@@ -1,0 +1,52 @@
+.dialog{border:0;padding:0;border-radius:24px;width:min(900px,calc(100vw - 32px));max-width:none;max-height:calc(100dvh - 32px);color:#25483e;background:#f7f0db;box-shadow:0 24px 90px #152b3d66;overscroll-behavior:contain;font-family:inherit}.dialog::backdrop{background:#183c426e;backdrop-filter:blur(4px)}.panel{padding:26px}.header{display:flex;align-items:center;justify-content:space-between;gap:16px}.header p{font-size:10px;font-weight:800;letter-spacing:.18em;margin:0 0 5px;color:#71806b}.header h2{font-size:36px;line-height:1.05;letter-spacing:-.04em;margin:0}.close{border:1px solid #b8c3a8;background:#ede7ce;color:#315745;width:44px;height:44px;border-radius:50%;font-size:30px;cursor:pointer;flex-shrink:0}.welcome{position:relative;padding:22px 120px 19px 0}.welcome strong{font-size:18px}.welcome p{font-size:13px;line-height:1.5;margin:7px 0 0;color:#687365}.welcome>span{position:absolute;right:0;top:28px;background:#d4e1bc;border-radius:20px;padding:8px 12px;font-size:10px;font-weight:900;letter-spacing:.05em}.tabs{display:flex;gap:7px;flex-wrap:wrap;padding-bottom:19px}.tabs button{font:inherit;min-height:44px;border-radius:24px;border:1px solid #c9cfb8;background:transparent;color:#526751;font-size:12px;font-weight:700;padding:8px 15px;cursor:pointer}.tabs button[aria-pressed=true]{color:#fff4da;background:#315845;border-color:#315845}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.card{overflow:hidden;border-radius:17px;background:#fff9e9;border:1px solid #dadcc4;display:flex;flex-direction:column}.equipped{border-color:#6d8860;box-shadow:0 0 0 1px #6d8860}.image{position:relative;background:radial-gradient(ellipse at 50% 80%,#b9bf9880 0%,#e8d8b0 70%);height:155px;display:flex;align-items:center;justify-content:center}.image img{width:100%;height:100%;object-fit:contain}.image>span:last-child:not(:first-child){position:absolute;right:10px;top:10px;background:#fff7ddcc;color:#3f634b;border-radius:12px;padding:5px 8px;font-size:9px;font-weight:800}.details{padding:15px;display:flex;flex-direction:column;flex:1}.details h3{font-size:17px;margin:0 0 7px;letter-spacing:-.02em}.details p{font-size:12px;line-height:1.5;color:#6c7466;margin:0 0 16px;flex:1}.details button{display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:44px;padding:10px 13px;background:#315845;border:0;color:#fff4da;border-radius:11px;font:inherit;font-size:12px;font-weight:750;cursor:pointer}.equipped .details button{background:#e5e9ce;color:#355840}.footer{padding-top:18px}.footer p{font-size:12px;font-weight:650;margin:0 0 8px;min-height:18px}.footer small{font-size:11px;line-height:1.5;color:#737c69}.dialog button:focus-visible{outline:3px solid #bb753b;outline-offset:3px}@media(max-width:600px){.dialog{width:calc(100vw - 16px);max-height:calc(100dvh - 16px);border-radius:19px}.panel{padding:18px 14px}.header h2{font-size:30px}.welcome{padding:18px 0 14px}.welcome strong{font-size:16px}.welcome>span{position:static;display:inline-block;margin-top:10px}.tabs{gap:6px;padding-bottom:15px}.tabs button{font-size:11px;padding:8px 12px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.image{height:118px}.details{padding:11px}.details h3{font-size:15px}.details p{font-size:11px}.details button{font-size:11px;padding:9px;line-height:1.4}.footer small{display:block}}@media(max-height:450px) and (min-width:601px){.panel{padding:18px}.welcome{padding-top:14px;padding-bottom:14px}.image{height:125px}}
+/* Category changes keep the same window; only the equipment list scrolls. */
+.dialog{height:min(800px,calc(100dvh - 32px));overflow:hidden}.panel{height:100%;display:flex;flex-direction:column}.header,.welcome,.tabs,.footer{flex-shrink:0}.grid{flex:1;min-height:0;overflow:auto;align-content:start;scrollbar-gutter:stable;padding:2px}.close{display:grid;place-items:center}
+@media(max-width:600px){.dialog{height:calc(100dvh - 16px)}}
+@media(max-height:450px){.welcome{display:none}.tabs{padding:10px 0}.footer{padding-top:8px}.footer small{display:none}.header h2{font-size:26px}}
+
+
+
+.actions{display:flex;flex-direction:column;gap:7px;margin:0 0 14px;color:#47624d;font-size:11px;line-height:1.35}.actions>span{display:flex;align-items:flex-start;gap:7px}.actions kbd{flex-shrink:0;min-width:32px;text-align:center;border:1px solid #d7dcc7;background:#edf0df;border-radius:5px;padding:2px 4px;font:600 9px inherit}
+
+/* Cards grow to fit both actions; the list scrolls, never individual cards. */
+.grid{grid-auto-rows:max-content}.image{flex-shrink:0}.actions kbd{font-family:inherit;font-size:9px;font-weight:600}
+
+/* Keep the dialog surface opaque while its inner content scrolls. */
+.panel{position:relative;isolation:isolate;overflow:hidden;background:#f7f0db}.header,.footer{position:relative;z-index:1;background:#f7f0db}
+
+.details .learnButton{margin-top:9px;background:#edf0d8;color:#315845;border:1px solid #aebb99;font-size:11px;line-height:1.5}.details .learnButton:hover{background:#dfe8c4}
+.details .questBadge{display:block;padding:8px 10px;border:1px solid #acbd96;border-radius:9px;background:#eee5c5;font-size:11px;font-weight:700}.details .questBadge[data-earned=true]{background:#dcebc5;color:#345d3a}
+.panel>div .grid{overflow:visible;flex:none}.panel>div .footer{position:static}.panel>div .tabs{flex-wrap:wrap}
+
+@media (pointer:coarse), (max-width:600px){.actions kbd{display:none;}}
+.header>div{flex:1;min-width:0}
+
+/* Story-inspired full-screen venue; one shared art surface, one content scroller. */
+.dialog.dialog{position:fixed;inset:0;margin:0;width:100vw;height:100dvh;max-width:none;max-height:100dvh;border:0;border-radius:0;overflow:hidden;background:#286f55}
+.dialog .panel.panel{height:100%;max-height:100dvh!important;background:#286f55 url('/stories/paths/store-coast.svg') center top/100% 100% no-repeat!important}
+.dialog .panel>header{background:transparent!important;border:0;color:#fff1d3;padding:20px 24px!important}
+.dialog .panel>header h2{font-family:IslandBrush,sans-serif;font-weight:400;font-size:clamp(24px,3vw,38px);letter-spacing:0;overflow-wrap:anywhere}
+.dialog .panel>header button{background:#244d40;color:#fff1d3;border:1px solid #a8b78d;border-radius:50%}
+.dialog .panel>div{padding:clamp(16px,3vw,36px) max(18px,calc((100vw - 1120px)/2)) 36px;background:transparent}
+.dialog button{transition:transform .18s ease,box-shadow .18s ease,background-color .18s ease}
+.dialog button:active{transform:translateY(2px) scale(.98)}
+.dialog button:focus-visible{outline:3px solid #ffd451;outline-offset:3px}
+@media(hover:hover){.dialog button:hover{transform:translateY(-3px)}}
+@media(max-width:600px){.dialog .panel>header{padding:16px 18px!important}.dialog .panel>div{padding:16px 16px 28px}}
+@media(prefers-reduced-motion:reduce){.dialog button{transition:none}.dialog button:hover,.dialog button:active{transform:none}}
+.welcome{padding:25px 24px;margin:0 0 22px;background:#fff1d3;border-radius:28px 48px 24px 28px;box-shadow:0 7px 0 #193f372b}.welcome strong{font-family:IslandBrush,sans-serif;font-size:clamp(22px,3vw,32px);font-weight:400;display:block;max-width:80%}.welcome p{color:#315547;font-size:14px}.welcome>span{position:static;display:inline-block;margin-top:14px;background:#f8d651;color:#244d40}.tabs button{background:#fff1d3;border:0;color:#254b3f;box-shadow:0 4px 0 #193f3733;font-size:13px}.tabs button[aria-pressed=true]{background:#e98acb;color:#233f39}.grid{gap:20px}.card{border:0;border-radius:26px 40px 24px 24px;background:#fff1d3;box-shadow:0 7px 0 #183b3433}.image{height:190px;background:#bfded1 url('/stories/paths/store-coast.svg') center/800px auto}.details{padding:20px}.details h3{font-size:20px}.details p{font-size:13px;color:#46604b}.details button{border-radius:999px}.footer{background:#fff1d3!important;padding:18px 22px;border-radius:20px;margin-top:24px}.footer p{margin:0;color:#315547}.equipped{outline:3px solid #f8d651;outline-offset:-3px}@media(max-width:600px){.grid{gap:12px}.image{height:135px}.details{padding:13px}.details h3{font-size:17px}.welcome strong{max-width:none}.details p{font-size:12px}}
+
+/* Item previews share one quiet textured tan surface. */
+.image{background:#e8d5ad url('/stories/films/assets/entry-grain.png') repeat!important;background-size:128px 128px!important;background-blend-mode:soft-light}
+/* Mobile categories stay in one swipeable row. */
+@media(max-width:600px),(pointer:coarse){
+ .tabs{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;max-width:100%;min-width:0;padding:5px 4px 12px;gap:8px;overscroll-behavior-x:contain;scroll-padding-inline:4px;scrollbar-width:thin}
+ .tabs button{flex:0 0 auto;white-space:nowrap}
+}
+/* Never wrap category tabs, including narrow desktop windows and scaled mobile views. */
+.dialog .tabs{display:flex;flex-flow:row nowrap!important;overflow-x:auto;overflow-y:hidden;width:100%;max-width:100%;min-width:0;gap:8px;padding:5px 4px 12px;overscroll-behavior-x:contain;scroll-padding-inline:4px;scrollbar-width:thin}
+.dialog .tabs>button{flex:0 0 auto!important;white-space:nowrap}
+.dialog .panel>header::before,.dialog .panel>header::after{display:none!important}
+/* Include padding in the rail width and leave space after the last pill. */
+.dialog .tabs{box-sizing:border-box;scroll-padding-inline:8px;padding-inline:8px}
+.dialog .tabs::after{content:'';flex:0 0 8px}

@@ -1,0 +1,486 @@
+/* Breakaway Run — co-located CSS Module for the HUD/overlay chrome that floats over the
+   Babylon canvas. Palette + pixel-button look mirror the app globals (peachy warm bg, gold
+   accents, dark glass panels, notched pixel buttons) so the game blends in. The 3D world
+   itself is rendered by Babylon into the full-bleed <canvas>; everything here overlays it. */
+
+.root {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: var(--font-ui), system-ui, sans-serif;
+  color: #eef2f6;
+  background: linear-gradient(180deg, #f4ddba 0%, #efd2a8 55%, #e8caa2 100%);
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: none;
+}
+
+/* full-bleed 3D stage */
+.canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  outline: none;
+  touch-action: none;
+}
+
+/* ---------- top HUD ---------- */
+.hud {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px calc(6px + env(safe-area-inset-top, 0px));
+  pointer-events: none;
+}
+.backBtn {
+  pointer-events: auto;
+  flex: 0 0 auto;
+  padding: 8px 12px;
+  font-size: 13px;
+}
+.stats {
+  flex: 1 1 auto;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+.statBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  min-width: 66px;
+  padding: 5px 9px;
+  background: rgba(14, 20, 28, 0.82);
+  border: 2px solid rgba(255, 255, 255, 0.09);
+  border-radius: 8px;
+}
+.statBox.goals { border-color: rgba(245, 200, 66, 0.55); }
+.statLabel {
+  font-size: 9px;
+  letter-spacing: 0.5px;
+  color: #93a1b0;
+  text-transform: uppercase;
+}
+.statBox.goals .statLabel { color: #f5c842; }
+.statVal {
+  font-size: 22px;
+  line-height: 1;
+  font-weight: 700;
+  color: #eef2f6;
+}
+.statBox.goals .statVal { color: #ffe27a; }
+
+/* ---------- centre flash (GOAL! / CRASH) ---------- */
+.flash {
+  position: absolute;
+  top: 30%;
+  left: 0;
+  right: 0;
+  z-index: 4;
+  text-align: center;
+  pointer-events: none;
+  font-size: clamp(40px, 15vw, 96px);
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-shadow: 0 3px 0 rgba(0, 0, 0, 0.35), 0 0 22px rgba(0, 0, 0, 0.3);
+  animation: pop 0.34s ease-out;
+}
+.flashGoal { color: #ffe27a; }
+.flashCrash { color: #ff8f6a; }
+@keyframes pop {
+  0% { transform: scale(0.4); opacity: 0; }
+  55% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* ---------- mobile controls: LEFT thumb-joystick + RIGHT boost button ---------- */
+/* full-screen passthrough layer; only the joystick zone + boost button capture touches,
+   so the top HUD and the rest of the canvas (swipe fallback) still work under it. */
+.controls {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+/* LEFT — the joystick capture zone: lower-left quadrant. The pad (ring+knob) appears
+   at the touch point inside it, so the thumb can land anywhere down here. */
+.joyZone {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 56%;
+  height: 46%;
+  pointer-events: auto;
+  touch-action: none;
+}
+/* the translucent pad — hidden until touched, then fades in (mirrors .vjoy-pad) */
+.joyPad {
+  position: absolute;
+  width: 128px;
+  height: 128px;
+  margin: -64px 0 0 -64px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.16s ease;
+}
+.joyPadOn { opacity: 1; }
+.joyRing {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2.5px solid rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.22), inset 0 0 18px rgba(255, 255, 255, 0.08);
+}
+.joyKnob {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 62px;
+  height: 62px;
+  margin: -31px 0 0 -31px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.38);
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+}
+
+/* RIGHT — big BOOST button anchored bottom-right; dim until the meter is armed */
+.boostBtn {
+  position: absolute;
+  right: calc(16px + env(safe-area-inset-right, 0px));
+  bottom: calc(22px + env(safe-area-inset-bottom, 0px));
+  pointer-events: auto;
+  width: 108px;
+  height: 108px;
+  padding: 0;
+  font-size: 19px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  opacity: 0.5;
+  filter: grayscale(0.45);
+}
+.boostBtn.armed {
+  opacity: 1;
+  filter: none;
+  animation: throb 0.7s ease-in-out infinite;
+}
+@keyframes throb {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+
+/* ---------- pixel button (mirrors .pixel-btn from globals) ---------- */
+.pixelBtn {
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #2b1a05;
+  background: #f0bd2e;
+  image-rendering: pixelated;
+  clip-path: polygon(
+    0 8px, 4px 8px, 4px 4px, 8px 4px, 8px 0,
+    calc(100% - 8px) 0, calc(100% - 8px) 4px, calc(100% - 4px) 4px, calc(100% - 4px) 8px, 100% 8px,
+    100% calc(100% - 8px), calc(100% - 4px) calc(100% - 8px), calc(100% - 4px) calc(100% - 4px), calc(100% - 8px) calc(100% - 4px), calc(100% - 8px) 100%,
+    8px 100%, 8px calc(100% - 4px), 4px calc(100% - 4px), 4px calc(100% - 8px), 0 calc(100% - 8px)
+  );
+  box-shadow:
+    inset 0 0 0 2px #6e4408,
+    inset 6px 6px 0 0 #ffe9a8,
+    inset -6px -6px 0 0 #a56f14;
+  transition: none;
+}
+.pixelBtn:active {
+  transform: translate(2px, 2px);
+  box-shadow: inset 0 0 0 2px #6e4408, inset 6px 6px 0 0 #a56f14, inset -6px -6px 0 0 #ffe9a8;
+}
+.pixelBtnDark {
+  color: #eef2f6;
+  background: #1b2732;
+  box-shadow:
+    inset 0 0 0 2px #05090d,
+    inset 6px 6px 0 0 #33465a,
+    inset -6px -6px 0 0 #0d151d;
+}
+.pixelBtnDark:active {
+  box-shadow: inset 0 0 0 2px #05090d, inset 6px 6px 0 0 #0d151d, inset -6px -6px 0 0 #33465a;
+}
+
+/* ---------- start / hint banner ---------- */
+.hintBanner {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 84px;
+  z-index: 3;
+  padding: 7px 15px;
+  background: rgba(14, 20, 28, 0.8);
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  font-size: 12px;
+  color: #eef2f6;
+  max-width: min(92vw, 460px);
+  text-align: center;
+  line-height: 1.5;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+.hintBanner b { color: #f5c842; }
+
+/* ---------- overlay (game over) ---------- */
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 24px;
+  text-align: center;
+  background: rgba(6, 10, 16, 0.55);
+  backdrop-filter: blur(2px);
+}
+.panel {
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 24px 22px;
+  background: rgba(14, 20, 28, 0.9);
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+}
+.title {
+  font-size: clamp(28px, 8vw, 40px);
+  line-height: 1;
+  color: #ff8f6a;
+  text-shadow: 0 3px 0 rgba(0, 0, 0, 0.35);
+}
+.finalScore {
+  font-size: 46px;
+  line-height: 1;
+  color: #eef2f6;
+  letter-spacing: 2px;
+}
+.finalRow {
+  display: flex;
+  gap: 18px;
+  font-size: 13px;
+  color: #cdd6df;
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+}
+.finalRow b { color: #ffe27a; font-size: 18px; display: block; }
+.bestLine {
+  font-size: 13px;
+  color: #93a1b0;
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+}
+.bestLine b { color: #f5c842; }
+.newBest {
+  font-size: 14px;
+  color: #ffe27a;
+}
+.overlayBtns {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.overlayBtn {
+  padding: 14px 22px;
+  font-size: 17px;
+}
+
+@media (min-width: 760px) {
+  .statBox { min-width: 82px; }
+  /* desktop is keyboard-driven (←/→ lane · ↑/W jump · Space boost) — hide the
+     touch joystick + boost button so they don't sit over the wider stage. */
+  .controls { display: none; }
+}
+
+/* Arcade run progression and pre-match briefing. */
+.introPanel { max-width: 480px; padding: 30px; gap: 14px; background: #102b25f5; border: 1px solid #b4e6ba40; border-radius: 24px; }
+.eyebrow { font: 600 10px/1.4 system-ui, sans-serif; letter-spacing: 3px; color: #b6d6bb; }
+.introBall { font-size: 42px; line-height: 1; }
+.introPanel h1 { margin: 0; font: 900 clamp(32px, 7vw, 52px)/.95 system-ui, sans-serif; letter-spacing: -2px; }
+.introPanel h1 em { font-style: normal; color: #d4ff76; }
+.introPanel p { margin: 0; font: 14px/1.6 system-ui, sans-serif; color: #c7d7cc; }
+.instructions { display: grid; gap: 14px; text-align: left; width: 100%; margin: 8px 0; }
+.instructions div { display: grid; gap: 4px; padding-left: 14px; border-left: 2px solid #d4ff76; }
+.instructions b { color: #d4ff76; font: 700 11px/1.5 system-ui, sans-serif; letter-spacing: 1px; }
+.instructions span { color: #b9cec1; font: 12px/1.5 system-ui, sans-serif; }
+.startButton { width: 100%; min-height: 54px; }
+.textButton { color: #b9cec1; background: transparent; border: 0; padding: 10px; cursor: pointer; }
+.pauseButton { position: absolute; top: 94px; right: 14px; z-index: 4; padding: 10px 14px; border-radius: 20px; border: 1px solid #ffffff35; background: #102b25e6; color: white; cursor: pointer; }
+.runInfo { position: absolute; top: 96px; left: 16px; width: min(280px, 65vw); z-index: 3; padding: 12px; border: 1px solid #ffffff25; border-radius: 12px; background: #102b25df; font: 11px/1.5 system-ui, sans-serif; pointer-events: none; }
+.runInfo div { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.runInfo div > span:first-child { color: #d4ff76; letter-spacing: 3px; font-size: 16px; }
+.runInfo progress { width: 100%; height: 4px; accent-color: #d4ff76; display: block; margin: 8px 0; }
+.runInfo small { color: #b9cec1; font-size: 9px; letter-spacing: 1px; }
+.goalGuide { position: absolute; top: 195px; left: 50%; transform: translateX(-50%); z-index: 3; display: grid; gap: 3px; text-align: center; padding: 12px 24px; border: 1px solid #d4ff7680; border-radius: 14px; background: #102b25e8; white-space: nowrap; pointer-events: none; }
+.goalGuide small, .goalGuide span { font: 11px/1.5 system-ui, sans-serif; color: #c7d7cc; }
+.goalGuide strong { font-size: 26px; color: #d4ff76; }
+.flash { top: 42%; font-size: clamp(24px, 5vw, 58px); padding: 0 20px; }
+.overlay { overflow-y: auto; padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom)); }
+.pixelBtn:focus-visible, .pauseButton:focus-visible, .textButton:focus-visible { outline: 3px solid white; outline-offset: 4px; }
+@media (max-height: 700px) { .introPanel { gap: 9px; padding: 20px; } .introBall { display: none; } .instructions { gap: 9px; } }
+@media (max-height: 480px) { .overlay { justify-content: flex-start; } .goalGuide { top: 85px; } .runInfo { top: 90px; width: 220px; } }
+@media (prefers-reduced-motion: reduce) { .flash, .boostBtn.armed { animation: none; } }
+
+.root { font-family: system-ui, -apple-system, sans-serif; }
+.pixelBtn { clip-path: none; border-radius: 14px; box-shadow: inset 0 -3px 0 #00000020; letter-spacing: 0; background: #d4ff76; color: #173227; }
+.pixelBtnDark { background: #153c39e8; color: #edf4e8; border: 1px solid #ffffff25; }
+.pixelBtn:active { transform: translateY(1px); box-shadow: inset 0 2px 4px #00000020; }
+.hud { padding-top: max(16px, env(safe-area-inset-top)); padding-inline: 16px; }
+.stats { flex: initial; position: absolute; left: 50%; transform: translateX(-50%); gap: 16px; }
+.statBox { min-width: 70px; border: none; background: #102b25df; border-radius: 10px; padding: 7px 15px; gap: 4px; }
+.statLabel { font: 600 9px/1 system-ui, sans-serif; letter-spacing: 1.5px; color: #b9cec1; }
+.statVal { font: 750 23px/1 system-ui, sans-serif; font-variant-numeric: tabular-nums; }
+.statBox.goals .statVal, .statBox.goals .statLabel { color: #d4ff76; }
+.soundButton { position: absolute; top: max(16px, env(safe-area-inset-top)); right: 16px; z-index: 7; color: #e4f0e4; background: #153c39e8; border: 1px solid #ffffff25; border-radius: 12px; padding: 10px; cursor: pointer; font-size: 11px; }
+.boostLabel { position: absolute; top: 81px; left: 50%; transform: translateX(-50%); z-index: 3; font: 700 9px/1 system-ui, sans-serif; letter-spacing: 1.2px; color: #153c39; }
+.keyboardGuide { position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%); display: flex; gap: 22px; padding: 13px 20px; border: 1px solid #ffffff25; border-radius: 14px; background: #102b25df; z-index: 3; white-space: nowrap; font-size: 11px; color: #c7d7cc; }
+.keyboardGuide span { display: flex; gap: 5px; align-items: center; }
+.keyboardGuide kbd { border: 1px solid #ffffff40; border-radius: 4px; padding: 4px 6px; color: #f0ffe0; font: 10px system-ui; }
+.touchButtons { position: absolute; bottom: max(24px, env(safe-area-inset-bottom)); left: 18px; display: flex; gap: 12px; pointer-events: auto; z-index: 2; }
+.touchButtons button, .jumpButton { width: 56px; height: 56px; border: 1px solid #ffffff60; border-radius: 50%; background: #153c39c9; color: #f4ffe8; font-size: 27px; touch-action: none; }
+.jumpButton { position: absolute; bottom: calc(108px + env(safe-area-inset-bottom)); right: 26px; pointer-events: auto; display: grid; place-content: center; width: 64px; height: 64px; }
+.jumpButton small { font: 700 9px system-ui; }
+.boostBtn { width: 82px; height: 70px; border-radius: 22px; font-size: 14px; bottom: calc(24px + env(safe-area-inset-bottom)); }
+.hintBanner { bottom: 110px; font-family: system-ui; }
+@media (max-width: 759px), (pointer: coarse) { .keyboardGuide { display: none; } .controls { display: block; } .stats { gap: 5px; } .statBox { padding: 7px 9px; min-width: 50px; } .statVal { font-size: 20px; } .backBtn { font-size: 11px; padding: 10px; } .soundButton { top: auto; bottom: calc(9px + env(safe-area-inset-bottom)); right: 50%; transform: translateX(50%); font-size: 9px; padding: 6px 9px; } }
+
+/* Coastal art direction: warm, translucent chrome with quiet typography. */
+.root { color: #fffbea; background: #a5c2bf; }
+.root::after { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 1; background: linear-gradient(180deg, #263f4216 0%, transparent 22%, transparent 75%, #263f4218 100%); }
+.statBox { background: #344e4a66; border: 1px solid #fffbe92b; border-radius: 12px; }
+.statVal { color: #fffbea; }
+.statBox.goals .statVal, .statBox.goals .statLabel { color: #f4ddb0; }
+.runInfo { background: #344e4a7a; border-color: #fffbe925; }
+.runInfo div > span:first-child { color: #f1dfac; }
+.runInfo progress { accent-color: #ead399; }
+.pauseButton, .soundButton, .pixelBtnDark, .keyboardGuide { background: #344e4a70; border: 1px solid #fffbe950; color: #fffbea; }
+.pauseButton, .soundButton { backdrop-filter: blur(6px); }
+.pixelBtn { background: #ecdcac; color: #344e4a; box-shadow: none; }
+.pixelBtnDark { color: #fffbea; background: #344e4a70; }
+.touchButtons button, .jumpButton { background: #344e4a55; border: 1px solid #fffbe978; border-radius: 17px; backdrop-filter: blur(5px); }
+.boostBtn { border-radius: 17px; }
+.goalGuide { background: #344e4ae0; border-color: #e6d3a7; }
+.goalGuide strong, .instructions b, .introPanel h1 em { color: #eddaab; }
+.introPanel { background: #344e4af2; border-color: #fffbe945; box-shadow: 0 20px 80px #233f4930; }
+.instructions div { border-color: #eddaab; }
+.hintBanner { background: #344e4a85; border: 1px solid #fffbe930; }
+.hintBanner b { color: #f4ddb0; }
+.keyboardGuide { padding: 10px 16px; border-radius: 10px; }
+
+/* ============================================================================
+   Overlay "modal" panels reskinned to the app's LIGHT town-paper design system
+   — matches .pm-modal / .mg-menu (coastal-ui.css). SCOPE: only the start-screen
+   (intro/paused) panel and the game-over results panel + their text. The Start /
+   Play Again / Back buttons reuse the GLOBAL green notched .pixel-btn (applied as
+   a plain string in the TSX), so these rules cover only the panel chrome + copy.
+   The in-game HUD, joystick/boost controls, flash, and 3D stage are untouched.
+   Placed last so it wins over the earlier dark/coastal overrides above.
+   Paper tokens: paper #efe4c4 · ink #294a3e · sub #52634e · gold #8a582b ·
+   pill-gold #f4cc7c · line #294b3f35.
+   ============================================================================ */
+
+/* backdrop scrim — same tint + blur as the app's .pm-backdrop */
+.overlay {
+  background: #19362e66;
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+}
+
+/* opaque town-paper card, shared by the intro and game-over panels */
+.panel, .introPanel {
+  background: #efe4c4;
+  border: 1px solid #294b3f35;
+  border-radius: 3px;
+  box-shadow: 8px 8px 0 #172d2580;
+  color: #294a3e;
+  font-family: var(--font-ui), system-ui, sans-serif;
+}
+
+/* gold eyebrow (FUTBOL ISLAND / ARCADE · FULL TIME) */
+.eyebrow {
+  color: #8a582b;
+  font-family: var(--font-ui), system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+/* headline ink, no glow; gold accent word */
+.title, .introPanel h1 {
+  color: #294a3e;
+  font-family: var(--font-ui), system-ui, sans-serif;
+  text-shadow: none;
+}
+.introPanel h1 em { color: #8a582b; }
+
+/* intro body copy → readable ink on paper */
+.introPanel p {
+  color: #52634e;
+  font-family: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+}
+
+/* numbered instruction rows */
+.instructions div { border-left-color: #8a582b; }
+.instructions b { color: #8a582b; }
+.instructions span {
+  color: #52634e;
+  font-family: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+}
+
+/* big gold final score (echoes the quiz-results score) */
+.finalScore { color: #8a582b; text-shadow: none; }
+
+/* results stat row + best line → sub-ink with gold values */
+.finalRow, .bestLine {
+  color: #52634e;
+  font-family: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+}
+.finalRow b, .bestLine b { color: #8a582b; }
+
+/* NEW BEST → the app's .cd-pb gold pill */
+.newBest {
+  display: inline-block;
+  background: #f4cc7c;
+  color: #294a3e;
+  font-family: var(--font-ui), system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.8px;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+/* ghost "Back to games" text button → paper sub-ink */
+.textButton {
+  color: #52634e;
+  font-family: var(--font-ui), system-ui, sans-serif;
+}
+.controls .islandJoystick{position:absolute;left:max(18px,env(safe-area-inset-left));bottom:max(20px,env(safe-area-inset-bottom));width:132px;height:132px;margin:0;pointer-events:auto}.islandJoystick>span{width:64px;height:64px}@media(max-height:500px){.controls .islandJoystick{width:120px;height:120px;bottom:12px}.islandJoystick>span{width:60px;height:60px}}
+@media(pointer:coarse){.controls{display:block}}

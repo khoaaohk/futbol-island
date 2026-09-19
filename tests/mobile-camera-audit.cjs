@@ -1,0 +1,12 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),ts=require('typescript'),vm=require('node:vm'),T=require('three');
+const cache={};function load(path){if(cache[path])return cache[path];const mod={exports:{}};vm.runInNewContext(ts.transpileModule(fs.readFileSync(path,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{exports:mod.exports,module:mod,require:id=>id==='three'?T:load('lib/town/'+id.replace('./','')+'.ts'),Math,Map,Set});return cache[path]=mod.exports;}
+const {VENUES}=load('lib/town/venues.ts'),create=load('lib/town/learningView.ts').createLearningView,old=fs.existsSync('/tmp/fi2-learningView-before-mobile-audit.ts')?load('/tmp/fi2-learningView-before-mobile-audit.ts').createLearningView:create,report=[];
+for(const [width,height]of[[390,844],[320,700],[844,390]])for(const v of VENUES)for(const angle of['default','broadcast','top','side','goalkeeper']){
+ const before=new T.PerspectiveCamera(40,width/height,1,500),after=before.clone();old().update(before,v,null,1,true,angle);create().update(after,v,null,1,true,angle,{width,height,mobile:true});before.updateMatrixWorld();after.updateMatrixWorld();
+ const points=[];for(const x of[-1,1])for(const z of[-1,1])for(const y of[0,2.5])points.push(new T.Vector3(v.x+x*v.width/2,(v.elevation??0)+y,v.z+z*v.length/2));
+ const projected=points.map(p=>p.clone().project(after)),prior=points.map(p=>p.clone().project(before));const span=p=>({x:Math.max(...p.map(p=>p.x))-Math.min(...p.map(p=>p.x)),y:Math.max(...p.map(p=>p.y))-Math.min(...p.map(p=>p.y))});const a=span(projected),b=span(prior);
+ if(angle!=='goalkeeper'){const top=1-2*Math.min(80,height*.22)/height,bottom=-1+2*Math.min(94,height*.25)/height;for(const p of projected){assert.ok(Math.abs(p.x)<=.991&&p.y<=top+.001&&p.y>=bottom-.001,`${width} ${v.id} ${angle} clips ${p.toArray()}`);}if(!(a.x>1.5||a.y/(top-bottom)>.86))console.log('FIT_DEBUG',width,v.id,angle,a,top,bottom,after.position.toArray());assert.ok(a.x>1.5||a.y/(top-bottom)>.86,`${width} ${v.id} ${angle} leaves excess margins`);}
+ else assert.equal(after.zoom,1.16);
+ report.push({width,format:v.id,angle,widthUse:Math.round(a.x*50),heightUse:Math.round(a.y*50),linearGain:Number(Math.sqrt(a.x*a.y/(b.x*b.y)).toFixed(2))});
+}
+fs.writeFileSync('/tmp/fi2-mobile-camera-audit.json',JSON.stringify(report,null,2));console.log('MOBILE_CAMERA_AUDIT_PASS',report.length,'live angle/format/viewport cases');console.log(report.filter(r=>r.linearGain<1.03));

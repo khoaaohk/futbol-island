@@ -1,0 +1,7 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),ts=require('typescript'),vm=require('node:vm');function load(path){const mod={exports:{}};vm.runInNewContext(ts.transpileModule(fs.readFileSync(path,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText,{module:mod,exports:mod.exports,Math});return mod.exports;}
+const {assistedShotYaw}=load('lib/town/shotAssist.ts'),{findWallJuggleTarget}=load('lib/town/wallJuggleTarget.ts'),player={x:0,y:0,z:0},target=(x,z,y=0)=>({id:'npc',x,y,z});
+assert.ok(Math.abs(assistedShotYaw(player,0,[target(1,8)])-Math.atan2(1,8))<1e-8);for(const targets of[[target(0,-4)],[target(5,3)],[target(0,30)],[target(0,8,6)]])assert.equal(assistedShotYaw(player,0,targets),0);assert.equal(assistedShotYaw(player,0,[target(1,8)],(x,z)=>z<4),0);assert.equal(assistedShotYaw(player,Math.PI*2,[target(1,8)]),Math.PI*2+Math.atan2(1,8));
+assert.ok(findWallJuggleTarget(player,0,(x,z)=>z>=7.9));assert.equal(findWallJuggleTarget(player,0,(x,z)=>z>8),null);assert.equal(findWallJuggleTarget(player,0,(x,z)=>z>=.5),null);assert.equal(findWallJuggleTarget(player,Math.PI,(x,z)=>z>=2),null);console.log('SHOT_ASSIST_PASS front cone, angle wrap, height/range/occlusion, wall facing and8m boundary');
+
+assert.ok(findWallJuggleTarget(player,0,(x,z)=>x>=2?7:false,true),'Active wall drill follows adjacent walls beside player');
+assert.equal(findWallJuggleTarget(player,0,(x,z)=>x>=2?7:false),null,'First wall kick still begins facing wall');

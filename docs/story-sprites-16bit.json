@@ -1,0 +1,12 @@
+{
+  "tool": "built-in image_gen",
+  "prompt": "Generate a production sprite sheet for a 16-bit SNES-style Futbol Island game. TRANSPARENT background. EXACT grid 6 columns and 4 rows, 1536x1024 total; every cell256x256. No text, labels, grid lines, shadows outside character. Each sprite fits inside cell with feet at local y232, centered x128, consistent scale about190px tall. Columns: 1 Luna brown high ponytail girl charcoal kit10, 2 Jayden spiky brown boy kit8, 3 Kai black curly boy kit7, 4 Maya long brown hair pink headband girl kit11, 5 Zoe blonde ponytail girl kit6, 6 Coach Rivera cap short dark beard charcoal tracksuit. Row1 idle facing front three-quarter right. Row2 walking right left leg forward. Row3 walking right right leg forward. Row4 kicking a ball WITHOUT drawing the ball, right foot extended. Crisp pixel art with visible 2-3pixel clusters, rich16-bit shading, detailed hair, expressive faces, dark outlines, athletic proportions. Not primitive block stickmen, not 3D rendered, not rounded sticker chibi. Attached image visual reference for the rich pixel style. Preserve exact grid placement, uniform feet baseline for use as animated sprite atlas. Transparent everywhere except sprites.",
+  "asset": "public/stories/characters-16bit.webp",
+  "rows": [
+    0,
+    284,
+    546,
+    796,
+    1024
+  ]
+}

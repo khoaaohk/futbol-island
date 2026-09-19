@@ -1,0 +1,34 @@
+.dialog{width:min(720px,calc(100vw - 24px));height:min(800px,calc(100dvh - 24px));max-width:none;max-height:none;margin:auto;border:1px solid #d5ddcc;border-radius:24px;padding:0;background:#fff;color:#244b40;font-family:inherit;overflow:hidden;box-shadow:0 18px 64px #17382f38;animation:arrive .35s ease-out both;overscroll-behavior:contain}
+.dialog::backdrop{background:#17372d80;animation:fade .35s ease-out both}
+.panel{height:100%;display:flex;flex-direction:column;overflow:hidden}
+.header{padding:22px 28px 18px;border-bottom:1px solid #e2e7dc;flex:none;background:#fff;z-index:1}
+.header p{margin:0 0 9px;color:#6d7e63;font-size:12px;font-weight:800;letter-spacing:.08em}
+.header h2{margin:0;font-size:30px;line-height:1.1;letter-spacing:-.035em}
+.body{min-height:0;overflow:auto;overscroll-behavior:contain;padding:20px 28px 24px;scrollbar-gutter:stable;flex:1}
+.tip{font-size:16px;line-height:1.5;margin:0 0 18px;color:#52695f}
+.illustration{background:#f4f2df;border:1px solid #e0e3cd;border-radius:20px;padding:15px 18px}
+.diagramHeading{display:flex;justify-content:space-between;font-size:12px;font-weight:800;color:#48694e}
+.field{display:block;width:100%;height:clamp(185px,29dvh,248px);overflow:visible}
+.pitchLines{fill:none;stroke:#c0ceb6;stroke-width:1.5}
+.space{fill:#efd078;fill-opacity:.53;stroke:#c7983a;stroke-dasharray:4 4}
+.route,.run{fill:none;stroke:#436953;stroke-width:2.5;animation:fade .4s ease-out both}
+.run{stroke-dasharray:6 5;stroke:#638263}
+.token{transition:transform .85s cubic-bezier(.25,.65,.25,1)}
+.token circle,.foot{stroke:#fff;stroke-width:2;fill:#315f4d}
+.token text{font-size:10px;fill:#254c3d;font-weight:750;paint-order:stroke;stroke:#f4f2df;stroke-width:3px;stroke-linejoin:round}
+.opponent circle{fill:#c67664}.opponent text{fill:#8b4a3d}.club circle{fill:#e9c56d;stroke:#c9a346}.club text{font-size:10px;stroke:#e9c56d}
+.ball circle{fill:#fff;stroke:#315846;stroke-width:1.5}.ball path{fill:#315846}
+.ballArrival{animation:ballSettle .75s ease-out both;transform-box:fill-box;transform-origin:center}
+.facing{fill:#f5eac5;transition:transform .6s ease}.note{fill:#476b52;font-size:9px;font-weight:750}
+.legend{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;font-size:10px;font-weight:700;color:#315f4d;margin:2px 0 12px}.legend span{color:#9e5345}.legend b{font-weight:700;color:#886a27}
+.caption{font-size:14px;line-height:1.45;margin:0 0 14px;min-height:61px;color:#365748}
+.secondary,.primary{font:inherit;font-weight:800;border-radius:12px;min-height:46px;cursor:pointer;touch-action:manipulation}
+.secondary{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:10px 14px;background:#fffdf4;border:1px solid #b7c6a9;color:#305541;font-size:14px}.secondary span{font-size:22px}
+.footer{flex:none;padding:16px 28px max(18px,env(safe-area-inset-bottom));border-top:1px solid #e2e7dc;background:#fff}.primary{width:100%;background:#f2cb75;color:#254b3e;border:1px solid #e8be63;padding:13px 20px;font-size:17px}
+.dialog button:focus-visible{outline:3px solid #8c6932;outline-offset:3px}.reward{padding:13px;background:#edf3e5;border-radius:12px;font-size:13px;line-height:1.5}.reward strong{display:block}
+.dialog[data-hidden=true],.dialog[data-hidden=true] *,.dialog[data-hidden=true]::backdrop{animation-play-state:paused!important;transition:none!important}
+@keyframes arrive{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}@keyframes fade{from{opacity:0}to{opacity:1}}@keyframes ballSettle{from{transform:translateY(-9px) scale(.8)}to{transform:translateY(0) scale(1)}}
+@media(max-width:600px){.dialog{border-radius:21px}.header{padding:18px 20px 15px}.header h2{font-size:26px}.body{padding:16px 19px}.tip{font-size:14px;margin-bottom:14px}.illustration{padding:13px 12px}.footer{padding:12px 20px max(14px,env(safe-area-inset-bottom))}.caption{font-size:13px;min-height:57px}.field{height:clamp(166px,27dvh,230px)}}
+@media(prefers-reduced-motion:reduce){.dialog,.dialog::backdrop,.dialog *{animation:none!important;transition:none!important}}
+.body{padding-top:12px}
+@media(max-width:600px),(pointer:coarse){.header{padding-top:calc(18px + env(safe-area-inset-top,0px))}.footer{padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}}

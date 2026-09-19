@@ -1,0 +1,764 @@
+[
+  {
+    "width": 390,
+    "height": 844,
+    "format": "7v7",
+    "lesson": "learn7_roles",
+    "naturallyAdvancedFrom": 0,
+    "naturallyAdvancedTo": 1,
+    "recordedVoicePlaying": true,
+    "broadcastResidualDriftMetres": 0.018576646003242034,
+    "pageErrors": [],
+    "samples": [
+      {
+        "step": 0,
+        "progress": 0.4,
+        "say": "Your team has seven players: one goalkeeper and six outfield players. Attack toward the goal at the far end.",
+        "camera": [
+          11.000005784028096,
+          90.52187958691823,
+          14.161864078252075
+        ],
+        "fieldCornersPixels": [
+          {
+            "x": 61.13348777598866,
+            "y": 228.08605755868655
+          },
+          {
+            "x": 18.189278972663335,
+            "y": 556.4211417505079
+          },
+          {
+            "x": 328.8665447084304,
+            "y": 228.08606809313667
+          },
+          {
+            "x": 371.81069480310083,
+            "y": 556.4211601279469
+          }
+        ],
+        "callouts": [
+          {
+            "text": "Attack",
+            "position": {
+              "x": 336.94701614833065,
+              "y": 406.091816284826
+            },
+            "srgb": "srgb",
+            "toneMapped": false
+          }
+        ]
+      },
+      {
+        "step": 1,
+        "progress": 0.32017999999999996,
+        "say": "Here, two defenders, three midfielders and one forward start ahead of the keeper. That is two-three-one, or one-two-three-one including the keeper.",
+        "camera": [
+          11.000000000000005,
+          90.52207323607384,
+          14.16204987633814
+        ],
+        "fieldCornersPixels": [
+          {
+            "x": 61.13371328545723,
+            "y": 228.08638490838428
+          },
+          {
+            "x": 18.189714868000245,
+            "y": 556.420798918894
+          },
+          {
+            "x": 328.86628671454275,
+            "y": 228.08638490838428
+          },
+          {
+            "x": 371.81028513199965,
+            "y": 556.4207989188941
+          }
+        ],
+        "callouts": [
+          {
+            "text": "Defenders",
+            "position": {
+              "x": 198.3312003881318,
+              "y": 464.9387975689265
+            },
+            "srgb": "srgb",
+            "toneMapped": false
+          },
+          {
+            "text": "Midfield",
+            "position": {
+              "x": 194.99999999999997,
+              "y": 380.75642296620276
+            },
+            "srgb": "srgb",
+            "toneMapped": false
+          },
+          {
+            "text": "Forward connection",
+            "position": {
+              "x": 194.99999999999994,
+              "y": 297.6767971391466
+            },
+            "srgb": "srgb",
+            "toneMapped": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "width": 390,
+    "height": 844,
+    "format": "9v9",
+    "lesson": "learn9_shape",
+    "naturallyAdvancedFrom": 0,
+    "naturallyAdvancedTo": 1,
+    "recordedVoicePlaying": true,
+    "broadcastResidualDriftMetres": 0.024315184421092425,
+    "pageErrors": [],
+    "samples": [
+      {
+        "step": 0,
+        "progress": 0.3636545454545455,
+        "say": "Gold attacks the far goal and protects the goal behind our goalkeeper.",
+        "camera": [
+          160.00000578113688,
+          111.84792449717452,
+          7.356148702833191
+        ],
+        "fieldCornersPixels": [
+          {
+            "x": 62.9466036053103,
+            "y": 215.02184482632316
+          },
+          {
+            "x": 16.98943353761959,
+            "y": 566.670718646899
+          },
+          {
+            "x": 327.0534240551014,
+            "y": 215.02185308052427
+          },
+          {
+            "x": 373.01054340640854,
+            "y": 566.6707336460719
+          }
+        ],
+        "callouts": [
+          {
+            "text": "Attack this direction",
+            "position": {
+              "x": 115.00000275394564,
+              "y": 353.1828596449288
+            },
+            "srgb": "srgb",
+            "toneMapped": false
+          }
+        ]
+      },
+      {
+        "step": 1,
+        "progress": 0.290909090909091,
+        "say": "Nine players means one goalkeeper and eight outfield players.",
+        "camera": [
+          160.00000000000009,
+          111.84816718082612,
+          7.3563801529006385
+        ],
+        "fieldCornersPixels": [
+          {
+            "x": 62.946827615748305,
+            "y": 215.0221930196433
+          },
+          {
+            "x": 16.98987878844057,
+            "y": 566.6703444275237
+          },
+          {
+            "x": 327.0531723842517,
+            "y": 215.02219301964342
+          },
+          {
+            "x": 373.01012121155844,
+            "y": 566.670344427524
+          }
+        ],
+        "callouts": [
+          {
+            "text": "Keeper behind the outfield team",
+            "position": {
+              "x": 194.99999999999932,
+              "y": 587.599332201876
+            },
+            "srgb": "srgb",
+            "toneMapped": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "width": 390,
+    "height": 844,
+    "format": "11v11",
+    "lesson": "learn11_shape",
+    "naturallyAdvancedFrom": 0,
+    "naturallyAdvancedTo": 1,
+    "recordedVoicePlaying": true,
+    "broadcastResidualDriftMetres": 0.03477501376961642,
+    "pageErrors": [],
+    "samples": [
+      {
+        "step": 0,
+        "progress": 0.3999600000000001,
+        "say": "Your team has eleven players: one goalkeeper and ten outfield players. Attack the far goal and protect the goal behind your keeper.",
+        "camera": [
+          135.00000578692087,
+          163.97810872853773,
+          272.41401299856
+        ],
+        "fieldCornersPixels": [
+          {
+            "x": 60.75708525507061,
+            "y": 217.2444880692713
+          },
+          {
+            "x": 15.28862003249138,
+            "y": 560.2323975838718
+          },
+          {
+            "x": 329.24293329239555,
+            "y": 217.2444937968602
+          },
+          {
+            "x": 374.71136480761305,
+            "y": 560.2324078484273
+          }
+        ],
+        "callouts": [
+          {
+            "text": "Attack",
+            "position": {
+              "x": 334.6568601164117,
+              "y": 377.1896915589263
+            },
+            "srgb": "srgb",
+            "toneMapped": false
+          }
+        ]
+      },
+      {
+        "step": 1,
+        "progress": 0.3198000000000001,
+        "say": "Here we start with four defenders, three midfielders and three forwards. Four-three-three leaves out the keeper; one-four-three-three includes them.",
+        "camera": [
+          135.00000000000009,
+          163.9784769689642,
+          272.4143631796653
+        ],
+        "fieldCornersPixels": [
+          {
+            "x": 60.75732623507282,
+            "y": 217.2448431843737
+          },
+          {
+            "x": 15.289077810787232,
+            "y": 560.2320275246896
+          },
+          {
+            "x": 329.24267376492713,
+            "y": 217.24484318437382
+          },
+          {
+            "x": 374.71092218921206,
+            "y": 560.2320275246897
+          }
+        ],
+        "callouts": []
+      }
+    ]
+  },
+  {
+    "width": 390,
+    "height": 844,
+    "format": "futsal",
+    "lesson": "learnf_roles31",
+    "naturallyAdvancedFrom": 0,
+    "naturallyAdvancedTo": 1,
+    "recordedVoicePlaying": true,
+    "broadcastResidualDriftMetres": 0.01300949917602339,
+    "pageErrors": [],
+    "samples": [
+      {
+        "step": 0,
+        "progress": 0.5714285714285714,
+        "say": "Gold attacks the far goal and protects the goal behind our goalkeeper.",
+        "camera": [
+          11.000002126761398,
+          58.357858247746634,
+          72.92417557107773
+        ],
+        "fieldCornersPixels": [
+          {
+            "x": 74.03875983835299,
+            "y": 192.59467625612038
+          },
+          {
+            "x": 23.354742669544375,
+            "y": 606.57750293568
+          },
+          {
+            "x": 315.9612646532848,
+            "y": 192.59468209656745
+          },
+          {
+            "x": 366.64523463385785,
+            "y": 606.5775146959448
+          }
+        ],
+        "callouts": [
+          {
+            "text": "Our team",
+            "position": {
+              "x": 194.99998863106393,
+              "y": 511.4511839976988
+            },
+            "srgb": "srgb",
+            "toneMapped": false
+          },
+          {
+            "text": "Attack",
+            "position": {
+              "x": 326.4310302900562,
+              "y": 350.6545652953083
+            },
+            "srgb": "srgb",
+            "toneMapped": false
+          }
+        ]
+      },
+      {
+        "step": 1,
+        "progress": 0.4571714285714288,
+        "say": "Futsal has five players per team: one goalkeeper and four outfield players.",
+        "camera": [
+          11.000000000000012,
+          58.35795809475716,
+          72.92427179286226
+        ],
+        "fieldCornersPixels": [
+          {
+            "x": 74.0389362672328,
+            "y": 192.59501124588363
+          },
+          {
+            "x": 23.35513491269845,
+            "y": 606.5770689908785
+          },
+          {
+            "x": 315.96106373276734,
+            "y": 192.59501124588365
+          },
+          {
+            "x": 366.64486508730135,
+            "y": 606.5770689908785
+          }
+        ],
+        "callouts": [
+          {
+            "text": "Five players",
+            "position": {
+              "x": 194.99999999999986,
+              "y": 511.450873034752
+            },
+            "srgb": "srgb",
+            "toneMapped": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "width": 1100,
+    "height": 844,
+    "format": "7v7",
+    "lesson": "learn7_roles",
+    "naturallyAdvancedFrom": 0,
+    "naturallyAdvancedTo": 1,
+    "recordedVoicePlaying": true,
+    "broadcastResidualDriftMetres": 0.010552070277707864,
+    "pageErrors": [],
+    "samples": [
+      {
+        "step": 0,
+        "progress": 0.39982,
+        "say": "Your team has seven players: one goalkeeper and six outfield players. Attack toward the goal at the far end.",
+        "camera": [
+          11.000523009878785,
+          78.25901121500641,
+          -6.419417076391279
+        ],
+        "fieldCornersPixels": [
+          {
+            "x": 391.48149606253924,
+            "y": 252.03455867014435
+          },
+          {
+            "x": 327.4774289943054,
+            "y": 674.9181616119001
+          },
+          {
+            "x": 708.5221533493504,
+            "y": 252.03596269592293
+          },
+          {
+            "x": 772.5181651789047,
+            "y": 674.9209282012006
+          }
+        ],
+        "callouts": [
+          {
+            "text": "Attack",
+            "position": {
+              "x": 722.9486203472027,
+              "y": 465.9440453099095
+            },
+            "srgb": "srgb",
+            "toneMapped": false
+          }
+        ]
+      },
+      {
+        "step": 1,
+        "progress": 0.31982000000000027,
+        "say": "Here, two defenders, three midfielders and one forward start ahead of the keeper. That is two-three-one, or one-two-three-one including the keeper.",
+        "camera": [
+          11.00000000000001,
+          78.2601018909958,
+          -6.4189505800039415
+        ],
+        "fieldCornersPixels": [
+          {
+            "x": 391.48098743519165,
+            "y": 252.03600336865344
+          },
+          {
+            "x": 327.4825915519947,
+            "y": 674.9170607354173
+          },
+          {
+            "x": 708.5190125648083,
+            "y": 252.03600336865344
+          },
+          {
+            "x": 772.5174084480053,
+            "y": 674.9170607354175
+          }
+        ],
+        "callouts": [
+          {
+            "text": "Defenders",
+            "position": {
+              "x": 554.130445593798,
+              "y": 552.9682304791359
+            },
+            "srgb": "srgb",
+            "toneMapped": false
+          },
+          {
+            "text": "Midfield",
+            "position": {
+              "x": 550,
+              "y": 443.0591006804197
+            },
+            "srgb": "srgb",
+            "toneMapped": false
+          },
+          {
+            "text": "Forward connection",
+            "position": {
+              "x": 510,
+              "y": 389.73615839027093
+            },
+            "srgb": "srgb",
+            "toneMapped": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "width": 1100,
+    "height": 844,
+    "format": "9v9",
+    "lesson": "learn9_shape",
+    "naturallyAdvancedFrom": 0,
+    "naturallyAdvancedTo": 1,
+    "recordedVoicePlaying": true,
+    "broadcastResidualDriftMetres": 0.012987633064074343,
+    "pageErrors": [],
+    "samples": [
+      {
+        "step": 0,
+        "progress": 0.3392181818181819,
+        "say": "Gold attacks the far goal and protects the goal behind our goalkeeper.",
+        "camera": [
+          160.00031738017725,
+          98.14386396819488,
+          -17.48151557541487
+        ],
+        "fieldCornersPixels": [
+          {
+            "x": 395.4382994100296,
+            "y": 242.09418290103255
+          },
+          {
+            "x": 328.50582460683023,
+            "y": 691.3613040798683
+          },
+          {
+            "x": 704.563540805292,
+            "y": 242.09483732384734
+          },
+          {
+            "x": 771.4918782302541,
+            "y": 691.3626479880621
+          }
+        ],
+        "callouts": [
+          {
+            "text": "Attack this direction",
+            "position": {
+              "x": 470.00003914984495,
+              "y": 412.69446185348613
+            },
+            "srgb": "srgb",
+            "toneMapped": false
+          }
+        ]
+      },
+      {
+        "step": 1,
+        "progress": 0.2907272727272727,
+        "say": "Nine players means one goalkeeper and eight outfield players.",
+        "camera": [
+          160.00000000000014,
+          98.14614016449863,
+          -17.479866510001262
+        ],
+        "fieldCornersPixels": [
+          {
+            "x": 395.4400248735369,
+            "y": 242.09708710337026
+          },
+          {
+            "x": 328.5126880152378,
+            "y": 691.3557120506495
+          },
+          {
+            "x": 704.559975126464,
+            "y": 242.09708710337048
+          },
+          {
+            "x": 771.487311984761,
+            "y": 691.3557120506501
+          }
+        ],
+        "callouts": [
+          {
+            "text": "Keeper behind the outfield team",
+            "position": {
+              "x": 549.9999999999994,
+              "y": 697.0870919306735
+            },
+            "srgb": "srgb",
+            "toneMapped": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "width": 1100,
+    "height": 844,
+    "format": "11v11",
+    "lesson": "learn11_shape",
+    "naturallyAdvancedFrom": 0,
+    "naturallyAdvancedTo": 1,
+    "recordedVoicePlaying": true,
+    "broadcastResidualDriftMetres": 0.017591786587961077,
+    "pageErrors": [],
+    "samples": [
+      {
+        "step": 0,
+        "progress": 0.40017999999999976,
+        "say": "Your team has eleven players: one goalkeeper and ten outfield players. Attack the far goal and protect the goal behind your keeper.",
+        "camera": [
+          135.0005178058506,
+          132.88908638160768,
+          225.60998886281803
+        ],
+        "fieldCornersPixels": [
+          {
+            "x": 381.8798136533478,
+            "y": 232.07373835707568
+          },
+          {
+            "x": 303.8973904940946,
+            "y": 708.6443787812419
+          },
+          {
+            "x": 718.1225209152191,
+            "y": 232.07458549083123
+          },
+          {
+            "x": 796.0996920219841,
+            "y": 708.6461940190148
+          }
+        ],
+        "callouts": [
+          {
+            "text": "Attack",
+            "position": {
+              "x": 730.8721337485701,
+              "y": 431.699221876746
+            },
+            "srgb": "srgb",
+            "toneMapped": false
+          }
+        ]
+      },
+      {
+        "step": 1,
+        "progress": 0.32,
+        "say": "Here we start with four defenders, three midfielders and three forwards. Four-three-three leaves out the keeper; one-four-three-three includes them.",
+        "camera": [
+          135.00000000000014,
+          132.89207516984956,
+          225.61150016176148
+        ],
+        "fieldCornersPixels": [
+          {
+            "x": 381.8809831854993,
+            "y": 232.07581029977658
+          },
+          {
+            "x": 303.90449275046916,
+            "y": 708.6401164535362
+          },
+          {
+            "x": 718.119016814501,
+            "y": 232.07581029977675
+          },
+          {
+            "x": 796.0955072495295,
+            "y": 708.6401164535367
+          }
+        ],
+        "callouts": []
+      }
+    ]
+  },
+  {
+    "width": 1100,
+    "height": 844,
+    "format": "futsal",
+    "lesson": "learnf_roles31",
+    "naturallyAdvancedFrom": 0,
+    "naturallyAdvancedTo": 1,
+    "recordedVoicePlaying": true,
+    "broadcastResidualDriftMetres": 0.008094028901788996,
+    "pageErrors": [],
+    "samples": [
+      {
+        "step": 0,
+        "progress": 0.5714,
+        "say": "Gold attacks the far goal and protects the goal behind our goalkeeper.",
+        "camera": [
+          11.000162243833886,
+          67.86990930298221,
+          75.97150540427211
+        ],
+        "fieldCornersPixels": [
+          {
+            "x": 440.16468925398857,
+            "y": 265.3360785379988
+          },
+          {
+            "x": 399.92433727027026,
+            "y": 653.9426026786699
+          },
+          {
+            "x": 659.8366124651176,
+            "y": 265.3364664410657
+          },
+          {
+            "x": 700.0740139881525,
+            "y": 653.9433268642427
+          }
+        ],
+        "callouts": [
+          {
+            "text": "Our team",
+            "position": {
+              "x": 549.9991837987949,
+              "y": 567.6365869308113
+            },
+            "srgb": "srgb",
+            "toneMapped": false
+          },
+          {
+            "text": "Attack",
+            "position": {
+              "x": 707.3882365286838,
+              "y": 384.2700327232654
+            },
+            "srgb": "srgb",
+            "toneMapped": false
+          }
+        ]
+      },
+      {
+        "step": 1,
+        "progress": 0.4571428571428574,
+        "say": "Futsal has five players per team: one goalkeeper and four outfield players.",
+        "camera": [
+          11.00000000000099,
+          67.87050990733609,
+          75.97191419746392
+        ],
+        "fieldCornersPixels": [
+          {
+            "x": 440.1648230716784,
+            "y": 265.337163501267
+          },
+          {
+            "x": 399.9267077363559,
+            "y": 653.9408606640062
+          },
+          {
+            "x": 659.8351769283296,
+            "y": 265.33716350126934
+          },
+          {
+            "x": 700.0732922636339,
+            "y": 653.9408606640106
+          }
+        ],
+        "callouts": [
+          {
+            "text": "Five players",
+            "position": {
+              "x": 549.999999999995,
+              "y": 567.6350343138287
+            },
+            "srgb": "srgb",
+            "toneMapped": false
+          }
+        ]
+      }
+    ]
+  }
+]

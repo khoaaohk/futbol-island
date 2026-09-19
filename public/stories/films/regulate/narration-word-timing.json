@@ -1,0 +1,822 @@
+[
+  {
+    "start": 0.0,
+    "end": 0.16,
+    "word": "Did"
+  },
+  {
+    "start": 0.16,
+    "end": 0.28,
+    "word": "you"
+  },
+  {
+    "start": 0.28,
+    "end": 0.48,
+    "word": "know"
+  },
+  {
+    "start": 0.48,
+    "end": 0.66,
+    "word": "that"
+  },
+  {
+    "start": 0.66,
+    "end": 1.12,
+    "word": "every"
+  },
+  {
+    "start": 1.12,
+    "end": 1.46,
+    "word": "young"
+  },
+  {
+    "start": 1.46,
+    "end": 1.74,
+    "word": "footballer"
+  },
+  {
+    "start": 1.74,
+    "end": 2.28,
+    "word": "plays"
+  },
+  {
+    "start": 2.28,
+    "end": 2.56,
+    "word": "two"
+  },
+  {
+    "start": 2.56,
+    "end": 2.94,
+    "word": "games"
+  },
+  {
+    "start": 2.94,
+    "end": 3.58,
+    "word": "at"
+  },
+  {
+    "start": 3.58,
+    "end": 3.68,
+    "word": "the"
+  },
+  {
+    "start": 3.68,
+    "end": 3.82,
+    "word": "same"
+  },
+  {
+    "start": 3.82,
+    "end": 4.1,
+    "word": "time?"
+  },
+  {
+    "start": 4.8,
+    "end": 5.28,
+    "word": "There's"
+  },
+  {
+    "start": 5.28,
+    "end": 5.4,
+    "word": "the"
+  },
+  {
+    "start": 5.4,
+    "end": 5.64,
+    "word": "game"
+  },
+  {
+    "start": 5.64,
+    "end": 6.2,
+    "word": "everyone"
+  },
+  {
+    "start": 6.2,
+    "end": 6.46,
+    "word": "can"
+  },
+  {
+    "start": 6.46,
+    "end": 6.74,
+    "word": "see."
+  },
+  {
+    "start": 7.46,
+    "end": 7.54,
+    "word": "The"
+  },
+  {
+    "start": 7.54,
+    "end": 7.86,
+    "word": "passes,"
+  },
+  {
+    "start": 8.22,
+    "end": 8.34,
+    "word": "tackles,"
+  },
+  {
+    "start": 9.04,
+    "end": 9.04,
+    "word": "goals,"
+  },
+  {
+    "start": 9.5,
+    "end": 9.54,
+    "word": "and"
+  },
+  {
+    "start": 9.54,
+    "end": 9.78,
+    "word": "saves."
+  },
+  {
+    "start": 10.8,
+    "end": 10.84,
+    "word": "And"
+  },
+  {
+    "start": 10.84,
+    "end": 11.06,
+    "word": "then"
+  },
+  {
+    "start": 11.06,
+    "end": 11.9,
+    "word": "there's"
+  },
+  {
+    "start": 11.9,
+    "end": 12.0,
+    "word": "the"
+  },
+  {
+    "start": 12.0,
+    "end": 12.2,
+    "word": "game"
+  },
+  {
+    "start": 12.2,
+    "end": 12.68,
+    "word": "happening"
+  },
+  {
+    "start": 12.68,
+    "end": 13.28,
+    "word": "inside."
+  },
+  {
+    "start": 14.22,
+    "end": 14.24,
+    "word": "The"
+  },
+  {
+    "start": 14.24,
+    "end": 14.54,
+    "word": "frustration"
+  },
+  {
+    "start": 14.54,
+    "end": 15.12,
+    "word": "after"
+  },
+  {
+    "start": 15.12,
+    "end": 15.28,
+    "word": "a"
+  },
+  {
+    "start": 15.28,
+    "end": 15.6,
+    "word": "mistake,"
+  },
+  {
+    "start": 16.28,
+    "end": 16.34,
+    "word": "the"
+  },
+  {
+    "start": 16.34,
+    "end": 16.68,
+    "word": "fear"
+  },
+  {
+    "start": 16.68,
+    "end": 16.94,
+    "word": "of"
+  },
+  {
+    "start": 16.94,
+    "end": 17.14,
+    "word": "letting"
+  },
+  {
+    "start": 17.14,
+    "end": 17.38,
+    "word": "the"
+  },
+  {
+    "start": 17.38,
+    "end": 17.6,
+    "word": "team"
+  },
+  {
+    "start": 17.6,
+    "end": 17.9,
+    "word": "down"
+  },
+  {
+    "start": 17.9,
+    "end": 18.16,
+    "word": "and"
+  },
+  {
+    "start": 18.16,
+    "end": 18.28,
+    "word": "the"
+  },
+  {
+    "start": 18.28,
+    "end": 18.74,
+    "word": "anger"
+  },
+  {
+    "start": 18.74,
+    "end": 19.32,
+    "word": "when"
+  },
+  {
+    "start": 19.32,
+    "end": 19.4,
+    "word": "a"
+  },
+  {
+    "start": 19.4,
+    "end": 19.62,
+    "word": "decision"
+  },
+  {
+    "start": 19.62,
+    "end": 19.98,
+    "word": "feels"
+  },
+  {
+    "start": 19.98,
+    "end": 20.3,
+    "word": "unfair."
+  },
+  {
+    "start": 21.84,
+    "end": 22.26,
+    "word": "Here's"
+  },
+  {
+    "start": 22.26,
+    "end": 22.44,
+    "word": "what's"
+  },
+  {
+    "start": 22.44,
+    "end": 22.82,
+    "word": "fascinating."
+  },
+  {
+    "start": 23.8,
+    "end": 23.86,
+    "word": "A"
+  },
+  {
+    "start": 23.86,
+    "end": 24.12,
+    "word": "player"
+  },
+  {
+    "start": 24.12,
+    "end": 24.62,
+    "word": "can"
+  },
+  {
+    "start": 24.62,
+    "end": 25.02,
+    "word": "control"
+  },
+  {
+    "start": 25.02,
+    "end": 25.44,
+    "word": "the"
+  },
+  {
+    "start": 25.44,
+    "end": 25.64,
+    "word": "ball"
+  },
+  {
+    "start": 25.64,
+    "end": 26.02,
+    "word": "with"
+  },
+  {
+    "start": 26.02,
+    "end": 26.16,
+    "word": "their"
+  },
+  {
+    "start": 26.16,
+    "end": 26.4,
+    "word": "feet,"
+  },
+  {
+    "start": 26.66,
+    "end": 26.76,
+    "word": "but"
+  },
+  {
+    "start": 26.76,
+    "end": 26.88,
+    "word": "they"
+  },
+  {
+    "start": 26.88,
+    "end": 27.16,
+    "word": "control"
+  },
+  {
+    "start": 27.16,
+    "end": 27.64,
+    "word": "the"
+  },
+  {
+    "start": 27.64,
+    "end": 27.94,
+    "word": "moment"
+  },
+  {
+    "start": 27.94,
+    "end": 28.2,
+    "word": "with"
+  },
+  {
+    "start": 28.2,
+    "end": 28.32,
+    "word": "their"
+  },
+  {
+    "start": 28.32,
+    "end": 28.6,
+    "word": "mind."
+  },
+  {
+    "start": 29.419999999999998,
+    "end": 30.02,
+    "word": "Emotional"
+  },
+  {
+    "start": 30.02,
+    "end": 30.34,
+    "word": "intelligence"
+  },
+  {
+    "start": 30.34,
+    "end": 31.32,
+    "word": "doesn't"
+  },
+  {
+    "start": 31.32,
+    "end": 31.52,
+    "word": "mean"
+  },
+  {
+    "start": 31.52,
+    "end": 32.2,
+    "word": "ignoring"
+  },
+  {
+    "start": 32.2,
+    "end": 32.68,
+    "word": "those"
+  },
+  {
+    "start": 32.68,
+    "end": 32.98,
+    "word": "feelings."
+  },
+  {
+    "start": 33.9,
+    "end": 34.06,
+    "word": "It"
+  },
+  {
+    "start": 34.06,
+    "end": 34.18,
+    "word": "means"
+  },
+  {
+    "start": 34.18,
+    "end": 34.5,
+    "word": "noticing"
+  },
+  {
+    "start": 34.5,
+    "end": 34.88,
+    "word": "them"
+  },
+  {
+    "start": 34.88,
+    "end": 35.24,
+    "word": "before"
+  },
+  {
+    "start": 35.24,
+    "end": 35.52,
+    "word": "they"
+  },
+  {
+    "start": 35.52,
+    "end": 35.7,
+    "word": "make"
+  },
+  {
+    "start": 35.7,
+    "end": 35.84,
+    "word": "the"
+  },
+  {
+    "start": 35.84,
+    "end": 35.96,
+    "word": "next"
+  },
+  {
+    "start": 35.96,
+    "end": 36.34,
+    "word": "decision"
+  },
+  {
+    "start": 36.34,
+    "end": 36.6,
+    "word": "for"
+  },
+  {
+    "start": 36.6,
+    "end": 36.78,
+    "word": "you."
+  },
+  {
+    "start": 37.42,
+    "end": 37.68,
+    "word": "Because"
+  },
+  {
+    "start": 37.68,
+    "end": 38.04,
+    "word": "between"
+  },
+  {
+    "start": 38.04,
+    "end": 38.24,
+    "word": "the"
+  },
+  {
+    "start": 38.24,
+    "end": 38.46,
+    "word": "emotion"
+  },
+  {
+    "start": 38.46,
+    "end": 39.12,
+    "word": "and"
+  },
+  {
+    "start": 39.12,
+    "end": 39.2,
+    "word": "the"
+  },
+  {
+    "start": 39.2,
+    "end": 39.5,
+    "word": "reaction,"
+  },
+  {
+    "start": 39.98,
+    "end": 40.06,
+    "word": "there"
+  },
+  {
+    "start": 40.06,
+    "end": 40.38,
+    "word": "is"
+  },
+  {
+    "start": 40.38,
+    "end": 40.68,
+    "word": "a"
+  },
+  {
+    "start": 40.68,
+    "end": 40.94,
+    "word": "small"
+  },
+  {
+    "start": 40.94,
+    "end": 41.42,
+    "word": "space,"
+  },
+  {
+    "start": 41.64,
+    "end": 41.76,
+    "word": "a"
+  },
+  {
+    "start": 41.76,
+    "end": 41.94,
+    "word": "breath,"
+  },
+  {
+    "start": 42.16,
+    "end": 42.28,
+    "word": "a"
+  },
+  {
+    "start": 42.28,
+    "end": 42.46,
+    "word": "choice."
+  },
+  {
+    "start": 43.38,
+    "end": 43.42,
+    "word": "In"
+  },
+  {
+    "start": 43.42,
+    "end": 43.54,
+    "word": "that"
+  },
+  {
+    "start": 43.54,
+    "end": 43.92,
+    "word": "space,"
+  },
+  {
+    "start": 43.92,
+    "end": 44.46,
+    "word": "frustration"
+  },
+  {
+    "start": 44.46,
+    "end": 45.36,
+    "word": "can"
+  },
+  {
+    "start": 45.36,
+    "end": 45.88,
+    "word": "become"
+  },
+  {
+    "start": 45.88,
+    "end": 46.28,
+    "word": "focus,"
+  },
+  {
+    "start": 46.8,
+    "end": 47.2,
+    "word": "fear"
+  },
+  {
+    "start": 47.2,
+    "end": 47.54,
+    "word": "can"
+  },
+  {
+    "start": 47.54,
+    "end": 47.7,
+    "word": "become"
+  },
+  {
+    "start": 47.7,
+    "end": 48.2,
+    "word": "courage,"
+  },
+  {
+    "start": 48.54,
+    "end": 48.58,
+    "word": "and"
+  },
+  {
+    "start": 48.58,
+    "end": 48.86,
+    "word": "blame"
+  },
+  {
+    "start": 48.86,
+    "end": 49.38,
+    "word": "can"
+  },
+  {
+    "start": 49.38,
+    "end": 49.72,
+    "word": "become"
+  },
+  {
+    "start": 49.72,
+    "end": 50.02,
+    "word": "encouragement."
+  },
+  {
+    "start": 51.4,
+    "end": 51.58,
+    "word": "Everyone"
+  },
+  {
+    "start": 51.58,
+    "end": 51.88,
+    "word": "celebrates"
+  },
+  {
+    "start": 51.88,
+    "end": 52.34,
+    "word": "the"
+  },
+  {
+    "start": 52.34,
+    "end": 52.52,
+    "word": "goal"
+  },
+  {
+    "start": 52.52,
+    "end": 52.74,
+    "word": "that"
+  },
+  {
+    "start": 52.74,
+    "end": 52.88,
+    "word": "wins"
+  },
+  {
+    "start": 52.88,
+    "end": 53.06,
+    "word": "the"
+  },
+  {
+    "start": 53.06,
+    "end": 53.4,
+    "word": "match."
+  },
+  {
+    "start": 54.26,
+    "end": 54.34,
+    "word": "But"
+  },
+  {
+    "start": 54.34,
+    "end": 54.54,
+    "word": "few"
+  },
+  {
+    "start": 54.54,
+    "end": 54.98,
+    "word": "people"
+  },
+  {
+    "start": 54.98,
+    "end": 55.36,
+    "word": "notice"
+  },
+  {
+    "start": 55.36,
+    "end": 56.48,
+    "word": "the"
+  },
+  {
+    "start": 56.48,
+    "end": 56.68,
+    "word": "calm"
+  },
+  {
+    "start": 56.68,
+    "end": 57.12,
+    "word": "response,"
+  },
+  {
+    "start": 57.73,
+    "end": 57.98,
+    "word": "the"
+  },
+  {
+    "start": 57.98,
+    "end": 58.2,
+    "word": "supportive"
+  },
+  {
+    "start": 58.2,
+    "end": 58.58,
+    "word": "words,"
+  },
+  {
+    "start": 59.38,
+    "end": 59.68,
+    "word": "or"
+  },
+  {
+    "start": 59.68,
+    "end": 59.92,
+    "word": "the"
+  },
+  {
+    "start": 59.92,
+    "end": 60.18,
+    "word": "decision"
+  },
+  {
+    "start": 60.18,
+    "end": 60.42,
+    "word": "to"
+  },
+  {
+    "start": 60.42,
+    "end": 60.58,
+    "word": "keep"
+  },
+  {
+    "start": 60.58,
+    "end": 60.86,
+    "word": "going"
+  },
+  {
+    "start": 60.86,
+    "end": 61.04,
+    "word": "after"
+  },
+  {
+    "start": 61.04,
+    "end": 61.04,
+    "word": "a"
+  },
+  {
+    "start": 61.04,
+    "end": 61.6,
+    "word": "mistake."
+  },
+  {
+    "start": 62.62,
+    "end": 62.8,
+    "word": "Great"
+  },
+  {
+    "start": 62.8,
+    "end": 63.06,
+    "word": "players"
+  },
+  {
+    "start": 63.06,
+    "end": 63.34,
+    "word": "don't"
+  },
+  {
+    "start": 63.34,
+    "end": 63.54,
+    "word": "play"
+  },
+  {
+    "start": 63.54,
+    "end": 63.82,
+    "word": "without"
+  },
+  {
+    "start": 63.82,
+    "end": 64.28,
+    "word": "emotion."
+  },
+  {
+    "start": 64.86,
+    "end": 64.98,
+    "word": "They"
+  },
+  {
+    "start": 64.98,
+    "end": 65.14,
+    "word": "learn"
+  },
+  {
+    "start": 65.14,
+    "end": 65.36,
+    "word": "how"
+  },
+  {
+    "start": 65.36,
+    "end": 65.42,
+    "word": "to"
+  },
+  {
+    "start": 65.42,
+    "end": 65.56,
+    "word": "play"
+  },
+  {
+    "start": 65.56,
+    "end": 65.76,
+    "word": "through"
+  },
+  {
+    "start": 65.76,
+    "end": 65.94,
+    "word": "it."
+  }
+]

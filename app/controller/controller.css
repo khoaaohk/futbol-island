@@ -1,0 +1,73 @@
+/* ===== phone controller page (/controller) ===== */
+.ctrl-root { position: fixed; inset: 0; background: transparent; color: #eaf0fb; font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; user-select: none; -webkit-user-select: none; overflow: hidden; touch-action: none; }
+.ctrl-root .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 7px; vertical-align: middle; }
+.ctrl-root .dot.ok { background: #37e08a; box-shadow: 0 0 8px #37e08a; } .ctrl-root .dot.wait { background: #f2c94c; } .ctrl-root .dot.bad { background: #ef6a55; }
+.ctrl-gate { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px; text-align: center; padding: 22px; }
+.ctrl-logo { font-size: 46px; filter: drop-shadow(0 4px 14px rgba(0,0,0,.5)); }
+.ctrl-badge { font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: #7c8aa3; font-weight: 800; }
+.ctrl-status { font-size: 16px; font-weight: 700; max-width: 26ch; }
+.ctrl-status.ok { color: #6ff0a6; } .ctrl-status.wait { color: #f2c94c; } .ctrl-status.bad { color: #ef8a78; }
+.ctrl-room { font-size: 13px; font-weight: 800; letter-spacing: .32em; color: #8b97ad; }
+.ctrl-start { margin-top: 8px; background: linear-gradient(160deg,#ffd45e,#f2a20c); color: #201400; border: none; font-weight: 900; font-size: 19px; padding: 16px 40px; border-radius: 16px; box-shadow: 0 8px 26px rgba(242,169,12,.4); }
+.ctrl-start:disabled { opacity: .4; box-shadow: none; }
+.ctrl-hint { font-size: 13px; color: #66748c; margin-top: 2px; }
+/* rotate-to-landscape prompt */
+.ctrl-rotate { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center; padding: 24px; }
+.rot-phone { font-size: 62px; animation: rotHint 1.9s ease-in-out infinite; }
+@keyframes rotHint { 0%,55%,100% { transform: rotate(0); } 78% { transform: rotate(-90deg); } }
+.rot-text { font-size: 20px; font-weight: 800; }
+.rot-sub { font-size: 13px; color: #66748c; max-width: 24ch; }
+
+/* ===== full gamepad ===== */
+.gp { position: absolute; inset: 0; }
+.ios-haptic { position: fixed; top: -200px; left: -200px; opacity: 0; pointer-events: none; }
+.ctrl-chip { font-size: 11px; font-weight: 800; color: #b8c4d8; }
+.ctrl-chip.ok { color: #8df0b6; } .ctrl-chip.bad { color: #ef8a78; }
+.ctrl-score { font-size: 21px; font-weight: 900; letter-spacing: .06em; display: flex; align-items: center; gap: 8px; }
+.ctrl-score .g { color: #f5c842; } .ctrl-score .b { color: #4da3ff; } .ctrl-score span { color: #55627a; }
+.ctrl-fs { width: 38px; height: 38px; min-width: 38px; border-radius: 11px; border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.06); color: #eaf0fb; display: grid; place-items: center; }
+.ctrl-fs:active { background: rgba(255,255,255,.16); }
+.ctrl-fs-spacer { width: 38px; }
+.gp-top { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 18px; z-index: 6; }
+
+/* shoulder buttons (pills, top corners) */
+.sh { position: absolute; top: 14px; width: 108px; height: 40px; border-radius: 22px; border: 1px solid rgba(255,255,255,.12); background: linear-gradient(180deg, #2b3548, #1b2233); color: #cfd8e8; font-weight: 900; font-size: 14px; letter-spacing: .06em; display: flex; align-items: center; justify-content: center; gap: 7px; box-shadow: 0 4px 10px rgba(0,0,0,.4); -webkit-tap-highlight-color: transparent; touch-action: none; }
+.sh small { font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #7c8aa3; }
+.sh:active { transform: scale(.95); filter: brightness(1.25); }
+.sh.on { background: linear-gradient(180deg, #f2b90c, #d79b06); color: #201400; border-color: transparent; }
+.sh.on small { color: rgba(32,20,0,.6); }
+.sh.soon { opacity: .34; }
+.sh.lb { left: calc(16px + env(safe-area-inset-left)); } .sh.lt { left: calc(16px + env(safe-area-inset-left)); top: 62px; }
+.sh.rb { right: calc(16px + env(safe-area-inset-right)); } .sh.rt { right: calc(16px + env(safe-area-inset-right)); top: 62px; }
+
+/* LEFT — analog stick */
+.stick-zone { position: absolute; left: env(safe-area-inset-left); top: 108px; bottom: 0; width: 46%; touch-action: none; }
+.joy-base { position: absolute; left: 28%; top: 46%; transform: translate(-50%,-50%); width: 158px; height: 158px; border-radius: 50%; background: radial-gradient(circle at 50% 40%, #2a3346, #161d2b 72%); border: 2px solid rgba(255,255,255,.14); display: grid; place-items: center; box-shadow: inset 0 3px 14px rgba(0,0,0,.55), 0 4px 12px rgba(0,0,0,.35); transition: border-color .12s; }
+.joy-base.on { border-color: rgba(242,201,66,.6); }
+.joy-base .ar { position: absolute; color: rgba(255,255,255,.3); font-size: 12px; line-height: 1; }
+.joy-base .ar.up { top: 10px; left: 50%; transform: translateX(-50%); }
+.joy-base .ar.dn { bottom: 10px; left: 50%; transform: translateX(-50%); }
+.joy-base .ar.lf { left: 11px; top: 50%; transform: translateY(-50%); }
+.joy-base .ar.rt { right: 11px; top: 50%; transform: translateY(-50%); }
+.joy-knob { width: 76px; height: 76px; border-radius: 50%; background: radial-gradient(120% 120% at 36% 30%, #ffe595, #f2b90c 74%); box-shadow: 0 6px 16px rgba(0,0,0,.55), inset 0 2px 6px rgba(255,255,255,.5); transition: transform .03s linear; }
+.joy-label { position: absolute; left: 28%; top: 46%; transform: translate(-50%, 110px); font-size: 11px; font-weight: 800; letter-spacing: .28em; color: rgba(255,255,255,.32); }
+
+/* RIGHT — face-button diamond */
+.face { position: absolute; right: calc(26px + env(safe-area-inset-right)); top: 108px; bottom: 12px; width: 240px; }
+.fb { position: absolute; width: 88px; height: 88px; border-radius: 50%; border: none; color: #fff; touch-action: none; -webkit-tap-highlight-color: transparent; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 7px 18px rgba(0,0,0,.5), inset 0 2px 7px rgba(255,255,255,.32); transition: transform .07s, filter .07s; }
+.fb .lt2 { font-weight: 900; font-size: 22px; line-height: 1; text-shadow: 0 1px 2px rgba(0,0,0,.35); }
+.fb small { font-size: 9.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; opacity: .85; margin-top: 2px; }
+.fb:active { transform: scale(.9); filter: brightness(1.25); }
+.fb.y { top: 50%; left: 50%; transform: translate(-50%, -50%) translateY(-92px); background: radial-gradient(120% 120% at 35% 25%, #ffdf6b, #e0a80c 70%); color: #2a1e00; }
+.fb.x { top: 50%; left: 50%; transform: translate(-50%, -50%) translateX(-92px); background: radial-gradient(120% 120% at 35% 25%, #7ac0ff, #2f6fe4 70%); }
+.fb.b { top: 50%; left: 50%; transform: translate(-50%, -50%) translateX(92px); background: radial-gradient(120% 120% at 35% 25%, #ff9d7c, #e0392a 70%); }
+.fb.a { top: 50%; left: 50%; transform: translate(-50%, -50%) translateY(92px); background: radial-gradient(120% 120% at 35% 25%, #83e39b, #22a34e 70%); }
+.fb.y:active { transform: translate(-50%, -50%) translateY(-92px) scale(.9); }
+.fb.x:active { transform: translate(-50%, -50%) translateX(-92px) scale(.9); }
+.fb.b:active { transform: translate(-50%, -50%) translateX(92px) scale(.9); }
+.fb.a:active { transform: translate(-50%, -50%) translateY(92px) scale(.9); }
+.fb.b.charging { filter: brightness(1.15); box-shadow: 0 7px 18px rgba(224,57,42,.6), inset 0 2px 7px rgba(255,255,255,.32); }
+.charge-ring { position: absolute; inset: -8px; border-radius: 50%; pointer-events: none; -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 5px)); mask: radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 5px)); }
+
+
+.ctrl-root{background:#0b111c}.ctrl-root button{cursor:pointer}.ctrl-root button:focus-visible{outline:3px solid #f5c842;outline-offset:4px}@media(max-height:500px){.joy-base{width:130px;height:130px}.joy-knob{width:64px;height:64px}.joy-label{transform:translate(-50%,85px)}.fb{width:62px;height:62px}.face{width:190px;right:24px;top:90px}.fb.y,.fb.y:active{transform:translate(-50%,-50%) translateY(-64px)}.fb.x,.fb.x:active{transform:translate(-50%,-50%) translateX(-64px)}.fb.b,.fb.b:active{transform:translate(-50%,-50%) translateX(64px)}.fb.a,.fb.a:active{transform:translate(-50%,-50%) translateY(64px)}}@media(prefers-reduced-motion:reduce){.rot-phone{animation:none}.joy-knob,.fb{transition:none}}

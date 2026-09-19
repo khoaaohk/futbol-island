@@ -1,0 +1,112 @@
+{
+  "duration": 66.638313,
+  "cues": [
+    {
+      "start": 0.0,
+      "text": "Did you know that every young footballer plays two games at the same time?",
+      "title": "TWO GAMES"
+    },
+    {
+      "start": 4.8,
+      "text": "There\u2019s the game everyone can see\u2014the passes, tackles, goals, and saves.",
+      "title": "ON THE FIELD"
+    },
+    {
+      "start": 10.8,
+      "text": "And then there\u2019s the game happening inside\u2014the frustration after a mistake,",
+      "title": "FRUSTRATION"
+    },
+    {
+      "start": 16.28,
+      "text": "the fear of letting the team down, and the anger when a decision feels unfair.",
+      "title": "FEAR"
+    },
+    {
+      "start": 21.84,
+      "text": "Here\u2019s what\u2019s fascinating: a player can control the ball with their feet,",
+      "title": "CONTROL THE BALL"
+    },
+    {
+      "start": 26.66,
+      "text": "but they control the moment with their mind.",
+      "title": "CONTROL THE MOMENT"
+    },
+    {
+      "start": 29.419999999999998,
+      "text": "Emotional intelligence doesn\u2019t mean ignoring those feelings.",
+      "title": "FEEL IT"
+    },
+    {
+      "start": 33.9,
+      "text": "It means noticing them before they make the next decision for you.",
+      "title": "NOTICE IT"
+    },
+    {
+      "start": 37.42,
+      "text": "Because between the emotion and the reaction, there is a small space.",
+      "title": "MAKE SPACE"
+    },
+    {
+      "start": 41.64,
+      "text": "A breath.",
+      "title": "A BREATH"
+    },
+    {
+      "start": 42.16,
+      "text": "A choice.",
+      "title": "A CHOICE"
+    },
+    {
+      "start": 43.38,
+      "text": "In that space, frustration can become focus.",
+      "title": "FRUSTRATION \u2192 FOCUS"
+    },
+    {
+      "start": 46.8,
+      "text": "Fear can become courage.",
+      "title": "FEAR \u2192 COURAGE"
+    },
+    {
+      "start": 48.54,
+      "text": "And blame can become encouragement.",
+      "title": "BLAME \u2192 ENCOURAGEMENT"
+    },
+    {
+      "start": 51.4,
+      "text": "Everyone celebrates the goal that wins the match.",
+      "title": "THE GOAL"
+    },
+    {
+      "start": 54.26,
+      "text": "But few people notice the calm response, the supportive words,",
+      "title": "THE WORDS THAT HELP"
+    },
+    {
+      "start": 59.38,
+      "text": "or the decision to keep going after a mistake.",
+      "title": "GET BACK UP"
+    },
+    {
+      "start": 62.62,
+      "text": "Great players don\u2019t play without emotion.",
+      "title": "EMOTION BELONGS"
+    },
+    {
+      "start": 64.86,
+      "text": "They learn how to play through it.",
+      "title": "PLAY THROUGH IT"
+    }
+  ],
+  "emotions": {
+    "anger": 18.28
+  },
+  "actions": {
+    "plays": 1.74,
+    "passes": 7.54,
+    "tackles": 8.22,
+    "goals": 9.04,
+    "saves": 9.54,
+    "playsEnd": 2.28
+  },
+  "voice": "User-supplied ElevenLabs Samantha recording, 2026-09-18 03:40:41"
+}

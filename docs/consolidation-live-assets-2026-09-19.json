@@ -1,0 +1,77 @@
+[
+  {
+    "path": "stories/paths/settings-coast.svg",
+    "matches": true,
+    "bytes": 27927
+  },
+  {
+    "path": "stories/paths/abstract-island.svg",
+    "matches": true,
+    "bytes": 28102
+  },
+  {
+    "path": "stories/paths/playbook-coast.svg",
+    "matches": true,
+    "bytes": 27972
+  },
+  {
+    "path": "stories/paths/story-entry.svg",
+    "matches": true,
+    "bytes": 27865
+  },
+  {
+    "path": "stories/films/assets/entry-grain.png",
+    "matches": true,
+    "bytes": 20488
+  },
+  {
+    "path": "stories/films/assets/Knewave-Regular.ttf",
+    "matches": true,
+    "bytes": 32460
+  },
+  {
+    "path": "lessons/11v11.json",
+    "matches": true,
+    "bytes": 518911
+  },
+  {
+    "path": "lessons/7v7.json",
+    "matches": true,
+    "bytes": 385086
+  },
+  {
+    "path": "lessons/9v9.json",
+    "matches": true,
+    "bytes": 682547
+  },
+  {
+    "path": "lessons/futsal.json",
+    "matches": true,
+    "bytes": 571747
+  },
+  {
+    "path": "lessons/generated-voice.json",
+    "matches": true,
+    "bytes": 33090
+  },
+  {
+    "path": "lessons/voice-audit.json",
+    "matches": true,
+    "bytes": 73370
+  },
+  {
+    "path": "voice/kokoro_af_bella/00139f3ef6553ff8.m4a",
+    "matches": true,
+    "bytes": 30333
+  },
+  {
+    "path": "voice/kokoro_af_bella/00168fe0cc60c169.m4a",
+    "matches": true,
+    "bytes": 9886
+  },
+  {
+    "path": "voice/kokoro_af_bella/0044b70eaa1e0fa3.m4a",
+    "matches": true,
+    "bytes": 20946
+  }
+]

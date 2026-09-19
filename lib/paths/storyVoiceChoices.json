@@ -1,0 +1,17 @@
+{
+  "provider": "elevenlabs",
+  "model": "eleven_multilingual_v2",
+  "speed": 0.9,
+  "grit": {
+    "name": "Adam Stone - Smooth, Deep and Relaxed",
+    "voiceId": "NFG5qt843uXKj4pFvR7C",
+    "installedRecording": "Adam Stone, supplied 2026-09-18 03:25:28"
+  },
+  "regulate": {
+    "name": "Samantha - Emotional, Soft and Intimate",
+    "voiceId": "uIZsnBL0YK1S5j69bAih",
+    "installedRecording": "Samantha - Smooth, Meditative Voice-of-Reason Narrator, supplied 2026-09-18 03:40:41"
+  },
+  "status": "Installed user-supplied ElevenLabs MP3 recordings; no API synthesis.",
+  "installedRecordingSpeed": "Original supplied speed; no tempo adjustment. The speed setting above is only for optional API generation."
+}

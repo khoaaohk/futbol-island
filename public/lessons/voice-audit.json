@@ -1,0 +1,1534 @@
+{
+  "formats": {
+    "7v7": {
+      "plays": 18,
+      "steps": 172,
+      "questions": 36
+    },
+    "9v9": {
+      "plays": 27,
+      "steps": 285,
+      "questions": 54
+    },
+    "11v11": {
+      "plays": 20,
+      "steps": 204,
+      "questions": 40
+    },
+    "futsal": {
+      "plays": 31,
+      "steps": 257,
+      "questions": 63
+    }
+  },
+  "voices": {
+    "kokoro_af_bella": {
+      "copied": 1308,
+      "generated": 69,
+      "sourceMissing": [
+        {
+          "context": "learn7_roles:step:11",
+          "text": "The right defender moves up behind the pass. Starting roles help us share jobs as the ball moves.",
+          "hash": "8a8b5992fb5e5e21"
+        },
+        {
+          "context": "learn7_buildout:step:13",
+          "text": "The midfielder carries into the available angle. The left defender moves up behind to stay connected after the restart.",
+          "hash": "90b4bd9e4ab9e270"
+        },
+        {
+          "context": "learn7_receive:step:9",
+          "text": "The defender takes the return away from pressure. The midfielder moves to offer another angle instead of staying beside the opponent.",
+          "hash": "a5ac83e58ea2732e"
+        },
+        {
+          "context": "prn_7_spread:step:8",
+          "text": "After passing wide, the middle midfielder moves across behind the ball to offer a return angle.",
+          "hash": "013d03529731cc42"
+        },
+        {
+          "context": "bld_7_usekeeper:step:7",
+          "text": "After the forward pass, the right defender moves up behind the midfielder to remain a reachable return option.",
+          "hash": "99dc56c0cccb6d77"
+        },
+        {
+          "context": "def_7_goalside:step:6",
+          "text": "The goalkeeper shifts toward the ball side while the defender keeps protecting the direct route.",
+          "hash": "1e29cd5ee3f89023"
+        },
+        {
+          "context": "dbz_7_dontballwatch:step:7",
+          "text": "The wide attacker carries along the side. Our right defender follows the runner while the left defender protects the middle.",
+          "hash": "d108c6d0c9ceae2c"
+        },
+        {
+          "context": "gap7_lostball:step:11",
+          "text": "Blue’s middle player moves behind the wide carrier for support. Our covering midfielder shifts with that new passing angle.",
+          "hash": "7af83d65428d1d6d"
+        },
+        {
+          "context": "next7_reachableforward:step:11",
+          "text": "The forward receives at a useful distance again. Come closer when the pass is too long; stay ahead when the midfielder can reach you.",
+          "hash": "f148368720f92515"
+        },
+        {
+          "context": "next7_reachableforward:explain:0",
+          "text": "Coming nearer shortens this passing distance without joining the defender. With one forward, your midfield pair needs that reachable connection.",
+          "hash": "abd2c5943170d59e"
+        },
+        {
+          "context": "next7_reachableforward:choice:0:0",
+          "text": "Coming nearer shortens this passing distance without joining the defender. With one forward, your midfield pair needs that reachable connection.",
+          "hash": "abd2c5943170d59e"
+        },
+        {
+          "context": "next7_outsideback:step:8",
+          "text": "The outside route helped until the defender closed it. Keep a return angle behind the ball so you can choose again.",
+          "hash": "8dad0c0303a4b4a2"
+        },
+        {
+          "context": "next7_outsideback:explain:1",
+          "text": "The opponent has stepped into the forward route. The middle defender remains behind and inside the pressure, offering a clear return.",
+          "hash": "5c53b7d99f87f50c"
+        },
+        {
+          "context": "next7_outsideback:choice:1:0",
+          "text": "The opponent has stepped into the forward route. The middle defender remains behind and inside the pressure, offering a clear return.",
+          "hash": "5c53b7d99f87f50c"
+        },
+        {
+          "context": "next7_dribbleroom:step:7",
+          "text": "The pass finds you outside after the dribble. First leave your teammate room, then reconnect as their position changes.",
+          "hash": "d118c4b6537bb447"
+        },
+        {
+          "context": "next7_dribbleroom:explain:0",
+          "text": "Moving behind keeps you available without crossing the teammate’s next inside touch.",
+          "hash": "7dd442065975fbae"
+        },
+        {
+          "context": "next7_dribbleroom:choice:0:0",
+          "text": "Moving behind keeps you available without crossing the teammate’s next inside touch.",
+          "hash": "7dd442065975fbae"
+        },
+        {
+          "context": "next7_shotreaction:step:7",
+          "text": "The loose rebound was reachable; the controlled ball was not. Look again after a shot before deciding to chase or recover.",
+          "hash": "2cec50b833411070"
+        },
+        {
+          "context": "next7_shotreaction:question:1",
+          "text": "The keeper has secured this ball before you can reach it. Which move helps defend the next pass?",
+          "hash": "3e1ec69d07bbf670"
+        },
+        {
+          "context": "next7_offsideboundary:step:8",
+          "text": "The runner moved into a permitted position before the pass. Check the rules your competition uses for its offside boundary.",
+          "hash": "a4201b3e6a3f312d"
+        },
+        {
+          "context": "next7_offsideboundary:explain:1",
+          "text": "The forward returns behind the second-last opponent before the teammate passes. The timing of the pass matters, not just where the run ends.",
+          "hash": "0dafec520e1db4a0"
+        },
+        {
+          "context": "next7_offsideboundary:choice:1:1",
+          "text": "The forward returns behind the second-last opponent before the teammate passes. The timing of the pass matters, not just where the run ends.",
+          "hash": "0dafec520e1db4a0"
+        },
+        {
+          "context": "next7_dribblein:step:7",
+          "text": "The same restart offered different choices as Blue moved. Look at the lane before choosing the permitted pass or dribble.",
+          "hash": "0858d2b8bf3d2d4d"
+        },
+        {
+          "context": "next7_dribblein:explain:1",
+          "text": "Blue has stepped into the dribble route. The midfielder’s new angle opens a different route for the restart.",
+          "hash": "adf1c45357508bea"
+        },
+        {
+          "context": "next7_dribblein:choice:1:1",
+          "text": "Blue has stepped into the dribble route. The midfielder’s new angle opens a different route for the restart.",
+          "hash": "adf1c45357508bea"
+        },
+        {
+          "context": "def_11_pressurecover:step:3",
+          "text": "Our nearer midfielder holds the pressure while the other moves into cover. Their carrier now faces two different defensive jobs.",
+          "hash": "c90fd11351e6d45c"
+        },
+        {
+          "context": "def_11_pressurecover:step:4",
+          "text": "Their carrier tests the pressure with a short carry. Our nearest midfielder moves with the ball, and the covering midfielder keeps a second defensive line.",
+          "hash": "d53c3b11f2b735c5"
+        },
+        {
+          "context": "def_11_pressurecover:step:5",
+          "text": "Reset the two midfielders. Their distances from the carrier will decide who pressures and who covers.",
+          "hash": "88dd15d3e497b2b9"
+        },
+        {
+          "context": "def_11_pressurecover:step:8",
+          "text": "Now our central midfielder is nearer and takes the pressure. Our other midfielder covers behind instead of chasing the same ball.",
+          "hash": "944aece86c51093e"
+        },
+        {
+          "context": "def_11_pressurecover:step:9",
+          "text": "Their carrier moves again. Our nearer midfielder follows without crossing into the covering teammate’s path. Pressure and cover stay connected.",
+          "hash": "4f832fcac7dfb895"
+        },
+        {
+          "context": "def_11_shift:step:5",
+          "text": "Return the group to the middle, then compare the danger on the other side.",
+          "hash": "a00e535723f7898d"
+        },
+        {
+          "context": "trn_11_recover:step:5",
+          "text": "Reset the midfielders so we can compare a carrier who has already escaped the pressure.",
+          "hash": "fe56469e40c46364"
+        },
+        {
+          "context": "trn_11_restdefense:step:5",
+          "text": "Return the ball and compare who is now protecting the space behind the attack.",
+          "hash": "994e02b1ce6ac89c"
+        },
+        {
+          "context": "learn11_restart:step:5",
+          "text": "Return the ball to the goalkeeper. This is a new goal-kick picture with pressure on the other side.",
+          "hash": "e0b8ac73acebfca3"
+        },
+        {
+          "context": "learnf_roles31:step:15",
+          "text": "After the return, the left ala widens and the pivot checks short. The fixo has new receiving angles.",
+          "hash": "cca35ebeb4856960"
+        },
+        {
+          "context": "learnf_roles31:choice:0:1",
+          "text": "The fixo can keep possession, but the question asks for a forward route. The pivot is ahead and the defender has not closed that lane.",
+          "hash": "b757d5cb80ed59fa"
+        },
+        {
+          "context": "learnf_roles31:choice:1:0",
+          "text": "The pivot is still ahead, but the defender now stands in the passing lane. Use the deeper angle rather than the same destination.",
+          "hash": "a32bb4206adebeec"
+        },
+        {
+          "context": "learnf_shape22:choice:0:1",
+          "text": "Advancing the second rear player removes the return pass and leaves both players ahead of the ball. Keep one of the rear pair behind.",
+          "hash": "3cbc87564d2652ba"
+        },
+        {
+          "context": "learnf_shape22:choice:1:0",
+          "text": "Both front players already provide depth. The left rear player can help the carrier by keeping a separate angle behind.",
+          "hash": "457602514c0da93f"
+        },
+        {
+          "context": "bld_f_passtofeet:step:8",
+          "text": "The fixo takes a small touch across the court, facing the right ala before the next pass.",
+          "hash": "7ce2eedacfe543c7"
+        },
+        {
+          "context": "bld_f_passtofeet:choice:0:1",
+          "text": "The defender is on the inside shoulder. Turning into the middle brings the ball toward that pressure; the touchline side has room.",
+          "hash": "7d4190e4bb28db61"
+        },
+        {
+          "context": "bld_f_passtofeet:choice:1:0",
+          "text": "The defender has moved outside and can meet this carry. The fixo offers a pass away from that pressure.",
+          "hash": "ddec60fcc97a5b98"
+        },
+        {
+          "context": "prn_f_support:step:8",
+          "text": "After switching, the fixo moves behind the right ala to offer a return at a different angle.",
+          "hash": "ffebc027834da363"
+        },
+        {
+          "context": "prn_f_support:choice:0:1",
+          "text": "This inside position stays near the defender’s screening line. Moving farther toward the touchline changes the angle from the fixo.",
+          "hash": "abb2d23f6c7e1187"
+        },
+        {
+          "context": "prn_f_support:choice:1:0",
+          "text": "The defender has followed the left-side route. Passing there repeats the covered lane; the right ala gives a different angle.",
+          "hash": "c001220b38e5bd1f"
+        },
+        {
+          "context": "f_pared:step:8",
+          "text": "After the lay-off, the pivot moves across to offer the fixo another forward lane.",
+          "hash": "48ac77e7ed2b4064"
+        },
+        {
+          "context": "f_pared:choice:0:0",
+          "text": "The deeper pass is screened here. The defender followed the ball, leaving the outside runner available for the return.",
+          "hash": "955b0c2ef959b766"
+        },
+        {
+          "context": "f_pared:choice:1:1",
+          "text": "The defender stayed with the outside route this time. The fixo is available behind the pivot, so keep the ball through that support.",
+          "hash": "06d7acf9a44e1b36"
+        },
+        {
+          "context": "f_pivot:choice:0:0",
+          "text": "The marker is on the pivot’s right shoulder. Turning right brings the next touch into the marker; the left side has room.",
+          "hash": "06df9fca5a6df5c9"
+        },
+        {
+          "context": "f_pivot:choice:1:1",
+          "text": "The marker has closed the turn. The right ala offers a lay-off that moves the ball around the pressure.",
+          "hash": "8ecc250ab52d0d9f"
+        },
+        {
+          "context": "f_paralela:step:9",
+          "text": "The left ala moves behind the receiver. The runner now has a return option after the diagonal pass.",
+          "hash": "19b51bf6a4b2f417"
+        },
+        {
+          "context": "f_paralela:choice:0:1",
+          "text": "The defender covers the right ala. The runner has gone down this same side, giving a different lane.",
+          "hash": "c7bd7e41ddba9ca9"
+        },
+        {
+          "context": "f_paralela:choice:1:0",
+          "text": "The runner has left the old touchline position and moved diagonally. A pass to the old spot misses the new receiving angle.",
+          "hash": "4029b4de94f2d0ce"
+        },
+        {
+          "context": "learnf_farpost:step:8",
+          "text": "The left ala moves away from the end line to reconnect after the return pass.",
+          "hash": "6ebc05d8a679aa6b"
+        },
+        {
+          "context": "learnf_farpost:choice:0:1",
+          "text": "The fixo is useful support behind, but cannot receive the across-goal pass asked for here. The far ala has arrived beyond the goalkeeper.",
+          "hash": "cd86b0df43b9daf2"
+        },
+        {
+          "context": "learnf_farpost:choice:1:0",
+          "text": "A defender now covers the across-goal lane. The supporting pivot is behind the ball and offers a return route.",
+          "hash": "525c808fb5376197"
+        },
+        {
+          "context": "def_f_goalside:step:7",
+          "text": "Blue carries wider. Our right ala follows under control, while the goalkeeper shifts with the shooting angle.",
+          "hash": "db7f7fdadecd2daf"
+        },
+        {
+          "context": "def_f_goalside:choice:0:0",
+          "text": "Running beyond the carrier gives them a route behind you. Arrive under control between the ball and our goal, with the fixo covering.",
+          "hash": "0214e2e9540d313f"
+        },
+        {
+          "context": "def_f_goalside:choice:1:1",
+          "text": "The left ala would have to cross the court. The right ala is now nearest and can approach while the others cover.",
+          "hash": "1a5f8ceea37c2209"
+        },
+        {
+          "context": "trn_f_firstpass:step:8",
+          "text": "After passing back, the fixo opens a new angle for the goalkeeper’s next release.",
+          "hash": "f093015f6764bf18"
+        },
+        {
+          "context": "trn_f_firstpass:choice:0:1",
+          "text": "A pass to the goalkeeper keeps possession but gives up this open forward route. The right ala is already beyond the first pressure.",
+          "hash": "6acf9cbeafafa34a"
+        },
+        {
+          "context": "trn_f_firstpass:choice:1:0",
+          "text": "The defender now covers the right-side lane. The goalkeeper is available behind and has not yet been used in this possession.",
+          "hash": "ed6a9ba117726a69"
+        },
+        {
+          "context": "trn_f_winitback:step:7",
+          "text": "The goalkeeper shifts toward the ball side behind the recovering right ala, keeping the goal protected.",
+          "hash": "8111f8b37269ce86"
+        },
+        {
+          "context": "trn_f_winitback:choice:0:0",
+          "text": "Cover is already behind the left ala and the ball is close enough to pressure. Retreating immediately gives the carrier time to look up.",
+          "hash": "3f788c1aa10258e9"
+        },
+        {
+          "context": "trn_f_winitback:choice:1:1",
+          "text": "The pass has escaped and the team is far from the ball. Chasing across leaves the middle open; recover between the ball and goal first.",
+          "hash": "477c4e867b42a7fb"
+        },
+        {
+          "context": "bld_f_splitcb:step:8",
+          "text": "The fixo moves across as the left ala receives, keeping an outfield return angle outside the press.",
+          "hash": "5cac08296823f163"
+        },
+        {
+          "context": "bld_f_splitcb:choice:0:0",
+          "text": "The presser screens the left release. The right ala has a clear receiving lane outside that pressure.",
+          "hash": "e7c3b64a0f1c0b90"
+        },
+        {
+          "context": "bld_f_splitcb:choice:1:1",
+          "text": "The goalkeeper has already released the ball and no opponent has touched it. The fixo offers a legal outfield continuation.",
+          "hash": "318f446cdc102c0f"
+        },
+        {
+          "context": "bld_f_splitcb:choice:2:0",
+          "text": "The defender has moved across to the right route. The left ala now gives the fixo a clear passing angle.",
+          "hash": "5199bed6503fab41"
+        },
+        {
+          "context": "set_f_throwin:choice:0:1",
+          "text": "The defender stands across the route to the right ala. The short pass up the line to the pivot is available.",
+          "hash": "3841a0aa48beb206"
+        },
+        {
+          "context": "set_f_throwin:choice:1:0",
+          "text": "The defender has followed the first option. The fixo provides a separate angle behind the taker before the restart count expires.",
+          "hash": "c6261ff289c6e7b7"
+        },
+        {
+          "context": "fmn_f_40:choice:0:0",
+          "text": "That forward space is occupied by a teammate. The vacated middle angle creates an extra connection while the far ala stays behind the ball.",
+          "hash": "abc0735f03f932d9"
+        },
+        {
+          "context": "fmn_f_40:choice:1:1",
+          "text": "The left ala already occupies that lane. Carrying toward them crowds the receiver and brings the ball near pressure; the right ala keeps another angle.",
+          "hash": "0dd9e3426ab5160a"
+        },
+        {
+          "context": "gapf_farpostdefense:step:10",
+          "text": "Blue carries wider. Our goalkeeper shifts across while the right ala delays and the left ala stays with the runner.",
+          "hash": "25f60c548bf18892"
+        }
+      ],
+      "missing": []
+    },
+    "kokoro_af_heart": {
+      "copied": 1308,
+      "generated": 69,
+      "sourceMissing": [
+        {
+          "context": "learn7_roles:step:11",
+          "text": "The right defender moves up behind the pass. Starting roles help us share jobs as the ball moves.",
+          "hash": "8a8b5992fb5e5e21"
+        },
+        {
+          "context": "learn7_buildout:step:13",
+          "text": "The midfielder carries into the available angle. The left defender moves up behind to stay connected after the restart.",
+          "hash": "90b4bd9e4ab9e270"
+        },
+        {
+          "context": "learn7_receive:step:9",
+          "text": "The defender takes the return away from pressure. The midfielder moves to offer another angle instead of staying beside the opponent.",
+          "hash": "a5ac83e58ea2732e"
+        },
+        {
+          "context": "prn_7_spread:step:8",
+          "text": "After passing wide, the middle midfielder moves across behind the ball to offer a return angle.",
+          "hash": "013d03529731cc42"
+        },
+        {
+          "context": "bld_7_usekeeper:step:7",
+          "text": "After the forward pass, the right defender moves up behind the midfielder to remain a reachable return option.",
+          "hash": "99dc56c0cccb6d77"
+        },
+        {
+          "context": "def_7_goalside:step:6",
+          "text": "The goalkeeper shifts toward the ball side while the defender keeps protecting the direct route.",
+          "hash": "1e29cd5ee3f89023"
+        },
+        {
+          "context": "dbz_7_dontballwatch:step:7",
+          "text": "The wide attacker carries along the side. Our right defender follows the runner while the left defender protects the middle.",
+          "hash": "d108c6d0c9ceae2c"
+        },
+        {
+          "context": "gap7_lostball:step:11",
+          "text": "Blue’s middle player moves behind the wide carrier for support. Our covering midfielder shifts with that new passing angle.",
+          "hash": "7af83d65428d1d6d"
+        },
+        {
+          "context": "next7_reachableforward:step:11",
+          "text": "The forward receives at a useful distance again. Come closer when the pass is too long; stay ahead when the midfielder can reach you.",
+          "hash": "f148368720f92515"
+        },
+        {
+          "context": "next7_reachableforward:explain:0",
+          "text": "Coming nearer shortens this passing distance without joining the defender. With one forward, your midfield pair needs that reachable connection.",
+          "hash": "abd2c5943170d59e"
+        },
+        {
+          "context": "next7_reachableforward:choice:0:0",
+          "text": "Coming nearer shortens this passing distance without joining the defender. With one forward, your midfield pair needs that reachable connection.",
+          "hash": "abd2c5943170d59e"
+        },
+        {
+          "context": "next7_outsideback:step:8",
+          "text": "The outside route helped until the defender closed it. Keep a return angle behind the ball so you can choose again.",
+          "hash": "8dad0c0303a4b4a2"
+        },
+        {
+          "context": "next7_outsideback:explain:1",
+          "text": "The opponent has stepped into the forward route. The middle defender remains behind and inside the pressure, offering a clear return.",
+          "hash": "5c53b7d99f87f50c"
+        },
+        {
+          "context": "next7_outsideback:choice:1:0",
+          "text": "The opponent has stepped into the forward route. The middle defender remains behind and inside the pressure, offering a clear return.",
+          "hash": "5c53b7d99f87f50c"
+        },
+        {
+          "context": "next7_dribbleroom:step:7",
+          "text": "The pass finds you outside after the dribble. First leave your teammate room, then reconnect as their position changes.",
+          "hash": "d118c4b6537bb447"
+        },
+        {
+          "context": "next7_dribbleroom:explain:0",
+          "text": "Moving behind keeps you available without crossing the teammate’s next inside touch.",
+          "hash": "7dd442065975fbae"
+        },
+        {
+          "context": "next7_dribbleroom:choice:0:0",
+          "text": "Moving behind keeps you available without crossing the teammate’s next inside touch.",
+          "hash": "7dd442065975fbae"
+        },
+        {
+          "context": "next7_shotreaction:step:7",
+          "text": "The loose rebound was reachable; the controlled ball was not. Look again after a shot before deciding to chase or recover.",
+          "hash": "2cec50b833411070"
+        },
+        {
+          "context": "next7_shotreaction:question:1",
+          "text": "The keeper has secured this ball before you can reach it. Which move helps defend the next pass?",
+          "hash": "3e1ec69d07bbf670"
+        },
+        {
+          "context": "next7_offsideboundary:step:8",
+          "text": "The runner moved into a permitted position before the pass. Check the rules your competition uses for its offside boundary.",
+          "hash": "a4201b3e6a3f312d"
+        },
+        {
+          "context": "next7_offsideboundary:explain:1",
+          "text": "The forward returns behind the second-last opponent before the teammate passes. The timing of the pass matters, not just where the run ends.",
+          "hash": "0dafec520e1db4a0"
+        },
+        {
+          "context": "next7_offsideboundary:choice:1:1",
+          "text": "The forward returns behind the second-last opponent before the teammate passes. The timing of the pass matters, not just where the run ends.",
+          "hash": "0dafec520e1db4a0"
+        },
+        {
+          "context": "next7_dribblein:step:7",
+          "text": "The same restart offered different choices as Blue moved. Look at the lane before choosing the permitted pass or dribble.",
+          "hash": "0858d2b8bf3d2d4d"
+        },
+        {
+          "context": "next7_dribblein:explain:1",
+          "text": "Blue has stepped into the dribble route. The midfielder’s new angle opens a different route for the restart.",
+          "hash": "adf1c45357508bea"
+        },
+        {
+          "context": "next7_dribblein:choice:1:1",
+          "text": "Blue has stepped into the dribble route. The midfielder’s new angle opens a different route for the restart.",
+          "hash": "adf1c45357508bea"
+        },
+        {
+          "context": "def_11_pressurecover:step:3",
+          "text": "Our nearer midfielder holds the pressure while the other moves into cover. Their carrier now faces two different defensive jobs.",
+          "hash": "c90fd11351e6d45c"
+        },
+        {
+          "context": "def_11_pressurecover:step:4",
+          "text": "Their carrier tests the pressure with a short carry. Our nearest midfielder moves with the ball, and the covering midfielder keeps a second defensive line.",
+          "hash": "d53c3b11f2b735c5"
+        },
+        {
+          "context": "def_11_pressurecover:step:5",
+          "text": "Reset the two midfielders. Their distances from the carrier will decide who pressures and who covers.",
+          "hash": "88dd15d3e497b2b9"
+        },
+        {
+          "context": "def_11_pressurecover:step:8",
+          "text": "Now our central midfielder is nearer and takes the pressure. Our other midfielder covers behind instead of chasing the same ball.",
+          "hash": "944aece86c51093e"
+        },
+        {
+          "context": "def_11_pressurecover:step:9",
+          "text": "Their carrier moves again. Our nearer midfielder follows without crossing into the covering teammate’s path. Pressure and cover stay connected.",
+          "hash": "4f832fcac7dfb895"
+        },
+        {
+          "context": "def_11_shift:step:5",
+          "text": "Return the group to the middle, then compare the danger on the other side.",
+          "hash": "a00e535723f7898d"
+        },
+        {
+          "context": "trn_11_recover:step:5",
+          "text": "Reset the midfielders so we can compare a carrier who has already escaped the pressure.",
+          "hash": "fe56469e40c46364"
+        },
+        {
+          "context": "trn_11_restdefense:step:5",
+          "text": "Return the ball and compare who is now protecting the space behind the attack.",
+          "hash": "994e02b1ce6ac89c"
+        },
+        {
+          "context": "learn11_restart:step:5",
+          "text": "Return the ball to the goalkeeper. This is a new goal-kick picture with pressure on the other side.",
+          "hash": "e0b8ac73acebfca3"
+        },
+        {
+          "context": "learnf_roles31:step:15",
+          "text": "After the return, the left ala widens and the pivot checks short. The fixo has new receiving angles.",
+          "hash": "cca35ebeb4856960"
+        },
+        {
+          "context": "learnf_roles31:choice:0:1",
+          "text": "The fixo can keep possession, but the question asks for a forward route. The pivot is ahead and the defender has not closed that lane.",
+          "hash": "b757d5cb80ed59fa"
+        },
+        {
+          "context": "learnf_roles31:choice:1:0",
+          "text": "The pivot is still ahead, but the defender now stands in the passing lane. Use the deeper angle rather than the same destination.",
+          "hash": "a32bb4206adebeec"
+        },
+        {
+          "context": "learnf_shape22:choice:0:1",
+          "text": "Advancing the second rear player removes the return pass and leaves both players ahead of the ball. Keep one of the rear pair behind.",
+          "hash": "3cbc87564d2652ba"
+        },
+        {
+          "context": "learnf_shape22:choice:1:0",
+          "text": "Both front players already provide depth. The left rear player can help the carrier by keeping a separate angle behind.",
+          "hash": "457602514c0da93f"
+        },
+        {
+          "context": "bld_f_passtofeet:step:8",
+          "text": "The fixo takes a small touch across the court, facing the right ala before the next pass.",
+          "hash": "7ce2eedacfe543c7"
+        },
+        {
+          "context": "bld_f_passtofeet:choice:0:1",
+          "text": "The defender is on the inside shoulder. Turning into the middle brings the ball toward that pressure; the touchline side has room.",
+          "hash": "7d4190e4bb28db61"
+        },
+        {
+          "context": "bld_f_passtofeet:choice:1:0",
+          "text": "The defender has moved outside and can meet this carry. The fixo offers a pass away from that pressure.",
+          "hash": "ddec60fcc97a5b98"
+        },
+        {
+          "context": "prn_f_support:step:8",
+          "text": "After switching, the fixo moves behind the right ala to offer a return at a different angle.",
+          "hash": "ffebc027834da363"
+        },
+        {
+          "context": "prn_f_support:choice:0:1",
+          "text": "This inside position stays near the defender’s screening line. Moving farther toward the touchline changes the angle from the fixo.",
+          "hash": "abb2d23f6c7e1187"
+        },
+        {
+          "context": "prn_f_support:choice:1:0",
+          "text": "The defender has followed the left-side route. Passing there repeats the covered lane; the right ala gives a different angle.",
+          "hash": "c001220b38e5bd1f"
+        },
+        {
+          "context": "f_pared:step:8",
+          "text": "After the lay-off, the pivot moves across to offer the fixo another forward lane.",
+          "hash": "48ac77e7ed2b4064"
+        },
+        {
+          "context": "f_pared:choice:0:0",
+          "text": "The deeper pass is screened here. The defender followed the ball, leaving the outside runner available for the return.",
+          "hash": "955b0c2ef959b766"
+        },
+        {
+          "context": "f_pared:choice:1:1",
+          "text": "The defender stayed with the outside route this time. The fixo is available behind the pivot, so keep the ball through that support.",
+          "hash": "06d7acf9a44e1b36"
+        },
+        {
+          "context": "f_pivot:choice:0:0",
+          "text": "The marker is on the pivot’s right shoulder. Turning right brings the next touch into the marker; the left side has room.",
+          "hash": "06df9fca5a6df5c9"
+        },
+        {
+          "context": "f_pivot:choice:1:1",
+          "text": "The marker has closed the turn. The right ala offers a lay-off that moves the ball around the pressure.",
+          "hash": "8ecc250ab52d0d9f"
+        },
+        {
+          "context": "f_paralela:step:9",
+          "text": "The left ala moves behind the receiver. The runner now has a return option after the diagonal pass.",
+          "hash": "19b51bf6a4b2f417"
+        },
+        {
+          "context": "f_paralela:choice:0:1",
+          "text": "The defender covers the right ala. The runner has gone down this same side, giving a different lane.",
+          "hash": "c7bd7e41ddba9ca9"
+        },
+        {
+          "context": "f_paralela:choice:1:0",
+          "text": "The runner has left the old touchline position and moved diagonally. A pass to the old spot misses the new receiving angle.",
+          "hash": "4029b4de94f2d0ce"
+        },
+        {
+          "context": "learnf_farpost:step:8",
+          "text": "The left ala moves away from the end line to reconnect after the return pass.",
+          "hash": "6ebc05d8a679aa6b"
+        },
+        {
+          "context": "learnf_farpost:choice:0:1",
+          "text": "The fixo is useful support behind, but cannot receive the across-goal pass asked for here. The far ala has arrived beyond the goalkeeper.",
+          "hash": "cd86b0df43b9daf2"
+        },
+        {
+          "context": "learnf_farpost:choice:1:0",
+          "text": "A defender now covers the across-goal lane. The supporting pivot is behind the ball and offers a return route.",
+          "hash": "525c808fb5376197"
+        },
+        {
+          "context": "def_f_goalside:step:7",
+          "text": "Blue carries wider. Our right ala follows under control, while the goalkeeper shifts with the shooting angle.",
+          "hash": "db7f7fdadecd2daf"
+        },
+        {
+          "context": "def_f_goalside:choice:0:0",
+          "text": "Running beyond the carrier gives them a route behind you. Arrive under control between the ball and our goal, with the fixo covering.",
+          "hash": "0214e2e9540d313f"
+        },
+        {
+          "context": "def_f_goalside:choice:1:1",
+          "text": "The left ala would have to cross the court. The right ala is now nearest and can approach while the others cover.",
+          "hash": "1a5f8ceea37c2209"
+        },
+        {
+          "context": "trn_f_firstpass:step:8",
+          "text": "After passing back, the fixo opens a new angle for the goalkeeper’s next release.",
+          "hash": "f093015f6764bf18"
+        },
+        {
+          "context": "trn_f_firstpass:choice:0:1",
+          "text": "A pass to the goalkeeper keeps possession but gives up this open forward route. The right ala is already beyond the first pressure.",
+          "hash": "6acf9cbeafafa34a"
+        },
+        {
+          "context": "trn_f_firstpass:choice:1:0",
+          "text": "The defender now covers the right-side lane. The goalkeeper is available behind and has not yet been used in this possession.",
+          "hash": "ed6a9ba117726a69"
+        },
+        {
+          "context": "trn_f_winitback:step:7",
+          "text": "The goalkeeper shifts toward the ball side behind the recovering right ala, keeping the goal protected.",
+          "hash": "8111f8b37269ce86"
+        },
+        {
+          "context": "trn_f_winitback:choice:0:0",
+          "text": "Cover is already behind the left ala and the ball is close enough to pressure. Retreating immediately gives the carrier time to look up.",
+          "hash": "3f788c1aa10258e9"
+        },
+        {
+          "context": "trn_f_winitback:choice:1:1",
+          "text": "The pass has escaped and the team is far from the ball. Chasing across leaves the middle open; recover between the ball and goal first.",
+          "hash": "477c4e867b42a7fb"
+        },
+        {
+          "context": "bld_f_splitcb:step:8",
+          "text": "The fixo moves across as the left ala receives, keeping an outfield return angle outside the press.",
+          "hash": "5cac08296823f163"
+        },
+        {
+          "context": "bld_f_splitcb:choice:0:0",
+          "text": "The presser screens the left release. The right ala has a clear receiving lane outside that pressure.",
+          "hash": "e7c3b64a0f1c0b90"
+        },
+        {
+          "context": "bld_f_splitcb:choice:1:1",
+          "text": "The goalkeeper has already released the ball and no opponent has touched it. The fixo offers a legal outfield continuation.",
+          "hash": "318f446cdc102c0f"
+        },
+        {
+          "context": "bld_f_splitcb:choice:2:0",
+          "text": "The defender has moved across to the right route. The left ala now gives the fixo a clear passing angle.",
+          "hash": "5199bed6503fab41"
+        },
+        {
+          "context": "set_f_throwin:choice:0:1",
+          "text": "The defender stands across the route to the right ala. The short pass up the line to the pivot is available.",
+          "hash": "3841a0aa48beb206"
+        },
+        {
+          "context": "set_f_throwin:choice:1:0",
+          "text": "The defender has followed the first option. The fixo provides a separate angle behind the taker before the restart count expires.",
+          "hash": "c6261ff289c6e7b7"
+        },
+        {
+          "context": "fmn_f_40:choice:0:0",
+          "text": "That forward space is occupied by a teammate. The vacated middle angle creates an extra connection while the far ala stays behind the ball.",
+          "hash": "abc0735f03f932d9"
+        },
+        {
+          "context": "fmn_f_40:choice:1:1",
+          "text": "The left ala already occupies that lane. Carrying toward them crowds the receiver and brings the ball near pressure; the right ala keeps another angle.",
+          "hash": "0dd9e3426ab5160a"
+        },
+        {
+          "context": "gapf_farpostdefense:step:10",
+          "text": "Blue carries wider. Our goalkeeper shifts across while the right ala delays and the left ala stays with the runner.",
+          "hash": "25f60c548bf18892"
+        }
+      ],
+      "missing": []
+    },
+    "kokoro_am_michael": {
+      "copied": 1308,
+      "generated": 69,
+      "sourceMissing": [
+        {
+          "context": "learn7_roles:step:11",
+          "text": "The right defender moves up behind the pass. Starting roles help us share jobs as the ball moves.",
+          "hash": "8a8b5992fb5e5e21"
+        },
+        {
+          "context": "learn7_buildout:step:13",
+          "text": "The midfielder carries into the available angle. The left defender moves up behind to stay connected after the restart.",
+          "hash": "90b4bd9e4ab9e270"
+        },
+        {
+          "context": "learn7_receive:step:9",
+          "text": "The defender takes the return away from pressure. The midfielder moves to offer another angle instead of staying beside the opponent.",
+          "hash": "a5ac83e58ea2732e"
+        },
+        {
+          "context": "prn_7_spread:step:8",
+          "text": "After passing wide, the middle midfielder moves across behind the ball to offer a return angle.",
+          "hash": "013d03529731cc42"
+        },
+        {
+          "context": "bld_7_usekeeper:step:7",
+          "text": "After the forward pass, the right defender moves up behind the midfielder to remain a reachable return option.",
+          "hash": "99dc56c0cccb6d77"
+        },
+        {
+          "context": "def_7_goalside:step:6",
+          "text": "The goalkeeper shifts toward the ball side while the defender keeps protecting the direct route.",
+          "hash": "1e29cd5ee3f89023"
+        },
+        {
+          "context": "dbz_7_dontballwatch:step:7",
+          "text": "The wide attacker carries along the side. Our right defender follows the runner while the left defender protects the middle.",
+          "hash": "d108c6d0c9ceae2c"
+        },
+        {
+          "context": "gap7_lostball:step:11",
+          "text": "Blue’s middle player moves behind the wide carrier for support. Our covering midfielder shifts with that new passing angle.",
+          "hash": "7af83d65428d1d6d"
+        },
+        {
+          "context": "next7_reachableforward:step:11",
+          "text": "The forward receives at a useful distance again. Come closer when the pass is too long; stay ahead when the midfielder can reach you.",
+          "hash": "f148368720f92515"
+        },
+        {
+          "context": "next7_reachableforward:explain:0",
+          "text": "Coming nearer shortens this passing distance without joining the defender. With one forward, your midfield pair needs that reachable connection.",
+          "hash": "abd2c5943170d59e"
+        },
+        {
+          "context": "next7_reachableforward:choice:0:0",
+          "text": "Coming nearer shortens this passing distance without joining the defender. With one forward, your midfield pair needs that reachable connection.",
+          "hash": "abd2c5943170d59e"
+        },
+        {
+          "context": "next7_outsideback:step:8",
+          "text": "The outside route helped until the defender closed it. Keep a return angle behind the ball so you can choose again.",
+          "hash": "8dad0c0303a4b4a2"
+        },
+        {
+          "context": "next7_outsideback:explain:1",
+          "text": "The opponent has stepped into the forward route. The middle defender remains behind and inside the pressure, offering a clear return.",
+          "hash": "5c53b7d99f87f50c"
+        },
+        {
+          "context": "next7_outsideback:choice:1:0",
+          "text": "The opponent has stepped into the forward route. The middle defender remains behind and inside the pressure, offering a clear return.",
+          "hash": "5c53b7d99f87f50c"
+        },
+        {
+          "context": "next7_dribbleroom:step:7",
+          "text": "The pass finds you outside after the dribble. First leave your teammate room, then reconnect as their position changes.",
+          "hash": "d118c4b6537bb447"
+        },
+        {
+          "context": "next7_dribbleroom:explain:0",
+          "text": "Moving behind keeps you available without crossing the teammate’s next inside touch.",
+          "hash": "7dd442065975fbae"
+        },
+        {
+          "context": "next7_dribbleroom:choice:0:0",
+          "text": "Moving behind keeps you available without crossing the teammate’s next inside touch.",
+          "hash": "7dd442065975fbae"
+        },
+        {
+          "context": "next7_shotreaction:step:7",
+          "text": "The loose rebound was reachable; the controlled ball was not. Look again after a shot before deciding to chase or recover.",
+          "hash": "2cec50b833411070"
+        },
+        {
+          "context": "next7_shotreaction:question:1",
+          "text": "The keeper has secured this ball before you can reach it. Which move helps defend the next pass?",
+          "hash": "3e1ec69d07bbf670"
+        },
+        {
+          "context": "next7_offsideboundary:step:8",
+          "text": "The runner moved into a permitted position before the pass. Check the rules your competition uses for its offside boundary.",
+          "hash": "a4201b3e6a3f312d"
+        },
+        {
+          "context": "next7_offsideboundary:explain:1",
+          "text": "The forward returns behind the second-last opponent before the teammate passes. The timing of the pass matters, not just where the run ends.",
+          "hash": "0dafec520e1db4a0"
+        },
+        {
+          "context": "next7_offsideboundary:choice:1:1",
+          "text": "The forward returns behind the second-last opponent before the teammate passes. The timing of the pass matters, not just where the run ends.",
+          "hash": "0dafec520e1db4a0"
+        },
+        {
+          "context": "next7_dribblein:step:7",
+          "text": "The same restart offered different choices as Blue moved. Look at the lane before choosing the permitted pass or dribble.",
+          "hash": "0858d2b8bf3d2d4d"
+        },
+        {
+          "context": "next7_dribblein:explain:1",
+          "text": "Blue has stepped into the dribble route. The midfielder’s new angle opens a different route for the restart.",
+          "hash": "adf1c45357508bea"
+        },
+        {
+          "context": "next7_dribblein:choice:1:1",
+          "text": "Blue has stepped into the dribble route. The midfielder’s new angle opens a different route for the restart.",
+          "hash": "adf1c45357508bea"
+        },
+        {
+          "context": "def_11_pressurecover:step:3",
+          "text": "Our nearer midfielder holds the pressure while the other moves into cover. Their carrier now faces two different defensive jobs.",
+          "hash": "c90fd11351e6d45c"
+        },
+        {
+          "context": "def_11_pressurecover:step:4",
+          "text": "Their carrier tests the pressure with a short carry. Our nearest midfielder moves with the ball, and the covering midfielder keeps a second defensive line.",
+          "hash": "d53c3b11f2b735c5"
+        },
+        {
+          "context": "def_11_pressurecover:step:5",
+          "text": "Reset the two midfielders. Their distances from the carrier will decide who pressures and who covers.",
+          "hash": "88dd15d3e497b2b9"
+        },
+        {
+          "context": "def_11_pressurecover:step:8",
+          "text": "Now our central midfielder is nearer and takes the pressure. Our other midfielder covers behind instead of chasing the same ball.",
+          "hash": "944aece86c51093e"
+        },
+        {
+          "context": "def_11_pressurecover:step:9",
+          "text": "Their carrier moves again. Our nearer midfielder follows without crossing into the covering teammate’s path. Pressure and cover stay connected.",
+          "hash": "4f832fcac7dfb895"
+        },
+        {
+          "context": "def_11_shift:step:5",
+          "text": "Return the group to the middle, then compare the danger on the other side.",
+          "hash": "a00e535723f7898d"
+        },
+        {
+          "context": "trn_11_recover:step:5",
+          "text": "Reset the midfielders so we can compare a carrier who has already escaped the pressure.",
+          "hash": "fe56469e40c46364"
+        },
+        {
+          "context": "trn_11_restdefense:step:5",
+          "text": "Return the ball and compare who is now protecting the space behind the attack.",
+          "hash": "994e02b1ce6ac89c"
+        },
+        {
+          "context": "learn11_restart:step:5",
+          "text": "Return the ball to the goalkeeper. This is a new goal-kick picture with pressure on the other side.",
+          "hash": "e0b8ac73acebfca3"
+        },
+        {
+          "context": "learnf_roles31:step:15",
+          "text": "After the return, the left ala widens and the pivot checks short. The fixo has new receiving angles.",
+          "hash": "cca35ebeb4856960"
+        },
+        {
+          "context": "learnf_roles31:choice:0:1",
+          "text": "The fixo can keep possession, but the question asks for a forward route. The pivot is ahead and the defender has not closed that lane.",
+          "hash": "b757d5cb80ed59fa"
+        },
+        {
+          "context": "learnf_roles31:choice:1:0",
+          "text": "The pivot is still ahead, but the defender now stands in the passing lane. Use the deeper angle rather than the same destination.",
+          "hash": "a32bb4206adebeec"
+        },
+        {
+          "context": "learnf_shape22:choice:0:1",
+          "text": "Advancing the second rear player removes the return pass and leaves both players ahead of the ball. Keep one of the rear pair behind.",
+          "hash": "3cbc87564d2652ba"
+        },
+        {
+          "context": "learnf_shape22:choice:1:0",
+          "text": "Both front players already provide depth. The left rear player can help the carrier by keeping a separate angle behind.",
+          "hash": "457602514c0da93f"
+        },
+        {
+          "context": "bld_f_passtofeet:step:8",
+          "text": "The fixo takes a small touch across the court, facing the right ala before the next pass.",
+          "hash": "7ce2eedacfe543c7"
+        },
+        {
+          "context": "bld_f_passtofeet:choice:0:1",
+          "text": "The defender is on the inside shoulder. Turning into the middle brings the ball toward that pressure; the touchline side has room.",
+          "hash": "7d4190e4bb28db61"
+        },
+        {
+          "context": "bld_f_passtofeet:choice:1:0",
+          "text": "The defender has moved outside and can meet this carry. The fixo offers a pass away from that pressure.",
+          "hash": "ddec60fcc97a5b98"
+        },
+        {
+          "context": "prn_f_support:step:8",
+          "text": "After switching, the fixo moves behind the right ala to offer a return at a different angle.",
+          "hash": "ffebc027834da363"
+        },
+        {
+          "context": "prn_f_support:choice:0:1",
+          "text": "This inside position stays near the defender’s screening line. Moving farther toward the touchline changes the angle from the fixo.",
+          "hash": "abb2d23f6c7e1187"
+        },
+        {
+          "context": "prn_f_support:choice:1:0",
+          "text": "The defender has followed the left-side route. Passing there repeats the covered lane; the right ala gives a different angle.",
+          "hash": "c001220b38e5bd1f"
+        },
+        {
+          "context": "f_pared:step:8",
+          "text": "After the lay-off, the pivot moves across to offer the fixo another forward lane.",
+          "hash": "48ac77e7ed2b4064"
+        },
+        {
+          "context": "f_pared:choice:0:0",
+          "text": "The deeper pass is screened here. The defender followed the ball, leaving the outside runner available for the return.",
+          "hash": "955b0c2ef959b766"
+        },
+        {
+          "context": "f_pared:choice:1:1",
+          "text": "The defender stayed with the outside route this time. The fixo is available behind the pivot, so keep the ball through that support.",
+          "hash": "06d7acf9a44e1b36"
+        },
+        {
+          "context": "f_pivot:choice:0:0",
+          "text": "The marker is on the pivot’s right shoulder. Turning right brings the next touch into the marker; the left side has room.",
+          "hash": "06df9fca5a6df5c9"
+        },
+        {
+          "context": "f_pivot:choice:1:1",
+          "text": "The marker has closed the turn. The right ala offers a lay-off that moves the ball around the pressure.",
+          "hash": "8ecc250ab52d0d9f"
+        },
+        {
+          "context": "f_paralela:step:9",
+          "text": "The left ala moves behind the receiver. The runner now has a return option after the diagonal pass.",
+          "hash": "19b51bf6a4b2f417"
+        },
+        {
+          "context": "f_paralela:choice:0:1",
+          "text": "The defender covers the right ala. The runner has gone down this same side, giving a different lane.",
+          "hash": "c7bd7e41ddba9ca9"
+        },
+        {
+          "context": "f_paralela:choice:1:0",
+          "text": "The runner has left the old touchline position and moved diagonally. A pass to the old spot misses the new receiving angle.",
+          "hash": "4029b4de94f2d0ce"
+        },
+        {
+          "context": "learnf_farpost:step:8",
+          "text": "The left ala moves away from the end line to reconnect after the return pass.",
+          "hash": "6ebc05d8a679aa6b"
+        },
+        {
+          "context": "learnf_farpost:choice:0:1",
+          "text": "The fixo is useful support behind, but cannot receive the across-goal pass asked for here. The far ala has arrived beyond the goalkeeper.",
+          "hash": "cd86b0df43b9daf2"
+        },
+        {
+          "context": "learnf_farpost:choice:1:0",
+          "text": "A defender now covers the across-goal lane. The supporting pivot is behind the ball and offers a return route.",
+          "hash": "525c808fb5376197"
+        },
+        {
+          "context": "def_f_goalside:step:7",
+          "text": "Blue carries wider. Our right ala follows under control, while the goalkeeper shifts with the shooting angle.",
+          "hash": "db7f7fdadecd2daf"
+        },
+        {
+          "context": "def_f_goalside:choice:0:0",
+          "text": "Running beyond the carrier gives them a route behind you. Arrive under control between the ball and our goal, with the fixo covering.",
+          "hash": "0214e2e9540d313f"
+        },
+        {
+          "context": "def_f_goalside:choice:1:1",
+          "text": "The left ala would have to cross the court. The right ala is now nearest and can approach while the others cover.",
+          "hash": "1a5f8ceea37c2209"
+        },
+        {
+          "context": "trn_f_firstpass:step:8",
+          "text": "After passing back, the fixo opens a new angle for the goalkeeper’s next release.",
+          "hash": "f093015f6764bf18"
+        },
+        {
+          "context": "trn_f_firstpass:choice:0:1",
+          "text": "A pass to the goalkeeper keeps possession but gives up this open forward route. The right ala is already beyond the first pressure.",
+          "hash": "6acf9cbeafafa34a"
+        },
+        {
+          "context": "trn_f_firstpass:choice:1:0",
+          "text": "The defender now covers the right-side lane. The goalkeeper is available behind and has not yet been used in this possession.",
+          "hash": "ed6a9ba117726a69"
+        },
+        {
+          "context": "trn_f_winitback:step:7",
+          "text": "The goalkeeper shifts toward the ball side behind the recovering right ala, keeping the goal protected.",
+          "hash": "8111f8b37269ce86"
+        },
+        {
+          "context": "trn_f_winitback:choice:0:0",
+          "text": "Cover is already behind the left ala and the ball is close enough to pressure. Retreating immediately gives the carrier time to look up.",
+          "hash": "3f788c1aa10258e9"
+        },
+        {
+          "context": "trn_f_winitback:choice:1:1",
+          "text": "The pass has escaped and the team is far from the ball. Chasing across leaves the middle open; recover between the ball and goal first.",
+          "hash": "477c4e867b42a7fb"
+        },
+        {
+          "context": "bld_f_splitcb:step:8",
+          "text": "The fixo moves across as the left ala receives, keeping an outfield return angle outside the press.",
+          "hash": "5cac08296823f163"
+        },
+        {
+          "context": "bld_f_splitcb:choice:0:0",
+          "text": "The presser screens the left release. The right ala has a clear receiving lane outside that pressure.",
+          "hash": "e7c3b64a0f1c0b90"
+        },
+        {
+          "context": "bld_f_splitcb:choice:1:1",
+          "text": "The goalkeeper has already released the ball and no opponent has touched it. The fixo offers a legal outfield continuation.",
+          "hash": "318f446cdc102c0f"
+        },
+        {
+          "context": "bld_f_splitcb:choice:2:0",
+          "text": "The defender has moved across to the right route. The left ala now gives the fixo a clear passing angle.",
+          "hash": "5199bed6503fab41"
+        },
+        {
+          "context": "set_f_throwin:choice:0:1",
+          "text": "The defender stands across the route to the right ala. The short pass up the line to the pivot is available.",
+          "hash": "3841a0aa48beb206"
+        },
+        {
+          "context": "set_f_throwin:choice:1:0",
+          "text": "The defender has followed the first option. The fixo provides a separate angle behind the taker before the restart count expires.",
+          "hash": "c6261ff289c6e7b7"
+        },
+        {
+          "context": "fmn_f_40:choice:0:0",
+          "text": "That forward space is occupied by a teammate. The vacated middle angle creates an extra connection while the far ala stays behind the ball.",
+          "hash": "abc0735f03f932d9"
+        },
+        {
+          "context": "fmn_f_40:choice:1:1",
+          "text": "The left ala already occupies that lane. Carrying toward them crowds the receiver and brings the ball near pressure; the right ala keeps another angle.",
+          "hash": "0dd9e3426ab5160a"
+        },
+        {
+          "context": "gapf_farpostdefense:step:10",
+          "text": "Blue carries wider. Our goalkeeper shifts across while the right ala delays and the left ala stays with the runner.",
+          "hash": "25f60c548bf18892"
+        }
+      ],
+      "missing": []
+    },
+    "kokoro_af_sarah": {
+      "copied": 1308,
+      "generated": 69,
+      "sourceMissing": [
+        {
+          "context": "learn7_roles:step:11",
+          "text": "The right defender moves up behind the pass. Starting roles help us share jobs as the ball moves.",
+          "hash": "8a8b5992fb5e5e21"
+        },
+        {
+          "context": "learn7_buildout:step:13",
+          "text": "The midfielder carries into the available angle. The left defender moves up behind to stay connected after the restart.",
+          "hash": "90b4bd9e4ab9e270"
+        },
+        {
+          "context": "learn7_receive:step:9",
+          "text": "The defender takes the return away from pressure. The midfielder moves to offer another angle instead of staying beside the opponent.",
+          "hash": "a5ac83e58ea2732e"
+        },
+        {
+          "context": "prn_7_spread:step:8",
+          "text": "After passing wide, the middle midfielder moves across behind the ball to offer a return angle.",
+          "hash": "013d03529731cc42"
+        },
+        {
+          "context": "bld_7_usekeeper:step:7",
+          "text": "After the forward pass, the right defender moves up behind the midfielder to remain a reachable return option.",
+          "hash": "99dc56c0cccb6d77"
+        },
+        {
+          "context": "def_7_goalside:step:6",
+          "text": "The goalkeeper shifts toward the ball side while the defender keeps protecting the direct route.",
+          "hash": "1e29cd5ee3f89023"
+        },
+        {
+          "context": "dbz_7_dontballwatch:step:7",
+          "text": "The wide attacker carries along the side. Our right defender follows the runner while the left defender protects the middle.",
+          "hash": "d108c6d0c9ceae2c"
+        },
+        {
+          "context": "gap7_lostball:step:11",
+          "text": "Blue’s middle player moves behind the wide carrier for support. Our covering midfielder shifts with that new passing angle.",
+          "hash": "7af83d65428d1d6d"
+        },
+        {
+          "context": "next7_reachableforward:step:11",
+          "text": "The forward receives at a useful distance again. Come closer when the pass is too long; stay ahead when the midfielder can reach you.",
+          "hash": "f148368720f92515"
+        },
+        {
+          "context": "next7_reachableforward:explain:0",
+          "text": "Coming nearer shortens this passing distance without joining the defender. With one forward, your midfield pair needs that reachable connection.",
+          "hash": "abd2c5943170d59e"
+        },
+        {
+          "context": "next7_reachableforward:choice:0:0",
+          "text": "Coming nearer shortens this passing distance without joining the defender. With one forward, your midfield pair needs that reachable connection.",
+          "hash": "abd2c5943170d59e"
+        },
+        {
+          "context": "next7_outsideback:step:8",
+          "text": "The outside route helped until the defender closed it. Keep a return angle behind the ball so you can choose again.",
+          "hash": "8dad0c0303a4b4a2"
+        },
+        {
+          "context": "next7_outsideback:explain:1",
+          "text": "The opponent has stepped into the forward route. The middle defender remains behind and inside the pressure, offering a clear return.",
+          "hash": "5c53b7d99f87f50c"
+        },
+        {
+          "context": "next7_outsideback:choice:1:0",
+          "text": "The opponent has stepped into the forward route. The middle defender remains behind and inside the pressure, offering a clear return.",
+          "hash": "5c53b7d99f87f50c"
+        },
+        {
+          "context": "next7_dribbleroom:step:7",
+          "text": "The pass finds you outside after the dribble. First leave your teammate room, then reconnect as their position changes.",
+          "hash": "d118c4b6537bb447"
+        },
+        {
+          "context": "next7_dribbleroom:explain:0",
+          "text": "Moving behind keeps you available without crossing the teammate’s next inside touch.",
+          "hash": "7dd442065975fbae"
+        },
+        {
+          "context": "next7_dribbleroom:choice:0:0",
+          "text": "Moving behind keeps you available without crossing the teammate’s next inside touch.",
+          "hash": "7dd442065975fbae"
+        },
+        {
+          "context": "next7_shotreaction:step:7",
+          "text": "The loose rebound was reachable; the controlled ball was not. Look again after a shot before deciding to chase or recover.",
+          "hash": "2cec50b833411070"
+        },
+        {
+          "context": "next7_shotreaction:question:1",
+          "text": "The keeper has secured this ball before you can reach it. Which move helps defend the next pass?",
+          "hash": "3e1ec69d07bbf670"
+        },
+        {
+          "context": "next7_offsideboundary:step:8",
+          "text": "The runner moved into a permitted position before the pass. Check the rules your competition uses for its offside boundary.",
+          "hash": "a4201b3e6a3f312d"
+        },
+        {
+          "context": "next7_offsideboundary:explain:1",
+          "text": "The forward returns behind the second-last opponent before the teammate passes. The timing of the pass matters, not just where the run ends.",
+          "hash": "0dafec520e1db4a0"
+        },
+        {
+          "context": "next7_offsideboundary:choice:1:1",
+          "text": "The forward returns behind the second-last opponent before the teammate passes. The timing of the pass matters, not just where the run ends.",
+          "hash": "0dafec520e1db4a0"
+        },
+        {
+          "context": "next7_dribblein:step:7",
+          "text": "The same restart offered different choices as Blue moved. Look at the lane before choosing the permitted pass or dribble.",
+          "hash": "0858d2b8bf3d2d4d"
+        },
+        {
+          "context": "next7_dribblein:explain:1",
+          "text": "Blue has stepped into the dribble route. The midfielder’s new angle opens a different route for the restart.",
+          "hash": "adf1c45357508bea"
+        },
+        {
+          "context": "next7_dribblein:choice:1:1",
+          "text": "Blue has stepped into the dribble route. The midfielder’s new angle opens a different route for the restart.",
+          "hash": "adf1c45357508bea"
+        },
+        {
+          "context": "def_11_pressurecover:step:3",
+          "text": "Our nearer midfielder holds the pressure while the other moves into cover. Their carrier now faces two different defensive jobs.",
+          "hash": "c90fd11351e6d45c"
+        },
+        {
+          "context": "def_11_pressurecover:step:4",
+          "text": "Their carrier tests the pressure with a short carry. Our nearest midfielder moves with the ball, and the covering midfielder keeps a second defensive line.",
+          "hash": "d53c3b11f2b735c5"
+        },
+        {
+          "context": "def_11_pressurecover:step:5",
+          "text": "Reset the two midfielders. Their distances from the carrier will decide who pressures and who covers.",
+          "hash": "88dd15d3e497b2b9"
+        },
+        {
+          "context": "def_11_pressurecover:step:8",
+          "text": "Now our central midfielder is nearer and takes the pressure. Our other midfielder covers behind instead of chasing the same ball.",
+          "hash": "944aece86c51093e"
+        },
+        {
+          "context": "def_11_pressurecover:step:9",
+          "text": "Their carrier moves again. Our nearer midfielder follows without crossing into the covering teammate’s path. Pressure and cover stay connected.",
+          "hash": "4f832fcac7dfb895"
+        },
+        {
+          "context": "def_11_shift:step:5",
+          "text": "Return the group to the middle, then compare the danger on the other side.",
+          "hash": "a00e535723f7898d"
+        },
+        {
+          "context": "trn_11_recover:step:5",
+          "text": "Reset the midfielders so we can compare a carrier who has already escaped the pressure.",
+          "hash": "fe56469e40c46364"
+        },
+        {
+          "context": "trn_11_restdefense:step:5",
+          "text": "Return the ball and compare who is now protecting the space behind the attack.",
+          "hash": "994e02b1ce6ac89c"
+        },
+        {
+          "context": "learn11_restart:step:5",
+          "text": "Return the ball to the goalkeeper. This is a new goal-kick picture with pressure on the other side.",
+          "hash": "e0b8ac73acebfca3"
+        },
+        {
+          "context": "learnf_roles31:step:15",
+          "text": "After the return, the left ala widens and the pivot checks short. The fixo has new receiving angles.",
+          "hash": "cca35ebeb4856960"
+        },
+        {
+          "context": "learnf_roles31:choice:0:1",
+          "text": "The fixo can keep possession, but the question asks for a forward route. The pivot is ahead and the defender has not closed that lane.",
+          "hash": "b757d5cb80ed59fa"
+        },
+        {
+          "context": "learnf_roles31:choice:1:0",
+          "text": "The pivot is still ahead, but the defender now stands in the passing lane. Use the deeper angle rather than the same destination.",
+          "hash": "a32bb4206adebeec"
+        },
+        {
+          "context": "learnf_shape22:choice:0:1",
+          "text": "Advancing the second rear player removes the return pass and leaves both players ahead of the ball. Keep one of the rear pair behind.",
+          "hash": "3cbc87564d2652ba"
+        },
+        {
+          "context": "learnf_shape22:choice:1:0",
+          "text": "Both front players already provide depth. The left rear player can help the carrier by keeping a separate angle behind.",
+          "hash": "457602514c0da93f"
+        },
+        {
+          "context": "bld_f_passtofeet:step:8",
+          "text": "The fixo takes a small touch across the court, facing the right ala before the next pass.",
+          "hash": "7ce2eedacfe543c7"
+        },
+        {
+          "context": "bld_f_passtofeet:choice:0:1",
+          "text": "The defender is on the inside shoulder. Turning into the middle brings the ball toward that pressure; the touchline side has room.",
+          "hash": "7d4190e4bb28db61"
+        },
+        {
+          "context": "bld_f_passtofeet:choice:1:0",
+          "text": "The defender has moved outside and can meet this carry. The fixo offers a pass away from that pressure.",
+          "hash": "ddec60fcc97a5b98"
+        },
+        {
+          "context": "prn_f_support:step:8",
+          "text": "After switching, the fixo moves behind the right ala to offer a return at a different angle.",
+          "hash": "ffebc027834da363"
+        },
+        {
+          "context": "prn_f_support:choice:0:1",
+          "text": "This inside position stays near the defender’s screening line. Moving farther toward the touchline changes the angle from the fixo.",
+          "hash": "abb2d23f6c7e1187"
+        },
+        {
+          "context": "prn_f_support:choice:1:0",
+          "text": "The defender has followed the left-side route. Passing there repeats the covered lane; the right ala gives a different angle.",
+          "hash": "c001220b38e5bd1f"
+        },
+        {
+          "context": "f_pared:step:8",
+          "text": "After the lay-off, the pivot moves across to offer the fixo another forward lane.",
+          "hash": "48ac77e7ed2b4064"
+        },
+        {
+          "context": "f_pared:choice:0:0",
+          "text": "The deeper pass is screened here. The defender followed the ball, leaving the outside runner available for the return.",
+          "hash": "955b0c2ef959b766"
+        },
+        {
+          "context": "f_pared:choice:1:1",
+          "text": "The defender stayed with the outside route this time. The fixo is available behind the pivot, so keep the ball through that support.",
+          "hash": "06d7acf9a44e1b36"
+        },
+        {
+          "context": "f_pivot:choice:0:0",
+          "text": "The marker is on the pivot’s right shoulder. Turning right brings the next touch into the marker; the left side has room.",
+          "hash": "06df9fca5a6df5c9"
+        },
+        {
+          "context": "f_pivot:choice:1:1",
+          "text": "The marker has closed the turn. The right ala offers a lay-off that moves the ball around the pressure.",
+          "hash": "8ecc250ab52d0d9f"
+        },
+        {
+          "context": "f_paralela:step:9",
+          "text": "The left ala moves behind the receiver. The runner now has a return option after the diagonal pass.",
+          "hash": "19b51bf6a4b2f417"
+        },
+        {
+          "context": "f_paralela:choice:0:1",
+          "text": "The defender covers the right ala. The runner has gone down this same side, giving a different lane.",
+          "hash": "c7bd7e41ddba9ca9"
+        },
+        {
+          "context": "f_paralela:choice:1:0",
+          "text": "The runner has left the old touchline position and moved diagonally. A pass to the old spot misses the new receiving angle.",
+          "hash": "4029b4de94f2d0ce"
+        },
+        {
+          "context": "learnf_farpost:step:8",
+          "text": "The left ala moves away from the end line to reconnect after the return pass.",
+          "hash": "6ebc05d8a679aa6b"
+        },
+        {
+          "context": "learnf_farpost:choice:0:1",
+          "text": "The fixo is useful support behind, but cannot receive the across-goal pass asked for here. The far ala has arrived beyond the goalkeeper.",
+          "hash": "cd86b0df43b9daf2"
+        },
+        {
+          "context": "learnf_farpost:choice:1:0",
+          "text": "A defender now covers the across-goal lane. The supporting pivot is behind the ball and offers a return route.",
+          "hash": "525c808fb5376197"
+        },
+        {
+          "context": "def_f_goalside:step:7",
+          "text": "Blue carries wider. Our right ala follows under control, while the goalkeeper shifts with the shooting angle.",
+          "hash": "db7f7fdadecd2daf"
+        },
+        {
+          "context": "def_f_goalside:choice:0:0",
+          "text": "Running beyond the carrier gives them a route behind you. Arrive under control between the ball and our goal, with the fixo covering.",
+          "hash": "0214e2e9540d313f"
+        },
+        {
+          "context": "def_f_goalside:choice:1:1",
+          "text": "The left ala would have to cross the court. The right ala is now nearest and can approach while the others cover.",
+          "hash": "1a5f8ceea37c2209"
+        },
+        {
+          "context": "trn_f_firstpass:step:8",
+          "text": "After passing back, the fixo opens a new angle for the goalkeeper’s next release.",
+          "hash": "f093015f6764bf18"
+        },
+        {
+          "context": "trn_f_firstpass:choice:0:1",
+          "text": "A pass to the goalkeeper keeps possession but gives up this open forward route. The right ala is already beyond the first pressure.",
+          "hash": "6acf9cbeafafa34a"
+        },
+        {
+          "context": "trn_f_firstpass:choice:1:0",
+          "text": "The defender now covers the right-side lane. The goalkeeper is available behind and has not yet been used in this possession.",
+          "hash": "ed6a9ba117726a69"
+        },
+        {
+          "context": "trn_f_winitback:step:7",
+          "text": "The goalkeeper shifts toward the ball side behind the recovering right ala, keeping the goal protected.",
+          "hash": "8111f8b37269ce86"
+        },
+        {
+          "context": "trn_f_winitback:choice:0:0",
+          "text": "Cover is already behind the left ala and the ball is close enough to pressure. Retreating immediately gives the carrier time to look up.",
+          "hash": "3f788c1aa10258e9"
+        },
+        {
+          "context": "trn_f_winitback:choice:1:1",
+          "text": "The pass has escaped and the team is far from the ball. Chasing across leaves the middle open; recover between the ball and goal first.",
+          "hash": "477c4e867b42a7fb"
+        },
+        {
+          "context": "bld_f_splitcb:step:8",
+          "text": "The fixo moves across as the left ala receives, keeping an outfield return angle outside the press.",
+          "hash": "5cac08296823f163"
+        },
+        {
+          "context": "bld_f_splitcb:choice:0:0",
+          "text": "The presser screens the left release. The right ala has a clear receiving lane outside that pressure.",
+          "hash": "e7c3b64a0f1c0b90"
+        },
+        {
+          "context": "bld_f_splitcb:choice:1:1",
+          "text": "The goalkeeper has already released the ball and no opponent has touched it. The fixo offers a legal outfield continuation.",
+          "hash": "318f446cdc102c0f"
+        },
+        {
+          "context": "bld_f_splitcb:choice:2:0",
+          "text": "The defender has moved across to the right route. The left ala now gives the fixo a clear passing angle.",
+          "hash": "5199bed6503fab41"
+        },
+        {
+          "context": "set_f_throwin:choice:0:1",
+          "text": "The defender stands across the route to the right ala. The short pass up the line to the pivot is available.",
+          "hash": "3841a0aa48beb206"
+        },
+        {
+          "context": "set_f_throwin:choice:1:0",
+          "text": "The defender has followed the first option. The fixo provides a separate angle behind the taker before the restart count expires.",
+          "hash": "c6261ff289c6e7b7"
+        },
+        {
+          "context": "fmn_f_40:choice:0:0",
+          "text": "That forward space is occupied by a teammate. The vacated middle angle creates an extra connection while the far ala stays behind the ball.",
+          "hash": "abc0735f03f932d9"
+        },
+        {
+          "context": "fmn_f_40:choice:1:1",
+          "text": "The left ala already occupies that lane. Carrying toward them crowds the receiver and brings the ball near pressure; the right ala keeps another angle.",
+          "hash": "0dd9e3426ab5160a"
+        },
+        {
+          "context": "gapf_farpostdefense:step:10",
+          "text": "Blue carries wider. Our goalkeeper shifts across while the right ala delays and the left ala stays with the runner.",
+          "hash": "25f60c548bf18892"
+        }
+      ],
+      "missing": []
+    }
+  }
+}

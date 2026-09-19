@@ -1,0 +1,8 @@
+.card{display:grid;grid-template-columns:minmax(180px,.8fr) minmax(0,1.2fr);gap:22px;margin:0 0 24px;padding:20px;border:2px solid #d4b75c;border-radius:20px;background:#fff8df;color:#294f43}
+.picture{position:relative;display:flex;align-items:center;justify-content:center;min-height:260px;border-radius:14px;background:radial-gradient(ellipse at center,#fff7d1 0%,#ead8a6 100%);overflow:hidden}
+.picture img{display:block;width:100%;max-width:320px;height:auto;object-fit:contain}
+.badge{position:absolute;bottom:10px;left:8px;right:8px;text-align:center;font-size:10px;font-weight:800;letter-spacing:.6px;padding:7px;border-radius:7px;background:#294f43;color:#fff3bf}
+.content{min-width:0;align-self:center}.eyebrow{font-size:11px;font-weight:750;letter-spacing:.6px}.content h3{font-size:28px;line-height:1.1;margin:9px 0 12px}.content p{font-size:13px;line-height:1.55;margin:10px 0}.content .note{font-size:11px;color:#626c57}.progress{display:flex;flex-wrap:wrap;gap:5px 12px;font-size:12px;margin-top:15px}.progress span{color:#626c57}.content progress{display:block;width:100%;height:9px;margin:9px 0 15px;accent-color:#477c6a}.content button{width:100%;min-height:44px;border:0;border-radius:10px;background:#294f43;color:#fff5d7;font:750 13px system-ui;padding:12px;cursor:pointer}.content button:disabled{background:#e7dcc0;color:#6f705b;cursor:default}.content button:focus-visible{outline:3px solid #bd7657;outline-offset:3px}.card[data-earned=true]{border-color:#477c6a}
+@media(max-width:600px){.card{grid-template-columns:1fr;padding:16px;gap:16px}.picture{min-height:230px}.picture img{max-width:270px}.content h3{font-size:25px}}
+
+.content .secondary{margin-top:9px;background:transparent;color:#294f43;border:1px solid #87967a}

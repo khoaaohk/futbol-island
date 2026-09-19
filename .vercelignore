@@ -1,0 +1,12 @@
+.next
+.next-dev
+node_modules
+.env*
+*.tsbuildinfo
+:memory:.ses
+tests
+scripts
+PROJECT.md
+
+# Offline film authoring dependencies and source references are not server runtime.
+vendor

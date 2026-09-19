@@ -1,0 +1,50 @@
+.shell{display:flex!important;flex-direction:column!important;overflow:hidden!important;padding:0!important;box-sizing:border-box;max-height:calc(100dvh - 24px);background:var(--modal-surface,#f7f0db)}
+.drawer{max-height:100dvh;--modal-surface:#f2e7c5}
+.white{--modal-surface:#fff}
+.header{position:relative!important;flex:0 0 auto!important;display:flex!important;align-items:center!important;justify-content:space-between;gap:16px;margin:0!important;padding:20px 24px!important;min-height:0!important;z-index:10;background:var(--modal-surface,#f7f0db)!important;border-bottom:1px solid #294f431a;box-sizing:border-box}
+.header>div{min-width:0}.header h2{margin:0!important;min-height:0!important;line-height:1.15}.header>button{flex:0 0 44px!important;align-self:center;display:grid;place-items:center;width:44px;height:44px;margin:0!important}
+.body{flex:1 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding:20px 24px 28px;scroll-padding-top:16px;box-sizing:border-box;isolation:isolate}
+.context{font-size:13px;line-height:1.5;margin:0 0 18px;color:#61705b}
+@media(max-width:600px){.header{padding:16px 18px!important;gap:12px}.body{padding:18px 18px 24px}.header h2{font-size:26px}}
+@media(max-height:480px){.header{padding-top:12px!important;padding-bottom:12px!important}}
+.drawer .header{padding-top:calc(20px + env(safe-area-inset-top,0px))!important}.drawer .body{padding-bottom:calc(28px + env(safe-area-inset-bottom,0px))}
+.body{padding-top:12px}
+@media(max-width:600px){.body{padding-top:12px}}
+@media(max-width:600px),(pointer:coarse){.shell{max-height:100dvh!important;border-radius:0!important}.header{padding-top:calc(16px + env(safe-area-inset-top,0px))!important;padding-left:calc(18px + env(safe-area-inset-left,0px))!important;padding-right:calc(18px + env(safe-area-inset-right,0px))!important}.body{padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))}}
+/* One surface color for all island dialogs and drawers. */
+.shell{--modal-surface:#f7f0db!important;background:#f7f0db!important}
+/* Center every dialog title independently of navigation on either side. */
+.header{display:grid!important;grid-template-columns:44px minmax(0,1fr) 44px;gap:16px}
+.header>div,.header>h2{grid-column:2;grid-row:1;text-align:center;justify-content:center}
+.header>button{grid-column:3;grid-row:1;justify-self:end}
+.header>button[aria-label^="Back"]{grid-column:1;justify-self:start}
+.header::before{content:'';grid-column:1;grid-row:1;display:block;width:40px;height:40px;border-radius:12px;background:#244d40 url('/icon.svg') center/30px 30px no-repeat}
+.header:has(button[aria-label^="Back"])::before{display:none}
+.header>div button[aria-label^="Back"]{position:absolute;left:24px;top:50%;transform:translateY(-50%)}
+@media(max-width:600px){.header{gap:10px}.header>div button[aria-label^="Back"]{left:18px}}
+
+/* Shared viewport gutters and equal controls across every modal. */
+.shell>.header{padding:20px 24px!important;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center!important}
+.shell>.header::before{width:44px;height:44px;align-self:center;justify-self:start}
+.shell>.header>button{width:44px;height:44px;padding:0;align-self:center;transform:none!important}
+@media(max-width:600px),(pointer:coarse){.shell>.header{padding:calc(16px + env(safe-area-inset-top,0px)) calc(18px + env(safe-area-inset-right,0px)) 16px calc(18px + env(safe-area-inset-left,0px))!important}}
+.header::before{background-image:url('/stories/paths/island-mark.svg');background-size:36px 36px}
+.header::before{box-sizing:border-box;border:3px solid #fff2cd;border-radius:14px;background-color:#e9c16b;background-image:url('/stories/paths/island-mark.svg'),url('/stories/films/assets/entry-grain.png');background-position:center,center;background-size:34px 34px,128px 128px;background-repeat:no-repeat,repeat;box-shadow:0 5px 0 #a8863d,0 0 0 4px #fff2cd40}
+/* Navigation anchors never move when a title wraps or a label collapses. */
+.shell>.header{grid-template-columns:76px minmax(0,1fr) 76px;align-items:start!important;min-height:84px!important}
+.shell>.header>button,.shell>.header::before{align-self:start!important}
+.shell>.header>div,.shell>.header>h2{min-height:44px;display:flex;align-items:center;justify-content:center}
+.shell>.header>button[data-navigation=back]{grid-column:1;justify-self:start}
+.shell>.header>div button[data-navigation=back]{position:absolute;left:24px;top:20px;transform:none!important}
+.shell>.header:has(button[data-navigation=back])::before{display:none}
+.shell>.header::after{content:'';position:absolute;pointer-events:none;left:14px;top:10px;width:64px;height:64px;background:radial-gradient(circle at 8% 24%,#fbd45e 0 2px,transparent 3px),radial-gradient(circle at 86% 9%,#ec92cd 0 2px,transparent 3px),radial-gradient(circle at 98% 79%,#fff2cd 0 2px,transparent 3px);animation:logoSparkle 1.4s ease-out both}
+.shell>.header:has(button[data-navigation=back])::after{display:none}
+@keyframes logoSparkle{0%{opacity:0;transform:scale(.7)}35%{opacity:1}100%{opacity:0;transform:scale(1.15)}}
+@media(max-width:600px),(pointer:coarse){.shell>.header{gap:8px;min-height:76px!important}.shell>.header h2{font-size:clamp(17px,4.5vw,26px)}.shell>.header>div button[data-navigation=back]{left:calc(18px + env(safe-area-inset-left,0px));top:calc(16px + env(safe-area-inset-top,0px))}.shell>.header::after{left:calc(8px + env(safe-area-inset-left,0px));top:calc(6px + env(safe-area-inset-top,0px))}}
+@media(prefers-reduced-motion:reduce){.shell>.header::after{display:none;animation:none}}
+.shell>.header:has(>[data-island-logo])::before,.shell>.header:has(>[data-island-logo])::after{display:none}
+.shell>.header>[data-island-logo]{grid-column:1;grid-row:1;justify-self:start;align-self:start!important;width:44px!important;height:44px!important}
+.shell>.header:has(button[data-navigation=back])>[data-island-logo]{display:none}
+
+/* The discoverable island badge lives only on the Paths landing screen. */
+.header::before,.header::after{display:none!important}

@@ -1,0 +1,9 @@
+import * as T from 'three';
+/** Temporary cartoon impact mark; no terrain or collision changes. */
+export function createCraterEffect(){
+ const root=new T.Group();root.name='parachute-impact-crater';root.visible=false;
+ const bowlGeometry=new T.CircleGeometry(1.65,18),bowlMaterial=new T.MeshBasicMaterial({color:'#514937',transparent:true,opacity:.6,depthWrite:false,side:T.DoubleSide}),bowl=new T.Mesh(bowlGeometry,bowlMaterial);bowl.rotation.x=-Math.PI/2;bowl.position.y=.035;root.add(bowl);
+ const rimGeometry=new T.RingGeometry(1.5,1.9,18),rimMaterial=new T.MeshBasicMaterial({color:'#bca471',transparent:true,opacity:.8,depthWrite:false,side:T.DoubleSide}),rim=new T.Mesh(rimGeometry,rimMaterial);rim.rotation.x=-Math.PI/2;rim.position.y=.045;root.add(rim);
+ const rockGeometry=new T.IcosahedronGeometry(.22,0),rockMaterial=new T.MeshStandardMaterial({color:'#aa9569',roughness:1,transparent:true}),rocks=Array.from({length:10},(_,i)=>{const rock=new T.Mesh(rockGeometry,rockMaterial);rock.castShadow=true;root.add(rock);return rock;});let age=10;
+ return {root,trigger(x:number,y:number,z:number){age=0;root.position.set(x,y,z);root.visible=true;},update(dt:number,reduced:boolean){age+=dt;root.visible=age<5.5;if(!root.visible)return;const spread=reduced?1:Math.min(1,age/.25),fade=1-T.MathUtils.smoothstep(age,3.5,5.5);bowl.scale.setScalar(.3+spread*.7);rim.scale.setScalar(.3+spread*.7);bowlMaterial.opacity=.6*fade;rimMaterial.opacity=.8*fade;rockMaterial.opacity=fade;for(let i=0;i<rocks.length;i++){const a=i*2.399,t=Math.min(1,age/.8),r=1.4+(reduced?1:t)*(i%3*.35+.3);rocks[i].position.set(Math.cos(a)*r,.08+(reduced?0:Math.sin(t*Math.PI)*(1+i%3*.2)),Math.sin(a)*r);rocks[i].rotation.set(t*3+i,i,t*2);}},dispose(){root.removeFromParent();bowlGeometry.dispose();bowlMaterial.dispose();rimGeometry.dispose();rimMaterial.dispose();rockGeometry.dispose();rockMaterial.dispose();}};
+}

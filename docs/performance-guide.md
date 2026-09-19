@@ -1,0 +1,572 @@
+# Performance reference for future Futbol Island updates
+
+Last reviewed: September 14, 2026. This is the maintained implementation guide; [the dated performance log](flight-performance-2026-09-14.md) contains measurements and experiment history. Check current code before proposing an optimization: many suggestions have already been implemented.
+
+## Purpose and evidence
+
+The user reported warming on an iPhone 17 Pro Max after roughly 3–5 minutes, especially during flight, boost and moving-truck landings. They reported improvement after earlier updates and cooling when stationary. Preserve football learning, visuals, responsive controls and reliable interactions while reducing unnecessary work.
+
+Desktop mobile emulation is useful for regression checks, CPU/GPU timings and work counts. It does **not** measure iPhone temperature, battery use, or establish that warming is resolved. Avoid translating a reduction in draw calls or matrix operations into an equal reduction in heat.
+
+## Rendering and shadows already optimized
+
+- Mobile baseline: DPR 2, about 30 rendered frames/second, 2048 shadow maps. Player simulation remains 60 Hz. Do not silently lower resolution, shadow quality, effects or frame rate to claim a performance win.
+- Static scenery uses 50 m spatial chunks. Compatible opaque palette materials share linear vertex colors; textured, emissive/animated and incompatible surfaces retain their material paths. Ground layering/order must remain correct.
+- Static opaque shadow geometry is batched separately from paint colors. Original shadow flags/proxy visibility are restored in `finally` blocks. Transparent, alpha-tested, displaced, clipped and custom-depth objects keep their original path.
+- Shadow-volume culling includes offscreen objects whose shadows can enter the view. Dynamic character/vehicle shadows remain supported. Moving flight cameras align shadow coverage to texels.
+- Static scenery and shadow proxies cache fixed transforms. `hiddenTransformGate.ts` skips invisible registered groups during the scene traversal only; explicit world-matrix updates still work, and newly visible branches force refresh. Do not break picking, bounds or reappearance.
+- **The framebuffer-copy shadow cache is disabled on mobile.** Desktop retains it, with camera invalidation and renderer-owned framebuffer restoration instead of synchronous GL state queries.
+
+Relevant code: `lib/town/world.ts`, `lib/graphics/staticShadowBatches.ts`, `shadowVisibility.ts`, `staticShadowCache.ts`, `hiddenTransformGate.ts`, `islandShadows.ts`, `components/Town.tsx`.
+
+## Characters, traffic and simulation
+
+- Character meshes cache rigid local matrices; animated joints/world transforms still advance. Appearance changes refresh cached transforms. Costumes attach to the existing rig and preserve the underlying character.
+- For individually rendered rigs, fixed same-material head, knee and elbow pieces are merged **within their own joint**: seven fewer meshes per rig, unchanged triangle count. Clothing/hair switches remain independent; picking metadata is retained. Do not merge across animated joints or independently toggled parts. Live-match and coach-practice rigs pass `mergeRigidParts=false` to preserve shared instancing across players.
+- Island characters outside an expanded camera frustum skip joint posing, activity/ride animation and label painting. Their routines/root positions remain valid. Nearby characters, interaction partners and hit reactions need immediate updates. Existing distance-based pose throttling and reusable neighborhood/partner containers are already present.
+- Distant unseen live matches accumulate roughly 100 ms between simulation calls. Visible, selected and nearby matches update immediately; MatchSim retains safe substeps and elapsed time. Quizzes/lessons keep their teaching path. A paused match must not accumulate a catch-up burst.
+- Movement, roof, truck, ball-ground, ball-wall and ball-roof queries use spatial collision lookups. Preserve live dynamic/breakable obstacles, swept collisions and full aiming reach.
+- Traffic positions sample cached road routes at 20 cm spacing into reusable vectors. Rebuild samples on every route change, including rejoining roads after free driving. Original curve tangents retain headings. Synthetic tests found up to 0.05055 m positional deviation: this is approximate, not pixel-exact.
+- Traffic rejects neighbors more than 8 m away before detailed yielding checks. Ordinary cars over 100 m from the player check yielding at 10 Hz; all positions still advance every frame. Pickups, nearby cars, driven trucks and road-return logic retain immediate updates. This is **not** a blanket reduction of player physics or traffic movement frequency.
+- Truck landing fixes avoid repeated hidden ground-landing searches while attached. Preserve generous landing acquisition, smooth approach, seated riding, driving/boost/reverse/honk, dismount and autonomous road return.
+
+Relevant code: `lib/graphics/player.ts`, `batchMeshes.ts`, `islandNpcs.ts`, `streetTraffic.ts`, `lib/town/trafficRouteSamples.ts`, `obstacleGrid.ts`, `components/Town.tsx`.
+
+## HUD, menus, previews and mobile input
+
+- Player position lives in `positionStore.ts`; `MovingIslandMap.tsx` subscribes separately from the large Town HUD. Position publishing is approximately every 150 ms; zone state changes only when crossing regions. Hidden/minimized map consumers unsubscribe and read the latest position on reopening.
+- Field classification runs at 10 Hz, with reusable clipping vectors in `pitchVisibility.ts`. Prompt placement still tracks smoothly; coordinates are rounded to half pixels and unchanged styles/text are not rewritten. Nearest-building selection uses a scan rather than filter/sort lists.
+- Normal paused menus stop the island after the first cleanup frame. Resize/appearance changes invalidate the frozen frame. Time-of-day changes retain their three-second lighting transition; onboarding retains camera motion. Resume without a large simulation catch-up.
+- Previews dispose their renderer on close, pause while offscreen, reject hidden resize draws and only reapply appearance/background when changed.
+- Joystick feedback updates CSS/transform values directly rather than React state. Preserve the bounded rim pulse and faded arc; avoid an infinite extra animation loop or broad expensive filter.
+- **Attach native non-passive gesture blockers after the joystick mounts.** Town's joystick mounts only when ready; installing them inside initial scene setup previously did nothing because its ref was null. Keep blockers scoped to the control and preserve pointer capture, multi-touch action buttons, blur/pagehide/cancel recovery and second-finger tip dismissal. Test iOS double-tap-then-hold on a real device; Chromium cannot prove native magnifier behavior.
+
+## Effects, water and audio
+
+- Exhaust/trail/collection particles use finite pools and skip work when disabled/empty. Known pool budgets: exhaust 112, flight trail 64, walking-ball particles 24, collection particles 72. Verify current definitions before changing budgets.
+- Walking-ball charge/trail geometry sleeps when the ball is hidden during flight. Inactive rings/ghosts skip transforms. Colors are cached and only changed when equipment changes. Box/collection effects stop updating after their lifetime; sonic bursts sleep after expiration.
+- Water ripples animate offsets of a prebuilt repeating texture. Do not replace this with per-frame canvas redraws, texture uploads, expensive reflections or a new independent render loop without measuring the cost.
+- Continuous engine sounds reuse oscillator voices; parameter updates are throttled to about 10 Hz. Muted/zero-volume effects stop sources and avoid silent allocations. Keep the shared music context running; zero effects volume must not stop music.
+- Ride hum stops during parachute/fall phases, even though the selected ride remains a flight item.
+- Defaults are music 4%, effects 50%, with one-time migration `fi2-audio-mix=4-50-v1`; preserve later user preferences. Volume changes are UX choices, not evidence of reduced GPU heat.
+- Match-news requests happen when a participating conversation opens and share a five-minute cached response. They are not polled from the flight/render loop. News unavailability is a separate service issue.
+
+## Experiments not to repeat without new evidence
+
+| Experiment | Finding / decision |
+| --- | --- |
+| 25 m scenery chunks instead of 50 m | Fewer triangles, but 74–84% more draw calls in tested scenes. Reverted. |
+| Mobile framebuffer-copy shadow caching | Local controlled GPU median: normal 7.455 ms, culled 6.790 ms, cached 10.182 ms. Keep mobile cache disabled. |
+| Assuming boost particles are the main cause | Sampled particle disabling had negligible/noisy impact; shadow disabling had a larger effect. This is not proof for every device/view. |
+| Broad NPC batching experiment | Earlier attempt was discarded. The newer retained change only merges invariant pieces within individual character joints; distinguish the two. |
+| Treating lower mesh/CPU counts as proven cooling | Work savings require real-device thermal validation before making that claim. |
+
+## Validation and update procedure
+
+1. Read this guide and relevant code; identify what is genuinely new. Record baseline build, route, ride, viewport, DPR, shadows and frame-rate target.
+2. Change one subsystem at a time. Preserve teaching cues, quizzes, collisions, costumes, pickup landings and responsive controls. Keep only changes with useful evidence; document tradeoffs.
+3. Run relevant existing tests and a production build for implementation changes. Use same-scene comparisons for rendering; distinguish color-only counters from color-plus-shadow counters. Do not compare unrelated routes as if they were controlled GPU measurements.
+4. For movement changes, check walking/rides/boost, both pickup landings, driving and dismount. For rendering changes, include costume/character variants, shadows and picking. Verify lesson/quiz controls and hidden-menu pause/resume when affected.
+5. For heat conclusions, repeat a roughly five-minute session on the physical iPhone using a consistent route and settings. Record device/browser, charging status and comparable starting conditions. Do not call heating solved from emulation alone.
+6. Append results to the dated log and update this guide if implementation or recommendations change. Record local versus deployed status and the deployment ID when actually verified.
+
+Useful repository checks (run those relevant to the change):
+
+- `node tests/player-batch.cjs`: shared match batch count, unchanged color uploads and reorder/hide/reappear behavior.
+- `node tests/movement-work.cjs`: character geometry/mesh count, road sampling error, 1,000 field projection parity cases.
+- `node tests/player-motion.cjs`, `node tests/npc-behavior.cjs`, `node tests/ride-ramps.cjs`: movement, rig customization, NPC and ramp behavior.
+- `node tests/wall-juggle.cjs`, `node tests/ball-actions.cjs`, `node tests/obstacle-grid.cjs`: juggling/ball behavior and collision grids.
+- `node tests/static-shadow-batches.cjs`, `node tests/shadow-visibility.cjs`, `node tests/hidden-transform-gate.cjs`: shadow/transform behavior and safe restoration.
+- `node tests/position-store.cjs`, `node tests/match-update-clock.cjs`: independent map subscriptions and match cadence.
+- `node tests/boost-render-work.cjs`, `node tests/idle-flight-effects.cjs`, `node tests/coin-effects.cjs`: bounded active effects and idle sleep.
+- `node tests/engine-voice-reuse.cjs`, `node tests/music-continuity.cjs`: sound reuse and shared music lifecycle.
+- `npm run build`: production compilation, lint and type validation.
+
+Browser scripts mentioned in the dated log live under `/tmp` and may disappear. Treat them as historical fixtures, not permanent available infrastructure; recreate or promote them into repository scripts when needed. Debug information is available under `window.__fi2`, including renderer, traffic stats, hidden-transform stats, position store and HUD renders.
+
+## Resolved batching regression and follow-up
+
+The joint-merging change initially increased a 22-player match fixture from 10 to 118 batches because generated geometry UUIDs prevented sharing across players. This is now corrected locally: field and coach-practice rigs explicitly disable per-rig merging, while individually rendered characters retain it. `tests/player-batch.cjs` verifies **22 players / 10 batches**. Keep this cross-player check alongside per-rig geometry checks.
+
+Player batch colors now compare actual Float32 RGB values at each instance slot. Stable colors skip `setColorAt` and GPU upload; changed colors upload the affected range. Comparing slot data preserves correct colors when players are reordered, hidden, reappear or change appearance. Empty batches do not request buffer uploads. Animated matrix uploads remain active.
+
+Town and Breakaway joysticks cache their rectangle for a gesture through `useJoystickBounds.ts`. New gestures, release/cancel, element resize, window resize/orientation and viewport/scroll changes invalidate it. Preserve native gesture blocking and multi-touch recovery. This is separate from the earlier direct-CSS feedback optimization.
+
+Jetpack sound uses two reused sine voices with a quieter, gently detuned upper harmonic and soft startup sweeps. Latest tuning uses base hum gain .009 and upper harmonic .002, with startup gains .012/.003. Parameter updates retain the existing 10 Hz cadence; music/effect preferences and parachute/fall muting remain unchanged.
+
+## Latest recorded status
+
+At this note's creation, the character-joint batching, route samples, distant yielding decisions and reusable field projection changes are **local, not deployed**. Production build and relevant tests passed. A four-second mobile-emulated production sample rendered 120 frames and deferred 402 of 1,080 traffic yielding scans (37.2% fewer scans in that sample). Both pickup landings and driving passed without JavaScript errors. This percentage describes yielding scans only, not total CPU, GPU or heat reduction.
+
+Older sections in the dated log say “local” as a historical snapshot. Do not infer today's deployment status from those labels; verify the release before reporting something as live.
+
+### Truck collision safeguard added after the latest pass
+
+Preserve `trafficSeparation.ts`: autonomous route advances and free driving check oriented vehicle footprints. Existing overlaps may separate without allowing new or deeper intersections. Do not restore a blanket rejection of every overlapped candidate, which trapped landed trucks, or make overlapping autonomous cars yield forever. Truck passengers are not pedestrians for traffic-stop checks. Keep the nearby rejection before SAT overlap work and reuse footprint objects. Regression check: `node tests/traffic-separation.cjs`; browser checks covered overlap escape and both pickup landings. Local, not deployed.
+
+## Live rooftop knockout
+
+The rooftop game shares Town's renderer and clock; it has no separate modal, canvas, audio loop or animation loop. Six island opponents seek six reusable field balls. Players must approach a loose ball to kick; stopped shots remain available, teaching scanning, aiming and finding space around cover. The ordinary attached-ball simulation is bypassed while participating. Offscreen distant arena updates sleep. Ball visuals share one instance buffer, teleport rings share geometry/material, and countdown textures are created once rather than repainted each frame. Effects expire after each knockout/return.
+
+The south stair uses continuous side collision barriers rather than height-dependent segments that can activate around a rider partway up a tread. Keep the top gate open and retain safe mounting clearance. Validation: rooftop travel and knockout simulation tests, browser walking/bike/moped ascent and descent, knockout queue teleport, return teleport and countdown. These changes are local, not deployed; no physical iPhone thermal measurements were taken.
+
+Knockout now counts three unprotected hits before elimination. The first two hits grant three seconds of protection, rendered with a single shared instanced blue-shield mesh (maximum seven instances, hidden when empty). Cage rebounds reflect both velocity axes at corners using swept ball steps and match the visible cage extents. The fixed six-ball pool persists through impacts and shot expiry; the player's ordinary attached ball stays hidden on the roof and raised arena obstacles. Tests cover all four wall rebounds, shield duration, third-hit elimination and an autonomous round finishing. Browser verification covered first/second-hit survival, blocked repeat hits, third-hit queue teleport and next-round return. Local, not deployed.
+
+Cage-ball possession: approaching a loose ball automatically attaches that existing ball at the player's feet (one per player). The ball follows movement and facing until kicked; a shot releases ownership, and elimination drops it. Both the main character and opponents use this rule. Keep the ordinary island ball hidden: possession reuses the same six instanced cage balls and adds no renderer or effect loop. `tests/rooftop-knockout.cjs` covers pickup, following/aiming, exclusive ownership, shot release and elimination drops alongside shield/rebound rules.
+
+Latest cage-ball rebound tuning: obstacle and queue faces now reflect shots instead of stopping them. Reflected penetration plus a 2 mm separation prevents repeated contact trapping. Cage contacts retain 92% of the normal velocity; obstacle contacts retain 86%. Exponential rolling drag replaces the fixed ten-second stop, settling below 1.2 m/s into a collectible ball. The existing swept steps and six-ball pool remain; no additional render loop or physics dependency. Regression tests cover obstacle faces/corners/queues, wall rebounds, no embedding, gradual settling, possession and shield rules. Build passed; local, not deployed.
+
+Hit animation update: first/second hits play a 1.4-second fall, get-up and dazed recovery. Movement, pickup and kicking pause during recovery; the three-second protection timer still begins on impact. Orbiting daze stars continue briefly after standing. Third-hit elimination has its own fall/twist, stretching shrink-out, transfer at 1.8 seconds and half-second arrival in the queue. `knockoutAnimation.ts` owns shared timing for the main character and opponents. Shield bubbles expand/pulse/fade, and event-only effects use fixed pools of 21 stars and 112 particles, with fewer particles and no knockout twist for reduced motion. Empty pools hide and skip matrix uploads. No independent loop or dynamic lights were added. Tests: `knockout-animation.cjs`, `rooftop-knockout.cjs`; browser verified falling, frozen recovery, upright daze/shield particles, third-hit queue teleport and return countdown. Local, not deployed; physical-device thermals remain unmeasured.
+
+Latest tuning supersedes the earlier hit timings: normal recovery lasts 2 seconds with a longer ground hold; third-hit teleport occurs at 2.7 seconds, followed by a half-second queue arrival. `SHIELD_DURATION` is now 5 seconds and drives both damage protection and visual timing.
+
+Cage balls now have cream-colored tapering trails from a single 72-instance pool (12 per ball). Trails sample actual movement, persist through rebounds, fade within .35 seconds after collection/stopping, reset between rounds, and stop uploading when empty. Reduced motion suppresses emission. Tests: `knockout-ball-trails.cjs`; browser verified rebound trails and their fade.
+
+Moving-ball collection no longer requires zero velocity. Nearby passing/receding shots can be trapped directly onto the feet; trajectory checks preserve direct incoming body hits. A .35-second release guard prevents immediately recapturing one's own kick. Collection clears velocity and preserves the same six-ball pool. Tests cover moving misses/rebounds, hit priority and release. Latest timing/collection/trail changes are local, not deployed.
+
+Stair-ball clearance: attached, charging and windup touches now sample the existing spatial surface lookup beneath the ball footprint, rather than reusing the character's lower tread height. Touch reach shortens near walls too tall to step onto. Shot and juggling paths retain their own physics. `tests/ball-actions.cjs` covers both stair directions and all three attached modes. The knockout landing's solid green panels are replaced with open rails; collision guards remain unchanged, and the blank green entrance panel is removed. Local, not deployed.
+
+Rides on elevated stairs now use `rideSurfacePose.ts`: front/rear support sets pitch, and wheel-circle/deck samples raise the ride clear of individual treads. The rider uses the same height and pitch. The result object is reused; flat roof spans exit after the front/rear checks, and flight, falls, truck riding and ramp airtime retain their existing paths. Ground-level pitch remains unchanged. `tests/ride-stair-pose.cjs` covers wheel clearance and both directions for scooter, bike and moped, plus flat-roof height. Local, not deployed.
+
+Exact stair seams now retain support: `roofAt` uses a one-micrometre footprint tolerance only for step-access surfaces. Strict open rectangles previously returned ground height at some shared tread boundaries, dropping rides into the stair mass. The stair-seam regression is in `tests/rooftop-travel.cjs`; browser riding checks now pass for scooter, bike and moped with matching rider/vehicle tilt. This supplements wheel support rather than altering solid-object collisions.
+
+## Production release — September 14, 2026 (Pacific)
+
+Deployed the accumulated updates, including live rooftop knockout, possession/rebounds/trails, five-second shields and hit/teleport animations, façade cleanup, stair-ball clearance and ride/tread-seam fixes. Vercel production build passed; deployment `dpl_DZ6T9PkmcpN23y7pDFZrqcTCDP35` is READY and aliased to https://futbolisland.app. Alias verification returned HTTP 200. Deployment URL: https://futbol-island-a3mkiv5x9-khoa0aohk.vercel.app. Prior “local, not deployed” entries above are historical and superseded by this release. Device thermal validation is still separate from release/build checks. This release record was appended locally after deployment.
+
+## September15 local thermal follow-up
+
+See [the measured follow-up](thermal-followup-2026-09-15.md). Live rooftop opponents now share14 character batches instead of162 individual visible meshes. Keep unmerged source rig geometry for cross-player sharing, detached local source transforms, and computed instance bounds with `frustumCulled=true` so color and shadow passes cull independently. The first no-culling attempt added offscreen geometry and was corrected. Unjoined unseen arena work sleeps; participant continuity is preserved. `tests/live-knockout-work.cjs` is the permanent regression check. Same-settings production emulation reduced rooftop-view rendering calls412→268; this is not a measured heat percentage. Local, not deployed.
+
+The [whole-app audit](performance-audit-2026-09-15.md) includes a staged-loading plan. Current50m world chunks are procedural rendering units, not lazy downloads. Prioritize selected-category/visible-preview preparation and current/next narration before architectural world streaming. Preserve lightweight world collision/map/route metadata and predictive shadow/view margins; avoid repeated construction/upload spikes.
+
+### September 15: collected-ball lessons (local, not deployed)
+
+Collection tips now hand off from `coinHunt` only after the finite `coinEffects` pool settles. This uses simulation completion, not a wall-clock timer: background tabs and paused menus cannot bring up the lesson while the collection is unfinished. Simultaneous collections queue their lesson IDs. The new lesson component is dynamically imported only when a completed collection needs it, and joins Town's existing paused-menu path; proximity guidance no longer subscribes to progress or runs dismissal timers. Preserve the completion ordering and idle-world pause when revising the lesson UI. `tests/coin-solids.cjs` covers the once-only, pause-safe handoff; `tests/coin-effects.cjs` covers bounded pools and zero idle effect mutations. No iPhone thermal claim follows from these checks.
+
+### September 15: knockout ground clearance (local, not deployed)
+
+`knockoutGrounding.ts` supports fallen rigs above the rooftop instead of rotating half their body below the foot pivot. It caches visible mesh references at the start of each fall and reuses geometry bounds; active hit/transfer frames project those bounds onto world Y without vertex scans or new frame allocations. This accounts for animated limbs and large mascot heads for both the main character and detached batched opponents. Normal gameplay and settled queue poses skip the support work. Preserve the two-second recovery, five-second shield, 2.7-second elimination transfer and shared rendering batches. `tests/knockout-grounding.cjs` checks actual transformed vertices in 4,656 samples across male/female characters, costumes, merged/batched rigs, normal/reduced motion, recovery and teleport. Existing animation and gameplay tests passed. This visual correctness change is not a measured thermal improvement.
+
+### September 15: rooftop countdown score styling (local, not deployed)
+
+`knockoutCountdown.ts` matches the live goal badge's pink (`#f3a6c4`) and plum (`#502b40`) colors, brief pop/rise and soft gold lightning edges. Four numeral/GO textures and one feathered burst texture are painted once; two reusable sprites update only during the existing three-second countdown and .8-second GO window. No per-frame canvas painting, dynamic lights, new animation loop or timers. Reduced motion uses a stationary badge and quiet halo. Finished countdowns leave transforms/materials untouched; the parent arena still sleeps when unjoined and unseen. `tests/knockout-countdown.cjs` covers the sequence, visual palette, reduced motion, cached texture count, inactive work and disposal; `tests/live-knockout-work.cjs` still verifies 14 character batches and offscreen sleep. No measured phone cooling claim.
+
+Ground-clearance follow-up: final production build passed. Mobile Chromium exercised loose-ball pickup, normal knockdown/recovery, five-second protection, third-hit queue teleport and return countdown successfully. The prone screenshot `/tmp/fi2-grounded-hit-fall.png` shows the full character above the roof. These checks are local; no deployment performed.
+
+### September 15: live-field, traffic and volleyball follow-up (local)
+
+- `liveFieldFrame.ts` retains live roster tokens, position references, reaction scratch state and motion objects. Roster replacement rebuilds the cache; each reception/facing/kick/stun field resets before reuse. Field runtime no longer creates live maps/sets/pose objects or foot-contact vectors each frame. Teaching/quiz poses remain separate. `tests/live-field-frame.cjs`, teaching-contact and quiz-outcome checks pass.
+- `trafficTangentCache.ts` retains two exact tangent samples per immutable route object (current and proposed). A new route gets a fresh cache, including truck reentry. This changes no heading approximation. The ten-minute synthetic road test compares cached/uncached trajectories exactly: 316,306 actual evaluations, 647,756 cache hits (about 67% fewer evaluations).
+- Junction ownership now holds priority through a turn so crossing vehicles wait outside the junction instead of mutually blocking. The initial synthetic test exposed an existing 67-second standstill; after priority, ten simulated minutes produced a maximum stop of about 4.3 seconds and all vehicles progressed. Driven-truck road return and overlap separation tests pass. A stopped player-driven truck can still physically block a lane; this is not a guarantee against every arbitrary obstruction.
+- Volleyball uses per-player batches only when the complete character is within view: a fully visible court falls from112 to62 submissions including the ball, with identical triangles. At screen edges, original merged rigs retain per-part culling; the first all-court14-batch attempt was rejected because it added offscreen geometry. Source rigs retain picking identity, hover pause and hit reactions. See `volleyball-performance-2026-09-15.md` and `tests/volleyball-batch.cjs`.
+
+These are work-reduction and correctness measurements, not physical iPhone temperature results. No deployment performed in this follow-up.
+
+Actual-island traffic validation: production Chromium ran ten accelerated simulated minutes on the authored 26-node road network. Every car/pickup advanced; longest stop was 6.07 seconds, and cached tangent evaluations were 306,457 versus 649,750 avoided repeats. This exercises autonomous intersection priority on real roads, in addition to the synthetic pickup-driving/reentry fixture. It does not promise clearance when a user deliberately parks in a lane.
+
+### September 15: occupied knockout box energy walls (local, not deployed)
+
+`knockoutQueueWalls.ts` adds translucent red corner-box boundaries that fade to zero alpha at 4.8 m, with rising red sparks. Only boxes containing a teleported-out participant activate. All walls share one 16-instance batch and update matrices only on occupancy changes; sparks share one 48-instance pool (12 per occupied box), updating at 20 Hz. No textures, dynamic lights, new loops, per-frame allocations or collision changes. Paused, empty and offscreen arena work sleeps; reduced motion keeps the static fading walls without moving particles. Characters remain visible through the boundaries. `tests/knockout-queue-walls.cjs` verifies arrival/occupancy gates, transparency, upper fade, caps, cadence, pause and cleanup; the live arena work test still passes with 14 character batches. This is a bounded visual addition, not a measured cooling improvement.
+
+Final verification: production build passes. Mobile Chromium checks passed loose-ball pickup, hit/shield recovery, elimination, red-wall/particle activation after arrival, queue teleport, return teleport and visible pink countdown. This confirms lifecycle/rendered objects, not physical-device temperatures. Loader uses a transform-only CSS indicator, removed with the loading screen; text-to-indicator gap is 10px with paragraph margins removed. No extra render loop or staged world-loading rewrite. Not deployed.
+
+### September 15: distinct ball-hunt lessons and practice (local, not deployed)
+
+Replaced ten overlapping concepts and differentiated the remaining diagrams; 50 three-stage patterns remain distinct even with labels removed. Practice idea opens a per-tip prediction/reveal in the existing lazy modal instead of generic quest routing. No new render loop, timers, 3D assets or eagerly loaded lesson data. Collection IDs/progress and fixed modal lifecycle are preserved. All 150 mobile stages and 49 practice entry points checked; production build and progress/semantic fixtures pass. See `ball-hunt-content-confirmation-2026-09-15.md`. This is educational refinement, not a measured cooling change.
+
+### September 15: offscreen live-player instance culling
+
+Live field batches used to submit entire teams when any part of a pitch entered view. `fieldRuntime.ts` now checks a conservative radius7 + 2×elevation body/shadow sphere per player before batch submission. Simulation, pose updates, contacts, and teaching participants stay unchanged. Six fixed and 18 sequential edge views are pixel-identical with culling toggled; final town GPU samples improve from 5.0–5.3ms to 3.95–4.02ms at unchanged DPR2/~30fps. See `moving-heat-followup-2026-09-15.md`. Do not infer physical cooling or a proven single historical culprit from these desktop measurements.
+
+Heat fix deployed and verified: `dpl_Af6TFaZWjuVGUJF3JLEsLnAKKXxa` / https://futbolisland.app. Production town/field/rooftop checks passed exact pixel and shadow parity with offscreen instances omitted. New Paths/stories are local-only and excluded from this isolated release. Physical iPhone retest remains necessary.
+
+### September 15: populated player matrix uploads (local)
+
+After the offscreen-player release, the user reported the iPhone still warms, but less. This is improvement feedback, not resolution. The new production movement profile still shows transforms/render submission among active CPU costs; its cruise route leaves the fields, so idle/cruise totals are not a controlled same-view thermal comparison.
+
+`playerBatch.ts` now limits instance-matrix update ranges to `mesh.count * 16` floats. Previously every nonempty frame uploaded all 1,024 reserved matrix slots per batch, including unused capacity. All populated slots are still rewritten each frame, so animations, reordering, shadows, growth and reappearance are unchanged. First buffer allocation remains full capacity. Empty batches skip uploads.
+
+Built mobile-emulated browser comparison instrumented actual WebGL bufferSubData bytes during the same frozen frame, forcing full player matrix uploads for the baseline:
+
+| View | Full upload bytes | Populated upload bytes | Changed pixel components |
+| --- | ---: | ---: | ---: |
+| Town (103,90), height28 | 679552 | 66432 | 0 |
+| Field (132,105), height28 | 663424 | 31104 | 0 |
+| Rooftop (11,18), height28 | 671488 | 37248 | 0 |
+
+Counts include buffer uploads during each sampled render, not total application/network traffic. Roughly 90–95% less sampled upload data is NOT a 90–95% GPU-time or thermal reduction. Render calls and triangles stayed identical. Physical iPhone validation remains outstanding. Scripts/results: /tmp/fi2-player-upload-review.cjs and .json. Regression checks cover short/full crowds, empty frames, unchanged colors, reordered colors, matrix validity and full reappearance. Player batch, live field, live knockout, Paths and learning-journey tests passed; production build passed. Not deployed; Paths/stories are also local preview only.
+
+### September 15: distinct costume head silhouettes (local)
+
+`clubCostume.ts` now authors species-specific skull proportions, rounded puma ears, lynx tufts/ruff, floppy dog ears, folded pig ears, goat horn bends, long zebra ears, distinct bird bills/eyes and orca face patches. Repeated lions, wolves, foxes and orcas also differ structurally. Existing oversized head scale and raised shoulder-clearance offset are preserved. These are construction-time meshes merged into the existing five head material buckets; no textures, timers, lights, animation loops or per-frame allocation were added. Maximum whole-costume mesh and triangle counts remain 29 and 4,680 (same maxima as the prior version; individual costumes vary).
+
+`tests/costume-heads.cjs` checks 24 head geometry signatures independent of palette, male/female rigs, ride transforms, cached attachment, existing scale/offset and disposal. Desktop/mobile store previews render all24; contact sheet `/tmp/fi2-costumes-distinct-heads.png`. Typecheck passed. Local only; this is visual differentiation, not a measured thermal improvement.
+
+### Pixel stories (September 15)
+Story illustration transitions use finite .65s CSS transform animations and one finite sparkle, with reduced-motion and hidden-document handling. No RAF or background timer was added. Retro sound cues reuse createIslandSound and its existing volume/mute/hidden checks and voice cleanup; the document event listener is removed on dispose. Story assets remain lazy per opened story. This is not evidence of physical iPhone cooling.
+
+### Playable story scene
+lib/paths/pixelStoryGame.ts replaces story illustration playback with a small on-demand canvas simulation. One cached background canvas and one lazy transparent sprite sheet per open scene. RAF stops at idle, caps paint around30Hz, hidden cancels it; dispose removes input/visibility listeners and ResizeObserver. Bubbles receive position CSS variables during active draw only. Desktop/mobile browser checks verified unchanged draw counts during idle; no physical iPhone thermal claim.
+
+Knockout waiting pens: removed the opaque green wall meshes. All four red wall outlines stay visible with one static instance upload; rising particles remain limited to occupied pens, with existing20Hz/reduced-motion/offscreen rules. Queue-wall tests passed. Story simulation is now watch-only, with scripted movement and finite autoplay timers; no scene input handlers. Scripted kicks do not start a second RAF chain. Desktop/mobile browser checks passed. No new physical-device heat measurement.
+
+Story navigation is manual again: Back/Next, with Replay on the final scene. No autoplay advance timer. Dialogue collapse/expand is a finite CSS scale effect, with no added JS frame loop. Sprite facing/walk frame selection reuses the existing active scene paint. Heating work remains unverified on physical iPhone until the pending upload optimization is deployed and compared.
+
+### Story scene choreography (September 15)
+Story animations use finite per-page timelines rather than shared generic states. One Canvas2D render loop caps at roughly 30Hz, stops at the end of the sequence, and pauses for hidden documents. Resize only stages and invalidates a frame. Timelines, gestures and small contextual cues share that loop; no extra timers, particle loops or network assets. Route tests cover 60 bounded distinct scenes. Preserve scene idle sleep when adding future story movements. This is a work-bound guarantee, not a measured iPhone thermal improvement.
+
+### September 15: movement HUD and minimap layer (local)
+See [measurements and tradeoffs](hud-minimap-performance-2026-09-15.md). Cache Town viewport dimensions in existing resize handlers; only write HUD hidden state when it changes, and resolve projected building visibility once. Floating prompt movement uses independent CSS translate with existing anchor transforms preserved. Minimap terrain now scrolls as one HTML compositor layer containing the unchanged SVG, retaining smooth motion and fixed player marker. Do not revert to animating the SVG group: alternating diagnostic measurements tied it to roughly60 layout passes/second. Final mobile-emulated four-second movement/boost samples fall to2/3 layout passes from241/222. This is not a total CPU, GPU or temperature percentage. Preserve reduced-motion handling, paused/minimized subscriptions, offshore zoom and boundary, and full-map click targets. Build, resize, prompt click/position and three map visual comparisons passed. Not deployed; physical-device thermals and layer-memory tradeoff remain unverified.
+
+### September 15: cached character render-group bindings (local)
+`playerBatch.ts` retains each mesh's render-group binding instead of rebuilding and looking up the geometry/roughness/side string every visible frame. Geometry or material replacement, roughness and side changes invalidate the binding. RGB comparisons, ancestor visibility checks, world matrices, shadow flags and active-prefix uploads are unchanged. This avoids repeated grouping strings/lookups, not character animation or simulation.
+
+Alternating synthetic production-module benchmark:70 real rigs,300 batching frames per trial,six trials. Median grouping/draw CPU time 190.77ms→132.49ms (about30.5% lower for this isolated operation, approximately0.194ms saved per frame in that fixture). This is NOT an overall frame-time or heat percentage. Before/after buffers match exactly across25 frames including position changes, culling, geometry/material/color/side changes. Raw timings: `player-batch-binding-2026-09-15.json`; benchmark `/tmp/fi2-batch-binding-review.cjs`. Permanent player-batch regression checks cache invalidation, visibility and all prior range/color invariants. Typecheck and live-field/live-knockout fixtures passed. Local only, alongside the still-undeployed minimap/HUD fixes. No physical iPhone measurements.
+
+### Production release: minimap/HUD and character binding optimizations
+September15 deployment `dpl_FJZj19iaNYWRA3iKvQnzg2J2H9ub` is READY and aliased to https://futbolisland.app (https://futbol-island-6fwcov2lt-khoa0aohk.vercel.app). Supersedes the local-only status of the immediately preceding HUD/minimap and character-binding entries. Local and Vercel builds passed. Live mobile-emulated hover/movement/boost checks verified the new map layer, zero page-size reads and redundant hidden writes, 0/2/3 layout passes in four-second samples, and correct760×440 landscape camera aspect. Raw verification: `performance-release-2026-09-15.json`. Physical iPhone thermal outcome remains unmeasured.
+
+## Explore activity tracking — September 16, 2026 (local)
+
+Explore now tracks truck touchdown, target reveals, parachute deployment, completed roof drops, successful player ball hits (20), and joined knockout round wins (5). Tracking runs at existing successful event transitions; there is no new timer, render loop, or animation. Counters cap at their checklist target and stop persistence writes after completion. Existing saved activity migrates with false/zero defaults for new fields. Preview mode does not earn progress. TypeScript and the Explore regression test passed; this is not a measured thermal improvement or a deployed change.
+
+Explore's Shoot 5 targets checklist derives its count from distinct revealed wall-target IDs in existing ball-hunt progress, so previous target hits count and repeats cannot inflate progress. It subscribes to existing saved events, adds no polling or separate per-hit storage writes, and preserves legacy single-target credit. All 16 activities remain automatic; target threshold/deduplication regression and TypeScript checks cover this update.
+
+Knockout now keeps only the northwest and southeast waiting boxes. Eliminations choose the least occupied remaining box (at most three of the six eliminated players per box), preserving teleport slots. Wall capacity drops from 16 to 8 faces and particles from 48 to 24. The red floor uses two static planes with one shared 28%-opacity material, with depth writes disabled. No additional animation loop is introduced. Gameplay/queue-wall regression tests and TypeScript checks validate the local change.
+
+## September 16: unselected ride animation work (local, not deployed)
+
+`vehicle.ts` now updates helicopter rotor transforms, classic pack flames/compression, and flying-car exhaust only while that model is selected. `flightExtras.ts` likewise skips hidden plane propeller transforms and unselected armor repulsor scaling. Scalar phase clocks keep advancing exactly as before, so switching back preserves the original animation phase. Shared vehicle paint color is parsed/set only when the final selected color changes. No changes to resolution, frame rate, scene population, physics, particles, or visible animation timing.
+
+Comparison `/tmp/fi2-vehicle-parity.cjs` ran 1,080 frames across walking, all flight types, ground rides, and reselecting helicopter/plane against captured pre-change source. Visible mesh world matrices/colors matched exactly on every frame. Rotation writes fell from 5,940 to 2,250 in that fixture (62% fewer for the vehicle update, NOT total frame work). TypeScript and `tests/idle-flight-effects.cjs` passed. This is a modest CPU-work reduction, not a measured phone-temperature result or proof of the original thermal culprit.
+
+### September 16 follow-up: settled lighting, hidden labels, expired impacts (local)
+
+- `islandLighting.ts` skips all work after reaching a lighting preset. Mode changes wake the existing smooth transition; reduced-motion immediate changes still apply. Convergence snaps only below 1e-7 in linear color/intensity/exposure, far below displayed color precision. Initial day lighting now performs zero lerps during unchanged frames (2,400 color lerps avoided across a 600-frame fixture).
+- `islandNpcs.ts` delays canvas label repaint/texture upload when the label itself is hidden. The current status is painted when the label becomes visible. Movement/routine simulation is unchanged.
+- `ballReactions.ts` stops particle transforms after the .7-second impact pulse expires while retaining knockback, stars, recovery and cleanup. Active particle loops no longer allocate sliced child arrays.
+
+`tests/lighting-idle.cjs` covers idle sleep, wake, transition and immediate modes. Ball-reaction tests cover expiry with particle transform methods guarded against writes, plus existing hit/recovery/cleanup; NPC behavior tests pass. TypeScript passes. These remove avoidable CPU and texture work; no physical-phone temperature measurement or deployment has been performed.
+
+### September 16: packed parachute and empty ground-trail sleep (local)
+
+The packed parachute previously reset all eight canopy mesh scales, four ropes' visibility and material opacity every rendered frame. It now returns while closed after its release animation has finished. Opening, inflation, discarded pack, rope attachment, landing release, cutaway and reduced motion remain intact. Ground trails stop scanning their 48-particle pool when disabled and empty, retaining movement history, teleport/reduced-motion resets and normal expiration of live particles.
+
+`/tmp/fi2-effects-sleep-parity.cjs` compared captured prior source against the new code: 2,520 parachute frames (open/land/cut/reopen and reduced motion) had identical visible transforms/opacities and covering state. Canopy scale writes fell from 20,380 to 4,900 in this mostly packed fixture. 1,350 trail frames across three styles and repeated enable/disable cycles had identical populated instance matrices/counts. `tests/idle-flight-effects.cjs` now guards against packed canopy writes and verifies reopening/landing. TypeScript passes. These are scoped work savings, not total frame/phone-temperature reductions. Not deployed.
+
+### September 16: invisible character highlight (local)
+
+`characterGlow.ts` previously animated 18 sparks and three orbit arcs every frame with no hover. It now skips their transforms/material updates below its existing visibility threshold, and only updates shell visibility when that threshold changes. The scalar animation clock and fade still advance, preserving the exact phase on hover/rehover. `/tmp/fi2-glow-parity.cjs` compared 1,800 idle/hover/fade/rehover frames including reduced motion: visible matrices, opacity and shader strength matched exactly; spark position writes fell from 32,400 to 4,644 in that fixture. `tests/character-glow-idle.cjs` verifies sleep/wake/fade/reduced-motion/disposal; TypeScript passes. No frame-rate, visual or thermal-result claim; not deployed.
+
+### September 16: active trail buffer upload ranges (local)
+
+`jetExhaust.ts`, `flightTrail.ts`, `parachuteTrail.ts`, and `rideTrail.ts` now mark only active instance-matrix prefixes for upload (`count * 16` floats), and colored trails mark only their active RGB prefixes (`count * 3`). First GPU buffer allocation still uses full capacity. Every active slot continues to be written; expiry, compaction, style changes, reactivation, particle budgets and visuals are unchanged. Empty effects do not flag uploads. This extends the previously validated player-batch approach to trail buffers.
+
+`tests/trail-upload-ranges.cjs` covers 360 frames per effect, boost/style changes, expiry and restart. Summed requested upload ranges versus full reserved-buffer sizes: exhaust 1,265,172 / 2,162,048 bytes (41% less), flight 521,344 / 1,077,248 (52%), parachute 722,152 / 1,969,920 (63%), ground 51,328 / 752,640 (93%). These are synthetic requested-range totals, not captured GPU traffic or total frame/heat improvements. Idle-flight regression and TypeScript checks pass. Not deployed; real-device cooling remains unverified.
+
+### September 16: recurring joint lookup and hidden landing-marker work (local)
+
+Cached island skateboarders' left shoulder alongside their existing right shoulder instead of recursively searching both every pose. Powered armor caches the underlying player's head when binding a rig, alongside its existing limb anchors, instead of searching the hierarchy every active frame. The underlying player head is stable across appearance/costume changes; binding a new rig refreshes the cache. The landing marker skips scale/opacity pulse updates once its existing fade falls below visibility, while retaining its time/fade state for reactivation.
+
+Ironman helmet regression passes across 23 mascots plus default, with head restoration and animated alignment. Landing-marker tests now forbid transforms/surface queries while hidden and verify reactivation, existing fade and floor placement; NPC behavior and TypeScript checks pass. Traffic was inspected but not altered: rigid material batches already disable local matrix rebuilding, so a broad duplicate traffic-transform optimization was not justified. These are small CPU reductions with no measured thermal claim; not deployed.
+
+### September 16 GPU diagnostic resumed
+
+User-requested `/tmp/fi2-major-gpu-audit.cjs` ran the existing frozen-flight GPU timer diagnostic in local mobile Chromium at unchanged rendering settings. Fifteen samples per mode: full median 2.347207 ms; diagnostic shadows-off 2.000499 ms; diagnostic flight-effects-off 3.301374 ms. This single-view, desktop-hosted run is noisy (removing effects was slower), and does not justify a large thermal-saving claim or a production visual downgrade. Shadows/effects were restored and no rendering setting was changed. It does not measure iPhone temperatures.
+
+### Building-target presentation and facing
+
+Six existing ball-hunt IDs moved to east walls (Books, Rua Nova, Local Library, Community Hall, Corner Deli, Coast Apartments); saved discovery IDs remain intact. Wall facing drives geometry rotation and front-only hit detection. Debris starts at the actual wall position; pickups/clues match the new approach. High targets use muted brass/cream and smaller round faces, omit KICK labels and ground arrows, and retain forgiving hit areas. No new timer, animation loop, or texture asset; fewer attached high-target label meshes. Coin hit/collection/effect tests cover east and south approaches. Local, not deployed.
+
+Building-target spacing follow-up: relocated six more wall discoveries to eliminate nearby clusters, retaining only the practice-wall and futsal-parking pairs. All 20 wall targets now have at least 35.47m horizontal separation outside those exceptions. Eight face east. Smaller muted tan/brass markings reduce contrast; original forgiving hit areas remain. Names, clues, detailed directions, pickup locations and world hint markers all use the same updated COIN_QUEST entries; original IDs/order preserve saved progress. `tests/ball-target-spacing.cjs`, coin-solids charged-shot/direction/pickup checks, coin persistence tests and TypeScript pass. No added runtime polling or effects; local only.
+
+Store simplification: item cards no longer render keyboard/action strips or Path badges/links. Path completion retains learning feedback but no longer advertises badges, equipment or Store rewards; the completion screen no longer loads Store previews. Gear and base characters are independent of quiz/Path progress, with future requirement metadata removed. The separate 50-ball costume policy and existing collection saves remain intact. Customization, learning-progress, coin-progress tests and TypeScript pass. Local only.
+
+### September 16: aerial discoveries and umbrella feedback (local, not deployed)
+
+Five parachute-only balls bring the catalog to 55, using the existing distance-gated ball animation and pooled collection effect. They add no parcel geometry, colliders, independent timer or animation loop. Collection requires parachute phase and a generous 3m horizontal / 2.5m vertical tolerance. Five new lesson concepts and diagram sequences load through the existing lazy lesson modal. Version-3 progress preserves costumes already earned by completing the previous 50.
+
+Umbrella canopies retain individual meshes so a kicked umbrella can fold and spring open in 1.45 seconds. Poles and furniture remain statically batched. Only active reactions write transforms, repeated hits cannot restart the fold, reduced motion stays still, and disposal releases the retained geometries. This trades a small number of canopy draw calls for interaction; it is not a verified heat saving. Unit checks cover idle sleep, folding/restoration, collection gating, migration and distinct lesson sequences. TypeScript passes; real-device visual/thermal testing remains outstanding.
+
+Aerial balls now use staggered altitudes 60/80/100/120/140m. While parachuting nearby, a shared unlit gold torus highlights each remaining aerial ball and its visual scale increases; no bloom, lights or particle emitter is added. Rings hide outside 150m horizontally or 160m vertically and after collection. Umbrella ground-hit radius now reaches table/chair edges so furniture collisions can trigger the fold before the ball reaches the pole; upper-floor checks remain. Local regression tests cover these gates.
+
+Umbrella timing refinement: 0.12s snap shut, 1s folded spring buildup, small opening bounces and a final broad stretch; settles by 2.35s. An on-demand shared-geometry particle pool emits ten small flecks per opening, capped at thirty concurrent meshes, with 0.7s lifetime and no shadows. Reduced motion skips the reaction and particles. No new render loop or idle transform writes.
+
+Beach umbrella mats/loungers now share the owning canopy reaction using one-time cached rotated bounds. Furniture stays statically batched; one canopy cooldown avoids duplicate folding. Broadleaf canopy collisions, potted shrubs and rooftop small trees now shed small fluttering leaves through the existing 48-particle pool; palms retain their narrow fronds. Tree checks remain collision-triggered, with no extra per-frame mesh animation or free-flight scanning. Tests cover linked mat edges, upper-floor exclusion, canopy hits and fixed-pool expiry. Local only.
+
+Leaf responsiveness: reduced impact speed threshold to 1.2, shortened per-tree cooldown from 0.8s to 0.3s, and increased initial leaf descent speed. Shortened lifetimes to 1.9s (leaves) / 2.5s (palm fronds) to offset more frequent hits; pool remains capped at 48 with collision-only activation. Tests cover immediate light-kick response and repeat cooldown.
+
+### September 16: distinct island conversations, rankings and on-demand clips (local only)
+
+- All 60 talkable characters (54 roaming/resident, two wall-practice, four volleyball) have distinct names and greetings. Authored resident/roamer encounters replace copied mentor topics. Purpose labels reuse the existing visible-label repaint gate; no additional character meshes, particles, render loops or simulation frequency are introduced. Shared locomotion rigs remain shared.
+- Twenty match-story residents have explicit competition assignments, two each across Premier League, La Liga, J1, Ligue 1, Serie A, Bundesliga, Brazilian Série A, Champions League, WSL and MLS. Each pair has a different first-match offset and viewing focus. No cross-league fallback; unavailable goal details stay explicitly unknown.
+- ESPN soccer date-range queries returned HTTP 400 during live verification. Scoped feeds now request individual dates (past seven days through tomorrow), at most three server-side requests concurrently. Browser requests still return one bounded feed. Five-minute browser/server caches and pending-request coalescing prevent repeated work when reopening or sharing a conversation. Removed NpcNews's minute polling interval. Scores only load when a conversation needs them, never while roaming.
+- Noor alone offers an on-demand ranking component: reorder ten candidates, highlight your first five, compare Messi/Cristiano Ronaldo and team eras. Rankings are explicitly personal, not official, and reset with the conversation. This is React state changed on taps, with no animations or background work.
+- Video discovery is separate from score fetching. Official YouTube Atom feeds are fetched only after choosing a clip action, cached for ten minutes and capped at five suggestions. The source list is fixed, not user-supplied. Clip publication must be within seven days; popular means view-count order within the returned recent uploads, not a verified global viral chart. UEFA/Brazil general feeds are restricted by competition title terms. The CBF source may have no Série A clip on a given day.
+- Match clips require the same competition, both team names (limited explicit aliases), highlight wording and an upload after kickoff within 48 hours. A conservative mismatch shows no clip. This may omit a legitimate clip with an unfamiliar abbreviation rather than attach the wrong match.
+- Thumbnails load lazily after requesting clips. The youtube-nocookie iframe is created only on Play, never autoplayed on opening a conversation. Only one iframe plays at once. Closing the video/chat, changing clips, hiding the document or scrolling its card out of view removes it. No YouTube API script runs while exploring. Embedding/territory restrictions remain publisher-controlled; a YouTube link is always available.
+- Validation: TypeScript; personality uniqueness across all 60; league coverage and offsets; existing NPC behavior/match-story tests; news parsing and scorer details; clip freshness/allowlist/match filtering; coalescing/cache/concurrency tests; mobile browser ranking, no idle requests, tap-only player and cleanup. Live local checks returned J1, Ligue 1, Brazilian Série A, Champions League scores and official Premier League video entries. Desktop browser verification is not an iPhone temperature measurement.
+
+Source notes: league/publisher channel IDs were resolved from their canonical YouTube channel metadata on September 16. Official links include https://www.premierleague.com/en/news/1301094, https://www.laliga.com/en-ES/news/la-liga-channel-surpasses-100-million-youtube-views, https://www.jleague.jp/en/, https://www.cbf.com.br/a-cbf/noticias (links @brasil), and the Serie A digital guidelines at https://img.legaseriea.it/vimages/66bc6cc3/Digital%20Guidelines%20-%20Lega%20Serie%20A.pdf.
+
+### Child-facing video safeguard (September 16, local)
+
+The video publication gate now requires an individually reviewed ID in `lib/town/approvedIslandClips.ts`, exact approved publisher ID, a nonempty review note, a valid review timestamp and an expiry no more than 72 hours after review. Uploads older than 72 hours are excluded. The registry intentionally starts empty: no unseen video has been marked reviewed. With no current approvals for a league, the route returns no clips without contacting YouTube or the scoreboard. Source allowlisting alone is not a content safety assessment.
+
+Publication approval is checked server-side each time a card opens and again when Play is tapped, with no client result cache; underlying source feeds still use their ten-minute server cache and concurrent requests coalesce. Late Play responses cannot mount a player after the conversation changes or closes. Approval removal/expiry takes effect on the next request. Tests cover unreviewed, wrong-source, expired, future, malformed and stale-upload exclusions. A human reviewer must watch the full clip and audio and check its title/thumbnail before adding an approval; do not approve from metadata or popularity. Embedded YouTube ads/recommendations cannot be guaranteed kid-safe by this app; a fully controlled child video library would require appropriately licensed, reviewed first-party playback.
+
+### Ten on-demand video desks (September 16, local only)
+
+Added ten dispersed residents with distinct teaching prompts: five UEFA concepts, three ESPN FC topics, a UEFA Champions League final recap desk and CBS Sports Golazo final discussion. Existing distance/frustum pose gates and shared character routines are preserved; ten additional rigs still add memory and nearby rendering cost. No automatic score request, feed polling, video preload, new animation loop or autoplay is attached to these residents. A single existing lazy player opens only after an explicit clip request and Play approval recheck.
+
+Topic metadata comes from the individually reviewed registry, filtered by exact publisher ID, specific concept, publication within 72 hours and valid review expiry, with at most five results. Empty registry returns no clips and performs no external source requests. This is a curated publication workflow, not an automatic claim that unseen videos are safe. Final recaps must be dated and reviewed for any latest-final claim; no fabricated final scores are displayed. ESPN FC and CBS Sports Golazo channel IDs were checked against their canonical YouTube about-page metadata. Human clip review remains required before any topic video appears.
+
+AGENTS.md now makes low mobile heat an explicit requirement for every change, including non-graphics features. Local tests cover unique conversations, topic/source gates, request bounds and TypeScript. Real-device thermal improvement is not established; not deployed.
+
+### Teaching cue clarity (local)
+
+Positioned teaching highlights now have one owner in lessonCues: removed the independent fieldRuntime highlight-ring draw, merged concentric spotlight/zone/feedback markers, and gave quiz targets priority while preserving their hit areas. Arrow shafts terminate inside their arrowheads; movement routes use one terminal arrowhead. Reuses existing buffers, fills and update loop, with fewer duplicate draws and no new animation or polling. Teaching captions and end actions now share normal layout flow above playback controls to prevent mobile overlap. Cue, picking, pause/seek and route tests pass; no claim of measured phone cooling.
+
+Teaching cleanup follow-up: world construction caches its scene roots, so one transition-only visibility call hides every retained dynamic object (including ferry and umbrellas) along with static scenery, then restores them on exit. No per-frame scene scan was added. Removed the unused 22-mesh highlight pool. Quiz choices use small unboxed numbers and keep only player labels named in the question; choices disappear during outcome playback. Hidden teaching-beat UI no longer polls. Quiz replay shares layout flow with controls, while redundant disabled quiz transport and counters are omitted.
+
+Map travel now restarts the existing 3.5-second arrival effect for district and field destinations; no new geometry, timers or animation loop. Arrival uses the original camera-facing angle. Five secondary buildings reuse roundedBlock with 1.5m corners and matching collision/roof metadata, remaining in static scenery batches. Live kickoff waits for own-half readiness (opponents outside the centre area), checked only during restart; regression covers both teams in all four formats. TypeScript and teaching-cue tests pass. Local only; no measured thermal claim.
+
+Charged-shot reliability: a nonzero released charge can start a new windup even if the previous kick is still winding up or airborne. Late zero-power taps cannot overwrite it. Cancelled/released button holds suppress the follow-on click (including zero-detail synthetic clicks), preventing a cancelled mobile hold becoming a low tap shot. Existing simulation handles the launch; no extra timer, polling or particles. Charged-shot regressions cover repeated launches during windup/flight and full-height trajectories; ball actions and TypeScript pass. iOS hardware interaction still needs confirmation.
+
+### Video playback restored at user request
+
+Removed the mandatory empty per-video approval gate and upload-age cutoff from public clip routes. Source allowlisting, exact channel IDs, valid video IDs and future-date rejection remain. Topic desks now request UEFA, ESPN FC or CBS Sports Golazo feeds only when opened, sharing ten-minute channel caches and pending requests (one-minute failure cache). Topic matching remains conservative; no matching upload is shown as such rather than mislabelled. Maximum five cards; one tap-to-play iframe; hidden/closed cleanup unchanged. Publisher age/region/embed restrictions remain outside app control. Official-source clips are not individually reviewed or guaranteed child-appropriate. Previous review-registry notes describe a superseded workflow. Local only.
+
+### Additional rounded buildings and official video discovery — September 16
+- Rounded ten existing buildings using the existing static rounded geometry and matching collision metadata. No extra buildings, animations or per-frame scans; dimensions and positions retained. Small static geometry increase remains in existing scenery batches.
+- Official YouTube feeds now sort by publication date. Empty topic/result matches offer explicitly labeled recent channel uploads; they are not represented as the requested match or lesson. On-demand fetches, shared ten-minute server caches and single tap-to-play iframe remain. No background polling added.
+- Validation: TypeScript and clip/topic/request-budget checks passed; local UEFA scanning endpoint returned recent official uploads with channel-fallback labeling. No iPhone thermal claim. Not deployed.
+
+### Video playback fallback — September 16
+- Load official YouTube IFrame API only after Play. Player onError switches to a recent ESPN FC or CBS Sports Golazo upload, preferring a different publisher. Backup is explicitly labeled as potentially a different match/topic. Manual Try another source covers restrictions that do not emit errors. No claim that every clip is US playable; availability is publisher-controlled at playback.
+- Backup metadata fetches reuse existing per-channel ten-minute caches and pending requests. At most three automatic player attempts; failed IDs excluded within a conversation. Destroy the prior player before switching, on hide/offscreen and close. No idle player/API requests or retry polling.
+- Verified TypeScript, request-budget tests and Chromium mocked error 150: switches source, one iframe only, close destroys iframe, no idle feed requests. Actual US-region playback and iPhone heat not established. Not deployed. Reference: https://developers.google.com/youtube/iframe_api_reference#Events
+
+### Recent-only video requirement — September 16
+- All public clips and backups limited to uploads in the last 14 days, newest first. Shared recentIslandClips rechecks cached results at response time and removes duplicate video IDs. No older fallback. ESPN FC goals/analysis and CBS Sports Golazo provide multiple backup candidates through shared channel caches, without additional background work.
+- Tests cover the 14-day boundary, cached expiry, future dates, duplicates and chronological ordering; TypeScript passed. Local live backup endpoint validated for recent-only unique clips. Not deployed.
+
+### Player career highlights and exclusive video playback — September 16
+- Current/all-time profiles now include an on-demand player highlight section. Career searches allow older uploads and prefer 4+ minute videos sorted by view count, with duration as tie-breaker. Backups remain specific to the player. News keeps its 14-day rule.
+- Career search needs server-only YOUTUBE_API_KEY with YouTube Data API v3 enabled (set in local .env.local and deployment environment; never NEXT_PUBLIC). No key is currently configured. Without it, show an honest unavailable state, no unrelated clips or broad feed crawl. Two bounded US/embeddable searches plus one metadata request per uncached player; 24-hour cache and request coalescing. Only allowlisted official publishers; validate US regional restrictions/public/embeddable metadata. View ranking is among matching retrieved official clips, not a claim of exhaustive YouTube-wide ranking.
+- Video ownership pauses/cancels the Town animation loop, all simulation driven by it, music media playback, and sound context. Resuming resets delta/accumulator and respects existing modal pauses; no catch-up simulation. Pause/end/error/close releases ownership. Nested/overlapping ownership cannot prematurely resume another player. Player rendering exists only while playing, not during profile browsing. Background lesson narration pauses too.
+- Unit checks cover older clips, 4-minute minimum, views, regional/embed/source restrictions, exact player filtering and overlapping pause ownership. TypeScript passed. No measured iPhone thermal result. Not deployed.
+- Browser validation passed with a simulated YouTube error: backup switches once, one iframe remains, island render count stays fixed during playback, music is paused, sound context is blocked, and closing removes the iframe and releases the sound pause.
+
+### No-API career library and truck impacts — September 16
+- Supersedes the API-key career-search requirement above. Player endpoints now read a saved server-side JSON catalog only. No key, search calls or third-party metadata requests while opening profiles. Offline collector stops further network requests on HTTP 429; cached-data auditor can work without network. See player-highlight-coverage.md for incomplete coverage and verification limits. News stays recent-only. Existing exclusive video playback pause retained.
+- Driven trucks check character impacts at 10 Hz with a swept oriented body to catch boost and reverse movement. Reuse existing finite ball-hit bounce/daze effects with truck cause and 3.3 m bounded displacement. Only the driven truck activates checks; static goals reject truck movement through their footprint. Elevation excludes rooftop goals/characters from street collisions.
+- Live matches have a separate collision-pause reason until all truck-hit players finish recovery; user and hover pause reasons are preserved. Island characters, volleyball players and practice characters share existing stunned routines. No extra render loop or continuous effect added.
+- TypeScript and swept truck/goal checks passed, along with existing 192 walking/riding goal approaches. No phone-temperature measurement. Not deployed.
+
+### Truck witnesses keep moving — September 16
+- Collision pause stops match simulation/ball, not standing-player body animation. Nearby players face the incident and make light hand/body gestures; hit characters retain bounce/daze/get-up. Island witnesses pause their routes while gesturing, then return to their previous routine.
+- Speech is event-triggered, max three lazily created/reused 512×192 canvas textures, five-second lifetime and eight-second burst cooldown. Text uploads only on a new burst; active sprites follow anchors. No separate RAF or React state loop. Hidden lessons suppress bubbles, inactive menus/video pause existing Town updates, and disposal releases textures/materials.
+- Truck checks remain gated to driven movement at 10 Hz. Extra match-reaction lookup short-circuits when there are no hit states. TypeScript passed; browser integration checks the match clock remains fixed while standing players still animate. No real-device thermal claim.
+
+- Truck speech now selects text per speaker: live-match players use pitch/match jokes; island residents use pedestrian/errand jokes, even beside a pitch. Separate phrase rotation, same three reused bubbles and cooldown; no new animation or polling work.
+
+### Procedural movement refinement — September 16
+- Walking leg solves are skipped when ride, flight or seated truck poses fully overwrite them. Shared movement clocks stay intact. 1,800 old/new pose comparisons passed across bike, scooter, moped, jetpack, truck and parachute, including reduced motion.
+- Receiving weight yields to the existing kick envelope without shifting ball contact. Bounded torso/head turn anticipation and optional nearby ball attention reuse existing joints; gaze is restricted to involved actors and disabled for costumes, rides, reduced motion and reaction poses. No new geometry, independent timers or animation loops.
+- Live-match pose evaluation now uses the existing generous body/shadow frustum before joint work. Teaching actors, ball owners, receptions, kicks, reactions and protesting players remain immediate. Culled roots retain simulation positions; resuming resets locomotion integration to avoid catch-up sprinting.
+- Browser partial-pitch check skipped 13 poses; disabling culling resumed all with finite transforms. Existing motion, batching, match clock, stairs, ramp, ball-action and 918 teaching-contact beat checks passed, plus new gaze/pause/transition tests and TypeScript. These are correctness/work-count results, not measured iPhone cooling. Local only, not deployed.
+
+### Shared play / quiz visual simplification — September 16
+- Removed floating coaching labels across all formats. Role names no longer cover plays or result replays; unanswered quizzes retain only player labels explicitly referenced in the question and every selectable numbered answer.
+- Plays and quiz demonstrations share a cached presentation plan and one coaching caption in the existing control area. Authored beat captions take priority; older steps sequence their callouts using the existing seekable progress clock. No new animation loop or network request.
+- Instructional markings are limited to two emphasized areas, one movement trail and bounded supporting routes, with focus following the active caption. Answer choices are exempt so options remain visible and selectable. Completed play steps clear instructional overlays. No actor positions, answer correctness or ball timing changed.
+- Validation: all 918 steps and 193 questions retain teaching geometry and every neutral quiz target; play-label/fill limits, pause/seek, choice hit areas, quiz outcomes and replay checks pass. Production build passes. Local only; no measured iPhone cooling claim.
+
+### Future ferry marker and path introduction — September 16
+- Added a single 1,404-vertex gold lock mesh above the Matchday Ferry. Shares an existing palette material, casts no shadow, and rotates only in the renderer's visible-mesh callback using the existing ferry clock. No particles, lights, independent timer or frustum scan. Reduced motion keeps it still; existing ferry disposal owns its geometry.
+- Browser check verified rotation, reduced-motion reset, retained dynamic parent and no shadow. TypeScript passed. Static Paths introduction explains first-island preparation for the future academy; no future destination is playable or unlocked by this change. Local only; phone thermal impact not measured.
+
+Ferry marker follow-up: lock now uses building-highlight green (#35ed8b) at 38% opacity. Twelve soft particles share one Points draw and a small shader; fixed seeds never upload per frame, time uniform updates only when rendered. No lights or shadows, particles hidden with reduced motion, all resources included in ferry disposal. TypeScript and browser checks passed for tint, opacity, count, rotation and reduced motion. Adds one bounded transparent draw; no real-device thermal measurement.
+
+### Four format starter paths — September 16
+- Replaced three pilot chapters as the main Paths view with four canonical format paths: 12 starter lessons each, 48 optional depth lessons, all 96 existing lessons retained. Compact static metadata only; existing promise-cached format catalog fetch happens at lesson launch, not while browsing Paths. Stories stay dynamic/on-demand.
+- Completion derives from all canonical played-step facts plus all correct quiz facts, preserving existing saves and allowing help/retries. Continue resumes the first missing played step or quiz question. Optional stories/depth/pilot practice do not gate starter completion; existing narrow pilot application/review evidence stays separate. Correct quiz writes merge persisted other-tab answers before saving.
+- Existing five stories appear at curriculum anchors; story progress merges previous saved IDs. Four-format selection persists. Existing pilot practice remains reachable as optional practice. No new review scheduler, timers, asset preloads, challenges or future-island gameplay.
+- Onboarding refreshed by delegated agent in onboarding-only TSX/CSS: six brief steps, tan modal, selected character continuity, four formats, exploration and future ferry language. Existing costume preview and spotlight mechanisms retained.
+- Ferry lock now pink (#ef8fb3), 22% rest opacity / 90% hover, 12 matching particles. Shared hover ray uses one box test; tap opens standard modal explaining all four starter paths plus all hidden balls are prerequisites for future academy travel. Dialog joins the existing world-pause condition. No new effect loop.
+- Validation: production build and TypeScript; 96-ID curriculum/evidence/launch tests; quiz persistence and two-writer merge checks; mobile browser four tabs, canonical lesson launch, return to selected format, embedded-story Escape/focus, no horizontal overflow, and lock hover opacity. 1st island remains playable; ferry travel not implemented. Local only, not deployed. No physical iPhone thermal claim.
+
+### Single quiz panel — September 16
+Combined question, short feedback and replay/next controls into one panel above chat/radar. Answer replaces question; wrong answers offer demonstration and retry, correct answers offer replay/pause and next. Full explanations remain in transcript. Reset view sits beside camera; removed duplicate coaching caption and separate top question panel. Replay UI interval now exists only while a demonstration is running and stops when paused/finished. Mobile browser verified one panel, incorrect retry, correct next, question advancement and no chat overlap; canonical quiz replay/outcome tests pass. No extra render loop or asset load. Local only.
+
+## Mental-toughness film prototype — September 16, 2026
+
+The reset story now uses an offline-rendered 30-second film from the actual upstream hand-drawn-canvas-animation engine. All 17 files/license are vendored; see docs/story-film-review/README.md for reproduction and inspected contact sheets. Offline dependencies are excluded from deployment uploads.
+
+Runtime loads a poster only and attaches the 720px MP4 on Play. Native media events update captions/progress; no canvas loop, generated textures, audio score synthesis or upstream engine download runs on the phone. Pause/hidden/offscreen/close stop playback and unmount clears the source. Existing media ownership suspends background island/audio work while playing. Initial sound respects saved mute/volume. Desktop/mobile browser checks passed for loading, pause, replay, early exit and completion. Reduced live drawing work is not measured iPhone cooling. Not deployed.
+
+Abstract story revision: richer textures and connected zoom/iris transitions are
+baked into the same 720px 30-second video, with no runtime texture or transition
+rendering. All eleven scene boundaries match exactly in the exported PNG frames.
+Other stories remain unchanged; not deployed.
+
+### Mental-toughness color/emotion revision
+The prototype is now 60 seconds, with full-frame print textures and expressive illustrated player poses. These are rendered offline; no new runtime canvas, particles or animation loop. Longer media increases bytes and playback duration, while retaining on-demand loading and background pause. Device thermal behavior is unmeasured. Not deployed.
+
+### September 17 story illustration and motion
+Replaced dense full-frame halftones with bold flat illustration and selective patterns. Added animated concept lettering, distinct scene layouts, independent body/botanical motion and connected camera transitions, all baked into the existing 720px/24fps H264 movie. No added runtime renderer or animation loop; 60-second duration and on-demand video lifecycle remain unchanged. Eleven scene boundaries match exactly in source renders. Real-device thermal outcome remains unmeasured. Not deployed.
+
+September 17 texture refinement: fixed-seed grain, dots and hatch patterns are baked into the mental-toughness MP4; no runtime texture generation or added render loop. More detail may increase encoded media bytes. Existing on-demand load and pause behavior remains. Not deployed; no device-temperature claim.
+
+September 17 futbol mural revision: elongated expressive figures, procedural pitch/murals/palms, handwritten titles and irregular scuffs are baked into the existing 60-second H264 asset. No live scene renderer, extra image requests or animation loops were added. Playback stays user-initiated and pauses background island activity. Texture detail affects encoded bytes; device heat has not been measured. Not deployed.
+
+Story smooth-motion refinement: native 24 unique frames/sec replace duplicated 12fps art within the same 720px/24fps playback format. Offline renderer samples unchanged core at half-frame times. Hierarchical limb transforms and simultaneous scene motion are baked into MP4. No added runtime loop; background pause/on-demand loading remain. Media size can change; this is not measured device cooling. Not deployed.
+
+Validation correction: earlier exact-boundary comparisons used RGBA difference bounding boxes and were not reliable because the alpha channel was unchanged. RGB validation of the current smooth export confirms 24/24 sampled adjacent frames are distinct. Across all 11 boundaries, mean per-channel pixel differences are 3.45–5.45 out of 255; boundary frames deliberately retain motion, rather than duplicate. Browser checks pass for on-demand load, pause, replay, early close and completion on mobile/desktop.
+
+Story atlas revision: actual user-supplied sprites and Knewave font are read only by the offline rendering page. Main app still requests just the poster and one on-demand video; no atlas decoding, font loading, particle simulation or parallax loop added to gameplay. Layered backgrounds and narrative shape morphs are baked at 720px/24fps. Not deployed; thermal impact unmeasured.
+
+### September 17 — immersive 11v11 Grit film
+The Grit path slot now opens a viewport-sized top-layer dialog, including when launched from Paths. Mental-toughness work is paused and its existing film is unchanged. Grit uses the supplied tree storyboard and TreeMetaphor narration, rendered offline into portrait 720×1280 and landscape 1280×720 H264 films, approximately 76.4 seconds. Only one source is chosen on Play (9.1 MB portrait / 8.6 MB landscape); no runtime canvas, source-sheet decoding, animation timer, or second-video preload. Native media events drive captions/progress. Existing video ownership pauses island work; hidden/offscreen/unmount pause and release playback. Controls remain above the artwork with safe-area spacing. The contact-sheet source limits enlarged sharpness; extracted artwork is reframed, with moving textured soil/leaves and organic zoom reveals, not a fully articulated tree rig. Captions use authored approximate cue times for the supplied audio; final football practice takeaway appears at completion.
+
+Validation: TypeScript and production build pass. Chrome 430×900 and 1280×800 checks verified viewport coverage, no MP4 before Play, selected portrait/landscape source, pause stability, early-close without progress, completed-film progress, and no page errors. Screenshots inspected. Local only, not deployed. No measured phone-temperature claim.
+
+### September 17 — Grit procedural animation and recorded voice cues
+Replaced the contact-sheet crop film with JavaScript Canvas geometry: progressively growing tapered roots, an obstacle they bend around, shifting earth, shoot breakthrough, branch-attached unfolding leaves, growing fruit, wind, and a jointed player taking a practice touch. A continuous world camera moves between these details; seed and fruit/sun transitions share a full-screen colored object. Fixed-seed texture is cached during offline rendering. No source artwork bitmaps are read by the new authoring script.
+
+Local faster-whisper transcription supplied phrase/word timing (no audio upload). Growth and teaching callouts now follow the narration; captions use the same phrase timings. Supplied audio is unchanged. The recording's last spoken phrase ends around 71.6s; the remaining time holds a football practice takeaway.
+
+Current media: 1080×1920 portrait and 1920×1080 landscape, 24 unique fps, approximately 30 MB each, 76.4s with H264/AAC. Full-HD and detailed grain increase media transfer/decode cost compared with the previous 720px film; only one on-demand movie is loaded. Rendering, texture generation and transcription remain offline. Island playback ownership/hidden/offscreen cleanup are preserved; no real-device thermal measurements.
+
+Validation: TypeScript and production build pass. Browser checks verified full viewport, no MP4 before Play, one correct-resolution source per orientation, timed darkness caption at 30.8s, no authoring JS/atlas requests, pause stability, early-close without completion, and successful completion. Inspected portrait/landscape frames. RGB comparisons at the two hidden joins: seed boundary 0 mean channel difference; fruit/sun boundary 1.48–1.71 out of 255, preserving continuity. Local only, not deployed.
+
+About Us navigation follow-up: existing back button moved into the header before the title, duplicate body button removed. Reuses existing navigation state, icon and hover styling; no new timers, effects, assets or render work.
+
+### Grit scenery, camera and mobile control follow-up
+Grounded the scenery with a continuous undergrowth band extending below soil; varied shrub contours, tree silhouettes and skyline roofs/windows. Crown now has layered irregular foliage and fruit on both branch sides. Recorded down/up phrases get close camera moves; the dark/heavy section is framed entirely below ground and the light section entirely above it. Mobile callouts wrap and balance in a narrower safe area. These changes are baked; no extra on-device animation work.
+
+The opening uses a 1.4-second camera push. Orientation-specific stills are exported from the exact first source frame and selected by a native picture element, visible until playback starts. Current H264/AAC files are 24.28 MB portrait and 24.09 MB landscape (decimal), full HD/24fps. First decoded frame versus corresponding JPEG poster has mean RGB difference 2.31/2.34 out of 255 from encoding, with matching composition.
+
+Story controls now use the quiz-bar layout: play/pause at left, sound icon at right, permanently visible balanced captions beneath. No caption toggle or separate transport strip. Fixed a global mobile `dialog[open]>section:first-of-type` rule expanding the bar over the whole movie: the caption region is now a div with an accessible region role, outside that generic panel selector. Browser verified bar height below 240px initially and 300px for the tested long caption, lower-screen placement, visible running video, clickable close, pause and completion. Screenshot inspected at 430×900; desktop lifecycle also passes. About header navigation passed earlier. Local only, not deployed; no physical thermal measurement.
+
+### Grit click-to-play and stable mobile bar
+Opening Grit now requests unmuted playback in the mount layout effect, following the user's story click. Story sound starts enabled even if island sound is muted or its saved volume is zero (fallback 50%); the island's saved preferences are not changed. Source loading still begins only when the story is opened. Manual pause/mute remain available; browser-denied playback leaves the Play action available, and canceled/unmounted play promises do not update state. Existing video ownership and hidden/offscreen cleanup remain. No polling or extra animation loop.
+
+Mobile caption bar now reserves 224px, with a 170px compact landscape rule. Its caption area flexes/scrolls internally instead of resizing the region when words change or Finish appears. These are CSS-only layout changes. No device heat claim; local only.
+
+### Grit immersive responsive framing — September 17
+Replaced baked movie titles with one responsive DOM text layer driven by native `timeupdate`; removed duplicate direction/callout labels. ROOTS MIRROR FRUIT sits at the soil/sky boundary. Growth terms appear as a single term/explanation pair while the camera visits the relevant roots or canopy. Brush font is shared; balanced wrapping and bounded font sizes avoid scaling lettering with video crops.
+
+Story artwork now covers the whole viewport behind the controls. Three separately composed exports (portrait, square, landscape) minimize cropping across phone/tablet/desktop ratios; only the closest ratio is loaded. Resizing across framing thresholds preserves playback time and paused state, replacing the one media source. Background scenery extends beyond the central subject. Extreme aspect ratios can still crop peripheral scenery. Captions reserve 144px on mobile, 128px desktop, 116px short landscape, with internal overflow for long text. Replay shares the control row; Close stays circular.
+
+Added narrated camera movement for gravity/light, moving light beams, soil particles, upward energy and canopy pollen; leaf and root-sap motion now use real story time even when growth slows. Lonely-face/dark-earth zoom and desktop wider framing are baked offline. No extra runtime animation loop or canvas; existing island pause/media cleanup remains. Current movies are 26.58 MB portrait, 17.74 MB square, 26.58 MB landscape at 24fps, with original narration. Posters match frame zero. Local only; physical phone temperature unmeasured.
+
+Validation: production build passed; mobile autoplay with sound, manual pause/mute, stable reduced bar through completion, replay positioning and close behavior passed. Responsive viewport/text checks performed separately. Superseded temporary render folders were removed after disk exhaustion; complete exports were rebuilt before installation.
+
+Follow-up validation: full-screen bounds, single title and compact bars passed at 320×568, 390×844, 768×1024, 1280×800 and 1920×1080. Resize initially stalled because `preload=none` requires explicit `load()` after replacing a paused source; fixed with preserved seek/resume intent and generation guards. Playing desktop→phone→tablet→desktop→phone checks now pass with advancing, preserved timestamps. Added missing RESISTANCE, complete opening question, and lower placement for gravity/deeper-underground labels. These remain native-event DOM/CSS changes.
+
+### Grit browser-stability follow-up
+After a user-reported browser crash, lowered playback assets from 1080p to 720p (55.6% fewer decoded pixels/frame), retained 24fps and sharp independent DOM text, and capped video rate at 2.5 Mbps. Only one format is loaded. Resizing now waits 300ms after the last resize before switching sources, preserving time/playing intent; this avoids repeated decoder replacement while dragging window edges. Island media ownership is held for the full story dialog lifetime, including pauses/source changes, so background simulation cannot restart during a switch. Hidden/offscreen still pauses video and close clears its source.
+
+Tears now roll down without arms; matching blue droplets and an expanding water surface connect the lonely face to water moving along roots. Exported offline in sequence, not concurrent runtime effects. These mitigations reduce known work but do not establish the cause of the reported browser crash or prove a thermal fix. Real-device heat/stability testing remains necessary. Local only.
+
+Grit transition refinement: removed the full-screen blue iris. The face/tears now dissolve as matching small droplets appear on roots, with a continuous camera pullback and gradual dark-soil lighting recovery. Re-exported only affected offline frames into the same bounded 720p/24fps assets (immersive-12); no new browser animation work. The repeated gravity caption now reads INTO THE DARK / Roots keep growing down on the later narration beat. User reports the earlier crash no longer occurs; this is not a measured thermal result.
+
+Tear continuity follow-up (immersive-13): six tracked droplets now depart cheek coordinates, land on nearby root curves and continue along those same curves; the wider water flow fades in after arrival. Dark soil stays visible. All 245 affected frames rendered successfully per format before installing the sequential 720p exports. No added runtime work.
+
+Centered face/root morph (immersive-14): face follows the camera center during pullback; cheek drops dissolve into the central root rather than traveling laterally. The head contour narrows/elongates into a tapered root, sprouts branches and shifts toward the root color while facial features fade. Re-exported all three bounded 720p movies and visually inspected a portrait transition frame. Runtime costs and playback lifecycle unchanged.
+
+Grit scenery/entry/path revision (immersive-15): colored sky ribbons extend above frame bounds; removed oversized leaf decals on both broad-leaf background trees. Replaced head/root morph with a downward shrinking circular face; independently retained tears converge/dissolve into root droplets. Sequential full exports retain 720p/24fps and the video bitrate cap.
+
+Grit now launches from the first 7v7 chapter; Mental Toughness occupies the former 11v11 Grit slot. Story IDs and saved completion remain unchanged. The Grit entrance captures the clicked button bounds/color, expands one temporary CSS circle, then fades it into the film; reduced-motion uses a short fade. No persistent animation loop. Background world ownership stays paused throughout the dialog. Local only.
+
+Grit transport polish: top-left title is now simply Grit. Entrance begins with a 240ms visual button shake before the existing expansion/fade. Closing pauses playback immediately and uses a 500ms reverse circle animation back to the launch button before unmounting. Reduced-motion skips the shake and uses short transitions. These one-shot CSS animations add no persistent loop or device haptics.
+
+Latest Grit polish: intro expansion is slower, with a small cached PNG grain tile and a stationary button face over the shaking underlay. Playback starts as the expanded shape reveals the first frame; delayed start is canceled on unmount, and reduced-motion skips the long entrance. Caption text is centered; Replay is an accessible icon beside Sound with 20px spacing. Closing still uses the matching button dimensions/corners and a brief shake. No persistent effects loop.
+
+Art updates remain offline: smooth extended sky curves, lowered skyline behind plants, no oversized tree leaf decals or closing-field foreground leaves, alternating three-color fruit distributed across both sides, soft canopy sunlight instead of yellow rays, dark face shrinking into soil, and tear droplets spreading to roots on both sides. Playback stays 720p/24fps with the existing bitrate cap and world pause.
+
+Caption layout: added a flex caption area beneath controls; short captions use automatic vertical margins to center in the remaining space, while long captions can scroll within the same fixed-height bar. CSS-only; no text measurement loop. TypeScript passes. Current artwork media revision is immersive-16.
+
+### Paths, Done controls and Coach Bella narration — September 17
+Desktop Paths remains full viewport with its original 720px content width and a short opacity transition. Grit is the first 9v9 stop; Regulating emotions is the first 7v7 stop, removed from its old later position. Saved story IDs are unchanged.
+
+Play/quiz and film header Done buttons now shrink from 76px to a 44px circle while text crossfades to the close icon, then invoke the existing dismissal after 300ms. A guarded, cleaned-up timeout and one CSS transition run only on click; reduced-motion dismisses immediately. Browser checked the intermediate width, circular height, 7v7 first stop, existing Grit playback/close/reopen/completion behavior and compact desktop caption bar. TypeScript passed.
+
+Grit narration now uses the existing local Kokoro af_bella Coach Bella model, generated offline from the unchanged narration-cues text. Phrase starts and film duration are retained; small offline tempo adjustments fit the existing scenes. All three movies copy the existing video packets and replace only audio; one native video player remains. The final football takeaway remains a caption over the closing pause, as before. No music has been added while options are being reviewed. Local only, no deployment or physical thermal measurement.
+
+### Shared warm storyteller and licensed score
+Per user direction, Grit and Regulating Emotions use a custom local Kokoro female blend (70% af_heart, 30% af_sarah), synthesized at 0.9x, replacing Bella without rewriting the scripts. This is an offline voice blend, not a newly trained model or a cloned human voice. Grit extends tight beats to about 79.7 seconds rather than compressing narration. `gritNarrationTiming.json` maps media time back to the original artwork timeline for responsive labels and captions, driven only by native timeupdate.
+
+Wildflowers by Scott Buckley is mixed offline beneath both stories, normalized low, ducked by voice, faded at entry/exit. CC BY 4.0 attribution appears in About; source/terms/change notices are documented in STORY-MUSIC.md. Final MP4 mux copies video packets for the music pass. Still one video/audio decoder, no runtime music element or audio graph. Local only; no device-temperature claim.
+
+### Regulating emotions film — September 17
+7v7's opening Regulating emotions story now uses a full-screen native film player following Grit's lifecycle. Nineteen script-aligned beats are rendered offline, then exported sequentially as portrait/square/landscape 720p H264/AAC, 24fps, 2.5Mbps capped video. The supplied packs are flattened small raster board crops (confirmed by their READMEs); they inform original procedural artwork, rather than being enlarged as blurry layers. New warm storyteller voice follows the user's later replacement direction; unchanged script, speed0.9, natural pauses, no temporal compression. Captions/callouts are responsive DOM text; compact stable caption dock and Done morph reuse existing styles/component.
+
+One video/source loads on story open. The full dialog lifetime holds world playback pause; source changes debounce300ms and preserve position/playing intent. Hidden/offscreen pause, source cleanup and canceled delayed entry are retained. Runtime does not fetch authoring code or draw Canvas. Validation: TypeScript and Chrome five-size layout/playback checks passed, including autoplay with sound, fixed dock, resize continuity, early close and completion. Visual inspection prompted centering close-up faces for narrow phones. Local only; no physical phone heat measurement. See `docs/story-film-review/REGULATING-EMOTIONS.md` for asset limitations/rebuild details.
+
+British narrator follow-up: the current shared voice blend is 70% `bf_emma` / 30% `bf_isabella`, using `en-gb` and synthesis speed 0.9. This supersedes the earlier American Heart/Sarah blend. Both scripts remain unchanged; audio timing and corresponding visual/caption timing are rebuilt before final music mixing.
+
+Regulating emotions direction update: the user requested British narration and fewer moving players. Final voice uses the local bf_emma/bf_isabella blend at0.9 in en-gb; narration remains unchanged, with natural phrase timing (70.6547s). Thirteen middle beats now use abstract emotional collage artwork with no player; the remaining player anchors are still. All motion remains offline in bounded videos, with no added browser work.
+
+Final British Grit playback checks passed after music mux; three aspect variants remain one H264/AAC player at 24fps, 79.263-second duration. Regulating Emotions now uses predominantly abstract emotional artwork (13 of 19 beats without a player), with still player anchors and artwork-to-artwork reveals; its current British narration lasts about 70.65 seconds. Both stories retain the exact script, fixed caption dock and low-runtime-cost offline rendering.
+
+User-paced Grit script supersedes the prior unchanged-script revision. Canonical `gritScript.json` now carries the user's exact revised wording, 33 spoken segments and deliberate pauses. Offline British narration stays at 0.9, while movies and timing map extend to about95.31s. Darkness, resistance, pressure and dirt have separate visual beats. No runtime animation or extra player was added. Regulating Emotions' score changes to Ascension (Scott Buckley, CC BY 4.0) with its own About credit; Grit retains Wildflowers.
+
+Regulating objects revision: removed all face/body drawing. Word-aligned boot/pass/interception/net/glove close-ups replace generic player scenes; abstract middle remains. Local offline Whisper supplied action word anchors without uploading audio. Actual-ball zoom and central artwork dissolves replace uniform circular wipes. Motion changes remain entirely offline, with existing native-video runtime budget unchanged.
+
+Regulating Samantha import: verified the corrected user recording03:40:41 against every approved narration word, then copied the source MP3 unchanged. New66.6383s timing drives captions and individual football action anchors; no TTS regeneration or speed change. The earlier03:19:24 recording was a different script and was not installed. Distinct frustration/fear/anger compositions plus moving feeling/space/support elements replace repeated quiet compositions. Rendering remains offline and sequential; native single-player runtime budget is unchanged.
+
+### Supplied ElevenLabs recordings — September 18
+Grit now uses the user's Adam Stone MP3 (03:25:28), verified against the revised script word-for-word with offline transcription. Original artwork is retimed at phrase boundaries to the recording, preserving natural speech speed and pauses, with a 4.37-second closing takeaway (69.10 seconds total). A cropped transcription corrected a zero-duration PRESSURE word timestamp. `scripts/import-grit-recording.py` validates exact words and monotonic timing before installing all three exports. Native DOM captions use the updated media/artwork map. Playback, separate darkness/resistance/pressure/dirt labels, autoplay, controls, closing and completion passed the browser check. The offline mixer uses installed narration.mp3 for both stories, avoiding the superseded synthesized WAV. Existing one-player 720p/24fps runtime and world pause guarantees remain unchanged. Local only.
+
+### Love Futsl opening story — September18
+Added futsal's opening film without removing tactical lessons. Reuses the existing single native-video lifecycle: full-dialog world pause, one closest-aspect720p24fps source, hidden/offscreen pause, debounced resize with preserved position and close cleanup. Captions/headlines use native timeupdate and shared fixed dock. Artwork is offline only; no runtime Canvas loop or secondary audio element. Supplied Adam narration remains at original speed. Streaming offline frames directly to ffmpeg replaces accumulating temporary PNGs after disk pressure during initial export. No new music layer. Local only; no physical thermal claim. See story-film-review/LOVE-FUTSL.md.
+
+Love Futsl validation: five responsive viewport sizes, unmuted autoplay, stable dock, playing resize, early close/completion and no runtime authoring-script fetch all passed. Opening court shrinks from a larger scale; matching shape/color transitions remain offline. Supplied audio speed is unchanged.
+
+Dismissal controls now share the same dark green background and cream icon/text across modal, drawer, transcript and story Done controls, including hover. Styling only: local sizes, focus outlines and Done-to-circle animation remain intact. Browser computed-color checks passed for Paths close and story Done, alongside existing playback checks. No new runtime work.
+
+## Island paths story artwork
+
+The paths modal uses a full-width scrolling body with the existing 672px content width plus 24px gutters (720px footprint) on desktop. Textured blue, pink, cream, green and gold SVG curves belong to that scroll surface via `background-attachment: local`, so the artwork travels with the lessons. Narrow screens scale the same full-width artwork; text sections retain cream reading surfaces. The static SVG embeds the existing small film grain bitmap; there are no SVG filters, canvas loops, animation timers, new audio, or per-frame work. Buttons, lesson order and actions are unchanged. Chromium checks at 320, 390, 1280 and 1920px verified no horizontal overflow, full-width scrolling and preserved desktop content width; screenshots checked texture and readable labels. Local only; physical-device thermals unmeasured.
+
+Final combined story/path changes pass the production build (September18). Love Futsl retains its original supplied54.57s narration and uses the larger-to-smaller opening court, one hero football and textured shape transitions. Grit Adam and Regulating Emotions Samantha recordings are installed; Regulating Emotions music remux reads the corrected MP3. Responsive browser checks cover the story players and Paths at narrow mobile through desktop widths. Changes remain local; no deployment or real-device temperature measurement.
+
+Paths background follow-up: replaced side-only ornaments with full-width solid blue/green/yellow diagonal bands, gently curved and textured with the existing embedded grain. Artwork still scrolls locally with the full-width modal body; centered content width and controls are unchanged. Cream reading surfaces retain contrast over each band. Four viewport checks (320/390/1280/1920) passed, including no horizontal overflow. Static cached SVG/CSS only.
+
+### September 18 — abstract island loading artwork
+
+- The ready-status loader uses `IslandLoading` with static SVG coast/football-route artwork, responsive portrait and wide compositions, a cached existing grain tile and the existing brush font. No canvas, video, SVG filters, timers or new animation loops were added. The existing small CSS progress indicator and reduced-motion behavior remain; ready/error lifecycle is unchanged.
+- Desktop artwork uses a complete wide composition below top-centered copy; mobile uses the portrait composition. Text is `PLAY · LEARN · GROW`. Chrome checks at 390×844 and 1440×900 confirmed readable top text and visible island/pitch, with artwork intentionally clipped at viewport edges on mobile. This is layout evidence, not a physical-device thermal measurement. Local only; parent runs the combined build.
+
+### Settings journey cards — September 18
+Settings now groups navigation, lighting, sound and narration into textured journey-style cards. Reuses the cached story grain image; hover/press transitions run only during interaction and respect reduced motion. No timers, canvas, audio contexts or polling added. Existing toggles, sliders and callbacks retained. Typecheck passed; desktop/mobile browser checks cover layout and music toggling. Local changes only; no device thermal claim.
+
+### September 18: full-screen island venues
+Store, Arcade menu, Coaches Centre and Pick your patch now use full-viewport CSS layouts with the shared static textured path artwork. Content remains bounded to 1120px on desktop; the existing single body scroller, lazy game mounts, store previews and map callbacks are retained. Hover/press transitions are short and respect reduced motion; no render loops, canvas layers or background timers were added. Chromium checks at 320, 390, 768 and 1440px confirm full viewport bounds, no horizontal overflow, category switching and close behavior. This is local layout validation, not a device temperature measurement.
+
+### Shared control and venue styling — September 18
+Main island controls and pitch camera/chat/transport/radar now share a gold/cream control surface; close controls match. Venue backdrops use distinct static SVG compositions, and item previews use one cached tan grain surface. Costume cards and onboarding reuse existing components and event lifecycles. Mobile shortcuts are accessible without the former viewport redirect, with Back in the header logo slot. Changes add no rendering loops or new preview renderers. Four viewport venue checks, typecheck, and Settings music-toggle checks passed locally; no deployment or phone thermal measurement.
+The Paths control is now a pink rounded square. Its two CSS particle layers animate twice on mount and once per hover, then sleep; reduced motion disables them. Joystick thumb changes are surface-only and preserve the direct pointer-driven transform. Kick/action buttons have distinct mint/coral surfaces. Mobile onboarding now overrides the broad fullscreen-section rule with its calculated card dimensions, keeping its footer on screen; mobile open/advance/skip checks pass.
+
+### Daily bottle and upcoming stories — September 18
+The island logo opens an interactive message bottle with60 authored positivity notes, indexed by the local calendar date; reopening on the same date shows the same note. Waves reuse the current modal's static patterned SVG and draw on one canvas at24fps, DPR capped1.5, only while open/visible; reduced motion draws a static frame. Entrance/exit layers push and restore the underlying view. Ocean sound is a bounded12-second synthesized noise swell through the existing shared sound context/master volume, stopped on dismissal or normal sound suspension. No extra audio context, network requests for narration, or idle polling. Twelve researched stories are optional path stops opening full-screen Coming soon placeholders; they do not award completion or block lessons. Local browser verified bottle open/reopen/close and placeholder open/close; typecheck passed. No deployment or thermal measurement.
+
+### September 18 UI consistency audit
+
+Shared Done/Back controls use one guarded 300ms timer per activation and a CSS width/opacity transition; reduced motion invokes navigation immediately. Timers are cleared on unmount. Header/wardrobe/playbook art remains static CSS/SVG; no new render loop, polling or preview renderer was added. Desktop/mobile emulation checked responsive header anchors and controls at320/390/1440px; see `docs/ui-style-audit.md`. These local checks do not establish phone temperature improvement or deployment status.
+Bottle wave refinement: Island Paths bands now render as crisp canvas vector edges with two gentle traveling sine swells, rather than shearing a rasterized background. Rendering remains24fps, now DPR capped2 for sharpness; grain is a subtle cached overlay. Canvas persists through exit, avoiding image reload/flicker; motion eases back to the original background origin. Continuous motion exists only while this user-opened scene is visible. Reduced-motion still disables swells and bottle bobbing.
+Final pre-deploy follow-up: ocean ambience now loops using one shared-context buffer while the bottle is open, suppresses background music, and fades for1.25seconds when dismissed. It respects mute/hidden state and survives ordinary window blur. Bottle opening uses an existing-context cork-pop cue. Paths alone retains the interactive island logo; other headers omit it. Done/Back remain collapsed through dismissal rather than restoring their labels mid-exit. Store category tabs never wrap at any width. Final production build passed.
+
+Mobile bottle waves draw their vector surface immediately, without decoding an SVG into a canvas pattern. Only the optional grain bitmap loads asynchronously. The existing capped DPR and 24fps loop remain; no physical-device thermal measurements were performed. Settings contain overscroll and use a scroll-attached background to avoid iOS local-background repaint gaps.
+
+September 18 release audit: ocean noise buffers are reused, zero-volume ambience allocates no source, and volume restoration/unmute resumes the requested ocean. Wave page transforms are written only when they change. Chromium production-build checks show no 3D renders behind settled Settings or the bottle, a two-second wave sample of 40 draws, and no wave draws after closing. Fourteen focused suites and town simulation pass; see release-audit-2026-09-18.md for scope and limits. Physical iPhone thermals unmeasured.
+
+Deployment verified READY in Vercel: `dpl_DLhmWL7Y62brq5VKaLeKbyQuyqjV`, production alias https://futbolisland.app (September 18, 2026).
+
+September 18 follow-up (local build): native non-passive touch events feed the existing pitch gesture math; touch pointer events are ignored to prevent duplicate movement. Listener cleanup and drag/pinch/cancel tests pass. Header scroll fading uses a static CSS mask plus a shallow 5px backdrop blur limited to the top 112px (104px mobile); no scroll listener or animation loop. This adds header compositing during scrolling and still needs physical iPhone verification. Completed-path feedback is interaction-only. Story entrance now sets backgroundColor rather than the background shorthand so the existing shared texture can render. Production build/typecheck pass; follow-up deployment pending.
+
+Follow-up deployed READY: dpl_FCU3DG5Q14G7DgXfiMuLAkJL4Eew, https://futbolisland.app. Production build, typecheck, town simulation, native gesture tests, paths/customization/exploration/ball-hunt/audio suites passed. Chromium checked onboarding, category scroll end, centered picker collapse, mobile camera drag, Paths and mobile/desktop scrolling fade without page errors. Physical iPhone scrolling/thermal validation remains unmeasured.

@@ -1,0 +1,98 @@
+/* Futbol Tennis — chrome aligned with the app's coastal theme (app/coastal-ui.css):
+   global .pixel-btn provides button surfaces (module classes only size/place them),
+   paper dialogs (--town-paper + ink + 8px offset shadow) for overlay cards, and
+   .modern-hud-style green chips for the score bar + footer strip. Scene stays warm tan/sunset. */
+.root{position:absolute;inset:0;overflow:hidden;background:#d4ad81;color:#294a3e;font-family:var(--font-ui),system-ui,sans-serif;isolation:isolate;touch-action:none;user-select:none;-webkit-user-select:none}
+.canvas{position:absolute;inset:0;width:100%;height:100%;outline:none;touch-action:none}
+.canvas:focus-visible{outline:3px solid #ffc35b;outline-offset:-4px}
+.header{position:absolute;top:max(15px,env(safe-area-inset-top));left:18px;right:18px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+/* back / pause: the app's global .pixel-btn (coastal green square) — module only sizes them */
+.icon{width:44px;height:44px;min-width:44px;padding:0;font-size:20px;line-height:1}
+.icon:disabled{opacity:.4;cursor:default;transform:none}
+.heading{text-align:center;display:flex;flex-direction:column;gap:3px}
+.heading span{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10px;letter-spacing:.14em;font-weight:600;color:#7c4a12}
+.heading strong{font-size:23px;font-weight:600;letter-spacing:-.02em;color:#3a2413;text-shadow:0 1px 0 #ffe9c4}
+/* score bar: green .modern-hud-style chip with the town's inset frame + offset shadow */
+.score{position:absolute;top:calc(max(15px,env(safe-area-inset-top)) + 62px);left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:18px;padding:9px 18px;background:#284e43e8;border-radius:2px;box-shadow:inset 0 0 0 1px #f3e6bcb3,var(--town-shadow);white-space:nowrap;color:#fff3d1}
+.score>div{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:600;letter-spacing:.5px}
+.score b{font-size:27px;font-weight:600;color:#f4cc7c;font-variant-numeric:tabular-nums}
+.score small{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:8px;letter-spacing:.14em;color:#d2d9b9}
+.youDot,.rivalDot{width:7px;height:7px;border-radius:1px;background:#2fa7ad}
+.rivalDot{background:#e07a54}
+.controls{position:absolute;left:20px;right:20px;bottom:max(18px,env(safe-area-inset-bottom));max-width:650px;margin:0 auto}
+.controls>p{margin:0 0 11px;text-align:center;font-family:var(--font-body);font-size:12.5px;font-weight:600;line-height:1.45;color:#fff5dc;text-shadow:0 1px 2px rgba(60,30,5,.65);min-height:34px}
+/* footer strip: same green chip; Serve/Kick is the gold PRIMARY variant of .pixel-btn */
+.actionRow{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#284e43e8;border-radius:2px;box-shadow:inset 0 0 0 1px #f3e6bcb3,var(--town-shadow);padding:10px 12px 10px 19px;color:#fff3d1}
+.actionRow>span{font-size:13px;font-weight:600;line-height:1.7}
+.actionRow small{display:block;font-family:var(--font-body);font-size:10.5px;font-weight:500;color:#d2d9b9}
+.action{min-width:98px;min-height:54px;font-size:17px;background:#f4cc7c;color:#294a3e;box-shadow:inset 0 0 0 1px #ffefd0,var(--town-shadow)}
+.action:hover{background:#f8d791;filter:none}
+.action:active{box-shadow:inset 0 0 0 1px #ffefd0}
+.action>span{display:block;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:8px;letter-spacing:.14em;margin-top:2px;color:inherit;opacity:.75}
+.action:disabled{opacity:.45;cursor:default;transform:none}
+.action:disabled:active{box-shadow:inset 0 0 0 1px #ffefd0,var(--town-shadow)}
+/* shot cluster: Short + Lob as small green pixel-btns beside the gold Kick/Serve button;
+   the main button morphs into a pulsing coral SLAM! while the overhead window is open */
+.cluster{display:flex;align-items:stretch;gap:8px}
+.mini{min-width:60px;min-height:54px;padding:4px 10px;font-size:12.5px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;touch-action:manipulation}
+.mini>span{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:7px;letter-spacing:.12em;opacity:.7}
+.mini:disabled{opacity:.45;cursor:default;transform:none}
+.action.slam{background:#e07a54;color:#fff3d1;box-shadow:inset 0 0 0 1px #ffd9c2,var(--town-shadow);animation:slamPulse .45s ease-in-out infinite alternate}
+.action.slam:hover{background:#e8845d}
+@keyframes slamPulse{from{transform:translateY(0)}to{transform:translateY(-2px);filter:brightness(1.14)}}
+@media(prefers-reduced-motion:reduce){.action.slam{animation:none}}
+.actionRow small.hintCoarse{display:none}
+/* overlay cards: the coastal paper dialog (like .pm-modal) over a frosted green scrim */
+.scrim{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;background:#19362e66;backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px)}
+.card{width:min(100%,380px);padding:26px 28px 24px;background:var(--town-paper,#efe4c4);border:1px solid #ffefd0;border-radius:3px;box-shadow:8px 8px 0 #172d2580;position:relative;color:#294a3e}
+.eyebrow{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10px;letter-spacing:.14em;font-weight:600;text-transform:uppercase;color:#52634e}
+.card h1{font-size:29px;line-height:1.15;letter-spacing:-.025em;font-weight:600;white-space:pre-line;margin:12px 0 12px;color:#294a3e}
+.card p{font-family:var(--font-body);font-size:13.5px;line-height:1.6;color:#52634e;margin:0 0 18px}
+.card ol{padding:0;list-style:none;display:grid;gap:12px;margin:20px 0}
+.card li{display:grid;grid-template-columns:60px 1fr;align-items:start;gap:9px;font-size:12px;line-height:1.5}
+.card li b{font-weight:600;color:#8a582b}
+.card li span{font-family:var(--font-body);color:#52634e}
+.keyboard{font-family:var(--font-body);font-size:10.5px;color:#52634e;display:block;margin-bottom:22px}
+/* trail legend: one colored dot per shot type, matching the canvas trail hues */
+.legend{display:flex;align-items:center;flex-wrap:wrap;gap:9px;font-family:var(--font-body);font-size:10.5px;font-weight:600;color:#52634e;margin:-8px 0 10px}
+.legend span{display:inline-flex;align-items:center;gap:4px;font-weight:500}
+.legend i{width:8px;height:8px;border-radius:50%;display:inline-block;box-shadow:inset 0 0 0 1px rgba(60,34,12,.25)}
+.tGold{background:#f0c565}.tEmber{background:#ff7a3c}.tCream{background:#fff6e0}.tTeal{background:#5fc4cf}.tRed{background:#ff3b2f}
+/* primary ("Let's play"/"Play again"): gold PRIMARY variant, full-width layout here */
+.primary{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:52px;padding:12px 18px;font-size:16px;background:#f4cc7c;color:#294a3e;box-shadow:inset 0 0 0 1px #ffefd0,var(--town-shadow)}
+.primary:hover{background:#f8d791;filter:none}
+.primary:active{box-shadow:inset 0 0 0 1px #ffefd0}
+.primary span{font-size:21px}
+.leave{display:block;margin:16px auto 0;background:none;border:0;color:#52634e;font-family:var(--font-body);text-decoration:underline;text-underline-offset:4px;font-size:12px;cursor:pointer}
+.leave:hover{color:#294a3e}
+/* bottom-left virtual joystick: translucent cream ring + knob (same pattern as the Drop-In
+   .vjoy pad), floated above the footer bar so it never covers the message or Kick.
+   TOUCH ONLY — hidden on fine-pointer (desktop) devices, which use keyboard/drag instead. */
+.joy{display:none;position:absolute;left:calc(14px + env(safe-area-inset-left,0px));bottom:calc(max(18px,env(safe-area-inset-bottom)) + 124px);width:118px;height:118px;z-index:5;touch-action:none;cursor:grab}
+.joyRing{position:absolute;inset:0;border-radius:50%;border:2.5px solid rgba(255,243,209,.55);background:rgba(255,243,209,.12);box-shadow:0 2px 14px rgba(41,74,62,.25),inset 0 0 18px rgba(255,243,209,.1)}
+.joyKnob{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:rgba(255,243,209,.45);border:2px solid rgba(255,243,209,.65);box-shadow:0 2px 10px rgba(41,74,62,.3);will-change:transform;pointer-events:none}
+@media(max-height:560px){
+ .header{top:8px;left:12px;right:12px}
+ .heading strong{font-size:18px}
+ .heading span{font-size:8px}
+ .score{top:12px;left:75%;padding:5px 13px;gap:9px}
+ .score b{font-size:21px}
+ .controls{bottom:9px;left:15px;right:15px}
+ .controls>p{margin-bottom:5px;min-height:0;font-size:10.5px}
+ .actionRow{padding:5px 8px 5px 14px;max-width:470px;margin-left:auto}
+ .action{min-height:42px;font-size:15px}
+ .mini{min-height:42px;min-width:52px;font-size:11px}
+ .card{padding:18px 22px;max-width:490px}
+ .card h1{font-size:23px;margin:8px 0;white-space:normal}
+ .card ol{gap:4px;margin:9px 0}
+ .card p{margin-bottom:8px;font-size:12px}
+ .keyboard{margin-bottom:10px}
+ .primary{min-height:43px;padding:7px 15px}
+ .scrim{padding:12px}
+ .heading{margin-left:48px}
+ .score small{font-size:7px}
+ .joy{width:92px;height:92px;bottom:78px;left:10px}
+ .joyKnob{width:44px;height:44px;margin:-22px 0 0 -22px}
+}
+@media(pointer:coarse){.keyboard,.action>span,.mini>span{display:none}.actionRow small.hintFine{display:none}.actionRow small.hintCoarse{display:block}.action{min-height:55px}.mini{min-height:55px}.joy{display:block}}
+@media(prefers-reduced-motion:reduce){.root *{scroll-behavior:auto}}

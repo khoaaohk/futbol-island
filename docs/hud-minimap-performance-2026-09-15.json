@@ -1,0 +1,168 @@
+{
+  "live_baseline": {
+    "results": [
+      {
+        "mode": "hover",
+        "reads": 246,
+        "hiddenWrites": 984,
+        "redundantHidden": 984,
+        "layoutCount": 0,
+        "styleCount": 246,
+        "layoutMs": 0,
+        "styleMs": 8.150999999999998
+      },
+      {
+        "mode": "moving",
+        "reads": 256,
+        "hiddenWrites": 1026,
+        "redundantHidden": 1024,
+        "layoutCount": 241,
+        "styleCount": 369,
+        "layoutMs": 5,
+        "styleMs": 17.195
+      },
+      {
+        "mode": "boost",
+        "reads": 244,
+        "hiddenWrites": 978,
+        "redundantHidden": 976,
+        "layoutCount": 222,
+        "styleCount": 354,
+        "layoutMs": 6.164,
+        "styleMs": 15.665999999999999
+      }
+    ],
+    "resize": {
+      "cameraAspect": 1.7272727272727273,
+      "width": 760,
+      "height": 440
+    }
+  },
+  "hud_only": {
+    "results": [
+      {
+        "mode": "hover",
+        "reads": 0,
+        "hiddenWrites": 0,
+        "redundantHidden": 0,
+        "layoutCount": 0,
+        "styleCount": 0,
+        "layoutMs": 0,
+        "styleMs": 0
+      },
+      {
+        "mode": "moving",
+        "reads": 0,
+        "hiddenWrites": 2,
+        "redundantHidden": 0,
+        "layoutCount": 239,
+        "styleCount": 242,
+        "layoutMs": 8.372,
+        "styleMs": 20.61
+      },
+      {
+        "mode": "boost",
+        "reads": 0,
+        "hiddenWrites": 2,
+        "redundantHidden": 0,
+        "layoutCount": 220,
+        "styleCount": 222,
+        "layoutMs": 7.667999999999999,
+        "styleMs": 15.591000000000001
+      }
+    ],
+    "resize": {
+      "cameraAspect": 1.7272727272727273,
+      "width": 760,
+      "height": 440
+    }
+  },
+  "minimap_isolation": {
+    "results": [
+      {
+        "mode": "smooth",
+        "reads": 0,
+        "hiddenWrites": 2,
+        "redundantHidden": 0,
+        "layoutCount": 240,
+        "styleCount": 243,
+        "layoutMs": 7.519,
+        "styleMs": 17.742
+      },
+      {
+        "mode": "no-transition",
+        "reads": 0,
+        "hiddenWrites": 2,
+        "redundantHidden": 0,
+        "layoutCount": 26,
+        "styleCount": 173,
+        "layoutMs": 1.4949999999999999,
+        "styleMs": 12.423000000000004
+      },
+      {
+        "mode": "smooth",
+        "reads": 0,
+        "hiddenWrites": 2,
+        "redundantHidden": 0,
+        "layoutCount": 231,
+        "styleCount": 234,
+        "layoutMs": 7.315999999999998,
+        "styleMs": 17.567
+      },
+      {
+        "mode": "no-transition",
+        "reads": 0,
+        "hiddenWrites": 2,
+        "redundantHidden": 0,
+        "layoutCount": 26,
+        "styleCount": 177,
+        "layoutMs": 1.5019999999999998,
+        "styleMs": 14.434999999999997
+      }
+    ],
+    "resize": {
+      "cameraAspect": 1.7272727272727273,
+      "width": 760,
+      "height": 440
+    }
+  },
+  "final": {
+    "results": [
+      {
+        "mode": "hover",
+        "reads": 0,
+        "hiddenWrites": 0,
+        "redundantHidden": 0,
+        "layoutCount": 0,
+        "styleCount": 0,
+        "layoutMs": 0,
+        "styleMs": 0
+      },
+      {
+        "mode": "moving",
+        "reads": 0,
+        "hiddenWrites": 2,
+        "redundantHidden": 0,
+        "layoutCount": 2,
+        "styleCount": 242,
+        "layoutMs": 0.404,
+        "styleMs": 20.582
+      },
+      {
+        "mode": "boost",
+        "reads": 0,
+        "hiddenWrites": 2,
+        "redundantHidden": 0,
+        "layoutCount": 3,
+        "styleCount": 222,
+        "layoutMs": 1.442,
+        "styleMs": 17.166999999999998
+      }
+    ],
+    "resize": {
+      "cameraAspect": 1.7272727272727273,
+      "width": 760,
+      "height": 440
+    }
+  }
+}

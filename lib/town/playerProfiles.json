@@ -1,0 +1,722 @@
+{
+  "Gianluigi Donnarumma": {
+    "blurb": "Italian giant who broke through at Milan, won Euro 2020 as best player and the 2025 UCL with PSG before joining Manchester City.",
+    "strengths": [
+      "Huge frame and reach",
+      "Penalty shootout specialist",
+      "Instinctive reflex saves"
+    ]
+  },
+  "Thibaut Courtois": {
+    "blurb": "Towering Belgian keeper for Chelsea, Atlético and Real Madrid, whose man-of-the-match 2022 UCL final display epitomises his big-game shot-stopping.",
+    "strengths": [
+      "Reach from a 1.99m frame",
+      "Big-game shot-stopping",
+      "Angles and positioning"
+    ]
+  },
+  "Alisson": {
+    "blurb": "Brazilian No.1 and Liverpool's mainstay since 2018, a Premier League and 2019 Champions League winner renowned for composure and pinpoint distribution.",
+    "strengths": [
+      "Commanding shot-stopping",
+      "Precise long-range distribution",
+      "Calm under pressure"
+    ]
+  },
+  "Lev Yashin": {
+    "blurb": "Soviet legend the 'Black Spider', the only goalkeeper to win the Ballon d'Or (1963), who redefined the position for Dynamo Moscow and the USSR.",
+    "strengths": [
+      "Revolutionary command of the area",
+      "Penalty-saving prowess",
+      "Sweeping ahead of his time"
+    ]
+  },
+  "Gianluigi Buffon": {
+    "blurb": "Italy's 2006 World Cup-winning keeper and Juventus icon whose record-length career marks him among the greatest ever.",
+    "strengths": [
+      "Impeccable positioning",
+      "Big-game temperament",
+      "Extraordinary longevity"
+    ]
+  },
+  "Iker Casillas": {
+    "blurb": "Spain's captain for the 2010 World Cup and Euro 2008/2012 treble, a Real Madrid icon known as 'San Iker' for reflex saves.",
+    "strengths": [
+      "Lightning reflexes",
+      "Elite one-on-one saves",
+      "Leadership and big-game nerve"
+    ]
+  },
+  "Manuel Neuer": {
+    "blurb": "German 2014 World Cup winner and Bayern mainstay who pioneered the 'sweeper-keeper' role, dominating the space behind a high line.",
+    "strengths": [
+      "Pioneering sweeper-keeper play",
+      "Excellent footwork and distribution",
+      "Commanding shot-stopping"
+    ]
+  },
+  "Oliver Kahn": {
+    "blurb": "Germany's ferociously intense Bayern captain and the only goalkeeper named Player of the Tournament at a World Cup (2002).",
+    "strengths": [
+      "Imposing physical presence",
+      "Reflex shot-stopping",
+      "Relentless competitive drive"
+    ]
+  },
+  "Dino Zoff": {
+    "blurb": "Italy's oldest World Cup winner as captain in 1982 at 40, a Juventus great renowned for calm reliability and clean-sheet records.",
+    "strengths": [
+      "Exceptional positioning",
+      "Calm reliability",
+      "Longevity at the top"
+    ]
+  },
+  "Peter Schmeichel": {
+    "blurb": "Danish colossus, Euro 1992 winner and Manchester United's treble-winning keeper (1999), famed for his size and the 'star jump' save.",
+    "strengths": [
+      "Commanding physical presence",
+      "Explosive star-jump saves",
+      "Long throw-out counters"
+    ]
+  },
+  "Gordon Banks": {
+    "blurb": "England's 1966 World Cup winner, immortalised by 'the Save of the Century' denying Pelé at the 1970 World Cup.",
+    "strengths": [
+      "Extraordinary reflex reactions",
+      "Positioning and anticipation",
+      "Big-game composure"
+    ]
+  },
+  "Edwin van der Sar": {
+    "blurb": "Dutch keeper who starred for Ajax, Fulham and Manchester United, winning the 1995 and 2008 Champions Leagues with a clean-sheet record.",
+    "strengths": [
+      "Excellent footwork and distribution",
+      "Composure and consistency",
+      "Commanding presence"
+    ]
+  },
+  "Sepp Maier": {
+    "blurb": "West Germany's 1974 World Cup winner, 'Die Katze von Anzing', a Bayern icon of the 1970s known for agility and reliability.",
+    "strengths": [
+      "Cat-like agility",
+      "Remarkable consistency",
+      "Command of his area"
+    ]
+  },
+  "Achraf Hakimi": {
+    "blurb": "Moroccan right-back for PSG, ex-Real Madrid, Dortmund and Inter; blistering pace, star of Morocco's 2022 World Cup semi-final run.",
+    "strengths": [
+      "Explosive acceleration",
+      "End-to-end stamina",
+      "Cutting inside to finish"
+    ]
+  },
+  "Dani Carvajal": {
+    "blurb": "Spanish right-back and Real Madrid mainstay, serial Champions League winner; tenacious defending and big-game reliability.",
+    "strengths": [
+      "Tenacious man-marking",
+      "Overlapping stamina",
+      "Big-match temperament"
+    ]
+  },
+  "Cafu": {
+    "blurb": "Brazilian right-back, most-capped Brazil player and only man in three straight World Cup finals; tireless 'Il Pendolino' at Roma and Milan.",
+    "strengths": [
+      "Inexhaustible running",
+      "Attacking overlaps",
+      "Elite longevity"
+    ]
+  },
+  "Roberto Carlos": {
+    "blurb": "Brazilian left-back and 2002 World Cup winner, Real Madrid Galáctico; thunderous free-kicks and an explosive left foot.",
+    "strengths": [
+      "Cannon left-foot free-kicks",
+      "Explosive pace",
+      "Marauding runs"
+    ]
+  },
+  "Paolo Maldini": {
+    "blurb": "Italian full-back/centre-back, AC Milan one-club legend across 25 seasons; the gold standard of positional, clean-tackling defence.",
+    "strengths": [
+      "Immaculate positioning",
+      "Clean, well-timed tackling",
+      "Composure and longevity"
+    ]
+  },
+  "Philipp Lahm": {
+    "blurb": "German full-back for both sides, Bayern and Germany captain and 2014 World Cup winner; cerebral, two-footed defending.",
+    "strengths": [
+      "Flawless positional IQ",
+      "Two-footed either flank",
+      "Can invert into midfield"
+    ]
+  },
+  "Javier Zanetti": {
+    "blurb": "Argentine full-back/midfielder and Inter captain over 19 seasons; extraordinary durability and versatility, 2010 treble winner.",
+    "strengths": [
+      "Remarkable fitness/longevity",
+      "Versatile RB/midfield",
+      "Consistency and leadership"
+    ]
+  },
+  "Dani Alves": {
+    "blurb": "Brazilian right-back, the most decorated player in football history; Barcelona's overlapping partner to Messi in the tiki-taka era.",
+    "strengths": [
+      "Overlapping combination play",
+      "High assist output",
+      "Attacking energy"
+    ]
+  },
+  "Carlos Alberto": {
+    "blurb": "Brazilian right-back and captain of the 1970 World Cup winners; scorer of that final's iconic team goal, an attacking full-back pioneer.",
+    "strengths": [
+      "Attacking full-back play",
+      "Leadership / captaincy",
+      "Powerful long-range shot"
+    ]
+  },
+  "Ashley Cole": {
+    "blurb": "English left-back for Arsenal's 'Invincibles' and Chelsea; among the best defensive full-backs, master of nullifying elite wingers.",
+    "strengths": [
+      "Elite 1v1 defending",
+      "Recovery pace and timing",
+      "Positional discipline"
+    ]
+  },
+  "Nílton Santos": {
+    "blurb": "Brazilian left-back, Botafogo legend and 1958/1962 World Cup winner; the 'Enciclopédia do Futebol' who pioneered the attacking full-back.",
+    "strengths": [
+      "Pioneering attacking FB play",
+      "Composure and control",
+      "Tactical intelligence"
+    ]
+  },
+  "Gary Neville": {
+    "blurb": "English right-back and Manchester United one-club man, Class of '92; dependable defending and a legendary partnership with Beckham.",
+    "strengths": [
+      "Reliable positional defending",
+      "Right-flank overlaps",
+      "Consistency and longevity"
+    ]
+  },
+  "Virgil van Dijk": {
+    "blurb": "Dutch colossus and Liverpool captain, the record signing who transformed their defence and finished 2nd in the 2019 Ballon d'Or.",
+    "strengths": [
+      "Dominant aerial duels",
+      "Composure under pressure",
+      "Recovery pace and stride"
+    ]
+  },
+  "Rúben Dias": {
+    "blurb": "Portuguese leader signed by Man City in 2020; immediately won the title and FWA Footballer of the Year for organising the backline.",
+    "strengths": [
+      "Vocal organisation",
+      "Front-foot defending",
+      "Reading and blocking"
+    ]
+  },
+  "Antonio Rüdiger": {
+    "blurb": "German warrior who won the 2021 UCL with Chelsea before anchoring Real Madrid's defence, famed for relentless aggression.",
+    "strengths": [
+      "Blistering recovery speed",
+      "Fearless, combative defending",
+      "Front-foot aggression"
+    ]
+  },
+  "Franz Beckenbauer": {
+    "blurb": "German legend 'Der Kaiser' who invented the attacking libero at Bayern, won the 1974 World Cup as captain and two Ballons d'Or.",
+    "strengths": [
+      "Pioneering ball-playing sweeper",
+      "Elegant passing and vision",
+      "Leadership and composure"
+    ]
+  },
+  "Franco Baresi": {
+    "blurb": "Italian AC Milan one-club icon and libero who marshalled Sacchi's dynasty and the world's most feared offside trap.",
+    "strengths": [
+      "Masterful offside trap",
+      "Reading the game",
+      "Ball-playing from the back"
+    ]
+  },
+  "Fabio Cannavaro": {
+    "blurb": "Italian captain who won the 2006 World Cup and became the only defender to win the Ballon d'Or that year.",
+    "strengths": [
+      "Impeccable positioning/timing",
+      "Anticipation / interceptions",
+      "Leadership under pressure"
+    ]
+  },
+  "Alessandro Nesta": {
+    "blurb": "Italian centre-back regarded as the most technically elegant defender ever, a Lazio and AC Milan great with two UCL titles.",
+    "strengths": [
+      "Flawless anticipatory tackling",
+      "Elegant ball control",
+      "One-on-one defending"
+    ]
+  },
+  "Sergio Ramos": {
+    "blurb": "Spanish serial winner and Real Madrid captain, a four-time UCL winner famed for clutch goals like the 2014 final equaliser.",
+    "strengths": [
+      "Aerial threat at both ends",
+      "Big-game mentality",
+      "Ball-playing range"
+    ]
+  },
+  "Bobby Moore": {
+    "blurb": "England's 1966 World Cup-winning captain and West Ham legend, revered for immaculate timing and positioning despite lacking pace.",
+    "strengths": [
+      "Impeccable tackle timing",
+      "Anticipation and reading",
+      "Calm distribution / leadership"
+    ]
+  },
+  "Carles Puyol": {
+    "blurb": "Spanish Barcelona one-club captain and heart of the 2008–2011 dynasty, a tenacious leader and 2010 World Cup winner.",
+    "strengths": [
+      "Relentless tenacity / tackling",
+      "Aerial power despite height",
+      "Inspirational leadership"
+    ]
+  },
+  "Rio Ferdinand": {
+    "blurb": "English ball-playing centre-back and Man United great, six-time PL champion and 2008 UCL winner known for pace and elegant passing.",
+    "strengths": [
+      "Elegant distribution",
+      "Reading the game",
+      "Recovery pace"
+    ]
+  },
+  "Daniel Passarella": {
+    "blurb": "Argentine 1978 World Cup-winning captain 'El Gran Capitán', a River Plate legend and highest-scoring defender of his era.",
+    "strengths": [
+      "Prolific scoring from defence",
+      "Aerial power / heading",
+      "Commanding leadership"
+    ]
+  },
+  "Pedri": {
+    "blurb": "Spanish creative midfielder, Barcelona and Spain's tempo-setter, celebrated for press resistance and mature ball retention.",
+    "strengths": [
+      "Elite press resistance",
+      "Line-breaking passing",
+      "Spatial awareness beyond his years"
+    ]
+  },
+  "Jude Bellingham": {
+    "blurb": "English box-to-box midfielder who starred at Dortmund then Real Madrid, known for late runs, big-game goals and precocious leadership.",
+    "strengths": [
+      "Late-arriving box runs",
+      "Physical drive through midfield",
+      "Clutch decisive goals"
+    ]
+  },
+  "Zinedine Zidane": {
+    "blurb": "French maestro, star of Juventus and Real Madrid and 1998 World Cup winner, revered for elegant control and the 2002 UCL final volley.",
+    "strengths": [
+      "Sublime close control",
+      "Vision and defence-splitting passes",
+      "Big-moment brilliance"
+    ]
+  },
+  "Xavi Hernández": {
+    "blurb": "Spanish deep-lying playmaker, Barcelona's tiki-taka metronome and a Spain treble winner who defined possession football.",
+    "strengths": [
+      "Metronomic passing/tempo",
+      "Constant scanning",
+      "Press resistance"
+    ]
+  },
+  "Andrés Iniesta": {
+    "blurb": "Spanish playmaker, Barcelona icon and scorer of Spain's 2010 World Cup-winning goal, famed for gliding dribbles through defences.",
+    "strengths": [
+      "Effortless dribbling under pressure",
+      "Clutch decisive goals",
+      "Impeccable ball retention"
+    ]
+  },
+  "Michel Platini": {
+    "blurb": "French attacking midfielder, three-time Ballon d'Or winner with Juventus, a prolific scoring playmaker and Euro 1984 talisman.",
+    "strengths": [
+      "Extraordinary midfield scoring",
+      "Dead-ball mastery",
+      "Vision and timing of runs"
+    ]
+  },
+  "Andrea Pirlo": {
+    "blurb": "Italian deep-lying playmaker, regista at Milan and Juventus and 2006 World Cup winner who redefined the role.",
+    "strengths": [
+      "Visionary long passing",
+      "Exquisite free-kicks",
+      "Calm tempo control"
+    ]
+  },
+  "Steven Gerrard": {
+    "blurb": "English box-to-box midfielder and one-club Liverpool captain, driver of the 2005 Istanbul comeback, famed for powerful shooting.",
+    "strengths": [
+      "Thunderous long-range shooting",
+      "Driving box-to-box runs",
+      "Inspirational leadership"
+    ]
+  },
+  "Paul Scholes": {
+    "blurb": "English central midfielder and Manchester United one-club great, revered by peers for passing range, timing of runs and goals from deep.",
+    "strengths": [
+      "Pinpoint short/long passing",
+      "Late runs and long-range goals",
+      "Exceptional game reading"
+    ]
+  },
+  "Lothar Matthäus": {
+    "blurb": "German midfielder, 1990 World Cup-winning captain and inaugural FIFA World Player, a commanding box-to-box force at Bayern and Inter.",
+    "strengths": [
+      "Powerful driving runs / shooting",
+      "Leadership and stamina",
+      "Tactical versatility"
+    ]
+  },
+  "Frank Rijkaard": {
+    "blurb": "Dutch midfielder, part of Milan's and Ajax's late-80s greats and a 1988 Euro winner, an elegant, versatile all-rounder.",
+    "strengths": [
+      "Composed two-way play",
+      "Versatility (midfield or CB)",
+      "Strong in tackle and air"
+    ]
+  },
+  "Roy Keane": {
+    "blurb": "Irish combative midfielder and Manchester United captain of the 1999 treble, a fierce leader defining their late-90s dominance.",
+    "strengths": [
+      "Relentless ball-winning",
+      "Commanding leadership",
+      "Box-to-box stamina"
+    ]
+  },
+  "Vinícius Júnior": {
+    "blurb": "Brazilian left winger for Real Madrid, breakout star of the 2020s who scored the winner in the 2022 UCL final and drives Madrid's attack.",
+    "strengths": [
+      "Explosive dribbling at speed",
+      "Cutting in to finish",
+      "Drawing fouls / 1v1 dominance"
+    ]
+  },
+  "Mohamed Salah": {
+    "blurb": "Egyptian right winger and Liverpool talisman, multiple Premier League Golden Boots, famous for cutting inside onto his left foot.",
+    "strengths": [
+      "Deadly left-footed finishing",
+      "Runs in behind",
+      "Elite goal consistency"
+    ]
+  },
+  "Garrincha": {
+    "blurb": "Brazilian right winger of Botafogo, 'Little Bird', two-time World Cup winner who mesmerised despite bent legs from childhood illness.",
+    "strengths": [
+      "Unmatched dribbling / feints",
+      "Devastating direction changes",
+      "Big-tournament brilliance"
+    ]
+  },
+  "George Best": {
+    "blurb": "Northern Irish winger for Manchester United, 1968 European Cup winner and Ballon d'Or holder, as famous off the pitch as on it.",
+    "strengths": [
+      "Balance and mesmeric dribbling",
+      "Two-footed and brave",
+      "Flair with end product"
+    ]
+  },
+  "Cristiano Ronaldo": {
+    "blurb": "Portuguese superstar who began as a stepover winger at Man United before becoming a prolific scorer at Real Madrid, Juventus and Al-Nassr.",
+    "strengths": [
+      "Elite aerial ability/power",
+      "Relentless goalscoring",
+      "Athleticism and free-kicks"
+    ]
+  },
+  "Lionel Messi": {
+    "blurb": "Argentine maestro, Barcelona icon and 2022 World Cup winner who from a right-wing base redefined the false-nine with peerless dribbling.",
+    "strengths": [
+      "Close control and dribbling",
+      "Left-foot finishing and passing",
+      "Vision and playmaking"
+    ]
+  },
+  "Ronaldinho": {
+    "blurb": "Brazilian playmaking winger, 2005 Ballon d'Or winner at Barcelona, the embodiment of joyful football with samba tricks and no-look passes.",
+    "strengths": [
+      "Flair tricks (elastico, no-look)",
+      "Creative vision",
+      "Free-kicks and long shots"
+    ]
+  },
+  "Ryan Giggs": {
+    "blurb": "Welsh left winger, one-club legend at Manchester United with record longevity and 13 titles, famed for mazy solo goals.",
+    "strengths": [
+      "Balance and dribbling",
+      "Remarkable longevity",
+      "Crossing and delivery"
+    ]
+  },
+  "Stanley Matthews": {
+    "blurb": "English right winger, the 'Wizard of Dribble', first Ballon d'Or winner (1956) and 1953 FA Cup hero who played top-flight football until 50.",
+    "strengths": [
+      "Body-swerve and feints",
+      "Extraordinary longevity",
+      "Pinpoint crossing"
+    ]
+  },
+  "Luís Figo": {
+    "blurb": "Portuguese winger, 2000 Ballon d'Or winner, notorious for his transfer from Barcelona to Real Madrid, a master of crossing and dribbling.",
+    "strengths": [
+      "Precision crossing",
+      "Silky dribbling and control",
+      "Big-game leadership"
+    ]
+  },
+  "Arjen Robben": {
+    "blurb": "Dutch right winger for Chelsea, Real Madrid and Bayern, scorer of the 2013 UCL final winner, famous for cutting inside onto his left foot.",
+    "strengths": [
+      "Signature cut-inside shot",
+      "Blistering acceleration",
+      "Clutch big-game goals"
+    ]
+  },
+  "Franck Ribéry": {
+    "blurb": "French left winger and Bayern icon, driving force of the 2013 treble, a dazzling dribbler who formed the 'Robbery' duo with Robben.",
+    "strengths": [
+      "Close-control dribbling",
+      "Crossing and creativity",
+      "Two-way work rate"
+    ]
+  },
+  "Kylian Mbappé": {
+    "blurb": "French superstar and 2018 World Cup winner, PSG's record scorer before Real Madrid; hat-trick in the 2022 World Cup final.",
+    "strengths": [
+      "Explosive acceleration/dribbling",
+      "Clinical two-footed finishing",
+      "Big-game mentality"
+    ]
+  },
+  "Ousmane Dembélé": {
+    "blurb": "French winger/forward, ex-Barcelona now PSG, who won the 2025 UCL and Ballon d'Or, an ambidextrous dribbler of rare unpredictability.",
+    "strengths": [
+      "Truly ambidextrous",
+      "Explosive change of direction",
+      "Unpredictable dribbling"
+    ]
+  },
+  "Erling Haaland": {
+    "blurb": "Norwegian goal-machine at Manchester City (via Salzburg/Dortmund); broke the single-season Premier League record with 36 goals in 2022-23.",
+    "strengths": [
+      "Pace and power in behind",
+      "Ruthless one-touch finishing",
+      "Relentless physical presence"
+    ]
+  },
+  "Pelé": {
+    "blurb": "Brazilian icon and only three-time World Cup winner (1958, 62, 70); Santos legend widely regarded among the greatest ever, ~1000+ goals.",
+    "strengths": [
+      "Complete finishing and vision",
+      "Explosive athleticism / balance",
+      "Big-stage decisiveness"
+    ]
+  },
+  "Ronaldo Nazário": {
+    "blurb": "Brazilian 'O Fenômeno', two-time World Cup winner and 2002 Golden Boot; unstoppable at Barcelona, Inter and Real Madrid before injuries.",
+    "strengths": [
+      "Freakish pace with the ball",
+      "Unrivalled dribbling in space",
+      "Ice-cold finishing"
+    ]
+  },
+  "Marco van Basten": {
+    "blurb": "Dutch elegant No.9, three-time Ballon d'Or winner at AC Milan and Euro 88 champion with a legendary volley; retired at 30 to injury.",
+    "strengths": [
+      "Exquisite technique/volleying",
+      "Aerial power and timing",
+      "Clinical, varied finishing"
+    ]
+  },
+  "Gerd Müller": {
+    "blurb": "German 'Der Bomber', Bayern and West Germany legend who won the 1974 World Cup and set scoring records unmatched for decades.",
+    "strengths": [
+      "Lethal poacher's instinct",
+      "Lightning-quick low centre of gravity",
+      "Uncanny efficiency"
+    ]
+  },
+  "Alfredo Di Stéfano": {
+    "blurb": "Argentine-Spanish all-round forward who drove Real Madrid to five straight European Cups (1956–60), scoring in all five finals.",
+    "strengths": [
+      "Complete box-to-box forward play",
+      "Relentless stamina / leadership",
+      "Prolific, versatile scoring"
+    ]
+  },
+  "Romário": {
+    "blurb": "Brazilian poacher and 1994 World Cup winner/Golden Ball; Barcelona and Brazil legend with cold-blooded finishing and 1000+ career goals.",
+    "strengths": [
+      "Deadly 1v1 finishing",
+      "Sublime close control",
+      "Genius movement off defenders"
+    ]
+  },
+  "Gabriel Batistuta": {
+    "blurb": "Argentine 'Batigol', Fiorentina icon and their all-time top scorer; a ferocious striker who finally won Serie A at Roma in 2001.",
+    "strengths": [
+      "Thunderous powerful shooting",
+      "Strong hold-up / physicality",
+      "Clinical from range and box"
+    ]
+  },
+  "Thierry Henry": {
+    "blurb": "French World Cup winner and Arsenal's record scorer / 'Invincibles' talisman; a converted winger who became a lethal, elegant striker.",
+    "strengths": [
+      "Blistering pace and dribbling",
+      "Curled far-corner finishes",
+      "Creative playmaking / assists"
+    ]
+  },
+  "Ruud van Nistelrooy": {
+    "blurb": "Dutch penalty-box predator, prolific for Man United and Real Madrid in the 2000s; a pure poacher with relentless records.",
+    "strengths": [
+      "Ruthless six-yard finishing",
+      "Superb positioning / anticipation",
+      "Strong hold-up play"
+    ]
+  },
+  "Eusébio": {
+    "blurb": "Portuguese 'Black Panther', Benfica legend and 1966 World Cup top scorer (9 goals) with a European Cup and 1965 Ballon d'Or.",
+    "strengths": [
+      "Explosive pace / acceleration",
+      "Ferocious right-footed shot",
+      "Prolific big-tournament scoring"
+    ]
+  },
+  "Dídac Plana": {
+    "blurb": "Spanish goalkeeper for Barça and Spain, a league and Copa winner famed for spectacular reflex saves and commanding his area.",
+    "strengths": [
+      "Reflex saves",
+      "Aerial command",
+      "Big-game temperament"
+    ]
+  },
+  "Luis Amado": {
+    "blurb": "Spanish goalkeeper legend of Inter Movistar and Spain, a World Cup (2000, 2004) and multiple Euro winner famed for consistency and command of his box.",
+    "strengths": [
+      "Positioning",
+      "Command of area",
+      "Trophy-laden consistency"
+    ]
+  },
+  "Stefano Mammarella": {
+    "blurb": "Italian goalkeeper and Italy's Euro 2014-winning keeper, named that tournament's best; known for reflexes and leadership.",
+    "strengths": [
+      "Reflex saves",
+      "Leadership",
+      "Penalty specialist"
+    ]
+  },
+  "Higuita": {
+    "blurb": "Same player as Léo Higuita — the Brazilian-born fly-goalkeeper (nicknamed after René Higuita) who dribbles and scores from his own goal.",
+    "strengths": [
+      "Outfield-level ball control",
+      "Goal threat from GK",
+      "Quick counterattacks"
+    ]
+  },
+  "Guitta": {
+    "blurb": "Brazilian goalkeeper for Corinthians/Magnus and Brazil, a Futsal Planet World's Best Goalkeeper (2021) known for lightning reflexes and elite 1v1 shot-stopping.",
+    "strengths": [
+      "Explosive reflexes",
+      "1v1 shot-stopping",
+      "Composure under pressure"
+    ]
+  },
+  "Tomás Paçó": {
+    "blurb": "Young Portuguese fixo at Sporting CP and a Portugal international, a composed ball-playing defender in the 2021 World Cup-winning squad.",
+    "strengths": [
+      "Composure on the ball",
+      "Defensive reading",
+      "Progressive passing"
+    ]
+  },
+  "Kike Boned": {
+    "blurb": "Spanish fixo (Enrique Boned) and ElPozo Murcia icon; 2× World champion (2000, 2004) and 2009 World Player, a cerebral defender.",
+    "strengths": [
+      "Elite defensive reading",
+      "Tactical intelligence",
+      "Leadership"
+    ]
+  },
+  "Pany Varela": {
+    "blurb": "Cape Verde-born Portuguese winger (Benfica) who scored in the 2021 Champions League and World Cup finals for Portugal.",
+    "strengths": [
+      "Powerful long-range shooting",
+      "Delivers in big finals",
+      "Vast experience"
+    ]
+  },
+  "Ricardinho": {
+    "blurb": "Portuguese winger No.10 'O Mágico', a record 6× Futsal Planet World Player who captained Portugal to the 2021 World Cup (Golden Ball).",
+    "strengths": [
+      "Mesmerising 1v1 dribbling",
+      "Creative vision and assists",
+      "Acrobatic finishing"
+    ]
+  },
+  "Falcão": {
+    "blurb": "Brazilian icon dubbed the 'Pelé of futsal'; 2× World Cup winner (2008, 2012), 4× World Player, with 400+ goals for Brazil.",
+    "strengths": [
+      "Wizard-level dribbling and tricks",
+      "Game-breaking creativity",
+      "Deadly finishing"
+    ]
+  },
+  "Manoel Tobias": {
+    "blurb": "Brazilian legend, 2× World Cup winner and 3× Best Player in the World; considered by many the greatest futsal player ever.",
+    "strengths": [
+      "Prolific goalscoring",
+      "Ferocious shooting power",
+      "Complete two-way game"
+    ]
+  },
+  "Zicky Té": {
+    "blurb": "Guinea-Bissau-born Portuguese pivot for Sporting CP and Portugal; named 2022 Best Young Player in the World.",
+    "strengths": [
+      "Powerful hold-up play",
+      "Physical strength",
+      "Back-to-goal finishing"
+    ]
+  },
+  "Ferrão": {
+    "blurb": "Brazilian pivot and multiple Best Player in the World winner; Barcelona's talisman 2014–24 and a world champion.",
+    "strengths": [
+      "Elite pivot hold-up",
+      "Clinical, quick finishing",
+      "Deceptive spins and turns"
+    ]
+  },
+  "Vander Carioca": {
+    "blurb": "Brazilian pivot with one of the longest careers in the sport; World Cup squads 2000 and 2004, still playing into his 40s.",
+    "strengths": [
+      "Powerful hold-up play",
+      "Box finishing",
+      "Remarkable longevity"
+    ]
+  },
+  "Wilde": {
+    "blurb": "Brazilian pivot and 2× World Cup winner (2008, 2012); multiple Spanish league titles as a powerful target player.",
+    "strengths": [
+      "Strong back-to-goal play",
+      "Reliable finishing",
+      "Physical duels"
+    ]
+  },
+  "Lenísio": {
+    "blurb": "Brazilian pivot/forward and prolific marksman; multiple LNFS and Brazilian league top scorer, netting 11 at the 2008 World Cup.",
+    "strengths": [
+      "Relentless goalscoring",
+      "Sharp box finishing",
+      "Smart positioning"
+    ]
+  }
+}

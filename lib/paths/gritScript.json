@@ -1,0 +1,260 @@
+{
+  "script": "Did you know… that a tree grows in two directions at the same time?\n\nIt’s always growing down… and growing up.\n\nAnd what’s interesting is—the root system mirrors the fruit system.\n\nNow, here’s what’s fascinating about a tree.\n\nIts nature is both gravitropic… and phototropic.\n\nThat means its roots grow away from the light—and toward gravity.\n\nBefore the tree can ever grow upward… the seed must first grow downward.\n\nInto darkness.\n\nResistance.\n\nPressure.\n\nAnd dirt.\n\nThe roots literally have to fight their way deeper underground.\n\nBut once the tree breaks through the surface… and begins reaching toward the light… there is less resistance.\n\nAnd honestly…\n\nThat is one of the most beautiful pictures of how life works.\n\nBecause the work you do in the dark—when nobody sees you… when life feels difficult and heavy—is what creates the success people admire later… in the light.\n\nEverybody wants the fruit.\n\nEverybody wants the visible success… the recognition… and the results.\n\nBut very few people are willing to endure the lonely seasons… that create them.",
+  "cues": [
+    {
+      "start": 0,
+      "text": "Did you know…",
+      "pause": 0.7
+    },
+    {
+      "start": 1.2,
+      "text": "that a tree grows in two directions at the same time?",
+      "pause": 0.8
+    },
+    {
+      "start": 5.14,
+      "text": "It’s always growing down…",
+      "pause": 0.6
+    },
+    {
+      "start": 6.95,
+      "text": "and growing up.",
+      "pause": 0.65
+    },
+    {
+      "start": 8.44,
+      "text": "And what’s interesting is—the root system mirrors the fruit system.",
+      "pause": 0.65
+    },
+    {
+      "start": 13.06,
+      "text": "Now, here’s what’s fascinating about a tree.",
+      "pause": 0.65
+    },
+    {
+      "start": 15.78,
+      "text": "Its nature is both gravitropic…",
+      "pause": 0.65
+    },
+    {
+      "start": 18.64,
+      "text": "and phototropic.",
+      "pause": 0.65
+    },
+    {
+      "start": 20.04,
+      "text": "That means its roots grow away from the light—",
+      "pause": 0.35
+    },
+    {
+      "start": 21.8,
+      "text": "and toward gravity.",
+      "pause": 0.65
+    },
+    {
+      "start": 23.5,
+      "text": "Before the tree can ever grow upward…",
+      "pause": 0.65
+    },
+    {
+      "start": 25.3,
+      "text": "the seed must first grow downward.",
+      "pause": 0.7
+    },
+    {
+      "start": 27.18,
+      "text": "Into darkness.",
+      "pause": 0.7
+    },
+    {
+      "start": 29,
+      "text": "Resistance.",
+      "pause": 0.7
+    },
+    {
+      "start": 30.4,
+      "text": "Pressure.",
+      "pause": 0.7
+    },
+    {
+      "start": 31.8,
+      "text": "And dirt.",
+      "pause": 0.8
+    },
+    {
+      "start": 33.68,
+      "text": "The roots literally have to fight their way deeper underground.",
+      "pause": 0.6
+    },
+    {
+      "start": 37.2,
+      "text": "But once the tree breaks through the surface…",
+      "pause": 0.65
+    },
+    {
+      "start": 39.4,
+      "text": "and begins reaching toward the light…",
+      "pause": 0.65
+    },
+    {
+      "start": 41.72,
+      "text": "there is less resistance.",
+      "pause": 0.75
+    },
+    {
+      "start": 43.64,
+      "text": "And honestly…",
+      "pause": 0.9
+    },
+    {
+      "start": 44.6,
+      "text": "That is one of the most beautiful pictures of how life works.",
+      "pause": 0.8
+    },
+    {
+      "start": 49.22,
+      "text": "Because the work you do in the dark—",
+      "pause": 0.4
+    },
+    {
+      "start": 50.6,
+      "text": "when nobody sees you…",
+      "pause": 0.7
+    },
+    {
+      "start": 51.92,
+      "text": "when life feels difficult and heavy—",
+      "pause": 0.55
+    },
+    {
+      "start": 55.6,
+      "text": "is what creates the success people admire later…",
+      "pause": 0.8
+    },
+    {
+      "start": 59.22,
+      "text": "in the light.",
+      "pause": 0.8
+    },
+    {
+      "start": 60.2,
+      "text": "Everybody wants the fruit.",
+      "pause": 0.75
+    },
+    {
+      "start": 63.0,
+      "text": "Everybody wants the visible success…",
+      "pause": 0.65
+    },
+    {
+      "start": 65.0,
+      "text": "the recognition…",
+      "pause": 0.65
+    },
+    {
+      "start": 66.0,
+      "text": "and the results.",
+      "pause": 0.7
+    },
+    {
+      "start": 67.14,
+      "text": "But very few people are willing to endure the lonely seasons…",
+      "pause": 0.9
+    },
+    {
+      "start": 70.8,
+      "text": "that create them.",
+      "pause": 0.9
+    }
+  ],
+  "captions": [
+    [
+      0,
+      "Did you know… that a tree grows in two directions at the same time?"
+    ],
+    [
+      5.14,
+      "It’s always growing down… and growing up."
+    ],
+    [
+      8.44,
+      "And what’s interesting is—the root system mirrors the fruit system."
+    ],
+    [
+      13.06,
+      "Now, here’s what’s fascinating about a tree."
+    ],
+    [
+      15.78,
+      "Its nature is both gravitropic… and phototropic."
+    ],
+    [
+      20.04,
+      "That means its roots grow away from the light—and toward gravity."
+    ],
+    [
+      23.5,
+      "Before the tree can ever grow upward… the seed must first grow downward."
+    ],
+    [
+      27.18,
+      "Into darkness."
+    ],
+    [
+      29,
+      "Resistance."
+    ],
+    [
+      30.4,
+      "Pressure."
+    ],
+    [
+      31.8,
+      "And dirt."
+    ],
+    [
+      33.68,
+      "The roots literally have to fight their way deeper underground."
+    ],
+    [
+      37.2,
+      "But once the tree breaks through the surface…"
+    ],
+    [
+      39.4,
+      "and begins reaching toward the light… there is less resistance."
+    ],
+    [
+      43.64,
+      "And honestly…"
+    ],
+    [
+      44.6,
+      "That is one of the most beautiful pictures of how life works."
+    ],
+    [
+      49.22,
+      "Because the work you do in the dark—when nobody sees you…"
+    ],
+    [
+      51.92,
+      "when life feels difficult and heavy—is what creates the success people admire later…"
+    ],
+    [
+      59.22,
+      "in the light."
+    ],
+    [
+      60.2,
+      "Everybody wants the fruit."
+    ],
+    [
+      63,
+      "Everybody wants the visible success… the recognition… and the results."
+    ],
+    [
+      67.14,
+      "But very few people are willing to endure the lonely seasons… that create them."
+    ]
+  ]
+}

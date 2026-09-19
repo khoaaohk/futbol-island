@@ -1,0 +1,18 @@
+button.button.button{
+ position:relative;width:var(--navigation-width,76px)!important;min-width:0!important;height:44px;
+ flex:0 0 auto!important;padding:0!important;border-radius:999px!important;
+ overflow:hidden;transition:width 260ms cubic-bezier(.22,.7,.3,1);
+}
+button.button.button[data-closing=true]{width:44px!important;pointer-events:none}
+.label,.icon{position:absolute;inset:0;display:grid;place-items:center;transition:opacity 160ms ease;white-space:nowrap}
+.icon{opacity:0}
+.button[data-closing=true] .label{opacity:0}
+.button[data-closing=true] .icon{opacity:1;transition-delay:100ms}
+@media(prefers-reduced-motion:reduce){button.button.button,.label,.icon{transition:none}}
+/* Shared paper finish also applies outside the modal shell (films, games and transcripts). */
+button.button.button{box-sizing:border-box;height:44px!important;border:3px solid #fff2cd!important;background:#e9c16b url('/stories/films/assets/entry-grain.png') center/128px 128px!important;color:#244d40!important;box-shadow:0 5px 0 #a8863d,0 0 0 4px #fff2cd40!important;font-family:inherit;font-size:14px;font-weight:600;line-height:1.1;align-self:start}
+button.button.button:focus{outline:none}
+button.button.button[data-keyboard-focus=true]:focus{outline:3px solid #2851df;outline-offset:6px}
+button.button.button:disabled{opacity:.5}
+button.button.button{transition:width 220ms cubic-bezier(.22,.7,.3,1),opacity 140ms ease}
+button.button.button[data-departing=true]{opacity:0;pointer-events:none}

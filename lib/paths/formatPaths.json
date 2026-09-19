@@ -1,0 +1,696 @@
+[
+  {
+    "format": "futsal",
+    "title": "Futsal",
+    "chapters": [
+      {
+        "title": "Find your connection",
+        "lessons": [
+          {
+            "id": "learnf_roles31",
+            "name": "3-1: Meet the Court Roles",
+            "steps": 16,
+            "questions": 2
+          },
+          {
+            "id": "bld_f_passtofeet",
+            "name": "Look, Control & Choose",
+            "steps": 9,
+            "questions": 2
+          },
+          {
+            "id": "prn_f_support",
+            "name": "Make a Passing Lane",
+            "steps": 9,
+            "questions": 2
+          }
+        ]
+      },
+      {
+        "title": "Attack and protect across goal",
+        "lessons": [
+          {
+            "id": "f_pared",
+            "name": "Wall Pass or Keep It",
+            "steps": 9,
+            "questions": 2
+          },
+          {
+            "id": "f_pivot",
+            "name": "Pivot: Turn or Combine",
+            "steps": 8,
+            "questions": 2
+          },
+          {
+            "id": "learnf_farpost",
+            "name": "Arrive at the Far Post",
+            "steps": 9,
+            "questions": 2
+          },
+          {
+            "id": "gapf_farpostdefense",
+            "name": "Protect the Far-Post Runner",
+            "steps": 11,
+            "questions": 2
+          }
+        ]
+      },
+      {
+        "title": "When the ball changes teams",
+        "lessons": [
+          {
+            "id": "def_f_goalside",
+            "name": "Delay and Cover",
+            "steps": 8,
+            "questions": 2
+          },
+          {
+            "id": "trn_f_firstpass",
+            "name": "Win It: Attack or Keep It",
+            "steps": 9,
+            "questions": 2
+          },
+          {
+            "id": "trn_f_winitback",
+            "name": "Lose It: Pressure or Recover",
+            "steps": 8,
+            "questions": 2
+          }
+        ]
+      },
+      {
+        "title": "Start with another option",
+        "lessons": [
+          {
+            "id": "bld_f_splitcb",
+            "name": "Goal-Clearance Options",
+            "steps": 9,
+            "questions": 3
+          },
+          {
+            "id": "set_f_throwin",
+            "name": "Kick-In: Have a Backup",
+            "steps": 7,
+            "questions": 2
+          }
+        ]
+      }
+    ],
+    "depth": [
+      {
+        "id": "learnf_shape22",
+        "name": "2-2: Keep Support Behind",
+        "steps": 11,
+        "questions": 2
+      },
+      {
+        "id": "f_paralela",
+        "name": "Parallel or Diagonal?",
+        "steps": 10,
+        "questions": 2
+      },
+      {
+        "id": "fmn_f_40",
+        "name": "4-0: Share the Space",
+        "steps": 8,
+        "questions": 2
+      },
+      {
+        "id": "expf_2v1",
+        "name": "Two Attackers: Commit the Defender",
+        "steps": 7,
+        "questions": 2
+      },
+      {
+        "id": "expf_thirdplayer",
+        "name": "Pivot Lay-Off: Find the Third Player",
+        "steps": 8,
+        "questions": 2
+      },
+      {
+        "id": "expf_switchblock",
+        "name": "Move the Block, Then Switch",
+        "steps": 7,
+        "questions": 2
+      },
+      {
+        "id": "expf_replacepivot",
+        "name": "Pivot Comes Short: Replace the Depth",
+        "steps": 7,
+        "questions": 2
+      },
+      {
+        "id": "expf_trailingoption",
+        "name": "Counterattack: Keep a Trailing Option",
+        "steps": 7,
+        "questions": 2
+      },
+      {
+        "id": "expf_pressreturn",
+        "name": "Touchline Press: Close the Return",
+        "steps": 7,
+        "questions": 2
+      },
+      {
+        "id": "expf_diamondshift",
+        "name": "Diamond Defense: Move as a Unit",
+        "steps": 9,
+        "questions": 2
+      },
+      {
+        "id": "expf_denypivot",
+        "name": "Defend the Pivot: Entry or Goal Side?",
+        "steps": 8,
+        "questions": 2
+      },
+      {
+        "id": "expf_delay2v1",
+        "name": "Outnumbered: Buy Time for Recovery",
+        "steps": 7,
+        "questions": 2
+      },
+      {
+        "id": "expf_cornercutback",
+        "name": "Corner: Read the Cutback",
+        "steps": 7,
+        "questions": 2
+      },
+      {
+        "id": "expf_defendcorner",
+        "name": "Defend a Corner: Share the Jobs",
+        "steps": 7,
+        "questions": 2
+      },
+      {
+        "id": "expf_kickinthird",
+        "name": "Kick-In: The Third Player Runs",
+        "steps": 7,
+        "questions": 2
+      },
+      {
+        "id": "expf_freekickbalance",
+        "name": "Free-Kick: Keep a Safety Player",
+        "steps": 7,
+        "questions": 2
+      },
+      {
+        "id": "expf_keeperrelease",
+        "name": "Keeper Regain: Release Beyond the Press",
+        "steps": 7,
+        "questions": 2
+      },
+      {
+        "id": "expf_keeperoverload",
+        "name": "Keeper at Feet: Create the Spare Player",
+        "steps": 7,
+        "questions": 2
+      },
+      {
+        "id": "expf_keeperposition",
+        "name": "Keeper: Defend the Goal or the Space",
+        "steps": 7,
+        "questions": 2
+      }
+    ],
+    "openingStory": "futsl"
+  },
+  {
+    "format": "7v7",
+    "title": "7v7",
+    "chapters": [
+      {
+        "title": "Meet the team and restart",
+        "lessons": [
+          {
+            "id": "learn7_roles",
+            "name": "Meet Your Team",
+            "steps": 12,
+            "questions": 2
+          },
+          {
+            "id": "learn7_shape",
+            "name": "A Formation Gives Us Options",
+            "steps": 15,
+            "questions": 2
+          },
+          {
+            "id": "learn7_buildout",
+            "name": "Goal Kick & Build-Out Line \u00b7 AYSO",
+            "steps": 14,
+            "questions": 2
+          }
+        ]
+      },
+      {
+        "title": "Look and help",
+        "lessons": [
+          {
+            "id": "learn7_receive",
+            "name": "Look, Then Turn or Return",
+            "steps": 10,
+            "questions": 2
+          },
+          {
+            "id": "learn7_carry",
+            "name": "Carry or Pass?",
+            "steps": 6,
+            "questions": 2
+          },
+          {
+            "id": "prn_7_spread",
+            "name": "Make Room for Your Team",
+            "steps": 9,
+            "questions": 2
+          },
+          {
+            "id": "prn_7_support",
+            "name": "Step Out of the Blocked Lane",
+            "steps": 8,
+            "questions": 2,
+            "story": "empathy"
+          }
+        ]
+      },
+      {
+        "title": "Connect around pressure",
+        "lessons": [
+          {
+            "id": "s_onetwo",
+            "name": "A Wall Pass, or Keep It",
+            "steps": 9,
+            "questions": 2
+          },
+          {
+            "id": "bld_7_usekeeper",
+            "name": "Your Keeper Can Help",
+            "steps": 8,
+            "questions": 2
+          }
+        ]
+      },
+      {
+        "title": "Protect the goal together",
+        "lessons": [
+          {
+            "id": "def_7_goalside",
+            "name": "Stay Between the Ball and Goal",
+            "steps": 7,
+            "questions": 2
+          },
+          {
+            "id": "dbz_7_dontballwatch",
+            "name": "See the Ball and the Runner",
+            "steps": 8,
+            "questions": 2
+          },
+          {
+            "id": "gap7_lostball",
+            "name": "Lost It? Protect the Middle",
+            "steps": 12,
+            "questions": 2
+          }
+        ]
+      }
+    ],
+    "depth": [
+      {
+        "id": "next7_reachableforward",
+        "name": "One Forward: Be Close Enough to Help",
+        "steps": 12,
+        "questions": 2
+      },
+      {
+        "id": "next7_outsideback",
+        "name": "Three Backs: Make the Outside Route",
+        "steps": 9,
+        "questions": 2
+      },
+      {
+        "id": "next7_dribbleroom",
+        "name": "Give Your Teammate Room to Dribble",
+        "steps": 8,
+        "questions": 2
+      },
+      {
+        "id": "next7_shotreaction",
+        "name": "Watch What Happens After the Shot",
+        "steps": 8,
+        "questions": 2
+      },
+      {
+        "id": "next7_offsideboundary",
+        "name": "Which Line Matters? \u00b7 AYSO",
+        "steps": 9,
+        "questions": 2
+      },
+      {
+        "id": "next7_dribblein",
+        "name": "Start with Your Feet \u00b7 FA",
+        "steps": 8,
+        "questions": 2
+      }
+    ],
+    "openingStory": "regulate"
+  },
+  {
+    "format": "9v9",
+    "title": "9v9",
+    "chapters": [
+      {
+        "title": "Find your unit and receive",
+        "lessons": [
+          {
+            "id": "learn9_shape",
+            "name": "3-2-3: Know Your Unit",
+            "steps": 17,
+            "questions": 2
+          },
+          {
+            "id": "learn9_receive",
+            "name": "Receive: Turn or Connect",
+            "steps": 10,
+            "questions": 2
+          },
+          {
+            "id": "prn_9_support",
+            "name": "Move Out of the Passing Shadow",
+            "steps": 9,
+            "questions": 2
+          }
+        ]
+      },
+      {
+        "title": "Read the spare option",
+        "lessons": [
+          {
+            "id": "learn9_two_one",
+            "name": "Two Against One: Carry or Pass",
+            "steps": 7,
+            "questions": 2
+          },
+          {
+            "id": "learn9_switch",
+            "name": "Find the Other Side",
+            "steps": 9,
+            "questions": 2
+          },
+          {
+            "id": "learn9_wall",
+            "name": "A Return Pass Is a Choice",
+            "steps": 9,
+            "questions": 2
+          },
+          {
+            "id": "bld_9_usekeeper",
+            "name": "Build With the Goalkeeper",
+            "steps": 8,
+            "questions": 2
+          }
+        ]
+      },
+      {
+        "title": "Share the next job",
+        "lessons": [
+          {
+            "id": "learn9_cover",
+            "name": "One Presses, One Covers",
+            "steps": 7,
+            "questions": 2
+          },
+          {
+            "id": "trn_9_firstpass",
+            "name": "Win It: Look, Then Choose",
+            "steps": 8,
+            "questions": 2
+          },
+          {
+            "id": "trn_9_recover",
+            "name": "Lose It: Recover or Approach",
+            "steps": 6,
+            "questions": 2
+          }
+        ]
+      },
+      {
+        "title": "Restart and track",
+        "lessons": [
+          {
+            "id": "learn9_restart",
+            "name": "Two Options for a Restart",
+            "steps": 8,
+            "questions": 2
+          },
+          {
+            "id": "gap9_runnerhandoff",
+            "name": "Track the Runner, Keep the Cover",
+            "steps": 11,
+            "questions": 2
+          }
+        ]
+      }
+    ],
+    "depth": [
+      {
+        "id": "nx9_twoblocks",
+        "name": "3-2-3: Connect the Two Blocks",
+        "steps": 13,
+        "questions": 2
+      },
+      {
+        "id": "nx9_midfieldhelper",
+        "name": "3-2-3: Two Midfielders Face Three",
+        "steps": 11,
+        "questions": 2
+      },
+      {
+        "id": "nx9_fourthrunner",
+        "name": "3-2-3: Back Three, Fourth Runner",
+        "steps": 11,
+        "questions": 2
+      },
+      {
+        "id": "nx9_twobackcover",
+        "name": "2-3-3: Who Becomes the Third Protector?",
+        "steps": 11,
+        "questions": 2
+      },
+      {
+        "id": "nx9_keeperthird",
+        "name": "2-3-3: Keep the Midfield Three Ahead",
+        "steps": 11,
+        "questions": 2
+      },
+      {
+        "id": "nx9_twostrikers",
+        "name": "3-3-2: Split the Two Striker Jobs",
+        "steps": 12,
+        "questions": 2
+      },
+      {
+        "id": "nx9_midfieldjoins",
+        "name": "3-3-2: Add an Attacker, Rebuild the Three",
+        "steps": 11,
+        "questions": 2
+      },
+      {
+        "id": "next9_spareback",
+        "name": "Three Backs Against Two Pressers",
+        "steps": 11,
+        "questions": 2
+      },
+      {
+        "id": "next9_frontpairpress",
+        "name": "Front Pair: When Can Midfield Join?",
+        "steps": 11,
+        "questions": 2
+      },
+      {
+        "id": "next9_frontthreescreen",
+        "name": "Front Three: Protect the Central Screen",
+        "steps": 12,
+        "questions": 2
+      },
+      {
+        "id": "next9_restartreturn",
+        "name": "After the Restart: Rebuild the Back Three",
+        "steps": 12,
+        "questions": 2
+      },
+      {
+        "id": "next9_singleholder",
+        "name": "3-1-3-1: Help the Single Holder",
+        "steps": 12,
+        "questions": 2
+      },
+      {
+        "id": "next9_fourtofrontthree",
+        "name": "3-4-1: Turn Four Midfielders into Front Options",
+        "steps": 12,
+        "questions": 2
+      },
+      {
+        "id": "next9_backtwoflanks",
+        "name": "2-4-2: Protect the Far Channel",
+        "steps": 13,
+        "questions": 2
+      },
+      {
+        "id": "next9_shortcornerbudget",
+        "name": "Short Corner: Borrow One of Two Outlets",
+        "steps": 13,
+        "questions": 2
+      }
+    ],
+    "openingStory": "grit"
+  },
+  {
+    "format": "11v11",
+    "title": "11v11",
+    "chapters": [
+      {
+        "title": "Receive inside the team shape",
+        "lessons": [
+          {
+            "id": "learn11_shape",
+            "name": "Our Eleven: Shape & Shared Jobs",
+            "steps": 19,
+            "questions": 2
+          },
+          {
+            "id": "bld_11_throughlines",
+            "name": "Can You Turn?",
+            "steps": 10,
+            "questions": 2
+          },
+          {
+            "id": "bld_11_whenlong",
+            "name": "Around the Pressure",
+            "steps": 10,
+            "questions": 2,
+            "story": "reset"
+          }
+        ]
+      },
+      {
+        "title": "Create the next opening",
+        "lessons": [
+          {
+            "id": "e_switch",
+            "name": "Find the Open Side",
+            "steps": 10,
+            "questions": 2
+          },
+          {
+            "id": "e_thirdman",
+            "name": "Use the Next Teammate",
+            "steps": 13,
+            "questions": 2
+          },
+          {
+            "id": "learn11_cutback",
+            "name": "Look Behind the Defenders",
+            "steps": 10,
+            "questions": 2
+          }
+        ]
+      },
+      {
+        "title": "Keep the team connected",
+        "lessons": [
+          {
+            "id": "def_11_pressurecover",
+            "name": "Who Goes, Who Helps?",
+            "steps": 10,
+            "questions": 2
+          },
+          {
+            "id": "def_11_shift",
+            "name": "Slide Across Together",
+            "steps": 10,
+            "questions": 2
+          },
+          {
+            "id": "trn_11_recover",
+            "name": "Can We Win It Back?",
+            "steps": 10,
+            "questions": 2
+          },
+          {
+            "id": "trn_11_restdefense",
+            "name": "Leave Someone to Help",
+            "steps": 10,
+            "questions": 2
+          }
+        ]
+      },
+      {
+        "title": "Restart and time the run",
+        "lessons": [
+          {
+            "id": "learn11_restart",
+            "name": "A Goal Kick Needs Two Options",
+            "steps": 10,
+            "questions": 2
+          },
+          {
+            "id": "gap11_runoncue",
+            "name": "Run When the Pass Is On",
+            "steps": 12,
+            "questions": 2,
+            "story": "loss"
+          }
+        ]
+      }
+    ],
+    "depth": [
+      {
+        "id": "exp11_checking8",
+        "name": "4-3-3 vs 5-3-2: Find the Checking Midfielder",
+        "steps": 9,
+        "questions": 2
+      },
+      {
+        "id": "exp11_insidefullback",
+        "name": "4-3-3: Fullback Inside or Outside?",
+        "steps": 9,
+        "questions": 2
+      },
+      {
+        "id": "exp11_safetyfive",
+        "name": "Front Five, Safety Five: Protect Two Lines",
+        "steps": 10,
+        "questions": 2
+      },
+      {
+        "id": "exp11_diamondjump",
+        "name": "Diamond vs 4-3-3: Who Closes the Fullback?",
+        "steps": 9,
+        "questions": 2
+      },
+      {
+        "id": "exp11_wingbackcue",
+        "name": "Back Five: When Can the Wing-back Go?",
+        "steps": 8,
+        "questions": 2
+      },
+      {
+        "id": "exp11_droppingnine",
+        "name": "Back Four + Six: Pass On the Dropping Forward",
+        "steps": 8,
+        "questions": 2
+      },
+      {
+        "id": "exp11_secondball",
+        "name": "4-4-2: Support the Second Ball",
+        "steps": 8,
+        "questions": 2
+      },
+      {
+        "id": "exp11_shortfreekick",
+        "name": "Wide Free Kick: Release the Wall at the Right Time",
+        "steps": 9,
+        "questions": 2
+      }
+    ]
+  }
+]

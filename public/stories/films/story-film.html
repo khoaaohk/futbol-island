@@ -1,0 +1,21 @@
+<!doctype html>
+<meta charset="utf-8">
+<!--
+Mental toughness prototype, 60 seconds. Supplied transparent character and mural
+sheets are rigged as offline sprites; the field contact sheet contributes only
+opaque interiors because its checkerboard is baked in. Knewave is embedded for
+brush lettering. Twelve distinct lessons, layered parallax and concept-led
+morphs (tear/ripple, breath, eye blink, bursts) at 24 unique samples/second.
+Only the baked movie and poster are loaded by the application.
+-->
+<title>Futbol Island — hand-drawn stories</title>
+<style>
+  body{margin:0;background:#111;color:#ccc;font:13px/1.4 ui-monospace,Menlo,monospace;display:flex;flex-direction:column;align-items:center;gap:10px;padding:12px}
+  canvas#c{width:min(92vw,720px);height:auto;background:#000;box-shadow:0 0 0 1px #333}
+  .bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:center}
+  button{background:#222;color:#ddd;border:1px solid #444;padding:4px 10px;cursor:pointer;font:inherit}
+  input[type=range]{width:320px}
+</style>
+<canvas id="c" width="1080" height="1080"></canvas>
+<script src="core.js"></script>
+<script src="story-film.js"></script>

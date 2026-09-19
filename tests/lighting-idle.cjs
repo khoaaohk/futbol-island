@@ -1,0 +1,8 @@
+const fs=require('fs'),vm=require('vm'),ts=require('typescript'),T=require('three'),assert=require('node:assert/strict');
+const m={exports:{}};vm.runInNewContext(ts.transpileModule(fs.readFileSync('lib/graphics/islandLighting.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{module:m,exports:m.exports,require});
+const scene=new T.Scene();scene.background=new T.Color();const hemi=new T.HemisphereLight(),sun=new T.DirectionalLight(),renderer={toneMappingExposure:1};const lighting=m.exports.createIslandLighting(scene,hemi,sun,renderer);
+let writes=0;for(const color of [scene.background,hemi.color,hemi.groundColor,sun.color]){const lerp=color.lerp;color.lerp=function(...args){writes++;return lerp.apply(this,args);};}
+lighting.update('day',0,true);const initial=writes;for(let i=0;i<600;i++)lighting.update('day',1/30);assert.equal(writes,initial,'Settled lighting sleeps');
+const day=scene.background.clone();lighting.update('night',1/30);assert(!scene.background.equals(day),'Mode changes wake lighting');assert(!scene.background.equals(new T.Color('#142039')),'Transition remains gradual');
+for(let i=0;i<600;i++)lighting.update('night',1/30);assert(scene.background.equals(new T.Color('#142039')));assert.equal(renderer.toneMappingExposure,.9);const settledWrites=writes;for(let i=0;i<600;i++)lighting.update('night',1/30);assert.equal(writes,settledWrites);
+lighting.update('sunset',0,true);assert(scene.background.equals(new T.Color('#e8b98b')),'Reduced motion switches immediately');console.log('PASS lighting sleeps, wakes, smoothly transitions, and honors immediate changes');

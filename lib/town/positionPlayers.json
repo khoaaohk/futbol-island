@@ -1,0 +1,262 @@
+{
+  "goalkeeper": {
+    "current": [
+      "Gianluigi Donnarumma",
+      "Thibaut Courtois",
+      "Alisson",
+      "David Raya",
+      "Emiliano Martínez",
+      "Diogo Costa",
+      "Yassine Bounou",
+      "Jan Oblak",
+      "Mike Maignan",
+      "Gregor Kobel"
+    ],
+    "allTime": [
+      "Lev Yashin",
+      "Gianluigi Buffon",
+      "Iker Casillas",
+      "Manuel Neuer",
+      "Oliver Kahn",
+      "Dino Zoff",
+      "Peter Schmeichel",
+      "Gordon Banks",
+      "Edwin van der Sar",
+      "Sepp Maier"
+    ]
+  },
+  "fullback": {
+    "current": [
+      "Achraf Hakimi",
+      "Nuno Mendes",
+      "Dani Carvajal",
+      "Trent Alexander-Arnold",
+      "Theo Hernández",
+      "Alphonso Davies",
+      "Jules Koundé",
+      "Alejandro Balde",
+      "Jeremie Frimpong",
+      "Pedro Porro"
+    ],
+    "allTime": [
+      "Cafu",
+      "Roberto Carlos",
+      "Paolo Maldini",
+      "Philipp Lahm",
+      "Javier Zanetti",
+      "Dani Alves",
+      "Carlos Alberto",
+      "Ashley Cole",
+      "Nílton Santos",
+      "Gary Neville"
+    ]
+  },
+  "centerback": {
+    "current": [
+      "Virgil van Dijk",
+      "Rúben Dias",
+      "Antonio Rüdiger",
+      "William Saliba",
+      "Gabriel Magalhães",
+      "Alessandro Bastoni",
+      "Marquinhos",
+      "Pau Cubarsí",
+      "Cristian Romero",
+      "Ibrahima Konaté"
+    ],
+    "allTime": [
+      "Franz Beckenbauer",
+      "Paolo Maldini",
+      "Franco Baresi",
+      "Fabio Cannavaro",
+      "Alessandro Nesta",
+      "Sergio Ramos",
+      "Bobby Moore",
+      "Carles Puyol",
+      "Rio Ferdinand",
+      "Daniel Passarella"
+    ]
+  },
+  "midfielder": {
+    "current": [
+      "Pedri",
+      "Vitinha",
+      "Jude Bellingham",
+      "Cole Palmer",
+      "Rodri",
+      "Federico Valverde",
+      "Declan Rice",
+      "Bruno Fernandes",
+      "Florian Wirtz",
+      "João Neves"
+    ],
+    "allTime": [
+      "Zinedine Zidane",
+      "Xavi Hernández",
+      "Andrés Iniesta",
+      "Michel Platini",
+      "Andrea Pirlo",
+      "Steven Gerrard",
+      "Paul Scholes",
+      "Lothar Matthäus",
+      "Frank Rijkaard",
+      "Roy Keane"
+    ]
+  },
+  "winger": {
+    "current": [
+      "Lamine Yamal",
+      "Vinícius Júnior",
+      "Mohamed Salah",
+      "Raphinha",
+      "Bukayo Saka",
+      "Khvicha Kvaratskhelia",
+      "Luis Díaz",
+      "Nico Williams",
+      "Désiré Doué",
+      "Michael Olise"
+    ],
+    "allTime": [
+      "Garrincha",
+      "George Best",
+      "Cristiano Ronaldo",
+      "Lionel Messi",
+      "Ronaldinho",
+      "Ryan Giggs",
+      "Stanley Matthews",
+      "Luís Figo",
+      "Arjen Robben",
+      "Franck Ribéry"
+    ]
+  },
+  "striker": {
+    "current": [
+      "Kylian Mbappé",
+      "Ousmane Dembélé",
+      "Erling Haaland",
+      "Harry Kane",
+      "Alexander Isak",
+      "Lautaro Martínez",
+      "Julián Álvarez",
+      "Victor Osimhen",
+      "Viktor Gyökeres",
+      "Robert Lewandowski"
+    ],
+    "allTime": [
+      "Pelé",
+      "Ronaldo Nazário",
+      "Marco van Basten",
+      "Gerd Müller",
+      "Alfredo Di Stéfano",
+      "Romário",
+      "Gabriel Batistuta",
+      "Thierry Henry",
+      "Ruud van Nistelrooy",
+      "Eusébio"
+    ]
+  },
+  "goleiro": {
+    "current": [
+      "Bernardo Paçó",
+      "Dídac Plana",
+      "Chemi",
+      "Edu",
+      "Miquel Feixas",
+      "Mathi Fernández",
+      "Luan Muller",
+      "Willian Dorn",
+      "Guitta",
+      "Higuita"
+    ],
+    "allTime": [
+      "Luis Amado",
+      "Stefano Mammarella",
+      "Higuita",
+      "Guitta",
+      "Paco Sedano",
+      "Mostafa Nazari",
+      "Sergey Zuev",
+      "Tiago Marinho",
+      "Santiago Elías",
+      "Gustavo Lobo"
+    ]
+  },
+  "fixo": {
+    "current": [
+      "Antonio Pérez",
+      "Tomás Paçó",
+      "André Coelho",
+      "Afonso Jesus",
+      "Ricardo Mayor",
+      "Adrián Rivera",
+      "João Victor",
+      "Souheil Mouhoudine",
+      "Mykola Mykytiuk",
+      "Sid Belhaj"
+    ],
+    "allTime": [
+      "Kike Boned",
+      "Schumacher",
+      "Gabriel",
+      "Carlos Ortiz",
+      "Aicardo",
+      "Neto",
+      "Julio García Mera",
+      "Marcio Forte",
+      "Sergei Sergeev",
+      "Douglas Junior"
+    ]
+  },
+  "ala": {
+    "current": [
+      "Pany Varela",
+      "Mellado",
+      "Adolfo",
+      "Catela",
+      "Matheus Rodrigues",
+      "Mario Rivillos",
+      "Sergio González",
+      "Luciano Gauna",
+      "Mamadou Touré",
+      "Pauleta"
+    ],
+    "allTime": [
+      "Ricardinho",
+      "Falcão",
+      "Manoel Tobias",
+      "Javi Rodríguez",
+      "Sergio Lozano",
+      "Daniel Ibañes",
+      "Robinho",
+      "Alex Merlim",
+      "Miguelín",
+      "Jordi Torras"
+    ]
+  },
+  "pivot": {
+    "current": [
+      "Zicky Té",
+      "Pito",
+      "Pablo Ramírez",
+      "Higor",
+      "Jesús Gordillo",
+      "Danyil Abakshyn",
+      "Artem Fareniuk",
+      "Ouassini Guirio",
+      "Raúl Gómez",
+      "Ferrão"
+    ],
+    "allTime": [
+      "Ferrão",
+      "Vander Carioca",
+      "Wilde",
+      "Lenísio",
+      "Konstantin Eremenko",
+      "Eder Lima",
+      "Cirilo",
+      "Joel Queirós",
+      "Fernandão",
+      "Cardinal"
+    ]
+  }
+}

@@ -1,0 +1,14 @@
+node_modules/
+.next/
+.next-dev/
+*.tsbuildinfo
+.env*
+.vercel
+
+# Local machine state and generated authoring outputs
+.DS_Store
+:memory:.ses
+*.log
+__pycache__/
+*.pyc
+.venv/

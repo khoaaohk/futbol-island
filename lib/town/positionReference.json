@@ -1,0 +1,410 @@
+{
+  "11v11": {
+    "GK": {
+      "name": "Goalkeeper",
+      "role": "goalkeeper",
+      "attack": "The first line of attack — start the build-up with calm, accurate distribution to the full-backs and centre-backs, and pick out longer passes when the press is beaten.",
+      "defense": "The last line of defence — stop shots, command the box on crosses, organise the back four, and sweep behind a high line.",
+      "keySkills": [
+        "Shot-stopping",
+        "Distribution",
+        "Command of box",
+        "Communication"
+      ]
+    },
+    "LB": {
+      "name": "Left Back",
+      "role": "fullback",
+      "attack": "Overlap down the left to give width, whip in crosses, and combine with the winger to break the line.",
+      "defense": "Defend the flank 1v1 against the winger, stop crosses, and tuck in to help the centre-backs.",
+      "keySkills": [
+        "Stamina",
+        "1v1 defending",
+        "Crossing",
+        "Overlapping runs"
+      ]
+    },
+    "RB": {
+      "name": "Right Back",
+      "role": "fullback",
+      "attack": "Overlap on the right to stretch play, deliver crosses, and support the winger in wide combinations.",
+      "defense": "Lock down the right flank against the winger, block crosses, and recover the space in behind.",
+      "keySkills": [
+        "Stamina",
+        "1v1 defending",
+        "Crossing",
+        "Recovery pace"
+      ]
+    },
+    "LCB": {
+      "name": "Left Centre-Back",
+      "role": "centerback",
+      "attack": "Split wide to build out past the press and step into midfield carrying the ball when space opens.",
+      "defense": "Win duels with the striker, head clears, cover the left-back, and read danger early.",
+      "keySkills": [
+        "Heading",
+        "Marking",
+        "Positioning",
+        "Passing out"
+      ]
+    },
+    "RCB": {
+      "name": "Right Centre-Back",
+      "role": "centerback",
+      "attack": "Split wide to play out from the back and drive forward with the ball to break lines.",
+      "defense": "Win aerial and ground duels, cover the right-back, and organise the offside line.",
+      "keySkills": [
+        "Heading",
+        "Tackling",
+        "Positioning",
+        "Composure"
+      ]
+    },
+    "LCM": {
+      "name": "Left Central Midfielder",
+      "role": "midfielder",
+      "attack": "Link defence and attack, break lines with passes, and arrive late in the box.",
+      "defense": "Screen in front of the back four, press the ball, and recover to protect the middle.",
+      "keySkills": [
+        "Passing range",
+        "Work-rate",
+        "Vision",
+        "Ball control"
+      ]
+    },
+    "CM": {
+      "name": "Central Midfielder",
+      "role": "midfielder",
+      "attack": "Set the tempo — decide when to keep it and when to go, and dictate the rhythm.",
+      "defense": "Shield the back line, win second balls, and cut out the opponent's central passes.",
+      "keySkills": [
+        "Tempo control",
+        "Passing",
+        "Positioning",
+        "Stamina"
+      ]
+    },
+    "RCM": {
+      "name": "Right Central Midfielder",
+      "role": "midfielder",
+      "attack": "Support the winger and full-back on the right, then get into the box to finish moves.",
+      "defense": "Cover the midfield when others push on and track runners from deep.",
+      "keySkills": [
+        "Box-to-box running",
+        "Passing",
+        "Tackling",
+        "Vision"
+      ]
+    },
+    "LW": {
+      "name": "Left Winger",
+      "role": "winger",
+      "attack": "Stretch the defence on the touchline, beat the full-back 1v1, then cut inside to shoot or cross.",
+      "defense": "Track the opposing full-back's overlap and press from the front to trap the ball wide.",
+      "keySkills": [
+        "Dribbling",
+        "Pace",
+        "Finishing",
+        "Crossing"
+      ]
+    },
+    "RW": {
+      "name": "Right Winger",
+      "role": "winger",
+      "attack": "Hug the touchline to stretch the back line and take on the full-back to cross or cut inside.",
+      "defense": "Get back to help the right-back, deny the overlap, and press aggressively when the ball is wide.",
+      "keySkills": [
+        "Dribbling",
+        "Pace",
+        "Finishing",
+        "1v1 attacking"
+      ]
+    },
+    "ST": {
+      "name": "Striker",
+      "role": "striker",
+      "attack": "Finish chances, hold the ball up to link play, and stretch the last line with runs in behind.",
+      "defense": "Press the centre-backs first, screen passes into midfield, and set the defensive trap.",
+      "keySkills": [
+        "Finishing",
+        "Movement",
+        "Hold-up play",
+        "Pressing"
+      ]
+    }
+  },
+  "9v9": {
+    "GK": {
+      "name": "Goalkeeper",
+      "role": "goalkeeper",
+      "attack": "Help the team build attacks with accurate distribution. Choose a short or longer pass according to pressure and available space.",
+      "defense": "Stop shots, come for crosses, and stay ready to sweep behind a high line.",
+      "keySkills": [
+        "Distribution",
+        "Shot-stopping",
+        "Sweeping",
+        "Bravery"
+      ]
+    },
+    "LCB": {
+      "name": "Left Centre-Back",
+      "role": "centerback",
+      "attack": "Split wide to help play out past the press and carry the ball into space.",
+      "defense": "Defend your side of the box and cover across when a team-mate steps out.",
+      "keySkills": [
+        "Positioning",
+        "Passing out",
+        "Marking",
+        "Covering"
+      ]
+    },
+    "CB": {
+      "name": "Centre-Back",
+      "role": "centerback",
+      "attack": "Be the calm middle option to build through, and step out with the ball to commit a presser.",
+      "defense": "Win the central duels, drop to sweep behind, and organise the back line.",
+      "keySkills": [
+        "Leadership",
+        "Heading",
+        "Reading the game",
+        "Composure"
+      ]
+    },
+    "RCB": {
+      "name": "Right Centre-Back",
+      "role": "centerback",
+      "attack": "Split wide to build out and drive forward when the lane opens.",
+      "defense": "Defend your side, cover for team-mates, and mark up on the striker.",
+      "keySkills": [
+        "Positioning",
+        "Tackling",
+        "Passing",
+        "Covering"
+      ]
+    },
+    "LCM": {
+      "name": "Left Central Midfielder",
+      "role": "midfielder",
+      "attack": "Set the tempo, join the attack, and be an option between the lines.",
+      "defense": "Win the ball back and sprint to protect the middle. Constant energy.",
+      "keySkills": [
+        "Work-rate",
+        "Passing",
+        "Vision",
+        "Tackling"
+      ]
+    },
+    "RCM": {
+      "name": "Right Central Midfielder",
+      "role": "midfielder",
+      "attack": "Link the defence to the front three and support both wings.",
+      "defense": "Screen the back line and track runners box-to-box.",
+      "keySkills": [
+        "Box-to-box running",
+        "Passing",
+        "Positioning",
+        "Stamina"
+      ]
+    },
+    "LW": {
+      "name": "Left Winger",
+      "role": "winger",
+      "attack": "Give width on the left, take on your defender, and get to the byline for cut-backs.",
+      "defense": "Track back to help the defence and press the ball when you lose it.",
+      "keySkills": [
+        "Dribbling",
+        "Pace",
+        "Crossing",
+        "Finishing"
+      ]
+    },
+    "RW": {
+      "name": "Right Winger",
+      "role": "winger",
+      "attack": "Stay wide on the right to stretch the pitch, beat your defender, and cross or cut in to shoot.",
+      "defense": "Defend your flank and press aggressively to win the ball high.",
+      "keySkills": [
+        "Dribbling",
+        "Pace",
+        "Finishing",
+        "Work-rate"
+      ]
+    },
+    "ST": {
+      "name": "Striker",
+      "role": "striker",
+      "attack": "Finish, hold it up to link with the midfielders, and spin in behind the last defender.",
+      "defense": "Be the first to press and cut off the pass back to the keeper.",
+      "keySkills": [
+        "Finishing",
+        "Movement",
+        "Hold-up play",
+        "Pressing"
+      ]
+    }
+  },
+  "7v7": {
+    "GK": {
+      "name": "Goalkeeper",
+      "role": "goalkeeper",
+      "attack": "Look for a safe pass to start an attack. Use a longer distribution when the space and pressure make it the better option.",
+      "defense": "Sweep behind the two defenders and be brave coming off your line.",
+      "keySkills": [
+        "Distribution",
+        "Bravery",
+        "Sweeping",
+        "Handling"
+      ]
+    },
+    "LB": {
+      "name": "Left Back",
+      "role": "fullback",
+      "attack": "Be the calm outlet to play out wide and support the left-side attacks.",
+      "defense": "Defend first — stay goal-side and cover the space in behind.",
+      "keySkills": [
+        "Passing",
+        "1v1 defending",
+        "Support runs",
+        "Recovery"
+      ]
+    },
+    "RB": {
+      "name": "Right Back",
+      "role": "fullback",
+      "attack": "Provide the passing option to build out on the right and push up to support.",
+      "defense": "Protect the space behind and recover quickly when the ball turns over.",
+      "keySkills": [
+        "Passing",
+        "1v1 defending",
+        "Overlapping",
+        "Recovery"
+      ]
+    },
+    "LM": {
+      "name": "Left Midfielder",
+      "role": "winger",
+      "attack": "Provide width on the left and support the striker with runs and crosses.",
+      "defense": "Get all the way back to help defend your channel. Fitness is everything.",
+      "keySkills": [
+        "Stamina",
+        "Dribbling",
+        "Crossing",
+        "Work-rate"
+      ]
+    },
+    "CM": {
+      "name": "Central Midfielder",
+      "role": "midfielder",
+      "attack": "Link the backs to the striker and keep the ball moving — the busiest player on the pitch.",
+      "defense": "Win the ball in the middle and be an option everywhere.",
+      "keySkills": [
+        "Passing",
+        "Stamina",
+        "Vision",
+        "Tackling"
+      ]
+    },
+    "RM": {
+      "name": "Right Midfielder",
+      "role": "winger",
+      "attack": "Stretch the play on the right and support the striker up the line.",
+      "defense": "Track back to defend your side. Non-stop running.",
+      "keySkills": [
+        "Stamina",
+        "Dribbling",
+        "Crossing",
+        "Work-rate"
+      ]
+    },
+    "ST": {
+      "name": "Striker",
+      "role": "striker",
+      "attack": "Get in behind, finish your chances, and hold the ball up when it comes long.",
+      "defense": "Press first to win the ball back high up the pitch.",
+      "keySkills": [
+        "Finishing",
+        "Movement",
+        "Pressing",
+        "Hold-up play"
+      ]
+    },
+    "LCB": {
+      "name": "Left Defender",
+      "role": "centerback",
+      "attack": "Be the calm outlet to play out wide and support the left-side attacks.",
+      "defense": "Defend first — stay goal-side and cover the space in behind.",
+      "keySkills": [
+        "Passing",
+        "1v1 defending",
+        "Support runs",
+        "Recovery"
+      ]
+    },
+    "RCB": {
+      "name": "Right Defender",
+      "role": "centerback",
+      "attack": "Provide the passing option to build out on the right and push up to support.",
+      "defense": "Protect the space behind and recover quickly when the ball turns over.",
+      "keySkills": [
+        "Passing",
+        "1v1 defending",
+        "Overlapping",
+        "Recovery"
+      ]
+    }
+  },
+  "futsal": {
+    "GK": {
+      "name": "Goleiro (Goalkeeper)",
+      "role": "goleiro",
+      "note": "Goleiro is simply Portuguese for 'goalkeeper' — but futsal keepers are far more involved than in 11-a-side, often racing out to become a fifth outfield player (the 'fly goalkeeper') to create a 5v4 overload.",
+      "attack": "Often the extra player in build-up (a 5v4) and the launcher of lightning counters with quick, accurate throws.",
+      "defense": "Shot-stopper who must be fearless in 1v1s and quick off the line to smother.",
+      "keySkills": [
+        "Reflexes",
+        "Throwing",
+        "1v1 blocking",
+        "Footwork"
+      ]
+    },
+    "FIXO": {
+      "name": "Fixo (Defender)",
+      "role": "fixo",
+      "note": "Fixo is the defensive anchor in futsal. This player organises cover and supports attacks, while rotating with teammates as the game changes.",
+      "attack": "The brain — organise the diamond, switch play side-to-side, and set the tempo from the back.",
+      "defense": "Protect the middle, cover teammates and delay counters until support recovers.",
+      "keySkills": [
+        "Passing",
+        "Reading the game",
+        "1v1 defending",
+        "Composure"
+      ]
+    },
+    "ALA": {
+      "name": "Ala (Winger)",
+      "role": "ala",
+      "note": "Ala means 'wing' in Portuguese — the wide players on the left and right of the diamond. Closest to a wing-back in 11-a-side: they attack the flanks AND sprint back to defend, so they cover enormous ground.",
+      "attack": "Work the whole flank — attack 1v1 and arrive at the far post to finish.",
+      "defense": "Sprint back to defend the wide areas. Needs an elite engine.",
+      "keySkills": [
+        "Stamina",
+        "Dribbling",
+        "Finishing",
+        "Two-way work"
+      ]
+    },
+    "PIVOT": {
+      "name": "Pivô (Pivot)",
+      "role": "pivot",
+      "note": "The pivô is the furthest-forward player, at the tip of the diamond — the futsal equivalent of a target-man striker (a No.9). Plays with their back to goal, holds off defenders, and links everything up front.",
+      "attack": "The reference point — hold the ball with your back to goal, spin defenders, and finish in tight spaces.",
+      "defense": "First line of the press; screen the opponent's fixo and force play backwards.",
+      "keySkills": [
+        "Hold-up play",
+        "Finishing",
+        "Strength",
+        "Link play"
+      ]
+    }
+  }
+}

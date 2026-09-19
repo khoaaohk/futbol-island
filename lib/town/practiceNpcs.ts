@@ -1,0 +1,12 @@
+import type {NpcDefinition} from './npcDialogues';
+/** The two existing wall-drill players, now available for a football conversation. */
+export const PRACTICE_NPCS:NpcDefinition[]=[
+ {id:'wall-andre',name:'Andre',role:'Wall-pass practice partner',x:150,z:-20,character:'male',face:'warm',clothing:'classic',greeting:'Just getting a few wall passes in. I am working on a clean pass and a first touch that sets up the next one. Want a practice tip?',topics:[
+  {id:'wall-pass',question:'How do I practise passing against a wall?',answer:'Choose a clear, permitted practice space and a small target. Start with a gentle inside-foot pass, then get ready to receive the rebound. Make the pass accurate before adding speed.',followUp:{question:'What should my standing foot do?',answer:'Put it beside the ball and point it toward your target. Keep your body balanced so your passing foot can meet the middle of the ball.'}},
+  {id:'weak-foot',question:'How can I improve my other foot?',answer:'Start closer to the wall and use soft passes with your less comfortable foot. Give yourself time to control each return rather than rushing.',followUp:{question:'Should I switch feet every pass?',answer:'You can alternate once both touches feel controlled. A short set with each foot also helps you notice what needs attention.'}}
+ ]},
+ {id:'wall-sofia',name:'Sofia',role:'First-touch practice partner',x:162,z:-20,character:'female',face:'deep',clothing:'coast',greeting:'The wall always gives the ball back! I like using the return to practise looking up and moving into a new angle. What are you working on?',topics:[
+  {id:'receive',question:'How do I control the rebound?',answer:'Get your feet ready while the ball travels. Cushion the return with a soft touch and keep it close enough to choose your next action.',followUp:{question:'Can I receive into space?',answer:'Yes. Put a marker to either side and guide your first touch toward one. Check the space first, then look back to meet the ball.'}},
+  {id:'movement',question:'Should I move between wall passes?',answer:'Once the basic pass feels comfortable, take a small step to make a new receiving angle. Stay balanced and keep the target clear.',followUp:{question:'How can I make it more like a game?',answer:'Look over your shoulder before the return, choose which side to receive toward, then pass again. The idea is to notice and decide, not just repeat touches.'}}
+ ]}
+];

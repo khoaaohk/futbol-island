@@ -1,0 +1,10 @@
+const fs=require('fs'),path=require('path'),ts=require('typescript'),assert=require('node:assert/strict');const cache=new Map();
+function load(file){file=path.resolve(file);if(cache.has(file))return cache.get(file);const m={exports:{}};cache.set(file,m.exports);new Function('exports','module','require',ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText)(m.exports,m,id=>load(path.resolve(path.dirname(file),id+'.ts')));return m.exports;}
+const {NPC_DIALOGUES:npcs}=load('lib/town/npcDialogues.ts'),{NEWS_LEAGUES}=load('lib/town/newsLeagues.ts');
+for(const key of ['id','name','greeting','pursuit'])assert.equal(new Set(npcs.map(n=>n[key])).size,npcs.length,`unique ${key}`);
+const answers=new Map();for(const n of npcs){assert(n.topics.length>0,n.id);for(const t of n.topics){assert(!answers.has(t.answer),`${n.id} repeats ${answers.get(t.answer)}`);answers.set(t.answer,n.id);assert(t.question&&t.followUp.question&&t.followUp.answer);}}
+const news=npcs.filter(n=>n.matchStory);assert.equal(news.length,20);assert.deepEqual([...new Set(news.map(n=>n.newsLeague))].sort(),Object.keys(NEWS_LEAGUES).sort());for(const league of Object.keys(NEWS_LEAGUES)){const pair=news.filter(n=>n.newsLeague===league);assert.equal(pair.length,2);assert.notEqual(pair[0].newsSlot,pair[1].newsSlot);assert.notEqual(pair[0].newsFocus,pair[1].newsFocus);}
+assert.equal(npcs.filter(n=>n.ranking).length,1);assert.equal(npcs.find(n=>n.ranking).id,'noor');assert(!npcs.find(n=>n.ranking).matchStory);assert.equal(npcs.filter(n=>n.topics.some(t=>t.question==='Pass or dribble?')).length,1);
+console.log(`PASS ${npcs.length} distinct names, greetings, purposes and topic answers; twenty league desks, ten competitions, one ranking host`);
+
+const all=[...npcs,...load("lib/town/practiceNpcs.ts").PRACTICE_NPCS,...load("lib/town/volleyballNpcs.ts").VOLLEYBALL_NPCS];for(const key of ["name","greeting"])assert.equal(new Set(all.map(n=>n[key])).size,all.length,"all talkable characters have unique "+key);console.log(`PASS all ${all.length} talkable characters, including beach and wall practice`);

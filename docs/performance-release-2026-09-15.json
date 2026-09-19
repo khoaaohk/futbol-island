@@ -1,0 +1,39 @@
+{
+  "results": [
+    {
+      "mode": "hover",
+      "reads": 0,
+      "hiddenWrites": 0,
+      "redundantHidden": 0,
+      "layoutCount": 0,
+      "styleCount": 0,
+      "layoutMs": 0,
+      "styleMs": 0
+    },
+    {
+      "mode": "moving",
+      "reads": 0,
+      "hiddenWrites": 2,
+      "redundantHidden": 0,
+      "layoutCount": 2,
+      "styleCount": 242,
+      "layoutMs": 0.264,
+      "styleMs": 20.866999999999997
+    },
+    {
+      "mode": "boost",
+      "reads": 0,
+      "hiddenWrites": 2,
+      "redundantHidden": 0,
+      "layoutCount": 3,
+      "styleCount": 222,
+      "layoutMs": 1.305,
+      "styleMs": 16.005000000000003
+    }
+  ],
+  "resize": {
+    "cameraAspect": 1.7272727272727273,
+    "width": 760,
+    "height": 440
+  }
+}

@@ -1,0 +1,40 @@
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const ts=require('typescript');
+const vm=require('node:vm');
+const manifest=require('../lib/town/questLessonManifest.json');
+function load(file,require,extra={}){const mod={exports:{}};vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,esModuleInterop:true}}).outputText,{module:mod,exports:mod.exports,require,...extra});return mod.exports;}
+const model=load('lib/town/questModel.ts',()=>manifest);
+const {applyQuestEvent:apply,getIslandQuests:quests,questPoints,sanitizeQuestEvidence:sanitize}=model;
+for(const [format,lessons]of Object.entries(manifest)){
+ const actual=JSON.parse(fs.readFileSync(`public/lessons/${format}.json`,'utf8'));
+ assert.deepEqual(lessons,Object.fromEntries(actual.map(x=>[x.id,x.steps.length])),'Quest manifest must stay aligned with real lesson steps');
+}
+let evidence=sanitize({visits:['fake','futsal','futsal'],steps:['fake'],equipment:'true'});
+assert.equal(evidence.visits.length,1);assert.equal(evidence.steps.length,0);assert.equal(evidence.equipment,false);
+const quiz=new Set();assert.equal(questPoints(quests(evidence,quiz)),0);
+evidence=apply(evidence,{type:'visit',format:'7v7'});
+assert.equal(questPoints(quests(evidence,quiz)),20);
+assert.equal(apply(evidence,{type:'visit',format:'7v7'}),evidence,'Repeated arrivals are idempotent');
+assert.equal(apply(evidence,{type:'step',format:'futsal',lessonId:'unknown',step:0}),evidence,'Unknown lessons never grant progress');
+const [lessonId,count]=Object.entries(manifest.futsal).find(([,count])=>count>1);
+evidence=apply(evidence,{type:'step',format:'futsal',lessonId,step:count-1});
+assert.equal(quests(evidence,quiz).find(x=>x.id==='first-play').value,0,'Seeking the ending cannot complete a play');
+for(let step=0;step<count;step++)evidence=apply(evidence,{type:'step',format:'futsal',lessonId,step});
+assert.equal(quests(evidence,quiz).find(x=>x.id==='first-play').value,1);
+evidence=apply(evidence,{type:'equip'});
+const points=questPoints(quests(evidence,quiz));
+assert.equal(questPoints(quests(sanitize(JSON.parse(JSON.stringify(evidence))),quiz)),points,'Reload cannot award the same quest twice');
+quiz.add('futsal:a:0');quiz.add('futsal:a:0');assert.equal(quests(evidence,quiz).find(x=>x.id==='first-answer').value,1);
+quiz.add('7v7:b:0');assert.equal(quests(evidence,quiz).find(x=>x.id==='two-formats').value,2);
+const memory=new Map();let writes=0;
+const storage={getItem:key=>memory.get(key)??null,setItem:(key,value)=>{writes++;memory.set(key,value);}};
+const browser={};
+const importProgress=()=>load('lib/town/questProgress.ts',id=>id==='react'?{}:id.includes('learningProgress')?{isLearningPreview:()=>false}:model,{window:browser,localStorage:storage});
+let progress=importProgress();progress.recordQuestVisit('futsal');progress.recordQuestVisit('futsal');assert.equal(writes,1);
+progress=importProgress();progress.recordQuestVisit('futsal');assert.equal(writes,1,'Persisted event is not rewarded/written again after reload');
+memory.set(progress.QUEST_STORAGE_KEY,JSON.stringify({visits:['futsal','7v7'],steps:[],equipment:true}));
+progress.recordQuestVisit('9v9');const merged=JSON.parse(memory.get(progress.QUEST_STORAGE_KEY));assert.ok(merged.visits.includes('7v7')&&merged.visits.includes('9v9')&&merged.equipment,'New local event preserves unseen other-tab progress');
+memory.set(progress.QUEST_STORAGE_KEY,'invalid JSON');progress=importProgress();assert.doesNotThrow(()=>progress.recordQuestEvent({type:'equip'}),'Damaged local saves recover');
+storage.setItem=()=>{throw Error('storage unavailable');};progress=importProgress();assert.doesNotThrow(()=>progress.recordQuestVisit('9v9'),'Storage denial keeps in-memory play usable');
+console.log('Quests: actual lesson manifest, incomplete/skipped playback, distinct visits/questions, cross-format mastery, one-time points, persistence, malformed saves and storage denial passed.');

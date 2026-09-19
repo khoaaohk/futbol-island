@@ -1,0 +1,142 @@
+{
+  "repository": "https://github.com/alesha-pro/tools",
+  "commit": "ce556d4f325ae6d672b51f526ed9c71730916222",
+  "files": [
+    {
+      "path": "skills/hand-drawn-canvas-animation/README.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6462c2f183d60250220b78c5bff1034bdf8651f9",
+      "size": 5624,
+      "url": "https://api.github.com/repos/alesha-pro/tools/git/blobs/6462c2f183d60250220b78c5bff1034bdf8651f9"
+    },
+    {
+      "path": "skills/hand-drawn-canvas-animation/SKILL.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ff1d478ffb499d178c241904e228734b4c0d53a6",
+      "size": 8307,
+      "url": "https://api.github.com/repos/alesha-pro/tools/git/blobs/ff1d478ffb499d178c241904e228734b4c0d53a6"
+    },
+    {
+      "path": "skills/hand-drawn-canvas-animation/assets/core.js",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2305accc42ae932b791a661a028d082e8c4fdbba",
+      "size": 46833,
+      "url": "https://api.github.com/repos/alesha-pro/tools/git/blobs/2305accc42ae932b791a661a028d082e8c4fdbba"
+    },
+    {
+      "path": "skills/hand-drawn-canvas-animation/assets/film-template.html",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2ba1a3a89e448e79a7d34d20de812c862f8274b7",
+      "size": 8202,
+      "url": "https://api.github.com/repos/alesha-pro/tools/git/blobs/2ba1a3a89e448e79a7d34d20de812c862f8274b7"
+    },
+    {
+      "path": "skills/hand-drawn-canvas-animation/assets/preview-fly-style.jpg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e7d19e0d1eee2c63f92fa5dcfe087f5b71c19fda",
+      "size": 89617,
+      "url": "https://api.github.com/repos/alesha-pro/tools/git/blobs/e7d19e0d1eee2c63f92fa5dcfe087f5b71c19fda"
+    },
+    {
+      "path": "skills/hand-drawn-canvas-animation/assets/preview-four-looks.jpg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "db1ab2f4658d480c77779a79852ebc625745768a",
+      "size": 109825,
+      "url": "https://api.github.com/repos/alesha-pro/tools/git/blobs/db1ab2f4658d480c77779a79852ebc625745768a"
+    },
+    {
+      "path": "skills/hand-drawn-canvas-animation/assets/preview-template.jpg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "abc80b485dca332ec4999cb29149d82a3e657316",
+      "size": 49268,
+      "url": "https://api.github.com/repos/alesha-pro/tools/git/blobs/abc80b485dca332ec4999cb29149d82a3e657316"
+    },
+    {
+      "path": "skills/hand-drawn-canvas-animation/examples/fly-style.html",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "61695d709998e54846a1b103df69c6405cdc204b",
+      "size": 16977,
+      "url": "https://api.github.com/repos/alesha-pro/tools/git/blobs/61695d709998e54846a1b103df69c6405cdc204b"
+    },
+    {
+      "path": "skills/hand-drawn-canvas-animation/examples/four-looks.html",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2937fb0a5280b6a1282bb1141d8dbe1047678935",
+      "size": 17126,
+      "url": "https://api.github.com/repos/alesha-pro/tools/git/blobs/2937fb0a5280b6a1282bb1141d8dbe1047678935"
+    },
+    {
+      "path": "skills/hand-drawn-canvas-animation/references/architecture.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a34c6a85985fe8544768f68ac0bfc9d2191bafa7",
+      "size": 11611,
+      "url": "https://api.github.com/repos/alesha-pro/tools/git/blobs/a34c6a85985fe8544768f68ac0bfc9d2191bafa7"
+    },
+    {
+      "path": "skills/hand-drawn-canvas-animation/references/brief-template.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "555b3a2008bc0ad92478cf7e15fe1e5c0f2c189f",
+      "size": 1776,
+      "url": "https://api.github.com/repos/alesha-pro/tools/git/blobs/555b3a2008bc0ad92478cf7e15fe1e5c0f2c189f"
+    },
+    {
+      "path": "skills/hand-drawn-canvas-animation/references/palettes.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fcb7b00a78fb7581be883169d9d04354ab94a1b5",
+      "size": 6757,
+      "url": "https://api.github.com/repos/alesha-pro/tools/git/blobs/fcb7b00a78fb7581be883169d9d04354ab94a1b5"
+    },
+    {
+      "path": "skills/hand-drawn-canvas-animation/references/reference-films.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "474c06fade3d00b4de0ace82e1ddce649271afca",
+      "size": 7380,
+      "url": "https://api.github.com/repos/alesha-pro/tools/git/blobs/474c06fade3d00b4de0ace82e1ddce649271afca"
+    },
+    {
+      "path": "skills/hand-drawn-canvas-animation/references/scenes.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "679a88363fe530aa133dd407ff2d7a6626613b2b",
+      "size": 8136,
+      "url": "https://api.github.com/repos/alesha-pro/tools/git/blobs/679a88363fe530aa133dd407ff2d7a6626613b2b"
+    },
+    {
+      "path": "skills/hand-drawn-canvas-animation/references/style.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "460081fd2fbb174a95f83b672c143cbb78fd82e5",
+      "size": 8039,
+      "url": "https://api.github.com/repos/alesha-pro/tools/git/blobs/460081fd2fbb174a95f83b672c143cbb78fd82e5"
+    },
+    {
+      "path": "skills/hand-drawn-canvas-animation/scripts/package.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a703a8785d84e5bf4988f6b8cb2b573cea6b7276",
+      "size": 282,
+      "url": "https://api.github.com/repos/alesha-pro/tools/git/blobs/a703a8785d84e5bf4988f6b8cb2b573cea6b7276"
+    },
+    {
+      "path": "skills/hand-drawn-canvas-animation/scripts/render.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "88115424e0c81340113f9d0b28f7797c13913ab6",
+      "size": 5169,
+      "url": "https://api.github.com/repos/alesha-pro/tools/git/blobs/88115424e0c81340113f9d0b28f7797c13913ab6"
+    }
+  ]
+}

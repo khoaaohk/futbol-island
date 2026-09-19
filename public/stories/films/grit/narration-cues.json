@@ -1,0 +1,986 @@
+[
+  {
+    "start": 0.0,
+    "end": 4.34,
+    "text": " Did you know that a tree grows in two directions at the same time?",
+    "words": [
+      {
+        "start": 0.0,
+        "end": 0.34,
+        "word": " Did"
+      },
+      {
+        "start": 0.34,
+        "end": 0.42,
+        "word": " you"
+      },
+      {
+        "start": 0.42,
+        "end": 0.64,
+        "word": " know"
+      },
+      {
+        "start": 0.64,
+        "end": 0.92,
+        "word": " that"
+      },
+      {
+        "start": 0.92,
+        "end": 1.26,
+        "word": " a"
+      },
+      {
+        "start": 1.26,
+        "end": 1.54,
+        "word": " tree"
+      },
+      {
+        "start": 1.54,
+        "end": 1.84,
+        "word": " grows"
+      },
+      {
+        "start": 1.84,
+        "end": 2.2,
+        "word": " in"
+      },
+      {
+        "start": 2.2,
+        "end": 2.92,
+        "word": " two"
+      },
+      {
+        "start": 2.92,
+        "end": 3.26,
+        "word": " directions"
+      },
+      {
+        "start": 3.26,
+        "end": 3.66,
+        "word": " at"
+      },
+      {
+        "start": 3.66,
+        "end": 3.78,
+        "word": " the"
+      },
+      {
+        "start": 3.78,
+        "end": 3.98,
+        "word": " same"
+      },
+      {
+        "start": 3.98,
+        "end": 4.34,
+        "word": " time?"
+      }
+    ]
+  },
+  {
+    "start": 5.14,
+    "end": 7.7,
+    "text": " It's always growing down and growing up.",
+    "words": [
+      {
+        "start": 5.14,
+        "end": 5.34,
+        "word": " It's"
+      },
+      {
+        "start": 5.34,
+        "end": 5.46,
+        "word": " always"
+      },
+      {
+        "start": 5.46,
+        "end": 5.76,
+        "word": " growing"
+      },
+      {
+        "start": 5.76,
+        "end": 6.4,
+        "word": " down"
+      },
+      {
+        "start": 6.4,
+        "end": 7.18,
+        "word": " and"
+      },
+      {
+        "start": 7.18,
+        "end": 7.42,
+        "word": " growing"
+      },
+      {
+        "start": 7.42,
+        "end": 7.7,
+        "word": " up."
+      }
+    ]
+  },
+  {
+    "start": 8.44,
+    "end": 12.54,
+    "text": " And what's interesting is the root system mirrors the fruit system.",
+    "words": [
+      {
+        "start": 8.44,
+        "end": 8.66,
+        "word": " And"
+      },
+      {
+        "start": 8.66,
+        "end": 8.9,
+        "word": " what's"
+      },
+      {
+        "start": 8.9,
+        "end": 9.14,
+        "word": " interesting"
+      },
+      {
+        "start": 9.14,
+        "end": 9.54,
+        "word": " is"
+      },
+      {
+        "start": 9.54,
+        "end": 9.66,
+        "word": " the"
+      },
+      {
+        "start": 9.66,
+        "end": 9.82,
+        "word": " root"
+      },
+      {
+        "start": 9.82,
+        "end": 10.2,
+        "word": " system"
+      },
+      {
+        "start": 10.2,
+        "end": 10.56,
+        "word": " mirrors"
+      },
+      {
+        "start": 10.56,
+        "end": 11.06,
+        "word": " the"
+      },
+      {
+        "start": 11.06,
+        "end": 12.06,
+        "word": " fruit"
+      },
+      {
+        "start": 12.06,
+        "end": 12.54,
+        "word": " system."
+      }
+    ]
+  },
+  {
+    "start": 13.06,
+    "end": 15.18,
+    "text": " Now here's what's fascinating about a tree.",
+    "words": [
+      {
+        "start": 13.06,
+        "end": 13.28,
+        "word": " Now"
+      },
+      {
+        "start": 13.28,
+        "end": 13.56,
+        "word": " here's"
+      },
+      {
+        "start": 13.56,
+        "end": 13.82,
+        "word": " what's"
+      },
+      {
+        "start": 13.82,
+        "end": 14.4,
+        "word": " fascinating"
+      },
+      {
+        "start": 14.4,
+        "end": 14.84,
+        "word": " about"
+      },
+      {
+        "start": 14.84,
+        "end": 14.96,
+        "word": " a"
+      },
+      {
+        "start": 14.96,
+        "end": 15.18,
+        "word": " tree."
+      }
+    ]
+  },
+  {
+    "start": 15.78,
+    "end": 19.28,
+    "text": " Its nature is both gravitropic and phototropic.",
+    "words": [
+      {
+        "start": 15.78,
+        "end": 15.8,
+        "word": " Its"
+      },
+      {
+        "start": 15.8,
+        "end": 16.0,
+        "word": " nature"
+      },
+      {
+        "start": 16.0,
+        "end": 16.5,
+        "word": " is"
+      },
+      {
+        "start": 16.5,
+        "end": 16.76,
+        "word": " both"
+      },
+      {
+        "start": 16.76,
+        "end": 17.94,
+        "word": " gravitropic"
+      },
+      {
+        "start": 17.94,
+        "end": 18.64,
+        "word": " and"
+      },
+      {
+        "start": 18.64,
+        "end": 19.28,
+        "word": " phototropic."
+      }
+    ]
+  },
+  {
+    "start": 20.04,
+    "end": 23.5,
+    "text": " So the root system grows away from light and toward gravity",
+    "words": [
+      {
+        "start": 20.04,
+        "end": 20.1,
+        "word": " So"
+      },
+      {
+        "start": 20.1,
+        "end": 20.26,
+        "word": " the"
+      },
+      {
+        "start": 20.26,
+        "end": 20.42,
+        "word": " root"
+      },
+      {
+        "start": 20.42,
+        "end": 20.82,
+        "word": " system"
+      },
+      {
+        "start": 20.82,
+        "end": 21.08,
+        "word": " grows"
+      },
+      {
+        "start": 21.08,
+        "end": 21.46,
+        "word": " away"
+      },
+      {
+        "start": 21.46,
+        "end": 21.72,
+        "word": " from"
+      },
+      {
+        "start": 21.72,
+        "end": 21.94,
+        "word": " light"
+      },
+      {
+        "start": 21.94,
+        "end": 22.52,
+        "word": " and"
+      },
+      {
+        "start": 22.52,
+        "end": 22.82,
+        "word": " toward"
+      },
+      {
+        "start": 22.82,
+        "end": 23.5,
+        "word": " gravity"
+      }
+    ]
+  },
+  {
+    "start": 23.5,
+    "end": 27.18,
+    "text": " and before the tree can ever grow upward, the seed first",
+    "words": [
+      {
+        "start": 23.5,
+        "end": 24.08,
+        "word": " and"
+      },
+      {
+        "start": 24.08,
+        "end": 24.52,
+        "word": " before"
+      },
+      {
+        "start": 24.52,
+        "end": 24.7,
+        "word": " the"
+      },
+      {
+        "start": 24.7,
+        "end": 24.88,
+        "word": " tree"
+      },
+      {
+        "start": 24.88,
+        "end": 25.1,
+        "word": " can"
+      },
+      {
+        "start": 25.1,
+        "end": 25.38,
+        "word": " ever"
+      },
+      {
+        "start": 25.38,
+        "end": 25.66,
+        "word": " grow"
+      },
+      {
+        "start": 25.66,
+        "end": 26.0,
+        "word": " upward,"
+      },
+      {
+        "start": 26.48,
+        "end": 26.56,
+        "word": " the"
+      },
+      {
+        "start": 26.56,
+        "end": 26.82,
+        "word": " seed"
+      },
+      {
+        "start": 26.82,
+        "end": 27.18,
+        "word": " first"
+      }
+    ]
+  },
+  {
+    "start": 27.18,
+    "end": 33.16,
+    "text": " has to grow downward into darkness, resistance, pressure and dirt.",
+    "words": [
+      {
+        "start": 27.18,
+        "end": 27.68,
+        "word": " has"
+      },
+      {
+        "start": 27.68,
+        "end": 27.94,
+        "word": " to"
+      },
+      {
+        "start": 27.94,
+        "end": 28.14,
+        "word": " grow"
+      },
+      {
+        "start": 28.14,
+        "end": 28.68,
+        "word": " downward"
+      },
+      {
+        "start": 28.68,
+        "end": 29.02,
+        "word": " into"
+      },
+      {
+        "start": 29.02,
+        "end": 29.96,
+        "word": " darkness,"
+      },
+      {
+        "start": 29.96,
+        "end": 31.12,
+        "word": " resistance,"
+      },
+      {
+        "start": 31.72,
+        "end": 31.92,
+        "word": " pressure"
+      },
+      {
+        "start": 31.92,
+        "end": 32.8,
+        "word": " and"
+      },
+      {
+        "start": 32.8,
+        "end": 33.16,
+        "word": " dirt."
+      }
+    ]
+  },
+  {
+    "start": 33.68,
+    "end": 37.2,
+    "text": " The roots literally have to fight their way deeper underground",
+    "words": [
+      {
+        "start": 33.68,
+        "end": 33.7,
+        "word": " The"
+      },
+      {
+        "start": 33.7,
+        "end": 33.94,
+        "word": " roots"
+      },
+      {
+        "start": 33.94,
+        "end": 35.02,
+        "word": " literally"
+      },
+      {
+        "start": 35.02,
+        "end": 35.46,
+        "word": " have"
+      },
+      {
+        "start": 35.46,
+        "end": 35.62,
+        "word": " to"
+      },
+      {
+        "start": 35.62,
+        "end": 35.84,
+        "word": " fight"
+      },
+      {
+        "start": 35.84,
+        "end": 36.06,
+        "word": " their"
+      },
+      {
+        "start": 36.06,
+        "end": 36.18,
+        "word": " way"
+      },
+      {
+        "start": 36.18,
+        "end": 36.54,
+        "word": " deeper"
+      },
+      {
+        "start": 36.54,
+        "end": 37.2,
+        "word": " underground"
+      }
+    ]
+  },
+  {
+    "start": 37.2,
+    "end": 40.78,
+    "text": " but once the tree breaks through the surface and starts growing upward",
+    "words": [
+      {
+        "start": 37.2,
+        "end": 37.74,
+        "word": " but"
+      },
+      {
+        "start": 37.74,
+        "end": 37.94,
+        "word": " once"
+      },
+      {
+        "start": 37.94,
+        "end": 38.2,
+        "word": " the"
+      },
+      {
+        "start": 38.2,
+        "end": 38.38,
+        "word": " tree"
+      },
+      {
+        "start": 38.38,
+        "end": 38.64,
+        "word": " breaks"
+      },
+      {
+        "start": 38.64,
+        "end": 38.9,
+        "word": " through"
+      },
+      {
+        "start": 38.9,
+        "end": 39.06,
+        "word": " the"
+      },
+      {
+        "start": 39.06,
+        "end": 39.36,
+        "word": " surface"
+      },
+      {
+        "start": 39.36,
+        "end": 39.6,
+        "word": " and"
+      },
+      {
+        "start": 39.6,
+        "end": 39.88,
+        "word": " starts"
+      },
+      {
+        "start": 39.88,
+        "end": 40.34,
+        "word": " growing"
+      },
+      {
+        "start": 40.34,
+        "end": 40.78,
+        "word": " upward"
+      }
+    ]
+  },
+  {
+    "start": 41.72,
+    "end": 42.9,
+    "text": " there's less resistance.",
+    "words": [
+      {
+        "start": 41.72,
+        "end": 42.24,
+        "word": " there's"
+      },
+      {
+        "start": 42.24,
+        "end": 42.44,
+        "word": " less"
+      },
+      {
+        "start": 42.44,
+        "end": 42.9,
+        "word": " resistance."
+      }
+    ]
+  },
+  {
+    "start": 43.64,
+    "end": 48.64,
+    "text": " And honestly that is one of the most beautiful pictures of how life works.",
+    "words": [
+      {
+        "start": 43.64,
+        "end": 43.68,
+        "word": " And"
+      },
+      {
+        "start": 43.68,
+        "end": 43.94,
+        "word": " honestly"
+      },
+      {
+        "start": 43.94,
+        "end": 44.36,
+        "word": " that"
+      },
+      {
+        "start": 44.36,
+        "end": 44.52,
+        "word": " is"
+      },
+      {
+        "start": 44.52,
+        "end": 44.74,
+        "word": " one"
+      },
+      {
+        "start": 44.74,
+        "end": 44.94,
+        "word": " of"
+      },
+      {
+        "start": 44.94,
+        "end": 45.16,
+        "word": " the"
+      },
+      {
+        "start": 45.16,
+        "end": 46.3,
+        "word": " most"
+      },
+      {
+        "start": 46.3,
+        "end": 46.84,
+        "word": " beautiful"
+      },
+      {
+        "start": 46.84,
+        "end": 47.46,
+        "word": " pictures"
+      },
+      {
+        "start": 47.46,
+        "end": 47.76,
+        "word": " of"
+      },
+      {
+        "start": 47.76,
+        "end": 48.0,
+        "word": " how"
+      },
+      {
+        "start": 48.0,
+        "end": 48.3,
+        "word": " life"
+      },
+      {
+        "start": 48.3,
+        "end": 48.64,
+        "word": " works."
+      }
+    ]
+  },
+  {
+    "start": 49.22,
+    "end": 51.92,
+    "text": " Because the work you do in the dark, when nobody sees you,",
+    "words": [
+      {
+        "start": 49.22,
+        "end": 49.56,
+        "word": " Because"
+      },
+      {
+        "start": 49.56,
+        "end": 49.72,
+        "word": " the"
+      },
+      {
+        "start": 49.72,
+        "end": 49.86,
+        "word": " work"
+      },
+      {
+        "start": 49.86,
+        "end": 50.02,
+        "word": " you"
+      },
+      {
+        "start": 50.02,
+        "end": 50.12,
+        "word": " do"
+      },
+      {
+        "start": 50.12,
+        "end": 50.22,
+        "word": " in"
+      },
+      {
+        "start": 50.22,
+        "end": 50.34,
+        "word": " the"
+      },
+      {
+        "start": 50.34,
+        "end": 50.56,
+        "word": " dark,"
+      },
+      {
+        "start": 50.98,
+        "end": 51.12,
+        "word": " when"
+      },
+      {
+        "start": 51.12,
+        "end": 51.34,
+        "word": " nobody"
+      },
+      {
+        "start": 51.34,
+        "end": 51.66,
+        "word": " sees"
+      },
+      {
+        "start": 51.66,
+        "end": 51.92,
+        "word": " you,"
+      }
+    ]
+  },
+  {
+    "start": 51.92,
+    "end": 58.06,
+    "text": " when life feels difficult and heavy is what creates the success people admire.",
+    "words": [
+      {
+        "start": 51.92,
+        "end": 52.18,
+        "word": " when"
+      },
+      {
+        "start": 52.18,
+        "end": 52.38,
+        "word": " life"
+      },
+      {
+        "start": 52.38,
+        "end": 52.66,
+        "word": " feels"
+      },
+      {
+        "start": 52.66,
+        "end": 53.1,
+        "word": " difficult"
+      },
+      {
+        "start": 53.1,
+        "end": 53.4,
+        "word": " and"
+      },
+      {
+        "start": 53.4,
+        "end": 54.34,
+        "word": " heavy"
+      },
+      {
+        "start": 54.34,
+        "end": 55.26,
+        "word": " is"
+      },
+      {
+        "start": 55.26,
+        "end": 55.44,
+        "word": " what"
+      },
+      {
+        "start": 55.44,
+        "end": 55.92,
+        "word": " creates"
+      },
+      {
+        "start": 55.92,
+        "end": 56.5,
+        "word": " the"
+      },
+      {
+        "start": 56.5,
+        "end": 56.82,
+        "word": " success"
+      },
+      {
+        "start": 56.82,
+        "end": 57.54,
+        "word": " people"
+      },
+      {
+        "start": 57.54,
+        "end": 58.06,
+        "word": " admire."
+      }
+    ]
+  },
+  {
+    "start": 59.22,
+    "end": 63.32,
+    "text": " Later in the light everybody wants the fruit, everybody wants the visible success,",
+    "words": [
+      {
+        "start": 59.22,
+        "end": 59.28,
+        "word": " Later"
+      },
+      {
+        "start": 59.28,
+        "end": 59.48,
+        "word": " in"
+      },
+      {
+        "start": 59.48,
+        "end": 59.58,
+        "word": " the"
+      },
+      {
+        "start": 59.58,
+        "end": 59.76,
+        "word": " light"
+      },
+      {
+        "start": 59.76,
+        "end": 60.26,
+        "word": " everybody"
+      },
+      {
+        "start": 60.26,
+        "end": 60.64,
+        "word": " wants"
+      },
+      {
+        "start": 60.64,
+        "end": 60.86,
+        "word": " the"
+      },
+      {
+        "start": 60.86,
+        "end": 61.06,
+        "word": " fruit,"
+      },
+      {
+        "start": 61.58,
+        "end": 61.72,
+        "word": " everybody"
+      },
+      {
+        "start": 61.72,
+        "end": 62.08,
+        "word": " wants"
+      },
+      {
+        "start": 62.08,
+        "end": 62.3,
+        "word": " the"
+      },
+      {
+        "start": 62.3,
+        "end": 62.66,
+        "word": " visible"
+      },
+      {
+        "start": 62.66,
+        "end": 63.32,
+        "word": " success,"
+      }
+    ]
+  },
+  {
+    "start": 63.96,
+    "end": 66.18,
+    "text": " recognition and results.",
+    "words": [
+      {
+        "start": 63.96,
+        "end": 64.54,
+        "word": " recognition"
+      },
+      {
+        "start": 64.54,
+        "end": 65.86,
+        "word": " and"
+      },
+      {
+        "start": 65.86,
+        "end": 66.18,
+        "word": " results."
+      }
+    ]
+  },
+  {
+    "start": 67.14,
+    "end": 71.6,
+    "text": " But very few people are willing to go through the lonely seasons that create it.",
+    "words": [
+      {
+        "start": 67.14,
+        "end": 67.14,
+        "word": " But"
+      },
+      {
+        "start": 67.14,
+        "end": 67.38,
+        "word": " very"
+      },
+      {
+        "start": 67.38,
+        "end": 67.62,
+        "word": " few"
+      },
+      {
+        "start": 67.62,
+        "end": 68.02,
+        "word": " people"
+      },
+      {
+        "start": 68.02,
+        "end": 68.14,
+        "word": " are"
+      },
+      {
+        "start": 68.14,
+        "end": 68.34,
+        "word": " willing"
+      },
+      {
+        "start": 68.34,
+        "end": 68.56,
+        "word": " to"
+      },
+      {
+        "start": 68.56,
+        "end": 68.74,
+        "word": " go"
+      },
+      {
+        "start": 68.74,
+        "end": 69.0,
+        "word": " through"
+      },
+      {
+        "start": 69.0,
+        "end": 69.28,
+        "word": " the"
+      },
+      {
+        "start": 69.28,
+        "end": 69.88,
+        "word": " lonely"
+      },
+      {
+        "start": 69.88,
+        "end": 70.54,
+        "word": " seasons"
+      },
+      {
+        "start": 70.54,
+        "end": 70.9,
+        "word": " that"
+      },
+      {
+        "start": 70.9,
+        "end": 71.2,
+        "word": " create"
+      },
+      {
+        "start": 71.2,
+        "end": 71.6,
+        "word": " it."
+      }
+    ]
+  }
+]

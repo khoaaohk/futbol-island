@@ -1,0 +1,8 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),ts=require('typescript');const m={exports:{}};vm.runInNewContext(ts.transpileModule(fs.readFileSync('lib/town/obstacleGrid.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{exports:m.exports,module:m});
+let seed=718;const rand=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/2**32};
+const objects=Array.from({length:2000},(_,id)=>({id,x:rand()*500-250,z:rand()*500-250,w:rand()*20+.1,d:rand()*20+.1,dynamic:id<12}));const grid=m.exports.createObstacleGrid(objects);
+const touches=(o,x,z,r)=>o.w>0&&o.d>0&&Math.abs(o.x-x)<o.w/2+r&&Math.abs(o.z-z)<o.d/2+r;
+for(let i=0;i<1500;i++){if(i%50===0)for(const o of objects.slice(0,12)){o.x=rand()*500-250;o.z=rand()*500-250;o.w=rand()*5;o.d=rand()*5;}const x=rand()*500-250,z=rand()*500-250,r=rand()*12;const expected=objects.filter(o=>touches(o,x,z,r)).map(o=>o.id).sort((a,b)=>a-b);const actual=Array.from(grid.query(x,z,r)).filter(o=>touches(o,x,z,r)).map(o=>o.id).sort((a,b)=>a-b);assert.deepEqual(actual,expected);}
+objects.push({id:2000,x:900,z:900,w:4,d:4});assert(grid.query(900,900).some(o=>o.id===2000));objects.pop();assert(!grid.query(900,900).some(o=>o.id===2000));
+const live={x:0,z:0,w:0,d:0,dynamic:true};objects.push(live);live.w=4;live.d=4;live.x=800;assert(grid.query(800,0).includes(live));live.w=live.d=0;assert(!grid.query(800,0).some(o=>touches(o,800,0,0)));
+assert(grid.stats.candidates/grid.stats.queries<80);console.log('OBSTACLE_GRID_PASS exhaustive footprint parity, moving objects, reopening boxes, additions and removal; average candidates',Math.round(grid.stats.candidates/grid.stats.queries));

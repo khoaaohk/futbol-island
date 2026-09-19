@@ -1,0 +1,2 @@
+/** Shared island/arcade thumb feedback, without React updates on pointer movement. */
+export function paintJoystick(element:HTMLElement|null,x:number,y:number){if(!element)return;element.dataset.edge=String(Math.hypot(x,y)>=30);element.style.setProperty('--stick-angle',`${Math.atan2(y,x)*180/Math.PI+90}deg`);const thumb=element.querySelector('span');if(thumb)thumb.style.transform=`translate(${x}px,${y}px)`;}

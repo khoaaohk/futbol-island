@@ -1,0 +1,290 @@
+.triggers{position:absolute;z-index:35;top:calc(20px + env(safe-area-inset-top,0px));right:calc(12px + env(safe-area-inset-right,0px));display:flex;gap:8px}
+.circle{display:grid;place-items:center;flex:0 0 44px;width:44px;height:44px;padding:0;border:1px solid #ecdfb5;border-radius:50%;background:#294f43;color:#fff0cc;box-shadow:2px 3px 0 #17352b38;cursor:pointer;transition:background .15s,transform .15s}
+.circle:hover{background:#3c6551;transform:translateY(-1px)}
+.circle:focus-visible,.panel button:focus-visible{outline:3px solid #c47b33;outline-offset:3px}
+.dialog{position:fixed;inset:0;width:100%;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;background:transparent;color:#294a3e;overflow:clip}
+.dialog[open]{display:flex;justify-content:flex-end}
+.dialog::backdrop{background:#16352a70;backdrop-filter:blur(3px)}
+.panel{width:min(480px,100%);height:100%;overflow:auto;overscroll-behavior:contain;background:#f2e7c5;border-left:1px solid #fff3d4;box-shadow:-10px 0 40px #142e2926;padding:calc(26px + env(safe-area-inset-top,0px)) calc(24px + env(safe-area-inset-right,0px)) calc(28px + env(safe-area-inset-bottom,0px)) 24px}
+.entering .panel{animation:slideOut .24s ease-in-out .14s reverse both}.leaving .panel{animation:slideOut .24s ease-in-out both}
+.header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}.header>div{min-width:0;flex:1}
+.eyebrow{margin:0 0 13px;font:700 10px/1.4 monospace;letter-spacing:1.8px}
+.header h2{margin:0;font-size:29px;line-height:1.12;letter-spacing:-.6px}.close{background:#e4d8b3;color:#294a3e;border-color:#96a182;box-shadow:none}.close:hover{background:#d4cfaa}
+.tabs{display:flex;gap:6px;padding:5px;margin:25px 0;background:#dcd8b6;border-radius:28px}.tabs button{flex:1;min-height:44px;padding:10px 16px;border:0;border-radius:24px;background:transparent;color:#294a3e;font-size:14px;font-weight:700;cursor:pointer}.tabs button[aria-pressed=true]{background:#294f43;color:#fff0cc;box-shadow:0 2px 3px #294f4320}
+.content h3{margin:27px 0 12px;font-size:16px}.content h3:first-child{margin-top:0}
+.toggle{display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%;min-height:76px;border:0;border-bottom:1px solid #a6ad8955;padding:13px 0;background:transparent;color:#294a3e;text-align:left;cursor:pointer}.toggle>span:first-child{min-width:0}.toggle strong{display:block;font-size:15px;line-height:1.4}.toggle small{display:block;font-size:12px;line-height:1.5;margin-top:3px;color:#586b55}
+.switch{flex:0 0 55px;padding:8px 9px;border:1px solid #8c9a7a;border-radius:20px;background:#ded9b7;text-align:center;font-size:12px;font-weight:700}.toggle[aria-pressed=true] .switch{background:#294f43;color:#fff0cc;border-color:#294f43}.toggle:hover .switch{box-shadow:0 0 0 3px #81957425}
+.copy{font-size:13px;line-height:1.6;margin:0 0 14px;color:#586b55}.times{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.times button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;min-height:85px;border:1px solid #9fa887;border-radius:14px;background:#e7ddbb;color:#294a3e;font-size:13px;font-weight:700;cursor:pointer}.times button>span{font-size:25px;font-weight:400;line-height:1}.times button[aria-pressed=true]{background:#294f43;color:#fff0cc;border-color:#294f43}.times button:hover{box-shadow:0 0 0 2px #81957435}
+.about{font-size:14px;line-height:1.75}.about p{margin:0 0 18px}.about .intro{font-weight:700;font-size:20px;line-height:1.4}.note{margin-top:25px;padding:18px 0;border-top:1px solid #a6ad8970;font-size:12px;font-weight:700;line-height:1.7}
+@keyframes slideIn{from{transform:translateX(var(--slide-from,100%))}to{transform:translateX(0)}}@keyframes slideOut{from{transform:translateX(0)}to{transform:translateX(var(--slide-from,100%))}}
+@media(max-width:340px){.panel{padding-left:18px;padding-right:calc(18px + env(safe-area-inset-right,0px))}.header{gap:12px}.header h2{font-size:25px}.times{gap:6px}.toggle{gap:10px}.toggle strong{font-size:14px}.toggle small{font-size:11px}}
+@media(max-height:480px){.panel{padding-top:calc(18px + env(safe-area-inset-top,0px));padding-bottom:calc(18px + env(safe-area-inset-bottom,0px))}.header h2{font-size:25px}.eyebrow{margin-bottom:7px}.tabs{margin:18px 0}.content h3{margin-top:22px}.times button{min-height:70px}}
+@media(prefers-reduced-motion:reduce){.entering .panel,.leaving .panel{animation:none}.circle{transition:none}.circle:hover{transform:none}}
+.triggers{left:calc(12px + env(safe-area-inset-left,0px));pointer-events:none;}
+.triggers button{pointer-events:auto;}
+.triggers button:first-child{order:2;margin-left:auto;}
+.triggers button:last-child{order:1;}
+/* Align the upper icons with the controls below on each side. */
+.triggers{left:calc(24px + env(safe-area-inset-left,0px));right:calc(24px + env(safe-area-inset-right,0px));}
+@media(max-width:600px),(pointer:coarse){.triggers{left:calc(18px + env(safe-area-inset-left,0px));right:calc(18px + env(safe-area-inset-right,0px));}}
+@media(max-width:350px){.triggers{right:calc(10px + env(safe-area-inset-right,0px));}}
+
+.dialog.fromLeft[open]{justify-content:flex-start;--slide-from:-100%;}
+.fromLeft .panel{border-left:0;border-right:1px solid #fff3d4;box-shadow:10px 0 40px #142e2926;}
+.content{margin-top:28px;}
+.features{padding-left:19px;margin:0 0 22px;}
+.features li{margin-bottom:10px;}
+.support{margin-top:28px;padding-top:20px;border-top:1px solid #a6ad8970;}
+.support a{color:#755029;text-underline-offset:3px;font-weight:700;}
+.donations{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:18px 0 14px;}
+.donations a{display:grid;place-items:center;min-height:54px;border-radius:14px;background:#294f43;color:#fff0cc;text-decoration:none;font-size:21px;}
+.donations a:hover{background:#3c6551;}
+.support .donationNote{font-size:12px;color:#586b55;line-height:1.6;}
+
+/* Blur first. A clipped dialog cannot auto-scroll to an offscreen focused button. */
+.dialog.entering::backdrop{animation:backdropIn .14s ease-out both;}
+@keyframes backdropIn{from{background:#16352a00;backdrop-filter:blur(0)}to{background:#16352a70;backdrop-filter:blur(3px)}}
+@media(prefers-reduced-motion:reduce){.dialog.entering::backdrop{animation:none;}}
+
+.mapButton{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:52px;margin-top:28px;padding:12px 16px;border:1px solid #8c9a7a;border-radius:14px;background:#294f43;color:#fff0cc;font-size:15px;font-weight:700;cursor:pointer;}
+.mapButton:hover{background:#3c6551;}
+@media(max-width:600px),(pointer:coarse){.panel{width:100%;}}
+
+.voiceSelect{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 0;font-size:15px;font-weight:700;}.voiceSelect select{max-width:65%;min-height:44px;border:1px solid #8c9a7a;border-radius:10px;padding:8px;background:#e7ddbb;color:#294a3e;font:inherit;}.panel select:focus-visible{outline:3px solid #c47b33;outline-offset:3px;}.mobileControls{display:none;}
+@media(max-width:600px),(pointer:coarse){.mobileControls{display:block;}}
+.questsTrigger{font:700 10px Arial;letter-spacing:-.3px}
+.backButton{display:block;margin:16px 0;padding:10px 0;border:0;background:none;color:#294f43;font-weight:700}
+.subpage{animation:subpageForward .24s cubic-bezier(.22,.68,0,1)}.subpageBack{animation:subpageReverse .24s cubic-bezier(.22,.68,0,1)}
+@keyframes subpageForward{from{transform:translateX(100%)}to{transform:translateX(0)}}@keyframes subpageReverse{from{transform:translateX(-100%)}to{transform:translateX(0)}}
+.questBalance{display:flex;justify-content:space-between;gap:12px;background:#294f43;color:#fff0cc;padding:20px 16px;border-radius:18px;margin-bottom:18px}
+.questCard{padding:18px 0;border-bottom:1px solid #294f4333}.questCard>small{font:700 10px monospace;letter-spacing:1px}.questCard h3{margin:9px 0}.questCard p{font-size:14px;line-height:1.5}.questCard progress{width:100%;height:9px;accent-color:#294f43}.questCard>div{display:flex;justify-content:space-between;font-size:12px;margin-top:8px}
+@media(prefers-reduced-motion:reduce){.subpage,.subpageBack{animation:none}}
+.panel{overflow-x:hidden}
+.secondaryButton{background:transparent!important;color:#294f43!important;border:1px solid #294f4366!important;box-shadow:none!important;margin-top:10px!important}.secondaryButton:hover{background:#294f430c!important}
+.questChapter{background:#5a8055;color:#fff4d5;padding:18px 20px;border-radius:18px;box-shadow:0 5px 0 #3e6144;margin-bottom:28px}.questChapter>small{font:700 10px monospace;letter-spacing:1.2px}.questChapter h3{margin:7px 0;font-size:22px}.questChapter p{font-size:13px;line-height:1.5;margin:0}
+.questPath{position:relative;margin:0 0 24px}.questRoad{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}.questStops{list-style:none;margin:0;padding:0}.questStop{position:absolute;transform:translateX(-50%);width:170px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:5px}.questStop button{display:grid;place-items:center;width:68px;height:62px;border-radius:50%;border:3px solid #f4edce;background:#bfc4a5;color:#718069;box-shadow:0 7px 0 #959f80;cursor:pointer;transition:translate .12s,box-shadow .12s}.questStop button:active{translate:0 4px;box-shadow:0 3px 0 #959f80}.questDone button{background:#608f55;color:#fff9dc;box-shadow:0 7px 0 #416741}.questCurrent button{background:#f0bd58;color:#294f43;box-shadow:0 7px 0 #bb8935;outline:4px solid #f0bd5855;outline-offset:5px}.questStop>strong{font-size:14px;margin-top:9px;background:#efe4c4;padding:2px 7px;border-radius:8px}.questStop>small{font-size:11px;line-height:1.25;max-width:165px;background:#efe4c4;padding:2px 5px;border-radius:6px}.questStart{position:absolute;bottom:calc(100% + 9px);background:#294f43;color:#fff0cc;border-radius:8px;padding:6px 9px;font:700 9px monospace;letter-spacing:.7px;white-space:nowrap}.questRemaining{font:700 10px Arial;color:#426846;background:#efe4c4;border-radius:5px;padding:2px 5px}.questLocked>small{color:#6b775d}
+@media(max-width:350px){.questStop{width:136px}.questStop>small{max-width:136px;font-size:10px}.questStop button{width:62px;height:58px}}
+@media(prefers-reduced-motion:reduce){.questStop button{transition:none}}
+.entryCopy{display:flex;flex-direction:column;gap:4px;text-align:left}.entryCopy small{font-size:12px;font-weight:400;line-height:1.4;opacity:.85}.aboutSubtitle{font-size:14px;line-height:1.5;margin:12px 0 0;color:#586b55}
+.questStop button{position:relative;transition:translate .16s ease,scale .16s ease,background .16s ease,box-shadow .16s ease}.questStart{transition:background .16s ease,translate .16s ease}
+.questCurrent button:hover,.questCurrent button:focus-visible{background:#ffd67b;translate:0 -3px;scale:1.04;box-shadow:0 10px 0 #bb8935}.questCurrent button:hover .questStart,.questCurrent button:focus-visible .questStart{background:#3c6b50;translate:0 -2px}
+.questCurrent button:active{translate:0 3px;scale:.98;box-shadow:0 4px 0 #bb8935}
+@media(prefers-reduced-motion:reduce){.questStop button,.questStart{transition:none}.questCurrent button:hover,.questCurrent button:focus-visible,.questCurrent button:active{translate:none;scale:1}.questCurrent button:hover .questStart,.questCurrent button:focus-visible .questStart{translate:none}}
+
+.volume{display:grid;gap:4px;padding:0 4px 16px;color:#294f43;font-size:13px;font-weight:700}.volume>span{display:flex;justify-content:space-between;gap:12px}.volume output{font-variant-numeric:tabular-nums}.volume input{width:100%;height:36px;margin:0;accent-color:#294f43;cursor:pointer;touch-action:pan-y}.volume input:focus-visible{outline:2px solid #b67d35;outline-offset:3px;border-radius:6px}
+
+.questFocus{padding:18px;background:#f8efd3;border:1px solid #75876b66;border-radius:16px;margin-bottom:24px}.questFocus>small{font-size:11px;font-weight:700;color:#426846}.questFocus h3{margin:8px 0}.questFocus p{font-size:14px;line-height:1.5}.questFocus progress{width:100%;height:10px;accent-color:#5b8b59}.questFocus>span{display:block;font-size:12px;margin-top:6px}.questFocus .mapButton{margin-top:14px}.questStop button[aria-pressed="true"]{outline:3px solid #b67d35;outline-offset:5px}
+
+.walkthrough{padding:0;border:0;background:transparent}
+
+.walkthrough{margin-top:18px}
+
+.triggers .questsTrigger{order:0}.triggers button:first-child{order:2}
+.questChapters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:22px 0 18px}.questChapters button{display:flex;flex-direction:column;align-items:center;gap:7px;padding:12px 6px;min-height:86px;border:1px solid #adb897;border-radius:13px;background:#e5debe;color:#294f43;font:700 11px/1.35 Arial;cursor:pointer}.questChapters button span{display:grid;place-items:center;width:25px;height:25px;border-radius:8px;background:#fff0cc}.questChapters button[aria-pressed=true]{background:#294f43;color:#fff0cc;border-color:#294f43}.questChapters button[aria-pressed=true] span{color:#294f43}.pathContinue{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:16px;min-height:44px;border:0;border-radius:11px;background:#fff0cc;color:#294f43;font-weight:800;cursor:pointer;box-shadow:0 4px 0 #c3b98d}.learningPath .questPath{margin-top:40px}.learningPath .questStop button:disabled{cursor:default;opacity:.65;box-shadow:0 5px 0 #a6ae92}.learningPath .questStop button:disabled:active{translate:none}.questChapters button:focus-visible,.pathContinue:focus-visible{outline:3px solid #bb8935;outline-offset:3px}
+.questChapter .pathReward{font-size:12px;margin-top:12px;padding:8px 10px;border-radius:9px;background:#355f454d}
+
+/* Story stops share the chapter road but have a book-shaped pink marker. */
+.storyStop>button{background:#efbad0!important;border-color:#d399b1!important;border-radius:18px!important;color:#58394c!important;box-shadow:0 5px 0 #bd849d!important}.storyLabel{color:#975775;font-size:11px;letter-spacing:.06em}
+
+.desktopShortcuts{margin:18px 0 24px}.shortcutList{margin:14px 0 0}.shortcutList>div{display:grid;grid-template-columns:145px 1fr;gap:14px;align-items:start;padding:12px 0;border-bottom:1px solid #cad3bf}.shortcutList dt{font-size:12px}.shortcutList kbd{display:inline-block;white-space:normal;line-height:1.5}.shortcutList dd{margin:0;font-size:14px;line-height:1.45}
+.dialog.pathsModal[open]{align-items:center;justify-content:center}.pathsModal .panel{position:relative;width:min(720px,calc(100vw - 24px));height:min(800px,calc(100dvh - 24px));max-height:calc(100dvh - 24px);border:1px solid #d5ddcc;border-radius:24px;background:#f2e7c5;--modal-surface:#f2e7c5;box-shadow:0 18px 64px #17382f38;animation:none}.pathsModal .subpage,.pathsModal .subpageBack{animation:none}
+.pathsModal .learningPath>.copy:first-child{font-size:11px;margin:0 0 8px}.pathsModal .questChapters{margin:0 0 12px}.pathsModal .questChapter{padding:10px 12px;margin:0 0 8px}.pathsModal .questChapter h3{font-size:19px;margin:4px 0!important}.pathsModal .questChapter small{font-size:10px}.pathsModal .questChapter [hidden]{display:none!important}.extraExploration{margin:20px 0 12px;padding-top:16px;border-top:1px solid #bcc8aa}.extraExploration>summary{cursor:pointer;font-weight:700;font-size:14px}.pathsModal .questPath{margin-top:0}
+.headerBack{flex-shrink:0;display:grid;place-items:center;width:44px;height:44px;padding:0;border:1px solid #96a182;border-radius:50%;background:#f5f7ef;color:#355b49;cursor:pointer}.pathsModal .header>div{flex:1}.pathsModal .learningPath .questPath{margin-bottom:8px}.extraExploration{margin:10px 0;padding-top:12px}.extraExploration>section{margin:12px 0 0}
+.pathsModal .questChapters{position:relative;isolation:isolate;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;background:#eee5cb;padding:4px;border-radius:14px}.pathsModal .questChapters::before{content:'';position:absolute;z-index:-1;top:4px;bottom:4px;left:4px;width:calc((100% - 8px)/3);background:#294f43;border-radius:10px;transform:translateX(calc(var(--chapter-index,0)*100%));transition:transform .22s ease-out}.pathsModal .questChapters button{flex-direction:row;min-height:48px;gap:5px;padding:8px 5px;border:0;background:transparent;box-shadow:none;font-size:11px}.pathsModal .questChapters button[aria-pressed=true]{background:transparent}.pathsModal .questChapters button span{width:19px;height:19px;flex:0 0 19px;font-size:10px}.pathsModal .questChapter{box-shadow:none}.pathsModal .questChapters button:not([aria-pressed=true]) span{background:transparent}
+@media(prefers-reduced-motion:reduce){.pathsModal .questChapters::before{transition:none}}
+.pathsModal .questChapters button{justify-content:center;text-align:center}.pathsModal .questChapters button span{align-self:center}.pathsModal .panel>div{padding-top:12px}
+.content{margin-top:0}
+.pathsModal .learningPath .questPath{margin-top:30px}
+.pathsModal .questChapters button .chapterText{display:block;width:auto;height:auto;min-width:0;flex:0 1 auto;background:transparent!important;color:inherit!important;border-radius:0;font-size:inherit;line-height:1.25;text-align:center;text-wrap:balance}.pathsModal .questChapters button{min-width:0}
+@media(max-width:600px){.dialog.pathsModal .panel{width:calc(100vw - 16px);height:calc(100dvh - 16px);max-height:calc(100dvh - 16px);border-radius:19px}.pathsModal .questChapters{padding:3px}.pathsModal .questChapters::before{top:3px;bottom:3px;left:3px;width:calc((100% - 6px)/3)}.pathsModal .questChapters button{font-size:10px;min-height:50px;gap:4px;padding:7px 4px}.pathsModal .questChapters button>span:first-child{width:16px;height:18px;flex-basis:16px;font-size:10px}.pathsModal .questChapters button .chapterText{max-width:85px}}
+.settingsEntries{display:grid;gap:14px}.settingsEntries .mapButton,.settingsEntries .walkthrough,.settingsEntries .desktopShortcuts{margin:0!important}.settingsEntries .mapButton{padding:12px 16px}
+@media(hover:hover) and (pointer:fine){.storyStop button:not(:disabled):hover{translate:0 -4px;box-shadow:0 11px 0 #9d768b}.storyStop button:not(:disabled):active{translate:0 3px;box-shadow:0 4px 0 #9d768b}}
+.storyStop button:focus-visible{outline:3px solid #b28a35;outline-offset:5px}
+@media(prefers-reduced-motion:reduce){.storyStop button{transition:none}.storyStop button:not(:disabled):hover{translate:none}}
+@media(hover:hover) and (pointer:fine){.storyStop button:not(:disabled):hover{box-shadow:0 9px 0 #bd849d!important}.storyStop button:not(:disabled):active{box-shadow:0 2px 0 #bd849d!important}}
+
+.explorationSummary{width:100%;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 14px;margin:0 0 16px;border:1px solid #cbd5c1;border-radius:14px;background:#f4f6ee;color:#244b40;text-align:left;cursor:pointer;font:inherit}.explorationSummary>span{display:grid;gap:4px}.explorationSummary strong{font-size:15px}.explorationSummary small{font-size:12px;color:#5c725c}.explorationSummary:hover{background:#eaf0e2}.explorationSummary:focus-visible{outline:3px solid #e9bd65;outline-offset:3px}
+
+.explorationGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:20px}.explorationCard{display:grid;grid-template-columns:24px 1fr;gap:8px;text-align:left;background:#faf8f1;border:1px solid #dcd8c8;border-radius:14px;padding:16px;color:#365347;font:inherit;cursor:pointer}.explorationCard strong{font-size:14px;align-self:center}.explorationCard>span:not(.achievementStatus),.explorationCard progress{grid-column:2;font-size:12px}.explorationCard progress{width:100%;height:6px;accent-color:#6e8b60}.achievementStatus{font-size:22px;line-height:1}.explorationCard[aria-pressed=true]{border-color:#8b9c77;background:#eef2e6;box-shadow:inset 0 0 0 1px #8b9c77}.explorationCard[data-complete=true] .achievementStatus{color:#4c7744}.explorationCard:hover{border-color:#8b9c77}.explorationCard:focus-visible{outline:3px solid #e9bd65;outline-offset:3px}@media(max-width:420px){.explorationGrid{grid-template-columns:1fr}.explorationCard{padding:14px}}
+
+.pathSummaries{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0 0 16px}.pathSummaries .explorationSummary{display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:8px;min-height:84px;margin:0;padding:14px;min-width:0}.pathSummaries .explorationSummary>span{display:flex;justify-content:space-between;align-items:center;gap:7px}.pathSummaries .explorationSummary strong{font-size:15px}.pathSummaries .explorationSummary small{font-size:12px}@media(max-width:420px){.pathSummaries{gap:10px}.pathSummaries .explorationSummary{padding:12px}.pathSummaries .explorationSummary strong{font-size:14px}}
+
+.exploreChecklist{color:#294f43}.exploreIntro{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}.exploreIntro p{margin:0;font-size:14px;line-height:1.5}.exploreIntro strong{font-size:12px;color:#61715d;white-space:nowrap}.exploreProgress{display:block;width:100%;height:7px;accent-color:#648253;border:0;border-radius:5px;overflow:hidden}.exploreProgress::-webkit-progress-bar{background:#e8eddf}.exploreProgress::-webkit-progress-value{background:#648253}.exploreList{list-style:none;padding:0;margin:18px 0 0;display:grid;gap:10px}.exploreList label{display:flex;align-items:flex-start;gap:13px;padding:16px;background:#faf9f3;border:1px solid #e1e3d8;border-radius:12px;cursor:pointer;min-height:64px}.exploreList input{width:22px;height:22px;flex:0 0 22px;margin:1px 0 0;accent-color:#537949;cursor:pointer}.exploreList label>span{display:grid;gap:5px}.exploreList strong{font-size:15px;line-height:1.4}.exploreList small{font-size:12px;line-height:1.5;color:#697666}.exploreList label[data-complete=true]{background:#edf3e7;border-color:#bfd0b3}.exploreList label:focus-within{outline:2px solid #c9a252;outline-offset:2px}.exploreSaved{font-size:12px;color:#697666;margin:16px 0 0}@media(max-width:420px){.exploreList label{padding:13px;gap:10px}}
+/* A chapter heading is editorial text, not an interactive card. */
+.pathsModal .learningPath .questChapter{background:transparent;color:#294f43;border:0;border-radius:0;box-shadow:none;padding:16px 0 4px;margin:0;text-align:center;cursor:default}.pathsModal .learningPath .questChapter>small{color:#758168;letter-spacing:.08em}.pathsModal .learningPath .questChapter h3{font-size:21px;margin:6px 0 0!important}
+/* Chapter selector: consistent inset around the sliding selection. */
+.dialog.pathsModal .questChapters{padding:12px;border-radius:16px}
+.dialog.pathsModal .questChapters::before{top:12px;bottom:12px;left:12px;width:calc((100% - 24px)/3);border-radius:10px}
+.dialog.pathsModal .questChapters button{border-radius:10px}
+
+.pathSummaries .explorationSummary small{font-size:20px;font-weight:700;line-height:1.3;color:#294f43;font-variant-numeric:tabular-nums}
+
+.pathSummaries .explorationSummary{position:relative;padding-right:46px}.pathSummaries .explorationSummary>.explorationArrow{position:absolute;right:14px;top:50%;transform:translateY(-50%);display:grid;place-items:center}@media(max-width:420px){.pathSummaries .explorationSummary{padding-right:42px}.pathSummaries .explorationSummary>.explorationArrow{right:10px}}
+.pathSummaries .explorationSummary{background:transparent;border:1px solid #294f4366;box-shadow:none;color:#294f43}.pathSummaries .explorationSummary:hover{background:#294f430c}
+/* Explore activities use the same quiet outlined treatment as secondary buttons. */
+.exploreList label{background:transparent;border:1px solid #294f4366;border-radius:14px;align-items:center;justify-content:space-between;box-shadow:none}
+.exploreList label:hover{background:#294f430c}
+.exploreList label[data-complete=true]{background:transparent;border-color:#294f4366}
+.exploreList label[data-complete=true]:hover{background:#294f430c}
+.exploreList label>span{order:0;flex:1;min-width:0}
+.exploreList input{order:1;margin:0;align-self:center;appearance:none;-webkit-appearance:none;width:24px;height:24px;flex:0 0 24px;border:1.5px solid #78906c;border-radius:8px;background:transparent;display:grid;place-content:center}
+.exploreList input:checked{background:#294f43;border-color:#294f43}
+.exploreList input:checked::after{content:'';width:6px;height:11px;border:solid #fff0cc;border-width:0 2px 2px 0;transform:translateY(-1px) rotate(45deg)}
+.exploreList input:focus-visible{outline:3px solid #c9a252;outline-offset:3px}
+@media(forced-colors:active){.exploreList input{appearance:auto;-webkit-appearance:auto}.exploreList input::after{display:none}}
+.exploreProgress{height:9px;background:#dfd2aa;accent-color:#294f43;border-radius:5px}
+.exploreProgress::-webkit-progress-bar{background:#dfd2aa;border-radius:5px}
+.exploreProgress::-webkit-progress-value{background:#294f43;border-radius:5px}
+.exploreProgress::-moz-progress-bar{background:#294f43;border-radius:5px}
+.headerBack{background:#e4d8b3;color:#294a3e;border-color:#96a182;box-shadow:none}.headerBack:hover{background:#d4cfaa}
+.exploreRow{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px;border:1px solid #294f4366;border-radius:14px;background:transparent;min-height:76px}.exploreCopy{display:grid;gap:5px;flex:1;min-width:0}.exploreIndicator{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:0 0 76px;min-height:48px;border:1px solid #8b9c79;border-radius:12px;color:#294f43;background:transparent;text-align:center}.exploreIndicator strong{font-size:17px}.exploreIndicator small{font-size:10px}.exploreIndicator[data-complete=true]{flex-basis:36px;min-height:36px;background:#294f43;border-color:#294f43;color:#fff0cc}.explorePending{width:12px;height:2px;background:#8b9c79;border-radius:2px}@media(max-width:420px){.exploreRow{padding:13px;gap:10px}.exploreIndicator{flex-basis:67px}}
+.exploreRow[data-complete=true] .exploreCopy>strong{text-decoration:line-through;text-decoration-thickness:1.5px;text-decoration-color:#708568;color:#61735b}
+
+.exploreChecklist .exploreTitle{margin:8px 0 16px;font-size:22px;line-height:1.25;letter-spacing:-.3px;color:#294f43}
+
+.exploreIntro{gap:16px;margin-bottom:22px}.exploreIntro p{flex-basis:100%;line-height:1.65}.exploreList{margin-top:24px}
+
+.pathIntro{margin-bottom:24px;width:100%;box-sizing:border-box;padding:20px 22px;border-radius:18px;background:#dfe3c8;color:var(--ink,#304d42)}
+.pathIntro h3{margin:0 0 8px;font-size:18px;line-height:1.3}
+.pathIntro p{margin:0;max-width:none;font-size:14px;line-height:1.55;color:#626f5c}
+.pathIntro p+p{margin-top:8px}
+
+@media(min-width:601px){.dialog.pathsModal .panel{width:100vw;height:100dvh;max-height:100dvh!important;border:0;border-radius:0;box-shadow:none}}
+
+@media(min-width:601px){.pathsModal .panel>div:first-of-type{width:min(720px,100%);align-self:center;box-sizing:border-box}}
+
+.dialog.pathsModal.entering .panel{animation:pathsFadeIn .26s ease-out both}
+.dialog.pathsModal.leaving .panel{animation:pathsFadeOut .2s ease-in both}
+@keyframes pathsFadeIn{from{opacity:0}to{opacity:1}}
+@keyframes pathsFadeOut{from{opacity:1}to{opacity:0}}
+@media(prefers-reduced-motion:reduce){.dialog.pathsModal.entering .panel,.dialog.pathsModal.leaving .panel{animation:none}}
+
+/* Static textured artwork belongs to the full-width scroller, so its sides travel
+   with the lessons. Only the inner content keeps the original 720px footprint. */
+.dialog.pathsModal .panel{background:#faf2da!important;--modal-surface:#faf2da!important}
+.pathsModal .panel>.header{background:#faf2da!important}
+.pathsModal .panel>div:first-of-type{width:100%;align-self:stretch;background:#1255ee url('/stories/paths/abstract-island.svg?v=diagonal-2') center top / 100% 1200px repeat-y local}
+.pathsModal .panel>div:first-of-type>.subpage,.pathsModal .panel>div:first-of-type>.subpageBack{max-width:672px;margin-inline:auto}
+.pathsModal .learningPath .questPath{background:none}
+.pathsModal .learningPath .questRoad path{stroke:#a8bdaa}
+@media(max-width:600px){.pathsModal .panel>div:first-of-type{background-size:100% 900px}}
+.pathsModal .learningPath>details,.pathsModal .pathSummaries{background:#faf2daf5;border-radius:16px}
+/* The journey scrolls behind its floating title and close control. */
+.pathsModal .panel{position:relative}
+.pathsModal .panel>.header{position:absolute!important;inset:0 0 auto;z-index:10;background:transparent!important;border-bottom:0;pointer-events:none}
+.pathsModal .panel>.header button{pointer-events:auto}
+.pathsModal .panel>.header h2{color:#fff3d2;text-shadow:0 1px 3px #123c35,0 0 12px #123c3544}
+.pathsModal .panel>div:first-of-type{padding-top:102px}
+@media(max-width:600px){.pathsModal .panel>div:first-of-type{padding-top:94px}}
+/* Settings, exploration and discoveries share the full island canvas. */
+.dialog.fullModal{position:fixed;inset:0;width:100vw;max-width:none;height:100dvh;max-height:none;margin:0;border:0;border-radius:0;transform:none}
+.dialog.fullModal .panel{position:relative;width:100%;height:100dvh;max-height:100dvh!important;border-radius:0;border:0;box-shadow:none}
+.fullModal .panel>.header{position:absolute!important;inset:0 0 auto;z-index:10;background:transparent!important;border-bottom:0;pointer-events:none}
+.fullModal .panel>.header button{pointer-events:auto}
+.fullModal .header h2{font-family:IslandBrush,sans-serif;font-weight:400;font-size:clamp(22px,3vw,30px);color:#fff3d2;text-shadow:0 1px 3px #123c35}
+.fullModal .panel>div:first-of-type{width:100%;align-self:stretch;padding-top:102px;background:#1255ee url('/stories/paths/abstract-island.svg?v=diagonal-2') center top/100% 1200px repeat-y local}
+.fullModal .panel>div:first-of-type>.subpage,.fullModal .panel>div:first-of-type>.subpageBack{max-width:672px;margin-inline:auto}
+.fullModal:not(.pathsModal) .content{background:#fff2d3f5;padding:26px;border-radius:28px 45px 24px 24px;box-shadow:0 7px 0 #173e3726}
+.fullModal .content>h3,.exploreTitle{font-family:IslandBrush,sans-serif;font-weight:400!important;font-size:24px!important}
+.fullModal .settingsEntries button{background:#b6ddd0;border:0;border-radius:18px;box-shadow:0 4px 0 #173e3726}
+.fullModal .settingsEntries button:nth-child(2){background:#f5ce6b}
+.fullModal .toggle{background:#fff9e7;border:1px solid #244d4033;border-radius:18px}
+.fullModal .times button{background:#f1d57d;border-radius:22px 16px 24px 14px}
+.fullModal .times button[aria-pressed=true]{background:#244d40;color:#fff3d2}
+.exploreChecklist{background:#fff2d3f5;border-radius:26px 45px 24px 24px;padding:24px}
+.exploreList .exploreRow{background:#f6dc91;border:0;border-radius:18px 12px 22px 14px;box-shadow:0 4px 0 #244d401a}
+.exploreList li:nth-child(even) .exploreRow{background:#c3ded0}
+.exploreList .exploreRow[data-complete=true]{background:#d8e7bd}
+@media(max-width:600px){.fullModal .panel>div:first-of-type{padding-top:94px;background-size:100% 900px}.fullModal:not(.pathsModal) .content,.exploreChecklist{padding:18px}.fullModal .header h2{font-size:22px}}
+.dialog.fullModal.entering .panel{animation:pathsFadeIn .26s ease-out both}
+.dialog.fullModal.leaving .panel{animation:pathsFadeOut .2s ease-in both}
+.fullModal:not(.pathsModal) .panel>div:first-of-type{background-image:url('/stories/paths/settings-coast.svg');background-size:100% 1200px}
+@media(prefers-reduced-motion:reduce){.dialog.fullModal.entering .panel,.dialog.fullModal.leaving .panel{animation:none}}
+
+/* Settings use the journey's tactile cards, with open coast between sections. */
+.fullModal .content.settingsJourney{background:transparent;padding:0;box-shadow:none;border-radius:0;display:grid;gap:28px;margin-top:12px;padding-bottom:24px}
+.settingsEyebrow{margin:0;color:#fff3d2;font-size:11px;font-weight:800;letter-spacing:.18em;text-shadow:0 1px 3px #123c35}
+.settingsJourney .settingsEntries{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.settingsJourney .settingsEntries>div{margin:0;min-width:0}
+.fullModal .settingsJourney .settingsEntries button{height:100%;min-height:100px;margin:0!important;padding:20px;gap:14px;text-align:left;border:0!important;border-radius:28px 34px 25px 22px;background:#f9d665 url('/stories/films/assets/entry-grain.png')!important;background-blend-mode:soft-light!important;color:#203e38!important;box-shadow:0 6px 0 #173e3755!important;transition:transform .18s,box-shadow .18s}
+.fullModal .settingsJourney .settingsEntries>button:nth-child(2){background-color:#beded1!important}
+.fullModal .settingsJourney .settingsEntries>div:nth-child(3) button{background-color:#efabd4!important}
+.fullModal .settingsJourney .settingsEntries>div:nth-child(4) button{background-color:#fff2d3!important}
+.settingsJourney .entryCopy small{font-size:12px}
+.preferenceCard{min-width:0;padding:24px;border-radius:30px 42px 28px 24px;background:#fff2d3 url('/stories/films/assets/entry-grain.png');background-blend-mode:soft-light;box-shadow:0 7px 0 #173e3738}
+.settingsJourney .preferenceCard h3{font:400 28px/1.25 IslandBrush,sans-serif;margin:0 0 14px}
+.settingsJourney .times{gap:14px;margin:20px 0 6px}
+.settingsJourney .times button{min-height:104px;border:0;background:#f9d665;box-shadow:0 5px 0 #b7953b;font-size:15px;transition:transform .18s,box-shadow .18s}
+.settingsJourney .times button:nth-child(2){background:#efabd4;box-shadow:0 5px 0 #b5739c}
+.settingsJourney .times button:nth-child(3){background:#beded1;box-shadow:0 5px 0 #81a99a}
+.settingsJourney .times button[aria-pressed=true]{background:#244d40;color:#fff3d2;outline:3px solid #f9d665;outline-offset:3px;box-shadow:0 5px 0 #142e28}
+.settingsJourney .toggle{padding:18px;gap:14px;border:0;background:#e4ecd9;border-radius:20px;transition:transform .18s}
+.settingsJourney .toggle small{color:#40594c}
+.settingsJourney .volume{padding:16px 6px 24px;gap:8px}
+.settingsJourney .volume output{background:#f9d665;border-radius:8px;padding:3px 8px;min-width:42px;text-align:center}
+.settingsJourney .volume>span{align-items:center}
+.settingsJourney .volume:last-child{padding-bottom:0}
+.settingsJourney .voiceSelect{padding-bottom:0;flex-wrap:wrap}
+.settingsJourney .voiceSelect select{background:#beded1;max-width:100%;min-width:0}
+@media(hover:hover){.fullModal .settingsJourney .settingsEntries button:hover{transform:translateY(-4px);box-shadow:0 10px 0 #173e3755!important}.settingsJourney .times button:hover{transform:translateY(-3px)}.settingsJourney .toggle:hover{background:#d5e4c5}}
+.fullModal .settingsJourney .settingsEntries button:active,.settingsJourney .times button:active{transform:translateY(3px);box-shadow:0 2px 0 #173e3755!important}
+@media(max-width:600px){.fullModal .content.settingsJourney{padding:0 0 20px;gap:24px}.preferenceCard{padding:20px 16px}.settingsJourney .settingsEntries{gap:14px}.fullModal .settingsJourney .settingsEntries button{padding:16px 13px;min-height:105px;font-size:14px}.settingsJourney .times{gap:10px}.settingsJourney .toggle{padding:16px 12px}.settingsJourney .preferenceCard h3{font-size:25px}}
+@media(prefers-reduced-motion:reduce){.fullModal .settingsJourney .settingsEntries button,.settingsJourney .times button,.settingsJourney .toggle{transition:none;transform:none!important}}
+
+@media(max-width:600px){.shortcutList>div{grid-template-columns:minmax(80px, .8fr) minmax(0,1.2fr);gap:12px}}
+.fullModal.ballsModal .panel>div:first-of-type{background:#32775c url('/stories/films/assets/entry-grain.png') repeat local;background-size:auto;background-blend-mode:soft-light}
+.triggers .circle{background:var(--island-control-face);background-blend-mode:soft-light;color:#244d40;border:3px solid #fff2cd;box-shadow:var(--island-control-shadow);transition:translate .16s,box-shadow .16s}
+.triggers .circle:active{translate:0 3px;box-shadow:0 2px 0 #a8863d,0 0 0 4px #fff2cd40}
+/* Keep the same content origin when navigating between the journey views. */
+.pathsModal .content{margin-top:0}
+.pathsModal .exploreChecklist{padding:32px}
+.pathsModal .exploreIntro{margin-top:0}
+@media(max-width:600px){.pathsModal .exploreChecklist{padding:24px 22px}}
+.fullModal.ballsModal .panel>div:first-of-type{background:#32775c url('/stories/paths/ball-hunt-coast.svg') center top/100% 1200px repeat-y local;background-blend-mode:normal}
+.fullModal.exploreModal .panel>div:first-of-type{background:#254c65 url('/stories/paths/explore-coast.svg') center top/100% 1200px repeat-y local}
+@media(max-width:600px){.fullModal.ballsModal .panel>div:first-of-type,.fullModal.exploreModal .panel>div:first-of-type{background-size:100% 900px}}
+/* A brief sparkle invites discovery without a persistent animation loop. */
+.triggers .questsTrigger{position:relative;overflow:visible;border-radius:14px;background-color:#ed9dce;box-shadow:0 5px 0 #aa6590,0 0 0 4px #fff2cd40}
+.triggers .questsTrigger:active{box-shadow:0 2px 0 #aa6590,0 0 0 4px #fff2cd40}
+.questsTrigger::before,.questsTrigger::after{content:'';position:absolute;inset:-13px;pointer-events:none;opacity:0;background:radial-gradient(circle at 8% 23%,#fff2cd 0 2px,transparent 3px),radial-gradient(circle at 88% 12%,#f9d665 0 3px,transparent 4px),radial-gradient(circle at 93% 78%,#ed9dce 0 2px,transparent 3px),radial-gradient(circle at 18% 95%,#f9d665 0 2px,transparent 3px);animation:pathSparkle 1.5s ease-out 1s 2}
+.questsTrigger::after{rotate:45deg;animation-delay:1.6s}
+@keyframes pathSparkle{0%{opacity:0;scale:.75}25%{opacity:1}100%{opacity:0;scale:1.18}}
+@media(hover:hover){.questsTrigger:hover::before{animation:pathHoverSparkle 1s ease-out}.questsTrigger:hover::after{animation:pathHoverSparkle 1s .2s ease-out}}
+@keyframes pathHoverSparkle{0%{opacity:0;scale:.75}25%{opacity:1}100%{opacity:0;scale:1.18}}
+@media(prefers-reduced-motion:reduce){.questsTrigger::before,.questsTrigger::after{animation:none!important}.triggers .circle{transition:none}}
+/* HUD and modal navigation share their corner anchors, including narrow phones. */
+@media(max-width:600px),(pointer:coarse){.triggers{top:calc(16px + env(safe-area-inset-top,0px));right:calc(18px + env(safe-area-inset-right,0px))}}
+/* Narration and mobile preferences share the tactile island controls. */
+.settingsJourney .preferenceCard .toggle{background:#e9c16b url('/stories/films/assets/entry-grain.png');background-blend-mode:soft-light;border:3px solid #fff2cd;border-radius:22px;box-shadow:0 4px 0 #a8863d;padding:16px;color:#244d40}
+.settingsJourney .toggle .switch{border:2px solid #fff2cd;background:#f5dfab;color:#244d40;min-height:40px;display:grid;place-items:center;box-shadow:0 3px 0 #a8863d}
+.settingsJourney .toggle[aria-pressed=true] .switch{background:#244d40;color:#fff2cd;box-shadow:0 3px 0 #17352b}
+.settingsJourney .toggle:active{translate:0 2px;box-shadow:0 2px 0 #a8863d}
+.settingsJourney .voiceSelect select{border:3px solid #fff2cd;border-radius:16px;background:#e9c16b url('/stories/films/assets/entry-grain.png');background-blend-mode:soft-light;box-shadow:0 4px 0 #a8863d;min-height:48px;padding:10px 14px}
+.volume input[type=range]{appearance:none;-webkit-appearance:none;height:48px;background:transparent;cursor:pointer}
+.volume input[type=range]::-webkit-slider-runnable-track{height:12px;border-radius:8px;background:#b6cbb6;border:2px solid #fff2cd}
+.volume input[type=range]::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;width:28px;height:28px;margin-top:-10px;border:3px solid #fff2cd;border-radius:50%;background:#244d40;box-shadow:0 3px 0 #17352b}
+.volume input[type=range]::-moz-range-track{height:10px;border:2px solid #fff2cd;border-radius:8px;background:#b6cbb6}
+.volume input[type=range]::-moz-range-progress{height:10px;border-radius:8px;background:#244d40}
+.volume input[type=range]::-moz-range-thumb{width:22px;height:22px;border:3px solid #fff2cd;border-radius:50%;background:#244d40;box-shadow:0 3px 0 #17352b}
+
+/* Keep iOS rubber-band scrolling inside an opaque viewport-sized surface. */
+.dialog.fullModal{overflow:hidden;overscroll-behavior:none;background:#087451}
+.dialog.fullModal .panel{height:100%!important;max-height:100%!important;min-height:0}
+.fullModal .panel>div:first-of-type{overscroll-behavior:none;background-attachment:scroll;overflow-x:hidden}
+.dialog.fullModal.entering .panel{animation-fill-mode:backwards}
+/* Let content fade beneath pinned navigation, over the same static backdrop. */
+.dialog.fullModal .panel{background:#1255ee url('/stories/paths/settings-coast.svg') center top/100% 1200px repeat-y!important}
+.dialog.fullModal.pathsModal .panel{background-image:url('/stories/paths/abstract-island.svg?v=diagonal-2')!important}
+.dialog.fullModal.ballsModal .panel{background-image:url('/stories/paths/ball-hunt-coast.svg')!important}
+.dialog.fullModal.exploreModal .panel{background-image:url('/stories/paths/explore-coast.svg')!important}
+.fullModal .panel>div:first-of-type{-webkit-mask-image:linear-gradient(to bottom,transparent 0,transparent 72px,#000 106px,#000 100%);mask-image:linear-gradient(to bottom,transparent 0,transparent 72px,#000 106px,#000 100%)}
+@media(max-width:600px){.dialog.fullModal.pathsModal .panel{background-size:100% 900px!important}.fullModal .panel>div:first-of-type{-webkit-mask-image:linear-gradient(to bottom,transparent 0,transparent 64px,#000 96px,#000 100%);mask-image:linear-gradient(to bottom,transparent 0,transparent 64px,#000 96px,#000 100%)}}
+
+/* A shallow, feathered blur protects pinned titles without a hard header edge. */
+.fullModal .panel>.header::before{content:'';position:absolute;inset:0 0 auto;height:112px;z-index:-1;pointer-events:none;-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);-webkit-mask-image:linear-gradient(#000 0%,#000b 48%,transparent 100%);mask-image:linear-gradient(#000 0%,#000b 48%,transparent 100%)}
+.fullModal .panel>div:first-of-type{-webkit-mask-image:linear-gradient(to bottom,transparent 0,transparent 48px,#0002 64px,#0008 86px,#000 118px);mask-image:linear-gradient(to bottom,transparent 0,transparent 48px,#0002 64px,#0008 86px,#000 118px)}
+@media(max-width:600px){.fullModal .panel>.header::before{height:104px}.fullModal .panel>div:first-of-type{-webkit-mask-image:linear-gradient(to bottom,transparent 0,transparent 42px,#0002 58px,#0008 78px,#000 108px);mask-image:linear-gradient(to bottom,transparent 0,transparent 42px,#0002 58px,#0008 78px,#000 108px)}}
+@media(hover:hover){.questStop button:not(:disabled):hover{translate:0 -4px;scale:1.06;filter:brightness(1.08)}}
+.questStop button:not(:disabled):active{translate:0 4px;scale:.96;box-shadow:0 2px 0 #416741}
+.questStop button:not(:disabled):focus-visible{outline:3px solid #fff2cd;outline-offset:5px}
+@media(prefers-reduced-motion:reduce){.questStop button:not(:disabled):hover,.questStop button:not(:disabled):active{translate:none;scale:1}}
