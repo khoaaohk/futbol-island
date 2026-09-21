@@ -6,6 +6,10 @@ Give each feature a clear learning purpose, including gameplay, quizzes, explora
 
 For animal costumes, explain the associated club, its mascot and the verified story behind the connection. Clearly distinguish real club history, a club's fictional mascot backstory, and any original game fiction. Preserve the player's underlying character when equipping a costume.
 
+## Story animation continuity
+
+For story work, follow the [riso art bible and engine contract](docs/story-production/riso/RISO_BIBLE.md) and the [builder's guide](docs/story-production/riso/ENGINE.md). Every path story is a riso canvas film in `lib/paths/riso/stories/<id>.ts` (one agent per file; the engine in `lib/paths/riso/` and `components/StoryFilmPlayer.tsx` belong to the engine agent) played by the one player; the earlier film systems were removed (`docs/story-production/riso/CLEANUP.md`). Seams are forward passages through painted material (never zoom in and bounce back out), every cue has a visible consequence, and each story keeps its own compositions. Preserve the sleeping playback loop, the kept `StoryPlaybackBar` and the narration audio/cue data. Gates: `scripts/review-riso-story.mjs` (0 seam diffs), `scripts/check-path-films-browser.mjs` (all 18 stories live), `scripts/check-riso-films-browser.mjs` (one story, four viewports).
+
 ## Performance continuity
 
 Before changing rendering, movement, traffic, effects, audio, mobile controls, maps or previews, read [the performance reference](docs/performance-guide.md). Preserve its implemented optimizations and interaction guarantees, and check the current code before proposing work already completed. Consult [the dated measurements](docs/flight-performance-2026-09-14.md) for evidence and rejected experiments.

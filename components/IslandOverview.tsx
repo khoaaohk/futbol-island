@@ -1,6 +1,6 @@
 import {useEffect,useRef,useId,useMemo,memo} from 'react';
 import {ARCADE_DOOR,COACHES_DOOR,STORE_DOOR,VENUES,type Format} from '@/lib/town/venues';
-import {ISLAND_SHORE,SHORE_SAND,NORTH_BEACH_UMBRELLAS,NORTH_BEACH_PATHS,onIsland} from '@/lib/town/shoreline';
+import {ISLAND_SHORE,SHORE_SAND,INTERIOR_GRASS,INTERIOR_GRASS_COLOR,NORTH_BEACH_UMBRELLAS,NORTH_BEACH_PATHS,onIsland} from '@/lib/town/shoreline';
 import {FLIGHT_BOUNDS,FLIGHT_WATER_MARGIN} from '@/lib/town/simulation';
 export type MapFootprint={x:number;z:number;w:number;d:number;cornerRadius?:number};
 export type MapDestination=Format|'square'|'store'|'coaches';
@@ -23,6 +23,7 @@ function IslandOverview({roads,buildings,position,markerPosition,onSelect,active
   </g>
   {localMap&&<g aria-label="Flight boundary" pointerEvents="none"><rect x={b.minX-8} y={b.minZ-8} width={w+16} height={h+16} mask={`url(#${boundaryMask})`} style={{fill:'#795433',fillOpacity:1,stroke:'none'}}/></g>}
   <polygon points={shorePoints} fill="#e1d3ae" stroke="#f1d6a1" strokeWidth="5"/>
+  <polygon aria-label="Interior grass" points={INTERIOR_GRASS.map(p=>`${p.x},${p.z}`).join(' ')} fill={INTERIOR_GRASS_COLOR}/>
   <g aria-label="Ferry dock"><path d="M210 190H238L235 204L226.5 215H210Z" fill="#b98f62" stroke="#91704d" strokeWidth=".7"/><rect x="202" y="190.5" width="8" height="5" fill="#b98f62"/><rect aria-label="Ferry boarding ramp" x="234" y="204" width="10" height="3.2" fill="#b98f62" stroke="#fff0cf" strokeWidth=".3"/><rect x="242" y="190.5" width="8" height="17" rx="2" fill="#477c6a"/><rect x="243" y="194" width="6" height="10" fill="#fff0cf"/></g>
   {SHORE_SAND.map((p,i)=>{const next=SHORE_SAND[(i+1)%SHORE_SAND.length];return <polygon key={'sand'+i} points={[p.outer,next.outer,next.inner,p.inner].map(p=>`${p.x},${p.z}`).join(' ')} fill="#f1d6a1"/>;})}
   {NORTH_BEACH_PATHS.map((r,i)=><rect key={'beach-path'+i} x={r.x-r.w/2} y={r.z-r.d/2} width={r.w} height={r.d} fill="#eddfbb"/>)}

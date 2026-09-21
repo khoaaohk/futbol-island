@@ -1,0 +1,30 @@
+# Futsal and 9v9 phrase illustration refinement
+
+The live phrase renderer now calls `phraseFutsalNineArtwork.ts` before its shared fallback. This supersedes the earlier chapter-level `cinematicFutsalNine.ts` illustrations. Scripts, audio, captions and UI are unchanged. There are no full-body figures in the new renderer.
+
+Existing visual anchors remain tied to word onsets in the shipped AAC. Each selected phrase stages several actions through its own normalized time: an initial camera move, an object/material change, then a reveal or redistribution. This is not a fixed quota of equally spaced slides.
+
+- **Woven Court:** travel along a strand, arrive at a close over/under junction, show the football's load deforming connected strands, pull out, and show support disappearing while the remaining strand thins and sags. The benchmark second passage is reviewed at 0.4, 2, 4, 6 and 8.5 seconds, preserving its anchors at 0, 3.02 and 7.08 seconds.
+- **Kite:** begin with a cropped boot preparing beside the ball; pull out to reveal the intended open patch; an opposing boot closes that patch; shift attention toward another opening. Later kite cloth deforms in the wind before its string angle changes. Opening passage reviewed at 0.3, 1.6, 3.4, 5.7 and 8.3 seconds, preserving anchors at 0, 4 and 7.68 seconds.
+- **Chalk Line:** marks actually draw as the chalk/pencil moves. Branches reveal further choices; close-up touches and blocked space illustrate the practical cue.
+- **Different Tides:** the camera follows a shore into differently shaped channels whose water advances at different rates. The quiet-growth passage travels below the soil to growing roots rather than holding on a static plant.
+- **Harbour at Night:** a sail folds down its mast while the camera widens to reveal an intact moored hull. Resting-ball, withdrawing-boot, moon, pillow and opening-book close-ups make effort and rest visible.
+- **Unfinished Map:** a pencil traces an action, the camera follows a revised branch, and a further route opens. The practical football passage checks a blocker before changing angle.
+
+No new assets, audio elements, timers, frame loops, offscreen canvases or renderers. Bounded Canvas paths reuse the shared player's scheduling, grain, phrase selection and transition machinery. Detailed illustrations add path work compared with generic shapes; no physical-device heat claim is made.
+
+Validation: isolated TypeScript compilation and project typecheck pass. All 36 audio SHA-256 hashes match the alignment reference, and all 108 phrase anchors coincide with recorded word onsets and remain within measured chapter durations. Chromium rendered 540 raw phase samples without errors. Phone and desktop sequences were captured for the key woven/kite passages, alongside harbour/map close-ups. Evidence: `/tmp/fi-six-phrase-contact.png`, `/tmp/fi-engine-woven-court-390-*.png`, `/tmp/fi-engine-kite-turned-390-*.png` and corresponding 1440px captures. Browser fixture: `/tmp/fi-cinematic-six-audit.cjs`.
+
+This is local authoring validation, not a deployment or physical-phone performance measurement. Shared player UI and routed playback integration are covered by the coordinator's audit.
+
+The final wired-engine run adds 216 phase/transition samples at each viewport (432 total), with no page errors. The custom renderer handles 92 of the 108 phrases; the other 16 retain shared semantic motifs. All 36 reduced-motion phone compositions are pixel-stable. At 1440px, all custom compositions are stable, while three shared fallback compositions produce small edge-raster differences despite identical frozen inputs and a test-only readback context: 1,630–2,074 color channels out of 5,184,000, maximum difference 11–18/255. This finding was passed to the shared renderer owner; it is not evidence of an advancing animation. The runtime canvas context and reduced-motion scheduling were not changed. Final project typecheck passes.
+
+## Continuous Woven Court benchmark
+
+The user rejected phrase-level composition changes, so Woven Court now bypasses that renderer. `drawFutsalNineContinuous` handles only `woven-court`; the other five films remain unchanged pending benchmark review. The shared host applies its fixed responsive frame and grain, with no phrase zoom, dissolve, wipe or portal.
+
+One persistent fabric and one football remain in continuous world coordinates for the whole film. The camera follows stitched orange material to the existing junction. Connected threads share its deformation. Supporting threads physically withdraw as the orange strand thins and sags, then re-enter the same junction. The same ball travels across the fabric. Orange and pink exchange forward/support positions without changing identity. When the ball leaves its supported position, the existing threads separate and then reconnect to gather it back. The ending widens over that same fabric.
+
+Camera position, zoom, support, sag, ball travel and role exchange are smooth tracks tied to the existing absolute narration onsets. Chapter boundaries do not reset any of these values. Seeking samples the same deterministic world state; reduced motion selects one fixed state within the current chapter. No new assets or player/UI/audio changes.
+
+Validation: full project typecheck passes. Seventeen phrase/chapter boundary comparisons at ±1ms show no image jump. Thirty-six phone/desktop frames cover the entire progression and were inspected, including the junction, unsupported strand, role exchange and recovery. Chromium recorded the complete 60-second movement with zero page errors. Recording `/tmp/fi-woven-continuous-60s.webm`; review copy with the existing six narration clips and their exact measured chapter padding: `/tmp/fi-woven-continuous-with-narration.mp4`. These are temporary authoring artifacts, not shipped video replacements. Boundary evidence `/tmp/fi-woven-continuity.json`; dense frames `/tmp/fi-woven-continuous-{390,1440}-*.png`. Root review is the next step before expanding this approach to other films.

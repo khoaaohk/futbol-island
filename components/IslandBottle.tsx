@@ -4,7 +4,66 @@ import {createPortal} from 'react-dom';
 import {DoneButton} from './DoneButton';
 import styles from './IslandBottle.module.css';
 const messages=[
-"You’re doing great. Give yourself a little credit today.","Have an amazing day. There’s only one you, and that’s a good thing.","You don’t have to be perfect to make someone smile.","Small steps count. Keep going at your own pace.","You belong here, exactly as you are.","A fresh start can be as small as your next breath.","Your kindness might be the best part of someone’s day.","There is more to you than one difficult moment.","You bring something to the team that nobody else can.","Be as kind to yourself as you are to a good friend.","Today is a lovely day to try again.","You’re allowed to learn as you go.","A little courage can take you somewhere new.","You don’t need to win to be worth cheering for.","Look how far you’ve come. That matters.","Your smile has a way of making the day brighter.","You can take a break and still be moving forward.","You have good things to share with the world.","One kind word can make a big difference.","You’re growing, even when you can’t see it yet.","There’s room for your way of doing things.","Someone is glad you’re on their team.","A mistake is a moment, not who you are.","Keep a little space in today for something you enjoy.","You deserve encouragement, including from yourself.","Your effort matters, even when nobody is watching.","You can be brave and nervous at the same time.","Today doesn’t have to be extraordinary to be good.","You make this island a little brighter.","It’s okay to ask for a hand. We all need one sometimes.","The next good moment could be a small one. Notice it.","You’re more than the score at the end of the game.","Bring your curiosity. You don’t need all the answers.","You can start small and still dream big.","There is strength in being gentle.","Your best today is enough for today.","Let yourself enjoy how good it feels to play.","You have time to become who you want to be.","A warm hello can be the start of something lovely.","You’re worth looking after. Take care of yourself today.","A hard day doesn’t erase your progress.","You can make someone feel included today.","You don’t need to compare your journey with anyone else’s.","Celebrate a tiny win. It still counts.","There’s something wonderful about showing up as yourself.","You’re allowed to feel proud of yourself.","A little patience with yourself goes a long way.","You might be someone’s reason to keep trying.","Your voice matters. There’s room for it here.","You can turn the page without forgetting what you learned.","You deserve a day with a little laughter in it.","Keep the things that make you, you.","Being a good teammate starts with caring.","You’ve made it through tricky days before.","Take the next step. You don’t have to see the whole path.","You can leave a place a little kinder than you found it.","Good things often begin with giving it a try.","There’s no rush to have everything figured out.","You are welcome. You are valued. You belong.","Here’s a little reminder: you’ve got something special."
+  "Take a moment to notice what went well today.",
+  "Check in with someone you haven’t spoken to in a while.",
+  "A good teammate listens as well as they speak.",
+  "Pick one thing to practise. Give it your attention.",
+  "Leave a little time for something you enjoy.",
+  "Thank someone for something specific.",
+  "Invite someone into the game.",
+  "You can ask for help before you have it figured out.",
+  "A missed chance is something to learn from.",
+  "Try to understand before offering advice.",
+  "A short walk can be a useful break.",
+  "Notice the effort behind someone’s improvement.",
+  "Make room for someone else’s idea.",
+  "It’s fine to take your time learning something new.",
+  "Say hello to someone you usually walk past.",
+  "One focused practice is enough for today.",
+  "You don’t need to fill every quiet moment.",
+  "Give someone your attention without checking your phone.",
+  "Ask a teammate what they’re working on.",
+  "There’s usually more than one way to solve a problem.",
+  "Rest is part of getting ready for the next game.",
+  "If someone helped you, let them know.",
+  "Try something without worrying about being good at it yet.",
+  "Let the last mistake go before the next play.",
+  "A small favour can make someone’s day easier.",
+  "Keep one promise you made to yourself.",
+  "Ask a question you’ve been putting off.",
+  "Look for the teammate who hasn’t had a turn.",
+  "Take a breath before you respond.",
+  "Enjoy a game without keeping score.",
+  "You can change your mind after learning something new.",
+  "Offer a hand with something ordinary.",
+  "Pay attention to what makes practice enjoyable.",
+  "Give credit to the person who set up the chance.",
+  "You don’t have to solve everything today.",
+  "Tell someone what you appreciated about their help.",
+  "Listen to the end of someone’s story.",
+  "Try a different approach if the first one isn’t working.",
+  "Keep the next step small enough to start.",
+  "Make it easy for someone new to join in.",
+  "Ask how someone’s day went, and leave time for the answer.",
+  "Share something you’ve learned recently.",
+  "Put a little care into an everyday task.",
+  "Let someone else choose the game today.",
+  "Take a break before frustration takes over.",
+  "A good question can be more useful than a quick answer.",
+  "Notice a detail you usually miss.",
+  "Be patient with someone learning the basics.",
+  "Follow up on something a friend told you.",
+  "Bring the same respect to practice as you do to a match.",
+  "Try to leave shared spaces ready for the next person.",
+  "Ask for feedback on one thing, not everything.",
+  "Make time for a conversation that isn’t about results.",
+  "You can disagree and still listen carefully.",
+  "Keep practising the part you find interesting.",
+  "Let a teammate know when their pass helped.",
+  "Share the useful tip someone once gave you.",
+  "Choose a pace you can keep up.",
+  "Give yourself a moment to enjoy finishing something.",
+  "Find a reason to get outside today."
 ];
 function dailyNote(){const now=new Date();const key=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;const day=Math.floor(Date.UTC(now.getFullYear(),now.getMonth(),now.getDate())/86400000);return{key,text:messages[((day%messages.length)+messages.length)%messages.length],date:now.toLocaleDateString(undefined,{month:'long',day:'numeric',year:'numeric'})};}
 function OceanWaves({leaving,pattern,origin}:{leaving:boolean;pattern:string;origin:{x:number;y:number;width:number;tileHeight:number}}){
@@ -63,10 +122,10 @@ export function IslandBottleLogo(){
  useEffect(()=>{if(!host)return;const siblings=Array.from(host.children).filter(n=>!n.hasAttribute('data-bottle-overlay')) as HTMLElement[];const previous=siblings.map(n=>n.inert);siblings.forEach(n=>n.inert=true);host.setAttribute('data-bottle-open','true');(focus.current??host.querySelector<HTMLButtonElement>('[data-bottle-overlay] button'))?.focus();document.dispatchEvent(new CustomEvent('fi2-bottle-ocean',{detail:true}));return()=>{siblings.forEach((n,i)=>n.inert=previous[i]);host.removeAttribute('data-bottle-open');host.removeAttribute('data-bottle-leaving');document.dispatchEvent(new CustomEvent('fi2-bottle-ocean',{detail:false}));trigger.current?.focus({preventScroll:true});};},[host]);
  const close=()=>{if(leaving)return;clearTimeout(noteTimer.current);setLeaving(true);host?.setAttribute('data-bottle-leaving','true');timer.current=setTimeout(()=>{setHost(null);setLeaving(false);},matchMedia('(prefers-reduced-motion: reduce)').matches?0:940);};
  return <><button ref={trigger} data-island-logo aria-label="Your daily message in a bottle" className={styles.logo} onClick={()=>{const n=dailyNote();setNote(n);const parent=trigger.current?.closest('dialog');const surfaces=parent?Array.from(parent.querySelectorAll<HTMLElement>('section,section>div')):[];const surface=surfaces.find(el=>getComputedStyle(el).backgroundImage.includes('/stories/paths/'));const background=surface?getComputedStyle(surface):null;const bounds=surface?.getBoundingClientRect();setPattern(background?.backgroundImage.match(/url\(["']?([^"')]+)/)?.[1]??'/stories/paths/abstract-island.svg');setOrigin({x:bounds?.x??0,y:(bounds?.y??0)-(background?.backgroundAttachment==='local'?(surface?.scrollTop??0):0),width:bounds?.width??innerWidth,tileHeight:parseFloat(background?.backgroundSize.split(' ')[1]??'')||1200});setOpened(false);setOpening(false);setHost(trigger.current?.closest('dialog')??document.querySelector<HTMLElement>('.town-app')??document.body);}}><img src="/stories/paths/island-mark.svg" alt=""/><span className={styles.sparkles} aria-hidden="true"/></button>{host&&createPortal(<div data-bottle-overlay className={`${styles.ocean} ${leaving?styles.leaving:''}`} role="dialog" aria-modal="true" aria-labelledby="bottle-title" onKeyDown={e=>{e.stopPropagation();if(e.key==='Escape'){e.preventDefault();close();}if(e.key==='Tab'){const buttons=Array.from(e.currentTarget.querySelectorAll<HTMLButtonElement>('button'));const first=buttons[0],last=buttons[buttons.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}}}>
- <header><span>A LITTLE GOODNESS, DRIFTING YOUR WAY</span><DoneButton onDone={close}/></header>
+ <header><span>A NOTE FOR TODAY</span><DoneButton onDone={close}/></header>
  <OceanWaves leaving={leaving} pattern={pattern} origin={origin}/>
  <main className={styles.center}><p className={styles.date}>{note.date}</p><h2 id="bottle-title">A little message<br/>for you.</h2>
- {!opened?<button ref={focus} className={`${styles.bottleButton} ${opening?styles.opening:''}`} aria-label="Open today's message in a bottle" aria-disabled={opening} onClick={()=>{if(opening)return;document.dispatchEvent(new Event('fi2-bottle-pop'));setOpening(true);noteTimer.current=setTimeout(()=>{setOpened(true);setOpening(false);try{localStorage.setItem('fi2-bottle-open-date',note.key);}catch{}},matchMedia('(prefers-reduced-motion: reduce)').matches?0:360);}}><svg className={styles.bottle} viewBox="0 0 180 270" role="img" aria-label="A glass bottle with a note inside"><path d="M69 26H111V78L133 107L146 142V231L130 253H50L34 231V142L47 107L69 78Z" fill="#b8e3d48c" stroke="#e6f5d9" strokeWidth="4"/><path d="M35 144L57 132L62 231L51 251L35 230Z" fill="#6fb2a860"/><path d="M125 116L145 144V230L131 250L121 219Z" fill="#eef7d947"/><path d="M73 13h34v30H73Z" fill="#bc8b56" stroke="#ffdc91" strokeWidth="3"/><path d="M62 132l63-9 6 83-64 9Z" fill="#fff1ce"/><path d="m76 149 33-4m-32 18 35-5m-33 19 27-4" stroke="#769582" strokeWidth="3" strokeLinecap="round"/><path d="M49 149v70" stroke="#fff7de" strokeWidth="5" strokeLinecap="round" opacity=".6"/></svg><span className={styles.bottleLabel}>Open me</span><span className={styles.bottleSparkles} aria-hidden="true"><i/><i/><i/><i/><i/><i/><i/><i/><i/><i/><i/><i/></span></button>:<article className={styles.note} aria-live="polite"><span aria-hidden="true">✦</span><p>{note.text}</p><small>With a little love from the island.</small></article>}
+ {!opened?<button ref={focus} className={`${styles.bottleButton} ${opening?styles.opening:''}`} aria-label="Open today's message in a bottle" aria-disabled={opening} onClick={()=>{if(opening)return;document.dispatchEvent(new Event('fi2-bottle-pop'));setOpening(true);noteTimer.current=setTimeout(()=>{setOpened(true);setOpening(false);try{localStorage.setItem('fi2-bottle-open-date',note.key);}catch{}},matchMedia('(prefers-reduced-motion: reduce)').matches?0:360);}}><svg className={styles.bottle} viewBox="0 0 180 270" role="img" aria-label="A glass bottle with a note inside"><path d="M69 26H111V78L133 107L146 142V231L130 253H50L34 231V142L47 107L69 78Z" fill="#b8e3d48c" stroke="#e6f5d9" strokeWidth="4"/><path d="M35 144L57 132L62 231L51 251L35 230Z" fill="#6fb2a860"/><path d="M125 116L145 144V230L131 250L121 219Z" fill="#eef7d947"/><path d="M73 13h34v30H73Z" fill="#bc8b56" stroke="#ffdc91" strokeWidth="3"/><path d="M62 132l63-9 6 83-64 9Z" fill="#fff1ce"/><path d="m76 149 33-4m-32 18 35-5m-33 19 27-4" stroke="#769582" strokeWidth="3" strokeLinecap="round"/><path d="M49 149v70" stroke="#fff7de" strokeWidth="5" strokeLinecap="round" opacity=".6"/></svg><span className={styles.bottleLabel}>Open me</span><span className={styles.bottleSparkles} aria-hidden="true"><i/><i/><i/><i/><i/><i/><i/><i/><i/><i/><i/><i/></span></button>:<article className={styles.note} aria-live="polite"><span aria-hidden="true">✦</span><p>{note.text}</p><small>From Futbol Island.</small></article>}
  {opened&&<p className={styles.tomorrow}>Your next little message arrives tomorrow.</p>}</main>
  </div>,host)}</>;
 }

@@ -1,0 +1,23 @@
+{
+  "voice": "Kokoro af_heart",
+  "engine": "kokoro-onnx",
+  "speed": 0.86,
+  "clipDurations": [
+    8.5,
+    9.3,
+    8.0,
+    10.9,
+    10.3,
+    8.4
+  ],
+  "scriptSha256": [
+    "aeeae921ed25aa0f537cf462f5bf5e48319c0bdf2fe8b638c85091a1b88b6e74",
+    "f23d5df1ed60d608779cc8fc6a5070658c1f3777dc61eefcf5f1805ce097e8d2",
+    "f85bbae7e410a08eff1ed77071c9be82922c295e9307e1153e41d68c20ed4136",
+    "7cbc8eb93502b9a804327aeef76c9c86315b2823e02aa3a41f887d30072e7f65",
+    "058f5616e1fcfbc9c3af5d1eb87de9be18ac5c23bbc28f0b7a6d9385281114b4",
+    "36d47eb0056c4f6c0c938aea01b7e7946ed004495bc493c1b795630528d17025"
+  ],
+  "temporary": true,
+  "license": "Apache-2.0 model; MIT runtime"
+}

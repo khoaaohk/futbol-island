@@ -1,15 +1,16 @@
 import * as T from 'three';
-import {ISLAND_SHORE,shoreSandWidth} from './shoreline';
+import {createFieldLighting} from './fieldLighting';
+import {ISLAND_SHORE,shoreSandWidth,INTERIOR_GRASS,INTERIOR_GRASS_COLOR} from './shoreline';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {VENUES,FIELD_SURFACE_Y} from './venues';
 import {GOAL_DEPTH,goalPostRadius} from './goalCollisions';
 export function buildFormatFields(scene:T.Scene){
- const roots=new Map<string,T.Group>();const owned:(T.Material|T.BufferGeometry)[]=[];
+ const roots=new Map<string,T.Group>();const surfaces=new Map<string,T.MeshStandardMaterial>();const owned:(T.Material|T.BufferGeometry)[]=[];
  const cream=new T.LineBasicMaterial({color:'#f5eed5'});owned.push(cream);
  const frameMaterial=new T.MeshStandardMaterial({color:'#fff6df',roughness:.48});
  const netMaterial=new T.LineBasicMaterial({color:'#c6d4cc',transparent:true,opacity:.68});owned.push(frameMaterial,netMaterial);
  for(const v of VENUES){const root=new T.Group();root.name='venue-'+v.id;root.position.set(v.x,v.elevation??0,v.z);scene.add(root);roots.set(v.id,root);
- const material=new T.MeshStandardMaterial({color:v.surface,roughness:.94});const geom=new T.BoxGeometry(v.width+6,.14,v.length+6);owned.push(material,geom);const surface=new T.Mesh(geom,material);surface.position.y=FIELD_SURFACE_Y-.07;surface.receiveShadow=true;root.add(surface);
+ const material=new T.MeshStandardMaterial({color:v.surface,roughness:.94});const geom=new T.BoxGeometry(v.width+6,.14,v.length+6);owned.push(material,geom);surfaces.set(v.id,material);const surface=new T.Mesh(geom,material);surface.position.y=FIELD_SURFACE_Y-.07;surface.receiveShadow=true;root.add(surface);
  const pts:number[]=[];const seg=(a:number,b:number,c:number,d:number)=>pts.push(a,.115,b,c,.115,d);const w=v.width/2,l=v.length/2;
  const rect=(x:number,z:number,width:number,length:number)=>{seg(x-width/2,z-length/2,x+width/2,z-length/2);seg(x+width/2,z-length/2,x+width/2,z+length/2);seg(x+width/2,z+length/2,x-width/2,z+length/2);seg(x-width/2,z+length/2,x-width/2,z-length/2);};
  const arc=(x:number,z:number,r:number,start=0,end=Math.PI*2)=>{for(let i=0;i<48;i++){const a=start+(end-start)*i/48,b=start+(end-start)*(i+1)/48;seg(x+Math.cos(a)*r,z+Math.sin(a)*r,x+Math.cos(b)*r,z+Math.sin(b)*r);}};
@@ -43,6 +44,12 @@ export function buildFormatFields(scene:T.Scene){
  const outline=new T.Shape();ISLAND_SHORE.forEach((p,i)=>i?outline.lineTo(p.x,-p.z):outline.moveTo(p.x,-p.z));outline.closePath();
  const landMat=new T.MeshStandardMaterial({color:'#dfc99e',roughness:1}),landGeo=new T.ExtrudeGeometry(outline,{depth:.7,bevelEnabled:false,steps:1});owned.push(landMat,landGeo);const land=new T.Mesh(landGeo,landMat);land.name='curved-island-foundation';land.rotation.x=-Math.PI/2;land.position.y=-.82;land.receiveShadow=true;scene.add(land);
 
+ // Lawn sits above the foundation but below paths, roads and court slabs.
+ const lawnShape=new T.Shape();INTERIOR_GRASS.forEach((p,i)=>i?lawnShape.lineTo(p.x,-p.z):lawnShape.moveTo(p.x,-p.z));lawnShape.closePath();
+ const lawnGeo=new T.ShapeGeometry(lawnShape);lawnGeo.rotateX(-Math.PI/2);
+ const lawnMat=new T.MeshStandardMaterial({color:INTERIOR_GRASS_COLOR,roughness:.94});owned.push(lawnGeo,lawnMat);
+ const lawn=new T.Mesh(lawnGeo,lawnMat);lawn.name='interior-island-grass';lawn.position.y=-.112;lawn.receiveShadow=true;scene.add(lawn);
+
  // A continuous sand ribbon follows the coast, including the sheltered inlet.
  const sandPositions:number[]=[],sandIndices:number[]=[];
  ISLAND_SHORE.forEach((p,i)=>{const prev=ISLAND_SHORE[(i+ISLAND_SHORE.length-1)%ISLAND_SHORE.length],next=ISLAND_SHORE[(i+1)%ISLAND_SHORE.length],dx=next.x-prev.x,dz=next.z-prev.z,length=Math.hypot(dx,dz);const width=shoreSandWidth(p);
@@ -50,5 +57,6 @@ export function buildFormatFields(scene:T.Scene){
  const a=i*2,b=((i+1)%ISLAND_SHORE.length)*2;sandIndices.push(a,b,a+1,b,b+1,a+1);
  });
  const sandGeo=new T.BufferGeometry();sandGeo.setAttribute('position',new T.Float32BufferAttribute(sandPositions,3));sandGeo.setIndex(sandIndices);sandGeo.computeVertexNormals();const sandMat=new T.MeshStandardMaterial({color:'#f1d6a1',roughness:1,side:T.DoubleSide});owned.push(sandGeo,sandMat);const sand=new T.Mesh(sandGeo,sandMat);sand.name='continuous-sandy-shore';sand.receiveShadow=true;scene.add(sand);
- return {roots,dispose(){for(const root of roots.values())root.removeFromParent();land.removeFromParent();sand.removeFromParent();for(const item of owned)item.dispose();}};
+ const floodlights=createFieldLighting(scene,roots,surfaces,frameMaterial,cream);
+ return {roots,updateLighting:floodlights.update,setIsolated(isolated:boolean){land.receiveShadow=!isolated;sand.receiveShadow=!isolated;lawn.receiveShadow=!isolated;},dispose(){floodlights.dispose();for(const root of roots.values())root.removeFromParent();land.removeFromParent();sand.removeFromParent();lawn.removeFromParent();for(const item of owned)item.dispose();}};
 }

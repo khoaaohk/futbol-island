@@ -15,3 +15,16 @@ export function truckHitsCharacter(from:{x:number;z:number},to:{x:number;z:numbe
  for(let i=0;i<=steps;i++){const x=target.x-from.x-dx*i/steps,z=target.z-from.z-dz*i/steps;if(Math.abs(x*cos-z*sin)<1.55&&Math.abs(x*sin+z*cos)<2.8)return true;}
  return false;
 }
+
+/** Narrow swept footprint for rideable two-wheel vehicles, including rooftop height. */
+export function rideHitsCharacter(from:{x:number;z:number},to:{x:number;y:number;z:number},yaw:number,target:{x:number;y:number;z:number},kind:'scooter'|'bike'|'moped'){
+ if(Math.abs(target.y-to.y)>.7)return false;
+ const dx=to.x-from.x,dz=to.z-from.z,length=Math.hypot(dx,dz);
+ // A warp or spawn is not a collision sweep.
+ if(length>12)return false;
+ const radius=kind==='moped'?.72:.58,reach=kind==='scooter'?.95:1.2;
+ if(Math.abs(target.x-to.x)>length+2||Math.abs(target.z-to.z)>length+2)return false;
+ const steps=Math.max(1,Math.ceil(length/.35)),sin=Math.sin(yaw),cos=Math.cos(yaw);
+ for(let i=0;i<=steps;i++){const x=target.x-from.x-dx*i/steps,z=target.z-from.z-dz*i/steps;if(Math.abs(x*cos-z*sin)<radius&&Math.abs(x*sin+z*cos)<reach)return true;}
+ return false;
+}

@@ -10,3 +10,4 @@ PROJECT.md
 
 # Offline film authoring dependencies and source references are not server runtime.
 vendor
+docs/story-production

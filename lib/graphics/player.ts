@@ -37,6 +37,8 @@ export type PlayerMotion = {
   mopedSuperman?: number;
   wallSplat?: boolean;
   parachute?: boolean;
+  parachuteJuggle?: {phase:number;side:-1|1};
+  parachuteSpin?: number;
   turnSmoothing?: number;
   flight?: FlightPose;
   rooftopPose?: 'hang'|'fall'|'dizzy';
@@ -56,7 +58,7 @@ export type PlayerRig = {
   dispose: () => void;
 };
 
-export function createPlayer(id: string, team: string, mergeRigidParts=true): PlayerRig {
+export function createPlayer(id: string, team: string, mergeRigidParts=true, articulatedHands=false): PlayerRig {
   const root = new T.Group(), pelvis = new T.Group(), torso = new T.Group();pelvis.name='player-pelvis';
   torso.name='armor-torso'; root.add(pelvis); pelvis.position.y = .88; pelvis.add(torso);
   const geometries: T.BufferGeometry[] = [], materials: T.Material[] = [];
@@ -87,7 +89,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true): Pl
   const cap = mesh(new T.SphereGeometry(1, 16, 10, 0, Math.PI * 2, 0, Math.PI * .52), hair, head, 0, .045, -.01);
   cap.scale.set(.131, seed % 3 === 0 ? .15 : .125, .13);
   const legs: { hip: T.Group; knee: T.Group; ankle: T.Group }[] = [];
-  const arms: { shoulder: T.Group; elbow: T.Group }[] = [];
+  const arms: { shoulder: T.Group; elbow: T.Group; hand:T.Group }[] = [];
   for (const side of [-1,1]) {
     const hip = new T.Group(); hip.name=side<0?'left-hip':'right-hip'; hip.position.set(side * .108, 0, 0); pelvis.add(hip);
     segment(hip, shorts, .23, .108, .095);
@@ -105,8 +107,9 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true): Pl
     segment(shoulder, skin, .28, .065, .049);
     const elbow = new T.Group(); elbow.name=side<0?'left-elbow':'right-elbow'; elbow.position.y = -.28; shoulder.add(elbow);
     segment(elbow, skin, .255, .051, .035);
-    ellipsoid(elbow, skin, 0, -.265, 0, .041, .063, .04);
-    shoulder.rotation.z = side * .12; arms.push({ shoulder, elbow });
+    const hand=new T.Group();hand.name=side<0?'left-hand':'right-hand';hand.position.y=-.265;
+    if(articulatedHands){elbow.add(hand);ellipsoid(hand,skin,0,0,0,.041,.063,.04);}else ellipsoid(elbow,skin,0,-.265,0,.041,.063,.04);
+    shoulder.rotation.z = side * .12; arms.push({ shoulder, elbow, hand });
   }
   const longHair=new T.Group();longHair.name='female-long-hair';head.add(longHair);longHair.visible=false;
   // A low side ponytail stays clear of the jetpack; cheek-length strands frame the face.
@@ -149,6 +152,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true): Pl
     if(clubCostume){longHair.visible=false;explorerHat.visible=false;cap.visible=false;}else cap.visible=true;
   };
   let bikeRoll = 0, rideTurnRoll=0, ridePhase=0, parachutePhase = 0;
+  let flightClock=0,flightActive=false;const flightJoints=new Float64Array(30);
   let initialized = false, previousX = 0, previousZ = 0, phase = seed, speed = 0, yaw = team === 'home' ? Math.PI : 0;
   let acceleration = 0, turn = 0, attentionYaw = 0, turnLead = 0;
   let truckPreviousSpeed=0,truckLean=0,truckSway=0,truckPhase=0,wasTruckRiding=false;
@@ -256,6 +260,8 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true): Pl
       knee.rotation.x = kneeAngle;
       ankle.rotation.x = -hipAngle-kneeAngle + (stance ? 0 : -.12*swing*effort);
       const arm = arms[index];
+      // Flight and parachuting twist this axis; walking owns a neutral shoulder yaw.
+      arm.shoulder.rotation.y = 0;
       arm.shoulder.rotation.x = Math.sin(phase+index*Math.PI-.2)*(.32+.23*run)*effort - .16*receive;
       arm.shoulder.rotation.z = side*(.12+.16*action+.09*receive) - bank*.3;
       arm.elbow.rotation.x = -.2-.65*effort-.12*action;
@@ -298,7 +304,8 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true): Pl
         leg.hip.rotation.set(hip,0,0);leg.knee.rotation.x=knee;leg.ankle.rotation.x=-hip-knee;
         if(superman){leg.hip.rotation.x=T.MathUtils.lerp(hip,1.4,superman);leg.knee.rotation.x=T.MathUtils.lerp(knee,.12,superman);leg.ankle.rotation.x=T.MathUtils.lerp(-hip-knee,-.1,superman);}
         const arm=arms[i], lean=torso.rotation.x;
-        const gripScale=motion.travelMode==='moped'?1.12:1;
+        // Town scales every ground vehicle, not only the moped, by 1.12.
+        const gripScale=1.12;
         const targetY=(scooter?1.25:1.13)*gripScale-pelvis.position.y;
         const targetZ=.48*gripScale-pelvis.position.z;
         const ay=targetY*Math.cos(lean)+targetZ*Math.sin(lean)-.385;
@@ -326,24 +333,40 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true): Pl
       const stand=motion.mopedStand!;pelvis.position.y+=.62*stand;torso.rotation.x*=1-stand;head.rotation.x*=1-stand;
       for(let i=0;i<2;i++){const side=i===0?-1:1;legs[i].hip.rotation.x*=1-stand;legs[i].knee.rotation.x*=1-stand;legs[i].ankle.rotation.x*=1-stand;arms[i].shoulder.rotation.x*=1-stand;arms[i].shoulder.rotation.z=side*1.1*stand;arms[i].elbow.rotation.x*=1-stand;}
     }
+    for(const arm of arms)arm.hand.rotation.set(0,0,0);
+    for(const leg of legs){leg.ankle.rotation.y=0;leg.ankle.rotation.z=0;}
+    const freeFlight=motion?.travelMode==='jetpack'&&!motion.parachute&&!motion.rocketboard&&!motion.flyingCar&&!motion.rooftopPose;
+    if(!freeFlight){flightActive=false;flightClock=0;}
     if(motion?.travelMode==='jetpack'){
-      const flight=motion.flight, compress=flight?.compression??0;
-      const sway=reduced?0:Math.sin(time*3.1-.5)*.06;
-      const launch=flight?.phase==='takeoff'?Math.sin(flight.progress*Math.PI):0;
-      const dashLean=Math.max(0,Math.min(1,((flight?.pitch??0)-.5)/.7));
-      const cruise=Math.max(0,Math.min(1,(flight?.pitch??0)/.5)),boost=Math.max(0,(flight?.thrust??1)-1);
-      const brace=flight?.phase==='landing'?smooth((flight.progress-.4)/.3):0;
-      pelvis.position.set(0,1.01-compress,0);pelvis.rotation.set(0,sway*.25,0);
-      torso.rotation.set(.06+compress*.45,0,-sway*.3);head.rotation.set(-.06-compress*.3,0,sway*.15);
+      const flight=motion.flight,compress=flight?.compression??0,p=flight?.progress??1;
+      const takeoff=flight?.phase==='takeoff',landing=flight?.phase==='landing';
+      const air=takeoff?smooth(p/.5):landing?1-smooth((p-.4)/.5):1;
+      const launch=takeoff?Math.sin(p*Math.PI):0,brace=landing?smooth((p-.2)/.45)*(1-smooth((p-.78)/.22)):0;
+      const cruise=T.MathUtils.clamp((flight?.pitch??0)/.5,0,1),boost=Math.max(0,(flight?.thrust??1)-1);
+      const drive=reduced?0:flight?.acceleration??acceleration/5,steer=reduced?0:flight?.turn??T.MathUtils.clamp(turn,-1,1);
+      if(freeFlight&&!reduced)flightClock+=dt*(2.1+cruise*.9+boost*.4);
+      const flow=reduced?0:air*(.055+cruise*.07+boost*.025),sway=Math.sin(flightClock)*flow;
+      // Joint-specific lag lets the hips lead, knees follow and feet trail.
+      // This runs only in the existing player update; no new animation loop.
+      const follow=(index:number,value:number,rate:number)=>{
+        flightJoints[index]=!flightActive||discontinuity?value:T.MathUtils.damp(flightJoints[index],value,rate,dt);
+        return flightJoints[index];
+      };
+      pelvis.position.set(0,.88+.13*air-compress,0);
+      pelvis.rotation.set(0,follow(0,-steer*.13,4),follow(1,-steer*.055+sway*.16,5));
+      torso.rotation.set(.035+compress*.7+drive*.06,follow(2,steer*.16,7),follow(3,-steer*.11-sway*.3,6));
+      head.rotation.set(follow(4,-.04-cruise*.11-compress*.25+brace*.1,9),follow(5,steer*.32,10),follow(6,steer*.07,8));
       for(let i=0;i<2;i++){
-        const side=i===0?-1:1,leg=legs[i],arm=arms[i];
-        leg.hip.rotation.set(.04+.14*launch-.15*brace+compress*.2,0,side*(.055+.045*brace));
-        leg.knee.rotation.x=.23+.32*launch+.8*compress+.07*side*sway;
-        leg.ankle.rotation.x=-.17-.16*launch;
-        // Arms remain connected at the shoulder; elbows absorb pack sway and braking.
-        arm.shoulder.rotation.set(-.18-.13*launch-compress*.5+cruise*.65+dashLean*.5-boost*.28+(reduced?0:Math.sin(time*4+i*.8)*.12*(.3+cruise+boost*.4)),side*cruise*.12,side*(.27+.13*brace+cruise*.15+boost*.16)+sway);
-        arm.elbow.rotation.x=-.65-.13*launch-.2*brace+cruise*.3+dashLean*.35-boost*.2+side*sway+(reduced?0:Math.sin(time*4-.7+i*.8)*.13*(cruise+boost*.4));
+        const side=i===0?-1:1,leg=legs[i],arm=arms[i],n=7+i*11;
+        const wave=Math.sin(flightClock+i*1.8)*flow,lag=Math.sin(flightClock-.75+i*1.8)*flow;
+        leg.hip.rotation.set(follow(n,.06*air+cruise*.12+drive*.12+wave-.13*brace-compress*2.1,4.5),follow(n+1,-steer*.13,3.5),side*(.045+.055*brace)+follow(n+2,-steer*.09,4));
+        leg.knee.rotation.x=follow(n+3,.1+.23*air+.2*launch+cruise*.14+Math.max(0,drive)*.18+lag*.9+compress*4.2,5);
+        leg.ankle.rotation.set(follow(n+4,-.08-.12*air-cruise*.13-lag*.65+compress*.35,3.5),0,follow(n+5,steer*.06,4));
+        arm.shoulder.rotation.set(follow(n+6,-.12-.22*launch-compress*.8+cruise*.6-boost*.18-drive*.16+wave*.7,7),side*cruise*.1,follow(n+7,side*(.2+.16*brace+cruise*.13)+steer*.14+sway*.4,6));
+        arm.elbow.rotation.x=follow(n+8,-.48-.2*launch-.25*brace+cruise*.18-lag*.8-drive*.12,5);
+        if(freeFlight)arm.hand.rotation.set(follow(n+9,-drive*.16+lag*.6,4),0,follow(n+10,side*.08+steer*.12,4));
       }
+      flightActive=freeFlight;
     }
     if(motion?.travelMode==='jetpack'&&motion.rocketboard){
       pelvis.position.set(0,.96,0);pelvis.rotation.set(0,.35,0);torso.rotation.set(.04,-.2,0);
@@ -374,8 +397,30 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true): Pl
     if(!motion?.parachute)parachutePhase=0;
     if(motion?.parachute){
       if(!reduced)parachutePhase+=dt*2.8;
-      pelvis.position.set(0,.94,0);torso.rotation.set(0,0,T.MathUtils.clamp(-turn*.12,-.12,.12));head.rotation.set(0,0,0);
-      for(let i=0;i<2;i++){const side=i===0?-1:1,swing=reduced?0:Math.sin(parachutePhase+i*Math.PI);arms[i].shoulder.rotation.set(-2.5+side*turn*.15,0,side*.3);arms[i].elbow.rotation.x=-.3;legs[i].hip.rotation.set(-.12+swing*.22,0,side*.08);legs[i].knee.rotation.x=.28+Math.max(0,swing)*.16;legs[i].ankle.rotation.x=-.12-swing*.08;}
+      const spin=reduced?0:T.MathUtils.clamp(motion.parachuteSpin??0,0,1);
+      const juggle=motion.parachuteJuggle;
+      // Counter-rotate the shoulders against trailing hips. Transfer weight toward
+      // each touch continuously, including the boundary between alternating feet.
+      const balance=juggle&&!reduced?juggle.side*Math.sin(juggle.phase*Math.PI):0;
+      const sway=Math.sin(parachutePhase)*spin;
+      pelvis.position.set(balance*.025,.94-spin*.025,spin*.035);
+      pelvis.rotation.set(spin*.07,-spin*.24+sway*.055,-spin*.12+balance*.045);
+      torso.rotation.set(spin*.09,spin*.4-sway*.09,-spin*.13-balance*.07+T.MathUtils.clamp(-turn*.12,-.12,.12));
+      head.rotation.set(juggle?.12:0,spin*.12,-torso.rotation.z*.35);
+      for(let i=0;i<2;i++){
+        const side=i===0?-1:1,swing=reduced?0:Math.sin(parachutePhase+i*Math.PI);
+        arms[i].shoulder.rotation.set(-2.5+side*turn*.15-side*spin*.12,-spin*.1,side*(.3+spin*.06));
+        arms[i].elbow.rotation.x=-.3-spin*.08;
+        legs[i].hip.rotation.set(-.12+swing*.22+spin*.16,-spin*.16,side*(.08+spin*.1));
+        legs[i].knee.rotation.x=.28+Math.max(0,swing)*.16+spin*.16;
+        legs[i].ankle.rotation.x=-.12-swing*.08-spin*.06;
+        if(juggle){
+          const tap=side===juggle.side?Math.sin(Math.PI*Math.min(1,juggle.phase/.32)):0;
+          legs[i].hip.rotation.x=-.12+spin*.08-tap*(reduced?.3:.65);
+          legs[i].knee.rotation.x=.28+spin*.12+tap*.15;
+          legs[i].ankle.rotation.x=-.12-spin*.04+tap*.2;
+        }
+      }
     }
     if(motion?.rooftopPose){
       const pose=motion.rooftopPose, frantic=pose==='hang'||pose==='fall', dizzy=pose==='dizzy';

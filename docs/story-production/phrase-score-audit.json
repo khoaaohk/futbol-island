@@ -1,0 +1,2684 @@
+[
+  {
+    "film": "chalk-line",
+    "beat": 1,
+    "at": 0,
+    "anchor": "What if",
+    "motif": "chalk",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "chalk-line",
+    "beat": 1,
+    "at": 3.18,
+    "anchor": "Waiting until",
+    "motif": "closed",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "chalk-line",
+    "beat": 1,
+    "at": 6,
+    "anchor": "a useful idea",
+    "motif": "chalk",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "chalk-line",
+    "beat": 2,
+    "at": 0,
+    "anchor": "Think of",
+    "motif": "chalk",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "chalk-line",
+    "beat": 2,
+    "at": 1.94,
+    "anchor": "One small mark",
+    "motif": "chalk",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "chalk-line",
+    "beat": 2,
+    "at": 4.48,
+    "anchor": "Another changes",
+    "motif": "chalk",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "chalk-line",
+    "beat": 3,
+    "at": 0,
+    "anchor": "Creative confidence",
+    "motif": "chalk",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "chalk-line",
+    "beat": 3,
+    "at": 2.5,
+    "anchor": "test an idea",
+    "motif": "chalk",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "chalk-line",
+    "beat": 3,
+    "at": 6.8,
+    "anchor": "a different first touch",
+    "motif": "touch",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "chalk-line",
+    "beat": 4,
+    "at": 0,
+    "anchor": "Look up",
+    "motif": "eye",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "chalk-line",
+    "beat": 4,
+    "at": 0.82,
+    "anchor": "Where is the pressure",
+    "motif": "pressure",
+    "state": 0,
+    "match": 0.5
+  },
+  {
+    "film": "chalk-line",
+    "beat": 4,
+    "at": 4.96,
+    "anchor": "Choose one small action",
+    "motif": "pass",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "chalk-line",
+    "beat": 5,
+    "at": 0,
+    "anchor": "If it fails",
+    "motif": "miss",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "chalk-line",
+    "beat": 5,
+    "at": 2.7,
+    "anchor": "Was the space closing",
+    "motif": "pressure",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "chalk-line",
+    "beat": 5,
+    "at": 5.98,
+    "anchor": "Feedback helps",
+    "motif": "chalk",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "chalk-line",
+    "beat": 6,
+    "at": 0,
+    "anchor": "You do not need",
+    "motif": "chalk",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "chalk-line",
+    "beat": 6,
+    "at": 4.94,
+    "anchor": "Look, try, learn",
+    "motif": "touch",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "chalk-line",
+    "beat": 6,
+    "at": 6.82,
+    "anchor": "Confidence can grow",
+    "motif": "branch",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "woven-court",
+    "beat": 1,
+    "at": 0,
+    "anchor": "Do you feel",
+    "motif": "thread",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "woven-court",
+    "beat": 1,
+    "at": 3.98,
+    "anchor": "responsibility can be shared",
+    "motif": "thread",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "woven-court",
+    "beat": 1,
+    "at": 7.22,
+    "anchor": "So does everyone",
+    "motif": "thread",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "woven-court",
+    "beat": 2,
+    "at": 0,
+    "anchor": "Think of woven",
+    "motif": "thread",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "woven-court",
+    "beat": 2,
+    "at": 3.02,
+    "anchor": "places they connect",
+    "motif": "thread",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "woven-court",
+    "beat": 2,
+    "at": 7.08,
+    "anchor": "one strand stretched",
+    "motif": "thread",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "woven-court",
+    "beat": 3,
+    "at": 0,
+    "anchor": "In futsal",
+    "motif": "thread",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "woven-court",
+    "beat": 3,
+    "at": 3.46,
+    "anchor": "After passing",
+    "motif": "pass",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "woven-court",
+    "beat": 3,
+    "at": 6.24,
+    "anchor": "an angle and a call",
+    "motif": "pass",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "woven-court",
+    "beat": 4,
+    "at": 0,
+    "anchor": "Shared responsibility",
+    "motif": "thread",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "woven-court",
+    "beat": 4,
+    "at": 4.24,
+    "anchor": "One player moves",
+    "motif": "pass",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "woven-court",
+    "beat": 4,
+    "at": 8.64,
+    "anchor": "Your jobs can change",
+    "motif": "thread",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "woven-court",
+    "beat": 5,
+    "at": 0,
+    "anchor": "When possession is lost",
+    "motif": "miss",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "woven-court",
+    "beat": 5,
+    "at": 1.7,
+    "anchor": "blame adds distance",
+    "motif": "thread",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "woven-court",
+    "beat": 5,
+    "at": 5.98,
+    "anchor": "recover, protect",
+    "motif": "pass",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "woven-court",
+    "beat": 6,
+    "at": 0,
+    "anchor": "Ask yourself",
+    "motif": "thread",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "woven-court",
+    "beat": 6,
+    "at": 3.76,
+    "anchor": "Offer, listen, support",
+    "motif": "listen",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "woven-court",
+    "beat": 6,
+    "at": 6.94,
+    "anchor": "rely on each other",
+    "motif": "thread",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "kite-turned",
+    "beat": 1,
+    "at": 0,
+    "anchor": "What happens",
+    "motif": "route",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "kite-turned",
+    "beat": 1,
+    "at": 4,
+    "anchor": "frustrated or stuck",
+    "motif": "pressure",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "kite-turned",
+    "beat": 1,
+    "at": 7.68,
+    "anchor": "look again",
+    "motif": "eye",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "kite-turned",
+    "beat": 2,
+    "at": 0,
+    "anchor": "Think of a kite",
+    "motif": "kite",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "kite-turned",
+    "beat": 2,
+    "at": 2.9,
+    "anchor": "Staying aloft",
+    "motif": "kite",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "kite-turned",
+    "beat": 2,
+    "at": 6.52,
+    "anchor": "changing the angle",
+    "motif": "kite",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "kite-turned",
+    "beat": 3,
+    "at": 0,
+    "anchor": "Adapting means",
+    "motif": "kite",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "kite-turned",
+    "beat": 3,
+    "at": 3.4,
+    "anchor": "Take a breath",
+    "motif": "breath",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "kite-turned",
+    "beat": 3,
+    "at": 6.24,
+    "anchor": "notice another",
+    "motif": "route",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "kite-turned",
+    "beat": 4,
+    "at": 0,
+    "anchor": "In futsal",
+    "motif": "route",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "kite-turned",
+    "beat": 4,
+    "at": 3.4,
+    "anchor": "Keep the ball close",
+    "motif": "touch",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "kite-turned",
+    "beat": 4,
+    "at": 6.58,
+    "anchor": "A sideways pass",
+    "motif": "pass",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "kite-turned",
+    "beat": 5,
+    "at": 0,
+    "anchor": "Then move",
+    "motif": "pass",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "kite-turned",
+    "beat": 5,
+    "at": 4.1,
+    "anchor": "a different route",
+    "motif": "route",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "kite-turned",
+    "beat": 5,
+    "at": 5.54,
+    "anchor": "Going backward",
+    "motif": "route",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "kite-turned",
+    "beat": 6,
+    "at": 0,
+    "anchor": "Changing your plan",
+    "motif": "kite",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "kite-turned",
+    "beat": 6,
+    "at": 5.12,
+    "anchor": "Notice, choose, adjust",
+    "motif": "kite",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "kite-turned",
+    "beat": 6,
+    "at": 9.14,
+    "anchor": "another way",
+    "motif": "kite",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "place-picture",
+    "beat": 1,
+    "at": 0,
+    "anchor": "Do you ever",
+    "motif": "seven-pigment",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "place-picture",
+    "beat": 1,
+    "at": 1.62,
+    "anchor": "like everyone else",
+    "motif": "seven-pigment",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "place-picture",
+    "beat": 1,
+    "at": 3.76,
+    "anchor": "Think of a picture",
+    "motif": "seven-pigment",
+    "state": 2,
+    "review": "authored from current word timestamps"
+  },
+  {
+    "film": "place-picture",
+    "beat": 1,
+    "at": 5.12,
+    "anchor": "many different colours",
+    "motif": "seven-pigment",
+    "state": 3,
+    "match": 1
+  },
+  {
+    "film": "place-picture",
+    "beat": 2,
+    "at": 0,
+    "anchor": "If every colour",
+    "motif": "seven-pigment",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "place-picture",
+    "beat": 2,
+    "at": 2.34,
+    "anchor": "something would be missing",
+    "motif": "seven-picture",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "place-picture",
+    "beat": 2,
+    "at": 3.98,
+    "anchor": "Your team needs",
+    "motif": "seven-pigment",
+    "state": 3,
+    "review": "authored from current word timestamps"
+  },
+  {
+    "film": "place-picture",
+    "beat": 2,
+    "at": 6.9,
+    "anchor": "without copying",
+    "motif": "seven-picture",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "place-picture",
+    "beat": 3,
+    "at": 0,
+    "anchor": "You might be quiet",
+    "motif": "seven-strength",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "place-picture",
+    "beat": 3,
+    "at": 1.12,
+    "anchor": "full of ideas",
+    "motif": "seven-strength",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "place-picture",
+    "beat": 3,
+    "at": 2.4,
+    "anchor": "quick to move",
+    "motif": "seven-strength",
+    "state": 2,
+    "review": "authored from current word timestamps"
+  },
+  {
+    "film": "place-picture",
+    "beat": 3,
+    "at": 3.82,
+    "anchor": "noticing others",
+    "motif": "seven-strength",
+    "state": 3,
+    "review": "authored from current word timestamps"
+  },
+  {
+    "film": "place-picture",
+    "beat": 3,
+    "at": 5.38,
+    "anchor": "These are things",
+    "motif": "seven-strength",
+    "state": 4,
+    "review": "authored from current word timestamps"
+  },
+  {
+    "film": "place-picture",
+    "beat": 4,
+    "at": 0,
+    "anchor": "Belonging means",
+    "motif": "seven-picture",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "place-picture",
+    "beat": 4,
+    "at": 2.14,
+    "anchor": "treated with respect",
+    "motif": "seven-picture",
+    "state": 3,
+    "review": "authored from current word timestamps"
+  },
+  {
+    "film": "place-picture",
+    "beat": 4,
+    "at": 4.82,
+    "anchor": "earn that by scoring",
+    "motif": "seven-evidence",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "place-picture",
+    "beat": 4,
+    "at": 7.12,
+    "anchor": "every pass right",
+    "motif": "seven-evidence",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "place-picture",
+    "beat": 5,
+    "at": 0,
+    "anchor": "In football",
+    "motif": "seven-invite",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "place-picture",
+    "beat": 5,
+    "at": 2.66,
+    "anchor": "Offer a pass",
+    "motif": "seven-invite",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "place-picture",
+    "beat": 5,
+    "at": 3.92,
+    "anchor": "Share an idea",
+    "motif": "seven-strength",
+    "state": 1,
+    "review": "authored from current word timestamps"
+  },
+  {
+    "film": "place-picture",
+    "beat": 5,
+    "at": 5.02,
+    "anchor": "Invite a teammate",
+    "motif": "seven-invite",
+    "state": 2,
+    "review": "authored from current word timestamps"
+  },
+  {
+    "film": "place-picture",
+    "beat": 5,
+    "at": 7.26,
+    "anchor": "Listen to their ideas",
+    "motif": "seven-strength",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "place-picture",
+    "beat": 6,
+    "at": 0,
+    "anchor": "You can learn",
+    "motif": "seven-picture",
+    "state": 4,
+    "match": 1
+  },
+  {
+    "film": "place-picture",
+    "beat": 6,
+    "at": 1.66,
+    "anchor": "still be yourself",
+    "motif": "seven-picture",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "place-picture",
+    "beat": 6,
+    "at": 3.54,
+    "anchor": "A team grows",
+    "motif": "seven-pigment",
+    "state": 3,
+    "review": "authored from current word timestamps"
+  },
+  {
+    "film": "place-picture",
+    "beat": 6,
+    "at": 4.86,
+    "anchor": "room for each person",
+    "motif": "seven-picture",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "pocket-radio",
+    "beat": 1,
+    "at": 0,
+    "anchor": "What do you say",
+    "motif": "seven-mistake",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "pocket-radio",
+    "beat": 1,
+    "at": 2.7,
+    "anchor": "Sometimes your inner voice",
+    "motif": "seven-radio",
+    "state": 0,
+    "review": "authored from current word timestamps"
+  },
+  {
+    "film": "pocket-radio",
+    "beat": 1,
+    "at": 4.82,
+    "anchor": "noisy radio",
+    "motif": "seven-radio",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "pocket-radio",
+    "beat": 1,
+    "at": 6.82,
+    "anchor": "same harsh words",
+    "motif": "seven-radio",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "pocket-radio",
+    "beat": 2,
+    "at": 0,
+    "anchor": "You might hear",
+    "motif": "seven-radio",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "pocket-radio",
+    "beat": 2,
+    "at": 2.4,
+    "anchor": "But a loud thought",
+    "motif": "seven-wave",
+    "state": 0,
+    "review": "authored from current word timestamps"
+  },
+  {
+    "film": "pocket-radio",
+    "beat": 2,
+    "at": 3.4,
+    "anchor": "not the whole truth",
+    "motif": "seven-evidence",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "pocket-radio",
+    "beat": 2,
+    "at": 5.08,
+    "anchor": "One pass is one moment",
+    "motif": "seven-mistake",
+    "state": 1,
+    "review": "authored from current word timestamps"
+  },
+  {
+    "film": "pocket-radio",
+    "beat": 3,
+    "at": 0,
+    "anchor": "Imagine turning",
+    "motif": "seven-dial",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "pocket-radio",
+    "beat": 3,
+    "at": 1.36,
+    "anchor": "a kinder station",
+    "motif": "seven-dial",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "pocket-radio",
+    "beat": 3,
+    "at": 3.28,
+    "anchor": "What would you say to a friend",
+    "motif": "seven-wave",
+    "state": 1,
+    "review": "authored from current word timestamps"
+  },
+  {
+    "film": "pocket-radio",
+    "beat": 3,
+    "at": 5.7,
+    "anchor": "Try offering yourself",
+    "motif": "seven-wave",
+    "state": 2,
+    "review": "authored from current word timestamps"
+  },
+  {
+    "film": "pocket-radio",
+    "beat": 4,
+    "at": 0,
+    "anchor": "Being kind",
+    "motif": "seven-wave",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "pocket-radio",
+    "beat": 4,
+    "at": 1.38,
+    "anchor": "pretending everything went well",
+    "motif": "seven-evidence",
+    "state": 3,
+    "review": "authored from current word timestamps"
+  },
+  {
+    "film": "pocket-radio",
+    "beat": 4,
+    "at": 4.06,
+    "anchor": "noticing what happened",
+    "motif": "seven-mistake",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "pocket-radio",
+    "beat": 4,
+    "at": 5.34,
+    "anchor": "without calling yourself names",
+    "motif": "seven-wave",
+    "state": 2,
+    "review": "authored from current word timestamps"
+  },
+  {
+    "film": "pocket-radio",
+    "beat": 4,
+    "at": 8.08,
+    "anchor": "allowed to learn",
+    "motif": "seven-mistake",
+    "state": 3,
+    "match": 1
+  },
+  {
+    "film": "pocket-radio",
+    "beat": 5,
+    "at": 0,
+    "anchor": "Breathe out slowly",
+    "motif": "seven-breath",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "pocket-radio",
+    "beat": 5,
+    "at": 1.88,
+    "anchor": "Then choose one useful football cue",
+    "motif": "seven-scanpass",
+    "state": 0,
+    "review": "authored from current word timestamps"
+  },
+  {
+    "film": "pocket-radio",
+    "beat": 5,
+    "at": 4.2,
+    "anchor": "Look up find a teammate",
+    "motif": "seven-scanpass",
+    "state": 1,
+    "review": "authored from current word timestamps"
+  },
+  {
+    "film": "pocket-radio",
+    "beat": 5,
+    "at": 5.62,
+    "anchor": "make a short pass",
+    "motif": "seven-scanpass",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "pocket-radio",
+    "beat": 5,
+    "at": 7.26,
+    "anchor": "Give your attention somewhere helpful",
+    "motif": "seven-scanpass",
+    "state": 3,
+    "review": "authored from current word timestamps"
+  },
+  {
+    "film": "pocket-radio",
+    "beat": 6,
+    "at": 0,
+    "anchor": "The noise may return",
+    "motif": "seven-radio",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "pocket-radio",
+    "beat": 6,
+    "at": 1.9,
+    "anchor": "You can notice it",
+    "motif": "seven-wave",
+    "state": 0,
+    "review": "authored from current word timestamps"
+  },
+  {
+    "film": "pocket-radio",
+    "beat": 6,
+    "at": 2.84,
+    "anchor": "tune in again",
+    "motif": "seven-dial",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "pocket-radio",
+    "beat": 6,
+    "at": 4.38,
+    "anchor": "A kinder voice",
+    "motif": "seven-wave",
+    "state": 2,
+    "review": "authored from current word timestamps"
+  },
+  {
+    "film": "pocket-radio",
+    "beat": 6,
+    "at": 5.76,
+    "anchor": "the next step",
+    "motif": "seven-mistake",
+    "state": 3,
+    "match": 1
+  },
+  {
+    "film": "signal-water",
+    "beat": 1,
+    "at": 0,
+    "anchor": "Have you ever needed help",
+    "motif": "seven-signal",
+    "state": 0,
+    "review": "authored from current word timestamps"
+  },
+  {
+    "film": "signal-water",
+    "beat": 1,
+    "at": 1.36,
+    "anchor": "stayed quiet",
+    "motif": "seven-signal",
+    "state": 1,
+    "review": "authored from current word timestamps"
+  },
+  {
+    "film": "signal-water",
+    "beat": 1,
+    "at": 2.84,
+    "anchor": "A question",
+    "motif": "seven-signal",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "signal-water",
+    "beat": 1,
+    "at": 3.9,
+    "anchor": "signal across water",
+    "motif": "seven-signal",
+    "state": 3,
+    "review": "authored from current word timestamps"
+  },
+  {
+    "film": "signal-water",
+    "beat": 1,
+    "at": 5.72,
+    "anchor": "It lets someone know",
+    "motif": "seven-signal",
+    "state": 4,
+    "review": "authored from current word timestamps"
+  },
+  {
+    "film": "signal-water",
+    "beat": 2,
+    "at": 0,
+    "anchor": "People cannot always see",
+    "motif": "seven-fog",
+    "state": 0,
+    "review": "authored from current word timestamps"
+  },
+  {
+    "film": "signal-water",
+    "beat": 2,
+    "at": 1.5,
+    "anchor": "what feels confusing",
+    "motif": "seven-fog",
+    "state": 1,
+    "review": "authored from current word timestamps"
+  },
+  {
+    "film": "signal-water",
+    "beat": 2,
+    "at": 3.44,
+    "anchor": "Saying I am not sure",
+    "motif": "seven-fog",
+    "state": 2,
+    "review": "authored from current word timestamps"
+  },
+  {
+    "film": "signal-water",
+    "beat": 2,
+    "at": 5.26,
+    "anchor": "gives a teammate or coach",
+    "motif": "seven-fog",
+    "state": 3,
+    "review": "authored from current word timestamps"
+  },
+  {
+    "film": "signal-water",
+    "beat": 2,
+    "at": 7.34,
+    "anchor": "begin helping",
+    "motif": "seven-signal",
+    "state": 4,
+    "match": 1
+  },
+  {
+    "film": "signal-water",
+    "beat": 3,
+    "at": 0,
+    "anchor": "Asking for help",
+    "motif": "seven-asktry",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "signal-water",
+    "beat": 3,
+    "at": 1.12,
+    "anchor": "part of learning",
+    "motif": "seven-asktry",
+    "state": 1,
+    "review": "authored from current word timestamps"
+  },
+  {
+    "film": "signal-water",
+    "beat": 3,
+    "at": 2.6,
+    "anchor": "try hard",
+    "motif": "seven-asktry",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "signal-water",
+    "beat": 3,
+    "at": 3.5,
+    "anchor": "need support",
+    "motif": "seven-asktry",
+    "state": 3,
+    "review": "authored from current word timestamps"
+  },
+  {
+    "film": "signal-water",
+    "beat": 3,
+    "at": 5.8,
+    "anchor": "Both can be true",
+    "motif": "seven-asktry",
+    "state": 4,
+    "match": 1
+  },
+  {
+    "film": "signal-water",
+    "beat": 4,
+    "at": 0,
+    "anchor": "Make your signal clear",
+    "motif": "seven-signal",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "signal-water",
+    "beat": 4,
+    "at": 1.82,
+    "anchor": "In football",
+    "motif": "seven-moveask",
+    "state": 0,
+    "review": "authored from current word timestamps"
+  },
+  {
+    "film": "signal-water",
+    "beat": 4,
+    "at": 3.22,
+    "anchor": "Where should I move after I pass",
+    "motif": "seven-moveask",
+    "state": 1,
+    "review": "authored from current word timestamps"
+  },
+  {
+    "film": "signal-water",
+    "beat": 4,
+    "at": 5.76,
+    "anchor": "Can you show me again",
+    "motif": "seven-moveask",
+    "state": 2,
+    "review": "authored from current word timestamps"
+  },
+  {
+    "film": "signal-water",
+    "beat": 5,
+    "at": 0,
+    "anchor": "Listen to the answer",
+    "motif": "seven-strength",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "signal-water",
+    "beat": 5,
+    "at": 1.74,
+    "anchor": "Try it slowly together",
+    "motif": "seven-moveask",
+    "state": 2,
+    "review": "authored from current word timestamps"
+  },
+  {
+    "film": "signal-water",
+    "beat": 5,
+    "at": 3.46,
+    "anchor": "If you still feel unsure",
+    "motif": "seven-moveask",
+    "state": 3,
+    "review": "authored from current word timestamps"
+  },
+  {
+    "film": "signal-water",
+    "beat": 5,
+    "at": 5,
+    "anchor": "ask another question",
+    "motif": "seven-signal",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "signal-water",
+    "beat": 5,
+    "at": 6.64,
+    "anchor": "Learning does not have to happen alone",
+    "motif": "seven-asktry",
+    "state": 4,
+    "review": "authored from current word timestamps"
+  },
+  {
+    "film": "signal-water",
+    "beat": 6,
+    "at": 0,
+    "anchor": "If someone cannot help",
+    "motif": "seven-signal",
+    "state": 1,
+    "review": "authored from current word timestamps"
+  },
+  {
+    "film": "signal-water",
+    "beat": 6,
+    "at": 1.58,
+    "anchor": "ask another trusted person",
+    "motif": "seven-signal",
+    "state": 3,
+    "review": "authored from current word timestamps"
+  },
+  {
+    "film": "signal-water",
+    "beat": 6,
+    "at": 3.96,
+    "anchor": "A clear question",
+    "motif": "seven-signal",
+    "state": 2,
+    "review": "authored from current word timestamps"
+  },
+  {
+    "film": "signal-water",
+    "beat": 6,
+    "at": 4.7,
+    "anchor": "opens a connection",
+    "motif": "seven-signal",
+    "state": 4,
+    "review": "authored from current word timestamps"
+  },
+  {
+    "film": "signal-water",
+    "beat": 6,
+    "at": 6.62,
+    "anchor": "Then you can take your next step",
+    "motif": "seven-moveask",
+    "state": 1,
+    "review": "authored from current word timestamps"
+  },
+  {
+    "film": "different-tides",
+    "beat": 1,
+    "at": 0,
+    "anchor": "Have you ever",
+    "motif": "shore",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "different-tides",
+    "beat": 1,
+    "at": 3.14,
+    "anchor": "you feel stuck",
+    "motif": "shore",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "different-tides",
+    "beat": 1,
+    "at": 6.2,
+    "anchor": "different speeds",
+    "motif": "shore",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "different-tides",
+    "beat": 2,
+    "at": 0,
+    "anchor": "Think of water",
+    "motif": "shore",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "different-tides",
+    "beat": 2,
+    "at": 3.9,
+    "anchor": "Some changes arrive",
+    "motif": "shore",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "different-tides",
+    "beat": 2,
+    "at": 6.46,
+    "anchor": "Others build quietly",
+    "motif": "roots",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "different-tides",
+    "beat": 3,
+    "at": 0,
+    "anchor": "A stronger shot",
+    "motif": "touch",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "different-tides",
+    "beat": 3,
+    "at": 2.78,
+    "anchor": "Looking up sooner",
+    "motif": "eye",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "different-tides",
+    "beat": 3,
+    "at": 6.9,
+    "anchor": "progress too",
+    "motif": "branch",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "different-tides",
+    "beat": 4,
+    "at": 0,
+    "anchor": "What is one thing",
+    "motif": "chalk",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "different-tides",
+    "beat": 4,
+    "at": 2.6,
+    "anchor": "checking your shoulder",
+    "motif": "eye",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "different-tides",
+    "beat": 4,
+    "at": 5.84,
+    "anchor": "what to look for",
+    "motif": "pass",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "different-tides",
+    "beat": 5,
+    "at": 0,
+    "anchor": "After practice",
+    "motif": "shore",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "different-tides",
+    "beat": 5,
+    "at": 4.42,
+    "anchor": "What felt clearer",
+    "motif": "eye",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "different-tides",
+    "beat": 5,
+    "at": 7.12,
+    "anchor": "A small change counts",
+    "motif": "branch",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "different-tides",
+    "beat": 6,
+    "at": 0,
+    "anchor": "You can learn",
+    "motif": "shore",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "different-tides",
+    "beat": 6,
+    "at": 3.36,
+    "anchor": "your next useful step",
+    "motif": "touch",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "different-tides",
+    "beat": 6,
+    "at": 5.78,
+    "anchor": "practice, questions, and rest",
+    "motif": "rest",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "harbour-night",
+    "beat": 1,
+    "at": 0,
+    "anchor": "Can you care",
+    "motif": "ballrest",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "harbour-night",
+    "beat": 1,
+    "at": 1.62,
+    "anchor": "need a break",
+    "motif": "ballrest",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "harbour-night",
+    "beat": 1,
+    "at": 6.1,
+    "anchor": "alongside the effort",
+    "motif": "ballrest",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "harbour-night",
+    "beat": 2,
+    "at": 0,
+    "anchor": "Think of a harbour",
+    "motif": "harbour",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "harbour-night",
+    "beat": 2,
+    "at": 3.22,
+    "anchor": "Pausing does not",
+    "motif": "harbour",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "harbour-night",
+    "beat": 2,
+    "at": 6.44,
+    "anchor": "does not make you weak",
+    "motif": "harbour",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "harbour-night",
+    "beat": 3,
+    "at": 0,
+    "anchor": "More practice",
+    "motif": "ballrest",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "harbour-night",
+    "beat": 3,
+    "at": 3.72,
+    "anchor": "How do you feel",
+    "motif": "pressure",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "harbour-night",
+    "beat": 3,
+    "at": 6.6,
+    "anchor": "tired or overwhelmed",
+    "motif": "breath",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "harbour-night",
+    "beat": 4,
+    "at": 0,
+    "anchor": "Tell a trusted",
+    "motif": "listen",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "harbour-night",
+    "beat": 4,
+    "at": 3.5,
+    "anchor": "I feel worn out",
+    "motif": "noise",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "harbour-night",
+    "beat": 4,
+    "at": 5.26,
+    "anchor": "plan a break",
+    "motif": "rest",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "harbour-night",
+    "beat": 5,
+    "at": 0,
+    "anchor": "Make room",
+    "motif": "rest",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "harbour-night",
+    "beat": 5,
+    "at": 2.4,
+    "anchor": "time with friends",
+    "motif": "colours",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "harbour-night",
+    "beat": 5,
+    "at": 4.62,
+    "anchor": "away from football",
+    "motif": "rest",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "harbour-night",
+    "beat": 6,
+    "at": 0,
+    "anchor": "Before your next",
+    "motif": "ballrest",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "harbour-night",
+    "beat": 6,
+    "at": 2.8,
+    "anchor": "Talk about",
+    "motif": "listen",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "harbour-night",
+    "beat": 6,
+    "at": 6.52,
+    "anchor": "effort and rest",
+    "motif": "ballrest",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "unfinished-map",
+    "beat": 1,
+    "at": 0,
+    "anchor": "When someone",
+    "motif": "map",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "unfinished-map",
+    "beat": 1,
+    "at": 3.26,
+    "anchor": "a verdict about you",
+    "motif": "closed",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "unfinished-map",
+    "beat": 1,
+    "at": 6.82,
+    "anchor": "especially when you care",
+    "motif": "core",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "unfinished-map",
+    "beat": 2,
+    "at": 0,
+    "anchor": "Useful feedback",
+    "motif": "map",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "unfinished-map",
+    "beat": 2,
+    "at": 4.14,
+    "anchor": "a pencilled map",
+    "motif": "map",
+    "state": 1,
+    "match": 0.6666666666666666
+  },
+  {
+    "film": "unfinished-map",
+    "beat": 2,
+    "at": 7,
+    "anchor": "another route",
+    "motif": "map",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "unfinished-map",
+    "beat": 3,
+    "at": 0,
+    "anchor": "If a coach says",
+    "motif": "eye",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "unfinished-map",
+    "beat": 3,
+    "at": 2.12,
+    "anchor": "What should I look",
+    "motif": "eye",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "unfinished-map",
+    "beat": 3,
+    "at": 5.62,
+    "anchor": "Clear questions",
+    "motif": "ripple",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "unfinished-map",
+    "beat": 4,
+    "at": 0,
+    "anchor": "Before your next pass",
+    "motif": "pass",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "unfinished-map",
+    "beat": 4,
+    "at": 2.6,
+    "anchor": "blocking the lane",
+    "motif": "route",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "unfinished-map",
+    "beat": 4,
+    "at": 4.22,
+    "anchor": "a different angle",
+    "motif": "route",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "unfinished-map",
+    "beat": 5,
+    "at": 0,
+    "anchor": "A pass gives information",
+    "motif": "miss",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "unfinished-map",
+    "beat": 5,
+    "at": 3.28,
+    "anchor": "cannot measure your value",
+    "motif": "score",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "unfinished-map",
+    "beat": 5,
+    "at": 6.44,
+    "anchor": "respect while you learn",
+    "motif": "core",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "unfinished-map",
+    "beat": 6,
+    "at": 0,
+    "anchor": "Keep the useful detail",
+    "motif": "map",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "unfinished-map",
+    "beat": 6,
+    "at": 2.96,
+    "anchor": "confusing part",
+    "motif": "ripple",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "unfinished-map",
+    "beat": 6,
+    "at": 7.82,
+    "anchor": "whole self",
+    "motif": "core",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "quiet-lantern",
+    "beat": 1,
+    "at": 0,
+    "anchor": "What makes",
+    "motif": "lantern",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "quiet-lantern",
+    "beat": 1,
+    "at": 2.34,
+    "anchor": "a loud voice",
+    "motif": "noise",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "quiet-lantern",
+    "beat": 1,
+    "at": 5.34,
+    "anchor": "noticing what",
+    "motif": "lantern",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "quiet-lantern",
+    "beat": 2,
+    "at": 0,
+    "anchor": "Think of a small light",
+    "motif": "lantern",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "quiet-lantern",
+    "beat": 2,
+    "at": 3.68,
+    "anchor": "fill the room",
+    "motif": "lantern",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "quiet-lantern",
+    "beat": 2,
+    "at": 4.66,
+    "anchor": "the next step",
+    "motif": "lantern",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "quiet-lantern",
+    "beat": 3,
+    "at": 0,
+    "anchor": "On the pitch",
+    "motif": "eye",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "quiet-lantern",
+    "beat": 3,
+    "at": 3.8,
+    "anchor": "needs support",
+    "motif": "pass",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "quiet-lantern",
+    "beat": 3,
+    "at": 7,
+    "anchor": "left out",
+    "motif": "colours",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "quiet-lantern",
+    "beat": 4,
+    "at": 0,
+    "anchor": "Then make",
+    "motif": "ripple",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "quiet-lantern",
+    "beat": 4,
+    "at": 2.24,
+    "anchor": "Call a name",
+    "motif": "ripple",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "quiet-lantern",
+    "beat": 4,
+    "at": 8.46,
+    "anchor": "choose together",
+    "motif": "thread",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "quiet-lantern",
+    "beat": 5,
+    "at": 0,
+    "anchor": "Leadership also",
+    "motif": "listen",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "quiet-lantern",
+    "beat": 5,
+    "at": 4.52,
+    "anchor": "Encourage them",
+    "motif": "speaker",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "quiet-lantern",
+    "beat": 5,
+    "at": 7.92,
+    "anchor": "alongside your own",
+    "motif": "listen",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "quiet-lantern",
+    "beat": 6,
+    "at": 0,
+    "anchor": "You can lead",
+    "motif": "lantern",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "quiet-lantern",
+    "beat": 6,
+    "at": 3.56,
+    "anchor": "helpful action",
+    "motif": "lantern",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "quiet-lantern",
+    "beat": 6,
+    "at": 6.26,
+    "anchor": "someone else",
+    "motif": "lantern",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "boat-weather",
+    "beat": 1,
+    "at": 0,
+    "anchor": "Football brings",
+    "motif": "touch",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "boat-weather",
+    "beat": 1,
+    "at": 2.8,
+    "anchor": "a strange bounce",
+    "motif": "touch",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "boat-weather",
+    "beat": 1,
+    "at": 6.7,
+    "anchor": "What can you do",
+    "motif": "route",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "boat-weather",
+    "beat": 2,
+    "at": 0,
+    "anchor": "Think of the game",
+    "motif": "sail",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "boat-weather",
+    "beat": 2,
+    "at": 2.74,
+    "anchor": "cannot command",
+    "motif": "sail",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "boat-weather",
+    "beat": 2,
+    "at": 4.86,
+    "anchor": "adjust your sail",
+    "motif": "sail",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "boat-weather",
+    "beat": 3,
+    "at": 0,
+    "anchor": "Frustration may",
+    "motif": "pressure",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "boat-weather",
+    "beat": 3,
+    "at": 3.5,
+    "anchor": "Notice the feeling",
+    "motif": "noise",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "boat-weather",
+    "beat": 3,
+    "at": 4.76,
+    "anchor": "Take a breath",
+    "motif": "breath",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "boat-weather",
+    "beat": 4,
+    "at": 0,
+    "anchor": "Bring your attention",
+    "motif": "eye",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "boat-weather",
+    "beat": 4,
+    "at": 4.36,
+    "anchor": "check your shoulder",
+    "motif": "eye",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "boat-weather",
+    "beat": 4,
+    "at": 7.6,
+    "anchor": "one clear action",
+    "motif": "pass",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "boat-weather",
+    "beat": 5,
+    "at": 0,
+    "anchor": "You can influence",
+    "motif": "sail",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "boat-weather",
+    "beat": 5,
+    "at": 5.56,
+    "anchor": "cover space together",
+    "motif": "thread",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "boat-weather",
+    "beat": 5,
+    "at": 8.24,
+    "anchor": "need guidance",
+    "motif": "ripple",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "boat-weather",
+    "beat": 6,
+    "at": 0,
+    "anchor": "Difficult weather",
+    "motif": "sail",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "boat-weather",
+    "beat": 6,
+    "at": 2.98,
+    "anchor": "pretend it feels good",
+    "motif": "sail",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "boat-weather",
+    "beat": 6,
+    "at": 6.78,
+    "anchor": "take it with support",
+    "motif": "sail",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "more-shirt",
+    "beat": 1,
+    "at": 0,
+    "anchor": "When someone asks",
+    "motif": "shirt",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "more-shirt",
+    "beat": 1,
+    "at": 2.44,
+    "anchor": "striker, defender",
+    "motif": "shirt",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "more-shirt",
+    "beat": 1,
+    "at": 7.08,
+    "anchor": "much more to you",
+    "motif": "shirt",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "more-shirt",
+    "beat": 2,
+    "at": 0,
+    "anchor": "Think of a shirt",
+    "motif": "shirt",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "more-shirt",
+    "beat": 2,
+    "at": 2.02,
+    "anchor": "not a boundary",
+    "motif": "shirt",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "more-shirt",
+    "beat": 2,
+    "at": 6,
+    "anchor": "everything you can become",
+    "motif": "shirt",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "more-shirt",
+    "beat": 3,
+    "at": 0,
+    "anchor": "A different position",
+    "motif": "shirt",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "more-shirt",
+    "beat": 3,
+    "at": 5.7,
+    "anchor": "Those feelings matter",
+    "motif": "noise",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "more-shirt",
+    "beat": 3,
+    "at": 8.36,
+    "anchor": "whole value",
+    "motif": "core",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "more-shirt",
+    "beat": 4,
+    "at": 0,
+    "anchor": "If your role changes",
+    "motif": "shirt",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "more-shirt",
+    "beat": 4,
+    "at": 4.02,
+    "anchor": "where to move",
+    "motif": "route",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "more-shirt",
+    "beat": 4,
+    "at": 6.94,
+    "anchor": "before receiving",
+    "motif": "eye",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "more-shirt",
+    "beat": 5,
+    "at": 0,
+    "anchor": "Your curiosity",
+    "motif": "eye",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "more-shirt",
+    "beat": 5,
+    "at": 4.06,
+    "anchor": "Beyond football",
+    "motif": "shirt",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "more-shirt",
+    "beat": 5,
+    "at": 7.66,
+    "anchor": "people who know you",
+    "motif": "colours",
+    "state": 3,
+    "match": 1
+  },
+  {
+    "film": "more-shirt",
+    "beat": 6,
+    "at": 0,
+    "anchor": "Keep learning",
+    "motif": "shirt",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "more-shirt",
+    "beat": 6,
+    "at": 0.98,
+    "anchor": "without shrinking",
+    "motif": "shirt",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "more-shirt",
+    "beat": 6,
+    "at": 5.42,
+    "anchor": "room to grow",
+    "motif": "shirt",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "empathy",
+    "beat": 1,
+    "at": 0,
+    "anchor": "How can feelings",
+    "motif": "noise",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "empathy",
+    "beat": 1,
+    "at": 2.62,
+    "anchor": "Frustration can",
+    "motif": "pressure",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "empathy",
+    "beat": 1,
+    "at": 5.04,
+    "anchor": "Encouragement can",
+    "motif": "speaker",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "empathy",
+    "beat": 2,
+    "at": 0,
+    "anchor": "Emotional intelligence",
+    "motif": "eye",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "empathy",
+    "beat": 2,
+    "at": 3.26,
+    "anchor": "yourself and others",
+    "motif": "colours",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "empathy",
+    "beat": 2,
+    "at": 7.6,
+    "anchor": "do not have to guess",
+    "motif": "listen",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "empathy",
+    "beat": 3,
+    "at": 0,
+    "anchor": "Think of overlapping",
+    "motif": "colours",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "empathy",
+    "beat": 3,
+    "at": 2.5,
+    "anchor": "Each changes",
+    "motif": "colours",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "empathy",
+    "beat": 3,
+    "at": 5.52,
+    "anchor": "another colour",
+    "motif": "colours",
+    "state": 3,
+    "match": 1
+  },
+  {
+    "film": "empathy",
+    "beat": 4,
+    "at": 0,
+    "anchor": "On the pitch",
+    "motif": "listen",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "empathy",
+    "beat": 4,
+    "at": 5.44,
+    "anchor": "How are you feeling",
+    "motif": "ripple",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "empathy",
+    "beat": 4,
+    "at": 6.92,
+    "anchor": "Listen before",
+    "motif": "listen",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "empathy",
+    "beat": 5,
+    "at": 0,
+    "anchor": "If they want support",
+    "motif": "thread",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "empathy",
+    "beat": 5,
+    "at": 3.24,
+    "anchor": "an encouraging word",
+    "motif": "speaker",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "empathy",
+    "beat": 5,
+    "at": 5.38,
+    "anchor": "Respect their space",
+    "motif": "colours",
+    "state": 3,
+    "match": 1
+  },
+  {
+    "film": "empathy",
+    "beat": 6,
+    "at": 0,
+    "anchor": "Notice your own",
+    "motif": "noise",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "empathy",
+    "beat": 6,
+    "at": 2.38,
+    "anchor": "Take a breath",
+    "motif": "breath",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "empathy",
+    "beat": 6,
+    "at": 7.38,
+    "anchor": "strengthen your team",
+    "motif": "thread",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "reset",
+    "beat": 1,
+    "at": 0,
+    "anchor": "What does mental",
+    "motif": "miss",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "reset",
+    "beat": 1,
+    "at": 4.34,
+    "anchor": "a useful response",
+    "motif": "route",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "reset",
+    "beat": 1,
+    "at": 6.48,
+    "anchor": "room for your feelings",
+    "motif": "noise",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "reset",
+    "beat": 2,
+    "at": 0,
+    "anchor": "Imagine a flexible branch",
+    "motif": "branch",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "reset",
+    "beat": 2,
+    "at": 3.04,
+    "anchor": "bends under pressure",
+    "motif": "branch",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "reset",
+    "beat": 2,
+    "at": 7.78,
+    "anchor": "only kind of strength",
+    "motif": "branch",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "reset",
+    "beat": 3,
+    "at": 0,
+    "anchor": "You might feel",
+    "motif": "noise",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "reset",
+    "beat": 3,
+    "at": 5.02,
+    "anchor": "Name that feeling",
+    "motif": "noise",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "reset",
+    "beat": 3,
+    "at": 6.42,
+    "anchor": "Take a slow breath",
+    "motif": "breath",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "reset",
+    "beat": 4,
+    "at": 0,
+    "anchor": "What can you do",
+    "motif": "eye",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "reset",
+    "beat": 4,
+    "at": 2.62,
+    "anchor": "Move into space",
+    "motif": "pass",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "reset",
+    "beat": 4,
+    "at": 6.36,
+    "anchor": "one action",
+    "motif": "touch",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "reset",
+    "beat": 5,
+    "at": 0,
+    "anchor": "If you feel stuck",
+    "motif": "closed",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "reset",
+    "beat": 5,
+    "at": 1.22,
+    "anchor": "ask a teammate",
+    "motif": "ripple",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "reset",
+    "beat": 5,
+    "at": 6.5,
+    "anchor": "where to put your attention",
+    "motif": "eye",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "reset",
+    "beat": 6,
+    "at": 0,
+    "anchor": "You can feel disappointed",
+    "motif": "noise",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "reset",
+    "beat": 6,
+    "at": 3.34,
+    "anchor": "Notice. Breathe. Choose",
+    "motif": "breath",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "reset",
+    "beat": 6,
+    "at": 7.6,
+    "anchor": "one moment at a time",
+    "motif": "touch",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "loss",
+    "beat": 1,
+    "at": 0,
+    "anchor": "What happens inside",
+    "motif": "score",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "loss",
+    "beat": 1,
+    "at": 2.92,
+    "anchor": "Disappointment or anger",
+    "motif": "noise",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "loss",
+    "beat": 1,
+    "at": 7.96,
+    "anchor": "understandable",
+    "motif": "noise",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "loss",
+    "beat": 2,
+    "at": 0,
+    "anchor": "Think of ripples",
+    "motif": "ripple",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "loss",
+    "beat": 2,
+    "at": 2.92,
+    "anchor": "flatten them immediately",
+    "motif": "ripple",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "loss",
+    "beat": 2,
+    "at": 4.9,
+    "anchor": "Give yourself space",
+    "motif": "ripple",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "loss",
+    "beat": 3,
+    "at": 0,
+    "anchor": "The score",
+    "motif": "score",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "loss",
+    "beat": 3,
+    "at": 2.52,
+    "anchor": "cannot describe",
+    "motif": "score",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "loss",
+    "beat": 3,
+    "at": 6.94,
+    "anchor": "deserve respect",
+    "motif": "core",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "loss",
+    "beat": 4,
+    "at": 0,
+    "anchor": "When you feel ready",
+    "motif": "map",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "loss",
+    "beat": 4,
+    "at": 2.88,
+    "anchor": "What helped us",
+    "motif": "map",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "loss",
+    "beat": 4,
+    "at": 6.98,
+    "anchor": "without blame",
+    "motif": "listen",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "loss",
+    "beat": 5,
+    "at": 0,
+    "anchor": "Choose one football",
+    "motif": "chalk",
+    "state": 0,
+    "match": 1
+  },
+  {
+    "film": "loss",
+    "beat": 5,
+    "at": 3.18,
+    "anchor": "check your shoulder",
+    "motif": "eye",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "loss",
+    "beat": 5,
+    "at": 9.04,
+    "anchor": "Keep it small",
+    "motif": "touch",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "loss",
+    "beat": 6,
+    "at": 0,
+    "anchor": "Then make room",
+    "motif": "rest",
+    "state": 1,
+    "match": 1
+  },
+  {
+    "film": "loss",
+    "beat": 6,
+    "at": 4.14,
+    "anchor": "a useful lesson forward",
+    "motif": "map",
+    "state": 2,
+    "match": 1
+  },
+  {
+    "film": "loss",
+    "beat": 6,
+    "at": 6.54,
+    "anchor": "the whole score",
+    "motif": "score",
+    "state": 2,
+    "match": 1
+  }
+]

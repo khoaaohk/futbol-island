@@ -1,0 +1,11 @@
+import * as T from 'three';
+import type {Venue} from '@/lib/town/venues';
+/** Lightweight stadium frame for the existing full-match simulation. */
+export function createMatchScenery(scene:T.Scene,venue:Venue){
+ const root=new T.Group(),geometry=new T.BoxGeometry(1,1,1),materials=new Map<string,T.MeshStandardMaterial>();root.position.set(venue.x,0,venue.z);scene.add(root);
+ const box=(x:number,y:number,z:number,w:number,h:number,d:number,color:string)=>{let m=materials.get(color);if(!m){m=new T.MeshStandardMaterial({color,roughness:.9});materials.set(color,m);}const mesh=new T.Mesh(geometry,m);mesh.position.set(x,y,z);mesh.scale.set(w,h,d);mesh.receiveShadow=true;mesh.castShadow=h>1;root.add(mesh);return mesh;};
+ box(0,-.05,0,venue.width+20,.1,venue.length+20,'#bd9875');for(const side of[-1,1]){for(let row=0;row<3;row++)box(side*(venue.width/2+7+row*1.5),row*.8+.4,0,1.4,.8,venue.length*.9,row%2?'#72a69b':'#d8b982');for(const z of[-venue.length/2,venue.length/2]){box(side*(venue.width/2+7),6,z,.3,12,.3,'#355263');box(side*(venue.width/2+7),12,z,3,.5,.7,'#ffdb97');}}
+ for(let i=0;i<10;i++)box(0,.106,-venue.length/2+(i+.5)*venue.length/10,venue.width,.001,venue.length/10,i%2?'#438677':'#4f9380');
+ const hemi=new T.HemisphereLight('#fff0d3','#455c65',1.5),sun=new T.DirectionalLight('#ffe1b0',2.6);sun.position.set(venue.x-30,65,venue.z+35);sun.target.position.set(venue.x,0,venue.z);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-85,right:85,top:85,bottom:-85,near:1,far:180});sun.shadow.normalBias=.06;sun.shadow.bias=-.0002;scene.add(hemi,sun,sun.target);const warm=new T.Color('#ffe1b0'),cool=new T.Color('#b7ccf0'),sky=new T.Color('#b3cbd0'),nightSky=new T.Color('#7288a2');let last=-1;
+ return{update(seconds:number){const t=T.MathUtils.smoothstep(seconds,30,180);if(Math.abs(last-t)<.003)return;last=t;sun.color.lerpColors(warm,cool,t);sun.intensity=2.6-t;sun.position.y=65-t*20;scene.background=new T.Color().lerpColors(sky,nightSky,t);const lamp=materials.get('#ffdb97')!;lamp.emissive.set('#ffc775');lamp.emissiveIntensity=t*2;},dispose(){scene.remove(root,hemi,sun,sun.target);geometry.dispose();materials.forEach(m=>m.dispose());sun.shadow.map?.dispose();}};
+}

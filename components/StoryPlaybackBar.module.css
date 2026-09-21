@@ -1,0 +1,31 @@
+/* One transport and caption tray for canvas and video stories. */
+.tray.tray{height:auto;position:absolute;z-index:3;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);display:flex;flex-direction:column;width:min(680px,calc(100% - 32px));max-height:calc(100% - 100px);box-sizing:border-box;padding:8px 20px 14px;border:1px solid #b9c19e;border-radius:18px;background:#f1ebcff5;color:#294f43;box-shadow:0 4px 20px #17352b20}
+.controls{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);flex-shrink:0;align-items:center;gap:10px;min-width:0}.actions{display:flex;justify-self:end;align-items:center;gap:4px}
+.tray .control,.transcript .control{display:inline-flex;align-items:center;justify-content:center;gap:8px;flex-shrink:0;min-width:44px;min-height:44px;padding:8px;border:0;border-radius:10px;background:transparent;color:#294f43;font:600 14px var(--font-body),Arial,sans-serif;cursor:pointer;touch-action:manipulation}
+.control:hover{background:#dfe3c8}.control:active{background:#d1d8b8}.control svg{width:21px;height:21px}.play{justify-self:start;min-width:0;max-width:100%;font-weight:700;text-align:left}.play svg{flex-shrink:0}
+.control:focus-visible,.dot:focus-visible,.header>button:focus-visible{outline:3px solid #de7c2c;outline-offset:2px}
+.clock{justify-self:center;text-align:center;font-size:11px;white-space:nowrap;font-variant-numeric:tabular-nums;opacity:.8}
+.soundIcon{position:relative;display:flex}.muteSlash{position:absolute;left:10px;top:-2px;height:25px;width:2px;background:currentColor;transform:rotate(-45deg)}
+.progress{display:flex;gap:5px;flex-shrink:0;margin:0 -4px 2px}
+.dot{position:relative;flex:1;min-width:0;height:24px;padding:0;border:0;border-radius:6px;background:transparent;cursor:pointer;touch-action:manipulation}
+.dot::before{content:'';position:absolute;left:4px;right:4px;top:10px;height:3px;background:#294f432d;border-radius:4px}
+.dot[data-complete=true]::before{background:#294f4390}.dot[data-current=true]::before{background:#294f43;height:4px}
+.captionArea{min-height:58px;max-height:130px;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column}
+.caption{margin:auto 0;text-align:center;text-wrap:pretty;overflow-wrap:break-word;font-size:16px;line-height:1.5;padding:0 2px}
+.notice{margin:8px 0 0;text-align:center;font-size:12px;line-height:1.4}
+
+.transcript{position:absolute;inset:90px 24px 24px;z-index:5;max-width:760px;margin:auto;overflow:auto;overscroll-behavior:contain;box-sizing:border-box;padding:25px;background:#fff4df;color:#244b43;border-radius:20px;box-shadow:0 10px 35px #153c3840;animation:readRise .42s cubic-bezier(.2,.8,.2,1) both}.transcript p{font-size:17px;line-height:1.65}.transcript h3{font:32px IslandBrush,Arial,sans-serif}.transcript>button{position:sticky;top:0;float:right;background:#f1ebcf}.transcript small{font-size:12px}
+
+.transport{display:flex;align-items:center;justify-self:start;min-width:0;gap:2px}.tray .replay{width:32px;min-width:32px;padding:6px}.tray .replay svg{width:18px;height:18px}
+.seek{display:block;width:100%;height:24px;margin:0 0 4px;accent-color:#294f43;cursor:pointer;touch-action:pan-y;flex-shrink:0}
+@keyframes readRise{from{opacity:0;transform:translateY(32vh)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:600px){.tray.tray{bottom:calc(12px + env(safe-area-inset-bottom,0px));padding:6px 14px 12px;border-radius:16px}.controls{gap:4px}.tray .control,.transcript .control{font-size:13px;padding:7px}.clock{font-size:10px}.caption{font-size:15px;line-height:1.45}.captionArea{min-height:66px;max-height:138px}.transcript{inset:85px 14px 14px;padding:20px}}
+@media(max-width:380px){.tray .play span{display:none}.tray .play{width:44px;min-width:44px}.controls{gap:2px}.clock{font-size:10px}}
+@media(max-width:350px){.tray.tray{width:calc(100% - 24px);padding-left:10px;padding-right:10px}.controls{gap:0}.tray .control{padding:6px;gap:5px}.clock{font-size:9px}}
+@media(max-height:520px){.tray.tray{bottom:8px;width:min(680px,calc(100% - 32px));padding:2px 14px 8px}.controls{min-height:40px}.tray .control{min-height:40px}.progress{margin-top:-4px;margin-bottom:0}.dot{height:18px}.dot::before{top:7px}.captionArea{min-height:36px;max-height:60px}.caption{font-size:13px;line-height:1.4}.transcript{inset:65px 20px 12px}}
+@media(prefers-reduced-motion:reduce){.transcript{animation:none}}
+
+/* Preserve an actual illustration area on short phones. Captions stay readable
+   and scrollable; the complete narration is also available in Read. */
+@media(max-width:600px) and (max-height:740px){.captionArea{min-height:58px;max-height:102px}.caption{font-size:14px;line-height:1.4}}
+@media(orientation:landscape) and (max-height:520px){:global([data-path-film]) .tray.tray{left:auto;right:max(12px,env(safe-area-inset-right,0px));bottom:max(12px,env(safe-area-inset-bottom,0px));transform:none;width:44%;max-height:calc(100% - 76px)}.captionArea{max-height:145px}.controls{gap:0}.tray .play span{display:none}.clock{font-size:10px}.tray .control{min-height:44px}}

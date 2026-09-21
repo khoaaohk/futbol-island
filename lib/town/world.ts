@@ -20,6 +20,7 @@ export function buildTown(scene: T.Scene) {
   const assets:{kind:string;x:number;z:number;w:number;d:number;visualW?:number;visualD?:number;canopyHeight?:number;baseY?:number}[]=[];
   const surfaceAreas:{kind:string;x:number;z:number;w:number;d:number}[]=[];
   const palette = new Map<string,T.MeshStandardMaterial>();
+  const nightSigns:T.MeshStandardMaterial[]=[];
   const mat = (color: string) => { if (!palette.has(color)) {const m=new T.MeshStandardMaterial({color,roughness:.85});palette.set(color,m);materials.push(m);}return palette.get(color)!;};
   const put = (g:T.BufferGeometry,color:string,x:number,y:number,z:number,parent:T.Group=town) => {if(parent===town&&g instanceof T.BoxGeometry&&y<.2&&['#7a9e67','#8b9e6b'].includes(color))surfaceAreas.push({kind:'garden',x,z,w:g.parameters.width,d:g.parameters.depth});const m=new T.Mesh(g,mat(color));m.position.set(x,y,z);m.castShadow=!(g instanceof T.BoxGeometry&&g.parameters.height<=.2&&y<.2);m.receiveShadow=true;parent.add(m);return m;};
   const box=(w:number,h:number,d:number,c:string,x:number,y:number,z:number,p=town)=>put(new T.BoxGeometry(w,h,d),c,x,y,z,p);
@@ -29,7 +30,9 @@ export function buildTown(scene: T.Scene) {
     const canvas=document.createElement('canvas');canvas.width=512;canvas.height=Math.round(512*h/w);const ctx=canvas.getContext('2d')!;
     ctx.fillStyle=bg;ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle=ink;ctx.textAlign='center';ctx.textBaseline='middle';ctx.font=`900 ${Math.min(canvas.height*.54,canvas.width/(text.length*.64))}px monospace`;ctx.fillText(text,canvas.width/2,canvas.height/2);
     const texture=new T.CanvasTexture(canvas);texture.colorSpace=T.SRGBColorSpace;textures.push(texture);
-    const material=new T.MeshStandardMaterial({map:texture,roughness:.9});materials.push(material);
+    // Keep the emissive-map shader present in every mode; mode changes only
+    // adjust uniforms and reuse the existing sign texture (no extra image).
+    const material=new T.MeshStandardMaterial({map:texture,emissiveMap:texture,emissive:'#ffe1aa',emissiveIntensity:0,roughness:.9});materials.push(material);nightSigns.push(material);
     const mesh=new T.Mesh(new T.PlaneGeometry(w,h),material);mesh.position.set(x,y,z);mesh.rotation.y=rotation;town.add(mesh);return mesh;
   };
 
@@ -795,6 +798,7 @@ export function buildTown(scene: T.Scene) {
   path(181,-15,14,4); // Connect the Coaches walkway directly to the garden gate.
   sign('COMMUNITY GARDEN',13,1.1,207,2.5,5.5,'#477c6a');
   for(const x of [201,213]){cylinder(.08,2.4,'#9d805b',x,1.2,5.5);obstacles.push({x,z:5.5,w:.2,d:.2});}
+  const gardenPlantMaterials=new Map<T.Material,T.MeshStandardMaterial>();
   // Twelve timber beds, with a generous central crossing and paths between rows.
   for(let row=0;row<3;row++)for(let col=0;col<4;col++){
     const x=192+col*10,z=-28+row*11;
@@ -804,7 +808,8 @@ export function buildTown(scene: T.Scene) {
     for(let a=0;a<3;a++)for(let b=0;b<3;b++){
       const px=x-1.8+a*1.8,pz=z-1.8+b*1.8;
       const crop=(row+col)%3;
-      put(new T.IcosahedronGeometry(crop===1?.48:.62,0),crop===2?'#739568':'#547b50',px,.95,pz);
+      const plant=put(new T.IcosahedronGeometry(crop===1?.48:.62,0),crop===2?'#739568':'#547b50',px,.95,pz);
+      const source=plant.material as T.MeshStandardMaterial;let bedPaint=gardenPlantMaterials.get(source);if(!bedPaint){bedPaint=source.clone();bedPaint.emissive.set('#d3ac72');bedPaint.emissiveIntensity=0;gardenPlantMaterials.set(source,bedPaint);materials.push(bedPaint);}plant.material=bedPaint;
       if(crop===1){cylinder(.035,1.35,'#9d805b',px,1.15,pz);put(new T.IcosahedronGeometry(.2,0),'#bd7657',px+.25,1.05,pz);}
       if(crop===2)put(new T.IcosahedronGeometry(.25,0),'#e8be71',px,1.45,pz);
     }
@@ -922,6 +927,64 @@ export function buildTown(scene: T.Scene) {
   }
   const squareArrival={x:95,z:-35},arcadeDoor={x:103,z:-48};
 
+  // Steady welcoming pools connect learning venues and the surrounding streets.
+  // These are painted light, not extra real-time lights or shadow passes.
+  const windowSources=['#365b56','#3d625c','#274c48'].map(color=>mat(color));
+  for(const material of windowSources){material.emissive.set('#ffd294');material.emissiveIntensity=0;}
+  const windowPaint=new T.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:.85,emissive:'#ffd294',emissiveIntensity:0});materials.push(windowPaint);
+  const lampLens=mat('#ffe8ae');lampLens.emissive.set('#ffd294');lampLens.emissiveIntensity=0;
+  type LampSite={x:number;z:number;ground:number;region?:'pier'|'north-beach'|'market'|'garden';poolDepth?:number};
+  const lampSites:LampSite[]=[];
+  const lampCandidates:LampSite[]=[{x:79,z:-45,ground:.075},{x:108,z:-45,ground:.075},{x:62,z:-28,ground:.075},{x:113,z:-22,ground:.075}];
+  const litVenues=new Set(['COACHES','HISTORY MUSEUM','CAFE BY THE SEA','PARK LIBRARY','COMMUNITY WORKSHOP','COAST CAFÉ','BEACH KITCHEN','ISLAND HIGH SCHOOL']);
+  for(const building of buildings)if(litVenues.has(building.name))lampCandidates.push({x:building.x+building.w*.35,z:building.z+building.d/2+2.5,ground:.075});
+  // Destination paths need their own sites: road sampling misses the coast and allotments.
+  // Landward bench/volleyball edge; leave the middle and ocean railing clear.
+  // Narrow pools remain on the actual eight-metre wooden deck.
+  for(const x of [52,76,100,124,148,176,196,222])lampCandidates.push({x,z:208.9,ground:.025,region:'pier',poolDepth:3});
+  for(const [x,z]of [[-42,-184],[-42,-202],[-21,-215],[20,-219],[60,-218],[83,-183],[83,-203],[104,-216],[145,-210],[180,-202]])lampCandidates.push({x,z,ground:-.09,region:'north-beach'});
+  for(const z of [14,42,70,112,140,168,190])lampCandidates.push({x:224.3,z,ground:z>=30?.025:-.022,region:'market'});
+  for(const [x,z]of [[187,-36],[207,-36],[228,-26],[187,-13],[196,3],[228,1],[190,22],[218,23]])lampCandidates.push({x,z,ground:-.022,region:'garden'});
+  // Alternate sidewalk edges every 32m. Round-robin sampling spreads the bounded
+  // budget among roads, rather than filling the first district in build order.
+  const streetRows=roads.map((r,index)=>{
+    const length=r.vertical?r.d:r.w,count=Math.max(1,Math.floor((length-12)/32));
+    return Array.from({length:count},(_,i)=>{
+      const along=-length/2+(i+.5)*length/count,side=(i+index)%2?1:-1;
+      const offset=(r.vertical?r.w:r.d)/2-.6;
+      return {x:r.x+(r.vertical?side*offset:along),z:r.z+(r.vertical?along:side*offset),ground:.035};
+    });
+  });
+  for(let i=0;i<Math.max(0,...streetRows.map(row=>row.length));i++)for(const row of streetRows)if(row[i])lampCandidates.push(row[i]);
+  for(const site of lampCandidates){
+    const onPierDeck=site.region==='pier'&&site.x>=48&&site.x<=225&&site.z>=208&&site.z<=214;
+    if(lampSites.length>=96||(!onIsland(site.x,site.z)&&!onPierDeck)||lampSites.some(p=>Math.hypot(p.x-site.x,p.z-site.z)<12)
+      ||asphaltRects.some(r=>Math.abs(site.x-r.x)<r.w/2+.45&&Math.abs(site.z-r.z)<r.d/2+.45)
+      ||roadJunctions.some(j=>Math.abs(site.x-j.x)<8&&Math.abs(site.z-j.z)<8)
+      ||obstacles.some(o=>Math.abs(site.x-o.x)<o.w/2+.5&&Math.abs(site.z-o.z)<o.d/2+.5))continue;
+    lampSites.push(site);const {x,z}=site,base=site.ground-.015;
+    // Tiny poles need no additional shadow geometry. They join existing spatial
+    // material batches; all pools reuse the same small texture below.
+    cylinder(.19,.22,'#384443',x,base+.11,z).castShadow=false;cylinder(.065,4.2,'#384443',x,base+2.1,z).castShadow=false;
+    box(.62,.12,.62,'#384443',x,base+4.22,z).castShadow=false;box(.43,.32,.43,'#ffe8ae',x,base+3.99,z).castShadow=false;
+    obstacles.push({x,z,w:.38,d:.38});assets.push({kind:'street-lamp',x,z,w:.38,d:.38,visualW:.65,visualD:.65});
+  }
+  // South-end practice floodlights point north at the rebound wall. Keep poles
+  // outside the marked playing width and leave the direct approach unobstructed.
+  for(const x of [141,171]){
+    cylinder(.1,5.4,'#384443',x,2.7,-8.6).castShadow=false;
+    const bank=box(1.5,.65,.3,'#384443',x,5.3,-8.6);bank.rotation.x=-.24;bank.castShadow=false;
+    const lens=box(1.22,.43,.045,'#ffe8ae',x,5.28,-8.77);lens.rotation.x=-.24;lens.castShadow=false;
+    obstacles.push({x,z:-8.6,w:.3,d:.3});assets.push({kind:'practice-light',x,z:-8.6,w:.3,d:.3,visualW:1.5,visualD:.5});
+  }
+  // Low bed stakes sit inside existing bed obstacles, never narrowing paths.
+  for(let row=0;row<3;row++)for(let col=0;col<4;col++){
+    const x=192+col*10,z=-28+row*11;
+    cylinder(.035,.5,'#384443',x+2.35,.86,z+2.35).castShadow=false;
+    box(.22,.12,.22,'#ffe8ae',x+2.35,1.12,z+2.35).castShadow=false;
+  }
+  const signStates=nightSigns.map(material=>({material,intensity:material.emissiveIntensity}));
+
   // Spatial/material batches preserve culling: a distant city's meshes never share
   // one giant visible bounding sphere with the current neighborhood.
   town.traverse(o=>{if(o instanceof T.Mesh&&o.geometry instanceof T.ConeGeometry&&o.geometry.parameters.radius>1.5&&o.geometry.parameters.height<=1){const b=buildings.find(b=>Math.abs(o.position.x-b.x)<b.w/2&&Math.abs(o.position.z-b.z)<b.d/2&&o.position.y>b.height);umbrellaReaction.register(o,b?.height??0,o.userData.umbrellaTargets??[]);}});
@@ -954,6 +1017,9 @@ export function buildTown(scene: T.Scene) {
     if(!shared){shared=m.clone();shared.color.set(0xffffff);shared.vertexColors=true;paintBatches.set(key,shared);materials.push(shared);}
     paintMaterials.set(m,shared);
   }
+  // Three original glass colors still appear by day, carried in vertex colors;
+  // at night they share one warm emissive uniform and one batch per city chunk.
+  for(const source of windowSources)paintMaterials.set(source,windowPaint);
   const position=new T.Vector3();
   town.traverse(object=>{
     if(!(object instanceof T.Mesh)||object.userData.umbrellaAnimated||object.parent===ferry||waves.includes(object)||Array.isArray(object.material))return;
@@ -978,6 +1044,40 @@ export function buildTown(scene: T.Scene) {
     geometries.forEach(g=>g.dispose());
   }
   original.forEach(m=>{m.removeFromParent();m.geometry.dispose();});
+  const nightRoot=new T.Group();nightRoot.name='night-atmosphere';scene.add(nightRoot);
+  const nightPools=new T.Group();nightPools.name='night-light-pools';nightPools.visible=false;nightRoot.add(nightPools);
+  // One 32px radial texture, generated once, for all selected ground pools.
+  // Separate spatial chunks retain local culling instead of one island-sized bound.
+  const poolCanvas=document.createElement('canvas');poolCanvas.width=poolCanvas.height=32;
+  const poolCtx=poolCanvas.getContext('2d')!,gradient=poolCtx.createRadialGradient(16,16,0,16,16,16);
+  gradient.addColorStop(0,'rgba(255,213,140,.56)');gradient.addColorStop(.3,'rgba(255,197,110,.34)');gradient.addColorStop(.7,'rgba(255,183,92,.09)');gradient.addColorStop(1,'rgba(255,196,112,0)');poolCtx.fillStyle=gradient;poolCtx.fillRect(0,0,32,32);
+  const poolTexture=new T.CanvasTexture(poolCanvas);poolTexture.colorSpace=T.SRGBColorSpace;textures.push(poolTexture);
+  const poolMaterial=new T.MeshBasicMaterial({map:poolTexture,transparent:true,depthWrite:false,blending:T.AdditiveBlending,toneMapped:false});materials.push(poolMaterial);
+  const poolGeometry=new T.PlaneGeometry(1,1);poolGeometry.rotateX(-Math.PI/2);
+  const poolChunks=new Map<string,typeof lampSites>();
+  for(const site of lampSites){const key=Math.floor(site.x/50)+':'+Math.floor(site.z/50);let chunk=poolChunks.get(key);if(!chunk){chunk=[];poolChunks.set(key,chunk);}chunk.push(site);}
+  const poolMatrix=new T.Matrix4(),poolPosition=new T.Vector3(),poolScale=new T.Vector3(10,1,10),poolRotation=new T.Quaternion();
+  for(const [key,sites] of poolChunks){
+    const mesh=new T.InstancedMesh(poolGeometry,poolMaterial,sites.length);mesh.name='night-pool-chunk-'+key;
+    for(let i=0;i<sites.length;i++){const site=sites[i];poolPosition.set(site.x,site.ground,site.z);poolScale.set(10,1,site.poolDepth??10);poolMatrix.compose(poolPosition,poolRotation,poolScale);mesh.setMatrixAt(i,poolMatrix);}
+    mesh.instanceMatrix.needsUpdate=true;mesh.computeBoundingSphere();mesh.matrixAutoUpdate=false;nightPools.add(mesh);
+  }
+  const detailPools=new T.Group();detailPools.name='night-detail-pools';nightPools.add(detailPools);
+  const bedPoolMaterial=poolMaterial.clone();bedPoolMaterial.opacity=.3;materials.push(bedPoolMaterial);
+  const bedPools=new T.InstancedMesh(poolGeometry,bedPoolMaterial,12);bedPools.name='garden-bed-glows';
+  for(let i=0;i<12;i++){poolPosition.set(192+(i%4)*10,.625,-28+Math.floor(i/4)*11);poolScale.set(5.5,1,5.5);poolMatrix.compose(poolPosition,poolRotation,poolScale);bedPools.setMatrixAt(i,poolMatrix);}
+  bedPools.computeBoundingSphere();bedPools.matrixAutoUpdate=false;detailPools.add(bedPools);
+  const wallPoolMaterial=poolMaterial.clone();wallPoolMaterial.opacity=.42;materials.push(wallPoolMaterial);
+  const practicePools=new T.InstancedMesh(poolGeometry,wallPoolMaterial,4);practicePools.name='practice-wall-light-wash';
+  for(let i=0;i<4;i++){
+    const wall=i>=2;poolPosition.set(i%2?162:150,wall?1.2:-.017,wall?-29.31:-20);
+    poolScale.set(wall?15:17,1,wall?4.4:21);
+    poolRotation.setFromAxisAngle(new T.Vector3(1,0,0),wall?Math.PI/2:0);
+    poolMatrix.compose(poolPosition,poolRotation,poolScale);practicePools.setMatrixAt(i,poolMatrix);
+  }
+  practicePools.computeBoundingSphere();practicePools.matrixAutoUpdate=false;detailPools.add(practicePools);
+  nightRoot.userData.detailPoolCount=16;
+  nightRoot.userData.lampSites=lampSites;nightRoot.userData.lampCount=lampSites.length;nightRoot.userData.poolChunkCount=poolChunks.size;
   const sceneryRoots=scene.children.filter(root=>!existingRoots.has(root));
-  return {ferry,ferryBounds:new T.Box3(new T.Vector3(241.5,-.4,190),new T.Vector3(250.5,5.1,208)),ferryLockBounds:new T.Box3(new T.Vector3(243,6.8,196),new T.Vector3(249,12.4,202)),setFerryLockHovered:(hovered:boolean)=>{lockMaterial.opacity=hovered?1:.48;},setVisible:(visible:boolean)=>{for(const root of sceneryRoots)root.visible=visible;},dynamicScenery:town,umbrellaReaction,arenaBounds:new T.Box3(new T.Vector3(ar.x-ar.w/2,0,ar.z-ar.d/2),new T.Vector3(ar.x+ar.w/2,ar.height+5,ar.z+ar.d/2)),updateFerry,museumBounds:new T.Box3(new T.Vector3(152.7,0,176.2),new T.Vector3(183.3,8.8,185.8)),walkSurfaces,updateWater:waterRipples.update,updateTrafficSignals:(mode:string)=>{for(const lens of signalLenses)lens.emissiveIntensity=mode==='night'?.85:mode==='sunset'?.55:.35;},coachesBounds:new T.Box3(new T.Vector3(149.7,0,-49.3),new T.Vector3(172.3,11,-36.4)),arcadeBounds:new T.Box3(new T.Vector3(95.7,0,-65.3),new T.Vector3(110.3,10.3,-52.3)),storeBounds:new T.Box3(new T.Vector3(77.7,0,-65.3),new T.Vector3(92.3,10.5,-52.4)),storeDoor:{x:85,z:-50},walls:[...buildings.map(b=>({...b,top:b.height,floor:0})),...roofObstacles,{x:156,z:-29.5,w:26,d:.35,top:2.4,floor:0}],obstacles,roofObstacles,waves,oceanMat,squareArrival,arcadeDoor,buildings,roads,roadJunctions,assets,surfaceAreas,destinations,updateArcade:(time:number,reduced:boolean)=>{const pulse=reduced?.5:(Math.sin(time*Math.PI*2)+1)/2;arcadeBulbs[0].emissiveIntensity=.25+pulse*1.75;arcadeBulbs[1].emissiveIntensity=2-pulse*1.75;},dispose:()=>{umbrellaReaction.dispose();ferry.traverse(o=>{if(o instanceof T.Mesh||o instanceof T.Points)o.geometry.dispose();});ferry.removeFromParent();water.removeFromParent();water.geometry.dispose();for(const mesh of mergedMeshes){mesh.removeFromParent();mesh.geometry.dispose();}textures.forEach(t=>t.dispose());materials.forEach(m=>m.dispose());}};
+  return {ferry,ferryBounds:new T.Box3(new T.Vector3(241.5,-.4,190),new T.Vector3(250.5,5.1,208)),ferryLockBounds:new T.Box3(new T.Vector3(243,6.8,196),new T.Vector3(249,12.4,202)),setFerryLockHovered:(hovered:boolean)=>{lockMaterial.opacity=hovered?1:.48;},setVisible:(visible:boolean)=>{for(const root of sceneryRoots)root.visible=visible;},dynamicScenery:town,umbrellaReaction,arenaBounds:new T.Box3(new T.Vector3(ar.x-ar.w/2,0,ar.z-ar.d/2),new T.Vector3(ar.x+ar.w/2,ar.height+5,ar.z+ar.d/2)),updateFerry,museumBounds:new T.Box3(new T.Vector3(152.7,0,176.2),new T.Vector3(183.3,8.8,185.8)),walkSurfaces,updateWater:waterRipples.update,updateTrafficSignals:(mode:string)=>{const night=mode==='night',dusk=mode==='sunset';for(const lens of signalLenses)lens.emissiveIntensity=night?.85:dusk?.55:.35;const glow=night?.82:dusk?.16:0;const windowColor=night?'#ffc176':'#ffd294';windowPaint.emissive.set(windowColor);windowPaint.emissiveIntensity=glow;for(const material of windowSources){material.emissive.set(windowColor);material.emissiveIntensity=glow;}lampLens.emissive.set(night?'#ffcb82':'#ffd294');lampLens.emissiveIntensity=night?1.7:dusk?.4:0;for(const state of signStates)state.material.emissiveIntensity=Math.max(state.intensity,night?.75:dusk?.12:0);for(const material of gardenPlantMaterials.values())material.emissiveIntensity=night?.09:0;nightPools.visible=night;},coachesBounds:new T.Box3(new T.Vector3(149.7,0,-49.3),new T.Vector3(172.3,11,-36.4)),arcadeBounds:new T.Box3(new T.Vector3(95.7,0,-65.3),new T.Vector3(110.3,10.3,-52.3)),storeBounds:new T.Box3(new T.Vector3(77.7,0,-65.3),new T.Vector3(92.3,10.5,-52.4)),storeDoor:{x:85,z:-50},walls:[...buildings.map(b=>({...b,top:b.height,floor:0})),...roofObstacles,{x:156,z:-29.5,w:26,d:.35,top:2.4,floor:0}],obstacles,roofObstacles,waves,oceanMat,squareArrival,arcadeDoor,buildings,roads,roadJunctions,assets,surfaceAreas,destinations,updateArcade:(time:number,reduced:boolean)=>{const pulse=reduced?.5:(Math.sin(time*Math.PI*2)+1)/2;arcadeBulbs[0].emissiveIntensity=.25+pulse*1.75;arcadeBulbs[1].emissiveIntensity=2-pulse*1.75;},dispose:()=>{nightPools.traverse(o=>{if(o instanceof T.InstancedMesh)o.dispose();});nightRoot.removeFromParent();poolGeometry.dispose();umbrellaReaction.dispose();ferry.traverse(o=>{if(o instanceof T.Mesh||o instanceof T.Points)o.geometry.dispose();});ferry.removeFromParent();water.removeFromParent();water.geometry.dispose();for(const mesh of mergedMeshes){mesh.removeFromParent();mesh.geometry.dispose();}textures.forEach(t=>t.dispose());materials.forEach(m=>m.dispose());}};
 }

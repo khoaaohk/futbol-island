@@ -1,7 +1,21 @@
 'use client';
-import {useEffect,useRef} from 'react';
+import {useEffect,useState,useRef,useCallback} from 'react';
+import {loadRisoStory} from '@/lib/paths/riso/registry';
+import type {RisoStory} from '@/lib/paths/riso/story';
+import StoryFilmPlayer,{type StoryOrigin} from './StoryFilmPlayer';
 import {DoneButton} from './DoneButton';
-import type {UpcomingStory as Story} from '@/lib/paths/upcomingStories';
-import shell from './ModalShell.module.css';
-import styles from './UpcomingStory.module.css';
-export default function UpcomingStory({story,onClose}:{story:Story;onClose:()=>void}){const root=useRef<HTMLDivElement>(null),close=useRef<HTMLButtonElement>(null);useEffect(()=>{const el=root.current,host=el?.parentElement;if(!host)return;const previous=document.activeElement as HTMLElement;const others=Array.from(host.children).filter(n=>n!==el) as HTMLElement[];const inert=others.map(n=>n.inert);others.forEach(n=>n.inert=true);close.current?.focus();return()=>{others.forEach((n,i)=>n.inert=inert[i]);previous?.focus({preventScroll:true});};},[]);return <div ref={root} data-story-view className={styles.screen} role="dialog" aria-modal="true" aria-labelledby="upcoming-title" onKeyDown={e=>{e.stopPropagation();if(e.key==='Escape'){e.preventDefault();onClose();}if(e.key==='Tab'){const controls=Array.from(e.currentTarget.querySelectorAll<HTMLButtonElement>('button'));const first=controls[0],last=controls[controls.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}}}><header className={shell.header}><div><h2 id="upcoming-title">{story.title}</h2></div><DoneButton ref={close} onDone={onClose}/></header><main><div className={styles.sign}><span aria-hidden="true">✦</span><small>A NEW ISLAND STORY</small><h3>Coming soon</h3><p>{story.theme}</p></div><p className={styles.caption}>A story to watch, feel, and take with you.</p></main></div>}
+import styles from './StoryFilmPlayer.module.css';
+type Story={id:string;title:string;theme:string};
+/** Loads the riso print for a story id (lib/paths/riso/stories/<id>.ts, dynamic import) and plays it; shows a paper loading card meanwhile. */
+export default function UpcomingStory({story,onClose,origin}:{story:Story;onClose:(completed:boolean)=>void;origin?:StoryOrigin}){
+ const completed=useRef(false),markComplete=useCallback(()=>{completed.current=true;},[]);
+ const dismiss=()=>onClose(completed.current);
+ const loadingRoot=useRef<HTMLDivElement>(null);
+ const[loaded,setLoaded]=useState<RisoStory|null>(null),[failed,setFailed]=useState(false),[retry,setRetry]=useState(0);
+ useEffect(()=>{let cancelled=false;completed.current=false;setFailed(false);setLoaded(null);
+  loadRisoStory(story.id).then(value=>{if(!cancelled)setLoaded(value);}).catch(()=>{if(!cancelled)setFailed(true);});
+  return()=>{cancelled=true;};},[story.id,retry]);
+ useEffect(()=>{const node=loadingRoot.current;if(!node)return;const previous=document.activeElement as HTMLElement|null;const others=Array.from(node.parentElement?.children??[]).filter(child=>child!==node) as HTMLElement[],inert=others.map(child=>child.inert);others.forEach(child=>child.inert=true);node.querySelector<HTMLButtonElement>('button')?.focus();return()=>{others.forEach((child,i)=>child.inert=inert[i]);previous?.focus?.({preventScroll:true});};},[loaded]);
+ if(loaded&&loaded.id===story.id)return <StoryFilmPlayer key={loaded.id} story={loaded} origin={origin} onClose={dismiss} onComplete={markComplete}/>;
+ return <div ref={loadingRoot} className={styles.film} onKeyDown={e=>{e.stopPropagation();if(e.key==='Escape'){e.preventDefault();dismiss();}if(e.key==='Tab'){const items=e.currentTarget.querySelectorAll<HTMLButtonElement>('button'),first=items[0],last=items[items.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last?.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus();}}}} data-story-view role="dialog" aria-modal="true" aria-label={story.title}><div className={styles.status}><div><h2>{story.title}</h2><p role="status">{failed?'The story couldn’t load. Try again.':'Getting your story ready…'}</p>{failed&&<button className={styles.control} onClick={()=>setRetry(n=>n+1)}>Try again</button>}<DoneButton onDone={dismiss}/></div></div></div>;
+}

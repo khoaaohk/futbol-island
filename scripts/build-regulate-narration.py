@@ -17,5 +17,4 @@ clock+=2; data.append(bytes(rate*4))
 with wave.open(str(target/'narration.wav'),'wb') as out:
  out.setnchannels(1);out.setsampwidth(2);out.setframerate(rate);out.writeframes(b''.join(data))
 (target/'timeline.json').write_text(json.dumps({'duration':clock,'cues':timeline},indent=2))
-(target/'timeline.js').write_text('const TWO_GAMES='+json.dumps(timeline)+';const TWO_GAMES_DURATION='+str(clock)+';')
 print(clock)

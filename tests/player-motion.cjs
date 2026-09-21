@@ -83,3 +83,47 @@ console.log('RIDE_LEGS_TURNS_PASS leg movement, bidirectional lean, pause and re
  a.dispose();b.dispose();
  console.log('ATTENTION_TRANSITION_PASS bounded gaze, pause, release, reduced motion, resume and receiving-to-kick priority');
 }
+
+const airRig=createPlayer('parachute-juggle','home'),THREE=require('three'),handsA=[new THREE.Vector3(),new THREE.Vector3()],handsB=[new THREE.Vector3(),new THREE.Vector3()],footA=new THREE.Vector3(),footB=new THREE.Vector3();
+airRig.update(0,0,0,0,true,{travelMode:'jetpack',parachute:true,facing:0});airRig.handPositions(...handsA);airRig.ballContact(1,footA);airRig.update(0,0,0,0,true,{travelMode:'jetpack',parachute:true,facing:0,parachuteJuggle:{phase:.16,side:1}});airRig.handPositions(...handsB);airRig.ballContact(1,footB);assert(handsA[0].distanceTo(handsB[0])<1e-8&&handsA[1].distanceTo(handsB[1])<1e-8,'air juggling preserves canopy grips');assert(footA.distanceTo(footB)>.05,'air juggling moves kicking foot');airRig.dispose();console.log('Airborne juggling: foot tap visible, canopy grips preserved.');
+
+const continuityRig=createPlayer('air-juggle-continuity','home');function sampleAirBall(phase,side){continuityRig.update(0,0,0,0,true,{travelMode:'jetpack',parachute:true,facing:0,parachuteJuggle:{phase,side}});const from=new THREE.Vector3(),to=new THREE.Vector3();continuityRig.ballContact(side,from);continuityRig.ballContact(-side,to);return from.lerp(to,phase);}assert(sampleAirBall(.99999,1).distanceTo(sampleAirBall(0,-1))<.001,'alternating-foot arc remains continuous at wrap');continuityRig.dispose();console.log('Airborne ball arc endpoints join without a foot-switch jump.');
+
+const spiralRig=createPlayer('spiral-juggle','home');
+const spiralPelvis=spiralRig.root.getObjectByName('player-pelvis'),spiralTorso=spiralRig.root.getObjectByName('armor-torso');
+spiralRig.update(0,0,1/60,0,false,{parachute:true,parachuteSpin:1,parachuteJuggle:{phase:.16,side:1}});
+assert(spiralPelvis.rotation.y<-.1&&spiralTorso.rotation.y>.2,'hips trail while shoulders counter-twist through spin');
+const spinHands=[new THREE.Vector3(),new THREE.Vector3()];spiralRig.handPositions(...spinHands);
+assert(spinHands.every(v=>Number.isFinite(v.length())&&v.y>1.3),'both hands remain raised for suspension lines');
+function spinBall(phase,side){spiralRig.update(0,0,0,0,false,{parachute:true,parachuteSpin:1,parachuteJuggle:{phase,side}});const a=new THREE.Vector3(),b=new THREE.Vector3();spiralRig.ballContact(side,a);spiralRig.ballContact(-side,b);return a.lerp(b,phase);}
+assert(spinBall(.99999,1).distanceTo(spinBall(0,-1))<.001,'juggling stays continuous while counter-twisting');
+spiralRig.update(0,0,1/60,0,true,{parachute:true,parachuteSpin:1});assert.equal(spiralPelvis.rotation.y,0,'reduced motion removes spin pose');
+spiralRig.dispose();console.log('Spiral juggling: counter-twist, raised grips, continuous touches and reduced motion passed.');
+
+const flightRig=createPlayer('flight-flow','home',true,true);
+const joint=name=>flightRig.root.getObjectByName(name);
+const flightSample=(time,extra={},reduced=false)=>flightRig.update(0,0,1/60,time,reduced,{travelMode:'jetpack',facing:0,flight:{bob:0,pitch:.35,roll:0,compression:0,thrust:1,secondary:0,phase:'cruise',progress:1,acceleration:0,turn:0,...extra}});
+let kneeMin=Infinity,kneeMax=-Infinity;
+for(let i=0;i<180;i++){flightSample(i/60);kneeMin=Math.min(kneeMin,joint('left-knee').rotation.x);kneeMax=Math.max(kneeMax,joint('left-knee').rotation.x);}
+assert(kneeMax-kneeMin>.08,'cruising knees flow instead of locking');
+const normalKnee=joint('left-knee').rotation.x;
+for(let i=0;i<60;i++)flightSample(3+i/60,{acceleration:1,turn:1});
+assert(joint('left-knee').rotation.x>normalKnee+.05,'acceleration draws knees back');
+assert(joint('player-head').rotation.y>.2&&joint('left-hip').rotation.y<-.05,'head leads turn while hips trail');
+assert(Math.abs(joint('left-hand').rotation.x)>.05,'hands follow acceleration');
+const paused=joint('left-knee').rotation.x;
+flightRig.update(0,0,0,4,false,{travelMode:'jetpack',flight:{phase:'cruise',progress:1,pitch:0,compression:0,thrust:1,acceleration:-1,turn:-1}});
+assert.equal(joint('left-knee').rotation.x,paused,'paused flight holds joint inertia');
+for(let i=0;i<60;i++)flightSample(4+i/60,{phase:'landing',progress:.82,compression:.17,pitch:0});
+assert(joint('left-knee').rotation.x>.65,'landing absorbs impact through knees');
+for(let i=0;i<60;i++)flightSample(5+i/60,{phase:'landing',progress:1,compression:0,pitch:0});
+assert(joint('left-knee').rotation.x<.16,'landing settles into standing pose');
+flightRig.update(0,0,1/60,6,true,{travelMode:'walk',facing:0});
+assert.equal(joint('left-ankle').rotation.z,0,'flight ankle bank clears when walking');
+assert.equal(joint('left-hand').rotation.x,0,'flight hand rotation clears when walking');
+flightSample(7,{pitch:.4,turn:1});
+assert(Math.abs(joint('left-shoulder').rotation.y)>.05,'cruise twists shoulder yaw');
+flightRig.update(0,0,1/60,7,true,{travelMode:'walk',facing:0});
+assert.equal(joint('left-shoulder').rotation.y,0,'walking clears cruise shoulder twist');
+assert.equal(joint('right-shoulder').rotation.y,0,'both shoulders return to walking alignment');
+flightRig.dispose();console.log('FLIGHT_FLOW_PASS knees, acceleration, turning, hands, pause, landing absorption and walking reset');

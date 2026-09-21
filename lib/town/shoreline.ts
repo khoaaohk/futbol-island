@@ -30,3 +30,7 @@ export function distanceToShore(x:number,z:number){
  }
  return Math.sqrt(squared);
 }
+
+/** Broad inland lawn, set back from the sand ribbon to retain a tan coastal margin. */
+export const INTERIOR_GRASS_COLOR='#6e9678';
+export const INTERIOR_GRASS=SHORE_SAND.map(({inner})=>({x:85+(inner.x-85)*.9,z:-10+(inner.z+10)*.9}));

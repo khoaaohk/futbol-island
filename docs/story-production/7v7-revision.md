@@ -1,0 +1,48 @@
+# 7v7 mental-concept explainer revision
+
+Replaces the rejected fictional scripts and establishes the replacement visual direction. Script, labels and age notes are revised in `lib/paths/films/seven.ts`; draw functions remain untouched pending the coordinator's new image boards and implementation. Existing Samantha recordings contain the obsolete scripts and MUST be replaced before playback. Root is preparing neural Kokoro narration. No new audio was generated in this revision.
+
+Each concept is a direct second-person explanation, with an opening question, an abstract visual metaphor, simple definition and concrete football cue. Six ten-second beats; 134 words for belonging, 134 for inner voice, 135 for help. Script text in `seven.ts` is the narration source of truth. The named films remain collection titles, not fictional plots.
+
+## Art direction for all three image boards
+
+Generate cinematic animation keyframes, not a poster, slideshow, worksheet or icon set. Full-bleed abstract painted forms extend far outside the frame; asymmetrical composition, large foreground crops, strong depth through overlapping layers. Rich screen-print grain and hand-painted edges inside flat fields of midnight navy #092635, electric cobalt #0759ef, hot orange #ff5424, rose pink #fa79c9 and warm cream #fff0d1. Optional small golden accent #ffc735. Bold contrast and warmth, matching the abstract feeling sequences in `public/stories/films/regulate-film.js` and the huge mural ribbons in `grit-film.js` (the inspected render scripts reference these actual artwork sources). No gradients, glossy 3D, card borders, tidy grids inside individual frames, clip art, thin infographic arrows, diagram labels, literal radio hardware, boats, buildings, people or pitch diagrams.
+
+Create six equal cinematic frames per concept, ordered left-to-right across two rows, with no embedded titles or words. Shapes must feel like successive camera positions inside one evolving composition. Final playback adds short labels separately. Keep semantic centre safe for both portrait and landscape crops, but make the artwork itself edge-to-edge. Camera notes below describe continuous transitions to guide subsequent animation; they are not claims that a still image contains motion.
+
+## A Place in the Picture — belonging and authenticity
+
+**Concept:** Different colours can occupy a shared picture without becoming the same. Belonging is welcome and respect, not a reward for performance. Visual motif: broad interlacing painted ribbons retain their colours and silhouettes throughout.
+
+1. **0–10s, A place for you.** Camera very close to a large irregular pink ribbon, diagonally cropped from the lower left toward centre; imposing cobalt and navy slabs squeeze the upper and right edges. A narrow cream opening suggests there may be room beyond. Warm orange peeks through the gap. No isolated puzzle piece. Transition: push directly into the cream opening as the huge edges slide past the viewer.
+2. **10–20s, Different, together.** Inside the opening, huge orange, pink and cobalt curved bands occupy different depths, each retaining a distinct contour. Cream separates portions so the colours stay legible. Navy anchors the far distance. Transition: a slow camera arc follows the pink contour while adjacent bands uncurl rather than cut away.
+3. **20–30s, Bring yourself.** Close on the different kinds of edges: a softly rounded pink fold, an energetic angular orange sweep, a steady broad cobalt arc. All belong to the same flowing composition, none central or crowned. Transition: pull back through their shared negative space to reveal how they connect.
+4. **30–40s, Room to learn.** The same bands expand outward around a large warm cream space. An imperfect notch remains visible in one band; the surrounding composition keeps holding its place. Convey welcome and breathing room, not a hole that must be filled perfectly. Transition: the open cream region widens as the camera glides sideways.
+5. **40–50s, Make room for others.** Two generous coloured folds peel apart, admitting another cobalt sweep into their shared rhythm. Different forms touch without blending into a single colour; their curves turn toward the same direction. Transition: move forward along the pink fold into the larger composition.
+6. **50–60s, Still yourself.** A confident full-bleed woven mural of broad pink, cobalt, orange and cream bands, with deep navy pockets. Each retains its original distinctive shape. The opening pink ribbon is recognisable at a larger scale within the whole. End with a gentle camera settle, retaining spaciousness rather than a badge or completion emblem.
+
+## The Pocket Radio — a kinder inner voice
+
+**Concept:** A loud thought is not the whole truth. Notice it; use the words you would offer a friend; choose one useful action. Visual motif: harsh compressed sound folds gradually open into a clear, smooth wave. Abstract sound only; no literal radio, speaker, dial or pitch.
+
+1. **0–10s, What do you hear?** Extreme close-up inside tangled orange and pink zigzag folds, crowded against midnight navy. A cream curved sliver is nearly obscured. Large ragged edges overlap and extend off all sides. Transition: camera travels forward between folds, revealing that the noise occupies only one layer.
+2. **10–20s, Noise is not truth.** One jagged orange loop repeats in the foreground while an expansive calm cobalt field is visible behind it. The loop is large but clearly not the whole world. No text in the thought. Transition: pull slightly back and orbit around the orange fold, revealing more of the blue space.
+3. **20–30s, A kinder station.** A warm cream arc opens through the cluster; pink folds soften along its edges while an orange remnant remains off-centre. Curves feel human and imperfect. Transition: follow the cream arc as it uncurls toward the viewer, carrying the camera into its open centre.
+4. **30–40s, Kind and honest.** Broad pink and cream waves share space with one smaller angular orange fold. The old sharpness remains acknowledged; it no longer occupies the whole frame. Deep navy and cobalt alternate behind. Transition: the camera crosses the boundary between the smaller sharp fold and the broad smooth wave.
+5. **40–50s, One useful cue.** A single strong cream wave makes a clear path through cobalt, with a broad orange bank on one side and pink on the other. Direction is suggested by the actual sweep, not an arrow, dotted route, ball or diagram. Transition: a steady forward drift rides the wave's long curve.
+6. **50–60s, Tune in again.** The smooth cream and pink wave fills the foreground; a small jagged orange echo appears at a distant edge. The composition remains spacious and stable even with that echo present. End in a gentle breathing expansion; do not imply harsh thoughts vanish forever.
+
+## The Signal Across the Water — asking for help
+
+**Concept:** A clear question tells another person what you need. Support and effort can coexist; listen, try and ask again. Visual motif: a cream pulse expands through layered blue distance, meets a responding warm form, and becomes a shared flowing connection. Abstract water/signal; no shores, boats, flags or characters.
+
+1. **0–10s, Send a signal.** Enormous layered cobalt and navy swells occupy the entire frame. A cropped cream crescent near the lower left presses gently into the blue depth; a distant pink arc appears across the upper right. Strong distance and a quiet sense of hesitation. Transition: camera approaches the cream crescent until its edge becomes a horizon.
+2. **10–20s, Make it clear.** The cream crescent becomes a broad, legible arc advancing between blue layers. Nearby orange folds separate so the signal is unobscured. Pink remains distant but visible. Transition: track along the advancing arc through overlapping cobalt bands.
+3. **20–30s, Asking is a skill.** Two strong differently coloured forms share the frame: the cream arc reaching outward and a pink arc turning toward it. Both remain substantial; neither dissolves, shrinks or surrenders its shape. Transition: glide between the two arcs as they approach one another.
+4. **30–40s, Name what you need.** Multiple close cream folds converge into one broad clean ribbon crossing deep navy. It has a clear beginning and direction, framed by orange and cobalt. Convey specificity through shape clarity, with no speech bubble or written question. Transition: camera moves along this ribbon toward the pink response.
+5. **40–50s, Listen, then try.** Cream and pink ribbons meet, bend alongside each other and form a paired flowing sweep through the cobalt depth. An orange fold provides a warm counterpoint. Connection creates a way forward, not a bridge diagram. Transition: pass through the opening where the two ribbons curve together.
+6. **50–60s, Keep reaching out.** An open fan of broad cream and pink arcs stretches across layered navy/cobalt, with an orange glow rendered as a solid painted shape. Several generous spaces remain between forms, suggesting more than one available connection. End with the camera resting within the joined sweep, no triumphant badge or literal rescue.
+
+## Validation
+
+Only narration, labels and age notes in `seven.ts` changed in this revision. Draw functions, palettes, IDs, themes, timing and audio URL contracts are untouched. Scripts have no named characters, fictional event sequence or device story. All retain a practical football cue and avoid equating personal worth with success. Native source typecheck passed after revision. The old visual/audio assets are explicitly not approved as the finished revision.

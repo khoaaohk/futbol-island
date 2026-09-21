@@ -566,8 +566,7 @@
             "id": "bld_11_whenlong",
             "name": "Around the Pressure",
             "steps": 10,
-            "questions": 2,
-            "story": "reset"
+            "questions": 2
           }
         ]
       },
@@ -691,6 +690,7 @@
         "steps": 9,
         "questions": 2
       }
-    ]
+    ],
+    "openingStory": "reset"
   }
 ]

@@ -1,0 +1,6 @@
+/* Center within the available body while allowing short screens to scroll. */
+.body.body{display:flex;flex-direction:column;align-items:center}
+.card.card{box-sizing:border-box;width:100%;max-width:680px;flex:none;margin:auto 0;padding:clamp(28px,5vw,56px);border-radius:32px 48px 32px 32px;background:#fff2d3;color:#244d40;box-shadow:0 8px 0 #183b3438;text-align:center}
+.card.card h3{font-size:clamp(28px,3.5vw,40px);line-height:1.2;text-wrap:balance;margin:22px 0 16px}
+.card.card p{max-width:52ch;margin:16px auto 0;font-size:clamp(16px,1.5vw,18px);line-height:1.65;color:#385647;text-wrap:pretty}
+@media(max-width:600px){.card.card{border-radius:28px;padding:28px 24px}}

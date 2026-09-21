@@ -1,0 +1,25 @@
+{
+  "phases": 894,
+  "boundaries": 75,
+  "reduced": 90,
+  "timings": [
+    {
+      "width": 390,
+      "height": 844,
+      "dpr": 1.5,
+      "batches": 120,
+      "drawsPerBatch": 30,
+      "medianMs": 0.006666660308837891,
+      "p95Ms": 0.013333320617675781
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "dpr": 1.5,
+      "batches": 120,
+      "drawsPerBatch": 30,
+      "medianMs": 0.006666660308837891,
+      "p95Ms": 0.02000001271565755
+    }
+  ]
+}

@@ -1,33 +1,54 @@
 @font-face{font-family:IslandLoadingBrush;src:url('/stories/films/assets/Knewave-Regular.ttf') format('truetype');font-display:block}
 .screen.screen{position:absolute;inset:0;z-index:8;display:block;padding:0;overflow:hidden;background:#2b53e5;color:#fff2d3;backdrop-filter:none;-webkit-backdrop-filter:none;letter-spacing:normal;font-family:var(--font-body),Arial,sans-serif;isolation:isolate}
 .screen::before{content:'';position:absolute;inset:0;background:url('/stories/films/assets/entry-grain.png');opacity:.38;pointer-events:none;z-index:2}
-.art{position:absolute;inset:30% 0 0;width:100%;pointer-events:none}
-.art picture{display:block;width:100%;height:100%}
-.art img{display:block;width:100%;height:100%;object-fit:fill;object-position:50% 100%}
-.copy{position:absolute;top:clamp(40px,8vh,90px);left:24px;right:24px;text-align:center;z-index:1}
+.art{position:absolute;inset:52% 0 0;width:100%;pointer-events:none}
+.copy{position:absolute;top:30%;left:24px;right:24px;transform:translateY(-50%);text-align:center;z-index:1}
 .eyebrow{font-size:clamp(10px,1.1vw,14px);font-weight:800;letter-spacing:.17em}
-.copy h2{font:clamp(32px,4.3vw,62px)/1.12 IslandLoadingBrush,Arial,sans-serif;margin:14px 0 16px;letter-spacing:-.025em}
-.copy h2 br{display:none}
-.copy p{font-size:15px;font-weight:700;margin:0 0 14px}
+.copy h2{font:clamp(32px,4.3vw,62px)/1.18 IslandLoadingBrush,Arial,sans-serif;margin:16px 0 26px;letter-spacing:-.025em}
 .copy :global(.island-loading-track){margin:0 auto;width:180px;background:#fff2d338;height:6px}
 .copy :global(.island-loading-track)>span{background:#f9d55d}
-@media(max-width:700px){.copy{top:max(62px,8svh,env(safe-area-inset-top));left:20px;right:20px}.copy h2{font-size:clamp(30px,8vw,48px);line-height:1.18;margin:16px 0 22px}.copy h2 br{display:block}.eyebrow{font-size:10px}.copy p{font-size:13px}.art{inset:36% -25% 0;width:150%}.art img{object-fit:contain;object-position:50% 100%}}
-@media(max-height:500px) and (min-width:701px){.copy{top:15px}.eyebrow{font-size:9px}.copy h2{font-size:30px;margin:9px 0}.copy p{font-size:12px;margin-bottom:8px}.art{top:20%;bottom:-40%}}
-.copy h2 br{display:block}
-@media(min-width:701px){.copy h2{font-size:clamp(30px,3.5vw,50px);margin:10px 0 12px}.art{top:36%}}
-/* Lower the complete loading copy group while keeping the coast unobstructed. */
-.copy{top:clamp(72px,12vh,130px)}
-@media(min-width:701px){.art{top:43%}}
-@media(max-width:700px){.copy{top:max(90px,12svh,env(safe-area-inset-top))}.art{top:43%}}
-@media(max-height:560px){.copy{top:28px}.copy h2{font-size:28px;margin:8px 0}.copy p{margin-bottom:10px}.art{top:44%;bottom:0}}
-.copy{top:clamp(105px,17vh,180px)}
-.copy h2{margin-bottom:26px}
-@media(max-width:700px){.copy{top:max(120px,17svh,env(safe-area-inset-top))}.copy h2{margin-bottom:30px}.art{top:48%}}
-@media(min-width:701px){.art{top:47%}}
-@media(max-height:560px){.copy{top:50px}.copy h2{font-size:28px;margin:10px 0 18px}.art{top:48%}}
-.copy{top:clamp(140px,22vh,230px)}
-@media(max-width:700px){.copy{top:max(145px,22svh,env(safe-area-inset-top))}.art{top:54%}}
-@media(min-width:701px){.art{top:52%}}
-@media(max-height:560px){.copy{top:65px}.art{top:52%}}
+@media(max-width:700px){.copy{top:31%;left:20px;right:20px}.copy h2{font-size:clamp(30px,8vw,48px)}.eyebrow{font-size:10px}.art{inset:auto -5% -2%;width:110%;height:48%}}
+@media(max-height:560px){.copy h2{font-size:28px;margin:8px 0 16px}.eyebrow{font-size:9px}}
 
-@media(max-width:700px){.art{left:-5%;right:-5%;width:110%;top:auto;bottom:-2%;height:48%}.art img{object-fit:cover;object-position:center bottom}}
+/* Finite arrival motion: no perpetual artwork loop while assets initialize. */
+.art{transform-origin:50% 100%;animation:coastArrive 3s cubic-bezier(.18,.65,.25,1) both}
+.copy{animation:none}
+.exiting{animation:loadingDepart .48s ease-in-out both;pointer-events:none}
+@keyframes coastArrive{from{transform:translateY(24px) scale(1.06);opacity:.55}to{transform:translateY(0) scale(1);opacity:1}}
+
+@keyframes loadingDepart{from{opacity:1}to{opacity:0}}
+@media(prefers-reduced-motion:reduce){.art,.copy{animation:none}.exiting{animation:loadingDepart .08s linear both}}
+
+.art svg{display:block;width:100%;height:100%;overflow:visible}
+.art .mobileArt{display:none}
+.shore{transform-box:fill-box;transform-origin:50% 50%}
+@media(max-width:700px){.art .mobileArt{display:block}.art .wideArt{display:none}}
+.exiting{animation:loadingDepart .5s 1.55s ease-in-out both}
+.exiting .copy{animation:islandDetailsDepart .22s ease-out both}
+.detailItem{transform-box:fill-box;transform-origin:center}
+.exiting .detailItem{animation:itemBounceAway .34s ease-in-out both}
+.exiting .detailItem:nth-child(6n+1){animation-delay:.28s}
+.exiting .detailItem:nth-child(6n+2){animation-delay:.42s}
+.exiting .detailItem:nth-child(6n+3){animation-delay:.07s}
+.exiting .detailItem:nth-child(6n+4){animation-delay:.21s}
+.exiting .detailItem:nth-child(6n+5){animation-delay:0s}
+.exiting .detailItem:nth-child(6n){animation-delay:.14s}
+@keyframes itemBounceAway{0%{transform:scale(1);opacity:1}28%{transform:translateY(-5px) scale(1.13);opacity:1}48%{transform:translateY(2px) scale(.94);opacity:1}100%{transform:translateY(5px) scale(0);opacity:0}}
+.exiting .surroundings{animation:islandDetailsDepart .35s .25s ease-out both}
+.exiting .shore{animation:none}
+.exiting .art{transform-origin:50% 46%;animation:islandDive .8s .8s cubic-bezier(.55,.05,.35,1) both}
+@keyframes islandDetailsDepart{to{opacity:0}}
+@keyframes islandDive{from{transform:scale(1)}to{transform:scale(14)}}
+
+@media(prefers-reduced-motion:reduce){.exiting{animation:loadingDepart .08s linear both}.exiting .details,.exiting .copy,.exiting .surroundings,.exiting .shore,.exiting .shore path{animation:none}}
+
+@media(prefers-reduced-motion:reduce){.exiting .art{animation:none}}
+
+.landingSurface{position:absolute;inset:0;background:#dfc587;opacity:0;pointer-events:none;z-index:1}
+.exiting .landingSurface{animation:landFill .6s 1s ease-in-out both}
+.exiting::after{content:'';position:absolute;inset:0;z-index:3;pointer-events:none;background:linear-gradient(115deg,transparent 25%,#fff2d370 48%,transparent 70%);animation:landingGleam .45s 1.15s ease-in-out both}
+@keyframes landFill{0%{opacity:0;transform:scale(.96);clip-path:inset(12% 18% 9% 16% round 46% 54% 43% 57%)}25%{opacity:1}65%{opacity:1;transform:scale(1.025);clip-path:inset(0 round 0)}84%{opacity:1;transform:scale(.992);clip-path:inset(0 round 0)}100%{opacity:1;transform:scale(1);clip-path:inset(0 round 0)}}
+@keyframes landingGleam{from{opacity:0;transform:translateX(-100%)}40%{opacity:.8}to{opacity:0;transform:translateX(100%)}}
+@media(prefers-reduced-motion:reduce){.exiting .landingSurface,.exiting::after{animation:none;opacity:0}}
+
+@media(prefers-reduced-motion:reduce){.exiting .detailItem{animation:none}}

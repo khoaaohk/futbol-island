@@ -1,0 +1,1554 @@
+{
+  "date": "2026-09-20",
+  "deployment": "local only",
+  "scope": {
+    "rebuiltCanvasStories": 14,
+    "rebuiltOriginalVideos": 2,
+    "approvedReferencesReviewed": [
+      "Regulating Emotions",
+      "The Woven Court"
+    ]
+  },
+  "canvas": {
+    "stories": 15,
+    "clauseFrames": 388,
+    "chapterSeams": 75,
+    "errors": [],
+    "seamsMatch": true
+  },
+  "appPlayback": {
+    "canvasStories": 15,
+    "originalStories": 3,
+    "viewports": [
+      390,
+      1440
+    ],
+    "narrowControls": 320,
+    "result": "pass"
+  },
+  "deliveredVideoReview": {
+    "result": "pass",
+    "freshReceiptSource": "/tmp/fi2-forward-originals/render-complete.json",
+    "timingMap": "lib/paths/gritNarrationTiming.json",
+    "films": [
+      {
+        "film": "futsl",
+        "format": "portrait",
+        "file": "/Users/khoado/Desktop/Warp Claude Projects/futbol-island/public/stories/films/futsl/portrait.mp4",
+        "fileModified": "2026-09-20T13:50:56.377Z",
+        "receiptModified": "2026-09-20T13:50:56.485Z",
+        "audioUnchanged": true,
+        "audioHash": "SHA256=8a90fb277761a98afe78eb643688e399e67412cbfb48b975c28cff8d82d7dc5b",
+        "metadata": {
+          "programs": [],
+          "stream_groups": [],
+          "streams": [
+            {
+              "codec_type": "video",
+              "width": 720,
+              "height": 1280,
+              "duration": "54.541667"
+            },
+            {
+              "codec_type": "audio",
+              "duration": "54.569796"
+            }
+          ],
+          "format": {
+            "duration": "54.569796",
+            "size": "5971931"
+          }
+        },
+        "samples": [
+          {
+            "kind": "passage",
+            "boundary": 5.36,
+            "offset": -0.25,
+            "requestedStory": 5.11,
+            "index": 123,
+            "media": 5.125,
+            "story": 5.125,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-portrait-01.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-portrait-01.png",
+            "meanRgbDifference": 2.0718
+          },
+          {
+            "kind": "passage",
+            "boundary": 5.36,
+            "offset": -0.08,
+            "requestedStory": 5.28,
+            "index": 127,
+            "media": 5.291666666666667,
+            "story": 5.291666666666667,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-portrait-02.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-portrait-02.png",
+            "meanRgbDifference": 1.7052
+          },
+          {
+            "kind": "passage",
+            "boundary": 5.36,
+            "offset": 0.25,
+            "requestedStory": 5.61,
+            "index": 135,
+            "media": 5.625,
+            "story": 5.625,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-portrait-03.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-portrait-03.png",
+            "meanRgbDifference": 1.7036
+          },
+          {
+            "kind": "body",
+            "requestedStory": 9.8,
+            "index": 235,
+            "media": 9.791666666666666,
+            "story": 9.791666666666666,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-portrait-04.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-portrait-04.png",
+            "meanRgbDifference": 1.6957
+          },
+          {
+            "kind": "body",
+            "requestedStory": 15.5,
+            "index": 372,
+            "media": 15.5,
+            "story": 15.5,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-portrait-05.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-portrait-05.png",
+            "meanRgbDifference": 1.4037
+          },
+          {
+            "kind": "passage",
+            "boundary": 23.3,
+            "offset": -0.25,
+            "requestedStory": 23.05,
+            "index": 553,
+            "media": 23.041666666666668,
+            "story": 23.041666666666668,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-portrait-06.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-portrait-06.png",
+            "meanRgbDifference": 2.1113
+          },
+          {
+            "kind": "passage",
+            "boundary": 23.3,
+            "offset": -0.08,
+            "requestedStory": 23.220000000000002,
+            "index": 557,
+            "media": 23.208333333333332,
+            "story": 23.208333333333332,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-portrait-07.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-portrait-07.png",
+            "meanRgbDifference": 1.6191
+          },
+          {
+            "kind": "passage",
+            "boundary": 23.3,
+            "offset": 0.25,
+            "requestedStory": 23.55,
+            "index": 565,
+            "media": 23.541666666666668,
+            "story": 23.541666666666668,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-portrait-08.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-portrait-08.png",
+            "meanRgbDifference": 1.5791
+          },
+          {
+            "kind": "passage",
+            "boundary": 26.84,
+            "offset": -0.25,
+            "requestedStory": 26.59,
+            "index": 638,
+            "media": 26.583333333333332,
+            "story": 26.583333333333332,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-portrait-09.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-portrait-09.png",
+            "meanRgbDifference": 2.0802
+          },
+          {
+            "kind": "passage",
+            "boundary": 26.84,
+            "offset": -0.08,
+            "requestedStory": 26.76,
+            "index": 642,
+            "media": 26.75,
+            "story": 26.75,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-portrait-10.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-portrait-10.png",
+            "meanRgbDifference": 1.5679
+          },
+          {
+            "kind": "passage",
+            "boundary": 26.84,
+            "offset": 0.25,
+            "requestedStory": 27.09,
+            "index": 650,
+            "media": 27.083333333333332,
+            "story": 27.083333333333332,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-portrait-11.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-portrait-11.png",
+            "meanRgbDifference": 1.5204
+          },
+          {
+            "kind": "body",
+            "requestedStory": 30.3,
+            "index": 727,
+            "media": 30.291666666666668,
+            "story": 30.291666666666668,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-portrait-12.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-portrait-12.png",
+            "meanRgbDifference": 1.541
+          },
+          {
+            "kind": "body",
+            "requestedStory": 36.7,
+            "index": 881,
+            "media": 36.708333333333336,
+            "story": 36.708333333333336,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-portrait-13.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-portrait-13.png",
+            "meanRgbDifference": 1.4154
+          },
+          {
+            "kind": "body",
+            "requestedStory": 45.5,
+            "index": 1092,
+            "media": 45.5,
+            "story": 45.5,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-portrait-14.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-portrait-14.png",
+            "meanRgbDifference": 1.614
+          },
+          {
+            "kind": "passage",
+            "boundary": 46.26,
+            "offset": -0.25,
+            "requestedStory": 46.01,
+            "index": 1104,
+            "media": 46,
+            "story": 46,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-portrait-15.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-portrait-15.png",
+            "meanRgbDifference": 2.2232
+          },
+          {
+            "kind": "passage",
+            "boundary": 46.26,
+            "offset": -0.08,
+            "requestedStory": 46.18,
+            "index": 1108,
+            "media": 46.166666666666664,
+            "story": 46.166666666666664,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-portrait-16.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-portrait-16.png",
+            "meanRgbDifference": 1.882
+          },
+          {
+            "kind": "passage",
+            "boundary": 46.26,
+            "offset": 0.25,
+            "requestedStory": 46.51,
+            "index": 1116,
+            "media": 46.5,
+            "story": 46.5,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-portrait-17.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-portrait-17.png",
+            "meanRgbDifference": 1.8776
+          },
+          {
+            "kind": "body",
+            "requestedStory": 53.8,
+            "index": 1291,
+            "media": 53.791666666666664,
+            "story": 53.791666666666664,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-portrait-18.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-portrait-18.png",
+            "meanRgbDifference": 1.9661
+          }
+        ],
+        "maximumMeanRgbDifference": 2.2232,
+        "comparisonPass": true,
+        "visualReview": "pass",
+        "audioDuration": "54.569796",
+        "videoDuration": "54.541667",
+        "heldLastFrameMs": 28.129
+      },
+      {
+        "film": "futsl",
+        "format": "square",
+        "file": "/Users/khoado/Desktop/Warp Claude Projects/futbol-island/public/stories/films/futsl/square.mp4",
+        "fileModified": "2026-09-20T13:51:17.411Z",
+        "receiptModified": "2026-09-20T13:51:17.504Z",
+        "audioUnchanged": true,
+        "audioHash": "SHA256=8a90fb277761a98afe78eb643688e399e67412cbfb48b975c28cff8d82d7dc5b",
+        "metadata": {
+          "programs": [],
+          "stream_groups": [],
+          "streams": [
+            {
+              "codec_type": "video",
+              "width": 720,
+              "height": 720,
+              "duration": "54.541667"
+            },
+            {
+              "codec_type": "audio",
+              "duration": "54.569796"
+            }
+          ],
+          "format": {
+            "duration": "54.569796",
+            "size": "3863722"
+          }
+        },
+        "samples": [
+          {
+            "kind": "passage",
+            "boundary": 5.36,
+            "offset": -0.25,
+            "requestedStory": 5.11,
+            "index": 123,
+            "media": 5.125,
+            "story": 5.125,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-square-01.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-square-01.png",
+            "meanRgbDifference": 1.9533
+          },
+          {
+            "kind": "passage",
+            "boundary": 5.36,
+            "offset": -0.08,
+            "requestedStory": 5.28,
+            "index": 127,
+            "media": 5.291666666666667,
+            "story": 5.291666666666667,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-square-02.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-square-02.png",
+            "meanRgbDifference": 1.8115
+          },
+          {
+            "kind": "passage",
+            "boundary": 5.36,
+            "offset": 0.25,
+            "requestedStory": 5.61,
+            "index": 135,
+            "media": 5.625,
+            "story": 5.625,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-square-03.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-square-03.png",
+            "meanRgbDifference": 1.7987
+          },
+          {
+            "kind": "body",
+            "requestedStory": 9.8,
+            "index": 235,
+            "media": 9.791666666666666,
+            "story": 9.791666666666666,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-square-04.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-square-04.png",
+            "meanRgbDifference": 1.8003
+          },
+          {
+            "kind": "body",
+            "requestedStory": 15.5,
+            "index": 372,
+            "media": 15.5,
+            "story": 15.5,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-square-05.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-square-05.png",
+            "meanRgbDifference": 1.5235
+          },
+          {
+            "kind": "passage",
+            "boundary": 23.3,
+            "offset": -0.25,
+            "requestedStory": 23.05,
+            "index": 553,
+            "media": 23.041666666666668,
+            "story": 23.041666666666668,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-square-06.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-square-06.png",
+            "meanRgbDifference": 2.271
+          },
+          {
+            "kind": "passage",
+            "boundary": 23.3,
+            "offset": -0.08,
+            "requestedStory": 23.220000000000002,
+            "index": 557,
+            "media": 23.208333333333332,
+            "story": 23.208333333333332,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-square-07.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-square-07.png",
+            "meanRgbDifference": 1.615
+          },
+          {
+            "kind": "passage",
+            "boundary": 23.3,
+            "offset": 0.25,
+            "requestedStory": 23.55,
+            "index": 565,
+            "media": 23.541666666666668,
+            "story": 23.541666666666668,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-square-08.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-square-08.png",
+            "meanRgbDifference": 1.5268
+          },
+          {
+            "kind": "passage",
+            "boundary": 26.84,
+            "offset": -0.25,
+            "requestedStory": 26.59,
+            "index": 638,
+            "media": 26.583333333333332,
+            "story": 26.583333333333332,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-square-09.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-square-09.png",
+            "meanRgbDifference": 2.251
+          },
+          {
+            "kind": "passage",
+            "boundary": 26.84,
+            "offset": -0.08,
+            "requestedStory": 26.76,
+            "index": 642,
+            "media": 26.75,
+            "story": 26.75,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-square-10.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-square-10.png",
+            "meanRgbDifference": 1.6378
+          },
+          {
+            "kind": "passage",
+            "boundary": 26.84,
+            "offset": 0.25,
+            "requestedStory": 27.09,
+            "index": 650,
+            "media": 27.083333333333332,
+            "story": 27.083333333333332,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-square-11.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-square-11.png",
+            "meanRgbDifference": 1.6123
+          },
+          {
+            "kind": "body",
+            "requestedStory": 30.3,
+            "index": 727,
+            "media": 30.291666666666668,
+            "story": 30.291666666666668,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-square-12.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-square-12.png",
+            "meanRgbDifference": 1.6233
+          },
+          {
+            "kind": "body",
+            "requestedStory": 36.7,
+            "index": 881,
+            "media": 36.708333333333336,
+            "story": 36.708333333333336,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-square-13.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-square-13.png",
+            "meanRgbDifference": 1.4838
+          },
+          {
+            "kind": "body",
+            "requestedStory": 45.5,
+            "index": 1092,
+            "media": 45.5,
+            "story": 45.5,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-square-14.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-square-14.png",
+            "meanRgbDifference": 1.6732
+          },
+          {
+            "kind": "passage",
+            "boundary": 46.26,
+            "offset": -0.25,
+            "requestedStory": 46.01,
+            "index": 1104,
+            "media": 46,
+            "story": 46,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-square-15.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-square-15.png",
+            "meanRgbDifference": 2.2314
+          },
+          {
+            "kind": "passage",
+            "boundary": 46.26,
+            "offset": -0.08,
+            "requestedStory": 46.18,
+            "index": 1108,
+            "media": 46.166666666666664,
+            "story": 46.166666666666664,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-square-16.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-square-16.png",
+            "meanRgbDifference": 1.9239
+          },
+          {
+            "kind": "passage",
+            "boundary": 46.26,
+            "offset": 0.25,
+            "requestedStory": 46.51,
+            "index": 1116,
+            "media": 46.5,
+            "story": 46.5,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-square-17.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-square-17.png",
+            "meanRgbDifference": 1.7363
+          },
+          {
+            "kind": "body",
+            "requestedStory": 53.8,
+            "index": 1291,
+            "media": 53.791666666666664,
+            "story": 53.791666666666664,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-square-18.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-square-18.png",
+            "meanRgbDifference": 2.3285
+          }
+        ],
+        "maximumMeanRgbDifference": 2.3285,
+        "comparisonPass": true,
+        "visualReview": "pass",
+        "audioDuration": "54.569796",
+        "videoDuration": "54.541667",
+        "heldLastFrameMs": 28.129
+      },
+      {
+        "film": "futsl",
+        "format": "landscape",
+        "file": "/Users/khoado/Desktop/Warp Claude Projects/futbol-island/public/stories/films/futsl/landscape.mp4",
+        "fileModified": "2026-09-20T13:51:42.917Z",
+        "receiptModified": "2026-09-20T13:51:43.029Z",
+        "audioUnchanged": true,
+        "audioHash": "SHA256=8a90fb277761a98afe78eb643688e399e67412cbfb48b975c28cff8d82d7dc5b",
+        "metadata": {
+          "programs": [],
+          "stream_groups": [],
+          "streams": [
+            {
+              "codec_type": "video",
+              "width": 1280,
+              "height": 720,
+              "duration": "54.458333"
+            },
+            {
+              "codec_type": "audio",
+              "duration": "54.569796"
+            }
+          ],
+          "format": {
+            "duration": "54.569796",
+            "size": "5109477"
+          }
+        },
+        "samples": [
+          {
+            "kind": "passage",
+            "boundary": 5.36,
+            "offset": -0.25,
+            "requestedStory": 5.11,
+            "index": 123,
+            "media": 5.125,
+            "story": 5.125,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-landscape-01.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-landscape-01.png",
+            "meanRgbDifference": 2.2293
+          },
+          {
+            "kind": "passage",
+            "boundary": 5.36,
+            "offset": -0.08,
+            "requestedStory": 5.28,
+            "index": 127,
+            "media": 5.291666666666667,
+            "story": 5.291666666666667,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-landscape-02.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-landscape-02.png",
+            "meanRgbDifference": 1.7029
+          },
+          {
+            "kind": "passage",
+            "boundary": 5.36,
+            "offset": 0.25,
+            "requestedStory": 5.61,
+            "index": 135,
+            "media": 5.625,
+            "story": 5.625,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-landscape-03.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-landscape-03.png",
+            "meanRgbDifference": 1.7047
+          },
+          {
+            "kind": "body",
+            "requestedStory": 9.8,
+            "index": 235,
+            "media": 9.791666666666666,
+            "story": 9.791666666666666,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-landscape-04.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-landscape-04.png",
+            "meanRgbDifference": 1.6949
+          },
+          {
+            "kind": "body",
+            "requestedStory": 15.5,
+            "index": 372,
+            "media": 15.5,
+            "story": 15.5,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-landscape-05.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-landscape-05.png",
+            "meanRgbDifference": 1.3132
+          },
+          {
+            "kind": "passage",
+            "boundary": 23.3,
+            "offset": -0.25,
+            "requestedStory": 23.05,
+            "index": 553,
+            "media": 23.041666666666668,
+            "story": 23.041666666666668,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-landscape-06.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-landscape-06.png",
+            "meanRgbDifference": 1.8413
+          },
+          {
+            "kind": "passage",
+            "boundary": 23.3,
+            "offset": -0.08,
+            "requestedStory": 23.220000000000002,
+            "index": 557,
+            "media": 23.208333333333332,
+            "story": 23.208333333333332,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-landscape-07.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-landscape-07.png",
+            "meanRgbDifference": 1.5084
+          },
+          {
+            "kind": "passage",
+            "boundary": 23.3,
+            "offset": 0.25,
+            "requestedStory": 23.55,
+            "index": 565,
+            "media": 23.541666666666668,
+            "story": 23.541666666666668,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-landscape-08.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-landscape-08.png",
+            "meanRgbDifference": 1.3352
+          },
+          {
+            "kind": "passage",
+            "boundary": 26.84,
+            "offset": -0.25,
+            "requestedStory": 26.59,
+            "index": 638,
+            "media": 26.583333333333332,
+            "story": 26.583333333333332,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-landscape-09.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-landscape-09.png",
+            "meanRgbDifference": 1.9092
+          },
+          {
+            "kind": "passage",
+            "boundary": 26.84,
+            "offset": -0.08,
+            "requestedStory": 26.76,
+            "index": 642,
+            "media": 26.75,
+            "story": 26.75,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-landscape-10.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-landscape-10.png",
+            "meanRgbDifference": 1.5205
+          },
+          {
+            "kind": "passage",
+            "boundary": 26.84,
+            "offset": 0.25,
+            "requestedStory": 27.09,
+            "index": 650,
+            "media": 27.083333333333332,
+            "story": 27.083333333333332,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-landscape-11.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-landscape-11.png",
+            "meanRgbDifference": 1.3857
+          },
+          {
+            "kind": "body",
+            "requestedStory": 30.3,
+            "index": 727,
+            "media": 30.291666666666668,
+            "story": 30.291666666666668,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-landscape-12.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-landscape-12.png",
+            "meanRgbDifference": 1.4038
+          },
+          {
+            "kind": "body",
+            "requestedStory": 36.7,
+            "index": 881,
+            "media": 36.708333333333336,
+            "story": 36.708333333333336,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-landscape-13.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-landscape-13.png",
+            "meanRgbDifference": 1.3076
+          },
+          {
+            "kind": "body",
+            "requestedStory": 45.5,
+            "index": 1092,
+            "media": 45.5,
+            "story": 45.5,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-landscape-14.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-landscape-14.png",
+            "meanRgbDifference": 1.3937
+          },
+          {
+            "kind": "passage",
+            "boundary": 46.26,
+            "offset": -0.25,
+            "requestedStory": 46.01,
+            "index": 1104,
+            "media": 46,
+            "story": 46,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-landscape-15.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-landscape-15.png",
+            "meanRgbDifference": 1.8669
+          },
+          {
+            "kind": "passage",
+            "boundary": 46.26,
+            "offset": -0.08,
+            "requestedStory": 46.18,
+            "index": 1108,
+            "media": 46.166666666666664,
+            "story": 46.166666666666664,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-landscape-16.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-landscape-16.png",
+            "meanRgbDifference": 1.6626
+          },
+          {
+            "kind": "passage",
+            "boundary": 46.26,
+            "offset": 0.25,
+            "requestedStory": 46.51,
+            "index": 1116,
+            "media": 46.5,
+            "story": 46.5,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-landscape-17.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-landscape-17.png",
+            "meanRgbDifference": 1.4434
+          },
+          {
+            "kind": "body",
+            "requestedStory": 53.8,
+            "index": 1291,
+            "media": 53.791666666666664,
+            "story": 53.791666666666664,
+            "authored": "/tmp/story-rebuild-originals/authored-futsl-landscape-18.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-futsl-landscape-18.png",
+            "meanRgbDifference": 1.7812
+          }
+        ],
+        "maximumMeanRgbDifference": 2.2293,
+        "comparisonPass": true,
+        "visualReview": "pass",
+        "audioDuration": "54.569796",
+        "videoDuration": "54.458333",
+        "heldLastFrameMs": 111.463
+      },
+      {
+        "film": "grit",
+        "format": "portrait",
+        "file": "/Users/khoado/Desktop/Warp Claude Projects/futbol-island/public/stories/films/grit/portrait.mp4",
+        "fileModified": "2026-09-20T13:52:53.729Z",
+        "receiptModified": "2026-09-20T13:52:53.836Z",
+        "audioUnchanged": true,
+        "audioHash": "SHA256=50cf6a24a4d01076d9d3d72b68c37718e5966cc26860f44aeddd3237625b8cce",
+        "metadata": {
+          "programs": [],
+          "stream_groups": [],
+          "streams": [
+            {
+              "codec_type": "video",
+              "width": 720,
+              "height": 1280,
+              "duration": "69.041667"
+            },
+            {
+              "codec_type": "audio",
+              "duration": "69.101833"
+            }
+          ],
+          "format": {
+            "duration": "69.101833",
+            "size": "5558723"
+          }
+        },
+        "samples": [
+          {
+            "kind": "passage",
+            "boundary": 13.06,
+            "offset": -0.25,
+            "requestedStory": 12.81,
+            "index": 268,
+            "media": 11.166666666666666,
+            "story": 12.79736434108527,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-portrait-01.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-portrait-01.png",
+            "meanRgbDifference": 2.0916
+          },
+          {
+            "kind": "passage",
+            "boundary": 13.06,
+            "offset": -0.08,
+            "requestedStory": 12.98,
+            "index": 273,
+            "media": 11.375,
+            "story": 12.983895348837208,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-portrait-02.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-portrait-02.png",
+            "meanRgbDifference": 1.4769
+          },
+          {
+            "kind": "passage",
+            "boundary": 13.06,
+            "offset": 0.25,
+            "requestedStory": 13.31,
+            "index": 281,
+            "media": 11.708333333333334,
+            "story": 13.301238095238096,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-portrait-03.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-portrait-03.png",
+            "meanRgbDifference": 1.4428
+          },
+          {
+            "kind": "body",
+            "requestedStory": 17,
+            "index": 360,
+            "media": 15,
+            "story": 17.010465116279068,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-portrait-04.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-portrait-04.png",
+            "meanRgbDifference": 1.4789
+          },
+          {
+            "kind": "passage",
+            "boundary": 27.18,
+            "offset": -0.25,
+            "requestedStory": 26.93,
+            "index": 607,
+            "media": 25.291666666666668,
+            "story": 26.949607843137255,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-portrait-05.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-portrait-05.png",
+            "meanRgbDifference": 2.3519
+          },
+          {
+            "kind": "passage",
+            "boundary": 27.18,
+            "offset": -0.08,
+            "requestedStory": 27.1,
+            "index": 610,
+            "media": 25.416666666666668,
+            "story": 27.087843137254904,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-portrait-06.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-portrait-06.png",
+            "meanRgbDifference": 1.6525
+          },
+          {
+            "kind": "passage",
+            "boundary": 27.18,
+            "offset": 0.25,
+            "requestedStory": 27.43,
+            "index": 617,
+            "media": 25.708333333333332,
+            "story": 27.43970319634703,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-portrait-07.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-portrait-07.png",
+            "meanRgbDifference": 1.6119
+          },
+          {
+            "kind": "body",
+            "requestedStory": 35.8,
+            "index": 750,
+            "media": 31.25,
+            "story": 35.81522842639594,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-portrait-08.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-portrait-08.png",
+            "meanRgbDifference": 1.5275
+          },
+          {
+            "kind": "body",
+            "requestedStory": 47.5,
+            "index": 1020,
+            "media": 42.5,
+            "story": 47.50888888888889,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-portrait-09.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-portrait-09.png",
+            "meanRgbDifference": 1.2679
+          },
+          {
+            "kind": "passage",
+            "boundary": 49.22,
+            "offset": -0.25,
+            "requestedStory": 48.97,
+            "index": 1049,
+            "media": 43.708333333333336,
+            "story": 48.985740740740745,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-portrait-10.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-portrait-10.png",
+            "meanRgbDifference": 2.2697
+          },
+          {
+            "kind": "passage",
+            "boundary": 49.22,
+            "offset": -0.08,
+            "requestedStory": 49.14,
+            "index": 1052,
+            "media": 43.833333333333336,
+            "story": 49.138518518518524,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-portrait-11.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-portrait-11.png",
+            "meanRgbDifference": 1.6908
+          },
+          {
+            "kind": "passage",
+            "boundary": 49.22,
+            "offset": 0.25,
+            "requestedStory": 49.47,
+            "index": 1061,
+            "media": 44.208333333333336,
+            "story": 49.459044943820224,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-portrait-12.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-portrait-12.png",
+            "meanRgbDifference": 1.6798
+          },
+          {
+            "kind": "body",
+            "requestedStory": 58.7,
+            "index": 1235,
+            "media": 51.458333333333336,
+            "story": 58.700462962962966,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-portrait-13.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-portrait-13.png",
+            "meanRgbDifference": 1.6826
+          },
+          {
+            "kind": "passage",
+            "boundary": 60.2,
+            "offset": -0.25,
+            "requestedStory": 59.95,
+            "index": 1280,
+            "media": 53.333333333333336,
+            "story": 59.94699346405229,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-portrait-14.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-portrait-14.png",
+            "meanRgbDifference": 2.2119
+          },
+          {
+            "kind": "passage",
+            "boundary": 60.2,
+            "offset": -0.08,
+            "requestedStory": 60.120000000000005,
+            "index": 1289,
+            "media": 53.708333333333336,
+            "story": 60.12714052287582,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-portrait-15.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-portrait-15.png",
+            "meanRgbDifference": 1.5819
+          },
+          {
+            "kind": "passage",
+            "boundary": 60.2,
+            "offset": 0.25,
+            "requestedStory": 60.45,
+            "index": 1297,
+            "media": 54.041666666666664,
+            "story": 60.43993710691824,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-portrait-16.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-portrait-16.png",
+            "meanRgbDifference": 1.5523
+          },
+          {
+            "kind": "body",
+            "requestedStory": 66.6,
+            "index": 1430,
+            "media": 59.583333333333336,
+            "story": 66.6140243902439,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-portrait-17.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-portrait-17.png",
+            "meanRgbDifference": 1.6492
+          },
+          {
+            "kind": "body",
+            "requestedStory": 74,
+            "index": 1602,
+            "media": 66.75,
+            "story": 74.018625,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-portrait-18.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-portrait-18.png",
+            "meanRgbDifference": 1.3977
+          }
+        ],
+        "maximumMeanRgbDifference": 2.3519,
+        "comparisonPass": true,
+        "visualReview": "pass",
+        "audioDuration": "69.101833",
+        "videoDuration": "69.041667",
+        "heldLastFrameMs": 60.166
+      },
+      {
+        "film": "grit",
+        "format": "square",
+        "file": "/Users/khoado/Desktop/Warp Claude Projects/futbol-island/public/stories/films/grit/square.mp4",
+        "fileModified": "2026-09-20T13:53:36.212Z",
+        "receiptModified": "2026-09-20T13:53:36.304Z",
+        "audioUnchanged": true,
+        "audioHash": "SHA256=50cf6a24a4d01076d9d3d72b68c37718e5966cc26860f44aeddd3237625b8cce",
+        "metadata": {
+          "programs": [],
+          "stream_groups": [],
+          "streams": [
+            {
+              "codec_type": "video",
+              "width": 720,
+              "height": 720,
+              "duration": "69.083333"
+            },
+            {
+              "codec_type": "audio",
+              "duration": "69.101833"
+            }
+          ],
+          "format": {
+            "duration": "69.101833",
+            "size": "3740677"
+          }
+        },
+        "samples": [
+          {
+            "kind": "passage",
+            "boundary": 13.06,
+            "offset": -0.25,
+            "requestedStory": 12.81,
+            "index": 268,
+            "media": 11.166666666666666,
+            "story": 12.79736434108527,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-square-01.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-square-01.png",
+            "meanRgbDifference": 2.1879
+          },
+          {
+            "kind": "passage",
+            "boundary": 13.06,
+            "offset": -0.08,
+            "requestedStory": 12.98,
+            "index": 273,
+            "media": 11.375,
+            "story": 12.983895348837208,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-square-02.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-square-02.png",
+            "meanRgbDifference": 1.4915
+          },
+          {
+            "kind": "passage",
+            "boundary": 13.06,
+            "offset": 0.25,
+            "requestedStory": 13.31,
+            "index": 281,
+            "media": 11.708333333333334,
+            "story": 13.301238095238096,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-square-03.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-square-03.png",
+            "meanRgbDifference": 1.4699
+          },
+          {
+            "kind": "body",
+            "requestedStory": 17,
+            "index": 360,
+            "media": 15,
+            "story": 17.010465116279068,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-square-04.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-square-04.png",
+            "meanRgbDifference": 1.4758
+          },
+          {
+            "kind": "passage",
+            "boundary": 27.18,
+            "offset": -0.25,
+            "requestedStory": 26.93,
+            "index": 607,
+            "media": 25.291666666666668,
+            "story": 26.949607843137255,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-square-05.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-square-05.png",
+            "meanRgbDifference": 2.4822
+          },
+          {
+            "kind": "passage",
+            "boundary": 27.18,
+            "offset": -0.08,
+            "requestedStory": 27.1,
+            "index": 610,
+            "media": 25.416666666666668,
+            "story": 27.087843137254904,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-square-06.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-square-06.png",
+            "meanRgbDifference": 1.738
+          },
+          {
+            "kind": "passage",
+            "boundary": 27.18,
+            "offset": 0.25,
+            "requestedStory": 27.43,
+            "index": 617,
+            "media": 25.708333333333332,
+            "story": 27.43970319634703,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-square-07.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-square-07.png",
+            "meanRgbDifference": 1.6953
+          },
+          {
+            "kind": "body",
+            "requestedStory": 35.8,
+            "index": 750,
+            "media": 31.25,
+            "story": 35.81522842639594,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-square-08.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-square-08.png",
+            "meanRgbDifference": 1.5906
+          },
+          {
+            "kind": "body",
+            "requestedStory": 47.5,
+            "index": 1020,
+            "media": 42.5,
+            "story": 47.50888888888889,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-square-09.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-square-09.png",
+            "meanRgbDifference": 1.4156
+          },
+          {
+            "kind": "passage",
+            "boundary": 49.22,
+            "offset": -0.25,
+            "requestedStory": 48.97,
+            "index": 1049,
+            "media": 43.708333333333336,
+            "story": 48.985740740740745,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-square-10.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-square-10.png",
+            "meanRgbDifference": 2.3868
+          },
+          {
+            "kind": "passage",
+            "boundary": 49.22,
+            "offset": -0.08,
+            "requestedStory": 49.14,
+            "index": 1052,
+            "media": 43.833333333333336,
+            "story": 49.138518518518524,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-square-11.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-square-11.png",
+            "meanRgbDifference": 1.7826
+          },
+          {
+            "kind": "passage",
+            "boundary": 49.22,
+            "offset": 0.25,
+            "requestedStory": 49.47,
+            "index": 1061,
+            "media": 44.208333333333336,
+            "story": 49.459044943820224,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-square-12.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-square-12.png",
+            "meanRgbDifference": 1.7486
+          },
+          {
+            "kind": "body",
+            "requestedStory": 58.7,
+            "index": 1235,
+            "media": 51.458333333333336,
+            "story": 58.700462962962966,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-square-13.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-square-13.png",
+            "meanRgbDifference": 1.8774
+          },
+          {
+            "kind": "passage",
+            "boundary": 60.2,
+            "offset": -0.25,
+            "requestedStory": 59.95,
+            "index": 1280,
+            "media": 53.333333333333336,
+            "story": 59.94699346405229,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-square-14.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-square-14.png",
+            "meanRgbDifference": 2.2886
+          },
+          {
+            "kind": "passage",
+            "boundary": 60.2,
+            "offset": -0.08,
+            "requestedStory": 60.120000000000005,
+            "index": 1289,
+            "media": 53.708333333333336,
+            "story": 60.12714052287582,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-square-15.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-square-15.png",
+            "meanRgbDifference": 1.8664
+          },
+          {
+            "kind": "passage",
+            "boundary": 60.2,
+            "offset": 0.25,
+            "requestedStory": 60.45,
+            "index": 1297,
+            "media": 54.041666666666664,
+            "story": 60.43993710691824,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-square-16.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-square-16.png",
+            "meanRgbDifference": 1.8667
+          },
+          {
+            "kind": "body",
+            "requestedStory": 66.6,
+            "index": 1430,
+            "media": 59.583333333333336,
+            "story": 66.6140243902439,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-square-17.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-square-17.png",
+            "meanRgbDifference": 1.7539
+          },
+          {
+            "kind": "body",
+            "requestedStory": 74,
+            "index": 1602,
+            "media": 66.75,
+            "story": 74.018625,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-square-18.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-square-18.png",
+            "meanRgbDifference": 1.4585
+          }
+        ],
+        "maximumMeanRgbDifference": 2.4822,
+        "comparisonPass": true,
+        "visualReview": "pass",
+        "audioDuration": "69.101833",
+        "videoDuration": "69.083333",
+        "heldLastFrameMs": 18.5
+      },
+      {
+        "film": "grit",
+        "format": "landscape",
+        "file": "/Users/khoado/Desktop/Warp Claude Projects/futbol-island/public/stories/films/grit/landscape.mp4",
+        "fileModified": "2026-09-20T13:54:28.640Z",
+        "receiptModified": "2026-09-20T13:54:28.740Z",
+        "audioUnchanged": true,
+        "audioHash": "SHA256=50cf6a24a4d01076d9d3d72b68c37718e5966cc26860f44aeddd3237625b8cce",
+        "metadata": {
+          "programs": [],
+          "stream_groups": [],
+          "streams": [
+            {
+              "codec_type": "video",
+              "width": 1280,
+              "height": 720,
+              "duration": "69.000000"
+            },
+            {
+              "codec_type": "audio",
+              "duration": "69.101833"
+            }
+          ],
+          "format": {
+            "duration": "69.101833",
+            "size": "5057539"
+          }
+        },
+        "samples": [
+          {
+            "kind": "passage",
+            "boundary": 13.06,
+            "offset": -0.25,
+            "requestedStory": 12.81,
+            "index": 268,
+            "media": 11.166666666666666,
+            "story": 12.79736434108527,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-landscape-01.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-landscape-01.png",
+            "meanRgbDifference": 1.8335
+          },
+          {
+            "kind": "passage",
+            "boundary": 13.06,
+            "offset": -0.08,
+            "requestedStory": 12.98,
+            "index": 273,
+            "media": 11.375,
+            "story": 12.983895348837208,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-landscape-02.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-landscape-02.png",
+            "meanRgbDifference": 1.4327
+          },
+          {
+            "kind": "passage",
+            "boundary": 13.06,
+            "offset": 0.25,
+            "requestedStory": 13.31,
+            "index": 281,
+            "media": 11.708333333333334,
+            "story": 13.301238095238096,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-landscape-03.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-landscape-03.png",
+            "meanRgbDifference": 1.3827
+          },
+          {
+            "kind": "body",
+            "requestedStory": 17,
+            "index": 360,
+            "media": 15,
+            "story": 17.010465116279068,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-landscape-04.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-landscape-04.png",
+            "meanRgbDifference": 1.3718
+          },
+          {
+            "kind": "passage",
+            "boundary": 27.18,
+            "offset": -0.25,
+            "requestedStory": 26.93,
+            "index": 607,
+            "media": 25.291666666666668,
+            "story": 26.949607843137255,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-landscape-05.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-landscape-05.png",
+            "meanRgbDifference": 2.0247
+          },
+          {
+            "kind": "passage",
+            "boundary": 27.18,
+            "offset": -0.08,
+            "requestedStory": 27.1,
+            "index": 610,
+            "media": 25.416666666666668,
+            "story": 27.087843137254904,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-landscape-06.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-landscape-06.png",
+            "meanRgbDifference": 1.6856
+          },
+          {
+            "kind": "passage",
+            "boundary": 27.18,
+            "offset": 0.25,
+            "requestedStory": 27.43,
+            "index": 617,
+            "media": 25.708333333333332,
+            "story": 27.43970319634703,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-landscape-07.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-landscape-07.png",
+            "meanRgbDifference": 1.6568
+          },
+          {
+            "kind": "body",
+            "requestedStory": 35.8,
+            "index": 750,
+            "media": 31.25,
+            "story": 35.81522842639594,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-landscape-08.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-landscape-08.png",
+            "meanRgbDifference": 1.5046
+          },
+          {
+            "kind": "body",
+            "requestedStory": 47.5,
+            "index": 1020,
+            "media": 42.5,
+            "story": 47.50888888888889,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-landscape-09.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-landscape-09.png",
+            "meanRgbDifference": 1.404
+          },
+          {
+            "kind": "passage",
+            "boundary": 49.22,
+            "offset": -0.25,
+            "requestedStory": 48.97,
+            "index": 1049,
+            "media": 43.708333333333336,
+            "story": 48.985740740740745,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-landscape-10.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-landscape-10.png",
+            "meanRgbDifference": 2.0783
+          },
+          {
+            "kind": "passage",
+            "boundary": 49.22,
+            "offset": -0.08,
+            "requestedStory": 49.14,
+            "index": 1052,
+            "media": 43.833333333333336,
+            "story": 49.138518518518524,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-landscape-11.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-landscape-11.png",
+            "meanRgbDifference": 1.5437
+          },
+          {
+            "kind": "passage",
+            "boundary": 49.22,
+            "offset": 0.25,
+            "requestedStory": 49.47,
+            "index": 1061,
+            "media": 44.208333333333336,
+            "story": 49.459044943820224,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-landscape-12.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-landscape-12.png",
+            "meanRgbDifference": 1.4884
+          },
+          {
+            "kind": "body",
+            "requestedStory": 58.7,
+            "index": 1235,
+            "media": 51.458333333333336,
+            "story": 58.700462962962966,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-landscape-13.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-landscape-13.png",
+            "meanRgbDifference": 1.5806
+          },
+          {
+            "kind": "passage",
+            "boundary": 60.2,
+            "offset": -0.25,
+            "requestedStory": 59.95,
+            "index": 1280,
+            "media": 53.333333333333336,
+            "story": 59.94699346405229,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-landscape-14.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-landscape-14.png",
+            "meanRgbDifference": 2.0597
+          },
+          {
+            "kind": "passage",
+            "boundary": 60.2,
+            "offset": -0.08,
+            "requestedStory": 60.120000000000005,
+            "index": 1289,
+            "media": 53.708333333333336,
+            "story": 60.12714052287582,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-landscape-15.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-landscape-15.png",
+            "meanRgbDifference": 1.5699
+          },
+          {
+            "kind": "passage",
+            "boundary": 60.2,
+            "offset": 0.25,
+            "requestedStory": 60.45,
+            "index": 1297,
+            "media": 54.041666666666664,
+            "story": 60.43993710691824,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-landscape-16.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-landscape-16.png",
+            "meanRgbDifference": 1.6164
+          },
+          {
+            "kind": "body",
+            "requestedStory": 66.6,
+            "index": 1430,
+            "media": 59.583333333333336,
+            "story": 66.6140243902439,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-landscape-17.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-landscape-17.png",
+            "meanRgbDifference": 1.5101
+          },
+          {
+            "kind": "body",
+            "requestedStory": 74,
+            "index": 1602,
+            "media": 66.75,
+            "story": 74.018625,
+            "authored": "/tmp/story-rebuild-originals/authored-grit-landscape-18.png",
+            "decoded": "/tmp/story-rebuild-originals/decoded-grit-landscape-18.png",
+            "meanRgbDifference": 1.3162
+          }
+        ],
+        "maximumMeanRgbDifference": 2.0783,
+        "comparisonPass": true,
+        "visualReview": "pass",
+        "audioDuration": "69.101833",
+        "videoDuration": "69.000000",
+        "heldLastFrameMs": 101.833
+      }
+    ],
+    "pixelComparison": {
+      "count": 108,
+      "maxMeanRgbDifference": 2.482238940329218,
+      "thresholdMeanRgbDifference": 5,
+      "passed": true
+    },
+    "visualReview": {
+      "formats": [
+        "portrait",
+        "square",
+        "landscape"
+      ],
+      "newPassagesReviewed": 8,
+      "passageSamplesPerFormat": 24,
+      "bodySamplesPerFormat": 12,
+      "findings": "All eight newly authored passage compositions and twelve selected body moments checked in all three delivered formats. Destination is visible before each seam; forward arrival continues into a different composition. No sampled blank frame, source/artwork mismatch, clipping failure or unreadable foreground collision. Large materials, pressure/root routing, receiving/decision and support outcomes match current authored frames.",
+      "contactSheets": "/tmp/story-rebuild-originals/delivered-{futsl|grit}-{portrait|square|landscape}-{passage|body}.jpg",
+      "limitations": "Bounded sampled-frame comparison, not an exhaustive frame-by-frame audit or audio listening test. Audio packet hashes verify original narration preservation."
+    }
+  },
+  "installedVideos": [
+    {
+      "film": "futsl",
+      "format": "portrait",
+      "bytes": 5971931,
+      "audioUnchanged": true,
+      "audioHash": "SHA256=8a90fb277761a98afe78eb643688e399e67412cbfb48b975c28cff8d82d7dc5b",
+      "duration": "54.569796"
+    },
+    {
+      "film": "futsl",
+      "format": "square",
+      "bytes": 3863722,
+      "audioUnchanged": true,
+      "audioHash": "SHA256=8a90fb277761a98afe78eb643688e399e67412cbfb48b975c28cff8d82d7dc5b",
+      "duration": "54.569796"
+    },
+    {
+      "film": "futsl",
+      "format": "landscape",
+      "bytes": 5109477,
+      "audioUnchanged": true,
+      "audioHash": "SHA256=8a90fb277761a98afe78eb643688e399e67412cbfb48b975c28cff8d82d7dc5b",
+      "duration": "54.569796"
+    },
+    {
+      "film": "grit",
+      "format": "portrait",
+      "bytes": 5558723,
+      "audioUnchanged": true,
+      "audioHash": "SHA256=50cf6a24a4d01076d9d3d72b68c37718e5966cc26860f44aeddd3237625b8cce",
+      "duration": "69.101833"
+    },
+    {
+      "film": "grit",
+      "format": "square",
+      "bytes": 3740677,
+      "audioUnchanged": true,
+      "audioHash": "SHA256=50cf6a24a4d01076d9d3d72b68c37718e5966cc26860f44aeddd3237625b8cce",
+      "duration": "69.101833"
+    },
+    {
+      "film": "grit",
+      "format": "landscape",
+      "bytes": 5057539,
+      "audioUnchanged": true,
+      "audioHash": "SHA256=50cf6a24a4d01076d9d3d72b68c37718e5966cc26860f44aeddd3237625b8cce",
+      "duration": "69.101833"
+    }
+  ],
+  "typecheck": "pass",
+  "productionBuild": "pass",
+  "diffWhitespaceCheck": "pass"
+}

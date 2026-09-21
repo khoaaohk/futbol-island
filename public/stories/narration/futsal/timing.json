@@ -1,0 +1,110 @@
+[
+  {
+    "id": "chalk-line",
+    "beat": 1,
+    "audioSeconds": 7.401995,
+    "seconds": 9.5
+  },
+  {
+    "id": "chalk-line",
+    "beat": 2,
+    "audioSeconds": 6.219274,
+    "seconds": 9.5
+  },
+  {
+    "id": "chalk-line",
+    "beat": 3,
+    "audioSeconds": 8.85102,
+    "seconds": 9.5
+  },
+  {
+    "id": "chalk-line",
+    "beat": 4,
+    "audioSeconds": 6.230794,
+    "seconds": 9.5
+  },
+  {
+    "id": "chalk-line",
+    "beat": 5,
+    "audioSeconds": 7.581814,
+    "seconds": 9.5
+  },
+  {
+    "id": "chalk-line",
+    "beat": 6,
+    "audioSeconds": 8.913469,
+    "seconds": 9.6
+  },
+  {
+    "id": "woven-court",
+    "beat": 1,
+    "audioSeconds": 7.093787,
+    "seconds": 9.5
+  },
+  {
+    "id": "woven-court",
+    "beat": 2,
+    "audioSeconds": 7.761542,
+    "seconds": 9.5
+  },
+  {
+    "id": "woven-court",
+    "beat": 3,
+    "audioSeconds": 8.276871,
+    "seconds": 9.5
+  },
+  {
+    "id": "woven-court",
+    "beat": 4,
+    "audioSeconds": 8.876463,
+    "seconds": 9.5
+  },
+  {
+    "id": "woven-court",
+    "beat": 5,
+    "audioSeconds": 8.018322,
+    "seconds": 9.5
+  },
+  {
+    "id": "woven-court",
+    "beat": 6,
+    "audioSeconds": 9.307438,
+    "seconds": 10
+  },
+  {
+    "id": "kite-turned",
+    "beat": 1,
+    "audioSeconds": 6.925986,
+    "seconds": 9.5
+  },
+  {
+    "id": "kite-turned",
+    "beat": 2,
+    "audioSeconds": 8.018912,
+    "seconds": 9.5
+  },
+  {
+    "id": "kite-turned",
+    "beat": 3,
+    "audioSeconds": 6.359274,
+    "seconds": 9.5
+  },
+  {
+    "id": "kite-turned",
+    "beat": 4,
+    "audioSeconds": 8.552426,
+    "seconds": 9.5
+  },
+  {
+    "id": "kite-turned",
+    "beat": 5,
+    "audioSeconds": 7.247982,
+    "seconds": 9.5
+  },
+  {
+    "id": "kite-turned",
+    "beat": 6,
+    "audioSeconds": 8.168662,
+    "seconds": 9.5
+  }
+]

@@ -1,0 +1,214 @@
+# Old story visual system — cleanup ledger (September 20, 2026)
+
+All 18 path stories now resolve to the riso player (`hasRisoStory(id)` is true for every id in `RISO_STORY_IDS`), so the earlier visual systems the user rejected were removed. Kept on purpose: **narration audio + caption/cue data** and the **playback UI** (`components/StoryPlaybackBar.tsx` + `.module.css`, untouched). Rule applied: a file was deleted only when no remaining module, stylesheet, script or test referenced it (each `rm` was preceded by a reference grep over `app/ components/ lib/ scripts/ tests/ public/stories/{paths,narration} package.json AGENTS.md PROJECT.md` returning 0).
+
+## Code changes (not deletions)
+
+- `components/PathStoryModal.tsx` — riso-only: dropped the `hasRisoStory` probe, the `VIDEO_FILMS` list and the fallbacks to `LoveFutslFilm` / `RegulatingEmotionsFilm` / `GritFilm`. Keeps `STORY_META`, the embedded/standalone `<dialog>` behaviour, `origin`, `onClose` / `onFinish` (`onFinish` only when the player reported completion).
+- `components/UpcomingStory.tsx` — loads through `loadRisoStory(id)` only (no `loadPathFilm` / `AnimatedPathFilm` fallback); keeps the loading / failed / retry card, focus containment, Escape and Tab trap, `DoneButton`. The card now uses `StoryFilmPlayer.module.css` (`.status`, `.control` added there in riso styling) instead of the deleted `AnimatedPathFilm.module.css`.
+- `lib/paths/riso/registry.ts` — imports `./data/narrationTiming.json` (moved from `lib/paths/films/narrationTiming.json`). The `?v=mental-kokoro-heart-2` audio cache-buster is still applied there because the narration clips it versions are kept.
+- `scripts/export-path-narration.cjs` — now exports the chapter scripts from `lib/paths/riso/stories/<id>.ts` (chapters mode only; track stories carry one recording), so the riso story files remain the single narration source. `scripts/check-path-narration.cjs` verifies the same 15 stories / 90 clips against `public/stories/narration/**/timing.json` (all PASS after the change) and writes `lib/paths/riso/data/narrationTiming.json`.
+- `scripts/riso-perf.mjs`, `scripts/review-riso-story.mjs` — read `lib/paths/riso/data/narrationTiming.json`.
+- `scripts/mix-story-music.mjs` — no longer muxes into the deleted mp4s: probes the dry `narration.mp3` and writes `narration-music.m4a` beside it.
+- `scripts/build-regulate-narration.py`, `scripts/import-regulate-recording.py` — no longer write `timeline.js` (a browser-global copy of `timeline.json` used only by the deleted `story-film.html` pages); `timeline.json`, `narration.*`, `narration-word-timing.json` unchanged.
+- `scripts/check-path-films-browser.mjs` — rewritten as the all-18 live sweep through the riso player (`[data-riso-story]`, track mode for futsl/grit/regulate) at 390×850 and 1440×850 (`--compact-mobile`, `--only`). `scripts/check-riso-films-browser.mjs` (one story, four viewports, touch gate) is unchanged.
+- `lib/paths/riso/stories/grit.ts` — final-gate fix only: `touch()` now also prints a fading paper puff + navy ring + yellow sparks at the touch point itself, because the leaf spray / stratum crack alone measured 1.5 % at 320×568 (below the 2 % touch-visibility gate). After: 38 / 13 / 13 / 49 % at 390×850 / 320×568 / 844×390 / 1440×850; seams re-reviewed (0 diffs).
+- `tests/path-stories.cjs` — rewritten: asserts all 18 ids are in `RISO_STORY_IDS` and built, chapters-mode ids have six durations, the old system is gone, the modal/loader are riso-only; keeps the production-lock and learning-preview assertions. `tests/story-choreography.cjs` deleted (tested only the deleted choreography/content modules).
+
+## Kept as data (and why)
+
+- `lib/paths/riso/data/narrationTiming.json` — chapter durations merged by the registry (was `lib/paths/films/narrationTiming.json`).
+- `lib/paths/gritScript.json`, `lib/paths/storyVoiceChoices.json` — read by `scripts/generate-eleven-story.py` (kept narration tooling).
+- `lib/paths/gritNarrationTiming.json` — media↔story alignment of the grit recording; provenance for the caption times in `lib/paths/riso/stories/grit.ts` (referenced in its comment). Not imported by any module.
+- `public/stories/films/{futsl,grit,regulate}/narration*.mp3|wav`, `timeline.json`, `script.json`, `narration-cues.json`, `recording-alignment.json`, `narration-word-timing.json` — track-mode audio and cue data used by the riso stories and narration tooling.
+- `public/stories/narration/**` — chapter clips + `timing.json`. `public/stories/paths/**` — path UI art.
+- `public/stories/films/assets/Knewave-Regular.ttf` + `Knewave-OFL.txt` — headline/brush font (`StoryFilmPlayer.module.css`, `IslandJourney.module.css`, `IslandLoading.module.css`, `app/layout.tsx` preload). `public/stories/films/assets/entry-grain.png` — used by `app/globals.css` and several component stylesheets for control surfaces (not story-specific).
+- `vendor/hand-drawn-canvas-animation/` — vendored upstream reference with its own LICENSE; `public/stories/films/LICENSE` (which covered only the deleted `core.js`) was removed.
+- `docs/story-production/*.md` ledgers (ART_DIRECTION, FORWARD_PASSAGE, revisions, audits) — kept as history with a "superseded by riso/" banner on the two contracts; `docs/story-production/storyboards/*.md` prompts kept, the image boards and `index.html` removed.
+
+## Deleted (182 files, 151.7 MB of media)
+
+Reasons: old player components and their CSS; the hand-drawn story game + choreography/content; `lib/paths/films/*` (catalog, types, abstract/cinematic/continuous/phrase/woven drawers, forward passage, film composition, per-format film metadata — narration text now lives in the riso stories); rendered mp4/poster/parts/storyboard media and the `*-film.html|js`, `story-film.*`, `story-print.js`, `story-review.html`, `core.js` pages; webp story stills (v2–v5) and `characters-16bit.webp`; `public/stories/art/`; render/check/build scripts that only served those systems; storyboard image boards.
+
+- `components/AnimatedPathFilm.module.css`
+- `components/AnimatedPathFilm.tsx`
+- `components/GritFilm.module.css`
+- `components/GritFilm.tsx`
+- `components/LoveFutslFilm.tsx`
+- `components/MentalToughnessFilm.module.css`
+- `components/MentalToughnessFilm.tsx`
+- `components/PathStoryModal.module.css`
+- `components/PathStoryScene.tsx`
+- `components/RegulatingEmotionsFilm.module.css`
+- `components/RegulatingEmotionsFilm.tsx`
+- `docs/story-production/storyboards/boat-weather.png`
+- `docs/story-production/storyboards/chalk-line.png`
+- `docs/story-production/storyboards/different-tides.png`
+- `docs/story-production/storyboards/empathy.png`
+- `docs/story-production/storyboards/harbour-night.png`
+- `docs/story-production/storyboards/index.html`
+- `docs/story-production/storyboards/kite-turned.png`
+- `docs/story-production/storyboards/loss.png`
+- `docs/story-production/storyboards/more-shirt.png`
+- `docs/story-production/storyboards/place-picture.png`
+- `docs/story-production/storyboards/pocket-radio.png`
+- `docs/story-production/storyboards/quiet-lantern.png`
+- `docs/story-production/storyboards/reset.png`
+- `docs/story-production/storyboards/signal-water.png`
+- `docs/story-production/storyboards/unfinished-map.png`
+- `docs/story-production/storyboards/woven-court-v2-assets.png`
+- `docs/story-production/storyboards/woven-court-v2.png`
+- `docs/story-production/storyboards/woven-court.png`
+- `lib/paths/films/abstractDraw.ts`
+- `lib/paths/films/catalog.ts`
+- `lib/paths/films/cinematicElevenLegacy.ts`
+- `lib/paths/films/cinematicEngine.ts`
+- `lib/paths/films/cinematicFutsalNine.ts`
+- `lib/paths/films/cinematicSeven.ts`
+- `lib/paths/films/cinematicSubjects.ts`
+- `lib/paths/films/continuousChalkNine.ts`
+- `lib/paths/films/continuousElevenLegacy.ts`
+- `lib/paths/films/continuousKite.ts`
+- `lib/paths/films/eleven.ts`
+- `lib/paths/films/filmComposition.ts`
+- `lib/paths/films/forwardPassage.ts`
+- `lib/paths/films/futsal.ts`
+- `lib/paths/films/legacy.ts`
+- `lib/paths/films/nine.ts`
+- `lib/paths/films/phraseElevenLegacyArtwork.ts`
+- `lib/paths/films/phraseFilmArtwork.ts`
+- `lib/paths/films/phraseFilmDraw.ts`
+- `lib/paths/films/phraseFilmScores.ts`
+- `lib/paths/films/phraseFilmTypes.ts`
+- `lib/paths/films/phraseFutsalNineArtwork.ts`
+- `lib/paths/films/phraseSevenArtwork.ts`
+- `lib/paths/films/seven.ts`
+- `lib/paths/films/types.ts`
+- `lib/paths/films/wovenStoryboard.ts`
+- `lib/paths/films/wovenVisualScore.ts`
+- `lib/paths/handDrawnStoryGame.ts`
+- `lib/paths/storyChoreography.ts`
+- `lib/paths/storyContent.ts`
+- `public/stories/art/woven-court/artwork-v3.png`
+- `public/stories/art/woven-court/artwork-v4-abstract.png`
+- `public/stories/art/woven-court/assets.png`
+- `public/stories/characters-16bit.webp`
+- `public/stories/empathy-v2-0.webp`
+- `public/stories/empathy-v2-1.webp`
+- `public/stories/empathy-v2-2.webp`
+- `public/stories/empathy-v3-0.webp`
+- `public/stories/empathy-v3-1.webp`
+- `public/stories/empathy-v3-2.webp`
+- `public/stories/empathy-v4-0.webp`
+- `public/stories/empathy-v4-1.webp`
+- `public/stories/empathy-v4-2.webp`
+- `public/stories/empathy-v5-0.webp`
+- `public/stories/empathy-v5-1.webp`
+- `public/stories/empathy-v5-2.webp`
+- `public/stories/films/assets/field-sheet.png`
+- `public/stories/films/assets/luna-parts.png`
+- `public/stories/films/assets/mural-parts.png`
+- `public/stories/films/core.js`
+- `public/stories/films/futsl-film.html`
+- `public/stories/films/futsl-film.js`
+- `public/stories/films/futsl/landscape.mp4`
+- `public/stories/films/futsl/portrait.mp4`
+- `public/stories/films/futsl/poster-landscape.jpg`
+- `public/stories/films/futsl/poster-portrait.jpg`
+- `public/stories/films/futsl/poster-square.jpg`
+- `public/stories/films/futsl/square.mp4`
+- `public/stories/films/futsl/timeline.js`
+- `public/stories/films/grit-film.html`
+- `public/stories/films/grit-film.js`
+- `public/stories/films/grit/landscape.mp4`
+- `public/stories/films/grit/parts.png`
+- `public/stories/films/grit/portrait.mp4`
+- `public/stories/films/grit/poster-landscape.jpg`
+- `public/stories/films/grit/poster-portrait.jpg`
+- `public/stories/films/grit/poster-square.jpg`
+- `public/stories/films/grit/poster.jpg`
+- `public/stories/films/grit/square.mp4`
+- `public/stories/films/grit/storyboard.png`
+- `public/stories/films/LICENSE`
+- `public/stories/films/mental-toughness.jpg`
+- `public/stories/films/mental-toughness.mp4`
+- `public/stories/films/regulate-film.html`
+- `public/stories/films/regulate-film.js`
+- `public/stories/films/regulate/landscape.mp4`
+- `public/stories/films/regulate/portrait.mp4`
+- `public/stories/films/regulate/poster-landscape.jpg`
+- `public/stories/films/regulate/poster-portrait.jpg`
+- `public/stories/films/regulate/poster-square.jpg`
+- `public/stories/films/regulate/square.mp4`
+- `public/stories/films/regulate/timeline.js`
+- `public/stories/films/story-film.html`
+- `public/stories/films/story-film.js`
+- `public/stories/films/story-print.js`
+- `public/stories/films/story-review.html`
+- `public/stories/grit-v2-0.webp`
+- `public/stories/grit-v2-1.webp`
+- `public/stories/grit-v2-2.webp`
+- `public/stories/grit-v3-0.webp`
+- `public/stories/grit-v3-1.webp`
+- `public/stories/grit-v3-2.webp`
+- `public/stories/grit-v4-0.webp`
+- `public/stories/grit-v4-1.webp`
+- `public/stories/grit-v4-2.webp`
+- `public/stories/grit-v5-0.webp`
+- `public/stories/grit-v5-1.webp`
+- `public/stories/grit-v5-2.webp`
+- `public/stories/loss-v2-0.webp`
+- `public/stories/loss-v2-1.webp`
+- `public/stories/loss-v2-2.webp`
+- `public/stories/loss-v2.webp`
+- `public/stories/loss-v3-0.webp`
+- `public/stories/loss-v3-1.webp`
+- `public/stories/loss-v3-2.webp`
+- `public/stories/loss-v4-0.webp`
+- `public/stories/loss-v4-1.webp`
+- `public/stories/loss-v4-2.webp`
+- `public/stories/loss-v5-0.webp`
+- `public/stories/loss-v5-1.webp`
+- `public/stories/loss-v5-2.webp`
+- `public/stories/regulate-v2-0.webp`
+- `public/stories/regulate-v2-1.webp`
+- `public/stories/regulate-v2-2.webp`
+- `public/stories/regulate-v2.webp`
+- `public/stories/regulate-v3-0.webp`
+- `public/stories/regulate-v3-1.webp`
+- `public/stories/regulate-v3-2.webp`
+- `public/stories/regulate-v4-0.webp`
+- `public/stories/regulate-v4-1.webp`
+- `public/stories/regulate-v4-2.webp`
+- `public/stories/regulate-v5-0.webp`
+- `public/stories/regulate-v5-1.webp`
+- `public/stories/regulate-v5-2.webp`
+- `public/stories/reset-v2-0.webp`
+- `public/stories/reset-v2-1.webp`
+- `public/stories/reset-v2-2.webp`
+- `public/stories/reset-v3-0.webp`
+- `public/stories/reset-v3-1.webp`
+- `public/stories/reset-v3-2.webp`
+- `public/stories/reset-v4-0.webp`
+- `public/stories/reset-v4-1.webp`
+- `public/stories/reset-v4-2.webp`
+- `public/stories/reset-v5-0.webp`
+- `public/stories/reset-v5-1.webp`
+- `public/stories/reset-v5-2.webp`
+- `scripts/build-grit-bella.mjs`
+- `scripts/build-grit-storyteller.mjs`
+- `scripts/check-forward-passages-browser.mjs`
+- `scripts/check-legacy-film-playback.mjs`
+- `scripts/check-path-film-playback.mjs`
+- `scripts/check-seven-story-motion.mjs`
+- `scripts/check-woven-phrase-browser.mjs`
+- `scripts/check-woven-trial-browser.mjs`
+- `scripts/grit-storyteller-voice.py`
+- `scripts/import-grit-recording.py`
+- `scripts/render-forward-story-films.mjs`
+- `scripts/render-futsl-film.mjs`
+- `scripts/render-grit-tears.mjs`
+- `scripts/render-regulate-film.mjs`
+- `scripts/render-story-smooth.mjs`
+- `scripts/review-story-artwork-browser.mjs`
+- `tests/story-choreography.cjs`

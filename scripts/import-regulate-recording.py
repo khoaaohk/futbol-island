@@ -26,7 +26,6 @@ def first(name):return next(w for w in words if norm(w['word'])==name)
 actions={key:first(key)['start'] for key in ['plays','passes','tackles','goals','saves']};actions['playsEnd']=first('plays')['end']
 data={'duration':duration,'cues':cues,'emotions':{'anger':first('anger')['start']},'actions':actions,'voice':'User-supplied ElevenLabs Samantha recording, 2026-09-18 03:40:41'}
 (base/'timeline.json').write_text(json.dumps(data,indent=2))
-(base/'timeline.js').write_text('const TWO_GAMES='+json.dumps(cues)+';const TWO_GAMES_DURATION='+str(duration)+';const TWO_GAMES_EMOTIONS='+json.dumps(data['emotions'])+';const TWO_GAMES_ACTIONS='+json.dumps(actions)+';')
 shutil.copyfile(recording,base/'narration.mp3')
 shutil.copyfile(alignment,base/'narration-word-timing.json')
 print(json.dumps({'duration':duration,'actions':actions,'anger':data['emotions']['anger'],'captions':len(cues),'script_match':True},indent=2))

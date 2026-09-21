@@ -42,3 +42,26 @@
 .matchStory ul{padding-left:20px;margin:12px 0;display:grid;gap:10px;font-size:14px;line-height:1.6}.matchStory small{display:block;font-size:11px;line-height:1.6;color:#52674f}.matchStory a{color:inherit;text-underline-offset:3px}.matchStory button{min-height:44px;border:1px solid #a8b397;border-radius:12px;background:#fff7df;color:#294f43;padding:10px 14px;font:inherit;cursor:pointer}
 .ranking{padding:18px 0;border-top:1px solid #b8c3a84d}.ranking p{font-size:14px;line-height:1.6;margin:0 0 16px}.rankTabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}.rankTabs button,.rankList button,.clip button{background:transparent;color:#315745;border:1px solid #a8b397;border-radius:12px;padding:10px 13px;min-height:44px;font:inherit;font-size:13px}.rankTabs button[aria-pressed=true]{background:#dce2c4;border-color:#58734d}.rankList{list-style:none;padding:0;margin:0 0 20px;display:grid;gap:8px}.rankList li{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px;border:1px solid #b8c3a8;border-radius:14px;font-size:14px}.rankList li[data-top=true]{background:#e5e4c9}.rankList li>span{min-width:0}.rankList b{display:inline-block;min-width:22px;color:#778266}.rankList li>div{display:flex;gap:6px;flex:none}.rankList button{font-size:20px;width:44px;padding:4px}.rankList button:disabled{opacity:.35}.rankResponse{padding:16px;background:#dce2c4;border-radius:14px}.ranking small{display:block;font-size:11px;line-height:1.5;color:#61705b}
 .clip{margin:16px 0;max-width:100%}.clipPreview{display:block;width:100%;text-align:left;overflow:hidden}.clipPreview img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:9px;margin-bottom:10px}.clip small{display:block;font-size:11px;line-height:1.5;color:#61705b;margin:8px 0}.clip iframe{display:block;border:0;width:100%;aspect-ratio:16/9;border-radius:12px;background:#244b40}.clip a{color:inherit}.clipActions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px}
+
+/* Conversation keeps one scroller and the familiar drawer, with island controls. */
+.dialog .panel{width:min(600px,100%);background:url('/stories/films/assets/entry-grain.png') center/160px repeat,#2e806d url('/stories/paths/conversation-coast.svg') center top/100% 1000px repeat-y!important}
+.dialog .header{background:transparent!important;border:0}
+.dialog .header h2{color:#fff2cd;font:400 clamp(24px,3vw,34px)/1.15 IslandBrush,sans-serif;letter-spacing:0}
+.dialog .body{padding:12px 24px 32px;gap:24px}
+.dialog .body>p{color:#fff2cd;font-size:14px;font-weight:700;line-height:1.5}
+.dialog .message{padding:18px 20px;border-radius:26px 26px 26px 8px;background:#fff2d3;box-shadow:0 5px 0 #143e3440}
+.dialog .message p{font-size:16px;line-height:1.7}.dialog .speaker{font-size:12px;color:#31574b}
+.dialog .userMessage{background:#eeb0d5;color:#244d40;border-radius:26px 26px 8px 26px}
+.dialog .userMessage .speaker{color:#31574b}
+.dialog .suggestions{gap:14px}.dialog .replyLabel{color:#fff2cd;font-size:14px}
+.dialog .suggestions>button{width:100%;padding:14px 18px;border:3px solid #fff2cd;border-radius:24px;background:#efcf82;color:#244d40;font-size:15px;font-weight:700;box-shadow:0 5px 0 #a88843;transition:transform .16s,background-color .16s,box-shadow .16s}
+.dialog .suggestions>button:hover{background:#efabc9;transform:translateY(-2px)}
+.dialog .suggestions>button:active{transform:translateY(3px);box-shadow:0 2px 0 #a88843}
+.dialog .suggestions>.goodbye{background:#c2ded1;text-decoration:none;border-color:#fff2cd;box-shadow:0 5px 0 #7b9e91}
+.dialog .news,.dialog .ranking,.dialog .clip{background:#fff2d3;border-radius:24px;padding:18px;color:#244d40}
+.dialog .newsHeader button,.dialog .matchStory button,.dialog .rankTabs button,.dialog .rankList button,.dialog .clip button{background:#efcf82;border:2px solid #fff8df;border-radius:18px;box-shadow:0 3px 0 #ac8d49;color:#244d40;cursor:pointer}
+.dialog .rankTabs button[aria-pressed=true]{background:#eeb0d5}.dialog .rankList li{background:#fff9e8;border-radius:18px}
+@media(max-width:600px){.dialog .body{padding:12px 18px calc(28px + env(safe-area-inset-bottom,0px))}}
+@media(prefers-reduced-motion:reduce){.dialog .suggestions>button{transition:none}}
+
+.dialog .panel{background-blend-mode:soft-light,normal}

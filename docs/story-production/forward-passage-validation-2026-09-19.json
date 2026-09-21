@@ -1,0 +1,152 @@
+{
+  "date": "2026-09-19",
+  "deployment": "local only",
+  "canvas": {
+    "films": 15,
+    "passages": 30,
+    "requests": [],
+    "failures": []
+  },
+  "videos": [
+    {
+      "film": "futsl",
+      "format": "landscape",
+      "width": 1280,
+      "height": 720,
+      "bytes": 10661395,
+      "durationBefore": "54.569796",
+      "durationAfter": "54.569796",
+      "audioUnchanged": true,
+      "audioHash": "SHA256=8a90fb277761a98afe78eb643688e399e67412cbfb48b975c28cff8d82d7dc5b",
+      "narrationAlignment": "authored timeline"
+    },
+    {
+      "film": "futsl",
+      "format": "portrait",
+      "width": 720,
+      "height": 1280,
+      "bytes": 10200439,
+      "durationBefore": "54.569796",
+      "durationAfter": "54.569796",
+      "audioUnchanged": true,
+      "audioHash": "SHA256=8a90fb277761a98afe78eb643688e399e67412cbfb48b975c28cff8d82d7dc5b",
+      "narrationAlignment": "authored timeline"
+    },
+    {
+      "film": "futsl",
+      "format": "square",
+      "width": 720,
+      "height": 720,
+      "bytes": 7044535,
+      "durationBefore": "54.569796",
+      "durationAfter": "54.569796",
+      "audioUnchanged": true,
+      "audioHash": "SHA256=8a90fb277761a98afe78eb643688e399e67412cbfb48b975c28cff8d82d7dc5b",
+      "narrationAlignment": "authored timeline"
+    },
+    {
+      "film": "grit",
+      "format": "landscape",
+      "width": 1280,
+      "height": 720,
+      "bytes": 12680065,
+      "durationBefore": "69.101833",
+      "durationAfter": "69.101833",
+      "audioUnchanged": true,
+      "audioHash": "SHA256=50cf6a24a4d01076d9d3d72b68c37718e5966cc26860f44aeddd3237625b8cce",
+      "narrationAlignment": "lib/paths/gritNarrationTiming.json"
+    },
+    {
+      "film": "grit",
+      "format": "portrait",
+      "width": 720,
+      "height": 1280,
+      "bytes": 13238717,
+      "durationBefore": "69.101833",
+      "durationAfter": "69.101833",
+      "audioUnchanged": true,
+      "audioHash": "SHA256=50cf6a24a4d01076d9d3d72b68c37718e5966cc26860f44aeddd3237625b8cce",
+      "narrationAlignment": "lib/paths/gritNarrationTiming.json"
+    },
+    {
+      "film": "grit",
+      "format": "square",
+      "width": 720,
+      "height": 720,
+      "bytes": 9026606,
+      "durationBefore": "69.101833",
+      "durationAfter": "69.101833",
+      "audioUnchanged": true,
+      "audioHash": "SHA256=50cf6a24a4d01076d9d3d72b68c37718e5966cc26860f44aeddd3237625b8cce",
+      "narrationAlignment": "lib/paths/gritNarrationTiming.json"
+    },
+    {
+      "film": "regulate",
+      "format": "landscape",
+      "width": 1280,
+      "height": 720,
+      "bytes": 13369961,
+      "durationBefore": "66.638375",
+      "durationAfter": "66.638375",
+      "audioUnchanged": true,
+      "audioHash": "SHA256=ba4e2629f7a18a739147eec59804ccb1f9fb9e524b37264a30371535d34d2b80",
+      "narrationAlignment": "authored timeline"
+    },
+    {
+      "film": "regulate",
+      "format": "portrait",
+      "width": 720,
+      "height": 1280,
+      "bytes": 12880109,
+      "durationBefore": "66.638375",
+      "durationAfter": "66.638375",
+      "audioUnchanged": true,
+      "audioHash": "SHA256=ba4e2629f7a18a739147eec59804ccb1f9fb9e524b37264a30371535d34d2b80",
+      "narrationAlignment": "authored timeline"
+    },
+    {
+      "film": "regulate",
+      "format": "square",
+      "width": 720,
+      "height": 720,
+      "bytes": 9477308,
+      "durationBefore": "66.638375",
+      "durationAfter": "66.638375",
+      "audioUnchanged": true,
+      "audioHash": "SHA256=ba4e2629f7a18a739147eec59804ccb1f9fb9e524b37264a30371535d34d2b80",
+      "narrationAlignment": "authored timeline"
+    }
+  ],
+  "independentVideoReview": {
+    "regulateAndFutsl": {
+      "formatsChecked": 6,
+      "decodedFramesCompared": 18,
+      "meanRGBCompressionErrorRange": [
+        1.52,
+        3.16
+      ],
+      "audioHashesMatch": true
+    },
+    "grit": {
+      "formatsChecked": 3,
+      "retimedFramesReviewed": 30,
+      "audioHashesMatch": true,
+      "finalFrameHoldMs": [
+        60.166,
+        143.5,
+        60.166
+      ]
+    },
+    "scope": "Selected decoded passage frames and source continuity checks; not exhaustive frame-by-frame viewing."
+  },
+  "finalProductionBuild": "pass",
+  "originalVideoPlayback": {
+    "viewports": [
+      390,
+      1440
+    ],
+    "narrowControls": 320,
+    "pageErrors": 0,
+    "result": "pass"
+  }
+}

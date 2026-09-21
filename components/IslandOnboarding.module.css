@@ -49,3 +49,5 @@
 .dialog .card>.footer button[data-navigation]{background:#e9c16b!important}
 
 .dialog .welcome>.header>h2{grid-column:1/-1;white-space:nowrap;font-size:clamp(16px,4.5vw,28px)}
+
+.choicesLayout{flex:none}@media(max-height:480px) and (min-width:601px){.welcome .choicesLayout{grid-column:1}}

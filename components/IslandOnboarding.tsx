@@ -1,4 +1,5 @@
 'use client';
+import {CharacterToggle} from './CharacterToggle';
 import {BackButton} from './BackButton';
 import {NavigationButton} from './DoneButton';
 import {COIN_QUEST} from '@/lib/town/coinQuest';
@@ -56,7 +57,7 @@ export default function IslandOnboarding({open,onClose,value,onChange,npcTarget,
  <section className={`${styles.card} ${shell.shell} ${step===0?styles.welcome:styles.tour}`} style={placement}>
  <header className={`${styles.header} ${shell.header}`}>{step>0&&<BackButton key={step} onBack={()=>setStep(n=>n-1)}/>}<h2 ref={heading} tabIndex={-1} id="island-welcome-title">{current.title}</h2></header><div className={`${shell.body} ${styles.body}`}>
  <div key={step} className={styles.content}><p className={styles.eyebrow}>{current.eyebrow}</p><p id="island-welcome-copy" className={styles.copy}>{current.copy}</p>
- {step===0&&<><div className={styles.preview}><CharacterPreview open={open&&step===0} value={value}/></div><div className={styles.choices} data-character={value.character} role="group" aria-label="Choose your starter character">{(['male','female'] as const).map(character=><button key={character} type="button" aria-pressed={value.character===character} onClick={()=>onChange(selectCharacter(value,character))}>{character==='male'?'Male':'Female'}</button>)}</div><p className={styles.saved}>Your character saves automatically. Change your look anytime.</p></>}
+ {step===0&&<><div className={styles.preview}><CharacterPreview open={open&&step===0} value={value}/></div><div className={styles.choicesLayout}><CharacterToggle value={value.character} onChange={character=>onChange(selectCharacter(value,character))} label="Choose your starter character" options={[{value:'male',label:'Male'},{value:'female',label:'Female'}]}/></div><p className={styles.saved}>Your character saves automatically. Change your look anytime.</p></>}
  {current.note&&<div className={styles.note}><Icon name={current.icon} size={28}/><span>{current.note}</span></div>}
  </div></div>
  <footer className={styles.footer}><NavigationButton label="Skip" onNavigate={dismiss}/><div className={styles.progress} role="status" aria-label={`Welcome step ${step+1} of ${steps.length}`}><span className={styles.stepLabel}>{step+1} / {steps.length}</span></div><NavigationButton key={step} label="Next" onNavigate={next}/></footer>

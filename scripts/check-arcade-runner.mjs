@@ -1,0 +1,12 @@
+import './register-local-ts.mjs';
+import assert from 'node:assert/strict';
+const {createRunnerGame,tickRunner,runnerJump,runnerSlide}=await import('../lib/arcade/runnerGame.ts');
+const setup=(kind,lane=0)=>{const s=createRunnerGame();s.spawn=99;s.objects=[{kind,lane,z:-.2,passed:false,openLane:0}];return s;};
+const hit=setup('defender');tickRunner(hit,.05);assert.equal(hit.lives,2);tickRunner(hit,.05);assert.equal(hit.lives,2,'one challenge cannot damage twice');
+const slide=setup('defender');runnerSlide(slide);tickRunner(slide,.05);assert.equal(slide.lives,3,'skill slide evades a defender');
+const cone=setup('cone');runnerSlide(cone);tickRunner(cone,.05);assert.equal(cone.lives,2,'sliding does not pass through a cone');
+const jump=setup('cone');runnerJump(jump);jump.objects[0].z=-4;for(let i=0;i<30;i++)tickRunner(jump,1/60);assert.equal(jump.lives,3,'well-timed jump clears a cone');
+const boost=setup('coin');boost.energy=4;tickRunner(boost,.05);assert(boost.boost>0);assert.equal(boost.energy,0);assert.equal(boost.score,25);
+const goal=setup('goal');tickRunner(goal,.05);assert.equal(goal.goals,1);assert(goal.score>0);const miss=setup('goal');miss.x=2.4;miss.lane=1;tickRunner(miss,.05);assert.equal(miss.goals,0,'blocked lane does not score');
+const dead=setup('cone');dead.lives=1;tickRunner(dead,.05);assert.equal(dead.lives,0);const time=dead.time;tickRunner(dead,1);assert.equal(dead.time,time,'finished games stop simulation');
+const long=createRunnerGame();long.lives=1e6;for(let i=0;i<36000;i++)tickRunner(long,1/60);assert(long.objects.length<24,'long play keeps obstacle list bounded');assert(Number.isFinite(long.x));console.log('PASS runner swept contacts, slide/jump differences, boosts, goal lanes, finish and bounded objects');
