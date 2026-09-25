@@ -1,0 +1,398 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Sudden death, live",
+   "text": "Moscow, 2008, pouring rain. Champions League final, sudden death. Nicolas Anelka must score for Chelsea. Edwin van der Sar points left... then dives right. Saved! Manchester United are champions!",
+   "src": "/plays/narration/van-der-sar-anelka-2008/1.m4a",
+   "seconds": 15.7,
+   "words": [
+    {
+     "w": "Moscow",
+     "at": 0.4
+    },
+    {
+     "w": "2008",
+     "at": 1.0
+    },
+    {
+     "w": "pouring",
+     "at": 1.85
+    },
+    {
+     "w": "rain",
+     "at": 2.25
+    },
+    {
+     "w": "Champions",
+     "at": 3.062
+    },
+    {
+     "w": "League",
+     "at": 3.65
+    },
+    {
+     "w": "final",
+     "at": 3.938
+    },
+    {
+     "w": "sudden",
+     "at": 4.438
+    },
+    {
+     "w": "death",
+     "at": 4.775
+    },
+    {
+     "w": "Nicolas",
+     "at": 5.55
+    },
+    {
+     "w": "Anelka",
+     "at": 6.025
+    },
+    {
+     "w": "must",
+     "at": 6.475
+    },
+    {
+     "w": "score",
+     "at": 6.763
+    },
+    {
+     "w": "for",
+     "at": 7.125
+    },
+    {
+     "w": "Chelsea",
+     "at": 7.287
+    },
+    {
+     "w": "Edwin",
+     "at": 8.238
+    },
+    {
+     "w": "van",
+     "at": 8.625
+    },
+    {
+     "w": "der",
+     "at": 8.85
+    },
+    {
+     "w": "Sar",
+     "at": 9.162
+    },
+    {
+     "w": "points",
+     "at": 9.463
+    },
+    {
+     "w": "left",
+     "at": 9.85
+    },
+    {
+     "w": "then",
+     "at": 10.675
+    },
+    {
+     "w": "dives",
+     "at": 10.9
+    },
+    {
+     "w": "right",
+     "at": 11.4
+    },
+    {
+     "w": "Saved",
+     "at": 12.188
+    },
+    {
+     "w": "Manchester",
+     "at": 12.838
+    },
+    {
+     "w": "United",
+     "at": 13.45
+    },
+    {
+     "w": "are",
+     "at": 13.875
+    },
+    {
+     "w": "champions",
+     "at": 14.037
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again, slowly. Van der Sar had studied Chelsea's penalties. He stays patient, waits for the kick, and pushes it away.",
+   "src": "/plays/narration/van-der-sar-anelka-2008/2.m4a",
+   "seconds": 9.4,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "slowly",
+     "at": 1.288
+    },
+    {
+     "w": "Van",
+     "at": 2.35
+    },
+    {
+     "w": "der",
+     "at": 2.65
+    },
+    {
+     "w": "Sar",
+     "at": 2.9
+    },
+    {
+     "w": "had",
+     "at": 3.237
+    },
+    {
+     "w": "studied",
+     "at": 3.4
+    },
+    {
+     "w": "Chelsea's",
+     "at": 3.788
+    },
+    {
+     "w": "penalties",
+     "at": 4.275
+    },
+    {
+     "w": "He",
+     "at": 5.325
+    },
+    {
+     "w": "stays",
+     "at": 5.45
+    },
+    {
+     "w": "patient",
+     "at": 5.838
+    },
+    {
+     "w": "waits",
+     "at": 6.588
+    },
+    {
+     "w": "for",
+     "at": 6.9
+    },
+    {
+     "w": "the",
+     "at": 7.013
+    },
+    {
+     "w": "kick",
+     "at": 7.112
+    },
+    {
+     "w": "and",
+     "at": 7.438
+    },
+    {
+     "w": "pushes",
+     "at": 7.55
+    },
+    {
+     "w": "it",
+     "at": 7.912
+    },
+    {
+     "w": "away",
+     "at": 8.0
+    }
+   ]
+  },
+  {
+   "label": "From behind the goal",
+   "text": "From behind the goal: his teammates race through the rain to hug him.",
+   "src": "/plays/narration/van-der-sar-anelka-2008/3.m4a",
+   "seconds": 5.0,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.375
+    },
+    {
+     "w": "behind",
+     "at": 0.512
+    },
+    {
+     "w": "the",
+     "at": 0.887
+    },
+    {
+     "w": "goal",
+     "at": 0.975
+    },
+    {
+     "w": "his",
+     "at": 1.75
+    },
+    {
+     "w": "teammates",
+     "at": 1.962
+    },
+    {
+     "w": "race",
+     "at": 2.5
+    },
+    {
+     "w": "through",
+     "at": 2.825
+    },
+    {
+     "w": "the",
+     "at": 3.025
+    },
+    {
+     "w": "rain",
+     "at": 3.125
+    },
+    {
+     "w": "to",
+     "at": 3.45
+    },
+    {
+     "w": "hug",
+     "at": 3.55
+    },
+    {
+     "w": "him",
+     "at": 3.763
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "The secret? Keepers, do your homework and stay calm. A little bluff and a patient wait can win a shootout, and brave kickers step up again.",
+   "src": "/plays/narration/van-der-sar-anelka-2008/4.m4a",
+   "seconds": 9.7,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "secret",
+     "at": 0.463
+    },
+    {
+     "w": "Keepers",
+     "at": 1.312
+    },
+    {
+     "w": "do",
+     "at": 1.975
+    },
+    {
+     "w": "your",
+     "at": 2.125
+    },
+    {
+     "w": "homework",
+     "at": 2.275
+    },
+    {
+     "w": "and",
+     "at": 2.8
+    },
+    {
+     "w": "stay",
+     "at": 2.938
+    },
+    {
+     "w": "calm",
+     "at": 3.263
+    },
+    {
+     "w": "A",
+     "at": 4.213
+    },
+    {
+     "w": "little",
+     "at": 4.3
+    },
+    {
+     "w": "bluff",
+     "at": 4.537
+    },
+    {
+     "w": "and",
+     "at": 4.9
+    },
+    {
+     "w": "a",
+     "at": 5.013
+    },
+    {
+     "w": "patient",
+     "at": 5.075
+    },
+    {
+     "w": "wait",
+     "at": 5.5
+    },
+    {
+     "w": "can",
+     "at": 5.8
+    },
+    {
+     "w": "win",
+     "at": 5.95
+    },
+    {
+     "w": "a",
+     "at": 6.088
+    },
+    {
+     "w": "shootout",
+     "at": 6.2
+    },
+    {
+     "w": "and",
+     "at": 6.975
+    },
+    {
+     "w": "brave",
+     "at": 7.112
+    },
+    {
+     "w": "kickers",
+     "at": 7.525
+    },
+    {
+     "w": "step",
+     "at": 7.9
+    },
+    {
+     "w": "up",
+     "at": 8.137
+    },
+    {
+     "w": "again",
+     "at": 8.3
+    }
+   ]
+  }
+ ]
+}

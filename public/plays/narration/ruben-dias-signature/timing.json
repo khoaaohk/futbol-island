@@ -1,0 +1,386 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The brave block, live",
+   "text": "Istanbul, 2023, the Champions League final. City lead Inter. Gosens heads the cross back, Lukaku heads from two yards... saved by Ederson! The ball breaks loose, and R\u00faben Dias heads it away. Corner!",
+   "src": "/plays/narration/ruben-dias-signature/1.m4a",
+   "seconds": 15.5,
+   "words": [
+    {
+     "w": "Istanbul",
+     "at": 0.375
+    },
+    {
+     "w": "2023",
+     "at": 1.125
+    },
+    {
+     "w": "the",
+     "at": 1.975
+    },
+    {
+     "w": "Champions",
+     "at": 2.112
+    },
+    {
+     "w": "League",
+     "at": 2.725
+    },
+    {
+     "w": "final",
+     "at": 2.987
+    },
+    {
+     "w": "City",
+     "at": 3.888
+    },
+    {
+     "w": "lead",
+     "at": 4.275
+    },
+    {
+     "w": "Inter",
+     "at": 4.5
+    },
+    {
+     "w": "Gosens",
+     "at": 5.3
+    },
+    {
+     "w": "heads",
+     "at": 5.85
+    },
+    {
+     "w": "the",
+     "at": 6.112
+    },
+    {
+     "w": "cross",
+     "at": 6.2
+    },
+    {
+     "w": "back",
+     "at": 6.6
+    },
+    {
+     "w": "Lukaku",
+     "at": 6.975
+    },
+    {
+     "w": "heads",
+     "at": 7.475
+    },
+    {
+     "w": "from",
+     "at": 7.725
+    },
+    {
+     "w": "two",
+     "at": 7.938
+    },
+    {
+     "w": "yards",
+     "at": 8.15
+    },
+    {
+     "w": "saved",
+     "at": 9.088
+    },
+    {
+     "w": "by",
+     "at": 9.475
+    },
+    {
+     "w": "Ederson",
+     "at": 9.675
+    },
+    {
+     "w": "The",
+     "at": 10.625
+    },
+    {
+     "w": "ball",
+     "at": 10.725
+    },
+    {
+     "w": "breaks",
+     "at": 11.025
+    },
+    {
+     "w": "loose",
+     "at": 11.387
+    },
+    {
+     "w": "and",
+     "at": 11.8
+    },
+    {
+     "w": "R\u00faben",
+     "at": 11.925
+    },
+    {
+     "w": "Dias",
+     "at": 12.25
+    },
+    {
+     "w": "heads",
+     "at": 12.7
+    },
+    {
+     "w": "it",
+     "at": 12.938
+    },
+    {
+     "w": "away",
+     "at": 13.025
+    },
+    {
+     "w": "Corner",
+     "at": 14.025
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again. It bounces off Ederson's knee to Dias. He twists his whole body and steers it wide of his own goal.",
+   "src": "/plays/narration/ruben-dias-signature/2.m4a",
+   "seconds": 8.2,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.7
+    },
+    {
+     "w": "It",
+     "at": 1.475
+    },
+    {
+     "w": "bounces",
+     "at": 1.625
+    },
+    {
+     "w": "off",
+     "at": 2.05
+    },
+    {
+     "w": "Ederson's",
+     "at": 2.275
+    },
+    {
+     "w": "knee",
+     "at": 2.825
+    },
+    {
+     "w": "to",
+     "at": 3.05
+    },
+    {
+     "w": "Dias",
+     "at": 3.175
+    },
+    {
+     "w": "He",
+     "at": 4.175
+    },
+    {
+     "w": "twists",
+     "at": 4.325
+    },
+    {
+     "w": "his",
+     "at": 4.688
+    },
+    {
+     "w": "whole",
+     "at": 4.85
+    },
+    {
+     "w": "body",
+     "at": 5.1
+    },
+    {
+     "w": "and",
+     "at": 5.5
+    },
+    {
+     "w": "steers",
+     "at": 5.638
+    },
+    {
+     "w": "it",
+     "at": 5.987
+    },
+    {
+     "w": "wide",
+     "at": 6.075
+    },
+    {
+     "w": "of",
+     "at": 6.362
+    },
+    {
+     "w": "his",
+     "at": 6.438
+    },
+    {
+     "w": "own",
+     "at": 6.6
+    },
+    {
+     "w": "goal",
+     "at": 6.85
+    }
+   ]
+  },
+  {
+   "label": "Behind the goal",
+   "text": "Out for a corner! City held on and won their first Champions League.",
+   "src": "/plays/narration/ruben-dias-signature/3.m4a",
+   "seconds": 5.3,
+   "words": [
+    {
+     "w": "Out",
+     "at": 0.375
+    },
+    {
+     "w": "for",
+     "at": 0.575
+    },
+    {
+     "w": "a",
+     "at": 0.688
+    },
+    {
+     "w": "corner",
+     "at": 0.75
+    },
+    {
+     "w": "City",
+     "at": 1.625
+    },
+    {
+     "w": "held",
+     "at": 1.95
+    },
+    {
+     "w": "on",
+     "at": 2.2
+    },
+    {
+     "w": "and",
+     "at": 2.475
+    },
+    {
+     "w": "won",
+     "at": 2.6
+    },
+    {
+     "w": "their",
+     "at": 2.825
+    },
+    {
+     "w": "first",
+     "at": 3.038
+    },
+    {
+     "w": "Champions",
+     "at": 3.375
+    },
+    {
+     "w": "League",
+     "at": 3.95
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: be brave. Get your body in the way of the shot, and keep your arms behind you.",
+   "src": "/plays/narration/ruben-dias-signature/4.m4a",
+   "seconds": 6.3,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "be",
+     "at": 1.075
+    },
+    {
+     "w": "brave",
+     "at": 1.238
+    },
+    {
+     "w": "Get",
+     "at": 2.212
+    },
+    {
+     "w": "your",
+     "at": 2.362
+    },
+    {
+     "w": "body",
+     "at": 2.475
+    },
+    {
+     "w": "in",
+     "at": 2.812
+    },
+    {
+     "w": "the",
+     "at": 2.888
+    },
+    {
+     "w": "way",
+     "at": 2.975
+    },
+    {
+     "w": "of",
+     "at": 3.188
+    },
+    {
+     "w": "the",
+     "at": 3.263
+    },
+    {
+     "w": "shot",
+     "at": 3.4
+    },
+    {
+     "w": "and",
+     "at": 3.837
+    },
+    {
+     "w": "keep",
+     "at": 3.95
+    },
+    {
+     "w": "your",
+     "at": 4.162
+    },
+    {
+     "w": "arms",
+     "at": 4.3
+    },
+    {
+     "w": "behind",
+     "at": 4.625
+    },
+    {
+     "w": "you",
+     "at": 5.075
+    }
+   ]
+  }
+ ]
+}

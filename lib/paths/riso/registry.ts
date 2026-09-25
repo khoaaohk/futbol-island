@@ -3,14 +3,16 @@
  * (missing modules resolve to "no riso story" and the old films keep loading). */
 import type {RisoStory} from './story';
 import narrationTiming from './data/narrationTiming.json';
-export const RISO_STORY_IDS=['chalk-line','woven-court','kite-turned','futsl','place-picture','pocket-radio','signal-water','empathy','different-tides','harbour-night','unfinished-map','grit','quiet-lantern','boat-weather','more-shirt','regulate','reset','loss'] as const;
+import narrationOverrides from './data/narrationOverrides.json';
+import {withNarration,type NarrationOverride} from './narration';
+export const RISO_STORY_IDS=['chalk-line','woven-court','kite-turned','room-to-invent','futsl','place-picture','loud-track','signal-water','empathy','house-player','different-tides','harbour-night','unfinished-map','pick-a-purpose','grit','quiet-lantern','boat-weather','more-shirt','windshield','regulate','reset','loss'] as const;
 export type RisoStoryId=typeof RISO_STORY_IDS[number];
 const modules=new Map<string,Promise<RisoStory|null>>();
 function load(id:string):Promise<RisoStory|null>{
  if(!(RISO_STORY_IDS as readonly string[]).includes(id))return Promise.resolve(null);
  let pending=modules.get(id);
  if(!pending){
-  pending=import(`./stories/${id}`).then((mod:{story?:RisoStory})=>{const story=mod?.story;if(!story||story.id!==id)return null;return withTiming(story);}).catch(()=>null);
+  pending=import(`./stories/${id}`).then((mod:{story?:RisoStory})=>{const story=mod?.story;if(!story||story.id!==id)return null;return withNarration(withTiming(story),(narrationOverrides as Record<string,NarrationOverride>)[id]);}).catch(()=>null);
   modules.set(id,pending);
   // a failed or missing module is retried on the next request so a story added while the app runs is picked up
   pending.then(story=>{if(!story)modules.delete(id);});

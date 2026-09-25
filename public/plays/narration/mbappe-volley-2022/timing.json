@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The one-two, live",
+   "text": "Qatar, 2022. The World Cup final. France are losing, two goals to one. Kingsley Coman wins the ball, and Kylian Mbapp\u00e9 plays a quick one-two with Marcus Thuram... Goal!",
+   "src": "/plays/narration/mbappe-volley-2022/1.m4a",
+   "seconds": 13.7,
+   "words": [
+    {
+     "w": "Qatar",
+     "at": 0.35
+    },
+    {
+     "w": "2022",
+     "at": 0.85
+    },
+    {
+     "w": "The",
+     "at": 2.163
+    },
+    {
+     "w": "World",
+     "at": 2.275
+    },
+    {
+     "w": "Cup",
+     "at": 2.575
+    },
+    {
+     "w": "final",
+     "at": 2.8
+    },
+    {
+     "w": "France",
+     "at": 3.65
+    },
+    {
+     "w": "are",
+     "at": 4.05
+    },
+    {
+     "w": "losing",
+     "at": 4.188
+    },
+    {
+     "w": "two",
+     "at": 4.888
+    },
+    {
+     "w": "goals",
+     "at": 5.1
+    },
+    {
+     "w": "to",
+     "at": 5.425
+    },
+    {
+     "w": "one",
+     "at": 5.55
+    },
+    {
+     "w": "Kingsley",
+     "at": 6.362
+    },
+    {
+     "w": "Coman",
+     "at": 6.8
+    },
+    {
+     "w": "wins",
+     "at": 7.3
+    },
+    {
+     "w": "the",
+     "at": 7.6
+    },
+    {
+     "w": "ball",
+     "at": 7.7
+    },
+    {
+     "w": "and",
+     "at": 8.125
+    },
+    {
+     "w": "Kylian",
+     "at": 8.262
+    },
+    {
+     "w": "Mbapp\u00e9",
+     "at": 8.85
+    },
+    {
+     "w": "plays",
+     "at": 9.475
+    },
+    {
+     "w": "a",
+     "at": 9.787
+    },
+    {
+     "w": "quick",
+     "at": 9.85
+    },
+    {
+     "w": "one-two",
+     "at": 10.1
+    },
+    {
+     "w": "with",
+     "at": 10.6
+    },
+    {
+     "w": "Marcus",
+     "at": 10.775
+    },
+    {
+     "w": "Thuram",
+     "at": 11.175
+    },
+    {
+     "w": "Goal",
+     "at": 12.287
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again, slowly. Thuram lifts the ball over the defenders. Mbapp\u00e9 keeps his eyes on it, and his body over it, as it drops.",
+   "src": "/plays/narration/mbappe-volley-2022/2.m4a",
+   "seconds": 9.5,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "slowly",
+     "at": 1.312
+    },
+    {
+     "w": "Thuram",
+     "at": 2.312
+    },
+    {
+     "w": "lifts",
+     "at": 2.788
+    },
+    {
+     "w": "the",
+     "at": 3.125
+    },
+    {
+     "w": "ball",
+     "at": 3.225
+    },
+    {
+     "w": "over",
+     "at": 3.55
+    },
+    {
+     "w": "the",
+     "at": 3.763
+    },
+    {
+     "w": "defenders",
+     "at": 3.85
+    },
+    {
+     "w": "Mbapp\u00e9",
+     "at": 4.963
+    },
+    {
+     "w": "keeps",
+     "at": 5.525
+    },
+    {
+     "w": "his",
+     "at": 5.787
+    },
+    {
+     "w": "eyes",
+     "at": 5.963
+    },
+    {
+     "w": "on",
+     "at": 6.287
+    },
+    {
+     "w": "it",
+     "at": 6.45
+    },
+    {
+     "w": "and",
+     "at": 6.662
+    },
+    {
+     "w": "his",
+     "at": 6.763
+    },
+    {
+     "w": "body",
+     "at": 6.925
+    },
+    {
+     "w": "over",
+     "at": 7.275
+    },
+    {
+     "w": "it",
+     "at": 7.625
+    },
+    {
+     "w": "as",
+     "at": 7.85
+    },
+    {
+     "w": "it",
+     "at": 7.975
+    },
+    {
+     "w": "drops",
+     "at": 8.075
+    }
+   ]
+  },
+  {
+   "label": "Two-all!",
+   "text": "Right foot, first time, even as he falls! It flies past Emiliano Mart\u00ednez's hand. Two-all!",
+   "src": "/plays/narration/mbappe-volley-2022/3.m4a",
+   "seconds": 7.5,
+   "words": [
+    {
+     "w": "Right",
+     "at": 0.425
+    },
+    {
+     "w": "foot",
+     "at": 0.713
+    },
+    {
+     "w": "first",
+     "at": 1.075
+    },
+    {
+     "w": "time",
+     "at": 1.35
+    },
+    {
+     "w": "even",
+     "at": 1.725
+    },
+    {
+     "w": "as",
+     "at": 1.962
+    },
+    {
+     "w": "he",
+     "at": 2.038
+    },
+    {
+     "w": "falls",
+     "at": 2.163
+    },
+    {
+     "w": "It",
+     "at": 3.05
+    },
+    {
+     "w": "flies",
+     "at": 3.2
+    },
+    {
+     "w": "past",
+     "at": 3.55
+    },
+    {
+     "w": "Emiliano",
+     "at": 3.862
+    },
+    {
+     "w": "Mart\u00ednez's",
+     "at": 4.45
+    },
+    {
+     "w": "hand",
+     "at": 5.1
+    },
+    {
+     "w": "Two-all",
+     "at": 5.95
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: keep your head and body over the dropping ball, lock your ankle, and strike through the middle.",
+   "src": "/plays/narration/mbappe-volley-2022/4.m4a",
+   "seconds": 7.0,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.562
+    },
+    {
+     "w": "keep",
+     "at": 1.413
+    },
+    {
+     "w": "your",
+     "at": 1.637
+    },
+    {
+     "w": "head",
+     "at": 1.75
+    },
+    {
+     "w": "and",
+     "at": 1.962
+    },
+    {
+     "w": "body",
+     "at": 2.075
+    },
+    {
+     "w": "over",
+     "at": 2.413
+    },
+    {
+     "w": "the",
+     "at": 2.612
+    },
+    {
+     "w": "dropping",
+     "at": 2.7
+    },
+    {
+     "w": "ball",
+     "at": 3.175
+    },
+    {
+     "w": "lock",
+     "at": 3.725
+    },
+    {
+     "w": "your",
+     "at": 3.938
+    },
+    {
+     "w": "ankle",
+     "at": 4.075
+    },
+    {
+     "w": "and",
+     "at": 4.825
+    },
+    {
+     "w": "strike",
+     "at": 4.963
+    },
+    {
+     "w": "through",
+     "at": 5.362
+    },
+    {
+     "w": "the",
+     "at": 5.575
+    },
+    {
+     "w": "middle",
+     "at": 5.675
+    }
+   ]
+  }
+ ]
+}

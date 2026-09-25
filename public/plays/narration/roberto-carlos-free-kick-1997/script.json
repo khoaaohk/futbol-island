@@ -1,0 +1,9 @@
+{
+ "film": "roberto-carlos-free-kick-1997",
+ "note": "Chapter 1 plays the free kick in real time: the run-up starts on 'A long run-up', the strike lands on 'left foot' and the ball needs ~1.1 s to reach the net, so keep the pause (the ellipsis) before 'Goal!'. Cue words in the film are matched to the recorded word onsets.",
+ "chapters": [
+  {"label": "The free kick, live", "text": "Lyon, 1997. Brazil against France. Roberto Carlos stands thirty-five metres out. A long run-up, a huge swing of his left foot... Goal!"},
+  {"label": "Watch it again", "text": "Watch it again, from behind. The ball flies wide of the wall, so wide that a ball boy ducks! Then it swerves back in, off the post, and Barthez never moves."},
+  {"label": "The secret", "text": "The secret? Strike across the ball with the outside of your foot. The ball spins, and the spin makes it curve. That's the Magnus effect!"}
+ ]
+}

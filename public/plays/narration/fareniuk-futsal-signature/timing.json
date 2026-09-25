@@ -1,0 +1,366 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: Uragan v Araz",
+   "text": "A 2021 Futsal Champions League night in Ukraine. Uragan play Araz. Fareniuk is the pivot, the player up front. He scores the second goal, and Uragan win two one!",
+   "src": "/plays/narration/fareniuk-futsal-signature/1.m4a",
+   "seconds": 13.1,
+   "words": [
+    {
+     "w": "A",
+     "at": 0.35
+    },
+    {
+     "w": "2021",
+     "at": 0.425
+    },
+    {
+     "w": "Futsal",
+     "at": 1.288
+    },
+    {
+     "w": "Champions",
+     "at": 1.762
+    },
+    {
+     "w": "League",
+     "at": 2.375
+    },
+    {
+     "w": "night",
+     "at": 2.65
+    },
+    {
+     "w": "in",
+     "at": 2.925
+    },
+    {
+     "w": "Ukraine",
+     "at": 3.025
+    },
+    {
+     "w": "Uragan",
+     "at": 4.138
+    },
+    {
+     "w": "play",
+     "at": 4.688
+    },
+    {
+     "w": "Araz",
+     "at": 4.987
+    },
+    {
+     "w": "Fareniuk",
+     "at": 5.987
+    },
+    {
+     "w": "is",
+     "at": 6.575
+    },
+    {
+     "w": "the",
+     "at": 6.725
+    },
+    {
+     "w": "pivot",
+     "at": 6.838
+    },
+    {
+     "w": "the",
+     "at": 7.375
+    },
+    {
+     "w": "player",
+     "at": 7.487
+    },
+    {
+     "w": "up",
+     "at": 7.912
+    },
+    {
+     "w": "front",
+     "at": 8.088
+    },
+    {
+     "w": "He",
+     "at": 8.9
+    },
+    {
+     "w": "scores",
+     "at": 9.062
+    },
+    {
+     "w": "the",
+     "at": 9.488
+    },
+    {
+     "w": "second",
+     "at": 9.613
+    },
+    {
+     "w": "goal",
+     "at": 9.975
+    },
+    {
+     "w": "and",
+     "at": 10.6
+    },
+    {
+     "w": "Uragan",
+     "at": 10.713
+    },
+    {
+     "w": "win",
+     "at": 11.15
+    },
+    {
+     "w": "two",
+     "at": 11.425
+    },
+    {
+     "w": "one",
+     "at": 11.738
+    }
+   ]
+  },
+  {
+   "label": "How he does it",
+   "text": "A pivot links the team\u2019s play. This is how he does it: he shows for the pass, plays it back, spins away, gets it back and scores!",
+   "src": "/plays/narration/fareniuk-futsal-signature/2.m4a",
+   "seconds": 9.2,
+   "words": [
+    {
+     "w": "A",
+     "at": 0.35
+    },
+    {
+     "w": "pivot",
+     "at": 0.438
+    },
+    {
+     "w": "links",
+     "at": 0.825
+    },
+    {
+     "w": "the",
+     "at": 1.1
+    },
+    {
+     "w": "team\u2019s",
+     "at": 1.2
+    },
+    {
+     "w": "play",
+     "at": 1.587
+    },
+    {
+     "w": "This",
+     "at": 2.513
+    },
+    {
+     "w": "is",
+     "at": 2.75
+    },
+    {
+     "w": "how",
+     "at": 2.875
+    },
+    {
+     "w": "he",
+     "at": 3.075
+    },
+    {
+     "w": "does",
+     "at": 3.2
+    },
+    {
+     "w": "it",
+     "at": 3.438
+    },
+    {
+     "w": "he",
+     "at": 3.975
+    },
+    {
+     "w": "shows",
+     "at": 4.138
+    },
+    {
+     "w": "for",
+     "at": 4.475
+    },
+    {
+     "w": "the",
+     "at": 4.588
+    },
+    {
+     "w": "pass",
+     "at": 4.675
+    },
+    {
+     "w": "plays",
+     "at": 5.175
+    },
+    {
+     "w": "it",
+     "at": 5.487
+    },
+    {
+     "w": "back",
+     "at": 5.575
+    },
+    {
+     "w": "spins",
+     "at": 6.062
+    },
+    {
+     "w": "away",
+     "at": 6.425
+    },
+    {
+     "w": "gets",
+     "at": 6.95
+    },
+    {
+     "w": "it",
+     "at": 7.162
+    },
+    {
+     "w": "back",
+     "at": 7.25
+    },
+    {
+     "w": "and",
+     "at": 7.537
+    },
+    {
+     "w": "scores",
+     "at": 7.662
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. The defender watches the ball, so nobody follows his spin!",
+   "src": "/plays/narration/fareniuk-futsal-signature/3.m4a",
+   "seconds": 6.3,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.212
+    },
+    {
+     "w": "The",
+     "at": 2.2
+    },
+    {
+     "w": "defender",
+     "at": 2.3
+    },
+    {
+     "w": "watches",
+     "at": 2.8
+    },
+    {
+     "w": "the",
+     "at": 3.225
+    },
+    {
+     "w": "ball",
+     "at": 3.325
+    },
+    {
+     "w": "so",
+     "at": 3.775
+    },
+    {
+     "w": "nobody",
+     "at": 3.95
+    },
+    {
+     "w": "follows",
+     "at": 4.312
+    },
+    {
+     "w": "his",
+     "at": 4.713
+    },
+    {
+     "w": "spin",
+     "at": 4.862
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: show for the pass, then play it back and spin away!",
+   "src": "/plays/narration/fareniuk-futsal-signature/4.m4a",
+   "seconds": 4.7,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.5
+    },
+    {
+     "w": "show",
+     "at": 1.25
+    },
+    {
+     "w": "for",
+     "at": 1.5
+    },
+    {
+     "w": "the",
+     "at": 1.613
+    },
+    {
+     "w": "pass",
+     "at": 1.7
+    },
+    {
+     "w": "then",
+     "at": 2.212
+    },
+    {
+     "w": "play",
+     "at": 2.35
+    },
+    {
+     "w": "it",
+     "at": 2.562
+    },
+    {
+     "w": "back",
+     "at": 2.65
+    },
+    {
+     "w": "and",
+     "at": 2.888
+    },
+    {
+     "w": "spin",
+     "at": 3.013
+    },
+    {
+     "w": "away",
+     "at": 3.325
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,4218 @@
+{
+ "Gianluigi Donnarumma": {
+  "clubs": [
+   {"club": "AC Milan", "from": 2015, "to": 2021},
+   {"club": "Paris Saint-Germain", "from": 2021, "to": 2025},
+   {"club": "Manchester City", "from": 2025, "to": null}
+  ],
+  "national": {"team": "Italy", "from": 2016, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Thibaut Courtois": {
+  "clubs": [
+   {"club": "Genk", "from": 2009, "to": 2011},
+   {"club": "Chelsea", "from": 2011, "to": 2018},
+   {"club": "Atlético Madrid", "from": 2011, "to": 2014, "loan": true},
+   {"club": "Real Madrid", "from": 2018, "to": null}
+  ],
+  "national": {"team": "Belgium", "from": 2011, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Alisson": {
+  "clubs": [
+   {"club": "Internacional", "from": 2013, "to": 2016},
+   {"club": "Roma", "from": 2016, "to": 2018},
+   {"club": "Liverpool", "from": 2018, "to": null}
+  ],
+  "national": {"team": "Brazil", "from": 2015, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "David Raya": {
+  "clubs": [
+   {"club": "Blackburn Rovers", "from": 2014, "to": 2019},
+   {"club": "Southport", "from": 2014, "to": 2015, "loan": true},
+   {"club": "Brentford", "from": 2019, "to": 2024},
+   {"club": "Arsenal", "from": 2023, "to": 2024, "loan": true},
+   {"club": "Arsenal", "from": 2024, "to": null}
+  ],
+  "national": {"team": "Spain", "from": 2022, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Emiliano Martínez": {
+  "clubs": [
+   {"club": "Arsenal", "from": 2012, "to": 2020},
+   {"club": "Oxford United", "from": 2012, "to": 2012, "loan": true},
+   {"club": "Sheffield Wednesday", "from": 2013, "to": 2014, "loan": true},
+   {"club": "Rotherham United", "from": 2015, "to": 2015, "loan": true},
+   {"club": "Wolverhampton Wanderers", "from": 2015, "to": 2016, "loan": true},
+   {"club": "Getafe", "from": 2017, "to": 2018, "loan": true},
+   {"club": "Reading", "from": 2019, "to": 2019, "loan": true},
+   {"club": "Aston Villa", "from": 2020, "to": 2026},
+   {"club": "Chelsea", "from": 2026, "to": null}
+  ],
+  "national": {"team": "Argentina", "from": 2021, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Diogo Costa": {
+  "clubs": [
+   {"club": "Porto", "from": 2019, "to": null}
+  ],
+  "national": {"team": "Portugal", "from": 2021, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Yassine Bounou": {
+  "clubs": [
+   {"club": "Wydad Casablanca", "from": 2010, "to": 2012},
+   {"club": "Atlético Madrid", "from": 2012, "to": 2016},
+   {"club": "Zaragoza", "from": 2014, "to": 2016, "loan": true},
+   {"club": "Girona", "from": 2016, "to": 2020},
+   {"club": "Sevilla", "from": 2019, "to": 2020, "loan": true},
+   {"club": "Sevilla", "from": 2020, "to": 2023},
+   {"club": "Al Hilal", "from": 2023, "to": null}
+  ],
+  "national": {"team": "Morocco", "from": 2013, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Jan Oblak": {
+  "clubs": [
+   {"club": "Olimpija Ljubljana", "from": 2009, "to": 2010},
+   {"club": "Benfica", "from": 2010, "to": 2014},
+   {"club": "Beira-Mar", "from": 2010, "to": 2010, "loan": true},
+   {"club": "Olhanense", "from": 2011, "to": 2011, "loan": true},
+   {"club": "União de Leiria", "from": 2011, "to": 2012, "loan": true},
+   {"club": "Rio Ave", "from": 2012, "to": 2013, "loan": true},
+   {"club": "Atlético Madrid", "from": 2014, "to": null}
+  ],
+  "national": {"team": "Slovenia", "from": 2012, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Mike Maignan": {
+  "clubs": [
+   {"club": "Lille", "from": 2015, "to": 2021},
+   {"club": "AC Milan", "from": 2021, "to": null}
+  ],
+  "national": {"team": "France", "from": 2020, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Gregor Kobel": {
+  "clubs": [
+   {"club": "TSG Hoffenheim", "from": 2016, "to": 2020},
+   {"club": "FC Augsburg", "from": 2019, "to": 2019, "loan": true},
+   {"club": "VfB Stuttgart", "from": 2019, "to": 2020, "loan": true},
+   {"club": "VfB Stuttgart", "from": 2020, "to": 2021},
+   {"club": "Borussia Dortmund", "from": 2021, "to": null}
+  ],
+  "national": {"team": "Switzerland", "from": 2021, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Lev Yashin": {
+  "clubs": [
+   {"club": "Dynamo Moscow", "from": 1950, "to": 1970}
+  ],
+  "national": {"team": "Soviet Union", "from": 1954, "to": 1970},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Gianluigi Buffon": {
+  "clubs": [
+   {"club": "Parma", "from": 1995, "to": 2001},
+   {"club": "Juventus", "from": 2001, "to": 2018},
+   {"club": "Paris Saint-Germain", "from": 2018, "to": 2019},
+   {"club": "Juventus", "from": 2019, "to": 2021},
+   {"club": "Parma", "from": 2021, "to": 2023}
+  ],
+  "national": {"team": "Italy", "from": 1997, "to": 2018},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Iker Casillas": {
+  "clubs": [
+   {"club": "Real Madrid", "from": 1999, "to": 2015},
+   {"club": "Porto", "from": 2015, "to": 2020}
+  ],
+  "national": {"team": "Spain", "from": 2000, "to": 2016},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Manuel Neuer": {
+  "clubs": [
+   {"club": "Schalke 04", "from": 2005, "to": 2011},
+   {"club": "Bayern Munich", "from": 2011, "to": null}
+  ],
+  "national": {"team": "Germany", "from": 2009, "to": 2026},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Oliver Kahn": {
+  "clubs": [
+   {"club": "Karlsruher SC", "from": 1987, "to": 1994},
+   {"club": "Bayern Munich", "from": 1994, "to": 2008}
+  ],
+  "national": {"team": "Germany", "from": 1995, "to": 2006},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Dino Zoff": {
+  "clubs": [
+   {"club": "Udinese", "from": 1961, "to": 1963},
+   {"club": "Mantova", "from": 1963, "to": 1967},
+   {"club": "Napoli", "from": 1967, "to": 1972},
+   {"club": "Juventus", "from": 1972, "to": 1983}
+  ],
+  "national": {"team": "Italy", "from": 1968, "to": 1983},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Peter Schmeichel": {
+  "clubs": [
+   {"club": "Gladsaxe-Hero", "from": 1981, "to": 1984},
+   {"club": "Hvidovre", "from": 1984, "to": 1987},
+   {"club": "Brøndby", "from": 1987, "to": 1991},
+   {"club": "Manchester United", "from": 1991, "to": 1999},
+   {"club": "Sporting CP", "from": 1999, "to": 2001},
+   {"club": "Aston Villa", "from": 2001, "to": 2002},
+   {"club": "Manchester City", "from": 2002, "to": 2003}
+  ],
+  "national": {"team": "Denmark", "from": 1987, "to": 2001},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Gordon Banks": {
+  "clubs": [
+   {"club": "Chesterfield", "from": 1958, "to": 1959},
+   {"club": "Leicester City", "from": 1959, "to": 1967},
+   {"club": "Stoke City", "from": 1967, "to": 1973},
+   {"club": "Cleveland Stokers", "from": 1967, "to": 1967, "loan": true},
+   {"club": "Hellenic", "from": 1971, "to": 1971, "loan": true},
+   {"club": "Fort Lauderdale Strikers", "from": 1977, "to": 1978},
+   {"club": "St Patrick's Athletic", "from": 1977, "to": 1977, "loan": true}
+  ],
+  "national": {"team": "England", "from": 1963, "to": 1972},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Edwin van der Sar": {
+  "clubs": [
+   {"club": "Ajax", "from": 1990, "to": 1999},
+   {"club": "Juventus", "from": 1999, "to": 2001},
+   {"club": "Fulham", "from": 2001, "to": 2005},
+   {"club": "Manchester United", "from": 2005, "to": 2011},
+   {"club": "Noordwijk", "from": 2016, "to": 2016}
+  ],
+  "national": {"team": "Netherlands", "from": 1994, "to": 2008},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Sepp Maier": {
+  "clubs": [
+   {"club": "Bayern Munich", "from": 1962, "to": 1980}
+  ],
+  "national": {"team": "West Germany", "from": 1966, "to": 1979},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Achraf Hakimi": {
+  "clubs": [
+   {"club": "Real Madrid", "from": 2017, "to": 2020},
+   {"club": "Borussia Dortmund", "from": 2018, "to": 2020, "loan": true},
+   {"club": "Inter Milan", "from": 2020, "to": 2021},
+   {"club": "Paris Saint-Germain", "from": 2021, "to": null}
+  ],
+  "national": {"team": "Morocco", "from": 2016, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Nuno Mendes": {
+  "clubs": [
+   {"club": "Sporting CP", "from": 2020, "to": 2022},
+   {"club": "Paris Saint-Germain", "from": 2021, "to": 2022, "loan": true},
+   {"club": "Paris Saint-Germain", "from": 2022, "to": null}
+  ],
+  "national": {"team": "Portugal", "from": 2021, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Dani Carvajal": {
+  "clubs": [
+   {"club": "Bayer Leverkusen", "from": 2012, "to": 2013},
+   {"club": "Real Madrid", "from": 2013, "to": 2026}
+  ],
+  "national": {"team": "Spain", "from": 2014, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Trent Alexander-Arnold": {
+  "clubs": [
+   {"club": "Liverpool", "from": 2016, "to": 2025},
+   {"club": "Real Madrid", "from": 2025, "to": null}
+  ],
+  "national": {"team": "England", "from": 2018, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Theo Hernández": {
+  "clubs": [
+   {"club": "Alavés", "from": 2016, "to": 2017, "loan": true},
+   {"club": "Real Madrid", "from": 2017, "to": 2019},
+   {"club": "Real Sociedad", "from": 2018, "to": 2019, "loan": true},
+   {"club": "AC Milan", "from": 2019, "to": 2025},
+   {"club": "Al Hilal", "from": 2025, "to": null}
+  ],
+  "national": {"team": "France", "from": 2021, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Alphonso Davies": {
+  "clubs": [
+   {"club": "Vancouver Whitecaps FC", "from": 2016, "to": 2018},
+   {"club": "Bayern Munich", "from": 2019, "to": null}
+  ],
+  "national": {"team": "Canada", "from": 2017, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Jules Koundé": {
+  "clubs": [
+   {"club": "Bordeaux", "from": 2017, "to": 2019},
+   {"club": "Sevilla", "from": 2019, "to": 2022},
+   {"club": "Barcelona", "from": 2022, "to": null}
+  ],
+  "national": {"team": "France", "from": 2021, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Alejandro Balde": {
+  "clubs": [
+   {"club": "Barcelona", "from": 2021, "to": null}
+  ],
+  "national": {"team": "Spain", "from": 2022, "to": 2023},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Jeremie Frimpong": {
+  "clubs": [
+   {"club": "Celtic", "from": 2019, "to": 2021},
+   {"club": "Bayer Leverkusen", "from": 2021, "to": 2025},
+   {"club": "Liverpool", "from": 2025, "to": null}
+  ],
+  "national": {"team": "Netherlands", "from": 2023, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Pedro Porro": {
+  "clubs": [
+   {"club": "Girona", "from": 2017, "to": 2019},
+   {"club": "Manchester City", "from": 2019, "to": 2022},
+   {"club": "Valladolid", "from": 2019, "to": 2020, "loan": true},
+   {"club": "Sporting CP", "from": 2020, "to": 2022, "loan": true},
+   {"club": "Sporting CP", "from": 2022, "to": 2023},
+   {"club": "Tottenham Hotspur", "from": 2023, "to": 2023, "loan": true},
+   {"club": "Tottenham Hotspur", "from": 2023, "to": null}
+  ],
+  "national": {"team": "Spain", "from": 2021, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Cafu": {
+  "clubs": [
+   {"club": "São Paulo", "from": 1989, "to": 1994},
+   {"club": "Zaragoza", "from": 1995, "to": 1995},
+   {"club": "Juventude", "from": 1995, "to": 1995},
+   {"club": "Palmeiras", "from": 1995, "to": 1997},
+   {"club": "Roma", "from": 1997, "to": 2003},
+   {"club": "AC Milan", "from": 2003, "to": 2008}
+  ],
+  "national": {"team": "Brazil", "from": 1990, "to": 2006},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Roberto Carlos": {
+  "clubs": [
+   {"club": "União São João", "from": 1991, "to": 1993},
+   {"club": "Atlético Mineiro", "from": 1992, "to": 1993, "loan": true},
+   {"club": "Palmeiras", "from": 1993, "to": 1995},
+   {"club": "Inter Milan", "from": 1995, "to": 1996},
+   {"club": "Real Madrid", "from": 1996, "to": 2007},
+   {"club": "Fenerbahçe", "from": 2007, "to": 2009},
+   {"club": "Corinthians", "from": 2010, "to": 2011},
+   {"club": "Anzhi Makhachkala", "from": 2011, "to": 2012},
+   {"club": "Delhi Dynamos", "from": 2015, "to": 2016}
+  ],
+  "national": {"team": "Brazil", "from": 1992, "to": 2006},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Paolo Maldini": {
+  "clubs": [
+   {"club": "AC Milan", "from": 1984, "to": 2009}
+  ],
+  "national": {"team": "Italy", "from": 1988, "to": 2002},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Philipp Lahm": {
+  "clubs": [
+   {"club": "Bayern Munich", "from": 2002, "to": 2017},
+   {"club": "VfB Stuttgart", "from": 2003, "to": 2005, "loan": true}
+  ],
+  "national": {"team": "Germany", "from": 2004, "to": 2014},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Javier Zanetti": {
+  "clubs": [
+   {"club": "Talleres", "from": 1992, "to": 1993},
+   {"club": "Banfield", "from": 1993, "to": 1995},
+   {"club": "Inter Milan", "from": 1995, "to": 2014}
+  ],
+  "national": {"team": "Argentina", "from": 1994, "to": 2011},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Dani Alves": {
+  "clubs": [
+   {"club": "Bahia", "from": 2001, "to": 2003},
+   {"club": "Sevilla", "from": 2003, "to": 2008},
+   {"club": "Barcelona", "from": 2008, "to": 2016},
+   {"club": "Juventus", "from": 2016, "to": 2017},
+   {"club": "Paris Saint-Germain", "from": 2017, "to": 2019},
+   {"club": "São Paulo", "from": 2019, "to": 2021},
+   {"club": "Barcelona", "from": 2021, "to": 2022},
+   {"club": "UNAM", "from": 2022, "to": 2023}
+  ],
+  "national": {"team": "Brazil", "from": 2006, "to": 2022},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Carlos Alberto": {
+  "clubs": [
+   {"club": "Fluminense", "from": 1963, "to": 1966},
+   {"club": "Santos", "from": 1966, "to": 1974},
+   {"club": "Botafogo", "from": 1971, "to": 1971},
+   {"club": "Fluminense", "from": 1974, "to": 1976},
+   {"club": "Flamengo", "from": 1976, "to": 1977},
+   {"club": "New York Cosmos", "from": 1977, "to": 1980},
+   {"club": "California Surf", "from": 1981, "to": 1981},
+   {"club": "New York Cosmos", "from": 1982, "to": 1982}
+  ],
+  "national": {"team": "Brazil", "from": 1964, "to": 1977},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Ashley Cole": {
+  "clubs": [
+   {"club": "Arsenal", "from": 1999, "to": 2006},
+   {"club": "Crystal Palace", "from": 2000, "to": 2000, "loan": true},
+   {"club": "Chelsea", "from": 2006, "to": 2014},
+   {"club": "Roma", "from": 2014, "to": 2016},
+   {"club": "LA Galaxy", "from": 2016, "to": 2018},
+   {"club": "Derby County", "from": 2019, "to": 2019}
+  ],
+  "national": {"team": "England", "from": 2001, "to": 2014},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Nílton Santos": {
+  "clubs": [
+   {"club": "Botafogo", "from": 1948, "to": 1964}
+  ],
+  "national": {"team": "Brazil", "from": 1949, "to": 1962},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Gary Neville": {
+  "clubs": [
+   {"club": "Manchester United", "from": 1992, "to": 2011}
+  ],
+  "national": {"team": "England", "from": 1995, "to": 2007},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Virgil van Dijk": {
+  "clubs": [
+   {"club": "Groningen", "from": 2011, "to": 2013},
+   {"club": "Celtic", "from": 2013, "to": 2015},
+   {"club": "Southampton", "from": 2015, "to": 2018},
+   {"club": "Liverpool", "from": 2018, "to": null}
+  ],
+  "national": {"team": "Netherlands", "from": 2015, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Rúben Dias": {
+  "clubs": [
+   {"club": "Benfica", "from": 2017, "to": 2020},
+   {"club": "Manchester City", "from": 2020, "to": null}
+  ],
+  "national": {"team": "Portugal", "from": 2018, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Antonio Rüdiger": {
+  "clubs": [
+   {"club": "VfB Stuttgart", "from": 2012, "to": 2016},
+   {"club": "Roma", "from": 2015, "to": 2016, "loan": true},
+   {"club": "Roma", "from": 2016, "to": 2017},
+   {"club": "Chelsea", "from": 2017, "to": 2022},
+   {"club": "Real Madrid", "from": 2022, "to": null}
+  ],
+  "national": {"team": "Germany", "from": 2014, "to": 2026},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "William Saliba": {
+  "clubs": [
+   {"club": "Saint-Étienne", "from": 2018, "to": 2019},
+   {"club": "Arsenal", "from": 2019, "to": null},
+   {"club": "Saint-Étienne", "from": 2019, "to": 2020, "loan": true},
+   {"club": "Nice", "from": 2021, "to": 2021, "loan": true},
+   {"club": "Marseille", "from": 2021, "to": 2022, "loan": true}
+  ],
+  "national": {"team": "France", "from": 2022, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Gabriel Magalhães": {
+  "clubs": [
+   {"club": "Avaí", "from": 2016, "to": 2017},
+   {"club": "Lille", "from": 2017, "to": 2020},
+   {"club": "Troyes", "from": 2017, "to": 2018, "loan": true},
+   {"club": "Dinamo Zagreb", "from": 2018, "to": 2018, "loan": true},
+   {"club": "Arsenal", "from": 2020, "to": null}
+  ],
+  "national": {"team": "Brazil", "from": 2023, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Alessandro Bastoni": {
+  "clubs": [
+   {"club": "Atalanta", "from": 2016, "to": 2017},
+   {"club": "Inter Milan", "from": 2017, "to": null},
+   {"club": "Atalanta", "from": 2017, "to": 2018, "loan": true},
+   {"club": "Parma", "from": 2018, "to": 2019, "loan": true}
+  ],
+  "national": {"team": "Italy", "from": 2020, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Marquinhos": {
+  "clubs": [
+   {"club": "Corinthians", "from": 2012, "to": 2013},
+   {"club": "Roma", "from": 2012, "to": 2013, "loan": true},
+   {"club": "Roma", "from": 2013, "to": 2013},
+   {"club": "Paris Saint-Germain", "from": 2013, "to": null}
+  ],
+  "national": {"team": "Brazil", "from": 2013, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Pau Cubarsí": {
+  "clubs": [
+   {"club": "Barcelona", "from": 2023, "to": null}
+  ],
+  "national": {"team": "Spain", "from": 2024, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Cristian Romero": {
+  "clubs": [
+   {"club": "Belgrano", "from": 2016, "to": 2018},
+   {"club": "Genoa", "from": 2018, "to": 2019},
+   {"club": "Juventus", "from": 2019, "to": 2021},
+   {"club": "Genoa", "from": 2019, "to": 2020, "loan": true},
+   {"club": "Atalanta", "from": 2020, "to": 2021, "loan": true},
+   {"club": "Atalanta", "from": 2021, "to": 2022},
+   {"club": "Tottenham Hotspur", "from": 2021, "to": 2022, "loan": true},
+   {"club": "Tottenham Hotspur", "from": 2022, "to": 2026},
+   {"club": "Atlético Madrid", "from": 2026, "to": null}
+  ],
+  "national": {"team": "Argentina", "from": 2021, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Ibrahima Konaté": {
+  "clubs": [
+   {"club": "Sochaux", "from": 2017, "to": 2017},
+   {"club": "RB Leipzig", "from": 2017, "to": 2021},
+   {"club": "Liverpool", "from": 2021, "to": 2026},
+   {"club": "Real Madrid", "from": 2026, "to": null}
+  ],
+  "national": {"team": "France", "from": 2022, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Franz Beckenbauer": {
+  "clubs": [
+   {"club": "Bayern Munich", "from": 1964, "to": 1977},
+   {"club": "New York Cosmos", "from": 1977, "to": 1980},
+   {"club": "Hamburger SV", "from": 1980, "to": 1982},
+   {"club": "New York Cosmos", "from": 1983, "to": 1983}
+  ],
+  "national": {"team": "West Germany", "from": 1965, "to": 1977},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Franco Baresi": {
+  "clubs": [
+   {"club": "AC Milan", "from": 1977, "to": 1997}
+  ],
+  "national": {"team": "Italy", "from": 1982, "to": 1994},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Fabio Cannavaro": {
+  "clubs": [
+   {"club": "Napoli", "from": 1991, "to": 1995},
+   {"club": "Parma", "from": 1995, "to": 2002},
+   {"club": "Inter Milan", "from": 2002, "to": 2004},
+   {"club": "Juventus", "from": 2004, "to": 2006},
+   {"club": "Real Madrid", "from": 2006, "to": 2009},
+   {"club": "Juventus", "from": 2009, "to": 2010},
+   {"club": "Al Ahli Dubai", "from": 2010, "to": 2011}
+  ],
+  "national": {"team": "Italy", "from": 1997, "to": 2010},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Alessandro Nesta": {
+  "clubs": [
+   {"club": "Lazio", "from": 1993, "to": 2002},
+   {"club": "AC Milan", "from": 2002, "to": 2012},
+   {"club": "Montreal Impact", "from": 2012, "to": 2014},
+   {"club": "Chennaiyin", "from": 2014, "to": 2014}
+  ],
+  "national": {"team": "Italy", "from": 1996, "to": 2006},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Sergio Ramos": {
+  "clubs": [
+   {"club": "Sevilla", "from": 2004, "to": 2005},
+   {"club": "Real Madrid", "from": 2005, "to": 2021},
+   {"club": "Paris Saint-Germain", "from": 2021, "to": 2023},
+   {"club": "Sevilla", "from": 2023, "to": 2024},
+   {"club": "Monterrey", "from": 2025, "to": 2025}
+  ],
+  "national": {"team": "Spain", "from": 2005, "to": 2021},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Bobby Moore": {
+  "clubs": [
+   {"club": "West Ham United", "from": 1958, "to": 1974},
+   {"club": "Fulham", "from": 1974, "to": 1977},
+   {"club": "San Antonio Thunder", "from": 1976, "to": 1976, "loan": true},
+   {"club": "Seattle Sounders", "from": 1978, "to": 1978},
+   {"club": "Herning Fremad", "from": 1978, "to": 1978},
+   {"club": "Eastern", "from": 1981, "to": 1981},
+   {"club": "Carolina Lightnin'", "from": 1983, "to": 1983}
+  ],
+  "national": {"team": "England", "from": 1962, "to": 1973},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Carles Puyol": {
+  "clubs": [
+   {"club": "Barcelona", "from": 1999, "to": 2014}
+  ],
+  "national": {"team": "Spain", "from": 2000, "to": 2013},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Rio Ferdinand": {
+  "clubs": [
+   {"club": "West Ham United", "from": 1995, "to": 2000},
+   {"club": "AFC Bournemouth", "from": 1996, "to": 1997, "loan": true},
+   {"club": "Leeds United", "from": 2000, "to": 2002},
+   {"club": "Manchester United", "from": 2002, "to": 2014},
+   {"club": "Queens Park Rangers", "from": 2014, "to": 2015}
+  ],
+  "national": {"team": "England", "from": 1997, "to": 2011},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Daniel Passarella": {
+  "clubs": [
+   {"club": "Sarmiento", "from": 1971, "to": 1973},
+   {"club": "River Plate", "from": 1973, "to": 1982},
+   {"club": "Fiorentina", "from": 1982, "to": 1986},
+   {"club": "Inter Milan", "from": 1986, "to": 1988},
+   {"club": "River Plate", "from": 1988, "to": 1989}
+  ],
+  "national": {"team": "Argentina", "from": 1976, "to": 1986},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Pedri": {
+  "clubs": [
+   {"club": "Las Palmas", "from": 2019, "to": 2020},
+   {"club": "Barcelona", "from": 2020, "to": null}
+  ],
+  "national": {"team": "Spain", "from": 2021, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Vitinha": {
+  "clubs": [
+   {"club": "Porto", "from": 2019, "to": 2022},
+   {"club": "Wolverhampton Wanderers", "from": 2020, "to": 2021, "loan": true},
+   {"club": "Paris Saint-Germain", "from": 2022, "to": null}
+  ],
+  "national": {"team": "Portugal", "from": 2022, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Jude Bellingham": {
+  "clubs": [
+   {"club": "Birmingham City", "from": 2019, "to": 2020},
+   {"club": "Borussia Dortmund", "from": 2020, "to": 2023},
+   {"club": "Real Madrid", "from": 2023, "to": null}
+  ],
+  "national": {"team": "England", "from": 2020, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Cole Palmer": {
+  "clubs": [
+   {"club": "Manchester City", "from": 2020, "to": 2023},
+   {"club": "Chelsea", "from": 2023, "to": null}
+  ],
+  "national": {"team": "England", "from": 2023, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Rodri": {
+  "clubs": [
+   {"club": "Villarreal", "from": 2015, "to": 2018},
+   {"club": "Atlético Madrid", "from": 2018, "to": 2019},
+   {"club": "Manchester City", "from": 2019, "to": 2026},
+   {"club": "Barcelona", "from": 2026, "to": null}
+  ],
+  "national": {"team": "Spain", "from": 2018, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Federico Valverde": {
+  "clubs": [
+   {"club": "Peñarol", "from": 2015, "to": 2016},
+   {"club": "Real Madrid", "from": 2017, "to": null},
+   {"club": "Deportivo La Coruña", "from": 2017, "to": 2018, "loan": true}
+  ],
+  "national": {"team": "Uruguay", "from": 2017, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Declan Rice": {
+  "clubs": [
+   {"club": "West Ham United", "from": 2015, "to": 2023},
+   {"club": "Arsenal", "from": 2023, "to": null}
+  ],
+  "national": {"team": "England", "from": 2019, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Bruno Fernandes": {
+  "clubs": [
+   {"club": "Novara", "from": 2012, "to": 2013},
+   {"club": "Udinese", "from": 2013, "to": 2016},
+   {"club": "Sampdoria", "from": 2016, "to": 2017, "loan": true},
+   {"club": "Sampdoria", "from": 2017, "to": 2017},
+   {"club": "Sporting CP", "from": 2017, "to": 2020},
+   {"club": "Manchester United", "from": 2020, "to": null}
+  ],
+  "national": {"team": "Portugal", "from": 2017, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Florian Wirtz": {
+  "clubs": [
+   {"club": "Bayer Leverkusen", "from": 2020, "to": 2025},
+   {"club": "Liverpool", "from": 2025, "to": null}
+  ],
+  "national": {"team": "Germany", "from": 2021, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "João Neves": {
+  "clubs": [
+   {"club": "Benfica", "from": 2022, "to": 2024},
+   {"club": "Paris Saint-Germain", "from": 2024, "to": null}
+  ],
+  "national": {"team": "Portugal", "from": 2023, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Zinedine Zidane": {
+  "clubs": [
+   {"club": "Cannes", "from": 1989, "to": 1992},
+   {"club": "Bordeaux", "from": 1992, "to": 1996},
+   {"club": "Juventus", "from": 1996, "to": 2001},
+   {"club": "Real Madrid", "from": 2001, "to": 2006}
+  ],
+  "national": {"team": "France", "from": 1994, "to": 2006},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Xavi Hernández": {
+  "clubs": [
+   {"club": "Barcelona", "from": 1998, "to": 2015},
+   {"club": "Al Sadd", "from": 2015, "to": 2019}
+  ],
+  "national": {"team": "Spain", "from": 2000, "to": 2014},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Andrés Iniesta": {
+  "clubs": [
+   {"club": "Barcelona", "from": 2002, "to": 2018},
+   {"club": "Vissel Kobe", "from": 2018, "to": 2023},
+   {"club": "Emirates", "from": 2023, "to": 2024}
+  ],
+  "national": {"team": "Spain", "from": 2006, "to": 2018},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Michel Platini": {
+  "clubs": [
+   {"club": "Nancy", "from": 1972, "to": 1979},
+   {"club": "Saint-Étienne", "from": 1979, "to": 1982},
+   {"club": "Juventus", "from": 1982, "to": 1987}
+  ],
+  "national": {"team": "France", "from": 1976, "to": 1987},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Andrea Pirlo": {
+  "clubs": [
+   {"club": "Brescia", "from": 1995, "to": 1998},
+   {"club": "Inter Milan", "from": 1998, "to": 2001},
+   {"club": "Reggina", "from": 1999, "to": 2000, "loan": true},
+   {"club": "Brescia", "from": 2001, "to": 2001, "loan": true},
+   {"club": "AC Milan", "from": 2001, "to": 2011},
+   {"club": "Juventus", "from": 2011, "to": 2015},
+   {"club": "New York City FC", "from": 2015, "to": 2017}
+  ],
+  "national": {"team": "Italy", "from": 2002, "to": 2015},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Steven Gerrard": {
+  "clubs": [
+   {"club": "Liverpool", "from": 1998, "to": 2015},
+   {"club": "LA Galaxy", "from": 2015, "to": 2016}
+  ],
+  "national": {"team": "England", "from": 2000, "to": 2014},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Paul Scholes": {
+  "clubs": [
+   {"club": "Manchester United", "from": 1993, "to": 2013},
+   {"club": "Royton Town", "from": 2018, "to": 2018}
+  ],
+  "national": {"team": "England", "from": 1997, "to": 2004},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Lothar Matthäus": {
+  "clubs": [
+   {"club": "Borussia Mönchengladbach", "from": 1979, "to": 1984},
+   {"club": "Bayern Munich", "from": 1984, "to": 1988},
+   {"club": "Inter Milan", "from": 1988, "to": 1992},
+   {"club": "Bayern Munich", "from": 1992, "to": 2000},
+   {"club": "MetroStars", "from": 2000, "to": 2000},
+   {"club": "1. FC Herzogenaurach", "from": 2018, "to": 2018}
+  ],
+  "national": {"team": "Germany", "from": 1980, "to": 2000},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Frank Rijkaard": {
+  "clubs": [
+   {"club": "Ajax", "from": 1980, "to": 1987},
+   {"club": "Sporting CP", "from": 1987, "to": 1988},
+   {"club": "Real Zaragoza", "from": 1987, "to": 1988, "loan": true},
+   {"club": "AC Milan", "from": 1988, "to": 1993},
+   {"club": "Ajax", "from": 1993, "to": 1995}
+  ],
+  "national": {"team": "Netherlands", "from": 1981, "to": 1994},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Roy Keane": {
+  "clubs": [
+   {"club": "Cobh Ramblers", "from": 1989, "to": 1990},
+   {"club": "Nottingham Forest", "from": 1990, "to": 1993},
+   {"club": "Manchester United", "from": 1993, "to": 2005},
+   {"club": "Celtic", "from": 2005, "to": 2006}
+  ],
+  "national": {"team": "Republic of Ireland", "from": 1991, "to": 2005},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Lamine Yamal": {
+  "clubs": [
+   {"club": "Barcelona", "from": 2023, "to": null}
+  ],
+  "national": {"team": "Spain", "from": 2023, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Vinícius Júnior": {
+  "clubs": [
+   {"club": "Flamengo", "from": 2017, "to": 2018},
+   {"club": "Real Madrid", "from": 2018, "to": null}
+  ],
+  "national": {"team": "Brazil", "from": 2019, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Mohamed Salah": {
+  "clubs": [
+   {"club": "Al-Mokawloon", "from": 2010, "to": 2012},
+   {"club": "Basel", "from": 2012, "to": 2014},
+   {"club": "Chelsea", "from": 2014, "to": 2016},
+   {"club": "Fiorentina", "from": 2015, "to": 2015, "loan": true},
+   {"club": "Roma", "from": 2015, "to": 2016, "loan": true},
+   {"club": "Roma", "from": 2016, "to": 2017},
+   {"club": "Liverpool", "from": 2017, "to": 2026},
+   {"club": "Trabzonspor", "from": 2026, "to": null}
+  ],
+  "national": {"team": "Egypt", "from": 2011, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Raphinha": {
+  "clubs": [
+   {"club": "Vitória Guimarães", "from": 2016, "to": 2018},
+   {"club": "Sporting CP", "from": 2018, "to": 2019},
+   {"club": "Rennes", "from": 2019, "to": 2020},
+   {"club": "Leeds United", "from": 2020, "to": 2022},
+   {"club": "Barcelona", "from": 2022, "to": null}
+  ],
+  "national": {"team": "Brazil", "from": 2021, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Bukayo Saka": {
+  "clubs": [
+   {"club": "Arsenal", "from": 2018, "to": null}
+  ],
+  "national": {"team": "England", "from": 2020, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Khvicha Kvaratskhelia": {
+  "clubs": [
+   {"club": "Dinamo Tbilisi", "from": 2017, "to": 2018},
+   {"club": "Rustavi", "from": 2018, "to": 2019},
+   {"club": "Lokomotiv Moscow", "from": 2019, "to": 2019, "loan": true},
+   {"club": "Rubin Kazan", "from": 2019, "to": 2022},
+   {"club": "Dinamo Batumi", "from": 2022, "to": 2022},
+   {"club": "Napoli", "from": 2022, "to": 2025},
+   {"club": "Paris Saint-Germain", "from": 2025, "to": null}
+  ],
+  "national": {"team": "Georgia", "from": 2019, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Luis Díaz": {
+  "clubs": [
+   {"club": "Barranquilla", "from": 2016, "to": 2017},
+   {"club": "Atlético Junior", "from": 2017, "to": 2019},
+   {"club": "Porto", "from": 2019, "to": 2022},
+   {"club": "Liverpool", "from": 2022, "to": 2025},
+   {"club": "Bayern Munich", "from": 2025, "to": null}
+  ],
+  "national": {"team": "Colombia", "from": 2018, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Nico Williams": {
+  "clubs": [
+   {"club": "Athletic Bilbao", "from": 2021, "to": null}
+  ],
+  "national": {"team": "Spain", "from": 2022, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Désiré Doué": {
+  "clubs": [
+   {"club": "Rennes", "from": 2022, "to": 2024},
+   {"club": "Paris Saint-Germain", "from": 2024, "to": null}
+  ],
+  "national": {"team": "France", "from": 2025, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Michael Olise": {
+  "clubs": [
+   {"club": "Reading", "from": 2019, "to": 2021},
+   {"club": "Crystal Palace", "from": 2021, "to": 2024},
+   {"club": "Bayern Munich", "from": 2024, "to": null}
+  ],
+  "national": {"team": "France", "from": 2024, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Garrincha": {
+  "clubs": [
+   {"club": "Serrano", "from": 1951, "to": 1951},
+   {"club": "Botafogo", "from": 1953, "to": 1965},
+   {"club": "Corinthians", "from": 1966, "to": 1966},
+   {"club": "Atlético Junior", "from": 1968, "to": 1968},
+   {"club": "Flamengo", "from": 1968, "to": 1969},
+   {"club": "Sacrofano", "from": 1970, "to": 1971},
+   {"club": "Olaria", "from": 1971, "to": 1972}
+  ],
+  "national": {"team": "Brazil", "from": 1955, "to": 1966},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "George Best": {
+  "clubs": [
+   {"club": "Manchester United", "from": 1963, "to": 1974},
+   {"club": "Jewish Guild", "from": 1974, "to": 1974},
+   {"club": "Dunstable Town", "from": 1974, "to": 1974},
+   {"club": "Stockport County", "from": 1975, "to": 1975},
+   {"club": "Cork Celtic", "from": 1975, "to": 1976},
+   {"club": "Los Angeles Aztecs", "from": 1976, "to": 1976},
+   {"club": "Fulham", "from": 1976, "to": 1977},
+   {"club": "Los Angeles Aztecs", "from": 1977, "to": 1978},
+   {"club": "Fort Lauderdale Strikers", "from": 1978, "to": 1979},
+   {"club": "Hibernian", "from": 1979, "to": 1980},
+   {"club": "San Jose Earthquakes", "from": 1980, "to": 1981},
+   {"club": "Sea Bee", "from": 1982, "to": 1982},
+   {"club": "Hong Kong Rangers", "from": 1982, "to": 1982},
+   {"club": "AFC Bournemouth", "from": 1982, "to": 1983},
+   {"club": "Brisbane Lions", "from": 1983, "to": 1983},
+   {"club": "Tobermore United", "from": 1984, "to": 1984}
+  ],
+  "national": {"team": "Northern Ireland", "from": 1964, "to": 1977},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Cristiano Ronaldo": {
+  "clubs": [
+   {"club": "Sporting CP", "from": 2002, "to": 2003},
+   {"club": "Manchester United", "from": 2003, "to": 2009},
+   {"club": "Real Madrid", "from": 2009, "to": 2018},
+   {"club": "Juventus", "from": 2018, "to": 2021},
+   {"club": "Manchester United", "from": 2021, "to": 2022},
+   {"club": "Al-Nassr", "from": 2023, "to": null}
+  ],
+  "national": {"team": "Portugal", "from": 2003, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Lionel Messi": {
+  "clubs": [
+   {"club": "Barcelona", "from": 2004, "to": 2021},
+   {"club": "Paris Saint-Germain", "from": 2021, "to": 2023},
+   {"club": "Inter Miami", "from": 2023, "to": null}
+  ],
+  "national": {"team": "Argentina", "from": 2005, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Ronaldinho": {
+  "clubs": [
+   {"club": "Grêmio", "from": 1998, "to": 2001},
+   {"club": "Paris Saint-Germain", "from": 2001, "to": 2003},
+   {"club": "Barcelona", "from": 2003, "to": 2008},
+   {"club": "AC Milan", "from": 2008, "to": 2011},
+   {"club": "Flamengo", "from": 2011, "to": 2012},
+   {"club": "Atlético Mineiro", "from": 2012, "to": 2014},
+   {"club": "Querétaro", "from": 2014, "to": 2015},
+   {"club": "Fluminense", "from": 2015, "to": 2015},
+   {"club": "Ravenna", "from": 2026, "to": null}
+  ],
+  "national": {"team": "Brazil", "from": 1999, "to": 2013},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Ryan Giggs": {
+  "clubs": [
+   {"club": "Manchester United", "from": 1990, "to": 2014}
+  ],
+  "national": {"team": "Wales", "from": 1991, "to": 2007},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Stanley Matthews": {
+  "clubs": [
+   {"club": "Stoke City", "from": 1932, "to": 1947},
+   {"club": "Blackpool", "from": 1947, "to": 1961},
+   {"club": "Toronto City", "from": 1961, "to": 1961, "loan": true},
+   {"club": "Stoke City", "from": 1961, "to": 1965},
+   {"club": "Toronto City", "from": 1965, "to": 1965, "loan": true}
+  ],
+  "national": {"team": "England", "from": 1934, "to": 1957},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Luís Figo": {
+  "clubs": [
+   {"club": "Sporting CP", "from": 1989, "to": 1995},
+   {"club": "Barcelona", "from": 1995, "to": 2000},
+   {"club": "Real Madrid", "from": 2000, "to": 2005},
+   {"club": "Inter Milan", "from": 2005, "to": 2009}
+  ],
+  "national": {"team": "Portugal", "from": 1991, "to": 2006},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Arjen Robben": {
+  "clubs": [
+   {"club": "Groningen", "from": 2000, "to": 2002},
+   {"club": "PSV Eindhoven", "from": 2002, "to": 2004},
+   {"club": "Chelsea", "from": 2004, "to": 2007},
+   {"club": "Real Madrid", "from": 2007, "to": 2009},
+   {"club": "Bayern Munich", "from": 2009, "to": 2019},
+   {"club": "Groningen", "from": 2020, "to": 2021}
+  ],
+  "national": {"team": "Netherlands", "from": 2003, "to": 2017},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Franck Ribéry": {
+  "clubs": [
+   {"club": "Boulogne", "from": 2000, "to": 2002},
+   {"club": "Alès", "from": 2002, "to": 2003},
+   {"club": "Brest", "from": 2003, "to": 2004},
+   {"club": "Metz", "from": 2004, "to": 2005},
+   {"club": "Galatasaray", "from": 2005, "to": 2005},
+   {"club": "Marseille", "from": 2005, "to": 2007},
+   {"club": "Bayern Munich", "from": 2007, "to": 2019},
+   {"club": "Fiorentina", "from": 2019, "to": 2021},
+   {"club": "Salernitana", "from": 2021, "to": 2022}
+  ],
+  "national": {"team": "France", "from": 2006, "to": 2014},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Kylian Mbappé": {
+  "clubs": [
+   {"club": "Monaco", "from": 2015, "to": 2018},
+   {"club": "Paris Saint-Germain", "from": 2017, "to": 2018, "loan": true},
+   {"club": "Paris Saint-Germain", "from": 2018, "to": 2024},
+   {"club": "Real Madrid", "from": 2024, "to": null}
+  ],
+  "national": {"team": "France", "from": 2017, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Ousmane Dembélé": {
+  "clubs": [
+   {"club": "Rennes", "from": 2015, "to": 2016},
+   {"club": "Borussia Dortmund", "from": 2016, "to": 2017},
+   {"club": "Barcelona", "from": 2017, "to": 2023},
+   {"club": "Paris Saint-Germain", "from": 2023, "to": null}
+  ],
+  "national": {"team": "France", "from": 2016, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Erling Haaland": {
+  "clubs": [
+   {"club": "Bryne", "from": 2016, "to": 2017},
+   {"club": "Molde", "from": 2017, "to": 2019},
+   {"club": "Red Bull Salzburg", "from": 2019, "to": 2020},
+   {"club": "Borussia Dortmund", "from": 2020, "to": 2022},
+   {"club": "Manchester City", "from": 2022, "to": null}
+  ],
+  "national": {"team": "Norway", "from": 2019, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Harry Kane": {
+  "clubs": [
+   {"club": "Tottenham Hotspur", "from": 2009, "to": 2023},
+   {"club": "Leyton Orient", "from": 2011, "to": 2011, "loan": true},
+   {"club": "Millwall", "from": 2012, "to": 2012, "loan": true},
+   {"club": "Norwich City", "from": 2012, "to": 2013, "loan": true},
+   {"club": "Leicester City", "from": 2013, "to": 2013, "loan": true},
+   {"club": "Bayern Munich", "from": 2023, "to": null}
+  ],
+  "national": {"team": "England", "from": 2015, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Alexander Isak": {
+  "clubs": [
+   {"club": "AIK", "from": 2016, "to": 2017},
+   {"club": "Borussia Dortmund", "from": 2017, "to": 2019},
+   {"club": "Real Sociedad", "from": 2019, "to": 2022},
+   {"club": "Newcastle United", "from": 2022, "to": 2025},
+   {"club": "Liverpool", "from": 2025, "to": null}
+  ],
+  "national": {"team": "Sweden", "from": 2017, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Lautaro Martínez": {
+  "clubs": [
+   {"club": "Racing Club", "from": 2015, "to": 2018},
+   {"club": "Inter Milan", "from": 2018, "to": null}
+  ],
+  "national": {"team": "Argentina", "from": 2018, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Julián Álvarez": {
+  "clubs": [
+   {"club": "River Plate", "from": 2018, "to": 2022},
+   {"club": "Manchester City", "from": 2022, "to": 2024},
+   {"club": "River Plate", "from": 2022, "to": 2022, "loan": true},
+   {"club": "Atlético Madrid", "from": 2024, "to": null}
+  ],
+  "national": {"team": "Argentina", "from": 2021, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Victor Osimhen": {
+  "clubs": [
+   {"club": "VfL Wolfsburg", "from": 2017, "to": 2019},
+   {"club": "Charleroi", "from": 2018, "to": 2019, "loan": true},
+   {"club": "Charleroi", "from": 2019, "to": 2019},
+   {"club": "Lille", "from": 2019, "to": 2020},
+   {"club": "Napoli", "from": 2020, "to": 2025},
+   {"club": "Galatasaray", "from": 2024, "to": 2025, "loan": true},
+   {"club": "Galatasaray", "from": 2025, "to": null}
+  ],
+  "national": {"team": "Nigeria", "from": 2017, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Viktor Gyökeres": {
+  "clubs": [
+   {"club": "IF Brommapojkarna", "from": 2015, "to": 2017},
+   {"club": "Brighton & Hove Albion", "from": 2018, "to": 2021},
+   {"club": "St. Pauli", "from": 2019, "to": 2020, "loan": true},
+   {"club": "Swansea City", "from": 2020, "to": 2021, "loan": true},
+   {"club": "Coventry City", "from": 2021, "to": 2021, "loan": true},
+   {"club": "Coventry City", "from": 2021, "to": 2023},
+   {"club": "Sporting CP", "from": 2023, "to": 2025},
+   {"club": "Arsenal", "from": 2025, "to": null}
+  ],
+  "national": {"team": "Sweden", "from": 2019, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Robert Lewandowski": {
+  "clubs": [
+   {"club": "Delta Warsaw", "from": 2005, "to": 2005},
+   {"club": "Znicz Pruszków", "from": 2006, "to": 2008},
+   {"club": "Lech Poznań", "from": 2008, "to": 2010},
+   {"club": "Borussia Dortmund", "from": 2010, "to": 2014},
+   {"club": "Bayern Munich", "from": 2014, "to": 2022},
+   {"club": "Barcelona", "from": 2022, "to": 2026},
+   {"club": "Chicago Fire", "from": 2026, "to": null}
+  ],
+  "national": {"team": "Poland", "from": 2008, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Pelé": {
+  "clubs": [
+   {"club": "Santos", "from": 1956, "to": 1974},
+   {"club": "New York Cosmos", "from": 1975, "to": 1977}
+  ],
+  "national": {"team": "Brazil", "from": 1957, "to": 1971},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Ronaldo Nazário": {
+  "clubs": [
+   {"club": "Cruzeiro", "from": 1993, "to": 1994},
+   {"club": "PSV Eindhoven", "from": 1994, "to": 1996},
+   {"club": "Barcelona", "from": 1996, "to": 1997},
+   {"club": "Inter Milan", "from": 1997, "to": 2002},
+   {"club": "Real Madrid", "from": 2002, "to": 2007},
+   {"club": "AC Milan", "from": 2007, "to": 2008},
+   {"club": "Corinthians", "from": 2009, "to": 2011}
+  ],
+  "national": {"team": "Brazil", "from": 1994, "to": 2011},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Marco van Basten": {
+  "clubs": [
+   {"club": "Ajax", "from": 1981, "to": 1987},
+   {"club": "AC Milan", "from": 1987, "to": 1995}
+  ],
+  "national": {"team": "Netherlands", "from": 1983, "to": 1992},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Gerd Müller": {
+  "clubs": [
+   {"club": "1861 Nördlingen", "from": 1963, "to": 1964},
+   {"club": "Bayern Munich", "from": 1964, "to": 1979},
+   {"club": "Fort Lauderdale Strikers", "from": 1979, "to": 1981}
+  ],
+  "national": {"team": "West Germany", "from": 1966, "to": 1974},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Alfredo Di Stéfano": {
+  "clubs": [
+   {"club": "River Plate", "from": 1945, "to": 1949},
+   {"club": "Huracán", "from": 1945, "to": 1946, "loan": true},
+   {"club": "Millonarios", "from": 1949, "to": 1953},
+   {"club": "Real Madrid", "from": 1953, "to": 1964},
+   {"club": "Espanyol", "from": 1964, "to": 1966}
+  ],
+  "national": {"team": "Argentina", "from": 1947, "to": 1947},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Romário": {
+  "clubs": [
+   {"club": "Vasco da Gama", "from": 1985, "to": 1988},
+   {"club": "PSV Eindhoven", "from": 1988, "to": 1993},
+   {"club": "Barcelona", "from": 1993, "to": 1995},
+   {"club": "Flamengo", "from": 1995, "to": 1996},
+   {"club": "Valencia", "from": 1996, "to": 1997},
+   {"club": "Flamengo", "from": 1997, "to": 1997, "loan": true},
+   {"club": "Flamengo", "from": 1998, "to": 1999},
+   {"club": "Vasco da Gama", "from": 2000, "to": 2002},
+   {"club": "Fluminense", "from": 2002, "to": 2004},
+   {"club": "Al Sadd", "from": 2003, "to": 2003, "loan": true},
+   {"club": "Vasco da Gama", "from": 2005, "to": 2006},
+   {"club": "Miami FC", "from": 2006, "to": 2006},
+   {"club": "Adelaide United", "from": 2006, "to": 2006, "loan": true},
+   {"club": "Vasco da Gama", "from": 2007, "to": 2007},
+   {"club": "America-RJ", "from": 2009, "to": 2009}
+  ],
+  "national": {"team": "Brazil", "from": 1987, "to": 2005},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Gabriel Batistuta": {
+  "clubs": [
+   {"club": "Newell's Old Boys", "from": 1988, "to": 1989},
+   {"club": "River Plate", "from": 1989, "to": 1990},
+   {"club": "Boca Juniors", "from": 1990, "to": 1991},
+   {"club": "Fiorentina", "from": 1991, "to": 2000},
+   {"club": "Roma", "from": 2000, "to": 2003},
+   {"club": "Inter Milan", "from": 2003, "to": 2003, "loan": true},
+   {"club": "Al-Arabi", "from": 2003, "to": 2005}
+  ],
+  "national": {"team": "Argentina", "from": 1991, "to": 2002},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Thierry Henry": {
+  "clubs": [
+   {"club": "Monaco", "from": 1994, "to": 1999},
+   {"club": "Juventus", "from": 1999, "to": 1999},
+   {"club": "Arsenal", "from": 1999, "to": 2007},
+   {"club": "Barcelona", "from": 2007, "to": 2010},
+   {"club": "New York Red Bulls", "from": 2010, "to": 2014},
+   {"club": "Arsenal", "from": 2012, "to": 2012, "loan": true}
+  ],
+  "national": {"team": "France", "from": 1997, "to": 2010},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Ruud van Nistelrooy": {
+  "clubs": [
+   {"club": "Den Bosch", "from": 1993, "to": 1997},
+   {"club": "Heerenveen", "from": 1997, "to": 1998},
+   {"club": "PSV Eindhoven", "from": 1998, "to": 2001},
+   {"club": "Manchester United", "from": 2001, "to": 2006},
+   {"club": "Real Madrid", "from": 2006, "to": 2010},
+   {"club": "Hamburger SV", "from": 2010, "to": 2011},
+   {"club": "Málaga", "from": 2011, "to": 2012}
+  ],
+  "national": {"team": "Netherlands", "from": 1998, "to": 2011},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Eusébio": {
+  "clubs": [
+   {"club": "Sporting Lourenço Marques", "from": 1957, "to": 1960},
+   {"club": "Benfica", "from": 1961, "to": 1975},
+   {"club": "Boston Minutemen", "from": 1975, "to": 1975},
+   {"club": "Monterrey", "from": 1975, "to": 1975},
+   {"club": "Toronto Metros-Croatia", "from": 1975, "to": 1976},
+   {"club": "Beira-Mar", "from": 1976, "to": 1976},
+   {"club": "Las Vegas Quicksilvers", "from": 1976, "to": 1977},
+   {"club": "União de Tomar", "from": 1977, "to": 1978},
+   {"club": "New Jersey Americans", "from": 1978, "to": 1979},
+   {"club": "Buffalo Stallions", "from": 1979, "to": 1980}
+  ],
+  "national": {"team": "Portugal", "from": 1961, "to": 1973},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Bernardo Paçó": {
+  "clubs": [
+   {"club": "Sporting CP", "from": 2019, "to": null}
+  ],
+  "national": {"team": "Portugal", "from": 2023, "to": null},
+  "source": "itwiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Dídac Plana": {
+  "clubs": [
+   {"club": "UD Guadalajara FS", "from": 2008, "to": 2010},
+   {"club": "AD Sala 10", "from": 2010, "to": 2013},
+   {"club": "FS García", "from": 2013, "to": 2016},
+   {"club": "Jaén FS", "from": 2016, "to": 2018},
+   {"club": "Barcelona", "from": 2018, "to": null}
+  ],
+  "national": {"team": "Spain", "from": 2018, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Chemi": {
+  "clubs": [
+   {"club": "O Parrulo", "from": 2018, "to": 2020},
+   {"club": "Jimbee Cartagena", "from": 2020, "to": null}
+  ],
+  "national": {"team": "Spain", "from": 2021, "to": null},
+  "source": "eswiki-clubs",
+  "checked": "2026-09-24"
+ },
+ "Edu": {
+  "clubs": [
+   {"club": "CD Debabarrena", "from": 2013, "to": 2015},
+   {"club": "Zierbena FS", "from": 2015, "to": 2017},
+   {"club": "Osasuña Magna", "from": 2017, "to": 2019},
+   {"club": "Viña Albali Valdepeñas", "from": 2019, "to": 2023},
+   {"club": "ElPozo Murcia", "from": 2023, "to": null}
+  ],
+  "national": {"team": "Portugal", "from": 2019, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Miquel Feixas": {
+  "clubs": [
+   {"club": "Industrias Santa Coloma", "from": 2018, "to": 2020},
+   {"club": "Barcelona", "from": 2020, "to": null}
+  ],
+  "national": {"team": "Spain"},
+  "source": "eswiki-clubs",
+  "checked": "2026-09-24"
+ },
+ "Mathi Fernández": {
+  "clubs": [
+   {"club": "Peñarol", "from": 2014, "to": 2026},
+   {"club": "Alzira", "from": 2026, "to": null}
+  ],
+  "national": {"team": "Uruguay", "from": 2016, "to": null},
+  "source": "club-news",
+  "checked": "2026-09-24"
+ },
+ "Luan Muller": {
+  "clubs": [
+   {"club": "Sorocaba", "from": 2014, "to": 2017},
+   {"club": "Foz Cataratas", "from": 2018, "to": 2018},
+   {"club": "Leo Futsal", "from": 2019, "to": 2020},
+   {"club": "ACEL", "from": 2020, "to": 2020},
+   {"club": "AD Fundão", "from": 2020, "to": 2022},
+   {"club": "Palma Futsal", "from": 2022, "to": null}
+  ],
+  "national": {"team": "Armenia"},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Willian Dorn": {
+  "clubs": [
+   {"club": "Joinville", "from": 2013, "to": 2023},
+   {"club": "Norilsk Nickel", "from": 2024, "to": null}
+  ],
+  "national": {"team": "Brazil", "from": 2021, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Guitta": {
+  "clubs": [
+   {"club": "Intelli", "from": 2006, "to": 2014},
+   {"club": "Corinthians", "from": 2015, "to": 2018},
+   {"club": "Sporting CP", "from": 2018, "to": 2023},
+   {"club": "Ukhta", "from": 2023, "to": null}
+  ],
+  "national": {"team": "Brazil", "from": 2011, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Higuita": {
+  "clubs": [
+   {"club": "Cabo Frio", "from": 2006, "to": 2008},
+   {"club": "Vasco da Gama", "from": 2009, "to": 2009},
+   {"club": "MFC Tulpar", "from": 2009, "to": 2010},
+   {"club": "Belenenses", "from": 2010, "to": 2010},
+   {"club": "Kairat", "from": 2011, "to": null}
+  ],
+  "national": {"team": "Kazakhstan", "from": 2013, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Luis Amado": {
+  "clubs": [
+   {"club": "Caja Segovia", "from": 1995, "to": 1996},
+   {"club": "At. Madrid Leganés", "from": 1996, "to": 1997},
+   {"club": "Caja Segovia", "from": 1997, "to": 2001},
+   {"club": "Movistar Inter", "from": 2001, "to": null}
+  ],
+  "national": {"team": "Spain"},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Stefano Mammarella": {
+  "clubs": [
+   {"club": "Chieti", "from": 2003, "to": 2009},
+   {"club": "Montesilvano", "from": 2009, "to": 2013},
+   {"club": "Acqua e Sapone", "from": 2013, "to": null}
+  ],
+  "national": {"team": "Italy"},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Paco Sedano": {
+  "clubs": [
+   {"club": "Coslada", "from": 1998, "to": 1999},
+   {"club": "Móstoles", "from": 1999, "to": 2007},
+   {"club": "Barcelona", "from": 2007, "to": 2018}
+  ],
+  "national": {"team": "Spain"},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Mostafa Nazari": {
+  "clubs": [
+   {"club": "Shohada Basij", "from": 2002, "to": 2004},
+   {"club": "Chini Hamgam", "from": 2004, "to": 2005},
+   {"club": "Shensa", "from": 2005, "to": 2007},
+   {"club": "Eram Kish", "from": 2007, "to": 2009},
+   {"club": "Foolad Mahan", "from": 2009, "to": 2010},
+   {"club": "Giti Pasand", "from": 2010, "to": 2012},
+   {"club": "Dabiri", "from": 2012, "to": 2013},
+   {"club": "Norilsk Nickel", "from": 2013, "to": 2014},
+   {"club": "Tasisat Daryaei", "from": 2014, "to": 2018},
+   {"club": "Vamos Mataram", "from": 2018, "to": 2019},
+   {"club": "Sunich", "from": 2019, "to": 2020},
+   {"club": "Crop", "from": 2020, "to": 2021}
+  ],
+  "national": {"team": "Iran", "from": 2004, "to": 2018},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Sergey Zuev": {
+  "clubs": [
+   {"club": "MFK UPI-DDT", "from": 1997, "to": 2001},
+   {"club": "MFK Viz-Sinara", "from": 2001, "to": 2014},
+   {"club": "Dina Moscow", "from": 2014, "to": 2017}
+  ],
+  "national": {"team": "Russia", "from": 2002, "to": 2012},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Tiago Marinho": {
+  "clubs": [
+   {"club": "Malwee/Jaraguá", "from": 2006, "to": 2010},
+   {"club": "Gazprom-Ugra", "from": 2011, "to": 2012},
+   {"club": "São José", "from": 2011, "to": 2011},
+   {"club": "Joinville", "from": 2012, "to": 2013},
+   {"club": "Sorocaba", "from": 2014, "to": 2018},
+   {"club": "Corinthians", "from": 2019, "to": 2019},
+   {"club": "Pato", "from": 2020, "to": 2020},
+   {"club": "Atlântico", "from": 2021, "to": 2021},
+   {"club": "Jaraguá", "from": 2022, "to": 2025}
+  ],
+  "national": {"team": "Brazil", "from": 2005, "to": 2019},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Santiago Elías": {
+  "clubs": [
+   {"club": "Pinocho", "from": 2001, "to": 2008},
+   {"club": "Vesevo", "from": 2008, "to": 2009},
+   {"club": "Pinocho", "from": 2010, "to": 2021}
+  ],
+  "national": {"team": "Argentina", "from": 2005, "to": 2014},
+  "source": "itwiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Gustavo Lobo": {
+  "clubs": [
+   {"club": "Carlos Barbosa", "from": 2001, "to": 2003},
+   {"club": "Kairat", "from": 2004, "to": 2009},
+   {"club": "Sibiryak Novosibirsk", "from": 2009, "to": 2012},
+   {"club": "Dinamo Moscow", "from": 2012, "to": 2018}
+  ],
+  "national": {"team": "Russia", "from": 2011, "to": 2016},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Antonio Pérez": {
+  "clubs": [
+   {"club": "Jaén", "from": 2019, "to": 2022},
+   {"club": "Barcelona", "from": 2022, "to": null}
+  ],
+  "national": {"team": "Spain", "from": 2021, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Tomás Paçó": {
+  "clubs": [
+   {"club": "Sporting CP", "from": 2019, "to": null}
+  ],
+  "national": {"team": "Portugal", "from": 2021, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "André Coelho": {
+  "clubs": [
+   {"club": "ABC Nelas", "from": 2012, "to": 2013},
+   {"club": "Braga/AAUM", "from": 2013, "to": 2017},
+   {"club": "Benfica", "from": 2017, "to": 2020},
+   {"club": "Barcelona", "from": 2020, "to": 2024},
+   {"club": "Benfica", "from": 2024, "to": null}
+  ],
+  "national": {"team": "Portugal", "from": 2016, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Afonso Jesus": {
+  "clubs": [
+   {"club": "Sporting CP", "from": 2015, "to": 2016},
+   {"club": "Benfica", "from": 2016, "to": null}
+  ],
+  "national": {"team": "Portugal", "from": 2017, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Ricardo Mayor": {
+  "clubs": [
+   {"club": "Córdoba Patrimonio", "from": 2020, "to": 2022, "loan": true},
+   {"club": "ElPozo Murcia", "from": 2022, "to": null}
+  ],
+  "national": {"team": "Spain", "from": 2024, "to": null},
+  "source": "itwiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Adrián Rivera": {
+  "clubs": [
+   {"club": "Leganés", "from": 2018, "to": 2020},
+   {"club": "Noia", "from": 2020, "to": 2021},
+   {"club": "Talavera", "from": 2021, "to": 2022},
+   {"club": "Zaragoza", "from": 2022, "to": 2025},
+   {"club": "ElPozo Murcia", "from": 2025, "to": null}
+  ],
+  "national": {"team": "Spain", "from": 2025, "to": null},
+  "source": "itwiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "João Victor": {
+  "clubs": [
+   {"club": "Corinthians", "from": 2019, "to": 2021},
+   {"club": "Palma Futsal", "from": 2021, "to": 2025},
+   {"club": "Noia", "from": 2023, "to": 2023, "loan": true},
+   {"club": "Ribera Navarra", "from": 2023, "to": 2023, "loan": true},
+   {"club": "Atlântico de Erechim", "from": 2023, "to": 2023, "loan": true},
+   {"club": "Palma Futsal", "from": 2024, "to": 2025, "loan": true},
+   {"club": "Barcelona", "from": 2025, "to": null}
+  ],
+  "national": {"team": "Brazil", "from": 2022, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Souheil Mouhoudine": {
+  "clubs": [
+   {"club": "AS Courneuve", "from": 2013, "to": 2015},
+   {"club": "AF Bobigny", "from": 2014, "to": 2015},
+   {"club": "Garges Djibson", "from": 2015, "to": 2017},
+   {"club": "ACCS", "from": 2017, "to": 2022},
+   {"club": "Étoile Lavalloise", "from": 2022, "to": 2024},
+   {"club": "Jimbee Cartagena", "from": 2024, "to": 2025},
+   {"club": "Étoile Lavalloise", "from": 2025, "to": null}
+  ],
+  "national": {"team": "France", "from": 2016, "to": null},
+  "source": "frwiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Mykola Mykytiuk": {
+  "clubs": [
+   {"club": "Uragan Ivano-Frankivsk", "from": 2016, "to": 2021},
+   {"club": "Prodexim Kherson", "from": 2021, "to": 2022},
+   {"club": "Uragan Ivano-Frankivsk", "from": 2022, "to": 2023},
+   {"club": "Córdoba Patrimonio", "from": 2023, "to": 2025},
+   {"club": "Ribera Navarra", "from": 2025, "to": null}
+  ],
+  "national": {"team": "Ukraine", "from": 2018, "to": null},
+  "source": "ukwiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Sid Belhaj": {
+  "clubs": [
+   {"club": "Paris Métropole Futsal", "from": 2011, "to": 2012},
+   {"club": "Kremlin-Bicêtre United", "from": 2012, "to": 2017},
+   {"club": "ACCES Futsal", "from": 2017, "to": 2021},
+   {"club": "Sporting Paris", "from": 2021, "to": null}
+  ],
+  "national": {"team": "France", "from": 2012, "to": null},
+  "source": "frwiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Kike Boned": {
+  "clubs": [
+   {"club": "Valencia Vijusa", "from": 2000, "to": 2001},
+   {"club": "ElPozo Murcia", "from": 2001, "to": 2015}
+  ],
+  "national": {"team": "Spain"},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Schumacher": {
+  "clubs": [
+   {"club": "Corinthians", "from": 1997, "to": 1997},
+   {"club": "General Motors", "from": 1998, "to": 1999},
+   {"club": "Vasco da Gama", "from": 2000, "to": 2000},
+   {"club": "Movistar Inter", "from": 2001, "to": 2012},
+   {"club": "Corinthians", "from": 2012, "to": 2015}
+  ],
+  "national": {"team": "Brazil"},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Gabriel": {
+  "clubs": [
+   {"club": "Carlos Barbosa", "from": 1999, "to": 2004},
+   {"club": "Movistar Inter", "from": 2004, "to": 2011},
+   {"club": "Barcelona", "from": 2011, "to": null}
+  ],
+  "national": {"team": "Brazil"},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Carlos Ortiz": {
+  "clubs": [
+   {"club": "Carnicer", "from": 1998, "to": 1999},
+   {"club": "Regal Sport", "from": 1999, "to": 2001},
+   {"club": "Atlético Boadilla", "from": 2001, "to": 2003},
+   {"club": "Algaraba Olías del Rey", "from": 2003, "to": 2004},
+   {"club": "Las Rozas Boadilla", "from": 2004, "to": 2006},
+   {"club": "MRA Navarra", "from": 2006, "to": 2008},
+   {"club": "Movistar Inter", "from": 2008, "to": 2020},
+   {"club": "Asnieres Villeneuve", "from": 2020, "to": 2021},
+   {"club": "Barcelona", "from": 2021, "to": null}
+  ],
+  "national": {"team": "Spain"},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Aicardo": {
+  "clubs": [
+   {"club": "Géminis San Miguel", "from": 2005, "to": 2006},
+   {"club": "Fuentemar - CD Virgili", "from": 2006, "to": 2008},
+   {"club": "Lobelle de Santiago", "from": 2008, "to": 2012},
+   {"club": "Barcelona", "from": 2012, "to": null}
+  ],
+  "national": {"team": "Spain"},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Neto": {
+  "clubs": [
+   {"club": "Atlético Mineiro", "from": 1998, "to": 2000},
+   {"club": "Minas", "from": 2001, "to": 2002},
+   {"club": "Ulbra", "from": 2003, "to": 2004},
+   {"club": "Movistar Inter", "from": 2004, "to": 2010},
+   {"club": "Malwee/Jaraguá", "from": 2010, "to": 2010},
+   {"club": "Santos", "from": 2011, "to": 2011},
+   {"club": "Joinville", "from": 2012, "to": 2012},
+   {"club": "Gazprom-Ugra", "from": 2013, "to": 2016},
+   {"club": "Split Tommy", "from": 2016, "to": 2016},
+   {"club": "Kairat", "from": 2016, "to": null}
+  ],
+  "national": {"team": "Brazil"},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Julio García Mera": {
+  "clubs": [
+   {"club": "Movistar Inter", "from": 1991, "to": 2007}
+  ],
+  "national": {"team": "Spain", "from": 1996, "to": 2005},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Marcio Forte": {
+  "clubs": [
+   {"club": "Lazio", "from": 2002, "to": 2004},
+   {"club": "Perugia", "from": 2004, "to": 2006},
+   {"club": "Montesilvano", "from": 2006, "to": 2011},
+   {"club": "Lazio", "from": 2011, "to": null}
+  ],
+  "national": {"team": "Italy"},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Sergei Sergeev": {
+  "clubs": [
+   {"club": "CSKA Moscow", "from": 2003, "to": 2012},
+   {"club": "Dinamo Moscow", "from": 2012, "to": 2017},
+   {"club": "Norilsk Nickel", "from": 2017, "to": 2020},
+   {"club": "Dinamo-Samara", "from": 2020, "to": null}
+  ],
+  "national": {"team": "Russia"},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Douglas Junior": {
+  "clubs": [
+   {"club": "ABC", "from": 2009, "to": 2009},
+   {"club": "ERA-PACK Chrudim", "from": 2010, "to": 2014},
+   {"club": "Kairat", "from": 2014, "to": null},
+   {"club": "KPRF Moscow", "from": 2022, "to": null, "loan": true}
+  ],
+  "national": {"team": "Kazakhstan", "from": 2015, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Pany Varela": {
+  "clubs": [
+   {"club": "Benfica", "from": 2008, "to": 2013},
+   {"club": "Belenenses", "from": 2012, "to": 2012, "loan": true},
+   {"club": "Olivais", "from": 2012, "to": 2013, "loan": true},
+   {"club": "Fundão", "from": 2013, "to": 2016},
+   {"club": "Sporting CP", "from": 2016, "to": 2024},
+   {"club": "Al-Nassr", "from": 2024, "to": 2025},
+   {"club": "Benfica", "from": 2025, "to": null}
+  ],
+  "national": {"team": "Portugal", "from": 2015, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Mellado": {
+  "clubs": [
+   {"club": "Librilla", "from": 2017, "to": 2018},
+   {"club": "Jimbee Cartagena", "from": 2018, "to": null}
+  ],
+  "national": {"team": "Spain", "from": 2020, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Adolfo": {
+  "clubs": [
+   {"club": "FS García", "from": 2009, "to": 2016},
+   {"club": "Barcelona", "from": 2016, "to": null}
+  ],
+  "national": {"team": "Spain", "from": 2017, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Catela": {
+  "clubs": [
+   {"club": "Jerez 1993", "from": 2012, "to": 2013},
+   {"club": "Zaragoza", "from": 2013, "to": 2015},
+   {"club": "Santiago Futsal", "from": 2015, "to": 2018},
+   {"club": "Palma Futsal", "from": 2018, "to": 2020},
+   {"club": "Valdepeñas", "from": 2020, "to": 2022},
+   {"club": "Barcelona", "from": 2022, "to": null}
+  ],
+  "national": {"team": "Spain", "from": 2016, "to": null},
+  "source": "itwiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Matheus Rodrigues": {
+  "clubs": [
+   {"club": "Corinthians", "from": 2016, "to": 2020},
+   {"club": "Barcelona", "from": 2020, "to": null}
+  ],
+  "national": {"team": "Brazil", "from": 2018, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Mario Rivillos": {
+  "clubs": [
+   {"club": "Carnicer Torrejón", "from": 2008, "to": 2012},
+   {"club": "Movistar Inter", "from": 2012, "to": 2017},
+   {"club": "Barcelona", "from": 2017, "to": 2020},
+   {"club": "Levante UD", "from": 2020, "to": 2022},
+   {"club": "Palma Futsal", "from": 2022, "to": null}
+  ],
+  "national": {"team": "Spain"},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Sergio González": {
+  "clubs": [],
+  "source": "missing",
+  "checked": "2026-09-24"
+ },
+ "Luciano Gauna": {
+  "clubs": [
+   {"club": "Pinocho", "from": 2019, "to": 2020},
+   {"club": "Peñíscola", "from": 2020, "to": 2025},
+   {"club": "Barcelona", "from": 2025, "to": null}
+  ],
+  "national": {"team": "Argentina", "from": 2020, "to": null},
+  "source": "itwiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Mamadou Touré": {
+  "clubs": [
+   {"club": "ACCS", "from": 2020, "to": 2022},
+   {"club": "Barcelona", "from": 2022, "to": null}
+  ],
+  "national": {"team": "France", "from": 2020, "to": null},
+  "source": "frwiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Pauleta": {
+  "clubs": [
+   {"club": "Belenenses", "from": 2013, "to": 2015},
+   {"club": "Leões Porto Salvo", "from": 2015, "to": 2017},
+   {"club": "AD Fundão", "from": 2017, "to": 2019},
+   {"club": "Sporting CP", "from": 2019, "to": null}
+  ],
+  "national": {"team": "Portugal", "from": 2018, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Ricardinho": {
+  "clubs": [
+   {"club": "Benfica", "from": 2003, "to": 2010},
+   {"club": "Nagoya Oceans", "from": 2010, "to": 2013},
+   {"club": "CSKA Moscow", "from": 2011, "to": 2011, "loan": true},
+   {"club": "Benfica", "from": 2011, "to": 2012, "loan": true},
+   {"club": "Movistar Inter", "from": 2013, "to": 2020},
+   {"club": "ACCS", "from": 2020, "to": 2022},
+   {"club": "Pendekar United", "from": 2022, "to": 2023},
+   {"club": "Riga Futsal Club", "from": 2023, "to": 2024},
+   {"club": "Ecocity Genzano", "from": 2024, "to": null}
+  ],
+  "national": {"team": "Portugal", "from": 2003, "to": 2021},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Falcão": {
+  "clubs": [
+   {"club": "Guapira", "from": 1989, "to": 1993},
+   {"club": "Corinthians", "from": 1993, "to": 1996},
+   {"club": "GM-Chevrolet", "from": 1997, "to": 1998},
+   {"club": "Atlético Mineiro", "from": 1999, "to": 1999},
+   {"club": "Rio de Janeiro", "from": 1999, "to": 1999},
+   {"club": "São Paulo", "from": 2000, "to": 2000},
+   {"club": "Banespa", "from": 2000, "to": 2002},
+   {"club": "Malwee/Jaraguá", "from": 2003, "to": 2005},
+   {"club": "São Paulo", "from": 2005, "to": 2005},
+   {"club": "Malwee/Jaraguá", "from": 2005, "to": 2010},
+   {"club": "Cortiana/Santos", "from": 2011, "to": 2011},
+   {"club": "Intelli", "from": 2012, "to": 2014},
+   {"club": "Madureira", "from": 2014, "to": 2014},
+   {"club": "Magnus Futsal", "from": 2015, "to": 2015},
+   {"club": "Vasco da Gama", "from": 2015, "to": 2015},
+   {"club": "Chennai 5s", "from": 2016, "to": 2016},
+   {"club": "Grêmio Futebol 7", "from": 2020, "to": 2020}
+  ],
+  "national": {"team": "Brazil", "from": 1998, "to": 2018},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Manoel Tobias": {
+  "clubs": [
+   {"club": "Candeia", "from": 1989, "to": 1989},
+   {"club": "Votorantim", "from": 1990, "to": 1990},
+   {"club": "Banfort", "from": 1991, "to": 1992},
+   {"club": "Inpacel", "from": 1993, "to": 1994},
+   {"club": "Enxuta", "from": 1994, "to": 1995},
+   {"club": "Inter/Ulbra", "from": 1996, "to": 1997},
+   {"club": "Atlético Mineiro", "from": 1998, "to": 1999},
+   {"club": "Vasco da Gama", "from": 2000, "to": 2001},
+   {"club": "Malwee/Jaraguá", "from": 2001, "to": 2002},
+   {"club": "Cartagena", "from": 2002, "to": 2007},
+   {"club": "SC Ulbra", "from": 2007, "to": 2007}
+  ],
+  "national": {"team": "Brazil", "from": 1992, "to": 2004},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Javi Rodríguez": {
+  "clubs": [
+   {"club": "Sant Andreu", "from": 1991, "to": 1992},
+   {"club": "Indústrias García", "from": 1992, "to": 1997},
+   {"club": "Playas de Castellón", "from": 1997, "to": 2006},
+   {"club": "Barcelona", "from": 2006, "to": 2012},
+   {"club": "Kuwait Club", "from": 2012, "to": 2014},
+   {"club": "Baku United", "from": 2014, "to": 2015}
+  ],
+  "national": {"team": "Spain"},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Sergio Lozano": {
+  "clubs": [
+   {"club": "Arganda", "from": 2001, "to": 2004},
+   {"club": "Las Rozas", "from": 2004, "to": 2008},
+   {"club": "Cartagena", "from": 2008, "to": 2010},
+   {"club": "Caja Segovia", "from": 2010, "to": 2011},
+   {"club": "Barcelona", "from": 2011, "to": null}
+  ],
+  "national": {"team": "Spain"},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Daniel Ibañes": {
+  "clubs": [
+   {"club": "XV de Piracicaba", "from": 1991, "to": 1991},
+   {"club": "Tejusa", "from": 1991, "to": 1991},
+   {"club": "Osan", "from": 1994, "to": 1994},
+   {"club": "Tejusa", "from": 1995, "to": 1995},
+   {"club": "Mejorada", "from": 1995, "to": 1996},
+   {"club": "Caja Segovia", "from": 1996, "to": 2002},
+   {"club": "Movistar Inter", "from": 2002, "to": 2010}
+  ],
+  "national": {"team": "Spain"},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Robinho": {
+  "clubs": [
+   {"club": "Action 21 Charleroi", "from": 2004, "to": 2006},
+   {"club": "Gazprom-Ugra", "from": 2006, "to": 2016},
+   {"club": "Dinamo Moscow", "from": 2016, "to": 2017},
+   {"club": "Benfica", "from": 2017, "to": 2022},
+   {"club": "Braga", "from": 2022, "to": 2024},
+   {"club": "Joinville Futsal", "from": 2024, "to": null}
+  ],
+  "national": {"team": "Russia", "from": 2009, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Alex Merlim": {
+  "clubs": [
+   {"club": "Bebedouro SP", "from": 2006, "to": 2006},
+   {"club": "Santa Fé", "from": 2007, "to": 2007},
+   {"club": "Augusta", "from": 2007, "to": 2011},
+   {"club": "Luparense", "from": 2011, "to": 2015},
+   {"club": "Sporting CP", "from": 2015, "to": null}
+  ],
+  "national": {"team": "Italy", "from": 2010, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Miguelín": {
+  "clubs": [
+   {"club": "Son Rapinya", "from": 2002, "to": 2005},
+   {"club": "Andorra", "from": 2005, "to": 2006},
+   {"club": "Inca", "from": 2006, "to": 2007},
+   {"club": "Fisiomedia Manacor", "from": 2007, "to": 2011},
+   {"club": "ElPozo Murcia", "from": 2011, "to": 2021},
+   {"club": "Cordoba", "from": 2021, "to": 2023},
+   {"club": "Pesaro", "from": 2023, "to": 2024},
+   {"club": "Fortuna Düsseldorf", "from": 2025, "to": null}
+  ],
+  "national": {"team": "Spain"},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Jordi Torras": {
+  "clubs": [
+   {"club": "Barcelona", "from": 1996, "to": 2003},
+   {"club": "Miró Martorell", "from": 2003, "to": 2004},
+   {"club": "PW Cartagena", "from": 2004, "to": 2007},
+   {"club": "Movistar Inter", "from": 2007, "to": 2010},
+   {"club": "Barcelona", "from": 2010, "to": 2014},
+   {"club": "Asti", "from": 2014, "to": 2015}
+  ],
+  "national": {"team": "Spain", "from": 2000, "to": 2015},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Zicky Té": {
+  "clubs": [
+   {"club": "Sporting CP", "from": 2018, "to": null}
+  ],
+  "national": {"team": "Portugal", "from": 2021, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Pito": {
+  "clubs": [
+   {"club": "Criciúma", "from": 2010, "to": 2010},
+   {"club": "ADESP", "from": 2011, "to": 2012},
+   {"club": "Concórdia", "from": 2013, "to": 2013},
+   {"club": "Carlos Barbosa", "from": 2014, "to": 2016},
+   {"club": "ElPozo Murcia", "from": 2016, "to": 2019},
+   {"club": "Movistar Inter", "from": 2019, "to": 2021},
+   {"club": "Barcelona", "from": 2021, "to": null}
+  ],
+  "national": {"team": "Brazil", "from": 2014, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Pablo Ramírez": {
+  "clubs": [
+   {"club": "Coineña", "from": 2020, "to": 2021},
+   {"club": "UMA Antequera", "from": 2021, "to": 2023},
+   {"club": "Jimbee Cartagena", "from": 2023, "to": null}
+  ],
+  "national": {"team": "Spain", "from": 2022, "to": null},
+  "source": "eswiki-clubs",
+  "checked": "2026-09-24"
+ },
+ "Higor": {
+  "clubs": [
+   {"club": "Corinthians", "from": 2017, "to": 2020},
+   {"club": "Palma Futsal", "from": 2020, "to": 2022},
+   {"club": "Benfica", "from": 2022, "to": 2026},
+   {"club": "Barcelona", "from": 2026, "to": null}
+  ],
+  "national": {"team": "Brazil", "from": 2018, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Jesús Gordillo": {
+  "clubs": [
+   {"club": "Palma Futsal", "from": 2020, "to": 2025},
+   {"club": "Calviá", "from": 2020, "to": 2021, "loan": true},
+   {"club": "Tyumen", "from": 2025, "to": null}
+  ],
+  "national": {"team": "Spain", "from": 2022, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Danyil Abakshyn": {
+  "clubs": [
+   {"club": "Viva Cup Kharkiv", "from": 2016, "to": 2018},
+   {"club": "Uragan Ivano-Frankivsk", "from": 2018, "to": 2023},
+   {"club": "HIT Kyiv", "from": 2023, "to": 2025},
+   {"club": "Eurobus", "from": 2025, "to": null}
+  ],
+  "national": {"team": "Ukraine", "from": 2021, "to": null},
+  "source": "ukwiki-text",
+  "checked": "2026-09-24"
+ },
+ "Artem Fareniuk": {
+  "clubs": [
+   {"club": "LTK Luhansk", "from": 2010, "to": 2011},
+   {"club": "Kardinal-Rivne", "from": 2012, "to": 2015},
+   {"club": "LTK InBev", "from": 2015, "to": 2016},
+   {"club": "Kardinal-Rivne", "from": 2016, "to": 2018},
+   {"club": "Uragan Ivano-Frankivsk", "from": 2018, "to": 2024},
+   {"club": "Eurobus", "from": 2024, "to": null}
+  ],
+  "national": {"team": "Ukraine", "from": 2018, "to": null},
+  "source": "ukwiki-clubs",
+  "checked": "2026-09-24"
+ },
+ "Ouassini Guirio": {
+  "clubs": [
+   {"club": "Garges Djibson", "from": 2018, "to": 2021},
+   {"club": "Nantes Métropole", "from": 2021, "to": 2023},
+   {"club": "Étoile Lavalloise", "from": 2023, "to": null}
+  ],
+  "national": {"team": "France", "from": 2022, "to": null},
+  "source": "frwiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Raúl Gómez": {
+  "clubs": [
+   {"club": "Jumilla", "from": 2016, "to": 2017},
+   {"club": "Real Betis Futsal", "from": 2017, "to": 2018},
+   {"club": "Peñíscola", "from": 2018, "to": 2019},
+   {"club": "KPRF Moscow", "from": 2019, "to": 2021},
+   {"club": "Movistar Inter", "from": 2021, "to": null}
+  ],
+  "national": {"team": "Spain", "from": 2019, "to": null},
+  "source": "itwiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Ferrão": {
+  "clubs": [
+   {"club": "Joinville", "from": 2007, "to": 2007},
+   {"club": "Atlântico", "from": 2008, "to": 2009},
+   {"club": "Farroupilha", "from": 2010, "to": 2010},
+   {"club": "MFK Tyumen", "from": 2011, "to": 2014},
+   {"club": "Barcelona", "from": 2014, "to": 2024},
+   {"club": "FC Semey", "from": 2024, "to": null}
+  ],
+  "national": {"team": "Brazil"},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Vander Carioca": {
+  "clubs": [
+   {"club": "Wimpro/Guarulhos", "from": 1995, "to": 1995},
+   {"club": "General Motors/Jambeiro", "from": 1996, "to": 1996},
+   {"club": "Atlético Mineiro", "from": 1997, "to": 1997},
+   {"club": "Flamengo", "from": 1998, "to": 1998},
+   {"club": "Vasco da Gama", "from": 2000, "to": 2001},
+   {"club": "Playas de Castellón", "from": 2001, "to": 2003},
+   {"club": "Martorell", "from": 2003, "to": 2004},
+   {"club": "Arzignano", "from": 2005, "to": 2005},
+   {"club": "Norilsk Nickel", "from": 2005, "to": 2008},
+   {"club": "Tyumen", "from": 2009, "to": 2009},
+   {"club": "Petrópolis EC", "from": 2010, "to": 2011},
+   {"club": "Joinville", "from": 2012, "to": 2014},
+   {"club": "Vasco da Gama", "from": 2015, "to": 2015},
+   {"club": "Corinthians", "from": 2016, "to": 2018},
+   {"club": "Magé Futsal", "from": 2021, "to": 2021}
+  ],
+  "national": {"team": "Brazil", "from": 1998, "to": 2004},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Wilde": {
+  "clubs": [
+   {"club": "General Motors", "from": 1999, "to": 2000},
+   {"club": "Santos", "from": 2000, "to": 2001},
+   {"club": "Banespa", "from": 2001, "to": 2002},
+   {"club": "Ulbra", "from": 2002, "to": 2003},
+   {"club": "MRA Navarra", "from": 2003, "to": 2005},
+   {"club": "ElPozo Murcia", "from": 2005, "to": 2010},
+   {"club": "Barcelona", "from": 2010, "to": 2016},
+   {"club": "Dinamo Moscow", "from": 2016, "to": 2017},
+   {"club": "AC Sparta Praha", "from": 2017, "to": 2017}
+  ],
+  "national": {"team": "Brazil"},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Lenísio": {
+  "clubs": [
+   {"club": "A.D.C. Wimpro", "from": 1994, "to": 1996},
+   {"club": "G.M.", "from": 1997, "to": 1997},
+   {"club": "Atlético Mineiro", "from": 1998, "to": 2000},
+   {"club": "Sport Club Ulbra", "from": 2001, "to": 2002},
+   {"club": "ElPozo Murcia", "from": 2002, "to": 2005},
+   {"club": "Polaris World Cartagena", "from": 2005, "to": 2007},
+   {"club": "Malwee", "from": 2007, "to": 2010},
+   {"club": "Poker/PEC", "from": 2011, "to": 2012}
+  ],
+  "national": {"team": "Brazil", "from": 1999, "to": 2008},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Konstantin Eremenko": {
+  "clubs": [
+   {"club": "Dnipro Dnipropetrovsk", "from": 1988, "to": 1988},
+   {"club": "Selenga Ulan-Ude", "from": 1989, "to": 1989},
+   {"club": "Traktor Pavlodar", "from": 1990, "to": 1990},
+   {"club": "Alga Bishkek", "from": 1990, "to": 1990},
+   {"club": "Mehanizator Dnipropetrovsk", "from": 1990, "to": 1990},
+   {"club": "Dina Moscow", "from": 1991, "to": 2001}
+  ],
+  "national": {"team": "Russia", "from": 1992, "to": 2001},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Eder Lima": {
+  "clubs": [
+   {"club": "Estrela Amadora", "from": 2004, "to": 2005},
+   {"club": "Gazprom-Ugra", "from": 2006, "to": 2017},
+   {"club": "Magnus", "from": 2017, "to": 2019},
+   {"club": "Corinthians", "from": 2020, "to": 2021},
+   {"club": "ACBF", "from": 2022, "to": 2022},
+   {"club": "JEC Krona", "from": 2023, "to": 2023}
+  ],
+  "national": {"team": "Russia", "from": 2009, "to": 2022},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Cirilo": {
+  "clubs": [
+   {"club": "São Caetano", "from": 2000, "to": 2000},
+   {"club": "Ulbra", "from": 2001, "to": 2002},
+   {"club": "Joinville", "from": 2003, "to": 2003},
+   {"club": "Spartak", "from": 2003, "to": 2004},
+   {"club": "Dinamo Moscow", "from": 2004, "to": 2017},
+   {"club": "KPRF Moscow", "from": 2017, "to": 2018}
+  ],
+  "national": {"team": "Russia", "from": 2006, "to": 2014},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Joel Queirós": {
+  "clubs": [
+   {"club": "Freixieiro", "from": 2001, "to": 2004},
+   {"club": "ElPozo Murcia", "from": 2004, "to": 2007},
+   {"club": "Xota FS", "from": 2007, "to": 2009},
+   {"club": "Benfica", "from": 2009, "to": 2014},
+   {"club": "Novaya Generatsiya", "from": 2014, "to": 2016},
+   {"club": "KPRF Moscow", "from": 2016, "to": 2017},
+   {"club": "Modicus Sandim", "from": 2017, "to": null}
+  ],
+  "national": {"team": "Portugal", "from": 2002, "to": 2014},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Fernandão": {
+  "clubs": [
+   {"club": "General Motors", "from": 2000, "to": 2000},
+   {"club": "Ulbra", "from": 2001, "to": 2001},
+   {"club": "Malwee", "from": 2001, "to": 2001},
+   {"club": "Vasco da Gama", "from": 2001, "to": 2001},
+   {"club": "Banespa", "from": 2002, "to": 2002},
+   {"club": "Toledo", "from": 2002, "to": 2002},
+   {"club": "São Miguel", "from": 2003, "to": 2003},
+   {"club": "Joinville", "from": 2004, "to": 2004},
+   {"club": "Martorell", "from": 2004, "to": 2006},
+   {"club": "Playas de Castellón", "from": 2006, "to": 2007},
+   {"club": "Barcelona", "from": 2007, "to": 2014},
+   {"club": "Dinamo Moscow", "from": 2014, "to": null}
+  ],
+  "national": {"team": "Spain"},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Cardinal": {
+  "clubs": [
+   {"club": "Jorge Antunes", "from": 2004, "to": 2005},
+   {"club": "Famalicense", "from": 2005, "to": 2006},
+   {"club": "Boavista", "from": 2006, "to": 2006},
+   {"club": "Alpendorada", "from": 2007, "to": 2007},
+   {"club": "Freixieiro", "from": 2007, "to": 2009},
+   {"club": "Sporting CP", "from": 2009, "to": 2011},
+   {"club": "CSKA Moscow", "from": 2011, "to": 2012},
+   {"club": "Rio Ave", "from": 2012, "to": 2013},
+   {"club": "Movistar Inter", "from": 2013, "to": 2016},
+   {"club": "ElPozo Murcia", "from": 2016, "to": 2017},
+   {"club": "Sporting CP", "from": 2017, "to": null}
+  ],
+  "national": {"team": "Portugal", "from": 2008, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Marc-André ter Stegen": {
+  "clubs": [
+   {"club": "Borussia Mönchengladbach", "from": 2010, "to": 2014},
+   {"club": "Barcelona", "from": 2014, "to": null},
+   {"club": "Girona", "from": 2026, "to": 2026, "loan": true},
+   {"club": "Ajax", "from": 2026, "to": null, "loan": true}
+  ],
+  "national": {"team": "Germany", "from": 2012, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Ederson": {
+  "clubs": [
+   {"club": "Ribeirão", "from": 2011, "to": 2013},
+   {"club": "Rio Ave", "from": 2013, "to": 2015},
+   {"club": "Benfica", "from": 2015, "to": 2017},
+   {"club": "Manchester City", "from": 2017, "to": 2025},
+   {"club": "Fenerbahçe", "from": 2025, "to": null}
+  ],
+  "national": {"team": "Brazil", "from": 2017, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Jordan Pickford": {
+  "clubs": [
+   {"club": "Sunderland", "from": 2011, "to": 2017},
+   {"club": "Darlington", "from": 2012, "to": 2012, "loan": true},
+   {"club": "Alfreton Town", "from": 2013, "to": 2013, "loan": true},
+   {"club": "Burton Albion", "from": 2013, "to": 2013, "loan": true},
+   {"club": "Carlisle United", "from": 2014, "to": 2014, "loan": true},
+   {"club": "Bradford City", "from": 2014, "to": 2015, "loan": true},
+   {"club": "Preston North End", "from": 2015, "to": 2016, "loan": true},
+   {"club": "Everton", "from": 2017, "to": null}
+  ],
+  "national": {"team": "England", "from": 2017, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Petr Čech": {
+  "clubs": [
+   {"club": "Chmel Blšany", "from": 1999, "to": 2001},
+   {"club": "Sparta Prague", "from": 2001, "to": 2002},
+   {"club": "Rennes", "from": 2002, "to": 2004},
+   {"club": "Chelsea", "from": 2004, "to": 2015},
+   {"club": "Arsenal", "from": 2015, "to": 2019}
+  ],
+  "national": {"team": "Czech Republic", "from": 2002, "to": 2016},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "David Seaman": {
+  "clubs": [
+   {"club": "Peterborough United", "from": 1982, "to": 1984},
+   {"club": "Birmingham City", "from": 1984, "to": 1986},
+   {"club": "Queens Park Rangers", "from": 1986, "to": 1990},
+   {"club": "Arsenal", "from": 1990, "to": 2003},
+   {"club": "Manchester City", "from": 2003, "to": 2004}
+  ],
+  "national": {"team": "England", "from": 1988, "to": 2002},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Fabien Barthez": {
+  "clubs": [
+   {"club": "Toulouse", "from": 1990, "to": 1992},
+   {"club": "Marseille", "from": 1992, "to": 1995},
+   {"club": "Monaco", "from": 1995, "to": 2000},
+   {"club": "Manchester United", "from": 2000, "to": 2004},
+   {"club": "Marseille", "from": 2004, "to": 2004, "loan": true},
+   {"club": "Marseille", "from": 2004, "to": 2006},
+   {"club": "Nantes", "from": 2006, "to": 2007}
+  ],
+  "national": {"team": "France", "from": 1994, "to": 2006},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Jorge Campos": {
+  "clubs": [
+   {"club": "Pumas UNAM", "from": 1988, "to": 1995},
+   {"club": "Atlante", "from": 1995, "to": 1996},
+   {"club": "LA Galaxy", "from": 1996, "to": 1996},
+   {"club": "Atlante", "from": 1996, "to": 1997},
+   {"club": "LA Galaxy", "from": 1997, "to": 1997},
+   {"club": "Cruz Azul", "from": 1997, "to": 1997},
+   {"club": "Pumas UNAM", "from": 1997, "to": 1998},
+   {"club": "Chicago Fire", "from": 1998, "to": 1998},
+   {"club": "Pumas UNAM", "from": 1998, "to": 2000},
+   {"club": "Tigres UANL", "from": 2000, "to": 2000},
+   {"club": "Atlante", "from": 2000, "to": 2001},
+   {"club": "Pumas UNAM", "from": 2001, "to": 2002},
+   {"club": "Puebla", "from": 2002, "to": 2003},
+   {"club": "México FC", "from": 2025, "to": null}
+  ],
+  "national": {"team": "Mexico", "from": 1991, "to": 2003},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Andrew Robertson": {
+  "clubs": [
+   {"club": "Queen's Park", "from": 2012, "to": 2013},
+   {"club": "Dundee United", "from": 2013, "to": 2014},
+   {"club": "Hull City", "from": 2014, "to": 2017},
+   {"club": "Liverpool", "from": 2017, "to": 2026},
+   {"club": "Tottenham Hotspur", "from": 2026, "to": null}
+  ],
+  "national": {"team": "Scotland", "from": 2014, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Reece James": {
+  "clubs": [
+   {"club": "Chelsea", "from": 2018, "to": null},
+   {"club": "Wigan Athletic", "from": 2018, "to": 2019, "loan": true}
+  ],
+  "national": {"team": "England", "from": 2020, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Marcelo": {
+  "clubs": [
+   {"club": "Fluminense", "from": 2005, "to": 2007},
+   {"club": "Real Madrid", "from": 2007, "to": 2022},
+   {"club": "Olympiacos", "from": 2022, "to": 2023},
+   {"club": "Fluminense", "from": 2023, "to": 2024}
+  ],
+  "national": {"team": "Brazil", "from": 2006, "to": 2018},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Lilian Thuram": {
+  "clubs": [
+   {"club": "Monaco", "from": 1991, "to": 1996},
+   {"club": "Parma", "from": 1996, "to": 2001},
+   {"club": "Juventus", "from": 2001, "to": 2006},
+   {"club": "Barcelona", "from": 2006, "to": 2008}
+  ],
+  "national": {"team": "France", "from": 1994, "to": 2008},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Patrice Evra": {
+  "clubs": [
+   {"club": "Marsala", "from": 1998, "to": 1999},
+   {"club": "Monza", "from": 1999, "to": 2000},
+   {"club": "Nice", "from": 2000, "to": 2002},
+   {"club": "Monaco", "from": 2002, "to": 2006},
+   {"club": "Manchester United", "from": 2006, "to": 2014},
+   {"club": "Juventus", "from": 2014, "to": 2017},
+   {"club": "Marseille", "from": 2017, "to": 2017},
+   {"club": "West Ham United", "from": 2018, "to": 2018}
+  ],
+  "national": {"team": "France", "from": 2004, "to": 2016},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Giacinto Facchetti": {
+  "clubs": [
+   {"club": "Inter Milan", "from": 1960, "to": 1978}
+  ],
+  "national": {"team": "Italy", "from": 1963, "to": 1977},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Joško Gvardiol": {
+  "clubs": [
+   {"club": "Dinamo Zagreb", "from": 2019, "to": 2020},
+   {"club": "RB Leipzig", "from": 2020, "to": 2023},
+   {"club": "Dinamo Zagreb", "from": 2020, "to": 2021, "loan": true},
+   {"club": "Manchester City", "from": 2023, "to": null}
+  ],
+  "national": {"team": "Croatia", "from": 2021, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Kim Min-jae": {
+  "clubs": [
+   {"club": "Gyeongju KHNP", "from": 2016, "to": 2016},
+   {"club": "Jeonbuk Hyundai Motors", "from": 2017, "to": 2018},
+   {"club": "Beijing Guoan", "from": 2019, "to": 2021},
+   {"club": "Fenerbahçe", "from": 2021, "to": 2022},
+   {"club": "Napoli", "from": 2022, "to": 2023},
+   {"club": "Bayern Munich", "from": 2023, "to": null}
+  ],
+  "national": {"team": "South Korea", "from": 2017, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "John Terry": {
+  "clubs": [
+   {"club": "Chelsea", "from": 1998, "to": 2017},
+   {"club": "Nottingham Forest", "from": 2000, "to": 2000, "loan": true},
+   {"club": "Aston Villa", "from": 2017, "to": 2018}
+  ],
+  "national": {"team": "England", "from": 2003, "to": 2012},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Jamie Carragher": {
+  "clubs": [
+   {"club": "Liverpool", "from": 1996, "to": 2013}
+  ],
+  "national": {"team": "England", "from": 1999, "to": 2010},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Nemanja Vidić": {
+  "clubs": [
+   {"club": "Red Star Belgrade", "from": 2000, "to": 2004},
+   {"club": "Spartak Subotica", "from": 2000, "to": 2001, "loan": true},
+   {"club": "Spartak Moscow", "from": 2004, "to": 2006},
+   {"club": "Manchester United", "from": 2006, "to": 2014},
+   {"club": "Inter Milan", "from": 2014, "to": 2016}
+  ],
+  "national": {"team": "Serbia", "from": 2002, "to": 2011},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Gerard Piqué": {
+  "clubs": [
+   {"club": "Manchester United", "from": 2004, "to": 2008},
+   {"club": "Zaragoza", "from": 2006, "to": 2007, "loan": true},
+   {"club": "Barcelona", "from": 2008, "to": 2022}
+  ],
+  "national": {"team": "Spain", "from": 2009, "to": 2018},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Thiago Silva": {
+  "clubs": [
+   {"club": "RS Futebol", "from": 2002, "to": 2003},
+   {"club": "Juventude", "from": 2004, "to": 2004},
+   {"club": "Dynamo Moscow", "from": 2005, "to": 2006},
+   {"club": "Fluminense", "from": 2006, "to": 2008},
+   {"club": "AC Milan", "from": 2009, "to": 2012},
+   {"club": "Paris Saint-Germain", "from": 2012, "to": 2020},
+   {"club": "Chelsea", "from": 2020, "to": 2024},
+   {"club": "Fluminense", "from": 2024, "to": 2025},
+   {"club": "Porto", "from": 2026, "to": 2026},
+   {"club": "Fluminense", "from": 2026, "to": null}
+  ],
+  "national": {"team": "Brazil", "from": 2008, "to": 2022},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Giorgio Chiellini": {
+  "clubs": [
+   {"club": "Livorno", "from": 2000, "to": 2002},
+   {"club": "Roma", "from": 2002, "to": 2004},
+   {"club": "Livorno", "from": 2002, "to": 2004, "loan": true},
+   {"club": "Juventus", "from": 2004, "to": 2022},
+   {"club": "Fiorentina", "from": 2004, "to": 2005, "loan": true},
+   {"club": "Los Angeles FC", "from": 2022, "to": 2023}
+  ],
+  "national": {"team": "Italy", "from": 2004, "to": 2022},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Kevin De Bruyne": {
+  "clubs": [
+   {"club": "Genk", "from": 2008, "to": 2012},
+   {"club": "Chelsea", "from": 2012, "to": 2014},
+   {"club": "Werder Bremen", "from": 2012, "to": 2013, "loan": true},
+   {"club": "VfL Wolfsburg", "from": 2014, "to": 2015},
+   {"club": "Manchester City", "from": 2015, "to": 2025},
+   {"club": "Napoli", "from": 2025, "to": null}
+  ],
+  "national": {"team": "Belgium", "from": 2010, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Jamal Musiala": {
+  "clubs": [
+   {"club": "Bayern Munich", "from": 2020, "to": null}
+  ],
+  "national": {"team": "Germany", "from": 2021, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Martin Ødegaard": {
+  "clubs": [
+   {"club": "Strømsgodset", "from": 2014, "to": 2015},
+   {"club": "Real Madrid", "from": 2015, "to": 2021},
+   {"club": "Heerenveen", "from": 2017, "to": 2018, "loan": true},
+   {"club": "Vitesse", "from": 2018, "to": 2019, "loan": true},
+   {"club": "Real Sociedad", "from": 2019, "to": 2020, "loan": true},
+   {"club": "Arsenal", "from": 2021, "to": 2021, "loan": true},
+   {"club": "Arsenal", "from": 2021, "to": null}
+  ],
+  "national": {"team": "Norway", "from": 2014, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "David Beckham": {
+  "clubs": [
+   {"club": "Manchester United", "from": 1992, "to": 2003},
+   {"club": "Preston North End", "from": 1995, "to": 1995, "loan": true},
+   {"club": "Real Madrid", "from": 2003, "to": 2007},
+   {"club": "LA Galaxy", "from": 2007, "to": 2012},
+   {"club": "AC Milan", "from": 2009, "to": 2009, "loan": true},
+   {"club": "AC Milan", "from": 2010, "to": 2010, "loan": true},
+   {"club": "Paris Saint-Germain", "from": 2013, "to": 2013}
+  ],
+  "national": {"team": "England", "from": 1996, "to": 2009},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Frank Lampard": {
+  "clubs": [
+   {"club": "West Ham United", "from": 1995, "to": 2001},
+   {"club": "Swansea City", "from": 1995, "to": 1996, "loan": true},
+   {"club": "Chelsea", "from": 2001, "to": 2014},
+   {"club": "Manchester City", "from": 2014, "to": 2015},
+   {"club": "New York City FC", "from": 2015, "to": 2016}
+  ],
+  "national": {"team": "England", "from": 1999, "to": 2014},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Kaká": {
+  "clubs": [
+   {"club": "São Paulo", "from": 2000, "to": 2003},
+   {"club": "AC Milan", "from": 2003, "to": 2009},
+   {"club": "Real Madrid", "from": 2009, "to": 2013},
+   {"club": "AC Milan", "from": 2013, "to": 2014},
+   {"club": "Orlando City", "from": 2014, "to": 2017},
+   {"club": "São Paulo", "from": 2014, "to": 2014, "loan": true}
+  ],
+  "national": {"team": "Brazil", "from": 2002, "to": 2016},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Luka Modrić": {
+  "clubs": [
+   {"club": "Dinamo Zagreb", "from": 2003, "to": 2008},
+   {"club": "Zrinjski Mostar", "from": 2003, "to": 2004, "loan": true},
+   {"club": "Inter Zaprešić", "from": 2004, "to": 2005, "loan": true},
+   {"club": "Tottenham Hotspur", "from": 2008, "to": 2012},
+   {"club": "Real Madrid", "from": 2012, "to": 2025},
+   {"club": "AC Milan", "from": 2025, "to": null}
+  ],
+  "national": {"team": "Croatia", "from": 2006, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Toni Kroos": {
+  "clubs": [
+   {"club": "Bayern Munich", "from": 2007, "to": 2014},
+   {"club": "Bayer Leverkusen", "from": 2009, "to": 2010, "loan": true},
+   {"club": "Real Madrid", "from": 2014, "to": 2024}
+  ],
+  "national": {"team": "Germany", "from": 2010, "to": 2024},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Patrick Vieira": {
+  "clubs": [
+   {"club": "Cannes", "from": 1993, "to": 1995},
+   {"club": "AC Milan", "from": 1995, "to": 1996},
+   {"club": "Arsenal", "from": 1996, "to": 2005},
+   {"club": "Juventus", "from": 2005, "to": 2006},
+   {"club": "Inter Milan", "from": 2006, "to": 2010},
+   {"club": "Manchester City", "from": 2010, "to": 2011}
+  ],
+  "national": {"team": "France", "from": 1997, "to": 2009},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Bobby Charlton": {
+  "clubs": [
+   {"club": "Manchester United", "from": 1956, "to": 1973},
+   {"club": "Preston North End", "from": 1974, "to": 1975},
+   {"club": "Waterford", "from": 1976, "to": 1976},
+   {"club": "Newcastle KB United", "from": 1978, "to": 1978},
+   {"club": "Perth Azzurri", "from": 1980, "to": 1980},
+   {"club": "Blacktown City", "from": 1980, "to": 1980}
+  ],
+  "national": {"team": "England", "from": 1958, "to": 1970},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Neymar": {
+  "clubs": [
+   {"club": "Santos", "from": 2009, "to": 2013},
+   {"club": "Barcelona", "from": 2013, "to": 2017},
+   {"club": "Paris Saint-Germain", "from": 2017, "to": 2023},
+   {"club": "Al-Hilal", "from": 2023, "to": 2025},
+   {"club": "Santos", "from": 2025, "to": null}
+  ],
+  "national": {"team": "Brazil", "from": 2010, "to": 2026},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Son Heung-min": {
+  "clubs": [
+   {"club": "Hamburger SV", "from": 2010, "to": 2013},
+   {"club": "Bayer Leverkusen", "from": 2013, "to": 2015},
+   {"club": "Tottenham Hotspur", "from": 2015, "to": 2025},
+   {"club": "Los Angeles FC", "from": 2025, "to": null}
+  ],
+  "national": {"team": "South Korea", "from": 2010, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Christian Pulisic": {
+  "clubs": [
+   {"club": "Borussia Dortmund", "from": 2016, "to": 2019},
+   {"club": "Chelsea", "from": 2019, "to": 2023},
+   {"club": "AC Milan", "from": 2023, "to": null}
+  ],
+  "national": {"team": "United States", "from": 2016, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Diego Maradona": {
+  "clubs": [
+   {"club": "Argentinos Juniors", "from": 1976, "to": 1981},
+   {"club": "Boca Juniors", "from": 1981, "to": 1982},
+   {"club": "Barcelona", "from": 1982, "to": 1984},
+   {"club": "Napoli", "from": 1984, "to": 1991},
+   {"club": "Sevilla", "from": 1992, "to": 1993},
+   {"club": "Newell's Old Boys", "from": 1993, "to": 1994},
+   {"club": "Boca Juniors", "from": 1995, "to": 1997}
+  ],
+  "national": {"team": "Argentina", "from": 1977, "to": 1994},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Johan Cruyff": {
+  "clubs": [
+   {"club": "Ajax", "from": 1964, "to": 1973},
+   {"club": "Barcelona", "from": 1973, "to": 1978},
+   {"club": "Los Angeles Aztecs", "from": 1979, "to": 1979},
+   {"club": "Washington Diplomats", "from": 1980, "to": 1981},
+   {"club": "Levante", "from": 1981, "to": 1981, "loan": true},
+   {"club": "Ajax", "from": 1981, "to": 1983},
+   {"club": "Feyenoord", "from": 1983, "to": 1984}
+  ],
+  "national": {"team": "Netherlands", "from": 1966, "to": 1977},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Rivaldo": {
+  "clubs": [
+   {"club": "Santa Cruz", "from": 1988, "to": 1992},
+   {"club": "Mogi Mirim", "from": 1992, "to": 1994},
+   {"club": "Corinthians", "from": 1993, "to": 1994, "loan": true},
+   {"club": "Palmeiras", "from": 1994, "to": 1996},
+   {"club": "Deportivo La Coruña", "from": 1996, "to": 1997},
+   {"club": "Barcelona", "from": 1997, "to": 2002},
+   {"club": "AC Milan", "from": 2002, "to": 2003},
+   {"club": "Cruzeiro", "from": 2004, "to": 2004},
+   {"club": "Olympiacos", "from": 2004, "to": 2007},
+   {"club": "AEK Athens", "from": 2007, "to": 2008},
+   {"club": "Bunyodkor", "from": 2008, "to": 2011},
+   {"club": "São Paulo", "from": 2011, "to": 2011, "loan": true},
+   {"club": "Kabuscorp", "from": 2012, "to": 2012},
+   {"club": "São Caetano", "from": 2013, "to": 2013},
+   {"club": "Mogi Mirim", "from": 2014, "to": 2015}
+  ],
+  "national": {"team": "Brazil", "from": 1993, "to": 2003},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Hristo Stoichkov": {
+  "clubs": [
+   {"club": "FC Yuri Gagarin", "from": 1981, "to": 1982},
+   {"club": "Hebros Harmanli", "from": 1982, "to": 1983},
+   {"club": "CSKA Sofia", "from": 1984, "to": 1990},
+   {"club": "Barcelona", "from": 1990, "to": 1995},
+   {"club": "Parma", "from": 1995, "to": 1996},
+   {"club": "Barcelona", "from": 1996, "to": 1998},
+   {"club": "CSKA Sofia", "from": 1997, "to": 1998, "loan": true},
+   {"club": "Al-Nassr", "from": 1998, "to": 1998},
+   {"club": "Kashiwa Reysol", "from": 1998, "to": 1999},
+   {"club": "Chicago Fire", "from": 2000, "to": 2002},
+   {"club": "D.C. United", "from": 2003, "to": 2003}
+  ],
+  "national": {"team": "Bulgaria", "from": 1986, "to": 1999},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Pavel Nedvěd": {
+  "clubs": [
+   {"club": "Škoda Plzeň", "from": 1990, "to": 1992},
+   {"club": "Dukla Prague", "from": 1990, "to": 1992, "loan": true},
+   {"club": "Sparta Prague", "from": 1992, "to": 1996},
+   {"club": "1.FC Košice", "from": 1996, "to": 1996},
+   {"club": "Lazio", "from": 1996, "to": 2001},
+   {"club": "Juventus", "from": 2001, "to": 2009}
+  ],
+  "national": {"team": "Czech Republic", "from": 1994, "to": 2006},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Eden Hazard": {
+  "clubs": [
+   {"club": "Lille", "from": 2007, "to": 2012},
+   {"club": "Chelsea", "from": 2012, "to": 2019},
+   {"club": "Real Madrid", "from": 2019, "to": 2023}
+  ],
+  "national": {"team": "Belgium", "from": 2008, "to": 2022},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Karim Benzema": {
+  "clubs": [
+   {"club": "Lyon", "from": 2004, "to": 2009},
+   {"club": "Real Madrid", "from": 2009, "to": 2023},
+   {"club": "Al-Ittihad", "from": 2023, "to": 2026},
+   {"club": "Al-Hilal", "from": 2026, "to": 2026}
+  ],
+  "national": {"team": "France", "from": 2007, "to": 2022},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Antoine Griezmann": {
+  "clubs": [
+   {"club": "Real Sociedad", "from": 2009, "to": 2014},
+   {"club": "Atlético Madrid", "from": 2014, "to": 2019},
+   {"club": "Barcelona", "from": 2019, "to": 2022},
+   {"club": "Atlético Madrid", "from": 2021, "to": 2022, "loan": true},
+   {"club": "Atlético Madrid", "from": 2022, "to": 2026},
+   {"club": "Orlando City", "from": 2026, "to": null}
+  ],
+  "national": {"team": "France", "from": 2014, "to": 2024},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Romelu Lukaku": {
+  "clubs": [
+   {"club": "Anderlecht", "from": 2009, "to": 2011},
+   {"club": "Chelsea", "from": 2011, "to": 2014},
+   {"club": "West Bromwich Albion", "from": 2012, "to": 2013, "loan": true},
+   {"club": "Everton", "from": 2013, "to": 2014, "loan": true},
+   {"club": "Everton", "from": 2013, "to": 2017},
+   {"club": "Manchester United", "from": 2017, "to": 2019},
+   {"club": "Inter Milan", "from": 2019, "to": 2021},
+   {"club": "Chelsea", "from": 2021, "to": 2024},
+   {"club": "Inter Milan", "from": 2022, "to": 2023, "loan": true},
+   {"club": "Roma", "from": 2023, "to": 2024, "loan": true},
+   {"club": "Napoli", "from": 2024, "to": 2026},
+   {"club": "Fenerbahçe", "from": 2026, "to": null}
+  ],
+  "national": {"team": "Belgium", "from": 2010, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Wayne Rooney": {
+  "clubs": [
+   {"club": "Everton", "from": 2002, "to": 2004},
+   {"club": "Manchester United", "from": 2004, "to": 2017},
+   {"club": "Everton", "from": 2017, "to": 2018},
+   {"club": "D.C. United", "from": 2018, "to": 2019},
+   {"club": "Derby County", "from": 2020, "to": 2021}
+  ],
+  "national": {"team": "England", "from": 2003, "to": 2018},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Alan Shearer": {
+  "clubs": [
+   {"club": "Southampton", "from": 1988, "to": 1992},
+   {"club": "Blackburn Rovers", "from": 1992, "to": 1996},
+   {"club": "Newcastle United", "from": 1996, "to": 2006}
+  ],
+  "national": {"team": "England", "from": 1992, "to": 2000},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Didier Drogba": {
+  "clubs": [
+   {"club": "Le Mans", "from": 1998, "to": 2002},
+   {"club": "Guingamp", "from": 2002, "to": 2003},
+   {"club": "Marseille", "from": 2003, "to": 2004},
+   {"club": "Chelsea", "from": 2004, "to": 2012},
+   {"club": "Shanghai Shenhua", "from": 2012, "to": 2013},
+   {"club": "Galatasaray", "from": 2013, "to": 2014},
+   {"club": "Chelsea", "from": 2014, "to": 2015},
+   {"club": "Montreal Impact", "from": 2015, "to": 2016},
+   {"club": "Phoenix Rising", "from": 2017, "to": 2018}
+  ],
+  "national": {"team": "Ivory Coast", "from": 2002, "to": 2014},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Samuel Eto'o": {
+  "clubs": [
+   {"club": "Real Madrid", "from": 1997, "to": 2000},
+   {"club": "Leganés", "from": 1997, "to": 1998, "loan": true},
+   {"club": "Espanyol", "from": 1999, "to": 1999, "loan": true},
+   {"club": "Mallorca", "from": 2000, "to": 2000, "loan": true},
+   {"club": "Mallorca", "from": 2000, "to": 2004},
+   {"club": "Barcelona", "from": 2004, "to": 2009},
+   {"club": "Inter Milan", "from": 2009, "to": 2011},
+   {"club": "Anzhi Makhachkala", "from": 2011, "to": 2013},
+   {"club": "Chelsea", "from": 2013, "to": 2014},
+   {"club": "Everton", "from": 2014, "to": 2015},
+   {"club": "Sampdoria", "from": 2015, "to": 2015},
+   {"club": "Antalyaspor", "from": 2015, "to": 2018},
+   {"club": "Konyaspor", "from": 2018, "to": 2018},
+   {"club": "Qatar SC", "from": 2018, "to": 2019}
+  ],
+  "national": {"team": "Cameroon", "from": 1997, "to": 2014},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Zlatan Ibrahimović": {
+  "clubs": [
+   {"club": "Malmö FF", "from": 1999, "to": 2001},
+   {"club": "Ajax", "from": 2001, "to": 2004},
+   {"club": "Juventus", "from": 2004, "to": 2006},
+   {"club": "Inter Milan", "from": 2006, "to": 2009},
+   {"club": "Barcelona", "from": 2009, "to": 2011},
+   {"club": "AC Milan", "from": 2010, "to": 2011, "loan": true},
+   {"club": "AC Milan", "from": 2011, "to": 2012},
+   {"club": "Paris Saint-Germain", "from": 2012, "to": 2016},
+   {"club": "Manchester United", "from": 2016, "to": 2018},
+   {"club": "LA Galaxy", "from": 2018, "to": 2019},
+   {"club": "AC Milan", "from": 2019, "to": 2023}
+  ],
+  "national": {"team": "Sweden", "from": 2001, "to": 2023},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Ferenc Puskás": {
+  "clubs": [
+   {"club": "Budapest Honvéd", "from": 1943, "to": 1956},
+   {"club": "Real Madrid", "from": 1958, "to": 1966}
+  ],
+  "national": {"team": "Hungary", "from": 1945, "to": 1956},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Luis Suárez": {
+  "clubs": [
+   {"club": "Nacional", "from": 2005, "to": 2006},
+   {"club": "Groningen", "from": 2006, "to": 2007},
+   {"club": "Ajax", "from": 2007, "to": 2011},
+   {"club": "Liverpool", "from": 2011, "to": 2014},
+   {"club": "Barcelona", "from": 2014, "to": 2020},
+   {"club": "Atlético Madrid", "from": 2020, "to": 2022},
+   {"club": "Nacional", "from": 2022, "to": 2022},
+   {"club": "Grêmio", "from": 2023, "to": 2023},
+   {"club": "Inter Miami", "from": 2024, "to": null}
+  ],
+  "national": {"team": "Uruguay", "from": 2007, "to": 2024},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Zico": {
+  "clubs": [
+   {"club": "Flamengo", "from": 1971, "to": 1983},
+   {"club": "Udinese", "from": 1983, "to": 1985},
+   {"club": "Flamengo", "from": 1985, "to": 1989},
+   {"club": "Kashima Antlers", "from": 1991, "to": 1994}
+  ],
+  "national": {"team": "Brazil", "from": 1976, "to": 1986},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Aitana Bonmatí": {
+  "clubs": [
+   {"club": "Barcelona", "from": 2016, "to": null}
+  ],
+  "national": {"team": "Spain", "from": 2017, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Alexia Putellas": {
+  "clubs": [
+   {"club": "Espanyol", "from": 2010, "to": 2011},
+   {"club": "Levante", "from": 2011, "to": 2012},
+   {"club": "Barcelona", "from": 2012, "to": 2026},
+   {"club": "London City Lionesses", "from": 2026, "to": null}
+  ],
+  "national": {"team": "Spain", "from": 2013, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Mariona Caldentey": {
+  "clubs": [
+   {"club": "Collerense", "from": 2011, "to": 2014},
+   {"club": "Barcelona", "from": 2014, "to": 2024},
+   {"club": "Arsenal", "from": 2024, "to": null}
+  ],
+  "national": {"team": "Spain", "from": 2017, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Patri Guijarro": {
+  "clubs": [
+   {"club": "Collerense", "from": 2013, "to": 2015},
+   {"club": "Barcelona", "from": 2015, "to": null}
+  ],
+  "national": {"team": "Spain", "from": 2017, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Lindsey Heaps": {
+  "clubs": [
+   {"club": "Colorado Rush", "from": 2012, "to": 2012},
+   {"club": "Paris Saint-Germain", "from": 2012, "to": 2016},
+   {"club": "Portland Thorns", "from": 2016, "to": 2021},
+   {"club": "Lyon", "from": 2022, "to": 2022, "loan": true},
+   {"club": "Lyon", "from": 2022, "to": 2026},
+   {"club": "Denver Summit", "from": 2026, "to": null}
+  ],
+  "national": {"team": "United States", "from": 2013, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Hannah Hampton": {
+  "clubs": [
+   {"club": "Birmingham City", "from": 2017, "to": 2021},
+   {"club": "Aston Villa", "from": 2021, "to": 2023},
+   {"club": "Chelsea", "from": 2023, "to": null}
+  ],
+  "national": {"team": "England", "from": 2022, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Mary Earps": {
+  "clubs": [
+   {"club": "Leicester City", "from": 2009, "to": 2010},
+   {"club": "Nottingham Forest", "from": 2010, "to": 2011},
+   {"club": "Doncaster Rovers Belles", "from": 2011, "to": 2012},
+   {"club": "Coventry City", "from": 2011, "to": 2011, "loan": true},
+   {"club": "Birmingham City", "from": 2013, "to": 2013},
+   {"club": "Reading", "from": 2016, "to": 2018},
+   {"club": "VfL Wolfsburg", "from": 2018, "to": 2019},
+   {"club": "Manchester United", "from": 2019, "to": 2024},
+   {"club": "Paris Saint-Germain", "from": 2024, "to": 2026},
+   {"club": "London City Lionesses", "from": 2026, "to": null}
+  ],
+  "national": {"team": "England", "from": 2017, "to": 2025},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Alyssa Naeher": {
+  "clubs": [
+   {"club": "Western Mass Lady Pioneers", "from": 2006, "to": 2006},
+   {"club": "SoccerPlus Connecticut", "from": 2008, "to": 2008},
+   {"club": "Boston Breakers", "from": 2010, "to": 2011},
+   {"club": "Turbine Potsdam", "from": 2011, "to": 2013},
+   {"club": "Boston Breakers", "from": 2013, "to": 2015},
+   {"club": "Chicago Stars", "from": 2016, "to": null}
+  ],
+  "national": {"team": "United States", "from": 2014, "to": 2024},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Lucy Bronze": {
+  "clubs": [
+   {"club": "Sunderland", "from": 2007, "to": 2010},
+   {"club": "Everton", "from": 2010, "to": 2012},
+   {"club": "Liverpool", "from": 2012, "to": 2014},
+   {"club": "Manchester City", "from": 2014, "to": 2017},
+   {"club": "Lyon", "from": 2017, "to": 2020},
+   {"club": "Manchester City", "from": 2020, "to": 2022},
+   {"club": "Barcelona", "from": 2022, "to": 2024},
+   {"club": "Chelsea", "from": 2024, "to": null}
+  ],
+  "national": {"team": "England", "from": 2013, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Wendie Renard": {
+  "clubs": [
+   {"club": "Lyon", "from": 2006, "to": null}
+  ],
+  "national": {"team": "France", "from": 2011, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Leah Williamson": {
+  "clubs": [
+   {"club": "Arsenal", "from": 2014, "to": null}
+  ],
+  "national": {"team": "England", "from": 2018, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Mapi León": {
+  "clubs": [
+   {"club": "Prainsa Zaragoza", "from": 2011, "to": 2013},
+   {"club": "Espanyol", "from": 2013, "to": 2014},
+   {"club": "Atlético Madrid", "from": 2014, "to": 2017},
+   {"club": "Barcelona", "from": 2017, "to": 2026},
+   {"club": "London City Lionesses", "from": 2026, "to": null}
+  ],
+  "national": {"team": "Spain", "from": 2016, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Caroline Graham Hansen": {
+  "clubs": [
+   {"club": "Stabæk", "from": 2010, "to": 2013},
+   {"club": "Tyresö", "from": 2013, "to": 2013},
+   {"club": "Stabæk", "from": 2014, "to": 2014},
+   {"club": "VfL Wolfsburg", "from": 2014, "to": 2019},
+   {"club": "Barcelona", "from": 2019, "to": null}
+  ],
+  "national": {"team": "Norway", "from": 2011, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Salma Paralluelo": {
+  "clubs": [
+   {"club": "Villarreal", "from": 2019, "to": 2022},
+   {"club": "Barcelona", "from": 2022, "to": 2026},
+   {"club": "OL Lyonnes", "from": 2026, "to": null}
+  ],
+  "national": {"team": "Spain", "from": 2022, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Trinity Rodman": {
+  "clubs": [
+   {"club": "Washington Spirit", "from": 2021, "to": null}
+  ],
+  "national": {"team": "United States", "from": 2022, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Lauren James": {
+  "clubs": [
+   {"club": "Arsenal", "from": 2017, "to": 2018},
+   {"club": "Manchester United", "from": 2018, "to": 2021},
+   {"club": "Chelsea", "from": 2021, "to": null}
+  ],
+  "national": {"team": "England", "from": 2022, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Chloe Kelly": {
+  "clubs": [
+   {"club": "Arsenal", "from": 2015, "to": 2018},
+   {"club": "Everton", "from": 2016, "to": 2018, "loan": true},
+   {"club": "Everton", "from": 2018, "to": 2020},
+   {"club": "Manchester City", "from": 2020, "to": 2025},
+   {"club": "Arsenal", "from": 2025, "to": 2025, "loan": true},
+   {"club": "Arsenal", "from": 2025, "to": null}
+  ],
+  "national": {"team": "England", "from": 2018, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Clàudia Pina": {
+  "clubs": [
+   {"club": "Barcelona", "from": 2018, "to": null},
+   {"club": "Sevilla", "from": 2020, "to": 2021, "loan": true}
+  ],
+  "national": {"team": "Spain", "from": 2021, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Sam Kerr": {
+  "clubs": [
+   {"club": "Perth Glory", "from": 2008, "to": 2011},
+   {"club": "Sydney FC", "from": 2012, "to": 2014},
+   {"club": "Western New York Flash", "from": 2013, "to": 2014},
+   {"club": "Perth Glory", "from": 2014, "to": 2019},
+   {"club": "Sky Blue FC", "from": 2015, "to": 2017},
+   {"club": "Chicago Red Stars", "from": 2018, "to": 2019},
+   {"club": "Chelsea", "from": 2020, "to": 2026},
+   {"club": "Gotham FC", "from": 2026, "to": null}
+  ],
+  "national": {"team": "Australia", "from": 2009, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Alessia Russo": {
+  "clubs": [
+   {"club": "Chelsea", "from": 2016, "to": 2017},
+   {"club": "Brighton & Hove Albion", "from": 2017, "to": 2017},
+   {"club": "Manchester United", "from": 2020, "to": 2023},
+   {"club": "Arsenal", "from": 2023, "to": null}
+  ],
+  "national": {"team": "England", "from": 2020, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Ewa Pajor": {
+  "clubs": [
+   {"club": "Medyk Konin", "from": 2012, "to": 2015},
+   {"club": "VfL Wolfsburg", "from": 2015, "to": 2024},
+   {"club": "Barcelona", "from": 2024, "to": null}
+  ],
+  "national": {"team": "Poland", "from": 2013, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Khadija Shaw": {
+  "clubs": [
+   {"club": "Florida Krush", "from": 2018, "to": 2018},
+   {"club": "Bordeaux", "from": 2019, "to": 2021},
+   {"club": "Manchester City", "from": 2021, "to": null}
+  ],
+  "national": {"team": "Jamaica", "from": 2015, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Sophia Wilson": {
+  "clubs": [
+   {"club": "Portland Thorns", "from": 2020, "to": null}
+  ],
+  "national": {"team": "United States", "from": 2020, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Temwa Chawinga": {
+  "clubs": [
+   {"club": "Blantyre Zero", "from": 2017, "to": 2017},
+   {"club": "Kvarnsveden", "from": 2017, "to": 2019},
+   {"club": "Wuhan Jianghan", "from": 2020, "to": 2023},
+   {"club": "Kansas City Current", "from": 2024, "to": null}
+  ],
+  "national": {"team": "Malawi", "from": 2016, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Ada Hegerberg": {
+  "clubs": [
+   {"club": "Kolbotn", "from": 2010, "to": 2011},
+   {"club": "Stabæk", "from": 2012, "to": 2013},
+   {"club": "Turbine Potsdam", "from": 2013, "to": 2014},
+   {"club": "Lyon", "from": 2014, "to": null}
+  ],
+  "national": {"team": "Norway", "from": 2011, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Vivianne Miedema": {
+  "clubs": [
+   {"club": "SC Heerenveen", "from": 2011, "to": 2014},
+   {"club": "Bayern Munich", "from": 2014, "to": 2017},
+   {"club": "Arsenal", "from": 2017, "to": 2024},
+   {"club": "Manchester City", "from": 2024, "to": null}
+  ],
+  "national": {"team": "Netherlands", "from": 2013, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Pernille Harder": {
+  "clubs": [
+   {"club": "Team Viborg", "from": 2007, "to": 2010},
+   {"club": "IK Skovbakken", "from": 2010, "to": 2012},
+   {"club": "Linköping", "from": 2012, "to": 2016},
+   {"club": "VfL Wolfsburg", "from": 2017, "to": 2020},
+   {"club": "Chelsea", "from": 2020, "to": 2023},
+   {"club": "Bayern Munich", "from": 2023, "to": null}
+  ],
+  "national": {"team": "Denmark", "from": 2009, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Marta": {
+  "clubs": [
+   {"club": "Vasco da Gama", "from": 2000, "to": 2002},
+   {"club": "Santa Cruz", "from": 2002, "to": 2004},
+   {"club": "Umeå IK", "from": 2004, "to": 2008},
+   {"club": "Los Angeles Sol", "from": 2009, "to": 2009},
+   {"club": "Santos", "from": 2009, "to": 2010, "loan": true},
+   {"club": "Gold Pride", "from": 2010, "to": 2010},
+   {"club": "Santos", "from": 2011, "to": 2011},
+   {"club": "Western New York Flash", "from": 2011, "to": 2011},
+   {"club": "Tyresö", "from": 2012, "to": 2014},
+   {"club": "Rosengård", "from": 2014, "to": 2017},
+   {"club": "Orlando Pride", "from": 2017, "to": null}
+  ],
+  "national": {"team": "Brazil", "from": 2002, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Barbra Banda": {
+  "clubs": [
+   {"club": "Green Buffaloes", "from": 2016, "to": 2018},
+   {"club": "Logroño", "from": 2018, "to": 2020},
+   {"club": "Shanghai Shengli", "from": 2020, "to": 2023},
+   {"club": "Orlando Pride", "from": 2024, "to": null}
+  ],
+  "national": {"team": "Zambia", "from": 2016, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Asisat Oshoala": {
+  "clubs": [
+   {"club": "Robo", "from": 2009, "to": 2013},
+   {"club": "Rivers Angels", "from": 2013, "to": 2015},
+   {"club": "Liverpool", "from": 2015, "to": 2016},
+   {"club": "Arsenal", "from": 2016, "to": 2017},
+   {"club": "Dalian Quanjian", "from": 2017, "to": 2019},
+   {"club": "Barcelona", "from": 2019, "to": 2019, "loan": true},
+   {"club": "Barcelona", "from": 2019, "to": 2024},
+   {"club": "Bay FC", "from": 2024, "to": 2025},
+   {"club": "Al Hilal", "from": 2025, "to": null}
+  ],
+  "national": {"team": "Nigeria", "from": 2013, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Mia Hamm": {
+  "clubs": [
+   {"club": "Washington Freedom", "from": 2001, "to": 2003}
+  ],
+  "national": {"team": "United States", "from": 1987, "to": 2004},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Megan Rapinoe": {
+  "clubs": [
+   {"club": "Chicago Red Stars", "from": 2009, "to": 2010},
+   {"club": "Philadelphia Independence", "from": 2011, "to": 2011},
+   {"club": "MagicJack", "from": 2011, "to": 2011},
+   {"club": "Sydney FC", "from": 2011, "to": 2011},
+   {"club": "Seattle Sounders", "from": 2012, "to": 2012},
+   {"club": "Lyon", "from": 2013, "to": 2014},
+   {"club": "Seattle Reign FC", "from": 2013, "to": 2023}
+  ],
+  "national": {"team": "United States", "from": 2006, "to": 2023},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Abby Wambach": {
+  "clubs": [
+   {"club": "Washington Freedom", "from": 2002, "to": 2003},
+   {"club": "Ajax America Women", "from": 2005, "to": 2005},
+   {"club": "Washington Freedom", "from": 2009, "to": 2010},
+   {"club": "magicJack", "from": 2011, "to": 2011},
+   {"club": "Western New York Flash", "from": 2013, "to": 2014}
+  ],
+  "national": {"team": "United States", "from": 2001, "to": 2015},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Birgit Prinz": {
+  "clubs": [
+   {"club": "FSV Frankfurt", "from": 1993, "to": 1998},
+   {"club": "1. FFC Frankfurt", "from": 1998, "to": 2002},
+   {"club": "Carolina Courage", "from": 2002, "to": 2003},
+   {"club": "1. FFC Frankfurt", "from": 2003, "to": 2011}
+  ],
+  "national": {"team": "Germany", "from": 1994, "to": 2011},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Christine Sinclair": {
+  "clubs": [
+   {"club": "Vancouver UBC Alumni", "from": 1999, "to": 2001},
+   {"club": "Vancouver Angels", "from": 2000, "to": 2000},
+   {"club": "Vancouver Breakers", "from": 2001, "to": 2002},
+   {"club": "Vancouver Whitecaps FC", "from": 2006, "to": 2008},
+   {"club": "FC Gold Pride", "from": 2009, "to": 2010},
+   {"club": "Western New York Flash", "from": 2011, "to": 2012},
+   {"club": "Portland Thorns", "from": 2013, "to": 2024}
+  ],
+  "national": {"team": "Canada", "from": 2000, "to": 2023},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Alex Morgan": {
+  "clubs": [
+   {"club": "West Coast FC", "from": 2008, "to": 2009},
+   {"club": "California Storm", "from": 2010, "to": 2010},
+   {"club": "Pali Blues", "from": 2010, "to": 2010},
+   {"club": "Western New York Flash", "from": 2011, "to": 2011},
+   {"club": "Seattle Sounders Women", "from": 2012, "to": 2012},
+   {"club": "Portland Thorns", "from": 2013, "to": 2015},
+   {"club": "Orlando Pride", "from": 2016, "to": 2016},
+   {"club": "Lyon", "from": 2017, "to": 2017},
+   {"club": "Orlando Pride", "from": 2017, "to": 2020},
+   {"club": "Tottenham Hotspur", "from": 2020, "to": 2020},
+   {"club": "Orlando Pride", "from": 2021, "to": 2021},
+   {"club": "San Diego Wave", "from": 2022, "to": 2024}
+  ],
+  "national": {"team": "United States", "from": 2010, "to": 2024},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Carli Lloyd": {
+  "clubs": [
+   {"club": "Central Jersey Splash", "from": 1999, "to": 1999},
+   {"club": "New Brunswick Power", "from": 2000, "to": 2000},
+   {"club": "South Jersey Banshees", "from": 2001, "to": 2001},
+   {"club": "New Jersey Wildcats", "from": 2004, "to": 2004},
+   {"club": "Chicago Red Stars", "from": 2009, "to": 2009},
+   {"club": "Sky Blue FC", "from": 2010, "to": 2010},
+   {"club": "Atlanta Beat", "from": 2011, "to": 2011},
+   {"club": "Western New York Flash", "from": 2013, "to": 2014},
+   {"club": "Houston Dash", "from": 2015, "to": 2017},
+   {"club": "Manchester City", "from": 2017, "to": 2017, "loan": true},
+   {"club": "NJ/NY Gotham FC", "from": 2018, "to": 2021}
+  ],
+  "national": {"team": "United States", "from": 2005, "to": 2021},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Hope Solo": {
+  "clubs": [
+   {"club": "Philadelphia Charge", "from": 2003, "to": 2003},
+   {"club": "Kopparbergs/Göteborg", "from": 2004, "to": 2004},
+   {"club": "Lyon", "from": 2005, "to": 2005},
+   {"club": "Saint Louis Athletica", "from": 2009, "to": 2010},
+   {"club": "Atlanta Beat", "from": 2010, "to": 2010},
+   {"club": "magicJack", "from": 2011, "to": 2011},
+   {"club": "Seattle Sounders Women", "from": 2012, "to": 2012},
+   {"club": "Seattle Reign", "from": 2013, "to": 2016}
+  ],
+  "national": {"team": "United States", "from": 2000, "to": 2016},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Nadine Angerer": {
+  "clubs": [
+   {"club": "1. FC Nürnberg", "from": 1995, "to": 1996},
+   {"club": "FC Wacker München", "from": 1996, "to": 1999},
+   {"club": "Bayern Munich", "from": 1999, "to": 2001},
+   {"club": "1. FFC Turbine Potsdam", "from": 2001, "to": 2007},
+   {"club": "Djurgårdens IF", "from": 2008, "to": 2008},
+   {"club": "1. FFC Frankfurt", "from": 2009, "to": 2013},
+   {"club": "Brisbane Roar", "from": 2013, "to": 2014},
+   {"club": "Portland Thorns", "from": 2014, "to": 2015},
+   {"club": "Brisbane Roar", "from": 2014, "to": 2014, "loan": true},
+   {"club": "Portland Thorns", "from": 2020, "to": 2020}
+  ],
+  "national": {"team": "Germany", "from": 1996, "to": 2015},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Formiga": {
+  "clubs": [
+   {"club": "Euroexport", "from": 1993, "to": 1995},
+   {"club": "Saad", "from": 1996, "to": 1996},
+   {"club": "São Paulo", "from": 1997, "to": 1998},
+   {"club": "Portuguesa", "from": 1999, "to": 1999},
+   {"club": "São Paulo", "from": 2000, "to": 2000},
+   {"club": "Santa Isabel", "from": 2001, "to": 2001},
+   {"club": "Santa Cruz", "from": 2002, "to": 2002},
+   {"club": "Santos", "from": 2002, "to": 2002},
+   {"club": "Independente", "from": 2003, "to": 2003},
+   {"club": "Malmö FF Dam", "from": 2004, "to": 2005},
+   {"club": "Saad", "from": 2006, "to": 2007},
+   {"club": "New Jersey Wildcats", "from": 2006, "to": 2006, "loan": true},
+   {"club": "Jersey Sky Blue", "from": 2007, "to": 2007, "loan": true},
+   {"club": "Botucatu", "from": 2008, "to": 2008},
+   {"club": "FC Gold Pride", "from": 2009, "to": 2009},
+   {"club": "Chicago Red Stars", "from": 2010, "to": 2010},
+   {"club": "São José", "from": 2011, "to": 2011},
+   {"club": "América de Natal", "from": 2012, "to": 2012},
+   {"club": "São José", "from": 2013, "to": 2015},
+   {"club": "São Francisco do Conde", "from": 2016, "to": 2016},
+   {"club": "Paris Saint-Germain", "from": 2017, "to": 2021},
+   {"club": "São Paulo", "from": 2022, "to": 2022}
+  ],
+  "national": {"team": "Brazil", "from": 1995, "to": 2021},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Homare Sawa": {
+  "clubs": [
+   {"club": "NTV Beleza", "from": 1991, "to": 1999},
+   {"club": "Denver Diamonds", "from": 1999, "to": 2000},
+   {"club": "Atlanta Beat", "from": 2001, "to": 2003},
+   {"club": "NTV Beleza", "from": 2004, "to": 2008},
+   {"club": "Washington Freedom", "from": 2009, "to": 2010},
+   {"club": "NTV Beleza", "from": 2009, "to": 2009, "loan": true},
+   {"club": "NTV Beleza", "from": 2010, "to": 2010},
+   {"club": "INAC Kobe Leonessa", "from": 2011, "to": 2015}
+  ],
+  "national": {"team": "Japan", "from": 1993, "to": 2015},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Sun Wen": {
+  "clubs": [
+   {"club": "Shanghai", "from": 1989, "to": 2000},
+   {"club": "Atlanta Beat", "from": 2001, "to": 2002},
+   {"club": "Shanghai SVA", "from": 2003, "to": 2003},
+   {"club": "Shanghai SVA", "from": 2006, "to": 2006}
+  ],
+  "national": {"team": "China", "from": 1990, "to": 2006},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Michelle Akers": {
+  "clubs": [
+   {"club": "Tyresö FF", "from": 1990, "to": 1990},
+   {"club": "Tyresö FF", "from": 1992, "to": 1992},
+   {"club": "Orlando Lions Women", "from": 1992, "to": 1992},
+   {"club": "Tyresö FF", "from": 1994, "to": 1994}
+  ],
+  "national": {"team": "United States", "from": 1985, "to": 2000},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Kristine Lilly": {
+  "clubs": [
+   {"club": "Tyresö FF", "from": 1994, "to": 1994},
+   {"club": "Washington Warthogs", "from": 1995, "to": 1995},
+   {"club": "Delaware Genies", "from": 1998, "to": 1998},
+   {"club": "Boston Breakers", "from": 2001, "to": 2003},
+   {"club": "KIF Örebro DFF", "from": 2005, "to": 2005},
+   {"club": "Boston Breakers", "from": 2009, "to": 2011}
+  ],
+  "national": {"team": "United States", "from": 1987, "to": 2010},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Lieke Martens": {
+  "clubs": [
+   {"club": "Heerenveen", "from": 2009, "to": 2010},
+   {"club": "VVV-Venlo", "from": 2010, "to": 2011},
+   {"club": "Standard Liège", "from": 2011, "to": 2012},
+   {"club": "FCR 2001 Duisburg", "from": 2012, "to": 2014},
+   {"club": "Kopparbergs/Göteborg", "from": 2014, "to": 2015},
+   {"club": "Rosengård", "from": 2015, "to": 2017},
+   {"club": "Barcelona", "from": 2017, "to": 2022},
+   {"club": "Paris Saint-Germain", "from": 2022, "to": 2025}
+  ],
+  "national": {"team": "Netherlands", "from": 2011, "to": 2024},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Roberto Baggio": {
+  "clubs": [
+   {"club": "Vicenza", "from": 1982, "to": 1985},
+   {"club": "Fiorentina", "from": 1985, "to": 1990},
+   {"club": "Juventus", "from": 1990, "to": 1995},
+   {"club": "AC Milan", "from": 1995, "to": 1997},
+   {"club": "Bologna", "from": 1997, "to": 1998},
+   {"club": "Inter Milan", "from": 1998, "to": 2000},
+   {"club": "Brescia", "from": 2000, "to": 2004}
+  ],
+  "national": {"team": "Italy", "from": 1988, "to": 2004},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Francesco Totti": {
+  "clubs": [
+   {"club": "Roma", "from": 1993, "to": 2017}
+  ],
+  "national": {"team": "Italy", "from": 1998, "to": 2006},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Alessandro Del Piero": {
+  "clubs": [
+   {"club": "Padova", "from": 1991, "to": 1993},
+   {"club": "Juventus", "from": 1993, "to": 2012},
+   {"club": "Sydney FC", "from": 2012, "to": 2014},
+   {"club": "Delhi Dynamos", "from": 2014, "to": 2014}
+  ],
+  "national": {"team": "Italy", "from": 1995, "to": 2008},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Dennis Bergkamp": {
+  "clubs": [
+   {"club": "Ajax", "from": 1986, "to": 1993},
+   {"club": "Inter Milan", "from": 1993, "to": 1995},
+   {"club": "Arsenal", "from": 1995, "to": 2006}
+  ],
+  "national": {"team": "Netherlands", "from": 1990, "to": 2000},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Raúl": {
+  "clubs": [
+   {"club": "Real Madrid", "from": 1994, "to": 2010},
+   {"club": "Schalke 04", "from": 2010, "to": 2012},
+   {"club": "Al Sadd", "from": 2012, "to": 2014},
+   {"club": "New York Cosmos", "from": 2014, "to": 2015}
+  ],
+  "national": {"team": "Spain", "from": 1996, "to": 2006},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Andriy Shevchenko": {
+  "clubs": [
+   {"club": "Dynamo Kyiv", "from": 1993, "to": 1999},
+   {"club": "AC Milan", "from": 1999, "to": 2006},
+   {"club": "Chelsea", "from": 2006, "to": 2009},
+   {"club": "AC Milan", "from": 2008, "to": 2009, "loan": true},
+   {"club": "Dynamo Kyiv", "from": 2009, "to": 2012}
+  ],
+  "national": {"team": "Ukraine", "from": 1995, "to": 2012},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Paolo Rossi": {
+  "clubs": [
+   {"club": "Juventus", "from": 1973, "to": 1976},
+   {"club": "Como", "from": 1975, "to": 1976, "loan": true},
+   {"club": "Vicenza", "from": 1976, "to": 1980},
+   {"club": "Perugia", "from": 1979, "to": 1980, "loan": true},
+   {"club": "Juventus", "from": 1981, "to": 1985},
+   {"club": "AC Milan", "from": 1985, "to": 1986},
+   {"club": "Hellas Verona", "from": 1986, "to": 1987}
+  ],
+  "national": {"team": "Italy", "from": 1977, "to": 1986},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "George Weah": {
+  "clubs": [
+   {"club": "Young Survivors", "from": 1981, "to": 1984},
+   {"club": "Bong Range United", "from": 1984, "to": 1985},
+   {"club": "Mighty Barrolle", "from": 1985, "to": 1986},
+   {"club": "Invincible Eleven", "from": 1986, "to": 1987},
+   {"club": "Africa Sports", "from": 1987, "to": 1987},
+   {"club": "Tonnerre Yaoundé", "from": 1987, "to": 1988},
+   {"club": "Monaco", "from": 1988, "to": 1992},
+   {"club": "Paris Saint-Germain", "from": 1992, "to": 1995},
+   {"club": "AC Milan", "from": 1995, "to": 2000},
+   {"club": "Chelsea", "from": 2000, "to": 2000, "loan": true},
+   {"club": "Manchester City", "from": 2000, "to": 2000},
+   {"club": "Marseille", "from": 2000, "to": 2001},
+   {"club": "Al Jazira", "from": 2001, "to": 2003}
+  ],
+  "national": {"team": "Liberia", "from": 1986, "to": 2018},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Kenny Dalglish": {
+  "clubs": [
+   {"club": "Celtic", "from": 1969, "to": 1977},
+   {"club": "Liverpool", "from": 1977, "to": 1990}
+  ],
+  "national": {"team": "Scotland", "from": 1971, "to": 1986},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Michael Laudrup": {
+  "clubs": [
+   {"club": "KB", "from": 1981, "to": 1981},
+   {"club": "Brøndby", "from": 1982, "to": 1983},
+   {"club": "Lazio", "from": 1983, "to": 1985},
+   {"club": "Juventus", "from": 1985, "to": 1989},
+   {"club": "Barcelona", "from": 1989, "to": 1994},
+   {"club": "Real Madrid", "from": 1994, "to": 1996},
+   {"club": "Vissel Kobe", "from": 1996, "to": 1997},
+   {"club": "Ajax", "from": 1997, "to": 1998}
+  ],
+  "national": {"team": "Denmark", "from": 1982, "to": 1998},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Gheorghe Hagi": {
+  "clubs": [
+   {"club": "FC Constanța", "from": 1982, "to": 1983},
+   {"club": "Sportul Studențesc", "from": 1983, "to": 1986},
+   {"club": "Steaua București", "from": 1986, "to": 1990},
+   {"club": "Real Madrid", "from": 1990, "to": 1992},
+   {"club": "Brescia", "from": 1992, "to": 1994},
+   {"club": "Barcelona", "from": 1994, "to": 1996},
+   {"club": "Galatasaray", "from": 1996, "to": 2001}
+  ],
+  "national": {"team": "Romania", "from": 1983, "to": 2000},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Rui Costa": {
+  "clubs": [
+   {"club": "Benfica", "from": 1990, "to": 1994},
+   {"club": "Fafe", "from": 1990, "to": 1991, "loan": true},
+   {"club": "Fiorentina", "from": 1994, "to": 2001},
+   {"club": "AC Milan", "from": 2001, "to": 2006},
+   {"club": "Benfica", "from": 2006, "to": 2008}
+  ],
+  "national": {"team": "Portugal", "from": 1993, "to": 2004},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Clarence Seedorf": {
+  "clubs": [
+   {"club": "Ajax", "from": 1992, "to": 1995},
+   {"club": "Sampdoria", "from": 1995, "to": 1996},
+   {"club": "Real Madrid", "from": 1996, "to": 2000},
+   {"club": "Inter Milan", "from": 2000, "to": 2002},
+   {"club": "AC Milan", "from": 2002, "to": 2012},
+   {"club": "Botafogo", "from": 2012, "to": 2014}
+  ],
+  "national": {"team": "Netherlands", "from": 1994, "to": 2008},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Claude Makélélé": {
+  "clubs": [
+   {"club": "Nantes", "from": 1991, "to": 1997},
+   {"club": "Marseille", "from": 1997, "to": 1998},
+   {"club": "Celta Vigo", "from": 1998, "to": 2000},
+   {"club": "Real Madrid", "from": 2000, "to": 2003},
+   {"club": "Chelsea", "from": 2003, "to": 2008},
+   {"club": "Paris Saint-Germain", "from": 2008, "to": 2011}
+  ],
+  "national": {"team": "France", "from": 1995, "to": 2008},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Michael Owen": {
+  "clubs": [
+   {"club": "Liverpool", "from": 1996, "to": 2004},
+   {"club": "Real Madrid", "from": 2004, "to": 2005},
+   {"club": "Newcastle United", "from": 2005, "to": 2009},
+   {"club": "Manchester United", "from": 2009, "to": 2012},
+   {"club": "Stoke City", "from": 2012, "to": 2013}
+  ],
+  "national": {"team": "England", "from": 1998, "to": 2008},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Gary Lineker": {
+  "clubs": [
+   {"club": "Leicester City", "from": 1978, "to": 1985},
+   {"club": "Everton", "from": 1985, "to": 1986},
+   {"club": "Barcelona", "from": 1986, "to": 1989},
+   {"club": "Tottenham Hotspur", "from": 1989, "to": 1992},
+   {"club": "Nagoya Grampus", "from": 1992, "to": 1994}
+  ],
+  "national": {"team": "England", "from": 1984, "to": 1992},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Moisés Caicedo": {
+  "clubs": [
+   {"club": "Independiente del Valle", "from": 2019, "to": 2021},
+   {"club": "Brighton & Hove Albion", "from": 2021, "to": 2023},
+   {"club": "Beerschot", "from": 2021, "to": 2022, "loan": true},
+   {"club": "Chelsea", "from": 2023, "to": null}
+  ],
+  "national": {"team": "Ecuador", "from": 2020, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Antoine Semenyo": {
+  "clubs": [
+   {"club": "Highworth Town", "from": 2017, "to": 2017},
+   {"club": "Bristol City", "from": 2018, "to": 2023},
+   {"club": "Bath City", "from": 2018, "to": 2018, "loan": true},
+   {"club": "Newport County", "from": 2018, "to": 2019, "loan": true},
+   {"club": "Sunderland", "from": 2020, "to": 2020, "loan": true},
+   {"club": "Bournemouth", "from": 2023, "to": 2026},
+   {"club": "Manchester City", "from": 2026, "to": null}
+  ],
+  "national": {"team": "Ghana", "from": 2022, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Aurélien Tchouaméni": {
+  "clubs": [
+   {"club": "Bordeaux", "from": 2018, "to": 2020},
+   {"club": "Monaco", "from": 2020, "to": 2022},
+   {"club": "Real Madrid", "from": 2022, "to": null}
+  ],
+  "national": {"team": "France", "from": 2021, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Joshua Kimmich": {
+  "clubs": [
+   {"club": "RB Leipzig", "from": 2013, "to": 2015},
+   {"club": "Bayern Munich", "from": 2015, "to": null}
+  ],
+  "national": {"team": "Germany", "from": 2016, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Bernardo Silva": {
+  "clubs": [
+   {"club": "Benfica", "from": 2013, "to": 2015},
+   {"club": "Monaco", "from": 2014, "to": 2015, "loan": true},
+   {"club": "Monaco", "from": 2015, "to": 2017},
+   {"club": "Manchester City", "from": 2017, "to": 2026},
+   {"club": "Real Madrid", "from": 2026, "to": null}
+  ],
+  "national": {"team": "Portugal", "from": 2015, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Denzel Dumfries": {
+  "clubs": [
+   {"club": "Sparta Rotterdam", "from": 2014, "to": 2017},
+   {"club": "Heerenveen", "from": 2017, "to": 2018},
+   {"club": "PSV Eindhoven", "from": 2018, "to": 2021},
+   {"club": "Inter Milan", "from": 2021, "to": 2026},
+   {"club": "Real Madrid", "from": 2026, "to": null}
+  ],
+  "national": {"team": "Netherlands", "from": 2018, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Jérémy Doku": {
+  "clubs": [
+   {"club": "Anderlecht", "from": 2018, "to": 2020},
+   {"club": "Rennes", "from": 2020, "to": 2023},
+   {"club": "Manchester City", "from": 2023, "to": null}
+  ],
+  "national": {"team": "Belgium", "from": 2020, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Rayan Cherki": {
+  "clubs": [
+   {"club": "Lyon", "from": 2019, "to": 2025},
+   {"club": "Manchester City", "from": 2025, "to": null}
+  ],
+  "national": {"team": "France", "from": 2025, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "N'Golo Kanté": {
+  "clubs": [
+   {"club": "Boulogne", "from": 2012, "to": 2013},
+   {"club": "Caen", "from": 2013, "to": 2015},
+   {"club": "Leicester City", "from": 2015, "to": 2016},
+   {"club": "Chelsea", "from": 2016, "to": 2023},
+   {"club": "Al-Ittihad", "from": 2023, "to": 2026},
+   {"club": "Fenerbahçe", "from": 2026, "to": null}
+  ],
+  "national": {"team": "France", "from": 2016, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Tijjani Reijnders": {
+  "clubs": [
+   {"club": "PEC Zwolle", "from": 2017, "to": 2017},
+   {"club": "AZ", "from": 2018, "to": 2023},
+   {"club": "RKC Waalwijk", "from": 2019, "to": 2020, "loan": true},
+   {"club": "AC Milan", "from": 2023, "to": 2025},
+   {"club": "Manchester City", "from": 2025, "to": 2026},
+   {"club": "Al-Qadsiah", "from": 2026, "to": null}
+  ],
+  "national": {"team": "Netherlands", "from": 2023, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Bruno Guimarães": {
+  "clubs": [
+   {"club": "Audax", "from": 2015, "to": 2018},
+   {"club": "Athletico Paranaense", "from": 2017, "to": 2018, "loan": true},
+   {"club": "Athletico Paranaense", "from": 2018, "to": 2020},
+   {"club": "Lyon", "from": 2020, "to": 2022},
+   {"club": "Newcastle United", "from": 2022, "to": 2026},
+   {"club": "Arsenal", "from": 2026, "to": null}
+  ],
+  "national": {"team": "Brazil", "from": 2020, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Frenkie de Jong": {
+  "clubs": [
+   {"club": "Ajax", "from": 2016, "to": 2019},
+   {"club": "Barcelona", "from": 2019, "to": null}
+  ],
+  "national": {"team": "Netherlands", "from": 2018, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Marc Cucurella": {
+  "clubs": [
+   {"club": "Barcelona", "from": 2017, "to": 2020},
+   {"club": "Eibar", "from": 2018, "to": 2019, "loan": true},
+   {"club": "Getafe", "from": 2019, "to": 2020, "loan": true},
+   {"club": "Getafe", "from": 2020, "to": 2021},
+   {"club": "Brighton & Hove Albion", "from": 2021, "to": 2022},
+   {"club": "Chelsea", "from": 2022, "to": 2026},
+   {"club": "Real Madrid", "from": 2026, "to": null}
+  ],
+  "national": {"team": "Spain", "from": 2021, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Sadio Mané": {
+  "clubs": [
+   {"club": "Metz", "from": 2011, "to": 2012},
+   {"club": "Red Bull Salzburg", "from": 2012, "to": 2014},
+   {"club": "Southampton", "from": 2014, "to": 2016},
+   {"club": "Liverpool", "from": 2016, "to": 2022},
+   {"club": "Bayern Munich", "from": 2022, "to": 2023},
+   {"club": "Al-Nassr", "from": 2023, "to": null}
+  ],
+  "national": {"team": "Senegal", "from": 2012, "to": 2026},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Martín Zubimendi": {
+  "clubs": [
+   {"club": "Real Sociedad", "from": 2019, "to": 2025},
+   {"club": "Arsenal", "from": 2025, "to": null}
+  ],
+  "national": {"team": "Spain", "from": 2021, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Enzo Fernández": {
+  "clubs": [
+   {"club": "River Plate", "from": 2019, "to": 2022},
+   {"club": "Defensa y Justicia", "from": 2020, "to": 2021, "loan": true},
+   {"club": "Benfica", "from": 2022, "to": 2023},
+   {"club": "Chelsea", "from": 2023, "to": 2026},
+   {"club": "Manchester City", "from": 2026, "to": null}
+  ],
+  "national": {"team": "Argentina", "from": 2022, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Willian Pacho": {
+  "clubs": [
+   {"club": "Independiente del Valle", "from": 2019, "to": 2022},
+   {"club": "Royal Antwerp", "from": 2022, "to": 2023},
+   {"club": "Eintracht Frankfurt", "from": 2023, "to": 2024},
+   {"club": "Paris Saint-Germain", "from": 2024, "to": null}
+  ],
+  "national": {"team": "Ecuador", "from": 2023, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Scott McTominay": {
+  "clubs": [
+   {"club": "Manchester United", "from": 2017, "to": 2024},
+   {"club": "Napoli", "from": 2024, "to": null}
+  ],
+  "national": {"team": "Scotland", "from": 2018, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Ryan Gravenberch": {
+  "clubs": [
+   {"club": "Ajax", "from": 2018, "to": 2022},
+   {"club": "Bayern Munich", "from": 2022, "to": 2023},
+   {"club": "Liverpool", "from": 2023, "to": null}
+  ],
+  "national": {"team": "Netherlands", "from": 2021, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Fermín López": {
+  "clubs": [
+   {"club": "Linares", "from": 2022, "to": 2023, "loan": true},
+   {"club": "Barcelona", "from": 2023, "to": null}
+  ],
+  "national": {"team": "Spain", "from": 2024, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Cody Gakpo": {
+  "clubs": [
+   {"club": "PSV Eindhoven", "from": 2018, "to": 2023},
+   {"club": "Liverpool", "from": 2023, "to": null}
+  ],
+  "national": {"team": "Netherlands", "from": 2021, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "João Pedro": {
+  "clubs": [
+   {"club": "Fluminense", "from": 2019, "to": 2020},
+   {"club": "Watford", "from": 2020, "to": 2023},
+   {"club": "Brighton & Hove Albion", "from": 2023, "to": 2025},
+   {"club": "Chelsea", "from": 2025, "to": null}
+  ],
+  "national": {"team": "Brazil", "from": 2023, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Ismaïla Sarr": {
+  "clubs": [
+   {"club": "Metz", "from": 2016, "to": 2017},
+   {"club": "Rennes", "from": 2017, "to": 2019},
+   {"club": "Watford", "from": 2019, "to": 2023},
+   {"club": "Marseille", "from": 2023, "to": 2024},
+   {"club": "Crystal Palace", "from": 2024, "to": null}
+  ],
+  "national": {"team": "Senegal", "from": 2016, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Rafael Leão": {
+  "clubs": [
+   {"club": "Sporting CP", "from": 2017, "to": 2018},
+   {"club": "Lille", "from": 2018, "to": 2019},
+   {"club": "AC Milan", "from": 2019, "to": 2026},
+   {"club": "Galatasaray", "from": 2026, "to": null}
+  ],
+  "national": {"team": "Portugal", "from": 2021, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Alexis Mac Allister": {
+  "clubs": [
+   {"club": "Argentinos Juniors", "from": 2016, "to": 2019},
+   {"club": "Brighton & Hove Albion", "from": 2019, "to": 2023},
+   {"club": "Argentinos Juniors", "from": 2019, "to": 2019, "loan": true},
+   {"club": "Boca Juniors", "from": 2019, "to": 2020, "loan": true},
+   {"club": "Liverpool", "from": 2023, "to": null}
+  ],
+  "national": {"team": "Argentina", "from": 2019, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Weston McKennie": {
+  "clubs": [
+   {"club": "Schalke 04", "from": 2017, "to": 2021},
+   {"club": "Juventus", "from": 2020, "to": 2021, "loan": true},
+   {"club": "Juventus", "from": 2021, "to": null},
+   {"club": "Leeds United", "from": 2023, "to": 2023, "loan": true}
+  ],
+  "national": {"team": "United States", "from": 2017, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Gabriel Martinelli": {
+  "clubs": [
+   {"club": "Ituano", "from": 2018, "to": 2019},
+   {"club": "Arsenal", "from": 2019, "to": 2026},
+   {"club": "Al-Hilal", "from": 2026, "to": null}
+  ],
+  "national": {"team": "Brazil", "from": 2022, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "João Cancelo": {
+  "clubs": [
+   {"club": "Benfica", "from": 2014, "to": 2015},
+   {"club": "Valencia", "from": 2014, "to": 2015, "loan": true},
+   {"club": "Valencia", "from": 2015, "to": 2018},
+   {"club": "Inter Milan", "from": 2017, "to": 2018, "loan": true},
+   {"club": "Juventus", "from": 2018, "to": 2019},
+   {"club": "Manchester City", "from": 2019, "to": 2024},
+   {"club": "Bayern Munich", "from": 2023, "to": 2023, "loan": true},
+   {"club": "Barcelona", "from": 2023, "to": 2024, "loan": true},
+   {"club": "Al Hilal", "from": 2024, "to": 2026},
+   {"club": "Barcelona", "from": 2026, "to": 2026, "loan": true},
+   {"club": "Barcelona", "from": 2026, "to": null}
+  ],
+  "national": {"team": "Portugal", "from": 2016, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Dani Olmo": {
+  "clubs": [
+   {"club": "Dinamo Zagreb", "from": 2015, "to": 2020},
+   {"club": "RB Leipzig", "from": 2020, "to": 2024},
+   {"club": "Barcelona", "from": 2024, "to": null}
+  ],
+  "national": {"team": "Spain", "from": 2019, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Arda Güler": {
+  "clubs": [
+   {"club": "Fenerbahçe", "from": 2021, "to": 2023},
+   {"club": "Real Madrid", "from": 2023, "to": null}
+  ],
+  "national": {"team": "Turkey", "from": 2022, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Marc Guéhi": {
+  "clubs": [
+   {"club": "Chelsea", "from": 2019, "to": 2021},
+   {"club": "Swansea City", "from": 2020, "to": 2021, "loan": true},
+   {"club": "Crystal Palace", "from": 2021, "to": 2026},
+   {"club": "Manchester City", "from": 2026, "to": null}
+  ],
+  "national": {"team": "England", "from": 2022, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Fabián Ruiz": {
+  "clubs": [
+   {"club": "Betis", "from": 2014, "to": 2018},
+   {"club": "Elche", "from": 2017, "to": 2017, "loan": true},
+   {"club": "Napoli", "from": 2018, "to": 2022},
+   {"club": "Paris Saint-Germain", "from": 2022, "to": null}
+  ],
+  "national": {"team": "Spain", "from": 2019, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Casemiro": {
+  "clubs": [
+   {"club": "São Paulo", "from": 2010, "to": 2013},
+   {"club": "Real Madrid", "from": 2013, "to": 2013, "loan": true},
+   {"club": "Real Madrid", "from": 2013, "to": 2022},
+   {"club": "Porto", "from": 2014, "to": 2015, "loan": true},
+   {"club": "Manchester United", "from": 2022, "to": 2026},
+   {"club": "Inter Miami", "from": 2026, "to": null}
+  ],
+  "national": {"team": "Brazil", "from": 2011, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Mikel Merino": {
+  "clubs": [
+   {"club": "Osasuna", "from": 2014, "to": 2016},
+   {"club": "Borussia Dortmund", "from": 2016, "to": 2017},
+   {"club": "Newcastle United", "from": 2017, "to": 2017, "loan": true},
+   {"club": "Newcastle United", "from": 2017, "to": 2018},
+   {"club": "Real Sociedad", "from": 2018, "to": 2024},
+   {"club": "Arsenal", "from": 2024, "to": null}
+  ],
+  "national": {"team": "Spain", "from": 2020, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Eberechi Eze": {
+  "clubs": [
+   {"club": "Queens Park Rangers", "from": 2016, "to": 2020},
+   {"club": "Wycombe Wanderers", "from": 2017, "to": 2018, "loan": true},
+   {"club": "Crystal Palace", "from": 2020, "to": 2025},
+   {"club": "Arsenal", "from": 2025, "to": null}
+  ],
+  "national": {"team": "England", "from": 2023, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Kenan Yıldız": {
+  "clubs": [
+   {"club": "Juventus", "from": 2023, "to": null}
+  ],
+  "national": {"team": "Turkey", "from": 2023, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Raúl Jiménez": {
+  "clubs": [
+   {"club": "América", "from": 2011, "to": 2014},
+   {"club": "Atlético Madrid", "from": 2014, "to": 2015},
+   {"club": "Benfica", "from": 2015, "to": 2019},
+   {"club": "Wolverhampton Wanderers", "from": 2018, "to": 2019, "loan": true},
+   {"club": "Wolverhampton Wanderers", "from": 2019, "to": 2023},
+   {"club": "Fulham", "from": 2023, "to": 2026},
+   {"club": "Wolverhampton Wanderers", "from": 2026, "to": null}
+  ],
+  "national": {"team": "Mexico", "from": 2013, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Gonçalo Ramos": {
+  "clubs": [
+   {"club": "Benfica", "from": 2020, "to": 2023},
+   {"club": "Paris Saint-Germain", "from": 2023, "to": 2023, "loan": true},
+   {"club": "Paris Saint-Germain", "from": 2023, "to": 2026},
+   {"club": "AC Milan", "from": 2026, "to": null}
+  ],
+  "national": {"team": "Portugal", "from": 2022, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Mikel Oyarzabal": {
+  "clubs": [
+   {"club": "Real Sociedad", "from": 2015, "to": null}
+  ],
+  "national": {"team": "Spain", "from": 2016, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Marcus Thuram": {
+  "clubs": [
+   {"club": "Sochaux", "from": 2015, "to": 2017},
+   {"club": "Guingamp", "from": 2017, "to": 2019},
+   {"club": "Borussia Mönchengladbach", "from": 2019, "to": 2023},
+   {"club": "Inter Milan", "from": 2023, "to": null}
+  ],
+  "national": {"team": "France", "from": 2020, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Kaoru Mitoma": {
+  "clubs": [
+   {"club": "Kawasaki Frontale", "from": 2018, "to": 2021},
+   {"club": "Brighton & Hove Albion", "from": 2021, "to": null},
+   {"club": "Union SG", "from": 2021, "to": 2022, "loan": true}
+  ],
+  "national": {"team": "Japan", "from": 2021, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Phil Foden": {
+  "clubs": [
+   {"club": "Manchester City", "from": 2017, "to": null}
+  ],
+  "national": {"team": "England", "from": 2020, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Lisandro Martínez": {
+  "clubs": [
+   {"club": "Newell's Old Boys", "from": 2017, "to": 2018},
+   {"club": "Defensa y Justicia", "from": 2017, "to": 2018, "loan": true},
+   {"club": "Defensa y Justicia", "from": 2018, "to": 2019},
+   {"club": "Ajax", "from": 2019, "to": 2022},
+   {"club": "Manchester United", "from": 2022, "to": null}
+  ],
+  "national": {"team": "Argentina", "from": 2019, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Bradley Barcola": {
+  "clubs": [
+   {"club": "Lyon", "from": 2021, "to": 2023},
+   {"club": "Paris Saint-Germain", "from": 2023, "to": 2026},
+   {"club": "Liverpool", "from": 2026, "to": null}
+  ],
+  "national": {"team": "France", "from": 2024, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ },
+ "Pervis Estupiñán": {
+  "clubs": [
+   {"club": "LDU Quito", "from": 2015, "to": 2016},
+   {"club": "Watford", "from": 2016, "to": 2020},
+   {"club": "Granada", "from": 2016, "to": 2017, "loan": true},
+   {"club": "Almería", "from": 2017, "to": 2018, "loan": true},
+   {"club": "Mallorca", "from": 2018, "to": 2019, "loan": true},
+   {"club": "Osasuna", "from": 2019, "to": 2020, "loan": true},
+   {"club": "Villarreal", "from": 2020, "to": 2022},
+   {"club": "Brighton & Hove Albion", "from": 2022, "to": 2025},
+   {"club": "AC Milan", "from": 2025, "to": null}
+  ],
+  "national": {"team": "Ecuador", "from": 2019, "to": null},
+  "source": "wiki-infobox",
+  "checked": "2026-09-24"
+ }
+}

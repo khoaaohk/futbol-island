@@ -1,0 +1,374 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Anfield, 2025. Liverpool lead two-one, but Bournemouth win the ball. Antoine Semenyo runs from his own half, straight down the middle. Nobody stops him... bottom corner! Two-two!",
+   "src": "/plays/narration/semenyo-signature/1.m4a",
+   "seconds": 13.6,
+   "words": [
+    {
+     "w": "Anfield",
+     "at": 0.4
+    },
+    {
+     "w": "2025",
+     "at": 0.925
+    },
+    {
+     "w": "Liverpool",
+     "at": 2.388
+    },
+    {
+     "w": "lead",
+     "at": 2.875
+    },
+    {
+     "w": "two-one",
+     "at": 3.138
+    },
+    {
+     "w": "but",
+     "at": 3.7
+    },
+    {
+     "w": "Bournemouth",
+     "at": 3.862
+    },
+    {
+     "w": "win",
+     "at": 4.325
+    },
+    {
+     "w": "the",
+     "at": 4.537
+    },
+    {
+     "w": "ball",
+     "at": 4.625
+    },
+    {
+     "w": "Antoine",
+     "at": 5.575
+    },
+    {
+     "w": "Semenyo",
+     "at": 6.188
+    },
+    {
+     "w": "runs",
+     "at": 6.763
+    },
+    {
+     "w": "from",
+     "at": 7.125
+    },
+    {
+     "w": "his",
+     "at": 7.263
+    },
+    {
+     "w": "own",
+     "at": 7.4
+    },
+    {
+     "w": "half",
+     "at": 7.625
+    },
+    {
+     "w": "straight",
+     "at": 8.088
+    },
+    {
+     "w": "down",
+     "at": 8.425
+    },
+    {
+     "w": "the",
+     "at": 8.637
+    },
+    {
+     "w": "middle",
+     "at": 8.725
+    },
+    {
+     "w": "Nobody",
+     "at": 9.5
+    },
+    {
+     "w": "stops",
+     "at": 9.875
+    },
+    {
+     "w": "him",
+     "at": 10.238
+    },
+    {
+     "w": "bottom",
+     "at": 10.875
+    },
+    {
+     "w": "corner",
+     "at": 11.262
+    },
+    {
+     "w": "Two-two",
+     "at": 11.938
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again. He carries the ball fast into the empty space. The defenders back away and just watch... but he does not wait!",
+   "src": "/plays/narration/semenyo-signature/2.m4a",
+   "seconds": 9.0,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.7
+    },
+    {
+     "w": "He",
+     "at": 1.5
+    },
+    {
+     "w": "carries",
+     "at": 1.65
+    },
+    {
+     "w": "the",
+     "at": 2.05
+    },
+    {
+     "w": "ball",
+     "at": 2.15
+    },
+    {
+     "w": "fast",
+     "at": 2.487
+    },
+    {
+     "w": "into",
+     "at": 2.862
+    },
+    {
+     "w": "the",
+     "at": 3.038
+    },
+    {
+     "w": "empty",
+     "at": 3.188
+    },
+    {
+     "w": "space",
+     "at": 3.587
+    },
+    {
+     "w": "The",
+     "at": 4.375
+    },
+    {
+     "w": "defenders",
+     "at": 4.475
+    },
+    {
+     "w": "back",
+     "at": 5.025
+    },
+    {
+     "w": "away",
+     "at": 5.3
+    },
+    {
+     "w": "and",
+     "at": 5.725
+    },
+    {
+     "w": "just",
+     "at": 5.85
+    },
+    {
+     "w": "watch",
+     "at": 6.088
+    },
+    {
+     "w": "but",
+     "at": 7.013
+    },
+    {
+     "w": "he",
+     "at": 7.138
+    },
+    {
+     "w": "does",
+     "at": 7.225
+    },
+    {
+     "w": "not",
+     "at": 7.425
+    },
+    {
+     "w": "wait",
+     "at": 7.675
+    }
+   ]
+  },
+  {
+   "label": "Behind the shot",
+   "text": "From behind him: he moves the ball onto his right foot and shoots, low into the bottom corner!",
+   "src": "/plays/narration/semenyo-signature/3.m4a",
+   "seconds": 6.8,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "behind",
+     "at": 0.5
+    },
+    {
+     "w": "him",
+     "at": 0.963
+    },
+    {
+     "w": "he",
+     "at": 1.663
+    },
+    {
+     "w": "moves",
+     "at": 1.825
+    },
+    {
+     "w": "the",
+     "at": 2.125
+    },
+    {
+     "w": "ball",
+     "at": 2.225
+    },
+    {
+     "w": "onto",
+     "at": 2.55
+    },
+    {
+     "w": "his",
+     "at": 2.788
+    },
+    {
+     "w": "right",
+     "at": 2.95
+    },
+    {
+     "w": "foot",
+     "at": 3.263
+    },
+    {
+     "w": "and",
+     "at": 3.55
+    },
+    {
+     "w": "shoots",
+     "at": 3.712
+    },
+    {
+     "w": "low",
+     "at": 4.438
+    },
+    {
+     "w": "into",
+     "at": 4.688
+    },
+    {
+     "w": "the",
+     "at": 4.862
+    },
+    {
+     "w": "bottom",
+     "at": 4.95
+    },
+    {
+     "w": "corner",
+     "at": 5.325
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: carry the ball at speed into space. Then shoot before the defender gets back!",
+   "src": "/plays/narration/semenyo-signature/4.m4a",
+   "seconds": 6.6,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "carry",
+     "at": 1.262
+    },
+    {
+     "w": "the",
+     "at": 1.562
+    },
+    {
+     "w": "ball",
+     "at": 1.65
+    },
+    {
+     "w": "at",
+     "at": 1.938
+    },
+    {
+     "w": "speed",
+     "at": 2.038
+    },
+    {
+     "w": "into",
+     "at": 2.388
+    },
+    {
+     "w": "space",
+     "at": 2.612
+    },
+    {
+     "w": "Then",
+     "at": 3.562
+    },
+    {
+     "w": "shoot",
+     "at": 3.875
+    },
+    {
+     "w": "before",
+     "at": 4.225
+    },
+    {
+     "w": "the",
+     "at": 4.487
+    },
+    {
+     "w": "defender",
+     "at": 4.575
+    },
+    {
+     "w": "gets",
+     "at": 5.0
+    },
+    {
+     "w": "back",
+     "at": 5.25
+    }
+   ]
+  }
+ ]
+}

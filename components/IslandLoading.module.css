@@ -1,4 +1,4 @@
-@font-face{font-family:IslandLoadingBrush;src:url('/stories/films/assets/Knewave-Regular.ttf') format('truetype');font-display:block}
+@font-face{font-family:IslandLoadingBrush;src:url('/stories/films/assets/IslandBrush-Regular.ttf') format('truetype');font-display:block}
 .screen.screen{position:absolute;inset:0;z-index:8;display:block;padding:0;overflow:hidden;background:#2b53e5;color:#fff2d3;backdrop-filter:none;-webkit-backdrop-filter:none;letter-spacing:normal;font-family:var(--font-body),Arial,sans-serif;isolation:isolate}
 .screen::before{content:'';position:absolute;inset:0;background:url('/stories/films/assets/entry-grain.png');opacity:.38;pointer-events:none;z-index:2}
 .art{position:absolute;inset:52% 0 0;width:100%;pointer-events:none}

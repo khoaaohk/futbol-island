@@ -1,0 +1,174 @@
+{
+ "lesson": "exp11_droppingnine",
+ "questions": [
+  {
+   "q": "Blue's nine drops toward midfield. Tap where your six should defend.",
+   "options": [
+    "Between the center backs",
+    "Out toward Blue's ten",
+    "Close to the dropping nine"
+   ],
+   "correct": 2,
+   "explain": "Yes. The six takes the checking nine, so both center backs keep the line connected.",
+   "choiceExplanations": [
+    "Then nobody takes the nine, so it turns freely in front of your back four.",
+    "Leaving the nine free lets Blue turn, and a center back gets dragged out to stop it.",
+    "Yes. The six takes the checking nine, so both center backs keep the line connected."
+   ],
+   "visual": {
+    "kind": "tapSpot",
+    "frame": {
+     "step": 2,
+     "hide": [
+      "six"
+     ],
+     "focus": [
+      "dst",
+      "lcb"
+     ]
+    },
+    "spots": [
+     {
+      "x": 132,
+      "y": 318
+     },
+     {
+      "x": 195,
+      "y": 285
+     },
+     {
+      "x": 126,
+      "y": 272
+     }
+    ]
+   }
+  },
+  {
+   "q": "The forward drops, then the picture changes. Put these moments in order, first to last.",
+   "options": [
+    "Blue's nine drops in front",
+    "Your six takes the checking nine",
+    "Blue's ten occupies your six",
+    "Near center back steps with cover"
+   ],
+   "correct": 0,
+   "explain": "Right. The six takes the nine first, then the ten blocks that handoff, so the center back steps.",
+   "choiceExplanations": [
+    "Right. The six takes the nine first, then the ten blocks that handoff, so the center back steps.",
+    "Your six can only take the nine once it has dropped in front.",
+    "The ten arrives after the handoff, which is why the first plan stops working.",
+    "The center back steps last, once the six is occupied and the nine has received."
+   ],
+   "visual": {
+    "kind": "order",
+    "frames": [
+     {
+      "step": 2,
+      "focus": [
+       "dst"
+      ],
+      "view": {
+       "x": 0,
+       "y": 150,
+       "w": 270,
+       "h": 200
+      }
+     },
+     {
+      "step": 4,
+      "focus": [
+       "six",
+       "dst"
+      ],
+      "view": {
+       "x": 0,
+       "y": 150,
+       "w": 270,
+       "h": 200
+      }
+     },
+     {
+      "step": 5,
+      "focus": [
+       "dr8",
+       "six"
+      ],
+      "view": {
+       "x": 0,
+       "y": 150,
+       "w": 270,
+       "h": 200
+      }
+     },
+     {
+      "step": 7,
+      "focus": [
+       "lcb",
+       "rcb"
+      ],
+      "view": {
+       "x": 0,
+       "y": 150,
+       "w": 270,
+       "h": 200
+      }
+     }
+    ]
+   }
+  },
+  {
+   "q": "Now the nine receives on the right, and the ten still occupies your six. Drag the right center back.",
+   "options": [
+    "Keep retreating toward goal",
+    "Step to the nine with cover",
+    "Tuck in beside your partner"
+   ],
+   "correct": 1,
+   "explain": "Yes. The six is busy with the ten, so the near center back steps while the partner covers.",
+   "choiceExplanations": [
+    "Retreating lets the nine turn and run at your line with no pressure.",
+    "Yes. The six is busy with the ten, so the near center back steps while the partner covers.",
+    "Tucking in leaves the nine unpressured, so it can turn and pick a pass."
+   ],
+   "visual": {
+    "kind": "dragToZone",
+    "frame": {
+     "step": 6,
+     "place": {
+      "dst": {
+       "x": 165,
+       "y": 282
+      }
+     },
+     "ball": "dst",
+     "focus": [
+      "rcb",
+      "dst",
+      "dr8"
+     ]
+    },
+    "drag": "rcb",
+    "zones": [
+     {
+      "x": 165,
+      "y": 372,
+      "w": 40,
+      "h": 28
+     },
+     {
+      "x": 165,
+      "y": 308,
+      "w": 40,
+      "h": 28
+     },
+     {
+      "x": 120,
+      "y": 345,
+      "w": 40,
+      "h": 28
+     }
+    ]
+   }
+  }
+ ]
+}

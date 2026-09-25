@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: bronze in Bangkok",
+   "text": "Bangkok, 2012, the Futsal World Cup. Italy\u2019s captain is number three, Marcio Forte, born in Brazil. The whistle goes! Italy beat Colombia three nil and win the bronze medal.",
+   "src": "/plays/narration/marcio-forte-futsal-signature/1.m4a",
+   "seconds": 13.8,
+   "words": [
+    {
+     "w": "Bangkok",
+     "at": 0.4
+    },
+    {
+     "w": "2012",
+     "at": 1.0
+    },
+    {
+     "w": "the",
+     "at": 2.025
+    },
+    {
+     "w": "Futsal",
+     "at": 2.163
+    },
+    {
+     "w": "World",
+     "at": 2.625
+    },
+    {
+     "w": "Cup",
+     "at": 2.938
+    },
+    {
+     "w": "Italy\u2019s",
+     "at": 3.812
+    },
+    {
+     "w": "captain",
+     "at": 4.25
+    },
+    {
+     "w": "is",
+     "at": 4.7
+    },
+    {
+     "w": "number",
+     "at": 4.85
+    },
+    {
+     "w": "three",
+     "at": 5.15
+    },
+    {
+     "w": "Marcio",
+     "at": 5.763
+    },
+    {
+     "w": "Forte",
+     "at": 6.287
+    },
+    {
+     "w": "born",
+     "at": 6.912
+    },
+    {
+     "w": "in",
+     "at": 7.25
+    },
+    {
+     "w": "Brazil",
+     "at": 7.375
+    },
+    {
+     "w": "The",
+     "at": 8.463
+    },
+    {
+     "w": "whistle",
+     "at": 8.6
+    },
+    {
+     "w": "goes",
+     "at": 8.925
+    },
+    {
+     "w": "Italy",
+     "at": 9.812
+    },
+    {
+     "w": "beat",
+     "at": 10.125
+    },
+    {
+     "w": "Colombia",
+     "at": 10.35
+    },
+    {
+     "w": "three",
+     "at": 10.925
+    },
+    {
+     "w": "nil",
+     "at": 11.238
+    },
+    {
+     "w": "and",
+     "at": 11.575
+    },
+    {
+     "w": "win",
+     "at": 11.713
+    },
+    {
+     "w": "the",
+     "at": 11.95
+    },
+    {
+     "w": "bronze",
+     "at": 12.05
+    },
+    {
+     "w": "medal",
+     "at": 12.5
+    }
+   ]
+  },
+  {
+   "label": "How he plays",
+   "text": "This is how he plays. Forte is the fixo, the last defender. He looks up and finds the pivot, far away. One long pass skips the whole defence!",
+   "src": "/plays/narration/marcio-forte-futsal-signature/2.m4a",
+   "seconds": 10.5,
+   "words": [
+    {
+     "w": "This",
+     "at": 0.35
+    },
+    {
+     "w": "is",
+     "at": 0.525
+    },
+    {
+     "w": "how",
+     "at": 0.65
+    },
+    {
+     "w": "he",
+     "at": 0.838
+    },
+    {
+     "w": "plays",
+     "at": 0.95
+    },
+    {
+     "w": "Forte",
+     "at": 1.85
+    },
+    {
+     "w": "is",
+     "at": 2.35
+    },
+    {
+     "w": "the",
+     "at": 2.487
+    },
+    {
+     "w": "fixo",
+     "at": 2.612
+    },
+    {
+     "w": "the",
+     "at": 3.2
+    },
+    {
+     "w": "last",
+     "at": 3.325
+    },
+    {
+     "w": "defender",
+     "at": 3.7
+    },
+    {
+     "w": "He",
+     "at": 4.65
+    },
+    {
+     "w": "looks",
+     "at": 4.775
+    },
+    {
+     "w": "up",
+     "at": 4.987
+    },
+    {
+     "w": "and",
+     "at": 5.138
+    },
+    {
+     "w": "finds",
+     "at": 5.263
+    },
+    {
+     "w": "the",
+     "at": 5.612
+    },
+    {
+     "w": "pivot",
+     "at": 5.7
+    },
+    {
+     "w": "far",
+     "at": 6.138
+    },
+    {
+     "w": "away",
+     "at": 6.425
+    },
+    {
+     "w": "One",
+     "at": 7.325
+    },
+    {
+     "w": "long",
+     "at": 7.6
+    },
+    {
+     "w": "pass",
+     "at": 7.888
+    },
+    {
+     "w": "skips",
+     "at": 8.262
+    },
+    {
+     "w": "the",
+     "at": 8.625
+    },
+    {
+     "w": "whole",
+     "at": 8.725
+    },
+    {
+     "w": "defence",
+     "at": 8.975
+    }
+   ]
+  },
+  {
+   "label": "Replay: over the defence",
+   "text": "Slowly now. Over three defenders, to the pivot\u2019s feet. He controls it, turns and scores!",
+   "src": "/plays/narration/marcio-forte-futsal-signature/3.m4a",
+   "seconds": 6.8,
+   "words": [
+    {
+     "w": "Slowly",
+     "at": 0.4
+    },
+    {
+     "w": "now",
+     "at": 0.75
+    },
+    {
+     "w": "Over",
+     "at": 1.375
+    },
+    {
+     "w": "three",
+     "at": 1.637
+    },
+    {
+     "w": "defenders",
+     "at": 1.875
+    },
+    {
+     "w": "to",
+     "at": 2.462
+    },
+    {
+     "w": "the",
+     "at": 2.538
+    },
+    {
+     "w": "pivot\u2019s",
+     "at": 2.625
+    },
+    {
+     "w": "feet",
+     "at": 3.038
+    },
+    {
+     "w": "He",
+     "at": 3.725
+    },
+    {
+     "w": "controls",
+     "at": 3.85
+    },
+    {
+     "w": "it",
+     "at": 4.388
+    },
+    {
+     "w": "turns",
+     "at": 4.612
+    },
+    {
+     "w": "and",
+     "at": 5.062
+    },
+    {
+     "w": "scores",
+     "at": 5.188
+    }
+   ]
+  },
+  {
+   "label": "Practise it",
+   "text": "Try it! Look up first. A long, accurate pass to the pivot can skip the whole defence.",
+   "src": "/plays/narration/marcio-forte-futsal-signature/4.m4a",
+   "seconds": 6.6,
+   "words": [
+    {
+     "w": "Try",
+     "at": 0.35
+    },
+    {
+     "w": "it",
+     "at": 0.65
+    },
+    {
+     "w": "Look",
+     "at": 1.0
+    },
+    {
+     "w": "up",
+     "at": 1.163
+    },
+    {
+     "w": "first",
+     "at": 1.35
+    },
+    {
+     "w": "A",
+     "at": 2.237
+    },
+    {
+     "w": "long",
+     "at": 2.362
+    },
+    {
+     "w": "accurate",
+     "at": 2.913
+    },
+    {
+     "w": "pass",
+     "at": 3.325
+    },
+    {
+     "w": "to",
+     "at": 3.65
+    },
+    {
+     "w": "the",
+     "at": 3.737
+    },
+    {
+     "w": "pivot",
+     "at": 3.825
+    },
+    {
+     "w": "can",
+     "at": 4.2
+    },
+    {
+     "w": "skip",
+     "at": 4.388
+    },
+    {
+     "w": "the",
+     "at": 4.7
+    },
+    {
+     "w": "whole",
+     "at": 4.8
+    },
+    {
+     "w": "defence",
+     "at": 5.05
+    }
+   ]
+  }
+ ]
+}

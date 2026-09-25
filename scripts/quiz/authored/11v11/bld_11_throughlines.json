@@ -1,0 +1,71 @@
+{
+ "lesson": "bld_11_throughlines",
+ "questions": [
+  {
+   "q": "The defender has moved across to your right. Tap the space you turn into.",
+   "options": [
+    "Toward the defender on the right",
+    "Straight ahead toward goal",
+    "Back toward our own goal"
+   ],
+   "correct": 1,
+   "explain": "Right. The defender left the middle, so you can turn and face their goal.",
+   "choiceExplanations": [
+    "That carries you into the defender, who has just moved there to close you down.",
+    "Right. The defender left the middle, so you can turn and face their goal.",
+    "There is room to turn, so going backward wastes the chance to face their goal."
+   ],
+   "visual": {
+    "kind": "tapSpot",
+    "frame": {"step": 2, "focus": ["cm", "dst"]},
+    "spots": [
+     {"x": 188, "y": 248},
+     {"x": 135, "y": 210},
+     {"x": 108, "y": 292}
+    ]
+   }
+  },
+  {
+   "q": "You receive in midfield. Which picture gives you room to turn toward goal?",
+   "options": [
+    "Defender stays in front",
+    "Defender presses up close",
+    "Defender moves across"
+   ],
+   "correct": 2,
+   "explain": "Yes. The defender has moved across, so the space straight ahead is clear to turn into.",
+   "choiceExplanations": [
+    "The defender blocks the way ahead, so a turn runs straight into them.",
+    "The defender is tight on you, so turning risks losing the ball. Use your support instead.",
+    "Yes. The defender has moved across, so the space straight ahead is clear to turn into."
+   ],
+   "visual": {
+    "kind": "pickPicture",
+    "pictures": [
+     {"step": 6, "focus": ["cm", "dst"]},
+     {"step": 6, "place": {"dst": {"x": 138, "y": 236}}, "focus": ["cm", "dst"]},
+     {"step": 2, "focus": ["cm", "dst"]}
+    ]
+   }
+  },
+  {
+   "q": "This time the defender slides to your left instead. What should your first touch do?",
+   "options": [
+    "Turn into the space straight ahead",
+    "Pass back to your support",
+    "Turn left into the defender"
+   ],
+   "correct": 0,
+   "explain": "Yes. The middle is empty again, so you turn and face their goal.",
+   "choiceExplanations": [
+    "Yes. The middle is empty again, so you turn and face their goal.",
+    "Passing back is for when a defender blocks you. Here there is room, so turn.",
+    "The defender has moved to that side, so turning left runs into pressure."
+   ],
+   "visual": {
+    "kind": "whatNext",
+    "frame": {"step": 2, "place": {"dst": {"x": 90, "y": 222}}, "focus": ["cm", "dst"], "trails": true}
+   }
+  }
+ ]
+}

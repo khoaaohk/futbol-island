@@ -1,0 +1,10 @@
+{
+ "film": "odegaard-signature",
+ "note": "Arsenal 1-0 Porto (4-2 on penalties), Champions League round of 16 second leg, Emirates Stadium, 12 March 2024, 41st minute. Chapter 1 is keyed from 'Martin' (Rice's pass arrives) through 'turns away' (the turn away from Conceicao), 'fakes a shot' and 'beats another' (the fake and the cut past Pepe) to 'Then the pass', 'through the gap' and 'Goal' (the ball in the net). Chapter 2 draws the sight line on 'already sees' and marks the ball-watching defender on 'only watches'. Every cue starts with a plain word (no contractions).",
+ "chapters": [
+  {"label": "The pass, live", "text": "Arsenal against Porto, 2024. Martin Ødegaard has the ball. He turns away from one defender, fakes a shot, and beats another. Then the pass, through the gap to Trossard... Goal!"},
+  {"label": "Watch it again", "text": "Watch again, slowly. As he dodges, Ødegaard already sees Trossard sneaking in behind a defender who only watches the ball."},
+  {"label": "Through the gap", "text": "He punches it through the gap. First touch, then a low shot into the far corner!"},
+  {"label": "Your turn", "text": "Your turn: scan the pitch before the ball comes to you. Then you already know your next pass."}
+ ]
+}

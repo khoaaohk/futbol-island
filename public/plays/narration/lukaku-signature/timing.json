@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Milan derby, 2021. Ivan Perisic plays a long ball. Romelu Lukaku holds off Franck Kessie, spins, and charges at the defence! They back off... a jink to the left... a low shot, into the near post!",
+   "src": "/plays/narration/lukaku-signature/1.m4a",
+   "seconds": 15.2,
+   "words": [
+    {
+     "w": "Milan",
+     "at": 0.375
+    },
+    {
+     "w": "derby",
+     "at": 0.775
+    },
+    {
+     "w": "2021",
+     "at": 1.275
+    },
+    {
+     "w": "Ivan",
+     "at": 2.638
+    },
+    {
+     "w": "Perisic",
+     "at": 3.0
+    },
+    {
+     "w": "plays",
+     "at": 3.55
+    },
+    {
+     "w": "a",
+     "at": 3.825
+    },
+    {
+     "w": "long",
+     "at": 3.938
+    },
+    {
+     "w": "ball",
+     "at": 4.275
+    },
+    {
+     "w": "Romelu",
+     "at": 5.1
+    },
+    {
+     "w": "Lukaku",
+     "at": 5.525
+    },
+    {
+     "w": "holds",
+     "at": 6.025
+    },
+    {
+     "w": "off",
+     "at": 6.325
+    },
+    {
+     "w": "Franck",
+     "at": 6.562
+    },
+    {
+     "w": "Kessie",
+     "at": 6.938
+    },
+    {
+     "w": "spins",
+     "at": 7.575
+    },
+    {
+     "w": "and",
+     "at": 8.137
+    },
+    {
+     "w": "charges",
+     "at": 8.262
+    },
+    {
+     "w": "at",
+     "at": 8.738
+    },
+    {
+     "w": "the",
+     "at": 8.812
+    },
+    {
+     "w": "defence",
+     "at": 8.9
+    },
+    {
+     "w": "They",
+     "at": 9.75
+    },
+    {
+     "w": "back",
+     "at": 9.925
+    },
+    {
+     "w": "off",
+     "at": 10.225
+    },
+    {
+     "w": "a",
+     "at": 11.0
+    },
+    {
+     "w": "jink",
+     "at": 11.113
+    },
+    {
+     "w": "to",
+     "at": 11.425
+    },
+    {
+     "w": "the",
+     "at": 11.512
+    },
+    {
+     "w": "left",
+     "at": 11.625
+    },
+    {
+     "w": "a",
+     "at": 12.525
+    },
+    {
+     "w": "low",
+     "at": 12.637
+    },
+    {
+     "w": "shot",
+     "at": 12.95
+    },
+    {
+     "w": "into",
+     "at": 13.312
+    },
+    {
+     "w": "the",
+     "at": 13.488
+    },
+    {
+     "w": "near",
+     "at": 13.575
+    },
+    {
+     "w": "post",
+     "at": 13.8
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again, slowly. Lukaku uses his strong body to keep Kessie behind him, and the ball safe. Then he spins away!",
+   "src": "/plays/narration/lukaku-signature/2.m4a",
+   "seconds": 9.0,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "slowly",
+     "at": 1.238
+    },
+    {
+     "w": "Lukaku",
+     "at": 2.263
+    },
+    {
+     "w": "uses",
+     "at": 2.775
+    },
+    {
+     "w": "his",
+     "at": 3.062
+    },
+    {
+     "w": "strong",
+     "at": 3.2
+    },
+    {
+     "w": "body",
+     "at": 3.625
+    },
+    {
+     "w": "to",
+     "at": 3.975
+    },
+    {
+     "w": "keep",
+     "at": 4.075
+    },
+    {
+     "w": "Kessie",
+     "at": 4.325
+    },
+    {
+     "w": "behind",
+     "at": 4.65
+    },
+    {
+     "w": "him",
+     "at": 5.062
+    },
+    {
+     "w": "and",
+     "at": 5.475
+    },
+    {
+     "w": "the",
+     "at": 5.588
+    },
+    {
+     "w": "ball",
+     "at": 5.675
+    },
+    {
+     "w": "safe",
+     "at": 6.025
+    },
+    {
+     "w": "Then",
+     "at": 6.838
+    },
+    {
+     "w": "he",
+     "at": 7.0
+    },
+    {
+     "w": "spins",
+     "at": 7.138
+    },
+    {
+     "w": "away",
+     "at": 7.575
+    }
+   ]
+  },
+  {
+   "label": "The finish",
+   "text": "Early and powerful, past Gianluigi Donnarumma. Inter win the derby, three-nil!",
+   "src": "/plays/narration/lukaku-signature/3.m4a",
+   "seconds": 6.2,
+   "words": [
+    {
+     "w": "Early",
+     "at": 0.375
+    },
+    {
+     "w": "and",
+     "at": 0.725
+    },
+    {
+     "w": "powerful",
+     "at": 0.85
+    },
+    {
+     "w": "past",
+     "at": 1.575
+    },
+    {
+     "w": "Gianluigi",
+     "at": 1.9
+    },
+    {
+     "w": "Donnarumma",
+     "at": 2.45
+    },
+    {
+     "w": "Inter",
+     "at": 3.513
+    },
+    {
+     "w": "win",
+     "at": 3.775
+    },
+    {
+     "w": "the",
+     "at": 3.987
+    },
+    {
+     "w": "derby",
+     "at": 4.075
+    },
+    {
+     "w": "three-nil",
+     "at": 4.588
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: use your body to hold off defenders. Keep the ball safe, so your teammates can join the attack!",
+   "src": "/plays/narration/lukaku-signature/4.m4a",
+   "seconds": 7.8,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "use",
+     "at": 1.163
+    },
+    {
+     "w": "your",
+     "at": 1.413
+    },
+    {
+     "w": "body",
+     "at": 1.525
+    },
+    {
+     "w": "to",
+     "at": 1.85
+    },
+    {
+     "w": "hold",
+     "at": 1.95
+    },
+    {
+     "w": "off",
+     "at": 2.188
+    },
+    {
+     "w": "defenders",
+     "at": 2.4
+    },
+    {
+     "w": "Keep",
+     "at": 3.562
+    },
+    {
+     "w": "the",
+     "at": 3.812
+    },
+    {
+     "w": "ball",
+     "at": 3.9
+    },
+    {
+     "w": "safe",
+     "at": 4.225
+    },
+    {
+     "w": "so",
+     "at": 4.85
+    },
+    {
+     "w": "your",
+     "at": 5.0
+    },
+    {
+     "w": "teammates",
+     "at": 5.162
+    },
+    {
+     "w": "can",
+     "at": 5.75
+    },
+    {
+     "w": "join",
+     "at": 5.938
+    },
+    {
+     "w": "the",
+     "at": 6.213
+    },
+    {
+     "w": "attack",
+     "at": 6.35
+    }
+   ]
+  }
+ ]
+}

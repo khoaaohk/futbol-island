@@ -1,0 +1,350 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Camp Nou, 2007. Messi gets the ball from Xavi, turns past one player, through another's legs, past him again, and away down the right. Past two more, into the box, round the keeper... goal!",
+   "src": "/plays/narration/messi-getafe-2007/1.m4a",
+   "seconds": 14.0,
+   "words": [
+    {
+     "w": "Camp",
+     "at": 0.35
+    },
+    {
+     "w": "Nou",
+     "at": 0.625
+    },
+    {
+     "w": "2007",
+     "at": 0.975
+    },
+    {
+     "w": "Messi",
+     "at": 2.525
+    },
+    {
+     "w": "gets",
+     "at": 2.85
+    },
+    {
+     "w": "the",
+     "at": 3.1
+    },
+    {
+     "w": "ball",
+     "at": 3.2
+    },
+    {
+     "w": "from",
+     "at": 3.5
+    },
+    {
+     "w": "Xavi",
+     "at": 3.725
+    },
+    {
+     "w": "turns",
+     "at": 4.45
+    },
+    {
+     "w": "past",
+     "at": 4.85
+    },
+    {
+     "w": "one",
+     "at": 5.2
+    },
+    {
+     "w": "player",
+     "at": 5.438
+    },
+    {
+     "w": "through",
+     "at": 6.037
+    },
+    {
+     "w": "another's",
+     "at": 6.25
+    },
+    {
+     "w": "legs",
+     "at": 6.7
+    },
+    {
+     "w": "past",
+     "at": 7.15
+    },
+    {
+     "w": "him",
+     "at": 7.463
+    },
+    {
+     "w": "again",
+     "at": 7.6
+    },
+    {
+     "w": "and",
+     "at": 8.025
+    },
+    {
+     "w": "away",
+     "at": 8.15
+    },
+    {
+     "w": "down",
+     "at": 8.5
+    },
+    {
+     "w": "the",
+     "at": 8.738
+    },
+    {
+     "w": "right",
+     "at": 8.825
+    },
+    {
+     "w": "Past",
+     "at": 9.613
+    },
+    {
+     "w": "two",
+     "at": 9.975
+    },
+    {
+     "w": "more",
+     "at": 10.15
+    },
+    {
+     "w": "into",
+     "at": 10.463
+    },
+    {
+     "w": "the",
+     "at": 10.637
+    },
+    {
+     "w": "box",
+     "at": 10.725
+    },
+    {
+     "w": "round",
+     "at": 11.213
+    },
+    {
+     "w": "the",
+     "at": 11.537
+    },
+    {
+     "w": "keeper",
+     "at": 11.625
+    },
+    {
+     "w": "goal",
+     "at": 12.588
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again, slowly. A last burst of speed takes him past the defender. He goes round the keeper, and scores from a tight angle.",
+   "src": "/plays/narration/messi-getafe-2007/2.m4a",
+   "seconds": 9.3,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "slowly",
+     "at": 1.35
+    },
+    {
+     "w": "A",
+     "at": 2.388
+    },
+    {
+     "w": "last",
+     "at": 2.5
+    },
+    {
+     "w": "burst",
+     "at": 2.913
+    },
+    {
+     "w": "of",
+     "at": 3.237
+    },
+    {
+     "w": "speed",
+     "at": 3.362
+    },
+    {
+     "w": "takes",
+     "at": 3.8
+    },
+    {
+     "w": "him",
+     "at": 4.062
+    },
+    {
+     "w": "past",
+     "at": 4.2
+    },
+    {
+     "w": "the",
+     "at": 4.537
+    },
+    {
+     "w": "defender",
+     "at": 4.625
+    },
+    {
+     "w": "He",
+     "at": 5.6
+    },
+    {
+     "w": "goes",
+     "at": 5.725
+    },
+    {
+     "w": "round",
+     "at": 5.975
+    },
+    {
+     "w": "the",
+     "at": 6.237
+    },
+    {
+     "w": "keeper",
+     "at": 6.325
+    },
+    {
+     "w": "and",
+     "at": 6.775
+    },
+    {
+     "w": "scores",
+     "at": 6.925
+    },
+    {
+     "w": "from",
+     "at": 7.4
+    },
+    {
+     "w": "a",
+     "at": 7.537
+    },
+    {
+     "w": "tight",
+     "at": 7.612
+    },
+    {
+     "w": "angle",
+     "at": 7.938
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Just like Maradona's famous goal in 1986! The secret: small, quick touches keep the ball close, and sudden changes of pace.",
+   "src": "/plays/narration/messi-getafe-2007/3.m4a",
+   "seconds": 10.1,
+   "words": [
+    {
+     "w": "Just",
+     "at": 0.375
+    },
+    {
+     "w": "like",
+     "at": 0.537
+    },
+    {
+     "w": "Maradona's",
+     "at": 0.725
+    },
+    {
+     "w": "famous",
+     "at": 1.4
+    },
+    {
+     "w": "goal",
+     "at": 1.775
+    },
+    {
+     "w": "in",
+     "at": 2.075
+    },
+    {
+     "w": "1986",
+     "at": 2.175
+    },
+    {
+     "w": "The",
+     "at": 3.788
+    },
+    {
+     "w": "secret",
+     "at": 3.95
+    },
+    {
+     "w": "small",
+     "at": 4.938
+    },
+    {
+     "w": "quick",
+     "at": 5.588
+    },
+    {
+     "w": "touches",
+     "at": 5.85
+    },
+    {
+     "w": "keep",
+     "at": 6.275
+    },
+    {
+     "w": "the",
+     "at": 6.487
+    },
+    {
+     "w": "ball",
+     "at": 6.575
+    },
+    {
+     "w": "close",
+     "at": 6.888
+    },
+    {
+     "w": "and",
+     "at": 7.6
+    },
+    {
+     "w": "sudden",
+     "at": 7.737
+    },
+    {
+     "w": "changes",
+     "at": 8.113
+    },
+    {
+     "w": "of",
+     "at": 8.512
+    },
+    {
+     "w": "pace",
+     "at": 8.637
+    }
+   ]
+  }
+ ]
+}

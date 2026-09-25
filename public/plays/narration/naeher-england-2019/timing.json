@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The save, live",
+   "text": "Lyon, 2019: the World Cup semi-final. England trail the USA two-one, and win a late penalty. Captain Steph Houghton steps up. Alyssa Naeher waits on her line... Houghton shoots low. Naeher dives to her right. Saved!",
+   "src": "/plays/narration/naeher-england-2019/1.m4a",
+   "seconds": 16.1,
+   "words": [
+    {
+     "w": "Lyon",
+     "at": 0.4
+    },
+    {
+     "w": "2019",
+     "at": 0.85
+    },
+    {
+     "w": "the",
+     "at": 1.825
+    },
+    {
+     "w": "World",
+     "at": 1.925
+    },
+    {
+     "w": "Cup",
+     "at": 2.225
+    },
+    {
+     "w": "semi-final",
+     "at": 2.45
+    },
+    {
+     "w": "England",
+     "at": 3.638
+    },
+    {
+     "w": "trail",
+     "at": 4.088
+    },
+    {
+     "w": "the",
+     "at": 4.425
+    },
+    {
+     "w": "USA",
+     "at": 4.537
+    },
+    {
+     "w": "two-one",
+     "at": 5.162
+    },
+    {
+     "w": "and",
+     "at": 5.7
+    },
+    {
+     "w": "win",
+     "at": 5.838
+    },
+    {
+     "w": "a",
+     "at": 6.075
+    },
+    {
+     "w": "late",
+     "at": 6.175
+    },
+    {
+     "w": "penalty",
+     "at": 6.425
+    },
+    {
+     "w": "Captain",
+     "at": 7.562
+    },
+    {
+     "w": "Steph",
+     "at": 7.975
+    },
+    {
+     "w": "Houghton",
+     "at": 8.3
+    },
+    {
+     "w": "steps",
+     "at": 8.675
+    },
+    {
+     "w": "up",
+     "at": 9.025
+    },
+    {
+     "w": "Alyssa",
+     "at": 9.562
+    },
+    {
+     "w": "Naeher",
+     "at": 9.925
+    },
+    {
+     "w": "waits",
+     "at": 10.15
+    },
+    {
+     "w": "on",
+     "at": 10.412
+    },
+    {
+     "w": "her",
+     "at": 10.512
+    },
+    {
+     "w": "line",
+     "at": 10.65
+    },
+    {
+     "w": "Houghton",
+     "at": 11.475
+    },
+    {
+     "w": "shoots",
+     "at": 11.875
+    },
+    {
+     "w": "low",
+     "at": 12.238
+    },
+    {
+     "w": "Naeher",
+     "at": 12.863
+    },
+    {
+     "w": "dives",
+     "at": 13.1
+    },
+    {
+     "w": "to",
+     "at": 13.6
+    },
+    {
+     "w": "her",
+     "at": 13.688
+    },
+    {
+     "w": "right",
+     "at": 13.825
+    },
+    {
+     "w": "Saved",
+     "at": 14.613
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again, from behind the goal. Naeher stays patient and watches the kicker's body. Then she pushes off hard.",
+   "src": "/plays/narration/naeher-england-2019/2.m4a",
+   "seconds": 8.2,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "from",
+     "at": 1.35
+    },
+    {
+     "w": "behind",
+     "at": 1.5
+    },
+    {
+     "w": "the",
+     "at": 1.887
+    },
+    {
+     "w": "goal",
+     "at": 1.975
+    },
+    {
+     "w": "Naeher",
+     "at": 2.9
+    },
+    {
+     "w": "stays",
+     "at": 3.237
+    },
+    {
+     "w": "patient",
+     "at": 3.638
+    },
+    {
+     "w": "and",
+     "at": 4.125
+    },
+    {
+     "w": "watches",
+     "at": 4.25
+    },
+    {
+     "w": "the",
+     "at": 4.662
+    },
+    {
+     "w": "kicker's",
+     "at": 4.75
+    },
+    {
+     "w": "body",
+     "at": 5.125
+    },
+    {
+     "w": "Then",
+     "at": 5.888
+    },
+    {
+     "w": "she",
+     "at": 6.1
+    },
+    {
+     "w": "pushes",
+     "at": 6.25
+    },
+    {
+     "w": "off",
+     "at": 6.6
+    },
+    {
+     "w": "hard",
+     "at": 6.85
+    }
+   ]
+  },
+  {
+   "label": "Smothered",
+   "text": "Both hands smother the ball by the post, and her teammates mob her!",
+   "src": "/plays/narration/naeher-england-2019/3.m4a",
+   "seconds": 5.0,
+   "words": [
+    {
+     "w": "Both",
+     "at": 0.4
+    },
+    {
+     "w": "hands",
+     "at": 0.675
+    },
+    {
+     "w": "smother",
+     "at": 1.15
+    },
+    {
+     "w": "the",
+     "at": 1.413
+    },
+    {
+     "w": "ball",
+     "at": 1.5
+    },
+    {
+     "w": "by",
+     "at": 1.8
+    },
+    {
+     "w": "the",
+     "at": 1.938
+    },
+    {
+     "w": "post",
+     "at": 2.025
+    },
+    {
+     "w": "and",
+     "at": 2.775
+    },
+    {
+     "w": "her",
+     "at": 2.888
+    },
+    {
+     "w": "teammates",
+     "at": 3.013
+    },
+    {
+     "w": "mob",
+     "at": 3.575
+    },
+    {
+     "w": "her",
+     "at": 3.837
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "The secret? Keepers, stay patient. Watch the kicker's hips and planting foot. Then push off strongly toward the ball.",
+   "src": "/plays/narration/naeher-england-2019/4.m4a",
+   "seconds": 8.4,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "secret",
+     "at": 0.463
+    },
+    {
+     "w": "Keepers",
+     "at": 1.238
+    },
+    {
+     "w": "stay",
+     "at": 1.825
+    },
+    {
+     "w": "patient",
+     "at": 2.1
+    },
+    {
+     "w": "Watch",
+     "at": 3.038
+    },
+    {
+     "w": "the",
+     "at": 3.35
+    },
+    {
+     "w": "kicker's",
+     "at": 3.45
+    },
+    {
+     "w": "hips",
+     "at": 3.8
+    },
+    {
+     "w": "and",
+     "at": 4.15
+    },
+    {
+     "w": "planting",
+     "at": 4.275
+    },
+    {
+     "w": "foot",
+     "at": 4.75
+    },
+    {
+     "w": "Then",
+     "at": 5.487
+    },
+    {
+     "w": "push",
+     "at": 5.725
+    },
+    {
+     "w": "off",
+     "at": 5.975
+    },
+    {
+     "w": "strongly",
+     "at": 6.213
+    },
+    {
+     "w": "toward",
+     "at": 6.7
+    },
+    {
+     "w": "the",
+     "at": 6.912
+    },
+    {
+     "w": "ball",
+     "at": 7.0
+    }
+   ]
+  }
+ ]
+}

@@ -25,7 +25,8 @@ assert.ok(max-min>.2, 'Essential running animation remains active in reduced mot
 rig.update(50, 50, 1/60, 5, false);
 assert.equal(rig.root.position.x,50,'Teleports retain simulation position');
 rig.update(50,50,1/60,5,true,{kick:PLAYER_KICK_CONTACT,kickSide:1});
-assert.ok(right.rotation.x<left.rotation.x-.2,'At contact the striking leg reaches ahead of the supporting leg');
+const T=require('three'),strikeBoot=rig.root.worldToLocal(rig.root.getObjectByName('right-ankle').getWorldPosition(new T.Vector3())),supportBoot=rig.root.worldToLocal(rig.root.getObjectByName('left-ankle').getWorldPosition(new T.Vector3()));
+assert.ok(strikeBoot.z>supportBoot.z+.2,'At contact the striking boot reaches ahead of the supporting boot in world geometry');
 rig.update(50,50,1/60,5,true,{receive:1,kickSide:-1});
 assert.ok(left.rotation.y<-.1,'Reception opens the chosen receiving foot');
 rig.update(50,50,0,5,true);
@@ -119,8 +120,8 @@ assert(joint('left-knee').rotation.x>.65,'landing absorbs impact through knees')
 for(let i=0;i<60;i++)flightSample(5+i/60,{phase:'landing',progress:1,compression:0,pitch:0});
 assert(joint('left-knee').rotation.x<.16,'landing settles into standing pose');
 flightRig.update(0,0,1/60,6,true,{travelMode:'walk',facing:0});
-assert.equal(joint('left-ankle').rotation.z,0,'flight ankle bank clears when walking');
-assert.equal(joint('left-hand').rotation.x,0,'flight hand rotation clears when walking');
+assert.equal(Math.abs(joint('left-ankle').rotation.z),0,'flight ankle bank clears when walking');
+assert.equal(Math.abs(joint('left-hand').rotation.x),0,'flight hand rotation clears when walking');
 flightSample(7,{pitch:.4,turn:1});
 assert(Math.abs(joint('left-shoulder').rotation.y)>.05,'cruise twists shoulder yaw');
 flightRig.update(0,0,1/60,7,true,{travelMode:'walk',facing:0});

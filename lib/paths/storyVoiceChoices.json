@@ -12,6 +12,13 @@
     "voiceId": "uIZsnBL0YK1S5j69bAih",
     "installedRecording": "Samantha - Smooth, Meditative Voice-of-Reason Narrator, supplied 2026-09-18 03:40:41"
   },
-  "status": "Installed user-supplied ElevenLabs MP3 recordings; no API synthesis.",
-  "installedRecordingSpeed": "Original supplied speed; no tempo adjustment. The speed setting above is only for optional API generation."
+  "status": "All 22 riso stories use API-generated ElevenLabs replacements; active content-hashed assets and retiming are selected by riso/data/narrationOverrides.json. Original supplied recordings retained for rollback.",
+  "installedRecordingSpeed": "Original supplied speed; no tempo adjustment. The speed setting above is only for optional API generation.",
+  "activeVoiceIds": [
+    "uIZsnBL0YK1S5j69bAih",
+    "NFG5qt843uXKj4pFvR7C",
+    "nzFihrBIvB34imQBuxub",
+    "Nhs7eitvQWFTQBsf0yiT",
+    "uKGPYP2uuyRQv8SeFre0"
+  ]
 }

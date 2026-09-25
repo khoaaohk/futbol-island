@@ -1,0 +1,9 @@
+{
+ "film": "messi-getafe-2007",
+ "note": "Chapter 1 plays the goal in real time: keep the pause before 'goal!' — the action is keyed from 'gets the ball' (the control) to 'goal' (the ball crossing the line).",
+ "chapters": [
+  {"label": "The goal, live", "text": "Camp Nou, 2007. Messi gets the ball from Xavi, turns past one player, through another's legs, past him again, and away down the right. Past two more, into the box, round the keeper... goal!"},
+  {"label": "Watch it again", "text": "Watch it again, slowly. A last burst of speed takes him past the defender. He goes round the keeper, and scores from a tight angle."},
+  {"label": "Your turn", "text": "Just like Maradona's famous goal in 1986! The secret: small, quick touches keep the ball close, and sudden changes of pace."}
+ ]
+}

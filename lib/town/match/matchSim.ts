@@ -1,3 +1,7 @@
+import {sevenBuildOutY,behindBuildOut,retreatBuildOutY} from "../buildOut";
+import {venueById,type Venue} from '../venues';
+import {sweepGoalFrame,type FrameHit} from '../goalCollisions';
+import {shotProgress,shotHeightAt,shotOffsetAt} from '../shotPlacement';
 import {firstTouchDirection} from "./firstTouch";
 import { laneAdjustment, screenPosition } from "./tacticalMovement";
 // Standalone two-way football match simulation (the "brain + body").
@@ -21,6 +25,15 @@ export interface SimPlayer {
   hx: number; // formation home
   hy: number;
   kick: number; // >0 briefly after striking the ball (for animation)
+  // ---- body-mechanics outputs (read by fieldRuntime each frame; see docs/body-mechanics) ----
+  brake: number; // 0..1 current deceleration / this player's max brake (explicit stop request for the rig)
+  backpedal: number; // 0..1 retreating toward own goal while FACING the carrier (short quick steps)
+  plant: number; // 0..1 hard-plant impulse set when a cut/plant begins, decays over ~0.2 s
+  faceX: number; // unit vector toward the carrier while backpedalling (0,0 otherwise) — the rig's facing
+  faceY: number;
+  intentX?: number; // desired velocity before momentum integration, for anticipatory posing
+  intentY?: number;
+  moveDistance?: number;
 }
 
 const GY_TOP = 8;
@@ -47,6 +60,40 @@ const P = {
   tackleChance: 0.9, // per second when a defender is right on the carrier
   protectTime: 0.55, // a player who just won/received the ball can't be tackled for this long
   interceptRadius: 3.4, // a defender must be right on a pass to cut it out (else sequences never build)
+};
+
+// ---- role movement profiles (docs/body-mechanics/BODY_MECHANICS.md — shared contract) ----
+// speed: max-speed multiplier on P.runSpeed (owner/carry/keeper cases keep their existing
+//        multipliers relative to that); accel: multiplier on P.accel when speeding up;
+// brake: multiplier on P.accel when slowing down (defenders stop hard and plant);
+// turn:  agility — a sharper cut costs 1/turn of the speed; burst: short-range multiplier
+//        within 4 u of a live loose ball (only the keeper springs).
+// Balance-tuned from the contract's starting values (fwd 1.10 / def .94 / gk .90 speed,
+// def accel .85 / turn .85, bleed .8): those raised goals/game 12-27 % over 96 seeds per
+// format — a quick forward outrunning a slow back line and a slower keeper. These values
+// keep the role ordering and feel with no measurable shift (docs/body-mechanics/balance-after.txt).
+export const ROLE_MOVEMENT: Record<Role, { speed: number; accel: number; brake: number; turn: number; burst: number }> = {
+  fwd: { speed: 1.04, accel: 1.15, brake: 1.00, turn: 1.15, burst: 1 },
+  mid: { speed: 1.00, accel: 1.00, brake: 1.05, turn: 1.00, burst: 1 },
+  def: { speed: 0.98, accel: 0.95, brake: 1.30, turn: 0.95, burst: 1 },
+  gk: { speed: 1.00, accel: 1.20, brake: 1.25, turn: 1.00, burst: 1.35 },
+};
+// momentum-model tunables (field units / seconds)
+const M = {
+  plantAngleCos: 0.342, // desired direction more than ~70° off the current velocity → plant first
+  plantSpeed: 25, // only at real running speed (below this a change of direction is just a step)
+  plantBleed: 0.6, // share of entry speed a plant bleeds at turn 1 — scaled by 1/turn (fwd keep more, def less)
+  plantFloorMax: 0.95, // at most this fraction of speed is bled in a plant, at least .4
+  plantDecay: 0.2, // s for the plant impulse to fade
+  plantTargetDist: 10, // a reversal onto a target nearer than this is an arrival stop, not a cut
+  plantCooldown: 0.4, // s after a plant begins before another can trigger (no plant chains)
+  backpedalSpeed: 0.62, // retreat pace while facing the carrier
+  backpedalOn: 28, // target toward own goal within this → backpedal…
+  backpedalOff: 36, // …and keep backpedalling until the target is this far (hysteresis)
+  backpedalDwell: 0.12, // s the raw decision must hold before the state flips (no flicker)
+  backpedalRamp: 0.1, // s time-constant for the 0..1 output engaging
+  backpedalRelease: 0.05, // s for the output to fall 1 → 0 once released (~0.16 s wall-clock at live speed)
+  keeperBurst: 4, // u from a live loose ball inside which the keeper springs (burst)
 };
 
 const GOLD_HOME: [string, number, number, Role][] = [
@@ -156,6 +203,16 @@ export class MatchSim {
   goalHold = 0;
   goalNet: "top" | "bottom" | null = null;
   ballImpact = 0; // 0..1 how hard the ball just hit the net (drives the bulge)
+  // Render-only reads (never used by the AI): a counter per launch plus its shape, so the view can
+  // give the ball real vertical physics (gravity arc, bounces) without changing gameplay.
+  kicks = 0;
+  lastKick = { height: 0, loft: 0, dur: 0, shotHeight: 0, fromY: 0, goalY: 0, aimX: 135 };
+  frameContact={serial:0,height:0,vy:0,x:0,y:0,z:0,part:'post' as 'post'|'crossbar'};
+  private goalVenue:Venue;
+  private frameVenues:Venue[];
+  private frameFrom={x:0,y:0,z:0};
+  private frameTo={x:0,y:0,z:0};
+  private frameHit:FrameHit={x:0,y:0,z:0,t:0,nx:0,ny:0,nz:0,part:'post'};
 
   // ---- user control (the "Play" island) ----
   // When userTeam is set, one player on that team is driven by the human, not the AI.
@@ -183,6 +240,10 @@ export class MatchSim {
 
   private lastOwner: string | null = null;
   private hold = 0;
+  private combination: {runner:string;wall:string;team:Team;x:number;y:number;expires:number}|null = null;
+  private carryUntil = 0;
+  private tacticalReason = "Build through connected support";
+  private carryDirection = {x:0,y:0};
   private carrying = false; // owner is driving the ball forward into space
   private ballFlight = 0; // min time a pass stays airborne before anyone can receive it
   private ballIsShot = false; // ball is a shot on goal (only the keeper can stop it)
@@ -202,9 +263,11 @@ export class MatchSim {
   private rng: () => number;
   private targets: Record<string, { x: number; y: number }> = {};
   private presserId: string | null = null;
+  private defenseIntent = {cover:null as string|null,balance:null as string|null};
   private chaserIds = new Set<string>(); // players running onto a loose ball this frame
   private passMul = 1; // futsal: quicker, zippier passing (smaller, faster game)
   private allowLoft = false; // 11v11: allow lofted balls "over the top" (bigger field)
+  private useBuildOut = false;
   private useOffside = false; // 11v11/9v9 only (futsal & 7v7 have no offside)
   private loftDur = 0; // remaining flight time of a lofted ball (drives the height arc)
   private loftT = 0;
@@ -295,9 +358,15 @@ export class MatchSim {
   // the keeper bounces on his line. BabylonStage's gait animates whatever velocity we
   // output, so even these sub-1 u/s adjustments read as constant purposeful motion.
   private wanderP: Record<string, { f1: number; f2: number; p1: number; p2: number }> = {};
+  // ---- momentum state (see integrate) ----
+  // floor: >0 while a plant is bleeding speed — the speed at which re-acceleration resumes;
+  // back/backT: the backpedal decision with its dwell timer (hysteresis so it never flickers).
+  private mom: Record<string, { floor: number; cool: number; back: boolean; backT: number }> = {};
 
   // stats (for testing) — carries counts SUSTAINED drives (a carry episode >= 15 units)
-  stats = { passes: 0, turnovers: 0, shots: 0, shotsGold: 0, shotsBlue: 0, interceptions: 0, possGold: 0, possBlue: 0, time: 0, recvOwn: 0, looseOwn: 0, looseOpp: 0, carries: 0, carryDist: 0, decided: 0, xgSum: 0 };
+  stats = { passes: 0, turnovers: 0, shots: 0, shotsGold: 0, shotsBlue: 0, interceptions: 0, possGold: 0, possBlue: 0, time: 0, recvOwn: 0, looseOwn: 0, looseOpp: 0, carries: 0, carryDist: 0, decided: 0, xgSum: 0, combinations: 0, combinationReturns: 0, crosses:0, switches:0 };
+  private nextAerial=0;
+  private aerialKind:'cross'|'switch'='switch';
   private carryAcc = 0; // distance covered in the current carry episode
   private carryOwner: string | null = null;
 
@@ -317,6 +386,7 @@ export class MatchSim {
   recv = { id: null as string | null, t: 0, dur: 0, foot: "R" as "L" | "R", faceX: 0, faceY: -1 };
 
   constructor(seed = 1, format: "9v9" | "11v11" | "futsal" | "7v7" = "9v9", squads?: { gold: [string, number, number, Role][]; blue: [string, number, number, Role][] }) {
+    this.goalVenue=venueById(format);this.frameVenues=[this.goalVenue];
     // deterministic PRNG so tests are reproducible
     let s = seed >>> 0;
     this.rng = () => {
@@ -340,6 +410,7 @@ export class MatchSim {
     if (format === "futsal") this.T = { press: 1.7, lane: 1.9, misplace: 2.0, shoot: 1.8, openReq: 8, laneReq: 6, loftP: 0, switchAt: 3, carryP: 0.52, fwdAdv: 145, shotRange: 155, finish: 1.22, lineUp: 50, lineDn: 88 };
     else if (format === "7v7") this.T = { press: 1.5, lane: 1.7, misplace: 1.8, shoot: 1.6, openReq: 9, laneReq: 6.5, loftP: 0, switchAt: 3, carryP: 0.45, fwdAdv: 135, shotRange: 135, finish: 1.2, lineUp: 46, lineDn: 82 };
     else if (format === "11v11") this.T = { press: 1.15, lane: 1.15, misplace: 1.1, shoot: 0.85, openReq: 11, laneReq: 8, loftP: 0.03, switchAt: 4, carryP: 0.28, fwdAdv: 120, shotRange: 110, finish: 0.73, lineUp: 30, lineDn: 62 };
+    this.useBuildOut = format === "7v7";
     this.useOffside = format === "11v11" || format === "9v9"; // futsal & 7v7 don't play offside
     // deal the philosophy cards for this match (seeded → reproducible): two DISTINCT
     // styles from the deck, then `spice` sets how pronounced the identities are today
@@ -367,8 +438,9 @@ export class MatchSim {
     this.kickOff("gold");
   }
   private add(id: string, team: Team, x: number, y: number, role: Role) {
-    this.players[id] = { id, team, role, isGK: role === "gk", x, y, vx: 0, vy: 0, hx: x, hy: y, kick: 0 };
+    this.players[id] = { id, team, role, isGK: role === "gk", x, y, vx: 0, vy: 0, hx: x, hy: y, kick: 0, brake: 0, backpedal: 0, plant: 0, faceX: 0, faceY: 0 };
     (team === "gold" ? this.goldIds : this.blueIds).push(id);
+    this.mom[id] = { floor: 0, cool: 0, back: false, backT: 0 };
     // seeded wander pair — every player gets his own micro-movement rhythm
     this.wanderP[id] = { f1: 0.45 + this.rng() * 0.5, f2: 0.8 + this.rng() * 0.8, p1: this.rng() * Math.PI * 2, p2: this.rng() * Math.PI * 2 };
     // seeded brain: staggered think-clock, personal reaction latency, line-follow state
@@ -558,9 +630,12 @@ export class MatchSim {
   }
 
   kickOff(conceding: Team) {
+    this.combination=null;this.carryUntil=0;this.carrying=false;
     for (const id of this.ids) {
       const p = this.players[id];
       p.x = p.hx; p.y = p.hy; p.vx = 0; p.vy = 0;
+      p.brake = 0; p.backpedal = 0; p.plant = 0; p.faceX = 0; p.faceY = 0;
+      const m = this.mom[id]; if (m) { m.floor = 0; m.cool = 0; m.back = false; m.backT = 0; }
     }
     this.ball.x = 135; this.ball.y = 200; this.ball.vx = 0; this.ball.vy = 0; this.ball.height = 0;
     this.ball.target = null; this.ball.intBy = null; this.ball.lofted = false; this.loftDur = 0;
@@ -603,10 +678,13 @@ export class MatchSim {
     r.t -= dt;
     // ---- kickoff fetch/carry: the ball visibly travels from the net to the spot ----
     if (r.carry === "fetch") {
-      // ball sits dead where it lies while the taker jogs over to collect it. Radius 9 (not 6):
-      // a scored ball rests INSIDE the net, past the pitch clamp the taker walks under — from the
-      // closest legal standing spot he must still be able to reach in and collect it.
-      if (dist(tk.x, tk.y, this.ball.x, this.ball.y) < 9 || r.t < -6) r.carry = "carrying";
+      // ball sits dead where it lies while the taker jogs over to collect it. Radius 10.5 (not 6):
+      // a scored ball rests INSIDE the net (as deep as y=3), past the pitch clamp the taker walks
+      // under — from the closest legal standing spot (target clamp y=12, and a hard-braking
+      // defender stops a few tenths short of it) he must still be able to reach in and collect it.
+      // (was 9: exactly the edge case, which the momentum model's harder brake exposed — takers
+      // stood 9.3 u from the ball until the failsafe, doubling every kick-off's dead time)
+      if (dist(tk.x, tk.y, this.ball.x, this.ball.y) < 10.5 || r.t < -6) r.carry = "carrying";
       return;
     }
     if (r.carry === "carrying") {
@@ -622,7 +700,7 @@ export class MatchSim {
     }
     this.ball.x = r.x; this.ball.y = r.y;
     const near = dist(tk.x, tk.y, r.x, r.y) < 9;
-    const ready=r.kind!=='kickoff'||this.ids.every(id=>{if(id===r.taker)return true;const p=this.players[id];return (p.team==='gold'?p.y>=201:p.y<=199)&&(p.team===tk.team||dist(p.x,p.y,135,200)>=25);});
+    const ready=(r.kind!=='goalkick'||!this.useBuildOut||this.buildOutReady(tk.team))&&(r.kind!=='kickoff'||this.ids.every(id=>{if(id===r.taker)return true;const p=this.players[id];return (p.team==='gold'?p.y>=201:p.y<=199)&&(p.team===tk.team||dist(p.x,p.y,135,200)>=25);}));
     if (ready && ((r.t <= 0 && near) || (r.kind!=='kickoff'&&r.t < -4))) {
       this.ball.owner = r.taker;
       this.possession = tk.team;
@@ -632,6 +710,15 @@ export class MatchSim {
       this.restart = null;
     }
   }
+
+  /** Retreat applies to keeper control / goal kicks, never a centre kickoff. */
+  get buildOutTeam():Team|null {
+    if(!this.useBuildOut)return null;
+    if(this.restart)return this.restart.kind==='goalkick'?this.players[this.restart.taker].team:null;
+    const owner=this.ball.owner?this.players[this.ball.owner]:null;
+    return owner?.isGK?owner.team:null;
+  }
+  private buildOutReady(team:Team){return this.foes(team).every(id=>behindBuildOut(this.players[id].y,team,.5));}
 
   private nearestFoe(id: string, x: number, y: number) {
     const p = this.players[id];
@@ -712,6 +799,30 @@ export class MatchSim {
     }
     return best;
   }
+  /** Sparse pitch-control read: compare arrival times only at plausible receiving options.
+   * Original heuristic, inspired by pitch-control analysis; no full-field grid or ML runtime.
+   */
+  private bestAerial(fromId:string):string|null{
+    if(this.goalVenue.id==='futsal'||this.stats.time<this.nextAerial)return null;
+    const from=this.players[fromId],gy=this.atkGoalY(from.team),foes=this.foes(from.team);
+    let crowd=0;for(const id of foes)if(dist(from.x,from.y,this.players[id].x,this.players[id].y)<65)crowd++;
+    let best:string|null=null,bestValue=-Infinity;
+    for(const id of this.mates(from.team)){
+      const t=this.players[id];if(id===fromId||t.isGK||this.isOffside(from.team,t.y))continue;
+      const width=Math.abs(t.x-from.x),d=dist(t.x,t.y,from.x,from.y);
+      const cross=Math.abs(from.x-135)>62&&Math.abs(from.y-gy)<125&&Math.abs(t.x-135)<55&&Math.abs(t.y-gy)<80&&width>48;
+      const switching=width>110&&(from.x-135)*(t.x-135)<0&&Math.abs(t.y-from.y)<95&&crowd>=2;
+      if((!cross&&!switching)||d>250||d<65)continue;
+      const tx=clamp(t.x+t.vx*.18,15,255),ty=clamp(t.y+t.vy*.18,16,384);
+      const arrival=.18+dist(t.x+t.vx*.18,t.y+t.vy*.18,tx,ty)/(P.runSpeed*ROLE_MOVEMENT[t.role].speed);
+      let defender=Infinity;
+      for(const fid of foes){const f=this.players[fid];defender=Math.min(defender,.18+dist(f.x+f.vx*.18,f.y+f.vy*.18,tx,ty)/(P.runSpeed*ROLE_MOVEMENT[f.role].speed));}
+      const advantage=defender-arrival;if(advantage<.12)continue;
+      const value=advantage*35+(cross?20:width*.09)-d*.025;
+      if(value>bestValue){bestValue=value;best=id;this.aerialKind=cross?'cross':'switch';}
+    }
+    return best;
+  }
   // keep-ball pass: prefer an OPEN team-mate, but with a strong FORWARD/lateral bias so
   // possession is worked UP the pitch (build-up), not endlessly recycled to the keeper.
   private safePass(fromId: string): string | null {
@@ -759,6 +870,8 @@ export class MatchSim {
 
   private launch(fromId: string, tx: number, ty: number, speed: number, height: number, target: string | null, loft = 0) {
     const from = this.players[fromId];
+    if(this.combination&&!(fromId===this.combination.wall&&target===this.combination.runner))this.combination=null;
+    this.carrying=false;this.carryUntil=0;
     this.passRelease=target?{id:fromId,x:from.x,y:from.y,tx,ty,target}:null;
     const dx = tx - from.x;
     const dy = ty - from.y;
@@ -776,19 +889,30 @@ export class MatchSim {
     this.ball.lofted = loft > 0;
     if (loft > 0) { this.loftPeak = loft; this.loftT = 0; this.loftDur = Math.max(0.55, L / (speed * 0.72)); }
     else { this.loftDur = 0; }
+    this.kicks++; this.lastKick.height = height; this.lastKick.loft = loft; this.lastKick.dur = this.loftDur;
+    this.lastKick.shotHeight=0;this.lastKick.fromY=from.y;this.lastKick.goalY=ty;this.lastKick.aimX=tx;
     from.kick = 1;
   }
   // a lofted ball over the top — flies through the air (no ground interception), arcs down
   // to a forward runner. Used only in 11v11 (bigger field).
-  private doLoft(fromId: string, toId: string) {
+  private doLoft(fromId: string, toId: string,kind:'through'|'cross'|'switch'='through') {
     const from = this.players[fromId];
     const t = this.players[toId];
     const dir = this.dirY(from.team);
-    const tx = t.x;
-    const ty = t.y + dir * 14; // lead the run — the ball drops in ahead of them
+    const tx = clamp(t.x+(kind==='through'?0:t.vx*.18),15,255);
+    const ty = clamp(t.y+(kind==='through'?dir*14:t.vy*.18),16,384);
     const D = dist(from.x, from.y, tx, ty);
     const speed = clamp(D * 1.5 + 165, 250, 430);
-    this.launch(fromId, tx, ty, speed, 0, toId, 4.4); // peak ~4.4 units — clears the defence
+    const peak=kind==='cross'?3.2:kind==='switch'?Math.min(5,3+D*.006):4.4;
+    this.launch(fromId, tx, ty, speed, 0, toId, peak);
+    if(kind!=='through'){
+      // Integrate the same air drag as ballLogic so the ball lands at its receiving lane.
+      const drag=P.friction*.35;this.loftDur=-Math.log(Math.max(.05,1-drag*D/speed))/drag;this.lastKick.dur=this.loftDur;
+      this.nextAerial=this.stats.time+(this.goalVenue.id==='7v7'?7:5);
+      if(kind==='cross')this.stats.crosses++;else this.stats.switches++;
+      this.tacticalReason=kind==='cross'?'High cross: find the runner arriving in the box':'Switch play: escape pressure into the far-side space';
+      this.msg=kind==='cross'?'High cross':'Switch of play';this.msgT=1.6;
+    }
     this.passCd = 0.5;
     this.stats.passes++;
     this.lastOwner = fromId;
@@ -850,6 +974,21 @@ export class MatchSim {
     } else {
       this.launch(fromId, tx, ty, speed, height, toId);
     }
+    const prior=this.combination;
+    this.combination=null;
+    if(!intercepted&&prior?.wall===fromId&&prior.runner===toId){
+      this.stats.combinationReturns++;
+    }else if(!intercepted&&!from.isGK&&!t.isGK&&D>=18&&D<=(this.passMul>1?105:90)&&Math.abs(t.y-from.y)<(this.passMul>1?70:55)&&!this.lastManRisk(fromId)){
+      const side=from.x>=t.x?1:-1;
+      const futsal=this.passMul>1;
+      const rx=clamp(t.x+side*(futsal?20:24),22,248),ry=clamp(from.y+dir*(futsal?28:38),28,372);
+      if(!this.isOffside(from.team,ry)){
+        this.combination={runner:fromId,wall:toId,team:from.team,x:rx,y:ry,expires:this.stats.time+(futsal?2.2:2.8)};
+        this.tacticalReason=futsal&&t.role==='fwd'?"Pivot link: lay off to the rotating runner":"Pass and run beyond the wall player";
+        this.stats.combinations++;
+      }
+    }
+    this.carryUntil=0;
     this.passCd = 0.48;
     this.stats.passes++;
   }
@@ -874,6 +1013,8 @@ export class MatchSim {
       this.shotRead = 20; // keeper picks it up far too late
     } else if (roll < xg + 0.3) {
       aimx = 135 + side * GHALF * (1.2 + this.rng() * 0.42); // dragged wide — far enough that some run OUT (goal kick), not always gathered
+      if(roll<xg+.07)aimx=135+side*GHALF*1.08; // a narrow miss strikes a post
+      else if(roll<xg+.12)aimx=135+side*GHALF*.45; // high miss clips the bar
       this.shotRead = 150; // keeper watches it past the post
     } else {
       aimx = 135 + side * GHALF * this.rng() * 0.55; // too close to the keeper
@@ -889,7 +1030,12 @@ export class MatchSim {
     // (linear in distance) still leaves ~75 u/s at the line — else long-range "goals"
     // died 2 units short and were quietly demoted to loose balls (the goal leak)
     if (this.shotIsGoal) spd = Math.max(spd, dist(from.x, from.y, aimx, gy) * P.friction + 75);
+    // Compact-court strikes should snap toward goal rather than read like a pass.
+    if (this.goalVenue.id === 'futsal') spd *= 1.3;
     this.launch(fromId, aimx, gy, spd, 1.0, null);
+    // Placement is presentation metadata: preserve the existing outcome and random sequence.
+    // Some finishes stay low; the strongest corner placements rise into the upper net.
+    this.lastKick.shotHeight=roll<xg*.65?.96:roll<xg?.18:roll>=xg+.07&&roll<xg+.12?1.25:.45;
     this.ballIsShot = true;
     this.shotIsGoal = roll < xg; // re-assert AFTER launch() wipes flight state
     this.shotAim = { x: aimx, y: gy }; // remembered so a decided goal can be re-steered if it ever stalls
@@ -910,7 +1056,8 @@ export class MatchSim {
     // assisted (corner) — only the pace scales, so shooting is accessible but expressive.
     const pw = clamp(this.userShootPower, 0, 1);
     // ~20% over the original (1.25 + 0.55·pw) so the human's strike rips too
-    this.launch(fromId, aimx, gy, P.shotSpeed * (1.5 + 0.66 * pw), 0.5 + 0.6 * pw, null);
+    this.launch(fromId, aimx, gy, P.shotSpeed * (1.5 + 0.66 * pw) * (this.goalVenue.id === 'futsal' ? 1.3 : 1), 0.5 + 0.6 * pw, null);
+    this.lastKick.shotHeight=.22+.74*pw;
     this.ballIsShot = true;
     this.shotIsGoal = false; // no pre-decided outcome for the human
     this.shotRead = 80; // the keeper reads a human strike honestly — placement & power decide it
@@ -936,6 +1083,8 @@ export class MatchSim {
   }
   private stepOnce(dt: number) {
     this.stats.time += dt;
+    const combination=this.combination;
+    if(combination&&(this.stats.time>combination.expires||this.possession!==combination.team||this.restart||this.goalHold>0))this.combination=null;
 
     // ---- goal celebration: ball dead in the net, but NOBODY freezes mid-stride ----
     // the scorer wheels away, his nearest team-mates converge to celebrate, and the
@@ -1033,7 +1182,13 @@ export class MatchSim {
     this.updateShape(dt); // team line heights first (the shared prior)…
     this.brainLogic(dt); // …then each player's throttled individual read of it
     this.computeTargets(dt);
-    if (this.userTeam) this.applyUserTarget();
+    if (this.userTeam) {
+      this.applyUserTarget();
+      const retreat=this.buildOutTeam;
+      if(retreat&&this.userId&&this.players[this.userId].team!==retreat){
+        this.targets[this.userId].y=retreatBuildOutY(this.targets[this.userId].y,retreat);
+      }
+    }
     this.integrate(dt);
     // input buffering: an action pressed just before you can act is held for a short window
     // so it fires the instant it's legal (instead of being dropped).
@@ -1056,17 +1211,45 @@ export class MatchSim {
   // opponent goal): distance to the nearest opponent inside a ~30-unit-wide lane, capped
   // at 45 — the "is the lane genuinely open?" read that invites a dribble.
   private openLaneLen(id: string): number {
-    const o = this.players[id];
-    const dir = this.dirY(o.team);
-    let lane = 45;
-    for (const fid of this.foes(o.team)) {
-      const f = this.players[fid];
-      if (f.isGK) continue;
-      const fwdD = (f.y - o.y) * dir;
-      if (fwdD < -2) continue; // behind — beaten already
-      if (Math.abs(f.x - o.x) < 15 && fwdD < lane) lane = Math.max(0, fwdD);
+    const o=this.players[id],dir=this.dirY(o.team);
+    let best=-1;
+    // Three short forward corridors: straight, left half-space, right half-space.
+    // Read only on the existing decision clock. Store one selected heading for the run.
+    for(const side of [0,-.6,.6]){
+      const dx=side,dy=dir*Math.sqrt(1-side*side);
+      let lane=this.passMul>1?36:45;
+      if(o.x+dx*lane<18||o.x+dx*lane>252)continue;
+      for(const fid of this.foes(o.team)){
+        const f=this.players[fid];
+        const fx=f.x-o.x,fy=f.y-o.y,along=fx*dx+fy*dy;
+        if(along>=-2&&Math.abs(fx*dy-fy*dx)<15)lane=Math.min(lane,Math.max(0,along));
+      }
+      const score=lane-(side===0?0:3);
+      if(score>best){best=score;this.carryDirection.x=dx;this.carryDirection.y=dy;}
     }
-    return lane;
+    return Math.max(0,best);
+  }
+  /** Read on demand by diagnostics; no new rendering or simulation loop. */
+  get tacticalIntent(){
+    return {reason:this.tacticalReason,combination:this.combination?{...this.combination}:null,
+      carrying:this.carrying,carryDirection:{...this.carryDirection},presser:this.presserId,
+      defense:{...this.defenseIntent,reason:"First defender presses; goal-side cover protects the lane; remaining unit recovers compactly"},
+      style:this.passMul>1?"futsal rotations and pivot links":"outdoor width and depth"};
+  }
+  private combinationReturn(owner:string):string|null {
+    const c=this.combination;
+    if(!c||c.wall!==owner||this.stats.time>c.expires)return null;
+    const wall=this.players[owner],runner=this.players[c.runner];
+    const d=dist(wall.x,wall.y,runner.x,runner.y);
+    if(d<14||d>95||(runner.y-wall.y)*this.dirY(wall.team)<8||this.isOffside(wall.team,runner.y))return null;
+    const nearest=this.nearestFoe(runner.id,runner.x,runner.y);
+    if(nearest&&nearest.d<9){this.combination=null;this.tacticalReason="Return runner marked: find another route";return null;}
+    for(const fid of this.foes(wall.team)){
+      const f=this.players[fid];
+      if(dist(f.x,f.y,wall.x,wall.y)>8&&segDist(f.x,f.y,wall.x,wall.y,runner.x,runner.y)<this.T.laneReq){this.combination=null;this.tacticalReason="Return lane screened: recycle or carry";return null;}
+    }
+    this.tacticalReason="Return into the space opened by the first pass";
+    return runner.id;
   }
   // last-man read: never dribble around in front of your own goal — if no outfield
   // team-mate is goal-side of the carrier while the ball is still in the defensive
@@ -1091,13 +1274,10 @@ export class MatchSim {
   // gets cushioned, and settles slightly AHEAD of the receiver in his stride, on the
   // chosen receiving foot. Keepers use their hands, so their claims stay immediate.
   // `tight` (the human's player) takes a shorter, closer touch — control feel matters.
-  private startTrap(id: string) {
-    const p = this.players[id];
-    this.ball.lofted = false; this.loftDur = 0;
-    const bvx = this.ball.vx, bvy = this.ball.vy;
-    this.ball.vx = 0; this.ball.vy = 0;
-    if (p.isGK) { this.trapT = 0; this.recv.id = null; this.recv.t = 0; return; } // hands — caught clean, no trap
-    const inSp = Math.hypot(bvx, bvy); // pace still on the arriving ball
+  /** Shared preview/commit geometry: presentation and control choose the same foot. */
+  get receptionRadius(){return P.ctrlRadius;}
+  receptionPlan(id:string,bvx=this.ball.vx,bvy=this.ball.vy){
+    const p=this.players[id];
     const tight = id === this.userId;
     // next-action direction: take it in STRIDE — the receiver's own movement first,
     // else his attacking direction (a standing player still plays it slightly in front)
@@ -1105,6 +1285,11 @@ export class MatchSim {
     const mv = Math.hypot(ux, uy);
     if (mv > 12) { ux /= mv; uy /= mv; } else { ux = 0; uy = this.dirY(p.team); }
     if(!tight){
+      // Prepare the NEXT action before contact instead of opening toward the chase
+      // back to the incoming ball. The same plan drives preview and actual cushion.
+      const wall=this.combination?.wall===id?this.combination:null;
+      if(wall){const runner=this.players[wall.runner],dx=runner.x-p.x,dy=runner.y-p.y,L=Math.hypot(dx,dy)||1;ux=dx/L;uy=dy/L;}
+      else if(uy*this.dirY(p.team)<.2){ux=0;uy=this.dirY(p.team);}
       const direction=firstTouchDirection(p,{x:ux,y:uy},this.foes(p.team).map(id=>this.players[id]));
       ux=direction.x;uy=direction.y;
     }
@@ -1128,6 +1313,17 @@ export class MatchSim {
     const pressedBehind = !!nf && nf.d < P.pressDist * 0.8 &&
       (nf.p.x - p.x) * fx + (nf.p.y - p.y) * fy < 0; // presser is BEHIND the open shape
     if (pressedBehind) foot = fromRight ? "R" : "L"; // shield it — near-foot trap
+    return {foot,faceX:fx,faceY:fy,ux,uy,mv,tight};
+  }
+  private startTrap(id: string) {
+    const p = this.players[id];
+    this.ball.lofted = false; this.loftDur = 0;
+    const bvx = this.ball.vx, bvy = this.ball.vy;
+    this.ball.vx = 0; this.ball.vy = 0;
+    if (p.isGK) { this.trapT = 0; this.recv.id = null; this.recv.t = 0; return; } // hands — caught clean, no trap
+    const inSp = Math.hypot(bvx, bvy); // pace still on the arriving ball
+    const {foot,faceX:fx,faceY:fy,ux,uy,mv,tight}=this.receptionPlan(id,bvx,bvy);
+    const rx=-fy,ry=fx;
     // ---- touch weight ----
     // firmer arriving ball + tired legs + a lapsing mind = heavier touch that pops
     // further out for a beat before control tightens (never for the human's tight touch)
@@ -1285,6 +1481,7 @@ export class MatchSim {
       // (or nobody safe short) → go long: a lofted ball over the top in 11v11, else a
       // driven kick up the pitch. The keeper never dribbles upfield or shoots.
       if (o.isGK) {
+        if(this.useBuildOut&&!this.buildOutReady(o.team))return;
         if (canAct) {
           this.carrying = false;
           // distribution is a philosophy read: a DIRECT side's keeper often skips the
@@ -1307,7 +1504,10 @@ export class MatchSim {
 
       // decision (Man-City progression: pass forward if on, else CARRY into space,
       // else recycle to keep it — shoot when a real sight of goal opens up)
-      if (clearChance && (this.passCd <= 0 || pressured)) {
+      const returnTo=canAct?this.combinationReturn(owner):null;
+      if(returnTo&&!clearChance){
+        this.carrying=false;this.doPass(owner,returnTo,1.12);
+      } else if (clearChance && (this.passCd <= 0 || pressured)) {
         this.carrying = false;
         this.doShot(owner);
       } else if (canAct && shootChance > 0 && this.rng() < shootChance) {
@@ -1344,6 +1544,10 @@ export class MatchSim {
           return;
         }
         let handled = false;
+        const aerial=this.hold>.25&&!clearChance?this.bestAerial(owner):null;
+        if(aerial&&!pressured&&this.rng()<(this.aerialKind==='cross'?.65:.5)){
+          this.doLoft(owner,aerial,this.aerialKind);return;
+        }
         // ---- engaged mid-carry: beat the man or release ----
         // a defender has stepped out to stop the drive. If he's ISOLATED (no second
         // defender covering near him) the carrier may knock it past him on the open
@@ -1397,7 +1601,9 @@ export class MatchSim {
             carryP = (0.3 + 0.45 * gain) * this.persona[o.team].carry * (1 - this.fatigue * 0.3) * (ph === "counter" ? 1.3 : 1);
           }
         }
-        if (carryP > 0 && this.rng() < carryP) {
+        if (carryP > 0 && ((this.carrying&&this.stats.time<this.carryUntil)||this.rng() < carryP)) {
+          if(!this.carrying)this.carryUntil=this.stats.time+(this.passMul>1?.65:.95);
+          this.tacticalReason="Carry into the open corridor until a defender engages";
           this.carrying = true; // TAKE the lane (integrate() gives the carry a gallop)
           this.passCd = 0.4; // decide again shortly — release when someone engages
         } else if (ph === "counter" && fwd) {
@@ -1475,6 +1681,26 @@ export class MatchSim {
       const prevBX = this.ball.x, prevBY = this.ball.y; // pre-step position (goal-line crossing test)
       this.ball.x += this.ball.vx * dt;
       this.ball.y += this.ball.vy * dt;
+      // Sweep the actual round goal frame before scoring. Use the same placement
+      // curve as presentation, so a visible post/bar hit is a real loose-ball rebound.
+      if(this.ballIsShot&&this.lastKick.shotHeight>0){
+        const venue=this.goalVenue,k=this.lastKick,a=this.frameFrom,b=this.frameTo;
+        const p0=shotProgress(k,prevBY),p1=shotProgress(k,this.ball.y),base=(venue.elevation??0)+.295;
+        a.x=venue.x+(prevBX-135)*venue.width/250+shotOffsetAt(k,p0,venue.goalWidth,venue.width);
+        a.y=base+shotHeightAt(k,p0,venue.goalHeight);a.z=venue.z+(prevBY-200)*venue.length/380;
+        b.x=venue.x+(this.ball.x-135)*venue.width/250+shotOffsetAt(k,p1,venue.goalWidth,venue.width);
+        b.y=base+shotHeightAt(k,p1,venue.goalHeight);b.z=venue.z+(this.ball.y-200)*venue.length/380;
+        if(sweepGoalFrame(a,b,.19,this.frameHit,this.frameVenues)){
+          const hit=this.frameHit,vx=(b.x-a.x)/dt,vy=(b.y-a.y)/dt,vz=(b.z-a.z)/dt,dot=vx*hit.nx+vy*hit.ny+vz*hit.nz;
+          this.ball.x=135+(hit.x-venue.x)*250/venue.width;this.ball.y=200+(hit.z-venue.z)*380/venue.length;
+          this.ball.vx=(vx-1.72*dot*hit.nx)*250/venue.width;this.ball.vy=(vz-1.72*dot*hit.nz)*380/venue.length;
+          this.ball.height=Math.max(0,hit.y-base);this.frameContact.serial++;this.frameContact.height=this.ball.height;this.frameContact.vy=vy-1.72*dot*hit.ny;this.frameContact.part=hit.part;
+          // Surface contact stays anchored to the frame after the ball rebounds.
+          this.frameContact.x=hit.x-hit.nx*.19;this.frameContact.y=hit.y-hit.ny*.19;this.frameContact.z=hit.z-hit.nz*.19;
+          this.ballIsShot=false;this.shotIsGoal=false;this.ball.lofted=false;this.loftDur=0;this.ball.target=null;this.ball.intBy=null;this.ballFlight=.12;
+          this.msg=hit.part==='post'?'Off the post!':'Off the crossbar!';this.msgT=1.2;return;
+        }
+      }
       // a lofted ball keeps its pace (less friction while airborne), and arcs up then down
       const fr = Math.max(0, 1 - (this.loftDur > 0 ? P.friction * 0.35 : P.friction) * dt);
       this.ball.vx *= fr; this.ball.vy *= fr;
@@ -1507,7 +1733,8 @@ export class MatchSim {
         const lineY = crossedTop ? GY_TOP : GY_BOT;
         const f = (lineY - prevBY) / (this.ball.y - prevBY || 1);
         const xc = prevBX + (this.ball.x - prevBX) * f; // x where it actually crossed the line
-        if (Math.abs(xc - 135) < GHALF) {
+        const shotHeight=this.ballIsShot&&this.lastKick.shotHeight>0?shotHeightAt(this.lastKick,shotProgress(this.lastKick,lineY),this.goalVenue.goalHeight):0;
+        if (Math.abs(xc - 135) < GHALF&&shotHeight+.295+.19<this.goalVenue.goalHeight+.105) {
           if (crossedTop) { this.score.gold++; this.msg = "GOAL — Gold!"; this.goalNet = "top"; }
           else { this.score.blue++; this.msg = "GOAL — Blue!"; this.goalNet = "bottom"; }
           this.msgT = 2.4;
@@ -1670,6 +1897,21 @@ export class MatchSim {
         // first touch: cushion the arriving ball in (reads incoming velocity — must run
         // while the flight momentum is still on the ball)
         this.startTrap(claimer);
+        if(!cp.isGK&&claimer!==this.userId&&claimVia==='recv'){
+          const returnTo=this.combinationReturn(claimer);
+          const nearby=this.nearestFoe(claimer,cp.x,cp.y);
+          const lane=this.openLaneLen(claimer);
+          // Safe receivers carry THROUGH the cushion; close pressure retains the
+          // deliberate shielding beat. A pre-read wall return needs only one touch.
+          if(returnTo){
+            this.passCd=Math.min(this.passCd,.12);
+            this.carrying=false;
+          }else if((!nearby||nearby.d>16)&&lane>=25&&!this.lastManRisk(claimer)){
+            this.carrying=true;this.carryUntil=this.stats.time+(this.passMul>1?.5:.75);
+            this.passCd=Math.min(this.passCd,.28);
+            this.tacticalReason="Receive on the move into the free next-action corridor";
+          }else this.carrying=false;
+        }
       }
     }
   }
@@ -1773,17 +2015,30 @@ export class MatchSim {
   }
 
   private computeTargets(dt: number) {
+    const retreat=this.buildOutTeam;
     const rst = this.restart; // dead ball: teams get SET rather than chase/press
     const poss = this.possession;
     const defTeam: Team = poss === "gold" ? "blue" : "gold";
     const dir = this.dirY(poss);
     const ballOwner = this.ball.owner;
     const ownerPos = ballOwner ? { x: this.players[ballOwner].x, y: this.players[ballOwner].y } : { x: this.ball.x, y: this.ball.y };
-    const presser = this.nearestOfTeam(defTeam, ownerPos.x, ownerPos.y);
+    let presser = this.nearestOfTeam(defTeam, ownerPos.x, ownerPos.y);
+    const previous=this.presserId?this.players[this.presserId]:null;
+    if(previous&&previous.team===defTeam&&presser&&previous.id!==this.userId){
+      const candidate=this.players[presser];
+      if(dist(previous.x,previous.y,ownerPos.x,ownerPos.y)<dist(candidate.x,candidate.y,ownerPos.x,ownerPos.y)+8)presser=previous.id;
+    }
     this.presserId = presser;
     // second defender provides COVER behind the presser, so passing lanes near the
     // ball are contested by two and the block engages rather than only recycling
-    const cover = this.nearestOfTeam(defTeam, ownerPos.x, ownerPos.y, presser);
+    let cover:string|null=null,coverScore=Infinity;
+    const ownGoal=this.ownGoalY(defTeam);
+    for(const id of this.mates(defTeam)){
+      const p=this.players[id];if(p.isGK||id===presser)continue;
+      const wrongSide=Math.max(0,Math.abs(p.y-ownGoal)-Math.abs(ownerPos.y-ownGoal));
+      const score=dist(p.x,p.y,ownerPos.x,ownerPos.y)+wrongSide*.8;
+      if(score<coverScore){coverScore=score;cover=id;}
+    }
     // third defender gives BALANCE — tucks central goal-side of the cover so the press
     // is a coordinated unit (press → cover → balance), never three men chasing one ball.
     // Only with 6+ outfielders (9v9/11v11): in small-sided games committing a third man
@@ -1796,6 +2051,7 @@ export class MatchSim {
         if (d < balD) { balD = d; balance = bid; }
       }
     }
+    this.defenseIntent.cover=cover;this.defenseIntent.balance=balance;
     const ph = this.phaseOf(poss); // one phase read per frame drives both teams' shape
 
     // ---- attacking support cast (passing triangle + third-man runner) ----
@@ -1880,6 +2136,18 @@ export class MatchSim {
         // kick-in / corner / goal kick: both sides take up their normal shape around the
         // spot (the code below reads the dead ball's position), minus pressing/chasing
       }
+      if(retreat){
+        if(p.team!==retreat){
+          this.targets[id]={x:p.hx,y:retreatBuildOutY(p.hy,retreat,8)};
+          continue;
+        }else if(!p.isGK&&id!==ballOwner){
+          // Two wide short outlets plus staggered midfield options demonstrate a
+          // buildup, rather than leaving teammates beyond the retreating press.
+          const depth=p.role==='def'?42:p.role==='mid'?100:Math.abs(sevenBuildOutY(retreat)-this.ownGoalY(retreat))+12;
+          this.targets[id]={x:p.hx,y:clamp(this.ownGoalY(retreat)+this.dirY(retreat)*depth,18,382)};
+          continue;
+        }
+      }
       if (!staged) {
       if (loose && chasers.has(id)) {
         tx = this.ball.x + this.ball.vx * 0.16; // run onto the ball, leading it
@@ -1948,25 +2216,31 @@ export class MatchSim {
           const nf = this.nearestFoe(id, p.x, p.y);
           if (this.carrying) {
             // drive toward goal, angling away from the nearest defender
-            tx = p.x + (135 - p.x) * 0.12;
-            ty = p.y + dir * 34;
+            tx = p.x + this.carryDirection.x * 34;
+            ty = p.y + (this.carryDirection.y || dir) * 34;
             if (nf && nf.d < 22) tx += (p.x - nf.p.x >= 0 ? 1 : -1) * 12;
+          } else if(this.recv.id===id&&this.recv.t>0&&(!nf||nf.d>16)){
+            // Let a prepared one-touch receiver step through contact as well; only
+            // nearby pressure asks for a stationary shielding touch.
+            tx=p.x+this.touchX*3;ty=p.y+this.touchY*3;
           } else if (nf && nf.d < 16) {
             tx = p.x + (p.x - nf.p.x >= 0 ? 1 : -1) * 6; ty = p.y; // shield & look to pass
           } else {
             tx = p.x; ty = p.y; // hold, look up
           }
+        } else if(this.combination?.runner===id&&this.combination.team===poss){
+          tx=this.combination.x;ty=this.combination.y;
         } else if (tmr === id && tmrRecv && this.depth(poss, this.ball.y) > 170) {
           // THIRD-MAN RUN: as the pass travels, burst BEYOND the receiver into the space
           // the pass has opened — arriving as the next option the moment it's controlled
           tx = tmrRecv.x + (p.hx >= 135 ? 22 : -22);
-          ty = clamp(tmrRecv.y + dir * 46, 26, 374);
+          ty = clamp(tmrRecv.y + dir * (this.passMul>1?30:46), 26, 374);
         } else if (s1 === id) {
           // SHORT OUTLET (triangle point one): show at a lateral/back angle so the
           // carrier always has a safe ball — never hiding behind a defender square-on
           const side = p.x >= ownerPos.x ? 1 : -1;
           tx = ownerPos.x + side * 27;
-          ty = ownerPos.y - dir * 13;
+          ty = ownerPos.y - dir * (this.passMul>1?10:13);
         } else if (s2 === id) {
           // LINE-BREAKER (triangle point two): sit in the half-space between the lines
           // ahead of the ball — never dropping BACK to it (a striker already beyond the
@@ -2039,7 +2313,7 @@ export class MatchSim {
         // drops/steps as one but ripples through like humans, never lock-step.
         const b = this.brain[id];
         const pline = b ? b.pl : this.shape[defTeam].line;
-        const bandOff = p.role === "def" ? (this.defOff[id] ?? 0) : p.role === "mid" ? 55 : 100; // band separation (+ back-line stagger)
+        const bandOff = p.role === "def" ? (this.defOff[id] ?? 0) : p.role === "mid" ? (this.passMul>1?40:55) : (this.passMul>1?74:100); // band separation (+ back-line stagger)
         const shiftX = clamp((this.ball.x - 135) * 0.34, -46, 46);
         const lineY = ownY + into * clamp(pline + bandOff, 18, 320);
         if (id === presser && ballOwner) {
@@ -2051,7 +2325,7 @@ export class MatchSim {
           // the cover man CONVERGES on the carrier too — two shirts visibly swarming.
           const squeeze = this.persona[defTeam].press > 1 && ballDepth < 190;
           tx = squeeze ? ownerPos.x * 0.72 + 135 * 0.28 : ownerPos.x * 0.45 + 135 * 0.55;
-          ty = ownerPos.y - into * (squeeze ? 8 : 17);
+          ty = ownerPos.y - into * (this.passMul>1?(squeeze?11:17):(squeeze?13:22));
         } else if (id === balance && ballOwner) {
           // balance third man: tucks central, deeper again, protecting the middle if the
           // press is beaten — completing the press → cover → balance chain
@@ -2070,7 +2344,7 @@ export class MatchSim {
           } else if (nf && nf.d < 46) {
             // default zonal half-step toward an attacker in the zone (don't dive in)
             tx = nf.p.x * 0.5 + tx * 0.5;
-            ty = nf.p.y * 0.45 + ty * 0.55;
+            ty = (nf.p.y-into*7) * 0.45 + ty * 0.55;
           }
         }
       }
@@ -2107,10 +2381,29 @@ export class MatchSim {
     }
   }
 
+  // ---- movement integration: role speeds + momentum + backpedal (docs/body-mechanics) ----
+  // Every player has a role movement profile (ROLE_MOVEMENT): forwards are quicker and
+  // lighter, defenders slower to wind up but stop hard and plant, keepers spring within a
+  // few units of a loose ball. Velocity keeps MOMENTUM: speeding up uses accel×role.accel,
+  // slowing down accel×role.brake, and a cut of more than ~70° at running speed bleeds
+  // speed first (a plant — the bled share scales with 1/role.turn) before the player
+  // re-accelerates along the new line. Outfield defenders whose next step is toward their
+  // own goal with the carrier in front of them BACKPEDAL (retreat facing the carrier at
+  // ≤ .62 × max) while the target is near; further than that they turn and recover at
+  // full speed. The presser's committed lunge, the build-out retreat and the human's
+  // stick feel are untouched. Runs inside the ≤1/30 s substeps of step(), so the rates
+  // are safe however much wall-clock time a distant match accumulates.
   private integrate(dt: number) {
+    const buildOut=this.buildOutTeam;
+    const carrierId = this.ball.owner;
+    const carrier = carrierId ? this.players[carrierId] : null;
+    const liveBall = carrierId === null && !this.restart && this.goalHold <= 0; // a loose ball in play
+    const fatigueBrake = 1 - this.fatigue * 0.025; // tired legs brake a touch softer (half the legsMul bite)
     for (const id of this.ids) {
       const p = this.players[id];
       const t = this.targets[id];
+      const rm = ROLE_MOVEMENT[p.role];
+      const isUser = id === this.userId;
       const dx = t.x - p.x;
       const dy = t.y - p.y;
       const d = Math.hypot(dx, dy);
@@ -2119,13 +2412,17 @@ export class MatchSim {
       // a COMMITTED carry gallops (66 u/s; 76 in transition space on the counter) —
       // quicker than the shielding dribble but still catchable by a sprinting defender
       // (84), so every long carry eventually gets engaged and has to make its choice
+      // — all scaled by the role's speed multiplier (keeper/owner/carry keep their ratios)
       const carryV = this.counterT > 0 && this.counterTeam === p.team ? 76 : 66;
-      let maxV = p.isGK ? P.gkSpeed * (this.ballIsShot && this.ball.owner === null ? 1.25 : 1) : id === this.ball.owner ? (this.carrying && id !== this.userId ? carryV : P.ownerSpeed) : P.runSpeed;
-      if (id !== this.userId) maxV *= this.legsMul; // match-arc legs (AI only — never the human)
-      if (id === this.userId) {
-        const jockeying = this.userJockey && this.ball.owner && this.players[this.ball.owner]?.team !== this.userTeam;
+      let maxV = (p.isGK ? P.gkSpeed * (this.ballIsShot && carrierId === null ? 1.25 : 1) : id === carrierId ? (this.carrying && !isUser ? carryV : P.ownerSpeed) : P.runSpeed) * rm.speed;
+      // burst: the keeper springs at a loose ball within reach (claims, smothers, spills)
+      if (rm.burst > 1 && liveBall && dist(p.x, p.y, this.ball.x, this.ball.y) < M.keeperBurst) maxV *= rm.burst;
+      if (!isUser) maxV *= this.legsMul; // match-arc legs (AI only — never the human)
+      let jockeying = false;
+      if (isUser) {
+        jockeying = !!(this.userJockey && carrier && carrier.team !== this.userTeam);
         if (jockeying) {
-          maxV = P.runSpeed * (this.userSprint ? 1.2 : 0.9); // controlled containing pace (fast-jockey on sprint)
+          maxV = P.runSpeed * rm.speed * (this.userSprint ? 1.2 : 0.9); // controlled containing pace (fast-jockey on sprint)
         } else {
           // analog speed: a soft push jogs, a hard push runs. Keyboard passes mag≈1 (full
           // speed, unchanged). Dead zone + quadratic curve give fine low-speed control.
@@ -2134,10 +2431,38 @@ export class MatchSim {
           if (this.userSprint) maxV *= 1.4; // sprint on top
         }
       }
+      const pressing = id === this.presserId && carrierId && carrierId !== id;
+      // ---- backpedal decision (outfield players defending a carrier) ----
+      // carrier "in front" = up the pitch from this player (dot with his attacking direction
+      // ≥ .3) and his target lies toward his own goal: near the target he retreats FACING
+      // the carrier at ≤ .62 × max speed; far from it he turns and recovers at full speed.
+      // Distance hysteresis (28 on / 36 off) plus a short dwell keep the decision steady.
+      // The presser (lunge) and committed chasers are exempt; the human only while jockeying
+      // (flag + facing for the rig, but his pace stays his own).
+      // Hard exits (no opposing carrier, the lunge, a loose-ball chase, the human letting go
+      // of jockey) drop the state at once; the geometric decision is debounced BOTH ways
+      // (dwell) so a one-frame wobble of the target never toggles the pace cap.
+      const mom = this.mom[id];
+      let wantBack = false;
+      let fx = 0, fy = 0;
+      const exempt = !carrier || carrier.team === p.team || p.isGK || (isUser ? !jockeying : !!pressing || this.chaserIds.has(id));
+      if (!exempt) {
+        const cx = carrier.x - p.x, cy = carrier.y - p.y, cl = Math.hypot(cx, cy) || 1;
+        fx = cx / cl; fy = cy / cl;
+        const up = this.dirY(p.team); // this player's attacking direction — "in front" of a defender facing play
+        const inFront = fy * up >= 0.3;
+        const goalward = d > 0.5 && (dy / d) * -up >= 0.3; // next step is toward own goal
+        if (inFront && goalward) wantBack = isUser ? true : mom.back ? d < M.backpedalOff : d < M.backpedalOn;
+      }
+      if (exempt || isUser) { mom.back = wantBack; mom.backT = 0; }
+      else if (wantBack !== mom.back) { mom.backT += dt; if (mom.backT >= M.backpedalDwell) { mom.back = wantBack; mom.backT = 0; } }
+      else mom.backT = 0;
+      const backpedalling = mom.back;
+      const maxV0 = maxV;
+      if (backpedalling && !isUser) maxV *= M.backpedalSpeed;
       // desired velocity — arrive: full speed until close, then ease. The PRESSER gets no
       // ease-in: he closes at full sprint right onto the carrier (the lunge) — with the
       // ease he'd decelerate into orbit just outside tackle range and never win a ball.
-      const pressing = id === this.presserId && this.ball.owner && this.ball.owner !== id;
       let dvx = 0;
       let dvy = 0;
       if (d > 0.5) {
@@ -2152,7 +2477,8 @@ export class MatchSim {
       let sy = 0;
       for (const oid of this.ids) {
         if (oid === id) continue;
-        if (pressing || this.chaserIds.has(id)) continue; // committed lunge / loose-ball chase — spacing forces don't apply
+        // A legal build-out retreat must not deadlock against stationary outlets.
+        if (pressing || this.chaserIds.has(id) || (buildOut&&p.team!==buildOut)) continue; // committed chase/retreat — spacing forces don't apply
         if (id === this.ball.owner && oid === this.presserId) continue; // carrier can't body the tackler away
         const o = this.players[oid];
         const od = dist(p.x, p.y, o.x, o.y);
@@ -2165,12 +2491,69 @@ export class MatchSim {
       dvx += sx;
       dvy += sy;
       // cap
-      const dv = Math.hypot(dvx, dvy);
-      if (dv > maxV) { dvx = (dvx / dv) * maxV; dvy = (dvy / dv) * maxV; }
-      // accelerate toward desired velocity
-      const k = Math.min(1, dt * P.accel);
-      p.vx += (dvx - p.vx) * k;
-      p.vy += (dvy - p.vy) * k;
+      let dv = Math.hypot(dvx, dvy);
+      if (dv > maxV) { dvx = (dvx / dv) * maxV; dvy = (dvy / dv) * maxV; dv = maxV; }
+      p.intentX=dvx;p.intentY=dvy;p.moveDistance=d;
+      // ---- momentum model ----
+      const speed = Math.hypot(p.vx, p.vy);
+      const accRate = P.accel * rm.accel;
+      const brkRate = P.accel * rm.brake * (isUser ? 1 : fatigueBrake);
+      p.plant = Math.max(0, p.plant - dt / M.plantDecay);
+      if (isUser) {
+        // the human keeps the current stick feel: plain convergence, no plant bleed
+        mom.floor = 0;
+        const k = Math.min(1, dt * P.accel);
+        p.vx += (dvx - p.vx) * k;
+        p.vy += (dvy - p.vy) * k;
+      } else {
+        // a cut: the desired line is >~70° off the current velocity at running speed →
+        // plant. The share of speed bled scales with 1/turn (nimble forwards keep more,
+        // heavy defenders nearly stop and re-plant); the impulse scales with entry speed.
+        // (a reversal onto a target within ~10 u is an arrival overshoot — a STOP, which the
+        // brake rate handles — not a cut; and a fresh plant can't chain straight into another)
+        if (mom.cool > 0) mom.cool -= dt;
+        if (mom.floor <= 0 && mom.cool <= 0 && speed > M.plantSpeed && d >= M.plantTargetDist && dv >= 8 && p.vx * dvx + p.vy * dvy < speed * dv * M.plantAngleCos) {
+          mom.floor = speed * (1 - clamp(M.plantBleed / rm.turn, 0.4, M.plantFloorMax));
+          mom.cool = M.plantCooldown;
+          p.plant = Math.max(p.plant, clamp(speed / (maxV0 * 0.5), 0, 1));
+        }
+        if (mom.floor > 0) {
+          // planting: velocity shrinks toward zero at the brake rate…
+          // (never below the floor: a 1/30 s step would otherwise overshoot it and the
+          // bled share would quantise to whole frames instead of following 1/turn)
+          const kb = Math.min(1, dt * brkRate);
+          const sp2 = Math.max(mom.floor, speed * (1 - kb));
+          const shrink = speed > 0.01 ? sp2 / speed : 0;
+          p.vx *= shrink;
+          p.vy *= shrink;
+          // …until enough is bled (or the new line agrees with the momentum left) — then
+          // ordinary acceleration takes over along the desired direction
+          const cos2 = sp2 > 0.01 && dv > 0.01 ? (p.vx * dvx + p.vy * dvy) / (sp2 * dv) : 1;
+          if (sp2 <= mom.floor || cos2 > 0.7) mom.floor = 0;
+        } else {
+          const k = Math.min(1, dt * (dv >= speed ? accRate : brkRate));
+          p.vx += (dvx - p.vx) * k;
+          p.vy += (dvy - p.vy) * k;
+        }
+      }
+      // brake read: actual deceleration this step against this player's hardest possible
+      // brake (full speed × brake rate) — 1 on a hard stop / plant, 0 while cruising
+      const decel = (speed - Math.hypot(p.vx, p.vy)) / dt;
+      p.brake = decel > 0 ? clamp(decel / (maxV0 * brkRate), 0, 1) : 0;
+      // backpedal output (render-only; the pace cap above already follows mom.back), read after
+      // this step's velocity so a released defender never shows the retreat pose at recovery pace
+      if (backpedalling) p.backpedal += (1 - p.backpedal) * Math.min(1, dt / M.backpedalRamp);
+      else {
+        // Released: the turn-and-recover run must not carry the upright retreat pose. Drop
+        // linearly in backpedalRelease, and never read more than the pace allows: at 1.15 × the
+        // retreat cap (~59 u/s for a defender) the output is gone. Both terms only ever lower
+        // the value, so the release stays monotonic (no flicker; re-engaging still waits out
+        // the dwell above).
+        const capV = maxV0 * M.backpedalSpeed, speedNow = Math.hypot(p.vx, p.vy);
+        p.backpedal = Math.min(p.backpedal - dt / M.backpedalRelease, clamp((capV * 1.15 - speedNow) / (capV * 0.15), 0, 1));
+      }
+      if (p.backpedal <= 0.02) { p.backpedal = 0; p.faceX = 0; p.faceY = 0; }
+      else if (!exempt) { p.faceX = fx; p.faceY = fy; } // ramping out after a hard exit keeps the last facing
       p.x = clamp(p.x + p.vx * dt, 8, 262);
       p.y = clamp(p.y + p.vy * dt, 6, 396);
     }

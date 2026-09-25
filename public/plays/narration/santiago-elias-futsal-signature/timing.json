@@ -1,0 +1,382 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: the 2012 World Cup",
+   "text": "The 2012 Futsal World Cup quarter-final: Argentina against Brazil, no goals yet. Fernandinho races clean through, but Santiago El\u00edas gets down fast. Two saves in one second!",
+   "src": "/plays/narration/santiago-elias-futsal-signature/1.m4a",
+   "seconds": 14.1,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "2012",
+     "at": 0.425
+    },
+    {
+     "w": "Futsal",
+     "at": 1.188
+    },
+    {
+     "w": "World",
+     "at": 1.625
+    },
+    {
+     "w": "Cup",
+     "at": 1.95
+    },
+    {
+     "w": "quarter-final",
+     "at": 2.225
+    },
+    {
+     "w": "Argentina",
+     "at": 3.3
+    },
+    {
+     "w": "against",
+     "at": 3.975
+    },
+    {
+     "w": "Brazil",
+     "at": 4.325
+    },
+    {
+     "w": "no",
+     "at": 5.112
+    },
+    {
+     "w": "goals",
+     "at": 5.35
+    },
+    {
+     "w": "yet",
+     "at": 5.675
+    },
+    {
+     "w": "Fernandinho",
+     "at": 6.487
+    },
+    {
+     "w": "races",
+     "at": 7.162
+    },
+    {
+     "w": "clean",
+     "at": 7.638
+    },
+    {
+     "w": "through",
+     "at": 7.987
+    },
+    {
+     "w": "but",
+     "at": 8.55
+    },
+    {
+     "w": "Santiago",
+     "at": 8.738
+    },
+    {
+     "w": "El\u00edas",
+     "at": 9.5
+    },
+    {
+     "w": "gets",
+     "at": 9.975
+    },
+    {
+     "w": "down",
+     "at": 10.225
+    },
+    {
+     "w": "fast",
+     "at": 10.562
+    },
+    {
+     "w": "Two",
+     "at": 11.575
+    },
+    {
+     "w": "saves",
+     "at": 11.9
+    },
+    {
+     "w": "in",
+     "at": 12.3
+    },
+    {
+     "w": "one",
+     "at": 12.425
+    },
+    {
+     "w": "second",
+     "at": 12.662
+    }
+   ]
+  },
+  {
+   "label": "Replay: the crossbar camera",
+   "text": "Watch again from the crossbar. Low and quick, he drops to stop Fernandinho. Gabriel heads the rebound, and he blocks that too!",
+   "src": "/plays/narration/santiago-elias-futsal-signature/2.m4a",
+   "seconds": 9.1,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "from",
+     "at": 1.0
+    },
+    {
+     "w": "the",
+     "at": 1.137
+    },
+    {
+     "w": "crossbar",
+     "at": 1.225
+    },
+    {
+     "w": "Low",
+     "at": 2.3
+    },
+    {
+     "w": "and",
+     "at": 2.625
+    },
+    {
+     "w": "quick",
+     "at": 2.75
+    },
+    {
+     "w": "he",
+     "at": 3.25
+    },
+    {
+     "w": "drops",
+     "at": 3.375
+    },
+    {
+     "w": "to",
+     "at": 3.725
+    },
+    {
+     "w": "stop",
+     "at": 3.825
+    },
+    {
+     "w": "Fernandinho",
+     "at": 4.125
+    },
+    {
+     "w": "Gabriel",
+     "at": 5.375
+    },
+    {
+     "w": "heads",
+     "at": 5.9
+    },
+    {
+     "w": "the",
+     "at": 6.162
+    },
+    {
+     "w": "rebound",
+     "at": 6.25
+    },
+    {
+     "w": "and",
+     "at": 6.862
+    },
+    {
+     "w": "he",
+     "at": 6.963
+    },
+    {
+     "w": "blocks",
+     "at": 7.075
+    },
+    {
+     "w": "that",
+     "at": 7.475
+    },
+    {
+     "w": "too",
+     "at": 7.737
+    }
+   ]
+  },
+  {
+   "label": "How he does it (demo)",
+   "text": "How he does it: knees bent, on his toes, hands low. A shot fizzes at his feet, and he snaps down like a wall.",
+   "src": "/plays/narration/santiago-elias-futsal-signature/3.m4a",
+   "seconds": 8.1,
+   "words": [
+    {
+     "w": "How",
+     "at": 0.375
+    },
+    {
+     "w": "he",
+     "at": 0.512
+    },
+    {
+     "w": "does",
+     "at": 0.6
+    },
+    {
+     "w": "it",
+     "at": 0.838
+    },
+    {
+     "w": "knees",
+     "at": 1.387
+    },
+    {
+     "w": "bent",
+     "at": 1.65
+    },
+    {
+     "w": "on",
+     "at": 1.988
+    },
+    {
+     "w": "his",
+     "at": 2.087
+    },
+    {
+     "w": "toes",
+     "at": 2.25
+    },
+    {
+     "w": "hands",
+     "at": 2.725
+    },
+    {
+     "w": "low",
+     "at": 3.1
+    },
+    {
+     "w": "A",
+     "at": 4.013
+    },
+    {
+     "w": "shot",
+     "at": 4.138
+    },
+    {
+     "w": "fizzes",
+     "at": 4.487
+    },
+    {
+     "w": "at",
+     "at": 4.812
+    },
+    {
+     "w": "his",
+     "at": 4.888
+    },
+    {
+     "w": "feet",
+     "at": 5.088
+    },
+    {
+     "w": "and",
+     "at": 5.438
+    },
+    {
+     "w": "he",
+     "at": 5.537
+    },
+    {
+     "w": "snaps",
+     "at": 5.675
+    },
+    {
+     "w": "down",
+     "at": 6.125
+    },
+    {
+     "w": "like",
+     "at": 6.388
+    },
+    {
+     "w": "a",
+     "at": 6.537
+    },
+    {
+     "w": "wall",
+     "at": 6.638
+    }
+   ]
+  },
+  {
+   "label": "Practise it",
+   "text": "Get down quickly to stop low shots near your feet. Hands down, save!",
+   "src": "/plays/narration/santiago-elias-futsal-signature/4.m4a",
+   "seconds": 5.3,
+   "words": [
+    {
+     "w": "Get",
+     "at": 0.375
+    },
+    {
+     "w": "down",
+     "at": 0.525
+    },
+    {
+     "w": "quickly",
+     "at": 0.775
+    },
+    {
+     "w": "to",
+     "at": 1.125
+    },
+    {
+     "w": "stop",
+     "at": 1.225
+    },
+    {
+     "w": "low",
+     "at": 1.55
+    },
+    {
+     "w": "shots",
+     "at": 1.812
+    },
+    {
+     "w": "near",
+     "at": 2.163
+    },
+    {
+     "w": "your",
+     "at": 2.288
+    },
+    {
+     "w": "feet",
+     "at": 2.438
+    },
+    {
+     "w": "Hands",
+     "at": 3.163
+    },
+    {
+     "w": "down",
+     "at": 3.55
+    },
+    {
+     "w": "save",
+     "at": 3.913
+    }
+   ]
+  }
+ ]
+}

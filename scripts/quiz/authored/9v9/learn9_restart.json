@@ -1,0 +1,128 @@
+{
+ "lesson": "learn9_restart",
+ "questions": [
+  {
+   "q": "True or false? At this goal kick, the ball is in play once kicked and moving.",
+   "options": [
+    "True",
+    "False"
+   ],
+   "correct": 0,
+   "explain": "Right, it's true. Once the kick clearly moves the ball, play is on.",
+   "choiceExplanations": [
+    "Right, it's true. Once the kick clearly moves the ball, play is on.",
+    "In this example the ball does not need to leave the area; a clear kick starts play."
+   ],
+   "visual": {
+    "kind": "trueFalse",
+    "frame": {
+     "step": 2,
+     "focus": [
+      "gk",
+      "rcb"
+     ]
+    }
+   }
+  },
+  {
+   "q": "Which picture gives the goalkeeper two short passes that one forward can't both block?",
+   "options": [
+    "Defenders split wide",
+    "Defenders close to the keeper",
+    "One defender tucked inside"
+   ],
+   "correct": 0,
+   "explain": "Yes. Split wide, one forward cannot block both routes, so one stays open.",
+   "choiceExplanations": [
+    "Yes. Split wide, one forward cannot block both routes, so one stays open.",
+    "Close together, one forward can block both passes at once.",
+    "With one defender inside, there is only one wide route to use."
+   ],
+   "visual": {
+    "kind": "pickPicture",
+    "pictures": [
+     {
+      "step": 0,
+      "focus": [
+       "lcb",
+       "rcb"
+      ]
+     },
+     {
+      "step": 0,
+      "place": {
+       "lcb": {
+        "x": 105,
+        "y": 350
+       },
+       "rcb": {
+        "x": 165,
+        "y": 350
+       }
+      },
+      "focus": [
+       "lcb",
+       "rcb"
+      ]
+     },
+     {
+      "step": 0,
+      "place": {
+       "lcb": {
+        "x": 95,
+        "y": 335
+       }
+      },
+      "focus": [
+       "lcb",
+       "rcb"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "q": "Now two opponents block both side routes. Which short pass is still open?",
+   "options": [
+    "Right defender",
+    "Left defender",
+    "Center defender"
+   ],
+   "correct": 2,
+   "explain": "Yes. Both side routes are blocked, so the center defender is the free short option.",
+   "choiceExplanations": [
+    "Blue's winger has stepped into that route, so the pass could be cut out.",
+    "The forward still stands in the left route, so that pass is blocked.",
+    "Yes. Both side routes are blocked, so the center defender is the free short option."
+   ],
+   "visual": {
+    "kind": "bestPass",
+    "frame": {
+     "step": 1,
+     "ball": "gk",
+     "place": {
+      "drw": {
+       "x": 215,
+       "y": 309
+      },
+      "cb": {
+       "x": 135,
+       "y": 300
+      }
+     },
+     "focus": [
+      "gk",
+      "dst",
+      "drw"
+     ]
+    },
+    "from": "gk",
+    "to": [
+     "rcb",
+     "lcb",
+     "cb"
+    ]
+   }
+  }
+ ]
+}

@@ -1,0 +1,118 @@
+{
+ "lesson": "f_pared",
+ "questions": [
+  {
+   "q": "True or false? The defender followed the ball, so the outside run is free.",
+   "options": [
+    "True",
+    "False"
+   ],
+   "correct": 0,
+   "explain": "Right, it's true: the defender went to the ball, so the runner is free outside.",
+   "choiceExplanations": [
+    "Right, it's true: the defender went to the ball, so the runner is free outside.",
+    "Look at the defender: they followed the ball to the pivot, leaving the outside run free."
+   ],
+   "visual": {
+    "kind": "trueFalse",
+    "frame": {
+     "step": 1,
+     "focus": [
+      "lm",
+      "dst"
+     ],
+     "marks": [
+      {
+       "kind": "run",
+       "from": {
+        "x": 48,
+        "y": 238
+       },
+       "to": "lm",
+       "tone": "gold"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "q": "The pivot laid the ball back to the fixo. What should the pivot do next?",
+   "options": [
+    "Stand still and watch the ball",
+    "Move across to offer a new lane",
+    "Run back toward the fixo"
+   ],
+   "correct": 1,
+   "explain": "Yes. Moving across gives the fixo a fresh forward lane after the lay-off.",
+   "choiceExplanations": [
+    "Standing still and watching makes you easy to mark, so the fixo has fewer choices.",
+    "Yes. Moving across gives the fixo a fresh forward lane after the lay-off.",
+    "Running back crowds the fixo and takes away the forward pass."
+   ],
+   "visual": {
+    "kind": "whatNext",
+    "frame": {
+     "step": 7,
+     "focus": [
+      "st",
+      "cb"
+     ],
+     "trails": true
+    }
+   }
+  },
+  {
+   "q": "The right ala just passed to the pivot. Drag them to run for the return.",
+   "options": [
+    "Stay back and wide",
+    "Run inside toward the ball",
+    "Run up the outside"
+   ],
+   "correct": 2,
+   "explain": "Yes. The defender followed the ball, so the outside run is free for the return pass.",
+   "choiceExplanations": [
+    "Standing still gives the pivot no return pass, so the wall pass never happens.",
+    "Running inside brings you next to the defender, so the lane gets crowded.",
+    "Yes. The defender followed the ball, so the outside run is free for the return pass."
+   ],
+   "visual": {
+    "kind": "dragToZone",
+    "frame": {
+     "step": 1,
+     "place": {
+      "lm": {
+       "x": 48,
+       "y": 238
+      }
+     },
+     "ball": "st",
+     "focus": [
+      "rm",
+      "dst"
+     ]
+    },
+    "drag": "rm",
+    "zones": [
+     {
+      "x": 222,
+      "y": 300,
+      "w": 40,
+      "h": 36
+     },
+     {
+      "x": 175,
+      "y": 215,
+      "w": 40,
+      "h": 36
+     },
+     {
+      "x": 240,
+      "y": 190,
+      "w": 40,
+      "h": 36
+     }
+    ]
+   }
+  }
+ ]
+}

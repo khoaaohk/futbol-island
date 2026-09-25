@@ -8,6 +8,9 @@ import type {NpcDefinition} from '@/lib/town/npcDialogues';
 import styles from './NpcConversation.module.css';
 import {launchLearning,readLearning} from '@/lib/town/learningProgress';
 import NpcNews from './NpcNews';
+import {earnForNpc} from '@/lib/town/cardRewardTriggers';
+import {npcCardsToday} from '@/lib/town/cardRewardStore';
+import cardStyles from './CardOffer.module.css';
 import NpcMatchStory from './NpcMatchStory';
 const NpcRanking=dynamic(()=>import('./NpcRanking'),{ssr:false});
 const NpcClips=dynamic(()=>import('./NpcClips'),{ssr:false});
@@ -27,6 +30,12 @@ export default function NpcConversation({npc,open,onOpenChange}:Props){
  const [showRanking,setShowRanking]=useState(false),[showClips,setShowClips]=useState(false);
  useEffect(()=>{setShowRanking(false);setShowClips(false);},[npc?.id,open]);
  const asked=new Set(exchanges.map(exchange=>exchange.id));
+ // Card rewards: a chat is "finished" once a topic and its follow-up were asked; closing it then offers a card pick (at most one
+ // per islander per day and NPC_PICKS_PER_DAY a day, docs/card-rewards.md). Tracked in a ref so it survives the close.
+ const learned=useRef<{npc:NpcDefinition;topics:string}|null>(null);
+ if(open&&npc&&exchanges.some(exchange=>exchange.id.endsWith(':follow-up')))learned.current={npc,topics:exchanges.map(exchange=>`${exchange.question} ${exchange.answer??''}`).join(' ')};
+ useEffect(()=>{if(open)return;const done=learned.current;learned.current=null;if(done)earnForNpc(done.npc,done.topics);},[open]);
+ const cardsToday=open&&npc?npcCardsToday(npc.id):'off';
  const send=(exchange:Exchange)=>{if(thinkingId||asked.has(exchange.id))return;if((exchange.answer?.length??0)>150&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches)setThinkingId(exchange.id);setExchanges(current=>[...current,exchange]);};
  return <dialog ref={dialog} className={`${styles.dialog} ${open?styles.entering:styles.leaving}`} aria-labelledby="npc-conversation-title" aria-modal="true" onCancel={event=>{event.preventDefault();onOpenChange(false);}} onClick={event=>{if(event.target===event.currentTarget)onOpenChange(false);}} onKeyDown={event=>{event.stopPropagation();if(event.key==='Escape'){event.preventDefault();onOpenChange(false);}}} onKeyUp={event=>event.stopPropagation()}>
   <section className={`${styles.panel} ${shell.shell} ${shell.drawer}`}>
@@ -44,6 +53,7 @@ export default function NpcConversation({npc,open,onOpenChange}:Props){
      </div>)}
     </div>
     {!thinkingId&&<div key={`${npc?.id}:${exchanges.length}`} ref={suggestions} className={styles.suggestions} role="group" aria-label="Choose your next reply" tabIndex={-1}>
+     {cardsToday==='day-cap'&&<p className={cardStyles.npcNote}>You’ve met lots of players today. Chat cards take a rest until tomorrow, and every tip still counts.</p>}
      <p className={styles.replyLabel}>Your reply</p>
      {npc?.ranking&&!showRanking&&<button type="button" onClick={()=>setShowRanking(true)}>Let’s rank players and teams <Icon name="arrow"/></button>}
      {(npc?.newsLeague||npc?.videoTopic)&&!showClips&&<button type="button" onClick={()=>setShowClips(true)}>{npc.videoTopic?'Watch a clip':`Show me a clip from ${npc.role.split(' · ').at(-1)}`} <Icon name="arrow"/></button>}

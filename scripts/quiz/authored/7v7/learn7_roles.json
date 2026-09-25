@@ -1,0 +1,98 @@
+{
+ "lesson": "learn7_roles",
+ "questions": [
+  {
+   "q": "True or false? Your team has two defenders, three midfielders, one forward.",
+   "options": [
+    "True",
+    "False"
+   ],
+   "correct": 0,
+   "explain": "Yes. Two at the back, three in the middle and one ahead, plus the keeper.",
+   "choiceExplanations": [
+    "Yes. Two at the back, three in the middle and one ahead, plus the keeper.",
+    "Count again. Two defenders, three midfielders and one forward start ahead of the keeper."
+   ],
+   "visual": {
+    "kind": "trueFalse",
+    "frame": {
+     "step": 1,
+     "focus": [
+      "lb",
+      "cm",
+      "st"
+     ]
+    }
+   }
+  },
+  {
+   "q": "The ball goes across the team. Put the steps in order.",
+   "options": [
+    "Left defender passes inside to you",
+    "You pass the ball back",
+    "Ball goes to the right defender",
+    "You move across to help"
+   ],
+   "correct": 0,
+   "explain": "Right. You help, pass back, the ball switches, then you move across.",
+   "choiceExplanations": [
+    "Right. You help, pass back, the ball switches, then you move across.",
+    "You give it back only after the left defender passes to you.",
+    "The right defender gets the ball after you pass it back.",
+    "You move across once the ball reaches the right defender."
+   ],
+   "visual": {
+    "kind": "order",
+    "frame": {
+     "step": 7,
+     "focus": [
+      "cm",
+      "rb"
+     ]
+    }
+   }
+  },
+  {
+   "q": "The left midfielder has the ball. Where can the middle midfielder help?",
+   "options": [
+    "Stay out on the right",
+    "Inside, near the ball",
+    "Behind the blue midfielder"
+   ],
+   "correct": 1,
+   "explain": "Yes. Close and inside gives the passer another angle.",
+   "choiceExplanations": [
+    "That is far from the ball, so the left midfielder has no close help.",
+    "Yes. Close and inside gives the passer another angle.",
+    "The blue player stands in that lane, so a pass could be cut out."
+   ],
+   "visual": {
+    "kind": "tapSpot",
+    "frame": {
+     "step": 3,
+     "ball": "lm",
+     "hide": [
+      "cm"
+     ],
+     "focus": [
+      "lm"
+     ]
+    },
+    "spots": [
+     {
+      "x": 205,
+      "y": 262
+     },
+     {
+      "x": 95,
+      "y": 252
+     },
+     {
+      "x": 170,
+      "y": 182
+     }
+    ]
+   }
+  }
+ ]
+}

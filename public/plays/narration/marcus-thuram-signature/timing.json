@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Thirty seconds, live",
+   "text": "Barcelona against Inter, a Champions League semi-final, April 2025. Thirty seconds gone! Dumfries races down the right and crosses twice. Marcus Thuram, six yards out and facing the wrong way, flicks it in with his heel!",
+   "src": "/plays/narration/marcus-thuram-signature/1.m4a",
+   "seconds": 17.0,
+   "words": [
+    {
+     "w": "Barcelona",
+     "at": 0.375
+    },
+    {
+     "w": "against",
+     "at": 1.075
+    },
+    {
+     "w": "Inter",
+     "at": 1.5
+    },
+    {
+     "w": "a",
+     "at": 2.237
+    },
+    {
+     "w": "Champions",
+     "at": 2.362
+    },
+    {
+     "w": "League",
+     "at": 3.013
+    },
+    {
+     "w": "semi-final",
+     "at": 3.312
+    },
+    {
+     "w": "April",
+     "at": 4.25
+    },
+    {
+     "w": "2025",
+     "at": 4.6
+    },
+    {
+     "w": "Thirty",
+     "at": 6.225
+    },
+    {
+     "w": "seconds",
+     "at": 6.588
+    },
+    {
+     "w": "gone",
+     "at": 7.013
+    },
+    {
+     "w": "Dumfries",
+     "at": 7.812
+    },
+    {
+     "w": "races",
+     "at": 8.412
+    },
+    {
+     "w": "down",
+     "at": 8.875
+    },
+    {
+     "w": "the",
+     "at": 9.088
+    },
+    {
+     "w": "right",
+     "at": 9.175
+    },
+    {
+     "w": "and",
+     "at": 9.5
+    },
+    {
+     "w": "crosses",
+     "at": 9.625
+    },
+    {
+     "w": "twice",
+     "at": 10.113
+    },
+    {
+     "w": "Marcus",
+     "at": 11.225
+    },
+    {
+     "w": "Thuram",
+     "at": 11.65
+    },
+    {
+     "w": "six",
+     "at": 12.525
+    },
+    {
+     "w": "yards",
+     "at": 12.8
+    },
+    {
+     "w": "out",
+     "at": 13.1
+    },
+    {
+     "w": "and",
+     "at": 13.375
+    },
+    {
+     "w": "facing",
+     "at": 13.512
+    },
+    {
+     "w": "the",
+     "at": 13.912
+    },
+    {
+     "w": "wrong",
+     "at": 14.0
+    },
+    {
+     "w": "way",
+     "at": 14.325
+    },
+    {
+     "w": "flicks",
+     "at": 14.762
+    },
+    {
+     "w": "it",
+     "at": 15.037
+    },
+    {
+     "w": "in",
+     "at": 15.113
+    },
+    {
+     "w": "with",
+     "at": 15.262
+    },
+    {
+     "w": "his",
+     "at": 15.387
+    },
+    {
+     "w": "heel",
+     "at": 15.55
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again. His back is to the goal, but one flick of the heel beats the keeper.",
+   "src": "/plays/narration/marcus-thuram-signature/2.m4a",
+   "seconds": 5.8,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "His",
+     "at": 1.5
+    },
+    {
+     "w": "back",
+     "at": 1.7
+    },
+    {
+     "w": "is",
+     "at": 1.988
+    },
+    {
+     "w": "to",
+     "at": 2.125
+    },
+    {
+     "w": "the",
+     "at": 2.212
+    },
+    {
+     "w": "goal",
+     "at": 2.312
+    },
+    {
+     "w": "but",
+     "at": 2.763
+    },
+    {
+     "w": "one",
+     "at": 2.913
+    },
+    {
+     "w": "flick",
+     "at": 3.225
+    },
+    {
+     "w": "of",
+     "at": 3.462
+    },
+    {
+     "w": "the",
+     "at": 3.538
+    },
+    {
+     "w": "heel",
+     "at": 3.638
+    },
+    {
+     "w": "beats",
+     "at": 3.987
+    },
+    {
+     "w": "the",
+     "at": 4.275
+    },
+    {
+     "w": "keeper",
+     "at": 4.375
+    }
+   ]
+  },
+  {
+   "label": "How he does it",
+   "text": "His big weapon is the powerful run in behind. Watch how he does it: body between defender and ball, then drive!",
+   "src": "/plays/narration/marcus-thuram-signature/3.m4a",
+   "seconds": 8.5,
+   "words": [
+    {
+     "w": "His",
+     "at": 0.35
+    },
+    {
+     "w": "big",
+     "at": 0.537
+    },
+    {
+     "w": "weapon",
+     "at": 0.775
+    },
+    {
+     "w": "is",
+     "at": 1.125
+    },
+    {
+     "w": "the",
+     "at": 1.275
+    },
+    {
+     "w": "powerful",
+     "at": 1.387
+    },
+    {
+     "w": "run",
+     "at": 1.988
+    },
+    {
+     "w": "in",
+     "at": 2.275
+    },
+    {
+     "w": "behind",
+     "at": 2.388
+    },
+    {
+     "w": "Watch",
+     "at": 3.475
+    },
+    {
+     "w": "how",
+     "at": 3.825
+    },
+    {
+     "w": "he",
+     "at": 4.0
+    },
+    {
+     "w": "does",
+     "at": 4.125
+    },
+    {
+     "w": "it",
+     "at": 4.362
+    },
+    {
+     "w": "body",
+     "at": 4.938
+    },
+    {
+     "w": "between",
+     "at": 5.3
+    },
+    {
+     "w": "defender",
+     "at": 5.625
+    },
+    {
+     "w": "and",
+     "at": 6.138
+    },
+    {
+     "w": "ball",
+     "at": 6.25
+    },
+    {
+     "w": "then",
+     "at": 6.775
+    },
+    {
+     "w": "drive",
+     "at": 7.013
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: use your body to hold off the defender while you drive towards goal!",
+   "src": "/plays/narration/marcus-thuram-signature/4.m4a",
+   "seconds": 5.8,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.562
+    },
+    {
+     "w": "use",
+     "at": 1.413
+    },
+    {
+     "w": "your",
+     "at": 1.637
+    },
+    {
+     "w": "body",
+     "at": 1.75
+    },
+    {
+     "w": "to",
+     "at": 2.1
+    },
+    {
+     "w": "hold",
+     "at": 2.2
+    },
+    {
+     "w": "off",
+     "at": 2.438
+    },
+    {
+     "w": "the",
+     "at": 2.638
+    },
+    {
+     "w": "defender",
+     "at": 2.725
+    },
+    {
+     "w": "while",
+     "at": 3.3
+    },
+    {
+     "w": "you",
+     "at": 3.5
+    },
+    {
+     "w": "drive",
+     "at": 3.663
+    },
+    {
+     "w": "towards",
+     "at": 4.075
+    },
+    {
+     "w": "goal",
+     "at": 4.425
+    }
+   ]
+  }
+ ]
+}

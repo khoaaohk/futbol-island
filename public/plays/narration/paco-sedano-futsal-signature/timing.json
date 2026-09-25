@@ -1,0 +1,378 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: the 2014 semi-final shoot-out",
+   "text": "Baku, 2014, a UEFA Futsal Cup semi-final. Araz against Barcelona ends four all, so it goes to penalties. Barcelona\u2019s keeper Paco Sedano stands tall on his line. Davi runs up, shoots, and Sedano saves it!",
+   "src": "/plays/narration/paco-sedano-futsal-signature/1.m4a",
+   "seconds": 16.8,
+   "words": [
+    {
+     "w": "Baku",
+     "at": 0.375
+    },
+    {
+     "w": "2014",
+     "at": 0.925
+    },
+    {
+     "w": "a",
+     "at": 2.1
+    },
+    {
+     "w": "UEFA",
+     "at": 2.212
+    },
+    {
+     "w": "Futsal",
+     "at": 2.688
+    },
+    {
+     "w": "Cup",
+     "at": 3.15
+    },
+    {
+     "w": "semi-final",
+     "at": 3.425
+    },
+    {
+     "w": "Araz",
+     "at": 4.625
+    },
+    {
+     "w": "against",
+     "at": 5.05
+    },
+    {
+     "w": "Barcelona",
+     "at": 5.35
+    },
+    {
+     "w": "ends",
+     "at": 6.062
+    },
+    {
+     "w": "four",
+     "at": 6.375
+    },
+    {
+     "w": "all",
+     "at": 6.6
+    },
+    {
+     "w": "so",
+     "at": 7.0
+    },
+    {
+     "w": "it",
+     "at": 7.138
+    },
+    {
+     "w": "goes",
+     "at": 7.225
+    },
+    {
+     "w": "to",
+     "at": 7.5
+    },
+    {
+     "w": "penalties",
+     "at": 7.6
+    },
+    {
+     "w": "Barcelona\u2019s",
+     "at": 8.85
+    },
+    {
+     "w": "keeper",
+     "at": 9.613
+    },
+    {
+     "w": "Paco",
+     "at": 10.0
+    },
+    {
+     "w": "Sedano",
+     "at": 10.463
+    },
+    {
+     "w": "stands",
+     "at": 10.963
+    },
+    {
+     "w": "tall",
+     "at": 11.412
+    },
+    {
+     "w": "on",
+     "at": 11.713
+    },
+    {
+     "w": "his",
+     "at": 11.812
+    },
+    {
+     "w": "line",
+     "at": 11.975
+    },
+    {
+     "w": "Davi",
+     "at": 12.875
+    },
+    {
+     "w": "runs",
+     "at": 13.225
+    },
+    {
+     "w": "up",
+     "at": 13.525
+    },
+    {
+     "w": "shoots",
+     "at": 14.037
+    },
+    {
+     "w": "and",
+     "at": 14.625
+    },
+    {
+     "w": "Sedano",
+     "at": 14.75
+    },
+    {
+     "w": "saves",
+     "at": 15.238
+    },
+    {
+     "w": "it",
+     "at": 15.637
+    }
+   ]
+  },
+  {
+   "label": "Replay: the low corner camera",
+   "text": "Watch again. He stays big and still, and waits for the kick. Only then does he move. Then Torras scores, and Barcelona are in the final!",
+   "src": "/plays/narration/paco-sedano-futsal-signature/2.m4a",
+   "seconds": 9.7,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "He",
+     "at": 1.4
+    },
+    {
+     "w": "stays",
+     "at": 1.55
+    },
+    {
+     "w": "big",
+     "at": 1.913
+    },
+    {
+     "w": "and",
+     "at": 2.188
+    },
+    {
+     "w": "still",
+     "at": 2.325
+    },
+    {
+     "w": "and",
+     "at": 2.825
+    },
+    {
+     "w": "waits",
+     "at": 2.95
+    },
+    {
+     "w": "for",
+     "at": 3.225
+    },
+    {
+     "w": "the",
+     "at": 3.337
+    },
+    {
+     "w": "kick",
+     "at": 3.438
+    },
+    {
+     "w": "Only",
+     "at": 4.213
+    },
+    {
+     "w": "then",
+     "at": 4.525
+    },
+    {
+     "w": "does",
+     "at": 4.75
+    },
+    {
+     "w": "he",
+     "at": 4.888
+    },
+    {
+     "w": "move",
+     "at": 5.0
+    },
+    {
+     "w": "Then",
+     "at": 5.888
+    },
+    {
+     "w": "Torras",
+     "at": 6.138
+    },
+    {
+     "w": "scores",
+     "at": 6.588
+    },
+    {
+     "w": "and",
+     "at": 7.162
+    },
+    {
+     "w": "Barcelona",
+     "at": 7.275
+    },
+    {
+     "w": "are",
+     "at": 8.0
+    },
+    {
+     "w": "in",
+     "at": 8.113
+    },
+    {
+     "w": "the",
+     "at": 8.188
+    },
+    {
+     "w": "final",
+     "at": 8.287
+    }
+   ]
+  },
+  {
+   "label": "How to stop a penalty (demo)",
+   "text": "Try it like Paco: stay big on your line, and wait. The kicker\u2019s hips and standing foot show you where the ball is going. Then go!",
+   "src": "/plays/narration/paco-sedano-futsal-signature/3.m4a",
+   "seconds": 9.1,
+   "words": [
+    {
+     "w": "Try",
+     "at": 0.35
+    },
+    {
+     "w": "it",
+     "at": 0.562
+    },
+    {
+     "w": "like",
+     "at": 0.637
+    },
+    {
+     "w": "Paco",
+     "at": 0.85
+    },
+    {
+     "w": "stay",
+     "at": 1.587
+    },
+    {
+     "w": "big",
+     "at": 1.887
+    },
+    {
+     "w": "on",
+     "at": 2.087
+    },
+    {
+     "w": "your",
+     "at": 2.188
+    },
+    {
+     "w": "line",
+     "at": 2.325
+    },
+    {
+     "w": "and",
+     "at": 2.712
+    },
+    {
+     "w": "wait",
+     "at": 2.837
+    },
+    {
+     "w": "The",
+     "at": 3.65
+    },
+    {
+     "w": "kicker\u2019s",
+     "at": 3.75
+    },
+    {
+     "w": "hips",
+     "at": 4.15
+    },
+    {
+     "w": "and",
+     "at": 4.475
+    },
+    {
+     "w": "standing",
+     "at": 4.6
+    },
+    {
+     "w": "foot",
+     "at": 5.088
+    },
+    {
+     "w": "show",
+     "at": 5.388
+    },
+    {
+     "w": "you",
+     "at": 5.625
+    },
+    {
+     "w": "where",
+     "at": 5.775
+    },
+    {
+     "w": "the",
+     "at": 5.912
+    },
+    {
+     "w": "ball",
+     "at": 6.0
+    },
+    {
+     "w": "is",
+     "at": 6.3
+    },
+    {
+     "w": "going",
+     "at": 6.45
+    },
+    {
+     "w": "Then",
+     "at": 7.375
+    },
+    {
+     "w": "go",
+     "at": 7.662
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,18 @@
+{"lesson":"bld_f_passtofeet","questions":[
+{"q":"The left ala has room on the outside. Tap where the first touch should go.",
+ "options":["Inside, toward the defender","Outside, into the open side","Back toward our goal"],"correct":1,
+ "explain":"Yes. The outside is open, so a small touch there moves away from the defender.",
+ "choiceExplanations":["The defender is on the inside, so a touch there runs into pressure.","Yes. The outside is open, so a small touch there moves away from the defender.","A touch back wastes the open space ahead on the outside."],
+ "visual":{"kind":"tapSpot","frame":{"step":1,"focus":["lm","dst"]},"spots":[{"x":95,"y":255},{"x":32,"y":205},{"x":70,"y":295}]}},
+{"q":"The defender now covers the outside. What should the left ala do next?",
+ "options":["Turn outside toward the touchline","Dribble inside past the defenders","Protect the ball, then pass to the fixo"],"correct":2,
+ "explain":"Yes. The outside is covered, so we protect the ball and use the fixo for support.",
+ "choiceExplanations":["The defender stands right there now, so a turn outside runs into them.","Their players wait in the middle, so dribbling there loses the ball easily.","Yes. The outside is covered, so we protect the ball and use the fixo for support."],
+ "visual":{"kind":"whatNext","frame":{"step":5,"focus":["lm","dst"],"trails":true}}},
+{"q":"Now the right ala is pressed on the outside. Which pass keeps the ball?",
+ "options":["Pass back to the fixo","Pass to the pivot up the middle","Pass down the line into space"],"correct":0,
+ "explain":"Yes. The fixo is behind with a clear lane, so we keep the ball, just like on the left.",
+ "choiceExplanations":["Yes. The fixo is behind with a clear lane, so we keep the ball, just like on the left.","A defender stands in the lane to the pivot, so the pass could be cut out.","The defender covers the outside, so a pass down the line runs straight to them."],
+ "visual":{"kind":"bestPass","frame":{"step":6,"place":{"dst":{"x":246,"y":203}},"ball":"rm","focus":["rm","dst"]},
+  "from":"rm","to":["cb","st",{"x":250,"y":165}]}}
+]}

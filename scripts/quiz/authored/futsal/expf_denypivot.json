@@ -1,0 +1,124 @@
+{
+ "lesson": "expf_denypivot",
+ "questions": [
+  {
+   "q": "The FIXO screens the entry pass. Tap where the RIGHT ALA stays.",
+   "options": [
+    "Next to Blue's PIVOT",
+    "Goal-side of Blue's RIGHT ALA",
+    "Up by the ball"
+   ],
+   "correct": 1,
+   "explain": "Right. The RIGHT ALA stays with their own player, so nobody is left free.",
+   "choiceExplanations": [
+    "The FIXO already screens the PIVOT. Two on him leaves Blue's RIGHT ALA free.",
+    "Right. The RIGHT ALA stays with their own player, so nobody is left free.",
+    "The LEFT ALA already presses the ball. Blue's RIGHT ALA would be free for a switch."
+   ],
+   "visual": {
+    "kind": "tapSpot",
+    "frame": {
+     "step": 3,
+     "hide": [
+      "rm"
+     ],
+     "focus": [
+      "cb",
+      "drm"
+     ]
+    },
+    "spots": [
+     {
+      "x": 170,
+      "y": 318
+     },
+     {
+      "x": 210,
+      "y": 292
+     },
+     {
+      "x": 75,
+      "y": 212
+     }
+    ]
+   }
+  },
+  {
+   "q": "Put the FIXO's jobs in order, from first to last.",
+   "options": [
+    "FIXO screens the entry pass",
+    "Blue passes back behind the press",
+    "The ball switches to the right",
+    "FIXO recovers behind the PIVOT"
+   ],
+   "correct": 0,
+   "explain": "Right. First deny the entry, then recover goal-side when the ball changes side.",
+   "choiceExplanations": [
+    "Right. First deny the entry, then recover goal-side when the ball changes side.",
+    "Blue passes back only after the FIXO has blocked the entry pass.",
+    "The switch comes after Blue passes back behind the press.",
+    "The FIXO recovers last, once the ball has switched sides."
+   ],
+   "visual": {
+    "kind": "order"
+   }
+  },
+  {
+   "q": "The ball switches and Blue's PIVOT drops deeper. Drag the FIXO to guard him.",
+   "options": [
+    "Out to the new passer",
+    "The middle, away from the PIVOT",
+    "Between the PIVOT and our goal"
+   ],
+   "correct": 2,
+   "explain": "Yes. The old screen no longer works, so the FIXO recovers goal-side of the PIVOT.",
+   "choiceExplanations": [
+    "Our RIGHT ALA already presses the passer. The PIVOT would be free behind you.",
+    "The PIVOT is free there, and one pass puts him through on goal.",
+    "Yes. The old screen no longer works, so the FIXO recovers goal-side of the PIVOT."
+   ],
+   "visual": {
+    "kind": "dragToZone",
+    "frame": {
+     "step": 6,
+     "place": {
+      "dst": {
+       "x": 205,
+       "y": 325
+      },
+      "cb": {
+       "x": 100,
+       "y": 290
+      }
+     },
+     "ball": "drm",
+     "focus": [
+      "cb",
+      "dst"
+     ]
+    },
+    "drag": "cb",
+    "zones": [
+     {
+      "x": 205,
+      "y": 238,
+      "w": 40,
+      "h": 30
+     },
+     {
+      "x": 135,
+      "y": 310,
+      "w": 44,
+      "h": 36
+     },
+     {
+      "x": 200,
+      "y": 362,
+      "w": 44,
+      "h": 30
+     }
+    ]
+   }
+  }
+ ]
+}

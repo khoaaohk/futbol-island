@@ -1,0 +1,350 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Montju\u00efc, live",
+   "text": "Barcelona, in blue and red, face Bayern Munich. Casad\u00f3, trapped deep, hits a long diagonal. Raphinha runs free on the left. Space in front! He drives at the box and shoots early. Goal!",
+   "src": "/plays/narration/raphinha-signature/1.m4a",
+   "seconds": 14.1,
+   "words": [
+    {
+     "w": "Barcelona",
+     "at": 0.375
+    },
+    {
+     "w": "in",
+     "at": 1.1
+    },
+    {
+     "w": "blue",
+     "at": 1.25
+    },
+    {
+     "w": "and",
+     "at": 1.575
+    },
+    {
+     "w": "red",
+     "at": 1.7
+    },
+    {
+     "w": "face",
+     "at": 2.163
+    },
+    {
+     "w": "Bayern",
+     "at": 2.487
+    },
+    {
+     "w": "Munich",
+     "at": 2.925
+    },
+    {
+     "w": "Casad\u00f3",
+     "at": 3.788
+    },
+    {
+     "w": "trapped",
+     "at": 4.45
+    },
+    {
+     "w": "deep",
+     "at": 4.812
+    },
+    {
+     "w": "hits",
+     "at": 5.2
+    },
+    {
+     "w": "a",
+     "at": 5.425
+    },
+    {
+     "w": "long",
+     "at": 5.537
+    },
+    {
+     "w": "diagonal",
+     "at": 5.875
+    },
+    {
+     "w": "Raphinha",
+     "at": 6.963
+    },
+    {
+     "w": "runs",
+     "at": 7.5
+    },
+    {
+     "w": "free",
+     "at": 7.838
+    },
+    {
+     "w": "on",
+     "at": 8.062
+    },
+    {
+     "w": "the",
+     "at": 8.162
+    },
+    {
+     "w": "left",
+     "at": 8.25
+    },
+    {
+     "w": "Space",
+     "at": 8.775
+    },
+    {
+     "w": "in",
+     "at": 9.2
+    },
+    {
+     "w": "front",
+     "at": 9.363
+    },
+    {
+     "w": "He",
+     "at": 10.075
+    },
+    {
+     "w": "drives",
+     "at": 10.2
+    },
+    {
+     "w": "at",
+     "at": 10.588
+    },
+    {
+     "w": "the",
+     "at": 10.662
+    },
+    {
+     "w": "box",
+     "at": 10.75
+    },
+    {
+     "w": "and",
+     "at": 11.2
+    },
+    {
+     "w": "shoots",
+     "at": 11.35
+    },
+    {
+     "w": "early",
+     "at": 11.675
+    },
+    {
+     "w": "Goal",
+     "at": 12.6
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. No defender is close yet. He doesn't wait. He curls it beyond Neuer.",
+   "src": "/plays/narration/raphinha-signature/2.m4a",
+   "seconds": 7.2,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.113
+    },
+    {
+     "w": "No",
+     "at": 2.038
+    },
+    {
+     "w": "defender",
+     "at": 2.25
+    },
+    {
+     "w": "is",
+     "at": 2.725
+    },
+    {
+     "w": "close",
+     "at": 2.875
+    },
+    {
+     "w": "yet",
+     "at": 3.225
+    },
+    {
+     "w": "He",
+     "at": 3.65
+    },
+    {
+     "w": "doesn't",
+     "at": 3.763
+    },
+    {
+     "w": "wait",
+     "at": 4.025
+    },
+    {
+     "w": "He",
+     "at": 4.7
+    },
+    {
+     "w": "curls",
+     "at": 4.862
+    },
+    {
+     "w": "it",
+     "at": 5.263
+    },
+    {
+     "w": "beyond",
+     "at": 5.35
+    },
+    {
+     "w": "Neuer",
+     "at": 5.775
+    }
+   ]
+  },
+  {
+   "label": "Into the corner",
+   "text": "From behind: it bends away from Neuer, into the corner! Raphinha scored three that night.",
+   "src": "/plays/narration/raphinha-signature/3.m4a",
+   "seconds": 6.6,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.375
+    },
+    {
+     "w": "behind",
+     "at": 0.512
+    },
+    {
+     "w": "it",
+     "at": 1.462
+    },
+    {
+     "w": "bends",
+     "at": 1.6
+    },
+    {
+     "w": "away",
+     "at": 1.913
+    },
+    {
+     "w": "from",
+     "at": 2.175
+    },
+    {
+     "w": "Neuer",
+     "at": 2.375
+    },
+    {
+     "w": "into",
+     "at": 2.85
+    },
+    {
+     "w": "the",
+     "at": 3.062
+    },
+    {
+     "w": "corner",
+     "at": 3.15
+    },
+    {
+     "w": "Raphinha",
+     "at": 3.987
+    },
+    {
+     "w": "scored",
+     "at": 4.5
+    },
+    {
+     "w": "three",
+     "at": 4.862
+    },
+    {
+     "w": "that",
+     "at": 5.1
+    },
+    {
+     "w": "night",
+     "at": 5.325
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: when you have space, shoot early, before the defender closes you down.",
+   "src": "/plays/narration/raphinha-signature/4.m4a",
+   "seconds": 6.0,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "when",
+     "at": 1.325
+    },
+    {
+     "w": "you",
+     "at": 1.462
+    },
+    {
+     "w": "have",
+     "at": 1.55
+    },
+    {
+     "w": "space",
+     "at": 1.762
+    },
+    {
+     "w": "shoot",
+     "at": 2.425
+    },
+    {
+     "w": "early",
+     "at": 2.7
+    },
+    {
+     "w": "before",
+     "at": 3.2
+    },
+    {
+     "w": "the",
+     "at": 3.487
+    },
+    {
+     "w": "defender",
+     "at": 3.575
+    },
+    {
+     "w": "closes",
+     "at": 4.05
+    },
+    {
+     "w": "you",
+     "at": 4.475
+    },
+    {
+     "w": "down",
+     "at": 4.625
+    }
+   ]
+  }
+ ]
+}

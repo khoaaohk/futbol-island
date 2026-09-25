@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The save, live",
+   "text": "Wembley, the Euro 2020 final. Penalties! Italy lead England three-two. Bukayo Saka, just nineteen, bravely steps up. Gianluigi Donnarumma waits on his line... Saka shoots. Donnarumma dives left. Saved! Italy are champions!",
+   "src": "/plays/narration/donnarumma-shootout-2021/1.m4a",
+   "seconds": 17.4,
+   "words": [
+    {
+     "w": "Wembley",
+     "at": 0.425
+    },
+    {
+     "w": "the",
+     "at": 0.875
+    },
+    {
+     "w": "Euro",
+     "at": 0.975
+    },
+    {
+     "w": "2020",
+     "at": 1.325
+    },
+    {
+     "w": "final",
+     "at": 1.938
+    },
+    {
+     "w": "Penalties",
+     "at": 2.812
+    },
+    {
+     "w": "Italy",
+     "at": 3.75
+    },
+    {
+     "w": "lead",
+     "at": 4.025
+    },
+    {
+     "w": "England",
+     "at": 4.275
+    },
+    {
+     "w": "three-two",
+     "at": 4.662
+    },
+    {
+     "w": "Bukayo",
+     "at": 5.6
+    },
+    {
+     "w": "Saka",
+     "at": 6.062
+    },
+    {
+     "w": "just",
+     "at": 6.5
+    },
+    {
+     "w": "nineteen",
+     "at": 6.7
+    },
+    {
+     "w": "bravely",
+     "at": 7.388
+    },
+    {
+     "w": "steps",
+     "at": 7.9
+    },
+    {
+     "w": "up",
+     "at": 8.225
+    },
+    {
+     "w": "Gianluigi",
+     "at": 8.863
+    },
+    {
+     "w": "Donnarumma",
+     "at": 9.425
+    },
+    {
+     "w": "waits",
+     "at": 10.0
+    },
+    {
+     "w": "on",
+     "at": 10.262
+    },
+    {
+     "w": "his",
+     "at": 10.363
+    },
+    {
+     "w": "line",
+     "at": 10.525
+    },
+    {
+     "w": "Saka",
+     "at": 11.412
+    },
+    {
+     "w": "shoots",
+     "at": 11.85
+    },
+    {
+     "w": "Donnarumma",
+     "at": 12.588
+    },
+    {
+     "w": "dives",
+     "at": 13.15
+    },
+    {
+     "w": "left",
+     "at": 13.65
+    },
+    {
+     "w": "Saved",
+     "at": 14.463
+    },
+    {
+     "w": "Italy",
+     "at": 15.175
+    },
+    {
+     "w": "are",
+     "at": 15.5
+    },
+    {
+     "w": "champions",
+     "at": 15.662
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again, slowly. Donnarumma stays big and still. He waits for the kick. Then he springs, and stops the ball.",
+   "src": "/plays/narration/donnarumma-shootout-2021/2.m4a",
+   "seconds": 8.3,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "slowly",
+     "at": 1.163
+    },
+    {
+     "w": "Donnarumma",
+     "at": 2.138
+    },
+    {
+     "w": "stays",
+     "at": 2.725
+    },
+    {
+     "w": "big",
+     "at": 3.112
+    },
+    {
+     "w": "and",
+     "at": 3.388
+    },
+    {
+     "w": "still",
+     "at": 3.513
+    },
+    {
+     "w": "He",
+     "at": 4.3
+    },
+    {
+     "w": "waits",
+     "at": 4.45
+    },
+    {
+     "w": "for",
+     "at": 4.688
+    },
+    {
+     "w": "the",
+     "at": 4.787
+    },
+    {
+     "w": "kick",
+     "at": 4.875
+    },
+    {
+     "w": "Then",
+     "at": 5.5
+    },
+    {
+     "w": "he",
+     "at": 5.638
+    },
+    {
+     "w": "springs",
+     "at": 5.763
+    },
+    {
+     "w": "and",
+     "at": 6.338
+    },
+    {
+     "w": "stops",
+     "at": 6.45
+    },
+    {
+     "w": "the",
+     "at": 6.825
+    },
+    {
+     "w": "ball",
+     "at": 6.925
+    }
+   ]
+  },
+  {
+   "label": "From behind the goal",
+   "text": "From behind the goal: what a save! All of Italy runs to him!",
+   "src": "/plays/narration/donnarumma-shootout-2021/3.m4a",
+   "seconds": 4.8,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.375
+    },
+    {
+     "w": "behind",
+     "at": 0.512
+    },
+    {
+     "w": "the",
+     "at": 0.887
+    },
+    {
+     "w": "goal",
+     "at": 0.975
+    },
+    {
+     "w": "what",
+     "at": 1.675
+    },
+    {
+     "w": "a",
+     "at": 1.812
+    },
+    {
+     "w": "save",
+     "at": 1.9
+    },
+    {
+     "w": "All",
+     "at": 2.575
+    },
+    {
+     "w": "of",
+     "at": 2.737
+    },
+    {
+     "w": "Italy",
+     "at": 2.825
+    },
+    {
+     "w": "runs",
+     "at": 3.1
+    },
+    {
+     "w": "to",
+     "at": 3.425
+    },
+    {
+     "w": "him",
+     "at": 3.525
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "The secret? Keepers, stay big and wait. Don't dive too early. Watch the kick, then spring! And kickers: be brave, like Saka.",
+   "src": "/plays/narration/donnarumma-shootout-2021/4.m4a",
+   "seconds": 9.0,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "secret",
+     "at": 0.463
+    },
+    {
+     "w": "Keepers",
+     "at": 1.163
+    },
+    {
+     "w": "stay",
+     "at": 1.675
+    },
+    {
+     "w": "big",
+     "at": 1.9
+    },
+    {
+     "w": "and",
+     "at": 2.087
+    },
+    {
+     "w": "wait",
+     "at": 2.2
+    },
+    {
+     "w": "Don't",
+     "at": 2.725
+    },
+    {
+     "w": "dive",
+     "at": 2.925
+    },
+    {
+     "w": "too",
+     "at": 3.237
+    },
+    {
+     "w": "early",
+     "at": 3.45
+    },
+    {
+     "w": "Watch",
+     "at": 4.237
+    },
+    {
+     "w": "the",
+     "at": 4.55
+    },
+    {
+     "w": "kick",
+     "at": 4.662
+    },
+    {
+     "w": "then",
+     "at": 4.987
+    },
+    {
+     "w": "spring",
+     "at": 5.188
+    },
+    {
+     "w": "And",
+     "at": 5.975
+    },
+    {
+     "w": "kickers",
+     "at": 6.138
+    },
+    {
+     "w": "be",
+     "at": 6.7
+    },
+    {
+     "w": "brave",
+     "at": 6.862
+    },
+    {
+     "w": "like",
+     "at": 7.338
+    },
+    {
+     "w": "Saka",
+     "at": 7.562
+    }
+   ]
+  }
+ ]
+}

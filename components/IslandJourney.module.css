@@ -1,25 +1,27 @@
-@font-face{font-family:IslandBrush;src:url('/stories/films/assets/Knewave-Regular.ttf') format('truetype');font-display:swap}
+/* IslandBrush-Regular.ttf = Knewave (OFL, renamed per its Reserved Font Name) plus brush-drawn dotless ı and
+   Latin Extended-A letters (ğ ş ł ć č ě ő ű ę ą ś ź ż ...), so every player name stays in the brush face. */
+@font-face{font-family:IslandBrush;src:url('/stories/films/assets/IslandBrush-Regular.ttf') format('truetype');font-display:swap}
 .arrival{position:relative;isolation:isolate;display:grid;grid-template-columns:1.1fr 1fr;align-items:center;gap:12px;margin:0 0 28px;padding:32px;border-radius:36px 70px 34px 22px;background:#fff1cfeF;color:#173e37;overflow:hidden;box-shadow:0 9px 0 #173e3724}
 .arrivalCopy{position:relative;z-index:1}.eyebrow{display:block;font-size:10px;font-weight:800;letter-spacing:.15em;line-height:1.6}.arrivalCopy h3{font-family:IslandBrush,sans-serif;font-weight:400;font-size:clamp(30px,4vw,48px);line-height:1.2;margin:12px 0 16px;letter-spacing:-.03em}.arrivalCopy>p{font-size:15px;line-height:1.6;max-width:32ch}.arrivalCopy details{font-size:12px;line-height:1.6;margin-top:18px}.arrivalCopy summary{font-weight:700;cursor:pointer}.arrivalArt{width:100%;min-width:0;transform:rotate(-4deg)}
 .basecamp{margin:0 0 32px}.sectionLabel{color:#fff4d6;margin:20px 0 14px;text-shadow:0 1px 2px #0b473b}.sectionLabel>span{font-size:10px;font-weight:800;letter-spacing:.16em}.sectionLabel p{font-weight:700;font-size:18px;margin:6px 0;line-height:1.4}
 .sideQuests.sideQuests{background:transparent!important;gap:16px!important}.sideQuests>button{background:#fff2d3!important;border:2px solid #fff2d3!important;min-height:100px!important;border-radius:24px 12px 24px 12px!important;box-shadow:0 6px 0 #173e3733!important}.sideQuests>button:first-child{background:#ffd46e!important;border-color:#ffd46e!important}.sideQuests>button:last-child{background:#b6ddd0!important;border-color:#b6ddd0!important}
 .journey{position:relative}.coasts.coasts{gap:10px;padding:0;background:none;border-radius:0}.coasts>span{display:none}.coasts button{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0;min-height:96px;background:#fff0cf!important;color:#173e37!important;border:2px solid transparent;border-radius:38% 30% 20% 24% / 26% 29% 20% 18%;box-shadow:0 6px 0 #173e3744;padding:12px 4px}.coasts button[aria-pressed=true]{border-color:#fff6df;background:#ffd03e!important;box-shadow:0 6px 0 #b58732,0 0 0 3px #fff4d670;transform:translateY(-4px)}.coasts button small{font-size:10px;margin:0}.coastArt{position:relative;display:block;width:50px;height:40px;background:#087451;border:3px solid #eec75d;border-radius:48% 30% 42% 28%;transform:rotate(-9deg)}.coastArt b{position:absolute;inset:0;display:grid;place-items:center;color:#fff0cc;font-size:14px;transform:rotate(9deg)}.coasts button:nth-of-type(2) .coastArt{background:#1255ee}.coasts button:nth-of-type(3) .coastArt{background:#b44079}.coasts button:nth-of-type(4) .coastArt{background:#1e475d}
 .bearing.bearing{margin:28px 0 0!important;padding:22px!important;background:#fff1d3!important;border-radius:24px 24px 8px 24px!important;box-shadow:0 6px 0 #173e3726;position:relative}.bearing h3{font-family:IslandBrush,sans-serif;font-size:27px;font-weight:400;margin-top:6px}.bearing p{font-size:13px;max-width:55ch}.bearing>strong{font-size:12px}.bearing>button{border:0;background:#244d40;color:#fff3d2;min-height:48px;border-radius:999px}.bearing>small{font-size:11px}.mapLegend{display:flex;justify-content:center;gap:18px;flex-wrap:wrap;color:#fff3d2;font-size:11px;font-weight:700;margin:25px 0 0;text-shadow:0 1px 2px #244d40}
-.levelMap.levelMap{max-width:590px;margin:38px auto 24px!important;isolation:isolate}.levelMap::after{content:'';position:absolute;inset:0;pointer-events:none;background:url('/stories/films/assets/entry-grain.png');opacity:.08;z-index:1}.levelMap>svg{overflow:visible}.levelMap>svg>path{stroke:#fff4d6!important;stroke-width:12;stroke-dasharray:none}.levelMap>svg>g>path{stroke:#fff0cc!important}.levelMap ol{position:relative;z-index:3}.levelMap ol li>strong{background:#fff1d3;line-height:1.35;padding:5px 9px;font-size:13px;box-shadow:0 2px 0 #173e3714}.levelMap ol li>small{background:#fff1d3;line-height:1.4;padding:3px 6px}.levelMap button:focus-visible{outline:4px solid #1255ee;outline-offset:6px}.lockedStop button{background:#7e9788!important;color:#fff2d3!important;border-color:#c8d7b5!important;opacity:1!important;box-shadow:0 5px 0 #566f61!important}.lockedStop>strong{color:#49635a}.chapterFlag{position:absolute;left:50%;width:min(92%,320px);transform:translateX(-50%);text-align:center;z-index:2;color:#193f35;pointer-events:none}.chapterFlag span{display:block;font-size:9px;letter-spacing:.18em;font-weight:800}.chapterFlag strong{display:block;font-size:15px;line-height:1.3;margin-top:3px}
+.levelMap.levelMap{max-width:590px;margin:38px auto 24px!important;isolation:isolate}.mapGrain{content:'';position:absolute;left:0;right:0;pointer-events:none;background:url('/stories/films/assets/entry-grain.png');opacity:.08;z-index:1}.levelMap>svg{overflow:visible}.levelMap>svg>path{stroke:#fff4d6!important;stroke-width:12;stroke-dasharray:none}.levelMap>svg>g>path{stroke:#fff0cc!important}.levelMap ol{position:relative;z-index:3}.levelMap ol li>strong{background:#fff1d3;line-height:1.35;padding:5px 9px;font-size:13px;box-shadow:0 2px 0 #173e3714}.levelMap ol li>small{background:#fff1d3;line-height:1.4;padding:3px 6px}.levelMap button:focus-visible{outline:4px solid #1255ee;outline-offset:6px}.lockedStop button{background:#7e9788!important;color:#fff2d3!important;border-color:#c8d7b5!important;opacity:1!important;box-shadow:0 5px 0 #566f61!important}.lockedStop>strong{color:#49635a}.chapterFlag{position:absolute;left:50%;width:min(92%,320px);transform:translateX(-50%);text-align:center;z-index:2;color:#193f35;pointer-events:none}.chapterFlag span{display:block;font-size:9px;letter-spacing:.18em;font-weight:800}.chapterFlag strong{display:block;font-size:15px;line-height:1.3;margin-top:3px}
 .journey>details{margin:14px 0;background:#fff1d3!important;border:0;border-radius:18px!important;padding:20px}.harbour.harbour{position:relative;background:#173f45;color:#fff0cc;margin-top:24px;padding:28px;border-radius:45px 20px 32px 20px;overflow:hidden}.harbour h3{font-family:IslandBrush,sans-serif;font-size:26px;font-weight:400;max-width:80%;line-height:1.3}.harbour p{font-size:13px;line-height:1.7}.harbour small{color:#d4e0cc}.ferry{position:absolute;right:25px;top:52px;font-size:50px;color:#ffd03e}.harbour::after{content:'';display:block;height:12px;margin:24px -45px -16px;background:repeating-linear-gradient(160deg,#41a3b6 0 35px,transparent 35px 55px);border-radius:50%}
 @media(min-width:850px){.arrival{margin-top:10px}.basecamp{display:grid;grid-template-columns:1fr 1.35fr;align-items:center;gap:28px}.sideQuests.sideQuests{margin:0}.coasts.coasts{gap:24px}.coasts button{min-height:104px}.bearing.bearing{display:grid;grid-template-columns:1fr 1fr;column-gap:24px}.bearing>.eyebrow,.bearing>h3,.bearing>p{grid-column:1}.bearing>strong{grid-column:2;grid-row:1}.bearing>progress{grid-column:2;grid-row:2;align-self:center}.bearing>button{grid-column:2;grid-row:3;align-self:center}.bearing>small{grid-column:1/-1}.arrivalArt{max-height:280px}}
 @media(max-width:600px){.arrival{grid-template-columns:1fr;padding:24px 22px 0;border-radius:26px 50px 26px 26px;gap:0}.arrivalArt{max-height:175px;margin-top:-4px}.arrivalCopy>p{max-width:30ch}.arrivalCopy h3{font-size:34px}.arrivalCopy details{margin:10px 0}.sectionLabel p{font-size:16px}.coasts.coasts{gap:7px}.coasts button{min-height:86px;padding:8px 4px}.coastArt{width:40px;height:32px}.coasts button strong{font-size:13px}.coasts button small{font-size:9px}.bearing.bearing{padding:18px!important}.mapLegend{gap:12px;font-size:10px}.sideQuests.sideQuests{gap:10px!important}.levelMap ol li>strong{font-size:12px}.chapterFlag strong{font-size:13px}.harbour.harbour{padding:24px}.harbour h3{font-size:23px}}
 @media(prefers-reduced-motion:reduce){.coasts button{transition:none}}
 /* Guide disclosure has its own full-width row, so artwork never follows its height. */
 .arrival{align-items:start}.arrivalArt{align-self:center}
-.guide{grid-column:1/-1;min-width:0}.guide>button{display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%;padding:12px 0;border:0;border-top:1px solid #244d4026;background:transparent;color:#173e37;text-align:left;font:inherit;font-size:13px;font-weight:700;cursor:pointer}.guide>button>span{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:#244d4014;font-size:20px}.guide>button:focus-visible{outline:3px solid #1255ee;outline-offset:3px}.guideReveal{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows 280ms ease,opacity 220ms ease}.guideReveal[data-open=true]{grid-template-rows:1fr;opacity:1}.guideReveal>div{min-height:0;overflow:hidden}.guideReveal p{font-size:13px;line-height:1.7;margin:8px 0 16px}
-.coasts button,.sideQuests>button{transition:translate 180ms ease,box-shadow 180ms ease,scale 180ms ease}.coasts button .coastArt{transition:transform 220ms ease}.coasts button:active,.sideQuests>button:active{translate:0 4px;scale:.98;box-shadow:0 2px 0 #173e3755!important}.coasts button:focus-visible,.sideQuests>button:focus-visible{outline:3px solid #fff3d2;outline-offset:5px}
+.guide{grid-column:1/-1;min-width:0}.guide>button{display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%;padding:12px 0;border:0;border-top:1px solid #244d4026;background:transparent;color:#173e37;text-align:left;font:inherit;font-size:13px;font-weight:700;cursor:pointer}.guide>button>span{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:#244d4014;font-size:20px}.guide>button:focus-visible{outline:3px solid #1255ee;outline-offset:3px}.guideReveal{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows 280ms ease,opacity 160ms ease-out}.guideReveal[data-open=true]{grid-template-rows:1fr;opacity:1}.guideReveal>div{min-height:0;overflow:hidden}.guideReveal p{font-size:13px;line-height:1.7;margin:8px 0 16px}
+.coasts button,.sideQuests>button{transition:translate 180ms ease,box-shadow 180ms ease,scale 180ms ease}.coasts button .coastArt{transition:transform 160ms ease-out}.coasts button:active,.sideQuests>button:active{translate:0 4px;scale:.98;box-shadow:0 2px 0 #173e3755!important}.coasts button:focus-visible,.sideQuests>button:focus-visible{outline:3px solid #ffd451;outline-offset:3px}
 @media(hover:hover) and (pointer:fine){.coasts button:hover,.sideQuests>button:hover{translate:0 -5px;box-shadow:0 11px 0 #173e3744!important}.coasts button:hover .coastArt{transform:rotate(0) scale(1.07)}.coasts button:active,.sideQuests>button:active{translate:0 4px;box-shadow:0 2px 0 #173e3755!important}}
 @media(max-width:600px){.arrival{padding-bottom:12px}.guideReveal p{font-size:12px}}
 @media(prefers-reduced-motion:reduce){.guideReveal,.coasts button,.sideQuests>button,.coasts button .coastArt{transition:none}.coasts button:hover,.sideQuests>button:hover,.coasts button:active,.sideQuests>button:active{translate:none;scale:1}.coasts button:hover .coastArt{transform:rotate(-9deg)}}
 .arrival::after{content:'';position:absolute;inset:0;z-index:2;pointer-events:none;background:url('/stories/films/assets/entry-grain.png') repeat;opacity:.22;mix-blend-mode:multiply}
 .coastArt{background-image:url('/stories/films/assets/entry-grain.png')}
-.levelMap::after{opacity:.24;mix-blend-mode:multiply}
+.mapGrain{opacity:.24;mix-blend-mode:multiply}
 .arrival{margin-top:0}
 /* Mobile intro: full-width copy and a separate illustration row. */
 @media(max-width:600px){
@@ -49,5 +51,87 @@
 /* Landing card leads the Paths screen; the path chooser sits under it. */
 .landing.landing{margin:0 0 4px!important}
 /* On phones the chooser docks to the top of the scroll while the path scrolls, so the current path stays visible; a horizontal swipe on the section switches path. */
-.pathDock{position:relative}
-@media(max-width:600px),(pointer:coarse){.pathDock{position:sticky;top:-12px;z-index:6;padding:6px 0 8px;background:none;box-shadow:none}.pathDock .coasts.coasts{gap:6px}.pathDock .coasts button{min-height:78px;padding:7px 3px;box-shadow:0 4px 0 #173e3744}.pathDock .coasts button[aria-pressed=true]{transform:translateY(-2px)}}
+.dockSentinel{height:1px;margin-bottom:-1px;pointer-events:none}
+.pathDock{height:120px;box-sizing:border-box;contain:layout style;position:sticky;top:0;z-index:6;padding:0 0 8px;background:none;box-shadow:none}
+.pathDock .coasts.coasts{padding:0}
+@media(max-width:600px),(pointer:coarse){.pathDock{height:100px}.pathDock .coasts.coasts{gap:6px}.pathDock .coasts button{min-height:78px;padding:7px 3px;box-shadow:0 4px 0 #173e3744}.pathDock .coasts button[aria-pressed=true]{transform:translateY(-2px)}}
+
+/* Docked, the chooser animates to a compact bar: the numbered coast badges collapse away and the cards shrink to the format name and its count. */
+.pathDock .coasts button{transition:min-height 160ms ease-out,padding 160ms ease-out,gap 160ms ease-out,translate 180ms ease,box-shadow 180ms ease,scale 180ms ease}
+.pathDock .coasts button .coastArt{overflow:hidden;transition:height 160ms ease-out,width 160ms ease-out,opacity 160ms ease,margin 160ms ease-out,transform 160ms ease-out}
+.pathDock[data-stuck=true] .coasts button{min-height:0;padding:9px 6px;gap:1px}
+.pathDock[data-stuck=true] .coasts button .coastArt{height:0;width:0;opacity:0;margin:0;border-width:0}
+.pathDock[data-stuck=true] .coasts button strong{font-size:13px}
+@media(prefers-reduced-motion:reduce){.pathDock .coasts button,.pathDock .coasts button .coastArt{transition:none}}
+
+/* The landing illustration breathes: the ball rolls, the flag flaps on its pole, the sun pulses behind a soft halo. Transform/opacity only, and it stops for reduced motion.
+   Each moving shape is its own HTML layer holding a full-art <svg> (JourneyArrivalArt), so the loops are composited and every
+   shape lands on the same pixels as before; transform origins are set inline in px. The loops rest after 6 s without interaction (.artRest, lib/sceneryRest.ts). */
+.artStage{position:relative;aspect-ratio:420/300}
+.artLayer{position:absolute;inset:0;display:block;width:100%;height:100%;overflow:hidden}
+.artPiece{position:absolute;inset:0}
+.artPiece>svg{position:absolute;inset:0;display:block;width:100%;height:100%}
+.artRest *{animation-play-state:paused!important}
+.ballSpin{animation:ballRoll 9s linear infinite}
+.flagWave{animation:flagFlap 2.6s ease-in-out infinite}
+.sunCore{animation:sunPulse 4.2s ease-in-out infinite}
+.sunHalo{animation:sunGlow 4.2s ease-in-out infinite}
+@keyframes ballRoll{to{transform:rotate(360deg)}}
+@keyframes flagFlap{0%,100%{transform:scaleX(1)}35%{transform:scaleX(.9)}70%{transform:scaleX(1.05)}}
+@keyframes sunPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}
+@keyframes sunGlow{0%,100%{transform:scale(1);opacity:.28}50%{transform:scale(1.18);opacity:.1}}
+@media(prefers-reduced-motion:reduce){.ballSpin,.flagWave,.sunCore,.sunHalo{animation:none}}
+
+/* Landing card: the pitch title on the left, progress and the next action on the right — two stacks on one centred axis, equal padding, no dead corner. */
+.landing.landing{display:grid;grid-template-columns:minmax(0,1fr);align-items:center;gap:18px;padding:24px!important}
+.landingHead{display:flex;flex-direction:column;gap:4px;min-width:0}
+.landing .landingHead h3{margin:0;font-size:clamp(26px,3.2vw,36px);line-height:1.08}
+.landingNext{display:flex;flex-direction:column;gap:14px;min-width:0}
+.landingProgress{display:flex;flex-direction:column;gap:8px}
+.landing .landingNext strong{font-size:12px}
+.landing .landingNext progress{display:block;width:100%;height:8px;accent-color:#588477;margin:0}
+.landing .landingNext button{display:flex;flex-direction:column;align-items:center;gap:4px;width:100%;box-sizing:border-box;min-height:56px;padding:12px 20px;border:0;border-radius:999px;background:#244d40;color:#fff3d2;font:inherit;cursor:pointer}
+.landing .landingNext p{margin:0;font-size:14px;line-height:1.5}
+@media(min-width:850px){.landing.landing{grid-template-columns:minmax(0,1fr) minmax(300px,1fr);column-gap:34px;padding:26px 28px!important}}
+
+/* The hero card keeps its box height after the subtitle was removed, so the Paths screen does not reflow. */
+.arrival.arrival{min-height:355px}
+@media(max-width:1100px){.arrival.arrival{min-height:330px}}
+@media(max-width:849px){.arrival.arrival{min-height:323px}}
+@media(max-width:600px){.arrival.arrival{min-height:483px}}
+@media(max-width:360px){.arrival.arrival{min-height:522px}}
+
+/* Covered artwork must stop animating while a story owns the screen. */
+:global(body:has([data-riso-story])) .arrivalArt,:global(body:has([data-riso-story])) .arrivalArt *{animation-play-state:paused!important}
+
+.chapterArt{position:absolute;left:0;width:100%;pointer-events:none}.chapterArt img{display:block;width:100%;height:100%}.journey{touch-action:pan-y pinch-zoom}.levelMap{overflow-anchor:none}
+
+/* Cover follows the actual compact buttons, with only a small feather beneath their shadows. */
+.pathDock .coasts.coasts{position:relative;isolation:isolate}
+.pathDock[data-stuck=true] .coasts::before{content:'';position:absolute;left:-24px;right:-24px;top:-102px;bottom:-14px;z-index:-1;pointer-events:none;background:#1255ee url('/stories/paths/abstract-island.svg?v=diagonal-2') center top/100vw 1200px repeat-y;-webkit-mask-image:linear-gradient(#000 calc(100% - 16px),transparent);mask-image:linear-gradient(#000 calc(100% - 16px),transparent)}
+.pathDock[data-stuck=true] .coasts::after{content:'';position:absolute;left:-24px;right:-24px;bottom:-16px;height:18px;z-index:-1;pointer-events:none;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);-webkit-mask-image:linear-gradient(#000,transparent);mask-image:linear-gradient(#000,transparent)}
+@media(max-width:600px){.pathDock[data-stuck=true] .coasts::before{top:-94px;background-size:100vw 900px}}
+
+/* Keep desktop tab hit boxes stationary so edge hovering cannot repeatedly enter/leave. */
+@media(hover:hover) and (pointer:fine){.pathDock .coasts button:hover,.pathDock .coasts button:active{translate:none;scale:1}}
+
+/* Format changes replace only the route and stops; the island stays still. */
+.pathForeground{position:absolute;inset:0;z-index:2}
+.pathForeground>svg{overflow:visible}
+.pathForeground>svg>path{stroke:#fff4d6!important;stroke-width:12;stroke-dasharray:none}
+.pathDock .coasts button strong,.pathDock[data-stuck=true] .coasts button strong{font-size:20px;line-height:1.2}
+.pathDock[data-stuck=true] .coasts button{padding:16px 6px}
+@media(max-width:600px){.pathDock .coasts button strong,.pathDock[data-stuck=true] .coasts button strong{font-size:17px}}
+/* Base camp has no label column any more: the side-quest tiles take the full width, one row on wide screens. */
+@media(min-width:850px){.basecamp{display:block}.sideQuests.sideQuests{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+.basecamp{margin-top:20px}
+@media(max-width:849px){.sideQuests.sideQuests{grid-template-columns:repeat(2,minmax(0,1fr))!important}.sideQuests.sideQuests>button:first-child:not(:only-child){grid-column:1/-1}}
+
+/* Side-quest tiles: titles share one top line whether the count wraps or not (was centred, so titles jumped). */
+.sideQuests.sideQuests>button{justify-content:flex-start}
+
+/* Desktop tiles: the count's word always sits on its own line, so all three tiles line up ("39 / 55" then "found"). */
+@media(min-width:850px){.sideQuests [data-count-word]{display:block}}
+/* The arrival art keeps its size when "How your journey works" opens: columns may not grow with their content. */
+.arrival{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}
+@media(max-width:600px){.arrival{grid-template-columns:minmax(0,1fr)}}

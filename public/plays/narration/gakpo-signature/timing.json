@@ -1,0 +1,398 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Munich, Euro 2024: the Netherlands against Romania. Xavi Simons spins and finds Cody Gakpo on the left. He takes his defender toward the touchline... cuts back inside... shoots! Goal!",
+   "src": "/plays/narration/gakpo-signature/1.m4a",
+   "seconds": 14.5,
+   "words": [
+    {
+     "w": "Munich",
+     "at": 0.4
+    },
+    {
+     "w": "Euro",
+     "at": 0.825
+    },
+    {
+     "w": "2024",
+     "at": 1.15
+    },
+    {
+     "w": "the",
+     "at": 2.325
+    },
+    {
+     "w": "Netherlands",
+     "at": 2.45
+    },
+    {
+     "w": "against",
+     "at": 3.05
+    },
+    {
+     "w": "Romania",
+     "at": 3.45
+    },
+    {
+     "w": "Xavi",
+     "at": 4.6
+    },
+    {
+     "w": "Simons",
+     "at": 4.987
+    },
+    {
+     "w": "spins",
+     "at": 5.475
+    },
+    {
+     "w": "and",
+     "at": 6.013
+    },
+    {
+     "w": "finds",
+     "at": 6.138
+    },
+    {
+     "w": "Cody",
+     "at": 6.513
+    },
+    {
+     "w": "Gakpo",
+     "at": 6.825
+    },
+    {
+     "w": "on",
+     "at": 7.312
+    },
+    {
+     "w": "the",
+     "at": 7.412
+    },
+    {
+     "w": "left",
+     "at": 7.5
+    },
+    {
+     "w": "He",
+     "at": 8.25
+    },
+    {
+     "w": "takes",
+     "at": 8.375
+    },
+    {
+     "w": "his",
+     "at": 8.613
+    },
+    {
+     "w": "defender",
+     "at": 8.775
+    },
+    {
+     "w": "toward",
+     "at": 9.3
+    },
+    {
+     "w": "the",
+     "at": 9.562
+    },
+    {
+     "w": "touchline",
+     "at": 9.65
+    },
+    {
+     "w": "cuts",
+     "at": 10.675
+    },
+    {
+     "w": "back",
+     "at": 10.95
+    },
+    {
+     "w": "inside",
+     "at": 11.25
+    },
+    {
+     "w": "shoots",
+     "at": 12.387
+    },
+    {
+     "w": "Goal",
+     "at": 13.088
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. Gakpo drives toward the line, and his defender follows. Then he cuts back inside, and the goal opens up.",
+   "src": "/plays/narration/gakpo-signature/2.m4a",
+   "seconds": 9.6,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.212
+    },
+    {
+     "w": "Gakpo",
+     "at": 2.275
+    },
+    {
+     "w": "drives",
+     "at": 2.788
+    },
+    {
+     "w": "toward",
+     "at": 3.25
+    },
+    {
+     "w": "the",
+     "at": 3.513
+    },
+    {
+     "w": "line",
+     "at": 3.625
+    },
+    {
+     "w": "and",
+     "at": 4.125
+    },
+    {
+     "w": "his",
+     "at": 4.237
+    },
+    {
+     "w": "defender",
+     "at": 4.375
+    },
+    {
+     "w": "follows",
+     "at": 4.888
+    },
+    {
+     "w": "Then",
+     "at": 5.888
+    },
+    {
+     "w": "he",
+     "at": 6.1
+    },
+    {
+     "w": "cuts",
+     "at": 6.225
+    },
+    {
+     "w": "back",
+     "at": 6.525
+    },
+    {
+     "w": "inside",
+     "at": 6.8
+    },
+    {
+     "w": "and",
+     "at": 7.463
+    },
+    {
+     "w": "the",
+     "at": 7.562
+    },
+    {
+     "w": "goal",
+     "at": 7.662
+    },
+    {
+     "w": "opens",
+     "at": 8.0
+    },
+    {
+     "w": "up",
+     "at": 8.4
+    }
+   ]
+  },
+  {
+   "label": "Near post",
+   "text": "He drills it low and fast, inside the near post. Florin Nita can't stop it. One-nil to the Netherlands!",
+   "src": "/plays/narration/gakpo-signature/3.m4a",
+   "seconds": 7.8,
+   "words": [
+    {
+     "w": "He",
+     "at": 0.35
+    },
+    {
+     "w": "drills",
+     "at": 0.475
+    },
+    {
+     "w": "it",
+     "at": 0.825
+    },
+    {
+     "w": "low",
+     "at": 0.988
+    },
+    {
+     "w": "and",
+     "at": 1.325
+    },
+    {
+     "w": "fast",
+     "at": 1.462
+    },
+    {
+     "w": "inside",
+     "at": 2.1
+    },
+    {
+     "w": "the",
+     "at": 2.513
+    },
+    {
+     "w": "near",
+     "at": 2.6
+    },
+    {
+     "w": "post",
+     "at": 2.825
+    },
+    {
+     "w": "Florin",
+     "at": 3.7
+    },
+    {
+     "w": "Nita",
+     "at": 4.1
+    },
+    {
+     "w": "can't",
+     "at": 4.375
+    },
+    {
+     "w": "stop",
+     "at": 4.675
+    },
+    {
+     "w": "it",
+     "at": 5.025
+    },
+    {
+     "w": "One-nil",
+     "at": 5.513
+    },
+    {
+     "w": "to",
+     "at": 6.0
+    },
+    {
+     "w": "the",
+     "at": 6.088
+    },
+    {
+     "w": "Netherlands",
+     "at": 6.175
+    }
+   ]
+  },
+  {
+   "label": "How he does it",
+   "text": "Now try his move. From the left wing, cut inside onto your right foot, and aim for the far corner.",
+   "src": "/plays/narration/gakpo-signature/4.m4a",
+   "seconds": 7.4,
+   "words": [
+    {
+     "w": "Now",
+     "at": 0.4
+    },
+    {
+     "w": "try",
+     "at": 0.637
+    },
+    {
+     "w": "his",
+     "at": 0.925
+    },
+    {
+     "w": "move",
+     "at": 1.1
+    },
+    {
+     "w": "From",
+     "at": 1.988
+    },
+    {
+     "w": "the",
+     "at": 2.163
+    },
+    {
+     "w": "left",
+     "at": 2.25
+    },
+    {
+     "w": "wing",
+     "at": 2.525
+    },
+    {
+     "w": "cut",
+     "at": 3.087
+    },
+    {
+     "w": "inside",
+     "at": 3.325
+    },
+    {
+     "w": "onto",
+     "at": 3.812
+    },
+    {
+     "w": "your",
+     "at": 4.037
+    },
+    {
+     "w": "right",
+     "at": 4.15
+    },
+    {
+     "w": "foot",
+     "at": 4.438
+    },
+    {
+     "w": "and",
+     "at": 4.975
+    },
+    {
+     "w": "aim",
+     "at": 5.138
+    },
+    {
+     "w": "for",
+     "at": 5.45
+    },
+    {
+     "w": "the",
+     "at": 5.562
+    },
+    {
+     "w": "far",
+     "at": 5.662
+    },
+    {
+     "w": "corner",
+     "at": 5.925
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The 2024 final, live",
+   "text": "San Diego, 2024: the Gold Cup final, USA against Brazil. Captain Lindsey Heaps runs up from midfield. Emily Fox crosses... Heaps heads it in! That goal won the cup.",
+   "src": "/plays/narration/heaps-signature/1.m4a",
+   "seconds": 13.6,
+   "words": [
+    {
+     "w": "San",
+     "at": 0.4
+    },
+    {
+     "w": "Diego",
+     "at": 0.65
+    },
+    {
+     "w": "2024",
+     "at": 1.2
+    },
+    {
+     "w": "the",
+     "at": 2.4
+    },
+    {
+     "w": "Gold",
+     "at": 2.5
+    },
+    {
+     "w": "Cup",
+     "at": 2.775
+    },
+    {
+     "w": "final",
+     "at": 3.0
+    },
+    {
+     "w": "USA",
+     "at": 3.538
+    },
+    {
+     "w": "against",
+     "at": 4.175
+    },
+    {
+     "w": "Brazil",
+     "at": 4.575
+    },
+    {
+     "w": "Captain",
+     "at": 5.638
+    },
+    {
+     "w": "Lindsey",
+     "at": 6.025
+    },
+    {
+     "w": "Heaps",
+     "at": 6.438
+    },
+    {
+     "w": "runs",
+     "at": 6.838
+    },
+    {
+     "w": "up",
+     "at": 7.138
+    },
+    {
+     "w": "from",
+     "at": 7.3
+    },
+    {
+     "w": "midfield",
+     "at": 7.45
+    },
+    {
+     "w": "Emily",
+     "at": 8.463
+    },
+    {
+     "w": "Fox",
+     "at": 8.863
+    },
+    {
+     "w": "crosses",
+     "at": 9.25
+    },
+    {
+     "w": "Heaps",
+     "at": 10.275
+    },
+    {
+     "w": "heads",
+     "at": 10.575
+    },
+    {
+     "w": "it",
+     "at": 10.812
+    },
+    {
+     "w": "in",
+     "at": 10.9
+    },
+    {
+     "w": "That",
+     "at": 11.588
+    },
+    {
+     "w": "goal",
+     "at": 11.85
+    },
+    {
+     "w": "won",
+     "at": 12.1
+    },
+    {
+     "w": "the",
+     "at": 12.287
+    },
+    {
+     "w": "cup",
+     "at": 12.375
+    }
+   ]
+  },
+  {
+   "label": "From the edge",
+   "text": "Heaps loves to arrive from midfield and shoot from the edge of the box. Here\u2019s how she does it. The ball rolls back... bang, low into the corner!",
+   "src": "/plays/narration/heaps-signature/2.m4a",
+   "seconds": 9.9,
+   "words": [
+    {
+     "w": "Heaps",
+     "at": 0.35
+    },
+    {
+     "w": "loves",
+     "at": 0.625
+    },
+    {
+     "w": "to",
+     "at": 0.9
+    },
+    {
+     "w": "arrive",
+     "at": 1.025
+    },
+    {
+     "w": "from",
+     "at": 1.45
+    },
+    {
+     "w": "midfield",
+     "at": 1.6
+    },
+    {
+     "w": "and",
+     "at": 2.2
+    },
+    {
+     "w": "shoot",
+     "at": 2.388
+    },
+    {
+     "w": "from",
+     "at": 2.725
+    },
+    {
+     "w": "the",
+     "at": 2.862
+    },
+    {
+     "w": "edge",
+     "at": 2.975
+    },
+    {
+     "w": "of",
+     "at": 3.163
+    },
+    {
+     "w": "the",
+     "at": 3.237
+    },
+    {
+     "w": "box",
+     "at": 3.325
+    },
+    {
+     "w": "Here",
+     "at": 4.237
+    },
+    {
+     "w": "s",
+     "at": 4.625
+    },
+    {
+     "w": "how",
+     "at": 4.8
+    },
+    {
+     "w": "she",
+     "at": 4.975
+    },
+    {
+     "w": "does",
+     "at": 5.125
+    },
+    {
+     "w": "it",
+     "at": 5.362
+    },
+    {
+     "w": "The",
+     "at": 5.875
+    },
+    {
+     "w": "ball",
+     "at": 5.975
+    },
+    {
+     "w": "rolls",
+     "at": 6.3
+    },
+    {
+     "w": "back",
+     "at": 6.625
+    },
+    {
+     "w": "bang",
+     "at": 7.463
+    },
+    {
+     "w": "low",
+     "at": 7.963
+    },
+    {
+     "w": "into",
+     "at": 8.213
+    },
+    {
+     "w": "the",
+     "at": 8.387
+    },
+    {
+     "w": "corner",
+     "at": 8.475
+    }
+   ]
+  },
+  {
+   "label": "Slow motion",
+   "text": "Watch slowly. Her head stays over the ball. Her right foot strikes right through the middle.",
+   "src": "/plays/narration/heaps-signature/3.m4a",
+   "seconds": 6.3,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "slowly",
+     "at": 0.713
+    },
+    {
+     "w": "Her",
+     "at": 1.575
+    },
+    {
+     "w": "head",
+     "at": 1.725
+    },
+    {
+     "w": "stays",
+     "at": 1.95
+    },
+    {
+     "w": "over",
+     "at": 2.263
+    },
+    {
+     "w": "the",
+     "at": 2.462
+    },
+    {
+     "w": "ball",
+     "at": 2.55
+    },
+    {
+     "w": "Her",
+     "at": 3.2
+    },
+    {
+     "w": "right",
+     "at": 3.375
+    },
+    {
+     "w": "foot",
+     "at": 3.688
+    },
+    {
+     "w": "strikes",
+     "at": 4.0
+    },
+    {
+     "w": "right",
+     "at": 4.412
+    },
+    {
+     "w": "through",
+     "at": 4.725
+    },
+    {
+     "w": "the",
+     "at": 4.912
+    },
+    {
+     "w": "middle",
+     "at": 5.0
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "The secret? Keep your head over the ball, and strike through the middle of it.",
+   "src": "/plays/narration/heaps-signature/4.m4a",
+   "seconds": 5.0,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "secret",
+     "at": 0.463
+    },
+    {
+     "w": "Keep",
+     "at": 1.363
+    },
+    {
+     "w": "your",
+     "at": 1.587
+    },
+    {
+     "w": "head",
+     "at": 1.7
+    },
+    {
+     "w": "over",
+     "at": 1.887
+    },
+    {
+     "w": "the",
+     "at": 2.062
+    },
+    {
+     "w": "ball",
+     "at": 2.15
+    },
+    {
+     "w": "and",
+     "at": 2.612
+    },
+    {
+     "w": "strike",
+     "at": 2.737
+    },
+    {
+     "w": "through",
+     "at": 3.125
+    },
+    {
+     "w": "the",
+     "at": 3.325
+    },
+    {
+     "w": "middle",
+     "at": 3.425
+    },
+    {
+     "w": "of",
+     "at": 3.675
+    },
+    {
+     "w": "it",
+     "at": 3.788
+    }
+   ]
+  }
+ ]
+}

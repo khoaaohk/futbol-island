@@ -1,0 +1,98 @@
+{
+ "lesson": "next7_dribblein",
+ "questions": [
+  {
+   "q": "True or false? Blue is guarding the pass to the middle.",
+   "options": [
+    "True",
+    "False"
+   ],
+   "correct": 0,
+   "explain": "Right, it's true. A blue player stands in the lane to the middle.",
+   "choiceExplanations": [
+    "Right, it's true. A blue player stands in the lane to the middle.",
+    "Look at the lane to the middle. A blue player stands in it."
+   ],
+   "visual": {
+    "kind": "trueFalse",
+    "frame": {
+     "step": 1,
+     "focus": [
+      "dcm",
+      "cm"
+     ]
+    }
+   }
+  },
+  {
+   "q": "The taker dribbles in. What do teammates do?",
+   "options": [
+    "Crowd close to the taker",
+    "Run back to our goal",
+    "Keep their own separate spaces"
+   ],
+   "correct": 2,
+   "explain": "Yes. Separate spaces give the taker more choices to pass.",
+   "choiceExplanations": [
+    "Crowding brings defenders close, so the taker has no room.",
+    "Running back leaves the taker with nobody to pass to.",
+    "Yes. Separate spaces give the taker more choices to pass."
+   ],
+   "visual": {
+    "kind": "whatNext",
+    "frame": {
+     "step": 3,
+     "focus": [
+      "lm",
+      "cm"
+     ],
+     "trails": true
+    }
+   }
+  },
+  {
+   "q": "Now Blue guards the pass inside. Where can the taker dribble?",
+   "options": [
+    "Up the line",
+    "Inside, toward the middle"
+   ],
+   "correct": 0,
+   "explain": "Yes. Blue left the line open, so the taker dribbles in there.",
+   "choiceExplanations": [
+    "Yes. Blue left the line open, so the taker dribbles in there.",
+    "Two blue players are there, so the dribble gets stopped."
+   ],
+   "visual": {
+    "kind": "dragToZone",
+    "frame": {
+     "step": 5,
+     "place": {
+      "drm": {
+       "x": 40,
+       "y": 278
+      }
+     },
+     "focus": [
+      "lm",
+      "drm"
+     ]
+    },
+    "drag": "lm",
+    "zones": [
+     {
+      "x": 30,
+      "y": 205,
+      "w": 36,
+      "h": 30
+     },
+     {
+      "x": 45,
+      "y": 250,
+      "w": 30,
+      "h": 24
+     }
+    ]
+   }
+  }
+ ]
+}

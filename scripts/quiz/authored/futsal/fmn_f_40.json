@@ -1,0 +1,147 @@
+{
+ "lesson": "fmn_f_40",
+ "questions": [
+  {
+   "q": "A teammate ran forward and cleared the middle. Tap the space the fixo moves into.",
+   "options": [
+    "The middle angle behind the ball",
+    "The front lane beside the runner",
+    "Stay deep near our goal"
+   ],
+   "correct": 0,
+   "explain": "Yes. The fixo steps into the middle angle, so the left ala has new support.",
+   "choiceExplanations": [
+    "Yes. The fixo steps into the middle angle, so the left ala has new support.",
+    "A teammate already filled that forward lane. Two players there crowd the same space.",
+    "From deep, the fixo is too far away to help. The middle space stays empty."
+   ],
+   "visual": {
+    "kind": "tapSpot",
+    "frame": {
+     "step": 2,
+     "focus": [
+      "cb",
+      "st"
+     ],
+     "marks": [
+      {
+       "kind": "run",
+       "from": {
+        "x": 115,
+        "y": 226
+       },
+       "to": "st",
+       "tone": "gold"
+      }
+     ]
+    },
+    "spots": [
+     {
+      "x": 112,
+      "y": 230
+     },
+     {
+      "x": 152,
+      "y": 188
+     },
+     {
+      "x": 117,
+      "y": 335
+     }
+    ]
+   }
+  },
+  {
+   "q": "In 4-0, players share the space. Put these steps in order.",
+   "options": [
+    "Pass out to the left ala",
+    "A teammate runs forward, clearing space",
+    "Fixo steps into the middle angle",
+    "Pass into the fixo's new support"
+   ],
+   "correct": 0,
+   "explain": "Right. The pass goes wide, a run clears space, the fixo fills it, then we use it.",
+   "choiceExplanations": [
+    "Right. The pass goes wide, a run clears space, the fixo fills it, then we use it.",
+    "A teammate runs forward first. That clears the middle space for someone else.",
+    "The fixo moves only after the middle is empty. Then the new angle is ready.",
+    "We pass to the fixo last, once they stand in the new angle."
+   ],
+   "visual": {
+    "kind": "order",
+    "frame": {
+     "step": 0,
+     "focus": [
+      "cb",
+      "lm",
+      "st"
+     ]
+    }
+   }
+  },
+  {
+   "q": "The right ala has the ball, and a teammate ran forward. Where does the fixo go?",
+   "options": [
+    "Up into the front lane too",
+    "Into the middle angle near the ball",
+    "Out wide beside the right ala"
+   ],
+   "correct": 1,
+   "explain": "Yes. The runner left the middle empty, so the fixo fills it and gives the ball a new angle.",
+   "choiceExplanations": [
+    "A teammate is already in that forward lane. Two runners there share one space and help nobody.",
+    "Yes. The runner left the middle empty, so the fixo fills it and gives the ball a new angle.",
+    "Standing right beside the ball crowds the right ala. One defender can then guard you both."
+   ],
+   "visual": {
+    "kind": "dragToZone",
+    "frame": {
+     "step": 0,
+     "place": {
+      "st": {
+       "x": 135,
+       "y": 140
+      }
+     },
+     "ball": "rm",
+     "focus": [
+      "cb",
+      "rm"
+     ],
+     "marks": [
+      {
+       "kind": "run",
+       "from": {
+        "x": 115,
+        "y": 226
+       },
+       "to": "st",
+       "tone": "gold"
+      }
+     ]
+    },
+    "drag": "cb",
+    "zones": [
+     {
+      "x": 98,
+      "y": 165,
+      "w": 46,
+      "h": 36
+     },
+     {
+      "x": 165,
+      "y": 230,
+      "w": 46,
+      "h": 36
+     },
+     {
+      "x": 225,
+      "y": 305,
+      "w": 46,
+      "h": 36
+     }
+    ]
+   }
+  }
+ ]
+}

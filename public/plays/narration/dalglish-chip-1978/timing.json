@@ -1,0 +1,378 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Wembley, 1978",
+   "text": "Wembley, 1978, the European Cup final: Liverpool, in red, against Club Brugge. Souness slides it through, and Kenny Dalglish is in! A tight angle, the keeper comes out, and... over him! Goal!",
+   "src": "/plays/narration/dalglish-chip-1978/1.m4a",
+   "seconds": 14.9,
+   "words": [
+    {
+     "w": "Wembley",
+     "at": 0.4
+    },
+    {
+     "w": "1978",
+     "at": 0.85
+    },
+    {
+     "w": "the",
+     "at": 1.9
+    },
+    {
+     "w": "European",
+     "at": 2.0
+    },
+    {
+     "w": "Cup",
+     "at": 2.525
+    },
+    {
+     "w": "final",
+     "at": 2.788
+    },
+    {
+     "w": "Liverpool",
+     "at": 3.612
+    },
+    {
+     "w": "in",
+     "at": 4.325
+    },
+    {
+     "w": "red",
+     "at": 4.487
+    },
+    {
+     "w": "against",
+     "at": 4.875
+    },
+    {
+     "w": "Club",
+     "at": 5.25
+    },
+    {
+     "w": "Brugge",
+     "at": 5.525
+    },
+    {
+     "w": "Souness",
+     "at": 6.537
+    },
+    {
+     "w": "slides",
+     "at": 6.987
+    },
+    {
+     "w": "it",
+     "at": 7.412
+    },
+    {
+     "w": "through",
+     "at": 7.537
+    },
+    {
+     "w": "and",
+     "at": 7.975
+    },
+    {
+     "w": "Kenny",
+     "at": 8.113
+    },
+    {
+     "w": "Dalglish",
+     "at": 8.45
+    },
+    {
+     "w": "is",
+     "at": 8.975
+    },
+    {
+     "w": "in",
+     "at": 9.125
+    },
+    {
+     "w": "A",
+     "at": 9.838
+    },
+    {
+     "w": "tight",
+     "at": 9.963
+    },
+    {
+     "w": "angle",
+     "at": 10.287
+    },
+    {
+     "w": "the",
+     "at": 10.688
+    },
+    {
+     "w": "keeper",
+     "at": 10.775
+    },
+    {
+     "w": "comes",
+     "at": 11.15
+    },
+    {
+     "w": "out",
+     "at": 11.45
+    },
+    {
+     "w": "and",
+     "at": 11.725
+    },
+    {
+     "w": "over",
+     "at": 12.325
+    },
+    {
+     "w": "him",
+     "at": 12.675
+    },
+    {
+     "w": "Goal",
+     "at": 13.45
+    }
+   ]
+  },
+  {
+   "label": "Wait for it",
+   "text": "Watch again, slowly. Keeper Jensen rushes out. Dalglish does not panic. He waits, and waits, until the keeper goes down, then lifts the ball gently over him.",
+   "src": "/plays/narration/dalglish-chip-1978/2.m4a",
+   "seconds": 11.5,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.163
+    },
+    {
+     "w": "Keeper",
+     "at": 2.212
+    },
+    {
+     "w": "Jensen",
+     "at": 2.575
+    },
+    {
+     "w": "rushes",
+     "at": 3.025
+    },
+    {
+     "w": "out",
+     "at": 3.4
+    },
+    {
+     "w": "Dalglish",
+     "at": 4.037
+    },
+    {
+     "w": "does",
+     "at": 4.625
+    },
+    {
+     "w": "not",
+     "at": 4.8
+    },
+    {
+     "w": "panic",
+     "at": 5.025
+    },
+    {
+     "w": "He",
+     "at": 5.9
+    },
+    {
+     "w": "waits",
+     "at": 6.062
+    },
+    {
+     "w": "and",
+     "at": 6.525
+    },
+    {
+     "w": "waits",
+     "at": 6.662
+    },
+    {
+     "w": "until",
+     "at": 7.162
+    },
+    {
+     "w": "the",
+     "at": 7.388
+    },
+    {
+     "w": "keeper",
+     "at": 7.475
+    },
+    {
+     "w": "goes",
+     "at": 7.85
+    },
+    {
+     "w": "down",
+     "at": 8.125
+    },
+    {
+     "w": "then",
+     "at": 8.6
+    },
+    {
+     "w": "lifts",
+     "at": 8.8
+    },
+    {
+     "w": "the",
+     "at": 9.125
+    },
+    {
+     "w": "ball",
+     "at": 9.225
+    },
+    {
+     "w": "gently",
+     "at": 9.537
+    },
+    {
+     "w": "over",
+     "at": 9.95
+    },
+    {
+     "w": "him",
+     "at": 10.2
+    }
+   ]
+  },
+  {
+   "label": "Over the boards",
+   "text": "It drops in! Dalglish races away and hurdles the advertising boards!",
+   "src": "/plays/narration/dalglish-chip-1978/3.m4a",
+   "seconds": 5.7,
+   "words": [
+    {
+     "w": "It",
+     "at": 0.35
+    },
+    {
+     "w": "drops",
+     "at": 0.475
+    },
+    {
+     "w": "in",
+     "at": 0.9
+    },
+    {
+     "w": "Dalglish",
+     "at": 1.6
+    },
+    {
+     "w": "races",
+     "at": 2.1
+    },
+    {
+     "w": "away",
+     "at": 2.5
+    },
+    {
+     "w": "and",
+     "at": 2.9
+    },
+    {
+     "w": "hurdles",
+     "at": 3.038
+    },
+    {
+     "w": "the",
+     "at": 3.438
+    },
+    {
+     "w": "advertising",
+     "at": 3.55
+    },
+    {
+     "w": "boards",
+     "at": 4.225
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: be patient, wait for the keeper to go down, then lift it over.",
+   "src": "/plays/narration/dalglish-chip-1978/4.m4a",
+   "seconds": 5.5,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "be",
+     "at": 1.275
+    },
+    {
+     "w": "patient",
+     "at": 1.438
+    },
+    {
+     "w": "wait",
+     "at": 2.2
+    },
+    {
+     "w": "for",
+     "at": 2.4
+    },
+    {
+     "w": "the",
+     "at": 2.513
+    },
+    {
+     "w": "keeper",
+     "at": 2.6
+    },
+    {
+     "w": "to",
+     "at": 2.95
+    },
+    {
+     "w": "go",
+     "at": 3.038
+    },
+    {
+     "w": "down",
+     "at": 3.2
+    },
+    {
+     "w": "then",
+     "at": 3.612
+    },
+    {
+     "w": "lift",
+     "at": 3.8
+    },
+    {
+     "w": "it",
+     "at": 4.013
+    },
+    {
+     "w": "over",
+     "at": 4.088
+    }
+   ]
+  }
+ ]
+}

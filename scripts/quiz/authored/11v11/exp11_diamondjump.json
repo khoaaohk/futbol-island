@@ -1,0 +1,129 @@
+{
+ "lesson": "exp11_diamondjump",
+ "questions": [
+  {
+   "q": "Blue reaches the left fullback, and your left back has a winger. What does your left back do next?",
+   "options": [
+    "Runs out to press the fullback",
+    "Stays goal-side of Blue's winger",
+    "Tucks inside to screen the six"
+   ],
+   "correct": 1,
+   "explain": "Yes. The back four must hold Blue's three forwards, so the left back keeps the winger.",
+   "choiceExplanations": [
+    "That leaves Blue's winger free behind you, so one pass beats your back four.",
+    "Yes. The back four must hold Blue's three forwards, so the left back keeps the winger.",
+    "The ten already screens Blue's six, so tucking in leaves the winger free outside."
+   ],
+   "visual": {
+    "kind": "whatNext",
+    "frame": {
+     "step": 3,
+     "trails": true,
+     "focus": [
+      "lb",
+      "dlw",
+      "dlb"
+     ]
+    }
+   }
+  },
+  {
+   "q": "The left eight presses the fullback. Tap where the far eight goes to keep cover.",
+   "options": [
+    "Narrow, beside your six",
+    "High, pressing Blue's center back",
+    "Wide, beside your right back"
+   ],
+   "correct": 0,
+   "explain": "Yes. Narrow beside the six, the far eight covers the inside lane behind the press.",
+   "choiceExplanations": [
+    "Yes. Narrow beside the six, the far eight covers the inside lane behind the press.",
+    "Four players high leaves the middle open, so one pass inside beats the whole press.",
+    "Your right back already holds that side, so the inside lane behind the press is left empty."
+   ],
+   "visual": {
+    "kind": "tapSpot",
+    "frame": {
+     "step": 5,
+     "hide": [
+      "r8"
+     ],
+     "focus": [
+      "l8",
+      "six"
+     ]
+    },
+    "spots": [
+     {
+      "x": 165,
+      "y": 248
+     },
+     {
+      "x": 180,
+      "y": 135
+     },
+     {
+      "x": 225,
+      "y": 255
+     }
+    ]
+   }
+  },
+  {
+   "q": "Blue switches to the right fullback. The ten still screens their six. Drag your right eight to its job.",
+   "options": [
+    "Press Blue's six with the ten",
+    "Drop beside your six",
+    "Close the right fullback"
+   ],
+   "correct": 2,
+   "explain": "Yes. The ten keeps the screen and the right back holds the winger, so the right eight closes the fullback.",
+   "choiceExplanations": [
+    "The ten already screens Blue's six, so a second presser leaves the fullback free.",
+    "Dropping deep gives the fullback time, and your right back must leave the winger to press.",
+    "Yes. The ten keeps the screen and the right back holds the winger, so the right eight closes the fullback."
+   ],
+   "visual": {
+    "kind": "dragToZone",
+    "frame": {
+     "step": 4,
+     "ball": "drb",
+     "focus": [
+      "r8",
+      "drb"
+     ],
+     "marks": [
+      {
+       "kind": "pass",
+       "from": "drcb",
+       "to": "drb",
+       "tone": "blue"
+      }
+     ]
+    },
+    "drag": "r8",
+    "zones": [
+     {
+      "x": 168,
+      "y": 188,
+      "w": 36,
+      "h": 24
+     },
+     {
+      "x": 163,
+      "y": 300,
+      "w": 26,
+      "h": 24
+     },
+     {
+      "x": 220,
+      "y": 200,
+      "w": 44,
+      "h": 36
+     }
+    ]
+   }
+  }
+ ]
+}

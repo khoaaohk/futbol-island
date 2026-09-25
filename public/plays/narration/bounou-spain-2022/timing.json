@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Two saves, live",
+   "text": "Qatar 2022: Morocco against Spain, penalties! Carlos Soler shoots low. Yassine Bounou, called Bono, blocks it! Next, Sergio Busquets steps up. Bono dives right... Saved again! The fans go wild!",
+   "src": "/plays/narration/bounou-spain-2022/1.m4a",
+   "seconds": 15.5,
+   "words": [
+    {
+     "w": "Qatar",
+     "at": 0.325
+    },
+    {
+     "w": "2022",
+     "at": 0.675
+    },
+    {
+     "w": "Morocco",
+     "at": 1.7
+    },
+    {
+     "w": "against",
+     "at": 2.2
+    },
+    {
+     "w": "Spain",
+     "at": 2.562
+    },
+    {
+     "w": "penalties",
+     "at": 3.075
+    },
+    {
+     "w": "Carlos",
+     "at": 4.088
+    },
+    {
+     "w": "Soler",
+     "at": 4.55
+    },
+    {
+     "w": "shoots",
+     "at": 4.925
+    },
+    {
+     "w": "low",
+     "at": 5.275
+    },
+    {
+     "w": "Yassine",
+     "at": 6.062
+    },
+    {
+     "w": "Bounou",
+     "at": 6.475
+    },
+    {
+     "w": "called",
+     "at": 6.875
+    },
+    {
+     "w": "Bono",
+     "at": 7.15
+    },
+    {
+     "w": "blocks",
+     "at": 7.6
+    },
+    {
+     "w": "it",
+     "at": 8.012
+    },
+    {
+     "w": "Next",
+     "at": 8.55
+    },
+    {
+     "w": "Sergio",
+     "at": 9.012
+    },
+    {
+     "w": "Busquets",
+     "at": 9.5
+    },
+    {
+     "w": "steps",
+     "at": 10.025
+    },
+    {
+     "w": "up",
+     "at": 10.375
+    },
+    {
+     "w": "Bono",
+     "at": 10.912
+    },
+    {
+     "w": "dives",
+     "at": 11.3
+    },
+    {
+     "w": "right",
+     "at": 11.812
+    },
+    {
+     "w": "Saved",
+     "at": 12.537
+    },
+    {
+     "w": "again",
+     "at": 12.887
+    },
+    {
+     "w": "The",
+     "at": 13.35
+    },
+    {
+     "w": "fans",
+     "at": 13.45
+    },
+    {
+     "w": "go",
+     "at": 13.85
+    },
+    {
+     "w": "wild",
+     "at": 14.037
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch Busquets' kick again, slowly. Bono stays calm and reads him. Small steps... then a strong push, and his right hand saves it!",
+   "src": "/plays/narration/bounou-spain-2022/2.m4a",
+   "seconds": 9.5,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "Busquets'",
+     "at": 0.7
+    },
+    {
+     "w": "kick",
+     "at": 1.2
+    },
+    {
+     "w": "again",
+     "at": 1.363
+    },
+    {
+     "w": "slowly",
+     "at": 1.712
+    },
+    {
+     "w": "Bono",
+     "at": 2.638
+    },
+    {
+     "w": "stays",
+     "at": 3.038
+    },
+    {
+     "w": "calm",
+     "at": 3.438
+    },
+    {
+     "w": "and",
+     "at": 3.788
+    },
+    {
+     "w": "reads",
+     "at": 3.9
+    },
+    {
+     "w": "him",
+     "at": 4.188
+    },
+    {
+     "w": "Small",
+     "at": 4.7
+    },
+    {
+     "w": "steps",
+     "at": 5.062
+    },
+    {
+     "w": "then",
+     "at": 5.975
+    },
+    {
+     "w": "a",
+     "at": 6.112
+    },
+    {
+     "w": "strong",
+     "at": 6.188
+    },
+    {
+     "w": "push",
+     "at": 6.638
+    },
+    {
+     "w": "and",
+     "at": 7.062
+    },
+    {
+     "w": "his",
+     "at": 7.162
+    },
+    {
+     "w": "right",
+     "at": 7.325
+    },
+    {
+     "w": "hand",
+     "at": 7.6
+    },
+    {
+     "w": "saves",
+     "at": 7.938
+    },
+    {
+     "w": "it",
+     "at": 8.338
+    }
+   ]
+  },
+  {
+   "label": "From behind the goal",
+   "text": "Now Soler's kick, from behind the goal. Low and central: Bono drops and smothers it!",
+   "src": "/plays/narration/bounou-spain-2022/3.m4a",
+   "seconds": 6.7,
+   "words": [
+    {
+     "w": "Now",
+     "at": 0.4
+    },
+    {
+     "w": "Soler's",
+     "at": 0.637
+    },
+    {
+     "w": "kick",
+     "at": 1.137
+    },
+    {
+     "w": "from",
+     "at": 1.475
+    },
+    {
+     "w": "behind",
+     "at": 1.613
+    },
+    {
+     "w": "the",
+     "at": 1.962
+    },
+    {
+     "w": "goal",
+     "at": 2.05
+    },
+    {
+     "w": "Low",
+     "at": 2.925
+    },
+    {
+     "w": "and",
+     "at": 3.212
+    },
+    {
+     "w": "central",
+     "at": 3.337
+    },
+    {
+     "w": "Bono",
+     "at": 4.062
+    },
+    {
+     "w": "drops",
+     "at": 4.463
+    },
+    {
+     "w": "and",
+     "at": 4.912
+    },
+    {
+     "w": "smothers",
+     "at": 5.037
+    },
+    {
+     "w": "it",
+     "at": 5.537
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "The secret? Keepers, stay calm and read the kicker. Take small steps to stay balanced, then push off strong and reach!",
+   "src": "/plays/narration/bounou-spain-2022/4.m4a",
+   "seconds": 8.4,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "secret",
+     "at": 0.463
+    },
+    {
+     "w": "Keepers",
+     "at": 1.288
+    },
+    {
+     "w": "stay",
+     "at": 1.837
+    },
+    {
+     "w": "calm",
+     "at": 2.163
+    },
+    {
+     "w": "and",
+     "at": 2.513
+    },
+    {
+     "w": "read",
+     "at": 2.625
+    },
+    {
+     "w": "the",
+     "at": 2.812
+    },
+    {
+     "w": "kicker",
+     "at": 2.9
+    },
+    {
+     "w": "Take",
+     "at": 3.788
+    },
+    {
+     "w": "small",
+     "at": 4.037
+    },
+    {
+     "w": "steps",
+     "at": 4.425
+    },
+    {
+     "w": "to",
+     "at": 4.75
+    },
+    {
+     "w": "stay",
+     "at": 4.85
+    },
+    {
+     "w": "balanced",
+     "at": 5.125
+    },
+    {
+     "w": "then",
+     "at": 5.8
+    },
+    {
+     "w": "push",
+     "at": 6.0
+    },
+    {
+     "w": "off",
+     "at": 6.263
+    },
+    {
+     "w": "strong",
+     "at": 6.487
+    },
+    {
+     "w": "and",
+     "at": 6.912
+    },
+    {
+     "w": "reach",
+     "at": 7.025
+    }
+   ]
+  }
+ ]
+}

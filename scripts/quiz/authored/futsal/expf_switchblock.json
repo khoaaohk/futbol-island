@@ -1,0 +1,134 @@
+{
+ "lesson": "expf_switchblock",
+ "questions": [
+  {
+   "q": "The block shifts left. Tap where the right ala waits.",
+   "options": [
+    "Inside the block, near the ball",
+    "Up high beside the pivot",
+    "Wide, beyond the block's far edge"
+   ],
+   "correct": 2,
+   "explain": "Yes. Outside the far edge, the right ala is ready for the switch later.",
+   "choiceExplanations": [
+    "Inside the block, the defenders can mark you easily. Nobody is left to switch to.",
+    "The pivot already holds that space. Two players there close together are easy to mark.",
+    "Yes. Outside the far edge, the right ala is ready for the switch later."
+   ],
+   "visual": {
+    "kind": "tapSpot",
+    "frame": {
+     "step": 1,
+     "hide": [
+      "rm"
+     ],
+     "focus": [
+      "lm",
+      "drm"
+     ]
+    },
+    "spots": [
+     {
+      "x": 100,
+      "y": 160
+     },
+     {
+      "x": 180,
+      "y": 110
+     },
+     {
+      "x": 235,
+      "y": 185
+     }
+    ]
+   }
+  },
+  {
+   "q": "How do we move the block, then switch? Put the steps in order.",
+   "options": [
+    "Draw the block to the left",
+    "Pass back to the deeper fixo",
+    "Fixo switches to the right ala",
+    "Right ala receives outside the block"
+   ],
+   "correct": 0,
+   "explain": "Right. Pull the block one way, go around it through the fixo, then switch wide.",
+   "choiceExplanations": [
+    "Right. Pull the block one way, go around it through the fixo, then switch wide.",
+    "First the block must shift. Then the pass behind the press takes us around it.",
+    "The fixo switches only after getting the ball behind the press.",
+    "The right ala receives last, outside the narrow block."
+   ],
+   "visual": {
+    "kind": "order",
+    "frame": {
+     "step": 1,
+     "focus": [
+      "lm",
+      "cb",
+      "rm"
+     ]
+    }
+   }
+  },
+  {
+   "q": "Now the block has shifted right. The fixo has the ball. Which pass completes the switch?",
+   "options": [
+    "Pass to the right ala",
+    "Pass across to the left ala",
+    "Pass into the pivot"
+   ],
+   "correct": 1,
+   "explain": "Yes. The far defender is still narrow, so the left ala is free outside the block.",
+   "choiceExplanations": [
+    "The block moved to that side. A defender is right on the right ala.",
+    "Yes. The far defender is still narrow, so the left ala is free outside the block.",
+    "A defender stands in the middle lane. The compact block closes the pivot."
+   ],
+   "visual": {
+    "kind": "bestPass",
+    "frame": {
+     "step": 4,
+     "place": {
+      "rm": {
+       "x": 235,
+       "y": 175
+      },
+      "drm": {
+       "x": 205,
+       "y": 160
+      },
+      "dst": {
+       "x": 130,
+       "y": 200
+      },
+      "dlm": {
+       "x": 105,
+       "y": 160
+      },
+      "dcb": {
+       "x": 140,
+       "y": 88
+      },
+      "lm": {
+       "x": 35,
+       "y": 170
+      }
+     },
+     "ball": "cb",
+     "focus": [
+      "cb",
+      "lm",
+      "dlm"
+     ]
+    },
+    "from": "cb",
+    "to": [
+     "rm",
+     "lm",
+     "st"
+    ]
+   }
+  }
+ ]
+}

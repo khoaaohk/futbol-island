@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Compostela, 1996. Ronaldo gets the ball near halfway. A trip, a shirt pull, but he stays on his feet! He powers between two players, into the box... goal!",
+   "src": "/plays/narration/ronaldo-compostela-1996/1.m4a",
+   "seconds": 12.4,
+   "words": [
+    {
+     "w": "Compostela",
+     "at": 0.35
+    },
+    {
+     "w": "1996",
+     "at": 1.15
+    },
+    {
+     "w": "Ronaldo",
+     "at": 2.737
+    },
+    {
+     "w": "gets",
+     "at": 3.275
+    },
+    {
+     "w": "the",
+     "at": 3.525
+    },
+    {
+     "w": "ball",
+     "at": 3.625
+    },
+    {
+     "w": "near",
+     "at": 3.925
+    },
+    {
+     "w": "halfway",
+     "at": 4.15
+    },
+    {
+     "w": "A",
+     "at": 5.088
+    },
+    {
+     "w": "trip",
+     "at": 5.213
+    },
+    {
+     "w": "a",
+     "at": 5.8
+    },
+    {
+     "w": "shirt",
+     "at": 5.925
+    },
+    {
+     "w": "pull",
+     "at": 6.25
+    },
+    {
+     "w": "but",
+     "at": 6.562
+    },
+    {
+     "w": "he",
+     "at": 6.688
+    },
+    {
+     "w": "stays",
+     "at": 6.812
+    },
+    {
+     "w": "on",
+     "at": 7.162
+    },
+    {
+     "w": "his",
+     "at": 7.263
+    },
+    {
+     "w": "feet",
+     "at": 7.463
+    },
+    {
+     "w": "He",
+     "at": 8.15
+    },
+    {
+     "w": "powers",
+     "at": 8.312
+    },
+    {
+     "w": "between",
+     "at": 8.75
+    },
+    {
+     "w": "two",
+     "at": 9.113
+    },
+    {
+     "w": "players",
+     "at": 9.338
+    },
+    {
+     "w": "into",
+     "at": 9.863
+    },
+    {
+     "w": "the",
+     "at": 10.037
+    },
+    {
+     "w": "box",
+     "at": 10.125
+    },
+    {
+     "w": "goal",
+     "at": 11.062
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again, slowly. A trip: arms out for balance! A shirt pull: he leans forward and shrugs it off. Then big, powerful strides.",
+   "src": "/plays/narration/ronaldo-compostela-1996/2.m4a",
+   "seconds": 10.0,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "slowly",
+     "at": 1.113
+    },
+    {
+     "w": "A",
+     "at": 2.038
+    },
+    {
+     "w": "trip",
+     "at": 2.163
+    },
+    {
+     "w": "arms",
+     "at": 2.65
+    },
+    {
+     "w": "out",
+     "at": 2.913
+    },
+    {
+     "w": "for",
+     "at": 3.075
+    },
+    {
+     "w": "balance",
+     "at": 3.2
+    },
+    {
+     "w": "A",
+     "at": 4.112
+    },
+    {
+     "w": "shirt",
+     "at": 4.237
+    },
+    {
+     "w": "pull",
+     "at": 4.55
+    },
+    {
+     "w": "he",
+     "at": 4.975
+    },
+    {
+     "w": "leans",
+     "at": 5.125
+    },
+    {
+     "w": "forward",
+     "at": 5.487
+    },
+    {
+     "w": "and",
+     "at": 5.888
+    },
+    {
+     "w": "shrugs",
+     "at": 6.013
+    },
+    {
+     "w": "it",
+     "at": 6.312
+    },
+    {
+     "w": "off",
+     "at": 6.4
+    },
+    {
+     "w": "Then",
+     "at": 7.088
+    },
+    {
+     "w": "big",
+     "at": 7.375
+    },
+    {
+     "w": "powerful",
+     "at": 7.862
+    },
+    {
+     "w": "strides",
+     "at": 8.412
+    }
+   ]
+  },
+  {
+   "label": "The coach",
+   "text": "Then a low shot, past the keeper! On the bench, coach Bobby Robson held his head in disbelief.",
+   "src": "/plays/narration/ronaldo-compostela-1996/3.m4a",
+   "seconds": 7.1,
+   "words": [
+    {
+     "w": "Then",
+     "at": 0.375
+    },
+    {
+     "w": "a",
+     "at": 0.5
+    },
+    {
+     "w": "low",
+     "at": 0.6
+    },
+    {
+     "w": "shot",
+     "at": 0.875
+    },
+    {
+     "w": "past",
+     "at": 1.4
+    },
+    {
+     "w": "the",
+     "at": 1.712
+    },
+    {
+     "w": "keeper",
+     "at": 1.8
+    },
+    {
+     "w": "On",
+     "at": 2.725
+    },
+    {
+     "w": "the",
+     "at": 2.862
+    },
+    {
+     "w": "bench",
+     "at": 2.95
+    },
+    {
+     "w": "coach",
+     "at": 3.612
+    },
+    {
+     "w": "Bobby",
+     "at": 3.925
+    },
+    {
+     "w": "Robson",
+     "at": 4.225
+    },
+    {
+     "w": "held",
+     "at": 4.7
+    },
+    {
+     "w": "his",
+     "at": 4.938
+    },
+    {
+     "w": "head",
+     "at": 5.1
+    },
+    {
+     "w": "in",
+     "at": 5.338
+    },
+    {
+     "w": "disbelief",
+     "at": 5.475
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: stay strong and balanced when someone pushes you, and keep the ball close as you run.",
+   "src": "/plays/narration/ronaldo-compostela-1996/4.m4a",
+   "seconds": 6.9,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "stay",
+     "at": 1.337
+    },
+    {
+     "w": "strong",
+     "at": 1.675
+    },
+    {
+     "w": "and",
+     "at": 2.163
+    },
+    {
+     "w": "balanced",
+     "at": 2.275
+    },
+    {
+     "w": "when",
+     "at": 2.737
+    },
+    {
+     "w": "someone",
+     "at": 2.9
+    },
+    {
+     "w": "pushes",
+     "at": 3.175
+    },
+    {
+     "w": "you",
+     "at": 3.6
+    },
+    {
+     "w": "and",
+     "at": 4.15
+    },
+    {
+     "w": "keep",
+     "at": 4.275
+    },
+    {
+     "w": "the",
+     "at": 4.487
+    },
+    {
+     "w": "ball",
+     "at": 4.575
+    },
+    {
+     "w": "close",
+     "at": 4.888
+    },
+    {
+     "w": "as",
+     "at": 5.25
+    },
+    {
+     "w": "you",
+     "at": 5.375
+    },
+    {
+     "w": "run",
+     "at": 5.537
+    }
+   ]
+  }
+ ]
+}

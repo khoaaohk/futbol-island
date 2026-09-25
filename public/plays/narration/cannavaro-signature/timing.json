@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The header, live",
+   "text": "Dortmund, 2006: the last minute of extra time. Germany send a high ball into Italy's box. Captain Fabio Cannavaro out-jumps giant Per Mertesacker and heads it clear!",
+   "src": "/plays/narration/cannavaro-signature/1.m4a",
+   "seconds": 13.2,
+   "words": [
+    {
+     "w": "Dortmund",
+     "at": 0.375
+    },
+    {
+     "w": "2006",
+     "at": 1.038
+    },
+    {
+     "w": "the",
+     "at": 2.525
+    },
+    {
+     "w": "last",
+     "at": 2.65
+    },
+    {
+     "w": "minute",
+     "at": 3.05
+    },
+    {
+     "w": "of",
+     "at": 3.288
+    },
+    {
+     "w": "extra",
+     "at": 3.4
+    },
+    {
+     "w": "time",
+     "at": 3.8
+    },
+    {
+     "w": "Germany",
+     "at": 4.75
+    },
+    {
+     "w": "send",
+     "at": 5.263
+    },
+    {
+     "w": "a",
+     "at": 5.537
+    },
+    {
+     "w": "high",
+     "at": 5.638
+    },
+    {
+     "w": "ball",
+     "at": 5.963
+    },
+    {
+     "w": "into",
+     "at": 6.312
+    },
+    {
+     "w": "Italy's",
+     "at": 6.562
+    },
+    {
+     "w": "box",
+     "at": 7.0
+    },
+    {
+     "w": "Captain",
+     "at": 7.938
+    },
+    {
+     "w": "Fabio",
+     "at": 8.35
+    },
+    {
+     "w": "Cannavaro",
+     "at": 8.775
+    },
+    {
+     "w": "out-jumps",
+     "at": 9.438
+    },
+    {
+     "w": "giant",
+     "at": 10.088
+    },
+    {
+     "w": "Per",
+     "at": 10.45
+    },
+    {
+     "w": "Mertesacker",
+     "at": 10.625
+    },
+    {
+     "w": "and",
+     "at": 11.3
+    },
+    {
+     "w": "heads",
+     "at": 11.425
+    },
+    {
+     "w": "it",
+     "at": 11.662
+    },
+    {
+     "w": "clear",
+     "at": 11.75
+    }
+   ]
+  },
+  {
+   "label": "Watch the jump",
+   "text": "Watch again. Mertesacker is twenty-two centimetres taller, but Cannavaro jumps first, arms out for balance, and meets the ball at the top of his leap.",
+   "src": "/plays/narration/cannavaro-signature/2.m4a",
+   "seconds": 10.6,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "Mertesacker",
+     "at": 1.6
+    },
+    {
+     "w": "is",
+     "at": 2.375
+    },
+    {
+     "w": "twenty-two",
+     "at": 2.538
+    },
+    {
+     "w": "centimetres",
+     "at": 3.087
+    },
+    {
+     "w": "taller",
+     "at": 3.763
+    },
+    {
+     "w": "but",
+     "at": 4.5
+    },
+    {
+     "w": "Cannavaro",
+     "at": 4.65
+    },
+    {
+     "w": "jumps",
+     "at": 5.263
+    },
+    {
+     "w": "first",
+     "at": 5.65
+    },
+    {
+     "w": "arms",
+     "at": 6.362
+    },
+    {
+     "w": "out",
+     "at": 6.725
+    },
+    {
+     "w": "for",
+     "at": 6.95
+    },
+    {
+     "w": "balance",
+     "at": 7.075
+    },
+    {
+     "w": "and",
+     "at": 7.775
+    },
+    {
+     "w": "meets",
+     "at": 7.9
+    },
+    {
+     "w": "the",
+     "at": 8.175
+    },
+    {
+     "w": "ball",
+     "at": 8.275
+    },
+    {
+     "w": "at",
+     "at": 8.588
+    },
+    {
+     "w": "the",
+     "at": 8.662
+    },
+    {
+     "w": "top",
+     "at": 8.762
+    },
+    {
+     "w": "of",
+     "at": 9.037
+    },
+    {
+     "w": "his",
+     "at": 9.113
+    },
+    {
+     "w": "leap",
+     "at": 9.275
+    }
+   ]
+  },
+  {
+   "label": "The burst",
+   "text": "Then he bursts out, wins the ball from Podolski and finds Totti. That move ended in Del Piero's goal!",
+   "src": "/plays/narration/cannavaro-signature/3.m4a",
+   "seconds": 7.7,
+   "words": [
+    {
+     "w": "Then",
+     "at": 0.35
+    },
+    {
+     "w": "he",
+     "at": 0.463
+    },
+    {
+     "w": "bursts",
+     "at": 0.588
+    },
+    {
+     "w": "out",
+     "at": 0.975
+    },
+    {
+     "w": "wins",
+     "at": 1.575
+    },
+    {
+     "w": "the",
+     "at": 1.837
+    },
+    {
+     "w": "ball",
+     "at": 1.925
+    },
+    {
+     "w": "from",
+     "at": 2.225
+    },
+    {
+     "w": "Podolski",
+     "at": 2.375
+    },
+    {
+     "w": "and",
+     "at": 3.025
+    },
+    {
+     "w": "finds",
+     "at": 3.163
+    },
+    {
+     "w": "Totti",
+     "at": 3.562
+    },
+    {
+     "w": "That",
+     "at": 4.588
+    },
+    {
+     "w": "move",
+     "at": 4.825
+    },
+    {
+     "w": "ended",
+     "at": 5.088
+    },
+    {
+     "w": "in",
+     "at": 5.45
+    },
+    {
+     "w": "Del",
+     "at": 5.6
+    },
+    {
+     "w": "Piero's",
+     "at": 5.875
+    },
+    {
+     "w": "goal",
+     "at": 6.325
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: timing beats height. Jump early, use your arms for balance, and head it high and away.",
+   "src": "/plays/narration/cannavaro-signature/4.m4a",
+   "seconds": 6.9,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "timing",
+     "at": 1.1
+    },
+    {
+     "w": "beats",
+     "at": 1.5
+    },
+    {
+     "w": "height",
+     "at": 1.775
+    },
+    {
+     "w": "Jump",
+     "at": 2.625
+    },
+    {
+     "w": "early",
+     "at": 2.95
+    },
+    {
+     "w": "use",
+     "at": 3.4
+    },
+    {
+     "w": "your",
+     "at": 3.587
+    },
+    {
+     "w": "arms",
+     "at": 3.725
+    },
+    {
+     "w": "for",
+     "at": 4.05
+    },
+    {
+     "w": "balance",
+     "at": 4.175
+    },
+    {
+     "w": "and",
+     "at": 4.688
+    },
+    {
+     "w": "head",
+     "at": 4.8
+    },
+    {
+     "w": "it",
+     "at": 4.963
+    },
+    {
+     "w": "high",
+     "at": 5.062
+    },
+    {
+     "w": "and",
+     "at": 5.362
+    },
+    {
+     "w": "away",
+     "at": 5.463
+    }
+   ]
+  }
+ ]
+}

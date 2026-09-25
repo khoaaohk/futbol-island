@@ -2,9 +2,9 @@
 import {forwardRef,useEffect,useRef,useState,type ButtonHTMLAttributes} from 'react';
 import {Icon} from './Icon';
 import styles from './DoneButton.module.css';
-type NavigationProps=Omit<ButtonHTMLAttributes<HTMLButtonElement>,'onClick'> & {onNavigate:()=>void;back?:boolean;label?:string};
+type NavigationProps=Omit<ButtonHTMLAttributes<HTMLButtonElement>,'onClick'> & {onNavigate:()=>void;back?:boolean;label?:string;immediate?:boolean};
 /** Collapse the label before changing views; keep focus refs and native keyboard activation. */
-export const NavigationButton=forwardRef<HTMLButtonElement,NavigationProps>(function NavigationButton({onNavigate,back=false,label,className='',disabled,...props},ref){
+export const NavigationButton=forwardRef<HTMLButtonElement,NavigationProps>(function NavigationButton({onNavigate,back=false,label,className='',disabled,immediate=false,...props},ref){
  const [closing,setClosing]=useState(false),[departing,setDeparting]=useState(false);
  const button=useRef<HTMLButtonElement|null>(null);
  const timer=useRef<ReturnType<typeof setTimeout>>();
@@ -20,7 +20,7 @@ export const NavigationButton=forwardRef<HTMLButtonElement,NavigationProps>(func
  const navigate=()=>{
   if(busy.current||disabled)return;
   busy.current=true;
-  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){onNavigate();busy.current=false;return;}
+  if(immediate||window.matchMedia('(prefers-reduced-motion: reduce)').matches){onNavigate();busy.current=false;return;}
   setClosing(true);
   timer.current=setTimeout(()=>{setDeparting(true);onNavigate();},240);
  };

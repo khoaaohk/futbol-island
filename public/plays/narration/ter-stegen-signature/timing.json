@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The Coliseum",
+   "text": "Getafe, 2019. A long ball flies over the top. Out rushes Barcelona keeper Marc-Andr\u00e9 ter Stegen! He chests it down and sends it back. Luis Su\u00e1rez lifts it in. Goal!",
+   "src": "/plays/narration/ter-stegen-signature/1.m4a",
+   "seconds": 13.7,
+   "words": [
+    {
+     "w": "Getafe",
+     "at": 0.375
+    },
+    {
+     "w": "2019",
+     "at": 0.95
+    },
+    {
+     "w": "A",
+     "at": 2.138
+    },
+    {
+     "w": "long",
+     "at": 2.263
+    },
+    {
+     "w": "ball",
+     "at": 2.6
+    },
+    {
+     "w": "flies",
+     "at": 2.962
+    },
+    {
+     "w": "over",
+     "at": 3.312
+    },
+    {
+     "w": "the",
+     "at": 3.487
+    },
+    {
+     "w": "top",
+     "at": 3.575
+    },
+    {
+     "w": "Out",
+     "at": 4.338
+    },
+    {
+     "w": "rushes",
+     "at": 4.6
+    },
+    {
+     "w": "Barcelona",
+     "at": 5.0
+    },
+    {
+     "w": "keeper",
+     "at": 5.638
+    },
+    {
+     "w": "Marc-Andr\u00e9",
+     "at": 6.025
+    },
+    {
+     "w": "ter",
+     "at": 6.713
+    },
+    {
+     "w": "Stegen",
+     "at": 7.025
+    },
+    {
+     "w": "He",
+     "at": 7.975
+    },
+    {
+     "w": "chests",
+     "at": 8.137
+    },
+    {
+     "w": "it",
+     "at": 8.463
+    },
+    {
+     "w": "down",
+     "at": 8.55
+    },
+    {
+     "w": "and",
+     "at": 8.9
+    },
+    {
+     "w": "sends",
+     "at": 9.037
+    },
+    {
+     "w": "it",
+     "at": 9.312
+    },
+    {
+     "w": "back",
+     "at": 9.4
+    },
+    {
+     "w": "Luis",
+     "at": 10.175
+    },
+    {
+     "w": "Su\u00e1rez",
+     "at": 10.588
+    },
+    {
+     "w": "lifts",
+     "at": 11.1
+    },
+    {
+     "w": "it",
+     "at": 11.387
+    },
+    {
+     "w": "in",
+     "at": 11.475
+    },
+    {
+     "w": "Goal",
+     "at": 12.25
+    }
+   ]
+  },
+  {
+   "label": "The replay",
+   "text": "Watch again. Outside his box, no hands allowed, so he uses his chest. Head up, he spots Su\u00e1rez running, and strikes it long.",
+   "src": "/plays/narration/ter-stegen-signature/2.m4a",
+   "seconds": 9.3,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "Outside",
+     "at": 1.438
+    },
+    {
+     "w": "his",
+     "at": 1.913
+    },
+    {
+     "w": "box",
+     "at": 2.087
+    },
+    {
+     "w": "no",
+     "at": 2.7
+    },
+    {
+     "w": "hands",
+     "at": 2.875
+    },
+    {
+     "w": "allowed",
+     "at": 3.175
+    },
+    {
+     "w": "so",
+     "at": 3.7
+    },
+    {
+     "w": "he",
+     "at": 3.85
+    },
+    {
+     "w": "uses",
+     "at": 3.975
+    },
+    {
+     "w": "his",
+     "at": 4.263
+    },
+    {
+     "w": "chest",
+     "at": 4.438
+    },
+    {
+     "w": "Head",
+     "at": 5.388
+    },
+    {
+     "w": "up",
+     "at": 5.588
+    },
+    {
+     "w": "he",
+     "at": 5.812
+    },
+    {
+     "w": "spots",
+     "at": 5.938
+    },
+    {
+     "w": "Su\u00e1rez",
+     "at": 6.362
+    },
+    {
+     "w": "running",
+     "at": 6.9
+    },
+    {
+     "w": "and",
+     "at": 7.312
+    },
+    {
+     "w": "strikes",
+     "at": 7.425
+    },
+    {
+     "w": "it",
+     "at": 7.787
+    },
+    {
+     "w": "long",
+     "at": 7.875
+    }
+   ]
+  },
+  {
+   "label": "The assist",
+   "text": "The pass drops into Su\u00e1rez\u2019s path. One touch, over the keeper, and in! A keeper\u2019s assist!",
+   "src": "/plays/narration/ter-stegen-signature/3.m4a",
+   "seconds": 6.9,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "pass",
+     "at": 0.425
+    },
+    {
+     "w": "drops",
+     "at": 0.8
+    },
+    {
+     "w": "into",
+     "at": 1.113
+    },
+    {
+     "w": "Su\u00e1rez\u2019s",
+     "at": 1.337
+    },
+    {
+     "w": "path",
+     "at": 1.9
+    },
+    {
+     "w": "One",
+     "at": 2.737
+    },
+    {
+     "w": "touch",
+     "at": 3.013
+    },
+    {
+     "w": "over",
+     "at": 3.45
+    },
+    {
+     "w": "the",
+     "at": 3.663
+    },
+    {
+     "w": "keeper",
+     "at": 3.75
+    },
+    {
+     "w": "and",
+     "at": 4.125
+    },
+    {
+     "w": "in",
+     "at": 4.25
+    },
+    {
+     "w": "A",
+     "at": 4.888
+    },
+    {
+     "w": "keeper\u2019s",
+     "at": 5.0
+    },
+    {
+     "w": "assist",
+     "at": 5.4
+    }
+   ]
+  },
+  {
+   "label": "The lesson",
+   "text": "That\u2019s ter Stegen. A keeper who passes well is like an extra player. Stay calm and find a free teammate.",
+   "src": "/plays/narration/ter-stegen-signature/4.m4a",
+   "seconds": 7.8,
+   "words": [
+    {
+     "w": "That\u2019s",
+     "at": 0.35
+    },
+    {
+     "w": "ter",
+     "at": 0.6
+    },
+    {
+     "w": "Stegen",
+     "at": 0.838
+    },
+    {
+     "w": "A",
+     "at": 1.738
+    },
+    {
+     "w": "keeper",
+     "at": 1.85
+    },
+    {
+     "w": "who",
+     "at": 2.188
+    },
+    {
+     "w": "passes",
+     "at": 2.325
+    },
+    {
+     "w": "well",
+     "at": 2.812
+    },
+    {
+     "w": "is",
+     "at": 3.125
+    },
+    {
+     "w": "like",
+     "at": 3.237
+    },
+    {
+     "w": "an",
+     "at": 3.388
+    },
+    {
+     "w": "extra",
+     "at": 3.513
+    },
+    {
+     "w": "player",
+     "at": 3.925
+    },
+    {
+     "w": "Stay",
+     "at": 4.85
+    },
+    {
+     "w": "calm",
+     "at": 5.188
+    },
+    {
+     "w": "and",
+     "at": 5.537
+    },
+    {
+     "w": "find",
+     "at": 5.65
+    },
+    {
+     "w": "a",
+     "at": 5.888
+    },
+    {
+     "w": "free",
+     "at": 5.963
+    },
+    {
+     "w": "teammate",
+     "at": 6.213
+    }
+   ]
+  }
+ ]
+}

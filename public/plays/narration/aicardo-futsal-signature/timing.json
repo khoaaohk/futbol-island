@@ -1,0 +1,386 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: the 2012 semi-final",
+   "text": "The 2012 Futsal Euro semi-final. Spain against Italy, in Zagreb. In the seventh minute, Ortiz slides the ball left. Aicardo arrives and beats the keeper at his near post. One nil!",
+   "src": "/plays/narration/aicardo-futsal-signature/1.m4a",
+   "seconds": 13.9,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "2012",
+     "at": 0.425
+    },
+    {
+     "w": "Futsal",
+     "at": 1.188
+    },
+    {
+     "w": "Euro",
+     "at": 1.65
+    },
+    {
+     "w": "semi-final",
+     "at": 2.013
+    },
+    {
+     "w": "Spain",
+     "at": 3.163
+    },
+    {
+     "w": "against",
+     "at": 3.575
+    },
+    {
+     "w": "Italy",
+     "at": 4.0
+    },
+    {
+     "w": "in",
+     "at": 4.475
+    },
+    {
+     "w": "Zagreb",
+     "at": 4.625
+    },
+    {
+     "w": "In",
+     "at": 5.638
+    },
+    {
+     "w": "the",
+     "at": 5.737
+    },
+    {
+     "w": "seventh",
+     "at": 5.838
+    },
+    {
+     "w": "minute",
+     "at": 6.25
+    },
+    {
+     "w": "Ortiz",
+     "at": 6.7
+    },
+    {
+     "w": "slides",
+     "at": 7.275
+    },
+    {
+     "w": "the",
+     "at": 7.75
+    },
+    {
+     "w": "ball",
+     "at": 7.85
+    },
+    {
+     "w": "left",
+     "at": 8.15
+    },
+    {
+     "w": "Aicardo",
+     "at": 8.975
+    },
+    {
+     "w": "arrives",
+     "at": 9.45
+    },
+    {
+     "w": "and",
+     "at": 9.975
+    },
+    {
+     "w": "beats",
+     "at": 10.1
+    },
+    {
+     "w": "the",
+     "at": 10.375
+    },
+    {
+     "w": "keeper",
+     "at": 10.475
+    },
+    {
+     "w": "at",
+     "at": 10.85
+    },
+    {
+     "w": "his",
+     "at": 10.938
+    },
+    {
+     "w": "near",
+     "at": 11.1
+    },
+    {
+     "w": "post",
+     "at": 11.325
+    },
+    {
+     "w": "One",
+     "at": 12.25
+    },
+    {
+     "w": "nil",
+     "at": 12.525
+    }
+   ]
+  },
+  {
+   "label": "Replay: the near post",
+   "text": "Watch again. The pass goes left, and Aicardo hits it at the near post. Then Spain defend superbly and win!",
+   "src": "/plays/narration/aicardo-futsal-signature/2.m4a",
+   "seconds": 8.0,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "The",
+     "at": 1.475
+    },
+    {
+     "w": "pass",
+     "at": 1.575
+    },
+    {
+     "w": "goes",
+     "at": 1.9
+    },
+    {
+     "w": "left",
+     "at": 2.188
+    },
+    {
+     "w": "and",
+     "at": 2.725
+    },
+    {
+     "w": "Aicardo",
+     "at": 2.85
+    },
+    {
+     "w": "hits",
+     "at": 3.3
+    },
+    {
+     "w": "it",
+     "at": 3.513
+    },
+    {
+     "w": "at",
+     "at": 3.587
+    },
+    {
+     "w": "the",
+     "at": 3.663
+    },
+    {
+     "w": "near",
+     "at": 3.75
+    },
+    {
+     "w": "post",
+     "at": 3.987
+    },
+    {
+     "w": "Then",
+     "at": 4.888
+    },
+    {
+     "w": "Spain",
+     "at": 5.15
+    },
+    {
+     "w": "defend",
+     "at": 5.575
+    },
+    {
+     "w": "superbly",
+     "at": 6.0
+    },
+    {
+     "w": "and",
+     "at": 6.6
+    },
+    {
+     "w": "win",
+     "at": 6.725
+    }
+   ]
+  },
+  {
+   "label": "Watch the passer",
+   "text": "How does he read the game? He watches the passer, not just the ball. Eyes and hips show where the pass will go. So he steps in early and steals it. Watch the passer, not just the ball!",
+   "src": "/plays/narration/aicardo-futsal-signature/3.m4a",
+   "seconds": 12.1,
+   "words": [
+    {
+     "w": "How",
+     "at": 0.35
+    },
+    {
+     "w": "does",
+     "at": 0.463
+    },
+    {
+     "w": "he",
+     "at": 0.588
+    },
+    {
+     "w": "read",
+     "at": 0.7
+    },
+    {
+     "w": "the",
+     "at": 0.887
+    },
+    {
+     "w": "game",
+     "at": 0.975
+    },
+    {
+     "w": "He",
+     "at": 1.75
+    },
+    {
+     "w": "watches",
+     "at": 1.913
+    },
+    {
+     "w": "the",
+     "at": 2.35
+    },
+    {
+     "w": "passer",
+     "at": 2.45
+    },
+    {
+     "w": "not",
+     "at": 2.925
+    },
+    {
+     "w": "just",
+     "at": 3.125
+    },
+    {
+     "w": "the",
+     "at": 3.337
+    },
+    {
+     "w": "ball",
+     "at": 3.425
+    },
+    {
+     "w": "Eyes",
+     "at": 4.25
+    },
+    {
+     "w": "and",
+     "at": 4.675
+    },
+    {
+     "w": "hips",
+     "at": 4.8
+    },
+    {
+     "w": "show",
+     "at": 5.15
+    },
+    {
+     "w": "where",
+     "at": 5.425
+    },
+    {
+     "w": "the",
+     "at": 5.562
+    },
+    {
+     "w": "pass",
+     "at": 5.65
+    },
+    {
+     "w": "will",
+     "at": 5.975
+    },
+    {
+     "w": "go",
+     "at": 6.15
+    },
+    {
+     "w": "So",
+     "at": 6.862
+    },
+    {
+     "w": "he",
+     "at": 7.013
+    },
+    {
+     "w": "steps",
+     "at": 7.125
+    },
+    {
+     "w": "in",
+     "at": 7.438
+    },
+    {
+     "w": "early",
+     "at": 7.612
+    },
+    {
+     "w": "and",
+     "at": 8.0
+    },
+    {
+     "w": "steals",
+     "at": 8.137
+    },
+    {
+     "w": "it",
+     "at": 8.613
+    },
+    {
+     "w": "Watch",
+     "at": 9.213
+    },
+    {
+     "w": "the",
+     "at": 9.55
+    },
+    {
+     "w": "passer",
+     "at": 9.65
+    },
+    {
+     "w": "not",
+     "at": 10.15
+    },
+    {
+     "w": "just",
+     "at": 10.375
+    },
+    {
+     "w": "the",
+     "at": 10.588
+    },
+    {
+     "w": "ball",
+     "at": 10.675
+    }
+   ]
+  }
+ ]
+}

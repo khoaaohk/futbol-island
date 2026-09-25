@@ -1,0 +1,177 @@
+{
+ "lesson": "exp11_safetyfive",
+ "questions": [
+  {
+   "q": "True or false? Your left back approaches the wide outlet, so the six should leave the middle to help.",
+   "options": [
+    "True",
+    "False"
+   ],
+   "correct": 1,
+   "explain": "Right, it's false. The six closes the central lane, so the deeper defenders keep a screen in front.",
+   "choiceExplanations": [
+    "If the six leaves, the central lane opens and Blue's striker can receive in front of your defenders.",
+    "Right, it's false. The six closes the central lane, so the deeper defenders keep a screen in front."
+   ],
+   "visual": {
+    "kind": "trueFalse",
+    "frame": {
+     "step": 7,
+     "focus": [
+      "lb",
+      "six"
+     ],
+     "marks": [
+      {
+       "kind": "pass",
+       "from": "dsix",
+       "to": "dlw",
+       "tone": "blue"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "q": "Blue breaks past your screen. Put these moments in order, first to last.",
+   "options": [
+    "Left screen blocks the near outlet",
+    "Blue wins a loose inside pass",
+    "Blue passes around the screen wide",
+    "Midfielder recovers inside the delaying defender"
+   ],
+   "correct": 0,
+   "explain": "Right. The screen sets up first, then Blue wins the ball, goes around it, and you recover.",
+   "choiceExplanations": [
+    "Right. The screen sets up first, then Blue wins the ball, goes around it, and you recover.",
+    "Blue can only win that pass after the screen is already set during your attack.",
+    "Blue goes around the screen only after winning the ball in the middle.",
+    "Recovering comes last, once the pass has already gone beyond your screen."
+   ],
+   "visual": {
+    "kind": "order",
+    "frames": [
+     {
+      "step": 5,
+      "focus": [
+       "l8"
+      ],
+      "view": {
+       "x": 0,
+       "y": 140,
+       "w": 270,
+       "h": 170
+      }
+     },
+     {
+      "step": 6,
+      "focus": [
+       "dsix"
+      ],
+      "view": {
+       "x": 0,
+       "y": 140,
+       "w": 270,
+       "h": 170
+      }
+     },
+     {
+      "step": 7,
+      "focus": [
+       "dlw"
+      ],
+      "marks": [
+       {
+        "kind": "pass",
+        "from": "dsix",
+        "to": "dlw",
+        "tone": "blue"
+       }
+      ],
+      "view": {
+       "x": 0,
+       "y": 140,
+       "w": 270,
+       "h": 170
+      }
+     },
+     {
+      "step": 9,
+      "focus": [
+       "l8",
+       "lb"
+      ],
+      "view": {
+       "x": 0,
+       "y": 140,
+       "w": 270,
+       "h": 170
+      }
+     }
+    ]
+   }
+  },
+  {
+   "q": "Now Blue goes around your right screen. Drag the six to rebuild protection in front of the defenders.",
+   "options": [
+    "Chase the old passer",
+    "Join the defender at the ball",
+    "Recover inside the delaying defender"
+   ],
+   "correct": 2,
+   "explain": "Yes. The six rebuilds the screen inside, so your defender can delay the winger with cover.",
+   "choiceExplanations": [
+    "The passer no longer has the ball, so chasing leaves the lane inside your defender open.",
+    "Two players at the ball leave the inside lane free for a pass to Blue's striker.",
+    "Yes. The six rebuilds the screen inside, so your defender can delay the winger with cover."
+   ],
+   "visual": {
+    "kind": "dragToZone",
+    "frame": {
+     "step": 8,
+     "place": {
+      "rcb": {
+       "x": 212,
+       "y": 270
+      }
+     },
+     "ball": "drw",
+     "focus": [
+      "six",
+      "rcb",
+      "drw"
+     ],
+     "marks": [
+      {
+       "kind": "pass",
+       "from": "dr8",
+       "to": "drw",
+       "tone": "blue"
+      }
+     ]
+    },
+    "drag": "six",
+    "zones": [
+     {
+      "x": 200,
+      "y": 195,
+      "w": 44,
+      "h": 36
+     },
+     {
+      "x": 250,
+      "y": 285,
+      "w": 36,
+      "h": 30
+     },
+     {
+      "x": 180,
+      "y": 285,
+      "w": 44,
+      "h": 36
+     }
+    ]
+   }
+  }
+ ]
+}

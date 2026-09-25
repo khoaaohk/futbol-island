@@ -1,0 +1,143 @@
+{
+ "lesson": "exp11_shortfreekick",
+ "questions": [
+  {
+   "q": "True or false? Your wall players may rush the taker before the free kick is taken.",
+   "options": [
+    "True",
+    "False"
+   ],
+   "correct": 1,
+   "explain": "Right, it's false. The wall stays the required distance until the ball is kicked and clearly moves.",
+   "choiceExplanations": [
+    "Rushing in early breaks the distance rule, so Blue takes the kick again and you can be booked.",
+    "Right, it's false. The wall stays the required distance until the ball is kicked and clearly moves."
+   ],
+   "visual": {
+    "kind": "trueFalse",
+    "frame": {
+     "step": 0,
+     "focus": [
+      "lb",
+      "rb",
+      "dlb"
+     ]
+    }
+   }
+  },
+  {
+   "q": "Blue plays the free kick short. Put your wall's jobs in order, first to last.",
+   "options": [
+    "Wall stays the required distance",
+    "Taker plays short, ball moves",
+    "Near wall player closes the receiver",
+    "Wall player covers the outside return"
+   ],
+   "correct": 0,
+   "explain": "Right. Hold the distance, wait for the ball to move, close the receiver, then cover the return.",
+   "choiceExplanations": [
+    "Right. Hold the distance, wait for the ball to move, close the receiver, then cover the return.",
+    "The short pass comes after the wall is set at the required distance.",
+    "The wall can only close once the ball is kicked and clearly moves.",
+    "Covering the return is last, after the receiver carries inside and the taker runs outside."
+   ],
+   "visual": {
+    "kind": "order",
+    "frames": [
+     {
+      "step": 0,
+      "focus": [
+       "lb",
+       "rb"
+      ],
+      "view": {
+       "x": 60,
+       "y": 200,
+       "w": 210,
+       "h": 180
+      }
+     },
+     {
+      "step": 3,
+      "focus": [
+       "dlb",
+       "drb"
+      ],
+      "view": {
+       "x": 60,
+       "y": 200,
+       "w": 210,
+       "h": 180
+      }
+     },
+     {
+      "step": 5,
+      "focus": [
+       "lb"
+      ],
+      "view": {
+       "x": 60,
+       "y": 200,
+       "w": 210,
+       "h": 180
+      }
+     },
+     {
+      "step": 8,
+      "focus": [
+       "lb"
+      ],
+      "view": {
+       "x": 60,
+       "y": 200,
+       "w": 210,
+       "h": 180
+      }
+     }
+    ]
+   }
+  },
+  {
+   "q": "One wall player closes the short receiver. The other wall player is hidden. Tap where they stay.",
+   "options": [
+    "Join the press on the receiver",
+    "Chase the taker",
+    "Protect the crossing route"
+   ],
+   "correct": 2,
+   "explain": "Yes. One wall player presses and the other protects the crossing route, so each job stays covered.",
+   "choiceExplanations": [
+    "Two wall players on one receiver leave the crossing route open for a ball into the box.",
+    "The taker has already passed, so chasing leaves the crossing route open.",
+    "Yes. One wall player presses and the other protects the crossing route, so each job stays covered."
+   ],
+   "visual": {
+    "kind": "tapSpot",
+    "frame": {
+     "step": 5,
+     "hide": [
+      "rb"
+     ],
+     "focus": [
+      "lb",
+      "drb"
+     ]
+    },
+    "spots": [
+     {
+      "x": 252,
+      "y": 330
+     },
+     {
+      "x": 242,
+      "y": 262
+     },
+     {
+      "x": 212,
+      "y": 323
+     }
+    ]
+   }
+  }
+ ]
+}

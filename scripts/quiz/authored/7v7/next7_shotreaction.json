@@ -1,0 +1,106 @@
+{
+ "lesson": "next7_shotreaction",
+ "questions": [
+  {
+   "q": "True or false? The striker chases into your path.",
+   "options": [
+    "True",
+    "False"
+   ],
+   "correct": 1,
+   "explain": "Right, it's false. The striker makes room instead of chasing.",
+   "choiceExplanations": [
+    "The striker moves away, so you have room to reach it.",
+    "Right, it's false. The striker makes room instead of chasing."
+   ],
+   "visual": {
+    "kind": "trueFalse",
+    "frame": {
+     "step": 3,
+     "focus": [
+      "rm",
+      "st"
+     ]
+    }
+   }
+  },
+  {
+   "q": "Which picture shows a ball you can reach?",
+   "options": [
+    "After the first shot",
+    "After the second shot"
+   ],
+   "correct": 0,
+   "explain": "Yes. The ball rolls loose near you, so you can reach it.",
+   "choiceExplanations": [
+    "Yes. The ball rolls loose near you, so you can reach it.",
+    "The keeper holds this ball, so you cannot reach it."
+   ],
+   "visual": {
+    "kind": "pickPicture",
+    "pictures": [
+     {
+      "step": 1,
+      "focus": [
+       "rm",
+       "dgk"
+      ]
+     },
+     {
+      "step": 4,
+      "focus": [
+       "rm",
+       "dgk"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "q": "Now the keeper grabs the loose ball first. Where do you go?",
+   "options": [
+    "Run at the keeper",
+    "Back toward midfield",
+    "Wait near their goal"
+   ],
+   "correct": 1,
+   "explain": "Yes. The keeper has control, so you go back to help defend.",
+   "choiceExplanations": [
+    "The keeper already holds it, so chasing leaves a gap behind you.",
+    "Yes. The keeper has control, so you go back to help defend.",
+    "Waiting near their goal leaves your team short when Blue passes."
+   ],
+   "visual": {
+    "kind": "tapSpot",
+    "frame": {
+     "step": 1,
+     "place": {
+      "dgk": {
+       "x": 182,
+       "y": 70
+      }
+     },
+     "ball": "dgk",
+     "focus": [
+      "rm",
+      "dgk"
+     ]
+    },
+    "spots": [
+     {
+      "x": 170,
+      "y": 100
+     },
+     {
+      "x": 180,
+      "y": 215
+     },
+     {
+      "x": 135,
+      "y": 70
+     }
+    ]
+   }
+  }
+ ]
+}

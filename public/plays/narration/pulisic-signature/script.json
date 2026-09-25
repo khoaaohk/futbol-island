@@ -1,0 +1,10 @@
+{
+ "film": "pulisic-signature",
+ "note": "Chapter 1 is keyed from 'steals the ball' (the steal from Lowton) through 'runs straight at', 'Tarkowski steps up', 'Pulisic darts past', 'into the box' to 'goal' (the ball in the net): keep the pause at '...' so the run plays near real time. Pulisic is pronounced 'puh-LISS-ick'; Tarkowski 'tar-KOV-skee'.",
+ "chapters": [
+  {"label": "The goal, live", "text": "Burnley versus Chelsea, 2019. Christian Pulisic steals the ball and runs straight at the defence. Tarkowski steps up. Pulisic darts past, into the box... goal!"},
+  {"label": "Slow motion", "text": "Slow motion: he attacks Tarkowski head on. The defender has to decide, so he pushes him wide. Pulisic reacts and darts past."},
+  {"label": "The finish", "text": "Then a low shot with his left foot, across goal, through Ben Mee's legs, past Nick Pope!"},
+  {"label": "Your turn", "text": "Your turn: run straight at defenders. They have to decide, then you react and go past."}
+ ]
+}

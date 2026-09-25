@@ -1,0 +1,386 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: the 2026 semi-final",
+   "text": "Futsal Euro semi-final, 2026. Portugal lead France, four to one. France push up with an extra attacker. Mouhoudine shoots from close. Bernardo Pa\u00e7\u00f3 saves!",
+   "src": "/plays/narration/bernardo-paco-futsal-signature/1.m4a",
+   "seconds": 12.9,
+   "words": [
+    {
+     "w": "Futsal",
+     "at": 0.375
+    },
+    {
+     "w": "Euro",
+     "at": 0.8
+    },
+    {
+     "w": "semi-final",
+     "at": 1.163
+    },
+    {
+     "w": "2026",
+     "at": 1.9
+    },
+    {
+     "w": "Portugal",
+     "at": 3.388
+    },
+    {
+     "w": "lead",
+     "at": 3.925
+    },
+    {
+     "w": "France",
+     "at": 4.188
+    },
+    {
+     "w": "four",
+     "at": 4.737
+    },
+    {
+     "w": "to",
+     "at": 4.975
+    },
+    {
+     "w": "one",
+     "at": 5.1
+    },
+    {
+     "w": "France",
+     "at": 5.95
+    },
+    {
+     "w": "push",
+     "at": 6.375
+    },
+    {
+     "w": "up",
+     "at": 6.638
+    },
+    {
+     "w": "with",
+     "at": 6.787
+    },
+    {
+     "w": "an",
+     "at": 6.912
+    },
+    {
+     "w": "extra",
+     "at": 7.037
+    },
+    {
+     "w": "attacker",
+     "at": 7.45
+    },
+    {
+     "w": "Mouhoudine",
+     "at": 8.363
+    },
+    {
+     "w": "shoots",
+     "at": 8.963
+    },
+    {
+     "w": "from",
+     "at": 9.325
+    },
+    {
+     "w": "close",
+     "at": 9.525
+    },
+    {
+     "w": "Bernardo",
+     "at": 10.387
+    },
+    {
+     "w": "Pa\u00e7\u00f3",
+     "at": 10.925
+    },
+    {
+     "w": "saves",
+     "at": 11.412
+    }
+   ]
+  },
+  {
+   "label": "Full time",
+   "text": "Full time. Portugal win four to one and reach the final. His twin brother, Tom\u00e1s, was Player of the Match!",
+   "src": "/plays/narration/bernardo-paco-futsal-signature/2.m4a",
+   "seconds": 7.9,
+   "words": [
+    {
+     "w": "Full",
+     "at": 0.375
+    },
+    {
+     "w": "time",
+     "at": 0.637
+    },
+    {
+     "w": "Portugal",
+     "at": 1.462
+    },
+    {
+     "w": "win",
+     "at": 2.0
+    },
+    {
+     "w": "four",
+     "at": 2.237
+    },
+    {
+     "w": "to",
+     "at": 2.475
+    },
+    {
+     "w": "one",
+     "at": 2.612
+    },
+    {
+     "w": "and",
+     "at": 2.925
+    },
+    {
+     "w": "reach",
+     "at": 3.05
+    },
+    {
+     "w": "the",
+     "at": 3.3
+    },
+    {
+     "w": "final",
+     "at": 3.413
+    },
+    {
+     "w": "His",
+     "at": 4.3
+    },
+    {
+     "w": "twin",
+     "at": 4.513
+    },
+    {
+     "w": "brother",
+     "at": 4.825
+    },
+    {
+     "w": "Tom\u00e1s",
+     "at": 5.225
+    },
+    {
+     "w": "was",
+     "at": 5.713
+    },
+    {
+     "w": "Player",
+     "at": 5.888
+    },
+    {
+     "w": "of",
+     "at": 6.312
+    },
+    {
+     "w": "the",
+     "at": 6.388
+    },
+    {
+     "w": "Match",
+     "at": 6.475
+    }
+   ]
+  },
+  {
+   "label": "How he blocks (demo)",
+   "text": "This is how he blocks. The shot is too close to dive, so he stays big: arms wide, and one leg shoots out along the floor. Blocked!",
+   "src": "/plays/narration/bernardo-paco-futsal-signature/3.m4a",
+   "seconds": 9.4,
+   "words": [
+    {
+     "w": "This",
+     "at": 0.35
+    },
+    {
+     "w": "is",
+     "at": 0.55
+    },
+    {
+     "w": "how",
+     "at": 0.675
+    },
+    {
+     "w": "he",
+     "at": 0.863
+    },
+    {
+     "w": "blocks",
+     "at": 0.975
+    },
+    {
+     "w": "The",
+     "at": 1.825
+    },
+    {
+     "w": "shot",
+     "at": 1.962
+    },
+    {
+     "w": "is",
+     "at": 2.212
+    },
+    {
+     "w": "too",
+     "at": 2.35
+    },
+    {
+     "w": "close",
+     "at": 2.5
+    },
+    {
+     "w": "to",
+     "at": 2.8
+    },
+    {
+     "w": "dive",
+     "at": 2.925
+    },
+    {
+     "w": "so",
+     "at": 3.5
+    },
+    {
+     "w": "he",
+     "at": 3.638
+    },
+    {
+     "w": "stays",
+     "at": 3.75
+    },
+    {
+     "w": "big",
+     "at": 4.138
+    },
+    {
+     "w": "arms",
+     "at": 4.812
+    },
+    {
+     "w": "wide",
+     "at": 5.175
+    },
+    {
+     "w": "and",
+     "at": 5.562
+    },
+    {
+     "w": "one",
+     "at": 5.675
+    },
+    {
+     "w": "leg",
+     "at": 5.9
+    },
+    {
+     "w": "shoots",
+     "at": 6.2
+    },
+    {
+     "w": "out",
+     "at": 6.487
+    },
+    {
+     "w": "along",
+     "at": 6.662
+    },
+    {
+     "w": "the",
+     "at": 6.938
+    },
+    {
+     "w": "floor",
+     "at": 7.037
+    },
+    {
+     "w": "Blocked",
+     "at": 7.975
+    }
+   ]
+  },
+  {
+   "label": "Practise it",
+   "text": "Practise with a friend. In futsal, stay big and use your legs to block close shots!",
+   "src": "/plays/narration/bernardo-paco-futsal-signature/4.m4a",
+   "seconds": 6.2,
+   "words": [
+    {
+     "w": "Practise",
+     "at": 0.325
+    },
+    {
+     "w": "with",
+     "at": 0.738
+    },
+    {
+     "w": "a",
+     "at": 0.838
+    },
+    {
+     "w": "friend",
+     "at": 0.912
+    },
+    {
+     "w": "In",
+     "at": 1.762
+    },
+    {
+     "w": "futsal",
+     "at": 1.938
+    },
+    {
+     "w": "stay",
+     "at": 2.587
+    },
+    {
+     "w": "big",
+     "at": 2.913
+    },
+    {
+     "w": "and",
+     "at": 3.275
+    },
+    {
+     "w": "use",
+     "at": 3.4
+    },
+    {
+     "w": "your",
+     "at": 3.587
+    },
+    {
+     "w": "legs",
+     "at": 3.725
+    },
+    {
+     "w": "to",
+     "at": 4.075
+    },
+    {
+     "w": "block",
+     "at": 4.175
+    },
+    {
+     "w": "close",
+     "at": 4.475
+    },
+    {
+     "w": "shots",
+     "at": 4.787
+    }
+   ]
+  }
+ ]
+}

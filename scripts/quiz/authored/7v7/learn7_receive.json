@@ -1,0 +1,87 @@
+{
+ "lesson": "learn7_receive",
+ "questions": [
+  {
+   "q": "True or false? You look for the defender before the pass arrives.",
+   "options": [
+    "True",
+    "False"
+   ],
+   "correct": 0,
+   "explain": "Yes. Looking early tells you if you can turn.",
+   "choiceExplanations": [
+    "Yes. Looking early tells you if you can turn.",
+    "Look before the ball comes, so you already know where the defender is."
+   ],
+   "visual": {
+    "kind": "trueFalse",
+    "frame": {
+     "step": 0,
+     "focus": [
+      "cm",
+      "dcm"
+     ]
+    }
+   }
+  },
+  {
+   "q": "You get the ball with room ahead. Put the steps in order.",
+   "options": [
+    "Look over your shoulder",
+    "Receive with your body open",
+    "Turn into the room",
+    "Look up again"
+   ],
+   "correct": 0,
+   "explain": "Right. Look first, receive open, turn, then look up again.",
+   "choiceExplanations": [
+    "Right. Look first, receive open, turn, then look up again.",
+    "Receive after you have looked, so you know where the defender is.",
+    "Turn only once the ball is at your feet.",
+    "Look up again last, while you move with the ball."
+   ],
+   "visual": {
+    "kind": "order",
+    "frame": {
+     "step": 2,
+     "focus": [
+      "cm",
+      "dcm"
+     ]
+    }
+   }
+  },
+  {
+   "q": "The defender is far away this time. What do you do?",
+   "options": [
+    "Give it straight back",
+    "Turn forward into the room",
+    "Stand still and wait"
+   ],
+   "correct": 1,
+   "explain": "Yes. The defender is far, so you can turn into the room.",
+   "choiceExplanations": [
+    "There is room ahead, so passing straight back wastes a chance to move forward.",
+    "Yes. The defender is far, so you can turn into the room.",
+    "Waiting lets the defender run back and close you down."
+   ],
+   "visual": {
+    "kind": "whatNext",
+    "frame": {
+     "step": 6,
+     "place": {
+      "dcm": {
+       "x": 190,
+       "y": 250
+      }
+     },
+     "focus": [
+      "cm",
+      "dcm"
+     ],
+     "trails": false
+    }
+   }
+  }
+ ]
+}

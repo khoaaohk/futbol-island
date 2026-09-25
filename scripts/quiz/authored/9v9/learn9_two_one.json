@@ -1,0 +1,20 @@
+{"lesson":"learn9_two_one","questions":[
+{"q":"True or false? The defender is still standing with our teammate.",
+ "options":["True","False"],"correct":1,
+ "explain":"Right, it's false. The defender left the teammate to close the ball, so the teammate is free.",
+ "choiceExplanations":["Look again: the defender has moved toward the ball and left the teammate alone.","Right, it's false. The defender left the teammate to close the ball, so the teammate is free."],
+ "visual":{"kind":"trueFalse","frame":{"step":3,"focus":["dst","rcm"]}}},
+{"q":"The pass reached the right midfielder. What happens next?",
+ "options":["The receiver stops and waits","The passer runs off to the far side","Receiver moves forward; passer offers support"],"correct":2,
+ "explain":"Yes. The receiver attacks the space while the passer stays close to help again.",
+ "choiceExplanations":["Stopping lets the defender recover, so the 2v1 is lost.","Running away leaves the receiver alone with no pass to play.","Yes. The receiver attacks the space while the passer stays close to help again."],
+ "visual":{"kind":"whatNext","frame":{"step":5,"focus":["rcm","lcm"],"trails":true}}},
+{"q":"The right midfielder has the ball. The defender stays with our teammate. Which picture is best?",
+ "options":["Pass to the teammate","Carry forward into space","Hold the ball and wait"],"correct":1,
+ "explain":"Yes. The defender stays with the teammate, so the space ahead of the ball is free to carry into.",
+ "choiceExplanations":["The defender is right in that lane, so the pass could be cut out.","Yes. The defender stays with the teammate, so the space ahead of the ball is free to carry into.","Waiting gives blue time to bring more defenders, so the 2v1 disappears."],
+ "visual":{"kind":"pickPicture","pictures":[
+  {"step":2,"place":{"dst":{"x":100,"y":190}},"ball":"rcm","focus":["rcm","dst"],"marks":[{"kind":"pass","from":"rcm","to":"lcm","tone":"neutral"}]},
+  {"step":2,"place":{"dst":{"x":100,"y":190}},"ball":"rcm","focus":["rcm","dst"],"marks":[{"kind":"dribble","from":"rcm","to":{"x":166,"y":135},"tone":"neutral"}]},
+  {"step":2,"place":{"dst":{"x":100,"y":190}},"ball":"rcm","focus":["rcm","dst"]}]}}
+]}

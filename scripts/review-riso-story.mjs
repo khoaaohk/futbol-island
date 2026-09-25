@@ -22,11 +22,12 @@ const requested=arg('--id'),out=arg('--out',process.env.RISO_REVIEW_DIR||path.jo
 const storiesDir=path.join(root,'lib/paths/riso/stories'),ids=readdirSync(storiesDir).filter(f=>f.endsWith('.ts')).map(f=>f.slice(0,-3)).filter(id=>!requested||id===requested);
 assert.ok(ids.length,`No riso story ${requested??''} in ${storiesDir}`);
 const storyLib=gather(path.join(root,'lib/paths/riso/story.ts')),sheetLib=gather(path.join(root,'lib/paths/riso/sheet.ts')),timing=JSON.parse(readFileSync(path.join(root,'lib/paths/riso/data/narrationTiming.json'),'utf8'));
+const narrationLib=gather(path.join(root,'lib/paths/riso/narration.ts')),overrides=JSON.parse(readFileSync(path.join(root,'lib/paths/riso/data/narrationOverrides.json'),'utf8'));
 const files=Object.fromEntries(ids.map(id=>[id,gather(path.join(storiesDir,`${id}.ts`))]));
 mkdirSync(out,{recursive:true});
 // The page renders stories exactly like StoryFilmPlayer.paint(): acquireSheet → story.draw → press(chapter).
-const pageSetup=`window.riso={storyLib:load(${JSON.stringify(storyLib)}),sheetLib:load(${JSON.stringify(sheetLib)}),timing:${JSON.stringify(timing)},files:${JSON.stringify(files)}};
-window.riso.story=id=>{let story=load(window.riso.files[id]).story;const t=window.riso.timing[id];if(story.audio.mode==='chapters'&&t)story={...story,chapters:story.chapters.map((c,i)=>({...c,seconds:t[i]??c.seconds}))};return story;};
+const pageSetup=`window.riso={storyLib:load(${JSON.stringify(storyLib)}),narrationLib:load(${JSON.stringify(narrationLib)}),overrides:${JSON.stringify(overrides)},sheetLib:load(${JSON.stringify(sheetLib)}),timing:${JSON.stringify(timing)},files:${JSON.stringify(files)}};
+window.riso.story=id=>{let story=load(window.riso.files[id]).story;const t=window.riso.timing[id];if(story.audio.mode==='chapters'&&t)story={...story,chapters:story.chapters.map((c,i)=>({...c,seconds:t[i]??c.seconds}))};return window.riso.narrationLib.withNarration(story,window.riso.overrides[id]);};
 window.riso.render=(story,canvas,ctx,dpr,chapter,chapterTime,tray)=>{const {storyLib,sheetLib}=window.riso;const play=storyLib.visualStory(story);const starts=storyLib.chapterStarts(play);const time=starts[chapter]+chapterTime;const f=storyLib.resolveFrame(story,time,chapter);const w=canvas.width/dpr,h=canvas.height/dpr;const sheet=sheetLib.acquireSheet(ctx,w,h,dpr,story.spec,tray);ctx.setTransform(1,0,0,1,0,0);story.draw({sheet,time,chapter:f.chapter,chapterTime:f.chapterTime,progress:f.progress,seconds:f.seconds,cue:f.cue,cueTime:f.cueTime,reducedMotion:false,width:w,height:h,captionChapter:f.captionChapter});sheet.press(f.chapter);return {ops:sheet._ops,...f};};`;
 const browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'});
 try{

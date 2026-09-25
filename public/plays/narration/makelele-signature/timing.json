@@ -1,0 +1,402 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The final",
+   "text": "Berlin, 2006: the World Cup final. Here\u2019s how Claude Mak\u00e9l\u00e9l\u00e9 played. Italy look for Totti, but Mak\u00e9l\u00e9l\u00e9 stays in front of him. The pass goes in\u2026 Mak\u00e9l\u00e9l\u00e9 steps across, and it\u2019s his!",
+   "src": "/plays/narration/makelele-signature/1.m4a",
+   "seconds": 14.8,
+   "words": [
+    {
+     "w": "Berlin",
+     "at": 0.375
+    },
+    {
+     "w": "2006",
+     "at": 0.9
+    },
+    {
+     "w": "the",
+     "at": 2.275
+    },
+    {
+     "w": "World",
+     "at": 2.4
+    },
+    {
+     "w": "Cup",
+     "at": 2.725
+    },
+    {
+     "w": "final",
+     "at": 2.95
+    },
+    {
+     "w": "Here",
+     "at": 3.875
+    },
+    {
+     "w": "s",
+     "at": 4.4
+    },
+    {
+     "w": "how",
+     "at": 4.6
+    },
+    {
+     "w": "Claude",
+     "at": 4.787
+    },
+    {
+     "w": "Mak\u00e9l\u00e9l\u00e9",
+     "at": 5.225
+    },
+    {
+     "w": "played",
+     "at": 5.838
+    },
+    {
+     "w": "Italy",
+     "at": 6.737
+    },
+    {
+     "w": "look",
+     "at": 7.1
+    },
+    {
+     "w": "for",
+     "at": 7.325
+    },
+    {
+     "w": "Totti",
+     "at": 7.463
+    },
+    {
+     "w": "but",
+     "at": 7.938
+    },
+    {
+     "w": "Mak\u00e9l\u00e9l\u00e9",
+     "at": 8.075
+    },
+    {
+     "w": "stays",
+     "at": 8.762
+    },
+    {
+     "w": "in",
+     "at": 9.175
+    },
+    {
+     "w": "front",
+     "at": 9.325
+    },
+    {
+     "w": "of",
+     "at": 9.537
+    },
+    {
+     "w": "him",
+     "at": 9.613
+    },
+    {
+     "w": "The",
+     "at": 10.363
+    },
+    {
+     "w": "pass",
+     "at": 10.488
+    },
+    {
+     "w": "goes",
+     "at": 10.875
+    },
+    {
+     "w": "in",
+     "at": 11.213
+    },
+    {
+     "w": "Mak\u00e9l\u00e9l\u00e9",
+     "at": 11.45
+    },
+    {
+     "w": "steps",
+     "at": 12.125
+    },
+    {
+     "w": "across",
+     "at": 12.438
+    },
+    {
+     "w": "and",
+     "at": 13.05
+    },
+    {
+     "w": "it\u2019s",
+     "at": 13.162
+    },
+    {
+     "w": "his",
+     "at": 13.35
+    }
+   ]
+  },
+  {
+   "label": "The replay",
+   "text": "Watch again, slowly. He keeps shuffling, always between the ball and his goal. When the pass comes, he\u2019s already there.",
+   "src": "/plays/narration/makelele-signature/2.m4a",
+   "seconds": 8.2,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.137
+    },
+    {
+     "w": "He",
+     "at": 2.125
+    },
+    {
+     "w": "keeps",
+     "at": 2.25
+    },
+    {
+     "w": "shuffling",
+     "at": 2.538
+    },
+    {
+     "w": "always",
+     "at": 3.125
+    },
+    {
+     "w": "between",
+     "at": 3.5
+    },
+    {
+     "w": "the",
+     "at": 3.763
+    },
+    {
+     "w": "ball",
+     "at": 3.85
+    },
+    {
+     "w": "and",
+     "at": 4.225
+    },
+    {
+     "w": "his",
+     "at": 4.338
+    },
+    {
+     "w": "goal",
+     "at": 4.513
+    },
+    {
+     "w": "When",
+     "at": 5.25
+    },
+    {
+     "w": "the",
+     "at": 5.388
+    },
+    {
+     "w": "pass",
+     "at": 5.475
+    },
+    {
+     "w": "comes",
+     "at": 5.838
+    },
+    {
+     "w": "he\u2019s",
+     "at": 6.3
+    },
+    {
+     "w": "already",
+     "at": 6.525
+    },
+    {
+     "w": "there",
+     "at": 6.9
+    }
+   ]
+  },
+  {
+   "label": "Simple",
+   "text": "No tricks. He looks up and passes it simply to Patrick Vieira. France attack!",
+   "src": "/plays/narration/makelele-signature/3.m4a",
+   "seconds": 6.2,
+   "words": [
+    {
+     "w": "No",
+     "at": 0.425
+    },
+    {
+     "w": "tricks",
+     "at": 0.662
+    },
+    {
+     "w": "He",
+     "at": 1.4
+    },
+    {
+     "w": "looks",
+     "at": 1.525
+    },
+    {
+     "w": "up",
+     "at": 1.738
+    },
+    {
+     "w": "and",
+     "at": 1.887
+    },
+    {
+     "w": "passes",
+     "at": 2.0
+    },
+    {
+     "w": "it",
+     "at": 2.425
+    },
+    {
+     "w": "simply",
+     "at": 2.575
+    },
+    {
+     "w": "to",
+     "at": 2.9
+    },
+    {
+     "w": "Patrick",
+     "at": 3.0
+    },
+    {
+     "w": "Vieira",
+     "at": 3.425
+    },
+    {
+     "w": "France",
+     "at": 4.325
+    },
+    {
+     "w": "attack",
+     "at": 4.725
+    }
+   ]
+  },
+  {
+   "label": "The lesson",
+   "text": "That\u2019s the Mak\u00e9l\u00e9l\u00e9 role. It quietly protects the whole team! Stay between the ball and your goal. When you win it, pass it simply.",
+   "src": "/plays/narration/makelele-signature/4.m4a",
+   "seconds": 9.1,
+   "words": [
+    {
+     "w": "That\u2019s",
+     "at": 0.375
+    },
+    {
+     "w": "the",
+     "at": 0.625
+    },
+    {
+     "w": "Mak\u00e9l\u00e9l\u00e9",
+     "at": 0.725
+    },
+    {
+     "w": "role",
+     "at": 1.35
+    },
+    {
+     "w": "It",
+     "at": 2.1
+    },
+    {
+     "w": "quietly",
+     "at": 2.25
+    },
+    {
+     "w": "protects",
+     "at": 2.75
+    },
+    {
+     "w": "the",
+     "at": 3.188
+    },
+    {
+     "w": "whole",
+     "at": 3.275
+    },
+    {
+     "w": "team",
+     "at": 3.538
+    },
+    {
+     "w": "Stay",
+     "at": 4.4
+    },
+    {
+     "w": "between",
+     "at": 4.7
+    },
+    {
+     "w": "the",
+     "at": 5.013
+    },
+    {
+     "w": "ball",
+     "at": 5.1
+    },
+    {
+     "w": "and",
+     "at": 5.475
+    },
+    {
+     "w": "your",
+     "at": 5.588
+    },
+    {
+     "w": "goal",
+     "at": 5.725
+    },
+    {
+     "w": "When",
+     "at": 6.425
+    },
+    {
+     "w": "you",
+     "at": 6.575
+    },
+    {
+     "w": "win",
+     "at": 6.713
+    },
+    {
+     "w": "it",
+     "at": 6.95
+    },
+    {
+     "w": "pass",
+     "at": 7.213
+    },
+    {
+     "w": "it",
+     "at": 7.55
+    },
+    {
+     "w": "simply",
+     "at": 7.7
+    }
+   ]
+  }
+ ]
+}

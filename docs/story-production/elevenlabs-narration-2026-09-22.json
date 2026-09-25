@@ -1,0 +1,1516 @@
+{
+  "futsl": {
+    "title": "Love Futsal",
+    "clips": [
+      {
+        "voiceId": "nzFihrBIvB34imQBuxub",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "a1039de94401d16c536119d004a93c8d73fc17713c2f6688746691e883bb3a08",
+        "characters": 1043,
+        "reportedCharacterCost": "574",
+        "part": "track",
+        "audio": "/stories/eleven/futsl/track-822229766728.m4a",
+        "duration": 72.50001,
+        "tempo": 1.086,
+        "processing": "pace-v2"
+      }
+    ]
+  },
+  "boat-weather": {
+    "title": "The Boat and the Weather",
+    "clips": [
+      {
+        "voiceId": "nzFihrBIvB34imQBuxub",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "68752a8c9c5cb084fdb2aa66aeff35e7d811a794408251720c4abe04ca61303b",
+        "characters": 125,
+        "reportedCharacterCost": "69",
+        "part": "01",
+        "audio": "/stories/eleven/boat-weather/01-42447a32833b.m4a",
+        "duration": 9.3,
+        "tempo": 1.096,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "nzFihrBIvB34imQBuxub",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "d8ab17df0f739902760de05b96a0184edb01756f74c4f17d51eeba39a341b810",
+        "characters": 114,
+        "reportedCharacterCost": "63",
+        "part": "02",
+        "audio": "/stories/eleven/boat-weather/02-ccdc4b4cd00f.m4a",
+        "duration": 7.30001,
+        "tempo": 1.096,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "nzFihrBIvB34imQBuxub",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "0c1efc3ec5de733440432120ffdceacba2df1ae63d058463f45409553bd223a1",
+        "characters": 125,
+        "reportedCharacterCost": "69",
+        "part": "03",
+        "audio": "/stories/eleven/boat-weather/03-dde8495fdd99.m4a",
+        "duration": 10.6,
+        "tempo": 1.096,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "nzFihrBIvB34imQBuxub",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "00c41d9a6ad0bc4a1133d451b3b1aab5a8979d3633ab3c7e13421faa1a90a46b",
+        "characters": 137,
+        "reportedCharacterCost": "75",
+        "part": "04",
+        "audio": "/stories/eleven/boat-weather/04-e8a99dbe472b.m4a",
+        "duration": 10.10001,
+        "tempo": 1.096,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "nzFihrBIvB34imQBuxub",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "32fda23c6e982ad1baddc6514be10a71924fa357902b5f310a34504316593212",
+        "characters": 150,
+        "reportedCharacterCost": "82",
+        "part": "05",
+        "audio": "/stories/eleven/boat-weather/05-801ac0cc7c11.m4a",
+        "duration": 9.50001,
+        "tempo": 1.096,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "nzFihrBIvB34imQBuxub",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "0e85d66d217381c204950edece6f130d0d0f91d2dd5e3ba2e23abce1c86bb1a9",
+        "characters": 129,
+        "reportedCharacterCost": "71",
+        "part": "06",
+        "audio": "/stories/eleven/boat-weather/06-76a89c8d8f58.m4a",
+        "duration": 9.0,
+        "tempo": 1.096,
+        "processing": "pace-v2"
+      }
+    ]
+  },
+  "chalk-line": {
+    "title": "The Chalk Line",
+    "clips": [
+      {
+        "voiceId": "Nhs7eitvQWFTQBsf0yiT",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "c2907e72d832fab1363d51b94f322d4dfe9b1679e60f6af621a72c5630d53cd4",
+        "characters": 122,
+        "reportedCharacterCost": "67",
+        "part": "01",
+        "audio": "/stories/eleven/chalk-line/01-32a790093f61.m4a",
+        "duration": 8.5,
+        "tempo": 1.108,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "Nhs7eitvQWFTQBsf0yiT",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "47310dbe7485014599325bde77e8a68a6c65837cdea2ca4f11109240c8629796",
+        "characters": 127,
+        "reportedCharacterCost": "70",
+        "part": "02",
+        "audio": "/stories/eleven/chalk-line/02-4ec93e417515.m4a",
+        "duration": 8.9,
+        "tempo": 1.108,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "Nhs7eitvQWFTQBsf0yiT",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "8c47a686aa77e11088e8558f2b139dafd4401ec7505c5c790a44119274a363db",
+        "characters": 125,
+        "reportedCharacterCost": "69",
+        "part": "03",
+        "audio": "/stories/eleven/chalk-line/03-b61dbcb27deb.m4a",
+        "duration": 9.1,
+        "tempo": 1.108,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "Nhs7eitvQWFTQBsf0yiT",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "309162a273052695f413615cbe462e8e6a1f6f7a6b66c1d423f09b880b441b28",
+        "characters": 126,
+        "reportedCharacterCost": "69",
+        "part": "04",
+        "audio": "/stories/eleven/chalk-line/04-3dc854e5d49b.m4a",
+        "duration": 8.50001,
+        "tempo": 1.108,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "Nhs7eitvQWFTQBsf0yiT",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "1d43125e842543373157e9e62fa2a2b5bc721e35559ba54c9889fa4ef89a8817",
+        "characters": 119,
+        "reportedCharacterCost": "65",
+        "part": "05",
+        "audio": "/stories/eleven/chalk-line/05-9c184bcd40ac.m4a",
+        "duration": 9.0,
+        "tempo": 1.108,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "Nhs7eitvQWFTQBsf0yiT",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "b577f96ca7c91f5e3ea50ba74de5653e5403e977a3bab7a9e24f41b769d85d24",
+        "characters": 135,
+        "reportedCharacterCost": "74",
+        "part": "06",
+        "audio": "/stories/eleven/chalk-line/06-61fc5a05aeef.m4a",
+        "duration": 10.5,
+        "tempo": 1.108,
+        "processing": "pace-v2"
+      }
+    ]
+  },
+  "different-tides": {
+    "title": "Different Tides",
+    "clips": [
+      {
+        "voiceId": "nzFihrBIvB34imQBuxub",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "af264b26e6ec2a707045fbc87252f558c2c59308825af2ab58e5c4a6b614e9c4",
+        "characters": 142,
+        "reportedCharacterCost": "78",
+        "part": "01",
+        "audio": "/stories/eleven/different-tides/01-e57e160607aa.m4a",
+        "duration": 6.90001,
+        "tempo": 1.116,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "nzFihrBIvB34imQBuxub",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "8d165a3f971164fb69c2e9d461c26317201eef1adf55df8ad01d1d9749d3dea4",
+        "characters": 130,
+        "reportedCharacterCost": "72",
+        "part": "02",
+        "audio": "/stories/eleven/different-tides/02-97c707fb9f9f.m4a",
+        "duration": 8.9,
+        "tempo": 1.116,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "nzFihrBIvB34imQBuxub",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "08612242785826d5bad00b0fd630bee60cb481413cf6eeb4989d1fc50c2309dc",
+        "characters": 113,
+        "reportedCharacterCost": "62",
+        "part": "03",
+        "audio": "/stories/eleven/different-tides/03-0e55b15b6fbd.m4a",
+        "duration": 7.40001,
+        "tempo": 1.116,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "nzFihrBIvB34imQBuxub",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "1225392946a12f3d8c63467a55d351ccc84e87a4d4d2be05bb576a8c5feefb9e",
+        "characters": 119,
+        "reportedCharacterCost": "65",
+        "part": "04",
+        "audio": "/stories/eleven/different-tides/04-3e244272608c.m4a",
+        "duration": 7.6,
+        "tempo": 1.116,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "nzFihrBIvB34imQBuxub",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "3dd0dcd7625f2bd53ed874d9acdea0bc6234af12b86513010f9dc06da8be93ec",
+        "characters": 132,
+        "reportedCharacterCost": "73",
+        "part": "05",
+        "audio": "/stories/eleven/different-tides/05-c1fdff904dcf.m4a",
+        "duration": 11.60001,
+        "tempo": 1.116,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "nzFihrBIvB34imQBuxub",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "06d4f79537112a3caecd3cbe6de51d596941bce0e1a76327724c6654800f6813",
+        "characters": 133,
+        "reportedCharacterCost": "73",
+        "part": "06",
+        "audio": "/stories/eleven/different-tides/06-d76962661624.m4a",
+        "duration": 10.4,
+        "tempo": 1.116,
+        "processing": "pace-v2"
+      }
+    ]
+  },
+  "empathy": {
+    "title": "Emotional Intelligence",
+    "clips": [
+      {
+        "voiceId": "Nhs7eitvQWFTQBsf0yiT",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "1b7a23a9901935aff74c8de30b0de7732aa9d137bbe0762a58ba53af2c94333e",
+        "characters": 118,
+        "reportedCharacterCost": "65",
+        "part": "01",
+        "audio": "/stories/eleven/empathy/01-83b12da9dae3.m4a",
+        "duration": 8.4,
+        "tempo": 1.156,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "Nhs7eitvQWFTQBsf0yiT",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "e79296a2165d4ac127ad9de16197f4e1fdd2ef22edeaf3a4234ab154d90d0848",
+        "characters": 154,
+        "reportedCharacterCost": "85",
+        "part": "02",
+        "audio": "/stories/eleven/empathy/02-86d6e322d30f.m4a",
+        "duration": 10.4,
+        "tempo": 1.156,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "Nhs7eitvQWFTQBsf0yiT",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "42f62f4f42902b43956df6ad830a94baff47b772b0dbb8b65655379cef6c1449",
+        "characters": 133,
+        "reportedCharacterCost": "73",
+        "part": "03",
+        "audio": "/stories/eleven/empathy/03-a124ddd7c8ec.m4a",
+        "duration": 8.50001,
+        "tempo": 1.156,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "Nhs7eitvQWFTQBsf0yiT",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "59c6bfb84a262194be0a8ac639d429c544121e8a93092510a12b67cbf5b50a0c",
+        "characters": 130,
+        "reportedCharacterCost": "72",
+        "part": "04",
+        "audio": "/stories/eleven/empathy/04-9b6f195171c0.m4a",
+        "duration": 9.40001,
+        "tempo": 1.156,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "Nhs7eitvQWFTQBsf0yiT",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "1687660108988d3ab420e951c0254276839eb7061fbbb7c498e38efe4c0cddee",
+        "characters": 108,
+        "reportedCharacterCost": "59",
+        "part": "05",
+        "audio": "/stories/eleven/empathy/05-313a2796c39d.m4a",
+        "duration": 7.3,
+        "tempo": 1.156,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "Nhs7eitvQWFTQBsf0yiT",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "894c4940bada25107fd77b2c01311ef1f3a1c0df468ce90e22ed4180af562a99",
+        "characters": 134,
+        "reportedCharacterCost": "74",
+        "part": "06",
+        "audio": "/stories/eleven/empathy/06-c2e71a0a31f9.m4a",
+        "duration": 9.20001,
+        "tempo": 1.156,
+        "processing": "pace-v2"
+      }
+    ]
+  },
+  "grit": {
+    "title": "Grit",
+    "clips": [
+      {
+        "voiceId": "NFG5qt843uXKj4pFvR7C",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "e68f6160b02dd4d658a517fed404a67972159fae83bf0919a35cf5983d652710",
+        "characters": 1063,
+        "reportedCharacterCost": "585",
+        "part": "track",
+        "audio": "/stories/eleven/grit/track-6bb976234b9d.m4a",
+        "duration": 72.90001,
+        "tempo": 1.179,
+        "processing": "pace-v2"
+      }
+    ]
+  },
+  "harbour-night": {
+    "title": "The Harbour at Night",
+    "clips": [
+      {
+        "voiceId": "NFG5qt843uXKj4pFvR7C",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "774490f53bd14ef68bbd027362490b74dd7516f11cf878e6f0c8d5a8d47f7e65",
+        "characters": 129,
+        "reportedCharacterCost": "71",
+        "part": "01",
+        "audio": "/stories/eleven/harbour-night/01-c95f17e3a2d1.m4a",
+        "duration": 12.20001,
+        "tempo": 1.042,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "NFG5qt843uXKj4pFvR7C",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "78cbeaeb926298638c04fea5b6e83f75aff9d9c6ebaea9a74abbb925589483cc",
+        "characters": 124,
+        "reportedCharacterCost": "68",
+        "part": "02",
+        "audio": "/stories/eleven/harbour-night/02-9cdb3b59eaf9.m4a",
+        "duration": 9.00001,
+        "tempo": 1.042,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "NFG5qt843uXKj4pFvR7C",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "de4915c454bc42f9344491614e8bb5c0f4d15f87b770703fa6d922682439fd48",
+        "characters": 127,
+        "reportedCharacterCost": "70",
+        "part": "03",
+        "audio": "/stories/eleven/harbour-night/03-c68f000fca0b.m4a",
+        "duration": 11.00001,
+        "tempo": 1.042,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "NFG5qt843uXKj4pFvR7C",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "4c465eca7cf7e7b1e9eb6356ac63ff8a0f15c0c262092d307474cbea1e895202",
+        "characters": 107,
+        "reportedCharacterCost": "59",
+        "part": "04",
+        "audio": "/stories/eleven/harbour-night/04-6a3cf66887f0.m4a",
+        "duration": 6.8,
+        "tempo": 1.042,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "NFG5qt843uXKj4pFvR7C",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "064c331b3800b98203dea4d278a64ed5af71ae749bf7b84ee6d76885654f4295",
+        "characters": 128,
+        "reportedCharacterCost": "70",
+        "part": "05",
+        "audio": "/stories/eleven/harbour-night/05-d764a49a14f3.m4a",
+        "duration": 9.1,
+        "tempo": 1.042,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "NFG5qt843uXKj4pFvR7C",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "eb97bddcb978060620544c912cbdc18b65c2c86ef253f4176a897d8733ba8d85",
+        "characters": 124,
+        "reportedCharacterCost": "68",
+        "part": "06",
+        "audio": "/stories/eleven/harbour-night/06-0ed1f1fc3ba6.m4a",
+        "duration": 7.9,
+        "tempo": 1.042,
+        "processing": "pace-v2"
+      }
+    ]
+  },
+  "house-player": {
+    "title": "The House You Build",
+    "clips": [
+      {
+        "voiceId": "uKGPYP2uuyRQv8SeFre0",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "dd18a9457c489b4852b8dc4a1103ba5ea5656c024ee41b0d63b501d411e0659d",
+        "characters": 167,
+        "reportedCharacterCost": "92",
+        "part": "01",
+        "audio": "/stories/eleven/house-player/01-4149542359e9.m4a",
+        "duration": 11.20001,
+        "tempo": 1.068,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "uKGPYP2uuyRQv8SeFre0",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "bf4f8b1f87c6e0f381624489566c01059d5feb0d71daa063f694619bb5442bff",
+        "characters": 230,
+        "reportedCharacterCost": "127",
+        "part": "02",
+        "audio": "/stories/eleven/house-player/02-ec2d4b1be640.m4a",
+        "duration": 17.50001,
+        "tempo": 1.068,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "uKGPYP2uuyRQv8SeFre0",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "42efa0e86ba5ec0981d72f305494a835eeab3c0b5a521d8bf068a5cbbc38964c",
+        "characters": 195,
+        "reportedCharacterCost": "107",
+        "part": "03",
+        "audio": "/stories/eleven/house-player/03-b4a2e8e3723f.m4a",
+        "duration": 9.9,
+        "tempo": 1.068,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "uKGPYP2uuyRQv8SeFre0",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "71112f4ca54d1ec748bf5487b6cbe45b18b834ecfa8632c0c73cbae5098d1314",
+        "characters": 202,
+        "reportedCharacterCost": "111",
+        "part": "04",
+        "audio": "/stories/eleven/house-player/04-032700c99e2c.m4a",
+        "duration": 14.8,
+        "tempo": 1.068,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "uKGPYP2uuyRQv8SeFre0",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "7b23b0e4939fcc6d75ca54ea5b12543a4265ae489b68e7cad7eae4c29f8d2204",
+        "characters": 223,
+        "reportedCharacterCost": "123",
+        "part": "05",
+        "audio": "/stories/eleven/house-player/05-54f95c37b957.m4a",
+        "duration": 13.70001,
+        "tempo": 1.068,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "uKGPYP2uuyRQv8SeFre0",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "e3194dab146066a7e9c61897d8ae1a265fffb1aed73d2be51e7eac59db6ffcd2",
+        "characters": 243,
+        "reportedCharacterCost": "134",
+        "part": "06",
+        "audio": "/stories/eleven/house-player/06-93ea262b5dc6.m4a",
+        "duration": 18.5,
+        "tempo": 1.068,
+        "processing": "pace-v2"
+      }
+    ]
+  },
+  "kite-turned": {
+    "title": "The Kite That Turned",
+    "clips": [
+      {
+        "voiceId": "uIZsnBL0YK1S5j69bAih",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "ba5430d2ede6e0a05466715b434b4c6667b5761f99a1c783e2f63e4f7b7981ff",
+        "characters": 132,
+        "reportedCharacterCost": "73",
+        "part": "01",
+        "audio": "/stories/eleven/kite-turned/01-efbba223f8c6.m4a",
+        "duration": 10.50001,
+        "tempo": 1.2,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "uIZsnBL0YK1S5j69bAih",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "bf344fcd78ef99e9d28db4914fbc5269c453ec3b30254f780c0af7bbded9075d",
+        "characters": 125,
+        "reportedCharacterCost": "69",
+        "part": "02",
+        "audio": "/stories/eleven/kite-turned/02-18bcbaac6c81.m4a",
+        "duration": 11.40001,
+        "tempo": 1.2,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "uIZsnBL0YK1S5j69bAih",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "fcd49e9aba2abd1fbe0ae72fe9e528f04c2a6e1549f682d137047e5620af6568",
+        "characters": 112,
+        "reportedCharacterCost": "62",
+        "part": "03",
+        "audio": "/stories/eleven/kite-turned/03-f755b5bac727.m4a",
+        "duration": 9.70001,
+        "tempo": 1.2,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "uIZsnBL0YK1S5j69bAih",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "34c5d8b36e561582fdd2023024ccc92bd01cfd3b524f7436df5313975fce1d10",
+        "characters": 122,
+        "reportedCharacterCost": "67",
+        "part": "04",
+        "audio": "/stories/eleven/kite-turned/04-3eacec7e95f7.m4a",
+        "duration": 12.5,
+        "tempo": 1.2,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "uIZsnBL0YK1S5j69bAih",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "8212fce066ce28f17544cf51fca44dfbec9809ac5f5ab1f9dac1294d26c7e62b",
+        "characters": 127,
+        "reportedCharacterCost": "70",
+        "part": "05",
+        "audio": "/stories/eleven/kite-turned/05-57a388429e82.m4a",
+        "duration": 11.90001,
+        "tempo": 1.2,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "uIZsnBL0YK1S5j69bAih",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "d418c23fe1820b819189658358f11832e739efe7b23f32bc34a61c4c182d9849",
+        "characters": 143,
+        "reportedCharacterCost": "79",
+        "part": "06",
+        "audio": "/stories/eleven/kite-turned/06-e3546146d68e.m4a",
+        "duration": 16.00001,
+        "tempo": 1.2,
+        "processing": "pace-v2"
+      }
+    ]
+  },
+  "loss": {
+    "title": "After the Final Whistle",
+    "clips": [
+      {
+        "voiceId": "uKGPYP2uuyRQv8SeFre0",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "45caacd4303c1225d567d2f31539919fa6f853c66a203289937716d6e449c16b",
+        "characters": 134,
+        "reportedCharacterCost": "74",
+        "part": "01",
+        "audio": "/stories/eleven/loss/01-2dcc72db48a6.m4a",
+        "duration": 9.5,
+        "tempo": 1.035,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "uKGPYP2uuyRQv8SeFre0",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "e791693dd40141c1e1076282e43c62338b0b6dbdfbf7b61b5a7c4efee2d5129b",
+        "characters": 133,
+        "reportedCharacterCost": "73",
+        "part": "02",
+        "audio": "/stories/eleven/loss/02-b9565290a0cf.m4a",
+        "duration": 7.80001,
+        "tempo": 1.035,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "uKGPYP2uuyRQv8SeFre0",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "2c098eb22c58351fe8e6eb4a08661321b6b3676b7ea7ce5ca345c6d82b15572c",
+        "characters": 139,
+        "reportedCharacterCost": "76",
+        "part": "03",
+        "audio": "/stories/eleven/loss/03-86e85bd50762.m4a",
+        "duration": 10.40001,
+        "tempo": 1.035,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "uKGPYP2uuyRQv8SeFre0",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "724c8dcb2752d4adadf37713ea2f2f5cfbb61a06818c098ad7f2ee974a964b66",
+        "characters": 132,
+        "reportedCharacterCost": "73",
+        "part": "04",
+        "audio": "/stories/eleven/loss/04-ab1ed0d1e081.m4a",
+        "duration": 11.8,
+        "tempo": 1.035,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "uKGPYP2uuyRQv8SeFre0",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "ce14731031901d2fa5e17ed4a4cbe7942885f16211488554416f68d114c8e43c",
+        "characters": 148,
+        "reportedCharacterCost": "81",
+        "part": "05",
+        "audio": "/stories/eleven/loss/05-e8e2d2c1c968.m4a",
+        "duration": 9.10001,
+        "tempo": 1.035,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "uKGPYP2uuyRQv8SeFre0",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "b2f872343a128fc0d14324282d8af0a9f33110bffb57a759755021d0b55ba0ff",
+        "characters": 130,
+        "reportedCharacterCost": "72",
+        "part": "06",
+        "audio": "/stories/eleven/loss/06-109be1f2e7a9.m4a",
+        "duration": 6.8,
+        "tempo": 1.035,
+        "processing": "pace-v2"
+      }
+    ]
+  },
+  "loud-track": {
+    "title": "The Loud Track",
+    "clips": [
+      {
+        "voiceId": "NFG5qt843uXKj4pFvR7C",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "9fa97faa3e8ef453363ef357325e0e843c7e03997a0673fdc59214bee357b8a0",
+        "characters": 161,
+        "reportedCharacterCost": "89",
+        "part": "01",
+        "audio": "/stories/eleven/loud-track/01-65e7e64c7c33.m4a",
+        "duration": 10.40001,
+        "tempo": 1.04,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "NFG5qt843uXKj4pFvR7C",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "7f5f189bec8612881b69e390e0323a144098cfff1257d6a760457833215c7280",
+        "characters": 103,
+        "reportedCharacterCost": "57",
+        "part": "02",
+        "audio": "/stories/eleven/loud-track/02-ed98a696c14c.m4a",
+        "duration": 6.8,
+        "tempo": 1.04,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "NFG5qt843uXKj4pFvR7C",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "e379dff01d0bb628d073d9562fcf4fcd042799f2158c9ce37f62d999a8fd15c6",
+        "characters": 121,
+        "reportedCharacterCost": "67",
+        "part": "03",
+        "audio": "/stories/eleven/loud-track/03-7eca19cdec45.m4a",
+        "duration": 7.10001,
+        "tempo": 1.04,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "NFG5qt843uXKj4pFvR7C",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "8850b43bb883dda04ecbe393f9547a617d0a79f36155ceae259fb2a38750ffea",
+        "characters": 147,
+        "reportedCharacterCost": "81",
+        "part": "04",
+        "audio": "/stories/eleven/loud-track/04-e6239d398e03.m4a",
+        "duration": 12.70001,
+        "tempo": 1.04,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "NFG5qt843uXKj4pFvR7C",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "6ea0a38e3cc02e2df432609b46a0b47ea1c30861edf999f3037d92b80ebf9b26",
+        "characters": 140,
+        "reportedCharacterCost": "77",
+        "part": "05",
+        "audio": "/stories/eleven/loud-track/05-b0f5e24465b3.m4a",
+        "duration": 12.00001,
+        "tempo": 1.04,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "NFG5qt843uXKj4pFvR7C",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "9f3cf9c393d2902fb283114b4c5bdc97500473477c2f802ab340ce3a633cfbcf",
+        "characters": 112,
+        "reportedCharacterCost": "62",
+        "part": "06",
+        "audio": "/stories/eleven/loud-track/06-dc3a7b54f698.m4a",
+        "duration": 9.60001,
+        "tempo": 1.04,
+        "processing": "pace-v2"
+      }
+    ]
+  },
+  "more-shirt": {
+    "title": "More Than a Shirt",
+    "clips": [
+      {
+        "voiceId": "Nhs7eitvQWFTQBsf0yiT",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "605422994b8a709a11f8eb74a37fd6da51384b432a467dc83b8ed0c9c806a878",
+        "characters": 130,
+        "reportedCharacterCost": "72",
+        "part": "01",
+        "audio": "/stories/eleven/more-shirt/01-229d299cf1f2.m4a",
+        "duration": 9.5,
+        "tempo": 1.081,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "Nhs7eitvQWFTQBsf0yiT",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "70535b40d3bff395537be908720a348e7232c39a957f261260b8eb6f9e9e5e79",
+        "characters": 124,
+        "reportedCharacterCost": "68",
+        "part": "02",
+        "audio": "/stories/eleven/more-shirt/02-252f5c8e6d29.m4a",
+        "duration": 8.50001,
+        "tempo": 1.081,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "Nhs7eitvQWFTQBsf0yiT",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "a036115de4ed40e5739d337981700c64021721840bf3a84767786575ef105339",
+        "characters": 140,
+        "reportedCharacterCost": "77",
+        "part": "03",
+        "audio": "/stories/eleven/more-shirt/03-637c9ab837bb.m4a",
+        "duration": 11.10001,
+        "tempo": 1.081,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "Nhs7eitvQWFTQBsf0yiT",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "aacf207aae963ffa63b6d0f75d69394c05d8db780c6ebbc9ca88f31ebbe55900",
+        "characters": 129,
+        "reportedCharacterCost": "71",
+        "part": "04",
+        "audio": "/stories/eleven/more-shirt/04-3fe92d9fa650.m4a",
+        "duration": 9.00001,
+        "tempo": 1.081,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "Nhs7eitvQWFTQBsf0yiT",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "4ba2afa14da6ead8dea81ac366ce293bba10c30ec918b82f6c151d1eccf4a167",
+        "characters": 129,
+        "reportedCharacterCost": "71",
+        "part": "05",
+        "audio": "/stories/eleven/more-shirt/05-704bca779dae.m4a",
+        "duration": 9.90001,
+        "tempo": 1.081,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "Nhs7eitvQWFTQBsf0yiT",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "a3c06f7f81734904536ec7deaf45ce958fbf809f37e324869de83d9ee96d14e2",
+        "characters": 111,
+        "reportedCharacterCost": "61",
+        "part": "06",
+        "audio": "/stories/eleven/more-shirt/06-f124d21c27a1.m4a",
+        "duration": 8.10001,
+        "tempo": 1.081,
+        "processing": "pace-v2"
+      }
+    ]
+  },
+  "pick-a-purpose": {
+    "title": "Pick a Purpose",
+    "clips": [
+      {
+        "voiceId": "uKGPYP2uuyRQv8SeFre0",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "d23ca6e848170342628741ef9e0ce7b6bfb745ed3a2b3115ca9f8feaa31aee34",
+        "characters": 146,
+        "reportedCharacterCost": "80",
+        "part": "01",
+        "audio": "/stories/eleven/pick-a-purpose/01-45a4f7298811.m4a",
+        "duration": 10.30001,
+        "tempo": 1.0,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "uKGPYP2uuyRQv8SeFre0",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "266a8def4525b5b12d647ede6161b01452388b869974cfc6e580af96670be828",
+        "characters": 142,
+        "reportedCharacterCost": "78",
+        "part": "02",
+        "audio": "/stories/eleven/pick-a-purpose/02-59327069f59b.m4a",
+        "duration": 11.10001,
+        "tempo": 1.0,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "uKGPYP2uuyRQv8SeFre0",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "a139f1f89a104fea487de5ea6a9cc076d94144b9e5e681a5eef56fff2adef96f",
+        "characters": 140,
+        "reportedCharacterCost": "77",
+        "part": "03",
+        "audio": "/stories/eleven/pick-a-purpose/03-f75811fa0765.m4a",
+        "duration": 10.30001,
+        "tempo": 1.0,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "uKGPYP2uuyRQv8SeFre0",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "13c4baea07463e131060037984a9f68fa2ff890926f9d6d1a727c46b205566a8",
+        "characters": 160,
+        "reportedCharacterCost": "88",
+        "part": "04",
+        "audio": "/stories/eleven/pick-a-purpose/04-f4d28e9acee8.m4a",
+        "duration": 10.8,
+        "tempo": 1.0,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "uKGPYP2uuyRQv8SeFre0",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "d461dfe737ce66f396ec66f959d46bbe4f15f80a884e4f0497f502a7137b8575",
+        "characters": 120,
+        "reportedCharacterCost": "66",
+        "part": "05",
+        "audio": "/stories/eleven/pick-a-purpose/05-e80103089196.m4a",
+        "duration": 8.50001,
+        "tempo": 1.0,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "uKGPYP2uuyRQv8SeFre0",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "11abea6923d15aeaff3056dee64d8b46715be993adf0977dca8a5f49d95962e3",
+        "characters": 153,
+        "reportedCharacterCost": "84",
+        "part": "06",
+        "audio": "/stories/eleven/pick-a-purpose/06-899356abc62b.m4a",
+        "duration": 12.50001,
+        "tempo": 1.0,
+        "processing": "pace-v2"
+      }
+    ]
+  },
+  "place-picture": {
+    "title": "A Place in the Picture",
+    "clips": [
+      {
+        "voiceId": "uKGPYP2uuyRQv8SeFre0",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "3ea5d9881095b8529cf6aa0127fc89c87a06890daab72dca2e12643cd9598a61",
+        "characters": 114,
+        "reportedCharacterCost": "63",
+        "part": "01",
+        "audio": "/stories/eleven/place-picture/01-2b159007b94a.m4a",
+        "duration": 5.9,
+        "tempo": 1.0,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "uKGPYP2uuyRQv8SeFre0",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "418815b16a72722edea5701035e22289f9e21e4562a5a05bc1a6bd74d5264a62",
+        "characters": 143,
+        "reportedCharacterCost": "79",
+        "part": "02",
+        "audio": "/stories/eleven/place-picture/02-5bee620054ad.m4a",
+        "duration": 10.30001,
+        "tempo": 1.0,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "uKGPYP2uuyRQv8SeFre0",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "7f56d5917cd685929b3c9d003b9430763401262738de3eeabc3f817f874aff33",
+        "characters": 109,
+        "reportedCharacterCost": "60",
+        "part": "03",
+        "audio": "/stories/eleven/place-picture/03-5d4a8d0b10e5.m4a",
+        "duration": 7.9,
+        "tempo": 1.0,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "uKGPYP2uuyRQv8SeFre0",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "3b70e29435cd576ef30f42ce704472b80a1d09f956796585a328e205e964af9c",
+        "characters": 131,
+        "reportedCharacterCost": "72",
+        "part": "04",
+        "audio": "/stories/eleven/place-picture/04-7e066b06b157.m4a",
+        "duration": 8.30001,
+        "tempo": 1.0,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "uKGPYP2uuyRQv8SeFre0",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "d0e2c2563fc76565b17291ab8cd5880c4dddcc58b165389e93e22ee38547d02d",
+        "characters": 127,
+        "reportedCharacterCost": "70",
+        "part": "05",
+        "audio": "/stories/eleven/place-picture/05-711eb61f5745.m4a",
+        "duration": 10.20001,
+        "tempo": 1.0,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "uKGPYP2uuyRQv8SeFre0",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "9fa43000e0f755b3b4dccfda4dfff9bd50784d97c43ff5ea72fde8c6ff6d93b6",
+        "characters": 111,
+        "reportedCharacterCost": "61",
+        "part": "06",
+        "audio": "/stories/eleven/place-picture/06-adca14d7505e.m4a",
+        "duration": 5.6,
+        "tempo": 1.0,
+        "processing": "pace-v2"
+      }
+    ]
+  },
+  "quiet-lantern": {
+    "title": "The Quiet Lantern",
+    "clips": [
+      {
+        "voiceId": "uIZsnBL0YK1S5j69bAih",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "10c926097f923a64afcd2f93d626982b71bb19a2d67dcc218d298799a8369fc5",
+        "characters": 129,
+        "reportedCharacterCost": "71",
+        "part": "01",
+        "audio": "/stories/eleven/quiet-lantern/01-5a8f420599c5.m4a",
+        "duration": 9.80001,
+        "tempo": 1.2,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "uIZsnBL0YK1S5j69bAih",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "2805f185911c1615c39cd0c8a3164db85cf92ded2aca49a31d2f44e392ed8932",
+        "characters": 96,
+        "reportedCharacterCost": "53",
+        "part": "02",
+        "audio": "/stories/eleven/quiet-lantern/02-73c11100148a.m4a",
+        "duration": 8.4,
+        "tempo": 1.2,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "uIZsnBL0YK1S5j69bAih",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "2414162fea96e6d4c05aa6efa0056a9b7be3bdd1a84c3a700ddb63bce959ecc9",
+        "characters": 138,
+        "reportedCharacterCost": "76",
+        "part": "03",
+        "audio": "/stories/eleven/quiet-lantern/03-127a2b80a94e.m4a",
+        "duration": 11.8,
+        "tempo": 1.2,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "uIZsnBL0YK1S5j69bAih",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "0ad8c733433001a7ea2adb218f611a1fe20cc42984f3922ba3c22685d33da87a",
+        "characters": 139,
+        "reportedCharacterCost": "76",
+        "part": "04",
+        "audio": "/stories/eleven/quiet-lantern/04-fa3ab191469a.m4a",
+        "duration": 10.60001,
+        "tempo": 1.2,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "uIZsnBL0YK1S5j69bAih",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "69227ac62a437f4b2adfb0f8624a8bb453dc1da168fd41c6ac8a8afd0411f558",
+        "characters": 136,
+        "reportedCharacterCost": "75",
+        "part": "05",
+        "audio": "/stories/eleven/quiet-lantern/05-1fb72c9e7583.m4a",
+        "duration": 13.0,
+        "tempo": 1.2,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "uIZsnBL0YK1S5j69bAih",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "3ccdc9dfea41e50c8f60ff170e08a5fd04b43d73488fb128098e0eebfe1d6b91",
+        "characters": 119,
+        "reportedCharacterCost": "65",
+        "part": "06",
+        "audio": "/stories/eleven/quiet-lantern/06-aea0fc54488e.m4a",
+        "duration": 11.80001,
+        "tempo": 1.2,
+        "processing": "pace-v2"
+      }
+    ]
+  },
+  "regulate": {
+    "title": "Regulating emotions",
+    "clips": [
+      {
+        "voiceId": "uIZsnBL0YK1S5j69bAih",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "150b2d8255dc87efb657d797c2c7fcdb51b2d82520c10594de9d76cd05f3d01e",
+        "characters": 1000,
+        "reportedCharacterCost": "550",
+        "part": "track",
+        "audio": "/stories/eleven/regulate/track-39a5eb68e9f4.m4a",
+        "duration": 67.9,
+        "tempo": 1.14,
+        "processing": "pace-v2"
+      }
+    ]
+  },
+  "reset": {
+    "title": "Mental Toughness",
+    "clips": [
+      {
+        "voiceId": "uIZsnBL0YK1S5j69bAih",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "8474ce19dc6e4fdce8fe3ad9ee376b8cfbe2831f21beb6430871f06394c2b794",
+        "characters": 127,
+        "reportedCharacterCost": "70",
+        "part": "01",
+        "audio": "/stories/eleven/reset/01-b2d3fad7fe30.m4a",
+        "duration": 8.7,
+        "tempo": 1.2,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "uIZsnBL0YK1S5j69bAih",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "6b3db19ac0690e42ff23b04c700906e7a8b4c509465d6a3491e8b884155522d9",
+        "characters": 131,
+        "reportedCharacterCost": "72",
+        "part": "02",
+        "audio": "/stories/eleven/reset/02-10d3b7666c0c.m4a",
+        "duration": 11.00001,
+        "tempo": 1.2,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "uIZsnBL0YK1S5j69bAih",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "26f1123cfd36abdff7657365d989f08c9b2d25829621efcbdd0022dc4707ff43",
+        "characters": 138,
+        "reportedCharacterCost": "76",
+        "part": "03",
+        "audio": "/stories/eleven/reset/03-9b96e45f10ca.m4a",
+        "duration": 11.0,
+        "tempo": 1.2,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "uIZsnBL0YK1S5j69bAih",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "960493bdfbed088fce9f1a57cf2a285d2e9ab066d491cb97b8e19d10ba411a90",
+        "characters": 120,
+        "reportedCharacterCost": "66",
+        "part": "04",
+        "audio": "/stories/eleven/reset/04-2a86aaddce23.m4a",
+        "duration": 13.60001,
+        "tempo": 1.2,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "uIZsnBL0YK1S5j69bAih",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "cfb75a8779a5ab0cb88102ade224ec6b6782ea87caf6cba304f2d3bb59a35ef6",
+        "characters": 121,
+        "reportedCharacterCost": "67",
+        "part": "05",
+        "audio": "/stories/eleven/reset/05-f75f864ca887.m4a",
+        "duration": 11.20001,
+        "tempo": 1.2,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "uIZsnBL0YK1S5j69bAih",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "96edfbf04a31dd3e2222e4dd6ea6190a8602b09b5cd3722f18b1d960cc5c9458",
+        "characters": 126,
+        "reportedCharacterCost": "69",
+        "part": "06",
+        "audio": "/stories/eleven/reset/06-7f1e40aaaa03.m4a",
+        "duration": 11.90001,
+        "tempo": 1.2,
+        "processing": "pace-v2"
+      }
+    ]
+  },
+  "room-to-invent": {
+    "title": "Room to Invent",
+    "clips": [
+      {
+        "voiceId": "nzFihrBIvB34imQBuxub",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "4f556fa6802a1d9f3263cac32f9b5e22771a1b0be4d842a8d9c227f8b146a8a2",
+        "characters": 149,
+        "reportedCharacterCost": "82",
+        "part": "01",
+        "audio": "/stories/eleven/room-to-invent/01-28000fc4a683.m4a",
+        "duration": 9.30001,
+        "tempo": 1.029,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "nzFihrBIvB34imQBuxub",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "759b6160d3ec2861e7ee60f9b21b7b17d33635528ad7824dda41172736876656",
+        "characters": 195,
+        "reportedCharacterCost": "107",
+        "part": "02",
+        "audio": "/stories/eleven/room-to-invent/02-a6cb1be9f56e.m4a",
+        "duration": 19.10001,
+        "tempo": 1.029,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "nzFihrBIvB34imQBuxub",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "d58a1e9d686fa7fd7e25d44314c19e3b0d7ff7b3ed55fe6fdc490ad173c3206a",
+        "characters": 142,
+        "reportedCharacterCost": "78",
+        "part": "03",
+        "audio": "/stories/eleven/room-to-invent/03-34ee33b7d351.m4a",
+        "duration": 10.80001,
+        "tempo": 1.029,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "nzFihrBIvB34imQBuxub",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "bce22a795180157e2fdf8a56d58c6f39882590017260e8e6592d86f27868eacf",
+        "characters": 136,
+        "reportedCharacterCost": "75",
+        "part": "04",
+        "audio": "/stories/eleven/room-to-invent/04-191184902f37.m4a",
+        "duration": 10.7,
+        "tempo": 1.029,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "nzFihrBIvB34imQBuxub",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "dba7a6dea71deb2ee4a272d741d5300b853000431ed85a03f2cb30314db6829c",
+        "characters": 144,
+        "reportedCharacterCost": "79",
+        "part": "05",
+        "audio": "/stories/eleven/room-to-invent/05-fb16d98e85d9.m4a",
+        "duration": 14.40001,
+        "tempo": 1.029,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "nzFihrBIvB34imQBuxub",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "c192e9d3bf8c0f31929bc699ad2c89b07357508ebf97242b6be2fe10a803696e",
+        "characters": 121,
+        "reportedCharacterCost": "67",
+        "part": "06",
+        "audio": "/stories/eleven/room-to-invent/06-66882783668a.m4a",
+        "duration": 8.40001,
+        "tempo": 1.029,
+        "processing": "pace-v2"
+      }
+    ]
+  },
+  "signal-water": {
+    "title": "The Signal Across the Water",
+    "clips": [
+      {
+        "voiceId": "uIZsnBL0YK1S5j69bAih",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "b865be8bb73c5e9d6f61340e3b0a93637f902e36f27fac4dcca5e5ebcb4bbe14",
+        "characters": 121,
+        "reportedCharacterCost": "67",
+        "part": "01",
+        "audio": "/stories/eleven/signal-water/01-6feefefebc7e.m4a",
+        "duration": 9.70001,
+        "tempo": 1.2,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "uIZsnBL0YK1S5j69bAih",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "88ed27cf9836f022c9c47f7f6afdb8ff887c88e1e5714b1a4a6f9ac1a9532f7e",
+        "characters": 127,
+        "reportedCharacterCost": "70",
+        "part": "02",
+        "audio": "/stories/eleven/signal-water/02-6157d2d8cc69.m4a",
+        "duration": 10.3,
+        "tempo": 1.2,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "uIZsnBL0YK1S5j69bAih",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "182a2af296173478773f2d120bf196883d3888fc0fd3bd585cffe83d401cd4c0",
+        "characters": 106,
+        "reportedCharacterCost": "58",
+        "part": "03",
+        "audio": "/stories/eleven/signal-water/03-f7b93366f458.m4a",
+        "duration": 8.10001,
+        "tempo": 1.2,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "uIZsnBL0YK1S5j69bAih",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "84b18929f1b5e95cff76365edc68078f059ba1b64caf6a9d683623377e6ef5a0",
+        "characters": 112,
+        "reportedCharacterCost": "62",
+        "part": "04",
+        "audio": "/stories/eleven/signal-water/04-c321ec3eeffe.m4a",
+        "duration": 7.8,
+        "tempo": 1.2,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "uIZsnBL0YK1S5j69bAih",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "28fb15c9ae93ada03b0c2f2aa019c77f54a5b2e1efb13d253592695f40e3d652",
+        "characters": 133,
+        "reportedCharacterCost": "73",
+        "part": "05",
+        "audio": "/stories/eleven/signal-water/05-3f0ba6306a76.m4a",
+        "duration": 13.1,
+        "tempo": 1.2,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "uIZsnBL0YK1S5j69bAih",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "5d123738af7dbd041bd6f667a7bd57f074444d4fd938b880902492d8ed1a2478",
+        "characters": 135,
+        "reportedCharacterCost": "74",
+        "part": "06",
+        "audio": "/stories/eleven/signal-water/06-0e4731ac4947.m4a",
+        "duration": 12.3,
+        "tempo": 1.2,
+        "processing": "pace-v2"
+      }
+    ]
+  },
+  "unfinished-map": {
+    "title": "The Unfinished Map",
+    "clips": [
+      {
+        "voiceId": "Nhs7eitvQWFTQBsf0yiT",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "aafab7d32b373496b63732a7061dfcb09146005ae7f1404417e4a5d245efeb84",
+        "characters": 132,
+        "reportedCharacterCost": "73",
+        "part": "01",
+        "audio": "/stories/eleven/unfinished-map/01-231d2a265817.m4a",
+        "duration": 8.90001,
+        "tempo": 1.113,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "Nhs7eitvQWFTQBsf0yiT",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "22d1b634535c790296f5e9253cccdd2d177ed7f827728978ff859652e337c056",
+        "characters": 125,
+        "reportedCharacterCost": "69",
+        "part": "02",
+        "audio": "/stories/eleven/unfinished-map/02-9a722cc907a9.m4a",
+        "duration": 8.7,
+        "tempo": 1.113,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "Nhs7eitvQWFTQBsf0yiT",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "8092f756524de3efe5b66dc70181c0f44e2a102b72b00a28f0cf579e05c44a04",
+        "characters": 122,
+        "reportedCharacterCost": "67",
+        "part": "03",
+        "audio": "/stories/eleven/unfinished-map/03-ff5209a6273f.m4a",
+        "duration": 10.30001,
+        "tempo": 1.113,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "Nhs7eitvQWFTQBsf0yiT",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "932b0111e27701392a88db22daf27643c324bd928b0b9272d0dbf6397f40ce5d",
+        "characters": 115,
+        "reportedCharacterCost": "63",
+        "part": "04",
+        "audio": "/stories/eleven/unfinished-map/04-34bf92143542.m4a",
+        "duration": 8.7,
+        "tempo": 1.113,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "Nhs7eitvQWFTQBsf0yiT",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "8ab7539f98f19db0583f3b9f7db8a821a8687fce4f9dca9125bcbcf42533f8d2",
+        "characters": 122,
+        "reportedCharacterCost": "67",
+        "part": "05",
+        "audio": "/stories/eleven/unfinished-map/05-5c7ceea5457f.m4a",
+        "duration": 8.70001,
+        "tempo": 1.113,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "Nhs7eitvQWFTQBsf0yiT",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "8897353cf22962811dcc5d577381aacb9d56a91ea6817fbc17bfd7b42dcf01fc",
+        "characters": 135,
+        "reportedCharacterCost": "74",
+        "part": "06",
+        "audio": "/stories/eleven/unfinished-map/06-4f7335a34c4c.m4a",
+        "duration": 10.1,
+        "tempo": 1.113,
+        "processing": "pace-v2"
+      }
+    ]
+  },
+  "windshield": {
+    "title": "The Windshield",
+    "clips": [
+      {
+        "voiceId": "NFG5qt843uXKj4pFvR7C",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "4119cf16dee6a76baef563786be89fd573d9cf5e4115e67c1f3bfabd2295760c",
+        "characters": 184,
+        "reportedCharacterCost": "101",
+        "part": "01",
+        "audio": "/stories/eleven/windshield/01-a4cff69a5c6a.m4a",
+        "duration": 10.5,
+        "tempo": 1.0,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "NFG5qt843uXKj4pFvR7C",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "32674250561b697e0bf6882c0b3b93d9690816268c66f93c65f137c7e5ef7ccb",
+        "characters": 167,
+        "reportedCharacterCost": "92",
+        "part": "02",
+        "audio": "/stories/eleven/windshield/02-06d5b7f1e315.m4a",
+        "duration": 11.10001,
+        "tempo": 1.0,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "NFG5qt843uXKj4pFvR7C",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "0a2d0923eb835467a91f543bda71c1582bf712ad9b4be4c7754ddc7d904f2dc4",
+        "characters": 162,
+        "reportedCharacterCost": "89",
+        "part": "03",
+        "audio": "/stories/eleven/windshield/03-bad3b08298f8.m4a",
+        "duration": 11.70001,
+        "tempo": 1.0,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "NFG5qt843uXKj4pFvR7C",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "63750df8cbc23a2094cd713fee863d7ab810585c1d7d9310e0fe02c3c95e8869",
+        "characters": 185,
+        "reportedCharacterCost": "102",
+        "part": "04",
+        "audio": "/stories/eleven/windshield/04-f070ec7acbd5.m4a",
+        "duration": 12.2,
+        "tempo": 1.0,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "NFG5qt843uXKj4pFvR7C",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "2b2566ccaffbbff8189a2796cac8c51aa8d6c207cbf2e4cd3361fcd6529eb8fd",
+        "characters": 184,
+        "reportedCharacterCost": "101",
+        "part": "05",
+        "audio": "/stories/eleven/windshield/05-63635fe6fd5f.m4a",
+        "duration": 12.9,
+        "tempo": 1.0,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "NFG5qt843uXKj4pFvR7C",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "77d25636a60a0c5fc6a7ced501b7f8ec3f9473e36b01aa0d77eee73b737779d1",
+        "characters": 227,
+        "reportedCharacterCost": "125",
+        "part": "06",
+        "audio": "/stories/eleven/windshield/06-2ea45813b535.m4a",
+        "duration": 18.20001,
+        "tempo": 1.0,
+        "processing": "pace-v2"
+      }
+    ]
+  },
+  "woven-court": {
+    "title": "The Woven Court",
+    "clips": [
+      {
+        "voiceId": "uKGPYP2uuyRQv8SeFre0",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "aeeae921ed25aa0f537cf462f5bf5e48319c0bdf2fe8b638c85091a1b88b6e74",
+        "characters": 130,
+        "reportedCharacterCost": "72",
+        "part": "01",
+        "audio": "/stories/eleven/woven-court/01-3bc9e0c324d3.m4a",
+        "duration": 9.5,
+        "tempo": 1.115,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "uKGPYP2uuyRQv8SeFre0",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "f23d5df1ed60d608779cc8fc6a5070658c1f3777dc61eefcf5f1805ce097e8d2",
+        "characters": 146,
+        "reportedCharacterCost": "80",
+        "part": "02",
+        "audio": "/stories/eleven/woven-court/02-0e73fa31070f.m4a",
+        "duration": 8.60001,
+        "tempo": 1.115,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "uKGPYP2uuyRQv8SeFre0",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "f85bbae7e410a08eff1ed77071c9be82922c295e9307e1153e41d68c20ed4136",
+        "characters": 116,
+        "reportedCharacterCost": "64",
+        "part": "03",
+        "audio": "/stories/eleven/woven-court/03-78c29ae87264.m4a",
+        "duration": 8.40001,
+        "tempo": 1.115,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "uKGPYP2uuyRQv8SeFre0",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "7cbc8eb93502b9a804327aeef76c9c86315b2823e02aa3a41f887d30072e7f65",
+        "characters": 152,
+        "reportedCharacterCost": "84",
+        "part": "04",
+        "audio": "/stories/eleven/woven-court/04-e826ada63bce.m4a",
+        "duration": 9.0,
+        "tempo": 1.115,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "uKGPYP2uuyRQv8SeFre0",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "058f5616e1fcfbc9c3af5d1eb87de9be18ac5c23bbc28f0b7a6d9385281114b4",
+        "characters": 149,
+        "reportedCharacterCost": "82",
+        "part": "05",
+        "audio": "/stories/eleven/woven-court/05-ef6ec96465e3.m4a",
+        "duration": 11.60001,
+        "tempo": 1.115,
+        "processing": "pace-v2"
+      },
+      {
+        "voiceId": "uKGPYP2uuyRQv8SeFre0",
+        "model": "eleven_multilingual_v2",
+        "scriptSha256": "36d47eb0056c4f6c0c938aea01b7e7946ed004495bc493c1b795630528d17025",
+        "characters": 123,
+        "reportedCharacterCost": "68",
+        "part": "06",
+        "audio": "/stories/eleven/woven-court/06-24123a4f02f3.m4a",
+        "duration": 9.1,
+        "tempo": 1.115,
+        "processing": "pace-v2"
+      }
+    ]
+  }
+}

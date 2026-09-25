@@ -1,0 +1,366 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Hampden, 1960",
+   "text": "Glasgow, 1960, European Cup final. Real Madrid, in white, against Eintracht Frankfurt, who have just scored. A minute later, Alfredo Di St\u00e9fano gets the ball and off he goes. He runs and runs... and scores! His third goal!",
+   "src": "/plays/narration/di-stefano-signature/1.m4a",
+   "seconds": 16.5,
+   "words": [
+    {
+     "w": "Glasgow",
+     "at": 0.375
+    },
+    {
+     "w": "1960",
+     "at": 0.975
+    },
+    {
+     "w": "European",
+     "at": 1.9
+    },
+    {
+     "w": "Cup",
+     "at": 2.425
+    },
+    {
+     "w": "final",
+     "at": 2.65
+    },
+    {
+     "w": "Real",
+     "at": 3.525
+    },
+    {
+     "w": "Madrid",
+     "at": 3.8
+    },
+    {
+     "w": "in",
+     "at": 4.325
+    },
+    {
+     "w": "white",
+     "at": 4.487
+    },
+    {
+     "w": "against",
+     "at": 4.875
+    },
+    {
+     "w": "Eintracht",
+     "at": 5.2
+    },
+    {
+     "w": "Frankfurt",
+     "at": 5.75
+    },
+    {
+     "w": "who",
+     "at": 6.237
+    },
+    {
+     "w": "have",
+     "at": 6.338
+    },
+    {
+     "w": "just",
+     "at": 6.45
+    },
+    {
+     "w": "scored",
+     "at": 6.688
+    },
+    {
+     "w": "A",
+     "at": 7.763
+    },
+    {
+     "w": "minute",
+     "at": 7.875
+    },
+    {
+     "w": "later",
+     "at": 8.15
+    },
+    {
+     "w": "Alfredo",
+     "at": 8.525
+    },
+    {
+     "w": "Di",
+     "at": 9.037
+    },
+    {
+     "w": "St\u00e9fano",
+     "at": 9.262
+    },
+    {
+     "w": "gets",
+     "at": 9.775
+    },
+    {
+     "w": "the",
+     "at": 10.025
+    },
+    {
+     "w": "ball",
+     "at": 10.125
+    },
+    {
+     "w": "and",
+     "at": 10.5
+    },
+    {
+     "w": "off",
+     "at": 10.625
+    },
+    {
+     "w": "he",
+     "at": 10.812
+    },
+    {
+     "w": "goes",
+     "at": 10.925
+    },
+    {
+     "w": "He",
+     "at": 11.775
+    },
+    {
+     "w": "runs",
+     "at": 11.938
+    },
+    {
+     "w": "and",
+     "at": 12.4
+    },
+    {
+     "w": "runs",
+     "at": 12.525
+    },
+    {
+     "w": "and",
+     "at": 13.4
+    },
+    {
+     "w": "scores",
+     "at": 13.575
+    },
+    {
+     "w": "His",
+     "at": 14.525
+    },
+    {
+     "w": "third",
+     "at": 14.762
+    },
+    {
+     "w": "goal",
+     "at": 15.1
+    }
+   ]
+  },
+  {
+   "label": "Everywhere",
+   "text": "Watch again, slowly. This is how he played: the centre forward drops deep for the ball, carries it forward himself and finishes the move he started.",
+   "src": "/plays/narration/di-stefano-signature/2.m4a",
+   "seconds": 10.5,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.212
+    },
+    {
+     "w": "This",
+     "at": 2.237
+    },
+    {
+     "w": "is",
+     "at": 2.475
+    },
+    {
+     "w": "how",
+     "at": 2.625
+    },
+    {
+     "w": "he",
+     "at": 2.825
+    },
+    {
+     "w": "played",
+     "at": 2.962
+    },
+    {
+     "w": "the",
+     "at": 3.9
+    },
+    {
+     "w": "centre",
+     "at": 4.037
+    },
+    {
+     "w": "forward",
+     "at": 4.438
+    },
+    {
+     "w": "drops",
+     "at": 4.912
+    },
+    {
+     "w": "deep",
+     "at": 5.35
+    },
+    {
+     "w": "for",
+     "at": 5.6
+    },
+    {
+     "w": "the",
+     "at": 5.713
+    },
+    {
+     "w": "ball",
+     "at": 5.8
+    },
+    {
+     "w": "carries",
+     "at": 6.412
+    },
+    {
+     "w": "it",
+     "at": 6.825
+    },
+    {
+     "w": "forward",
+     "at": 6.987
+    },
+    {
+     "w": "himself",
+     "at": 7.312
+    },
+    {
+     "w": "and",
+     "at": 7.8
+    },
+    {
+     "w": "finishes",
+     "at": 7.938
+    },
+    {
+     "w": "the",
+     "at": 8.425
+    },
+    {
+     "w": "move",
+     "at": 8.55
+    },
+    {
+     "w": "he",
+     "at": 8.9
+    },
+    {
+     "w": "started",
+     "at": 9.037
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "People said he played everywhere. Your turn: help your team all over the pitch. Even strikers win the ball back!",
+   "src": "/plays/narration/di-stefano-signature/3.m4a",
+   "seconds": 7.7,
+   "words": [
+    {
+     "w": "People",
+     "at": 0.325
+    },
+    {
+     "w": "said",
+     "at": 0.65
+    },
+    {
+     "w": "he",
+     "at": 0.812
+    },
+    {
+     "w": "played",
+     "at": 0.925
+    },
+    {
+     "w": "everywhere",
+     "at": 1.225
+    },
+    {
+     "w": "Your",
+     "at": 2.263
+    },
+    {
+     "w": "turn",
+     "at": 2.462
+    },
+    {
+     "w": "help",
+     "at": 3.225
+    },
+    {
+     "w": "your",
+     "at": 3.438
+    },
+    {
+     "w": "team",
+     "at": 3.562
+    },
+    {
+     "w": "all",
+     "at": 3.9
+    },
+    {
+     "w": "over",
+     "at": 4.062
+    },
+    {
+     "w": "the",
+     "at": 4.263
+    },
+    {
+     "w": "pitch",
+     "at": 4.35
+    },
+    {
+     "w": "Even",
+     "at": 4.938
+    },
+    {
+     "w": "strikers",
+     "at": 5.263
+    },
+    {
+     "w": "win",
+     "at": 5.8
+    },
+    {
+     "w": "the",
+     "at": 5.963
+    },
+    {
+     "w": "ball",
+     "at": 6.05
+    },
+    {
+     "w": "back",
+     "at": 6.35
+    }
+   ]
+  }
+ ]
+}

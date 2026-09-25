@@ -1,0 +1,119 @@
+{
+ "lesson": "prn_7_spread",
+ "questions": [
+  {
+   "q": "True or false? Everyone should gather close around the ball.",
+   "options": [
+    "True",
+    "False"
+   ],
+   "correct": 1,
+   "explain": "Right, it's false. Spreading out gives the passer more routes.",
+   "choiceExplanations": [
+    "Crowding the ball lets one defender block every pass.",
+    "Right, it's false. Spreading out gives the passer more routes."
+   ],
+   "visual": {
+    "kind": "trueFalse",
+    "frame": {
+     "step": 6,
+     "focus": [
+      "lm",
+      "rm"
+     ]
+    }
+   }
+  },
+  {
+   "q": "The defender moved to the left side. Which pass is open now?",
+   "options": [
+    "Pass to your right teammate",
+    "Pass to your left teammate"
+   ],
+   "correct": 0,
+   "explain": "Yes. Your right teammate moved wide into open room.",
+   "choiceExplanations": [
+    "Yes. Your right teammate moved wide into open room.",
+    "The defender moved toward that side, so the pass could be cut out."
+   ],
+   "visual": {
+    "kind": "bestPass",
+    "frame": {
+     "step": 6,
+     "ball": "cm",
+     "focus": [
+      "cm",
+      "dcm"
+     ],
+     "place": {
+      "dcm": {
+       "x": 60,
+       "y": 244
+      }
+     }
+    },
+    "from": "cm",
+    "to": [
+     "rm",
+     "lm"
+    ]
+   }
+  },
+  {
+   "q": "The right teammate is close to a defender. Where should they move?",
+   "options": [
+    "Move toward the ball",
+    "Hide behind the blue player",
+    "Move wide on the right"
+   ],
+   "correct": 2,
+   "explain": "Yes. Wide on the right opens a new passing angle.",
+   "choiceExplanations": [
+    "Moving to the ball crowds the space, so one defender can block both.",
+    "The blue player is in that lane, so the pass could be cut out.",
+    "Yes. Wide on the right opens a new passing angle."
+   ],
+   "visual": {
+    "kind": "dragToZone",
+    "frame": {
+     "step": 1,
+     "place": {
+      "lm": {
+       "x": 40,
+       "y": 235
+      },
+      "dst": {
+       "x": 95,
+       "y": 185
+      }
+     },
+     "focus": [
+      "rm",
+      "dlm"
+     ]
+    },
+    "drag": "rm",
+    "zones": [
+     {
+      "x": 170,
+      "y": 262,
+      "w": 40,
+      "h": 30
+     },
+     {
+      "x": 192,
+      "y": 152,
+      "w": 40,
+      "h": 30
+     },
+     {
+      "x": 235,
+      "y": 230,
+      "w": 40,
+      "h": 40
+     }
+    ]
+   }
+  }
+ ]
+}

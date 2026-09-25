@@ -7,7 +7,7 @@ import store from './IslandStore.module.css';
 
 const STORY_META:Record<StoryId,{id:StoryId;title:string;theme:string}>={
  reset:{id:'reset',title:'Mental Toughness',theme:'Finding your next useful action'},loss:{id:'loss',title:'After the Final Whistle',theme:'Handling a loss'},empathy:{id:'empathy',title:'Emotional Intelligence',theme:'Noticing feelings and responding with care'},
- futsl:{id:'futsl',title:'Love Futsl',theme:'Smaller court. Bigger game.'},regulate:{id:'regulate',title:'Regulating emotions',theme:'When the game feels unfair.'},grit:{id:'grit',title:'Grit',theme:'Roots before fruit'}};
+ futsl:{id:'futsl',title:'Love Futsal',theme:'Smaller court. Bigger game.'},regulate:{id:'regulate',title:'Regulating emotions',theme:'When the game feels unfair.'},grit:{id:'grit',title:'Grit',theme:'Roots before fruit'}};
 type Props={storyId:StoryId;onClose:()=>void;onFinish:()=>void;embedded?:boolean;origin?:StoryOrigin};
 /** Every path story is a riso print (lib/paths/riso/stories/<id>.ts) played by StoryFilmPlayer through UpcomingStory.
  * Embedded inside the paths dialog it renders in place; standalone it opens its own <dialog>. */

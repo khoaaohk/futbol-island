@@ -1,0 +1,354 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Munich, live",
+   "text": "Munich, 2024: the Euros begin! Germany, in white, play Scotland. G\u00fcndogan finds Havertz, who lays it back to Jamal Musiala. A quick chop past a defender... and bang, into the roof of the net!",
+   "src": "/plays/narration/musiala-signature/1.m4a",
+   "seconds": 14.6,
+   "words": [
+    {
+     "w": "Munich",
+     "at": 0.4
+    },
+    {
+     "w": "2024",
+     "at": 0.8
+    },
+    {
+     "w": "the",
+     "at": 1.975
+    },
+    {
+     "w": "Euros",
+     "at": 2.112
+    },
+    {
+     "w": "begin",
+     "at": 2.55
+    },
+    {
+     "w": "Germany",
+     "at": 3.425
+    },
+    {
+     "w": "in",
+     "at": 4.0
+    },
+    {
+     "w": "white",
+     "at": 4.162
+    },
+    {
+     "w": "play",
+     "at": 4.612
+    },
+    {
+     "w": "Scotland",
+     "at": 4.938
+    },
+    {
+     "w": "G\u00fcndogan",
+     "at": 6.05
+    },
+    {
+     "w": "finds",
+     "at": 6.6
+    },
+    {
+     "w": "Havertz",
+     "at": 6.925
+    },
+    {
+     "w": "who",
+     "at": 7.412
+    },
+    {
+     "w": "lays",
+     "at": 7.55
+    },
+    {
+     "w": "it",
+     "at": 7.812
+    },
+    {
+     "w": "back",
+     "at": 7.9
+    },
+    {
+     "w": "to",
+     "at": 8.175
+    },
+    {
+     "w": "Jamal",
+     "at": 8.3
+    },
+    {
+     "w": "Musiala",
+     "at": 8.725
+    },
+    {
+     "w": "A",
+     "at": 9.838
+    },
+    {
+     "w": "quick",
+     "at": 9.95
+    },
+    {
+     "w": "chop",
+     "at": 10.213
+    },
+    {
+     "w": "past",
+     "at": 10.562
+    },
+    {
+     "w": "a",
+     "at": 10.912
+    },
+    {
+     "w": "defender",
+     "at": 10.975
+    },
+    {
+     "w": "and",
+     "at": 11.9
+    },
+    {
+     "w": "bang",
+     "at": 12.037
+    },
+    {
+     "w": "into",
+     "at": 12.512
+    },
+    {
+     "w": "the",
+     "at": 12.7
+    },
+    {
+     "w": "roof",
+     "at": 12.838
+    },
+    {
+     "w": "of",
+     "at": 13.088
+    },
+    {
+     "w": "the",
+     "at": 13.162
+    },
+    {
+     "w": "net",
+     "at": 13.25
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. Small, quick touches: one to control, one chop sideways, away from the defender.",
+   "src": "/plays/narration/musiala-signature/2.m4a",
+   "seconds": 7.9,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.137
+    },
+    {
+     "w": "Small",
+     "at": 2.163
+    },
+    {
+     "w": "quick",
+     "at": 2.65
+    },
+    {
+     "w": "touches",
+     "at": 2.9
+    },
+    {
+     "w": "one",
+     "at": 3.725
+    },
+    {
+     "w": "to",
+     "at": 3.875
+    },
+    {
+     "w": "control",
+     "at": 3.975
+    },
+    {
+     "w": "one",
+     "at": 4.675
+    },
+    {
+     "w": "chop",
+     "at": 4.912
+    },
+    {
+     "w": "sideways",
+     "at": 5.213
+    },
+    {
+     "w": "away",
+     "at": 5.875
+    },
+    {
+     "w": "from",
+     "at": 6.175
+    },
+    {
+     "w": "the",
+     "at": 6.312
+    },
+    {
+     "w": "defender",
+     "at": 6.4
+    }
+   ]
+  },
+  {
+   "label": "From behind",
+   "text": "From behind the goal: the chop makes a gap, and the net shakes! What a finish!",
+   "src": "/plays/narration/musiala-signature/3.m4a",
+   "seconds": 5.5,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.375
+    },
+    {
+     "w": "behind",
+     "at": 0.512
+    },
+    {
+     "w": "the",
+     "at": 0.887
+    },
+    {
+     "w": "goal",
+     "at": 0.975
+    },
+    {
+     "w": "the",
+     "at": 1.65
+    },
+    {
+     "w": "chop",
+     "at": 1.788
+    },
+    {
+     "w": "makes",
+     "at": 2.062
+    },
+    {
+     "w": "a",
+     "at": 2.263
+    },
+    {
+     "w": "gap",
+     "at": 2.325
+    },
+    {
+     "w": "and",
+     "at": 2.663
+    },
+    {
+     "w": "the",
+     "at": 2.763
+    },
+    {
+     "w": "net",
+     "at": 2.85
+    },
+    {
+     "w": "shakes",
+     "at": 3.087
+    },
+    {
+     "w": "What",
+     "at": 3.825
+    },
+    {
+     "w": "a",
+     "at": 3.962
+    },
+    {
+     "w": "finish",
+     "at": 4.037
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: use small, quick touches, and change direction to squeeze between defenders.",
+   "src": "/plays/narration/musiala-signature/4.m4a",
+   "seconds": 6.6,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "use",
+     "at": 1.363
+    },
+    {
+     "w": "small",
+     "at": 1.675
+    },
+    {
+     "w": "quick",
+     "at": 2.275
+    },
+    {
+     "w": "touches",
+     "at": 2.525
+    },
+    {
+     "w": "and",
+     "at": 3.125
+    },
+    {
+     "w": "change",
+     "at": 3.263
+    },
+    {
+     "w": "direction",
+     "at": 3.625
+    },
+    {
+     "w": "to",
+     "at": 4.125
+    },
+    {
+     "w": "squeeze",
+     "at": 4.225
+    },
+    {
+     "w": "between",
+     "at": 4.65
+    },
+    {
+     "w": "defenders",
+     "at": 4.975
+    }
+   ]
+  }
+ ]
+}

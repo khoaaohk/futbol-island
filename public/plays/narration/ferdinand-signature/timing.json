@@ -1,0 +1,346 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Moscow, live",
+   "text": "Moscow, 2008, the Champions League final. Rio Ferdinand has a sore leg. But when Frank Lampard threads a pass into the box, Rio reads it, steps across, and cuts it out!",
+   "src": "/plays/narration/ferdinand-signature/1.m4a",
+   "seconds": 12.8,
+   "words": [
+    {
+     "w": "Moscow",
+     "at": 0.4
+    },
+    {
+     "w": "2008",
+     "at": 1.025
+    },
+    {
+     "w": "the",
+     "at": 1.925
+    },
+    {
+     "w": "Champions",
+     "at": 2.038
+    },
+    {
+     "w": "League",
+     "at": 2.65
+    },
+    {
+     "w": "final",
+     "at": 2.913
+    },
+    {
+     "w": "Rio",
+     "at": 3.9
+    },
+    {
+     "w": "Ferdinand",
+     "at": 4.213
+    },
+    {
+     "w": "has",
+     "at": 4.8
+    },
+    {
+     "w": "a",
+     "at": 4.963
+    },
+    {
+     "w": "sore",
+     "at": 5.062
+    },
+    {
+     "w": "leg",
+     "at": 5.375
+    },
+    {
+     "w": "But",
+     "at": 6.15
+    },
+    {
+     "w": "when",
+     "at": 6.287
+    },
+    {
+     "w": "Frank",
+     "at": 6.463
+    },
+    {
+     "w": "Lampard",
+     "at": 6.8
+    },
+    {
+     "w": "threads",
+     "at": 7.263
+    },
+    {
+     "w": "a",
+     "at": 7.562
+    },
+    {
+     "w": "pass",
+     "at": 7.638
+    },
+    {
+     "w": "into",
+     "at": 8.012
+    },
+    {
+     "w": "the",
+     "at": 8.188
+    },
+    {
+     "w": "box",
+     "at": 8.275
+    },
+    {
+     "w": "Rio",
+     "at": 9.012
+    },
+    {
+     "w": "reads",
+     "at": 9.387
+    },
+    {
+     "w": "it",
+     "at": 9.762
+    },
+    {
+     "w": "steps",
+     "at": 10.137
+    },
+    {
+     "w": "across",
+     "at": 10.463
+    },
+    {
+     "w": "and",
+     "at": 11.075
+    },
+    {
+     "w": "cuts",
+     "at": 11.213
+    },
+    {
+     "w": "it",
+     "at": 11.488
+    },
+    {
+     "w": "out",
+     "at": 11.575
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. As Lampard passes, Rio takes one smooth step into its path, and his boot gets there first.",
+   "src": "/plays/narration/ferdinand-signature/2.m4a",
+   "seconds": 8.7,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.188
+    },
+    {
+     "w": "As",
+     "at": 2.237
+    },
+    {
+     "w": "Lampard",
+     "at": 2.475
+    },
+    {
+     "w": "passes",
+     "at": 2.95
+    },
+    {
+     "w": "Rio",
+     "at": 3.763
+    },
+    {
+     "w": "takes",
+     "at": 4.1
+    },
+    {
+     "w": "one",
+     "at": 4.388
+    },
+    {
+     "w": "smooth",
+     "at": 4.675
+    },
+    {
+     "w": "step",
+     "at": 5.1
+    },
+    {
+     "w": "into",
+     "at": 5.362
+    },
+    {
+     "w": "its",
+     "at": 5.562
+    },
+    {
+     "w": "path",
+     "at": 5.737
+    },
+    {
+     "w": "and",
+     "at": 6.35
+    },
+    {
+     "w": "his",
+     "at": 6.463
+    },
+    {
+     "w": "boot",
+     "at": 6.638
+    },
+    {
+     "w": "gets",
+     "at": 6.9
+    },
+    {
+     "w": "there",
+     "at": 7.15
+    },
+    {
+     "w": "first",
+     "at": 7.362
+    }
+   ]
+  },
+  {
+   "label": "The lesson",
+   "text": "That's Rio's signature: the smooth interception. Read the pass and step in first. After you win the ball, stay calm, lift your head, and make a simple pass.",
+   "src": "/plays/narration/ferdinand-signature/3.m4a",
+   "seconds": 10.8,
+   "words": [
+    {
+     "w": "That's",
+     "at": 0.375
+    },
+    {
+     "w": "Rio's",
+     "at": 0.65
+    },
+    {
+     "w": "signature",
+     "at": 1.012
+    },
+    {
+     "w": "the",
+     "at": 1.975
+    },
+    {
+     "w": "smooth",
+     "at": 2.125
+    },
+    {
+     "w": "interception",
+     "at": 2.538
+    },
+    {
+     "w": "Read",
+     "at": 3.612
+    },
+    {
+     "w": "the",
+     "at": 3.837
+    },
+    {
+     "w": "pass",
+     "at": 3.938
+    },
+    {
+     "w": "and",
+     "at": 4.4
+    },
+    {
+     "w": "step",
+     "at": 4.537
+    },
+    {
+     "w": "in",
+     "at": 4.85
+    },
+    {
+     "w": "first",
+     "at": 5.013
+    },
+    {
+     "w": "After",
+     "at": 5.963
+    },
+    {
+     "w": "you",
+     "at": 6.275
+    },
+    {
+     "w": "win",
+     "at": 6.425
+    },
+    {
+     "w": "the",
+     "at": 6.612
+    },
+    {
+     "w": "ball",
+     "at": 6.7
+    },
+    {
+     "w": "stay",
+     "at": 7.188
+    },
+    {
+     "w": "calm",
+     "at": 7.513
+    },
+    {
+     "w": "lift",
+     "at": 8.012
+    },
+    {
+     "w": "your",
+     "at": 8.238
+    },
+    {
+     "w": "head",
+     "at": 8.35
+    },
+    {
+     "w": "and",
+     "at": 8.725
+    },
+    {
+     "w": "make",
+     "at": 8.838
+    },
+    {
+     "w": "a",
+     "at": 9.012
+    },
+    {
+     "w": "simple",
+     "at": 9.113
+    },
+    {
+     "w": "pass",
+     "at": 9.45
+    }
+   ]
+  }
+ ]
+}

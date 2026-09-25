@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The counter, live",
+   "text": "Lusail, 2022, the World Cup final. Argentina win it back. Messi flicks it to Juli\u00e1n \u00c1lvarez, who sends Alexis Mac Allister racing forward. He passes across to Di Mar\u00eda, who scores!",
+   "src": "/plays/narration/mac-allister-signature/1.m4a",
+   "seconds": 14.7,
+   "words": [
+    {
+     "w": "Lusail",
+     "at": 0.4
+    },
+    {
+     "w": "2022",
+     "at": 1.0
+    },
+    {
+     "w": "the",
+     "at": 2.05
+    },
+    {
+     "w": "World",
+     "at": 2.175
+    },
+    {
+     "w": "Cup",
+     "at": 2.5
+    },
+    {
+     "w": "final",
+     "at": 2.725
+    },
+    {
+     "w": "Argentina",
+     "at": 3.638
+    },
+    {
+     "w": "win",
+     "at": 4.3
+    },
+    {
+     "w": "it",
+     "at": 4.45
+    },
+    {
+     "w": "back",
+     "at": 4.575
+    },
+    {
+     "w": "Messi",
+     "at": 5.425
+    },
+    {
+     "w": "flicks",
+     "at": 5.787
+    },
+    {
+     "w": "it",
+     "at": 6.1
+    },
+    {
+     "w": "to",
+     "at": 6.225
+    },
+    {
+     "w": "Juli\u00e1n",
+     "at": 6.35
+    },
+    {
+     "w": "\u00c1lvarez",
+     "at": 6.838
+    },
+    {
+     "w": "who",
+     "at": 7.7
+    },
+    {
+     "w": "sends",
+     "at": 7.85
+    },
+    {
+     "w": "Alexis",
+     "at": 8.125
+    },
+    {
+     "w": "Mac",
+     "at": 8.725
+    },
+    {
+     "w": "Allister",
+     "at": 8.963
+    },
+    {
+     "w": "racing",
+     "at": 9.5
+    },
+    {
+     "w": "forward",
+     "at": 9.938
+    },
+    {
+     "w": "He",
+     "at": 10.95
+    },
+    {
+     "w": "passes",
+     "at": 11.075
+    },
+    {
+     "w": "across",
+     "at": 11.525
+    },
+    {
+     "w": "to",
+     "at": 11.95
+    },
+    {
+     "w": "Di",
+     "at": 12.075
+    },
+    {
+     "w": "Mar\u00eda",
+     "at": 12.25
+    },
+    {
+     "w": "who",
+     "at": 12.925
+    },
+    {
+     "w": "scores",
+     "at": 13.1
+    }
+   ]
+  },
+  {
+   "label": "Watch his run",
+   "text": "Watch again from behind. Mac Allister sprints into the space between the defenders, and \u00c1lvarez finds him.",
+   "src": "/plays/narration/mac-allister-signature/2.m4a",
+   "seconds": 7.7,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "from",
+     "at": 1.0
+    },
+    {
+     "w": "behind",
+     "at": 1.137
+    },
+    {
+     "w": "Mac",
+     "at": 2.188
+    },
+    {
+     "w": "Allister",
+     "at": 2.438
+    },
+    {
+     "w": "sprints",
+     "at": 2.938
+    },
+    {
+     "w": "into",
+     "at": 3.362
+    },
+    {
+     "w": "the",
+     "at": 3.538
+    },
+    {
+     "w": "space",
+     "at": 3.638
+    },
+    {
+     "w": "between",
+     "at": 4.075
+    },
+    {
+     "w": "the",
+     "at": 4.388
+    },
+    {
+     "w": "defenders",
+     "at": 4.475
+    },
+    {
+     "w": "and",
+     "at": 5.425
+    },
+    {
+     "w": "\u00c1lvarez",
+     "at": 5.562
+    },
+    {
+     "w": "finds",
+     "at": 6.075
+    },
+    {
+     "w": "him",
+     "at": 6.412
+    }
+   ]
+  },
+  {
+   "label": "The extra pass",
+   "text": "He could shoot, but he looks up and finds the free man. Di Mar\u00eda finishes with his left foot!",
+   "src": "/plays/narration/mac-allister-signature/3.m4a",
+   "seconds": 6.7,
+   "words": [
+    {
+     "w": "He",
+     "at": 0.35
+    },
+    {
+     "w": "could",
+     "at": 0.475
+    },
+    {
+     "w": "shoot",
+     "at": 0.7
+    },
+    {
+     "w": "but",
+     "at": 1.375
+    },
+    {
+     "w": "he",
+     "at": 1.512
+    },
+    {
+     "w": "looks",
+     "at": 1.625
+    },
+    {
+     "w": "up",
+     "at": 1.863
+    },
+    {
+     "w": "and",
+     "at": 2.013
+    },
+    {
+     "w": "finds",
+     "at": 2.138
+    },
+    {
+     "w": "the",
+     "at": 2.487
+    },
+    {
+     "w": "free",
+     "at": 2.587
+    },
+    {
+     "w": "man",
+     "at": 2.825
+    },
+    {
+     "w": "Di",
+     "at": 3.75
+    },
+    {
+     "w": "Mar\u00eda",
+     "at": 3.975
+    },
+    {
+     "w": "finishes",
+     "at": 4.412
+    },
+    {
+     "w": "with",
+     "at": 4.862
+    },
+    {
+     "w": "his",
+     "at": 4.963
+    },
+    {
+     "w": "left",
+     "at": 5.125
+    },
+    {
+     "w": "foot",
+     "at": 5.412
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: keep the ball with calm, safe passes. When a gap opens, speed it up with one quick pass forward!",
+   "src": "/plays/narration/mac-allister-signature/4.m4a",
+   "seconds": 8.0,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.525
+    },
+    {
+     "w": "keep",
+     "at": 1.15
+    },
+    {
+     "w": "the",
+     "at": 1.312
+    },
+    {
+     "w": "ball",
+     "at": 1.4
+    },
+    {
+     "w": "with",
+     "at": 1.712
+    },
+    {
+     "w": "calm",
+     "at": 1.887
+    },
+    {
+     "w": "safe",
+     "at": 2.413
+    },
+    {
+     "w": "passes",
+     "at": 2.725
+    },
+    {
+     "w": "When",
+     "at": 3.8
+    },
+    {
+     "w": "a",
+     "at": 3.938
+    },
+    {
+     "w": "gap",
+     "at": 4.0
+    },
+    {
+     "w": "opens",
+     "at": 4.275
+    },
+    {
+     "w": "speed",
+     "at": 4.938
+    },
+    {
+     "w": "it",
+     "at": 5.237
+    },
+    {
+     "w": "up",
+     "at": 5.312
+    },
+    {
+     "w": "with",
+     "at": 5.487
+    },
+    {
+     "w": "one",
+     "at": 5.662
+    },
+    {
+     "w": "quick",
+     "at": 5.9
+    },
+    {
+     "w": "pass",
+     "at": 6.15
+    },
+    {
+     "w": "forward",
+     "at": 6.525
+    }
+   ]
+  }
+ ]
+}

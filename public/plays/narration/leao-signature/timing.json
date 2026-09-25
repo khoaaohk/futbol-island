@@ -1,0 +1,374 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The run, live",
+   "text": "Napoli against Milan, Champions League. In his own half, a loose ball, and Rafael Le\u00e3o takes it! Past one, and away he gallops up the left. Inside another, then a burst of speed past the last defender, and across to Giroud... Goal!",
+   "src": "/plays/narration/leao-signature/1.m4a",
+   "seconds": 16.7,
+   "words": [
+    {
+     "w": "Napoli",
+     "at": 0.425
+    },
+    {
+     "w": "against",
+     "at": 0.875
+    },
+    {
+     "w": "Milan",
+     "at": 1.225
+    },
+    {
+     "w": "Champions",
+     "at": 1.938
+    },
+    {
+     "w": "League",
+     "at": 2.5
+    },
+    {
+     "w": "In",
+     "at": 3.388
+    },
+    {
+     "w": "his",
+     "at": 3.487
+    },
+    {
+     "w": "own",
+     "at": 3.612
+    },
+    {
+     "w": "half",
+     "at": 3.8
+    },
+    {
+     "w": "a",
+     "at": 4.2
+    },
+    {
+     "w": "loose",
+     "at": 4.312
+    },
+    {
+     "w": "ball",
+     "at": 4.612
+    },
+    {
+     "w": "and",
+     "at": 5.037
+    },
+    {
+     "w": "Rafael",
+     "at": 5.15
+    },
+    {
+     "w": "Le\u00e3o",
+     "at": 5.7
+    },
+    {
+     "w": "takes",
+     "at": 6.088
+    },
+    {
+     "w": "it",
+     "at": 6.463
+    },
+    {
+     "w": "Past",
+     "at": 7.062
+    },
+    {
+     "w": "one",
+     "at": 7.45
+    },
+    {
+     "w": "and",
+     "at": 8.075
+    },
+    {
+     "w": "away",
+     "at": 8.2
+    },
+    {
+     "w": "he",
+     "at": 8.55
+    },
+    {
+     "w": "gallops",
+     "at": 8.688
+    },
+    {
+     "w": "up",
+     "at": 9.088
+    },
+    {
+     "w": "the",
+     "at": 9.25
+    },
+    {
+     "w": "left",
+     "at": 9.375
+    },
+    {
+     "w": "Inside",
+     "at": 10.25
+    },
+    {
+     "w": "another",
+     "at": 10.775
+    },
+    {
+     "w": "then",
+     "at": 11.225
+    },
+    {
+     "w": "a",
+     "at": 11.363
+    },
+    {
+     "w": "burst",
+     "at": 11.438
+    },
+    {
+     "w": "of",
+     "at": 11.762
+    },
+    {
+     "w": "speed",
+     "at": 11.863
+    },
+    {
+     "w": "past",
+     "at": 12.262
+    },
+    {
+     "w": "the",
+     "at": 12.625
+    },
+    {
+     "w": "last",
+     "at": 12.725
+    },
+    {
+     "w": "defender",
+     "at": 13.062
+    },
+    {
+     "w": "and",
+     "at": 13.588
+    },
+    {
+     "w": "across",
+     "at": 13.688
+    },
+    {
+     "w": "to",
+     "at": 14.1
+    },
+    {
+     "w": "Giroud",
+     "at": 14.225
+    },
+    {
+     "w": "Goal",
+     "at": 15.262
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. In open grass: long strides, ball pushed far ahead. Near a defender: short, quick touches. Then a change of pace, and he rolls it across!",
+   "src": "/plays/narration/leao-signature/2.m4a",
+   "seconds": 11.4,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.087
+    },
+    {
+     "w": "In",
+     "at": 2.087
+    },
+    {
+     "w": "open",
+     "at": 2.25
+    },
+    {
+     "w": "grass",
+     "at": 2.575
+    },
+    {
+     "w": "long",
+     "at": 3.163
+    },
+    {
+     "w": "strides",
+     "at": 3.475
+    },
+    {
+     "w": "ball",
+     "at": 4.0
+    },
+    {
+     "w": "pushed",
+     "at": 4.3
+    },
+    {
+     "w": "far",
+     "at": 4.6
+    },
+    {
+     "w": "ahead",
+     "at": 4.825
+    },
+    {
+     "w": "Near",
+     "at": 5.688
+    },
+    {
+     "w": "a",
+     "at": 5.912
+    },
+    {
+     "w": "defender",
+     "at": 5.975
+    },
+    {
+     "w": "short",
+     "at": 6.75
+    },
+    {
+     "w": "quick",
+     "at": 7.225
+    },
+    {
+     "w": "touches",
+     "at": 7.475
+    },
+    {
+     "w": "Then",
+     "at": 8.35
+    },
+    {
+     "w": "a",
+     "at": 8.488
+    },
+    {
+     "w": "change",
+     "at": 8.562
+    },
+    {
+     "w": "of",
+     "at": 8.863
+    },
+    {
+     "w": "pace",
+     "at": 8.963
+    },
+    {
+     "w": "and",
+     "at": 9.363
+    },
+    {
+     "w": "he",
+     "at": 9.463
+    },
+    {
+     "w": "rolls",
+     "at": 9.575
+    },
+    {
+     "w": "it",
+     "at": 9.838
+    },
+    {
+     "w": "across",
+     "at": 9.912
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: in open space, take long strides. When defenders get close, switch to short touches!",
+   "src": "/plays/narration/leao-signature/3.m4a",
+   "seconds": 7.1,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.5
+    },
+    {
+     "w": "in",
+     "at": 1.0
+    },
+    {
+     "w": "open",
+     "at": 1.15
+    },
+    {
+     "w": "space",
+     "at": 1.488
+    },
+    {
+     "w": "take",
+     "at": 1.95
+    },
+    {
+     "w": "long",
+     "at": 2.175
+    },
+    {
+     "w": "strides",
+     "at": 2.45
+    },
+    {
+     "w": "When",
+     "at": 3.475
+    },
+    {
+     "w": "defenders",
+     "at": 3.612
+    },
+    {
+     "w": "get",
+     "at": 4.125
+    },
+    {
+     "w": "close",
+     "at": 4.3
+    },
+    {
+     "w": "switch",
+     "at": 4.812
+    },
+    {
+     "w": "to",
+     "at": 5.175
+    },
+    {
+     "w": "short",
+     "at": 5.312
+    },
+    {
+     "w": "touches",
+     "at": 5.6
+    }
+   ]
+  }
+ ]
+}

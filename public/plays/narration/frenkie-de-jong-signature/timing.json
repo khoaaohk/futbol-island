@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Ajax in Madrid",
+   "text": "Madrid, 2019. Ajax beat mighty Real Madrid four goals to one! In midfield was Frenkie de Jong, who loves the ball.",
+   "src": "/plays/narration/frenkie-de-jong-signature/1.m4a",
+   "seconds": 9.6,
+   "words": [
+    {
+     "w": "Madrid",
+     "at": 0.375
+    },
+    {
+     "w": "2019",
+     "at": 1.012
+    },
+    {
+     "w": "Ajax",
+     "at": 2.312
+    },
+    {
+     "w": "beat",
+     "at": 2.8
+    },
+    {
+     "w": "mighty",
+     "at": 3.05
+    },
+    {
+     "w": "Real",
+     "at": 3.325
+    },
+    {
+     "w": "Madrid",
+     "at": 3.6
+    },
+    {
+     "w": "four",
+     "at": 4.025
+    },
+    {
+     "w": "goals",
+     "at": 4.325
+    },
+    {
+     "w": "to",
+     "at": 4.65
+    },
+    {
+     "w": "one",
+     "at": 4.775
+    },
+    {
+     "w": "In",
+     "at": 5.537
+    },
+    {
+     "w": "midfield",
+     "at": 5.675
+    },
+    {
+     "w": "was",
+     "at": 6.25
+    },
+    {
+     "w": "Frenkie",
+     "at": 6.438
+    },
+    {
+     "w": "de",
+     "at": 6.85
+    },
+    {
+     "w": "Jong",
+     "at": 7.013
+    },
+    {
+     "w": "who",
+     "at": 7.65
+    },
+    {
+     "w": "loves",
+     "at": 7.812
+    },
+    {
+     "w": "the",
+     "at": 8.125
+    },
+    {
+     "w": "ball",
+     "at": 8.225
+    }
+   ]
+  },
+  {
+   "label": "How he does it",
+   "text": "This is how he does it. A defender rushes at his back. Frenkie turns away from him and carries the ball into open space!",
+   "src": "/plays/narration/frenkie-de-jong-signature/2.m4a",
+   "seconds": 8.6,
+   "words": [
+    {
+     "w": "This",
+     "at": 0.375
+    },
+    {
+     "w": "is",
+     "at": 0.6
+    },
+    {
+     "w": "how",
+     "at": 0.75
+    },
+    {
+     "w": "he",
+     "at": 0.975
+    },
+    {
+     "w": "does",
+     "at": 1.1
+    },
+    {
+     "w": "it",
+     "at": 1.337
+    },
+    {
+     "w": "A",
+     "at": 1.887
+    },
+    {
+     "w": "defender",
+     "at": 1.975
+    },
+    {
+     "w": "rushes",
+     "at": 2.513
+    },
+    {
+     "w": "at",
+     "at": 2.925
+    },
+    {
+     "w": "his",
+     "at": 3.013
+    },
+    {
+     "w": "back",
+     "at": 3.175
+    },
+    {
+     "w": "Frenkie",
+     "at": 4.05
+    },
+    {
+     "w": "turns",
+     "at": 4.425
+    },
+    {
+     "w": "away",
+     "at": 4.725
+    },
+    {
+     "w": "from",
+     "at": 5.0
+    },
+    {
+     "w": "him",
+     "at": 5.175
+    },
+    {
+     "w": "and",
+     "at": 5.4
+    },
+    {
+     "w": "carries",
+     "at": 5.537
+    },
+    {
+     "w": "the",
+     "at": 5.95
+    },
+    {
+     "w": "ball",
+     "at": 6.062
+    },
+    {
+     "w": "into",
+     "at": 6.412
+    },
+    {
+     "w": "open",
+     "at": 6.662
+    },
+    {
+     "w": "space",
+     "at": 7.062
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. He peeks over his shoulder, keeps his body between the defender and the ball, spins away, and runs with his head up.",
+   "src": "/plays/narration/frenkie-de-jong-signature/3.m4a",
+   "seconds": 9.3,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.188
+    },
+    {
+     "w": "He",
+     "at": 2.2
+    },
+    {
+     "w": "peeks",
+     "at": 2.325
+    },
+    {
+     "w": "over",
+     "at": 2.587
+    },
+    {
+     "w": "his",
+     "at": 2.788
+    },
+    {
+     "w": "shoulder",
+     "at": 2.938
+    },
+    {
+     "w": "keeps",
+     "at": 3.65
+    },
+    {
+     "w": "his",
+     "at": 3.913
+    },
+    {
+     "w": "body",
+     "at": 4.075
+    },
+    {
+     "w": "between",
+     "at": 4.45
+    },
+    {
+     "w": "the",
+     "at": 4.763
+    },
+    {
+     "w": "defender",
+     "at": 4.85
+    },
+    {
+     "w": "and",
+     "at": 5.362
+    },
+    {
+     "w": "the",
+     "at": 5.463
+    },
+    {
+     "w": "ball",
+     "at": 5.55
+    },
+    {
+     "w": "spins",
+     "at": 6.162
+    },
+    {
+     "w": "away",
+     "at": 6.575
+    },
+    {
+     "w": "and",
+     "at": 7.125
+    },
+    {
+     "w": "runs",
+     "at": 7.263
+    },
+    {
+     "w": "with",
+     "at": 7.638
+    },
+    {
+     "w": "his",
+     "at": 7.737
+    },
+    {
+     "w": "head",
+     "at": 7.9
+    },
+    {
+     "w": "up",
+     "at": 8.088
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: when you are pressed, turn away from the defender and carry the ball into open space.",
+   "src": "/plays/narration/frenkie-de-jong-signature/4.m4a",
+   "seconds": 6.7,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "when",
+     "at": 1.35
+    },
+    {
+     "w": "you",
+     "at": 1.488
+    },
+    {
+     "w": "are",
+     "at": 1.575
+    },
+    {
+     "w": "pressed",
+     "at": 1.7
+    },
+    {
+     "w": "turn",
+     "at": 2.4
+    },
+    {
+     "w": "away",
+     "at": 2.65
+    },
+    {
+     "w": "from",
+     "at": 2.925
+    },
+    {
+     "w": "the",
+     "at": 3.062
+    },
+    {
+     "w": "defender",
+     "at": 3.138
+    },
+    {
+     "w": "and",
+     "at": 3.65
+    },
+    {
+     "w": "carry",
+     "at": 3.788
+    },
+    {
+     "w": "the",
+     "at": 4.125
+    },
+    {
+     "w": "ball",
+     "at": 4.225
+    },
+    {
+     "w": "into",
+     "at": 4.562
+    },
+    {
+     "w": "open",
+     "at": 4.812
+    },
+    {
+     "w": "space",
+     "at": 5.213
+    }
+   ]
+  }
+ ]
+}

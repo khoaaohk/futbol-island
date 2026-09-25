@@ -1,0 +1,62 @@
+{
+ "lesson": "expf_freekickbalance",
+ "questions": [
+  {
+   "q": "The FIXO is hidden. Where should the fixo support this free kick?",
+   "options": ["Near the far post", "Short, beside the taker", "Behind the ball, near our goal side"],
+   "correct": 2,
+   "explain": "Yes. The fixo supports behind the ball and stays between Blue's high player and our goal.",
+   "choiceExplanations": [
+    "Two teammates are already forward. Another runner leaves nobody to stop Blue's counter.",
+    "That is too close to the taker and ahead of Blue's high player. Stay behind the ball.",
+    "Yes. The fixo supports behind the ball and stays between Blue's high player and our goal."
+   ],
+   "visual": {
+    "kind": "tapSpot",
+    "frame": {"step": 2, "hide": ["cb"], "ball": "lm", "focus": ["lm", "dst"]},
+    "spots": [{"x": 200, "y": 60}, {"x": 95, "y": 210}, {"x": 160, "y": 280}]
+   }
+  },
+  {
+   "q": "Which picture keeps a safety player at this free kick?",
+   "options": ["Fixo waits behind the ball", "Fixo runs toward the goal", "Fixo stands next to the taker"],
+   "correct": 0,
+   "explain": "Right. The fixo stays behind the ball, ready for a return pass and to stop a counter.",
+   "choiceExplanations": [
+    "Right. The fixo stays behind the ball, ready for a return pass and to stop a counter.",
+    "Now everyone is forward. If Blue wins it, their high player runs at our goal alone.",
+    "The fixo is too close to the ball. One quick Blue pass goes past both of them."
+   ],
+   "visual": {
+    "kind": "pickPicture",
+    "pictures": [
+     {"step": 2, "ball": "lm", "place": {"cb": {"x": 160, "y": 278}}, "focus": ["cb", "dst"]},
+     {"step": 2, "ball": "lm", "place": {"cb": {"x": 95, "y": 95}}, "focus": ["cb", "dst"]},
+     {"step": 2, "ball": "lm", "place": {"cb": {"x": 85, "y": 215}}, "focus": ["cb", "dst"]}
+    ]
+   }
+  },
+  {
+   "q": "A defender presses the fixo from the front. Which pass keeps the ball?",
+   "options": ["Pass to the left ala", "Pass into the central pivot", "Pass outside to the right ala"],
+   "correct": 2,
+   "explain": "Yes. The right ala is outside the pressure with a clear lane, so we keep the ball.",
+   "choiceExplanations": [
+    "A defender is marking the left ala now, so that pass could be stolen.",
+    "The presser stands in the middle lane. A central pass runs into pressure.",
+    "Yes. The right ala is outside the pressure with a clear lane, so we keep the ball."
+   ],
+   "visual": {
+    "kind": "bestPass",
+    "frame": {
+     "step": 4,
+     "place": {"drm": {"x": 160, "y": 245}, "dlm": {"x": 60, "y": 210}, "rm": {"x": 240, "y": 240}, "dst": {"x": 205, "y": 330}},
+     "ball": "cb",
+     "focus": ["cb", "drm"]
+    },
+    "from": "cb",
+    "to": ["lm", "st", "rm"]
+   }
+  }
+ ]
+}

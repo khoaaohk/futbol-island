@@ -1,0 +1,134 @@
+{
+ "lesson": "learnf_farpost",
+ "questions": [
+  {
+   "q": "The left ala has the ball near goal. Tap where the far ala should arrive.",
+   "options": [
+    "At the near post, by the ball",
+    "Beyond the far post",
+    "Wide and far from goal"
+   ],
+   "correct": 1,
+   "explain": "Yes. The far ala arrives beyond the far post, ready for a pass across goal.",
+   "choiceExplanations": [
+    "That space is crowded by the ball and the defenders. The far ala arrives on the other side.",
+    "Yes. The far ala arrives beyond the far post, ready for a pass across goal.",
+    "That is too far from goal to score. The far ala runs in beyond the far post."
+   ],
+   "visual": {
+    "kind": "tapSpot",
+    "frame": {
+     "step": 1,
+     "hide": [
+      "rm"
+     ],
+     "focus": [
+      "lm"
+     ]
+    },
+    "spots": [
+     {
+      "x": 100,
+      "y": 50
+     },
+     {
+      "x": 170,
+      "y": 48
+     },
+     {
+      "x": 225,
+      "y": 165
+     }
+    ]
+   }
+  },
+  {
+   "q": "The blue fixo drops across the passing lane. What should the left ala do next?",
+   "options": [
+    "Force the cross anyway",
+    "Dribble into the corner",
+    "Pass back to the pivot"
+   ],
+   "correct": 2,
+   "explain": "Right. The cross is blocked, so the pivot's support keeps the ball and another option.",
+   "choiceExplanations": [
+    "The blue fixo now stands in that lane, so the cross would be cut out.",
+    "The corner is a dead end, so the ala runs out of space and loses the ball.",
+    "Right. The cross is blocked, so the pivot's support keeps the ball and another option."
+   ],
+   "visual": {
+    "kind": "whatNext",
+    "frame": {
+     "step": 5,
+     "focus": [
+      "dcb",
+      "st"
+     ],
+     "trails": true
+    }
+   }
+  },
+  {
+   "q": "Now it is the other side. The right ala has the ball. Which pass is best?",
+   "options": [
+    "Pass to the pivot",
+    "Pass across goal to the far ala",
+    "Pass back to the fixo"
+   ],
+   "correct": 1,
+   "explain": "Yes. The lane across goal is open, and the far ala arrives beyond the far post.",
+   "choiceExplanations": [
+    "A blue ala stands in that lane, so the pass could be cut out.",
+    "Yes. The lane across goal is open, and the far ala arrives beyond the far post.",
+    "That pass is safe but slow. The far ala is free right now, so use the chance."
+   ],
+   "visual": {
+    "kind": "bestPass",
+    "frame": {
+     "step": 1,
+     "place": {
+      "rm": {
+       "x": 230,
+       "y": 99
+      },
+      "lm": {
+       "x": 102,
+       "y": 49
+      },
+      "st": {
+       "x": 179,
+       "y": 177
+      },
+      "cb": {
+       "x": 146,
+       "y": 273
+      },
+      "dlm": {
+       "x": 204,
+       "y": 140
+      },
+      "drm": {
+       "x": 69,
+       "y": 110
+      },
+      "dcb": {
+       "x": 150,
+       "y": 112
+      }
+     },
+     "ball": "rm",
+     "focus": [
+      "rm",
+      "lm"
+     ]
+    },
+    "from": "rm",
+    "to": [
+     "st",
+     "lm",
+     "cb"
+    ]
+   }
+  }
+ ]
+}

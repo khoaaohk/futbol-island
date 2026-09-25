@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Budapest, 2019, the Champions League final. Lyon lead Barcelona four-nil, one minute left. Martens slips it through. Asisat Oshoala gets there first, one touch round the keeper... and in!",
+   "src": "/plays/narration/oshoala-signature/1.m4a",
+   "seconds": 14.5,
+   "words": [
+    {
+     "w": "Budapest",
+     "at": 0.4
+    },
+    {
+     "w": "2019",
+     "at": 1.1
+    },
+    {
+     "w": "the",
+     "at": 1.95
+    },
+    {
+     "w": "Champions",
+     "at": 2.062
+    },
+    {
+     "w": "League",
+     "at": 2.675
+    },
+    {
+     "w": "final",
+     "at": 2.938
+    },
+    {
+     "w": "Lyon",
+     "at": 3.925
+    },
+    {
+     "w": "lead",
+     "at": 4.35
+    },
+    {
+     "w": "Barcelona",
+     "at": 4.575
+    },
+    {
+     "w": "four-nil",
+     "at": 5.213
+    },
+    {
+     "w": "one",
+     "at": 5.862
+    },
+    {
+     "w": "minute",
+     "at": 6.1
+    },
+    {
+     "w": "left",
+     "at": 6.375
+    },
+    {
+     "w": "Martens",
+     "at": 7.175
+    },
+    {
+     "w": "slips",
+     "at": 7.638
+    },
+    {
+     "w": "it",
+     "at": 7.95
+    },
+    {
+     "w": "through",
+     "at": 8.113
+    },
+    {
+     "w": "Asisat",
+     "at": 8.887
+    },
+    {
+     "w": "Oshoala",
+     "at": 9.425
+    },
+    {
+     "w": "gets",
+     "at": 10.05
+    },
+    {
+     "w": "there",
+     "at": 10.3
+    },
+    {
+     "w": "first",
+     "at": 10.488
+    },
+    {
+     "w": "one",
+     "at": 11.088
+    },
+    {
+     "w": "touch",
+     "at": 11.412
+    },
+    {
+     "w": "round",
+     "at": 11.75
+    },
+    {
+     "w": "the",
+     "at": 12.012
+    },
+    {
+     "w": "keeper",
+     "at": 12.1
+    },
+    {
+     "w": "and",
+     "at": 12.963
+    },
+    {
+     "w": "in",
+     "at": 13.137
+    }
+   ]
+  },
+  {
+   "label": "First to react",
+   "text": "Watch again. The pass is played, and Asisat reacts first. Her defender is a step behind.",
+   "src": "/plays/narration/oshoala-signature/2.m4a",
+   "seconds": 7.0,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "The",
+     "at": 1.4
+    },
+    {
+     "w": "pass",
+     "at": 1.5
+    },
+    {
+     "w": "is",
+     "at": 1.825
+    },
+    {
+     "w": "played",
+     "at": 1.988
+    },
+    {
+     "w": "and",
+     "at": 2.513
+    },
+    {
+     "w": "Asisat",
+     "at": 2.612
+    },
+    {
+     "w": "reacts",
+     "at": 3.075
+    },
+    {
+     "w": "first",
+     "at": 3.525
+    },
+    {
+     "w": "Her",
+     "at": 4.325
+    },
+    {
+     "w": "defender",
+     "at": 4.463
+    },
+    {
+     "w": "is",
+     "at": 4.975
+    },
+    {
+     "w": "a",
+     "at": 5.088
+    },
+    {
+     "w": "step",
+     "at": 5.15
+    },
+    {
+     "w": "behind",
+     "at": 5.425
+    }
+   ]
+  },
+  {
+   "label": "One touch",
+   "text": "One touch past Bouhaddi. She slides it home, and it trickles in! The first African to score in a Women's Champions League final.",
+   "src": "/plays/narration/oshoala-signature/3.m4a",
+   "seconds": 9.1,
+   "words": [
+    {
+     "w": "One",
+     "at": 0.4
+    },
+    {
+     "w": "touch",
+     "at": 0.637
+    },
+    {
+     "w": "past",
+     "at": 0.988
+    },
+    {
+     "w": "Bouhaddi",
+     "at": 1.325
+    },
+    {
+     "w": "She",
+     "at": 2.312
+    },
+    {
+     "w": "slides",
+     "at": 2.487
+    },
+    {
+     "w": "it",
+     "at": 2.888
+    },
+    {
+     "w": "home",
+     "at": 2.975
+    },
+    {
+     "w": "and",
+     "at": 3.575
+    },
+    {
+     "w": "it",
+     "at": 3.688
+    },
+    {
+     "w": "trickles",
+     "at": 3.775
+    },
+    {
+     "w": "in",
+     "at": 4.2
+    },
+    {
+     "w": "The",
+     "at": 4.9
+    },
+    {
+     "w": "first",
+     "at": 5.037
+    },
+    {
+     "w": "African",
+     "at": 5.4
+    },
+    {
+     "w": "to",
+     "at": 5.825
+    },
+    {
+     "w": "score",
+     "at": 5.963
+    },
+    {
+     "w": "in",
+     "at": 6.35
+    },
+    {
+     "w": "a",
+     "at": 6.438
+    },
+    {
+     "w": "Women's",
+     "at": 6.5
+    },
+    {
+     "w": "Champions",
+     "at": 6.862
+    },
+    {
+     "w": "League",
+     "at": 7.45
+    },
+    {
+     "w": "final",
+     "at": 7.7
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "The secret? Stay alert in the box. React first, one quick touch, and finish. The quickest striker to react often scores!",
+   "src": "/plays/narration/oshoala-signature/4.m4a",
+   "seconds": 9.2,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "secret",
+     "at": 0.463
+    },
+    {
+     "w": "Stay",
+     "at": 1.2
+    },
+    {
+     "w": "alert",
+     "at": 1.575
+    },
+    {
+     "w": "in",
+     "at": 1.913
+    },
+    {
+     "w": "the",
+     "at": 1.988
+    },
+    {
+     "w": "box",
+     "at": 2.075
+    },
+    {
+     "w": "React",
+     "at": 2.938
+    },
+    {
+     "w": "first",
+     "at": 3.325
+    },
+    {
+     "w": "one",
+     "at": 3.837
+    },
+    {
+     "w": "quick",
+     "at": 4.075
+    },
+    {
+     "w": "touch",
+     "at": 4.338
+    },
+    {
+     "w": "and",
+     "at": 4.737
+    },
+    {
+     "w": "finish",
+     "at": 4.862
+    },
+    {
+     "w": "The",
+     "at": 5.8
+    },
+    {
+     "w": "quickest",
+     "at": 5.9
+    },
+    {
+     "w": "striker",
+     "at": 6.3
+    },
+    {
+     "w": "to",
+     "at": 6.725
+    },
+    {
+     "w": "react",
+     "at": 6.85
+    },
+    {
+     "w": "often",
+     "at": 7.287
+    },
+    {
+     "w": "scores",
+     "at": 7.688
+    }
+   ]
+  }
+ ]
+}

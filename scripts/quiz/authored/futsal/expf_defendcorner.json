@@ -1,0 +1,68 @@
+{
+ "lesson": "expf_defendcorner",
+ "questions": [
+  {
+   "q": "The FIXO is hidden. Blue plays the corner short. Tap where our fixo stays.",
+   "options": ["Out wide by the short pass", "In the middle, guarding the goal", "Far up the pitch for a counter"],
+   "correct": 1,
+   "explain": "Yes. The fixo keeps the central job, so nobody gets a free shot in front of goal.",
+   "choiceExplanations": [
+    "Our left ala already presses the short pass. The fixo following leaves the goalmouth empty.",
+    "Yes. The fixo keeps the central job, so nobody gets a free shot in front of goal.",
+    "Leaving now gives Blue a free player in front of our goal. Defend the corner first."
+   ],
+   "visual": {
+    "kind": "tapSpot",
+    "frame": {"step": 3, "hide": ["cb"], "focus": ["lm", "dst"]},
+    "spots": [{"x": 40, "y": 345}, {"x": 130, "y": 350}, {"x": 100, "y": 215}]
+   }
+  },
+  {
+   "q": "Put our short-corner defence in the right order.",
+   "options": ["Blue plays the corner short", "Our left ala presses the receiver", "The taker runs along the goal line", "Our fixo covers that near-side run"],
+   "correct": 0,
+   "explain": "Yes. Watch the short pass, press it, then the fixo tracks the taker's new run.",
+   "choiceExplanations": [
+    "Yes. Watch the short pass, press it, then the fixo tracks the taker's new run.",
+    "Blue must pass short first. Our left ala presses the ball once it arrives.",
+    "The taker runs only after the short pass and our press. Watch the first pass first.",
+    "The fixo covers last, once the taker starts running along the goal line."
+   ],
+   "visual": {
+    "kind": "order",
+    "frames": [
+     {"step": 2, "focus": ["dlm", "dst"], "marks": [{"kind": "pass", "from": "dlm", "to": "dst", "tone": "blue"}]},
+     {"step": 3, "focus": ["lm"]},
+     {"step": 4, "focus": ["dlm"], "marks": [{"kind": "run", "from": {"x": 12, "y": 392}, "to": "dlm", "tone": "blue"}]},
+     {"step": 6, "focus": ["cb", "dlm"]}
+    ]
+   }
+  },
+  {
+   "q": "Now the corner comes from the right. Drag the FIXO to stop the taker's run.",
+   "options": ["Press the short receiver too", "Drop to the far post", "Track the near-side run"],
+   "correct": 2,
+   "explain": "Yes. The fixo tracks the near-side run, so the taker can't get a free shot.",
+   "choiceExplanations": [
+    "The right ala already presses the ball. Two on the ball leaves the taker free near goal.",
+    "That space is far from the danger. The taker is running in at the near side.",
+    "Yes. The fixo tracks the near-side run, so the taker can't get a free shot."
+   ],
+   "visual": {
+    "kind": "dragToZone",
+    "frame": {
+     "step": 4,
+     "place": {
+      "gk": {"x": 160, "y": 377}, "cb": {"x": 140, "y": 354}, "lm": {"x": 65, "y": 350}, "rm": {"x": 215, "y": 285}, "st": {"x": 155, "y": 270},
+      "dgk": {"x": 130, "y": 35}, "dcb": {"x": 125, "y": 235}, "dlm": {"x": 45, "y": 335}, "drm": {"x": 215, "y": 382}, "dst": {"x": 235, "y": 305}
+     },
+     "ball": "dst",
+     "focus": ["cb", "drm"],
+     "marks": [{"kind": "run", "from": {"x": 258, "y": 392}, "to": "drm", "tone": "blue"}]
+    },
+    "drag": "cb",
+    "zones": [{"x": 235, "y": 335, "w": 36, "h": 26}, {"x": 90, "y": 385, "w": 40, "h": 28}, {"x": 190, "y": 360, "w": 40, "h": 36}]
+   }
+  }
+ ]
+}

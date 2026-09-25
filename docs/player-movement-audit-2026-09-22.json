@@ -1,0 +1,117 @@
+{
+  "date": "2026-09-22",
+  "synthetic": {
+    "motion": [
+      {
+        "mode": "walk",
+        "releaseDistance": 0.2722962271857642,
+        "secondsToBelowPointOne": 0.31666666666666665,
+        "reversalZeroSeconds": 0.08333333333333333
+      },
+      {
+        "mode": "scooter",
+        "releaseDistance": 1.046785268738838,
+        "secondsToBelowPointOne": 0.41666666666666663,
+        "reversalZeroSeconds": 0.09999999999999999
+      },
+      {
+        "mode": "bike",
+        "releaseDistance": 1.4987519085575598,
+        "secondsToBelowPointOne": 0.44999999999999996,
+        "reversalZeroSeconds": 0.09999999999999999
+      },
+      {
+        "mode": "moped",
+        "releaseDistance": 2.101391200596117,
+        "secondsToBelowPointOne": 0.4833333333333333,
+        "reversalZeroSeconds": 0.11666666666666665
+      },
+      {
+        "mode": "jetpack",
+        "releaseDistance": 3.9617084859796226,
+        "secondsToBelowPointOne": 0.733333333333334,
+        "reversalZeroSeconds": 0.15
+      }
+    ],
+    "shots": [
+      {
+        "charge": 0,
+        "maxHeight": 0.588935185185186,
+        "maxDistance": 56.7657773798862,
+        "firstReturn": 2.466666666666667
+      },
+      {
+        "charge": 0.01,
+        "maxHeight": 0.7270787037037048,
+        "maxDistance": 127.17798623496203,
+        "firstReturn": 9.45
+      },
+      {
+        "charge": 0.5,
+        "maxHeight": 32.956392195766476,
+        "maxDistance": 291.2774817703091,
+        "firstReturn": 9.45
+      },
+      {
+        "charge": 1,
+        "maxHeight": 117.32953813933791,
+        "maxDistance": 357.0050017466477,
+        "firstReturn": 9.45
+      }
+    ],
+    "slowFrames": [
+      {
+        "fps": 60,
+        "twoSecondDistance": 7.39999999999999
+      },
+      {
+        "fps": 30,
+        "twoSecondDistance": 7.399999999999995
+      },
+      {
+        "fps": 20,
+        "twoSecondDistance": 7.400000000000005
+      },
+      {
+        "fps": 15,
+        "twoSecondDistance": 5.55
+      },
+      {
+        "fps": 10,
+        "twoSecondDistance": 3.6999999999999966
+      }
+    ]
+  },
+  "browser": {
+    "smallStickOffsetPx": 2,
+    "holdMilliseconds": 1500,
+    "start": {
+      "x": 95,
+      "z": -35
+    },
+    "held": {
+      "p": {
+        "x": 95.25197158812227,
+        "z": -35.151418165557736
+      },
+      "v": {
+        "x": 0.1761609321963427,
+        "z": -0.10586100359523512
+      }
+    },
+    "released": {
+      "p": {
+        "x": 95.2652295770789,
+        "z": -35.15938533511743
+      },
+      "v": {
+        "x": 3.9612837447843005e-05,
+        "z": -2.380468061334791e-05
+      }
+    },
+    "blur": {
+      "x": 0.0006935492784365255,
+      "z": -0.0004167769876252165
+    }
+  }
+}

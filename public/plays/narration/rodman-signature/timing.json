@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Paris, 2024, the Olympics: USA against Japan, in extra time. Crystal Dunn hits a long pass to Trinity Rodman on the right. She races at the defender... cuts inside... left foot... what a goal!",
+   "src": "/plays/narration/rodman-signature/1.m4a",
+   "seconds": 15.4,
+   "words": [
+    {
+     "w": "Paris",
+     "at": 0.35
+    },
+    {
+     "w": "2024",
+     "at": 0.8
+    },
+    {
+     "w": "the",
+     "at": 1.688
+    },
+    {
+     "w": "Olympics",
+     "at": 1.8
+    },
+    {
+     "w": "USA",
+     "at": 2.75
+    },
+    {
+     "w": "against",
+     "at": 3.4
+    },
+    {
+     "w": "Japan",
+     "at": 3.8
+    },
+    {
+     "w": "in",
+     "at": 4.375
+    },
+    {
+     "w": "extra",
+     "at": 4.537
+    },
+    {
+     "w": "time",
+     "at": 4.95
+    },
+    {
+     "w": "Crystal",
+     "at": 5.912
+    },
+    {
+     "w": "Dunn",
+     "at": 6.338
+    },
+    {
+     "w": "hits",
+     "at": 6.65
+    },
+    {
+     "w": "a",
+     "at": 6.875
+    },
+    {
+     "w": "long",
+     "at": 6.987
+    },
+    {
+     "w": "pass",
+     "at": 7.362
+    },
+    {
+     "w": "to",
+     "at": 7.725
+    },
+    {
+     "w": "Trinity",
+     "at": 7.85
+    },
+    {
+     "w": "Rodman",
+     "at": 8.225
+    },
+    {
+     "w": "on",
+     "at": 8.688
+    },
+    {
+     "w": "the",
+     "at": 8.787
+    },
+    {
+     "w": "right",
+     "at": 8.875
+    },
+    {
+     "w": "She",
+     "at": 9.537
+    },
+    {
+     "w": "races",
+     "at": 9.7
+    },
+    {
+     "w": "at",
+     "at": 10.15
+    },
+    {
+     "w": "the",
+     "at": 10.238
+    },
+    {
+     "w": "defender",
+     "at": 10.325
+    },
+    {
+     "w": "cuts",
+     "at": 11.262
+    },
+    {
+     "w": "inside",
+     "at": 11.6
+    },
+    {
+     "w": "left",
+     "at": 12.637
+    },
+    {
+     "w": "foot",
+     "at": 12.988
+    },
+    {
+     "w": "what",
+     "at": 13.75
+    },
+    {
+     "w": "a",
+     "at": 13.887
+    },
+    {
+     "w": "goal",
+     "at": 13.963
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. Rodman attacks Hikaru Kitagawa at full speed, then cuts the ball back inside. The defender is beaten.",
+   "src": "/plays/narration/rodman-signature/2.m4a",
+   "seconds": 9.8,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.188
+    },
+    {
+     "w": "Rodman",
+     "at": 2.237
+    },
+    {
+     "w": "attacks",
+     "at": 2.65
+    },
+    {
+     "w": "Hikaru",
+     "at": 3.075
+    },
+    {
+     "w": "Kitagawa",
+     "at": 3.5
+    },
+    {
+     "w": "at",
+     "at": 4.1
+    },
+    {
+     "w": "full",
+     "at": 4.263
+    },
+    {
+     "w": "speed",
+     "at": 4.562
+    },
+    {
+     "w": "then",
+     "at": 5.325
+    },
+    {
+     "w": "cuts",
+     "at": 5.537
+    },
+    {
+     "w": "the",
+     "at": 5.85
+    },
+    {
+     "w": "ball",
+     "at": 5.95
+    },
+    {
+     "w": "back",
+     "at": 6.25
+    },
+    {
+     "w": "inside",
+     "at": 6.525
+    },
+    {
+     "w": "The",
+     "at": 7.588
+    },
+    {
+     "w": "defender",
+     "at": 7.7
+    },
+    {
+     "w": "is",
+     "at": 8.225
+    },
+    {
+     "w": "beaten",
+     "at": 8.387
+    }
+   ]
+  },
+  {
+   "label": "Top corner",
+   "text": "Her left foot fires it over the diving keeper, into the top corner. The USA went on to win gold!",
+   "src": "/plays/narration/rodman-signature/3.m4a",
+   "seconds": 7.2,
+   "words": [
+    {
+     "w": "Her",
+     "at": 0.375
+    },
+    {
+     "w": "left",
+     "at": 0.525
+    },
+    {
+     "w": "foot",
+     "at": 0.812
+    },
+    {
+     "w": "fires",
+     "at": 1.113
+    },
+    {
+     "w": "it",
+     "at": 1.55
+    },
+    {
+     "w": "over",
+     "at": 1.637
+    },
+    {
+     "w": "the",
+     "at": 1.812
+    },
+    {
+     "w": "diving",
+     "at": 1.9
+    },
+    {
+     "w": "keeper",
+     "at": 2.3
+    },
+    {
+     "w": "into",
+     "at": 2.975
+    },
+    {
+     "w": "the",
+     "at": 3.163
+    },
+    {
+     "w": "top",
+     "at": 3.25
+    },
+    {
+     "w": "corner",
+     "at": 3.525
+    },
+    {
+     "w": "The",
+     "at": 4.513
+    },
+    {
+     "w": "USA",
+     "at": 4.625
+    },
+    {
+     "w": "went",
+     "at": 5.15
+    },
+    {
+     "w": "on",
+     "at": 5.312
+    },
+    {
+     "w": "to",
+     "at": 5.438
+    },
+    {
+     "w": "win",
+     "at": 5.525
+    },
+    {
+     "w": "gold",
+     "at": 5.75
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: attack the defender at speed, and be brave enough to try a trick.",
+   "src": "/plays/narration/rodman-signature/4.m4a",
+   "seconds": 5.8,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.562
+    },
+    {
+     "w": "attack",
+     "at": 1.387
+    },
+    {
+     "w": "the",
+     "at": 1.775
+    },
+    {
+     "w": "defender",
+     "at": 1.875
+    },
+    {
+     "w": "at",
+     "at": 2.375
+    },
+    {
+     "w": "speed",
+     "at": 2.538
+    },
+    {
+     "w": "and",
+     "at": 3.2
+    },
+    {
+     "w": "be",
+     "at": 3.312
+    },
+    {
+     "w": "brave",
+     "at": 3.462
+    },
+    {
+     "w": "enough",
+     "at": 3.763
+    },
+    {
+     "w": "to",
+     "at": 4.025
+    },
+    {
+     "w": "try",
+     "at": 4.125
+    },
+    {
+     "w": "a",
+     "at": 4.362
+    },
+    {
+     "w": "trick",
+     "at": 4.425
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The save, live",
+   "text": "Arsenal against Porto, 2024. Penalties! Arsenal lead four-two, so Galeno must score. David Raya bounces on his toes... Galeno shoots. Raya springs left. Saved! Arsenal are through!",
+   "src": "/plays/narration/raya-signature/1.m4a",
+   "seconds": 14.8,
+   "words": [
+    {
+     "w": "Arsenal",
+     "at": 0.375
+    },
+    {
+     "w": "against",
+     "at": 0.8
+    },
+    {
+     "w": "Porto",
+     "at": 1.175
+    },
+    {
+     "w": "2024",
+     "at": 1.7
+    },
+    {
+     "w": "Penalties",
+     "at": 3.112
+    },
+    {
+     "w": "Arsenal",
+     "at": 4.088
+    },
+    {
+     "w": "lead",
+     "at": 4.55
+    },
+    {
+     "w": "four-two",
+     "at": 4.787
+    },
+    {
+     "w": "so",
+     "at": 5.275
+    },
+    {
+     "w": "Galeno",
+     "at": 5.4
+    },
+    {
+     "w": "must",
+     "at": 5.9
+    },
+    {
+     "w": "score",
+     "at": 6.162
+    },
+    {
+     "w": "David",
+     "at": 6.963
+    },
+    {
+     "w": "Raya",
+     "at": 7.375
+    },
+    {
+     "w": "bounces",
+     "at": 7.675
+    },
+    {
+     "w": "on",
+     "at": 8.113
+    },
+    {
+     "w": "his",
+     "at": 8.213
+    },
+    {
+     "w": "toes",
+     "at": 8.375
+    },
+    {
+     "w": "Galeno",
+     "at": 9.15
+    },
+    {
+     "w": "shoots",
+     "at": 9.675
+    },
+    {
+     "w": "Raya",
+     "at": 10.412
+    },
+    {
+     "w": "springs",
+     "at": 10.762
+    },
+    {
+     "w": "left",
+     "at": 11.225
+    },
+    {
+     "w": "Saved",
+     "at": 12.037
+    },
+    {
+     "w": "Arsenal",
+     "at": 12.738
+    },
+    {
+     "w": "are",
+     "at": 13.275
+    },
+    {
+     "w": "through",
+     "at": 13.438
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. Raya stays calm, weight on his toes, heels off the grass. He waits for the kick, then pushes off and beats it away.",
+   "src": "/plays/narration/raya-signature/2.m4a",
+   "seconds": 9.6,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.113
+    },
+    {
+     "w": "Raya",
+     "at": 2.163
+    },
+    {
+     "w": "stays",
+     "at": 2.475
+    },
+    {
+     "w": "calm",
+     "at": 2.888
+    },
+    {
+     "w": "weight",
+     "at": 3.513
+    },
+    {
+     "w": "on",
+     "at": 3.737
+    },
+    {
+     "w": "his",
+     "at": 3.837
+    },
+    {
+     "w": "toes",
+     "at": 4.0
+    },
+    {
+     "w": "heels",
+     "at": 4.475
+    },
+    {
+     "w": "off",
+     "at": 4.8
+    },
+    {
+     "w": "the",
+     "at": 4.987
+    },
+    {
+     "w": "grass",
+     "at": 5.075
+    },
+    {
+     "w": "He",
+     "at": 5.975
+    },
+    {
+     "w": "waits",
+     "at": 6.1
+    },
+    {
+     "w": "for",
+     "at": 6.35
+    },
+    {
+     "w": "the",
+     "at": 6.463
+    },
+    {
+     "w": "kick",
+     "at": 6.562
+    },
+    {
+     "w": "then",
+     "at": 6.912
+    },
+    {
+     "w": "pushes",
+     "at": 7.075
+    },
+    {
+     "w": "off",
+     "at": 7.475
+    },
+    {
+     "w": "and",
+     "at": 7.763
+    },
+    {
+     "w": "beats",
+     "at": 7.875
+    },
+    {
+     "w": "it",
+     "at": 8.113
+    },
+    {
+     "w": "away",
+     "at": 8.2
+    }
+   ]
+  },
+  {
+   "label": "Behind the kicker",
+   "text": "Now, from behind Galeno: a strong hand! Galeno was brave to step up. Here come Raya's team-mates!",
+   "src": "/plays/narration/raya-signature/3.m4a",
+   "seconds": 7.9,
+   "words": [
+    {
+     "w": "Now",
+     "at": 0.4
+    },
+    {
+     "w": "from",
+     "at": 0.7
+    },
+    {
+     "w": "behind",
+     "at": 0.838
+    },
+    {
+     "w": "Galeno",
+     "at": 1.225
+    },
+    {
+     "w": "a",
+     "at": 2.038
+    },
+    {
+     "w": "strong",
+     "at": 2.15
+    },
+    {
+     "w": "hand",
+     "at": 2.575
+    },
+    {
+     "w": "Galeno",
+     "at": 3.362
+    },
+    {
+     "w": "was",
+     "at": 3.862
+    },
+    {
+     "w": "brave",
+     "at": 4.013
+    },
+    {
+     "w": "to",
+     "at": 4.425
+    },
+    {
+     "w": "step",
+     "at": 4.525
+    },
+    {
+     "w": "up",
+     "at": 4.775
+    },
+    {
+     "w": "Here",
+     "at": 5.388
+    },
+    {
+     "w": "come",
+     "at": 5.625
+    },
+    {
+     "w": "Raya's",
+     "at": 5.85
+    },
+    {
+     "w": "team-mates",
+     "at": 6.237
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn, keepers: keep your weight on your toes. Then you can spring either way, left or right!",
+   "src": "/plays/narration/raya-signature/4.m4a",
+   "seconds": 6.6,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.525
+    },
+    {
+     "w": "keepers",
+     "at": 0.9
+    },
+    {
+     "w": "keep",
+     "at": 1.7
+    },
+    {
+     "w": "your",
+     "at": 1.887
+    },
+    {
+     "w": "weight",
+     "at": 2.0
+    },
+    {
+     "w": "on",
+     "at": 2.188
+    },
+    {
+     "w": "your",
+     "at": 2.288
+    },
+    {
+     "w": "toes",
+     "at": 2.4
+    },
+    {
+     "w": "Then",
+     "at": 3.275
+    },
+    {
+     "w": "you",
+     "at": 3.425
+    },
+    {
+     "w": "can",
+     "at": 3.513
+    },
+    {
+     "w": "spring",
+     "at": 3.663
+    },
+    {
+     "w": "either",
+     "at": 4.025
+    },
+    {
+     "w": "way",
+     "at": 4.325
+    },
+    {
+     "w": "left",
+     "at": 4.763
+    },
+    {
+     "w": "or",
+     "at": 5.125
+    },
+    {
+     "w": "right",
+     "at": 5.275
+    }
+   ]
+  }
+ ]
+}

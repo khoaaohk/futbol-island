@@ -1,0 +1,386 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Paris, 2015. Barcelona, in bright yellow, lead Paris Saint-Germain. Luis Su\u00e1rez races clear. David Luiz rushes across... through his legs! Su\u00e1rez curls it into the top corner. Goal!",
+   "src": "/plays/narration/suarez-signature/1.m4a",
+   "seconds": 15.1,
+   "words": [
+    {
+     "w": "Paris",
+     "at": 0.35
+    },
+    {
+     "w": "2015",
+     "at": 0.75
+    },
+    {
+     "w": "Barcelona",
+     "at": 1.938
+    },
+    {
+     "w": "in",
+     "at": 2.7
+    },
+    {
+     "w": "bright",
+     "at": 2.862
+    },
+    {
+     "w": "yellow",
+     "at": 3.212
+    },
+    {
+     "w": "lead",
+     "at": 3.7
+    },
+    {
+     "w": "Paris",
+     "at": 3.987
+    },
+    {
+     "w": "Saint-Germain",
+     "at": 4.425
+    },
+    {
+     "w": "Luis",
+     "at": 5.513
+    },
+    {
+     "w": "Su\u00e1rez",
+     "at": 5.975
+    },
+    {
+     "w": "races",
+     "at": 6.5
+    },
+    {
+     "w": "clear",
+     "at": 6.963
+    },
+    {
+     "w": "David",
+     "at": 7.713
+    },
+    {
+     "w": "Luiz",
+     "at": 8.125
+    },
+    {
+     "w": "rushes",
+     "at": 8.525
+    },
+    {
+     "w": "across",
+     "at": 8.875
+    },
+    {
+     "w": "through",
+     "at": 9.887
+    },
+    {
+     "w": "his",
+     "at": 10.1
+    },
+    {
+     "w": "legs",
+     "at": 10.275
+    },
+    {
+     "w": "Su\u00e1rez",
+     "at": 11.1
+    },
+    {
+     "w": "curls",
+     "at": 11.637
+    },
+    {
+     "w": "it",
+     "at": 12.05
+    },
+    {
+     "w": "into",
+     "at": 12.137
+    },
+    {
+     "w": "the",
+     "at": 12.312
+    },
+    {
+     "w": "top",
+     "at": 12.4
+    },
+    {
+     "w": "corner",
+     "at": 12.675
+    },
+    {
+     "w": "Goal",
+     "at": 13.6
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again, slowly. Luiz stretches and his legs open. Su\u00e1rez pokes the ball through the gap, and darts round to collect it.",
+   "src": "/plays/narration/suarez-signature/2.m4a",
+   "seconds": 9.0,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "slowly",
+     "at": 1.312
+    },
+    {
+     "w": "Luiz",
+     "at": 2.325
+    },
+    {
+     "w": "stretches",
+     "at": 2.7
+    },
+    {
+     "w": "and",
+     "at": 3.225
+    },
+    {
+     "w": "his",
+     "at": 3.337
+    },
+    {
+     "w": "legs",
+     "at": 3.5
+    },
+    {
+     "w": "open",
+     "at": 3.85
+    },
+    {
+     "w": "Su\u00e1rez",
+     "at": 4.75
+    },
+    {
+     "w": "pokes",
+     "at": 5.25
+    },
+    {
+     "w": "the",
+     "at": 5.55
+    },
+    {
+     "w": "ball",
+     "at": 5.65
+    },
+    {
+     "w": "through",
+     "at": 5.95
+    },
+    {
+     "w": "the",
+     "at": 6.1
+    },
+    {
+     "w": "gap",
+     "at": 6.2
+    },
+    {
+     "w": "and",
+     "at": 6.6
+    },
+    {
+     "w": "darts",
+     "at": 6.725
+    },
+    {
+     "w": "round",
+     "at": 7.05
+    },
+    {
+     "w": "to",
+     "at": 7.4
+    },
+    {
+     "w": "collect",
+     "at": 7.5
+    },
+    {
+     "w": "it",
+     "at": 7.875
+    }
+   ]
+  },
+  {
+   "label": "The finish",
+   "text": "Then a curling shot past keeper Salvatore Sirigu. His second nutmeg on Luiz that night!",
+   "src": "/plays/narration/suarez-signature/3.m4a",
+   "seconds": 6.9,
+   "words": [
+    {
+     "w": "Then",
+     "at": 0.375
+    },
+    {
+     "w": "a",
+     "at": 0.487
+    },
+    {
+     "w": "curling",
+     "at": 0.588
+    },
+    {
+     "w": "shot",
+     "at": 1.062
+    },
+    {
+     "w": "past",
+     "at": 1.375
+    },
+    {
+     "w": "keeper",
+     "at": 1.738
+    },
+    {
+     "w": "Salvatore",
+     "at": 2.125
+    },
+    {
+     "w": "Sirigu",
+     "at": 2.812
+    },
+    {
+     "w": "His",
+     "at": 3.8
+    },
+    {
+     "w": "second",
+     "at": 3.987
+    },
+    {
+     "w": "nutmeg",
+     "at": 4.325
+    },
+    {
+     "w": "on",
+     "at": 4.8
+    },
+    {
+     "w": "Luiz",
+     "at": 5.0
+    },
+    {
+     "w": "that",
+     "at": 5.375
+    },
+    {
+     "w": "night",
+     "at": 5.6
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: watch the defender's feet. If their legs open, play the ball through them, then sprint round to meet it!",
+   "src": "/plays/narration/suarez-signature/4.m4a",
+   "seconds": 7.8,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "watch",
+     "at": 1.113
+    },
+    {
+     "w": "the",
+     "at": 1.45
+    },
+    {
+     "w": "defender's",
+     "at": 1.55
+    },
+    {
+     "w": "feet",
+     "at": 2.138
+    },
+    {
+     "w": "If",
+     "at": 2.95
+    },
+    {
+     "w": "their",
+     "at": 3.125
+    },
+    {
+     "w": "legs",
+     "at": 3.3
+    },
+    {
+     "w": "open",
+     "at": 3.65
+    },
+    {
+     "w": "play",
+     "at": 4.162
+    },
+    {
+     "w": "the",
+     "at": 4.412
+    },
+    {
+     "w": "ball",
+     "at": 4.5
+    },
+    {
+     "w": "through",
+     "at": 4.812
+    },
+    {
+     "w": "them",
+     "at": 5.025
+    },
+    {
+     "w": "then",
+     "at": 5.425
+    },
+    {
+     "w": "sprint",
+     "at": 5.65
+    },
+    {
+     "w": "round",
+     "at": 6.025
+    },
+    {
+     "w": "to",
+     "at": 6.35
+    },
+    {
+     "w": "meet",
+     "at": 6.45
+    },
+    {
+     "w": "it",
+     "at": 6.662
+    }
+   ]
+  }
+ ]
+}

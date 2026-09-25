@@ -92,3 +92,11 @@ export function drawPixelPortrait(ctx: CanvasRenderingContext2D, size: number, n
   else if (facial === 2) { px(10, 15, hair, 4, 1); } // mustache
   else if (facial === 3) { px(8, 15, hair, 8, 3); px(9, 18, hair, 6, 1); px(10, 15, skin, 4, 1); } // beard (leave mouth)
 }
+
+/** The same name-hashed features the pixel avatar uses, for other art styles (e.g. the player card). */
+export type PortraitFeatures={skin:string;skinShade:string;hair:string;hairShade:string;eye:string;style:number;facial:number;seed:number};
+export function portraitFeatures(name:string):PortraitFeatures{
+  const h=hash(name),bit=(shift:number,mask:number)=>(h>>shift)&mask;
+  const skin=SKINS[bit(0,7)%SKINS.length],hair=HAIRS[bit(3,15)%HAIRS.length];
+  return {skin,skinShade:shade(skin,.82),hair,hairShade:shade(hair,.72),eye:EYES[bit(7,3)%EYES.length],style:bit(9,7)%6,facial:bit(12,3),seed:h};
+}

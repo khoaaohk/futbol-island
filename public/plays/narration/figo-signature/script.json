@@ -1,0 +1,10 @@
+{
+ "film": "figo-signature",
+ "note": "Germany 3-1 Portugal, World Cup match for third place, Stuttgart, 8 July 2006 (88'): Figo's cross, Nuno Gomes's header, in Figo's last game for Portugal. Chapter 1 is keyed from 'Figo on the wing' (he receives) through 'he looks up' and 'crosses' to 'Nuno Gomes heads it in' (keep the '...' pauses). Chapter 2 draws the sight line on 'Figo lifts his head', Gomes's run on 'Nuno Gomes is running' and the curling flight on 'and curls it there'. Say 'Luís' as 'Loo-EESH' if the voice allows.",
+ "chapters": [
+  {"label": "The last cross, live", "text": "World Cup 2006, third place match. Luís Figo comes on for his last game for Portugal. Two minutes left. Figo on the wing... he looks up, crosses... Nuno Gomes heads it in!"},
+  {"label": "Watch it again", "text": "Watch again, slowly. Before he crosses, Figo lifts his head. He sees where Nuno Gomes is running... and curls it there."},
+  {"label": "Behind the goal", "text": "Behind the goal: Gomes heads it in from close range. Figo's last assist for Portugal!"},
+  {"label": "Your turn", "text": "Your turn: beat your defender, then look up before you cross the ball, so you know where your striker is running."}
+ ]
+}

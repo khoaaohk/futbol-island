@@ -1,0 +1,438 @@
+{
+  "_uncertain": [
+    "Edu",
+    "Gabriel",
+    "Mathi Fernández",
+    "Ouassini Guirio",
+    "Sergio González",
+    "Sergei Sergeev",
+    "Artem Fareniuk",
+    "Mykola Mykytiuk",
+    "Douglas Junior",
+    "Marcio Forte"
+  ],
+  "Adolfo": {
+    "blurb": "Spanish ala Adolfo Fernández came through Marfil Santa Coloma before joining FC Barcelona in 2015, and helped Spain win the 2026 Futsal Euro.",
+    "strengths": ["Quick 1v1 on the wing", "Sharp change of pace", "Shoots early off the dribble"]
+  },
+  "Adrián Rivera": {
+    "blurb": "Young Spanish fixo from ElPozo Murcia who captained Spain's U-19 side to a European title and scored plenty of goals on loan at Sala 10.",
+    "strengths": ["Well-timed poke tackles", "Reads passes into the pivot", "Brave last defender"]
+  },
+  "Afonso Jesus": {
+    "blurb": "Portuguese fixo raised at Sporting who became a Benfica mainstay, and a 2021 World Cup and 2022 Euro winner with Portugal.",
+    "strengths": ["Last-man blocks", "Calm in the back line", "Starts attacks from deep"]
+  },
+  "Aicardo": {
+    "blurb": "Spanish cierre from Cádiz who won two Champions League titles with Barcelona and was a 2012 European champion with Spain.",
+    "strengths": ["Reads the game early", "Organises the defence", "Smart positioning as last man"]
+  },
+  "Alejandro Balde": {
+    "blurb": "Speedy Spanish left-back from Barcelona's La Masia academy who broke into the first team as a teenager and won Euro 2024 with Spain.",
+    "strengths": ["Blistering overlapping runs", "Recovery pace", "Low crosses from the byline"]
+  },
+  "Alessandro Bastoni": {
+    "blurb": "Left-footed Italian centre-back for Inter who won Serie A titles in 2021 and 2024, loved for stepping forward to join the attack.",
+    "strengths": ["Carries the ball forward", "Line-breaking passes", "Covers wide spaces"]
+  },
+  "Alex Merlim": {
+    "blurb": "Brazilian-born Italy international who became a Sporting CP star, winning the UEFA Futsal Champions League in 2019, 2021 and 2026.",
+    "strengths": ["Long-range shooting", "Creative wing play", "Big-game composure"]
+  },
+  "Alexander Isak": {
+    "blurb": "Tall, silky Swedish striker who shone at Real Sociedad and Newcastle, scoring in Newcastle's 2025 League Cup final win before joining Liverpool.",
+    "strengths": ["Close control in the box", "Calm one-on-one finishing", "Clever runs behind"]
+  },
+  "Alphonso Davies": {
+    "blurb": "Canadian flier who went from Vancouver Whitecaps to Bayern Munich, won the 2020 Champions League and famously sprinted past Semedo vs Barcelona.",
+    "strengths": ["Explosive recovery speed", "Driving runs down the left", "Wins 1v1 duels"]
+  },
+  "André Coelho": {
+    "blurb": "Portuguese fixo who won the 2021 World Cup with Portugal and the 2022 Champions League with Barcelona, known for thunderous shots from deep.",
+    "strengths": ["Powerful long-range strikes", "Composed defending", "Switches play quickly"]
+  },
+  "Antonio Pérez": {
+    "blurb": "Spanish cierre at FC Barcelona who won the U-19 Euro in 2019, then starred at the 2026 Futsal Euro as top scorer and best player of the final.",
+    "strengths": ["Steals and goes forward", "Reads passing lanes", "Scores from the back"]
+  },
+  "Artem Fareniuk": {
+    "blurb": "Experienced Ukrainian futsal international who has played at the Futsal Euro for Ukraine, a pivot who helps link the team's attacks.",
+    "strengths": ["Links play with teammates", "Back-to-goal hold-up", "Lays off for shooters"]
+  },
+  "Bernardo Paçó": {
+    "blurb": "Portuguese goleiro who joined Sporting CP's academy as a boy and became its keeper; his brother Tomás Paçó plays alongside him at Sporting.",
+    "strengths": ["Big blocking saves", "Quick throws to start attacks", "Stays set for shots"]
+  },
+  "Bruno Fernandes": {
+    "blurb": "Portuguese playmaker who starred at Sporting before becoming Manchester United's captain, famous for creative passes and his hop-skip penalties.",
+    "strengths": ["Risky, creative final passes", "Penalty-taking nerve", "Shoots from distance"]
+  },
+  "Bukayo Saka": {
+    "blurb": "Arsenal academy graduate and England winger who played in the Euro 2020 and Euro 2024 finals, famous for cutting inside onto his left foot.",
+    "strengths": ["Cuts inside to curl", "Brave 1v1 dribbling", "Works back to defend"]
+  },
+  "Cardinal": {
+    "blurb": "Portuguese pivot Fernando Cardinal played for Sporting, Inter and ElPozo, scored 87 goals for Portugal and won the futsal Champions League with Sporting in 2019.",
+    "strengths": ["Back-post finishing", "Strong hold-up play", "Clever movement in the box"]
+  },
+  "Carlos Ortiz": {
+    "blurb": "Spanish cierre and Movistar Inter legend who won five straight leagues and three UEFA Futsal Cups there, plus four European titles with Spain.",
+    "strengths": ["Long shots from the back", "Leadership and organisation", "Composed under pressure"]
+  },
+  "Catela": {
+    "blurb": "Spanish ala from Cádiz who played for Santiago, Palma and Valdepeñas before joining FC Barcelona in 2022, a Spain international since 2016.",
+    "strengths": ["Overlapping runs", "Tireless up-and-down work", "Direct wing play"]
+  },
+  "Chemi": {
+    "blurb": "Spanish goleiro José Miguel Oliver, known as Chemi, won Jimbee Cartagena's first league title in 2024 and was Spain's keeper at the 2026 Euro.",
+    "strengths": ["Low split saves", "Stays big in 1v1s", "Calm starts to attacks"]
+  },
+  "Cirilo": {
+    "blurb": "Brazilian-born pivot who became a Russia international and won seven Russian Super League titles with Moscow clubs like Dinamo.",
+    "strengths": ["Holds the ball under pressure", "Clever lay-off passes", "Turns defenders in the box"]
+  },
+  "Cole Palmer": {
+    "blurb": "English attacking midfielder from Manchester City's academy who became Chelsea's star, scoring twice in their 2025 Club World Cup final win.",
+    "strengths": ["Ice-cold penalties", "Finds space between lines", "Disguised passes and shots"]
+  },
+  "Cristian Romero": {
+    "blurb": "Fearless Argentine centre-back who won the 2022 World Cup and two Copa Américas with Argentina, and has been a leader at Tottenham.",
+    "strengths": ["Aggressive front-foot tackling", "Wins aerial duels", "Steps in to intercept"]
+  },
+  "Daniel Ibañes": {
+    "blurb": "Brazilian-born Spain star who scored in the 2000 World Cup final win over Brazil and won many titles with Inter Movistar.",
+    "strengths": ["Tight close control", "Clever turns in traffic", "Clutch finishing"]
+  },
+  "Danyil Abakshyn": {
+    "blurb": "Ukrainian futsal forward who won the Silver Boot at the 2024 World Cup, scoring a hat-trick as Ukraine beat France to take a historic bronze.",
+    "strengths": ["Quick turn and toe-poke", "Sharp finishing", "Creates chances for teammates"]
+  },
+  "David Raya": {
+    "blurb": "Spanish goalkeeper who rose through Brentford and won the Premier League Golden Glove with Arsenal in 2024, known for calm footwork.",
+    "strengths": ["Sharp reflex saves", "Accurate distribution", "Calm with the ball"]
+  },
+  "Declan Rice": {
+    "blurb": "England midfielder who captained West Ham to the 2023 Conference League, then joined Arsenal and scored two stunning free kicks vs Real Madrid in 2025.",
+    "strengths": ["Breaks up attacks", "Covers huge ground", "Driving runs forward"]
+  },
+  "Désiré Doué": {
+    "blurb": "Young French attacker who came through Rennes, joined PSG in 2024 and scored twice in the 2025 Champions League final win over Inter.",
+    "strengths": ["Fearless 1v1 dribbling", "Shoots with both feet", "Quick feet in tight spaces"]
+  },
+  "Diogo Costa": {
+    "blurb": "Porto's Portuguese goalkeeper who made history at Euro 2024 by saving three penalties in a row in the shootout against Slovenia.",
+    "strengths": ["Penalty-saving specialist", "Quick reactions", "Comfortable passing out"]
+  },
+  "Douglas Junior": {
+    "blurb": "Brazilian-born fixo who became a Kazakhstan international and a Kairat Almaty idol, known for powerful shooting from the back.",
+    "strengths": ["Thunderous long shots", "Strong defensive duels", "Leads from the back"]
+  },
+  "Eder Lima": {
+    "blurb": "Brazilian-born Russia pivot who was top scorer at the 2012 Futsal World Cup and helped Russia reach the 2016 World Cup final.",
+    "strengths": ["Thunderous shooting", "Strong back-to-goal play", "Finds space to shoot"]
+  },
+  "Edu": {
+    "blurb": "Portuguese futsal goleiro Edu Sousa, from Mirandela, who plays in Spain's top league and won the 2022 Finalissima with Portugal; he starts attacks with fast, accurate throws.",
+    "strengths": ["Quick throws to attack", "Sharp reflexes", "Commands his area"]
+  },
+  "Emiliano Martínez": {
+    "blurb": "Argentina's World Cup-winning goalkeeper who made a famous last-minute save in the 2022 final, won the Golden Glove and starred for Aston Villa.",
+    "strengths": ["Penalty shootout hero", "Big saves in big moments", "Confident presence"]
+  },
+  "Federico Valverde": {
+    "blurb": "Energetic Uruguayan midfielder at Real Madrid who won the Champions League in 2022 and 2024, famous for thunderbolt shots from distance.",
+    "strengths": ["Tireless box-to-box running", "Long-range thunderbolts", "Helps defend anywhere"]
+  },
+  "Fernandão": {
+    "blurb": "Brazilian-born Spain pivot who won two UEFA Futsal Cups with Barcelona and helped Spain win the 2010 European title.",
+    "strengths": ["Powerful turns on goal", "Shields the ball", "Physical strength"]
+  },
+  "Florian Wirtz": {
+    "blurb": "German playmaker who led Bayer Leverkusen to an unbeaten Bundesliga title in 2024 before a big-money move to Liverpool in 2025.",
+    "strengths": ["Clever killer passes", "Turns in tight spaces", "Sees runs early"]
+  },
+  "Gabriel": {
+    "blurb": "Brazilian futsal defender who played in Spain's top league and for Brazil, remembered as a strong fixo who could also score big goals.",
+    "strengths": ["Strong, well-timed tackles", "Physical presence", "Powerful shooting"]
+  },
+  "Gabriel Magalhães": {
+    "blurb": "Brazilian centre-back who won Ligue 1 with Lille in 2021 before becoming an Arsenal leader, famous for scoring headers from corners.",
+    "strengths": ["Attacks corners with power", "Dominant in the air", "Left-footed passing"]
+  },
+  "Gregor Kobel": {
+    "blurb": "Swiss goalkeeper who became Borussia Dortmund's No.1 and helped them reach the 2024 Champions League final, known for starting attacks.",
+    "strengths": ["Quick distribution", "Big reflex saves", "Sweeps behind the defence"]
+  },
+  "Gustavo Lobo": {
+    "blurb": "Brazilian-born goleiro who starred for Kairat and Dinamo Moscow, played for Russia, and was named Futsal Planet's best goalkeeper in 2013.",
+    "strengths": ["Commands his area", "Brave close-range saves", "Organises the defence"]
+  },
+  "Harry Kane": {
+    "blurb": "England's all-time top scorer and Tottenham's record goalscorer, who won the 2018 World Cup Golden Boot and a Bundesliga title with Bayern.",
+    "strengths": ["Drops deep to create", "Clinical finishing", "Long-range passing"]
+  },
+  "Higor": {
+    "blurb": "Brazilian pivot who played for Corinthians, Palma Futsal and Benfica, and has been called up to Brazil's national team.",
+    "strengths": ["Strong back-to-goal turns", "Holds off defenders", "Quick finishes in the box"]
+  },
+  "Ibrahima Konaté": {
+    "blurb": "Powerful French centre-back who moved from RB Leipzig to Liverpool and won the Premier League in 2025, known for his pace and strength.",
+    "strengths": ["Powerful headed clearances", "Recovery pace", "Wins physical duels"]
+  },
+  "Jan Oblak": {
+    "blurb": "Slovenian goalkeeper and Atlético Madrid's No.1 since 2014, a La Liga winner in 2021 and a record five-time Zamora Trophy winner.",
+    "strengths": ["Unbeatable in 1v1s", "Calm positioning", "Consistent shot-stopping"]
+  },
+  "Javi Rodríguez": {
+    "blurb": "Spanish futsal legend who scored two late penalties in the 2000 World Cup final win over Brazil, then won the World Cup again in 2004.",
+    "strengths": ["Sharp 1v1 skills", "Nerves from the spot", "Captain's leadership"]
+  },
+  "Jeremie Frimpong": {
+    "blurb": "Speedy Dutch wing-back who won an unbeaten league and cup double with Bayer Leverkusen in 2024 before joining Liverpool in 2025.",
+    "strengths": ["Rocket runs down the right", "Arrives late in the box", "Relentless energy"]
+  },
+  "Jesús Gordillo": {
+    "blurb": "Spanish pivot from Toledo who won the U-19 Euro in 2019, three Champions Leagues with Palma Futsal and the 2026 Futsal Euro with Spain.",
+    "strengths": ["First-time finishing", "Strong hold-up play", "Pins the defender"]
+  },
+  "João Neves": {
+    "blurb": "Tireless Portuguese midfielder from Benfica's academy who joined PSG in 2024 and won the Champions League with them in 2025.",
+    "strengths": ["Wins the ball back", "Constant pressing energy", "Quick, simple passing"]
+  },
+  "João Victor": {
+    "blurb": "Brazilian fixo, also known as Neguinho, who won the 2024 Futsal World Cup and Copa América with Brazil and is known for his powerful shot.",
+    "strengths": ["Power shots from the back", "Solid 1v1 defending", "Starts attacks quickly"]
+  },
+  "Joel Queirós": {
+    "blurb": "Tall Portuguese pivot who scored 107 goals for Portugal and won the 2010 UEFA Futsal Cup with Benfica.",
+    "strengths": ["Toe-poke finishes", "Uses his height", "Holds the ball up"]
+  },
+  "Jordi Torras": {
+    "blurb": "Left-footed Spanish ala who captained Barcelona and Spain, won the 2004 World Cup and played in four Euros for his country.",
+    "strengths": ["Direct runs from the wing", "Strong left foot", "Captain's leadership"]
+  },
+  "Jules Koundé": {
+    "blurb": "French defender who won the Europa League with Sevilla, then moved to Barcelona, where he often plays right-back thanks to his speed.",
+    "strengths": ["Recovery sprints", "Clean, timed tackles", "Comfortable at two positions"]
+  },
+  "Julián Álvarez": {
+    "blurb": "Argentine forward who won the 2022 World Cup and the 2023 treble with Manchester City, and scored a famous solo goal against Croatia.",
+    "strengths": ["Relentless pressing", "Smart runs behind", "Composed finishing"]
+  },
+  "Julio García Mera": {
+    "blurb": "Spanish cierre and Inter Movistar legend who won two World Cups and three European titles with Spain before becoming a club director.",
+    "strengths": ["Steps in to steal", "Reads the play", "Organises the team"]
+  },
+  "Khvicha Kvaratskhelia": {
+    "blurb": "Georgian winger who helped Napoli win Serie A in 2023, then joined PSG and scored in their 2025 Champions League final win.",
+    "strengths": ["Mazy dribbles from the left", "Unpredictable skills", "Shoots with both feet"]
+  },
+  "Konstantin Eremenko": {
+    "blurb": "Russian legend of Dina Moscow, often called the greatest futsal player of the 20th century, who scored the winning shootout kick at Euro 1999.",
+    "strengths": ["Classic pivot turns", "Deadly finishing", "Composure on penalties"]
+  },
+  "Lamine Yamal": {
+    "blurb": "Barcelona's teenage winger who helped Spain win Euro 2024, curling in a stunning semi-final goal vs France to become the Euros' youngest scorer.",
+    "strengths": ["Curls in from the right", "Fearless dribbling", "Vision for assists"]
+  },
+  "Lautaro Martínez": {
+    "blurb": "Argentine striker and Inter captain who won the 2022 World Cup and scored the winner in the 2024 Copa América final.",
+    "strengths": ["Swivel-and-shoot finishes", "Strong hold-up play", "Presses from the front"]
+  },
+  "Luan Muller": {
+    "blurb": "Brazilian-born Armenia goleiro who won the Champions League with Palma Futsal and was named Futsal Planet's best goalkeeper for 2024.",
+    "strengths": ["Close-range reflexes", "Stays big in 1v1s", "Can even score goals"]
+  },
+  "Luciano Gauna": {
+    "blurb": "Argentine ala who shone at Peñíscola before joining Barcelona in 2025, and reached the 2024 Futsal World Cup final with Argentina.",
+    "strengths": ["Driving 1v1 dribbles", "Quick change of speed", "Clever vision"]
+  },
+  "Luis Díaz": {
+    "blurb": "Colombian winger who starred at Porto and Liverpool, winning the Premier League in 2025, before moving to Bayern Munich that summer.",
+    "strengths": ["Direct dribbles at defenders", "Relentless pressing", "Quick cut-inside shots"]
+  },
+  "Mamadou Touré": {
+    "blurb": "French ala seen as the star of French futsal, who helped France finish fourth at the 2024 World Cup and moved to FC Barcelona.",
+    "strengths": ["Powerful dribbling", "Speed and strength", "Beats defenders 1v1"]
+  },
+  "Marcio Forte": {
+    "blurb": "Brazilian-born fixo who became an Italy international and captain, and played club futsal for Lazio.",
+    "strengths": ["Long passes to the pivot", "Calm under pressure", "Tough defending"]
+  },
+  "Mario Rivillos": {
+    "blurb": "Spanish ala who won the Champions League five times with Inter, Barcelona and Palma, and captained Spain to the 2026 Futsal Euro.",
+    "strengths": ["Curled shots from the wing", "Big-game experience", "Smart movement"]
+  },
+  "Marquinhos": {
+    "blurb": "Brazilian centre-back who won Olympic gold in 2016 and captained PSG to the 2025 Champions League, famous for reading the game.",
+    "strengths": ["Reads passes early", "Calm leadership", "Quick, clean interceptions"]
+  },
+  "Matheus Rodrigues": {
+    "blurb": "Brazilian ala who won titles with Corinthians before joining FC Barcelona in 2020, a powerful left-footer who scores plenty of goals.",
+    "strengths": ["Powerful left foot", "Wing tricks and flair", "Moves the ball quickly"]
+  },
+  "Mathi Fernández": {
+    "blurb": "Uruguay's futsal goleiro from Montevideo who won the 2025 Copa Libertadores with Peñarol, known for fast-reaction saves at close range.",
+    "strengths": ["Fast-reaction saves", "Stays set for shots", "Quick back on his feet"]
+  },
+  "Mellado": {
+    "blurb": "Spanish ala from Murcia who helped Jimbee Cartagena win two league titles and became a European champion with Spain in 2026.",
+    "strengths": ["Sole-roll 1v1 moves", "Works hard both ways", "Tight ball control"]
+  },
+  "Michael Olise": {
+    "blurb": "Left-footed French winger who starred at Crystal Palace before joining Bayern Munich in 2024 and winning the Bundesliga there.",
+    "strengths": ["Curls passes from the right", "Close control", "Creates chances constantly"]
+  },
+  "Miguelín": {
+    "blurb": "Spanish ala from Mallorca who spent a decade at ElPozo Murcia, winning cups there, and became a European champion with Spain.",
+    "strengths": ["Clever wing passes", "Reads teammates' runs", "Calm finishing"]
+  },
+  "Mike Maignan": {
+    "blurb": "French goalkeeper who won Ligue 1 with Lille in 2021 and Serie A with AC Milan in 2022, famous for flying fingertip saves.",
+    "strengths": ["Flying fingertip saves", "Long, accurate throws", "Commanding presence"]
+  },
+  "Miquel Feixas": {
+    "blurb": "Spanish goleiro who grew up in Barcelona's academy, returned to the first team in 2020 and earned Spain call-ups, known for agile saves.",
+    "strengths": ["Brave 1v1 blocks", "Agile reflexes", "Good with his feet"]
+  },
+  "Mostafa Nazari": {
+    "blurb": "Iranian goleiro who was named the world's best futsal goalkeeper in 2010 and won Asian titles with Iran across a long career.",
+    "strengths": ["Brave blocks", "Quick reflexes", "Organises his defence"]
+  },
+  "Mykola Mykytiuk": {
+    "blurb": "Ukrainian fixo who scored in the 2024 Futsal World Cup quarter-final win over Venezuela on Ukraine's run to a historic bronze medal.",
+    "strengths": ["Solid defensive wall", "Reads the pivot's moves", "Joins attacks late"]
+  },
+  "Neto": {
+    "blurb": "Brazilian fixo who scored the extra-time winner in the 2012 World Cup final vs Spain and was named the world's best player that year.",
+    "strengths": ["Tireless last defender", "Surging runs forward", "Clutch goals"]
+  },
+  "Nico Williams": {
+    "blurb": "Speedy Spanish winger from Athletic Club who scored in the Euro 2024 final as Spain beat England to win the tournament.",
+    "strengths": ["Burst of speed", "Takes on defenders", "Direct running"]
+  },
+  "Nuno Mendes": {
+    "blurb": "Portuguese left-back who came through Sporting CP, joined PSG and won the 2025 Champions League, known for flying forward runs.",
+    "strengths": ["Flying overlaps", "Recovery pace", "Strong 1v1 defending"]
+  },
+  "Ouassini Guirio": {
+    "blurb": "French futsal international who won the Coupe de France with Nantes and league-and-cup doubles with Étoile Lavalloise.",
+    "strengths": ["Hold, turn and shoot", "Quick bursts of speed", "Direct attacking runs"]
+  },
+  "Pablo Ramírez": {
+    "blurb": "Spanish pivot from Málaga who helped Jimbee Cartagena win back-to-back league titles and was named the league's best pivot in 2025.",
+    "strengths": ["Clever lay-off passes", "Strong hold-up play", "Decisive finishing"]
+  },
+  "Paco Sedano": {
+    "blurb": "Spanish goleiro who won the 2004 World Cup and two Euros with Spain, plus three leagues and a UEFA Futsal Cup with Barcelona.",
+    "strengths": ["Calm penalty stopper", "Smart positioning", "Big-game experience"]
+  },
+  "Pau Cubarsí": {
+    "blurb": "Spanish centre-back who broke into Barcelona's first team as a teenager in 2024, admired for calm passes that cut through the lines.",
+    "strengths": ["Line-breaking passes", "Calm under pressure", "Reads danger early"]
+  },
+  "Pauleta": {
+    "blurb": "Portuguese ala who won 17 titles in seven seasons at Sporting CP, including the 2021 UEFA Futsal Champions League.",
+    "strengths": ["Passes across the box", "Quick combination play", "Smart movement"]
+  },
+  "Pedro Porro": {
+    "blurb": "Spanish right-back who won the league with Sporting CP in 2021 and then joined Tottenham, famous for whipped crosses from the right.",
+    "strengths": ["Whipped crosses", "Attacking overlaps", "Long-range shooting"]
+  },
+  "Pito": {
+    "blurb": "Brazilian pivot from Chapecó who became an FC Barcelona star and won the 2024 Futsal World Cup with Brazil.",
+    "strengths": ["Spin-and-finish moves", "Strong hold-up play", "Clinical in the box"]
+  },
+  "Raphinha": {
+    "blurb": "Brazilian winger who moved from Leeds to Barcelona, where he won La Liga in 2025, known for his strong left foot from the right.",
+    "strengths": ["Left-foot strikes", "Relentless pressing", "Dangerous set pieces"]
+  },
+  "Raúl Gómez": {
+    "blurb": "Spanish pivot from Albacete who has become a key player for Movistar Inter and has been called up to Spain's national team.",
+    "strengths": ["Back-post tap-ins", "Finds space in the box", "Links with teammates"]
+  },
+  "Ricardo Mayor": {
+    "blurb": "Spanish cierre from ElPozo Murcia's academy who became one of the team's pillars and a Spain international.",
+    "strengths": ["Cuts out passes", "Launches quick counters", "Calm on the ball"]
+  },
+  "Robert Lewandowski": {
+    "blurb": "Poland's record goalscorer who starred for Dortmund, Bayern and Barcelona, won the 2020 Champions League and once scored five goals in nine minutes.",
+    "strengths": ["Clinical finishing", "Perfect positioning", "Strong hold-up play"]
+  },
+  "Robinho": {
+    "blurb": "Brazilian-born ala who played for Russia, starring for Gazprom-Ugra and Benfica, where he won the Portuguese league in 2019.",
+    "strengths": ["Brazilian step-overs", "Creative dribbling", "Quick combination play"]
+  },
+  "Rodri": {
+    "blurb": "Spanish midfielder who scored Manchester City's winner in the 2023 Champions League final, won Euro 2024 and the 2024 Ballon d'Or.",
+    "strengths": ["Controls the tempo", "Shields the defence", "Accurate passing range"]
+  },
+  "Santiago Elías": {
+    "blurb": "Argentine goleiro who played at the 2008 and 2012 Futsal World Cups and was named the world's best futsal goalkeeper for 2009.",
+    "strengths": ["Low reflex saves", "Quick reactions", "Organises the defence"]
+  },
+  "Schumacher": {
+    "blurb": "Brazilian fixo who won the 2008 World Cup at home, was named its second-best player and was voted world's best futsal player that year.",
+    "strengths": ["Builds attacks from the back", "Leads by example", "Calm defending"]
+  },
+  "Sergei Sergeev": {
+    "blurb": "Russian futsal international who played for CSKA and Dinamo Moscow, described as his team's engine for starting moves from deep.",
+    "strengths": ["Calm cover defending", "Starts moves from deep", "Reads the game"]
+  },
+  "Sergey Zuev": {
+    "blurb": "Russian goleiro and former ice hockey goalie who starred for Dina Moscow and Russia, and was voted the world's best futsal keeper in 2008.",
+    "strengths": ["Plays out like a fixo", "Quick reactions", "Brave in 1v1s"]
+  },
+  "Sergio González": {
+    "blurb": "Spanish ala who has played for FC Barcelona and Spain's national team, a hard-working wide player who covers the whole court.",
+    "strengths": ["Tireless wing running", "Helps defend", "Supports every attack"]
+  },
+  "Sergio Lozano": {
+    "blurb": "Spanish ala and FC Barcelona's all-time top futsal scorer, whose No.9 shirt was retired; he scored twice in Spain's Euro 2012 final win.",
+    "strengths": ["Powerful shooting", "Clutch big-game goals", "Clever movement"]
+  },
+  "Sid Belhaj": {
+    "blurb": "French fixo who holds France's futsal caps record, captains Sporting Paris and played at France's first World Cup in 2024.",
+    "strengths": ["Passes into the pivot", "Captain's leadership", "Composed defending"]
+  },
+  "Souheil Mouhoudine": {
+    "blurb": "French futsal captain from the Paris area, one of France's top scorers ever, who helped them reach fourth place at the 2024 World Cup.",
+    "strengths": ["Steals the ball high", "Scores from deep", "Leads the team"]
+  },
+  "Theo Hernández": {
+    "blurb": "French left-back who won Serie A with AC Milan in 2022 and scored against Morocco in the 2022 World Cup semi-final.",
+    "strengths": ["Runs from his own box", "Powerful left foot", "Pace to recover"]
+  },
+  "Tiago Marinho": {
+    "blurb": "Brazilian goleiro who won the World Cup in 2008 and 2012, earning the 2008 Golden Glove, and was famous for his passes to Falcão.",
+    "strengths": ["Quick-reaction saves", "Pinpoint passing", "Starts fast attacks"]
+  },
+  "Trent Alexander-Arnold": {
+    "blurb": "English right-back from Liverpool's academy who won the 2019 Champions League, famous for his quick corner vs Barcelona, before joining Real Madrid.",
+    "strengths": ["Pinpoint crossing", "Long diagonal passes", "Quick thinking at set pieces"]
+  },
+  "Victor Osimhen": {
+    "blurb": "Nigerian striker who fired Napoli to the 2023 Serie A title as top scorer and was named African Player of the Year in 2023.",
+    "strengths": ["Leaping headers", "Runs behind defenders", "Relentless energy"]
+  },
+  "Viktor Gyökeres": {
+    "blurb": "Powerful Swedish striker who scored goals by the bucketload for Sporting CP, winning two Portuguese titles, before joining Arsenal in 2025.",
+    "strengths": ["Powerful runs through defenders", "Strong finishing", "Holds off defenders"]
+  },
+  "Vitinha": {
+    "blurb": "Portuguese midfielder from Porto who became PSG's passing hub and won the 2025 Champions League with them.",
+    "strengths": ["Quick one-touch passing", "Keeps the ball moving", "Calm under pressure"]
+  },
+  "William Saliba": {
+    "blurb": "Calm French centre-back who rose at Saint-Étienne, became an Arsenal rock and played in the 2022 World Cup final for France.",
+    "strengths": ["Calm recovery tackles", "Reads danger early", "Pace and strength"]
+  },
+  "Willian Dorn": {
+    "blurb": "Brazilian goleiro who spent 11 seasons at Joinville, was named the world's best futsal keeper for 2023 and won the 2024 World Cup.",
+    "strengths": ["Plays out from the back", "Sharp reflexes", "Confident 1v1 saves"]
+  },
+  "Yassine Bounou": {
+    "blurb": "Moroccan goalkeeper who won two Europa Leagues with Sevilla and saved penalties in the 2022 shootout win over Spain on Morocco's World Cup run.",
+    "strengths": ["Shootout saves", "Calm under pressure", "Good with his feet"]
+  }
+}

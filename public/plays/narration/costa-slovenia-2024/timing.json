@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Three in a row",
+   "text": "Frankfurt, 2024. Portugal and Slovenia go to penalties. Diogo Costa dives and saves from Ili\u010di\u0107. Balkovec shoots, and Costa tips it round the post. Then Verbi\u010d... saved again! Three saves in a row, a Euros first!",
+   "src": "/plays/narration/costa-slovenia-2024/1.m4a",
+   "seconds": 17.1,
+   "words": [
+    {
+     "w": "Frankfurt",
+     "at": 0.375
+    },
+    {
+     "w": "2024",
+     "at": 0.85
+    },
+    {
+     "w": "Portugal",
+     "at": 2.188
+    },
+    {
+     "w": "and",
+     "at": 2.725
+    },
+    {
+     "w": "Slovenia",
+     "at": 2.85
+    },
+    {
+     "w": "go",
+     "at": 3.475
+    },
+    {
+     "w": "to",
+     "at": 3.638
+    },
+    {
+     "w": "penalties",
+     "at": 3.725
+    },
+    {
+     "w": "Diogo",
+     "at": 4.838
+    },
+    {
+     "w": "Costa",
+     "at": 5.338
+    },
+    {
+     "w": "dives",
+     "at": 5.775
+    },
+    {
+     "w": "and",
+     "at": 6.325
+    },
+    {
+     "w": "saves",
+     "at": 6.463
+    },
+    {
+     "w": "from",
+     "at": 6.85
+    },
+    {
+     "w": "Ili\u010di\u0107",
+     "at": 7.0
+    },
+    {
+     "w": "Balkovec",
+     "at": 8.05
+    },
+    {
+     "w": "shoots",
+     "at": 8.7
+    },
+    {
+     "w": "and",
+     "at": 9.15
+    },
+    {
+     "w": "Costa",
+     "at": 9.287
+    },
+    {
+     "w": "tips",
+     "at": 9.738
+    },
+    {
+     "w": "it",
+     "at": 10.037
+    },
+    {
+     "w": "round",
+     "at": 10.125
+    },
+    {
+     "w": "the",
+     "at": 10.387
+    },
+    {
+     "w": "post",
+     "at": 10.475
+    },
+    {
+     "w": "Then",
+     "at": 11.363
+    },
+    {
+     "w": "Verbi\u010d",
+     "at": 11.6
+    },
+    {
+     "w": "saved",
+     "at": 12.588
+    },
+    {
+     "w": "again",
+     "at": 12.938
+    },
+    {
+     "w": "Three",
+     "at": 13.675
+    },
+    {
+     "w": "saves",
+     "at": 14.025
+    },
+    {
+     "w": "in",
+     "at": 14.412
+    },
+    {
+     "w": "a",
+     "at": 14.488
+    },
+    {
+     "w": "row",
+     "at": 14.588
+    },
+    {
+     "w": "a",
+     "at": 15.05
+    },
+    {
+     "w": "Euros",
+     "at": 15.162
+    },
+    {
+     "w": "first",
+     "at": 15.662
+    }
+   ]
+  },
+  {
+   "label": "Round the post",
+   "text": "Watch the second save, slowly. Balkovec strikes it well. Costa stays set and still, waits for the kick, pushes off, stretches every finger and tips it round the post.",
+   "src": "/plays/narration/costa-slovenia-2024/2.m4a",
+   "seconds": 12.0,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.375
+    },
+    {
+     "w": "the",
+     "at": 0.675
+    },
+    {
+     "w": "second",
+     "at": 0.812
+    },
+    {
+     "w": "save",
+     "at": 1.188
+    },
+    {
+     "w": "slowly",
+     "at": 1.637
+    },
+    {
+     "w": "Balkovec",
+     "at": 2.663
+    },
+    {
+     "w": "strikes",
+     "at": 3.25
+    },
+    {
+     "w": "it",
+     "at": 3.6
+    },
+    {
+     "w": "well",
+     "at": 3.725
+    },
+    {
+     "w": "Costa",
+     "at": 4.562
+    },
+    {
+     "w": "stays",
+     "at": 5.0
+    },
+    {
+     "w": "set",
+     "at": 5.45
+    },
+    {
+     "w": "and",
+     "at": 5.75
+    },
+    {
+     "w": "still",
+     "at": 5.9
+    },
+    {
+     "w": "waits",
+     "at": 6.525
+    },
+    {
+     "w": "for",
+     "at": 6.825
+    },
+    {
+     "w": "the",
+     "at": 6.938
+    },
+    {
+     "w": "kick",
+     "at": 7.037
+    },
+    {
+     "w": "pushes",
+     "at": 7.45
+    },
+    {
+     "w": "off",
+     "at": 7.85
+    },
+    {
+     "w": "stretches",
+     "at": 8.438
+    },
+    {
+     "w": "every",
+     "at": 8.938
+    },
+    {
+     "w": "finger",
+     "at": 9.262
+    },
+    {
+     "w": "and",
+     "at": 9.65
+    },
+    {
+     "w": "tips",
+     "at": 9.787
+    },
+    {
+     "w": "it",
+     "at": 10.1
+    },
+    {
+     "w": "round",
+     "at": 10.2
+    },
+    {
+     "w": "the",
+     "at": 10.463
+    },
+    {
+     "w": "post",
+     "at": 10.55
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn, keepers. After every kick, save or goal, reset. Walk back to the middle, get set, then stay patient until the ball is kicked.",
+   "src": "/plays/narration/costa-slovenia-2024/3.m4a",
+   "seconds": 9.7,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.35
+    },
+    {
+     "w": "turn",
+     "at": 0.512
+    },
+    {
+     "w": "keepers",
+     "at": 0.9
+    },
+    {
+     "w": "After",
+     "at": 1.837
+    },
+    {
+     "w": "every",
+     "at": 2.15
+    },
+    {
+     "w": "kick",
+     "at": 2.462
+    },
+    {
+     "w": "save",
+     "at": 2.913
+    },
+    {
+     "w": "or",
+     "at": 3.325
+    },
+    {
+     "w": "goal",
+     "at": 3.487
+    },
+    {
+     "w": "reset",
+     "at": 3.875
+    },
+    {
+     "w": "Walk",
+     "at": 4.862
+    },
+    {
+     "w": "back",
+     "at": 5.15
+    },
+    {
+     "w": "to",
+     "at": 5.425
+    },
+    {
+     "w": "the",
+     "at": 5.513
+    },
+    {
+     "w": "middle",
+     "at": 5.6
+    },
+    {
+     "w": "get",
+     "at": 5.95
+    },
+    {
+     "w": "set",
+     "at": 6.162
+    },
+    {
+     "w": "then",
+     "at": 6.65
+    },
+    {
+     "w": "stay",
+     "at": 6.85
+    },
+    {
+     "w": "patient",
+     "at": 7.112
+    },
+    {
+     "w": "until",
+     "at": 7.588
+    },
+    {
+     "w": "the",
+     "at": 7.812
+    },
+    {
+     "w": "ball",
+     "at": 7.9
+    },
+    {
+     "w": "is",
+     "at": 8.225
+    },
+    {
+     "w": "kicked",
+     "at": 8.387
+    }
+   ]
+  }
+ ]
+}

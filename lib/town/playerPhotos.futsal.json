@@ -1,0 +1,29 @@
+{
+  "Willian Dorn": {
+    "slug": "willian-dorn",
+    "article": "Willian Dorn",
+    "file": "https://commons.wikimedia.org/wiki/File:Willian_Dorn.png",
+    "artist": "Ulyango si amigo",
+    "license": "CC0",
+    "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "date": "2024"
+  },
+  "Paco Sedano": {
+    "slug": "paco-sedano",
+    "article": "Paco Sedano",
+    "file": "https://commons.wikimedia.org/wiki/File:2012_2013_-_Paco_Sedano.jpg",
+    "artist": "Castroquini",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "date": "2012-09-14"
+  },
+  "Ricardinho": {
+    "slug": "ricardinho",
+    "article": "Ricardinho (futsal player, born 1985)",
+    "file": "https://commons.wikimedia.org/wiki/File:Ricardinho_on_Benfica.jpg",
+    "artist": "Alface",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "date": "2012-03-10"
+  }
+}

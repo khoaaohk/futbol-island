@@ -1,0 +1,346 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The quick finish, live",
+   "text": "Barcelona against Chelsea, the 2025 Champions League semi-final. A long ball forward. Salma Paralluelo beats Lucy Bronze. Alexia Putellas slips a pass between the defenders. Ewa Pajor bursts through. Goal!",
+   "src": "/plays/narration/pajor-signature/1.m4a",
+   "seconds": 16.6,
+   "words": [
+    {
+     "w": "Barcelona",
+     "at": 0.375
+    },
+    {
+     "w": "against",
+     "at": 1.025
+    },
+    {
+     "w": "Chelsea",
+     "at": 1.413
+    },
+    {
+     "w": "the",
+     "at": 2.05
+    },
+    {
+     "w": "2025",
+     "at": 2.15
+    },
+    {
+     "w": "Champions",
+     "at": 3.163
+    },
+    {
+     "w": "League",
+     "at": 3.763
+    },
+    {
+     "w": "semi-final",
+     "at": 4.075
+    },
+    {
+     "w": "A",
+     "at": 5.2
+    },
+    {
+     "w": "long",
+     "at": 5.338
+    },
+    {
+     "w": "ball",
+     "at": 5.7
+    },
+    {
+     "w": "forward",
+     "at": 5.987
+    },
+    {
+     "w": "Salma",
+     "at": 6.95
+    },
+    {
+     "w": "Paralluelo",
+     "at": 7.35
+    },
+    {
+     "w": "beats",
+     "at": 7.987
+    },
+    {
+     "w": "Lucy",
+     "at": 8.312
+    },
+    {
+     "w": "Bronze",
+     "at": 8.7
+    },
+    {
+     "w": "Alexia",
+     "at": 9.662
+    },
+    {
+     "w": "Putellas",
+     "at": 10.175
+    },
+    {
+     "w": "slips",
+     "at": 10.812
+    },
+    {
+     "w": "a",
+     "at": 11.113
+    },
+    {
+     "w": "pass",
+     "at": 11.188
+    },
+    {
+     "w": "between",
+     "at": 11.6
+    },
+    {
+     "w": "the",
+     "at": 11.912
+    },
+    {
+     "w": "defenders",
+     "at": 12.0
+    },
+    {
+     "w": "Ewa",
+     "at": 13.037
+    },
+    {
+     "w": "Pajor",
+     "at": 13.312
+    },
+    {
+     "w": "bursts",
+     "at": 13.725
+    },
+    {
+     "w": "through",
+     "at": 14.175
+    },
+    {
+     "w": "Goal",
+     "at": 15.1
+    }
+   ]
+  },
+  {
+   "label": "Ready early",
+   "text": "Watch again. Before Alexia even passes, Pajor is already on her toes, with her eyes on the gap.",
+   "src": "/plays/narration/pajor-signature/2.m4a",
+   "seconds": 7.4,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.7
+    },
+    {
+     "w": "Before",
+     "at": 1.562
+    },
+    {
+     "w": "Alexia",
+     "at": 1.95
+    },
+    {
+     "w": "even",
+     "at": 2.475
+    },
+    {
+     "w": "passes",
+     "at": 2.775
+    },
+    {
+     "w": "Pajor",
+     "at": 3.612
+    },
+    {
+     "w": "is",
+     "at": 4.0
+    },
+    {
+     "w": "already",
+     "at": 4.125
+    },
+    {
+     "w": "on",
+     "at": 4.487
+    },
+    {
+     "w": "her",
+     "at": 4.612
+    },
+    {
+     "w": "toes",
+     "at": 4.763
+    },
+    {
+     "w": "with",
+     "at": 5.338
+    },
+    {
+     "w": "her",
+     "at": 5.438
+    },
+    {
+     "w": "eyes",
+     "at": 5.588
+    },
+    {
+     "w": "on",
+     "at": 5.912
+    },
+    {
+     "w": "the",
+     "at": 6.013
+    },
+    {
+     "w": "gap",
+     "at": 6.1
+    }
+   ]
+  },
+  {
+   "label": "No waiting",
+   "text": "So when the ball arrives, she is ready, and finishes fast, past Hannah Hampton!",
+   "src": "/plays/narration/pajor-signature/3.m4a",
+   "seconds": 5.9,
+   "words": [
+    {
+     "w": "So",
+     "at": 0.375
+    },
+    {
+     "w": "when",
+     "at": 0.463
+    },
+    {
+     "w": "the",
+     "at": 0.588
+    },
+    {
+     "w": "ball",
+     "at": 0.675
+    },
+    {
+     "w": "arrives",
+     "at": 0.95
+    },
+    {
+     "w": "she",
+     "at": 1.788
+    },
+    {
+     "w": "is",
+     "at": 1.95
+    },
+    {
+     "w": "ready",
+     "at": 2.1
+    },
+    {
+     "w": "and",
+     "at": 2.65
+    },
+    {
+     "w": "finishes",
+     "at": 2.788
+    },
+    {
+     "w": "fast",
+     "at": 3.225
+    },
+    {
+     "w": "past",
+     "at": 3.775
+    },
+    {
+     "w": "Hannah",
+     "at": 4.1
+    },
+    {
+     "w": "Hampton",
+     "at": 4.4
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "The secret? Be ready before the ball arrives, so you can shoot with one touch.",
+   "src": "/plays/narration/pajor-signature/4.m4a",
+   "seconds": 5.6,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "secret",
+     "at": 0.463
+    },
+    {
+     "w": "Be",
+     "at": 1.35
+    },
+    {
+     "w": "ready",
+     "at": 1.525
+    },
+    {
+     "w": "before",
+     "at": 1.775
+    },
+    {
+     "w": "the",
+     "at": 2.062
+    },
+    {
+     "w": "ball",
+     "at": 2.15
+    },
+    {
+     "w": "arrives",
+     "at": 2.425
+    },
+    {
+     "w": "so",
+     "at": 3.1
+    },
+    {
+     "w": "you",
+     "at": 3.225
+    },
+    {
+     "w": "can",
+     "at": 3.325
+    },
+    {
+     "w": "shoot",
+     "at": 3.538
+    },
+    {
+     "w": "with",
+     "at": 3.837
+    },
+    {
+     "w": "one",
+     "at": 4.0
+    },
+    {
+     "w": "touch",
+     "at": 4.237
+    }
+   ]
+  }
+ ]
+}

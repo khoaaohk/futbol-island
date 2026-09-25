@@ -38,10 +38,13 @@ export function answerLearning(id:LearningId,stage:number,lessonId:string,questi
  return {...r,attempts:[...r.attempts,{eventId,questId:id,conceptId:j.concept,format:j.format,lessonId,questionIndex,variantId,contentVersion:LEARNING_VERSION,at,responseId,correct,attemptNumber,assistance,mode:stage<2?'practice':stage<4?'independent-check':'delayed-review'}],cursor:{...r.cursor,answer:responseId}};
  });
 }
+/** Fired after a Learning Journey stage is newly completed (card rewards listen: lib/town/cardRewardTriggers.ts). */
+export const LEARNING_STAGE_COMPLETE='fi2-learning-stage-complete';
 export function completeLearningStage(id:LearningId,stage:number){
  if(isLearningPreview())return;
  const s=read(),r=s.journeys[id];if(!r||!Number.isInteger(stage)||stage<0||stage>5||r.completed.includes(stage))return;
  write({...s,celebration:{id,stage},journeys:{...s.journeys,[id]:{...r,completed:[...r.completed,stage],reviewAt:stage===3&&r.reviewAt===undefined?Date.now()+REVIEW_DELAY:r.reviewAt}}});
+ window.dispatchEvent(new CustomEvent(LEARNING_STAGE_COMPLETE,{detail:{id,stage}}));
 }
 export function dismissLearningCelebration(){const s=read();if(s.celebration)write({...s,celebration:undefined});}
 export function favoriteLearning(id:LearningId){change(id,r=>({...r,favorite:!r.favorite}));}

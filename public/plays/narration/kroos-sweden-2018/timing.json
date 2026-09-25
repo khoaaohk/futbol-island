@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The free kick, live",
+   "text": "Sochi, 2018. Germany and Sweden are level, and time is almost up. A free kick, wide on the left. Toni Kroos taps it to Marco Reus, Reus stops it... and Kroos curls it... Goal!",
+   "src": "/plays/narration/kroos-sweden-2018/1.m4a",
+   "seconds": 13.4,
+   "words": [
+    {
+     "w": "Sochi",
+     "at": 0.375
+    },
+    {
+     "w": "2018",
+     "at": 0.825
+    },
+    {
+     "w": "Germany",
+     "at": 2.0
+    },
+    {
+     "w": "and",
+     "at": 2.475
+    },
+    {
+     "w": "Sweden",
+     "at": 2.612
+    },
+    {
+     "w": "are",
+     "at": 3.0
+    },
+    {
+     "w": "level",
+     "at": 3.125
+    },
+    {
+     "w": "and",
+     "at": 3.45
+    },
+    {
+     "w": "time",
+     "at": 3.587
+    },
+    {
+     "w": "is",
+     "at": 3.913
+    },
+    {
+     "w": "almost",
+     "at": 4.025
+    },
+    {
+     "w": "up",
+     "at": 4.475
+    },
+    {
+     "w": "A",
+     "at": 5.013
+    },
+    {
+     "w": "free",
+     "at": 5.138
+    },
+    {
+     "w": "kick",
+     "at": 5.438
+    },
+    {
+     "w": "wide",
+     "at": 5.838
+    },
+    {
+     "w": "on",
+     "at": 6.188
+    },
+    {
+     "w": "the",
+     "at": 6.287
+    },
+    {
+     "w": "left",
+     "at": 6.375
+    },
+    {
+     "w": "Toni",
+     "at": 7.188
+    },
+    {
+     "w": "Kroos",
+     "at": 7.525
+    },
+    {
+     "w": "taps",
+     "at": 7.888
+    },
+    {
+     "w": "it",
+     "at": 8.213
+    },
+    {
+     "w": "to",
+     "at": 8.3
+    },
+    {
+     "w": "Marco",
+     "at": 8.4
+    },
+    {
+     "w": "Reus",
+     "at": 8.775
+    },
+    {
+     "w": "Reus",
+     "at": 9.213
+    },
+    {
+     "w": "stops",
+     "at": 9.525
+    },
+    {
+     "w": "it",
+     "at": 9.963
+    },
+    {
+     "w": "and",
+     "at": 10.5
+    },
+    {
+     "w": "Kroos",
+     "at": 10.637
+    },
+    {
+     "w": "curls",
+     "at": 11.012
+    },
+    {
+     "w": "it",
+     "at": 11.412
+    },
+    {
+     "w": "Goal",
+     "at": 12.012
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again, from behind. The little pass opens the angle. It rises over everyone, swings wide, and bends back in.",
+   "src": "/plays/narration/kroos-sweden-2018/2.m4a",
+   "seconds": 9.0,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "from",
+     "at": 1.175
+    },
+    {
+     "w": "behind",
+     "at": 1.325
+    },
+    {
+     "w": "The",
+     "at": 2.413
+    },
+    {
+     "w": "little",
+     "at": 2.525
+    },
+    {
+     "w": "pass",
+     "at": 2.763
+    },
+    {
+     "w": "opens",
+     "at": 3.163
+    },
+    {
+     "w": "the",
+     "at": 3.538
+    },
+    {
+     "w": "angle",
+     "at": 3.688
+    },
+    {
+     "w": "It",
+     "at": 4.425
+    },
+    {
+     "w": "rises",
+     "at": 4.6
+    },
+    {
+     "w": "over",
+     "at": 5.0
+    },
+    {
+     "w": "everyone",
+     "at": 5.225
+    },
+    {
+     "w": "swings",
+     "at": 5.95
+    },
+    {
+     "w": "wide",
+     "at": 6.388
+    },
+    {
+     "w": "and",
+     "at": 6.875
+    },
+    {
+     "w": "bends",
+     "at": 7.0
+    },
+    {
+     "w": "back",
+     "at": 7.35
+    },
+    {
+     "w": "in",
+     "at": 7.675
+    }
+   ]
+  },
+  {
+   "label": "From behind the goal",
+   "text": "From behind the goal: the keeper flies, too late! Top corner!",
+   "src": "/plays/narration/kroos-sweden-2018/3.m4a",
+   "seconds": 4.9,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.375
+    },
+    {
+     "w": "behind",
+     "at": 0.512
+    },
+    {
+     "w": "the",
+     "at": 0.887
+    },
+    {
+     "w": "goal",
+     "at": 0.975
+    },
+    {
+     "w": "the",
+     "at": 1.625
+    },
+    {
+     "w": "keeper",
+     "at": 1.725
+    },
+    {
+     "w": "flies",
+     "at": 2.075
+    },
+    {
+     "w": "too",
+     "at": 2.525
+    },
+    {
+     "w": "late",
+     "at": 2.725
+    },
+    {
+     "w": "Top",
+     "at": 3.175
+    },
+    {
+     "w": "corner",
+     "at": 3.45
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "The secret? A tight angle? Pass it short to open it up. Then curl it, up and over, into the far corner.",
+   "src": "/plays/narration/kroos-sweden-2018/4.m4a",
+   "seconds": 7.6,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "secret",
+     "at": 0.463
+    },
+    {
+     "w": "A",
+     "at": 1.137
+    },
+    {
+     "w": "tight",
+     "at": 1.262
+    },
+    {
+     "w": "angle",
+     "at": 1.587
+    },
+    {
+     "w": "Pass",
+     "at": 2.413
+    },
+    {
+     "w": "it",
+     "at": 2.725
+    },
+    {
+     "w": "short",
+     "at": 2.888
+    },
+    {
+     "w": "to",
+     "at": 3.175
+    },
+    {
+     "w": "open",
+     "at": 3.3
+    },
+    {
+     "w": "it",
+     "at": 3.562
+    },
+    {
+     "w": "up",
+     "at": 3.65
+    },
+    {
+     "w": "Then",
+     "at": 4.263
+    },
+    {
+     "w": "curl",
+     "at": 4.513
+    },
+    {
+     "w": "it",
+     "at": 4.85
+    },
+    {
+     "w": "up",
+     "at": 5.013
+    },
+    {
+     "w": "and",
+     "at": 5.162
+    },
+    {
+     "w": "over",
+     "at": 5.275
+    },
+    {
+     "w": "into",
+     "at": 5.638
+    },
+    {
+     "w": "the",
+     "at": 5.812
+    },
+    {
+     "w": "far",
+     "at": 5.9
+    },
+    {
+     "w": "corner",
+     "at": 6.15
+    }
+   ]
+  }
+ ]
+}

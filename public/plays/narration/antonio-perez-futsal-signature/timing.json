@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: EURO 2026",
+   "text": "The 2026 Futsal EURO quarter-final, in Ljubljana. Spain play Italy. Antonio P\u00e9rez is Spain\u2019s fixo, the last defender. He scores twice, and Spain win four nil!",
+   "src": "/plays/narration/antonio-perez-futsal-signature/1.m4a",
+   "seconds": 13.4,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "2026",
+     "at": 0.425
+    },
+    {
+     "w": "Futsal",
+     "at": 1.363
+    },
+    {
+     "w": "EURO",
+     "at": 1.8
+    },
+    {
+     "w": "quarter-final",
+     "at": 2.163
+    },
+    {
+     "w": "in",
+     "at": 2.925
+    },
+    {
+     "w": "Ljubljana",
+     "at": 3.05
+    },
+    {
+     "w": "Spain",
+     "at": 4.237
+    },
+    {
+     "w": "play",
+     "at": 4.675
+    },
+    {
+     "w": "Italy",
+     "at": 4.975
+    },
+    {
+     "w": "Antonio",
+     "at": 5.875
+    },
+    {
+     "w": "P\u00e9rez",
+     "at": 6.475
+    },
+    {
+     "w": "is",
+     "at": 6.9
+    },
+    {
+     "w": "Spain\u2019s",
+     "at": 7.037
+    },
+    {
+     "w": "fixo",
+     "at": 7.575
+    },
+    {
+     "w": "the",
+     "at": 8.25
+    },
+    {
+     "w": "last",
+     "at": 8.375
+    },
+    {
+     "w": "defender",
+     "at": 8.725
+    },
+    {
+     "w": "He",
+     "at": 9.6
+    },
+    {
+     "w": "scores",
+     "at": 9.762
+    },
+    {
+     "w": "twice",
+     "at": 10.213
+    },
+    {
+     "w": "and",
+     "at": 10.875
+    },
+    {
+     "w": "Spain",
+     "at": 11.012
+    },
+    {
+     "w": "win",
+     "at": 11.425
+    },
+    {
+     "w": "four",
+     "at": 11.7
+    },
+    {
+     "w": "nil",
+     "at": 12.0
+    }
+   ]
+  },
+  {
+   "label": "How he defends",
+   "text": "The fixo reads the game. This is how he defends: he stays between the attacker and his goal, and watches the passer\u2019s hips. The pass comes. He steps in front, steals it and goes!",
+   "src": "/plays/narration/antonio-perez-futsal-signature/2.m4a",
+   "seconds": 12.7,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "fixo",
+     "at": 0.463
+    },
+    {
+     "w": "reads",
+     "at": 0.912
+    },
+    {
+     "w": "the",
+     "at": 1.25
+    },
+    {
+     "w": "game",
+     "at": 1.35
+    },
+    {
+     "w": "This",
+     "at": 2.188
+    },
+    {
+     "w": "is",
+     "at": 2.425
+    },
+    {
+     "w": "how",
+     "at": 2.55
+    },
+    {
+     "w": "he",
+     "at": 2.75
+    },
+    {
+     "w": "defends",
+     "at": 2.875
+    },
+    {
+     "w": "he",
+     "at": 3.8
+    },
+    {
+     "w": "stays",
+     "at": 3.95
+    },
+    {
+     "w": "between",
+     "at": 4.325
+    },
+    {
+     "w": "the",
+     "at": 4.638
+    },
+    {
+     "w": "attacker",
+     "at": 4.75
+    },
+    {
+     "w": "and",
+     "at": 5.3
+    },
+    {
+     "w": "his",
+     "at": 5.412
+    },
+    {
+     "w": "goal",
+     "at": 5.588
+    },
+    {
+     "w": "and",
+     "at": 6.025
+    },
+    {
+     "w": "watches",
+     "at": 6.162
+    },
+    {
+     "w": "the",
+     "at": 6.625
+    },
+    {
+     "w": "passer\u2019s",
+     "at": 6.725
+    },
+    {
+     "w": "hips",
+     "at": 7.225
+    },
+    {
+     "w": "The",
+     "at": 8.088
+    },
+    {
+     "w": "pass",
+     "at": 8.2
+    },
+    {
+     "w": "comes",
+     "at": 8.588
+    },
+    {
+     "w": "He",
+     "at": 9.45
+    },
+    {
+     "w": "steps",
+     "at": 9.6
+    },
+    {
+     "w": "in",
+     "at": 9.925
+    },
+    {
+     "w": "front",
+     "at": 10.088
+    },
+    {
+     "w": "steals",
+     "at": 10.562
+    },
+    {
+     "w": "it",
+     "at": 11.05
+    },
+    {
+     "w": "and",
+     "at": 11.162
+    },
+    {
+     "w": "goes",
+     "at": 11.275
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. Read the pass, step in, steal it, go!",
+   "src": "/plays/narration/antonio-perez-futsal-signature/3.m4a",
+   "seconds": 5.0,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.662
+    },
+    {
+     "w": "slowly",
+     "at": 1.062
+    },
+    {
+     "w": "Read",
+     "at": 1.938
+    },
+    {
+     "w": "the",
+     "at": 2.138
+    },
+    {
+     "w": "pass",
+     "at": 2.225
+    },
+    {
+     "w": "step",
+     "at": 2.675
+    },
+    {
+     "w": "in",
+     "at": 2.938
+    },
+    {
+     "w": "steal",
+     "at": 3.138
+    },
+    {
+     "w": "it",
+     "at": 3.475
+    },
+    {
+     "w": "go",
+     "at": 3.625
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: when you are the last defender, read the pass and step in to steal it!",
+   "src": "/plays/narration/antonio-perez-futsal-signature/4.m4a",
+   "seconds": 5.6,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "when",
+     "at": 1.35
+    },
+    {
+     "w": "you",
+     "at": 1.5
+    },
+    {
+     "w": "are",
+     "at": 1.625
+    },
+    {
+     "w": "the",
+     "at": 1.712
+    },
+    {
+     "w": "last",
+     "at": 1.8
+    },
+    {
+     "w": "defender",
+     "at": 2.138
+    },
+    {
+     "w": "read",
+     "at": 2.8
+    },
+    {
+     "w": "the",
+     "at": 2.987
+    },
+    {
+     "w": "pass",
+     "at": 3.087
+    },
+    {
+     "w": "and",
+     "at": 3.525
+    },
+    {
+     "w": "step",
+     "at": 3.65
+    },
+    {
+     "w": "in",
+     "at": 3.888
+    },
+    {
+     "w": "to",
+     "at": 4.013
+    },
+    {
+     "w": "steal",
+     "at": 4.138
+    },
+    {
+     "w": "it",
+     "at": 4.5
+    }
+   ]
+  }
+ ]
+}

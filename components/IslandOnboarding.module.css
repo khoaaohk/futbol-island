@@ -51,3 +51,26 @@
 .dialog .welcome>.header>h2{grid-column:1/-1;white-space:nowrap;font-size:clamp(16px,4.5vw,28px)}
 
 .choicesLayout{flex:none}@media(max-height:480px) and (min-width:601px){.welcome .choicesLayout{grid-column:1}}
+/* Match the Paths cue: shake the symbol, then blur into lessons and plays. */
+.lessonIconCycle{position:relative;display:block;flex:0 0 28px;width:28px;height:28px;animation:lessonIconShake 3s linear infinite}
+.lessonIconCycle>span{position:absolute;inset:0;opacity:0;animation:lessonIconSwap 9s linear infinite}
+.lessonIconCycle>span:nth-child(2){animation-delay:3s}
+.lessonIconCycle>span:nth-child(3){animation-delay:6s}
+@keyframes lessonIconShake{0%,80%,92%,100%{transform:none}83%,89%{transform:translateX(-2px) rotate(-5deg)}86%{transform:translateX(2px) rotate(5deg)}}
+@keyframes lessonIconSwap{0%{opacity:0;filter:blur(2px)}2%,30%{opacity:1;filter:blur(0)}31.5%{opacity:.6;filter:blur(2px)}33.333%,100%{opacity:0;filter:blur(2px)}}
+.dialog[data-page-hidden=true] .lessonIconCycle,.dialog[data-page-hidden=true] .lessonIconCycle>span,.dialog:not([open]) .lessonIconCycle,.dialog:not([open]) .lessonIconCycle>span{animation-play-state:paused}
+@media(prefers-reduced-motion:reduce){.lessonIconCycle{animation:none}.lessonIconCycle>span{animation:none;opacity:0;filter:none}.lessonIconCycle>span:first-child{opacity:1}}
+/* Give the Paths introduction enough room without shrinking readable text. */
+@media(max-width:600px),(max-height:480px){
+ .dialog .pathsStep>.header{padding:12px 16px!important;grid-template-columns:64px minmax(0,1fr) 64px;gap:8px}
+ .pathsStep .body{padding:12px 16px!important;scrollbar-gutter:auto}
+ .pathsStep .eyebrow{margin-bottom:8px}
+ .pathsStep .note{padding:12px;gap:10px;margin-top:12px}
+ .dialog .pathsStep>.footer{padding:10px 16px 16px;gap:8px}
+}
+@media(min-width:601px) and (max-height:480px){
+ .pathsStep .content{display:grid;grid-template-columns:1fr 1fr;column-gap:20px;align-items:center}
+ .pathsStep .eyebrow{grid-column:1}
+ .pathsStep .copy{grid-column:1}
+ .pathsStep .note{grid-column:2;grid-row:1/3;margin-top:0}
+}

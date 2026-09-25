@@ -1,0 +1,398 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The duel",
+   "text": "Germany, 2006, a World Cup quarter-final. Lu\u00eds Figo of Portugal, one of the best wingers in the world, runs at England\u2019s Ashley Cole. Early on, Cole wins the ball!",
+   "src": "/plays/narration/ashley-cole-signature/1.m4a",
+   "seconds": 13.0,
+   "words": [
+    {
+     "w": "Germany",
+     "at": 0.4
+    },
+    {
+     "w": "2006",
+     "at": 0.925
+    },
+    {
+     "w": "a",
+     "at": 2.1
+    },
+    {
+     "w": "World",
+     "at": 2.2
+    },
+    {
+     "w": "Cup",
+     "at": 2.5
+    },
+    {
+     "w": "quarter-final",
+     "at": 2.75
+    },
+    {
+     "w": "Lu\u00eds",
+     "at": 4.025
+    },
+    {
+     "w": "Figo",
+     "at": 4.487
+    },
+    {
+     "w": "of",
+     "at": 4.9
+    },
+    {
+     "w": "Portugal",
+     "at": 5.025
+    },
+    {
+     "w": "one",
+     "at": 5.875
+    },
+    {
+     "w": "of",
+     "at": 6.013
+    },
+    {
+     "w": "the",
+     "at": 6.088
+    },
+    {
+     "w": "best",
+     "at": 6.188
+    },
+    {
+     "w": "wingers",
+     "at": 6.562
+    },
+    {
+     "w": "in",
+     "at": 6.987
+    },
+    {
+     "w": "the",
+     "at": 7.062
+    },
+    {
+     "w": "world",
+     "at": 7.15
+    },
+    {
+     "w": "runs",
+     "at": 7.662
+    },
+    {
+     "w": "at",
+     "at": 8.05
+    },
+    {
+     "w": "England\u2019s",
+     "at": 8.15
+    },
+    {
+     "w": "Ashley",
+     "at": 8.675
+    },
+    {
+     "w": "Cole",
+     "at": 9.137
+    },
+    {
+     "w": "Early",
+     "at": 10.088
+    },
+    {
+     "w": "on",
+     "at": 10.475
+    },
+    {
+     "w": "Cole",
+     "at": 10.887
+    },
+    {
+     "w": "wins",
+     "at": 11.25
+    },
+    {
+     "w": "the",
+     "at": 11.55
+    },
+    {
+     "w": "ball",
+     "at": 11.65
+    }
+   ]
+  },
+  {
+   "label": "Close",
+   "text": "Here\u2019s how he did it. Cole gets close. Then he slows down and stays on his feet. No diving in!",
+   "src": "/plays/narration/ashley-cole-signature/2.m4a",
+   "seconds": 7.4,
+   "words": [
+    {
+     "w": "Here",
+     "at": 0.375
+    },
+    {
+     "w": "s",
+     "at": 0.7
+    },
+    {
+     "w": "how",
+     "at": 0.875
+    },
+    {
+     "w": "he",
+     "at": 1.012
+    },
+    {
+     "w": "did",
+     "at": 1.125
+    },
+    {
+     "w": "it",
+     "at": 1.325
+    },
+    {
+     "w": "Cole",
+     "at": 1.887
+    },
+    {
+     "w": "gets",
+     "at": 2.15
+    },
+    {
+     "w": "close",
+     "at": 2.4
+    },
+    {
+     "w": "Then",
+     "at": 3.175
+    },
+    {
+     "w": "he",
+     "at": 3.312
+    },
+    {
+     "w": "slows",
+     "at": 3.438
+    },
+    {
+     "w": "down",
+     "at": 3.85
+    },
+    {
+     "w": "and",
+     "at": 4.112
+    },
+    {
+     "w": "stays",
+     "at": 4.225
+    },
+    {
+     "w": "on",
+     "at": 4.562
+    },
+    {
+     "w": "his",
+     "at": 4.662
+    },
+    {
+     "w": "feet",
+     "at": 4.862
+    },
+    {
+     "w": "No",
+     "at": 5.438
+    },
+    {
+     "w": "diving",
+     "at": 5.713
+    },
+    {
+     "w": "in",
+     "at": 6.1
+    }
+   ]
+  },
+  {
+   "label": "Down the line",
+   "text": "He stays inside, so Figo can only go down the line. Figo knocks it on. Cole pokes it away!",
+   "src": "/plays/narration/ashley-cole-signature/3.m4a",
+   "seconds": 7.2,
+   "words": [
+    {
+     "w": "He",
+     "at": 0.35
+    },
+    {
+     "w": "stays",
+     "at": 0.475
+    },
+    {
+     "w": "inside",
+     "at": 0.85
+    },
+    {
+     "w": "so",
+     "at": 1.55
+    },
+    {
+     "w": "Figo",
+     "at": 1.738
+    },
+    {
+     "w": "can",
+     "at": 2.05
+    },
+    {
+     "w": "only",
+     "at": 2.175
+    },
+    {
+     "w": "go",
+     "at": 2.475
+    },
+    {
+     "w": "down",
+     "at": 2.65
+    },
+    {
+     "w": "the",
+     "at": 2.812
+    },
+    {
+     "w": "line",
+     "at": 2.9
+    },
+    {
+     "w": "Figo",
+     "at": 3.65
+    },
+    {
+     "w": "knocks",
+     "at": 4.075
+    },
+    {
+     "w": "it",
+     "at": 4.338
+    },
+    {
+     "w": "on",
+     "at": 4.425
+    },
+    {
+     "w": "Cole",
+     "at": 5.138
+    },
+    {
+     "w": "pokes",
+     "at": 5.475
+    },
+    {
+     "w": "it",
+     "at": 5.737
+    },
+    {
+     "w": "away",
+     "at": 5.812
+    }
+   ]
+  },
+  {
+   "label": "The lesson",
+   "text": "That\u2019s how to shut down the best winger. Stay close, stay on your feet, and show the winger down the line.",
+   "src": "/plays/narration/ashley-cole-signature/4.m4a",
+   "seconds": 7.0,
+   "words": [
+    {
+     "w": "That\u2019s",
+     "at": 0.35
+    },
+    {
+     "w": "how",
+     "at": 0.512
+    },
+    {
+     "w": "to",
+     "at": 0.637
+    },
+    {
+     "w": "shut",
+     "at": 0.762
+    },
+    {
+     "w": "down",
+     "at": 1.0
+    },
+    {
+     "w": "the",
+     "at": 1.188
+    },
+    {
+     "w": "best",
+     "at": 1.275
+    },
+    {
+     "w": "winger",
+     "at": 1.575
+    },
+    {
+     "w": "Stay",
+     "at": 2.45
+    },
+    {
+     "w": "close",
+     "at": 2.788
+    },
+    {
+     "w": "stay",
+     "at": 3.562
+    },
+    {
+     "w": "on",
+     "at": 3.837
+    },
+    {
+     "w": "your",
+     "at": 3.938
+    },
+    {
+     "w": "feet",
+     "at": 4.1
+    },
+    {
+     "w": "and",
+     "at": 4.487
+    },
+    {
+     "w": "show",
+     "at": 4.612
+    },
+    {
+     "w": "the",
+     "at": 4.85
+    },
+    {
+     "w": "winger",
+     "at": 4.95
+    },
+    {
+     "w": "down",
+     "at": 5.25
+    },
+    {
+     "w": "the",
+     "at": 5.438
+    },
+    {
+     "w": "line",
+     "at": 5.525
+    }
+   ]
+  }
+ ]
+}

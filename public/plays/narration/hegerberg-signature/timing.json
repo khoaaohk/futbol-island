@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The first goal, live",
+   "text": "Budapest, 2019. Lyon play Barcelona in the Women's Champions League final. Van de Sanden races clear, crosses low... Ada Hegerberg slides it under the keeper!",
+   "src": "/plays/narration/hegerberg-signature/1.m4a",
+   "seconds": 12.7,
+   "words": [
+    {
+     "w": "Budapest",
+     "at": 0.375
+    },
+    {
+     "w": "2019",
+     "at": 1.15
+    },
+    {
+     "w": "Lyon",
+     "at": 2.5
+    },
+    {
+     "w": "play",
+     "at": 2.925
+    },
+    {
+     "w": "Barcelona",
+     "at": 3.15
+    },
+    {
+     "w": "in",
+     "at": 3.85
+    },
+    {
+     "w": "the",
+     "at": 3.938
+    },
+    {
+     "w": "Women's",
+     "at": 4.025
+    },
+    {
+     "w": "Champions",
+     "at": 4.463
+    },
+    {
+     "w": "League",
+     "at": 5.05
+    },
+    {
+     "w": "final",
+     "at": 5.287
+    },
+    {
+     "w": "Van",
+     "at": 6.2
+    },
+    {
+     "w": "de",
+     "at": 6.5
+    },
+    {
+     "w": "Sanden",
+     "at": 6.638
+    },
+    {
+     "w": "races",
+     "at": 7.1
+    },
+    {
+     "w": "clear",
+     "at": 7.562
+    },
+    {
+     "w": "crosses",
+     "at": 8.213
+    },
+    {
+     "w": "low",
+     "at": 8.713
+    },
+    {
+     "w": "Ada",
+     "at": 9.55
+    },
+    {
+     "w": "Hegerberg",
+     "at": 9.85
+    },
+    {
+     "w": "slides",
+     "at": 10.438
+    },
+    {
+     "w": "it",
+     "at": 10.875
+    },
+    {
+     "w": "under",
+     "at": 10.963
+    },
+    {
+     "w": "the",
+     "at": 11.162
+    },
+    {
+     "w": "keeper",
+     "at": 11.25
+    }
+   ]
+  },
+  {
+   "label": "Hat-trick",
+   "text": "Five minutes later, Majri slips it across. Left foot, two! Then Bronze whips it in. A hat-trick before the half-hour!",
+   "src": "/plays/narration/hegerberg-signature/2.m4a",
+   "seconds": 8.8,
+   "words": [
+    {
+     "w": "Five",
+     "at": 0.4
+    },
+    {
+     "w": "minutes",
+     "at": 0.688
+    },
+    {
+     "w": "later",
+     "at": 1.0
+    },
+    {
+     "w": "Majri",
+     "at": 1.4
+    },
+    {
+     "w": "slips",
+     "at": 1.788
+    },
+    {
+     "w": "it",
+     "at": 2.062
+    },
+    {
+     "w": "across",
+     "at": 2.138
+    },
+    {
+     "w": "Left",
+     "at": 3.2
+    },
+    {
+     "w": "foot",
+     "at": 3.538
+    },
+    {
+     "w": "two",
+     "at": 3.888
+    },
+    {
+     "w": "Then",
+     "at": 4.588
+    },
+    {
+     "w": "Bronze",
+     "at": 4.838
+    },
+    {
+     "w": "whips",
+     "at": 5.3
+    },
+    {
+     "w": "it",
+     "at": 5.513
+    },
+    {
+     "w": "in",
+     "at": 5.6
+    },
+    {
+     "w": "A",
+     "at": 6.237
+    },
+    {
+     "w": "hat-trick",
+     "at": 6.35
+    },
+    {
+     "w": "before",
+     "at": 6.85
+    },
+    {
+     "w": "the",
+     "at": 7.138
+    },
+    {
+     "w": "half-hour",
+     "at": 7.225
+    }
+   ]
+  },
+  {
+   "label": "The run",
+   "text": "Watch it again. Ada waits by her defender. A split second before the cross, she darts in front. Too late to follow!",
+   "src": "/plays/narration/hegerberg-signature/3.m4a",
+   "seconds": 8.3,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "Ada",
+     "at": 1.462
+    },
+    {
+     "w": "waits",
+     "at": 1.75
+    },
+    {
+     "w": "by",
+     "at": 2.075
+    },
+    {
+     "w": "her",
+     "at": 2.237
+    },
+    {
+     "w": "defender",
+     "at": 2.35
+    },
+    {
+     "w": "A",
+     "at": 3.312
+    },
+    {
+     "w": "split",
+     "at": 3.438
+    },
+    {
+     "w": "second",
+     "at": 3.812
+    },
+    {
+     "w": "before",
+     "at": 4.162
+    },
+    {
+     "w": "the",
+     "at": 4.412
+    },
+    {
+     "w": "cross",
+     "at": 4.5
+    },
+    {
+     "w": "she",
+     "at": 4.95
+    },
+    {
+     "w": "darts",
+     "at": 5.112
+    },
+    {
+     "w": "in",
+     "at": 5.438
+    },
+    {
+     "w": "front",
+     "at": 5.588
+    },
+    {
+     "w": "Too",
+     "at": 6.275
+    },
+    {
+     "w": "late",
+     "at": 6.5
+    },
+    {
+     "w": "to",
+     "at": 6.725
+    },
+    {
+     "w": "follow",
+     "at": 6.85
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "The secret? Move a split second before the cross, not after. Dart to the near post, and your defender cannot follow.",
+   "src": "/plays/narration/hegerberg-signature/4.m4a",
+   "seconds": 8.1,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "secret",
+     "at": 0.463
+    },
+    {
+     "w": "Move",
+     "at": 1.312
+    },
+    {
+     "w": "a",
+     "at": 1.512
+    },
+    {
+     "w": "split",
+     "at": 1.587
+    },
+    {
+     "w": "second",
+     "at": 1.962
+    },
+    {
+     "w": "before",
+     "at": 2.312
+    },
+    {
+     "w": "the",
+     "at": 2.562
+    },
+    {
+     "w": "cross",
+     "at": 2.65
+    },
+    {
+     "w": "not",
+     "at": 3.125
+    },
+    {
+     "w": "after",
+     "at": 3.3
+    },
+    {
+     "w": "Dart",
+     "at": 4.225
+    },
+    {
+     "w": "to",
+     "at": 4.525
+    },
+    {
+     "w": "the",
+     "at": 4.612
+    },
+    {
+     "w": "near",
+     "at": 4.7
+    },
+    {
+     "w": "post",
+     "at": 4.938
+    },
+    {
+     "w": "and",
+     "at": 5.525
+    },
+    {
+     "w": "your",
+     "at": 5.638
+    },
+    {
+     "w": "defender",
+     "at": 5.75
+    },
+    {
+     "w": "cannot",
+     "at": 6.275
+    },
+    {
+     "w": "follow",
+     "at": 6.65
+    }
+   ]
+  }
+ ]
+}

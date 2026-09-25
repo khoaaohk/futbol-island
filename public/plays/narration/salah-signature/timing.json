@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Anfield, December 2017, in the snow: Liverpool against Everton. Joe Gomez passes to Mohamed Salah on the right. He spins away... cuts inside... left foot... what a goal!",
+   "src": "/plays/narration/salah-signature/1.m4a",
+   "seconds": 13.8,
+   "words": [
+    {
+     "w": "Anfield",
+     "at": 0.4
+    },
+    {
+     "w": "December",
+     "at": 0.975
+    },
+    {
+     "w": "2017",
+     "at": 1.4
+    },
+    {
+     "w": "in",
+     "at": 2.325
+    },
+    {
+     "w": "the",
+     "at": 2.413
+    },
+    {
+     "w": "snow",
+     "at": 2.525
+    },
+    {
+     "w": "Liverpool",
+     "at": 3.337
+    },
+    {
+     "w": "against",
+     "at": 3.925
+    },
+    {
+     "w": "Everton",
+     "at": 4.35
+    },
+    {
+     "w": "Joe",
+     "at": 5.425
+    },
+    {
+     "w": "Gomez",
+     "at": 5.675
+    },
+    {
+     "w": "passes",
+     "at": 6.138
+    },
+    {
+     "w": "to",
+     "at": 6.625
+    },
+    {
+     "w": "Mohamed",
+     "at": 6.725
+    },
+    {
+     "w": "Salah",
+     "at": 7.263
+    },
+    {
+     "w": "on",
+     "at": 7.612
+    },
+    {
+     "w": "the",
+     "at": 7.713
+    },
+    {
+     "w": "right",
+     "at": 7.8
+    },
+    {
+     "w": "He",
+     "at": 8.425
+    },
+    {
+     "w": "spins",
+     "at": 8.588
+    },
+    {
+     "w": "away",
+     "at": 8.95
+    },
+    {
+     "w": "cuts",
+     "at": 9.738
+    },
+    {
+     "w": "inside",
+     "at": 10.075
+    },
+    {
+     "w": "left",
+     "at": 11.113
+    },
+    {
+     "w": "foot",
+     "at": 11.412
+    },
+    {
+     "w": "what",
+     "at": 12.175
+    },
+    {
+     "w": "a",
+     "at": 12.312
+    },
+    {
+     "w": "goal",
+     "at": 12.387
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. Salah starts wide on the right. He cuts inside, onto his stronger left foot, and suddenly the whole goal opens up.",
+   "src": "/plays/narration/salah-signature/2.m4a",
+   "seconds": 9.9,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.188
+    },
+    {
+     "w": "Salah",
+     "at": 2.263
+    },
+    {
+     "w": "starts",
+     "at": 2.65
+    },
+    {
+     "w": "wide",
+     "at": 3.038
+    },
+    {
+     "w": "on",
+     "at": 3.362
+    },
+    {
+     "w": "the",
+     "at": 3.462
+    },
+    {
+     "w": "right",
+     "at": 3.55
+    },
+    {
+     "w": "He",
+     "at": 4.275
+    },
+    {
+     "w": "cuts",
+     "at": 4.4
+    },
+    {
+     "w": "inside",
+     "at": 4.7
+    },
+    {
+     "w": "onto",
+     "at": 5.4
+    },
+    {
+     "w": "his",
+     "at": 5.638
+    },
+    {
+     "w": "stronger",
+     "at": 5.787
+    },
+    {
+     "w": "left",
+     "at": 6.325
+    },
+    {
+     "w": "foot",
+     "at": 6.612
+    },
+    {
+     "w": "and",
+     "at": 7.175
+    },
+    {
+     "w": "suddenly",
+     "at": 7.312
+    },
+    {
+     "w": "the",
+     "at": 7.725
+    },
+    {
+     "w": "whole",
+     "at": 7.825
+    },
+    {
+     "w": "goal",
+     "at": 8.05
+    },
+    {
+     "w": "opens",
+     "at": 8.3
+    },
+    {
+     "w": "up",
+     "at": 8.7
+    }
+   ]
+  },
+  {
+   "label": "Round the defender",
+   "text": "He curls it around Ashley Williams, into the far top corner. Jordan Pickford can't reach it. It won the Pusk\u00e1s Award!",
+   "src": "/plays/narration/salah-signature/3.m4a",
+   "seconds": 8.6,
+   "words": [
+    {
+     "w": "He",
+     "at": 0.35
+    },
+    {
+     "w": "curls",
+     "at": 0.487
+    },
+    {
+     "w": "it",
+     "at": 0.863
+    },
+    {
+     "w": "around",
+     "at": 0.95
+    },
+    {
+     "w": "Ashley",
+     "at": 1.337
+    },
+    {
+     "w": "Williams",
+     "at": 1.8
+    },
+    {
+     "w": "into",
+     "at": 2.413
+    },
+    {
+     "w": "the",
+     "at": 2.587
+    },
+    {
+     "w": "far",
+     "at": 2.688
+    },
+    {
+     "w": "top",
+     "at": 2.975
+    },
+    {
+     "w": "corner",
+     "at": 3.25
+    },
+    {
+     "w": "Jordan",
+     "at": 4.225
+    },
+    {
+     "w": "Pickford",
+     "at": 4.65
+    },
+    {
+     "w": "can't",
+     "at": 5.1
+    },
+    {
+     "w": "reach",
+     "at": 5.375
+    },
+    {
+     "w": "it",
+     "at": 5.662
+    },
+    {
+     "w": "It",
+     "at": 6.175
+    },
+    {
+     "w": "won",
+     "at": 6.312
+    },
+    {
+     "w": "the",
+     "at": 6.438
+    },
+    {
+     "w": "Pusk\u00e1s",
+     "at": 6.525
+    },
+    {
+     "w": "Award",
+     "at": 7.1
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: cut inside onto your stronger foot, then curl it into the far corner.",
+   "src": "/plays/narration/salah-signature/4.m4a",
+   "seconds": 6.2,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "cut",
+     "at": 1.337
+    },
+    {
+     "w": "inside",
+     "at": 1.575
+    },
+    {
+     "w": "onto",
+     "at": 2.062
+    },
+    {
+     "w": "your",
+     "at": 2.288
+    },
+    {
+     "w": "stronger",
+     "at": 2.4
+    },
+    {
+     "w": "foot",
+     "at": 2.925
+    },
+    {
+     "w": "then",
+     "at": 3.55
+    },
+    {
+     "w": "curl",
+     "at": 3.788
+    },
+    {
+     "w": "it",
+     "at": 4.138
+    },
+    {
+     "w": "into",
+     "at": 4.213
+    },
+    {
+     "w": "the",
+     "at": 4.388
+    },
+    {
+     "w": "far",
+     "at": 4.487
+    },
+    {
+     "w": "corner",
+     "at": 4.775
+    }
+   ]
+  }
+ ]
+}

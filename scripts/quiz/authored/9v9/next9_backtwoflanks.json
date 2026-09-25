@@ -1,0 +1,123 @@
+{
+ "lesson": "next9_backtwoflanks",
+ "questions": [
+  {
+   "q": "True or false? Our right back should leave the striker to chase the far winger.",
+   "options": [
+    "True",
+    "False"
+   ],
+   "correct": 1,
+   "explain": "Right, it's false. The backs keep their players, and the far wide midfielder covers the outside run.",
+   "choiceExplanations": [
+    "If the back leaves, the striker is free in front of goal. The right midfielder takes that run.",
+    "Right, it's false. The backs keep their players, and the far wide midfielder covers the outside run."
+   ],
+   "visual": {
+    "kind": "trueFalse",
+    "frame": {
+     "step": 3,
+     "focus": [
+      "RB",
+      "st",
+      "lw"
+     ]
+    }
+   }
+  },
+  {
+   "q": "Put the defending and the regain in order, from first to last.",
+   "options": [
+    "Right midfielder tracks the far winger",
+    "Blue passes back inside",
+    "Our central midfielder wins control",
+    "Right midfielder returns to width"
+   ],
+   "correct": 0,
+   "explain": "Yes. We cover the far run, blue goes inside, we win it, then width comes back.",
+   "choiceExplanations": [
+    "Yes. We cover the far run, blue goes inside, we win it, then width comes back.",
+    "Blue only goes back inside because the far runner is already covered.",
+    "We win control after blue's inside pass, not before it.",
+    "Width returns last, once the temporary defending job has ended."
+   ],
+   "visual": {
+    "kind": "order",
+    "frame": {
+     "step": 6,
+     "focus": [
+      "RM",
+      "LC"
+     ]
+    }
+   }
+  },
+  {
+   "q": "Now blue attacks down our right. Where does our left midfielder recover?",
+   "options": [
+    "Into the central channel",
+    "Press the ball with the right back",
+    "Track the far winger outside"
+   ],
+   "correct": 2,
+   "explain": "Right. The far wide midfielder covers the outside run, just like on the other side.",
+   "choiceExplanations": [
+    "Our central midfielders already protect inside, so the far winger runs free outside.",
+    "The right back already delays the ball, so another player there leaves the far run open.",
+    "Right. The far wide midfielder covers the outside run, just like on the other side."
+   ],
+   "visual": {
+    "kind": "dragToZone",
+    "frame": {
+     "step": 4,
+     "ball": "lw",
+     "place": {
+      "RB": {
+       "x": 205,
+       "y": 325
+      },
+      "LB": {
+       "x": 130,
+       "y": 335
+      }
+     },
+     "marks": [
+      {
+       "kind": "run",
+       "from": "rw",
+       "to": {
+        "x": 45,
+        "y": 365
+       }
+      }
+     ],
+     "focus": [
+      "LM",
+      "rw"
+     ]
+    },
+    "drag": "LM",
+    "zones": [
+     {
+      "x": 98,
+      "y": 318,
+      "w": 36,
+      "h": 28
+     },
+     {
+      "x": 205,
+      "y": 285,
+      "w": 36,
+      "h": 28
+     },
+     {
+      "x": 62,
+      "y": 345,
+      "w": 36,
+      "h": 28
+     }
+    ]
+   }
+  }
+ ]
+}

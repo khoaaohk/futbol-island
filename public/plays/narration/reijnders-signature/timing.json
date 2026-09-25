@@ -1,0 +1,350 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Real Madrid against Milan, in the Champions League. Le\u00e3o gallops down the left, past two defenders, into the box, and squares it for Reijnders... Goal!",
+   "src": "/plays/narration/reijnders-signature/1.m4a",
+   "seconds": 10.7,
+   "words": [
+    {
+     "w": "Real",
+     "at": 0.425
+    },
+    {
+     "w": "Madrid",
+     "at": 0.725
+    },
+    {
+     "w": "against",
+     "at": 1.137
+    },
+    {
+     "w": "Milan",
+     "at": 1.475
+    },
+    {
+     "w": "in",
+     "at": 2.1
+    },
+    {
+     "w": "the",
+     "at": 2.188
+    },
+    {
+     "w": "Champions",
+     "at": 2.275
+    },
+    {
+     "w": "League",
+     "at": 2.85
+    },
+    {
+     "w": "Le\u00e3o",
+     "at": 3.75
+    },
+    {
+     "w": "gallops",
+     "at": 4.138
+    },
+    {
+     "w": "down",
+     "at": 4.575
+    },
+    {
+     "w": "the",
+     "at": 4.763
+    },
+    {
+     "w": "left",
+     "at": 4.85
+    },
+    {
+     "w": "past",
+     "at": 5.4
+    },
+    {
+     "w": "two",
+     "at": 5.737
+    },
+    {
+     "w": "defenders",
+     "at": 5.95
+    },
+    {
+     "w": "into",
+     "at": 6.688
+    },
+    {
+     "w": "the",
+     "at": 6.862
+    },
+    {
+     "w": "box",
+     "at": 6.95
+    },
+    {
+     "w": "and",
+     "at": 7.412
+    },
+    {
+     "w": "squares",
+     "at": 7.537
+    },
+    {
+     "w": "it",
+     "at": 7.975
+    },
+    {
+     "w": "for",
+     "at": 8.1
+    },
+    {
+     "w": "Reijnders",
+     "at": 8.225
+    },
+    {
+     "w": "Goal",
+     "at": 9.312
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. The defenders chase Le\u00e3o, and Reijnders runs late from midfield, into the empty space. One touch, then a low shot, right under the keeper!",
+   "src": "/plays/narration/reijnders-signature/2.m4a",
+   "seconds": 11.6,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.188
+    },
+    {
+     "w": "The",
+     "at": 2.237
+    },
+    {
+     "w": "defenders",
+     "at": 2.35
+    },
+    {
+     "w": "chase",
+     "at": 2.913
+    },
+    {
+     "w": "Le\u00e3o",
+     "at": 3.25
+    },
+    {
+     "w": "and",
+     "at": 3.95
+    },
+    {
+     "w": "Reijnders",
+     "at": 4.075
+    },
+    {
+     "w": "runs",
+     "at": 4.575
+    },
+    {
+     "w": "late",
+     "at": 4.912
+    },
+    {
+     "w": "from",
+     "at": 5.225
+    },
+    {
+     "w": "midfield",
+     "at": 5.4
+    },
+    {
+     "w": "into",
+     "at": 6.1
+    },
+    {
+     "w": "the",
+     "at": 6.312
+    },
+    {
+     "w": "empty",
+     "at": 6.45
+    },
+    {
+     "w": "space",
+     "at": 6.838
+    },
+    {
+     "w": "One",
+     "at": 7.9
+    },
+    {
+     "w": "touch",
+     "at": 8.188
+    },
+    {
+     "w": "then",
+     "at": 8.65
+    },
+    {
+     "w": "a",
+     "at": 8.787
+    },
+    {
+     "w": "low",
+     "at": 8.875
+    },
+    {
+     "w": "shot",
+     "at": 9.175
+    },
+    {
+     "w": "right",
+     "at": 9.713
+    },
+    {
+     "w": "under",
+     "at": 9.963
+    },
+    {
+     "w": "the",
+     "at": 10.137
+    },
+    {
+     "w": "keeper",
+     "at": 10.225
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: arrive late in the box. Defenders watch the strikers, and forget the midfielder. So wait, then run into the gap, and be the one they forget!",
+   "src": "/plays/narration/reijnders-signature/3.m4a",
+   "seconds": 10.5,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "arrive",
+     "at": 1.062
+    },
+    {
+     "w": "late",
+     "at": 1.538
+    },
+    {
+     "w": "in",
+     "at": 1.812
+    },
+    {
+     "w": "the",
+     "at": 1.887
+    },
+    {
+     "w": "box",
+     "at": 1.975
+    },
+    {
+     "w": "Defenders",
+     "at": 2.888
+    },
+    {
+     "w": "watch",
+     "at": 3.513
+    },
+    {
+     "w": "the",
+     "at": 3.85
+    },
+    {
+     "w": "strikers",
+     "at": 3.95
+    },
+    {
+     "w": "and",
+     "at": 4.55
+    },
+    {
+     "w": "forget",
+     "at": 4.675
+    },
+    {
+     "w": "the",
+     "at": 5.0
+    },
+    {
+     "w": "midfielder",
+     "at": 5.1
+    },
+    {
+     "w": "So",
+     "at": 6.263
+    },
+    {
+     "w": "wait",
+     "at": 6.537
+    },
+    {
+     "w": "then",
+     "at": 7.125
+    },
+    {
+     "w": "run",
+     "at": 7.362
+    },
+    {
+     "w": "into",
+     "at": 7.562
+    },
+    {
+     "w": "the",
+     "at": 7.737
+    },
+    {
+     "w": "gap",
+     "at": 7.825
+    },
+    {
+     "w": "and",
+     "at": 8.275
+    },
+    {
+     "w": "be",
+     "at": 8.4
+    },
+    {
+     "w": "the",
+     "at": 8.55
+    },
+    {
+     "w": "one",
+     "at": 8.65
+    },
+    {
+     "w": "they",
+     "at": 8.875
+    },
+    {
+     "w": "forget",
+     "at": 9.037
+    }
+   ]
+  }
+ ]
+}

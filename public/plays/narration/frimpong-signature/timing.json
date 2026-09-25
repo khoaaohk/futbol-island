@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The run, live",
+   "text": "Wembley, August 2025. Liverpool play Crystal Palace. Jeremie Frimpong races down the right wing. He skips past Tyrick Mitchell, into the box... and his chip floats in!",
+   "src": "/plays/narration/frimpong-signature/1.m4a",
+   "seconds": 13.0,
+   "words": [
+    {
+     "w": "Wembley",
+     "at": 0.4
+    },
+    {
+     "w": "August",
+     "at": 0.925
+    },
+    {
+     "w": "2025",
+     "at": 1.3
+    },
+    {
+     "w": "Liverpool",
+     "at": 2.8
+    },
+    {
+     "w": "play",
+     "at": 3.362
+    },
+    {
+     "w": "Crystal",
+     "at": 3.688
+    },
+    {
+     "w": "Palace",
+     "at": 4.1
+    },
+    {
+     "w": "Jeremie",
+     "at": 5.05
+    },
+    {
+     "w": "Frimpong",
+     "at": 5.537
+    },
+    {
+     "w": "races",
+     "at": 6.1
+    },
+    {
+     "w": "down",
+     "at": 6.55
+    },
+    {
+     "w": "the",
+     "at": 6.787
+    },
+    {
+     "w": "right",
+     "at": 6.875
+    },
+    {
+     "w": "wing",
+     "at": 7.175
+    },
+    {
+     "w": "He",
+     "at": 7.85
+    },
+    {
+     "w": "skips",
+     "at": 8.012
+    },
+    {
+     "w": "past",
+     "at": 8.375
+    },
+    {
+     "w": "Tyrick",
+     "at": 8.787
+    },
+    {
+     "w": "Mitchell",
+     "at": 9.15
+    },
+    {
+     "w": "into",
+     "at": 9.55
+    },
+    {
+     "w": "the",
+     "at": 9.738
+    },
+    {
+     "w": "box",
+     "at": 9.825
+    },
+    {
+     "w": "and",
+     "at": 10.725
+    },
+    {
+     "w": "his",
+     "at": 10.838
+    },
+    {
+     "w": "chip",
+     "at": 11.025
+    },
+    {
+     "w": "floats",
+     "at": 11.312
+    },
+    {
+     "w": "in",
+     "at": 11.7
+    }
+   ]
+  },
+  {
+   "label": "The rocket run",
+   "text": "Watch again. Szoboszlai slips it to him and he flies. One quick jink inside, and the defender is left behind.",
+   "src": "/plays/narration/frimpong-signature/2.m4a",
+   "seconds": 8.4,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "Szoboszlai",
+     "at": 1.525
+    },
+    {
+     "w": "slips",
+     "at": 2.163
+    },
+    {
+     "w": "it",
+     "at": 2.438
+    },
+    {
+     "w": "to",
+     "at": 2.525
+    },
+    {
+     "w": "him",
+     "at": 2.65
+    },
+    {
+     "w": "and",
+     "at": 2.925
+    },
+    {
+     "w": "he",
+     "at": 3.038
+    },
+    {
+     "w": "flies",
+     "at": 3.163
+    },
+    {
+     "w": "One",
+     "at": 4.088
+    },
+    {
+     "w": "quick",
+     "at": 4.338
+    },
+    {
+     "w": "jink",
+     "at": 4.612
+    },
+    {
+     "w": "inside",
+     "at": 4.925
+    },
+    {
+     "w": "and",
+     "at": 5.7
+    },
+    {
+     "w": "the",
+     "at": 5.812
+    },
+    {
+     "w": "defender",
+     "at": 5.9
+    },
+    {
+     "w": "is",
+     "at": 6.425
+    },
+    {
+     "w": "left",
+     "at": 6.575
+    },
+    {
+     "w": "behind",
+     "at": 6.85
+    }
+   ]
+  },
+  {
+   "label": "Cross or shot?",
+   "text": "Then he lifts it over Dean Henderson. Was it a cross or a shot? It hits the far post and drops in!",
+   "src": "/plays/narration/frimpong-signature/3.m4a",
+   "seconds": 7.5,
+   "words": [
+    {
+     "w": "Then",
+     "at": 0.35
+    },
+    {
+     "w": "he",
+     "at": 0.475
+    },
+    {
+     "w": "lifts",
+     "at": 0.637
+    },
+    {
+     "w": "it",
+     "at": 0.938
+    },
+    {
+     "w": "over",
+     "at": 1.012
+    },
+    {
+     "w": "Dean",
+     "at": 1.262
+    },
+    {
+     "w": "Henderson",
+     "at": 1.525
+    },
+    {
+     "w": "Was",
+     "at": 2.6
+    },
+    {
+     "w": "it",
+     "at": 2.763
+    },
+    {
+     "w": "a",
+     "at": 2.837
+    },
+    {
+     "w": "cross",
+     "at": 2.938
+    },
+    {
+     "w": "or",
+     "at": 3.5
+    },
+    {
+     "w": "a",
+     "at": 3.612
+    },
+    {
+     "w": "shot",
+     "at": 3.725
+    },
+    {
+     "w": "It",
+     "at": 4.475
+    },
+    {
+     "w": "hits",
+     "at": 4.625
+    },
+    {
+     "w": "the",
+     "at": 4.875
+    },
+    {
+     "w": "far",
+     "at": 4.975
+    },
+    {
+     "w": "post",
+     "at": 5.237
+    },
+    {
+     "w": "and",
+     "at": 5.662
+    },
+    {
+     "w": "drops",
+     "at": 5.775
+    },
+    {
+     "w": "in",
+     "at": 6.2
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "Your turn! Use your speed to get past the defender. Then look up before you cross, and pick your target.",
+   "src": "/plays/narration/frimpong-signature/4.m4a",
+   "seconds": 7.1,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "Use",
+     "at": 1.288
+    },
+    {
+     "w": "your",
+     "at": 1.512
+    },
+    {
+     "w": "speed",
+     "at": 1.663
+    },
+    {
+     "w": "to",
+     "at": 2.025
+    },
+    {
+     "w": "get",
+     "at": 2.125
+    },
+    {
+     "w": "past",
+     "at": 2.3
+    },
+    {
+     "w": "the",
+     "at": 2.638
+    },
+    {
+     "w": "defender",
+     "at": 2.725
+    },
+    {
+     "w": "Then",
+     "at": 3.737
+    },
+    {
+     "w": "look",
+     "at": 3.975
+    },
+    {
+     "w": "up",
+     "at": 4.138
+    },
+    {
+     "w": "before",
+     "at": 4.287
+    },
+    {
+     "w": "you",
+     "at": 4.55
+    },
+    {
+     "w": "cross",
+     "at": 4.675
+    },
+    {
+     "w": "and",
+     "at": 5.2
+    },
+    {
+     "w": "pick",
+     "at": 5.325
+    },
+    {
+     "w": "your",
+     "at": 5.537
+    },
+    {
+     "w": "target",
+     "at": 5.65
+    }
+   ]
+  }
+ ]
+}

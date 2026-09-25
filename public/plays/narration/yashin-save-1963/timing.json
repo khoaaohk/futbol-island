@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The Black Spider",
+   "text": "Wembley, 1963. England play the Rest of the World. In goal, all in black, is Lev Yashin, the Black Spider. Jimmy Greaves hits a rocket... but Yashin punches it all the way back to halfway!",
+   "src": "/plays/narration/yashin-save-1963/1.m4a",
+   "seconds": 14.5,
+   "words": [
+    {
+     "w": "Wembley",
+     "at": 0.4
+    },
+    {
+     "w": "1963",
+     "at": 0.875
+    },
+    {
+     "w": "England",
+     "at": 2.513
+    },
+    {
+     "w": "play",
+     "at": 2.987
+    },
+    {
+     "w": "the",
+     "at": 3.25
+    },
+    {
+     "w": "Rest",
+     "at": 3.35
+    },
+    {
+     "w": "of",
+     "at": 3.587
+    },
+    {
+     "w": "the",
+     "at": 3.663
+    },
+    {
+     "w": "World",
+     "at": 3.75
+    },
+    {
+     "w": "In",
+     "at": 4.65
+    },
+    {
+     "w": "goal",
+     "at": 4.862
+    },
+    {
+     "w": "all",
+     "at": 5.4
+    },
+    {
+     "w": "in",
+     "at": 5.65
+    },
+    {
+     "w": "black",
+     "at": 5.8
+    },
+    {
+     "w": "is",
+     "at": 6.325
+    },
+    {
+     "w": "Lev",
+     "at": 6.487
+    },
+    {
+     "w": "Yashin",
+     "at": 6.763
+    },
+    {
+     "w": "the",
+     "at": 7.425
+    },
+    {
+     "w": "Black",
+     "at": 7.525
+    },
+    {
+     "w": "Spider",
+     "at": 7.862
+    },
+    {
+     "w": "Jimmy",
+     "at": 8.8
+    },
+    {
+     "w": "Greaves",
+     "at": 9.137
+    },
+    {
+     "w": "hits",
+     "at": 9.625
+    },
+    {
+     "w": "a",
+     "at": 9.863
+    },
+    {
+     "w": "rocket",
+     "at": 9.925
+    },
+    {
+     "w": "but",
+     "at": 10.925
+    },
+    {
+     "w": "Yashin",
+     "at": 11.075
+    },
+    {
+     "w": "punches",
+     "at": 11.537
+    },
+    {
+     "w": "it",
+     "at": 11.95
+    },
+    {
+     "w": "all",
+     "at": 12.1
+    },
+    {
+     "w": "the",
+     "at": 12.338
+    },
+    {
+     "w": "way",
+     "at": 12.425
+    },
+    {
+     "w": "back",
+     "at": 12.625
+    },
+    {
+     "w": "to",
+     "at": 12.875
+    },
+    {
+     "w": "halfway",
+     "at": 12.975
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. Yashin doesn't wait on his line. He steps out and meets the ball with a boxer's punch!",
+   "src": "/plays/narration/yashin-save-1963/2.m4a",
+   "seconds": 7.7,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.238
+    },
+    {
+     "w": "Yashin",
+     "at": 2.275
+    },
+    {
+     "w": "doesn't",
+     "at": 2.725
+    },
+    {
+     "w": "wait",
+     "at": 3.0
+    },
+    {
+     "w": "on",
+     "at": 3.212
+    },
+    {
+     "w": "his",
+     "at": 3.312
+    },
+    {
+     "w": "line",
+     "at": 3.475
+    },
+    {
+     "w": "He",
+     "at": 4.25
+    },
+    {
+     "w": "steps",
+     "at": 4.375
+    },
+    {
+     "w": "out",
+     "at": 4.7
+    },
+    {
+     "w": "and",
+     "at": 4.888
+    },
+    {
+     "w": "meets",
+     "at": 5.0
+    },
+    {
+     "w": "the",
+     "at": 5.275
+    },
+    {
+     "w": "ball",
+     "at": 5.375
+    },
+    {
+     "w": "with",
+     "at": 5.662
+    },
+    {
+     "w": "a",
+     "at": 5.763
+    },
+    {
+     "w": "boxer's",
+     "at": 5.825
+    },
+    {
+     "w": "punch",
+     "at": 6.3
+    }
+   ]
+  },
+  {
+   "label": "Friends",
+   "text": "Greaves can't believe it. The two stars fall into each other's arms, laughing!",
+   "src": "/plays/narration/yashin-save-1963/3.m4a",
+   "seconds": 5.6,
+   "words": [
+    {
+     "w": "Greaves",
+     "at": 0.375
+    },
+    {
+     "w": "can't",
+     "at": 0.75
+    },
+    {
+     "w": "believe",
+     "at": 1.025
+    },
+    {
+     "w": "it",
+     "at": 1.425
+    },
+    {
+     "w": "The",
+     "at": 2.0
+    },
+    {
+     "w": "two",
+     "at": 2.1
+    },
+    {
+     "w": "stars",
+     "at": 2.275
+    },
+    {
+     "w": "fall",
+     "at": 2.7
+    },
+    {
+     "w": "into",
+     "at": 2.888
+    },
+    {
+     "w": "each",
+     "at": 3.125
+    },
+    {
+     "w": "other's",
+     "at": 3.288
+    },
+    {
+     "w": "arms",
+     "at": 3.575
+    },
+    {
+     "w": "laughing",
+     "at": 4.088
+    }
+   ]
+  },
+  {
+   "label": "The lesson",
+   "text": "Yashin shouted orders to his defenders. So shout loud, come for the ball with confidence. Your area is your home!",
+   "src": "/plays/narration/yashin-save-1963/4.m4a",
+   "seconds": 8.6,
+   "words": [
+    {
+     "w": "Yashin",
+     "at": 0.425
+    },
+    {
+     "w": "shouted",
+     "at": 0.875
+    },
+    {
+     "w": "orders",
+     "at": 1.275
+    },
+    {
+     "w": "to",
+     "at": 1.675
+    },
+    {
+     "w": "his",
+     "at": 1.762
+    },
+    {
+     "w": "defenders",
+     "at": 1.925
+    },
+    {
+     "w": "So",
+     "at": 3.0
+    },
+    {
+     "w": "shout",
+     "at": 3.3
+    },
+    {
+     "w": "loud",
+     "at": 3.625
+    },
+    {
+     "w": "come",
+     "at": 4.225
+    },
+    {
+     "w": "for",
+     "at": 4.475
+    },
+    {
+     "w": "the",
+     "at": 4.588
+    },
+    {
+     "w": "ball",
+     "at": 4.675
+    },
+    {
+     "w": "with",
+     "at": 4.987
+    },
+    {
+     "w": "confidence",
+     "at": 5.15
+    },
+    {
+     "w": "Your",
+     "at": 6.263
+    },
+    {
+     "w": "area",
+     "at": 6.463
+    },
+    {
+     "w": "is",
+     "at": 6.875
+    },
+    {
+     "w": "your",
+     "at": 7.0
+    },
+    {
+     "w": "home",
+     "at": 7.175
+    }
+   ]
+  }
+ ]
+}

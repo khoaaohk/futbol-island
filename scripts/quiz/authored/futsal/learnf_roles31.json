@@ -1,0 +1,136 @@
+{
+ "lesson": "learnf_roles31",
+ "questions": [
+  {
+   "q": "The fixo is hiding. Tap the space where the fixo plays in the 3-1.",
+   "options": [
+    "Behind the ball, in the middle",
+    "Ahead of the ball, in the middle",
+    "Deep in the right corner"
+   ],
+   "correct": 0,
+   "explain": "Yes. The fixo stays behind the ball, so there is always a safe pass back.",
+   "choiceExplanations": [
+    "Yes. The fixo stays behind the ball, so there is always a safe pass back.",
+    "That space is ahead of the ball. The fixo stays behind the ball to give a safe pass back.",
+    "That is out wide in the corner. The fixo stays in the middle, behind the ball, to help both sides."
+   ],
+   "visual": {
+    "kind": "tapSpot",
+    "frame": {
+     "step": 3,
+     "hide": [
+      "cb"
+     ],
+     "focus": [
+      "lm",
+      "st"
+     ]
+    },
+    "spots": [
+     {
+      "x": 135,
+      "y": 305
+     },
+     {
+      "x": 170,
+      "y": 195
+     },
+     {
+      "x": 238,
+      "y": 335
+     }
+    ]
+   }
+  },
+  {
+   "q": "True or false? In 3-1, the goalkeeper is one of the three.",
+   "options": [
+    "True",
+    "False"
+   ],
+   "correct": 1,
+   "explain": "Right, it's false. 3-1 counts only the four outfield players: the fixo and two alas, then one pivot.",
+   "choiceExplanations": [
+    "Not quite. The goalkeeper is separate. 3-1 counts only the four outfield players.",
+    "Right, it's false. 3-1 counts only the four outfield players: the fixo and two alas, then one pivot."
+   ],
+   "visual": {
+    "kind": "trueFalse",
+    "frame": {
+     "step": 2,
+     "focus": [
+      "gk"
+     ],
+     "marks": [
+      {
+       "kind": "zone",
+       "x": 135,
+       "y": 268,
+       "w": 232,
+       "h": 88,
+       "text": "3",
+       "tone": "gold"
+      },
+      {
+       "kind": "zone",
+       "x": 135,
+       "y": 128,
+       "w": 70,
+       "h": 52,
+       "text": "1",
+       "tone": "gold"
+      }
+     ],
+     "view": {
+      "x": -10,
+      "y": 80,
+      "w": 290,
+      "h": 320
+     }
+    }
+   }
+  },
+  {
+   "q": "The right ala has the ball. A defender blocks the pivot. Which pass is safe?",
+   "options": [
+    "Pass to the pivot ahead",
+    "Pass back to the fixo",
+    "Long pass across to the left ala"
+   ],
+   "correct": 1,
+   "explain": "Yes. The fixo is behind the ball with a clear lane, so we keep the ball and try again.",
+   "choiceExplanations": [
+    "A defender stands in that lane, so the pass could be cut out.",
+    "Yes. The fixo is behind the ball with a clear lane, so we keep the ball and try again.",
+    "Their pivot is close to that long pass. If it is stolen, they are right by our goal."
+   ],
+   "visual": {
+    "kind": "bestPass",
+    "frame": {
+     "step": 12,
+     "place": {
+      "drm": {
+       "x": 182,
+       "y": 192
+      },
+      "dlm": {
+       "x": 50,
+       "y": 170
+      }
+     },
+     "ball": "rm",
+     "focus": [
+      "rm"
+     ]
+    },
+    "from": "rm",
+    "to": [
+     "st",
+     "cb",
+     "lm"
+    ]
+   }
+  }
+ ]
+}

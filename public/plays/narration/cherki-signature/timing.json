@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "First game for France",
+   "text": "Stuttgart. Rayan Cherki's first game for France, in white. Mbapp\u00e9 passes to him on the edge of the box. He pops it up and smashes a volley. Goal!",
+   "src": "/plays/narration/cherki-signature/1.m4a",
+   "seconds": 10.8,
+   "words": [
+    {
+     "w": "Stuttgart",
+     "at": 0.375
+    },
+    {
+     "w": "Rayan",
+     "at": 1.163
+    },
+    {
+     "w": "Cherki's",
+     "at": 1.613
+    },
+    {
+     "w": "first",
+     "at": 2.1
+    },
+    {
+     "w": "game",
+     "at": 2.375
+    },
+    {
+     "w": "for",
+     "at": 2.625
+    },
+    {
+     "w": "France",
+     "at": 2.763
+    },
+    {
+     "w": "in",
+     "at": 3.3
+    },
+    {
+     "w": "white",
+     "at": 3.45
+    },
+    {
+     "w": "Mbapp\u00e9",
+     "at": 4.287
+    },
+    {
+     "w": "passes",
+     "at": 4.838
+    },
+    {
+     "w": "to",
+     "at": 5.3
+    },
+    {
+     "w": "him",
+     "at": 5.425
+    },
+    {
+     "w": "on",
+     "at": 5.612
+    },
+    {
+     "w": "the",
+     "at": 5.713
+    },
+    {
+     "w": "edge",
+     "at": 5.825
+    },
+    {
+     "w": "of",
+     "at": 6.013
+    },
+    {
+     "w": "the",
+     "at": 6.088
+    },
+    {
+     "w": "box",
+     "at": 6.175
+    },
+    {
+     "w": "He",
+     "at": 6.975
+    },
+    {
+     "w": "pops",
+     "at": 7.1
+    },
+    {
+     "w": "it",
+     "at": 7.388
+    },
+    {
+     "w": "up",
+     "at": 7.463
+    },
+    {
+     "w": "and",
+     "at": 7.638
+    },
+    {
+     "w": "smashes",
+     "at": 7.763
+    },
+    {
+     "w": "a",
+     "at": 8.262
+    },
+    {
+     "w": "volley",
+     "at": 8.325
+    },
+    {
+     "w": "Goal",
+     "at": 9.35
+    }
+   ]
+  },
+  {
+   "label": "Pop and volley",
+   "text": "Watch again. One touch lifts the ball up. Then a volley with his left foot, too fast for the keeper.",
+   "src": "/plays/narration/cherki-signature/2.m4a",
+   "seconds": 7.3,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "One",
+     "at": 1.462
+    },
+    {
+     "w": "touch",
+     "at": 1.738
+    },
+    {
+     "w": "lifts",
+     "at": 2.075
+    },
+    {
+     "w": "the",
+     "at": 2.4
+    },
+    {
+     "w": "ball",
+     "at": 2.5
+    },
+    {
+     "w": "up",
+     "at": 2.8
+    },
+    {
+     "w": "Then",
+     "at": 3.438
+    },
+    {
+     "w": "a",
+     "at": 3.587
+    },
+    {
+     "w": "volley",
+     "at": 3.65
+    },
+    {
+     "w": "with",
+     "at": 4.05
+    },
+    {
+     "w": "his",
+     "at": 4.162
+    },
+    {
+     "w": "left",
+     "at": 4.325
+    },
+    {
+     "w": "foot",
+     "at": 4.612
+    },
+    {
+     "w": "too",
+     "at": 5.088
+    },
+    {
+     "w": "fast",
+     "at": 5.338
+    },
+    {
+     "w": "for",
+     "at": 5.7
+    },
+    {
+     "w": "the",
+     "at": 5.812
+    },
+    {
+     "w": "keeper",
+     "at": 5.9
+    }
+   ]
+  },
+  {
+   "label": "The cross",
+   "text": "Near the end, he is out on the right. He cuts inside onto his left foot and curls a cross. Kolo Muani heads it in!",
+   "src": "/plays/narration/cherki-signature/3.m4a",
+   "seconds": 8.6,
+   "words": [
+    {
+     "w": "Near",
+     "at": 0.4
+    },
+    {
+     "w": "the",
+     "at": 0.613
+    },
+    {
+     "w": "end",
+     "at": 0.75
+    },
+    {
+     "w": "he",
+     "at": 1.275
+    },
+    {
+     "w": "is",
+     "at": 1.425
+    },
+    {
+     "w": "out",
+     "at": 1.587
+    },
+    {
+     "w": "on",
+     "at": 1.788
+    },
+    {
+     "w": "the",
+     "at": 1.887
+    },
+    {
+     "w": "right",
+     "at": 1.975
+    },
+    {
+     "w": "He",
+     "at": 2.7
+    },
+    {
+     "w": "cuts",
+     "at": 2.825
+    },
+    {
+     "w": "inside",
+     "at": 3.125
+    },
+    {
+     "w": "onto",
+     "at": 3.663
+    },
+    {
+     "w": "his",
+     "at": 3.888
+    },
+    {
+     "w": "left",
+     "at": 4.05
+    },
+    {
+     "w": "foot",
+     "at": 4.338
+    },
+    {
+     "w": "and",
+     "at": 4.65
+    },
+    {
+     "w": "curls",
+     "at": 4.775
+    },
+    {
+     "w": "a",
+     "at": 5.088
+    },
+    {
+     "w": "cross",
+     "at": 5.15
+    },
+    {
+     "w": "Kolo",
+     "at": 6.162
+    },
+    {
+     "w": "Muani",
+     "at": 6.575
+    },
+    {
+     "w": "heads",
+     "at": 7.0
+    },
+    {
+     "w": "it",
+     "at": 7.237
+    },
+    {
+     "w": "in",
+     "at": 7.325
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: practise with both feet, so defenders can't guess which way you will go!",
+   "src": "/plays/narration/cherki-signature/4.m4a",
+   "seconds": 6.0,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "practise",
+     "at": 1.312
+    },
+    {
+     "w": "with",
+     "at": 1.762
+    },
+    {
+     "w": "both",
+     "at": 1.925
+    },
+    {
+     "w": "feet",
+     "at": 2.237
+    },
+    {
+     "w": "so",
+     "at": 2.75
+    },
+    {
+     "w": "defenders",
+     "at": 2.925
+    },
+    {
+     "w": "can't",
+     "at": 3.45
+    },
+    {
+     "w": "guess",
+     "at": 3.725
+    },
+    {
+     "w": "which",
+     "at": 4.0
+    },
+    {
+     "w": "way",
+     "at": 4.2
+    },
+    {
+     "w": "you",
+     "at": 4.425
+    },
+    {
+     "w": "will",
+     "at": 4.525
+    },
+    {
+     "w": "go",
+     "at": 4.7
+    }
+   ]
+  }
+ ]
+}

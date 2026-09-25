@@ -1,0 +1,358 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Right on time",
+   "text": "Seconds into the second half at Molineux. Pervis Estupi\u00f1\u00e1n races forward. March finds Welbeck. Powerful shot, saved! Mitoma lays it back. Low left foot, into the corner!",
+   "src": "/plays/narration/estupinan-signature/1.m4a",
+   "seconds": 12.8,
+   "words": [
+    {
+     "w": "Seconds",
+     "at": 0.375
+    },
+    {
+     "w": "into",
+     "at": 0.713
+    },
+    {
+     "w": "the",
+     "at": 0.887
+    },
+    {
+     "w": "second",
+     "at": 1.012
+    },
+    {
+     "w": "half",
+     "at": 1.35
+    },
+    {
+     "w": "at",
+     "at": 1.613
+    },
+    {
+     "w": "Molineux",
+     "at": 1.7
+    },
+    {
+     "w": "Pervis",
+     "at": 2.688
+    },
+    {
+     "w": "Estupi\u00f1\u00e1n",
+     "at": 3.05
+    },
+    {
+     "w": "races",
+     "at": 3.8
+    },
+    {
+     "w": "forward",
+     "at": 4.237
+    },
+    {
+     "w": "March",
+     "at": 5.037
+    },
+    {
+     "w": "finds",
+     "at": 5.375
+    },
+    {
+     "w": "Welbeck",
+     "at": 5.725
+    },
+    {
+     "w": "Powerful",
+     "at": 6.638
+    },
+    {
+     "w": "shot",
+     "at": 7.2
+    },
+    {
+     "w": "saved",
+     "at": 7.725
+    },
+    {
+     "w": "Mitoma",
+     "at": 8.488
+    },
+    {
+     "w": "lays",
+     "at": 9.025
+    },
+    {
+     "w": "it",
+     "at": 9.312
+    },
+    {
+     "w": "back",
+     "at": 9.4
+    },
+    {
+     "w": "Low",
+     "at": 10.25
+    },
+    {
+     "w": "left",
+     "at": 10.55
+    },
+    {
+     "w": "foot",
+     "at": 10.838
+    },
+    {
+     "w": "into",
+     "at": 11.137
+    },
+    {
+     "w": "the",
+     "at": 11.312
+    },
+    {
+     "w": "corner",
+     "at": 11.4
+    }
+   ]
+  },
+  {
+   "label": "No one follows",
+   "text": "Watch again, slowly. He sprints from deep, and no one follows. Mitoma cleverly lays it into his path. Brighton won four to one.",
+   "src": "/plays/narration/estupinan-signature/2.m4a",
+   "seconds": 9.6,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.113
+    },
+    {
+     "w": "He",
+     "at": 2.0
+    },
+    {
+     "w": "sprints",
+     "at": 2.163
+    },
+    {
+     "w": "from",
+     "at": 2.525
+    },
+    {
+     "w": "deep",
+     "at": 2.737
+    },
+    {
+     "w": "and",
+     "at": 3.075
+    },
+    {
+     "w": "no",
+     "at": 3.2
+    },
+    {
+     "w": "one",
+     "at": 3.4
+    },
+    {
+     "w": "follows",
+     "at": 3.612
+    },
+    {
+     "w": "Mitoma",
+     "at": 4.588
+    },
+    {
+     "w": "cleverly",
+     "at": 5.162
+    },
+    {
+     "w": "lays",
+     "at": 5.65
+    },
+    {
+     "w": "it",
+     "at": 5.975
+    },
+    {
+     "w": "into",
+     "at": 6.062
+    },
+    {
+     "w": "his",
+     "at": 6.263
+    },
+    {
+     "w": "path",
+     "at": 6.438
+    },
+    {
+     "w": "Brighton",
+     "at": 7.188
+    },
+    {
+     "w": "won",
+     "at": 7.625
+    },
+    {
+     "w": "four",
+     "at": 7.862
+    },
+    {
+     "w": "to",
+     "at": 8.1
+    },
+    {
+     "w": "one",
+     "at": 8.225
+    }
+   ]
+  },
+  {
+   "label": "How he does it",
+   "text": "How does he do it? He waits behind his winger, then bursts round the outside. Pass, and cross! Time your overlap so you arrive just as your winger is ready to pass!",
+   "src": "/plays/narration/estupinan-signature/3.m4a",
+   "seconds": 11.3,
+   "words": [
+    {
+     "w": "How",
+     "at": 0.375
+    },
+    {
+     "w": "does",
+     "at": 0.487
+    },
+    {
+     "w": "he",
+     "at": 0.613
+    },
+    {
+     "w": "do",
+     "at": 0.738
+    },
+    {
+     "w": "it",
+     "at": 0.938
+    },
+    {
+     "w": "He",
+     "at": 1.5
+    },
+    {
+     "w": "waits",
+     "at": 1.65
+    },
+    {
+     "w": "behind",
+     "at": 1.95
+    },
+    {
+     "w": "his",
+     "at": 2.337
+    },
+    {
+     "w": "winger",
+     "at": 2.5
+    },
+    {
+     "w": "then",
+     "at": 3.075
+    },
+    {
+     "w": "bursts",
+     "at": 3.288
+    },
+    {
+     "w": "round",
+     "at": 3.75
+    },
+    {
+     "w": "the",
+     "at": 3.987
+    },
+    {
+     "w": "outside",
+     "at": 4.1
+    },
+    {
+     "w": "Pass",
+     "at": 5.225
+    },
+    {
+     "w": "and",
+     "at": 5.8
+    },
+    {
+     "w": "cross",
+     "at": 5.938
+    },
+    {
+     "w": "Time",
+     "at": 6.862
+    },
+    {
+     "w": "your",
+     "at": 7.112
+    },
+    {
+     "w": "overlap",
+     "at": 7.25
+    },
+    {
+     "w": "so",
+     "at": 7.85
+    },
+    {
+     "w": "you",
+     "at": 7.975
+    },
+    {
+     "w": "arrive",
+     "at": 8.125
+    },
+    {
+     "w": "just",
+     "at": 8.575
+    },
+    {
+     "w": "as",
+     "at": 8.787
+    },
+    {
+     "w": "your",
+     "at": 8.9
+    },
+    {
+     "w": "winger",
+     "at": 9.062
+    },
+    {
+     "w": "is",
+     "at": 9.4
+    },
+    {
+     "w": "ready",
+     "at": 9.55
+    },
+    {
+     "w": "to",
+     "at": 9.775
+    },
+    {
+     "w": "pass",
+     "at": 9.875
+    }
+   ]
+  }
+ ]
+}

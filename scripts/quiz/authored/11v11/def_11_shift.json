@@ -1,0 +1,67 @@
+{
+ "lesson": "def_11_shift",
+ "questions": [
+  {
+   "q": "True or false? With the ball on the left, the midfield slides a few steps but still covers the middle.",
+   "options": ["True", "False"],
+   "correct": 0,
+   "explain": "Right, it's true. A short slide keeps the group connected, so a pass inside still meets a midfielder.",
+   "choiceExplanations": [
+    "Right, it's true. A short slide keeps the group connected, so a pass inside still meets a midfielder.",
+    "Look at the central midfielder: the group slid left together, but he still guards the middle."
+   ],
+   "visual": {
+    "kind": "trueFalse",
+    "frame": {"step": 3, "focus": ["lm", "cm", "rm"]}
+   }
+  },
+  {
+   "q": "The ball has switched to the right. Which midfield shape protects against the next pass?",
+   "options": [
+    "Midfield stays in its central spots",
+    "Midfield slides right as a group",
+    "All three midfielders go to the ball"
+   ],
+   "correct": 1,
+   "explain": "Yes. Sliding together puts help near the ball while the middle stays covered.",
+   "choiceExplanations": [
+    "The group has not followed the danger, so the carrier's side is short of help.",
+    "Yes. Sliding together puts help near the ball while the middle stays covered.",
+    "Everyone chases the ball, so one pass inside or across finds the empty middle."
+   ],
+   "visual": {
+    "kind": "pickPicture",
+    "pictures": [
+     {"step": 8, "place": {"cm": {"x": 135, "y": 270}, "lm": {"x": 75, "y": 265}, "rm": {"x": 195, "y": 265}}, "focus": ["lm", "cm", "rm"]},
+     {"step": 8, "focus": ["lm", "cm", "rm"]},
+     {"step": 8, "place": {"cm": {"x": 195, "y": 240}, "lm": {"x": 170, "y": 262}, "rm": {"x": 228, "y": 250}}, "focus": ["lm", "cm", "rm"]}
+    ]
+   }
+  },
+  {
+   "q": "The ball is on the right, but your left midfielder stayed out wide. Drag him where he helps.",
+   "options": [
+    "Tuck in toward the middle",
+    "Stay wide on the left touchline",
+    "Sprint across to the ball"
+   ],
+   "correct": 0,
+   "explain": "Yes. Tucking in closes the gap beside the central midfielder, so a pass inside is covered.",
+   "choiceExplanations": [
+    "Yes. Tucking in closes the gap beside the central midfielder, so a pass inside is covered.",
+    "Alone out wide, he leaves a big gap in midfield for the next pass through the middle.",
+    "Chasing across leaves the whole left side and middle empty if the ball is switched back."
+   ],
+   "visual": {
+    "kind": "dragToZone",
+    "frame": {"step": 8, "place": {"lm": {"x": 40, "y": 265}}, "focus": ["lm", "cm"]},
+    "drag": "lm",
+    "zones": [
+     {"x": 100, "y": 245, "w": 44, "h": 36},
+     {"x": 35, "y": 215, "w": 40, "h": 36},
+     {"x": 195, "y": 238, "w": 40, "h": 30}
+    ]
+   }
+  }
+ ]
+}

@@ -1,0 +1,121 @@
+{
+ "lesson": "next9_frontthreescreen",
+ "questions": [
+  {
+   "q": "Their left back has the ball. Tap where our striker screens their central midfielder.",
+   "options": [
+    "Up near their goalkeeper",
+    "Between the ball and their midfielder",
+    "Next to our left winger"
+   ],
+   "correct": 1,
+   "explain": "Yes. Standing in that passing lane is the screen, so their only central midfielder cannot get the ball.",
+   "choiceExplanations": [
+    "Their keeper is not the danger yet, so the pass into their midfielder stays open.",
+    "Yes. Standing in that passing lane is the screen, so their only central midfielder cannot get the ball.",
+    "Our winger already presses that back, so two players there leave the middle open."
+   ],
+   "visual": {
+    "kind": "tapSpot",
+    "frame": {
+     "step": 4,
+     "hide": [
+      "ST"
+     ],
+     "focus": [
+      "LW",
+      "cm"
+     ]
+    },
+    "spots": [
+     {
+      "x": 140,
+      "y": 78
+     },
+     {
+      "x": 95,
+      "y": 133
+     },
+     {
+      "x": 72,
+      "y": 88
+     }
+    ]
+   }
+  },
+  {
+   "q": "Put the press in order, from first to last.",
+   "options": [
+    "Winger presses their back",
+    "Back passes to their keeper",
+    "Keeper takes a loose touch",
+    "Striker closes down the keeper"
+   ],
+   "correct": 0,
+   "explain": "Yes. The winger presses, the back goes to the keeper, then a loose touch lets the striker press.",
+   "choiceExplanations": [
+    "Yes. The winger presses, the back goes to the keeper, then a loose touch lets the striker press.",
+    "The back only passes to the keeper after our winger presses and the middle is screened.",
+    "The keeper's loose touch comes after the back passes to them.",
+    "The striker closes the keeper last, after the loose touch and once our midfielder takes their connector."
+   ],
+   "visual": {
+    "kind": "order",
+    "frame": {
+     "step": 5,
+     "focus": [
+      "LW",
+      "ST"
+     ]
+    }
+   }
+  },
+  {
+   "q": "Their right back has it now, and our right winger presses. Where does the striker go?",
+   "options": [
+    "Between the ball and their midfielder",
+    "Stay on the left side",
+    "Up next to our right winger"
+   ],
+   "correct": 0,
+   "explain": "Right. The screen moves with the ball, so their midfielder stays cut off on this side too.",
+   "choiceExplanations": [
+    "Right. The screen moves with the ball, so their midfielder stays cut off on this side too.",
+    "The ball moved right, so staying left leaves the pass into their midfielder open.",
+    "Our winger already presses that back, so the striker is not needed there."
+   ],
+   "visual": {
+    "kind": "dragToZone",
+    "frame": {
+     "step": 4,
+     "ball": "rb",
+     "focus": [
+      "RW",
+      "cm"
+     ]
+    },
+    "drag": "ST",
+    "zones": [
+     {
+      "x": 182,
+      "y": 133,
+      "w": 36,
+      "h": 28
+     },
+     {
+      "x": 75,
+      "y": 150,
+      "w": 30,
+      "h": 26
+     },
+     {
+      "x": 245,
+      "y": 145,
+      "w": 30,
+      "h": 26
+     }
+    ]
+   }
+  }
+ ]
+}

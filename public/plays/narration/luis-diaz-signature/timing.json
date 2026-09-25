@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Anfield, 2022. Liverpool are losing to Crystal Palace, with ten players. Luis D\u00edaz gets the ball on the left, and runs straight at the defenders... past one... past two... still going... right foot... goal!",
+   "src": "/plays/narration/luis-diaz-signature/1.m4a",
+   "seconds": 15.8,
+   "words": [
+    {
+     "w": "Anfield",
+     "at": 0.4
+    },
+    {
+     "w": "2022",
+     "at": 0.925
+    },
+    {
+     "w": "Liverpool",
+     "at": 2.288
+    },
+    {
+     "w": "are",
+     "at": 2.825
+    },
+    {
+     "w": "losing",
+     "at": 2.975
+    },
+    {
+     "w": "to",
+     "at": 3.375
+    },
+    {
+     "w": "Crystal",
+     "at": 3.5
+    },
+    {
+     "w": "Palace",
+     "at": 3.913
+    },
+    {
+     "w": "with",
+     "at": 4.388
+    },
+    {
+     "w": "ten",
+     "at": 4.562
+    },
+    {
+     "w": "players",
+     "at": 4.862
+    },
+    {
+     "w": "Luis",
+     "at": 5.825
+    },
+    {
+     "w": "D\u00edaz",
+     "at": 6.263
+    },
+    {
+     "w": "gets",
+     "at": 6.625
+    },
+    {
+     "w": "the",
+     "at": 6.875
+    },
+    {
+     "w": "ball",
+     "at": 6.975
+    },
+    {
+     "w": "on",
+     "at": 7.287
+    },
+    {
+     "w": "the",
+     "at": 7.388
+    },
+    {
+     "w": "left",
+     "at": 7.475
+    },
+    {
+     "w": "and",
+     "at": 7.85
+    },
+    {
+     "w": "runs",
+     "at": 7.975
+    },
+    {
+     "w": "straight",
+     "at": 8.363
+    },
+    {
+     "w": "at",
+     "at": 8.713
+    },
+    {
+     "w": "the",
+     "at": 8.787
+    },
+    {
+     "w": "defenders",
+     "at": 8.875
+    },
+    {
+     "w": "past",
+     "at": 9.9
+    },
+    {
+     "w": "one",
+     "at": 10.275
+    },
+    {
+     "w": "past",
+     "at": 10.975
+    },
+    {
+     "w": "two",
+     "at": 11.338
+    },
+    {
+     "w": "still",
+     "at": 12.088
+    },
+    {
+     "w": "going",
+     "at": 12.375
+    },
+    {
+     "w": "right",
+     "at": 13.162
+    },
+    {
+     "w": "foot",
+     "at": 13.5
+    },
+    {
+     "w": "goal",
+     "at": 14.412
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. D\u00edaz runs straight at each defender, so they back off. Then he changes speed and bursts past.",
+   "src": "/plays/narration/luis-diaz-signature/2.m4a",
+   "seconds": 8.4,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.662
+    },
+    {
+     "w": "slowly",
+     "at": 1.163
+    },
+    {
+     "w": "D\u00edaz",
+     "at": 2.15
+    },
+    {
+     "w": "runs",
+     "at": 2.525
+    },
+    {
+     "w": "straight",
+     "at": 2.788
+    },
+    {
+     "w": "at",
+     "at": 3.087
+    },
+    {
+     "w": "each",
+     "at": 3.175
+    },
+    {
+     "w": "defender",
+     "at": 3.4
+    },
+    {
+     "w": "so",
+     "at": 3.95
+    },
+    {
+     "w": "they",
+     "at": 4.062
+    },
+    {
+     "w": "back",
+     "at": 4.2
+    },
+    {
+     "w": "off",
+     "at": 4.475
+    },
+    {
+     "w": "Then",
+     "at": 5.237
+    },
+    {
+     "w": "he",
+     "at": 5.4
+    },
+    {
+     "w": "changes",
+     "at": 5.537
+    },
+    {
+     "w": "speed",
+     "at": 5.975
+    },
+    {
+     "w": "and",
+     "at": 6.438
+    },
+    {
+     "w": "bursts",
+     "at": 6.55
+    },
+    {
+     "w": "past",
+     "at": 6.963
+    }
+   ]
+  },
+  {
+   "label": "Past five",
+   "text": "He weaves past five Palace players along the edge of the box, and fires it past keeper Vicente Guaita!",
+   "src": "/plays/narration/luis-diaz-signature/3.m4a",
+   "seconds": 7.5,
+   "words": [
+    {
+     "w": "He",
+     "at": 0.35
+    },
+    {
+     "w": "weaves",
+     "at": 0.475
+    },
+    {
+     "w": "past",
+     "at": 0.8
+    },
+    {
+     "w": "five",
+     "at": 1.2
+    },
+    {
+     "w": "Palace",
+     "at": 1.613
+    },
+    {
+     "w": "players",
+     "at": 2.0
+    },
+    {
+     "w": "along",
+     "at": 2.475
+    },
+    {
+     "w": "the",
+     "at": 2.763
+    },
+    {
+     "w": "edge",
+     "at": 2.875
+    },
+    {
+     "w": "of",
+     "at": 3.062
+    },
+    {
+     "w": "the",
+     "at": 3.138
+    },
+    {
+     "w": "box",
+     "at": 3.225
+    },
+    {
+     "w": "and",
+     "at": 4.075
+    },
+    {
+     "w": "fires",
+     "at": 4.213
+    },
+    {
+     "w": "it",
+     "at": 4.588
+    },
+    {
+     "w": "past",
+     "at": 4.675
+    },
+    {
+     "w": "keeper",
+     "at": 5.062
+    },
+    {
+     "w": "Vicente",
+     "at": 5.425
+    },
+    {
+     "w": "Guaita",
+     "at": 5.925
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: run straight at defenders to make them back off, then burst past them!",
+   "src": "/plays/narration/luis-diaz-signature/4.m4a",
+   "seconds": 6.0,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "run",
+     "at": 1.387
+    },
+    {
+     "w": "straight",
+     "at": 1.663
+    },
+    {
+     "w": "at",
+     "at": 1.962
+    },
+    {
+     "w": "defenders",
+     "at": 2.038
+    },
+    {
+     "w": "to",
+     "at": 2.6
+    },
+    {
+     "w": "make",
+     "at": 2.688
+    },
+    {
+     "w": "them",
+     "at": 2.837
+    },
+    {
+     "w": "back",
+     "at": 2.975
+    },
+    {
+     "w": "off",
+     "at": 3.25
+    },
+    {
+     "w": "then",
+     "at": 3.75
+    },
+    {
+     "w": "burst",
+     "at": 3.987
+    },
+    {
+     "w": "past",
+     "at": 4.362
+    },
+    {
+     "w": "them",
+     "at": 4.725
+    }
+   ]
+  }
+ ]
+}

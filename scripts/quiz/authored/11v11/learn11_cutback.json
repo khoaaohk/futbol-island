@@ -1,0 +1,104 @@
+{
+ "lesson": "learn11_cutback",
+ "questions": [
+  {
+   "q": "True or false? The defender has dropped toward the cut-back, so pulling the ball back is still a good pass.",
+   "options": [
+    "True",
+    "False"
+   ],
+   "correct": 1,
+   "explain": "Right, it's false. The defender now sits in the cut-back lane, so we keep it with our support.",
+   "choiceExplanations": [
+    "The defender has dropped into that lane, so the pull-back would go straight to them.",
+    "Right, it's false. The defender now sits in the cut-back lane, so we keep it with our support."
+   ],
+   "visual": {
+    "kind": "trueFalse",
+    "frame": {
+     "step": 7,
+     "focus": [
+      "cm",
+      "dst",
+      "lm"
+     ]
+    }
+   }
+  },
+  {
+   "q": "Put the cut-back in order, from first to last.",
+   "options": [
+    "Look up at the side of the box",
+    "Defender follows the runner toward goal",
+    "Pull the ball back",
+    "Teammate chooses their next touch"
+   ],
+   "correct": 0,
+   "explain": "Yes. Look first, see the defender follow the run, then pull it back to the free teammate.",
+   "choiceExplanations": [
+    "Yes. Look first, see the defender follow the run, then pull it back to the free teammate.",
+    "You only see the defender follow the runner once you have taken a look.",
+    "Pull it back only after the defender has left the lane clear.",
+    "The teammate chooses their touch last, once the cut-back has reached them."
+   ],
+   "visual": {
+    "kind": "order",
+    "frame": {
+     "step": 0,
+     "focus": [
+      "cm",
+      "st",
+      "dst"
+     ]
+    }
+   }
+  },
+  {
+   "q": "The defender follows the runner, and the waiting teammate moved inside. Which pass creates the best chance?",
+   "options": [
+    "Back down the side to your support",
+    "Across to the runner near goal",
+    "Cut-back to the waiting teammate"
+   ],
+   "correct": 2,
+   "explain": "Yes. The defender went with the runner, so the cut-back lane to the teammate is clear.",
+   "choiceExplanations": [
+    "That keeps the ball, but the cut-back is open, so we miss a clear chance.",
+    "The defender followed the runner and stands right in that lane, so the pass is blocked.",
+    "Yes. The defender went with the runner, so the cut-back lane to the teammate is clear."
+   ],
+   "visual": {
+    "kind": "bestPass",
+    "frame": {
+     "step": 2,
+     "place": {
+      "lm": {
+       "x": 122,
+       "y": 168
+      },
+      "st": {
+       "x": 150,
+       "y": 75
+      },
+      "dst": {
+       "x": 164,
+       "y": 91
+      }
+     },
+     "ball": "cm",
+     "focus": [
+      "cm",
+      "dst",
+      "lm"
+     ]
+    },
+    "from": "cm",
+    "to": [
+     "rm",
+     "st",
+     "lm"
+    ]
+   }
+  }
+ ]
+}

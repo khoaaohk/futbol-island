@@ -1,0 +1,32 @@
+// Aicardo's signature (futsal) film: contract checks (no browser). Run: node tests/play-film-aicardo-futsal-signature.cjs
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
+const ts=require('typescript');
+const root=path.resolve(__dirname,'..'),file=path.join(root,'lib/plays/riso/aicardo-futsal-signature.ts'),src=fs.readFileSync(file,'utf8');
+const cache={};
+function load(f){f=path.resolve(f);if(f.endsWith('.json'))return JSON.parse(fs.readFileSync(f,'utf8'));if(cache[f])return cache[f].exports;const code=ts.transpileModule(fs.readFileSync(f,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,esModuleInterop:true,resolveJsonModule:true}}).outputText;
+ const mod={exports:{}};cache[f]=mod;new Function('module','exports','require',code)(mod,mod.exports,n=>{if(n.startsWith('@/'))n=path.join(root,n.slice(2));else n=path.resolve(path.dirname(f),n);const r=[n,`${n}.ts`,`${n}.json`].find(fs.existsSync);assert.ok(r,`missing module ${n}`);if(r.endsWith('.json'))return JSON.parse(fs.readFileSync(r,'utf8'));return load(r);});return mod.exports;}
+const film=load(file).default;
+assert.equal(film.id,'aicardo-futsal-signature');assert.equal(film.format,'futsal','a futsal film');assert.deepEqual(film.audio,{mode:'chapters'});
+assert.equal(film.chapters.length,3,'three chapters');
+const total=film.chapters.reduce((a,c)=>a+c.seconds,0);assert.ok(total>=30&&total<=55,`about 30–55 s (${total})`);
+for(const ch of film.chapters){let last=-1;for(const c of ch.cues){assert.ok(c.at>last&&c.at<ch.seconds-.65,`cue "${c.words}" ordered and before the passage`);last=c.at;assert.ok(ch.narration.toLowerCase().replace(/’/g,"'").includes(c.words.toLowerCase().replace(/’/g,"'")),`cue words "${c.words}" are in the narration`);
+  assert.ok(!/^[^\s]*['’-]/.test(c.words.split(/\s+/)[0]),`cue "${c.words}" starts with a plain word (Kokoro)`);}
+ assert.ok(ch.cues.length>=4,'≥ 4 cue actions per chapter');}
+const words=film.chapters.map(c=>c.narration).join(' '),n=words.split(/\s+/).length;
+assert.ok(n>=70&&n<=90,`70–90 words (${n})`);assert.ok(words.length<700,'under 700 characters');
+const script=JSON.parse(fs.readFileSync(path.join(root,'public/plays/narration/aicardo-futsal-signature/script.json'),'utf8'));
+assert.deepEqual(script.chapters.map(c=>c.text),film.chapters.map(c=>c.narration),'script.json matches the film narration');
+assert.deepEqual(script.chapters.map(c=>c.label),film.chapters.map(c=>c.label),'script.json labels match');
+assert.ok(!/Math\.random/.test(src),'seeded randomness only');
+assert.ok(/const VOICE:NarrationTiming\|null=(null|timingJson as NarrationTiming)/.test(src),'VOICE left null for the lead');
+// the real match is named; inferred details (foot, height) are not claimed in the match chapters
+assert.ok(/2012 Futsal Euro semi-final/.test(film.chapters[0].narration)&&/Italy/.test(film.chapters[0].narration),'the real match is named');
+assert.ok(/Ortiz/.test(film.chapters[0].narration)&&/near post/.test(film.chapters[0].narration),'the source wording (Ortiz, near post) is kept');
+for(const ch of film.chapters.slice(0,2))assert.ok(!/right foot|left foot|low|volley|first time/i.test(ch.narration),'match chapters claim no inferred foot / height');
+assert.ok(/watch the passer, not just the ball/i.test(film.chapters[2].narration),'ends with the entry lesson');
+assert.ok(/9 Feb 2012/.test(src)&&/6:09/.test(src)&&/slid the ball left for Aicardo to beat Mammarella at his\s*near post/.test(src.replace(/\n \*\s*/g,' ')),'header states the match date, minute and the source wording');
+const appearance=JSON.parse(fs.readFileSync(path.join(root,'lib/town/playerAppearance.json'),'utf8'));assert.equal(appearance.Aicardo.country,'Spain','card country matches the film');
+const iconic=JSON.parse(fs.readFileSync(path.join(root,'lib/town/iconicPlays.json'),'utf8'));assert.equal(iconic.Aicardo.kind,'signature');
+console.log(`Aicardo signature film: ${film.chapters.length} chapters, ${total.toFixed(1)} s, ${n} words, ${words.length} characters — contract passed.`);

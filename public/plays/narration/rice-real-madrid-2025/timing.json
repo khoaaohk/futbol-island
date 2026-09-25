@@ -1,0 +1,378 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The first free kick",
+   "text": "Arsenal against Real Madrid, 2025. Declan Rice has never scored a free kick. He steps up, and curls it round the wall... Goal!",
+   "src": "/plays/narration/rice-real-madrid-2025/1.m4a",
+   "seconds": 10.3,
+   "words": [
+    {
+     "w": "Arsenal",
+     "at": 0.4
+    },
+    {
+     "w": "against",
+     "at": 0.9
+    },
+    {
+     "w": "Real",
+     "at": 1.275
+    },
+    {
+     "w": "Madrid",
+     "at": 1.55
+    },
+    {
+     "w": "2025",
+     "at": 2.2
+    },
+    {
+     "w": "Declan",
+     "at": 3.75
+    },
+    {
+     "w": "Rice",
+     "at": 4.2
+    },
+    {
+     "w": "has",
+     "at": 4.513
+    },
+    {
+     "w": "never",
+     "at": 4.675
+    },
+    {
+     "w": "scored",
+     "at": 5.0
+    },
+    {
+     "w": "a",
+     "at": 5.312
+    },
+    {
+     "w": "free",
+     "at": 5.388
+    },
+    {
+     "w": "kick",
+     "at": 5.688
+    },
+    {
+     "w": "He",
+     "at": 6.375
+    },
+    {
+     "w": "steps",
+     "at": 6.5
+    },
+    {
+     "w": "up",
+     "at": 6.8
+    },
+    {
+     "w": "and",
+     "at": 7.075
+    },
+    {
+     "w": "curls",
+     "at": 7.213
+    },
+    {
+     "w": "it",
+     "at": 7.612
+    },
+    {
+     "w": "round",
+     "at": 7.7
+    },
+    {
+     "w": "the",
+     "at": 7.963
+    },
+    {
+     "w": "wall",
+     "at": 8.062
+    },
+    {
+     "w": "Goal",
+     "at": 8.963
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again. It starts outside the post, then bends back inside. Courtois dives, but it's just too good!",
+   "src": "/plays/narration/rice-real-madrid-2025/2.m4a",
+   "seconds": 7.8,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "It",
+     "at": 1.525
+    },
+    {
+     "w": "starts",
+     "at": 1.675
+    },
+    {
+     "w": "outside",
+     "at": 1.988
+    },
+    {
+     "w": "the",
+     "at": 2.388
+    },
+    {
+     "w": "post",
+     "at": 2.475
+    },
+    {
+     "w": "then",
+     "at": 2.95
+    },
+    {
+     "w": "bends",
+     "at": 3.15
+    },
+    {
+     "w": "back",
+     "at": 3.475
+    },
+    {
+     "w": "inside",
+     "at": 3.775
+    },
+    {
+     "w": "Courtois",
+     "at": 4.787
+    },
+    {
+     "w": "dives",
+     "at": 5.225
+    },
+    {
+     "w": "but",
+     "at": 5.787
+    },
+    {
+     "w": "it's",
+     "at": 5.912
+    },
+    {
+     "w": "just",
+     "at": 6.075
+    },
+    {
+     "w": "too",
+     "at": 6.3
+    },
+    {
+     "w": "good",
+     "at": 6.475
+    }
+   ]
+  },
+  {
+   "label": "Another one!",
+   "text": "Twelve minutes later, another one! Over the wall and into the top corner. Rice leaps onto the boards, arms wide!",
+   "src": "/plays/narration/rice-real-madrid-2025/3.m4a",
+   "seconds": 8.1,
+   "words": [
+    {
+     "w": "Twelve",
+     "at": 0.325
+    },
+    {
+     "w": "minutes",
+     "at": 0.65
+    },
+    {
+     "w": "later",
+     "at": 0.975
+    },
+    {
+     "w": "another",
+     "at": 1.4
+    },
+    {
+     "w": "one",
+     "at": 1.75
+    },
+    {
+     "w": "Over",
+     "at": 2.413
+    },
+    {
+     "w": "the",
+     "at": 2.638
+    },
+    {
+     "w": "wall",
+     "at": 2.763
+    },
+    {
+     "w": "and",
+     "at": 3.175
+    },
+    {
+     "w": "into",
+     "at": 3.288
+    },
+    {
+     "w": "the",
+     "at": 3.462
+    },
+    {
+     "w": "top",
+     "at": 3.55
+    },
+    {
+     "w": "corner",
+     "at": 3.825
+    },
+    {
+     "w": "Rice",
+     "at": 4.75
+    },
+    {
+     "w": "leaps",
+     "at": 5.162
+    },
+    {
+     "w": "onto",
+     "at": 5.412
+    },
+    {
+     "w": "the",
+     "at": 5.638
+    },
+    {
+     "w": "boards",
+     "at": 5.725
+    },
+    {
+     "w": "arms",
+     "at": 6.275
+    },
+    {
+     "w": "wide",
+     "at": 6.662
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "The secret? Practise! Rice had practised free kicks again and again. Wrap your foot round the ball, and it bends round the wall.",
+   "src": "/plays/narration/rice-real-madrid-2025/4.m4a",
+   "seconds": 8.7,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "secret",
+     "at": 0.463
+    },
+    {
+     "w": "Practise",
+     "at": 1.238
+    },
+    {
+     "w": "Rice",
+     "at": 2.35
+    },
+    {
+     "w": "had",
+     "at": 2.663
+    },
+    {
+     "w": "practised",
+     "at": 2.775
+    },
+    {
+     "w": "free",
+     "at": 3.288
+    },
+    {
+     "w": "kicks",
+     "at": 3.538
+    },
+    {
+     "w": "again",
+     "at": 3.85
+    },
+    {
+     "w": "and",
+     "at": 4.112
+    },
+    {
+     "w": "again",
+     "at": 4.213
+    },
+    {
+     "w": "Wrap",
+     "at": 4.987
+    },
+    {
+     "w": "your",
+     "at": 5.263
+    },
+    {
+     "w": "foot",
+     "at": 5.412
+    },
+    {
+     "w": "round",
+     "at": 5.65
+    },
+    {
+     "w": "the",
+     "at": 5.862
+    },
+    {
+     "w": "ball",
+     "at": 5.95
+    },
+    {
+     "w": "and",
+     "at": 6.362
+    },
+    {
+     "w": "it",
+     "at": 6.463
+    },
+    {
+     "w": "bends",
+     "at": 6.562
+    },
+    {
+     "w": "round",
+     "at": 6.975
+    },
+    {
+     "w": "the",
+     "at": 7.213
+    },
+    {
+     "w": "wall",
+     "at": 7.3
+    }
+   ]
+  }
+ ]
+}

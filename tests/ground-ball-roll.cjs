@@ -1,0 +1,6 @@
+const assert=require('node:assert/strict'),fs=require('fs'),vm=require('vm'),ts=require('typescript'),T=require('three');
+const m={exports:{}};vm.runInNewContext(ts.transpileModule(fs.readFileSync('lib/graphics/groundBallRoll.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText,{module:m,exports:m.exports,require});
+const roll=m.exports.createGroundBallRoll(.19),ball=new T.Object3D();roll(ball,1/60,true);const idle=ball.quaternion.clone();for(let i=0;i<120;i++)roll(ball,1/60,true);assert(ball.quaternion.equals(idle),'no idle spin');
+ball.position.z=.19;roll(ball,1/60,true);assert(Math.abs(ball.quaternion.angleTo(idle)-1)<1e-8,'one radius of travel rolls one radian');ball.position.z=0;roll(ball,1/60,true);assert(ball.quaternion.angleTo(idle)<1e-8,'reverse retraces rotation');
+ball.position.x=100;roll(ball,1/60,true);assert(ball.quaternion.angleTo(idle)<1e-8,'teleport does not spin');roll(ball,0,true);assert(ball.quaternion.equals(idle));roll(ball,1/60,false);ball.position.x=101;roll(ball,1/60,true);assert(ball.quaternion.angleTo(idle)<1e-8,'reentry primes roll');
+for(let i=0;i<1000;i++){ball.position.x+=.001*Math.sin(i/30);ball.position.z+=.002;roll(ball,1/60,true);}assert(Math.abs(ball.quaternion.length()-1)<1e-12);console.log('GROUND_BALL_ROLL_PASS idle, travel, reverse, teleport, pause, reentry and stable quaternion');

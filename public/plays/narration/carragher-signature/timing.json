@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Extra time",
+   "text": "Istanbul, 2005: the Champions League final, Liverpool against Milan. Three goals each, in extra time. Jamie Carragher has cramp, but Milan attack again... Carragher gets there just in time, and clears it for a corner!",
+   "src": "/plays/narration/carragher-signature/1.m4a",
+   "seconds": 16.0,
+   "words": [
+    {
+     "w": "Istanbul",
+     "at": 0.35
+    },
+    {
+     "w": "2005",
+     "at": 1.15
+    },
+    {
+     "w": "the",
+     "at": 2.625
+    },
+    {
+     "w": "Champions",
+     "at": 2.737
+    },
+    {
+     "w": "League",
+     "at": 3.325
+    },
+    {
+     "w": "final",
+     "at": 3.587
+    },
+    {
+     "w": "Liverpool",
+     "at": 4.312
+    },
+    {
+     "w": "against",
+     "at": 4.875
+    },
+    {
+     "w": "Milan",
+     "at": 5.275
+    },
+    {
+     "w": "Three",
+     "at": 6.15
+    },
+    {
+     "w": "goals",
+     "at": 6.4
+    },
+    {
+     "w": "each",
+     "at": 6.725
+    },
+    {
+     "w": "in",
+     "at": 7.125
+    },
+    {
+     "w": "extra",
+     "at": 7.287
+    },
+    {
+     "w": "time",
+     "at": 7.7
+    },
+    {
+     "w": "Jamie",
+     "at": 8.6
+    },
+    {
+     "w": "Carragher",
+     "at": 9.012
+    },
+    {
+     "w": "has",
+     "at": 9.475
+    },
+    {
+     "w": "cramp",
+     "at": 9.688
+    },
+    {
+     "w": "but",
+     "at": 10.113
+    },
+    {
+     "w": "Milan",
+     "at": 10.25
+    },
+    {
+     "w": "attack",
+     "at": 10.675
+    },
+    {
+     "w": "again",
+     "at": 11.05
+    },
+    {
+     "w": "Carragher",
+     "at": 12.037
+    },
+    {
+     "w": "gets",
+     "at": 12.5
+    },
+    {
+     "w": "there",
+     "at": 12.75
+    },
+    {
+     "w": "just",
+     "at": 12.95
+    },
+    {
+     "w": "in",
+     "at": 13.175
+    },
+    {
+     "w": "time",
+     "at": 13.325
+    },
+    {
+     "w": "and",
+     "at": 13.775
+    },
+    {
+     "w": "clears",
+     "at": 13.912
+    },
+    {
+     "w": "it",
+     "at": 14.287
+    },
+    {
+     "w": "for",
+     "at": 14.375
+    },
+    {
+     "w": "a",
+     "at": 14.488
+    },
+    {
+     "w": "corner",
+     "at": 14.55
+    }
+   ]
+  },
+  {
+   "label": "The replay",
+   "text": "Watch again, slowly. Carragher waits for the right moment. Then he stretches in low, and his boot reaches the ball first.",
+   "src": "/plays/narration/carragher-signature/2.m4a",
+   "seconds": 8.5,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.188
+    },
+    {
+     "w": "Carragher",
+     "at": 2.212
+    },
+    {
+     "w": "waits",
+     "at": 2.675
+    },
+    {
+     "w": "for",
+     "at": 2.975
+    },
+    {
+     "w": "the",
+     "at": 3.087
+    },
+    {
+     "w": "right",
+     "at": 3.175
+    },
+    {
+     "w": "moment",
+     "at": 3.45
+    },
+    {
+     "w": "Then",
+     "at": 4.237
+    },
+    {
+     "w": "he",
+     "at": 4.45
+    },
+    {
+     "w": "stretches",
+     "at": 4.588
+    },
+    {
+     "w": "in",
+     "at": 5.075
+    },
+    {
+     "w": "low",
+     "at": 5.225
+    },
+    {
+     "w": "and",
+     "at": 5.7
+    },
+    {
+     "w": "his",
+     "at": 5.812
+    },
+    {
+     "w": "boot",
+     "at": 5.987
+    },
+    {
+     "w": "reaches",
+     "at": 6.3
+    },
+    {
+     "w": "the",
+     "at": 6.65
+    },
+    {
+     "w": "ball",
+     "at": 6.75
+    },
+    {
+     "w": "first",
+     "at": 7.062
+    }
+   ]
+  },
+  {
+   "label": "From behind the goal",
+   "text": "From behind the goal: out for a corner. No goal! Liverpool went on to win on penalties.",
+   "src": "/plays/narration/carragher-signature/3.m4a",
+   "seconds": 6.8,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.375
+    },
+    {
+     "w": "behind",
+     "at": 0.512
+    },
+    {
+     "w": "the",
+     "at": 0.887
+    },
+    {
+     "w": "goal",
+     "at": 0.975
+    },
+    {
+     "w": "out",
+     "at": 1.587
+    },
+    {
+     "w": "for",
+     "at": 1.85
+    },
+    {
+     "w": "a",
+     "at": 1.962
+    },
+    {
+     "w": "corner",
+     "at": 2.025
+    },
+    {
+     "w": "No",
+     "at": 2.875
+    },
+    {
+     "w": "goal",
+     "at": 3.125
+    },
+    {
+     "w": "Liverpool",
+     "at": 3.837
+    },
+    {
+     "w": "went",
+     "at": 4.338
+    },
+    {
+     "w": "on",
+     "at": 4.487
+    },
+    {
+     "w": "to",
+     "at": 4.625
+    },
+    {
+     "w": "win",
+     "at": 4.75
+    },
+    {
+     "w": "on",
+     "at": 4.963
+    },
+    {
+     "w": "penalties",
+     "at": 5.125
+    }
+   ]
+  },
+  {
+   "label": "The lesson",
+   "text": "Jamie Carragher, brave to the end. Only slide when you're sure. Timing matters more than power!",
+   "src": "/plays/narration/carragher-signature/4.m4a",
+   "seconds": 7.0,
+   "words": [
+    {
+     "w": "Jamie",
+     "at": 0.4
+    },
+    {
+     "w": "Carragher",
+     "at": 0.725
+    },
+    {
+     "w": "brave",
+     "at": 1.25
+    },
+    {
+     "w": "to",
+     "at": 1.625
+    },
+    {
+     "w": "the",
+     "at": 1.712
+    },
+    {
+     "w": "end",
+     "at": 1.85
+    },
+    {
+     "w": "Only",
+     "at": 2.612
+    },
+    {
+     "w": "slide",
+     "at": 2.975
+    },
+    {
+     "w": "when",
+     "at": 3.388
+    },
+    {
+     "w": "you're",
+     "at": 3.513
+    },
+    {
+     "w": "sure",
+     "at": 3.675
+    },
+    {
+     "w": "Timing",
+     "at": 4.362
+    },
+    {
+     "w": "matters",
+     "at": 4.775
+    },
+    {
+     "w": "more",
+     "at": 5.2
+    },
+    {
+     "w": "than",
+     "at": 5.388
+    },
+    {
+     "w": "power",
+     "at": 5.55
+    }
+   ]
+  }
+ ]
+}

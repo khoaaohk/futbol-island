@@ -1,0 +1,386 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The winner, live",
+   "text": "Wellington, a World Cup quarter-final, deep in extra time. Spain and the Netherlands are level. Jenni Hermoso holds the ball up and slides it through. Salma Paralluelo turns and races into the box, and shoots. Goal!",
+   "src": "/plays/narration/paralluelo-netherlands-2023/1.m4a",
+   "seconds": 15.4,
+   "words": [
+    {
+     "w": "Wellington",
+     "at": 0.4
+    },
+    {
+     "w": "a",
+     "at": 1.1
+    },
+    {
+     "w": "World",
+     "at": 1.212
+    },
+    {
+     "w": "Cup",
+     "at": 1.587
+    },
+    {
+     "w": "quarter-final",
+     "at": 1.85
+    },
+    {
+     "w": "deep",
+     "at": 2.837
+    },
+    {
+     "w": "in",
+     "at": 3.15
+    },
+    {
+     "w": "extra",
+     "at": 3.3
+    },
+    {
+     "w": "time",
+     "at": 3.675
+    },
+    {
+     "w": "Spain",
+     "at": 4.562
+    },
+    {
+     "w": "and",
+     "at": 5.05
+    },
+    {
+     "w": "the",
+     "at": 5.162
+    },
+    {
+     "w": "Netherlands",
+     "at": 5.25
+    },
+    {
+     "w": "are",
+     "at": 5.85
+    },
+    {
+     "w": "level",
+     "at": 5.95
+    },
+    {
+     "w": "Jenni",
+     "at": 6.75
+    },
+    {
+     "w": "Hermoso",
+     "at": 7.025
+    },
+    {
+     "w": "holds",
+     "at": 7.6
+    },
+    {
+     "w": "the",
+     "at": 7.925
+    },
+    {
+     "w": "ball",
+     "at": 8.025
+    },
+    {
+     "w": "up",
+     "at": 8.325
+    },
+    {
+     "w": "and",
+     "at": 8.537
+    },
+    {
+     "w": "slides",
+     "at": 8.662
+    },
+    {
+     "w": "it",
+     "at": 9.088
+    },
+    {
+     "w": "through",
+     "at": 9.238
+    },
+    {
+     "w": "Salma",
+     "at": 10.05
+    },
+    {
+     "w": "Paralluelo",
+     "at": 10.45
+    },
+    {
+     "w": "turns",
+     "at": 11.062
+    },
+    {
+     "w": "and",
+     "at": 11.512
+    },
+    {
+     "w": "races",
+     "at": 11.625
+    },
+    {
+     "w": "into",
+     "at": 12.037
+    },
+    {
+     "w": "the",
+     "at": 12.213
+    },
+    {
+     "w": "box",
+     "at": 12.3
+    },
+    {
+     "w": "and",
+     "at": 12.775
+    },
+    {
+     "w": "shoots",
+     "at": 12.938
+    },
+    {
+     "w": "Goal",
+     "at": 13.925
+    }
+   ]
+  },
+  {
+   "label": "Speed makes space",
+   "text": "Watch again. She spins away from her defender and sprints. Every stride makes the gap bigger.",
+   "src": "/plays/narration/paralluelo-netherlands-2023/2.m4a",
+   "seconds": 6.9,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.7
+    },
+    {
+     "w": "She",
+     "at": 1.512
+    },
+    {
+     "w": "spins",
+     "at": 1.675
+    },
+    {
+     "w": "away",
+     "at": 2.0
+    },
+    {
+     "w": "from",
+     "at": 2.325
+    },
+    {
+     "w": "her",
+     "at": 2.462
+    },
+    {
+     "w": "defender",
+     "at": 2.575
+    },
+    {
+     "w": "and",
+     "at": 3.1
+    },
+    {
+     "w": "sprints",
+     "at": 3.237
+    },
+    {
+     "w": "Every",
+     "at": 4.088
+    },
+    {
+     "w": "stride",
+     "at": 4.438
+    },
+    {
+     "w": "makes",
+     "at": 4.9
+    },
+    {
+     "w": "the",
+     "at": 5.162
+    },
+    {
+     "w": "gap",
+     "at": 5.25
+    },
+    {
+     "w": "bigger",
+     "at": 5.525
+    }
+   ]
+  },
+  {
+   "label": "Low and across",
+   "text": "The angle is tight, so she keeps it low and across the keeper... in off the far post!",
+   "src": "/plays/narration/paralluelo-netherlands-2023/3.m4a",
+   "seconds": 6.0,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "angle",
+     "at": 0.487
+    },
+    {
+     "w": "is",
+     "at": 0.875
+    },
+    {
+     "w": "tight",
+     "at": 1.038
+    },
+    {
+     "w": "so",
+     "at": 1.55
+    },
+    {
+     "w": "she",
+     "at": 1.675
+    },
+    {
+     "w": "keeps",
+     "at": 1.825
+    },
+    {
+     "w": "it",
+     "at": 2.087
+    },
+    {
+     "w": "low",
+     "at": 2.237
+    },
+    {
+     "w": "and",
+     "at": 2.538
+    },
+    {
+     "w": "across",
+     "at": 2.638
+    },
+    {
+     "w": "the",
+     "at": 2.975
+    },
+    {
+     "w": "keeper",
+     "at": 3.075
+    },
+    {
+     "w": "in",
+     "at": 3.975
+    },
+    {
+     "w": "off",
+     "at": 4.1
+    },
+    {
+     "w": "the",
+     "at": 4.325
+    },
+    {
+     "w": "far",
+     "at": 4.425
+    },
+    {
+     "w": "post",
+     "at": 4.65
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "The secret? Use your speed to create space. Then keep your shot low, and across the keeper.",
+   "src": "/plays/narration/paralluelo-netherlands-2023/4.m4a",
+   "seconds": 6.7,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "secret",
+     "at": 0.463
+    },
+    {
+     "w": "Use",
+     "at": 1.337
+    },
+    {
+     "w": "your",
+     "at": 1.562
+    },
+    {
+     "w": "speed",
+     "at": 1.688
+    },
+    {
+     "w": "to",
+     "at": 2.025
+    },
+    {
+     "w": "create",
+     "at": 2.125
+    },
+    {
+     "w": "space",
+     "at": 2.475
+    },
+    {
+     "w": "Then",
+     "at": 3.388
+    },
+    {
+     "w": "keep",
+     "at": 3.625
+    },
+    {
+     "w": "your",
+     "at": 3.837
+    },
+    {
+     "w": "shot",
+     "at": 3.987
+    },
+    {
+     "w": "low",
+     "at": 4.3
+    },
+    {
+     "w": "and",
+     "at": 4.7
+    },
+    {
+     "w": "across",
+     "at": 4.812
+    },
+    {
+     "w": "the",
+     "at": 5.2
+    },
+    {
+     "w": "keeper",
+     "at": 5.3
+    }
+   ]
+  }
+ ]
+}

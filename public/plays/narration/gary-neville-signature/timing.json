@@ -1,0 +1,398 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Just before half-time",
+   "text": "Cardiff, May 2004, the FA Cup final: Manchester United against Millwall, a minute before half-time. Roy Keane passes, and right-back Gary Neville races into the box. He chips a cross... Ronaldo heads it in. Goal!",
+   "src": "/plays/narration/gary-neville-signature/1.m4a",
+   "seconds": 15.8,
+   "words": [
+    {
+     "w": "Cardiff",
+     "at": 0.35
+    },
+    {
+     "w": "May",
+     "at": 0.8
+    },
+    {
+     "w": "2004",
+     "at": 1.0
+    },
+    {
+     "w": "the",
+     "at": 1.875
+    },
+    {
+     "w": "FA",
+     "at": 2.013
+    },
+    {
+     "w": "Cup",
+     "at": 2.275
+    },
+    {
+     "w": "final",
+     "at": 2.513
+    },
+    {
+     "w": "Manchester",
+     "at": 3.288
+    },
+    {
+     "w": "United",
+     "at": 3.9
+    },
+    {
+     "w": "against",
+     "at": 4.312
+    },
+    {
+     "w": "Millwall",
+     "at": 4.675
+    },
+    {
+     "w": "a",
+     "at": 5.4
+    },
+    {
+     "w": "minute",
+     "at": 5.5
+    },
+    {
+     "w": "before",
+     "at": 5.737
+    },
+    {
+     "w": "half-time",
+     "at": 6.05
+    },
+    {
+     "w": "Roy",
+     "at": 7.2
+    },
+    {
+     "w": "Keane",
+     "at": 7.513
+    },
+    {
+     "w": "passes",
+     "at": 7.838
+    },
+    {
+     "w": "and",
+     "at": 8.45
+    },
+    {
+     "w": "right-back",
+     "at": 8.575
+    },
+    {
+     "w": "Gary",
+     "at": 9.1
+    },
+    {
+     "w": "Neville",
+     "at": 9.425
+    },
+    {
+     "w": "races",
+     "at": 9.787
+    },
+    {
+     "w": "into",
+     "at": 10.213
+    },
+    {
+     "w": "the",
+     "at": 10.387
+    },
+    {
+     "w": "box",
+     "at": 10.475
+    },
+    {
+     "w": "He",
+     "at": 11.35
+    },
+    {
+     "w": "chips",
+     "at": 11.512
+    },
+    {
+     "w": "a",
+     "at": 11.762
+    },
+    {
+     "w": "cross",
+     "at": 11.825
+    },
+    {
+     "w": "Ronaldo",
+     "at": 12.725
+    },
+    {
+     "w": "heads",
+     "at": 13.25
+    },
+    {
+     "w": "it",
+     "at": 13.488
+    },
+    {
+     "w": "in",
+     "at": 13.562
+    },
+    {
+     "w": "Goal",
+     "at": 14.4
+    }
+   ]
+  },
+  {
+   "label": "The overlap",
+   "text": "Watch his run. Ronaldo goes inside, and his defender follows. So Neville sprints round the outside, into space.",
+   "src": "/plays/narration/gary-neville-signature/2.m4a",
+   "seconds": 8.6,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "his",
+     "at": 0.662
+    },
+    {
+     "w": "run",
+     "at": 0.825
+    },
+    {
+     "w": "Ronaldo",
+     "at": 1.587
+    },
+    {
+     "w": "goes",
+     "at": 2.15
+    },
+    {
+     "w": "inside",
+     "at": 2.45
+    },
+    {
+     "w": "and",
+     "at": 3.275
+    },
+    {
+     "w": "his",
+     "at": 3.388
+    },
+    {
+     "w": "defender",
+     "at": 3.55
+    },
+    {
+     "w": "follows",
+     "at": 4.062
+    },
+    {
+     "w": "So",
+     "at": 5.1
+    },
+    {
+     "w": "Neville",
+     "at": 5.3
+    },
+    {
+     "w": "sprints",
+     "at": 5.638
+    },
+    {
+     "w": "round",
+     "at": 6.025
+    },
+    {
+     "w": "the",
+     "at": 6.213
+    },
+    {
+     "w": "outside",
+     "at": 6.325
+    },
+    {
+     "w": "into",
+     "at": 6.888
+    },
+    {
+     "w": "space",
+     "at": 7.138
+    }
+   ]
+  },
+  {
+   "label": "Far post",
+   "text": "From behind the goal: the cross drops toward a defender, but Ronaldo steals in front to head it down. United lead!",
+   "src": "/plays/narration/gary-neville-signature/3.m4a",
+   "seconds": 8.3,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.375
+    },
+    {
+     "w": "behind",
+     "at": 0.537
+    },
+    {
+     "w": "the",
+     "at": 0.912
+    },
+    {
+     "w": "goal",
+     "at": 1.0
+    },
+    {
+     "w": "the",
+     "at": 1.725
+    },
+    {
+     "w": "cross",
+     "at": 1.825
+    },
+    {
+     "w": "drops",
+     "at": 2.225
+    },
+    {
+     "w": "toward",
+     "at": 2.575
+    },
+    {
+     "w": "a",
+     "at": 2.837
+    },
+    {
+     "w": "defender",
+     "at": 2.9
+    },
+    {
+     "w": "but",
+     "at": 3.6
+    },
+    {
+     "w": "Ronaldo",
+     "at": 3.75
+    },
+    {
+     "w": "steals",
+     "at": 4.375
+    },
+    {
+     "w": "in",
+     "at": 4.862
+    },
+    {
+     "w": "front",
+     "at": 5.0
+    },
+    {
+     "w": "to",
+     "at": 5.188
+    },
+    {
+     "w": "head",
+     "at": 5.275
+    },
+    {
+     "w": "it",
+     "at": 5.438
+    },
+    {
+     "w": "down",
+     "at": 5.525
+    },
+    {
+     "w": "United",
+     "at": 6.45
+    },
+    {
+     "w": "lead",
+     "at": 6.925
+    }
+   ]
+  },
+  {
+   "label": "Give a choice",
+   "text": "Like Neville: give your winger a pass option on the outside, so they have a choice.",
+   "src": "/plays/narration/gary-neville-signature/4.m4a",
+   "seconds": 5.7,
+   "words": [
+    {
+     "w": "Like",
+     "at": 0.4
+    },
+    {
+     "w": "Neville",
+     "at": 0.625
+    },
+    {
+     "w": "give",
+     "at": 1.438
+    },
+    {
+     "w": "your",
+     "at": 1.613
+    },
+    {
+     "w": "winger",
+     "at": 1.725
+    },
+    {
+     "w": "a",
+     "at": 1.988
+    },
+    {
+     "w": "pass",
+     "at": 2.05
+    },
+    {
+     "w": "option",
+     "at": 2.4
+    },
+    {
+     "w": "on",
+     "at": 2.737
+    },
+    {
+     "w": "the",
+     "at": 2.837
+    },
+    {
+     "w": "outside",
+     "at": 2.95
+    },
+    {
+     "w": "so",
+     "at": 3.775
+    },
+    {
+     "w": "they",
+     "at": 3.913
+    },
+    {
+     "w": "have",
+     "at": 4.05
+    },
+    {
+     "w": "a",
+     "at": 4.213
+    },
+    {
+     "w": "choice",
+     "at": 4.287
+    }
+   ]
+  }
+ ]
+}

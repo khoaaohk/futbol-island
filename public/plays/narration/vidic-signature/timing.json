@@ -1,0 +1,386 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Moscow, live",
+   "text": "Moscow, 2008, the Champions League final. Frank Lampard sends a high ball toward Didier Drogba. Nemanja Vidi\u0107 doesn't wait for his keeper. He charges out, jumps, and heads it behind. Safe!",
+   "src": "/plays/narration/vidic-signature/1.m4a",
+   "seconds": 14.2,
+   "words": [
+    {
+     "w": "Moscow",
+     "at": 0.4
+    },
+    {
+     "w": "2008",
+     "at": 1.05
+    },
+    {
+     "w": "the",
+     "at": 2.0
+    },
+    {
+     "w": "Champions",
+     "at": 2.112
+    },
+    {
+     "w": "League",
+     "at": 2.75
+    },
+    {
+     "w": "final",
+     "at": 3.013
+    },
+    {
+     "w": "Frank",
+     "at": 4.0
+    },
+    {
+     "w": "Lampard",
+     "at": 4.325
+    },
+    {
+     "w": "sends",
+     "at": 4.775
+    },
+    {
+     "w": "a",
+     "at": 4.987
+    },
+    {
+     "w": "high",
+     "at": 5.062
+    },
+    {
+     "w": "ball",
+     "at": 5.388
+    },
+    {
+     "w": "toward",
+     "at": 5.75
+    },
+    {
+     "w": "Didier",
+     "at": 6.05
+    },
+    {
+     "w": "Drogba",
+     "at": 6.475
+    },
+    {
+     "w": "Nemanja",
+     "at": 7.438
+    },
+    {
+     "w": "Vidi\u0107",
+     "at": 7.925
+    },
+    {
+     "w": "doesn't",
+     "at": 8.325
+    },
+    {
+     "w": "wait",
+     "at": 8.6
+    },
+    {
+     "w": "for",
+     "at": 8.85
+    },
+    {
+     "w": "his",
+     "at": 8.963
+    },
+    {
+     "w": "keeper",
+     "at": 9.125
+    },
+    {
+     "w": "He",
+     "at": 9.9
+    },
+    {
+     "w": "charges",
+     "at": 10.037
+    },
+    {
+     "w": "out",
+     "at": 10.45
+    },
+    {
+     "w": "jumps",
+     "at": 10.812
+    },
+    {
+     "w": "and",
+     "at": 11.225
+    },
+    {
+     "w": "heads",
+     "at": 11.35
+    },
+    {
+     "w": "it",
+     "at": 11.588
+    },
+    {
+     "w": "behind",
+     "at": 11.662
+    },
+    {
+     "w": "Safe",
+     "at": 12.825
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. Vidi\u0107 reads the flight early. Three quick steps, then he takes off first, in front of Drogba, and meets it with his forehead. Up and out!",
+   "src": "/plays/narration/vidic-signature/2.m4a",
+   "seconds": 10.7,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.113
+    },
+    {
+     "w": "Vidi\u0107",
+     "at": 2.15
+    },
+    {
+     "w": "reads",
+     "at": 2.587
+    },
+    {
+     "w": "the",
+     "at": 2.95
+    },
+    {
+     "w": "flight",
+     "at": 3.062
+    },
+    {
+     "w": "early",
+     "at": 3.4
+    },
+    {
+     "w": "Three",
+     "at": 4.275
+    },
+    {
+     "w": "quick",
+     "at": 4.537
+    },
+    {
+     "w": "steps",
+     "at": 4.8
+    },
+    {
+     "w": "then",
+     "at": 5.338
+    },
+    {
+     "w": "he",
+     "at": 5.463
+    },
+    {
+     "w": "takes",
+     "at": 5.55
+    },
+    {
+     "w": "off",
+     "at": 5.812
+    },
+    {
+     "w": "first",
+     "at": 6.037
+    },
+    {
+     "w": "in",
+     "at": 6.463
+    },
+    {
+     "w": "front",
+     "at": 6.6
+    },
+    {
+     "w": "of",
+     "at": 6.787
+    },
+    {
+     "w": "Drogba",
+     "at": 6.888
+    },
+    {
+     "w": "and",
+     "at": 7.475
+    },
+    {
+     "w": "meets",
+     "at": 7.6
+    },
+    {
+     "w": "it",
+     "at": 7.85
+    },
+    {
+     "w": "with",
+     "at": 7.963
+    },
+    {
+     "w": "his",
+     "at": 8.062
+    },
+    {
+     "w": "forehead",
+     "at": 8.225
+    },
+    {
+     "w": "Up",
+     "at": 9.137
+    },
+    {
+     "w": "and",
+     "at": 9.312
+    },
+    {
+     "w": "out",
+     "at": 9.425
+    }
+   ]
+  },
+  {
+   "label": "The lesson",
+   "text": "That's Vidi\u0107's signature: attacking the ball in the air. Don't wait for it to come to you. Go to meet it, jump early, and clear it high and wide!",
+   "src": "/plays/narration/vidic-signature/3.m4a",
+   "seconds": 9.5,
+   "words": [
+    {
+     "w": "That's",
+     "at": 0.375
+    },
+    {
+     "w": "Vidi\u0107's",
+     "at": 0.675
+    },
+    {
+     "w": "signature",
+     "at": 1.188
+    },
+    {
+     "w": "attacking",
+     "at": 2.062
+    },
+    {
+     "w": "the",
+     "at": 2.538
+    },
+    {
+     "w": "ball",
+     "at": 2.625
+    },
+    {
+     "w": "in",
+     "at": 2.938
+    },
+    {
+     "w": "the",
+     "at": 3.013
+    },
+    {
+     "w": "air",
+     "at": 3.163
+    },
+    {
+     "w": "Don't",
+     "at": 3.938
+    },
+    {
+     "w": "wait",
+     "at": 4.15
+    },
+    {
+     "w": "for",
+     "at": 4.375
+    },
+    {
+     "w": "it",
+     "at": 4.513
+    },
+    {
+     "w": "to",
+     "at": 4.6
+    },
+    {
+     "w": "come",
+     "at": 4.7
+    },
+    {
+     "w": "to",
+     "at": 4.925
+    },
+    {
+     "w": "you",
+     "at": 5.05
+    },
+    {
+     "w": "Go",
+     "at": 5.737
+    },
+    {
+     "w": "to",
+     "at": 5.912
+    },
+    {
+     "w": "meet",
+     "at": 6.0
+    },
+    {
+     "w": "it",
+     "at": 6.2
+    },
+    {
+     "w": "jump",
+     "at": 6.412
+    },
+    {
+     "w": "early",
+     "at": 6.725
+    },
+    {
+     "w": "and",
+     "at": 7.15
+    },
+    {
+     "w": "clear",
+     "at": 7.287
+    },
+    {
+     "w": "it",
+     "at": 7.537
+    },
+    {
+     "w": "high",
+     "at": 7.638
+    },
+    {
+     "w": "and",
+     "at": 7.95
+    },
+    {
+     "w": "wide",
+     "at": 8.088
+    }
+   ]
+  }
+ ]
+}

@@ -328,3 +328,101 @@ Muted, ch1 shows a whistle inflate and blast, two heavy numerals rock, tip and f
 **Gates.** typecheck: loss.ts clean · `review-riso-story --id loss`: 5 seams 0 px, 0 errors · `riso-perf`: median 4.4 ms, p95 17.1, ops median 82 · `check-riso-loss.mjs`: PASS ×4 viewports (screenshots `scratchpad/riso/fix/loss/app/*.jpg`).
 
 **Remaining limitations.** ch2's camera still centres on the impact for the seam aperture in its last second (needed for the passage); the ch1 navy figure over the yellow shore prints dark green where it overlaps the wet strip.
+
+## Rework (2026-09-21) — one world: a pitch at full time with a puddle by the touchline
+
+**Why.** Art director's diagnosis of the 2026-09-20 build: the whistle was a red blob, the scoreboard two blocks in an oval, ch5 scattered pebbles, ch6 a mesh disc — nothing nameable; the pond ripples were a giant abstract target with no player, so the metaphor never connected to "after a match"; yellow/blue fields swallowed the frames; the football beats (check your shoulder before receiving, recover into space) and the human beats (talk without blame, rest and life beyond football) were not pictures. `spec`, `audio`, chapter text / audio / seconds / cues and `figure()` are kept; every scene and lead object is rebuilt.
+
+**World (side view, world units; camera target ≈ (0, 20..40); core ±380 × ±300 so the desktop art region — the tightest crop, ±396 × ±312 at zoom 1 — keeps every important form; phones multiply the zoom by `view(s) ≤ 1.32`).**
+
+| Element | Construction | Position |
+|---|---|---|
+| Dusk sky | cream paper with a faint yellow screen (`field(Y,.1)`); three soft **orange halftone bands low on the horizon** (cov .12 / .2 / .3, torn edges, drifting 10 / 6 / 3 u/s); ch6 adds a soft blue evening band high up | bands at y −210, −120, −40 above the horizon |
+| Pitch | torn horizon at **y = +230**; ground = yellow .75 × blue .45 = green, a navy .1 mowing stripe, a **paper touchline** (knockout ribbon) at y +300 | y > 230 |
+| Goal | `goalFrame`: navy posts + bar, blue halftone net, side depth | ch1 right of the opponents (x 330–600), ch5 far right small |
+| Puddle | a paper knockout ellipse printed blue .6 (a clean blue pool on the green) with a navy .15 depth band along its lower edge; **paper ripple rings** = ellipse ribbons (ry/rx .37) knocked out in one path, clipped to the pool; a paper sky reflection (.3) when the water is still | centre (60, 330), rx 300, ry 105 — in front of the touchline |
+| Player (you) | navy `figure()` pictogram, size 300–320 | feet on y 250 (seat on y 300 in ch2, bench seat y 172 in ch4) |
+| Teammates / opponents / coach / friend / referee | `sticker()`: a paper halo (hand-cut silhouette knockout) under a coloured `figure()` — blue teammates, orange opponents, orange coach with a **paper cap**, cream friend (paper, yellow tone), grey referee (navy .45) | feet on y 250 |
+| Ball | paper football, navy pentagons (`footballPanels`, orange shade crescent), navy ground shadow | r 46–56 |
+| Whistle | a **paper whistle**: barrel disc + tube mouthpiece knocked out in one path, navy contour, a navy hole, burst lines (navy `sparkBurst`) and three sound arcs | in the referee's raised hand |
+| Scoreboard | a navy paper board (knockout margin + navy fill) on two posts with a paper divider; **row 1: a blue swatch + one paper pip; row 2: an orange swatch + two paper pips** (marks, not digits) | ch3 x −300..20, y −200..−10; ch6 x −380..−140, y −220..−60 |
+| Feeling | a navy knot (boiling blob) on a paper knockout at the chest; anger = orange spikes flickering through it on twos; caring = it rounds into a **warm orange ring** with a paper centre | at the chest |
+| Bench | a navy slab seat with two legs and a paper highlight | ch4, x −260..260, y 170..190 |
+| Thought bubbles | paper blobs with a tail to the head; marks inside: a navy **tick**, a navy **curved arrow** | ch4 above the player and the coach |
+| Lamp post | a navy post with a paper lamp head and a yellow stepped glow | ch6 at x 520 |
+
+Headlines: none / none / **ONE RESULT** / **TWO QUESTIONS** / **ONE DETAIL** / none.
+
+### Ch1 (10.517 s) — the whistle goes; what happens inside you
+Referee (grey sticker, size 340) at (−300, 250) facing +x; player (navy, 300) at (40, 250) facing +x with the ball rolling in from the right; two orange stickers (210) far right at (470, 236) and (560, 236) in front of the goal (x 330–600, h 170).
+- **0–0.3** the referee's arm rises with the paper whistle to the head (anticipation); **0.3 blast**: navy burst lines (r 160) and three sound arcs, camera kick; **everyone stops** — the ball rolling left from (320, 214) decelerates to a stop at the player's feet (110, 214) by 1.2.
+- **1.0–3.0** the two orange figures jump with arms up (hops every .5 s, lift 40, `reach` arms).
+- **2.92 "Disappointment or anger"**: 2.92–3.45 **the player's shoulders drop** (stand → slump arms, tilt .24, head drop); 3.5–3.8 **a navy knot grows at the chest** (easeOutBack, r 34, boiling on twos); **4.6–6.8 orange spikes flicker through it** (three spikes reseeded on twos, jagged) with a residual heave.
+- **7.96 "understandable"**: 7.96–8.6 **the knot softens into a warm orange ring** (paper centre opens, spikes gone, boil stops).
+- Camera: (−40,40,1) → kick → (−20,40,1.04) → (40,20,1.06) at 2.92 → (60,−20,1.18) at 3.6 → hold with creep → 8.8–10.517 push into the ring at the chest (53,106, zoom 2.6). Zoom monotone.
+- **Seam: into the knot** (aperture disc r 22 inside the ring's paper centre).
+
+### Ch2 (9.217 s) — ripples: the player sits by the puddle
+Player (navy, 300) sits (`sitKnee`) on the ground at (−200, 300) facing +x, feet over the water; the puddle centre (60, 330); the touchline behind; the goal far left small.
+- **0.4–0.85 a tear-sized paper drop** falls from the head into the water at (−190, 322); **rings spread** (paper ellipse rings born .85, 1.25, 1.65 …, speed 90 u/s, width 9, fading by r 260); a second drop at 1.9.
+- **2.92 "flatten them immediately"**: 2.92–3.25 the arm extends and **the hand (a navy mitt) presses the water** at (−62, 306) — the pool flattens for two drawn frames — then **the water splashes back bigger**: a paper crown, droplets, three jagged rings (width 16, speed 200, amp .12) born 3.3 / 3.45 / 3.6; camera kick.
+- **4.9 "Give yourself space"**: 4.9–5.4 **the hand lifts** (arms back to the lap); **5–7.6 the camera pulls back** (zoom 1.25 → .95 easeOut); ring births stop, the live rings travel out and fade; 6.5–8.2 the water stills and the paper sky reflection reassembles.
+- Camera: (−120,200,1.25) → (−100,230,1.22) at 2.92 → kick → (−80,240,1.18) at 4.9 → (0,210,.95) at 7.6 → hold. Zoom monotone decreasing; the passage does the push.
+- **Seam: through the puddle water** (aperture disc r 80 at the pool centre).
+
+### Ch3 (10.617 s) — ONE RESULT: the score cannot describe the team
+Board big: camera (−140,−105, 1.45) on the scoreboard (x −300..20, y −200..−10, posts to the ground); the team below out of frame: blue stickers (300) at (−170, 250), (190, 250), (370, 250) and the player (navy) at (10, 250), all facing +x, **each right arm laid across the next figure's shoulders**; the player slumped (.6) at first.
+- **0–0.5** the pips print (paper pips pop in easeOutBack: one, then two); 0.5–2.5 the board holds with a creep.
+- **2.52 "cannot describe"**: 2.52–4.0 **the camera pulls back** — the board shrinks to the top-left and **the team standing together, arms on shoulders, is revealed** (zoom 1.45 → .95).
+- **4.0–5.6 "effort"**: a faint navy replay ghost of the player sprinting (halftone .3, stride on twos, speed lines) crosses behind the team left → right.
+- **6.94 "deserve respect"**: the neighbour's **blue mitt pats the player's shoulder twice** (settle) and **the player lifts out of the slump** (easeOutBack, head up); the line leans toward the player a little.
+- Camera: (−140,−105,1.45) → (−140,−105,1.45) at 2.52 → (20,40,.95) at 4.0 → hold → 9.2–10.617 push into the board (−140,−105, zoom 1.6).
+- **Seam: into the board's paper** (aperture disc r 46 in the navy board between the rows).
+
+### Ch4 (9.317 s) — TWO QUESTIONS: on the bench with the coach
+Bench at (0, 180); player (navy, 300) sits at (−110, 172) facing +x; coach (orange sticker, 340, paper cap) sits at (130, 172) facing −x; the pitch behind.
+- **0–2.88** the two sit; the coach's head nods once (1.4); the player's head turns to the coach (.3–.8).
+- **2.88 "What helped us"**: **a paper thought bubble pops above the player** (−150, −110, r 90×64, tail to the head) and **a navy tick draws itself inside** (3.1–3.5).
+- **4.7 "try differently"**: **a second bubble pops above the coach** (200, −140, r 100×70) and **a navy curved arrow draws itself inside** (4.9–5.4); the first bubble drifts off at 6.8.
+- **6.98 "without blame"**: 6.2–6.5 **a pointing arm rises** from the player toward the coach (anticipation), **6.98–7.4 it lowers**, **7.4–7.9 replaced by an open hand** (a paper palm with three finger strokes, easeOutBack); the coach's arm opens too (7.9–8.3).
+- Camera: (0,110,1.15) → (0,30,1.15) at 2.88 → (30,20,1.18) at 4.7 → (20,40,1.2) at 6.98 → 8.3–9.317 push into the coach's bubble (200,−140, zoom 2.2); the arrow fades 8.1–8.4 so the bubble is blank paper at the seam.
+- **Seam: into a bubble** (aperture disc r 40 at the coach's bubble centre).
+
+### Ch5 (11.217 s) — ONE DETAIL: shoulder check, then recover into space
+Wide pitch (zoom .95): blue teammate (300) at (−440, 250) facing +x with the ball at (−390, 214); player (navy, 300) at (−40, 250) facing −x (toward the passer); orange opponent (300) at (280, 250) facing −x behind the player; goal far right (x 470–720, small).
+- **3.18 "check your shoulder"**: 3.18–3.65 **the head turns back** (`lookBack`, camera turns rot −.03) and **a yellow sight wedge opens toward the opponent**; 4.3 the head returns.
+- **3.75–3.9** the teammate loads and kicks; **3.9–4.65 the pass** flies to the player's feet (−90, 214), cushion, paper-and-yellow spark.
+- **5.6–6.2 the opponent runs in** (stride, speed lines) and **takes the ball** (6.2–7.0 the ball leaves with the opponent back to (300, 214)); the player's shoulders drop for a beat.
+- **6.6 "recover into space"**: 6.5 **a paper pool of space** appears at (−320, 250); **6.7–7.5 the player runs back into it** (stride, speed lines, landing settle, dust).
+- **8.2–8.9** the opponent kicks; the ball flies left and **the player, goal-side in the space, intercepts it** (cushion, spark at 8.9).
+- **9.04 "Keep it small"**: **a small yellow ring draws itself around just the player and the ball** in the pool (r 170, paper under, easeOut draw-on).
+- Camera: (−100,40,.95) → look (−60,20,1.0,−.03) at 3.4 → (−100,30,1.02) at 4.65 → (60,30,1.02) at 6.4 → (−200,30,1.05) at 7.5 → (−260,40,1.1) at 8.9 → hold → 9.9–11.217 push into the ball (−280,214, zoom 2.4). Zoom monotone.
+- **Seam: into the ball's panel** (aperture = pentagon r 17 at the ball centre at its rest rotation).
+
+### Ch6 (9.115 s) — room for rest: walking off with a friend at dusk
+Deeper dusk (orange bands ×1.4, a blue evening band high); the scoreboard small at the left (x −380..−140, y −220..−60); the player (navy, 300) at (−250, 250) facing +x; the friend (cream sticker, 300) at (420, 250) facing −x **waving** by the **lamp post** (520, 250, h 400, lit lamp); no ball.
+- **0.6–5.4 the player walks off the pitch** toward the friend (walk stride on twos, −250 → 180); the friend's arm waves (up/down, .6 Hz) all along.
+- **4.14 "a useful lesson forward"**: **a small yellow token** (r 16, paper under) pops into the player's front hand (easeOutBack) and is carried forward.
+- **6.54 "the whole score"**: **the scoreboard fades to paper** (navy cov .9 → .08, pips gone) and stays on the pitch behind them; the camera pans right, leaving it.
+- **7.4–9.115** the friend turns and **the two walk on together** (both `walk`, facing +x, 180 → 300 and 420 → 540) under the lamp; the last frame holds on them with a creep.
+- Camera: (−120,20,1.05) → (−60,20,1.05) at 4.14 → (−20,20,1.05) at 6.54 → (200,20,1.02) at 8.4 → (230,20,1.02). Last chapter: no seam.
+
+**Kid test targets (sound off).** ch1 "The referee blows the whistle, the other team jumps up happy, and our player droops with a dark knot on their chest that turns orange, then into a soft ring." ch2 "A player sits by a puddle; a tear drops in and makes rings; they slap the water and it splashes back; they lift their hand and the water goes calm." ch3 ONE RESULT "A scoreboard shows 1 dot against 2 dots; then the team stands together with arms round each other and a friend pats the player." ch4 TWO QUESTIONS "A player and the coach sit on a bench; two thought bubbles appear, one with a tick and one with an arrow; the player points, then opens their hand." ch5 ONE DETAIL "A player looks over their shoulder and gets the ball; an orange player takes it; our player runs back into the space and gets the ball back; a yellow ring goes round them." ch6 "The player walks off the pitch carrying a little yellow token to a friend waving under a lamp; the scoreboard fades away behind."
+
+Reduced-motion stills: 6.0 / 3.9 / 5.2 / 5.6 / 9.3 / 5.6 s.
+
+### Rework ledger (2026-09-21, `lib/paths/riso/stories/loss.ts`)
+
+**Built as boarded** with these adjustments after the first frame strips: a viewport fit `view(s) = clamp((safe.w/fit)/800, 1, 1.32)` multiplies every camera zoom (as in reset) and every chapter's base zoom was raised ~×1.1 so the figures fill the phone; ch1's referee moved to x −255 and the two orange figures to x 275 / 363 in front of a goal at x 230–480 so they stay inside the 390-wide crop; the whistle grew to r 38 with a thicker tube; ch2's drop rings widened (w 13, to r 280) and every paper ring got a navy hairline so ripples read on the blue; ch3's board close-up is zoom 1.85 and the team stands at x −190 / −10 / 170 / 350; ch4 runs at zoom 1.35–1.38 with the bubbles at (−150, −100) and (200, −128); ch5's teammate is at −430, the pool of space at −250 and the intercept at (−210, 214) so the "keep it small" ring (rx 158) does not touch the teammate; ch6's board is at x −360..−120, the friend at 330 and the lamp at 430 so the friend is in view from ~5 s and the board is still on screen while it fades; the touch reaction is a navy pebble landing with a blue wet ring, a paper ripple ring and four droplets. Coloured figures print through `sticker()` — a hand-cut paper silhouette knocked out under an ink `figure()` (10 plate ops instead of 30 for a paper-mode figure) — which gives the teammates, opponents, coach, friend and referee a cut-paper halo on the green.
+
+**Kid test (sound off; frames `scratchpad/riso/fix/loss2/kid-ch123.jpg`, `kid-ch456.jpg`, `kid3.jpg`; app captures `scratchpad/riso/fix/loss2/app-loss-<w>x<h>-ch<n>.png`; strips `phone-strip.jpg`, `strip-320.jpg`, `strip-844.jpg`, `strip-1440.jpg`):**
+- ch1 — "The grey referee blows a whistle (lines burst out of it), the orange team jumps up with their arms in the air, and our dark player droops over the ball; a dark blob grows on their chest, orange spikes flash in it, then it turns into a soft orange ring." PASS
+- ch2 — "A player sits at the edge of a puddle by the pitch with their feet in the water; a drop falls in and rings spread; they slap the water with their hand and it splashes up in a big ring; they lift the hand and the puddle goes calm and shiny." PASS
+- ch3 ONE RESULT — "A scoreboard: blue with one dot, orange with two dots. Then the camera pulls back and the team stands in a line with their arms round each other; a faint runner goes past behind; the friend pats our player and the player stands up straight." PASS
+- ch4 TWO QUESTIONS — "A player and the coach (orange, with a white cap) sit on a bench; a thought bubble with a tick pops over the player, then one with a curved arrow over the coach; the player points at the coach, drops the arm, and opens their hand instead." PASS
+- ch5 ONE DETAIL — "A player looks over their shoulder (a yellow beam) at the orange player behind, gets the ball from the blue friend, the orange player takes it, our player runs back into a yellow patch and gets the ball back there; a yellow ring goes round them." PASS
+- ch6 — "Evening: the player walks away from the scoreboard holding a little yellow coin toward a yellow friend waving under a lamp; the scoreboard fades to paper behind them and the two walk off together." PASS
+
+**Gates.** `npm run typecheck` clean · `review-riso-story.mjs --id loss --out …/riso/review3`: 45 samples, 5/5 seams max 0 / changed 0, held-seam 0 %, 0 transparent, 0 errors, maxOps 131 (passage frame; scenes 37–92) · `riso-perf.mjs loss` at 390×850 DPR 1.5: **median 3.7 ms**, p95 15.4 ms, max 15.8 ms, ops median 66 · `check-riso-films-browser.mjs --format 11v11 --title "After the Final Whistle"`: PASS at 390×850 (touch 48.4 %), 320×568 (19.1 %), 844×390 (30.3 %), 1440×850 (81.5 %); zero page errors.
+
+**Self-critique.** The whistle reads as a whistle only because it is at the referee's mouth with burst lines — on its own it is still "a disc on a stick"; ch2's tear drop is a small mark (the puddle and the hand carry the beat); ch3's close-up on the phone shows the team's heads below the board (the vertical crop is taller than the desktop one), which softens the "board big, then the team revealed" reveal; the ch6 friend is out of frame for the first ~4 s so the walk has no visible destination until the camera reaches it.

@@ -1,0 +1,68 @@
+{
+ "lesson": "e_thirdman",
+ "questions": [
+  {
+   "q": "The left teammate has received your pass. What should happen next?",
+   "options": [
+    "Pass on to the forward player",
+    "Pass straight back to you",
+    "Dribble into the defender"
+   ],
+   "correct": 0,
+   "explain": "Yes. From the left, the forward is on a new angle, so the third player receives beyond the defender.",
+   "choiceExplanations": [
+    "Yes. From the left, the forward is on a new angle, so the third player receives beyond the defender.",
+    "Back to you, the defender still blocks your lane, so we are stuck again.",
+    "The defender is right there, so dribbling at them loses the new angle and the ball."
+   ],
+   "visual": {
+    "kind": "whatNext",
+    "frame": {"step": 3, "focus": ["lm", "rm", "dst"], "trails": true}
+   }
+  },
+  {
+   "q": "The direct lane to the forward is blocked. Which picture shows the third-player route?",
+   "options": [
+    "Pass straight to the forward",
+    "Left teammate first, then the forward",
+    "Pass back to the deeper midfielder"
+   ],
+   "correct": 1,
+   "explain": "Right. Two clear passes take the ball around the defender to the third player.",
+   "choiceExplanations": [
+    "The defender stands in that lane, so the direct pass can be cut out.",
+    "Right. Two clear passes take the ball around the defender to the third player.",
+    "That keeps the ball, but it moves away from the forward and nobody gets beyond the defender."
+   ],
+   "visual": {
+    "kind": "pickPicture",
+    "pictures": [
+     {"step": 2, "focus": ["cm", "dst"], "marks": [{"kind": "pass", "from": "cm", "to": "rm", "tone": "gold"}]},
+     {"step": 2, "focus": ["cm", "dst"], "marks": [{"kind": "pass", "from": "cm", "to": "lm", "tone": "gold"}, {"kind": "pass", "from": "lm", "to": "rm", "tone": "gold"}]},
+     {"step": 2, "focus": ["cm", "dst"], "marks": [{"kind": "pass", "from": "cm", "to": "dm", "tone": "gold"}]}
+    ]
+   }
+  },
+  {
+   "q": "Now the defender stands between the left teammate and the forward. Which pass is best?",
+   "options": [
+    "Straight to the forward",
+    "To the left teammate first",
+    "Back to the deeper midfielder"
+   ],
+   "correct": 0,
+   "explain": "Yes. The direct lane is open, so we don't need an extra pass.",
+   "choiceExplanations": [
+    "Yes. The direct lane is open, so we don't need an extra pass.",
+    "The defender now blocks the left teammate's next pass, so that extra pass leads nowhere.",
+    "That pass goes backward when a clear forward pass is already there."
+   ],
+   "visual": {
+    "kind": "bestPass",
+    "frame": {"step": 2, "place": {"dst": {"x": 98, "y": 196}}, "ball": "cm", "focus": ["cm", "dst", "rm"]},
+    "from": "cm",
+    "to": ["rm", "lm", "dm"]
+   }
+  }
+ ]
+}

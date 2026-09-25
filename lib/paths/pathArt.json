@@ -1,0 +1,106 @@
+{
+  "futsal": [
+    {
+      "top": 114,
+      "height": 830,
+      "mobile": "/stories/paths/chapters/ink-6a0fd39d8820.webp",
+      "desktop": "/stories/paths/chapters/ink-591f4ab72f13.webp"
+    },
+    {
+      "top": 1024,
+      "height": 1230,
+      "mobile": "/stories/paths/chapters/ink-b08babc6b58c.webp",
+      "desktop": "/stories/paths/chapters/ink-61324abb79c7.webp"
+    },
+    {
+      "top": 2134,
+      "height": 1030,
+      "mobile": "/stories/paths/chapters/ink-a1f48322ba0b.webp",
+      "desktop": "/stories/paths/chapters/ink-90c132a2b95f.webp"
+    },
+    {
+      "top": 3044,
+      "height": 630,
+      "mobile": "/stories/paths/chapters/ink-b96e6e362a8a.webp",
+      "desktop": "/stories/paths/chapters/ink-af38b58619fa.webp"
+    }
+  ],
+  "7v7": [
+    {
+      "top": 114,
+      "height": 830,
+      "mobile": "/stories/paths/chapters/ink-6a0fd39d8820.webp",
+      "desktop": "/stories/paths/chapters/ink-591f4ab72f13.webp"
+    },
+    {
+      "top": 1024,
+      "height": 1230,
+      "mobile": "/stories/paths/chapters/ink-b08babc6b58c.webp",
+      "desktop": "/stories/paths/chapters/ink-61324abb79c7.webp"
+    },
+    {
+      "top": 2334,
+      "height": 630,
+      "mobile": "/stories/paths/chapters/ink-65983af15cb0.webp",
+      "desktop": "/stories/paths/chapters/ink-8091f6f676fe.webp"
+    },
+    {
+      "top": 3044,
+      "height": 830,
+      "mobile": "/stories/paths/chapters/ink-10da65772e0e.webp",
+      "desktop": "/stories/paths/chapters/ink-63d930634116.webp"
+    }
+  ],
+  "9v9": [
+    {
+      "top": 114,
+      "height": 830,
+      "mobile": "/stories/paths/chapters/ink-6a0fd39d8820.webp",
+      "desktop": "/stories/paths/chapters/ink-591f4ab72f13.webp"
+    },
+    {
+      "top": 1024,
+      "height": 1230,
+      "mobile": "/stories/paths/chapters/ink-b08babc6b58c.webp",
+      "desktop": "/stories/paths/chapters/ink-61324abb79c7.webp"
+    },
+    {
+      "top": 2134,
+      "height": 1030,
+      "mobile": "/stories/paths/chapters/ink-a1f48322ba0b.webp",
+      "desktop": "/stories/paths/chapters/ink-90c132a2b95f.webp"
+    },
+    {
+      "top": 3044,
+      "height": 630,
+      "mobile": "/stories/paths/chapters/ink-b96e6e362a8a.webp",
+      "desktop": "/stories/paths/chapters/ink-af38b58619fa.webp"
+    }
+  ],
+  "11v11": [
+    {
+      "top": 114,
+      "height": 830,
+      "mobile": "/stories/paths/chapters/ink-6a0fd39d8820.webp",
+      "desktop": "/stories/paths/chapters/ink-591f4ab72f13.webp"
+    },
+    {
+      "top": 1024,
+      "height": 830,
+      "mobile": "/stories/paths/chapters/ink-aafc473616a0.webp",
+      "desktop": "/stories/paths/chapters/ink-a543a71ccc79.webp"
+    },
+    {
+      "top": 1934,
+      "height": 1230,
+      "mobile": "/stories/paths/chapters/ink-883578abc8c9.webp",
+      "desktop": "/stories/paths/chapters/ink-e014775f780d.webp"
+    },
+    {
+      "top": 3044,
+      "height": 630,
+      "mobile": "/stories/paths/chapters/ink-b96e6e362a8a.webp",
+      "desktop": "/stories/paths/chapters/ink-af38b58619fa.webp"
+    }
+  ]
+}

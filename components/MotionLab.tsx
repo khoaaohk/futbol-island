@@ -1,0 +1,45 @@
+'use client';
+import {useEffect,useLayoutEffect,useRef,useState} from 'react';
+import * as T from 'three';
+import {createMatchBallTexture} from '@/lib/graphics/matchBallTexture';
+import {createPlayer,ROLE_PROFILES} from '@/lib/graphics/player';
+import {MOTION_STUDIES,STUDY_DURATION,sampleMotionStudy,type MotionStudyId,type StudySample} from '@/lib/graphics/study/scenarios';
+import styles from './MotionLab.module.css';
+type Controls={play:()=>void;pause:()=>void;seek:(time:number)=>void;report:()=>unknown;configure:()=>void};
+export default function MotionLab(){
+ const host=useRef<HTMLDivElement>(null),controls=useRef<Controls>();
+ const [scenario,setScenario]=useState<MotionStudyId>('retreat-chase'),[role,setRole]=useState<keyof typeof ROLE_PROFILES>('def'),[view,setView]=useState('front'),[mirror,setMirror]=useState(false),[slow,setSlow]=useState(false),[playing,setPlaying]=useState(false),[time,setTime]=useState(0),[error,setError]=useState('');
+ const config=useRef({scenario,role,view,mirror,slow});
+ useEffect(()=>{
+  const node=host.current;if(!node)return;let disposed=false,frame=0,clock=0,previous=0,accumulator=0,lastPaint=0,lastUI=0,running=false,draws=0;
+  const cpu:number[]=[],intervals:number[]=[];let previousPaint=0;const sample:StudySample={x:0,z:0,motion:{}},scene=new T.Scene();scene.background=new T.Color('#c4d2bd');
+  let renderer:T.WebGLRenderer;try{renderer=new T.WebGLRenderer({antialias:true});}catch{setError('This browser could not start the movement preview.');return;}
+  setError('');renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.outputColorSpace=T.SRGBColorSpace;node.appendChild(renderer.domElement);renderer.domElement.setAttribute('aria-label','Player movement review');renderer.domElement.setAttribute('role','img');
+  const camera=new T.PerspectiveCamera(36,1,.1,80),rig=createPlayer('movement-study','home',true);rig.setProfile(ROLE_PROFILES[config.current.role]);scene.add(rig.root);scene.add(new T.HemisphereLight('#fff8e6','#536b4b',2.2));const sun=new T.DirectionalLight('#ffffff',2.6);sun.position.set(4,8,5);scene.add(sun);
+  const floorGeo=new T.PlaneGeometry(100,100),floorMat=new T.MeshStandardMaterial({color:'#648663',roughness:1}),floor=new T.Mesh(floorGeo,floorMat);floor.rotation.x=-Math.PI/2;scene.add(floor);const grid=new T.GridHelper(100,100,'#d5dfb7','#76936d');grid.position.y=.002;scene.add(grid);
+  const ballMap=createMatchBallTexture(),ballGeo=new T.SphereGeometry(.19,16,12),ballMat=new T.MeshStandardMaterial({map:ballMap,roughness:.85}),ball=new T.Mesh(ballGeo,ballMat);scene.add(ball);
+  const pose=(t:number)=>{sampleMotionStudy(config.current.scenario,t,sample,config.current.mirror);rig.update(sample.x,sample.z,1/60,t,false,sample.motion);ball.visible=!!sample.motion.dribbling;if(ball.visible){const bx=ball.position.x,bz=ball.position.z;rig.dribbleContact(ball.position);if(t===0)ball.rotation.set(0,0,0);else{ball.rotation.x+=(ball.position.z-bz)/.19;ball.rotation.z-=(ball.position.x-bx)/.19;}}};
+  const paint=()=>{const view=config.current.view;const x=rig.root.position.x,z=rig.root.position.z;camera.position.set(x+(view==='side'?4.8:view==='three-quarter'?3.6:0),1.7,z+(view==='rear'?-4.8:view==='side'?0:4.8));camera.lookAt(x,.95,z);renderer.render(scene,camera);node.dataset.scenario=config.current.scenario;node.dataset.time=clock.toFixed(3);node.dataset.draws=String(++draws);};
+  const resize=()=>{renderer.setSize(node.clientWidth,node.clientHeight,false);camera.aspect=node.clientWidth/Math.max(1,node.clientHeight);camera.updateProjectionMatrix();paint();};
+  const pause=()=>{running=false;cancelAnimationFrame(frame);frame=0;setPlaying(false);};
+  const seek=(next:number)=>{pause();clock=Math.round(Math.max(0,Math.min(STUDY_DURATION,next))*60)/60;for(let i=0;i<=Math.round(clock*60);i++)pose(i/60);accumulator=0;paint();setTime(clock);};
+  const tick=(now:number)=>{if(disposed||!running)return;const dt=Math.min(.1,(now-previous)/1000);previous=now;accumulator+=dt*(config.current.slow?.5:1);const start=performance.now();while(accumulator>=1/60&&clock<STUDY_DURATION){clock=Math.min(STUDY_DURATION,clock+1/60);pose(clock);accumulator-=1/60;}if(cpu.length<18000)cpu.push(performance.now()-start);if(now-lastPaint>=1000/30-1){paint();if(previousPaint&&intervals.length<18000)intervals.push(now-previousPaint);previousPaint=now;lastPaint=now;}if(now-lastUI>100){setTime(clock);lastUI=now;}if(clock>=STUDY_DURATION){pause();setTime(clock);return;}frame=requestAnimationFrame(tick);};
+  const play=()=>{if(running||document.hidden)return;if(clock>=STUDY_DURATION)seek(0);running=true;setPlaying(true);previous=performance.now();previousPaint=0;frame=requestAnimationFrame(tick);};
+  const visibility=()=>{if(document.hidden)pause();};document.addEventListener('visibilitychange',visibility);
+  const lost=(event:Event)=>{event.preventDefault();pause();setError('Graphics paused. Reload this review to continue.');};renderer.domElement.addEventListener('webglcontextlost',lost);
+  controls.current={play,pause,seek,configure:()=>{rig.setProfile(ROLE_PROFILES[config.current.role]);cpu.length=intervals.length=0;seek(0);},report:()=>{const {scenario,role,view,mirror,slow}=config.current;const percentile=(a:number[],q:number)=>{const s=[...a].sort((a,b)=>a-b);return s.length?s[Math.floor((s.length-1)*q)]:null;};return{date:new Date().toISOString(),scenario,role,view,mirror,halfSpeed:slow,userAgent:navigator.userAgent,viewport:[node.clientWidth,node.clientHeight],pixelRatio:renderer.getPixelRatio(),time:clock,poseUpdateMs:{samples:cpu.length,median:percentile(cpu,.5),p95:percentile(cpu,.95)},renderIntervalMs:{samples:intervals.length,median:percentile(intervals,.5),p95:percentile(intervals,.95)},note:'Manual review; not a temperature measurement. Update timing excludes rendering. No reference motion-capture data attached.'};}};
+  pose(0);setTime(0);setPlaying(false);resize();const observer=new ResizeObserver(resize);observer.observe(node);
+  return()=>{disposed=true;running=false;cancelAnimationFrame(frame);observer.disconnect();document.removeEventListener('visibilitychange',visibility);renderer.domElement.removeEventListener('webglcontextlost',lost);controls.current=undefined;rig.dispose();ballGeo.dispose();ballMat.dispose();ballMap.dispose();floorGeo.dispose();floorMat.dispose();grid.geometry.dispose();(grid.material as T.Material).dispose();renderer.dispose();renderer.forceContextLoss();renderer.domElement.remove();};
+ },[]);
+ useLayoutEffect(()=>{config.current={scenario,role,view,mirror,slow};controls.current?.configure();},[scenario,role,view,mirror,slow]);
+ const download=()=>{const data=controls.current?.report();if(!data)return;const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=`futbol-motion-${scenario}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
+ return <main className={styles.lab}><h1>Movement review</h1><p>Review the same player rig used on the island. Watch complete actions, then pause or scrub to inspect foot placement and body balance.</p><div className={styles.controls}>
+ <label>Movement<select aria-label="Movement" value={scenario} onChange={e=>setScenario(e.target.value as MotionStudyId)}>{MOTION_STUDIES.map(s=><option key={s.id} value={s.id}>{s.label}</option>)}</select></label>
+ <label>Body profile<select aria-label="Body profile" value={role} onChange={e=>setRole(e.target.value as keyof typeof ROLE_PROFILES)}>{['you','def','fwd','gk'].map(r=><option key={r} value={r}>{({you:'Player',def:'Defender',fwd:'Forward',gk:'Goalkeeper'})[r]}</option>)}</select></label>
+ <label>View<select aria-label="View" value={view} onChange={e=>setView(e.target.value)}>{['front','side','rear','three-quarter'].map(v=><option key={v}>{v}</option>)}</select></label>
+ <label><span>Opposite side</span><input type="checkbox" checked={mirror} onChange={e=>setMirror(e.target.checked)}/></label><label><span>Half speed</span><input type="checkbox" checked={slow} onChange={e=>setSlow(e.target.checked)}/></label></div>
+ <div ref={host} className={styles.stage}/>{error&&<p role="alert">{error}</p>}
+ <div className={styles.controls}><button disabled={!!error} onClick={()=>playing?controls.current?.pause():controls.current?.play()}>{playing?'Pause':'Play'}</button><button disabled={!!error} onClick={()=>controls.current?.seek(0)}>Restart</button><button onClick={download}>Export diagnostics</button></div>
+ <label className={styles.timeline}>Time<input aria-label="Movement time" type="range" min="0" max={STUDY_DURATION} step="0.01" value={time} onChange={e=>controls.current?.seek(Number(e.target.value))}/><output>{time.toFixed(2)}s</output></label>
+ <p className={styles.note}>On a phone, check foot sliding, abrupt joint changes and stiffness at normal speed. Export diagnostics after playback. Record heat and battery observations separately; this page cannot measure device temperature. Playback stops after one action and pauses when hidden.</p><a href="/">Back to Futbol Island</a></main>;
+}

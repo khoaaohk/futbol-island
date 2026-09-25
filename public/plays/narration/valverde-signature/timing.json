@@ -1,0 +1,382 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The volley, live",
+   "text": "Madrid, 2024. Real Madrid are losing to Manchester City. Luka Modri\u0107 finds Vin\u00edcius, and he floats a cross over the box... Fede Valverde hits it first time. What a volley! Goal!",
+   "src": "/plays/narration/valverde-signature/1.m4a",
+   "seconds": 14.2,
+   "words": [
+    {
+     "w": "Madrid",
+     "at": 0.4
+    },
+    {
+     "w": "2024",
+     "at": 0.925
+    },
+    {
+     "w": "Real",
+     "at": 2.25
+    },
+    {
+     "w": "Madrid",
+     "at": 2.525
+    },
+    {
+     "w": "are",
+     "at": 2.925
+    },
+    {
+     "w": "losing",
+     "at": 3.05
+    },
+    {
+     "w": "to",
+     "at": 3.45
+    },
+    {
+     "w": "Manchester",
+     "at": 3.575
+    },
+    {
+     "w": "City",
+     "at": 4.188
+    },
+    {
+     "w": "Luka",
+     "at": 5.05
+    },
+    {
+     "w": "Modri\u0107",
+     "at": 5.375
+    },
+    {
+     "w": "finds",
+     "at": 5.825
+    },
+    {
+     "w": "Vin\u00edcius",
+     "at": 6.15
+    },
+    {
+     "w": "and",
+     "at": 7.05
+    },
+    {
+     "w": "he",
+     "at": 7.162
+    },
+    {
+     "w": "floats",
+     "at": 7.287
+    },
+    {
+     "w": "a",
+     "at": 7.588
+    },
+    {
+     "w": "cross",
+     "at": 7.662
+    },
+    {
+     "w": "over",
+     "at": 8.062
+    },
+    {
+     "w": "the",
+     "at": 8.262
+    },
+    {
+     "w": "box",
+     "at": 8.35
+    },
+    {
+     "w": "Fede",
+     "at": 9.363
+    },
+    {
+     "w": "Valverde",
+     "at": 9.65
+    },
+    {
+     "w": "hits",
+     "at": 10.25
+    },
+    {
+     "w": "it",
+     "at": 10.475
+    },
+    {
+     "w": "first",
+     "at": 10.625
+    },
+    {
+     "w": "time",
+     "at": 10.9
+    },
+    {
+     "w": "What",
+     "at": 11.675
+    },
+    {
+     "w": "a",
+     "at": 11.812
+    },
+    {
+     "w": "volley",
+     "at": 11.887
+    },
+    {
+     "w": "Goal",
+     "at": 12.713
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. Eyes on the ball. He swings his right leg, ankle locked, toes pointing down... and hits the middle of the ball.",
+   "src": "/plays/narration/valverde-signature/2.m4a",
+   "seconds": 9.3,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.113
+    },
+    {
+     "w": "Eyes",
+     "at": 1.938
+    },
+    {
+     "w": "on",
+     "at": 2.212
+    },
+    {
+     "w": "the",
+     "at": 2.312
+    },
+    {
+     "w": "ball",
+     "at": 2.4
+    },
+    {
+     "w": "He",
+     "at": 3.275
+    },
+    {
+     "w": "swings",
+     "at": 3.438
+    },
+    {
+     "w": "his",
+     "at": 3.812
+    },
+    {
+     "w": "right",
+     "at": 3.975
+    },
+    {
+     "w": "leg",
+     "at": 4.25
+    },
+    {
+     "w": "ankle",
+     "at": 4.675
+    },
+    {
+     "w": "locked",
+     "at": 5.0
+    },
+    {
+     "w": "toes",
+     "at": 5.513
+    },
+    {
+     "w": "pointing",
+     "at": 5.9
+    },
+    {
+     "w": "down",
+     "at": 6.3
+    },
+    {
+     "w": "and",
+     "at": 7.025
+    },
+    {
+     "w": "hits",
+     "at": 7.15
+    },
+    {
+     "w": "the",
+     "at": 7.425
+    },
+    {
+     "w": "middle",
+     "at": 7.525
+    },
+    {
+     "w": "of",
+     "at": 7.763
+    },
+    {
+     "w": "the",
+     "at": 7.838
+    },
+    {
+     "w": "ball",
+     "at": 7.925
+    }
+   ]
+  },
+  {
+   "label": "Into the corner",
+   "text": "Behind the goal: low and hard, it flies into the corner. The keeper can't reach it. Three all!",
+   "src": "/plays/narration/valverde-signature/3.m4a",
+   "seconds": 6.7,
+   "words": [
+    {
+     "w": "Behind",
+     "at": 0.35
+    },
+    {
+     "w": "the",
+     "at": 0.713
+    },
+    {
+     "w": "goal",
+     "at": 0.8
+    },
+    {
+     "w": "low",
+     "at": 1.462
+    },
+    {
+     "w": "and",
+     "at": 1.712
+    },
+    {
+     "w": "hard",
+     "at": 1.825
+    },
+    {
+     "w": "it",
+     "at": 2.163
+    },
+    {
+     "w": "flies",
+     "at": 2.25
+    },
+    {
+     "w": "into",
+     "at": 2.587
+    },
+    {
+     "w": "the",
+     "at": 2.763
+    },
+    {
+     "w": "corner",
+     "at": 2.85
+    },
+    {
+     "w": "The",
+     "at": 3.575
+    },
+    {
+     "w": "keeper",
+     "at": 3.675
+    },
+    {
+     "w": "can't",
+     "at": 4.05
+    },
+    {
+     "w": "reach",
+     "at": 4.325
+    },
+    {
+     "w": "it",
+     "at": 4.612
+    },
+    {
+     "w": "Three",
+     "at": 5.075
+    },
+    {
+     "w": "all",
+     "at": 5.375
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: lock your ankle and strike through the middle of the ball.",
+   "src": "/plays/narration/valverde-signature/4.m4a",
+   "seconds": 4.8,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "lock",
+     "at": 1.363
+    },
+    {
+     "w": "your",
+     "at": 1.637
+    },
+    {
+     "w": "ankle",
+     "at": 1.775
+    },
+    {
+     "w": "and",
+     "at": 2.2
+    },
+    {
+     "w": "strike",
+     "at": 2.337
+    },
+    {
+     "w": "through",
+     "at": 2.725
+    },
+    {
+     "w": "the",
+     "at": 2.862
+    },
+    {
+     "w": "middle",
+     "at": 2.95
+    },
+    {
+     "w": "of",
+     "at": 3.188
+    },
+    {
+     "w": "the",
+     "at": 3.263
+    },
+    {
+     "w": "ball",
+     "at": 3.35
+    }
+   ]
+  }
+ ]
+}

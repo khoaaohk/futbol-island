@@ -10,6 +10,10 @@ import {COACH_VOICES} from '@/lib/town/useLessonVoice';
 import styles from './IslandSettings.module.css';
 import IslandQuests from './IslandQuests';
 import CoinQuest from './CoinQuest';
+import dynamicImport from 'next/dynamic';
+import {CardOfferDot,pendingPicksLabel,usePendingPicks} from './CardOfferBadges';
+import {OPEN_CARDS_EVENT} from '@/lib/town/cardRewardStore';
+const CardCollection=dynamicImport(()=>import('./CardCollection'),{ssr:false});
 
 type TimeOfDay='day'|'sunset'|'night';
 type Props={
@@ -36,11 +40,16 @@ function Symbol({kind}:{kind:'settings'|'about'|'close'}){
 
 export default function IslandSettings({voiceEnabled,onVoiceChange,coachVoice,onCoachVoiceChange,controlsFlipped,onControlsFlippedChange,open,onOpenChange,onOpenMap,onStartLearning,onOpenStore,pathsRequest,onRestartOnboarding,musicEnabled,musicVolume,soundVolume,onMusicVolumeChange,onSoundVolumeChange,onMusicChange,soundMuted,onSoundMutedChange,timeOfDay,onTimeOfDayChange}:Props){
   const storeItem=useRef<string|undefined>(undefined);
+  const triggers=useRef<HTMLElement>(null);
+  useEffect(()=>{const sync=()=>{if(triggers.current)triggers.current.dataset.pageHidden=String(document.hidden);};sync();document.addEventListener('visibilitychange',sync);return()=>document.removeEventListener('visibilitychange',sync);},[]);
   const mapAfterClose=useRef(false),learnAfterClose=useRef(false),storeAfterClose=useRef(false),welcomeAfterClose=useRef(false);
   const [backward,setBackward]=useState(false);
-  const [tab,setTab]=useState<'settings'|'about'|'quests'|'balls'|'exploration'|'shortcuts'>('settings');
+  const [tab,setTab]=useState<'settings'|'about'|'quests'|'balls'|'exploration'|'shortcuts'|'cards'>('settings');
   useEffect(()=>{const show=()=>{setTab('balls');setBackward(false);};window.addEventListener('fi2-open-coin-panel',show);return()=>window.removeEventListener('fi2-open-coin-panel',show);},[]);
   useEffect(()=>{if(pathsRequest){setTab('quests');setBackward(false);}},[pathsRequest]);
+  // "See it in my binder" after choosing a card: open Paths → Collect cards (the binder turns to the new card itself).
+  useEffect(()=>{const show=()=>{setTab('cards');setBackward(false);onOpenChange(true);};window.addEventListener(OPEN_CARDS_EVENT,show);return()=>window.removeEventListener(OPEN_CARDS_EVENT,show);},[onOpenChange]);
+  const picks=usePendingPicks();
   useEffect(()=>{if(new URLSearchParams(location.search).get('panel')==='about'){setTab('about');onOpenChange(true);}},[]);
   const body=useRef<HTMLDivElement>(null);
   useEffect(()=>{if(body.current)body.current.scrollTop=0;close.current?.focus({preventScroll:true});},[tab]);
@@ -49,7 +58,8 @@ export default function IslandSettings({voiceEnabled,onVoiceChange,coachVoice,on
     const element=dialog.current;if(!element)return;
     let timer:ReturnType<typeof setTimeout>|undefined;
     if(open){
-      if(!element.open){restoreFocus.current=document.activeElement instanceof HTMLElement?document.activeElement:null;element.showModal();element.scrollLeft=0;close.current?.focus({preventScroll:true});}
+      if(body.current)body.current.scrollTop=0;
+      if(!element.open){restoreFocus.current=document.activeElement instanceof HTMLElement?document.activeElement:null;element.showModal();element.scrollLeft=0;if(body.current)body.current.scrollTop=0;close.current?.focus({preventScroll:true});}
     }else if(element.open){
       const finish=()=>{element.close();if(welcomeAfterClose.current){welcomeAfterClose.current=false;onRestartOnboarding?.();}else if(storeAfterClose.current){storeAfterClose.current=false;onOpenStore?.(storeItem.current);storeItem.current=undefined;}else if(learnAfterClose.current){learnAfterClose.current=false;onStartLearning();}else if(mapAfterClose.current){mapAfterClose.current=false;onOpenMap();}else if(restoreFocus.current?.isConnected)restoreFocus.current.focus({preventScroll:true});};
       if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)finish();else timer=setTimeout(finish,240);
@@ -57,7 +67,7 @@ export default function IslandSettings({voiceEnabled,onVoiceChange,coachVoice,on
     return ()=>{if(timer)clearTimeout(timer);};
   },[open]);
   useEffect(()=>()=>{if(restoreFocus.current?.isConnected)restoreFocus.current.focus();},[]);
-  const show=(next:'settings'|'about'|'quests'|'balls'|'exploration'|'shortcuts')=>{setBackward(false);setTab(next);onOpenChange(true);};
+  const show=(next:'settings'|'about'|'quests'|'balls'|'exploration'|'shortcuts'|'cards')=>{setBackward(false);setTab(next);onOpenChange(true);};
   const keyboard=(event:KeyboardEvent<HTMLDialogElement>)=>{
     event.stopPropagation();
     if(event.key==='Escape'){event.preventDefault();onOpenChange(false);return;}
@@ -69,15 +79,15 @@ export default function IslandSettings({voiceEnabled,onVoiceChange,coachVoice,on
     else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
   };
   return <>
-    <nav className={styles.triggers} aria-label="Island information">
+    <nav ref={triggers} className={styles.triggers} aria-label="Island information">
       <button type="button" className={styles.circle} aria-label="Settings" aria-haspopup="dialog" aria-expanded={open&&tab==='settings'} onClick={()=>show('settings')}><Symbol kind="settings"/></button>
-      <button type="button" className={`${styles.circle} ${styles.questsTrigger}`} data-tour="quests" aria-label="Paths" aria-haspopup="dialog" aria-expanded={open&&(tab==='quests'||tab==='balls'||tab==='exploration')} onClick={()=>show('quests')}><Icon name="bolt" size={24}/></button>
+      <button type="button" className={`${styles.circle} ${styles.questsTrigger}`} data-tour="quests" aria-label={`Paths${pendingPicksLabel(picks)}`} aria-haspopup="dialog" aria-expanded={open&&(tab==='quests'||tab==='balls'||tab==='exploration'||tab==='cards')} onClick={()=>show('quests')}><CardOfferDot/><span className={styles.pathIconCycle} aria-hidden="true">{['bolt','book','play'].map(name=><span key={name} data-path-icon={name}><Icon name={name} size={24}/></span>)}</span></button>
     </nav>
-    <dialog ref={dialog} className={`${styles.dialog} ${styles.fullModal} ${tab==='balls'?styles.ballsModal:tab==='exploration'?styles.exploreModal:''} ${tab==='quests'||tab==='balls'||tab==='exploration'?styles.pathsModal:''} ${open?styles.entering:styles.leaving}`} aria-labelledby="island-settings-title" aria-modal="true" onKeyDown={keyboard} onKeyUp={e=>e.stopPropagation()} onCancel={e=>{e.preventDefault();onOpenChange(false);}} onClick={e=>{if(e.target===e.currentTarget)onOpenChange(false);}}>
-      <section data-paths-host={tab==='quests'||tab==='balls'||tab==='exploration'?'true':undefined} className={`${styles.panel} ${shell.shell} ${tab==='quests'||tab==='balls'||tab==='exploration'?shell.white:shell.drawer}`}>
-        <header className={`${styles.header} ${shell.header}`}>{tab==='quests'&&<IslandBottleLogo/>}{(tab==='balls'||tab==='exploration'||tab==='about'||tab==='shortcuts')&&<BackButton className={styles.headerBack} onBack={()=>{setBackward(true);setTab(tab==='about'||tab==='shortcuts'?'settings':'quests');}}/>}<div><h2 id="island-settings-title">{tab==='settings'?'Make it your island':tab==='quests'?'Island paths':tab==='balls'?'Ball hunt':tab==='exploration'?'Explore':tab==='shortcuts'?'Keyboard shortcuts':'About us'}</h2></div><DoneButton ref={close} className={`${styles.circle} ${styles.close}`} onDone={()=>onOpenChange(false)}/></header><div ref={body} className={shell.body}>{tab==='about'&&<p className={styles.aboutSubtitle}>A playful island for learning football together.</p>}
+    <dialog ref={dialog} className={`${styles.dialog} ${styles.fullModal} ${tab==='balls'?styles.ballsModal:tab==='exploration'?styles.exploreModal:''} ${tab==='quests'||tab==='balls'||tab==='exploration'||tab==='cards'?styles.pathsModal:''} ${open?styles.entering:styles.leaving}`} aria-labelledby="island-settings-title" aria-modal="true" onKeyDown={keyboard} onKeyUp={e=>e.stopPropagation()} onCancel={e=>{e.preventDefault();onOpenChange(false);}} onClick={e=>{if(e.target===e.currentTarget)onOpenChange(false);}}>
+      <section data-paths-host={tab==='quests'||tab==='balls'||tab==='exploration'||tab==='cards'?'true':undefined} className={`${styles.panel} ${shell.shell} ${tab==='quests'||tab==='balls'||tab==='exploration'||tab==='cards'?shell.white:shell.drawer}`}>
+        <header className={`${styles.header} ${shell.header}`}>{tab==='quests'&&<IslandBottleLogo/>}{(tab==='balls'||tab==='exploration'||tab==='cards'||tab==='about'||tab==='shortcuts')&&<BackButton className={styles.headerBack} onBack={()=>{setBackward(true);setTab(tab==='about'||tab==='shortcuts'?'settings':'quests');}}/>}<div><h2 id="island-settings-title" className={tab==='settings'?styles.settingsTitle:undefined}>{tab==='settings'?'Make it your island':tab==='quests'?'Island paths':tab==='balls'?'Ball hunt':tab==='cards'?'Collect cards':tab==='exploration'?'Explore':tab==='shortcuts'?'Keyboard shortcuts':'About us'}</h2></div><DoneButton ref={close} className={`${styles.circle} ${styles.close}`} onDone={()=>onOpenChange(false)}/></header><div ref={body} className={shell.body}>{tab==='about'&&<p className={styles.aboutSubtitle}>A playful island for learning football together.</p>}
         <div key={tab} className={backward?styles.subpageBack:styles.subpage}>
-        {(tab==='quests'||tab==='exploration')?<IslandQuests exploration={tab==='exploration'} onExplore={()=>{setBackward(false);setTab('exploration');}} onDiscover={()=>{setBackward(false);setTab('balls');}} onMap={()=>{mapAfterClose.current=true;onOpenChange(false);}} onStore={onOpenStore?()=>{storeAfterClose.current=true;onOpenChange(false);}:undefined} onLearn={()=>{learnAfterClose.current=true;onOpenChange(false);}}/>:tab==='balls'?<div className={styles.content}><CoinQuest onStore={()=>{storeItem.current='costume:matchday-fox';storeAfterClose.current=true;onOpenChange(false);}}/></div>:tab==='shortcuts'?<div className={styles.content}><dl id="desktop-keyboard-shortcuts" className={styles.shortcutList}>{[['WASD / ↑ ↓ ← →','Move'],['Space','Kick · hold for a stronger, higher shot'],['J','Juggle / stop juggling'],['R','Change ride'],['E','Talk to a nearby island character'],['M','Open / close map'],['Space / J','Use your ride’s two actions'],['Space / J in a truck','Speed up / honk'],['Esc','Close the map or current panel']].map(([key,action])=><div key={key}><dt><kbd>{key}</kbd></dt><dd>{action}</dd></div>)}</dl></div>:tab==='settings'?<div className={`${styles.content} ${styles.settingsJourney}`}>
+        {(tab==='quests'||tab==='exploration')?<IslandQuests exploration={tab==='exploration'} onExplore={()=>{setBackward(false);setTab('exploration');}} onDiscover={()=>{setBackward(false);setTab('balls');}} onCards={()=>{setBackward(false);setTab('cards');}} onMap={()=>{mapAfterClose.current=true;onOpenChange(false);}} onStore={onOpenStore?()=>{storeAfterClose.current=true;onOpenChange(false);}:undefined} onLearn={()=>{learnAfterClose.current=true;onOpenChange(false);}}/>:tab==='cards'?<div className={styles.content}><CardCollection/></div>:tab==='balls'?<div className={styles.content}><CoinQuest onStore={()=>{storeItem.current='costume:matchday-fox';storeAfterClose.current=true;onOpenChange(false);}}/></div>:tab==='shortcuts'?<div className={styles.content}><dl id="desktop-keyboard-shortcuts" className={styles.shortcutList}>{[['WASD / ↑ ↓ ← →','Move'],['Space','Kick · hold for a stronger, higher shot'],['J','Juggle / stop juggling'],['R','Change ride'],['E','Talk to a nearby island character'],['M','Open / close map'],['Space / J','Use your ride’s two actions'],['Space / J in a truck','Speed up / honk'],['Esc','Close the map or current panel']].map(([key,action])=><div key={key}><dt><kbd>{key}</kbd></dt><dd>{action}</dd></div>)}</dl></div>:tab==='settings'?<div className={`${styles.content} ${styles.settingsJourney}`}>
           <p className={styles.settingsEyebrow}>YOUR ISLAND, YOUR WAY</p>
           <div className={styles.settingsEntries}><button className={`${styles.mapButton} ${styles.secondaryButton}`} onClick={()=>{setBackward(false);setTab('about');}}><span className={styles.entryCopy}><strong>About us</strong><small>Why we built Futbol Island.</small></span><span aria-hidden="true"><Icon name="arrow"/></span></button>
           <button type="button" className={`${styles.mapButton} ${styles.secondaryButton}`} onClick={()=>{mapAfterClose.current=true;onOpenChange(false);}}>Open full map <span aria-hidden="true"><Icon name="external"/></span></button>

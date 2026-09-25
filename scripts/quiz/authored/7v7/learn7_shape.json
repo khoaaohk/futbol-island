@@ -1,0 +1,149 @@
+{
+ "lesson": "learn7_shape",
+ "questions": [
+  {
+   "q": "The forward is hiding. Tap where the forward plays.",
+   "options": [
+    "Behind the defenders",
+    "Far up the field",
+    "Out wide on the left"
+   ],
+   "correct": 1,
+   "explain": "Yes. The forward gives the team a target farther up the field.",
+   "choiceExplanations": [
+    "That is where the defenders help. The forward gives a target farther up.",
+    "Yes. The forward gives the team a target farther up the field.",
+    "That is the left midfielder's side. The forward plays up the middle."
+   ],
+   "visual": {
+    "kind": "tapSpot",
+    "frame": {
+     "step": 3,
+     "hide": [
+      "st"
+     ],
+     "focus": [
+      "cm"
+     ]
+    },
+    "spots": [
+     {
+      "x": 135,
+      "y": 335
+     },
+     {
+      "x": 135,
+      "y": 140
+     },
+     {
+      "x": 40,
+      "y": 275
+     }
+    ]
+   }
+  },
+  {
+   "q": "Which picture gives the wide player a clear pass back?",
+   "options": [
+    "Middle player runs ahead",
+    "Middle player stays far left",
+    "Middle player drops behind"
+   ],
+   "correct": 2,
+   "explain": "Yes. Behind and inside gives a short, clear pass back.",
+   "choiceExplanations": [
+    "The middle player is ahead, near a defender, so there is no help behind.",
+    "The middle player is too far away, so that pass is long and risky.",
+    "Yes. Behind and inside gives a short, clear pass back."
+   ],
+   "visual": {
+    "kind": "pickPicture",
+    "pictures": [
+     {
+      "step": 10,
+      "focus": [
+       "rm",
+       "cm"
+      ]
+     },
+     {
+      "step": 11,
+      "place": {
+       "cm": {
+        "x": 80,
+        "y": 265
+       }
+      },
+      "focus": [
+       "rm",
+       "cm"
+      ]
+     },
+     {
+      "step": 11,
+      "focus": [
+       "rm",
+       "cm"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "q": "Now the left midfielder has drifted inside. Where should they move?",
+   "options": [
+    "Move wide on the left",
+    "Move into the middle",
+    "Drop back near the defender"
+   ],
+   "correct": 0,
+   "explain": "Yes. Wide on the left gives the passer a new route.",
+   "choiceExplanations": [
+    "Yes. Wide on the left gives the passer a new route.",
+    "The middle is crowded, and the blue player can block that pass.",
+    "That is too close to our defender, so it adds no new route ahead."
+   ],
+   "visual": {
+    "kind": "dragToZone",
+    "frame": {
+     "step": 5,
+     "place": {
+      "lm": {
+       "x": 88,
+       "y": 262
+      },
+      "rm": {
+       "x": 230,
+       "y": 245
+      }
+     },
+     "focus": [
+      "lm",
+      "cm"
+     ]
+    },
+    "drag": "lm",
+    "zones": [
+     {
+      "x": 40,
+      "y": 235,
+      "w": 44,
+      "h": 40
+     },
+     {
+      "x": 150,
+      "y": 215,
+      "w": 40,
+      "h": 36
+     },
+     {
+      "x": 105,
+      "y": 305,
+      "w": 40,
+      "h": 26
+     }
+    ]
+   }
+  }
+ ]
+}

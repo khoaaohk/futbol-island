@@ -1,0 +1,21 @@
+{"lesson":"f_pivot","questions":[
+{"q":"True or false? The pivot checks both shoulders before the ball arrives.",
+ "options":["True","False"],"correct":0,
+ "explain":"Right, it's true: checking both shoulders shows the pivot where the marker is and where the room is.",
+ "choiceExplanations":["Right, it's true: checking both shoulders shows the pivot where the marker is and where the room is.","The pivot looks first, so they already know whether to turn or lay the ball off."],
+ "visual":{"kind":"trueFalse","frame":{"step":0,"focus":["st","dcb"]}}},
+{"q":"The pivot wants to turn left. In which picture is there room?",
+ "options":["Marker on the left","Marker on the right","Marker right behind"],"correct":1,
+ "explain":"Yes. The marker is on the right, so the left side is free to turn into.",
+ "choiceExplanations":["The marker is on the left side, so a left turn runs straight into them.","Yes. The marker is on the right, so the left side is free to turn into.","The marker is tight behind, so turning is risky. Lay the ball off instead."],
+ "visual":{"kind":"pickPicture","pictures":[
+  {"step":5,"focus":["st","dcb"]},
+  {"step":1,"focus":["st","dcb"]},
+  {"step":1,"place":{"dcb":{"x":135,"y":138}},"focus":["st","dcb"]}]}},
+{"q":"The marker covers the turn, and the right ala is marked. Which lay-off is best?",
+ "options":["Lay off to the right ala","Pass back to the fixo","Lay off to the left ala"],"correct":2,
+ "explain":"Yes. The left ala is free with a clear lane, so the lay-off keeps the ball.",
+ "choiceExplanations":["A defender stands in the lane to the right ala, so that lay-off gets cut out.","Their pivot sits in the long lane back, so the pass to the fixo could be stolen.","Yes. The left ala is free with a clear lane, so the lay-off keeps the ball."],
+ "visual":{"kind":"bestPass","frame":{"step":6,"place":{"drm":{"x":205,"y":215},"dst":{"x":118,"y":225}},"ball":"st","focus":["st","lm"]},
+  "from":"st","to":["rm","cb","lm"]}}
+]}

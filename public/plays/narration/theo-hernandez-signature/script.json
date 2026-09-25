@@ -1,0 +1,10 @@
+{
+ "film": "theo-hernandez-signature",
+ "note": "Chapter 1 is keyed from 'picks up the ball' (the first touch, on the corner of his own box) through 'Past one', 'past another', 'still running', 'into their box' to 'goal' (the ball crossing the line): keep the pauses so the run plays near real time. Chapter 2 is keyed to one big push ('He pushes' = the touch, 'on to it' = the next touch). Every cue starts with a plain word.",
+ "chapters": [
+  {"label": "The run, live", "text": "San Siro, May 2022. Theo Hernández picks up the ball on the edge of his own box, and off he goes! Past one, past another, still running, into their box... goal!"},
+  {"label": "Watch it again", "text": "Watch it again, slowly. See all that empty grass? He pushes the ball far ahead and sprints on to it, again and again."},
+  {"label": "The finish", "text": "Ninety-five metres later, he slots it low past keeper Juan Musso. A week later, Milan were champions!"},
+  {"label": "Your turn", "text": "Your turn: when there is space in front of you, push the ball ahead and run into it!"}
+ ]
+}

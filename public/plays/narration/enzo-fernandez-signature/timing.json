@@ -1,0 +1,398 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The curler, live",
+   "text": "Qatar, 2022, the World Cup. Argentina lead Mexico late on. From a short corner, Messi passes to Enzo Fern\u00e1ndez. He shimmies, and curls it... into the top corner!",
+   "src": "/plays/narration/enzo-fernandez-signature/1.m4a",
+   "seconds": 13.0,
+   "words": [
+    {
+     "w": "Qatar",
+     "at": 0.35
+    },
+    {
+     "w": "2022",
+     "at": 0.85
+    },
+    {
+     "w": "the",
+     "at": 1.825
+    },
+    {
+     "w": "World",
+     "at": 1.95
+    },
+    {
+     "w": "Cup",
+     "at": 2.312
+    },
+    {
+     "w": "Argentina",
+     "at": 3.112
+    },
+    {
+     "w": "lead",
+     "at": 3.8
+    },
+    {
+     "w": "Mexico",
+     "at": 4.05
+    },
+    {
+     "w": "late",
+     "at": 4.625
+    },
+    {
+     "w": "on",
+     "at": 4.85
+    },
+    {
+     "w": "From",
+     "at": 5.55
+    },
+    {
+     "w": "a",
+     "at": 5.713
+    },
+    {
+     "w": "short",
+     "at": 5.787
+    },
+    {
+     "w": "corner",
+     "at": 6.075
+    },
+    {
+     "w": "Messi",
+     "at": 6.55
+    },
+    {
+     "w": "passes",
+     "at": 6.862
+    },
+    {
+     "w": "to",
+     "at": 7.375
+    },
+    {
+     "w": "Enzo",
+     "at": 7.513
+    },
+    {
+     "w": "Fern\u00e1ndez",
+     "at": 7.912
+    },
+    {
+     "w": "He",
+     "at": 9.075
+    },
+    {
+     "w": "shimmies",
+     "at": 9.25
+    },
+    {
+     "w": "and",
+     "at": 9.8
+    },
+    {
+     "w": "curls",
+     "at": 9.938
+    },
+    {
+     "w": "it",
+     "at": 10.387
+    },
+    {
+     "w": "into",
+     "at": 10.95
+    },
+    {
+     "w": "the",
+     "at": 11.188
+    },
+    {
+     "w": "top",
+     "at": 11.275
+    },
+    {
+     "w": "corner",
+     "at": 11.55
+    }
+   ]
+  },
+  {
+   "label": "The shimmy",
+   "text": "Watch again, slowly. Guti\u00e9rrez closes him down. Enzo sways his hips one way, then slips past the other way.",
+   "src": "/plays/narration/enzo-fernandez-signature/2.m4a",
+   "seconds": 8.6,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.163
+    },
+    {
+     "w": "Guti\u00e9rrez",
+     "at": 2.163
+    },
+    {
+     "w": "closes",
+     "at": 2.775
+    },
+    {
+     "w": "him",
+     "at": 3.112
+    },
+    {
+     "w": "down",
+     "at": 3.275
+    },
+    {
+     "w": "Enzo",
+     "at": 4.037
+    },
+    {
+     "w": "sways",
+     "at": 4.463
+    },
+    {
+     "w": "his",
+     "at": 4.812
+    },
+    {
+     "w": "hips",
+     "at": 4.975
+    },
+    {
+     "w": "one",
+     "at": 5.263
+    },
+    {
+     "w": "way",
+     "at": 5.5
+    },
+    {
+     "w": "then",
+     "at": 5.9
+    },
+    {
+     "w": "slips",
+     "at": 6.112
+    },
+    {
+     "w": "past",
+     "at": 6.487
+    },
+    {
+     "w": "the",
+     "at": 6.862
+    },
+    {
+     "w": "other",
+     "at": 6.938
+    },
+    {
+     "w": "way",
+     "at": 7.2
+    }
+   ]
+  },
+  {
+   "label": "The curl",
+   "text": "Right foot. The ball bends across goal, past the leaping Ochoa, into the far corner. Argentina win two-nil!",
+   "src": "/plays/narration/enzo-fernandez-signature/3.m4a",
+   "seconds": 8.4,
+   "words": [
+    {
+     "w": "Right",
+     "at": 0.425
+    },
+    {
+     "w": "foot",
+     "at": 0.713
+    },
+    {
+     "w": "The",
+     "at": 1.5
+    },
+    {
+     "w": "ball",
+     "at": 1.6
+    },
+    {
+     "w": "bends",
+     "at": 1.9
+    },
+    {
+     "w": "across",
+     "at": 2.163
+    },
+    {
+     "w": "goal",
+     "at": 2.538
+    },
+    {
+     "w": "past",
+     "at": 3.1
+    },
+    {
+     "w": "the",
+     "at": 3.438
+    },
+    {
+     "w": "leaping",
+     "at": 3.525
+    },
+    {
+     "w": "Ochoa",
+     "at": 3.888
+    },
+    {
+     "w": "into",
+     "at": 4.525
+    },
+    {
+     "w": "the",
+     "at": 4.737
+    },
+    {
+     "w": "far",
+     "at": 4.838
+    },
+    {
+     "w": "corner",
+     "at": 5.1
+    },
+    {
+     "w": "Argentina",
+     "at": 6.013
+    },
+    {
+     "w": "win",
+     "at": 6.65
+    },
+    {
+     "w": "two-nil",
+     "at": 6.888
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: open your body, and strike with the inside of your foot. Curl the ball towards the far corner, away from the keeper's reach!",
+   "src": "/plays/narration/enzo-fernandez-signature/4.m4a",
+   "seconds": 9.2,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "open",
+     "at": 1.238
+    },
+    {
+     "w": "your",
+     "at": 1.55
+    },
+    {
+     "w": "body",
+     "at": 1.675
+    },
+    {
+     "w": "and",
+     "at": 2.175
+    },
+    {
+     "w": "strike",
+     "at": 2.325
+    },
+    {
+     "w": "with",
+     "at": 2.737
+    },
+    {
+     "w": "the",
+     "at": 2.862
+    },
+    {
+     "w": "inside",
+     "at": 3.0
+    },
+    {
+     "w": "of",
+     "at": 3.487
+    },
+    {
+     "w": "your",
+     "at": 3.562
+    },
+    {
+     "w": "foot",
+     "at": 3.725
+    },
+    {
+     "w": "Curl",
+     "at": 4.662
+    },
+    {
+     "w": "the",
+     "at": 4.987
+    },
+    {
+     "w": "ball",
+     "at": 5.075
+    },
+    {
+     "w": "towards",
+     "at": 5.4
+    },
+    {
+     "w": "the",
+     "at": 5.737
+    },
+    {
+     "w": "far",
+     "at": 5.838
+    },
+    {
+     "w": "corner",
+     "at": 6.112
+    },
+    {
+     "w": "away",
+     "at": 6.862
+    },
+    {
+     "w": "from",
+     "at": 7.225
+    },
+    {
+     "w": "the",
+     "at": 7.362
+    },
+    {
+     "w": "keeper's",
+     "at": 7.45
+    },
+    {
+     "w": "reach",
+     "at": 7.875
+    }
+   ]
+  }
+ ]
+}

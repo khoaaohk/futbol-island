@@ -1,13 +1,14 @@
 'use client';
 import {useEffect,useRef,useState,type ReactNode} from 'react';
 import {Icon} from './Icon';
+import StoryCaption from './StoryCaption';
 import styles from './StoryPlaybackBar.module.css';
 
 type Chapter={label:string;narration:string};
-type Props={cue?:ReactNode;title:string;playing:boolean;started:boolean;completed:boolean;muted:boolean;time:number;duration:number;caption:string;captionId?:string;transcript:Chapter[];segments?:{label:string}[];ageNote?:string;error?:string;className?:string;chapter?:number;onToggle:()=>void;onReplay:()=>void;onMute:()=>void;onPause:()=>void;onSeekChapter?:(index:number)=>void;onSeekTime?:(time:number)=>void};
+type Props={cue?:ReactNode;title:string;playing:boolean;started:boolean;completed:boolean;muted:boolean;time:number;duration:number;caption:string;captionStart?:number;captionDuration?:number;captionId?:string;transcript:Chapter[];segments?:{label:string}[];ageNote?:string;error?:string;className?:string;chapter?:number;onToggle:()=>void;onReplay:()=>void;onMute:()=>void;onPause:()=>void;onSeekChapter?:(index:number)=>void;onSeekTime?:(time:number)=>void};
 const stamp=(seconds:number)=>{const value=Math.max(0,Math.floor(Number.isFinite(seconds)?seconds:0));return `${Math.floor(value/60)}:${String(value%60).padStart(2,'0')}`;};
 /** One segmented chapter bar for every story. `segments` (visual chapters) may differ from `transcript` (caption paragraphs) for single-track narration. */
-export default function StoryPlaybackBar({cue,title,playing,started,completed,muted,time,duration,caption,captionId,transcript,segments,ageNote,error,className='',chapter,onToggle,onReplay,onMute,onPause,onSeekChapter,onSeekTime}:Props){
+export default function StoryPlaybackBar({cue,title,playing,started,completed,muted,time,duration,caption,captionStart,captionDuration,captionId,transcript,segments,ageNote,error,className='',chapter,onToggle,onReplay,onMute,onPause,onSeekChapter,onSeekTime}:Props){
  const bar=segments??transcript;
  const [reading,setReading]=useState(false),opened=useRef(false),read=useRef<HTMLButtonElement>(null),back=useRef<HTMLButtonElement>(null);
  useEffect(()=>{if(reading){opened.current=true;back.current?.focus({preventScroll:true});}else if(opened.current)read.current?.focus({preventScroll:true});},[reading]);
@@ -31,7 +32,7 @@ export default function StoryPlaybackBar({cue,title,playing,started,completed,mu
    </div>
   </nav>
   {onSeekChapter?<div className={styles.progress} role="group" aria-label="Story chapters">{bar.map((item,index)=><button key={index} className={styles.dot} data-current={index===chapter} data-complete={index<(chapter??0)||completed} aria-label={`Chapter ${index+1}: ${item.label}`} aria-current={index===chapter?'step':undefined} onClick={()=>onSeekChapter(index)}/>)}</div>:onSeekTime?<input className={styles.seek} type="range" aria-label="Story progress" min={0} max={duration||1} step={.1} value={Math.min(time,duration||1)} onChange={e=>onSeekTime(Number(e.currentTarget.value))}/>:null}
-  <div className={styles.captionArea}><p id={captionId} className={styles.caption}>{caption}</p></div>
+  <div className={styles.captionArea}><StoryCaption id={captionId} text={caption} time={time} start={captionStart} duration={captionDuration}/></div>
   {error&&<p className={styles.notice} role="status">{error}</p>}
  </div>;
 }

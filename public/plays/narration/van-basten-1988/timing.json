@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The final",
+   "text": "Munich, 1988, the Euro final. The Netherlands, in orange, lead the Soviet Union one-nil. Arnold M\u00fchren floats a long cross from the left, and van Basten volleys it. Goal!",
+   "src": "/plays/narration/van-basten-1988/1.m4a",
+   "seconds": 13.5,
+   "words": [
+    {
+     "w": "Munich",
+     "at": 0.4
+    },
+    {
+     "w": "1988",
+     "at": 0.8
+    },
+    {
+     "w": "the",
+     "at": 1.825
+    },
+    {
+     "w": "Euro",
+     "at": 1.962
+    },
+    {
+     "w": "final",
+     "at": 2.312
+    },
+    {
+     "w": "The",
+     "at": 3.263
+    },
+    {
+     "w": "Netherlands",
+     "at": 3.375
+    },
+    {
+     "w": "in",
+     "at": 4.05
+    },
+    {
+     "w": "orange",
+     "at": 4.213
+    },
+    {
+     "w": "lead",
+     "at": 4.862
+    },
+    {
+     "w": "the",
+     "at": 5.112
+    },
+    {
+     "w": "Soviet",
+     "at": 5.25
+    },
+    {
+     "w": "Union",
+     "at": 5.787
+    },
+    {
+     "w": "one-nil",
+     "at": 6.175
+    },
+    {
+     "w": "Arnold",
+     "at": 7.138
+    },
+    {
+     "w": "M\u00fchren",
+     "at": 7.562
+    },
+    {
+     "w": "floats",
+     "at": 7.987
+    },
+    {
+     "w": "a",
+     "at": 8.3
+    },
+    {
+     "w": "long",
+     "at": 8.412
+    },
+    {
+     "w": "cross",
+     "at": 8.787
+    },
+    {
+     "w": "from",
+     "at": 9.2
+    },
+    {
+     "w": "the",
+     "at": 9.338
+    },
+    {
+     "w": "left",
+     "at": 9.425
+    },
+    {
+     "w": "and",
+     "at": 9.975
+    },
+    {
+     "w": "van",
+     "at": 10.1
+    },
+    {
+     "w": "Basten",
+     "at": 10.363
+    },
+    {
+     "w": "volleys",
+     "at": 10.863
+    },
+    {
+     "w": "it",
+     "at": 11.338
+    },
+    {
+     "w": "Goal",
+     "at": 12.05
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. He watches the ball all the way. He gets over it and strikes first time, with his right foot.",
+   "src": "/plays/narration/van-basten-1988/2.m4a",
+   "seconds": 8.0,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.212
+    },
+    {
+     "w": "He",
+     "at": 2.175
+    },
+    {
+     "w": "watches",
+     "at": 2.325
+    },
+    {
+     "w": "the",
+     "at": 2.75
+    },
+    {
+     "w": "ball",
+     "at": 2.85
+    },
+    {
+     "w": "all",
+     "at": 3.15
+    },
+    {
+     "w": "the",
+     "at": 3.312
+    },
+    {
+     "w": "way",
+     "at": 3.4
+    },
+    {
+     "w": "He",
+     "at": 4.225
+    },
+    {
+     "w": "gets",
+     "at": 4.35
+    },
+    {
+     "w": "over",
+     "at": 4.562
+    },
+    {
+     "w": "it",
+     "at": 4.85
+    },
+    {
+     "w": "and",
+     "at": 4.975
+    },
+    {
+     "w": "strikes",
+     "at": 5.1
+    },
+    {
+     "w": "first",
+     "at": 5.475
+    },
+    {
+     "w": "time",
+     "at": 5.75
+    },
+    {
+     "w": "with",
+     "at": 6.088
+    },
+    {
+     "w": "his",
+     "at": 6.188
+    },
+    {
+     "w": "right",
+     "at": 6.35
+    },
+    {
+     "w": "foot",
+     "at": 6.662
+    }
+   ]
+  },
+  {
+   "label": "Over the keeper",
+   "text": "From that tight angle, it loops over Dasayev into the far corner. Two-nil! The Netherlands are champions of Europe!",
+   "src": "/plays/narration/van-basten-1988/3.m4a",
+   "seconds": 8.3,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "that",
+     "at": 0.5
+    },
+    {
+     "w": "tight",
+     "at": 0.762
+    },
+    {
+     "w": "angle",
+     "at": 1.05
+    },
+    {
+     "w": "it",
+     "at": 1.712
+    },
+    {
+     "w": "loops",
+     "at": 1.887
+    },
+    {
+     "w": "over",
+     "at": 2.2
+    },
+    {
+     "w": "Dasayev",
+     "at": 2.425
+    },
+    {
+     "w": "into",
+     "at": 2.962
+    },
+    {
+     "w": "the",
+     "at": 3.138
+    },
+    {
+     "w": "far",
+     "at": 3.237
+    },
+    {
+     "w": "corner",
+     "at": 3.5
+    },
+    {
+     "w": "Two-nil",
+     "at": 4.475
+    },
+    {
+     "w": "The",
+     "at": 5.4
+    },
+    {
+     "w": "Netherlands",
+     "at": 5.525
+    },
+    {
+     "w": "are",
+     "at": 6.125
+    },
+    {
+     "w": "champions",
+     "at": 6.287
+    },
+    {
+     "w": "of",
+     "at": 6.888
+    },
+    {
+     "w": "Europe",
+     "at": 6.975
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Eyes on the ball, body over it, strike cleanly through it. With perfect technique, even hard angles can work.",
+   "src": "/plays/narration/van-basten-1988/4.m4a",
+   "seconds": 7.9,
+   "words": [
+    {
+     "w": "Eyes",
+     "at": 0.4
+    },
+    {
+     "w": "on",
+     "at": 0.662
+    },
+    {
+     "w": "the",
+     "at": 0.762
+    },
+    {
+     "w": "ball",
+     "at": 0.85
+    },
+    {
+     "w": "body",
+     "at": 1.375
+    },
+    {
+     "w": "over",
+     "at": 1.725
+    },
+    {
+     "w": "it",
+     "at": 2.025
+    },
+    {
+     "w": "strike",
+     "at": 2.2
+    },
+    {
+     "w": "cleanly",
+     "at": 2.538
+    },
+    {
+     "w": "through",
+     "at": 2.987
+    },
+    {
+     "w": "it",
+     "at": 3.263
+    },
+    {
+     "w": "With",
+     "at": 3.925
+    },
+    {
+     "w": "perfect",
+     "at": 4.138
+    },
+    {
+     "w": "technique",
+     "at": 4.588
+    },
+    {
+     "w": "even",
+     "at": 5.4
+    },
+    {
+     "w": "hard",
+     "at": 5.7
+    },
+    {
+     "w": "angles",
+     "at": 6.0
+    },
+    {
+     "w": "can",
+     "at": 6.425
+    },
+    {
+     "w": "work",
+     "at": 6.625
+    }
+   ]
+  }
+ ]
+}

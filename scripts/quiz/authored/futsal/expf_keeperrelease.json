@@ -1,0 +1,65 @@
+{
+ "lesson": "expf_keeperrelease",
+ "questions": [
+  {
+   "q": "True or false? The short pass to the FIXO is the safe choice here.",
+   "options": ["True", "False"],
+   "correct": 1,
+   "explain": "Right, it's false. The presser screens the fixo, so the keeper releases beyond the press.",
+   "choiceExplanations": [
+    "The first presser screens the fixo. A short pass there could be stolen near our goal.",
+    "Right, it's false. The presser screens the fixo, so the keeper releases beyond the press."
+   ],
+   "visual": {
+    "kind": "trueFalse",
+    "frame": {"step": 2, "ball": "gk", "focus": ["gk", "cb", "dst"], "marks": [{"kind": "pass", "from": "gk", "to": "cb", "tone": "neutral"}]}
+   }
+  },
+  {
+   "q": "Put the keeper's release in the right order.",
+   "options": ["Keeper wins the ball and scans", "Right ala moves beyond the press", "Keeper releases to the right ala", "Pivot receives ahead of the pressure"],
+   "correct": 0,
+   "explain": "Yes. Scan, get beyond the press, release, then play forward to the pivot.",
+   "choiceExplanations": [
+    "Yes. Scan, get beyond the press, release, then play forward to the pivot.",
+    "The keeper wins the ball and scans first. Then the right ala moves beyond the press.",
+    "The right ala must get beyond the press first. Then the keeper can release to them.",
+    "The pivot pass comes last, after the release has beaten the first press."
+   ],
+   "visual": {
+    "kind": "order",
+    "frames": [
+     {"step": 0, "focus": ["gk"]},
+     {"step": 1, "focus": ["rm", "dst"]},
+     {"step": 3, "focus": ["rm"], "marks": [{"kind": "pass", "from": {"x": 140, "y": 362}, "to": "rm", "tone": "gold"}]},
+     {"step": 6, "focus": ["st"]}
+    ]
+   }
+  },
+  {
+   "q": "Now the keeper wins it on the other side. Which release beats the press?",
+   "options": ["Release to the left ala", "Short pass to the fixo", "Pass wide to the right ala"],
+   "correct": 0,
+   "explain": "Yes. The left ala is beyond the first presser, so one pass beats the press.",
+   "choiceExplanations": [
+    "Yes. The left ala is beyond the first presser, so one pass beats the press.",
+    "The presser screens the fixo. A short pass there can be stolen near our goal.",
+    "A defender is right beside the right ala. That pass does not beat the press."
+   ],
+   "visual": {
+    "kind": "bestPass",
+    "frame": {
+     "step": 2,
+     "place": {
+      "gk": {"x": 130, "y": 360}, "cb": {"x": 175, "y": 315}, "lm": {"x": 30, "y": 205}, "rm": {"x": 240, "y": 280}, "st": {"x": 125, "y": 170},
+      "dgk": {"x": 125, "y": 35}, "dcb": {"x": 125, "y": 132}, "dlm": {"x": 100, "y": 250}, "drm": {"x": 215, "y": 268}, "dst": {"x": 153, "y": 338}
+     },
+     "ball": "gk",
+     "focus": ["gk", "dst"]
+    },
+    "from": "gk",
+    "to": ["lm", "cb", "rm"]
+   }
+  }
+ ]
+}

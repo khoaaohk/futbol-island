@@ -1,0 +1,106 @@
+{
+ "lesson": "trn_9_firstpass",
+ "questions": [
+  {
+   "q": "True or false? The pass forward to the striker is still safe here.",
+   "options": [
+    "True",
+    "False"
+   ],
+   "correct": 1,
+   "explain": "Right, it's false. An opponent has stepped into that lane, so the pass could be cut out.",
+   "choiceExplanations": [
+    "Look at the lane: an opponent now stands between the ball and the striker.",
+    "Right, it's false. An opponent has stepped into that lane, so the pass could be cut out."
+   ],
+   "visual": {
+    "kind": "trueFalse",
+    "frame": {
+     "step": 4,
+     "focus": [
+      "lcm",
+      "st",
+      "dst"
+     ]
+    }
+   }
+  },
+  {
+   "q": "The right midfielder has the ball. Tap where the left midfielder should move to support.",
+   "options": [
+    "Behind the opponent, in the blocked lane",
+    "A short angle behind the ball",
+    "Far out wide, away from the play"
+   ],
+   "correct": 1,
+   "explain": "Yes. A short angle behind the ball gives a clear, safe pass for the next decision.",
+   "choiceExplanations": [
+    "The opponent stands between the ball and that spot, so the pass is blocked.",
+    "Yes. A short angle behind the ball gives a clear, safe pass for the next decision.",
+    "That is too far away, so the pass is long and slow to arrive."
+   ],
+   "visual": {
+    "kind": "tapSpot",
+    "frame": {
+     "step": 6,
+     "focus": [
+      "lcm",
+      "rcm"
+     ]
+    },
+    "spots": [
+     {
+      "x": 100,
+      "y": 195
+     },
+     {
+      "x": 125,
+      "y": 295
+     },
+     {
+      "x": 60,
+      "y": 275
+     }
+    ]
+   }
+  },
+  {
+   "q": "Now an opponent blocks the sideways pass instead. Which pass is best?",
+   "options": [
+    "Pass forward to the striker",
+    "Pass sideways to the right midfielder",
+    "Pass up the line to the left winger"
+   ],
+   "correct": 0,
+   "explain": "Yes. The forward lane is clear, so we pass before the defense recovers.",
+   "choiceExplanations": [
+    "Yes. The forward lane is clear, so we pass before the defense recovers.",
+    "An opponent now stands in the sideways lane, so the pass could be cut out.",
+    "Blue's midfielder is right in that lane, so the pass is risky."
+   ],
+   "visual": {
+    "kind": "bestPass",
+    "frame": {
+     "step": 1,
+     "ball": "lcm",
+     "place": {
+      "dst": {
+       "x": 174,
+       "y": 264
+      }
+     },
+     "focus": [
+      "lcm",
+      "dst"
+     ]
+    },
+    "from": "lcm",
+    "to": [
+     "st",
+     "rcm",
+     "lw"
+    ]
+   }
+  }
+ ]
+}

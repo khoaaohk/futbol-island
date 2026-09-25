@@ -1,0 +1,386 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The equaliser, live",
+   "text": "Eindhoven, 2023, Champions League final. Barcelona trail Wolfsburg two-one, when Aitana Bonmat\u00ed skips free on the right. Patri Guijarro is arriving, unmarked. In comes the cross... Header! Goal! Two-two!",
+   "src": "/plays/narration/guijarro-signature/1.m4a",
+   "seconds": 15.6,
+   "words": [
+    {
+     "w": "Eindhoven",
+     "at": 0.4
+    },
+    {
+     "w": "2023",
+     "at": 1.0
+    },
+    {
+     "w": "Champions",
+     "at": 1.988
+    },
+    {
+     "w": "League",
+     "at": 2.575
+    },
+    {
+     "w": "final",
+     "at": 2.837
+    },
+    {
+     "w": "Barcelona",
+     "at": 3.788
+    },
+    {
+     "w": "trail",
+     "at": 4.438
+    },
+    {
+     "w": "Wolfsburg",
+     "at": 4.775
+    },
+    {
+     "w": "two-one",
+     "at": 5.338
+    },
+    {
+     "w": "when",
+     "at": 5.812
+    },
+    {
+     "w": "Aitana",
+     "at": 5.963
+    },
+    {
+     "w": "Bonmat\u00ed",
+     "at": 6.4
+    },
+    {
+     "w": "skips",
+     "at": 7.062
+    },
+    {
+     "w": "free",
+     "at": 7.412
+    },
+    {
+     "w": "on",
+     "at": 7.638
+    },
+    {
+     "w": "the",
+     "at": 7.737
+    },
+    {
+     "w": "right",
+     "at": 7.825
+    },
+    {
+     "w": "Patri",
+     "at": 8.662
+    },
+    {
+     "w": "Guijarro",
+     "at": 9.05
+    },
+    {
+     "w": "is",
+     "at": 9.55
+    },
+    {
+     "w": "arriving",
+     "at": 9.675
+    },
+    {
+     "w": "unmarked",
+     "at": 10.325
+    },
+    {
+     "w": "In",
+     "at": 11.363
+    },
+    {
+     "w": "comes",
+     "at": 11.525
+    },
+    {
+     "w": "the",
+     "at": 11.787
+    },
+    {
+     "w": "cross",
+     "at": 11.875
+    },
+    {
+     "w": "Header",
+     "at": 12.75
+    },
+    {
+     "w": "Goal",
+     "at": 13.35
+    },
+    {
+     "w": "Two-two",
+     "at": 13.963
+    }
+   ]
+  },
+  {
+   "label": "Reading the cross",
+   "text": "Watch Patri. Every defender watches the ball, but she reads where the cross will land, and runs into the gap.",
+   "src": "/plays/narration/guijarro-signature/2.m4a",
+   "seconds": 7.8,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "Patri",
+     "at": 0.7
+    },
+    {
+     "w": "Every",
+     "at": 1.663
+    },
+    {
+     "w": "defender",
+     "at": 1.975
+    },
+    {
+     "w": "watches",
+     "at": 2.5
+    },
+    {
+     "w": "the",
+     "at": 2.925
+    },
+    {
+     "w": "ball",
+     "at": 3.025
+    },
+    {
+     "w": "but",
+     "at": 3.413
+    },
+    {
+     "w": "she",
+     "at": 3.562
+    },
+    {
+     "w": "reads",
+     "at": 3.763
+    },
+    {
+     "w": "where",
+     "at": 4.138
+    },
+    {
+     "w": "the",
+     "at": 4.263
+    },
+    {
+     "w": "cross",
+     "at": 4.35
+    },
+    {
+     "w": "will",
+     "at": 4.725
+    },
+    {
+     "w": "land",
+     "at": 4.9
+    },
+    {
+     "w": "and",
+     "at": 5.675
+    },
+    {
+     "w": "runs",
+     "at": 5.812
+    },
+    {
+     "w": "into",
+     "at": 6.188
+    },
+    {
+     "w": "the",
+     "at": 6.362
+    },
+    {
+     "w": "gap",
+     "at": 6.45
+    }
+   ]
+  },
+  {
+   "label": "One touch",
+   "text": "One touch: a thumping header past Merle Frohms. Her second goal in two minutes!",
+   "src": "/plays/narration/guijarro-signature/3.m4a",
+   "seconds": 6.4,
+   "words": [
+    {
+     "w": "One",
+     "at": 0.4
+    },
+    {
+     "w": "touch",
+     "at": 0.637
+    },
+    {
+     "w": "a",
+     "at": 1.337
+    },
+    {
+     "w": "thumping",
+     "at": 1.462
+    },
+    {
+     "w": "header",
+     "at": 1.85
+    },
+    {
+     "w": "past",
+     "at": 2.175
+    },
+    {
+     "w": "Merle",
+     "at": 2.538
+    },
+    {
+     "w": "Frohms",
+     "at": 2.888
+    },
+    {
+     "w": "Her",
+     "at": 3.85
+    },
+    {
+     "w": "second",
+     "at": 4.013
+    },
+    {
+     "w": "goal",
+     "at": 4.35
+    },
+    {
+     "w": "in",
+     "at": 4.6
+    },
+    {
+     "w": "two",
+     "at": 4.763
+    },
+    {
+     "w": "minutes",
+     "at": 4.975
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "Reading early is her signature. It wins the ball back in midfield too: read the pass early, step in, then pass forward straight away.",
+   "src": "/plays/narration/guijarro-signature/4.m4a",
+   "seconds": 9.7,
+   "words": [
+    {
+     "w": "Reading",
+     "at": 0.4
+    },
+    {
+     "w": "early",
+     "at": 0.762
+    },
+    {
+     "w": "is",
+     "at": 1.175
+    },
+    {
+     "w": "her",
+     "at": 1.288
+    },
+    {
+     "w": "signature",
+     "at": 1.438
+    },
+    {
+     "w": "It",
+     "at": 2.45
+    },
+    {
+     "w": "wins",
+     "at": 2.6
+    },
+    {
+     "w": "the",
+     "at": 2.837
+    },
+    {
+     "w": "ball",
+     "at": 2.925
+    },
+    {
+     "w": "back",
+     "at": 3.225
+    },
+    {
+     "w": "in",
+     "at": 3.487
+    },
+    {
+     "w": "midfield",
+     "at": 3.575
+    },
+    {
+     "w": "too",
+     "at": 4.125
+    },
+    {
+     "w": "read",
+     "at": 4.888
+    },
+    {
+     "w": "the",
+     "at": 5.112
+    },
+    {
+     "w": "pass",
+     "at": 5.2
+    },
+    {
+     "w": "early",
+     "at": 5.575
+    },
+    {
+     "w": "step",
+     "at": 6.162
+    },
+    {
+     "w": "in",
+     "at": 6.463
+    },
+    {
+     "w": "then",
+     "at": 7.0
+    },
+    {
+     "w": "pass",
+     "at": 7.213
+    },
+    {
+     "w": "forward",
+     "at": 7.588
+    },
+    {
+     "w": "straight",
+     "at": 8.0
+    },
+    {
+     "w": "away",
+     "at": 8.3
+    }
+   ]
+  }
+ ]
+}

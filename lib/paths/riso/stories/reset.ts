@@ -1,14 +1,15 @@
-/** Mental Toughness (reset) — riso rebuild. Lead material: a flexible branch in wind.
- * Background world: purple wind STREAMLINES — torn drifting bands that bend around the branch (compressed windward, relaxed leeward),
- * compress on a gust envelope and relax; people are ABSTRACT riso figures (bible §1c.4, `figure()` below); the ball is a yellow disc with a navy hexagon net;
- * yellow grainy ground; leaf fragments blown along the bands. Inks: yellow → blue → purple → navy on cream.
- * Roles: purple = pressure/wind/opponent, blue = teammate branch, navy wood + yellow leaves = the metaphor.
+/** Mental Toughness (reset) — riso rework (2026-09-21). ONE WORLD, side view: a young TREE beside a pitch and the player on the pitch;
+ * the wind is a visible force (purple streaks on gust envelopes) that bends the tree AND leans the player.
+ * Sky: cream paper with two soft purple halftone bands high up · pitch: yellow × blue = green band with paper lines below a torn horizon ·
+ * tree: navy trunk with a hand-cut edge, a big yellow × blue crown of overlapping cut-paper leaves · player: abstract cut-paper pictogram
+ * (bible §1c.4, `figure()` below) · ball: a paper football with navy pentagons · feeling: a purple knot on a paper knockout.
+ * Inks: yellow → blue → purple → navy on cream. Roles: purple = wind/pressure/feeling, blue = teammate, navy = you / wood.
  * Wind blows screen-left → screen-right for the whole story. Drawn objects on twos, camera on ones, randomness seeded. */
 import type {Sheet} from '../sheet';
 import {type RisoStory,type Scene,playChapters} from '../story';
 import {aperture,apertureDisc} from '../passage';
-import {twos,twosIndex,sm,easeOut,easeIO,easeIn,easeOutBack,key,settle,spring,squash,clamp,lerp,rng,hash,noise1,blob,polyPath,ribbon,smoothPts,partial,rotPts,circlePath,arc,TAU,type Pt,type Key} from '../motion';
-import {laneArrow,sparkBurst,speedLines,ripple,chalkStroke,contour,dust,handCut} from '../shapes';
+import {twos,twosIndex,sm,easeOut,easeIO,easeIn,easeOutBack,key,settle,clamp,lerp,rng,hash,noise1,blob,polyPath,ribbon,smoothPts,partial,rotPts,wob,arc,TAU,type Pt,type Key} from '../motion';
+import {laneArrow,speedLines,dust,handCut,footballPanels} from '../shapes';
 
 const CH='/stories/narration/11v11/reset/';
 const K='navy',P='purple',B='blue',Y='yellow';
@@ -16,14 +17,14 @@ const K='navy',P='purple',B='blue',Y='yellow';
 // ---------------- motion helpers ----------------
 /** gust envelope 0..1: rises (easeIn) onset→peak, relaxes (slow tail) peak→recovery. */
 const gust=(t:number,on:number,peak:number,rec:number)=>t<=on||t>=rec?0:t<peak?easeIn((t-on)/(peak-on)):Math.pow(1-(t-peak)/(rec-peak),3);
-/** integral of the gust envelope (drives the extra band drift a gust adds). */
+/** integral of the gust envelope (drives the extra drift a gust adds to the streaks). */
 function gustInt(t:number,on:number,peak:number,rec:number){if(t<=on)return 0;const a=peak-on,b=rec-peak;if(t<peak){const u=(t-on)/a;return a*u*u*u*u/4;}if(t<rec){const u=(t-peak)/b;return a/4+b*(1-Math.pow(1-u,4))/4;}return a/4+b/4;}
 /** camera through [t,x,y,zoom,rot] keys, each segment eased (a key may carry its own ease as its last element). */
-function cam(s:Sheet,t:number,K:Key[],kick:Pt=[0,0]){const v=key(t,K,easeIO,true);s.camera(v[0]+kick[0],v[1]+kick[1],v[2]??1,v[3]??0);return v;}
+function cam(s:Sheet,t:number,K:Key[],kick:Pt=[0,0],rot=0){const v=key(t,K,easeIO,true);s.camera(v[0]+kick[0],v[1]+kick[1],(v[2]??1)*view(s),(v[3]??0)+rot);return v;}
+/** viewport fit: the desktop art region shows 793 × 625 world units at zoom 1; phones show up to 1080 × 1055, so they get a closer view (≤ ×1.32) and the same composition. */
+const view=(s:Sheet)=>clamp((s.safe.w/s.fit)/800,1,1.32);
 const wrap=(v:number,a:number,b:number)=>{const L=b-a;return a+(((v-a)%L)+L)%L;};
-/** a gaussian bump of half-width w around 0 (edge crumples, local lifts). */
-const bell=(d:number,w:number)=>Math.exp(-(d/w)*(d/w));
-/** residual sway: the branch never stops dead (a slow two-tone oscillation added to every bend). */
+/** residual sway: the tree never stops dead (a slow two-tone oscillation added to every bend). */
 const sway=(t:number,k=1)=>k*(.02*Math.sin(t*2.4)+.012*Math.sin(t*4.1+1));
 
 // ---------------- abstract riso figure (bible §1c.4) — copied verbatim into each 11v11 story file ----------------
@@ -79,51 +80,62 @@ export const mixLimbs=(a:Limb[],b:Limb[],u:number):Limb[]=>a.map((l,i)=>l.map((p
 export const poseLimbs=(p:Pose)=>({arms:POSES[p].arms,legs:POSES[p].legs});
 
 
-// ---------------- the world: wind bands, ground, fragments ----------------
-type Band={y:number;h:number;cov:number;speed:number;seed:number};
-/** A full-width strip with torn top and bottom edges whose noise slides with `off` (units) — drift without a seam.
- * top/bottom(x) add a local displacement (crumple toward a push, a lift under a supporting branch). */
-function bandPath(y0:number,y1:number,off:number,seed:number,amp:number,o:{top?:(x:number)=>number;bottom?:(x:number)=>number;x0?:number;x1?:number;step?:number}={}){
- const{top,bottom,x0=-1800,x1=1800,step=60}=o,p=new Path2D();
- const yt=(x:number)=>y0+amp*noise1((x-off)/170+seed,seed)+amp*.45*noise1((x-off)/52,seed+3)+(top?top(x):0);
- const yb=(x:number)=>y1+amp*noise1((x-off)/190+seed+50,seed+7)+amp*.45*noise1((x-off)/61,seed+9)+(bottom?bottom(x):0);
+/** person: navy prints straight onto the print; any other ink (the blue teammate) prints on a paper knockout so it stays clean over the green. */
+function person(s:Sheet,x:number,y:number,size:number,ink:string,seed:number,pose:Pose,o:FigureOpts={}){
+ if(ink===K)return figure(s,x,y,size,K,seed,pose,o);
+ figure(s,x,y,size,K,seed,pose,{...o,mode:'paper',paperTone:0});return figure(s,x,y,size,ink,seed,pose,{...o,mode:'ink',cov:o.cov??.92});
+}
+/** ∫ sm(a,b,·) dv from a to t (easeIO), for gust integrals of envelopes written as c·(1 − sm). */
+function smInt(a:number,b:number,t:number){if(t<=a)return 0;const d=b-a,u=clamp((t-a)/d),F=u<.5?u*u*u*u:u-.5+Math.pow(2-2*u,4)/16;return d*F+Math.max(0,t-b);}
+const at=(pts:Pt[],u:number)=>{const i=Math.min(pts.length-2,Math.max(0,Math.floor(u*(pts.length-1)))),f=u*(pts.length-1)-i;return{p:[lerp(pts[i][0],pts[i+1][0],f),lerp(pts[i][1],pts[i+1][1],f)] as Pt,a:Math.atan2(pts[i+1][1]-pts[i][1],pts[i+1][0]-pts[i][0])};};
+/** shortest-way angle blend. */
+const turn=(a:number,target:number,k:number)=>a+Math.atan2(Math.sin(target-a),Math.cos(target-a))*clamp(k);
+
+// ---------------- the world: cream sky, soft purple bands, the green pitch ----------------
+/** A full-width strip with torn top and bottom edges whose noise slides with `off` (units). */
+function bandPath(y0:number,y1:number,off:number,seed:number,amp:number,o:{x0?:number;x1?:number;step?:number}={}){
+ const{x0=-1800,x1=1800,step=60}=o,p=new Path2D();
+ const yt=(x:number)=>y0+amp*noise1((x-off)/170+seed,seed)+amp*.45*noise1((x-off)/52,seed+3);
+ const yb=(x:number)=>y1+amp*noise1((x-off)/190+seed+50,seed+7)+amp*.45*noise1((x-off)/61,seed+9);
  p.moveTo(x0,yt(x0));for(let x=x0+step;x<=x1;x+=step)p.lineTo(x,yt(x));for(let x=x1;x>=x0;x-=step)p.lineTo(x,yb(x));p.closePath();return p;
 }
-/** Wind bands: each its own torn print at a stepped coverage, drifting right; a gust compresses them (height ×.7, speed ×3, cov +.2). */
-type Flow={x:number;y:number;r:number;k:number};
-/** Wind streamlines: each band is its own torn print at a stepped coverage, drifting right; `flow` bends every band around an obstacle
- * (the branch): bands above it lift, bands below it dip, most strongly near it, and the windward side is compressed. */
-function windBands(s:Sheet,t:number,bands:Band[],g:(b:number)=>number,gi:(b:number)=>number,edges:Partial<Record<number,{top?:(x:number)=>number;bottom?:(x:number)=>number}>>={},ink=P,flow?:Flow){
- bands.forEach((b,i)=>{const gg=g(i),h=b.h*(1-.3*gg),off=b.speed*1.8*(t+2*gi(i)),cov=Math.min(.9,b.cov+.2*gg),e=edges[i]??{};
-  const fl=flow?(x:number)=>(b.y<flow.y?-1:1)*flow.k*bell(x-flow.x-(x<flow.x?0:flow.r*.4),flow.r)*bell(b.y-flow.y,flow.r*1.3):()=>0;
-  const path=bandPath(b.y-h/2,b.y+h/2,off,b.seed,18+10*gg,{top:x=>(e.top?e.top(x):0)+fl(x),bottom:x=>(e.bottom?e.bottom(x):0)+fl(x)});s.tone(ink,path,cov);});
+const HZ=230;
+/** sky (cream paper, faint yellow screen, two soft purple halftone bands high up) and the pitch (torn horizon, yellow × blue = green,
+ * a navy mowing stripe, paper touchline + box line). */
+function world(s:Sheet,t:number,seed:number,o:{bands?:number}={}){
+ const{bands=1}=o,tt=twos(t);
+ s.field(Y,.1,.3);
+ s.tone(P,bandPath(-600,-520,20*tt,seed,26,{step:90}),.18*bands);
+ s.tone(P,bandPath(-430,-380,14*tt,seed+1,20,{step:90}),.12*bands);
+ const gnd=bandPath(HZ,HZ+2400,0,seed+2,12,{step:80});
+ s.tone(Y,gnd,.75);s.tone(B,gnd,.45);
+ s.tone(K,bandPath(HZ+120,HZ+190,0,seed+3,8,{step:110}),.1);
+ s.tone(K,bandPath(HZ+300,HZ+2400,0,seed+4,10,{step:110}),.12);
+ const lines=new Path2D();lines.addPath(ribbon([[-1600,HZ+44],[1600,HZ+48]],10,{seed:seed+5,pressure:.3,taper:0,wobble:1.6,step:80}));lines.addPath(ribbon([[-1600,HZ+168],[1600,HZ+172]],7,{seed:seed+6,pressure:.3,taper:0,wobble:1.6,step:80}));
+ s.knockout(lines,.9);
 }
-/** Ground: a yellow grainy band below a torn horizon. */
-function ground(s:Sheet,y:number,seed:number,cov=.4){s.tone(Y,bandPath(y,y+2400,0,seed,26,{step:80}),cov);s.tone(K,bandPath(y+150,y+230,0,seed+1,22,{step:70}),.12);s.tone(P,bandPath(y+330,y+470,0,seed+2,30,{step:70}),.3);s.tone(K,bandPath(y+560,y+2400,0,seed+3,26,{step:80}),.15);dust(s,null,0,y+300,900,40,{seed:seed+4,size:7,cov:.5,spread:1.6});}
-/** Leaf fragments riding the bands (world-index seeding so they wrap), scattering away from a push and settling. */
-function fragments(s:Sheet,t:number,bands:Band[],count:number,seed:number,gi:(b:number)=>number,g:(b:number)=>number,push?:{x:number;y:number;age:number;r?:number}){
- const rr=rng(seed),yel=new Path2D(),pap=new Path2D();
- for(let i=0;i<count;i++){const b=bands[i%bands.length],bi=i%bands.length,x0=rr()*3600-1800,ly=b.y+(rr()-.5)*b.h*.6,sz=(16+rr()*16),spin=(rr()-.5)*4,ph=rr()*TAU;
-  let x=wrap(x0+b.speed*1.8*(t+2*gi(bi))*1.15,-1800,1800),y=ly+6*Math.sin(twos(t)*2+ph)*(1+3*g(bi));
-  if(push){const a=clamp(push.age/1.2),d=Math.hypot(x-push.x,y-push.y),R=push.r??380;if(a>0&&a<1&&d<R){const k=Math.sin(a*Math.PI)*90*(1-d/R);x+=(x-push.x)/(d||1)*k;y+=(y-push.y)/(d||1)*k;}}
-  const q=rotPts([[-sz,-sz*.45],[sz*.9,-sz*.6],[sz,sz*.4],[-sz*.8,sz*.55]],ph+twos(t)*spin);const p=i%3===2?pap:yel;p.moveTo(x+q[0][0],y+q[0][1]);for(let k=1;k<4;k++)p.lineTo(x+q[k][0],y+q[k][1]);p.closePath();}
- s.fill(Y,yel,.9);s.knockout(pap,.8);
+/** the wind: purple streak ribbons drifting right; count, length and coverage grow with the gust value g, drift with its integral gi.
+ * ink null = paper knockout streaks (grass flattened by a gust). */
+function wind(s:Sheet,t:number,g:number,gi:number,seed:number,o:{cov?:number;n?:number;box?:[number,number,number,number];ink?:string|null;len?:number;width?:number}={}){
+ const{cov=.5,n=7,box=[-1500,-560,3000,760],len=320,ink=P,width=15}=o,N=Math.round(n*3.2),live=Math.round(n*(1+2.2*g)),rr=rng(seed),p=new Path2D(),[bx,by,bw,bh]=box,tt=twos(t);
+ let drawn=0;
+ for(let i=0;i<N;i++){const x0=rr()*bw,y0=rr()*bh,L0=len*(.5+rr()),w=width*(.6+rr()*.8),lift=(rr()-.5)*40,ph=rr()*TAU,sp=.7+rr()*.6;if(i>=live)continue;
+  const x=bx+wrap(x0+300*sp*(.5*tt+3*gi),0,bw),y=by+y0,L=L0*(.6+1.6*g);
+  const pts:Pt[]=[];for(let k=0;k<=4;k++){const u=k/4;pts.push([x+u*L,y+lift*Math.sin(u*Math.PI)*(1-.6*g)+3*Math.sin(ph+u*4)]);}
+  p.addPath(ribbon(pts,w*(1+.7*g),{seed:seed+i,taper:.85,pressure:.2,wobble:.8,step:20}));drawn++;}
+ if(!drawn)return;if(ink)s.fill(ink,p,Math.min(.9,cov+.35*g));else s.knockout(p,cov);
 }
 
-// ---------------- the branch, leaves, ball, cup, knot ----------------
-/** spine: root→tip with a slight natural arc, bent about the root by `bend` radians (more toward the tip, like wood). */
-function spine(root:Pt,tip:Pt,bend:number,seed:number,n=22,sag=50):Pt[]{
- const dx=tip[0]-root[0],dy=tip[1]-root[1],L=Math.hypot(dx,dy)||1,nx=-dy/L,ny=dx/L,r=rng(seed),k=(r()-.5)*2,out:Pt[]=[];
- for(let i=0;i<=n;i++){const u=i/n,px=root[0]+dx*u+nx*sag*k*Math.sin(u*Math.PI),py=root[1]+dy*u+ny*sag*k*Math.sin(u*Math.PI),a=bend*Math.pow(u,1.5),c=Math.cos(a),sn=Math.sin(a),x=px-root[0],y=py-root[1];out.push([root[0]+x*c-y*sn,root[1]+x*sn+y*c]);}
- return out;
-}
-const at=(pts:Pt[],u:number)=>{const i=Math.min(pts.length-2,Math.max(0,Math.floor(u*(pts.length-1)))),f=u*(pts.length-1)-i;return{p:[lerp(pts[i][0],pts[i+1][0],f),lerp(pts[i][1],pts[i+1][1],f)] as Pt,a:Math.atan2(pts[i+1][1]-pts[i][1],pts[i+1][0]-pts[i][0])};};
-/** tapered wobbly polygon along a spine (w0 at the start, w1 at the end); side +1 = only the lower half (shadow). */
-function taper(pts:Pt[],w0:number,w1:number,seed:number,side=0,extra=0){
- const q=smoothPts(pts,false,10),n=q.length,L:Pt[]=[],R:Pt[]=[];
- for(let i=0;i<n;i++){const a=q[Math.max(0,i-1)],b=q[Math.min(n-1,i+1)];let nx=a[1]-b[1],ny=b[0]-a[0];const l=Math.hypot(nx,ny)||1;nx/=l;ny/=l;if(ny<0){nx=-nx;ny=-ny;}const u=i/(n-1),w=lerp(w0,w1,u)*(1+.08*noise1(i*.7+seed,seed))/2;
-  L.push(side>0?[q[i][0],q[i][1]]:[q[i][0]-nx*w,q[i][1]-ny*w]);R.push([q[i][0]+nx*(w+extra),q[i][1]+ny*(w+extra)]);}
- const p=new Path2D();p.moveTo(L[0][0],L[0][1]);for(let i=1;i<n;i++)p.lineTo(L[i][0],L[i][1]);for(let i=n-1;i>=0;i--)p.lineTo(R[i][0],R[i][1]);p.closePath();return p;
+// ---------------- the tree ----------------
+/** trunk spine root→tip bent about the root by `bend` radians (more toward the tip, like a young trunk). */
+function spine(root:Pt,tip:Pt,bend:number,n=14):Pt[]{const dx=tip[0]-root[0],dy=tip[1]-root[1],out:Pt[]=[];
+ for(let i=0;i<=n;i++){const u=i/n,a=bend*Math.pow(u,1.5),c=Math.cos(a),sn=Math.sin(a),x=dx*u,y=dy*u;out.push([root[0]+x*c-y*sn,root[1]+x*sn+y*c]);}return out;}
+type Geom={sp:Pt[];C:Pt;sx:number;sy:number;tip:Pt};
+/** tree geometry as a pure function: spine, crown centre (above the bent tip, shifted downwind by g), crown flattening. */
+function treeGeom(x:number,y:number,h:number,bend:number,crown:number,g:number):Geom{
+ const sp=spine([x,y],[x,y-h],bend),tip=sp[sp.length-1],a=bend*.9;
+ const C:Pt=[tip[0]+Math.sin(a)*crown*.45+crown*.3*g,tip[1]-Math.cos(a)*crown*.45];
+ return{sp,C,sx:1+.35*g,sy:1-.22*g,tip};
 }
 /** leaf outline points: a pointed blade of length len and half-width wid, from (x,y) at angle a. */
 function leafPts(x:number,y:number,a:number,len:number,wid:number,seed:number):Pt[]{
@@ -132,344 +144,282 @@ function leafPts(x:number,y:number,a:number,len:number,wid:number,seed:number):P
  return rotPts(pts,a).map(p=>[p[0]+x,p[1]+y] as Pt);
 }
 type Leaf={x:number;y:number;a:number;len:number;wid:number;seed:number};
-/** draw a batch of leaves: one ink fill and one midrib knockout. */
-function leaves(s:Sheet,ink:string,list:Leaf[],cov=.92){
- if(!list.length)return;const body=new Path2D(),rib=new Path2D();
- for(const l of list){if(l.len<4)continue;body.addPath(polyPath(leafPts(l.x,l.y,l.a,l.len,l.wid,l.seed),true));const e:Pt=[l.x+Math.cos(l.a)*l.len*.85,l.y+Math.sin(l.a)*l.len*.85];rib.addPath(ribbon([[l.x,l.y],e],Math.max(2,l.wid*.16),{seed:l.seed,taper:.8,wobble:.8,pressure:0}));}
- s.fill(ink,body,cov);s.knockout(rib,.9);
+/** draw a batch of leaves: optional paper knockout beneath (bright on green), one ink fill, one midrib knockout. */
+function leaves(s:Sheet,ink:string,list:Leaf[],cov=.92,o:{knock?:boolean;rib?:boolean}={}){
+ const{knock=false,rib=true}=o;if(!list.length)return;const body=new Path2D(),ribs=new Path2D();let any=false;
+ for(const l of list){if(l.len<4)continue;any=true;body.addPath(polyPath(leafPts(l.x,l.y,l.a,l.len,l.wid,l.seed),true));const e:Pt=[l.x+Math.cos(l.a)*l.len*.85,l.y+Math.sin(l.a)*l.len*.85];ribs.addPath(ribbon([[l.x,l.y],e],Math.max(2,l.wid*.14),{seed:l.seed,taper:.8,wobble:.8,pressure:0}));}
+ if(!any)return;if(knock)s.knockout(body,.95);s.fill(ink,body,cov);if(rib)s.knockout(ribs,.9);
 }
-/** the branch: purple shadow tone on the lower side (thicker when bent), navy wood, paper highlight on the light side, leaves. */
-function branch(s:Sheet,pts:Pt[],w0:number,w1:number,seed:number,o:{ink?:string;leafInk?:string;leafU?:number[];leafLen?:number;wind?:number;flutter?:number;skip?:number[];shadow?:number;leafScale?:number[];cov?:number}={}){
- const{ink=K,leafInk=Y,leafU=[],leafLen=130,wind=0,flutter=0,skip=[],shadow=0,leafScale,cov=1}=o;
- s.tone(P,taper(pts,w0*1.1,w1*1.4,seed+1,1,6+shadow*14),.5);
- s.fill(ink,taper(pts,w0,w1,seed),cov);
- s.knockout(taper(pts,w0*.28,w1*.3,seed+2,-1),.45);
- const list:Leaf[]=[];leafU.forEach((u,i)=>{if(skip.includes(i))return;const{p,a}=at(pts,u),side=i%2?1:-1,sc=leafScale?.[i]??1;if(sc<=0)return;
-  let ang=a+side*(.95+.25*noise1(i+seed,seed));ang=lerp(ang,.35+side*.2,clamp(wind));ang+=flutter*side*.25*Math.sin(twos(u*7)+i);
-  list.push({x:p[0],y:p[1],a:ang,len:leafLen*(.8+.35*hash(i,seed))*sc,wid:leafLen*.3*sc*(1+.3*clamp(wind)),seed:seed*7+i});});
- leaves(s,leafInk,list);
+/** the crown's leaves around C: outward-pointing cut-paper blades that turn downwind, stretch and flutter with g. */
+function crownLeaves(G:Geom,crown:number,g:number,tt:number,seed:number,o:{skip?:number[];scale?:(i:number)=>number}={}){
+ const{skip=[],scale}=o,rr=rng(seed),yel:Leaf[]=[],blu:Leaf[]=[];
+ for(let i=0;i<14;i++){const a0=i/14*TAU+(rr()-.5)*.5,d=crown*(.3+.45*rr()),L=crown*(.55+.3*rr()),j=rr();if(skip.includes(i))continue;const sc=scale?scale(i):1;if(sc<=0)continue;
+  const px=G.C[0]+Math.cos(a0)*d*G.sx,py=G.C[1]+Math.sin(a0)*d*G.sy;
+  let ang=turn(a0,0,g*.8);ang+=.15*Math.sin(tt*9+i)*g+.05*Math.sin(tt*3+i*1.3+j*6)*(.3+g);
+  const len=L*(1+.35*g)*sc,wid=len*.42;
+  (i%3===0?blu:yel).push({x:px-Math.cos(ang)*len*.35,y:py-Math.sin(ang)*len*.35,a:ang,len,wid,seed:seed*7+i});}
+ return{yel,blu};
 }
-/** the story's ball: a leaf-yellow disc with a navy HEXAGON net (one central hexagon, six around it) so it reads as a football,
- * a navy rim and a paper highlight. lens>0 widens one seam into a navy lens (ch4 seam). */
-function leafBall(s:Sheet,x:number,y:number,r:number,rot:number,o:{sx?:number;sy?:number;cov?:number;lens?:number;seed?:number}={}){
- const{sx=1,sy=1,cov=.92,lens=0,seed=5}=o;s.save();s.translate(x,y);s.scale(sx,sy);
- const disc=polyPath(blob(0,0,r,r,seed,{amp:.03,n:48}),true);s.knockout(disc,.95);s.fill(Y,disc,cov);
- const hex=(cx:number,cy:number,hr:number,a0:number)=>{const pts:Pt[]=[];for(let i=0;i<6;i++){const a=a0+i/6*TAU;pts.push([cx+Math.cos(a)*hr,cy+Math.sin(a)*hr]);}return pts;};
- const net=new Path2D();net.addPath(ribbon(hex(0,0,r*.3,rot),Math.max(3,r*.06),{seed:seed+2,close:true,taper:0,wobble:1,pressure:.3}));
- for(let k=0;k<6;k++){const a=rot+k*TAU/6,d=r*.6;const c=hex(Math.cos(a)*d,Math.sin(a)*d,r*.3,a);net.addPath(ribbon(c,Math.max(3,r*.06),{seed:seed+3+k,close:true,taper:0,wobble:1,pressure:.3}));}
- s.save();s.clip(disc);s.fill(K,net,.6);s.restore();
- s.fill(K,ribbon(blob(0,0,r,r,seed+1,{amp:.02,n:48}),Math.max(3,r*.07),{seed:seed+9,close:true,pressure:.6,wobble:r*.02}));
- if(lens>0){const a=rot+TAU/5*2,L=r*.95,w=r*.55*lens,pts:Pt[]=[];for(let i=0;i<=8;i++){const u=i/8;pts.push([Math.cos(a)*L*u+Math.cos(a+Math.PI/2)*Math.sin(u*Math.PI)*w,Math.sin(a)*L*u+Math.sin(a+Math.PI/2)*Math.sin(u*Math.PI)*w]);}for(let i=7;i>0;i--){const u=i/8;pts.push([Math.cos(a)*L*u-Math.cos(a+Math.PI/2)*Math.sin(u*Math.PI)*w,Math.sin(a)*L*u-Math.sin(a+Math.PI/2)*Math.sin(u*Math.PI)*w]);}s.fill(K,polyPath(pts,true));}
- s.knockout(polyPath(blob(-r*.38,-r*.4,r*.16,r*.13,seed+2,{amp:.05}),true));
- s.restore();
+type TreeOpts={crown?:number;skip?:number[];scale?:(i:number)=>number;extra?:Leaf[];shadow?:number};
+/** the tree: navy root flare, hand-cut navy trunk with a paper highlight, two branch ribbons, a green under-crown (yellow × blue),
+ * blue leaves overprinting to deep green, yellow leaves knocked out so they print bright. Returns the geometry. */
+function tree(s:Sheet,t:number,x:number,y:number,h:number,bend:number,g:number,seed:number,o:TreeOpts={}):Geom{
+ const{crown=170,skip=[],scale,extra=[],shadow=0}=o,tt=twos(t),G=treeGeom(x,y,h,bend,crown,g),q=G.sp,n=q.length;
+ s.fill(K,polyPath(blob(x,y+2,crown*.42,14,seed+1,{amp:.2,n:20}),true));
+ const L:Pt[]=[],R:Pt[]=[],w=(i:number)=>lerp(crown*.36,crown*.16,i/(n-1))/2;
+ for(let i=0;i<n;i++){const a=q[Math.max(0,i-1)],b=q[Math.min(n-1,i+1)];let nx=a[1]-b[1],ny=b[0]-a[0];const l=Math.hypot(nx,ny)||1;nx/=l;ny/=l;const ww=w(i);L.push([q[i][0]+nx*ww,q[i][1]+ny*ww]);R.push([q[i][0]-nx*ww,q[i][1]-ny*ww]);}
+ const poly=handCut([...L,[G.tip[0],G.tip[1]-6],...R.reverse()],seed+2,5,12);
+ if(shadow>0)s.tone(P,polyPath(poly.map(p=>[p[0]+8,p[1]+4] as Pt),true),.4*shadow);
+ s.fill(K,polyPath(poly,true));
+ s.knockout(ribbon(L.slice(1,n-2).map((p,i)=>[p[0]+w(i+1)*.5,p[1]] as Pt),Math.max(3,crown*.03),{seed:seed+3,taper:.3,wobble:1,pressure:.2,step:14}),.35);
+ const br=new Path2D();const b1=at(q,.78).p,b2=at(q,.9).p;
+ br.addPath(ribbon([b1,[G.C[0]-crown*.55*G.sx,G.C[1]+crown*.15]],crown*.09,{seed:seed+4,taper:.5,wobble:1.2,pressure:.3,step:16}));
+ br.addPath(ribbon([b2,[G.C[0]+crown*.5*G.sx,G.C[1]+crown*.05]],crown*.08,{seed:seed+5,taper:.5,wobble:1.2,pressure:.3,step:16}));
+ s.fill(K,br);
+ const uc=polyPath(blob(G.C[0],G.C[1],crown*.95*G.sx,crown*.8*G.sy,seed+6,{amp:.12,n:32}),true);s.fill(Y,uc,.95);s.tone(B,uc,.6);
+ const{yel,blu}=crownLeaves(G,crown,g,tt,seed+7,{skip,scale});
+ leaves(s,B,blu,.85,{rib:false});leaves(s,Y,yel.concat(extra),.95,{knock:true});
+ return G;
 }
-/** the lens polygon of leafBall in world space (for the ch4 aperture). */
-function ballLens(x:number,y:number,r:number,rot:number,lens:number):Pt[]{const a=rot+TAU/5*2,L=r*.95,w=r*.55*lens,pts:Pt[]=[];for(let i=0;i<=8;i++){const u=i/8;pts.push([x+Math.cos(a)*L*u+Math.cos(a+Math.PI/2)*Math.sin(u*Math.PI)*w,y+Math.sin(a)*L*u+Math.sin(a+Math.PI/2)*Math.sin(u*Math.PI)*w]);}for(let i=7;i>0;i--){const u=i/8;pts.push([x+Math.cos(a)*L*u-Math.cos(a+Math.PI/2)*Math.sin(u*Math.PI)*w,y+Math.sin(a)*L*u-Math.sin(a+Math.PI/2)*Math.sin(u*Math.PI)*w]);}return pts;}
-/** a leaf-cup: two leaves opening from a point; open 0 = folded shut, 1 = open. */
-function cupLeaves(x:number,y:number,a:number,open:number,len:number,seed:number):Leaf[]{const sp=.12+.55*open;return[{x,y,a:a-sp,len,wid:len*.3,seed},{x,y,a:a+sp,len:len*.9,wid:len*.28,seed:seed+1}];}
-/** the knot: the twig looped through itself; yellow highlight in the loop, paper glint. tight 0..1 shrinks it. */
-function knot(s:Sheet,x:number,y:number,r:number,progress:number,tight=0,seed=31){
- const rr=r*(1-.15*tight),loop=blob(x,y,rr,rr*.85,seed,{amp:.06,n:36}),line=progress>=1?loop:partial(smoothPts(loop,true,6),progress);
- if(progress>=.6)s.fill(Y,polyPath(blob(x,y,rr*.7,rr*.6,seed+1,{amp:.05}),true),.9);
- if(line.length>1)s.fill(K,ribbon(line,r*.4,{seed,close:progress>=1,pressure:.5,wobble:1.5}));
- if(progress>=1)s.knockout(polyPath(blob(x-rr*.25,y-rr*.3,rr*.14,rr*.1,seed+2),true));
+/** a loose leaf in flight: from a to b over dur seconds from t0, spinning and wobbling, resting on the ground after. */
+function flyingLeaf(t:number,t0:number,a:Pt,b:Pt,dur:number,seed:number,size=1):Leaf|null{
+ if(t<t0)return null;const u=clamp((t-t0)/dur),e=u<1?u:1,p=arc(a,b,easeOut(e),-60);
+ const y=u<1?p[1]+30*Math.sin(u*TAU*2.2+seed):b[1]+4*settle(t,t0+dur,{amp:1,freq:5,decay:6});
+ return{x:p[0],y,a:u<1?u*TAU*2.5+seed:.2+.3*Math.sin(seed),len:120*size,wid:44*size,seed:seed+70};
 }
-/** paper air lens travelling along a path (the breath). */
-function airLens(s:Sheet,pts:Pt[],u:number,w:number,h:number,seed:number){const{p,a}=at(pts,clamp(u));s.knockout(polyPath(blob(p[0],p[1],w,h,seed,{amp:.08,rot:a,n:24}),true),.92);}
-const spark=(s:Sheet,x:number,y:number,age:number,seed:number,r=120)=>{if(age<0)return;const g=easeOutBack(clamp(age/.45))*(1-.3*clamp((age-1.2)/.8));if(g<=0)return;sparkBurst(s,Y,x,y,r,{n:8,seed,g,width:r*.12});};
-const puff=(s:Sheet,x:number,y:number,age:number,seed:number,size=1)=>{if(age<0||age>1)return;const r=(40+200*easeOut(age))*size;dust(s,P,x,y,r,Math.round(14*size),{seed,size:9*size,cov:.7*(1-age)});};
 
-// ---------------- chapter 1: a pass carried off line ----------------
-const B1:Band[]=[{y:-340,h:170,cov:.35,speed:20,seed:1},{y:-170,h:210,cov:.5,speed:35,seed:2},{y:130,h:200,cov:.7,speed:55,seed:3},{y:330,h:220,cov:.5,speed:80,seed:4},{y:-560,h:170,cov:.35,speed:15,seed:0},{y:-800,h:200,cov:.4,speed:12,seed:20}];
-function ch1Ball(t:number):{x:number;y:number;rot:number;sx:number;sy:number}{
- const u=sm(.3,1.05,t,easeIn),fly=t<1.05;let x:number,y:number;
- if(fly){const p=arc([-120,-40],[180,150],u,110);x=p[0];y=p[1]+70*u*u*u;}
- else{x=180;const b=t-1.05;y=150-24*Math.sin(Math.PI*clamp(b/.25))-8*Math.sin(Math.PI*clamp((b-.25)/.2));}
- const rot=u*5+(t>1.05?easeOut(clamp((t-1.05)/.35))*1.2:0);
- const w=t>1.45?settle(t,1.45,{amp:.12,freq:4.5,decay:4,phase:Math.PI/2}):0;const sq=t>=1.4&&t<6.65?.06*sm(1.4,1.8,t):.06*(1-sm(6.65,7.2,t));
- return{x,y,rot,sx:1+w+sq,sy:1-w-sq};
+// ---------------- the post, the ball, the feeling, sight, spark ----------------
+/** the rigid post: a navy hand-cut slab on a purple base tone; loads (thickens) before the crack, snaps at hc above the ground and the top falls right. */
+function post(s:Sheet,t:number,x:number,y:number,h:number,w:number,seed:number,o:{crackAt:number;load:number;hc:number}){
+ const{crackAt,load,hc}=o,cracked=t>=crackAt,ww=w*(1+.25*load),spread=sm(crackAt,crackAt+.9,t,easeOut);
+ s.tone(P,polyPath(blob(x,y+6,w*2.2+w*2*spread,w*.7+w*.5*spread,seed,{amp:.15,n:20}),true),.4+.3*spread);
+ const slab=(y0:number,y1:number)=>polyPath(handCut([[x-ww/2,y0],[x+ww/2,y0],[x+ww/2,y1],[x-ww/2,y1]],seed+1,4,18),true);
+ if(!cracked){s.fill(K,slab(y-h,y));return;}
+ s.fill(K,slab(y-hc,y));
+ const fall=clamp((t-crackAt)/.42),th=.47*fall*fall+Math.min(0,settle(t,crackAt+.42,{amp:.05,freq:5,decay:6}));
+ s.save();s.translate(x+ww/2,y-hc);s.rotate(th);s.translate(-(x+ww/2),-(y-hc));
+ s.fill(K,slab(y-h,y-hc+4));
+ const zig:Pt[]=[[x-ww/2-4,y-hc-2],[x-ww*.2,y-hc+8],[x,y-hc-6],[x+ww*.25,y-hc+6],[x+ww/2+4,y-hc-2]];s.knockout(ribbon(zig,7,{seed:seed+2,wobble:.5,taper:.2}),.95);
+ s.restore();
+ if(t>=crackAt+.42&&t<crackAt+1.3)dust(s,null,x+ww/2+(h-hc)*Math.cos(.47),y-hc+(h-hc)*Math.sin(.47),70,9,{seed:seed+3,size:8,cov:.9*(1-(t-crackAt-.42)/.9)});
 }
+/** the story's ball: a paper football with navy pentagons (purple shadow crescent) and a navy ground shadow. */
+function ball(s:Sheet,x:number,y:number,r:number,rot:number,o:{sx?:number;sy?:number;shadow?:number}={}){
+ const{sx=1,sy=1,shadow=1}=o;if(shadow>0)s.tone(K,polyPath(blob(x,y+r*.98,r*1.1*shadow,r*.28*shadow,9,{amp:.06,n:18}),true),.25);
+ s.save();s.translate(x,y);s.scale(sx,sy);footballPanels(s,0,0,r,{rot,key:K,shadow:P,seed:5,light:[-.4,-.5]});s.restore();
+}
+/** the feeling: a purple knot (boiling blob, optional spikes) on a paper knockout so it reads on the navy torso. */
+function knot(s:Sheet,x:number,y:number,r:number,seed:number,o:{boil?:number;cov?:number;spikes?:[number,number][];round?:number}={}){
+ const{boil=0,cov=.85,spikes=[],round=0}=o;if(r<=1)return;const p=new Path2D();
+ p.addPath(polyPath(blob(x,y,r*1.1,r*.9,seed+boil,{amp:.2,n:22,rot:-.4}),true));
+ spikes.forEach(([a,len],i)=>{if(len<=2)return;const w=lerp(r*.55,r*.9,round);p.addPath(ribbon([[x,y],[x+Math.cos(a)*len,y+Math.sin(a)*len]],w,{seed:seed+i,taper:lerp(.9,.3,round),wobble:lerp(2.5,1,round),pressure:.4}));});
+ s.knockout(p,.95);s.fill(P,p,cov);
+}
+/** A yellow sight wedge from the head toward `ang` (the look), knocked out beneath so it prints bright. */
+function sight(s:Sheet,x:number,y:number,ang:number,half:number,L:number,seed:number,g=1){
+ if(g<=0)return;const pts:Pt[]=[[x,y]];for(let i=0;i<=8;i++){const a=ang-half+2*half*i/8;pts.push([x+Math.cos(a)*L*g,y+Math.sin(a)*L*g]);}
+ const p=polyPath(wob(pts,6,seed,true,{step:26,corner:.5}),true);s.knockout(p,.5);s.tone(Y,p,.6);
+}
+/** a paper-and-yellow spark on arrival. */
+function spark(s:Sheet,x:number,y:number,age:number,seed:number,r=90){
+ if(age<0||age>1.1)return;const g=easeOutBack(clamp(age/.4))*(1-.4*clamp((age-.6)/.5));if(g<=0)return;const rr=rng(seed),p=new Path2D();
+ for(let i=0;i<8;i++){const a=i/8*TAU+(rr()-.5)*.4,r0=r*.35,r1=r*(.8+rr()*.5)*g;p.addPath(ribbon([[x+Math.cos(a)*r0,y+Math.sin(a)*r0],[x+Math.cos(a)*r1,y+Math.sin(a)*r1]],r*.13*(.7+rr()*.6),{seed:seed+i,taper:.8,pressure:.4,wobble:.8}));}
+ s.knockout(p,.95);s.fill(Y,p,.95);
+}
+const chestOf=(f:{top:Pt;hip:Pt}):Pt=>[lerp(f.top[0],f.hip[0],.45),lerp(f.top[1],f.hip[1],.45)];
+
+// ---------------- chapter 1: a pass goes wrong; the wind hits the player and the tree ----------------
+const T1={x:300,y:240,h:290,crown:145};
+const ch1Wind=(t:number)=>({g:gust(t,2.0,2.6,3.8),gi:gustInt(t,2.0,2.6,3.8)});
+function ch1Bend(t:number){const{g}=ch1Wind(t);return .5*g+sway(t)+(t>3.8?settle(t,3.8,{amp:-.1,freq:1,decay:1.5}):0);}
+const ch1Geom=(t:number)=>treeGeom(T1.x,T1.y,T1.h,ch1Bend(t),T1.crown,ch1Wind(t).g);
+function ch1Ball(t:number){if(t<.3)return{x:20,y:214,rot:0,on:true};const u=clamp((t-.3)/.75),p=arc([20,214],[-520,236],u,60),roll=sm(1.05,1.9,t,easeOut);return{x:p[0]-260*roll,y:t<1.05?p[1]:236,rot:-u*5-roll*3,on:t<2.2};}
 const ch1:Scene={
  draw(s,t){
-  const tt=twos(t);
-  const g3=gust(t,.3,.7,1),g2=gust(t,8,8.4,8.77),G=(i:number)=>i===2?g3:i===1?g2:0,GI=(i:number)=>i===2?gustInt(t,.3,.7,1):i===1?gustInt(t,8,8.4,8.77):0;
-  cam(s,t,[[0,0,0,1],[.45,0,0,1],[1.5,120,90,1.15],[2.2,120,90,1.15],[3.2,20,60,1.15],[5,20,60,1.15],[5.8,60,80,1.2],[6.48,60,80,1.2],[7.6,140,150,1.3],[8,140,150,1.3],[8.77,40,-170,1.42,.035]]);
-  s.field(Y,.1,.3);s.tone(Y,polyPath(blob(500,600,900,700,3,{amp:.1}),true),.2);
-  ground(s,330,11);
-  // band 3 closes over the ball (edges crumple toward it), then opens a torn gap (the room)
-  const close=sm(1.4,1.8,t)*(1-sm(6.65,7.4,t)),squeeze=sm(6.48,6.65,t)*(1-sm(6.65,7,t));
-  const bump=(sign:number)=>(x:number)=>sign*(30*close+10*squeeze)*bell(x-180,220);
-  const loosen=sm(6.65,7.6,t)*20;
-  windBands(s,t,B1.map((b,i)=>i===1?{...b,y:b.y-loosen}:i===3?{...b,y:b.y+loosen}:b),G,GI,{2:{top:bump(1),bottom:bump(-1)}},P,{x:-220,y:30,r:380,k:100});
-  fragments(s,t,B1,14,21,GI,G,t>1.05?{x:180,y:150,age:t-1.05}:undefined);
-  const gap=key(t,[[6.65,0],[7.3,1.15,easeOut],[7.7,1]]);if(gap>0)s.knockout(polyPath(blob(180,150,205*gap,135*gap,7,{amp:.14,n:30}),true),.94);
-  // branch A: loads back, flicks, returns; straightens toward the new cup; bends in the closing gust
-  let bend=key(t,[[0,0],[.25,-.07,easeIn],[.55,.09,easeOut],[1.05,.02],[1.6,0]])+settle(t,1.05,{amp:.04,freq:2.2,decay:2.5})+g3*.05;
-  bend+=sm(4.6,5.2,t)*.12+settle(t,5.2,{amp:.05,freq:2,decay:3})+g2*.16+sway(t);
-  const A=spine([-540,120],[-120,-40],bend,41);
-  branch(s,A,50,14,41,{leafU:[.4,.7,.9],leafLen:150,wind:g3*.6+g2*.8,flutter:g2});
-  // the pass that goes wrong: a navy player winds up and kicks at .3; the blue teammate waits with arms up, then slumps as the ball is lost
-  const ku=sm(.05,.3,t),kicked=t>=.3&&t<.6;
-  figure(s,-300,70,330,K,61,kicked?'kick':'stand',{facing:1,tilt:t<.3?-.12*Math.sin(ku*Math.PI):0});
-  const lost=sm(1.05,1.5,t,easeOut),rL=poseLimbs('reach'),slL=poseLimbs('slump');
-  figure(s,430,90,300,B,62,'reach',{facing:-1,arms:mixLimbs(rL.arms,slL.arms,lost),tilt:.22*lost,headDrop:[.02*lost,.08*lost]});
-  // the ball: flies, is pushed down into band 3, lands with a bounce, squashes under the band, un-squashes in the gap
-  const b=ch1Ball(t);if(t>=.3)leafBall(s,b.x,b.y,150,b.rot,{sx:b.sx,sy:b.sy,cov:.92});
-  if(t>=.3&&t<1.05)speedLines(s,K,b.x,b.y,Math.atan2(190,300),{n:4,seed:43,len:90,width:5});
-  if(t>=1.05)dust(s,Y,180,150,60+140*clamp(t-1.05),8,{seed:44,size:8,cov:.8*(1-clamp((t-1.05)/1.2))});
-  // branch B (teammate): open cup that folds shut when the pass is lost, then a twig grows under the band and opens a new cup
-  const Bs=spine([560,-200],[250,-60],-.02+g3*.03,51);branch(s,Bs,42,12,51,{ink:B,leafInk:B,leafU:[.45,.75],leafLen:140});
-  const open=key(t,[[0,1],[1.05,1],[1.35,0,easeOut],[4.34,0],[4.5,.1]]);leaves(s,B,cupLeaves(250,-60,-.6,open,135,53));
-  const grow=t<4.5?0:easeOutBack(sm(4.5,5.2,t,easeIO));
-  if(grow>0){const twig:Pt[]=[[270,-30],[250,60],[190,140],[120,190]];const q=partial(smoothPts(twig,false,8),Math.min(1,grow));if(q.length>1){s.tone(P,taper(q,20,9,55,1,5),.5);s.fill(B,taper(q,20,8,55));}
-   const cupOpen=sm(5.2,5.5,t,easeOut);if(cupOpen>0)leaves(s,B,cupLeaves(120,190,2.2,cupOpen,100,57));}
+  const tt=twos(t),ti=twosIndex(t),{g,gi}=ch1Wind(t);
+  cam(s,t,[[0,0,30,1],[.3,0,30,1],[.5,-40,30,1.04],[1.4,-60,30,1.06],[2.0,-60,30,1.06],[2.6,160,-10,1.08,-.03],[3.8,160,-10,1.08,0],[4.34,160,-10,1.08,0],[5,100,0,1.1,0],[6.48,100,0,1.1,0],[7.4,160,-40,1.16,0],[8.0,220,-80,1.25,0],[8.77,T1.x,-115,1.45,0]]);
+  world(s,t,11);
+  wind(s,t,g,gi,21);if(g>0)wind(s,t,g,gi,22,{ink:null,box:[-1500,HZ+10,3000,190],n:4,cov:.6*g,len:200,width:6});
+  const G=tree(s,t,T1.x,T1.y,T1.h,ch1Bend(t),g,31,{crown:T1.crown,shadow:g});
+  // the teammate (blue, left): arms up for the pass, turns after the ball, slumps, then stands and lifts an arm at 5.0
+  const lost=sm(1.5,2.0,t,easeOut),offer=sm(5.0,5.4,t,easeOut),rL=poseLimbs('reach'),slL=poseLimbs('slump'),stL=poseLimbs('stand'),ptL=poseLimbs('point');
+  const tmArms=t<5?mixLimbs(rL.arms,slL.arms,lost):mixLimbs(slL.arms,ptL.arms,offer);
+  const tmFace=t>=1.0&&t<5.0?-1:1;
+  person(s,-340,250,290,B,41,'stand',{facing:tmFace,arms:tmArms,tilt:.22*lost*(1-offer)+.2*g*tmFace,headDrop:[.02*lost*(1-offer),.08*lost*(1-offer)]});
+  // the player (navy, right, facing the teammate): wind-up, kick, shoulders drop, leans in the gust, straightens and points on 4.34
+  const wu=sm(.08,.3,t),kicked=t>=.3&&t<.6,drop=sm(1.3,1.8,t,easeOut),up=t<4.4?0:easeOutBack(sm(4.4,4.9,t)),slump=drop*(1-clamp(up)),pt=sm(4.9,5.3,t,easeOut);
+  const arms=up>0?mixLimbs(stL.arms,ptL.arms,pt):mixLimbs(stL.arms,slL.arms,slump);
+  const f=person(s,60+24*g,250,300,K,51,kicked?'kick':'stand',{facing:-1,arms:kicked?undefined:arms,tilt:(t<.3?-.12*Math.sin(wu*Math.PI):0)+.22*slump-.3*g+.02*Math.sin(t*2.1),headDrop:[.02*slump,.08*slump]});
+  // the ball: kicked at .3, flies low past the teammate and rolls out of the picture (the miss)
+  const b=ch1Ball(t);if(b.on)ball(s,b.x,b.y,54,b.rot,{shadow:t<.3||t>1.05?1:.4});
+  if(t>=.3&&t<1.05)speedLines(s,K,b.x+30,b.y,Math.PI,{n:4,seed:43+ti,len:90,width:5,cov:.8});
+  // the feeling: a purple knot grows on the chest at 6.5, lifts off at 7.2 and floats with the wind up into the crown
+  const grow=t<6.5?0:easeOutBack(sm(6.5,6.8,t)),fl=sm(7.2,8.6,t,easeIO);
+  if(grow>0){const c=chestOf(f),p=arc(c,G.C,fl,-120),x=p[0]+16*Math.sin(t*5)*fl*(1-fl),y=p[1]+10*Math.sin(t*7);knot(s,x,y,40*grow*(1-.7*fl),61,{boil:t<8.6?ti%3:0,cov:.85});}
+  void tt;
  },
- aperture(){return apertureDisc(40,-170,80,12);},still:5.6,
+ aperture(t){const G=ch1Geom(t);return apertureDisc(G.C[0],G.C[1],80,12);},still:2.7,
 };
 
-// ---------------- chapter 2: bend and return ----------------
-const B2:Band[]=[{y:-380,h:150,cov:.35,speed:20,seed:5},{y:-190,h:170,cov:.5,speed:35,seed:6},{y:0,h:200,cov:.7,speed:50,seed:7},{y:190,h:170,cov:.5,speed:65,seed:8},{y:380,h:150,cov:.35,speed:80,seed:9},{y:-570,h:160,cov:.35,speed:15,seed:10},{y:-780,h:200,cov:.4,speed:12,seed:11}];
+// ---------------- chapter 2: BEND — the whole tree bends and springs back; the rigid post snaps ----------------
+const T2={x:0,y:240,h:320,crown:175};
+const ch2G=(t:number)=>gust(t,3.04,3.55,4.6)+.6*gust(t,7.78,8.1,8.9),ch2GI=(t:number)=>gustInt(t,3.04,3.55,4.6)+.6*gustInt(t,7.78,8.1,8.9);
 function ch2Bend(t:number){
- let b=settle(t,-.4,{amp:.05,freq:1.1,decay:.7})+sway(t,.8);
- if(t<3.04)return b;
- if(t<3.16)return b+lerp(0,-.06,easeIn((t-3.04)/.12));
- if(t<3.55)return lerp(-.06,.6,easeIO((t-3.16)/.39));
- b=settle(t,3.55,{amp:.6,freq:1.1,decay:1.5,phase:Math.PI/2})+sway(t,.8);
- if(t<7.78)return b;
- if(t<7.95)return b+lerp(0,-.04,easeIn((t-7.78)/.17));
- if(t<8.3)return b+lerp(-.04,.3,easeIO((t-7.95)/.35));
- return b+settle(t,8.3,{amp:.3,freq:1.1,decay:1.6,phase:Math.PI/2});
+ let b=sway(t,.8)+.06*Math.exp(-t*1.2)*Math.cos(t*4);
+ if(t>=3.04&&t<3.16)b+=lerp(0,-.05,easeIn((t-3.04)/.12));else if(t>=3.16&&t<3.6)b+=lerp(-.05,.62,easeIO((t-3.16)/.44));else if(t>=3.6)b+=settle(t,3.6,{amp:.62,freq:1.0,decay:1.5,phase:Math.PI/2});
+ if(t>=7.78&&t<7.9)b+=lerp(0,-.04,easeIn((t-7.78)/.12));else if(t>=7.9&&t<8.25)b+=lerp(-.04,.36,easeIO((t-7.9)/.35));else if(t>=8.25)b+=settle(t,8.25,{amp:.36,freq:1.0,decay:1.6,phase:Math.PI/2});
+ return b;
 }
-const ch2Tip=(t:number)=>at(spine([-520,420],[380,-300],ch2Bend(t),61),1);
+const ch2Geom=(t:number)=>treeGeom(T2.x,T2.y,T2.h,ch2Bend(t),T2.crown,ch2G(t));
+/** the seam leaf: the crown's front-right leaf that turns to the camera and grows from 9.2. */
+function seamLeaf(t:number){const G=ch2Geom(t),turnU=sm(9.2,9.6,t,easeOut),len=lerp(200,300,turnU),wid=lerp(80,120,turnU),a=lerp(-.2,-.45,turnU);
+ const x=G.C[0]+T2.crown*.5*G.sx,y=G.C[1]+T2.crown*.12*G.sy;return{leaf:{x,y,a,len,wid,seed:99} as Leaf,c:[x+Math.cos(a)*len*.5,y+Math.sin(a)*len*.5] as Pt};}
 const ch2:Scene={
  draw(s,t){
-  const tt=twos(t);
-  const g1=gust(t,3.04,3.4,3.9),g2=gust(t,7.78,8.1,8.5),g=g1+g2*.6,gi=gustInt(t,3.04,3.5,3.9)+gustInt(t,7.78,8.1,8.5)*.6;
-  const kick=settle(t,8.15,{amp:6,freq:9,decay:6});
-  cam(s,t,[[0,0,40,.9],[3.04,-10,40,.9],[3.7,-60,60,1.2,-.07],[3.9,-60,60,1.2,-.07],[4.6,-60,60,1.2,.02],[5.5,-60,60,1.2,0],[7.78,-60,60,1.2,0],[8.6,230,80,1.2,0],[9.2,230,80,1.2,0],[9.97,300,-230,1.42,0]],[kick,kick*.5]);
-  s.field(Y,.1,.3);s.tone(Y,polyPath(blob(-500,-500,900,600,4,{amp:.1}),true),.2);
-  ground(s,400,12);
-  windBands(s,t,B2,()=>g,()=>gi,{},P,{x:-40,y:60,r:520,k:130*(1+g)});
-  fragments(s,t,B2,18,22,()=>gi,()=>g,t>8.15?{x:440,y:180,age:t-8.15,r:300}:undefined);
-  // the rigid post: loads, cracks at 8.15, tilts 8° and stays
-  const tilt=t<8.15?0:.14*spring(t-8.15,4,.4)+settle(t,8.15,{amp:.01,freq:14,decay:8});
-  s.save();s.translate(440,450);s.rotate(tilt);
-  const load=sm(7.95,8.15,t)*(1-sm(8.15,8.4,t));s.tone(P,polyPath(blob(0,-60,90+30*sm(8.15,9,t),160,13,{amp:.1}),true),.4+.3*sm(8.15,9,t));
-  s.fill(K,taper([[0,0],[2,-300],[0,-570]],36+10*load,30+8*load,63));
-  if(t>=8.15){const zig:Pt[]=[[-26,-274],[-4,-262],[-16,-250],[8,-242],[-8,-232],[26,-224]];s.knockout(ribbon(zig,10,{seed:64,wobble:.5,taper:.2}),.95);}
-  s.restore();
-  // branch A whole: bends about its root, returns with two overshoots; leaf at u .6 tears off at 3.5
-  const bend=ch2Bend(t);const A=spine([-520,420],[380,-300],bend,61);
-  const torn=t>=3.5;const tipLeaf=t>=9.2?lerp(1,1.6,sm(9.2,9.6,t,easeOut)):1;
-  branch(s,A,54,10,61,{leafU:[.35,.48,.6,.7,.8,.9,1],leafLen:175,wind:clamp(g*1.2),flutter:g1+g2,skip:torn?[2,6]:[6],shadow:Math.abs(bend)});
-  // the tip leaf, drawn on top so it can turn to the camera for the seam
-  const tip=at(A,1);const turn=sm(9.2,9.6,t,easeOut);const ta=lerp(tip.a-.8+.3*Math.sin(tt*3)*(g1+g2),-.45,turn)+(turn>0?settle(t,9.6,{amp:.1,freq:4,decay:5}):0);
-  leaves(s,Y,[{x:tip.p[0],y:tip.p[1],a:ta,len:170*tipLeaf,wid:54*tipLeaf,seed:77}],.92+.06*turn);
-  if(torn){const u=clamp((t-3.5)/3);const p=arc([at(A,.6).p[0],at(A,.6).p[1]],[330,410],u,-60);const yy=u>=1?410+settle(t,6.5,{amp:8,freq:5,decay:6}):p[1]+40*Math.sin(u*TAU*2);leaves(s,Y,[{x:p[0],y:yy,a:u*TAU*2+.5,len:130,wid:40,seed:79}]);}
+  const g=ch2G(t),gi=ch2GI(t),kick=settle(t,8.15,{amp:6,freq:9,decay:6}),L=seamLeaf(t);
+  cam(s,t,[[0,0,-20,.9],[3.04,0,-20,.9],[3.7,60,-10,1.05,-.05],[4.3,60,-10,1.05,-.05],[5.5,40,-20,1.08,0],[7.78,40,-20,1.08,0],[8.4,150,10,1.12,0],[9.2,150,10,1.12,0],[9.97,L.c[0],L.c[1],1.55,0]],[kick,kick*.5]);
+  world(s,t,12);
+  wind(s,t,g,gi,23,{n:8});if(g>0)wind(s,t,g,gi,24,{ink:null,box:[-1500,HZ+10,3000,190],n:5,cov:.6*g,len:220,width:6});
+  const bend=ch2Bend(t);
+  tree(s,t,T2.x,T2.y,T2.h,bend,g,32,{crown:T2.crown,skip:[...(t>=3.5?[4]:[]),...(t>=3.65?[9]:[])],shadow:Math.abs(bend)});
+  // two leaves torn off in the first gust fly right and land on the pitch
+  const fl:Leaf[]=[];const l1=flyingLeaf(t,3.5,[110,-280],[560,232],1.6,5),l2=flyingLeaf(t,3.65,[50,-320],[700,240],1.8,6);if(l1)fl.push(l1);if(l2)fl.push(l2);leaves(s,Y,fl,.95,{knock:true});
+  // the rigid post beside the tree: loads on the second gust, cracks at 8.15, its top falls
+  post(s,t,330,240,300,34,71,{crackAt:8.15,load:sm(7.95,8.15,t)*(1-sm(8.15,8.4,t)),hc:100});
+  // the seam leaf, drawn last: turns to the camera and grows from 9.2
+  leaves(s,Y,[L.leaf],.95,{knock:true});
  },
- aperture(t){const tip=ch2Tip(t);return apertureDisc(tip.p[0]+Math.cos(-.45)*80,tip.p[1]+Math.sin(-.45)*80,62,12);},still:3.6,
+ aperture(t){const L=seamLeaf(t);return apertureDisc(L.c[0],L.c[1],62,12);},still:3.6,
 };
 
-// ---------------- chapter 3: inside a leaf (yellow + purple duotone) ----------------
-const RIB:Pt[]=[[-470,200],[-250,110],[0,0],[250,-100],[470,-200]];
+// ---------------- chapter 3: BREATHE — name the feeling, take a slow breath ----------------
+const KNOT:Pt=[14,8];
+const ch3G=(t:number)=>.35*(1-sm(6.42,8,t)),ch3GI=(t:number)=>.35*(t-smInt(6.42,8,t));
 const ch3:Scene={
  draw(s,t){
-  const tt=twos(t),ti=twosIndex(t);
-  const inhale=sm(6.42,8,t,easeOut),exhale=sm(8,9.77,t,easeOut);
+  const tt=twos(t),ti=twosIndex(t),g=ch3G(t),gi=ch3GI(t);
+  const inhale=sm(6.42,8,t,easeOut),exhale=sm(8,9.77,t,easeOut),named=sm(5.2,5.7,t);
   const kick=(t>=0&&t<.3?4:0)+(t>=1.1&&t<1.4?4:0)+(t>=2.2&&t<2.5?4:0);
-  const rot=key(t,[[0,0],[2.6,-.035],[5.02,-.035],[5.7,0],[6.42,0],[8,.05],[9.4,-.035]]);
-  const v=key(t,[[0,0,0,1],[2.6,-40,30,1.05],[5.02,-40,30,1.05],[5.7,0,10,1.25],[6.42,10,8,1.26],[8,260,-120,1.28],[9.77,330,-145,1.36]],easeIO,true);
-  s.camera(v[0]+kick*.5+6*Math.sin(t*.7)*sm(2.6,5,t)*(1-sm(5,5.3,t))+3*Math.sin(t*1.9),v[1]+kick+2*Math.sin(t*1.3),v[2]*(1+.16*inhale-.05*exhale),rot+.01*Math.sin(t*1.1));
-  // the world seen through the leaf: faint wind stripes over paper, then the leaf as a huge mottled yellow field
-  const stripeCov=key(t,[[0,.12],[6.42,.12],[8,.08]]),sp=1+sm(2.6,3,t)*(1-sm(6.42,8,t)*.5);
-  for(let i=0;i<3;i++)s.tone(P,bandPath(-330+i*300,-330+i*300+150,25*sp*t,31+i,20,{step:90}),stripeCov);
-  const leafScale=1+.06*inhale-.02*exhale;s.save();s.translate(-470,200);s.scale(leafScale);s.translate(470,-200);
-  const leaf=polyPath(leafPts(-560,240,Math.atan2(-440,1040),1180,330,33),true);
-  s.save();s.clip(leaf);s.field(Y,1,.6);s.restore();
-  // midrib and veins in paper; the two veins nearest the bruise grow a ring around it on "Name that feeling"
-  const rib=new Path2D();rib.addPath(ribbon(RIB,22,{seed:35,taper:.6,wobble:2,pressure:.4}));
-  const shove=(i:number)=>{const k=t>=.15&&i===2?6*sm(.15,.4,t):t>=1.25&&i===5?6*sm(1.25,1.5,t):0;return k*(1-sm(5.7,6.2,t));};
-  for(let i=0;i<11;i++){const u=.08+i*.085,{p,a}=at(RIB,u),side=i%2?1:-1,len=150+40*hash(i,3),ang=a+side*.95,sh=shove(i);const e:Pt=[p[0]+Math.cos(ang)*len,p[1]+Math.sin(ang)*len+sh*side];rib.addPath(ribbon([p,e],8,{seed:36+i,taper:.7,wobble:1.5,pressure:.3}));}
-  s.knockout(rib,.9);
-  // the bruise: a purple blot that boils until it is named, pulses between spikes, opens to halftone on the exhale
-  const named=sm(5.2,5.7,t),boil=t<5.7?ti%3:0,pulse=t<5.02?7*Math.sin(tt*TAU/1.2):0;
-  const r0=150+pulse-11*(sm(0,.15,t)*(1-sm(.15,.4,t))+sm(1.1,1.25,t)*(1-sm(1.25,1.5,t))+sm(2.2,2.35,t)*(1-sm(2.35,2.6,t)));
-  const cov=key(t,[[0,.8],[2.6,.8],[3.4,.95],[6.42,.95],[8,.6],[9.6,.45]]),shrink=1-.22*inhale;
-  s.tone(P,polyPath(blob(-110,40,r0*1.1*shrink,r0*.8*shrink,3+boil,{amp:.22,n:22,rot:-.4}),true),cov);
-  // three named feelings: three spikes shoot out, overshoot, then round into lobes once the ring closes
-  const spikes:[number,number,number][]=[[0,-2.3,230],[1.1,.7,180],[2.2,-.42,280]];
-  spikes.forEach(([t0,a,len],i)=>{const g=t<t0?0:easeOut(clamp((t-t0-.15)/.25))*(1+.12*settle(t,t0+.4,{amp:1,freq:3,decay:5}));if(g<=0)return;const round=named;const L=len*g*(1-.35*round);const shake=i===2&&t<5.7?4*Math.sin(tt*30):0;
-   const tipP:Pt=[-110+Math.cos(a)*L,40+Math.sin(a)*L+shake];const w=lerp(60,96,round);s.tone(P,ribbon([[-110,40],tipP],w,{seed:40+i,taper:lerp(.9,.3,round),wobble:lerp(3,1,round),pressure:.4}),cov);});
-  // the vein ring: two contours travel to meet, overshoot, snap closed
-  const ringP=t<5.02?0:sm(5.2,5.7,t,easeIO),bow=sm(5.02,5.2,t)*10;
-  if(ringP>0||bow>0){const L=blob(-110,40,260+bow,185+bow,44,{amp:.16,n:18,rot:-.3}),half=Math.round(L.length/2),left=L.slice(half).concat([L[0]]),right=L.slice(0,half+1);
-   const over=ringP>=1?1+.06*settle(t,5.7,{amp:1,freq:4,decay:6}):ringP*1.02;const w=key(t,[[5.2,14],[6.42,14],[8,10]]);
-   const a1=partial(smoothPts(left,false,6),Math.min(1,over)),a2=partial(smoothPts(right,false,6),Math.min(1,over));if(a1.length>1)s.fill(P,ribbon(a1,w,{seed:45,taper:.5,wobble:1.2}),.9);if(a2.length>1)s.fill(P,ribbon(a2,w,{seed:46,taper:.5,wobble:1.2}),.9);}
-  // the player inside the leaf: names the feeling (points at the blot at 5.02), then takes the slow breath (chest expands on the inhale, eases on the exhale)
-  const name=sm(5.02,5.4,t,easeOut),stL=poseLimbs('stand'),pL=poseLimbs('point');
-  const chest=1+.18*inhale-.1*exhale*inhale;
-  figure(s,250,-30,300,K,151,'stand',{facing:-1,arms:mixLimbs(stL.arms,pL.arms,name*(1-sm(6.42,7.2,t))),scaleX:chest,tilt:.03*Math.sin(t*2.2)-.05*inhale+.03*exhale});
-  // the breath: a paper lens of air travels the midrib on the inhale, a smaller one returns on the exhale
-  if(t>=6.42)airLens(s,RIB,.05+.8*sm(6.42,8,t,easeIO),140,60,47);
-  if(t>=8)airLens(s,RIB,.85-.75*sm(8,9.7,t,easeIO),90,40,48);
-  s.restore();
+  cam(s,t,[[0,0,20,1],[2.6,-30,30,1.03,-.02],[5.02,-30,30,1.03,-.02],[5.7,0,20,1.06,0],[6.42,0,20,1.06,0],[8,0,10,1.14,0],[9.1,0,10,1.14,0],[9.77,KNOT[0],KNOT[1],1.5,0]],[kick*.5+3*Math.sin(t*1.9)*(1-inhale),kick+2*Math.sin(t*1.3)*(1-inhale)]);
+  world(s,t,13);
+  wind(s,t,g,gi,25,{n:6,cov:.35});
+  tree(s,t,430,240,330,sway(t)+.3*g,g,33,{crown:150});
+  // the player, big and centred: chest heaves with each feeling, hunched; on the breath the whole pose opens
+  const heave=.08*Math.pow(Math.abs(Math.sin(t*TAU/.9)),.7)*(1-sm(5.02,5.5,t));
+  const chest=1+heave+.22*inhale-.14*exhale*inhale,tilt=.1*(1-inhale)-.04*inhale,stL=poseLimbs('stand'),rL=poseLimbs('reach');
+  person(s,0,250,500,K,151,'stand',{facing:1,scaleX:chest,tilt,headDrop:[.02*(1-inhale),.06*(1-inhale)-.02*inhale],arms:mixLimbs(stL.arms,rL.arms,.25*inhale*(1-.5*exhale))});
+  // the knot: grows in three pops with three spikes, boils until named, rounds into lobes, shrinks and opens on the exhale
+  const pop=(t0:number)=>t<t0?0:easeOutBack(sm(t0,t0+.3,t));
+  const r=(44+16*pop(0)+16*pop(1.1)+16*pop(2.2))*(1-.3*exhale)*(1-.06*named);
+  const sp=(t0:number,len:number)=>t<t0?0:len*easeOut(clamp((t-t0-.1)/.25))*(1+.12*settle(t,t0+.35,{amp:1,freq:3,decay:5}))*(1-.35*named);
+  const shake=t<5.4&&t>=2.2?.08*Math.sin(tt*30):0;
+  knot(s,KNOT[0],KNOT[1],r,161,{boil:t<5.4?ti%3:0,cov:key(t,[[0,.85],[8,.85],[9.6,.5]]),round:named,spikes:[[-2.3,sp(0,110)],[.7,sp(1.1,90)],[-.2+shake,sp(2.2,130)]]});
+  // naming: a navy-edged paper ring draws itself round the knot as two halves that meet; it expands with the chest on the breath
+  if(t>=5.02){const bow=sm(5.02,5.2,t)*8,rr=(106+bow)*(1+.12*inhale)*(1-.03*exhale),Lp=blob(KNOT[0],KNOT[1],rr,rr*.95,44,{amp:.05,n:24}),half=12,A=Lp.slice(0,half+1),Bh=Lp.slice(half).concat([Lp[0]]);
+   const prog=t<5.2?.04:Math.min(1,named*1.02+(named>=1?.04*settle(t,5.7,{amp:1,freq:4,decay:6}):0));
+   for(const [pts,sd] of [[A,45],[Bh,46]] as [Pt[],number][]){const q=partial(smoothPts(pts,false,6),prog);if(q.length>1){s.fill(K,ribbon(q,22,{seed:sd,taper:.4,wobble:1.2,pressure:.3}),.95);s.knockout(ribbon(q,11,{seed:sd+2,taper:.5,wobble:1,pressure:.2}),.95);}}}
+  // the breath out: a paper puff drifts forward from the head
+  if(t>=8){const u=sm(8,9.3,t,easeOut);s.knockout(polyPath(blob(120+150*u,-180-40*u,30+50*u,22+36*u,47,{amp:.1,n:20}),true),.9*(1-u));}
  },
- aperture(t){const {p,a}=at(RIB,.85);const sc=1+.06*sm(6.42,8,t,easeOut)-.02*sm(8,9.77,t,easeOut);const x=-470+(p[0]+470)*sc,y=200+(p[1]-200)*sc;return apertureDisc(x,y,58,12,a);},still:5.7,
+ aperture(){return apertureDisc(KNOT[0],KNOT[1],60,12);},still:5.8,
 };
 
-// ---------------- chapter 4: the twig at the fork ----------------
-const B4:Band[]=[{y:-325,h:250,cov:.6,speed:55,seed:14},{y:310,h:280,cov:.55,speed:80,seed:15},{y:-620,h:160,cov:.35,speed:30,seed:16},{y:620,h:180,cov:.35,speed:40,seed:17}];
-function ch4Ball(t:number){const u=sm(6.55,7.3,t,easeIO),p=arc([250,-120],[60,-20],u,30);const c=t>7.3?settle(t,7.3,{amp:.08,freq:4,decay:5,phase:Math.PI/2}):0;return{x:p[0],y:p[1],rot:u*6+key(t,[[8.2,0],[8.35,-.15],[8.7,1.1,easeOut]]),sx:1+c,sy:1-c};}
+// ---------------- chapter 4: ONE ACTION — shoulder, space, option, pass ----------------
+const ch4Run=(t:number)=>sm(2.8,3.5,t,easeIO);
+function ch4Ball(t:number){const u=sm(6.55,7.3,t,easeIO),p=arc([370,214],[80,214],u,40);const c=t>7.3?settle(t,7.3,{amp:.08,freq:4,decay:5,phase:Math.PI/2}):0;return{x:p[0],y:p[1],rot:-u*6+key(t,[[8.2,0],[8.35,.15],[8.7,-1.1,easeOut]]),sx:1+c,sy:1-c};}
 const ch4:Scene={
  draw(s,t){
-  const tt=twos(t);
-  cam(s,t,[[0,-60,-60,1],[.15,-60,-60,1],[.7,-150,-180,1.05,-.14],[1.3,-150,-180,1.05,-.14],[1.9,-60,-60,1.05,0],[2.75,-60,-60,1.05,0],[3.6,100,-40,1.1,0],[6.7,100,-40,1.1,0],[7.4,60,-20,1.2,0],[8.2,60,-20,1.2,0],[9.07,60,-20,1.62,0]]);
-  s.field(Y,.15,.4);
-  // the blob: hidden inside the upper band, uncovered by the look, shoves, creeps down, stops dead on the pass
-  const win=sm(.15,.65,t,easeOut),shove=sm(.7,1,t,easeOut)*20,creep=sm(1.3,6.55,t,easeIn)*100;
-  const bx=-150+shove*.7,by=-300+shove*.6+creep;
-  const press=sm(1.3,2.8,t)*15,vac=sm(3,3.6,t,easeOut);
-  windBands(s,t,B4,()=>0,()=>0,{0:{bottom:x=>shove*.8*bell(x-bx,160)},1:{top:x=>-press*bell(x+80,220)-vac*40*bell(x+60,200)*(1-.3*Math.abs(Math.sin(x/40)))}},P,{x:-80,y:60,r:360,k:60});
-  fragments(s,t,B4,10,24,()=>0,()=>0,t>3.4?{x:-80,y:200,age:t-3.4,r:260}:undefined);
-  if(win>0)s.knockout(polyPath(blob(-150,-300,200*win,150*win,16,{amp:.08}),true),.5);
-  s.fill(P,polyPath(blob(bx,by,120,105,17+(t>=.15&&t<6.55?twosIndex(t)%2:0),{amp:.12,n:30}),true),.95);
-  // twig A: enters from the left, forks at the shoulder, tip sags under the lower band, then grows into the calm gap
-  const sag=sm(1.3,2.8,t)*12+sm(2.62,2.8,t)*10+4*Math.sin(t*2.3),grow=t<2.8?0:easeOutBack(sm(2.8,3.5,t,easeIO)),dip=t>7.3?20*settle(t,7.3,{amp:1,freq:3,decay:3}):0;
-  const R4=110;const base:Pt[]=[[-540,260],[-400,235],[-240,200]];const oldTip:Pt[]=[[-240,200],[-160,215],[-80,230+sag]];
-  const newCurve:Pt[]=[[-240,200],[-140,120],[-20,30],[60,-20+dip]];
-  s.tone(P,taper(base.concat(oldTip.slice(1)),30,12,71,1,6),.5);s.fill(K,taper(base.concat(oldTip.slice(1)),26,11,71));
-  s.fill(K,taper([[-240,200],[-290,120],[-330,90]],14,6,72));
-  leaves(s,Y,[{x:-330,y:90,a:-2.4,len:90,wid:28,seed:73}]);
-  const look=key(t,[[0,0],[.15,.1],[.55,-2.7,easeOut],[.75,-2.9],[1.3,-2.6],[1.6,0]]);
-  leaves(s,Y,[{x:-80,y:230+sag,a:.3+look,len:100,wid:32,seed:74}]);
-  if(grow>0){const q=partial(smoothPts(newCurve,false,8),Math.min(1,grow));if(q.length>1){s.tone(P,taper(q,24,10,75,1,5),.5);s.fill(K,taper(q,22,9,75));}
-   if(grow<1&&grow>.3)speedLines(s,K,q[q.length-1][0],q[q.length-1][1],Math.atan2(-50,80),{n:4,seed:76,len:80,width:4});}
-  // the offer: the tip unfolds into a cup facing the ball, a dashed navy line self-draws ball → cup
-  const open=t<3.6?0:easeOutBack(sm(3.6,4.1,t))*(1+.1*Math.sin(tt*6)*sm(5.4,5.6,t)*(1-sm(5.6,5.9,t)));
-  if(open>0)leaves(s,Y,cupLeaves(60,-20+dip,-1.1,open,110,77));
-  const lineP=sm(3.7,4.3,t,easeOut),passU=sm(6.55,7.3,t,easeIO);
-  if(lineP>0&&passU<1){const a:Pt=[lerp(230,60,passU)-20*passU,lerp(-110,-20,passU)];laneArrow(s,K,a,[75,-32],20,{dashed:true,seed:78,progress:lineP,head:40});}
-  // branch B (teammate) holds the leaf-ball, loads back and passes on "one action"; the cup cushions
-  const load=sm(6.36,6.55,t)*(1-sm(6.55,6.8,t)),turn=sm(3.6,3.9,t,easeOut)*.25-sm(3.5,3.6,t)*.05;
-  const Bs=spine([560,-460],[320,-150],-load*.12+turn,81);branch(s,Bs,40,12,81,{ink:B,leafInk:B,leafU:[.4,.7],leafLen:130});
-  leaves(s,B,cupLeaves(320,-150,2.6,.9,120,83));
-  // the player: checks the shoulder (head turns back with an anticipation nod), runs into open paper on "Move into space" (stride, smear), receives
-  const lk=key(t,[[0,0],[.15,-.15],[.55,1,easeOut],[1.3,1],[1.6,0]]),runU=sm(2.62,3.5,t,easeIO),st=stride(twosIndex(t));
-  const px=lerp(-330,200,runU),py=lerp(330,100,runU),moving=runU>0&&runU<1;
-  const cushion=t>=7.3&&t<7.5?.06:0;
-  figure(s,px,py,300,K,161,moving?'run':lk>.5?'lookBack':'stand',{facing:moving?1:-1,legs:moving?st.legs:undefined,arms:moving?st.arms:undefined,head:!moving&&lk>0?[-.1*lk,-.82]:undefined,tilt:moving?.1:-.04*lk+cushion,scaleX:1+cushion});
-  if(moving&&runU<.7)speedLines(s,K,px-40,py-140,Math.atan2(-250,440),{n:4,seed:162,len:110,width:5});
-  const b=ch4Ball(t);leafBall(s,b.x,b.y,R4,b.rot,{sx:b.sx,sy:b.sy,lens:sm(8.35,8.8,t,easeOut)});
-  spark(s,60,-20,t-7.3,84,120);
-  if(passU>0&&passU<1)speedLines(s,K,b.x,b.y,Math.atan2(100,-190),{n:4,seed:85,len:70,width:4});
+  const ti=twosIndex(t),g=.12,gi=.12*t;
+  cam(s,t,[[0,-40,40,.95],[.15,-40,40,.95],[.7,-120,0,.98,-.04],[1.3,-120,0,.98,-.04],[1.9,-40,40,1.0,0],[2.75,-40,40,1.0,0],[3.6,60,30,1.05,0],[4.3,60,30,1.05,0],[6.4,120,40,1.08,0],[7.4,80,60,1.15,0],[8.2,80,90,1.2,0],[9.07,80,214,2.6,0]]);
+  world(s,t,14);
+  wind(s,t,g,gi,26,{n:6,cov:.3});
+  tree(s,t,-520,240,320,sway(t),g,34,{crown:150});
+  // the open space: a pool of yellow on the grass that appears on "Move into space" and brightens when the player arrives
+  const pool=t<2.3?0:easeOutBack(sm(2.3,2.7,t)),runU=ch4Run(t);
+  if(pool>0){const pp=polyPath(blob(40,250,190*pool,60*pool,17,{amp:.08,n:28}),true);s.knockout(pp,.9);s.tone(Y,pp,.6+.15*sm(3.4,3.6,t));}
+  // the player: checks the shoulder (head back + sight wedge, camera turns), runs into the space, offers (pointing arm), receives
+  const lk=key(t,[[0,0],[.15,-.15],[.55,1,easeOut],[1.3,1],[1.7,0]]),st=stride(ti),moving=runU>0&&runU<1,px=lerp(-260,40,runU)+(runU>=1?12*settle(t,3.5,{amp:1,freq:4,decay:5}):0);
+  const pt=key(t,[[4.3,0],[4.45,-.15],[4.8,1,easeOut]]),cushion=t>=7.3&&t<7.5?.06:0,stL=poseLimbs('stand'),ptL=poseLimbs('point');
+  const f=person(s,px,250,300,K,161,moving?'run':'stand',{facing:1,legs:moving?st.legs:undefined,arms:moving?st.arms:t>=4.3?mixLimbs(stL.arms,ptL.arms,pt):undefined,head:!moving&&lk>0?[-.12*lk,-.82]:undefined,tilt:moving?.12:-.04*lk+cushion,scaleX:1+cushion});
+  sight(s,f.head[0],f.head[1],Math.PI,.16,300,162,sm(.4,.8,t)*(1-sm(1.3,1.7,t)));
+  if(moving&&runU<.75)speedLines(s,K,px-40,120,0,{n:4,seed:163+ti,len:120,spread:50,width:6,cov:.85});
+  if(runU>=1&&t<4)dust(s,null,px,250,50,7,{seed:164,size:6,cov:.9*(1-sm(3.5,4,t))});
+  // the teammate with the ball: loads and kicks on "one action"
+  const load=sm(6.36,6.55,t)*(1-sm(6.55,6.8,t)),kicked=t>=6.55&&t<6.85;
+  person(s,400,250,290,B,171,kicked?'kick':'stand',{facing:-1,tilt:-.1*load});
+  // the option: a navy dashed lane from the ball to the player's feet; dashes vanish behind the ball as it passes
+  const lineP=sm(4.6,5.2,t,easeOut),passU=sm(6.55,7.3,t,easeIO);
+  if(lineP>0&&passU<1){const a:Pt=[lerp(340,80,passU),214+10*passU];laneArrow(s,K,a,[110,222],16,{dashed:true,seed:78,progress:lineP,head:34});}
+  const b=ch4Ball(t);ball(s,b.x,b.y,64,b.rot,{sx:b.sx,sy:b.sy,shadow:passU>0&&passU<1?.5:1});
+  if(passU>0&&passU<1)speedLines(s,K,b.x+50,b.y,Math.PI,{n:4,seed:85+ti,len:80,width:4,cov:.8});
+  spark(s,80,214,t-7.3,84,100);
  },
- aperture(t){const b=ch4Ball(t);return aperture(ballLens(b.x,b.y,110,b.rot,Math.max(.4,sm(8.35,8.8,t,easeOut))));},still:7.4,
+ aperture(t){const b=ch4Ball(t);return apertureDisc(b.x,b.y,15.5,5,b.rot);},still:7.4,
 };
 
-// ---------------- chapter 5: pinned in a slot; the knot ----------------
-function ch5Edges(t:number){
- const topBase=key(t,[[0,-100],[.15,-110,easeIn],[.65,-40,easeOut],[1.9,-40],[2.7,-170,easeOut],[3,-158],[3.3,-164]]);
- const lift=t>2.7?settle(t,2.7,{amp:12,freq:3,decay:4}):0;
- const bot=key(t,[[0,180],[.15,190,easeIn],[.65,120,easeOut]]);
- return{top:(x:number)=>topBase-lift-(t>1.9?sm(1.9,2.7,t,easeOut)*60*bell(x-300,320):0),bot};
-}
+// ---------------- chapter 5: NEXT — stuck, a hand on the shoulder, the reset ----------------
+const STUCK_ARMS:Limb[]=[[[-.13,-.6],[-.26,-.5],[-.3,-.62]],[[.13,-.6],[.28,-.52],[.34,-.64]]];
+const HAND_ARMS:Limb[]=[[[-.16,-.6],[-.24,-.46],[-.23,-.3]],[[.13,-.6],[.34,-.63],[.52,-.6]]];
+const ch5Arrive=(t:number)=>sm(1.3,2.3,t,easeIO);
+const ch5TmX=(t:number)=>lerp(620,190,ch5Arrive(t))+(t>2.3?12*settle(t,2.3,{amp:1,freq:3,decay:5}):0);
+/** the teammate's mitt on the player's shoulder (arms[1] end of HAND_ARMS at facing −1, size 360). */
+const ch5Mitt=(t:number):Pt=>[ch5TmX(t)-.52*360,250-.6*360];
 const ch5:Scene={
  draw(s,t){
-  const tt=twos(t);
-  const kick=settle(t,2.3,{amp:5,freq:8,decay:6})+settle(t,7.2,{amp:4,freq:10,decay:7});
-  cam(s,t,[[0,-100,40,1.25],[.6,-100,40,1.4],[1.4,-100,40,1.4],[2.3,40,40,1.4],[4.5,40,40,1.4],[6.5,80,10,1.42,.035],[7.4,130,20,1.5,0],[8.1,130,20,1.5,0],[8.77,180,30,2.05,0]],[0,kick]);
-  s.field(Y,.15,.4);
-  const e=ch5Edges(t),cov=key(t,[[0,.8],[.65,.95],[1.9,.95],[2.7,.55]]);
-  s.tone(P,bandPath(-1400,0,40*t,18,26,{bottom:x=>e.top(x)}),cov);
-  s.tone(P,bandPath(0,1400,60*t,19,26,{top:x=>e.bot}),cov);
-  // stepped pressure inside the masses: darker navy strata the further from the slot (the reference's nested tonal bands)
-  for(let k=0;k<3;k++){const d=140+k*170;s.tone(K,bandPath(-1400,-d,40*t+k*90,40+k,22,{bottom:x=>e.top(x)-d+40*k}),.1+.08*k);s.tone(K,bandPath(d+e.bot-40*k,1400,60*t+k*70,50+k,22,{top:()=>0}),.1+.08*k);}
-  // fragments jammed in the slot: squeezed toward the tip, spilled out when the band lifts, gathered on the knot
-  {const rr=rng(25),p=new Path2D(),sq=sm(.15,.65,t),spill=sm(2.3,3,t,easeOut),gather=sm(6.7,7.6,t,easeIO);
-   for(let i=0;i<12;i++){let x=-520+rr()*820,y=40+(rr()-.5)*120;const sz=14+rr()*12,ph=rr()*TAU;x+=sq*(300-x)*.35;y=lerp(y,y*.3+40,sq*(1-spill));y+=spill*(rr()-.5)*160;x=lerp(x,180+(rr()-.5)*70,gather);y=lerp(y,30+(rr()-.5)*60,gather);
-    const q=rotPts([[-sz,-sz*.5],[sz*.9,-sz*.6],[sz,sz*.4],[-sz*.8,sz*.5]],ph+tt*.5*(1-gather));p.moveTo(x+q[0][0],y+q[0][1]);for(let k=1;k<4;k++)p.lineTo(x+q[k][0],y+q[k][1]);p.closePath();}
-   s.fill(Y,p,.9);}
-  // twig A through the slot: flattens under the press, springs round, ties a knot, straightens and grows past it
-  const flat=sm(.15,.65,t)*(1-sm(2.9,3.3,t))-.5*settle(t,3.3,{amp:1,freq:4,decay:5});
-  const wig=3*Math.sin(t*2.1);
-  const spineA:Pt[]=[[-540,40+wig],[-300,44],[-120,42-wig],[60,36],[340,30+wig]];
-  s.save();s.translate(0,40);s.scale(1,1-.06*flat);s.translate(0,-40);
-  s.tone(P,taper(spineA,34,15,91,1,6),.5);s.fill(K,taper(spineA,30,14,91));
-  branch(s,spineA,0,0,91,{leafU:[.25,.55,.8],leafLen:130,wind:-.2*(1-flat),flutter:sm(2.9,3.3,t)*(1-sm(3.5,4,t))});
-  s.restore();
-  // the stuck player: bent forward in the slot, head down; on "ask a teammate" the blue teammate arrives and its hand lands on the shoulder;
-  // on "where to put your attention" (NEXT) the player straightens in one ease-out-back and turns its head toward the ball
-  const arrive=sm(1.22,1.9,t,easeOut),hand=sm(1.9,2.3,t,easeOut),up=t<6.5?0:easeOutBack(sm(6.5,7.0,t)),nod=t>=1.22&&t<1.9?.06*Math.sin(sm(1.22,1.9,t)*Math.PI*3):0;
-  const sL=poseLimbs('slump'),stL=poseLimbs('stand'),lL=poseLimbs('lean');
-  figure(s,190,140,270,K,131,'slump',{facing:1,tilt:.28*(1-up)+nod,headDrop:[.02*(1-up),.1*(1-up)],arms:mixLimbs(sL.arms,stL.arms,up),head:[-.14*Math.min(1,up),-.82]});
-  if(arrive>0)figure(s,lerp(760,410,arrive),140,260,B,132,'stand',{facing:-1,arms:mixLimbs(stL.arms,lL.arms,hand),tilt:.16*hand});
-  if(t>=7.0&&t<7.6)sparkBurst(s,Y,190,-90,90,{n:7,seed:133,g:easeOutBack(sm(7.0,7.3,t)),width:8});
-  // the leaf-ball: squashed by the press, rolls free when the slot opens
-  const sq=sm(.15,.65,t)*(1-sm(2.9,3.2,t)),roll=sm(2.9,3.5,t,easeIO),bx=lerp(-120,-60,roll)+3*settle(t,3.5,{amp:1,freq:5,decay:6});
-  const [sx,sy]=squash(-sq*.08);leafBall(s,bx,40,120,roll*1.2,{sx,sy});
-  // the ask: the tip leaf flicks three times and sends three rings along the slot to B
-  if(t>=1.22){const p=sm(1.3,1.9,t,easeOut);ripple(s,K,300,-50,60,3,{width:11,seed:95,spacing:70,progress:p,cov:.9*(1-sm(2.1,2.6,t))});}
-  // branch B: bends in from its root, wedges under the upper band and lifts it, withdraws a little, holds
-  const bendIn=t<1.5?0:easeOutBack(sm(1.5,2.1,t,easeIO)),liftB=sm(1.9,2.7,t,easeOut),back=sm(4.5,5.3,t,easeIO)*40;
-  const Bs=spine([560,-20],[380-bendIn*60+back,10-liftB*150-bendIn*30],-.15*bendIn,97,22,30);
-  branch(s,Bs,42,13,97,{ink:B,leafInk:B,leafU:[.4,.7],leafLen:115,shadow:bendIn*.3});
-  leaves(s,B,cupLeaves(Bs[Bs.length-1][0],Bs[Bs.length-1][1],-2.6,.6,90,98));
+  const ti=twosIndex(t),g=.15,gi=.15*t,M=ch5Mitt(t);
+  const kick=settle(t,2.7,{amp:3,freq:8,decay:6})+settle(t,7.0,{amp:4,freq:8,decay:6});
+  cam(s,t,[[0,0,20,1.1],[1.22,10,18,1.12],[2.3,80,20,1.15],[4.5,80,20,1.15],[6.5,60,0,1.18],[7.2,40,-10,1.2],[8.1,40,-10,1.2],[8.77,M[0],M[1],2.0]],[0,kick]);
+  world(s,t,15);
+  wind(s,t,g,gi,27,{n:6,cov:.3});
+  tree(s,t,-420,240,300,sway(t)+.06,g,35,{crown:140});
+  // the player: frozen mid-step with the knot back on the chest; on NEXT (6.5) straightens in one ease-out-back
+  const up=t<6.5?0:easeOutBack(sm(6.5,7.0,t)),u=clamp(up),wL=poseLimbs('walk'),stL=poseLimbs('stand');
+  const f=person(s,0,250,380,K,131,'stand',{facing:1,legs:mixLimbs(wL.legs,stL.legs,u),arms:mixLimbs(STUCK_ARMS,stL.arms,u),tilt:.12*(1-up)-.02*up+(t>2.7?.01*settle(t,2.7,{amp:1,freq:4,decay:4}):0),headDrop:[.02*(1-u),.07*(1-u)-.01*u]});
+  const c=chestOf(f),popU=sm(6.5,6.65,t);
+  knot(s,c[0],c[1],46*(1-popU),132,{boil:t<6.5?Math.floor(ti/2)%3:0,cov:.85});
+  // the teammate walks in from the right, stops beside and puts a blue paper mitt on the shoulder
+  const arrive=ch5Arrive(t),moving=arrive>0&&arrive<1,st=stride(ti),hand=sm(2.3,2.7,t,easeOut);
+  if(t>=1.3){person(s,ch5TmX(t),250,360,B,133,moving?'walk':'stand',{facing:-1,legs:moving?st.legs:undefined,arms:moving?st.arms:mixLimbs(stL.arms,HAND_ARMS,hand),tilt:moving?.06:.04*hand});
+   if(hand>0){const mp=polyPath(blob(M[0],M[1],36*hand,32*hand,134,{amp:.08,n:20}),true);s.knockout(mp,.95);s.fill(B,mp,.92);}}
+  // the knot pops into five leaves that blow away with the wind
+  if(t>=6.55){const fl:Leaf[]=[];for(let i=0;i<5;i++){const age=t-6.55-i*.06;if(age<0||age>1.8)continue;const k=easeOut(clamp(age/1.8));fl.push({x:c[0]+k*(160+50*i)+30*Math.sin(age*3+i),y:c[1]-k*(80+40*i)+25*Math.sin(age*5+i),a:age*4+i,len:70*(1-.4*k),wid:28*(1-.4*k),seed:140+i});}leaves(s,Y,fl,.95,{knock:true});}
+  spark(s,c[0],c[1]-20,t-6.6,135,110);
  },
- aperture(){return apertureDisc(190,-85,34,12);},still:7.4,
+ aperture(t){const M=ch5Mitt(t);return apertureDisc(M[0],M[1],27,12);},still:7.3,
 };
 
-// ---------------- chapter 6: reset and return ----------------
-const B6:Band[]=[{y:-380,h:150,cov:.3,speed:10,seed:26},{y:-190,h:170,cov:.4,speed:18,seed:27},{y:0,h:200,cov:.5,speed:25,seed:28},{y:190,h:170,cov:.4,speed:32,seed:29},{y:380,h:150,cov:.3,speed:40,seed:30}];
-const ROOT6:Pt=[-520,420],TIP6:Pt=[330,-230];
-function ch6Bend(t:number){let b=.05*Math.exp(-t*1.2)*Math.cos(t*4)*(1-sm(4.1,5.7,t))+sway(t,.6);const g=gust(t,3.34,3.6,3.9);b+=g*.2;if(t>3.6)b+=settle(t,3.6,{amp:.2,freq:1.2,decay:1.8,phase:Math.PI/2})*(1-sm(4.1,5.7,t))*.7;if(t>9.6)b+=settle(t,9.6,{amp:.03,freq:1.5,decay:3});return b;}
-/** where the ball is: at A's tip cup, in flight, or in B's cup — three passes. */
-function ch6Ball(t:number,tipA:Pt,tipB:Pt):{p:Pt;rot:number;c:number}{
- const legs:[number,number,Pt,Pt][]=[[7.6,8.1,tipA,tipB],[8.3,8.8,tipB,tipA],[9,9.5,tipA,tipB]];
- let p:Pt=tipA,rot=0,c=0;
- for(const [t0,t1,a,b] of legs){if(t<t0)break;const u=sm(t0,t1,t,easeIO);p=arc(a,b,u,45);rot+=u*4;if(u>=1)c=settle(t,t1,{amp:.08,freq:4,decay:5,phase:Math.PI/2});}
- return{p,rot,c};
-}
+// ---------------- chapter 6: back in the game, one moment at a time ----------------
+const PA:Pt=[-20,214],PB:Pt=[290,214];
+/** where the ball is: five short passes between A and B. */
+function ch6Ball(t:number){const legs:[number,number,Pt,Pt][]=[[.8,1.5,PA,PB],[2.2,2.9,PB,PA],[5.7,6.4,PA,PB],[7.7,8.4,PB,PA],[8.8,9.5,PA,PB]];let p:Pt=PA,rot=0,c=0,flying=false;
+ for(const[t0,t1,a,b] of legs){if(t<t0)break;const u=sm(t0,t1,t,easeIO);p=arc(a,b,u,40);rot+=u*5*(b[0]>a[0]?1:-1);flying=u<1;if(u>=1)c=settle(t,t1,{amp:.08,freq:4,decay:5,phase:Math.PI/2});}
+ return{p,rot,c,flying};}
 const ch6:Scene={
  draw(s,t){
-  const tt=twos(t);
-  const rot=key(t,[[3.9,0],[4.1,-.035],[4.9,.035],[5.7,0]]);
-  const v=key(t,[[0,-160,80,1.1],[3.34,-150,80,1.1],[3.9,-60,20,1.2],[4.9,-60,20,1.2],[5.6,20,30,1.2],[7.7,20,30,1.2],[9.6,150,60,1.22],[10.4,152,60,1.22]],easeIO,true);
-  s.camera(v[0],v[1],v[2],rot);
-  const g=gust(t,3.34,3.6,3.9),calm=sm(4.1,5.7,t);
-  s.field(Y,.1,.3);s.tone(Y,polyPath(blob(400,500,900,700,6,{amp:.1}),true),.2);
-  ground(s,330,32,.4);chalkStroke(s,[[-1400,380],[-400,384],[600,378],[1500,382]],16,{seed:33,dust:.2,step:60});
-  windBands(s,t,B6.map(b=>({...b,cov:Math.max(.15,b.cov-.1*calm),speed:b.speed*(1-.4*calm)})),()=>g,()=>gustInt(t,3.34,3.6,3.9),{},P,{x:-60,y:60,r:460,k:70*(1-.5*calm)});
-  fragments(s,t,B6,6,34,()=>0,()=>g);
-  // branch A with the knot, the bruise, and three new leaves that unfurl with each pass
-  const bend=ch6Bend(t),A=spine(ROOT6,TIP6,bend,101);
-  const newLeaf=(t0:number)=>t<t0?0:easeOutBack(sm(t0,t0+.35,t));
-  branch(s,A,54,10,101,{leafU:[.3,.42,.62,.85,.5,.75,.95],leafLen:160,wind:g,flutter:g+sm(6.6,6.7,t)*(1-sm(6.9,7.1,t)),shadow:Math.abs(bend)*.6,leafScale:[1,1,1,1,newLeaf(8.1),newLeaf(8.8),newLeaf(9.5)]});
-  const br=at(A,.7);const pulse=t<.6?6*Math.sin(clamp(t/.6)*Math.PI):0,brCov=key(t,[[0,.6],[5.8,.6],[6.6,.4]]);
-  s.tone(P,polyPath(blob(br.p[0]+30,br.p[1]-40,72+pulse,60+pulse,3+(t<5.8?twosIndex(t)%3:0),{amp:.18,n:22}),true),brCov);
-  s.fill(P,ribbon(blob(br.p[0]+30,br.p[1]-40,110,92,44,{amp:.14,n:18}),8+4*sm(3.34,3.9,t),{seed:45,close:true,wobble:1,taper:0}),.8);
-  // breathe: a paper lens travels the wood root → tip as the bands retreat
-  if(t>=4.1&&t<5.8)airLens(s,A,sm(4.1,5.7,t,easeIO),90,40,47);
-  // the tip leaf turns to look at the bruise on "Notice"
-  const tip=at(A,1),tipB:Pt=[420,-110];
-  const look=key(t,[[3.34,0],[3.5,.1],[3.9,-2.2,easeOut],[4.9,-2.2],[5.2,0]]),cupTurn=sm(4.9,5.2,t,easeOut)*.25-sm(4.8,4.9,t)*.05;
-  leaves(s,Y,[{x:tip.p[0],y:tip.p[1],a:tip.a-.9+look,len:130,wid:40,seed:103}]);
-  // branch B reaches in from the right; on the ground the player (upright now) and the blue teammate: the dashed choice line, then three cushioned passes
-  const Bs=spine([600,-300],[tipB[0],tipB[1]],-.02,105,22,30);branch(s,Bs,40,12,105,{ink:B,leafInk:B,leafU:[.45,.75],leafLen:130});
-  void cupTurn;
-  const PA:Pt=[-30,300],PB:Pt=[400,290];
-  const ball=ch6Ball(t,PA,PB);
-  const loadA=sm(7.45,7.6,t)*(1-sm(7.6,7.8,t))+sm(8.85,9,t)*(1-sm(9,9.2,t)),loadB=sm(8.15,8.3,t)*(1-sm(8.3,8.5,t));
-  const kickA=(t>=7.55&&t<7.75)||(t>=8.95&&t<9.15),kickB=t>=8.25&&t<8.45;
-  const cushA=t>=8.8&&t<8.95?.06:0,cushB=(t>=8.1&&t<8.25)||(t>=9.5&&t<9.65)?.06:0;
-  const rolled=sm(.3,.9,t,easeIO);
-  figure(s,-110,330,320,K,171,kickA?'kick':'stand',{facing:1,tilt:-.1*loadA+cushA+.02*Math.sin(t*2.1),scaleX:1+cushA,head:t>=3.34&&t<5.2?[-.1*sm(3.34,3.9,t)*(1-sm(4.9,5.2,t)),-.82]:undefined});
-  figure(s,480,320,300,B,172,kickB?'kick':'stand',{facing:-1,tilt:-.1*loadB+cushB,scaleX:1+cushB});
-  const lineP=sm(4.9,5.5,t,easeOut);if(lineP>0&&t<7.6)laneArrow(s,K,[PA[0]+60,PA[1]-40],[PB[0]-60,PB[1]-30],18,{dashed:true,seed:111,progress:lineP,head:36});
-  if(t<7.6)leafBall(s,PA[0]+rolled*30,PA[1]-rolled*6,100,rolled*1.5+settle(t,.9,{amp:.2,freq:4,decay:4}),{});
-  else leafBall(s,ball.p[0],ball.p[1],100,ball.rot,{sx:1+ball.c,sy:1-ball.c});
-  spark(s,PB[0],PB[1]-40,t-8.1,113,100);spark(s,PA[0],PA[1]-40,t-8.8,114,100);spark(s,PB[0],PB[1]-40,t-9.5,115,110);
+  const ti=twosIndex(t),g=.12*(1-.6*sm(4.4,5.6,t)),gi=.12*(t-.6*smInt(4.4,5.6,t));
+  cam(s,t,[[0,80,40,1.2],[3.34,60,40,1.2],[3.9,-20,20,1.18,-.02],[4.4,-20,20,1.18,0],[5.6,0,20,1.12,0],[7.6,60,30,1.1,0],[8.8,120,30,1.05,0],[9.8,-20,-10,.95,0]]);
+  world(s,t,16);
+  wind(s,t,g,gi,28,{n:6,cov:.3});
+  // the tree, upright, with three new leaves unfurling
+  const G=treeGeom(-400,240,300,sway(t,.7),160,g),nl=(t0:number)=>t<t0?0:easeOutBack(sm(t0,t0+.4,t));
+  const extra:Leaf[]=[[.3,-.55,-.9,.4],[.58,-.2,-.3,.9],[.1,-.95,-1.6,1.4]].map(([dx,dy,a,t0],i)=>({x:G.C[0]+dx*160*G.sx,y:G.C[1]+dy*160*G.sy,a,len:120*nl(t0),wid:50*nl(t0),seed:180+i}));
+  tree(s,t,-400,240,300,sway(t,.7),g,36,{crown:160,extra});
+  // the players: A (navy) and B (blue) pass in rhythm; A notices (head), breathes (chest), chooses (pointing arm), passes
+  const bl=ch6Ball(t);
+  const kickA=(t>=.7&&t<.95)||(t>=5.6&&t<5.85)||(t>=8.7&&t<8.95),kickB=(t>=2.1&&t<2.35)||(t>=7.6&&t<7.85);
+  const loadA=sm(.55,.7,t)*(1-sm(.7,.9,t))+sm(5.45,5.6,t)*(1-sm(5.6,5.8,t))+sm(8.55,8.7,t)*(1-sm(8.7,8.9,t)),loadB=sm(1.95,2.1,t)*(1-sm(2.1,2.3,t))+sm(7.45,7.6,t)*(1-sm(7.6,7.8,t));
+  const cushA=(t>=2.9&&t<3.1)||(t>=8.4&&t<8.6)?.06:0,cushB=(t>=1.5&&t<1.7)||(t>=6.4&&t<6.6)||(t>=9.5&&t<9.7)?.06:0;
+  const lk=key(t,[[3.34,0],[3.5,-.15],[3.9,1,easeOut],[4.2,1],[4.5,0]]),breath=sm(4.4,5.3,t,easeOut)*(1-.6*sm(5.3,6.5,t)),pt=key(t,[[5.5,0],[5.6,-.15],[5.8,1,easeOut]])*(1-sm(5.85,6.2,t));
+  const stL=poseLimbs('stand'),ptL=poseLimbs('point');
+  const f=person(s,-60,250,300,K,171,kickA?'kick':'stand',{facing:1,tilt:-.1*loadA+cushA-.03*breath+.015*Math.sin(t*2.1),scaleX:(1+cushA)*(1+.18*breath),head:lk>0?[-.12*lk,-.82]:undefined,arms:kickA?undefined:pt>0?mixLimbs(stL.arms,ptL.arms,pt):undefined});
+  sight(s,f.head[0],f.head[1],Math.PI,.14,220,172,sm(3.6,3.9,t)*(1-sm(4.2,4.5,t)));
+  const c=chestOf(f),fade=1-sm(4.4,5.0,t);if(fade>0)knot(s,c[0],c[1],22*fade,173,{cov:.45});
+  person(s,330,250,290,B,174,kickB?'kick':'stand',{facing:-1,tilt:-.1*loadB+cushB,scaleX:1+cushB});
+  ball(s,bl.p[0],bl.p[1],46,bl.rot,{sx:1+bl.c,sy:1-bl.c,shadow:bl.flying?.5:1});
+  if(bl.flying)speedLines(s,K,bl.p[0]+(bl.rot>0?-40:40),bl.p[1],bl.rot>0?0:Math.PI,{n:3,seed:175+ti,len:60,width:4,cov:.8});
+  for(const[t1,p] of [[1.5,PB],[2.9,PA],[6.4,PB],[8.4,PA],[9.5,PB]] as [number,Pt][])spark(s,p[0],p[1]-10,t-t1,176+Math.round(t1*10),80);
  },
- still:9.6,
+ still:9.9,
 };
 
 export const story:RisoStory={
@@ -480,18 +430,18 @@ export const story:RisoStory={
   {label:'WHAT IS TOUGHNESS?',narration:'What does mental toughness mean when a pass goes wrong? It means finding a useful response while making room for your feelings.',seconds:9.417,audio:CH+'01.m4a',cues:[{at:0,words:'What does mental'},{at:4.34,words:'a useful response'},{at:6.48,words:'room for your feelings'}]},
   {label:'BEND AND RETURN',headline:'Bend',narration:'Imagine a flexible branch in the wind. It bends under pressure, then finds balance. Staying rigid is not the only kind of strength.',seconds:10.617,audio:CH+'02.m4a',cues:[{at:0,words:'Imagine a flexible branch'},{at:3.04,words:'bends under pressure'},{at:7.78,words:'only kind of strength'}]},
   {label:'NOTICE THE MOMENT',headline:'Breathe',narration:'You might feel frustrated, embarrassed, or worried about another mistake. Name that feeling. Take a slow breath before choosing an action.',seconds:10.417,audio:CH+'03.m4a',cues:[{at:0,words:'You might feel'},{at:5.02,words:'Name that feeling'},{at:6.42,words:'Take a slow breath'}]},
-  {label:'ONE USEFUL ACTION',narration:'What can you do now? Check your shoulder. Move into space. Offer a simple passing option. Choose one action you can try.',seconds:9.717,audio:CH+'04.m4a',cues:[{at:0,words:'What can you do'},{at:2.62,words:'Move into space'},{at:6.36,words:'one action'}]},
+  {label:'ONE USEFUL ACTION',headline:'One action',narration:'What can you do now? Check your shoulder. Move into space. Offer a simple passing option. Choose one action you can try.',seconds:9.717,audio:CH+'04.m4a',cues:[{at:0,words:'What can you do'},{at:2.62,words:'Move into space'},{at:6.36,words:'one action'}]},
   {label:'SUPPORT IS STRENGTH',headline:{text:'Next',at:6.5},narration:'If you feel stuck, ask a teammate or coach for help. A reset word, like Next, can remind you where to put your attention.',seconds:9.417,audio:CH+'05.m4a',cues:[{at:0,words:'If you feel stuck'},{at:1.22,words:'ask a teammate'},{at:6.5,words:'where to put your attention'}]},
   {label:'RESET AND RETURN',narration:'You can feel disappointed and still contribute. Notice. Breathe. Choose. Practise returning to the game, one moment at a time.',seconds:10.415,audio:CH+'06.m4a',cues:[{at:0,words:'You can feel disappointed'},{at:3.34,words:'Notice. Breathe. Choose'},{at:7.6,words:'one moment at a time'}]},
  ],
  draw(f){playChapters(story,f,[ch1,ch2,ch3,ch4,ch5,ch6]);},
- /** a tap shakes a leaf loose: it spirals down and right with the wind, a small purple gust puff marks the tap. */
+ /** a tap shakes a leaf loose: it spirals down and right with the wind, a small paper gust puff marks the tap. */
  touch(s,x,y,age,seed){
   const u=easeOut(clamp(age/.8));const lx=x+130*u,ly=y+170*u+18*Math.sin(u*TAU*2),a=u*TAU*2+.4;
   dust(s,null,x,y,50+160*u,12,{seed:seed+3,size:16,cov:.9*(1-clamp(age/.7))});
   const fade=.95*(1-clamp((age-.6)/.2));
   s.fill(K,ribbon([[lx,ly],[lx-Math.cos(a)*70,ly-Math.sin(a)*70]],9,{seed:seed+4,taper:.6,wobble:1}),fade);
-  leaves(s,B,[{x:lx,y:ly,a,len:150,wid:50,seed}],fade);
+  leaves(s,B,[{x:lx,y:ly,a,len:150,wid:50,seed}],fade,{knock:true});
   if(age>0&&age<.35){const p=new Path2D();for(let i=0;i<4;i++){const yy=y-24+i*16;p.addPath(ribbon([[x-10+age*80,yy],[x+60+age*220,yy+3]],4,{seed:seed+i,taper:.8,wobble:.5}));}s.knockout(p,.9*(1-age/.35));}
  },
 };

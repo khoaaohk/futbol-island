@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Extra time",
+   "text": "Miami, the twenty twenty-four Copa Am\u00e9rica final, in extra time. Miguel Borja of Colombia is alone in the box. He shoots... Lisandro Mart\u00ednez slides in from behind and blocks it!",
+   "src": "/plays/narration/lisandro-martinez-signature/1.m4a",
+   "seconds": 13.7,
+   "words": [
+    {
+     "w": "Miami",
+     "at": 0.4
+    },
+    {
+     "w": "the",
+     "at": 1.0
+    },
+    {
+     "w": "twenty",
+     "at": 1.1
+    },
+    {
+     "w": "twenty-four",
+     "at": 1.4
+    },
+    {
+     "w": "Copa",
+     "at": 1.938
+    },
+    {
+     "w": "Am\u00e9rica",
+     "at": 2.362
+    },
+    {
+     "w": "final",
+     "at": 2.888
+    },
+    {
+     "w": "in",
+     "at": 3.625
+    },
+    {
+     "w": "extra",
+     "at": 3.788
+    },
+    {
+     "w": "time",
+     "at": 4.2
+    },
+    {
+     "w": "Miguel",
+     "at": 5.062
+    },
+    {
+     "w": "Borja",
+     "at": 5.45
+    },
+    {
+     "w": "of",
+     "at": 5.8
+    },
+    {
+     "w": "Colombia",
+     "at": 5.9
+    },
+    {
+     "w": "is",
+     "at": 6.5
+    },
+    {
+     "w": "alone",
+     "at": 6.625
+    },
+    {
+     "w": "in",
+     "at": 7.013
+    },
+    {
+     "w": "the",
+     "at": 7.088
+    },
+    {
+     "w": "box",
+     "at": 7.175
+    },
+    {
+     "w": "He",
+     "at": 8.0
+    },
+    {
+     "w": "shoots",
+     "at": 8.188
+    },
+    {
+     "w": "Lisandro",
+     "at": 9.2
+    },
+    {
+     "w": "Mart\u00ednez",
+     "at": 9.8
+    },
+    {
+     "w": "slides",
+     "at": 10.5
+    },
+    {
+     "w": "in",
+     "at": 11.0
+    },
+    {
+     "w": "from",
+     "at": 11.2
+    },
+    {
+     "w": "behind",
+     "at": 11.375
+    },
+    {
+     "w": "and",
+     "at": 11.975
+    },
+    {
+     "w": "blocks",
+     "at": 12.1
+    },
+    {
+     "w": "it",
+     "at": 12.537
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again. Borja is a step ahead, but Lisandro keeps chasing. He reads the shot, then slides into its path.",
+   "src": "/plays/narration/lisandro-martinez-signature/2.m4a",
+   "seconds": 8.2,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "Borja",
+     "at": 1.438
+    },
+    {
+     "w": "is",
+     "at": 1.8
+    },
+    {
+     "w": "a",
+     "at": 1.913
+    },
+    {
+     "w": "step",
+     "at": 1.975
+    },
+    {
+     "w": "ahead",
+     "at": 2.212
+    },
+    {
+     "w": "but",
+     "at": 2.562
+    },
+    {
+     "w": "Lisandro",
+     "at": 2.7
+    },
+    {
+     "w": "keeps",
+     "at": 3.35
+    },
+    {
+     "w": "chasing",
+     "at": 3.663
+    },
+    {
+     "w": "He",
+     "at": 4.65
+    },
+    {
+     "w": "reads",
+     "at": 4.8
+    },
+    {
+     "w": "the",
+     "at": 5.15
+    },
+    {
+     "w": "shot",
+     "at": 5.3
+    },
+    {
+     "w": "then",
+     "at": 5.825
+    },
+    {
+     "w": "slides",
+     "at": 6.05
+    },
+    {
+     "w": "into",
+     "at": 6.513
+    },
+    {
+     "w": "its",
+     "at": 6.713
+    },
+    {
+     "w": "path",
+     "at": 6.875
+    }
+   ]
+  },
+  {
+   "label": "Corner",
+   "text": "The ball smacks off his leg and flies out for a corner. Lisandro is only one metre seventy-five!",
+   "src": "/plays/narration/lisandro-martinez-signature/3.m4a",
+   "seconds": 7.6,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "ball",
+     "at": 0.425
+    },
+    {
+     "w": "smacks",
+     "at": 0.75
+    },
+    {
+     "w": "off",
+     "at": 1.175
+    },
+    {
+     "w": "his",
+     "at": 1.363
+    },
+    {
+     "w": "leg",
+     "at": 1.525
+    },
+    {
+     "w": "and",
+     "at": 2.112
+    },
+    {
+     "w": "flies",
+     "at": 2.263
+    },
+    {
+     "w": "out",
+     "at": 2.625
+    },
+    {
+     "w": "for",
+     "at": 2.85
+    },
+    {
+     "w": "a",
+     "at": 2.962
+    },
+    {
+     "w": "corner",
+     "at": 3.025
+    },
+    {
+     "w": "Lisandro",
+     "at": 4.013
+    },
+    {
+     "w": "is",
+     "at": 4.725
+    },
+    {
+     "w": "only",
+     "at": 4.85
+    },
+    {
+     "w": "one",
+     "at": 5.188
+    },
+    {
+     "w": "metre",
+     "at": 5.425
+    },
+    {
+     "w": "seventy-five",
+     "at": 5.763
+    }
+   ]
+  },
+  {
+   "label": "Be brave",
+   "text": "You don't need to be the tallest. Good timing and bravery win duels: keep chasing, pick your moment, be brave!",
+   "src": "/plays/narration/lisandro-martinez-signature/4.m4a",
+   "seconds": 7.7,
+   "words": [
+    {
+     "w": "You",
+     "at": 0.375
+    },
+    {
+     "w": "don't",
+     "at": 0.463
+    },
+    {
+     "w": "need",
+     "at": 0.613
+    },
+    {
+     "w": "to",
+     "at": 0.787
+    },
+    {
+     "w": "be",
+     "at": 0.863
+    },
+    {
+     "w": "the",
+     "at": 0.988
+    },
+    {
+     "w": "tallest",
+     "at": 1.075
+    },
+    {
+     "w": "Good",
+     "at": 2.062
+    },
+    {
+     "w": "timing",
+     "at": 2.288
+    },
+    {
+     "w": "and",
+     "at": 2.688
+    },
+    {
+     "w": "bravery",
+     "at": 2.8
+    },
+    {
+     "w": "win",
+     "at": 3.35
+    },
+    {
+     "w": "duels",
+     "at": 3.575
+    },
+    {
+     "w": "keep",
+     "at": 4.412
+    },
+    {
+     "w": "chasing",
+     "at": 4.688
+    },
+    {
+     "w": "pick",
+     "at": 5.35
+    },
+    {
+     "w": "your",
+     "at": 5.537
+    },
+    {
+     "w": "moment",
+     "at": 5.65
+    },
+    {
+     "w": "be",
+     "at": 6.062
+    },
+    {
+     "w": "brave",
+     "at": 6.213
+    }
+   ]
+  }
+ ]
+}

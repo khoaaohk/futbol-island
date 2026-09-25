@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The last minute",
+   "text": "Lusail, 2022. The World Cup final, the very last minute of extra time. A long ball bounces past Otamendi. Randal Kolo Muani is through, one on one!",
+   "src": "/plays/narration/martinez-save-2022/1.m4a",
+   "seconds": 12.9,
+   "words": [
+    {
+     "w": "Lusail",
+     "at": 0.4
+    },
+    {
+     "w": "2022",
+     "at": 1.0
+    },
+    {
+     "w": "The",
+     "at": 2.413
+    },
+    {
+     "w": "World",
+     "at": 2.525
+    },
+    {
+     "w": "Cup",
+     "at": 2.825
+    },
+    {
+     "w": "final",
+     "at": 3.062
+    },
+    {
+     "w": "the",
+     "at": 3.625
+    },
+    {
+     "w": "very",
+     "at": 3.725
+    },
+    {
+     "w": "last",
+     "at": 4.025
+    },
+    {
+     "w": "minute",
+     "at": 4.4
+    },
+    {
+     "w": "of",
+     "at": 4.638
+    },
+    {
+     "w": "extra",
+     "at": 4.725
+    },
+    {
+     "w": "time",
+     "at": 5.125
+    },
+    {
+     "w": "A",
+     "at": 6.037
+    },
+    {
+     "w": "long",
+     "at": 6.162
+    },
+    {
+     "w": "ball",
+     "at": 6.525
+    },
+    {
+     "w": "bounces",
+     "at": 6.875
+    },
+    {
+     "w": "past",
+     "at": 7.388
+    },
+    {
+     "w": "Otamendi",
+     "at": 7.8
+    },
+    {
+     "w": "Randal",
+     "at": 9.025
+    },
+    {
+     "w": "Kolo",
+     "at": 9.488
+    },
+    {
+     "w": "Muani",
+     "at": 9.9
+    },
+    {
+     "w": "is",
+     "at": 10.35
+    },
+    {
+     "w": "through",
+     "at": 10.537
+    },
+    {
+     "w": "one",
+     "at": 11.088
+    },
+    {
+     "w": "on",
+     "at": 11.35
+    },
+    {
+     "w": "one",
+     "at": 11.55
+    }
+   ]
+  },
+  {
+   "label": "Watch the save",
+   "text": "Watch again, slowly. Emiliano Mart\u00ednez races off his line, spreads his arms and legs wide, and blocks the shot with his left leg!",
+   "src": "/plays/narration/martinez-save-2022/2.m4a",
+   "seconds": 10.3,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.275
+    },
+    {
+     "w": "Emiliano",
+     "at": 2.388
+    },
+    {
+     "w": "Mart\u00ednez",
+     "at": 3.025
+    },
+    {
+     "w": "races",
+     "at": 3.6
+    },
+    {
+     "w": "off",
+     "at": 4.0
+    },
+    {
+     "w": "his",
+     "at": 4.188
+    },
+    {
+     "w": "line",
+     "at": 4.35
+    },
+    {
+     "w": "spreads",
+     "at": 5.088
+    },
+    {
+     "w": "his",
+     "at": 5.463
+    },
+    {
+     "w": "arms",
+     "at": 5.638
+    },
+    {
+     "w": "and",
+     "at": 6.1
+    },
+    {
+     "w": "legs",
+     "at": 6.225
+    },
+    {
+     "w": "wide",
+     "at": 6.638
+    },
+    {
+     "w": "and",
+     "at": 7.4
+    },
+    {
+     "w": "blocks",
+     "at": 7.525
+    },
+    {
+     "w": "the",
+     "at": 7.9
+    },
+    {
+     "w": "shot",
+     "at": 8.05
+    },
+    {
+     "w": "with",
+     "at": 8.363
+    },
+    {
+     "w": "his",
+     "at": 8.463
+    },
+    {
+     "w": "left",
+     "at": 8.625
+    },
+    {
+     "w": "leg",
+     "at": 8.9
+    }
+   ]
+  },
+  {
+   "label": "Behind the goal",
+   "text": "From behind the goal, see how little space he leaves. Argentina went on to win the World Cup!",
+   "src": "/plays/narration/martinez-save-2022/3.m4a",
+   "seconds": 6.7,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "behind",
+     "at": 0.487
+    },
+    {
+     "w": "the",
+     "at": 0.863
+    },
+    {
+     "w": "goal",
+     "at": 0.95
+    },
+    {
+     "w": "see",
+     "at": 1.637
+    },
+    {
+     "w": "how",
+     "at": 1.825
+    },
+    {
+     "w": "little",
+     "at": 2.0
+    },
+    {
+     "w": "space",
+     "at": 2.237
+    },
+    {
+     "w": "he",
+     "at": 2.612
+    },
+    {
+     "w": "leaves",
+     "at": 2.75
+    },
+    {
+     "w": "Argentina",
+     "at": 3.737
+    },
+    {
+     "w": "went",
+     "at": 4.375
+    },
+    {
+     "w": "on",
+     "at": 4.537
+    },
+    {
+     "w": "to",
+     "at": 4.662
+    },
+    {
+     "w": "win",
+     "at": 4.775
+    },
+    {
+     "w": "the",
+     "at": 4.987
+    },
+    {
+     "w": "World",
+     "at": 5.075
+    },
+    {
+     "w": "Cup",
+     "at": 5.412
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn, keepers: rush out fast to close the angle, then make yourself big. Spread your arms and legs wide!",
+   "src": "/plays/narration/martinez-save-2022/4.m4a",
+   "seconds": 8.1,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "keepers",
+     "at": 0.95
+    },
+    {
+     "w": "rush",
+     "at": 1.788
+    },
+    {
+     "w": "out",
+     "at": 2.062
+    },
+    {
+     "w": "fast",
+     "at": 2.25
+    },
+    {
+     "w": "to",
+     "at": 2.562
+    },
+    {
+     "w": "close",
+     "at": 2.65
+    },
+    {
+     "w": "the",
+     "at": 2.987
+    },
+    {
+     "w": "angle",
+     "at": 3.125
+    },
+    {
+     "w": "then",
+     "at": 3.6
+    },
+    {
+     "w": "make",
+     "at": 3.737
+    },
+    {
+     "w": "yourself",
+     "at": 3.913
+    },
+    {
+     "w": "big",
+     "at": 4.338
+    },
+    {
+     "w": "Spread",
+     "at": 5.225
+    },
+    {
+     "w": "your",
+     "at": 5.562
+    },
+    {
+     "w": "arms",
+     "at": 5.737
+    },
+    {
+     "w": "and",
+     "at": 6.162
+    },
+    {
+     "w": "legs",
+     "at": 6.275
+    },
+    {
+     "w": "wide",
+     "at": 6.662
+    }
+   ]
+  }
+ ]
+}

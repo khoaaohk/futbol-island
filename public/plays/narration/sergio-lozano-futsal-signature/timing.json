@@ -1,0 +1,358 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: the 2012 final",
+   "text": "The 2012 Futsal Euro final. Russia lead, until Lozano scores with seconds left. One all! Now it is extra time. He finds a yard of space and strikes it firmly. Goal!",
+   "src": "/plays/narration/sergio-lozano-futsal-signature/1.m4a",
+   "seconds": 13.4,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "2012",
+     "at": 0.425
+    },
+    {
+     "w": "Futsal",
+     "at": 1.163
+    },
+    {
+     "w": "Euro",
+     "at": 1.6
+    },
+    {
+     "w": "final",
+     "at": 1.913
+    },
+    {
+     "w": "Russia",
+     "at": 2.8
+    },
+    {
+     "w": "lead",
+     "at": 3.175
+    },
+    {
+     "w": "until",
+     "at": 3.75
+    },
+    {
+     "w": "Lozano",
+     "at": 4.025
+    },
+    {
+     "w": "scores",
+     "at": 4.55
+    },
+    {
+     "w": "with",
+     "at": 5.062
+    },
+    {
+     "w": "seconds",
+     "at": 5.237
+    },
+    {
+     "w": "left",
+     "at": 5.65
+    },
+    {
+     "w": "One",
+     "at": 6.525
+    },
+    {
+     "w": "all",
+     "at": 6.75
+    },
+    {
+     "w": "Now",
+     "at": 7.312
+    },
+    {
+     "w": "it",
+     "at": 7.55
+    },
+    {
+     "w": "is",
+     "at": 7.65
+    },
+    {
+     "w": "extra",
+     "at": 7.8
+    },
+    {
+     "w": "time",
+     "at": 8.2
+    },
+    {
+     "w": "He",
+     "at": 8.925
+    },
+    {
+     "w": "finds",
+     "at": 9.05
+    },
+    {
+     "w": "a",
+     "at": 9.312
+    },
+    {
+     "w": "yard",
+     "at": 9.375
+    },
+    {
+     "w": "of",
+     "at": 9.637
+    },
+    {
+     "w": "space",
+     "at": 9.762
+    },
+    {
+     "w": "and",
+     "at": 10.225
+    },
+    {
+     "w": "strikes",
+     "at": 10.35
+    },
+    {
+     "w": "it",
+     "at": 10.725
+    },
+    {
+     "w": "firmly",
+     "at": 10.887
+    },
+    {
+     "w": "Goal",
+     "at": 11.95
+    }
+   ]
+  },
+  {
+   "label": "Replay: the firm strike",
+   "text": "Watch again. He needs only a yard of space. Then bang, a firm strike! Two one, and Spain are champions of Europe!",
+   "src": "/plays/narration/sergio-lozano-futsal-signature/2.m4a",
+   "seconds": 8.5,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "He",
+     "at": 1.325
+    },
+    {
+     "w": "needs",
+     "at": 1.438
+    },
+    {
+     "w": "only",
+     "at": 1.663
+    },
+    {
+     "w": "a",
+     "at": 1.95
+    },
+    {
+     "w": "yard",
+     "at": 2.05
+    },
+    {
+     "w": "of",
+     "at": 2.312
+    },
+    {
+     "w": "space",
+     "at": 2.4
+    },
+    {
+     "w": "Then",
+     "at": 3.337
+    },
+    {
+     "w": "bang",
+     "at": 3.587
+    },
+    {
+     "w": "a",
+     "at": 4.025
+    },
+    {
+     "w": "firm",
+     "at": 4.138
+    },
+    {
+     "w": "strike",
+     "at": 4.463
+    },
+    {
+     "w": "Two",
+     "at": 5.287
+    },
+    {
+     "w": "one",
+     "at": 5.537
+    },
+    {
+     "w": "and",
+     "at": 5.888
+    },
+    {
+     "w": "Spain",
+     "at": 6.025
+    },
+    {
+     "w": "are",
+     "at": 6.438
+    },
+    {
+     "w": "champions",
+     "at": 6.562
+    },
+    {
+     "w": "of",
+     "at": 7.112
+    },
+    {
+     "w": "Europe",
+     "at": 7.2
+    }
+   ]
+  },
+  {
+   "label": "Shoot hard and low",
+   "text": "In futsal, the goal is small and the keeper is close. So when you get a yard of space, shoot straight away. Hard and low, past the keeper\u2019s feet!",
+   "src": "/plays/narration/sergio-lozano-futsal-signature/3.m4a",
+   "seconds": 9.8,
+   "words": [
+    {
+     "w": "In",
+     "at": 0.4
+    },
+    {
+     "w": "futsal",
+     "at": 0.537
+    },
+    {
+     "w": "the",
+     "at": 1.038
+    },
+    {
+     "w": "goal",
+     "at": 1.125
+    },
+    {
+     "w": "is",
+     "at": 1.363
+    },
+    {
+     "w": "small",
+     "at": 1.5
+    },
+    {
+     "w": "and",
+     "at": 1.938
+    },
+    {
+     "w": "the",
+     "at": 2.038
+    },
+    {
+     "w": "keeper",
+     "at": 2.125
+    },
+    {
+     "w": "is",
+     "at": 2.462
+    },
+    {
+     "w": "close",
+     "at": 2.6
+    },
+    {
+     "w": "So",
+     "at": 3.513
+    },
+    {
+     "w": "when",
+     "at": 3.638
+    },
+    {
+     "w": "you",
+     "at": 3.763
+    },
+    {
+     "w": "get",
+     "at": 3.837
+    },
+    {
+     "w": "a",
+     "at": 3.962
+    },
+    {
+     "w": "yard",
+     "at": 4.037
+    },
+    {
+     "w": "of",
+     "at": 4.338
+    },
+    {
+     "w": "space",
+     "at": 4.438
+    },
+    {
+     "w": "shoot",
+     "at": 5.175
+    },
+    {
+     "w": "straight",
+     "at": 5.475
+    },
+    {
+     "w": "away",
+     "at": 5.775
+    },
+    {
+     "w": "Hard",
+     "at": 6.675
+    },
+    {
+     "w": "and",
+     "at": 7.075
+    },
+    {
+     "w": "low",
+     "at": 7.2
+    },
+    {
+     "w": "past",
+     "at": 7.65
+    },
+    {
+     "w": "the",
+     "at": 7.963
+    },
+    {
+     "w": "keeper\u2019s",
+     "at": 8.05
+    },
+    {
+     "w": "feet",
+     "at": 8.45
+    }
+   ]
+  }
+ ]
+}

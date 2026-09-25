@@ -1,0 +1,22 @@
+{"lesson":"expf_trailingoption","questions":[
+{"q":"Two teammates run at the goal. Tap where the PIVOT arrives to help.",
+ "options":["In the goalmouth with the first wave","Deep, right beside the FIXO","Behind the first wave, ready for a cutback"],
+ "correct":2,
+ "explain":"Yes. The PIVOT arrives behind the first wave, so there is a new angle for a cutback.",
+ "choiceExplanations":["Two teammates are already there. A third runner in the same line gives no new angle.","The FIXO already stays deep. The PIVOT pushes up to arrive behind the attack.","Yes. The PIVOT arrives behind the first wave, so there is a new angle for a cutback."],
+ "visual":{"kind":"tapSpot","frame":{"step":3,"hide":["st"],"focus":["lm","rm"]},
+  "spots":[{"x":150,"y":100},{"x":135,"y":225},{"x":115,"y":150}]}},
+{"q":"Put the counterattack in order, from first to last.",
+ "options":["Two attackers make the first wave","The PIVOT arrives behind them","A defender steps out to the PIVOT","Pass across to the far ALA"],
+ "correct":0,
+ "explain":"Right. The trailing run pulls a defender out, and that opens the far side.",
+ "choiceExplanations":["Right. The trailing run pulls a defender out, and that opens the far side.","The first wave has to run first, so the PIVOT can arrive behind it.","The defender only steps out once the PIVOT has arrived behind the first wave.","That pass comes last. The far lane opens only after the defender steps out."],
+ "visual":{"kind":"order"}},
+{"q":"Now the defenders stay home and block the far lane. Which pass is best?",
+ "options":["Pass across to the far ALA","Back to the trailing PIVOT","All the way back to the FIXO"],
+ "correct":1,
+ "explain":"Yes. Nobody stepped out to the PIVOT, so the cutback lane is open for a shot.",
+ "choiceExplanations":["A defender stands right in that lane, so the pass would be cut out.","Yes. Nobody stepped out to the PIVOT, so the cutback lane is open for a shot.","That pass is safe but slow. The chance is gone, and the defenders get time to recover."],
+ "visual":{"kind":"bestPass","frame":{"step":5,"place":{"dcb":{"x":135,"y":82},"dlm":{"x":55,"y":78}},"ball":"lm","focus":["lm","st"]},
+  "from":"lm","to":["rm","st","cb"]}}
+]}

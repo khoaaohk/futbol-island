@@ -679,3 +679,619 @@ All 15 Canvas stories pass actual 390px/1440px playback, 320px controls, chapter
 The15 Canvas stories now use authored short actions with contact/response during narration, plus selective larger material forms. Grit's detailed connected tree/leaf growth and Love Futsal's actions are encoded offline into all three video formats; playback remains one video. Canvas keeps24fps/DPR1.5, one audio element, cached grain and the existing pause/hidden/offscreen/close sleep. Added paths and interpolation are bounded; no new surface, loop, polling or artwork download. Shared `filmComposition.ts` uses constant-size arithmetic for compact portrait safe space and a landscape artwork/control split. Additional branch/leaf detail is paid during offline export, not by a live mobile Canvas.
 
 All15 Canvas films pass actual playback/cleanup checks at320×568,390×667,390×850,844×390 and1440×850. The3 original films pass phone/desktop playback,320px controls, preserved captions and cleanup.30selected Canvas passages and75chapter endpoints pass;388narration-linked samples supplement independent visual reviews. See `story-production/story-motion-mobile-2026-09-20.md` for export, motion and composition evidence. No new device-temperature claim; local only.
+
+### September 21 — screenshot-requested scenery and access fixes (local)
+
+Removed the picnic table/seats at (36, 2) beside the futsal ramp, extended its six-metre-wide entrance path from z45 to the sidewalk at z59, and trimmed the western road's unused southern spur back to the junction at z65. Ground ride ramps now sit farther outside sidewalks and reject footprints overlapping paths or roads with 0.6 m clearance. Planning runs only during scene setup; both ground ramps remain available. Southern grass now reaches the existing coastal sand ribbon, filling the bare pier/knockout approach areas while preserving paths, seating pads, volleyball sand and the boardwalk. The shared outline also updates the map; no extra ground mesh, texture, animation or frame-loop work is added.
+
+Validation: production build and existing ride-ramp tests passed. Live local browser assertions passed for removed furniture, the continuous entrance path, the shortened street and both ground ramps' pavement clearance. Reviewed five rendered views covering futsal, the western junction, coastal approach, pier cafés and museum. Local changes only; no deployment or physical-device thermal measurement.
+
+### September 22 — pedestrian clearance and lawn cleanup (local)
+
+Eight South Pier lamps moved from the deck to the inland grass at z205.5. Street lamp candidates now sit outside sidewalk edges; a bounded setup-only search relocates entrance lamps off paths and sand courts, with 0.65 m paving clearance. Pole collision footprints move with the lamps. Existing static batches and instanced light-pool textures are retained; no new lights or animation loop. Browser audit verified all 86 installed street lamps clear road/sidewalk, junction and path rectangles, including all eight pier lamps.
+
+Removed the Community Park playground, collision footprint and its two approach paving pieces, plus the contrasting park lawn overlays so the tree strips use the existing island grass. Removed the volleyball court's western side path. Straightened the beach promenade and connected its eastern end to the street sidewalk. Reviewed rendered pier, park and beach views. Final production build, typecheck and browser geometry checks passed. The floating Post-match Tables sign now has a wooden backing, two ground-reaching posts and a matching collision footprint, all using static scenery batches. Local only, not deployed; device heat not measured.
+
+### September 22 — museum, ferry and terrace follow-up (local)
+
+Simplified the museum forecourt to one rectangle and added a four-metre connection to the pier, with furniture moved away from its entrance. Replaced the dock-side patio's short wooden bridge/interior rails with a level paved connection; aligned its southern path and moved the pier bench clear. Extended the dock polygon across the full gangway mouth, matching plank ends and perimeter rail openings, and removed obsolete rails inside the joined boardwalk. Extended the coastal path north to the beach promenade, moving the bordering palm clear; removed the duplicate path beside the western building row.
+
+Added six short lamps to Cafe by the Sea's upper and lower terraces (three per level). They reuse emissive lens materials, static geometry batches and the existing cached/instanced night-pool texture. Each roof pool is bounded to 5 × 5 m and placed at its terrace height; lamp collision is elevation-aware. Added runtime cost is six static pool instances and batched lamp geometry, with no real-time lights, new textures or animation loops. Terrain and rooftop travel tests pass. Local browser review includes museum/pier clearance, removed interior dock rail, six terrace lamps, street-lamp paving clearance and rendered ferry/patio/terrace views. No deployment or device-temperature claims.
+
+### September 22 — warmer golden sunset (local)
+
+Sunset palette now uses an apricot sky (#efb477), honey-gold sunlight (#ffbf72), warm sky fill (#ffdda6) and ochre ground bounce (#ad8254). Light intensities, exposure, shadow direction, day/night presets and transition/sleep behavior are unchanged. This edits existing color uniforms only; no added rendering work or resources. Compared matching plaza and pier browser captures; production build, field-lighting tests and lighting-idle tests pass (updated the latter's expected sunset sky). Local only, not deployed.
+
+### September 22 — distinct daytime palette (local)
+
+Day mode now uses a clear blue sky (#a9d4ed), cool-neutral sky fill (#eaf4ff), natural ground bounce (#929887) and near-white sunlight (#fff5e6), removing the previous amber daylight cast. Intensities, exposure, fixed shadows and sunset/night palettes are retained. Existing color uniforms only: no added lights, resources or recurring work. Production build, lighting-idle and field-lighting tests pass; plaza and pier browser captures reviewed. Local only, not deployed.
+
+### September 22 — player mechanics, contacts and purposeful live play (local)
+
+The shared rig now uses deterministic authored teaching samples for repeatable quiz/seek poses, distinct pass/shot/loft mechanics with hip-before-chest rotation, action-linked weight shift and gait counter-sway, bounded planted-foot pivots/replanting, and lateral leg solving that keeps the supporting boot grounded. Defensive and goalkeeper poses use the same joints. Two cached support points plus fixed-size vector/quaternion arithmetic replace foot sliding; there are no per-foot raycasts, new geometries or animation loops. Existing reduced-motion, ride/flight overrides, culling and instancing remain.
+
+Ball rendering now normalizes the live kick countdown correctly, caches actual release/arrival boot anchors once per teaching beat, previews the same receiving-foot plan used by the simulation, joins the selected left/right foot at control, grounds ordinary dribble rolls and displays goalkeeper possession at the hands. A teaching beat samples and restores at most two existing contact rigs; it creates no extra rigs. Quiz outcomes and paused live games stop pose integration. Endpoint caches are scoped to the current beat/lesson/clock, and live ball offsets clear on ownership changes.
+
+Live AI retains existing formations, support triangles, team identities, brain cadence and safe substeps. It adds one bounded pass-and-run intention per match, conditional return passes, three-corridor carry decisions, moving first touches, stable press handoffs and goal-side cover. Futsal uses shorter rotations, closer support and compact defensive bands. Additional work is bounded roster arithmetic on existing clocks; no new timers, polls or rendering assets. See `live-match-engine-improvements-2026-09-22.md` for seeded evidence and model limitations.
+
+Validation includes new full-runtime contact/arrival tests, full-rig deterministic and bilateral planted-foot tests, existing teaching/quiz/ride/juggle/batch/clock regressions, and twelve seeded three-minute matches across all four formats. Batching remains 22 actors / 10 batches in the existing check. Desktop and 390px Chromium captures cover preparation, release, flight and receipt without page errors. The existing effects test canvas stub was completed so all four seeded effect simulations can run. Local only; no deployment or physical-phone temperature measurement.
+
+### September 22 — live post-pass glide correction (local)
+
+The .45-second simulation kick countdown was rendered across the slowed .42 match clock, holding the strike pose and pass-facing direction for roughly 1.07 real seconds while the passer translated. Live presentation now maps that countdown to a .32-second recovery, smoothly turns toward travel during follow-through, then releases the kick override so distance-driven steps and foot planting resume. Simulation decisions and authored teaching timings are unchanged. This adds only bounded scalar arithmetic to the existing pose update, with no timers, assets or extra render loops. Full-runtime contact tests cover recovery metadata, both-foot alternating strides and grounded support, alongside release/arrival continuity. Local only; not deployed.
+
+### September 22 — coordinated whole-body range (local)
+
+Added stance-phase lateral hip transfer, stronger opposed pelvis/chest rotation, upper-body counterbalance, head stabilization, shoulder motion on three axes, independently phased elbow flexion and greater swing-foot clearance. Receiving/striking shifts weight toward the supporting leg. Existing bounded leg solves and stance anchors keep soles grounded; reduced-motion and ride overrides remain. All additions are scalar operations in the existing rig update; no new objects per frame, render loops, meshes or raycasts. Body/contact, ride, juggling and batching regressions pass (22 actors / 10 batches). No deployment or physical-phone thermal claim.
+
+### September 22 — directional locomotion (local)
+
+Added continuously blended sprint, backpedal and lateral-shuffle posture/stride mechanics. Live running effort is normalized before playback scaling; actual distance still drives gait. Containing defenders face the attacker, opening into travel at chase pace. All work is bounded scalar arithmetic per existing posed actor; no new rigs, meshes, timers, polling or allocations per frame. Existing view culling, sleeping matches and batching remain. Full-rig, contact, ride and batch checks and production build pass. See `player-locomotion-audit-2026-09-22.md` for findings and measured fixture ranges. Not deployed; no phone thermal measurement.
+
+### September 22 — calmer live-game pacing (local)
+
+Reduced the shared live simulation multiplier from .42 to .32 (about 24% slower). Player travel, ball flight and tactical decisions remain on the same clock across all formats; distance-driven gait and real-time .32-second kick recovery remain synchronized. Authored lessons and quizzes keep their own timing. No additional rendering or simulation work; no deployment. Contact/recovery fixtures read the shared multiplier so they verify actual real-time recovery after pace changes.
+
+Live ball flight trail (September 22, 2026): each venue's `createMatchEffects` now owns one `createBallEffects` (the walking character's shot trail: a 20-point line, 14 ghosts sharing one geometry/material, pooled sparkles and 5 launch rings) instead of the 48-point vertex-colour ribbon. `fieldRuntime` feeds it the rendered ball after placement (`e.effects.trail`), so the trail head sits on the ball (the old ribbon sampled raw sim positions before the release/receive offsets and left a gap). It updates only for visible, non-teaching venues, draws only while the ball is in flight, and reduced motion hides it. Added cost while a live ball flies: roughly 15–20 extra small draw calls in the visible venue. Not measured on an iPhone.
+
+### September 22 — level support soles and softer step landings (local)
+
+Corrected the ordinary gait/support ankle orientation using the complete pelvis–hip–knee rotation. Previously only pitch was cancelled, leaving a measured 27.58° sideways boot tilt in a shuffle and 14.57° in a stationary ready stance. The feet now remain level laterally while the hips lean and abduct; deliberate toe pitch and striking/receiving boot mechanics remain. Swing-foot height uses a squared sine for zero vertical velocity at both endpoints with unchanged peak clearance, softening lift-off and touchdown. This reinforces readable supporting-foot placement in defending and striking.
+
+Cost: two cached quaternions and one cached Euler per existing rig; bounded quaternion operations for at most two ordinary/support feet per pose update, plus one scalar multiply per swing. No per-frame objects, scene traversals, raycasts, new meshes, render loops or changes to culling. Existing batching remains 22 players / 10 batches. Added full-transform sole tests cover 2,353 near-ground samples across four profiles and mirrored shuffles, plus both striking sides. Existing body, seam, range, profile, ball-contact, ride/flight and batching suites pass; production build passes. Local Chromium checks cover all four live formats and desktop/phone-width teaching contact poses. No deployment or physical-phone thermal measurements.
+
+### September 22 — fluid upper-body transitions (local)
+
+The chest, shoulders, elbows and head now use an allocation-free critically damped response, with independent response rates. The hips and support-foot lateral counterbalance remain contact-driven, so upper-body follow-through does not delay movement or slide planted boots. Teaching samples, reduced motion, teleports/offscreen resumes and special ride/action poses reset the response; ordinary paused frames retain both its pose and velocity. No change to AI, root travel or ball-release timing.
+
+`poseResponse.ts` integrates a held target analytically. Each rig adds a fixed 28-double buffer (224 bytes) and 14 bounded scalar response channels in its existing update. No extra loop, scene query, object per frame, mesh or background work. In a controlled running/receiving/jockey fixture at 60 Hz, maximum sampled upper-joint frame change fell from .476 to .147 radians; maximum sampled angular acceleration fell from 1,542 to 182 rad/s². Arm excursion retained 92% of the unfiltered fixture. These are fixture measurements, not universal realism or phone-performance claims. Equivalent checks pass at 30/120 Hz; the response to a held target is timestep invariant.
+
+Validation: `player-fluidity`, body mechanics/review/seams/range/profiles, player motion including ride/flight overrides, field/teaching contact, glue and batching regressions, and production build. `check-player-fluidity-browser.cjs` captures running-to-receiving and cutting-to-stopping at desktop/phone-width viewports using the actual shared player. All four live formats are covered by the locomotion browser check. Local only, not deployed; physical-phone heat unmeasured.
+
+### September 22 — ball contact, goal frames and aerial choices (local)
+
+Dribbling stays ahead of the stride; shots use venue-sized upper-corner placement; post/crossbar rebounds use bounded swept sphere/capsule tests. Live balls share one static 256×128 panel texture (no per-frame canvas work or additional ball draw calls), with 16×12 sphere geometry and distance-based rolling. Aerial decisions score plausible onside receivers against defender arrival times when a carrier can act, with cooldowns; no dense pitch-control grid or model inference. All use existing update clocks, visibility and cached collision outputs. Player turn lean/twist/backpedal refinements add scalar operations to existing poses.
+
+Final production build, focused regression checks and controlled desktop/phone-width browser cases pass. A 96-match seeded sample and detailed validation are recorded in `game-engine-upgrade-2026-09-22.md`. No new external dependency, deployment or real-phone thermal measurement. The subsequent `body-movement-research-2026-09-22.md` is a research plan, not an additional implemented animation system.
+
+### September 22 — contact mechanics, anticipation and reference motion (local)
+
+The next shared-rig pass replaces zero-speed strike contact with forward-through-impact pass/shot/loft curves and a cached analytical 3D striking-leg solve. Desired travel prepares cuts/stops; retreat gradually opens into chase. Transition-only upper-body inertialization preserves full gait excursion. Small offline CMU run/kick curves add restrained upper-body accents; procedural support and ball contacts remain authoritative. Source terms and the estimated contact-frame limitation are documented in `body-mechanics/motion-reference-provenance.md`.
+
+Fixed buffers now total 768 bytes per rig (672 response + 96 reference), plus cached solver scratch objects. Bounded curve sampling and strike-only solving add no meshes, render loops, runtime parsing or per-frame helper allocations. Batching stays 22 players / 10 batches. Controlled contact, body, seam, pause, teaching, ride and game-engine regressions pass, as do desktop/phone-width technique browser checks. The new response retains more arm excursion but has higher peak acceleration than the previous continuous spring; measured comparisons are in `body-movement-implementation-2026-09-22.md`. Local only, no physical-phone thermal claim.
+
+
+### September 22 — five story voices and subtle bottle surf (local)
+
+The explicit voice-replacement request covers all 22 riso stories: 114 chapter clips plus the three continuous films (Futsl, Grit, Regulating Emotions). Offline ElevenLabs synthesis uses all five supplied voice IDs; 117 successful requests contain 18,722 input characters and report a summed character-cost header of 10,304 units (not a currency amount; subscription-read permission is unavailable). New AAC assets have content-hashed URLs; original recordings remain available for rollback. No API credential, voice model or synthesis request enters the client.
+
+A small narration adapter maps new media times onto the existing authored art clock, with chapter phrase anchors and continuous-film caption anchors. Captions, headlines and chapter-seek boundaries follow the replacement audio. Playback retains one audio element and the existing sleeping canvas loop. A chapter keeps its previous reflection length when possible and gives the final painted passage .65 seconds; longer speech extends it rather than speeding it up. Unit tests cover invertible timing, original text, chapter seam endpoints and track caption/headline boundaries. The seam-review tool now loads the adapter.
+
+Bottle ambience uses a cached 16-second mono surf buffer with three asymmetric breaking/receding waves, a 180 Hz rumble cut, restrained foam and .22 source gain. Envelope controls are generated at 100 Hz outside the sample loop; playback adds no timers or network requests. Fade-in is 1.8 seconds; closing, mute, zero volume, page-hidden and disposal behavior are preserved. Buffer work/size are bounded (about 3 MB at 48 kHz), with no new buffer on reopening. Tests verify distinct crests and quiet gaps, no clipping, zero loop endpoints and lifecycle/cache reuse. See `story-production/ELEVENLABS-2026-09-22.md` and its JSON provenance. Local only; no physical-phone temperature measurement.
+
+Browser validation for the completed narration set: all 22 stories pass at 390×850 and 1440×850 (44 views), checking playback, seeking, pause/sleep and source cleanup. The futsal track also passes 320×568 and 844×390, with touch feedback and transcript controls checked across all four viewports. Visible title corrected to “Love Futsal”; internal story ID remains `futsl`.
+
+Final validation: production build passes (home route 473 kB; first-load JS 561 kB). The prior engine-pass build was 462/550 kB; this working-tree build includes the motion/reference and narration changes. All 22 adapted stories pass the seam review (117 boundaries, 1,060 samples, zero pixel differences/draw errors). Live browser verification confirms the “Love Futsal” heading, replacement media URL, advancing playback and release on close. Default town tests and narration/movement regressions pass. Local only; not deployed.
+
+### September 22 follow-up — narration pace and Paths particles (local)
+
+Slower recordings now receive offline, pitch-preserving FFmpeg `atempo` processing, with one rate per story derived from its source narration timing and capped at 1.20. Already brisk stories keep rate 1.0. New content-hashed files are made directly from cached original MP3s; no further ElevenLabs calls or credits were used. Character/caption anchors are scaled by the same tempo. Chapter duration now follows actual processed media plus the existing .65-second painted transition instead of preserving old silent reflection padding. Example total durations: Love Futsal 78.7 → 72.5 seconds; Kite 90.2 → 75.9; Quiet Lantern 82.2 → 69.3; Mental Toughness 84.8 → 71.3. A Place in the Picture keeps its speech speed but loses excess chapter padding (60.0 → 52.1 seconds). No voice or script changes. This supersedes the prior reflection-padding policy.
+
+The top-left Paths button reuses its two CSS particle layers for a staggered 4.8-second loop, with four dots per layer and .82 peak opacity (increased after user review). Only opacity/transform animate; no JS frame loop, canvas, timer, network asset or new React state. A visibility listener pauses the layers on hidden pages, and CSS pauses them behind any open dialog. Reduced motion disables the effect. The learning purpose is to keep the route to lessons, quizzes and stories discoverable. No physical-phone thermal claim.
+
+Narration mapping and installed media checks pass for all22 stories, including the .65-second chapter-tail constraint. Adapted visual seam review passes all22 stories with zero seam differences or draw errors. Browser/build results follow below.
+
+Pacing/particle final checks: six representative live story views pass (Futsal, Kite, Place in the Picture at 390×850 and 1440×850). Particle browser checks pass continuous movement, modal pause/resume and reduced-motion suppression, including the brighter user-requested treatment. Production build passes at 473 kB home / 561 kB first-load JS. No deployment.
+
+### September 22 — remove floodlights from plays and quizzes (local)
+
+Isolated learning views now hide the floodlight poles and lamp banks and immediately set the four pooled spotlights to zero intensity. Existing ambient/day-night fill keeps the teaching field readable. Fixtures and normal pitch selection restore when returning to island exploration. Visibility changes touch a cached fixture list only on entry/exit; no new objects, timers or render loops, and the stable shader light count is preserved. This clears visual obstructions around instructional plays and quizzes. All-format day/night isolation, restoration, resource disposal and lighting-idle checks pass; production build passes. Local only, not deployed; no phone thermal measurement.
+
+### September 22 — football quotes and sound-driven bottle water (local)
+
+Daily bottle messages now rotate through ten short, sourced quotations from football players and coaches. Each note shows the speaker, role and a keyboard-accessible source link. Wording follows the linked publisher's English text; the catalog is `lib/content/bottleQuotes.ts`. Dates retain local-calendar selection and repeat consistently within a day. The purpose is encouragement through football, teamwork, persistence and enjoyment. The quotes are static bundled content, with no external requests until a source link is opened.
+
+The existing 24 fps water canvas now samples the same 16-second swell envelope used to synthesize the ocean audio, driven by the active audio context's source clock. With sound unavailable/muted it uses a local visual clock. Wave height increases with each breaking wash. Bottle displacement and rocking use spring buoyancy, lateral restoring force and drag, integrated with bounded 1/120-second substeps (at most10 per draw). The old independent repeating CSS drift is replaced; the entrance/opening animation remains. Audio shares its clock only while its ocean source is alive, and ordinary UI sounds cannot overwrite it.
+
+Added cost: one cached swell object, six scalar physics values, bounded arithmetic and two CSS transform-property writes per existing draw; no new RAF loop, physics dependency, analyser node, canvas, raycast or per-frame React update. A cached React ref avoids DOM queries in the drawing loop. Page hiding resets integration timing and suspends rendering/audio; reduced motion disables bottle displacement and travelling waves. Focus trapping includes the new source link.
+
+Checks pass acoustic/lifecycle regressions, sound-clock ownership and cleanup, physics bounds/paused state at24/60/120Hz, and mobile Chromium quote/source/focus/close checks with animation on and reduced motion. All sourced excerpts are at most25words per linked article. Local only; no physical-phone thermal measurement.
+
+Bottle follow-up: the bottle now travels across the full viewport, makes full rotations and receives angular impulses on rebounds. Collision bounds follow its rotated dimensions with no inset margin; the SVG viewBox is cropped around the bottle so unused canvas space does not cause premature bounces. Mobile motion (≤600px) is 40% faster. Hover/keyboard focus holds it for opening. Bounds are read once per resize; a few trigonometric/scalar operations keep it onscreen each existing24fps tick. Compact320×568 browser sampling confirms visible edge contact, repeated rebounds and no clipping. Physics fixtures confirm more mobile rebounds at equal bounds. The earlier centered spring-drift description is superseded by this screen-space current/drag motion.
+
+Female appearance follow-up: hide the Coast outfit's cream chest stripe on female characters, including previews, using the existing appearance update. No new resources or frame work.
+
+Final build passes (home474kB, first-load562kB), with existing player/costume/ride regressions passing after the female outfit correction. Bottle source-clock, audio lifecycle, mobile edge-bounce and reduced-motion checks pass. Local only; not deployed.
+
+Bottle edge/reveal correction: collisions now project the glass outline and cork corners (including stroke) into screen space at the actual rotation, rather than using the SVG rectangle. This removes transparent-corner gaps during diagonal spins. The fixed16-point hull is checked during bounded physics substeps without allocations or layout reads. Tests cover exact painted-edge contact at six rotations. The tap-to-message delay is140ms (was360ms), followed by a240ms fade (was550ms); reduced motion remains immediate.
+
+Resize follow-up: refresh the wave background origin/width and cached bottle bounds on canvas resize, and reset integration timing. Browser checks pass mobile → 1440×900 desktop → 844×390 landscape → 320×568 → 390×850, both while drifting and with the quote open. Painted bottle bounds stay inside the viewport; canvas size, quote width, Done control, restored desktop HUD and page-error checks pass. Background measurements run only on resize; no new animation loop. Local browser coverage, not a physical-device test.
+
+Live futsal pace / aerial readability: futsal uses a 0.48 live clock (was 0.32), with the same clock applied to simulation, vertical ball physics, rendered travel/dribble speed and real-time kick recovery. Other formats stay at 0.32. Futsal AI and player shots receive a further 1.3 velocity multiplier. Purple (#b877ff) now identifies lofted live passes/crosses/switches; shots retain their existing tint. No new geometry, particles, loops or allocations; futsal advances more simulation time and can require additional bounded substeps when updates are batched. Existing distant throttling is retained. Field-contact checks cover each format’s elapsed time and consistent recovery. Live-effects checks pass all formats; goal-frame/upper-finish checks pass with the new futsal clock, plus ball-physics and match-clock regressions. Local only; no physical-phone thermal measurement or deployment.
+
+Goal-frame impact cue: live post/crossbar collisions record the surface contact and trigger a warm, 420 ms ring with eight small fading sparks, anchored to the frame after rebound. Two pooled bursts per match reuse geometry/materials; each active burst adds two draw calls (ring plus instanced sparks), with no lights, textures, new animation loop or per-frame allocations. Idle bursts skip work, hidden impacts are consumed without replay, pause freezes age, and reduced motion uses a stationary 180 ms ring without sparks. Checks pass all-format impact lifecycle, rooftop coordinates, goals/frame rebounds, and a browser-rendered futsal impact with no page errors. Production build passes (home475kB / first-load563kB). Local only; no deployment or physical-phone thermal claim.
+
+Paths HUD icon cycle: the existing button now cycles bolt → storybook → play every three seconds, with a brief shake and up to 2px blur confined to the 24px symbol. Three existing SVG icons use CSS animation; no timers, React updates or animation loop. Animations pause with document hiding or an open dialog; reduced motion keeps the bolt static. Existing surrounding particles and button behavior remain. Browser checks pass sequence/repeat, shake/blur, dialog pause, reduced motion and no page errors. Local only; no measured phone-heat claim.
+
+Paths icon refinement: the whole button now shakes briefly (±2px / ±5°) before the inner icon blurs and swaps. The nine-second icon sequence stays synchronized with a three-second button animation. The button animation also pauses behind dialogs/on page hide and is disabled for reduced motion. Browser sequence, button-transform, icon-blur and accessibility checks pass. No JS timers or additional loops; local only.
+
+Onboarding Find your path: restored the original lesson paragraph (stories remain in the colored note). The note symbol now cycles bolt → open book → play with the Paths shake/blur timing. Three existing 28px SVGs animate only on this open step; leaving removes the animated icons, page hiding pauses them, and reduced motion leaves a static bolt. No added timers or frame loop. Browser checks pass restored copy, order/repeat, shake/blur, reduced motion and cleanup. Local only.
+
+Production release — September 22, 2026: deployed the current working tree as dpl_7nrGrrPzMDBPuBTjxV9T7ihk7N54 (https://futbol-island-n4ieab7w0-khoa0aohk.vercel.app), aliased to https://futbolisland.app. Vercel build passed (home477kB / first-load565kB). Live mobile-width Chromium check passed restored onboarding copy, bolt/book/play cycling, shake/blur, reduced motion, cleanup, four initialized live formats and frame-impact effect presence, with no page errors. Updated Love Futsal narration returned HTTP200. Earlier local-only notes describe historical checkpoints; these changes are now deployed. No physical-phone thermal measurement.
+
+Post-release onboarding fit: step 2 now uses up to 460px height on narrow phones and a wider, two-column card on short landscape viewports. Compact padding preserves 14px body copy and navigation targets. Existing viewport/gap placement is reused; no additional observers or loops. Browser checks show zero body overflow at 320×568, 360×640, 375×667, 390×844, 430×932, 667×375 and 844×390. This follow-up is local and not part of deployment dpl_7nrGrrPzMDBPuBTjxV9T7ihk7N54.
+
+Mobile interaction follow-up (local, after September 22 production release):
+- Path chooser retains a fixed 100px mobile / 120px desktop layout slot while its cards compact over160ms. Cached docking boundaries are recomputed on layout changes; passive scrolling compares scrollTop, with2px hysteresis, without per-scroll DOM geometry reads or RAF. The bounded local card animation no longer shifts the long illustrated path. Dock/undock and tap/swipe selection sounds reuse the gesture-unlocked island audio context, its volume/mute rules, cooldown and cleanup; no new AudioContext per scroll cue.
+- Story loading leaves the existing path visible until the module is ready; the title/loading card is removed, with retry/close still available for genuine load failures. The player owns focus/inert state after mounting. Phones use180ms entry and160ms exit fades instead of the1.85s printed circle entry/.78s exit. Story Done skips the shared240ms navigation delay and closing stops playback without repainting an expensive final frame. Identical resize/initial visibility callbacks no longer redraw the same opening frame.
+- Mobile captions paginate into two measured lines, retaining every word and the full Read transcript. Pages advance proportionally within the existing narration paragraph timing (not word-level forced alignment). Canvas text measurement runs only for changed text, font or width, not per playback tick. Existing250ms clock updates drive page selection; the caption height stays two lines. Desktop retains full paragraphs.
+- Desktop Land on truck remains visible with the field Go card, aligned under Go with12px clearance. Bounds are cached by viewport/field and measured when the candidate appears, not every frame. Mobile prompt precedence remains.
+- Foundation top lowered from-.12m to-.18m, increasing clearance under the-.112m lawn from8mm to68mm to address depth fighting at shallow airborne views. Lawn, road, shoreline, camera, shadows and mesh counts are unchanged. Browser comparisons cover the north-coast flight view; this is not a physical-iPhone verification.
+Validation so far: stable path offset through docking; shared dock/undock/selection audio; two-line caption samples and complete-word/timing fixtures; both chapter and track story opening/closing; desktop truck clearance at800/1280px; field lighting/disposal and audio regressions. Different Tides passes playback, touch, sleep, transcript focus and audio cleanup at390×850,320×568,844×390 and1440×850. Typecheck and diff checks pass. These follow-up changes are not deployed.
+
+Final follow-up verification: all22stories pass at mobile390×850 and desktop1440×850 (44views), including two-line mobile captions, playback, chapter seeking and cleanup. Four-size Different Tides lifecycle/touch checks also pass. Production build passes (home476kB / first-load564kB). Shared-player Done now starts closing immediately rather than waiting240ms for button navigation animation. These changes remain local; deployment dpl_7nrGrrPzMDBPuBTjxV9T7ihk7N54 is still the earlier release.
+
+Production follow-up release — September 22, 2026: dpl_CZCHGRnDi3pBNZuE8whRt3bWLPsz, https://futbol-island-jt7z0phg0-khoa0aohk.vercel.app, is READY and aliased to https://futbolisland.app. Vercel build passed (home478kB / first-load566kB). Live mobile-browser verification passed stable dock layout, shared dock/undock/format sound cues, removal of the loading screen, two-line captions, chapter/track story transitions, restored path interaction and grass/foundation clearance. Done-to-removal measured175ms in this Chromium check for Different Tides and Love Futsal. All local follow-up changes above, including onboarding fit and desktop truck prompt spacing, are now deployed. Physical-iPhone grass/scroll smoothness remains a device check, not established by emulation.
+
+
+### September 22 — path painting and story background work (local)
+
+The phone report showed blank/cut-off path artwork during scrolling and heating during stories. The long map was one 3824–4024px SVG plus a full-height multiply grain layer. It now uses independent chapter SVGs (largest 1230px in all four paths), short connecting-road SVGs and 512px grain strips. Filter seeds, coordinates, textures, stops, typography and the overall map dimensions remain intact. No delayed mounting/scroll observer or extra requests; the bounded sections let the browser rasterize smaller surfaces. This adds 19–20 SVG roots and 8 grain elements per path instead of one large SVG/pseudo-element. Browser screenshots retain the artwork, but real-iPhone blank-tile behavior still needs verification.
+
+A local 390×844 Chromium profile of Love Futsal confirmed the island renderer stayed frozen while the story played, but the covered journey sun/ball/flag and logo animations kept running. Those animations now pause while a riso story exists and resume on close. The story tray now measures via ResizeObserver only when its dimensions change. A direct-child MutationObserver reconnects that observer when Read mode replaces/restores the tray; headline and clock text no longer trigger geometry reads. Narration, scene drawing, 24fps cap and DPR 1.5 remain unchanged.
+
+Eight-second before/after sample: world renders 119→119 in both; story draws 161 vs 160; ongoing tray bounds reads 20→0; running background animations 5→0; layout passes 491→13; layout time 57.6ms→3.6ms; style recalc 82.3ms→9.3ms; main-thread TaskDuration 949ms→654ms. Script time was noisier/increased 314ms→436ms, so these are local samples, not a universal speedup or a measured phone-temperature reduction. No GPU power/physical-phone measurement.
+
+All-format scroll checks preserve 17/18 stops and map height; before/after screenshots visually reviewed. Largest sampled RAF gap~20ms before/~17ms after on this desktop; not an iOS smoothness claim. Caption fixtures, typecheck and diff checks pass. All 22 stories pass mobile/desktop playback, seeking, captions, pause and cleanup (44 views). Different Tides additionally passes touch bursts, sleeping playback, Read/return focus and audio cleanup at 390×850, 320×568, 844×390 and 1440×850. Production build passes (home 476kB / first load 564kB). Story drawing and seam code were not modified. Local only, not deployed.
+
+Deployment verification follow-up: production mobile checks exposed the nearby field lesson prompt’s `learnEntryPulse` behind stories (depends on the player’s initial field position). Pause that prompt’s CSS animations while `[data-riso-story]` is mounted; resume automatically on close. No timers, observers or rendering-quality changes. Publishing this additional correction with the path/story performance release.
+
+Production performance release — September 22, 2026: dpl_Cz2YyzDPpfYrpGgqeyLf3832pngT is READY at https://futbol-island-gutc9rlxf-khoa0aohk.vercel.app and aliased to https://futbolisland.app. Vercel build passes (home 478kB / first load 567kB). Live mobile Chromium checks pass all four bounded path maps (largest SVG 1230px), active story playback with the world frozen (122 renders unchanged while story draws advanced 46→106), no running background animations, explicit field-prompt pause, paused canvas sleep, Read/return and closing, with no page errors. This includes the field-prompt CSS correction caught during the first deployment check; it supersedes dpl_J5dPbTHBhfpsAn4UAz2aq6Ly9UDq. Phone scrolling and temperature still require physical-device verification.
+
+
+### September 23 — mobile path rasterization, format navigation and narration buffering (local)
+
+The physical-phone report persisted after SVG splitting. Chapter backgrounds now use pre-rendered copies of the existing filtered SVG artwork, at 2× resolution for mobile and desktop. The browser no longer executes chapter turbulence/displacement filters while scrolling. All four current-path images load eagerly and request decode on mounting; identical assets are content-hashed and shared across formats. There are 16 unique WebP assets, about 4.5MB on disk, with about 902KB transferred for a cold Futsal mobile map. This trades a bounded image download/decoded-image memory for procedural filter work. Other formats reuse matching assets; only the active format’s four backgrounds are mounted. Headings, roads and lesson controls remain live accessible DOM. The generator is `scripts/bake-path-art.mjs`; dev-only localStorage `fi2-path-art-source=true` exposes the source SVG for regeneration. A manifest geometry check falls back to source SVG if lesson layout changes until regenerated. No runtime image conversion or new animation loop. Physical iPhone scrolling still needs verification.
+
+Settings resets its scroll body after showModal as well as on opening, avoiding the browser’s restored scroll position. Format changes slide the outgoing map 35% over240ms and the incoming map from55% over480ms; reduced motion switches immediately. One cancellable Web Animation operates on the current map, with no duplicate path tree. Switching from deep in a map returns to its start below the selector. Horizontal single-touch swipes use the same directional shared-context sound cue as taps; vertical movement, touch cancellation and accidental clicks after a swipe are handled. Pinned mobile format tabs now paint an opaque textured cover up through the header gap, hiding scrolled lesson content behind the title/navigation.
+
+Chapter narration prefetches one next clip after the current clip starts playing. A single fetch/blob lookahead feeds the existing Audio element, with cancellation on seek/close, blob revocation, deduplication and network fallback. No second player, whole-catalog preload, extra ElevenLabs generation or polling. The visual clock waits with a buffering narration rather than advancing and snapping back; genuinely failed/missing narration retains silent playback. Repeated identical-time story frames are skipped during buffering, while touch feedback remains active. Track-mode stories retain their one continuous source.
+
+Validation so far: all22stories pass mobile/desktop playback, captions, seeking, pause and cleanup (44 views); dedicated delayed-network browser check passes initial-audio hold, next-clip fetch during playback, cached blob playback and cleanup. Mobile browser checks pass settings reopen at scrollTop0, four baked backgrounds/no chapter filters in all formats, swipes in both directions, vertical-scroll rejection and sound cues. Screenshot confirms opaque mobile navigation cover. Narration-buffer lifecycle fixtures and typecheck pass. Four-viewport Different Tides lifecycle checks also pass, including touch, Read/return and audio cleanup. Final navigation refinements are recorded below. Local only, not deployed.
+
+September 23 navigation refinements: the incoming path waits for its requested artwork to decode while the current path remains visible, then slides/fades in over480ms after a240ms exit. Removed content-column overflow clipping; the viewport is the outer boundary. Visible road segments draw top-to-bottom from180–640ms into entry, using their existing SVG strokes and finite dash-offset animations. Visible stops begin at700ms, one every280ms with240ms settling animations, so they do not overlap. Offscreen stops remain settled; no delayed full-map reveal or scroll animation loop. Each onscreen stop gets one85ms soft sine pop through the existing island audio context, honoring mute/volume/visibility. Animations, stroke overrides and sound timers are cancelled on new selection, story opening or unmount. Reduced motion switches immediately without the reveal sequence.
+
+The opaque pinned cover now applies to mobile and desktop and follows the actual button row rather than its larger layout slot. A14px feather and an18px-high,3px backdrop-blur strip sit immediately below the buttons. The small strip adds bounded compositor work during scrolling; it replaces the distracting hard edge/empty gap without revealing content behind the title. The cover uses the existing backdrop. Removed visible chapter headings “Find your unit and receive” and “Find your connection”; lesson content and progress remain intact.
+
+Final desktop/mobile navigation checks pass uncropped travel,240ms/480ms slide phases, line completion before the first stop, individually spaced pop events using the shared context, reduced motion, and pinned-cover coverage with14px clearance beneath the actual tabs. Narration-buffer and audio lifecycle fixtures pass; all22-story sweep and four-viewport lifecycle checks pass. Production build passes (home 478kB / first load 567kB). Local only, not deployed; real-device scrolling, playback stalls and temperature remain an iPhone verification.
+
+Opening-story spacing: moved the initial story stop up40px in every format, including its connecting-line origin, to separate its metadata from the first chapter’s printed island. Chapter geometry, baked artwork, subsequent stops and progress are unchanged. No additional runtime work.
+
+September 23 hover correction: desktop format buttons keep their hit geometry stationary during hover/press; shadow and inner-art feedback remain. Removing hover translation/press scaling prevents the bottom edge from repeatedly leaving/re-entering a stationary pointer and retriggering hover sound. Scoped to the four format tabs on fine-pointer hover devices; no new runtime work. Browser checks pass all four expanded and docked buttons: one pointer enter, zero pointer leaves, constant bounds over750ms at the bottom edge. Local only, not deployed.
+
+
+### September 23 — stationary route transitions and navigation audit
+
+The final transition replaces the earlier side slides: the background stays still while the current foreground fades out over220ms. The new route draws first, followed by visible story/play stops at280ms intervals with the existing soft pop sound. Each format has its own bounded curve amplitude, frequency and bend; chapter art geometry is unchanged. No duplicate map snapshot, background animation or continuous animation loop. Offscreen stops stay settled. Cancellation covers rapid choices, resize, hidden page, dialog close, story entry and reduced motion. Format titles are now20px on desktop/17px on mobile, with progress counts removed from the tabs; lesson progress itself is retained.
+
+Audit fixes: artwork decode has a900ms fallback so a stalled asset cannot block format changes; landscape touch layouts receive full pinned-header coverage; story portal gestures cannot switch the underlying path; narration retries reload a failed source and pausing cancels pending delayed autoplay. Browser checks pass mobile/desktop distinct curves, stationary map, rapid selection and reduced motion. Narration-buffer and shared sound regression fixtures pass. Local only, not deployed. Desktop emulation does not establish iPhone temperature improvement.
+
+Final validation: all44 story views (22 stories at390px and1440px), Different Tides lifecycle at320/390/844/1440px, all four navigation/audio bug regressions, typecheck and production build pass. Home478kB / first load567kB. No deployment performed.
+
+
+September 23 production deployment: `dpl_8yieEraqPpSpYAw6xbowaDg9iCKJ` is READY at https://futbol-island-imr19very-khoa0aohk.vercel.app, aliased to https://futbolisland.app. Deployment succeeded with explicit `--scope khoa0aohk` after the unscoped request returned Not authorized. Vercel production build passed (home480kB / first load569kB). Live390px and1440px browser checks passed: enlarged titles, no tab counts, four distinct route curves, stationary background, rapid format switching and reduced motion. This supersedes local-only status for the September23 changes above. Physical iPhone temperature remains unmeasured.
+
+
+September23 story Done-button correction (local, not deployed): removed the story player's `immediate` bypass so its existing shared button fades the label, shrinks76px→44px and reveals a checkmark before the240ms navigation callback. The existing170ms mobile story exit and reduced-motion immediate close remain. No new loop, assets or rendering changes. Targeted browser checks passed at390px and1440px (width44.48px and checkmark opacity0.71 at190ms; story still mounted), then successful dismissal and immediate reduced-motion dismissal. Typecheck passed.
+
+
+September23 procedural articulation (local, not deployed): direction-aware retreat braking and foot anchors, wider recovery steps, knee-pole locomotion IK, grounded sole preservation, airborne ankle detail, shoulder/pelvis motion and articulated wrists/forearms. Defensive support-centre balance uses bounded pendulum-inspired correction with an exact damped spring; free-leg reach has exponential soft saturation. Implementation, sources, rejected unrestricted balance experiment and costs are in [the articulation report](body-movement-articulation-2026-09-23.md). Existing live22-player batching remains10 batches; response/reference storage rises400 bytes/rig to1168 bytes. Previously merged unbatched rigs can gain two separate hand draws. Desktop-only22-rig pose benchmark median0.440ms/p950.470ms excludes rendering and does not prove phone cooling. Body/contact/seam/profile/batching/ride tests,30/60/120Hz retreat fixtures, all-format live browser checks and desktop technique views pass.
+
+Story Done correction validation is complete: all44 story views, four-viewport lifecycle and all22 stories' seam/draw review pass. No story scene/cue edits. Still local since the last deployment.
+
+Final articulation validation: phone-width movement contact sheet passes; production build passes (home479kB / first load567kB), typecheck and diff whitespace check pass. No deployment performed for this pass.
+
+
+### September 23 — first biomechanics study milestone
+
+The current-rig study now has eight reproducible six-second sequences, a 192-case mirrored/profile/frame-rate audit, stored baseline/refined reports, and an isolated `/motion-lab` review route. Three sequence findings were fixed: stationary post-kick support-foot release, abrupt brake-loading pitch (now an exact critically damped response), and overextended retreat-to-chase stance release. Synthetic peak post-kick recovery displacement decreased from20.82cm to5.60cm for passing and4.20cm for shooting; this low-height ankle proxy includes lift-off and landing, not just planted-foot sliding. Remaining goalkeeper shuffle/startup flags need contact-state and visual assessment. See [study protocol and results](body-mechanics/biomechanics-study-2026-09-23.md).
+
+Runtime delta for this milestone is16bytes/rig (1184bytes response/reference storage), with no added gameplay meshes, raycasts or animation loops. The lab reuses one renderer, pauses on backgrounding, renders only on demand while paused, and releases GPU resources on unmount. It is separate from full-game performance measurement.
+
+Validation: typecheck, diff whitespace check, 192-case regression, body mechanics/fluidity/batching, field contacts/dribbling, 918 teaching beats/217 passes, and ride poses pass. Lab browser checks pass at390px and1440px: playback, pause, all eight sequences, scrub endpoints, single canvas, and diagnostic export. Production build passes; home first load568kB, lab260kB. Shared chunk redistribution makes the home route-size column incomparable to the previous build, so use total first-load size. A CSS alignment compatibility warning was corrected before preview deployment. Physical iPhone review, thermal observations and reference-footage curve comparison have not been performed; this is the first milestone, not a completed2–4week study. Production remains on the preceding release; preview status follows.
+
+
+Preview verification: deployment `dpl_8HoSCeSjpPuFctzoCvsVXNFwA9rs` is READY at https://futbol-island-7jkjkefhd-khoa0aohk.vercel.app/motion-lab. Vercel build passed without the corrected CSS warning (home569kB first load; lab261kB). The preview retains existing Vercel sign-in protection; unauthenticated requests redirect to sign-in. Production at futbolisland.app was not changed. Physical-phone testing remains outstanding.
+
+Authenticated preview verification returned HTTP200 and the expected movement-review controls.
+
+
+### September 23 — support-contact refinement (second milestone)
+
+The remaining shuffle/startup flags exposed two constraints: a slow gait could retain a stance beyond physical reach while waiting for the opposite boot, and a fixed0.3m lateral limit clipped a reachable wide shuffle. Exhausted gait stance now uses the existing lifted release regardless of speed; shuffle lateral room blends0.3→0.5m, still bounded by actual leg reach. No new meshes, loops, raycasts, buffers or production diagnostics.
+
+The audit now instruments its in-memory rig module to distinguish consecutive fully locked samples with unchanged support anchors from lift-off, replant and striking frames. Across the same192 cases, peak actual locked-support drift for shuffle falls6.85cm→numerical noise; start-stop5.82cm→numerical noise. All six locomotion sequences pass a1mm locked-drift ceiling. This does not mean all contact motion is perfect: receive/pass still has up to5.1mm locked drift, and low airborne/landing shuffle steps still reach11.51cm at30Hz. The longest both-ankles-above10cm interval for shuffle remains0.142s across the matrix; one forward-profile60Hz case increases by0.033s. This is a clearance proxy, not proof of ground reaction forces or absence of hopping. Reports: `docs/body-mechanics/study-results/support-{baseline,refined}-2026-09-23.json`.
+
+Validation:192-case motion regression, body mechanics, retreat balance, fluidity, strike contact (96plus72extended cases),208range branches, seams, field contact/dribbling, batching and ride poses pass. Typecheck passes. Movement-lab390/1440browser checks pass. Physical-phone testing remains outstanding. Preview/build status follows.
+
+Second-milestone local production build passes (home568kB / lab260kB first load). The12-frame goalkeeper shuffle contact sheet was visually inspected after correcting the capture harness to use compositor screenshots; no blank capture frames remain. This inspection covers sampled frames, not a physical-phone or motion-capture validation.
+
+Second-milestone preview `dpl_7FGQtbcikcFztWUxRt1RfDCcr5X3` is READY at https://futbol-island-juefrrm5r-khoa0aohk.vercel.app/motion-lab. Vercel build passes (home569kB / lab261kB first load), authenticated HTTP200 and expected review controls verified. Existing sign-in protection retained. Production unchanged.
+
+
+### September 23 — toe-off and trunk timing (third milestone)
+
+Gait release previously added a fixed0.02m heel clearance at its first frame. Clearance now rises from zero through a smoothstep envelope over the first15% of the release blend, then follows the existing decay. A broader parabolic replacement was rejected because it changed moving-kick support behavior. The failing kick regression also exposed a stale release: capturing a grounded boot as kick support did not clear its previous gait replant. The support capture now cancels that old replant and lift-off flag, keeping its world anchor authoritative.
+
+Across192synthetic sequences the largest measured first-release vertical step decreased from2.10cm to0.52cm; shuffle, acceleration and both cuts fall to numerical noise at that transition. This is a specific onset measurement, not a claim that total foot acceleration or every landing improved: peak acceleration elsewhere remains high and the shuffle's low-height swing displacement remains. A6mm regression ceiling now protects the measured onset across all profiles/rates/mirrors, alongside unchanged planted-contact and kick-support budgets.
+
+The chest counter-rotation has a0.18rad gait-phase delay relative to the hip coil (about2.9% of a cycle). It retains its amplitude and existing transition response; this is an authored timing adjustment, not a measured human constant. No extra player state, geometry, render passes or animation loops; one additional sine evaluation per posed rig.
+
+Validation so far:192-case study; body mechanics and flat soles; retreat balance;30/60/120Hz fluidity;208range branches; strike contacts; seams and moving-kick supports; field/dribble contact;918teaching beats/217passes; batching and ride poses pass. Typecheck passes. Physical-phone review and reference-footage comparison remain outstanding. Browser/build/preview details follow.
+
+Third-milestone validation:390px/1440px movement-lab checks pass, the12-frame shuffle contact sheet was inspected, and the production build passes (home568kB / lab260kB first load). Desktop-only22-rig pose benchmark median0.452ms / p950.546ms; this excludes rendering and is not a phone thermal measurement. Preview deployment pending; production unchanged.
+
+Third-milestone preview `dpl_Gg86BikZMbvo7iqvPmxUTuqxjGpt` is READY at https://futbol-island-ivltob8fp-khoa0aohk.vercel.app/motion-lab. Vercel build passed (home570kB / lab261kB first load). Authenticated HTTP200 and review controls verified; existing Vercel sign-in protection retained. Production unchanged.
+
+
+### September 23 — high-step landing timing (fourth milestone)
+
+The acceleration trace located a cut-preparation landing that brought an airborne ankle down roughly28cm in34ms. Its duration used horizontal travel only. High approaches now add0.2seconds per metre above0.18m to the existing reach time, capped at0.14s. Ordinary low plants keep their quick timing. These are tuned animation constants, not a biological landing law. Experiments extending every plant and easing yaw sooner were rejected because the existing45-degree planted-turn regression failed; its threshold was preserved.
+
+Across the192-case matrix, peak foot acceleration during90-degree cuts falls1735→1481m/s² (about15%);45-degree cuts1680→1637m/s². These discrete second differences remain high and depend on sample rate; they are artifact-screening metrics, not human forces or evidence that all landings are realistic. The maxima for low-height displacement and both-ankles-raised duration remain unchanged for these two scenario sets. The1mm locked-support and6mm release-onset budgets remain. A1550m/s² empirical90-degree-cut ceiling now guards this regression. Reports are in `study-results/landing-{before,after}-2026-09-23.json`.
+
+Reference inspection now has a reproducible offline command: `node scripts/analyze-motion-reference.cjs /tmp/fi-mocap-reference`. It verifies the existing CMU trial hashes and reuses the existing importer's skeleton parsing without rewriting game curves. For the selected0.733s run excerpt, knee-flexion ranges are0–116° left and0–105° right; the0.75s kick excerpt has33–69° left and25–84° right. These are single-clip observations under the existing120Hz/parser assumptions, not normative limits or direct calibration targets. Root-relative ankle height is explicitly not ground clearance. No new raw captures or cut/shuffle references were acquired, and no motion-reference asset was changed. Report: `study-results/reference-observations-2026-09-23.json`.
+
+Runtime delta: bounded arithmetic only when selecting a cut replant; no new rig storage, render work or background loops. Movement study, body/sole mechanics, range, seam/kick support, fluidity and strike tests pass; typecheck passes. Physical-phone review remains outstanding. Further validation/build/deployment follows.
+
+Fourth-milestone validation complete: field/dribble/teaching contact, batching and ride tests pass;390px/1440px lab playback checks pass;12cut frames visually inspected. Local production build passes (home568kB / lab260kB first load), whitespace check passes. No physical-phone or thermal results. Preview deployment pending; production unchanged.
+
+Fourth-milestone preview `dpl_HjB2LmEcXPWLWoHG184Df8U5SEQA` is READY at https://futbol-island-p400o5yqt-khoa0aohk.vercel.app/motion-lab. Vercel build passed (home570kB / lab261kB first load); authenticated HTTP200 and review controls verified. Existing sign-in protection retained. Production unchanged.
+
+
+### September 23 — swing momentum and closer dribbling (fifth milestone)
+
+Anchored replanting now uses a bounded cubic Hermite start tangent: the prior foot velocity contributes `u(1-u)^2 * duration * velocity`, decaying to zero at the fixed landing anchor. Anchored steps advance by the current timestep immediately, avoiding a one-frame freeze at handoff. Incoming velocity is capped at6×root-scale m/s; grounded and authored reset paths clear it. Existing world locks and strike targets remain authoritative. Compared with the fourth milestone's same192cases, peak shuffle acceleration falls741→526m/s² (29%); start-stop815→645m/s² (21%). Cut90 remains1481m/s². These are synthetic finite-difference measures, not measured human forces.
+
+The user's new dribbling report exposed a disconnected ball animation: live ball position previously oscillated0.85–1.15m ahead independently of the rig. Live and teaching dribbling now select/blend the visible leading boot's contact point, with a0.5×root-scale forward floor. The blend chooses an actual boot point once the feet separate enough, so touches can visibly meet the ball. This is close-control visual coupling, not newly simulated ball impulses; it does not claim physically correct free flight between every touch. Receiving/striking retain their existing contact paths. The fallback without a rig uses0.5–0.62m ahead. The old0.85m clearance tests were updated to the user's closer-control requirement; added actual-toe-distance checks pass nine speed/scale/turn trajectories.
+
+The review lab adds a ninth sequence, Close-control dribble, with the existing patterned match ball visible and rolling. The audit now covers216cases. It keeps the prior locked-support, toe-off and cut-landing budgets. No changes to teaching content or narration.
+
+Runtime costs: four persistent Vector3 objects for swing/replant velocity and two for dribble contacts (144bytes of numeric payload plus object overhead); no per-frame allocations from these changes. A visible owner now refreshes rig world matrices and transforms two ankle points for ball contact. No new main-game meshes or loops; the isolated lab adds one ball mesh/texture, disposed on exit. Desktop-only22-rig benchmark median0.461ms / p950.593ms excludes rendering and cannot establish phone heat. Body/sole,216-case study, range, seam/support, fluidity, strike, field/dribble,918teaching beats/217passes, batching and ride tests pass.390/1440lab checks pass and the dribble contact sheet was inspected. Physical-phone validation remains outstanding.
+
+
+### September 23 — island dribble and visible play expression
+
+The screenshot revealed the island walking ball still used a separate0.95m lead. `walkBall.syncDribble` now adopts the current posed rig's boot-driven contact before drawing, preserving ball-footprint floor/stair clearance; ordinary fallback lead is0.56m. A reusable player record avoids new per-frame object allocation. Live-match and teaching close control remain as in the fifth milestone. Charging/windup/shot/juggle paths are excluded from this synchronization. Ball-actions and wall-juggle regressions pass, including terrain and charging isolation.
+
+Added visible chest yaw, sway/flexion and larger shoulder yaw/elevation/abduction with independently phased elbow flexion. Extra expression fades during braking/ball actions; an initial braking-hand regression was fixed without loosening its bound. Sampled-play expression test measures21.8° hip+chest yaw proxy,9.2° chest roll,14.9° shoulder yaw and49.6° elbow excursion; seek and pause reproduce poses. These are animation settings, not physiological norms. The shirt remains one rigid mesh; a deformable lumbar/chest chain is a research recommendation, not implemented. See [upper-body research](body-mechanics/upper-body-research-2026-09-23.md) for primary biomechanics, GitHub references, math choices and dataset restrictions. In particular a universal chest-lags-hips claim is not supported by the cited running study.
+
+The changes add arithmetic and a walking-owner matrix refresh/foot transform; no new gameplay meshes or loops.216-case study, teaching-expression, body/sole, range, seams, fluidity, strike/field/dribble/teaching contact, batching and rides pass. Typecheck passed. Browser/build/preview status follows; physical iPhone heat remains unmeasured.
+
+Latest validation: actual island walking controller browser check passes (attached ball0.569m ahead, zero horizontal difference from computed boot contact in the sampled frame); articulation contact sheet inspected. Local production build passes (home568kB / lab261kB first load), typecheck and whitespace check pass. Preview pending, production unchanged.
+
+Latest preview `dpl_9juhava6TTSE9EHcN2yy76fRNnec` is READY at https://futbol-island-bx2hc76fg-khoa0aohk.vercel.app/motion-lab. Vercel build passes (home570kB / lab262kB first load), authenticated HTTP200 and dribble-review controls verified. Sign-in protection retained. Production unchanged.
+
+
+### September 23 — deformable spine and smoother close control
+
+Implemented a carrier → lumbar → chest hierarchy. Head, collar, neck and shoulders follow the chest; the waistband remains with the carrier/pelvis. The shirt now uses smooth height weights and twelve signed rotation morph samples (two joints × three axes × two directions). This is a bounded small-angle approximation to weighted skinning, not a physics simulator or learned model. Across the sampled run the upper surface follows the collar within 2.51mm. Lower-spine bend, twist and sway use gait-specific phase/amplitude factors for running, backpedalling and shuffling; the existing analytic inertial response preserves transition momentum. Reduced motion and special ride/action poses clear the additional spine expression. Existing authored strike lean and contact solvers remain authoritative. Plush costume torso shells retain their rigid carrier binding; their head/limbs follow the articulated joints.
+
+Male/female surfaces are shared and reference-counted. Standard Three.js morph targets cover individual meshes, shadows and instanced crowds. Crowd batching remains 10 batches for22 players; each actor carries its own weights, including after reorder/shrink/reappearance. Morph storage starts at32 rows and doubles when needed instead of uploading1024 unused actor rows; unchanged weights skip texture updates. A32-row texture uses1664bytes. Each shirt now has336 vertices/600 triangles versus126/200 previously; two shared sets of position/normal morph deltas total193536bytes of typed-array payload. Each rig adds two groups and36 doubles (288bytes) for transition response. No new animation loop or per-frame vertex rewriting. Desktop22-rig pose benchmark median0.545ms/p950.742ms excludes rendering and is not a phone-temperature result.
+
+Dribbling now softens the leading-foot handoff from0.16 to0.32×scale, applies a continuous forward-clearance function with a0.55×scale floor and0.025×scale lead allowance, and compresses lateral motion into a bounded0.12×scale lane. At30/60/120Hz and1.5/3/5m/s, the worst lateral handoff step is at most60.4% of the previous calculation (at least39.6% lower); observed side excursion remains below9.5cm. This is deterministic geometry-based smoothing, so seeks/pauses do not accumulate filter lag. Boot-derived centre contact stays within8cm periodically across nine scaled turning trajectories; the previous4cm exact-centre tolerance was intentionally relaxed for the narrower lane, still below half the ball radius. No free-flight ball impulse simulation is claimed.
+
+Validation: new spine deformation/hem/collar, shared disposal,70-slot growth, instanced weights and deterministic seek tests; dribble smoothness;216-case movement study; body/sole, seams/support, range, fluidity,168 strike cases, field contact,918 teaching beats/217 passes, profile/batching, rides, ball actions and wall juggling pass. The flight-reset test now compares absolute zero so equivalent IEEE-754 negative zero is accepted.390/1440 browser lab pause/seek checks pass; articulation sheet inspected; live instanced rendering has no shader/WebGL errors. Island dribble browser check passes (sample0.570m ahead, zero difference from the computed smoothed contact). Typecheck/whitespace pass. Build/preview status follows. Production unchanged; real-phone motion/heat review remains outstanding.
+
+Deformable-spine preview `dpl_2F41LCik632jyawEvgraR1sGJkWE` is READY at https://futbol-island-bp7810q6k-khoa0aohk.vercel.app/motion-lab. Local build passed (home569kB/lab262kB first load); Vercel build passed (home571kB/lab263kB). Authenticated preview response and expected review controls verified. Existing sign-in protection retained. Production unchanged.
+
+
+### September 23 — residual dribble jitter, rolling and technique refinement
+
+The prior narrow dribble lane still sampled every IK foot placement directly. Live/island rigs now critically damp the two normalized player-relative offsets once per pose (rates48 lateral /75 forward). Translation follows the player directly, so the ball does not lag behind the runner. Repeated contact reads are pure; pause holds state, reacquisition/teleport resets, and authored samplePose seeks continue to compute direct deterministic contacts. This last distinction matters: the new temporal smoothing applies to live/island movement, not history-dependent lesson scrubbing. The existing8cm periodic boot-contact bound passes unchanged after tuning the response. Across nine30/60/120Hz and1.5/3/5m/s checks, the largest filtered lateral step is at most55.8% of the prior narrow-lane target step. This is a synthetic positional metric, not proof that every perceived glitch is eliminated.
+
+The island's previous rolling expression added1.2rad/s even at rest and used player speed rather than ball displacement. Attached/charging/windup ground rotation now uses a reusable world-axis quaternion from actual rendered x/z travel divided by ball radius. Idle balls stop spinning; reversal reverses roll, and teleports/mode entry prime the history. Juggle/flight spin remains separately authored. No extra meshes or loops. Cost: four doubles (32bytes) plus one scratch Vector3 per rig, one owner matrix refresh during dribble posing instead of each contact read; the island roll helper owns two vectors and one quaternion with no per-frame allocation.
+
+Running swing recovery now advances slightly earlier through a bounded sinusoidal phase remap, while stance and swing endpoints remain fixed. Shot/loft backswing clearance increases knee folding before extension; contact atphase0.36 and its forward tangent remain unchanged. The opposite arm opens during load and returns during follow-through, with smaller amplitudes for passing. Existing pelvis/chest transfer and support-foot constraints remain in place. These are authored biomechanics-inspired refinements, not motion-capture fitting or a new physics simulation.
+
+Validation:216-case movement audit;168 strike contact cases;918 teaching beats/217 passes; range, seams, body/sole, fluidity, spine, batching and ride regressions pass. Dribble contact, repeated-read, pause, teleport, smoothing and roll tests pass; ball actions and wall juggling pass. Island browser sample is0.609m ahead with zero mismatch from the filtered contact. Running articulation and72 strike frames across front/side/rear captured; side sheet inspected and contact error below3e-14m. Typecheck/whitespace pass. No real-iPhone thermal measurement. Build/preview status follows; production unchanged.
+
+Refinement preview `dpl_7qXkFbSRrVGGk5G1DqEMgnJfsuRQ` is READY at https://futbol-island-396yskvji-khoa0aohk.vercel.app. Local build passed (home570kB/lab262kB first load), Vercel build passed (home572kB/lab263kB). Authenticated HTTP200 and movement-review content verified. Sign-in protection retained; production unchanged.
+
+
+### September 23 — strike weight transfer and recovery landing
+
+Loading now adds a bounded support-side hip shift driven by the strike load/drive envelopes (smaller for passes). Lumbar and chest yaw articulate separately through the load and follow-through; the torso's drive contribution fades before the action ends instead of remaining fully advanced into the final phase. Existing ankle targets and contactphase0.36 remain unchanged.
+
+At the end of a continuous slow/stationary kick (speed below0.8m/s), the striking foot now takes a0.18s Hermite landing step0.14m forward with a small speed-based lead. The old support foot remains held through this landing, then hands back to normal stance. This uses the existing replant solver and incoming foot velocity. A double-foot recovery hold must not be mistaken for braking: the braking branch now excludes this short recovery interval. Seeks, reduced motion, rides, a new touch and other non-football poses cancel/reset the added recovery state. Sampled teaching poses retain deterministic phase-based evaluation; the stateful extra landing is for continuous playback.
+
+Rejected experiment: forcing the extra landing while already running reduced grounded support in the moving-pass regression. Keep the running gait's existing next stride instead; the original grounded-frame requirement passes unchanged. This is a tuned animation refinement, not a force simulation.
+
+Runtime delta: one scalar recovery timer per rig plus bounded arithmetic, reusing existing foot anchors and spine response buffers. No new geometry, draw calls, raycasts, allocations per frame, or animation loops. Validation:216-case motion study;168 strike contacts;918 teaching beats/217passes; body/sole, range, seams, field contact, spine, ride/mechanics, dribble and rolling tests pass. New recovery tests cover18 profile/side/rate combinations, verify a forward grounded landing, pause during landing, seek reset, and an interrupted opposite-foot strike. Maximum sampled per-frame recovery displacement is4.82cm across30/60/120Hz; this is a regression measure, not human biomechanics data. Browser technique captures (72 frames) and mobile/desktop lab checks pass;12 final-strike/recovery frames inspected. Typecheck and whitespace pass. Build/preview status follows; production unchanged and real-phone thermal validation remains outstanding.
+
+
+### September 23 — steady dribble lane, truck ramps and field light collision
+
+Dribbling now follows a central forward lane (0.60–0.625m lead), independent of animated ankle displacement. This supersedes the earlier ankle-target spring: removed its buffer and scratch vectors, and narrowed the dribbling foot lane by0.055m so the boot approaches the ball. Existing8cm contact regression still passes;18 straight/turn/rate cases show numerical-zero lateral offset. Browser attached ball target gap is0, forward lead0.614m. This removes gait-driven wobble without adding a second ball simulation.
+
+The desktop truck landing button is centered below the entire field banner (verified1440/1000px). Shadow normalBias increases from0.035 to0.12, retaining depth bias-0.0002, map dimensions and shadow caching. Controlled cafe comparisons removed diagonal self-shadow striping while retaining railing/furniture shadows; larger depth bias was rejected for losing detail. Normal offset may soften/detach very close contact shadows; real-phone review remains needed.
+
+Driven pickups sample both tire lanes at each axle against ground ramps. Support sets height and pitch; gravity releases the truck off the lip and returns it to the ground. Elevated roof launchers are excluded. Rider bed position uses the truck's full rotation and translation, and the rider inherits pitch/roll without interpolation lag. Added bounded ramp samples for driven/rejoining trucks only, no raycasts, geometry, lights or extra loop. Existing traffic and personal-ride behavior tests pass, including ten-minute traffic flow; new ramp tests cover30/60/120Hz, orientations, stationary support, reverse, pause, takeoff and landing. Browser verified0.675m support,-0.221rad tilt and exact rider/bed alignment; screenshot inspected.
+
+All20 field floodlight pedestals now have0.75m collision bodies sourced from the same layout as their rendering. Ground poles enter the existing obstacle grid; futsal and knockout roof poles enter height-filtered roof obstacles so they do not block streets underneath. No new rendering work; only20 static grid entries at construction. Collision tests cover240 walking/bike/moped approaches and roof separation. These changes preserve exploration access to football activities. Desktop validation does not establish lower phone temperatures. Build/preview status follows; production unchanged.
+
+Validation complete: typecheck, whitespace and local production build passed (home570kB first load). Preview dpl_5C2qBwypbq4ZkZv1sGsekofTb7ZD is READY at https://futbol-island-davf44obk-khoa0aohk.vercel.app; Vercel build passed (home573kB). Production unchanged; preview sign-in protection retained.
+
+September23 follow-up on the remaining diagonal roof line: reproduced the stripe/diagonal boundary with normalBias0.035 on the lower cafe terrace, then compared0.12 and disabled receiving shadows at the same camera/scene state. Current0.12 removes the roof artifact in the inspected desktop lower/upper terrace views and390px touch viewport; furniture/rail shadows remain. No further rendering changes made. This is local browser visual evidence for the settings already shipped to preview dpl_5C2qBwypbq4ZkZv1sGsekofTb7ZD, not confirmation of the user screenshot’s deployment or all camera angles. Public production still lacks the preview adjustment.
+
+Production deployment September23: dpl_6oHyck2isnuYx7cZw8NxTwuPV2QR is READY and aliased to https://futbolisland.app. Vercel production build and type checks passed; public homepage verified HTTP200. Build reports629kB home first-load JS for the current workspace release. This supersedes the previous preview-only status.
+
+## Card binder page turn and card lift — September 24, 2026 (local, not deployed)
+
+- **Page turn (components/BinderLeaf.tsx, CardCollection.tsx):**
+  - Each strip's shade and gloss, and the cast shadow under the page, now sit on their own compositor layers. Before this, changing their opacity every frame repainted every strip, and the GPU became the bottleneck: 21 frames drawn in 1.3 s on desktop.
+  - The gloss no longer uses `mix-blend-mode`.
+  - Strip copies only render the pockets they show, and are inert.
+  - The strip count is lower: 5 on the spread and 4 on phone, down from 7 and 5.
+  - The turn clock starts on the first rAF, so the mount frame no longer skips motion.
+- **Card lift:** the viewer card is eagerly loaded when the binder opens, not lazy. The flight is one FLIP transform on a composited layer, measured once. The binder no longer re-renders while the card flies back.
+- **Measurements** (headless Chrome, 2× scale, dev build; median / p95 / max frame ms):
+
+  | | Before | After |
+  |---|---|---|
+  | Desktop turn | 49.9 / 100 / 117 | 16.7 / 16.8 / 50 |
+  | Phone turn | 16.7 / 50 / 67 | 16.7 / 16.7 / 16.8 |
+  | Lift | 16.7 / 16.8 / 34 | 16.7 / 16.8 / 34–50 |
+
+  The lift had been stable already. What changed is that it no longer has hidden, doubled or popping frames.
+- **Remaining:** one frame of about 50 ms while the sheets mount at the start of a desktop turn. This was fixed by the prebuilt turn below.
+- **Prebuilt next turn (follow-up, same day):**
+  - **What gets prebuilt:** the binder builds the one likely next turn ahead of time. That is the turning sheets, the page they uncover, and the page-turn shadows.
+  - **Triggers:**
+    - In idle time after each turn lands.
+    - When hover or keyboard focus reaches a page arrow.
+    - When a finger lands on a page in the two-page view.
+  - **How it stays hidden:** the prebuilt turn sits at opacity .001. It is marked `data-prep` and `aria-hidden`.
+  - **At turn start:** only these pieces are made visible, with the same React keys, so nothing mounts. The resting pages switch after the sheet has landed.
+  - **The `:has()` cost:** mounting the shadows at turn start used to restyle about 2,400–3,800 elements because of the dialog's `:has()` rules, taking 10–45 ms. That now happens during the prebuild, and the restyle at turn start is about 1 ms.
+  - **Mini cards** now skip re-rendering when nothing about them changed.
+  - **Limits:** at most one prebuilt turn exists, and it is dropped when the page, binder, viewport or layout changes. It is built in small interruptible slices, so nothing runs at rest.
+  - **Cost:** a few MB of GPU memory for the hidden sheet and the page copy.
+- **First frames of a turn** (dev server, heavily loaded machine, so treat as relative):
+  - Desktop: 67–217 ms before, now 17 ms when prebuilt and 33–67 ms when the turn wasn't predicted (e.g. ← key).
+  - Phone emulation (390×844, 4× CPU throttle): 283–417 ms before, now 17–33 ms.
+  - Long frames of 50–83 ms remain about 1 s into a desktop turn, after the sheet has landed. They come from the page swap and from building the next prebuilt turn, and they are not visible as stutter.
+  - As above, these are not iPhone thermal measurements.
+- **Scripts:** the benchmark scripts are in the session scratchpad: bench.mjs, liftprobe.mjs, trace.mjs.
+- **Not a thermal claim:** these are desktop numbers, not iPhone measurements, so they don't show lower phone temperature.
+
+## Cards, binder and films runtime audit — September 24, 2026 (local, not deployed)
+
+**Method.** Local production builds (`next build` + `next start` on :8093), headless Chrome 152. Desktop at 1280×800 DPR 2. Phone emulation at 390×844 DPR 3 with touch, 4× CDP CPU throttle and a throttled network. The work counts come from CDP `Performance.getMetrics` (task, style, layout) and trace events: `Display::DrawAndSwap` for compositor frames and `FinishPaintRenderPass` for GPU render-pass time. `window.__fi2.renderStats` shows whether the island renders.
+
+The machine was heavily loaded during the runs, from other agents and the Kokoro re-voicing (load average 6–22). Absolute timings are therefore noisy. The reliable evidence is the work counts and the A/B toggles made in the same session. Scripts are in the session scratchpad under `perf/`: `audit.mjs`, `gpuprobe.mjs`, `cardidle.mjs`, `sceneshot.mjs` and `binderopen.mjs`.
+
+This section covers desktop and emulation numbers only. It makes no iPhone temperature claim.
+
+**What was fine.**
+- **Films are code-split.** Each of the 308 films is its own lazy chunk, and no film chunk loads with the island.
+- **The film player stops cleanly.** On stop, close and tab hide it leaves no canvas and no rAF, and it pauses and releases its audio (src removed, `readyState` 0).
+- **Nothing leaks.** Memory was checked across 10 card open/close cycles and 20 page turns:
+  - Heap: 98.6 → 99.0 MB.
+  - DOM nodes: 3008 → 3020.
+  - Listeners: 651 → 651.
+  - Live audio nodes: 4 → 4.
+- **The binder is quiet at rest:** 0 running animations and 0 paints.
+- **MiniCard masks are sized right.** They are 320×400 webp, which suits the pockets. The binder opening decodes 32 images in 13–39 ms.
+- **Tilt and foil do no work at rest.**
+
+**Changes.**
+1. **The island loop sleeps behind menus** (`components/Town.tsx`, `wakeLoop`).
+   - Paused menus already skipped rendering, but the rAF chain kept firing at 60/s. That forced a main-thread frame every tick, and every running CSS animation above the island restyled on each one, composited or not.
+   - The loop now stops requesting frames after its frozen frame. Any Town render (menu open or close, appearance, time of day) and any resize wake it.
+   - Result, binder open and idle: app rAF went from 60/s to 0/s, and main-thread time from 2.6–3% to 0.1–0.3% on desktop. The island still rendered 0 frames behind Paths, the binder and the card.
+   - The lighting-idle test passes.
+2. **Card live scenery is composited** (`components/PlayerArt.tsx` `LiveScenery`, `PlayerArt.module.css`).
+   - Before, 22 CSS animations ran on SVG children, and each one restyled, laid out and repainted the scene every frame. Chrome never composites animations on SVG elements.
+   - Each moving shape is now a small HTML box holding its own `<svg>`, on a 240-unit stage scaled like the `slice` viewBox. The scale is measured only on resize.
+   - Transform origins are set inline in px, replacing `transform-box: fill-box`.
+   - The short alternate loops are folded into long iterations with identical per-half easing: wings 10 flaps per 8.4 s, flag 5 ripples per 11 s. A composited animation still wakes the main thread at every iteration.
+   - Card open at rest, same session, scenery running vs paused:
+
+     | | Before | After |
+     |---|---|---|
+     | Desktop main thread | 14.4% (paused 3.3%) | 0.6% |
+     | Phone 4× main thread | 25.1% (paused 15.5%) | 1.7% |
+     | Layouts in 4 s | 240 | 0 |
+
+   - Parity: frozen frames of 7 players × 2 times × 2 viewports differ by at most 0.47% of pixels, all anti-aliasing. After the keyframe folding, the frames are byte-identical.
+3. **The live scenery rests** (lead's request after a real-device warmth report).
+   - The scenery moves for 6 s after the card appears and after any interaction on the page (pointer, wheel, key, focus). It then freezes on its current frame: class `paused`, `data-scenery="rest"`.
+   - To wake it without an input event (for example spin momentum), call `window.dispatchEvent(new Event('fi-scenery-wake'))`. The event name is exported as `SCENERY_WAKE_EVENT` from `components/PlayerArt.tsx`.
+   - With reduced motion it stays still, as before.
+   - Phone 4×: 60.3 compositor frames/s and 151 ms of GPU passes per 3 s while awake, then **0 frames/s and 0 ms at rest**.
+4. **Backdrop blurs are removed.**
+   - The card viewer's `blur(13px) saturate(1.1)` is replaced by the existing flat `#183b34d9` scrim.
+   - The IslandSettings `fullModal` `::backdrop` `blur(3px)` is dropped after its 140 ms entry. The panel is opaque and full-screen, so that blur was never visible, but it was recomputed on every frame.
+   - Same-session A/B (phone 4×, card open, scenery running), GPU render-pass time per 3 s:
+
+     | Blurs | GPU time |
+     |---|---|
+     | Both | 260 ms |
+     | No viewer blur | 187 ms |
+     | No `::backdrop` blur | 206 ms |
+     | Neither | 128 ms |
+
+5. **CardFilmPlayer uses the story player's budget.**
+   - 24 fps drawing, which is 20 fps effective on a 60 Hz display.
+   - Canvas DPR 1.5, down from 2. At 390 px the canvas went from 646×824 to 426×530. Part of that is a card-size change made in parallel.
+   - It skips redrawing an unchanged clock.
+   - Compositor frames during a film: about 29/s → about 18–20/s.
+   - The film is still CPU-bound in the riso engine's JS: about 5.6 ms per draw on desktop dev, mostly `athlete.ts` hull and limb drawing. At 4× it takes 75–95% of one throttled core. The engine was not changed.
+6. **The position guide loads lazily.** `Town.tsx` now loads `PositionGuide` (and with it PlayerCard, PlayerArt, the photo manifests, the film registry and the riso player) with `next/dynamic`.
+   - It prefetches on idle 6 s after the island is ready and then mounts closed.
+   - The `CardCollection` chunk is prefetched when Paths opens.
+   - Home first-load JS: 632 → 571 kB. Page chunk: 1164 → 903 KB raw.
+   - The binder then opens in about 320 ms from click to pockets in the DOM, most of it the existing Paths navigation delay.
+   - First guide tap: an interleaved A/B against a static-import build measured median ~0.63 s static vs ~0.82 s lazy, before the warm mount was added. That time is dominated by the existing pointerdown handler and the React render.
+
+**Left for later.**
+- The film engine's per-frame JS cost.
+- Page-turn frames under load: phone max 50–83 ms, 1–3 frames over 34 ms. The same as before within the noise.
+- Search: 30–60 ms per key on desktop, 50–200 ms at 4× for the first letters (40 thumbnails).
+- `tests/card-collection.cjs` and `tests/iconic-play-ui.cjs` fail on other agents' recent UI changes: the hidden "Flip card" button, and Donnarumma now having a film. They are not caused by this pass.
+
+**Follow-up: the Paths landing art** (`components/JourneyArrivalArt.tsx`, `IslandQuests.tsx`, `IslandJourney.module.css`, `lib/sceneryRest.ts`).
+- **Composited pieces.** The sun halo, sun core, ball pattern and flag each moved into its own HTML layer, holding a full-art `<svg>` with the same viewBox as the static art. The browser snaps each layer to exactly the pixels the single SVG used.
+  - An earlier try with small per-piece boxes was off by up to about 0.4 CSS px at fractional positions, because the SVG root rects are pixel-snapped. It was rejected.
+  - Transform origins are set in px on resize only.
+- **Rest after 6 s.** The art uses the same 6 s rest as the card scenery: the shared `useSceneryRest` hook and the `fi-scenery-wake` event.
+  - The Paths header badge's `background-color` cycle is not composited, so it repainted every frame. It now rests with the art: `dialog:has([data-scenery=rest])`.
+  - The covered field-lesson prompt's box-shadow pulse now pauses behind any open dialog.
+  - With reduced motion the art is still, and screenshots match the old art exactly (max pixel difference 1).
+- **Parity.** Frames frozen at 0, 1.3, 3.1 and 5.2 s, at 1280×800, 390×844 and 844×390: at most 0.75% of pixels change by more than 24/255, mean difference 0.11–0.56, max 98. All of it is anti-aliasing at edges.
+- **A/B** of two prod builds, identical except for this change (phone 4×; the machine was heavily loaded):
+
+  | | Before | After |
+  |---|---|---|
+  | Paths open, first 3 s | 9–24 layouts, 19–57 ms paint | 0 layouts, 0 paint |
+  | Paths at rest, 7–10 s | still about 61 compositor frames/s and 181–196 ms of GPU passes per 3 s | **0 frames/s and 0 ms** |
+
+- **Correction to the earlier "about 30%" figure.** It was measured while the island's idle rAF chain still forced main-thread frames. With the Town loop sleeping (change 1 above), the art's own main-thread cost was layouts and paints every few frames, plus continuous compositor and GPU work. The rest removes the compositor and GPU work.
+
+
+## Player card back, hover tilt, flip sparks — September 24, 2026 (local, not deployed)
+
+- **Back:** one flat card-stock face (same grain, trim and shadow as the front) with Strengths / Top Plays / History tabs. History (`lib/town/playerCareers`) and the Play Moment list (`iconicPlays.json`, ~90 kB) are dynamic imports loaded only when their tab shows on the back. Highlight clips (`components/CardHighlights.tsx`) fetch only while the Top Plays tab is showing; thumbnails are 80 px `mqdefault` with `loading=lazy decoding=async`; one iframe at a time (`fi2-video-play`), removed on tab change, turning the card or a hidden page. The old strengths/highlights sheets were removed.
+- **Hover tilt (mouse only, `(hover: hover) and (pointer: fine)`):** ±14° X / ±18° Y through a critically damped spring written to `.flip` once per frame. The rAF loop runs only while the spring moves and sleeps as soon as it catches up, even with the pointer resting on the card. Leaving is judged against the card's flat box, via a document `pointermove` listener attached only while hovering. Touch and pen never tilt. Perspective is now 1400 px, so a tilted card stays on screen at 1280×800.
+- **Flip:** always the CSS transition between the two faces, so it can't stop edge-on. The card is 4–6 px thick: 3 rim slices and 4 side strips, static preserve-3d layers. About 16 tiny sparks ride the leading edge inside the turning element for about 0.4 s each and unmount afterwards. They don't run with reduced motion. The drag and flick spin was removed at the user's request.
+- **Measured** in headless Chrome at 2× (median / p95 / max frame ms): hover sweep 16.7 / 16.7 / 16.8; top-bar flip 16.7 / 16.8 / 16.8–33. There were 0 rAF calls in the second after rest, both while hovering still and after leaving, and 0 on the phone at rest.
+- **Not a thermal claim:** these are desktop numbers, not iPhone measurements.
+
+## Card flip turn light, viewer bar presses — September 24, 2026 (local, not deployed)
+
+- **Flip particles removed.** After several rounds, the user rejected the edge sparks and trail streaks. Their DOM, CSS and notes are gone.
+- **Turn light replaces them** (`PlayerCard.tsx` `TurnLight`, `LIFT`; `.turnLight`/`.catchLight` in `PlayerCard.module.css`). The flip curve puts the card edge-on at about 90 ms, so the turn is split there.
+  - **Glare sweep:** a diagonal glare band crosses the face turning away (0–95 ms), getting brighter toward edge-on. The face turning in then carries it across and fades it (80–500 ms). The band follows the turn direction.
+  - **Shade:** the leaving face darkens as it turns away, and the arriving face clears.
+  - **Catch light:** two strips on the card's side thickness flash cream/gold around edge-on (0.3 s).
+  - **Lift:** the card scales to 1.04 and lifts 4 px through the turn, then settles with a small overshoot. The ground shadow widens and softens while the card is up. This is done with Web Animations on the individual `scale`/`translate` properties, so it composes with the CSS transform and hover tilt.
+- **Cost:** per flip, 6 small layers (2 per face plus 2 edge strips) and 2 Web Animations. Only transform and opacity change, with no filter. The layers unmount when the incoming sweep ends (about 0.5 s), and the Web Animations finish at 0.7 s. Nothing runs at rest; checked with 0 turn-light nodes after the flip.
+- **Reduced motion:** a plain instant flip. No layers mount and there is no lift.
+- **Viewer bar.**
+  - Done now uses the shared NavigationButton collapse: a 240 ms shrink to the round check, then it fades with the closing viewer. It was `immediate` before, and it is keyed on the lift phase so a tap during the lift can't stick.
+  - Flip and Play get the paper-pill hover (−2 px, 7 px drop, `hover:hover` only) and press (+3 px, 2 px drop). These are `translate`/`box-shadow` transitions of 0.16 s, and there are none with reduced motion.
+- **Checks.** Paused mid-flip frames at 390×844 and 1280×800 (every animation paused at 40/90/160/260 ms, both directions) show the sweep, shade, catch light and lift. `tsc`, `npm test` and `tests/iconic-play-ui.cjs` pass. No phone thermal claim.
+
+## "Pick a card" deck, reveal and covered scenery — September 24, 2026 (local, not deployed)
+
+- **What still ran behind the offer.** Headless Chrome at 390×844, sampled for 3 s with the dialog open (`document.getAnimations()`, wrapped `requestAnimationFrame`/`setTimeout`, `renderStats.rendered`):
+  - **Ball offer (island behind):** already quiet. The island loop sleeps through `cardOfferOpen` in `settingsRef` (+0 frames), and there were no rAF callbacks, no timers and no CSS loops outside the dialog. Browsing cards, the film and the reveal also added +0 island frames.
+  - **Offer over Paths (Journey stage, story or quiz end):** 5 infinite CSS loops kept running behind the dialog: the Paths landing art (`sunGlow`, `sunPulse`, `ballRoll`, `flagFlap`) and the IslandBottle badge colour cycle (a background-colour repaint). The cause was that `useSceneryRest` woke on any pointer, key or `focusin` on the page, including the dialog's own focus and every tap and arrow press inside it.
+  - **Fix (`lib/sceneryRest.ts`, one guard).** If the event's target (or, for the window wake event, the focused element) is inside a modal `<dialog>` that doesn't contain the art, the art rests at once and the event doesn't wake it. After the fix there are 0 loops behind the offer, including after arrow keys, arrow taps and pointer moves, and the art wakes normally when the offer closes and focus returns to Paths.
+  - **Music keeps playing** under the offer. This is the app's existing modal behaviour: music ducks only for the field catalog, lessons, the bottle and video. Island sound effects start 0 sources while the offer is open.
+- **The dialog's own cost.**
+  - Static MiniCards on the flat scrim.
+  - Changing the front card is one 0.3 s transform transition. Stacking and the dim filter switch in one step mid-move, so nothing else animates.
+  - Choosing fades the other cards once (0.24 s), and the spin is one WAAPI transform animation on PlayerCard's `.flip` (0.85 s).
+  - The revealed PlayerCard's looping scenery is paused by the offer's CSS, so the dialog has no endless animation. Its film, hover tilt and foil turn behave as in the binder.
+  - PlayerCard's chunk is imported only once an offer is open.
+  - There are no animations with reduced motion.
+- **Checks:** `scratchpad/pickcard/ui.mjs` at 390×844, 375×667, 1280×800 and reduced motion, plus `bg-probe.mjs` for the ball and Paths cases. No phone thermal claim.
+
+## New cards, binder and quiz features: second runtime round — September 24, 2026 evening (local, not deployed)
+
+**Method.**
+- **Build:** a local production build (`next build`, then `next start` on :8093) of a snapshot of `app/`, `components/` and `lib/` copied to the session scratchpad. `public/` and `node_modules` were symlinked. The snapshot kept the build stable while other agents edited files. It was rebuilt once at 17:04 to pick up the bug sweep's later edits: the ghost card's `pointer-events`, the choice `:disabled` colours, and the scroll into view after an answer.
+- **One test-only patch.** `cardDevEarn()` ignores `?cards=earn` in production builds, so the snapshot dropped its `NODE_ENV` guard. Without that, the offer and the greyed cards can't be reached. The repository is unchanged.
+- **Emulation:** headless Chrome 152.
+  - Phone: 390×844, DPR 3, touch, 4× CDP CPU throttle.
+  - Desktop: 1280×800, DPR 2.
+- **What was recorded:**
+  - Frame times: rAF deltas, given as median / p95 / max in ms.
+  - Long tasks.
+  - Trace sums: `Paint`, `RasterTask`, `Layerize`, `UpdateLayoutTree`, and GPU `FinishPaintRenderPass` for render-pass time.
+  - `window.__fi2.renderStats.rendered`.
+  - Running `document.getAnimations()`.
+  - Wrapped rAF, timeouts and intervals.
+  - Heap after forced GC, DOM nodes and listeners.
+- **Machine load** was 1.6–3 for the numbers below. An earlier pass at load 8–11 produced 50–300 ms long tasks on the phone profile in every feature, and none of them reproduced at low load.
+- **Scripts:** in the session scratchpad under `perf2/`: `offer.mjs`, `binder.mjs`, `ghostab.mjs`, `cardflip.mjs`, `quiz.mjs`, `quizdrag.mjs`, `quizrest.mjs`, `gap.mjs` and `backturn3.mjs`, with shared code in `lib.mjs`.
+- **Not a thermal claim:** these are emulation numbers, not iPhone temperature measurements.
+
+**Results** (phone 4× unless noted; frames are median / p95 / max ms):
+
+| Feature | Measurement |
+|---|---|
+| Pick a card: browse (2 arrows, ← key, swipe, 2 arrows) | 16.7 / 16.7 / 16.8, 0 long tasks. Desktop the same. |
+| Pick a card: choose + 0.85 s spin | 16.7 / 16.8 / 16.8. Worst over 4 offers: 33.2. |
+| Pick a card: flip + flip back in the reveal | 16.7 / 16.7 / 16.8, 0 turn-light nodes afterwards. |
+| Pick a card: film, 4 s | 16.7 / 16.7 / 16.8. Worst over 4 offers: 33.4. |
+| Island while an offer is open | +0 rendered frames in each of 4 offers. |
+| Offer or reveal at rest | 0 running animations, 0 rAF, 0 timers, 0–0.2% main thread, 0 compositor frames. |
+| Memory after closing offers | DOM nodes 1929 → 1929 and listeners 498 → 498 over 4 offers. Heap +2.4 MB after the first offer (PlayerCard and film chunks), then about +1.4 MB per new card's film module. The same offer 7 times levels off (99.2 → 100.3 MB), so nothing leaks. |
+| Binder turns, greyed (all 36 pockets filtered) vs full collection | Forward 16.7 / 16.8 / 50 vs 16.7 / 16.8 / 33.4. Back 16.7 / 16.8 / 33.4 vs the same. Paint 175 / 274 vs 182 / 278 ms, raster 11.8 / 10.5 vs 12.2 / 10.5 ms, GPU 29.5 / 29.3 vs 30.1 / 28.3 ms per 4 turns. |
+| Same-session A/B per turn: shipped / no `grayscale` / no filter and no opacity | Phone: main 255 / 253 / 256 ms, paint 55 / 55 / 55, raster 2.5 / 2.3 / 2.3, GPU 7.1 / 7.2 / 7.5. Desktop: main 232 / 238 / 220 ms, raster 7.6 / 6.8 / 8.7. |
+| Card lift, grey viewer vs collected | 16.7 / 16.8 / 50 for both, with one 62–64 ms task at 4× (PlayerCard mount). Lift out 16.7 / 16.7 / 16.8. |
+| Grey viewer | GPU 32 ms per 3 s while the scenery is awake (collected card: 27). At rest (7–10 s): 0 frames, 0 rAF. Filter on vs off, same session: 102 vs 100 ms phone, 170 vs 173 ms desktop. |
+| Foil turn, 6 flips in the binder viewer | 16.7 / 16.8 / 16.8, 0 long tasks, desktop the same. 0 turn-light layers afterwards, and 0 animations, rAF or timers at rest. |
+| Visual quiz, 16 answers over 2 rounds (wrong + Try again on each lesson's first question) | 16.7 / 16.8 / 150. The 3 frames over 34 ms all fell on the first lesson's first answers (first loads). Round 1 → 2: DOM nodes 2343 → 2343, listeners 563 → 563, heap 96.4 → 96.9 MB. |
+| Visual quiz: drag the token, 30 touch moves | 16.7 / 16.8 / 16.8. The first touch costs one 108 ms task at 4×. |
+| Island after closing each feature | Back to its baseline: one rAF chain (the island loop, 30 rendered frames/s on phone), the same 7 infinite HUD animations as before opening, 0 timers and 0 intervals. |
+
+**Conclusions.**
+- **No regressions in the new features, so no code was changed.**
+- **The grey pockets cost nothing measurable during turns.**
+  - Removing `filter:grayscale(1)`, or both the filter and the opacity, changed per-turn main-thread, paint, raster and GPU time only within noise, on phone and desktop.
+  - Chrome rasterizes the filtered pockets once, when the page and the prebuilt turn are painted. After that the turn only moves layers.
+  - The cheaper alternatives (desaturating the art once, a layer per page, or dropping the filter on strip copies) would save nothing, so the look stays as it is.
+
+**Left over (not fixed).**
+- **Desktop back turns.** Consecutive back turns (for example pages 8 → 6 → 4 → 2) show one frame of 67–117 ms about 170–220 ms into the turn. It happens with the full collection too.
+  - Traces show the GPU thread's `SwapBuffers` waiting 83–113 ms (`WaitForCommandsToBeScheduled`), with no main-thread task.
+  - Forward turns and alternating next/prev turns don't show it. Phone emulation doesn't show it either.
+  - It is desktop Chrome GPU scheduling of the newly shown sheet, and it says nothing about WebKit on iPhone.
+  - To reproduce: `gap.mjs` with `SEQ=1`.
+- **After a turn lands.** Frames of 50–83 ms about 1.0–1.2 s after a desktop turn starts. These are the page swap plus the next prebuild, as noted earlier, and nothing is moving at that point.
+- **Quiz questions.** While any quiz question waits for an answer, the island still renders 30 frames/s of a static scene: at most 120 px changed in 6 s, and 9% main thread at 4×.
+  - This is the existing field-lesson loop, not something the visual questions added.
+  - Sleeping it while a visual (SVG) question waits is the next heat saving worth trying. It needs a Town loop change that keeps the post-answer replay and the 3D tap questions working. (Done: see "Quiz questions sleep the 3D loop while waiting" below.)
+
+## Quiz questions sleep the 3D loop while waiting — September 24, 2026 late (local, not deployed)
+
+**What changed.** While a lesson quiz question waits for an answer, `Town.tsx`'s `animate()` now uses the same sleep path as the menus (`paused` / `idleSince` / `loopSleeping` / `wakeLoop`). No new loop was added.
+- **Condition.** The loop sleeps when `fieldSession.current.quiz` is set and `answer === null`. This covers visual (SVG) questions and the 3D "tap the pitch" (`interact`) questions.
+- **When it sleeps.** It waits until the camera has stopped moving and 1.2 s have passed. The camera counts as moving if its position, rotation or zoom changed in the last rendered frame. The 1.2 s lets the players' poses finish blending after a launch; with 0.5 s the first settled frame differed from a fresh render by about 200–460 px on the players' limbs.
+- **What resets the settle timer.**
+  - A change of lesson, question or camera angle.
+  - A resize or orientation change (the existing `resizeRevision`).
+  - A gesture on the canvas. `pointerdown`, a `pointermove` with a button held, `wheel`, `touchstart` and `touchmove` bump `quizInput` and call `wakeLoop()`.
+- **Waking from the quiz UI.** `FieldLearning` takes a new `onWake` prop and calls it after every render, the same pattern Town uses. An answer (SVG, keyboard or pitch tap), Try again, Next question, the camera button, Back and Done all re-render it, so the loop wakes. A wake with nothing changed goes straight back to sleep without rendering.
+- **After an answer.** `answer !== null`, so the loop runs as before: `feedback.highlight`, the "Show me" / autoplay `QuizReplay` and the camera move to the feedback shot all animate.
+- **Taps and hovers on 3D questions.** A tap works while the loop is asleep. The camera keeps the pose of the last rendered frame, so `games.pickQuiz` hits what the child sees, and the tap's `pointerdown` wakes the loop anyway. Hover has no 3D effect in a quiz: live-player inspection is off during a field session, and the quiz choices have no hover highlight. That is why a mouse move without a button held doesn't wake the loop.
+
+**Render counts** (dev server :8092, phone 390×844 DPR 3 touch with 4× CPU throttle, `perf2/quizrest.mjs`, load 1.7–2.6; `window.__fi2.renderStats.rendered` over 3 s, measured 4 s after launch):
+
+| State | Before | After |
+|---|---|---|
+| Island idle (reference) | 91 | 91 |
+| Visual question waiting (`learnf_roles31` q4, trueFalse) | 90 frames, 9.3% main thread, GPU 1.8 ms | 0 frames, 0% main thread, 0 swaps |
+| 3D tap question waiting (`learnf_roles31` q1) | 90 frames, 9.5% main thread | 0 frames, 0% main thread, 0 swaps |
+
+The loop keeps rendering for about 3–5 s after a question appears while the camera settles, then renders nothing until the child acts. On desktop (1280×800) it renders at 60 fps during that settle, then 0.
+
+**Checks** (`perf2/quizsleep.mjs m|d`, all pass on phone and desktop):
+- A visual question stops increasing `rendered` once settled.
+- The camera button, a rotate to landscape and back, Try again and Next question each wake the loop, animate, and settle back to sleep.
+- A wrong answer wakes the loop.
+- A right answer shows its highlight.
+- Back to live game returns to the full rate.
+- On a 3D question the loop sleeps; a drag rotates the view from sleep; tapping a wrong option answers it; "Show me" plays the replay (`outcomeProgress` 0 → 0.26 in 1 s); Try again goes back to sleep; the right tap autoplays the replay; Next settles back to sleep.
+- **No stale frame:** after each sleep, a forced re-render (a resize event) differs from the slept frame by 0–65 px out of 2.9 M. That is anti-aliasing and shadow noise on limbs.
+- **Gates:** tsc, `npm test`, quiz-replay, quiz-outcomes, lesson-cues, lesson-presentation and visual-quiz all pass.
+
+**Tradeoffs.**
+- The small idle motion of the posed players stops while the loop sleeps. That is the "at most 120 px in 6 s" noted above, and it is the same freeze the menus use.
+- Other venues' background matches pause while the loop sleeps, as they do behind menus.
+- The answered or feedback state still renders at 30 fps (phone) until the next question or close. That is unchanged and could be a follow-up once the replay ends.
+- These are emulation render counts, not iPhone temperature measurements.

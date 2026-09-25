@@ -1,0 +1,398 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: EURO 2026",
+   "text": "The 2026 Futsal EURO quarter-final, in Riga. France play Ukraine. It is one all after forty minutes. In extra time, captain Mouhoudine scores: one, two, three goals! France win four two.",
+   "src": "/plays/narration/mouhoudine-futsal-signature/1.m4a",
+   "seconds": 14.8,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "2026",
+     "at": 0.425
+    },
+    {
+     "w": "Futsal",
+     "at": 1.363
+    },
+    {
+     "w": "EURO",
+     "at": 1.8
+    },
+    {
+     "w": "quarter-final",
+     "at": 2.163
+    },
+    {
+     "w": "in",
+     "at": 2.925
+    },
+    {
+     "w": "Riga",
+     "at": 3.075
+    },
+    {
+     "w": "France",
+     "at": 4.025
+    },
+    {
+     "w": "play",
+     "at": 4.412
+    },
+    {
+     "w": "Ukraine",
+     "at": 4.7
+    },
+    {
+     "w": "It",
+     "at": 5.725
+    },
+    {
+     "w": "is",
+     "at": 5.862
+    },
+    {
+     "w": "one",
+     "at": 5.975
+    },
+    {
+     "w": "all",
+     "at": 6.2
+    },
+    {
+     "w": "after",
+     "at": 6.45
+    },
+    {
+     "w": "forty",
+     "at": 6.763
+    },
+    {
+     "w": "minutes",
+     "at": 7.1
+    },
+    {
+     "w": "In",
+     "at": 8.012
+    },
+    {
+     "w": "extra",
+     "at": 8.175
+    },
+    {
+     "w": "time",
+     "at": 8.575
+    },
+    {
+     "w": "captain",
+     "at": 9.05
+    },
+    {
+     "w": "Mouhoudine",
+     "at": 9.475
+    },
+    {
+     "w": "scores",
+     "at": 9.988
+    },
+    {
+     "w": "one",
+     "at": 10.812
+    },
+    {
+     "w": "two",
+     "at": 11.213
+    },
+    {
+     "w": "three",
+     "at": 11.562
+    },
+    {
+     "w": "goals",
+     "at": 11.8
+    },
+    {
+     "w": "France",
+     "at": 12.537
+    },
+    {
+     "w": "win",
+     "at": 12.9
+    },
+    {
+     "w": "four",
+     "at": 13.162
+    },
+    {
+     "w": "two",
+     "at": 13.412
+    }
+   ]
+  },
+  {
+   "label": "How he wins the ball",
+   "text": "Mouhoudine plays at the back. This is how he wins the ball: he watches the pass. It looks past him, but he stretches his long leg, pokes it away and attacks!",
+   "src": "/plays/narration/mouhoudine-futsal-signature/2.m4a",
+   "seconds": 10.7,
+   "words": [
+    {
+     "w": "Mouhoudine",
+     "at": 0.4
+    },
+    {
+     "w": "plays",
+     "at": 0.887
+    },
+    {
+     "w": "at",
+     "at": 1.212
+    },
+    {
+     "w": "the",
+     "at": 1.288
+    },
+    {
+     "w": "back",
+     "at": 1.375
+    },
+    {
+     "w": "This",
+     "at": 2.188
+    },
+    {
+     "w": "is",
+     "at": 2.425
+    },
+    {
+     "w": "how",
+     "at": 2.55
+    },
+    {
+     "w": "he",
+     "at": 2.75
+    },
+    {
+     "w": "wins",
+     "at": 2.913
+    },
+    {
+     "w": "the",
+     "at": 3.225
+    },
+    {
+     "w": "ball",
+     "at": 3.325
+    },
+    {
+     "w": "he",
+     "at": 4.0
+    },
+    {
+     "w": "watches",
+     "at": 4.162
+    },
+    {
+     "w": "the",
+     "at": 4.6
+    },
+    {
+     "w": "pass",
+     "at": 4.713
+    },
+    {
+     "w": "It",
+     "at": 5.65
+    },
+    {
+     "w": "looks",
+     "at": 5.8
+    },
+    {
+     "w": "past",
+     "at": 6.062
+    },
+    {
+     "w": "him",
+     "at": 6.438
+    },
+    {
+     "w": "but",
+     "at": 6.688
+    },
+    {
+     "w": "he",
+     "at": 6.812
+    },
+    {
+     "w": "stretches",
+     "at": 6.925
+    },
+    {
+     "w": "his",
+     "at": 7.362
+    },
+    {
+     "w": "long",
+     "at": 7.537
+    },
+    {
+     "w": "leg",
+     "at": 7.875
+    },
+    {
+     "w": "pokes",
+     "at": 8.35
+    },
+    {
+     "w": "it",
+     "at": 8.613
+    },
+    {
+     "w": "away",
+     "at": 8.7
+    },
+    {
+     "w": "and",
+     "at": 9.075
+    },
+    {
+     "w": "attacks",
+     "at": 9.188
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Slow motion now. Read the pass, stretch that long leg, poke it away, go!",
+   "src": "/plays/narration/mouhoudine-futsal-signature/3.m4a",
+   "seconds": 5.6,
+   "words": [
+    {
+     "w": "Slow",
+     "at": 0.4
+    },
+    {
+     "w": "motion",
+     "at": 0.65
+    },
+    {
+     "w": "now",
+     "at": 1.0
+    },
+    {
+     "w": "Read",
+     "at": 1.688
+    },
+    {
+     "w": "the",
+     "at": 1.887
+    },
+    {
+     "w": "pass",
+     "at": 1.975
+    },
+    {
+     "w": "stretch",
+     "at": 2.525
+    },
+    {
+     "w": "that",
+     "at": 2.85
+    },
+    {
+     "w": "long",
+     "at": 3.05
+    },
+    {
+     "w": "leg",
+     "at": 3.3
+    },
+    {
+     "w": "poke",
+     "at": 3.65
+    },
+    {
+     "w": "it",
+     "at": 3.837
+    },
+    {
+     "w": "away",
+     "at": 3.913
+    },
+    {
+     "w": "go",
+     "at": 4.25
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: use your long legs to reach passes, and win the ball back!",
+   "src": "/plays/narration/mouhoudine-futsal-signature/4.m4a",
+   "seconds": 5.2,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.525
+    },
+    {
+     "w": "use",
+     "at": 1.312
+    },
+    {
+     "w": "your",
+     "at": 1.538
+    },
+    {
+     "w": "long",
+     "at": 1.675
+    },
+    {
+     "w": "legs",
+     "at": 2.0
+    },
+    {
+     "w": "to",
+     "at": 2.3
+    },
+    {
+     "w": "reach",
+     "at": 2.4
+    },
+    {
+     "w": "passes",
+     "at": 2.65
+    },
+    {
+     "w": "and",
+     "at": 3.237
+    },
+    {
+     "w": "win",
+     "at": 3.35
+    },
+    {
+     "w": "the",
+     "at": 3.513
+    },
+    {
+     "w": "ball",
+     "at": 3.6
+    },
+    {
+     "w": "back",
+     "at": 3.9
+    }
+   ]
+  }
+ ]
+}

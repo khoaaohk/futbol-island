@@ -1,0 +1,126 @@
+{
+ "lesson": "learnf_shape22",
+ "questions": [
+  {
+   "q": "The left rear carries forward. Tap where the right rear player should support.",
+   "options": [
+    "Up the right side, level with the front",
+    "Inside, behind the ball",
+    "Deep in the right corner"
+   ],
+   "correct": 1,
+   "explain": "Yes. Inside and behind the ball, the rear player gives a safe pass and protects behind.",
+   "choiceExplanations": [
+    "That is up with the front pair, so nobody protects behind if we lose the ball.",
+    "Yes. Inside and behind the ball, the rear player gives a safe pass and protects behind.",
+    "The corner is far from the ball, so the pass is long and easy to cut out."
+   ],
+   "visual": {
+    "kind": "tapSpot",
+    "frame": {
+     "step": 2,
+     "hide": [
+      "rm"
+     ],
+     "focus": [
+      "cb"
+     ]
+    },
+    "spots": [
+     {
+      "x": 225,
+      "y": 205
+     },
+     {
+      "x": 170,
+      "y": 290
+     },
+     {
+      "x": 240,
+      "y": 345
+     }
+    ]
+   }
+  },
+  {
+   "q": "The rear players take turns to carry. Put the steps in order.",
+   "options": [
+    "Left rear carries into space",
+    "Right rear tucks inside, behind the ball",
+    "Ball goes across to the right rear",
+    "Left rear tucks inside as support"
+   ],
+   "correct": 0,
+   "explain": "Yes. The left rear carries first, and the right rear tucks in behind to support.",
+   "choiceExplanations": [
+    "Yes. The left rear carries first, and the right rear tucks in behind to support.",
+    "The support move comes after the carry, so the teammate can stay behind the ball.",
+    "The pass across comes after the pair resets, once the first carry is done.",
+    "This comes last: now the right rear carries, so the left rear becomes the support."
+   ],
+   "visual": {
+    "kind": "order",
+    "frame": {
+     "step": 4,
+     "focus": [
+      "cb",
+      "rm"
+     ]
+    }
+   }
+  },
+  {
+   "q": "Now the right rear carries inside. Drag the left rear player to the best support space.",
+   "options": [
+    "Stay wide in the corner",
+    "Up the wing, level with the ball",
+    "Inside, behind the ball"
+   ],
+   "correct": 2,
+   "explain": "Yes. Inside and behind the ball gives a safe pass back and protects our goal.",
+   "choiceExplanations": [
+    "That corner is far from the ball, so the pass back is long and easy to cut out.",
+    "Going up leaves nobody behind the ball, so if we lose it our goal is open.",
+    "Yes. Inside and behind the ball gives a safe pass back and protects our goal."
+   ],
+   "visual": {
+    "kind": "dragToZone",
+    "frame": {
+     "step": 8,
+     "place": {
+      "rm": {
+       "x": 180,
+       "y": 225
+      }
+     },
+     "ball": "rm",
+     "focus": [
+      "cb",
+      "rm"
+     ]
+    },
+    "drag": "cb",
+    "zones": [
+     {
+      "x": 35,
+      "y": 345,
+      "w": 40,
+      "h": 40
+     },
+     {
+      "x": 60,
+      "y": 205,
+      "w": 40,
+      "h": 40
+     },
+     {
+      "x": 140,
+      "y": 295,
+      "w": 50,
+      "h": 40
+     }
+    ]
+   }
+  }
+ ]
+}

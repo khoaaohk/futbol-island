@@ -1,0 +1,22 @@
+{
+ "film": "baggio-spain-1994",
+ "note": "Chapter 1 is keyed from 'Signori flicks' (the flick) through 'Roberto Baggio' (he collects), 'The keeper rushes out', 'Baggio goes round' to 'goal' (the ball crossing the line): keep the pauses at '...' so the run plays near real time. Chapter 3 continues the sentence chapter 2 leaves hanging.",
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Boston, 1994. Italy and Spain are level, two minutes left. Signori flicks it through, and Roberto Baggio runs clear! The keeper rushes out... Baggio goes round him... goal!"
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again, slowly. Baggio stays calm and takes the ball wide, around keeper Zubizarreta. It runs a little too far..."
+  },
+  {
+   "label": "Tight angle",
+   "text": "But from a tight angle, past a defender on the line, he passes it into the net. Italy are into the semi-final!"
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: one-on-one with the keeper? Stay calm, take it around them, and pass it into the net."
+  }
+ ]
+}

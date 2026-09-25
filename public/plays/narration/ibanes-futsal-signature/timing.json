@@ -1,0 +1,386 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: Guatemala 2000",
+   "text": "Guatemala City, 2000. The Futsal World Cup semi final: Spain against Russia. Daniel scores. Two one! Russia equalise. With fifty five seconds left, Daniel scores again! Three two, and Spain go on to become world champions.",
+   "src": "/plays/narration/ibanes-futsal-signature/1.m4a",
+   "seconds": 17.7,
+   "words": [
+    {
+     "w": "Guatemala",
+     "at": 0.375
+    },
+    {
+     "w": "City",
+     "at": 0.938
+    },
+    {
+     "w": "2000",
+     "at": 1.363
+    },
+    {
+     "w": "The",
+     "at": 2.663
+    },
+    {
+     "w": "Futsal",
+     "at": 2.788
+    },
+    {
+     "w": "World",
+     "at": 3.25
+    },
+    {
+     "w": "Cup",
+     "at": 3.55
+    },
+    {
+     "w": "semi",
+     "at": 3.862
+    },
+    {
+     "w": "final",
+     "at": 4.287
+    },
+    {
+     "w": "Spain",
+     "at": 5.025
+    },
+    {
+     "w": "against",
+     "at": 5.45
+    },
+    {
+     "w": "Russia",
+     "at": 5.875
+    },
+    {
+     "w": "Daniel",
+     "at": 6.562
+    },
+    {
+     "w": "scores",
+     "at": 7.013
+    },
+    {
+     "w": "Two",
+     "at": 7.975
+    },
+    {
+     "w": "one",
+     "at": 8.287
+    },
+    {
+     "w": "Russia",
+     "at": 9.0
+    },
+    {
+     "w": "equalise",
+     "at": 9.375
+    },
+    {
+     "w": "With",
+     "at": 10.4
+    },
+    {
+     "w": "fifty",
+     "at": 10.6
+    },
+    {
+     "w": "five",
+     "at": 10.9
+    },
+    {
+     "w": "seconds",
+     "at": 11.225
+    },
+    {
+     "w": "left",
+     "at": 11.6
+    },
+    {
+     "w": "Daniel",
+     "at": 12.0
+    },
+    {
+     "w": "scores",
+     "at": 12.438
+    },
+    {
+     "w": "again",
+     "at": 12.875
+    },
+    {
+     "w": "Three",
+     "at": 13.575
+    },
+    {
+     "w": "two",
+     "at": 13.863
+    },
+    {
+     "w": "and",
+     "at": 14.3
+    },
+    {
+     "w": "Spain",
+     "at": 14.45
+    },
+    {
+     "w": "go",
+     "at": 14.9
+    },
+    {
+     "w": "on",
+     "at": 15.075
+    },
+    {
+     "w": "to",
+     "at": 15.275
+    },
+    {
+     "w": "become",
+     "at": 15.363
+    },
+    {
+     "w": "world",
+     "at": 15.725
+    },
+    {
+     "w": "champions",
+     "at": 16.038
+    }
+   ]
+  },
+  {
+   "label": "How he does it",
+   "text": "How does Daniel escape a defender? Watch how he does it. The defender rushes in. Daniel puts his sole on the ball and drags it back. The defender misses, and Daniel turns away.",
+   "src": "/plays/narration/ibanes-futsal-signature/2.m4a",
+   "seconds": 12.4,
+   "words": [
+    {
+     "w": "How",
+     "at": 0.375
+    },
+    {
+     "w": "does",
+     "at": 0.525
+    },
+    {
+     "w": "Daniel",
+     "at": 0.75
+    },
+    {
+     "w": "escape",
+     "at": 1.175
+    },
+    {
+     "w": "a",
+     "at": 1.562
+    },
+    {
+     "w": "defender",
+     "at": 1.625
+    },
+    {
+     "w": "Watch",
+     "at": 2.513
+    },
+    {
+     "w": "how",
+     "at": 2.85
+    },
+    {
+     "w": "he",
+     "at": 3.025
+    },
+    {
+     "w": "does",
+     "at": 3.15
+    },
+    {
+     "w": "it",
+     "at": 3.388
+    },
+    {
+     "w": "The",
+     "at": 3.95
+    },
+    {
+     "w": "defender",
+     "at": 4.05
+    },
+    {
+     "w": "rushes",
+     "at": 4.575
+    },
+    {
+     "w": "in",
+     "at": 4.975
+    },
+    {
+     "w": "Daniel",
+     "at": 5.787
+    },
+    {
+     "w": "puts",
+     "at": 6.225
+    },
+    {
+     "w": "his",
+     "at": 6.438
+    },
+    {
+     "w": "sole",
+     "at": 6.588
+    },
+    {
+     "w": "on",
+     "at": 6.888
+    },
+    {
+     "w": "the",
+     "at": 6.987
+    },
+    {
+     "w": "ball",
+     "at": 7.075
+    },
+    {
+     "w": "and",
+     "at": 7.425
+    },
+    {
+     "w": "drags",
+     "at": 7.55
+    },
+    {
+     "w": "it",
+     "at": 7.938
+    },
+    {
+     "w": "back",
+     "at": 8.025
+    },
+    {
+     "w": "The",
+     "at": 8.838
+    },
+    {
+     "w": "defender",
+     "at": 8.95
+    },
+    {
+     "w": "misses",
+     "at": 9.45
+    },
+    {
+     "w": "and",
+     "at": 10.05
+    },
+    {
+     "w": "Daniel",
+     "at": 10.175
+    },
+    {
+     "w": "turns",
+     "at": 10.6
+    },
+    {
+     "w": "away",
+     "at": 10.975
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn. When a defender gets close, step on the ball, pull it back with your sole, and turn away.",
+   "src": "/plays/narration/ibanes-futsal-signature/3.m4a",
+   "seconds": 6.9,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "When",
+     "at": 1.375
+    },
+    {
+     "w": "a",
+     "at": 1.512
+    },
+    {
+     "w": "defender",
+     "at": 1.575
+    },
+    {
+     "w": "gets",
+     "at": 2.075
+    },
+    {
+     "w": "close",
+     "at": 2.325
+    },
+    {
+     "w": "step",
+     "at": 2.962
+    },
+    {
+     "w": "on",
+     "at": 3.212
+    },
+    {
+     "w": "the",
+     "at": 3.312
+    },
+    {
+     "w": "ball",
+     "at": 3.4
+    },
+    {
+     "w": "pull",
+     "at": 3.85
+    },
+    {
+     "w": "it",
+     "at": 4.037
+    },
+    {
+     "w": "back",
+     "at": 4.125
+    },
+    {
+     "w": "with",
+     "at": 4.388
+    },
+    {
+     "w": "your",
+     "at": 4.487
+    },
+    {
+     "w": "sole",
+     "at": 4.65
+    },
+    {
+     "w": "and",
+     "at": 5.138
+    },
+    {
+     "w": "turn",
+     "at": 5.25
+    },
+    {
+     "w": "away",
+     "at": 5.5
+    }
+   ]
+  }
+ ]
+}

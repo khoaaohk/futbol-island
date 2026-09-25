@@ -1,0 +1,362 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The cross",
+   "text": "Mexico, 1970. England against Brazil. Carlos Alberto finds Jairzinho on the right. He beats Terry Cooper and crosses from the byline.",
+   "src": "/plays/narration/banks-save-1970/1.m4a",
+   "seconds": 11.1,
+   "words": [
+    {
+     "w": "Mexico",
+     "at": 0.4
+    },
+    {
+     "w": "1970",
+     "at": 1.175
+    },
+    {
+     "w": "England",
+     "at": 2.538
+    },
+    {
+     "w": "against",
+     "at": 2.975
+    },
+    {
+     "w": "Brazil",
+     "at": 3.4
+    },
+    {
+     "w": "Carlos",
+     "at": 4.513
+    },
+    {
+     "w": "Alberto",
+     "at": 4.975
+    },
+    {
+     "w": "finds",
+     "at": 5.562
+    },
+    {
+     "w": "Jairzinho",
+     "at": 5.912
+    },
+    {
+     "w": "on",
+     "at": 6.638
+    },
+    {
+     "w": "the",
+     "at": 6.737
+    },
+    {
+     "w": "right",
+     "at": 6.825
+    },
+    {
+     "w": "He",
+     "at": 7.525
+    },
+    {
+     "w": "beats",
+     "at": 7.65
+    },
+    {
+     "w": "Terry",
+     "at": 7.963
+    },
+    {
+     "w": "Cooper",
+     "at": 8.338
+    },
+    {
+     "w": "and",
+     "at": 8.725
+    },
+    {
+     "w": "crosses",
+     "at": 8.85
+    },
+    {
+     "w": "from",
+     "at": 9.3
+    },
+    {
+     "w": "the",
+     "at": 9.438
+    },
+    {
+     "w": "byline",
+     "at": 9.525
+    }
+   ]
+  },
+  {
+   "label": "The header",
+   "text": "Pel\u00e9 leaps over Alan Mullery and heads it down. He shouts, \u201cGoal!\u201d But Gordon Banks gets there!",
+   "src": "/plays/narration/banks-save-1970/2.m4a",
+   "seconds": 7.2,
+   "words": [
+    {
+     "w": "Pel\u00e9",
+     "at": 0.35
+    },
+    {
+     "w": "leaps",
+     "at": 0.725
+    },
+    {
+     "w": "over",
+     "at": 0.963
+    },
+    {
+     "w": "Alan",
+     "at": 1.2
+    },
+    {
+     "w": "Mullery",
+     "at": 1.525
+    },
+    {
+     "w": "and",
+     "at": 1.975
+    },
+    {
+     "w": "heads",
+     "at": 2.1
+    },
+    {
+     "w": "it",
+     "at": 2.337
+    },
+    {
+     "w": "down",
+     "at": 2.425
+    },
+    {
+     "w": "He",
+     "at": 3.175
+    },
+    {
+     "w": "shouts",
+     "at": 3.35
+    },
+    {
+     "w": "Goal",
+     "at": 3.9
+    },
+    {
+     "w": "But",
+     "at": 4.75
+    },
+    {
+     "w": "Gordon",
+     "at": 4.9
+    },
+    {
+     "w": "Banks",
+     "at": 5.275
+    },
+    {
+     "w": "gets",
+     "at": 5.65
+    },
+    {
+     "w": "there",
+     "at": 5.9
+    }
+   ]
+  },
+  {
+   "label": "The replay",
+   "text": "Watch again, slowly. Banks races across from the near post. The ball bounces up in front of him, and his right hand scoops it over the bar.",
+   "src": "/plays/narration/banks-save-1970/3.m4a",
+   "seconds": 10.0,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.25
+    },
+    {
+     "w": "Banks",
+     "at": 2.35
+    },
+    {
+     "w": "races",
+     "at": 2.75
+    },
+    {
+     "w": "across",
+     "at": 3.2
+    },
+    {
+     "w": "from",
+     "at": 3.625
+    },
+    {
+     "w": "the",
+     "at": 3.763
+    },
+    {
+     "w": "near",
+     "at": 3.85
+    },
+    {
+     "w": "post",
+     "at": 4.075
+    },
+    {
+     "w": "The",
+     "at": 4.95
+    },
+    {
+     "w": "ball",
+     "at": 5.05
+    },
+    {
+     "w": "bounces",
+     "at": 5.375
+    },
+    {
+     "w": "up",
+     "at": 5.812
+    },
+    {
+     "w": "in",
+     "at": 5.963
+    },
+    {
+     "w": "front",
+     "at": 6.1
+    },
+    {
+     "w": "of",
+     "at": 6.287
+    },
+    {
+     "w": "him",
+     "at": 6.362
+    },
+    {
+     "w": "and",
+     "at": 6.775
+    },
+    {
+     "w": "his",
+     "at": 6.888
+    },
+    {
+     "w": "right",
+     "at": 7.062
+    },
+    {
+     "w": "hand",
+     "at": 7.375
+    },
+    {
+     "w": "scoops",
+     "at": 7.875
+    },
+    {
+     "w": "it",
+     "at": 8.262
+    },
+    {
+     "w": "over",
+     "at": 8.338
+    },
+    {
+     "w": "the",
+     "at": 8.537
+    },
+    {
+     "w": "bar",
+     "at": 8.625
+    }
+   ]
+  },
+  {
+   "label": "The lesson",
+   "text": "The save of the century! Keep moving your feet, and never give up on a ball.",
+   "src": "/plays/narration/banks-save-1970/4.m4a",
+   "seconds": 5.5,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "save",
+     "at": 0.475
+    },
+    {
+     "w": "of",
+     "at": 0.812
+    },
+    {
+     "w": "the",
+     "at": 0.887
+    },
+    {
+     "w": "century",
+     "at": 0.988
+    },
+    {
+     "w": "Keep",
+     "at": 2.013
+    },
+    {
+     "w": "moving",
+     "at": 2.275
+    },
+    {
+     "w": "your",
+     "at": 2.562
+    },
+    {
+     "w": "feet",
+     "at": 2.725
+    },
+    {
+     "w": "and",
+     "at": 3.175
+    },
+    {
+     "w": "never",
+     "at": 3.3
+    },
+    {
+     "w": "give",
+     "at": 3.55
+    },
+    {
+     "w": "up",
+     "at": 3.712
+    },
+    {
+     "w": "on",
+     "at": 3.862
+    },
+    {
+     "w": "a",
+     "at": 3.987
+    },
+    {
+     "w": "ball",
+     "at": 4.05
+    }
+   ]
+  }
+ ]
+}

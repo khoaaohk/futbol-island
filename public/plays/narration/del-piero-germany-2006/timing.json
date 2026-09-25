@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Dortmund, 2006. Italy against Germany, the last minute of extra time. Italy break! Gilardino races forward, and Alessandro Del Piero sprints to join him. Gilardino slips it across... goal!",
+   "src": "/plays/narration/del-piero-germany-2006/1.m4a",
+   "seconds": 15.2,
+   "words": [
+    {
+     "w": "Dortmund",
+     "at": 0.4
+    },
+    {
+     "w": "2006",
+     "at": 0.925
+    },
+    {
+     "w": "Italy",
+     "at": 2.462
+    },
+    {
+     "w": "against",
+     "at": 2.8
+    },
+    {
+     "w": "Germany",
+     "at": 3.212
+    },
+    {
+     "w": "the",
+     "at": 3.775
+    },
+    {
+     "w": "last",
+     "at": 3.9
+    },
+    {
+     "w": "minute",
+     "at": 4.3
+    },
+    {
+     "w": "of",
+     "at": 4.537
+    },
+    {
+     "w": "extra",
+     "at": 4.625
+    },
+    {
+     "w": "time",
+     "at": 5.025
+    },
+    {
+     "w": "Italy",
+     "at": 5.888
+    },
+    {
+     "w": "break",
+     "at": 6.237
+    },
+    {
+     "w": "Gilardino",
+     "at": 7.013
+    },
+    {
+     "w": "races",
+     "at": 7.65
+    },
+    {
+     "w": "forward",
+     "at": 8.088
+    },
+    {
+     "w": "and",
+     "at": 8.625
+    },
+    {
+     "w": "Alessandro",
+     "at": 8.75
+    },
+    {
+     "w": "Del",
+     "at": 9.475
+    },
+    {
+     "w": "Piero",
+     "at": 9.713
+    },
+    {
+     "w": "sprints",
+     "at": 10.113
+    },
+    {
+     "w": "to",
+     "at": 10.575
+    },
+    {
+     "w": "join",
+     "at": 10.7
+    },
+    {
+     "w": "him",
+     "at": 11.0
+    },
+    {
+     "w": "Gilardino",
+     "at": 11.713
+    },
+    {
+     "w": "slips",
+     "at": 12.412
+    },
+    {
+     "w": "it",
+     "at": 12.688
+    },
+    {
+     "w": "across",
+     "at": 12.762
+    },
+    {
+     "w": "goal",
+     "at": 13.762
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again. As soon as Italy won the ball, Del Piero sprinted to support, so Gilardino had a friend to pass to.",
+   "src": "/plays/narration/del-piero-germany-2006/2.m4a",
+   "seconds": 8.3,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "As",
+     "at": 1.625
+    },
+    {
+     "w": "soon",
+     "at": 1.812
+    },
+    {
+     "w": "as",
+     "at": 2.013
+    },
+    {
+     "w": "Italy",
+     "at": 2.15
+    },
+    {
+     "w": "won",
+     "at": 2.425
+    },
+    {
+     "w": "the",
+     "at": 2.612
+    },
+    {
+     "w": "ball",
+     "at": 2.7
+    },
+    {
+     "w": "Del",
+     "at": 3.237
+    },
+    {
+     "w": "Piero",
+     "at": 3.538
+    },
+    {
+     "w": "sprinted",
+     "at": 3.962
+    },
+    {
+     "w": "to",
+     "at": 4.4
+    },
+    {
+     "w": "support",
+     "at": 4.525
+    },
+    {
+     "w": "so",
+     "at": 5.35
+    },
+    {
+     "w": "Gilardino",
+     "at": 5.525
+    },
+    {
+     "w": "had",
+     "at": 6.2
+    },
+    {
+     "w": "a",
+     "at": 6.338
+    },
+    {
+     "w": "friend",
+     "at": 6.4
+    },
+    {
+     "w": "to",
+     "at": 6.638
+    },
+    {
+     "w": "pass",
+     "at": 6.725
+    },
+    {
+     "w": "to",
+     "at": 7.088
+    }
+   ]
+  },
+  {
+   "label": "Into the corner",
+   "text": "He curls it high past keeper Jens Lehmann, into the top corner. Italy are in the final!",
+   "src": "/plays/narration/del-piero-germany-2006/3.m4a",
+   "seconds": 6.6,
+   "words": [
+    {
+     "w": "He",
+     "at": 0.35
+    },
+    {
+     "w": "curls",
+     "at": 0.475
+    },
+    {
+     "w": "it",
+     "at": 0.812
+    },
+    {
+     "w": "high",
+     "at": 0.9
+    },
+    {
+     "w": "past",
+     "at": 1.188
+    },
+    {
+     "w": "keeper",
+     "at": 1.55
+    },
+    {
+     "w": "Jens",
+     "at": 1.913
+    },
+    {
+     "w": "Lehmann",
+     "at": 2.275
+    },
+    {
+     "w": "into",
+     "at": 2.938
+    },
+    {
+     "w": "the",
+     "at": 3.112
+    },
+    {
+     "w": "top",
+     "at": 3.2
+    },
+    {
+     "w": "corner",
+     "at": 3.475
+    },
+    {
+     "w": "Italy",
+     "at": 4.388
+    },
+    {
+     "w": "are",
+     "at": 4.812
+    },
+    {
+     "w": "in",
+     "at": 4.938
+    },
+    {
+     "w": "the",
+     "at": 5.013
+    },
+    {
+     "w": "final",
+     "at": 5.112
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: when your team wins the ball, sprint forward to support, then bend it into the far corner.",
+   "src": "/plays/narration/del-piero-germany-2006/4.m4a",
+   "seconds": 7.2,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.562
+    },
+    {
+     "w": "when",
+     "at": 1.375
+    },
+    {
+     "w": "your",
+     "at": 1.512
+    },
+    {
+     "w": "team",
+     "at": 1.663
+    },
+    {
+     "w": "wins",
+     "at": 2.0
+    },
+    {
+     "w": "the",
+     "at": 2.275
+    },
+    {
+     "w": "ball",
+     "at": 2.375
+    },
+    {
+     "w": "sprint",
+     "at": 2.913
+    },
+    {
+     "w": "forward",
+     "at": 3.288
+    },
+    {
+     "w": "to",
+     "at": 3.625
+    },
+    {
+     "w": "support",
+     "at": 3.75
+    },
+    {
+     "w": "then",
+     "at": 4.575
+    },
+    {
+     "w": "bend",
+     "at": 4.812
+    },
+    {
+     "w": "it",
+     "at": 5.088
+    },
+    {
+     "w": "into",
+     "at": 5.162
+    },
+    {
+     "w": "the",
+     "at": 5.338
+    },
+    {
+     "w": "far",
+     "at": 5.438
+    },
+    {
+     "w": "corner",
+     "at": 5.725
+    }
+   ]
+  }
+ ]
+}

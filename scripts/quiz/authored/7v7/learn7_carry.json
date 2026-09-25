@@ -1,0 +1,115 @@
+{
+ "lesson": "learn7_carry",
+ "questions": [
+  {
+   "q": "Which picture shows it is time to pass right?",
+   "options": [
+    "Defender between you and teammate",
+    "Defender in front of you",
+    "Defender next to teammate"
+   ],
+   "correct": 1,
+   "explain": "Yes. The defender came across to you, so the passing lane is open.",
+   "choiceExplanations": [
+    "The defender is in the passing lane, so the pass could be cut out.",
+    "Yes. The defender came across to you, so the passing lane is open.",
+    "The defender is next to your teammate, so a pass there is not safe."
+   ],
+   "visual": {
+    "kind": "pickPicture",
+    "pictures": [
+     {
+      "step": 1,
+      "focus": [
+       "cm",
+       "dcm",
+       "rm"
+      ]
+     },
+     {
+      "step": 3,
+      "focus": [
+       "cm",
+       "dcm",
+       "rm"
+      ]
+     },
+     {
+      "step": 3,
+      "place": {
+       "dcm": {
+        "x": 198,
+        "y": 205
+       }
+      },
+      "focus": [
+       "cm",
+       "dcm",
+       "rm"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "q": "You carried forward. What will the defender do next?",
+   "options": [
+    "Come across to stop you",
+    "Stay in the passing lane",
+    "Run back to their goal"
+   ],
+   "correct": 0,
+   "explain": "Yes. Your carry pulls the defender to you, so the lane opens.",
+   "choiceExplanations": [
+    "Yes. Your carry pulls the defender to you, so the lane opens.",
+    "Then you could run free at goal, so the defender must come to you.",
+    "Running away gives you room to shoot, so the defender steps toward you."
+   ],
+   "visual": {
+    "kind": "whatNext",
+    "frame": {
+     "step": 2,
+     "focus": [
+      "cm",
+      "dcm"
+     ]
+    }
+   }
+  },
+  {
+   "q": "Now the defender is in front of you. Which pass is open?",
+   "options": [
+    "Pass to the forward ahead",
+    "Pass to your right teammate"
+   ],
+   "correct": 1,
+   "explain": "Yes. The defender stands in front, so the right lane is open.",
+   "choiceExplanations": [
+    "The defender is right in that lane, so the pass could be cut out.",
+    "Yes. The defender stands in front, so the right lane is open."
+   ],
+   "visual": {
+    "kind": "bestPass",
+    "frame": {
+     "step": 1,
+     "place": {
+      "dcm": {
+       "x": 135,
+       "y": 232
+      }
+     },
+     "ball": "cm",
+     "focus": [
+      "cm",
+      "dcm"
+     ]
+    },
+    "from": "cm",
+    "to": [
+     "st",
+     "rm"
+    ]
+   }
+  }
+ ]
+}

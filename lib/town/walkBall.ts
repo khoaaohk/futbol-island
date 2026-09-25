@@ -8,25 +8,29 @@ export function juggleContact(kind:JuggleTouch,side:number,head?:JuggleHead){
 }
 
 import type {CharacterCustomization} from './customization';
+import type {FramePoint,FrameHit} from './goalCollisions';
 export const SHOT_WINDUP=.46,SHOT_SPEED=38,WALL_JUGGLE_DISTANCE=8;
 const JUGGLE_CONTACT=.48,WALL_GRAVITY=26,WALL_KICK_TIME=.22,WALL_RECEIVE_TIME=.14;
 const WALL_HEIGHT_RATIOS=[.45,.72,.9,.6,.95];
 export type WallJuggleTarget={x:number;z:number;top?:number};
 type Player={x:number;z:number;y:number;yaw:number};
 export type JuggleHead={bottom:number;top:number;front:number;width:number};
-type Environment={juggleHead?:JuggleHead;moving?:boolean;ballStyle?:CharacterCustomization['ball'];floor:(x:number,z:number)=>number;blocked:(x:number,z:number,y:number)=>boolean;impact:(x:number,y:number,z:number)=>void;strike:()=>void;receive?:()=>void;hit?:(x:number,y:number,z:number,vx:number,vz:number)=>boolean};
+type Environment={juggleHead?:JuggleHead;moving?:boolean;ballStyle?:CharacterCustomization['ball'];floor:(x:number,z:number)=>number;blocked:(x:number,z:number,y:number)=>boolean;impact:(x:number,y:number,z:number)=>void;strike:()=>void;receive?:()=>void;hit?:(x:number,y:number,z:number,vx:number,vz:number)=>boolean;frame?:(from:FramePoint,to:FramePoint)=>FrameHit|null};
 export function createWalkBall(){
  const state={x:0,y:.2,z:0,vx:0,vy:0,vz:0,charge:0,mode:'attached' as 'attached'|'charging'|'windup'|'shot'|'return'|'juggle'|'wall-juggle',age:0,kick:0,yaw:0,jugglePhase:0,juggleTouch:'foot' as JuggleTouch,juggleSide:1 as -1|1,bounce:0,wallTarget:null as WallJuggleTarget|null,wallPhase:'kick' as 'kick'|'outbound'|'returning'|'receive',wallAge:0};
  let shotAge=0,impactCooldown=0,wallDirection={x:0,z:1},wallLegTime=.4,contactHeight=.85,returnAge=0,receiveHeight=.85,normalTouchCycle=-1,blendAge=1,wallKickCount=0;
  let movingJuggle=false;
+ let finishTarget:{x:number;y:number;z:number}|undefined;
+ const frameFrom={x:0,y:0,z:0},frameTo={x:0,y:0,z:0};
  let nextWall:WallJuggleTarget|undefined,blendStart={x:0,y:0,z:0};
- const attach=(p:Player,floor?:Environment['floor'])=>{
-  const sx=Math.sin(p.yaw),sz=Math.cos(p.yaw);let support=p.y;
-  state.x=p.x+sx*.65;state.z=p.z+sz*.65;
+ const attach=(p:Player,floor?:Environment['floor'],contact?:{x:number;z:number})=>{
+  const dx=contact?contact.x-p.x:Math.sin(p.yaw),dz=contact?contact.z-p.z:Math.cos(p.yaw),length=Math.hypot(dx,dz)||1,sx=dx/length,sz=dz/length;let support=p.y;
+  const lead=contact?length:state.mode==='attached'?.56:.65;
+  state.x=p.x+sx*lead;state.z=p.z+sz*lead;
   if(floor){
    // The ball sits ahead of the feet, often over the next stair tread.
    // Sample its footprint, and shorten the touch beside a taller wall.
-   for(let reach=.65;reach>=.049;reach-=.15){
+   for(let reach=lead;reach>=.049;reach-=.15){
     state.x=p.x+sx*reach;state.z=p.z+sz*reach;
     support=Math.max(p.y,floor(state.x,state.z),floor(state.x+.2,state.z),floor(state.x-.2,state.z),floor(state.x,state.z+.2),floor(state.x,state.z-.2));
     if(support<=p.y+1.1)break;
@@ -35,8 +39,8 @@ export function createWalkBall(){
   }
   state.y=support+.2;state.vx=state.vy=state.vz=0;
  };
- const reset=(p:Player)=>{state.mode='attached';state.charge=0;state.wallTarget=null;nextWall=undefined;state.wallAge=state.age=state.kick=state.jugglePhase=0;blendAge=1;normalTouchCycle=-1;wallKickCount=0;attach(p);};
- const shoot=(p:Player,yaw:number,charge=0)=>{if((state.mode==='windup'||state.mode==='shot')&&charge<=0)return;state.mode='windup';state.charge=Math.max(0,Math.min(1,charge));state.wallTarget=null;nextWall=undefined;state.age=0;state.kick=0;state.yaw=yaw;attach({...p,yaw});};
+ const reset=(p:Player)=>{state.mode='attached';state.charge=0;state.wallTarget=null;nextWall=undefined;finishTarget=undefined;state.wallAge=state.age=state.kick=state.jugglePhase=0;blendAge=1;normalTouchCycle=-1;wallKickCount=0;attach(p);};
+ const shoot=(p:Player,yaw:number,charge=0,finish?:{x:number;y:number;z:number})=>{if((state.mode==='windup'||state.mode==='shot')&&charge<=0)return;state.mode='windup';state.charge=Math.max(0,Math.min(1,charge));state.wallTarget=null;nextWall=undefined;finishTarget=finish;state.age=0;state.kick=0;state.yaw=finish?Math.atan2(finish.x-p.x,finish.z-p.z):yaw;attach({...p,yaw:state.yaw});};
  const beginCharge=(p:Player,yaw:number)=>{if(state.mode==='shot'||state.mode==='windup')return;reset(p);state.mode='charging';state.yaw=yaw;};
  const validWall=(p:Player,target?:WallJuggleTarget)=>{if(!target)return false;const distance=Math.hypot(target.x-p.x,target.z-p.z),facing=distance?((target.x-p.x)*Math.sin(p.yaw)+(target.z-p.z)*Math.cos(p.yaw))/distance:0;return Number.isFinite(distance)&&distance>=.8&&distance<=WALL_JUGGLE_DISTANCE&&facing>=-.1&&(target.top===undefined||Number.isFinite(target.top)&&target.top>p.y+.75);};
  const regularJuggle=()=>{blendStart={x:state.x,y:state.y,z:state.z};blendAge=0;state.mode='juggle';state.wallTarget=null;state.wallAge=state.age=state.kick=0;state.vx=state.vy=state.vz=0;normalTouchCycle=-1;};
@@ -99,19 +103,36 @@ export function createWalkBall(){
    }
    state.y=Math.max(p.y+JUGGLE_CONTACT,state.y);if(touch!==normalTouchCycle&&blendAge>=.35){normalTouchCycle=touch;env.receive?.();}return;
   }
-  if(state.mode==='windup'){attach({...p,yaw:state.yaw},env.floor);state.kick=Math.min(.36,state.age/SHOT_WINDUP*.36);if(state.age<SHOT_WINDUP)return;state.mode='shot';shotAge=0;state.age=0;state.vx=Math.sin(state.yaw)*(SHOT_SPEED+22*state.charge);state.vz=Math.cos(state.yaw)*(SHOT_SPEED+22*state.charge);state.vy=3.2+52*state.charge;env.strike();}
+  if(state.mode==='windup'){attach({...p,yaw:state.yaw},env.floor);state.kick=Math.min(.36,state.age/SHOT_WINDUP*.36);if(state.age<SHOT_WINDUP)return;state.mode='shot';shotAge=0;state.age=0;state.vx=Math.sin(state.yaw)*(SHOT_SPEED+22*state.charge);state.vz=Math.cos(state.yaw)*(SHOT_SPEED+22*state.charge);state.vy=3.2+52*state.charge;
+   if(finishTarget){
+    const dx=finishTarget.x-state.x,dz=finishTarget.z-state.z,d=Math.hypot(dx,dz),speed=SHOT_SPEED+22*state.charge;
+    const duration=-Math.log(Math.max(.01,1-.1*d/speed))/.1;
+    state.vx=dx/Math.max(.001,d)*speed;state.vz=dz/Math.max(.001,d)*speed;
+    state.vy=(finishTarget.y-state.y)/Math.max(.05,duration)+6.5*duration;
+   }
+   env.strike();}
   if(state.mode==='return'){const blend=1-Math.exp(-dt*12);state.x+=(p.x+Math.sin(p.yaw)*.65-state.x)*blend;state.z+=(p.z+Math.cos(p.yaw)*.65-state.z)*blend;state.y+=(p.y+.2-state.y)*blend;state.kick=0;if(state.age>.55)reset(p);return;}
   shotAge+=dt;state.kick=shotAge<.6?.36+shotAge/.6*.64:0;
   const steps=Math.max(1,Math.ceil(Math.hypot(state.vx,state.vz)*dt/.12)),step=dt/steps;
   for(let i=0;i<steps;i++){
+   if(env.frame){
+    frameFrom.x=state.x;frameFrom.y=state.y;frameFrom.z=state.z;
+    frameTo.x=state.x+state.vx*step;frameTo.y=state.y+(state.vy-13*step)*step;frameTo.z=state.z+state.vz*step;
+    const hit=env.frame(frameFrom,frameTo);
+    if(hit){const dot=state.vx*hit.nx+state.vy*hit.ny+state.vz*hit.nz;
+     state.vx-=1.72*dot*hit.nx;state.vy-=1.72*dot*hit.ny;state.vz-=1.72*dot*hit.nz;
+     state.x=hit.x;state.y=hit.y;state.z=hit.z;finishTarget=undefined;impact();continue;
+    }
+   }
    const x=state.x+state.vx*step;if(env.blocked(x,state.z,state.y)){state.vx*=-.78;impact();}else state.x=x;
    const z=state.z+state.vz*step;if(env.blocked(state.x,z,state.y)){state.vz*=-.78;impact();}else state.z=z;
    if(env.hit?.(state.x,state.y,state.z,state.vx,state.vz)){state.vx*=-.42;state.vz*=-.42;state.vy=2;impact();}
    state.vy-=13*step;state.y+=state.vy*step;const floor=env.floor(state.x,state.z)+.2;
    if(state.y<floor){state.y=floor;if(state.vy<-.8){state.vy=-state.vy*.53;impact();}else state.vy=0;}
   }
-  const drag=Math.exp(-(state.charge>0&&state.y>env.floor(state.x,state.z)+.3?.1:.33)*dt);state.vx*=drag;state.vz*=drag;
+  const drag=Math.exp(-(finishTarget||state.charge>0&&state.y>env.floor(state.x,state.z)+.3?.1:.33)*dt);state.vx*=drag;state.vz*=drag;
   if(shotAge>(state.charge>0?9:2)||Math.hypot(state.x-p.x,state.z-p.z)>(state.charge>0?360:65)||Math.hypot(state.vx,state.vz)<2&&state.y<=env.floor(state.x,state.z)+.3)recall();
  }
- return {state,reset,beginCharge,shoot,juggle,updateWallTarget,recall,update};
+ const syncDribble=(p:Player,contact:{x:number;z:number},floor:Environment['floor'])=>{if(state.mode==='attached')attach(p,floor,contact);};
+ return {state,reset,beginCharge,shoot,juggle,updateWallTarget,recall,update,syncDribble};
 }

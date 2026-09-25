@@ -1,0 +1,97 @@
+{
+ "lesson": "learn11_restart",
+ "questions": [
+  {
+   "q": "The goalkeeper plays to the open right teammate. What should that teammate do next?",
+   "options": [
+    "Open up and face the field",
+    "Pass straight back to the goalkeeper",
+    "Dribble toward our own goal line"
+   ],
+   "correct": 0,
+   "explain": "Yes. Opening toward the field lets the receiver see forward passes and move the ball up.",
+   "choiceExplanations": [
+    "Yes. Opening toward the field lets the receiver see forward passes and move the ball up.",
+    "The route was open for a reason; passing straight back wastes the space he was given.",
+    "Going backward toward our goal invites pressure in the most dangerous area."
+   ],
+   "visual": {
+    "kind": "whatNext",
+    "frame": {
+     "step": 3,
+     "focus": [
+      "rm",
+      "gk"
+     ],
+     "trails": true
+    }
+   }
+  },
+  {
+   "q": "Put the goal kick in order, from first to last.",
+   "options": [
+    "Two teammates offer different angles",
+    "Goalkeeper reads the opponent",
+    "Pass into the open route",
+    "Receiver opens toward the field"
+   ],
+   "correct": 0,
+   "explain": "Yes. Two angles give choices, the keeper reads the opponent, then passes into the open route.",
+   "choiceExplanations": [
+    "Yes. Two angles give choices, the keeper reads the opponent, then passes into the open route.",
+    "The keeper needs teammates offering angles first, or there is nothing to read.",
+    "The pass comes only after the goalkeeper has read which route the opponent blocks.",
+    "The receiver opens up once the ball arrives, so this is the last step."
+   ],
+   "visual": {
+    "kind": "order",
+    "frame": {
+     "step": 0,
+     "focus": [
+      "gk",
+      "lm",
+      "rm"
+     ]
+    }
+   }
+  },
+  {
+   "q": "Now the opponent steps into the middle. Which goal-kick pass has the clear route?",
+   "options": [
+    "Short pass up the middle",
+    "Pass to the right teammate",
+    "Long kick to the striker"
+   ],
+   "correct": 1,
+   "explain": "Yes. The opponent has moved inside, so the ground route to the right teammate is open.",
+   "choiceExplanations": [
+    "The opponent stands right in that lane, so the pass could be intercepted near our goal.",
+    "Yes. The opponent has moved inside, so the ground route to the right teammate is open.",
+    "The long kick travels over the opponent into a fifty-fifty contest, while the right route keeps the ball."
+   ],
+   "visual": {
+    "kind": "bestPass",
+    "frame": {
+     "step": 5,
+     "place": {
+      "dst": {
+       "x": 135,
+       "y": 284
+      }
+     },
+     "ball": "gk",
+     "focus": [
+      "gk",
+      "dst"
+     ]
+    },
+    "from": "gk",
+    "to": [
+     "cm",
+     "rm",
+     "st"
+    ]
+   }
+  }
+ ]
+}

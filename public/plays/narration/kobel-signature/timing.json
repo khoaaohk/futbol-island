@@ -1,0 +1,386 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Wembley, 2024",
+   "text": "Wembley, 2024, Champions League final. Real Madrid have a free kick, and Dortmund line up their wall. Toni Kroos curls it toward the top corner... but Gregor Kobel flies! Fingertips! Wide!",
+   "src": "/plays/narration/kobel-signature/1.m4a",
+   "seconds": 14.1,
+   "words": [
+    {
+     "w": "Wembley",
+     "at": 0.4
+    },
+    {
+     "w": "2024",
+     "at": 0.875
+    },
+    {
+     "w": "Champions",
+     "at": 1.863
+    },
+    {
+     "w": "League",
+     "at": 2.475
+    },
+    {
+     "w": "final",
+     "at": 2.737
+    },
+    {
+     "w": "Real",
+     "at": 3.625
+    },
+    {
+     "w": "Madrid",
+     "at": 3.9
+    },
+    {
+     "w": "have",
+     "at": 4.3
+    },
+    {
+     "w": "a",
+     "at": 4.463
+    },
+    {
+     "w": "free",
+     "at": 4.537
+    },
+    {
+     "w": "kick",
+     "at": 4.812
+    },
+    {
+     "w": "and",
+     "at": 5.175
+    },
+    {
+     "w": "Dortmund",
+     "at": 5.3
+    },
+    {
+     "w": "line",
+     "at": 5.787
+    },
+    {
+     "w": "up",
+     "at": 6.013
+    },
+    {
+     "w": "their",
+     "at": 6.15
+    },
+    {
+     "w": "wall",
+     "at": 6.362
+    },
+    {
+     "w": "Toni",
+     "at": 7.263
+    },
+    {
+     "w": "Kroos",
+     "at": 7.625
+    },
+    {
+     "w": "curls",
+     "at": 7.987
+    },
+    {
+     "w": "it",
+     "at": 8.4
+    },
+    {
+     "w": "toward",
+     "at": 8.5
+    },
+    {
+     "w": "the",
+     "at": 8.738
+    },
+    {
+     "w": "top",
+     "at": 8.825
+    },
+    {
+     "w": "corner",
+     "at": 9.1
+    },
+    {
+     "w": "but",
+     "at": 10.0
+    },
+    {
+     "w": "Gregor",
+     "at": 10.15
+    },
+    {
+     "w": "Kobel",
+     "at": 10.537
+    },
+    {
+     "w": "flies",
+     "at": 10.963
+    },
+    {
+     "w": "Fingertips",
+     "at": 11.738
+    },
+    {
+     "w": "Wide",
+     "at": 12.675
+    }
+   ]
+  },
+  {
+   "label": "The replay",
+   "text": "Watch again, slowly. Kobel stays on his toes. One quick step, a big push, and his fingertips turn it past the post.",
+   "src": "/plays/narration/kobel-signature/2.m4a",
+   "seconds": 8.5,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.137
+    },
+    {
+     "w": "Kobel",
+     "at": 2.163
+    },
+    {
+     "w": "stays",
+     "at": 2.525
+    },
+    {
+     "w": "on",
+     "at": 2.862
+    },
+    {
+     "w": "his",
+     "at": 2.962
+    },
+    {
+     "w": "toes",
+     "at": 3.125
+    },
+    {
+     "w": "One",
+     "at": 3.938
+    },
+    {
+     "w": "quick",
+     "at": 4.175
+    },
+    {
+     "w": "step",
+     "at": 4.425
+    },
+    {
+     "w": "a",
+     "at": 4.838
+    },
+    {
+     "w": "big",
+     "at": 4.9
+    },
+    {
+     "w": "push",
+     "at": 5.138
+    },
+    {
+     "w": "and",
+     "at": 5.537
+    },
+    {
+     "w": "his",
+     "at": 5.638
+    },
+    {
+     "w": "fingertips",
+     "at": 5.8
+    },
+    {
+     "w": "turn",
+     "at": 6.325
+    },
+    {
+     "w": "it",
+     "at": 6.562
+    },
+    {
+     "w": "past",
+     "at": 6.65
+    },
+    {
+     "w": "the",
+     "at": 6.987
+    },
+    {
+     "w": "post",
+     "at": 7.075
+    }
+   ]
+  },
+  {
+   "label": "Start the attack",
+   "text": "This is how Kobel starts attacks. He catches it, and looks up fast. Who is free? He throws it out, and Dortmund are away! After a save, look up fast, and pass to a free teammate.",
+   "src": "/plays/narration/kobel-signature/3.m4a",
+   "seconds": 12.3,
+   "words": [
+    {
+     "w": "This",
+     "at": 0.375
+    },
+    {
+     "w": "is",
+     "at": 0.575
+    },
+    {
+     "w": "how",
+     "at": 0.7
+    },
+    {
+     "w": "Kobel",
+     "at": 0.887
+    },
+    {
+     "w": "starts",
+     "at": 1.3
+    },
+    {
+     "w": "attacks",
+     "at": 1.613
+    },
+    {
+     "w": "He",
+     "at": 2.55
+    },
+    {
+     "w": "catches",
+     "at": 2.7
+    },
+    {
+     "w": "it",
+     "at": 3.125
+    },
+    {
+     "w": "and",
+     "at": 3.263
+    },
+    {
+     "w": "looks",
+     "at": 3.375
+    },
+    {
+     "w": "up",
+     "at": 3.587
+    },
+    {
+     "w": "fast",
+     "at": 3.775
+    },
+    {
+     "w": "Who",
+     "at": 4.562
+    },
+    {
+     "w": "is",
+     "at": 4.725
+    },
+    {
+     "w": "free",
+     "at": 4.888
+    },
+    {
+     "w": "He",
+     "at": 5.65
+    },
+    {
+     "w": "throws",
+     "at": 5.812
+    },
+    {
+     "w": "it",
+     "at": 6.138
+    },
+    {
+     "w": "out",
+     "at": 6.225
+    },
+    {
+     "w": "and",
+     "at": 6.487
+    },
+    {
+     "w": "Dortmund",
+     "at": 6.6
+    },
+    {
+     "w": "are",
+     "at": 7.05
+    },
+    {
+     "w": "away",
+     "at": 7.175
+    },
+    {
+     "w": "After",
+     "at": 8.162
+    },
+    {
+     "w": "a",
+     "at": 8.463
+    },
+    {
+     "w": "save",
+     "at": 8.562
+    },
+    {
+     "w": "look",
+     "at": 9.025
+    },
+    {
+     "w": "up",
+     "at": 9.188
+    },
+    {
+     "w": "fast",
+     "at": 9.387
+    },
+    {
+     "w": "and",
+     "at": 9.887
+    },
+    {
+     "w": "pass",
+     "at": 10.012
+    },
+    {
+     "w": "to",
+     "at": 10.35
+    },
+    {
+     "w": "a",
+     "at": 10.438
+    },
+    {
+     "w": "free",
+     "at": 10.5
+    },
+    {
+     "w": "teammate",
+     "at": 10.738
+    }
+   ]
+  }
+ ]
+}

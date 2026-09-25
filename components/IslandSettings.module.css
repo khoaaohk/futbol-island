@@ -45,6 +45,9 @@
 .dialog.entering::backdrop{animation:backdropIn .14s ease-out both;}
 @keyframes backdropIn{from{background:#16352a00;backdrop-filter:blur(0)}to{background:#16352a70;backdrop-filter:blur(3px)}}
 @media(prefers-reduced-motion:reduce){.dialog.entering::backdrop{animation:none;}}
+/* Phone heat: the full-screen panel is opaque, so once it has entered the blur under it is never seen, yet the GPU re-blurs the
+   whole screen on every frame that anything above it moves (card scenery, films, page turns). Keep the tint, drop the blur. */
+.dialog.fullModal:not(.entering)::backdrop{backdrop-filter:none;-webkit-backdrop-filter:none}
 
 .mapButton{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:52px;margin-top:28px;padding:12px 16px;border:1px solid #8c9a7a;border-radius:14px;background:#294f43;color:#fff0cc;font-size:15px;font-weight:700;cursor:pointer;}
 .mapButton:hover{background:#3c6551;}
@@ -181,7 +184,7 @@
 .dialog.fullModal .panel{position:relative;width:100%;height:100dvh;max-height:100dvh!important;border-radius:0;border:0;box-shadow:none}
 .fullModal .panel>.header{position:absolute!important;inset:0 0 auto;z-index:10;background:transparent!important;border-bottom:0;pointer-events:none}
 .fullModal .panel>.header button{pointer-events:auto}
-.fullModal .header h2{font-family:IslandBrush,sans-serif;font-weight:400;font-size:clamp(22px,3vw,30px);color:#fff3d2;text-shadow:0 1px 3px #123c35}
+.fullModal .header h2{font-family:IslandBrush,sans-serif;font-weight:400;font-size:clamp(24px,3vw,38px);letter-spacing:0;color:#fff3d2;text-shadow:0 1px 3px #123c35}
 .fullModal .panel>div:first-of-type{width:100%;align-self:stretch;padding-top:102px;background:#1255ee url('/stories/paths/abstract-island.svg?v=diagonal-2') center top/100% 1200px repeat-y local}
 .fullModal .panel>div:first-of-type>.subpage,.fullModal .panel>div:first-of-type>.subpageBack{max-width:672px;margin-inline:auto}
 .fullModal:not(.pathsModal) .content{background:#fff2d3f5;padding:26px;border-radius:28px 45px 24px 24px;box-shadow:0 7px 0 #173e3726}
@@ -195,7 +198,7 @@
 .exploreList .exploreRow{background:#f6dc91;border:0;border-radius:18px 12px 22px 14px;box-shadow:0 4px 0 #244d401a}
 .exploreList li:nth-child(even) .exploreRow{background:#c3ded0}
 .exploreList .exploreRow[data-complete=true]{background:#d8e7bd}
-@media(max-width:600px){.fullModal .panel>div:first-of-type{padding-top:94px;background-size:100% 900px}.fullModal:not(.pathsModal) .content,.exploreChecklist{padding:18px}.fullModal .header h2{font-size:22px}}
+@media(max-width:600px){.fullModal .panel>div:first-of-type{padding-top:94px;background-size:100% 900px}.fullModal:not(.pathsModal) .content,.exploreChecklist{padding:18px}.fullModal .header h2{font-size:24px}.fullModal .header h2.settingsTitle{font-size:clamp(18px,5vw,22px)}}
 .dialog.fullModal.entering .panel{animation:pathsFadeIn .26s ease-out both}
 .dialog.fullModal.leaving .panel{animation:pathsFadeOut .2s ease-in both}
 .fullModal:not(.pathsModal) .panel>div:first-of-type{background-image:url('/stories/paths/settings-coast.svg');background-size:100% 1200px}
@@ -243,14 +246,32 @@
 .fullModal.ballsModal .panel>div:first-of-type{background:#32775c url('/stories/paths/ball-hunt-coast.svg') center top/100% 1200px repeat-y local;background-blend-mode:normal}
 .fullModal.exploreModal .panel>div:first-of-type{background:#254c65 url('/stories/paths/explore-coast.svg') center top/100% 1200px repeat-y local}
 @media(max-width:600px){.fullModal.ballsModal .panel>div:first-of-type,.fullModal.exploreModal .panel>div:first-of-type{background-size:100% 900px}}
-/* A brief sparkle invites discovery without a persistent animation loop. */
-.triggers .questsTrigger{position:relative;overflow:visible;border-radius:14px;background-color:#ed9dce;box-shadow:0 5px 0 #aa6590,0 0 0 4px #fff2cd40}
+/* Two small, staggered particle layers gently highlight the learning paths. */
+.triggers .questsTrigger{position:relative;overflow:visible;border-radius:14px;background-color:#ed9dce;box-shadow:0 5px 0 #aa6590,0 0 0 4px #fff2cd40;animation:pathButtonShake 3s linear infinite}
 .triggers .questsTrigger:active{box-shadow:0 2px 0 #aa6590,0 0 0 4px #fff2cd40}
-.questsTrigger::before,.questsTrigger::after{content:'';position:absolute;inset:-13px;pointer-events:none;opacity:0;background:radial-gradient(circle at 8% 23%,#fff2cd 0 2px,transparent 3px),radial-gradient(circle at 88% 12%,#f9d665 0 3px,transparent 4px),radial-gradient(circle at 93% 78%,#ed9dce 0 2px,transparent 3px),radial-gradient(circle at 18% 95%,#f9d665 0 2px,transparent 3px);animation:pathSparkle 1.5s ease-out 1s 2}
-.questsTrigger::after{rotate:45deg;animation-delay:1.6s}
-@keyframes pathSparkle{0%{opacity:0;scale:.75}25%{opacity:1}100%{opacity:0;scale:1.18}}
-@media(hover:hover){.questsTrigger:hover::before{animation:pathHoverSparkle 1s ease-out}.questsTrigger:hover::after{animation:pathHoverSparkle 1s .2s ease-out}}
-@keyframes pathHoverSparkle{0%{opacity:0;scale:.75}25%{opacity:1}100%{opacity:0;scale:1.18}}
+.questsTrigger::before,.questsTrigger::after{content:'';position:absolute;inset:-14px;pointer-events:none;opacity:0;background:radial-gradient(circle at 10% 28%,#fff8df 0 2.5px,#aa659080 2.7px,transparent 3.7px),radial-gradient(circle at 85% 14%,#ffe16b 0 3px,#aa659080 3.2px,transparent 4px),radial-gradient(circle at 90% 82%,#fff8df 0 2.5px,#aa659080 2.7px,transparent 3.7px),radial-gradient(circle at 20% 92%,#ffe16b 0 2px,transparent 3px);animation:pathSparkle 4.8s ease-in-out infinite}
+.questsTrigger::after{rotate:55deg;animation-delay:-2.4s}
+.pathIconCycle{position:relative;display:block;width:24px;height:24px;pointer-events:none}
+.pathIconCycle>span{position:absolute;inset:0;opacity:0;animation:pathIconSwap 9s linear infinite}
+.pathIconCycle>span:nth-child(2){animation-delay:3s}
+.pathIconCycle>span:nth-child(3){animation-delay:6s}
+@keyframes pathIconSwap{
+ 0%{opacity:0;filter:blur(2px)}
+ 2%,30%{opacity:1;filter:blur(0)}
+ 31.5%{opacity:.6;filter:blur(2px)}
+ 33.333%,100%{opacity:0;filter:blur(2px)}
+}
+@keyframes pathButtonShake{
+ 0%,80%,92%,100%{transform:none}
+ 83%,89%{transform:translateX(-2px) rotate(-5deg)}
+ 86%{transform:translateX(2px) rotate(5deg)}
+}
+.triggers[data-page-hidden=true] .questsTrigger,.triggers[data-page-hidden=true] .pathIconCycle>span,
+:global(body:has(dialog[open])) .questsTrigger,:global(body:has(dialog[open])) .pathIconCycle>span{animation-play-state:paused}
+@media(prefers-reduced-motion:reduce){.triggers .questsTrigger{animation:none;transform:none}.pathIconCycle>span{animation:none;opacity:0;filter:none;transform:none}.pathIconCycle>span:first-child{opacity:1}}
+@keyframes pathSparkle{0%,100%{opacity:0;transform:translateY(4px) scale(.86)}35%{opacity:.82}70%{opacity:.42}95%{opacity:0;transform:translateY(-7px) scale(1.2)}}
+.triggers[data-page-hidden=true] .questsTrigger::before,.triggers[data-page-hidden=true] .questsTrigger::after,
+:global(body:has(dialog[open])) .questsTrigger::before,:global(body:has(dialog[open])) .questsTrigger::after{animation-play-state:paused}
 @media(prefers-reduced-motion:reduce){.questsTrigger::before,.questsTrigger::after{animation:none!important}.triggers .circle{transition:none}}
 /* HUD and modal navigation share their corner anchors, including narrow phones. */
 @media(max-width:600px),(pointer:coarse){.triggers{top:calc(16px + env(safe-area-inset-top,0px));right:calc(18px + env(safe-area-inset-right,0px))}}

@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: the 2012 final",
+   "text": "The 2012 Futsal World Cup final. Extra time, two all, nineteen seconds left! Neto, Brazil\u2019s last defender, flicks it over his man, races down the wing, and shoots low with his left foot. Far corner!",
+   "src": "/plays/narration/neto-futsal-signature/1.m4a",
+   "seconds": 15.4,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "2012",
+     "at": 0.425
+    },
+    {
+     "w": "Futsal",
+     "at": 1.188
+    },
+    {
+     "w": "World",
+     "at": 1.65
+    },
+    {
+     "w": "Cup",
+     "at": 1.975
+    },
+    {
+     "w": "final",
+     "at": 2.2
+    },
+    {
+     "w": "Extra",
+     "at": 3.112
+    },
+    {
+     "w": "time",
+     "at": 3.525
+    },
+    {
+     "w": "two",
+     "at": 4.138
+    },
+    {
+     "w": "all",
+     "at": 4.375
+    },
+    {
+     "w": "nineteen",
+     "at": 4.825
+    },
+    {
+     "w": "seconds",
+     "at": 5.338
+    },
+    {
+     "w": "left",
+     "at": 5.75
+    },
+    {
+     "w": "Neto",
+     "at": 6.6
+    },
+    {
+     "w": "Brazil\u2019s",
+     "at": 7.225
+    },
+    {
+     "w": "last",
+     "at": 7.725
+    },
+    {
+     "w": "defender",
+     "at": 8.037
+    },
+    {
+     "w": "flicks",
+     "at": 8.637
+    },
+    {
+     "w": "it",
+     "at": 8.938
+    },
+    {
+     "w": "over",
+     "at": 9.012
+    },
+    {
+     "w": "his",
+     "at": 9.213
+    },
+    {
+     "w": "man",
+     "at": 9.375
+    },
+    {
+     "w": "races",
+     "at": 10.012
+    },
+    {
+     "w": "down",
+     "at": 10.475
+    },
+    {
+     "w": "the",
+     "at": 10.713
+    },
+    {
+     "w": "wing",
+     "at": 10.838
+    },
+    {
+     "w": "and",
+     "at": 11.275
+    },
+    {
+     "w": "shoots",
+     "at": 11.463
+    },
+    {
+     "w": "low",
+     "at": 11.812
+    },
+    {
+     "w": "with",
+     "at": 12.125
+    },
+    {
+     "w": "his",
+     "at": 12.238
+    },
+    {
+     "w": "left",
+     "at": 12.4
+    },
+    {
+     "w": "foot",
+     "at": 12.688
+    },
+    {
+     "w": "Far",
+     "at": 13.625
+    },
+    {
+     "w": "corner",
+     "at": 13.938
+    }
+   ]
+  },
+  {
+   "label": "Replay: over the tackle",
+   "text": "Watch again. He lifts it over the tackle, and he\u2019s away! Three two. Brazil are world champions!",
+   "src": "/plays/narration/neto-futsal-signature/2.m4a",
+   "seconds": 7.1,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "He",
+     "at": 1.35
+    },
+    {
+     "w": "lifts",
+     "at": 1.5
+    },
+    {
+     "w": "it",
+     "at": 1.788
+    },
+    {
+     "w": "over",
+     "at": 1.863
+    },
+    {
+     "w": "the",
+     "at": 2.038
+    },
+    {
+     "w": "tackle",
+     "at": 2.125
+    },
+    {
+     "w": "and",
+     "at": 2.562
+    },
+    {
+     "w": "he\u2019s",
+     "at": 2.663
+    },
+    {
+     "w": "away",
+     "at": 2.825
+    },
+    {
+     "w": "Three",
+     "at": 3.525
+    },
+    {
+     "w": "two",
+     "at": 3.812
+    },
+    {
+     "w": "Brazil",
+     "at": 4.537
+    },
+    {
+     "w": "are",
+     "at": 5.025
+    },
+    {
+     "w": "world",
+     "at": 5.175
+    },
+    {
+     "w": "champions",
+     "at": 5.463
+    }
+   ]
+  },
+  {
+   "label": "How he defends",
+   "text": "This is how he defends: when his team loses the ball, he sprints back, gets between the ball and the goal, and stops it.",
+   "src": "/plays/narration/neto-futsal-signature/3.m4a",
+   "seconds": 8.2,
+   "words": [
+    {
+     "w": "This",
+     "at": 0.375
+    },
+    {
+     "w": "is",
+     "at": 0.575
+    },
+    {
+     "w": "how",
+     "at": 0.7
+    },
+    {
+     "w": "he",
+     "at": 0.9
+    },
+    {
+     "w": "defends",
+     "at": 1.0
+    },
+    {
+     "w": "when",
+     "at": 2.05
+    },
+    {
+     "w": "his",
+     "at": 2.188
+    },
+    {
+     "w": "team",
+     "at": 2.362
+    },
+    {
+     "w": "loses",
+     "at": 2.7
+    },
+    {
+     "w": "the",
+     "at": 3.075
+    },
+    {
+     "w": "ball",
+     "at": 3.175
+    },
+    {
+     "w": "he",
+     "at": 3.675
+    },
+    {
+     "w": "sprints",
+     "at": 3.812
+    },
+    {
+     "w": "back",
+     "at": 4.225
+    },
+    {
+     "w": "gets",
+     "at": 4.875
+    },
+    {
+     "w": "between",
+     "at": 5.125
+    },
+    {
+     "w": "the",
+     "at": 5.438
+    },
+    {
+     "w": "ball",
+     "at": 5.525
+    },
+    {
+     "w": "and",
+     "at": 5.862
+    },
+    {
+     "w": "the",
+     "at": 5.963
+    },
+    {
+     "w": "goal",
+     "at": 6.062
+    },
+    {
+     "w": "and",
+     "at": 6.487
+    },
+    {
+     "w": "stops",
+     "at": 6.612
+    },
+    {
+     "w": "it",
+     "at": 7.062
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn! When your team loses the ball, always get back behind it.",
+   "src": "/plays/narration/neto-futsal-signature/4.m4a",
+   "seconds": 5.2,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.512
+    },
+    {
+     "w": "When",
+     "at": 1.325
+    },
+    {
+     "w": "your",
+     "at": 1.462
+    },
+    {
+     "w": "team",
+     "at": 1.575
+    },
+    {
+     "w": "loses",
+     "at": 1.875
+    },
+    {
+     "w": "the",
+     "at": 2.25
+    },
+    {
+     "w": "ball",
+     "at": 2.35
+    },
+    {
+     "w": "always",
+     "at": 2.8
+    },
+    {
+     "w": "get",
+     "at": 3.175
+    },
+    {
+     "w": "back",
+     "at": 3.35
+    },
+    {
+     "w": "behind",
+     "at": 3.625
+    },
+    {
+     "w": "it",
+     "at": 4.05
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,22 @@
+{
+ "film": "del-piero-germany-2006",
+ "note": "Chapter 1 is keyed from 'Italy break' (the ball won, Totti's pass) through 'Gilardino slips' (the pass across) to 'goal' (the ball in the top corner): keep the pause at '...' so the break plays near real time. Chapter 2 whips up the pitch just after 'sprinted'. Chapter 3's curl plays in slow motion between 'high' and 'top corner'.",
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Dortmund, 2006. Italy against Germany, the last minute of extra time. Italy break! Gilardino races forward, and Alessandro Del Piero sprints to join him. Gilardino slips it across... goal!"
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again. As soon as Italy won the ball, Del Piero sprinted to support, so Gilardino had a friend to pass to."
+  },
+  {
+   "label": "Into the corner",
+   "text": "He curls it high past keeper Jens Lehmann, into the top corner. Italy are in the final!"
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: when your team wins the ball, sprint forward to support, then bend it into the far corner."
+  }
+ ]
+}

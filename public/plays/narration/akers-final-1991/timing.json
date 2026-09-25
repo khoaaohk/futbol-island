@@ -1,0 +1,398 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The winner, live",
+   "text": "Guangzhou, 1991, the first Women's World Cup final. One-one, two minutes left. Norway's defender wins a long ball, but Michelle Akers chases her down! The back-pass is short... Akers pounces, round the keeper... goal!",
+   "src": "/plays/narration/akers-final-1991/1.m4a",
+   "seconds": 16.2,
+   "words": [
+    {
+     "w": "Guangzhou",
+     "at": 0.375
+    },
+    {
+     "w": "1991",
+     "at": 0.925
+    },
+    {
+     "w": "the",
+     "at": 1.975
+    },
+    {
+     "w": "first",
+     "at": 2.112
+    },
+    {
+     "w": "Women's",
+     "at": 2.475
+    },
+    {
+     "w": "World",
+     "at": 2.825
+    },
+    {
+     "w": "Cup",
+     "at": 3.125
+    },
+    {
+     "w": "final",
+     "at": 3.35
+    },
+    {
+     "w": "One-one",
+     "at": 4.275
+    },
+    {
+     "w": "two",
+     "at": 4.888
+    },
+    {
+     "w": "minutes",
+     "at": 5.075
+    },
+    {
+     "w": "left",
+     "at": 5.4
+    },
+    {
+     "w": "Norway's",
+     "at": 6.225
+    },
+    {
+     "w": "defender",
+     "at": 6.7
+    },
+    {
+     "w": "wins",
+     "at": 7.225
+    },
+    {
+     "w": "a",
+     "at": 7.525
+    },
+    {
+     "w": "long",
+     "at": 7.638
+    },
+    {
+     "w": "ball",
+     "at": 8.0
+    },
+    {
+     "w": "but",
+     "at": 8.412
+    },
+    {
+     "w": "Michelle",
+     "at": 8.55
+    },
+    {
+     "w": "Akers",
+     "at": 8.95
+    },
+    {
+     "w": "chases",
+     "at": 9.387
+    },
+    {
+     "w": "her",
+     "at": 9.787
+    },
+    {
+     "w": "down",
+     "at": 9.925
+    },
+    {
+     "w": "The",
+     "at": 10.725
+    },
+    {
+     "w": "back-pass",
+     "at": 10.825
+    },
+    {
+     "w": "is",
+     "at": 11.45
+    },
+    {
+     "w": "short",
+     "at": 11.625
+    },
+    {
+     "w": "Akers",
+     "at": 12.45
+    },
+    {
+     "w": "pounces",
+     "at": 12.825
+    },
+    {
+     "w": "round",
+     "at": 13.412
+    },
+    {
+     "w": "the",
+     "at": 13.713
+    },
+    {
+     "w": "keeper",
+     "at": 13.8
+    },
+    {
+     "w": "goal",
+     "at": 14.738
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again. Akers presses hard, so the defender has to rush. Her back-pass stops short, and Akers gets there first.",
+   "src": "/plays/narration/akers-final-1991/2.m4a",
+   "seconds": 8.9,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "Akers",
+     "at": 1.562
+    },
+    {
+     "w": "presses",
+     "at": 1.95
+    },
+    {
+     "w": "hard",
+     "at": 2.35
+    },
+    {
+     "w": "so",
+     "at": 2.875
+    },
+    {
+     "w": "the",
+     "at": 2.987
+    },
+    {
+     "w": "defender",
+     "at": 3.075
+    },
+    {
+     "w": "has",
+     "at": 3.6
+    },
+    {
+     "w": "to",
+     "at": 3.8
+    },
+    {
+     "w": "rush",
+     "at": 3.938
+    },
+    {
+     "w": "Her",
+     "at": 4.8
+    },
+    {
+     "w": "back-pass",
+     "at": 4.95
+    },
+    {
+     "w": "stops",
+     "at": 5.575
+    },
+    {
+     "w": "short",
+     "at": 5.95
+    },
+    {
+     "w": "and",
+     "at": 6.45
+    },
+    {
+     "w": "Akers",
+     "at": 6.588
+    },
+    {
+     "w": "gets",
+     "at": 7.025
+    },
+    {
+     "w": "there",
+     "at": 7.275
+    },
+    {
+     "w": "first",
+     "at": 7.487
+    }
+   ]
+  },
+  {
+   "label": "Stay calm",
+   "text": "The angle is tight. She stays calm, takes a deep breath, and passes it in with her right foot.",
+   "src": "/plays/narration/akers-final-1991/3.m4a",
+   "seconds": 6.8,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "angle",
+     "at": 0.487
+    },
+    {
+     "w": "is",
+     "at": 0.875
+    },
+    {
+     "w": "tight",
+     "at": 1.038
+    },
+    {
+     "w": "She",
+     "at": 1.887
+    },
+    {
+     "w": "stays",
+     "at": 2.05
+    },
+    {
+     "w": "calm",
+     "at": 2.462
+    },
+    {
+     "w": "takes",
+     "at": 3.05
+    },
+    {
+     "w": "a",
+     "at": 3.288
+    },
+    {
+     "w": "deep",
+     "at": 3.388
+    },
+    {
+     "w": "breath",
+     "at": 3.65
+    },
+    {
+     "w": "and",
+     "at": 4.112
+    },
+    {
+     "w": "passes",
+     "at": 4.225
+    },
+    {
+     "w": "it",
+     "at": 4.638
+    },
+    {
+     "w": "in",
+     "at": 4.725
+    },
+    {
+     "w": "with",
+     "at": 4.912
+    },
+    {
+     "w": "her",
+     "at": 5.013
+    },
+    {
+     "w": "right",
+     "at": 5.15
+    },
+    {
+     "w": "foot",
+     "at": 5.463
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: press defenders, pounce on mistakes, then stay calm and pass it into the net.",
+   "src": "/plays/narration/akers-final-1991/4.m4a",
+   "seconds": 6.6,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "press",
+     "at": 1.312
+    },
+    {
+     "w": "defenders",
+     "at": 1.6
+    },
+    {
+     "w": "pounce",
+     "at": 2.25
+    },
+    {
+     "w": "on",
+     "at": 2.562
+    },
+    {
+     "w": "mistakes",
+     "at": 2.663
+    },
+    {
+     "w": "then",
+     "at": 3.575
+    },
+    {
+     "w": "stay",
+     "at": 3.775
+    },
+    {
+     "w": "calm",
+     "at": 4.088
+    },
+    {
+     "w": "and",
+     "at": 4.438
+    },
+    {
+     "w": "pass",
+     "at": 4.562
+    },
+    {
+     "w": "it",
+     "at": 4.912
+    },
+    {
+     "w": "into",
+     "at": 4.987
+    },
+    {
+     "w": "the",
+     "at": 5.162
+    },
+    {
+     "w": "net",
+     "at": 5.25
+    }
+   ]
+  }
+ ]
+}

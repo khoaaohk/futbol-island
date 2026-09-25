@@ -1,0 +1,64 @@
+{
+ "lesson": "gap11_runoncue",
+ "questions": [
+  {
+   "q": "Put the striker's movements from this lesson in order, from first to last.",
+   "options": [
+    "Check diagonally away from the screen",
+    "Connect and keep the attack moving",
+    "Reset in front of the back line",
+    "Run into the channel on release"
+   ],
+   "correct": 0,
+   "explain": "Yes. Connect while the pass is screened, reset, then attack the channel once the pass is on.",
+   "choiceExplanations": [
+    "Yes. Connect while the pass is screened, reset, then attack the channel once the pass is on.",
+    "You can only connect after checking away from the screen to open the lane.",
+    "The reset comes after the first connection, ready to read the next picture.",
+    "The channel run is last: it starts only once the lane is clear and the pass is released."
+   ],
+   "visual": {
+    "kind": "order",
+    "frame": {"step": 1, "focus": ["st", "cm", "dcm"]}
+   }
+  },
+  {
+   "q": "True or false? The striker should start the channel run as the midfielder releases the pass.",
+   "options": ["True", "False"],
+   "correct": 0,
+   "explain": "Right, it's true. Running on the release keeps you onside and meets the ball in the channel.",
+   "choiceExplanations": [
+    "Right, it's true. Running on the release keeps you onside and meets the ball in the channel.",
+    "Leaving early risks offside or arriving before the pass; leaving late lets defenders close the channel."
+   ],
+   "visual": {
+    "kind": "trueFalse",
+    "frame": {"step": 7, "focus": ["st", "cm"]}
+   }
+  },
+  {
+   "q": "Now the screening opponent stands on the right. Tap where the striker should check to connect.",
+   "options": [
+    "Check diagonally to the left",
+    "Check diagonally to the right",
+    "Run straight in behind"
+   ],
+   "correct": 0,
+   "explain": "Yes. Checking away from the screen, to the left, opens a clear lane from the midfielder.",
+   "choiceExplanations": [
+    "Yes. Checking away from the screen, to the left, opens a clear lane from the midfielder.",
+    "The screening opponent now stands in that lane, so the pass would be cut out.",
+    "The midfielder has no route into that space while the back line holds, so the run can't be reached."
+   ],
+   "visual": {
+    "kind": "tapSpot",
+    "frame": {"step": 1, "place": {"dcm": {"x": 160, "y": 212}}, "focus": ["st", "cm", "dcm"]},
+    "spots": [
+     {"x": 95, "y": 182},
+     {"x": 175, "y": 182},
+     {"x": 135, "y": 100}
+    ]
+   }
+  }
+ ]
+}

@@ -1,0 +1,10 @@
+{
+ "film": "raya-signature",
+ "note": "Arsenal 1-0 Porto (a.e.t., Arsenal won 4-2 on penalties), Champions League round of 16 second leg, Emirates Stadium, 12 March 2024: the last kick of the shoot-out, Raya's save from Galeno. Chapter 1 is keyed from 'Galeno must' (he places the ball and walks back) and 'David Raya' (close on Raya bouncing on his toes) to 'Galeno shoots', 'Raya springs', 'Saved' and 'Arsenal are' (the red shirts sprint from halfway). Chapter 2 marks the heels off the grass on 'heels'; chapter 3 rings Galeno on 'brave'; chapter 4 puts pads under the balls of the feet on 'toes' and two arrows on 'spring'. Every cue starts with a plain word (no contractions or hyphens).",
+ "chapters": [
+  {"label": "The save, live", "text": "Arsenal against Porto, 2024. Penalties! Arsenal lead four-two, so Galeno must score. David Raya bounces on his toes... Galeno shoots. Raya springs left. Saved! Arsenal are through!"},
+  {"label": "Watch it again", "text": "Watch again, slowly. Raya stays calm, weight on his toes, heels off the grass. He waits for the kick, then pushes off and beats it away."},
+  {"label": "Behind the kicker", "text": "Now, from behind Galeno: a strong hand! Galeno was brave to step up. Here come Raya's team-mates!"},
+  {"label": "Your turn", "text": "Your turn, keepers: keep your weight on your toes. Then you can spring either way, left or right!"}
+ ]
+}

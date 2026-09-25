@@ -1,0 +1,382 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: the 2012 final",
+   "text": "The 2012 UEFA Futsal Cup final, in Lleida. In the second minute, Wilde, from Brazil, shoots Barcelona ahead against Dinamo Moscow! Bar\u00e7a win three one, and Wilde is man of the match.",
+   "src": "/plays/narration/wilde-futsal-signature/1.m4a",
+   "seconds": 14.5,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "2012",
+     "at": 0.425
+    },
+    {
+     "w": "UEFA",
+     "at": 1.188
+    },
+    {
+     "w": "Futsal",
+     "at": 1.663
+    },
+    {
+     "w": "Cup",
+     "at": 2.125
+    },
+    {
+     "w": "final",
+     "at": 2.35
+    },
+    {
+     "w": "in",
+     "at": 2.975
+    },
+    {
+     "w": "Lleida",
+     "at": 3.125
+    },
+    {
+     "w": "In",
+     "at": 4.188
+    },
+    {
+     "w": "the",
+     "at": 4.312
+    },
+    {
+     "w": "second",
+     "at": 4.412
+    },
+    {
+     "w": "minute",
+     "at": 4.75
+    },
+    {
+     "w": "Wilde",
+     "at": 5.312
+    },
+    {
+     "w": "from",
+     "at": 5.875
+    },
+    {
+     "w": "Brazil",
+     "at": 6.05
+    },
+    {
+     "w": "shoots",
+     "at": 6.9
+    },
+    {
+     "w": "Barcelona",
+     "at": 7.225
+    },
+    {
+     "w": "ahead",
+     "at": 7.9
+    },
+    {
+     "w": "against",
+     "at": 8.2
+    },
+    {
+     "w": "Dinamo",
+     "at": 8.6
+    },
+    {
+     "w": "Moscow",
+     "at": 9.1
+    },
+    {
+     "w": "Bar\u00e7a",
+     "at": 10.3
+    },
+    {
+     "w": "win",
+     "at": 10.738
+    },
+    {
+     "w": "three",
+     "at": 11.012
+    },
+    {
+     "w": "one",
+     "at": 11.3
+    },
+    {
+     "w": "and",
+     "at": 11.875
+    },
+    {
+     "w": "Wilde",
+     "at": 12.012
+    },
+    {
+     "w": "is",
+     "at": 12.475
+    },
+    {
+     "w": "man",
+     "at": 12.637
+    },
+    {
+     "w": "of",
+     "at": 12.938
+    },
+    {
+     "w": "the",
+     "at": 13.012
+    },
+    {
+     "w": "match",
+     "at": 13.1
+    }
+   ]
+  },
+  {
+   "label": "How he does it",
+   "text": "Wilde played pivot, up front. This is his power turn: back to goal, he takes the ball. He sinks low and leans into the defender. He feels where the defender is, then turns and shoots!",
+   "src": "/plays/narration/wilde-futsal-signature/2.m4a",
+   "seconds": 13.0,
+   "words": [
+    {
+     "w": "Wilde",
+     "at": 0.4
+    },
+    {
+     "w": "played",
+     "at": 0.812
+    },
+    {
+     "w": "pivot",
+     "at": 1.163
+    },
+    {
+     "w": "up",
+     "at": 1.562
+    },
+    {
+     "w": "front",
+     "at": 1.762
+    },
+    {
+     "w": "This",
+     "at": 2.538
+    },
+    {
+     "w": "is",
+     "at": 2.775
+    },
+    {
+     "w": "his",
+     "at": 2.888
+    },
+    {
+     "w": "power",
+     "at": 3.062
+    },
+    {
+     "w": "turn",
+     "at": 3.475
+    },
+    {
+     "w": "back",
+     "at": 4.162
+    },
+    {
+     "w": "to",
+     "at": 4.45
+    },
+    {
+     "w": "goal",
+     "at": 4.575
+    },
+    {
+     "w": "he",
+     "at": 4.975
+    },
+    {
+     "w": "takes",
+     "at": 5.1
+    },
+    {
+     "w": "the",
+     "at": 5.4
+    },
+    {
+     "w": "ball",
+     "at": 5.5
+    },
+    {
+     "w": "He",
+     "at": 6.375
+    },
+    {
+     "w": "sinks",
+     "at": 6.537
+    },
+    {
+     "w": "low",
+     "at": 6.888
+    },
+    {
+     "w": "and",
+     "at": 7.25
+    },
+    {
+     "w": "leans",
+     "at": 7.412
+    },
+    {
+     "w": "into",
+     "at": 7.812
+    },
+    {
+     "w": "the",
+     "at": 7.987
+    },
+    {
+     "w": "defender",
+     "at": 8.075
+    },
+    {
+     "w": "He",
+     "at": 9.05
+    },
+    {
+     "w": "feels",
+     "at": 9.213
+    },
+    {
+     "w": "where",
+     "at": 9.588
+    },
+    {
+     "w": "the",
+     "at": 9.713
+    },
+    {
+     "w": "defender",
+     "at": 9.8
+    },
+    {
+     "w": "is",
+     "at": 10.338
+    },
+    {
+     "w": "then",
+     "at": 10.7
+    },
+    {
+     "w": "turns",
+     "at": 10.938
+    },
+    {
+     "w": "and",
+     "at": 11.45
+    },
+    {
+     "w": "shoots",
+     "at": 11.613
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. Low, strong, turn!",
+   "src": "/plays/narration/wilde-futsal-signature/3.m4a",
+   "seconds": 3.9,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.662
+    },
+    {
+     "w": "slowly",
+     "at": 1.062
+    },
+    {
+     "w": "Low",
+     "at": 1.887
+    },
+    {
+     "w": "strong",
+     "at": 2.15
+    },
+    {
+     "w": "turn",
+     "at": 2.575
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: back to goal, stay strong, don\u2019t get pushed off, then turn!",
+   "src": "/plays/narration/wilde-futsal-signature/4.m4a",
+   "seconds": 5.2,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.5
+    },
+    {
+     "w": "back",
+     "at": 1.2
+    },
+    {
+     "w": "to",
+     "at": 1.475
+    },
+    {
+     "w": "goal",
+     "at": 1.575
+    },
+    {
+     "w": "stay",
+     "at": 1.95
+    },
+    {
+     "w": "strong",
+     "at": 2.237
+    },
+    {
+     "w": "don\u2019t",
+     "at": 2.712
+    },
+    {
+     "w": "get",
+     "at": 2.888
+    },
+    {
+     "w": "pushed",
+     "at": 3.025
+    },
+    {
+     "w": "off",
+     "at": 3.3
+    },
+    {
+     "w": "then",
+     "at": 3.612
+    },
+    {
+     "w": "turn",
+     "at": 3.812
+    }
+   ]
+  }
+ ]
+}

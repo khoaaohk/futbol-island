@@ -1,0 +1,10 @@
+{
+ "film": "carlos-alberto-1970",
+ "note": "Chapter 1 is keyed from 'Clodoaldo' (his dribble) through 'Rivellino', 'Jairzinho', 'Pelé' and 'and here comes' to 'Goal' (the ball in the net): keep the pauses at '...' so the move plays near real time. Chapter 2 pans right to the empty space on 'leaving'.",
+ "chapters": [
+  {"label": "The goal, live", "text": "Mexico City, 1970. Brazil against Italy, the World Cup final. Clodoaldo dribbles past four players... Rivellino sends it down the wing to Jairzinho. He cuts inside to Pelé... and here comes Carlos Alberto! Goal!"},
+  {"label": "Watch it again", "text": "Watch again, slowly. Jairzinho drags his defender left, leaving empty space on the right."},
+  {"label": "The overlap", "text": "Carlos Alberto, the right-back, sprints into it. Pelé rolls the ball into his path. First time... what a team goal!"},
+  {"label": "Your turn", "text": "Your turn: full-backs, overlap and sprint into the space. Teammates, pass into the runner's path, so they can shoot without stopping."}
+ ]
+}

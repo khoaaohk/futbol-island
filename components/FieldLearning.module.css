@@ -106,3 +106,6 @@
 .corners .choose{--navigation-width:140px;position:absolute;left:50%;transform:translateX(-50%);margin:0;justify-self:center}
 
 .corners button.choose[data-navigation]{position:absolute;left:50%;transform:translateX(-50%);transition:width 220ms cubic-bezier(.22,.7,.3,1),opacity 140ms ease}
+/* Visual quiz questions (VisualQuestion.tsx) carry their own mini pitch, so the card may grow; it still scrolls inside. */
+.bottom[data-quiz=true] .quizUnified[data-visual]{max-height:min(calc(100dvh - 200px),720px)}
+@media(max-width:600px),(pointer:coarse){.bottom[data-quiz=true] .quizUnified[data-visual]{max-height:calc(100dvh - 170px);padding:12px 14px}}

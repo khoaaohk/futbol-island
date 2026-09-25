@@ -1,10 +1,10 @@
 import {Color,MathUtils,type HemisphereLight,type DirectionalLight,type Scene,type WebGLRenderer} from 'three';
 export type TimeOfDay='day'|'sunset'|'night';
 const presets={
- // Original golden sunset treatment, cooled slightly for warm daylight.
- day:{sky:'#e8c5a6',upper:'#ffe8c5',lower:'#a18a74',sun:'#ffd39c',hemi:2,direct:3,exposure:1},
- // Golden-hour sunlight with a pink sky and rose bounce in shaded surfaces.
- sunset:{sky:'#f29cac',upper:'#ffd4c6',lower:'#ad6f91',sun:'#ffad70',hemi:1.7,direct:2.95,exposure:1},
+ // Clear daytime: blue sky, neutral sunlight and a soft natural ground bounce.
+ day:{sky:'#a9d4ed',upper:'#eaf4ff',lower:'#929887',sun:'#fff5e6',hemi:2,direct:3,exposure:1},
+ // Honey-gold sunlight, apricot sky and warm ochre bounce across the island.
+ sunset:{sky:'#efb477',upper:'#ffdda6',lower:'#ad8254',sun:'#ffbf72',hemi:1.7,direct:2.95,exposure:1},
  // Keep the night sky while warm broad fill reaches trees, paths and pitches.
  // Reusing these lights brightens shadowed scenery without extra light passes.
  night:{sky:'#0d1830',upper:'#d4c6af',lower:'#706653',sun:'#c8d0e4',hemi:1.15,direct:1.05,exposure:.98},

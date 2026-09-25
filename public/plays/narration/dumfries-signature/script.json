@@ -1,0 +1,22 @@
+{
+ "film": "dumfries-signature",
+ "note": "Chapter 1 is keyed from 'Dimarco wins' / 'crunching tackle' (the ball won) through 'Straight away' / 'Denzel Dumfries' (his charge), 'The pass' and 'clean through' (the through ball) to 'he sets up' and 'Lautaro Martínez' (the finish). Chapter 2 is the slow replay of the charge; chapter 3 keys 'an easy finish' and 'for Lautaro'; chapter 4 keys the lesson words. Every cue starts with a plain word.",
+ "chapters": [
+  {
+   "label": "The charge, live",
+   "text": "Milan, May 2025: Inter against Barcelona, a Champions League semi-final. Dimarco wins the ball with a crunching tackle. Straight away, Denzel Dumfries sprints forward. The pass sends him clean through, and he sets up Lautaro Martínez to score!"
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again. The moment Inter win the ball, Dumfries runs, forward into the space behind the defence."
+  },
+  {
+   "label": "The finish",
+   "text": "From behind the goal: an easy finish for Lautaro. Inter won four three, after extra time."
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: when your team wins the ball, sprint forward on the outside to stretch the defence!"
+  }
+ ]
+}

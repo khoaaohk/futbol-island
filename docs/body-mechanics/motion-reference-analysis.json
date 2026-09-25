@@ -1,0 +1,56 @@
+[
+  {
+    "kind": "run",
+    "trial": "09_01",
+    "frames": 148,
+    "rate": 120,
+    "start": 35,
+    "end": 123,
+    "contactProxy": null,
+    "mirrorToRight": false,
+    "sha256": "02c94e8c2d4d2ff05f9a784f06403700c2c9d7caedd9bd92b50284d1a05f2bee",
+    "channels": [
+      "chestPitch",
+      "chestYaw",
+      "leftShoulderPitch",
+      "leftElbow",
+      "rightShoulderPitch",
+      "rightElbow"
+    ],
+    "mean": [
+      0.31364837445496113,
+      0.0785135993818067,
+      0.4179051095942193,
+      -1.8618409867747665,
+      0.4614050365375604,
+      -1.4858284977266407
+    ]
+  },
+  {
+    "kind": "shot",
+    "trial": "10_01",
+    "frames": 801,
+    "rate": 120,
+    "start": 568,
+    "end": 658,
+    "contactProxy": 598,
+    "mirrorToRight": false,
+    "sha256": "4277e748947e8703825f340f94582f48997ca01b308f2447075eab4c42029e84",
+    "channels": [
+      "chestPitch",
+      "chestYaw",
+      "leftShoulderPitch",
+      "leftElbow",
+      "rightShoulderPitch",
+      "rightElbow"
+    ],
+    "mean": [
+      0.022622243103455477,
+      0.3036514937731219,
+      0.057674895550842147,
+      -0.7623671394818275,
+      0.16425218789842322,
+      -0.8071412122073702
+    ]
+  }
+]

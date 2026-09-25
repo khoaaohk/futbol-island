@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Wembley, live",
+   "text": "Wembley, 2013, the Champions League final: Bayern in red, Dortmund in yellow, one-all, last minute. Arjen Robben has missed two chances. A long ball, Rib\u00e9ry's back-heel, and Robben runs through... goal!",
+   "src": "/plays/narration/robben-final-2013/1.m4a",
+   "seconds": 15.1,
+   "words": [
+    {
+     "w": "Wembley",
+     "at": 0.4
+    },
+    {
+     "w": "2013",
+     "at": 0.925
+    },
+    {
+     "w": "the",
+     "at": 1.9
+    },
+    {
+     "w": "Champions",
+     "at": 2.013
+    },
+    {
+     "w": "League",
+     "at": 2.6
+    },
+    {
+     "w": "final",
+     "at": 2.862
+    },
+    {
+     "w": "Bayern",
+     "at": 3.638
+    },
+    {
+     "w": "in",
+     "at": 4.05
+    },
+    {
+     "w": "red",
+     "at": 4.213
+    },
+    {
+     "w": "Dortmund",
+     "at": 4.638
+    },
+    {
+     "w": "in",
+     "at": 5.1
+    },
+    {
+     "w": "yellow",
+     "at": 5.25
+    },
+    {
+     "w": "one-all",
+     "at": 5.675
+    },
+    {
+     "w": "last",
+     "at": 6.125
+    },
+    {
+     "w": "minute",
+     "at": 6.5
+    },
+    {
+     "w": "Arjen",
+     "at": 7.362
+    },
+    {
+     "w": "Robben",
+     "at": 7.75
+    },
+    {
+     "w": "has",
+     "at": 8.125
+    },
+    {
+     "w": "missed",
+     "at": 8.3
+    },
+    {
+     "w": "two",
+     "at": 8.562
+    },
+    {
+     "w": "chances",
+     "at": 8.787
+    },
+    {
+     "w": "A",
+     "at": 9.812
+    },
+    {
+     "w": "long",
+     "at": 9.938
+    },
+    {
+     "w": "ball",
+     "at": 10.3
+    },
+    {
+     "w": "Rib\u00e9ry's",
+     "at": 10.787
+    },
+    {
+     "w": "back-heel",
+     "at": 11.35
+    },
+    {
+     "w": "and",
+     "at": 11.963
+    },
+    {
+     "w": "Robben",
+     "at": 12.075
+    },
+    {
+     "w": "runs",
+     "at": 12.45
+    },
+    {
+     "w": "through",
+     "at": 12.812
+    },
+    {
+     "w": "goal",
+     "at": 13.713
+    }
+   ]
+  },
+  {
+   "label": "Into the space",
+   "text": "Watch again, slowly. Robben keeps running into the space between defenders. The ball bounces off one, and he's free.",
+   "src": "/plays/narration/robben-final-2013/2.m4a",
+   "seconds": 8.6,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.275
+    },
+    {
+     "w": "Robben",
+     "at": 2.3
+    },
+    {
+     "w": "keeps",
+     "at": 2.7
+    },
+    {
+     "w": "running",
+     "at": 3.013
+    },
+    {
+     "w": "into",
+     "at": 3.312
+    },
+    {
+     "w": "the",
+     "at": 3.487
+    },
+    {
+     "w": "space",
+     "at": 3.587
+    },
+    {
+     "w": "between",
+     "at": 4.0
+    },
+    {
+     "w": "defenders",
+     "at": 4.35
+    },
+    {
+     "w": "The",
+     "at": 5.375
+    },
+    {
+     "w": "ball",
+     "at": 5.475
+    },
+    {
+     "w": "bounces",
+     "at": 5.775
+    },
+    {
+     "w": "off",
+     "at": 6.25
+    },
+    {
+     "w": "one",
+     "at": 6.5
+    },
+    {
+     "w": "and",
+     "at": 6.85
+    },
+    {
+     "w": "he's",
+     "at": 6.963
+    },
+    {
+     "w": "free",
+     "at": 7.213
+    }
+   ]
+  },
+  {
+   "label": "The calm finish",
+   "text": "Keeper Weidenfeller rushes out. Robben stays calm and pokes it early with his left foot. It rolls in, slowly... Bayern win!",
+   "src": "/plays/narration/robben-final-2013/3.m4a",
+   "seconds": 9.3,
+   "words": [
+    {
+     "w": "Keeper",
+     "at": 0.35
+    },
+    {
+     "w": "Weidenfeller",
+     "at": 0.7
+    },
+    {
+     "w": "rushes",
+     "at": 1.4
+    },
+    {
+     "w": "out",
+     "at": 1.775
+    },
+    {
+     "w": "Robben",
+     "at": 2.487
+    },
+    {
+     "w": "stays",
+     "at": 2.85
+    },
+    {
+     "w": "calm",
+     "at": 3.237
+    },
+    {
+     "w": "and",
+     "at": 3.612
+    },
+    {
+     "w": "pokes",
+     "at": 3.725
+    },
+    {
+     "w": "it",
+     "at": 3.987
+    },
+    {
+     "w": "early",
+     "at": 4.1
+    },
+    {
+     "w": "with",
+     "at": 4.438
+    },
+    {
+     "w": "his",
+     "at": 4.537
+    },
+    {
+     "w": "left",
+     "at": 4.7
+    },
+    {
+     "w": "foot",
+     "at": 4.987
+    },
+    {
+     "w": "It",
+     "at": 5.675
+    },
+    {
+     "w": "rolls",
+     "at": 5.85
+    },
+    {
+     "w": "in",
+     "at": 6.25
+    },
+    {
+     "w": "slowly",
+     "at": 6.575
+    },
+    {
+     "w": "Bayern",
+     "at": 7.612
+    },
+    {
+     "w": "win",
+     "at": 8.05
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: missed a chance? Stay brave. Keep running into space, and when the chance comes, finish calmly.",
+   "src": "/plays/narration/robben-final-2013/4.m4a",
+   "seconds": 7.5,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.5
+    },
+    {
+     "w": "missed",
+     "at": 0.875
+    },
+    {
+     "w": "a",
+     "at": 1.087
+    },
+    {
+     "w": "chance",
+     "at": 1.163
+    },
+    {
+     "w": "Stay",
+     "at": 2.013
+    },
+    {
+     "w": "brave",
+     "at": 2.312
+    },
+    {
+     "w": "Keep",
+     "at": 3.237
+    },
+    {
+     "w": "running",
+     "at": 3.5
+    },
+    {
+     "w": "into",
+     "at": 3.788
+    },
+    {
+     "w": "space",
+     "at": 4.013
+    },
+    {
+     "w": "and",
+     "at": 4.537
+    },
+    {
+     "w": "when",
+     "at": 4.638
+    },
+    {
+     "w": "the",
+     "at": 4.763
+    },
+    {
+     "w": "chance",
+     "at": 4.85
+    },
+    {
+     "w": "comes",
+     "at": 5.175
+    },
+    {
+     "w": "finish",
+     "at": 5.625
+    },
+    {
+     "w": "calmly",
+     "at": 5.963
+    }
+   ]
+  }
+ ]
+}

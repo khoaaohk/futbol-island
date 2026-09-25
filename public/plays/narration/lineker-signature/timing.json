@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Mexico, live",
+   "text": "Mexico, 1986. England must beat Poland. Kenny Sansom wins it, Lineker and Beardsley swap passes, and Lineker switches it to Trevor Steven. Gary Stevens overlaps, crosses low... Lineker! Goal!",
+   "src": "/plays/narration/lineker-signature/1.m4a",
+   "seconds": 15.9,
+   "words": [
+    {
+     "w": "Mexico",
+     "at": 0.4
+    },
+    {
+     "w": "1986",
+     "at": 0.95
+    },
+    {
+     "w": "England",
+     "at": 2.413
+    },
+    {
+     "w": "must",
+     "at": 2.875
+    },
+    {
+     "w": "beat",
+     "at": 3.15
+    },
+    {
+     "w": "Poland",
+     "at": 3.388
+    },
+    {
+     "w": "Kenny",
+     "at": 4.438
+    },
+    {
+     "w": "Sansom",
+     "at": 4.787
+    },
+    {
+     "w": "wins",
+     "at": 5.275
+    },
+    {
+     "w": "it",
+     "at": 5.588
+    },
+    {
+     "w": "Lineker",
+     "at": 5.987
+    },
+    {
+     "w": "and",
+     "at": 6.45
+    },
+    {
+     "w": "Beardsley",
+     "at": 6.588
+    },
+    {
+     "w": "swap",
+     "at": 7.112
+    },
+    {
+     "w": "passes",
+     "at": 7.487
+    },
+    {
+     "w": "and",
+     "at": 8.1
+    },
+    {
+     "w": "Lineker",
+     "at": 8.225
+    },
+    {
+     "w": "switches",
+     "at": 8.613
+    },
+    {
+     "w": "it",
+     "at": 9.075
+    },
+    {
+     "w": "to",
+     "at": 9.2
+    },
+    {
+     "w": "Trevor",
+     "at": 9.3
+    },
+    {
+     "w": "Steven",
+     "at": 9.688
+    },
+    {
+     "w": "Gary",
+     "at": 10.75
+    },
+    {
+     "w": "Stevens",
+     "at": 11.137
+    },
+    {
+     "w": "overlaps",
+     "at": 11.6
+    },
+    {
+     "w": "crosses",
+     "at": 12.325
+    },
+    {
+     "w": "low",
+     "at": 12.812
+    },
+    {
+     "w": "Lineker",
+     "at": 13.562
+    },
+    {
+     "w": "Goal",
+     "at": 14.45
+    }
+   ]
+  },
+  {
+   "label": "Watch his run",
+   "text": "Watch it again, slowly. After his pass, Lineker sprints all the way into the box, then surges in to meet the low cross.",
+   "src": "/plays/narration/lineker-signature/2.m4a",
+   "seconds": 8.8,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "slowly",
+     "at": 1.312
+    },
+    {
+     "w": "After",
+     "at": 2.413
+    },
+    {
+     "w": "his",
+     "at": 2.712
+    },
+    {
+     "w": "pass",
+     "at": 2.888
+    },
+    {
+     "w": "Lineker",
+     "at": 3.487
+    },
+    {
+     "w": "sprints",
+     "at": 3.888
+    },
+    {
+     "w": "all",
+     "at": 4.35
+    },
+    {
+     "w": "the",
+     "at": 4.588
+    },
+    {
+     "w": "way",
+     "at": 4.675
+    },
+    {
+     "w": "into",
+     "at": 4.888
+    },
+    {
+     "w": "the",
+     "at": 5.062
+    },
+    {
+     "w": "box",
+     "at": 5.15
+    },
+    {
+     "w": "then",
+     "at": 5.9
+    },
+    {
+     "w": "surges",
+     "at": 6.138
+    },
+    {
+     "w": "in",
+     "at": 6.55
+    },
+    {
+     "w": "to",
+     "at": 6.75
+    },
+    {
+     "w": "meet",
+     "at": 6.85
+    },
+    {
+     "w": "the",
+     "at": 7.05
+    },
+    {
+     "w": "low",
+     "at": 7.175
+    },
+    {
+     "w": "cross",
+     "at": 7.425
+    }
+   ]
+  },
+  {
+   "label": "One touch",
+   "text": "He stretches out his right foot and sweeps it first time past the Polish keeper! One-nil, and his first-half hat-trick has begun!",
+   "src": "/plays/narration/lineker-signature/3.m4a",
+   "seconds": 8.9,
+   "words": [
+    {
+     "w": "He",
+     "at": 0.35
+    },
+    {
+     "w": "stretches",
+     "at": 0.475
+    },
+    {
+     "w": "out",
+     "at": 0.9
+    },
+    {
+     "w": "his",
+     "at": 1.062
+    },
+    {
+     "w": "right",
+     "at": 1.225
+    },
+    {
+     "w": "foot",
+     "at": 1.538
+    },
+    {
+     "w": "and",
+     "at": 2.062
+    },
+    {
+     "w": "sweeps",
+     "at": 2.212
+    },
+    {
+     "w": "it",
+     "at": 2.575
+    },
+    {
+     "w": "first",
+     "at": 2.725
+    },
+    {
+     "w": "time",
+     "at": 3.0
+    },
+    {
+     "w": "past",
+     "at": 3.337
+    },
+    {
+     "w": "the",
+     "at": 3.688
+    },
+    {
+     "w": "Polish",
+     "at": 3.775
+    },
+    {
+     "w": "keeper",
+     "at": 4.175
+    },
+    {
+     "w": "One-nil",
+     "at": 5.138
+    },
+    {
+     "w": "and",
+     "at": 6.05
+    },
+    {
+     "w": "his",
+     "at": 6.162
+    },
+    {
+     "w": "first-half",
+     "at": 6.325
+    },
+    {
+     "w": "hat-trick",
+     "at": 6.825
+    },
+    {
+     "w": "has",
+     "at": 7.263
+    },
+    {
+     "w": "begun",
+     "at": 7.425
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: get across your defender to the near post, and finish with one touch.",
+   "src": "/plays/narration/lineker-signature/4.m4a",
+   "seconds": 5.7,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.562
+    },
+    {
+     "w": "get",
+     "at": 1.387
+    },
+    {
+     "w": "across",
+     "at": 1.538
+    },
+    {
+     "w": "your",
+     "at": 1.863
+    },
+    {
+     "w": "defender",
+     "at": 1.962
+    },
+    {
+     "w": "to",
+     "at": 2.45
+    },
+    {
+     "w": "the",
+     "at": 2.538
+    },
+    {
+     "w": "near",
+     "at": 2.625
+    },
+    {
+     "w": "post",
+     "at": 2.85
+    },
+    {
+     "w": "and",
+     "at": 3.45
+    },
+    {
+     "w": "finish",
+     "at": 3.587
+    },
+    {
+     "w": "with",
+     "at": 3.95
+    },
+    {
+     "w": "one",
+     "at": 4.125
+    },
+    {
+     "w": "touch",
+     "at": 4.362
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,66 @@
+{
+ "lesson": "exp11_checking8",
+ "questions": [
+  {
+   "q": "Blue's wing-back blocks your fullback. Tap where the left eight checks to offer a clear pass.",
+   "options": [
+    "Stay high behind Blue's midfielder",
+    "Check short beneath the midfield line",
+    "Go wide to the touchline"
+   ],
+   "correct": 1,
+   "explain": "Yes. Checking beneath Blue's midfield line opens a clear route from the center back.",
+   "choiceExplanations": [
+    "Blue's midfielder stands in that lane, so the pass from the center back would be cut out.",
+    "Yes. Checking beneath Blue's midfield line opens a clear route from the center back.",
+    "The wing-back already guards the wide lane, so the pass there is still blocked."
+   ],
+   "visual": {
+    "kind": "tapSpot",
+    "frame": {"step": 2, "ball": "lcb", "focus": ["l8", "dlb"]},
+    "spots": [
+     {"x": 103, "y": 180},
+     {"x": 100, "y": 262},
+     {"x": 38, "y": 298}
+    ]
+   }
+  },
+  {
+   "q": "True or false? Here the six should move into the same lane as the eight to help him.",
+   "options": ["True", "False"],
+   "correct": 1,
+   "explain": "Right, it's false. The six keeps a different lane, giving the eight another inside connection.",
+   "choiceExplanations": [
+    "In the same lane, one opponent can block both of them. Separate lanes give two passing options.",
+    "Right, it's false. The six keeps a different lane, giving the eight another inside connection."
+   ],
+   "visual": {
+    "kind": "trueFalse",
+    "frame": {"step": 5, "focus": ["six", "l8"]}
+   }
+  },
+  {
+   "q": "Which picture shows the moment to pass to the fullback?",
+   "options": [
+    "Wing-back in the wide lane, eight unmarked",
+    "Wing-back in the wide lane, eight followed",
+    "Wing-back dropped, eight followed"
+   ],
+   "correct": 2,
+   "explain": "Yes. The wing-back has dropped and the eight drags his marker inside, so the fullback is free.",
+   "choiceExplanations": [
+    "The wing-back still blocks the wide pass, and the eight is free, so play into the checking eight.",
+    "The wing-back still sits in the wide lane, so a pass to the fullback would be cut out.",
+    "Yes. The wing-back has dropped and the eight drags his marker inside, so the fullback is free."
+   ],
+   "visual": {
+    "kind": "pickPicture",
+    "pictures": [
+     {"step": 4, "focus": ["lb", "l8", "dlb"]},
+     {"step": 7, "place": {"dlb": {"x": 55, "y": 277}}, "focus": ["lb", "l8", "dlb"]},
+     {"step": 7, "focus": ["lb", "l8", "dlb"]}
+    ]
+   }
+  }
+ ]
+}

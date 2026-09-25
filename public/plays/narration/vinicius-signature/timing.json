@@ -1,0 +1,366 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Wembley, 2024",
+   "text": "Wembley, 2024, the Champions League final. Real Madrid lead one\u2013nil. Then a Dortmund pass goes astray... Bellingham steals it, Vin\u00edcius J\u00fanior is away... two\u2013nil!",
+   "src": "/plays/narration/vinicius-signature/1.m4a",
+   "seconds": 13.1,
+   "words": [
+    {
+     "w": "Wembley",
+     "at": 0.4
+    },
+    {
+     "w": "2024",
+     "at": 0.85
+    },
+    {
+     "w": "the",
+     "at": 1.663
+    },
+    {
+     "w": "Champions",
+     "at": 1.762
+    },
+    {
+     "w": "League",
+     "at": 2.35
+    },
+    {
+     "w": "final",
+     "at": 2.612
+    },
+    {
+     "w": "Real",
+     "at": 3.4
+    },
+    {
+     "w": "Madrid",
+     "at": 3.7
+    },
+    {
+     "w": "lead",
+     "at": 4.15
+    },
+    {
+     "w": "one",
+     "at": 4.438
+    },
+    {
+     "w": "nil",
+     "at": 4.8
+    },
+    {
+     "w": "Then",
+     "at": 5.475
+    },
+    {
+     "w": "a",
+     "at": 5.625
+    },
+    {
+     "w": "Dortmund",
+     "at": 5.725
+    },
+    {
+     "w": "pass",
+     "at": 6.213
+    },
+    {
+     "w": "goes",
+     "at": 6.575
+    },
+    {
+     "w": "astray",
+     "at": 6.825
+    },
+    {
+     "w": "Bellingham",
+     "at": 7.888
+    },
+    {
+     "w": "steals",
+     "at": 8.463
+    },
+    {
+     "w": "it",
+     "at": 8.912
+    },
+    {
+     "w": "Vin\u00edcius",
+     "at": 9.175
+    },
+    {
+     "w": "J\u00fanior",
+     "at": 9.838
+    },
+    {
+     "w": "is",
+     "at": 10.275
+    },
+    {
+     "w": "away",
+     "at": 10.4
+    },
+    {
+     "w": "two",
+     "at": 11.338
+    },
+    {
+     "w": "nil",
+     "at": 11.775
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. Bellingham rolls it into Vin\u00edcius's path. See him change gear: one quick touch, and he's clear!",
+   "src": "/plays/narration/vinicius-signature/2.m4a",
+   "seconds": 8.8,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.113
+    },
+    {
+     "w": "Bellingham",
+     "at": 2.062
+    },
+    {
+     "w": "rolls",
+     "at": 2.625
+    },
+    {
+     "w": "it",
+     "at": 2.938
+    },
+    {
+     "w": "into",
+     "at": 3.013
+    },
+    {
+     "w": "Vin\u00edcius's",
+     "at": 3.25
+    },
+    {
+     "w": "path",
+     "at": 4.013
+    },
+    {
+     "w": "See",
+     "at": 4.8
+    },
+    {
+     "w": "him",
+     "at": 5.025
+    },
+    {
+     "w": "change",
+     "at": 5.237
+    },
+    {
+     "w": "gear",
+     "at": 5.625
+    },
+    {
+     "w": "one",
+     "at": 6.213
+    },
+    {
+     "w": "quick",
+     "at": 6.45
+    },
+    {
+     "w": "touch",
+     "at": 6.713
+    },
+    {
+     "w": "and",
+     "at": 7.112
+    },
+    {
+     "w": "he's",
+     "at": 7.213
+    },
+    {
+     "w": "clear",
+     "at": 7.388
+    }
+   ]
+  },
+  {
+   "label": "Across the keeper",
+   "text": "From behind the goal: he sweeps it across the keeper, into the far corner! Real Madrid win their fifteenth European Cup!",
+   "src": "/plays/narration/vinicius-signature/3.m4a",
+   "seconds": 8.4,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "behind",
+     "at": 0.5
+    },
+    {
+     "w": "the",
+     "at": 0.912
+    },
+    {
+     "w": "goal",
+     "at": 1.0
+    },
+    {
+     "w": "he",
+     "at": 1.75
+    },
+    {
+     "w": "sweeps",
+     "at": 1.913
+    },
+    {
+     "w": "it",
+     "at": 2.237
+    },
+    {
+     "w": "across",
+     "at": 2.312
+    },
+    {
+     "w": "the",
+     "at": 2.65
+    },
+    {
+     "w": "keeper",
+     "at": 2.75
+    },
+    {
+     "w": "into",
+     "at": 3.375
+    },
+    {
+     "w": "the",
+     "at": 3.562
+    },
+    {
+     "w": "far",
+     "at": 3.663
+    },
+    {
+     "w": "corner",
+     "at": 3.95
+    },
+    {
+     "w": "Real",
+     "at": 4.9
+    },
+    {
+     "w": "Madrid",
+     "at": 5.175
+    },
+    {
+     "w": "win",
+     "at": 5.612
+    },
+    {
+     "w": "their",
+     "at": 5.85
+    },
+    {
+     "w": "fifteenth",
+     "at": 6.05
+    },
+    {
+     "w": "European",
+     "at": 6.575
+    },
+    {
+     "w": "Cup",
+     "at": 7.088
+    }
+   ]
+  },
+  {
+   "label": "Change your speed",
+   "text": "Change your speed! Jog, then burst. Quick feet and a sudden sprint get you past defenders!",
+   "src": "/plays/narration/vinicius-signature/4.m4a",
+   "seconds": 6.9,
+   "words": [
+    {
+     "w": "Change",
+     "at": 0.375
+    },
+    {
+     "w": "your",
+     "at": 0.637
+    },
+    {
+     "w": "speed",
+     "at": 0.762
+    },
+    {
+     "w": "Jog",
+     "at": 1.65
+    },
+    {
+     "w": "then",
+     "at": 2.125
+    },
+    {
+     "w": "burst",
+     "at": 2.35
+    },
+    {
+     "w": "Quick",
+     "at": 3.188
+    },
+    {
+     "w": "feet",
+     "at": 3.462
+    },
+    {
+     "w": "and",
+     "at": 3.775
+    },
+    {
+     "w": "a",
+     "at": 3.888
+    },
+    {
+     "w": "sudden",
+     "at": 3.962
+    },
+    {
+     "w": "sprint",
+     "at": 4.287
+    },
+    {
+     "w": "get",
+     "at": 4.65
+    },
+    {
+     "w": "you",
+     "at": 4.787
+    },
+    {
+     "w": "past",
+     "at": 4.9
+    },
+    {
+     "w": "defenders",
+     "at": 5.25
+    }
+   ]
+  }
+ ]
+}

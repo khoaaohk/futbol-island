@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Ready to shoot",
+   "text": "Porto, 2021, the Champions League final. Kevin De Bruyne races down the left, ready to shoot. But N'Golo Kant\u00e9 is sprinting back!",
+   "src": "/plays/narration/kante-signature/1.m4a",
+   "seconds": 10.7,
+   "words": [
+    {
+     "w": "Porto",
+     "at": 0.325
+    },
+    {
+     "w": "2021",
+     "at": 0.925
+    },
+    {
+     "w": "the",
+     "at": 2.125
+    },
+    {
+     "w": "Champions",
+     "at": 2.263
+    },
+    {
+     "w": "League",
+     "at": 2.875
+    },
+    {
+     "w": "final",
+     "at": 3.138
+    },
+    {
+     "w": "Kevin",
+     "at": 4.088
+    },
+    {
+     "w": "De",
+     "at": 4.425
+    },
+    {
+     "w": "Bruyne",
+     "at": 4.55
+    },
+    {
+     "w": "races",
+     "at": 5.013
+    },
+    {
+     "w": "down",
+     "at": 5.475
+    },
+    {
+     "w": "the",
+     "at": 5.713
+    },
+    {
+     "w": "left",
+     "at": 5.8
+    },
+    {
+     "w": "ready",
+     "at": 6.275
+    },
+    {
+     "w": "to",
+     "at": 6.525
+    },
+    {
+     "w": "shoot",
+     "at": 6.675
+    },
+    {
+     "w": "But",
+     "at": 7.45
+    },
+    {
+     "w": "N'Golo",
+     "at": 7.6
+    },
+    {
+     "w": "Kant\u00e9",
+     "at": 8.162
+    },
+    {
+     "w": "is",
+     "at": 8.75
+    },
+    {
+     "w": "sprinting",
+     "at": 8.887
+    },
+    {
+     "w": "back",
+     "at": 9.35
+    }
+   ]
+  },
+  {
+   "label": "The replay",
+   "text": "Watch again, slowly. Kant\u00e9 never stops running. He slides in from behind and hooks the ball away. What a tackle!",
+   "src": "/plays/narration/kante-signature/2.m4a",
+   "seconds": 8.5,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.113
+    },
+    {
+     "w": "Kant\u00e9",
+     "at": 2.062
+    },
+    {
+     "w": "never",
+     "at": 2.5
+    },
+    {
+     "w": "stops",
+     "at": 2.8
+    },
+    {
+     "w": "running",
+     "at": 3.175
+    },
+    {
+     "w": "He",
+     "at": 3.875
+    },
+    {
+     "w": "slides",
+     "at": 4.037
+    },
+    {
+     "w": "in",
+     "at": 4.463
+    },
+    {
+     "w": "from",
+     "at": 4.65
+    },
+    {
+     "w": "behind",
+     "at": 4.787
+    },
+    {
+     "w": "and",
+     "at": 5.263
+    },
+    {
+     "w": "hooks",
+     "at": 5.375
+    },
+    {
+     "w": "the",
+     "at": 5.65
+    },
+    {
+     "w": "ball",
+     "at": 5.75
+    },
+    {
+     "w": "away",
+     "at": 6.025
+    },
+    {
+     "w": "What",
+     "at": 6.812
+    },
+    {
+     "w": "a",
+     "at": 6.963
+    },
+    {
+     "w": "tackle",
+     "at": 7.025
+    }
+   ]
+  },
+  {
+   "label": "No shot",
+   "text": "From behind the goal: no shot for De Bruyne. Kant\u00e9 was named player of the match, and Chelsea won the cup.",
+   "src": "/plays/narration/kante-signature/3.m4a",
+   "seconds": 7.6,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "behind",
+     "at": 0.487
+    },
+    {
+     "w": "the",
+     "at": 0.863
+    },
+    {
+     "w": "goal",
+     "at": 0.95
+    },
+    {
+     "w": "no",
+     "at": 1.637
+    },
+    {
+     "w": "shot",
+     "at": 1.925
+    },
+    {
+     "w": "for",
+     "at": 2.225
+    },
+    {
+     "w": "De",
+     "at": 2.35
+    },
+    {
+     "w": "Bruyne",
+     "at": 2.5
+    },
+    {
+     "w": "Kant\u00e9",
+     "at": 3.538
+    },
+    {
+     "w": "was",
+     "at": 4.0
+    },
+    {
+     "w": "named",
+     "at": 4.175
+    },
+    {
+     "w": "player",
+     "at": 4.487
+    },
+    {
+     "w": "of",
+     "at": 4.862
+    },
+    {
+     "w": "the",
+     "at": 4.938
+    },
+    {
+     "w": "match",
+     "at": 5.025
+    },
+    {
+     "w": "and",
+     "at": 5.5
+    },
+    {
+     "w": "Chelsea",
+     "at": 5.638
+    },
+    {
+     "w": "won",
+     "at": 6.05
+    },
+    {
+     "w": "the",
+     "at": 6.213
+    },
+    {
+     "w": "cup",
+     "at": 6.3
+    }
+   ]
+  },
+  {
+   "label": "The lesson",
+   "text": "That is the ball-winning sprint! When you lose the ball, press straight away: sprint, get close, win it back. The best time is right away.",
+   "src": "/plays/narration/kante-signature/4.m4a",
+   "seconds": 9.2,
+   "words": [
+    {
+     "w": "That",
+     "at": 0.375
+    },
+    {
+     "w": "is",
+     "at": 0.562
+    },
+    {
+     "w": "the",
+     "at": 0.7
+    },
+    {
+     "w": "ball-winning",
+     "at": 0.8
+    },
+    {
+     "w": "sprint",
+     "at": 1.413
+    },
+    {
+     "w": "When",
+     "at": 2.225
+    },
+    {
+     "w": "you",
+     "at": 2.362
+    },
+    {
+     "w": "lose",
+     "at": 2.475
+    },
+    {
+     "w": "the",
+     "at": 2.725
+    },
+    {
+     "w": "ball",
+     "at": 2.825
+    },
+    {
+     "w": "press",
+     "at": 3.25
+    },
+    {
+     "w": "straight",
+     "at": 3.5
+    },
+    {
+     "w": "away",
+     "at": 3.8
+    },
+    {
+     "w": "sprint",
+     "at": 4.575
+    },
+    {
+     "w": "get",
+     "at": 5.125
+    },
+    {
+     "w": "close",
+     "at": 5.338
+    },
+    {
+     "w": "win",
+     "at": 5.775
+    },
+    {
+     "w": "it",
+     "at": 5.912
+    },
+    {
+     "w": "back",
+     "at": 6.025
+    },
+    {
+     "w": "The",
+     "at": 6.8
+    },
+    {
+     "w": "best",
+     "at": 6.9
+    },
+    {
+     "w": "time",
+     "at": 7.175
+    },
+    {
+     "w": "is",
+     "at": 7.438
+    },
+    {
+     "w": "right",
+     "at": 7.575
+    },
+    {
+     "w": "away",
+     "at": 7.775
+    }
+   ]
+  }
+ ]
+}

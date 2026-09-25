@@ -1,0 +1,10 @@
+{
+ "film": "vieira-signature",
+ "note": "Chapter 1 is the live break, keyed to the cue words: the corner kick on 'last corner', the ball dropping to Dugarry on 'France win the ball', Vieira's first-time pass on 'passes first time', the ball in the net on 'goal' — keep the pauses at the two '...'. Chapter 2 is the slow replay (Brazil still up for the corner, then a whip to Vieira's run); chapter 3 the first-time pass and Petit's low left-foot finish; chapter 4 the lesson.",
+ "chapters": [
+  {"label": "The goal, live", "text": "World Cup final, 1998. Brazil's last corner... France win the ball! Dugarry breaks away, with Patrick Vieira sprinting up the left beside him. Dugarry finds Vieira, who passes first time to Petit... goal! France are world champions!"},
+  {"label": "Watch again", "text": "Watch again, slowly. Brazil are still up for their corner. France win it, and Vieira drives forward into the empty space."},
+  {"label": "One touch", "text": "One touch! Petit slides it low with his left foot, past the keeper."},
+  {"label": "Your turn", "text": "Your turn: when you win the ball, carry it forward fast, before the other team gets organised!"}
+ ]
+}

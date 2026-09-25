@@ -12,7 +12,8 @@ for(const venue of VENUES)for(const lesson of JSON.parse(fs.readFileSync('public
   steps++;
  }
  for(let i=0;i<lesson.questions.length;i++){
-  const q=lesson.questions[i];Object.assign(session,{quiz:true,question:i,step:q.step,progress:1,answer:null});cues.update(session,venue);
+  const q=lesson.questions[i];if(q.visual)continue;// answered on the SVG board (tests/visual-quiz.cjs)
+  Object.assign(session,{quiz:true,question:i,step:q.step,progress:1,answer:null});cues.update(session,venue);
   const labels=cues.root.children.filter(n=>n.isSprite&&n.visible&&n.userData.answer!==undefined),fills=cues.root.children.filter(n=>n.isMesh&&n.visible&&n.material.opacity===.18);
   assert.equal(labels.length,q.options.length,lesson.id+':'+i+' all targets render');assert.equal(fills.length,q.options.length,'no answer-giving fills before selection');assert.equal(new Set(fills.map(m=>m.material.color.getHex())).size,1,'neutral choice colors');
   session.answer=q.correct;cues.update(session,venue);assert(ground.geometry.drawRange.count>0);questions++;

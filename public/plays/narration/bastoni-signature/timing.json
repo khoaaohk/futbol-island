@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The overlap, live",
+   "text": "Lisbon, April 2023: Benfica against Inter. Alessandro Bastoni is a centre-back. Space opens on the left, so he steps up, passes, and races round the outside, down the wing. His cross... Barella heads it in!",
+   "src": "/plays/narration/bastoni-signature/1.m4a",
+   "seconds": 16.5,
+   "words": [
+    {
+     "w": "Lisbon",
+     "at": 0.425
+    },
+    {
+     "w": "April",
+     "at": 0.95
+    },
+    {
+     "w": "2023",
+     "at": 1.3
+    },
+    {
+     "w": "Benfica",
+     "at": 2.587
+    },
+    {
+     "w": "against",
+     "at": 3.2
+    },
+    {
+     "w": "Inter",
+     "at": 3.625
+    },
+    {
+     "w": "Alessandro",
+     "at": 4.537
+    },
+    {
+     "w": "Bastoni",
+     "at": 5.25
+    },
+    {
+     "w": "is",
+     "at": 5.9
+    },
+    {
+     "w": "a",
+     "at": 6.025
+    },
+    {
+     "w": "centre-back",
+     "at": 6.138
+    },
+    {
+     "w": "Space",
+     "at": 7.237
+    },
+    {
+     "w": "opens",
+     "at": 7.763
+    },
+    {
+     "w": "on",
+     "at": 8.162
+    },
+    {
+     "w": "the",
+     "at": 8.262
+    },
+    {
+     "w": "left",
+     "at": 8.35
+    },
+    {
+     "w": "so",
+     "at": 8.8
+    },
+    {
+     "w": "he",
+     "at": 8.938
+    },
+    {
+     "w": "steps",
+     "at": 9.05
+    },
+    {
+     "w": "up",
+     "at": 9.4
+    },
+    {
+     "w": "passes",
+     "at": 9.838
+    },
+    {
+     "w": "and",
+     "at": 10.45
+    },
+    {
+     "w": "races",
+     "at": 10.575
+    },
+    {
+     "w": "round",
+     "at": 11.05
+    },
+    {
+     "w": "the",
+     "at": 11.262
+    },
+    {
+     "w": "outside",
+     "at": 11.375
+    },
+    {
+     "w": "down",
+     "at": 12.075
+    },
+    {
+     "w": "the",
+     "at": 12.312
+    },
+    {
+     "w": "wing",
+     "at": 12.412
+    },
+    {
+     "w": "His",
+     "at": 13.262
+    },
+    {
+     "w": "cross",
+     "at": 13.488
+    },
+    {
+     "w": "Barella",
+     "at": 14.45
+    },
+    {
+     "w": "heads",
+     "at": 14.95
+    },
+    {
+     "w": "it",
+     "at": 15.188
+    },
+    {
+     "w": "in",
+     "at": 15.275
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again. Their right back has gone forward, leaving empty grass. Bastoni runs round his team mate, into that space.",
+   "src": "/plays/narration/bastoni-signature/2.m4a",
+   "seconds": 9.0,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.7
+    },
+    {
+     "w": "Their",
+     "at": 1.512
+    },
+    {
+     "w": "right",
+     "at": 1.675
+    },
+    {
+     "w": "back",
+     "at": 1.9
+    },
+    {
+     "w": "has",
+     "at": 2.163
+    },
+    {
+     "w": "gone",
+     "at": 2.325
+    },
+    {
+     "w": "forward",
+     "at": 2.612
+    },
+    {
+     "w": "leaving",
+     "at": 3.225
+    },
+    {
+     "w": "empty",
+     "at": 3.562
+    },
+    {
+     "w": "grass",
+     "at": 3.925
+    },
+    {
+     "w": "Bastoni",
+     "at": 4.912
+    },
+    {
+     "w": "runs",
+     "at": 5.5
+    },
+    {
+     "w": "round",
+     "at": 5.8
+    },
+    {
+     "w": "his",
+     "at": 6.062
+    },
+    {
+     "w": "team",
+     "at": 6.237
+    },
+    {
+     "w": "mate",
+     "at": 6.55
+    },
+    {
+     "w": "into",
+     "at": 7.05
+    },
+    {
+     "w": "that",
+     "at": 7.3
+    },
+    {
+     "w": "space",
+     "at": 7.55
+    }
+   ]
+  },
+  {
+   "label": "The header",
+   "text": "From behind the goal: a cross from Bastoni, and a thumping header from Nicol\u00f2 Barella. Inter won two nil.",
+   "src": "/plays/narration/bastoni-signature/3.m4a",
+   "seconds": 7.9,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "behind",
+     "at": 0.487
+    },
+    {
+     "w": "the",
+     "at": 0.887
+    },
+    {
+     "w": "goal",
+     "at": 0.975
+    },
+    {
+     "w": "a",
+     "at": 1.712
+    },
+    {
+     "w": "cross",
+     "at": 1.837
+    },
+    {
+     "w": "from",
+     "at": 2.25
+    },
+    {
+     "w": "Bastoni",
+     "at": 2.4
+    },
+    {
+     "w": "and",
+     "at": 3.2
+    },
+    {
+     "w": "a",
+     "at": 3.312
+    },
+    {
+     "w": "thumping",
+     "at": 3.413
+    },
+    {
+     "w": "header",
+     "at": 3.85
+    },
+    {
+     "w": "from",
+     "at": 4.175
+    },
+    {
+     "w": "Nicol\u00f2",
+     "at": 4.375
+    },
+    {
+     "w": "Barella",
+     "at": 4.85
+    },
+    {
+     "w": "Inter",
+     "at": 5.838
+    },
+    {
+     "w": "won",
+     "at": 6.1
+    },
+    {
+     "w": "two",
+     "at": 6.338
+    },
+    {
+     "w": "nil",
+     "at": 6.55
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: when the space opens, a defender can step up and join the attack!",
+   "src": "/plays/narration/bastoni-signature/4.m4a",
+   "seconds": 5.7,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "when",
+     "at": 1.375
+    },
+    {
+     "w": "the",
+     "at": 1.512
+    },
+    {
+     "w": "space",
+     "at": 1.6
+    },
+    {
+     "w": "opens",
+     "at": 1.95
+    },
+    {
+     "w": "a",
+     "at": 2.6
+    },
+    {
+     "w": "defender",
+     "at": 2.675
+    },
+    {
+     "w": "can",
+     "at": 3.15
+    },
+    {
+     "w": "step",
+     "at": 3.3
+    },
+    {
+     "w": "up",
+     "at": 3.538
+    },
+    {
+     "w": "and",
+     "at": 3.688
+    },
+    {
+     "w": "join",
+     "at": 3.812
+    },
+    {
+     "w": "the",
+     "at": 4.088
+    },
+    {
+     "w": "attack",
+     "at": 4.225
+    }
+   ]
+  }
+ ]
+}

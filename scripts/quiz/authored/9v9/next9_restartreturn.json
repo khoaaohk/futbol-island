@@ -1,0 +1,102 @@
+{
+ "lesson": "next9_restartreturn",
+ "questions": [
+  {
+   "q": "True or false? The restart taker should run forward before the back three is rebuilt.",
+   "options": [
+    "True",
+    "False"
+   ],
+   "correct": 1,
+   "explain": "Right, it's false. The taker rebuilds the back three first, then joins the attack later.",
+   "choiceExplanations": [
+    "Two blue strikers stay high, so running forward leaves two backs against two with no cover.",
+    "Right, it's false. The taker rebuilds the back three first, then joins the attack later."
+   ],
+   "visual": {
+    "kind": "trueFalse",
+    "frame": {
+     "step": 2,
+     "focus": [
+      "RB",
+      "ls",
+      "rs"
+     ]
+    }
+   }
+  },
+  {
+   "q": "The right midfielder gets the ball back. What should the central midfielder do next?",
+   "options": [
+    "Run forward past their strikers",
+    "Stay in the middle and watch",
+    "Move behind to cover the right side"
+   ],
+   "correct": 2,
+   "explain": "Right. The central midfielder moves behind the ball to replace the covering job.",
+   "choiceExplanations": [
+    "Running forward leaves nobody behind the ball if we lose it on the right.",
+    "Standing still gives no cover and no new angle for the right midfielder.",
+    "Right. The central midfielder moves behind the ball to replace the covering job."
+   ],
+   "visual": {
+    "kind": "whatNext",
+    "frame": {
+     "step": 6,
+     "focus": [
+      "CM",
+      "RM"
+     ],
+     "trails": true
+    }
+   }
+  },
+  {
+   "q": "Now our left back took the restart. Tap where the left back should go next.",
+   "options": [
+    "Run forward past the left midfielder",
+    "Back into the back line",
+    "Into the middle of midfield"
+   ],
+   "correct": 1,
+   "explain": "Yes. Rejoining the back line rebuilds three backs against their two strikers, just like on the right.",
+   "choiceExplanations": [
+    "Two blue strikers stay high, so running forward leaves our back line one short.",
+    "Yes. Rejoining the back line rebuilds three backs against their two strikers, just like on the right.",
+    "The middle is not the missing job. The back line still has only two players."
+   ],
+   "visual": {
+    "kind": "tapSpot",
+    "frame": {
+     "step": 4,
+     "ball": "LM",
+     "place": {
+      "LB": {
+       "x": 25,
+       "y": 265
+      }
+     },
+     "focus": [
+      "LB",
+      "ls",
+      "rs"
+     ]
+    },
+    "spots": [
+     {
+      "x": 40,
+      "y": 190
+     },
+     {
+      "x": 70,
+      "y": 345
+     },
+     {
+      "x": 110,
+      "y": 215
+     }
+    ]
+   }
+  }
+ ]
+}

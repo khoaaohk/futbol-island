@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "London, 2019. A Burnley free kick is cleared to Son Heung-min, by his own box. Off he goes! Past one... past two... he's still going, into the box... goal!",
+   "src": "/plays/narration/son-burnley-2019/1.m4a",
+   "seconds": 12.0,
+   "words": [
+    {
+     "w": "London",
+     "at": 0.4
+    },
+    {
+     "w": "2019",
+     "at": 0.85
+    },
+    {
+     "w": "A",
+     "at": 1.988
+    },
+    {
+     "w": "Burnley",
+     "at": 2.112
+    },
+    {
+     "w": "free",
+     "at": 2.538
+    },
+    {
+     "w": "kick",
+     "at": 2.812
+    },
+    {
+     "w": "is",
+     "at": 3.087
+    },
+    {
+     "w": "cleared",
+     "at": 3.225
+    },
+    {
+     "w": "to",
+     "at": 3.525
+    },
+    {
+     "w": "Son",
+     "at": 3.65
+    },
+    {
+     "w": "Heung-min",
+     "at": 3.9
+    },
+    {
+     "w": "by",
+     "at": 4.4
+    },
+    {
+     "w": "his",
+     "at": 4.562
+    },
+    {
+     "w": "own",
+     "at": 4.7
+    },
+    {
+     "w": "box",
+     "at": 4.925
+    },
+    {
+     "w": "Off",
+     "at": 5.5
+    },
+    {
+     "w": "he",
+     "at": 5.688
+    },
+    {
+     "w": "goes",
+     "at": 5.8
+    },
+    {
+     "w": "Past",
+     "at": 6.325
+    },
+    {
+     "w": "one",
+     "at": 6.7
+    },
+    {
+     "w": "past",
+     "at": 7.375
+    },
+    {
+     "w": "two",
+     "at": 7.737
+    },
+    {
+     "w": "he's",
+     "at": 8.5
+    },
+    {
+     "w": "still",
+     "at": 8.675
+    },
+    {
+     "w": "going",
+     "at": 8.95
+    },
+    {
+     "w": "into",
+     "at": 9.387
+    },
+    {
+     "w": "the",
+     "at": 9.562
+    },
+    {
+     "w": "box",
+     "at": 9.65
+    },
+    {
+     "w": "goal",
+     "at": 10.562
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again, slowly. Long touches push the ball into space, so he sprints at full speed, head up.",
+   "src": "/plays/narration/son-burnley-2019/2.m4a",
+   "seconds": 7.6,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "slowly",
+     "at": 1.312
+    },
+    {
+     "w": "Long",
+     "at": 2.375
+    },
+    {
+     "w": "touches",
+     "at": 2.725
+    },
+    {
+     "w": "push",
+     "at": 3.15
+    },
+    {
+     "w": "the",
+     "at": 3.375
+    },
+    {
+     "w": "ball",
+     "at": 3.475
+    },
+    {
+     "w": "into",
+     "at": 3.737
+    },
+    {
+     "w": "space",
+     "at": 3.962
+    },
+    {
+     "w": "so",
+     "at": 4.65
+    },
+    {
+     "w": "he",
+     "at": 4.8
+    },
+    {
+     "w": "sprints",
+     "at": 4.938
+    },
+    {
+     "w": "at",
+     "at": 5.287
+    },
+    {
+     "w": "full",
+     "at": 5.4
+    },
+    {
+     "w": "speed",
+     "at": 5.662
+    },
+    {
+     "w": "head",
+     "at": 6.2
+    },
+    {
+     "w": "up",
+     "at": 6.388
+    }
+   ]
+  },
+  {
+   "label": "Past Nick Pope",
+   "text": "He skips a tackle, races into the box, and slots it past Nick Pope with his right foot. Pusk\u00e1s Award goal!",
+   "src": "/plays/narration/son-burnley-2019/3.m4a",
+   "seconds": 8.1,
+   "words": [
+    {
+     "w": "He",
+     "at": 0.35
+    },
+    {
+     "w": "skips",
+     "at": 0.475
+    },
+    {
+     "w": "a",
+     "at": 0.738
+    },
+    {
+     "w": "tackle",
+     "at": 0.8
+    },
+    {
+     "w": "races",
+     "at": 1.538
+    },
+    {
+     "w": "into",
+     "at": 1.962
+    },
+    {
+     "w": "the",
+     "at": 2.138
+    },
+    {
+     "w": "box",
+     "at": 2.225
+    },
+    {
+     "w": "and",
+     "at": 2.85
+    },
+    {
+     "w": "slots",
+     "at": 2.987
+    },
+    {
+     "w": "it",
+     "at": 3.312
+    },
+    {
+     "w": "past",
+     "at": 3.4
+    },
+    {
+     "w": "Nick",
+     "at": 3.788
+    },
+    {
+     "w": "Pope",
+     "at": 4.037
+    },
+    {
+     "w": "with",
+     "at": 4.338
+    },
+    {
+     "w": "his",
+     "at": 4.438
+    },
+    {
+     "w": "right",
+     "at": 4.575
+    },
+    {
+     "w": "foot",
+     "at": 4.862
+    },
+    {
+     "w": "Pusk\u00e1s",
+     "at": 5.737
+    },
+    {
+     "w": "Award",
+     "at": 6.325
+    },
+    {
+     "w": "goal",
+     "at": 6.675
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: when there's space, carry the ball with long touches, run at full speed, and keep your head up.",
+   "src": "/plays/narration/son-burnley-2019/4.m4a",
+   "seconds": 7.2,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.525
+    },
+    {
+     "w": "when",
+     "at": 1.275
+    },
+    {
+     "w": "there's",
+     "at": 1.413
+    },
+    {
+     "w": "space",
+     "at": 1.637
+    },
+    {
+     "w": "carry",
+     "at": 2.475
+    },
+    {
+     "w": "the",
+     "at": 2.763
+    },
+    {
+     "w": "ball",
+     "at": 2.85
+    },
+    {
+     "w": "with",
+     "at": 3.163
+    },
+    {
+     "w": "long",
+     "at": 3.337
+    },
+    {
+     "w": "touches",
+     "at": 3.675
+    },
+    {
+     "w": "run",
+     "at": 4.263
+    },
+    {
+     "w": "at",
+     "at": 4.513
+    },
+    {
+     "w": "full",
+     "at": 4.625
+    },
+    {
+     "w": "speed",
+     "at": 4.888
+    },
+    {
+     "w": "and",
+     "at": 5.388
+    },
+    {
+     "w": "keep",
+     "at": 5.5
+    },
+    {
+     "w": "your",
+     "at": 5.713
+    },
+    {
+     "w": "head",
+     "at": 5.825
+    },
+    {
+     "w": "up",
+     "at": 6.013
+    }
+   ]
+  }
+ ]
+}

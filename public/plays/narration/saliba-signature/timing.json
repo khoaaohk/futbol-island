@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Le Classique",
+   "text": "Marseille against Paris Saint-Germain, 2021. Seven minutes left, no goals. Messi slides a pass through. Kylian Mbapp\u00e9 is away! But William Saliba, on loan from Arsenal, races after him and slides in to win the ball!",
+   "src": "/plays/narration/saliba-signature/1.m4a",
+   "seconds": 16.8,
+   "words": [
+    {
+     "w": "Marseille",
+     "at": 0.375
+    },
+    {
+     "w": "against",
+     "at": 0.875
+    },
+    {
+     "w": "Paris",
+     "at": 1.238
+    },
+    {
+     "w": "Saint-Germain",
+     "at": 1.663
+    },
+    {
+     "w": "2021",
+     "at": 2.625
+    },
+    {
+     "w": "Seven",
+     "at": 4.138
+    },
+    {
+     "w": "minutes",
+     "at": 4.463
+    },
+    {
+     "w": "left",
+     "at": 4.775
+    },
+    {
+     "w": "no",
+     "at": 5.188
+    },
+    {
+     "w": "goals",
+     "at": 5.425
+    },
+    {
+     "w": "Messi",
+     "at": 6.312
+    },
+    {
+     "w": "slides",
+     "at": 6.662
+    },
+    {
+     "w": "a",
+     "at": 7.088
+    },
+    {
+     "w": "pass",
+     "at": 7.15
+    },
+    {
+     "w": "through",
+     "at": 7.513
+    },
+    {
+     "w": "Kylian",
+     "at": 8.312
+    },
+    {
+     "w": "Mbapp\u00e9",
+     "at": 8.9
+    },
+    {
+     "w": "is",
+     "at": 9.525
+    },
+    {
+     "w": "away",
+     "at": 9.65
+    },
+    {
+     "w": "But",
+     "at": 10.575
+    },
+    {
+     "w": "William",
+     "at": 10.725
+    },
+    {
+     "w": "Saliba",
+     "at": 11.113
+    },
+    {
+     "w": "on",
+     "at": 11.775
+    },
+    {
+     "w": "loan",
+     "at": 11.975
+    },
+    {
+     "w": "from",
+     "at": 12.3
+    },
+    {
+     "w": "Arsenal",
+     "at": 12.5
+    },
+    {
+     "w": "races",
+     "at": 13.213
+    },
+    {
+     "w": "after",
+     "at": 13.688
+    },
+    {
+     "w": "him",
+     "at": 14.025
+    },
+    {
+     "w": "and",
+     "at": 14.25
+    },
+    {
+     "w": "slides",
+     "at": 14.4
+    },
+    {
+     "w": "in",
+     "at": 14.838
+    },
+    {
+     "w": "to",
+     "at": 15.025
+    },
+    {
+     "w": "win",
+     "at": 15.15
+    },
+    {
+     "w": "the",
+     "at": 15.363
+    },
+    {
+     "w": "ball",
+     "at": 15.45
+    }
+   ]
+  },
+  {
+   "label": "The replay",
+   "text": "Watch again, slowly. Saliba uses his speed to catch up and run alongside. Then he slides in low, and takes the ball, not the player.",
+   "src": "/plays/narration/saliba-signature/2.m4a",
+   "seconds": 10.0,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.188
+    },
+    {
+     "w": "Saliba",
+     "at": 2.275
+    },
+    {
+     "w": "uses",
+     "at": 2.75
+    },
+    {
+     "w": "his",
+     "at": 3.038
+    },
+    {
+     "w": "speed",
+     "at": 3.188
+    },
+    {
+     "w": "to",
+     "at": 3.55
+    },
+    {
+     "w": "catch",
+     "at": 3.675
+    },
+    {
+     "w": "up",
+     "at": 3.938
+    },
+    {
+     "w": "and",
+     "at": 4.138
+    },
+    {
+     "w": "run",
+     "at": 4.25
+    },
+    {
+     "w": "alongside",
+     "at": 4.45
+    },
+    {
+     "w": "Then",
+     "at": 5.662
+    },
+    {
+     "w": "he",
+     "at": 5.9
+    },
+    {
+     "w": "slides",
+     "at": 6.05
+    },
+    {
+     "w": "in",
+     "at": 6.525
+    },
+    {
+     "w": "low",
+     "at": 6.675
+    },
+    {
+     "w": "and",
+     "at": 7.25
+    },
+    {
+     "w": "takes",
+     "at": 7.375
+    },
+    {
+     "w": "the",
+     "at": 7.675
+    },
+    {
+     "w": "ball",
+     "at": 7.775
+    },
+    {
+     "w": "not",
+     "at": 8.2
+    },
+    {
+     "w": "the",
+     "at": 8.387
+    },
+    {
+     "w": "player",
+     "at": 8.475
+    }
+   ]
+  },
+  {
+   "label": "From behind the goal",
+   "text": "From behind the goal: a perfect tackle. No goal for Mbapp\u00e9!",
+   "src": "/plays/narration/saliba-signature/3.m4a",
+   "seconds": 5.0,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.375
+    },
+    {
+     "w": "behind",
+     "at": 0.512
+    },
+    {
+     "w": "the",
+     "at": 0.887
+    },
+    {
+     "w": "goal",
+     "at": 0.975
+    },
+    {
+     "w": "a",
+     "at": 1.55
+    },
+    {
+     "w": "perfect",
+     "at": 1.65
+    },
+    {
+     "w": "tackle",
+     "at": 2.075
+    },
+    {
+     "w": "No",
+     "at": 2.788
+    },
+    {
+     "w": "goal",
+     "at": 3.0
+    },
+    {
+     "w": "for",
+     "at": 3.275
+    },
+    {
+     "w": "Mbapp\u00e9",
+     "at": 3.4
+    }
+   ]
+  },
+  {
+   "label": "The lesson",
+   "text": "William Saliba, calm and fast. Use your speed to get goal-side first. Then take the ball calmly!",
+   "src": "/plays/narration/saliba-signature/4.m4a",
+   "seconds": 7.5,
+   "words": [
+    {
+     "w": "William",
+     "at": 0.4
+    },
+    {
+     "w": "Saliba",
+     "at": 0.762
+    },
+    {
+     "w": "calm",
+     "at": 1.488
+    },
+    {
+     "w": "and",
+     "at": 1.812
+    },
+    {
+     "w": "fast",
+     "at": 1.938
+    },
+    {
+     "w": "Use",
+     "at": 2.812
+    },
+    {
+     "w": "your",
+     "at": 3.038
+    },
+    {
+     "w": "speed",
+     "at": 3.15
+    },
+    {
+     "w": "to",
+     "at": 3.438
+    },
+    {
+     "w": "get",
+     "at": 3.525
+    },
+    {
+     "w": "goal-side",
+     "at": 3.7
+    },
+    {
+     "w": "first",
+     "at": 4.3
+    },
+    {
+     "w": "Then",
+     "at": 5.088
+    },
+    {
+     "w": "take",
+     "at": 5.325
+    },
+    {
+     "w": "the",
+     "at": 5.562
+    },
+    {
+     "w": "ball",
+     "at": 5.65
+    },
+    {
+     "w": "calmly",
+     "at": 5.963
+    }
+   ]
+  }
+ ]
+}

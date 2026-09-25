@@ -1,0 +1,3620 @@
+{
+  "Gianluigi Donnarumma": {
+    "kind": "moment",
+    "title": "The Euro 2020 Final Shootout Save",
+    "year": 2021,
+    "event": "Italy v England, Euro 2020 final",
+    "template": "penalty_save",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Stay big and wait for the kicker before you dive, so you don’t guess too early."
+  },
+  "Thibaut Courtois": {
+    "kind": "moment",
+    "title": "The Champions League Final Wall",
+    "year": 2022,
+    "event": "Liverpool v Real Madrid, Champions League final",
+    "template": "save",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Stay tall and spread yourself wide so the shooter sees less of the goal."
+  },
+  "Alisson": {
+    "kind": "moment",
+    "title": "The Goalkeeper’s Winning Header",
+    "year": 2021,
+    "event": "West Brom v Liverpool, Premier League",
+    "template": "header_goal",
+    "params": {
+      "side": "center",
+      "distance": "box"
+    },
+    "lesson": "Never give up: in the last seconds even the keeper can go up and help the team."
+  },
+  "David Raya": {
+    "kind": "signature",
+    "title": "Signature: the calm reflex save",
+    "template": "save",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Keep your weight on your toes so you can spring either way."
+  },
+  "Emiliano Martínez": {
+    "kind": "moment",
+    "title": "The Last-Minute World Cup Final Save",
+    "year": 2022,
+    "event": "Argentina v France, World Cup final",
+    "template": "save",
+    "params": {
+      "side": "center",
+      "distance": "box"
+    },
+    "lesson": "Rush out and make yourself huge to close the shooter’s angle."
+  },
+  "Diogo Costa": {
+    "kind": "moment",
+    "title": "Three Shootout Saves in a Row",
+    "year": 2024,
+    "event": "Portugal v Slovenia, Euro 2024",
+    "template": "penalty_save",
+    "params": {},
+    "lesson": "Watch the kicker’s hips and standing foot to guess where the ball is going."
+  },
+  "Yassine Bounou": {
+    "kind": "moment",
+    "title": "The Shootout Saves v Spain",
+    "year": 2022,
+    "event": "Morocco v Spain, World Cup",
+    "template": "penalty_save",
+    "params": {},
+    "lesson": "Stay calm and patient on the line; the pressure is on the kicker, not you."
+  },
+  "Jan Oblak": {
+    "kind": "signature",
+    "title": "Signature: the unbeatable one-on-one",
+    "template": "save",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Stay on your feet as long as you can so the attacker has to make the first move."
+  },
+  "Mike Maignan": {
+    "kind": "signature",
+    "title": "Signature: the flying fingertip save",
+    "template": "save",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Push off hard with the foot nearest the ball to dive further."
+  },
+  "Gregor Kobel": {
+    "kind": "signature",
+    "title": "Signature: the keeper who starts attacks",
+    "template": "sweeper_keeper",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "After a save, look up fast and pass to a free teammate to start an attack."
+  },
+  "Lev Yashin": {
+    "kind": "signature",
+    "title": "Signature: the Black Spider in the air",
+    "template": "save",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Shout loud and come for the ball with confidence; your area is your home."
+  },
+  "Gianluigi Buffon": {
+    "kind": "moment",
+    "title": "The Save from Zidane’s Header",
+    "year": 2006,
+    "event": "Italy v France, World Cup final",
+    "template": "save",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Keep your eyes on the ball right until it leaves the head or foot."
+  },
+  "Iker Casillas": {
+    "kind": "moment",
+    "title": "The Toe Save from Robben",
+    "year": 2010,
+    "event": "Netherlands v Spain, World Cup final",
+    "template": "save",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "In a one-on-one, stay big and use any part of your body, even your foot, to stop it."
+  },
+  "Manuel Neuer": {
+    "kind": "moment",
+    "title": "The Sweeper-Keeper v Algeria",
+    "year": 2014,
+    "event": "Germany v Algeria, World Cup",
+    "template": "sweeper_keeper",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Read long balls early and sprint out to clear them before the striker gets there."
+  },
+  "Oliver Kahn": {
+    "kind": "moment",
+    "title": "Three Saves in a Final Shootout",
+    "year": 2001,
+    "event": "Bayern Munich v Valencia, Champions League final",
+    "template": "penalty_save",
+    "params": {},
+    "lesson": "Believe you will save it; confident keepers make kickers nervous."
+  },
+  "Dino Zoff": {
+    "kind": "moment",
+    "title": "The Goal-Line Save v Brazil",
+    "year": 1982,
+    "event": "Italy v Brazil, World Cup",
+    "template": "save",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Keep calm in the last minutes and hold on to the ball tight."
+  },
+  "Peter Schmeichel": {
+    "kind": "signature",
+    "title": "Signature: the star-jump save",
+    "template": "save",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Spread your arms and legs wide like a star to block a close-range shot."
+  },
+  "Gordon Banks": {
+    "kind": "moment",
+    "title": "The Save of the Century",
+    "year": 1970,
+    "event": "England v Brazil, World Cup",
+    "template": "save",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Move across your goal quickly and never give up on a ball that looks like a goal."
+  },
+  "Edwin van der Sar": {
+    "kind": "moment",
+    "title": "The Shootout Save v Anelka",
+    "year": 2008,
+    "event": "Manchester United v Chelsea, Champions League final",
+    "template": "penalty_save",
+    "params": {},
+    "lesson": "Keep your focus for every kick; one save can win the whole shootout."
+  },
+  "Sepp Maier": {
+    "kind": "signature",
+    "title": "Signature: the cat-like reflex save",
+    "template": "save",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Stay low and light on your feet so you can react like a cat."
+  },
+  "Achraf Hakimi": {
+    "kind": "moment",
+    "title": "The Panenka That Beat Spain",
+    "year": 2022,
+    "event": "Morocco v Spain, World Cup",
+    "template": "penalty_goal",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Pick your penalty before you run up and don’t change your mind."
+  },
+  "Nuno Mendes": {
+    "kind": "signature",
+    "title": "Signature: the flying left-back overlap",
+    "template": "overlap_run",
+    "params": {
+      "side": "left"
+    },
+    "lesson": "Run past your winger on the outside to give them an easy pass."
+  },
+  "Dani Carvajal": {
+    "kind": "moment",
+    "title": "The Final Header from a Corner",
+    "year": 2024,
+    "event": "Borussia Dortmund v Real Madrid, Champions League final",
+    "template": "header_goal",
+    "params": {
+      "side": "center",
+      "distance": "box"
+    },
+    "lesson": "Attack the corner: run to the near post and meet the ball first."
+  },
+  "Trent Alexander-Arnold": {
+    "kind": "moment",
+    "title": "The Quick Corner v Barcelona",
+    "year": 2019,
+    "event": "Liverpool v Barcelona, Champions League semi-final",
+    "template": "cross_assist",
+    "params": {
+      "side": "right"
+    },
+    "lesson": "Stay switched on: a quick set piece can catch sleepy defenders."
+  },
+  "Theo Hernández": {
+    "kind": "signature",
+    "title": "Signature: the run from his own box",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "left",
+      "beaten": 3,
+      "distance": "box"
+    },
+    "lesson": "When there is space in front of you, push the ball ahead and run into it."
+  },
+  "Alphonso Davies": {
+    "kind": "moment",
+    "title": "The Run Past Semedo",
+    "year": 2020,
+    "event": "Barcelona v Bayern Munich, Champions League",
+    "template": "cross_assist",
+    "params": {
+      "side": "left",
+      "beaten": 1
+    },
+    "lesson": "Beat your defender, get to the byline, then pull it back for a teammate."
+  },
+  "Jules Koundé": {
+    "kind": "signature",
+    "title": "Signature: the recovery sprint and tackle",
+    "template": "last_ditch_tackle",
+    "params": {
+      "side": "right"
+    },
+    "lesson": "Never stop chasing: sprint back and tackle from the side, not from behind."
+  },
+  "Alejandro Balde": {
+    "kind": "signature",
+    "title": "Signature: the overlap down the left",
+    "template": "overlap_run",
+    "params": {
+      "side": "left"
+    },
+    "lesson": "Time your run so you arrive just as your teammate is ready to pass."
+  },
+  "Jeremie Frimpong": {
+    "kind": "signature",
+    "title": "Signature: the rocket run down the right",
+    "template": "overlap_run",
+    "params": {
+      "side": "right"
+    },
+    "lesson": "Use your speed to get beyond the defender, then look up before you cross."
+  },
+  "Pedro Porro": {
+    "kind": "signature",
+    "title": "Signature: the whipped cross from the right",
+    "template": "cross_assist",
+    "params": {
+      "side": "right",
+      "foot": "right"
+    },
+    "lesson": "Whip the cross into the space between the keeper and the defenders."
+  },
+  "Cafu": {
+    "kind": "signature",
+    "title": "Signature: the endless right-wing run",
+    "template": "overlap_run",
+    "params": {
+      "side": "right"
+    },
+    "lesson": "A good full-back defends and attacks; keep running for the whole game."
+  },
+  "Roberto Carlos": {
+    "kind": "moment",
+    "title": "The Banana Free Kick v France",
+    "year": 1997,
+    "event": "Brazil v France, Tournoi de France",
+    "template": "free_kick_goal",
+    "params": {
+      "side": "center",
+      "distance": "long",
+      "foot": "left"
+    },
+    "lesson": "Hit across the ball with the outside of your foot to make it swerve."
+  },
+  "Paolo Maldini": {
+    "kind": "signature",
+    "title": "Signature: the perfect clean tackle",
+    "template": "last_ditch_tackle",
+    "params": {
+      "side": "left"
+    },
+    "lesson": "Wait for the right moment, then win the ball cleanly without diving in."
+  },
+  "Philipp Lahm": {
+    "kind": "moment",
+    "title": "The World Cup Opening Curler",
+    "year": 2006,
+    "event": "Germany v Costa Rica, World Cup",
+    "template": "long_range_goal",
+    "params": {
+      "side": "left",
+      "distance": "edge",
+      "foot": "right"
+    },
+    "lesson": "Cut inside onto your stronger foot and curl it into the far corner."
+  },
+  "Javier Zanetti": {
+    "kind": "signature",
+    "title": "Signature: win it and carry it forward",
+    "template": "interception_counter",
+    "params": {
+      "side": "right"
+    },
+    "lesson": "After you win the ball, run forward with it to start the attack."
+  },
+  "Dani Alves": {
+    "kind": "signature",
+    "title": "Signature: the overlap with Messi",
+    "template": "overlap_run",
+    "params": {
+      "side": "right"
+    },
+    "lesson": "Pass and keep running; the return pass will find you in space."
+  },
+  "Carlos Alberto": {
+    "kind": "moment",
+    "title": "The Perfect Team Goal",
+    "year": 1970,
+    "event": "Brazil v Italy, World Cup final",
+    "template": "long_range_goal",
+    "params": {
+      "side": "right",
+      "distance": "edge",
+      "foot": "right"
+    },
+    "lesson": "Run into space and hit it first time when the pass is rolled into your path."
+  },
+  "Ashley Cole": {
+    "kind": "signature",
+    "title": "Signature: shutting down the best winger",
+    "template": "last_ditch_tackle",
+    "params": {
+      "side": "left"
+    },
+    "lesson": "Stay close, stay on your feet and show the winger down the line."
+  },
+  "Nílton Santos": {
+    "kind": "signature",
+    "title": "Signature: the full-back who attacks",
+    "template": "overlap_run",
+    "params": {
+      "side": "left"
+    },
+    "lesson": "Defenders can attack too: bring the ball forward when there is space."
+  },
+  "Gary Neville": {
+    "kind": "signature",
+    "title": "Signature: the overlap in the FA Cup final",
+    "template": "overlap_run",
+    "params": {
+      "side": "right"
+    },
+    "lesson": "When your winger cuts inside, sprint round the outside: give them a pass option on the outside so they have a choice."
+  },
+  "Virgil van Dijk": {
+    "kind": "signature",
+    "title": "Signature: winning every header in the box",
+    "template": "aerial_clearance",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Time your jump and meet the ball at its highest point."
+  },
+  "Rúben Dias": {
+    "kind": "signature",
+    "title": "Signature: the brave block",
+    "template": "last_ditch_tackle",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Get your body in the way of the shot and keep your arms behind you."
+  },
+  "Antonio Rüdiger": {
+    "kind": "signature",
+    "title": "Signature: the never-give-up tackle",
+    "template": "last_ditch_tackle",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Chase every ball like it matters; hard work wins it back."
+  },
+  "William Saliba": {
+    "kind": "signature",
+    "title": "Signature: the calm recovery tackle",
+    "template": "last_ditch_tackle",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Use your speed to get goal-side first, then take the ball calmly."
+  },
+  "Gabriel Magalhães": {
+    "kind": "signature",
+    "title": "Signature: the corner-kick header",
+    "template": "header_goal",
+    "params": {
+      "side": "center",
+      "distance": "box"
+    },
+    "lesson": "Start your run late and attack the ball, don’t wait for it."
+  },
+  "Alessandro Bastoni": {
+    "kind": "signature",
+    "title": "Signature: the centre-back who joins the attack",
+    "template": "overlap_run",
+    "params": {
+      "side": "left"
+    },
+    "lesson": "When the space opens, a defender can step up and join the attack."
+  },
+  "Marquinhos": {
+    "kind": "signature",
+    "title": "Signature: read the pass, steal the ball",
+    "template": "interception_counter",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Watch the passer’s eyes and step in front of the striker to steal it."
+  },
+  "Pau Cubarsí": {
+    "kind": "signature",
+    "title": "Signature: the line-breaking pass",
+    "template": "through_ball_assist",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Look forward first: a pass through the lines skips lots of defenders."
+  },
+  "Cristian Romero": {
+    "kind": "signature",
+    "title": "Signature: the fearless slide tackle",
+    "template": "last_ditch_tackle",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Slide only when you are sure you can reach the ball first."
+  },
+  "Ibrahima Konaté": {
+    "kind": "signature",
+    "title": "Signature: the powerful headed clearance",
+    "template": "aerial_clearance",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Head the ball high and wide, away from danger."
+  },
+  "Franz Beckenbauer": {
+    "kind": "signature",
+    "title": "Signature: the libero bringing it out",
+    "template": "interception_counter",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "After winning the ball, lift your head and carry it into midfield."
+  },
+  "Franco Baresi": {
+    "kind": "signature",
+    "title": "Signature: the perfect interception",
+    "template": "interception_counter",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Guess where the pass is going and get there first."
+  },
+  "Fabio Cannavaro": {
+    "kind": "signature",
+    "title": "Signature: out-jumping taller strikers",
+    "template": "aerial_clearance",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Timing beats height: jump early and use your arms for balance."
+  },
+  "Alessandro Nesta": {
+    "kind": "signature",
+    "title": "Signature: the elegant slide tackle",
+    "template": "last_ditch_tackle",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Slide with your leg low and take the ball, not the player."
+  },
+  "Sergio Ramos": {
+    "kind": "moment",
+    "title": "The 93rd-Minute Final Header",
+    "year": 2014,
+    "event": "Real Madrid v Atlético Madrid, Champions League final",
+    "template": "header_goal",
+    "params": {
+      "side": "center",
+      "distance": "box"
+    },
+    "lesson": "Keep believing until the final whistle; one header can change everything."
+  },
+  "Bobby Moore": {
+    "kind": "moment",
+    "title": "The Perfect Tackle on Jairzinho",
+    "year": 1970,
+    "event": "England v Brazil, World Cup",
+    "template": "last_ditch_tackle",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Be patient: wait for the attacker to show you the ball, then take it."
+  },
+  "Carles Puyol": {
+    "kind": "moment",
+    "title": "The Semi-Final Header",
+    "year": 2010,
+    "event": "Germany v Spain, World Cup semi-final",
+    "template": "header_goal",
+    "params": {
+      "side": "center",
+      "distance": "box"
+    },
+    "lesson": "Run at the ball with power and head it down toward the goal."
+  },
+  "Rio Ferdinand": {
+    "kind": "signature",
+    "title": "Signature: the smooth interception",
+    "template": "interception_counter",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Stay calm on the ball after you win it, then make a simple pass."
+  },
+  "Daniel Passarella": {
+    "kind": "signature",
+    "title": "Signature: the defender who scores headers",
+    "template": "header_goal",
+    "params": {
+      "side": "center",
+      "distance": "box"
+    },
+    "lesson": "Defenders can score too: attack set pieces with a strong header."
+  },
+  "Pedri": {
+    "kind": "signature",
+    "title": "Signature: the calm pass under pressure",
+    "template": "through_ball_assist",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Check over your shoulder before the ball comes so you know where to pass."
+  },
+  "Vitinha": {
+    "kind": "signature",
+    "title": "Signature: keep it moving with quick passes",
+    "template": "through_ball_assist",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Pass and move: give it, then find a new space to get it back."
+  },
+  "Jude Bellingham": {
+    "kind": "moment",
+    "title": "The Last-Gasp Overhead Kick",
+    "year": 2024,
+    "event": "England v Slovakia, Euro 2024",
+    "template": "bicycle_kick",
+    "params": {
+      "side": "center",
+      "distance": "box"
+    },
+    "lesson": "Keep trying until the very end, and be brave when the ball is in the air."
+  },
+  "Cole Palmer": {
+    "kind": "signature",
+    "title": "Signature: the ice-cold penalty",
+    "template": "penalty_goal",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Take a deep breath, look calm and pick your spot."
+  },
+  "Rodri": {
+    "kind": "moment",
+    "title": "The Champions League Final Winner",
+    "year": 2023,
+    "event": "Manchester City v Inter, Champions League final",
+    "template": "long_range_goal",
+    "params": {
+      "side": "center",
+      "distance": "edge",
+      "foot": "right"
+    },
+    "lesson": "Keep your shot low and place it in the corner instead of blasting it."
+  },
+  "Federico Valverde": {
+    "kind": "signature",
+    "title": "Signature: the long-range thunderbolt",
+    "template": "long_range_goal",
+    "params": {
+      "side": "center",
+      "distance": "long",
+      "foot": "right"
+    },
+    "lesson": "Lock your ankle and strike through the middle of the ball."
+  },
+  "Declan Rice": {
+    "kind": "moment",
+    "title": "Two Free Kicks v Real Madrid",
+    "year": 2025,
+    "event": "Arsenal v Real Madrid, Champions League quarter-final",
+    "template": "free_kick_goal",
+    "params": {
+      "side": "center",
+      "distance": "edge",
+      "foot": "right"
+    },
+    "lesson": "Practise free kicks a lot: great technique comes from repetition."
+  },
+  "Bruno Fernandes": {
+    "kind": "signature",
+    "title": "Signature: the hop-skip penalty",
+    "template": "penalty_goal",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Watch the keeper as you run up, then put it the other way."
+  },
+  "Florian Wirtz": {
+    "kind": "signature",
+    "title": "Signature: the clever killer pass",
+    "template": "through_ball_assist",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Look for the run behind the defenders and pass into their path."
+  },
+  "João Neves": {
+    "kind": "signature",
+    "title": "Signature: the tireless ball-winner",
+    "template": "interception_counter",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Press quickly after losing the ball; the first few seconds are best."
+  },
+  "Zinedine Zidane": {
+    "kind": "moment",
+    "title": "The Champions League Final Volley",
+    "year": 2002,
+    "event": "Real Madrid v Bayer Leverkusen, Champions League final",
+    "template": "volley_goal",
+    "params": {
+      "side": "center",
+      "distance": "edge",
+      "foot": "left"
+    },
+    "lesson": "Keep your eyes on the falling ball and your head over it as you strike."
+  },
+  "Xavi Hernández": {
+    "kind": "signature",
+    "title": "Signature: the metronome pass",
+    "template": "through_ball_assist",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Keep the ball moving with short, simple passes to control the game."
+  },
+  "Andrés Iniesta": {
+    "kind": "moment",
+    "title": "The World Cup-Winning Goal",
+    "year": 2010,
+    "event": "Netherlands v Spain, World Cup final",
+    "template": "volley_goal",
+    "params": {
+      "side": "center",
+      "distance": "box",
+      "foot": "right"
+    },
+    "lesson": "Stay calm in the box: control, set, then strike with your laces."
+  },
+  "Michel Platini": {
+    "kind": "signature",
+    "title": "Signature: the curled free kick",
+    "template": "free_kick_goal",
+    "params": {
+      "side": "center",
+      "distance": "edge",
+      "foot": "right"
+    },
+    "lesson": "Curl it over the wall by striking the side of the ball."
+  },
+  "Andrea Pirlo": {
+    "kind": "moment",
+    "title": "The Cheeky Chipped Penalty",
+    "year": 2012,
+    "event": "England v Italy, Euro 2012 quarter-final",
+    "template": "penalty_goal",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Staying calm under pressure helps you make smart choices."
+  },
+  "Steven Gerrard": {
+    "kind": "moment",
+    "title": "The 30-Yard FA Cup Final Rocket",
+    "year": 2006,
+    "event": "Liverpool v West Ham, FA Cup final",
+    "template": "long_range_goal",
+    "params": {
+      "side": "center",
+      "distance": "long",
+      "foot": "right"
+    },
+    "lesson": "Never give up: one big effort in the last minute can save the game."
+  },
+  "Paul Scholes": {
+    "kind": "moment",
+    "title": "The Long-Range Winner v Barcelona",
+    "year": 2008,
+    "event": "Manchester United v Barcelona, Champions League semi-final",
+    "template": "long_range_goal",
+    "params": {
+      "side": "center",
+      "distance": "long",
+      "foot": "right"
+    },
+    "lesson": "Arrive late at the edge of the box, then hit it with confidence."
+  },
+  "Lothar Matthäus": {
+    "kind": "signature",
+    "title": "Signature: the box-to-box power shot",
+    "template": "long_range_goal",
+    "params": {
+      "side": "center",
+      "distance": "long",
+      "foot": "right"
+    },
+    "lesson": "Help defend and attack: box-to-box players cover the whole pitch."
+  },
+  "Frank Rijkaard": {
+    "kind": "signature",
+    "title": "Signature: win it and play it forward",
+    "template": "interception_counter",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Win the ball, then pass it forward quickly before the other team is ready."
+  },
+  "Roy Keane": {
+    "kind": "signature",
+    "title": "Signature: the midfield ball-winner",
+    "template": "interception_counter",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Be first to every loose ball, then give a simple pass to a teammate."
+  },
+  "Lamine Yamal": {
+    "kind": "moment",
+    "title": "The Euro Semi-Final Curler",
+    "year": 2024,
+    "event": "Spain v France, Euro 2024 semi-final",
+    "template": "long_range_goal",
+    "params": {
+      "side": "right",
+      "distance": "long",
+      "foot": "left"
+    },
+    "lesson": "Curl the ball with the inside of your foot so it bends away from the keeper."
+  },
+  "Vinícius Júnior": {
+    "kind": "signature",
+    "title": "Signature: the lightning dribble from the left",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "left",
+      "beaten": 2,
+      "trick": "stepover"
+    },
+    "lesson": "Use quick feet and sudden changes of speed to get past defenders."
+  },
+  "Mohamed Salah": {
+    "kind": "signature",
+    "title": "Signature: cutting inside onto the left foot",
+    "template": "long_range_goal",
+    "params": {
+      "side": "right",
+      "distance": "edge",
+      "foot": "left"
+    },
+    "lesson": "Cut inside onto your stronger foot and curl it into the far corner."
+  },
+  "Raphinha": {
+    "kind": "signature",
+    "title": "Signature: the early strike from the wing",
+    "template": "long_range_goal",
+    "params": {
+      "side": "right",
+      "distance": "long",
+      "foot": "left"
+    },
+    "lesson": "When you have space, shoot early before the defender closes you down."
+  },
+  "Bukayo Saka": {
+    "kind": "signature",
+    "title": "Signature: the cut inside and curl",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "right",
+      "beaten": 1,
+      "foot": "left"
+    },
+    "lesson": "Face up your defender, then drive inside to open up the shot."
+  },
+  "Khvicha Kvaratskhelia": {
+    "kind": "signature",
+    "title": "Signature: the mazy run from the left",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "left",
+      "beaten": 3,
+      "foot": "right"
+    },
+    "lesson": "Keep the ball close with small touches so defenders can’t reach it."
+  },
+  "Luis Díaz": {
+    "kind": "signature",
+    "title": "Signature: the direct dribble at defenders",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "left",
+      "beaten": 2
+    },
+    "lesson": "Run straight at defenders to make them back off, then burst past."
+  },
+  "Nico Williams": {
+    "kind": "signature",
+    "title": "Signature: the burst of speed on the wing",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "left",
+      "beaten": 1
+    },
+    "lesson": "Knock the ball past the defender and win the race with your speed."
+  },
+  "Désiré Doué": {
+    "kind": "signature",
+    "title": "Signature: the fearless one-on-one",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "left",
+      "beaten": 2
+    },
+    "lesson": "Be brave: take on your defender whenever you get the chance."
+  },
+  "Michael Olise": {
+    "kind": "signature",
+    "title": "Signature: the left-footed ball from the right",
+    "template": "cross_assist",
+    "params": {
+      "side": "right",
+      "foot": "left"
+    },
+    "lesson": "Use your stronger foot to curl a pass into the path of a teammate."
+  },
+  "Garrincha": {
+    "kind": "signature",
+    "title": "Signature: the feint past the full-back",
+    "template": "skill_move",
+    "params": {
+      "side": "right",
+      "beaten": 1
+    },
+    "lesson": "Fake one way with your body, then go the other way fast."
+  },
+  "George Best": {
+    "kind": "moment",
+    "title": "Rounding the Keeper in the Final",
+    "year": 1968,
+    "event": "Manchester United v Benfica, European Cup final",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "center",
+      "beaten": 2,
+      "distance": "box"
+    },
+    "lesson": "In a one-on-one, drop your shoulder and take the ball around the keeper."
+  },
+  "Cristiano Ronaldo": {
+    "kind": "moment",
+    "title": "The Bicycle Kick v Juventus",
+    "year": 2018,
+    "event": "Juventus v Real Madrid, Champions League quarter-final",
+    "template": "bicycle_kick",
+    "params": {
+      "side": "center",
+      "distance": "box"
+    },
+    "lesson": "Hard practice and strong legs help you jump high for amazing finishes."
+  },
+  "Lionel Messi": {
+    "kind": "moment",
+    "title": "The Solo Goal v Getafe",
+    "year": 2007,
+    "event": "Barcelona v Getafe, Copa del Rey semi-final",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "right",
+      "beaten": 5,
+      "distance": "box"
+    },
+    "lesson": "Keep the ball close with small touches so defenders can’t reach it."
+  },
+  "Ronaldinho": {
+    "kind": "moment",
+    "title": "The Toe-Poke Shimmy v Chelsea",
+    "year": 2005,
+    "event": "Chelsea v Barcelona, Champions League",
+    "template": "long_range_goal",
+    "params": {
+      "side": "center",
+      "distance": "edge"
+    },
+    "lesson": "A little shimmy freezes defenders; then shoot quickly before they recover."
+  },
+  "Ryan Giggs": {
+    "kind": "moment",
+    "title": "The FA Cup Semi-Final Wonder Run",
+    "year": 1999,
+    "event": "Arsenal v Manchester United, FA Cup semi-final replay",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "left",
+      "beaten": 4,
+      "foot": "left"
+    },
+    "lesson": "Run at defenders with the ball close and keep going when you see a gap."
+  },
+  "Stanley Matthews": {
+    "kind": "moment",
+    "title": "The Matthews Final Cross",
+    "year": 1953,
+    "event": "Blackpool v Bolton Wanderers, FA Cup final",
+    "template": "cross_assist",
+    "params": {
+      "side": "right"
+    },
+    "lesson": "Get to the byline and pull the ball back to a teammate in space."
+  },
+  "Luís Figo": {
+    "kind": "signature",
+    "title": "Signature: the byline cross from the right",
+    "template": "cross_assist",
+    "params": {
+      "side": "right",
+      "trick": "stepover"
+    },
+    "lesson": "Beat your defender, then look up before you cross the ball."
+  },
+  "Arjen Robben": {
+    "kind": "moment",
+    "title": "The Champions League Final Winner",
+    "year": 2013,
+    "event": "Borussia Dortmund v Bayern Munich, Champions League final",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "center",
+      "beaten": 2,
+      "distance": "box",
+      "foot": "left"
+    },
+    "lesson": "Stay calm in front of goal and slide the ball past the keeper."
+  },
+  "Franck Ribéry": {
+    "kind": "signature",
+    "title": "Signature: the dazzling dribble on the left",
+    "template": "skill_move",
+    "params": {
+      "side": "left",
+      "beaten": 2
+    },
+    "lesson": "Change direction quickly to leave defenders off balance."
+  },
+  "Kylian Mbappé": {
+    "kind": "moment",
+    "title": "The World Cup Final Volley",
+    "year": 2022,
+    "event": "Argentina v France, World Cup final",
+    "template": "volley_goal",
+    "params": {
+      "side": "center",
+      "distance": "box",
+      "foot": "right"
+    },
+    "lesson": "Keep your eyes on the ball and strike it early, before it touches the ground."
+  },
+  "Ousmane Dembélé": {
+    "kind": "signature",
+    "title": "Signature: the two-footed dribble",
+    "template": "skill_move",
+    "params": {
+      "side": "right",
+      "beaten": 2
+    },
+    "lesson": "Practise with both feet so defenders never know which way you’ll go."
+  },
+  "Erling Haaland": {
+    "kind": "signature",
+    "title": "Signature: the first-time finish",
+    "template": "volley_goal",
+    "params": {
+      "side": "center",
+      "distance": "box"
+    },
+    "lesson": "Make your run early, then hit it first time before the keeper is set."
+  },
+  "Harry Kane": {
+    "kind": "signature",
+    "title": "Signature: dropping deep to pass",
+    "template": "through_ball_assist",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "A striker can drop back to get the ball and pass to runners."
+  },
+  "Alexander Isak": {
+    "kind": "signature",
+    "title": "Signature: the silky close-control finish",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "center",
+      "beaten": 2,
+      "distance": "box"
+    },
+    "lesson": "Stay relaxed on the ball; soft touches keep it under control."
+  },
+  "Lautaro Martínez": {
+    "kind": "signature",
+    "title": "Signature: the swivel-and-shoot finish",
+    "template": "volley_goal",
+    "params": {
+      "side": "center",
+      "distance": "box"
+    },
+    "lesson": "Turn quickly in the box and shoot before the defender can block."
+  },
+  "Julián Álvarez": {
+    "kind": "moment",
+    "title": "The Solo Run v Croatia",
+    "year": 2022,
+    "event": "Argentina v Croatia, World Cup semi-final",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "center",
+      "beaten": 2,
+      "distance": "box"
+    },
+    "lesson": "Keep running with the ball even when defenders are around you."
+  },
+  "Victor Osimhen": {
+    "kind": "signature",
+    "title": "Signature: the leaping header",
+    "template": "header_goal",
+    "params": {
+      "side": "center",
+      "distance": "box"
+    },
+    "lesson": "Jump off one foot to go higher, and head the ball down toward goal."
+  },
+  "Viktor Gyökeres": {
+    "kind": "signature",
+    "title": "Signature: the powerful run through defenders",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "center",
+      "beaten": 2,
+      "distance": "box"
+    },
+    "lesson": "Use your body to shield the ball as you drive toward goal."
+  },
+  "Robert Lewandowski": {
+    "kind": "moment",
+    "title": "Five Goals in Nine Minutes",
+    "year": 2015,
+    "event": "Bayern Munich v Wolfsburg, Bundesliga",
+    "template": "volley_goal",
+    "params": {
+      "side": "center",
+      "distance": "box"
+    },
+    "lesson": "Always be ready in the box: goals come when you keep moving into space."
+  },
+  "Pelé": {
+    "kind": "moment",
+    "title": "The World Cup Final Flick and Volley",
+    "year": 1958,
+    "event": "Brazil v Sweden, World Cup final",
+    "template": "volley_goal",
+    "params": {
+      "side": "center",
+      "distance": "box",
+      "beaten": 1
+    },
+    "lesson": "Control the ball with your chest, then strike it before it hits the ground."
+  },
+  "Ronaldo Nazário": {
+    "kind": "moment",
+    "title": "The Solo Goal v Compostela",
+    "year": 1996,
+    "event": "Compostela v Barcelona, La Liga",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "center",
+      "beaten": 3,
+      "distance": "box"
+    },
+    "lesson": "Use speed and strength to keep going when defenders try to stop you."
+  },
+  "Marco van Basten": {
+    "kind": "moment",
+    "title": "The Euro 88 Final Volley",
+    "year": 1988,
+    "event": "Netherlands v Soviet Union, Euro 88 final",
+    "template": "volley_goal",
+    "params": {
+      "side": "right",
+      "distance": "box",
+      "foot": "right"
+    },
+    "lesson": "Watch the ball all the way onto your foot and keep your body over it."
+  },
+  "Gerd Müller": {
+    "kind": "moment",
+    "title": "The World Cup Final Turn and Shot",
+    "year": 1974,
+    "event": "West Germany v Netherlands, World Cup final",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "center",
+      "beaten": 1,
+      "distance": "box"
+    },
+    "lesson": "In the box, turn quickly and shoot fast; you don’t need a perfect chance."
+  },
+  "Alfredo Di Stéfano": {
+    "kind": "signature",
+    "title": "Signature: the forward who is everywhere",
+    "template": "interception_counter",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Help your team all over the pitch: even strikers win the ball back."
+  },
+  "Romário": {
+    "kind": "signature",
+    "title": "Signature: the quick feint and toe-poke",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "center",
+      "beaten": 1,
+      "distance": "box"
+    },
+    "lesson": "A small feint in the box buys you the space to shoot."
+  },
+  "Gabriel Batistuta": {
+    "kind": "signature",
+    "title": "Signature: the thunderbolt strike",
+    "template": "long_range_goal",
+    "params": {
+      "side": "center",
+      "distance": "long",
+      "foot": "right"
+    },
+    "lesson": "Plant your standing foot beside the ball and strike through it with power."
+  },
+  "Thierry Henry": {
+    "kind": "moment",
+    "title": "The Flick-Up Volley v Man United",
+    "year": 2000,
+    "event": "Arsenal v Manchester United, Premier League",
+    "template": "volley_goal",
+    "params": {
+      "side": "center",
+      "distance": "edge",
+      "foot": "right"
+    },
+    "lesson": "Flick the ball up to yourself, then volley it with your eyes on the ball."
+  },
+  "Ruud van Nistelrooy": {
+    "kind": "signature",
+    "title": "Signature: the six-yard-box poacher",
+    "template": "volley_goal",
+    "params": {
+      "side": "center",
+      "distance": "box"
+    },
+    "lesson": "Follow every shot in; rebounds often fall to the striker who keeps running."
+  },
+  "Eusébio": {
+    "kind": "signature",
+    "title": "Signature: the Black Panther’s rocket",
+    "template": "long_range_goal",
+    "params": {
+      "side": "center",
+      "distance": "long",
+      "foot": "right"
+    },
+    "lesson": "Hit it with your laces and follow through toward the goal."
+  },
+  "Bernardo Paçó": {
+    "kind": "signature",
+    "title": "Signature: the futsal block save",
+    "template": "save",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "In futsal, stay big and use your legs to block close shots."
+  },
+  "Dídac Plana": {
+    "kind": "signature",
+    "title": "Signature: the spectacular reflex save",
+    "template": "save",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Stay on your toes so you can react fast to shots from close range."
+  },
+  "Chemi": {
+    "kind": "signature",
+    "title": "Signature: the low split save",
+    "template": "save",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Drop into a split to cover the low corners on quick futsal shots."
+  },
+  "Edu": {
+    "kind": "signature",
+    "title": "Signature: the quick throw to start an attack",
+    "template": "sweeper_keeper",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "After a save, throw it fast to a free teammate to start a counter."
+  },
+  "Miquel Feixas": {
+    "kind": "signature",
+    "title": "Signature: the one-on-one block",
+    "template": "save",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Come off your line and close the angle fast when a player breaks through."
+  },
+  "Mathi Fernández": {
+    "kind": "signature",
+    "title": "Signature: the fast-reaction save",
+    "template": "save",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Keep your hands ready in front of you so you can react in a flash."
+  },
+  "Luan Muller": {
+    "kind": "signature",
+    "title": "Signature: the close-range stop",
+    "template": "save",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Stay square to the ball so shots hit your body."
+  },
+  "Willian Dorn": {
+    "kind": "signature",
+    "title": "Signature: the goleiro who plays out",
+    "template": "sweeper_keeper",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "A futsal keeper is a fifth outfield player: be ready to pass with your feet."
+  },
+  "Guitta": {
+    "kind": "signature",
+    "title": "Signature: the lightning-reflex save",
+    "template": "save",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Watch the shooter’s foot, not their body, to react quicker."
+  },
+  "Higuita": {
+    "kind": "signature",
+    "title": "Signature: the keeper who joins the attack",
+    "template": "sweeper_keeper",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "A brave keeper can dribble out and become an extra attacker."
+  },
+  "Luis Amado": {
+    "kind": "signature",
+    "title": "Signature: the rock-steady save",
+    "template": "save",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Be in the right place early and saves become easier."
+  },
+  "Stefano Mammarella": {
+    "kind": "signature",
+    "title": "Signature: the big-tournament save",
+    "template": "save",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Talk to your defenders and keep them organised in front of you."
+  },
+  "Paco Sedano": {
+    "kind": "signature",
+    "title": "Signature: the calm penalty stopper",
+    "template": "penalty_save",
+    "params": {},
+    "lesson": "Stay big on the line and wait for the kicker to show you where it’s going."
+  },
+  "Mostafa Nazari": {
+    "kind": "signature",
+    "title": "Signature: the brave block",
+    "template": "save",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Be brave and get your body behind the ball."
+  },
+  "Sergey Zuev": {
+    "kind": "signature",
+    "title": "Signature: the keeper who plays like a fixo",
+    "template": "sweeper_keeper",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Use your feet to pass calmly so your team keeps the ball."
+  },
+  "Tiago Marinho": {
+    "kind": "signature",
+    "title": "Signature: the quick-reaction save",
+    "template": "save",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Keep your weight forward on your toes, ready to spring."
+  },
+  "Santiago Elías": {
+    "kind": "signature",
+    "title": "Signature: the low reflex save",
+    "template": "save",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Get down quickly to stop low shots near your feet."
+  },
+  "Gustavo Lobo": {
+    "kind": "signature",
+    "title": "Signature: the commanding goleiro",
+    "template": "save",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Shout clear instructions so your teammates know where to be."
+  },
+  "Antonio Pérez": {
+    "kind": "signature",
+    "title": "Signature: read it, steal it, go",
+    "template": "interception_counter",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "As the last defender, read the pass and step in to steal it."
+  },
+  "Tomás Paçó": {
+    "kind": "signature",
+    "title": "Signature: the calm pass from the back",
+    "template": "through_ball_assist",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Stay calm on the ball and pass to the teammate who is free."
+  },
+  "André Coelho": {
+    "kind": "signature",
+    "title": "Signature: the fixo’s long-range strike",
+    "template": "long_range_goal",
+    "params": {
+      "side": "center",
+      "distance": "long",
+      "foot": "right"
+    },
+    "lesson": "Strike low and hard; in futsal a low shot is hardest to save."
+  },
+  "Afonso Jesus": {
+    "kind": "signature",
+    "title": "Signature: the last-man block",
+    "template": "last_ditch_tackle",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Stay on your feet and block the shot with your body."
+  },
+  "Ricardo Mayor": {
+    "kind": "signature",
+    "title": "Signature: the interception and quick counter",
+    "template": "interception_counter",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "After you win the ball, pass forward fast before they get back."
+  },
+  "Adrián Rivera": {
+    "kind": "signature",
+    "title": "Signature: the timed poke tackle",
+    "template": "last_ditch_tackle",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Poke the ball away with your toe when the attacker takes a big touch."
+  },
+  "João Victor": {
+    "kind": "signature",
+    "title": "Signature: the power shot from the back",
+    "template": "long_range_goal",
+    "params": {
+      "side": "center",
+      "distance": "long"
+    },
+    "lesson": "Shoot from distance when the defenders give you space."
+  },
+  "Souheil Mouhoudine": {
+    "kind": "signature",
+    "title": "Signature: the tall fixo who steals it",
+    "template": "interception_counter",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Use your long legs to reach passes and win the ball back."
+  },
+  "Mykola Mykytiuk": {
+    "kind": "signature",
+    "title": "Signature: the defensive wall",
+    "template": "last_ditch_tackle",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Keep the attacker in front of you and don’t let them turn."
+  },
+  "Sid Belhaj": {
+    "kind": "signature",
+    "title": "Signature: the pass to the pivot",
+    "template": "through_ball_assist",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Pass into the pivot’s feet, then move to get the ball back."
+  },
+  "Kike Boned": {
+    "kind": "signature",
+    "title": "Signature: the clever interception",
+    "template": "interception_counter",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Think one pass ahead so you are already there when it comes."
+  },
+  "Schumacher": {
+    "kind": "signature",
+    "title": "Signature: the fixo who builds the attack",
+    "template": "through_ball_assist",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Keep your head up and switch play to the free side."
+  },
+  "Gabriel": {
+    "kind": "signature",
+    "title": "Signature: the strong fixo tackle",
+    "template": "last_ditch_tackle",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Get close, stay low and take the ball cleanly."
+  },
+  "Carlos Ortiz": {
+    "kind": "signature",
+    "title": "Signature: the long shot from the back",
+    "template": "long_range_goal",
+    "params": {
+      "side": "center",
+      "distance": "long"
+    },
+    "lesson": "Keep your shot low so it can skid past the keeper."
+  },
+  "Aicardo": {
+    "kind": "signature",
+    "title": "Signature: the reader of the game",
+    "template": "interception_counter",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Watch the passer, not just the ball, to see where it’s going."
+  },
+  "Neto": {
+    "kind": "signature",
+    "title": "Signature: the hard-working last defender",
+    "template": "last_ditch_tackle",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Always get back behind the ball when your team loses it."
+  },
+  "Julio García Mera": {
+    "kind": "signature",
+    "title": "Signature: the step-in steal",
+    "template": "interception_counter",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Step in front of your attacker at the right moment to steal the pass."
+  },
+  "Marcio Forte": {
+    "kind": "signature",
+    "title": "Signature: the long pass to the pivot",
+    "template": "through_ball_assist",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "A long, accurate pass to the pivot can skip the whole defence."
+  },
+  "Sergei Sergeev": {
+    "kind": "signature",
+    "title": "Signature: the calm cover defender",
+    "template": "last_ditch_tackle",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Cover your teammate’s back so nobody gets a free run at goal."
+  },
+  "Douglas Junior": {
+    "kind": "signature",
+    "title": "Signature: the fixo’s thunder shot",
+    "template": "long_range_goal",
+    "params": {
+      "side": "center",
+      "distance": "long",
+      "foot": "right"
+    },
+    "lesson": "Hit through the middle of the ball for a straight, powerful shot."
+  },
+  "Pany Varela": {
+    "kind": "signature",
+    "title": "Signature: the ala’s 1v1 and finish",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "right",
+      "beaten": 1
+    },
+    "lesson": "In a 1v1, fake one way and go the other, then shoot fast."
+  },
+  "Mellado": {
+    "kind": "signature",
+    "title": "Signature: the sole-roll 1v1",
+    "template": "skill_move",
+    "params": {
+      "side": "left",
+      "trick": "drag_back"
+    },
+    "lesson": "Roll the ball with the sole of your foot to keep it close in tight spaces."
+  },
+  "Adolfo": {
+    "kind": "signature",
+    "title": "Signature: the quick 1v1 on the wing",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "right",
+      "beaten": 1
+    },
+    "lesson": "Attack your defender at speed and shoot early in futsal."
+  },
+  "Catela": {
+    "kind": "signature",
+    "title": "Signature: the ala’s overlapping run",
+    "template": "overlap_run",
+    "params": {
+      "side": "left"
+    },
+    "lesson": "Keep moving after you pass: futsal is all about pass and move."
+  },
+  "Matheus Rodrigues": {
+    "kind": "signature",
+    "title": "Signature: the Brazilian wing trick",
+    "template": "skill_move",
+    "params": {
+      "side": "left",
+      "trick": "elastico"
+    },
+    "lesson": "Tricks work best when you do them at speed and with a purpose."
+  },
+  "Mario Rivillos": {
+    "kind": "signature",
+    "title": "Signature: the curled shot from the wing",
+    "template": "long_range_goal",
+    "params": {
+      "side": "right",
+      "distance": "edge",
+      "foot": "left"
+    },
+    "lesson": "Cut in and shoot for the far post; keepers find it hard to reach."
+  },
+  "Sergio González": {
+    "kind": "signature",
+    "title": "Signature: the tireless wing runner",
+    "template": "overlap_run",
+    "params": {
+      "side": "right"
+    },
+    "lesson": "Run into space to give your teammate an easy pass."
+  },
+  "Luciano Gauna": {
+    "kind": "signature",
+    "title": "Signature: the ala 1v1 drive",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "left",
+      "beaten": 1
+    },
+    "lesson": "Drive at the defender and use the sole to change direction."
+  },
+  "Mamadou Touré": {
+    "kind": "signature",
+    "title": "Signature: the powerful ala dribble",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "right",
+      "beaten": 1
+    },
+    "lesson": "Shield the ball with your body, then burst away."
+  },
+  "Pauleta": {
+    "kind": "signature",
+    "title": "Signature: the pass across the box",
+    "template": "through_ball_assist",
+    "params": {
+      "side": "left"
+    },
+    "lesson": "Pass across the box to the back post where a teammate can tap it in."
+  },
+  "Ricardinho": {
+    "kind": "signature",
+    "title": "Signature: O Mágico’s rabona trick",
+    "template": "skill_move",
+    "params": {
+      "side": "left",
+      "trick": "rabona"
+    },
+    "lesson": "Practise tricks until they feel easy, then use them to beat a defender."
+  },
+  "Falcão": {
+    "kind": "signature",
+    "title": "Signature: the Pelé of futsal’s dribble",
+    "template": "skill_move",
+    "params": {
+      "side": "left",
+      "trick": "elastico",
+      "beaten": 2
+    },
+    "lesson": "Use the sole of your foot to keep the ball close and fool defenders."
+  },
+  "Manoel Tobias": {
+    "kind": "signature",
+    "title": "Signature: the 1v1 and toe-poke finish",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "right",
+      "beaten": 1,
+      "distance": "box"
+    },
+    "lesson": "A quick toe-poke shot surprises the keeper before they are ready."
+  },
+  "Javi Rodríguez": {
+    "kind": "signature",
+    "title": "Signature: the sharp ala 1v1",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "left",
+      "beaten": 1
+    },
+    "lesson": "Change your speed suddenly to lose your defender."
+  },
+  "Sergio Lozano": {
+    "kind": "signature",
+    "title": "Signature: the powerful ala strike",
+    "template": "long_range_goal",
+    "params": {
+      "side": "right",
+      "distance": "long",
+      "foot": "right"
+    },
+    "lesson": "When you get a yard of space, shoot hard and low."
+  },
+  "Daniel Ibañes": {
+    "kind": "signature",
+    "title": "Signature: the close-control turn",
+    "template": "skill_move",
+    "params": {
+      "side": "left",
+      "trick": "drag_back"
+    },
+    "lesson": "Drag the ball back with your sole to escape a defender."
+  },
+  "Robinho": {
+    "kind": "signature",
+    "title": "Signature: the Brazilian step-over",
+    "template": "skill_move",
+    "params": {
+      "side": "right",
+      "trick": "stepover"
+    },
+    "lesson": "Step over the ball to make the defender lean the wrong way."
+  },
+  "Alex Merlim": {
+    "kind": "signature",
+    "title": "Signature: the ala’s shot from distance",
+    "template": "long_range_goal",
+    "params": {
+      "side": "left",
+      "distance": "long",
+      "foot": "left"
+    },
+    "lesson": "Take one touch to set yourself, then shoot with confidence."
+  },
+  "Miguelín": {
+    "kind": "signature",
+    "title": "Signature: the clever wing pass",
+    "template": "through_ball_assist",
+    "params": {
+      "side": "left"
+    },
+    "lesson": "Look up before the ball arrives so you know your next pass."
+  },
+  "Jordi Torras": {
+    "kind": "signature",
+    "title": "Signature: the direct run from the wing",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "right",
+      "beaten": 1
+    },
+    "lesson": "Attack the space in front of you and shoot before the block comes."
+  },
+  "Zicky Té": {
+    "kind": "signature",
+    "title": "Signature: the pivot hold-up and turn",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "center",
+      "beaten": 1,
+      "distance": "box"
+    },
+    "lesson": "With your back to goal, hold off the defender, then spin and shoot."
+  },
+  "Pito": {
+    "kind": "signature",
+    "title": "Signature: the pivot spin and finish",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "center",
+      "beaten": 1,
+      "distance": "box"
+    },
+    "lesson": "Feel where the defender is, then turn the other way."
+  },
+  "Pablo Ramírez": {
+    "kind": "signature",
+    "title": "Signature: the pivot lay-off",
+    "template": "through_ball_assist",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Hold the ball up and lay it off for a teammate running in to shoot."
+  },
+  "Higor": {
+    "kind": "signature",
+    "title": "Signature: the strong back-to-goal turn",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "center",
+      "beaten": 1,
+      "distance": "box"
+    },
+    "lesson": "Use your body as a shield to protect the ball from behind."
+  },
+  "Jesús Gordillo": {
+    "kind": "signature",
+    "title": "Signature: the pivot’s first-time finish",
+    "template": "volley_goal",
+    "params": {
+      "side": "center",
+      "distance": "box"
+    },
+    "lesson": "Be ready at the back post to finish first time."
+  },
+  "Danyil Abakshyn": {
+    "kind": "signature",
+    "title": "Signature: the toe-poke after the turn",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "center",
+      "beaten": 1,
+      "distance": "box"
+    },
+    "lesson": "In futsal, a quick toe-poke can beat the keeper before they are set."
+  },
+  "Artem Fareniuk": {
+    "kind": "signature",
+    "title": "Signature: the pivot who links play",
+    "template": "through_ball_assist",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Show for the pass, then play it back and spin away."
+  },
+  "Ouassini Guirio": {
+    "kind": "signature",
+    "title": "Signature: the hold, turn and shoot",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "center",
+      "beaten": 1,
+      "distance": "box"
+    },
+    "lesson": "Keep the ball close to your body when a defender is right behind you."
+  },
+  "Raúl Gómez": {
+    "kind": "signature",
+    "title": "Signature: the back-post tap-in",
+    "template": "volley_goal",
+    "params": {
+      "side": "center",
+      "distance": "box"
+    },
+    "lesson": "Arrive at the back post at the same time as the ball."
+  },
+  "Ferrão": {
+    "kind": "signature",
+    "title": "Signature: the unstoppable pivot turn",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "center",
+      "beaten": 1,
+      "distance": "box"
+    },
+    "lesson": "Hold the defender off with your arm and body, then turn and finish."
+  },
+  "Vander Carioca": {
+    "kind": "signature",
+    "title": "Signature: the veteran pivot’s lay-off",
+    "template": "through_ball_assist",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Smart passing lets you play for years; let the ball do the work."
+  },
+  "Wilde": {
+    "kind": "signature",
+    "title": "Signature: the power pivot turn",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "center",
+      "beaten": 1,
+      "distance": "box"
+    },
+    "lesson": "Be strong with your back to goal and don’t let the defender push you off."
+  },
+  "Lenísio": {
+    "kind": "signature",
+    "title": "Signature: the pivot’s quick finish",
+    "template": "volley_goal",
+    "params": {
+      "side": "center",
+      "distance": "box"
+    },
+    "lesson": "Shoot early in the box; futsal keepers have less time to react."
+  },
+  "Konstantin Eremenko": {
+    "kind": "signature",
+    "title": "Signature: the classic pivot turn",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "center",
+      "beaten": 1,
+      "distance": "box"
+    },
+    "lesson": "Receive with your back to goal, then turn when the defender leans."
+  },
+  "Eder Lima": {
+    "kind": "signature",
+    "title": "Signature: the pivot’s thunderous shot",
+    "template": "long_range_goal",
+    "params": {
+      "side": "center",
+      "distance": "edge",
+      "foot": "left"
+    },
+    "lesson": "Turn and shoot hard and low from just outside the area."
+  },
+  "Cirilo": {
+    "kind": "signature",
+    "title": "Signature: the hold-up and pass",
+    "template": "through_ball_assist",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Keep the ball and wait for your teammates to join the attack."
+  },
+  "Joel Queirós": {
+    "kind": "signature",
+    "title": "Signature: the pivot toe-poke finish",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "center",
+      "beaten": 1,
+      "distance": "box"
+    },
+    "lesson": "Use a toe-poke to shoot fast when there is no time to swing your leg."
+  },
+  "Fernandão": {
+    "kind": "signature",
+    "title": "Signature: the big pivot’s turn",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "center",
+      "beaten": 1,
+      "distance": "box"
+    },
+    "lesson": "Use your size to shield the ball, then turn and shoot."
+  },
+  "Cardinal": {
+    "kind": "signature",
+    "title": "Signature: the pivot at the back post",
+    "template": "volley_goal",
+    "params": {
+      "side": "center",
+      "distance": "box"
+    },
+    "lesson": "Keep moving between defenders so you are free when the pass comes."
+  },
+  "Marc-André ter Stegen": {
+    "kind": "signature",
+    "title": "Signature: passing out from the back",
+    "template": "sweeper_keeper",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "A keeper who can pass well is like an extra player; stay calm and find a free teammate."
+  },
+  "Ederson": {
+    "kind": "signature",
+    "title": "Signature: the long kick that starts attacks",
+    "template": "sweeper_keeper",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Look up before you kick: a long pass to a free teammate can start an attack in one touch."
+  },
+  "Jordan Pickford": {
+    "kind": "moment",
+    "title": "The Shootout Save v Colombia",
+    "year": 2018,
+    "event": "Colombia v England, World Cup round of 16",
+    "template": "penalty_save",
+    "params": {
+      "dive": "right"
+    },
+    "lesson": "Stay on your line, stay big, and push off hard toward the corner you pick."
+  },
+  "Petr Čech": {
+    "kind": "moment",
+    "title": "Saving Robben in the Final",
+    "year": 2012,
+    "event": "Bayern Munich v Chelsea, Champions League final",
+    "template": "penalty_save",
+    "params": {
+      "dive": "left"
+    },
+    "lesson": "Study the kicker, stay patient, and trust your preparation."
+  },
+  "David Seaman": {
+    "kind": "signature",
+    "title": "Signature: the safe pair of hands",
+    "template": "save",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Get your body behind the ball so that even if it slips, it doesn’t go in."
+  },
+  "Fabien Barthez": {
+    "kind": "signature",
+    "title": "Signature: the quick reflex save",
+    "template": "save",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Stay on your toes before a shot so you can spring either way."
+  },
+  "Jorge Campos": {
+    "kind": "signature",
+    "title": "Signature: the rushing sweeper-keeper",
+    "template": "sweeper_keeper",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Even if you’re not the tallest, quick feet and bravery help you win the ball first."
+  },
+  "Andrew Robertson": {
+    "kind": "signature",
+    "title": "Signature: the overlap and cross",
+    "template": "overlap_run",
+    "params": {
+      "side": "left"
+    },
+    "lesson": "Sprint past your winger on the outside, then whip the ball in early."
+  },
+  "Reece James": {
+    "kind": "signature",
+    "title": "Signature: the curling right-wing cross",
+    "template": "cross_assist",
+    "params": {
+      "side": "right"
+    },
+    "lesson": "Look up before you cross and aim for the space between the keeper and defenders."
+  },
+  "Marcelo": {
+    "kind": "signature",
+    "title": "Signature: the attacking left-back",
+    "template": "overlap_run",
+    "params": {
+      "side": "left"
+    },
+    "lesson": "A full-back can attack too: time your run when your team has the ball safely."
+  },
+  "Lilian Thuram": {
+    "kind": "moment",
+    "title": "Two Goals in a World Cup Semi",
+    "year": 1998,
+    "event": "France v Croatia, World Cup semi-final",
+    "template": "long_range_goal",
+    "params": {
+      "side": "right",
+      "distance": "edge",
+      "foot": "left"
+    },
+    "lesson": "Defenders can score too: if you see space, step forward and shoot."
+  },
+  "Patrice Evra": {
+    "kind": "signature",
+    "title": "Signature: the energetic overlap",
+    "template": "overlap_run",
+    "params": {
+      "side": "left"
+    },
+    "lesson": "Keep running up and down the wing: your stamina wins games in the last minutes."
+  },
+  "Giacinto Facchetti": {
+    "kind": "signature",
+    "title": "Signature: the attacking full-back pioneer",
+    "template": "overlap_run",
+    "params": {
+      "side": "left"
+    },
+    "lesson": "When your team attacks, a full-back running forward gives an extra option."
+  },
+  "Joško Gvardiol": {
+    "kind": "signature",
+    "title": "Signature: carrying the ball out of defence",
+    "template": "interception_counter",
+    "params": {
+      "side": "left"
+    },
+    "lesson": "When there’s space in front of you, a defender can dribble forward and start the attack."
+  },
+  "Kim Min-jae": {
+    "kind": "signature",
+    "title": "Signature: the interception that starts a break",
+    "template": "interception_counter",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Watch the passer’s eyes and step in front of the striker to steal it."
+  },
+  "John Terry": {
+    "kind": "signature",
+    "title": "Signature: the brave block",
+    "template": "last_ditch_tackle",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Stay on your feet and put your body between the ball and the goal."
+  },
+  "Jamie Carragher": {
+    "kind": "signature",
+    "title": "Signature: the last-ditch slide",
+    "template": "last_ditch_tackle",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Only slide when you’re sure; timing matters more than power."
+  },
+  "Nemanja Vidić": {
+    "kind": "signature",
+    "title": "Signature: attacking the ball in the air",
+    "template": "aerial_clearance",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Go to meet the ball instead of waiting for it; clear it high and wide."
+  },
+  "Gerard Piqué": {
+    "kind": "signature",
+    "title": "Signature: the calm pass out of defence",
+    "template": "interception_counter",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "After you win the ball, take a breath and pass it to a teammate, don’t just boot it."
+  },
+  "Thiago Silva": {
+    "kind": "signature",
+    "title": "Signature: the perfectly timed interception",
+    "template": "interception_counter",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Good defenders read the pass early, so they don’t need to dive in."
+  },
+  "Giorgio Chiellini": {
+    "kind": "signature",
+    "title": "Signature: the fierce block tackle",
+    "template": "last_ditch_tackle",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Defending is teamwork: talk to your partner and cover each other."
+  },
+  "Kevin De Bruyne": {
+    "kind": "signature",
+    "title": "Signature: the killer through-ball",
+    "template": "through_ball_assist",
+    "params": {
+      "side": "right"
+    },
+    "lesson": "Pass into the space in front of your striker so they can run onto it."
+  },
+  "Jamal Musiala": {
+    "kind": "signature",
+    "title": "Signature: the slalom through tight spaces",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "center",
+      "beaten": 3,
+      "distance": "box"
+    },
+    "lesson": "Use small, quick touches and change direction to squeeze between defenders."
+  },
+  "Martin Ødegaard": {
+    "kind": "signature",
+    "title": "Signature: the defence-splitting pass",
+    "template": "through_ball_assist",
+    "params": {
+      "side": "right"
+    },
+    "lesson": "Scan the pitch before you receive so you already know your next pass."
+  },
+  "David Beckham": {
+    "kind": "moment",
+    "title": "The Last-Minute Free Kick v Greece",
+    "year": 2001,
+    "event": "England v Greece, World Cup qualifier",
+    "template": "free_kick_goal",
+    "params": {
+      "side": "center",
+      "distance": "long",
+      "foot": "right"
+    },
+    "lesson": "Hit through the side of the ball to make it curl over the wall and dip."
+  },
+  "Frank Lampard": {
+    "kind": "signature",
+    "title": "Signature: the late run and long shot",
+    "template": "long_range_goal",
+    "params": {
+      "side": "center",
+      "distance": "edge",
+      "foot": "right"
+    },
+    "lesson": "Arrive late at the edge of the box when defenders are watching the strikers."
+  },
+  "Kaká": {
+    "kind": "signature",
+    "title": "Signature: the long run through midfield",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "center",
+      "beaten": 3,
+      "distance": "box"
+    },
+    "lesson": "When there’s space, push the ball ahead and sprint; defenders can’t catch a fast run."
+  },
+  "Luka Modrić": {
+    "kind": "signature",
+    "title": "Signature: the outside-of-the-foot pass",
+    "template": "through_ball_assist",
+    "params": {
+      "side": "right",
+      "foot": "right"
+    },
+    "lesson": "The outside of your foot can bend a pass around a defender."
+  },
+  "Toni Kroos": {
+    "kind": "moment",
+    "title": "The Last-Second Free Kick v Sweden",
+    "year": 2018,
+    "event": "Germany v Sweden, World Cup group stage",
+    "template": "free_kick_goal",
+    "params": {
+      "side": "left",
+      "distance": "edge",
+      "foot": "right"
+    },
+    "lesson": "Even from a tight angle, a curling shot aimed at the far corner can score."
+  },
+  "Patrick Vieira": {
+    "kind": "signature",
+    "title": "Signature: win it and drive forward",
+    "template": "interception_counter",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Win the ball, then carry it forward quickly before the other team is organised."
+  },
+  "Bobby Charlton": {
+    "kind": "signature",
+    "title": "Signature: the thunderbolt from distance",
+    "template": "long_range_goal",
+    "params": {
+      "side": "center",
+      "distance": "long",
+      "foot": "right"
+    },
+    "lesson": "Practise shooting with both feet so you can shoot whichever way the ball comes."
+  },
+  "Neymar": {
+    "kind": "signature",
+    "title": "Signature: the skill that beats a defender",
+    "template": "skill_move",
+    "params": {
+      "side": "left",
+      "trick": "elastico"
+    },
+    "lesson": "Practise one trick until it’s automatic, then use it when a defender is close."
+  },
+  "Son Heung-min": {
+    "kind": "moment",
+    "title": "The 70-Metre Solo Goal v Burnley",
+    "year": 2019,
+    "event": "Tottenham Hotspur v Burnley, Premier League",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "right",
+      "beaten": 5,
+      "distance": "box"
+    },
+    "lesson": "Knock the ball into space and sprint; defenders who turn late can’t catch you."
+  },
+  "Christian Pulisic": {
+    "kind": "signature",
+    "title": "Signature: attacking the defender head-on",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "left",
+      "beaten": 2,
+      "distance": "box"
+    },
+    "lesson": "Run straight at defenders; they have to decide, and you get to react."
+  },
+  "Diego Maradona": {
+    "kind": "moment",
+    "title": "The Goal of the Century v England",
+    "year": 1986,
+    "event": "Argentina v England, World Cup quarter-final",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "right",
+      "beaten": 5,
+      "distance": "box",
+      "foot": "left"
+    },
+    "lesson": "Keep the ball close and keep going: one great dribble can beat a whole team."
+  },
+  "Johan Cruyff": {
+    "kind": "moment",
+    "title": "The Cruyff Turn v Sweden",
+    "year": 1974,
+    "event": "Netherlands v Sweden, World Cup",
+    "template": "skill_move",
+    "params": {
+      "side": "left",
+      "trick": "cruyff_turn"
+    },
+    "lesson": "Fake a pass or cross, then drag the ball behind your standing leg and go the other way."
+  },
+  "Rivaldo": {
+    "kind": "moment",
+    "title": "The Overhead Kick Hat-Trick",
+    "year": 2001,
+    "event": "Barcelona v Valencia, La Liga",
+    "template": "bicycle_kick",
+    "params": {
+      "side": "center",
+      "distance": "edge"
+    },
+    "lesson": "Keep your eyes on the ball and land safely on your hands and back."
+  },
+  "Hristo Stoichkov": {
+    "kind": "signature",
+    "title": "Signature: the left-foot rocket",
+    "template": "long_range_goal",
+    "params": {
+      "side": "left",
+      "distance": "edge",
+      "foot": "left"
+    },
+    "lesson": "Practise shooting on your strong foot until it’s powerful and accurate."
+  },
+  "Pavel Nedvěd": {
+    "kind": "signature",
+    "title": "Signature: the two-footed long shot",
+    "template": "long_range_goal",
+    "params": {
+      "side": "left",
+      "distance": "long",
+      "foot": "left"
+    },
+    "lesson": "Work on your weaker foot so you can shoot as soon as you get space."
+  },
+  "Eden Hazard": {
+    "kind": "moment",
+    "title": "The Solo Run v Arsenal",
+    "year": 2017,
+    "event": "Chelsea v Arsenal, Premier League",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "center",
+      "beaten": 2,
+      "distance": "box"
+    },
+    "lesson": "Use your body to shield the ball and keep it close when defenders push you."
+  },
+  "Karim Benzema": {
+    "kind": "signature",
+    "title": "Signature: drop, link and finish",
+    "template": "through_ball_assist",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "A striker can drop deep to help build attacks, then sprint into the box to finish."
+  },
+  "Antoine Griezmann": {
+    "kind": "moment",
+    "title": "The World Cup Final Penalty",
+    "year": 2018,
+    "event": "France v Croatia, World Cup final",
+    "template": "penalty_goal",
+    "params": {
+      "side": "left",
+      "foot": "left"
+    },
+    "lesson": "Pick your spot before you run up, and don’t change your mind."
+  },
+  "Romelu Lukaku": {
+    "kind": "signature",
+    "title": "Signature: the powerful hold-up and finish",
+    "template": "header_goal",
+    "params": {
+      "side": "center",
+      "distance": "box"
+    },
+    "lesson": "Use your body to hold off defenders while your teammates join the attack."
+  },
+  "Wayne Rooney": {
+    "kind": "moment",
+    "title": "The Overhead Kick v Manchester City",
+    "year": 2011,
+    "event": "Manchester United v Manchester City, Premier League",
+    "template": "bicycle_kick",
+    "params": {
+      "side": "center",
+      "distance": "box"
+    },
+    "lesson": "Watch the ball the whole way and kick through it as you fall back."
+  },
+  "Alan Shearer": {
+    "kind": "signature",
+    "title": "Signature: the powerful finish",
+    "template": "volley_goal",
+    "params": {
+      "side": "center",
+      "distance": "box",
+      "foot": "right"
+    },
+    "lesson": "Strike through the middle of the ball to keep a powerful shot on target."
+  },
+  "Didier Drogba": {
+    "kind": "moment",
+    "title": "The Late Header in the Final",
+    "year": 2012,
+    "event": "Bayern Munich v Chelsea, Champions League final",
+    "template": "header_goal",
+    "params": {
+      "side": "center",
+      "distance": "box"
+    },
+    "lesson": "Attack the near post and meet the ball with your forehead."
+  },
+  "Samuel Eto'o": {
+    "kind": "signature",
+    "title": "Signature: the speedy run in behind",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "right",
+      "beaten": 1,
+      "distance": "box"
+    },
+    "lesson": "Time your run so you’re onside, then sprint in behind the defence."
+  },
+  "Zlatan Ibrahimović": {
+    "kind": "moment",
+    "title": "The Overhead Kick v England",
+    "year": 2012,
+    "event": "Sweden v England, friendly",
+    "template": "bicycle_kick",
+    "params": {
+      "side": "center",
+      "distance": "long"
+    },
+    "lesson": "Be brave and try something creative when a normal shot isn’t possible."
+  },
+  "Ferenc Puskás": {
+    "kind": "signature",
+    "title": "Signature: the deadly left foot",
+    "template": "long_range_goal",
+    "params": {
+      "side": "center",
+      "distance": "edge",
+      "foot": "left"
+    },
+    "lesson": "Get the ball onto your best foot quickly, then shoot before the defender blocks."
+  },
+  "Luis Suárez": {
+    "kind": "signature",
+    "title": "Signature: the cheeky nutmeg finish",
+    "template": "skill_move",
+    "params": {
+      "side": "right",
+      "trick": "nutmeg"
+    },
+    "lesson": "If a defender opens their legs, play the ball through them!"
+  },
+  "Zico": {
+    "kind": "signature",
+    "title": "Signature: the curling free kick",
+    "template": "free_kick_goal",
+    "params": {
+      "side": "center",
+      "distance": "edge",
+      "foot": "right"
+    },
+    "lesson": "Practise free kicks: aim over the wall and let the curl bring the ball down."
+  },
+  "Aitana Bonmatí": {
+    "kind": "signature",
+    "title": "Signature: the turn-and-pass in midfield",
+    "template": "through_ball_assist",
+    "params": {
+      "side": "center",
+      "foot": "right"
+    },
+    "lesson": "Check your shoulder before the ball comes, then turn and play forward."
+  },
+  "Alexia Putellas": {
+    "kind": "signature",
+    "title": "Signature: the late run into the box",
+    "template": "long_range_goal",
+    "params": {
+      "side": "center",
+      "distance": "edge",
+      "foot": "right"
+    },
+    "lesson": "Time your run from midfield so you arrive just as the ball does."
+  },
+  "Mariona Caldentey": {
+    "kind": "signature",
+    "title": "Signature: the clever pass in the final third",
+    "template": "through_ball_assist",
+    "params": {
+      "side": "left",
+      "foot": "right"
+    },
+    "lesson": "Look for the pass that splits two defenders before you shoot."
+  },
+  "Patri Guijarro": {
+    "kind": "signature",
+    "title": "Signature: winning it back and starting the attack",
+    "template": "interception_counter",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Read the pass early, step in, then pass forward straight away."
+  },
+  "Lindsey Heaps": {
+    "kind": "signature",
+    "title": "Signature: the midfield strike from the edge",
+    "template": "long_range_goal",
+    "params": {
+      "side": "center",
+      "distance": "edge",
+      "foot": "right"
+    },
+    "lesson": "Keep your head over the ball and strike through the middle of it."
+  },
+  "Hannah Hampton": {
+    "kind": "signature",
+    "title": "Signature: the shoot-out save",
+    "template": "penalty_save",
+    "params": {},
+    "lesson": "Stay big and patient on the line; wait for the ball before you dive."
+  },
+  "Mary Earps": {
+    "kind": "moment",
+    "title": "The Penalty Save in the World Cup Final",
+    "year": 2023,
+    "event": "Spain v England, Women's World Cup final",
+    "template": "penalty_save",
+    "lesson": "Stay calm, watch the kicker and push off hard towards the ball."
+  },
+  "Alyssa Naeher": {
+    "kind": "moment",
+    "title": "The Penalty Save v England",
+    "year": 2019,
+    "event": "England v USA, Women's World Cup semi-final",
+    "template": "penalty_save",
+    "lesson": "A penalty save can win a big game; stay still until the kicker commits."
+  },
+  "Lucy Bronze": {
+    "kind": "moment",
+    "title": "The Rocket v Norway",
+    "year": 2019,
+    "event": "Norway v England, Women's World Cup quarter-final",
+    "template": "long_range_goal",
+    "params": {
+      "side": "right",
+      "distance": "edge",
+      "foot": "right"
+    },
+    "lesson": "Strike the ball first time, keeping your body over it so it stays low and fast."
+  },
+  "Wendie Renard": {
+    "kind": "signature",
+    "title": "Signature: the towering header from a corner",
+    "template": "header_goal",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Attack the ball at its highest point and head it down towards goal."
+  },
+  "Leah Williamson": {
+    "kind": "signature",
+    "title": "Signature: stepping in to steal the pass",
+    "template": "interception_counter",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Watch the passer’s hips and step in before the ball reaches the striker."
+  },
+  "Mapi León": {
+    "kind": "signature",
+    "title": "Signature: the tackle and the long pass",
+    "template": "last_ditch_tackle",
+    "params": {
+      "side": "left"
+    },
+    "lesson": "Win the ball cleanly, then lift your head to find a teammate far away."
+  },
+  "Caroline Graham Hansen": {
+    "kind": "signature",
+    "title": "Signature: the dribble from the right wing",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "right",
+      "beaten": 2,
+      "foot": "right"
+    },
+    "lesson": "Slow down to tempt the defender, then burst past with a quick touch."
+  },
+  "Salma Paralluelo": {
+    "kind": "moment",
+    "title": "The Extra-Time Winner v the Netherlands",
+    "year": 2023,
+    "event": "Spain v Netherlands, Women's World Cup quarter-final",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "left",
+      "beaten": 1
+    },
+    "lesson": "Use your speed to get half a yard, then shoot low across the keeper."
+  },
+  "Trinity Rodman": {
+    "kind": "signature",
+    "title": "Signature: the run past the full-back",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "right",
+      "beaten": 2
+    },
+    "lesson": "Attack the defender at speed and be brave enough to try a trick."
+  },
+  "Lauren James": {
+    "kind": "signature",
+    "title": "Signature: the curler from the edge",
+    "template": "long_range_goal",
+    "params": {
+      "side": "right",
+      "distance": "edge",
+      "foot": "right"
+    },
+    "lesson": "Cut inside onto your stronger foot, then curl the ball into the far corner."
+  },
+  "Chloe Kelly": {
+    "kind": "moment",
+    "title": "The Winning Penalty in the Euro Final",
+    "year": 2025,
+    "event": "England v Spain, Women's Euro final",
+    "template": "penalty_goal",
+    "params": {},
+    "lesson": "Pick your spot before you run up, then strike it with confidence."
+  },
+  "Clàudia Pina": {
+    "kind": "signature",
+    "title": "Signature: the long-range screamer",
+    "template": "long_range_goal",
+    "params": {
+      "side": "left",
+      "distance": "long",
+      "foot": "right"
+    },
+    "lesson": "Lock your ankle and strike through the ball to hit it hard and true."
+  },
+  "Sam Kerr": {
+    "kind": "moment",
+    "title": "The Long-Range Goal v England",
+    "year": 2023,
+    "event": "Australia v England, Women's World Cup semi-final",
+    "template": "long_range_goal",
+    "params": {
+      "side": "center",
+      "distance": "long",
+      "foot": "right"
+    },
+    "lesson": "If the keeper gives you a chance, shoot early and hit the target."
+  },
+  "Alessia Russo": {
+    "kind": "moment",
+    "title": "The Header in the Euro Final",
+    "year": 2025,
+    "event": "England v Spain, Women's Euro final",
+    "template": "header_goal",
+    "params": {},
+    "lesson": "Attack the cross, keep your eyes open and head it back across the keeper."
+  },
+  "Ewa Pajor": {
+    "kind": "signature",
+    "title": "Signature: the quick finish in the box",
+    "template": "volley_goal",
+    "params": {
+      "side": "center",
+      "distance": "box"
+    },
+    "lesson": "Be ready before the ball arrives so you can shoot with one touch."
+  },
+  "Khadija Shaw": {
+    "kind": "signature",
+    "title": "Signature: the powerful header",
+    "template": "header_goal",
+    "params": {
+      "side": "right"
+    },
+    "lesson": "Use your body to hold off the defender, then attack the ball with your forehead."
+  },
+  "Sophia Wilson": {
+    "kind": "signature",
+    "title": "Signature: the burst in behind",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "left",
+      "beaten": 1
+    },
+    "lesson": "Run into the space behind the defence, then finish before they catch you."
+  },
+  "Temwa Chawinga": {
+    "kind": "signature",
+    "title": "Signature: the sprint and finish",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "center",
+      "beaten": 1
+    },
+    "lesson": "Use your speed to get goal-side, then pick your corner."
+  },
+  "Ada Hegerberg": {
+    "kind": "signature",
+    "title": "Signature: the striker’s run to the near post",
+    "template": "header_goal",
+    "params": {
+      "side": "left"
+    },
+    "lesson": "Move a split second before the cross so the defender cannot follow you."
+  },
+  "Vivianne Miedema": {
+    "kind": "signature",
+    "title": "Signature: the cool finish past the keeper",
+    "template": "chip_goal",
+    "params": {
+      "side": "center",
+      "distance": "box"
+    },
+    "lesson": "Stay calm one-on-one; look at the keeper, then pick your finish."
+  },
+  "Pernille Harder": {
+    "kind": "signature",
+    "title": "Signature: the dribble and shot",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "left",
+      "beaten": 2,
+      "foot": "right"
+    },
+    "lesson": "Keep the ball close as you run, then shoot before the defender recovers."
+  },
+  "Marta": {
+    "kind": "moment",
+    "title": "The Flick-and-Spin Goal v USA",
+    "year": 2007,
+    "event": "Brazil v USA, Women's World Cup semi-final",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "left",
+      "beaten": 2,
+      "foot": "left"
+    },
+    "lesson": "Be brave with the ball: a clever touch can get you past a defender."
+  },
+  "Barbra Banda": {
+    "kind": "signature",
+    "title": "Signature: the powerful finish",
+    "template": "long_range_goal",
+    "params": {
+      "side": "center",
+      "distance": "edge",
+      "foot": "right"
+    },
+    "lesson": "Hit the ball hard and low; keepers find those the hardest to stop."
+  },
+  "Asisat Oshoala": {
+    "kind": "signature",
+    "title": "Signature: the quick finish in the box",
+    "template": "volley_goal",
+    "params": {
+      "side": "center",
+      "distance": "box"
+    },
+    "lesson": "Stay alert in the box; the quickest striker to react often scores."
+  },
+  "Mia Hamm": {
+    "kind": "signature",
+    "title": "Signature: the dribble and shot",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "left",
+      "beaten": 2
+    },
+    "lesson": "Run at defenders with confidence, then finish when you see the gap."
+  },
+  "Megan Rapinoe": {
+    "kind": "moment",
+    "title": "The Penalty in the World Cup Final",
+    "year": 2019,
+    "event": "USA v Netherlands, Women's World Cup final",
+    "template": "penalty_goal",
+    "params": {
+      "foot": "right"
+    },
+    "lesson": "Decide where you will shoot before you start your run-up, and stick to it."
+  },
+  "Abby Wambach": {
+    "kind": "moment",
+    "title": "The Last-Second Header v Brazil",
+    "year": 2011,
+    "event": "Brazil v USA, Women's World Cup quarter-final",
+    "template": "header_goal",
+    "params": {
+      "side": "left"
+    },
+    "lesson": "Never stop believing: keep attacking the box until the final whistle."
+  },
+  "Birgit Prinz": {
+    "kind": "signature",
+    "title": "Signature: the powerful shot on the turn",
+    "template": "long_range_goal",
+    "params": {
+      "side": "center",
+      "distance": "edge",
+      "foot": "right"
+    },
+    "lesson": "Shield the ball with your body, turn, then shoot with power."
+  },
+  "Christine Sinclair": {
+    "kind": "signature",
+    "title": "Signature: the striker’s finish",
+    "template": "volley_goal",
+    "params": {
+      "side": "center",
+      "distance": "box"
+    },
+    "lesson": "Great strikers are always in the right place: watch where the ball will land."
+  },
+  "Alex Morgan": {
+    "kind": "moment",
+    "title": "The 123rd-Minute Header v Canada",
+    "year": 2012,
+    "event": "Canada v USA, Olympic semi-final",
+    "template": "header_goal",
+    "params": {
+      "side": "right"
+    },
+    "lesson": "Keep your energy for the end: late goals win big games."
+  },
+  "Carli Lloyd": {
+    "kind": "moment",
+    "title": "The Halfway-Line Goal in the Final",
+    "year": 2015,
+    "event": "USA v Japan, Women's World Cup final",
+    "template": "long_range_goal",
+    "params": {
+      "side": "center",
+      "distance": "long",
+      "foot": "right"
+    },
+    "lesson": "Look up! If the keeper is off her line, you can score from far away."
+  },
+  "Hope Solo": {
+    "kind": "moment",
+    "title": "The Shoot-Out Save v Brazil",
+    "year": 2011,
+    "event": "Brazil v USA, Women's World Cup quarter-final",
+    "template": "penalty_save",
+    "lesson": "In a shoot-out one save can decide everything, so stay focused."
+  },
+  "Nadine Angerer": {
+    "kind": "moment",
+    "title": "The Penalty Save v Marta in the Final",
+    "year": 2007,
+    "event": "Germany v Brazil, Women's World Cup final",
+    "template": "penalty_save",
+    "lesson": "Keep your weight on your toes so you can spring either way."
+  },
+  "Formiga": {
+    "kind": "signature",
+    "title": "Signature: winning it back in midfield",
+    "template": "interception_counter",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Stay close to your opponent and nip in when the pass is loose."
+  },
+  "Homare Sawa": {
+    "kind": "moment",
+    "title": "The Extra-Time Flick in the Final",
+    "year": 2011,
+    "event": "Japan v USA, Women's World Cup final",
+    "template": "volley_goal",
+    "params": {
+      "side": "left",
+      "distance": "box",
+      "foot": "right"
+    },
+    "lesson": "At a corner, get to the ball first; even a small flick can score."
+  },
+  "Sun Wen": {
+    "kind": "signature",
+    "title": "Signature: the clever finish",
+    "template": "volley_goal",
+    "params": {
+      "side": "center",
+      "distance": "box"
+    },
+    "lesson": "Find space where the defenders are not looking, then finish quickly."
+  },
+  "Michelle Akers": {
+    "kind": "moment",
+    "title": "The Late Winner in the First Final",
+    "year": 1991,
+    "event": "USA v Norway, Women's World Cup final",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "center",
+      "beaten": 1
+    },
+    "lesson": "Chase every loose ball: a defender’s mistake can become your goal."
+  },
+  "Kristine Lilly": {
+    "kind": "moment",
+    "title": "The Goal-Line Header in the Final",
+    "year": 1999,
+    "event": "USA v China, Women's World Cup final",
+    "template": "aerial_clearance",
+    "params": {
+      "side": "left"
+    },
+    "lesson": "Guard the post at corners; a header off the line is as good as a goal."
+  },
+  "Lieke Martens": {
+    "kind": "signature",
+    "title": "Signature: the step-over on the left wing",
+    "template": "skill_move",
+    "params": {
+      "side": "left",
+      "trick": "stepover"
+    },
+    "lesson": "Sell the step-over with your shoulders, then go the other way."
+  },
+  "Roberto Baggio": {
+    "kind": "moment",
+    "title": "The Late Winner v Spain",
+    "year": 1994,
+    "event": "Italy v Spain, World Cup quarter-final",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "right",
+      "beaten": 1,
+      "foot": "right"
+    },
+    "lesson": "Stay calm when you are through: take the keeper on and slot it in."
+  },
+  "Francesco Totti": {
+    "kind": "moment",
+    "title": "The Chipped Penalty v the Netherlands",
+    "year": 2000,
+    "event": "Italy v Netherlands, Euro 2000 semi-final",
+    "template": "penalty_goal",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "A calm chip only works if you are brave, so practise it first."
+  },
+  "Alessandro Del Piero": {
+    "kind": "moment",
+    "title": "The Curler in Extra Time v Germany",
+    "year": 2006,
+    "event": "Germany v Italy, World Cup semi-final",
+    "template": "long_range_goal",
+    "params": {
+      "side": "left",
+      "distance": "box",
+      "foot": "right"
+    },
+    "lesson": "Open your body and curl the ball with the inside of your foot."
+  },
+  "Dennis Bergkamp": {
+    "kind": "moment",
+    "title": "The Three Touches v Argentina",
+    "year": 1998,
+    "event": "Netherlands v Argentina, World Cup quarter-final",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "right",
+      "beaten": 1,
+      "foot": "right"
+    },
+    "lesson": "A perfect first touch sets up everything that comes next."
+  },
+  "Raúl": {
+    "kind": "signature",
+    "title": "Signature: the cool chip over the keeper",
+    "template": "chip_goal",
+    "params": {
+      "side": "center",
+      "distance": "box",
+      "foot": "left"
+    },
+    "lesson": "When the keeper rushes out, a gentle chip can be the best finish."
+  },
+  "Andriy Shevchenko": {
+    "kind": "moment",
+    "title": "The Winning Penalty in the Final",
+    "year": 2003,
+    "event": "Juventus v AC Milan, Champions League final",
+    "template": "penalty_goal",
+    "params": {
+      "foot": "right"
+    },
+    "lesson": "Take a deep breath, pick your spot and trust your practice."
+  },
+  "Paolo Rossi": {
+    "kind": "moment",
+    "title": "The Hat-Trick v Brazil",
+    "year": 1982,
+    "event": "Italy v Brazil, World Cup second round",
+    "template": "header_goal",
+    "params": {
+      "side": "left"
+    },
+    "lesson": "Be in the box when the cross comes: goals come to strikers who get there."
+  },
+  "George Weah": {
+    "kind": "moment",
+    "title": "The Length-of-the-Pitch Run v Verona",
+    "year": 1996,
+    "event": "AC Milan v Verona, Serie A",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "center",
+      "beaten": 5,
+      "distance": "box"
+    },
+    "lesson": "Once you are running, keep the ball close and keep going."
+  },
+  "Kenny Dalglish": {
+    "kind": "moment",
+    "title": "The Chip in the European Cup Final",
+    "year": 1978,
+    "event": "Liverpool v Club Brugge, European Cup final",
+    "template": "chip_goal",
+    "params": {
+      "side": "right",
+      "distance": "box"
+    },
+    "lesson": "Wait for the keeper to go down, then lift the ball gently over them."
+  },
+  "Michael Laudrup": {
+    "kind": "signature",
+    "title": "Signature: the no-look through ball",
+    "template": "through_ball_assist",
+    "params": {
+      "side": "center",
+      "foot": "right"
+    },
+    "lesson": "Look one way and pass the other to fool the defenders."
+  },
+  "Gheorghe Hagi": {
+    "kind": "moment",
+    "title": "The Long-Range Lob v Colombia",
+    "year": 1994,
+    "event": "Romania v Colombia, World Cup group stage",
+    "template": "chip_goal",
+    "params": {
+      "side": "left",
+      "distance": "long",
+      "foot": "left"
+    },
+    "lesson": "If the keeper is off the line, a high lob can drop in behind them."
+  },
+  "Rui Costa": {
+    "kind": "signature",
+    "title": "Signature: the perfect through ball",
+    "template": "through_ball_assist",
+    "params": {
+      "side": "center",
+      "foot": "right"
+    },
+    "lesson": "Weight your pass so the striker can run onto it without breaking stride."
+  },
+  "Clarence Seedorf": {
+    "kind": "signature",
+    "title": "Signature: the long-range thunderbolt",
+    "template": "long_range_goal",
+    "params": {
+      "side": "center",
+      "distance": "long",
+      "foot": "right"
+    },
+    "lesson": "Strike through the ball with your laces and follow through towards goal."
+  },
+  "Claude Makélélé": {
+    "kind": "signature",
+    "title": "Signature: the steal in front of the defence",
+    "template": "interception_counter",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Stay between the ball and your goal, then pass simply once you win it."
+  },
+  "Michael Owen": {
+    "kind": "moment",
+    "title": "The Solo Goal v Argentina",
+    "year": 1998,
+    "event": "Argentina v England, World Cup round of 16",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "right",
+      "beaten": 2,
+      "foot": "right"
+    },
+    "lesson": "Run straight at defenders with speed; they hate backing off."
+  },
+  "Gary Lineker": {
+    "kind": "signature",
+    "title": "Signature: the poacher’s finish in the six-yard box",
+    "template": "volley_goal",
+    "params": {
+      "side": "center",
+      "distance": "box"
+    },
+    "lesson": "Get across your defender to the near post and finish with one touch."
+  },
+  "Moisés Caicedo": {
+    "kind": "signature",
+    "title": "Signature: the steal and go",
+    "template": "interception_counter",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Watch the passer’s eyes and hips to guess the pass, then step in and steal it."
+  },
+  "Antoine Semenyo": {
+    "kind": "signature",
+    "title": "Signature: the powerful run and shot",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "right",
+      "beaten": 2
+    },
+    "lesson": "Carry the ball at speed into space, then shoot before the defender recovers."
+  },
+  "Aurélien Tchouaméni": {
+    "kind": "signature",
+    "title": "Signature: the shield in front of the defence",
+    "template": "interception_counter",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Stay between the ball and your goal so attackers have to go around you."
+  },
+  "Joshua Kimmich": {
+    "kind": "signature",
+    "title": "Signature: the pinpoint pass from deep",
+    "template": "through_ball_assist",
+    "params": {
+      "side": "right"
+    },
+    "lesson": "Look up early and aim your pass at your teammate’s front foot."
+  },
+  "Bernardo Silva": {
+    "kind": "signature",
+    "title": "Signature: the close-control wriggle",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "center",
+      "beaten": 2,
+      "foot": "left"
+    },
+    "lesson": "Keep the ball glued to your foot and use your body to shield it."
+  },
+  "Denzel Dumfries": {
+    "kind": "signature",
+    "title": "Signature: the wing-back charge",
+    "template": "overlap_run",
+    "params": {
+      "side": "right"
+    },
+    "lesson": "When your team wins the ball, sprint forward on the outside to stretch the defence."
+  },
+  "Jérémy Doku": {
+    "kind": "signature",
+    "title": "Signature: the dribble at full speed",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "left",
+      "beaten": 2,
+      "foot": "right"
+    },
+    "lesson": "Change pace suddenly: go slow, then explode past the defender."
+  },
+  "Rayan Cherki": {
+    "kind": "signature",
+    "title": "Signature: the two-footed playmaker",
+    "template": "through_ball_assist",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Practise with both feet so defenders can’t guess which way you will go."
+  },
+  "N'Golo Kanté": {
+    "kind": "signature",
+    "title": "Signature: the ball-winning sprint",
+    "template": "interception_counter",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Press quickly after losing the ball: the best time to win it back is straight away."
+  },
+  "Tijjani Reijnders": {
+    "kind": "signature",
+    "title": "Signature: the late run into the box",
+    "template": "volley_goal",
+    "params": {
+      "side": "center",
+      "distance": "box"
+    },
+    "lesson": "Arrive late in the box: defenders watch the strikers and forget the midfielder."
+  },
+  "Bruno Guimarães": {
+    "kind": "signature",
+    "title": "Signature: win it, then pass forward",
+    "template": "through_ball_assist",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "After you win the ball, look forward first for a quick pass."
+  },
+  "Frenkie de Jong": {
+    "kind": "signature",
+    "title": "Signature: carrying the ball out of pressure",
+    "template": "skill_move",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "When pressed, turn away from the defender and carry the ball into open space."
+  },
+  "Marc Cucurella": {
+    "kind": "signature",
+    "title": "Signature: defend, then join the attack",
+    "template": "overlap_run",
+    "params": {
+      "side": "left"
+    },
+    "lesson": "Defend first, then join the attack when your winger has the ball."
+  },
+  "Sadio Mané": {
+    "kind": "signature",
+    "title": "Signature: the quick cut and finish",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "left",
+      "beaten": 1,
+      "foot": "right"
+    },
+    "lesson": "Press the defender straight away: winning the ball high up leaves a short run to goal."
+  },
+  "Martín Zubimendi": {
+    "kind": "signature",
+    "title": "Signature: the calm holding midfielder",
+    "template": "interception_counter",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Stand where the forward pass has to go through you, not around you."
+  },
+  "Enzo Fernández": {
+    "kind": "signature",
+    "title": "Signature: the curler from range",
+    "template": "long_range_goal",
+    "params": {
+      "side": "center",
+      "distance": "long",
+      "foot": "right"
+    },
+    "lesson": "Curl the ball towards the far corner, away from the keeper’s reach."
+  },
+  "Willian Pacho": {
+    "kind": "signature",
+    "title": "Signature: the recovery sprint",
+    "template": "last_ditch_tackle",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Turn and sprint back goal-side before you try to win the ball."
+  },
+  "Scott McTominay": {
+    "kind": "signature",
+    "title": "Signature: the late run and finish",
+    "template": "volley_goal",
+    "params": {
+      "side": "center",
+      "distance": "box"
+    },
+    "lesson": "Time your run so you arrive in the box just as the ball does."
+  },
+  "Ryan Gravenberch": {
+    "kind": "signature",
+    "title": "Signature: steal and carry",
+    "template": "interception_counter",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "After you win the ball, carry it forward into the space in front of you."
+  },
+  "Fermín López": {
+    "kind": "signature",
+    "title": "Signature: the surprise run and shot",
+    "template": "long_range_goal",
+    "params": {
+      "side": "center",
+      "distance": "edge",
+      "foot": "right"
+    },
+    "lesson": "Keep running forward after you pass: the return ball can find you free."
+  },
+  "Cody Gakpo": {
+    "kind": "signature",
+    "title": "Signature: cut inside and curl",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "left",
+      "beaten": 1,
+      "foot": "right"
+    },
+    "lesson": "From the left wing, cut inside onto your right foot and aim for the far corner."
+  },
+  "João Pedro": {
+    "kind": "signature",
+    "title": "Signature: the curler from the edge",
+    "template": "long_range_goal",
+    "params": {
+      "side": "center",
+      "distance": "edge",
+      "foot": "right"
+    },
+    "lesson": "Open your body and curl the ball so it bends away from the keeper."
+  },
+  "Ismaïla Sarr": {
+    "kind": "signature",
+    "title": "Signature: the sprint in behind",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "right",
+      "beaten": 1,
+      "foot": "right"
+    },
+    "lesson": "Run in behind the defence the moment your teammate looks up to pass."
+  },
+  "Rafael Leão": {
+    "kind": "signature",
+    "title": "Signature: the long-stride dribble",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "left",
+      "beaten": 2,
+      "foot": "right"
+    },
+    "lesson": "Take long strides in open space, then short touches when defenders get close."
+  },
+  "Alexis Mac Allister": {
+    "kind": "signature",
+    "title": "Signature: setting the tempo",
+    "template": "through_ball_assist",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Slow the game with safe passes, then speed it up with one quick forward pass."
+  },
+  "Weston McKennie": {
+    "kind": "signature",
+    "title": "Signature: the late header",
+    "template": "header_goal",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Attack the ball in the air: jump early and hit it with your forehead."
+  },
+  "Gabriel Martinelli": {
+    "kind": "signature",
+    "title": "Signature: the press and pounce",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "left",
+      "beaten": 1,
+      "foot": "right"
+    },
+    "lesson": "Chase every loose ball: pressing can turn a defender’s mistake into a goal."
+  },
+  "João Cancelo": {
+    "kind": "signature",
+    "title": "Signature: the full-back playmaker",
+    "template": "through_ball_assist",
+    "params": {
+      "side": "right"
+    },
+    "lesson": "A full-back can step inside into midfield to add an extra passer."
+  },
+  "Dani Olmo": {
+    "kind": "signature",
+    "title": "Signature: finding the pocket of space",
+    "template": "through_ball_assist",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Stand between the other team’s midfield and defence, where nobody is marking you."
+  },
+  "Arda Güler": {
+    "kind": "signature",
+    "title": "Signature: the left-footed curler",
+    "template": "long_range_goal",
+    "params": {
+      "side": "center",
+      "distance": "long",
+      "foot": "left"
+    },
+    "lesson": "Wrap your foot around the ball to curl it into the top corner."
+  },
+  "Marc Guéhi": {
+    "kind": "signature",
+    "title": "Signature: the perfectly timed block",
+    "template": "last_ditch_tackle",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Stay on your feet and block the shot with your body facing the ball."
+  },
+  "Fabián Ruiz": {
+    "kind": "signature",
+    "title": "Signature: keep it, then break the lines",
+    "template": "through_ball_assist",
+    "params": {
+      "side": "left"
+    },
+    "lesson": "Keep the ball moving with short passes until a gap opens for a forward pass."
+  },
+  "Casemiro": {
+    "kind": "signature",
+    "title": "Signature: the defensive midfield anchor",
+    "template": "interception_counter",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Stay in front of your defenders to block the middle of the pitch."
+  },
+  "Mikel Merino": {
+    "kind": "signature",
+    "title": "Signature: the late header",
+    "template": "header_goal",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Arrive late at the back post: defenders often forget the midfielder."
+  },
+  "Eberechi Eze": {
+    "kind": "signature",
+    "title": "Signature: the silky dribble",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "center",
+      "beaten": 2,
+      "foot": "right"
+    },
+    "lesson": "Drop your shoulder to fake one way, then go the other."
+  },
+  "Kenan Yıldız": {
+    "kind": "signature",
+    "title": "Signature: face up and cut inside",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "left",
+      "beaten": 1,
+      "foot": "right"
+    },
+    "lesson": "Face your defender, fake one way, and cut inside to shoot."
+  },
+  "Raúl Jiménez": {
+    "kind": "signature",
+    "title": "Signature: the striker’s header",
+    "template": "header_goal",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Watch the ball onto your forehead and aim down towards the goal."
+  },
+  "Gonçalo Ramos": {
+    "kind": "signature",
+    "title": "Signature: the first-time finish",
+    "template": "volley_goal",
+    "params": {
+      "side": "center",
+      "distance": "box"
+    },
+    "lesson": "Keep moving in the box so the defender can’t settle next to you."
+  },
+  "Mikel Oyarzabal": {
+    "kind": "signature",
+    "title": "Signature: the run across the defender",
+    "template": "volley_goal",
+    "params": {
+      "side": "center",
+      "distance": "box"
+    },
+    "lesson": "Sprint across your defender to meet a low cross first."
+  },
+  "Marcus Thuram": {
+    "kind": "signature",
+    "title": "Signature: the powerful run in behind",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "center",
+      "beaten": 1,
+      "distance": "box"
+    },
+    "lesson": "Use your body to hold off the defender while you drive towards goal."
+  },
+  "Kaoru Mitoma": {
+    "kind": "signature",
+    "title": "Signature: the studied dribble",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "left",
+      "beaten": 2,
+      "foot": "right"
+    },
+    "lesson": "Watch the defender’s hips, not their feet, to know when to go past."
+  },
+  "Phil Foden": {
+    "kind": "signature",
+    "title": "Signature: set and strike",
+    "template": "long_range_goal",
+    "params": {
+      "side": "center",
+      "distance": "edge",
+      "foot": "left"
+    },
+    "lesson": "Take one touch to set the ball, then strike low before the keeper is ready."
+  },
+  "Lisandro Martínez": {
+    "kind": "signature",
+    "title": "Signature: the brave challenge",
+    "template": "last_ditch_tackle",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "You don’t need to be the tallest: good timing and bravery win duels."
+  },
+  "Bradley Barcola": {
+    "kind": "signature",
+    "title": "Signature: go before they’re set",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "left",
+      "beaten": 1,
+      "foot": "right"
+    },
+    "lesson": "Use your speed early: run at the defender before they get set."
+  },
+  "Pervis Estupiñán": {
+    "kind": "signature",
+    "title": "Signature: the overlap and cross",
+    "template": "overlap_run",
+    "params": {
+      "side": "left"
+    },
+    "lesson": "Time your overlap so you arrive just as your winger is ready to pass."
+  }
+}

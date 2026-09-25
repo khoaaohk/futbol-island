@@ -1,0 +1,382 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The save, live",
+   "text": "Shanghai, the 2007 World Cup final. Germany lead Brazil one-nil, then Brazil win a penalty. Marta, the tournament's top scorer, steps up. Nadine Angerer waits on her line... Marta shoots. Angerer dives. Saved!",
+   "src": "/plays/narration/angerer-marta-2007/1.m4a",
+   "seconds": 16.6,
+   "words": [
+    {
+     "w": "Shanghai",
+     "at": 0.4
+    },
+    {
+     "w": "the",
+     "at": 0.887
+    },
+    {
+     "w": "2007",
+     "at": 0.975
+    },
+    {
+     "w": "World",
+     "at": 2.0
+    },
+    {
+     "w": "Cup",
+     "at": 2.3
+    },
+    {
+     "w": "final",
+     "at": 2.525
+    },
+    {
+     "w": "Germany",
+     "at": 3.475
+    },
+    {
+     "w": "lead",
+     "at": 3.975
+    },
+    {
+     "w": "Brazil",
+     "at": 4.25
+    },
+    {
+     "w": "one-nil",
+     "at": 4.675
+    },
+    {
+     "w": "then",
+     "at": 5.425
+    },
+    {
+     "w": "Brazil",
+     "at": 5.65
+    },
+    {
+     "w": "win",
+     "at": 6.125
+    },
+    {
+     "w": "a",
+     "at": 6.263
+    },
+    {
+     "w": "penalty",
+     "at": 6.325
+    },
+    {
+     "w": "Marta",
+     "at": 7.425
+    },
+    {
+     "w": "the",
+     "at": 7.85
+    },
+    {
+     "w": "tournament's",
+     "at": 7.95
+    },
+    {
+     "w": "top",
+     "at": 8.525
+    },
+    {
+     "w": "scorer",
+     "at": 8.812
+    },
+    {
+     "w": "steps",
+     "at": 9.35
+    },
+    {
+     "w": "up",
+     "at": 9.7
+    },
+    {
+     "w": "Nadine",
+     "at": 10.262
+    },
+    {
+     "w": "Angerer",
+     "at": 10.738
+    },
+    {
+     "w": "waits",
+     "at": 11.175
+    },
+    {
+     "w": "on",
+     "at": 11.463
+    },
+    {
+     "w": "her",
+     "at": 11.562
+    },
+    {
+     "w": "line",
+     "at": 11.7
+    },
+    {
+     "w": "Marta",
+     "at": 12.537
+    },
+    {
+     "w": "shoots",
+     "at": 12.912
+    },
+    {
+     "w": "Angerer",
+     "at": 13.637
+    },
+    {
+     "w": "dives",
+     "at": 14.075
+    },
+    {
+     "w": "Saved",
+     "at": 15.137
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again, slowly. Angerer stays patient. She reads Marta's run, then dives. Strong hands!",
+   "src": "/plays/narration/angerer-marta-2007/2.m4a",
+   "seconds": 7.7,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "slowly",
+     "at": 1.188
+    },
+    {
+     "w": "Angerer",
+     "at": 2.013
+    },
+    {
+     "w": "stays",
+     "at": 2.45
+    },
+    {
+     "w": "patient",
+     "at": 2.825
+    },
+    {
+     "w": "She",
+     "at": 3.763
+    },
+    {
+     "w": "reads",
+     "at": 3.9
+    },
+    {
+     "w": "Marta's",
+     "at": 4.175
+    },
+    {
+     "w": "run",
+     "at": 4.612
+    },
+    {
+     "w": "then",
+     "at": 4.963
+    },
+    {
+     "w": "dives",
+     "at": 5.15
+    },
+    {
+     "w": "Strong",
+     "at": 5.838
+    },
+    {
+     "w": "hands",
+     "at": 6.25
+    }
+   ]
+  },
+  {
+   "label": "Never beaten",
+   "text": "From behind the goal: pushed away! Germany won two-nil, and Angerer let in no goals all tournament.",
+   "src": "/plays/narration/angerer-marta-2007/3.m4a",
+   "seconds": 7.3,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "behind",
+     "at": 0.487
+    },
+    {
+     "w": "the",
+     "at": 0.863
+    },
+    {
+     "w": "goal",
+     "at": 0.95
+    },
+    {
+     "w": "pushed",
+     "at": 1.625
+    },
+    {
+     "w": "away",
+     "at": 1.95
+    },
+    {
+     "w": "Germany",
+     "at": 2.888
+    },
+    {
+     "w": "won",
+     "at": 3.325
+    },
+    {
+     "w": "two-nil",
+     "at": 3.562
+    },
+    {
+     "w": "and",
+     "at": 4.15
+    },
+    {
+     "w": "Angerer",
+     "at": 4.312
+    },
+    {
+     "w": "let",
+     "at": 4.75
+    },
+    {
+     "w": "in",
+     "at": 4.925
+    },
+    {
+     "w": "no",
+     "at": 5.075
+    },
+    {
+     "w": "goals",
+     "at": 5.25
+    },
+    {
+     "w": "all",
+     "at": 5.575
+    },
+    {
+     "w": "tournament",
+     "at": 5.775
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "The secret? Keepers, stay patient on your line. Read the kicker: her run and her hips. Then dive with strong hands.",
+   "src": "/plays/narration/angerer-marta-2007/4.m4a",
+   "seconds": 8.2,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "secret",
+     "at": 0.463
+    },
+    {
+     "w": "Keepers",
+     "at": 1.212
+    },
+    {
+     "w": "stay",
+     "at": 1.725
+    },
+    {
+     "w": "patient",
+     "at": 2.013
+    },
+    {
+     "w": "on",
+     "at": 2.413
+    },
+    {
+     "w": "your",
+     "at": 2.513
+    },
+    {
+     "w": "line",
+     "at": 2.625
+    },
+    {
+     "w": "Read",
+     "at": 3.388
+    },
+    {
+     "w": "the",
+     "at": 3.587
+    },
+    {
+     "w": "kicker",
+     "at": 3.675
+    },
+    {
+     "w": "her",
+     "at": 4.15
+    },
+    {
+     "w": "run",
+     "at": 4.338
+    },
+    {
+     "w": "and",
+     "at": 4.612
+    },
+    {
+     "w": "her",
+     "at": 4.713
+    },
+    {
+     "w": "hips",
+     "at": 4.825
+    },
+    {
+     "w": "Then",
+     "at": 5.588
+    },
+    {
+     "w": "dive",
+     "at": 5.825
+    },
+    {
+     "w": "with",
+     "at": 6.162
+    },
+    {
+     "w": "strong",
+     "at": 6.325
+    },
+    {
+     "w": "hands",
+     "at": 6.725
+    }
+   ]
+  }
+ ]
+}

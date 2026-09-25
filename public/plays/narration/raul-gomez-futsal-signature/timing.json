@@ -1,0 +1,330 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: World Cup 2021",
+   "text": "The 2021 Futsal World Cup, round of sixteen. Spain lead the Czech Republic. Ra\u00fal G\u00f3mez waits near the back post. The ball zips across, he shoots, saved! He follows it in. Two nil!",
+   "src": "/plays/narration/raul-gomez-futsal-signature/1.m4a",
+   "seconds": 14.4,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "2021",
+     "at": 0.425
+    },
+    {
+     "w": "Futsal",
+     "at": 1.337
+    },
+    {
+     "w": "World",
+     "at": 1.775
+    },
+    {
+     "w": "Cup",
+     "at": 2.087
+    },
+    {
+     "w": "round",
+     "at": 2.425
+    },
+    {
+     "w": "of",
+     "at": 2.712
+    },
+    {
+     "w": "sixteen",
+     "at": 2.837
+    },
+    {
+     "w": "Spain",
+     "at": 4.013
+    },
+    {
+     "w": "lead",
+     "at": 4.5
+    },
+    {
+     "w": "the",
+     "at": 4.688
+    },
+    {
+     "w": "Czech",
+     "at": 4.812
+    },
+    {
+     "w": "Republic",
+     "at": 5.075
+    },
+    {
+     "w": "Ra\u00fal",
+     "at": 6.15
+    },
+    {
+     "w": "G\u00f3mez",
+     "at": 6.475
+    },
+    {
+     "w": "waits",
+     "at": 6.938
+    },
+    {
+     "w": "near",
+     "at": 7.275
+    },
+    {
+     "w": "the",
+     "at": 7.438
+    },
+    {
+     "w": "back",
+     "at": 7.525
+    },
+    {
+     "w": "post",
+     "at": 7.8
+    },
+    {
+     "w": "The",
+     "at": 8.6
+    },
+    {
+     "w": "ball",
+     "at": 8.7
+    },
+    {
+     "w": "zips",
+     "at": 9.012
+    },
+    {
+     "w": "across",
+     "at": 9.3
+    },
+    {
+     "w": "he",
+     "at": 9.875
+    },
+    {
+     "w": "shoots",
+     "at": 10.062
+    },
+    {
+     "w": "saved",
+     "at": 10.588
+    },
+    {
+     "w": "He",
+     "at": 11.4
+    },
+    {
+     "w": "follows",
+     "at": 11.562
+    },
+    {
+     "w": "it",
+     "at": 11.938
+    },
+    {
+     "w": "in",
+     "at": 12.025
+    },
+    {
+     "w": "Two",
+     "at": 12.775
+    },
+    {
+     "w": "nil",
+     "at": 13.05
+    }
+   ]
+  },
+  {
+   "label": "Replay: the back post",
+   "text": "Watch again, in slow motion. He waits, then runs, so he meets the ball right at the back post. First shot saved, second shot in!",
+   "src": "/plays/narration/raul-gomez-futsal-signature/2.m4a",
+   "seconds": 9.7,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "in",
+     "at": 1.062
+    },
+    {
+     "w": "slow",
+     "at": 1.212
+    },
+    {
+     "w": "motion",
+     "at": 1.45
+    },
+    {
+     "w": "He",
+     "at": 2.35
+    },
+    {
+     "w": "waits",
+     "at": 2.513
+    },
+    {
+     "w": "then",
+     "at": 3.025
+    },
+    {
+     "w": "runs",
+     "at": 3.225
+    },
+    {
+     "w": "so",
+     "at": 3.825
+    },
+    {
+     "w": "he",
+     "at": 3.975
+    },
+    {
+     "w": "meets",
+     "at": 4.1
+    },
+    {
+     "w": "the",
+     "at": 4.375
+    },
+    {
+     "w": "ball",
+     "at": 4.475
+    },
+    {
+     "w": "right",
+     "at": 4.85
+    },
+    {
+     "w": "at",
+     "at": 5.088
+    },
+    {
+     "w": "the",
+     "at": 5.162
+    },
+    {
+     "w": "back",
+     "at": 5.25
+    },
+    {
+     "w": "post",
+     "at": 5.537
+    },
+    {
+     "w": "First",
+     "at": 6.525
+    },
+    {
+     "w": "shot",
+     "at": 6.862
+    },
+    {
+     "w": "saved",
+     "at": 7.213
+    },
+    {
+     "w": "second",
+     "at": 7.787
+    },
+    {
+     "w": "shot",
+     "at": 8.162
+    },
+    {
+     "w": "in",
+     "at": 8.425
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn. Wait, then run. Arrive at the back post at the same time as the ball!",
+   "src": "/plays/narration/raul-gomez-futsal-signature/3.m4a",
+   "seconds": 6.5,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.512
+    },
+    {
+     "w": "Wait",
+     "at": 1.325
+    },
+    {
+     "w": "then",
+     "at": 1.85
+    },
+    {
+     "w": "run",
+     "at": 2.075
+    },
+    {
+     "w": "Arrive",
+     "at": 2.888
+    },
+    {
+     "w": "at",
+     "at": 3.263
+    },
+    {
+     "w": "the",
+     "at": 3.337
+    },
+    {
+     "w": "back",
+     "at": 3.425
+    },
+    {
+     "w": "post",
+     "at": 3.725
+    },
+    {
+     "w": "at",
+     "at": 4.037
+    },
+    {
+     "w": "the",
+     "at": 4.112
+    },
+    {
+     "w": "same",
+     "at": 4.213
+    },
+    {
+     "w": "time",
+     "at": 4.525
+    },
+    {
+     "w": "as",
+     "at": 4.875
+    },
+    {
+     "w": "the",
+     "at": 5.013
+    },
+    {
+     "w": "ball",
+     "at": 5.1
+    }
+   ]
+  }
+ ]
+}

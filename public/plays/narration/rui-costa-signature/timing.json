@@ -1,0 +1,386 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The perfect pass, live",
+   "text": "Euro 2000: Portugal against England, two-all. Rui Costa on the ball. He looks up... and slides it through! Nuno Gomes runs onto it... and smashes it in! Portugal lead three-two!",
+   "src": "/plays/narration/rui-costa-signature/1.m4a",
+   "seconds": 13.3,
+   "words": [
+    {
+     "w": "Euro",
+     "at": 0.4
+    },
+    {
+     "w": "2000",
+     "at": 0.713
+    },
+    {
+     "w": "Portugal",
+     "at": 1.637
+    },
+    {
+     "w": "against",
+     "at": 2.175
+    },
+    {
+     "w": "England",
+     "at": 2.575
+    },
+    {
+     "w": "two-all",
+     "at": 3.025
+    },
+    {
+     "w": "Rui",
+     "at": 3.638
+    },
+    {
+     "w": "Costa",
+     "at": 3.938
+    },
+    {
+     "w": "on",
+     "at": 4.388
+    },
+    {
+     "w": "the",
+     "at": 4.487
+    },
+    {
+     "w": "ball",
+     "at": 4.575
+    },
+    {
+     "w": "He",
+     "at": 5.15
+    },
+    {
+     "w": "looks",
+     "at": 5.275
+    },
+    {
+     "w": "up",
+     "at": 5.525
+    },
+    {
+     "w": "and",
+     "at": 6.15
+    },
+    {
+     "w": "slides",
+     "at": 6.287
+    },
+    {
+     "w": "it",
+     "at": 6.688
+    },
+    {
+     "w": "through",
+     "at": 6.812
+    },
+    {
+     "w": "Nuno",
+     "at": 7.525
+    },
+    {
+     "w": "Gomes",
+     "at": 7.9
+    },
+    {
+     "w": "runs",
+     "at": 8.325
+    },
+    {
+     "w": "onto",
+     "at": 8.6
+    },
+    {
+     "w": "it",
+     "at": 9.012
+    },
+    {
+     "w": "and",
+     "at": 9.575
+    },
+    {
+     "w": "smashes",
+     "at": 9.713
+    },
+    {
+     "w": "it",
+     "at": 10.225
+    },
+    {
+     "w": "in",
+     "at": 10.325
+    },
+    {
+     "w": "Portugal",
+     "at": 11.012
+    },
+    {
+     "w": "lead",
+     "at": 11.55
+    },
+    {
+     "w": "three-two",
+     "at": 11.812
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. Rui Costa passes into the space in front of Nuno Gomes, not to his feet. Not too hard, not too soft.",
+   "src": "/plays/narration/rui-costa-signature/2.m4a",
+   "seconds": 9.7,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.212
+    },
+    {
+     "w": "Rui",
+     "at": 2.275
+    },
+    {
+     "w": "Costa",
+     "at": 2.587
+    },
+    {
+     "w": "passes",
+     "at": 3.062
+    },
+    {
+     "w": "into",
+     "at": 3.513
+    },
+    {
+     "w": "the",
+     "at": 3.688
+    },
+    {
+     "w": "space",
+     "at": 3.788
+    },
+    {
+     "w": "in",
+     "at": 4.2
+    },
+    {
+     "w": "front",
+     "at": 4.35
+    },
+    {
+     "w": "of",
+     "at": 4.537
+    },
+    {
+     "w": "Nuno",
+     "at": 4.662
+    },
+    {
+     "w": "Gomes",
+     "at": 5.025
+    },
+    {
+     "w": "not",
+     "at": 5.7
+    },
+    {
+     "w": "to",
+     "at": 5.9
+    },
+    {
+     "w": "his",
+     "at": 5.987
+    },
+    {
+     "w": "feet",
+     "at": 6.188
+    },
+    {
+     "w": "Not",
+     "at": 6.938
+    },
+    {
+     "w": "too",
+     "at": 7.188
+    },
+    {
+     "w": "hard",
+     "at": 7.375
+    },
+    {
+     "w": "not",
+     "at": 7.85
+    },
+    {
+     "w": "too",
+     "at": 8.05
+    },
+    {
+     "w": "soft",
+     "at": 8.238
+    }
+   ]
+  },
+  {
+   "label": "Behind the goal",
+   "text": "Behind the goal: one touch, no slowing down, and he lashes it into the roof of the net.",
+   "src": "/plays/narration/rui-costa-signature/3.m4a",
+   "seconds": 6.4,
+   "words": [
+    {
+     "w": "Behind",
+     "at": 0.35
+    },
+    {
+     "w": "the",
+     "at": 0.713
+    },
+    {
+     "w": "goal",
+     "at": 0.8
+    },
+    {
+     "w": "one",
+     "at": 1.587
+    },
+    {
+     "w": "touch",
+     "at": 1.863
+    },
+    {
+     "w": "no",
+     "at": 2.325
+    },
+    {
+     "w": "slowing",
+     "at": 2.538
+    },
+    {
+     "w": "down",
+     "at": 2.975
+    },
+    {
+     "w": "and",
+     "at": 3.575
+    },
+    {
+     "w": "he",
+     "at": 3.688
+    },
+    {
+     "w": "lashes",
+     "at": 3.8
+    },
+    {
+     "w": "it",
+     "at": 4.25
+    },
+    {
+     "w": "into",
+     "at": 4.338
+    },
+    {
+     "w": "the",
+     "at": 4.513
+    },
+    {
+     "w": "roof",
+     "at": 4.638
+    },
+    {
+     "w": "of",
+     "at": 4.938
+    },
+    {
+     "w": "the",
+     "at": 5.013
+    },
+    {
+     "w": "net",
+     "at": 5.1
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: weight your pass so your striker can run onto it without breaking stride.",
+   "src": "/plays/narration/rui-costa-signature/4.m4a",
+   "seconds": 5.9,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.562
+    },
+    {
+     "w": "weight",
+     "at": 1.413
+    },
+    {
+     "w": "your",
+     "at": 1.613
+    },
+    {
+     "w": "pass",
+     "at": 1.725
+    },
+    {
+     "w": "so",
+     "at": 2.1
+    },
+    {
+     "w": "your",
+     "at": 2.212
+    },
+    {
+     "w": "striker",
+     "at": 2.325
+    },
+    {
+     "w": "can",
+     "at": 2.775
+    },
+    {
+     "w": "run",
+     "at": 2.95
+    },
+    {
+     "w": "onto",
+     "at": 3.175
+    },
+    {
+     "w": "it",
+     "at": 3.575
+    },
+    {
+     "w": "without",
+     "at": 3.688
+    },
+    {
+     "w": "breaking",
+     "at": 4.0
+    },
+    {
+     "w": "stride",
+     "at": 4.438
+    }
+   ]
+  }
+ ]
+}

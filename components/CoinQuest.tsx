@@ -11,7 +11,7 @@ export function BallHuntSummary({onDiscover}:{onDiscover:()=>void}){
  const progress=useCoinProgress(),total=COIN_QUEST.length,collected=progress.collected.length;
  return <button type="button" className={styles.summaryCard} onClick={onDiscover} aria-haspopup="dialog">
   <span className={styles.summaryTitle}><strong>Ball hunt</strong></span><span className={styles.summaryArrow}><Icon name="arrow" size={24}/></span>
-  <span className={styles.summaryCount}>{collected} / {total} found</span>
+  <span className={styles.summaryCount}>{collected} / {total} <span data-count-word="">found</span></span>
  </button>;
 }
 

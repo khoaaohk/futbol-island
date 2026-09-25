@@ -1,0 +1,398 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Allianz Arena",
+   "text": "Munich, 2016, Champions League semi-final. Bayern attack and attack, but Atl\u00e9tico's keeper Jan Oblak is man of the match. Here's how he did it: a striker runs through... Oblak stays up. Saved!",
+   "src": "/plays/narration/oblak-signature/1.m4a",
+   "seconds": 14.7,
+   "words": [
+    {
+     "w": "Munich",
+     "at": 0.4
+    },
+    {
+     "w": "2016",
+     "at": 0.8
+    },
+    {
+     "w": "Champions",
+     "at": 1.738
+    },
+    {
+     "w": "League",
+     "at": 2.325
+    },
+    {
+     "w": "semi-final",
+     "at": 2.612
+    },
+    {
+     "w": "Bayern",
+     "at": 3.85
+    },
+    {
+     "w": "attack",
+     "at": 4.275
+    },
+    {
+     "w": "and",
+     "at": 4.737
+    },
+    {
+     "w": "attack",
+     "at": 4.838
+    },
+    {
+     "w": "but",
+     "at": 5.325
+    },
+    {
+     "w": "Atl\u00e9tico's",
+     "at": 5.475
+    },
+    {
+     "w": "keeper",
+     "at": 6.162
+    },
+    {
+     "w": "Jan",
+     "at": 6.55
+    },
+    {
+     "w": "Oblak",
+     "at": 6.862
+    },
+    {
+     "w": "is",
+     "at": 7.375
+    },
+    {
+     "w": "man",
+     "at": 7.537
+    },
+    {
+     "w": "of",
+     "at": 7.812
+    },
+    {
+     "w": "the",
+     "at": 7.888
+    },
+    {
+     "w": "match",
+     "at": 7.975
+    },
+    {
+     "w": "Here's",
+     "at": 8.787
+    },
+    {
+     "w": "how",
+     "at": 9.05
+    },
+    {
+     "w": "he",
+     "at": 9.225
+    },
+    {
+     "w": "did",
+     "at": 9.363
+    },
+    {
+     "w": "it",
+     "at": 9.575
+    },
+    {
+     "w": "a",
+     "at": 10.012
+    },
+    {
+     "w": "striker",
+     "at": 10.137
+    },
+    {
+     "w": "runs",
+     "at": 10.6
+    },
+    {
+     "w": "through",
+     "at": 10.938
+    },
+    {
+     "w": "Oblak",
+     "at": 11.688
+    },
+    {
+     "w": "stays",
+     "at": 12.175
+    },
+    {
+     "w": "up",
+     "at": 12.525
+    },
+    {
+     "w": "Saved",
+     "at": 13.213
+    }
+   ]
+  },
+  {
+   "label": "Stay on your feet",
+   "text": "Watch again, slowly. Oblak stays on his feet, knees bent, hands low. The striker waits for a dive that never comes.",
+   "src": "/plays/narration/oblak-signature/2.m4a",
+   "seconds": 8.9,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.137
+    },
+    {
+     "w": "Oblak",
+     "at": 2.138
+    },
+    {
+     "w": "stays",
+     "at": 2.575
+    },
+    {
+     "w": "on",
+     "at": 2.913
+    },
+    {
+     "w": "his",
+     "at": 3.013
+    },
+    {
+     "w": "feet",
+     "at": 3.212
+    },
+    {
+     "w": "knees",
+     "at": 3.65
+    },
+    {
+     "w": "bent",
+     "at": 3.938
+    },
+    {
+     "w": "hands",
+     "at": 4.375
+    },
+    {
+     "w": "low",
+     "at": 4.75
+    },
+    {
+     "w": "The",
+     "at": 5.55
+    },
+    {
+     "w": "striker",
+     "at": 5.65
+    },
+    {
+     "w": "waits",
+     "at": 6.1
+    },
+    {
+     "w": "for",
+     "at": 6.375
+    },
+    {
+     "w": "a",
+     "at": 6.487
+    },
+    {
+     "w": "dive",
+     "at": 6.588
+    },
+    {
+     "w": "that",
+     "at": 7.0
+    },
+    {
+     "w": "never",
+     "at": 7.15
+    },
+    {
+     "w": "comes",
+     "at": 7.45
+    }
+   ]
+  },
+  {
+   "label": "Move first",
+   "text": "So the striker must move first. He shoots low; Oblak drops fast and blocks it with his glove.",
+   "src": "/plays/narration/oblak-signature/3.m4a",
+   "seconds": 6.9,
+   "words": [
+    {
+     "w": "So",
+     "at": 0.375
+    },
+    {
+     "w": "the",
+     "at": 0.463
+    },
+    {
+     "w": "striker",
+     "at": 0.55
+    },
+    {
+     "w": "must",
+     "at": 1.0
+    },
+    {
+     "w": "move",
+     "at": 1.225
+    },
+    {
+     "w": "first",
+     "at": 1.475
+    },
+    {
+     "w": "He",
+     "at": 2.325
+    },
+    {
+     "w": "shoots",
+     "at": 2.5
+    },
+    {
+     "w": "low",
+     "at": 2.825
+    },
+    {
+     "w": "Oblak",
+     "at": 3.487
+    },
+    {
+     "w": "drops",
+     "at": 3.9
+    },
+    {
+     "w": "fast",
+     "at": 4.25
+    },
+    {
+     "w": "and",
+     "at": 4.638
+    },
+    {
+     "w": "blocks",
+     "at": 4.75
+    },
+    {
+     "w": "it",
+     "at": 5.112
+    },
+    {
+     "w": "with",
+     "at": 5.188
+    },
+    {
+     "w": "his",
+     "at": 5.287
+    },
+    {
+     "w": "glove",
+     "at": 5.45
+    }
+   ]
+  },
+  {
+   "label": "Make them move",
+   "text": "Don't dive early! Stay on your feet as long as you can, so the attacker has to move first.",
+   "src": "/plays/narration/oblak-signature/4.m4a",
+   "seconds": 6.4,
+   "words": [
+    {
+     "w": "Don't",
+     "at": 0.35
+    },
+    {
+     "w": "dive",
+     "at": 0.6
+    },
+    {
+     "w": "early",
+     "at": 0.95
+    },
+    {
+     "w": "Stay",
+     "at": 1.825
+    },
+    {
+     "w": "on",
+     "at": 2.112
+    },
+    {
+     "w": "your",
+     "at": 2.212
+    },
+    {
+     "w": "feet",
+     "at": 2.337
+    },
+    {
+     "w": "as",
+     "at": 2.587
+    },
+    {
+     "w": "long",
+     "at": 2.7
+    },
+    {
+     "w": "as",
+     "at": 2.888
+    },
+    {
+     "w": "you",
+     "at": 2.962
+    },
+    {
+     "w": "can",
+     "at": 3.075
+    },
+    {
+     "w": "so",
+     "at": 3.6
+    },
+    {
+     "w": "the",
+     "at": 3.712
+    },
+    {
+     "w": "attacker",
+     "at": 3.85
+    },
+    {
+     "w": "has",
+     "at": 4.375
+    },
+    {
+     "w": "to",
+     "at": 4.6
+    },
+    {
+     "w": "move",
+     "at": 4.725
+    },
+    {
+     "w": "first",
+     "at": 5.013
+    }
+   ]
+  }
+ ]
+}

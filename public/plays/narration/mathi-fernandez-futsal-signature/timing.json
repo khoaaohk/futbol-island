@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: the 2025 final",
+   "text": "Copa Libertadores final, 2025. Pe\u00f1arol lead Magnus, one to nothing. Magnus goalkeeper Andre Pereira strikes a left-foot rocket. Mathi Fern\u00e1ndez stops it!",
+   "src": "/plays/narration/mathi-fernandez-futsal-signature/1.m4a",
+   "seconds": 13.0,
+   "words": [
+    {
+     "w": "Copa",
+     "at": 0.35
+    },
+    {
+     "w": "Libertadores",
+     "at": 0.7
+    },
+    {
+     "w": "final",
+     "at": 1.475
+    },
+    {
+     "w": "2025",
+     "at": 2.163
+    },
+    {
+     "w": "Pe\u00f1arol",
+     "at": 3.737
+    },
+    {
+     "w": "lead",
+     "at": 4.4
+    },
+    {
+     "w": "Magnus",
+     "at": 4.688
+    },
+    {
+     "w": "one",
+     "at": 5.487
+    },
+    {
+     "w": "to",
+     "at": 5.725
+    },
+    {
+     "w": "nothing",
+     "at": 5.85
+    },
+    {
+     "w": "Magnus",
+     "at": 6.8
+    },
+    {
+     "w": "goalkeeper",
+     "at": 7.3
+    },
+    {
+     "w": "Andre",
+     "at": 7.925
+    },
+    {
+     "w": "Pereira",
+     "at": 8.275
+    },
+    {
+     "w": "strikes",
+     "at": 8.762
+    },
+    {
+     "w": "a",
+     "at": 9.125
+    },
+    {
+     "w": "left-foot",
+     "at": 9.225
+    },
+    {
+     "w": "rocket",
+     "at": 9.675
+    },
+    {
+     "w": "Mathi",
+     "at": 10.537
+    },
+    {
+     "w": "Fern\u00e1ndez",
+     "at": 10.85
+    },
+    {
+     "w": "stops",
+     "at": 11.463
+    },
+    {
+     "w": "it",
+     "at": 11.912
+    }
+   ]
+  },
+  {
+   "label": "The winning throw",
+   "text": "Late on, Pe\u00f1arol lead two to one. Mathi throws to Franco Duque, who lifts it over the last defender into the empty goal. Three to one. Champions!",
+   "src": "/plays/narration/mathi-fernandez-futsal-signature/2.m4a",
+   "seconds": 11.0,
+   "words": [
+    {
+     "w": "Late",
+     "at": 0.4
+    },
+    {
+     "w": "on",
+     "at": 0.625
+    },
+    {
+     "w": "Pe\u00f1arol",
+     "at": 1.0
+    },
+    {
+     "w": "lead",
+     "at": 1.575
+    },
+    {
+     "w": "two",
+     "at": 1.837
+    },
+    {
+     "w": "to",
+     "at": 2.05
+    },
+    {
+     "w": "one",
+     "at": 2.175
+    },
+    {
+     "w": "Mathi",
+     "at": 2.987
+    },
+    {
+     "w": "throws",
+     "at": 3.337
+    },
+    {
+     "w": "to",
+     "at": 3.75
+    },
+    {
+     "w": "Franco",
+     "at": 3.85
+    },
+    {
+     "w": "Duque",
+     "at": 4.263
+    },
+    {
+     "w": "who",
+     "at": 4.925
+    },
+    {
+     "w": "lifts",
+     "at": 5.075
+    },
+    {
+     "w": "it",
+     "at": 5.375
+    },
+    {
+     "w": "over",
+     "at": 5.463
+    },
+    {
+     "w": "the",
+     "at": 5.662
+    },
+    {
+     "w": "last",
+     "at": 5.775
+    },
+    {
+     "w": "defender",
+     "at": 6.15
+    },
+    {
+     "w": "into",
+     "at": 6.662
+    },
+    {
+     "w": "the",
+     "at": 6.838
+    },
+    {
+     "w": "empty",
+     "at": 6.975
+    },
+    {
+     "w": "goal",
+     "at": 7.325
+    },
+    {
+     "w": "Three",
+     "at": 8.2
+    },
+    {
+     "w": "to",
+     "at": 8.475
+    },
+    {
+     "w": "one",
+     "at": 8.6
+    },
+    {
+     "w": "Champions",
+     "at": 9.312
+    }
+   ]
+  },
+  {
+   "label": "How he reacts (demo)",
+   "text": "This is how he reacts. Hands up in front, knees soft. The ball flies in, and his hands are already there. Saved!",
+   "src": "/plays/narration/mathi-fernandez-futsal-signature/3.m4a",
+   "seconds": 8.3,
+   "words": [
+    {
+     "w": "This",
+     "at": 0.35
+    },
+    {
+     "w": "is",
+     "at": 0.525
+    },
+    {
+     "w": "how",
+     "at": 0.65
+    },
+    {
+     "w": "he",
+     "at": 0.838
+    },
+    {
+     "w": "reacts",
+     "at": 0.95
+    },
+    {
+     "w": "Hands",
+     "at": 1.812
+    },
+    {
+     "w": "up",
+     "at": 2.087
+    },
+    {
+     "w": "in",
+     "at": 2.237
+    },
+    {
+     "w": "front",
+     "at": 2.388
+    },
+    {
+     "w": "knees",
+     "at": 2.775
+    },
+    {
+     "w": "soft",
+     "at": 3.062
+    },
+    {
+     "w": "The",
+     "at": 3.925
+    },
+    {
+     "w": "ball",
+     "at": 4.025
+    },
+    {
+     "w": "flies",
+     "at": 4.338
+    },
+    {
+     "w": "in",
+     "at": 4.75
+    },
+    {
+     "w": "and",
+     "at": 5.013
+    },
+    {
+     "w": "his",
+     "at": 5.112
+    },
+    {
+     "w": "hands",
+     "at": 5.275
+    },
+    {
+     "w": "are",
+     "at": 5.638
+    },
+    {
+     "w": "already",
+     "at": 5.725
+    },
+    {
+     "w": "there",
+     "at": 6.1
+    },
+    {
+     "w": "Saved",
+     "at": 6.862
+    }
+   ]
+  },
+  {
+   "label": "Practise it",
+   "text": "Your turn. Keep your hands ready in front of you, so you can react in a flash!",
+   "src": "/plays/narration/mathi-fernandez-futsal-signature/4.m4a",
+   "seconds": 5.4,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "Keep",
+     "at": 1.387
+    },
+    {
+     "w": "your",
+     "at": 1.613
+    },
+    {
+     "w": "hands",
+     "at": 1.725
+    },
+    {
+     "w": "ready",
+     "at": 2.075
+    },
+    {
+     "w": "in",
+     "at": 2.337
+    },
+    {
+     "w": "front",
+     "at": 2.475
+    },
+    {
+     "w": "of",
+     "at": 2.663
+    },
+    {
+     "w": "you",
+     "at": 2.75
+    },
+    {
+     "w": "so",
+     "at": 3.075
+    },
+    {
+     "w": "you",
+     "at": 3.2
+    },
+    {
+     "w": "can",
+     "at": 3.3
+    },
+    {
+     "w": "react",
+     "at": 3.425
+    },
+    {
+     "w": "in",
+     "at": 3.812
+    },
+    {
+     "w": "a",
+     "at": 3.888
+    },
+    {
+     "w": "flash",
+     "at": 3.962
+    }
+   ]
+  }
+ ]
+}

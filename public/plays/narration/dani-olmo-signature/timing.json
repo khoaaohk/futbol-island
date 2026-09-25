@@ -1,0 +1,346 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Stuttgart, live",
+   "text": "Stuttgart, 2024. Spain, in red, play Germany, in white, in the Euro quarter-final. Dani Olmo came on for injured Pedri. Yamal cuts inside and rolls it across. Nobody follows Olmo. First time... past Neuer! Goal!",
+   "src": "/plays/narration/dani-olmo-signature/1.m4a",
+   "seconds": 16.6,
+   "words": [
+    {
+     "w": "Stuttgart",
+     "at": 0.35
+    },
+    {
+     "w": "2024",
+     "at": 0.825
+    },
+    {
+     "w": "Spain",
+     "at": 2.163
+    },
+    {
+     "w": "in",
+     "at": 2.725
+    },
+    {
+     "w": "red",
+     "at": 2.888
+    },
+    {
+     "w": "play",
+     "at": 3.288
+    },
+    {
+     "w": "Germany",
+     "at": 3.612
+    },
+    {
+     "w": "in",
+     "at": 4.125
+    },
+    {
+     "w": "white",
+     "at": 4.287
+    },
+    {
+     "w": "in",
+     "at": 4.675
+    },
+    {
+     "w": "the",
+     "at": 4.763
+    },
+    {
+     "w": "Euro",
+     "at": 4.862
+    },
+    {
+     "w": "quarter-final",
+     "at": 5.175
+    },
+    {
+     "w": "Dani",
+     "at": 6.45
+    },
+    {
+     "w": "Olmo",
+     "at": 6.85
+    },
+    {
+     "w": "came",
+     "at": 7.175
+    },
+    {
+     "w": "on",
+     "at": 7.388
+    },
+    {
+     "w": "for",
+     "at": 7.6
+    },
+    {
+     "w": "injured",
+     "at": 7.75
+    },
+    {
+     "w": "Pedri",
+     "at": 8.15
+    },
+    {
+     "w": "Yamal",
+     "at": 9.062
+    },
+    {
+     "w": "cuts",
+     "at": 9.488
+    },
+    {
+     "w": "inside",
+     "at": 9.8
+    },
+    {
+     "w": "and",
+     "at": 10.387
+    },
+    {
+     "w": "rolls",
+     "at": 10.5
+    },
+    {
+     "w": "it",
+     "at": 10.812
+    },
+    {
+     "w": "across",
+     "at": 10.887
+    },
+    {
+     "w": "Nobody",
+     "at": 11.863
+    },
+    {
+     "w": "follows",
+     "at": 12.238
+    },
+    {
+     "w": "Olmo",
+     "at": 12.65
+    },
+    {
+     "w": "First",
+     "at": 13.238
+    },
+    {
+     "w": "time",
+     "at": 13.525
+    },
+    {
+     "w": "past",
+     "at": 14.3
+    },
+    {
+     "w": "Neuer",
+     "at": 14.675
+    },
+    {
+     "w": "Goal",
+     "at": 15.088
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. Olmo runs from deep, behind Germany's midfield. Yamal pulls two defenders. Olmo arrives unmarked and sweeps it in without breaking stride.",
+   "src": "/plays/narration/dani-olmo-signature/2.m4a",
+   "seconds": 12.3,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.188
+    },
+    {
+     "w": "Olmo",
+     "at": 2.188
+    },
+    {
+     "w": "runs",
+     "at": 2.587
+    },
+    {
+     "w": "from",
+     "at": 2.95
+    },
+    {
+     "w": "deep",
+     "at": 3.163
+    },
+    {
+     "w": "behind",
+     "at": 3.675
+    },
+    {
+     "w": "Germany's",
+     "at": 4.138
+    },
+    {
+     "w": "midfield",
+     "at": 4.65
+    },
+    {
+     "w": "Yamal",
+     "at": 5.763
+    },
+    {
+     "w": "pulls",
+     "at": 6.188
+    },
+    {
+     "w": "two",
+     "at": 6.588
+    },
+    {
+     "w": "defenders",
+     "at": 6.8
+    },
+    {
+     "w": "Olmo",
+     "at": 7.838
+    },
+    {
+     "w": "arrives",
+     "at": 8.225
+    },
+    {
+     "w": "unmarked",
+     "at": 8.688
+    },
+    {
+     "w": "and",
+     "at": 9.325
+    },
+    {
+     "w": "sweeps",
+     "at": 9.475
+    },
+    {
+     "w": "it",
+     "at": 9.812
+    },
+    {
+     "w": "in",
+     "at": 9.887
+    },
+    {
+     "w": "without",
+     "at": 10.062
+    },
+    {
+     "w": "breaking",
+     "at": 10.375
+    },
+    {
+     "w": "stride",
+     "at": 10.787
+    }
+   ]
+  },
+  {
+   "label": "How he does it",
+   "text": "How he does it: find the pocket. Stand between the other team's midfield and defence, where nobody is marking you.",
+   "src": "/plays/narration/dani-olmo-signature/3.m4a",
+   "seconds": 8.2,
+   "words": [
+    {
+     "w": "How",
+     "at": 0.375
+    },
+    {
+     "w": "he",
+     "at": 0.575
+    },
+    {
+     "w": "does",
+     "at": 0.7
+    },
+    {
+     "w": "it",
+     "at": 0.938
+    },
+    {
+     "w": "find",
+     "at": 1.438
+    },
+    {
+     "w": "the",
+     "at": 1.738
+    },
+    {
+     "w": "pocket",
+     "at": 1.825
+    },
+    {
+     "w": "Stand",
+     "at": 2.85
+    },
+    {
+     "w": "between",
+     "at": 3.212
+    },
+    {
+     "w": "the",
+     "at": 3.513
+    },
+    {
+     "w": "other",
+     "at": 3.6
+    },
+    {
+     "w": "team's",
+     "at": 3.875
+    },
+    {
+     "w": "midfield",
+     "at": 4.312
+    },
+    {
+     "w": "and",
+     "at": 4.963
+    },
+    {
+     "w": "defence",
+     "at": 5.062
+    },
+    {
+     "w": "where",
+     "at": 5.825
+    },
+    {
+     "w": "nobody",
+     "at": 6.0
+    },
+    {
+     "w": "is",
+     "at": 6.475
+    },
+    {
+     "w": "marking",
+     "at": 6.625
+    },
+    {
+     "w": "you",
+     "at": 7.025
+    }
+   ]
+  }
+ ]
+}

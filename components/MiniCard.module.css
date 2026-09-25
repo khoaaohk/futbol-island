@@ -1,0 +1,59 @@
+/* Mini player card: the full PlayerCard's design in miniature, sized by --w (1em = a tenth of the card width). */
+.card{--edge:#c9973f;--deep:#9c6a1f;position:relative;box-sizing:border-box;display:flex;flex-direction:column;flex:none;width:var(--w,104px);aspect-ratio:5/7;
+ font-size:calc(var(--w,104px) / 10);padding:.5em .5em .75em;border:.4em solid #fff1d3;border-radius:1.1em 1.7em 1.1em 1.1em;overflow:hidden;color:#244d40;text-align:left;
+ background:#e8d5ad url('/stories/films/assets/entry-grain.png') 0 0/128px 128px;
+ box-shadow:0 0 0 .12em var(--edge),0 0 0 .3em var(--flag1,#e9b949),0 0 0 .44em var(--flag2,#fff1d3),0 .7em 0 .44em #183b3430}
+.legend{--edge:#8a6fc9;--deep:#6c4fb3}
+.top{display:flex;justify-content:space-between;align-items:center;gap:.3em;min-height:1.5em}
+.rarity{font-family:IslandBrush,sans-serif;font-weight:400;font-size:.95em;line-height:1;color:#fff1d3;background:var(--deep);padding:.12em .45em .22em;border-radius:.6em .9em .6em .6em;transform:rotate(-3deg);white-space:nowrap}
+.no{font-size:.8em;font-weight:800;letter-spacing:.02em;color:#61705b;white-space:nowrap}
+/* Recessed picture window: gold (Star) or purple-pink (Legend) behind the art, with a bevelled inner shadow above it. */
+.window{position:relative;display:block;flex:1 1 auto;min-height:0;margin-top:.35em;border-radius:.9em 1.4em .9em .9em;overflow:hidden;background:linear-gradient(160deg,#e9b949,#9c6a1f)}
+.legend .window{background:linear-gradient(160deg,#e98acb,#7b5bc4)}
+.window::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:3;
+ box-shadow:inset 0 .9em 1.1em -.4em #0f2a2fa6,inset .6em 0 .9em -.5em #0f2a2f70,inset 0 -.25em .5em -.25em #fff1d366,inset 0 0 0 .2em #fff1d3cc}
+.window>svg{position:absolute;left:0;top:50%;width:100%;height:auto;aspect-ratio:1;transform:translateY(-50%);border-radius:0}
+.window>svg.backdrop{top:0;height:100%;aspect-ratio:auto;transform:none}
+/* Riso-printed photo portrait: cream paper, a flag-colour halftone and a deep-green ink pass (as in PlayerArt's layered mode). */
+.photo{position:absolute;left:4%;right:4%;top:6%;bottom:0;z-index:1}
+.photo>span{position:absolute;inset:0;-webkit-mask-size:contain;mask-size:contain;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:center bottom;mask-position:center bottom}
+.photo>.paper{inset:10% 14% 0;border-radius:50% 50% 18% 18%/42% 42% 12% 12%;background:#fff1d3 url('/stories/films/assets/entry-grain.png') 0 0/128px 128px;box-shadow:0 .4em 0 #183b3430}
+.tone{mix-blend-mode:multiply;transform:translate(1px,.5px)}
+.ink{background:#1f3d36;mix-blend-mode:multiply}
+.window::before{content:'';position:absolute;inset:0;z-index:2;pointer-events:none;mix-blend-mode:multiply;opacity:.35;background:radial-gradient(circle,#1f3d3624 34%,transparent 38%) 0 0/4px 4px}
+.plate{display:flex;align-items:center;justify-content:center;min-height:2.5em;margin-top:.4em;padding:.15em .35em;background:#fff1d3;border-radius:.7em 1.1em .7em .7em;box-shadow:0 .25em 0 #183b3430;
+ font-family:IslandBrush,sans-serif;font-weight:400;font-size:.9em;line-height:1.05;text-align:center}
+.plate>span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.stripe{position:absolute;left:0;right:0;bottom:0;height:.38em;background:linear-gradient(90deg,var(--flag1) 0 33.3%,var(--flag2) 0 66.6%,var(--flag3) 0)}
+/* Stack top card: picture and rarity only; the stack's own label carries the words. */
+.compact{padding:.45em .45em .6em}
+.compact .no,.compact .plate{display:none}
+.compact .rarity{font-size:1.55em}
+.compact .window{margin-top:.3em}
+/* Face-down (not collected yet): the island card back, numbered, with "???". */
+.down{--edge:#a99f8a;align-items:center;justify-content:space-between;padding:.55em .45em .6em;color:#fff1d3;
+ background:#286f55 url('/stories/films/assets/entry-grain.png') 0 0/128px 128px;
+ box-shadow:0 0 0 .12em var(--edge),0 .7em 0 .12em #183b3428}
+.down::before{content:'';position:absolute;inset:.45em;border-radius:.8em 1.3em .8em .8em;border:.12em dashed #fff1d366;pointer-events:none;
+ background:repeating-linear-gradient(135deg,#fff1d312 0 .5em,transparent .5em 1.1em)}
+.down>*{position:relative}
+.downNo{align-self:flex-end;font-size:.8em;font-weight:800;letter-spacing:.02em;color:#fff1d3d9}
+.downMark{width:3.8em;height:3.8em;border-radius:1em 1.4em 1em 1em;background:#244d40 url('/icon.svg') center/70% 70% no-repeat;box-shadow:0 0 0 .22em #fff1d3,0 .35em 0 .22em #0f2a2f55;opacity:.9}
+.downName{display:flex;align-items:center;justify-content:center;width:100%;min-height:2.3em;font-family:IslandBrush,sans-serif;font-size:1.25em;line-height:1.05;letter-spacing:.18em;color:#fff1d3cc;text-align:center}
+.downName>span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.revealed{letter-spacing:0;font-size:1.05em;color:#fff1d3}
+.down.compact{justify-content:center}
+.down.compact .downNo,.down.compact .downName{display:none}
+.down.compact .downMark{width:4.4em;height:4.4em}
+.plainBack .downMark{opacity:.55}
+.down.compact.numbered{justify-content:space-evenly}
+.down.compact.numbered .downNo{display:block;align-self:center;font-size:1.5em;letter-spacing:0;color:#fff1d3}
+.down.compact.numbered .downMark{width:3.6em;height:3.6em}
+/* Table thumb: the flag's colours behind the riso ink portrait (one mask image), no backdrop SVG. */
+.thumb .window{background:linear-gradient(160deg,var(--flag1) 0 34%,var(--flag2) 34% 64%,var(--flag3) 64%)}
+.thumb .window::before{opacity:.5}
+/* Play Moment marker: a gold star, bottom right, on cards whose player has an iconic-play film (lib/plays/riso/registry.ts). */
+.film{position:absolute;right:.15em;bottom:.15em;z-index:4;display:grid;place-items:center;width:1.7em;height:1.7em;border-radius:50%;background:#ffd451;border:.18em solid #fff1d3;box-shadow:0 .2em 0 #a8792b;color:#244d40}
+.film>svg{width:1.05em;height:1.05em;fill:currentColor}
+/* Keep a long name clear of the star. */
+.card:has(.film) .plate{padding-right:1.3em;padding-left:1.3em}

@@ -1,0 +1,342 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The free kick, live",
+   "text": "Lyon, 1997. Brazil against France. Roberto Carlos stands thirty-five metres out. A long run-up, a huge swing of his left foot... Goal!",
+   "src": "/plays/narration/roberto-carlos-free-kick-1997/1.m4a",
+   "seconds": 11.8,
+   "words": [
+    {
+     "w": "Lyon",
+     "at": 0.4
+    },
+    {
+     "w": "1997",
+     "at": 0.875
+    },
+    {
+     "w": "Brazil",
+     "at": 2.312
+    },
+    {
+     "w": "against",
+     "at": 2.775
+    },
+    {
+     "w": "France",
+     "at": 3.125
+    },
+    {
+     "w": "Roberto",
+     "at": 4.088
+    },
+    {
+     "w": "Carlos",
+     "at": 4.55
+    },
+    {
+     "w": "stands",
+     "at": 5.025
+    },
+    {
+     "w": "thirty-five",
+     "at": 5.375
+    },
+    {
+     "w": "metres",
+     "at": 5.925
+    },
+    {
+     "w": "out",
+     "at": 6.275
+    },
+    {
+     "w": "A",
+     "at": 6.888
+    },
+    {
+     "w": "long",
+     "at": 7.013
+    },
+    {
+     "w": "run-up",
+     "at": 7.412
+    },
+    {
+     "w": "a",
+     "at": 7.975
+    },
+    {
+     "w": "huge",
+     "at": 8.1
+    },
+    {
+     "w": "swing",
+     "at": 8.588
+    },
+    {
+     "w": "of",
+     "at": 8.938
+    },
+    {
+     "w": "his",
+     "at": 9.012
+    },
+    {
+     "w": "left",
+     "at": 9.175
+    },
+    {
+     "w": "foot",
+     "at": 9.463
+    },
+    {
+     "w": "Goal",
+     "at": 10.338
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again, from behind. The ball flies wide of the wall, so wide that a ball boy ducks! Then it swerves back in, off the post, and Barthez never moves.",
+   "src": "/plays/narration/roberto-carlos-free-kick-1997/2.m4a",
+   "seconds": 11.4,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "from",
+     "at": 1.125
+    },
+    {
+     "w": "behind",
+     "at": 1.275
+    },
+    {
+     "w": "The",
+     "at": 2.337
+    },
+    {
+     "w": "ball",
+     "at": 2.45
+    },
+    {
+     "w": "flies",
+     "at": 2.763
+    },
+    {
+     "w": "wide",
+     "at": 3.163
+    },
+    {
+     "w": "of",
+     "at": 3.438
+    },
+    {
+     "w": "the",
+     "at": 3.513
+    },
+    {
+     "w": "wall",
+     "at": 3.612
+    },
+    {
+     "w": "so",
+     "at": 4.213
+    },
+    {
+     "w": "wide",
+     "at": 4.463
+    },
+    {
+     "w": "that",
+     "at": 4.85
+    },
+    {
+     "w": "a",
+     "at": 4.963
+    },
+    {
+     "w": "ball",
+     "at": 5.037
+    },
+    {
+     "w": "boy",
+     "at": 5.375
+    },
+    {
+     "w": "ducks",
+     "at": 5.638
+    },
+    {
+     "w": "Then",
+     "at": 6.612
+    },
+    {
+     "w": "it",
+     "at": 6.812
+    },
+    {
+     "w": "swerves",
+     "at": 6.938
+    },
+    {
+     "w": "back",
+     "at": 7.375
+    },
+    {
+     "w": "in",
+     "at": 7.7
+    },
+    {
+     "w": "off",
+     "at": 8.05
+    },
+    {
+     "w": "the",
+     "at": 8.275
+    },
+    {
+     "w": "post",
+     "at": 8.375
+    },
+    {
+     "w": "and",
+     "at": 8.975
+    },
+    {
+     "w": "Barthez",
+     "at": 9.1
+    },
+    {
+     "w": "never",
+     "at": 9.613
+    },
+    {
+     "w": "moves",
+     "at": 9.925
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "The secret? Strike across the ball with the outside of your foot. The ball spins, and the spin makes it curve. That's the Magnus effect!",
+   "src": "/plays/narration/roberto-carlos-free-kick-1997/3.m4a",
+   "seconds": 9.4,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "secret",
+     "at": 0.463
+    },
+    {
+     "w": "Strike",
+     "at": 1.238
+    },
+    {
+     "w": "across",
+     "at": 1.538
+    },
+    {
+     "w": "the",
+     "at": 1.875
+    },
+    {
+     "w": "ball",
+     "at": 1.975
+    },
+    {
+     "w": "with",
+     "at": 2.263
+    },
+    {
+     "w": "the",
+     "at": 2.362
+    },
+    {
+     "w": "outside",
+     "at": 2.475
+    },
+    {
+     "w": "of",
+     "at": 2.962
+    },
+    {
+     "w": "your",
+     "at": 3.038
+    },
+    {
+     "w": "foot",
+     "at": 3.2
+    },
+    {
+     "w": "The",
+     "at": 4.062
+    },
+    {
+     "w": "ball",
+     "at": 4.175
+    },
+    {
+     "w": "spins",
+     "at": 4.5
+    },
+    {
+     "w": "and",
+     "at": 5.15
+    },
+    {
+     "w": "the",
+     "at": 5.263
+    },
+    {
+     "w": "spin",
+     "at": 5.375
+    },
+    {
+     "w": "makes",
+     "at": 5.775
+    },
+    {
+     "w": "it",
+     "at": 6.05
+    },
+    {
+     "w": "curve",
+     "at": 6.213
+    },
+    {
+     "w": "That's",
+     "at": 7.162
+    },
+    {
+     "w": "the",
+     "at": 7.45
+    },
+    {
+     "w": "Magnus",
+     "at": 7.55
+    },
+    {
+     "w": "effect",
+     "at": 8.0
+    }
+   ]
+  }
+ ]
+}

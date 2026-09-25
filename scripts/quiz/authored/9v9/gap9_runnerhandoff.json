@@ -1,0 +1,102 @@
+{
+ "lesson": "gap9_runnerhandoff",
+ "questions": [
+  {
+   "q": "A runner heads for the right channel. Tap where the right midfielder should recover.",
+   "options": [
+    "Toward the teammate pressing left",
+    "Step up in front of the runner",
+    "Alongside the runner, nearer our goal"
+   ],
+   "correct": 2,
+   "explain": "Yes. Alongside and nearer our goal, you can see the runner and still protect the goal.",
+   "choiceExplanations": [
+    "That leaves the runner alone behind our midfield, free to receive.",
+    "The runner is already behind you, so stepping up leaves them free.",
+    "Yes. Alongside and nearer our goal, you can see the runner and still protect the goal."
+   ],
+   "visual": {
+    "kind": "tapSpot",
+    "frame": {
+     "step": 3,
+     "focus": [
+      "rcm",
+      "dst"
+     ]
+    },
+    "spots": [
+     {
+      "x": 120,
+      "y": 270
+     },
+     {
+      "x": 190,
+      "y": 250
+     },
+     {
+      "x": 210,
+      "y": 318
+     }
+    ]
+   }
+  },
+  {
+   "q": "Put the runner hand-off in order, from first to last.",
+   "options": [
+    "Runner goes behind our midfield",
+    "Recover alongside, nearer our goal",
+    "Runner checks into the middle",
+    "Center defender calls and takes over"
+   ],
+   "correct": 0,
+   "explain": "Yes. See the run, recover with it, then share the job only after the call.",
+   "choiceExplanations": [
+    "Yes. See the run, recover with it, then share the job only after the call.",
+    "We recover because the runner moved, so the run comes first.",
+    "The runner checks inside after we have recovered with them.",
+    "The center defender takes over last, once the runner comes near them."
+   ],
+   "visual": {
+    "kind": "order",
+    "frame": {
+     "step": 1,
+     "focus": [
+      "rcm",
+      "cb",
+      "dst"
+     ]
+    }
+   }
+  },
+  {
+   "q": "True or false? With the center defender far away, the midfielder can leave the runner.",
+   "options": [
+    "True",
+    "False"
+   ],
+   "correct": 1,
+   "explain": "Right, it's false. No teammate is close and ready, so keep tracking the runner.",
+   "choiceExplanations": [
+    "The center defender is too far to take over, so the runner would be left alone.",
+    "Right, it's false. No teammate is close and ready, so keep tracking the runner."
+   ],
+   "visual": {
+    "kind": "trueFalse",
+    "frame": {
+     "step": 7,
+     "place": {
+      "cb": {
+       "x": 75,
+       "y": 345
+      }
+     },
+     "focus": [
+      "rcm",
+      "cb",
+      "dst"
+     ]
+    }
+   }
+  }
+ ]
+}

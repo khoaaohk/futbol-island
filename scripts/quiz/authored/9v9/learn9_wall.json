@@ -1,0 +1,18 @@
+{"lesson":"learn9_wall","questions":[
+{"q":"You just passed to the forward. Where do you run for the return pass?",
+ "options":["Curve outside, level with the forward","Run inside, near the defender","Stay where you passed from"],"correct":0,
+ "explain":"Yes. Curving outside puts you in a lane the defender is not covering.",
+ "choiceExplanations":["Yes. Curving outside puts you in a lane the defender is not covering.","Running inside takes you toward the defender, so the return lane gets crowded.","Standing still gives the forward no return pass, so the wall pass never happens."],
+ "visual":{"kind":"tapSpot","frame":{"step":1,"focus":["lcm","st"]},
+  "spots":[{"x":62,"y":180},{"x":140,"y":215},{"x":85,"y":242}]}},
+{"q":"The runner has the ball, and the lane back is clear. What happens next?",
+ "options":["Dribble back toward our goal","Return it to the forward","Wait for the defender to arrive"],"correct":1,
+ "explain":"Right. The lane to the forward is clear now, so the return goes before the defender moves.",
+ "choiceExplanations":["Going backward throws away the space the wall pass just made.","Right. The lane to the forward is clear now, so the return goes before the defender moves.","Waiting lets the defender track across and close the lane."],
+ "visual":{"kind":"whatNext","frame":{"step":4,"focus":["lcm","st"],"trails":true}}},
+{"q":"True or false? The defender moved away, so the pass to the runner is open.",
+ "options":["True","False"],"correct":0,
+ "explain":"Right, it's true. With the defender back on the right, the return lane to the runner is clear again.",
+ "choiceExplanations":["Right, it's true. With the defender back on the right, the return lane to the runner is clear again.","Look at the lane: the defender has left it, so nothing blocks the pass now."],
+ "visual":{"kind":"trueFalse","frame":{"step":7,"place":{"dst":{"x":165,"y":215}},"ball":"st","focus":["st","lcm","dst"],"marks":[{"kind":"pass","from":"st","to":"lcm","tone":"neutral"}]}}}
+]}

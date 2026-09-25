@@ -1,0 +1,378 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Munich, 2006, the first game of the World Cup! Germany's left-back, Philipp Lahm, has the ball wide on the left. The defender slips! Lahm cuts inside... curls it... Goal!",
+   "src": "/plays/narration/lahm-costa-rica-2006/1.m4a",
+   "seconds": 13.0,
+   "words": [
+    {
+     "w": "Munich",
+     "at": 0.4
+    },
+    {
+     "w": "2006",
+     "at": 0.8
+    },
+    {
+     "w": "the",
+     "at": 1.7
+    },
+    {
+     "w": "first",
+     "at": 1.812
+    },
+    {
+     "w": "game",
+     "at": 2.125
+    },
+    {
+     "w": "of",
+     "at": 2.337
+    },
+    {
+     "w": "the",
+     "at": 2.413
+    },
+    {
+     "w": "World",
+     "at": 2.5
+    },
+    {
+     "w": "Cup",
+     "at": 2.812
+    },
+    {
+     "w": "Germany's",
+     "at": 3.55
+    },
+    {
+     "w": "left-back",
+     "at": 4.112
+    },
+    {
+     "w": "Philipp",
+     "at": 4.7
+    },
+    {
+     "w": "Lahm",
+     "at": 5.0
+    },
+    {
+     "w": "has",
+     "at": 5.4
+    },
+    {
+     "w": "the",
+     "at": 5.6
+    },
+    {
+     "w": "ball",
+     "at": 5.713
+    },
+    {
+     "w": "wide",
+     "at": 6.037
+    },
+    {
+     "w": "on",
+     "at": 6.362
+    },
+    {
+     "w": "the",
+     "at": 6.463
+    },
+    {
+     "w": "left",
+     "at": 6.55
+    },
+    {
+     "w": "The",
+     "at": 7.35
+    },
+    {
+     "w": "defender",
+     "at": 7.45
+    },
+    {
+     "w": "slips",
+     "at": 8.0
+    },
+    {
+     "w": "Lahm",
+     "at": 8.8
+    },
+    {
+     "w": "cuts",
+     "at": 9.188
+    },
+    {
+     "w": "inside",
+     "at": 9.575
+    },
+    {
+     "w": "curls",
+     "at": 10.562
+    },
+    {
+     "w": "it",
+     "at": 11.012
+    },
+    {
+     "w": "Goal",
+     "at": 11.637
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again, from behind. One sharp cut puts it on his right foot. It starts outside the far post, then bends back in.",
+   "src": "/plays/narration/lahm-costa-rica-2006/2.m4a",
+   "seconds": 9.0,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "from",
+     "at": 1.225
+    },
+    {
+     "w": "behind",
+     "at": 1.375
+    },
+    {
+     "w": "One",
+     "at": 2.475
+    },
+    {
+     "w": "sharp",
+     "at": 2.8
+    },
+    {
+     "w": "cut",
+     "at": 3.163
+    },
+    {
+     "w": "puts",
+     "at": 3.45
+    },
+    {
+     "w": "it",
+     "at": 3.663
+    },
+    {
+     "w": "on",
+     "at": 3.737
+    },
+    {
+     "w": "his",
+     "at": 3.837
+    },
+    {
+     "w": "right",
+     "at": 4.0
+    },
+    {
+     "w": "foot",
+     "at": 4.325
+    },
+    {
+     "w": "It",
+     "at": 5.075
+    },
+    {
+     "w": "starts",
+     "at": 5.225
+    },
+    {
+     "w": "outside",
+     "at": 5.562
+    },
+    {
+     "w": "the",
+     "at": 5.963
+    },
+    {
+     "w": "far",
+     "at": 6.05
+    },
+    {
+     "w": "post",
+     "at": 6.287
+    },
+    {
+     "w": "then",
+     "at": 6.825
+    },
+    {
+     "w": "bends",
+     "at": 7.025
+    },
+    {
+     "w": "back",
+     "at": 7.375
+    },
+    {
+     "w": "in",
+     "at": 7.7
+    }
+   ]
+  },
+  {
+   "label": "From behind the goal",
+   "text": "From behind the goal: the keeper leaps, but it's too high! Top corner!",
+   "src": "/plays/narration/lahm-costa-rica-2006/3.m4a",
+   "seconds": 5.2,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.375
+    },
+    {
+     "w": "behind",
+     "at": 0.512
+    },
+    {
+     "w": "the",
+     "at": 0.887
+    },
+    {
+     "w": "goal",
+     "at": 0.975
+    },
+    {
+     "w": "the",
+     "at": 1.625
+    },
+    {
+     "w": "keeper",
+     "at": 1.725
+    },
+    {
+     "w": "leaps",
+     "at": 2.1
+    },
+    {
+     "w": "but",
+     "at": 2.413
+    },
+    {
+     "w": "it's",
+     "at": 2.538
+    },
+    {
+     "w": "too",
+     "at": 2.7
+    },
+    {
+     "w": "high",
+     "at": 2.9
+    },
+    {
+     "w": "Top",
+     "at": 3.413
+    },
+    {
+     "w": "corner",
+     "at": 3.7
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "The secret? Full-backs can attack too! Cut inside onto your stronger foot, then curl it into the far corner.",
+   "src": "/plays/narration/lahm-costa-rica-2006/4.m4a",
+   "seconds": 7.9,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "secret",
+     "at": 0.463
+    },
+    {
+     "w": "Full-backs",
+     "at": 1.337
+    },
+    {
+     "w": "can",
+     "at": 1.875
+    },
+    {
+     "w": "attack",
+     "at": 1.988
+    },
+    {
+     "w": "too",
+     "at": 2.413
+    },
+    {
+     "w": "Cut",
+     "at": 3.212
+    },
+    {
+     "w": "inside",
+     "at": 3.45
+    },
+    {
+     "w": "onto",
+     "at": 3.938
+    },
+    {
+     "w": "your",
+     "at": 4.162
+    },
+    {
+     "w": "stronger",
+     "at": 4.287
+    },
+    {
+     "w": "foot",
+     "at": 4.85
+    },
+    {
+     "w": "then",
+     "at": 5.325
+    },
+    {
+     "w": "curl",
+     "at": 5.562
+    },
+    {
+     "w": "it",
+     "at": 5.888
+    },
+    {
+     "w": "into",
+     "at": 5.963
+    },
+    {
+     "w": "the",
+     "at": 6.138
+    },
+    {
+     "w": "far",
+     "at": 6.237
+    },
+    {
+     "w": "corner",
+     "at": 6.5
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,10 @@
+{
+ "film": "ronaldo-compostela-1996",
+ "note": "Chapter 1 is keyed from 'gets the ball' (the first touch) to 'goal' (the ball crossing the line): keep the pause before 'goal!'. Chapter 3 whips to the bench on 'On the bench'.",
+ "chapters": [
+  {"label": "The goal, live", "text": "Compostela, 1996. Ronaldo gets the ball near halfway. A trip, a shirt pull, but he stays on his feet! He powers between two players, into the box... goal!"},
+  {"label": "Watch it again", "text": "Watch it again, slowly. A trip: arms out for balance! A shirt pull: he leans forward and shrugs it off. Then big, powerful strides."},
+  {"label": "The coach", "text": "Then a low shot, past the keeper! On the bench, coach Bobby Robson held his head in disbelief."},
+  {"label": "Your turn", "text": "Your turn: stay strong and balanced when someone pushes you, and keep the ball close as you run."}
+ ]
+}

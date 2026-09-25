@@ -1,0 +1,22 @@
+{"lesson":"learn9_cover","questions":[
+{"q":"Our left midfielder presses the ball. Drag the second midfielder to cover.",
+ "options":["Next to the ball, joining the chase","Behind and inside, as cover","Out wide on the right"],"correct":1,
+ "explain":"Yes. Cover sits behind and inside, so if the attacker gets past, help is there.",
+ "choiceExplanations":["Two players at the ball can both be beaten with one touch, leaving no cover.","Yes. Cover sits behind and inside, so if the attacker gets past, help is there.","That is too far from the ball to help if the attacker gets past."],
+ "visual":{"kind":"dragToZone","frame":{"step":0,"place":{"rcm":{"x":190,"y":305}},"focus":["lcm","rcm"]},
+  "drag":"rcm","zones":[{"x":140,"y":238,"w":34,"h":30},{"x":140,"y":288,"w":36,"h":30},{"x":215,"y":285,"w":34,"h":30}]}},
+{"q":"Blue passes to the right. Which picture shows our midfielders doing the right jobs?",
+ "options":["Right mid steps up, left mid tucks in","Both go to the ball","Both stay where they were"],"correct":0,
+ "explain":"Yes. The nearer player presses and the other recovers inside, so one presses and one covers.",
+ "choiceExplanations":["Yes. The nearer player presses and the other recovers inside, so one presses and one covers.","With both at the ball, one pass beats them and nobody covers behind.","Nobody slows the new ball carrier, so blue can run forward freely."],
+ "visual":{"kind":"pickPicture","pictures":[
+  {"step":5,"focus":["lcm","rcm"]},
+  {"step":5,"place":{"lcm":{"x":175,"y":258}},"focus":["lcm","rcm"]},
+  {"step":4,"focus":["lcm","rcm"]}]}},
+{"q":"Blue passes left, and our left midfielder presses. Where does the right midfielder cover?",
+ "options":["Out wide on the right","Next to the presser at the ball","Behind and inside the presser"],"correct":2,
+ "explain":"Right. Same job, other side: cover sits behind and inside the player who presses.",
+ "choiceExplanations":["That is far from the ball, so the presser has no help behind.","Two at the ball can both be beaten by one pass, and nobody covers.","Right. Same job, other side: cover sits behind and inside the player who presses."],
+ "visual":{"kind":"tapSpot","frame":{"step":2,"place":{"dlcm":{"x":45,"y":235},"lcm":{"x":65,"y":255}},"ball":"dlcm","focus":["lcm","rcm"]},
+  "spots":[{"x":200,"y":285},{"x":78,"y":222},{"x":100,"y":292}]}}
+]}

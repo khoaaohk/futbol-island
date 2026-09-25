@@ -1,0 +1,342 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The final, live",
+   "text": "Basel, the 2025 Euro final: England against Spain. This is how captain Leah Williamson defends. Spain try to pass to their striker... Williamson steps in and steals it!",
+   "src": "/plays/narration/williamson-signature/1.m4a",
+   "seconds": 13.2,
+   "words": [
+    {
+     "w": "Basel",
+     "at": 0.4
+    },
+    {
+     "w": "the",
+     "at": 0.925
+    },
+    {
+     "w": "2025",
+     "at": 1.025
+    },
+    {
+     "w": "Euro",
+     "at": 2.025
+    },
+    {
+     "w": "final",
+     "at": 2.362
+    },
+    {
+     "w": "England",
+     "at": 3.163
+    },
+    {
+     "w": "against",
+     "at": 3.6
+    },
+    {
+     "w": "Spain",
+     "at": 4.037
+    },
+    {
+     "w": "This",
+     "at": 5.037
+    },
+    {
+     "w": "is",
+     "at": 5.275
+    },
+    {
+     "w": "how",
+     "at": 5.4
+    },
+    {
+     "w": "captain",
+     "at": 5.575
+    },
+    {
+     "w": "Leah",
+     "at": 6.0
+    },
+    {
+     "w": "Williamson",
+     "at": 6.225
+    },
+    {
+     "w": "defends",
+     "at": 6.8
+    },
+    {
+     "w": "Spain",
+     "at": 7.787
+    },
+    {
+     "w": "try",
+     "at": 8.225
+    },
+    {
+     "w": "to",
+     "at": 8.475
+    },
+    {
+     "w": "pass",
+     "at": 8.575
+    },
+    {
+     "w": "to",
+     "at": 8.9
+    },
+    {
+     "w": "their",
+     "at": 8.988
+    },
+    {
+     "w": "striker",
+     "at": 9.175
+    },
+    {
+     "w": "Williamson",
+     "at": 10.213
+    },
+    {
+     "w": "steps",
+     "at": 10.838
+    },
+    {
+     "w": "in",
+     "at": 11.225
+    },
+    {
+     "w": "and",
+     "at": 11.45
+    },
+    {
+     "w": "steals",
+     "at": 11.588
+    },
+    {
+     "w": "it",
+     "at": 12.037
+    }
+   ]
+  },
+  {
+   "label": "Watch her read it",
+   "text": "Watch again, slowly. Leah watches the passer's hips. They turn toward the striker, so she moves early. Her boot gets there first, then a calm pass to Keira Walsh.",
+   "src": "/plays/narration/williamson-signature/2.m4a",
+   "seconds": 11.6,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.137
+    },
+    {
+     "w": "Leah",
+     "at": 2.125
+    },
+    {
+     "w": "watches",
+     "at": 2.388
+    },
+    {
+     "w": "the",
+     "at": 2.85
+    },
+    {
+     "w": "passer's",
+     "at": 2.95
+    },
+    {
+     "w": "hips",
+     "at": 3.45
+    },
+    {
+     "w": "They",
+     "at": 4.225
+    },
+    {
+     "w": "turn",
+     "at": 4.412
+    },
+    {
+     "w": "toward",
+     "at": 4.775
+    },
+    {
+     "w": "the",
+     "at": 5.037
+    },
+    {
+     "w": "striker",
+     "at": 5.125
+    },
+    {
+     "w": "so",
+     "at": 5.65
+    },
+    {
+     "w": "she",
+     "at": 5.838
+    },
+    {
+     "w": "moves",
+     "at": 6.013
+    },
+    {
+     "w": "early",
+     "at": 6.375
+    },
+    {
+     "w": "Her",
+     "at": 7.25
+    },
+    {
+     "w": "boot",
+     "at": 7.438
+    },
+    {
+     "w": "gets",
+     "at": 7.675
+    },
+    {
+     "w": "there",
+     "at": 7.925
+    },
+    {
+     "w": "first",
+     "at": 8.137
+    },
+    {
+     "w": "then",
+     "at": 8.7
+    },
+    {
+     "w": "a",
+     "at": 8.838
+    },
+    {
+     "w": "calm",
+     "at": 8.938
+    },
+    {
+     "w": "pass",
+     "at": 9.287
+    },
+    {
+     "w": "to",
+     "at": 9.675
+    },
+    {
+     "w": "Keira",
+     "at": 9.8
+    },
+    {
+     "w": "Walsh",
+     "at": 10.137
+    }
+   ]
+  },
+  {
+   "label": "Step in first",
+   "text": "England won that final on penalties. The secret? Watch the passer's hips, and step in before the ball reaches the striker!",
+   "src": "/plays/narration/williamson-signature/3.m4a",
+   "seconds": 8.8,
+   "words": [
+    {
+     "w": "England",
+     "at": 0.375
+    },
+    {
+     "w": "won",
+     "at": 0.812
+    },
+    {
+     "w": "that",
+     "at": 1.125
+    },
+    {
+     "w": "final",
+     "at": 1.363
+    },
+    {
+     "w": "on",
+     "at": 1.712
+    },
+    {
+     "w": "penalties",
+     "at": 1.875
+    },
+    {
+     "w": "The",
+     "at": 3.038
+    },
+    {
+     "w": "secret",
+     "at": 3.2
+    },
+    {
+     "w": "Watch",
+     "at": 4.138
+    },
+    {
+     "w": "the",
+     "at": 4.475
+    },
+    {
+     "w": "passer's",
+     "at": 4.575
+    },
+    {
+     "w": "hips",
+     "at": 5.075
+    },
+    {
+     "w": "and",
+     "at": 5.55
+    },
+    {
+     "w": "step",
+     "at": 5.675
+    },
+    {
+     "w": "in",
+     "at": 5.912
+    },
+    {
+     "w": "before",
+     "at": 6.1
+    },
+    {
+     "w": "the",
+     "at": 6.362
+    },
+    {
+     "w": "ball",
+     "at": 6.45
+    },
+    {
+     "w": "reaches",
+     "at": 6.775
+    },
+    {
+     "w": "the",
+     "at": 7.15
+    },
+    {
+     "w": "striker",
+     "at": 7.25
+    }
+   ]
+  }
+ ]
+}

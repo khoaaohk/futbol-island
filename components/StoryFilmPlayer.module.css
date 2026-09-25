@@ -1,5 +1,5 @@
 /* Riso story player. Paper behind the canvas so letterboxing never shows navy; one canvas, the kept playback tray, a 1–2 word headline. */
-@font-face{font-family:IslandLoadingBrush;src:url('/stories/films/assets/Knewave-Regular.ttf') format('truetype');font-display:block}
+@font-face{font-family:IslandLoadingBrush;src:url('/stories/films/assets/IslandBrush-Regular.ttf') format('truetype');font-display:block}
 .film{position:absolute;inset:0;z-index:90;overflow:hidden;background:var(--paper,#f0ece2);color:#22366b;font-family:var(--font-body),Arial,sans-serif;isolation:isolate}
 /* Arrival fades a paper cover out instead of fading the root in, so nothing behind the film is ever visible through the canvas. */
 .film::after{content:'';position:absolute;inset:0;z-index:20;background:var(--paper,#f0ece2);pointer-events:none;animation:arriveCover .3s ease both}
@@ -32,22 +32,26 @@
 .control:hover{background:#ffe80066}
 .control:focus-visible{outline:3px solid #ff48b0;outline-offset:2px}
 
-/* Origin entry circle: a generated riso disc — cream stock, pink and blue rings out of register, a faint dot screen. No image files. */
+/* Origin entry: the story button's own colour grows from the button under a printed texture (halftone screens at two angles, a
+   coarse speckle and soft mottling — CSS only) and dissolves into the first scene. The layer is full-screen and revealed through a
+   growing clip-path circle, so the print texture stays at page scale instead of magnifying with the circle. */
 .entering{background:transparent}
-.entryCircle{position:absolute;z-index:8;border-radius:50%;pointer-events:none;transform:translate(-50%,-50%) scale(1);
- background:radial-gradient(circle at 50% 50%,transparent 0 60%,#22366b 60.5% 63%,transparent 63.5%),radial-gradient(circle at 51.5% 49%,transparent 0 66%,#ff48b0 66.5% 71%,transparent 71.5%),radial-gradient(circle at 48.5% 51.5%,transparent 0 73%,#0078bf 73.5% 78%,transparent 78.5%),radial-gradient(#22366b22 .6px,transparent 1.1px) 0 0/5px 5px,#f0ece2;
- animation:entryShake .24s linear,entryGrow 1.1s .24s cubic-bezier(.22,.7,.3,1) forwards,entryFade .5s 1.34s forwards}
+.entryCircle{position:absolute;inset:0;z-index:8;pointer-events:none;background-color:var(--entry-color,#ff48b0);
+ background-image:radial-gradient(circle at 30% 20%,#ffffff2e,transparent 55%),radial-gradient(circle at 75% 80%,#22366b24,transparent 50%),radial-gradient(#22366b33 .55px,transparent 1.05px),radial-gradient(#fff3d64d .5px,transparent .95px),radial-gradient(#22366b1f .9px,transparent 1.5px);
+ background-size:100% 100%,100% 100%,3.4px 3.4px,4.1px 4.1px,7px 7px;background-position:0 0,0 0,0 0,1.7px 2.3px,2px 4px;
+ clip-path:circle(var(--entry-r) at var(--entry-x) var(--entry-y));
+ animation:entryShake .24s linear,entryGrow 1.1s .24s cubic-bezier(.22,.7,.3,1) forwards,entryFade .55s 1.3s ease-in forwards}
 .entering .canvas,.entering .header,.entering .label,.entering :global([data-story-playback-bar]){opacity:0;animation:entryReveal .15s 1.25s forwards}
-@keyframes entryGrow{to{transform:translate(-50%,-50%) scale(var(--entry-scale))}}
+@keyframes entryGrow{to{clip-path:circle(var(--entry-cover) at var(--entry-x) var(--entry-y))}}
 @keyframes entryFade{to{opacity:0}}
 @keyframes entryReveal{to{opacity:1}}
-@keyframes entryShake{0%,100%{transform:translate(-50%,-50%) rotate(0) scale(1)}20%,60%{transform:translate(calc(-50% - 4px),-50%) rotate(-5deg) scale(1.08)}40%,80%{transform:translate(calc(-50% + 4px),-50%) rotate(5deg) scale(1.08)}}
+@keyframes entryShake{0%,100%{clip-path:circle(var(--entry-r) at var(--entry-x) var(--entry-y))}20%,60%{clip-path:circle(calc(var(--entry-r) * 1.08) at calc(var(--entry-x) - 4px) var(--entry-y))}40%,80%{clip-path:circle(calc(var(--entry-r) * 1.08) at calc(var(--entry-x) + 4px) var(--entry-y))}}
 .exiting{background:transparent}
 .exiting .canvas,.exiting .header,.exiting .label,.exiting :global([data-story-playback-bar]){opacity:0;transition:opacity .18s}
 .entryCircle.exitCircle{animation:entryExit .78s ease-in-out forwards}
-@keyframes entryExit{0%{opacity:0;transform:translate(-50%,-50%) scale(var(--entry-scale))}13%{opacity:1;transform:translate(-50%,-50%) scale(var(--entry-scale))}62%{opacity:1;transform:translate(-50%,-50%) rotate(0) scale(1)}69%,83%{opacity:1;transform:translate(calc(-50% - 4px),-50%) rotate(-5deg) scale(1.08)}76%,90%{opacity:1;transform:translate(calc(-50% + 4px),-50%) rotate(5deg) scale(1.08)}96%{opacity:1;transform:translate(-50%,-50%) rotate(0) scale(1)}100%{opacity:0;transform:translate(-50%,-50%) rotate(0) scale(1)}}
+@keyframes entryExit{0%{opacity:0;clip-path:circle(var(--entry-cover) at var(--entry-x) var(--entry-y))}13%{opacity:1;clip-path:circle(var(--entry-cover) at var(--entry-x) var(--entry-y))}62%{opacity:1;clip-path:circle(var(--entry-r) at var(--entry-x) var(--entry-y))}69%,83%{opacity:1;clip-path:circle(calc(var(--entry-r) * 1.08) at calc(var(--entry-x) - 4px) var(--entry-y))}76%,90%{opacity:1;clip-path:circle(calc(var(--entry-r) * 1.08) at calc(var(--entry-x) + 4px) var(--entry-y))}96%{opacity:1;clip-path:circle(var(--entry-r) at var(--entry-x) var(--entry-y))}100%{opacity:0;clip-path:circle(var(--entry-r) at var(--entry-x) var(--entry-y))}}
 .entryButton{position:absolute;z-index:9;display:grid;place-items:center;transform:translate(-50%,-50%);box-sizing:border-box;border:2px solid #fff0cc;color:#304d42;pointer-events:none;animation:entryFade .2s .24s forwards}
-@media(prefers-reduced-motion:reduce){.entryCircle{animation:entryFade .15s forwards;transform:translate(-50%,-50%) scale(var(--entry-scale))}.entering .canvas,.entering .header,.entering .label,.entering :global([data-story-playback-bar]){animation:none;opacity:1}.entryCircle.exitCircle{animation:entryFade .12s ease-out forwards}.entryButton{display:none}}
+@media(prefers-reduced-motion:reduce){.entryCircle{animation:entryFade .15s forwards;clip-path:none}.entering .canvas,.entering .header,.entering .label,.entering :global([data-story-playback-bar]){animation:none;opacity:1}.entryCircle.exitCircle{animation:entryFade .12s ease-out forwards}.entryButton{display:none}}
 
 /* Tray micro-feedback, added from outside the kept StoryPlaybackBar: segments swell on hover/press, play squashes. The bar itself (segments, no marker dot) is the same for every story. */
 .film :global([data-story-playback-bar]) :global(button[aria-label^="Chapter"]){transition:transform .18s cubic-bezier(.2,1.4,.4,1)}
@@ -57,3 +61,15 @@
 .film :global([data-story-playback-bar]) :global(button[aria-label="Replay story"]){background:transparent;border:2px solid var(--key,#22366b);border-radius:12px;box-shadow:2px 1.5px 0 var(--echo,#ff48b0);transform:rotate(-1.5deg);color:var(--key,#22366b);animation:stampIn .32s cubic-bezier(.2,1.6,.4,1) both}
 @keyframes stampIn{from{opacity:0;transform:rotate(-8deg) scale(1.5)}to{opacity:1;transform:rotate(-1.5deg) scale(1)}}
 @media(prefers-reduced-motion:reduce){.film :global([data-story-playback-bar]) :global(button){transition:none;animation:none}}
+/* Phones use a short composited fade instead of a full-screen printed clip-path. */
+@media(max-width:600px),(pointer:coarse){
+ .film{animation:mobileStoryEnter .18s ease-out both}
+ .film::after{animation:none;opacity:0;visibility:hidden}
+ .entryCircle,.entryButton{display:none}
+ .entering .canvas,.entering .header,.entering .label,.entering :global([data-story-playback-bar]){animation:none;opacity:1}
+ .film.exiting{animation:mobileStoryExit .16s ease-in both;pointer-events:none}
+ .exiting .canvas,.exiting .header,.exiting .label,.exiting :global([data-story-playback-bar]){opacity:1;transition:none}
+}
+@keyframes mobileStoryEnter{from{opacity:0}to{opacity:1}}
+@keyframes mobileStoryExit{from{opacity:1}to{opacity:0}}
+@media(prefers-reduced-motion:reduce){.film,.film.exiting{animation:none}}

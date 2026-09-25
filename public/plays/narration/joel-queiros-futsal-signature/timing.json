@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: the 2010 UEFA Futsal Cup final",
+   "text": "Lisbon, 2010, the UEFA Futsal Cup final. Benfica are one down. Big Joel is fouled at the edge of the box. Ricardinho rolls it short, and Joel blasts it in! One all!",
+   "src": "/plays/narration/joel-queiros-futsal-signature/1.m4a",
+   "seconds": 13.1,
+   "words": [
+    {
+     "w": "Lisbon",
+     "at": 0.425
+    },
+    {
+     "w": "2010",
+     "at": 0.925
+    },
+    {
+     "w": "the",
+     "at": 1.65
+    },
+    {
+     "w": "UEFA",
+     "at": 1.75
+    },
+    {
+     "w": "Futsal",
+     "at": 2.212
+    },
+    {
+     "w": "Cup",
+     "at": 2.675
+    },
+    {
+     "w": "final",
+     "at": 2.9
+    },
+    {
+     "w": "Benfica",
+     "at": 3.788
+    },
+    {
+     "w": "are",
+     "at": 4.4
+    },
+    {
+     "w": "one",
+     "at": 4.55
+    },
+    {
+     "w": "down",
+     "at": 4.775
+    },
+    {
+     "w": "Big",
+     "at": 5.575
+    },
+    {
+     "w": "Joel",
+     "at": 5.838
+    },
+    {
+     "w": "is",
+     "at": 6.225
+    },
+    {
+     "w": "fouled",
+     "at": 6.4
+    },
+    {
+     "w": "at",
+     "at": 6.737
+    },
+    {
+     "w": "the",
+     "at": 6.812
+    },
+    {
+     "w": "edge",
+     "at": 6.95
+    },
+    {
+     "w": "of",
+     "at": 7.188
+    },
+    {
+     "w": "the",
+     "at": 7.263
+    },
+    {
+     "w": "box",
+     "at": 7.35
+    },
+    {
+     "w": "Ricardinho",
+     "at": 8.287
+    },
+    {
+     "w": "rolls",
+     "at": 9.0
+    },
+    {
+     "w": "it",
+     "at": 9.3
+    },
+    {
+     "w": "short",
+     "at": 9.475
+    },
+    {
+     "w": "and",
+     "at": 9.9
+    },
+    {
+     "w": "Joel",
+     "at": 10.037
+    },
+    {
+     "w": "blasts",
+     "at": 10.375
+    },
+    {
+     "w": "it",
+     "at": 10.812
+    },
+    {
+     "w": "in",
+     "at": 10.9
+    },
+    {
+     "w": "One",
+     "at": 11.512
+    },
+    {
+     "w": "all",
+     "at": 11.787
+    }
+   ]
+  },
+  {
+   "label": "Replay: short pass, quick hit",
+   "text": "Watch again: one short pass, one quick hit. Benfica won in extra time, and Joel was top scorer!",
+   "src": "/plays/narration/joel-queiros-futsal-signature/2.m4a",
+   "seconds": 7.6,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.662
+    },
+    {
+     "w": "one",
+     "at": 1.363
+    },
+    {
+     "w": "short",
+     "at": 1.613
+    },
+    {
+     "w": "pass",
+     "at": 1.925
+    },
+    {
+     "w": "one",
+     "at": 2.4
+    },
+    {
+     "w": "quick",
+     "at": 2.625
+    },
+    {
+     "w": "hit",
+     "at": 2.875
+    },
+    {
+     "w": "Benfica",
+     "at": 3.663
+    },
+    {
+     "w": "won",
+     "at": 4.2
+    },
+    {
+     "w": "in",
+     "at": 4.388
+    },
+    {
+     "w": "extra",
+     "at": 4.475
+    },
+    {
+     "w": "time",
+     "at": 4.85
+    },
+    {
+     "w": "and",
+     "at": 5.263
+    },
+    {
+     "w": "Joel",
+     "at": 5.388
+    },
+    {
+     "w": "was",
+     "at": 5.737
+    },
+    {
+     "w": "top",
+     "at": 5.9
+    },
+    {
+     "w": "scorer",
+     "at": 6.175
+    }
+   ]
+  },
+  {
+   "label": "How he does it",
+   "text": "His trademark is the toe-poke. This is how he does it: the defender rushes in, no time to swing, so he jabs it with his toes. Goal!",
+   "src": "/plays/narration/joel-queiros-futsal-signature/3.m4a",
+   "seconds": 9.8,
+   "words": [
+    {
+     "w": "His",
+     "at": 0.35
+    },
+    {
+     "w": "trademark",
+     "at": 0.537
+    },
+    {
+     "w": "is",
+     "at": 1.125
+    },
+    {
+     "w": "the",
+     "at": 1.262
+    },
+    {
+     "w": "toe-poke",
+     "at": 1.35
+    },
+    {
+     "w": "This",
+     "at": 2.337
+    },
+    {
+     "w": "is",
+     "at": 2.575
+    },
+    {
+     "w": "how",
+     "at": 2.7
+    },
+    {
+     "w": "he",
+     "at": 2.9
+    },
+    {
+     "w": "does",
+     "at": 3.025
+    },
+    {
+     "w": "it",
+     "at": 3.263
+    },
+    {
+     "w": "the",
+     "at": 3.775
+    },
+    {
+     "w": "defender",
+     "at": 3.875
+    },
+    {
+     "w": "rushes",
+     "at": 4.375
+    },
+    {
+     "w": "in",
+     "at": 4.8
+    },
+    {
+     "w": "no",
+     "at": 5.25
+    },
+    {
+     "w": "time",
+     "at": 5.425
+    },
+    {
+     "w": "to",
+     "at": 5.7
+    },
+    {
+     "w": "swing",
+     "at": 5.85
+    },
+    {
+     "w": "so",
+     "at": 6.4
+    },
+    {
+     "w": "he",
+     "at": 6.513
+    },
+    {
+     "w": "jabs",
+     "at": 6.638
+    },
+    {
+     "w": "it",
+     "at": 6.975
+    },
+    {
+     "w": "with",
+     "at": 7.062
+    },
+    {
+     "w": "his",
+     "at": 7.162
+    },
+    {
+     "w": "toes",
+     "at": 7.325
+    },
+    {
+     "w": "Goal",
+     "at": 8.375
+    }
+   ]
+  },
+  {
+   "label": "Practise it",
+   "text": "Your turn: no time to swing? Use a toe-poke and shoot fast!",
+   "src": "/plays/narration/joel-queiros-futsal-signature/4.m4a",
+   "seconds": 4.9,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.5
+    },
+    {
+     "w": "no",
+     "at": 1.075
+    },
+    {
+     "w": "time",
+     "at": 1.25
+    },
+    {
+     "w": "to",
+     "at": 1.488
+    },
+    {
+     "w": "swing",
+     "at": 1.587
+    },
+    {
+     "w": "Use",
+     "at": 2.362
+    },
+    {
+     "w": "a",
+     "at": 2.562
+    },
+    {
+     "w": "toe-poke",
+     "at": 2.625
+    },
+    {
+     "w": "and",
+     "at": 3.138
+    },
+    {
+     "w": "shoot",
+     "at": 3.263
+    },
+    {
+     "w": "fast",
+     "at": 3.525
+    }
+   ]
+  }
+ ]
+}

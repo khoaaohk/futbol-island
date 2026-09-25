@@ -1,0 +1,382 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Milan, 1990, the World Cup! West Germany's captain, Lothar Matth\u00e4us, picks up the ball deep in his own half. He runs... and runs... fifty metres! Then a hard drive... Goal!",
+   "src": "/plays/narration/matthaus-signature/1.m4a",
+   "seconds": 13.1,
+   "words": [
+    {
+     "w": "Milan",
+     "at": 0.4
+    },
+    {
+     "w": "1990",
+     "at": 0.9
+    },
+    {
+     "w": "the",
+     "at": 1.7
+    },
+    {
+     "w": "World",
+     "at": 1.8
+    },
+    {
+     "w": "Cup",
+     "at": 2.112
+    },
+    {
+     "w": "West",
+     "at": 2.812
+    },
+    {
+     "w": "Germany's",
+     "at": 3.075
+    },
+    {
+     "w": "captain",
+     "at": 3.55
+    },
+    {
+     "w": "Lothar",
+     "at": 4.1
+    },
+    {
+     "w": "Matth\u00e4us",
+     "at": 4.5
+    },
+    {
+     "w": "picks",
+     "at": 5.175
+    },
+    {
+     "w": "up",
+     "at": 5.388
+    },
+    {
+     "w": "the",
+     "at": 5.513
+    },
+    {
+     "w": "ball",
+     "at": 5.6
+    },
+    {
+     "w": "deep",
+     "at": 5.912
+    },
+    {
+     "w": "in",
+     "at": 6.162
+    },
+    {
+     "w": "his",
+     "at": 6.237
+    },
+    {
+     "w": "own",
+     "at": 6.362
+    },
+    {
+     "w": "half",
+     "at": 6.55
+    },
+    {
+     "w": "He",
+     "at": 7.375
+    },
+    {
+     "w": "runs",
+     "at": 7.537
+    },
+    {
+     "w": "and",
+     "at": 8.35
+    },
+    {
+     "w": "runs",
+     "at": 8.488
+    },
+    {
+     "w": "fifty",
+     "at": 9.325
+    },
+    {
+     "w": "metres",
+     "at": 9.625
+    },
+    {
+     "w": "Then",
+     "at": 10.175
+    },
+    {
+     "w": "a",
+     "at": 10.312
+    },
+    {
+     "w": "hard",
+     "at": 10.387
+    },
+    {
+     "w": "drive",
+     "at": 10.762
+    },
+    {
+     "w": "Goal",
+     "at": 11.713
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again, from low down. Big strides, head up, the ball pushed out in front. Nobody stops him. Then bang!",
+   "src": "/plays/narration/matthaus-signature/2.m4a",
+   "seconds": 8.1,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "from",
+     "at": 1.15
+    },
+    {
+     "w": "low",
+     "at": 1.325
+    },
+    {
+     "w": "down",
+     "at": 1.525
+    },
+    {
+     "w": "Big",
+     "at": 2.388
+    },
+    {
+     "w": "strides",
+     "at": 2.625
+    },
+    {
+     "w": "head",
+     "at": 3.15
+    },
+    {
+     "w": "up",
+     "at": 3.337
+    },
+    {
+     "w": "the",
+     "at": 3.513
+    },
+    {
+     "w": "ball",
+     "at": 3.6
+    },
+    {
+     "w": "pushed",
+     "at": 3.9
+    },
+    {
+     "w": "out",
+     "at": 4.162
+    },
+    {
+     "w": "in",
+     "at": 4.338
+    },
+    {
+     "w": "front",
+     "at": 4.487
+    },
+    {
+     "w": "Nobody",
+     "at": 5.188
+    },
+    {
+     "w": "stops",
+     "at": 5.55
+    },
+    {
+     "w": "him",
+     "at": 5.888
+    },
+    {
+     "w": "Then",
+     "at": 6.388
+    },
+    {
+     "w": "bang",
+     "at": 6.638
+    }
+   ]
+  },
+  {
+   "label": "From behind the goal",
+   "text": "From behind the goal: the keeper stretches, but he can't stop it! Three-one!",
+   "src": "/plays/narration/matthaus-signature/3.m4a",
+   "seconds": 5.5,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.375
+    },
+    {
+     "w": "behind",
+     "at": 0.512
+    },
+    {
+     "w": "the",
+     "at": 0.887
+    },
+    {
+     "w": "goal",
+     "at": 0.975
+    },
+    {
+     "w": "the",
+     "at": 1.7
+    },
+    {
+     "w": "keeper",
+     "at": 1.8
+    },
+    {
+     "w": "stretches",
+     "at": 2.175
+    },
+    {
+     "w": "but",
+     "at": 2.688
+    },
+    {
+     "w": "he",
+     "at": 2.812
+    },
+    {
+     "w": "can't",
+     "at": 2.9
+    },
+    {
+     "w": "stop",
+     "at": 3.175
+    },
+    {
+     "w": "it",
+     "at": 3.525
+    },
+    {
+     "w": "Three-one",
+     "at": 3.925
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "The secret? Box-to-box players help defend and attack, covering the whole pitch. Start near your own goal, carry it forward, then shoot!",
+   "src": "/plays/narration/matthaus-signature/4.m4a",
+   "seconds": 9.4,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "secret",
+     "at": 0.463
+    },
+    {
+     "w": "Box-to-box",
+     "at": 1.288
+    },
+    {
+     "w": "players",
+     "at": 2.0
+    },
+    {
+     "w": "help",
+     "at": 2.4
+    },
+    {
+     "w": "defend",
+     "at": 2.65
+    },
+    {
+     "w": "and",
+     "at": 3.112
+    },
+    {
+     "w": "attack",
+     "at": 3.212
+    },
+    {
+     "w": "covering",
+     "at": 3.925
+    },
+    {
+     "w": "the",
+     "at": 4.263
+    },
+    {
+     "w": "whole",
+     "at": 4.35
+    },
+    {
+     "w": "pitch",
+     "at": 4.612
+    },
+    {
+     "w": "Start",
+     "at": 5.6
+    },
+    {
+     "w": "near",
+     "at": 5.888
+    },
+    {
+     "w": "your",
+     "at": 6.1
+    },
+    {
+     "w": "own",
+     "at": 6.25
+    },
+    {
+     "w": "goal",
+     "at": 6.475
+    },
+    {
+     "w": "carry",
+     "at": 6.975
+    },
+    {
+     "w": "it",
+     "at": 7.287
+    },
+    {
+     "w": "forward",
+     "at": 7.388
+    },
+    {
+     "w": "then",
+     "at": 7.838
+    },
+    {
+     "w": "shoot",
+     "at": 8.088
+    }
+   ]
+  }
+ ]
+}

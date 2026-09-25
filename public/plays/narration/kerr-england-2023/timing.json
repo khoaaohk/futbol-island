@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The wonder goal, live",
+   "text": "Sydney, the 2023 World Cup semi-final. England lead one-nil. Sam Kerr gets the ball in her own half, and runs! She splits two defenders... and shoots from outside the box. Goal!",
+   "src": "/plays/narration/kerr-england-2023/1.m4a",
+   "seconds": 13.4,
+   "words": [
+    {
+     "w": "Sydney",
+     "at": 0.4
+    },
+    {
+     "w": "the",
+     "at": 0.8
+    },
+    {
+     "w": "2023",
+     "at": 0.9
+    },
+    {
+     "w": "World",
+     "at": 1.812
+    },
+    {
+     "w": "Cup",
+     "at": 2.125
+    },
+    {
+     "w": "semi-final",
+     "at": 2.4
+    },
+    {
+     "w": "England",
+     "at": 3.438
+    },
+    {
+     "w": "lead",
+     "at": 3.9
+    },
+    {
+     "w": "one-nil",
+     "at": 4.15
+    },
+    {
+     "w": "Sam",
+     "at": 5.2
+    },
+    {
+     "w": "Kerr",
+     "at": 5.5
+    },
+    {
+     "w": "gets",
+     "at": 5.75
+    },
+    {
+     "w": "the",
+     "at": 5.987
+    },
+    {
+     "w": "ball",
+     "at": 6.075
+    },
+    {
+     "w": "in",
+     "at": 6.388
+    },
+    {
+     "w": "her",
+     "at": 6.463
+    },
+    {
+     "w": "own",
+     "at": 6.575
+    },
+    {
+     "w": "half",
+     "at": 6.775
+    },
+    {
+     "w": "and",
+     "at": 7.175
+    },
+    {
+     "w": "runs",
+     "at": 7.312
+    },
+    {
+     "w": "She",
+     "at": 8.088
+    },
+    {
+     "w": "splits",
+     "at": 8.262
+    },
+    {
+     "w": "two",
+     "at": 8.688
+    },
+    {
+     "w": "defenders",
+     "at": 8.9
+    },
+    {
+     "w": "and",
+     "at": 9.9
+    },
+    {
+     "w": "shoots",
+     "at": 10.05
+    },
+    {
+     "w": "from",
+     "at": 10.35
+    },
+    {
+     "w": "outside",
+     "at": 10.5
+    },
+    {
+     "w": "the",
+     "at": 10.912
+    },
+    {
+     "w": "box",
+     "at": 11.0
+    },
+    {
+     "w": "Goal",
+     "at": 11.975
+    }
+   ]
+  },
+  {
+   "label": "Drive at them",
+   "text": "Watch it again. Kerr drives straight at the defenders. They back away, so she keeps going, right between them.",
+   "src": "/plays/narration/kerr-england-2023/2.m4a",
+   "seconds": 7.5,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "Kerr",
+     "at": 1.562
+    },
+    {
+     "w": "drives",
+     "at": 1.825
+    },
+    {
+     "w": "straight",
+     "at": 2.263
+    },
+    {
+     "w": "at",
+     "at": 2.562
+    },
+    {
+     "w": "the",
+     "at": 2.638
+    },
+    {
+     "w": "defenders",
+     "at": 2.725
+    },
+    {
+     "w": "They",
+     "at": 3.7
+    },
+    {
+     "w": "back",
+     "at": 3.825
+    },
+    {
+     "w": "away",
+     "at": 4.1
+    },
+    {
+     "w": "so",
+     "at": 4.625
+    },
+    {
+     "w": "she",
+     "at": 4.8
+    },
+    {
+     "w": "keeps",
+     "at": 4.95
+    },
+    {
+     "w": "going",
+     "at": 5.25
+    },
+    {
+     "w": "right",
+     "at": 5.7
+    },
+    {
+     "w": "between",
+     "at": 5.912
+    },
+    {
+     "w": "them",
+     "at": 6.263
+    }
+   ]
+  },
+  {
+   "label": "Before the keeper is set",
+   "text": "Then she shoots early, before Mary Earps is set. It flies over her... One-all!",
+   "src": "/plays/narration/kerr-england-2023/3.m4a",
+   "seconds": 5.9,
+   "words": [
+    {
+     "w": "Then",
+     "at": 0.35
+    },
+    {
+     "w": "she",
+     "at": 0.5
+    },
+    {
+     "w": "shoots",
+     "at": 0.675
+    },
+    {
+     "w": "early",
+     "at": 1.0
+    },
+    {
+     "w": "before",
+     "at": 1.45
+    },
+    {
+     "w": "Mary",
+     "at": 1.8
+    },
+    {
+     "w": "Earps",
+     "at": 2.1
+    },
+    {
+     "w": "is",
+     "at": 2.388
+    },
+    {
+     "w": "set",
+     "at": 2.513
+    },
+    {
+     "w": "It",
+     "at": 3.05
+    },
+    {
+     "w": "flies",
+     "at": 3.2
+    },
+    {
+     "w": "over",
+     "at": 3.575
+    },
+    {
+     "w": "her",
+     "at": 3.875
+    },
+    {
+     "w": "One-all",
+     "at": 4.525
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "The secret? Drive at defenders to push them back. Shoot early, while the keeper is still moving. Lock your ankle and strike through the ball.",
+   "src": "/plays/narration/kerr-england-2023/4.m4a",
+   "seconds": 9.2,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "secret",
+     "at": 0.463
+    },
+    {
+     "w": "Drive",
+     "at": 1.238
+    },
+    {
+     "w": "at",
+     "at": 1.587
+    },
+    {
+     "w": "defenders",
+     "at": 1.675
+    },
+    {
+     "w": "to",
+     "at": 2.275
+    },
+    {
+     "w": "push",
+     "at": 2.375
+    },
+    {
+     "w": "them",
+     "at": 2.612
+    },
+    {
+     "w": "back",
+     "at": 2.75
+    },
+    {
+     "w": "Shoot",
+     "at": 3.587
+    },
+    {
+     "w": "early",
+     "at": 3.875
+    },
+    {
+     "w": "while",
+     "at": 4.4
+    },
+    {
+     "w": "the",
+     "at": 4.588
+    },
+    {
+     "w": "keeper",
+     "at": 4.675
+    },
+    {
+     "w": "is",
+     "at": 5.05
+    },
+    {
+     "w": "still",
+     "at": 5.175
+    },
+    {
+     "w": "moving",
+     "at": 5.45
+    },
+    {
+     "w": "Lock",
+     "at": 6.338
+    },
+    {
+     "w": "your",
+     "at": 6.562
+    },
+    {
+     "w": "ankle",
+     "at": 6.7
+    },
+    {
+     "w": "and",
+     "at": 7.075
+    },
+    {
+     "w": "strike",
+     "at": 7.213
+    },
+    {
+     "w": "through",
+     "at": 7.55
+    },
+    {
+     "w": "the",
+     "at": 7.75
+    },
+    {
+     "w": "ball",
+     "at": 7.85
+    }
+   ]
+  }
+ ]
+}

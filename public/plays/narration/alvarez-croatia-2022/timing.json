@@ -1,0 +1,398 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The run, live",
+   "text": "Qatar, 2022, the World Cup semi-final. Messi heads it on, and Juli\u00e1n \u00c1lvarez is off, from near halfway! He charges at Croatia's defenders... and he scores!",
+   "src": "/plays/narration/alvarez-croatia-2022/1.m4a",
+   "seconds": 12.3,
+   "words": [
+    {
+     "w": "Qatar",
+     "at": 0.35
+    },
+    {
+     "w": "2022",
+     "at": 0.875
+    },
+    {
+     "w": "the",
+     "at": 1.925
+    },
+    {
+     "w": "World",
+     "at": 2.05
+    },
+    {
+     "w": "Cup",
+     "at": 2.4
+    },
+    {
+     "w": "semi-final",
+     "at": 2.675
+    },
+    {
+     "w": "Messi",
+     "at": 3.925
+    },
+    {
+     "w": "heads",
+     "at": 4.3
+    },
+    {
+     "w": "it",
+     "at": 4.537
+    },
+    {
+     "w": "on",
+     "at": 4.625
+    },
+    {
+     "w": "and",
+     "at": 5.075
+    },
+    {
+     "w": "Juli\u00e1n",
+     "at": 5.2
+    },
+    {
+     "w": "\u00c1lvarez",
+     "at": 5.688
+    },
+    {
+     "w": "is",
+     "at": 6.275
+    },
+    {
+     "w": "off",
+     "at": 6.4
+    },
+    {
+     "w": "from",
+     "at": 6.75
+    },
+    {
+     "w": "near",
+     "at": 6.925
+    },
+    {
+     "w": "halfway",
+     "at": 7.15
+    },
+    {
+     "w": "He",
+     "at": 8.1
+    },
+    {
+     "w": "charges",
+     "at": 8.262
+    },
+    {
+     "w": "at",
+     "at": 8.7
+    },
+    {
+     "w": "Croatia's",
+     "at": 8.8
+    },
+    {
+     "w": "defenders",
+     "at": 9.4
+    },
+    {
+     "w": "and",
+     "at": 10.45
+    },
+    {
+     "w": "he",
+     "at": 10.562
+    },
+    {
+     "w": "scores",
+     "at": 10.7
+    }
+   ]
+  },
+  {
+   "label": "Lucky bounces",
+   "text": "Watch again, slowly. Juranovi\u0107 tackles, but the ball bounces off him and runs on. Sosa tries to clear it, and it bounces back to \u00c1lvarez!",
+   "src": "/plays/narration/alvarez-croatia-2022/2.m4a",
+   "seconds": 10.4,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.2
+    },
+    {
+     "w": "Juranovi\u0107",
+     "at": 2.188
+    },
+    {
+     "w": "tackles",
+     "at": 2.837
+    },
+    {
+     "w": "but",
+     "at": 3.487
+    },
+    {
+     "w": "the",
+     "at": 3.612
+    },
+    {
+     "w": "ball",
+     "at": 3.7
+    },
+    {
+     "w": "bounces",
+     "at": 4.025
+    },
+    {
+     "w": "off",
+     "at": 4.5
+    },
+    {
+     "w": "him",
+     "at": 4.763
+    },
+    {
+     "w": "and",
+     "at": 4.975
+    },
+    {
+     "w": "runs",
+     "at": 5.1
+    },
+    {
+     "w": "on",
+     "at": 5.4
+    },
+    {
+     "w": "Sosa",
+     "at": 6.287
+    },
+    {
+     "w": "tries",
+     "at": 6.7
+    },
+    {
+     "w": "to",
+     "at": 7.025
+    },
+    {
+     "w": "clear",
+     "at": 7.15
+    },
+    {
+     "w": "it",
+     "at": 7.425
+    },
+    {
+     "w": "and",
+     "at": 7.725
+    },
+    {
+     "w": "it",
+     "at": 7.838
+    },
+    {
+     "w": "bounces",
+     "at": 7.925
+    },
+    {
+     "w": "back",
+     "at": 8.4
+    },
+    {
+     "w": "to",
+     "at": 8.675
+    },
+    {
+     "w": "\u00c1lvarez",
+     "at": 8.8
+    }
+   ]
+  },
+  {
+   "label": "The finish",
+   "text": "Right foot, close range, past Livakovi\u0107. Two-nil to Argentina! They went on to reach the final.",
+   "src": "/plays/narration/alvarez-croatia-2022/3.m4a",
+   "seconds": 7.2,
+   "words": [
+    {
+     "w": "Right",
+     "at": 0.425
+    },
+    {
+     "w": "foot",
+     "at": 0.713
+    },
+    {
+     "w": "close",
+     "at": 1.05
+    },
+    {
+     "w": "range",
+     "at": 1.35
+    },
+    {
+     "w": "past",
+     "at": 1.8
+    },
+    {
+     "w": "Livakovi\u0107",
+     "at": 2.15
+    },
+    {
+     "w": "Two-nil",
+     "at": 3.288
+    },
+    {
+     "w": "to",
+     "at": 3.725
+    },
+    {
+     "w": "Argentina",
+     "at": 3.875
+    },
+    {
+     "w": "They",
+     "at": 4.925
+    },
+    {
+     "w": "went",
+     "at": 5.062
+    },
+    {
+     "w": "on",
+     "at": 5.213
+    },
+    {
+     "w": "to",
+     "at": 5.338
+    },
+    {
+     "w": "reach",
+     "at": 5.425
+    },
+    {
+     "w": "the",
+     "at": 5.675
+    },
+    {
+     "w": "final",
+     "at": 5.787
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: when you have space, drive forward with the ball. Stay strong when tackles come in, and keep going until the end!",
+   "src": "/plays/narration/alvarez-croatia-2022/4.m4a",
+   "seconds": 8.4,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "when",
+     "at": 1.1
+    },
+    {
+     "w": "you",
+     "at": 1.238
+    },
+    {
+     "w": "have",
+     "at": 1.312
+    },
+    {
+     "w": "space",
+     "at": 1.512
+    },
+    {
+     "w": "drive",
+     "at": 2.237
+    },
+    {
+     "w": "forward",
+     "at": 2.638
+    },
+    {
+     "w": "with",
+     "at": 2.987
+    },
+    {
+     "w": "the",
+     "at": 3.087
+    },
+    {
+     "w": "ball",
+     "at": 3.175
+    },
+    {
+     "w": "Stay",
+     "at": 4.125
+    },
+    {
+     "w": "strong",
+     "at": 4.463
+    },
+    {
+     "w": "when",
+     "at": 4.888
+    },
+    {
+     "w": "tackles",
+     "at": 5.05
+    },
+    {
+     "w": "come",
+     "at": 5.475
+    },
+    {
+     "w": "in",
+     "at": 5.638
+    },
+    {
+     "w": "and",
+     "at": 6.013
+    },
+    {
+     "w": "keep",
+     "at": 6.125
+    },
+    {
+     "w": "going",
+     "at": 6.375
+    },
+    {
+     "w": "until",
+     "at": 6.662
+    },
+    {
+     "w": "the",
+     "at": 6.888
+    },
+    {
+     "w": "end",
+     "at": 7.037
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,386 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Mexico City, 1986. Diego Maradona gets the ball, spins away from two England players, and off he goes, from his own half! Past one... still going, past another, into the box... goal!",
+   "src": "/plays/narration/maradona-1986/1.m4a",
+   "seconds": 14.4,
+   "words": [
+    {
+     "w": "Mexico",
+     "at": 0.4
+    },
+    {
+     "w": "City",
+     "at": 0.875
+    },
+    {
+     "w": "1986",
+     "at": 1.325
+    },
+    {
+     "w": "Diego",
+     "at": 2.862
+    },
+    {
+     "w": "Maradona",
+     "at": 3.3
+    },
+    {
+     "w": "gets",
+     "at": 3.85
+    },
+    {
+     "w": "the",
+     "at": 4.1
+    },
+    {
+     "w": "ball",
+     "at": 4.2
+    },
+    {
+     "w": "spins",
+     "at": 4.763
+    },
+    {
+     "w": "away",
+     "at": 5.125
+    },
+    {
+     "w": "from",
+     "at": 5.475
+    },
+    {
+     "w": "two",
+     "at": 5.688
+    },
+    {
+     "w": "England",
+     "at": 5.9
+    },
+    {
+     "w": "players",
+     "at": 6.275
+    },
+    {
+     "w": "and",
+     "at": 6.8
+    },
+    {
+     "w": "off",
+     "at": 6.925
+    },
+    {
+     "w": "he",
+     "at": 7.112
+    },
+    {
+     "w": "goes",
+     "at": 7.225
+    },
+    {
+     "w": "from",
+     "at": 7.662
+    },
+    {
+     "w": "his",
+     "at": 7.787
+    },
+    {
+     "w": "own",
+     "at": 7.925
+    },
+    {
+     "w": "half",
+     "at": 8.15
+    },
+    {
+     "w": "Past",
+     "at": 8.887
+    },
+    {
+     "w": "one",
+     "at": 9.275
+    },
+    {
+     "w": "still",
+     "at": 10.113
+    },
+    {
+     "w": "going",
+     "at": 10.4
+    },
+    {
+     "w": "past",
+     "at": 10.95
+    },
+    {
+     "w": "another",
+     "at": 11.287
+    },
+    {
+     "w": "into",
+     "at": 11.688
+    },
+    {
+     "w": "the",
+     "at": 11.863
+    },
+    {
+     "w": "box",
+     "at": 11.95
+    },
+    {
+     "w": "goal",
+     "at": 12.938
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again, slowly. Tiny touches keep the ball glued to his left foot. He stays low, and quick cuts beat each defender.",
+   "src": "/plays/narration/maradona-1986/2.m4a",
+   "seconds": 9.0,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "slowly",
+     "at": 1.288
+    },
+    {
+     "w": "Tiny",
+     "at": 2.337
+    },
+    {
+     "w": "touches",
+     "at": 2.675
+    },
+    {
+     "w": "keep",
+     "at": 3.1
+    },
+    {
+     "w": "the",
+     "at": 3.288
+    },
+    {
+     "w": "ball",
+     "at": 3.375
+    },
+    {
+     "w": "glued",
+     "at": 3.688
+    },
+    {
+     "w": "to",
+     "at": 4.025
+    },
+    {
+     "w": "his",
+     "at": 4.112
+    },
+    {
+     "w": "left",
+     "at": 4.275
+    },
+    {
+     "w": "foot",
+     "at": 4.562
+    },
+    {
+     "w": "He",
+     "at": 5.275
+    },
+    {
+     "w": "stays",
+     "at": 5.4
+    },
+    {
+     "w": "low",
+     "at": 5.775
+    },
+    {
+     "w": "and",
+     "at": 6.25
+    },
+    {
+     "w": "quick",
+     "at": 6.375
+    },
+    {
+     "w": "cuts",
+     "at": 6.638
+    },
+    {
+     "w": "beat",
+     "at": 7.013
+    },
+    {
+     "w": "each",
+     "at": 7.3
+    },
+    {
+     "w": "defender",
+     "at": 7.525
+    }
+   ]
+  },
+  {
+   "label": "Round the keeper",
+   "text": "He goes round keeper Peter Shilton and scores the Goal of the Century!",
+   "src": "/plays/narration/maradona-1986/3.m4a",
+   "seconds": 5.4,
+   "words": [
+    {
+     "w": "He",
+     "at": 0.35
+    },
+    {
+     "w": "goes",
+     "at": 0.45
+    },
+    {
+     "w": "round",
+     "at": 0.7
+    },
+    {
+     "w": "keeper",
+     "at": 1.113
+    },
+    {
+     "w": "Peter",
+     "at": 1.45
+    },
+    {
+     "w": "Shilton",
+     "at": 1.812
+    },
+    {
+     "w": "and",
+     "at": 2.6
+    },
+    {
+     "w": "scores",
+     "at": 2.763
+    },
+    {
+     "w": "the",
+     "at": 3.225
+    },
+    {
+     "w": "Goal",
+     "at": 3.362
+    },
+    {
+     "w": "of",
+     "at": 3.663
+    },
+    {
+     "w": "the",
+     "at": 3.737
+    },
+    {
+     "w": "Century",
+     "at": 3.837
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: keep the ball close with tiny touches, stay low and balanced, and change direction to beat defenders.",
+   "src": "/plays/narration/maradona-1986/4.m4a",
+   "seconds": 8.2,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.562
+    },
+    {
+     "w": "keep",
+     "at": 1.4
+    },
+    {
+     "w": "the",
+     "at": 1.587
+    },
+    {
+     "w": "ball",
+     "at": 1.675
+    },
+    {
+     "w": "close",
+     "at": 1.975
+    },
+    {
+     "w": "with",
+     "at": 2.288
+    },
+    {
+     "w": "tiny",
+     "at": 2.462
+    },
+    {
+     "w": "touches",
+     "at": 2.825
+    },
+    {
+     "w": "stay",
+     "at": 3.612
+    },
+    {
+     "w": "low",
+     "at": 3.938
+    },
+    {
+     "w": "and",
+     "at": 4.275
+    },
+    {
+     "w": "balanced",
+     "at": 4.4
+    },
+    {
+     "w": "and",
+     "at": 5.175
+    },
+    {
+     "w": "change",
+     "at": 5.312
+    },
+    {
+     "w": "direction",
+     "at": 5.7
+    },
+    {
+     "w": "to",
+     "at": 6.225
+    },
+    {
+     "w": "beat",
+     "at": 6.35
+    },
+    {
+     "w": "defenders",
+     "at": 6.55
+    }
+   ]
+  }
+ ]
+}

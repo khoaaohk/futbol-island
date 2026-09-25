@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The pass, live",
+   "text": "Madrid, 2022. Real Madrid need a goal against Chelsea. Marcelo wins the ball for Luka Modri\u0107, on the left... and he passes with the outside of his right boot! Rodrygo volleys... Goal!",
+   "src": "/plays/narration/modric-signature/1.m4a",
+   "seconds": 14.0,
+   "words": [
+    {
+     "w": "Madrid",
+     "at": 0.4
+    },
+    {
+     "w": "2022",
+     "at": 0.875
+    },
+    {
+     "w": "Real",
+     "at": 2.2
+    },
+    {
+     "w": "Madrid",
+     "at": 2.5
+    },
+    {
+     "w": "need",
+     "at": 2.925
+    },
+    {
+     "w": "a",
+     "at": 3.112
+    },
+    {
+     "w": "goal",
+     "at": 3.212
+    },
+    {
+     "w": "against",
+     "at": 3.55
+    },
+    {
+     "w": "Chelsea",
+     "at": 3.987
+    },
+    {
+     "w": "Marcelo",
+     "at": 4.987
+    },
+    {
+     "w": "wins",
+     "at": 5.575
+    },
+    {
+     "w": "the",
+     "at": 5.838
+    },
+    {
+     "w": "ball",
+     "at": 5.925
+    },
+    {
+     "w": "for",
+     "at": 6.25
+    },
+    {
+     "w": "Luka",
+     "at": 6.4
+    },
+    {
+     "w": "Modri\u0107",
+     "at": 6.65
+    },
+    {
+     "w": "on",
+     "at": 7.213
+    },
+    {
+     "w": "the",
+     "at": 7.312
+    },
+    {
+     "w": "left",
+     "at": 7.4
+    },
+    {
+     "w": "and",
+     "at": 8.275
+    },
+    {
+     "w": "he",
+     "at": 8.387
+    },
+    {
+     "w": "passes",
+     "at": 8.488
+    },
+    {
+     "w": "with",
+     "at": 8.963
+    },
+    {
+     "w": "the",
+     "at": 9.062
+    },
+    {
+     "w": "outside",
+     "at": 9.175
+    },
+    {
+     "w": "of",
+     "at": 9.688
+    },
+    {
+     "w": "his",
+     "at": 9.762
+    },
+    {
+     "w": "right",
+     "at": 9.938
+    },
+    {
+     "w": "boot",
+     "at": 10.262
+    },
+    {
+     "w": "Rodrygo",
+     "at": 10.887
+    },
+    {
+     "w": "volleys",
+     "at": 11.5
+    },
+    {
+     "w": "Goal",
+     "at": 12.613
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. Toes turned in, the outside of the boot spins the ball. See it bend around the defenders to Rodrygo.",
+   "src": "/plays/narration/modric-signature/2.m4a",
+   "seconds": 9.1,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.238
+    },
+    {
+     "w": "Toes",
+     "at": 2.288
+    },
+    {
+     "w": "turned",
+     "at": 2.675
+    },
+    {
+     "w": "in",
+     "at": 2.987
+    },
+    {
+     "w": "the",
+     "at": 3.312
+    },
+    {
+     "w": "outside",
+     "at": 3.425
+    },
+    {
+     "w": "of",
+     "at": 3.888
+    },
+    {
+     "w": "the",
+     "at": 3.962
+    },
+    {
+     "w": "boot",
+     "at": 4.05
+    },
+    {
+     "w": "spins",
+     "at": 4.362
+    },
+    {
+     "w": "the",
+     "at": 4.8
+    },
+    {
+     "w": "ball",
+     "at": 4.9
+    },
+    {
+     "w": "See",
+     "at": 5.7
+    },
+    {
+     "w": "it",
+     "at": 5.912
+    },
+    {
+     "w": "bend",
+     "at": 6.0
+    },
+    {
+     "w": "around",
+     "at": 6.275
+    },
+    {
+     "w": "the",
+     "at": 6.588
+    },
+    {
+     "w": "defenders",
+     "at": 6.675
+    },
+    {
+     "w": "to",
+     "at": 7.275
+    },
+    {
+     "w": "Rodrygo",
+     "at": 7.4
+    }
+   ]
+  },
+  {
+   "label": "Into the corner",
+   "text": "Rodrygo opens his body and side-foots it into the bottom corner. The keeper has no chance!",
+   "src": "/plays/narration/modric-signature/3.m4a",
+   "seconds": 6.7,
+   "words": [
+    {
+     "w": "Rodrygo",
+     "at": 0.4
+    },
+    {
+     "w": "opens",
+     "at": 1.038
+    },
+    {
+     "w": "his",
+     "at": 1.387
+    },
+    {
+     "w": "body",
+     "at": 1.55
+    },
+    {
+     "w": "and",
+     "at": 1.975
+    },
+    {
+     "w": "side-foots",
+     "at": 2.125
+    },
+    {
+     "w": "it",
+     "at": 2.712
+    },
+    {
+     "w": "into",
+     "at": 2.788
+    },
+    {
+     "w": "the",
+     "at": 2.962
+    },
+    {
+     "w": "bottom",
+     "at": 3.05
+    },
+    {
+     "w": "corner",
+     "at": 3.425
+    },
+    {
+     "w": "The",
+     "at": 4.362
+    },
+    {
+     "w": "keeper",
+     "at": 4.475
+    },
+    {
+     "w": "has",
+     "at": 4.85
+    },
+    {
+     "w": "no",
+     "at": 5.05
+    },
+    {
+     "w": "chance",
+     "at": 5.237
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: a defender in the way? The outside of your foot can bend a pass around a defender.",
+   "src": "/plays/narration/modric-signature/4.m4a",
+   "seconds": 6.7,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "a",
+     "at": 1.225
+    },
+    {
+     "w": "defender",
+     "at": 1.3
+    },
+    {
+     "w": "in",
+     "at": 1.812
+    },
+    {
+     "w": "the",
+     "at": 1.887
+    },
+    {
+     "w": "way",
+     "at": 1.975
+    },
+    {
+     "w": "The",
+     "at": 2.8
+    },
+    {
+     "w": "outside",
+     "at": 2.95
+    },
+    {
+     "w": "of",
+     "at": 3.362
+    },
+    {
+     "w": "your",
+     "at": 3.438
+    },
+    {
+     "w": "foot",
+     "at": 3.6
+    },
+    {
+     "w": "can",
+     "at": 3.9
+    },
+    {
+     "w": "bend",
+     "at": 4.05
+    },
+    {
+     "w": "a",
+     "at": 4.263
+    },
+    {
+     "w": "pass",
+     "at": 4.338
+    },
+    {
+     "w": "around",
+     "at": 4.775
+    },
+    {
+     "w": "a",
+     "at": 5.088
+    },
+    {
+     "w": "defender",
+     "at": 5.138
+    }
+   ]
+  }
+ ]
+}

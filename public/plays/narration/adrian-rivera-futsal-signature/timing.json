@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: EURO 2026",
+   "text": "The 2026 Futsal EURO, in Ljubljana. Spain play Belgium. Adri\u00e1n Rivera is Spain\u2019s fixo, the last defender. After just two minutes, he scores the first goal! Spain win ten to three!",
+   "src": "/plays/narration/adrian-rivera-futsal-signature/1.m4a",
+   "seconds": 14.3,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "2026",
+     "at": 0.425
+    },
+    {
+     "w": "Futsal",
+     "at": 1.363
+    },
+    {
+     "w": "EURO",
+     "at": 1.8
+    },
+    {
+     "w": "in",
+     "at": 2.25
+    },
+    {
+     "w": "Ljubljana",
+     "at": 2.375
+    },
+    {
+     "w": "Spain",
+     "at": 3.562
+    },
+    {
+     "w": "play",
+     "at": 4.0
+    },
+    {
+     "w": "Belgium",
+     "at": 4.225
+    },
+    {
+     "w": "Adri\u00e1n",
+     "at": 5.138
+    },
+    {
+     "w": "Rivera",
+     "at": 5.625
+    },
+    {
+     "w": "is",
+     "at": 6.15
+    },
+    {
+     "w": "Spain\u2019s",
+     "at": 6.3
+    },
+    {
+     "w": "fixo",
+     "at": 6.888
+    },
+    {
+     "w": "the",
+     "at": 7.55
+    },
+    {
+     "w": "last",
+     "at": 7.675
+    },
+    {
+     "w": "defender",
+     "at": 8.025
+    },
+    {
+     "w": "After",
+     "at": 8.963
+    },
+    {
+     "w": "just",
+     "at": 9.25
+    },
+    {
+     "w": "two",
+     "at": 9.488
+    },
+    {
+     "w": "minutes",
+     "at": 9.7
+    },
+    {
+     "w": "he",
+     "at": 10.037
+    },
+    {
+     "w": "scores",
+     "at": 10.162
+    },
+    {
+     "w": "the",
+     "at": 10.537
+    },
+    {
+     "w": "first",
+     "at": 10.637
+    },
+    {
+     "w": "goal",
+     "at": 11.0
+    },
+    {
+     "w": "Spain",
+     "at": 11.787
+    },
+    {
+     "w": "win",
+     "at": 12.225
+    },
+    {
+     "w": "ten",
+     "at": 12.537
+    },
+    {
+     "w": "to",
+     "at": 12.8
+    },
+    {
+     "w": "three",
+     "at": 12.938
+    }
+   ]
+  },
+  {
+   "label": "How he does it",
+   "text": "Rivera is famous for his poke tackle. Watch how he does it: he stays low and waits. The attacker dribbles at him and takes a big touch. He pokes the ball away with his toe!",
+   "src": "/plays/narration/adrian-rivera-futsal-signature/2.m4a",
+   "seconds": 11.6,
+   "words": [
+    {
+     "w": "Rivera",
+     "at": 0.4
+    },
+    {
+     "w": "is",
+     "at": 0.8
+    },
+    {
+     "w": "famous",
+     "at": 0.975
+    },
+    {
+     "w": "for",
+     "at": 1.375
+    },
+    {
+     "w": "his",
+     "at": 1.488
+    },
+    {
+     "w": "poke",
+     "at": 1.663
+    },
+    {
+     "w": "tackle",
+     "at": 1.975
+    },
+    {
+     "w": "Watch",
+     "at": 2.862
+    },
+    {
+     "w": "how",
+     "at": 3.175
+    },
+    {
+     "w": "he",
+     "at": 3.337
+    },
+    {
+     "w": "does",
+     "at": 3.45
+    },
+    {
+     "w": "it",
+     "at": 3.675
+    },
+    {
+     "w": "he",
+     "at": 4.125
+    },
+    {
+     "w": "stays",
+     "at": 4.275
+    },
+    {
+     "w": "low",
+     "at": 4.688
+    },
+    {
+     "w": "and",
+     "at": 5.05
+    },
+    {
+     "w": "waits",
+     "at": 5.175
+    },
+    {
+     "w": "The",
+     "at": 6.138
+    },
+    {
+     "w": "attacker",
+     "at": 6.3
+    },
+    {
+     "w": "dribbles",
+     "at": 6.787
+    },
+    {
+     "w": "at",
+     "at": 7.2
+    },
+    {
+     "w": "him",
+     "at": 7.287
+    },
+    {
+     "w": "and",
+     "at": 7.5
+    },
+    {
+     "w": "takes",
+     "at": 7.625
+    },
+    {
+     "w": "a",
+     "at": 7.862
+    },
+    {
+     "w": "big",
+     "at": 7.925
+    },
+    {
+     "w": "touch",
+     "at": 8.162
+    },
+    {
+     "w": "He",
+     "at": 8.95
+    },
+    {
+     "w": "pokes",
+     "at": 9.075
+    },
+    {
+     "w": "the",
+     "at": 9.375
+    },
+    {
+     "w": "ball",
+     "at": 9.475
+    },
+    {
+     "w": "away",
+     "at": 9.775
+    },
+    {
+     "w": "with",
+     "at": 10.012
+    },
+    {
+     "w": "his",
+     "at": 10.113
+    },
+    {
+     "w": "toe",
+     "at": 10.275
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. Wait, big touch, poke!",
+   "src": "/plays/narration/adrian-rivera-futsal-signature/3.m4a",
+   "seconds": 4.1,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.662
+    },
+    {
+     "w": "slowly",
+     "at": 1.038
+    },
+    {
+     "w": "Wait",
+     "at": 1.913
+    },
+    {
+     "w": "big",
+     "at": 2.225
+    },
+    {
+     "w": "touch",
+     "at": 2.45
+    },
+    {
+     "w": "poke",
+     "at": 2.775
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: when the attacker pushes the ball too far, poke it away with your toe!",
+   "src": "/plays/narration/adrian-rivera-futsal-signature/4.m4a",
+   "seconds": 5.7,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "when",
+     "at": 1.35
+    },
+    {
+     "w": "the",
+     "at": 1.488
+    },
+    {
+     "w": "attacker",
+     "at": 1.625
+    },
+    {
+     "w": "pushes",
+     "at": 2.1
+    },
+    {
+     "w": "the",
+     "at": 2.487
+    },
+    {
+     "w": "ball",
+     "at": 2.575
+    },
+    {
+     "w": "too",
+     "at": 2.875
+    },
+    {
+     "w": "far",
+     "at": 3.062
+    },
+    {
+     "w": "poke",
+     "at": 3.55
+    },
+    {
+     "w": "it",
+     "at": 3.737
+    },
+    {
+     "w": "away",
+     "at": 3.812
+    },
+    {
+     "w": "with",
+     "at": 4.075
+    },
+    {
+     "w": "your",
+     "at": 4.213
+    },
+    {
+     "w": "toe",
+     "at": 4.338
+    }
+   ]
+  }
+ ]
+}

@@ -3,3 +3,73 @@
 .dialog{height:min(800px,calc(100dvh - 24px));overflow:hidden}.panel{height:100%;display:flex;flex-direction:column;box-sizing:border-box;padding-bottom:0}.panel header{flex:none;min-height:76px}.panel h2{font-size:clamp(23px,3vw,30px);line-height:1.12;min-height:34px}.scroll{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable;}.players li{display:block;padding:0;overflow:hidden}.players li button{display:flex;align-items:center;gap:10px;text-align:left;width:100%;min-height:68px;border:0;background:#f8faf3;color:#25483e;padding:12px;font:inherit;cursor:pointer}.players li button:hover{background:#eaf0dd}.players li button>span{flex:1;min-width:0;font-weight:700}.players li button small{display:block;font-size:10px;color:#748168;margin-top:5px;font-weight:400}.players li canvas{border-radius:9px;flex:none}.profileIntro{display:flex;align-items:center;gap:18px;margin:22px 0}.profileIntro canvas{border-radius:18px;flex:none}.profile p{font-size:14px;line-height:1.65;color:#526652}.profile h3{font-size:16px;margin:20px 0 12px}.profile ul{margin:0;padding-left:22px;font-size:14px;line-height:1.8;color:#45653f}.back{min-height:44px;padding:10px 14px;border:1px solid #c8d3ba;border-radius:12px;background:#f5f8ed;color:#315845;font:inherit;font-size:12px;cursor:pointer}.badge{font-size:11px;color:#6e7e60}.study{margin-top:24px;padding:4px 18px 12px;background:#eff4e7;border-radius:16px}@media(max-width:600px){.panel{padding-bottom:0}.profileIntro{align-items:flex-start;gap:14px}.profileIntro canvas{width:80px!important;height:80px!important}.profile p{font-size:13px}.panel header{min-height:82px}.players li{padding:0}.players li button{padding:10px}}
 
 .heading{display:flex;align-items:center;gap:12px;flex:1;min-width:0}.heading h2{overflow-wrap:anywhere}.panel header .headerBack{width:44px;height:44px;min-width:44px;padding:0;border-radius:50%;background:#e2d9b5;border-color:#a2ab87;color:#294f43}.profileIntro{margin-top:0}
+
+/* Full-screen guide in the island art style (matches Coaches Centre / Arcade): coast backdrop,
+   brush lettering, cream cards on a bounded reading column; the player card stands on the art. */
+.dialog.dialog{position:fixed;inset:0;margin:0;width:100vw;height:100dvh;max-width:none;max-height:100dvh;border:0;border-radius:0;overflow:hidden;background:#286f55;box-shadow:none}
+.dialog .panel.panel{height:100%;max-height:100dvh!important;padding:0;border-radius:0;background:#286f55 url('/stories/paths/playbook-coast.svg') center top/cover no-repeat!important}
+.dialog .panel>header{background:transparent!important;border:0;color:#fff1d3}
+.dialog .panel>header h2{font-family:IslandBrush,sans-serif;font-weight:400;font-size:clamp(24px,3vw,38px);letter-spacing:0;color:#fff1d3;text-shadow:0 2px 0 #183b3466}
+.dialog .scroll{background:transparent;padding:clamp(12px,2.4vw,28px) max(18px,calc((100vw - 880px)/2)) 40px}
+.dialog .scroll>p:first-child{color:#fff1d3;text-shadow:0 1px 2px #183b34;font-weight:700}
+.dialog .role,.dialog .players,.dialog .profileIntro,.dialog .profile>section{background:#fff1d3;color:#244d40;border:0;border-radius:30px 48px 26px 26px;box-shadow:0 8px 0 #183b3438;padding:clamp(18px,3vw,28px);margin:0 0 22px}
+.dialog .profile{background:transparent}
+.dialog .profile>.tabs{justify-content:center;margin:0 auto 14px}
+.dialog .profile>.study{background:#e8d5ad url('/stories/films/assets/entry-grain.png') repeat;background-size:128px 128px}
+.dialog .responsibilities h3,.dialog .players h3,.dialog .profile h3{font-family:IslandBrush,sans-serif;font-weight:400;font-size:clamp(22px,2.6vw,28px);letter-spacing:0}
+.dialog .players li button{background:#fff8e6;border-radius:18px 26px 18px 18px}
+.dialog .caption{color:#61705b}
+.dialog .sources{background:#183b34b3;color:#fff1d3;border-radius:18px;padding:12px 16px;margin-top:8px}
+.dialog .sources summary,.dialog .sources a{color:#fff1d3}
+@media(max-width:600px){.dialog .scroll{padding:12px 14px 28px}.dialog .role,.dialog .players,.dialog .profileIntro,.dialog .profile>section{border-radius:24px 34px 22px 22px}}
+/* Player detail: the 3D card leads; every section (intro, what to watch, highlights, study) follows. */
+.dialog .cardLayout{display:grid;grid-template-columns:minmax(280px,340px) minmax(0,1fr);gap:clamp(18px,3vw,36px);align-items:start}
+.dialog .cardColumn{position:sticky;top:0}
+.dialog .infoColumn>*{margin:0 0 22px}
+.dialog .infoColumn .profileIntro{display:block}
+@media(max-width:760px){.dialog .cardLayout{grid-template-columns:1fr}.dialog .cardColumn{position:static}}
+.dialog .infoColumn>section{background:#fff1d3;color:#244d40;border:0;border-radius:30px 48px 26px 26px;box-shadow:0 8px 0 #183b3438;padding:clamp(18px,3vw,28px)}
+.dialog .infoColumn>section.study{background:#e8d5ad url('/stories/films/assets/entry-grain.png') repeat;background-size:128px 128px}
+.dialog .infoColumn>section h3{margin-top:0}
+@media(max-width:600px){.dialog .infoColumn>section{border-radius:24px 34px 22px 22px}}
+/* The card is the focal point: centred hero, then the study panels in a grid below it. */
+.dialog .cardLayout{grid-template-columns:1fr;justify-items:center;gap:26px}
+.dialog .cardColumn{position:static;width:100%;display:grid;justify-items:center}
+.dialog .infoColumn{width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px;align-items:stretch}
+.dialog .infoColumn>*{margin:0}
+.dialog .infoColumn>section.study{grid-column:1/-1}
+@media(max-width:760px){.dialog .infoColumn{grid-template-columns:1fr}}
+/* Each player's page wears their card's scene: the same seeded riso backdrop, full screen, behind everything. */
+.dialog .panel.panel{position:relative}
+.dialog .panel>header,.dialog .panel>div{position:relative;z-index:1}
+.pageBackdrop{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none;animation:backdropIn .45s ease both}
+.pageBackdrop svg{position:absolute;inset:0;width:100%;height:100%}
+.pageBackdrop::after{content:'';position:absolute;inset:0;opacity:.1;background:url('/stories/films/assets/entry-grain.png') 0 0/128px 128px}
+@keyframes backdropIn{from{opacity:0}}
+@media(prefers-reduced-motion:reduce){.pageBackdrop{animation:none}}
+.dialog .panel>.pageBackdrop{position:absolute;inset:0;z-index:0}
+/* Players to learn from: riso photo thumbnails (PlayerThumb), name, country and the card link. */
+.dialog .players .playerList li button{gap:14px;min-height:84px;padding:12px 14px 12px 12px}
+.dialog .players .playerList li button>span:first-child{flex:none}
+.dialog .players .playerList .playerText{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+.playerName{font-size:15px;font-weight:800;line-height:1.2;overflow-wrap:anywhere}
+.country{font-size:12px;font-weight:700;color:#5e7057;line-height:1.3}
+.dialog .players .playerList .playerText small{margin-top:2px;font-size:11px;font-weight:600;color:#3f7a5e}
+.dialog .players .playerList li>button>svg:last-child{color:#84986c}
+@media(max-width:600px){.dialog .players .playerList li button{min-height:76px;padding:10px 12px 10px 10px;gap:12px}.playerName{font-size:14px}}
+/* The header's eyebrow span rule (12px, #71806b) also caught DoneButton/BackButton labels, so the guide's Back and Done read grey and small.
+   They keep the shared pill label (14px, deep green) like every other modal. */
+.panel header [data-navigation] span{font-size:inherit;color:inherit}
+/* Player card view: the card fills the height between the header and its buttons, and Flip / Play sit right under it
+   (in the flow, not pinned to the screen bottom), so short phones get a big picture and tall ones no gap. The card and
+   its buttons centre together in the space below the header. */
+.dialog .cardColumn{min-height:calc(100dvh - 150px - env(safe-area-inset-bottom,0px));align-content:center}
+.dialog .cardColumn>div{--card-w:min(410px,84vw,calc((100dvh - 210px - env(safe-area-inset-bottom,0px)) / 1.52));padding-bottom:calc(8px + env(safe-area-inset-bottom,0px))}
+.dialog .cardColumn>div>div:last-child{position:static;left:auto;bottom:auto;transform:none;margin-top:6px}
+/* Flip and Play use the header pills' metrics: 44 px, cream border, 0 5px 0 drop plus soft halo, 14 px label.
+   Flip takes Done's paper finish; Play keeps its yellow primary fill (as in the binder viewer). */
+.dialog .cardColumn>div>div:last-child>button{box-sizing:border-box;height:44px;min-height:44px;border:3px solid #fff2cd;font-size:14px;line-height:1.1}
+.dialog .cardColumn>div>div:last-child>button[aria-pressed]{padding:0 18px;background:#e9c16b url('/stories/films/assets/entry-grain.png') center/128px 128px;color:#244d40;font-weight:600;box-shadow:0 5px 0 #a8863d,0 0 0 4px #fff2cd40}
+.dialog .cardColumn>div>div:last-child>button[aria-pressed]:active{box-shadow:0 2px 0 #a8863d,0 0 0 4px #fff2cd40}
+.dialog .cardColumn>div>div:last-child>button:not([aria-pressed]){box-shadow:0 5px 0 #a8792b,0 0 0 4px #fff2cd40}
+.dialog .cardColumn>div>div:last-child>button:not([aria-pressed]):active{box-shadow:0 2px 0 #a8792b,0 0 0 4px #fff2cd40}

@@ -1,0 +1,22 @@
+{"lesson":"expf_cornercutback","questions":[
+{"q":"The near-post runner is marked. Tap where the FIXO waits for the corner.",
+ "options":["Crowding the near post","At the far post","Deeper, at the top of the area"],
+ "correct":2,
+ "explain":"Yes. The FIXO waits deeper, so the corner can go to a different depth.",
+ "choiceExplanations":["The PIVOT is already there with a defender. Another player there just crowds the space.","The far ALA already holds that side. The FIXO offers a deeper pass instead.","Yes. The FIXO waits deeper, so the corner can go to a different depth."],
+ "visual":{"kind":"tapSpot","frame":{"step":1,"hide":["cb"],"focus":["lm","st"]},
+  "spots":[{"x":100,"y":28},{"x":180,"y":38},{"x":125,"y":145}]}},
+{"q":"The FIXO has the ball. What does the outside defender do next?",
+ "options":["Steps out to press the FIXO","Stays glued to the near post","Runs to mark the far ALA"],
+ "correct":0,
+ "explain":"Yes. The defender steps out to the FIXO, and that leaves the far side open.",
+ "choiceExplanations":["Yes. The defender steps out to the FIXO, and that leaves the far side open.","The FIXO is free with the ball, so a defender has to close him down.","Another defender already watches the far ALA. The nearest threat is the FIXO."],
+ "visual":{"kind":"whatNext","frame":{"step":3,"trails":true,"focus":["cb","dlm"]}}},
+{"q":"Now a defender blocks the far side. Which pass is open?",
+ "options":["Pass to the taker by the line","Pass to the far ALA","Pass to the near-post PIVOT"],
+ "correct":0,
+ "explain":"Yes. The taker stepped back on court, and nobody blocks that lane.",
+ "choiceExplanations":["Yes. The taker stepped back on court, and nobody blocks that lane.","A defender stands right in that lane, so the pass would be cut out.","The PIVOT is marked tight, so the defender can step in and win it."],
+ "visual":{"kind":"bestPass","frame":{"step":5,"place":{"drm":{"x":180,"y":125},"dlm":{"x":60,"y":130},"dcb":{"x":82,"y":48}},"ball":"cb","focus":["cb"]},
+  "from":"cb","to":["lm","rm","st"]}}
+]}

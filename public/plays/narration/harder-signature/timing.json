@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The final, live",
+   "text": "Enschede, 2017. The Euro final: the Netherlands against Denmark. A long ball goes down the right. Pernille Harder races after it, cuts into the box... and scores!",
+   "src": "/plays/narration/harder-signature/1.m4a",
+   "seconds": 12.9,
+   "words": [
+    {
+     "w": "Enschede",
+     "at": 0.375
+    },
+    {
+     "w": "2017",
+     "at": 0.975
+    },
+    {
+     "w": "The",
+     "at": 2.388
+    },
+    {
+     "w": "Euro",
+     "at": 2.538
+    },
+    {
+     "w": "final",
+     "at": 2.888
+    },
+    {
+     "w": "the",
+     "at": 3.55
+    },
+    {
+     "w": "Netherlands",
+     "at": 3.675
+    },
+    {
+     "w": "against",
+     "at": 4.275
+    },
+    {
+     "w": "Denmark",
+     "at": 4.713
+    },
+    {
+     "w": "A",
+     "at": 5.662
+    },
+    {
+     "w": "long",
+     "at": 5.787
+    },
+    {
+     "w": "ball",
+     "at": 6.188
+    },
+    {
+     "w": "goes",
+     "at": 6.55
+    },
+    {
+     "w": "down",
+     "at": 6.875
+    },
+    {
+     "w": "the",
+     "at": 7.062
+    },
+    {
+     "w": "right",
+     "at": 7.15
+    },
+    {
+     "w": "Pernille",
+     "at": 7.888
+    },
+    {
+     "w": "Harder",
+     "at": 8.363
+    },
+    {
+     "w": "races",
+     "at": 8.75
+    },
+    {
+     "w": "after",
+     "at": 9.188
+    },
+    {
+     "w": "it",
+     "at": 9.55
+    },
+    {
+     "w": "cuts",
+     "at": 9.725
+    },
+    {
+     "w": "into",
+     "at": 9.988
+    },
+    {
+     "w": "the",
+     "at": 10.162
+    },
+    {
+     "w": "box",
+     "at": 10.25
+    },
+    {
+     "w": "and",
+     "at": 11.125
+    },
+    {
+     "w": "scores",
+     "at": 11.3
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. Harder starts in her own half, so she\u2019s not offside. The defenders raise their arms, but play goes on. She keeps the ball close.",
+   "src": "/plays/narration/harder-signature/2.m4a",
+   "seconds": 10.8,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.188
+    },
+    {
+     "w": "Harder",
+     "at": 2.237
+    },
+    {
+     "w": "starts",
+     "at": 2.625
+    },
+    {
+     "w": "in",
+     "at": 2.962
+    },
+    {
+     "w": "her",
+     "at": 3.038
+    },
+    {
+     "w": "own",
+     "at": 3.15
+    },
+    {
+     "w": "half",
+     "at": 3.35
+    },
+    {
+     "w": "so",
+     "at": 3.75
+    },
+    {
+     "w": "she\u2019s",
+     "at": 3.925
+    },
+    {
+     "w": "not",
+     "at": 4.125
+    },
+    {
+     "w": "offside",
+     "at": 4.35
+    },
+    {
+     "w": "The",
+     "at": 5.45
+    },
+    {
+     "w": "defenders",
+     "at": 5.55
+    },
+    {
+     "w": "raise",
+     "at": 6.138
+    },
+    {
+     "w": "their",
+     "at": 6.5
+    },
+    {
+     "w": "arms",
+     "at": 6.713
+    },
+    {
+     "w": "but",
+     "at": 7.213
+    },
+    {
+     "w": "play",
+     "at": 7.362
+    },
+    {
+     "w": "goes",
+     "at": 7.65
+    },
+    {
+     "w": "on",
+     "at": 7.95
+    },
+    {
+     "w": "She",
+     "at": 8.637
+    },
+    {
+     "w": "keeps",
+     "at": 8.775
+    },
+    {
+     "w": "the",
+     "at": 9.05
+    },
+    {
+     "w": "ball",
+     "at": 9.15
+    },
+    {
+     "w": "close",
+     "at": 9.45
+    }
+   ]
+  },
+  {
+   "label": "Near post",
+   "text": "Behind the goal now. A quick left-foot shot, low at the near post. The keeper goes the wrong way!",
+   "src": "/plays/narration/harder-signature/3.m4a",
+   "seconds": 7.1,
+   "words": [
+    {
+     "w": "Behind",
+     "at": 0.35
+    },
+    {
+     "w": "the",
+     "at": 0.713
+    },
+    {
+     "w": "goal",
+     "at": 0.8
+    },
+    {
+     "w": "now",
+     "at": 1.05
+    },
+    {
+     "w": "A",
+     "at": 1.762
+    },
+    {
+     "w": "quick",
+     "at": 1.875
+    },
+    {
+     "w": "left-foot",
+     "at": 2.125
+    },
+    {
+     "w": "shot",
+     "at": 2.638
+    },
+    {
+     "w": "low",
+     "at": 3.087
+    },
+    {
+     "w": "at",
+     "at": 3.337
+    },
+    {
+     "w": "the",
+     "at": 3.413
+    },
+    {
+     "w": "near",
+     "at": 3.5
+    },
+    {
+     "w": "post",
+     "at": 3.725
+    },
+    {
+     "w": "The",
+     "at": 4.525
+    },
+    {
+     "w": "keeper",
+     "at": 4.625
+    },
+    {
+     "w": "goes",
+     "at": 5.0
+    },
+    {
+     "w": "the",
+     "at": 5.275
+    },
+    {
+     "w": "wrong",
+     "at": 5.412
+    },
+    {
+     "w": "way",
+     "at": 5.75
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: keep the ball close as you run, then shoot before the defender recovers!",
+   "src": "/plays/narration/harder-signature/4.m4a",
+   "seconds": 6.4,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "keep",
+     "at": 1.375
+    },
+    {
+     "w": "the",
+     "at": 1.587
+    },
+    {
+     "w": "ball",
+     "at": 1.675
+    },
+    {
+     "w": "close",
+     "at": 2.038
+    },
+    {
+     "w": "as",
+     "at": 2.362
+    },
+    {
+     "w": "you",
+     "at": 2.475
+    },
+    {
+     "w": "run",
+     "at": 2.638
+    },
+    {
+     "w": "then",
+     "at": 3.275
+    },
+    {
+     "w": "shoot",
+     "at": 3.575
+    },
+    {
+     "w": "before",
+     "at": 3.925
+    },
+    {
+     "w": "the",
+     "at": 4.213
+    },
+    {
+     "w": "defender",
+     "at": 4.3
+    },
+    {
+     "w": "recovers",
+     "at": 4.825
+    }
+   ]
+  }
+ ]
+}

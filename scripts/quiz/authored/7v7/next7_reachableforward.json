@@ -1,0 +1,138 @@
+{
+ "lesson": "next7_reachableforward",
+ "questions": [
+  {
+   "q": "True or false? Our forward is close enough for a short pass.",
+   "options": [
+    "True",
+    "False"
+   ],
+   "correct": 1,
+   "explain": "Right, it's false. The forward is too far away to reach.",
+   "choiceExplanations": [
+    "The forward is far away, so a short pass cannot reach them.",
+    "Right, it's false. The forward is too far away to reach."
+   ],
+   "visual": {
+    "kind": "trueFalse",
+    "frame": {
+     "step": 3,
+     "focus": [
+      "st",
+      "lc"
+     ]
+    }
+   }
+  },
+  {
+   "q": "Put these moments in order, first to last.",
+   "options": [
+    "Forward comes nearer to the ball",
+    "Short pass reaches the forward",
+    "Midfielder carries the ball closer",
+    "Forward moves ahead into the gap"
+   ],
+   "correct": 0,
+   "explain": "Yes. First the forward comes nearer, so the pass can reach.",
+   "choiceExplanations": [
+    "Yes. First the forward comes nearer, so the pass can reach.",
+    "The pass can only reach them after they come nearer.",
+    "The midfielder carries closer after the forward passes it back.",
+    "The forward moves ahead last, once the midfielder is closer."
+   ],
+   "visual": {
+    "kind": "order",
+    "frames": [
+     {
+      "step": 6,
+      "focus": [
+       "st"
+      ],
+      "view": {
+       "x": 20,
+       "y": 130,
+       "w": 220,
+       "h": 150
+      }
+     },
+     {
+      "step": 7,
+      "focus": [
+       "st"
+      ],
+      "view": {
+       "x": 20,
+       "y": 130,
+       "w": 220,
+       "h": 150
+      }
+     },
+     {
+      "step": 8,
+      "focus": [
+       "lc"
+      ],
+      "view": {
+       "x": 20,
+       "y": 130,
+       "w": 220,
+       "h": 150
+      }
+     },
+     {
+      "step": 10,
+      "focus": [
+       "st"
+      ],
+      "view": {
+       "x": 20,
+       "y": 130,
+       "w": 220,
+       "h": 150
+      }
+     }
+    ]
+   }
+  },
+  {
+   "q": "Now the right midfielder has the ball. Where can the forward help?",
+   "options": [
+    "Stay far up the pitch",
+    "Behind the blue midfielder",
+    "Nearer, in the open gap"
+   ],
+   "correct": 2,
+   "explain": "Yes. Nearer and open, so the short pass reaches the forward.",
+   "choiceExplanations": [
+    "That is too far, so the pass cannot reach the forward.",
+    "A blue player stands in that lane, so the pass gets blocked.",
+    "Yes. Nearer and open, so the short pass reaches the forward."
+   ],
+   "visual": {
+    "kind": "tapSpot",
+    "frame": {
+     "step": 3,
+     "ball": "rc",
+     "focus": [
+      "rc",
+      "st"
+     ]
+    },
+    "spots": [
+     {
+      "x": 150,
+      "y": 85
+     },
+     {
+      "x": 112,
+      "y": 165
+     },
+     {
+      "x": 178,
+      "y": 200
+     }
+    ]
+   }
+  }
+ ]
+}

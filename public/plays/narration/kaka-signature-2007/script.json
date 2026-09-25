@@ -1,0 +1,10 @@
+{
+ "film": "kaka-signature-2007",
+ "note": "AC Milan 1-0 Celtic (aet), San Siro, 7 March 2007, Kaká's 93rd-minute winner. Chapter 1 is keyed from 'Celtic lose' (Sno loses the ball) through 'Kaká grabs', 'He pushes', 'brushes past', 'into the box' to 'goal' (the ball crossing the line): keep the pauses at '...' so the run plays near real time.",
+ "chapters": [
+  {"label": "The run, live", "text": "Milan, 2007, extra time against Celtic on a wet night. Celtic lose the ball in midfield... Kaká grabs it and off he goes! He pushes it ahead, brushes past Neil Lennon, into the box... goal!"},
+  {"label": "Watch it again", "text": "Watch it again, slowly. Big pushes send the ball into the space ahead, then he sprints after it. The defenders chase, but can’t catch him."},
+  {"label": "Under the keeper", "text": "He slides it underneath keeper Artur Boruc, and Milan are through!"},
+  {"label": "Your turn", "text": "Your turn: when there’s space, push the ball ahead and sprint. Defenders can’t catch a fast run!"}
+ ]
+}

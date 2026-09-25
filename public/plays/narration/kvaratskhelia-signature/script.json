@@ -1,0 +1,22 @@
+{
+ "film": "kvaratskhelia-signature",
+ "note": "Chapter 1 is keyed from 'Osimhen lays' (the lay-off) through 'Khvicha Kvaratskhelia' (first touch), 'one defender', 'two', 'three' (the three beats) to 'bang' (the shot) and 'roof of the net': keep the pause at '...' so the slalom plays near real time. Chapter 2 keys the fake to 'He shimmies' and the real cut to 'then right'.",
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Naples, 2023, against Atalanta. Osimhen lays it off to Khvicha Kvaratskhelia on the left. He slaloms past one defender, two, three... bang, into the roof of the net!"
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again. Tiny touches keep the ball close, so no defender can reach it. He shimmies left, then right. Which way?"
+  },
+  {
+   "label": "The finish",
+   "text": "Then a quick shift to his right foot, and a thumping shot, high into the net! Fans call him Kvaradona."
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: keep the ball close with small touches, so defenders can't reach it."
+  }
+ ]
+}

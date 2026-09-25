@@ -1,0 +1,386 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Old Trafford, 2011. United and City, one-all. Nani on the right. His cross hits a defender and loops up. Rooney... overhead kick! Top corner!",
+   "src": "/plays/narration/rooney-overhead-2011/1.m4a",
+   "seconds": 11.0,
+   "words": [
+    {
+     "w": "Old",
+     "at": 0.375
+    },
+    {
+     "w": "Trafford",
+     "at": 0.625
+    },
+    {
+     "w": "2011",
+     "at": 1.075
+    },
+    {
+     "w": "United",
+     "at": 2.212
+    },
+    {
+     "w": "and",
+     "at": 2.8
+    },
+    {
+     "w": "City",
+     "at": 2.975
+    },
+    {
+     "w": "one-all",
+     "at": 3.325
+    },
+    {
+     "w": "Nani",
+     "at": 3.938
+    },
+    {
+     "w": "on",
+     "at": 4.287
+    },
+    {
+     "w": "the",
+     "at": 4.388
+    },
+    {
+     "w": "right",
+     "at": 4.475
+    },
+    {
+     "w": "His",
+     "at": 5.2
+    },
+    {
+     "w": "cross",
+     "at": 5.4
+    },
+    {
+     "w": "hits",
+     "at": 5.775
+    },
+    {
+     "w": "a",
+     "at": 5.987
+    },
+    {
+     "w": "defender",
+     "at": 6.05
+    },
+    {
+     "w": "and",
+     "at": 6.575
+    },
+    {
+     "w": "loops",
+     "at": 6.7
+    },
+    {
+     "w": "up",
+     "at": 7.025
+    },
+    {
+     "w": "Rooney",
+     "at": 7.65
+    },
+    {
+     "w": "overhead",
+     "at": 8.375
+    },
+    {
+     "w": "kick",
+     "at": 8.838
+    },
+    {
+     "w": "Top",
+     "at": 9.312
+    },
+    {
+     "w": "corner",
+     "at": 9.6
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Slow motion. The deflection takes the speed off the ball. Rooney watches it, turns his body, jumps early, swings his right foot over his head.",
+   "src": "/plays/narration/rooney-overhead-2011/2.m4a",
+   "seconds": 10.1,
+   "words": [
+    {
+     "w": "Slow",
+     "at": 0.4
+    },
+    {
+     "w": "motion",
+     "at": 0.675
+    },
+    {
+     "w": "The",
+     "at": 1.575
+    },
+    {
+     "w": "deflection",
+     "at": 1.675
+    },
+    {
+     "w": "takes",
+     "at": 2.275
+    },
+    {
+     "w": "the",
+     "at": 2.55
+    },
+    {
+     "w": "speed",
+     "at": 2.663
+    },
+    {
+     "w": "off",
+     "at": 3.013
+    },
+    {
+     "w": "the",
+     "at": 3.2
+    },
+    {
+     "w": "ball",
+     "at": 3.3
+    },
+    {
+     "w": "Rooney",
+     "at": 4.225
+    },
+    {
+     "w": "watches",
+     "at": 4.525
+    },
+    {
+     "w": "it",
+     "at": 4.987
+    },
+    {
+     "w": "turns",
+     "at": 5.25
+    },
+    {
+     "w": "his",
+     "at": 5.537
+    },
+    {
+     "w": "body",
+     "at": 5.7
+    },
+    {
+     "w": "jumps",
+     "at": 6.263
+    },
+    {
+     "w": "early",
+     "at": 6.625
+    },
+    {
+     "w": "swings",
+     "at": 7.287
+    },
+    {
+     "w": "his",
+     "at": 7.638
+    },
+    {
+     "w": "right",
+     "at": 7.812
+    },
+    {
+     "w": "foot",
+     "at": 8.137
+    },
+    {
+     "w": "over",
+     "at": 8.363
+    },
+    {
+     "w": "his",
+     "at": 8.562
+    },
+    {
+     "w": "head",
+     "at": 8.725
+    }
+   ]
+  },
+  {
+   "label": "Behind the net",
+   "text": "Joe Hart can't move. Two-one, and Old Trafford goes wild!",
+   "src": "/plays/narration/rooney-overhead-2011/3.m4a",
+   "seconds": 5.0,
+   "words": [
+    {
+     "w": "Joe",
+     "at": 0.4
+    },
+    {
+     "w": "Hart",
+     "at": 0.6
+    },
+    {
+     "w": "can't",
+     "at": 0.875
+    },
+    {
+     "w": "move",
+     "at": 1.125
+    },
+    {
+     "w": "Two-one",
+     "at": 1.887
+    },
+    {
+     "w": "and",
+     "at": 2.425
+    },
+    {
+     "w": "Old",
+     "at": 2.538
+    },
+    {
+     "w": "Trafford",
+     "at": 2.75
+    },
+    {
+     "w": "goes",
+     "at": 3.175
+    },
+    {
+     "w": "wild",
+     "at": 3.513
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Beginners: only practise on soft mats, with a coach. The secret is timing and body shape. Watch the ball, jump early, and land on your hands and back.",
+   "src": "/plays/narration/rooney-overhead-2011/4.m4a",
+   "seconds": 11.0,
+   "words": [
+    {
+     "w": "Beginners",
+     "at": 0.35
+    },
+    {
+     "w": "only",
+     "at": 1.225
+    },
+    {
+     "w": "practise",
+     "at": 1.525
+    },
+    {
+     "w": "on",
+     "at": 1.988
+    },
+    {
+     "w": "soft",
+     "at": 2.2
+    },
+    {
+     "w": "mats",
+     "at": 2.6
+    },
+    {
+     "w": "with",
+     "at": 2.987
+    },
+    {
+     "w": "a",
+     "at": 3.087
+    },
+    {
+     "w": "coach",
+     "at": 3.163
+    },
+    {
+     "w": "The",
+     "at": 4.062
+    },
+    {
+     "w": "secret",
+     "at": 4.213
+    },
+    {
+     "w": "is",
+     "at": 4.625
+    },
+    {
+     "w": "timing",
+     "at": 4.787
+    },
+    {
+     "w": "and",
+     "at": 5.3
+    },
+    {
+     "w": "body",
+     "at": 5.425
+    },
+    {
+     "w": "shape",
+     "at": 5.825
+    },
+    {
+     "w": "Watch",
+     "at": 6.662
+    },
+    {
+     "w": "the",
+     "at": 7.0
+    },
+    {
+     "w": "ball",
+     "at": 7.1
+    },
+    {
+     "w": "jump",
+     "at": 7.638
+    },
+    {
+     "w": "early",
+     "at": 7.95
+    },
+    {
+     "w": "and",
+     "at": 8.4
+    },
+    {
+     "w": "land",
+     "at": 8.525
+    },
+    {
+     "w": "on",
+     "at": 8.887
+    },
+    {
+     "w": "your",
+     "at": 8.988
+    },
+    {
+     "w": "hands",
+     "at": 9.1
+    },
+    {
+     "w": "and",
+     "at": 9.525
+    },
+    {
+     "w": "back",
+     "at": 9.65
+    }
+   ]
+  }
+ ]
+}

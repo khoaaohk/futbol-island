@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Berlin, live",
+   "text": "Berlin, 2024, the Euro final. Spain, in red, and England are level with four minutes left. Mikel Oyarzabal passes to Cucurella, then sprints into the box. Cucurella crosses it low... Oyarzabal scores! Goal!",
+   "src": "/plays/narration/oyarzabal-signature/1.m4a",
+   "seconds": 16.6,
+   "words": [
+    {
+     "w": "Berlin",
+     "at": 0.4
+    },
+    {
+     "w": "2024",
+     "at": 0.9
+    },
+    {
+     "w": "the",
+     "at": 1.775
+    },
+    {
+     "w": "Euro",
+     "at": 1.887
+    },
+    {
+     "w": "final",
+     "at": 2.237
+    },
+    {
+     "w": "Spain",
+     "at": 3.188
+    },
+    {
+     "w": "in",
+     "at": 3.875
+    },
+    {
+     "w": "red",
+     "at": 4.088
+    },
+    {
+     "w": "and",
+     "at": 4.5
+    },
+    {
+     "w": "England",
+     "at": 4.625
+    },
+    {
+     "w": "are",
+     "at": 5.075
+    },
+    {
+     "w": "level",
+     "at": 5.225
+    },
+    {
+     "w": "with",
+     "at": 5.55
+    },
+    {
+     "w": "four",
+     "at": 5.737
+    },
+    {
+     "w": "minutes",
+     "at": 6.0
+    },
+    {
+     "w": "left",
+     "at": 6.325
+    },
+    {
+     "w": "Mikel",
+     "at": 7.175
+    },
+    {
+     "w": "Oyarzabal",
+     "at": 7.6
+    },
+    {
+     "w": "passes",
+     "at": 8.338
+    },
+    {
+     "w": "to",
+     "at": 8.825
+    },
+    {
+     "w": "Cucurella",
+     "at": 8.925
+    },
+    {
+     "w": "then",
+     "at": 9.775
+    },
+    {
+     "w": "sprints",
+     "at": 10.0
+    },
+    {
+     "w": "into",
+     "at": 10.438
+    },
+    {
+     "w": "the",
+     "at": 10.613
+    },
+    {
+     "w": "box",
+     "at": 10.7
+    },
+    {
+     "w": "Cucurella",
+     "at": 11.637
+    },
+    {
+     "w": "crosses",
+     "at": 12.25
+    },
+    {
+     "w": "it",
+     "at": 12.7
+    },
+    {
+     "w": "low",
+     "at": 12.825
+    },
+    {
+     "w": "Oyarzabal",
+     "at": 13.6
+    },
+    {
+     "w": "scores",
+     "at": 14.35
+    },
+    {
+     "w": "Goal",
+     "at": 15.188
+    }
+   ]
+  },
+  {
+   "label": "Watch his run",
+   "text": "Watch his run, slowly. Gu\u00e9hi is marking him. Oyarzabal sprints away from his defender and reaches the low cross first, with his right foot.",
+   "src": "/plays/narration/oyarzabal-signature/2.m4a",
+   "seconds": 10.0,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.375
+    },
+    {
+     "w": "his",
+     "at": 0.637
+    },
+    {
+     "w": "run",
+     "at": 0.8
+    },
+    {
+     "w": "slowly",
+     "at": 1.337
+    },
+    {
+     "w": "Gu\u00e9hi",
+     "at": 2.325
+    },
+    {
+     "w": "is",
+     "at": 2.75
+    },
+    {
+     "w": "marking",
+     "at": 2.9
+    },
+    {
+     "w": "him",
+     "at": 3.275
+    },
+    {
+     "w": "Oyarzabal",
+     "at": 4.062
+    },
+    {
+     "w": "sprints",
+     "at": 4.737
+    },
+    {
+     "w": "away",
+     "at": 5.112
+    },
+    {
+     "w": "from",
+     "at": 5.4
+    },
+    {
+     "w": "his",
+     "at": 5.537
+    },
+    {
+     "w": "defender",
+     "at": 5.7
+    },
+    {
+     "w": "and",
+     "at": 6.225
+    },
+    {
+     "w": "reaches",
+     "at": 6.35
+    },
+    {
+     "w": "the",
+     "at": 6.725
+    },
+    {
+     "w": "low",
+     "at": 6.85
+    },
+    {
+     "w": "cross",
+     "at": 7.112
+    },
+    {
+     "w": "first",
+     "at": 7.513
+    },
+    {
+     "w": "with",
+     "at": 8.075
+    },
+    {
+     "w": "his",
+     "at": 8.213
+    },
+    {
+     "w": "right",
+     "at": 8.375
+    },
+    {
+     "w": "foot",
+     "at": 8.688
+    }
+   ]
+  },
+  {
+   "label": "Behind the net",
+   "text": "From behind the net: he gets there before Pickford. Spain win the Euro, two-one!",
+   "src": "/plays/narration/oyarzabal-signature/3.m4a",
+   "seconds": 6.1,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.375
+    },
+    {
+     "w": "behind",
+     "at": 0.512
+    },
+    {
+     "w": "the",
+     "at": 0.887
+    },
+    {
+     "w": "net",
+     "at": 0.975
+    },
+    {
+     "w": "he",
+     "at": 1.625
+    },
+    {
+     "w": "gets",
+     "at": 1.725
+    },
+    {
+     "w": "there",
+     "at": 1.975
+    },
+    {
+     "w": "before",
+     "at": 2.175
+    },
+    {
+     "w": "Pickford",
+     "at": 2.525
+    },
+    {
+     "w": "Spain",
+     "at": 3.425
+    },
+    {
+     "w": "win",
+     "at": 3.825
+    },
+    {
+     "w": "the",
+     "at": 4.013
+    },
+    {
+     "w": "Euro",
+     "at": 4.1
+    },
+    {
+     "w": "two-one",
+     "at": 4.537
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: when a low cross is coming, sprint across the front of your defender. Meet it first!",
+   "src": "/plays/narration/oyarzabal-signature/4.m4a",
+   "seconds": 6.7,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "when",
+     "at": 1.3
+    },
+    {
+     "w": "a",
+     "at": 1.438
+    },
+    {
+     "w": "low",
+     "at": 1.525
+    },
+    {
+     "w": "cross",
+     "at": 1.788
+    },
+    {
+     "w": "is",
+     "at": 2.163
+    },
+    {
+     "w": "coming",
+     "at": 2.3
+    },
+    {
+     "w": "sprint",
+     "at": 2.763
+    },
+    {
+     "w": "across",
+     "at": 3.062
+    },
+    {
+     "w": "the",
+     "at": 3.4
+    },
+    {
+     "w": "front",
+     "at": 3.5
+    },
+    {
+     "w": "of",
+     "at": 3.712
+    },
+    {
+     "w": "your",
+     "at": 3.788
+    },
+    {
+     "w": "defender",
+     "at": 3.888
+    },
+    {
+     "w": "Meet",
+     "at": 4.925
+    },
+    {
+     "w": "it",
+     "at": 5.138
+    },
+    {
+     "w": "first",
+     "at": 5.287
+    }
+   ]
+  }
+ ]
+}

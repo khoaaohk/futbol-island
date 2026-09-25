@@ -7,11 +7,13 @@ type Point={x:number;z:number};
 export function rampLocal(r:RideRamp,p:Point){const dx=p.x-r.x,dz=p.z-r.z;return {side:dx*Math.cos(r.yaw)-dz*Math.sin(r.yaw),along:dx*Math.sin(r.yaw)+dz*Math.cos(r.yaw)};}
 export function rampSurface(ramps:RideRamp[],x:number,z:number){for(const r of ramps){const p=rampLocal(r,{x,z});if(Math.abs(p.side)<=r.width/2&&p.along>=0&&p.along<=r.length)return (r.base??0)+p.along/r.length*r.height;}return 0;}
 /** Place ramps along clear road shoulders, with a full unobstructed landing corridor. */
-export function planRideRamps(roads:{x:number;z:number;w:number;d:number;vertical:boolean}[],obstacles:Obstacle[]){
- const candidates:RideRamp[]=[];for(const road of roads){const length=road.vertical?road.d:road.w;for(let along=-length/2+12;along<length/2-45;along+=8)for(const side of [-7,7])for(const direction of [1,-1]){
+export function planRideRamps(roads:{x:number;z:number;w:number;d:number;vertical:boolean}[],obstacles:Obstacle[],paths:Obstacle[]=[]){
+ const candidates:RideRamp[]=[];for(const road of roads){const length=road.vertical?road.d:road.w;for(let along=-length/2+12;along<length/2-45;along+=8)for(const side of [-9,9])for(const direction of [1,-1]){
  const x=road.x+(road.vertical?side:along),z=road.z+(road.vertical?along:side),yaw=road.vertical?(direction===1?0:Math.PI):(direction===1?Math.PI/2:-Math.PI/2),r={id:'',x,z,yaw,width:3.4,length:6,height:1.35,label:'SCAN • TIME YOUR RUN'};
  let clear=true;for(let d=-7;d<=49&&clear;d+=1.5)for(const across of [-2,0,2]){const px=x+Math.sin(yaw)*d+Math.cos(yaw)*across,pz=z+Math.cos(yaw)*d-Math.sin(yaw)*across;if(blocked(px,pz,obstacles,.9)||fieldSurfaceHeight(px,pz)>.02||VENUES.some(v=>Math.abs(px-v.x)<v.width/2+5&&Math.abs(pz-v.z)<v.length/2+5)){clear=false;break;}}
- if(clear)candidates.push(r);
+ // Reserve the ramp footprint plus walking clearance around every paved route.
+ const footprint={x:x+Math.sin(yaw)*r.length/2,z:z+Math.cos(yaw)*r.length/2,w:road.vertical?r.width:r.length,d:road.vertical?r.length:r.width};
+ if(clear&&![...paths,...roads].some(p=>Math.abs(p.x-footprint.x)<(p.w+footprint.w)/2+.6&&Math.abs(p.z-footprint.z)<(p.d+footprint.d)/2+.6))candidates.push(r);
  }}
  const chosen:RideRamp[]=[];for(const target of [{x:95,z:-35},{x:190,z:135}]){const r=candidates.filter(r=>chosen.every(c=>Math.hypot(c.x-r.x,c.z-r.z)>55)).sort((a,b)=>Math.hypot(a.x-target.x,a.z-target.z)-Math.hypot(b.x-target.x,b.z-target.z))[0];if(r)chosen.push({...r,id:'run-ramp-'+(chosen.length+1)});}for(const x of [110,130,150,30,50]){const r:RideRamp={id:'north-ramp',x,z:-212,yaw:Math.PI/2,width:3.4,length:6,height:1.35,label:'LOOK UP • TIME YOUR RUN'};let clear=true;for(let d=-8;d<49;d+=2)for(const side of [-2,0,2])if(!onIsland(x+d,-212+side)||blocked(x+d,-212+side,obstacles,1.2))clear=false;if(clear){chosen.push(r);break;}}return chosen;
 }

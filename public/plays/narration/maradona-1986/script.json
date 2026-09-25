@@ -1,0 +1,10 @@
+{
+ "film": "maradona-1986",
+ "note": "Chapter 1 is keyed from 'gets the ball' (the first touch) through 'spins', 'Past one', 'past another', 'into the box' to 'goal' (the ball crossing the line): keep the pauses at '...' so the run plays near real time. Chapter 2 pans fast to Butcher just before 'He stays low'.",
+ "chapters": [
+  {"label": "The goal, live", "text": "Mexico City, 1986. Diego Maradona gets the ball, spins away from two England players, and off he goes, from his own half! Past one... still going, past another, into the box... goal!"},
+  {"label": "Watch it again", "text": "Watch it again, slowly. Tiny touches keep the ball glued to his left foot. He stays low, and quick cuts beat each defender."},
+  {"label": "Round the keeper", "text": "He goes round keeper Peter Shilton and scores the Goal of the Century!"},
+  {"label": "Your turn", "text": "Your turn: keep the ball close with tiny touches, stay low and balanced, and change direction to beat defenders."}
+ ]
+}

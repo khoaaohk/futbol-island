@@ -1,0 +1,43 @@
+/* Visual quiz questions: the quiz card's cream surface, dark-green ink, dashed cream targets on a static SVG pitch.
+   Selectors start at .visual and name the element so they win over FieldLearning's round `.bottom button` transport style. */
+.visual{display:flex;flex-direction:column;gap:10px;margin:0 0 4px}
+.board{display:block;width:100%;height:auto;max-height:min(34dvh,300px);border-radius:12px;border:1px solid #b7bf9b;background:#3f6a50;touch-action:none;user-select:none;-webkit-user-select:none}
+.thumb{display:block;width:100%;height:auto;max-height:118px;border-radius:9px;pointer-events:none;background:#3f6a50}
+/* beat FieldLearning's `.bottom button>svg{width:28px}` icon rule */
+.visual button svg.thumb{width:100%;height:auto;max-height:118px}
+.target{cursor:pointer;outline:none}
+.target .ring{transition:stroke-width .15s}
+.target:hover .ring,.target:focus-visible .ring{stroke:#fff;stroke-dasharray:none}
+.target:focus-visible{outline:none}
+.target[aria-disabled=true]{cursor:default}
+.token{cursor:grab;touch-action:none}
+.token.dragging{cursor:grabbing}
+.token .handle{stroke-dasharray:3 2}
+.freeze{position:relative}
+.freezeTag{position:absolute;left:8px;top:8px;padding:3px 8px;border-radius:8px;background:#294f43e6;color:#fff2b9;font:700 10px/1.4 monospace;letter-spacing:1px;pointer-events:none}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.visual button.choice{display:flex;align-items:center;gap:8px;width:100%;height:auto;min-height:48px;padding:10px 12px;border-radius:12px;border:1px solid #99a580;background:#f7efd6;color:#294f43;font:inherit;font-size:14px;font-weight:700;line-height:1.3;text-align:left;box-shadow:none;cursor:pointer;transition:background .15s,transform .15s}
+.visual button.choice b{display:inline-grid;place-items:center;flex:none;width:24px;height:24px;border-radius:50%;background:#294f43;color:#fff0cc;font-size:12px}
+.visual button.tf{justify-content:center;font-size:16px;min-height:52px}
+.visual button.tf span{font-size:18px}
+.pictures{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pictures.four{grid-template-columns:1fr 1fr}
+.visual button.picture{display:flex;flex-direction:column;gap:6px;width:100%;height:auto;min-height:48px;padding:6px;border-radius:12px;border:2px solid #99a580;background:#f7efd6;color:#294f43;font:inherit;font-size:12.5px;font-weight:700;line-height:1.3;text-align:left;box-shadow:none;cursor:pointer;transition:background .15s,transform .15s}
+.visual button.picture>span{display:flex;gap:6px;align-items:flex-start;padding:0 2px 2px}
+.visual button.picture b{flex:none}
+.visual button.choice:hover:not(:disabled),.visual button.picture:hover:not(:disabled){background:#fff6de;transform:translateY(-1px)}
+.visual button.choice:focus-visible,.visual button.picture:focus-visible{outline:3px solid #294f43;outline-offset:2px}
+.visual button:disabled{cursor:default;opacity:.55}
+/* The quiz footer's transport rule (.bottom button:disabled: dark fill, .35) would hide a locked choice's text: keep the cream card. */
+.visual button.choice:disabled,.visual button.picture:disabled{background:#f7efd6;opacity:.55}
+.visual button.good{border-color:#2f8a57;background:#d8f2d9;opacity:1}
+.visual button.bad{border-color:#c4583a;background:#ffe1d6;opacity:1}
+.visual button.good:disabled,.visual button.bad:disabled{opacity:1}
+.badge{display:inline-grid;place-items:center;flex:none;width:22px;height:22px;margin-right:6px;border-radius:50%;background:#294f43;color:#fff0cc;font-size:11px}
+.good .badge{background:#2f8a57}.bad .badge{background:#c4583a}
+.orderStatus{margin:0;font-size:12px;color:#52664e}
+.choices:has(> button:nth-child(5)){grid-template-columns:1fr}
+.choices.pair{grid-template-columns:1fr 1fr}
+@media(max-width:420px){.visual button svg.thumb{max-height:96px}.choices{grid-template-columns:1fr}.choices.pair{grid-template-columns:1fr 1fr}.visual button.choice{min-height:46px;font-size:13.5px}.pictures,.pictures.four{grid-template-columns:1fr 1fr}.thumb{max-height:96px}}
+@media(max-height:560px){.board{max-height:44dvh}.visual button svg.thumb{max-height:72px}}
+@media(prefers-reduced-motion:reduce){.target .ring,.visual button.choice,.visual button.picture{transition:none}.visual button.choice:hover:not(:disabled),.visual button.picture:hover:not(:disabled){transform:none}}

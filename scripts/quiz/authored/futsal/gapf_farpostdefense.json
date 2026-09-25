@@ -1,0 +1,113 @@
+{
+ "lesson": "gapf_farpostdefense",
+ "questions": [
+  {
+   "q": "True or false? As the right ala, you should only watch the dribbler.",
+   "options": [
+    "True",
+    "False"
+   ],
+   "correct": 1,
+   "explain": "Right, it's false. You check the runner across goal and the ball, so nobody scores at the far post.",
+   "choiceExplanations": [
+    "If you only watch the dribbler, the runner across goal is free for an easy tap-in.",
+    "Right, it's false. You check the runner across goal and the ball, so nobody scores at the far post."
+   ],
+   "visual": {
+    "kind": "trueFalse",
+    "frame": {
+     "step": 1,
+     "focus": [
+      "rm",
+      "dst",
+      "dlm"
+     ]
+    }
+   }
+  },
+  {
+   "q": "Blue switched the ball to the right. What should happen next?",
+   "options": [
+    "Both alas run to the new ball carrier",
+    "The left ala recovers with the far runner",
+    "The right ala runs back to the far post"
+   ],
+   "correct": 1,
+   "explain": "Yes. After a switch the jobs flip, so the left ala now tracks the far-post runner.",
+   "choiceExplanations": [
+    "If both alas chase the ball, the runner at the new far post is left free.",
+    "Yes. After a switch the jobs flip, so the left ala now tracks the far-post runner.",
+    "The right ala is now on the ball side. They should move toward the ball and slow it."
+   ],
+   "visual": {
+    "kind": "whatNext",
+    "frame": {
+     "step": 6,
+     "trails": true,
+     "focus": [
+      "lm",
+      "rm",
+      "dlm"
+     ]
+    }
+   }
+  },
+  {
+   "q": "Blue has the ball on the right. Where should the left ala defend the far runner?",
+   "options": [
+    "Into the middle, toward the ball",
+    "Up the court, away from our goal",
+    "Goal-side of the far-post runner"
+   ],
+   "correct": 2,
+   "explain": "Yes. Between the runner and our goal, the left ala can reach any pass across the box.",
+   "choiceExplanations": [
+    "The fixo already guards the middle. Joining the ball leaves the far runner alone.",
+    "That space is behind the runner. They can get to our goal first.",
+    "Yes. Between the runner and our goal, the left ala can reach any pass across the box."
+   ],
+   "visual": {
+    "kind": "dragToZone",
+    "frame": {
+     "step": 4,
+     "place": {
+      "dlm": {
+       "x": 55,
+       "y": 322
+      },
+      "lm": {
+       "x": 95,
+       "y": 300
+      }
+     },
+     "focus": [
+      "lm",
+      "dlm",
+      "drm"
+     ]
+    },
+    "drag": "lm",
+    "zones": [
+     {
+      "x": 150,
+      "y": 300,
+      "w": 44,
+      "h": 34
+     },
+     {
+      "x": 70,
+      "y": 240,
+      "w": 44,
+      "h": 34
+     },
+     {
+      "x": 55,
+      "y": 360,
+      "w": 44,
+      "h": 32
+     }
+    ]
+   }
+  }
+ ]
+}

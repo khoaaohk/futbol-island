@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The first big chance",
+   "text": "Paris, 2022, the Champions League final. Liverpool in red, Real Madrid in white. Thiago slides a pass to Sadio Man\u00e9. He zips inside and shoots!",
+   "src": "/plays/narration/courtois-final-2022/1.m4a",
+   "seconds": 12.2,
+   "words": [
+    {
+     "w": "Paris",
+     "at": 0.35
+    },
+    {
+     "w": "2022",
+     "at": 0.8
+    },
+    {
+     "w": "the",
+     "at": 1.8
+    },
+    {
+     "w": "Champions",
+     "at": 1.913
+    },
+    {
+     "w": "League",
+     "at": 2.5
+    },
+    {
+     "w": "final",
+     "at": 2.763
+    },
+    {
+     "w": "Liverpool",
+     "at": 3.7
+    },
+    {
+     "w": "in",
+     "at": 4.275
+    },
+    {
+     "w": "red",
+     "at": 4.425
+    },
+    {
+     "w": "Real",
+     "at": 4.938
+    },
+    {
+     "w": "Madrid",
+     "at": 5.225
+    },
+    {
+     "w": "in",
+     "at": 5.675
+    },
+    {
+     "w": "white",
+     "at": 5.825
+    },
+    {
+     "w": "Thiago",
+     "at": 6.75
+    },
+    {
+     "w": "slides",
+     "at": 7.263
+    },
+    {
+     "w": "a",
+     "at": 7.688
+    },
+    {
+     "w": "pass",
+     "at": 7.763
+    },
+    {
+     "w": "to",
+     "at": 8.15
+    },
+    {
+     "w": "Sadio",
+     "at": 8.287
+    },
+    {
+     "w": "Man\u00e9",
+     "at": 8.725
+    },
+    {
+     "w": "He",
+     "at": 9.575
+    },
+    {
+     "w": "zips",
+     "at": 9.738
+    },
+    {
+     "w": "inside",
+     "at": 10.113
+    },
+    {
+     "w": "and",
+     "at": 10.688
+    },
+    {
+     "w": "shoots",
+     "at": 10.825
+    }
+   ]
+  },
+  {
+   "label": "Watch the save",
+   "text": "Watch again, slowly. Thibaut Courtois stands tall and set, then flies across at full stretch. His fingertips push it onto the post!",
+   "src": "/plays/narration/courtois-final-2022/2.m4a",
+   "seconds": 9.5,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.188
+    },
+    {
+     "w": "Thibaut",
+     "at": 2.188
+    },
+    {
+     "w": "Courtois",
+     "at": 2.55
+    },
+    {
+     "w": "stands",
+     "at": 3.0
+    },
+    {
+     "w": "tall",
+     "at": 3.362
+    },
+    {
+     "w": "and",
+     "at": 3.688
+    },
+    {
+     "w": "set",
+     "at": 3.825
+    },
+    {
+     "w": "then",
+     "at": 4.375
+    },
+    {
+     "w": "flies",
+     "at": 4.612
+    },
+    {
+     "w": "across",
+     "at": 4.938
+    },
+    {
+     "w": "at",
+     "at": 5.35
+    },
+    {
+     "w": "full",
+     "at": 5.475
+    },
+    {
+     "w": "stretch",
+     "at": 5.737
+    },
+    {
+     "w": "His",
+     "at": 6.7
+    },
+    {
+     "w": "fingertips",
+     "at": 6.9
+    },
+    {
+     "w": "push",
+     "at": 7.425
+    },
+    {
+     "w": "it",
+     "at": 7.662
+    },
+    {
+     "w": "onto",
+     "at": 7.737
+    },
+    {
+     "w": "the",
+     "at": 7.963
+    },
+    {
+     "w": "post",
+     "at": 8.05
+    }
+   ]
+  },
+  {
+   "label": "It stays out",
+   "text": "From behind the goal: the ball rolls along the line, but stays out! Courtois made nine saves. Real Madrid won the final!",
+   "src": "/plays/narration/courtois-final-2022/3.m4a",
+   "seconds": 8.8,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "behind",
+     "at": 0.487
+    },
+    {
+     "w": "the",
+     "at": 0.863
+    },
+    {
+     "w": "goal",
+     "at": 0.95
+    },
+    {
+     "w": "the",
+     "at": 1.675
+    },
+    {
+     "w": "ball",
+     "at": 1.775
+    },
+    {
+     "w": "rolls",
+     "at": 2.125
+    },
+    {
+     "w": "along",
+     "at": 2.5
+    },
+    {
+     "w": "the",
+     "at": 2.812
+    },
+    {
+     "w": "line",
+     "at": 2.9
+    },
+    {
+     "w": "but",
+     "at": 3.263
+    },
+    {
+     "w": "stays",
+     "at": 3.425
+    },
+    {
+     "w": "out",
+     "at": 3.8
+    },
+    {
+     "w": "Courtois",
+     "at": 4.487
+    },
+    {
+     "w": "made",
+     "at": 4.925
+    },
+    {
+     "w": "nine",
+     "at": 5.15
+    },
+    {
+     "w": "saves",
+     "at": 5.438
+    },
+    {
+     "w": "Real",
+     "at": 6.3
+    },
+    {
+     "w": "Madrid",
+     "at": 6.625
+    },
+    {
+     "w": "won",
+     "at": 7.05
+    },
+    {
+     "w": "the",
+     "at": 7.237
+    },
+    {
+     "w": "final",
+     "at": 7.338
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn, keepers: stay tall and spread wide, so the shooter sees less goal. Then stretch: even fingertips count!",
+   "src": "/plays/narration/courtois-final-2022/4.m4a",
+   "seconds": 8.3,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.35
+    },
+    {
+     "w": "turn",
+     "at": 0.475
+    },
+    {
+     "w": "keepers",
+     "at": 0.85
+    },
+    {
+     "w": "stay",
+     "at": 1.663
+    },
+    {
+     "w": "tall",
+     "at": 1.962
+    },
+    {
+     "w": "and",
+     "at": 2.288
+    },
+    {
+     "w": "spread",
+     "at": 2.4
+    },
+    {
+     "w": "wide",
+     "at": 2.725
+    },
+    {
+     "w": "so",
+     "at": 3.125
+    },
+    {
+     "w": "the",
+     "at": 3.237
+    },
+    {
+     "w": "shooter",
+     "at": 3.362
+    },
+    {
+     "w": "sees",
+     "at": 3.725
+    },
+    {
+     "w": "less",
+     "at": 4.025
+    },
+    {
+     "w": "goal",
+     "at": 4.25
+    },
+    {
+     "w": "Then",
+     "at": 5.138
+    },
+    {
+     "w": "stretch",
+     "at": 5.388
+    },
+    {
+     "w": "even",
+     "at": 6.125
+    },
+    {
+     "w": "fingertips",
+     "at": 6.438
+    },
+    {
+     "w": "count",
+     "at": 6.95
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,378 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: the 2004 final",
+   "text": "The 2004 Futsal World Cup final, in Taipei. Spain play Italy. Kike is Spain\u2019s fixo, the last defender. He scores the first goal, and Spain win two one!",
+   "src": "/plays/narration/kike-boned-futsal-signature/1.m4a",
+   "seconds": 12.9,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "2004",
+     "at": 0.425
+    },
+    {
+     "w": "Futsal",
+     "at": 1.5
+    },
+    {
+     "w": "World",
+     "at": 1.95
+    },
+    {
+     "w": "Cup",
+     "at": 2.25
+    },
+    {
+     "w": "final",
+     "at": 2.475
+    },
+    {
+     "w": "in",
+     "at": 3.025
+    },
+    {
+     "w": "Taipei",
+     "at": 3.175
+    },
+    {
+     "w": "Spain",
+     "at": 4.362
+    },
+    {
+     "w": "play",
+     "at": 4.775
+    },
+    {
+     "w": "Italy",
+     "at": 5.075
+    },
+    {
+     "w": "Kike",
+     "at": 5.963
+    },
+    {
+     "w": "is",
+     "at": 6.4
+    },
+    {
+     "w": "Spain\u2019s",
+     "at": 6.537
+    },
+    {
+     "w": "fixo",
+     "at": 7.075
+    },
+    {
+     "w": "the",
+     "at": 7.675
+    },
+    {
+     "w": "last",
+     "at": 7.775
+    },
+    {
+     "w": "defender",
+     "at": 8.113
+    },
+    {
+     "w": "He",
+     "at": 9.025
+    },
+    {
+     "w": "scores",
+     "at": 9.15
+    },
+    {
+     "w": "the",
+     "at": 9.525
+    },
+    {
+     "w": "first",
+     "at": 9.637
+    },
+    {
+     "w": "goal",
+     "at": 10.0
+    },
+    {
+     "w": "and",
+     "at": 10.375
+    },
+    {
+     "w": "Spain",
+     "at": 10.512
+    },
+    {
+     "w": "win",
+     "at": 10.9
+    },
+    {
+     "w": "two",
+     "at": 11.2
+    },
+    {
+     "w": "one",
+     "at": 11.488
+    }
+   ]
+  },
+  {
+   "label": "How he does it",
+   "text": "Fixos read the game. This is how he does it: he watches the passer, thinks one pass ahead and steps into the gap early. The ball comes, and he steals it and attacks!",
+   "src": "/plays/narration/kike-boned-futsal-signature/2.m4a",
+   "seconds": 11.4,
+   "words": [
+    {
+     "w": "Fixos",
+     "at": 0.35
+    },
+    {
+     "w": "read",
+     "at": 0.9
+    },
+    {
+     "w": "the",
+     "at": 1.113
+    },
+    {
+     "w": "game",
+     "at": 1.2
+    },
+    {
+     "w": "This",
+     "at": 2.062
+    },
+    {
+     "w": "is",
+     "at": 2.3
+    },
+    {
+     "w": "how",
+     "at": 2.45
+    },
+    {
+     "w": "he",
+     "at": 2.65
+    },
+    {
+     "w": "does",
+     "at": 2.8
+    },
+    {
+     "w": "it",
+     "at": 3.038
+    },
+    {
+     "w": "he",
+     "at": 3.575
+    },
+    {
+     "w": "watches",
+     "at": 3.737
+    },
+    {
+     "w": "the",
+     "at": 4.175
+    },
+    {
+     "w": "passer",
+     "at": 4.275
+    },
+    {
+     "w": "thinks",
+     "at": 5.013
+    },
+    {
+     "w": "one",
+     "at": 5.3
+    },
+    {
+     "w": "pass",
+     "at": 5.537
+    },
+    {
+     "w": "ahead",
+     "at": 5.875
+    },
+    {
+     "w": "and",
+     "at": 6.213
+    },
+    {
+     "w": "steps",
+     "at": 6.338
+    },
+    {
+     "w": "into",
+     "at": 6.638
+    },
+    {
+     "w": "the",
+     "at": 6.812
+    },
+    {
+     "w": "gap",
+     "at": 6.9
+    },
+    {
+     "w": "early",
+     "at": 7.2
+    },
+    {
+     "w": "The",
+     "at": 8.137
+    },
+    {
+     "w": "ball",
+     "at": 8.25
+    },
+    {
+     "w": "comes",
+     "at": 8.562
+    },
+    {
+     "w": "and",
+     "at": 9.012
+    },
+    {
+     "w": "he",
+     "at": 9.113
+    },
+    {
+     "w": "steals",
+     "at": 9.25
+    },
+    {
+     "w": "it",
+     "at": 9.75
+    },
+    {
+     "w": "and",
+     "at": 9.863
+    },
+    {
+     "w": "attacks",
+     "at": 9.963
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. Eyes up, step early, win the ball!",
+   "src": "/plays/narration/kike-boned-futsal-signature/3.m4a",
+   "seconds": 4.8,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.662
+    },
+    {
+     "w": "slowly",
+     "at": 1.062
+    },
+    {
+     "w": "Eyes",
+     "at": 1.913
+    },
+    {
+     "w": "up",
+     "at": 2.175
+    },
+    {
+     "w": "step",
+     "at": 2.475
+    },
+    {
+     "w": "early",
+     "at": 2.75
+    },
+    {
+     "w": "win",
+     "at": 3.125
+    },
+    {
+     "w": "the",
+     "at": 3.312
+    },
+    {
+     "w": "ball",
+     "at": 3.4
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: think one pass ahead, so you are already there when it comes!",
+   "src": "/plays/narration/kike-boned-futsal-signature/4.m4a",
+   "seconds": 5.0,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.512
+    },
+    {
+     "w": "think",
+     "at": 1.337
+    },
+    {
+     "w": "one",
+     "at": 1.512
+    },
+    {
+     "w": "pass",
+     "at": 1.675
+    },
+    {
+     "w": "ahead",
+     "at": 2.025
+    },
+    {
+     "w": "so",
+     "at": 2.475
+    },
+    {
+     "w": "you",
+     "at": 2.6
+    },
+    {
+     "w": "are",
+     "at": 2.7
+    },
+    {
+     "w": "already",
+     "at": 2.8
+    },
+    {
+     "w": "there",
+     "at": 3.175
+    },
+    {
+     "w": "when",
+     "at": 3.388
+    },
+    {
+     "w": "it",
+     "at": 3.513
+    },
+    {
+     "w": "comes",
+     "at": 3.6
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,382 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The winning kick",
+   "text": "Basel, the 2025 Euro final. Penalties! Score this one, and England are champions. Chloe Kelly spins the ball. She breathes. Here's the run... smashed high into the net! England win!",
+   "src": "/plays/narration/kelly-penalty-2025/1.m4a",
+   "seconds": 14.3,
+   "words": [
+    {
+     "w": "Basel",
+     "at": 0.4
+    },
+    {
+     "w": "the",
+     "at": 0.838
+    },
+    {
+     "w": "2025",
+     "at": 0.925
+    },
+    {
+     "w": "Euro",
+     "at": 1.9
+    },
+    {
+     "w": "final",
+     "at": 2.212
+    },
+    {
+     "w": "Penalties",
+     "at": 3.112
+    },
+    {
+     "w": "Score",
+     "at": 4.0
+    },
+    {
+     "w": "this",
+     "at": 4.325
+    },
+    {
+     "w": "one",
+     "at": 4.55
+    },
+    {
+     "w": "and",
+     "at": 4.825
+    },
+    {
+     "w": "England",
+     "at": 4.987
+    },
+    {
+     "w": "are",
+     "at": 5.425
+    },
+    {
+     "w": "champions",
+     "at": 5.588
+    },
+    {
+     "w": "Chloe",
+     "at": 6.737
+    },
+    {
+     "w": "Kelly",
+     "at": 7.088
+    },
+    {
+     "w": "spins",
+     "at": 7.463
+    },
+    {
+     "w": "the",
+     "at": 7.85
+    },
+    {
+     "w": "ball",
+     "at": 7.95
+    },
+    {
+     "w": "She",
+     "at": 8.463
+    },
+    {
+     "w": "breathes",
+     "at": 8.637
+    },
+    {
+     "w": "Here's",
+     "at": 9.488
+    },
+    {
+     "w": "the",
+     "at": 9.8
+    },
+    {
+     "w": "run",
+     "at": 9.9
+    },
+    {
+     "w": "smashed",
+     "at": 10.738
+    },
+    {
+     "w": "high",
+     "at": 11.25
+    },
+    {
+     "w": "into",
+     "at": 11.488
+    },
+    {
+     "w": "the",
+     "at": 11.662
+    },
+    {
+     "w": "net",
+     "at": 11.75
+    },
+    {
+     "w": "England",
+     "at": 12.463
+    },
+    {
+     "w": "win",
+     "at": 12.925
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again, slowly. She picked her spot before the run. Head still, and she hits it hard. No doubt!",
+   "src": "/plays/narration/kelly-penalty-2025/2.m4a",
+   "seconds": 7.2,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "slowly",
+     "at": 1.163
+    },
+    {
+     "w": "She",
+     "at": 2.163
+    },
+    {
+     "w": "picked",
+     "at": 2.3
+    },
+    {
+     "w": "her",
+     "at": 2.487
+    },
+    {
+     "w": "spot",
+     "at": 2.612
+    },
+    {
+     "w": "before",
+     "at": 2.938
+    },
+    {
+     "w": "the",
+     "at": 3.188
+    },
+    {
+     "w": "run",
+     "at": 3.275
+    },
+    {
+     "w": "Head",
+     "at": 3.7
+    },
+    {
+     "w": "still",
+     "at": 3.938
+    },
+    {
+     "w": "and",
+     "at": 4.338
+    },
+    {
+     "w": "she",
+     "at": 4.45
+    },
+    {
+     "w": "hits",
+     "at": 4.6
+    },
+    {
+     "w": "it",
+     "at": 4.812
+    },
+    {
+     "w": "hard",
+     "at": 4.9
+    },
+    {
+     "w": "No",
+     "at": 5.65
+    },
+    {
+     "w": "doubt",
+     "at": 5.875
+    }
+   ]
+  },
+  {
+   "label": "To the fans",
+   "text": "From behind the goal: too high for the keeper! Kelly races to the England fans, and her teammates pile on.",
+   "src": "/plays/narration/kelly-penalty-2025/3.m4a",
+   "seconds": 7.6,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "behind",
+     "at": 0.487
+    },
+    {
+     "w": "the",
+     "at": 0.863
+    },
+    {
+     "w": "goal",
+     "at": 0.95
+    },
+    {
+     "w": "too",
+     "at": 1.637
+    },
+    {
+     "w": "high",
+     "at": 1.85
+    },
+    {
+     "w": "for",
+     "at": 2.1
+    },
+    {
+     "w": "the",
+     "at": 2.212
+    },
+    {
+     "w": "keeper",
+     "at": 2.3
+    },
+    {
+     "w": "Kelly",
+     "at": 3.188
+    },
+    {
+     "w": "races",
+     "at": 3.525
+    },
+    {
+     "w": "to",
+     "at": 3.975
+    },
+    {
+     "w": "the",
+     "at": 4.062
+    },
+    {
+     "w": "England",
+     "at": 4.175
+    },
+    {
+     "w": "fans",
+     "at": 4.588
+    },
+    {
+     "w": "and",
+     "at": 5.125
+    },
+    {
+     "w": "her",
+     "at": 5.237
+    },
+    {
+     "w": "teammates",
+     "at": 5.362
+    },
+    {
+     "w": "pile",
+     "at": 5.963
+    },
+    {
+     "w": "on",
+     "at": 6.275
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "The secret? Under pressure, pick your spot early. Stick to your routine, then strike with conviction.",
+   "src": "/plays/narration/kelly-penalty-2025/4.m4a",
+   "seconds": 6.8,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "secret",
+     "at": 0.463
+    },
+    {
+     "w": "Under",
+     "at": 1.25
+    },
+    {
+     "w": "pressure",
+     "at": 1.5
+    },
+    {
+     "w": "pick",
+     "at": 1.95
+    },
+    {
+     "w": "your",
+     "at": 2.112
+    },
+    {
+     "w": "spot",
+     "at": 2.225
+    },
+    {
+     "w": "early",
+     "at": 2.525
+    },
+    {
+     "w": "Stick",
+     "at": 3.425
+    },
+    {
+     "w": "to",
+     "at": 3.725
+    },
+    {
+     "w": "your",
+     "at": 3.812
+    },
+    {
+     "w": "routine",
+     "at": 3.925
+    },
+    {
+     "w": "then",
+     "at": 4.55
+    },
+    {
+     "w": "strike",
+     "at": 4.787
+    },
+    {
+     "w": "with",
+     "at": 5.112
+    },
+    {
+     "w": "conviction",
+     "at": 5.25
+    }
+   ]
+  }
+ ]
+}

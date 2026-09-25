@@ -1,0 +1,145 @@
+{
+ "lesson": "next7_dribbleroom",
+ "questions": [
+  {
+   "q": "True or false? The forward runs over to help the dribble.",
+   "options": [
+    "True",
+    "False"
+   ],
+   "correct": 1,
+   "explain": "Right, it's false. The forward keeps their own lane and leaves room.",
+   "choiceExplanations": [
+    "The forward keeps their own lane, so the dribbler has room.",
+    "Right, it's false. The forward keeps their own lane and leaves room."
+   ],
+   "visual": {
+    "kind": "trueFalse",
+    "frame": {
+     "step": 3,
+     "focus": [
+      "st",
+      "lm"
+     ]
+    }
+   }
+  },
+  {
+   "q": "Put these moments in order, first to last.",
+   "options": [
+    "You move behind the dribbler",
+    "Teammate carries inside",
+    "You move to the outside",
+    "The pass finds you outside"
+   ],
+   "correct": 0,
+   "explain": "Yes. First you move behind, so your teammate has room.",
+   "choiceExplanations": [
+    "Yes. First you move behind, so your teammate has room.",
+    "Your teammate carries inside after you leave them room.",
+    "You move outside after your teammate carries inside.",
+    "The pass comes last, once you are open outside."
+   ],
+   "visual": {
+    "kind": "order",
+    "frames": [
+     {
+      "step": 3,
+      "focus": [
+       "cm"
+      ],
+      "view": {
+       "x": 15,
+       "y": 128,
+       "w": 230,
+       "h": 150
+      }
+     },
+     {
+      "step": 4,
+      "focus": [
+       "lm"
+      ],
+      "view": {
+       "x": 15,
+       "y": 128,
+       "w": 230,
+       "h": 150
+      }
+     },
+     {
+      "step": 6,
+      "focus": [
+       "cm"
+      ],
+      "view": {
+       "x": 15,
+       "y": 128,
+       "w": 230,
+       "h": 150
+      }
+     },
+     {
+      "step": 7,
+      "focus": [
+       "cm"
+      ],
+      "view": {
+       "x": 15,
+       "y": 128,
+       "w": 230,
+       "h": 150
+      }
+     }
+    ]
+   }
+  },
+  {
+   "q": "Now the right midfielder wants to dribble. Where do you leave room?",
+   "options": [
+    "In front, across their path",
+    "Behind the dribbler",
+    "Right next to them, by the line"
+   ],
+   "correct": 1,
+   "explain": "Yes. Behind leaves room ahead, and you can still help.",
+   "choiceExplanations": [
+    "That blocks the dribble path, so your teammate has no room.",
+    "Yes. Behind leaves room ahead, and you can still help.",
+    "That crowds the dribbler, so there is less room to beat the defender."
+   ],
+   "visual": {
+    "kind": "dragToZone",
+    "frame": {
+     "step": 0,
+     "ball": "rm",
+     "focus": [
+      "rm",
+      "cm"
+     ]
+    },
+    "drag": "cm",
+    "zones": [
+     {
+      "x": 238,
+      "y": 140,
+      "w": 32,
+      "h": 28
+     },
+     {
+      "x": 190,
+      "y": 252,
+      "w": 40,
+      "h": 32
+     },
+     {
+      "x": 253,
+      "y": 230,
+      "w": 30,
+      "h": 30
+     }
+    ]
+   }
+  }
+ ]
+}

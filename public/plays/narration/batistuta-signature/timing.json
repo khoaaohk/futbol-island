@@ -1,0 +1,358 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Winner goes through",
+   "text": "Wembley, 1999: Arsenal against Fiorentina, and the winner goes through. Heinrich passes to Batistuta, out on the right. One touch to stop it, one past the defender... boom! A thunderbolt into the roof of the net!",
+   "src": "/plays/narration/batistuta-signature/1.m4a",
+   "seconds": 15.4,
+   "words": [
+    {
+     "w": "Wembley",
+     "at": 0.4
+    },
+    {
+     "w": "1999",
+     "at": 0.875
+    },
+    {
+     "w": "Arsenal",
+     "at": 2.188
+    },
+    {
+     "w": "against",
+     "at": 2.7
+    },
+    {
+     "w": "Fiorentina",
+     "at": 3.075
+    },
+    {
+     "w": "and",
+     "at": 3.875
+    },
+    {
+     "w": "the",
+     "at": 3.987
+    },
+    {
+     "w": "winner",
+     "at": 4.088
+    },
+    {
+     "w": "goes",
+     "at": 4.425
+    },
+    {
+     "w": "through",
+     "at": 4.737
+    },
+    {
+     "w": "Heinrich",
+     "at": 5.638
+    },
+    {
+     "w": "passes",
+     "at": 6.088
+    },
+    {
+     "w": "to",
+     "at": 6.575
+    },
+    {
+     "w": "Batistuta",
+     "at": 6.675
+    },
+    {
+     "w": "out",
+     "at": 7.688
+    },
+    {
+     "w": "on",
+     "at": 7.888
+    },
+    {
+     "w": "the",
+     "at": 7.987
+    },
+    {
+     "w": "right",
+     "at": 8.075
+    },
+    {
+     "w": "One",
+     "at": 8.875
+    },
+    {
+     "w": "touch",
+     "at": 9.162
+    },
+    {
+     "w": "to",
+     "at": 9.475
+    },
+    {
+     "w": "stop",
+     "at": 9.6
+    },
+    {
+     "w": "it",
+     "at": 9.95
+    },
+    {
+     "w": "one",
+     "at": 10.125
+    },
+    {
+     "w": "past",
+     "at": 10.363
+    },
+    {
+     "w": "the",
+     "at": 10.713
+    },
+    {
+     "w": "defender",
+     "at": 10.8
+    },
+    {
+     "w": "boom",
+     "at": 11.812
+    },
+    {
+     "w": "A",
+     "at": 12.613
+    },
+    {
+     "w": "thunderbolt",
+     "at": 12.738
+    },
+    {
+     "w": "into",
+     "at": 13.338
+    },
+    {
+     "w": "the",
+     "at": 13.525
+    },
+    {
+     "w": "roof",
+     "at": 13.662
+    },
+    {
+     "w": "of",
+     "at": 13.963
+    },
+    {
+     "w": "the",
+     "at": 14.037
+    },
+    {
+     "w": "net",
+     "at": 14.125
+    }
+   ]
+  },
+  {
+   "label": "The thunderbolt",
+   "text": "Watch again, slowly. Standing foot beside the ball, eyes down, and his leg swings through with all his power.",
+   "src": "/plays/narration/batistuta-signature/2.m4a",
+   "seconds": 8.1,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.238
+    },
+    {
+     "w": "Standing",
+     "at": 2.263
+    },
+    {
+     "w": "foot",
+     "at": 2.712
+    },
+    {
+     "w": "beside",
+     "at": 2.925
+    },
+    {
+     "w": "the",
+     "at": 3.263
+    },
+    {
+     "w": "ball",
+     "at": 3.35
+    },
+    {
+     "w": "eyes",
+     "at": 3.812
+    },
+    {
+     "w": "down",
+     "at": 4.15
+    },
+    {
+     "w": "and",
+     "at": 4.85
+    },
+    {
+     "w": "his",
+     "at": 4.963
+    },
+    {
+     "w": "leg",
+     "at": 5.125
+    },
+    {
+     "w": "swings",
+     "at": 5.438
+    },
+    {
+     "w": "through",
+     "at": 5.875
+    },
+    {
+     "w": "with",
+     "at": 6.1
+    },
+    {
+     "w": "all",
+     "at": 6.25
+    },
+    {
+     "w": "his",
+     "at": 6.463
+    },
+    {
+     "w": "power",
+     "at": 6.638
+    }
+   ]
+  },
+  {
+   "label": "Batigol",
+   "text": "Too fast for David Seaman! Batigol's goal sends Fiorentina through.",
+   "src": "/plays/narration/batistuta-signature/3.m4a",
+   "seconds": 5.6,
+   "words": [
+    {
+     "w": "Too",
+     "at": 0.35
+    },
+    {
+     "w": "fast",
+     "at": 0.562
+    },
+    {
+     "w": "for",
+     "at": 0.925
+    },
+    {
+     "w": "David",
+     "at": 1.05
+    },
+    {
+     "w": "Seaman",
+     "at": 1.425
+    },
+    {
+     "w": "Batigol's",
+     "at": 2.263
+    },
+    {
+     "w": "goal",
+     "at": 2.9
+    },
+    {
+     "w": "sends",
+     "at": 3.237
+    },
+    {
+     "w": "Fiorentina",
+     "at": 3.6
+    },
+    {
+     "w": "through",
+     "at": 4.287
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: plant your standing foot beside the ball, and strike through it with power!",
+   "src": "/plays/narration/batistuta-signature/4.m4a",
+   "seconds": 5.7,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "plant",
+     "at": 1.337
+    },
+    {
+     "w": "your",
+     "at": 1.613
+    },
+    {
+     "w": "standing",
+     "at": 1.725
+    },
+    {
+     "w": "foot",
+     "at": 2.138
+    },
+    {
+     "w": "beside",
+     "at": 2.375
+    },
+    {
+     "w": "the",
+     "at": 2.712
+    },
+    {
+     "w": "ball",
+     "at": 2.8
+    },
+    {
+     "w": "and",
+     "at": 3.237
+    },
+    {
+     "w": "strike",
+     "at": 3.362
+    },
+    {
+     "w": "through",
+     "at": 3.712
+    },
+    {
+     "w": "it",
+     "at": 3.925
+    },
+    {
+     "w": "with",
+     "at": 4.013
+    },
+    {
+     "w": "power",
+     "at": 4.188
+    }
+   ]
+  }
+ ]
+}

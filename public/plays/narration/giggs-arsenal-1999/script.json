@@ -1,0 +1,10 @@
+{
+ "film": "giggs-arsenal-1999",
+ "note": "Chapter 1 is keyed from 'Ryan Giggs' / 'pounces' (the interception) through each defender's name to 'he scores' (the ball in the roof of the net): keep the pause at '...'. Chapter 2 pans fast down the pitch on 'At full speed'; 'out, in, out' each paint one change of direction.",
+ "chapters": [
+  {"label": "The goal, live", "text": "Villa Park, 1999, extra time. Ryan Giggs pounces on a loose pass in his own half. Past Vieira, past Dixon twice, past Keown, past Adams... he scores!"},
+  {"label": "Watch it again", "text": "Watch it again, slowly. Close touches keep the ball tight to his left foot. At full speed he changes direction: out, in, out! Defenders can't keep up."},
+  {"label": "Into the roof", "text": "From a tight angle, he lashes it high over David Seaman, into the roof of the net!"},
+  {"label": "Your turn", "text": "Your turn: dribble with close touches, change direction at speed, and when the keeper goes down, finish high!"}
+ ]
+}

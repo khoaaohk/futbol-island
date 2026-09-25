@@ -1,0 +1,382 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Durban, 2010",
+   "text": "Durban, 2010, the World Cup semi-final. Spain, in red, play Germany, in white. Nil-nil, seventy-three minutes. Xavi whips in a corner... and Carles Puyol thunders a header into the net!",
+   "src": "/plays/narration/puyol-header-2010/1.m4a",
+   "seconds": 14.1,
+   "words": [
+    {
+     "w": "Durban",
+     "at": 0.375
+    },
+    {
+     "w": "2010",
+     "at": 0.925
+    },
+    {
+     "w": "the",
+     "at": 1.625
+    },
+    {
+     "w": "World",
+     "at": 1.75
+    },
+    {
+     "w": "Cup",
+     "at": 2.075
+    },
+    {
+     "w": "semi-final",
+     "at": 2.35
+    },
+    {
+     "w": "Spain",
+     "at": 3.587
+    },
+    {
+     "w": "in",
+     "at": 4.175
+    },
+    {
+     "w": "red",
+     "at": 4.362
+    },
+    {
+     "w": "play",
+     "at": 4.838
+    },
+    {
+     "w": "Germany",
+     "at": 5.162
+    },
+    {
+     "w": "in",
+     "at": 5.675
+    },
+    {
+     "w": "white",
+     "at": 5.825
+    },
+    {
+     "w": "Nil-nil",
+     "at": 6.65
+    },
+    {
+     "w": "seventy-three",
+     "at": 7.388
+    },
+    {
+     "w": "minutes",
+     "at": 8.025
+    },
+    {
+     "w": "Xavi",
+     "at": 8.787
+    },
+    {
+     "w": "whips",
+     "at": 9.213
+    },
+    {
+     "w": "in",
+     "at": 9.525
+    },
+    {
+     "w": "a",
+     "at": 9.613
+    },
+    {
+     "w": "corner",
+     "at": 9.675
+    },
+    {
+     "w": "and",
+     "at": 10.625
+    },
+    {
+     "w": "Carles",
+     "at": 10.762
+    },
+    {
+     "w": "Puyol",
+     "at": 11.2
+    },
+    {
+     "w": "thunders",
+     "at": 11.688
+    },
+    {
+     "w": "a",
+     "at": 12.075
+    },
+    {
+     "w": "header",
+     "at": 12.15
+    },
+    {
+     "w": "into",
+     "at": 12.463
+    },
+    {
+     "w": "the",
+     "at": 12.65
+    },
+    {
+     "w": "net",
+     "at": 12.75
+    }
+   ]
+  },
+  {
+   "label": "The long run",
+   "text": "Watch again, slowly. Puyol starts far from goal, away from the grabbing arms. Then he charges in at full speed.",
+   "src": "/plays/narration/puyol-header-2010/2.m4a",
+   "seconds": 8.4,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.163
+    },
+    {
+     "w": "Puyol",
+     "at": 2.188
+    },
+    {
+     "w": "starts",
+     "at": 2.575
+    },
+    {
+     "w": "far",
+     "at": 2.95
+    },
+    {
+     "w": "from",
+     "at": 3.2
+    },
+    {
+     "w": "goal",
+     "at": 3.4
+    },
+    {
+     "w": "away",
+     "at": 3.875
+    },
+    {
+     "w": "from",
+     "at": 4.15
+    },
+    {
+     "w": "the",
+     "at": 4.287
+    },
+    {
+     "w": "grabbing",
+     "at": 4.375
+    },
+    {
+     "w": "arms",
+     "at": 4.8
+    },
+    {
+     "w": "Then",
+     "at": 5.612
+    },
+    {
+     "w": "he",
+     "at": 5.825
+    },
+    {
+     "w": "charges",
+     "at": 5.963
+    },
+    {
+     "w": "in",
+     "at": 6.375
+    },
+    {
+     "w": "at",
+     "at": 6.575
+    },
+    {
+     "w": "full",
+     "at": 6.7
+    },
+    {
+     "w": "speed",
+     "at": 6.987
+    }
+   ]
+  },
+  {
+   "label": "Highest point",
+   "text": "He leaps above everyone and meets the ball at its highest point. Neuer has no chance!",
+   "src": "/plays/narration/puyol-header-2010/3.m4a",
+   "seconds": 5.9,
+   "words": [
+    {
+     "w": "He",
+     "at": 0.35
+    },
+    {
+     "w": "leaps",
+     "at": 0.475
+    },
+    {
+     "w": "above",
+     "at": 0.713
+    },
+    {
+     "w": "everyone",
+     "at": 0.938
+    },
+    {
+     "w": "and",
+     "at": 1.4
+    },
+    {
+     "w": "meets",
+     "at": 1.525
+    },
+    {
+     "w": "the",
+     "at": 1.8
+    },
+    {
+     "w": "ball",
+     "at": 1.9
+    },
+    {
+     "w": "at",
+     "at": 2.225
+    },
+    {
+     "w": "its",
+     "at": 2.312
+    },
+    {
+     "w": "highest",
+     "at": 2.425
+    },
+    {
+     "w": "point",
+     "at": 2.825
+    },
+    {
+     "w": "Neuer",
+     "at": 3.7
+    },
+    {
+     "w": "has",
+     "at": 4.075
+    },
+    {
+     "w": "no",
+     "at": 4.275
+    },
+    {
+     "w": "chance",
+     "at": 4.463
+    }
+   ]
+  },
+  {
+   "label": "Attack the ball",
+   "text": "To beat taller defenders, make a long, brave run. Attack the ball at its highest point, and head it hard!",
+   "src": "/plays/narration/puyol-header-2010/4.m4a",
+   "seconds": 7.6,
+   "words": [
+    {
+     "w": "To",
+     "at": 0.35
+    },
+    {
+     "w": "beat",
+     "at": 0.45
+    },
+    {
+     "w": "taller",
+     "at": 0.713
+    },
+    {
+     "w": "defenders",
+     "at": 1.075
+    },
+    {
+     "w": "make",
+     "at": 1.9
+    },
+    {
+     "w": "a",
+     "at": 2.062
+    },
+    {
+     "w": "long",
+     "at": 2.163
+    },
+    {
+     "w": "brave",
+     "at": 2.65
+    },
+    {
+     "w": "run",
+     "at": 3.05
+    },
+    {
+     "w": "Attack",
+     "at": 3.938
+    },
+    {
+     "w": "the",
+     "at": 4.325
+    },
+    {
+     "w": "ball",
+     "at": 4.425
+    },
+    {
+     "w": "at",
+     "at": 4.75
+    },
+    {
+     "w": "its",
+     "at": 4.838
+    },
+    {
+     "w": "highest",
+     "at": 4.975
+    },
+    {
+     "w": "point",
+     "at": 5.35
+    },
+    {
+     "w": "and",
+     "at": 5.875
+    },
+    {
+     "w": "head",
+     "at": 6.0
+    },
+    {
+     "w": "it",
+     "at": 6.162
+    },
+    {
+     "w": "hard",
+     "at": 6.25
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,374 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Spain against Croatia, Euro 2024. Lamine Yamal turns into the box and pulls defenders toward him. He finds Pedri. Nice and calm, Pedri finds Fabi\u00e1n Ruiz. Right, left... goal!",
+   "src": "/plays/narration/pedri-signature/1.m4a",
+   "seconds": 14.6,
+   "words": [
+    {
+     "w": "Spain",
+     "at": 0.375
+    },
+    {
+     "w": "against",
+     "at": 0.713
+    },
+    {
+     "w": "Croatia",
+     "at": 1.075
+    },
+    {
+     "w": "Euro",
+     "at": 1.75
+    },
+    {
+     "w": "2024",
+     "at": 2.025
+    },
+    {
+     "w": "Lamine",
+     "at": 3.538
+    },
+    {
+     "w": "Yamal",
+     "at": 3.95
+    },
+    {
+     "w": "turns",
+     "at": 4.375
+    },
+    {
+     "w": "into",
+     "at": 4.688
+    },
+    {
+     "w": "the",
+     "at": 4.862
+    },
+    {
+     "w": "box",
+     "at": 4.95
+    },
+    {
+     "w": "and",
+     "at": 5.4
+    },
+    {
+     "w": "pulls",
+     "at": 5.537
+    },
+    {
+     "w": "defenders",
+     "at": 5.9
+    },
+    {
+     "w": "toward",
+     "at": 6.45
+    },
+    {
+     "w": "him",
+     "at": 6.713
+    },
+    {
+     "w": "He",
+     "at": 7.3
+    },
+    {
+     "w": "finds",
+     "at": 7.45
+    },
+    {
+     "w": "Pedri",
+     "at": 7.775
+    },
+    {
+     "w": "Nice",
+     "at": 8.675
+    },
+    {
+     "w": "and",
+     "at": 9.0
+    },
+    {
+     "w": "calm",
+     "at": 9.137
+    },
+    {
+     "w": "Pedri",
+     "at": 9.6
+    },
+    {
+     "w": "finds",
+     "at": 9.95
+    },
+    {
+     "w": "Fabi\u00e1n",
+     "at": 10.3
+    },
+    {
+     "w": "Ruiz",
+     "at": 10.825
+    },
+    {
+     "w": "Right",
+     "at": 11.775
+    },
+    {
+     "w": "left",
+     "at": 12.262
+    },
+    {
+     "w": "goal",
+     "at": 13.188
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. Croatia players close in, but Pedri stays calm. He knows Fabi\u00e1n is free, so one gentle pass is enough.",
+   "src": "/plays/narration/pedri-signature/2.m4a",
+   "seconds": 9.8,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.662
+    },
+    {
+     "w": "slowly",
+     "at": 1.087
+    },
+    {
+     "w": "Croatia",
+     "at": 2.087
+    },
+    {
+     "w": "players",
+     "at": 2.6
+    },
+    {
+     "w": "close",
+     "at": 3.0
+    },
+    {
+     "w": "in",
+     "at": 3.375
+    },
+    {
+     "w": "but",
+     "at": 3.587
+    },
+    {
+     "w": "Pedri",
+     "at": 3.725
+    },
+    {
+     "w": "stays",
+     "at": 4.088
+    },
+    {
+     "w": "calm",
+     "at": 4.513
+    },
+    {
+     "w": "He",
+     "at": 5.35
+    },
+    {
+     "w": "knows",
+     "at": 5.475
+    },
+    {
+     "w": "Fabi\u00e1n",
+     "at": 5.8
+    },
+    {
+     "w": "is",
+     "at": 6.325
+    },
+    {
+     "w": "free",
+     "at": 6.513
+    },
+    {
+     "w": "so",
+     "at": 7.112
+    },
+    {
+     "w": "one",
+     "at": 7.312
+    },
+    {
+     "w": "gentle",
+     "at": 7.562
+    },
+    {
+     "w": "pass",
+     "at": 7.95
+    },
+    {
+     "w": "is",
+     "at": 8.3
+    },
+    {
+     "w": "enough",
+     "at": 8.425
+    }
+   ]
+  },
+  {
+   "label": "Right, left, goal",
+   "text": "Fabi\u00e1n cuts right, then left, past two defenders, and his shot flies into the corner.",
+   "src": "/plays/narration/pedri-signature/3.m4a",
+   "seconds": 6.7,
+   "words": [
+    {
+     "w": "Fabi\u00e1n",
+     "at": 0.375
+    },
+    {
+     "w": "cuts",
+     "at": 0.925
+    },
+    {
+     "w": "right",
+     "at": 1.225
+    },
+    {
+     "w": "then",
+     "at": 1.9
+    },
+    {
+     "w": "left",
+     "at": 2.1
+    },
+    {
+     "w": "past",
+     "at": 2.575
+    },
+    {
+     "w": "two",
+     "at": 2.913
+    },
+    {
+     "w": "defenders",
+     "at": 3.125
+    },
+    {
+     "w": "and",
+     "at": 3.975
+    },
+    {
+     "w": "his",
+     "at": 4.088
+    },
+    {
+     "w": "shot",
+     "at": 4.237
+    },
+    {
+     "w": "flies",
+     "at": 4.588
+    },
+    {
+     "w": "into",
+     "at": 4.963
+    },
+    {
+     "w": "the",
+     "at": 5.138
+    },
+    {
+     "w": "corner",
+     "at": 5.225
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: like Pedri, check over your shoulder before the ball comes, so you know where to pass.",
+   "src": "/plays/narration/pedri-signature/4.m4a",
+   "seconds": 6.5,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "like",
+     "at": 1.3
+    },
+    {
+     "w": "Pedri",
+     "at": 1.538
+    },
+    {
+     "w": "check",
+     "at": 2.188
+    },
+    {
+     "w": "over",
+     "at": 2.413
+    },
+    {
+     "w": "your",
+     "at": 2.612
+    },
+    {
+     "w": "shoulder",
+     "at": 2.763
+    },
+    {
+     "w": "before",
+     "at": 3.175
+    },
+    {
+     "w": "the",
+     "at": 3.462
+    },
+    {
+     "w": "ball",
+     "at": 3.55
+    },
+    {
+     "w": "comes",
+     "at": 3.85
+    },
+    {
+     "w": "so",
+     "at": 4.425
+    },
+    {
+     "w": "you",
+     "at": 4.55
+    },
+    {
+     "w": "know",
+     "at": 4.65
+    },
+    {
+     "w": "where",
+     "at": 4.825
+    },
+    {
+     "w": "to",
+     "at": 4.963
+    },
+    {
+     "w": "pass",
+     "at": 5.05
+    }
+   ]
+  }
+ ]
+}

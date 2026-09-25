@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The final",
+   "text": "Munich, 2025: the Champions League final. Paris captain Marquinhos faces Inter. Here\u2019s how he defends. Inter look for their striker\u2026 but Marquinhos steps in first!",
+   "src": "/plays/narration/marquinhos-signature/1.m4a",
+   "seconds": 12.8,
+   "words": [
+    {
+     "w": "Munich",
+     "at": 0.4
+    },
+    {
+     "w": "2025",
+     "at": 0.8
+    },
+    {
+     "w": "the",
+     "at": 2.1
+    },
+    {
+     "w": "Champions",
+     "at": 2.212
+    },
+    {
+     "w": "League",
+     "at": 2.825
+    },
+    {
+     "w": "final",
+     "at": 3.087
+    },
+    {
+     "w": "Paris",
+     "at": 4.062
+    },
+    {
+     "w": "captain",
+     "at": 4.45
+    },
+    {
+     "w": "Marquinhos",
+     "at": 4.9
+    },
+    {
+     "w": "faces",
+     "at": 5.575
+    },
+    {
+     "w": "Inter",
+     "at": 5.975
+    },
+    {
+     "w": "Here",
+     "at": 6.688
+    },
+    {
+     "w": "s",
+     "at": 7.1
+    },
+    {
+     "w": "how",
+     "at": 7.3
+    },
+    {
+     "w": "he",
+     "at": 7.463
+    },
+    {
+     "w": "defends",
+     "at": 7.55
+    },
+    {
+     "w": "Inter",
+     "at": 8.613
+    },
+    {
+     "w": "look",
+     "at": 8.925
+    },
+    {
+     "w": "for",
+     "at": 9.15
+    },
+    {
+     "w": "their",
+     "at": 9.262
+    },
+    {
+     "w": "striker",
+     "at": 9.463
+    },
+    {
+     "w": "but",
+     "at": 10.05
+    },
+    {
+     "w": "Marquinhos",
+     "at": 10.2
+    },
+    {
+     "w": "steps",
+     "at": 10.938
+    },
+    {
+     "w": "in",
+     "at": 11.275
+    },
+    {
+     "w": "first",
+     "at": 11.438
+    }
+   ]
+  },
+  {
+   "label": "The replay",
+   "text": "Watch again, slowly. Marquinhos watches the passer\u2019s eyes. He sees where the pass is going, so he moves early\u2026 and steps in front of the striker!",
+   "src": "/plays/narration/marquinhos-signature/2.m4a",
+   "seconds": 10.3,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.238
+    },
+    {
+     "w": "Marquinhos",
+     "at": 2.263
+    },
+    {
+     "w": "watches",
+     "at": 2.938
+    },
+    {
+     "w": "the",
+     "at": 3.375
+    },
+    {
+     "w": "passer\u2019s",
+     "at": 3.475
+    },
+    {
+     "w": "eyes",
+     "at": 3.975
+    },
+    {
+     "w": "He",
+     "at": 4.775
+    },
+    {
+     "w": "sees",
+     "at": 4.938
+    },
+    {
+     "w": "where",
+     "at": 5.263
+    },
+    {
+     "w": "the",
+     "at": 5.388
+    },
+    {
+     "w": "pass",
+     "at": 5.487
+    },
+    {
+     "w": "is",
+     "at": 5.875
+    },
+    {
+     "w": "going",
+     "at": 6.025
+    },
+    {
+     "w": "so",
+     "at": 6.675
+    },
+    {
+     "w": "he",
+     "at": 6.825
+    },
+    {
+     "w": "moves",
+     "at": 6.95
+    },
+    {
+     "w": "early",
+     "at": 7.287
+    },
+    {
+     "w": "and",
+     "at": 7.85
+    },
+    {
+     "w": "steps",
+     "at": 7.987
+    },
+    {
+     "w": "in",
+     "at": 8.312
+    },
+    {
+     "w": "front",
+     "at": 8.45
+    },
+    {
+     "w": "of",
+     "at": 8.637
+    },
+    {
+     "w": "the",
+     "at": 8.713
+    },
+    {
+     "w": "striker",
+     "at": 8.8
+    }
+   ]
+  },
+  {
+   "label": "Ball stolen",
+   "text": "Ball stolen! Marquinhos lifts his head and starts the attack with a pass. Paris won five\u2013nil, their first Champions League!",
+   "src": "/plays/narration/marquinhos-signature/3.m4a",
+   "seconds": 9.2,
+   "words": [
+    {
+     "w": "Ball",
+     "at": 0.375
+    },
+    {
+     "w": "stolen",
+     "at": 0.637
+    },
+    {
+     "w": "Marquinhos",
+     "at": 1.525
+    },
+    {
+     "w": "lifts",
+     "at": 2.15
+    },
+    {
+     "w": "his",
+     "at": 2.413
+    },
+    {
+     "w": "head",
+     "at": 2.575
+    },
+    {
+     "w": "and",
+     "at": 2.812
+    },
+    {
+     "w": "starts",
+     "at": 2.925
+    },
+    {
+     "w": "the",
+     "at": 3.237
+    },
+    {
+     "w": "attack",
+     "at": 3.35
+    },
+    {
+     "w": "with",
+     "at": 3.737
+    },
+    {
+     "w": "a",
+     "at": 3.837
+    },
+    {
+     "w": "pass",
+     "at": 3.913
+    },
+    {
+     "w": "Paris",
+     "at": 4.938
+    },
+    {
+     "w": "won",
+     "at": 5.362
+    },
+    {
+     "w": "five",
+     "at": 5.638
+    },
+    {
+     "w": "nil",
+     "at": 6.225
+    },
+    {
+     "w": "their",
+     "at": 6.7
+    },
+    {
+     "w": "first",
+     "at": 6.888
+    },
+    {
+     "w": "Champions",
+     "at": 7.237
+    },
+    {
+     "w": "League",
+     "at": 7.825
+    }
+   ]
+  },
+  {
+   "label": "The lesson",
+   "text": "That\u2019s Marquinhos. Watch the passer\u2019s eyes, and step in front of the striker to steal it!",
+   "src": "/plays/narration/marquinhos-signature/4.m4a",
+   "seconds": 6.2,
+   "words": [
+    {
+     "w": "That\u2019s",
+     "at": 0.375
+    },
+    {
+     "w": "Marquinhos",
+     "at": 0.675
+    },
+    {
+     "w": "Watch",
+     "at": 1.887
+    },
+    {
+     "w": "the",
+     "at": 2.2
+    },
+    {
+     "w": "passer\u2019s",
+     "at": 2.3
+    },
+    {
+     "w": "eyes",
+     "at": 2.812
+    },
+    {
+     "w": "and",
+     "at": 3.288
+    },
+    {
+     "w": "step",
+     "at": 3.4
+    },
+    {
+     "w": "in",
+     "at": 3.638
+    },
+    {
+     "w": "front",
+     "at": 3.75
+    },
+    {
+     "w": "of",
+     "at": 3.938
+    },
+    {
+     "w": "the",
+     "at": 4.013
+    },
+    {
+     "w": "striker",
+     "at": 4.1
+    },
+    {
+     "w": "to",
+     "at": 4.525
+    },
+    {
+     "w": "steal",
+     "at": 4.662
+    },
+    {
+     "w": "it",
+     "at": 5.025
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,398 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Two\u2013nil down",
+   "text": "Turin, April twenty-first, 1999, the Champions League semi-final. Manchester United are two\u2013nil down to Juventus. Captain Roy Keane won\u2019t give up. Beckham swings in a corner... Keane gets there first. Goal!",
+   "src": "/plays/narration/keane-signature/1.m4a",
+   "seconds": 15.6,
+   "words": [
+    {
+     "w": "Turin",
+     "at": 0.35
+    },
+    {
+     "w": "April",
+     "at": 0.775
+    },
+    {
+     "w": "twenty-first",
+     "at": 1.1
+    },
+    {
+     "w": "1999",
+     "at": 1.75
+    },
+    {
+     "w": "the",
+     "at": 2.8
+    },
+    {
+     "w": "Champions",
+     "at": 2.913
+    },
+    {
+     "w": "League",
+     "at": 3.562
+    },
+    {
+     "w": "semi-final",
+     "at": 3.888
+    },
+    {
+     "w": "Manchester",
+     "at": 5.125
+    },
+    {
+     "w": "United",
+     "at": 5.75
+    },
+    {
+     "w": "are",
+     "at": 6.175
+    },
+    {
+     "w": "two",
+     "at": 6.325
+    },
+    {
+     "w": "nil",
+     "at": 6.825
+    },
+    {
+     "w": "down",
+     "at": 7.1
+    },
+    {
+     "w": "to",
+     "at": 7.425
+    },
+    {
+     "w": "Juventus",
+     "at": 7.525
+    },
+    {
+     "w": "Captain",
+     "at": 8.662
+    },
+    {
+     "w": "Roy",
+     "at": 9.05
+    },
+    {
+     "w": "Keane",
+     "at": 9.312
+    },
+    {
+     "w": "won\u2019t",
+     "at": 9.65
+    },
+    {
+     "w": "give",
+     "at": 9.85
+    },
+    {
+     "w": "up",
+     "at": 10.012
+    },
+    {
+     "w": "Beckham",
+     "at": 10.562
+    },
+    {
+     "w": "swings",
+     "at": 11.0
+    },
+    {
+     "w": "in",
+     "at": 11.463
+    },
+    {
+     "w": "a",
+     "at": 11.537
+    },
+    {
+     "w": "corner",
+     "at": 11.613
+    },
+    {
+     "w": "Keane",
+     "at": 12.488
+    },
+    {
+     "w": "gets",
+     "at": 12.825
+    },
+    {
+     "w": "there",
+     "at": 13.062
+    },
+    {
+     "w": "first",
+     "at": 13.262
+    },
+    {
+     "w": "Goal",
+     "at": 14.175
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again. Keane arrives late at the near post, squeezes between two Juventus players, and glances it into the far corner.",
+   "src": "/plays/narration/keane-signature/2.m4a",
+   "seconds": 9.0,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.7
+    },
+    {
+     "w": "Keane",
+     "at": 1.587
+    },
+    {
+     "w": "arrives",
+     "at": 1.9
+    },
+    {
+     "w": "late",
+     "at": 2.362
+    },
+    {
+     "w": "at",
+     "at": 2.638
+    },
+    {
+     "w": "the",
+     "at": 2.712
+    },
+    {
+     "w": "near",
+     "at": 2.8
+    },
+    {
+     "w": "post",
+     "at": 3.038
+    },
+    {
+     "w": "squeezes",
+     "at": 3.8
+    },
+    {
+     "w": "between",
+     "at": 4.375
+    },
+    {
+     "w": "two",
+     "at": 4.737
+    },
+    {
+     "w": "Juventus",
+     "at": 4.975
+    },
+    {
+     "w": "players",
+     "at": 5.475
+    },
+    {
+     "w": "and",
+     "at": 6.25
+    },
+    {
+     "w": "glances",
+     "at": 6.375
+    },
+    {
+     "w": "it",
+     "at": 6.9
+    },
+    {
+     "w": "into",
+     "at": 7.013
+    },
+    {
+     "w": "the",
+     "at": 7.188
+    },
+    {
+     "w": "far",
+     "at": 7.287
+    },
+    {
+     "w": "corner",
+     "at": 7.55
+    }
+   ]
+  },
+  {
+   "label": "Back to work",
+   "text": "From behind: past the keeper, in! No big celebration. Keane points to Beckham and runs back to work. United win three\u2013two!",
+   "src": "/plays/narration/keane-signature/3.m4a",
+   "seconds": 9.2,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "behind",
+     "at": 0.487
+    },
+    {
+     "w": "past",
+     "at": 1.15
+    },
+    {
+     "w": "the",
+     "at": 1.438
+    },
+    {
+     "w": "keeper",
+     "at": 1.525
+    },
+    {
+     "w": "in",
+     "at": 1.887
+    },
+    {
+     "w": "No",
+     "at": 2.487
+    },
+    {
+     "w": "big",
+     "at": 2.7
+    },
+    {
+     "w": "celebration",
+     "at": 2.938
+    },
+    {
+     "w": "Keane",
+     "at": 4.112
+    },
+    {
+     "w": "points",
+     "at": 4.425
+    },
+    {
+     "w": "to",
+     "at": 4.75
+    },
+    {
+     "w": "Beckham",
+     "at": 4.85
+    },
+    {
+     "w": "and",
+     "at": 5.25
+    },
+    {
+     "w": "runs",
+     "at": 5.375
+    },
+    {
+     "w": "back",
+     "at": 5.675
+    },
+    {
+     "w": "to",
+     "at": 5.95
+    },
+    {
+     "w": "work",
+     "at": 6.075
+    },
+    {
+     "w": "United",
+     "at": 6.737
+    },
+    {
+     "w": "win",
+     "at": 7.213
+    },
+    {
+     "w": "three\u2013two",
+     "at": 7.525
+    }
+   ]
+  },
+  {
+   "label": "First to the ball",
+   "text": "Like Keane: be first to every loose ball, then give a simple pass to a teammate.",
+   "src": "/plays/narration/keane-signature/4.m4a",
+   "seconds": 6.0,
+   "words": [
+    {
+     "w": "Like",
+     "at": 0.4
+    },
+    {
+     "w": "Keane",
+     "at": 0.637
+    },
+    {
+     "w": "be",
+     "at": 1.475
+    },
+    {
+     "w": "first",
+     "at": 1.637
+    },
+    {
+     "w": "to",
+     "at": 1.95
+    },
+    {
+     "w": "every",
+     "at": 2.075
+    },
+    {
+     "w": "loose",
+     "at": 2.375
+    },
+    {
+     "w": "ball",
+     "at": 2.675
+    },
+    {
+     "w": "then",
+     "at": 3.175
+    },
+    {
+     "w": "give",
+     "at": 3.375
+    },
+    {
+     "w": "a",
+     "at": 3.513
+    },
+    {
+     "w": "simple",
+     "at": 3.612
+    },
+    {
+     "w": "pass",
+     "at": 3.987
+    },
+    {
+     "w": "to",
+     "at": 4.375
+    },
+    {
+     "w": "a",
+     "at": 4.463
+    },
+    {
+     "w": "teammate",
+     "at": 4.525
+    }
+   ]
+  }
+ ]
+}

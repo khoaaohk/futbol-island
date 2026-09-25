@@ -1,0 +1,370 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "London, 2022. Real Madrid are at Chelsea. Karim Benzema drops deep to help. A one-two with Vin\u00edcius... and another! Now he sprints into the box. The cross... header! Goal!",
+   "src": "/plays/narration/benzema-signature/1.m4a",
+   "seconds": 13.6,
+   "words": [
+    {
+     "w": "London",
+     "at": 0.425
+    },
+    {
+     "w": "2022",
+     "at": 0.875
+    },
+    {
+     "w": "Real",
+     "at": 2.275
+    },
+    {
+     "w": "Madrid",
+     "at": 2.55
+    },
+    {
+     "w": "are",
+     "at": 2.95
+    },
+    {
+     "w": "at",
+     "at": 3.075
+    },
+    {
+     "w": "Chelsea",
+     "at": 3.212
+    },
+    {
+     "w": "Karim",
+     "at": 4.138
+    },
+    {
+     "w": "Benzema",
+     "at": 4.575
+    },
+    {
+     "w": "drops",
+     "at": 5.125
+    },
+    {
+     "w": "deep",
+     "at": 5.487
+    },
+    {
+     "w": "to",
+     "at": 5.75
+    },
+    {
+     "w": "help",
+     "at": 5.875
+    },
+    {
+     "w": "A",
+     "at": 6.487
+    },
+    {
+     "w": "one-two",
+     "at": 6.612
+    },
+    {
+     "w": "with",
+     "at": 7.125
+    },
+    {
+     "w": "Vin\u00edcius",
+     "at": 7.3
+    },
+    {
+     "w": "and",
+     "at": 8.425
+    },
+    {
+     "w": "another",
+     "at": 8.55
+    },
+    {
+     "w": "Now",
+     "at": 9.312
+    },
+    {
+     "w": "he",
+     "at": 9.55
+    },
+    {
+     "w": "sprints",
+     "at": 9.688
+    },
+    {
+     "w": "into",
+     "at": 10.113
+    },
+    {
+     "w": "the",
+     "at": 10.287
+    },
+    {
+     "w": "box",
+     "at": 10.375
+    },
+    {
+     "w": "The",
+     "at": 11.05
+    },
+    {
+     "w": "cross...",
+     "at": 11.15
+    },
+    {
+     "w": "header",
+     "at": 11.5
+    },
+    {
+     "w": "Goal",
+     "at": 12.15
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. Benzema comes back to link play. He passes to Vin\u00edcius and gets it back. Then again! Then he races forward!",
+   "src": "/plays/narration/benzema-signature/2.m4a",
+   "seconds": 10.2,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.113
+    },
+    {
+     "w": "Benzema",
+     "at": 2.112
+    },
+    {
+     "w": "comes",
+     "at": 2.65
+    },
+    {
+     "w": "back",
+     "at": 2.925
+    },
+    {
+     "w": "to",
+     "at": 3.2
+    },
+    {
+     "w": "link",
+     "at": 3.325
+    },
+    {
+     "w": "play",
+     "at": 3.562
+    },
+    {
+     "w": "He",
+     "at": 4.3
+    },
+    {
+     "w": "passes",
+     "at": 4.425
+    },
+    {
+     "w": "to",
+     "at": 4.9
+    },
+    {
+     "w": "Vin\u00edcius",
+     "at": 5.0
+    },
+    {
+     "w": "and",
+     "at": 5.7
+    },
+    {
+     "w": "gets",
+     "at": 5.825
+    },
+    {
+     "w": "it",
+     "at": 6.037
+    },
+    {
+     "w": "back",
+     "at": 6.125
+    },
+    {
+     "w": "Then",
+     "at": 6.888
+    },
+    {
+     "w": "again",
+     "at": 7.1
+    },
+    {
+     "w": "Then",
+     "at": 7.862
+    },
+    {
+     "w": "he",
+     "at": 8.1
+    },
+    {
+     "w": "races",
+     "at": 8.25
+    },
+    {
+     "w": "forward",
+     "at": 8.713
+    }
+   ]
+  },
+  {
+   "label": "Top corner",
+   "text": "Vin\u00edcius crosses, and Benzema heads it into the top corner. What a finish!",
+   "src": "/plays/narration/benzema-signature/3.m4a",
+   "seconds": 5.8,
+   "words": [
+    {
+     "w": "Vin\u00edcius",
+     "at": 0.4
+    },
+    {
+     "w": "crosses",
+     "at": 0.975
+    },
+    {
+     "w": "and",
+     "at": 1.85
+    },
+    {
+     "w": "Benzema",
+     "at": 1.962
+    },
+    {
+     "w": "heads",
+     "at": 2.45
+    },
+    {
+     "w": "it",
+     "at": 2.688
+    },
+    {
+     "w": "into",
+     "at": 2.763
+    },
+    {
+     "w": "the",
+     "at": 2.938
+    },
+    {
+     "w": "top",
+     "at": 3.025
+    },
+    {
+     "w": "corner",
+     "at": 3.3
+    },
+    {
+     "w": "What",
+     "at": 4.188
+    },
+    {
+     "w": "a",
+     "at": 4.338
+    },
+    {
+     "w": "finish",
+     "at": 4.412
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: a striker can drop deep to help build attacks, then sprint into the box to finish.",
+   "src": "/plays/narration/benzema-signature/4.m4a",
+   "seconds": 6.9,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.562
+    },
+    {
+     "w": "a",
+     "at": 1.413
+    },
+    {
+     "w": "striker",
+     "at": 1.538
+    },
+    {
+     "w": "can",
+     "at": 2.0
+    },
+    {
+     "w": "drop",
+     "at": 2.15
+    },
+    {
+     "w": "deep",
+     "at": 2.45
+    },
+    {
+     "w": "to",
+     "at": 2.675
+    },
+    {
+     "w": "help",
+     "at": 2.775
+    },
+    {
+     "w": "build",
+     "at": 3.025
+    },
+    {
+     "w": "attacks",
+     "at": 3.263
+    },
+    {
+     "w": "then",
+     "at": 4.125
+    },
+    {
+     "w": "sprint",
+     "at": 4.375
+    },
+    {
+     "w": "into",
+     "at": 4.737
+    },
+    {
+     "w": "the",
+     "at": 4.912
+    },
+    {
+     "w": "box",
+     "at": 5.0
+    },
+    {
+     "w": "to",
+     "at": 5.375
+    },
+    {
+     "w": "finish",
+     "at": 5.5
+    }
+   ]
+  }
+ ]
+}

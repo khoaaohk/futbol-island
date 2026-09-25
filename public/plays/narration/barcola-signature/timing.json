@@ -1,0 +1,382 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Paris, 2024, against Real Sociedad. Paris Saint-Germain break fast, from left to right. Bradley Barcola takes the ball on the touchline. He runs straight at the defence, cuts inside... and pokes it under the keeper! Two nil!",
+   "src": "/plays/narration/barcola-signature/1.m4a",
+   "seconds": 16.2,
+   "words": [
+    {
+     "w": "Paris",
+     "at": 0.35
+    },
+    {
+     "w": "2024",
+     "at": 0.775
+    },
+    {
+     "w": "against",
+     "at": 1.675
+    },
+    {
+     "w": "Real",
+     "at": 2.05
+    },
+    {
+     "w": "Sociedad",
+     "at": 2.337
+    },
+    {
+     "w": "Paris",
+     "at": 3.612
+    },
+    {
+     "w": "Saint-Germain",
+     "at": 4.013
+    },
+    {
+     "w": "break",
+     "at": 4.825
+    },
+    {
+     "w": "fast",
+     "at": 5.112
+    },
+    {
+     "w": "from",
+     "at": 5.65
+    },
+    {
+     "w": "left",
+     "at": 5.85
+    },
+    {
+     "w": "to",
+     "at": 6.15
+    },
+    {
+     "w": "right",
+     "at": 6.275
+    },
+    {
+     "w": "Bradley",
+     "at": 7.175
+    },
+    {
+     "w": "Barcola",
+     "at": 7.625
+    },
+    {
+     "w": "takes",
+     "at": 8.175
+    },
+    {
+     "w": "the",
+     "at": 8.45
+    },
+    {
+     "w": "ball",
+     "at": 8.55
+    },
+    {
+     "w": "on",
+     "at": 8.863
+    },
+    {
+     "w": "the",
+     "at": 8.963
+    },
+    {
+     "w": "touchline",
+     "at": 9.05
+    },
+    {
+     "w": "He",
+     "at": 10.0
+    },
+    {
+     "w": "runs",
+     "at": 10.15
+    },
+    {
+     "w": "straight",
+     "at": 10.463
+    },
+    {
+     "w": "at",
+     "at": 10.812
+    },
+    {
+     "w": "the",
+     "at": 10.887
+    },
+    {
+     "w": "defence",
+     "at": 10.975
+    },
+    {
+     "w": "cuts",
+     "at": 11.613
+    },
+    {
+     "w": "inside",
+     "at": 11.925
+    },
+    {
+     "w": "and",
+     "at": 12.95
+    },
+    {
+     "w": "pokes",
+     "at": 13.075
+    },
+    {
+     "w": "it",
+     "at": 13.387
+    },
+    {
+     "w": "under",
+     "at": 13.463
+    },
+    {
+     "w": "the",
+     "at": 13.662
+    },
+    {
+     "w": "keeper",
+     "at": 13.75
+    },
+    {
+     "w": "Two",
+     "at": 14.575
+    },
+    {
+     "w": "nil",
+     "at": 14.838
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. The defence is still getting back. Barcola attacks at full speed, before they can get set. Space opens up!",
+   "src": "/plays/narration/barcola-signature/2.m4a",
+   "seconds": 9.4,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.113
+    },
+    {
+     "w": "The",
+     "at": 2.0
+    },
+    {
+     "w": "defence",
+     "at": 2.1
+    },
+    {
+     "w": "is",
+     "at": 2.538
+    },
+    {
+     "w": "still",
+     "at": 2.65
+    },
+    {
+     "w": "getting",
+     "at": 2.925
+    },
+    {
+     "w": "back",
+     "at": 3.225
+    },
+    {
+     "w": "Barcola",
+     "at": 4.013
+    },
+    {
+     "w": "attacks",
+     "at": 4.5
+    },
+    {
+     "w": "at",
+     "at": 4.938
+    },
+    {
+     "w": "full",
+     "at": 5.05
+    },
+    {
+     "w": "speed",
+     "at": 5.338
+    },
+    {
+     "w": "before",
+     "at": 5.787
+    },
+    {
+     "w": "they",
+     "at": 6.062
+    },
+    {
+     "w": "can",
+     "at": 6.2
+    },
+    {
+     "w": "get",
+     "at": 6.325
+    },
+    {
+     "w": "set",
+     "at": 6.537
+    },
+    {
+     "w": "Space",
+     "at": 7.287
+    },
+    {
+     "w": "opens",
+     "at": 7.725
+    },
+    {
+     "w": "up",
+     "at": 8.125
+    }
+   ]
+  },
+  {
+   "label": "The finish",
+   "text": "He veers inside, into the gap, and tucks it under Alex Remiro. Barcola scores!",
+   "src": "/plays/narration/barcola-signature/3.m4a",
+   "seconds": 6.5,
+   "words": [
+    {
+     "w": "He",
+     "at": 0.35
+    },
+    {
+     "w": "veers",
+     "at": 0.487
+    },
+    {
+     "w": "inside",
+     "at": 0.85
+    },
+    {
+     "w": "into",
+     "at": 1.712
+    },
+    {
+     "w": "the",
+     "at": 1.887
+    },
+    {
+     "w": "gap",
+     "at": 1.975
+    },
+    {
+     "w": "and",
+     "at": 2.312
+    },
+    {
+     "w": "tucks",
+     "at": 2.425
+    },
+    {
+     "w": "it",
+     "at": 2.712
+    },
+    {
+     "w": "under",
+     "at": 2.788
+    },
+    {
+     "w": "Alex",
+     "at": 3.013
+    },
+    {
+     "w": "Remiro",
+     "at": 3.4
+    },
+    {
+     "w": "Barcola",
+     "at": 4.412
+    },
+    {
+     "w": "scores",
+     "at": 4.938
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: use your speed early. Run at the defender before they\u2019re set!",
+   "src": "/plays/narration/barcola-signature/4.m4a",
+   "seconds": 5.6,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "use",
+     "at": 1.212
+    },
+    {
+     "w": "your",
+     "at": 1.413
+    },
+    {
+     "w": "speed",
+     "at": 1.562
+    },
+    {
+     "w": "early",
+     "at": 1.95
+    },
+    {
+     "w": "Run",
+     "at": 2.812
+    },
+    {
+     "w": "at",
+     "at": 3.038
+    },
+    {
+     "w": "the",
+     "at": 3.112
+    },
+    {
+     "w": "defender",
+     "at": 3.2
+    },
+    {
+     "w": "before",
+     "at": 3.725
+    },
+    {
+     "w": "they\u2019re",
+     "at": 4.05
+    },
+    {
+     "w": "set",
+     "at": 4.263
+    }
+   ]
+  }
+ ]
+}

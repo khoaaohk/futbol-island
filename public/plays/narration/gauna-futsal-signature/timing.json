@@ -1,0 +1,366 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: World Cup 2024",
+   "text": "The 2024 Futsal World Cup semi-final, in Tashkent. Argentina play France. Number eight is Luciano Gauna, a winger. He tries three shots. Argentina win three two, and reach the final!",
+   "src": "/plays/narration/gauna-futsal-signature/1.m4a",
+   "seconds": 14.8,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "2024",
+     "at": 0.425
+    },
+    {
+     "w": "Futsal",
+     "at": 1.387
+    },
+    {
+     "w": "World",
+     "at": 1.825
+    },
+    {
+     "w": "Cup",
+     "at": 2.125
+    },
+    {
+     "w": "semi-final",
+     "at": 2.4
+    },
+    {
+     "w": "in",
+     "at": 3.275
+    },
+    {
+     "w": "Tashkent",
+     "at": 3.425
+    },
+    {
+     "w": "Argentina",
+     "at": 4.588
+    },
+    {
+     "w": "play",
+     "at": 5.225
+    },
+    {
+     "w": "France",
+     "at": 5.513
+    },
+    {
+     "w": "Number",
+     "at": 6.487
+    },
+    {
+     "w": "eight",
+     "at": 6.775
+    },
+    {
+     "w": "is",
+     "at": 7.05
+    },
+    {
+     "w": "Luciano",
+     "at": 7.213
+    },
+    {
+     "w": "Gauna",
+     "at": 7.787
+    },
+    {
+     "w": "a",
+     "at": 8.412
+    },
+    {
+     "w": "winger",
+     "at": 8.537
+    },
+    {
+     "w": "He",
+     "at": 9.375
+    },
+    {
+     "w": "tries",
+     "at": 9.525
+    },
+    {
+     "w": "three",
+     "at": 9.988
+    },
+    {
+     "w": "shots",
+     "at": 10.325
+    },
+    {
+     "w": "Argentina",
+     "at": 11.25
+    },
+    {
+     "w": "win",
+     "at": 11.875
+    },
+    {
+     "w": "three",
+     "at": 12.137
+    },
+    {
+     "w": "two",
+     "at": 12.438
+    },
+    {
+     "w": "and",
+     "at": 12.825
+    },
+    {
+     "w": "reach",
+     "at": 12.95
+    },
+    {
+     "w": "the",
+     "at": 13.225
+    },
+    {
+     "w": "final",
+     "at": 13.363
+    }
+   ]
+  },
+  {
+   "label": "How he beats a defender",
+   "text": "This is how he beats a defender. He drives at him, fast. The defender backs away. Then stop! The sole stops the ball, and pulls it inside. The defender is stuck. Shoot!",
+   "src": "/plays/narration/gauna-futsal-signature/2.m4a",
+   "seconds": 12.3,
+   "words": [
+    {
+     "w": "This",
+     "at": 0.375
+    },
+    {
+     "w": "is",
+     "at": 0.575
+    },
+    {
+     "w": "how",
+     "at": 0.7
+    },
+    {
+     "w": "he",
+     "at": 0.9
+    },
+    {
+     "w": "beats",
+     "at": 1.062
+    },
+    {
+     "w": "a",
+     "at": 1.337
+    },
+    {
+     "w": "defender",
+     "at": 1.4
+    },
+    {
+     "w": "He",
+     "at": 2.35
+    },
+    {
+     "w": "drives",
+     "at": 2.475
+    },
+    {
+     "w": "at",
+     "at": 2.875
+    },
+    {
+     "w": "him",
+     "at": 2.962
+    },
+    {
+     "w": "fast",
+     "at": 3.175
+    },
+    {
+     "w": "The",
+     "at": 3.9
+    },
+    {
+     "w": "defender",
+     "at": 4.0
+    },
+    {
+     "w": "backs",
+     "at": 4.4
+    },
+    {
+     "w": "away",
+     "at": 4.725
+    },
+    {
+     "w": "Then",
+     "at": 5.562
+    },
+    {
+     "w": "stop",
+     "at": 5.85
+    },
+    {
+     "w": "The",
+     "at": 6.65
+    },
+    {
+     "w": "sole",
+     "at": 6.787
+    },
+    {
+     "w": "stops",
+     "at": 7.125
+    },
+    {
+     "w": "the",
+     "at": 7.475
+    },
+    {
+     "w": "ball",
+     "at": 7.575
+    },
+    {
+     "w": "and",
+     "at": 7.938
+    },
+    {
+     "w": "pulls",
+     "at": 8.05
+    },
+    {
+     "w": "it",
+     "at": 8.338
+    },
+    {
+     "w": "inside",
+     "at": 8.425
+    },
+    {
+     "w": "The",
+     "at": 9.275
+    },
+    {
+     "w": "defender",
+     "at": 9.375
+    },
+    {
+     "w": "is",
+     "at": 9.875
+    },
+    {
+     "w": "stuck",
+     "at": 10.012
+    },
+    {
+     "w": "Shoot",
+     "at": 10.95
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Slow motion. Drive, stop, change direction, go!",
+   "src": "/plays/narration/gauna-futsal-signature/3.m4a",
+   "seconds": 4.5,
+   "words": [
+    {
+     "w": "Slow",
+     "at": 0.4
+    },
+    {
+     "w": "motion",
+     "at": 0.65
+    },
+    {
+     "w": "Drive",
+     "at": 1.462
+    },
+    {
+     "w": "stop",
+     "at": 1.925
+    },
+    {
+     "w": "change",
+     "at": 2.35
+    },
+    {
+     "w": "direction",
+     "at": 2.65
+    },
+    {
+     "w": "go",
+     "at": 3.2
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: drive at the defender, then use your sole to change direction!",
+   "src": "/plays/narration/gauna-futsal-signature/4.m4a",
+   "seconds": 5.4,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "drive",
+     "at": 1.387
+    },
+    {
+     "w": "at",
+     "at": 1.738
+    },
+    {
+     "w": "the",
+     "at": 1.812
+    },
+    {
+     "w": "defender",
+     "at": 1.9
+    },
+    {
+     "w": "then",
+     "at": 2.575
+    },
+    {
+     "w": "use",
+     "at": 2.775
+    },
+    {
+     "w": "your",
+     "at": 2.962
+    },
+    {
+     "w": "sole",
+     "at": 3.112
+    },
+    {
+     "w": "to",
+     "at": 3.4
+    },
+    {
+     "w": "change",
+     "at": 3.538
+    },
+    {
+     "w": "direction",
+     "at": 3.875
+    }
+   ]
+  }
+ ]
+}

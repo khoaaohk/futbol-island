@@ -1,5 +1,40 @@
 import type {TravelMode} from '../town/travelModes';
 
+const OCEAN_STARTS=[.6,5.7,11.1],OCEAN_LENGTHS=[4.5,4.8,4.2];
+export type BottleOceanSample={wash:number;froth:number};
+/** Shared 16-second swell envelope for sound, water and buoyancy. */
+export function sampleBottleOcean(time:number,out:BottleOceanSample){
+ const t=((time%16)+16)%16;out.wash=0;out.froth=0;
+ for(let i=0;i<3;i++){const u=(t-OCEAN_STARTS[i])/OCEAN_LENGTHS[i];if(u>0&&u<1){const attack=Math.min(1,u/.2),recede=Math.max(0,1-(u-.2)/.8),envelope=attack*attack*(3-2*attack)*recede*recede;out.wash+=envelope;out.froth+=envelope*Math.sin(Math.PI*Math.min(1,u/.55))**2;}}
+ return out;
+}
+let bottleOceanClock:(()=>number)|null=null;
+export function readBottleOceanTime(fallback:number){const t=bottleOceanClock?.();return t!==undefined&&Number.isFinite(t)?t:fallback;}
+
+/** A cached shore wash: separate breaking waves and long, thinning backwash.
+ * Remove low rumble before colouring the foam; a constant low-passed bed sounds like traffic.
+ */
+export function fillBottleOcean(data:Float32Array,sampleRate:number,random:()=>number=Math.random){
+ const duration=data.length/sampleRate,hp=Math.exp(-2*Math.PI*180/sampleRate),bodyRate=1-Math.exp(-2*Math.PI*900/sampleRate);
+ const controls=Math.ceil(duration*100)+1;
+ const amplitudes=new Float32Array(controls),rates=new Float32Array(controls),swell={wash:0,froth:0};
+ // Envelopes/cutoffs need only 100 Hz control samples; interpolate them in the audio buffer.
+ // All expensive trig/exponentials are outside the sample-rate loop.
+ for(let i=0;i<controls;i++){
+  const t=i/100,{wash,froth}=sampleBottleOcean(t,swell);
+  amplitudes[i]=(.025+.65*wash)*Math.max(0,Math.min(1,t/.35,(duration-t)/.35));
+  rates[i]=1-Math.exp(-2*Math.PI*(1500+1700*froth)/sampleRate);
+ }
+ let previous=0,high=0,body=0,foam=0;
+ for(let i=0;i<data.length;i++){
+  const position=i/sampleRate*100,index=Math.floor(position),blend=position-index;
+  const white=random()*2-1;high=hp*(high+white-previous);previous=white;body+=bodyRate*(high-body);
+  const foamRate=rates[index]+(rates[index+1]-rates[index])*blend;foam+=foamRate*(high-foam);
+  data[i]=(body*.65+foam*.35)*(amplitudes[index]+(amplitudes[index+1]-amplitudes[index])*blend);
+ }
+ data[0]=data[data.length-1]=0;
+}
+
 /** Quiet, self-contained game Foley. One gesture-unlocked context, no downloads. */
 export function createIslandSound(initialMuted=false,initialVolume=.5){
   let context:AudioContext|null=null,master:GainNode|null=null,noise:AudioBuffer|null=null;
@@ -51,13 +86,23 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
     const c=context!,source=c.createBufferSource(),filter=c.createBiquadFilter();source.buffer=noise;
     filter.type='bandpass';filter.frequency.value=hz;filter.Q.value=.6;source.connect(filter);voice(source,filter,duration,volume,delay);
   }
-  function ui(kind:'hover'|'click'|'expand'|'collapse'){
+  // A card sliding in its plastic sleeve: a short band of noise swept upward, with a faint low body. Hover-rate limited.
+  function slide(){
+    const c=context!,source=c.createBufferSource(),filter=c.createBiquadFilter(),t=c.currentTime;source.buffer=noise;
+    filter.type='bandpass';filter.Q.value=1.1;filter.frequency.setValueAtTime(900,t);filter.frequency.exponentialRampToValueAtTime(3400,t+.13);
+    source.connect(filter);voice(source,filter,.15,.16,0,.02);tone(210,260,.09,.012,'sine',0,.015);
+  }
+  function ui(kind:'hover'|'slide'|'click'|'expand'|'collapse'|'dock'|'undock'|'swipe-right'|'swipe-left'|'path-pop'){
     // Keyboard activation can click in the same task that first resumes audio.
-    if(kind!=='hover'&&context&&context.state!=='running'&&context.state!=='closed'&&!muted&&!hidden&&!disposed){
+    if(kind!=='hover'&&kind!=='slide'&&context&&context.state!=='running'&&context.state!=='closed'&&!muted&&!hidden&&!disposed){
       const requested=performance.now();
       void context.resume().then(()=>{if(context?.state==='running'&&performance.now()-requested<300)ui(kind);}).catch(()=>{});return;
     }
+    if(kind==='slide'){if(ready('slide',.09))slide();return;}
     if(!ready(kind,kind==='hover'?.075:.04))return;
+    if(kind==='path-pop'){tone(660,980,.085,.038,'sine',0,.006);return;}
+    if(kind==='dock'||kind==='undock'){tone(kind==='dock'?420:640,kind==='dock'?640:420,.11,.055,'triangle');return;}
+    if(kind==='swipe-right'||kind==='swipe-left'){tone(kind==='swipe-right'?300:900,kind==='swipe-right'?900:300,.16,.047,'sine');return;}
     if(kind==='expand'||kind==='collapse'){tone(kind==='expand'?430:680,kind==='expand'?680:430,.15,.065,'sine');return;}
     tone(kind==='hover'?750:520,kind==='hover'?920:760,kind==='hover'?.055:.095,kind==='hover'?.045:.1,'sine');
   }
@@ -69,6 +114,8 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
     if(done)tone(1047,1047,.13,.035,'square',.18);
   }
   document.addEventListener('fi2-story-cue',storyCue);
+  const pathCue=(event:Event)=>{const kind=(event as CustomEvent).detail;if(kind==='dock'||kind==='undock'||kind==='swipe-right'||kind==='swipe-left'||kind==='path-pop')ui(kind);};
+  document.addEventListener('fi2-path-cue',pathCue);
   function ride(mode:TravelMode){
     if(!ready('ride:'+mode,.15))return;
     if(mode==='walk'){hiss(380,.1,.22);tone(150,90,.1,.12);}
@@ -136,12 +183,11 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
     if(!oceanRequested||muted||volume===0||hidden||disposed)return;
     unlock();const c=getContext();if(!c||!master)return;
     const start=()=>{if(version!==oceanVersion||!oceanRequested||muted||volume===0||hidden||disposed||!master)return;const source=c.createBufferSource(),filter=c.createBiquadFilter(),gain=c.createGain();
-      const buffer=oceanBuffer??c.createBuffer(1,c.sampleRate*12,c.sampleRate);
-      if(!oceanBuffer){const data=buffer.getChannelData(0);let smooth=0;
-      for(let i=0;i<data.length;i++){smooth=smooth*.96+(Math.random()*2-1)*.12;const phase=i/data.length;data[i]=smooth*(.5+.5*Math.sin(Math.PI*phase)**2);}
-      oceanBuffer=buffer;}
-      source.buffer=buffer;source.loop=true;filter.type='lowpass';filter.frequency.value=1100;gain.gain.value=.35;source.connect(filter);filter.connect(gain);gain.connect(master);sources.add(source);oceanSource=source;oceanGain=gain;
-      source.onended=()=>{sources.delete(source);source.disconnect();filter.disconnect();gain.disconnect();if(oceanSource===source){oceanSource=null;oceanGain=null;}};source.start();
+      const buffer=oceanBuffer??c.createBuffer(1,c.sampleRate*16,c.sampleRate);
+      if(!oceanBuffer){fillBottleOcean(buffer.getChannelData(0),c.sampleRate);oceanBuffer=buffer;}
+      source.buffer=buffer;source.loop=true;filter.type='lowpass';filter.frequency.value=3600;gain.gain.value=0;gain.gain.setValueAtTime(0,c.currentTime);gain.gain.linearRampToValueAtTime(.22,c.currentTime+1.8);source.connect(filter);filter.connect(gain);gain.connect(master);sources.add(source);oceanSource=source;oceanGain=gain;
+      const startedAt=c.currentTime,clock=()=>c.currentTime-startedAt;bottleOceanClock=clock;
+      source.onended=()=>{if(bottleOceanClock===clock)bottleOceanClock=null;sources.delete(source);source.disconnect();filter.disconnect();gain.disconnect();if(oceanSource===source){oceanSource=null;oceanGain=null;}};source.start();
     };if(c.state==='running')start();else void c.resume().then(start).catch(()=>{});
   }
   document.addEventListener('fi2-bottle-ocean',bottleOcean);
@@ -151,6 +197,6 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
   function setVolume(value:number){if(!Number.isFinite(value))return;const wasSilent=volume===0;volume=Math.max(0,Math.min(1,value));debug.volume=volume;if(volume===0)silence();if(master&&context)master.gain.setTargetAtTime(muted?0:.64*volume,context.currentTime,.04);if(wasSilent&&volume>0&&oceanRequested)bottleOcean(new CustomEvent('fi2-bottle-ocean',{detail:true}));}
   function setMuted(value:boolean){muted=value;debug.muted=value;silence();if(master&&context)master.gain.setTargetAtTime(value?0:.64*volume,context.currentTime,.04);if(!value){unlock();if(oceanRequested)bottleOcean(new CustomEvent('fi2-bottle-ocean',{detail:true}));}}
   function visibility(){hidden=document.hidden||mediaPaused;debug.hidden=hidden;silence();if(hidden){if(context?.state==='running')void context.suspend().catch(()=>{});}else if(debug.unlocked){unlock();if(oceanRequested)bottleOcean(new CustomEvent('fi2-bottle-ocean',{detail:true}));}}
-  function dispose(){document.removeEventListener('fi2-bottle-pop',bottlePop);document.removeEventListener('fi2-bottle-ocean',bottleOcean);document.removeEventListener('fi2-story-cue',storyCue);disposed=true;debug.disposed=true;silence();if(context){context.onstatechange=null;void context.close().catch(()=>{});}debug.contextState='closed';}
+  function dispose(){document.removeEventListener('fi2-path-cue',pathCue);document.removeEventListener('fi2-bottle-pop',bottlePop);document.removeEventListener('fi2-bottle-ocean',bottleOcean);document.removeEventListener('fi2-story-cue',storyCue);disposed=true;debug.disposed=true;silence();if(context){context.onstatechange=null;void context.close().catch(()=>{});}debug.contextState='closed';}
   return {setMediaPaused(value:boolean){mediaPaused=value;visibility();},debug,getContext,unlock,ui,ride,move,stair,boundary,fall,impact,ball,boost,honk,truck,setVolume,setMuted,visibility,silence,dispose};
 }

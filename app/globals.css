@@ -585,3 +585,10 @@ button:is([aria-label^="Close" i],[aria-label^="Dismiss" i],[aria-label="Collaps
 .island-revealing .town-scene{animation:islandArrival .48s ease-out both}
 @keyframes islandArrival{from{opacity:.65;filter:blur(4px);transform:scale(1.015)}to{opacity:1;filter:blur(0);transform:scale(1)}}
 @media(prefers-reduced-motion:reduce){.island-revealing .town-scene{animation:none}}
+/* Desktop landing stays below the field action instead of replacing it. */
+@media(min-width:601px) and (pointer:fine){.store-enter-prompt[data-truck-land]{transform:translate(-50%,0)}}
+
+/* The covered field invitation sleeps while a story owns the screen. */
+body:has([data-riso-story]) .field-learn-card:not([hidden]){animation-play-state:paused}
+/* Behind a full-screen menu the prompt is covered; its box-shadow pulse over a backdrop blur would repaint every frame. */
+body:has(dialog[open]) .field-learn-card:not([hidden]){animation-play-state:paused}

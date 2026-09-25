@@ -1,0 +1,169 @@
+{
+ "lesson": "exp11_wingbackcue",
+ "questions": [
+  {
+   "q": "Blue's fullback takes a slow touch. Which picture gives your wing-back cover to press?",
+   "options": [
+    "Outer center back tucked inside",
+    "Near midfielder pushed high",
+    "Outer center back near the winger"
+   ],
+   "correct": 2,
+   "explain": "Yes. The center back is goal-side of the winger and the midfielder guards inside, so the press is covered.",
+   "choiceExplanations": [
+    "Then Blue's winger is free outside, so a pass behind your wing-back goes straight through.",
+    "Then the inside pass is open, so the fullback can play past your press.",
+    "Yes. The center back is goal-side of the winger and the midfielder guards inside, so the press is covered."
+   ],
+   "visual": {
+    "kind": "pickPicture",
+    "pictures": [
+     {
+      "step": 2,
+      "place": {
+       "lcb": {
+        "x": 112,
+        "y": 292
+       }
+      },
+      "focus": [
+       "lb",
+       "lcb",
+       "l8"
+      ],
+      "view": {
+       "x": 0,
+       "y": 170,
+       "w": 175,
+       "h": 160
+      }
+     },
+     {
+      "step": 2,
+      "place": {
+       "l8": {
+        "x": 110,
+        "y": 195
+       }
+      },
+      "focus": [
+       "lb",
+       "lcb",
+       "l8"
+      ],
+      "view": {
+       "x": 0,
+       "y": 170,
+       "w": 175,
+       "h": 160
+      }
+     },
+     {
+      "step": 2,
+      "focus": [
+       "lb",
+       "lcb",
+       "l8"
+      ],
+      "view": {
+       "x": 0,
+       "y": 170,
+       "w": 175,
+       "h": 160
+      }
+     }
+    ]
+   }
+  },
+  {
+   "q": "The wing-back presses the fullback. Tap where the outer center back stays.",
+   "options": [
+    "Up the line behind the wing-back",
+    "Goal-side of Blue's winger",
+    "Tucked in beside the center back"
+   ],
+   "correct": 1,
+   "explain": "Yes. The outer center back stays with the winger, so the pressing wing-back has cover behind.",
+   "choiceExplanations": [
+    "Then nobody holds Blue's winger, so a pass over the press is free.",
+    "Yes. The outer center back stays with the winger, so the pressing wing-back has cover behind.",
+    "That leaves the winger alone outside, so one pass beats the press."
+   ],
+   "visual": {
+    "kind": "tapSpot",
+    "frame": {
+     "step": 4,
+     "hide": [
+      "lcb"
+     ],
+     "focus": [
+      "lb",
+      "dlw"
+     ]
+    },
+    "spots": [
+     {
+      "x": 50,
+      "y": 250
+     },
+     {
+      "x": 58,
+      "y": 305
+     },
+     {
+      "x": 100,
+      "y": 332
+     }
+    ]
+   }
+  },
+  {
+   "q": "Now Blue's right fullback takes a slow touch, and your right center back holds the winger. Drag your wing-back.",
+   "options": [
+    "Approach the fullback from inside",
+    "Tuck into midfield",
+    "Stay deep near your goal"
+   ],
+   "correct": 0,
+   "explain": "Yes. The touch is slow and the winger is covered, so the wing-back can press from inside.",
+   "choiceExplanations": [
+    "Yes. The touch is slow and the winger is covered, so the wing-back can press from inside.",
+    "Your midfielders already guard inside, so the fullback is left free to pass forward.",
+    "Staying deep wastes the slow touch, so the fullback gets time to pick a pass."
+   ],
+   "visual": {
+    "kind": "dragToZone",
+    "frame": {
+     "step": 2,
+     "ball": "drb",
+     "focus": [
+      "rb",
+      "six",
+      "drw"
+     ]
+    },
+    "drag": "rb",
+    "zones": [
+     {
+      "x": 222,
+      "y": 225,
+      "w": 32,
+      "h": 28
+     },
+     {
+      "x": 150,
+      "y": 240,
+      "w": 28,
+      "h": 24
+     },
+     {
+      "x": 230,
+      "y": 345,
+      "w": 40,
+      "h": 30
+     }
+    ]
+   }
+  }
+ ]
+}

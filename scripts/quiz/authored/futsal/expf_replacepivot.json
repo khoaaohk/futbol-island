@@ -1,0 +1,132 @@
+{
+ "lesson": "expf_replacepivot",
+ "questions": [
+  {
+   "q": "True or false? When the pivot comes short, first check if the marker follows.",
+   "options": [
+    "True",
+    "False"
+   ],
+   "correct": 0,
+   "explain": "Right, it's true. If the marker follows the pivot, the space behind opens for a runner.",
+   "choiceExplanations": [
+    "Right, it's true. If the marker follows the pivot, the space behind opens for a runner.",
+    "Check first. The marker's choice tells you if the space behind is open or protected."
+   ],
+   "visual": {
+    "kind": "trueFalse",
+    "frame": {
+     "step": 1,
+     "trails": true,
+     "focus": [
+      "st",
+      "dcb"
+     ]
+    }
+   }
+  },
+  {
+   "q": "The right ala runs deep. What does the last defender do next?",
+   "options": [
+    "Stays tight on the pivot",
+    "Drops back with the runner",
+    "Runs out to press the fixo"
+   ],
+   "correct": 1,
+   "explain": "Yes. The last defender must protect the run, so they release the pivot.",
+   "choiceExplanations": [
+    "Then the runner would be free behind them, heading straight at goal.",
+    "Yes. The last defender must protect the run, so they release the pivot.",
+    "The last defender cannot leave the space behind. The runner would be free to score."
+   ],
+   "visual": {
+    "kind": "whatNext",
+    "frame": {
+     "step": 3,
+     "trails": true,
+     "focus": [
+      "rm",
+      "dcb",
+      "st"
+     ]
+    }
+   }
+  },
+  {
+   "q": "The pivot drops short on the left. Its marker follows. Where does the left ala run?",
+   "options": [
+    "Short beside the pivot",
+    "Back beside the fixo",
+    "Into the space behind"
+   ],
+   "correct": 2,
+   "explain": "Yes. The marker left the space behind, so the left ala replaces the pivot's depth.",
+   "choiceExplanations": [
+    "The pivot is already there. Two players close together are easy to mark.",
+    "Dropping back leaves nobody to use the empty space behind the defenders.",
+    "Yes. The marker left the space behind, so the left ala replaces the pivot's depth."
+   ],
+   "visual": {
+    "kind": "dragToZone",
+    "frame": {
+     "step": 2,
+     "place": {
+      "st": {
+       "x": 115,
+       "y": 205
+      },
+      "dcb": {
+       "x": 118,
+       "y": 178
+      },
+      "dst": {
+       "x": 160,
+       "y": 240
+      },
+      "rm": {
+       "x": 235,
+       "y": 210
+      }
+     },
+     "focus": [
+      "lm",
+      "st",
+      "dcb"
+     ],
+     "marks": [
+      {
+       "kind": "run",
+       "from": {
+        "x": 120,
+        "y": 145
+       },
+       "to": "st",
+       "tone": "gold"
+      }
+     ]
+    },
+    "drag": "lm",
+    "zones": [
+     {
+      "x": 72,
+      "y": 238,
+      "w": 40,
+      "h": 34
+     },
+     {
+      "x": 85,
+      "y": 300,
+      "w": 44,
+      "h": 34
+     },
+     {
+      "x": 40,
+      "y": 130,
+      "w": 44,
+      "h": 36
+     }
+    ]
+   }
+  }
+ ]
+}

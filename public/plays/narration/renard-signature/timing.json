@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Opening night",
+   "text": "Paris, 2019, the Women's World Cup opener: France against South Korea. Just before half-time, Amel Majri swings in a corner from the left... Wendie Renard rises and powers it in!",
+   "src": "/plays/narration/renard-signature/1.m4a",
+   "seconds": 13.9,
+   "words": [
+    {
+     "w": "Paris",
+     "at": 0.35
+    },
+    {
+     "w": "2019",
+     "at": 0.9
+    },
+    {
+     "w": "the",
+     "at": 1.95
+    },
+    {
+     "w": "Women's",
+     "at": 2.087
+    },
+    {
+     "w": "World",
+     "at": 2.538
+    },
+    {
+     "w": "Cup",
+     "at": 2.9
+    },
+    {
+     "w": "opener",
+     "at": 3.15
+    },
+    {
+     "w": "France",
+     "at": 4.05
+    },
+    {
+     "w": "against",
+     "at": 4.45
+    },
+    {
+     "w": "South",
+     "at": 4.888
+    },
+    {
+     "w": "Korea",
+     "at": 5.2
+    },
+    {
+     "w": "Just",
+     "at": 6.2
+    },
+    {
+     "w": "before",
+     "at": 6.5
+    },
+    {
+     "w": "half-time",
+     "at": 6.825
+    },
+    {
+     "w": "Amel",
+     "at": 7.625
+    },
+    {
+     "w": "Majri",
+     "at": 7.963
+    },
+    {
+     "w": "swings",
+     "at": 8.512
+    },
+    {
+     "w": "in",
+     "at": 9.012
+    },
+    {
+     "w": "a",
+     "at": 9.088
+    },
+    {
+     "w": "corner",
+     "at": 9.162
+    },
+    {
+     "w": "from",
+     "at": 9.575
+    },
+    {
+     "w": "the",
+     "at": 9.713
+    },
+    {
+     "w": "left",
+     "at": 9.8
+    },
+    {
+     "w": "Wendie",
+     "at": 10.713
+    },
+    {
+     "w": "Renard",
+     "at": 11.05
+    },
+    {
+     "w": "rises",
+     "at": 11.438
+    },
+    {
+     "w": "and",
+     "at": 12.0
+    },
+    {
+     "w": "powers",
+     "at": 12.137
+    },
+    {
+     "w": "it",
+     "at": 12.562
+    },
+    {
+     "w": "in",
+     "at": 12.65
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. Renard waits near the penalty spot. She jumps, meets the ball at the top of her leap, and heads it over her defender.",
+   "src": "/plays/narration/renard-signature/2.m4a",
+   "seconds": 9.6,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.238
+    },
+    {
+     "w": "Renard",
+     "at": 2.288
+    },
+    {
+     "w": "waits",
+     "at": 2.675
+    },
+    {
+     "w": "near",
+     "at": 3.0
+    },
+    {
+     "w": "the",
+     "at": 3.212
+    },
+    {
+     "w": "penalty",
+     "at": 3.3
+    },
+    {
+     "w": "spot",
+     "at": 3.812
+    },
+    {
+     "w": "She",
+     "at": 4.688
+    },
+    {
+     "w": "jumps",
+     "at": 4.862
+    },
+    {
+     "w": "meets",
+     "at": 5.537
+    },
+    {
+     "w": "the",
+     "at": 5.825
+    },
+    {
+     "w": "ball",
+     "at": 5.925
+    },
+    {
+     "w": "at",
+     "at": 6.237
+    },
+    {
+     "w": "the",
+     "at": 6.312
+    },
+    {
+     "w": "top",
+     "at": 6.412
+    },
+    {
+     "w": "of",
+     "at": 6.662
+    },
+    {
+     "w": "her",
+     "at": 6.737
+    },
+    {
+     "w": "leap",
+     "at": 6.875
+    },
+    {
+     "w": "and",
+     "at": 7.225
+    },
+    {
+     "w": "heads",
+     "at": 7.35
+    },
+    {
+     "w": "it",
+     "at": 7.6
+    },
+    {
+     "w": "over",
+     "at": 7.725
+    },
+    {
+     "w": "her",
+     "at": 7.938
+    },
+    {
+     "w": "defender",
+     "at": 8.05
+    }
+   ]
+  },
+  {
+   "label": "Behind the goal",
+   "text": "From behind the goal: the keeper doesn't move. Her second header of the night! France win four\u2013nil.",
+   "src": "/plays/narration/renard-signature/3.m4a",
+   "seconds": 7.1,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.375
+    },
+    {
+     "w": "behind",
+     "at": 0.512
+    },
+    {
+     "w": "the",
+     "at": 0.887
+    },
+    {
+     "w": "goal",
+     "at": 0.975
+    },
+    {
+     "w": "the",
+     "at": 1.5
+    },
+    {
+     "w": "keeper",
+     "at": 1.6
+    },
+    {
+     "w": "doesn't",
+     "at": 1.975
+    },
+    {
+     "w": "move",
+     "at": 2.25
+    },
+    {
+     "w": "Her",
+     "at": 3.1
+    },
+    {
+     "w": "second",
+     "at": 3.288
+    },
+    {
+     "w": "header",
+     "at": 3.625
+    },
+    {
+     "w": "of",
+     "at": 3.888
+    },
+    {
+     "w": "the",
+     "at": 3.962
+    },
+    {
+     "w": "night",
+     "at": 4.05
+    },
+    {
+     "w": "France",
+     "at": 4.638
+    },
+    {
+     "w": "win",
+     "at": 5.013
+    },
+    {
+     "w": "four",
+     "at": 5.3
+    },
+    {
+     "w": "nil",
+     "at": 5.775
+    }
+   ]
+  },
+  {
+   "label": "Up, then down",
+   "text": "The secret? Attack the ball at its highest point, then head it down towards goal.",
+   "src": "/plays/narration/renard-signature/4.m4a",
+   "seconds": 5.8,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "secret",
+     "at": 0.463
+    },
+    {
+     "w": "Attack",
+     "at": 1.363
+    },
+    {
+     "w": "the",
+     "at": 1.738
+    },
+    {
+     "w": "ball",
+     "at": 1.825
+    },
+    {
+     "w": "at",
+     "at": 2.112
+    },
+    {
+     "w": "its",
+     "at": 2.188
+    },
+    {
+     "w": "highest",
+     "at": 2.3
+    },
+    {
+     "w": "point",
+     "at": 2.7
+    },
+    {
+     "w": "then",
+     "at": 3.325
+    },
+    {
+     "w": "head",
+     "at": 3.55
+    },
+    {
+     "w": "it",
+     "at": 3.712
+    },
+    {
+     "w": "down",
+     "at": 3.8
+    },
+    {
+     "w": "towards",
+     "at": 4.075
+    },
+    {
+     "w": "goal",
+     "at": 4.425
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,362 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: the Euro 2026 final",
+   "text": "The Euro 2026 final. Portugal are losing to Spain, three to two. Then Pauleta scores! Three all!",
+   "src": "/plays/narration/pauleta-futsal-signature/1.m4a",
+   "seconds": 8.3,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "Euro",
+     "at": 0.425
+    },
+    {
+     "w": "2026",
+     "at": 0.725
+    },
+    {
+     "w": "final",
+     "at": 1.65
+    },
+    {
+     "w": "Portugal",
+     "at": 2.513
+    },
+    {
+     "w": "are",
+     "at": 3.05
+    },
+    {
+     "w": "losing",
+     "at": 3.2
+    },
+    {
+     "w": "to",
+     "at": 3.55
+    },
+    {
+     "w": "Spain",
+     "at": 3.688
+    },
+    {
+     "w": "three",
+     "at": 4.263
+    },
+    {
+     "w": "to",
+     "at": 4.5
+    },
+    {
+     "w": "two",
+     "at": 4.638
+    },
+    {
+     "w": "Then",
+     "at": 5.338
+    },
+    {
+     "w": "Pauleta",
+     "at": 5.55
+    },
+    {
+     "w": "scores",
+     "at": 5.987
+    },
+    {
+     "w": "Three",
+     "at": 6.7
+    },
+    {
+     "w": "all",
+     "at": 7.013
+    }
+   ]
+  },
+  {
+   "label": "How he does it",
+   "text": "His special move is the pass across the box. Watch how he does it. He races down the left, gets to the end line, and rolls it across the goal.",
+   "src": "/plays/narration/pauleta-futsal-signature/2.m4a",
+   "seconds": 10.2,
+   "words": [
+    {
+     "w": "His",
+     "at": 0.35
+    },
+    {
+     "w": "special",
+     "at": 0.5
+    },
+    {
+     "w": "move",
+     "at": 0.912
+    },
+    {
+     "w": "is",
+     "at": 1.325
+    },
+    {
+     "w": "the",
+     "at": 1.475
+    },
+    {
+     "w": "pass",
+     "at": 1.587
+    },
+    {
+     "w": "across",
+     "at": 1.975
+    },
+    {
+     "w": "the",
+     "at": 2.325
+    },
+    {
+     "w": "box",
+     "at": 2.425
+    },
+    {
+     "w": "Watch",
+     "at": 3.312
+    },
+    {
+     "w": "how",
+     "at": 3.65
+    },
+    {
+     "w": "he",
+     "at": 3.812
+    },
+    {
+     "w": "does",
+     "at": 3.925
+    },
+    {
+     "w": "it",
+     "at": 4.162
+    },
+    {
+     "w": "He",
+     "at": 4.8
+    },
+    {
+     "w": "races",
+     "at": 4.95
+    },
+    {
+     "w": "down",
+     "at": 5.4
+    },
+    {
+     "w": "the",
+     "at": 5.638
+    },
+    {
+     "w": "left",
+     "at": 5.725
+    },
+    {
+     "w": "gets",
+     "at": 6.3
+    },
+    {
+     "w": "to",
+     "at": 6.55
+    },
+    {
+     "w": "the",
+     "at": 6.638
+    },
+    {
+     "w": "end",
+     "at": 6.787
+    },
+    {
+     "w": "line",
+     "at": 7.05
+    },
+    {
+     "w": "and",
+     "at": 7.65
+    },
+    {
+     "w": "rolls",
+     "at": 7.787
+    },
+    {
+     "w": "it",
+     "at": 8.2
+    },
+    {
+     "w": "across",
+     "at": 8.3
+    },
+    {
+     "w": "the",
+     "at": 8.675
+    },
+    {
+     "w": "goal",
+     "at": 8.775
+    }
+   ]
+  },
+  {
+   "label": "Replay: the back post",
+   "text": "Again, slowly. The keeper can\u2019t reach it. At the back post, a teammate taps it in!",
+   "src": "/plays/narration/pauleta-futsal-signature/3.m4a",
+   "seconds": 6.4,
+   "words": [
+    {
+     "w": "Again",
+     "at": 0.375
+    },
+    {
+     "w": "slowly",
+     "at": 0.812
+    },
+    {
+     "w": "The",
+     "at": 1.65
+    },
+    {
+     "w": "keeper",
+     "at": 1.75
+    },
+    {
+     "w": "can\u2019t",
+     "at": 2.1
+    },
+    {
+     "w": "reach",
+     "at": 2.375
+    },
+    {
+     "w": "it",
+     "at": 2.663
+    },
+    {
+     "w": "At",
+     "at": 3.15
+    },
+    {
+     "w": "the",
+     "at": 3.288
+    },
+    {
+     "w": "back",
+     "at": 3.375
+    },
+    {
+     "w": "post",
+     "at": 3.663
+    },
+    {
+     "w": "a",
+     "at": 4.112
+    },
+    {
+     "w": "teammate",
+     "at": 4.213
+    },
+    {
+     "w": "taps",
+     "at": 4.725
+    },
+    {
+     "w": "it",
+     "at": 5.013
+    },
+    {
+     "w": "in",
+     "at": 5.1
+    }
+   ]
+  },
+  {
+   "label": "Practise it",
+   "text": "Now you try. Pass across the box to the back post, where a teammate can tap it in!",
+   "src": "/plays/narration/pauleta-futsal-signature/4.m4a",
+   "seconds": 6.3,
+   "words": [
+    {
+     "w": "Now",
+     "at": 0.425
+    },
+    {
+     "w": "you",
+     "at": 0.65
+    },
+    {
+     "w": "try",
+     "at": 0.812
+    },
+    {
+     "w": "Pass",
+     "at": 1.688
+    },
+    {
+     "w": "across",
+     "at": 1.988
+    },
+    {
+     "w": "the",
+     "at": 2.312
+    },
+    {
+     "w": "box",
+     "at": 2.4
+    },
+    {
+     "w": "to",
+     "at": 2.775
+    },
+    {
+     "w": "the",
+     "at": 2.862
+    },
+    {
+     "w": "back",
+     "at": 2.95
+    },
+    {
+     "w": "post",
+     "at": 3.225
+    },
+    {
+     "w": "where",
+     "at": 3.825
+    },
+    {
+     "w": "a",
+     "at": 3.962
+    },
+    {
+     "w": "teammate",
+     "at": 4.037
+    },
+    {
+     "w": "can",
+     "at": 4.55
+    },
+    {
+     "w": "tap",
+     "at": 4.675
+    },
+    {
+     "w": "it",
+     "at": 4.912
+    },
+    {
+     "w": "in",
+     "at": 5.0
+    }
+   ]
+  }
+ ]
+}

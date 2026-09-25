@@ -1,0 +1,18 @@
+{"lesson":"learn9_receive","questions":[
+{"q":"True or false? The midfielder waits for the ball to arrive before looking around.",
+ "options":["True","False"],"correct":1,
+ "explain":"Right, it's false. The midfielder checks over a shoulder first, so they already know where the pressure is.",
+ "choiceExplanations":["Look at the start: the midfielder checks over a shoulder before the pass arrives.","Right, it's false. The midfielder checks over a shoulder first, so they already know where the pressure is."],
+ "visual":{"kind":"trueFalse","frame":{"step":0,"focus":["lcm","dst"]}}},
+{"q":"The midfielder just returned the ball to the defender. What should the midfielder do next?",
+ "options":["Stand still and watch the pass","Run far forward past the defender","Move sideways to offer a new angle"],"correct":2,
+ "explain":"Yes. Moving sideways gives the next pass a new route around the defender.",
+ "choiceExplanations":["Standing still keeps you behind the same defender, so the pass back to you is blocked.","Running far away leaves the defender with the ball alone, with no close support.","Yes. Moving sideways gives the next pass a new route around the defender."],
+ "visual":{"kind":"whatNext","frame":{"step":8,"focus":["lcm","dst"],"trails":true}}},
+{"q":"Now the defender presses from your left side. Where should your first touch go?",
+ "options":["Forward and to the right","Forward and to the left","Straight back toward our goal"],"correct":0,
+ "explain":"Yes. The pressure is on the left, so the open space is to your right.",
+ "choiceExplanations":["Yes. The pressure is on the left, so the open space is to your right.","That touch goes toward the defender, so they can win the ball.","The space ahead on the right is open, so going back wastes the chance to turn."],
+ "visual":{"kind":"tapSpot","frame":{"step":2,"place":{"dst":{"x":78,"y":238}},"ball":"lcm","focus":["lcm","dst"]},
+  "spots":[{"x":130,"y":226},{"x":70,"y":210},{"x":100,"y":295}]}}
+]}

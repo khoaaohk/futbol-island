@@ -1,0 +1,1347 @@
+{
+  "stories": 22,
+  "seams": 117,
+  "samples": 1060,
+  "errors": [],
+  "report": [
+    {
+      "id": "boat-weather",
+      "title": "The Boat and the Weather",
+      "mode": "chapters",
+      "samples": 45,
+      "maxOps": 207,
+      "seams": [
+        {
+          "chapter": 0,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 1,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 2,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 3,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 4,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        }
+      ],
+      "drawErrors": [],
+      "starts": [
+        0,
+        10.850010000000001,
+        19.53301,
+        31.78301,
+        43.43301,
+        54.48301000000001
+      ]
+    },
+    {
+      "id": "chalk-line",
+      "title": "The Chalk Line",
+      "mode": "chapters",
+      "samples": 45,
+      "maxOps": 179,
+      "seams": [
+        {
+          "chapter": 0,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 1,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 2,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 3,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 4,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        }
+      ],
+      "drawErrors": [],
+      "starts": [
+        0,
+        10.05001,
+        20.60002,
+        31.25002,
+        41.30002,
+        51.850030000000004
+      ]
+    },
+    {
+      "id": "different-tides",
+      "title": "Different Tides",
+      "mode": "chapters",
+      "samples": 45,
+      "maxOps": 157,
+      "seams": [
+        {
+          "chapter": 0,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 1,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 2,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 3,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 4,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        }
+      ],
+      "drawErrors": [],
+      "starts": [
+        0,
+        10,
+        20.8,
+        30.6,
+        39.75001,
+        53.400020000000005
+      ]
+    },
+    {
+      "id": "empathy",
+      "title": "Emotional Intelligence",
+      "mode": "chapters",
+      "samples": 45,
+      "maxOps": 182,
+      "seams": [
+        {
+          "chapter": 0,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 1,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 2,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 3,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 4,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        }
+      ],
+      "drawErrors": [],
+      "starts": [
+        0,
+        10.350010000000001,
+        23.000010000000003,
+        33.450010000000006,
+        45.00001,
+        54.15001
+      ]
+    },
+    {
+      "id": "futsl",
+      "title": "Love Futsl",
+      "mode": "track",
+      "samples": 34,
+      "maxOps": 155,
+      "seams": [
+        {
+          "chapter": 0,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 1,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 2,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 3,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 4,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 5,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        }
+      ],
+      "drawErrors": [],
+      "starts": [
+        0,
+        7.558,
+        21.734,
+        32.404,
+        43.862,
+        53.591,
+        65.735
+      ]
+    },
+    {
+      "id": "grit",
+      "title": "Grit",
+      "mode": "track",
+      "samples": 42,
+      "maxOps": 358,
+      "seams": [
+        {
+          "chapter": 0,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 1,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 2,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 3,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 4,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 5,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 6,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 7,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        }
+      ],
+      "drawErrors": [],
+      "starts": [
+        0,
+        8.475,
+        17.879,
+        27.98,
+        42.724,
+        50.828,
+        56.842,
+        67.791,
+        78.588
+      ]
+    },
+    {
+      "id": "harbour-night",
+      "title": "The Harbour at Night",
+      "mode": "chapters",
+      "samples": 45,
+      "maxOps": 309,
+      "seams": [
+        {
+          "chapter": 0,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 1,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 2,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 3,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 4,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        }
+      ],
+      "drawErrors": [],
+      "starts": [
+        0,
+        13.350010000000001,
+        23.40002,
+        35.55003,
+        44.70003,
+        55.05003
+      ]
+    },
+    {
+      "id": "house-player",
+      "title": "The House You Build",
+      "mode": "chapters",
+      "samples": 62,
+      "maxOps": 203,
+      "seams": [
+        {
+          "chapter": 0,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 1,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 2,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 3,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 4,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        }
+      ],
+      "drawErrors": [],
+      "starts": [
+        0,
+        12.55001,
+        31.900009999999998,
+        44.400009999999995,
+        60.75001999999999,
+        76.00001999999999
+      ]
+    },
+    {
+      "id": "kite-turned",
+      "title": "The Kite That Turned",
+      "mode": "chapters",
+      "samples": 45,
+      "maxOps": 177,
+      "seams": [
+        {
+          "chapter": 0,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 1,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 2,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 3,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 4,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        }
+      ],
+      "drawErrors": [],
+      "starts": [
+        0,
+        13.25001,
+        27.50001,
+        39.75002,
+        55.40003,
+        70.35003
+      ]
+    },
+    {
+      "id": "loss",
+      "title": "After the Final Whistle",
+      "mode": "chapters",
+      "samples": 45,
+      "maxOps": 131,
+      "seams": [
+        {
+          "chapter": 0,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 1,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 2,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 3,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 4,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        }
+      ],
+      "drawErrors": [],
+      "starts": [
+        0,
+        10.517,
+        19.734,
+        31.084010000000003,
+        43.934020000000004,
+        55.15102
+      ]
+    },
+    {
+      "id": "loud-track",
+      "title": "The Loud Track",
+      "mode": "chapters",
+      "samples": 54,
+      "maxOps": 210,
+      "seams": [
+        {
+          "chapter": 0,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 1,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 2,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 3,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 4,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        }
+      ],
+      "drawErrors": [],
+      "starts": [
+        0,
+        11.45001,
+        19.200020000000002,
+        27.250020000000003,
+        41.100030000000004,
+        54.25003
+      ]
+    },
+    {
+      "id": "more-shirt",
+      "title": "More Than a Shirt",
+      "mode": "chapters",
+      "samples": 45,
+      "maxOps": 443,
+      "seams": [
+        {
+          "chapter": 0,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 1,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 2,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 3,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 4,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        }
+      ],
+      "drawErrors": [],
+      "starts": [
+        0,
+        10.85,
+        20.7,
+        33.35001,
+        43.800019999999996,
+        55.15003
+      ]
+    },
+    {
+      "id": "pick-a-purpose",
+      "title": "Pick a Purpose",
+      "mode": "chapters",
+      "samples": 58,
+      "maxOps": 190,
+      "seams": [
+        {
+          "chapter": 0,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 1,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 2,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 3,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 4,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        }
+      ],
+      "drawErrors": [],
+      "starts": [
+        0,
+        10.95001,
+        22.700020000000002,
+        33.75003,
+        45.20004,
+        54.35004
+      ]
+    },
+    {
+      "id": "place-picture",
+      "title": "A Place in the Picture",
+      "mode": "chapters",
+      "samples": 53,
+      "maxOps": 203,
+      "seams": [
+        {
+          "chapter": 0,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 1,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 2,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 3,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 4,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        }
+      ],
+      "drawErrors": [],
+      "starts": [
+        0,
+        8.7,
+        19.7,
+        28.9,
+        39.599999999999994,
+        50.699999999999996
+      ]
+    },
+    {
+      "id": "quiet-lantern",
+      "title": "The Quiet Lantern",
+      "mode": "chapters",
+      "samples": 45,
+      "maxOps": 698,
+      "seams": [
+        {
+          "chapter": 0,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 1,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 2,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 3,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 4,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        }
+      ],
+      "drawErrors": [],
+      "starts": [
+        0,
+        12.450000000000001,
+        23.1,
+        37.85001,
+        51.200019999999995,
+        67.45003
+      ]
+    },
+    {
+      "id": "regulate",
+      "title": "Regulating emotions",
+      "mode": "track",
+      "samples": 42,
+      "maxOps": 214,
+      "seams": [
+        {
+          "chapter": 0,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 1,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 2,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 3,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 4,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 5,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 6,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 7,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        }
+      ],
+      "drawErrors": [],
+      "starts": [
+        0,
+        12.272,
+        18.564,
+        24.218,
+        34.063,
+        42.933,
+        50.189,
+        59.698,
+        71.645
+      ]
+    },
+    {
+      "id": "reset",
+      "title": "Mental Toughness",
+      "mode": "chapters",
+      "samples": 45,
+      "maxOps": 172,
+      "seams": [
+        {
+          "chapter": 0,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 1,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 2,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 3,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 4,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        }
+      ],
+      "drawErrors": [],
+      "starts": [
+        0,
+        11.15,
+        24.90001,
+        38.750020000000006,
+        55.80003000000001,
+        69.85003
+      ]
+    },
+    {
+      "id": "room-to-invent",
+      "title": "Room to Invent",
+      "mode": "chapters",
+      "samples": 58,
+      "maxOps": 189,
+      "seams": [
+        {
+          "chapter": 0,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 1,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 2,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 3,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 4,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        }
+      ],
+      "drawErrors": [],
+      "starts": [
+        0,
+        10.15001,
+        30.500009999999996,
+        42.25001999999999,
+        53.90001999999999,
+        69.35002999999999
+      ]
+    },
+    {
+      "id": "signal-water",
+      "title": "The Signal Across the Water",
+      "mode": "chapters",
+      "samples": 56,
+      "maxOps": 229,
+      "seams": [
+        {
+          "chapter": 0,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 1,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 2,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 3,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 4,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        }
+      ],
+      "drawErrors": [],
+      "starts": [
+        0,
+        12.25,
+        25.30001,
+        35.65001,
+        45.60002,
+        61.950019999999995
+      ]
+    },
+    {
+      "id": "unfinished-map",
+      "title": "The Unfinished Map",
+      "mode": "chapters",
+      "samples": 45,
+      "maxOps": 195,
+      "seams": [
+        {
+          "chapter": 0,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 1,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 2,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 3,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 4,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        }
+      ],
+      "drawErrors": [],
+      "starts": [
+        0,
+        10.55001,
+        20.90002,
+        33.05002,
+        43.30002,
+        53.650020000000005
+      ]
+    },
+    {
+      "id": "windshield",
+      "title": "The Windshield",
+      "mode": "chapters",
+      "samples": 61,
+      "maxOps": 465,
+      "seams": [
+        {
+          "chapter": 0,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 1,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 2,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 3,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 4,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        }
+      ],
+      "drawErrors": [],
+      "starts": [
+        0,
+        12.2,
+        23.95,
+        36.30001,
+        49.15001,
+        62.80002
+      ]
+    },
+    {
+      "id": "woven-court",
+      "title": "The Woven Court",
+      "mode": "chapters",
+      "samples": 45,
+      "maxOps": 153,
+      "seams": [
+        {
+          "chapter": 0,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 1,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 2,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 3,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        },
+        {
+          "chapter": 4,
+          "max": 0,
+          "changed": 0,
+          "heldMax": 0,
+          "heldChangedPct": 0,
+          "transparent": 0
+        }
+      ],
+      "drawErrors": [],
+      "starts": [
+        0,
+        11.25,
+        21.40001,
+        31.450020000000002,
+        43.117020000000004,
+        56.767030000000005
+      ]
+    }
+  ]
+}

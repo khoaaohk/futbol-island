@@ -1,0 +1,362 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The Bernab\u00e9u, 2009",
+   "text": "The Bernab\u00e9u, 2009: Real Madrid against Betis. The ball is slipped through, and Ra\u00fal is away! Ricardo rushes out, and Ra\u00fal scoops it over him! Goal!",
+   "src": "/plays/narration/raul-signature/1.m4a",
+   "seconds": 11.5,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "Bernab\u00e9u",
+     "at": 0.425
+    },
+    {
+     "w": "2009",
+     "at": 1.2
+    },
+    {
+     "w": "Real",
+     "at": 2.388
+    },
+    {
+     "w": "Madrid",
+     "at": 2.638
+    },
+    {
+     "w": "against",
+     "at": 3.013
+    },
+    {
+     "w": "Betis",
+     "at": 3.375
+    },
+    {
+     "w": "The",
+     "at": 4.325
+    },
+    {
+     "w": "ball",
+     "at": 4.425
+    },
+    {
+     "w": "is",
+     "at": 4.713
+    },
+    {
+     "w": "slipped",
+     "at": 4.838
+    },
+    {
+     "w": "through",
+     "at": 5.188
+    },
+    {
+     "w": "and",
+     "at": 5.575
+    },
+    {
+     "w": "Ra\u00fal",
+     "at": 5.713
+    },
+    {
+     "w": "is",
+     "at": 6.037
+    },
+    {
+     "w": "away",
+     "at": 6.15
+    },
+    {
+     "w": "Ricardo",
+     "at": 6.987
+    },
+    {
+     "w": "rushes",
+     "at": 7.525
+    },
+    {
+     "w": "out",
+     "at": 7.9
+    },
+    {
+     "w": "and",
+     "at": 8.162
+    },
+    {
+     "w": "Ra\u00fal",
+     "at": 8.275
+    },
+    {
+     "w": "scoops",
+     "at": 8.588
+    },
+    {
+     "w": "it",
+     "at": 8.938
+    },
+    {
+     "w": "over",
+     "at": 9.012
+    },
+    {
+     "w": "him",
+     "at": 9.25
+    },
+    {
+     "w": "Goal",
+     "at": 10.025
+    }
+   ]
+  },
+  {
+   "label": "Stay cool",
+   "text": "Watch again, slowly. Ricardo charges out. Ra\u00fal stays cool. He slips his left foot under the ball and lifts it softly over the keeper.",
+   "src": "/plays/narration/raul-signature/2.m4a",
+   "seconds": 9.9,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.188
+    },
+    {
+     "w": "Ricardo",
+     "at": 2.138
+    },
+    {
+     "w": "charges",
+     "at": 2.638
+    },
+    {
+     "w": "out",
+     "at": 3.025
+    },
+    {
+     "w": "Ra\u00fal",
+     "at": 3.712
+    },
+    {
+     "w": "stays",
+     "at": 4.037
+    },
+    {
+     "w": "cool",
+     "at": 4.487
+    },
+    {
+     "w": "He",
+     "at": 5.35
+    },
+    {
+     "w": "slips",
+     "at": 5.513
+    },
+    {
+     "w": "his",
+     "at": 5.787
+    },
+    {
+     "w": "left",
+     "at": 5.95
+    },
+    {
+     "w": "foot",
+     "at": 6.237
+    },
+    {
+     "w": "under",
+     "at": 6.438
+    },
+    {
+     "w": "the",
+     "at": 6.638
+    },
+    {
+     "w": "ball",
+     "at": 6.725
+    },
+    {
+     "w": "and",
+     "at": 7.075
+    },
+    {
+     "w": "lifts",
+     "at": 7.2
+    },
+    {
+     "w": "it",
+     "at": 7.5
+    },
+    {
+     "w": "softly",
+     "at": 7.675
+    },
+    {
+     "w": "over",
+     "at": 8.175
+    },
+    {
+     "w": "the",
+     "at": 8.387
+    },
+    {
+     "w": "keeper",
+     "at": 8.475
+    }
+   ]
+  },
+  {
+   "label": "The Raulina",
+   "text": "It drops into the empty net! A newspaper said this chip needed a name: the Raulina!",
+   "src": "/plays/narration/raul-signature/3.m4a",
+   "seconds": 6.4,
+   "words": [
+    {
+     "w": "It",
+     "at": 0.35
+    },
+    {
+     "w": "drops",
+     "at": 0.475
+    },
+    {
+     "w": "into",
+     "at": 0.812
+    },
+    {
+     "w": "the",
+     "at": 0.988
+    },
+    {
+     "w": "empty",
+     "at": 1.125
+    },
+    {
+     "w": "net",
+     "at": 1.45
+    },
+    {
+     "w": "A",
+     "at": 2.212
+    },
+    {
+     "w": "newspaper",
+     "at": 2.337
+    },
+    {
+     "w": "said",
+     "at": 2.975
+    },
+    {
+     "w": "this",
+     "at": 3.163
+    },
+    {
+     "w": "chip",
+     "at": 3.362
+    },
+    {
+     "w": "needed",
+     "at": 3.625
+    },
+    {
+     "w": "a",
+     "at": 3.888
+    },
+    {
+     "w": "name",
+     "at": 3.95
+    },
+    {
+     "w": "the",
+     "at": 4.75
+    },
+    {
+     "w": "Raulina",
+     "at": 4.85
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: when the keeper rushes out, a gentle chip can be the best finish.",
+   "src": "/plays/narration/raul-signature/4.m4a",
+   "seconds": 5.7,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.512
+    },
+    {
+     "w": "when",
+     "at": 1.325
+    },
+    {
+     "w": "the",
+     "at": 1.462
+    },
+    {
+     "w": "keeper",
+     "at": 1.55
+    },
+    {
+     "w": "rushes",
+     "at": 1.925
+    },
+    {
+     "w": "out",
+     "at": 2.3
+    },
+    {
+     "w": "a",
+     "at": 2.725
+    },
+    {
+     "w": "gentle",
+     "at": 2.837
+    },
+    {
+     "w": "chip",
+     "at": 3.25
+    },
+    {
+     "w": "can",
+     "at": 3.525
+    },
+    {
+     "w": "be",
+     "at": 3.638
+    },
+    {
+     "w": "the",
+     "at": 3.775
+    },
+    {
+     "w": "best",
+     "at": 3.875
+    },
+    {
+     "w": "finish",
+     "at": 4.2
+    }
+   ]
+  }
+ ]
+}

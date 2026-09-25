@@ -1,0 +1,378 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Semi-final, live",
+   "text": "Amsterdam, 2000. Italy and the Netherlands go to penalties. Francesco Totti tells his teammates: I'm going to chip it! He strolls up... the keeper dives... and Totti scoops it down the middle. Goal!",
+   "src": "/plays/narration/totti-cucchiaio-2000/1.m4a",
+   "seconds": 14.5,
+   "words": [
+    {
+     "w": "Amsterdam",
+     "at": 0.4
+    },
+    {
+     "w": "2000",
+     "at": 1.163
+    },
+    {
+     "w": "Italy",
+     "at": 2.388
+    },
+    {
+     "w": "and",
+     "at": 2.775
+    },
+    {
+     "w": "the",
+     "at": 2.888
+    },
+    {
+     "w": "Netherlands",
+     "at": 2.975
+    },
+    {
+     "w": "go",
+     "at": 3.6
+    },
+    {
+     "w": "to",
+     "at": 3.763
+    },
+    {
+     "w": "penalties",
+     "at": 3.85
+    },
+    {
+     "w": "Francesco",
+     "at": 5.013
+    },
+    {
+     "w": "Totti",
+     "at": 5.763
+    },
+    {
+     "w": "tells",
+     "at": 6.125
+    },
+    {
+     "w": "his",
+     "at": 6.388
+    },
+    {
+     "w": "teammates",
+     "at": 6.562
+    },
+    {
+     "w": "I'm",
+     "at": 7.213
+    },
+    {
+     "w": "going",
+     "at": 7.338
+    },
+    {
+     "w": "to",
+     "at": 7.513
+    },
+    {
+     "w": "chip",
+     "at": 7.612
+    },
+    {
+     "w": "it",
+     "at": 7.875
+    },
+    {
+     "w": "He",
+     "at": 8.225
+    },
+    {
+     "w": "strolls",
+     "at": 8.375
+    },
+    {
+     "w": "up",
+     "at": 8.825
+    },
+    {
+     "w": "the",
+     "at": 9.412
+    },
+    {
+     "w": "keeper",
+     "at": 9.5
+    },
+    {
+     "w": "dives",
+     "at": 9.875
+    },
+    {
+     "w": "and",
+     "at": 10.875
+    },
+    {
+     "w": "Totti",
+     "at": 11.0
+    },
+    {
+     "w": "scoops",
+     "at": 11.425
+    },
+    {
+     "w": "it",
+     "at": 11.787
+    },
+    {
+     "w": "down",
+     "at": 11.875
+    },
+    {
+     "w": "the",
+     "at": 12.088
+    },
+    {
+     "w": "middle",
+     "at": 12.175
+    },
+    {
+     "w": "Goal",
+     "at": 13.0
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again. Van der Sar leans one way, then dives the other. Totti lifts it softly over him.",
+   "src": "/plays/narration/totti-cucchiaio-2000/2.m4a",
+   "seconds": 7.8,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "Van",
+     "at": 1.538
+    },
+    {
+     "w": "der",
+     "at": 1.825
+    },
+    {
+     "w": "Sar",
+     "at": 2.075
+    },
+    {
+     "w": "leans",
+     "at": 2.425
+    },
+    {
+     "w": "one",
+     "at": 2.75
+    },
+    {
+     "w": "way",
+     "at": 2.975
+    },
+    {
+     "w": "then",
+     "at": 3.4
+    },
+    {
+     "w": "dives",
+     "at": 3.6
+    },
+    {
+     "w": "the",
+     "at": 4.088
+    },
+    {
+     "w": "other",
+     "at": 4.225
+    },
+    {
+     "w": "Totti",
+     "at": 4.938
+    },
+    {
+     "w": "lifts",
+     "at": 5.35
+    },
+    {
+     "w": "it",
+     "at": 5.638
+    },
+    {
+     "w": "softly",
+     "at": 5.787
+    },
+    {
+     "w": "over",
+     "at": 6.275
+    },
+    {
+     "w": "him",
+     "at": 6.525
+    }
+   ]
+  },
+  {
+   "label": "From the side",
+   "text": "From the side: the ball floats just over the falling keeper. Italy go through to the final!",
+   "src": "/plays/narration/totti-cucchiaio-2000/3.m4a",
+   "seconds": 6.3,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.375
+    },
+    {
+     "w": "the",
+     "at": 0.512
+    },
+    {
+     "w": "side",
+     "at": 0.613
+    },
+    {
+     "w": "the",
+     "at": 1.4
+    },
+    {
+     "w": "ball",
+     "at": 1.5
+    },
+    {
+     "w": "floats",
+     "at": 1.812
+    },
+    {
+     "w": "just",
+     "at": 2.2
+    },
+    {
+     "w": "over",
+     "at": 2.413
+    },
+    {
+     "w": "the",
+     "at": 2.612
+    },
+    {
+     "w": "falling",
+     "at": 2.712
+    },
+    {
+     "w": "keeper",
+     "at": 3.125
+    },
+    {
+     "w": "Italy",
+     "at": 3.938
+    },
+    {
+     "w": "go",
+     "at": 4.275
+    },
+    {
+     "w": "through",
+     "at": 4.463
+    },
+    {
+     "w": "to",
+     "at": 4.675
+    },
+    {
+     "w": "the",
+     "at": 4.763
+    },
+    {
+     "w": "final",
+     "at": 4.862
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "The secret? Be brave, but stay calm. Watch the keeper commit, then choose the empty space.",
+   "src": "/plays/narration/totti-cucchiaio-2000/4.m4a",
+   "seconds": 6.8,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "secret",
+     "at": 0.463
+    },
+    {
+     "w": "Be",
+     "at": 1.175
+    },
+    {
+     "w": "brave",
+     "at": 1.337
+    },
+    {
+     "w": "but",
+     "at": 1.788
+    },
+    {
+     "w": "stay",
+     "at": 1.95
+    },
+    {
+     "w": "calm",
+     "at": 2.263
+    },
+    {
+     "w": "Watch",
+     "at": 3.163
+    },
+    {
+     "w": "the",
+     "at": 3.475
+    },
+    {
+     "w": "keeper",
+     "at": 3.575
+    },
+    {
+     "w": "commit",
+     "at": 3.925
+    },
+    {
+     "w": "then",
+     "at": 4.375
+    },
+    {
+     "w": "choose",
+     "at": 4.612
+    },
+    {
+     "w": "the",
+     "at": 4.912
+    },
+    {
+     "w": "empty",
+     "at": 5.025
+    },
+    {
+     "w": "space",
+     "at": 5.362
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,10 @@
+{
+ "film": "seedorf-signature",
+ "note": "Chapter 1 is keyed from 'runs with the ball' (the carry over halfway) through 'looks up' and 'the keeper' (Molina off his line) to 'boom' (the strike) and 'Top corner' (the ball in the net): keep the pause at 'boom!...' so the ball's long flight plays near real time. Chapter 2 is the slow-motion replay; 'strikes it' is the contact.",
+ "chapters": [
+  {"label": "The goal, live", "text": "Madrid, 1997, the derby at the Bernabéu. Real Madrid are losing one-nil to Atlético. Clarence Seedorf runs with the ball, just past halfway... he looks up, the keeper is off his line... boom!... Top corner! One-one!"},
+  {"label": "Watch it again", "text": "Watch again, slowly. Eyes on the ball, standing foot planted, and he strikes it with his laces, right through the ball."},
+  {"label": "Top corner", "text": "Over forty metres! It flies past keeper Molina and into the top corner. The derby ends one-one."},
+  {"label": "Your turn", "text": "Your turn: strike through the ball with your laces, and follow through towards goal."}
+ ]
+}

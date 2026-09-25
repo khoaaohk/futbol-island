@@ -1,0 +1,362 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Wembley, 1953",
+   "text": "Wembley, 1953, England against Hungary. A short pass to Pusk\u00e1s. England's captain Billy Wright slides in, but the ball has gone! His left foot... goal!",
+   "src": "/plays/narration/puskas-drag-back-1953/1.m4a",
+   "seconds": 12.3,
+   "words": [
+    {
+     "w": "Wembley",
+     "at": 0.4
+    },
+    {
+     "w": "1953",
+     "at": 0.875
+    },
+    {
+     "w": "England",
+     "at": 2.05
+    },
+    {
+     "w": "against",
+     "at": 2.462
+    },
+    {
+     "w": "Hungary",
+     "at": 2.8
+    },
+    {
+     "w": "A",
+     "at": 3.712
+    },
+    {
+     "w": "short",
+     "at": 3.85
+    },
+    {
+     "w": "pass",
+     "at": 4.175
+    },
+    {
+     "w": "to",
+     "at": 4.525
+    },
+    {
+     "w": "Pusk\u00e1s",
+     "at": 4.625
+    },
+    {
+     "w": "England's",
+     "at": 5.763
+    },
+    {
+     "w": "captain",
+     "at": 6.275
+    },
+    {
+     "w": "Billy",
+     "at": 6.7
+    },
+    {
+     "w": "Wright",
+     "at": 7.0
+    },
+    {
+     "w": "slides",
+     "at": 7.287
+    },
+    {
+     "w": "in",
+     "at": 7.775
+    },
+    {
+     "w": "but",
+     "at": 8.037
+    },
+    {
+     "w": "the",
+     "at": 8.162
+    },
+    {
+     "w": "ball",
+     "at": 8.262
+    },
+    {
+     "w": "has",
+     "at": 8.588
+    },
+    {
+     "w": "gone",
+     "at": 8.762
+    },
+    {
+     "w": "His",
+     "at": 9.475
+    },
+    {
+     "w": "left",
+     "at": 9.675
+    },
+    {
+     "w": "foot",
+     "at": 9.963
+    },
+    {
+     "w": "goal",
+     "at": 10.863
+    }
+   ]
+  },
+  {
+   "label": "The drag-back",
+   "text": "Watch again: Wright dives in, but Pusk\u00e1s drags the ball back with the sole of his left boot. Wright slides into empty space.",
+   "src": "/plays/narration/puskas-drag-back-1953/2.m4a",
+   "seconds": 9.2,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "Wright",
+     "at": 1.387
+    },
+    {
+     "w": "dives",
+     "at": 1.65
+    },
+    {
+     "w": "in",
+     "at": 2.15
+    },
+    {
+     "w": "but",
+     "at": 2.438
+    },
+    {
+     "w": "Pusk\u00e1s",
+     "at": 2.575
+    },
+    {
+     "w": "drags",
+     "at": 3.163
+    },
+    {
+     "w": "the",
+     "at": 3.587
+    },
+    {
+     "w": "ball",
+     "at": 3.675
+    },
+    {
+     "w": "back",
+     "at": 3.975
+    },
+    {
+     "w": "with",
+     "at": 4.263
+    },
+    {
+     "w": "the",
+     "at": 4.362
+    },
+    {
+     "w": "sole",
+     "at": 4.5
+    },
+    {
+     "w": "of",
+     "at": 4.838
+    },
+    {
+     "w": "his",
+     "at": 4.912
+    },
+    {
+     "w": "left",
+     "at": 5.075
+    },
+    {
+     "w": "boot",
+     "at": 5.362
+    },
+    {
+     "w": "Wright",
+     "at": 6.275
+    },
+    {
+     "w": "slides",
+     "at": 6.625
+    },
+    {
+     "w": "into",
+     "at": 7.112
+    },
+    {
+     "w": "empty",
+     "at": 7.362
+    },
+    {
+     "w": "space",
+     "at": 7.737
+    }
+   ]
+  },
+  {
+   "label": "Left foot",
+   "text": "One quick turn onto his best foot, and bang! Roof of the net, just inside the post.",
+   "src": "/plays/narration/puskas-drag-back-1953/3.m4a",
+   "seconds": 6.5,
+   "words": [
+    {
+     "w": "One",
+     "at": 0.4
+    },
+    {
+     "w": "quick",
+     "at": 0.625
+    },
+    {
+     "w": "turn",
+     "at": 0.875
+    },
+    {
+     "w": "onto",
+     "at": 1.163
+    },
+    {
+     "w": "his",
+     "at": 1.387
+    },
+    {
+     "w": "best",
+     "at": 1.55
+    },
+    {
+     "w": "foot",
+     "at": 1.863
+    },
+    {
+     "w": "and",
+     "at": 2.4
+    },
+    {
+     "w": "bang",
+     "at": 2.538
+    },
+    {
+     "w": "Roof",
+     "at": 3.475
+    },
+    {
+     "w": "of",
+     "at": 3.763
+    },
+    {
+     "w": "the",
+     "at": 3.837
+    },
+    {
+     "w": "net",
+     "at": 3.925
+    },
+    {
+     "w": "just",
+     "at": 4.312
+    },
+    {
+     "w": "inside",
+     "at": 4.6
+    },
+    {
+     "w": "the",
+     "at": 5.013
+    },
+    {
+     "w": "post",
+     "at": 5.1
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: get the ball onto your best foot quickly, then shoot before the defender blocks.",
+   "src": "/plays/narration/puskas-drag-back-1953/4.m4a",
+   "seconds": 6.5,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.562
+    },
+    {
+     "w": "get",
+     "at": 1.438
+    },
+    {
+     "w": "the",
+     "at": 1.613
+    },
+    {
+     "w": "ball",
+     "at": 1.7
+    },
+    {
+     "w": "onto",
+     "at": 2.025
+    },
+    {
+     "w": "your",
+     "at": 2.263
+    },
+    {
+     "w": "best",
+     "at": 2.4
+    },
+    {
+     "w": "foot",
+     "at": 2.7
+    },
+    {
+     "w": "quickly",
+     "at": 2.925
+    },
+    {
+     "w": "then",
+     "at": 3.675
+    },
+    {
+     "w": "shoot",
+     "at": 3.962
+    },
+    {
+     "w": "before",
+     "at": 4.3
+    },
+    {
+     "w": "the",
+     "at": 4.562
+    },
+    {
+     "w": "defender",
+     "at": 4.638
+    },
+    {
+     "w": "blocks",
+     "at": 5.025
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Level, live",
+   "text": "Manchester, 2022. City and Dortmund are level, six minutes left. Jo\u00e3o Cancelo looks up on the left and floats a cross... Haaland! Goal!",
+   "src": "/plays/narration/cancelo-signature/1.m4a",
+   "seconds": 10.7,
+   "words": [
+    {
+     "w": "Manchester",
+     "at": 0.4
+    },
+    {
+     "w": "2022",
+     "at": 1.125
+    },
+    {
+     "w": "City",
+     "at": 2.538
+    },
+    {
+     "w": "and",
+     "at": 2.9
+    },
+    {
+     "w": "Dortmund",
+     "at": 3.025
+    },
+    {
+     "w": "are",
+     "at": 3.475
+    },
+    {
+     "w": "level",
+     "at": 3.575
+    },
+    {
+     "w": "six",
+     "at": 4.088
+    },
+    {
+     "w": "minutes",
+     "at": 4.375
+    },
+    {
+     "w": "left",
+     "at": 4.7
+    },
+    {
+     "w": "Jo\u00e3o",
+     "at": 5.55
+    },
+    {
+     "w": "Cancelo",
+     "at": 5.85
+    },
+    {
+     "w": "looks",
+     "at": 6.475
+    },
+    {
+     "w": "up",
+     "at": 6.688
+    },
+    {
+     "w": "on",
+     "at": 6.838
+    },
+    {
+     "w": "the",
+     "at": 6.938
+    },
+    {
+     "w": "left",
+     "at": 7.025
+    },
+    {
+     "w": "and",
+     "at": 7.362
+    },
+    {
+     "w": "floats",
+     "at": 7.487
+    },
+    {
+     "w": "a",
+     "at": 7.787
+    },
+    {
+     "w": "cross...",
+     "at": 7.85
+    },
+    {
+     "w": "Haaland",
+     "at": 8.225
+    },
+    {
+     "w": "Goal",
+     "at": 9.25
+    }
+   ]
+  },
+  {
+   "label": "Watch his boot",
+   "text": "Watch his right boot, slowly. He hits the ball with the outside of it, and the cross floats in, dropping towards the far post.",
+   "src": "/plays/narration/cancelo-signature/2.m4a",
+   "seconds": 8.6,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "his",
+     "at": 0.662
+    },
+    {
+     "w": "right",
+     "at": 0.825
+    },
+    {
+     "w": "boot",
+     "at": 1.137
+    },
+    {
+     "w": "slowly",
+     "at": 1.587
+    },
+    {
+     "w": "He",
+     "at": 2.688
+    },
+    {
+     "w": "hits",
+     "at": 2.825
+    },
+    {
+     "w": "the",
+     "at": 3.075
+    },
+    {
+     "w": "ball",
+     "at": 3.175
+    },
+    {
+     "w": "with",
+     "at": 3.487
+    },
+    {
+     "w": "the",
+     "at": 3.587
+    },
+    {
+     "w": "outside",
+     "at": 3.7
+    },
+    {
+     "w": "of",
+     "at": 4.138
+    },
+    {
+     "w": "it",
+     "at": 4.225
+    },
+    {
+     "w": "and",
+     "at": 4.55
+    },
+    {
+     "w": "the",
+     "at": 4.662
+    },
+    {
+     "w": "cross",
+     "at": 4.75
+    },
+    {
+     "w": "floats",
+     "at": 5.162
+    },
+    {
+     "w": "in",
+     "at": 5.55
+    },
+    {
+     "w": "dropping",
+     "at": 6.05
+    },
+    {
+     "w": "towards",
+     "at": 6.5
+    },
+    {
+     "w": "the",
+     "at": 6.862
+    },
+    {
+     "w": "far",
+     "at": 6.95
+    },
+    {
+     "w": "post",
+     "at": 7.2
+    }
+   ]
+  },
+  {
+   "label": "How he played",
+   "text": "How he played for City. Watch this practice: he starts wide, then steps inside, next to the midfielder. Now there is one more passer in the middle.",
+   "src": "/plays/narration/cancelo-signature/3.m4a",
+   "seconds": 10.3,
+   "words": [
+    {
+     "w": "How",
+     "at": 0.375
+    },
+    {
+     "w": "he",
+     "at": 0.512
+    },
+    {
+     "w": "played",
+     "at": 0.637
+    },
+    {
+     "w": "for",
+     "at": 0.95
+    },
+    {
+     "w": "City",
+     "at": 1.113
+    },
+    {
+     "w": "Watch",
+     "at": 1.988
+    },
+    {
+     "w": "this",
+     "at": 2.325
+    },
+    {
+     "w": "practice",
+     "at": 2.525
+    },
+    {
+     "w": "he",
+     "at": 3.425
+    },
+    {
+     "w": "starts",
+     "at": 3.575
+    },
+    {
+     "w": "wide",
+     "at": 3.962
+    },
+    {
+     "w": "then",
+     "at": 4.537
+    },
+    {
+     "w": "steps",
+     "at": 4.737
+    },
+    {
+     "w": "inside",
+     "at": 5.075
+    },
+    {
+     "w": "next",
+     "at": 5.725
+    },
+    {
+     "w": "to",
+     "at": 5.987
+    },
+    {
+     "w": "the",
+     "at": 6.062
+    },
+    {
+     "w": "midfielder",
+     "at": 6.15
+    },
+    {
+     "w": "Now",
+     "at": 7.325
+    },
+    {
+     "w": "there",
+     "at": 7.575
+    },
+    {
+     "w": "is",
+     "at": 7.75
+    },
+    {
+     "w": "one",
+     "at": 7.9
+    },
+    {
+     "w": "more",
+     "at": 8.125
+    },
+    {
+     "w": "passer",
+     "at": 8.363
+    },
+    {
+     "w": "in",
+     "at": 8.85
+    },
+    {
+     "w": "the",
+     "at": 8.938
+    },
+    {
+     "w": "middle",
+     "at": 9.025
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: a full-back can step inside, into midfield, to add an extra passer.",
+   "src": "/plays/narration/cancelo-signature/4.m4a",
+   "seconds": 6.4,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "a",
+     "at": 1.363
+    },
+    {
+     "w": "full-back",
+     "at": 1.475
+    },
+    {
+     "w": "can",
+     "at": 1.95
+    },
+    {
+     "w": "step",
+     "at": 2.125
+    },
+    {
+     "w": "inside",
+     "at": 2.4
+    },
+    {
+     "w": "into",
+     "at": 3.013
+    },
+    {
+     "w": "midfield",
+     "at": 3.25
+    },
+    {
+     "w": "to",
+     "at": 4.025
+    },
+    {
+     "w": "add",
+     "at": 4.162
+    },
+    {
+     "w": "an",
+     "at": 4.388
+    },
+    {
+     "w": "extra",
+     "at": 4.513
+    },
+    {
+     "w": "passer",
+     "at": 4.9
+    }
+   ]
+  }
+ ]
+}

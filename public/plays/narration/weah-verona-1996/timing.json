@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "San Siro, 1996. Verona's corner flies too long. George Weah controls it in his own box, and off he goes! Past one... past another... and another... goal!",
+   "src": "/plays/narration/weah-verona-1996/1.m4a",
+   "seconds": 12.9,
+   "words": [
+    {
+     "w": "San",
+     "at": 0.4
+    },
+    {
+     "w": "Siro",
+     "at": 0.713
+    },
+    {
+     "w": "1996",
+     "at": 1.125
+    },
+    {
+     "w": "Verona's",
+     "at": 2.663
+    },
+    {
+     "w": "corner",
+     "at": 3.225
+    },
+    {
+     "w": "flies",
+     "at": 3.638
+    },
+    {
+     "w": "too",
+     "at": 4.062
+    },
+    {
+     "w": "long",
+     "at": 4.275
+    },
+    {
+     "w": "George",
+     "at": 5.075
+    },
+    {
+     "w": "Weah",
+     "at": 5.4
+    },
+    {
+     "w": "controls",
+     "at": 5.725
+    },
+    {
+     "w": "it",
+     "at": 6.25
+    },
+    {
+     "w": "in",
+     "at": 6.362
+    },
+    {
+     "w": "his",
+     "at": 6.438
+    },
+    {
+     "w": "own",
+     "at": 6.6
+    },
+    {
+     "w": "box",
+     "at": 6.85
+    },
+    {
+     "w": "and",
+     "at": 7.312
+    },
+    {
+     "w": "off",
+     "at": 7.425
+    },
+    {
+     "w": "he",
+     "at": 7.612
+    },
+    {
+     "w": "goes",
+     "at": 7.7
+    },
+    {
+     "w": "Past",
+     "at": 8.312
+    },
+    {
+     "w": "one",
+     "at": 8.7
+    },
+    {
+     "w": "past",
+     "at": 9.35
+    },
+    {
+     "w": "another",
+     "at": 9.662
+    },
+    {
+     "w": "and",
+     "at": 10.425
+    },
+    {
+     "w": "another",
+     "at": 10.537
+    },
+    {
+     "w": "goal",
+     "at": 11.488
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again, slowly. Every Milan player was back for the corner. Weah sees open grass ahead, and runs faster than anyone can chase.",
+   "src": "/plays/narration/weah-verona-1996/2.m4a",
+   "seconds": 10.4,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "slowly",
+     "at": 1.375
+    },
+    {
+     "w": "Every",
+     "at": 2.438
+    },
+    {
+     "w": "Milan",
+     "at": 2.75
+    },
+    {
+     "w": "player",
+     "at": 3.175
+    },
+    {
+     "w": "was",
+     "at": 3.513
+    },
+    {
+     "w": "back",
+     "at": 3.675
+    },
+    {
+     "w": "for",
+     "at": 3.975
+    },
+    {
+     "w": "the",
+     "at": 4.088
+    },
+    {
+     "w": "corner",
+     "at": 4.175
+    },
+    {
+     "w": "Weah",
+     "at": 5.075
+    },
+    {
+     "w": "sees",
+     "at": 5.45
+    },
+    {
+     "w": "open",
+     "at": 5.825
+    },
+    {
+     "w": "grass",
+     "at": 6.125
+    },
+    {
+     "w": "ahead",
+     "at": 6.5
+    },
+    {
+     "w": "and",
+     "at": 7.15
+    },
+    {
+     "w": "runs",
+     "at": 7.275
+    },
+    {
+     "w": "faster",
+     "at": 7.688
+    },
+    {
+     "w": "than",
+     "at": 8.2
+    },
+    {
+     "w": "anyone",
+     "at": 8.363
+    },
+    {
+     "w": "can",
+     "at": 8.8
+    },
+    {
+     "w": "chase",
+     "at": 9.012
+    }
+   ]
+  },
+  {
+   "label": "The finish",
+   "text": "Ninety metres later, he stays calm and fires it low past the keeper, into the corner!",
+   "src": "/plays/narration/weah-verona-1996/3.m4a",
+   "seconds": 6.5,
+   "words": [
+    {
+     "w": "Ninety",
+     "at": 0.425
+    },
+    {
+     "w": "metres",
+     "at": 0.775
+    },
+    {
+     "w": "later",
+     "at": 1.163
+    },
+    {
+     "w": "he",
+     "at": 1.925
+    },
+    {
+     "w": "stays",
+     "at": 2.075
+    },
+    {
+     "w": "calm",
+     "at": 2.462
+    },
+    {
+     "w": "and",
+     "at": 2.85
+    },
+    {
+     "w": "fires",
+     "at": 2.987
+    },
+    {
+     "w": "it",
+     "at": 3.388
+    },
+    {
+     "w": "low",
+     "at": 3.475
+    },
+    {
+     "w": "past",
+     "at": 3.688
+    },
+    {
+     "w": "the",
+     "at": 4.037
+    },
+    {
+     "w": "keeper",
+     "at": 4.125
+    },
+    {
+     "w": "into",
+     "at": 4.8
+    },
+    {
+     "w": "the",
+     "at": 5.013
+    },
+    {
+     "w": "corner",
+     "at": 5.1
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: after you defend a corner, look up. Space ahead? Break fast. A quick counter-attack can go all the way!",
+   "src": "/plays/narration/weah-verona-1996/4.m4a",
+   "seconds": 8.2,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.525
+    },
+    {
+     "w": "after",
+     "at": 1.05
+    },
+    {
+     "w": "you",
+     "at": 1.325
+    },
+    {
+     "w": "defend",
+     "at": 1.425
+    },
+    {
+     "w": "a",
+     "at": 1.738
+    },
+    {
+     "w": "corner",
+     "at": 1.8
+    },
+    {
+     "w": "look",
+     "at": 2.225
+    },
+    {
+     "w": "up",
+     "at": 2.388
+    },
+    {
+     "w": "Space",
+     "at": 3.0
+    },
+    {
+     "w": "ahead",
+     "at": 3.4
+    },
+    {
+     "w": "Break",
+     "at": 4.112
+    },
+    {
+     "w": "fast",
+     "at": 4.438
+    },
+    {
+     "w": "A",
+     "at": 5.213
+    },
+    {
+     "w": "quick",
+     "at": 5.325
+    },
+    {
+     "w": "counter-attack",
+     "at": 5.575
+    },
+    {
+     "w": "can",
+     "at": 6.3
+    },
+    {
+     "w": "go",
+     "at": 6.425
+    },
+    {
+     "w": "all",
+     "at": 6.6
+    },
+    {
+     "w": "the",
+     "at": 6.763
+    },
+    {
+     "w": "way",
+     "at": 6.85
+    }
+   ]
+  }
+ ]
+}

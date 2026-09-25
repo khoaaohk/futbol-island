@@ -1,0 +1,378 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: the 2016 final",
+   "text": "The 2016 Futsal World Cup final, in Cali. Argentina lead Russia five three, with seconds left. Then Russia win a second penalty: a free shot from ten metres. Eder Lima strikes it like thunder. Goal! His third of the final.",
+   "src": "/plays/narration/eder-lima-futsal-signature/1.m4a",
+   "seconds": 16.9,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "2016",
+     "at": 0.425
+    },
+    {
+     "w": "Futsal",
+     "at": 1.238
+    },
+    {
+     "w": "World",
+     "at": 1.7
+    },
+    {
+     "w": "Cup",
+     "at": 2.0
+    },
+    {
+     "w": "final",
+     "at": 2.225
+    },
+    {
+     "w": "in",
+     "at": 2.675
+    },
+    {
+     "w": "Cali",
+     "at": 2.837
+    },
+    {
+     "w": "Argentina",
+     "at": 3.888
+    },
+    {
+     "w": "lead",
+     "at": 4.55
+    },
+    {
+     "w": "Russia",
+     "at": 4.838
+    },
+    {
+     "w": "five",
+     "at": 5.237
+    },
+    {
+     "w": "three",
+     "at": 5.588
+    },
+    {
+     "w": "with",
+     "at": 6.025
+    },
+    {
+     "w": "seconds",
+     "at": 6.213
+    },
+    {
+     "w": "left",
+     "at": 6.625
+    },
+    {
+     "w": "Then",
+     "at": 7.525
+    },
+    {
+     "w": "Russia",
+     "at": 7.787
+    },
+    {
+     "w": "win",
+     "at": 8.175
+    },
+    {
+     "w": "a",
+     "at": 8.375
+    },
+    {
+     "w": "second",
+     "at": 8.488
+    },
+    {
+     "w": "penalty",
+     "at": 8.85
+    },
+    {
+     "w": "a",
+     "at": 9.637
+    },
+    {
+     "w": "free",
+     "at": 9.762
+    },
+    {
+     "w": "shot",
+     "at": 10.075
+    },
+    {
+     "w": "from",
+     "at": 10.425
+    },
+    {
+     "w": "ten",
+     "at": 10.637
+    },
+    {
+     "w": "metres",
+     "at": 10.9
+    },
+    {
+     "w": "Eder",
+     "at": 11.812
+    },
+    {
+     "w": "Lima",
+     "at": 12.1
+    },
+    {
+     "w": "strikes",
+     "at": 12.463
+    },
+    {
+     "w": "it",
+     "at": 12.85
+    },
+    {
+     "w": "like",
+     "at": 12.975
+    },
+    {
+     "w": "thunder",
+     "at": 13.213
+    },
+    {
+     "w": "Goal",
+     "at": 14.1
+    },
+    {
+     "w": "His",
+     "at": 14.775
+    },
+    {
+     "w": "third",
+     "at": 15.012
+    },
+    {
+     "w": "of",
+     "at": 15.287
+    },
+    {
+     "w": "the",
+     "at": 15.363
+    },
+    {
+     "w": "final",
+     "at": 15.463
+    }
+   ]
+  },
+  {
+   "label": "Replay: no wall",
+   "text": "Watch again. No wall, only the keeper. One big swing, and bang! Five four! But time runs out, and Argentina are champions.",
+   "src": "/plays/narration/eder-lima-futsal-signature/2.m4a",
+   "seconds": 9.5,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "No",
+     "at": 1.413
+    },
+    {
+     "w": "wall",
+     "at": 1.65
+    },
+    {
+     "w": "only",
+     "at": 2.013
+    },
+    {
+     "w": "the",
+     "at": 2.288
+    },
+    {
+     "w": "keeper",
+     "at": 2.375
+    },
+    {
+     "w": "One",
+     "at": 3.087
+    },
+    {
+     "w": "big",
+     "at": 3.325
+    },
+    {
+     "w": "swing",
+     "at": 3.575
+    },
+    {
+     "w": "and",
+     "at": 4.013
+    },
+    {
+     "w": "bang",
+     "at": 4.125
+    },
+    {
+     "w": "Five",
+     "at": 4.713
+    },
+    {
+     "w": "four",
+     "at": 5.062
+    },
+    {
+     "w": "But",
+     "at": 5.9
+    },
+    {
+     "w": "time",
+     "at": 6.05
+    },
+    {
+     "w": "runs",
+     "at": 6.375
+    },
+    {
+     "w": "out",
+     "at": 6.675
+    },
+    {
+     "w": "and",
+     "at": 6.963
+    },
+    {
+     "w": "Argentina",
+     "at": 7.062
+    },
+    {
+     "w": "are",
+     "at": 7.65
+    },
+    {
+     "w": "champions",
+     "at": 7.812
+    }
+   ]
+  },
+  {
+   "label": "Turn and shoot",
+   "text": "Watch how a pivot does it. Back to goal, feel the defender lean. Then turn, and shoot hard and low from just outside the area!",
+   "src": "/plays/narration/eder-lima-futsal-signature/3.m4a",
+   "seconds": 9.0,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "how",
+     "at": 0.7
+    },
+    {
+     "w": "a",
+     "at": 0.838
+    },
+    {
+     "w": "pivot",
+     "at": 0.9
+    },
+    {
+     "w": "does",
+     "at": 1.225
+    },
+    {
+     "w": "it",
+     "at": 1.462
+    },
+    {
+     "w": "Back",
+     "at": 2.087
+    },
+    {
+     "w": "to",
+     "at": 2.375
+    },
+    {
+     "w": "goal",
+     "at": 2.5
+    },
+    {
+     "w": "feel",
+     "at": 3.087
+    },
+    {
+     "w": "the",
+     "at": 3.337
+    },
+    {
+     "w": "defender",
+     "at": 3.425
+    },
+    {
+     "w": "lean",
+     "at": 3.95
+    },
+    {
+     "w": "Then",
+     "at": 4.838
+    },
+    {
+     "w": "turn",
+     "at": 5.088
+    },
+    {
+     "w": "and",
+     "at": 5.6
+    },
+    {
+     "w": "shoot",
+     "at": 5.75
+    },
+    {
+     "w": "hard",
+     "at": 6.037
+    },
+    {
+     "w": "and",
+     "at": 6.338
+    },
+    {
+     "w": "low",
+     "at": 6.45
+    },
+    {
+     "w": "from",
+     "at": 6.775
+    },
+    {
+     "w": "just",
+     "at": 6.925
+    },
+    {
+     "w": "outside",
+     "at": 7.112
+    },
+    {
+     "w": "the",
+     "at": 7.513
+    },
+    {
+     "w": "area",
+     "at": 7.625
+    }
+   ]
+  }
+ ]
+}

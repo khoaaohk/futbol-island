@@ -1,6 +1,6 @@
 export const PATHS_PREVIEW=process.env.NODE_ENV!=='production';
 export const STORY_CARDS=[
- {id:'futsl',title:'Smaller court. Bigger game.',skill:'Love Futsl',color:'#5cace4'},
+ {id:'futsl',title:'Smaller court. Bigger game.',skill:'Love Futsal',color:'#5cace4'},
  {id:'reset',title:'Mental Toughness',skill:'Mental toughness',color:'#f0bd91'},
  {id:'regulate',title:'When the game feels unfair.',skill:'Regulating emotions',color:'#eab1be'},
  {id:'grit',title:'Not yet is a starting point.',skill:'Grit & healthy practice',color:'#e7cf87'},

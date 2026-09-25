@@ -1,0 +1,386 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The steal",
+   "text": "Hampden Park, 2023. Scotland against Spain. A Spain defender slips by the goal line. Andy Robertson steals the ball and cuts it back, and Scott McTominay scores!",
+   "src": "/plays/narration/mctominay-signature/1.m4a",
+   "seconds": 12.9,
+   "words": [
+    {
+     "w": "Hampden",
+     "at": 0.35
+    },
+    {
+     "w": "Park",
+     "at": 0.75
+    },
+    {
+     "w": "2023",
+     "at": 1.3
+    },
+    {
+     "w": "Scotland",
+     "at": 2.737
+    },
+    {
+     "w": "against",
+     "at": 3.288
+    },
+    {
+     "w": "Spain",
+     "at": 3.712
+    },
+    {
+     "w": "A",
+     "at": 4.713
+    },
+    {
+     "w": "Spain",
+     "at": 4.838
+    },
+    {
+     "w": "defender",
+     "at": 5.25
+    },
+    {
+     "w": "slips",
+     "at": 5.775
+    },
+    {
+     "w": "by",
+     "at": 6.15
+    },
+    {
+     "w": "the",
+     "at": 6.3
+    },
+    {
+     "w": "goal",
+     "at": 6.4
+    },
+    {
+     "w": "line",
+     "at": 6.65
+    },
+    {
+     "w": "Andy",
+     "at": 7.562
+    },
+    {
+     "w": "Robertson",
+     "at": 7.9
+    },
+    {
+     "w": "steals",
+     "at": 8.488
+    },
+    {
+     "w": "the",
+     "at": 8.875
+    },
+    {
+     "w": "ball",
+     "at": 8.975
+    },
+    {
+     "w": "and",
+     "at": 9.3
+    },
+    {
+     "w": "cuts",
+     "at": 9.438
+    },
+    {
+     "w": "it",
+     "at": 9.713
+    },
+    {
+     "w": "back",
+     "at": 9.8
+    },
+    {
+     "w": "and",
+     "at": 10.2
+    },
+    {
+     "w": "Scott",
+     "at": 10.338
+    },
+    {
+     "w": "McTominay",
+     "at": 10.637
+    },
+    {
+     "w": "scores",
+     "at": 11.312
+    }
+   ]
+  },
+  {
+   "label": "The late run",
+   "text": "Watch McTominay. He times his run into the middle of the box, and gets there just as the ball does. First time, left foot!",
+   "src": "/plays/narration/mctominay-signature/2.m4a",
+   "seconds": 8.8,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "McTominay",
+     "at": 0.7
+    },
+    {
+     "w": "He",
+     "at": 1.85
+    },
+    {
+     "w": "times",
+     "at": 1.975
+    },
+    {
+     "w": "his",
+     "at": 2.312
+    },
+    {
+     "w": "run",
+     "at": 2.475
+    },
+    {
+     "w": "into",
+     "at": 2.737
+    },
+    {
+     "w": "the",
+     "at": 2.913
+    },
+    {
+     "w": "middle",
+     "at": 3.0
+    },
+    {
+     "w": "of",
+     "at": 3.212
+    },
+    {
+     "w": "the",
+     "at": 3.288
+    },
+    {
+     "w": "box",
+     "at": 3.375
+    },
+    {
+     "w": "and",
+     "at": 4.0
+    },
+    {
+     "w": "gets",
+     "at": 4.125
+    },
+    {
+     "w": "there",
+     "at": 4.375
+    },
+    {
+     "w": "just",
+     "at": 4.612
+    },
+    {
+     "w": "as",
+     "at": 4.9
+    },
+    {
+     "w": "the",
+     "at": 5.05
+    },
+    {
+     "w": "ball",
+     "at": 5.15
+    },
+    {
+     "w": "does",
+     "at": 5.475
+    },
+    {
+     "w": "First",
+     "at": 6.375
+    },
+    {
+     "w": "time",
+     "at": 6.7
+    },
+    {
+     "w": "left",
+     "at": 7.175
+    },
+    {
+     "w": "foot",
+     "at": 7.463
+    }
+   ]
+  },
+  {
+   "label": "The finish",
+   "text": "The low shot flicks off a defender on the ground and past the keeper. Goal!",
+   "src": "/plays/narration/mctominay-signature/3.m4a",
+   "seconds": 5.5,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "low",
+     "at": 0.45
+    },
+    {
+     "w": "shot",
+     "at": 0.725
+    },
+    {
+     "w": "flicks",
+     "at": 1.087
+    },
+    {
+     "w": "off",
+     "at": 1.363
+    },
+    {
+     "w": "a",
+     "at": 1.512
+    },
+    {
+     "w": "defender",
+     "at": 1.562
+    },
+    {
+     "w": "on",
+     "at": 1.962
+    },
+    {
+     "w": "the",
+     "at": 2.062
+    },
+    {
+     "w": "ground",
+     "at": 2.15
+    },
+    {
+     "w": "and",
+     "at": 2.6
+    },
+    {
+     "w": "past",
+     "at": 2.725
+    },
+    {
+     "w": "the",
+     "at": 3.038
+    },
+    {
+     "w": "keeper",
+     "at": 3.125
+    },
+    {
+     "w": "Goal",
+     "at": 4.1
+    }
+   ]
+  },
+  {
+   "label": "The lesson",
+   "text": "That is the late run and finish. Time your run so you arrive in the box just as the ball does!",
+   "src": "/plays/narration/mctominay-signature/4.m4a",
+   "seconds": 6.6,
+   "words": [
+    {
+     "w": "That",
+     "at": 0.375
+    },
+    {
+     "w": "is",
+     "at": 0.575
+    },
+    {
+     "w": "the",
+     "at": 0.725
+    },
+    {
+     "w": "late",
+     "at": 0.863
+    },
+    {
+     "w": "run",
+     "at": 1.175
+    },
+    {
+     "w": "and",
+     "at": 1.45
+    },
+    {
+     "w": "finish",
+     "at": 1.587
+    },
+    {
+     "w": "Time",
+     "at": 2.487
+    },
+    {
+     "w": "your",
+     "at": 2.737
+    },
+    {
+     "w": "run",
+     "at": 2.85
+    },
+    {
+     "w": "so",
+     "at": 3.125
+    },
+    {
+     "w": "you",
+     "at": 3.25
+    },
+    {
+     "w": "arrive",
+     "at": 3.4
+    },
+    {
+     "w": "in",
+     "at": 3.788
+    },
+    {
+     "w": "the",
+     "at": 3.862
+    },
+    {
+     "w": "box",
+     "at": 3.95
+    },
+    {
+     "w": "just",
+     "at": 4.412
+    },
+    {
+     "w": "as",
+     "at": 4.725
+    },
+    {
+     "w": "the",
+     "at": 4.862
+    },
+    {
+     "w": "ball",
+     "at": 4.95
+    },
+    {
+     "w": "does",
+     "at": 5.25
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,10 @@
+{
+ "film": "weah-verona-1996",
+ "note": "Chapter 1 is keyed from \"Verona's corner\" (the kick) through \"controls it\" (the first touch), \"and off he goes\", \"Past one\", \"past another\", \"and another\" to \"goal\": keep the pauses at '...' so the run plays near real time. Chapter 2 pans fast alongside him on \"and runs\".",
+ "chapters": [
+  {"label": "The goal, live", "text": "San Siro, 1996. Verona's corner flies too long. George Weah controls it in his own box, and off he goes! Past one... past another... and another... goal!"},
+  {"label": "Watch it again", "text": "Watch it again, slowly. Every Milan player was back for the corner. Weah sees open grass ahead, and runs faster than anyone can chase."},
+  {"label": "The finish", "text": "Ninety metres later, he stays calm and fires it low past the keeper, into the corner!"},
+  {"label": "Your turn", "text": "Your turn: after you defend a corner, look up. Space ahead? Break fast. A quick counter-attack can go all the way!"}
+ ]
+}

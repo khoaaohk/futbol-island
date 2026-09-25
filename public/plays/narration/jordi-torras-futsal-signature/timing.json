@@ -1,0 +1,350 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: EURO 2012 quarter-final",
+   "text": "Futsal Euro 2012. Spain, in white, against Romania. Kike back-heels to Alemao, a low ball across, Jordi Torras turns it in! One nil to Spain!",
+   "src": "/plays/narration/jordi-torras-futsal-signature/1.m4a",
+   "seconds": 12.1,
+   "words": [
+    {
+     "w": "Futsal",
+     "at": 0.375
+    },
+    {
+     "w": "Euro",
+     "at": 0.8
+    },
+    {
+     "w": "2012",
+     "at": 1.1
+    },
+    {
+     "w": "Spain",
+     "at": 2.413
+    },
+    {
+     "w": "in",
+     "at": 2.975
+    },
+    {
+     "w": "white",
+     "at": 3.125
+    },
+    {
+     "w": "against",
+     "at": 3.438
+    },
+    {
+     "w": "Romania",
+     "at": 3.75
+    },
+    {
+     "w": "Kike",
+     "at": 4.888
+    },
+    {
+     "w": "back-heels",
+     "at": 5.3
+    },
+    {
+     "w": "to",
+     "at": 5.9
+    },
+    {
+     "w": "Alemao",
+     "at": 6.05
+    },
+    {
+     "w": "a",
+     "at": 6.838
+    },
+    {
+     "w": "low",
+     "at": 6.963
+    },
+    {
+     "w": "ball",
+     "at": 7.25
+    },
+    {
+     "w": "across",
+     "at": 7.55
+    },
+    {
+     "w": "Jordi",
+     "at": 8.137
+    },
+    {
+     "w": "Torras",
+     "at": 8.488
+    },
+    {
+     "w": "turns",
+     "at": 8.925
+    },
+    {
+     "w": "it",
+     "at": 9.213
+    },
+    {
+     "w": "in",
+     "at": 9.3
+    },
+    {
+     "w": "One",
+     "at": 9.925
+    },
+    {
+     "w": "nil",
+     "at": 10.2
+    },
+    {
+     "w": "to",
+     "at": 10.45
+    },
+    {
+     "w": "Spain",
+     "at": 10.588
+    }
+   ]
+  },
+  {
+   "label": "Replay: first to the ball",
+   "text": "Watch again. Torras attacks the space and gets to the ball first. Later he curls in another, then rolls in a third. Three goals! Spain win eight three.",
+   "src": "/plays/narration/jordi-torras-futsal-signature/2.m4a",
+   "seconds": 10.9,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "Torras",
+     "at": 1.462
+    },
+    {
+     "w": "attacks",
+     "at": 1.9
+    },
+    {
+     "w": "the",
+     "at": 2.325
+    },
+    {
+     "w": "space",
+     "at": 2.438
+    },
+    {
+     "w": "and",
+     "at": 2.837
+    },
+    {
+     "w": "gets",
+     "at": 2.95
+    },
+    {
+     "w": "to",
+     "at": 3.2
+    },
+    {
+     "w": "the",
+     "at": 3.288
+    },
+    {
+     "w": "ball",
+     "at": 3.375
+    },
+    {
+     "w": "first",
+     "at": 3.688
+    },
+    {
+     "w": "Later",
+     "at": 4.6
+    },
+    {
+     "w": "he",
+     "at": 4.95
+    },
+    {
+     "w": "curls",
+     "at": 5.088
+    },
+    {
+     "w": "in",
+     "at": 5.525
+    },
+    {
+     "w": "another",
+     "at": 5.612
+    },
+    {
+     "w": "then",
+     "at": 6.025
+    },
+    {
+     "w": "rolls",
+     "at": 6.237
+    },
+    {
+     "w": "in",
+     "at": 6.662
+    },
+    {
+     "w": "a",
+     "at": 6.737
+    },
+    {
+     "w": "third",
+     "at": 6.85
+    },
+    {
+     "w": "Three",
+     "at": 7.675
+    },
+    {
+     "w": "goals",
+     "at": 7.963
+    },
+    {
+     "w": "Spain",
+     "at": 8.675
+    },
+    {
+     "w": "win",
+     "at": 9.1
+    },
+    {
+     "w": "eight",
+     "at": 9.275
+    },
+    {
+     "w": "three",
+     "at": 9.512
+    }
+   ]
+  },
+  {
+   "label": "How he does it: the direct run",
+   "text": "This is how he attacks from the wing. Run straight at the space in front of you. Beat your defender, then shoot early, before the block comes!",
+   "src": "/plays/narration/jordi-torras-futsal-signature/3.m4a",
+   "seconds": 9.3,
+   "words": [
+    {
+     "w": "This",
+     "at": 0.35
+    },
+    {
+     "w": "is",
+     "at": 0.55
+    },
+    {
+     "w": "how",
+     "at": 0.675
+    },
+    {
+     "w": "he",
+     "at": 0.875
+    },
+    {
+     "w": "attacks",
+     "at": 1.025
+    },
+    {
+     "w": "from",
+     "at": 1.45
+    },
+    {
+     "w": "the",
+     "at": 1.587
+    },
+    {
+     "w": "wing",
+     "at": 1.688
+    },
+    {
+     "w": "Run",
+     "at": 2.525
+    },
+    {
+     "w": "straight",
+     "at": 2.888
+    },
+    {
+     "w": "at",
+     "at": 3.188
+    },
+    {
+     "w": "the",
+     "at": 3.263
+    },
+    {
+     "w": "space",
+     "at": 3.362
+    },
+    {
+     "w": "in",
+     "at": 3.737
+    },
+    {
+     "w": "front",
+     "at": 3.85
+    },
+    {
+     "w": "of",
+     "at": 4.037
+    },
+    {
+     "w": "you",
+     "at": 4.125
+    },
+    {
+     "w": "Beat",
+     "at": 4.875
+    },
+    {
+     "w": "your",
+     "at": 5.125
+    },
+    {
+     "w": "defender",
+     "at": 5.25
+    },
+    {
+     "w": "then",
+     "at": 6.025
+    },
+    {
+     "w": "shoot",
+     "at": 6.325
+    },
+    {
+     "w": "early",
+     "at": 6.65
+    },
+    {
+     "w": "before",
+     "at": 7.15
+    },
+    {
+     "w": "the",
+     "at": 7.438
+    },
+    {
+     "w": "block",
+     "at": 7.525
+    },
+    {
+     "w": "comes",
+     "at": 7.85
+    }
+   ]
+  }
+ ]
+}

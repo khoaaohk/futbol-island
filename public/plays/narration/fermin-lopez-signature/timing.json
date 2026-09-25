@@ -1,0 +1,374 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Paris 2024",
+   "text": "Olympic final, 2024: Spain against France in Paris. Juan Miranda drives the ball across from the left. Who is arriving? Ferm\u00edn L\u00f3pez! Two-one to Spain.",
+   "src": "/plays/narration/fermin-lopez-signature/1.m4a",
+   "seconds": 12.4,
+   "words": [
+    {
+     "w": "Olympic",
+     "at": 0.375
+    },
+    {
+     "w": "final",
+     "at": 0.75
+    },
+    {
+     "w": "2024",
+     "at": 1.2
+    },
+    {
+     "w": "Spain",
+     "at": 2.425
+    },
+    {
+     "w": "against",
+     "at": 2.85
+    },
+    {
+     "w": "France",
+     "at": 3.237
+    },
+    {
+     "w": "in",
+     "at": 3.65
+    },
+    {
+     "w": "Paris",
+     "at": 3.8
+    },
+    {
+     "w": "Juan",
+     "at": 4.862
+    },
+    {
+     "w": "Miranda",
+     "at": 5.15
+    },
+    {
+     "w": "drives",
+     "at": 5.65
+    },
+    {
+     "w": "the",
+     "at": 6.062
+    },
+    {
+     "w": "ball",
+     "at": 6.15
+    },
+    {
+     "w": "across",
+     "at": 6.475
+    },
+    {
+     "w": "from",
+     "at": 6.85
+    },
+    {
+     "w": "the",
+     "at": 6.987
+    },
+    {
+     "w": "left",
+     "at": 7.075
+    },
+    {
+     "w": "Who",
+     "at": 7.862
+    },
+    {
+     "w": "is",
+     "at": 8.05
+    },
+    {
+     "w": "arriving",
+     "at": 8.175
+    },
+    {
+     "w": "Ferm\u00edn",
+     "at": 9.012
+    },
+    {
+     "w": "L\u00f3pez",
+     "at": 9.5
+    },
+    {
+     "w": "Two-one",
+     "at": 10.287
+    },
+    {
+     "w": "to",
+     "at": 10.725
+    },
+    {
+     "w": "Spain",
+     "at": 10.863
+    }
+   ]
+  },
+  {
+   "label": "The replay",
+   "text": "Watch again, slowly. Ferm\u00edn runs from midfield into the box, right on time, and taps it in: his second goal of the final! Spain won gold, five-three.",
+   "src": "/plays/narration/fermin-lopez-signature/2.m4a",
+   "seconds": 11.2,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.137
+    },
+    {
+     "w": "Ferm\u00edn",
+     "at": 2.175
+    },
+    {
+     "w": "runs",
+     "at": 2.675
+    },
+    {
+     "w": "from",
+     "at": 3.0
+    },
+    {
+     "w": "midfield",
+     "at": 3.175
+    },
+    {
+     "w": "into",
+     "at": 3.712
+    },
+    {
+     "w": "the",
+     "at": 3.888
+    },
+    {
+     "w": "box",
+     "at": 3.975
+    },
+    {
+     "w": "right",
+     "at": 4.562
+    },
+    {
+     "w": "on",
+     "at": 4.812
+    },
+    {
+     "w": "time",
+     "at": 5.013
+    },
+    {
+     "w": "and",
+     "at": 5.438
+    },
+    {
+     "w": "taps",
+     "at": 5.562
+    },
+    {
+     "w": "it",
+     "at": 5.912
+    },
+    {
+     "w": "in",
+     "at": 5.987
+    },
+    {
+     "w": "his",
+     "at": 6.575
+    },
+    {
+     "w": "second",
+     "at": 6.787
+    },
+    {
+     "w": "goal",
+     "at": 7.15
+    },
+    {
+     "w": "of",
+     "at": 7.388
+    },
+    {
+     "w": "the",
+     "at": 7.463
+    },
+    {
+     "w": "final",
+     "at": 7.562
+    },
+    {
+     "w": "Spain",
+     "at": 8.425
+    },
+    {
+     "w": "won",
+     "at": 8.825
+    },
+    {
+     "w": "gold",
+     "at": 9.05
+    },
+    {
+     "w": "five-three",
+     "at": 9.562
+    }
+   ]
+  },
+  {
+   "label": "How he does it",
+   "text": "How does he do it? Pass to a teammate, then keep running forward. Defenders watch the ball, not you. So remember: keep running forward after you pass. The return ball can find you free!",
+   "src": "/plays/narration/fermin-lopez-signature/3.m4a",
+   "seconds": 12.8,
+   "words": [
+    {
+     "w": "How",
+     "at": 0.375
+    },
+    {
+     "w": "does",
+     "at": 0.487
+    },
+    {
+     "w": "he",
+     "at": 0.613
+    },
+    {
+     "w": "do",
+     "at": 0.738
+    },
+    {
+     "w": "it",
+     "at": 0.938
+    },
+    {
+     "w": "Pass",
+     "at": 1.512
+    },
+    {
+     "w": "to",
+     "at": 1.825
+    },
+    {
+     "w": "a",
+     "at": 1.913
+    },
+    {
+     "w": "teammate",
+     "at": 2.013
+    },
+    {
+     "w": "then",
+     "at": 2.625
+    },
+    {
+     "w": "keep",
+     "at": 2.837
+    },
+    {
+     "w": "running",
+     "at": 3.1
+    },
+    {
+     "w": "forward",
+     "at": 3.413
+    },
+    {
+     "w": "Defenders",
+     "at": 4.362
+    },
+    {
+     "w": "watch",
+     "at": 4.975
+    },
+    {
+     "w": "the",
+     "at": 5.3
+    },
+    {
+     "w": "ball",
+     "at": 5.4
+    },
+    {
+     "w": "not",
+     "at": 5.8
+    },
+    {
+     "w": "you",
+     "at": 6.062
+    },
+    {
+     "w": "So",
+     "at": 6.7
+    },
+    {
+     "w": "remember",
+     "at": 6.9
+    },
+    {
+     "w": "keep",
+     "at": 7.688
+    },
+    {
+     "w": "running",
+     "at": 7.938
+    },
+    {
+     "w": "forward",
+     "at": 8.213
+    },
+    {
+     "w": "after",
+     "at": 8.6
+    },
+    {
+     "w": "you",
+     "at": 8.875
+    },
+    {
+     "w": "pass",
+     "at": 9.0
+    },
+    {
+     "w": "The",
+     "at": 9.963
+    },
+    {
+     "w": "return",
+     "at": 10.075
+    },
+    {
+     "w": "ball",
+     "at": 10.5
+    },
+    {
+     "w": "can",
+     "at": 10.75
+    },
+    {
+     "w": "find",
+     "at": 10.938
+    },
+    {
+     "w": "you",
+     "at": 11.25
+    },
+    {
+     "w": "free",
+     "at": 11.387
+    }
+   ]
+  }
+ ]
+}

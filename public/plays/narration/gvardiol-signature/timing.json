@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Craven Cottage, 2024, against Fulham. Manchester City's left-back Jo\u0161ko Gvardiol sees space. He carries the ball forward, passes to Kevin De Bruyne, keeps running. It comes back, one touch... goal!",
+   "src": "/plays/narration/gvardiol-signature/1.m4a",
+   "seconds": 15.5,
+   "words": [
+    {
+     "w": "Craven",
+     "at": 0.35
+    },
+    {
+     "w": "Cottage",
+     "at": 0.762
+    },
+    {
+     "w": "2024",
+     "at": 1.425
+    },
+    {
+     "w": "against",
+     "at": 2.35
+    },
+    {
+     "w": "Fulham",
+     "at": 2.737
+    },
+    {
+     "w": "Manchester",
+     "at": 3.7
+    },
+    {
+     "w": "City's",
+     "at": 4.312
+    },
+    {
+     "w": "left-back",
+     "at": 4.688
+    },
+    {
+     "w": "Jo\u0161ko",
+     "at": 5.237
+    },
+    {
+     "w": "Gvardiol",
+     "at": 5.8
+    },
+    {
+     "w": "sees",
+     "at": 6.362
+    },
+    {
+     "w": "space",
+     "at": 6.662
+    },
+    {
+     "w": "He",
+     "at": 7.675
+    },
+    {
+     "w": "carries",
+     "at": 7.8
+    },
+    {
+     "w": "the",
+     "at": 8.2
+    },
+    {
+     "w": "ball",
+     "at": 8.3
+    },
+    {
+     "w": "forward",
+     "at": 8.613
+    },
+    {
+     "w": "passes",
+     "at": 9.338
+    },
+    {
+     "w": "to",
+     "at": 9.825
+    },
+    {
+     "w": "Kevin",
+     "at": 9.95
+    },
+    {
+     "w": "De",
+     "at": 10.275
+    },
+    {
+     "w": "Bruyne",
+     "at": 10.4
+    },
+    {
+     "w": "keeps",
+     "at": 10.95
+    },
+    {
+     "w": "running",
+     "at": 11.25
+    },
+    {
+     "w": "It",
+     "at": 12.025
+    },
+    {
+     "w": "comes",
+     "at": 12.175
+    },
+    {
+     "w": "back",
+     "at": 12.475
+    },
+    {
+     "w": "one",
+     "at": 12.863
+    },
+    {
+     "w": "touch",
+     "at": 13.137
+    },
+    {
+     "w": "goal",
+     "at": 14.062
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. Nobody closes him down, so he drives into the open grass. Then pass and go: give it, sprint, get it back.",
+   "src": "/plays/narration/gvardiol-signature/2.m4a",
+   "seconds": 9.5,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.113
+    },
+    {
+     "w": "Nobody",
+     "at": 2.112
+    },
+    {
+     "w": "closes",
+     "at": 2.475
+    },
+    {
+     "w": "him",
+     "at": 2.812
+    },
+    {
+     "w": "down",
+     "at": 2.975
+    },
+    {
+     "w": "so",
+     "at": 3.325
+    },
+    {
+     "w": "he",
+     "at": 3.438
+    },
+    {
+     "w": "drives",
+     "at": 3.562
+    },
+    {
+     "w": "into",
+     "at": 3.987
+    },
+    {
+     "w": "the",
+     "at": 4.162
+    },
+    {
+     "w": "open",
+     "at": 4.275
+    },
+    {
+     "w": "grass",
+     "at": 4.6
+    },
+    {
+     "w": "Then",
+     "at": 5.513
+    },
+    {
+     "w": "pass",
+     "at": 5.763
+    },
+    {
+     "w": "and",
+     "at": 6.225
+    },
+    {
+     "w": "go",
+     "at": 6.35
+    },
+    {
+     "w": "give",
+     "at": 7.112
+    },
+    {
+     "w": "it",
+     "at": 7.325
+    },
+    {
+     "w": "sprint",
+     "at": 7.513
+    },
+    {
+     "w": "get",
+     "at": 7.975
+    },
+    {
+     "w": "it",
+     "at": 8.137
+    },
+    {
+     "w": "back",
+     "at": 8.225
+    }
+   ]
+  },
+  {
+   "label": "The finish",
+   "text": "His first touch fools Issa Diop. His right foot rolls it past Bernd Leno.",
+   "src": "/plays/narration/gvardiol-signature/3.m4a",
+   "seconds": 6.0,
+   "words": [
+    {
+     "w": "His",
+     "at": 0.35
+    },
+    {
+     "w": "first",
+     "at": 0.525
+    },
+    {
+     "w": "touch",
+     "at": 0.8
+    },
+    {
+     "w": "fools",
+     "at": 1.113
+    },
+    {
+     "w": "Issa",
+     "at": 1.475
+    },
+    {
+     "w": "Diop",
+     "at": 1.8
+    },
+    {
+     "w": "His",
+     "at": 2.65
+    },
+    {
+     "w": "right",
+     "at": 2.85
+    },
+    {
+     "w": "foot",
+     "at": 3.138
+    },
+    {
+     "w": "rolls",
+     "at": 3.375
+    },
+    {
+     "w": "it",
+     "at": 3.663
+    },
+    {
+     "w": "past",
+     "at": 3.75
+    },
+    {
+     "w": "Bernd",
+     "at": 4.112
+    },
+    {
+     "w": "Leno",
+     "at": 4.525
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: when there is space in front of you, even a defender can dribble forward and start the attack!",
+   "src": "/plays/narration/gvardiol-signature/4.m4a",
+   "seconds": 7.0,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.562
+    },
+    {
+     "w": "when",
+     "at": 1.35
+    },
+    {
+     "w": "there",
+     "at": 1.488
+    },
+    {
+     "w": "is",
+     "at": 1.625
+    },
+    {
+     "w": "space",
+     "at": 1.762
+    },
+    {
+     "w": "in",
+     "at": 2.175
+    },
+    {
+     "w": "front",
+     "at": 2.325
+    },
+    {
+     "w": "of",
+     "at": 2.513
+    },
+    {
+     "w": "you",
+     "at": 2.6
+    },
+    {
+     "w": "even",
+     "at": 3.15
+    },
+    {
+     "w": "a",
+     "at": 3.388
+    },
+    {
+     "w": "defender",
+     "at": 3.45
+    },
+    {
+     "w": "can",
+     "at": 3.975
+    },
+    {
+     "w": "dribble",
+     "at": 4.15
+    },
+    {
+     "w": "forward",
+     "at": 4.525
+    },
+    {
+     "w": "and",
+     "at": 4.938
+    },
+    {
+     "w": "start",
+     "at": 5.062
+    },
+    {
+     "w": "the",
+     "at": 5.338
+    },
+    {
+     "w": "attack",
+     "at": 5.475
+    }
+   ]
+  }
+ ]
+}

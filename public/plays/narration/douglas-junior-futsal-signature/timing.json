@@ -1,0 +1,386 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: the 2021 semi-final",
+   "text": "The 2021 Futsal World Cup semi-final, in Kaunas. Kazakhstan play Portugal. Douglas is Kazakhstan\u2019s fixo, the last defender. In extra time, he scores, and Kazakhstan lead two one!",
+   "src": "/plays/narration/douglas-junior-futsal-signature/1.m4a",
+   "seconds": 14.9,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "2021",
+     "at": 0.425
+    },
+    {
+     "w": "Futsal",
+     "at": 1.35
+    },
+    {
+     "w": "World",
+     "at": 1.8
+    },
+    {
+     "w": "Cup",
+     "at": 2.1
+    },
+    {
+     "w": "semi-final",
+     "at": 2.375
+    },
+    {
+     "w": "in",
+     "at": 3.225
+    },
+    {
+     "w": "Kaunas",
+     "at": 3.375
+    },
+    {
+     "w": "Kazakhstan",
+     "at": 4.438
+    },
+    {
+     "w": "play",
+     "at": 5.275
+    },
+    {
+     "w": "Portugal",
+     "at": 5.5
+    },
+    {
+     "w": "Douglas",
+     "at": 6.525
+    },
+    {
+     "w": "is",
+     "at": 7.025
+    },
+    {
+     "w": "Kazakhstan\u2019s",
+     "at": 7.188
+    },
+    {
+     "w": "fixo",
+     "at": 8.125
+    },
+    {
+     "w": "the",
+     "at": 8.85
+    },
+    {
+     "w": "last",
+     "at": 8.975
+    },
+    {
+     "w": "defender",
+     "at": 9.325
+    },
+    {
+     "w": "In",
+     "at": 10.287
+    },
+    {
+     "w": "extra",
+     "at": 10.45
+    },
+    {
+     "w": "time",
+     "at": 10.85
+    },
+    {
+     "w": "he",
+     "at": 11.262
+    },
+    {
+     "w": "scores",
+     "at": 11.387
+    },
+    {
+     "w": "and",
+     "at": 12.0
+    },
+    {
+     "w": "Kazakhstan",
+     "at": 12.137
+    },
+    {
+     "w": "lead",
+     "at": 12.975
+    },
+    {
+     "w": "two",
+     "at": 13.238
+    },
+    {
+     "w": "one",
+     "at": 13.512
+    }
+   ]
+  },
+  {
+   "label": "How he does it",
+   "text": "Fixos defend, but Douglas can shoot from far out too. This is how he does it: the ball rolls to him, he steps in and strikes. Boom!",
+   "src": "/plays/narration/douglas-junior-futsal-signature/2.m4a",
+   "seconds": 9.7,
+   "words": [
+    {
+     "w": "Fixos",
+     "at": 0.375
+    },
+    {
+     "w": "defend",
+     "at": 0.825
+    },
+    {
+     "w": "but",
+     "at": 1.312
+    },
+    {
+     "w": "Douglas",
+     "at": 1.45
+    },
+    {
+     "w": "can",
+     "at": 1.85
+    },
+    {
+     "w": "shoot",
+     "at": 2.05
+    },
+    {
+     "w": "from",
+     "at": 2.35
+    },
+    {
+     "w": "far",
+     "at": 2.562
+    },
+    {
+     "w": "out",
+     "at": 2.812
+    },
+    {
+     "w": "too",
+     "at": 3.038
+    },
+    {
+     "w": "This",
+     "at": 3.812
+    },
+    {
+     "w": "is",
+     "at": 4.05
+    },
+    {
+     "w": "how",
+     "at": 4.175
+    },
+    {
+     "w": "he",
+     "at": 4.375
+    },
+    {
+     "w": "does",
+     "at": 4.5
+    },
+    {
+     "w": "it",
+     "at": 4.737
+    },
+    {
+     "w": "the",
+     "at": 5.25
+    },
+    {
+     "w": "ball",
+     "at": 5.35
+    },
+    {
+     "w": "rolls",
+     "at": 5.65
+    },
+    {
+     "w": "to",
+     "at": 5.975
+    },
+    {
+     "w": "him",
+     "at": 6.1
+    },
+    {
+     "w": "he",
+     "at": 6.425
+    },
+    {
+     "w": "steps",
+     "at": 6.575
+    },
+    {
+     "w": "in",
+     "at": 6.938
+    },
+    {
+     "w": "and",
+     "at": 7.112
+    },
+    {
+     "w": "strikes",
+     "at": 7.237
+    },
+    {
+     "w": "Boom",
+     "at": 8.225
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. Head over the ball, standing foot beside it, laces through the middle, and follow through!",
+   "src": "/plays/narration/douglas-junior-futsal-signature/3.m4a",
+   "seconds": 7.4,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.163
+    },
+    {
+     "w": "Head",
+     "at": 2.188
+    },
+    {
+     "w": "over",
+     "at": 2.362
+    },
+    {
+     "w": "the",
+     "at": 2.562
+    },
+    {
+     "w": "ball",
+     "at": 2.65
+    },
+    {
+     "w": "standing",
+     "at": 3.1
+    },
+    {
+     "w": "foot",
+     "at": 3.513
+    },
+    {
+     "w": "beside",
+     "at": 3.725
+    },
+    {
+     "w": "it",
+     "at": 4.125
+    },
+    {
+     "w": "laces",
+     "at": 4.375
+    },
+    {
+     "w": "through",
+     "at": 4.8
+    },
+    {
+     "w": "the",
+     "at": 5.0
+    },
+    {
+     "w": "middle",
+     "at": 5.1
+    },
+    {
+     "w": "and",
+     "at": 5.525
+    },
+    {
+     "w": "follow",
+     "at": 5.662
+    },
+    {
+     "w": "through",
+     "at": 6.037
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: hit through the middle of the ball for a straight, powerful shot!",
+   "src": "/plays/narration/douglas-junior-futsal-signature/4.m4a",
+   "seconds": 5.0,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "hit",
+     "at": 1.375
+    },
+    {
+     "w": "through",
+     "at": 1.575
+    },
+    {
+     "w": "the",
+     "at": 1.688
+    },
+    {
+     "w": "middle",
+     "at": 1.775
+    },
+    {
+     "w": "of",
+     "at": 1.962
+    },
+    {
+     "w": "the",
+     "at": 2.038
+    },
+    {
+     "w": "ball",
+     "at": 2.125
+    },
+    {
+     "w": "for",
+     "at": 2.425
+    },
+    {
+     "w": "a",
+     "at": 2.538
+    },
+    {
+     "w": "straight",
+     "at": 2.638
+    },
+    {
+     "w": "powerful",
+     "at": 3.163
+    },
+    {
+     "w": "shot",
+     "at": 3.688
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The final, live",
+   "text": "Gothenburg, 2021: the Champions League final, Barcelona against Chelsea. Here's how Mapi Le\u00f3n defends. Chelsea attack. Mapi steps in and wins the ball. Head up... long pass!",
+   "src": "/plays/narration/mapi-leon-signature/1.m4a",
+   "seconds": 13.4,
+   "words": [
+    {
+     "w": "Gothenburg",
+     "at": 0.4
+    },
+    {
+     "w": "2021",
+     "at": 1.075
+    },
+    {
+     "w": "the",
+     "at": 2.3
+    },
+    {
+     "w": "Champions",
+     "at": 2.413
+    },
+    {
+     "w": "League",
+     "at": 3.0
+    },
+    {
+     "w": "final",
+     "at": 3.263
+    },
+    {
+     "w": "Barcelona",
+     "at": 3.725
+    },
+    {
+     "w": "against",
+     "at": 4.4
+    },
+    {
+     "w": "Chelsea",
+     "at": 4.775
+    },
+    {
+     "w": "Here's",
+     "at": 5.688
+    },
+    {
+     "w": "how",
+     "at": 5.938
+    },
+    {
+     "w": "Mapi",
+     "at": 6.1
+    },
+    {
+     "w": "Le\u00f3n",
+     "at": 6.425
+    },
+    {
+     "w": "defends",
+     "at": 6.8
+    },
+    {
+     "w": "Chelsea",
+     "at": 7.725
+    },
+    {
+     "w": "attack",
+     "at": 8.15
+    },
+    {
+     "w": "Mapi",
+     "at": 8.988
+    },
+    {
+     "w": "steps",
+     "at": 9.4
+    },
+    {
+     "w": "in",
+     "at": 9.713
+    },
+    {
+     "w": "and",
+     "at": 9.863
+    },
+    {
+     "w": "wins",
+     "at": 9.975
+    },
+    {
+     "w": "the",
+     "at": 10.25
+    },
+    {
+     "w": "ball",
+     "at": 10.35
+    },
+    {
+     "w": "Head",
+     "at": 10.887
+    },
+    {
+     "w": "up",
+     "at": 11.088
+    },
+    {
+     "w": "long",
+     "at": 11.713
+    },
+    {
+     "w": "pass",
+     "at": 12.037
+    }
+   ]
+  },
+  {
+   "label": "Stay on your feet",
+   "text": "Watch again. She doesn't dive in. She stays on her feet, then pokes the ball away with her left foot. Clean!",
+   "src": "/plays/narration/mapi-leon-signature/2.m4a",
+   "seconds": 7.6,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "She",
+     "at": 1.2
+    },
+    {
+     "w": "doesn't",
+     "at": 1.312
+    },
+    {
+     "w": "dive",
+     "at": 1.575
+    },
+    {
+     "w": "in",
+     "at": 1.863
+    },
+    {
+     "w": "She",
+     "at": 2.487
+    },
+    {
+     "w": "stays",
+     "at": 2.65
+    },
+    {
+     "w": "on",
+     "at": 2.962
+    },
+    {
+     "w": "her",
+     "at": 3.062
+    },
+    {
+     "w": "feet",
+     "at": 3.225
+    },
+    {
+     "w": "then",
+     "at": 3.625
+    },
+    {
+     "w": "pokes",
+     "at": 3.825
+    },
+    {
+     "w": "the",
+     "at": 4.125
+    },
+    {
+     "w": "ball",
+     "at": 4.225
+    },
+    {
+     "w": "away",
+     "at": 4.525
+    },
+    {
+     "w": "with",
+     "at": 4.787
+    },
+    {
+     "w": "her",
+     "at": 4.888
+    },
+    {
+     "w": "left",
+     "at": 5.025
+    },
+    {
+     "w": "foot",
+     "at": 5.312
+    },
+    {
+     "w": "Clean",
+     "at": 6.125
+    }
+   ]
+  },
+  {
+   "label": "Head up, look far",
+   "text": "Her head comes up. She spots a teammate far away, and the long pass flies over Chelsea's attack. Barcelona won that final four nil!",
+   "src": "/plays/narration/mapi-leon-signature/3.m4a",
+   "seconds": 9.7,
+   "words": [
+    {
+     "w": "Her",
+     "at": 0.35
+    },
+    {
+     "w": "head",
+     "at": 0.475
+    },
+    {
+     "w": "comes",
+     "at": 0.7
+    },
+    {
+     "w": "up",
+     "at": 1.0
+    },
+    {
+     "w": "She",
+     "at": 1.637
+    },
+    {
+     "w": "spots",
+     "at": 1.8
+    },
+    {
+     "w": "a",
+     "at": 2.138
+    },
+    {
+     "w": "teammate",
+     "at": 2.212
+    },
+    {
+     "w": "far",
+     "at": 2.763
+    },
+    {
+     "w": "away",
+     "at": 3.0
+    },
+    {
+     "w": "and",
+     "at": 3.575
+    },
+    {
+     "w": "the",
+     "at": 3.688
+    },
+    {
+     "w": "long",
+     "at": 3.788
+    },
+    {
+     "w": "pass",
+     "at": 4.138
+    },
+    {
+     "w": "flies",
+     "at": 4.537
+    },
+    {
+     "w": "over",
+     "at": 4.912
+    },
+    {
+     "w": "Chelsea's",
+     "at": 5.112
+    },
+    {
+     "w": "attack",
+     "at": 5.6
+    },
+    {
+     "w": "Barcelona",
+     "at": 6.612
+    },
+    {
+     "w": "won",
+     "at": 7.275
+    },
+    {
+     "w": "that",
+     "at": 7.5
+    },
+    {
+     "w": "final",
+     "at": 7.737
+    },
+    {
+     "w": "four",
+     "at": 8.137
+    },
+    {
+     "w": "nil",
+     "at": 8.4
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "The secret? Win the ball cleanly. Then lift your head, and find a teammate far away.",
+   "src": "/plays/narration/mapi-leon-signature/4.m4a",
+   "seconds": 6.5,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "secret",
+     "at": 0.463
+    },
+    {
+     "w": "Win",
+     "at": 1.212
+    },
+    {
+     "w": "the",
+     "at": 1.438
+    },
+    {
+     "w": "ball",
+     "at": 1.525
+    },
+    {
+     "w": "cleanly",
+     "at": 1.837
+    },
+    {
+     "w": "Then",
+     "at": 2.862
+    },
+    {
+     "w": "lift",
+     "at": 3.1
+    },
+    {
+     "w": "your",
+     "at": 3.337
+    },
+    {
+     "w": "head",
+     "at": 3.45
+    },
+    {
+     "w": "and",
+     "at": 3.812
+    },
+    {
+     "w": "find",
+     "at": 3.925
+    },
+    {
+     "w": "a",
+     "at": 4.162
+    },
+    {
+     "w": "teammate",
+     "at": 4.237
+    },
+    {
+     "w": "far",
+     "at": 4.787
+    },
+    {
+     "w": "away",
+     "at": 5.05
+    }
+   ]
+  }
+ ]
+}

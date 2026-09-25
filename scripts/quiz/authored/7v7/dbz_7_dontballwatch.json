@@ -1,0 +1,18 @@
+{"lesson":"dbz_7_dontballwatch","questions":[
+{"q":"True or false? Just watch the ball, not the runner.",
+ "options":["True","False"],"correct":1,
+ "explain":"Right, it's false. Keep checking the ball and the runner, so nobody gets free.",
+ "choiceExplanations":["If you only watch the ball, the runner sneaks behind you toward goal.","Right, it's false. Keep checking the ball and the runner, so nobody gets free."],
+ "visual":{"kind":"trueFalse","frame":{"step":0,"focus":["lb","dst","dcm"]}}},
+{"q":"Put the defending in order, from first to last.",
+ "options":["Check the ball and the runner","Turn your head, move with them","Right defender picks up the runner"],"correct":0,
+ "explain":"Yes. Check both, move with the runner, then hand the runner to the right defender.",
+ "choiceExplanations":["Yes. Check both, move with the runner, then hand the runner to the right defender.","First you check where the runner is, then you move with them.","The right defender takes over last, once the runner comes to their side."],
+ "visual":{"kind":"order","frame":{"step":1,"focus":["lb","dst"]}}},
+{"q":"Now the runner cuts back left. Tap where the left defender goes.",
+ "options":["Toward the ball","Up the middle","Next to the runner"],"correct":2,
+ "explain":"Yes. The runner came to your side, so you stay close and mark them.",
+ "choiceExplanations":["The right defender already has the ball side, so the runner would be free.","That is away from the runner, so they can run free toward our goal.","Yes. The runner came to your side, so you stay close and mark them."],
+ "visual":{"kind":"tapSpot","frame":{"step":6,"place":{"dst":{"x":95,"y":295}},"focus":["lb","dst"]},
+  "spots":[{"x":205,"y":287},{"x":140,"y":256},{"x":100,"y":322}]}}
+]}

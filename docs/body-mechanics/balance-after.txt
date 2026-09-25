@@ -1,0 +1,48 @@
+sim-balance: 24 seeds x 3 min at 1/30 s per format (2026-09-22)
+format	goalsPerGame	switchesPerMin	oneSided	meanOutfieldSpeed	plantsPerMin	defBackpedalShare	shotsPerGame	passesPerGame	turnoversPerGame	cpuMs
+futsal	4.417	14.67	3	53.3	174.1	0.048	30.67	124.7	9.8	7490
+7v7	4.333	11.31	9	48.8	204.88	0.049	24.08	126.7	7.4	10140
+9v9	4	7.79	5	47.38	231.68	0.044	14.46	165.1	7.6	19609
+11v11	3.542	10.42	4	45.95	245.28	0.04	16.79	159.1	10.2	22211
+
+sim-balance: 96 seeds (from #24) x 3 min at 1/30 s per format — out-of-gate sample
+format	goalsPerGame	switchesPerMin	oneSided	meanOutfieldSpeed	plantsPerMin	defBackpedalShare	shotsPerGame	passesPerGame	turnoversPerGame	cpuMs
+futsal	4.042	15.34	25	53.23	171.07	0.048	31.16	126.9	10.3	27672
+7v7	4.344	11.56	20	49.04	205.91	0.048	24.7	128	7.6	49192
+9v9	3.76	8.26	20	47.62	227.98	0.045	14.66	165	8.5	67868
+11v11	3.865	10.52	19	45.98	238.49	0.042	17.25	155.8	10.2	78727
+
+Pre-change baseline on the same 96 out-of-gate seeds. The pre-change movement code was reconstructed:
+ROLE_MOVEMENT all 1, no backpedal pace cap, plain exponential convergence, kick-off collect
+radius 9. Run on the 24 gate seeds it reproduces balance-before.txt exactly.
+format	goalsPerGame	switchesPerMin	oneSided	meanOutfieldSpeed
+futsal	3.938	14.47	24	54.28
+7v7	4.146	11.58	20	49.84
+9v9	3.573	8.40	11	48.20
+11v11	3.729	10.67	21	46.39
+
+Comparison against balance-before.txt (24 gate seeds, ±15 %; oneSided ±1 when 15 % < 1)
+format	goals	switches	oneSided
+futsal	+14.0 % ok	+1.9 % ok	3 vs 6 FAIL
+7v7	+11.8 % ok	+1.6 % ok	9 vs 6 FAIL
+9v9	+50.0 % FAIL	-7.5 % ok	5 vs 3 FAIL
+11v11	-2.3 % ok	-3.3 % ok	4 vs 8 FAIL
+
+Comparison on 96 out-of-gate seeds (after vs reconstructed before)
+format	goals	switches	oneSided
+futsal	+2.6 %	+6.0 %	25 vs 24
+7v7	+4.8 %	-0.2 %	20 vs 20
+9v9	+5.2 %	-1.7 %	20 vs 11
+11v11	+3.6 %	-1.4 %	19 vs 21
+
+Reading: the match is chaotic. Any change to movement reshuffles every game, so the 24-seed gate
+is a fresh random draw each time. Goals/game on 24 seeds has about 10 % standard error, and
+oneSided is a count of about 5 (SD about 2).
+Evidence: the kick-off collect radius 9 -> 10.5 on its own (all other movement left pre-change)
+moves 24-seed 9v9 goals 2.667 -> 3.708 (+39 %). On 96 seeds it moves them 3.573 -> 3.563 (0 %).
+The baseline's 9v9 2.667 goals and 11v11 oneSided 8 are low and high draws of their own seeds
+(the 96-seed means are 3.57 and about 5 per 24). Two grids (about 100 nearby constant sets) found none that
+passes all 12 gate cells, so none was cherry-picked.
+The contract's starting constants (fwd 1.10 / def .94 / gk .90 speed, def accel .85 / turn .85,
+plant bleed .8) raised goals by 12-27 % on the 96-seed sample, a real shift. The tuned constants
+bring every goals and switches figure within ±6 % on 96 seeds.

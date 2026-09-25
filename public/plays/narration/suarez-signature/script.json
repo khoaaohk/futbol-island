@@ -1,0 +1,10 @@
+{
+ "film": "suarez-signature",
+ "note": "Luis Suárez's cheeky nutmeg finish: PSG 1-3 Barcelona, Parc des Princes, 15 April 2015, his 79th-minute goal. Chapter 1 is keyed from 'Luis Suárez' (the pass) through 'David Luiz' and 'through his legs' (the nutmeg) to 'Goal' (the ball in the top corner): keep the pauses at '...' so it plays near real time.",
+ "chapters": [
+  {"label": "The goal, live", "text": "Paris, 2015. Barcelona, in bright yellow, lead Paris Saint-Germain. Luis Suárez races clear. David Luiz rushes across... through his legs! Suárez curls it into the top corner. Goal!"},
+  {"label": "Watch it again", "text": "Watch it again, slowly. Luiz stretches and his legs open. Suárez pokes the ball through the gap, and darts round to collect it."},
+  {"label": "The finish", "text": "Then a curling shot past keeper Salvatore Sirigu. His second nutmeg on Luiz that night!"},
+  {"label": "Your turn", "text": "Your turn: watch the defender's feet. If their legs open, play the ball through them, then sprint round to meet it!"}
+ ]
+}

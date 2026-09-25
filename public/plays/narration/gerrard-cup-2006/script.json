@@ -1,0 +1,10 @@
+{
+ "film": "gerrard-cup-2006",
+ "note": "Chapter 1 is keyed from 'headed clear' (the header) through 'drops' (the bounce) and 'first time' (the half-volley) to 'goal' (the ball in the net): keep the pauses at '...' so that stretch plays near real time. Chapter 2 is the slow-motion replay; 'strikes' is the contact.",
+ "chapters": [
+  {"label": "The goal, live", "text": "Cardiff, 2006, the FA Cup final. Liverpool are losing three-two in added time, and Steven Gerrard waits, thirty-five yards out. The ball is headed clear... it drops... first time... goal! Three-three!"},
+  {"label": "Watch it again", "text": "Watch again, slowly. Tired legs, but head down, body leaning over the ball, and he strikes right through the middle."},
+  {"label": "Bottom corner", "text": "Low and hard, past keeper Shaka Hislop, into the bottom corner! Liverpool win the cup on penalties."},
+  {"label": "Your turn", "text": "Your turn: body over the ball, strike through the middle, and your long shot stays low and powerful."}
+ ]
+}

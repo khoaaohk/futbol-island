@@ -1,0 +1,71 @@
+{
+ "lesson": "trn_9_recover",
+ "questions": [
+  {
+   "q": "We just lost the ball. Drag the left midfielder to where they recover first.",
+   "options": [
+    "Chase behind the ball carrier",
+    "Stay out wide on the left",
+    "The space in front of our goal"
+   ],
+   "correct": 2,
+   "explain": "Right. Recovering in front of our goal puts you back between the ball and the goal.",
+   "choiceExplanations": [
+    "Chasing from behind rarely catches the ball, and our goal stays open.",
+    "Staying wide leaves the middle open, so the ball carrier runs straight at goal.",
+    "Right. Recovering in front of our goal puts you back between the ball and the goal."
+   ],
+   "visual": {
+    "kind": "dragToZone",
+    "frame": {"step": 1, "focus": ["lcm", "dst"]},
+    "drag": "lcm",
+    "zones": [
+     {"x": 110, "y": 205, "w": 40, "h": 30},
+     {"x": 40, "y": 230, "w": 40, "h": 36},
+     {"x": 110, "y": 290, "w": 44, "h": 36}
+    ]
+   }
+  },
+  {
+   "q": "Put the steps after losing the ball in order, from first to last.",
+   "options": [
+    "Gold loses the ball",
+    "Recover toward the space in front of goal",
+    "Cover is ready behind",
+    "Approach without diving in"
+   ],
+   "correct": 0,
+   "explain": "Yes. We lose it, recover, get cover ready, and only then step toward the ball.",
+   "choiceExplanations": [
+    "Yes. We lose it, recover, get cover ready, and only then step toward the ball.",
+    "We only need to recover after the ball is lost.",
+    "Cover is ready once a teammate has recovered behind.",
+    "We approach last, because cover must be ready behind first."
+   ],
+   "visual": {
+    "kind": "order",
+    "frame": {"step": 0, "focus": ["lcm", "rcm", "dst"]}
+   }
+  },
+  {
+   "q": "Now the right midfielder is caught upfield. Tap where they should recover.",
+   "options": [
+    "Chase behind the ball carrier",
+    "Back in front of our goal",
+    "Stay out wide on the right"
+   ],
+   "correct": 1,
+   "explain": "Yes. Just like on the left, recover toward our goal to rebuild protection first.",
+   "choiceExplanations": [
+    "Chasing from behind rarely catches the ball, and it leaves our goal less protected.",
+    "Yes. Just like on the left, recover toward our goal to rebuild protection first.",
+    "Out wide is away from the danger, so the middle stays open."
+   ],
+   "visual": {
+    "kind": "tapSpot",
+    "frame": {"step": 2, "place": {"rcm": {"x": 182, "y": 200}}, "focus": ["rcm", "dst"]},
+    "spots": [{"x": 150, "y": 222}, {"x": 170, "y": 300}, {"x": 240, "y": 200}]
+   }
+  }
+ ]
+}

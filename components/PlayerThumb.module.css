@@ -1,0 +1,8 @@
+/* Static riso photo thumbnail: flag bands, cream paper arch, flag-colour halftone, deep-green ink. */
+.thumb{position:relative;display:block;flex:none;overflow:hidden;border-radius:26%;isolation:isolate;box-shadow:inset 0 0 0 2px #183b3424}
+.paper{position:absolute;left:9%;right:9%;top:7%;bottom:-6%;border-radius:50% 50% 16% 16%/44% 44% 10% 10%;background:#fff1d3}
+/* The masks are 4:5 portraits with the head in the top half: zoom to head and shoulders. */
+.mask{position:absolute;inset:0;-webkit-mask-size:128% auto;mask-size:128% auto;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:50% 0;mask-position:50% 0}
+/* No misregistration offset and a lighter tone at thumbnail size, so the ink face stays crisp at 1x. */
+.tone{mix-blend-mode:multiply;opacity:.72}
+.ink{background:#1f3d36;mix-blend-mode:multiply}

@@ -1,0 +1,148 @@
+{
+ "lesson": "trn_f_winitback",
+ "questions": [
+  {
+   "q": "Blue escaped to the far wing. Tap where the fixo should recover first.",
+   "options": [
+    "Out wide, chasing the ball",
+    "Through the middle, behind the ball",
+    "Near where we lost it"
+   ],
+   "correct": 1,
+   "explain": "Yes. The fixo recovers through the middle first, so the goal is protected.",
+   "choiceExplanations": [
+    "Chasing from far away is too slow, and it leaves the middle open.",
+    "Yes. The fixo recovers through the middle first, so the goal is protected.",
+    "That spot is too far from the ball, so blue can attack the space behind."
+   ],
+   "visual": {
+    "kind": "tapSpot",
+    "frame": {
+     "step": 3,
+     "focus": [
+      "cb"
+     ]
+    },
+    "spots": [
+     {
+      "x": 190,
+      "y": 215
+     },
+     {
+      "x": 150,
+      "y": 332
+     },
+     {
+      "x": 60,
+      "y": 228
+     }
+    ]
+   }
+  },
+  {
+   "q": "Gold just lost the ball. In which picture can the left ala approach safely?",
+   "options": [
+    "Fixo beside the left ala",
+    "Fixo far across the court",
+    "Fixo close behind the left ala"
+   ],
+   "correct": 2,
+   "explain": "Yes. The fixo is close behind, so the ala can approach with cover.",
+   "choiceExplanations": [
+    "With the fixo level with the ala, one pass beats them both.",
+    "The fixo is too far away to help, so the ala would be alone.",
+    "Yes. The fixo is close behind, so the ala can approach with cover."
+   ],
+   "visual": {
+    "kind": "pickPicture",
+    "pictures": [
+     {
+      "step": 0,
+      "place": {
+       "cb": {
+        "x": 100,
+        "y": 262
+       }
+      },
+      "focus": [
+       "lm",
+       "cb"
+      ]
+     },
+     {
+      "step": 0,
+      "place": {
+       "cb": {
+        "x": 205,
+        "y": 322
+       }
+      },
+      "focus": [
+       "lm",
+       "cb"
+      ]
+     },
+     {
+      "step": 0,
+      "focus": [
+       "lm",
+       "cb"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "q": "Blue escaped right, and the fixo is back. Where should the left ala recover?",
+   "options": [
+    "Inside, behind the ball",
+    "Chase the ball on the wing",
+    "Stay out on the left"
+   ],
+   "correct": 0,
+   "explain": "Yes. The left ala recovers inside, so gold is connected again and the middle is closed.",
+   "choiceExplanations": [
+    "Yes. The left ala recovers inside, so gold is connected again and the middle is closed.",
+    "The ball is far away, so chasing it leaves the middle open behind you.",
+    "That is too far from teammates, so blue can pass through the middle."
+   ],
+   "visual": {
+    "kind": "dragToZone",
+    "frame": {
+     "step": 4,
+     "place": {
+      "cb": {
+       "x": 153,
+       "y": 326
+      }
+     },
+     "focus": [
+      "lm",
+      "cb"
+     ]
+    },
+    "drag": "lm",
+    "zones": [
+     {
+      "x": 100,
+      "y": 316,
+      "w": 50,
+      "h": 40
+     },
+     {
+      "x": 185,
+      "y": 215,
+      "w": 50,
+      "h": 40
+     },
+     {
+      "x": 35,
+      "y": 305,
+      "w": 40,
+      "h": 40
+     }
+    ]
+   }
+  }
+ ]
+}

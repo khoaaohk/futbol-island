@@ -1,0 +1,101 @@
+{
+ "lesson": "trn_f_firstpass",
+ "questions": [
+  {
+   "q": "True or false? Right after winning the ball, the right ala has an open forward route.",
+   "options": [
+    "True",
+    "False"
+   ],
+   "correct": 0,
+   "explain": "Right, it's true. No defender blocks that lane, so we attack before pressure arrives.",
+   "choiceExplanations": [
+    "Right, it's true. No defender blocks that lane, so we attack before pressure arrives.",
+    "Look again: no blue player stands in that lane, so the forward pass is on."
+   ],
+   "visual": {
+    "kind": "trueFalse",
+    "frame": {
+     "step": 1,
+     "ball": "cb",
+     "focus": [
+      "cb",
+      "rm"
+     ],
+     "marks": [
+      {
+       "kind": "pass",
+       "from": "cb",
+       "to": "rm",
+       "tone": "gold"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "q": "The blue defender recovers to the right ala. What should the ala do next?",
+   "options": [
+    "Dribble forward into the defender",
+    "Pass back to the fixo",
+    "Shoot from far away"
+   ],
+   "correct": 1,
+   "explain": "Yes. The chance is gone, so the ala keeps control and returns the ball to the fixo.",
+   "choiceExplanations": [
+    "The defender now blocks the way forward, so the ala would likely lose the ball.",
+    "Yes. The chance is gone, so the ala keeps control and returns the ball to the fixo.",
+    "That is far too far from goal. The keeper saves it and blue gets the ball."
+   ],
+   "visual": {
+    "kind": "whatNext",
+    "frame": {
+     "step": 3,
+     "focus": [
+      "rm",
+      "drm"
+     ],
+     "trails": true
+    }
+   }
+  },
+  {
+   "q": "Now blue's left ala has stepped away. Which pass uses the advantage?",
+   "options": [
+    "Pass forward to the right ala",
+    "Pass back to the goalkeeper",
+    "Pass forward to the left ala"
+   ],
+   "correct": 2,
+   "explain": "Yes. The left lane is open, so we attack forward before blue recovers.",
+   "choiceExplanations": [
+    "Blue's right ala stands in that lane, so the pass could be cut out.",
+    "That pass is safe, but the left route is open. Use the advantage while it's there.",
+    "Yes. The left lane is open, so we attack forward before blue recovers."
+   ],
+   "visual": {
+    "kind": "bestPass",
+    "frame": {
+     "step": 6,
+     "place": {
+      "dlm": {
+       "x": 100,
+       "y": 185
+      }
+     },
+     "ball": "cb",
+     "focus": [
+      "cb",
+      "lm"
+     ]
+    },
+    "from": "cb",
+    "to": [
+     "rm",
+     "gk",
+     "lm"
+    ]
+   }
+  }
+ ]
+}

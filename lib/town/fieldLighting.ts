@@ -1,3 +1,4 @@
+import {fieldLightLayout} from './fieldLightLayout';
 import * as T from 'three';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {VENUES,FIELD_SURFACE_Y,type Format,type Venue} from './venues';
@@ -13,15 +14,14 @@ export function createFieldLighting(scene:T.Scene,roots:Map<string,T.Group>,surf
  const dayMarkings=markings.color.clone(),nightMarkings=new T.Color().setRGB(2,2,2);
  const steel=new T.MeshStandardMaterial({color:'#596269',roughness:.72});
  const lenses=new T.MeshStandardMaterial({color:'#f5eed5',emissive:'#fff0cf',emissiveIntensity:0,roughness:.45});
- const owned:T.BufferGeometry[]=[],entries:FieldEntry[]=[];
+ const owned:T.BufferGeometry[]=[],entries:FieldEntry[]=[],fixtures:T.Mesh[]=[];
  const roofRoot=new T.Group();roofRoot.name='rooftop-floodlights';roofRoot.position.set(KNOCKOUT_ROOF.x,KNOCKOUT_ROOF.height,KNOCKOUT_ROOF.z);scene.add(roofRoot);
  const roofVenue:LightingVenue={id:'knockout',name:'Rooftop Knockout',x:KNOCKOUT_ROOF.x,z:KNOCKOUT_ROOF.z,elevation:KNOCKOUT_ROOF.height,width:24,length:44,players:7,goalWidth:0,goalHeight:0,surface:'#648c72',shape:''};
  for(const v of [...VENUES,roofVenue]){
   const root=v.id==='knockout'?roofRoot:roots.get(v.id)!,body:T.BufferGeometry[]=[],glass:T.BufferGeometry[]=[];
-  const height=v.id==='futsal'||v.id==='knockout'?8:v.id==='11v11'?21:15,side=v.width/2+(v.id==='knockout'?.7:2.3);
+  const {height,side,posts}=fieldLightLayout(v);
   const box=(list:T.BufferGeometry[],w:number,h:number,d:number,x:number,y:number,z:number,tilt=0)=>{const g=new T.BoxGeometry(w,h,d);g.rotateZ(tilt);g.translate(x,y,z);list.push(g);};
-  for(const hand of[-1,1])for(const end of[-1,1]){
-   const x=hand*side,z=end*(v.length/2+(v.id==='knockout'?1.5:2.3));
+  for(const {x,z,hand} of posts){
    const pole=new T.CylinderGeometry(.13,.22,height,8);pole.translate(x,FIELD_SURFACE_Y+height/2,z);body.push(pole);
    box(body,.75,.28,.75,x,FIELD_SURFACE_Y+.14,z);
    box(body,1.6,.14,.22,x-hand*.5,height+.08,z);
@@ -32,7 +32,7 @@ export function createFieldLighting(scene:T.Scene,roots:Map<string,T.Group>,surf
   }
   for(const [list,material,name]of [[body,steel,'floodlight-structure'],[glass,lenses,'floodlight-panels']] as const){
    const geometry=mergeGeometries(list)!;list.forEach(g=>g.dispose());geometry.computeBoundingSphere();owned.push(geometry);
-   const mesh=new T.Mesh(geometry,material);mesh.name=name;mesh.castShadow=false;mesh.receiveShadow=false;mesh.matrixAutoUpdate=false;root.add(mesh);
+   const mesh=new T.Mesh(geometry,material);mesh.name=name;mesh.castShadow=false;mesh.receiveShadow=false;mesh.matrixAutoUpdate=false;root.add(mesh);fixtures.push(mesh);
   }
   const surface=surfaces.get(v.id);if(surface){surface.emissive.copy(surface.color);surface.emissiveIntensity=0;}
   const dayColor=surface?.color.clone()??new T.Color(v.surface),nightColor=dayColor.clone(),nightEmission=v.id==='futsal'?dayColor.clone():new T.Color('#d0ccb7');
@@ -41,7 +41,7 @@ export function createFieldLighting(scene:T.Scene,roots:Map<string,T.Group>,surf
  const lightRoot=new T.Group();lightRoot.name='field-floodlight-pool';scene.add(lightRoot);
  const spots=[0,1,2,3].map(i=>{const light=new T.SpotLight('#fff0d5',0,180,1.18,.72,2);light.name='shared-pitch-floodlight-'+i;light.castShadow=false;lightRoot.add(light,light.target);return light;});
  const visibility=createPitchVisibility();let chosen:FieldEntry|undefined,lastMode='',blend=0,scanAge=1;
- let lightGain=0,strength=0,settled=false;goal.emissive.set('#fff0d5');
+ let lightGain=0,strength=0,settled=false,teaching=false;goal.emissive.set('#fff0d5');
  function select(camera:T.Camera,isolated:Format|null,roofActive:boolean,player?:{x:number;y:number;z:number}){
   if(isolated)return entries.find(e=>e.venue.id===isolated);
   if(roofActive)return entries.find(e=>e.venue.id==='knockout');
@@ -58,11 +58,17 @@ export function createFieldLighting(scene:T.Scene,roots:Map<string,T.Group>,surf
   strength=Math.pow(Math.hypot(entry.side-.7,v.length/2+(v.id==='knockout'?1.5:2.3),entry.height),2)*.85*(v.id==='futsal'?.82:.5);lightRoot.userData.format=v.id;
  }
  return {update(mode:string,camera:T.Camera,isolated:Format|null,dt:number,reduced=false,roofActive=false,player?:{x:number;y:number;z:number}){
+  const nextTeaching=isolated!==null;
+  if(teaching!==nextTeaching){
+   teaching=nextTeaching;for(const fixture of fixtures)fixture.visible=!teaching;
+   scanAge=1;
+   if(teaching){chosen=undefined;strength=0;lightGain=0;for(const spot of spots)spot.intensity=0;lightRoot.userData.active=null;lightRoot.userData.format=null;}
+  }
   roofRoot.visible=!isolated;
   const night=mode==='night',changed=mode!==lastMode;lastMode=mode;
   if(!night&&blend===0&&settled)return;
   scanAge+=dt;let next=chosen;
-  if(night&&(changed||isolated!==null||roofActive||scanAge>=.12)){next=select(camera,isolated,roofActive,player);scanAge=0;}
+  if(night&&!teaching&&(changed||roofActive||scanAge>=.12)){next=select(camera,isolated,roofActive,player);scanAge=0;}
   const targetChanged=next!==chosen;if(targetChanged){chosen=next;lightGain=0;if(chosen)place(chosen);else{strength=0;lightRoot.userData.format=null;}}
   const oldBlend=blend,oldGain=lightGain;const target=night?1:0,k=reduced?1:1-Math.exp(-Math.min(.1,dt)*4);
   blend=T.MathUtils.lerp(blend,target,k);if(Math.abs(blend-target)<.0005)blend=target;

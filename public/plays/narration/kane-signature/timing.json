@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Wembley, the Euro 2020 final. England against Italy, second minute. Luke Shaw passes to Harry Kane. Kane sweeps it wide to Trippier. Cross... Shaw volleys! One-nil!",
+   "src": "/plays/narration/kane-signature/1.m4a",
+   "seconds": 12.7,
+   "words": [
+    {
+     "w": "Wembley",
+     "at": 0.425
+    },
+    {
+     "w": "the",
+     "at": 0.875
+    },
+    {
+     "w": "Euro",
+     "at": 0.975
+    },
+    {
+     "w": "2020",
+     "at": 1.3
+    },
+    {
+     "w": "final",
+     "at": 1.913
+    },
+    {
+     "w": "England",
+     "at": 2.788
+    },
+    {
+     "w": "against",
+     "at": 3.212
+    },
+    {
+     "w": "Italy",
+     "at": 3.625
+    },
+    {
+     "w": "second",
+     "at": 4.112
+    },
+    {
+     "w": "minute",
+     "at": 4.45
+    },
+    {
+     "w": "Luke",
+     "at": 5.162
+    },
+    {
+     "w": "Shaw",
+     "at": 5.388
+    },
+    {
+     "w": "passes",
+     "at": 5.688
+    },
+    {
+     "w": "to",
+     "at": 6.15
+    },
+    {
+     "w": "Harry",
+     "at": 6.25
+    },
+    {
+     "w": "Kane",
+     "at": 6.525
+    },
+    {
+     "w": "Kane",
+     "at": 7.388
+    },
+    {
+     "w": "sweeps",
+     "at": 7.763
+    },
+    {
+     "w": "it",
+     "at": 8.062
+    },
+    {
+     "w": "wide",
+     "at": 8.15
+    },
+    {
+     "w": "to",
+     "at": 8.5
+    },
+    {
+     "w": "Trippier",
+     "at": 8.6
+    },
+    {
+     "w": "Cross",
+     "at": 9.363
+    },
+    {
+     "w": "Shaw",
+     "at": 10.2
+    },
+    {
+     "w": "volleys",
+     "at": 10.488
+    },
+    {
+     "w": "One-nil",
+     "at": 11.113
+    }
+   ]
+  },
+  {
+   "label": "Watch Kane",
+   "text": "Watch Kane again. He's a striker, but he loves to drop back and get the ball. He looks up, spots Trippier's run, and plays the perfect pass.",
+   "src": "/plays/narration/kane-signature/2.m4a",
+   "seconds": 9.9,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "Kane",
+     "at": 0.713
+    },
+    {
+     "w": "again",
+     "at": 0.975
+    },
+    {
+     "w": "He's",
+     "at": 1.775
+    },
+    {
+     "w": "a",
+     "at": 1.938
+    },
+    {
+     "w": "striker",
+     "at": 2.013
+    },
+    {
+     "w": "but",
+     "at": 2.725
+    },
+    {
+     "w": "he",
+     "at": 2.862
+    },
+    {
+     "w": "loves",
+     "at": 2.987
+    },
+    {
+     "w": "to",
+     "at": 3.325
+    },
+    {
+     "w": "drop",
+     "at": 3.425
+    },
+    {
+     "w": "back",
+     "at": 3.725
+    },
+    {
+     "w": "and",
+     "at": 4.013
+    },
+    {
+     "w": "get",
+     "at": 4.125
+    },
+    {
+     "w": "the",
+     "at": 4.287
+    },
+    {
+     "w": "ball",
+     "at": 4.375
+    },
+    {
+     "w": "He",
+     "at": 5.3
+    },
+    {
+     "w": "looks",
+     "at": 5.45
+    },
+    {
+     "w": "up",
+     "at": 5.7
+    },
+    {
+     "w": "spots",
+     "at": 6.162
+    },
+    {
+     "w": "Trippier's",
+     "at": 6.575
+    },
+    {
+     "w": "run",
+     "at": 7.05
+    },
+    {
+     "w": "and",
+     "at": 7.388
+    },
+    {
+     "w": "plays",
+     "at": 7.513
+    },
+    {
+     "w": "the",
+     "at": 7.9
+    },
+    {
+     "w": "perfect",
+     "at": 8.0
+    },
+    {
+     "w": "pass",
+     "at": 8.475
+    }
+   ]
+  },
+  {
+   "label": "Behind the goal",
+   "text": "From behind the goal: Trippier crosses, and Shaw smashes it in. His first goal for England!",
+   "src": "/plays/narration/kane-signature/3.m4a",
+   "seconds": 6.8,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "behind",
+     "at": 0.487
+    },
+    {
+     "w": "the",
+     "at": 0.863
+    },
+    {
+     "w": "goal",
+     "at": 0.95
+    },
+    {
+     "w": "Trippier",
+     "at": 1.613
+    },
+    {
+     "w": "crosses",
+     "at": 2.05
+    },
+    {
+     "w": "and",
+     "at": 2.675
+    },
+    {
+     "w": "Shaw",
+     "at": 2.812
+    },
+    {
+     "w": "smashes",
+     "at": 3.112
+    },
+    {
+     "w": "it",
+     "at": 3.625
+    },
+    {
+     "w": "in",
+     "at": 3.725
+    },
+    {
+     "w": "His",
+     "at": 4.475
+    },
+    {
+     "w": "first",
+     "at": 4.675
+    },
+    {
+     "w": "goal",
+     "at": 4.95
+    },
+    {
+     "w": "for",
+     "at": 5.2
+    },
+    {
+     "w": "England",
+     "at": 5.325
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn! Strikers, don't just wait up front. Drop back, get the ball, look up, and pass to your runners!",
+   "src": "/plays/narration/kane-signature/4.m4a",
+   "seconds": 7.4,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.512
+    },
+    {
+     "w": "Strikers",
+     "at": 1.212
+    },
+    {
+     "w": "don't",
+     "at": 2.0
+    },
+    {
+     "w": "just",
+     "at": 2.188
+    },
+    {
+     "w": "wait",
+     "at": 2.35
+    },
+    {
+     "w": "up",
+     "at": 2.538
+    },
+    {
+     "w": "front",
+     "at": 2.7
+    },
+    {
+     "w": "Drop",
+     "at": 3.575
+    },
+    {
+     "w": "back",
+     "at": 3.9
+    },
+    {
+     "w": "get",
+     "at": 4.3
+    },
+    {
+     "w": "the",
+     "at": 4.463
+    },
+    {
+     "w": "ball",
+     "at": 4.55
+    },
+    {
+     "w": "look",
+     "at": 4.925
+    },
+    {
+     "w": "up",
+     "at": 5.088
+    },
+    {
+     "w": "and",
+     "at": 5.287
+    },
+    {
+     "w": "pass",
+     "at": 5.412
+    },
+    {
+     "w": "to",
+     "at": 5.725
+    },
+    {
+     "w": "your",
+     "at": 5.812
+    },
+    {
+     "w": "runners",
+     "at": 5.925
+    }
+   ]
+  }
+ ]
+}

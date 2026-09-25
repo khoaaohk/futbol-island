@@ -66,8 +66,42 @@
 .logo{animation:islandBadgeColors 20s ease-in-out infinite}
 @keyframes islandBadgeColors{0%,100%{background-color:#f19b72}25%{background-color:#ed9dce}50%{background-color:#a9d3b2}75%{background-color:#93c7e5}}
 :global(dialog:not([open])) .logo{animation-play-state:paused}
+/* The colour cycle repaints every frame (background-color is not composited): it rests with the Paths art (data-scenery="rest", lib/sceneryRest.ts) and wakes with it. */
+:global(dialog:has([data-scenery=rest])) .logo{animation-play-state:paused}
 @media(prefers-reduced-motion:reduce){.logo{animation:none}}
 
 .sparkles{inset:-17px;background:radial-gradient(circle at 8% 22%,#fff2cd 0 2px,transparent 3px),radial-gradient(circle at 88% 10%,#f9d665 0 3px,transparent 4px),radial-gradient(circle at 94% 80%,#ed9dce 0 2px,transparent 3px),radial-gradient(circle at 18% 95%,#f9d665 0 2px,transparent 3px),radial-gradient(circle at 44% 3%,#fff2cd 0 2px,transparent 3px),radial-gradient(circle at 2% 59%,#93c7e5 0 3px,transparent 4px),radial-gradient(circle at 65% 98%,#fff2cd 0 2px,transparent 3px),radial-gradient(circle at 99% 43%,#a9d3b2 0 2px,transparent 3px)}
 @media(hover:hover){.logo:hover .sparkles{animation:badgeHoverSparkle 1.5s ease-out}}
 @keyframes badgeHoverSparkle{0%{opacity:0;scale:.8}30%{opacity:1}100%{opacity:0;scale:1.2}}
+
+/* Water-driven translation/rotation is written by the existing capped wave loop. */
+.bottleButton{animation:floatIn 2.2s 1.6s ease-out both}
+.bottleButton.opening{animation:bottleUnseal .36s ease-in forwards}
+.note blockquote{margin:0}.note footer{display:flex;flex-direction:column;align-items:center;gap:6px}.note footer strong{font-size:16px}.note footer small{font-size:12px}.note footer a{color:#244d40;font-size:12px;text-underline-offset:3px;padding:8px}.note footer a:focus-visible{outline:2px solid #244d40;outline-offset:3px;border-radius:4px}
+@media(prefers-reduced-motion:reduce){.bottleButton{animation:none;translate:none!important;rotate:none!important}}
+
+/* A bounded water area lets the bottle roam without covering the heading or Done. */
+.center[data-bottle-opened=false]{height:calc(100% - 90px);min-height:460px;justify-content:flex-start;padding-bottom:18px}
+.bottleSea{position:relative;width:100%;flex:1;min-height:245px;--float-width:clamp(110px,20vh,165px);--float-height:clamp(165px,30vh,245px)}
+.bottleSea .bottleButton{position:absolute;left:calc(50% - var(--float-width)/2);top:calc(50% - var(--float-height)/2);margin:0}
+.ocean .bottleSea .bottleButton .bottle{width:var(--float-width);height:var(--float-height)}
+
+.center[data-bottle-opened=false]{padding-inline:0}.center[data-bottle-opened=false]>h2,.center[data-bottle-opened=false]>.date{padding-inline:20px}
+
+/* Bounce against the viewport itself; no inset play-area walls. */
+.center[data-bottle-opened=false]{position:static}
+.center[data-bottle-opened=false]>.date,.center[data-bottle-opened=false]>h2{position:relative;z-index:3;pointer-events:none}
+.bottleSea{position:absolute;inset:0;width:100%;min-height:0;z-index:2;pointer-events:none;--float-width:calc(var(--float-height)*124/252)}
+.bottleSea .bottleButton{pointer-events:auto}
+.bottleSea .bottleLabel{left:12%;right:12%;top:57%}
+
+.ocean .center[data-bottle-opened=false]{animation:none}.center[data-bottle-opened=false]>.date,.center[data-bottle-opened=false]>h2{animation:bottleContentIn .7s 1.4s both}
+@media(prefers-reduced-motion:reduce){.center[data-bottle-opened=false]>.date,.center[data-bottle-opened=false]>h2{animation:none}}
+
+/* Reveal the quote promptly after the tap. */
+.bottleButton.opening{animation-duration:.14s}
+.note{animation:noteQuickReveal .24s ease-out both}
+@keyframes noteQuickReveal{from{opacity:0;transform:translateY(12px) scale(.97)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.note{animation:none!important}}
+
+:global(body:has([data-riso-story])) .logo,:global(body:has([data-riso-story])) .sparkles{animation-play-state:paused!important}

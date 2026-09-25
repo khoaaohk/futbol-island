@@ -1,0 +1,374 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The final, live",
+   "text": "Enschede, 2017, the Euro final. The Netherlands lead Denmark late in the game. Vivianne Miedema is played in down the left. She cuts inside, and lashes it low. Goal! That seals the title!",
+   "src": "/plays/narration/miedema-signature/1.m4a",
+   "seconds": 14.8,
+   "words": [
+    {
+     "w": "Enschede",
+     "at": 0.375
+    },
+    {
+     "w": "2017",
+     "at": 1.0
+    },
+    {
+     "w": "the",
+     "at": 1.95
+    },
+    {
+     "w": "Euro",
+     "at": 2.062
+    },
+    {
+     "w": "final",
+     "at": 2.413
+    },
+    {
+     "w": "The",
+     "at": 3.362
+    },
+    {
+     "w": "Netherlands",
+     "at": 3.475
+    },
+    {
+     "w": "lead",
+     "at": 4.125
+    },
+    {
+     "w": "Denmark",
+     "at": 4.388
+    },
+    {
+     "w": "late",
+     "at": 4.912
+    },
+    {
+     "w": "in",
+     "at": 5.213
+    },
+    {
+     "w": "the",
+     "at": 5.287
+    },
+    {
+     "w": "game",
+     "at": 5.375
+    },
+    {
+     "w": "Vivianne",
+     "at": 6.275
+    },
+    {
+     "w": "Miedema",
+     "at": 6.775
+    },
+    {
+     "w": "is",
+     "at": 7.2
+    },
+    {
+     "w": "played",
+     "at": 7.362
+    },
+    {
+     "w": "in",
+     "at": 7.725
+    },
+    {
+     "w": "down",
+     "at": 7.9
+    },
+    {
+     "w": "the",
+     "at": 8.113
+    },
+    {
+     "w": "left",
+     "at": 8.2
+    },
+    {
+     "w": "She",
+     "at": 9.037
+    },
+    {
+     "w": "cuts",
+     "at": 9.175
+    },
+    {
+     "w": "inside",
+     "at": 9.45
+    },
+    {
+     "w": "and",
+     "at": 10.15
+    },
+    {
+     "w": "lashes",
+     "at": 10.275
+    },
+    {
+     "w": "it",
+     "at": 10.725
+    },
+    {
+     "w": "low",
+     "at": 10.85
+    },
+    {
+     "w": "Goal",
+     "at": 11.775
+    },
+    {
+     "w": "That",
+     "at": 12.512
+    },
+    {
+     "w": "seals",
+     "at": 12.8
+    },
+    {
+     "w": "the",
+     "at": 13.2
+    },
+    {
+     "w": "title",
+     "at": 13.3
+    }
+   ]
+  },
+  {
+   "label": "The cut inside",
+   "text": "Watch it again, slowly. A defender rushes in. Vivianne cuts inside, and the defender is fooled.",
+   "src": "/plays/narration/miedema-signature/2.m4a",
+   "seconds": 7.6,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "slowly",
+     "at": 1.212
+    },
+    {
+     "w": "A",
+     "at": 2.188
+    },
+    {
+     "w": "defender",
+     "at": 2.275
+    },
+    {
+     "w": "rushes",
+     "at": 2.775
+    },
+    {
+     "w": "in",
+     "at": 3.175
+    },
+    {
+     "w": "Vivianne",
+     "at": 3.9
+    },
+    {
+     "w": "cuts",
+     "at": 4.35
+    },
+    {
+     "w": "inside",
+     "at": 4.65
+    },
+    {
+     "w": "and",
+     "at": 5.263
+    },
+    {
+     "w": "the",
+     "at": 5.362
+    },
+    {
+     "w": "defender",
+     "at": 5.45
+    },
+    {
+     "w": "is",
+     "at": 5.975
+    },
+    {
+     "w": "fooled",
+     "at": 6.162
+    }
+   ]
+  },
+  {
+   "label": "The keeper",
+   "text": "Now watch the keeper. She is wrong-footed, leaning the other way, so Vivianne shoots low, inside the near post.",
+   "src": "/plays/narration/miedema-signature/3.m4a",
+   "seconds": 7.9,
+   "words": [
+    {
+     "w": "Now",
+     "at": 0.4
+    },
+    {
+     "w": "watch",
+     "at": 0.6
+    },
+    {
+     "w": "the",
+     "at": 0.9
+    },
+    {
+     "w": "keeper",
+     "at": 1.0
+    },
+    {
+     "w": "She",
+     "at": 1.837
+    },
+    {
+     "w": "is",
+     "at": 2.0
+    },
+    {
+     "w": "wrong-footed",
+     "at": 2.15
+    },
+    {
+     "w": "leaning",
+     "at": 2.925
+    },
+    {
+     "w": "the",
+     "at": 3.212
+    },
+    {
+     "w": "other",
+     "at": 3.288
+    },
+    {
+     "w": "way",
+     "at": 3.55
+    },
+    {
+     "w": "so",
+     "at": 4.075
+    },
+    {
+     "w": "Vivianne",
+     "at": 4.25
+    },
+    {
+     "w": "shoots",
+     "at": 4.75
+    },
+    {
+     "w": "low",
+     "at": 5.112
+    },
+    {
+     "w": "inside",
+     "at": 5.737
+    },
+    {
+     "w": "the",
+     "at": 6.188
+    },
+    {
+     "w": "near",
+     "at": 6.275
+    },
+    {
+     "w": "post",
+     "at": 6.5
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "The secret? Stay calm one on one. Look at the keeper first, then pick your finish.",
+   "src": "/plays/narration/miedema-signature/4.m4a",
+   "seconds": 6.1,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "secret",
+     "at": 0.463
+    },
+    {
+     "w": "Stay",
+     "at": 1.2
+    },
+    {
+     "w": "calm",
+     "at": 1.55
+    },
+    {
+     "w": "one",
+     "at": 1.85
+    },
+    {
+     "w": "on",
+     "at": 2.038
+    },
+    {
+     "w": "one",
+     "at": 2.225
+    },
+    {
+     "w": "Look",
+     "at": 3.038
+    },
+    {
+     "w": "at",
+     "at": 3.212
+    },
+    {
+     "w": "the",
+     "at": 3.288
+    },
+    {
+     "w": "keeper",
+     "at": 3.375
+    },
+    {
+     "w": "first",
+     "at": 3.737
+    },
+    {
+     "w": "then",
+     "at": 4.162
+    },
+    {
+     "w": "pick",
+     "at": 4.35
+    },
+    {
+     "w": "your",
+     "at": 4.562
+    },
+    {
+     "w": "finish",
+     "at": 4.688
+    }
+   ]
+  }
+ ]
+}

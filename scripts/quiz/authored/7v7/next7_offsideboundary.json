@@ -1,0 +1,206 @@
+{
+ "lesson": "next7_offsideboundary",
+ "questions": [
+  {
+   "q": "Tap a spot where our forward cannot be called offside.",
+   "options": [
+    "Past the far line, on the left",
+    "Between halfway and the far line",
+    "Past the far line, on the right"
+   ],
+   "correct": 1,
+   "explain": "Right. Between halfway and the far line, offside cannot apply.",
+   "choiceExplanations": [
+    "Past the far line and ahead of the defenders, this spot is offside.",
+    "Right. Between halfway and the far line, offside cannot apply.",
+    "This spot is past the far line and ahead of the defenders, so offside."
+   ],
+   "visual": {
+    "kind": "tapSpot",
+    "frame": {
+     "step": 1,
+     "focus": [
+      "st"
+     ],
+     "marks": [
+      {
+       "kind": "zone",
+       "x": 135,
+       "y": 141,
+       "w": 262,
+       "h": 4,
+       "tone": "neutral",
+       "text": "Far line"
+      }
+     ]
+    },
+    "spots": [
+     {
+      "x": 60,
+      "y": 100
+     },
+     {
+      "x": 160,
+      "y": 170
+     },
+     {
+      "x": 215,
+      "y": 100
+     }
+    ]
+   }
+  },
+  {
+   "q": "Put these moments in order, first to last.",
+   "options": [
+    "Forward stays short of the far line",
+    "Pass reaches the forward",
+    "Forward runs past the far line",
+    "Forward comes back before the pass"
+   ],
+   "correct": 0,
+   "explain": "Yes. First the forward waits short of the line, where offside cannot apply.",
+   "choiceExplanations": [
+    "Yes. First the forward waits short of the line, where offside cannot apply.",
+    "The pass comes after the forward finds that safe area.",
+    "The forward runs past the line after the ball comes back.",
+    "Coming back is last, just before the next pass."
+   ],
+   "visual": {
+    "kind": "order",
+    "frames": [
+     {
+      "step": 1,
+      "focus": [
+       "st"
+      ],
+      "marks": [
+       {
+        "kind": "zone",
+        "x": 135,
+        "y": 141,
+        "w": 262,
+        "h": 4,
+        "tone": "neutral",
+        "text": "Far line"
+       }
+      ]
+     },
+     {
+      "step": 4,
+      "focus": [
+       "st"
+      ],
+      "marks": [
+       {
+        "kind": "zone",
+        "x": 135,
+        "y": 141,
+        "w": 262,
+        "h": 4,
+        "tone": "neutral",
+        "text": "Far line"
+       }
+      ]
+     },
+     {
+      "step": 5,
+      "focus": [
+       "st"
+      ],
+      "marks": [
+       {
+        "kind": "zone",
+        "x": 135,
+        "y": 141,
+        "w": 262,
+        "h": 4,
+        "tone": "neutral",
+        "text": "Far line"
+       }
+      ]
+     },
+     {
+      "step": 7,
+      "focus": [
+       "st"
+      ],
+      "marks": [
+       {
+        "kind": "zone",
+        "x": 135,
+        "y": 141,
+        "w": 262,
+        "h": 4,
+        "tone": "neutral",
+        "text": "Far line"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "q": "Our right midfielder went past the far line. Where should they go?",
+   "options": [
+    "Farther ahead toward goal",
+    "Across the middle, still past the line",
+    "Back, short of the far line"
+   ],
+   "correct": 2,
+   "explain": "Right. Short of the far line, offside cannot apply, so the pass is safe.",
+   "choiceExplanations": [
+    "Farther ahead is still offside, so the pass cannot go there.",
+    "Moving across keeps them past the line, so they are still offside.",
+    "Right. Short of the far line, offside cannot apply, so the pass is safe."
+   ],
+   "visual": {
+    "kind": "dragToZone",
+    "frame": {
+     "step": 7,
+     "place": {
+      "rm": {
+       "x": 230,
+       "y": 110
+      }
+     },
+     "focus": [
+      "rm"
+     ],
+     "marks": [
+      {
+       "kind": "zone",
+       "x": 135,
+       "y": 141,
+       "w": 262,
+       "h": 4,
+       "tone": "neutral",
+       "text": "Far line"
+      }
+     ]
+    },
+    "drag": "rm",
+    "zones": [
+     {
+      "x": 225,
+      "y": 58,
+      "w": 40,
+      "h": 28
+     },
+     {
+      "x": 150,
+      "y": 105,
+      "w": 40,
+      "h": 30
+     },
+     {
+      "x": 225,
+      "y": 172,
+      "w": 40,
+      "h": 30
+     }
+    ]
+   }
+  }
+ ]
+}

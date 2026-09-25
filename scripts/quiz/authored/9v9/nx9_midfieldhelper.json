@@ -1,0 +1,112 @@
+{
+ "lesson": "nx9_midfieldhelper",
+ "questions": [
+  {
+   "q": "The left winger has come inside to help. What should the left back do?",
+   "options": [
+    "Come inside next to the winger",
+    "Stay wide on the left",
+    "Push up beside the striker"
+   ],
+   "correct": 1,
+   "explain": "Yes. The left back keeps our width, so the winger can help inside safely.",
+   "choiceExplanations": [
+    "Then nobody holds the left side, and our shape gets squeezed.",
+    "Yes. The left back keeps our width, so the winger can help inside safely.",
+    "That leaves the back line short and the left side empty behind."
+   ],
+   "visual": {
+    "kind": "whatNext",
+    "frame": {
+     "step": 5,
+     "focus": [
+      "lw",
+      "lcb"
+     ],
+     "trails": true
+    }
+   }
+  },
+  {
+   "q": "Put the winger help in order, from first to last.",
+   "options": [
+    "Left winger helps inside",
+    "Attack moves right, left winger goes wide",
+    "Right winger joins the midfield pair"
+   ],
+   "correct": 0,
+   "explain": "Yes. The near winger helps each time, so the helper changes when the ball changes side.",
+   "choiceExplanations": [
+    "Yes. The near winger helps each time, so the helper changes when the ball changes side.",
+    "The left winger goes wide again only after helping inside first.",
+    "The right winger helps last, once the attack has moved to the right."
+   ],
+   "visual": {
+    "kind": "order",
+    "frame": {
+     "step": 2,
+     "focus": [
+      "lw",
+      "rw"
+     ]
+    }
+   }
+  },
+  {
+   "q": "The attack is on the right. Which picture adds a midfield helper and keeps width?",
+   "options": [
+    "Right winger inside, right back wide",
+    "Both wingers inside",
+    "Right winger and right back both inside"
+   ],
+   "correct": 0,
+   "explain": "Yes. One winger helps the pair, the back keeps width, and the other forward stays ahead.",
+   "choiceExplanations": [
+    "Yes. One winger helps the pair, the back keeps width, and the other forward stays ahead.",
+    "With both wingers inside, nobody stays ahead as a forward outlet.",
+    "With the back tucked in too, nobody holds the right side."
+   ],
+   "visual": {
+    "kind": "pickPicture",
+    "pictures": [
+     {
+      "step": 8,
+      "focus": [
+       "lw",
+       "rw",
+       "rcb"
+      ]
+     },
+     {
+      "step": 8,
+      "place": {
+       "lw": {
+        "x": 95,
+        "y": 235
+       }
+      },
+      "focus": [
+       "lw",
+       "rw",
+       "rcb"
+      ]
+     },
+     {
+      "step": 8,
+      "place": {
+       "rcb": {
+        "x": 170,
+        "y": 290
+       }
+      },
+      "focus": [
+       "lw",
+       "rw",
+       "rcb"
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

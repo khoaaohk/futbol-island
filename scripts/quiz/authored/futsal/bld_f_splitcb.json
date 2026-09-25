@@ -1,0 +1,84 @@
+{
+ "lesson": "bld_f_splitcb",
+ "questions": [
+  {
+   "q": "Put the goal clearance in order, from first to last.",
+   "options": [
+    "Goalkeeper finds the clearer side",
+    "Right ala receives the release",
+    "Fixo offers the inside pass",
+    "Switch to the left ala"
+   ],
+   "correct": 0,
+   "explain": "Yes. The keeper finds the open side, the fixo connects, then we switch when blue blocks.",
+   "choiceExplanations": [
+    "Yes. The keeper finds the open side, the fixo connects, then we switch when blue blocks.",
+    "The goalkeeper must find the open side before the right ala can receive.",
+    "The fixo helps after the right ala has the ball, not before.",
+    "The switch comes last, once blue covers the right side."
+   ],
+   "visual": {
+    "kind": "order",
+    "frame": {
+     "step": 0,
+     "focus": [
+      "gk"
+     ]
+    }
+   }
+  },
+  {
+   "q": "Now the left ala receives the clearance. Drag the fixo to offer a safe pass.",
+   "options": [
+    "Far across on the right",
+    "Inside, at an open angle",
+    "Up by our pivot"
+   ],
+   "correct": 1,
+   "explain": "Right. The fixo gives an open angle inside, away from the pressing blue pivot.",
+   "choiceExplanations": [
+    "That is too far from the ball, and the pass would cross the whole court.",
+    "Right. The fixo gives an open angle inside, away from the pressing blue pivot.",
+    "That is too far upfield. The left ala needs a short, safe pass nearby."
+   ],
+   "visual": {
+    "kind": "dragToZone",
+    "frame": {
+     "step": 1,
+     "ball": "lm",
+     "place": {
+      "dst": {
+       "x": 62,
+       "y": 342
+      }
+     },
+     "focus": [
+      "lm",
+      "cb"
+     ]
+    },
+    "drag": "cb",
+    "zones": [
+     {
+      "x": 200,
+      "y": 270,
+      "w": 44,
+      "h": 36
+     },
+     {
+      "x": 100,
+      "y": 272,
+      "w": 44,
+      "h": 36
+     },
+     {
+      "x": 135,
+      "y": 172,
+      "w": 44,
+      "h": 36
+     }
+    ]
+   }
+  }
+ ]
+}

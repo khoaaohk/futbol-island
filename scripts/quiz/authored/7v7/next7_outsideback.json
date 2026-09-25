@@ -1,0 +1,103 @@
+{
+ "lesson": "next7_outsideback",
+ "questions": [
+  {
+   "q": "True or false? Blue now blocks the route up the line.",
+   "options": [
+    "True",
+    "False"
+   ],
+   "correct": 0,
+   "explain": "Right, it's true. The blue player stands right in front of you.",
+   "choiceExplanations": [
+    "Right, it's true. The blue player stands right in front of you.",
+    "Look ahead of you. A blue player closed the route up the line."
+   ],
+   "visual": {
+    "kind": "trueFalse",
+    "frame": {
+     "step": 5,
+     "focus": [
+      "rb",
+      "dlb"
+     ]
+    }
+   }
+  },
+  {
+   "q": "You moved out wide. What happens next?",
+   "options": [
+    "The forward runs back for the ball",
+    "The middle defender passes to you",
+    "You run back to the middle"
+   ],
+   "correct": 1,
+   "explain": "Yes. You are open out wide, so the pass comes to you.",
+   "choiceExplanations": [
+    "The forward stays ahead, and you are the open player out wide.",
+    "Yes. You are open out wide, so the pass comes to you.",
+    "Going back to the middle takes away the new outside route."
+   ],
+   "visual": {
+    "kind": "whatNext",
+    "frame": {
+     "step": 3,
+     "focus": [
+      "rb",
+      "cb"
+     ],
+     "trails": true
+    }
+   }
+  },
+  {
+   "q": "The left defender has the ball. Blue blocks forward. Which pass?",
+   "options": [
+    "Pass back inside to the middle defender",
+    "Pass inside to the midfielder",
+    "Pass up the line"
+   ],
+   "correct": 0,
+   "explain": "Yes. The lane back inside is open, so we keep the ball.",
+   "choiceExplanations": [
+    "Yes. The lane back inside is open, so we keep the ball.",
+    "A blue player stands in that lane, so the pass gets cut out.",
+    "Blue closed the route up the line, so that pass is blocked."
+   ],
+   "visual": {
+    "kind": "bestPass",
+    "frame": {
+     "step": 6,
+     "place": {
+      "lb": {
+       "x": 30,
+       "y": 300
+      },
+      "drm": {
+       "x": 30,
+       "y": 212
+      },
+      "dcm": {
+       "x": 76,
+       "y": 240
+      }
+     },
+     "ball": "lb",
+     "focus": [
+      "lb",
+      "drm"
+     ]
+    },
+    "from": "lb",
+    "to": [
+     "cb",
+     "lc",
+     {
+      "x": 30,
+      "y": 190
+     }
+    ]
+   }
+  }
+ ]
+}

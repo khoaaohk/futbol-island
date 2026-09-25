@@ -1,0 +1,398 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The final, live",
+   "text": "Lyon, 2019: the World Cup final. The referee checks the video. Penalty to the USA! Megan Rapinoe steps up. The keeper waits. Rapinoe jogs in... and calmly sweeps it home. Goal!",
+   "src": "/plays/narration/rapinoe-penalty-2019/1.m4a",
+   "seconds": 14.6,
+   "words": [
+    {
+     "w": "Lyon",
+     "at": 0.4
+    },
+    {
+     "w": "2019",
+     "at": 0.85
+    },
+    {
+     "w": "the",
+     "at": 1.725
+    },
+    {
+     "w": "World",
+     "at": 1.825
+    },
+    {
+     "w": "Cup",
+     "at": 2.15
+    },
+    {
+     "w": "final",
+     "at": 2.375
+    },
+    {
+     "w": "The",
+     "at": 3.237
+    },
+    {
+     "w": "referee",
+     "at": 3.35
+    },
+    {
+     "w": "checks",
+     "at": 3.812
+    },
+    {
+     "w": "the",
+     "at": 4.125
+    },
+    {
+     "w": "video",
+     "at": 4.225
+    },
+    {
+     "w": "Penalty",
+     "at": 5.138
+    },
+    {
+     "w": "to",
+     "at": 5.65
+    },
+    {
+     "w": "the",
+     "at": 5.737
+    },
+    {
+     "w": "USA",
+     "at": 5.838
+    },
+    {
+     "w": "Megan",
+     "at": 6.812
+    },
+    {
+     "w": "Rapinoe",
+     "at": 7.15
+    },
+    {
+     "w": "steps",
+     "at": 7.688
+    },
+    {
+     "w": "up",
+     "at": 8.05
+    },
+    {
+     "w": "The",
+     "at": 8.575
+    },
+    {
+     "w": "keeper",
+     "at": 8.675
+    },
+    {
+     "w": "waits",
+     "at": 9.05
+    },
+    {
+     "w": "Rapinoe",
+     "at": 9.65
+    },
+    {
+     "w": "jogs",
+     "at": 10.188
+    },
+    {
+     "w": "in",
+     "at": 10.625
+    },
+    {
+     "w": "and",
+     "at": 11.225
+    },
+    {
+     "w": "calmly",
+     "at": 11.363
+    },
+    {
+     "w": "sweeps",
+     "at": 11.863
+    },
+    {
+     "w": "it",
+     "at": 12.162
+    },
+    {
+     "w": "home",
+     "at": 12.25
+    },
+    {
+     "w": "Goal",
+     "at": 13.1
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again, slowly. Rapinoe has picked her spot. The keeper stays still, and the ball zips low past her.",
+   "src": "/plays/narration/rapinoe-penalty-2019/2.m4a",
+   "seconds": 7.8,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "slowly",
+     "at": 1.188
+    },
+    {
+     "w": "Rapinoe",
+     "at": 2.188
+    },
+    {
+     "w": "has",
+     "at": 2.65
+    },
+    {
+     "w": "picked",
+     "at": 2.825
+    },
+    {
+     "w": "her",
+     "at": 3.038
+    },
+    {
+     "w": "spot",
+     "at": 3.163
+    },
+    {
+     "w": "The",
+     "at": 3.95
+    },
+    {
+     "w": "keeper",
+     "at": 4.05
+    },
+    {
+     "w": "stays",
+     "at": 4.425
+    },
+    {
+     "w": "still",
+     "at": 4.787
+    },
+    {
+     "w": "and",
+     "at": 5.237
+    },
+    {
+     "w": "the",
+     "at": 5.338
+    },
+    {
+     "w": "ball",
+     "at": 5.425
+    },
+    {
+     "w": "zips",
+     "at": 5.737
+    },
+    {
+     "w": "low",
+     "at": 6.05
+    },
+    {
+     "w": "past",
+     "at": 6.287
+    },
+    {
+     "w": "her",
+     "at": 6.638
+    }
+   ]
+  },
+  {
+   "label": "Arms wide",
+   "text": "From behind the goal: in it goes! Rapinoe runs off and spreads her arms wide. The USA go on to win!",
+   "src": "/plays/narration/rapinoe-penalty-2019/3.m4a",
+   "seconds": 7.9,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "behind",
+     "at": 0.487
+    },
+    {
+     "w": "the",
+     "at": 0.863
+    },
+    {
+     "w": "goal",
+     "at": 0.95
+    },
+    {
+     "w": "in",
+     "at": 1.562
+    },
+    {
+     "w": "it",
+     "at": 1.688
+    },
+    {
+     "w": "goes",
+     "at": 1.8
+    },
+    {
+     "w": "Rapinoe",
+     "at": 2.638
+    },
+    {
+     "w": "runs",
+     "at": 3.1
+    },
+    {
+     "w": "off",
+     "at": 3.4
+    },
+    {
+     "w": "and",
+     "at": 3.663
+    },
+    {
+     "w": "spreads",
+     "at": 3.775
+    },
+    {
+     "w": "her",
+     "at": 4.138
+    },
+    {
+     "w": "arms",
+     "at": 4.275
+    },
+    {
+     "w": "wide",
+     "at": 4.625
+    },
+    {
+     "w": "The",
+     "at": 5.487
+    },
+    {
+     "w": "USA",
+     "at": 5.6
+    },
+    {
+     "w": "go",
+     "at": 6.1
+    },
+    {
+     "w": "on",
+     "at": 6.275
+    },
+    {
+     "w": "to",
+     "at": 6.45
+    },
+    {
+     "w": "win",
+     "at": 6.575
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "The secret? Pick your spot before you run up. Don't change your mind. Then strike it with confidence!",
+   "src": "/plays/narration/rapinoe-penalty-2019/4.m4a",
+   "seconds": 6.9,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "secret",
+     "at": 0.463
+    },
+    {
+     "w": "Pick",
+     "at": 1.2
+    },
+    {
+     "w": "your",
+     "at": 1.363
+    },
+    {
+     "w": "spot",
+     "at": 1.488
+    },
+    {
+     "w": "before",
+     "at": 1.812
+    },
+    {
+     "w": "you",
+     "at": 2.075
+    },
+    {
+     "w": "run",
+     "at": 2.2
+    },
+    {
+     "w": "up",
+     "at": 2.4
+    },
+    {
+     "w": "Don't",
+     "at": 3.013
+    },
+    {
+     "w": "change",
+     "at": 3.263
+    },
+    {
+     "w": "your",
+     "at": 3.562
+    },
+    {
+     "w": "mind",
+     "at": 3.675
+    },
+    {
+     "w": "Then",
+     "at": 4.487
+    },
+    {
+     "w": "strike",
+     "at": 4.737
+    },
+    {
+     "w": "it",
+     "at": 5.037
+    },
+    {
+     "w": "with",
+     "at": 5.112
+    },
+    {
+     "w": "confidence",
+     "at": 5.275
+    }
+   ]
+  }
+ ]
+}

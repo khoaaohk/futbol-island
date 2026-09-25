@@ -1,0 +1,51 @@
+{
+  "note": "Single selected trials; existing ASF importer assumptions retained. Root-relative ankle height is not ground clearance. Knee ranges are reference observations, not targets or normative limits. Sampling rate is the existing 120Hz assumption. No shuffle/cut or ball-contact annotation.",
+  "clips": [
+    {
+      "trial": "09_01",
+      "sourceHash": "02c94e8c2d4d2ff05f9a784f06403700c2c9d7caedd9bd92b50284d1a05f2bee",
+      "frameStart": 35,
+      "frameEnd": 123,
+      "durationSeconds": 0.7333333333333333,
+      "leftKneeDegrees": {
+        "min": 0,
+        "max": 116.2999999999935
+      },
+      "rightKneeDegrees": {
+        "min": 0,
+        "max": 104.97899999999476
+      },
+      "rootRelativeLeftAnkleY": {
+        "min": -0.9305431033775788,
+        "max": -0.45422536222982757
+      },
+      "rootRelativeRightAnkleY": {
+        "min": -0.9337770797183129,
+        "max": -0.503420763563463
+      }
+    },
+    {
+      "trial": "10_01",
+      "sourceHash": "4277e748947e8703825f340f94582f48997ca01b308f2447075eab4c42029e84",
+      "frameStart": 568,
+      "frameEnd": 658,
+      "durationSeconds": 0.75,
+      "leftKneeDegrees": {
+        "min": 33.1247999999988,
+        "max": 69.32529999999721
+      },
+      "rightKneeDegrees": {
+        "min": 25.467599999999067,
+        "max": 83.7527999999964
+      },
+      "rootRelativeLeftAnkleY": {
+        "min": -0.8845735986266724,
+        "max": -0.7805792775969909
+      },
+      "rootRelativeRightAnkleY": {
+        "min": -0.834231524183072,
+        "max": -0.40379807957100144
+      }
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+/* A bending binder sheet: nested strips in 3D, each with a front and a back slice of the two pages it carries. */
+.leaf{position:absolute;top:0;z-index:5;transform-style:preserve-3d;pointer-events:none}
+.strip{position:absolute;top:0;transform-style:preserve-3d;will-change:transform}
+.face{position:absolute;top:0;bottom:0;left:-1px;right:-1px;overflow:hidden;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.back{transform:rotateY(180deg)}
+.slice{position:absolute;top:0}
+/* Plain opacity (no blend mode) keeps each strip a cheap composited layer on phones.
+   The fold darkens as a strip turns edge-on; the plastic catches a highlight as it bends. Opacity only. */
+.shade{position:absolute;inset:0;background:#0f2a2f;opacity:0;pointer-events:none;will-change:opacity}
+.gloss{position:absolute;inset:0;background:linear-gradient(90deg,transparent,#ffffff8c 50%,transparent);opacity:0;pointer-events:none;will-change:opacity}

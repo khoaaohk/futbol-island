@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: World Cup 2024",
+   "text": "The 2024 Futsal World Cup, in Uzbekistan. Spain play New Zealand. Catela is Spain\u2019s ala, a winger. He scores three goals in the second half, and Spain win seven one!",
+   "src": "/plays/narration/catela-futsal-signature/1.m4a",
+   "seconds": 13.6,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "2024",
+     "at": 0.425
+    },
+    {
+     "w": "Futsal",
+     "at": 1.387
+    },
+    {
+     "w": "World",
+     "at": 1.825
+    },
+    {
+     "w": "Cup",
+     "at": 2.138
+    },
+    {
+     "w": "in",
+     "at": 2.5
+    },
+    {
+     "w": "Uzbekistan",
+     "at": 2.6
+    },
+    {
+     "w": "Spain",
+     "at": 4.013
+    },
+    {
+     "w": "play",
+     "at": 4.513
+    },
+    {
+     "w": "New",
+     "at": 4.825
+    },
+    {
+     "w": "Zealand",
+     "at": 5.0
+    },
+    {
+     "w": "Catela",
+     "at": 5.963
+    },
+    {
+     "w": "is",
+     "at": 6.525
+    },
+    {
+     "w": "Spain\u2019s",
+     "at": 6.675
+    },
+    {
+     "w": "ala",
+     "at": 7.237
+    },
+    {
+     "w": "a",
+     "at": 7.812
+    },
+    {
+     "w": "winger",
+     "at": 7.938
+    },
+    {
+     "w": "He",
+     "at": 8.825
+    },
+    {
+     "w": "scores",
+     "at": 8.975
+    },
+    {
+     "w": "three",
+     "at": 9.412
+    },
+    {
+     "w": "goals",
+     "at": 9.65
+    },
+    {
+     "w": "in",
+     "at": 10.062
+    },
+    {
+     "w": "the",
+     "at": 10.137
+    },
+    {
+     "w": "second",
+     "at": 10.225
+    },
+    {
+     "w": "half",
+     "at": 10.55
+    },
+    {
+     "w": "and",
+     "at": 11.0
+    },
+    {
+     "w": "Spain",
+     "at": 11.137
+    },
+    {
+     "w": "win",
+     "at": 11.525
+    },
+    {
+     "w": "seven",
+     "at": 11.887
+    },
+    {
+     "w": "one",
+     "at": 12.275
+    }
+   ]
+  },
+  {
+   "label": "How he does it",
+   "text": "An ala plays on the wing, close to the touchline. This is how he does it: he passes inside, then keeps running. He sprints round the outside, gets it back in space and shoots!",
+   "src": "/plays/narration/catela-futsal-signature/2.m4a",
+   "seconds": 12.0,
+   "words": [
+    {
+     "w": "An",
+     "at": 0.375
+    },
+    {
+     "w": "ala",
+     "at": 0.512
+    },
+    {
+     "w": "plays",
+     "at": 0.863
+    },
+    {
+     "w": "on",
+     "at": 1.188
+    },
+    {
+     "w": "the",
+     "at": 1.288
+    },
+    {
+     "w": "wing",
+     "at": 1.387
+    },
+    {
+     "w": "close",
+     "at": 1.875
+    },
+    {
+     "w": "to",
+     "at": 2.2
+    },
+    {
+     "w": "the",
+     "at": 2.288
+    },
+    {
+     "w": "touchline",
+     "at": 2.375
+    },
+    {
+     "w": "This",
+     "at": 3.413
+    },
+    {
+     "w": "is",
+     "at": 3.65
+    },
+    {
+     "w": "how",
+     "at": 3.8
+    },
+    {
+     "w": "he",
+     "at": 4.0
+    },
+    {
+     "w": "does",
+     "at": 4.15
+    },
+    {
+     "w": "it",
+     "at": 4.388
+    },
+    {
+     "w": "he",
+     "at": 4.875
+    },
+    {
+     "w": "passes",
+     "at": 5.013
+    },
+    {
+     "w": "inside",
+     "at": 5.537
+    },
+    {
+     "w": "then",
+     "at": 6.263
+    },
+    {
+     "w": "keeps",
+     "at": 6.45
+    },
+    {
+     "w": "running",
+     "at": 6.75
+    },
+    {
+     "w": "He",
+     "at": 7.675
+    },
+    {
+     "w": "sprints",
+     "at": 7.838
+    },
+    {
+     "w": "round",
+     "at": 8.25
+    },
+    {
+     "w": "the",
+     "at": 8.463
+    },
+    {
+     "w": "outside",
+     "at": 8.575
+    },
+    {
+     "w": "gets",
+     "at": 9.275
+    },
+    {
+     "w": "it",
+     "at": 9.488
+    },
+    {
+     "w": "back",
+     "at": 9.575
+    },
+    {
+     "w": "in",
+     "at": 9.838
+    },
+    {
+     "w": "space",
+     "at": 9.988
+    },
+    {
+     "w": "and",
+     "at": 10.45
+    },
+    {
+     "w": "shoots",
+     "at": 10.6
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again. Pass, run round the outside: the defender cannot follow both!",
+   "src": "/plays/narration/catela-futsal-signature/3.m4a",
+   "seconds": 5.9,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "Pass",
+     "at": 1.462
+    },
+    {
+     "w": "run",
+     "at": 1.9
+    },
+    {
+     "w": "round",
+     "at": 2.125
+    },
+    {
+     "w": "the",
+     "at": 2.312
+    },
+    {
+     "w": "outside",
+     "at": 2.4
+    },
+    {
+     "w": "the",
+     "at": 3.275
+    },
+    {
+     "w": "defender",
+     "at": 3.375
+    },
+    {
+     "w": "cannot",
+     "at": 3.85
+    },
+    {
+     "w": "follow",
+     "at": 4.225
+    },
+    {
+     "w": "both",
+     "at": 4.525
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: pass, then keep moving. Futsal is all about pass and move!",
+   "src": "/plays/narration/catela-futsal-signature/4.m4a",
+   "seconds": 5.8,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.5
+    },
+    {
+     "w": "pass",
+     "at": 1.188
+    },
+    {
+     "w": "then",
+     "at": 1.65
+    },
+    {
+     "w": "keep",
+     "at": 1.825
+    },
+    {
+     "w": "moving",
+     "at": 2.075
+    },
+    {
+     "w": "Futsal",
+     "at": 2.85
+    },
+    {
+     "w": "is",
+     "at": 3.312
+    },
+    {
+     "w": "all",
+     "at": 3.425
+    },
+    {
+     "w": "about",
+     "at": 3.587
+    },
+    {
+     "w": "pass",
+     "at": 3.837
+    },
+    {
+     "w": "and",
+     "at": 4.25
+    },
+    {
+     "w": "move",
+     "at": 4.375
+    }
+   ]
+  }
+ ]
+}

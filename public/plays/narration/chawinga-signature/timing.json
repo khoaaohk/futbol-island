@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "San Jose, 2024. Kansas City against Bay FC. Temwa Chawinga needs one more goal for the record. She steals the ball, rides the tackle, races on... and shoots from outside the box. What a rocket!",
+   "src": "/plays/narration/chawinga-signature/1.m4a",
+   "seconds": 15.2,
+   "words": [
+    {
+     "w": "San",
+     "at": 0.375
+    },
+    {
+     "w": "Jose",
+     "at": 0.6
+    },
+    {
+     "w": "2024",
+     "at": 1.15
+    },
+    {
+     "w": "Kansas",
+     "at": 2.487
+    },
+    {
+     "w": "City",
+     "at": 2.987
+    },
+    {
+     "w": "against",
+     "at": 3.3
+    },
+    {
+     "w": "Bay",
+     "at": 3.75
+    },
+    {
+     "w": "FC",
+     "at": 4.062
+    },
+    {
+     "w": "Temwa",
+     "at": 5.112
+    },
+    {
+     "w": "Chawinga",
+     "at": 5.487
+    },
+    {
+     "w": "needs",
+     "at": 6.0
+    },
+    {
+     "w": "one",
+     "at": 6.287
+    },
+    {
+     "w": "more",
+     "at": 6.525
+    },
+    {
+     "w": "goal",
+     "at": 6.75
+    },
+    {
+     "w": "for",
+     "at": 7.05
+    },
+    {
+     "w": "the",
+     "at": 7.162
+    },
+    {
+     "w": "record",
+     "at": 7.25
+    },
+    {
+     "w": "She",
+     "at": 8.037
+    },
+    {
+     "w": "steals",
+     "at": 8.213
+    },
+    {
+     "w": "the",
+     "at": 8.65
+    },
+    {
+     "w": "ball",
+     "at": 8.75
+    },
+    {
+     "w": "rides",
+     "at": 9.238
+    },
+    {
+     "w": "the",
+     "at": 9.625
+    },
+    {
+     "w": "tackle",
+     "at": 9.738
+    },
+    {
+     "w": "races",
+     "at": 10.275
+    },
+    {
+     "w": "on",
+     "at": 10.725
+    },
+    {
+     "w": "and",
+     "at": 11.5
+    },
+    {
+     "w": "shoots",
+     "at": 11.65
+    },
+    {
+     "w": "from",
+     "at": 11.975
+    },
+    {
+     "w": "outside",
+     "at": 12.125
+    },
+    {
+     "w": "the",
+     "at": 12.537
+    },
+    {
+     "w": "box",
+     "at": 12.625
+    },
+    {
+     "w": "What",
+     "at": 13.5
+    },
+    {
+     "w": "a",
+     "at": 13.637
+    },
+    {
+     "w": "rocket",
+     "at": 13.7
+    }
+   ]
+  },
+  {
+   "label": "Goal-side",
+   "text": "Watch again. She sprints in and nicks the ball away. The midfielder pushes, but Chawinga stays strong. Now she is goal-side.",
+   "src": "/plays/narration/chawinga-signature/2.m4a",
+   "seconds": 9.0,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "She",
+     "at": 1.387
+    },
+    {
+     "w": "sprints",
+     "at": 1.55
+    },
+    {
+     "w": "in",
+     "at": 1.962
+    },
+    {
+     "w": "and",
+     "at": 2.138
+    },
+    {
+     "w": "nicks",
+     "at": 2.25
+    },
+    {
+     "w": "the",
+     "at": 2.5
+    },
+    {
+     "w": "ball",
+     "at": 2.6
+    },
+    {
+     "w": "away",
+     "at": 2.875
+    },
+    {
+     "w": "The",
+     "at": 3.788
+    },
+    {
+     "w": "midfielder",
+     "at": 3.9
+    },
+    {
+     "w": "pushes",
+     "at": 4.45
+    },
+    {
+     "w": "but",
+     "at": 4.975
+    },
+    {
+     "w": "Chawinga",
+     "at": 5.138
+    },
+    {
+     "w": "stays",
+     "at": 5.625
+    },
+    {
+     "w": "strong",
+     "at": 5.987
+    },
+    {
+     "w": "Now",
+     "at": 6.838
+    },
+    {
+     "w": "she",
+     "at": 7.075
+    },
+    {
+     "w": "is",
+     "at": 7.225
+    },
+    {
+     "w": "goal-side",
+     "at": 7.375
+    }
+   ]
+  },
+  {
+   "label": "Pick your corner",
+   "text": "From outside the box, she picks her corner and strikes. It rockets into the net: goal nineteen, a new NWSL record!",
+   "src": "/plays/narration/chawinga-signature/3.m4a",
+   "seconds": 9.0,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "outside",
+     "at": 0.487
+    },
+    {
+     "w": "the",
+     "at": 0.887
+    },
+    {
+     "w": "box",
+     "at": 0.975
+    },
+    {
+     "w": "she",
+     "at": 1.575
+    },
+    {
+     "w": "picks",
+     "at": 1.725
+    },
+    {
+     "w": "her",
+     "at": 1.938
+    },
+    {
+     "w": "corner",
+     "at": 2.087
+    },
+    {
+     "w": "and",
+     "at": 2.5
+    },
+    {
+     "w": "strikes",
+     "at": 2.638
+    },
+    {
+     "w": "It",
+     "at": 3.65
+    },
+    {
+     "w": "rockets",
+     "at": 3.825
+    },
+    {
+     "w": "into",
+     "at": 4.263
+    },
+    {
+     "w": "the",
+     "at": 4.438
+    },
+    {
+     "w": "net",
+     "at": 4.525
+    },
+    {
+     "w": "goal",
+     "at": 5.287
+    },
+    {
+     "w": "nineteen",
+     "at": 5.525
+    },
+    {
+     "w": "a",
+     "at": 6.325
+    },
+    {
+     "w": "new",
+     "at": 6.438
+    },
+    {
+     "w": "NWSL",
+     "at": 6.725
+    },
+    {
+     "w": "record",
+     "at": 7.625
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: use your speed to get goal-side, then pick your corner.",
+   "src": "/plays/narration/chawinga-signature/4.m4a",
+   "seconds": 5.0,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "use",
+     "at": 1.288
+    },
+    {
+     "w": "your",
+     "at": 1.512
+    },
+    {
+     "w": "speed",
+     "at": 1.663
+    },
+    {
+     "w": "to",
+     "at": 2.0
+    },
+    {
+     "w": "get",
+     "at": 2.087
+    },
+    {
+     "w": "goal-side",
+     "at": 2.25
+    },
+    {
+     "w": "then",
+     "at": 3.075
+    },
+    {
+     "w": "pick",
+     "at": 3.275
+    },
+    {
+     "w": "your",
+     "at": 3.438
+    },
+    {
+     "w": "corner",
+     "at": 3.55
+    }
+   ]
+  }
+ ]
+}

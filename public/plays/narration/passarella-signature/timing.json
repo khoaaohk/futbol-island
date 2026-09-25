@@ -1,0 +1,386 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Four-nil, live",
+   "text": "Rosario, World Cup 1978. Argentina must beat Peru by four goals to reach the final. It's three-nil. Captain Daniel Passarella, a defender, races into the box. The ball flies in. Passarella heads it on, and Leopoldo Luque dives... Four-nil!",
+   "src": "/plays/narration/passarella-signature/1.m4a",
+   "seconds": 18.1,
+   "words": [
+    {
+     "w": "Rosario",
+     "at": 0.375
+    },
+    {
+     "w": "World",
+     "at": 1.075
+    },
+    {
+     "w": "Cup",
+     "at": 1.425
+    },
+    {
+     "w": "1978",
+     "at": 1.675
+    },
+    {
+     "w": "Argentina",
+     "at": 3.075
+    },
+    {
+     "w": "must",
+     "at": 3.75
+    },
+    {
+     "w": "beat",
+     "at": 4.0
+    },
+    {
+     "w": "Peru",
+     "at": 4.225
+    },
+    {
+     "w": "by",
+     "at": 4.6
+    },
+    {
+     "w": "four",
+     "at": 4.825
+    },
+    {
+     "w": "goals",
+     "at": 5.1
+    },
+    {
+     "w": "to",
+     "at": 5.45
+    },
+    {
+     "w": "reach",
+     "at": 5.575
+    },
+    {
+     "w": "the",
+     "at": 5.825
+    },
+    {
+     "w": "final",
+     "at": 5.938
+    },
+    {
+     "w": "It's",
+     "at": 6.65
+    },
+    {
+     "w": "three-nil",
+     "at": 6.9
+    },
+    {
+     "w": "Captain",
+     "at": 7.912
+    },
+    {
+     "w": "Daniel",
+     "at": 8.325
+    },
+    {
+     "w": "Passarella",
+     "at": 8.75
+    },
+    {
+     "w": "a",
+     "at": 9.5
+    },
+    {
+     "w": "defender",
+     "at": 9.575
+    },
+    {
+     "w": "races",
+     "at": 10.213
+    },
+    {
+     "w": "into",
+     "at": 10.662
+    },
+    {
+     "w": "the",
+     "at": 10.838
+    },
+    {
+     "w": "box",
+     "at": 10.925
+    },
+    {
+     "w": "The",
+     "at": 11.775
+    },
+    {
+     "w": "ball",
+     "at": 11.875
+    },
+    {
+     "w": "flies",
+     "at": 12.188
+    },
+    {
+     "w": "in",
+     "at": 12.6
+    },
+    {
+     "w": "Passarella",
+     "at": 13.287
+    },
+    {
+     "w": "heads",
+     "at": 13.925
+    },
+    {
+     "w": "it",
+     "at": 14.162
+    },
+    {
+     "w": "on",
+     "at": 14.25
+    },
+    {
+     "w": "and",
+     "at": 14.6
+    },
+    {
+     "w": "Leopoldo",
+     "at": 14.725
+    },
+    {
+     "w": "Luque",
+     "at": 15.325
+    },
+    {
+     "w": "dives",
+     "at": 15.525
+    },
+    {
+     "w": "Four-nil",
+     "at": 16.587
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again. Passarella wasn't tall, but he scored many headers. He times his run, jumps high, eyes on the ball. Header! Luque's diving header does the rest.",
+   "src": "/plays/narration/passarella-signature/2.m4a",
+   "seconds": 11.4,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "Passarella",
+     "at": 1.438
+    },
+    {
+     "w": "wasn't",
+     "at": 2.075
+    },
+    {
+     "w": "tall",
+     "at": 2.362
+    },
+    {
+     "w": "but",
+     "at": 2.737
+    },
+    {
+     "w": "he",
+     "at": 2.862
+    },
+    {
+     "w": "scored",
+     "at": 2.987
+    },
+    {
+     "w": "many",
+     "at": 3.35
+    },
+    {
+     "w": "headers",
+     "at": 3.575
+    },
+    {
+     "w": "He",
+     "at": 4.475
+    },
+    {
+     "w": "times",
+     "at": 4.6
+    },
+    {
+     "w": "his",
+     "at": 4.938
+    },
+    {
+     "w": "run",
+     "at": 5.1
+    },
+    {
+     "w": "jumps",
+     "at": 5.537
+    },
+    {
+     "w": "high",
+     "at": 5.9
+    },
+    {
+     "w": "eyes",
+     "at": 6.388
+    },
+    {
+     "w": "on",
+     "at": 6.713
+    },
+    {
+     "w": "the",
+     "at": 6.812
+    },
+    {
+     "w": "ball",
+     "at": 6.9
+    },
+    {
+     "w": "Header",
+     "at": 7.838
+    },
+    {
+     "w": "Luque's",
+     "at": 8.575
+    },
+    {
+     "w": "diving",
+     "at": 8.938
+    },
+    {
+     "w": "header",
+     "at": 9.4
+    },
+    {
+     "w": "does",
+     "at": 9.725
+    },
+    {
+     "w": "the",
+     "at": 9.912
+    },
+    {
+     "w": "rest",
+     "at": 10.0
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn. Defenders can score too! At corners and free kicks, run into the box and attack the ball with a strong header.",
+   "src": "/plays/narration/passarella-signature/3.m4a",
+   "seconds": 8.6,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "Defenders",
+     "at": 1.312
+    },
+    {
+     "w": "can",
+     "at": 1.9
+    },
+    {
+     "w": "score",
+     "at": 2.087
+    },
+    {
+     "w": "too",
+     "at": 2.425
+    },
+    {
+     "w": "At",
+     "at": 3.25
+    },
+    {
+     "w": "corners",
+     "at": 3.462
+    },
+    {
+     "w": "and",
+     "at": 3.962
+    },
+    {
+     "w": "free",
+     "at": 4.088
+    },
+    {
+     "w": "kicks",
+     "at": 4.338
+    },
+    {
+     "w": "run",
+     "at": 4.963
+    },
+    {
+     "w": "into",
+     "at": 5.162
+    },
+    {
+     "w": "the",
+     "at": 5.338
+    },
+    {
+     "w": "box",
+     "at": 5.425
+    },
+    {
+     "w": "and",
+     "at": 5.838
+    },
+    {
+     "w": "attack",
+     "at": 5.938
+    },
+    {
+     "w": "the",
+     "at": 6.3
+    },
+    {
+     "w": "ball",
+     "at": 6.4
+    },
+    {
+     "w": "with",
+     "at": 6.713
+    },
+    {
+     "w": "a",
+     "at": 6.812
+    },
+    {
+     "w": "strong",
+     "at": 6.888
+    },
+    {
+     "w": "header",
+     "at": 7.3
+    }
+   ]
+  }
+ ]
+}

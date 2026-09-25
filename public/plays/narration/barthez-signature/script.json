@@ -1,0 +1,10 @@
+{
+ "film": "barthez-signature",
+ "note": "Chapter 1 is the live move, keyed to the cue words: Rivaldo's short free-kick on 'France lead', Roberto Carlos's cross on 'crosses', Ronaldo's shot just after 'close range', Barthez's block on 'Fabien Barthez' — keep the pause at the '...'. Chapter 2 is the slow replay from beside the goal (on his toes, the shuffle, the angle closed); chapter 3 the super-slow shot, spring, block and hold; chapter 4 the lesson.",
+ "chapters": [
+  {"label": "The save, live", "text": "World Cup final, 1998. France lead Brazil by two goals. Roberto Carlos races down the left and crosses. Ronaldo shoots from close range... but Fabien Barthez stops it!"},
+  {"label": "Watch again", "text": "Watch again, slowly. Barthez is up on his toes as the cross comes over. He shuffles across and steps out to close the angle."},
+  {"label": "Quick reflex", "text": "So close! A lightning reflex: he springs, blocks the shot, and holds on tight."},
+  {"label": "Your turn", "text": "Your turn: before a shot, stay on your toes, so you can spring either way!"}
+ ]
+}

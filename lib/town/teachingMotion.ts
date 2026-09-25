@@ -1,4 +1,4 @@
-import {lessonPositions,lessonVisualFrame,type FieldLesson} from './formatLessons';
+import {lessonPositions,lessonVisualFrame,lessonStepSeconds,type FieldLesson} from './formatLessons';
 import {fieldPoint,type Venue} from './venues';
 import type {PlayerMotion} from '../graphics/player';
 type Point={x:number;z:number};
@@ -11,7 +11,12 @@ function owner(poses:Map<string,Point>,ball:Point){let id:string|undefined,best=
 const cache=new WeakMap<FieldLesson,ReturnType<typeof makePlans>>();
 function makePlans(lesson:FieldLesson,v:Venue){return lesson.steps.flatMap((authored,step)=>{
  const beats=authored.beats?.length?authored.beats:[{start:0,end:1}];
- return beats.map((beat,index)=>{const a=lessonPositions(lesson,step,beat.start),b=lessonPositions(lesson,step,beat.end),start=new Map([...a.positions].map(([id,p])=>[id,fieldPoint(v,p)])),end=new Map([...b.positions].map(([id,p])=>[id,fieldPoint(v,p)])),from=fieldPoint(v,a.ball),to=fieldPoint(v,b.ball);return{step,beat:index,start,end,from,to,source:owner(start,from),receiver:owner(end,to)};});
+ return beats.map((beat,index)=>{
+   const a=lessonPositions(lesson,step,beat.start),b=lessonPositions(lesson,step,beat.end),start=new Map([...a.positions].map(([id,p])=>[id,fieldPoint(v,p)])),end=new Map([...b.positions].map(([id,p])=>[id,fieldPoint(v,p)])),from=fieldPoint(v,a.ball),to=fieldPoint(v,b.ball),source=owner(start,from),receiver=owner(end,to);
+   const releaseProgress=beat.start+(beat.end-beat.start)*TEACHING_RELEASE,arrivalProgress=beat.start+(beat.end-beat.start)*TEACHING_ARRIVAL;
+   const releaseSample=lessonPositions(lesson,step,releaseProgress),arrivalSample=lessonPositions(lesson,step,arrivalProgress);
+   return{step,beat:index,start,end,from,to,source,receiver,releaseProgress,arrivalProgress,releaseRoot:source?fieldPoint(v,releaseSample.positions.get(source)!):from,arrivalRoot:receiver?fieldPoint(v,arrivalSample.positions.get(receiver)!):to};
+ });
 });}
 /** Geometry, not actor names or a preferred right foot, determines open hips and contact side. */
 export function receivingPose(at:Point,incoming:Point,outgoing:Point,opponents:Point[]=[]){
@@ -31,13 +36,22 @@ export function teachingMotion(lesson:FieldLesson,v:Venue,step:number,progress:n
  const pass=!!plan.source&&plan.source!==plan.receiver&&Math.hypot(plan.to.x-plan.from.x,plan.to.z-plan.from.z)>2;
  const boundary=(index:number,id:string,at:Point)=>{const prior=index>0?plans[index-1].from:plan.from,next=plans[Math.min(index,plans.length-1)].to;const foes=lesson.offense.some(p=>p.id===id)?lesson.defense:lesson.offense,frame=index>planIndex?plan.end:plan.start;return receivingPose(at,prior,next,foes.flatMap(p=>frame.has(p.id)?[frame.get(p.id)!]:[]));};
  const before=lessonPositions(lesson,step,Math.max(visual.start,progress-.012)).positions,after=lessonPositions(lesson,step,Math.min(visual.end,progress+.012)).positions;
+ const releaseRoot=plan.releaseRoot;
+ const releaseFacing=heading(plan.start.get(plan.source??'')??plan.from,plan.to);
+ const sourceSide=plan.source?boundary(planIndex,plan.source,plan.start.get(plan.source)!).kickSide:1;
+ const release={x:releaseRoot.x+Math.sin(releaseFacing)*.79+Math.cos(releaseFacing)*sourceSide*.108,z:releaseRoot.z+Math.cos(releaseFacing)*.79-Math.sin(releaseFacing)*sourceSide*.108};
+ // Both ends belong to authored contact frames, never to a later moving passer.
+ const arrivalRoot=plan.arrivalRoot;
+ const arrivalPose=plan.receiver?boundary(planIndex+1,plan.receiver,plan.end.get(plan.receiver)!):undefined;
+ const arrival=arrivalPose?{x:arrivalRoot.x+Math.sin(arrivalPose.facing)*.58+Math.cos(arrivalPose.facing)*arrivalPose.kickSide*.108,z:arrivalRoot.z+Math.cos(arrivalPose.facing)*.58-Math.sin(arrivalPose.facing)*arrivalPose.kickSide*.108}:plan.to;
  const motions=new Map<string,PlayerMotion>();
  for(const [id,p]of poses){const a=plan.start.get(id)!,b=plan.end.get(id)!,distance=Math.hypot(b.x-a.x,b.z-a.z),defender=lesson.defense.some(actor=>actor.id===id),near=Math.hypot(p.x-fieldPoint(v,sample.ball).x,p.z-fieldPoint(v,sample.ball).z)<8;
  const tangent=heading(fieldPoint(v,before.get(id)!),fieldPoint(v,after.get(id)!));
- const motion:PlayerMotion={facing:distance>.05&&!defender&&!near?tangent:heading(p,fieldPoint(v,sample.ball)),turnSmoothing:12};
- if(id===plan.source){const pose=boundary(planIndex,id,a);Object.assign(motion,pose);if(pass){motion.facing=shortTurn(pose.facing,heading(a,plan.to),t/TEACHING_RELEASE);motion.kick=t<TEACHING_RELEASE?.36*t/TEACHING_RELEASE:t<.4?.36+.64*(t-TEACHING_RELEASE)/(.4-TEACHING_RELEASE):undefined;}else{motion.dribbling=distance>.1;motion.facing=distance>.1?shortTurn(pose.facing,tangent,t/.35):pose.facing;motion.receive=distance<=.1?.35:0;}}
- if(pass&&id===plan.receiver){const pose=boundary(planIndex+1,id,b);Object.assign(motion,pose);motion.receive=smooth((t-.65)/.17);}
+ const motion:PlayerMotion={facing:distance>.05&&!defender&&!near?tangent:heading(p,fieldPoint(v,sample.ball)),turnSmoothing:12,samplePose:{speed:Math.hypot(fieldPoint(v,after.get(id)!).x-fieldPoint(v,before.get(id)!).x,fieldPoint(v,after.get(id)!).z-fieldPoint(v,before.get(id)!).z)/Math.max(.001,Math.min(visual.end,progress+.012)-Math.max(visual.start,progress-.012))/lessonStepSeconds(lesson.steps[step]),distance:distance*smooth(t),heading:tangent},jockey:defender&&near?1:0};
+ if(id===plan.source){const pose=boundary(planIndex,id,a);Object.assign(motion,pose);if(pass){motion.facing=shortTurn(pose.facing,heading(a,plan.to),t/TEACHING_RELEASE);motion.actionKind='pass';motion.kick=t<TEACHING_RELEASE?.36*t/TEACHING_RELEASE:t<.4?.36+.64*(t-TEACHING_RELEASE)/(.4-TEACHING_RELEASE):undefined;}else{motion.dribbling=distance>.1;motion.facing=distance>.1?shortTurn(pose.facing,tangent,t/.35):pose.facing;motion.receive=distance<=.1?.35:0;}}
+ if(pass&&id===plan.source&&t>.4&&distance>.1)motion.facing=shortTurn(heading(a,plan.to),tangent,(t-.4)/.3);
+ if(pass&&id===plan.receiver){const pose=boundary(planIndex+1,id,b);Object.assign(motion,pose);motion.receive=smooth((t-.65)/.17);motion.receiveProgress=clamp((t-.82)/.18);const scan=Math.sin(Math.PI*clamp((t-.2)/.4));motion.scanYaw=scan*.5*pose.kickSide;}
  motions.set(id,motion);
  }
- return{poses,motions,source:plan.source,receiver:plan.receiver,pass,from:plan.from,to:plan.to,ball:fieldPoint(v,sample.ball),travel:smooth((t-TEACHING_RELEASE)/(TEACHING_ARRIVAL-TEACHING_RELEASE)),landed:pass&&t>=TEACHING_ARRIVAL};
+ return{poses,motions,source:plan.source,receiver:plan.receiver,pass,release,releaseRoot,arrival,arrivalRoot,contactFrame:{beat:visual.index,releaseProgress:plan.releaseProgress,arrivalProgress:plan.arrivalProgress},from:plan.from,to:plan.to,ball:fieldPoint(v,sample.ball),travel:smooth((t-TEACHING_RELEASE)/(TEACHING_ARRIVAL-TEACHING_RELEASE)),landed:pass&&t>=TEACHING_ARRIVAL};
 }

@@ -1,0 +1,382 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Turin, 2018. Real Madrid attack down the right. Ronaldo waits in the box, back to goal. Carvajal crosses. Ronaldo flies up... Goal!",
+   "src": "/plays/narration/ronaldo-bicycle-2018/1.m4a",
+   "seconds": 10.9,
+   "words": [
+    {
+     "w": "Turin",
+     "at": 0.35
+    },
+    {
+     "w": "2018",
+     "at": 0.775
+    },
+    {
+     "w": "Real",
+     "at": 1.938
+    },
+    {
+     "w": "Madrid",
+     "at": 2.2
+    },
+    {
+     "w": "attack",
+     "at": 2.6
+    },
+    {
+     "w": "down",
+     "at": 2.975
+    },
+    {
+     "w": "the",
+     "at": 3.188
+    },
+    {
+     "w": "right",
+     "at": 3.275
+    },
+    {
+     "w": "Ronaldo",
+     "at": 3.962
+    },
+    {
+     "w": "waits",
+     "at": 4.525
+    },
+    {
+     "w": "in",
+     "at": 4.787
+    },
+    {
+     "w": "the",
+     "at": 4.862
+    },
+    {
+     "w": "box",
+     "at": 4.95
+    },
+    {
+     "w": "back",
+     "at": 5.425
+    },
+    {
+     "w": "to",
+     "at": 5.7
+    },
+    {
+     "w": "goal",
+     "at": 5.825
+    },
+    {
+     "w": "Carvajal",
+     "at": 6.487
+    },
+    {
+     "w": "crosses",
+     "at": 7.0
+    },
+    {
+     "w": "Ronaldo",
+     "at": 7.862
+    },
+    {
+     "w": "flies",
+     "at": 8.438
+    },
+    {
+     "w": "up",
+     "at": 8.85
+    },
+    {
+     "w": "Goal",
+     "at": 9.537
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again, slowly. His eyes never leave the ball. He jumps early, lies flat in the air, and scissors his legs.",
+   "src": "/plays/narration/ronaldo-bicycle-2018/2.m4a",
+   "seconds": 8.4,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "slowly",
+     "at": 1.163
+    },
+    {
+     "w": "His",
+     "at": 2.15
+    },
+    {
+     "w": "eyes",
+     "at": 2.35
+    },
+    {
+     "w": "never",
+     "at": 2.675
+    },
+    {
+     "w": "leave",
+     "at": 2.925
+    },
+    {
+     "w": "the",
+     "at": 3.138
+    },
+    {
+     "w": "ball",
+     "at": 3.225
+    },
+    {
+     "w": "He",
+     "at": 3.925
+    },
+    {
+     "w": "jumps",
+     "at": 4.088
+    },
+    {
+     "w": "early",
+     "at": 4.45
+    },
+    {
+     "w": "lies",
+     "at": 5.013
+    },
+    {
+     "w": "flat",
+     "at": 5.388
+    },
+    {
+     "w": "in",
+     "at": 5.662
+    },
+    {
+     "w": "the",
+     "at": 5.737
+    },
+    {
+     "w": "air",
+     "at": 5.888
+    },
+    {
+     "w": "and",
+     "at": 6.25
+    },
+    {
+     "w": "scissors",
+     "at": 6.4
+    },
+    {
+     "w": "his",
+     "at": 6.787
+    },
+    {
+     "w": "legs",
+     "at": 6.95
+    }
+   ]
+  },
+  {
+   "label": "Behind the goal",
+   "text": "Buffon can't move. It's two-nil, and even the Juventus fans stand up and clap!",
+   "src": "/plays/narration/ronaldo-bicycle-2018/3.m4a",
+   "seconds": 6.2,
+   "words": [
+    {
+     "w": "Buffon",
+     "at": 0.375
+    },
+    {
+     "w": "can't",
+     "at": 0.85
+    },
+    {
+     "w": "move",
+     "at": 1.125
+    },
+    {
+     "w": "It's",
+     "at": 1.95
+    },
+    {
+     "w": "two-nil",
+     "at": 2.212
+    },
+    {
+     "w": "and",
+     "at": 2.925
+    },
+    {
+     "w": "even",
+     "at": 3.05
+    },
+    {
+     "w": "the",
+     "at": 3.288
+    },
+    {
+     "w": "Juventus",
+     "at": 3.375
+    },
+    {
+     "w": "fans",
+     "at": 3.875
+    },
+    {
+     "w": "stand",
+     "at": 4.25
+    },
+    {
+     "w": "up",
+     "at": 4.562
+    },
+    {
+     "w": "and",
+     "at": 4.713
+    },
+    {
+     "w": "clap",
+     "at": 4.838
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Beginners: practise on soft ground, with a coach. The secret is timing and body shape. Watch the ball, jump early, and land safely on your hands and back.",
+   "src": "/plays/narration/ronaldo-bicycle-2018/4.m4a",
+   "seconds": 11.2,
+   "words": [
+    {
+     "w": "Beginners",
+     "at": 0.35
+    },
+    {
+     "w": "practise",
+     "at": 1.225
+    },
+    {
+     "w": "on",
+     "at": 1.725
+    },
+    {
+     "w": "soft",
+     "at": 1.95
+    },
+    {
+     "w": "ground",
+     "at": 2.35
+    },
+    {
+     "w": "with",
+     "at": 2.812
+    },
+    {
+     "w": "a",
+     "at": 2.913
+    },
+    {
+     "w": "coach",
+     "at": 2.987
+    },
+    {
+     "w": "The",
+     "at": 3.888
+    },
+    {
+     "w": "secret",
+     "at": 4.037
+    },
+    {
+     "w": "is",
+     "at": 4.45
+    },
+    {
+     "w": "timing",
+     "at": 4.612
+    },
+    {
+     "w": "and",
+     "at": 5.125
+    },
+    {
+     "w": "body",
+     "at": 5.25
+    },
+    {
+     "w": "shape",
+     "at": 5.65
+    },
+    {
+     "w": "Watch",
+     "at": 6.463
+    },
+    {
+     "w": "the",
+     "at": 6.8
+    },
+    {
+     "w": "ball",
+     "at": 6.9
+    },
+    {
+     "w": "jump",
+     "at": 7.388
+    },
+    {
+     "w": "early",
+     "at": 7.7
+    },
+    {
+     "w": "and",
+     "at": 8.15
+    },
+    {
+     "w": "land",
+     "at": 8.275
+    },
+    {
+     "w": "safely",
+     "at": 8.7
+    },
+    {
+     "w": "on",
+     "at": 9.137
+    },
+    {
+     "w": "your",
+     "at": 9.238
+    },
+    {
+     "w": "hands",
+     "at": 9.35
+    },
+    {
+     "w": "and",
+     "at": 9.775
+    },
+    {
+     "w": "back",
+     "at": 9.9
+    }
+   ]
+  }
+ ]
+}

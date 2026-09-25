@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live",
+   "text": "Munich, 1974, the World Cup final. West Germany lead the Netherlands two-one. After half-time, the Dutch attack again and again. Johnny Rep shoots... Sepp Maier springs across and pushes it away!",
+   "src": "/plays/narration/maier-signature/1.m4a",
+   "seconds": 14.7,
+   "words": [
+    {
+     "w": "Munich",
+     "at": 0.4
+    },
+    {
+     "w": "1974",
+     "at": 0.85
+    },
+    {
+     "w": "the",
+     "at": 1.975
+    },
+    {
+     "w": "World",
+     "at": 2.075
+    },
+    {
+     "w": "Cup",
+     "at": 2.375
+    },
+    {
+     "w": "final",
+     "at": 2.6
+    },
+    {
+     "w": "West",
+     "at": 3.45
+    },
+    {
+     "w": "Germany",
+     "at": 3.788
+    },
+    {
+     "w": "lead",
+     "at": 4.287
+    },
+    {
+     "w": "the",
+     "at": 4.513
+    },
+    {
+     "w": "Netherlands",
+     "at": 4.6
+    },
+    {
+     "w": "two-one",
+     "at": 5.237
+    },
+    {
+     "w": "After",
+     "at": 6.213
+    },
+    {
+     "w": "half-time",
+     "at": 6.525
+    },
+    {
+     "w": "the",
+     "at": 7.25
+    },
+    {
+     "w": "Dutch",
+     "at": 7.388
+    },
+    {
+     "w": "attack",
+     "at": 7.675
+    },
+    {
+     "w": "again",
+     "at": 8.05
+    },
+    {
+     "w": "and",
+     "at": 8.4
+    },
+    {
+     "w": "again",
+     "at": 8.512
+    },
+    {
+     "w": "Johnny",
+     "at": 9.375
+    },
+    {
+     "w": "Rep",
+     "at": 9.8
+    },
+    {
+     "w": "shoots",
+     "at": 10.05
+    },
+    {
+     "w": "Sepp",
+     "at": 11.1
+    },
+    {
+     "w": "Maier",
+     "at": 11.375
+    },
+    {
+     "w": "springs",
+     "at": 11.738
+    },
+    {
+     "w": "across",
+     "at": 12.175
+    },
+    {
+     "w": "and",
+     "at": 12.7
+    },
+    {
+     "w": "pushes",
+     "at": 12.825
+    },
+    {
+     "w": "it",
+     "at": 13.188
+    },
+    {
+     "w": "away",
+     "at": 13.275
+    }
+   ]
+  },
+  {
+   "label": "The replay",
+   "text": "Watch again, slowly. Maier waits low, on his toes. Rep strikes it. Maier pushes off, flies sideways and turns it away!",
+   "src": "/plays/narration/maier-signature/2.m4a",
+   "seconds": 9.1,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.662
+    },
+    {
+     "w": "slowly",
+     "at": 1.062
+    },
+    {
+     "w": "Maier",
+     "at": 1.988
+    },
+    {
+     "w": "waits",
+     "at": 2.275
+    },
+    {
+     "w": "low",
+     "at": 2.55
+    },
+    {
+     "w": "on",
+     "at": 2.837
+    },
+    {
+     "w": "his",
+     "at": 2.938
+    },
+    {
+     "w": "toes",
+     "at": 3.1
+    },
+    {
+     "w": "Rep",
+     "at": 3.862
+    },
+    {
+     "w": "strikes",
+     "at": 4.1
+    },
+    {
+     "w": "it",
+     "at": 4.537
+    },
+    {
+     "w": "Maier",
+     "at": 5.112
+    },
+    {
+     "w": "pushes",
+     "at": 5.4
+    },
+    {
+     "w": "off",
+     "at": 5.775
+    },
+    {
+     "w": "flies",
+     "at": 6.138
+    },
+    {
+     "w": "sideways",
+     "at": 6.537
+    },
+    {
+     "w": "and",
+     "at": 7.213
+    },
+    {
+     "w": "turns",
+     "at": 7.325
+    },
+    {
+     "w": "it",
+     "at": 7.612
+    },
+    {
+     "w": "away",
+     "at": 7.7
+    }
+   ]
+  },
+  {
+   "label": "Again and again",
+   "text": "The TV commentator shouted, \u201cMaier! Again and again, Maier!\u201d West Germany held on to win.",
+   "src": "/plays/narration/maier-signature/3.m4a",
+   "seconds": 7.1,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "TV",
+     "at": 0.438
+    },
+    {
+     "w": "commentator",
+     "at": 0.85
+    },
+    {
+     "w": "shouted",
+     "at": 1.462
+    },
+    {
+     "w": "Maier",
+     "at": 2.175
+    },
+    {
+     "w": "Again",
+     "at": 2.888
+    },
+    {
+     "w": "and",
+     "at": 3.188
+    },
+    {
+     "w": "again",
+     "at": 3.288
+    },
+    {
+     "w": "Maier",
+     "at": 3.625
+    },
+    {
+     "w": "West",
+     "at": 4.513
+    },
+    {
+     "w": "Germany",
+     "at": 4.8
+    },
+    {
+     "w": "held",
+     "at": 5.25
+    },
+    {
+     "w": "on",
+     "at": 5.487
+    },
+    {
+     "w": "to",
+     "at": 5.675
+    },
+    {
+     "w": "win",
+     "at": 5.8
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "They called him the Cat. Your turn: stay low and light on your feet, so you can react like a cat!",
+   "src": "/plays/narration/maier-signature/4.m4a",
+   "seconds": 6.8,
+   "words": [
+    {
+     "w": "They",
+     "at": 0.35
+    },
+    {
+     "w": "called",
+     "at": 0.5
+    },
+    {
+     "w": "him",
+     "at": 0.738
+    },
+    {
+     "w": "the",
+     "at": 0.863
+    },
+    {
+     "w": "Cat",
+     "at": 0.963
+    },
+    {
+     "w": "Your",
+     "at": 1.812
+    },
+    {
+     "w": "turn",
+     "at": 2.013
+    },
+    {
+     "w": "stay",
+     "at": 2.8
+    },
+    {
+     "w": "low",
+     "at": 3.125
+    },
+    {
+     "w": "and",
+     "at": 3.388
+    },
+    {
+     "w": "light",
+     "at": 3.5
+    },
+    {
+     "w": "on",
+     "at": 3.712
+    },
+    {
+     "w": "your",
+     "at": 3.812
+    },
+    {
+     "w": "feet",
+     "at": 3.975
+    },
+    {
+     "w": "so",
+     "at": 4.425
+    },
+    {
+     "w": "you",
+     "at": 4.55
+    },
+    {
+     "w": "can",
+     "at": 4.65
+    },
+    {
+     "w": "react",
+     "at": 4.8
+    },
+    {
+     "w": "like",
+     "at": 5.188
+    },
+    {
+     "w": "a",
+     "at": 5.338
+    },
+    {
+     "w": "cat",
+     "at": 5.412
+    }
+   ]
+  }
+ ]
+}

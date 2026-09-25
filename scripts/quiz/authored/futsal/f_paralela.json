@@ -1,0 +1,150 @@
+{
+ "lesson": "f_paralela",
+ "questions": [
+  {
+   "q": "The fixo is hiding. Tap where the fixo goes on a parallel run.",
+   "options": [
+    "Straight down the same side",
+    "Across, into the middle",
+    "Back behind the ball"
+   ],
+   "correct": 0,
+   "explain": "Yes. A parallel run goes straight down the same side as the ball.",
+   "choiceExplanations": [
+    "Yes. A parallel run goes straight down the same side as the ball.",
+    "Cutting across into the middle is the diagonal run, not the parallel one.",
+    "Staying back is not a run, so the ala has nobody ahead to find."
+   ],
+   "visual": {
+    "kind": "tapSpot",
+    "frame": {
+     "step": 1,
+     "hide": [
+      "cb"
+     ],
+     "focus": [
+      "lm"
+     ]
+    },
+    "spots": [
+     {
+      "x": 22,
+      "y": 180
+     },
+     {
+      "x": 128,
+      "y": 205
+     },
+     {
+      "x": 125,
+      "y": 300
+     }
+    ]
+   }
+  },
+  {
+   "q": "The side route gets closed. Put these moments in order, first to last.",
+   "options": [
+    "Fixo passes left, then runs",
+    "Ala passes down the side",
+    "Defender closes the side route",
+    "Runner cuts in on a diagonal"
+   ],
+   "correct": 0,
+   "explain": "Yes. The fixo passes left and runs first, so the ala has a runner to find.",
+   "choiceExplanations": [
+    "Yes. The fixo passes left and runs first, so the ala has a runner to find.",
+    "The ala can only pass down the side once the fixo is running there.",
+    "The defender closes the side route after the first pass goes down it.",
+    "The diagonal comes last, once the side route is closed."
+   ],
+   "visual": {
+    "kind": "order",
+    "frames": [
+     {
+      "step": 0,
+      "focus": [
+       "cb"
+      ]
+     },
+     {
+      "step": 3,
+      "focus": [
+       "lm",
+       "cb"
+      ]
+     },
+     {
+      "step": 5,
+      "focus": [
+       "dlm"
+      ]
+     },
+     {
+      "step": 6,
+      "focus": [
+       "cb"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "q": "On the right, the defender closes the side route. Drag the fixo somewhere open.",
+   "options": [
+    "Down the right side",
+    "Diagonal, into the middle",
+    "Stay back behind the ball"
+   ],
+   "correct": 1,
+   "explain": "Yes. The diagonal run goes inside, away from the defender, so the lane is open.",
+   "choiceExplanations": [
+    "The defender is closing that side route, so a pass there gets cut out.",
+    "Yes. The diagonal run goes inside, away from the defender, so the lane is open.",
+    "Standing still gives the right ala no new option while the defender presses."
+   ],
+   "visual": {
+    "kind": "dragToZone",
+    "frame": {
+     "step": 5,
+     "place": {
+      "drm": {
+       "x": 246,
+       "y": 194
+      },
+      "cb": {
+       "x": 170,
+       "y": 265
+      }
+     },
+     "ball": "rm",
+     "focus": [
+      "rm",
+      "drm"
+     ]
+    },
+    "drag": "cb",
+    "zones": [
+     {
+      "x": 245,
+      "y": 150,
+      "w": 40,
+      "h": 36
+     },
+     {
+      "x": 150,
+      "y": 195,
+      "w": 40,
+      "h": 36
+     },
+     {
+      "x": 175,
+      "y": 305,
+      "w": 40,
+      "h": 36
+     }
+    ]
+   }
+  }
+ ]
+}

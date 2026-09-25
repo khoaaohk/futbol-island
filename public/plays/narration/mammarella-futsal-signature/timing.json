@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: the 2014 final",
+   "text": "The 2014 Futsal Euro final. Italy lead Russia, two to one. Eder Lima turns and shoots for the top corner. Mammarella flies up and tips it over the bar!",
+   "src": "/plays/narration/mammarella-futsal-signature/1.m4a",
+   "seconds": 11.9,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "2014",
+     "at": 0.425
+    },
+    {
+     "w": "Futsal",
+     "at": 1.35
+    },
+    {
+     "w": "Euro",
+     "at": 1.825
+    },
+    {
+     "w": "final",
+     "at": 2.163
+    },
+    {
+     "w": "Italy",
+     "at": 3.013
+    },
+    {
+     "w": "lead",
+     "at": 3.4
+    },
+    {
+     "w": "Russia",
+     "at": 3.688
+    },
+    {
+     "w": "two",
+     "at": 4.388
+    },
+    {
+     "w": "to",
+     "at": 4.6
+    },
+    {
+     "w": "one",
+     "at": 4.725
+    },
+    {
+     "w": "Eder",
+     "at": 5.612
+    },
+    {
+     "w": "Lima",
+     "at": 5.925
+    },
+    {
+     "w": "turns",
+     "at": 6.263
+    },
+    {
+     "w": "and",
+     "at": 6.725
+    },
+    {
+     "w": "shoots",
+     "at": 6.888
+    },
+    {
+     "w": "for",
+     "at": 7.225
+    },
+    {
+     "w": "the",
+     "at": 7.338
+    },
+    {
+     "w": "top",
+     "at": 7.425
+    },
+    {
+     "w": "corner",
+     "at": 7.7
+    },
+    {
+     "w": "Mammarella",
+     "at": 8.588
+    },
+    {
+     "w": "flies",
+     "at": 9.188
+    },
+    {
+     "w": "up",
+     "at": 9.575
+    },
+    {
+     "w": "and",
+     "at": 9.787
+    },
+    {
+     "w": "tips",
+     "at": 9.9
+    },
+    {
+     "w": "it",
+     "at": 10.137
+    },
+    {
+     "w": "over",
+     "at": 10.213
+    },
+    {
+     "w": "the",
+     "at": 10.412
+    },
+    {
+     "w": "bar",
+     "at": 10.5
+    }
+   ]
+  },
+  {
+   "label": "Replay: the fingertips",
+   "text": "Watch again. His fingertips push the ball up and over. From that corner, Italy break and score. Three to one. Champions!",
+   "src": "/plays/narration/mammarella-futsal-signature/2.m4a",
+   "seconds": 8.9,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "His",
+     "at": 1.45
+    },
+    {
+     "w": "fingertips",
+     "at": 1.65
+    },
+    {
+     "w": "push",
+     "at": 2.175
+    },
+    {
+     "w": "the",
+     "at": 2.4
+    },
+    {
+     "w": "ball",
+     "at": 2.5
+    },
+    {
+     "w": "up",
+     "at": 2.825
+    },
+    {
+     "w": "and",
+     "at": 2.987
+    },
+    {
+     "w": "over",
+     "at": 3.1
+    },
+    {
+     "w": "From",
+     "at": 3.875
+    },
+    {
+     "w": "that",
+     "at": 4.05
+    },
+    {
+     "w": "corner",
+     "at": 4.3
+    },
+    {
+     "w": "Italy",
+     "at": 4.725
+    },
+    {
+     "w": "break",
+     "at": 5.013
+    },
+    {
+     "w": "and",
+     "at": 5.362
+    },
+    {
+     "w": "score",
+     "at": 5.487
+    },
+    {
+     "w": "Three",
+     "at": 6.275
+    },
+    {
+     "w": "to",
+     "at": 6.525
+    },
+    {
+     "w": "one",
+     "at": 6.65
+    },
+    {
+     "w": "Champions",
+     "at": 7.188
+    }
+   ]
+  },
+  {
+   "label": "How a goleiro organises",
+   "text": "A goleiro sees the whole court. So talk! Tell one defender to press, one to cover, and keep all four in front of you.",
+   "src": "/plays/narration/mammarella-futsal-signature/3.m4a",
+   "seconds": 8.4,
+   "words": [
+    {
+     "w": "A",
+     "at": 0.375
+    },
+    {
+     "w": "goleiro",
+     "at": 0.45
+    },
+    {
+     "w": "sees",
+     "at": 1.0
+    },
+    {
+     "w": "the",
+     "at": 1.312
+    },
+    {
+     "w": "whole",
+     "at": 1.4
+    },
+    {
+     "w": "court",
+     "at": 1.663
+    },
+    {
+     "w": "So",
+     "at": 2.525
+    },
+    {
+     "w": "talk",
+     "at": 2.763
+    },
+    {
+     "w": "Tell",
+     "at": 3.538
+    },
+    {
+     "w": "one",
+     "at": 3.8
+    },
+    {
+     "w": "defender",
+     "at": 4.025
+    },
+    {
+     "w": "to",
+     "at": 4.475
+    },
+    {
+     "w": "press",
+     "at": 4.6
+    },
+    {
+     "w": "one",
+     "at": 5.225
+    },
+    {
+     "w": "to",
+     "at": 5.388
+    },
+    {
+     "w": "cover",
+     "at": 5.5
+    },
+    {
+     "w": "and",
+     "at": 5.925
+    },
+    {
+     "w": "keep",
+     "at": 6.05
+    },
+    {
+     "w": "all",
+     "at": 6.3
+    },
+    {
+     "w": "four",
+     "at": 6.55
+    },
+    {
+     "w": "in",
+     "at": 6.812
+    },
+    {
+     "w": "front",
+     "at": 6.95
+    },
+    {
+     "w": "of",
+     "at": 7.138
+    },
+    {
+     "w": "you",
+     "at": 7.225
+    }
+   ]
+  },
+  {
+   "label": "Practise it",
+   "text": "Talk to your defenders and keep them organised. Then you\u2019re ready for the big save!",
+   "src": "/plays/narration/mammarella-futsal-signature/4.m4a",
+   "seconds": 5.9,
+   "words": [
+    {
+     "w": "Talk",
+     "at": 0.35
+    },
+    {
+     "w": "to",
+     "at": 0.6
+    },
+    {
+     "w": "your",
+     "at": 0.688
+    },
+    {
+     "w": "defenders",
+     "at": 0.8
+    },
+    {
+     "w": "and",
+     "at": 1.637
+    },
+    {
+     "w": "keep",
+     "at": 1.775
+    },
+    {
+     "w": "them",
+     "at": 2.013
+    },
+    {
+     "w": "organised",
+     "at": 2.2
+    },
+    {
+     "w": "Then",
+     "at": 3.362
+    },
+    {
+     "w": "you\u2019re",
+     "at": 3.625
+    },
+    {
+     "w": "ready",
+     "at": 3.75
+    },
+    {
+     "w": "for",
+     "at": 4.025
+    },
+    {
+     "w": "the",
+     "at": 4.138
+    },
+    {
+     "w": "big",
+     "at": 4.225
+    },
+    {
+     "w": "save",
+     "at": 4.463
+    }
+   ]
+  }
+ ]
+}

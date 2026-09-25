@@ -1,0 +1,84 @@
+{
+ "lesson": "expf_thirdplayer",
+ "questions": [
+  {
+   "q": "The fixo is hiding. Tap where the fixo offers the pivot a separate exit.",
+   "options": [
+    "Next to the left ala who passed",
+    "Deep on the other diagonal",
+    "Up beside the pivot"
+   ],
+   "correct": 1,
+   "explain": "Yes. On a different diagonal from the passer, the fixo gives the pivot a free lay-off.",
+   "choiceExplanations": [
+    "The defender following the passer covers that space too. One defender stops both.",
+    "Yes. On a different diagonal from the passer, the fixo gives the pivot a free lay-off.",
+    "Up beside the pivot there is no pass back. The pivot needs an exit behind."
+   ],
+   "visual": {
+    "kind": "tapSpot",
+    "frame": {"step": 2, "hide": ["cb"], "focus": ["st", "lm", "dst"]},
+    "spots": [
+     {"x": 50, "y": 258},
+     {"x": 98, "y": 248},
+     {"x": 95, "y": 125}
+    ]
+   }
+  },
+  {
+   "q": "The pivot is marked from behind and the passer is followed. Which picture shows the escape?",
+   "options": [
+    "Pivot turns toward goal",
+    "Pivot passes back to the left ala",
+    "Pivot lays off to the fixo"
+   ],
+   "correct": 2,
+   "explain": "Right. The fixo is the third player, free on a different line from both defenders.",
+   "choiceExplanations": [
+    "The marker is right behind the pivot, so the turn gets stopped.",
+    "The defender following the left ala sits in that lane. The pass could be stolen.",
+    "Right. The fixo is the third player, free on a different line from both defenders."
+   ],
+   "visual": {
+    "kind": "pickPicture",
+    "pictures": [
+     {"step": 3, "ball": "st", "focus": ["st", "dcb"], "marks": [{"kind": "dribble", "from": "st", "to": {"x": 135, "y": 105}, "tone": "gold"}]},
+     {"step": 3, "ball": "st", "focus": ["st", "dst"], "marks": [{"kind": "pass", "from": "st", "to": "lm", "tone": "gold"}]},
+     {"step": 3, "ball": "st", "focus": ["st", "cb"], "marks": [{"kind": "pass", "from": "st", "to": "cb", "tone": "gold"}]}
+    ]
+   }
+  },
+  {
+   "q": "Now the right ala passed in and is followed. Which lay-off finds the third player?",
+   "options": [
+    "Back to the right ala",
+    "Lay off to the fixo",
+    "Long pass to the left ala"
+   ],
+   "correct": 1,
+   "explain": "Yes. The fixo is on a different line from the passer, so the lay-off is free.",
+   "choiceExplanations": [
+    "A defender followed the right ala and sits in that lane. The pass could be cut out.",
+    "Yes. The fixo is on a different line from the passer, so the lay-off is free.",
+    "A defender stands in that long lane. A pivot with a marker behind needs a short, safe pass."
+   ],
+   "visual": {
+    "kind": "bestPass",
+    "frame": {
+     "step": 3,
+     "place": {
+      "rm": {"x": 230, "y": 215},
+      "dst": {"x": 190, "y": 200},
+      "cb": {"x": 170, "y": 250},
+      "lm": {"x": 40, "y": 205},
+      "dlm": {"x": 75, "y": 178}
+     },
+     "ball": "st",
+     "focus": ["st", "rm", "dst"]
+    },
+    "from": "st",
+    "to": ["rm", "cb", "lm"]
+   }
+  }
+ ]
+}

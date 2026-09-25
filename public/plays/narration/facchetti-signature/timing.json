@@ -1,0 +1,386 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "San Siro, 1965. Inter lead Liverpool two-nil; one more goal sends them to the final. Look who is charging forward... the left-back, Giacinto Facchetti! He shoots... Goal!",
+   "src": "/plays/narration/facchetti-signature/1.m4a",
+   "seconds": 13.4,
+   "words": [
+    {
+     "w": "San",
+     "at": 0.4
+    },
+    {
+     "w": "Siro",
+     "at": 0.713
+    },
+    {
+     "w": "1965",
+     "at": 1.15
+    },
+    {
+     "w": "Inter",
+     "at": 2.8
+    },
+    {
+     "w": "lead",
+     "at": 3.05
+    },
+    {
+     "w": "Liverpool",
+     "at": 3.3
+    },
+    {
+     "w": "two-nil",
+     "at": 3.788
+    },
+    {
+     "w": "one",
+     "at": 4.438
+    },
+    {
+     "w": "more",
+     "at": 4.675
+    },
+    {
+     "w": "goal",
+     "at": 4.912
+    },
+    {
+     "w": "sends",
+     "at": 5.263
+    },
+    {
+     "w": "them",
+     "at": 5.6
+    },
+    {
+     "w": "to",
+     "at": 5.8
+    },
+    {
+     "w": "the",
+     "at": 5.888
+    },
+    {
+     "w": "final",
+     "at": 5.987
+    },
+    {
+     "w": "Look",
+     "at": 6.825
+    },
+    {
+     "w": "who",
+     "at": 7.037
+    },
+    {
+     "w": "is",
+     "at": 7.175
+    },
+    {
+     "w": "charging",
+     "at": 7.338
+    },
+    {
+     "w": "forward",
+     "at": 7.763
+    },
+    {
+     "w": "the",
+     "at": 8.675
+    },
+    {
+     "w": "left-back",
+     "at": 8.812
+    },
+    {
+     "w": "Giacinto",
+     "at": 9.45
+    },
+    {
+     "w": "Facchetti",
+     "at": 10.05
+    },
+    {
+     "w": "He",
+     "at": 10.725
+    },
+    {
+     "w": "shoots",
+     "at": 10.912
+    },
+    {
+     "w": "Goal",
+     "at": 11.938
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. A defender, sprinting up the pitch like an attacker. Back then, defenders hardly ever did that!",
+   "src": "/plays/narration/facchetti-signature/2.m4a",
+   "seconds": 8.7,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.2
+    },
+    {
+     "w": "A",
+     "at": 2.188
+    },
+    {
+     "w": "defender",
+     "at": 2.275
+    },
+    {
+     "w": "sprinting",
+     "at": 2.987
+    },
+    {
+     "w": "up",
+     "at": 3.413
+    },
+    {
+     "w": "the",
+     "at": 3.562
+    },
+    {
+     "w": "pitch",
+     "at": 3.663
+    },
+    {
+     "w": "like",
+     "at": 4.0
+    },
+    {
+     "w": "an",
+     "at": 4.162
+    },
+    {
+     "w": "attacker",
+     "at": 4.25
+    },
+    {
+     "w": "Back",
+     "at": 5.338
+    },
+    {
+     "w": "then",
+     "at": 5.625
+    },
+    {
+     "w": "defenders",
+     "at": 6.0
+    },
+    {
+     "w": "hardly",
+     "at": 6.562
+    },
+    {
+     "w": "ever",
+     "at": 6.95
+    },
+    {
+     "w": "did",
+     "at": 7.225
+    },
+    {
+     "w": "that",
+     "at": 7.4
+    }
+   ]
+  },
+  {
+   "label": "Behind the goal",
+   "text": "From behind the goal: the shot flies past the keeper, Tommy Lawrence. Inter were off to the final, and won the European Cup!",
+   "src": "/plays/narration/facchetti-signature/3.m4a",
+   "seconds": 8.5,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "behind",
+     "at": 0.487
+    },
+    {
+     "w": "the",
+     "at": 0.863
+    },
+    {
+     "w": "goal",
+     "at": 0.95
+    },
+    {
+     "w": "the",
+     "at": 1.7
+    },
+    {
+     "w": "shot",
+     "at": 1.837
+    },
+    {
+     "w": "flies",
+     "at": 2.138
+    },
+    {
+     "w": "past",
+     "at": 2.587
+    },
+    {
+     "w": "the",
+     "at": 2.938
+    },
+    {
+     "w": "keeper",
+     "at": 3.025
+    },
+    {
+     "w": "Tommy",
+     "at": 3.5
+    },
+    {
+     "w": "Lawrence",
+     "at": 3.85
+    },
+    {
+     "w": "Inter",
+     "at": 4.862
+    },
+    {
+     "w": "were",
+     "at": 5.213
+    },
+    {
+     "w": "off",
+     "at": 5.325
+    },
+    {
+     "w": "to",
+     "at": 5.55
+    },
+    {
+     "w": "the",
+     "at": 5.638
+    },
+    {
+     "w": "final",
+     "at": 5.737
+    },
+    {
+     "w": "and",
+     "at": 6.25
+    },
+    {
+     "w": "won",
+     "at": 6.375
+    },
+    {
+     "w": "the",
+     "at": 6.562
+    },
+    {
+     "w": "European",
+     "at": 6.65
+    },
+    {
+     "w": "Cup",
+     "at": 7.188
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: when your team attacks, the full-back runs forward too. That gives your team one more option!",
+   "src": "/plays/narration/facchetti-signature/4.m4a",
+   "seconds": 7.3,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "when",
+     "at": 1.275
+    },
+    {
+     "w": "your",
+     "at": 1.413
+    },
+    {
+     "w": "team",
+     "at": 1.525
+    },
+    {
+     "w": "attacks",
+     "at": 1.8
+    },
+    {
+     "w": "the",
+     "at": 2.388
+    },
+    {
+     "w": "full-back",
+     "at": 2.487
+    },
+    {
+     "w": "runs",
+     "at": 2.975
+    },
+    {
+     "w": "forward",
+     "at": 3.275
+    },
+    {
+     "w": "too",
+     "at": 3.688
+    },
+    {
+     "w": "That",
+     "at": 4.513
+    },
+    {
+     "w": "gives",
+     "at": 4.75
+    },
+    {
+     "w": "your",
+     "at": 4.963
+    },
+    {
+     "w": "team",
+     "at": 5.088
+    },
+    {
+     "w": "one",
+     "at": 5.4
+    },
+    {
+     "w": "more",
+     "at": 5.625
+    },
+    {
+     "w": "option",
+     "at": 5.85
+    }
+   ]
+  }
+ ]
+}

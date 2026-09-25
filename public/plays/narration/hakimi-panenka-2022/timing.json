@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Penalties, live",
+   "text": "Qatar, 2022. Morocco lead Spain in the shootout. One more goal, and Morocco reach their first World Cup quarter-final. Achraf Hakimi steps up. He barely runs... and chips it down the middle. Goal!",
+   "src": "/plays/narration/hakimi-panenka-2022/1.m4a",
+   "seconds": 14.9,
+   "words": [
+    {
+     "w": "Qatar",
+     "at": 0.35
+    },
+    {
+     "w": "2022",
+     "at": 0.825
+    },
+    {
+     "w": "Morocco",
+     "at": 2.237
+    },
+    {
+     "w": "lead",
+     "at": 2.775
+    },
+    {
+     "w": "Spain",
+     "at": 3.038
+    },
+    {
+     "w": "in",
+     "at": 3.438
+    },
+    {
+     "w": "the",
+     "at": 3.513
+    },
+    {
+     "w": "shootout",
+     "at": 3.625
+    },
+    {
+     "w": "One",
+     "at": 4.388
+    },
+    {
+     "w": "more",
+     "at": 4.625
+    },
+    {
+     "w": "goal",
+     "at": 4.85
+    },
+    {
+     "w": "and",
+     "at": 5.25
+    },
+    {
+     "w": "Morocco",
+     "at": 5.362
+    },
+    {
+     "w": "reach",
+     "at": 5.888
+    },
+    {
+     "w": "their",
+     "at": 6.15
+    },
+    {
+     "w": "first",
+     "at": 6.338
+    },
+    {
+     "w": "World",
+     "at": 6.7
+    },
+    {
+     "w": "Cup",
+     "at": 7.05
+    },
+    {
+     "w": "quarter-final",
+     "at": 7.3
+    },
+    {
+     "w": "Achraf",
+     "at": 8.5
+    },
+    {
+     "w": "Hakimi",
+     "at": 9.0
+    },
+    {
+     "w": "steps",
+     "at": 9.525
+    },
+    {
+     "w": "up",
+     "at": 9.85
+    },
+    {
+     "w": "He",
+     "at": 10.3
+    },
+    {
+     "w": "barely",
+     "at": 10.425
+    },
+    {
+     "w": "runs",
+     "at": 10.812
+    },
+    {
+     "w": "and",
+     "at": 11.675
+    },
+    {
+     "w": "chips",
+     "at": 11.825
+    },
+    {
+     "w": "it",
+     "at": 12.15
+    },
+    {
+     "w": "down",
+     "at": 12.275
+    },
+    {
+     "w": "the",
+     "at": 12.488
+    },
+    {
+     "w": "middle",
+     "at": 12.575
+    },
+    {
+     "w": "Goal",
+     "at": 13.425
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again, slowly. A short, calm run-up. The keeper dives, and the ball floats into the empty middle.",
+   "src": "/plays/narration/hakimi-panenka-2022/2.m4a",
+   "seconds": 7.9,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "slowly",
+     "at": 1.212
+    },
+    {
+     "w": "A",
+     "at": 2.212
+    },
+    {
+     "w": "short",
+     "at": 2.35
+    },
+    {
+     "w": "calm",
+     "at": 2.788
+    },
+    {
+     "w": "run-up",
+     "at": 3.1
+    },
+    {
+     "w": "The",
+     "at": 3.925
+    },
+    {
+     "w": "keeper",
+     "at": 4.025
+    },
+    {
+     "w": "dives",
+     "at": 4.4
+    },
+    {
+     "w": "and",
+     "at": 5.037
+    },
+    {
+     "w": "the",
+     "at": 5.138
+    },
+    {
+     "w": "ball",
+     "at": 5.225
+    },
+    {
+     "w": "floats",
+     "at": 5.562
+    },
+    {
+     "w": "into",
+     "at": 5.862
+    },
+    {
+     "w": "the",
+     "at": 6.037
+    },
+    {
+     "w": "empty",
+     "at": 6.175
+    },
+    {
+     "w": "middle",
+     "at": 6.525
+    }
+   ]
+  },
+  {
+   "label": "The penguin dance",
+   "text": "Hakimi does a funny penguin dance! His teammates sprint to join him, and the fans go wild.",
+   "src": "/plays/narration/hakimi-panenka-2022/3.m4a",
+   "seconds": 7.2,
+   "words": [
+    {
+     "w": "Hakimi",
+     "at": 0.375
+    },
+    {
+     "w": "does",
+     "at": 0.9
+    },
+    {
+     "w": "a",
+     "at": 1.062
+    },
+    {
+     "w": "funny",
+     "at": 1.175
+    },
+    {
+     "w": "penguin",
+     "at": 1.562
+    },
+    {
+     "w": "dance",
+     "at": 2.025
+    },
+    {
+     "w": "His",
+     "at": 2.925
+    },
+    {
+     "w": "teammates",
+     "at": 3.138
+    },
+    {
+     "w": "sprint",
+     "at": 3.712
+    },
+    {
+     "w": "to",
+     "at": 3.987
+    },
+    {
+     "w": "join",
+     "at": 4.1
+    },
+    {
+     "w": "him",
+     "at": 4.4
+    },
+    {
+     "w": "and",
+     "at": 4.95
+    },
+    {
+     "w": "the",
+     "at": 5.062
+    },
+    {
+     "w": "fans",
+     "at": 5.162
+    },
+    {
+     "w": "go",
+     "at": 5.6
+    },
+    {
+     "w": "wild",
+     "at": 5.775
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "The secret? Know your plan before you step up. Then breathe, trust it, and keep a calm mind under pressure.",
+   "src": "/plays/narration/hakimi-panenka-2022/4.m4a",
+   "seconds": 7.5,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "secret",
+     "at": 0.463
+    },
+    {
+     "w": "Know",
+     "at": 1.363
+    },
+    {
+     "w": "your",
+     "at": 1.6
+    },
+    {
+     "w": "plan",
+     "at": 1.725
+    },
+    {
+     "w": "before",
+     "at": 2.013
+    },
+    {
+     "w": "you",
+     "at": 2.275
+    },
+    {
+     "w": "step",
+     "at": 2.4
+    },
+    {
+     "w": "up",
+     "at": 2.65
+    },
+    {
+     "w": "Then",
+     "at": 3.288
+    },
+    {
+     "w": "breathe",
+     "at": 3.538
+    },
+    {
+     "w": "trust",
+     "at": 4.112
+    },
+    {
+     "w": "it",
+     "at": 4.5
+    },
+    {
+     "w": "and",
+     "at": 4.8
+    },
+    {
+     "w": "keep",
+     "at": 4.925
+    },
+    {
+     "w": "a",
+     "at": 5.112
+    },
+    {
+     "w": "calm",
+     "at": 5.213
+    },
+    {
+     "w": "mind",
+     "at": 5.55
+    },
+    {
+     "w": "under",
+     "at": 5.888
+    },
+    {
+     "w": "pressure",
+     "at": 6.075
+    }
+   ]
+  }
+ ]
+}

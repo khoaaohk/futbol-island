@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Turin, live",
+   "text": "Turin, Champions League. Juventus, in black, play Dortmund, in yellow. Kenan Y\u0131ld\u0131z gets the ball on the left edge of the box. He steadies himself, and bends it with his right foot. Far corner! Goal!",
+   "src": "/plays/narration/yildiz-signature/1.m4a",
+   "seconds": 14.2,
+   "words": [
+    {
+     "w": "Turin",
+     "at": 0.35
+    },
+    {
+     "w": "Champions",
+     "at": 0.838
+    },
+    {
+     "w": "League",
+     "at": 1.45
+    },
+    {
+     "w": "Juventus",
+     "at": 2.188
+    },
+    {
+     "w": "in",
+     "at": 2.925
+    },
+    {
+     "w": "black",
+     "at": 3.087
+    },
+    {
+     "w": "play",
+     "at": 3.562
+    },
+    {
+     "w": "Dortmund",
+     "at": 3.938
+    },
+    {
+     "w": "in",
+     "at": 4.425
+    },
+    {
+     "w": "yellow",
+     "at": 4.55
+    },
+    {
+     "w": "Kenan",
+     "at": 5.463
+    },
+    {
+     "w": "Y\u0131ld\u0131z",
+     "at": 5.875
+    },
+    {
+     "w": "gets",
+     "at": 6.3
+    },
+    {
+     "w": "the",
+     "at": 6.55
+    },
+    {
+     "w": "ball",
+     "at": 6.65
+    },
+    {
+     "w": "on",
+     "at": 6.987
+    },
+    {
+     "w": "the",
+     "at": 7.088
+    },
+    {
+     "w": "left",
+     "at": 7.175
+    },
+    {
+     "w": "edge",
+     "at": 7.45
+    },
+    {
+     "w": "of",
+     "at": 7.688
+    },
+    {
+     "w": "the",
+     "at": 7.763
+    },
+    {
+     "w": "box",
+     "at": 7.85
+    },
+    {
+     "w": "He",
+     "at": 8.7
+    },
+    {
+     "w": "steadies",
+     "at": 8.85
+    },
+    {
+     "w": "himself",
+     "at": 9.238
+    },
+    {
+     "w": "and",
+     "at": 9.775
+    },
+    {
+     "w": "bends",
+     "at": 9.912
+    },
+    {
+     "w": "it",
+     "at": 10.25
+    },
+    {
+     "w": "with",
+     "at": 10.363
+    },
+    {
+     "w": "his",
+     "at": 10.463
+    },
+    {
+     "w": "right",
+     "at": 10.625
+    },
+    {
+     "w": "foot",
+     "at": 10.938
+    },
+    {
+     "w": "Far",
+     "at": 11.7
+    },
+    {
+     "w": "corner",
+     "at": 12.012
+    },
+    {
+     "w": "Goal",
+     "at": 12.762
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. His right foot wraps around the ball. It starts wide of the far post, then bends back in.",
+   "src": "/plays/narration/yildiz-signature/2.m4a",
+   "seconds": 8.1,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.163
+    },
+    {
+     "w": "His",
+     "at": 2.125
+    },
+    {
+     "w": "right",
+     "at": 2.325
+    },
+    {
+     "w": "foot",
+     "at": 2.638
+    },
+    {
+     "w": "wraps",
+     "at": 2.925
+    },
+    {
+     "w": "around",
+     "at": 3.25
+    },
+    {
+     "w": "the",
+     "at": 3.513
+    },
+    {
+     "w": "ball",
+     "at": 3.6
+    },
+    {
+     "w": "It",
+     "at": 4.325
+    },
+    {
+     "w": "starts",
+     "at": 4.475
+    },
+    {
+     "w": "wide",
+     "at": 4.825
+    },
+    {
+     "w": "of",
+     "at": 5.088
+    },
+    {
+     "w": "the",
+     "at": 5.162
+    },
+    {
+     "w": "far",
+     "at": 5.263
+    },
+    {
+     "w": "post",
+     "at": 5.537
+    },
+    {
+     "w": "then",
+     "at": 6.013
+    },
+    {
+     "w": "bends",
+     "at": 6.2
+    },
+    {
+     "w": "back",
+     "at": 6.55
+    },
+    {
+     "w": "in",
+     "at": 6.825
+    }
+   ]
+  },
+  {
+   "label": "Behind the goal",
+   "text": "From behind the goal: past the keeper, top corner! The fans roar!",
+   "src": "/plays/narration/yildiz-signature/3.m4a",
+   "seconds": 5.2,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.375
+    },
+    {
+     "w": "behind",
+     "at": 0.512
+    },
+    {
+     "w": "the",
+     "at": 0.887
+    },
+    {
+     "w": "goal",
+     "at": 0.975
+    },
+    {
+     "w": "past",
+     "at": 1.55
+    },
+    {
+     "w": "the",
+     "at": 1.837
+    },
+    {
+     "w": "keeper",
+     "at": 1.925
+    },
+    {
+     "w": "top",
+     "at": 2.3
+    },
+    {
+     "w": "corner",
+     "at": 2.575
+    },
+    {
+     "w": "The",
+     "at": 3.2
+    },
+    {
+     "w": "fans",
+     "at": 3.337
+    },
+    {
+     "w": "roar",
+     "at": 3.763
+    }
+   ]
+  },
+  {
+   "label": "How he does it",
+   "text": "How he does it: run at your defender. Your turn: face your defender, fake one way, and cut inside to shoot.",
+   "src": "/plays/narration/yildiz-signature/4.m4a",
+   "seconds": 8.0,
+   "words": [
+    {
+     "w": "How",
+     "at": 0.375
+    },
+    {
+     "w": "he",
+     "at": 0.525
+    },
+    {
+     "w": "does",
+     "at": 0.625
+    },
+    {
+     "w": "it",
+     "at": 0.863
+    },
+    {
+     "w": "run",
+     "at": 1.262
+    },
+    {
+     "w": "at",
+     "at": 1.525
+    },
+    {
+     "w": "your",
+     "at": 1.625
+    },
+    {
+     "w": "defender",
+     "at": 1.75
+    },
+    {
+     "w": "Your",
+     "at": 2.812
+    },
+    {
+     "w": "turn",
+     "at": 3.013
+    },
+    {
+     "w": "face",
+     "at": 3.788
+    },
+    {
+     "w": "your",
+     "at": 4.088
+    },
+    {
+     "w": "defender",
+     "at": 4.188
+    },
+    {
+     "w": "fake",
+     "at": 4.812
+    },
+    {
+     "w": "one",
+     "at": 5.075
+    },
+    {
+     "w": "way",
+     "at": 5.3
+    },
+    {
+     "w": "and",
+     "at": 5.65
+    },
+    {
+     "w": "cut",
+     "at": 5.787
+    },
+    {
+     "w": "inside",
+     "at": 6.025
+    },
+    {
+     "w": "to",
+     "at": 6.475
+    },
+    {
+     "w": "shoot",
+     "at": 6.625
+    }
+   ]
+  }
+ ]
+}

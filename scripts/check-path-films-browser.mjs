@@ -13,10 +13,10 @@ const only=arg('--only','').split(',').filter(Boolean);
 const out=arg('--out','/private/tmp/claude-501/-Users-khoado-Desktop-Warp-Claude-Projects/a94b3f51-4163-4951-814b-79d6d6d74e9a/scratchpad/riso/sweep');mkdirSync(out,{recursive:true});
 // [format tab, [story id, button title (aria-label "Story: <title>"), track mode]]
 const groups=[
- ['Futsal',[['futsl','Smaller court. Bigger game.',true],['chalk-line','The Chalk Line'],['woven-court','The Woven Court'],['kite-turned','The Kite That Turned']]],
- ['7v7',[['regulate','When the game feels unfair.',true],['place-picture','A Place in the Picture'],['pocket-radio','The Pocket Radio'],['signal-water','The Signal Across the Water'],['empathy','Emotional Intelligence']]],
- ['9v9',[['grit','Not yet is a starting point.',true],['different-tides','Different Tides'],['harbour-night','The Harbour at Night'],['unfinished-map','The Unfinished Map']]],
- ['11v11',[['reset','Mental Toughness'],['quiet-lantern','The Quiet Lantern'],['boat-weather','The Boat and the Weather'],['more-shirt','More Than a Shirt'],['loss','After the Final Whistle']]]];
+ ['Futsal',[['futsl','Smaller court. Bigger game.',true],['chalk-line','The Chalk Line'],['woven-court','The Woven Court'],['kite-turned','The Kite That Turned'],['room-to-invent','Room to Invent']]],
+ ['7v7',[['regulate','When the game feels unfair.',true],['place-picture','A Place in the Picture'],['loud-track','The Loud Track'],['signal-water','The Signal Across the Water'],['house-player','The House You Build'],['empathy','Emotional Intelligence']]],
+ ['9v9',[['grit','Not yet is a starting point.',true],['different-tides','Different Tides'],['harbour-night','The Harbour at Night'],['unfinished-map','The Unfinished Map'],['pick-a-purpose','Pick a Purpose']]],
+ ['11v11',[['reset','Mental Toughness'],['quiet-lantern','The Quiet Lantern'],['boat-weather','The Boat and the Weather'],['more-shirt','More Than a Shirt'],['windshield','The Windshield'],['loss','After the Final Whistle']]]];
 const sizes=process.argv.includes('--compact-mobile')?[[320,568],[390,667],[844,390]]:[[390,850],[1440,850]];
 const browser=await chromium.launch({headless:true,executablePath:'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'});
 let checked=0;
@@ -34,6 +34,7 @@ try{for(const [width,height] of sizes){
    const tray=film.getByRole('region',{name:'Story playback and captions'});const box=await tray.boundingBox();
    assert.ok(box&&box.x>=0&&box.y>=0&&box.x+box.width<=width+.5&&box.y+box.height<=height+.5,`${id}: tray fits ${width}x${height}: ${JSON.stringify(box)}`);
    await film.getByRole('button',{name:'Pause',exact:true}).waitFor({timeout:15000});await page.waitForTimeout(600);
+   if(width<1000){const caption=await film.locator('[data-caption-paged]').evaluate(n=>({height:n.getBoundingClientRect().height,line:parseFloat(getComputedStyle(n).lineHeight),paged:n.dataset.captionPaged}));assert.equal(caption.paged,'true');assert(caption.height<=caption.line*2+1,`${id}: mobile captions fit two lines`);}
    const canvas=film.locator('canvas');const first=Number(await canvas.getAttribute('data-draws'));await page.waitForTimeout(400);assert.ok(Number(await canvas.getAttribute('data-draws'))>first,`${id}: canvas draws while playing`);
    assert.equal(await canvas.getAttribute('data-riso-error'),null,`${id}: story draw raised no error`);
    const paperish=await canvas.evaluate(c=>{const g=c.getContext('2d');const d=g.getImageData(0,0,c.width,c.height).data;let cream=0,n=0;for(let i=0;i<d.length;i+=64){n++;if(d[i]>200&&d[i+1]>195&&d[i+2]>170)cream++;}return cream/n;});

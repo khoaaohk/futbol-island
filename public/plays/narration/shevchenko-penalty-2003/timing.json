@@ -1,0 +1,366 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Penalties, live",
+   "text": "Manchester, 2003. The Champions League final, and it's penalties. Score this, and Milan win. Andriy Shevchenko sets the ball down, calm. Buffon waits. A short run... Buffon goes one way, the ball rolls the other. Champions!",
+   "src": "/plays/narration/shevchenko-penalty-2003/1.m4a",
+   "seconds": 17.1,
+   "words": [
+    {
+     "w": "Manchester",
+     "at": 0.425
+    },
+    {
+     "w": "2003",
+     "at": 1.05
+    },
+    {
+     "w": "The",
+     "at": 2.462
+    },
+    {
+     "w": "Champions",
+     "at": 2.587
+    },
+    {
+     "w": "League",
+     "at": 3.212
+    },
+    {
+     "w": "final",
+     "at": 3.513
+    },
+    {
+     "w": "and",
+     "at": 4.025
+    },
+    {
+     "w": "it's",
+     "at": 4.138
+    },
+    {
+     "w": "penalties",
+     "at": 4.3
+    },
+    {
+     "w": "Score",
+     "at": 5.275
+    },
+    {
+     "w": "this",
+     "at": 5.65
+    },
+    {
+     "w": "and",
+     "at": 5.975
+    },
+    {
+     "w": "Milan",
+     "at": 6.1
+    },
+    {
+     "w": "win",
+     "at": 6.562
+    },
+    {
+     "w": "Andriy",
+     "at": 7.338
+    },
+    {
+     "w": "Shevchenko",
+     "at": 7.737
+    },
+    {
+     "w": "sets",
+     "at": 8.412
+    },
+    {
+     "w": "the",
+     "at": 8.688
+    },
+    {
+     "w": "ball",
+     "at": 8.775
+    },
+    {
+     "w": "down",
+     "at": 9.05
+    },
+    {
+     "w": "calm",
+     "at": 9.425
+    },
+    {
+     "w": "Buffon",
+     "at": 9.938
+    },
+    {
+     "w": "waits",
+     "at": 10.425
+    },
+    {
+     "w": "A",
+     "at": 11.137
+    },
+    {
+     "w": "short",
+     "at": 11.275
+    },
+    {
+     "w": "run",
+     "at": 11.6
+    },
+    {
+     "w": "Buffon",
+     "at": 12.475
+    },
+    {
+     "w": "goes",
+     "at": 12.975
+    },
+    {
+     "w": "one",
+     "at": 13.262
+    },
+    {
+     "w": "way",
+     "at": 13.5
+    },
+    {
+     "w": "the",
+     "at": 13.812
+    },
+    {
+     "w": "ball",
+     "at": 13.9
+    },
+    {
+     "w": "rolls",
+     "at": 14.2
+    },
+    {
+     "w": "the",
+     "at": 14.537
+    },
+    {
+     "w": "other",
+     "at": 14.675
+    },
+    {
+     "w": "Champions",
+     "at": 15.4
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Again, slowly. No rush. He picked his spot and sticks to it. Buffon dives, and the ball goes the other way.",
+   "src": "/plays/narration/shevchenko-penalty-2003/2.m4a",
+   "seconds": 8.2,
+   "words": [
+    {
+     "w": "Again",
+     "at": 0.375
+    },
+    {
+     "w": "slowly",
+     "at": 0.812
+    },
+    {
+     "w": "No",
+     "at": 1.562
+    },
+    {
+     "w": "rush",
+     "at": 1.8
+    },
+    {
+     "w": "He",
+     "at": 2.575
+    },
+    {
+     "w": "picked",
+     "at": 2.7
+    },
+    {
+     "w": "his",
+     "at": 2.913
+    },
+    {
+     "w": "spot",
+     "at": 3.025
+    },
+    {
+     "w": "and",
+     "at": 3.362
+    },
+    {
+     "w": "sticks",
+     "at": 3.475
+    },
+    {
+     "w": "to",
+     "at": 3.8
+    },
+    {
+     "w": "it",
+     "at": 3.962
+    },
+    {
+     "w": "Buffon",
+     "at": 4.513
+    },
+    {
+     "w": "dives",
+     "at": 5.0
+    },
+    {
+     "w": "and",
+     "at": 5.588
+    },
+    {
+     "w": "the",
+     "at": 5.688
+    },
+    {
+     "w": "ball",
+     "at": 5.775
+    },
+    {
+     "w": "goes",
+     "at": 6.1
+    },
+    {
+     "w": "the",
+     "at": 6.362
+    },
+    {
+     "w": "other",
+     "at": 6.5
+    },
+    {
+     "w": "way",
+     "at": 6.8
+    }
+   ]
+  },
+  {
+   "label": "From behind the goal",
+   "text": "From behind: it rolls in. Shevchenko wheels away, and his team-mates chase him!",
+   "src": "/plays/narration/shevchenko-penalty-2003/3.m4a",
+   "seconds": 6.3,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "behind",
+     "at": 0.487
+    },
+    {
+     "w": "it",
+     "at": 1.288
+    },
+    {
+     "w": "rolls",
+     "at": 1.425
+    },
+    {
+     "w": "in",
+     "at": 1.775
+    },
+    {
+     "w": "Shevchenko",
+     "at": 2.575
+    },
+    {
+     "w": "wheels",
+     "at": 3.15
+    },
+    {
+     "w": "away",
+     "at": 3.475
+    },
+    {
+     "w": "and",
+     "at": 3.938
+    },
+    {
+     "w": "his",
+     "at": 4.037
+    },
+    {
+     "w": "team-mates",
+     "at": 4.213
+    },
+    {
+     "w": "chase",
+     "at": 4.775
+    },
+    {
+     "w": "him",
+     "at": 5.062
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "The secret? Keep a calm routine. Pick your spot, and trust it.",
+   "src": "/plays/narration/shevchenko-penalty-2003/4.m4a",
+   "seconds": 4.8,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "secret",
+     "at": 0.463
+    },
+    {
+     "w": "Keep",
+     "at": 1.175
+    },
+    {
+     "w": "a",
+     "at": 1.337
+    },
+    {
+     "w": "calm",
+     "at": 1.4
+    },
+    {
+     "w": "routine",
+     "at": 1.7
+    },
+    {
+     "w": "Pick",
+     "at": 2.525
+    },
+    {
+     "w": "your",
+     "at": 2.688
+    },
+    {
+     "w": "spot",
+     "at": 2.812
+    },
+    {
+     "w": "and",
+     "at": 3.212
+    },
+    {
+     "w": "trust",
+     "at": 3.325
+    },
+    {
+     "w": "it",
+     "at": 3.675
+    }
+   ]
+  }
+ ]
+}

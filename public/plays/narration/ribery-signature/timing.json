@@ -1,0 +1,382 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Wembley, live",
+   "text": "Wembley, 2013, the Champions League final: Bayern in red, Dortmund in yellow, no goals after an hour. Franck Rib\u00e9ry runs at the defenders on the left, clips a pass... and Mand\u017euki\u0107 scores!",
+   "src": "/plays/narration/ribery-signature/1.m4a",
+   "seconds": 14.5,
+   "words": [
+    {
+     "w": "Wembley",
+     "at": 0.4
+    },
+    {
+     "w": "2013",
+     "at": 0.925
+    },
+    {
+     "w": "the",
+     "at": 1.975
+    },
+    {
+     "w": "Champions",
+     "at": 2.087
+    },
+    {
+     "w": "League",
+     "at": 2.675
+    },
+    {
+     "w": "final",
+     "at": 2.938
+    },
+    {
+     "w": "Bayern",
+     "at": 3.763
+    },
+    {
+     "w": "in",
+     "at": 4.175
+    },
+    {
+     "w": "red",
+     "at": 4.338
+    },
+    {
+     "w": "Dortmund",
+     "at": 4.862
+    },
+    {
+     "w": "in",
+     "at": 5.325
+    },
+    {
+     "w": "yellow",
+     "at": 5.475
+    },
+    {
+     "w": "no",
+     "at": 6.037
+    },
+    {
+     "w": "goals",
+     "at": 6.3
+    },
+    {
+     "w": "after",
+     "at": 6.65
+    },
+    {
+     "w": "an",
+     "at": 6.938
+    },
+    {
+     "w": "hour",
+     "at": 7.025
+    },
+    {
+     "w": "Franck",
+     "at": 8.075
+    },
+    {
+     "w": "Rib\u00e9ry",
+     "at": 8.45
+    },
+    {
+     "w": "runs",
+     "at": 8.988
+    },
+    {
+     "w": "at",
+     "at": 9.338
+    },
+    {
+     "w": "the",
+     "at": 9.412
+    },
+    {
+     "w": "defenders",
+     "at": 9.5
+    },
+    {
+     "w": "on",
+     "at": 10.037
+    },
+    {
+     "w": "the",
+     "at": 10.137
+    },
+    {
+     "w": "left",
+     "at": 10.225
+    },
+    {
+     "w": "clips",
+     "at": 10.762
+    },
+    {
+     "w": "a",
+     "at": 11.062
+    },
+    {
+     "w": "pass",
+     "at": 11.137
+    },
+    {
+     "w": "and",
+     "at": 12.1
+    },
+    {
+     "w": "Mand\u017euki\u0107",
+     "at": 12.225
+    },
+    {
+     "w": "scores",
+     "at": 12.912
+    }
+   ]
+  },
+  {
+   "label": "Which way?",
+   "text": "Watch again, slowly. Two defenders must guess which way he goes. He changes direction quickly, and clips it over them to Robben.",
+   "src": "/plays/narration/ribery-signature/2.m4a",
+   "seconds": 9.2,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.275
+    },
+    {
+     "w": "Two",
+     "at": 2.263
+    },
+    {
+     "w": "defenders",
+     "at": 2.475
+    },
+    {
+     "w": "must",
+     "at": 3.075
+    },
+    {
+     "w": "guess",
+     "at": 3.35
+    },
+    {
+     "w": "which",
+     "at": 3.675
+    },
+    {
+     "w": "way",
+     "at": 3.875
+    },
+    {
+     "w": "he",
+     "at": 4.088
+    },
+    {
+     "w": "goes",
+     "at": 4.2
+    },
+    {
+     "w": "He",
+     "at": 5.1
+    },
+    {
+     "w": "changes",
+     "at": 5.237
+    },
+    {
+     "w": "direction",
+     "at": 5.65
+    },
+    {
+     "w": "quickly",
+     "at": 6.15
+    },
+    {
+     "w": "and",
+     "at": 6.75
+    },
+    {
+     "w": "clips",
+     "at": 6.888
+    },
+    {
+     "w": "it",
+     "at": 7.162
+    },
+    {
+     "w": "over",
+     "at": 7.237
+    },
+    {
+     "w": "them",
+     "at": 7.438
+    },
+    {
+     "w": "to",
+     "at": 7.625
+    },
+    {
+     "w": "Robben",
+     "at": 7.75
+    }
+   ]
+  },
+  {
+   "label": "Across the goal",
+   "text": "Robben runs in behind. Keeper Weidenfeller rushes out, Robben goes round him and squares it. Mand\u017euki\u0107 taps in!",
+   "src": "/plays/narration/ribery-signature/3.m4a",
+   "seconds": 8.8,
+   "words": [
+    {
+     "w": "Robben",
+     "at": 0.4
+    },
+    {
+     "w": "runs",
+     "at": 0.75
+    },
+    {
+     "w": "in",
+     "at": 1.05
+    },
+    {
+     "w": "behind",
+     "at": 1.2
+    },
+    {
+     "w": "Keeper",
+     "at": 2.212
+    },
+    {
+     "w": "Weidenfeller",
+     "at": 2.575
+    },
+    {
+     "w": "rushes",
+     "at": 3.275
+    },
+    {
+     "w": "out",
+     "at": 3.65
+    },
+    {
+     "w": "Robben",
+     "at": 4.15
+    },
+    {
+     "w": "goes",
+     "at": 4.525
+    },
+    {
+     "w": "round",
+     "at": 4.775
+    },
+    {
+     "w": "him",
+     "at": 5.037
+    },
+    {
+     "w": "and",
+     "at": 5.213
+    },
+    {
+     "w": "squares",
+     "at": 5.338
+    },
+    {
+     "w": "it",
+     "at": 5.812
+    },
+    {
+     "w": "Mand\u017euki\u0107",
+     "at": 6.412
+    },
+    {
+     "w": "taps",
+     "at": 7.112
+    },
+    {
+     "w": "in",
+     "at": 7.475
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: run at your defender, change direction quickly, and leave them off balance.",
+   "src": "/plays/narration/ribery-signature/4.m4a",
+   "seconds": 6.1,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "run",
+     "at": 1.387
+    },
+    {
+     "w": "at",
+     "at": 1.613
+    },
+    {
+     "w": "your",
+     "at": 1.688
+    },
+    {
+     "w": "defender",
+     "at": 1.788
+    },
+    {
+     "w": "change",
+     "at": 2.462
+    },
+    {
+     "w": "direction",
+     "at": 2.825
+    },
+    {
+     "w": "quickly",
+     "at": 3.3
+    },
+    {
+     "w": "and",
+     "at": 3.925
+    },
+    {
+     "w": "leave",
+     "at": 4.05
+    },
+    {
+     "w": "them",
+     "at": 4.312
+    },
+    {
+     "w": "off",
+     "at": 4.45
+    },
+    {
+     "w": "balance",
+     "at": 4.65
+    }
+   ]
+  }
+ ]
+}

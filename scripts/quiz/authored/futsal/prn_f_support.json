@@ -1,0 +1,21 @@
+{"lesson":"prn_f_support","questions":[
+{"q":"True or false? When the wide pass is covered, keep trying that same pass.",
+ "options":["True","False"],"correct":1,
+ "explain":"Right, it's false: we use the other side instead of forcing the covered pass.",
+ "choiceExplanations":["The defender now sits in that lane, so forcing the old pass gets it stolen.","Right, it's false: we use the other side instead of forcing the covered pass."],
+ "visual":{"kind":"trueFalse","frame":{"step":6,"focus":["lm","dst"],"marks":[{"kind":"pass","from":"cb","to":"lm","tone":"bad"}]}}},
+{"q":"A defender blocks the pass to the left ala. Which picture opens a lane?",
+ "options":["Left ala moves inside","Left ala stays still","Left ala moves wider"],"correct":2,
+ "explain":"Yes. Moving wider changes the angle, so the lane around the defender opens.",
+ "choiceExplanations":["Moving inside keeps the defender in the lane, so the pass is still blocked.","Standing still leaves the defender between the ball and you, so the pass is blocked.","Yes. Moving wider changes the angle, so the lane around the defender opens."],
+ "visual":{"kind":"pickPicture","pictures":[
+  {"step":1,"place":{"lm":{"x":100,"y":235}},"focus":["lm","dst"],"marks":[{"kind":"pass","from":"cb","to":"lm","tone":"neutral"}]},
+  {"step":1,"focus":["lm","dst"],"marks":[{"kind":"pass","from":"cb","to":"lm","tone":"neutral"}]},
+  {"step":1,"place":{"lm":{"x":34,"y":246}},"focus":["lm","dst"],"marks":[{"kind":"pass","from":"cb","to":"lm","tone":"neutral"}]}]}},
+{"q":"Now the defender blocks the right ala, and their ala steps inside. Which pass is open?",
+ "options":["Pass to the left ala out wide","Pass to the right ala","Pass to the pivot up the middle"],"correct":0,
+ "explain":"Yes. The left ala is wide, so that lane is open and away from the defender.",
+ "choiceExplanations":["Yes. The left ala is wide, so that lane is open and away from the defender.","The defender stands in that lane now, so the pass to the right ala could be cut out.","Their ala has stepped into the middle lane, so the pass to the pivot is covered."],
+ "visual":{"kind":"bestPass","frame":{"step":2,"place":{"dst":{"x":180,"y":277},"dlm":{"x":130,"y":210}},"ball":"cb","focus":["dst","lm"]},
+  "from":"cb","to":["lm","rm","st"]}}
+]}

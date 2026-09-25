@@ -1,0 +1,358 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Burnley versus Chelsea, 2019. Christian Pulisic steals the ball and runs straight at the defence. Tarkowski steps up. Pulisic darts past, into the box... goal!",
+   "src": "/plays/narration/pulisic-signature/1.m4a",
+   "seconds": 12.5,
+   "words": [
+    {
+     "w": "Burnley",
+     "at": 0.4
+    },
+    {
+     "w": "versus",
+     "at": 0.8
+    },
+    {
+     "w": "Chelsea",
+     "at": 1.212
+    },
+    {
+     "w": "2019",
+     "at": 1.825
+    },
+    {
+     "w": "Christian",
+     "at": 3.112
+    },
+    {
+     "w": "Pulisic",
+     "at": 3.55
+    },
+    {
+     "w": "steals",
+     "at": 4.037
+    },
+    {
+     "w": "the",
+     "at": 4.425
+    },
+    {
+     "w": "ball",
+     "at": 4.55
+    },
+    {
+     "w": "and",
+     "at": 4.925
+    },
+    {
+     "w": "runs",
+     "at": 5.05
+    },
+    {
+     "w": "straight",
+     "at": 5.412
+    },
+    {
+     "w": "at",
+     "at": 5.763
+    },
+    {
+     "w": "the",
+     "at": 5.838
+    },
+    {
+     "w": "defence",
+     "at": 5.925
+    },
+    {
+     "w": "Tarkowski",
+     "at": 6.888
+    },
+    {
+     "w": "steps",
+     "at": 7.562
+    },
+    {
+     "w": "up",
+     "at": 7.925
+    },
+    {
+     "w": "Pulisic",
+     "at": 8.537
+    },
+    {
+     "w": "darts",
+     "at": 9.0
+    },
+    {
+     "w": "past",
+     "at": 9.363
+    },
+    {
+     "w": "into",
+     "at": 9.887
+    },
+    {
+     "w": "the",
+     "at": 10.062
+    },
+    {
+     "w": "box",
+     "at": 10.15
+    },
+    {
+     "w": "goal",
+     "at": 11.088
+    }
+   ]
+  },
+  {
+   "label": "Slow motion",
+   "text": "Slow motion: he attacks Tarkowski head on. The defender has to decide, so he pushes him wide. Pulisic reacts and darts past.",
+   "src": "/plays/narration/pulisic-signature/2.m4a",
+   "seconds": 9.8,
+   "words": [
+    {
+     "w": "Slow",
+     "at": 0.4
+    },
+    {
+     "w": "motion",
+     "at": 0.65
+    },
+    {
+     "w": "he",
+     "at": 1.425
+    },
+    {
+     "w": "attacks",
+     "at": 1.575
+    },
+    {
+     "w": "Tarkowski",
+     "at": 2.025
+    },
+    {
+     "w": "head",
+     "at": 2.675
+    },
+    {
+     "w": "on",
+     "at": 2.875
+    },
+    {
+     "w": "The",
+     "at": 3.55
+    },
+    {
+     "w": "defender",
+     "at": 3.65
+    },
+    {
+     "w": "has",
+     "at": 4.15
+    },
+    {
+     "w": "to",
+     "at": 4.4
+    },
+    {
+     "w": "decide",
+     "at": 4.5
+    },
+    {
+     "w": "so",
+     "at": 5.125
+    },
+    {
+     "w": "he",
+     "at": 5.263
+    },
+    {
+     "w": "pushes",
+     "at": 5.375
+    },
+    {
+     "w": "him",
+     "at": 5.737
+    },
+    {
+     "w": "wide",
+     "at": 5.9
+    },
+    {
+     "w": "Pulisic",
+     "at": 6.838
+    },
+    {
+     "w": "reacts",
+     "at": 7.3
+    },
+    {
+     "w": "and",
+     "at": 7.85
+    },
+    {
+     "w": "darts",
+     "at": 7.975
+    },
+    {
+     "w": "past",
+     "at": 8.363
+    }
+   ]
+  },
+  {
+   "label": "The finish",
+   "text": "Then a low shot with his left foot, across goal, through Ben Mee's legs, past Nick Pope!",
+   "src": "/plays/narration/pulisic-signature/3.m4a",
+   "seconds": 6.5,
+   "words": [
+    {
+     "w": "Then",
+     "at": 0.375
+    },
+    {
+     "w": "a",
+     "at": 0.487
+    },
+    {
+     "w": "low",
+     "at": 0.575
+    },
+    {
+     "w": "shot",
+     "at": 0.85
+    },
+    {
+     "w": "with",
+     "at": 1.137
+    },
+    {
+     "w": "his",
+     "at": 1.238
+    },
+    {
+     "w": "left",
+     "at": 1.4
+    },
+    {
+     "w": "foot",
+     "at": 1.688
+    },
+    {
+     "w": "across",
+     "at": 2.275
+    },
+    {
+     "w": "goal",
+     "at": 2.7
+    },
+    {
+     "w": "through",
+     "at": 3.35
+    },
+    {
+     "w": "Ben",
+     "at": 3.55
+    },
+    {
+     "w": "Mee's",
+     "at": 3.8
+    },
+    {
+     "w": "legs",
+     "at": 4.05
+    },
+    {
+     "w": "past",
+     "at": 4.612
+    },
+    {
+     "w": "Nick",
+     "at": 5.013
+    },
+    {
+     "w": "Pope",
+     "at": 5.225
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: run straight at defenders. They have to decide, then you react and go past.",
+   "src": "/plays/narration/pulisic-signature/4.m4a",
+   "seconds": 6.3,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "run",
+     "at": 1.137
+    },
+    {
+     "w": "straight",
+     "at": 1.413
+    },
+    {
+     "w": "at",
+     "at": 1.712
+    },
+    {
+     "w": "defenders",
+     "at": 1.788
+    },
+    {
+     "w": "They",
+     "at": 2.8
+    },
+    {
+     "w": "have",
+     "at": 2.925
+    },
+    {
+     "w": "to",
+     "at": 3.125
+    },
+    {
+     "w": "decide",
+     "at": 3.212
+    },
+    {
+     "w": "then",
+     "at": 3.788
+    },
+    {
+     "w": "you",
+     "at": 3.925
+    },
+    {
+     "w": "react",
+     "at": 4.05
+    },
+    {
+     "w": "and",
+     "at": 4.513
+    },
+    {
+     "w": "go",
+     "at": 4.625
+    },
+    {
+     "w": "past",
+     "at": 4.812
+    }
+   ]
+  }
+ ]
+}

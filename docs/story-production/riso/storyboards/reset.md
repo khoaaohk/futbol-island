@@ -329,3 +329,96 @@ Muted, ch1 shows a branch tip flick a leaf-ball toward a blue cup, a purple band
 **Gates.** typecheck: reset.ts clean (an unrelated error in `unfinished-map.ts` belongs to another agent's in-progress edit) · `review-riso-story --id reset`: 5 seams 0 px, 0 errors · `riso-perf`: median 4.2 ms, p95 17.3, ops median 74 · `check-riso-reset.mjs`: PASS ×4 viewports (screenshots `scratchpad/riso/fix/reset/app/*.jpg`).
 
 **Remaining limitations.** The streamline bend is moderate (k 100–130 u) so the construction still shares "stacked bands" DNA with kite-turned at a glance; the ch4 opponent stays the purple blob in the upper band (nameable as "a purple blob hiding", not a person).
+
+---
+
+## Rework (2026-09-21) — one world: a young tree beside the pitch
+
+**Why.** Art director's diagnosis of the 2026-09-20 build: the "branch" was a bare stick that the figure seemed to hold like a pole (nobody says "tree"); the ball was a hexagon-net disc; the purple wind bands swallowed every frame and the wind's force never bent anything visibly; "bends under pressure, then finds balance" and the reset word never became pictures; ch3's giant leaf and ch5's purple blob were unreadable. `spec`, `audio`, chapter text / audio / seconds / cues and `figure()` are kept; every scene and lead object is rebuilt.
+
+**World (side view, world units, camera target ≈ (0, 0..40), core ±400 × ±300 so desktop 1440×850 — the tightest crop, ±396 × ±312 at zoom 1 — keeps every important form).** Wind blows left → right for the whole story.
+
+| Element | Construction | Position |
+|---|---|---|
+| Sky | cream paper with a faint yellow screen (`field(Y,.1)`); two soft purple halftone bands high up (cov .18 / .12, torn edges, drifting 20 / 14 u/s) | bands at y −560 and −400 |
+| Pitch | torn horizon at **y = +230**; ground = yellow .75 × blue .45 = green, a navy .1 mowing stripe, paper touchline (knockout ribbon) at y +276 and a paper box corner | y > 230 |
+| Tree | navy root flare, navy trunk (spine bent about the root, hand-cut edge, paper highlight strip), two branch ribbons, a solid green under-crown (yellow blob × blue tone), 14 overlapping cut-paper leaves (yellow knocked out then printed, blue leaves overprinting to deep green), paper midribs. Wind `g` flattens the crown (sx 1+.35g, sy 1−.22g), shifts it right, turns every leaf toward +x and stretches it | trunk base on the ground (y 240), h 330–360, crown r 165–200 |
+| Wind | purple **streaks**: 7 base ribbons drifting right (always visible), count ×(1+2.2g), length ×(0.6+1.6g), coverage +.3g, on a gust envelope onset → peak → recovery; during gusts paper knockout streaks flatten the grass | air box y ∈ [−560, +200]; grass box y ∈ [240, 420] |
+| Player (you) | navy `figure()` pictogram, size 300–460 | feet on y 250 |
+| Teammate | blue `figure()` printed on a paper knockout (clean blue on the green) | feet on y 250 |
+| Ball | paper football, navy pentagons (`footballPanels`, shadow purple), navy ground shadow | r 46–64 |
+| Feeling | purple knot: a boiling blob with spikes on a paper knockout (legible on the navy torso) | at the chest |
+
+Headlines: none / **BEND** / **BREATHE** / **ONE ACTION** / **NEXT** (at 6.5) / none.
+
+### Ch1 (9.417 s) — the pass goes wrong, the wind hits both
+Player at (60, 250) size 300 facing −x; teammate at (−380, 250) facing +x, arms up; tree at (360, 240) h 330 crown 165; ball at the player's foot (20, 214) r 46.
+- 0.08–0.3 wind-up (tilt), 0.3 kick; **0.3–1.05 the ball flies low past the teammate** (arc from (20,214) to (−560,236), lift 60) and rolls out of frame left (to −700 by 1.7). The teammate turns after it (`reach`, facing flips at 0.9) then slumps (1.5). **1.3–1.8 the player's shoulders drop** (slump mix, head drop).
+- **2.0 gust** (onset 2.0, peak 2.6, recovery 3.8): streaks dense and long; **the player leans right** (tilt +.25g, a foot slides) and **the tree bends the same way** (bend .5g about the root, crown flattens, leaves streak); camera leans −.03g. Release: damped settle on the tree (freq 1.0, decay 1.5).
+- **4.34 "a useful response"**: 4.4–4.9 the player straightens (easeOutBack) and 4.9–5.3 raises a pointing arm toward the teammate; the teammate stands and lifts an arm (5.0).
+- **6.48 "room for your feelings"**: a purple knot grows on the player's chest (6.5–6.8, easeOutBack, r 40); 7.2–8.6 it lifts off and **floats with the wind up into the tree's crown** (arc, wobble, shrinking).
+- Camera: (0,20,1) → dragged left by the ball (.5–1.4: −120,30,1.08) → to tree+player on the gust (2.8: 60,0,1.12,−.03) → (5: 20,−10,1.15) → 7.4–8.77 push up into the crown (360,−160,1.45). Zoom monotone.
+- **Seam: into the tree's crown** (aperture disc r 80 at the crown centre, inside the green under-crown).
+
+### Ch2 (10.617 s) — BEND: the whole tree bends and springs back; the post snaps
+Tree centred: base (0, 240) h 360 crown 200. Rigid post: navy hand-cut slab w 34 from the ground at (330, 240) up to y −80, purple base tone. No player (the metaphor alone, per the board).
+- 0–3.04 residual sway from ch1 (decaying), leaves flutter, base streaks.
+- **3.04 gust** (onset 3.04, peak 3.55, recovery 4.6): anticipation 3.04–3.16 the tip lifts against the wind (−.05); **3.16–3.6 the tree bends .62 rad**, crown flattens and every leaf streaks right, two leaves tear off (3.5, 3.65) and fly right; **3.6 → 6 damped overshoot return** (`settle` amp .62, freq 1.0, decay 1.5, phase π/2). Camera leans (rot −.05) and pushes.
+- **7.78 gust 2** (onset 7.78, peak 8.1, recovery 8.9), half strength: the tree bends .36 and returns; **the post loads (thickens, 7.95–8.15), cracks at 8.15** (paper zigzag knockout at y +40), **its top snaps and falls** (rotates about the crack to 1.35 rad, lands on the pitch at ~8.7 with a bounce and a dust puff); the purple base tone spreads. Camera kick at the crack; pan right to frame post + tree.
+- 9.2–9.6 the crown's front-right leaf turns to the camera and grows (len 200 → 300, wid 80 → 120), bright yellow; 9.2–9.97 push to it (zoom 1.15 → 1.55).
+- **Seam: into that leaf** (aperture disc r 62 at the leaf centre).
+
+### Ch3 (10.417 s) — BREATHE: name the feeling, breathe
+Player big and centred: size 460 at (0, 250) facing +x, hunched (tilt .1, head down); the knot on the chest at KNOT = (14, 12) on a paper knockout; the tree's trunk and half crown at the right edge (430, 240); pitch; light streaks.
+- **0 / 1.1 / 2.2 three feelings**: the chest heaves (scaleX 1 + .08·|sin(t·2π/.9)|), the knot grows in three pops (r 44 → 60 → 76, easeOutBack) and shoots three purple spikes (up-left 110, down-right 90, right 130) that shake on twos; the knot boils (reseeded on twos).
+- **5.02 "Name that feeling"**: 5.2–5.7 **a paper ring draws itself around the knot** as two halves that meet with an overshoot (r 120, paper 16 wide + navy hairline); boiling stops; the spikes round into lobes; the chest heave stops.
+- **6.42 "Take a slow breath"**: inhale 6.42–8.0 — **the whole composition expands**: camera zoom 1.0 → 1.14 (easeOut), chest scaleX → 1.22, the hunch lifts (tilt → −.04, head up), arms rise a little, the ring expands with the chest (r 120 → 134), streaks slow to a calm (g → 0, cov .35 → .12); exhale 8.0–9.77 — chest → 1.08 slowly, a paper puff of breath drifts forward from the head (r 30 → 70, fading), the knot shrinks ×.7 and its coverage opens .85 → .5.
+- 9.1–9.77 push into the ring (zoom 1.14 → 1.7 at KNOT).
+- **Seam: through the breath ring** (aperture disc r 60 at KNOT, inside the ring).
+
+### Ch4 (9.717 s) — ONE ACTION: shoulder, space, option, pass
+Wide pitch (zoom .95): player at (−260, 250) size 300 facing +x; teammate at (400, 250) facing −x with the ball at (370, 214) r 64; a **pool of open yellow space** on the grass at (40, 250) rx 190 ry 60 (paper knockout + yellow .6); the tree's crown edge at (−520, 240) for continuity.
+- **0.15–0.7 "Check your shoulder"**: the head turns back (`lookBack`, head −.12) and a **yellow sight wedge** opens behind the player (angle π ± .16, L 300); the camera turns with the look (rot −.04, pan left); 1.3–1.7 head returns.
+- **2.62 "Move into space"**: 2.3 the pool appears (easeOutBack); **2.8–3.5 the player runs into it** (stride on twos, speed lines, landing settle); the pool brightens (yellow .6 → .75).
+- 4.3–4.7 **offer**: a pointing arm extends toward the teammate (anticipation, then easeOut); 4.6–5.2 a navy dashed lane self-draws ball → the player's feet.
+- **6.36 "one action"**: the teammate loads (6.36–6.55, tilt −.1) and kicks; **6.55–7.3 the pass** flies along the lane (lift 40, spin) to (80, 214); the player cushions (scaleX 1.06, .2 s) and a paper-and-yellow spark bursts; dashes vanish behind the ball. 8.2 a quarter-turn settle presents the centre pentagon.
+- Camera: (−40,40,.95) → look (−120,0,.98,−.04) → (−40,40,1) → follow the run (60,30,1.05) → follow the pass (80,60,1.15) → 8.2–9.07 push into the ball (80,214,2.6).
+- **Seam: into the ball's centre pentagon** (aperture = pentagon r 17 at the ball centre, at the ball's rest rotation).
+
+### Ch5 (9.417 s) — NEXT: stuck, a hand on the shoulder, the reset
+Player at (0, 250) size 380 facing +x, **frozen mid-step** (walk legs, arms half raised, tilt .12, head down), the knot back on the chest (r 46, boiling slowly) — nothing moves but the camera creep and the light streaks (stuck has weight). Tree at (−420, 240) h 300 crown 140 at the left. Pitch.
+- **1.22 "ask a teammate"**: **the teammate walks in from the right** (620 → 190 over 1.3–2.3, walk stride, facing −x, stops with a settle); **2.3–2.7 its arm lifts and a blue paper mitt (r 36) lands on the player's shoulder** at (10, 34); the player's shoulder gives a small lift (settle).
+- 2.7–6.5 the two stand joined; the knot's boil slows; residual sway on the tree; the camera drifts.
+- **6.5 "where to put your attention"** (NEXT pops): **6.5–7.0 the player straightens** (easeOutBack: tilt → −.02, head up, legs and arms to stand); **6.55 the knot pops into five leaves** that blow away right with the wind (spiral, rising, fading by 8.6); a yellow spark at 6.6.
+- Camera: (0,20,1.1) creep → (80,20,1.15) with the teammate → (60,0,1.18) on NEXT → 8.1–8.77 push into the mitt (10,34,2.0).
+- **Seam: into the teammate's hand** (aperture disc r 27 inside the blue mitt).
+
+### Ch6 (10.415 s) — back in the game, one moment at a time
+Tree at (−400, 240) h 340 crown 180 with **three new bright leaves unfurling** (0.4 / 0.9 / 1.4, easeOutBack); player A at (−60, 250) size 300 facing +x; teammate B at (330, 250) facing −x; ball r 46; wind = gentle sway (g .12).
+- 0.8–1.6 A → B pass (A kicks, B cushions, spark); 2.2–2.9 B → A.
+- **3.34 "Notice"**: A's head turns back with a small sight wedge (3.34–3.9), returns 4.2. **4.4 "Breathe"**: A's chest expands (scaleX 1 → 1.18, 4.4–5.3) and the frame widens (zoom 1.18 → 1.12); streaks fade. **5.5 "Choose"**: A's pointing arm (5.5–5.8) then **5.7–6.4 A → B**.
+- **7.6 "one moment at a time"**: 7.7–8.4 B → A, 8.8–9.5 A → B, each cushioned with a spark.
+- 8.8–9.8 the camera opens to the **wide calm frame** (−20,−10,.95): tree upright with new leaves, player and teammate side by side, wind gone to a sway. Zoom monotone decreasing 1.2 → .95 (the "breathe" widening is part of the same descent).
+- Last chapter: no seam.
+
+**Kid test targets (sound off).** ch1 "A player kicks the ball past their friend, then a big wind blows the player and the tree over sideways; they stand back up and a purple puff floats into the tree." ch2 BEND "A tree bends right over in the wind and springs back; a stiff post beside it snaps and falls." ch3 BREATHE "A person with a purple knot on their chest draws a ring round it and takes a big breath." ch4 ONE ACTION "A player looks over their shoulder, runs into the yellow space and gets the ball passed to them." ch5 NEXT "A player stuck with a purple knot; a friend walks up and puts a hand on their shoulder; they stand up straight and the knot blows away as leaves." ch6 "The tree has new leaves and the two players pass the ball to each other."
+
+Reduced-motion stills: 2.7 / 3.6 / 5.8 / 7.4 / 7.3 / 9.9 s.
+
+### Rework ledger (2026-09-21, `lib/paths/riso/stories/reset.ts`)
+
+**Built as boarded** with these adjustments after the first contact sheet: a viewport fit `view(s) = clamp((safe.w/fit)/800, 1, 1.32)` multiplies every camera zoom (the desktop art region shows 793 × 625 world units at zoom 1, phones up to 1080 × 1055 — without it every object read small on a phone); trees shrunk to h 290/320/300 (crown 145/175/160) in ch1/ch2/ch6 so the crown tops clear the headline band on 1440 × 850; ch1's tree moved to x 300 and the teammate to −340 so the tree stays in frame while the camera is dragged after the miss; the wind streaks widened (15 u, len 320, cov .5 → .85 in a gust) so the wind is a visible force; the wind lean is signed by facing so the player and the teammate lean downwind like the tree; ch3's player is size 500 with the knot at (14, 8) and the ring r 106 so the ring clears the head.
+
+**Kid test (sound off; frames `scratchpad/riso/fix/reset2/frames*/`, app captures `scratchpad/riso/fix/reset2/app-reset-<w>x<h>-ch<n>.jpg`, strips `phone-strip.jpg`, `strip-320.jpg`, `strip-844.jpg`, `strip-1440.jpg`):**
+- ch1 — "A player kicks the ball and it rolls past their friend off the pitch; a big purple wind blows and the player and the tree both lean over; the player stands up and points; a purple puff floats from their chest into the tree." PASS
+- ch2 BEND — "A tree bends right over in the wind and springs back; two leaves fly off; the stiff post next to it cracks and its top falls over." PASS
+- ch3 BREATHE — "A big person with a purple knot on their chest; a ring is drawn round the knot; then they puff their chest up and breathe out." PASS
+- ch4 ONE ACTION — "A player looks over their shoulder, runs into the yellow patch, points, and their friend kicks the ball to them." PASS
+- ch5 NEXT — "A player is stuck with a purple knot; a friend walks up and puts a hand on their shoulder; the player stands up straight and the knot turns into leaves that blow away." PASS
+- ch6 — "The tree has new leaves; the two players pass the ball to each other; the player looks back and takes a breath; at the end the tree and the players stand calmly." PASS
+
+**Gates.** `npm run typecheck` clean · `review-riso-story.mjs --id reset --out …/riso/review3`: 45 samples, 5/5 seams max 0 / changed 0, held-seam 0 %, 0 transparent, 0 errors, maxOps 172 (passage frame; scenes 51–100) · `riso-perf.mjs reset` at 390×850 DPR 1.5: **median 3.2 ms**, p95 16.4 ms, max 25.8 ms, ops median 86 · `check-riso-films-browser.mjs --format 11v11 --title "Mental Toughness"`: PASS at 390×850 (touch 14.3 %), 320×568 (6.4 %), 844×390 (8.6 %), 1440×850 (12.3 %); zero page errors.
+
+**Seams (all forward passages):** the tree's crown (ch1 → ch2) · the crown's front leaf (ch2 → ch3) · the breath ring (ch3 → ch4) · the ball's centre pentagon (ch4 → ch5) · the teammate's mitt (ch5 → ch6).
+
+**Self-critique.** The wind now acts on things (the tree bends about its root with damped overshoot, the player leans and slides, the grass gets paper streaks) and every chapter is one nameable picture, but the streaks are still a graphic (ribbons) rather than a torn ink field, so the print texture is carried mostly by the sky bands, the green ground and the cut-paper crown. Landscape 844×390 shows everything smaller (the fit caps at 1.32 while the region shows 1180 units) and the crown of the ch3 tree is cut at the right edge by design. The ch4 passage into a 15.5-unit pentagon zooms hard in .65 s; it reads as a rush into the ball but is the most abrupt seam of the six.

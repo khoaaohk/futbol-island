@@ -579,3 +579,33 @@ The yellow/team-color light surrounding the pink GOAL score now has an elliptica
 - Hit parcels now emit spinning box fragments; collection shows a large rising football and an expanding soft ring. Pools cap fragments at36 and celebrations at3; no real-time light/shadow or per-event geometry creation. Effects fully hide when done. Tests cover rapid triggers, idle cleanup, reduced motion, and existing parcel collisions. Browser verified actual reveal and collection.
 - Main character football is35% larger than the previous .75 scale (now1.0125); existing .2m ground center accommodates its .192m radius. Physics and shot/juggle rules remain unchanged.
 - Goal glow perimeter fades to transparent. These changes and the historical-comparison shadow optimization remain local, not deployed.
+
+### September 21 — scenery and access cleanup (local, not deployed)
+
+Applied the user's screenshot requests: removed the picnic seating beside the futsal ramp; connected its foot to the sidewalk; moved ground ramps off paved routes using placement exclusions; removed the western dead-end road spur beside Surf & Repair; extended grass across the southern coastal approach and South Pier gaps. Paths, seating pads, volleyball sand and boardwalk remain visible. Shared map outline follows the grass. Production build, ride-ramp tests and live browser placement checks passed; five rendered areas reviewed. No added animation or recurring runtime work. See docs/performance-guide.md.
+
+### September 22 — lamps, paths and café sign (local, not deployed)
+
+Moved eight pier lamps onto grass and audited all 86 street lamps for clearance from sidewalks, paths and junction paving. Removed the park playground and its approach paving, matching the tree strips to the shared lawn. Removed the volleyball-side path. Straightened the beach path and connected its eastern end to the sidewalk. Repaired the floating Post-match Tables sign with a frame, grounded posts and collision. Final production build and browser clearance checks pass; rendered views reviewed. Static scenery only; placement searches run at setup.
+
+### September 22 — connected southern routes and terrace lighting (local)
+
+Museum forecourt now connects directly to the pier; nearby seating leaves the entrance clear. Dock seating is one paved area with direct boardwalk access, replacing the short railed bridge. Ferry dock geometry now meets the full gangway opening and removes old internal boardwalk rails. Coastal path joins the beach promenade; redundant path beside the western building row removed. Both Cafe by the Sea terraces have three short warm lamps using shared lighting resources. Terrain/rooftop travel checks and rendered browser review pass; local only.
+
+### September 22 — golden sunset (local)
+
+Warmed sunset sunlight, sky fill and ground bounce to gold/ochre with an apricot sky. Existing brightness, shadows, day/night modes and sleeping transitions retained. Matching-view browser comparison, build and lighting tests pass; not deployed.
+
+### September 22 — distinct daytime lighting (local)
+
+Daytime now has a blue sky and neutral sunlight, clearly separate from golden sunset. Build and lighting tests pass; plaza/pier views reviewed. Local only.
+
+## September 22 — player motion and live football follow-up (local)
+
+Implemented coordinated body lean/sway, planted pivots/replanting, corrected sideways support, distinct pass/shot/loft actions and deterministic teaching poses. Live/teaching ball contacts now use appropriate left/right receiving geometry, stable release points, grounded dribble rolls and keeper hand possession. Live AI adds conditional give-and-goes, committed open-space carries, moving receptions, stable pressing/goal-side cover and shorter, compact futsal patterns. See `docs/live-player-motion-audit-2026-09-22.md` and `docs/live-match-engine-improvements-2026-09-22.md`. Changes remain local, not deployed; final verification recorded in the performance guide.
+
+Production release — September 22, 2026: deployed the current working tree as dpl_7nrGrrPzMDBPuBTjxV9T7ihk7N54 (https://futbol-island-n4ieab7w0-khoa0aohk.vercel.app), aliased to https://futbolisland.app. Vercel build passed (home477kB / first-load565kB). Live mobile-width Chromium check passed restored onboarding copy, bolt/book/play cycling, shake/blur, reduced motion, cleanup, four initialized live formats and frame-impact effect presence, with no page errors. Updated Love Futsal narration returned HTTP200. Earlier local-only notes describe historical checkpoints; these changes are now deployed. No physical-phone thermal measurement.
+
+Production follow-up release — September 22, 2026: dpl_CZCHGRnDi3pBNZuE8whRt3bWLPsz, https://futbol-island-jt7z0phg0-khoa0aohk.vercel.app, is READY and aliased to https://futbolisland.app. Vercel build passed (home478kB / first-load566kB). Live mobile-browser verification passed stable dock layout, shared dock/undock/format sound cues, removal of the loading screen, two-line captions, chapter/track story transitions, restored path interaction and grass/foundation clearance. Done-to-removal measured175ms in this Chromium check for Different Tides and Love Futsal. All local follow-up changes above, including onboarding fit and desktop truck prompt spacing, are now deployed. Physical-iPhone grass/scroll smoothness remains a device check, not established by emulation.
+
+Production performance release — September 22, 2026: dpl_Cz2YyzDPpfYrpGgqeyLf3832pngT is READY at https://futbol-island-gutc9rlxf-khoa0aohk.vercel.app and aliased to https://futbolisland.app. Vercel build passes (home 478kB / first load 567kB). Live mobile Chromium checks pass all four bounded path maps (largest SVG 1230px), active story playback with the world frozen (122 renders unchanged while story draws advanced 46→106), no running background animations, explicit field-prompt pause, paused canvas sleep, Read/return and closing, with no page errors. This includes the field-prompt CSS correction caught during the first deployment check; it supersedes dpl_J5dPbTHBhfpsAn4UAz2aq6Ly9UDq. Phone scrolling and temperature still require physical-device verification.

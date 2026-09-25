@@ -1,0 +1,382 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Extra time, live",
+   "text": "Moscow, 2008, Champions League final. Extra time, and legs are tired. But Patrice Evra still races down the left wing, weaves into the box and pulls it back. Ryan Giggs shoots... John Terry heads it off the line!",
+   "src": "/plays/narration/evra-signature/1.m4a",
+   "seconds": 16.1,
+   "words": [
+    {
+     "w": "Moscow",
+     "at": 0.4
+    },
+    {
+     "w": "2008",
+     "at": 1.025
+    },
+    {
+     "w": "Champions",
+     "at": 1.988
+    },
+    {
+     "w": "League",
+     "at": 2.6
+    },
+    {
+     "w": "final",
+     "at": 2.862
+    },
+    {
+     "w": "Extra",
+     "at": 3.812
+    },
+    {
+     "w": "time",
+     "at": 4.237
+    },
+    {
+     "w": "and",
+     "at": 4.675
+    },
+    {
+     "w": "legs",
+     "at": 4.812
+    },
+    {
+     "w": "are",
+     "at": 5.138
+    },
+    {
+     "w": "tired",
+     "at": 5.237
+    },
+    {
+     "w": "But",
+     "at": 6.2
+    },
+    {
+     "w": "Patrice",
+     "at": 6.35
+    },
+    {
+     "w": "Evra",
+     "at": 6.9
+    },
+    {
+     "w": "still",
+     "at": 7.213
+    },
+    {
+     "w": "races",
+     "at": 7.525
+    },
+    {
+     "w": "down",
+     "at": 7.975
+    },
+    {
+     "w": "the",
+     "at": 8.213
+    },
+    {
+     "w": "left",
+     "at": 8.3
+    },
+    {
+     "w": "wing",
+     "at": 8.588
+    },
+    {
+     "w": "weaves",
+     "at": 9.188
+    },
+    {
+     "w": "into",
+     "at": 9.562
+    },
+    {
+     "w": "the",
+     "at": 9.738
+    },
+    {
+     "w": "box",
+     "at": 9.825
+    },
+    {
+     "w": "and",
+     "at": 10.275
+    },
+    {
+     "w": "pulls",
+     "at": 10.4
+    },
+    {
+     "w": "it",
+     "at": 10.688
+    },
+    {
+     "w": "back",
+     "at": 10.775
+    },
+    {
+     "w": "Ryan",
+     "at": 11.675
+    },
+    {
+     "w": "Giggs",
+     "at": 12.075
+    },
+    {
+     "w": "shoots",
+     "at": 12.463
+    },
+    {
+     "w": "John",
+     "at": 13.412
+    },
+    {
+     "w": "Terry",
+     "at": 13.738
+    },
+    {
+     "w": "heads",
+     "at": 14.075
+    },
+    {
+     "w": "it",
+     "at": 14.312
+    },
+    {
+     "w": "off",
+     "at": 14.387
+    },
+    {
+     "w": "the",
+     "at": 14.575
+    },
+    {
+     "w": "line",
+     "at": 14.675
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. Minute 102, and Evra is still sprinting. He weaves past his man, reaches the byline, then looks back and cuts it into space.",
+   "src": "/plays/narration/evra-signature/2.m4a",
+   "seconds": 11.2,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.188
+    },
+    {
+     "w": "Minute",
+     "at": 2.188
+    },
+    {
+     "w": "102",
+     "at": 2.45
+    },
+    {
+     "w": "and",
+     "at": 3.375
+    },
+    {
+     "w": "Evra",
+     "at": 3.513
+    },
+    {
+     "w": "is",
+     "at": 3.825
+    },
+    {
+     "w": "still",
+     "at": 3.95
+    },
+    {
+     "w": "sprinting",
+     "at": 4.237
+    },
+    {
+     "w": "He",
+     "at": 5.362
+    },
+    {
+     "w": "weaves",
+     "at": 5.525
+    },
+    {
+     "w": "past",
+     "at": 5.862
+    },
+    {
+     "w": "his",
+     "at": 6.213
+    },
+    {
+     "w": "man",
+     "at": 6.375
+    },
+    {
+     "w": "reaches",
+     "at": 6.912
+    },
+    {
+     "w": "the",
+     "at": 7.3
+    },
+    {
+     "w": "byline",
+     "at": 7.4
+    },
+    {
+     "w": "then",
+     "at": 8.15
+    },
+    {
+     "w": "looks",
+     "at": 8.35
+    },
+    {
+     "w": "back",
+     "at": 8.6
+    },
+    {
+     "w": "and",
+     "at": 8.925
+    },
+    {
+     "w": "cuts",
+     "at": 9.062
+    },
+    {
+     "w": "it",
+     "at": 9.338
+    },
+    {
+     "w": "into",
+     "at": 9.412
+    },
+    {
+     "w": "space",
+     "at": 9.662
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn. Keep running up and down the wing, all game long. When others get tired, your stamina wins games in the last minutes!",
+   "src": "/plays/narration/evra-signature/3.m4a",
+   "seconds": 9.2,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.512
+    },
+    {
+     "w": "Keep",
+     "at": 1.363
+    },
+    {
+     "w": "running",
+     "at": 1.625
+    },
+    {
+     "w": "up",
+     "at": 1.95
+    },
+    {
+     "w": "and",
+     "at": 2.138
+    },
+    {
+     "w": "down",
+     "at": 2.25
+    },
+    {
+     "w": "the",
+     "at": 2.487
+    },
+    {
+     "w": "wing",
+     "at": 2.587
+    },
+    {
+     "w": "all",
+     "at": 3.075
+    },
+    {
+     "w": "game",
+     "at": 3.3
+    },
+    {
+     "w": "long",
+     "at": 3.625
+    },
+    {
+     "w": "When",
+     "at": 4.5
+    },
+    {
+     "w": "others",
+     "at": 4.65
+    },
+    {
+     "w": "get",
+     "at": 5.0
+    },
+    {
+     "w": "tired",
+     "at": 5.188
+    },
+    {
+     "w": "your",
+     "at": 5.9
+    },
+    {
+     "w": "stamina",
+     "at": 6.025
+    },
+    {
+     "w": "wins",
+     "at": 6.487
+    },
+    {
+     "w": "games",
+     "at": 6.862
+    },
+    {
+     "w": "in",
+     "at": 7.287
+    },
+    {
+     "w": "the",
+     "at": 7.362
+    },
+    {
+     "w": "last",
+     "at": 7.45
+    },
+    {
+     "w": "minutes",
+     "at": 7.85
+    }
+   ]
+  }
+ ]
+}

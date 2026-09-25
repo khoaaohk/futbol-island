@@ -1,0 +1,60 @@
+{
+ "lesson": "expf_keeperoverload",
+ "questions": [
+  {
+   "q": "True or false? The fixo can pass back to the keeper right now.",
+   "options": ["True", "False"],
+   "correct": 1,
+   "explain": "Right, it's false. The keeper already released it, so the fixo plays on to an outfield teammate.",
+   "choiceExplanations": [
+    "The keeper already released the ball in this possession. They cannot get it back in our half.",
+    "Right, it's false. The keeper already released it, so the fixo plays on to an outfield teammate."
+   ],
+   "visual": {
+    "kind": "trueFalse",
+    "frame": {"step": 5, "ball": "cb", "focus": ["gk", "cb"], "marks": [{"kind": "pass", "from": "cb", "to": "gk", "tone": "neutral"}]}
+   }
+  },
+  {
+   "q": "The keeper carries right and the presser follows. What happens next?",
+   "options": ["The keeper keeps carrying forward", "The keeper passes into the pivot", "The keeper passes left to the fixo"],
+   "correct": 2,
+   "explain": "Yes. The presser followed the keeper, so the fixo on the other side is the spare player.",
+   "choiceExplanations": [
+    "That runs into the presser and uses up the four seconds. Release to the free player.",
+    "Blue players screen the middle. The fixo on the far side is free instead.",
+    "Yes. The presser followed the keeper, so the fixo on the other side is the spare player."
+   ],
+   "visual": {
+    "kind": "whatNext",
+    "frame": {"step": 1, "trails": true, "focus": ["gk", "dst", "cb"]}
+   }
+  },
+  {
+   "q": "Now the keeper carries left and the presser follows. Which pass finds the spare player?",
+   "options": ["Pass into the pivot", "Pass across to the fixo", "Pass to the left ala"],
+   "correct": 1,
+   "explain": "Right. The presser followed the keeper, so the fixo on the other side is free.",
+   "choiceExplanations": [
+    "The presser stands in that lane, so the pass would be blocked.",
+    "Right. The presser followed the keeper, so the fixo on the other side is free.",
+    "A defender is close to the left ala, so that pass is under pressure."
+   ],
+   "visual": {
+    "kind": "bestPass",
+    "frame": {
+     "step": 1,
+     "place": {
+      "gk": {"x": 105, "y": 320}, "cb": {"x": 205, "y": 305}, "lm": {"x": 30, "y": 280}, "rm": {"x": 245, "y": 235}, "st": {"x": 125, "y": 155},
+      "dgk": {"x": 125, "y": 35}, "dcb": {"x": 125, "y": 115}, "dlm": {"x": 45, "y": 255}, "drm": {"x": 200, "y": 195}, "dst": {"x": 105, "y": 280}
+     },
+     "ball": "gk",
+     "focus": ["gk", "dst"],
+     "marks": [{"kind": "dribble", "from": {"x": 135, "y": 330}, "to": "gk", "tone": "gold"}]
+    },
+    "from": "gk",
+    "to": ["st", "cb", "lm"]
+   }
+  }
+ ]
+}

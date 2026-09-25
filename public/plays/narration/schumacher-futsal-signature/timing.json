@@ -1,0 +1,382 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: the 2008 final",
+   "text": "The 2008 Futsal World Cup final, in Rio. Brazil play Spain. Schumacher, number eight, starts for Brazil. It ends two two, and Brazil win on penalties, four three!",
+   "src": "/plays/narration/schumacher-futsal-signature/1.m4a",
+   "seconds": 12.6,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "2008",
+     "at": 0.425
+    },
+    {
+     "w": "Futsal",
+     "at": 1.262
+    },
+    {
+     "w": "World",
+     "at": 1.7
+    },
+    {
+     "w": "Cup",
+     "at": 2.0
+    },
+    {
+     "w": "final",
+     "at": 2.225
+    },
+    {
+     "w": "in",
+     "at": 2.725
+    },
+    {
+     "w": "Rio",
+     "at": 2.875
+    },
+    {
+     "w": "Brazil",
+     "at": 3.837
+    },
+    {
+     "w": "play",
+     "at": 4.275
+    },
+    {
+     "w": "Spain",
+     "at": 4.562
+    },
+    {
+     "w": "Schumacher",
+     "at": 5.662
+    },
+    {
+     "w": "number",
+     "at": 6.287
+    },
+    {
+     "w": "eight",
+     "at": 6.525
+    },
+    {
+     "w": "starts",
+     "at": 6.85
+    },
+    {
+     "w": "for",
+     "at": 7.2
+    },
+    {
+     "w": "Brazil",
+     "at": 7.325
+    },
+    {
+     "w": "It",
+     "at": 8.175
+    },
+    {
+     "w": "ends",
+     "at": 8.325
+    },
+    {
+     "w": "two",
+     "at": 8.637
+    },
+    {
+     "w": "two",
+     "at": 8.887
+    },
+    {
+     "w": "and",
+     "at": 9.35
+    },
+    {
+     "w": "Brazil",
+     "at": 9.463
+    },
+    {
+     "w": "win",
+     "at": 9.9
+    },
+    {
+     "w": "on",
+     "at": 10.062
+    },
+    {
+     "w": "penalties",
+     "at": 10.25
+    },
+    {
+     "w": "four",
+     "at": 10.938
+    },
+    {
+     "w": "three",
+     "at": 11.213
+    }
+   ]
+  },
+  {
+   "label": "How he does it",
+   "text": "He was voted the second best player at that World Cup. He builds attacks from the back. This is how he does it: head up, he sees the crowded side, and switches the ball to the free side!",
+   "src": "/plays/narration/schumacher-futsal-signature/2.m4a",
+   "seconds": 12.4,
+   "words": [
+    {
+     "w": "He",
+     "at": 0.35
+    },
+    {
+     "w": "was",
+     "at": 0.463
+    },
+    {
+     "w": "voted",
+     "at": 0.625
+    },
+    {
+     "w": "the",
+     "at": 0.975
+    },
+    {
+     "w": "second",
+     "at": 1.113
+    },
+    {
+     "w": "best",
+     "at": 1.475
+    },
+    {
+     "w": "player",
+     "at": 1.788
+    },
+    {
+     "w": "at",
+     "at": 2.2
+    },
+    {
+     "w": "that",
+     "at": 2.3
+    },
+    {
+     "w": "World",
+     "at": 2.55
+    },
+    {
+     "w": "Cup",
+     "at": 2.862
+    },
+    {
+     "w": "He",
+     "at": 3.7
+    },
+    {
+     "w": "builds",
+     "at": 3.85
+    },
+    {
+     "w": "attacks",
+     "at": 4.15
+    },
+    {
+     "w": "from",
+     "at": 4.65
+    },
+    {
+     "w": "the",
+     "at": 4.787
+    },
+    {
+     "w": "back",
+     "at": 4.875
+    },
+    {
+     "w": "This",
+     "at": 5.75
+    },
+    {
+     "w": "is",
+     "at": 6.0
+    },
+    {
+     "w": "how",
+     "at": 6.15
+    },
+    {
+     "w": "he",
+     "at": 6.35
+    },
+    {
+     "w": "does",
+     "at": 6.475
+    },
+    {
+     "w": "it",
+     "at": 6.713
+    },
+    {
+     "w": "head",
+     "at": 7.263
+    },
+    {
+     "w": "up",
+     "at": 7.463
+    },
+    {
+     "w": "he",
+     "at": 7.85
+    },
+    {
+     "w": "sees",
+     "at": 8.012
+    },
+    {
+     "w": "the",
+     "at": 8.325
+    },
+    {
+     "w": "crowded",
+     "at": 8.425
+    },
+    {
+     "w": "side",
+     "at": 8.838
+    },
+    {
+     "w": "and",
+     "at": 9.45
+    },
+    {
+     "w": "switches",
+     "at": 9.6
+    },
+    {
+     "w": "the",
+     "at": 10.075
+    },
+    {
+     "w": "ball",
+     "at": 10.2
+    },
+    {
+     "w": "to",
+     "at": 10.55
+    },
+    {
+     "w": "the",
+     "at": 10.637
+    },
+    {
+     "w": "free",
+     "at": 10.738
+    },
+    {
+     "w": "side",
+     "at": 11.037
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. Head up, look, switch!",
+   "src": "/plays/narration/schumacher-futsal-signature/3.m4a",
+   "seconds": 3.7,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.662
+    },
+    {
+     "w": "slowly",
+     "at": 1.012
+    },
+    {
+     "w": "Head",
+     "at": 1.75
+    },
+    {
+     "w": "up",
+     "at": 1.913
+    },
+    {
+     "w": "look",
+     "at": 2.087
+    },
+    {
+     "w": "switch",
+     "at": 2.288
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: keep your head up and switch play to the free side!",
+   "src": "/plays/narration/schumacher-futsal-signature/4.m4a",
+   "seconds": 4.4,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "keep",
+     "at": 1.288
+    },
+    {
+     "w": "your",
+     "at": 1.512
+    },
+    {
+     "w": "head",
+     "at": 1.625
+    },
+    {
+     "w": "up",
+     "at": 1.762
+    },
+    {
+     "w": "and",
+     "at": 1.913
+    },
+    {
+     "w": "switch",
+     "at": 2.038
+    },
+    {
+     "w": "play",
+     "at": 2.325
+    },
+    {
+     "w": "to",
+     "at": 2.575
+    },
+    {
+     "w": "the",
+     "at": 2.663
+    },
+    {
+     "w": "free",
+     "at": 2.763
+    },
+    {
+     "w": "side",
+     "at": 3.038
+    }
+   ]
+  }
+ ]
+}

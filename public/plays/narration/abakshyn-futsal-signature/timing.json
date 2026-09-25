@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: World Cup 2024",
+   "text": "The 2024 Futsal World Cup, the match for bronze, in Tashkent. Ukraine lead France four one. Keeper Sukhov saves, and Danyil Abakshyn strikes from his own half. Goal! Five one!",
+   "src": "/plays/narration/abakshyn-futsal-signature/1.m4a",
+   "seconds": 14.4,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "2024",
+     "at": 0.425
+    },
+    {
+     "w": "Futsal",
+     "at": 1.387
+    },
+    {
+     "w": "World",
+     "at": 1.825
+    },
+    {
+     "w": "Cup",
+     "at": 2.138
+    },
+    {
+     "w": "the",
+     "at": 2.675
+    },
+    {
+     "w": "match",
+     "at": 2.8
+    },
+    {
+     "w": "for",
+     "at": 3.125
+    },
+    {
+     "w": "bronze",
+     "at": 3.275
+    },
+    {
+     "w": "in",
+     "at": 3.85
+    },
+    {
+     "w": "Tashkent",
+     "at": 4.0
+    },
+    {
+     "w": "Ukraine",
+     "at": 5.188
+    },
+    {
+     "w": "lead",
+     "at": 5.725
+    },
+    {
+     "w": "France",
+     "at": 5.987
+    },
+    {
+     "w": "four",
+     "at": 6.4
+    },
+    {
+     "w": "one",
+     "at": 6.625
+    },
+    {
+     "w": "Keeper",
+     "at": 7.362
+    },
+    {
+     "w": "Sukhov",
+     "at": 7.763
+    },
+    {
+     "w": "saves",
+     "at": 8.238
+    },
+    {
+     "w": "and",
+     "at": 8.9
+    },
+    {
+     "w": "Danyil",
+     "at": 9.025
+    },
+    {
+     "w": "Abakshyn",
+     "at": 9.588
+    },
+    {
+     "w": "strikes",
+     "at": 10.213
+    },
+    {
+     "w": "from",
+     "at": 10.562
+    },
+    {
+     "w": "his",
+     "at": 10.688
+    },
+    {
+     "w": "own",
+     "at": 10.825
+    },
+    {
+     "w": "half",
+     "at": 11.025
+    },
+    {
+     "w": "Goal",
+     "at": 11.963
+    },
+    {
+     "w": "Five",
+     "at": 12.7
+    },
+    {
+     "w": "one",
+     "at": 13.05
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again. He waits for the ball to drop, then strikes. Nineteen seconds later he scores again, then again: a hat-trick! Ukraine win seven one!",
+   "src": "/plays/narration/abakshyn-futsal-signature/2.m4a",
+   "seconds": 10.6,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "He",
+     "at": 1.45
+    },
+    {
+     "w": "waits",
+     "at": 1.6
+    },
+    {
+     "w": "for",
+     "at": 1.875
+    },
+    {
+     "w": "the",
+     "at": 1.988
+    },
+    {
+     "w": "ball",
+     "at": 2.075
+    },
+    {
+     "w": "to",
+     "at": 2.375
+    },
+    {
+     "w": "drop",
+     "at": 2.5
+    },
+    {
+     "w": "then",
+     "at": 2.925
+    },
+    {
+     "w": "strikes",
+     "at": 3.163
+    },
+    {
+     "w": "Nineteen",
+     "at": 4.213
+    },
+    {
+     "w": "seconds",
+     "at": 4.65
+    },
+    {
+     "w": "later",
+     "at": 4.975
+    },
+    {
+     "w": "he",
+     "at": 5.3
+    },
+    {
+     "w": "scores",
+     "at": 5.438
+    },
+    {
+     "w": "again",
+     "at": 5.775
+    },
+    {
+     "w": "then",
+     "at": 6.175
+    },
+    {
+     "w": "again",
+     "at": 6.325
+    },
+    {
+     "w": "a",
+     "at": 6.938
+    },
+    {
+     "w": "hat-trick",
+     "at": 7.05
+    },
+    {
+     "w": "Ukraine",
+     "at": 7.963
+    },
+    {
+     "w": "win",
+     "at": 8.488
+    },
+    {
+     "w": "seven",
+     "at": 8.863
+    },
+    {
+     "w": "one",
+     "at": 9.25
+    }
+   ]
+  },
+  {
+   "label": "How he does it",
+   "text": "This is his trick: back to goal, he turns and pokes it with his toe, before the keeper is set!",
+   "src": "/plays/narration/abakshyn-futsal-signature/3.m4a",
+   "seconds": 6.6,
+   "words": [
+    {
+     "w": "This",
+     "at": 0.375
+    },
+    {
+     "w": "is",
+     "at": 0.55
+    },
+    {
+     "w": "his",
+     "at": 0.662
+    },
+    {
+     "w": "trick",
+     "at": 0.838
+    },
+    {
+     "w": "back",
+     "at": 1.587
+    },
+    {
+     "w": "to",
+     "at": 1.875
+    },
+    {
+     "w": "goal",
+     "at": 2.0
+    },
+    {
+     "w": "he",
+     "at": 2.625
+    },
+    {
+     "w": "turns",
+     "at": 2.788
+    },
+    {
+     "w": "and",
+     "at": 3.237
+    },
+    {
+     "w": "pokes",
+     "at": 3.35
+    },
+    {
+     "w": "it",
+     "at": 3.612
+    },
+    {
+     "w": "with",
+     "at": 3.688
+    },
+    {
+     "w": "his",
+     "at": 3.788
+    },
+    {
+     "w": "toe",
+     "at": 3.962
+    },
+    {
+     "w": "before",
+     "at": 4.4
+    },
+    {
+     "w": "the",
+     "at": 4.688
+    },
+    {
+     "w": "keeper",
+     "at": 4.775
+    },
+    {
+     "w": "is",
+     "at": 5.15
+    },
+    {
+     "w": "set",
+     "at": 5.287
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: a quick toe-poke can beat the keeper before they are set!",
+   "src": "/plays/narration/abakshyn-futsal-signature/4.m4a",
+   "seconds": 5.0,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "a",
+     "at": 1.337
+    },
+    {
+     "w": "quick",
+     "at": 1.45
+    },
+    {
+     "w": "toe-poke",
+     "at": 1.7
+    },
+    {
+     "w": "can",
+     "at": 2.225
+    },
+    {
+     "w": "beat",
+     "at": 2.4
+    },
+    {
+     "w": "the",
+     "at": 2.587
+    },
+    {
+     "w": "keeper",
+     "at": 2.675
+    },
+    {
+     "w": "before",
+     "at": 3.05
+    },
+    {
+     "w": "they",
+     "at": 3.337
+    },
+    {
+     "w": "are",
+     "at": 3.475
+    },
+    {
+     "w": "set",
+     "at": 3.638
+    }
+   ]
+  }
+ ]
+}

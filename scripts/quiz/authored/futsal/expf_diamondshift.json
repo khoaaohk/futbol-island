@@ -1,0 +1,21 @@
+{"lesson":"expf_diamondshift","questions":[
+{"q":"True or false? When one ALA presses, the other ALA helps close the middle.",
+ "options":["True","False"],
+ "correct":0,
+ "explain":"Right, it's true. The far ALA narrows in, so Blue cannot pass through the diamond.",
+ "choiceExplanations":["Right, it's true. The far ALA narrows in, so Blue cannot pass through the diamond.","If the far ALA stays wide, a gap opens in the middle of the diamond."],
+ "visual":{"kind":"trueFalse","frame":{"step":4,"focus":["lm","rm"]}}},
+{"q":"Blue passes the ball back to the middle. What does our diamond do next?",
+ "options":["Everyone sprints at the new ball","Shift across together with the pass","Stay exactly where they are"],
+ "correct":1,
+ "explain":"Yes. The whole diamond slides across with the pass, so pressure, cover and the middle stay connected.",
+ "choiceExplanations":["Chasing in a line leaves holes behind, and one pass beats everyone.","Yes. The whole diamond slides across with the pass, so pressure, cover and the middle stay connected.","If nobody moves, the ball reaches the free side with no one to press it."],
+ "visual":{"kind":"whatNext","frame":{"step":5,"trails":true,"focus":["st","rm"]}}},
+{"q":"Blue's PIVOT drifts to the far side. Drag the FIXO to keep covering him.",
+ "options":["Behind Blue's PIVOT, near our goal","Stay in the middle","Up near the ball"],
+ "correct":0,
+ "explain":"Yes. The FIXO stays goal-side of Blue's PIVOT, so the pass through the diamond is still covered.",
+ "choiceExplanations":["Yes. The FIXO stays goal-side of Blue's PIVOT, so the pass through the diamond is still covered.","Blue's PIVOT is free now, so a pass through the diamond finds him alone.","The RIGHT ALA already presses the ball. Blue's PIVOT would be free behind you."],
+ "visual":{"kind":"dragToZone","frame":{"step":6,"place":{"dst":{"x":95,"y":320}},"focus":["cb","dst"]},
+  "drag":"cb","zones":[{"x":100,"y":350,"w":50,"h":36},{"x":170,"y":325,"w":44,"h":36},{"x":215,"y":320,"w":36,"h":30}]}}
+]}

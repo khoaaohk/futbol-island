@@ -1,0 +1,136 @@
+{
+ "lesson": "e_switch",
+ "questions": [
+  {
+   "q": "True or false? The defender has gone left, so the passing lane to the right is clear.",
+   "options": [
+    "True",
+    "False"
+   ],
+   "correct": 0,
+   "explain": "Right, it's true. The pressure went left, so the right-side teammate can receive and look forward.",
+   "choiceExplanations": [
+    "Right, it's true. The pressure went left, so the right-side teammate can receive and look forward.",
+    "Look at the defender: they slid left, so nobody stands in the lane to the right."
+   ],
+   "visual": {
+    "kind": "trueFalse",
+    "frame": {
+     "step": 2,
+     "focus": [
+      "cm",
+      "dst",
+      "rm"
+     ]
+    }
+   }
+  },
+  {
+   "q": "Which picture shows a switch that uses the open space?",
+   "options": [
+    "Pass right, defender on the left",
+    "Pass right, defender on the right",
+    "Pass left, defender on the left"
+   ],
+   "correct": 0,
+   "explain": "Yes. The ball goes away from the pressure, so the receiver has time to look forward.",
+   "choiceExplanations": [
+    "Yes. The ball goes away from the pressure, so the receiver has time to look forward.",
+    "The pass goes to the side where the defender is waiting, so the receiver gets closed down.",
+    "The pass goes toward the defender, so it can be cut out or pressed straight away."
+   ],
+   "visual": {
+    "kind": "pickPicture",
+    "pictures": [
+     {
+      "step": 2,
+      "focus": [
+       "dst"
+      ],
+      "marks": [
+       {
+        "kind": "pass",
+        "from": "cm",
+        "to": "rm",
+        "tone": "gold"
+       }
+      ]
+     },
+     {
+      "step": 2,
+      "place": {
+       "dst": {
+        "x": 170,
+        "y": 230
+       }
+      },
+      "focus": [
+       "dst"
+      ],
+      "marks": [
+       {
+        "kind": "pass",
+        "from": "cm",
+        "to": "rm",
+        "tone": "gold"
+       }
+      ]
+     },
+     {
+      "step": 2,
+      "focus": [
+       "dst"
+      ],
+      "marks": [
+       {
+        "kind": "pass",
+        "from": "cm",
+        "to": "lm",
+        "tone": "gold"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "q": "The defender still slides left, but now your defensive midfielder has the ball. Which pass uses the open side?",
+   "options": [
+    "Across to the left midfielder",
+    "Short to the central midfielder",
+    "Up to the right midfielder"
+   ],
+   "correct": 2,
+   "explain": "Yes. The right side is away from the pressure, so the receiver can turn and look forward.",
+   "choiceExplanations": [
+    "The defender has slid left and stands in that lane, so the pass can be cut out.",
+    "That short pass keeps the ball in the middle but does not move it to the open side.",
+    "Yes. The right side is away from the pressure, so the receiver can turn and look forward."
+   ],
+   "visual": {
+    "kind": "bestPass",
+    "frame": {
+     "step": 2,
+     "ball": "dm",
+     "focus": [
+      "dm",
+      "dst",
+      "rm"
+     ],
+     "place": {
+      "dst": {
+       "x": 92,
+       "y": 238
+      }
+     }
+    },
+    "from": "dm",
+    "to": [
+     "lm",
+     "cm",
+     "rm"
+    ]
+   }
+  }
+ ]
+}

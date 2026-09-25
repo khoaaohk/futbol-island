@@ -1,3 +1,4 @@
+import {CAFE_NPC_ROUTES,onCafeRoute} from '../town/cafeRoutes';
 import {applyTruckProtest} from './truckReactions';
 import * as T from 'three';
 import type {BallReactions} from './ballReactions';
@@ -14,15 +15,16 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
  const textures:T.Texture[]=[],materials:T.Material[]=[];
  const canTravel=(a:{x:number;y:number;z:number},b:{x:number;y:number;z:number})=>safeNpcPath(a,b,placement.isWalkable,placement.heightAt);
  const entries=NPC_DIALOGUES.map((definition,index)=>{
-  let x=definition.x,z=definition.z;
-  search:for(let radius=0;radius<=12;radius+=1){for(let angle=0;angle<16;angle++){const px=definition.x+Math.cos(angle*Math.PI/8)*radius,pz=definition.z+Math.sin(angle*Math.PI/8)*radius;if(placement.isWalkable(px,pz)){x=px;z=pz;break search;}}}
+  const authoredRoute=CAFE_NPC_ROUTES[definition.id];
+  let x=authoredRoute?.[0].x??definition.x,z=authoredRoute?.[0].z??definition.z;
+  search:for(let radius=0;radius<=12&&!authoredRoute;radius+=1){for(let angle=0;angle<16;angle++){const px=definition.x+Math.cos(angle*Math.PI/8)*radius,pz=definition.z+Math.sin(angle*Math.PI/8)*radius;if(placement.isWalkable(px,pz)){x=px;z=pz;break search;}}}
   const rig=createPlayer(`town-npc-${definition.id}`,'home');rig.setAppearance({...DEFAULT_CUSTOMIZATION,character:definition.character,face:definition.face,clothing:definition.clothing,body:definition.body??'balanced'});root.add(rig.root);
   rig.root.traverse(object=>{object.userData.npcId=definition.id;});
   const canvas=document.createElement('canvas');canvas.width=512;canvas.height=160;const ctx=canvas.getContext('2d')!;
   ctx.fillStyle='#294f43';ctx.beginPath();ctx.roundRect(3,3,506,154,44);ctx.fill();ctx.textAlign='center';ctx.fillStyle='#fff0cc';ctx.font='700 43px sans-serif';ctx.fillText(definition.name,256,66);ctx.fillStyle='#e6cb8b';ctx.font='700 29px sans-serif';ctx.fillText('LET’S TALK',256,115);
   const texture=new T.CanvasTexture(canvas);texture.colorSpace=T.SRGBColorSpace;textures.push(texture);const material=new T.SpriteMaterial({map:texture,depthTest:true,depthWrite:false});materials.push(material);
   const label=new T.Sprite(material);label.position.y=2.5;label.scale.set(3.5,1.094,1);label.userData.npcId=definition.id;rig.root.add(label);
-  const position={x,y:placement.heightAt(x,z),z};rig.update(x,z,0,0,true);rig.root.position.y=position.y;
+  const position={x,y:authoredRoute?.[0].y??placement.heightAt(x,z),z};rig.update(x,z,0,0,true);rig.root.position.y=position.y;
   const activity=definition.activity?createNpcActivity(definition.activity,rig):null;
   activity?.root.traverse(object=>{object.userData.npcId=definition.id;});
   const ride=definition.travel&&definition.travel!=='run'?createNpcRide(definition.travel,definition.id):null;if(ride)root.add(ride.root);
@@ -33,7 +35,10 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
    for(let direction=0;direction<8;direction++){const angle=direction*Math.PI/4;const ends=[-1,1].map(sign=>{let end={...position};for(let d=.5;d<=7;d+=.5){const next={x:x+Math.sin(angle)*d*sign,y:position.y,z:z+Math.cos(angle)*d*sign};if(!canTravel(position,next))break;end=next;}return end;});const span=Math.hypot(ends[0].x-ends[1].x,ends[0].z-ends[1].z);if(span>length){best=ends;length=span;}}
    if(length>1){route.splice(0,route.length,{...position},...best);routine.restDuration=1.2;}
   }
-  return {id:definition.id,definition,rig,position,home:{x,z},label,activity,ride,lastPosition:{x,z},workTime:index*1.7,worker:Boolean(activity),route,routine,near:false,stunned:false,labelStatus:'',labelCanvas:canvas,labelTexture:texture,rigElapsed:0,distance:Infinity,leftShoulder:rig.root.getObjectByName('left-shoulder'),rightShoulder:rig.root.getObjectByName('right-shoulder'),rightElbow:rig.root.getObjectByName('right-elbow')};
+  if(authoredRoute){route.splice(0,route.length,...authoredRoute.map(p=>({...p})));routine.speed=.9;routine.socialCooldown=Infinity;
+   if(definition.id==='cafe-oren'){routine.waypoint=authoredRoute.findIndex(p=>p.pause===7);Object.assign(position,route[routine.waypoint]);routine.target={...position};rig.root.position.set(position.x,position.y,position.z);}
+  }
+  return {routeTravel:authoredRoute?(a:Position,b:Position)=>onCafeRoute(a,b,authoredRoute,routine.waypoint):undefined,id:definition.id,definition,rig,position,home:{x,z},label,activity,ride,lastPosition:{x,z},workTime:index*1.7,worker:Boolean(activity),route,routine,near:false,stunned:false,labelStatus:'',labelCanvas:canvas,labelTexture:texture,rigElapsed:0,distance:Infinity,leftShoulder:rig.root.getObjectByName('left-shoulder'),rightShoulder:rig.root.getObjectByName('right-shoulder'),rightElbow:rig.root.getObjectByName('right-elbow')};
  });
  const neighborhood:typeof entries=[],frozen=new Set<string>(),entryById=new Map(entries.map(entry=>[entry.id,entry]));
  const viewFrustum=new T.Frustum(),viewMatrix=new T.Matrix4(),viewSphere=new T.Sphere();

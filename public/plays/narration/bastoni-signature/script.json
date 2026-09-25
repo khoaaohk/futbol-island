@@ -1,0 +1,10 @@
+{
+ "film": "bastoni-signature",
+ "note": "Chapter 1 is keyed from 'so he steps up' (Bastoni's first touch as he leaves the back line) through 'passes' (into Dimarco), 'and races round' / 'down the wing' (the overlap) to 'His cross' (the cross) and 'Barella heads' (the header): keep the pause after 'His cross...' so the ball's flight plays. Chapter 2 is the slow replay of the overlap; chapter 3 keys 'a cross from' and 'a thumping header'. Every cue starts with a plain word.",
+ "chapters": [
+  {"label": "The overlap, live", "text": "Lisbon, April 2023: Benfica against Inter. Alessandro Bastoni is a centre-back. Space opens on the left, so he steps up, passes, and races round the outside, down the wing. His cross... Barella heads it in!"},
+  {"label": "Watch it again", "text": "Watch again. Their right back has gone forward, leaving empty grass. Bastoni runs round his team mate, into that space."},
+  {"label": "The header", "text": "From behind the goal: a cross from Bastoni, and a thumping header from Nicolò Barella. Inter won two nil."},
+  {"label": "Your turn", "text": "Your turn: when the space opens, a defender can step up and join the attack!"}
+ ]
+}

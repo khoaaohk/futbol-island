@@ -1,0 +1,59 @@
+{
+ "lesson": "expf_kickinthird",
+ "questions": [
+  {
+   "q": "True or false? Here the best first kick-in pass goes forward to the PIVOT.",
+   "options": ["True", "False"],
+   "correct": 1,
+   "explain": "Right, it's false. A defender screens that lane, so the kick-in goes back to the fixo.",
+   "choiceExplanations": [
+    "A defender screens that forward lane. The first pass goes back to the fixo instead.",
+    "Right, it's false. A defender screens that lane, so the kick-in goes back to the fixo."
+   ],
+   "visual": {
+    "kind": "trueFalse",
+    "frame": {"step": 2, "ball": "lm", "focus": ["lm", "st", "dlm"], "marks": [{"kind": "pass", "from": "lm", "to": "st", "tone": "neutral"}]}
+   }
+  },
+  {
+   "q": "The fixo has the ball. What does the kick-in taker do next?",
+   "options": ["Stays on the touchline and waits", "Runs inside next to the pivot", "Runs up the outside of the defender"],
+   "correct": 2,
+   "explain": "Yes. The pivot drags the defender inside, so the outside channel opens for the taker.",
+   "choiceExplanations": [
+    "Standing still is easy to mark. The taker re-enters and runs to become the third player.",
+    "That crowds the pivot and the defender. The taker runs outside, where the space is.",
+    "Yes. The pivot drags the defender inside, so the outside channel opens for the taker."
+   ],
+   "visual": {
+    "kind": "whatNext",
+    "frame": {"step": 3, "trails": true, "focus": ["lm", "st", "dlm"]}
+   }
+  },
+  {
+   "q": "Kick-in on the right now. The defender followed the pivot. Which pass finds the run?",
+   "options": ["Pass into the pivot", "Pass to the outside runner", "Long pass across to the left ala"],
+   "correct": 1,
+   "explain": "Right. The defender went inside with the pivot, so the outside runner is free.",
+   "choiceExplanations": [
+    "The defender followed the pivot, so that pass runs straight into pressure.",
+    "Right. The defender went inside with the pivot, so the outside runner is free.",
+    "A defender stands in that long lane, so the pass could be cut out."
+   ],
+   "visual": {
+    "kind": "bestPass",
+    "frame": {
+     "step": 4,
+     "place": {
+      "gk": {"x": 140, "y": 365}, "cb": {"x": 165, "y": 275}, "lm": {"x": 35, "y": 220}, "rm": {"x": 245, "y": 150}, "st": {"x": 180, "y": 180},
+      "dgk": {"x": 150, "y": 30}, "dcb": {"x": 120, "y": 100}, "dlm": {"x": 65, "y": 155}, "drm": {"x": 165, "y": 184}, "dst": {"x": 100, "y": 245}
+     },
+     "ball": "cb",
+     "focus": ["cb", "rm"]
+    },
+    "from": "cb",
+    "to": ["st", "rm", "lm"]
+   }
+  }
+ ]
+}

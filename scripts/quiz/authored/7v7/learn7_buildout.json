@@ -1,0 +1,155 @@
+{
+ "lesson": "learn7_buildout",
+ "questions": [
+  {
+   "q": "True or false? Blue must wait until our defender touches the ball.",
+   "options": [
+    "True",
+    "False"
+   ],
+   "correct": 1,
+   "explain": "Right, it's false. Once the kick moves the ball, blue can press.",
+   "choiceExplanations": [
+    "Blue can come once the kick is taken and the ball moves.",
+    "Right, it's false. Once the kick moves the ball, blue can press."
+   ],
+   "visual": {
+    "kind": "trueFalse",
+    "frame": {
+     "step": 5,
+     "focus": [
+      "lb",
+      "dcm"
+     ],
+     "marks": [
+      {
+       "kind": "zone",
+       "x": 135,
+       "y": 267,
+       "w": 266,
+       "h": 3,
+       "tone": "gold"
+      },
+      {
+       "kind": "label",
+       "x": 52,
+       "y": 300,
+       "text": "Build-out line"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "q": "A goal kick with the build-out line. Put the steps in order.",
+   "options": [
+    "Blue moves back past the line",
+    "Keeper kicks to the left defender",
+    "Blue may now cross the line",
+    "Defender passes to midfield"
+   ],
+   "correct": 0,
+   "explain": "Right. Blue moves back, we kick, blue may come, so we pass on.",
+   "choiceExplanations": [
+    "Right. Blue moves back, we kick, blue may come, so we pass on.",
+    "The keeper kicks only after blue has moved back past the line.",
+    "Blue may cross the line only after the kick moves the ball.",
+    "The defender passes to midfield last, before the pressure arrives."
+   ],
+   "visual": {
+    "kind": "order",
+    "frame": {
+     "step": 3,
+     "focus": [
+      "gk",
+      "dcm"
+     ],
+     "marks": [
+      {
+       "kind": "zone",
+       "x": 135,
+       "y": 267,
+       "w": 266,
+       "h": 3,
+       "tone": "gold"
+      },
+      {
+       "kind": "label",
+       "x": 52,
+       "y": 300,
+       "text": "Build-out line"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "q": "Before the kick, blue's forward is too close. Where must they go?",
+   "options": [
+    "Closer to our goalkeeper",
+    "Right on the line",
+    "Beyond the line, toward halfway"
+   ],
+   "correct": 2,
+   "explain": "Yes. Blue moves past the line, so we have room to restart.",
+   "choiceExplanations": [
+    "That is even closer to our keeper. Blue must give us room.",
+    "Standing on the line is not enough. Blue must move past it.",
+    "Yes. Blue moves past the line, so we have room to restart."
+   ],
+   "visual": {
+    "kind": "dragToZone",
+    "frame": {
+     "step": 3,
+     "place": {
+      "dst": {
+       "x": 195,
+       "y": 295
+      }
+     },
+     "focus": [
+      "dst",
+      "gk"
+     ],
+     "marks": [
+      {
+       "kind": "zone",
+       "x": 135,
+       "y": 267,
+       "w": 266,
+       "h": 3,
+       "tone": "gold"
+      },
+      {
+       "kind": "label",
+       "x": 52,
+       "y": 300,
+       "text": "Build-out line"
+      }
+     ]
+    },
+    "drag": "dst",
+    "zones": [
+     {
+      "x": 170,
+      "y": 350,
+      "w": 36,
+      "h": 28
+     },
+     {
+      "x": 235,
+      "y": 267,
+      "w": 44,
+      "h": 20
+     },
+     {
+      "x": 170,
+      "y": 232,
+      "w": 44,
+      "h": 36
+     }
+    ]
+   }
+  }
+ ]
+}

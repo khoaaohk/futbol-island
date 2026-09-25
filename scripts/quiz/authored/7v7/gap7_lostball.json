@@ -1,0 +1,18 @@
+{"lesson":"gap7_lostball","questions":[
+{"q":"Blue just stole our pass. What should you do next?",
+ "options":["Keep running forward to attack","Run back to protect the middle","Everyone chases the ball"],"correct":1,
+ "explain":"Yes. We lost the ball, so run back and protect the way to our goal.",
+ "choiceExplanations":["Blue has the ball now, so running forward leaves our goal open.","Yes. We lost the ball, so run back and protect the way to our goal.","If everyone chases, blue passes around us to the free runner."],
+ "visual":{"kind":"whatNext","frame":{"step":1,"trails":true,"focus":["cm","dcm","dst"]}}},
+{"q":"True or false? The center midfielder is covering behind the right midfielder.",
+ "options":["True","False"],"correct":0,
+ "explain":"Right, it's true. One player slows the ball, and the other helps behind.",
+ "choiceExplanations":["Right, it's true. One player slows the ball, and the other helps behind.","Look behind the right midfielder. The center midfielder is there to help."],
+ "visual":{"kind":"trueFalse","frame":{"step":6,"focus":["cm","rm"]}}},
+{"q":"Blue wins it on the left. Drag the center midfielder back.",
+ "options":["Back across the middle","Up at the carrier","Out on the right"],"correct":0,
+ "explain":"Yes. Running back across blocks the pass to the runner near our goal.",
+ "choiceExplanations":["Yes. Running back across blocks the pass to the runner near our goal.","Running at the carrier leaves the middle open for an easy pass.","That is far from the ball, so the middle pass is wide open."],
+ "visual":{"kind":"dragToZone","frame":{"step":3,"place":{"dcm":{"x":95,"y":255}},"ball":"dcm","focus":["cm","dcm","dst"]},
+  "drag":"cm","zones":[{"x":112,"y":288,"w":36,"h":34},{"x":95,"y":222,"w":36,"h":34},{"x":190,"y":248,"w":36,"h":34}]}}
+]}

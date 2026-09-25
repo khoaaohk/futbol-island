@@ -1,0 +1,107 @@
+{
+ "lesson": "nx9_twoblocks",
+ "questions": [
+  {
+   "q": "True or false? In three-two-three, our two midfielders should stand at the same height.",
+   "options": [
+    "True",
+    "False"
+   ],
+   "correct": 1,
+   "explain": "Right, it's false. One sits lower to link the defenders, and one higher to link the forwards.",
+   "choiceExplanations": [
+    "At the same height, both link the same block, and the other block is cut off.",
+    "Right, it's false. One sits lower to link the defenders, and one higher to link the forwards."
+   ],
+   "visual": {
+    "kind": "trueFalse",
+    "frame": {
+     "step": 7,
+     "focus": [
+      "lcm",
+      "rcm"
+     ]
+    }
+   }
+  },
+  {
+   "q": "Put the midfield link-up in order, from first to last.",
+   "options": [
+    "Partner shows higher between units",
+    "Lower midfielder passes to the higher one",
+    "Left midfielder moves up higher",
+    "Partner drops to the lower diagonal"
+   ],
+   "correct": 0,
+   "explain": "Yes. They make two heights, connect, then swap jobs so each block keeps a link.",
+   "choiceExplanations": [
+    "Yes. They make two heights, connect, then swap jobs so each block keeps a link.",
+    "The pass needs the higher partner in place first.",
+    "The left midfielder moves higher after the first diagonal pass.",
+    "The partner drops last, to replace the lower link the left midfielder left."
+   ],
+   "visual": {
+    "kind": "order",
+    "frame": {
+     "step": 5,
+     "focus": [
+      "lcm",
+      "rcm"
+     ]
+    }
+   }
+  },
+  {
+   "q": "Now the right midfielder links the back three. Drag the left midfielder to link the forwards.",
+   "options": [
+    "Low, beside the right midfielder",
+    "Up in the front line",
+    "Higher, between the two blocks"
+   ],
+   "correct": 2,
+   "explain": "Yes. Higher between the blocks, the left midfielder links the forwards while the partner stays low.",
+   "choiceExplanations": [
+    "Both midfielders are low then, so nobody links the front three.",
+    "Up there you join the forwards, and the gap between blocks is left empty.",
+    "Yes. Higher between the blocks, the left midfielder links the forwards while the partner stays low."
+   ],
+   "visual": {
+    "kind": "dragToZone",
+    "frame": {
+     "step": 5,
+     "place": {
+      "rcm": {
+       "x": 160,
+       "y": 292
+      }
+     },
+     "focus": [
+      "lcm",
+      "rcm"
+     ]
+    },
+    "drag": "lcm",
+    "zones": [
+     {
+      "x": 100,
+      "y": 312,
+      "w": 34,
+      "h": 26
+     },
+     {
+      "x": 85,
+      "y": 140,
+      "w": 36,
+      "h": 28
+     },
+     {
+      "x": 135,
+      "y": 215,
+      "w": 36,
+      "h": 28
+     }
+    ]
+   }
+  }
+ ]
+}

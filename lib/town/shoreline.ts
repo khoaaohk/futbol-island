@@ -31,6 +31,9 @@ export function distanceToShore(x:number,z:number){
  return Math.sqrt(squared);
 }
 
-/** Broad inland lawn, set back from the sand ribbon to retain a tan coastal margin. */
+/** Southern lawn meets the coastal sand and pier; northern beach keeps its setback. */
 export const INTERIOR_GRASS_COLOR='#6e9678';
-export const INTERIOR_GRASS=SHORE_SAND.map(({inner})=>({x:85+(inner.x-85)*.9,z:-10+(inner.z+10)*.9}));
+export const INTERIOR_GRASS=SHORE_SAND.map(({inner})=>{
+ const south=Math.max(0,Math.min(1,(inner.z-110)/35)),scale=.9+.1*south;
+ return {x:85+(inner.x-85)*scale,z:-10+(inner.z+10)*scale};
+});

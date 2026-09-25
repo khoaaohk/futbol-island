@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The final, live",
+   "text": "Moscow, 2018: the World Cup final. The referee checks the video. Penalty to France! The keeper takes his time. Antoine Griezmann runs in, pauses... and rolls it in. Goal!",
+   "src": "/plays/narration/griezmann-penalty-2018/1.m4a",
+   "seconds": 13.5,
+   "words": [
+    {
+     "w": "Moscow",
+     "at": 0.4
+    },
+    {
+     "w": "2018",
+     "at": 0.925
+    },
+    {
+     "w": "the",
+     "at": 1.725
+    },
+    {
+     "w": "World",
+     "at": 1.825
+    },
+    {
+     "w": "Cup",
+     "at": 2.125
+    },
+    {
+     "w": "final",
+     "at": 2.35
+    },
+    {
+     "w": "The",
+     "at": 3.212
+    },
+    {
+     "w": "referee",
+     "at": 3.325
+    },
+    {
+     "w": "checks",
+     "at": 3.788
+    },
+    {
+     "w": "the",
+     "at": 4.1
+    },
+    {
+     "w": "video",
+     "at": 4.2
+    },
+    {
+     "w": "Penalty",
+     "at": 5.112
+    },
+    {
+     "w": "to",
+     "at": 5.625
+    },
+    {
+     "w": "France",
+     "at": 5.763
+    },
+    {
+     "w": "The",
+     "at": 6.5
+    },
+    {
+     "w": "keeper",
+     "at": 6.6
+    },
+    {
+     "w": "takes",
+     "at": 6.975
+    },
+    {
+     "w": "his",
+     "at": 7.237
+    },
+    {
+     "w": "time",
+     "at": 7.4
+    },
+    {
+     "w": "Antoine",
+     "at": 8.175
+    },
+    {
+     "w": "Griezmann",
+     "at": 8.7
+    },
+    {
+     "w": "runs",
+     "at": 9.275
+    },
+    {
+     "w": "in",
+     "at": 9.6
+    },
+    {
+     "w": "pauses",
+     "at": 9.912
+    },
+    {
+     "w": "and",
+     "at": 10.775
+    },
+    {
+     "w": "rolls",
+     "at": 10.9
+    },
+    {
+     "w": "it",
+     "at": 11.262
+    },
+    {
+     "w": "in",
+     "at": 11.35
+    },
+    {
+     "w": "Goal",
+     "at": 12.05
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again, slowly. A calm run-up, then a pause. He watches Suba\u0161i\u0107 move first... and rolls it the other way.",
+   "src": "/plays/narration/griezmann-penalty-2018/2.m4a",
+   "seconds": 8.4,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "slowly",
+     "at": 1.188
+    },
+    {
+     "w": "A",
+     "at": 2.112
+    },
+    {
+     "w": "calm",
+     "at": 2.237
+    },
+    {
+     "w": "run-up",
+     "at": 2.575
+    },
+    {
+     "w": "then",
+     "at": 2.938
+    },
+    {
+     "w": "a",
+     "at": 3.062
+    },
+    {
+     "w": "pause",
+     "at": 3.138
+    },
+    {
+     "w": "He",
+     "at": 3.875
+    },
+    {
+     "w": "watches",
+     "at": 4.025
+    },
+    {
+     "w": "Suba\u0161i\u0107",
+     "at": 4.438
+    },
+    {
+     "w": "move",
+     "at": 4.95
+    },
+    {
+     "w": "first",
+     "at": 5.213
+    },
+    {
+     "w": "and",
+     "at": 6.05
+    },
+    {
+     "w": "rolls",
+     "at": 6.175
+    },
+    {
+     "w": "it",
+     "at": 6.537
+    },
+    {
+     "w": "the",
+     "at": 6.612
+    },
+    {
+     "w": "other",
+     "at": 6.75
+    },
+    {
+     "w": "way",
+     "at": 7.05
+    }
+   ]
+  },
+  {
+   "label": "The wrong way",
+   "text": "From the goal line: the keeper dives one way, the ball goes the other! France go on to be world champions!",
+   "src": "/plays/narration/griezmann-penalty-2018/3.m4a",
+   "seconds": 7.6,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "the",
+     "at": 0.487
+    },
+    {
+     "w": "goal",
+     "at": 0.575
+    },
+    {
+     "w": "line",
+     "at": 0.85
+    },
+    {
+     "w": "the",
+     "at": 1.6
+    },
+    {
+     "w": "keeper",
+     "at": 1.7
+    },
+    {
+     "w": "dives",
+     "at": 2.075
+    },
+    {
+     "w": "one",
+     "at": 2.562
+    },
+    {
+     "w": "way",
+     "at": 2.8
+    },
+    {
+     "w": "the",
+     "at": 3.138
+    },
+    {
+     "w": "ball",
+     "at": 3.225
+    },
+    {
+     "w": "goes",
+     "at": 3.525
+    },
+    {
+     "w": "the",
+     "at": 3.788
+    },
+    {
+     "w": "other",
+     "at": 3.925
+    },
+    {
+     "w": "France",
+     "at": 4.725
+    },
+    {
+     "w": "go",
+     "at": 5.125
+    },
+    {
+     "w": "on",
+     "at": 5.287
+    },
+    {
+     "w": "to",
+     "at": 5.412
+    },
+    {
+     "w": "be",
+     "at": 5.487
+    },
+    {
+     "w": "world",
+     "at": 5.625
+    },
+    {
+     "w": "champions",
+     "at": 5.963
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "The secret? Keep your run-up calm. Watch the keeper. If he moves, strike the other side with confidence!",
+   "src": "/plays/narration/griezmann-penalty-2018/4.m4a",
+   "seconds": 7.2,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "secret",
+     "at": 0.463
+    },
+    {
+     "w": "Keep",
+     "at": 1.15
+    },
+    {
+     "w": "your",
+     "at": 1.337
+    },
+    {
+     "w": "run-up",
+     "at": 1.45
+    },
+    {
+     "w": "calm",
+     "at": 1.775
+    },
+    {
+     "w": "Watch",
+     "at": 2.388
+    },
+    {
+     "w": "the",
+     "at": 2.725
+    },
+    {
+     "w": "keeper",
+     "at": 2.825
+    },
+    {
+     "w": "If",
+     "at": 3.675
+    },
+    {
+     "w": "he",
+     "at": 3.837
+    },
+    {
+     "w": "moves",
+     "at": 3.962
+    },
+    {
+     "w": "strike",
+     "at": 4.475
+    },
+    {
+     "w": "the",
+     "at": 4.787
+    },
+    {
+     "w": "other",
+     "at": 4.862
+    },
+    {
+     "w": "side",
+     "at": 5.112
+    },
+    {
+     "w": "with",
+     "at": 5.388
+    },
+    {
+     "w": "confidence",
+     "at": 5.55
+    }
+   ]
+  }
+ ]
+}

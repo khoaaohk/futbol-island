@@ -1,0 +1,147 @@
+{
+ "lesson": "exp11_secondball",
+ "questions": [
+  {
+   "q": "The near midfielder arrives at the loose ball. Tap where the central partner should stay.",
+   "options": [
+    "Beside the midfielder at the ball",
+    "Up with the two forwards",
+    "Deeper, behind the ball"
+   ],
+   "correct": 2,
+   "explain": "Yes. Staying deeper, the partner can delay a counterattack if Blue reaches the next touch first.",
+   "choiceExplanations": [
+    "Two midfielders on one ball leaves nobody to delay a counterattack if Blue wins it.",
+    "Joining the forwards leaves the middle empty behind the contest.",
+    "Yes. Staying deeper, the partner can delay a counterattack if Blue reaches the next touch first."
+   ],
+   "visual": {
+    "kind": "tapSpot",
+    "frame": {
+     "step": 4,
+     "hide": [
+      "six"
+     ],
+     "focus": [
+      "l8"
+     ]
+    },
+    "spots": [
+     {
+      "x": 118,
+      "y": 250
+     },
+     {
+      "x": 145,
+      "y": 180
+     },
+     {
+      "x": 126,
+      "y": 284
+     }
+    ]
+   }
+  },
+  {
+   "q": "Follow the second ball. Put these moments in order, first to last.",
+   "options": [
+    "Forwards hold different depths",
+    "A challenged touch leaves it loose",
+    "Near midfielder arrives underneath",
+    "Blue wins it, recover through the middle"
+   ],
+   "correct": 0,
+   "explain": "Right. Set the depths, the ball drops loose, support arrives, then recover when Blue wins it.",
+   "choiceExplanations": [
+    "Right. Set the depths, the ball drops loose, support arrives, then recover when Blue wins it.",
+    "The ball only drops loose after the forwards set their depths and contest it.",
+    "The midfielder arrives once the ball is loose, not before the challenge.",
+    "Recovering comes last, once Blue has reached the next touch first."
+   ],
+   "visual": {
+    "kind": "order",
+    "frames": [
+     {
+      "step": 0,
+      "focus": [
+       "st",
+       "rw"
+      ],
+      "view": {
+       "x": 0,
+       "y": 165,
+       "w": 270,
+       "h": 170
+      }
+     },
+     {
+      "step": 2,
+      "focus": [
+       "st"
+      ],
+      "view": {
+       "x": 0,
+       "y": 165,
+       "w": 270,
+       "h": 170
+      }
+     },
+     {
+      "step": 4,
+      "focus": [
+       "l8"
+      ],
+      "view": {
+       "x": 0,
+       "y": 165,
+       "w": 270,
+       "h": 170
+      }
+     },
+     {
+      "step": 7,
+      "focus": [
+       "l8",
+       "six"
+      ],
+      "view": {
+       "x": 0,
+       "y": 165,
+       "w": 270,
+       "h": 170
+      }
+     }
+    ]
+   }
+  },
+  {
+   "q": "True or false? Here both central midfielders arrive at the loose ball, and your team is protected against a counter.",
+   "options": [
+    "True",
+    "False"
+   ],
+   "correct": 1,
+   "explain": "Right, it's false. One midfielder must stay deeper, so a Blue counterattack meets a delaying player.",
+   "choiceExplanations": [
+    "With both midfielders at the ball, nobody stays deeper to delay Blue if they win the next touch.",
+    "Right, it's false. One midfielder must stay deeper, so a Blue counterattack meets a delaying player."
+   ],
+   "visual": {
+    "kind": "trueFalse",
+    "frame": {
+     "step": 4,
+     "place": {
+      "six": {
+       "x": 120,
+       "y": 252
+      }
+     },
+     "focus": [
+      "l8",
+      "six"
+     ]
+    }
+   }
+  }
+ ]
+}

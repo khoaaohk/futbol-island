@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Stuttgart, 2024",
+   "text": "Stuttgart, 2024. Spain against Germany, one all, the last minute of extra time. Dani Olmo clips in a cross... Mikel Merino heads it in! Spain win!",
+   "src": "/plays/narration/merino-signature/1.m4a",
+   "seconds": 12.1,
+   "words": [
+    {
+     "w": "Stuttgart",
+     "at": 0.35
+    },
+    {
+     "w": "2024",
+     "at": 0.9
+    },
+    {
+     "w": "Spain",
+     "at": 2.3
+    },
+    {
+     "w": "against",
+     "at": 2.65
+    },
+    {
+     "w": "Germany",
+     "at": 3.062
+    },
+    {
+     "w": "one",
+     "at": 3.663
+    },
+    {
+     "w": "all",
+     "at": 3.9
+    },
+    {
+     "w": "the",
+     "at": 4.225
+    },
+    {
+     "w": "last",
+     "at": 4.35
+    },
+    {
+     "w": "minute",
+     "at": 4.75
+    },
+    {
+     "w": "of",
+     "at": 4.987
+    },
+    {
+     "w": "extra",
+     "at": 5.075
+    },
+    {
+     "w": "time",
+     "at": 5.475
+    },
+    {
+     "w": "Dani",
+     "at": 6.375
+    },
+    {
+     "w": "Olmo",
+     "at": 6.775
+    },
+    {
+     "w": "clips",
+     "at": 7.138
+    },
+    {
+     "w": "in",
+     "at": 7.463
+    },
+    {
+     "w": "a",
+     "at": 7.537
+    },
+    {
+     "w": "cross",
+     "at": 7.6
+    },
+    {
+     "w": "Mikel",
+     "at": 8.512
+    },
+    {
+     "w": "Merino",
+     "at": 8.9
+    },
+    {
+     "w": "heads",
+     "at": 9.4
+    },
+    {
+     "w": "it",
+     "at": 9.637
+    },
+    {
+     "w": "in",
+     "at": 9.725
+    },
+    {
+     "w": "Spain",
+     "at": 10.3
+    },
+    {
+     "w": "win",
+     "at": 10.725
+    }
+   ]
+  },
+  {
+   "label": "Watch his run",
+   "text": "Watch again. Merino waits outside the box. Every defender watches the ball. Then he runs in late, and jumps!",
+   "src": "/plays/narration/merino-signature/2.m4a",
+   "seconds": 8.4,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "Merino",
+     "at": 1.413
+    },
+    {
+     "w": "waits",
+     "at": 1.9
+    },
+    {
+     "w": "outside",
+     "at": 2.163
+    },
+    {
+     "w": "the",
+     "at": 2.562
+    },
+    {
+     "w": "box",
+     "at": 2.65
+    },
+    {
+     "w": "Every",
+     "at": 3.487
+    },
+    {
+     "w": "defender",
+     "at": 3.825
+    },
+    {
+     "w": "watches",
+     "at": 4.35
+    },
+    {
+     "w": "the",
+     "at": 4.75
+    },
+    {
+     "w": "ball",
+     "at": 4.85
+    },
+    {
+     "w": "Then",
+     "at": 5.575
+    },
+    {
+     "w": "he",
+     "at": 5.775
+    },
+    {
+     "w": "runs",
+     "at": 5.938
+    },
+    {
+     "w": "in",
+     "at": 6.275
+    },
+    {
+     "w": "late",
+     "at": 6.425
+    },
+    {
+     "w": "and",
+     "at": 6.8
+    },
+    {
+     "w": "jumps",
+     "at": 6.938
+    }
+   ]
+  },
+  {
+   "label": "Like his dad",
+   "text": "From behind the goal: a twist of the neck, past Manuel Neuer! Merino circles the corner flag, like his dad did here in 1991.",
+   "src": "/plays/narration/merino-signature/3.m4a",
+   "seconds": 10.3,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "behind",
+     "at": 0.5
+    },
+    {
+     "w": "the",
+     "at": 0.887
+    },
+    {
+     "w": "goal",
+     "at": 0.975
+    },
+    {
+     "w": "a",
+     "at": 1.738
+    },
+    {
+     "w": "twist",
+     "at": 1.863
+    },
+    {
+     "w": "of",
+     "at": 2.188
+    },
+    {
+     "w": "the",
+     "at": 2.263
+    },
+    {
+     "w": "neck",
+     "at": 2.35
+    },
+    {
+     "w": "past",
+     "at": 2.788
+    },
+    {
+     "w": "Manuel",
+     "at": 3.188
+    },
+    {
+     "w": "Neuer",
+     "at": 3.675
+    },
+    {
+     "w": "Merino",
+     "at": 4.638
+    },
+    {
+     "w": "circles",
+     "at": 5.15
+    },
+    {
+     "w": "the",
+     "at": 5.625
+    },
+    {
+     "w": "corner",
+     "at": 5.725
+    },
+    {
+     "w": "flag",
+     "at": 6.138
+    },
+    {
+     "w": "like",
+     "at": 6.85
+    },
+    {
+     "w": "his",
+     "at": 7.013
+    },
+    {
+     "w": "dad",
+     "at": 7.188
+    },
+    {
+     "w": "did",
+     "at": 7.575
+    },
+    {
+     "w": "here",
+     "at": 7.75
+    },
+    {
+     "w": "in",
+     "at": 8.0
+    },
+    {
+     "w": "1991",
+     "at": 8.125
+    }
+   ]
+  },
+  {
+   "label": "Arrive late",
+   "text": "Arrive late! Defenders watch the ball and forget the midfielder. Wait, then run into the gap, or the back post!",
+   "src": "/plays/narration/merino-signature/4.m4a",
+   "seconds": 8.0,
+   "words": [
+    {
+     "w": "Arrive",
+     "at": 0.375
+    },
+    {
+     "w": "late",
+     "at": 0.725
+    },
+    {
+     "w": "Defenders",
+     "at": 1.4
+    },
+    {
+     "w": "watch",
+     "at": 1.975
+    },
+    {
+     "w": "the",
+     "at": 2.3
+    },
+    {
+     "w": "ball",
+     "at": 2.4
+    },
+    {
+     "w": "and",
+     "at": 2.712
+    },
+    {
+     "w": "forget",
+     "at": 2.825
+    },
+    {
+     "w": "the",
+     "at": 3.138
+    },
+    {
+     "w": "midfielder",
+     "at": 3.225
+    },
+    {
+     "w": "Wait",
+     "at": 4.425
+    },
+    {
+     "w": "then",
+     "at": 5.05
+    },
+    {
+     "w": "run",
+     "at": 5.275
+    },
+    {
+     "w": "into",
+     "at": 5.463
+    },
+    {
+     "w": "the",
+     "at": 5.638
+    },
+    {
+     "w": "gap",
+     "at": 5.725
+    },
+    {
+     "w": "or",
+     "at": 6.088
+    },
+    {
+     "w": "the",
+     "at": 6.188
+    },
+    {
+     "w": "back",
+     "at": 6.275
+    },
+    {
+     "w": "post",
+     "at": 6.55
+    }
+   ]
+  }
+ ]
+}

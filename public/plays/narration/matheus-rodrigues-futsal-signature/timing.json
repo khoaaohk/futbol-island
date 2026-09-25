@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: Yerevan 2024",
+   "text": "Yerevan, 2024. Barcelona play Sporting in a futsal Champions League semi final. Four all, then Matheus Rodrigues scores the fifth. Barcelona win five four!",
+   "src": "/plays/narration/matheus-rodrigues-futsal-signature/1.m4a",
+   "seconds": 12.8,
+   "words": [
+    {
+     "w": "Yerevan",
+     "at": 0.4
+    },
+    {
+     "w": "2024",
+     "at": 1.1
+    },
+    {
+     "w": "Barcelona",
+     "at": 2.462
+    },
+    {
+     "w": "play",
+     "at": 3.1
+    },
+    {
+     "w": "Sporting",
+     "at": 3.388
+    },
+    {
+     "w": "in",
+     "at": 3.812
+    },
+    {
+     "w": "a",
+     "at": 3.888
+    },
+    {
+     "w": "futsal",
+     "at": 3.962
+    },
+    {
+     "w": "Champions",
+     "at": 4.412
+    },
+    {
+     "w": "League",
+     "at": 4.975
+    },
+    {
+     "w": "semi",
+     "at": 5.312
+    },
+    {
+     "w": "final",
+     "at": 5.713
+    },
+    {
+     "w": "Four",
+     "at": 6.6
+    },
+    {
+     "w": "all",
+     "at": 6.85
+    },
+    {
+     "w": "then",
+     "at": 7.213
+    },
+    {
+     "w": "Matheus",
+     "at": 7.35
+    },
+    {
+     "w": "Rodrigues",
+     "at": 7.925
+    },
+    {
+     "w": "scores",
+     "at": 8.662
+    },
+    {
+     "w": "the",
+     "at": 9.075
+    },
+    {
+     "w": "fifth",
+     "at": 9.188
+    },
+    {
+     "w": "Barcelona",
+     "at": 10.062
+    },
+    {
+     "w": "win",
+     "at": 10.7
+    },
+    {
+     "w": "five",
+     "at": 11.0
+    },
+    {
+     "w": "four",
+     "at": 11.387
+    }
+   ]
+  },
+  {
+   "label": "How he does it",
+   "text": "Here\u2019s how he does it. He runs at the defender, fast. One foot pushes the ball out, then snaps it back in. The defender is fooled, and he shoots!",
+   "src": "/plays/narration/matheus-rodrigues-futsal-signature/2.m4a",
+   "seconds": 10.4,
+   "words": [
+    {
+     "w": "Here",
+     "at": 0.375
+    },
+    {
+     "w": "s",
+     "at": 0.725
+    },
+    {
+     "w": "how",
+     "at": 0.925
+    },
+    {
+     "w": "he",
+     "at": 1.062
+    },
+    {
+     "w": "does",
+     "at": 1.175
+    },
+    {
+     "w": "it",
+     "at": 1.413
+    },
+    {
+     "w": "He",
+     "at": 1.975
+    },
+    {
+     "w": "runs",
+     "at": 2.138
+    },
+    {
+     "w": "at",
+     "at": 2.487
+    },
+    {
+     "w": "the",
+     "at": 2.562
+    },
+    {
+     "w": "defender",
+     "at": 2.65
+    },
+    {
+     "w": "fast",
+     "at": 3.2
+    },
+    {
+     "w": "One",
+     "at": 4.1
+    },
+    {
+     "w": "foot",
+     "at": 4.412
+    },
+    {
+     "w": "pushes",
+     "at": 4.675
+    },
+    {
+     "w": "the",
+     "at": 5.0
+    },
+    {
+     "w": "ball",
+     "at": 5.1
+    },
+    {
+     "w": "out",
+     "at": 5.4
+    },
+    {
+     "w": "then",
+     "at": 5.688
+    },
+    {
+     "w": "snaps",
+     "at": 5.9
+    },
+    {
+     "w": "it",
+     "at": 6.287
+    },
+    {
+     "w": "back",
+     "at": 6.375
+    },
+    {
+     "w": "in",
+     "at": 6.65
+    },
+    {
+     "w": "The",
+     "at": 7.412
+    },
+    {
+     "w": "defender",
+     "at": 7.525
+    },
+    {
+     "w": "is",
+     "at": 8.025
+    },
+    {
+     "w": "fooled",
+     "at": 8.213
+    },
+    {
+     "w": "and",
+     "at": 8.713
+    },
+    {
+     "w": "he",
+     "at": 8.812
+    },
+    {
+     "w": "shoots",
+     "at": 8.963
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. Out and back in, one quick touch. The defender leans the wrong way.",
+   "src": "/plays/narration/matheus-rodrigues-futsal-signature/3.m4a",
+   "seconds": 6.9,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.662
+    },
+    {
+     "w": "slowly",
+     "at": 1.137
+    },
+    {
+     "w": "Out",
+     "at": 2.038
+    },
+    {
+     "w": "and",
+     "at": 2.263
+    },
+    {
+     "w": "back",
+     "at": 2.375
+    },
+    {
+     "w": "in",
+     "at": 2.663
+    },
+    {
+     "w": "one",
+     "at": 2.875
+    },
+    {
+     "w": "quick",
+     "at": 3.1
+    },
+    {
+     "w": "touch",
+     "at": 3.35
+    },
+    {
+     "w": "The",
+     "at": 4.125
+    },
+    {
+     "w": "defender",
+     "at": 4.225
+    },
+    {
+     "w": "leans",
+     "at": 4.725
+    },
+    {
+     "w": "the",
+     "at": 5.075
+    },
+    {
+     "w": "wrong",
+     "at": 5.2
+    },
+    {
+     "w": "way",
+     "at": 5.525
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn. Tricks work best when you do them at speed, and with a purpose: get past and score!",
+   "src": "/plays/narration/matheus-rodrigues-futsal-signature/4.m4a",
+   "seconds": 6.7,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.512
+    },
+    {
+     "w": "Tricks",
+     "at": 1.363
+    },
+    {
+     "w": "work",
+     "at": 1.675
+    },
+    {
+     "w": "best",
+     "at": 1.9
+    },
+    {
+     "w": "when",
+     "at": 2.188
+    },
+    {
+     "w": "you",
+     "at": 2.325
+    },
+    {
+     "w": "do",
+     "at": 2.425
+    },
+    {
+     "w": "them",
+     "at": 2.562
+    },
+    {
+     "w": "at",
+     "at": 2.688
+    },
+    {
+     "w": "speed",
+     "at": 2.812
+    },
+    {
+     "w": "and",
+     "at": 3.3
+    },
+    {
+     "w": "with",
+     "at": 3.413
+    },
+    {
+     "w": "a",
+     "at": 3.513
+    },
+    {
+     "w": "purpose",
+     "at": 3.575
+    },
+    {
+     "w": "get",
+     "at": 4.45
+    },
+    {
+     "w": "past",
+     "at": 4.638
+    },
+    {
+     "w": "and",
+     "at": 5.075
+    },
+    {
+     "w": "score",
+     "at": 5.213
+    }
+   ]
+  }
+ ]
+}

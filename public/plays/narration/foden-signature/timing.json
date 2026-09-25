@@ -1,0 +1,362 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Set and strike",
+   "text": "The Etihad, final day. Win, and Manchester City are champions. Two minutes in, Bernardo Silva squares it to Phil Foden, in sky blue. One touch, then bang! Top corner!",
+   "src": "/plays/narration/foden-signature/1.m4a",
+   "seconds": 13.0,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "Etihad",
+     "at": 0.475
+    },
+    {
+     "w": "final",
+     "at": 1.087
+    },
+    {
+     "w": "day",
+     "at": 1.5
+    },
+    {
+     "w": "Win",
+     "at": 2.225
+    },
+    {
+     "w": "and",
+     "at": 2.7
+    },
+    {
+     "w": "Manchester",
+     "at": 2.825
+    },
+    {
+     "w": "City",
+     "at": 3.413
+    },
+    {
+     "w": "are",
+     "at": 3.7
+    },
+    {
+     "w": "champions",
+     "at": 3.837
+    },
+    {
+     "w": "Two",
+     "at": 5.05
+    },
+    {
+     "w": "minutes",
+     "at": 5.275
+    },
+    {
+     "w": "in",
+     "at": 5.562
+    },
+    {
+     "w": "Bernardo",
+     "at": 5.775
+    },
+    {
+     "w": "Silva",
+     "at": 6.312
+    },
+    {
+     "w": "squares",
+     "at": 6.713
+    },
+    {
+     "w": "it",
+     "at": 7.125
+    },
+    {
+     "w": "to",
+     "at": 7.225
+    },
+    {
+     "w": "Phil",
+     "at": 7.35
+    },
+    {
+     "w": "Foden",
+     "at": 7.625
+    },
+    {
+     "w": "in",
+     "at": 8.2
+    },
+    {
+     "w": "sky",
+     "at": 8.363
+    },
+    {
+     "w": "blue",
+     "at": 8.738
+    },
+    {
+     "w": "One",
+     "at": 9.575
+    },
+    {
+     "w": "touch",
+     "at": 9.912
+    },
+    {
+     "w": "then",
+     "at": 10.325
+    },
+    {
+     "w": "bang",
+     "at": 10.562
+    },
+    {
+     "w": "Top",
+     "at": 11.262
+    },
+    {
+     "w": "corner",
+     "at": 11.588
+    }
+   ]
+  },
+  {
+   "label": "Across his body",
+   "text": "Watch again. His first touch takes it across his body, away from the defender, set for his left foot.",
+   "src": "/plays/narration/foden-signature/2.m4a",
+   "seconds": 7.3,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "His",
+     "at": 1.525
+    },
+    {
+     "w": "first",
+     "at": 1.725
+    },
+    {
+     "w": "touch",
+     "at": 2.025
+    },
+    {
+     "w": "takes",
+     "at": 2.35
+    },
+    {
+     "w": "it",
+     "at": 2.612
+    },
+    {
+     "w": "across",
+     "at": 2.688
+    },
+    {
+     "w": "his",
+     "at": 2.987
+    },
+    {
+     "w": "body",
+     "at": 3.15
+    },
+    {
+     "w": "away",
+     "at": 3.837
+    },
+    {
+     "w": "from",
+     "at": 4.2
+    },
+    {
+     "w": "the",
+     "at": 4.338
+    },
+    {
+     "w": "defender",
+     "at": 4.425
+    },
+    {
+     "w": "set",
+     "at": 5.112
+    },
+    {
+     "w": "for",
+     "at": 5.375
+    },
+    {
+     "w": "his",
+     "at": 5.487
+    },
+    {
+     "w": "left",
+     "at": 5.65
+    },
+    {
+     "w": "foot",
+     "at": 5.938
+    }
+   ]
+  },
+  {
+   "label": "No time",
+   "text": "The keeper has no time to get set. City won the league that day!",
+   "src": "/plays/narration/foden-signature/3.m4a",
+   "seconds": 4.8,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "keeper",
+     "at": 0.425
+    },
+    {
+     "w": "has",
+     "at": 0.8
+    },
+    {
+     "w": "no",
+     "at": 1.0
+    },
+    {
+     "w": "time",
+     "at": 1.175
+    },
+    {
+     "w": "to",
+     "at": 1.438
+    },
+    {
+     "w": "get",
+     "at": 1.525
+    },
+    {
+     "w": "set",
+     "at": 1.738
+    },
+    {
+     "w": "City",
+     "at": 2.45
+    },
+    {
+     "w": "won",
+     "at": 2.725
+    },
+    {
+     "w": "the",
+     "at": 2.862
+    },
+    {
+     "w": "league",
+     "at": 2.95
+    },
+    {
+     "w": "that",
+     "at": 3.2
+    },
+    {
+     "w": "day",
+     "at": 3.425
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: one touch to set the ball, then strike it low and quick, before the keeper is ready!",
+   "src": "/plays/narration/foden-signature/4.m4a",
+   "seconds": 6.8,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "one",
+     "at": 1.387
+    },
+    {
+     "w": "touch",
+     "at": 1.65
+    },
+    {
+     "w": "to",
+     "at": 1.925
+    },
+    {
+     "w": "set",
+     "at": 2.05
+    },
+    {
+     "w": "the",
+     "at": 2.212
+    },
+    {
+     "w": "ball",
+     "at": 2.3
+    },
+    {
+     "w": "then",
+     "at": 2.712
+    },
+    {
+     "w": "strike",
+     "at": 2.913
+    },
+    {
+     "w": "it",
+     "at": 3.212
+    },
+    {
+     "w": "low",
+     "at": 3.362
+    },
+    {
+     "w": "and",
+     "at": 3.725
+    },
+    {
+     "w": "quick",
+     "at": 3.862
+    },
+    {
+     "w": "before",
+     "at": 4.55
+    },
+    {
+     "w": "the",
+     "at": 4.838
+    },
+    {
+     "w": "keeper",
+     "at": 4.925
+    },
+    {
+     "w": "is",
+     "at": 5.3
+    },
+    {
+     "w": "ready",
+     "at": 5.45
+    }
+   ]
+  }
+ ]
+}

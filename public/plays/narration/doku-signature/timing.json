@@ -1,0 +1,358 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Slow, then boom",
+   "text": "The Etihad, in the rain. Doku strolls toward the box. Then boom, a burst of speed! He shapes to shoot, slips it to Rodri, gets it back, and curls it low into the far corner!",
+   "src": "/plays/narration/doku-signature/1.m4a",
+   "seconds": 12.2,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "Etihad",
+     "at": 0.475
+    },
+    {
+     "w": "in",
+     "at": 0.988
+    },
+    {
+     "w": "the",
+     "at": 1.062
+    },
+    {
+     "w": "rain",
+     "at": 1.15
+    },
+    {
+     "w": "Doku",
+     "at": 2.038
+    },
+    {
+     "w": "strolls",
+     "at": 2.438
+    },
+    {
+     "w": "toward",
+     "at": 2.925
+    },
+    {
+     "w": "the",
+     "at": 3.163
+    },
+    {
+     "w": "box",
+     "at": 3.25
+    },
+    {
+     "w": "Then",
+     "at": 4.088
+    },
+    {
+     "w": "boom",
+     "at": 4.362
+    },
+    {
+     "w": "a",
+     "at": 4.9
+    },
+    {
+     "w": "burst",
+     "at": 5.0
+    },
+    {
+     "w": "of",
+     "at": 5.312
+    },
+    {
+     "w": "speed",
+     "at": 5.412
+    },
+    {
+     "w": "He",
+     "at": 6.425
+    },
+    {
+     "w": "shapes",
+     "at": 6.6
+    },
+    {
+     "w": "to",
+     "at": 6.975
+    },
+    {
+     "w": "shoot",
+     "at": 7.125
+    },
+    {
+     "w": "slips",
+     "at": 7.588
+    },
+    {
+     "w": "it",
+     "at": 7.862
+    },
+    {
+     "w": "to",
+     "at": 7.95
+    },
+    {
+     "w": "Rodri",
+     "at": 8.075
+    },
+    {
+     "w": "gets",
+     "at": 8.675
+    },
+    {
+     "w": "it",
+     "at": 8.887
+    },
+    {
+     "w": "back",
+     "at": 8.975
+    },
+    {
+     "w": "and",
+     "at": 9.338
+    },
+    {
+     "w": "curls",
+     "at": 9.463
+    },
+    {
+     "w": "it",
+     "at": 9.875
+    },
+    {
+     "w": "low",
+     "at": 10.0
+    },
+    {
+     "w": "into",
+     "at": 10.238
+    },
+    {
+     "w": "the",
+     "at": 10.412
+    },
+    {
+     "w": "far",
+     "at": 10.512
+    },
+    {
+     "w": "corner",
+     "at": 10.775
+    }
+   ]
+  },
+  {
+   "label": "Change of pace",
+   "text": "Watch again. Slow, slow, then a sudden change of pace, and a quick one-two!",
+   "src": "/plays/narration/doku-signature/2.m4a",
+   "seconds": 5.7,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.662
+    },
+    {
+     "w": "Slow",
+     "at": 1.462
+    },
+    {
+     "w": "slow",
+     "at": 1.962
+    },
+    {
+     "w": "then",
+     "at": 2.388
+    },
+    {
+     "w": "a",
+     "at": 2.513
+    },
+    {
+     "w": "sudden",
+     "at": 2.587
+    },
+    {
+     "w": "change",
+     "at": 2.9
+    },
+    {
+     "w": "of",
+     "at": 3.188
+    },
+    {
+     "w": "pace",
+     "at": 3.275
+    },
+    {
+     "w": "and",
+     "at": 3.712
+    },
+    {
+     "w": "a",
+     "at": 3.812
+    },
+    {
+     "w": "quick",
+     "at": 3.875
+    },
+    {
+     "w": "one-two",
+     "at": 4.125
+    }
+   ]
+  },
+  {
+   "label": "The Doku show",
+   "text": "The keeper cannot reach it. Doku set up four more goals. City won six to one!",
+   "src": "/plays/narration/doku-signature/3.m4a",
+   "seconds": 6.3,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "keeper",
+     "at": 0.425
+    },
+    {
+     "w": "cannot",
+     "at": 0.8
+    },
+    {
+     "w": "reach",
+     "at": 1.15
+    },
+    {
+     "w": "it",
+     "at": 1.438
+    },
+    {
+     "w": "Doku",
+     "at": 1.988
+    },
+    {
+     "w": "set",
+     "at": 2.375
+    },
+    {
+     "w": "up",
+     "at": 2.513
+    },
+    {
+     "w": "four",
+     "at": 2.688
+    },
+    {
+     "w": "more",
+     "at": 2.95
+    },
+    {
+     "w": "goals",
+     "at": 3.175
+    },
+    {
+     "w": "City",
+     "at": 3.975
+    },
+    {
+     "w": "won",
+     "at": 4.275
+    },
+    {
+     "w": "six",
+     "at": 4.513
+    },
+    {
+     "w": "to",
+     "at": 4.8
+    },
+    {
+     "w": "one",
+     "at": 4.925
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: dribble slowly so the defender relaxes, then explode past him at full speed!",
+   "src": "/plays/narration/doku-signature/4.m4a",
+   "seconds": 7.0,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.562
+    },
+    {
+     "w": "dribble",
+     "at": 1.413
+    },
+    {
+     "w": "slowly",
+     "at": 1.8
+    },
+    {
+     "w": "so",
+     "at": 2.3
+    },
+    {
+     "w": "the",
+     "at": 2.462
+    },
+    {
+     "w": "defender",
+     "at": 2.55
+    },
+    {
+     "w": "relaxes",
+     "at": 2.95
+    },
+    {
+     "w": "then",
+     "at": 3.975
+    },
+    {
+     "w": "explode",
+     "at": 4.125
+    },
+    {
+     "w": "past",
+     "at": 4.688
+    },
+    {
+     "w": "him",
+     "at": 5.013
+    },
+    {
+     "w": "at",
+     "at": 5.138
+    },
+    {
+     "w": "full",
+     "at": 5.263
+    },
+    {
+     "w": "speed",
+     "at": 5.537
+    }
+   ]
+  }
+ ]
+}

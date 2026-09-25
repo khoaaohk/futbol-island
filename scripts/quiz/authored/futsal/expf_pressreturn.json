@@ -1,0 +1,24 @@
+{"lesson":"expf_pressreturn","questions":[
+{"q":"True or false? In a touchline press, the PIVOT also runs at the ball.",
+ "options":["True","False"],
+ "correct":1,
+ "explain":"Right, it's false. The LEFT ALA presses the ball, and the PIVOT takes away the inside return.",
+ "choiceExplanations":["Two players on the ball leave the inside pass open. The PIVOT blocks the return instead.","Right, it's false. The LEFT ALA presses the ball, and the PIVOT takes away the inside return."],
+ "visual":{"kind":"trueFalse","frame":{"step":1,"focus":["lm","st"]}}},
+{"q":"Blue wants to pass back inside. Which picture shows the press done right?",
+ "options":["PIVOT waits in the middle","PIVOT joins the ALA at the ball","PIVOT stands in the pass back inside"],
+ "correct":2,
+ "explain":"Yes. The ALA presses, and the PIVOT blocks the return, so Blue is stuck by the line.",
+ "choiceExplanations":["The PIVOT is too far away. Blue can pass back inside and escape the press.","Two players on the ball leave the inside pass wide open for Blue.","Yes. The ALA presses, and the PIVOT blocks the return, so Blue is stuck by the line."],
+ "visual":{"kind":"pickPicture","pictures":[
+  {"step":3,"place":{"st":{"x":140,"y":245}},"focus":["st"],"marks":[{"kind":"pass","from":"dlm","to":"dcb","tone":"blue"}]},
+  {"step":3,"place":{"st":{"x":60,"y":210}},"focus":["st"],"marks":[{"kind":"pass","from":"dlm","to":"dcb","tone":"blue"}]},
+  {"step":3,"focus":["st"],"marks":[{"kind":"pass","from":"dlm","to":"dcb","tone":"blue"}]}]}},
+{"q":"Now the press is on the right side. Drag the PIVOT to finish the press.",
+ "options":["Space in the pass back inside","Space next to the pressing ALA","Space deep near our goal"],
+ "correct":0,
+ "explain":"Yes. The RIGHT ALA presses the ball, so the PIVOT closes the pass back inside.",
+ "choiceExplanations":["Yes. The RIGHT ALA presses the ball, so the PIVOT closes the pass back inside.","The ball is already pressed. A second presser leaves the pass back inside open.","That is too deep. Blue can pass back inside and escape the press."],
+ "visual":{"kind":"dragToZone","frame":{"step":3,"place":{"drm":{"x":235,"y":230},"rm":{"x":212,"y":258},"dlm":{"x":45,"y":200},"lm":{"x":80,"y":280},"st":{"x":120,"y":250}},"ball":"drm","focus":["rm","st"],"marks":[{"kind":"pass","from":"drm","to":"dcb","tone":"blue"}]},
+  "drag":"st","zones":[{"x":185,"y":200,"w":50,"h":40},{"x":240,"y":285,"w":50,"h":40},{"x":110,"y":330,"w":50,"h":40}]}}
+]}

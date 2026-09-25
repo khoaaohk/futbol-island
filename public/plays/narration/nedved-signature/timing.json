@@ -1,0 +1,398 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live in Turin",
+   "text": "Juventus lead Real Madrid in the 2003 Champions League semi-final. Zambrotta looks up from halfway: a long pass... Pavel Nedved sprints between the two centre-backs... and buries it past Casillas! Three nil!",
+   "src": "/plays/narration/nedved-signature/1.m4a",
+   "seconds": 15.9,
+   "words": [
+    {
+     "w": "Juventus",
+     "at": 0.4
+    },
+    {
+     "w": "lead",
+     "at": 1.0
+    },
+    {
+     "w": "Real",
+     "at": 1.288
+    },
+    {
+     "w": "Madrid",
+     "at": 1.575
+    },
+    {
+     "w": "in",
+     "at": 2.1
+    },
+    {
+     "w": "the",
+     "at": 2.188
+    },
+    {
+     "w": "2003",
+     "at": 2.275
+    },
+    {
+     "w": "Champions",
+     "at": 3.25
+    },
+    {
+     "w": "League",
+     "at": 3.9
+    },
+    {
+     "w": "semi-final",
+     "at": 4.213
+    },
+    {
+     "w": "Zambrotta",
+     "at": 5.475
+    },
+    {
+     "w": "looks",
+     "at": 6.075
+    },
+    {
+     "w": "up",
+     "at": 6.287
+    },
+    {
+     "w": "from",
+     "at": 6.45
+    },
+    {
+     "w": "halfway",
+     "at": 6.6
+    },
+    {
+     "w": "a",
+     "at": 7.412
+    },
+    {
+     "w": "long",
+     "at": 7.537
+    },
+    {
+     "w": "pass",
+     "at": 7.912
+    },
+    {
+     "w": "Pavel",
+     "at": 8.9
+    },
+    {
+     "w": "Nedved",
+     "at": 9.312
+    },
+    {
+     "w": "sprints",
+     "at": 9.787
+    },
+    {
+     "w": "between",
+     "at": 10.25
+    },
+    {
+     "w": "the",
+     "at": 10.562
+    },
+    {
+     "w": "two",
+     "at": 10.662
+    },
+    {
+     "w": "centre-backs",
+     "at": 10.887
+    },
+    {
+     "w": "and",
+     "at": 12.05
+    },
+    {
+     "w": "buries",
+     "at": 12.175
+    },
+    {
+     "w": "it",
+     "at": 12.55
+    },
+    {
+     "w": "past",
+     "at": 12.662
+    },
+    {
+     "w": "Casillas",
+     "at": 13.075
+    },
+    {
+     "w": "Three",
+     "at": 14.188
+    },
+    {
+     "w": "nil",
+     "at": 14.488
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. Nedved finds the gap between the defenders. He doesn't slow down. He doesn't wait. He shoots!",
+   "src": "/plays/narration/nedved-signature/2.m4a",
+   "seconds": 8.5,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.113
+    },
+    {
+     "w": "Nedved",
+     "at": 2.125
+    },
+    {
+     "w": "finds",
+     "at": 2.625
+    },
+    {
+     "w": "the",
+     "at": 2.938
+    },
+    {
+     "w": "gap",
+     "at": 3.025
+    },
+    {
+     "w": "between",
+     "at": 3.325
+    },
+    {
+     "w": "the",
+     "at": 3.638
+    },
+    {
+     "w": "defenders",
+     "at": 3.725
+    },
+    {
+     "w": "He",
+     "at": 4.7
+    },
+    {
+     "w": "doesn't",
+     "at": 4.812
+    },
+    {
+     "w": "slow",
+     "at": 5.088
+    },
+    {
+     "w": "down",
+     "at": 5.4
+    },
+    {
+     "w": "He",
+     "at": 6.05
+    },
+    {
+     "w": "doesn't",
+     "at": 6.162
+    },
+    {
+     "w": "wait",
+     "at": 6.4
+    },
+    {
+     "w": "He",
+     "at": 6.875
+    },
+    {
+     "w": "shoots",
+     "at": 7.062
+    }
+   ]
+  },
+  {
+   "label": "From behind the goal",
+   "text": "From behind the goal: he hits it hard, before the defenders can close him down. Goal!",
+   "src": "/plays/narration/nedved-signature/3.m4a",
+   "seconds": 6.4,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.375
+    },
+    {
+     "w": "behind",
+     "at": 0.512
+    },
+    {
+     "w": "the",
+     "at": 0.887
+    },
+    {
+     "w": "goal",
+     "at": 0.975
+    },
+    {
+     "w": "he",
+     "at": 1.65
+    },
+    {
+     "w": "hits",
+     "at": 1.8
+    },
+    {
+     "w": "it",
+     "at": 2.013
+    },
+    {
+     "w": "hard",
+     "at": 2.1
+    },
+    {
+     "w": "before",
+     "at": 2.5
+    },
+    {
+     "w": "the",
+     "at": 2.788
+    },
+    {
+     "w": "defenders",
+     "at": 2.875
+    },
+    {
+     "w": "can",
+     "at": 3.425
+    },
+    {
+     "w": "close",
+     "at": 3.575
+    },
+    {
+     "w": "him",
+     "at": 3.862
+    },
+    {
+     "w": "down",
+     "at": 4.025
+    },
+    {
+     "w": "Goal",
+     "at": 4.975
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Nedved could shoot with either foot. Your turn: practise with your weaker foot, so you can shoot as soon as you get space.",
+   "src": "/plays/narration/nedved-signature/4.m4a",
+   "seconds": 8.0,
+   "words": [
+    {
+     "w": "Nedved",
+     "at": 0.425
+    },
+    {
+     "w": "could",
+     "at": 0.85
+    },
+    {
+     "w": "shoot",
+     "at": 1.05
+    },
+    {
+     "w": "with",
+     "at": 1.363
+    },
+    {
+     "w": "either",
+     "at": 1.488
+    },
+    {
+     "w": "foot",
+     "at": 1.8
+    },
+    {
+     "w": "Your",
+     "at": 2.638
+    },
+    {
+     "w": "turn",
+     "at": 2.837
+    },
+    {
+     "w": "practise",
+     "at": 3.663
+    },
+    {
+     "w": "with",
+     "at": 4.175
+    },
+    {
+     "w": "your",
+     "at": 4.312
+    },
+    {
+     "w": "weaker",
+     "at": 4.45
+    },
+    {
+     "w": "foot",
+     "at": 4.825
+    },
+    {
+     "w": "so",
+     "at": 5.3
+    },
+    {
+     "w": "you",
+     "at": 5.425
+    },
+    {
+     "w": "can",
+     "at": 5.525
+    },
+    {
+     "w": "shoot",
+     "at": 5.725
+    },
+    {
+     "w": "as",
+     "at": 5.963
+    },
+    {
+     "w": "soon",
+     "at": 6.05
+    },
+    {
+     "w": "as",
+     "at": 6.188
+    },
+    {
+     "w": "you",
+     "at": 6.263
+    },
+    {
+     "w": "get",
+     "at": 6.35
+    },
+    {
+     "w": "space",
+     "at": 6.55
+    }
+   ]
+  }
+ ]
+}

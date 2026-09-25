@@ -1,0 +1,374 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The header, live",
+   "text": "Berlin, 2006, the World Cup final. In extra time, Zinedine Zidane passes to Willy Sagnol, who crosses it back. Zidane heads it hard!",
+   "src": "/plays/narration/buffon-zidane-2006/1.m4a",
+   "seconds": 11.2,
+   "words": [
+    {
+     "w": "Berlin",
+     "at": 0.375
+    },
+    {
+     "w": "2006",
+     "at": 1.0
+    },
+    {
+     "w": "the",
+     "at": 2.125
+    },
+    {
+     "w": "World",
+     "at": 2.225
+    },
+    {
+     "w": "Cup",
+     "at": 2.525
+    },
+    {
+     "w": "final",
+     "at": 2.75
+    },
+    {
+     "w": "In",
+     "at": 3.688
+    },
+    {
+     "w": "extra",
+     "at": 3.85
+    },
+    {
+     "w": "time",
+     "at": 4.25
+    },
+    {
+     "w": "Zinedine",
+     "at": 4.787
+    },
+    {
+     "w": "Zidane",
+     "at": 5.35
+    },
+    {
+     "w": "passes",
+     "at": 5.812
+    },
+    {
+     "w": "to",
+     "at": 6.3
+    },
+    {
+     "w": "Willy",
+     "at": 6.425
+    },
+    {
+     "w": "Sagnol",
+     "at": 6.737
+    },
+    {
+     "w": "who",
+     "at": 7.525
+    },
+    {
+     "w": "crosses",
+     "at": 7.675
+    },
+    {
+     "w": "it",
+     "at": 8.1
+    },
+    {
+     "w": "back",
+     "at": 8.225
+    },
+    {
+     "w": "Zidane",
+     "at": 9.075
+    },
+    {
+     "w": "heads",
+     "at": 9.525
+    },
+    {
+     "w": "it",
+     "at": 9.762
+    },
+    {
+     "w": "hard",
+     "at": 9.85
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again, slowly. Gianluigi Buffon stays set, on his toes. He watches the ball, springs up, and tips it over the bar!",
+   "src": "/plays/narration/buffon-zidane-2006/2.m4a",
+   "seconds": 9.3,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "slowly",
+     "at": 1.288
+    },
+    {
+     "w": "Gianluigi",
+     "at": 2.325
+    },
+    {
+     "w": "Buffon",
+     "at": 2.925
+    },
+    {
+     "w": "stays",
+     "at": 3.413
+    },
+    {
+     "w": "set",
+     "at": 3.875
+    },
+    {
+     "w": "on",
+     "at": 4.162
+    },
+    {
+     "w": "his",
+     "at": 4.263
+    },
+    {
+     "w": "toes",
+     "at": 4.425
+    },
+    {
+     "w": "He",
+     "at": 5.325
+    },
+    {
+     "w": "watches",
+     "at": 5.475
+    },
+    {
+     "w": "the",
+     "at": 5.9
+    },
+    {
+     "w": "ball",
+     "at": 6.0
+    },
+    {
+     "w": "springs",
+     "at": 6.463
+    },
+    {
+     "w": "up",
+     "at": 6.925
+    },
+    {
+     "w": "and",
+     "at": 7.188
+    },
+    {
+     "w": "tips",
+     "at": 7.312
+    },
+    {
+     "w": "it",
+     "at": 7.562
+    },
+    {
+     "w": "over",
+     "at": 7.638
+    },
+    {
+     "w": "the",
+     "at": 7.838
+    },
+    {
+     "w": "bar",
+     "at": 7.925
+    }
+   ]
+  },
+  {
+   "label": "From the front",
+   "text": "From the front: one strong hand pushes the ball up and over. Italy went on to win the World Cup!",
+   "src": "/plays/narration/buffon-zidane-2006/3.m4a",
+   "seconds": 7.2,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "the",
+     "at": 0.487
+    },
+    {
+     "w": "front",
+     "at": 0.588
+    },
+    {
+     "w": "one",
+     "at": 1.337
+    },
+    {
+     "w": "strong",
+     "at": 1.613
+    },
+    {
+     "w": "hand",
+     "at": 2.05
+    },
+    {
+     "w": "pushes",
+     "at": 2.438
+    },
+    {
+     "w": "the",
+     "at": 2.85
+    },
+    {
+     "w": "ball",
+     "at": 2.95
+    },
+    {
+     "w": "up",
+     "at": 3.3
+    },
+    {
+     "w": "and",
+     "at": 3.462
+    },
+    {
+     "w": "over",
+     "at": 3.575
+    },
+    {
+     "w": "Italy",
+     "at": 4.438
+    },
+    {
+     "w": "went",
+     "at": 4.775
+    },
+    {
+     "w": "on",
+     "at": 4.938
+    },
+    {
+     "w": "to",
+     "at": 5.1
+    },
+    {
+     "w": "win",
+     "at": 5.2
+    },
+    {
+     "w": "the",
+     "at": 5.412
+    },
+    {
+     "w": "World",
+     "at": 5.5
+    },
+    {
+     "w": "Cup",
+     "at": 5.862
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: stay set, watch the header, and use a strong hand to push it over the bar.",
+   "src": "/plays/narration/buffon-zidane-2006/4.m4a",
+   "seconds": 6.3,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "stay",
+     "at": 1.425
+    },
+    {
+     "w": "set",
+     "at": 1.8
+    },
+    {
+     "w": "watch",
+     "at": 2.225
+    },
+    {
+     "w": "the",
+     "at": 2.55
+    },
+    {
+     "w": "header",
+     "at": 2.65
+    },
+    {
+     "w": "and",
+     "at": 3.125
+    },
+    {
+     "w": "use",
+     "at": 3.25
+    },
+    {
+     "w": "a",
+     "at": 3.438
+    },
+    {
+     "w": "strong",
+     "at": 3.513
+    },
+    {
+     "w": "hand",
+     "at": 3.95
+    },
+    {
+     "w": "to",
+     "at": 4.213
+    },
+    {
+     "w": "push",
+     "at": 4.3
+    },
+    {
+     "w": "it",
+     "at": 4.537
+    },
+    {
+     "w": "over",
+     "at": 4.612
+    },
+    {
+     "w": "the",
+     "at": 4.812
+    },
+    {
+     "w": "bar",
+     "at": 4.9
+    }
+   ]
+  }
+ ]
+}

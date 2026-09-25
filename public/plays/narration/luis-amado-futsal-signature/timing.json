@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: the 2012 final",
+   "text": "The 2012 Futsal Euro final: Russia against Spain, no goals yet. Sergei Abramov shoots from close range, but Luis Amado is already there. Saved!",
+   "src": "/plays/narration/luis-amado-futsal-signature/1.m4a",
+   "seconds": 11.9,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "2012",
+     "at": 0.425
+    },
+    {
+     "w": "Futsal",
+     "at": 1.188
+    },
+    {
+     "w": "Euro",
+     "at": 1.625
+    },
+    {
+     "w": "final",
+     "at": 1.938
+    },
+    {
+     "w": "Russia",
+     "at": 2.737
+    },
+    {
+     "w": "against",
+     "at": 3.1
+    },
+    {
+     "w": "Spain",
+     "at": 3.538
+    },
+    {
+     "w": "no",
+     "at": 4.25
+    },
+    {
+     "w": "goals",
+     "at": 4.475
+    },
+    {
+     "w": "yet",
+     "at": 4.8
+    },
+    {
+     "w": "Sergei",
+     "at": 5.65
+    },
+    {
+     "w": "Abramov",
+     "at": 6.112
+    },
+    {
+     "w": "shoots",
+     "at": 6.612
+    },
+    {
+     "w": "from",
+     "at": 6.95
+    },
+    {
+     "w": "close",
+     "at": 7.125
+    },
+    {
+     "w": "range",
+     "at": 7.45
+    },
+    {
+     "w": "but",
+     "at": 7.95
+    },
+    {
+     "w": "Luis",
+     "at": 8.113
+    },
+    {
+     "w": "Amado",
+     "at": 8.537
+    },
+    {
+     "w": "is",
+     "at": 9.05
+    },
+    {
+     "w": "already",
+     "at": 9.2
+    },
+    {
+     "w": "there",
+     "at": 9.575
+    },
+    {
+     "w": "Saved",
+     "at": 10.45
+    }
+   ]
+  },
+  {
+   "label": "Replay: the goal-line camera",
+   "text": "Watch again. Set before the shot, feet still. The ball hits him, out for a corner. Spain went on to win, three to one!",
+   "src": "/plays/narration/luis-amado-futsal-signature/2.m4a",
+   "seconds": 8.5,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "Set",
+     "at": 1.262
+    },
+    {
+     "w": "before",
+     "at": 1.438
+    },
+    {
+     "w": "the",
+     "at": 1.688
+    },
+    {
+     "w": "shot",
+     "at": 1.812
+    },
+    {
+     "w": "feet",
+     "at": 2.2
+    },
+    {
+     "w": "still",
+     "at": 2.438
+    },
+    {
+     "w": "The",
+     "at": 3.225
+    },
+    {
+     "w": "ball",
+     "at": 3.325
+    },
+    {
+     "w": "hits",
+     "at": 3.625
+    },
+    {
+     "w": "him",
+     "at": 3.862
+    },
+    {
+     "w": "out",
+     "at": 4.1
+    },
+    {
+     "w": "for",
+     "at": 4.325
+    },
+    {
+     "w": "a",
+     "at": 4.438
+    },
+    {
+     "w": "corner",
+     "at": 4.5
+    },
+    {
+     "w": "Spain",
+     "at": 5.487
+    },
+    {
+     "w": "went",
+     "at": 5.925
+    },
+    {
+     "w": "on",
+     "at": 6.088
+    },
+    {
+     "w": "to",
+     "at": 6.225
+    },
+    {
+     "w": "win",
+     "at": 6.35
+    },
+    {
+     "w": "three",
+     "at": 6.787
+    },
+    {
+     "w": "to",
+     "at": 7.05
+    },
+    {
+     "w": "one",
+     "at": 7.175
+    }
+   ]
+  },
+  {
+   "label": "How he does it (demo)",
+   "text": "How he does it: move while the ball moves, and stand between the ball and the middle of your goal. Then the shot comes to you.",
+   "src": "/plays/narration/luis-amado-futsal-signature/3.m4a",
+   "seconds": 8.3,
+   "words": [
+    {
+     "w": "How",
+     "at": 0.375
+    },
+    {
+     "w": "he",
+     "at": 0.575
+    },
+    {
+     "w": "does",
+     "at": 0.7
+    },
+    {
+     "w": "it",
+     "at": 0.938
+    },
+    {
+     "w": "move",
+     "at": 1.475
+    },
+    {
+     "w": "while",
+     "at": 1.85
+    },
+    {
+     "w": "the",
+     "at": 2.038
+    },
+    {
+     "w": "ball",
+     "at": 2.125
+    },
+    {
+     "w": "moves",
+     "at": 2.438
+    },
+    {
+     "w": "and",
+     "at": 3.15
+    },
+    {
+     "w": "stand",
+     "at": 3.288
+    },
+    {
+     "w": "between",
+     "at": 3.638
+    },
+    {
+     "w": "the",
+     "at": 3.938
+    },
+    {
+     "w": "ball",
+     "at": 4.025
+    },
+    {
+     "w": "and",
+     "at": 4.4
+    },
+    {
+     "w": "the",
+     "at": 4.513
+    },
+    {
+     "w": "middle",
+     "at": 4.6
+    },
+    {
+     "w": "of",
+     "at": 4.838
+    },
+    {
+     "w": "your",
+     "at": 4.912
+    },
+    {
+     "w": "goal",
+     "at": 5.025
+    },
+    {
+     "w": "Then",
+     "at": 5.963
+    },
+    {
+     "w": "the",
+     "at": 6.2
+    },
+    {
+     "w": "shot",
+     "at": 6.35
+    },
+    {
+     "w": "comes",
+     "at": 6.675
+    },
+    {
+     "w": "to",
+     "at": 6.975
+    },
+    {
+     "w": "you",
+     "at": 7.1
+    }
+   ]
+  },
+  {
+   "label": "Practise it",
+   "text": "Be in the right place early, and saves become easier. Move first, then set!",
+   "src": "/plays/narration/luis-amado-futsal-signature/4.m4a",
+   "seconds": 5.7,
+   "words": [
+    {
+     "w": "Be",
+     "at": 0.35
+    },
+    {
+     "w": "in",
+     "at": 0.487
+    },
+    {
+     "w": "the",
+     "at": 0.562
+    },
+    {
+     "w": "right",
+     "at": 0.65
+    },
+    {
+     "w": "place",
+     "at": 0.9
+    },
+    {
+     "w": "early",
+     "at": 1.225
+    },
+    {
+     "w": "and",
+     "at": 1.8
+    },
+    {
+     "w": "saves",
+     "at": 1.938
+    },
+    {
+     "w": "become",
+     "at": 2.312
+    },
+    {
+     "w": "easier",
+     "at": 2.65
+    },
+    {
+     "w": "Move",
+     "at": 3.612
+    },
+    {
+     "w": "first",
+     "at": 3.85
+    },
+    {
+     "w": "then",
+     "at": 4.237
+    },
+    {
+     "w": "set",
+     "at": 4.463
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,386 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Vienna, 2008",
+   "text": "Vienna, 2008, the Euro final. Spain, in red, play Germany, in white. Xavi looks up and rolls a perfect pass through. Fernando Torres races past Lahm, chips the keeper... goal!",
+   "src": "/plays/narration/xavi-signature/1.m4a",
+   "seconds": 13.9,
+   "words": [
+    {
+     "w": "Vienna",
+     "at": 0.4
+    },
+    {
+     "w": "2008",
+     "at": 0.875
+    },
+    {
+     "w": "the",
+     "at": 1.75
+    },
+    {
+     "w": "Euro",
+     "at": 1.863
+    },
+    {
+     "w": "final",
+     "at": 2.212
+    },
+    {
+     "w": "Spain",
+     "at": 3.188
+    },
+    {
+     "w": "in",
+     "at": 3.75
+    },
+    {
+     "w": "red",
+     "at": 3.913
+    },
+    {
+     "w": "play",
+     "at": 4.338
+    },
+    {
+     "w": "Germany",
+     "at": 4.638
+    },
+    {
+     "w": "in",
+     "at": 5.112
+    },
+    {
+     "w": "white",
+     "at": 5.25
+    },
+    {
+     "w": "Xavi",
+     "at": 6.0
+    },
+    {
+     "w": "looks",
+     "at": 6.35
+    },
+    {
+     "w": "up",
+     "at": 6.562
+    },
+    {
+     "w": "and",
+     "at": 6.737
+    },
+    {
+     "w": "rolls",
+     "at": 6.85
+    },
+    {
+     "w": "a",
+     "at": 7.112
+    },
+    {
+     "w": "perfect",
+     "at": 7.188
+    },
+    {
+     "w": "pass",
+     "at": 7.7
+    },
+    {
+     "w": "through",
+     "at": 8.062
+    },
+    {
+     "w": "Fernando",
+     "at": 8.838
+    },
+    {
+     "w": "Torres",
+     "at": 9.438
+    },
+    {
+     "w": "races",
+     "at": 9.825
+    },
+    {
+     "w": "past",
+     "at": 10.287
+    },
+    {
+     "w": "Lahm",
+     "at": 10.688
+    },
+    {
+     "w": "chips",
+     "at": 11.188
+    },
+    {
+     "w": "the",
+     "at": 11.45
+    },
+    {
+     "w": "keeper",
+     "at": 11.55
+    },
+    {
+     "w": "goal",
+     "at": 12.488
+    }
+   ]
+  },
+  {
+   "label": "Always looking",
+   "text": "Watch again, slowly. Xavi is always looking for space. One touch, then a pass weighted just right, behind the defence.",
+   "src": "/plays/narration/xavi-signature/2.m4a",
+   "seconds": 8.9,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.113
+    },
+    {
+     "w": "Xavi",
+     "at": 2.1
+    },
+    {
+     "w": "is",
+     "at": 2.475
+    },
+    {
+     "w": "always",
+     "at": 2.6
+    },
+    {
+     "w": "looking",
+     "at": 2.975
+    },
+    {
+     "w": "for",
+     "at": 3.275
+    },
+    {
+     "w": "space",
+     "at": 3.413
+    },
+    {
+     "w": "One",
+     "at": 4.338
+    },
+    {
+     "w": "touch",
+     "at": 4.588
+    },
+    {
+     "w": "then",
+     "at": 5.125
+    },
+    {
+     "w": "a",
+     "at": 5.263
+    },
+    {
+     "w": "pass",
+     "at": 5.338
+    },
+    {
+     "w": "weighted",
+     "at": 5.763
+    },
+    {
+     "w": "just",
+     "at": 6.15
+    },
+    {
+     "w": "right",
+     "at": 6.412
+    },
+    {
+     "w": "behind",
+     "at": 6.875
+    },
+    {
+     "w": "the",
+     "at": 7.287
+    },
+    {
+     "w": "defence",
+     "at": 7.375
+    }
+   ]
+  },
+  {
+   "label": "Champions",
+   "text": "Torres gets there first and lifts it over Jens Lehmann. Spain are champions of Europe!",
+   "src": "/plays/narration/xavi-signature/3.m4a",
+   "seconds": 6.4,
+   "words": [
+    {
+     "w": "Torres",
+     "at": 0.35
+    },
+    {
+     "w": "gets",
+     "at": 0.7
+    },
+    {
+     "w": "there",
+     "at": 0.938
+    },
+    {
+     "w": "first",
+     "at": 1.137
+    },
+    {
+     "w": "and",
+     "at": 1.712
+    },
+    {
+     "w": "lifts",
+     "at": 1.85
+    },
+    {
+     "w": "it",
+     "at": 2.138
+    },
+    {
+     "w": "over",
+     "at": 2.212
+    },
+    {
+     "w": "Jens",
+     "at": 2.462
+    },
+    {
+     "w": "Lehmann",
+     "at": 2.85
+    },
+    {
+     "w": "Spain",
+     "at": 3.812
+    },
+    {
+     "w": "are",
+     "at": 4.25
+    },
+    {
+     "w": "champions",
+     "at": 4.388
+    },
+    {
+     "w": "of",
+     "at": 4.938
+    },
+    {
+     "w": "Europe",
+     "at": 5.037
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: keep the ball moving with short, simple passes. Get it, give it, and look for space to control the game.",
+   "src": "/plays/narration/xavi-signature/4.m4a",
+   "seconds": 8.3,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "keep",
+     "at": 1.25
+    },
+    {
+     "w": "the",
+     "at": 1.413
+    },
+    {
+     "w": "ball",
+     "at": 1.5
+    },
+    {
+     "w": "moving",
+     "at": 1.863
+    },
+    {
+     "w": "with",
+     "at": 2.237
+    },
+    {
+     "w": "short",
+     "at": 2.425
+    },
+    {
+     "w": "simple",
+     "at": 2.888
+    },
+    {
+     "w": "passes",
+     "at": 3.225
+    },
+    {
+     "w": "Get",
+     "at": 4.35
+    },
+    {
+     "w": "it",
+     "at": 4.575
+    },
+    {
+     "w": "give",
+     "at": 4.862
+    },
+    {
+     "w": "it",
+     "at": 5.1
+    },
+    {
+     "w": "and",
+     "at": 5.4
+    },
+    {
+     "w": "look",
+     "at": 5.525
+    },
+    {
+     "w": "for",
+     "at": 5.725
+    },
+    {
+     "w": "space",
+     "at": 5.888
+    },
+    {
+     "w": "to",
+     "at": 6.275
+    },
+    {
+     "w": "control",
+     "at": 6.375
+    },
+    {
+     "w": "the",
+     "at": 6.812
+    },
+    {
+     "w": "game",
+     "at": 6.9
+    }
+   ]
+  }
+ ]
+}

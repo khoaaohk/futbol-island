@@ -1,0 +1,398 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Wembley, 2024",
+   "text": "Wembley, 2024, the Champions League final. Still nil\u2013nil. Toni Kroos whips in a corner... Dani Carvajal flicks it in! Real Madrid lead!",
+   "src": "/plays/narration/carvajal-header-2024/1.m4a",
+   "seconds": 11.1,
+   "words": [
+    {
+     "w": "Wembley",
+     "at": 0.4
+    },
+    {
+     "w": "2024",
+     "at": 0.875
+    },
+    {
+     "w": "the",
+     "at": 1.738
+    },
+    {
+     "w": "Champions",
+     "at": 1.837
+    },
+    {
+     "w": "League",
+     "at": 2.45
+    },
+    {
+     "w": "final",
+     "at": 2.712
+    },
+    {
+     "w": "Still",
+     "at": 3.612
+    },
+    {
+     "w": "nil",
+     "at": 3.925
+    },
+    {
+     "w": "nil",
+     "at": 4.45
+    },
+    {
+     "w": "Toni",
+     "at": 5.138
+    },
+    {
+     "w": "Kroos",
+     "at": 5.513
+    },
+    {
+     "w": "whips",
+     "at": 5.888
+    },
+    {
+     "w": "in",
+     "at": 6.162
+    },
+    {
+     "w": "a",
+     "at": 6.237
+    },
+    {
+     "w": "corner",
+     "at": 6.3
+    },
+    {
+     "w": "Dani",
+     "at": 7.2
+    },
+    {
+     "w": "Carvajal",
+     "at": 7.525
+    },
+    {
+     "w": "flicks",
+     "at": 8.088
+    },
+    {
+     "w": "it",
+     "at": 8.363
+    },
+    {
+     "w": "in",
+     "at": 8.45
+    },
+    {
+     "w": "Real",
+     "at": 9.0
+    },
+    {
+     "w": "Madrid",
+     "at": 9.325
+    },
+    {
+     "w": "lead",
+     "at": 9.725
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. Carvajal is shorter than the striker beside him. He darts to the near post, gets in front, and jumps first.",
+   "src": "/plays/narration/carvajal-header-2024/2.m4a",
+   "seconds": 9.0,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.163
+    },
+    {
+     "w": "Carvajal",
+     "at": 2.188
+    },
+    {
+     "w": "is",
+     "at": 2.8
+    },
+    {
+     "w": "shorter",
+     "at": 2.975
+    },
+    {
+     "w": "than",
+     "at": 3.362
+    },
+    {
+     "w": "the",
+     "at": 3.462
+    },
+    {
+     "w": "striker",
+     "at": 3.55
+    },
+    {
+     "w": "beside",
+     "at": 3.95
+    },
+    {
+     "w": "him",
+     "at": 4.312
+    },
+    {
+     "w": "He",
+     "at": 4.875
+    },
+    {
+     "w": "darts",
+     "at": 5.025
+    },
+    {
+     "w": "to",
+     "at": 5.35
+    },
+    {
+     "w": "the",
+     "at": 5.438
+    },
+    {
+     "w": "near",
+     "at": 5.525
+    },
+    {
+     "w": "post",
+     "at": 5.763
+    },
+    {
+     "w": "gets",
+     "at": 6.4
+    },
+    {
+     "w": "in",
+     "at": 6.612
+    },
+    {
+     "w": "front",
+     "at": 6.763
+    },
+    {
+     "w": "and",
+     "at": 7.175
+    },
+    {
+     "w": "jumps",
+     "at": 7.312
+    },
+    {
+     "w": "first",
+     "at": 7.675
+    }
+   ]
+  },
+  {
+   "label": "The glance",
+   "text": "From beside the goal, see him glance it. It flies across the keeper, into the far corner! Real Madrid win their fifteenth European Cup!",
+   "src": "/plays/narration/carvajal-header-2024/3.m4a",
+   "seconds": 9.5,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "beside",
+     "at": 0.487
+    },
+    {
+     "w": "the",
+     "at": 0.863
+    },
+    {
+     "w": "goal",
+     "at": 0.95
+    },
+    {
+     "w": "see",
+     "at": 1.538
+    },
+    {
+     "w": "him",
+     "at": 1.738
+    },
+    {
+     "w": "glance",
+     "at": 1.925
+    },
+    {
+     "w": "it",
+     "at": 2.337
+    },
+    {
+     "w": "It",
+     "at": 2.925
+    },
+    {
+     "w": "flies",
+     "at": 3.112
+    },
+    {
+     "w": "across",
+     "at": 3.487
+    },
+    {
+     "w": "the",
+     "at": 3.825
+    },
+    {
+     "w": "keeper",
+     "at": 3.925
+    },
+    {
+     "w": "into",
+     "at": 4.487
+    },
+    {
+     "w": "the",
+     "at": 4.662
+    },
+    {
+     "w": "far",
+     "at": 4.763
+    },
+    {
+     "w": "corner",
+     "at": 5.025
+    },
+    {
+     "w": "Real",
+     "at": 5.975
+    },
+    {
+     "w": "Madrid",
+     "at": 6.275
+    },
+    {
+     "w": "win",
+     "at": 6.713
+    },
+    {
+     "w": "their",
+     "at": 6.95
+    },
+    {
+     "w": "fifteenth",
+     "at": 7.175
+    },
+    {
+     "w": "European",
+     "at": 7.7
+    },
+    {
+     "w": "Cup",
+     "at": 8.213
+    }
+   ]
+  },
+  {
+   "label": "Attack the near post",
+   "text": "Attack the near post! Get there first, time your jump, and glance it on. Small players can win headers too!",
+   "src": "/plays/narration/carvajal-header-2024/4.m4a",
+   "seconds": 7.5,
+   "words": [
+    {
+     "w": "Attack",
+     "at": 0.35
+    },
+    {
+     "w": "the",
+     "at": 0.688
+    },
+    {
+     "w": "near",
+     "at": 0.775
+    },
+    {
+     "w": "post",
+     "at": 1.0
+    },
+    {
+     "w": "Get",
+     "at": 1.837
+    },
+    {
+     "w": "there",
+     "at": 1.988
+    },
+    {
+     "w": "first",
+     "at": 2.163
+    },
+    {
+     "w": "time",
+     "at": 2.7
+    },
+    {
+     "w": "your",
+     "at": 2.938
+    },
+    {
+     "w": "jump",
+     "at": 3.087
+    },
+    {
+     "w": "and",
+     "at": 3.413
+    },
+    {
+     "w": "glance",
+     "at": 3.525
+    },
+    {
+     "w": "it",
+     "at": 3.888
+    },
+    {
+     "w": "on",
+     "at": 3.975
+    },
+    {
+     "w": "Small",
+     "at": 4.675
+    },
+    {
+     "w": "players",
+     "at": 4.975
+    },
+    {
+     "w": "can",
+     "at": 5.4
+    },
+    {
+     "w": "win",
+     "at": 5.525
+    },
+    {
+     "w": "headers",
+     "at": 5.725
+    },
+    {
+     "w": "too",
+     "at": 6.138
+    }
+   ]
+  }
+ ]
+}

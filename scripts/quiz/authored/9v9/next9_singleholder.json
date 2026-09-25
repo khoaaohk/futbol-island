@@ -1,0 +1,156 @@
+{
+ "lesson": "next9_singleholder",
+ "questions": [
+  {
+   "q": "Which picture shows the three-one-three-one shape, with a single holder?",
+   "options": [
+    "Holder level with the midfielders",
+    "One holder behind three midfielders",
+    "Two players sit deep"
+   ],
+   "correct": 1,
+   "explain": "Right. One holder sits behind three attacking midfielders, with the striker ahead.",
+   "choiceExplanations": [
+    "Here nobody sits behind the midfield three, so the space in front of our backs is empty.",
+    "Right. One holder sits behind three attacking midfielders, with the striker ahead.",
+    "Two deep players is a different shape. In three-one-three-one, only one player holds."
+   ],
+   "visual": {
+    "kind": "pickPicture",
+    "pictures": [
+     {
+      "step": 1,
+      "place": {
+       "DM": {
+        "x": 105,
+        "y": 222
+       }
+      },
+      "focus": [
+       "DM"
+      ],
+      "view": {
+       "x": 10,
+       "y": 180,
+       "w": 250,
+       "h": 140
+      }
+     },
+     {
+      "step": 1,
+      "focus": [
+       "DM"
+      ],
+      "view": {
+       "x": 10,
+       "y": 180,
+       "w": 250,
+       "h": 140
+      }
+     },
+     {
+      "step": 1,
+      "place": {
+       "AM": {
+        "x": 165,
+        "y": 288
+       }
+      },
+      "focus": [
+       "DM",
+       "AM"
+      ],
+      "view": {
+       "x": 10,
+       "y": 180,
+       "w": 250,
+       "h": 140
+      }
+     }
+    ]
+   }
+  },
+  {
+   "q": "We lose the ball. Put what happens next in order.",
+   "options": [
+    "Left midfielder delays the carrier",
+    "Attacking midfielder recovers beside the holder",
+    "Centre back controls the ball",
+    "Attacking midfielder moves higher again"
+   ],
+   "correct": 0,
+   "explain": "Yes. We delay, pair up in the middle, win the ball, then restore the higher link.",
+   "choiceExplanations": [
+    "Yes. We delay, pair up in the middle, win the ball, then restore the higher link.",
+    "First the left midfielder slows the carrier, then the attacking midfielder recovers.",
+    "The centre back wins it after the pair has protected the middle.",
+    "The attacking midfielder only moves higher once our centre back has the ball."
+   ],
+   "visual": {
+    "kind": "order",
+    "frame": {
+     "step": 5,
+     "focus": [
+      "AM",
+      "DM",
+      "LM"
+     ]
+    }
+   }
+  },
+  {
+   "q": "Our right midfielder now delays the ball. Where should the attacking midfielder recover?",
+   "options": [
+    "Beside the holder in the middle",
+    "Press next to the right midfielder",
+    "Stay high near the striker"
+   ],
+   "correct": 0,
+   "explain": "Right. Their other midfielder threatens the holder, so the attacking midfielder makes a pair in the middle.",
+   "choiceExplanations": [
+    "Right. Their other midfielder threatens the holder, so the attacking midfielder makes a pair in the middle.",
+    "Two players at the ball leave their free midfielder running at the holder alone.",
+    "Staying high leaves the single holder facing two midfielders alone."
+   ],
+   "visual": {
+    "kind": "dragToZone",
+    "frame": {
+     "step": 4,
+     "ball": "rc",
+     "place": {
+      "RM": {
+       "x": 195,
+       "y": 232
+      }
+     },
+     "focus": [
+      "AM",
+      "DM",
+      "lc"
+     ]
+    },
+    "drag": "AM",
+    "zones": [
+     {
+      "x": 85,
+      "y": 292,
+      "w": 36,
+      "h": 28
+     },
+     {
+      "x": 215,
+      "y": 268,
+      "w": 36,
+      "h": 28
+     },
+     {
+      "x": 145,
+      "y": 172,
+      "w": 40,
+      "h": 28
+     }
+    ]
+   }
+  }
+ ]
+}

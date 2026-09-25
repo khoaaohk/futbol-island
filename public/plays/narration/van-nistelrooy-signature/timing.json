@@ -1,0 +1,382 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Cup final, live",
+   "text": "Cardiff, 2004: the FA Cup final. Manchester United lead Millwall two-nil. Ryan Giggs races down the left. Ruud van Nistelrooy keeps running... Giggs drives it across... Van Nistelrooy! Three-nil!",
+   "src": "/plays/narration/van-nistelrooy-signature/1.m4a",
+   "seconds": 15.2,
+   "words": [
+    {
+     "w": "Cardiff",
+     "at": 0.35
+    },
+    {
+     "w": "2004",
+     "at": 0.8
+    },
+    {
+     "w": "the",
+     "at": 1.875
+    },
+    {
+     "w": "FA",
+     "at": 2.013
+    },
+    {
+     "w": "Cup",
+     "at": 2.275
+    },
+    {
+     "w": "final",
+     "at": 2.513
+    },
+    {
+     "w": "Manchester",
+     "at": 3.425
+    },
+    {
+     "w": "United",
+     "at": 4.05
+    },
+    {
+     "w": "lead",
+     "at": 4.475
+    },
+    {
+     "w": "Millwall",
+     "at": 4.75
+    },
+    {
+     "w": "two-nil",
+     "at": 5.213
+    },
+    {
+     "w": "Ryan",
+     "at": 6.2
+    },
+    {
+     "w": "Giggs",
+     "at": 6.6
+    },
+    {
+     "w": "races",
+     "at": 6.987
+    },
+    {
+     "w": "down",
+     "at": 7.45
+    },
+    {
+     "w": "the",
+     "at": 7.688
+    },
+    {
+     "w": "left",
+     "at": 7.775
+    },
+    {
+     "w": "Ruud",
+     "at": 8.45
+    },
+    {
+     "w": "van",
+     "at": 8.725
+    },
+    {
+     "w": "Nistelrooy",
+     "at": 8.95
+    },
+    {
+     "w": "keeps",
+     "at": 9.55
+    },
+    {
+     "w": "running",
+     "at": 9.85
+    },
+    {
+     "w": "Giggs",
+     "at": 10.662
+    },
+    {
+     "w": "drives",
+     "at": 11.037
+    },
+    {
+     "w": "it",
+     "at": 11.438
+    },
+    {
+     "w": "across",
+     "at": 11.512
+    },
+    {
+     "w": "Van",
+     "at": 12.463
+    },
+    {
+     "w": "Nistelrooy",
+     "at": 12.725
+    },
+    {
+     "w": "Three-nil",
+     "at": 13.6
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again, slowly. While Giggs runs, Van Nistelrooy never stops. He sprints right into the six-yard box.",
+   "src": "/plays/narration/van-nistelrooy-signature/2.m4a",
+   "seconds": 8.4,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "slowly",
+     "at": 1.238
+    },
+    {
+     "w": "While",
+     "at": 2.263
+    },
+    {
+     "w": "Giggs",
+     "at": 2.5
+    },
+    {
+     "w": "runs",
+     "at": 2.862
+    },
+    {
+     "w": "Van",
+     "at": 3.375
+    },
+    {
+     "w": "Nistelrooy",
+     "at": 3.6
+    },
+    {
+     "w": "never",
+     "at": 4.225
+    },
+    {
+     "w": "stops",
+     "at": 4.537
+    },
+    {
+     "w": "He",
+     "at": 5.4
+    },
+    {
+     "w": "sprints",
+     "at": 5.562
+    },
+    {
+     "w": "right",
+     "at": 5.987
+    },
+    {
+     "w": "into",
+     "at": 6.237
+    },
+    {
+     "w": "the",
+     "at": 6.412
+    },
+    {
+     "w": "six-yard",
+     "at": 6.513
+    },
+    {
+     "w": "box",
+     "at": 7.0
+    }
+   ]
+  },
+  {
+   "label": "Three yards out",
+   "text": "Giggs's cross zips in, and he slides it home from three yards. Easy, because he got there first!",
+   "src": "/plays/narration/van-nistelrooy-signature/3.m4a",
+   "seconds": 7.2,
+   "words": [
+    {
+     "w": "Giggs's",
+     "at": 0.375
+    },
+    {
+     "w": "cross",
+     "at": 0.825
+    },
+    {
+     "w": "zips",
+     "at": 1.188
+    },
+    {
+     "w": "in",
+     "at": 1.525
+    },
+    {
+     "w": "and",
+     "at": 2.05
+    },
+    {
+     "w": "he",
+     "at": 2.163
+    },
+    {
+     "w": "slides",
+     "at": 2.288
+    },
+    {
+     "w": "it",
+     "at": 2.638
+    },
+    {
+     "w": "home",
+     "at": 2.725
+    },
+    {
+     "w": "from",
+     "at": 3.0
+    },
+    {
+     "w": "three",
+     "at": 3.212
+    },
+    {
+     "w": "yards",
+     "at": 3.45
+    },
+    {
+     "w": "Easy",
+     "at": 4.463
+    },
+    {
+     "w": "because",
+     "at": 5.025
+    },
+    {
+     "w": "he",
+     "at": 5.287
+    },
+    {
+     "w": "got",
+     "at": 5.375
+    },
+    {
+     "w": "there",
+     "at": 5.562
+    },
+    {
+     "w": "first",
+     "at": 5.763
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: follow every shot in. When the keeper pushes it out, the rebound falls to the striker who keeps running!",
+   "src": "/plays/narration/van-nistelrooy-signature/4.m4a",
+   "seconds": 8.0,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "follow",
+     "at": 1.238
+    },
+    {
+     "w": "every",
+     "at": 1.625
+    },
+    {
+     "w": "shot",
+     "at": 1.95
+    },
+    {
+     "w": "in",
+     "at": 2.237
+    },
+    {
+     "w": "When",
+     "at": 3.0
+    },
+    {
+     "w": "the",
+     "at": 3.138
+    },
+    {
+     "w": "keeper",
+     "at": 3.225
+    },
+    {
+     "w": "pushes",
+     "at": 3.6
+    },
+    {
+     "w": "it",
+     "at": 3.962
+    },
+    {
+     "w": "out",
+     "at": 4.05
+    },
+    {
+     "w": "the",
+     "at": 4.5
+    },
+    {
+     "w": "rebound",
+     "at": 4.638
+    },
+    {
+     "w": "falls",
+     "at": 5.188
+    },
+    {
+     "w": "to",
+     "at": 5.525
+    },
+    {
+     "w": "the",
+     "at": 5.612
+    },
+    {
+     "w": "striker",
+     "at": 5.713
+    },
+    {
+     "w": "who",
+     "at": 6.175
+    },
+    {
+     "w": "keeps",
+     "at": 6.3
+    },
+    {
+     "w": "running",
+     "at": 6.6
+    }
+   ]
+  }
+ ]
+}

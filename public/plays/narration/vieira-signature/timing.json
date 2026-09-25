@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "World Cup final, 1998. Brazil's last corner... France win the ball! Dugarry breaks away, with Patrick Vieira sprinting up the left beside him. Dugarry finds Vieira, who passes first time to Petit... goal! France are world champions!",
+   "src": "/plays/narration/vieira-signature/1.m4a",
+   "seconds": 17.4,
+   "words": [
+    {
+     "w": "World",
+     "at": 0.4
+    },
+    {
+     "w": "Cup",
+     "at": 0.725
+    },
+    {
+     "w": "final",
+     "at": 0.95
+    },
+    {
+     "w": "1998",
+     "at": 1.425
+    },
+    {
+     "w": "Brazil's",
+     "at": 2.913
+    },
+    {
+     "w": "last",
+     "at": 3.45
+    },
+    {
+     "w": "corner",
+     "at": 3.8
+    },
+    {
+     "w": "France",
+     "at": 4.65
+    },
+    {
+     "w": "win",
+     "at": 5.0
+    },
+    {
+     "w": "the",
+     "at": 5.188
+    },
+    {
+     "w": "ball",
+     "at": 5.275
+    },
+    {
+     "w": "Dugarry",
+     "at": 5.987
+    },
+    {
+     "w": "breaks",
+     "at": 6.425
+    },
+    {
+     "w": "away",
+     "at": 6.75
+    },
+    {
+     "w": "with",
+     "at": 7.138
+    },
+    {
+     "w": "Patrick",
+     "at": 7.312
+    },
+    {
+     "w": "Vieira",
+     "at": 7.75
+    },
+    {
+     "w": "sprinting",
+     "at": 8.262
+    },
+    {
+     "w": "up",
+     "at": 8.688
+    },
+    {
+     "w": "the",
+     "at": 8.838
+    },
+    {
+     "w": "left",
+     "at": 8.925
+    },
+    {
+     "w": "beside",
+     "at": 9.225
+    },
+    {
+     "w": "him",
+     "at": 9.588
+    },
+    {
+     "w": "Dugarry",
+     "at": 10.325
+    },
+    {
+     "w": "finds",
+     "at": 10.812
+    },
+    {
+     "w": "Vieira",
+     "at": 11.15
+    },
+    {
+     "w": "who",
+     "at": 11.75
+    },
+    {
+     "w": "passes",
+     "at": 11.912
+    },
+    {
+     "w": "first",
+     "at": 12.4
+    },
+    {
+     "w": "time",
+     "at": 12.675
+    },
+    {
+     "w": "to",
+     "at": 12.975
+    },
+    {
+     "w": "Petit",
+     "at": 13.075
+    },
+    {
+     "w": "goal",
+     "at": 14.088
+    },
+    {
+     "w": "France",
+     "at": 14.775
+    },
+    {
+     "w": "are",
+     "at": 15.175
+    },
+    {
+     "w": "world",
+     "at": 15.325
+    },
+    {
+     "w": "champions",
+     "at": 15.688
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. Brazil are still up for their corner. France win it, and Vieira drives forward into the empty space.",
+   "src": "/plays/narration/vieira-signature/2.m4a",
+   "seconds": 8.9,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.188
+    },
+    {
+     "w": "Brazil",
+     "at": 2.163
+    },
+    {
+     "w": "are",
+     "at": 2.625
+    },
+    {
+     "w": "still",
+     "at": 2.763
+    },
+    {
+     "w": "up",
+     "at": 3.013
+    },
+    {
+     "w": "for",
+     "at": 3.2
+    },
+    {
+     "w": "their",
+     "at": 3.312
+    },
+    {
+     "w": "corner",
+     "at": 3.475
+    },
+    {
+     "w": "France",
+     "at": 4.3
+    },
+    {
+     "w": "win",
+     "at": 4.763
+    },
+    {
+     "w": "it",
+     "at": 5.013
+    },
+    {
+     "w": "and",
+     "at": 5.375
+    },
+    {
+     "w": "Vieira",
+     "at": 5.5
+    },
+    {
+     "w": "drives",
+     "at": 5.95
+    },
+    {
+     "w": "forward",
+     "at": 6.388
+    },
+    {
+     "w": "into",
+     "at": 6.763
+    },
+    {
+     "w": "the",
+     "at": 6.938
+    },
+    {
+     "w": "empty",
+     "at": 7.075
+    },
+    {
+     "w": "space",
+     "at": 7.412
+    }
+   ]
+  },
+  {
+   "label": "One touch",
+   "text": "One touch! Petit slides it low with his left foot, past the keeper.",
+   "src": "/plays/narration/vieira-signature/3.m4a",
+   "seconds": 5.2,
+   "words": [
+    {
+     "w": "One",
+     "at": 0.4
+    },
+    {
+     "w": "touch",
+     "at": 0.637
+    },
+    {
+     "w": "Petit",
+     "at": 1.45
+    },
+    {
+     "w": "slides",
+     "at": 1.788
+    },
+    {
+     "w": "it",
+     "at": 2.138
+    },
+    {
+     "w": "low",
+     "at": 2.225
+    },
+    {
+     "w": "with",
+     "at": 2.462
+    },
+    {
+     "w": "his",
+     "at": 2.562
+    },
+    {
+     "w": "left",
+     "at": 2.7
+    },
+    {
+     "w": "foot",
+     "at": 2.987
+    },
+    {
+     "w": "past",
+     "at": 3.35
+    },
+    {
+     "w": "the",
+     "at": 3.663
+    },
+    {
+     "w": "keeper",
+     "at": 3.75
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: when you win the ball, carry it forward fast, before the other team gets organised!",
+   "src": "/plays/narration/vieira-signature/4.m4a",
+   "seconds": 6.5,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "when",
+     "at": 1.35
+    },
+    {
+     "w": "you",
+     "at": 1.488
+    },
+    {
+     "w": "win",
+     "at": 1.6
+    },
+    {
+     "w": "the",
+     "at": 1.762
+    },
+    {
+     "w": "ball",
+     "at": 1.85
+    },
+    {
+     "w": "carry",
+     "at": 2.325
+    },
+    {
+     "w": "it",
+     "at": 2.638
+    },
+    {
+     "w": "forward",
+     "at": 2.725
+    },
+    {
+     "w": "fast",
+     "at": 3.1
+    },
+    {
+     "w": "before",
+     "at": 3.775
+    },
+    {
+     "w": "the",
+     "at": 4.062
+    },
+    {
+     "w": "other",
+     "at": 4.162
+    },
+    {
+     "w": "team",
+     "at": 4.325
+    },
+    {
+     "w": "gets",
+     "at": 4.625
+    },
+    {
+     "w": "organised",
+     "at": 4.875
+    }
+   ]
+  }
+ ]
+}

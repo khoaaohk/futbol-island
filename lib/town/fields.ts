@@ -1,4 +1,5 @@
 import * as T from 'three';
+import {SEVEN_PENALTY_DEPTH,sevenBuildOutLocalZ} from './buildOut';
 import {createFieldLighting} from './fieldLighting';
 import {ISLAND_SHORE,shoreSandWidth,INTERIOR_GRASS,INTERIOR_GRASS_COLOR} from './shoreline';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
@@ -15,9 +16,14 @@ export function buildFormatFields(scene:T.Scene){
  const rect=(x:number,z:number,width:number,length:number)=>{seg(x-width/2,z-length/2,x+width/2,z-length/2);seg(x+width/2,z-length/2,x+width/2,z+length/2);seg(x+width/2,z+length/2,x-width/2,z+length/2);seg(x-width/2,z+length/2,x-width/2,z-length/2);};
  const arc=(x:number,z:number,r:number,start=0,end=Math.PI*2)=>{for(let i=0;i<48;i++){const a=start+(end-start)*i/48,b=start+(end-start)*(i+1)/48;seg(x+Math.cos(a)*r,z+Math.sin(a)*r,x+Math.cos(b)*r,z+Math.sin(b)*r);}};
  rect(0,0,v.width,v.length);seg(-w,0,w,0);arc(0,0,v.id==='futsal'?3:v.id==='11v11'?9.15:Math.min(7,v.width*.15));
+ if(v.id==='7v7')for(const side of [-1,1] as const){
+  const z=sevenBuildOutLocalZ(side);
+  // Physical dash segments join the existing one-draw-call pitch markings.
+  for(let x=-w;x<w;x+=1.5)seg(x,z,Math.min(x+.9,w),z);
+ }
  for(const side of [-1,1]){
  if(v.id==='futsal'){const end=side*l;for(const hand of [-1,1]){const center=hand*1.5;const start=side<0?(hand<0?Math.PI/2:0):(hand<0?Math.PI:Math.PI*1.5);arc(center,end,6,start,start+Math.PI/2);}seg(-1.5,end-side*6,1.5,end-side*6);}
- else{const depth=v.id==='11v11'?16.5:v.id==='9v9'?13:10,width=v.id==='11v11'?40.32:v.id==='9v9'?29:23;rect(0,side*(l-depth/2),width,depth);rect(0,side*(l-2.5),v.goalWidth+8,5);}
+ else{const depth=v.id==='11v11'?16.5:v.id==='9v9'?13:SEVEN_PENALTY_DEPTH,width=v.id==='11v11'?40.32:v.id==='9v9'?29:23;rect(0,side*(l-depth/2),width,depth);rect(0,side*(l-2.5),v.goalWidth+8,5);}
  const goal=new T.Group();goal.name='goal-'+v.id+'-'+side;root.add(goal);
  const goalPts:number[]=[];const line=(a:number[],b:number[])=>goalPts.push(...a,...b);
  const gw=v.goalWidth/2,base=FIELD_SURFACE_Y,h=base+v.goalHeight,z=side*l,back=z+side*GOAL_DEPTH;
@@ -42,9 +48,10 @@ export function buildFormatFields(scene:T.Scene){
  const lineGeo=new T.BufferGeometry();lineGeo.setAttribute('position',new T.Float32BufferAttribute(pts,3));owned.push(lineGeo);root.add(new T.LineSegments(lineGeo,cream));
  }
  const outline=new T.Shape();ISLAND_SHORE.forEach((p,i)=>i?outline.lineTo(p.x,-p.z):outline.moveTo(p.x,-p.z));outline.closePath();
- const landMat=new T.MeshStandardMaterial({color:'#dfc99e',roughness:1}),landGeo=new T.ExtrudeGeometry(outline,{depth:.7,bevelEnabled:false,steps:1});owned.push(landMat,landGeo);const land=new T.Mesh(landGeo,landMat);land.name='curved-island-foundation';land.rotation.x=-Math.PI/2;land.position.y=-.82;land.receiveShadow=true;scene.add(land);
+ const landMat=new T.MeshStandardMaterial({color:'#dfc99e',roughness:1}),landGeo=new T.ExtrudeGeometry(outline,{depth:.64,bevelEnabled:false,steps:1});owned.push(landMat,landGeo);const land=new T.Mesh(landGeo,landMat);land.name='curved-island-foundation';land.rotation.x=-Math.PI/2;land.position.y=-.82;land.receiveShadow=true;scene.add(land);
 
- // Lawn sits above the foundation but below paths, roads and court slabs.
+ // Keep 6.8 cm between the lawn and foundation top: the former 8 mm gap
+ // was vulnerable to depth fighting at shallow flight angles. Roads/sand stay in place.
  const lawnShape=new T.Shape();INTERIOR_GRASS.forEach((p,i)=>i?lawnShape.lineTo(p.x,-p.z):lawnShape.moveTo(p.x,-p.z));lawnShape.closePath();
  const lawnGeo=new T.ShapeGeometry(lawnShape);lawnGeo.rotateX(-Math.PI/2);
  const lawnMat=new T.MeshStandardMaterial({color:INTERIOR_GRASS_COLOR,roughness:.94});owned.push(lawnGeo,lawnMat);

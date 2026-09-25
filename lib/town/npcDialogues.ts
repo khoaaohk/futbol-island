@@ -161,3 +161,9 @@ for(const [index,resident] of matchStoryResidents.entries()){
 
 // Video desks do not automatically request scores or videos when approached.
 NPC_DIALOGUES.push(...VIDEO_NEIGHBORS);
+
+// Café visitors carry football conversations between the entrance and viewing decks.
+for(const [id,name,mentor,x,z] of [['cafe-bela','Bela','priya',199.35,168.5],['cafe-oren','Oren','diego',200,136]] as const){
+ const host=ISLAND_REGULARS.find(n=>n.id===mentor)!;
+ NPC_DIALOGUES.push({...host,id,name,x,z,topics:id==='cafe-bela'?[{id:'view',question:'What can I spot from the roof?',answer:'Follow one midfielder before the ball reaches them. Notice the shoulder check, the open body shape and the space their first touch enters. The view from above makes that sequence easier to see.',followUp:{question:'When should they look back at the ball?',answer:'After checking the next option, watch the arriving pass so the chosen foot can cushion it. Scanning gives information; a controlled touch puts it to use.'}}]:[{id:'triangle',question:'Why sketch a passing triangle?',answer:'Three teammates at different angles can offer a way around a defender. When one passes and moves, the other two adjust so the new ball carrier still has options.',followUp:{question:'How does the defence answer that?',answer:'Watch one defender approach the ball while another protects the next pass. An attacker may need to carry into a different space before the triangle opens again.'}}],role:'Café terrace regular',pursuit:id==='cafe-bela'?'SCANNING FROM THE TERRACE':'SKETCHING ROOFTOP TRIANGLES',greeting:id==='cafe-bela'?'From the rooftop I watch midfielders scan before receiving. Down here we compare what we noticed. What are you working on?':'I sketch passing triangles upstairs, then talk them through with friends on the terrace. Which movements help the player on the ball?'});
+}

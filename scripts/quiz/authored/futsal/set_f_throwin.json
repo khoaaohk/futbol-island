@@ -1,0 +1,134 @@
+{
+ "lesson": "set_f_throwin",
+ "questions": [
+  {
+   "q": "Gold takes a kick-in from the left. Tap where the pivot offers the short option.",
+   "options": [
+    "In the middle, near a defender",
+    "Up the line, in open space",
+    "Right next to the kicker"
+   ],
+   "correct": 1,
+   "explain": "Yes. The pivot shows up the line in open space, a short and clear option.",
+   "choiceExplanations": [
+    "A blue ala is close to that space, so the pass could be cut out.",
+    "Yes. The pivot shows up the line in open space, a short and clear option.",
+    "That is too close. One defender could guard the kicker and the pivot together."
+   ],
+   "visual": {
+    "kind": "tapSpot",
+    "frame": {
+     "step": 0,
+     "hide": [
+      "st"
+     ],
+     "focus": [
+      "lm"
+     ]
+    },
+    "spots": [
+     {
+      "x": 125,
+      "y": 200
+     },
+     {
+      "x": 52,
+      "y": 164
+     },
+     {
+      "x": 38,
+      "y": 212
+     }
+    ]
+   }
+  },
+  {
+   "q": "Put the kick-in plan in order, from first to last.",
+   "options": [
+    "Set up two short options",
+    "Kick up the line to the pivot",
+    "Pivot passes back to the ala",
+    "Ala uses the backup fixo"
+   ],
+   "correct": 0,
+   "explain": "Yes. Two options first, use the open one, then the backup when it gets covered.",
+   "choiceExplanations": [
+    "Yes. Two options first, use the open one, then the backup when it gets covered.",
+    "Before the kick, gold sets up two short options.",
+    "The pivot must receive the kick-in before passing it back.",
+    "The backup comes last, after blue covers the route up the line."
+   ],
+   "visual": {
+    "kind": "order",
+    "frame": {
+     "step": 0,
+     "focus": [
+      "lm"
+     ]
+    }
+   }
+  },
+  {
+   "q": "Kick-in on the right now. The pivot is covered. Which pass is the backup?",
+   "options": [
+    "Pass up the line to the pivot",
+    "Long pass across to the left ala",
+    "Pass back to the fixo"
+   ],
+   "correct": 2,
+   "explain": "Yes. The fixo is the prepared backup, with a short and clear lane.",
+   "choiceExplanations": [
+    "A blue pivot now covers that route up the line, so the pass could be cut out.",
+    "That long pass runs past a defender, and a steal there is close to our goal.",
+    "Yes. The fixo is the prepared backup, with a short and clear lane."
+   ],
+   "visual": {
+    "kind": "bestPass",
+    "frame": {
+     "step": 4,
+     "place": {
+      "rm": {
+       "x": 260,
+       "y": 241
+      },
+      "st": {
+       "x": 218,
+       "y": 164
+      },
+      "cb": {
+       "x": 194,
+       "y": 282
+      },
+      "lm": {
+       "x": 60,
+       "y": 250
+      },
+      "dst": {
+       "x": 235,
+       "y": 199
+      },
+      "dlm": {
+       "x": 150,
+       "y": 246
+      },
+      "drm": {
+       "x": 54,
+       "y": 181
+      }
+     },
+     "ball": "rm",
+     "focus": [
+      "rm",
+      "cb"
+     ]
+    },
+    "from": "rm",
+    "to": [
+     "st",
+     "lm",
+     "cb"
+    ]
+   }
+  }
+ ]
+}

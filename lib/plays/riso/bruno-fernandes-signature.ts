@@ -1,0 +1,615 @@
+/** Bruno Fernandes — signature: the hop-skip penalty. Portugal 2–0 Uruguay, 2022 FIFA World Cup, Group H, Lusail Stadium, Lusail, Qatar,
+ * Monday 28 November 2022, kick-off 22:00 local (a night match under the lights), the penalty in the 90+3rd minute. An iconic-play riso
+ * film (RisoStory, chapters mode) played by the card's picture window (components/CardFilmPlayer.tsx) or StoryFilmPlayer. A 1:1
+ * reconstruction of the kick from WRITTEN accounts (the footage itself was not reviewed), rendered as a riso print.
+ *
+ * WHY THIS MOMENT: iconicPlays.json gives Bruno Fernandes the signature "the hop-skip penalty" (lesson: "Watch the keeper as you run up,
+ * then put it the other way"). The Guardian's report of this match describes exactly that, in so many words: "Fernandes kept his cool
+ * and with a hop, skip and a jump, sent Rochet the wrong way from the spot" — a World Cup penalty, one written source naming the hop AND
+ * the keeper going the wrong way, and a second (Wikipedia, citing BBC Sport) naming where the ball went.
+ *
+ * SOURCES (read Sept 2026, fetched with curl, cached in scratchpad/films/src-cache/):
+ *  - Wikipedia, "2022 FIFA World Cup Group H" (raw wikitext), Portugal v Uruguay: 28 Nov 2022, 22:00, Lusail Stadium, attendance 88,668,
+ *    referee Alireza Faghani (Iran); goals Fernandes 54', 90+3' (pen.); "a penalty awarded by the VAR for handball by José Giménez, which
+ *    he ROLLED INTO THE LEFT SIDE of the net"; kit boxes: Portugal RED shirts (DB1D27), GREEN shorts (0F7540), RED socks; Uruguay ALL WHITE
+ *    (their change kit); line-ups + numbers: Fernandes 8, Rochet 23 (GK), Giménez 2; Ronaldo (7) substituted in the 82nd minute (so NOT on
+ *    the pitch for the penalty); on the pitch at the end for Portugal: Costa 22, Cancelo 20, Dias 4, Pepe 3, Guerreiro 5, Bernardo Silva 10,
+ *    Fernandes 8, Leão 15, M. Nunes 23, G. Ramos 26, Palhinha 6; for Uruguay: Rochet 23, Giménez 2, Coates 19, Bentancur 6, Valverde 15,
+ *    Varela 13, Viña 17, Pellistri 8, De Arrascaeta 10, M. Gómez 18, Suárez 9; Fernandes man of the match.
+ *    https://en.wikipedia.org/wiki/2022_FIFA_World_Cup_Group_H
+ *  - The Guardian, Portugal–Uruguay match report, 28 Nov 2022: "Portugal were awarded a penalty after Fernandes had nut-megged José María
+ *    Giménez on the edge of the area. The ball struck the defender's trailing hand ... the Iranian referee was advised to check the
+ *    pitch-side monitor"; "Fernandes kept his cool and with a HOP, SKIP AND A JUMP, sent ROCHET THE WRONG WAY from the spot"; "Ronaldo, who
+ *    would have taken the penalty had he not been substituted". https://www.theguardian.com/football/2022/nov/28/portugal-uruguay-world-cup-group-h-match-report
+ *  - BBC Sport, "Portugal 2-0 Uruguay: Bruno Fernandes scores twice to secure last-16 place", 28 Nov 2022 ("Fernandes got his second from
+ *    the spot after a video assistant referee intervention"). https://www.bbc.com/sport/football/63698279
+ *  - Wikipedia, "Bruno Fernandes" (height 1.79 m; attacking midfielder; Manchester United). https://en.wikipedia.org/wiki/Bruno_Fernandes
+ * CONFIRMED by those accounts: the date, the stadium, the 22:00 kick-off (night, floodlights); Portugal 1–0 up; stoppage time; Faghani sent
+ *  to the pitchside monitor by the VAR, then gave the penalty; Fernandes (8) took it because Ronaldo had gone off; a hop, skip and a jump in
+ *  the run-up; Rochet (23) went the wrong way; the ball ROLLED into the left side of the net; Portugal won 2–0; kits as above; 1.79 m.
+ * INFERRED (illustrative, never named in the narration): that he struck it with his RIGHT foot (he is right-footed — general knowledge, not
+ *  these sources) as a side-foot, from a short run angled in from his left; "left side of the net" read from HIS side (so the keeper's
+ *  right, −z), and hence that Rochet dived to his own LEFT (+z) — "the wrong way"; the rhythm of the run as drawn (slow walking steps, one
+ *  small two-footed hop, a plant and the strike — his well-known penalty style as the Guardian's phrase describes it, timings illustrative);
+ *  exactly when Rochet moved; the ball's line (≈ .1 m high, ≈ .8 m inside the post) and pace; the celebration as drawn (a run toward the
+ *  near corner, teammates arriving); Rochet's keeper kit (printed yellow), Faghani's kit (printed dark), the numbers' ink, the Al Rihla ball's
+ *  graphics (printed as red panels), hair and builds except Fernandes' height, where everyone stood, which end and which touchline, the
+ *  camera placements, the Lusail bowl as drawn (two steep tiers, a pale membrane roof ring with the floodlights on its inner lip), the crowd
+ *  colours (Portugal red and green; Uruguay's sky blue printed as a pale navy screen) and flags.
+ *
+ * FRAMING (the TV broadcast, never top-down): ch1 = LIVE, real time: the wide main-stand shot of the floodlit Lusail bowl → a hard cut to
+ * Faghani bent over the pitchside monitor → he straightens and points: penalty → a cut to the lower main-stand camera level with the spot,
+ * tight on Fernandes at his mark → it widens as he walks in with slow steps, the little hop, the side-foot roll into the corner as Rochet
+ * dives the other way → the net → he runs off; ch2 = the slow-motion replay from HIGH BEHIND THE GOAL (over the net): footprints mark the
+ * slow steps, a yellow bounce arc marks the hop, a dashed sight line to the keeper while he is in the air, a red arrow as Rochet moves
+ * first, a yellow trail as the ball rolls the other way; ch3 = the reverse angle LOW ON THE GOAL LINE: the keeper dives away, the ball rolls
+ * in past the lens-side post, the celebration runs toward this camera; ch4 = the lesson: watch the keeper as you run up (the sight line
+ * through the slow steps and the hop), wait for him to move (the red arrow), then put it the other way (a ring in the open corner).
+ * Composed on the FULL sheet (world units = sheet units centred on the canvas; never sheet.safe), kept inside the central ~1000 units, so it
+ * frames from the 1.45:1 card window down to square (a narrower window widens the lens a little). Figures: every body goes through ONE
+ * adapter, drawPlayer() → athlete.ts (continuous silhouettes, FK skeleton, `prev` secondary motion, a motion smear on the hop, the strike,
+ * the dive and the celebration sprint); small wide-shot figures and every figure inside a passage print at `low` detail. Handedness: the
+ * world is right-handed (x toward the goal, y up, +z = Fernandes' right when he faces the goal, the main-stand side), exactly athlete.ts's
+ * convention, so foot 'r' is his RIGHT foot with no mirrored projector; the keeper faces −x, so HIS left is +z (the way he dives) and the
+ * ball goes to −z. Inks: yellow, red, green, navy (Portugal red + green, Uruguay paper, grass = yellow under green, a navy night sky).
+ * Everything is keyed to cue times (withTiming swaps in the recorded word onsets), poses on twos, cameras on ones; all randomness seeded. */
+import {withTiming,type NarrationTiming} from './timing';
+import type {Sheet} from '../../paths/riso/sheet';
+import {type RisoStory,type Scene,type Chapter,playChapters} from '../../paths/riso/story';
+import {apertureDisc} from '../../paths/riso/passage';
+import {TAU,twos,sm,key,clamp,lerp,rng,hash,polyPath,ribbon,partial,easeOut,easeOutBack,easeInOutSine,linear,type Pt} from '../../paths/riso/motion';
+import {sparkBurst,footballPanels,speedLines,laneArrow} from '../../paths/riso/shapes';
+import {drawAthlete,motionSmear,makeCamera,solve,strike,runCycle,runCadence,stand,keeperSet,keeperDive,celebrate,posed,blendPose,STRIKE_CONTACT,
+ type Pose,type Camera,type AthleteStyle,type Place,type InkFill,type V3} from './athlete';
+
+// ---------------------------------------------------------------- narration + timing
+/** The narration (script.json mirrors it). Cue `words` are the match keys for the voice's word onsets; their `at` and each chapter's
+ * `seconds` are ESTIMATES (≈2.7 words/s + punctuation pauses) until the Kokoro voice exists. LEAD: once
+ * public/plays/narration/bruno-fernandes-signature/timing.json exists, add
+ *   import timingJson from '../../../public/plays/narration/bruno-fernandes-signature/timing.json';
+ * and set VOICE to `timingJson as NarrationTiming` (one line; every scene re-times itself from the cues).
+ * NB withTiming matches a cue by its FIRST word, in order — so no cue starts with a word that also appears between it and the previous cue. */
+const SCRIPT:{label:string;text:string;tail:number;cues:string[]}[]=[
+ {label:'The last minute, live',text:'World Cup 2022: Portugal against Uruguay, the last minute. The referee checks the screen. Penalty! Bruno Fernandes: slow steps... a little hop... and he rolls it in. Goal!',tail:2.2,
+  cues:['World Cup','referee checks','Penalty','Bruno Fernandes','slow steps','a little hop','rolls it','Goal']},
+ {label:'Watch the hop',text:'Watch again, slowly. Small, slow steps. Then the hop: his eyes stay on the keeper. Rochet moves first... so Bruno rolls it the other way.',tail:1.6,
+  cues:['Watch again','Small','Then the hop','his eyes','Rochet moves','the other way']},
+ {label:'The wrong way',text:'From the goal line: the keeper dives one way, the ball goes the other! Portugal win two-nil.',tail:2,
+  cues:['From the goal line','keeper dives','the ball goes','Portugal win']},
+ {label:'The secret',text:'The secret? Watch the keeper as you run up. Wait for him to move... then put it the other way!',tail:2,
+  cues:['The secret','Watch the keeper','Wait for him','put it','the other way']},
+];
+import timingJson from '../../../public/plays/narration/bruno-fernandes-signature/timing.json';
+const VOICE:NarrationTiming|null=timingJson as NarrationTiming;
+/** provisional word onsets: .26 s + .025 s a letter per word, pauses after , . ! ? : ... */
+function estimate(text:string,cues:string[],tail:number){
+ const words=[...text.matchAll(/\S+/g)],on:number[]=[];let t=.2;
+ for(const m of words){on.push(t);const w=m[0];t+=.26+.025*w.replace(/[^a-z0-9]/gi,'').length;if(/[,;:]$/.test(w))t+=.22;if(/[.!?]$/.test(w))t+=.42;if(/\.\.\.$/.test(w))t+=.35;}
+ let from=0;
+ const cs=cues.map(c=>{const k=text.indexOf(c,from);if(k<0)throw new Error('bruno: cue "'+c+'" not in the narration');from=k+c.length;const wi=words.findIndex(m=>(m.index??0)+m[0].length>k);return{at:+on[wi].toFixed(2),words:c};});
+ return{seconds:+(t+tail).toFixed(2),cues:cs};
+}
+const CHAPTERS:Chapter[]=withTiming(SCRIPT.map(c=>{const e=estimate(c.text,c.cues,c.tail);return{label:c.label,narration:c.text,seconds:e.seconds,cues:e.cues};}),VOICE);
+/** onset of the cue whose words start with w in chapter i (throws on a typo, so a retime can never silently desync) */
+const CUE=(i:number,w:string)=>{const c=CHAPTERS[i].cues.find(q=>q.words.startsWith(w));if(!c)throw new Error('bruno: no cue '+w);return c.at;};
+const SECS=(i:number)=>CHAPTERS[i].seconds;
+/** key() needs increasing times: push each key at least `gap` after the previous one (real voice timings can crowd authored offsets) */
+function mono(K:[number,number][],gap=.05):[number,number][]{const o:[number,number][]=[];for(const[t,v] of K)o.push([o.length?Math.max(t,o[o.length-1][0]+gap):t,v]);return o;}
+
+// ---------------------------------------------------------------- inks, vectors
+const Y='yellow',R='red',G='green',K='navy';
+const add3=(a:V3,b:V3):V3=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]];
+const mix3=(a:V3,b:V3,u:number):V3=>[lerp(a[0],b[0],u),lerp(a[1],b[1],u),lerp(a[2],b[2],u)];
+const dot3=(a:V3,b:V3)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+const wrap=(a:number)=>{while(a>Math.PI)a-=TAU;while(a<-Math.PI)a+=TAU;return a;};
+const lerpAng=(a:number,b:number,u:number)=>a+wrap(b-a)*u;
+/** yaw (athlete.ts convention: 0 faces +x, + turns left) that faces from (x,z) toward (x2,z2) */
+const yawTo=(x:number,z:number,x2:number,z2:number)=>Math.atan2(-(z2-z),x2-x);
+/** a narrower (square) window gets a slightly wider lens so the action still fits; set by frame(), read by every camera */
+let LENS=1;
+/** Frame the FULL sheet: world (0,0) on the canvas centre at 1 unit per sheet unit (the passage arrival scale still multiplies in). */
+function frame(s:Sheet){const S=s.arrival;s.camera((s.cx-s.W/2)/S,(s.cy-s.H/2)/S,1/s.fit,0);LENS=Math.pow(Math.min(1,s.W/1620),.6);}
+/** half the visible extents with margin for the .68 passage preview */
+const view=(s:Sheet)=>({hx:s.W/(2*.68)+120,hy:s.H/(2*.68)+120});
+
+// ---------------------------------------------------------------- 3D: projection through an athlete.ts Camera (right-handed metres, y up)
+/** Pitch: the goal line is x = 0 (the kick goes +x), the goal centre z = 0, +z = Fernandes' right (the main-stand side), halfway x = −52.5. */
+type Cam=Camera;
+const NEAR=.4;
+function toCam(c:Cam,P:V3):V3{const d:V3=[P[0]-c.eye[0],P[1]-c.eye[1],P[2]-c.eye[2]];return[dot3(d,c.r),dot3(d,c.u),dot3(d,c.f)];}
+const scr=(c:Cam,q:V3):Pt=>[c.center[0]+c.F*q[0]/q[2],c.center[1]-c.F*q[1]/q[2]];
+function pr(c:Cam,P:V3):Pt|null{const q=toCam(c,P);return q[2]<NEAR?null:scr(c,q);}
+const kAt=(c:Cam,P:V3)=>c.F/Math.max(NEAR,toCam(c,P)[2]);
+function polyP(c:Cam,pts:V3[]):Pt[]{const q=pts.map(p=>toCam(c,p)),out:V3[]=[];
+ for(let i=0;i<q.length;i++){const a=q[i],b=q[(i+1)%q.length],ia=a[2]>=NEAR,ib=b[2]>=NEAR;if(ia)out.push(a);if(ia!==ib){const k=(NEAR-a[2])/(b[2]-a[2]);out.push([a[0]+(b[0]-a[0])*k,a[1]+(b[1]-a[1])*k,NEAR]);}}
+ return out.map(p=>scr(c,p));}
+const addPoly=(path:Path2D,q:Pt[])=>{if(q.length>2)path.addPath(polyPath(q,true));};
+/** a 3D segment as a projected quad (clipped to the near plane); width in metres */
+function seg3(c:Cam,a:V3,b:V3,wm:number,out:Path2D,minW=1.1){let qa=toCam(c,a),qb=toCam(c,b);if(qa[2]<NEAR&&qb[2]<NEAR)return;
+ const cut=(p:V3,q:V3):V3=>{const k=(NEAR-p[2])/(q[2]-p[2]);return[p[0]+(q[0]-p[0])*k,p[1]+(q[1]-p[1])*k,NEAR];};if(qa[2]<NEAR)qa=cut(qa,qb);else if(qb[2]<NEAR)qb=cut(qb,qa);
+ const A=scr(c,qa),Bp=scr(c,qb),wa=Math.max(minW,c.F*wm/qa[2]/2),wb=Math.max(minW,c.F*wm/qb[2]/2),dx=Bp[0]-A[0],dy=Bp[1]-A[1],l=Math.hypot(dx,dy)||1,nx=-dy/l,ny=dx/l;
+ out.moveTo(A[0]+nx*wa,A[1]+ny*wa);out.lineTo(Bp[0]+nx*wb,Bp[1]+ny*wb);out.lineTo(Bp[0]-nx*wb,Bp[1]-ny*wb);out.lineTo(A[0]-nx*wa,A[1]-ny*wa);out.closePath();}
+const cam3=(pos:V3,target:V3,fov:number)=>makeCamera({pos,target,fov,size:1080*LENS});
+
+// ---------------------------------------------------------------- Lusail at night: a huge two-tier bowl under a pale membrane roof ring
+/** stand planes (a along, b up the rake 0..1); the ends widen with the rake so the corners meet (a mitred bowl): 0 the far side (z<0),
+ * 1 behind this goal (x>0), 2 the main stand (z>0, the camera side), 3 the far end. Steep and tall (88,668 seats). */
+const STANDS:((a:number,b:number)=>V3)[]=[
+ (a,b)=>[lerp(-120-44*b,15+44*b,a),1.2+38*b,-44-44*b],
+ (a,b)=>[13+44*b,1.2+38*b,lerp(-45-44*b,45+44*b,a)],
+ (a,b)=>[lerp(15+44*b,-120-44*b,a),1.2+36*b,44+42*b],
+ (a,b)=>[-119-44*b,1.2+38*b,lerp(45+44*b,-45-44*b,a)],
+];
+const STAND_COLS=[132,92,132,92],STAND_ROWS=17,ROOF_Y=52;
+/** the dark fascia (hospitality boxes) between the two tiers */
+const FASCIA:[number,number]=[.42,.49];
+/** crowd colour weights per stand: [paper (white shirts, phones), red (Portugal), green (Portugal), sky (Uruguay: pale navy)] — inferred */
+const CROWD_MIX:[number,number,number,number][]=[[.22,.42,.14,.22],[.2,.48,.18,.14],[.22,.44,.14,.2],[.2,.3,.1,.4]];
+/** flags on the stand fronts: [stand, a, kind] kind 0 = Portugal (green | red, vertical), 1 = Uruguay (paper with sky stripes, a yellow sun) */
+const FLAGS:[number,number,number][]=[[0,.18,0],[0,.3,1],[0,.55,0],[0,.72,0],[1,.22,0],[1,.5,0],[1,.78,1],[2,.25,0],[2,.6,0],[3,.35,1],[3,.55,1],[3,.7,0]];
+function stadium(s:Sheet,c:Cam,t:number,which:number[],o:{roar?:number}={}){
+ const{roar=0}=o,v=view(s),tt=twos(t);
+ // a Gulf night: deep navy, a faint floodlit haze low over the bowl
+ s.field(K,.86,.5);
+ const hz=pr(c,add3(c.eye,[c.f[0]*1e4,0,c.f[2]*1e4]));
+ if(hz)s.tone(Y,polyPath([[-1e4,hz[1]-700],[1e4,hz[1]-700],[1e4,hz[1]+80],[-1e4,hz[1]+80]],true),.1);
+ const planes=new Path2D(),fas=new Path2D(),roof=new Path2D(),edge=new Path2D(),walk=new Path2D();
+ for(const i of which){const S=STANDS[i];addPoly(planes,polyP(c,[S(0,0),S(1,0),S(1,1),S(0,1)]));
+  addPoly(planes,polyP(c,[add3(S(0,0),[0,-1.25,0]),add3(S(1,0),[0,-1.25,0]),S(1,0),S(0,0)]));
+  addPoly(fas,polyP(c,[S(0,FASCIA[0]),S(1,FASCIA[0]),S(1,FASCIA[1]),S(0,FASCIA[1])]));
+  seg3(c,S(0,.22),S(1,.22),.45,walk);
+  // the membrane roof: a pale ring from the top of the stand in to the inner lip, a navy lip truss under it
+  const L=(a:number):V3=>{const p=S(a,.2);return[p[0],ROOF_Y,p[2]];};
+  addPoly(roof,polyP(c,[add3(S(0,1),[0,3,0]),add3(S(1,1),[0,3,0]),L(1),L(0)]));
+  seg3(c,L(0),L(1),1.1,edge);}
+ s.knockout(planes);s.tone(K,planes,.5);s.tone(G,planes,.1);s.knockout(walk,.4);
+ s.knockout(fas);s.fill(K,fas,.9);s.tone(Y,fas,.22);
+ // the crowd: seeded dots; roar lifts them
+ const inks=[new Path2D(),new Path2D(),new Path2D(),new Path2D()];
+ for(const si of which){const S=STANDS[si],cols=STAND_COLS[si],mx=CROWD_MIX[si];for(let j=0;j<STAND_ROWS;j++){const b=(j+.5)/STAND_ROWS;if(b>FASCIA[0]-.02&&b<FASCIA[1]+.02)continue;
+  for(let i=0;i<cols;i++){const h=hash(i*131+j*7919+si*17,6);if(h<.18)continue;const a=(i+.5+(hash(i+j*31,9)-.5)*.5)/cols,P=S(a,b),q=toCam(c,P);if(q[2]<NEAR)continue;
+   const p=scr(c,q);if(Math.abs(p[0])>v.hx||Math.abs(p[1])>v.hy)continue;const z=clamp(c.F*.6/q[2],2.4,18),lift=roar>0?roar*z*1.3*Math.max(0,Math.sin(tt*10+h*TAU)):0;
+   const u=(h-.18)/.82,ink=u<mx[0]?0:u<mx[0]+mx[1]?1:u<mx[0]+mx[1]+mx[2]?2:3;inks[ink].rect(p[0]-z/2,p[1]-z*.7-lift,z,z*1.3);}}}
+ s.knockout(inks[0],.8);s.knockout(inks[1],.7);s.fill(R,inks[1],.95);s.knockout(inks[2],.7);s.fill(G,inks[2],.95);s.knockout(inks[3],.8);s.tone(K,inks[3],.35);
+ // the roof: pale, lit from below; the navy lip with the floodlight line and haloes
+ s.knockout(roof,.9);s.tone(K,roof,.16);s.tone(Y,roof,.12);s.fill(K,edge,.9);
+ const lamp=new Path2D(),halo=new Path2D();
+ for(const i of which){const S=STANDS[i],n=i%2?6:9;for(let k=0;k<n;k++){const u=(k+.5)/n,pa=S(u-.02,.2),pb=S(u+.02,.2),a:V3=[pa[0],ROOF_Y-1,pa[2]],b:V3=[pb[0],ROOF_Y-1,pb[2]],m=mix3(a,b,.5);if(toCam(c,m)[2]<NEAR+2)continue;seg3(c,a,b,1.2,lamp);
+  const g=pr(c,m);if(g){const r=clamp(kAt(c,m)*5,8,150);halo.moveTo(g[0]+r,g[1]);halo.ellipse(g[0],g[1],r,r*.6,0,0,TAU);}}}
+ s.knockout(halo,.22);s.tone(Y,halo,.4);s.knockout(lamp);s.fill(Y,lamp,.8);
+ // flags on the stand fronts
+ const fl=new Path2D(),gr=new Path2D(),rd=new Path2D(),sk=new Path2D(),sun=new Path2D();
+ for(const[si,a,kind] of FLAGS){if(!which.includes(si))continue;const S=STANDS[si],w=.022,P=(u:number,b:number)=>S(a+u*w,b*.6);
+  const q=polyP(c,[P(0,.005),P(1,.005),P(1,.09),P(0,.09)]);if(q.length<3)continue;fl.addPath(polyPath(q,true));
+  if(kind===0){addPoly(gr,polyP(c,[P(0,.005),P(.4,.005),P(.4,.09),P(0,.09)]));addPoly(rd,polyP(c,[P(.4,.005),P(1,.005),P(1,.09),P(.4,.09)]));}
+  else{for(const y0 of[.015,.035,.055])addPoly(sk,polyP(c,[P(.35,y0),P(1,y0),P(1,y0+.009),P(.35,y0+.009)]));addPoly(sun,polyP(c,[P(.08,.055),P(.24,.055),P(.24,.08),P(.08,.08)]));}}
+ s.knockout(fl);s.fill(G,gr,.95);s.fill(R,rd,.95);s.tone(K,sk,.45);s.fill(Y,sun,.95);
+}
+// ---------------------------------------------------------------- floodlit grass, lines, boards, the review monitor, the goal
+/** the review monitor on the far touchline at halfway (inferred side): its screen faces the pitch (+z), the main-stand cameras */
+const MON:V3=[-52.5,0,-35.3];
+function ground(s:Sheet,c:Cam,o:{bulge?:number;goal?:boolean;monitor?:boolean}={}){
+ const g=polyP(c,[[-117,0,-43],[12,0,-43],[12,0,43],[-117,0,43]]);if(g.length<3)return;const gp=polyPath(g,true);
+ s.knockout(gp);s.fill(Y,gp,.9);s.tone(G,gp,.8);s.tone(K,gp,.12);
+ const st=new Path2D();for(let k=0;k<20;k+=2)addPoly(st,polyP(c,[[-k*5.25,0,-34],[-(k+1)*5.25,0,-34],[-(k+1)*5.25,0,34],[-k*5.25,0,34]]));s.tone(K,st,.12);
+ // LED boards behind the goal and along both touchlines: navy with pale lit panels
+ const bd=new Path2D(),pn=new Path2D(),board=(a:V3,b:V3)=>addPoly(bd,polyP(c,[a,b,add3(b,[0,.95,0]),add3(a,[0,.95,0])]));
+ board([5.5,0,-38],[5.5,0,38]);board([-110,0,-38.5],[5.5,0,-38.5]);board([-110,0,38.5],[5.5,0,38.5]);
+ for(let k=0;k<11;k++){const z=-34+k*6.3;addPoly(pn,polyP(c,[[5.4,.25,z],[5.4,.25,z+3.4],[5.4,.7,z+3.4],[5.4,.7,z]]));}
+ for(const zz of[-38.4,38.4])for(let k=0;k<17;k++){const x=-106+k*6.4;addPoly(pn,polyP(c,[[x,.25,zz],[x+3.4,.25,zz],[x+3.4,.7,zz],[x,.7,zz]]));}
+ s.knockout(bd);s.fill(K,bd,.9);s.knockout(pn,.8);s.tone(R,pn,.35);
+ const ln=new Path2D(),L=(a:V3,b:V3)=>seg3(c,a,b,.13,ln);
+ for(let k=0;k<8;k++){L([-k*13.125,0,-34],[-(k+1)*13.125,0,-34]);L([-k*13.125,0,34],[-(k+1)*13.125,0,34]);}
+ for(let k=0;k<4;k++){L([0,0,-34+k*17],[0,0,-34+(k+1)*17]);L([-52.5,0,-34+k*17],[-52.5,0,-34+(k+1)*17]);}
+ const circ=(cx:number,cz:number,r:number,a0=0,a1=TAU,n=28)=>{for(let i=0;i<n;i++){const u0=a0+(a1-a0)*i/n,u1=a0+(a1-a0)*(i+1)/n;L([cx+Math.cos(u0)*r,0,cz+Math.sin(u0)*r],[cx+Math.cos(u1)*r,0,cz+Math.sin(u1)*r]);}};
+ circ(-52.5,0,9.15);
+ L([0,0,-20.16],[-16.5,0,-20.16]);L([-16.5,0,-20.16],[-16.5,0,20.16]);L([-16.5,0,20.16],[0,0,20.16]);
+ L([0,0,-9.16],[-5.5,0,-9.16]);L([-5.5,0,-9.16],[-5.5,0,9.16]);L([-5.5,0,9.16],[0,0,9.16]);
+ {const a=Math.acos(5.5/9.15);circ(-11,0,9.15,Math.PI-a,Math.PI+a,12);}
+ circ(0,-34,1,Math.PI/2,Math.PI,4);circ(0,34,1,Math.PI,Math.PI*1.5,4);
+ {const d:V3[]=[];for(let i=0;i<12;i++){const a=i/12*TAU;d.push([-11+Math.cos(a)*.15,0,Math.sin(a)*.15]);}addPoly(ln,polyP(c,d));}
+ s.knockout(ln);
+ if(o.monitor)monitor(s,c);
+ if(o.goal!==false)goal3(s,c,o.bulge??0);
+}
+/** the pitchside review monitor at the halfway line (a screen on a post, a hood, a replay picture) */
+function monitor(s:Sheet,c:Cam){
+ if(toCam(c,MON)[2]<NEAR)return;const[x,,z]=MON;
+ const body=new Path2D(),scr2=new Path2D(),pic=new Path2D();
+ seg3(c,[x,0,z-.1],[x,1.05,z-.1],.09,body);addPoly(body,polyP(c,[[x-.34,0,z+.2],[x+.34,0,z+.2],[x+.34,0,z-.4],[x-.34,0,z-.4]]));
+ addPoly(body,polyP(c,[[x-.5,1.02,z],[x+.5,1.02,z],[x+.5,1.72,z],[x-.5,1.72,z]]));
+ addPoly(body,polyP(c,[[x-.54,1.72,z+.02],[x+.54,1.72,z+.02],[x+.54,1.78,z+.4],[x-.54,1.78,z+.4]]));
+ addPoly(scr2,polyP(c,[[x-.44,1.08,z+.01],[x+.44,1.08,z+.01],[x+.44,1.66,z+.01],[x-.44,1.66,z+.01]]));
+ addPoly(pic,polyP(c,[[x-.36,1.14,z+.02],[x+.1,1.14,z+.02],[x+.1,1.5,z+.02],[x-.36,1.5,z+.02]]));
+ s.knockout(body);s.fill(K,body,.92);s.knockout(scr2);s.tone(G,scr2,.6);s.tone(Y,pic,.75);
+}
+/** the goal at x = 0: posts z ±3.66, bar 2.44, net 2 m deep with a sloping roof; bulge pushes the back out low, where the ball hits (z BZ) */
+function goal3(s:Sheet,c:Cam,bulge:number){
+ const X=0,z0=-3.66,z1=3.66,H=2.44,back=(z:number,y:number)=>X+2+bulge*.55*Math.exp(-Math.pow((z-BZ)/1.4,2))*(1-.6*y/1.9);
+ const zs=[z0,-2.4,-1.2,0,1.2,2.4,z1];
+ const planes:V3[][]=[[[X,0,z0],[X,H,z0],[back(z0,1.9),1.9,z0],[back(z0,0),0,z0]],[[X,0,z1],[X,H,z1],[back(z1,1.9),1.9,z1],[back(z1,0),0,z1]],
+  [[X,H,z0],[X,H,z1],...zs.slice().reverse().map(z=>[back(z,1.9),1.9,z] as V3)],
+  [...zs.map(z=>[back(z,0),0,z] as V3),...zs.slice().reverse().map(z=>[back(z,1.9),1.9,z] as V3)]];
+ const net=new Path2D();for(const P of planes)addPoly(net,polyP(c,P));
+ s.knockout(net,.3);s.tone(K,net,.1);
+ const mesh=new Path2D();
+ for(let i=0;i<=14;i++){const z=lerp(z0,z1,i/14);seg3(c,[X,H,z],[back(z,1.9),1.9,z],.022,mesh,.7);seg3(c,[back(z,1.9),1.9,z],[back(z,0),0,z],.022,mesh,.7);}
+ for(let j=1;j<=5;j++){const y=1.9*j/6;for(let i=0;i<zs.length-1;i++)seg3(c,[back(zs[i],y),y,zs[i]],[back(zs[i+1],y),y,zs[i+1]],.022,mesh,.7);seg3(c,[X,y*H/1.9,z0],[back(z0,y),y,z0],.022,mesh,.7);seg3(c,[X,y*H/1.9,z1],[back(z1,y),y,z1],.022,mesh,.7);}
+ for(let j=1;j<4;j++){const u=j/4;seg3(c,[X+2*u,H-.54*u,z0],[X+2*u,H-.54*u,z1],.022,mesh,.7);}
+ s.knockout(mesh,.8);
+ const fr=new Path2D();seg3(c,[X,0,z0],[X,H,z0],.12,fr);seg3(c,[X,0,z1],[X,H,z1],.12,fr);seg3(c,[X,H,z0-.06],[X,H,z1+.06],.12,fr);
+ const fo=new Path2D();seg3(c,[X,0,z0],[X,H,z0],.2,fo);seg3(c,[X,0,z1],[X,H,z1],.2,fo);seg3(c,[X,H,z0-.04],[X,H,z1+.04],.2,fo);
+ s.fill(K,fo,.9);s.knockout(fr);
+}
+
+// ---------------------------------------------------------------- the kick on one clock τ (seconds; τ = 0 is the contact)
+/** the ball on the spot, 11 m out */
+const B0:V3=[-11,.11,0];
+const DXG=-B0[0];
+/** the placement: ROLLED into the left side of the net — HIS left (−z, the keeper's right), ≈ .8 m inside the post */
+const ZL=-2.85,BZ=ZL;
+const flight=(d:number):V3=>{const u=d/DXG;return[B0[0]+d,.11+.09*Math.sin(Math.PI*u)*(1-u),B0[2]+ZL*u];};
+const FLY=.62;// 11 m in ≈ .62 s: a firm, rolled side-foot
+const dAt=(tau:number)=>{const u=clamp(tau/FLY);return DXG*u*(1.1-.1*u);};
+const GOAL_PT=flight(DXG),NET_HIT:V3=[1.75,.2,ZL-.25],REST:V3=[1.3,.11,ZL-.15],IN_NET=FLY+.14;
+function ballAt(tau:number):V3{
+ if(tau<=0)return B0;
+ if(tau<FLY)return flight(dAt(tau));
+ if(tau<IN_NET)return mix3(GOAL_PT,NET_HIT,easeOut((tau-FLY)/(IN_NET-FLY)));
+ const u=clamp((tau-IN_NET)/.45),h=NET_HIT[1]*(1-u)+.11*u;
+ return[lerp(NET_HIT[0],REST[0],u),Math.max(.11,h),lerp(NET_HIT[2],REST[2],u)];
+}
+/** ball spin: a forward roll */
+const spinAt=(tau:number)=>tau<=0?0:TAU*4.8*Math.min(tau,IN_NET)+TAU*1*Math.max(0,tau-IN_NET);
+const bulgeAt=(tau:number)=>tau<IN_NET-.03?0:.6*Math.exp(-(tau-IN_NET+.03)*2.8)*(1+.3*Math.sin((tau-IN_NET)*12));
+
+// ---------------------------------------------------------------- the cast: kits (athlete.ts styles)
+const SKIN_L:InkFill[]=[[Y,.35],[R,.16]],SKIN_M:InkFill[]=[[Y,.46],[R,.26],[K,.06]],SKIN_D:InkFill[]=[[R,.45],[K,.45],[Y,.18]];
+/** Portugal: red shirts, green shorts, red socks (the kit box); paper numbers, green trim (inferred) */
+const por=(o:Partial<AthleteStyle>={}):AthleteStyle=>({shirt:[R,.95],shorts:[G,.95],socks:[R,.95],boots:K,skin:SKIN_L,hair:[K,.85],line:K,trim:[G,.9],numberInk:'paper',hairStyle:'short',...o});
+/** Uruguay: all white (their change kit that night, the kit box); navy numbers and trim (inferred) */
+const uru=(o:Partial<AthleteStyle>={}):AthleteStyle=>({shirt:'paper',shorts:'paper',socks:'paper',boots:K,skin:SKIN_L,hair:[K,.8],line:K,trim:[K,.6],numberInk:K,hairStyle:'short',...o});
+const BF_B={height:1.79,bulk:.96};
+/** Fernandes: 8, 1.79 m, short dark hair */
+const BF_ST=por({number:8,hair:[K,.9],build:BF_B,seed:8});
+/** Rochet: 23, a yellow goalkeeper kit (inferred), long sleeves, paper gloves */
+const ROC_ST:AthleteStyle={shirt:[Y,.95],shorts:[Y,.95],socks:[Y,.95],boots:K,skin:SKIN_L,hair:[K,.85],line:K,trim:K,gloves:'paper',sleeves:'long',hairStyle:'short',number:23,numberInk:K,build:{height:1.9,bulk:1},seed:23};
+/** Faghani: a dark referee kit (inferred) */
+const REF_ST:AthleteStyle={shirt:[K,.85],shorts:[K,.95],socks:[K,.95],boots:K,skin:SKIN_L,hair:[K,.85],line:K,trim:[Y,.8],hairStyle:'balding',build:{height:1.8,bulk:1.02},seed:30};
+
+// ---------------------------------------------------------------- Fernandes: at his mark, slow steps in from his left, the little hop, the right side-foot roll, the run off
+/** approach from his LEFT (≈ 17°): a right-footer comes in from the left and side-foots across to his left */
+const DIRN=Math.hypot(1,.3),DIR:[number,number]=[1/DIRN,.3/DIRN];
+const YAW_P=yawTo(0,0,DIR[0],DIR[1]);
+/** the run on one clock: slow steps from the mark (T_RUN0), the hop (T_H0..T_H1, both feet off the grass), the plant + strike, contact at 0 */
+const SD=1.0,RUN_END=-STRIKE_CONTACT*SD,T_RUN0=-2.7,T_H0=-.98,T_H1=RUN_END,G_MARK=-4.5,G_H0=-1.95,G_END=-1.15;
+const HOP_H=.24;
+const PWR=.55;// a placement: a short backswing, a checked follow-through
+/** the RIGHT side-foot: kicking thigh rotated out so the inside of the boot faces the target, ankle locked */
+function sideFoot(u:number):Pose{const p=strike(u,{foot:'r',power:PWR}),w=sm(.3,STRIKE_CONTACT,u)*(1-sm(.72,.95,u));p.rHipR+=.72*w;p.rAnk-=.5*w;p.yaw+=.1*w;return p;}
+/** where his pelvis stands at contact so the inside of his RIGHT boot meets the back of the ball (solved once, FK) */
+const PC:[number,number]=(()=>{const sk=solve(sideFoot(STRIKE_CONTACT),BF_B,{x:0,z:0,yaw:YAW_P}),mid:[number,number]=[(sk.rToe[0]+sk.rHeel[0])/2,(sk.rToe[2]+sk.rHeel[2])/2],tgt:[number,number]=[B0[0]-DIR[0]*.14,B0[2]-DIR[1]*.14];return[tgt[0]-mid[0],tgt[1]-mid[1]];})();
+const gPos=(g:number):[number,number]=>[PC[0]+DIR[0]*g,PC[1]+DIR[1]*g];
+/** at his mark: upright, hands loose at his sides, eyes on the keeper */
+const P_WAIT=posed({lHipF:6,rHipF:2,lKnee:12,rKnee:8,lAnk:-2,rAnk:0,lean:4,pitch:1,neckP:-4,lShA:12,rShA:14,lShF:4,rShF:-4,lElb:20,rElb:24});
+/** the hop: both feet off the grass, knees soft, left leg reaching to land as the plant, arms out for balance, head UP at the keeper */
+const P_HOP=posed({lHipF:40,lKnee:52,lAnk:-10,rHipF:-8,rKnee:78,rAnk:30,lean:6,pitch:-2,neckP:-8,lShA:44,rShA:40,lShF:18,rShF:-12,lElb:40,rElb:46,twist:6,squash:.04});
+const hopU=(tau:number)=>clamp((tau-T_H0)/(T_H1-T_H0));
+/** after the kick: watch it go in, turn, run toward the near corner (the goal-line camera side), arms up */
+const T_TURN=.8,T_CEL=2.9,CEL:[number,number]=[-6.2,-11.2];
+const CEL_YAW=yawTo(CEL[0],CEL[1],-3,-22);
+const gRun=(tau:number)=>key(tau,[[T_RUN0,G_MARK],[T_H0,G_H0],[RUN_END,G_END],[0,0]],linear);
+/** the run phase: a slow walking cadence, frozen in the air through the hop */
+const runPh=(tau:number)=>{const a=clamp(tau,T_RUN0,T_H0)-T_RUN0,c=Math.max(0,tau-T_H1);return a*runCadence(0)*.72+c*runCadence(.5);};
+const celU=(tau:number)=>sm(T_TURN+.2,T_CEL,tau,linear);
+function bfPose(tau:number,it=0):Pose{
+ if(tau<=T_RUN0){const br=.5+.5*Math.sin(it*2.1),p=blendPose(P_WAIT,runCycle(0,{speed:0,stride:.5}),sm(T_RUN0-.3,T_RUN0,tau));p.lean+=.02*br;p.neckP+=.03*br;return p;}
+ let p:Pose;
+ if(tau<RUN_END){const run=runCycle(runPh(tau),{speed:0,stride:.55});p=blendPose(P_WAIT,run,sm(T_RUN0,T_RUN0+.3,tau));
+  // the hop: blend in the airborne pose and lift him off the grass on a little arc
+  const u=hopU(tau),w=sm(T_H0-.1,T_H0+.06,tau);p=blendPose(p,P_HOP,w);p.air=Math.max(p.air,HOP_H*Math.sin(Math.PI*u)*(u>0&&u<1?1:0));return p;}
+ const us=STRIKE_CONTACT+tau/SD,run=runCycle(runPh(tau),{speed:.4});
+ p=blendPose(blendPose(P_HOP,run,.3),sideFoot(Math.min(1,us)),sm(RUN_END-.04,RUN_END+.1,tau));
+ if(tau>.55)p=blendPose(p,stand(),sm(.55,.8,tau));
+ if(tau>T_TURN){const u=celU(tau),ph=(tau-T_TURN)*runCadence(.85);p=blendPose(p,runCycle(ph,{speed:.9-.4*u}),sm(T_TURN,T_TURN+.25,tau));
+  p=blendPose(p,celebrate((tau-T_CEL)*.9,{kind:'arms'}),sm(T_CEL-.3,T_CEL+.2,tau));}
+ return p;
+}
+function bfPlace(tau:number):Place{
+ if(tau<=T_RUN0){const[x,z]=gPos(G_MARK);return{x,z,yaw:YAW_P};}
+ let g:number;
+ if(tau<0)g=gRun(tau);
+ else g=.5*(1-Math.pow(1-clamp(tau/.6),2));
+ let[x,z]=gPos(g);
+ const[x0,z0]=gPos(.5);
+ if(tau>T_TURN){const u=celU(tau),e=u*(2-u);x=lerp(x0,CEL[0],e);z=lerp(z0,CEL[1],e);}
+ const runYaw=yawTo(x0,z0,CEL[0],CEL[1]);
+ return{x,z,yaw:lerpAng(lerpAng(YAW_P,runYaw,sm(T_TURN,T_TURN+.35,tau,easeInOutSine)),CEL_YAW,sm(T_CEL-.4,T_CEL+.2,tau,easeInOutSine))};
+}
+
+// ---------------------------------------------------------------- Rochet: set on his line, a lean to his left while Fernandes is in the air, the dive the wrong way
+const ROC_X=-.15;
+/** dive start (he moves first, as Fernandes lands from the hop) and its length */
+const KD0=-.42,KDUR=1.05;
+function rocAt(tau:number,it:number):{pose:Pose;place:Place}{
+ let p=keeperSet(it*1.2);
+ // the shift: weight leaning toward his LEFT (+z) during the hop — the tell
+ const lean=sm(-1.1,-.6,tau)*(1-sm(KD0-.02,KD0+.1,tau));
+ if(lean>0)p=blendPose(p,keeperDive(.14,{side:'l',height:.35}),lean*.8);
+ if(tau>KD0)p=blendPose(p,keeperDive(clamp((tau-KD0)/KDUR),{side:'l',height:.35}),sm(KD0,KD0+.08,tau));
+ return{pose:p,place:{x:ROC_X,z:0,yaw:Math.PI}};
+}
+
+// ---------------------------------------------------------------- everyone else (on the pitch at 90+3: Ronaldo had gone off)
+type Role='ref'|'por'|'uru';
+/** runTo: a teammate who sprints to Fernandes in the celebration [start τ, arrival offset from CEL] */
+type Actor={name:string;role:Role;st:AthleteStyle;x:number;z:number;phase:number;runTo?:[number,number,number]};
+const REF_BOX:[number,number]=[-15.2,10.6];
+const ACTORS:Actor[]=[
+ {name:'Faghani',role:'ref',st:REF_ST,x:REF_BOX[0],z:REF_BOX[1],phase:.6},
+ {name:'Bernardo Silva',role:'por',st:por({number:10,hair:[K,.9],hairStyle:'curly',build:{height:1.73,bulk:.9},seed:10,detail:'low'}),x:-17.6,z:6.8,phase:.1,runTo:[1.1,-1,.9]},
+ {name:'Leão',role:'por',st:por({number:15,skin:SKIN_D,hair:K,build:{height:1.88,bulk:1},seed:15,detail:'low'}),x:-20.4,z:-2.6,phase:.4,runTo:[1.4,1.1,.4]},
+ {name:'Gonçalo Ramos',role:'por',st:por({number:26,hair:[K,.8],build:{height:1.85},seed:26,detail:'low'}),x:-17.8,z:-9.6,phase:.7,runTo:[.9,-.4,-1.2]},
+ {name:'Matheus Nunes',role:'por',st:por({number:23,skin:SKIN_M,hair:K,build:{height:1.83},seed:23,detail:'low'}),x:-21.2,z:2.4,phase:.25,runTo:[1.6,.3,1.5]},
+ {name:'Palhinha',role:'por',st:por({number:6,hair:[K,.7],build:{height:1.9,bulk:1.04},seed:6,detail:'low'}),x:-26,z:-1.4,phase:.85},
+ {name:'Giménez',role:'uru',st:uru({number:2,hair:K,build:{height:1.85,bulk:1.02},seed:40,detail:'low'}),x:-20.6,z:-.8,phase:.3},
+ {name:'Coates',role:'uru',st:uru({number:19,hair:[K,.7],build:{height:1.96,bulk:1.04},seed:41,detail:'low'}),x:-18.4,z:3.6,phase:.9},
+ {name:'Valverde',role:'uru',st:uru({number:15,hair:K,build:{height:1.82},seed:42,detail:'low'}),x:-17.8,z:-5.8,phase:.15},
+ {name:'Suárez',role:'uru',st:uru({number:9,hair:K,build:{height:1.82,bulk:1.02},seed:43,detail:'low'}),x:-21.4,z:5.2,phase:.65},
+ {name:'Bentancur',role:'uru',st:uru({number:6,hair:K,hairStyle:'long',build:{height:1.87},seed:44,detail:'low'}),x:-17.6,z:10.2,phase:.45},
+ {name:'Gómez',role:'uru',st:uru({number:18,hair:K,build:{height:1.86,bulk:1.04},seed:45,detail:'low'}),x:-19.2,z:-8,phase:.55},
+];
+const SLUMP=posed({lHipF:30,rHipF:30,lKnee:36,rKnee:36,lean:34,pitch:6,neckP:30,lShA:14,rShA:14,lShF:24,rShF:24,lElb:20,rElb:20});
+/** the referee at the monitor: bent to the screen, hands on hips; then upright, the arm out toward the spot */
+const P_STUDY=posed({lHipF:14,rHipF:14,lKnee:14,rKnee:14,lean:26,pitch:6,neckP:20,lShA:34,rShA:34,lShF:-14,rShF:-14,lElb:100,rElb:100,lShR:30,rShR:30});
+const P_POINT=posed({rShF:62,rShA:24,rElb:4,rHand:1,lShA:18,lShF:-8,lElb:20,lean:6,neckP:8,lHipF:10,rHipF:-4});
+type Env={it:number;mon?:number;point?:number;smear?:boolean;minBall?:number;lines?:boolean;prevT?:number;hero?:'high'|'mid';crowd?:boolean};
+function actorAt(a:Actor,tau:number,it:number,e:Env):{pose:Pose;place:Place}{
+ const toBall=yawTo(a.x,a.z,B0[0],B0[2]),br=Math.sin(it*2.1+a.phase*TAU),goal=sm(IN_NET-.1,IN_NET+.3,tau);
+ if(a.role==='ref'){
+  if((e.mon??0)>.5){const at:[number,number]=[MON[0],MON[2]+.8],pt=e.point??0;const p=blendPose(P_STUDY,P_POINT,pt);
+   return{pose:p,place:{x:at[0],z:at[1],yaw:lerpAng(yawTo(at[0],at[1],MON[0],MON[2]),yawTo(at[0],at[1],-11,0),pt)}};}
+  let p=stand();if(goal>0)p=blendPose(p,posed({rShF:20,rShA:18,lShA:18,lElb:20,rElb:20,neckP:0}),goal);
+  return{pose:p,place:{x:a.x,z:a.z,yaw:yawTo(a.x,a.z,-9.6,-.5)}};}
+ if(a.role==='uru'){let p=blendPose(stand(),SLUMP,.12+.05*br);if(goal>0)p=blendPose(p,SLUMP,goal*.85);return{pose:p,place:{x:a.x,z:a.z,yaw:toBall}};}
+ let p=blendPose(stand(),posed({lHipF:20,rHipF:20,lKnee:30,rKnee:30,lean:14,lShA:20,rShA:20,lElb:40,rElb:40}),.4+.1*br);
+ if(goal>0)p=blendPose(p,celebrate(it*.9+a.phase,{kind:'arms'}),goal);
+ if(a.runTo){const[t0,ox,oz]=a.runTo,dest:[number,number]=[CEL[0]+ox,CEL[1]+oz],L=Math.hypot(dest[0]-a.x,dest[1]-a.z),T=L/6.4,u=clamp((tau-t0)/T);
+  if(tau>t0){const ph=(tau-t0)*runCadence(1);p=blendPose(p,runCycle(ph+a.phase,{speed:1-.5*u}),sm(t0,t0+.2,tau));
+   if(u>=1)p=blendPose(p,celebrate(it*.9+a.phase,{kind:'arms'}),sm(t0+T,t0+T+.3,tau));
+   const e2=u*(2-u),x=lerp(a.x,dest[0],e2),z=lerp(a.z,dest[1],e2);
+   return{pose:p,place:{x,z,yaw:u<1?yawTo(a.x,a.z,dest[0],dest[1]):yawTo(x,z,CEL[0],CEL[1])}};}}
+ return{pose:p,place:{x:a.x,z:a.z,yaw:toBall}};
+}
+
+// ---------------------------------------------------------------- the ONE figure adapter (all bodies go through here → athlete.ts)
+/** drawPlayer(sheet, pose, camera, style, place, prev?, smear?): athlete.ts figure; prev = the pose one drawn frame earlier (secondary
+ * motion: hems trail), smear = halftone echo + speed lines on fast limbs (the hop, the strike, the dive, the celebration sprint). */
+function drawPlayer(s:Sheet,pose:Pose,camera:Cam,style:AthleteStyle,place:Place,prev?:{pose:Pose;place:Place},smear=false){
+ if(smear&&prev)motionSmear(s,prev.pose,pose,camera,style,place,{prevPlace:prev.place,ink:[K,.3],threshold:9});
+ return drawAthlete(s,pose,camera,style,place,prev?{prev:prev.pose,prevPlace:prev.place}:{});
+}
+
+// ---------------------------------------------------------------- the ball (white with colour graphics → red panels)
+function drawBall(s:Sheet,c:Cam,tau:number,o:{min?:number;lines?:boolean;prev?:number}={}){
+ const P=ballAt(tau),q=toCam(c,P);if(q[2]<NEAR)return null;const g=scr(c,q),r=Math.max(o.min??18,c.F*.11/q[2]);
+ const sh:Pt[]=[];const rad=.16+P[1]*.05;for(let i=0;i<14;i++){const a=i/14*TAU,p=pr(c,[P[0]+Math.cos(a)*rad*1.3,0,P[2]+Math.sin(a)*rad]);if(p)sh.push(p);}
+ if(sh.length>8)s.tone(K,polyPath(sh,true),clamp(.5-P[1]*.15,.1,.5));
+ if(o.lines&&o.prev!==undefined&&tau>0&&tau<IN_NET){const a=pr(c,ballAt(o.prev));if(a){const d=Math.hypot(g[0]-a[0],g[1]-a[1]);if(d>r*.8)speedLines(s,K,g[0],g[1],Math.atan2(g[1]-a[1],g[0]-a[0]),{n:3,seed:7,len:Math.min(200,d*1.2),spread:r*.8,width:Math.max(2.5,r*.16),cov:.75});}}
+ footballPanels(s,g[0],g[1],r,{rot:spinAt(tau),key:R,shadow:G,seed:5});
+ return{g,r,d:q[2]};
+}
+function pathPts(c:Cam,ta:number,tb:number,n=24):Pt[]{const out:Pt[]=[];for(let i=0;i<=n;i++){const p=pr(c,ballAt(lerp(ta,tb,i/n)));if(p)out.push(p);}return out;}
+
+// ---------------------------------------------------------------- one frame of the world through a camera
+/** everything on the pitch, depth-sorted (far first): the players at τp (poses on twos), their previous drawn pose, the ball at τ.
+ * Heat: small figures print at `low` detail; inside a passage every figure is capped. */
+function play(s:Sheet,c:Cam,tau:number,tp:number,tpPrev:number,e:Env){
+ const v=view(s),items:{d:number;draw:()=>void}[]=[],m=s.getTransform(),ppu=Math.sqrt(Math.abs(m.a*m.d-m.b*m.c))/s.dpr,passing=!!s._passage.pending;
+ const visible=(pl:Place,h=1.8)=>{const q=toCam(c,[pl.x??0,.9,pl.z??0]);if(q[2]<1)return -1;const g=scr(c,q),k=c.F/q[2]*h;return Math.abs(g[0])>v.hx+k||g[1]<-v.hy-k||g[1]>v.hy+k?-1:q[2];};
+ const detailFor=(st:AthleteStyle,d:number,hero:boolean):AthleteStyle=>{const px=c.F*1.8/d*ppu;if(passing)return{...st,detail:hero?'mid':'low'};if(px<120)return{...st,detail:'low'};if(!hero)return{...st,detail:px>200?'mid':'low'};if(e.hero==='mid'&&px>170)return{...st,detail:'mid'};return{...st,detail:'auto'};};
+ {const pl=bfPlace(tp),d=visible(pl);if(d>0)items.push({d,draw:()=>{const pose=bfPose(tp,e.it),prev={pose:bfPose(tpPrev,e.it-1/12),place:bfPlace(tpPrev)};
+  drawPlayer(s,pose,c,detailFor(BF_ST,d,true),pl,prev,!!e.smear&&((tp>T_H0&&tp<.4)||(tp>T_TURN+.1&&tp<T_CEL-.2)));}});}
+ {const cur=rocAt(tp,e.it),d=visible(cur.place);if(d>0)items.push({d,draw:()=>{const prev=rocAt(tpPrev,e.it-1/12);drawPlayer(s,cur.pose,c,detailFor(ROC_ST,d,true),cur.place,prev,!!e.smear&&tp>KD0&&tp<KD0+.7);}});}
+ for(const a of ACTORS){if(e.crowd===false&&a.role!=='ref'&&!a.runTo)continue;const cur=actorAt(a,tp,e.it,e),d=visible(cur.place);if(d<0)continue;
+  items.push({d,draw:()=>{const prev=actorAt(a,tpPrev,e.it-1/12,e);drawPlayer(s,cur.pose,c,detailFor(a.st,d,a.role==='ref'&&(e.mon??0)>.5),cur.place,prev,!!e.smear&&!!a.runTo&&tp>a.runTo[0]);}});}
+ const bq=toCam(c,ballAt(tau));if(bq[2]>=NEAR)items.push({d:bq[2],draw:()=>{drawBall(s,c,tau,{min:e.minBall,lines:e.lines,prev:e.prevT});}});
+ items.sort((a,b)=>b.d-a.d).forEach(i=>i.draw());
+}
+
+// ---------------------------------------------------------------- teaching marks (yellow = do this, red = the keeper's tell)
+/** the slow steps: footprints along the run up to the hop, each printed as he passes it */
+function footprints(s:Sheet,c:Cam,tau:number,cov:number){
+ if(cov<.02)return;const fp=new Path2D();
+ for(let k=0;k<5;k++){const g=lerp(G_MARK+.35,G_H0,k/4),tk=key(g,[[G_MARK,T_RUN0],[G_H0,T_H0]],linear);if(tau<tk-.05)continue;
+  const[x,z]=gPos(g),side=(k%2?.16:-.16),cx=x-DIR[1]*side,cz=z+DIR[0]*side,pts:Pt[]=[];
+  for(let i=0;i<10;i++){const a=i/10*TAU,p=pr(c,[cx+Math.cos(a)*.17*DIR[0]-Math.sin(a)*.08*DIR[1],0,cz+Math.cos(a)*.17*DIR[1]+Math.sin(a)*.08*DIR[0]]);if(p)pts.push(p);}
+  if(pts.length>6)fp.addPath(polyPath(pts,true));}
+ s.knockout(fp,.8*cov);s.fill(Y,fp,.95*cov);s.stroke(K,fp,1.6,.6*cov);
+}
+/** the hop: a yellow bounce arc over the grass from take-off to landing, drawn as he flies it */
+function hopArc(s:Sheet,c:Cam,tau:number,cov:number){
+ if(cov<.02)return;const u1=clamp(hopU(tau));if(u1<=.02)return;const pts:Pt[]=[];
+ const n=16;for(let i=0;i<=n;i++){const u=i/n*u1,[x,z]=gPos(lerp(G_H0,G_END,u)),p=pr(c,[x,.08+.55*Math.sin(Math.PI*u),z]);if(p)pts.push(p);}
+ if(pts.length<3)return;const[x0,z0]=gPos(G_H0),w=Math.max(9,kAt(c,[x0,.3,z0])*.11);
+ s.knockout(ribbon(pts,w*1.7,{taper:.3,pressure:.2,wobble:0}),.6*cov);s.fill(Y,ribbon(pts,w,{taper:.3,pressure:.2,wobble:0}),.95*cov);
+ // the landing mark once he is down
+ if(u1>=1){const[x,z]=gPos(G_END),rr:Pt[]=[];for(let i=0;i<14;i++){const a=i/14*TAU,p=pr(c,[x+Math.cos(a)*.32,0,z+Math.sin(a)*.32]);if(p)rr.push(p);}if(rr.length>8){const ring=ribbon(rr,w*.7,{close:true,seed:9,taper:0,wobble:.6});s.fill(Y,ring,.9*cov);}}
+}
+/** a dashed yellow sight line from his eyes to the keeper's face */
+function sightLine(s:Sheet,c:Cam,tp:number,it:number,u:number){
+ if(u<.02)return;const sk=solve(bfPose(tp,it),BF_B,bfPlace(tp)),kk=rocAt(tp,it),ks=solve(kk.pose,ROC_ST.build,kk.place),a=pr(c,sk.face),b=pr(c,ks.face);
+ if(!a||!b)return;const rb=new Path2D(),n=10,w=Math.max(7,kAt(c,sk.face)*.035),u1=clamp(u);
+ for(let i=0;i<n;i++){const u0=i/n*u1,ue=(i+.62)/n*u1,p0:Pt=[lerp(a[0],b[0],u0),lerp(a[1],b[1],u0)],p1:Pt=[lerp(a[0],b[0],ue),lerp(a[1],b[1],ue)];rb.addPath(ribbon([p0,p1],w,{seed:13+i,taper:.2,wobble:0}));}
+ s.knockout(rb,.95);s.fill(Y,rb,.95);s.stroke(K,rb,1.8,.8);
+}
+/** the keeper's tell: a red arrow on the grass from his feet toward his left (+z) */
+function tellArrow(s:Sheet,c:Cam,u:number){
+ if(u<.02)return;const a=pr(c,[ROC_X-.6,0,.2]),b=pr(c,[ROC_X-.6,0,2.6]);if(!a||!b)return;
+ const w=Math.max(8,kAt(c,[ROC_X,0,1.2])*.12);laneArrow(s,R,a,b,w,{seed:23,cov:.95,progress:clamp(u)});
+}
+/** a ring on the goal mouth at the open spot */
+function spotRing(s:Sheet,c:Cam,at:V3,rad:number,cov:number,ink=Y,wm=.09){
+ const ring:Pt[]=[];for(let i=0;i<32;i++){const a=i/32*TAU,p=pr(c,[at[0],at[1]+Math.sin(a)*rad,at[2]+Math.cos(a)*rad]);if(p)ring.push(p);}
+ if(ring.length<20)return;const rr=ribbon(ring,Math.max(5,kAt(c,at)*wm),{close:true,seed:11,taper:0,wobble:1});s.knockout(rr,.85*cov);s.fill(ink,rr,.95*cov);
+}
+const SPOT:V3=[.02,.42,ZL];
+/** the rolled line so far, fading at the tail */
+function trail(s:Sheet,c:Cam,tau:number,fromTau:number,cov:number){
+ if(cov<.02||tau<=.02)return;const pts=pathPts(c,fromTau,Math.min(tau,FLY+.001),20);if(pts.length<3)return;
+ const w=Math.max(8,kAt(c,ballAt(Math.min(tau,FLY)))*.16);s.knockout(ribbon(pts,w*1.5,{taper:.9,pressure:.2,wobble:0}),.45*cov);s.fill(Y,ribbon(pts,w,{taper:.9,pressure:.2,wobble:0}),.9*cov);
+}
+
+// ---------------------------------------------------------------- shot blending (camera plans keyed on cue times)
+type Shot={P:V3;T:V3;fov:number};
+const blendShot=(a:Shot,b:Shot,u:number):Shot=>u<=0?a:u>=1?b:{P:mix3(a.P,b.P,u),T:mix3(a.T,b.T,u),fov:Math.exp(lerp(Math.log(a.fov),Math.log(b.fov),u))};
+function plan(t:number,steps:[number,number,(t:number)=>Shot][]):Cam{let cur=steps[0][2](t);for(let i=1;i<steps.length;i++){const[a,d,f]=steps[i];const u=sm(a,a+Math.max(.01,d),t,easeInOutSine);if(u>0)cur=blendShot(cur,f(t),u);}return cam3(cur.P,cur.T,cur.fov);}
+const pxz=(tau:number):V3=>{const p=bfPlace(tau);return[p.x??0,0,p.z??0];};
+const REF_MON:V3=[MON[0],1.2,MON[2]+.4];
+
+// ---------------------------------------------------------------- 1 · live: the wide shot, a cut to the monitor, a cut to the spot camera, real time
+/** contact near "rolls it", the run starting on "slow steps" — never before the run has had time */
+const tS1=()=>Math.max((CUE(0,'rolls it')+.15+CUE(0,'slow steps')-T_RUN0)/2,CUE(0,'slow steps')-T_RUN0-.2);
+const tau1=(t:number)=>Math.max(T_RUN0-8,t-tS1());
+/** the cut from the monitor to Fernandes at his mark */
+const tCut=()=>CUE(0,'Bruno')-.25;
+/** P_K: the lower-tier main-stand camera level with the penalty spot */
+const P_K:V3=[-6.6,9.5,30],P_WIDE:V3=[-24,27,68],P_MON:V3=[-37,16,66];
+function cam1(t:number):Cam{
+ const tau=tau1(t),tN=tS1()+IN_NET,pm=pxz(T_RUN0);
+ return plan(t,[
+  [0,0,()=>({P:P_WIDE,T:[-40,4,-12],fov:50})],
+  [CUE(0,'World Cup')-.2,1.8,()=>({P:P_WIDE,T:[-30,3,-6],fov:34})],
+  [CUE(0,'referee')-.25,.01,()=>({P:P_MON,T:REF_MON,fov:2.6})],
+  [CUE(0,'Penalty')-.1,.9,()=>({P:P_MON,T:add3(REF_MON,[.7,0,.3]),fov:3.6})],
+  [tCut(),.01,()=>({P:P_K,T:add3(pm,[1.2,1,0]),fov:11})],
+  [CUE(0,'slow steps')-.1,1.4,()=>({P:P_K,T:[-7.2,.9,.2],fov:25})],
+  [tN-.3,.8,()=>({P:P_K,T:[-4.6,.9,-1.2],fov:27})],
+  [tN+.7,1.4,()=>({P:P_K,T:add3(pxz(tau),[0,1,0]),fov:26})],
+ ]);
+}
+const ch1:Scene={
+ draw(s,t){
+  frame(s);const c=cam1(t),tau=tau1(t),tt=twos(t),tp=tau1(tt),tpp=tau1(tt-1/12),tN=tS1()+IN_NET,mon=t<tCut()?1:0;
+  const tP=CUE(0,'Penalty'),point=mon?sm(tP-.15,tP+.35,tt,easeOutBack):0;
+  stadium(s,c,t,[0,1,3],{roar:sm(tN-.1,tN+.4,t)+.3*point});
+  ground(s,c,{bulge:bulgeAt(tau),monitor:true});
+  play(s,c,tau,tp,tpp,{it:tt,mon,point,minBall:12,lines:true,prevT:tau1(t-.06),hero:'mid',smear:!mon});
+ },
+ aperture(t){const c=cam1(t),P=ballAt(tau1(t)),q=toCam(c,P),g=scr(c,q);return apertureDisc(g[0],g[1],Math.max(12,c.F*.11/q[2]*1.2),12);},
+ still:14,
+};
+
+// ---------------------------------------------------------------- 2 · the slow-motion replay from HIGH BEHIND THE GOAL: slow steps, the hop, the eyes, the tell, the other way
+const tau2=(t:number)=>key(t,mono([[0,T_RUN0-.3],[CUE(1,'Small'),T_RUN0+.05],[CUE(1,'Then the hop'),T_H0-.02],[CUE(1,'his eyes'),T_H0+.28],[CUE(1,'Rochet moves'),KD0+.05],[CUE(1,'the other way'),.08],[SECS(1),IN_NET+.7]]),linear);
+const P2:V3=[6.2,5.3,-1.4];
+/** the replay cuts (on ones) from the camera BEHIND HIS LEFT SHOULDER (slow steps, the hop, the eyes) to HIGH BEHIND THE GOAL (the tell, the roll) */
+const tCut2=()=>CUE(1,'Rochet moves')-.25;
+function cam2(t:number):Cam{
+ const h=gPos(G_H0),H:V3=[h[0],.9,h[1]];
+ return plan(t,[
+  [0,0,()=>({P:[-24,3.4,-7.5],T:[-11,.9,-.6],fov:26})],
+  [CUE(1,'Then the hop')-.4,1,()=>({P:[-18.5,2.2,-5.4],T:add3(H,[1.4,.1,0]),fov:17})],
+  [CUE(1,'his eyes')-.2,1,()=>({P:[-19,2.6,-5.8],T:[-6.4,.9,-.2],fov:26})],
+  [tCut2(),.01,()=>({P:P2,T:[-4.2,.6,.3],fov:30})],
+  [CUE(1,'the other way')-.1,1.1,()=>({P:add3(P2,[0,0,-.6]),T:[-2.2,.3,-1.2],fov:30})],
+ ]);
+}
+const ch2:Scene={
+ draw(s,t){
+  frame(s);const c=cam2(t),tau=tau2(t),tt=twos(t),tp=tau2(tt),tpp=tau2(tt-1/12),behind=t>=tCut2();
+  const tS=CUE(1,'Small'),tH=CUE(1,'Then the hop'),tE=CUE(1,'his eyes'),tM=CUE(1,'Rochet moves'),tO=CUE(1,'the other way');
+  stadium(s,c,t,behind?[0,2,3]:[0,1,2],{roar:sm(IN_NET,IN_NET+.4,tau)});
+  ground(s,c,{goal:!behind,bulge:bulgeAt(tau)});
+  footprints(s,c,tau,sm(tS-.1,tS+.3,t)*(1-sm(tO+.4,tO+1,t)));
+  hopArc(s,c,tau,sm(tH-.15,tH+.1,t)*(1-sm(tO+.4,tO+1,t)));
+  tellArrow(s,c,sm(tM-.05,tM+.45,t)*(1-sm(SECS(1)-1,SECS(1)-.6,t)));
+  trail(s,c,tau,Math.max(0,tau-.6),1-sm(FLY+.2,IN_NET+.7,tau));
+  play(s,c,tau,tp,tpp,{it:tt,smear:true,minBall:12,crowd:false});
+  // behind the goal: the net is nearer than the play
+  if(behind)goal3(s,c,bulgeAt(tau));
+  sightLine(s,c,tp,tt,sm(tE-.1,tE+.45,t,easeOutBack)*(1-sm(tM+.3,tM+.7,t)));
+ },
+ aperture(t){const c=cam2(t),P=ballAt(tau2(t)),q=toCam(c,P),g=scr(c,q);return apertureDisc(g[0],g[1],Math.max(12,c.F*.11/q[2]*1.2),12);},
+ still:4.6,
+};
+
+// ---------------------------------------------------------------- 3 · the reverse angle LOW ON THE GOAL LINE: the keeper one way, the ball the other; the celebration comes to us
+const tau3=(t:number)=>key(t,mono([[0,-.95],[CUE(2,'keeper dives'),KD0+.25],[CUE(2,'the ball goes'),FLY-.05],[CUE(2,'Portugal win'),T_TURN+.9],[SECS(2),T_CEL+Math.max(1,SECS(2)-CUE(2,'Portugal win')-1.2)]]),linear);
+const P3:V3=[-6.8,1.2,-14.6];
+const CELV:V3=[CEL[0],1.2,CEL[1]];
+function cam3v(t:number):Cam{
+ const tau=tau3(t);
+ return plan(t,[
+  [0,0,()=>({P:P3,T:[-5.4,.8,.2],fov:34})],
+  [CUE(2,'keeper dives')-.2,.8,()=>({P:P3,T:[-.8,.8,.2],fov:22})],
+  [CUE(2,'the ball goes')-.2,.8,()=>({P:P3,T:[-.4,.6,-.9],fov:22})],
+  [CUE(2,'Portugal win')-.5,1.3,()=>({P:[-2.2,1.5,-23],T:add3(pxz(tau),[0,1,0]),fov:32})],
+ ]);
+}
+const ch3:Scene={
+ draw(s,t){
+  frame(s);const c=cam3v(t),tau=tau3(t),tt=twos(t),tp=tau3(tt),tpp=tau3(tt-1/12),tW=CUE(2,'Portugal win');
+  stadium(s,c,t,[1,2,3],{roar:.3+.7*sm(IN_NET,IN_NET+.4,tau)});
+  ground(s,c,{bulge:bulgeAt(tau)});
+  play(s,c,tau,tp,tpp,{it:tt,smear:true,minBall:10});
+  const gl=sm(CUE(2,'the ball goes')+.3,CUE(2,'the ball goes')+.8,t);if(gl>0){const q=pr(c,[.8,.5,ZL]);if(q)sparkBurst(s,Y,q[0],q[1],80+110*gl,{n:10,seed:7,g:easeOutBack(gl),width:11,cov:.9*(1-sm(tW,tW+.8,t))});}
+  const wn=sm(tW-.05,tW+.4,t);if(wn>0){const q=pr(c,[CEL[0]+.6,2.7,CEL[1]]);if(q){sparkBurst(s,R,q[0],q[1],170+120*wn,{n:9,seed:21,g:easeOutBack(wn),width:10});sparkBurst(s,G,q[0],q[1],120+90*wn,{n:7,seed:22,g:easeOutBack(wn),width:9});}}
+ },
+ aperture(t){const c=cam3v(t),q=pr(c,CELV)??[0,0];return apertureDisc(q[0],q[1],90,12);},
+ still:6,
+};
+
+// ---------------------------------------------------------------- 4 · the lesson: watch the keeper as you run up → wait for him to move → put it the other way
+const tau4=(t:number)=>key(t,mono([[0,T_RUN0-.6],[CUE(3,'Watch the keeper'),T_RUN0],[CUE(3,'Wait for him'),T_H0+.1],[CUE(3,'put it'),KD0+.1],[CUE(3,'the other way'),.25],[SECS(3),IN_NET+.8]]),linear);
+function cam4v(t:number):Cam{
+ const pm=pxz(T_RUN0);
+ return plan(t,[
+  [0,0,()=>({P:add3(pm,[4.4,1.5,3.6]),T:add3(pm,[0,1.05,0]),fov:30})],
+  [CUE(3,'Watch the keeper')-.2,1.2,()=>({P:[5,5.6,4.4],T:[-11,.7,-1],fov:21})],
+  [CUE(3,'Wait for him')-.1,.01,()=>({P:[-19,2.6,-5.8],T:[-6.4,.9,-.2],fov:26})],
+  [CUE(3,'put it')-.1,1.1,()=>({P:[-17,3.2,4.6],T:[-4.6,.6,-1.2],fov:38})],
+ ]);
+}
+const ch4:Scene={
+ draw(s,t){
+  frame(s);const c=cam4v(t),tau=tau4(t),tt=twos(t),tp=tau4(tt),tpp=tau4(tt-1/12);
+  const tW=CUE(3,'Watch the keeper'),tA=CUE(3,'Wait for him'),tP=CUE(3,'put it'),tO=CUE(3,'the other way');
+  stadium(s,c,t,[0,1,3],{roar:.8*sm(tO+.3,tO+.7,t)});
+  ground(s,c,{bulge:bulgeAt(tau)});
+  // 2 · wait for him to move: the red arrow as he goes
+  tellArrow(s,c,sm(tA+.2,tA+.7,t)*(1-sm(tO+.6,tO+1.2,t)));
+  // 3 · the other way: the yellow ring in the open corner and the line into it
+  const ring=sm(tP-.1,tP+.35,t,easeOutBack);if(ring>.02)spotRing(s,c,SPOT,.52*clamp(ring,0,1.2),Math.min(1,ring)*(1-sm(IN_NET+.2,IN_NET+.7,tau)));
+  const dv=sm(tP-.1,tP+.4,t);
+  if(dv>.02){const pts=partial(pathPts(c,0,FLY,24),Math.max(.04,clamp(tau/FLY))),w=Math.max(9,kAt(c,[-5,.2,-1.3])*.12);if(pts.length>2){s.knockout(ribbon(pts,w*1.6,{taper:.4,pressure:.2,wobble:0}),.5*dv);s.fill(Y,ribbon(pts,w,{taper:.4,pressure:.2,wobble:0}),.95*dv);}}
+  play(s,c,tau,tp,tpp,{it:tt,smear:true,minBall:13,crowd:false});
+  // 1 · watch the keeper as you run up: the sight line, held through the slow steps and the hop
+  sightLine(s,c,tp,tt,sm(tW-.1,tW+.45,t,easeOutBack)*(1-sm(tP-.1,tP+.3,t)));
+  const gd=sm(tO+.3,tO+.7,t);if(gd>0&&tau>FLY){const q=pr(c,[.8,.4,ZL]);if(q)sparkBurst(s,Y,q[0],q[1],Math.max(60,kAt(c,[0,.4,ZL])*1.1)*easeOutBack(gd),{n:10,seed:61,width:Math.max(6,kAt(c,[0,.4,ZL])*.05)});}
+ },
+ still:9,
+};
+
+const film:RisoStory={
+ id:'bruno-fernandes-signature',format:'11v11',title:"Bruno Fernandes' hop-skip penalty",
+ theme:'Penalties: watch the keeper as you run up, wait for him to move, then put it the other way',
+ ageNote:'Portugal 2–0 Uruguay, FIFA World Cup 2022, Lusail Stadium, Qatar, 28 November 2022. For players of every age.',
+ spec:{paper:'#f0ece2',inks:{yellow:'#ffe800',red:'#e8392f',green:'#00a95c',navy:'#22366b'},order:['yellow','red','green','navy'],registration:1.8,alpha:.9,grain:.6,mottle:.5},
+ audio:{mode:'chapters'},
+ chapters:CHAPTERS,
+ draw(f){playChapters(film,f,[ch1,ch2,ch3,ch4]);},
+ /** Touch: a little penalty — two footprints, a hop arc, then a low yellow line into a ring, a ball on its tip. */
+ touch(s,x,y,age,seed){
+  const u=age<=0?1:easeOut(clamp(age/.5)),fade=age<=0?1:1-clamp((age-.65)/.25),r=rng(seed);
+  const fp=new Path2D();for(let k=0;k<2;k++){const cx=x-90+k*30,cy=y+(k?-8:8);fp.moveTo(cx+9,cy);fp.arc(cx,cy,9,0,TAU);}s.fill(Y,fp,.9*fade);
+  const hop:Pt[]=[];for(let i=0;i<=10;i++){const k=i/10;hop.push([x-50+50*k,y-40*Math.sin(Math.PI*k)]);}s.fill(Y,ribbon(hop,8,{seed,taper:.3,wobble:1}),.9*fade);
+  const pts:Pt[]=[];for(let i=0;i<=12;i++){const k=i/12*u;pts.push([x+150*k,y-24*k]);}
+  if(pts.length>2)s.fill(Y,ribbon(pts,12,{seed,taper:.8,pressure:.3,wobble:1}),.95*fade);
+  const ring:Pt[]=[];for(let i=0;i<24;i++){const a=i/24*TAU;ring.push([x+150+Math.cos(a)*34,y-24+Math.sin(a)*34]);}
+  s.fill(Y,ribbon(ring,8,{close:true,seed,taper:0,wobble:1}),.9*fade);
+  const e=pts[pts.length-1];if(age>.45&&age<.75)sparkBurst(s,Y,x+150,y-24,70,{n:7,seed,g:1-clamp((age-.45)/.3),width:9});
+  footballPanels(s,e[0],e[1],26,{rot:age*8+r()*TAU,key:R,shadow:G,seed:5});
+ },
+};
+export default film;

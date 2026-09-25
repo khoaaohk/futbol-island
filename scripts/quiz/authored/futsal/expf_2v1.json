@@ -1,0 +1,81 @@
+{
+ "lesson": "expf_2v1",
+ "questions": [
+  {
+   "q": "Two attackers face one defender. Tap where the right ala should be.",
+   "options": [
+    "Close beside the ball carrier",
+    "Wide in a separate lane",
+    "Behind the ball carrier"
+   ],
+   "correct": 1,
+   "explain": "Yes. Wide in their own lane, one defender cannot cover both attackers.",
+   "choiceExplanations": [
+    "Close together, one defender can guard you both at once.",
+    "Yes. Wide in their own lane, one defender cannot cover both attackers.",
+    "Behind the ball does not stretch the defender. We want to attack the goal together."
+   ],
+   "visual": {
+    "kind": "tapSpot",
+    "frame": {"step": 0, "hide": ["rm"], "focus": ["lm", "dcb"]},
+    "spots": [
+     {"x": 150, "y": 212},
+     {"x": 215, "y": 190},
+     {"x": 108, "y": 272}
+    ]
+   }
+  },
+  {
+   "q": "How does this 2 against 1 work? Put the steps in order.",
+   "options": [
+    "Carry at the last defender",
+    "The defender steps toward the ball",
+    "Pass across to the right ala",
+    "Carry forward on the right"
+   ],
+   "correct": 0,
+   "explain": "Right. Carry to pull the defender in, pass past them, then attack the open space.",
+   "choiceExplanations": [
+    "Right. Carry to pull the defender in, pass past them, then attack the open space.",
+    "The defender only steps in once you carry at them.",
+    "Pass only after the defender commits to you. Then the right ala is free.",
+    "The right ala carries forward last, into the space the defender left."
+   ],
+   "visual": {
+    "kind": "order",
+    "frame": {"step": 1, "focus": ["lm", "rm", "dcb"]}
+   }
+  },
+  {
+   "q": "Now the right ala carries and the defender steps toward them. Which pass beats the defender?",
+   "options": [
+    "Pass back to the fixo",
+    "Pass forward past the defender",
+    "Pass across to the left ala"
+   ],
+   "correct": 2,
+   "explain": "Yes. The defender stepped to the ball, so the left ala in the other lane is free.",
+   "choiceExplanations": [
+    "That pass is safe, but it throws away the 2 against 1 we just built.",
+    "The defender is standing right in that lane, so the pass would be blocked.",
+    "Yes. The defender stepped to the ball, so the left ala in the other lane is free."
+   ],
+   "visual": {
+    "kind": "bestPass",
+    "frame": {
+     "step": 1,
+     "place": {
+      "rm": {"x": 165, "y": 192},
+      "lm": {"x": 60, "y": 178},
+      "dcb": {"x": 160, "y": 158},
+      "dlm": {"x": 30, "y": 262}
+     },
+     "ball": "rm",
+     "focus": ["rm", "dcb"]
+    },
+    "from": "rm",
+    "to": ["cb", {"x": 158, "y": 110}, "lm"]
+   }
+  }
+ ]
+}

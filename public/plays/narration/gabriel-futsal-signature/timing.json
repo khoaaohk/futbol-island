@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: the 2014 final",
+   "text": "The 2014 UEFA Futsal Cup final, in Baku. Barcelona play Dynamo, and Dynamo lead one nil. Then Gabriel, from Brazil, rifles in the equaliser from far out! Bar\u00e7a win five two in extra time.",
+   "src": "/plays/narration/gabriel-futsal-signature/1.m4a",
+   "seconds": 16.0,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "2014",
+     "at": 0.425
+    },
+    {
+     "w": "UEFA",
+     "at": 1.262
+    },
+    {
+     "w": "Futsal",
+     "at": 1.738
+    },
+    {
+     "w": "Cup",
+     "at": 2.2
+    },
+    {
+     "w": "final",
+     "at": 2.425
+    },
+    {
+     "w": "in",
+     "at": 3.075
+    },
+    {
+     "w": "Baku",
+     "at": 3.225
+    },
+    {
+     "w": "Barcelona",
+     "at": 4.4
+    },
+    {
+     "w": "play",
+     "at": 5.05
+    },
+    {
+     "w": "Dynamo",
+     "at": 5.275
+    },
+    {
+     "w": "and",
+     "at": 5.975
+    },
+    {
+     "w": "Dynamo",
+     "at": 6.1
+    },
+    {
+     "w": "lead",
+     "at": 6.625
+    },
+    {
+     "w": "one",
+     "at": 6.888
+    },
+    {
+     "w": "nil",
+     "at": 7.125
+    },
+    {
+     "w": "Then",
+     "at": 7.963
+    },
+    {
+     "w": "Gabriel",
+     "at": 8.213
+    },
+    {
+     "w": "from",
+     "at": 8.875
+    },
+    {
+     "w": "Brazil",
+     "at": 9.05
+    },
+    {
+     "w": "rifles",
+     "at": 9.887
+    },
+    {
+     "w": "in",
+     "at": 10.45
+    },
+    {
+     "w": "the",
+     "at": 10.537
+    },
+    {
+     "w": "equaliser",
+     "at": 10.65
+    },
+    {
+     "w": "from",
+     "at": 11.3
+    },
+    {
+     "w": "far",
+     "at": 11.512
+    },
+    {
+     "w": "out",
+     "at": 11.8
+    },
+    {
+     "w": "Bar\u00e7a",
+     "at": 12.613
+    },
+    {
+     "w": "win",
+     "at": 13.025
+    },
+    {
+     "w": "five",
+     "at": 13.3
+    },
+    {
+     "w": "two",
+     "at": 13.688
+    },
+    {
+     "w": "in",
+     "at": 14.0
+    },
+    {
+     "w": "extra",
+     "at": 14.15
+    },
+    {
+     "w": "time",
+     "at": 14.55
+    }
+   ]
+  },
+  {
+   "label": "How he defends",
+   "text": "Gabriel was strong in defence too. This is how he tackles: he gets close to the attacker, fast. He stays low, knees bent. He watches the ball, not the tricks. Then he steps in and takes it cleanly!",
+   "src": "/plays/narration/gabriel-futsal-signature/2.m4a",
+   "seconds": 13.6,
+   "words": [
+    {
+     "w": "Gabriel",
+     "at": 0.4
+    },
+    {
+     "w": "was",
+     "at": 0.875
+    },
+    {
+     "w": "strong",
+     "at": 1.0
+    },
+    {
+     "w": "in",
+     "at": 1.413
+    },
+    {
+     "w": "defence",
+     "at": 1.488
+    },
+    {
+     "w": "too",
+     "at": 1.962
+    },
+    {
+     "w": "This",
+     "at": 2.712
+    },
+    {
+     "w": "is",
+     "at": 2.95
+    },
+    {
+     "w": "how",
+     "at": 3.075
+    },
+    {
+     "w": "he",
+     "at": 3.263
+    },
+    {
+     "w": "tackles",
+     "at": 3.388
+    },
+    {
+     "w": "he",
+     "at": 4.225
+    },
+    {
+     "w": "gets",
+     "at": 4.325
+    },
+    {
+     "w": "close",
+     "at": 4.575
+    },
+    {
+     "w": "to",
+     "at": 4.875
+    },
+    {
+     "w": "the",
+     "at": 4.963
+    },
+    {
+     "w": "attacker",
+     "at": 5.1
+    },
+    {
+     "w": "fast",
+     "at": 5.662
+    },
+    {
+     "w": "He",
+     "at": 6.475
+    },
+    {
+     "w": "stays",
+     "at": 6.625
+    },
+    {
+     "w": "low",
+     "at": 7.037
+    },
+    {
+     "w": "knees",
+     "at": 7.45
+    },
+    {
+     "w": "bent",
+     "at": 7.725
+    },
+    {
+     "w": "He",
+     "at": 8.55
+    },
+    {
+     "w": "watches",
+     "at": 8.7
+    },
+    {
+     "w": "the",
+     "at": 9.125
+    },
+    {
+     "w": "ball",
+     "at": 9.225
+    },
+    {
+     "w": "not",
+     "at": 9.637
+    },
+    {
+     "w": "the",
+     "at": 9.812
+    },
+    {
+     "w": "tricks",
+     "at": 9.912
+    },
+    {
+     "w": "Then",
+     "at": 10.7
+    },
+    {
+     "w": "he",
+     "at": 10.838
+    },
+    {
+     "w": "steps",
+     "at": 10.95
+    },
+    {
+     "w": "in",
+     "at": 11.3
+    },
+    {
+     "w": "and",
+     "at": 11.512
+    },
+    {
+     "w": "takes",
+     "at": 11.625
+    },
+    {
+     "w": "it",
+     "at": 11.912
+    },
+    {
+     "w": "cleanly",
+     "at": 12.0
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. Close, low, clean!",
+   "src": "/plays/narration/gabriel-futsal-signature/3.m4a",
+   "seconds": 3.8,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.662
+    },
+    {
+     "w": "slowly",
+     "at": 1.012
+    },
+    {
+     "w": "Close",
+     "at": 1.812
+    },
+    {
+     "w": "low",
+     "at": 2.15
+    },
+    {
+     "w": "clean",
+     "at": 2.35
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: get close, stay low and take the ball cleanly!",
+   "src": "/plays/narration/gabriel-futsal-signature/4.m4a",
+   "seconds": 4.9,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.5
+    },
+    {
+     "w": "get",
+     "at": 1.2
+    },
+    {
+     "w": "close",
+     "at": 1.375
+    },
+    {
+     "w": "stay",
+     "at": 2.112
+    },
+    {
+     "w": "low",
+     "at": 2.425
+    },
+    {
+     "w": "and",
+     "at": 2.688
+    },
+    {
+     "w": "take",
+     "at": 2.8
+    },
+    {
+     "w": "the",
+     "at": 3.038
+    },
+    {
+     "w": "ball",
+     "at": 3.125
+    },
+    {
+     "w": "cleanly",
+     "at": 3.4
+    }
+   ]
+  }
+ ]
+}

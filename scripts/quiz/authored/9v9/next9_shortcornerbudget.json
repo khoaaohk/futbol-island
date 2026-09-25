@@ -1,0 +1,167 @@
+{
+ "lesson": "next9_shortcornerbudget",
+ "questions": [
+  {
+   "q": "True or false? Our centre back should leave their runner to help the left back.",
+   "options": [
+    "True",
+    "False"
+   ],
+   "correct": 1,
+   "explain": "Right, it's false. The centre back keeps their mark, and a spare outlet helps short.",
+   "choiceExplanations": [
+    "Leaving the runner frees a blue player in the middle. A spare outlet helps instead.",
+    "Right, it's false. The centre back keeps their mark, and a spare outlet helps short."
+   ],
+   "visual": {
+    "kind": "trueFalse",
+    "frame": {
+     "step": 4,
+     "focus": [
+      "CB",
+      "ls",
+      "LB"
+     ]
+    }
+   }
+  },
+  {
+   "q": "Blue plays two players short. Which picture helps short and keeps all three runners marked?",
+   "options": [
+    "Left back alone at the corner",
+    "Centre back helps short",
+    "Right winger helps short"
+   ],
+   "correct": 2,
+   "explain": "Right. The nearer outlet helps short, and all three central runners stay marked.",
+   "choiceExplanations": [
+    "The left back faces two players alone, so blue can pass around them.",
+    "The centre back left their runner, so a blue player is free in front of our goal.",
+    "Right. The nearer outlet helps short, and all three central runners stay marked."
+   ],
+   "visual": {
+    "kind": "pickPicture",
+    "pictures": [
+     {
+      "step": 5,
+      "focus": [
+       "LB",
+       "CB",
+       "RW"
+      ],
+      "view": {
+       "x": 0,
+       "y": 255,
+       "w": 200,
+       "h": 130
+      }
+     },
+     {
+      "step": 5,
+      "place": {
+       "CB": {
+        "x": 55,
+        "y": 335
+       }
+      },
+      "focus": [
+       "LB",
+       "CB",
+       "RW"
+      ],
+      "view": {
+       "x": 0,
+       "y": 255,
+       "w": 200,
+       "h": 130
+      }
+     },
+     {
+      "step": 6,
+      "focus": [
+       "LB",
+       "CB",
+       "RW"
+      ],
+      "view": {
+       "x": 0,
+       "y": 255,
+       "w": 200,
+       "h": 130
+      }
+     }
+    ]
+   }
+  },
+  {
+   "q": "Now a blue player marks our nearer winger. Which release should the keeper use?",
+   "options": [
+    "Short pass to the right winger",
+    "Longer pass to the striker",
+    "Pass to the right back"
+   ],
+   "correct": 1,
+   "explain": "Right. We keep two release heights, so when one is marked the higher one is free.",
+   "choiceExplanations": [
+    "A blue player stands right next to that winger, so the pass could be stolen.",
+    "Right. We keep two release heights, so when one is marked the higher one is free.",
+    "A blue striker stands in that short lane, so the pass could be stolen near our goal."
+   ],
+   "visual": {
+    "kind": "bestPass",
+    "frame": {
+     "step": 10,
+     "place": {
+      "lm": {
+       "x": 80,
+       "y": 318
+      },
+      "cb": {
+       "x": 185,
+       "y": 175
+      },
+      "cm": {
+       "x": 205,
+       "y": 280
+      },
+      "ls": {
+       "x": 100,
+       "y": 290
+      },
+      "rs": {
+       "x": 186,
+       "y": 341
+      },
+      "RB": {
+       "x": 200,
+       "y": 335
+      },
+      "RC": {
+       "x": 100,
+       "y": 255
+      },
+      "LC": {
+       "x": 175,
+       "y": 300
+      },
+      "CB": {
+       "x": 100,
+       "y": 372
+      }
+     },
+     "focus": [
+      "G",
+      "RW",
+      "ST"
+     ]
+    },
+    "from": "G",
+    "to": [
+     "RW",
+     "ST",
+     "RB"
+    ]
+   }
+  }
+ ]
+}
