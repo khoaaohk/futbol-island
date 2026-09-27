@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Wembley, 2022. Liverpool play Manchester City. City pass the ball back to their keeper. Sadio Man\u00e9 sprints straight at him. A heavy touch... Man\u00e9 slides in... goal!",
+   "src": "/plays/narration/mane-signature/1.m4a",
+   "seconds": 13.1,
+   "words": [
+    {
+     "w": "Wembley",
+     "at": 0.4
+    },
+    {
+     "w": "2022",
+     "at": 0.875
+    },
+    {
+     "w": "Liverpool",
+     "at": 2.225
+    },
+    {
+     "w": "play",
+     "at": 2.75
+    },
+    {
+     "w": "Manchester",
+     "at": 3.025
+    },
+    {
+     "w": "City",
+     "at": 3.612
+    },
+    {
+     "w": "City",
+     "at": 4.35
+    },
+    {
+     "w": "pass",
+     "at": 4.65
+    },
+    {
+     "w": "the",
+     "at": 4.975
+    },
+    {
+     "w": "ball",
+     "at": 5.075
+    },
+    {
+     "w": "back",
+     "at": 5.375
+    },
+    {
+     "w": "to",
+     "at": 5.65
+    },
+    {
+     "w": "their",
+     "at": 5.737
+    },
+    {
+     "w": "keeper",
+     "at": 5.9
+    },
+    {
+     "w": "Sadio",
+     "at": 6.65
+    },
+    {
+     "w": "Man\u00e9",
+     "at": 7.075
+    },
+    {
+     "w": "sprints",
+     "at": 7.487
+    },
+    {
+     "w": "straight",
+     "at": 7.875
+    },
+    {
+     "w": "at",
+     "at": 8.162
+    },
+    {
+     "w": "him",
+     "at": 8.238
+    },
+    {
+     "w": "A",
+     "at": 8.738
+    },
+    {
+     "w": "heavy",
+     "at": 8.85
+    },
+    {
+     "w": "touch",
+     "at": 9.188
+    },
+    {
+     "w": "Man\u00e9",
+     "at": 9.975
+    },
+    {
+     "w": "slides",
+     "at": 10.45
+    },
+    {
+     "w": "in",
+     "at": 10.9
+    },
+    {
+     "w": "goal",
+     "at": 11.637
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again. The moment the ball goes back, Man\u00e9 is already running, so the keeper has no time.",
+   "src": "/plays/narration/mane-signature/2.m4a",
+   "seconds": 7.0,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "The",
+     "at": 1.538
+    },
+    {
+     "w": "moment",
+     "at": 1.65
+    },
+    {
+     "w": "the",
+     "at": 1.938
+    },
+    {
+     "w": "ball",
+     "at": 2.025
+    },
+    {
+     "w": "goes",
+     "at": 2.325
+    },
+    {
+     "w": "back",
+     "at": 2.575
+    },
+    {
+     "w": "Man\u00e9",
+     "at": 2.975
+    },
+    {
+     "w": "is",
+     "at": 3.375
+    },
+    {
+     "w": "already",
+     "at": 3.525
+    },
+    {
+     "w": "running",
+     "at": 3.9
+    },
+    {
+     "w": "so",
+     "at": 4.55
+    },
+    {
+     "w": "the",
+     "at": 4.688
+    },
+    {
+     "w": "keeper",
+     "at": 4.775
+    },
+    {
+     "w": "has",
+     "at": 5.15
+    },
+    {
+     "w": "no",
+     "at": 5.4
+    },
+    {
+     "w": "time",
+     "at": 5.588
+    }
+   ]
+  },
+  {
+   "label": "Behind the goal",
+   "text": "From behind the goal: the touch runs away from the keeper, and Man\u00e9 slides the ball into the net. Liverpool lead two-nil!",
+   "src": "/plays/narration/mane-signature/3.m4a",
+   "seconds": 8.7,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "behind",
+     "at": 0.487
+    },
+    {
+     "w": "the",
+     "at": 0.887
+    },
+    {
+     "w": "goal",
+     "at": 0.975
+    },
+    {
+     "w": "the",
+     "at": 1.725
+    },
+    {
+     "w": "touch",
+     "at": 1.863
+    },
+    {
+     "w": "runs",
+     "at": 2.2
+    },
+    {
+     "w": "away",
+     "at": 2.475
+    },
+    {
+     "w": "from",
+     "at": 2.775
+    },
+    {
+     "w": "the",
+     "at": 2.913
+    },
+    {
+     "w": "keeper",
+     "at": 3.0
+    },
+    {
+     "w": "and",
+     "at": 3.65
+    },
+    {
+     "w": "Man\u00e9",
+     "at": 3.763
+    },
+    {
+     "w": "slides",
+     "at": 4.287
+    },
+    {
+     "w": "the",
+     "at": 4.775
+    },
+    {
+     "w": "ball",
+     "at": 4.875
+    },
+    {
+     "w": "into",
+     "at": 5.188
+    },
+    {
+     "w": "the",
+     "at": 5.362
+    },
+    {
+     "w": "net",
+     "at": 5.45
+    },
+    {
+     "w": "Liverpool",
+     "at": 6.325
+    },
+    {
+     "w": "lead",
+     "at": 6.875
+    },
+    {
+     "w": "two-nil",
+     "at": 7.162
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: when they pass back, press straight away. Win the ball high up, and it is a short run to goal!",
+   "src": "/plays/narration/mane-signature/4.m4a",
+   "seconds": 6.9,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.512
+    },
+    {
+     "w": "when",
+     "at": 0.988
+    },
+    {
+     "w": "they",
+     "at": 1.113
+    },
+    {
+     "w": "pass",
+     "at": 1.25
+    },
+    {
+     "w": "back",
+     "at": 1.575
+    },
+    {
+     "w": "press",
+     "at": 1.95
+    },
+    {
+     "w": "straight",
+     "at": 2.2
+    },
+    {
+     "w": "away",
+     "at": 2.5
+    },
+    {
+     "w": "Win",
+     "at": 3.438
+    },
+    {
+     "w": "the",
+     "at": 3.612
+    },
+    {
+     "w": "ball",
+     "at": 3.7
+    },
+    {
+     "w": "high",
+     "at": 4.0
+    },
+    {
+     "w": "up",
+     "at": 4.2
+    },
+    {
+     "w": "and",
+     "at": 4.487
+    },
+    {
+     "w": "it",
+     "at": 4.588
+    },
+    {
+     "w": "is",
+     "at": 4.662
+    },
+    {
+     "w": "a",
+     "at": 4.763
+    },
+    {
+     "w": "short",
+     "at": 4.875
+    },
+    {
+     "w": "run",
+     "at": 5.2
+    },
+    {
+     "w": "to",
+     "at": 5.425
+    },
+    {
+     "w": "goal",
+     "at": 5.55
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,362 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Sydney, 2023, the Women\u2019s World Cup: England against Denmark. Six minutes in, Rachel Daly finds Lauren James on the left. James drives forward... and scores!",
+   "src": "/plays/narration/lauren-james-signature/1.m4a",
+   "seconds": 12.6,
+   "words": [
+    {
+     "w": "Sydney",
+     "at": 0.375
+    },
+    {
+     "w": "2023",
+     "at": 0.75
+    },
+    {
+     "w": "the",
+     "at": 1.7
+    },
+    {
+     "w": "Women\u2019s",
+     "at": 1.825
+    },
+    {
+     "w": "World",
+     "at": 2.225
+    },
+    {
+     "w": "Cup",
+     "at": 2.587
+    },
+    {
+     "w": "England",
+     "at": 3.225
+    },
+    {
+     "w": "against",
+     "at": 3.65
+    },
+    {
+     "w": "Denmark",
+     "at": 4.088
+    },
+    {
+     "w": "Six",
+     "at": 5.175
+    },
+    {
+     "w": "minutes",
+     "at": 5.45
+    },
+    {
+     "w": "in",
+     "at": 5.75
+    },
+    {
+     "w": "Rachel",
+     "at": 6.112
+    },
+    {
+     "w": "Daly",
+     "at": 6.5
+    },
+    {
+     "w": "finds",
+     "at": 6.888
+    },
+    {
+     "w": "Lauren",
+     "at": 7.263
+    },
+    {
+     "w": "James",
+     "at": 7.638
+    },
+    {
+     "w": "on",
+     "at": 8.062
+    },
+    {
+     "w": "the",
+     "at": 8.162
+    },
+    {
+     "w": "left",
+     "at": 8.25
+    },
+    {
+     "w": "James",
+     "at": 9.05
+    },
+    {
+     "w": "drives",
+     "at": 9.512
+    },
+    {
+     "w": "forward",
+     "at": 9.988
+    },
+    {
+     "w": "and",
+     "at": 10.85
+    },
+    {
+     "w": "scores",
+     "at": 11.025
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. James carries it inside, across the edge of the box, onto her right foot.",
+   "src": "/plays/narration/lauren-james-signature/2.m4a",
+   "seconds": 7.2,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.238
+    },
+    {
+     "w": "James",
+     "at": 2.3
+    },
+    {
+     "w": "carries",
+     "at": 2.7
+    },
+    {
+     "w": "it",
+     "at": 3.1
+    },
+    {
+     "w": "inside",
+     "at": 3.2
+    },
+    {
+     "w": "across",
+     "at": 3.9
+    },
+    {
+     "w": "the",
+     "at": 4.237
+    },
+    {
+     "w": "edge",
+     "at": 4.375
+    },
+    {
+     "w": "of",
+     "at": 4.588
+    },
+    {
+     "w": "the",
+     "at": 4.662
+    },
+    {
+     "w": "box",
+     "at": 4.75
+    },
+    {
+     "w": "onto",
+     "at": 5.237
+    },
+    {
+     "w": "her",
+     "at": 5.463
+    },
+    {
+     "w": "right",
+     "at": 5.6
+    },
+    {
+     "w": "foot",
+     "at": 5.912
+    }
+   ]
+  },
+  {
+   "label": "The far corner",
+   "text": "From behind the goal: she strikes it past Lene Christensen, right into the far corner. England lead one-nil!",
+   "src": "/plays/narration/lauren-james-signature/3.m4a",
+   "seconds": 7.9,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "behind",
+     "at": 0.5
+    },
+    {
+     "w": "the",
+     "at": 0.887
+    },
+    {
+     "w": "goal",
+     "at": 0.975
+    },
+    {
+     "w": "she",
+     "at": 1.712
+    },
+    {
+     "w": "strikes",
+     "at": 1.875
+    },
+    {
+     "w": "it",
+     "at": 2.25
+    },
+    {
+     "w": "past",
+     "at": 2.35
+    },
+    {
+     "w": "Lene",
+     "at": 2.725
+    },
+    {
+     "w": "Christensen",
+     "at": 3.0
+    },
+    {
+     "w": "right",
+     "at": 3.962
+    },
+    {
+     "w": "into",
+     "at": 4.213
+    },
+    {
+     "w": "the",
+     "at": 4.388
+    },
+    {
+     "w": "far",
+     "at": 4.487
+    },
+    {
+     "w": "corner",
+     "at": 4.75
+    },
+    {
+     "w": "England",
+     "at": 5.688
+    },
+    {
+     "w": "lead",
+     "at": 6.15
+    },
+    {
+     "w": "one-nil",
+     "at": 6.375
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: cut inside onto your stronger foot. Look up, open your body, and curl the ball into the far corner!",
+   "src": "/plays/narration/lauren-james-signature/4.m4a",
+   "seconds": 7.9,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "cut",
+     "at": 1.188
+    },
+    {
+     "w": "inside",
+     "at": 1.425
+    },
+    {
+     "w": "onto",
+     "at": 1.913
+    },
+    {
+     "w": "your",
+     "at": 2.138
+    },
+    {
+     "w": "stronger",
+     "at": 2.25
+    },
+    {
+     "w": "foot",
+     "at": 2.763
+    },
+    {
+     "w": "Look",
+     "at": 3.65
+    },
+    {
+     "w": "up",
+     "at": 3.837
+    },
+    {
+     "w": "open",
+     "at": 4.25
+    },
+    {
+     "w": "your",
+     "at": 4.537
+    },
+    {
+     "w": "body",
+     "at": 4.65
+    },
+    {
+     "w": "and",
+     "at": 5.1
+    },
+    {
+     "w": "curl",
+     "at": 5.237
+    },
+    {
+     "w": "the",
+     "at": 5.562
+    },
+    {
+     "w": "ball",
+     "at": 5.65
+    },
+    {
+     "w": "into",
+     "at": 5.963
+    },
+    {
+     "w": "the",
+     "at": 6.138
+    },
+    {
+     "w": "far",
+     "at": 6.237
+    },
+    {
+     "w": "corner",
+     "at": 6.525
+    }
+   ]
+  }
+ ]
+}

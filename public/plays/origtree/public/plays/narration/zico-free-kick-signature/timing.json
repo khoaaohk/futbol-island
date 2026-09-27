@@ -1,0 +1,362 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The free kick, live",
+   "text": "Seville, 1982. Brazil against Scotland at the World Cup, and Scotland lead one-nil! Free kick to Brazil, thirty yards out. Zico takes just two steps... Top corner! One-one!",
+   "src": "/plays/narration/zico-free-kick-signature/1.m4a",
+   "seconds": 13.6,
+   "words": [
+    {
+     "w": "Seville",
+     "at": 0.4
+    },
+    {
+     "w": "1982",
+     "at": 0.85
+    },
+    {
+     "w": "Brazil",
+     "at": 2.337
+    },
+    {
+     "w": "against",
+     "at": 2.8
+    },
+    {
+     "w": "Scotland",
+     "at": 3.175
+    },
+    {
+     "w": "at",
+     "at": 3.663
+    },
+    {
+     "w": "the",
+     "at": 3.737
+    },
+    {
+     "w": "World",
+     "at": 3.825
+    },
+    {
+     "w": "Cup",
+     "at": 4.162
+    },
+    {
+     "w": "and",
+     "at": 4.5
+    },
+    {
+     "w": "Scotland",
+     "at": 4.638
+    },
+    {
+     "w": "lead",
+     "at": 5.175
+    },
+    {
+     "w": "one-nil",
+     "at": 5.425
+    },
+    {
+     "w": "Free",
+     "at": 6.375
+    },
+    {
+     "w": "kick",
+     "at": 6.662
+    },
+    {
+     "w": "to",
+     "at": 6.925
+    },
+    {
+     "w": "Brazil",
+     "at": 7.025
+    },
+    {
+     "w": "thirty",
+     "at": 7.638
+    },
+    {
+     "w": "yards",
+     "at": 7.975
+    },
+    {
+     "w": "out",
+     "at": 8.3
+    },
+    {
+     "w": "Zico",
+     "at": 9.062
+    },
+    {
+     "w": "takes",
+     "at": 9.512
+    },
+    {
+     "w": "just",
+     "at": 9.825
+    },
+    {
+     "w": "two",
+     "at": 10.062
+    },
+    {
+     "w": "steps",
+     "at": 10.312
+    },
+    {
+     "w": "Top",
+     "at": 11.15
+    },
+    {
+     "w": "corner",
+     "at": 11.45
+    },
+    {
+     "w": "One-one",
+     "at": 12.062
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again, from behind. The ball rises up over the wall, then curls and dips, right into the top corner. Alan Rough can only stand and watch.",
+   "src": "/plays/narration/zico-free-kick-signature/2.m4a",
+   "seconds": 10.7,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "from",
+     "at": 1.15
+    },
+    {
+     "w": "behind",
+     "at": 1.3
+    },
+    {
+     "w": "The",
+     "at": 2.362
+    },
+    {
+     "w": "ball",
+     "at": 2.475
+    },
+    {
+     "w": "rises",
+     "at": 2.862
+    },
+    {
+     "w": "up",
+     "at": 3.263
+    },
+    {
+     "w": "over",
+     "at": 3.413
+    },
+    {
+     "w": "the",
+     "at": 3.612
+    },
+    {
+     "w": "wall",
+     "at": 3.737
+    },
+    {
+     "w": "then",
+     "at": 4.325
+    },
+    {
+     "w": "curls",
+     "at": 4.537
+    },
+    {
+     "w": "and",
+     "at": 5.05
+    },
+    {
+     "w": "dips",
+     "at": 5.188
+    },
+    {
+     "w": "right",
+     "at": 5.812
+    },
+    {
+     "w": "into",
+     "at": 6.062
+    },
+    {
+     "w": "the",
+     "at": 6.237
+    },
+    {
+     "w": "top",
+     "at": 6.325
+    },
+    {
+     "w": "corner",
+     "at": 6.6
+    },
+    {
+     "w": "Alan",
+     "at": 7.625
+    },
+    {
+     "w": "Rough",
+     "at": 8.0
+    },
+    {
+     "w": "can",
+     "at": 8.3
+    },
+    {
+     "w": "only",
+     "at": 8.425
+    },
+    {
+     "w": "stand",
+     "at": 8.75
+    },
+    {
+     "w": "and",
+     "at": 9.225
+    },
+    {
+     "w": "watch",
+     "at": 9.35
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "Zico practised every day, with shirts hung in the top corners as targets. Your turn: aim over the wall, and let the curl bring the ball down.",
+   "src": "/plays/narration/zico-free-kick-signature/3.m4a",
+   "seconds": 9.9,
+   "words": [
+    {
+     "w": "Zico",
+     "at": 0.425
+    },
+    {
+     "w": "practised",
+     "at": 0.825
+    },
+    {
+     "w": "every",
+     "at": 1.35
+    },
+    {
+     "w": "day",
+     "at": 1.65
+    },
+    {
+     "w": "with",
+     "at": 2.125
+    },
+    {
+     "w": "shirts",
+     "at": 2.312
+    },
+    {
+     "w": "hung",
+     "at": 2.675
+    },
+    {
+     "w": "in",
+     "at": 2.888
+    },
+    {
+     "w": "the",
+     "at": 2.962
+    },
+    {
+     "w": "top",
+     "at": 3.05
+    },
+    {
+     "w": "corners",
+     "at": 3.325
+    },
+    {
+     "w": "as",
+     "at": 3.8
+    },
+    {
+     "w": "targets",
+     "at": 3.95
+    },
+    {
+     "w": "Your",
+     "at": 5.037
+    },
+    {
+     "w": "turn",
+     "at": 5.237
+    },
+    {
+     "w": "aim",
+     "at": 6.037
+    },
+    {
+     "w": "over",
+     "at": 6.312
+    },
+    {
+     "w": "the",
+     "at": 6.513
+    },
+    {
+     "w": "wall",
+     "at": 6.638
+    },
+    {
+     "w": "and",
+     "at": 7.15
+    },
+    {
+     "w": "let",
+     "at": 7.275
+    },
+    {
+     "w": "the",
+     "at": 7.412
+    },
+    {
+     "w": "curl",
+     "at": 7.513
+    },
+    {
+     "w": "bring",
+     "at": 7.9
+    },
+    {
+     "w": "the",
+     "at": 8.088
+    },
+    {
+     "w": "ball",
+     "at": 8.175
+    },
+    {
+     "w": "down",
+     "at": 8.475
+    }
+   ]
+  }
+ ]
+}

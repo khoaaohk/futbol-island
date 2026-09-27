@@ -1,4 +1,7 @@
 import * as T from 'three';
+import {createIslandArcadePlayer} from './islandArcadePlayer';
+import type {BeanDress} from '../town/beanLooks';
+export type {ArcadePoseOptions} from './arcadePlayerMotion';
 import {RoundedBoxGeometry} from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 
 /** Shared, original arcade art. One sun, bounded effects, no postprocessing chain. */
@@ -21,11 +24,9 @@ export function createArcadeStage(canvas:HTMLCanvasElement){
  function ring(x:number,z:number,r:number,color:string){const m=new T.Mesh(new T.RingGeometry(r-.035,r,64),new T.MeshBasicMaterial({color,side:T.DoubleSide}));m.rotation.x=-Math.PI/2;m.position.set(x,.03,z);scene.add(m);return m;}
  function goal(x:number,z:number,width:number){const root=new T.Group();root.position.set(x,0,z);scene.add(root);for(const side of[-1,1]){cylinder(side*width/2,1.05,0,.065,2.1,'#fff4da',root);bar(side*width/2,0,side*width/2,-1.1,.08,.045,'#fff4da',root);cylinder(side*width/2,.8,-1.1,.04,1.6,'#fff4da',root);}bar(-width/2,0,width/2,0,2.1,.065,'#fff4da',root);const points:number[]=[];for(let x=-width/2;x<=width/2+.01;x+=.25)points.push(x,.08,-1.1,x,1.6,-1.1,x,1.6,-1.1,x,2.1,0);for(let y=.1;y<=1.61;y+=.25)points.push(-width/2,y,-1.1,width/2,y,-1.1);const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(points,3));root.add(new T.LineSegments(geo,new T.LineBasicMaterial({color:'#d5e5df',transparent:true,opacity:.6})));return root;}
  function football(radius=.22){const root=new T.Group();sphere(0,0,0,radius,'#fff8e3',root);for(let i=0;i<8;i++){const a=i*Math.PI*.763,y=1-2*(i+.5)/8,r=Math.sqrt(1-y*y);const patch=sphere(Math.cos(a)*r*radius*.96,y*radius*.96,Math.sin(a)*r*radius*.96,radius*.28,'#294c49',root);patch.scale.multiplyScalar(.95);}scene.add(root);return root;}
- function player(color:string){const root=new T.Group(),body=new T.Group();root.add(body);scene.add(root);box(0,1.05,0,.57,.62,.34,color,body);box(0,.66,0,.54,.22,.34,'#253e49',body);sphere(0,1.63,0,.27,'#b8794f',body);for(const x of[-.09,.09])sphere(x,1.67,.235,.029,'#263e40',body);const hair=sphere(0,1.78,-.035,.26,'#352b30',body);hair.scale.y*=.5;
- const legs=[-1,1].map(side=>{const pivot=new T.Group();pivot.position.set(side*.16,.62,0);body.add(pivot);box(0,-.23,0,.18,.42,.2,'#b8794f',pivot);box(0,-.42,.01,.19,.18,.21,'#fff4db',pivot);box(0,-.54,.09,.23,.16,.38,'#243a45',pivot);return pivot;});
- const arms=[-1,1].map(side=>{const pivot=new T.Group();pivot.position.set(side*.36,1.25,0);body.add(pivot);box(0,-.12,0,.19,.25,.23,color,pivot);box(0,-.33,0,.15,.25,.17,'#b8794f',pivot);return pivot;});let stride=0,yaw=0;
- return{root,body,pose(dt:number,speed:number,facing:number,kick=0,jump=0,lean=0){stride+=dt*speed*3.3;yaw+=Math.atan2(Math.sin(facing-yaw),Math.cos(facing-yaw))*(1-Math.exp(-dt*14));root.rotation.y=yaw;root.position.y=jump;const swing=Math.sin(stride)*Math.min(.8,speed*.12);legs[0].rotation.x=swing;legs[1].rotation.x=-swing-kick*1.15;arms[0].rotation.x=-swing*.6;arms[1].rotation.x=swing*.6+kick*.4;body.position.y=reduced?0:Math.abs(Math.cos(stride))*Math.min(.045,speed*.01);body.rotation.set(speed*.013-kick*.08,0,reduced?0:-lean*.13);body.scale.set(1+kick*.025,1-kick*.035,1+kick*.025);}};
- }
+ const islandPlayers:ReturnType<typeof createIslandArcadePlayer>[]=[];
+ function player(color:string,dress?:BeanDress){const rig=createIslandArcadePlayer(color,reduced,islandPlayers.length,dress);islandPlayers.push(rig);scene.add(rig.root);return rig;}
+
  const ground=box(0,-.4,-8,90,.6,100,'#dbbd8e');ground.castShadow=false;(ground.material as T.MeshStandardMaterial).map=grain;
  // Tall scenery stays outside the playable space. Reused geometry/materials.
  const scenery=new T.Group();scene.add(scenery);defaultParent=scenery;for(const side of[-1,1])for(let i=0;i<5;i++){const x=side*(11+(i%2)*2),z=-34+i*14;
@@ -40,11 +41,24 @@ export function createArcadeStage(canvas:HTMLCanvasElement){
  const day=new T.Color('#afcfd2'),dusk=new T.Color('#677c9b'),warm=new T.Color('#ffe1b0'),cool=new T.Color('#b9d4ff');let lastLight=-1;
  function lighting(seconds:number){const night=T.MathUtils.smoothstep(seconds,35,180);if(Math.abs(night-lastLight)<.003)return;lastLight=night;(scene.background as T.Color).lerpColors(day,dusk,night);(scene.fog as T.Fog).color.copy(scene.background as T.Color);sun.color.lerpColors(warm,cool,night);sun.intensity=2.5-night*1.3;sun.position.set(-14+night*7,24-night*13,10);hemi.intensity=1.3-night*.25;mat('#ffe3a0').emissiveIntensity=.1+night*2;}
  function effects(dt:number){if(!alive)return;alive=false;for(let i=0;i<count;i++){if(life[i]<=0)continue;life[i]-=dt;const j=i*3;vel[j+1]-=dt*5;for(let k=0;k<3;k++)positions[j+k]+=vel[j+k]*dt;dummy.position.fromArray(positions,j);dummy.scale.setScalar(Math.max(0,life[i]*1.8));dummy.updateMatrix();particles.setMatrixAt(i,dummy.matrix);if(life[i]>0)alive=true;}particles.instanceMatrix.needsUpdate=true;}
- function fit(width:number,length:number,runner=false){const w=canvas.clientWidth,h=canvas.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/Math.max(1,h);camera.updateProjectionMatrix();target.set(0,0,runner?-11:0);const distance=runner?Math.max(20,15/camera.aspect):Math.max(length*1.22,width*1.35/camera.aspect)*1.25;camera.position.set(runner?0:distance*.06,distance*.83,target.z+distance*.78);if(runner){camera.position.set(0,mobile?14:11,mobile?21:15);target.set(0,0,mobile?-10:-14);}camera.lookAt(target);camera.updateMatrixWorld();}
+ function fit(width:number,length:number,runner=false){const w=canvas.clientWidth,h=canvas.clientHeight;renderer.setSize(w,h,false);camera.clearViewOffset();camera.aspect=w/Math.max(1,h);camera.updateProjectionMatrix();target.set(0,0,runner?-11:0);
+  if(runner){camera.position.set(0,mobile?14:11,mobile?21:15);target.set(0,0,mobile?-10:-14);camera.lookAt(target);camera.updateMatrixWorld();return;}
+  // Compose the court into the space between HUD and controls, not into a tiny
+  // island in the centre. Binary search only on resize; no per-frame fitting.
+  const top=h<520?82:mobile?143:132,bottom=h<520?100:mobile?157:146;
+  const room=Math.max(.3,(h-top-bottom)/h),limitX=mobile?.93:.88,corner=new T.Vector3();let low=5,high=250;
+  for(let i=0;i<22;i++){const distance=(low+high)/2;camera.position.set(0,distance,distance*.58);camera.lookAt(target);camera.updateMatrixWorld();let fits=true;for(const x of [-width/2,width/2])for(const z of [-length/2,length/2]){corner.set(x,0,z).project(camera);if(Math.abs(corner.x)>limitX||Math.abs(corner.y)>room)fits=false;}if(fits)high=distance;else low=distance;}
+  camera.position.set(0,high,high*.58);camera.lookAt(target);camera.updateMatrixWorld();
+  // The off-centre projection reserves unequal HUD/control margins without a
+  // second viewport; pointer picking uses the same projection matrix.
+  camera.setViewOffset(w,h,0,(bottom-top)/2,w,h);
+  camera.far=Math.max(180,camera.position.length()+115);camera.updateProjectionMatrix();
+  const fog=scene.fog as T.Fog;fog.near=camera.position.length()+28;fog.far=camera.position.length()+100;
+ }
  const ray=new T.Raycaster(),pointer=new T.Vector2(),plane=new T.Plane(new T.Vector3(0,1,0),0),point=new T.Vector3();
  function pick(clientX:number,clientY:number){const r=canvas.getBoundingClientRect();pointer.set((clientX-r.left)/r.width*2-1,1-(clientY-r.top)/r.height*2);ray.setFromCamera(pointer,camera);return ray.ray.intersectPlane(plane,point);}
  function render(){renderer.render(scene,camera);}
- function dispose(){const geometries=new Set<T.BufferGeometry>(),mats=new Set<T.Material>();scene.traverse(o=>{if(o instanceof T.Mesh||o instanceof T.LineSegments){geometries.add(o.geometry);const list=Array.isArray(o.material)?o.material:[o.material];list.forEach(m=>mats.add(m));}});geometries.forEach(g=>g.dispose());mats.forEach(m=>m.dispose());grain.dispose();sun.shadow.map?.dispose();renderer.dispose();}
- return{effectsActive:()=>alive,scene,camera,renderer,mobile,reduced,box,sphere,cylinder,bar,ring,goal,football,player,burst,effects,lighting,scrollScenery,fit,pick,render,dispose};
+ function dispose(){for(const rig of islandPlayers)rig.dispose();const geometries=new Set<T.BufferGeometry>(),mats=new Set<T.Material>();scene.traverse(o=>{if(o instanceof T.Mesh||o instanceof T.LineSegments){geometries.add(o.geometry);const list=Array.isArray(o.material)?o.material:[o.material];list.forEach(m=>mats.add(m));}});geometries.forEach(g=>g.dispose());mats.forEach(m=>m.dispose());grain.dispose();sun.shadow.map?.dispose();renderer.dispose();}
+ return{resetPlayers:()=>islandPlayers.forEach(p=>p.resetPose()),scenery,effectsActive:()=>alive,scene,camera,renderer,mobile,reduced,box,sphere,cylinder,bar,ring,goal,football,player,burst,effects,lighting,scrollScenery,fit,pick,render,dispose};
 }
 export type ArcadeStage=ReturnType<typeof createArcadeStage>;

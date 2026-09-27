@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: the 1999 final",
+   "text": "Granada, 1999: the European futsal final, Russia against Spain. Konstantin Eremenko is Russia\u2019s tall pivot and top scorer. It ends three all, so penalties! Eremenko scores, and Russia are champions of Europe!",
+   "src": "/plays/narration/eremenko-futsal-signature/1.m4a",
+   "seconds": 16.5,
+   "words": [
+    {
+     "w": "Granada",
+     "at": 0.35
+    },
+    {
+     "w": "1999",
+     "at": 0.875
+    },
+    {
+     "w": "the",
+     "at": 2.275
+    },
+    {
+     "w": "European",
+     "at": 2.375
+    },
+    {
+     "w": "futsal",
+     "at": 2.913
+    },
+    {
+     "w": "final",
+     "at": 3.388
+    },
+    {
+     "w": "Russia",
+     "at": 3.987
+    },
+    {
+     "w": "against",
+     "at": 4.35
+    },
+    {
+     "w": "Spain",
+     "at": 4.787
+    },
+    {
+     "w": "Konstantin",
+     "at": 5.862
+    },
+    {
+     "w": "Eremenko",
+     "at": 6.575
+    },
+    {
+     "w": "is",
+     "at": 7.237
+    },
+    {
+     "w": "Russia\u2019s",
+     "at": 7.412
+    },
+    {
+     "w": "tall",
+     "at": 7.862
+    },
+    {
+     "w": "pivot",
+     "at": 8.213
+    },
+    {
+     "w": "and",
+     "at": 8.625
+    },
+    {
+     "w": "top",
+     "at": 8.75
+    },
+    {
+     "w": "scorer",
+     "at": 9.062
+    },
+    {
+     "w": "It",
+     "at": 10.0
+    },
+    {
+     "w": "ends",
+     "at": 10.15
+    },
+    {
+     "w": "three",
+     "at": 10.463
+    },
+    {
+     "w": "all",
+     "at": 10.725
+    },
+    {
+     "w": "so",
+     "at": 11.125
+    },
+    {
+     "w": "penalties",
+     "at": 11.3
+    },
+    {
+     "w": "Eremenko",
+     "at": 12.488
+    },
+    {
+     "w": "scores",
+     "at": 13.15
+    },
+    {
+     "w": "and",
+     "at": 13.775
+    },
+    {
+     "w": "Russia",
+     "at": 13.912
+    },
+    {
+     "w": "are",
+     "at": 14.275
+    },
+    {
+     "w": "champions",
+     "at": 14.438
+    },
+    {
+     "w": "of",
+     "at": 14.988
+    },
+    {
+     "w": "Europe",
+     "at": 15.075
+    }
+   ]
+  },
+  {
+   "label": "How he does it",
+   "text": "Pivots play with their back to goal. This is how he does it: he takes the pass and feels the defender. When the defender leans one way, he turns the other and shoots!",
+   "src": "/plays/narration/eremenko-futsal-signature/2.m4a",
+   "seconds": 11.1,
+   "words": [
+    {
+     "w": "Pivots",
+     "at": 0.325
+    },
+    {
+     "w": "play",
+     "at": 0.725
+    },
+    {
+     "w": "with",
+     "at": 0.975
+    },
+    {
+     "w": "their",
+     "at": 1.113
+    },
+    {
+     "w": "back",
+     "at": 1.275
+    },
+    {
+     "w": "to",
+     "at": 1.55
+    },
+    {
+     "w": "goal",
+     "at": 1.675
+    },
+    {
+     "w": "This",
+     "at": 2.487
+    },
+    {
+     "w": "is",
+     "at": 2.75
+    },
+    {
+     "w": "how",
+     "at": 2.9
+    },
+    {
+     "w": "he",
+     "at": 3.1
+    },
+    {
+     "w": "does",
+     "at": 3.225
+    },
+    {
+     "w": "it",
+     "at": 3.462
+    },
+    {
+     "w": "he",
+     "at": 3.975
+    },
+    {
+     "w": "takes",
+     "at": 4.1
+    },
+    {
+     "w": "the",
+     "at": 4.4
+    },
+    {
+     "w": "pass",
+     "at": 4.513
+    },
+    {
+     "w": "and",
+     "at": 4.975
+    },
+    {
+     "w": "feels",
+     "at": 5.125
+    },
+    {
+     "w": "the",
+     "at": 5.5
+    },
+    {
+     "w": "defender",
+     "at": 5.6
+    },
+    {
+     "w": "When",
+     "at": 6.675
+    },
+    {
+     "w": "the",
+     "at": 6.812
+    },
+    {
+     "w": "defender",
+     "at": 6.9
+    },
+    {
+     "w": "leans",
+     "at": 7.425
+    },
+    {
+     "w": "one",
+     "at": 7.775
+    },
+    {
+     "w": "way",
+     "at": 8.0
+    },
+    {
+     "w": "he",
+     "at": 8.475
+    },
+    {
+     "w": "turns",
+     "at": 8.637
+    },
+    {
+     "w": "the",
+     "at": 9.037
+    },
+    {
+     "w": "other",
+     "at": 9.175
+    },
+    {
+     "w": "and",
+     "at": 9.475
+    },
+    {
+     "w": "shoots",
+     "at": 9.662
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. Back to goal, feel the lean, turn!",
+   "src": "/plays/narration/eremenko-futsal-signature/3.m4a",
+   "seconds": 4.7,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.662
+    },
+    {
+     "w": "slowly",
+     "at": 1.087
+    },
+    {
+     "w": "Back",
+     "at": 1.95
+    },
+    {
+     "w": "to",
+     "at": 2.225
+    },
+    {
+     "w": "goal",
+     "at": 2.325
+    },
+    {
+     "w": "feel",
+     "at": 2.675
+    },
+    {
+     "w": "the",
+     "at": 2.888
+    },
+    {
+     "w": "lean",
+     "at": 2.975
+    },
+    {
+     "w": "turn",
+     "at": 3.3
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: receive with your back to goal, turn when the defender leans!",
+   "src": "/plays/narration/eremenko-futsal-signature/4.m4a",
+   "seconds": 5.3,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "receive",
+     "at": 1.337
+    },
+    {
+     "w": "with",
+     "at": 1.762
+    },
+    {
+     "w": "your",
+     "at": 1.887
+    },
+    {
+     "w": "back",
+     "at": 2.0
+    },
+    {
+     "w": "to",
+     "at": 2.275
+    },
+    {
+     "w": "goal",
+     "at": 2.375
+    },
+    {
+     "w": "turn",
+     "at": 2.85
+    },
+    {
+     "w": "when",
+     "at": 3.138
+    },
+    {
+     "w": "the",
+     "at": 3.263
+    },
+    {
+     "w": "defender",
+     "at": 3.337
+    },
+    {
+     "w": "leans",
+     "at": 3.8
+    }
+   ]
+  }
+ ]
+}

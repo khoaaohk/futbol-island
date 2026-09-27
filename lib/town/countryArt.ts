@@ -25,6 +25,8 @@ export const COUNTRY_ART:Record<string,CountryArt>={
  Uruguay:C('#0038a8','#ffffff','#fcd116','skyline'),
  Belgium:C('#000000','#fdda24','#ef3340','skyline'),
  Croatia:C('#ff0000','#ffffff','#171796','castle'),
+ 'Costa Rica':C('#002b7f','#ffffff','#ce1126','mountains'),
+ 'Cape Verde':C('#003893','#ffffff','#cf2027','palms'),
  Norway:C('#ba0c2f','#ffffff','#00205b','mountains'),
  Sweden:C('#006aa7','#fecc00','#006aa7','castle'),
  Denmark:C('#c8102e','#ffffff','#c8102e','castle'),

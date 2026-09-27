@@ -9,7 +9,7 @@
 .preview{position:relative;height:240px;width:100%;margin:22px 0 0;border-radius:20px;overflow:hidden;background:#e8b98b}.preview canvas{display:block;width:100%;height:100%;touch-action:none}.previewFallback{padding:24px;font-size:13px;line-height:1.6}.summary{margin:12px 0 20px}.summary strong{font-size:16px}.summary small{margin-top:4px}
 @media(max-width:350px){.preview{height:220px}}@media(max-height:480px){.preview{height:210px}}
 
-.selectors{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 12px;margin-top:18px}.selection{display:flex;flex-direction:column;gap:8px;min-width:0;font-size:13px;font-weight:700}.selection select{width:100%;min-width:0;min-height:44px;border:1px solid #98a386;border-radius:12px;padding:10px 8px;background:#e7ddbb;color:#294a3e;font:inherit;text-overflow:ellipsis}.selection select:focus-visible{outline:3px solid #c47b33;outline-offset:3px}.summary{margin:12px 0 16px}.progress{margin:16px 0;padding:12px}.preview{height:clamp(260px,38dvh,360px);margin-top:18px}
+.selectors{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 12px;margin-top:18px}.selection{display:flex;flex-direction:column;gap:8px;min-width:0;font-size:13px;font-weight:700}.selection select{width:100%;min-width:0;min-height:44px;border:1px solid #98a386;border-radius:12px;padding:10px 8px;background:#e7ddbb;color:#294a3e;font:inherit;font-size:16px;text-overflow:ellipsis}.selection select:focus-visible{outline:3px solid #c47b33;outline-offset:3px}.summary{margin:12px 0 16px}.progress{margin:16px 0;padding:12px}.preview{height:clamp(260px,38dvh,360px);margin-top:18px}
 /* A single selected-item view and compact thumbnails keep equipment visible without a card catalog. */
 .tabs{margin-top:18px}
 .equipmentPreview{display:grid;place-items:center;width:100%;height:clamp(145px,23dvh,190px);margin-top:16px;border-radius:20px;background:radial-gradient(ellipse at 50% 80%,#ddd6a9 0%,#e8b98b 75%);overflow:hidden}
@@ -55,3 +55,158 @@
 
 .toggleLayout{max-width:420px;margin:0 auto 24px}
 .dialog .selection select{padding-inline:22px 18px}
+
+/* Bean character builder (lane D). Reuses the wardrobe's cream card, gold paper pill and pink pressed state. */
+.builder{display:flex;flex-direction:column;gap:18px;min-width:0;background:#fff2d3;padding:24px;border-radius:32px;box-shadow:0 7px 0 #6a3b5e40;color:#244d40}
+.group{display:flex;flex-direction:column;gap:12px;min-width:0}.group+.group{padding-top:16px;border-top:2px dashed #e1cd97}
+.groupTitle{margin:0;font:400 clamp(20px,2.4vw,24px)/1.15 IslandBrush,sans-serif;color:#244d40}
+.hint,.lessonLead{margin:0;font-size:13px;line-height:1.5;color:#4d6456}
+.choice{display:flex;flex-direction:column;gap:8px;min-width:0}.choiceLabel{margin:0;font-size:14px;font-weight:700}.choiceLabel span{font-weight:400;color:#4d6456}
+.chips{display:flex;flex-wrap:wrap;gap:10px 8px}
+.chip{display:inline-flex;align-items:center;gap:7px;min-height:var(--btn-height);padding:6px 15px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius);background:var(--btn-gold-bright);box-shadow:0 4px 0 var(--btn-gold-bright-edge);color:var(--btn-ink);font:700 14px/1.2 var(--font-body),Arial,sans-serif;cursor:pointer;transition:filter .15s,translate .15s,box-shadow .15s}
+.chip:hover{filter:brightness(1.04)}.chip:active{translate:0 var(--btn-press);box-shadow:0 1px 0 var(--btn-gold-bright-edge)}
+.chip[aria-pressed=true]{background:var(--btn-pink);box-shadow:0 4px 0 var(--btn-pink-edge)}
+.chipDot{width:16px;height:16px;border-radius:50%;border:2px solid #fff8df;flex:none}
+.swatches{display:flex;flex-wrap:wrap;gap:10px}
+.colorSwatch{position:relative;width:40px;height:40px;padding:0;border:3px solid var(--btn-rim);border-radius:50%;box-shadow:0 3px 0 var(--btn-gold-bright-edge);cursor:pointer;transition:transform .15s}
+.colorSwatch:hover{transform:translateY(-2px)}.colorSwatch:active{transform:translateY(2px)}
+.colorSwatch[aria-pressed=true]{box-shadow:0 0 0 3px var(--btn-ink),0 3px 0 3px var(--btn-ink)}
+.colorSwatch[aria-pressed=true]::after{content:'';position:absolute;inset:11px;border-radius:50%;background:#fff8df;box-shadow:0 0 0 2px #244d4055}
+.chip:focus-visible,.colorSwatch:focus-visible,.numberChip:focus-visible{outline:3px solid #c47b33;outline-offset:3px}
+.numberLesson{display:flex;flex-direction:column;gap:10px;margin-top:6px;padding:14px;border-radius:20px;background:#f7edcf url('/stories/films/assets/entry-grain.png') center/160px}
+.numberLesson .groupTitle{font-size:clamp(18px,2vw,21px)}
+.numberRow{display:flex;flex-wrap:wrap;gap:6px}
+.numberChip{width:36px;height:36px;padding:0;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:50%;background:var(--btn-gold-bright);box-shadow:0 3px 0 var(--btn-gold-bright-edge);color:var(--btn-ink);font:800 14px/1 var(--font-body),Arial,sans-serif;cursor:pointer}
+.numberChip[aria-pressed=true]{background:var(--btn-pink);box-shadow:0 3px 0 var(--btn-pink-edge)}
+.lessonCard{font-size:13px;line-height:1.5}.lessonCard strong{font-size:14px}.lessonCard p{margin:4px 0 8px}
+.lessonSkills{display:flex;flex-wrap:wrap;gap:6px}.lessonSkills span{padding:4px 10px;border-radius:14px;background:#fff8df;font-size:12px;font-weight:700}
+.dialog .builder .selection select{width:100%}
+.dialog .previewColumn .note{margin:8px 0 0;font-size:13px;line-height:1.5}
+/* Phones: the preview stays in view while the options scroll underneath. */
+@media(max-width:700px){
+ .layout[data-tab=character] .previewColumn{position:sticky;top:-12px;z-index:2;padding:10px 10px 4px;border-radius:0 0 26px 26px}
+ .layout[data-tab=character] .preview{height:clamp(190px,28dvh,250px)!important}
+ .layout[data-tab=character] .summary{margin:6px 0 2px}.layout[data-tab=character] .summary small{font-size:12px}
+ .builder{padding:20px 16px;border-radius:26px}
+ .colorSwatch{width:38px;height:38px}
+}
+@media(prefers-reduced-motion:reduce){.chip,.colorSwatch{transition:none}}
+/* Desktop: the preview card keeps a bounded size (small canvas); the builder beside it shares its grid row (see the two-column builder block). */
+@media(min-width:701px){
+ .layout[data-tab=character]{align-items:stretch}
+ .layout[data-tab=character] .preview{flex:none;height:clamp(300px,calc(100dvh - 330px),520px)!important;min-height:0}
+}
+@media(max-width:700px){.layout[data-tab=character] .summary small{display:none}}
+/* Simplified builder: five short steps (looks, skin, hair, face, kit), each one swipeable rail; the rest sits under More. */
+.builder{gap:14px}
+.builder .choiceLabel{font:400 clamp(18px,2vw,21px)/1.15 IslandBrush,sans-serif;color:#244d40}
+.builder .choiceLabel span{font-family:var(--font-body),Arial,sans-serif;font-size:14px;font-weight:400}
+.stepHead{display:flex;align-items:center;justify-content:space-between;gap:12px}.stepHead>div{flex:0 1 210px}.stepHead>div button{min-height:38px;padding:6px 10px;font-size:14px}
+@media(max-width:700px){.rail{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;scrollbar-width:none;padding:3px 3px 8px;margin:-3px -3px -4px}
+.rail::-webkit-scrollbar{display:none}.rail>button{flex:0 0 auto;white-space:nowrap}}
+.disclosure>summary{list-style:none;width:max-content;max-width:100%;min-height:36px;padding:4px 14px;font-size:13px}
+.disclosure>summary::-webkit-details-marker{display:none}
+.disclosure>summary::after{content:'+';font-weight:800;margin-left:2px}.disclosure[open]>summary::after{content:'–'}
+.disclosure[open]>summary{margin-bottom:12px}
+.more{display:flex;flex-direction:column;gap:14px;padding:14px;border-radius:20px;background:#f7edcf url('/stories/films/assets/entry-grain.png') center/160px}
+.more .choiceLabel{font:700 14px/1.2 var(--font-body),Arial,sans-serif}
+.disclosure .numberLesson{margin-top:0}
+@media(max-width:700px){
+ .layout[data-tab=character]{gap:12px}
+ .layout[data-tab=character] .preview{height:clamp(170px,23dvh,200px)!important}
+ .layout[data-tab=character] .summary{margin:4px 0 0}.layout[data-tab=character] .summary strong{font-size:14px}
+ .builder{gap:12px;padding:16px 14px}
+ .chip{min-height:38px;padding:5px 13px;font-size:13px}.colorSwatch{width:34px;height:34px}
+}
+/* Touch comfort: every builder control is at least 44px, and selects use 16px text (no iOS zoom). */
+.chip,.builder .chip,.disclosure>summary{min-height:44px}.colorSwatch{width:44px;height:44px}.numberChip{width:44px;height:44px}
+.stepHead>div button{min-height:44px}.dialog .selection select{font-size:16px}
+@media(max-width:700px){.chip{min-height:44px}.colorSwatch{width:44px;height:44px}}
+
+/* Ride unlock progress spans the rides grid (lib/town/rideUnlocks.ts). */
+.dialog .selectors>.note{grid-column:1/-1;margin:0}
+
+/* iOS long-press guard (tests/device-guards.cjs check 1): no "Save image / Copy / Share" callout or text selection on held controls. */
+.preview,.preview *{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-user-drag:none}
+/* 44px tap target without changing the drawn size (tests/device-guards.cjs check 3). */
+.numberChip{position:relative}
+.numberChip::before{content:'';position:absolute;inset:-4px;border-radius:50%}
+.colorSwatch::before{content:'';position:absolute;inset:-5px;border-radius:50%}
+
+/* Move arrows under the preview summary (lib/graphics/previewMoves.ts): the builder's gold paper pills, round, 44px. */
+.moveNav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:10px 0 2px;padding:0 4px}
+/* Round icon family (docs/ui/BUTTONS.md): textured gold, 44px, gold edge + rim halo, presses down. */
+.moveArrow{flex:none;justify-content:center;width:var(--btn-icon);height:var(--btn-icon);min-height:var(--btn-icon);padding:0;border-radius:50%;background:var(--btn-gold) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;box-shadow:var(--btn-shadow-gold)}
+.moveArrow:hover{background:var(--btn-gold) var(--btn-grain) center/128px 128px}.moveArrow:active{translate:0 var(--btn-press);box-shadow:var(--btn-shadow-gold-pressed)}
+.moveName{flex:1;min-width:0;margin:0;text-align:center;font:400 clamp(17px,2vw,20px)/1.15 IslandBrush,sans-serif;color:#244d40;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:700px){.moveNav{margin:4px 0 0}.moveName{font-size:16px}}
+
+/* Why No. 10 + More side by side; the chosen panel opens below the row. */
+.disclosureRow{display:flex;flex-wrap:wrap;gap:10px 8px;margin-top:10px}
+.disclosureButton{min-height:var(--btn-height);padding:4px 14px;font-size:14px;font-weight:700}
+.disclosureButton::after{content:'+';font-weight:800;margin-left:2px}
+.disclosureButton[aria-expanded=true]::after{content:'–'}
+.disclosureButton[aria-expanded=true]{background:var(--btn-pink);box-shadow:0 4px 0 var(--btn-pink-edge)}
+.disclosurePanel{margin-top:10px}
+
+/* Two-column builder (user, Sep 26 2026): compact island selects for text choices, swatches only for skin.
+   Desktop/tablet: the builder takes the preview card's height (contain:size keeps it out of the row sizing) and scrolls
+   inside itself only when More or Why is open. Phones: the same two columns from 360px, one column below. */
+.fieldGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 12px;align-items:start}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.wide{grid-column:1/-1}
+.fieldLabel{font:400 clamp(17px,1.9vw,20px)/1.15 IslandBrush,sans-serif;color:#244d40;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fieldLabel span{font:400 14px/1.2 var(--font-body),Arial,sans-serif;color:#4d6456}
+.swatchRow{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));justify-items:center;gap:2px;padding:2px 0 4px}
+.builder .colorSwatch{width:34px;height:34px;border-width:2px;box-shadow:0 3px 0 var(--btn-gold-bright-edge)}
+.builder .colorSwatch[aria-pressed=true]{box-shadow:0 0 0 3px var(--btn-ink),0 3px 0 3px var(--btn-ink)}
+.builder .colorSwatch[aria-pressed=true]::after{inset:10px}
+.fieldGrid>.disclosureButton{justify-content:center;width:100%;min-width:0;margin:0;font-size:14px}
+.more.fieldGrid{display:grid;gap:12px}
+.more .fieldLabel{font:700 14px/1.2 var(--font-body),Arial,sans-serif}
+/* Male/Female toggle at the shared 44px control height (user, Sep 26 2026). CharacterToggle is shared with the tour, so it is sized here:
+   3px border + 2px track + 34px buttons = 44px, and each button keeps a 44px hit area through an invisible ::before. */
+.toggleField>div{padding:2px}.toggleField>div::before{left:2px;top:2px;bottom:2px;width:calc(50% - 2px)}
+.toggleField>div button{position:relative;min-height:34px;height:34px;padding:0 6px;font-size:15px;line-height:1}
+.toggleField>div button::before{content:'';position:absolute;inset:-5px 0}
+/* The costume reminder rides in the summary line; phones hide the drag hint but keep the reminder. */
+@media(max-width:700px){.layout[data-tab=character] .summary small:has([data-costume-note]){display:block}.layout[data-tab=character] .dragHint{display:none}}
+.builder>.disclosurePanel{margin-top:0}
+@media(min-width:701px){
+ .layout[data-tab=character] .builder{container-type:size;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#e1cd97 transparent}
+ /* Rows breathe into the matched height (size container = the builder), capped so they never drift apart. */
+ .layout[data-tab=character] .builder>.fieldGrid:first-child{row-gap:clamp(14px,4.5cqh,30px)}
+}
+/* Tablets: give the two-column builder a little more width than the preview so colour names are not cut off. */
+@media(min-width:701px) and (max-width:960px){.layout[data-tab=character]{grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:20px}}
+@media(max-width:359px){.fieldGrid{grid-template-columns:1fr}.swatchRow{grid-template-columns:repeat(4,minmax(0,1fr))}}
+
+/* Phones (user, Sep 26 2026, real iPhone): a big preview card about half the visible screen tall (svh = height with
+   Safari's toolbars showing), rounded on all corners, scrolling away with the page so the options below get the full
+   screen; balanced spacing between the summary, the move arrows (their gold edge + halo) and the card edge. */
+@media(max-width:700px){
+ .layout[data-tab=character] .previewColumn{position:relative;top:auto;z-index:auto;padding:12px 12px 18px;border-radius:26px}
+ .layout[data-tab=character] .preview{height:clamp(240px,50vh,520px)!important;height:clamp(240px,50svh,520px)!important;border-radius:18px}
+ .layout[data-tab=character] .summary{margin:12px 4px 0}
+ .layout[data-tab=character] .moveNav{margin:12px 0 0;padding:0 2px}
+}
+
+/* Open / close (user, Sep 26 2026: "fade in Make it yours, make the transition smoother"). Opacity + transform only:
+   the backdrop and panel fade in (~300ms), then the preview card and the options card rise in one after the other;
+   closing fades out inside the component's 240ms close timer. The 3D canvas fades in on its first frame (CharacterPreview). */
+.dialog.entering::backdrop{animation:fadeBackdrop .3s ease-out both}
+.dialog.leaving::backdrop{animation:fadeBackdrop .22s ease-in reverse both}
+@keyframes fadeBackdrop{from{opacity:0}to{opacity:1}}
+.dialog.entering .panel{animation:wardrobeIn .3s cubic-bezier(.2,.7,.3,1) both}
+.dialog.leaving .panel{animation:wardrobeOut .22s ease-in both}
+@keyframes wardrobeOut{from{opacity:1}to{opacity:0}}
+.dialog.entering .previewColumn,.dialog.entering .builder{animation:cardIn .36s cubic-bezier(.2,.7,.3,1) both}
+.dialog.entering .previewColumn{animation-delay:.05s}.dialog.entering .builder{animation-delay:.12s}
+@keyframes cardIn{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+.dialog.leaving .layout{animation:cardOut .22s ease-in both}
+@keyframes cardOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(8px) scale(.99)}}
+@media(prefers-reduced-motion:reduce){
+ .dialog.entering::backdrop,.dialog.entering .panel{animation:wardrobeIn .12s linear both}
+ .dialog.leaving::backdrop,.dialog.leaving .panel{animation:wardrobeOut .12s linear both}
+ .dialog.entering .previewColumn,.dialog.entering .builder,.dialog.leaving .layout{animation:none}
+}

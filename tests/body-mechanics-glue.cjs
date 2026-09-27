@@ -39,7 +39,7 @@ assert.deepEqual({...lessonRig.profile},{...profileFor('mid',profileSeed('7v7','
 lessonRig.dispose();
 
 // Freeze the match (dt 0, inactive) and drive the sim outputs by hand.
-const freeze=()=>{for(const rig of e.rigs.values())delete rig.root.userData.brakeEstimate;e.sim.recv.t=0;e.sim.recv.id=null;e.sim.ball.owner=null;e.sim.ball.target=null;e.sim.ball.intBy=null;e.sim.ball.height=0;for(const p of Object.values(e.sim.players)){p.kick=0;p.brake=0;p.backpedal=0;p.plant=0;p.faceX=0;p.faceY=0;}};
+const freeze=()=>{for(const rig of e.rigs.values()){delete rig.root.userData.brakeEstimate;delete rig.root.userData.brakeSampleTime;delete rig.root.userData.brakeSampleSpeed;}e.sim.recv.t=0;e.sim.recv.id=null;e.sim.ball.owner=null;e.sim.ball.target=null;e.sim.ball.intBy=null;e.sim.ball.height=0;for(const p of Object.values(e.sim.players)){p.kick=0;p.brake=0;p.backpedal=0;p.plant=0;p.faceX=0;p.faceY=0;}};
 const frame=()=>runtime.update(0,10,camera,null,false,'11v11');
 const ids=Object.keys(e.sim.players),pick=(role,team)=>ids.find(id=>e.sim.players[id].role===role&&(!team||e.sim.players[id].team===team));
 const motionOf=id=>e.liveFrame.rows.get(id).motion;

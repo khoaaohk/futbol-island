@@ -3,7 +3,7 @@
  * Internals are seeded (never Math.random); marks hold while the seed holds.
  * Story-specific lead objects (a kite, a lantern, a dial…) belong in the story file, not here. */
 import type {Sheet} from './sheet';
-import {rng,hash,noise1,TAU,clamp,lerp,ribbon,wob,polyPath,curvePath,circlePath,rectPath,torn,blob,smoothPts,partial,rotPts,movePts,type Pt} from './motion';
+import {rng,hash,noise1,TAU,clamp,lerp,ribbon,wob,polyPath,curvePath,circlePath,rectPath,torn,blob,smoothPts,partial,rotPts,movePts,pathExtent,type Pt} from './motion';
 
 // ---------------- marks ----------------
 export type ContourOpts={close?:boolean;seed?:number;pressure?:number;taper?:number;gaps?:[number,number][];wobble?:number;cov?:number;step?:number};
@@ -82,7 +82,7 @@ export function arches(cx:number,cy:number,r0:number,step:number,count:number,le
 /** ring(x, y, r0, r1): an annulus path (inner winding reversed, so plain nonzero fills work). r1 may be huge for a stepped vignette band. */
 export function ring(x:number,y:number,r0:number,r1:number){const p=new Path2D();p.arc(x,y,r1,0,TAU);p.moveTo(x+r0,y);p.arc(x,y,r0,0,TAU,true);p.closePath();return p;}
 /** crescent(x, y, r, light): the shadow side of a disc — disc minus an offset circle toward the light [dx,dy] in −1..1. */
-export function crescent(x:number,y:number,r:number,light:Pt=[-.4,-.45],k=1.15){const p=new Path2D();p.arc(x,y,r,0,TAU);p.moveTo(x+light[0]*r*.9+r*k,y+light[1]*r*.9);p.arc(x+light[0]*r*.9,y+light[1]*r*.9,r*k,0,TAU,true);p.closePath();return p;}
+export function crescent(x:number,y:number,r:number,light:Pt=[-.4,-.45],k=1.15){const p=new Path2D();p.arc(x,y,r,0,TAU);p.moveTo(x+light[0]*r*.9+r*k,y+light[1]*r*.9);p.arc(x+light[0]*r*.9,y+light[1]*r*.9,r*k,0,TAU,true);p.closePath();pathExtent.set(p,{w:2*Math.abs(r),h:2*Math.abs(r),line:false});return p;}
 /** tornChannel(x, width, seed): a vertical channel with hand-cut edges spanning y0..y1 (the reference's navy channel). */
 export function tornChannel(x:number,width:number,seed=1,o:{y0?:number;y1?:number;amp?:number;step?:number;lean?:number}={}):Path2D{
  const{y0=-3000,y1=3000,amp=45,step=170,lean=0}=o;return polyPath(handCut([[x-width/2+lean*y0,y0],[x+width/2+lean*y0,y0],[x+width/2+lean*y1,y1],[x-width/2+lean*y1,y1]],seed,amp,step),true);}

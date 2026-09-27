@@ -22,13 +22,55 @@
 .facing{fill:#f5eac5;transition:transform .6s ease}.note{fill:#476b52;font-size:9px;font-weight:750}
 .legend{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;font-size:10px;font-weight:700;color:#315f4d;margin:2px 0 12px}.legend span{color:#9e5345}.legend b{font-weight:700;color:#886a27}
 .caption{font-size:14px;line-height:1.45;margin:0 0 14px;min-height:61px;color:#365748}
-.secondary,.primary{font:inherit;font-weight:800;border-radius:12px;min-height:46px;cursor:pointer;touch-action:manipulation}
-.secondary{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:10px 14px;background:#fffdf4;border:1px solid #b7c6a9;color:#305541;font-size:14px}.secondary span{font-size:22px}
-.footer{flex:none;padding:16px 28px max(18px,env(safe-area-inset-bottom));border-top:1px solid #e2e7dc;background:#fff}.primary{width:100%;background:#f2cb75;color:#254b3e;border:1px solid #e8be63;padding:13px 20px;font-size:17px}
-.dialog button:focus-visible{outline:3px solid #8c6932;outline-offset:3px}.reward{padding:13px;background:#edf3e5;border-radius:12px;font-size:13px;line-height:1.5}.reward strong{display:block}
+.footer{flex:none;display:flex;flex-direction:column;gap:12px;padding:14px 28px max(18px,env(safe-area-inset-bottom));border-top:1px solid #e2e7dc;background:#fff}
+.reward{padding:13px;background:#edf3e5;border-radius:12px;font-size:13px;line-height:1.5}.reward strong{display:block}
 .dialog[data-hidden=true],.dialog[data-hidden=true] *,.dialog[data-hidden=true]::backdrop{animation-play-state:paused!important;transition:none!important}
 @keyframes arrive{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}@keyframes fade{from{opacity:0}to{opacity:1}}@keyframes ballSettle{from{transform:translateY(-9px) scale(.8)}to{transform:translateY(0) scale(1)}}
 @media(max-width:600px){.dialog{border-radius:21px}.header{padding:18px 20px 15px}.header h2{font-size:26px}.body{padding:16px 19px}.tip{font-size:14px;margin-bottom:14px}.illustration{padding:13px 12px}.footer{padding:12px 20px max(14px,env(safe-area-inset-bottom))}.caption{font-size:13px;min-height:57px}.field{height:clamp(166px,27dvh,230px)}}
 @media(prefers-reduced-motion:reduce){.dialog,.dialog::backdrop,.dialog *{animation:none!important;transition:none!important}}
 .body{padding-top:12px}
 @media(max-width:600px),(pointer:coarse){.header{padding-top:calc(18px + env(safe-area-inset-top,0px))}.footer{padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}}
+
+/* Watch-through controls: the shared gold paper pills (DoneButton.module.css) at full width; only their widths are set here. */
+.stepNav{display:flex;align-items:center;min-height:44px}
+.previous{--navigation-width:148px}
+.next{--navigation-width:100%}
+.counter{font-variant-numeric:tabular-nums}
+/* The diagram takes the free height, so there is no dead band under it and the actions stay pinned. */
+.body{display:flex;flex-direction:column}
+.tip,.reward{flex:none}
+.illustration{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;container-type:inline-size}
+.diagramHeading,.legend,.caption{flex:none}
+/* Grow with the free height up to the pitch's own aspect (no letterbox); any extra space centres pitch + caption together. */
+.field{flex:1 1 0;height:auto;min-height:clamp(140px,24dvh,200px);max-height:75.2cqi;margin-top:auto}
+.caption{margin-bottom:auto;padding-bottom:2px}
+@media(max-width:600px),(pointer:coarse) and (max-width:900px){
+ .dialog{width:100vw;height:100dvh;max-height:100dvh;border-radius:0;border:0}
+ .footer{gap:10px;padding:10px calc(20px + env(safe-area-inset-right,0px)) calc(14px + env(safe-area-inset-bottom,0px)) calc(20px + env(safe-area-inset-left,0px))}
+ .caption{min-height:38px}
+}
+@media(max-height:700px) and (max-width:600px){
+ .header{padding-bottom:12px}.header p{margin-bottom:6px}.header h2{font-size:23px}
+ .body{padding-top:10px;padding-bottom:10px}.tip{margin-bottom:10px;line-height:1.42}
+ .illustration{padding:10px 12px}.legend{margin:0 0 6px}
+ .field{min-height:140px}
+}
+@media(max-width:600px) and (min-height:780px){.tip{font-size:15px}.caption{font-size:15px}.legend{font-size:11px;margin-bottom:14px}}
+/* Landscape phones: the card scrolls instead of squashing the diagram, and Previous sits beside the main pill to save height. */
+@media(max-height:500px){
+ .dialog{width:100vw;height:100dvh;max-height:100dvh;border-radius:0;border:0}
+ .header{padding-top:calc(10px + env(safe-area-inset-top,0px));padding-bottom:10px}.header p{margin-bottom:4px}.header h2{font-size:22px}
+ .illustration{flex:none}.field{flex:none;height:min(60dvh,75.2cqi);min-height:150px}
+ .footer{flex-direction:row;align-items:center;padding-top:10px;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))}
+ .stepNav{flex:none}.next{--navigation-width:calc(100% - 160px)}
+}
+
+/* Navigation rule (docs/ui/BUTTONS.md): Previous step and Next / Got it are the same size, Next on the right, on
+   every viewport. A single-step lesson keeps its one button on the right. */
+.footer{flex-direction:row;align-items:center;justify-content:space-between}
+.previous,.next{--navigation-width:var(--lesson-btn,148px)}
+.next{margin-left:auto}
+/* Long labels (user, Sep 26 2026): BallHuntLesson.tsx sizes both pills to the longer label (--lesson-btn, 128 px minimum). When even the
+   full half-width is too narrow (data-wrap), the label wraps onto two balanced lines and the pill grows taller (44 px minimum). */
+.footer[data-wrap] .previous,.footer[data-wrap] .next{--btn-height:auto;min-height:var(--lesson-btn-h,52px)}/* both the same height (the taller of the two) */
+.footer[data-wrap] .previous>span:first-child,.footer[data-wrap] .next>span:first-child{position:static;display:block;white-space:normal;text-wrap:balance;text-align:center;line-height:1.15;padding:5px 14px}

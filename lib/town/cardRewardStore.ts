@@ -2,7 +2,8 @@
 import {useSyncExternalStore} from 'react';
 import {ALL_PLAYERS,CARD_ENTRIES,CARD_STORAGE_KEY,addToCollection,cardDevEarn,readCollection} from './cardCollection';
 import {isLearningPreview} from './learningProgress';
-import {CARD_REWARDS_ENABLED,MAX_OFFERS_PER_SESSION,OFFERS_STORAGE_KEY,dayKey,drawThemedOffer,emptyOfferState,mergeOfferState,npcPickState,refreshOffer,sanitizeOfferState,sourceKey,type CardOffer,type OfferState,type RewardKind,type Theme} from './cardRewards';
+import {CARD_REWARDS_ENABLED,OFFERS_STORAGE_KEY,dayKey,drawThemedOffer,emptyOfferState,mergeOfferState,npcPickState,refreshOffer,sanitizeOfferState,sourceKey,tierGate,type CardOffer,type OfferState,type RewardKind,type Theme} from './cardRewards';
+import {cardTier,readPathProgress} from './cardTiers';
 
 /**
  * Card-reward offers on this device: pending "choose 1 of 3" offers, which sources already paid, and today's NPC picks.
@@ -14,11 +15,13 @@ export const CARD_ADDED='fi2-card-added';
 export const CARD_COMPLETE='fi2-card-complete';
 /** Opens Paths → Collect cards (IslandSettings listens); the binder then turns to the chosen card (takeCardSpot). */
 export const OPEN_CARDS_EVENT='fi2-open-cards';
-const SESSION_KEY='fi2-card-offers-session-v1';
+/** The binder (if open) should turn to the requested spot now (takeCardSpot), without anything joining the collection. */
+export const CARD_SPOT='fi2-card-spot';
 const VALID=new Set(ALL_PLAYERS);
-const CARDS=CARD_ENTRIES.map(({name,role})=>({name,role}));
+/** Every card with its value tier (cardTiers.json): offers draw only from the tiers the child's path progress has unlocked. */
+const CARDS=CARD_ENTRIES.map(({name,role})=>({name,role,tier:cardTier(name)}));
 
-let state:OfferState=emptyOfferState(),loaded=false,memorySession=0;
+let state:OfferState=emptyOfferState(),loaded=false;
 const resolved=new Set<string>(),listeners=new Set<()=>void>();
 const server=emptyOfferState();
 
@@ -35,14 +38,12 @@ function subscribe(fn:()=>void){listeners.add(fn);if(listeners.size===1)window.a
 export function useCardOffers():CardOffer[]{return useSyncExternalStore(subscribe,()=>cardRewardsActive()?read().offers:server.offers,()=>server.offers);}
 export const readCardOffers=()=>cardRewardsActive()?read().offers:[];
 
-function sessionCount(){try{return Number(sessionStorage.getItem(SESSION_KEY)??0)||0;}catch{return memorySession;}}
-function bumpSession(){memorySession=sessionCount()+1;try{sessionStorage.setItem(SESSION_KEY,String(memorySession));}catch{}}
 
-export type EarnResult='offered'|'complete'|'off'|'paid'|'capped'|'npc-today'|'day-cap';
+export type EarnResult='offered'|'complete'|'off'|'paid'|'npc-today'|'day-cap';
 export type EarnRequest={kind:RewardKind;id:string;reason:string;theme?:Theme};
 /**
  * Called by a trigger (ball found, NPC chat finished, quiz passed). Creates one pending offer of up to three missing cards, or
- * reports why not: rewards off, this source already paid, the session cap, the NPC daily limits, or the collection complete
+ * reports why not: rewards off, this source already paid, the NPC daily limits, or the collection complete
  * (which dispatches CARD_COMPLETE so the host can show the friendly message).
  */
 export function earnCardOffer({kind,id,reason,theme}:EarnRequest,now=new Date()):EarnResult{
@@ -52,12 +53,15 @@ export function earnCardOffer({kind,id,reason,theme}:EarnRequest,now=new Date())
  if(kind==='npc'){const npc=npcPickState(current,id,day);if(npc!=='ok')return npc;}
  const owned=new Set(readCollection());
  if(CARDS.every(card=>owned.has(card.name))){window.dispatchEvent(new CustomEvent(CARD_COMPLETE));return 'complete';}
- if(sessionCount()>=MAX_OFFERS_PER_SESSION)return 'capped';
+ // No per-session cap (removed Sep 25 2026): a capped ball could never pay again, so the child lost a card they earned. Every
+ // trigger is already one-time (balls, quizzes, Explore, stages, stories) or capped per day (NPC chats).
  const avoid=new Set(current.offers.flatMap(o=>o.cards));
- const {cards,match}=drawThemedOffer(CARDS,owned,Math.random,{avoid,theme});
+ // Value tiers (Sep 25 2026): Elite from half-way along the furthest path, Icons near its end and only on big triggers, and a
+ // path finish offers Icons only (tierGate in cardRewards.ts).
+ const {cards,match}=drawThemedOffer(CARDS,owned,Math.random,{avoid,theme,gate:tierGate(readPathProgress(),kind)});
  const offer:CardOffer={id:`${key}:${now.getTime()}`,kind,source:key,reason,cards,at:now.getTime(),seen:false,...(theme?{theme}:{}),...(match?{match}:{})};
  const npcDay=kind==='npc'?{day,ids:[...(current.npcDay.day===day?current.npcDay.ids:[]),id]}:current.npcDay;
- bumpSession();save({...current,offers:[...current.offers,offer],paid:[...current.paid,key],npcDay});
+ save({...current,offers:[...current.offers,offer],paid:[...current.paid,key],npcDay});
  return 'offered';
 }
 
@@ -70,7 +74,7 @@ export function npcCardsToday(npcId:string,now=new Date()):'ok'|'npc-today'|'day
 export function liveOffer(id:string):CardOffer|null{
  const offer=read().offers.find(o=>o.id===id);if(!offer)return null;
  const owned=new Set(readCollection()),avoid=new Set(read().offers.filter(o=>o.id!==id).flatMap(o=>o.cards));
- const next=refreshOffer(offer,CARDS,owned,Math.random,avoid);
+ const next=refreshOffer(offer,CARDS,owned,Math.random,avoid,tierGate(readPathProgress(),offer.kind));
  if(next!==offer){if(!next.cards.length){resolveOffer(id);return null;}save({...read(),offers:read().offers.map(o=>o.id===id?next:o)});}
  return next;
 }
@@ -80,6 +84,9 @@ function resolveOffer(id:string){resolved.add(id);save({...read(),offers:read().
 /** A card the binder should turn to and light up the next time it opens (set when the child chooses a card). */
 let spotRequest:string|null=null;
 export const takeCardSpot=()=>{const name=spotRequest;spotRequest=null;return name;};
+/** Opens Paths → Collect cards at `name`'s pocket (the position guide's "See it in my binder"). Viewing never collects: a card the
+ *  child does not own yet shows greyed there, as in every binder view. */
+export function showCardInBinder(name:string){spotRequest=name;window.dispatchEvent(new CustomEvent(CARD_SPOT));window.dispatchEvent(new CustomEvent(OPEN_CARDS_EVENT));}
 /** The child picks `name` from offer `id`: the card joins the collection, the offer is resolved, and the binder is told. */
 export function chooseOfferCard(id:string,name:string):boolean{
  const offer=read().offers.find(o=>o.id===id);if(!offer||!offer.cards.includes(name))return false;

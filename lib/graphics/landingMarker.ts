@@ -8,10 +8,10 @@ export function createLandingMarker(){
  const fill=new T.MeshBasicMaterial({color:'#ff3b36',map:fillTexture,transparent:true,opacity:0,depthWrite:false,side:T.DoubleSide});
  const ring=new T.Mesh(new T.PlaneGeometry(1.4,1.4),edge),disc=new T.Mesh(new T.PlaneGeometry(1.4,1.4),fill);root.add(disc,ring);
  const normal=new T.Vector3(),axis=new T.Vector3(0,0,1);let fade=0,lastTime:number|undefined,strength=1;
- return {root,update(target:{x:number;z:number}|null,height:number,surface:(x:number,z:number)=>number,visible:boolean,time=0,reduced=false){
+ return {root,update(target:{x:number;z:number}|null,height:number,surface:(x:number,z:number)=>number,visible:boolean,time=0,reduced=false,size=1){
   const dt=lastTime===undefined?1/60:Math.min(.1,Math.max(0,time-lastTime));lastTime=time;const show=visible&&target!==null;fade=reduced?(show?1:0):T.MathUtils.lerp(fade,show?1:0,1-Math.exp(-dt*8));root.visible=fade>.005;
   if(!show&&!root.visible)return;
   if(show&&target){const floor=surface(target.x,target.z),dx=surface(target.x+.1,target.z)-surface(target.x-.1,target.z),dz=surface(target.x,target.z+.1)-surface(target.x,target.z-.1);normal.set(Math.abs(dx)<.4?-dx/.2:0,1,Math.abs(dz)<.4?-dz/.2:0).normalize();root.quaternion.setFromUnitVectors(axis,normal);root.position.set(target.x,floor+.16,target.z);strength=T.MathUtils.clamp((height-floor)/2,.45,1);}
-  const pulse=reduced?.5:(Math.sin(time*Math.PI*1.6)+1)/2;root.scale.setScalar(reduced?1:.9+pulse*.18);edge.opacity=(.08+pulse*.24)*strength*fade;fill.opacity=(.06+pulse*.08)*strength*fade;
+  const pulse=reduced?.5:(Math.sin(time*Math.PI*1.6)+1)/2;root.scale.setScalar((reduced?1:.9+pulse*.18)*size);edge.opacity=(.08+pulse*.24)*strength*fade;fill.opacity=(.06+pulse*.08)*strength*fade;
  },dispose(){root.removeFromParent();ring.geometry.dispose();disc.geometry.dispose();edge.dispose();fill.dispose();edgeTexture.dispose();fillTexture.dispose();}};
 }

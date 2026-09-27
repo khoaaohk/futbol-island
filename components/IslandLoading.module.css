@@ -36,7 +36,7 @@
 @keyframes itemBounceAway{0%{transform:scale(1);opacity:1}28%{transform:translateY(-5px) scale(1.13);opacity:1}48%{transform:translateY(2px) scale(.94);opacity:1}100%{transform:translateY(5px) scale(0);opacity:0}}
 .exiting .surroundings{animation:islandDetailsDepart .35s .25s ease-out both}
 .exiting .shore{animation:none}
-.exiting .art{transform-origin:50% 46%;animation:islandDive .8s .8s cubic-bezier(.55,.05,.35,1) both}
+.exiting .art{animation:none;transform:none}
 @keyframes islandDetailsDepart{to{opacity:0}}
 @keyframes islandDive{from{transform:scale(1)}to{transform:scale(14)}}
 
@@ -46,9 +46,67 @@
 
 .landingSurface{position:absolute;inset:0;background:#dfc587;opacity:0;pointer-events:none;z-index:1}
 .exiting .landingSurface{animation:landFill .6s 1s ease-in-out both}
-.exiting::after{content:'';position:absolute;inset:0;z-index:3;pointer-events:none;background:linear-gradient(115deg,transparent 25%,#fff2d370 48%,transparent 70%);animation:landingGleam .45s 1.15s ease-in-out both}
+.exiting::after{display:none;content:'';position:absolute;inset:0;z-index:3;pointer-events:none;background:linear-gradient(115deg,transparent 25%,#fff2d370 48%,transparent 70%);animation:landingGleam .45s 1.15s ease-in-out both}
 @keyframes landFill{0%{opacity:0;transform:scale(.96);clip-path:inset(12% 18% 9% 16% round 46% 54% 43% 57%)}25%{opacity:1}65%{opacity:1;transform:scale(1.025);clip-path:inset(0 round 0)}84%{opacity:1;transform:scale(.992);clip-path:inset(0 round 0)}100%{opacity:1;transform:scale(1);clip-path:inset(0 round 0)}}
 @keyframes landingGleam{from{opacity:0;transform:translateX(-100%)}40%{opacity:.8}to{opacity:0;transform:translateX(100%)}}
 @media(prefers-reduced-motion:reduce){.exiting .landingSurface,.exiting::after{animation:none;opacity:0}}
 
 @media(prefers-reduced-motion:reduce){.exiting .detailItem{animation:none}}
+/* The loading screen must cover every HUD control (Enter prompts z 12, Learn cards z 25, toasts…) until it has fully faded out. */
+.screen.screen{z-index:2000}
+
+/* ---- Splash cast: baked stills of the real bean rig (scripts/render-splash-characters.cjs). The island stays the hero:
+   wide screens flank it with two small groups (clear of the shore: the wide island spans ~29–73.5% of the width);
+   portrait screens lift the island and stand one row on a foreground strip below it. One-shot staggered pop-in, then
+   static; no loops. */
+.cast{position:absolute;inset:0;z-index:1;pointer-events:none}
+.group{position:absolute;bottom:3vh}
+/* Hugging the island's shore (wide island ≈29.4–70.5% of the width), ~10 px clear of it: the left box is placed by
+   its right edge (the kicker's boot is 10.8% in from it), the right box by its left edge (the cheerer's hand is at it). */
+.left{right:calc(70.6vw + 10px - min(27.8vw,44vh)*.108);width:min(27.8vw,44vh)}
+.right{left:calc(70.5vw + 10px);width:min(28vw,48vh)}
+.row{display:none}
+.castMember{position:absolute;width:auto;max-width:none;transform:translateX(-50%);transform-origin:50% 100%;animation:castPop .62s var(--d) cubic-bezier(.34,1.56,.64,1) both;user-select:none}
+@keyframes castPop{0%{opacity:0;transform:translateX(-50%) translateY(14%) scale(.72)}60%{opacity:1}100%{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
+.art .foreground{display:none}
+@media(max-aspect-ratio:5/6){
+ .left,.right{display:none}
+ .row{display:block;left:50%;bottom:2vh;width:min(100vw,50vh);transform:translateX(-50%)}
+ /* The island sits higher and a little smaller; the pink foreground continues below it for the cast to stand on. */
+ .art.art{inset:auto 0 28%;width:100%;height:40%}
+ .art .mobileArt{display:block}.art .wideArt{display:none}
+ /* The portrait art's pink band continues below the island for the cast to stand on: a rect in the SVG's own
+    surroundings group (LoadingIslandArt .foreground; the SVG overflows its box), so it enters, dives and fades as ONE
+    layer with the art, with no seam. */
+ .art .foreground{display:inline}
+}
+/* Exit: the cast hops away (staggered) before the island dive (.8 s) begins. */
+.exiting .castMember{animation:castAway .4s both ease-in}
+.exiting .castMember:nth-child(1){animation-delay:.12s}.exiting .castMember:nth-child(2){animation-delay:.04s}
+.exiting .castMember:nth-child(3){animation-delay:.18s}.exiting .castMember:nth-child(4){animation-delay:0s}
+@keyframes castAway{0%{opacity:1;transform:translateX(-50%) scale(1)}35%{opacity:1;transform:translateX(-50%) translateY(-6%) scale(1.06)}100%{opacity:0;transform:translateX(-50%) translateY(4%) scale(.2)}}
+@media(prefers-reduced-motion:reduce){.castMember,.exiting .castMember{animation:none}.exiting .cast{opacity:0}}
+
+/* Copy: brush title with a soft print shadow, a short kid-friendly tagline. */
+.copy h2{text-shadow:0 3px 0 #1d3cb4,0 10px 26px #0b1f7a55}
+.copy h2{margin-bottom:10px}
+.tagline{margin:0 0 22px;font-size:clamp(13px,1.35vw,18px);font-weight:700;letter-spacing:.02em;color:#fff2d3e6}
+.exiting .tagline{animation:islandDetailsDepart .22s ease-out both}
+@media(max-width:700px){.tagline{font-size:14px;margin-bottom:18px}}
+@media(max-height:560px){.tagline{font-size:12px;margin-bottom:12px}}
+
+/* Portrait tablets: a bigger title. */
+/* Portrait phones: the text block sits in the top band (~8–17% down, just below the notch), leaving open sky between
+   the loader and the island. % of the screen (not vh) so iOS toolbars don't push it down. */
+@media(max-width:700px) and (max-aspect-ratio:5/6){.copy{top:max(8%,calc(env(safe-area-inset-top,0px) + 16px));transform:none}}
+@media(max-width:700px) and (max-aspect-ratio:5/6) and (max-height:700px){.copy{top:max(5%,calc(env(safe-area-inset-top,0px) + 12px))}}
+@media(min-width:701px) and (max-aspect-ratio:5/6){.art.art{inset:auto -5% 17%;width:110%;height:46%}.row{width:min(80vw,40vh)}.copy{top:16%}.copy h2{font-size:clamp(44px,6.5vw,72px)}.eyebrow{font-size:13px}.tagline{font-size:19px}}
+
+/* Inline placeholder (splashInline.json) under each cast image: same art, stretched to the image box. */
+.castMember{background-size:100% 100%;background-repeat:no-repeat}
+
+/* Begin exactly at the visible tan coastline, then stretch toward all four viewport edges. */
+.tanWipe{position:absolute;left:var(--land-x);top:var(--land-y);width:var(--land-w);height:var(--land-h);transform:translate(-50%,-50%);z-index:3;pointer-events:none;overflow:visible;opacity:0}
+.exiting .tanWipe{will-change:transform;animation:tanStretch .7s .8s cubic-bezier(.45,0,.55,1) forwards}
+@keyframes tanStretch{from{opacity:1;transform:translate(-50%,-50%) translate(0,0) scale(1,1)}to{opacity:1;transform:translate(-50%,-50%) translate(var(--land-dx),var(--land-dy)) scale(var(--land-sx),var(--land-sy))}}
+@media(prefers-reduced-motion:reduce){.exiting .tanWipe{animation:none}}

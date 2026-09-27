@@ -21,6 +21,10 @@ type Props={
  /** How far (px) the sheet rises off the page at mid-turn, so the turn reads in depth. */lift?:number;
  /** Prebuilt ahead of its turn: mounted, laid out, painted and rasterized but all but transparent (opacity .001, so the
   * compositor keeps its tiles), so the turn's first frame only calls reveal(). */hidden?:boolean;
+ /** A phone's single page: past this p the sheet has fallen over the hinge onto the off-screen side, and all that would show
+  * of it is a sliver of 1–6 px over the binder's left edge and rings, which then vanished when the turn settled (the
+  * end-of-turn snap). From there it is hidden the same way as a prebuilt sheet (opacity .001, tiles kept), at the pose
+  * where that sliver is thinnest (the lifted hinge edge projects just off the binder). */away?:number;
 };
 
 /**
@@ -30,12 +34,14 @@ type Props={
  * the plastic are opacity only. pose() writes transforms and opacities directly: compositor-only, no React renders.
  * At p = 0 and p = 1 the sheet is flat and lies exactly on the page box it hands over to.
  */
-const BinderLeaf=forwardRef<LeafHandle,Props>(function BinderLeaf({hinge,offset,width,height,strips,front,back,left,z=0,bend=78,lift=34,hidden=false},ref){
- const root=useRef<HTMLDivElement>(null),strip=useRef<(HTMLDivElement|null)[]>([]),shade=useRef<(HTMLSpanElement|null)[]>([]),shadeB=useRef<(HTMLSpanElement|null)[]>([]),gloss=useRef<(HTMLSpanElement|null)[]>([]);
+const BinderLeaf=forwardRef<LeafHandle,Props>(function BinderLeaf({hinge,offset,width,height,strips,front,back,left,z=0,bend=78,lift=34,hidden=false,away},ref){
+ const gone=useRef(false),root=useRef<HTMLDivElement>(null),strip=useRef<(HTMLDivElement|null)[]>([]),shade=useRef<(HTMLSpanElement|null)[]>([]),shadeB=useRef<(HTMLSpanElement|null)[]>([]),gloss=useRef<(HTMLSpanElement|null)[]>([]);
  // Whole-pixel strips (the last takes the remainder): every slice's content sits on the same pixel grid as the resting page.
  const n=Math.max(1,strips),s=Math.floor(width/n),sign=hinge==='left'?-1:1,steps=n*(n-1)/2||1;
  const sw=(i:number)=>i<n-1?s:width-s*(n-1);
- useImperativeHandle(ref,()=>({reveal(){const el=root.current;if(el?.hasAttribute('data-prep')){el.style.opacity='';el.removeAttribute('data-prep');}},pose(p){
+ useImperativeHandle(ref,()=>({reveal(){const el=root.current;if(el?.hasAttribute('data-prep')){el.style.opacity=gone.current?'.001':'';el.removeAttribute('data-prep');}},pose(p){
+  // Off the page (a phone's sheet past `away`): hidden; a prebuilt sheet keeps its own .001 until reveal().
+  const off=away!==undefined&&p>=away,el=root.current;if(off!==gone.current){gone.current=off;if(el&&!el.hasAttribute('data-prep'))el.style.opacity=off?'.001':'';}
   // The curl peaks early (c ≈ 0.4): the free edge leads as the sheet peels up, then the sheet flattens as it lands.
   const c=Math.min(1,Math.max(0,p)),curl=Math.sin(Math.PI*Math.pow(c,.8))*bend*(n>1?1:0);
   const up=Math.sin(Math.PI*c)*lift;
@@ -49,7 +55,7 @@ const BinderLeaf=forwardRef<LeafHandle,Props>(function BinderLeaf({hinge,offset,
    const dark=(.38*Math.pow(edgeOn,1.4)).toFixed(3);if(sh)sh.style.opacity=dark;const sb=shadeB.current[i];if(sb)sb.style.opacity=dark;
    if(gl)gl.style.opacity=(.55*Math.pow(Math.max(0,Math.cos((facing-46)*Math.PI/180)),14)*(c>0&&c<1?1:0)).toFixed(3);
   }
- }}),[n,sign,steps,bend,lift,z]);
+ }}),[n,sign,steps,bend,lift,z,away]);
  const x=(i:number)=>hinge==='left'?i*s:width-i*s-sw(i);
  const build=(i:number):ReactNode=>{
   if(i>=n)return null;

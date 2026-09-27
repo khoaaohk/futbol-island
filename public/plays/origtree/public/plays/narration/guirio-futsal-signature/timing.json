@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: EURO 2026",
+   "text": "The 2026 Futsal EURO third-place match, in Ljubljana. France play Croatia, who lead three one. Then number fourteen, Guirio, scores: one, two, three goals! It ends five all, but Croatia win on penalties.",
+   "src": "/plays/narration/guirio-futsal-signature/1.m4a",
+   "seconds": 15.8,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "2026",
+     "at": 0.425
+    },
+    {
+     "w": "Futsal",
+     "at": 1.363
+    },
+    {
+     "w": "EURO",
+     "at": 1.8
+    },
+    {
+     "w": "third-place",
+     "at": 2.163
+    },
+    {
+     "w": "match",
+     "at": 2.788
+    },
+    {
+     "w": "in",
+     "at": 3.275
+    },
+    {
+     "w": "Ljubljana",
+     "at": 3.425
+    },
+    {
+     "w": "France",
+     "at": 4.675
+    },
+    {
+     "w": "play",
+     "at": 5.05
+    },
+    {
+     "w": "Croatia",
+     "at": 5.3
+    },
+    {
+     "w": "who",
+     "at": 5.925
+    },
+    {
+     "w": "lead",
+     "at": 6.075
+    },
+    {
+     "w": "three",
+     "at": 6.338
+    },
+    {
+     "w": "one",
+     "at": 6.575
+    },
+    {
+     "w": "Then",
+     "at": 7.338
+    },
+    {
+     "w": "number",
+     "at": 7.575
+    },
+    {
+     "w": "fourteen",
+     "at": 7.862
+    },
+    {
+     "w": "Guirio",
+     "at": 8.525
+    },
+    {
+     "w": "scores",
+     "at": 9.162
+    },
+    {
+     "w": "one",
+     "at": 10.037
+    },
+    {
+     "w": "two",
+     "at": 10.512
+    },
+    {
+     "w": "three",
+     "at": 10.863
+    },
+    {
+     "w": "goals",
+     "at": 11.1
+    },
+    {
+     "w": "It",
+     "at": 11.95
+    },
+    {
+     "w": "ends",
+     "at": 12.1
+    },
+    {
+     "w": "five",
+     "at": 12.4
+    },
+    {
+     "w": "all",
+     "at": 12.7
+    },
+    {
+     "w": "but",
+     "at": 13.012
+    },
+    {
+     "w": "Croatia",
+     "at": 13.162
+    },
+    {
+     "w": "win",
+     "at": 13.762
+    },
+    {
+     "w": "on",
+     "at": 14.0
+    },
+    {
+     "w": "penalties",
+     "at": 14.2
+    }
+   ]
+  },
+  {
+   "label": "How he does it",
+   "text": "Guirio plays pivot, back to goal. This is how he does it: a defender is right behind him. He keeps the ball close, under his foot, then turns and shoots!",
+   "src": "/plays/narration/guirio-futsal-signature/2.m4a",
+   "seconds": 10.8,
+   "words": [
+    {
+     "w": "Guirio",
+     "at": 0.375
+    },
+    {
+     "w": "plays",
+     "at": 0.887
+    },
+    {
+     "w": "pivot",
+     "at": 1.262
+    },
+    {
+     "w": "back",
+     "at": 1.75
+    },
+    {
+     "w": "to",
+     "at": 2.025
+    },
+    {
+     "w": "goal",
+     "at": 2.15
+    },
+    {
+     "w": "This",
+     "at": 3.038
+    },
+    {
+     "w": "is",
+     "at": 3.275
+    },
+    {
+     "w": "how",
+     "at": 3.4
+    },
+    {
+     "w": "he",
+     "at": 3.6
+    },
+    {
+     "w": "does",
+     "at": 3.725
+    },
+    {
+     "w": "it",
+     "at": 3.962
+    },
+    {
+     "w": "a",
+     "at": 4.45
+    },
+    {
+     "w": "defender",
+     "at": 4.525
+    },
+    {
+     "w": "is",
+     "at": 5.05
+    },
+    {
+     "w": "right",
+     "at": 5.2
+    },
+    {
+     "w": "behind",
+     "at": 5.45
+    },
+    {
+     "w": "him",
+     "at": 5.888
+    },
+    {
+     "w": "He",
+     "at": 6.575
+    },
+    {
+     "w": "keeps",
+     "at": 6.7
+    },
+    {
+     "w": "the",
+     "at": 6.975
+    },
+    {
+     "w": "ball",
+     "at": 7.075
+    },
+    {
+     "w": "close",
+     "at": 7.362
+    },
+    {
+     "w": "under",
+     "at": 7.787
+    },
+    {
+     "w": "his",
+     "at": 7.987
+    },
+    {
+     "w": "foot",
+     "at": 8.188
+    },
+    {
+     "w": "then",
+     "at": 8.55
+    },
+    {
+     "w": "turns",
+     "at": 8.762
+    },
+    {
+     "w": "and",
+     "at": 9.25
+    },
+    {
+     "w": "shoots",
+     "at": 9.4
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. Hold, keep it close, turn and shoot!",
+   "src": "/plays/narration/guirio-futsal-signature/3.m4a",
+   "seconds": 4.7,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.662
+    },
+    {
+     "w": "slowly",
+     "at": 1.062
+    },
+    {
+     "w": "Hold",
+     "at": 1.938
+    },
+    {
+     "w": "keep",
+     "at": 2.3
+    },
+    {
+     "w": "it",
+     "at": 2.462
+    },
+    {
+     "w": "close",
+     "at": 2.55
+    },
+    {
+     "w": "turn",
+     "at": 2.95
+    },
+    {
+     "w": "and",
+     "at": 3.212
+    },
+    {
+     "w": "shoot",
+     "at": 3.35
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: keep the ball close to your body when a defender is right behind you!",
+   "src": "/plays/narration/guirio-futsal-signature/4.m4a",
+   "seconds": 5.7,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.588
+    },
+    {
+     "w": "keep",
+     "at": 1.425
+    },
+    {
+     "w": "the",
+     "at": 1.663
+    },
+    {
+     "w": "ball",
+     "at": 1.75
+    },
+    {
+     "w": "close",
+     "at": 2.062
+    },
+    {
+     "w": "to",
+     "at": 2.4
+    },
+    {
+     "w": "your",
+     "at": 2.487
+    },
+    {
+     "w": "body",
+     "at": 2.6
+    },
+    {
+     "w": "when",
+     "at": 2.975
+    },
+    {
+     "w": "a",
+     "at": 3.112
+    },
+    {
+     "w": "defender",
+     "at": 3.163
+    },
+    {
+     "w": "is",
+     "at": 3.675
+    },
+    {
+     "w": "right",
+     "at": 3.825
+    },
+    {
+     "w": "behind",
+     "at": 4.05
+    },
+    {
+     "w": "you",
+     "at": 4.5
+    }
+   ]
+  }
+ ]
+}

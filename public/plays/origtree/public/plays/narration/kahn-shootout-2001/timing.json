@@ -1,0 +1,374 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Penalties, live",
+   "text": "Milan, 2001. The Champions League final goes to penalties. Oliver Kahn guesses right and saves from Zahovi\u010d. Carboni shoots, and Kahn's fingertips push it onto the bar. Then Pellegrino steps up... saved! Bayern win!",
+   "src": "/plays/narration/kahn-shootout-2001/1.m4a",
+   "seconds": 16.5,
+   "words": [
+    {
+     "w": "Milan",
+     "at": 0.4
+    },
+    {
+     "w": "2001",
+     "at": 0.938
+    },
+    {
+     "w": "The",
+     "at": 2.438
+    },
+    {
+     "w": "Champions",
+     "at": 2.562
+    },
+    {
+     "w": "League",
+     "at": 3.15
+    },
+    {
+     "w": "final",
+     "at": 3.438
+    },
+    {
+     "w": "goes",
+     "at": 3.825
+    },
+    {
+     "w": "to",
+     "at": 4.15
+    },
+    {
+     "w": "penalties",
+     "at": 4.25
+    },
+    {
+     "w": "Oliver",
+     "at": 5.338
+    },
+    {
+     "w": "Kahn",
+     "at": 5.787
+    },
+    {
+     "w": "guesses",
+     "at": 6.125
+    },
+    {
+     "w": "right",
+     "at": 6.537
+    },
+    {
+     "w": "and",
+     "at": 6.9
+    },
+    {
+     "w": "saves",
+     "at": 7.037
+    },
+    {
+     "w": "from",
+     "at": 7.425
+    },
+    {
+     "w": "Zahovi\u010d",
+     "at": 7.625
+    },
+    {
+     "w": "Carboni",
+     "at": 8.662
+    },
+    {
+     "w": "shoots",
+     "at": 9.213
+    },
+    {
+     "w": "and",
+     "at": 9.65
+    },
+    {
+     "w": "Kahn's",
+     "at": 9.787
+    },
+    {
+     "w": "fingertips",
+     "at": 10.175
+    },
+    {
+     "w": "push",
+     "at": 10.7
+    },
+    {
+     "w": "it",
+     "at": 10.938
+    },
+    {
+     "w": "onto",
+     "at": 11.012
+    },
+    {
+     "w": "the",
+     "at": 11.238
+    },
+    {
+     "w": "bar",
+     "at": 11.325
+    },
+    {
+     "w": "Then",
+     "at": 12.062
+    },
+    {
+     "w": "Pellegrino",
+     "at": 12.3
+    },
+    {
+     "w": "steps",
+     "at": 12.938
+    },
+    {
+     "w": "up",
+     "at": 13.3
+    },
+    {
+     "w": "saved",
+     "at": 14.0
+    },
+    {
+     "w": "Bayern",
+     "at": 14.688
+    },
+    {
+     "w": "win",
+     "at": 15.125
+    }
+   ]
+  },
+  {
+   "label": "The winning save",
+   "text": "Watch the winning save again, slowly. Kahn stands tall and still. He waits for the kick, guesses correctly, dives and keeps it out. Bayern are champions of Europe!",
+   "src": "/plays/narration/kahn-shootout-2001/2.m4a",
+   "seconds": 11.4,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "the",
+     "at": 0.7
+    },
+    {
+     "w": "winning",
+     "at": 0.8
+    },
+    {
+     "w": "save",
+     "at": 1.163
+    },
+    {
+     "w": "again",
+     "at": 1.413
+    },
+    {
+     "w": "slowly",
+     "at": 1.837
+    },
+    {
+     "w": "Kahn",
+     "at": 2.888
+    },
+    {
+     "w": "stands",
+     "at": 3.2
+    },
+    {
+     "w": "tall",
+     "at": 3.638
+    },
+    {
+     "w": "and",
+     "at": 4.0
+    },
+    {
+     "w": "still",
+     "at": 4.138
+    },
+    {
+     "w": "He",
+     "at": 4.95
+    },
+    {
+     "w": "waits",
+     "at": 5.075
+    },
+    {
+     "w": "for",
+     "at": 5.325
+    },
+    {
+     "w": "the",
+     "at": 5.438
+    },
+    {
+     "w": "kick",
+     "at": 5.537
+    },
+    {
+     "w": "guesses",
+     "at": 5.938
+    },
+    {
+     "w": "correctly",
+     "at": 6.35
+    },
+    {
+     "w": "dives",
+     "at": 7.062
+    },
+    {
+     "w": "and",
+     "at": 7.675
+    },
+    {
+     "w": "keeps",
+     "at": 7.8
+    },
+    {
+     "w": "it",
+     "at": 8.062
+    },
+    {
+     "w": "out",
+     "at": 8.15
+    },
+    {
+     "w": "Bayern",
+     "at": 8.875
+    },
+    {
+     "w": "are",
+     "at": 9.3
+    },
+    {
+     "w": "champions",
+     "at": 9.438
+    },
+    {
+     "w": "of",
+     "at": 9.988
+    },
+    {
+     "w": "Europe",
+     "at": 10.075
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn, keepers. Even when a penalty goes in, stay strong and confident. Forget the last kick, and face one penalty at a time.",
+   "src": "/plays/narration/kahn-shootout-2001/3.m4a",
+   "seconds": 9.7,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.35
+    },
+    {
+     "w": "turn",
+     "at": 0.512
+    },
+    {
+     "w": "keepers",
+     "at": 0.95
+    },
+    {
+     "w": "Even",
+     "at": 1.887
+    },
+    {
+     "w": "when",
+     "at": 2.163
+    },
+    {
+     "w": "a",
+     "at": 2.288
+    },
+    {
+     "w": "penalty",
+     "at": 2.35
+    },
+    {
+     "w": "goes",
+     "at": 2.8
+    },
+    {
+     "w": "in",
+     "at": 3.075
+    },
+    {
+     "w": "stay",
+     "at": 3.513
+    },
+    {
+     "w": "strong",
+     "at": 3.837
+    },
+    {
+     "w": "and",
+     "at": 4.425
+    },
+    {
+     "w": "confident",
+     "at": 4.562
+    },
+    {
+     "w": "Forget",
+     "at": 5.713
+    },
+    {
+     "w": "the",
+     "at": 6.05
+    },
+    {
+     "w": "last",
+     "at": 6.15
+    },
+    {
+     "w": "kick",
+     "at": 6.55
+    },
+    {
+     "w": "and",
+     "at": 6.912
+    },
+    {
+     "w": "face",
+     "at": 7.037
+    },
+    {
+     "w": "one",
+     "at": 7.388
+    },
+    {
+     "w": "penalty",
+     "at": 7.625
+    },
+    {
+     "w": "at",
+     "at": 8.1
+    },
+    {
+     "w": "a",
+     "at": 8.188
+    },
+    {
+     "w": "time",
+     "at": 8.25
+    }
+   ]
+  }
+ ]
+}

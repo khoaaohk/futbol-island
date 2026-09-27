@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The run, live",
+   "text": "Milan, 2007, extra time against Celtic on a wet night. Celtic lose the ball in midfield... Kak\u00e1 grabs it and off he goes! He pushes it ahead, brushes past Neil Lennon, into the box... goal!",
+   "src": "/plays/narration/kaka-signature-2007/1.m4a",
+   "seconds": 15.0,
+   "words": [
+    {
+     "w": "Milan",
+     "at": 0.4
+    },
+    {
+     "w": "2007",
+     "at": 0.95
+    },
+    {
+     "w": "extra",
+     "at": 2.15
+    },
+    {
+     "w": "time",
+     "at": 2.55
+    },
+    {
+     "w": "against",
+     "at": 2.875
+    },
+    {
+     "w": "Celtic",
+     "at": 3.225
+    },
+    {
+     "w": "on",
+     "at": 3.688
+    },
+    {
+     "w": "a",
+     "at": 3.788
+    },
+    {
+     "w": "wet",
+     "at": 3.85
+    },
+    {
+     "w": "night",
+     "at": 4.075
+    },
+    {
+     "w": "Celtic",
+     "at": 4.963
+    },
+    {
+     "w": "lose",
+     "at": 5.438
+    },
+    {
+     "w": "the",
+     "at": 5.725
+    },
+    {
+     "w": "ball",
+     "at": 5.825
+    },
+    {
+     "w": "in",
+     "at": 6.138
+    },
+    {
+     "w": "midfield",
+     "at": 6.225
+    },
+    {
+     "w": "Kak\u00e1",
+     "at": 7.325
+    },
+    {
+     "w": "grabs",
+     "at": 7.713
+    },
+    {
+     "w": "it",
+     "at": 8.175
+    },
+    {
+     "w": "and",
+     "at": 8.3
+    },
+    {
+     "w": "off",
+     "at": 8.425
+    },
+    {
+     "w": "he",
+     "at": 8.613
+    },
+    {
+     "w": "goes",
+     "at": 8.725
+    },
+    {
+     "w": "He",
+     "at": 9.525
+    },
+    {
+     "w": "pushes",
+     "at": 9.65
+    },
+    {
+     "w": "it",
+     "at": 10.012
+    },
+    {
+     "w": "ahead",
+     "at": 10.1
+    },
+    {
+     "w": "brushes",
+     "at": 10.713
+    },
+    {
+     "w": "past",
+     "at": 11.188
+    },
+    {
+     "w": "Neil",
+     "at": 11.625
+    },
+    {
+     "w": "Lennon",
+     "at": 11.875
+    },
+    {
+     "w": "into",
+     "at": 12.262
+    },
+    {
+     "w": "the",
+     "at": 12.5
+    },
+    {
+     "w": "box",
+     "at": 12.6
+    },
+    {
+     "w": "goal",
+     "at": 13.562
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again, slowly. Big pushes send the ball into the space ahead, then he sprints after it. The defenders chase, but can\u2019t catch him.",
+   "src": "/plays/narration/kaka-signature-2007/2.m4a",
+   "seconds": 9.9,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "slowly",
+     "at": 1.312
+    },
+    {
+     "w": "Big",
+     "at": 2.413
+    },
+    {
+     "w": "pushes",
+     "at": 2.663
+    },
+    {
+     "w": "send",
+     "at": 3.1
+    },
+    {
+     "w": "the",
+     "at": 3.337
+    },
+    {
+     "w": "ball",
+     "at": 3.425
+    },
+    {
+     "w": "into",
+     "at": 3.737
+    },
+    {
+     "w": "the",
+     "at": 3.913
+    },
+    {
+     "w": "space",
+     "at": 4.013
+    },
+    {
+     "w": "ahead",
+     "at": 4.375
+    },
+    {
+     "w": "then",
+     "at": 5.0
+    },
+    {
+     "w": "he",
+     "at": 5.15
+    },
+    {
+     "w": "sprints",
+     "at": 5.287
+    },
+    {
+     "w": "after",
+     "at": 5.763
+    },
+    {
+     "w": "it",
+     "at": 6.175
+    },
+    {
+     "w": "The",
+     "at": 6.737
+    },
+    {
+     "w": "defenders",
+     "at": 6.85
+    },
+    {
+     "w": "chase",
+     "at": 7.463
+    },
+    {
+     "w": "but",
+     "at": 7.975
+    },
+    {
+     "w": "can\u2019t",
+     "at": 8.137
+    },
+    {
+     "w": "catch",
+     "at": 8.45
+    },
+    {
+     "w": "him",
+     "at": 8.713
+    }
+   ]
+  },
+  {
+   "label": "Under the keeper",
+   "text": "He slides it underneath keeper Artur Boruc, and Milan are through!",
+   "src": "/plays/narration/kaka-signature-2007/3.m4a",
+   "seconds": 5.0,
+   "words": [
+    {
+     "w": "He",
+     "at": 0.35
+    },
+    {
+     "w": "slides",
+     "at": 0.487
+    },
+    {
+     "w": "it",
+     "at": 0.863
+    },
+    {
+     "w": "underneath",
+     "at": 0.938
+    },
+    {
+     "w": "keeper",
+     "at": 1.4
+    },
+    {
+     "w": "Artur",
+     "at": 1.775
+    },
+    {
+     "w": "Boruc",
+     "at": 2.125
+    },
+    {
+     "w": "and",
+     "at": 2.975
+    },
+    {
+     "w": "Milan",
+     "at": 3.087
+    },
+    {
+     "w": "are",
+     "at": 3.5
+    },
+    {
+     "w": "through",
+     "at": 3.663
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: when there\u2019s space, push the ball ahead and sprint. Defenders can\u2019t catch a fast run!",
+   "src": "/plays/narration/kaka-signature-2007/4.m4a",
+   "seconds": 7.1,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "when",
+     "at": 1.25
+    },
+    {
+     "w": "there\u2019s",
+     "at": 1.387
+    },
+    {
+     "w": "space",
+     "at": 1.637
+    },
+    {
+     "w": "push",
+     "at": 2.25
+    },
+    {
+     "w": "the",
+     "at": 2.5
+    },
+    {
+     "w": "ball",
+     "at": 2.6
+    },
+    {
+     "w": "ahead",
+     "at": 2.875
+    },
+    {
+     "w": "and",
+     "at": 3.163
+    },
+    {
+     "w": "sprint",
+     "at": 3.288
+    },
+    {
+     "w": "Defenders",
+     "at": 4.162
+    },
+    {
+     "w": "can\u2019t",
+     "at": 4.725
+    },
+    {
+     "w": "catch",
+     "at": 5.0
+    },
+    {
+     "w": "a",
+     "at": 5.213
+    },
+    {
+     "w": "fast",
+     "at": 5.287
+    },
+    {
+     "w": "run",
+     "at": 5.7
+    }
+   ]
+  }
+ ]
+}

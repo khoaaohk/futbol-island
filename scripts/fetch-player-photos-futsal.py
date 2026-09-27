@@ -1036,6 +1036,10 @@ def main():
     while queue:
         name = queue.pop(0)
         tag = f'[{done+1}/{len(names)}] {name}'
+        if (manifest.get(name) or {}).get('source', '').startswith('wikimedia/deep-audit'):
+            # reviewed by hand in scripts/fetch-player-photos-deep.py (Sep 26 2026): never re-judge or drop it here
+            done += 1
+            continue
         try:
             manifest[name] = process(net, vis, name, (appearance.get(name) or {}).get('country'), tmp,
                                      idents, crops)

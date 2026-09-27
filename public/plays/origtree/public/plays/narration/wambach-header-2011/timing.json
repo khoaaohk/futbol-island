@@ -1,0 +1,366 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The last minute",
+   "text": "Dresden, 2011. The USA are losing to Brazil, and extra time is almost over. Megan Rapinoe crosses with her left foot... Abby Wambach heads it in! Two-all!",
+   "src": "/plays/narration/wambach-header-2011/1.m4a",
+   "seconds": 12.6,
+   "words": [
+    {
+     "w": "Dresden",
+     "at": 0.375
+    },
+    {
+     "w": "2011",
+     "at": 1.0
+    },
+    {
+     "w": "The",
+     "at": 2.237
+    },
+    {
+     "w": "USA",
+     "at": 2.35
+    },
+    {
+     "w": "are",
+     "at": 2.95
+    },
+    {
+     "w": "losing",
+     "at": 3.1
+    },
+    {
+     "w": "to",
+     "at": 3.5
+    },
+    {
+     "w": "Brazil",
+     "at": 3.6
+    },
+    {
+     "w": "and",
+     "at": 4.325
+    },
+    {
+     "w": "extra",
+     "at": 4.487
+    },
+    {
+     "w": "time",
+     "at": 4.912
+    },
+    {
+     "w": "is",
+     "at": 5.275
+    },
+    {
+     "w": "almost",
+     "at": 5.425
+    },
+    {
+     "w": "over",
+     "at": 5.9
+    },
+    {
+     "w": "Megan",
+     "at": 6.775
+    },
+    {
+     "w": "Rapinoe",
+     "at": 7.1
+    },
+    {
+     "w": "crosses",
+     "at": 7.638
+    },
+    {
+     "w": "with",
+     "at": 8.113
+    },
+    {
+     "w": "her",
+     "at": 8.238
+    },
+    {
+     "w": "left",
+     "at": 8.375
+    },
+    {
+     "w": "foot",
+     "at": 8.662
+    },
+    {
+     "w": "Abby",
+     "at": 9.425
+    },
+    {
+     "w": "Wambach",
+     "at": 9.7
+    },
+    {
+     "w": "heads",
+     "at": 10.2
+    },
+    {
+     "w": "it",
+     "at": 10.438
+    },
+    {
+     "w": "in",
+     "at": 10.525
+    },
+    {
+     "w": "Two-all",
+     "at": 11.088
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. Wambach times her run to the far post, jumps above the keeper, and meets the ball with her forehead.",
+   "src": "/plays/narration/wambach-header-2011/2.m4a",
+   "seconds": 8.5,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.275
+    },
+    {
+     "w": "Wambach",
+     "at": 2.388
+    },
+    {
+     "w": "times",
+     "at": 2.9
+    },
+    {
+     "w": "her",
+     "at": 3.212
+    },
+    {
+     "w": "run",
+     "at": 3.35
+    },
+    {
+     "w": "to",
+     "at": 3.575
+    },
+    {
+     "w": "the",
+     "at": 3.663
+    },
+    {
+     "w": "far",
+     "at": 3.763
+    },
+    {
+     "w": "post",
+     "at": 4.062
+    },
+    {
+     "w": "jumps",
+     "at": 4.763
+    },
+    {
+     "w": "above",
+     "at": 5.088
+    },
+    {
+     "w": "the",
+     "at": 5.338
+    },
+    {
+     "w": "keeper",
+     "at": 5.425
+    },
+    {
+     "w": "and",
+     "at": 5.9
+    },
+    {
+     "w": "meets",
+     "at": 6.025
+    },
+    {
+     "w": "the",
+     "at": 6.3
+    },
+    {
+     "w": "ball",
+     "at": 6.4
+    },
+    {
+     "w": "with",
+     "at": 6.713
+    },
+    {
+     "w": "her",
+     "at": 6.812
+    },
+    {
+     "w": "forehead",
+     "at": 6.963
+    }
+   ]
+  },
+  {
+   "label": "Penalties",
+   "text": "Now, penalties! Hope Solo dives and saves one, and the USA win the shootout!",
+   "src": "/plays/narration/wambach-header-2011/3.m4a",
+   "seconds": 6.4,
+   "words": [
+    {
+     "w": "Now",
+     "at": 0.425
+    },
+    {
+     "w": "penalties",
+     "at": 0.775
+    },
+    {
+     "w": "Hope",
+     "at": 1.85
+    },
+    {
+     "w": "Solo",
+     "at": 2.087
+    },
+    {
+     "w": "dives",
+     "at": 2.5
+    },
+    {
+     "w": "and",
+     "at": 3.013
+    },
+    {
+     "w": "saves",
+     "at": 3.138
+    },
+    {
+     "w": "one",
+     "at": 3.525
+    },
+    {
+     "w": "and",
+     "at": 4.0
+    },
+    {
+     "w": "the",
+     "at": 4.112
+    },
+    {
+     "w": "USA",
+     "at": 4.2
+    },
+    {
+     "w": "win",
+     "at": 4.725
+    },
+    {
+     "w": "the",
+     "at": 4.888
+    },
+    {
+     "w": "shootout",
+     "at": 4.987
+    }
+   ]
+  },
+  {
+   "label": "Never give up",
+   "text": "Never give up, even in the last minute! Time your run, jump, and meet the ball with your forehead.",
+   "src": "/plays/narration/wambach-header-2011/4.m4a",
+   "seconds": 6.6,
+   "words": [
+    {
+     "w": "Never",
+     "at": 0.4
+    },
+    {
+     "w": "give",
+     "at": 0.65
+    },
+    {
+     "w": "up",
+     "at": 0.838
+    },
+    {
+     "w": "even",
+     "at": 1.275
+    },
+    {
+     "w": "in",
+     "at": 1.512
+    },
+    {
+     "w": "the",
+     "at": 1.587
+    },
+    {
+     "w": "last",
+     "at": 1.675
+    },
+    {
+     "w": "minute",
+     "at": 2.05
+    },
+    {
+     "w": "Time",
+     "at": 2.888
+    },
+    {
+     "w": "your",
+     "at": 3.188
+    },
+    {
+     "w": "run",
+     "at": 3.325
+    },
+    {
+     "w": "jump",
+     "at": 3.812
+    },
+    {
+     "w": "and",
+     "at": 4.213
+    },
+    {
+     "w": "meet",
+     "at": 4.325
+    },
+    {
+     "w": "the",
+     "at": 4.513
+    },
+    {
+     "w": "ball",
+     "at": 4.6
+    },
+    {
+     "w": "with",
+     "at": 4.912
+    },
+    {
+     "w": "your",
+     "at": 5.013
+    },
+    {
+     "w": "forehead",
+     "at": 5.138
+    }
+   ]
+  }
+ ]
+}

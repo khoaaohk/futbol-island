@@ -1,0 +1,354 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The run, live",
+   "text": "Sweden, 1958. Brazil lead Austria one-nil. Left-back N\u00edlton Santos wins the ball in his own half, passes to Altafini, and keeps running. The ball comes back... he scores!",
+   "src": "/plays/narration/nilton-santos-signature/1.m4a",
+   "seconds": 13.8,
+   "words": [
+    {
+     "w": "Sweden",
+     "at": 0.375
+    },
+    {
+     "w": "1958",
+     "at": 0.85
+    },
+    {
+     "w": "Brazil",
+     "at": 2.288
+    },
+    {
+     "w": "lead",
+     "at": 2.837
+    },
+    {
+     "w": "Austria",
+     "at": 3.112
+    },
+    {
+     "w": "one-nil",
+     "at": 3.6
+    },
+    {
+     "w": "Left-back",
+     "at": 4.675
+    },
+    {
+     "w": "N\u00edlton",
+     "at": 5.225
+    },
+    {
+     "w": "Santos",
+     "at": 5.688
+    },
+    {
+     "w": "wins",
+     "at": 6.287
+    },
+    {
+     "w": "the",
+     "at": 6.6
+    },
+    {
+     "w": "ball",
+     "at": 6.7
+    },
+    {
+     "w": "in",
+     "at": 7.013
+    },
+    {
+     "w": "his",
+     "at": 7.088
+    },
+    {
+     "w": "own",
+     "at": 7.225
+    },
+    {
+     "w": "half",
+     "at": 7.45
+    },
+    {
+     "w": "passes",
+     "at": 8.088
+    },
+    {
+     "w": "to",
+     "at": 8.575
+    },
+    {
+     "w": "Altafini",
+     "at": 8.7
+    },
+    {
+     "w": "and",
+     "at": 9.475
+    },
+    {
+     "w": "keeps",
+     "at": 9.6
+    },
+    {
+     "w": "running",
+     "at": 9.9
+    },
+    {
+     "w": "The",
+     "at": 10.675
+    },
+    {
+     "w": "ball",
+     "at": 10.775
+    },
+    {
+     "w": "comes",
+     "at": 11.075
+    },
+    {
+     "w": "back",
+     "at": 11.375
+    },
+    {
+     "w": "he",
+     "at": 12.125
+    },
+    {
+     "w": "scores",
+     "at": 12.275
+    }
+   ]
+  },
+  {
+   "label": "Get back!",
+   "text": "Watch again. Back then, full-backs rarely crossed halfway. Coach Feola shouted, 'Get back! Get back!' But N\u00edlton kept running.",
+   "src": "/plays/narration/nilton-santos-signature/2.m4a",
+   "seconds": 9.3,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "Back",
+     "at": 1.438
+    },
+    {
+     "w": "then",
+     "at": 1.725
+    },
+    {
+     "w": "full-backs",
+     "at": 1.975
+    },
+    {
+     "w": "rarely",
+     "at": 2.538
+    },
+    {
+     "w": "crossed",
+     "at": 2.9
+    },
+    {
+     "w": "halfway",
+     "at": 3.275
+    },
+    {
+     "w": "Coach",
+     "at": 4.162
+    },
+    {
+     "w": "Feola",
+     "at": 4.475
+    },
+    {
+     "w": "shouted",
+     "at": 4.888
+    },
+    {
+     "w": "Get",
+     "at": 5.6
+    },
+    {
+     "w": "back",
+     "at": 5.725
+    },
+    {
+     "w": "Get",
+     "at": 6.1
+    },
+    {
+     "w": "back",
+     "at": 6.3
+    },
+    {
+     "w": "But",
+     "at": 7.1
+    },
+    {
+     "w": "N\u00edlton",
+     "at": 7.25
+    },
+    {
+     "w": "kept",
+     "at": 7.7
+    },
+    {
+     "w": "running",
+     "at": 7.975
+    }
+   ]
+  },
+  {
+   "label": "Well done",
+   "text": "The return pass... he shoots... goal! Two-nil. And Feola just said, 'Well done.'",
+   "src": "/plays/narration/nilton-santos-signature/3.m4a",
+   "seconds": 6.4,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "return",
+     "at": 0.425
+    },
+    {
+     "w": "pass",
+     "at": 0.85
+    },
+    {
+     "w": "he",
+     "at": 1.6
+    },
+    {
+     "w": "shoots",
+     "at": 1.775
+    },
+    {
+     "w": "goal",
+     "at": 2.55
+    },
+    {
+     "w": "Two-nil",
+     "at": 2.9
+    },
+    {
+     "w": "And",
+     "at": 3.55
+    },
+    {
+     "w": "Feola",
+     "at": 3.712
+    },
+    {
+     "w": "just",
+     "at": 4.15
+    },
+    {
+     "w": "said",
+     "at": 4.35
+    },
+    {
+     "w": "Well",
+     "at": 4.8
+    },
+    {
+     "w": "done",
+     "at": 5.0
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn. Defenders can attack too! Space in front of you? Bring the ball forward, pass, and keep running!",
+   "src": "/plays/narration/nilton-santos-signature/4.m4a",
+   "seconds": 7.6,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "Defenders",
+     "at": 1.175
+    },
+    {
+     "w": "can",
+     "at": 1.7
+    },
+    {
+     "w": "attack",
+     "at": 1.812
+    },
+    {
+     "w": "too",
+     "at": 2.188
+    },
+    {
+     "w": "Space",
+     "at": 2.85
+    },
+    {
+     "w": "in",
+     "at": 3.237
+    },
+    {
+     "w": "front",
+     "at": 3.375
+    },
+    {
+     "w": "of",
+     "at": 3.562
+    },
+    {
+     "w": "you",
+     "at": 3.65
+    },
+    {
+     "w": "Bring",
+     "at": 4.312
+    },
+    {
+     "w": "the",
+     "at": 4.537
+    },
+    {
+     "w": "ball",
+     "at": 4.625
+    },
+    {
+     "w": "forward",
+     "at": 4.938
+    },
+    {
+     "w": "pass",
+     "at": 5.412
+    },
+    {
+     "w": "and",
+     "at": 5.862
+    },
+    {
+     "w": "keep",
+     "at": 5.975
+    },
+    {
+     "w": "running",
+     "at": 6.225
+    }
+   ]
+  }
+ ]
+}

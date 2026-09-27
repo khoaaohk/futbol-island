@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The run, live",
+   "text": "Yokohama, 2002, the World Cup final. Brazil lead Germany, seventy-three minutes gone... and Cafu is still running! The captain races down the right wing, past his man... and crosses for Rivaldo. So close!",
+   "src": "/plays/narration/cafu-signature/1.m4a",
+   "seconds": 15.5,
+   "words": [
+    {
+     "w": "Yokohama",
+     "at": 0.4
+    },
+    {
+     "w": "2002",
+     "at": 1.137
+    },
+    {
+     "w": "the",
+     "at": 2.15
+    },
+    {
+     "w": "World",
+     "at": 2.275
+    },
+    {
+     "w": "Cup",
+     "at": 2.575
+    },
+    {
+     "w": "final",
+     "at": 2.8
+    },
+    {
+     "w": "Brazil",
+     "at": 3.737
+    },
+    {
+     "w": "lead",
+     "at": 4.25
+    },
+    {
+     "w": "Germany",
+     "at": 4.513
+    },
+    {
+     "w": "seventy-three",
+     "at": 5.112
+    },
+    {
+     "w": "minutes",
+     "at": 5.688
+    },
+    {
+     "w": "gone",
+     "at": 6.0
+    },
+    {
+     "w": "and",
+     "at": 6.875
+    },
+    {
+     "w": "Cafu",
+     "at": 7.013
+    },
+    {
+     "w": "is",
+     "at": 7.475
+    },
+    {
+     "w": "still",
+     "at": 7.6
+    },
+    {
+     "w": "running",
+     "at": 7.875
+    },
+    {
+     "w": "The",
+     "at": 8.75
+    },
+    {
+     "w": "captain",
+     "at": 8.85
+    },
+    {
+     "w": "races",
+     "at": 9.275
+    },
+    {
+     "w": "down",
+     "at": 9.7
+    },
+    {
+     "w": "the",
+     "at": 9.938
+    },
+    {
+     "w": "right",
+     "at": 10.025
+    },
+    {
+     "w": "wing",
+     "at": 10.338
+    },
+    {
+     "w": "past",
+     "at": 10.75
+    },
+    {
+     "w": "his",
+     "at": 11.088
+    },
+    {
+     "w": "man",
+     "at": 11.25
+    },
+    {
+     "w": "and",
+     "at": 12.1
+    },
+    {
+     "w": "crosses",
+     "at": 12.238
+    },
+    {
+     "w": "for",
+     "at": 12.725
+    },
+    {
+     "w": "Rivaldo",
+     "at": 12.85
+    },
+    {
+     "w": "So",
+     "at": 13.85
+    },
+    {
+     "w": "close",
+     "at": 14.062
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. A defender, flying up the wing like an attacker, still sprinting late in the final.",
+   "src": "/plays/narration/cafu-signature/2.m4a",
+   "seconds": 7.8,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.275
+    },
+    {
+     "w": "A",
+     "at": 2.337
+    },
+    {
+     "w": "defender",
+     "at": 2.425
+    },
+    {
+     "w": "flying",
+     "at": 3.062
+    },
+    {
+     "w": "up",
+     "at": 3.438
+    },
+    {
+     "w": "the",
+     "at": 3.538
+    },
+    {
+     "w": "wing",
+     "at": 3.663
+    },
+    {
+     "w": "like",
+     "at": 3.95
+    },
+    {
+     "w": "an",
+     "at": 4.112
+    },
+    {
+     "w": "attacker",
+     "at": 4.2
+    },
+    {
+     "w": "still",
+     "at": 5.037
+    },
+    {
+     "w": "sprinting",
+     "at": 5.338
+    },
+    {
+     "w": "late",
+     "at": 5.838
+    },
+    {
+     "w": "in",
+     "at": 6.138
+    },
+    {
+     "w": "the",
+     "at": 6.213
+    },
+    {
+     "w": "final",
+     "at": 6.312
+    }
+   ]
+  },
+  {
+   "label": "The captain",
+   "text": "Brazil won, two-nil. As the rain came down, Cafu jumped onto a podium and lifted the World Cup to the sky.",
+   "src": "/plays/narration/cafu-signature/3.m4a",
+   "seconds": 8.2,
+   "words": [
+    {
+     "w": "Brazil",
+     "at": 0.35
+    },
+    {
+     "w": "won",
+     "at": 0.775
+    },
+    {
+     "w": "two-nil",
+     "at": 1.363
+    },
+    {
+     "w": "As",
+     "at": 2.513
+    },
+    {
+     "w": "the",
+     "at": 2.712
+    },
+    {
+     "w": "rain",
+     "at": 2.8
+    },
+    {
+     "w": "came",
+     "at": 3.125
+    },
+    {
+     "w": "down",
+     "at": 3.4
+    },
+    {
+     "w": "Cafu",
+     "at": 3.975
+    },
+    {
+     "w": "jumped",
+     "at": 4.338
+    },
+    {
+     "w": "onto",
+     "at": 4.638
+    },
+    {
+     "w": "a",
+     "at": 4.862
+    },
+    {
+     "w": "podium",
+     "at": 4.925
+    },
+    {
+     "w": "and",
+     "at": 5.425
+    },
+    {
+     "w": "lifted",
+     "at": 5.55
+    },
+    {
+     "w": "the",
+     "at": 5.862
+    },
+    {
+     "w": "World",
+     "at": 5.95
+    },
+    {
+     "w": "Cup",
+     "at": 6.3
+    },
+    {
+     "w": "to",
+     "at": 6.55
+    },
+    {
+     "w": "the",
+     "at": 6.638
+    },
+    {
+     "w": "sky",
+     "at": 6.737
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: full-backs, defend and attack. Get back, then run forward. Keep running the whole game!",
+   "src": "/plays/narration/cafu-signature/4.m4a",
+   "seconds": 7.3,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "full-backs",
+     "at": 1.087
+    },
+    {
+     "w": "defend",
+     "at": 1.725
+    },
+    {
+     "w": "and",
+     "at": 2.163
+    },
+    {
+     "w": "attack",
+     "at": 2.263
+    },
+    {
+     "w": "Get",
+     "at": 3.163
+    },
+    {
+     "w": "back",
+     "at": 3.375
+    },
+    {
+     "w": "then",
+     "at": 3.737
+    },
+    {
+     "w": "run",
+     "at": 3.95
+    },
+    {
+     "w": "forward",
+     "at": 4.188
+    },
+    {
+     "w": "Keep",
+     "at": 5.062
+    },
+    {
+     "w": "running",
+     "at": 5.325
+    },
+    {
+     "w": "the",
+     "at": 5.588
+    },
+    {
+     "w": "whole",
+     "at": 5.675
+    },
+    {
+     "w": "game",
+     "at": 5.925
+    }
+   ]
+  }
+ ]
+}

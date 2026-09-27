@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: Bangkok 2012",
+   "text": "The 2012 Futsal World Cup, in Bangkok. Captain Sergei Sergeev scores after thirty four seconds! He gets three, and Russia beat Guatemala nine nil. In the whole group, they let in none.",
+   "src": "/plays/narration/sergeev-futsal-signature/1.m4a",
+   "seconds": 14.3,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "2012",
+     "at": 0.425
+    },
+    {
+     "w": "Futsal",
+     "at": 1.188
+    },
+    {
+     "w": "World",
+     "at": 1.65
+    },
+    {
+     "w": "Cup",
+     "at": 1.988
+    },
+    {
+     "w": "in",
+     "at": 2.4
+    },
+    {
+     "w": "Bangkok",
+     "at": 2.55
+    },
+    {
+     "w": "Captain",
+     "at": 3.688
+    },
+    {
+     "w": "Sergei",
+     "at": 4.112
+    },
+    {
+     "w": "Sergeev",
+     "at": 4.588
+    },
+    {
+     "w": "scores",
+     "at": 5.25
+    },
+    {
+     "w": "after",
+     "at": 5.8
+    },
+    {
+     "w": "thirty",
+     "at": 6.112
+    },
+    {
+     "w": "four",
+     "at": 6.463
+    },
+    {
+     "w": "seconds",
+     "at": 6.713
+    },
+    {
+     "w": "He",
+     "at": 7.725
+    },
+    {
+     "w": "gets",
+     "at": 7.85
+    },
+    {
+     "w": "three",
+     "at": 8.137
+    },
+    {
+     "w": "and",
+     "at": 8.8
+    },
+    {
+     "w": "Russia",
+     "at": 8.938
+    },
+    {
+     "w": "beat",
+     "at": 9.338
+    },
+    {
+     "w": "Guatemala",
+     "at": 9.637
+    },
+    {
+     "w": "nine",
+     "at": 10.3
+    },
+    {
+     "w": "nil",
+     "at": 10.625
+    },
+    {
+     "w": "In",
+     "at": 11.412
+    },
+    {
+     "w": "the",
+     "at": 11.537
+    },
+    {
+     "w": "whole",
+     "at": 11.625
+    },
+    {
+     "w": "group",
+     "at": 11.887
+    },
+    {
+     "w": "they",
+     "at": 12.4
+    },
+    {
+     "w": "let",
+     "at": 12.55
+    },
+    {
+     "w": "in",
+     "at": 12.725
+    },
+    {
+     "w": "none",
+     "at": 12.875
+    }
+   ]
+  },
+  {
+   "label": "How he covers",
+   "text": "Sergeev was calm at the back. This is how he covers: a teammate goes to the ball. Sergeev waits behind, to the side. The attacker gets past, but Sergeev is already there, and takes the ball!",
+   "src": "/plays/narration/sergeev-futsal-signature/2.m4a",
+   "seconds": 13.6,
+   "words": [
+    {
+     "w": "Sergeev",
+     "at": 0.375
+    },
+    {
+     "w": "was",
+     "at": 0.938
+    },
+    {
+     "w": "calm",
+     "at": 1.113
+    },
+    {
+     "w": "at",
+     "at": 1.387
+    },
+    {
+     "w": "the",
+     "at": 1.462
+    },
+    {
+     "w": "back",
+     "at": 1.55
+    },
+    {
+     "w": "This",
+     "at": 2.362
+    },
+    {
+     "w": "is",
+     "at": 2.6
+    },
+    {
+     "w": "how",
+     "at": 2.725
+    },
+    {
+     "w": "he",
+     "at": 2.925
+    },
+    {
+     "w": "covers",
+     "at": 3.062
+    },
+    {
+     "w": "a",
+     "at": 3.888
+    },
+    {
+     "w": "teammate",
+     "at": 4.013
+    },
+    {
+     "w": "goes",
+     "at": 4.55
+    },
+    {
+     "w": "to",
+     "at": 4.85
+    },
+    {
+     "w": "the",
+     "at": 4.938
+    },
+    {
+     "w": "ball",
+     "at": 5.025
+    },
+    {
+     "w": "Sergeev",
+     "at": 5.975
+    },
+    {
+     "w": "waits",
+     "at": 6.6
+    },
+    {
+     "w": "behind",
+     "at": 6.9
+    },
+    {
+     "w": "to",
+     "at": 7.438
+    },
+    {
+     "w": "the",
+     "at": 7.513
+    },
+    {
+     "w": "side",
+     "at": 7.612
+    },
+    {
+     "w": "The",
+     "at": 8.425
+    },
+    {
+     "w": "attacker",
+     "at": 8.575
+    },
+    {
+     "w": "gets",
+     "at": 9.05
+    },
+    {
+     "w": "past",
+     "at": 9.312
+    },
+    {
+     "w": "but",
+     "at": 9.9
+    },
+    {
+     "w": "Sergeev",
+     "at": 10.062
+    },
+    {
+     "w": "is",
+     "at": 10.725
+    },
+    {
+     "w": "already",
+     "at": 10.875
+    },
+    {
+     "w": "there",
+     "at": 11.25
+    },
+    {
+     "w": "and",
+     "at": 11.65
+    },
+    {
+     "w": "takes",
+     "at": 11.775
+    },
+    {
+     "w": "the",
+     "at": 12.075
+    },
+    {
+     "w": "ball",
+     "at": 12.175
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again. Behind, to the side, ready!",
+   "src": "/plays/narration/sergeev-futsal-signature/3.m4a",
+   "seconds": 3.7,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "Behind",
+     "at": 1.35
+    },
+    {
+     "w": "to",
+     "at": 1.812
+    },
+    {
+     "w": "the",
+     "at": 1.887
+    },
+    {
+     "w": "side",
+     "at": 1.988
+    },
+    {
+     "w": "ready",
+     "at": 2.362
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: cover your teammate\u2019s back, so nobody gets a free run at goal!",
+   "src": "/plays/narration/sergeev-futsal-signature/4.m4a",
+   "seconds": 5.5,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "cover",
+     "at": 1.363
+    },
+    {
+     "w": "your",
+     "at": 1.637
+    },
+    {
+     "w": "teammate\u2019s",
+     "at": 1.75
+    },
+    {
+     "w": "back",
+     "at": 2.25
+    },
+    {
+     "w": "so",
+     "at": 2.7
+    },
+    {
+     "w": "nobody",
+     "at": 2.875
+    },
+    {
+     "w": "gets",
+     "at": 3.225
+    },
+    {
+     "w": "a",
+     "at": 3.438
+    },
+    {
+     "w": "free",
+     "at": 3.513
+    },
+    {
+     "w": "run",
+     "at": 3.75
+    },
+    {
+     "w": "at",
+     "at": 3.962
+    },
+    {
+     "w": "goal",
+     "at": 4.05
+    }
+   ]
+  }
+ ]
+}

@@ -29,13 +29,17 @@
  * CONFIRMED: match, date, kick-off, venue, attendance, score before (3–5) and after (4–5), the foul at 39:40 and the second-penalty goal at 39:41
  *  (a free shot from the 10 m mark: no wall, the keeper at least 5 m from the ball, everyone else behind the ball — Laws of the Game), his
  *  hat-trick in the final, his shirt number 8, Argentina's keeper Sarmiento (#1), the crossbar at 40:00, Argentina champions; kits per Wikipedia.
- * INFERRED (not named in the narration): his shooting foot (LEFT, from the card's `foot` param — the Mammarella film drew him right-footed; neither
- *  is verified), how hard, where the kick went (about 1.2 m up, the keeper's right, far post from the camera) and the keeper's dive; which goal;
+ * VERIFIED FOOT (not named in the narration): RIGHT. Reviewed footage (2026-09-25): FIFA TV "Russia v Argentina | FIFA Futsal World Cup 2016
+ *  Final | Match Highlights" (youtube.com/watch?v=O7izyt2LrfI, ≈1:49) shows this very second penalty from behind — "EDER LIMA" #8 plants his
+ *  LEFT foot and strikes with the RIGHT; UEFA.com's EURO 2014 final highlights (youtube.com/watch?v=yIZwUQ26ad8, ≈0:18) show his turn and
+ *  diagonal shot, also right-footed. No written source names his foot; the "left-footed Éder Lima" on FotMob is a different player (a
+ *  defender born 1986, Capital FC) — the likely source of the old LEFT card param.
+ * INFERRED (not named in the narration): how hard, where the kick went (about 1.2 m up, the keeper's right, far post from the camera) and the keeper's dive; which goal;
  *  Sarmiento's keeper kit (yellow) and position (≈4 m off his line); where the other eight stood behind the ball; his run to fetch the ball;
- *  his short dark hair; the court colour. No video was reviewed. Chapter 3 is a demonstration of the lesson, not footage of a particular match.
+ *  his short dark hair; the court colour. Chapter 3 is a demonstration of the lesson, not footage of a particular match.
  * Players: the shared athlete library (./athlete.ts) through ONE adapter `athlete()` → drawAthlete (prev → hem/hair follow-through,
  * motionSmear on the strike). Our stages are LEFT-handed (X right, Z away from the camera), so `projector()` maps library z → −Z; the
- * strikes use the LEFT foot (foot:'l'); the ball sits at the solved left toe at contact.
+ * strikes use the RIGHT foot (foot:'r', verified above); the ball sits at the solved right toe at contact.
  * Timing: the SCRIPT's cues are estimated (≈2.7 words/s) until the lead voices it; `authored()` maps each chapter's recorded clock through
  * the cue anchors back onto the authored choreography, so every action stays on its word after withTiming() moves the cues.
  * Inks: red (Russia, rings), yellow (Sarmiento, lights, flight lines), blue (court, Argentina stripes), navy (key line, run-off, stands).
@@ -134,7 +138,7 @@ const yawTo=(dX:number,dZ:number)=>Math.atan2(dZ,dX);
 const FACE_LEFT=Math.PI,FACE_RIGHT=0,FACE_CAMERA=-Math.PI/2;
 const SKIN:InkFill[]=[[Y,.62],[K,.26]];
 const BUILD={height:1.84,bulk:1.06};
-/** Eder Lima: Russia no. 8 (FIFA line-up) — all red (Wikipedia kit table), 1.84 m, short dark hair (inferred), left foot (card param, inferred) */
+/** Eder Lima: Russia no. 8 (FIFA line-up) — all red (Wikipedia kit table), 1.84 m, short dark hair (inferred), right foot (verified from footage, see header) */
 const EDER:AthleteStyle={shirt:R,shorts:R,socks:R,boots:K,skin:SKIN,hair:K,line:K,trim:'paper',number:8,numberInk:'paper',hairStyle:'short',build:BUILD,seed:8};
 const RUS=(n:number):AthleteStyle=>({shirt:R,shorts:R,socks:R,boots:K,skin:n%2?[[Y,.8],[R,.26]]:[[Y,.72],[R,.2]],hair:n%3?K:[Y,.9],line:K,trim:'paper',numberInk:'paper',hairStyle:n%2?'short':'bald',build:{height:1.74+hash(n,3)*.12},seed:20+n});
 /** Argentina: sky-blue and white stripes, white shorts and socks (Wikipedia kit table for the final) */
@@ -151,10 +155,10 @@ function athlete(s:Sheet,st:Stage,gen:Gen,t:number,style:AthleteStyle,o:{detail?
  if(o.smear){const c=gen(t-o.smear);motionSmear(s,c.pose,a.pose,cm,style,pl,{prevPlace:placeAt(c.X,c.Z,c.yaw),ink:[R,.6],threshold:5});}
  return drawAthlete(s,a.pose,cm,{...style,detail:o.detail??'auto'},pl,{prev:b.pose,prevPlace:pp});
 }
-/** the LEFT-foot strike: where the ball sits at contact — just past the kicking toe along the foot (library coords, place at the origin) */
-const strikeL=(t:number)=>strike(t,{foot:'l'});
-function strikeBall(yaw:number):V3{const sk=solve(strikeL(STRIKE_CONTACT),BUILD,{yaw}),toe=sk.lToe,an=sk.lAn,d:V3=[toe[0]-an[0],0,toe[2]-an[2]],l=Math.hypot(d[0],d[2])||1;return[toe[0]+d[0]/l*.08,BALL_R,toe[2]+d[2]/l*.08];}
-/** stance point so that the ball at `ball` meets his left toe when he strikes toward `target` */
+/** the RIGHT-foot strike: where the ball sits at contact — just past the kicking toe along the foot (library coords, place at the origin) */
+const strikeR=(t:number)=>strike(t,{foot:'r'});
+function strikeBall(yaw:number):V3{const sk=solve(strikeR(STRIKE_CONTACT),BUILD,{yaw}),toe=sk.rToe,an=sk.rAn,d:V3=[toe[0]-an[0],0,toe[2]-an[2]],l=Math.hypot(d[0],d[2])||1;return[toe[0]+d[0]/l*.08,BALL_R,toe[2]+d[2]/l*.08];}
+/** stance point so that the ball at `ball` meets his right toe when he strikes toward `target` */
 function plantFor(ball:[number,number],target:V3){const yaw=yawTo(target[0]-ball[0],target[2]-ball[1]),sb=toMine(strikeBall(yaw));return{yaw,P:[ball[0]-sb[0],ball[1]-sb[2]] as [number,number]};}
 
 // ---------------- the ball: paper sphere, navy panels, navy shade, rim, glint ----------------
@@ -292,7 +296,7 @@ function liveBall(T:number):{X:number;Y:number;Z:number;flying:boolean;spin:numb
  const d=sm(T_IN+.1,T_IN+.45,T,easeIn);
  return{X:GOAL_X+.6,Y:lerp(TGT[1],BALL_R,d),Z:TGT[2]+.1,flying:false,spin:60};
 }
-/** Eder Lima live: sets the ball on the mark → walks back to his run-up → waits → runs in → left-foot strike → runs on to fetch the ball */
+/** Eder Lima live: sets the ball on the mark → walks back to his run-up → waits → runs in → right-foot strike → runs on to fetch the ball */
 const liveE:Gen=T=>{
  const X=key(T,mono([[0,MARK[0]-.7],[.9,MARK[0]-.7],[WALK,START[0],easeIO],[S_T0,START[0]],[T_HIT,LIVE.P[0],easeIn],[T_HIT+.5,LIVE.P[0]+.5,easeOut],[C1.end,GOAL_X-1.4,easeIO]]));
  const Z=key(T,mono([[0,MARK[1]-.1],[.9,MARK[1]-.1],[WALK,START[1],easeIO],[S_T0,START[1]],[T_HIT,LIVE.P[1],easeIn],[T_HIT+.5,LIVE.P[1]+.2*DIRZ,easeOut],[C1.end,9.4,easeIO]]));
@@ -300,8 +304,8 @@ const liveE:Gen=T=>{
  if(T<.9){pose=posed({lHipF:50,rHipF:30,lKnee:80,rKnee:60,lean:46,neckP:30,lShF:60,rShF:60,lElb:20,rElb:20});}
  else if(T<WALK){pose=blendPose(posed({lHipF:50,rHipF:30,lKnee:80,rKnee:60,lean:46,neckP:30,lShF:60,rShF:60,lElb:20,rElb:20}),backpedal((T-.9)*1.4),sm(.9,1.3,T));}
  else if(T<S_T0){pose=blendPose(backpedal((WALK-.9)*1.4),stand(),sm(WALK,WALK+.4,T));pose=blendPose(pose,posed({lean:10,neckP:-4,lShA:20,rShA:20,lElb:30,rElb:30,lHipF:14,rHipF:8,lKnee:20,rKnee:16}),.4+.2*Math.sin(T*3));}
- else if(T<T_HIT+.55){const stT=key(T,[[S_T0,0],[S_T0+.45,.22],[T_HIT,STRIKE_CONTACT],[T_HIT+.55,.95]],linear);pose=blendPose(stand(),strikeL(stT),sm(S_T0,S_T0+.12,T));}
- else{const u=sm(T_HIT+.55,T_HIT+1,T,easeIO);pose=blendPose(strikeL(.95),runCycle((T-T_HIT)*runCadence(.7),{speed:.7}),u);pose=blendPose(pose,stand(),sm(C1.end-.9,C1.end-.2,T));}
+ else if(T<T_HIT+.55){const stT=key(T,[[S_T0,0],[S_T0+.45,.22],[T_HIT,STRIKE_CONTACT],[T_HIT+.55,.95]],linear);pose=blendPose(stand(),strikeR(stT),sm(S_T0,S_T0+.12,T));}
+ else{const u=sm(T_HIT+.55,T_HIT+1,T,easeIO);pose=blendPose(strikeR(.95),runCycle((T-T_HIT)*runCadence(.7),{speed:.7}),u);pose=blendPose(pose,stand(),sm(C1.end-.9,C1.end-.2,T));}
  if(T>T_HIT+.55)yaw=lerp(LIVE.yaw,yawTo(GOAL_X-1.4-LIVE.P[0],9.4-LIVE.P[1]),sm(T_HIT+.55,T_HIT+1,T));
  return{pose,yaw,X,Z};
 };
@@ -359,7 +363,7 @@ const R_S0=C2.swing-.9;
 const rT=(t:number)=>key(t,[[R_S0,0],[C2.swing,.22],[C2.swing+.45,.4],[R_HIT,STRIKE_CONTACT],[R_HIT+1.6,.8],[C2.time,.95]],linear);
 const repE:Gen=t=>{const X=key(t,mono([[0,REP.P[0]-RDX*RUNR],[R_S0,REP.P[0]-RDX*RUNR],[R_HIT,REP.P[0],easeIn],[R_HIT+1.8,REP.P[0]+.3,easeOut],[C2.end,REP.P[0]+1.2,easeIO]])),
   Z=key(t,mono([[0,REP.P[1]-RDZ*RUNR],[R_S0,REP.P[1]-RDZ*RUNR],[R_HIT,REP.P[1],easeIn],[R_HIT+1.8,REP.P[1]+.4,easeOut],[C2.end,REP.P[1]+2.4,easeIO]]));
- let pose=t<R_S0?blendPose(stand(),posed({lean:12,neckP:-6,lShA:22,rShA:22,lElb:30,rElb:30,lHipF:12,rHipF:10,lKnee:22,rKnee:18}),.6+.2*Math.sin(t*2.5)):blendPose(stand(),strikeL(rT(t)),sm(R_S0,R_S0+.15,t)),yaw=REP.yaw;
+ let pose=t<R_S0?blendPose(stand(),posed({lean:12,neckP:-6,lShA:22,rShA:22,lElb:30,rElb:30,lHipF:12,rHipF:10,lKnee:22,rKnee:18}),.6+.2*Math.sin(t*2.5)):blendPose(stand(),strikeR(rT(t)),sm(R_S0,R_S0+.15,t)),yaw=REP.yaw;
  if(t>C2.time-.3){const u=sm(C2.time-.3,C2.time+.5,t,easeIO);pose=blendPose(pose,runCycle((t-C2.time)*runCadence(.6),{speed:.6}),u);yaw=lerp(REP.yaw,yawTo(.3,1),u);}
  return{pose,yaw,X,Z};};
 function repBall(t:number){if(t<R_HIT)return{X:RB[0],Y:BALL_R,Z:RB[1],flying:false};
@@ -389,9 +393,9 @@ const sc2:Scene={
    if(b.flying)speedLines(s,R,p[0],p[1],dir,{n:5,seed:605+Math.floor(tt*6),len:r*3.5,spread:r*.8,width:5});
    ball(s,p[0],p[1],r,97,{rot:tt*6,smear:b.flying?.5:0,dir});
    if(tt>=R_HIT&&tt<R_HIT+.4)sparkBurst(s,Y,p[0],p[1],r*2.8,{n:10,seed:98,g:easeOut(sm(R_HIT,R_HIT+.3,tt))});};
-  // "One big swing": a yellow swoosh arcs behind his kicking leg on the backswing
+  // "One big swing": a yellow swoosh arcs behind his kicking (right) leg on the backswing — screen right, seen from behind
   const E=repE(tt),sw=sm(C2.swing,C2.swing+.4,tt)*(1-sm(R_HIT,R_HIT+.2,tt));
-  if(sw>.02){const c=proj(st,E.X-.35,.5,E.Z-.1),rr=.9*kAt(st,E.Z),pts:Pt[]=[];for(let k=0;k<=10;k++){const a=Math.PI*.15+k/10*Math.PI*.8;pts.push([c[0]-Math.cos(a)*rr*.7,c[1]+Math.sin(a)*rr*-.6]);}const rp=ribbon(partial(pts,sw),14,{seed:606,taper:.7,wobble:1});s.knockout(rp);s.fill(Y,rp);}
+  if(sw>.02){const c=proj(st,E.X+.35,.5,E.Z-.1),rr=.9*kAt(st,E.Z),pts:Pt[]=[];for(let k=0;k<=10;k++){const a=Math.PI*.15+k/10*Math.PI*.8;pts.push([c[0]-Math.cos(a)*rr*.7,c[1]+Math.sin(a)*rr*-.6]);}const rp=ribbon(partial(pts,sw),14,{seed:606,taper:.7,wobble:1});s.knockout(rp);s.fill(Y,rp);}
   const its:{z:number;draw:()=>void}[]=[{z:E.Z,draw:()=>{athlete(s,st,repE,tt,EDER,{detail:'high',smear:tt>R_HIT-.5&&tt<R_HIT+.4?.3:0});}},{z:b.Z<E.Z+.4&&!b.flying?E.Z+.01:b.Z,draw:drawBall}];
   its.sort((a,c)=>c.z-a.z).forEach(it=>it.draw());
   if(tt>=R_IN&&tt<R_IN+1.2){const p=proj(st,RT[0],RT[1],GZ+.4);sparkBurst(s,Y,p[0],p[1],130,{n:12,seed:99,g:easeOut(sm(R_IN,R_IN+.3,tt))*(1-sm(R_IN+.8,R_IN+1.2,tt))});}
@@ -420,8 +424,8 @@ const demoE:Gen=t=>{
  const X=key(t,mono([[0,EP[0]],[C3.turn,EP[0]],[C3.turn+.5,DEM.P[0]-.25,easeIO],[D_HIT,DEM.P[0],easeOut],[D_HIT+1.6,DEM.P[0]+.2]])),Z=key(t,mono([[0,EP[1]],[C3.turn,EP[1]],[C3.turn+.5,DEM.P[1]-.35,easeIO],[D_HIT,DEM.P[1],easeOut],[D_HIT+1.6,DEM.P[1]+.4]]));
  let pose:Pose,yaw=FACE_CAMERA;
  if(t<C3.turn){pose=blendPose(stand(),POST,sm(.1,C3.back,t));pose=blendPose(pose,posed({...{lHipF:30,rHipF:44,lKnee:50,rKnee:40,rAnk:10,lean:30,neckP:30,rShF:-30,rShA:30,rElb:30,lShA:34,lElb:60}}),pulse(t,PASS[1]-.1,.5));}
- else if(t<D_HIT-.55){const u=sm(C3.turn,D_HIT-.55,t,easeIO);pose=blendPose(POST,dribble(.2+u*.8,{foot:'l',speed:.4}),sm(C3.turn,C3.turn+.15,t));yaw=FACE_CAMERA+u*TURN;}
- else{pose=blendPose(dribble(1,{foot:'l',speed:.4}),strikeL(dT(t)),sm(D_HIT-.55,D_HIT-.42,t));yaw=FACE_CAMERA+TURN;}
+ else if(t<D_HIT-.55){const u=sm(C3.turn,D_HIT-.55,t,easeIO);pose=blendPose(POST,dribble(.2+u*.8,{foot:'r',speed:.4}),sm(C3.turn,C3.turn+.15,t));yaw=FACE_CAMERA+u*TURN;}
+ else{pose=blendPose(dribble(1,{foot:'r',speed:.4}),strikeR(dT(t)),sm(D_HIT-.55,D_HIT-.42,t));yaw=FACE_CAMERA+TURN;}
  return{pose,yaw,X,Z};};
 /** the turn goes the long way round, screen right (FACE_CAMERA → FACE_RIGHT → toward the goal) */
 function demoBall(t:number){

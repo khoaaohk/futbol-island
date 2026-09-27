@@ -1,0 +1,398 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The Bernab\u00e9u",
+   "text": "Madrid, 2009. Barcelona beat Real Madrid six-two, and centre-back Gerard Piqu\u00e9 even scored! Here\u2019s how he played from the back. A Madrid pass forward\u2026 Piqu\u00e9 steps in and wins it!",
+   "src": "/plays/narration/pique-signature/1.m4a",
+   "seconds": 14.3,
+   "words": [
+    {
+     "w": "Madrid",
+     "at": 0.375
+    },
+    {
+     "w": "2009",
+     "at": 0.938
+    },
+    {
+     "w": "Barcelona",
+     "at": 2.388
+    },
+    {
+     "w": "beat",
+     "at": 3.038
+    },
+    {
+     "w": "Real",
+     "at": 3.337
+    },
+    {
+     "w": "Madrid",
+     "at": 3.625
+    },
+    {
+     "w": "six-two",
+     "at": 4.1
+    },
+    {
+     "w": "and",
+     "at": 4.825
+    },
+    {
+     "w": "centre-back",
+     "at": 4.963
+    },
+    {
+     "w": "Gerard",
+     "at": 5.525
+    },
+    {
+     "w": "Piqu\u00e9",
+     "at": 5.95
+    },
+    {
+     "w": "even",
+     "at": 6.4
+    },
+    {
+     "w": "scored",
+     "at": 6.725
+    },
+    {
+     "w": "Here",
+     "at": 7.8
+    },
+    {
+     "w": "s",
+     "at": 8.325
+    },
+    {
+     "w": "how",
+     "at": 8.5
+    },
+    {
+     "w": "he",
+     "at": 8.637
+    },
+    {
+     "w": "played",
+     "at": 8.75
+    },
+    {
+     "w": "from",
+     "at": 9.1
+    },
+    {
+     "w": "the",
+     "at": 9.238
+    },
+    {
+     "w": "back",
+     "at": 9.325
+    },
+    {
+     "w": "A",
+     "at": 10.088
+    },
+    {
+     "w": "Madrid",
+     "at": 10.175
+    },
+    {
+     "w": "pass",
+     "at": 10.613
+    },
+    {
+     "w": "forward",
+     "at": 11.012
+    },
+    {
+     "w": "Piqu\u00e9",
+     "at": 11.65
+    },
+    {
+     "w": "steps",
+     "at": 12.062
+    },
+    {
+     "w": "in",
+     "at": 12.425
+    },
+    {
+     "w": "and",
+     "at": 12.637
+    },
+    {
+     "w": "wins",
+     "at": 12.762
+    },
+    {
+     "w": "it",
+     "at": 13.088
+    }
+   ]
+  },
+  {
+   "label": "The replay",
+   "text": "Watch again, slowly. No panic, no big boot. Piqu\u00e9 takes a calm touch, lifts his head and looks for a teammate.",
+   "src": "/plays/narration/pique-signature/2.m4a",
+   "seconds": 8.1,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.113
+    },
+    {
+     "w": "No",
+     "at": 2.075
+    },
+    {
+     "w": "panic",
+     "at": 2.288
+    },
+    {
+     "w": "no",
+     "at": 2.75
+    },
+    {
+     "w": "big",
+     "at": 2.925
+    },
+    {
+     "w": "boot",
+     "at": 3.15
+    },
+    {
+     "w": "Piqu\u00e9",
+     "at": 3.862
+    },
+    {
+     "w": "takes",
+     "at": 4.225
+    },
+    {
+     "w": "a",
+     "at": 4.463
+    },
+    {
+     "w": "calm",
+     "at": 4.537
+    },
+    {
+     "w": "touch",
+     "at": 4.875
+    },
+    {
+     "w": "lifts",
+     "at": 5.325
+    },
+    {
+     "w": "his",
+     "at": 5.588
+    },
+    {
+     "w": "head",
+     "at": 5.75
+    },
+    {
+     "w": "and",
+     "at": 5.987
+    },
+    {
+     "w": "looks",
+     "at": 6.1
+    },
+    {
+     "w": "for",
+     "at": 6.35
+    },
+    {
+     "w": "a",
+     "at": 6.463
+    },
+    {
+     "w": "teammate",
+     "at": 6.525
+    }
+   ]
+  },
+  {
+   "label": "The pass",
+   "text": "There\u2019s Xavi, free in the middle. A calm pass along the grass, and Barcelona are on the attack!",
+   "src": "/plays/narration/pique-signature/3.m4a",
+   "seconds": 6.9,
+   "words": [
+    {
+     "w": "There\u2019s",
+     "at": 0.35
+    },
+    {
+     "w": "Xavi",
+     "at": 0.575
+    },
+    {
+     "w": "free",
+     "at": 1.325
+    },
+    {
+     "w": "in",
+     "at": 1.613
+    },
+    {
+     "w": "the",
+     "at": 1.688
+    },
+    {
+     "w": "middle",
+     "at": 1.775
+    },
+    {
+     "w": "A",
+     "at": 2.663
+    },
+    {
+     "w": "calm",
+     "at": 2.788
+    },
+    {
+     "w": "pass",
+     "at": 3.125
+    },
+    {
+     "w": "along",
+     "at": 3.425
+    },
+    {
+     "w": "the",
+     "at": 3.712
+    },
+    {
+     "w": "grass",
+     "at": 3.8
+    },
+    {
+     "w": "and",
+     "at": 4.35
+    },
+    {
+     "w": "Barcelona",
+     "at": 4.475
+    },
+    {
+     "w": "are",
+     "at": 5.175
+    },
+    {
+     "w": "on",
+     "at": 5.263
+    },
+    {
+     "w": "the",
+     "at": 5.362
+    },
+    {
+     "w": "attack",
+     "at": 5.475
+    }
+   ]
+  },
+  {
+   "label": "The lesson",
+   "text": "That\u2019s Piqu\u00e9. When you win the ball, take a breath, then pass it to a teammate. Don\u2019t just boot it!",
+   "src": "/plays/narration/pique-signature/4.m4a",
+   "seconds": 6.8,
+   "words": [
+    {
+     "w": "That\u2019s",
+     "at": 0.375
+    },
+    {
+     "w": "Piqu\u00e9",
+     "at": 0.65
+    },
+    {
+     "w": "When",
+     "at": 1.55
+    },
+    {
+     "w": "you",
+     "at": 1.688
+    },
+    {
+     "w": "win",
+     "at": 1.8
+    },
+    {
+     "w": "the",
+     "at": 1.988
+    },
+    {
+     "w": "ball",
+     "at": 2.075
+    },
+    {
+     "w": "take",
+     "at": 2.5
+    },
+    {
+     "w": "a",
+     "at": 2.688
+    },
+    {
+     "w": "breath",
+     "at": 2.75
+    },
+    {
+     "w": "then",
+     "at": 3.2
+    },
+    {
+     "w": "pass",
+     "at": 3.413
+    },
+    {
+     "w": "it",
+     "at": 3.712
+    },
+    {
+     "w": "to",
+     "at": 3.8
+    },
+    {
+     "w": "a",
+     "at": 3.925
+    },
+    {
+     "w": "teammate",
+     "at": 4.037
+    },
+    {
+     "w": "Don\u2019t",
+     "at": 5.013
+    },
+    {
+     "w": "just",
+     "at": 5.225
+    },
+    {
+     "w": "boot",
+     "at": 5.463
+    },
+    {
+     "w": "it",
+     "at": 5.688
+    }
+   ]
+  }
+ ]
+}

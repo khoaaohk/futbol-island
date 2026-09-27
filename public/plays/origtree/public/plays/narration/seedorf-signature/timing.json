@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Madrid, 1997, the derby at the Bernab\u00e9u. Real Madrid are losing one-nil to Atl\u00e9tico. Clarence Seedorf runs with the ball, just past halfway... he looks up, the keeper is off his line... boom!... Top corner! One-one!",
+   "src": "/plays/narration/seedorf-signature/1.m4a",
+   "seconds": 16.2,
+   "words": [
+    {
+     "w": "Madrid",
+     "at": 0.4
+    },
+    {
+     "w": "1997",
+     "at": 0.875
+    },
+    {
+     "w": "the",
+     "at": 1.925
+    },
+    {
+     "w": "derby",
+     "at": 2.062
+    },
+    {
+     "w": "at",
+     "at": 2.462
+    },
+    {
+     "w": "the",
+     "at": 2.538
+    },
+    {
+     "w": "Bernab\u00e9u",
+     "at": 2.625
+    },
+    {
+     "w": "Real",
+     "at": 3.775
+    },
+    {
+     "w": "Madrid",
+     "at": 4.05
+    },
+    {
+     "w": "are",
+     "at": 4.525
+    },
+    {
+     "w": "losing",
+     "at": 4.65
+    },
+    {
+     "w": "one-nil",
+     "at": 5.025
+    },
+    {
+     "w": "to",
+     "at": 5.525
+    },
+    {
+     "w": "Atl\u00e9tico",
+     "at": 5.675
+    },
+    {
+     "w": "Clarence",
+     "at": 6.912
+    },
+    {
+     "w": "Seedorf",
+     "at": 7.362
+    },
+    {
+     "w": "runs",
+     "at": 7.912
+    },
+    {
+     "w": "with",
+     "at": 8.287
+    },
+    {
+     "w": "the",
+     "at": 8.387
+    },
+    {
+     "w": "ball",
+     "at": 8.475
+    },
+    {
+     "w": "just",
+     "at": 8.9
+    },
+    {
+     "w": "past",
+     "at": 9.113
+    },
+    {
+     "w": "halfway",
+     "at": 9.475
+    },
+    {
+     "w": "he",
+     "at": 10.525
+    },
+    {
+     "w": "looks",
+     "at": 10.675
+    },
+    {
+     "w": "up",
+     "at": 10.887
+    },
+    {
+     "w": "the",
+     "at": 11.175
+    },
+    {
+     "w": "keeper",
+     "at": 11.275
+    },
+    {
+     "w": "is",
+     "at": 11.65
+    },
+    {
+     "w": "off",
+     "at": 11.775
+    },
+    {
+     "w": "his",
+     "at": 11.963
+    },
+    {
+     "w": "line",
+     "at": 12.125
+    },
+    {
+     "w": "boom",
+     "at": 13.037
+    },
+    {
+     "w": "Top",
+     "at": 13.875
+    },
+    {
+     "w": "corner",
+     "at": 14.188
+    },
+    {
+     "w": "One-one",
+     "at": 14.713
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. Eyes on the ball, standing foot planted, and he strikes it with his laces, right through the ball.",
+   "src": "/plays/narration/seedorf-signature/2.m4a",
+   "seconds": 8.3,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.163
+    },
+    {
+     "w": "Eyes",
+     "at": 2.225
+    },
+    {
+     "w": "on",
+     "at": 2.487
+    },
+    {
+     "w": "the",
+     "at": 2.587
+    },
+    {
+     "w": "ball",
+     "at": 2.675
+    },
+    {
+     "w": "standing",
+     "at": 3.125
+    },
+    {
+     "w": "foot",
+     "at": 3.562
+    },
+    {
+     "w": "planted",
+     "at": 3.825
+    },
+    {
+     "w": "and",
+     "at": 4.5
+    },
+    {
+     "w": "he",
+     "at": 4.612
+    },
+    {
+     "w": "strikes",
+     "at": 4.737
+    },
+    {
+     "w": "it",
+     "at": 5.112
+    },
+    {
+     "w": "with",
+     "at": 5.188
+    },
+    {
+     "w": "his",
+     "at": 5.287
+    },
+    {
+     "w": "laces",
+     "at": 5.45
+    },
+    {
+     "w": "right",
+     "at": 6.237
+    },
+    {
+     "w": "through",
+     "at": 6.55
+    },
+    {
+     "w": "the",
+     "at": 6.75
+    },
+    {
+     "w": "ball",
+     "at": 6.85
+    }
+   ]
+  },
+  {
+   "label": "Top corner",
+   "text": "Over forty metres! It flies past keeper Molina and into the top corner. The derby ends one-one.",
+   "src": "/plays/narration/seedorf-signature/3.m4a",
+   "seconds": 7.5,
+   "words": [
+    {
+     "w": "Over",
+     "at": 0.375
+    },
+    {
+     "w": "forty",
+     "at": 0.65
+    },
+    {
+     "w": "metres",
+     "at": 1.0
+    },
+    {
+     "w": "It",
+     "at": 1.85
+    },
+    {
+     "w": "flies",
+     "at": 2.0
+    },
+    {
+     "w": "past",
+     "at": 2.388
+    },
+    {
+     "w": "keeper",
+     "at": 2.788
+    },
+    {
+     "w": "Molina",
+     "at": 3.163
+    },
+    {
+     "w": "and",
+     "at": 3.65
+    },
+    {
+     "w": "into",
+     "at": 3.763
+    },
+    {
+     "w": "the",
+     "at": 3.938
+    },
+    {
+     "w": "top",
+     "at": 4.025
+    },
+    {
+     "w": "corner",
+     "at": 4.3
+    },
+    {
+     "w": "The",
+     "at": 5.162
+    },
+    {
+     "w": "derby",
+     "at": 5.3
+    },
+    {
+     "w": "ends",
+     "at": 5.725
+    },
+    {
+     "w": "one-one",
+     "at": 6.025
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: strike through the ball with your laces, and follow through towards goal.",
+   "src": "/plays/narration/seedorf-signature/4.m4a",
+   "seconds": 5.5,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "strike",
+     "at": 1.375
+    },
+    {
+     "w": "through",
+     "at": 1.725
+    },
+    {
+     "w": "the",
+     "at": 1.863
+    },
+    {
+     "w": "ball",
+     "at": 1.95
+    },
+    {
+     "w": "with",
+     "at": 2.237
+    },
+    {
+     "w": "your",
+     "at": 2.337
+    },
+    {
+     "w": "laces",
+     "at": 2.45
+    },
+    {
+     "w": "and",
+     "at": 3.05
+    },
+    {
+     "w": "follow",
+     "at": 3.188
+    },
+    {
+     "w": "through",
+     "at": 3.525
+    },
+    {
+     "w": "towards",
+     "at": 3.725
+    },
+    {
+     "w": "goal",
+     "at": 4.075
+    }
+   ]
+  }
+ ]
+}

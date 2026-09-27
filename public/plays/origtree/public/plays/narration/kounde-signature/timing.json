@@ -1,0 +1,398 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The chase",
+   "text": "Euro twenty twenty-four, France against Belgium. Speedy J\u00e9r\u00e9my Doku kept racing into the space behind France\u2019s defence. Here is how Jules Kound\u00e9 chased a run like that: sprint back, and tackle!",
+   "src": "/plays/narration/kounde-signature/1.m4a",
+   "seconds": 14.1,
+   "words": [
+    {
+     "w": "Euro",
+     "at": 0.4
+    },
+    {
+     "w": "twenty",
+     "at": 0.675
+    },
+    {
+     "w": "twenty-four",
+     "at": 0.975
+    },
+    {
+     "w": "France",
+     "at": 1.812
+    },
+    {
+     "w": "against",
+     "at": 2.2
+    },
+    {
+     "w": "Belgium",
+     "at": 2.625
+    },
+    {
+     "w": "Speedy",
+     "at": 3.712
+    },
+    {
+     "w": "J\u00e9r\u00e9my",
+     "at": 4.162
+    },
+    {
+     "w": "Doku",
+     "at": 4.625
+    },
+    {
+     "w": "kept",
+     "at": 5.013
+    },
+    {
+     "w": "racing",
+     "at": 5.338
+    },
+    {
+     "w": "into",
+     "at": 5.737
+    },
+    {
+     "w": "the",
+     "at": 5.912
+    },
+    {
+     "w": "space",
+     "at": 6.013
+    },
+    {
+     "w": "behind",
+     "at": 6.425
+    },
+    {
+     "w": "France\u2019s",
+     "at": 6.888
+    },
+    {
+     "w": "defence",
+     "at": 7.4
+    },
+    {
+     "w": "Here",
+     "at": 8.438
+    },
+    {
+     "w": "is",
+     "at": 8.675
+    },
+    {
+     "w": "how",
+     "at": 8.8
+    },
+    {
+     "w": "Jules",
+     "at": 9.037
+    },
+    {
+     "w": "Kound\u00e9",
+     "at": 9.325
+    },
+    {
+     "w": "chased",
+     "at": 9.825
+    },
+    {
+     "w": "a",
+     "at": 10.2
+    },
+    {
+     "w": "run",
+     "at": 10.312
+    },
+    {
+     "w": "like",
+     "at": 10.6
+    },
+    {
+     "w": "that",
+     "at": 10.825
+    },
+    {
+     "w": "sprint",
+     "at": 11.525
+    },
+    {
+     "w": "back",
+     "at": 11.95
+    },
+    {
+     "w": "and",
+     "at": 12.475
+    },
+    {
+     "w": "tackle",
+     "at": 12.613
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. Doku is past him, but Kound\u00e9 never stops. He sprints flat out, catches up, and comes alongside.",
+   "src": "/plays/narration/kounde-signature/2.m4a",
+   "seconds": 9.0,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.662
+    },
+    {
+     "w": "slowly",
+     "at": 1.087
+    },
+    {
+     "w": "Doku",
+     "at": 2.112
+    },
+    {
+     "w": "is",
+     "at": 2.475
+    },
+    {
+     "w": "past",
+     "at": 2.625
+    },
+    {
+     "w": "him",
+     "at": 2.987
+    },
+    {
+     "w": "but",
+     "at": 3.163
+    },
+    {
+     "w": "Kound\u00e9",
+     "at": 3.3
+    },
+    {
+     "w": "never",
+     "at": 3.725
+    },
+    {
+     "w": "stops",
+     "at": 4.037
+    },
+    {
+     "w": "He",
+     "at": 4.925
+    },
+    {
+     "w": "sprints",
+     "at": 5.05
+    },
+    {
+     "w": "flat",
+     "at": 5.463
+    },
+    {
+     "w": "out",
+     "at": 5.75
+    },
+    {
+     "w": "catches",
+     "at": 6.15
+    },
+    {
+     "w": "up",
+     "at": 6.55
+    },
+    {
+     "w": "and",
+     "at": 6.812
+    },
+    {
+     "w": "comes",
+     "at": 6.925
+    },
+    {
+     "w": "alongside",
+     "at": 7.2
+    }
+   ]
+  },
+  {
+   "label": "From the side",
+   "text": "Now he slides in from the side, not from behind. His boot reaches the ball first, and it rolls out of play.",
+   "src": "/plays/narration/kounde-signature/3.m4a",
+   "seconds": 7.9,
+   "words": [
+    {
+     "w": "Now",
+     "at": 0.4
+    },
+    {
+     "w": "he",
+     "at": 0.625
+    },
+    {
+     "w": "slides",
+     "at": 0.775
+    },
+    {
+     "w": "in",
+     "at": 1.225
+    },
+    {
+     "w": "from",
+     "at": 1.425
+    },
+    {
+     "w": "the",
+     "at": 1.562
+    },
+    {
+     "w": "side",
+     "at": 1.663
+    },
+    {
+     "w": "not",
+     "at": 2.35
+    },
+    {
+     "w": "from",
+     "at": 2.55
+    },
+    {
+     "w": "behind",
+     "at": 2.688
+    },
+    {
+     "w": "His",
+     "at": 3.8
+    },
+    {
+     "w": "boot",
+     "at": 4.013
+    },
+    {
+     "w": "reaches",
+     "at": 4.3
+    },
+    {
+     "w": "the",
+     "at": 4.65
+    },
+    {
+     "w": "ball",
+     "at": 4.75
+    },
+    {
+     "w": "first",
+     "at": 5.062
+    },
+    {
+     "w": "and",
+     "at": 5.675
+    },
+    {
+     "w": "it",
+     "at": 5.787
+    },
+    {
+     "w": "rolls",
+     "at": 5.875
+    },
+    {
+     "w": "out",
+     "at": 6.275
+    },
+    {
+     "w": "of",
+     "at": 6.412
+    },
+    {
+     "w": "play",
+     "at": 6.5
+    }
+   ]
+  },
+  {
+   "label": "Never stop",
+   "text": "Never stop chasing! Sprint back, get alongside the attacker, and tackle from the side, not from behind.",
+   "src": "/plays/narration/kounde-signature/4.m4a",
+   "seconds": 7.7,
+   "words": [
+    {
+     "w": "Never",
+     "at": 0.425
+    },
+    {
+     "w": "stop",
+     "at": 0.725
+    },
+    {
+     "w": "chasing",
+     "at": 1.062
+    },
+    {
+     "w": "Sprint",
+     "at": 2.075
+    },
+    {
+     "w": "back",
+     "at": 2.425
+    },
+    {
+     "w": "get",
+     "at": 2.85
+    },
+    {
+     "w": "alongside",
+     "at": 2.987
+    },
+    {
+     "w": "the",
+     "at": 3.538
+    },
+    {
+     "w": "attacker",
+     "at": 3.65
+    },
+    {
+     "w": "and",
+     "at": 4.3
+    },
+    {
+     "w": "tackle",
+     "at": 4.438
+    },
+    {
+     "w": "from",
+     "at": 4.85
+    },
+    {
+     "w": "the",
+     "at": 4.987
+    },
+    {
+     "w": "side",
+     "at": 5.088
+    },
+    {
+     "w": "not",
+     "at": 5.75
+    },
+    {
+     "w": "from",
+     "at": 5.975
+    },
+    {
+     "w": "behind",
+     "at": 6.112
+    }
+   ]
+  }
+ ]
+}

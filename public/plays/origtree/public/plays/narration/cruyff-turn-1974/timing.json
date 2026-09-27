@@ -1,0 +1,386 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live",
+   "text": "Dortmund, 1974. The Netherlands, in orange, play Sweden. On the left, Johan Cruyff has the ball. Defender Jan Olsson is right behind him. Cruyff gets ready to pass... then, suddenly, he's gone!",
+   "src": "/plays/narration/cruyff-turn-1974/1.m4a",
+   "seconds": 15.0,
+   "words": [
+    {
+     "w": "Dortmund",
+     "at": 0.4
+    },
+    {
+     "w": "1974",
+     "at": 0.875
+    },
+    {
+     "w": "The",
+     "at": 2.4
+    },
+    {
+     "w": "Netherlands",
+     "at": 2.525
+    },
+    {
+     "w": "in",
+     "at": 3.175
+    },
+    {
+     "w": "orange",
+     "at": 3.337
+    },
+    {
+     "w": "play",
+     "at": 3.85
+    },
+    {
+     "w": "Sweden",
+     "at": 4.15
+    },
+    {
+     "w": "On",
+     "at": 5.1
+    },
+    {
+     "w": "the",
+     "at": 5.237
+    },
+    {
+     "w": "left",
+     "at": 5.325
+    },
+    {
+     "w": "Johan",
+     "at": 5.787
+    },
+    {
+     "w": "Cruyff",
+     "at": 6.188
+    },
+    {
+     "w": "has",
+     "at": 6.55
+    },
+    {
+     "w": "the",
+     "at": 6.75
+    },
+    {
+     "w": "ball",
+     "at": 6.85
+    },
+    {
+     "w": "Defender",
+     "at": 7.688
+    },
+    {
+     "w": "Jan",
+     "at": 8.225
+    },
+    {
+     "w": "Olsson",
+     "at": 8.537
+    },
+    {
+     "w": "is",
+     "at": 8.975
+    },
+    {
+     "w": "right",
+     "at": 9.125
+    },
+    {
+     "w": "behind",
+     "at": 9.35
+    },
+    {
+     "w": "him",
+     "at": 9.762
+    },
+    {
+     "w": "Cruyff",
+     "at": 10.363
+    },
+    {
+     "w": "gets",
+     "at": 10.7
+    },
+    {
+     "w": "ready",
+     "at": 10.95
+    },
+    {
+     "w": "to",
+     "at": 11.175
+    },
+    {
+     "w": "pass",
+     "at": 11.275
+    },
+    {
+     "w": "then",
+     "at": 12.213
+    },
+    {
+     "w": "suddenly",
+     "at": 12.713
+    },
+    {
+     "w": "he's",
+     "at": 13.275
+    },
+    {
+     "w": "gone",
+     "at": 13.512
+    }
+   ]
+  },
+  {
+   "label": "The replay",
+   "text": "Watch it slowly. Cruyff fakes the pass. Then he uses the inside of his foot to drag the ball behind his standing leg, spins round, and speeds away. Olsson goes the wrong way!",
+   "src": "/plays/narration/cruyff-turn-1974/2.m4a",
+   "seconds": 12.7,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.375
+    },
+    {
+     "w": "it",
+     "at": 0.637
+    },
+    {
+     "w": "slowly",
+     "at": 0.787
+    },
+    {
+     "w": "Cruyff",
+     "at": 1.788
+    },
+    {
+     "w": "fakes",
+     "at": 2.188
+    },
+    {
+     "w": "the",
+     "at": 2.475
+    },
+    {
+     "w": "pass",
+     "at": 2.575
+    },
+    {
+     "w": "Then",
+     "at": 3.462
+    },
+    {
+     "w": "he",
+     "at": 3.7
+    },
+    {
+     "w": "uses",
+     "at": 3.825
+    },
+    {
+     "w": "the",
+     "at": 4.15
+    },
+    {
+     "w": "inside",
+     "at": 4.312
+    },
+    {
+     "w": "of",
+     "at": 4.787
+    },
+    {
+     "w": "his",
+     "at": 4.862
+    },
+    {
+     "w": "foot",
+     "at": 5.062
+    },
+    {
+     "w": "to",
+     "at": 5.325
+    },
+    {
+     "w": "drag",
+     "at": 5.425
+    },
+    {
+     "w": "the",
+     "at": 5.763
+    },
+    {
+     "w": "ball",
+     "at": 5.85
+    },
+    {
+     "w": "behind",
+     "at": 6.15
+    },
+    {
+     "w": "his",
+     "at": 6.513
+    },
+    {
+     "w": "standing",
+     "at": 6.625
+    },
+    {
+     "w": "leg",
+     "at": 7.1
+    },
+    {
+     "w": "spins",
+     "at": 7.775
+    },
+    {
+     "w": "round",
+     "at": 8.262
+    },
+    {
+     "w": "and",
+     "at": 8.738
+    },
+    {
+     "w": "speeds",
+     "at": 8.863
+    },
+    {
+     "w": "away",
+     "at": 9.275
+    },
+    {
+     "w": "Olsson",
+     "at": 10.188
+    },
+    {
+     "w": "goes",
+     "at": 10.6
+    },
+    {
+     "w": "the",
+     "at": 10.9
+    },
+    {
+     "w": "wrong",
+     "at": 11.025
+    },
+    {
+     "w": "way",
+     "at": 11.363
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "The game ended nil-nil, but everyone remembers the Cruyff turn. Fake the pass, drag the ball behind your standing leg, and turn away fast.",
+   "src": "/plays/narration/cruyff-turn-1974/3.m4a",
+   "seconds": 10.0,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "game",
+     "at": 0.425
+    },
+    {
+     "w": "ended",
+     "at": 0.725
+    },
+    {
+     "w": "nil-nil",
+     "at": 1.05
+    },
+    {
+     "w": "but",
+     "at": 1.825
+    },
+    {
+     "w": "everyone",
+     "at": 1.975
+    },
+    {
+     "w": "remembers",
+     "at": 2.425
+    },
+    {
+     "w": "the",
+     "at": 2.9
+    },
+    {
+     "w": "Cruyff",
+     "at": 3.0
+    },
+    {
+     "w": "turn",
+     "at": 3.325
+    },
+    {
+     "w": "Fake",
+     "at": 4.3
+    },
+    {
+     "w": "the",
+     "at": 4.55
+    },
+    {
+     "w": "pass",
+     "at": 4.662
+    },
+    {
+     "w": "drag",
+     "at": 5.487
+    },
+    {
+     "w": "the",
+     "at": 5.838
+    },
+    {
+     "w": "ball",
+     "at": 5.925
+    },
+    {
+     "w": "behind",
+     "at": 6.25
+    },
+    {
+     "w": "your",
+     "at": 6.612
+    },
+    {
+     "w": "standing",
+     "at": 6.725
+    },
+    {
+     "w": "leg",
+     "at": 7.2
+    },
+    {
+     "w": "and",
+     "at": 7.825
+    },
+    {
+     "w": "turn",
+     "at": 7.963
+    },
+    {
+     "w": "away",
+     "at": 8.25
+    },
+    {
+     "w": "fast",
+     "at": 8.562
+    }
+   ]
+  }
+ ]
+}

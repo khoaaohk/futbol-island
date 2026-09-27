@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Dream debut",
+   "text": "Anfield, January 2018: Virgil van Dijk's first game for Liverpool, in red, against Everton, in blue. One-all, eighty-four minutes. Oxlade-Chamberlain swings in a corner... Van Dijk rises... Goal!",
+   "src": "/plays/narration/van-dijk-signature/1.m4a",
+   "seconds": 15.4,
+   "words": [
+    {
+     "w": "Anfield",
+     "at": 0.4
+    },
+    {
+     "w": "January",
+     "at": 1.012
+    },
+    {
+     "w": "2018",
+     "at": 1.587
+    },
+    {
+     "w": "Virgil",
+     "at": 2.812
+    },
+    {
+     "w": "van",
+     "at": 3.175
+    },
+    {
+     "w": "Dijk's",
+     "at": 3.425
+    },
+    {
+     "w": "first",
+     "at": 3.775
+    },
+    {
+     "w": "game",
+     "at": 4.075
+    },
+    {
+     "w": "for",
+     "at": 4.375
+    },
+    {
+     "w": "Liverpool",
+     "at": 4.525
+    },
+    {
+     "w": "in",
+     "at": 5.2
+    },
+    {
+     "w": "red",
+     "at": 5.362
+    },
+    {
+     "w": "against",
+     "at": 5.75
+    },
+    {
+     "w": "Everton",
+     "at": 6.15
+    },
+    {
+     "w": "in",
+     "at": 6.625
+    },
+    {
+     "w": "blue",
+     "at": 6.775
+    },
+    {
+     "w": "One-all",
+     "at": 7.675
+    },
+    {
+     "w": "eighty-four",
+     "at": 8.275
+    },
+    {
+     "w": "minutes",
+     "at": 8.825
+    },
+    {
+     "w": "Oxlade-Chamberlain",
+     "at": 9.613
+    },
+    {
+     "w": "swings",
+     "at": 10.75
+    },
+    {
+     "w": "in",
+     "at": 11.238
+    },
+    {
+     "w": "a",
+     "at": 11.312
+    },
+    {
+     "w": "corner",
+     "at": 11.387
+    },
+    {
+     "w": "Van",
+     "at": 12.312
+    },
+    {
+     "w": "Dijk",
+     "at": 12.6
+    },
+    {
+     "w": "rises",
+     "at": 12.887
+    },
+    {
+     "w": "Goal",
+     "at": 13.963
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. The keeper, Jordan Pickford, rushes off his line to catch it. Van Dijk times his jump and gets there first.",
+   "src": "/plays/narration/van-dijk-signature/2.m4a",
+   "seconds": 9.4,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.188
+    },
+    {
+     "w": "The",
+     "at": 2.212
+    },
+    {
+     "w": "keeper",
+     "at": 2.362
+    },
+    {
+     "w": "Jordan",
+     "at": 2.962
+    },
+    {
+     "w": "Pickford",
+     "at": 3.388
+    },
+    {
+     "w": "rushes",
+     "at": 4.037
+    },
+    {
+     "w": "off",
+     "at": 4.4
+    },
+    {
+     "w": "his",
+     "at": 4.588
+    },
+    {
+     "w": "line",
+     "at": 4.75
+    },
+    {
+     "w": "to",
+     "at": 5.075
+    },
+    {
+     "w": "catch",
+     "at": 5.175
+    },
+    {
+     "w": "it",
+     "at": 5.463
+    },
+    {
+     "w": "Van",
+     "at": 6.062
+    },
+    {
+     "w": "Dijk",
+     "at": 6.35
+    },
+    {
+     "w": "times",
+     "at": 6.625
+    },
+    {
+     "w": "his",
+     "at": 6.938
+    },
+    {
+     "w": "jump",
+     "at": 7.112
+    },
+    {
+     "w": "and",
+     "at": 7.438
+    },
+    {
+     "w": "gets",
+     "at": 7.55
+    },
+    {
+     "w": "there",
+     "at": 7.8
+    },
+    {
+     "w": "first",
+     "at": 8.012
+    }
+   ]
+  },
+  {
+   "label": "Highest point",
+   "text": "From behind the goal: he meets the ball at its highest point, before Pickford can. Into the net, in front of the Kop!",
+   "src": "/plays/narration/van-dijk-signature/3.m4a",
+   "seconds": 7.8,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "behind",
+     "at": 0.5
+    },
+    {
+     "w": "the",
+     "at": 0.887
+    },
+    {
+     "w": "goal",
+     "at": 0.975
+    },
+    {
+     "w": "he",
+     "at": 1.725
+    },
+    {
+     "w": "meets",
+     "at": 1.875
+    },
+    {
+     "w": "the",
+     "at": 2.15
+    },
+    {
+     "w": "ball",
+     "at": 2.25
+    },
+    {
+     "w": "at",
+     "at": 2.575
+    },
+    {
+     "w": "its",
+     "at": 2.663
+    },
+    {
+     "w": "highest",
+     "at": 2.837
+    },
+    {
+     "w": "point",
+     "at": 3.312
+    },
+    {
+     "w": "before",
+     "at": 3.75
+    },
+    {
+     "w": "Pickford",
+     "at": 4.1
+    },
+    {
+     "w": "can",
+     "at": 4.525
+    },
+    {
+     "w": "Into",
+     "at": 5.412
+    },
+    {
+     "w": "the",
+     "at": 5.612
+    },
+    {
+     "w": "net",
+     "at": 5.725
+    },
+    {
+     "w": "in",
+     "at": 6.037
+    },
+    {
+     "w": "front",
+     "at": 6.15
+    },
+    {
+     "w": "of",
+     "at": 6.338
+    },
+    {
+     "w": "the",
+     "at": 6.412
+    },
+    {
+     "w": "Kop",
+     "at": 6.5
+    }
+   ]
+  },
+  {
+   "label": "Time your jump",
+   "text": "Don't jump too early! Time your jump, and meet the ball at its highest point.",
+   "src": "/plays/narration/van-dijk-signature/4.m4a",
+   "seconds": 5.3,
+   "words": [
+    {
+     "w": "Don't",
+     "at": 0.375
+    },
+    {
+     "w": "jump",
+     "at": 0.637
+    },
+    {
+     "w": "too",
+     "at": 0.925
+    },
+    {
+     "w": "early",
+     "at": 1.1
+    },
+    {
+     "w": "Time",
+     "at": 1.887
+    },
+    {
+     "w": "your",
+     "at": 2.138
+    },
+    {
+     "w": "jump",
+     "at": 2.288
+    },
+    {
+     "w": "and",
+     "at": 2.638
+    },
+    {
+     "w": "meet",
+     "at": 2.75
+    },
+    {
+     "w": "the",
+     "at": 2.938
+    },
+    {
+     "w": "ball",
+     "at": 3.025
+    },
+    {
+     "w": "at",
+     "at": 3.35
+    },
+    {
+     "w": "its",
+     "at": 3.438
+    },
+    {
+     "w": "highest",
+     "at": 3.55
+    },
+    {
+     "w": "point",
+     "at": 3.925
+    }
+   ]
+  }
+ ]
+}

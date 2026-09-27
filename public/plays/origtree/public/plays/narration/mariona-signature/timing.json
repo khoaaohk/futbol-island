@@ -1,0 +1,386 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The assist, live",
+   "text": "Sydney, the 2023 World Cup final, Spain against England. Bronze loses the ball, and Spain break. Ona Batlle finds Mariona Caldentey. Mariona waits... then slips Olga Carmona in. She shoots... Goal!",
+   "src": "/plays/narration/mariona-signature/1.m4a",
+   "seconds": 16.3,
+   "words": [
+    {
+     "w": "Sydney",
+     "at": 0.4
+    },
+    {
+     "w": "the",
+     "at": 0.825
+    },
+    {
+     "w": "2023",
+     "at": 0.925
+    },
+    {
+     "w": "World",
+     "at": 1.825
+    },
+    {
+     "w": "Cup",
+     "at": 2.125
+    },
+    {
+     "w": "final",
+     "at": 2.35
+    },
+    {
+     "w": "Spain",
+     "at": 2.837
+    },
+    {
+     "w": "against",
+     "at": 3.225
+    },
+    {
+     "w": "England",
+     "at": 3.625
+    },
+    {
+     "w": "Bronze",
+     "at": 4.65
+    },
+    {
+     "w": "loses",
+     "at": 5.162
+    },
+    {
+     "w": "the",
+     "at": 5.6
+    },
+    {
+     "w": "ball",
+     "at": 5.7
+    },
+    {
+     "w": "and",
+     "at": 6.112
+    },
+    {
+     "w": "Spain",
+     "at": 6.237
+    },
+    {
+     "w": "break",
+     "at": 6.625
+    },
+    {
+     "w": "Ona",
+     "at": 7.463
+    },
+    {
+     "w": "Batlle",
+     "at": 7.775
+    },
+    {
+     "w": "finds",
+     "at": 8.188
+    },
+    {
+     "w": "Mariona",
+     "at": 8.6
+    },
+    {
+     "w": "Caldentey",
+     "at": 9.125
+    },
+    {
+     "w": "Mariona",
+     "at": 10.137
+    },
+    {
+     "w": "waits",
+     "at": 10.662
+    },
+    {
+     "w": "then",
+     "at": 11.55
+    },
+    {
+     "w": "slips",
+     "at": 11.8
+    },
+    {
+     "w": "Olga",
+     "at": 12.188
+    },
+    {
+     "w": "Carmona",
+     "at": 12.5
+    },
+    {
+     "w": "in",
+     "at": 13.0
+    },
+    {
+     "w": "She",
+     "at": 13.65
+    },
+    {
+     "w": "shoots",
+     "at": 13.863
+    },
+    {
+     "w": "Goal",
+     "at": 14.838
+    }
+   ]
+  },
+  {
+   "label": "Watch Mariona",
+   "text": "Watch Mariona again. She holds the ball until Carmona runs past on the outside. One clever pass, and Carmona is through!",
+   "src": "/plays/narration/mariona-signature/2.m4a",
+   "seconds": 9.2,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "Mariona",
+     "at": 0.7
+    },
+    {
+     "w": "again",
+     "at": 1.25
+    },
+    {
+     "w": "She",
+     "at": 2.087
+    },
+    {
+     "w": "holds",
+     "at": 2.225
+    },
+    {
+     "w": "the",
+     "at": 2.538
+    },
+    {
+     "w": "ball",
+     "at": 2.625
+    },
+    {
+     "w": "until",
+     "at": 2.938
+    },
+    {
+     "w": "Carmona",
+     "at": 3.175
+    },
+    {
+     "w": "runs",
+     "at": 3.65
+    },
+    {
+     "w": "past",
+     "at": 3.962
+    },
+    {
+     "w": "on",
+     "at": 4.362
+    },
+    {
+     "w": "the",
+     "at": 4.463
+    },
+    {
+     "w": "outside",
+     "at": 4.575
+    },
+    {
+     "w": "One",
+     "at": 5.7
+    },
+    {
+     "w": "clever",
+     "at": 5.987
+    },
+    {
+     "w": "pass",
+     "at": 6.388
+    },
+    {
+     "w": "and",
+     "at": 7.0
+    },
+    {
+     "w": "Carmona",
+     "at": 7.125
+    },
+    {
+     "w": "is",
+     "at": 7.625
+    },
+    {
+     "w": "through",
+     "at": 7.812
+    }
+   ]
+  },
+  {
+   "label": "Into the far corner",
+   "text": "From behind the goal: low, past Earps, into the far corner. Spain lead one-nil!",
+   "src": "/plays/narration/mariona-signature/3.m4a",
+   "seconds": 6.2,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "behind",
+     "at": 0.487
+    },
+    {
+     "w": "the",
+     "at": 0.863
+    },
+    {
+     "w": "goal",
+     "at": 0.95
+    },
+    {
+     "w": "low",
+     "at": 1.637
+    },
+    {
+     "w": "past",
+     "at": 2.0
+    },
+    {
+     "w": "Earps",
+     "at": 2.35
+    },
+    {
+     "w": "into",
+     "at": 2.688
+    },
+    {
+     "w": "the",
+     "at": 2.862
+    },
+    {
+     "w": "far",
+     "at": 2.95
+    },
+    {
+     "w": "corner",
+     "at": 3.2
+    },
+    {
+     "w": "Spain",
+     "at": 4.062
+    },
+    {
+     "w": "lead",
+     "at": 4.5
+    },
+    {
+     "w": "one-nil",
+     "at": 4.725
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "The secret? Be patient on the ball. Look up, and before you shoot, look for the pass that splits two defenders.",
+   "src": "/plays/narration/mariona-signature/4.m4a",
+   "seconds": 7.6,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "secret",
+     "at": 0.463
+    },
+    {
+     "w": "Be",
+     "at": 1.3
+    },
+    {
+     "w": "patient",
+     "at": 1.462
+    },
+    {
+     "w": "on",
+     "at": 1.887
+    },
+    {
+     "w": "the",
+     "at": 1.988
+    },
+    {
+     "w": "ball",
+     "at": 2.075
+    },
+    {
+     "w": "Look",
+     "at": 2.888
+    },
+    {
+     "w": "up",
+     "at": 3.087
+    },
+    {
+     "w": "and",
+     "at": 3.362
+    },
+    {
+     "w": "before",
+     "at": 3.462
+    },
+    {
+     "w": "you",
+     "at": 3.725
+    },
+    {
+     "w": "shoot",
+     "at": 3.9
+    },
+    {
+     "w": "look",
+     "at": 4.375
+    },
+    {
+     "w": "for",
+     "at": 4.55
+    },
+    {
+     "w": "the",
+     "at": 4.662
+    },
+    {
+     "w": "pass",
+     "at": 4.763
+    },
+    {
+     "w": "that",
+     "at": 5.15
+    },
+    {
+     "w": "splits",
+     "at": 5.338
+    },
+    {
+     "w": "two",
+     "at": 5.763
+    },
+    {
+     "w": "defenders",
+     "at": 5.975
+    }
+   ]
+  }
+ ]
+}

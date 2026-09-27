@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The cross, live",
+   "text": "Lisbon, 2020, the Champions League final. Gnabry finds M\u00fcller, who lays it back to Joshua Kimmich on the right. He looks up, crosses to the back post... Coman heads it in!",
+   "src": "/plays/narration/kimmich-signature/1.m4a",
+   "seconds": 12.7,
+   "words": [
+    {
+     "w": "Lisbon",
+     "at": 0.425
+    },
+    {
+     "w": "2020",
+     "at": 0.975
+    },
+    {
+     "w": "the",
+     "at": 1.825
+    },
+    {
+     "w": "Champions",
+     "at": 1.962
+    },
+    {
+     "w": "League",
+     "at": 2.6
+    },
+    {
+     "w": "final",
+     "at": 2.888
+    },
+    {
+     "w": "Gnabry",
+     "at": 3.85
+    },
+    {
+     "w": "finds",
+     "at": 4.312
+    },
+    {
+     "w": "M\u00fcller",
+     "at": 4.713
+    },
+    {
+     "w": "who",
+     "at": 5.225
+    },
+    {
+     "w": "lays",
+     "at": 5.375
+    },
+    {
+     "w": "it",
+     "at": 5.662
+    },
+    {
+     "w": "back",
+     "at": 5.75
+    },
+    {
+     "w": "to",
+     "at": 6.025
+    },
+    {
+     "w": "Joshua",
+     "at": 6.162
+    },
+    {
+     "w": "Kimmich",
+     "at": 6.638
+    },
+    {
+     "w": "on",
+     "at": 7.037
+    },
+    {
+     "w": "the",
+     "at": 7.138
+    },
+    {
+     "w": "right",
+     "at": 7.225
+    },
+    {
+     "w": "He",
+     "at": 7.95
+    },
+    {
+     "w": "looks",
+     "at": 8.1
+    },
+    {
+     "w": "up",
+     "at": 8.35
+    },
+    {
+     "w": "crosses",
+     "at": 8.675
+    },
+    {
+     "w": "to",
+     "at": 9.15
+    },
+    {
+     "w": "the",
+     "at": 9.238
+    },
+    {
+     "w": "back",
+     "at": 9.325
+    },
+    {
+     "w": "post",
+     "at": 9.613
+    },
+    {
+     "w": "Coman",
+     "at": 10.55
+    },
+    {
+     "w": "heads",
+     "at": 11.05
+    },
+    {
+     "w": "it",
+     "at": 11.287
+    },
+    {
+     "w": "in",
+     "at": 11.375
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again, slowly. Kimmich spots Kingsley Coman, all alone at the far post, and drops the ball onto his head.",
+   "src": "/plays/narration/kimmich-signature/2.m4a",
+   "seconds": 8.6,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "slowly",
+     "at": 1.312
+    },
+    {
+     "w": "Kimmich",
+     "at": 2.388
+    },
+    {
+     "w": "spots",
+     "at": 2.737
+    },
+    {
+     "w": "Kingsley",
+     "at": 3.175
+    },
+    {
+     "w": "Coman",
+     "at": 3.625
+    },
+    {
+     "w": "all",
+     "at": 4.412
+    },
+    {
+     "w": "alone",
+     "at": 4.65
+    },
+    {
+     "w": "at",
+     "at": 5.013
+    },
+    {
+     "w": "the",
+     "at": 5.088
+    },
+    {
+     "w": "far",
+     "at": 5.188
+    },
+    {
+     "w": "post",
+     "at": 5.487
+    },
+    {
+     "w": "and",
+     "at": 6.0
+    },
+    {
+     "w": "drops",
+     "at": 6.125
+    },
+    {
+     "w": "the",
+     "at": 6.475
+    },
+    {
+     "w": "ball",
+     "at": 6.575
+    },
+    {
+     "w": "onto",
+     "at": 6.9
+    },
+    {
+     "w": "his",
+     "at": 7.138
+    },
+    {
+     "w": "head",
+     "at": 7.3
+    }
+   ]
+  },
+  {
+   "label": "The header",
+   "text": "Coman heads it low, across the keeper. It was the only goal: Bayern were champions of Europe!",
+   "src": "/plays/narration/kimmich-signature/3.m4a",
+   "seconds": 6.7,
+   "words": [
+    {
+     "w": "Coman",
+     "at": 0.35
+    },
+    {
+     "w": "heads",
+     "at": 0.75
+    },
+    {
+     "w": "it",
+     "at": 0.988
+    },
+    {
+     "w": "low",
+     "at": 1.1
+    },
+    {
+     "w": "across",
+     "at": 1.5
+    },
+    {
+     "w": "the",
+     "at": 1.85
+    },
+    {
+     "w": "keeper",
+     "at": 1.95
+    },
+    {
+     "w": "It",
+     "at": 2.8
+    },
+    {
+     "w": "was",
+     "at": 2.938
+    },
+    {
+     "w": "the",
+     "at": 3.062
+    },
+    {
+     "w": "only",
+     "at": 3.175
+    },
+    {
+     "w": "goal",
+     "at": 3.475
+    },
+    {
+     "w": "Bayern",
+     "at": 4.188
+    },
+    {
+     "w": "were",
+     "at": 4.588
+    },
+    {
+     "w": "champions",
+     "at": 4.713
+    },
+    {
+     "w": "of",
+     "at": 5.263
+    },
+    {
+     "w": "Europe",
+     "at": 5.35
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: look up early, and aim your pass at your teammate's front foot, so they can keep running.",
+   "src": "/plays/narration/kimmich-signature/4.m4a",
+   "seconds": 6.8,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "look",
+     "at": 1.337
+    },
+    {
+     "w": "up",
+     "at": 1.512
+    },
+    {
+     "w": "early",
+     "at": 1.7
+    },
+    {
+     "w": "and",
+     "at": 2.325
+    },
+    {
+     "w": "aim",
+     "at": 2.462
+    },
+    {
+     "w": "your",
+     "at": 2.663
+    },
+    {
+     "w": "pass",
+     "at": 2.775
+    },
+    {
+     "w": "at",
+     "at": 3.062
+    },
+    {
+     "w": "your",
+     "at": 3.138
+    },
+    {
+     "w": "teammate's",
+     "at": 3.263
+    },
+    {
+     "w": "front",
+     "at": 3.825
+    },
+    {
+     "w": "foot",
+     "at": 4.088
+    },
+    {
+     "w": "so",
+     "at": 4.725
+    },
+    {
+     "w": "they",
+     "at": 4.875
+    },
+    {
+     "w": "can",
+     "at": 5.025
+    },
+    {
+     "w": "keep",
+     "at": 5.2
+    },
+    {
+     "w": "running",
+     "at": 5.45
+    }
+   ]
+  }
+ ]
+}

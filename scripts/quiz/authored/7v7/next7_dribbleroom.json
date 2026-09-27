@@ -140,6 +140,31 @@
      }
     ]
    }
+  },
+  {
+   "q": "Your teammate wants to go inside. Which move changes direction fast?",
+   "options": [
+    "Toe poke",
+    "Stop and wait",
+    "Inside cut: hook it across your body"
+   ],
+   "correct": 2,
+   "explain": "Right. Hook the ball across with the inside of your foot and go.",
+   "choiceExplanations": [
+    "A toe poke is a quick shot, not a turn.",
+    "Waiting gives the defender time to close you down.",
+    "Right. Hook the ball across with the inside of your foot and go."
+   ],
+   "visual": {
+    "kind": "whatNext",
+    "frame": {
+     "step": 3,
+     "focus": [
+      "lm",
+      "drm"
+     ]
+    }
+   }
   }
  ]
 }

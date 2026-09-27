@@ -1,0 +1,362 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The overlap, live",
+   "text": "Here's how Dani Alves did it at Barcelona, again and again. The right-back passes to Messi... and keeps running! Round the outside. Messi slides it back into his path. Alves crosses... and Messi scores!",
+   "src": "/plays/narration/dani-alves-signature/1.m4a",
+   "seconds": 14.4,
+   "words": [
+    {
+     "w": "Here's",
+     "at": 0.35
+    },
+    {
+     "w": "how",
+     "at": 0.575
+    },
+    {
+     "w": "Dani",
+     "at": 0.75
+    },
+    {
+     "w": "Alves",
+     "at": 1.075
+    },
+    {
+     "w": "did",
+     "at": 1.525
+    },
+    {
+     "w": "it",
+     "at": 1.688
+    },
+    {
+     "w": "at",
+     "at": 1.762
+    },
+    {
+     "w": "Barcelona",
+     "at": 1.85
+    },
+    {
+     "w": "again",
+     "at": 2.65
+    },
+    {
+     "w": "and",
+     "at": 3.0
+    },
+    {
+     "w": "again",
+     "at": 3.112
+    },
+    {
+     "w": "The",
+     "at": 4.037
+    },
+    {
+     "w": "right-back",
+     "at": 4.175
+    },
+    {
+     "w": "passes",
+     "at": 4.7
+    },
+    {
+     "w": "to",
+     "at": 5.175
+    },
+    {
+     "w": "Messi",
+     "at": 5.3
+    },
+    {
+     "w": "and",
+     "at": 6.175
+    },
+    {
+     "w": "keeps",
+     "at": 6.3
+    },
+    {
+     "w": "running",
+     "at": 6.588
+    },
+    {
+     "w": "Round",
+     "at": 7.312
+    },
+    {
+     "w": "the",
+     "at": 7.638
+    },
+    {
+     "w": "outside",
+     "at": 7.75
+    },
+    {
+     "w": "Messi",
+     "at": 8.738
+    },
+    {
+     "w": "slides",
+     "at": 9.088
+    },
+    {
+     "w": "it",
+     "at": 9.512
+    },
+    {
+     "w": "back",
+     "at": 9.6
+    },
+    {
+     "w": "into",
+     "at": 9.838
+    },
+    {
+     "w": "his",
+     "at": 10.012
+    },
+    {
+     "w": "path",
+     "at": 10.188
+    },
+    {
+     "w": "Alves",
+     "at": 10.887
+    },
+    {
+     "w": "crosses",
+     "at": 11.363
+    },
+    {
+     "w": "and",
+     "at": 12.4
+    },
+    {
+     "w": "Messi",
+     "at": 12.525
+    },
+    {
+     "w": "scores",
+     "at": 12.863
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. The defender follows Messi inside. Nobody follows Alves. He sprints into the empty space on the wing, and the ball is waiting for him.",
+   "src": "/plays/narration/dani-alves-signature/2.m4a",
+   "seconds": 11.4,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.262
+    },
+    {
+     "w": "The",
+     "at": 2.288
+    },
+    {
+     "w": "defender",
+     "at": 2.4
+    },
+    {
+     "w": "follows",
+     "at": 2.913
+    },
+    {
+     "w": "Messi",
+     "at": 3.3
+    },
+    {
+     "w": "inside",
+     "at": 3.65
+    },
+    {
+     "w": "Nobody",
+     "at": 4.7
+    },
+    {
+     "w": "follows",
+     "at": 5.088
+    },
+    {
+     "w": "Alves",
+     "at": 5.525
+    },
+    {
+     "w": "He",
+     "at": 6.475
+    },
+    {
+     "w": "sprints",
+     "at": 6.638
+    },
+    {
+     "w": "into",
+     "at": 7.062
+    },
+    {
+     "w": "the",
+     "at": 7.237
+    },
+    {
+     "w": "empty",
+     "at": 7.388
+    },
+    {
+     "w": "space",
+     "at": 7.787
+    },
+    {
+     "w": "on",
+     "at": 8.188
+    },
+    {
+     "w": "the",
+     "at": 8.287
+    },
+    {
+     "w": "wing",
+     "at": 8.387
+    },
+    {
+     "w": "and",
+     "at": 8.875
+    },
+    {
+     "w": "the",
+     "at": 8.988
+    },
+    {
+     "w": "ball",
+     "at": 9.088
+    },
+    {
+     "w": "is",
+     "at": 9.45
+    },
+    {
+     "w": "waiting",
+     "at": 9.613
+    },
+    {
+     "w": "for",
+     "at": 9.975
+    },
+    {
+     "w": "him",
+     "at": 10.125
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: pass to a teammate, then keep running! Go round the outside, into space. The return pass will find you there.",
+   "src": "/plays/narration/dani-alves-signature/3.m4a",
+   "seconds": 8.6,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.512
+    },
+    {
+     "w": "pass",
+     "at": 1.113
+    },
+    {
+     "w": "to",
+     "at": 1.425
+    },
+    {
+     "w": "a",
+     "at": 1.525
+    },
+    {
+     "w": "teammate",
+     "at": 1.637
+    },
+    {
+     "w": "then",
+     "at": 2.25
+    },
+    {
+     "w": "keep",
+     "at": 2.462
+    },
+    {
+     "w": "running",
+     "at": 2.725
+    },
+    {
+     "w": "Go",
+     "at": 3.612
+    },
+    {
+     "w": "round",
+     "at": 3.8
+    },
+    {
+     "w": "the",
+     "at": 4.062
+    },
+    {
+     "w": "outside",
+     "at": 4.175
+    },
+    {
+     "w": "into",
+     "at": 4.763
+    },
+    {
+     "w": "space",
+     "at": 5.013
+    },
+    {
+     "w": "The",
+     "at": 5.925
+    },
+    {
+     "w": "return",
+     "at": 6.025
+    },
+    {
+     "w": "pass",
+     "at": 6.45
+    },
+    {
+     "w": "will",
+     "at": 6.763
+    },
+    {
+     "w": "find",
+     "at": 6.9
+    },
+    {
+     "w": "you",
+     "at": 7.2
+    },
+    {
+     "w": "there",
+     "at": 7.35
+    }
+   ]
+  }
+ ]
+}

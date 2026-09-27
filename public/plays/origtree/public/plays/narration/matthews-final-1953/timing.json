@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Last minute",
+   "text": "Wembley, 1953, the FA Cup final. Blackpool were two goals down; now it's three all, last minute. Stanley Matthews gets it on the right, beats his man, races to the line, cuts it back... Bill Perry scores!",
+   "src": "/plays/narration/matthews-final-1953/1.m4a",
+   "seconds": 15.2,
+   "words": [
+    {
+     "w": "Wembley",
+     "at": 0.4
+    },
+    {
+     "w": "1953",
+     "at": 0.875
+    },
+    {
+     "w": "the",
+     "at": 2.025
+    },
+    {
+     "w": "FA",
+     "at": 2.163
+    },
+    {
+     "w": "Cup",
+     "at": 2.425
+    },
+    {
+     "w": "final",
+     "at": 2.65
+    },
+    {
+     "w": "Blackpool",
+     "at": 3.612
+    },
+    {
+     "w": "were",
+     "at": 4.162
+    },
+    {
+     "w": "two",
+     "at": 4.312
+    },
+    {
+     "w": "goals",
+     "at": 4.525
+    },
+    {
+     "w": "down",
+     "at": 4.85
+    },
+    {
+     "w": "now",
+     "at": 5.438
+    },
+    {
+     "w": "it's",
+     "at": 5.65
+    },
+    {
+     "w": "three",
+     "at": 5.85
+    },
+    {
+     "w": "all",
+     "at": 6.075
+    },
+    {
+     "w": "last",
+     "at": 6.4
+    },
+    {
+     "w": "minute",
+     "at": 6.775
+    },
+    {
+     "w": "Stanley",
+     "at": 7.7
+    },
+    {
+     "w": "Matthews",
+     "at": 8.15
+    },
+    {
+     "w": "gets",
+     "at": 8.7
+    },
+    {
+     "w": "it",
+     "at": 8.912
+    },
+    {
+     "w": "on",
+     "at": 8.988
+    },
+    {
+     "w": "the",
+     "at": 9.088
+    },
+    {
+     "w": "right",
+     "at": 9.175
+    },
+    {
+     "w": "beats",
+     "at": 9.688
+    },
+    {
+     "w": "his",
+     "at": 9.963
+    },
+    {
+     "w": "man",
+     "at": 10.125
+    },
+    {
+     "w": "races",
+     "at": 10.637
+    },
+    {
+     "w": "to",
+     "at": 11.125
+    },
+    {
+     "w": "the",
+     "at": 11.213
+    },
+    {
+     "w": "line",
+     "at": 11.325
+    },
+    {
+     "w": "cuts",
+     "at": 11.8
+    },
+    {
+     "w": "it",
+     "at": 12.062
+    },
+    {
+     "w": "back",
+     "at": 12.175
+    },
+    {
+     "w": "Bill",
+     "at": 13.012
+    },
+    {
+     "w": "Perry",
+     "at": 13.338
+    },
+    {
+     "w": "scores",
+     "at": 13.713
+    }
+   ]
+  },
+  {
+   "label": "The shoulder",
+   "text": "Slow motion. Matthews drops his shoulder, Banks leans the wrong way, and one touch round the outside takes him to the byline.",
+   "src": "/plays/narration/matthews-final-1953/2.m4a",
+   "seconds": 9.0,
+   "words": [
+    {
+     "w": "Slow",
+     "at": 0.4
+    },
+    {
+     "w": "motion",
+     "at": 0.7
+    },
+    {
+     "w": "Matthews",
+     "at": 1.712
+    },
+    {
+     "w": "drops",
+     "at": 2.225
+    },
+    {
+     "w": "his",
+     "at": 2.538
+    },
+    {
+     "w": "shoulder",
+     "at": 2.688
+    },
+    {
+     "w": "Banks",
+     "at": 3.388
+    },
+    {
+     "w": "leans",
+     "at": 3.775
+    },
+    {
+     "w": "the",
+     "at": 4.125
+    },
+    {
+     "w": "wrong",
+     "at": 4.25
+    },
+    {
+     "w": "way",
+     "at": 4.575
+    },
+    {
+     "w": "and",
+     "at": 5.225
+    },
+    {
+     "w": "one",
+     "at": 5.35
+    },
+    {
+     "w": "touch",
+     "at": 5.588
+    },
+    {
+     "w": "round",
+     "at": 5.925
+    },
+    {
+     "w": "the",
+     "at": 6.138
+    },
+    {
+     "w": "outside",
+     "at": 6.25
+    },
+    {
+     "w": "takes",
+     "at": 6.8
+    },
+    {
+     "w": "him",
+     "at": 7.062
+    },
+    {
+     "w": "to",
+     "at": 7.225
+    },
+    {
+     "w": "the",
+     "at": 7.312
+    },
+    {
+     "w": "byline",
+     "at": 7.4
+    }
+   ]
+  },
+  {
+   "label": "The cut-back",
+   "text": "From the byline he cuts it back, low, just behind Mortensen. Perry smashes it in!",
+   "src": "/plays/narration/matthews-final-1953/3.m4a",
+   "seconds": 6.4,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "the",
+     "at": 0.487
+    },
+    {
+     "w": "byline",
+     "at": 0.575
+    },
+    {
+     "w": "he",
+     "at": 1.025
+    },
+    {
+     "w": "cuts",
+     "at": 1.15
+    },
+    {
+     "w": "it",
+     "at": 1.413
+    },
+    {
+     "w": "back",
+     "at": 1.5
+    },
+    {
+     "w": "low",
+     "at": 1.975
+    },
+    {
+     "w": "just",
+     "at": 2.475
+    },
+    {
+     "w": "behind",
+     "at": 2.663
+    },
+    {
+     "w": "Mortensen",
+     "at": 2.975
+    },
+    {
+     "w": "Perry",
+     "at": 4.162
+    },
+    {
+     "w": "smashes",
+     "at": 4.537
+    },
+    {
+     "w": "it",
+     "at": 5.0
+    },
+    {
+     "w": "in",
+     "at": 5.1
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: take on the full-back, get to the byline, cut it back across goal.",
+   "src": "/plays/narration/matthews-final-1953/4.m4a",
+   "seconds": 5.4,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "take",
+     "at": 1.275
+    },
+    {
+     "w": "on",
+     "at": 1.488
+    },
+    {
+     "w": "the",
+     "at": 1.587
+    },
+    {
+     "w": "full-back",
+     "at": 1.675
+    },
+    {
+     "w": "get",
+     "at": 2.25
+    },
+    {
+     "w": "to",
+     "at": 2.388
+    },
+    {
+     "w": "the",
+     "at": 2.462
+    },
+    {
+     "w": "byline",
+     "at": 2.55
+    },
+    {
+     "w": "cut",
+     "at": 3.125
+    },
+    {
+     "w": "it",
+     "at": 3.312
+    },
+    {
+     "w": "back",
+     "at": 3.4
+    },
+    {
+     "w": "across",
+     "at": 3.638
+    },
+    {
+     "w": "goal",
+     "at": 4.0
+    }
+   ]
+  }
+ ]
+}

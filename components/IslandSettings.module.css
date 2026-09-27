@@ -2,14 +2,14 @@
 .circle{display:grid;place-items:center;flex:0 0 44px;width:44px;height:44px;padding:0;border:1px solid #ecdfb5;border-radius:50%;background:#294f43;color:#fff0cc;box-shadow:2px 3px 0 #17352b38;cursor:pointer;transition:background .15s,transform .15s}
 .circle:hover{background:#3c6551;transform:translateY(-1px)}
 .circle:focus-visible,.panel button:focus-visible{outline:3px solid #c47b33;outline-offset:3px}
-.dialog{position:fixed;inset:0;width:100%;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;background:transparent;color:#294a3e;overflow:clip}
+.dialog{position:fixed;inset:0;width:100%;height:auto;max-width:none;max-height:none;margin:0;padding:0;border:0;background:transparent;color:#294a3e;overflow:clip}
 .dialog[open]{display:flex;justify-content:flex-end}
 .dialog::backdrop{background:#16352a70;backdrop-filter:blur(3px)}
 .panel{width:min(480px,100%);height:100%;overflow:auto;overscroll-behavior:contain;background:#f2e7c5;border-left:1px solid #fff3d4;box-shadow:-10px 0 40px #142e2926;padding:calc(26px + env(safe-area-inset-top,0px)) calc(24px + env(safe-area-inset-right,0px)) calc(28px + env(safe-area-inset-bottom,0px)) 24px}
 .entering .panel{animation:slideOut .24s ease-in-out .14s reverse both}.leaving .panel{animation:slideOut .24s ease-in-out both}
 .header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}.header>div{min-width:0;flex:1}
 .eyebrow{margin:0 0 13px;font:700 10px/1.4 monospace;letter-spacing:1.8px}
-.header h2{margin:0;font-size:29px;line-height:1.12;letter-spacing:-.6px}.close{background:#e4d8b3;color:#294a3e;border-color:#96a182;box-shadow:none}.close:hover{background:#d4cfaa}
+.header h2,.dialog :global([data-bottle-overlay])>header>h2{margin:0;font-size:29px;line-height:1.12;letter-spacing:-.6px}.close{background:#e4d8b3;color:#294a3e;border-color:#96a182;box-shadow:none}.close:hover{background:#d4cfaa}
 .tabs{display:flex;gap:6px;padding:5px;margin:25px 0;background:#dcd8b6;border-radius:28px}.tabs button{flex:1;min-height:44px;padding:10px 16px;border:0;border-radius:24px;background:transparent;color:#294a3e;font-size:14px;font-weight:700;cursor:pointer}.tabs button[aria-pressed=true]{background:#294f43;color:#fff0cc;box-shadow:0 2px 3px #294f4320}
 .content h3{margin:27px 0 12px;font-size:16px}.content h3:first-child{margin-top:0}
 .toggle{display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%;min-height:76px;border:0;border-bottom:1px solid #a6ad8955;padding:13px 0;background:transparent;color:#294a3e;text-align:left;cursor:pointer}.toggle>span:first-child{min-width:0}.toggle strong{display:block;font-size:15px;line-height:1.4}.toggle small{display:block;font-size:12px;line-height:1.5;margin-top:3px;color:#586b55}
@@ -53,7 +53,7 @@
 .mapButton:hover{background:#3c6551;}
 @media(max-width:600px),(pointer:coarse){.panel{width:100%;}}
 
-.voiceSelect{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 0;font-size:15px;font-weight:700;}.voiceSelect select{max-width:65%;min-height:44px;border:1px solid #8c9a7a;border-radius:10px;padding:8px;background:#e7ddbb;color:#294a3e;font:inherit;}.panel select:focus-visible{outline:3px solid #c47b33;outline-offset:3px;}.mobileControls{display:none;}
+.voiceSelect{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 0;font-size:15px;font-weight:700;}.voiceSelect select{max-width:65%;min-height:44px;border:1px solid #8c9a7a;border-radius:10px;padding:8px;background:#e7ddbb;color:#294a3e;font:inherit;font-size:16px;}.panel select:focus-visible{outline:3px solid #c47b33;outline-offset:3px;}.mobileControls{display:none;}
 @media(max-width:600px),(pointer:coarse){.mobileControls{display:block;}}
 .questsTrigger{font:700 10px Arial;letter-spacing:-.3px}
 .backButton{display:block;margin:16px 0;padding:10px 0;border:0;background:none;color:#294f43;font-weight:700}
@@ -176,15 +176,17 @@
 .pathsModal .panel{position:relative}
 .pathsModal .panel>.header{position:absolute!important;inset:0 0 auto;z-index:10;background:transparent!important;border-bottom:0;pointer-events:none}
 .pathsModal .panel>.header button{pointer-events:auto}
-.pathsModal .panel>.header h2{color:#fff3d2;text-shadow:0 1px 3px #123c35,0 0 12px #123c3544}
+.pathsModal .panel>.header h2,.dialog.pathsModal :global([data-bottle-overlay])>header>h2{color:#fff3d2;text-shadow:0 1px 3px #123c35,0 0 12px #123c3544}
 .pathsModal .panel>div:first-of-type{padding-top:102px}
 @media(max-width:600px){.pathsModal .panel>div:first-of-type{padding-top:94px}}
 /* Settings, exploration and discoveries share the full island canvas. */
-.dialog.fullModal{position:fixed;inset:0;width:100vw;max-width:none;height:100dvh;max-height:none;margin:0;border:0;border-radius:0;transform:none}
+/* Height from inset:0, not 100dvh (iPhone, Sep 25 2026): Safari can leave dvh at the toolbar-expanded height after its toolbar
+   collapses, leaving the page background showing below the dialog. A fixed box pinned to all four edges always fills the viewport. */
+.dialog.fullModal{position:fixed;inset:0;width:100vw;max-width:none;height:auto;max-height:none;margin:0;border:0;border-radius:0;transform:none}
 .dialog.fullModal .panel{position:relative;width:100%;height:100dvh;max-height:100dvh!important;border-radius:0;border:0;box-shadow:none}
 .fullModal .panel>.header{position:absolute!important;inset:0 0 auto;z-index:10;background:transparent!important;border-bottom:0;pointer-events:none}
 .fullModal .panel>.header button{pointer-events:auto}
-.fullModal .header h2{font-family:IslandBrush,sans-serif;font-weight:400;font-size:clamp(24px,3vw,38px);letter-spacing:0;color:#fff3d2;text-shadow:0 1px 3px #123c35}
+.fullModal .header h2,.fullModal :global([data-bottle-overlay])>header>h2{font-family:IslandBrush,sans-serif;font-weight:400;font-size:clamp(24px,3vw,38px);letter-spacing:0;color:#fff3d2;text-shadow:0 1px 3px #123c35}
 .fullModal .panel>div:first-of-type{width:100%;align-self:stretch;padding-top:102px;background:#1255ee url('/stories/paths/abstract-island.svg?v=diagonal-2') center top/100% 1200px repeat-y local}
 .fullModal .panel>div:first-of-type>.subpage,.fullModal .panel>div:first-of-type>.subpageBack{max-width:672px;margin-inline:auto}
 .fullModal:not(.pathsModal) .content{background:#fff2d3f5;padding:26px;border-radius:28px 45px 24px 24px;box-shadow:0 7px 0 #173e3726}
@@ -198,7 +200,7 @@
 .exploreList .exploreRow{background:#f6dc91;border:0;border-radius:18px 12px 22px 14px;box-shadow:0 4px 0 #244d401a}
 .exploreList li:nth-child(even) .exploreRow{background:#c3ded0}
 .exploreList .exploreRow[data-complete=true]{background:#d8e7bd}
-@media(max-width:600px){.fullModal .panel>div:first-of-type{padding-top:94px;background-size:100% 900px}.fullModal:not(.pathsModal) .content,.exploreChecklist{padding:18px}.fullModal .header h2{font-size:24px}.fullModal .header h2.settingsTitle{font-size:clamp(18px,5vw,22px)}}
+@media(max-width:600px){.fullModal .panel>div:first-of-type{padding-top:94px;background-size:100% 900px}.fullModal:not(.pathsModal) .content,.exploreChecklist{padding:18px}.fullModal .header h2,.fullModal :global([data-bottle-overlay])>header>h2{font-size:24px}.fullModal .header h2.settingsTitle{font-size:clamp(18px,5vw,22px)}}
 .dialog.fullModal.entering .panel{animation:pathsFadeIn .26s ease-out both}
 .dialog.fullModal.leaving .panel{animation:pathsFadeOut .2s ease-in both}
 .fullModal:not(.pathsModal) .panel>div:first-of-type{background-image:url('/stories/paths/settings-coast.svg');background-size:100% 1200px}
@@ -210,17 +212,17 @@
 .settingsJourney .settingsEntries{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
 .settingsJourney .settingsEntries>div{margin:0;min-width:0}
 .fullModal .settingsJourney .settingsEntries button{height:100%;min-height:100px;margin:0!important;padding:20px;gap:14px;text-align:left;border:0!important;border-radius:28px 34px 25px 22px;background:#f9d665 url('/stories/films/assets/entry-grain.png')!important;background-blend-mode:soft-light!important;color:#203e38!important;box-shadow:0 6px 0 #173e3755!important;transition:transform .18s,box-shadow .18s}
-.fullModal .settingsJourney .settingsEntries>button:nth-child(2){background-color:#beded1!important}
-.fullModal .settingsJourney .settingsEntries>div:nth-child(3) button{background-color:#efabd4!important}
+.fullModal .settingsJourney .settingsEntries>button:nth-child(2){background-color:var(--btn-mint)!important}
+.fullModal .settingsJourney .settingsEntries>div:nth-child(3) button{background-color:var(--btn-pink)!important}
 .fullModal .settingsJourney .settingsEntries>div:nth-child(4) button{background-color:#fff2d3!important}
 .settingsJourney .entryCopy small{font-size:12px}
 .preferenceCard{min-width:0;padding:24px;border-radius:30px 42px 28px 24px;background:#fff2d3 url('/stories/films/assets/entry-grain.png');background-blend-mode:soft-light;box-shadow:0 7px 0 #173e3738}
 .settingsJourney .preferenceCard h3{font:400 28px/1.25 IslandBrush,sans-serif;margin:0 0 14px}
 .settingsJourney .times{gap:14px;margin:20px 0 6px}
-.settingsJourney .times button{min-height:104px;border:0;background:#f9d665;box-shadow:0 5px 0 #b7953b;font-size:15px;transition:transform .18s,box-shadow .18s}
-.settingsJourney .times button:nth-child(2){background:#efabd4;box-shadow:0 5px 0 #b5739c}
-.settingsJourney .times button:nth-child(3){background:#beded1;box-shadow:0 5px 0 #81a99a}
-.settingsJourney .times button[aria-pressed=true]{background:#244d40;color:#fff3d2;outline:3px solid #f9d665;outline-offset:3px;box-shadow:0 5px 0 #142e28}
+.settingsJourney .times button{min-height:104px;border:0;background:var(--btn-gold-bright);box-shadow:0 5px 0 var(--btn-gold-bright-edge);font-size:15px;transition:transform .18s,box-shadow .18s}
+.settingsJourney .times button:nth-child(2){background:var(--btn-pink);box-shadow:0 5px 0 var(--btn-pink-edge)}
+.settingsJourney .times button:nth-child(3){background:var(--btn-mint);box-shadow:0 5px 0 var(--btn-mint-edge)}
+.settingsJourney .times button[aria-pressed=true]{background:var(--btn-green);color:var(--btn-ink-on-dark);outline:3px solid var(--btn-gold-bright);outline-offset:3px;box-shadow:0 5px 0 var(--btn-green-edge)}
 .settingsJourney .toggle{padding:18px;gap:14px;border:0;background:#e4ecd9;border-radius:20px;transition:transform .18s}
 .settingsJourney .toggle small{color:#40594c}
 .settingsJourney .volume{padding:16px 6px 24px;gap:8px}
@@ -268,10 +270,17 @@
 }
 .triggers[data-page-hidden=true] .questsTrigger,.triggers[data-page-hidden=true] .pathIconCycle>span,
 :global(body:has(dialog[open])) .questsTrigger,:global(body:has(dialog[open])) .pathIconCycle>span{animation-play-state:paused}
+/* Also under a full-screen game that is not a <dialog> (Island Strikers): the HUD is covered, but its loops kept the compositor at 60 fps. */
+:global(body:has([data-fullscreen-game])) .questsTrigger,:global(body:has([data-fullscreen-game])) .pathIconCycle>span{animation-play-state:paused}
 @media(prefers-reduced-motion:reduce){.triggers .questsTrigger{animation:none;transform:none}.pathIconCycle>span{animation:none;opacity:0;filter:none;transform:none}.pathIconCycle>span:first-child{opacity:1}}
+/* Resting HUD (useSceneryRest, 6 s after the last input): the loops freeze on a clean frame; the sparkle dots fade out rather than freeze mid-fade. */
+.hudRest .questsTrigger,.hudRest .pathIconCycle>span{animation-play-state:paused}
+.questsTrigger::before,.questsTrigger::after{transition:filter .5s ease}
+.hudRest .questsTrigger::before,.hudRest .questsTrigger::after{animation-play-state:paused;filter:opacity(0)}
 @keyframes pathSparkle{0%,100%{opacity:0;transform:translateY(4px) scale(.86)}35%{opacity:.82}70%{opacity:.42}95%{opacity:0;transform:translateY(-7px) scale(1.2)}}
 .triggers[data-page-hidden=true] .questsTrigger::before,.triggers[data-page-hidden=true] .questsTrigger::after,
 :global(body:has(dialog[open])) .questsTrigger::before,:global(body:has(dialog[open])) .questsTrigger::after{animation-play-state:paused}
+:global(body:has([data-fullscreen-game])) .questsTrigger::before,:global(body:has([data-fullscreen-game])) .questsTrigger::after{animation-play-state:paused}
 @media(prefers-reduced-motion:reduce){.questsTrigger::before,.questsTrigger::after{animation:none!important}.triggers .circle{transition:none}}
 /* HUD and modal navigation share their corner anchors, including narrow phones. */
 @media(max-width:600px),(pointer:coarse){.triggers{top:calc(16px + env(safe-area-inset-top,0px));right:calc(18px + env(safe-area-inset-right,0px))}}
@@ -309,3 +318,22 @@
 .questStop button:not(:disabled):active{translate:0 4px;scale:.96;box-shadow:0 2px 0 #416741}
 .questStop button:not(:disabled):focus-visible{outline:3px solid #fff2cd;outline-offset:5px}
 @media(prefers-reduced-motion:reduce){.questStop button:not(:disabled):hover,.questStop button:not(:disabled):active{translate:none;scale:1}}
+
+/* Paths attention (button audit, docs/ui/BUTTONS.md): one cycle, then rest. Each wake from useSceneryRest (the hudRest class
+   coming off) restarts exactly one shake, one icon round (bolt → book → play → bolt) and one sparkle pass; resting drops the
+   animations, so the button sits still on its base frame (bolt icon) and never loops under a finger or cursor. */
+.triggers .questsTrigger{animation-iteration-count:1}
+.triggers.hudRest .questsTrigger{animation:none}
+.pathIconCycle>span{animation-iteration-count:1}
+.pathIconCycle>span:first-child{opacity:1}
+.hudRest .pathIconCycle>span{animation:none;opacity:0;filter:none}
+.hudRest .pathIconCycle>span:first-child{opacity:1}
+.questsTrigger::before,.questsTrigger::after{animation-iteration-count:1}
+.hudRest .questsTrigger::before,.hudRest .questsTrigger::after{animation-name:none}
+@media(prefers-reduced-motion:reduce){.triggers .questsTrigger,.pathIconCycle>span,.questsTrigger::before,.questsTrigger::after{animation:none!important}}
+/* Phones and touch tablets (user, Sep 26 2026): no keyboard shortcuts entry; About us spans the full width, with Open full map
+   and See walkthrough side by side beneath it. */
+@media(max-width:600px),(pointer:coarse){
+ .settingsJourney .settingsEntries .desktopShortcuts{display:none}
+ .settingsJourney .settingsEntries>button:first-child{grid-column:1/-1;min-height:84px}
+}

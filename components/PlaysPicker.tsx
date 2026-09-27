@@ -26,10 +26,10 @@ export default function PlaysPicker({open,onClose,trigger,format,title,lessons,c
   <section className={`${drawer.panel} ${picker.panel} ${shell.shell}`}>
    <header className={`${drawer.header} ${picker.header} ${shell.header}`}><div><h2 id="choose-plays-title">Choose plays</h2></div><DoneButton ref={close} className={`${drawer.circle} ${drawer.close}`} onDone={onClose}/></header>
    <div className={picker.body}>
-   <div className={picker.intro}><p className={drawer.copy}>{title} · Watch a play, then try Quiz Yourself.</p>
+   <div className={picker.intro}><p className={drawer.copy}>{title} · Watch a play, then try Quiz yourself.</p>
     <div className={picker.mastery} aria-label="Playbook star progress"><div><span><Icon name="star" size={18}/><strong>{banked} / {total} stars earned</strong></span><small>{mastered} / {lessons.length} plays completed</small></div><progress max={total||1} value={banked} aria-label="Stars earned in this playbook"/><p>Earn one star for each new correct answer. {total-banked} stars left to earn.</p></div>
    </div>
-   {error?<p role="alert">{error} <button className={styles.retry} onClick={onRetry}>Retry</button></p>:!lessons.length?<p role="status">Loading lessons…</p>:<>
+   {error?<p role="alert">{error} <button className={styles.retry} onClick={onRetry}>Try again</button></p>:!lessons.length?<p role="status">Loading lessons…</p>:<>
     <label className={picker.mobileCategory}>Category<select aria-label="Play category" value={category} onChange={event=>onCategory(event.target.value)}>{['All',...Array.from(new Set(lessons.map(l=>l.catalog.category)))].map(c=><option key={c} value={c}>{c==='All'?'All plays':c} ({c==='All'?lessons.length:lessons.filter(l=>l.catalog.category===c).length})</option>)}</select></label>
     <section className={`${styles.categories} ${picker.categories}`} aria-label="Play categories"><h3>Categories</h3><div role="group" aria-label="Choose a category">{['All',...Array.from(new Set(lessons.map(l=>l.catalog.category)))].map(c=><button key={c} type="button" aria-pressed={category===c} onClick={()=>onCategory(c)}><span>{c==='All'?'All plays':c}</span><small>{c==='All'?lessons.length:lessons.filter(l=>l.catalog.category===c).length}</small></button>)}</div></section>
     <section className={picker.categoryContent} aria-label="Plays in selected category"><div className={picker.categoryHeading}><h3>{category==='All'?'All plays':category}</h3><p><Icon name="star" size={16}/>{categoryEarned} / {categoryTotal} earned · {categoryTotal-categoryEarned} left</p></div>

@@ -162,6 +162,31 @@
      "RB"
     ]
    }
+  },
+  {
+   "q": "The keeper holds the ball and the nearer winger is open. Which release keeps it safest?",
+   "options": [
+    "Punt it high down the middle",
+    "Hold it until someone presses",
+    "Roll it out to the winger"
+   ],
+   "correct": 2,
+   "explain": "Yes. A roll-out along the ground is quick and easy to control, so we keep the ball.",
+   "choiceExplanations": [
+    "A high punt is a 50-50 ball that the other team can win.",
+    "Waiting lets their players mark the winger and press the keeper.",
+    "Yes. A roll-out along the ground is quick and easy to control, so we keep the ball."
+   ],
+   "visual": {
+    "kind": "whatNext",
+    "frame": {
+     "step": 10,
+     "focus": [
+      "G",
+      "RW"
+     ]
+    }
+   }
   }
  ]
 }

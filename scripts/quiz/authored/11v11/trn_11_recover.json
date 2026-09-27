@@ -1,5 +1,130 @@
-{"lesson":"trn_11_recover","questions":[
-{"q":"True or false? The carrier is close, so the nearest midfielder should dive in with a tackle straight away.","options":["True","False"],"correct":1,"explain":"Right, it's false. Get close without diving in, so the carrier can't simply go past you.","choiceExplanations":["Diving in lets the carrier knock the ball past you. Get close and stay on your feet instead.","Right, it's false. Get close without diving in, so the carrier can't simply go past you."],"visual":{"kind":"trueFalse","frame":{"step":3,"focus":["cm","dst"]}}},
-{"q":"Put the decision after losing the ball in order, from first to last.","options":["Look at the carrier and your helpers","Close enough with cover: approach","The carrier escapes past you","Turn and recover toward goal"],"correct":0,"explain":"Yes. Look first, press while the ball can be won, and recover once the carrier escapes.","choiceExplanations":["Yes. Look first, press while the ball can be won, and recover once the carrier escapes.","You approach only after checking the carrier's distance and who covers behind you.","The carrier escaping is the new picture that comes after your first approach.","Recovering is the last step, once the chance to win the ball has gone."],"visual":{"kind":"order","frame":{"step":0,"focus":["cm","dst"]}}},
-{"q":"Now the carrier escapes past you on the right side. Tap where your recovery run should end.","options":["Chase behind the carrier","Stay high near halfway","Goal side of the carrier"],"correct":2,"explain":"Yes. Recovering goal side puts you between the ball and goal, so you can help again.","choiceExplanations":["Chasing from behind can't stop the carrier, and a tackle from there often becomes a foul.","Waiting up the pitch leaves your team a player short while the carrier runs at goal.","Yes. Recovering goal side puts you between the ball and goal, so you can help again."],"visual":{"kind":"tapSpot","frame":{"step":7,"place":{"dst":{"x":190,"y":290},"rm":{"x":215,"y":235}},"ball":"dst","focus":["cm","dst"]},"spots":[{"x":172,"y":252},{"x":105,"y":220},{"x":172,"y":347}]}}
-]}
+{
+  "lesson": "trn_11_recover",
+  "questions": [
+    {
+      "q": "True or false? The carrier is close, so the nearest midfielder should dive in with a tackle straight away.",
+      "options": [
+        "True",
+        "False"
+      ],
+      "correct": 1,
+      "explain": "Right, it's false. Get close without diving in, so the carrier can't simply go past you.",
+      "choiceExplanations": [
+        "Diving in lets the carrier knock the ball past you. Get close and stay on your feet instead.",
+        "Right, it's false. Get close without diving in, so the carrier can't simply go past you."
+      ],
+      "visual": {
+        "kind": "trueFalse",
+        "frame": {
+          "step": 3,
+          "focus": [
+            "cm",
+            "dst"
+          ]
+        }
+      }
+    },
+    {
+      "q": "Put the decision after losing the ball in order, from first to last.",
+      "options": [
+        "Look at the carrier and your helpers",
+        "Close enough with cover: approach",
+        "The carrier escapes past you",
+        "Turn and recover toward goal"
+      ],
+      "correct": 0,
+      "explain": "Yes. Look first, press while the ball can be won, and recover once the carrier escapes.",
+      "choiceExplanations": [
+        "Yes. Look first, press while the ball can be won, and recover once the carrier escapes.",
+        "You approach only after checking the carrier's distance and who covers behind you.",
+        "The carrier escaping is the new picture that comes after your first approach.",
+        "Recovering is the last step, once the chance to win the ball has gone."
+      ],
+      "visual": {
+        "kind": "order",
+        "frame": {
+          "step": 0,
+          "focus": [
+            "cm",
+            "dst"
+          ]
+        }
+      }
+    },
+    {
+      "q": "Now the carrier escapes past you on the right side. Tap where your recovery run should end.",
+      "options": [
+        "Chase behind the carrier",
+        "Stay high near halfway",
+        "Goal side of the carrier"
+      ],
+      "correct": 2,
+      "explain": "Yes. Recovering goal side puts you between the ball and goal, so you can help again.",
+      "choiceExplanations": [
+        "Chasing from behind can't stop the carrier, and a tackle from there often becomes a foul.",
+        "Waiting up the pitch leaves your team a player short while the carrier runs at goal.",
+        "Yes. Recovering goal side puts you between the ball and goal, so you can help again."
+      ],
+      "visual": {
+        "kind": "tapSpot",
+        "frame": {
+          "step": 7,
+          "place": {
+            "dst": {
+              "x": 190,
+              "y": 290
+            },
+            "rm": {
+              "x": 215,
+              "y": 235
+            }
+          },
+          "ball": "dst",
+          "focus": [
+            "cm",
+            "dst"
+          ]
+        },
+        "spots": [
+          {
+            "x": 172,
+            "y": 252
+          },
+          {
+            "x": 105,
+            "y": 220
+          },
+          {
+            "x": 172,
+            "y": 347
+          }
+        ]
+      }
+    },
+    {
+      "q": "Their carrier fakes a kick, drags the ball behind his standing leg and turns past you. Which move is that?",
+      "options": [
+        "A stepover",
+        "A Cruyff turn",
+        "A nutmeg"
+      ],
+      "correct": 1,
+      "explain": "Right. The Cruyff turn sells a kick, then hides the ball behind the standing leg to turn away.",
+      "choiceExplanations": [
+        "A stepover circles over the ball; it does not drag it behind the leg.",
+        "Right. The Cruyff turn sells a kick, then hides the ball behind the standing leg to turn away.",
+        "A nutmeg goes through your legs; here he turned away from you."
+      ],
+      "visual": {
+        "kind": "whatNext",
+        "frame": {
+          "step": 5,
+          "focus": [
+            "dst",
+            "cm"
+          ]
+        }
+      }
+    }
+  ]
+}

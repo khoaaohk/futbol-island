@@ -1,0 +1,1610 @@
+{
+ "note": "Card value tiers (docs/card-rewards.md, 25 Sep 2026). `demand` is a 0-100 JUDGEMENT score of how much children and fans want the card: global fame, current superstar status, iconic moments and major honours (Ballon d'Or, World Cup, FIFA awards). It is not follower data and cites no numbers. Women's players are scored by their own fans' demand and futsal players on the futsal community's scale, so each game has its icons. Tiers are derived: demand >= thresholds.icon is an Icon, >= thresholds.elite is Elite, the rest Regular. To move a card, change its demand, or pin it with `overrides` (name -> icon|elite|regular). Players missing here count as Regular.",
+ "thresholds": {
+  "icon": 85,
+  "elite": 72
+ },
+ "overrides": {},
+ "cards": {
+  "Cristiano Ronaldo": {
+   "demand": 100,
+   "why": "Five Ballon d'Or wins and football's all-time top scorer; the card fans ask for most"
+  },
+  "Lionel Messi": {
+   "demand": 100,
+   "why": "Eight Ballon d'Or wins and the 2022 World Cup; the card fans ask for most"
+  },
+  "Kylian Mbappé": {
+   "demand": 96,
+   "why": "2018 World Cup winner and 2022 final hat-trick; one of the most wanted cards"
+  },
+  "Pelé": {
+   "demand": 96,
+   "why": "Three World Cups; the most famous name in football history"
+  },
+  "Diego Maradona": {
+   "demand": 95,
+   "why": "The 1986 World Cup and the \"Goal of the Century\""
+  },
+  "Erling Haaland": {
+   "demand": 94,
+   "why": "Record-breaking goalscorer; one of the most asked-for players by kids"
+  },
+  "Lamine Yamal": {
+   "demand": 93,
+   "why": "Teen Euro 2024 winner; one of the most wanted cards among children today"
+  },
+  "Neymar": {
+   "demand": 92,
+   "why": "Brazil's all-time top scorer and one of the most famous players in the world"
+  },
+  "Ronaldinho": {
+   "demand": 92,
+   "why": "2005 Ballon d'Or; the smiling magician whose skills kids still copy"
+  },
+  "Ronaldo Nazário": {
+   "demand": 92,
+   "why": "\"R9\": two Ballon d'Or wins and the 2002 World Cup Golden Boot"
+  },
+  "Zinedine Zidane": {
+   "demand": 91,
+   "why": "1998 World Cup final double and the famous 2002 volley"
+  },
+  "Vinícius Júnior": {
+   "demand": 90,
+   "why": "The Best FIFA Men's Player 2024; Real Madrid's star dribbler"
+  },
+  "David Beckham": {
+   "demand": 89,
+   "why": "World-famous free kicks and crosses; one of football's best-known names"
+  },
+  "Jude Bellingham": {
+   "demand": 89,
+   "why": "Real Madrid and England superstar; a top shirt with kids worldwide"
+  },
+  "Falcão": {
+   "demand": 88,
+   "why": "Brazil's futsal king; the most famous futsal player ever"
+  },
+  "Johan Cruyff": {
+   "demand": 88,
+   "why": "Three Ballon d'Or wins; the Cruyff turn is named after him"
+  },
+  "Marta": {
+   "demand": 88,
+   "why": "Six-time world player of the year; the name the women's game is known by"
+  },
+  "Mohamed Salah": {
+   "demand": 88,
+   "why": "Liverpool's goal machine and Egypt's hero, loved worldwide"
+  },
+  "Aitana Bonmatí": {
+   "demand": 87,
+   "why": "Won the Ballon d'Or Féminin three years running (2023-2025)"
+  },
+  "Ricardinho": {
+   "demand": 87,
+   "why": "\"O Mágico\": six-time world's best futsal player and Portugal's Euro 2018 star"
+  },
+  "Zlatan Ibrahimović": {
+   "demand": 87,
+   "why": "Acrobatic goals and a huge personality; famous with kids and gamers"
+  },
+  "Alexia Putellas": {
+   "demand": 86,
+   "why": "Two-time Ballon d'Or Féminin winner and Barcelona icon"
+  },
+  "Harry Kane": {
+   "demand": 86,
+   "why": "England's all-time top scorer; globally famous striker"
+  },
+  "Luka Modrić": {
+   "demand": 86,
+   "why": "2018 Ballon d'Or; led Croatia to a World Cup final"
+  },
+  "Mia Hamm": {
+   "demand": 86,
+   "why": "Two World Cups; the name that inspired a generation of girls"
+  },
+  "Thierry Henry": {
+   "demand": 86,
+   "why": "Arsenal's record scorer and 1998 World Cup winner"
+  },
+  "Andrés Iniesta": {
+   "demand": 85,
+   "why": "Scored the 2010 World Cup winning goal"
+  },
+  "Franz Beckenbauer": {
+   "demand": 85,
+   "why": "\"Der Kaiser\": won the World Cup as captain and as coach"
+  },
+  "Gianluigi Buffon": {
+   "demand": 85,
+   "why": "2006 World Cup winner; one of the most famous goalkeepers ever"
+  },
+  "Kaká": {
+   "demand": 85,
+   "why": "2007 Ballon d'Or winner and 2002 World Cup winner"
+  },
+  "Kevin De Bruyne": {
+   "demand": 85,
+   "why": "Manchester City's great passer; one of the most famous playmakers of his era"
+  },
+  "Ousmane Dembélé": {
+   "demand": 85,
+   "why": "2025 Ballon d'Or winner after PSG's Champions League title"
+  },
+  "Paolo Maldini": {
+   "demand": 85,
+   "why": "Five European Cups in 25 years at AC Milan; the defender every child knows"
+  },
+  "Sergio Ramos": {
+   "demand": 85,
+   "why": "Four Champions Leagues, 2010 World Cup; the famous 93rd-minute header in 2014"
+  },
+  "Karim Benzema": {
+   "demand": 82,
+   "why": "2022 Ballon d'Or winner"
+  },
+  "Manuel Neuer": {
+   "demand": 82,
+   "why": "2014 World Cup winner; made the sweeper-keeper famous"
+  },
+  "Robert Lewandowski": {
+   "demand": 82,
+   "why": "Five goals in nine minutes (2015); one of the greatest strikers"
+  },
+  "Roberto Carlos": {
+   "demand": 82,
+   "why": "The 1997 \"banana\" free kick; 2002 World Cup winner"
+  },
+  "Rodri": {
+   "demand": 82,
+   "why": "2024 Ballon d'Or winner and Euro 2024 player of the tournament"
+  },
+  "Son Heung-min": {
+   "demand": 82,
+   "why": "Asia's biggest football star; Premier League Golden Boot 2022"
+  },
+  "Alex Morgan": {
+   "demand": 80,
+   "why": "USA World Cup winner and one of the best-known women players"
+  },
+  "Cole Palmer": {
+   "demand": 80,
+   "why": "Chelsea star whose \"cold\" celebration kids copy"
+  },
+  "Iker Casillas": {
+   "demand": 80,
+   "why": "Captain of Spain's 2010 World Cup win"
+  },
+  "Luis Suárez": {
+   "demand": 80,
+   "why": "Uruguay and Barcelona goalscorer"
+  },
+  "Megan Rapinoe": {
+   "demand": 80,
+   "why": "2019 World Cup Golden Ball and Golden Boot; famous celebration pose"
+  },
+  "Sam Kerr": {
+   "demand": 80,
+   "why": "Australia's captain, famous for her backflip celebration"
+  },
+  "Toni Kroos": {
+   "demand": 80,
+   "why": "2014 World Cup winner; six Champions League titles"
+  },
+  "Virgil van Dijk": {
+   "demand": 80,
+   "why": "Liverpool captain; runner-up for the 2019 Ballon d'Or"
+  },
+  "Wayne Rooney": {
+   "demand": 80,
+   "why": "Manchester United's record scorer; famous overhead kick"
+  },
+  "Xavi Hernández": {
+   "demand": 80,
+   "why": "Barcelona and Spain's passing master"
+  },
+  "Andrea Pirlo": {
+   "demand": 78,
+   "why": "2006 World Cup winner and the cool Panenka of 2012"
+  },
+  "Antoine Griezmann": {
+   "demand": 78,
+   "why": "2018 World Cup winner; famous dance celebrations"
+  },
+  "Bukayo Saka": {
+   "demand": 78,
+   "why": "Arsenal and England star, a favourite with young fans"
+  },
+  "Cafu": {
+   "demand": 78,
+   "why": "The only man to play in three World Cup finals; 2002 winning captain"
+  },
+  "Jamal Musiala": {
+   "demand": 78,
+   "why": "Germany's dribbling star and a favourite with young fans"
+  },
+  "Manoel Tobias": {
+   "demand": 78,
+   "why": "Brazil great and FIFA Futsal World Cup winner, a futsal legend"
+  },
+  "Steven Gerrard": {
+   "demand": 78,
+   "why": "Liverpool captain of the 2005 Istanbul comeback"
+  },
+  "Arjen Robben": {
+   "demand": 76,
+   "why": "The famous cut inside onto his left foot"
+  },
+  "Didier Drogba": {
+   "demand": 76,
+   "why": "Chelsea's 2012 Champions League final hero"
+  },
+  "Eden Hazard": {
+   "demand": 76,
+   "why": "Chelsea's dribbling star, loved by young fans"
+  },
+  "Emiliano Martínez": {
+   "demand": 76,
+   "why": "2022 World Cup winner and shootout hero for Argentina"
+  },
+  "Ferrão": {
+   "demand": 76,
+   "why": "Barcelona and Brazil pivot, one of the world's best futsal players"
+  },
+  "Marcelo": {
+   "demand": 76,
+   "why": "Real Madrid left-back with five Champions League titles and famous skills"
+  },
+  "Pedri": {
+   "demand": 76,
+   "why": "Barcelona and Spain playmaker; Golden Boy 2021"
+  },
+  "Roberto Baggio": {
+   "demand": 76,
+   "why": "\"The Divine Ponytail\", 1993 Ballon d'Or"
+  },
+  "Thibaut Courtois": {
+   "demand": 76,
+   "why": "Real Madrid No. 1; man of the match in the 2022 Champions League final"
+  },
+  "Florian Wirtz": {
+   "demand": 74,
+   "why": "Germany's creative star and one of the most wanted young players"
+  },
+  "Francesco Totti": {
+   "demand": 74,
+   "why": "Roma's one-club captain and the famous chipped penalty"
+  },
+  "Garrincha": {
+   "demand": 74,
+   "why": "Brazil's bent-legged dribbling genius of 1958 and 1962"
+  },
+  "Julián Álvarez": {
+   "demand": 74,
+   "why": "2022 World Cup winner nicknamed \"the Spider\""
+  },
+  "Lev Yashin": {
+   "demand": 74,
+   "why": "The only goalkeeper to win the Ballon d'Or"
+  },
+  "Lucy Bronze": {
+   "demand": 74,
+   "why": "England great; The Best FIFA Women's Player 2020"
+  },
+  "Luís Figo": {
+   "demand": 74,
+   "why": "2000 Ballon d'Or; moved from Barcelona to Real Madrid"
+  },
+  "N'Golo Kanté": {
+   "demand": 74,
+   "why": "2018 World Cup winner, loved for his energy and smile"
+  },
+  "Romário": {
+   "demand": 74,
+   "why": "1994 World Cup winner and Golden Ball"
+  },
+  "Trent Alexander-Arnold": {
+   "demand": 74,
+   "why": "Famous quick corner against Barcelona in 2019"
+  },
+  "Zicky Té": {
+   "demand": 74,
+   "why": "Portugal's young futsal star and one of the best young players in the world"
+  },
+  "Achraf Hakimi": {
+   "demand": 72,
+   "why": "Morocco's star full-back; 2025 Champions League winner with PSG"
+  },
+  "Alessandro Del Piero": {
+   "demand": 70,
+   "why": "Juventus captain and 2006 World Cup winner; best known to older fans, just below Elite"
+  },
+  "Alisson": {
+   "demand": 72,
+   "why": "Liverpool and Brazil No. 1; even scored a headed goal"
+  },
+  "Bruno Fernandes": {
+   "demand": 72,
+   "why": "Manchester United captain and playmaker"
+  },
+  "Dani Alves": {
+   "demand": 70,
+   "why": "One of the most decorated players in history; less asked-for by children today, just below Elite"
+  },
+  "Eusébio": {
+   "demand": 72,
+   "why": "Portugal's \"Black Panther\", top scorer at the 1966 World Cup"
+  },
+  "Fabio Cannavaro": {
+   "demand": 72,
+   "why": "2006 World Cup winning captain; Ballon d'Or as a defender"
+  },
+  "Ferenc Puskás": {
+   "demand": 72,
+   "why": "FIFA's goal of the year award is named after him"
+  },
+  "Frank Lampard": {
+   "demand": 72,
+   "why": "Chelsea's record goalscorer from midfield"
+  },
+  "George Best": {
+   "demand": 72,
+   "why": "Manchester United's 1968 European Cup winner and first football celebrity"
+  },
+  "Guitta": {
+   "demand": 72,
+   "why": "Brazil keeper and one of the world's best futsal goalkeepers"
+  },
+  "Luis Amado": {
+   "demand": 72,
+   "why": "Spain's two-time Futsal World Cup winning goalkeeper"
+  },
+  "Marco van Basten": {
+   "demand": 72,
+   "why": "Three Ballon d'Or wins and the Euro 88 volley"
+  },
+  "Phil Foden": {
+   "demand": 72,
+   "why": "Manchester City and England star; 2024 PFA Player of the Year"
+  },
+  "Philipp Lahm": {
+   "demand": 72,
+   "why": "Germany's 2014 World Cup winning captain"
+  },
+  "Pito": {
+   "demand": 72,
+   "why": "Brazil's powerful pivot and one of the world's top futsal scorers"
+  },
+  "Raphinha": {
+   "demand": 72,
+   "why": "Barcelona and Brazil winger with a big 2024-25 season"
+  },
+  "Sadio Mané": {
+   "demand": 72,
+   "why": "Senegal hero; won the 2022 Africa Cup of Nations"
+  },
+  "Samuel Eto'o": {
+   "demand": 70,
+   "why": "Four-time African Player of the Year; best known to older fans, just below Elite"
+  },
+  "Abby Wambach": {
+   "demand": 70,
+   "why": "USA scorer famous for headers; 2015 World Cup winner"
+  },
+  "Ada Hegerberg": {
+   "demand": 70,
+   "why": "Won the first Ballon d'Or Féminin (2018)"
+  },
+  "Alfredo Di Stéfano": {
+   "demand": 70,
+   "why": "Led Real Madrid to five European Cups in a row"
+  },
+  "Alphonso Davies": {
+   "demand": 70,
+   "why": "Speedy Canada star and a fan favourite with young players"
+  },
+  "Bobby Charlton": {
+   "demand": 70,
+   "why": "1966 World Cup winner and Manchester United legend"
+  },
+  "Bobby Moore": {
+   "demand": 70,
+   "why": "Captain of England's 1966 World Cup winners"
+  },
+  "Carles Puyol": {
+   "demand": 70,
+   "why": "Barcelona captain; headed Spain into the 2010 final"
+  },
+  "Carli Lloyd": {
+   "demand": 70,
+   "why": "Hat-trick in the 2015 World Cup final, one from halfway"
+  },
+  "Carlos Alberto": {
+   "demand": 70,
+   "why": "Captain and scorer of the famous 1970 World Cup final goal"
+  },
+  "Casemiro": {
+   "demand": 70,
+   "why": "Five Champions League titles with Real Madrid"
+  },
+  "Dennis Bergkamp": {
+   "demand": 70,
+   "why": "Arsenal's artist, famous for his touch"
+  },
+  "Federico Valverde": {
+   "demand": 70,
+   "why": "Uruguay's tireless Real Madrid midfielder"
+  },
+  "Gerd Müller": {
+   "demand": 70,
+   "why": "\"Der Bomber\", 1974 World Cup winner"
+  },
+  "Gianluigi Donnarumma": {
+   "demand": 70,
+   "why": "Euro 2020 player of the tournament; Champions League winner with PSG in 2025"
+  },
+  "Higuita": {
+   "demand": 70,
+   "why": "Kazakhstan's attacking futsal goalkeeper, famous for his goals and saves"
+  },
+  "Khvicha Kvaratskhelia": {
+   "demand": 70,
+   "why": "Georgia's dribbling star; 2025 Champions League winner"
+  },
+  "Kike Boned": {
+   "demand": 70,
+   "why": "Spain's two-time Futsal World Cup winner"
+  },
+  "Lautaro Martínez": {
+   "demand": 70,
+   "why": "Inter captain and 2022 World Cup winner"
+  },
+  "Martin Ødegaard": {
+   "demand": 70,
+   "why": "Arsenal and Norway captain"
+  },
+  "Nico Williams": {
+   "demand": 70,
+   "why": "Euro 2024 winner and final scorer"
+  },
+  "Oliver Kahn": {
+   "demand": 70,
+   "why": "Golden Ball at the 2002 World Cup, the only keeper to win it"
+  },
+  "Rafael Leão": {
+   "demand": 70,
+   "why": "AC Milan and Portugal's speedy dribbler"
+  },
+  "Rivaldo": {
+   "demand": 70,
+   "why": "1999 Ballon d'Or and 2002 World Cup winner"
+  },
+  "Thiago Silva": {
+   "demand": 70,
+   "why": "Brazil captain and one of the best defenders of his era"
+  },
+  "Victor Osimhen": {
+   "demand": 70,
+   "why": "African Footballer of the Year 2023"
+  },
+  "Christian Pulisic": {
+   "demand": 68,
+   "why": "\"Captain America\", the USA's best-known men's player"
+  },
+  "Declan Rice": {
+   "demand": 68,
+   "why": "England midfielder; two free kicks against Real Madrid in 2025"
+  },
+  "Dídac Plana": {
+   "demand": 68,
+   "why": "Barcelona keeper and one of the world's best futsal goalkeepers"
+  },
+  "Gabriel Batistuta": {
+   "demand": 68,
+   "why": "Argentina's powerful striker \"Batigol\""
+  },
+  "Gerard Piqué": {
+   "demand": 68,
+   "why": "World Cup, Euro and Champions League winner with Spain and Barcelona"
+  },
+  "Lothar Matthäus": {
+   "demand": 68,
+   "why": "1990 World Cup winning captain; most World Cup games for decades"
+  },
+  "Luis Díaz": {
+   "demand": 68,
+   "why": "Colombia's fast, skilful winger"
+  },
+  "Mary Earps": {
+   "demand": 68,
+   "why": "2023 Women's World Cup Golden Glove; hugely popular with young England fans"
+  },
+  "Michel Platini": {
+   "demand": 68,
+   "why": "Three Ballon d'Or wins in a row in the 1980s"
+  },
+  "Raúl": {
+   "demand": 68,
+   "why": "Real Madrid's long-time captain and scorer"
+  },
+  "Romelu Lukaku": {
+   "demand": 68,
+   "why": "Belgium's record goalscorer"
+  },
+  "Schumacher": {
+   "demand": 68,
+   "why": "Brazil's great futsal fixo of the 1990s and 2000s"
+  },
+  "Zico": {
+   "demand": 68,
+   "why": "Brazil's \"White Pelé\", free-kick master"
+  },
+  "Alan Shearer": {
+   "demand": 66,
+   "why": "Premier League record goalscorer"
+  },
+  "Alessia Russo": {
+   "demand": 66,
+   "why": "England Euro winner known for her backheel goal in 2022"
+  },
+  "Alexander Isak": {
+   "demand": 66,
+   "why": "Sweden striker with smooth dribbling"
+  },
+  "Andriy Shevchenko": {
+   "demand": 66,
+   "why": "2004 Ballon d'Or winner from Ukraine"
+  },
+  "Arda Güler": {
+   "demand": 66,
+   "why": "Turkey's teenage star with a very large fanbase"
+  },
+  "Bernardo Silva": {
+   "demand": 66,
+   "why": "Manchester City and Portugal playmaker"
+  },
+  "Christine Sinclair": {
+   "demand": 66,
+   "why": "Most international goals ever, men or women"
+  },
+  "Fernandão": {
+   "demand": 66,
+   "why": "Brazil and Barcelona pivot with many titles"
+  },
+  "Franck Ribéry": {
+   "demand": 66,
+   "why": "Bayern's treble-winning winger"
+  },
+  "Franco Baresi": {
+   "demand": 66,
+   "why": "AC Milan's legendary sweeper"
+  },
+  "Gordon Banks": {
+   "demand": 66,
+   "why": "1966 World Cup winner; the 1970 \"save of the century\""
+  },
+  "Homare Sawa": {
+   "demand": 66,
+   "why": "Led Japan to the 2011 World Cup; world player of the year"
+  },
+  "Hope Solo": {
+   "demand": 66,
+   "why": "Two Olympic golds and the 2015 World Cup with the USA"
+  },
+  "Javi Rodríguez": {
+   "demand": 66,
+   "why": "Spain's two-time Futsal World Cup winner"
+  },
+  "Javier Zanetti": {
+   "demand": 66,
+   "why": "Inter captain; over 800 games for the club"
+  },
+  "John Terry": {
+   "demand": 66,
+   "why": "Chelsea captain with five Premier League titles"
+  },
+  "Joshua Kimmich": {
+   "demand": 66,
+   "why": "Bayern and Germany leader"
+  },
+  "Lilian Thuram": {
+   "demand": 66,
+   "why": "Scored both goals in France's 1998 World Cup semi-final"
+  },
+  "Pany Varela": {
+   "demand": 66,
+   "why": "Portugal's 2021 Futsal World Cup winner"
+  },
+  "Patrick Vieira": {
+   "demand": 66,
+   "why": "Arsenal's Invincibles captain; 1998 World Cup winner"
+  },
+  "Peter Schmeichel": {
+   "demand": 66,
+   "why": "Manchester United's treble-winning keeper, famous star jumps"
+  },
+  "Petr Čech": {
+   "demand": 66,
+   "why": "Record Premier League clean sheets; wore a famous helmet"
+  },
+  "Ryan Giggs": {
+   "demand": 66,
+   "why": "Manchester United's record appearance maker"
+  },
+  "Trinity Rodman": {
+   "demand": 66,
+   "why": "USA Olympic champion and a star with young fans"
+  },
+  "Viktor Gyökeres": {
+   "demand": 66,
+   "why": "Sweden's powerful goalscorer with a famous mask celebration"
+  },
+  "Alessandro Nesta": {
+   "demand": 64,
+   "why": "Elegant Italy and Milan defender"
+  },
+  "Andrew Robertson": {
+   "demand": 64,
+   "why": "Liverpool left-back and Scotland captain"
+  },
+  "Antonio Rüdiger": {
+   "demand": 64,
+   "why": "Real Madrid's fierce defender, loved for his reactions"
+  },
+  "Chloe Kelly": {
+   "demand": 64,
+   "why": "Scored England's Euro 2022 winner and the Euro 2025 winning penalty"
+  },
+  "Dani Carvajal": {
+   "demand": 64,
+   "why": "Real Madrid right-back with many Champions League titles"
+  },
+  "Edwin van der Sar": {
+   "demand": 64,
+   "why": "Champions League winner with Ajax and Manchester United"
+  },
+  "Enzo Fernández": {
+   "demand": 64,
+   "why": "2022 World Cup Best Young Player"
+  },
+  "Frenkie de Jong": {
+   "demand": 64,
+   "why": "Barcelona and Netherlands playmaker"
+  },
+  "George Weah": {
+   "demand": 64,
+   "why": "The only African Ballon d'Or winner (1995)"
+  },
+  "Gheorghe Hagi": {
+   "demand": 64,
+   "why": "Romania's \"Maradona of the Carpathians\""
+  },
+  "Giorgio Chiellini": {
+   "demand": 64,
+   "why": "Euro 2020 winning captain known for tough defending"
+  },
+  "Jorge Campos": {
+   "demand": 64,
+   "why": "Mexico keeper with bright kits who also played striker"
+  },
+  "Kim Min-jae": {
+   "demand": 64,
+   "why": "South Korea's star defender with a huge fanbase in Asia"
+  },
+  "Lauren James": {
+   "demand": 64,
+   "why": "England's skilful Chelsea forward"
+  },
+  "Leah Williamson": {
+   "demand": 64,
+   "why": "Captain of England's Euro 2022 winners"
+  },
+  "Lenísio": {
+   "demand": 64,
+   "why": "Brazil's 2008 Futsal World Cup winning pivot"
+  },
+  "Marc-André ter Stegen": {
+   "demand": 64,
+   "why": "Barcelona's long-time keeper, famous for passing with both feet"
+  },
+  "Michael Olise": {
+   "demand": 64,
+   "why": "Bayern's creative left-footer"
+  },
+  "Michael Owen": {
+   "demand": 64,
+   "why": "1998 World Cup wonder goal and the 2001 Ballon d'Or"
+  },
+  "Paul Scholes": {
+   "demand": 64,
+   "why": "Manchester United midfielder admired by other players"
+  },
+  "Rio Ferdinand": {
+   "demand": 64,
+   "why": "Manchester United and England centre-back"
+  },
+  "Roy Keane": {
+   "demand": 64,
+   "why": "Manchester United's fierce captain"
+  },
+  "Sergio Lozano": {
+   "demand": 64,
+   "why": "Barcelona and Spain futsal scorer"
+  },
+  "Vander Carioca": {
+   "demand": 64,
+   "why": "Brazil pivot of the 1990s and 2000s"
+  },
+  "Vivianne Miedema": {
+   "demand": 64,
+   "why": "Netherlands' record goalscorer"
+  },
+  "Wendie Renard": {
+   "demand": 64,
+   "why": "France captain with a record eight women's Champions League titles"
+  },
+  "William Saliba": {
+   "demand": 64,
+   "why": "Arsenal and France centre-back"
+  },
+  "Alexis Mac Allister": {
+   "demand": 62,
+   "why": "2022 World Cup winner with Argentina"
+  },
+  "Aurélien Tchouaméni": {
+   "demand": 62,
+   "why": "France and Real Madrid midfielder"
+  },
+  "Cardinal": {
+   "demand": 62,
+   "why": "Portugal's Euro-winning pivot"
+  },
+  "Cristian Romero": {
+   "demand": 62,
+   "why": "2022 World Cup winner with Argentina"
+  },
+  "Dino Zoff": {
+   "demand": 62,
+   "why": "Won the 1982 World Cup as captain aged 40"
+  },
+  "Désiré Doué": {
+   "demand": 62,
+   "why": "Scored twice in the 2025 Champions League final"
+  },
+  "Eder Lima": {
+   "demand": 62,
+   "why": "Russia's powerful pivot at the 2016 World Cup final"
+  },
+  "Ederson": {
+   "demand": 62,
+   "why": "Manchester City keeper who passes like a playmaker"
+  },
+  "Hristo Stoichkov": {
+   "demand": 62,
+   "why": "Bulgaria's 1994 World Cup star and 1994 Ballon d'Or winner"
+  },
+  "Jan Oblak": {
+   "demand": 62,
+   "why": "Atlético Madrid's long-serving No. 1"
+  },
+  "Joško Gvardiol": {
+   "demand": 62,
+   "why": "Croatia's masked defender at the 2022 World Cup"
+  },
+  "Khadija Shaw": {
+   "demand": 62,
+   "why": "Jamaica's powerful Manchester City striker"
+  },
+  "Marquinhos": {
+   "demand": 62,
+   "why": "PSG captain; 2025 Champions League winner"
+  },
+  "Paolo Rossi": {
+   "demand": 62,
+   "why": "Top scorer as Italy won the 1982 World Cup"
+  },
+  "Pau Cubarsí": {
+   "demand": 62,
+   "why": "Teenage Barcelona defender and rising star"
+  },
+  "Pavel Nedvěd": {
+   "demand": 62,
+   "why": "2003 Ballon d'Or winner from the Czech Republic"
+  },
+  "Reece James": {
+   "demand": 62,
+   "why": "Chelsea captain; powerful right-back"
+  },
+  "Ruud van Nistelrooy": {
+   "demand": 62,
+   "why": "Manchester United and Real Madrid goal poacher"
+  },
+  "Rúben Dias": {
+   "demand": 62,
+   "why": "Manchester City and Portugal centre-back"
+  },
+  "Salma Paralluelo": {
+   "demand": 62,
+   "why": "Spain World Cup winner and former sprinter"
+  },
+  "Sophia Wilson": {
+   "demand": 62,
+   "why": "USA Olympic champion striker"
+  },
+  "Sun Wen": {
+   "demand": 62,
+   "why": "China's star, joint FIFA Women's Player of the Century"
+  },
+  "Theo Hernández": {
+   "demand": 62,
+   "why": "Attacking left-back known for long solo runs"
+  },
+  "Vitinha": {
+   "demand": 62,
+   "why": "PSG's midfield passer; 2025 Champions League winner"
+  },
+  "Ashley Cole": {
+   "demand": 60,
+   "why": "England's great left-back of the 2000s"
+  },
+  "Birgit Prinz": {
+   "demand": 60,
+   "why": "Germany's two-time World Cup winner and record scorer"
+  },
+  "Clarence Seedorf": {
+   "demand": 60,
+   "why": "Won the Champions League with three different clubs"
+  },
+  "Dani Olmo": {
+   "demand": 60,
+   "why": "Euro 2024 winner with Spain"
+  },
+  "Gary Lineker": {
+   "demand": 60,
+   "why": "1986 World Cup Golden Boot; never booked in his career"
+  },
+  "João Neves": {
+   "demand": 60,
+   "why": "Young PSG midfielder; 2025 Champions League winner"
+  },
+  "Jules Koundé": {
+   "demand": 60,
+   "why": "France and Barcelona defender"
+  },
+  "Kaoru Mitoma": {
+   "demand": 60,
+   "why": "Japan's dribbling winger with a famous university thesis on dribbling"
+  },
+  "Kenan Yıldız": {
+   "demand": 60,
+   "why": "Juventus and Turkey's young No. 10"
+  },
+  "Konstantin Eremenko": {
+   "demand": 60,
+   "why": "Russia's futsal legend of the 1990s"
+  },
+  "Lindsey Heaps": {
+   "demand": 60,
+   "why": "USA captain and Olympic gold medallist"
+  },
+  "Lisandro Martínez": {
+   "demand": 60,
+   "why": "2022 World Cup winner nicknamed \"the Butcher\""
+  },
+  "Marcus Thuram": {
+   "demand": 60,
+   "why": "France and Inter striker"
+  },
+  "Michael Laudrup": {
+   "demand": 60,
+   "why": "Elegant Denmark playmaker"
+  },
+  "Michelle Akers": {
+   "demand": 60,
+   "why": "Star of the first Women's World Cup in 1991"
+  },
+  "Moisés Caicedo": {
+   "demand": 60,
+   "why": "Ecuador midfielder at Chelsea"
+  },
+  "Nemanja Vidić": {
+   "demand": 60,
+   "why": "Manchester United's tough centre-back"
+  },
+  "Nuno Mendes": {
+   "demand": 60,
+   "why": "PSG and Portugal left-back; 2025 Champions League winner"
+  },
+  "Pernille Harder": {
+   "demand": 60,
+   "why": "Denmark star; two-time UEFA Women's Player of the Year"
+  },
+  "Scott McTominay": {
+   "demand": 60,
+   "why": "Scotland midfielder; Serie A MVP with Napoli"
+  },
+  "Stanley Matthews": {
+   "demand": 60,
+   "why": "The first European Footballer of the Year (1956)"
+  },
+  "Yassine Bounou": {
+   "demand": 60,
+   "why": "Keeper of Morocco's famous 2022 World Cup semi-final run"
+  },
+  "Alessandro Bastoni": {
+   "demand": 58,
+   "why": "Inter's ball-playing left centre-back"
+  },
+  "Asisat Oshoala": {
+   "demand": 58,
+   "why": "Nigeria's six-time African Women's Footballer of the Year"
+  },
+  "Barbra Banda": {
+   "demand": 58,
+   "why": "Zambia's star striker; 2024 BBC Women's Footballer of the Year"
+  },
+  "Bradley Barcola": {
+   "demand": 58,
+   "why": "France winger; 2025 Champions League winner"
+  },
+  "Bruno Guimarães": {
+   "demand": 58,
+   "why": "Newcastle and Brazil midfielder"
+  },
+  "Caroline Graham Hansen": {
+   "demand": 58,
+   "why": "Norway's brilliant Barcelona winger"
+  },
+  "Claude Makélélé": {
+   "demand": 58,
+   "why": "A defensive midfield role is named after him"
+  },
+  "Cody Gakpo": {
+   "demand": 58,
+   "why": "Netherlands forward; three goals at the 2022 World Cup"
+  },
+  "Eberechi Eze": {
+   "demand": 58,
+   "why": "England attacking midfielder; FA Cup final winner 2025"
+  },
+  "Ewa Pajor": {
+   "demand": 58,
+   "why": "Poland's record-breaking striker at Barcelona"
+  },
+  "Fabien Barthez": {
+   "demand": 58,
+   "why": "1998 World Cup winner with France"
+  },
+  "Frank Rijkaard": {
+   "demand": 58,
+   "why": "AC Milan and Netherlands midfielder"
+  },
+  "Gabriel Magalhães": {
+   "demand": 58,
+   "why": "Arsenal centre-back who scores from corners"
+  },
+  "Gabriel Martinelli": {
+   "demand": 58,
+   "why": "Arsenal and Brazil winger"
+  },
+  "Gary Neville": {
+   "demand": 58,
+   "why": "Manchester United right-back and TV pundit"
+  },
+  "Giacinto Facchetti": {
+   "demand": 58,
+   "why": "Inter's pioneer attacking full-back"
+  },
+  "Jordan Pickford": {
+   "demand": 58,
+   "why": "England's No. 1 at several tournaments"
+  },
+  "Jordi Torras": {
+   "demand": 58,
+   "why": "Spain futsal winger with many titles"
+  },
+  "João Cancelo": {
+   "demand": 58,
+   "why": "Portugal full-back who plays like a midfielder"
+  },
+  "Jérémy Doku": {
+   "demand": 58,
+   "why": "Belgium's dribbler at Manchester City"
+  },
+  "Kenny Dalglish": {
+   "demand": 58,
+   "why": "Liverpool and Scotland legend"
+  },
+  "Kristine Lilly": {
+   "demand": 58,
+   "why": "Over 350 games for the USA, a world record"
+  },
+  "Lieke Martens": {
+   "demand": 58,
+   "why": "Euro 2017 winner and The Best FIFA Women's Player"
+  },
+  "Marc Cucurella": {
+   "demand": 58,
+   "why": "Euro 2024 winner with Spain; famous curly hair"
+  },
+  "Mariona Caldentey": {
+   "demand": 58,
+   "why": "Spain World Cup winner and Arsenal midfielder"
+  },
+  "Mike Maignan": {
+   "demand": 58,
+   "why": "France and AC Milan goalkeeper"
+  },
+  "Nadine Angerer": {
+   "demand": 58,
+   "why": "Won the 2007 World Cup without conceding a goal"
+  },
+  "Rui Costa": {
+   "demand": 58,
+   "why": "Portugal and Milan playmaker"
+  },
+  "Carlos Ortiz": {
+   "demand": 56,
+   "why": "Spain and Inter futsal captain with many titles"
+  },
+  "Daniel Passarella": {
+   "demand": 56,
+   "why": "Argentina's 1978 World Cup winning captain"
+  },
+  "David Seaman": {
+   "demand": 56,
+   "why": "England and Arsenal keeper of the 1990s"
+  },
+  "Diogo Costa": {
+   "demand": 56,
+   "why": "Portugal No. 1; three saves in one Euro 2024 shootout"
+  },
+  "Formiga": {
+   "demand": 56,
+   "why": "Played in seven Women's World Cups"
+  },
+  "Hannah Hampton": {
+   "demand": 56,
+   "why": "England's goalkeeper in the Euro 2025 win"
+  },
+  "Ibrahima Konaté": {
+   "demand": 56,
+   "why": "Liverpool and France centre-back"
+  },
+  "Jamie Carragher": {
+   "demand": 56,
+   "why": "Liverpool one-club defender and TV pundit"
+  },
+  "Jeremie Frimpong": {
+   "demand": 56,
+   "why": "Very fast wing-back known for his smile and dance"
+  },
+  "João Pedro": {
+   "demand": 56,
+   "why": "Brazil forward; known mainly to Premier League fans"
+  },
+  "Mapi León": {
+   "demand": 56,
+   "why": "Barcelona's ball-playing centre-back"
+  },
+  "Mikel Oyarzabal": {
+   "demand": 56,
+   "why": "Scored Spain's winner in the Euro 2024 final"
+  },
+  "Nílton Santos": {
+   "demand": 56,
+   "why": "Brazil's attacking left-back, 1958 and 1962 World Cups"
+  },
+  "Patrice Evra": {
+   "demand": 56,
+   "why": "Manchester United left-back of the 2000s"
+  },
+  "Rayan Cherki": {
+   "demand": 56,
+   "why": "France's two-footed young playmaker"
+  },
+  "Temwa Chawinga": {
+   "demand": 56,
+   "why": "Malawi striker with record NWSL goals"
+  },
+  "Wilde": {
+   "demand": 56,
+   "why": "Brazil futsal pivot; known mainly to futsal fans"
+  },
+  "Fabián Ruiz": {
+   "demand": 55,
+   "why": "Euro 2024 winner with Spain"
+  },
+  "Fermín López": {
+   "demand": 55,
+   "why": "Young Barcelona midfielder; Olympic gold 2024"
+  },
+  "Gonçalo Ramos": {
+   "demand": 55,
+   "why": "Portugal striker; hat-trick at the 2022 World Cup"
+  },
+  "Mikel Merino": {
+   "demand": 55,
+   "why": "Scored Spain's late Euro 2024 winner against Germany"
+  },
+  "Raúl Jiménez": {
+   "demand": 55,
+   "why": "Mexico striker who came back from a serious injury"
+  },
+  "Weston McKennie": {
+   "demand": 55,
+   "why": "USA midfielder at Juventus"
+  },
+  "Alejandro Balde": {
+   "demand": 54,
+   "why": "Young Barcelona left-back"
+  },
+  "Alyssa Naeher": {
+   "demand": 54,
+   "why": "USA goalkeeper and 2019 World Cup winner"
+  },
+  "André Coelho": {
+   "demand": 54,
+   "why": "Portugal's World Cup and Euro winning fixo"
+  },
+  "David Raya": {
+   "demand": 54,
+   "why": "Arsenal goalkeeper; well known to Premier League fans"
+  },
+  "Paco Sedano": {
+   "demand": 54,
+   "why": "Barcelona and Spain futsal goalkeeper with many titles"
+  },
+  "Ryan Gravenberch": {
+   "demand": 54,
+   "why": "Liverpool and Netherlands midfielder"
+  },
+  "Sepp Maier": {
+   "demand": 54,
+   "why": "1974 World Cup winner with West Germany"
+  },
+  "Adolfo": {
+   "demand": 52,
+   "why": "Spain futsal ala at Barcelona"
+  },
+  "Alex Merlim": {
+   "demand": 52,
+   "why": "Italy futsal ala; known mainly to futsal fans"
+  },
+  "Antoine Semenyo": {
+   "demand": 52,
+   "why": "Bournemouth and Ghana forward"
+  },
+  "Clàudia Pina": {
+   "demand": 52,
+   "why": "Barcelona forward with a strong long shot"
+  },
+  "Denzel Dumfries": {
+   "demand": 52,
+   "why": "Inter and Netherlands wing-back"
+  },
+  "Marc Guéhi": {
+   "demand": 52,
+   "why": "England centre-back at Euro 2024"
+  },
+  "Martín Zubimendi": {
+   "demand": 52,
+   "why": "Spain's Euro 2024-winning holding midfielder"
+  },
+  "Neto": {
+   "demand": 52,
+   "why": "Brazil 2012 Futsal World Cup winner"
+  },
+  "Patri Guijarro": {
+   "demand": 52,
+   "why": "Barcelona's holding midfielder"
+  },
+  "Robinho": {
+   "demand": 52,
+   "why": "Brazil futsal ala; known mainly to futsal fans"
+  },
+  "Tijjani Reijnders": {
+   "demand": 52,
+   "why": "Netherlands midfielder"
+  },
+  "Tomás Paçó": {
+   "demand": 52,
+   "why": "Portugal's young fixo and a rising futsal star"
+  },
+  "Ismaïla Sarr": {
+   "demand": 50,
+   "why": "Senegal winger; known mainly to Premier League fans"
+  },
+  "Joel Queirós": {
+   "demand": 50,
+   "why": "Portugal futsal pivot; known mainly to futsal fans"
+  },
+  "Mario Rivillos": {
+   "demand": 50,
+   "why": "Spain futsal ala with a strong shot"
+  },
+  "Miguelín": {
+   "demand": 50,
+   "why": "Spain futsal ala; known mainly to futsal fans"
+  },
+  "Pauleta": {
+   "demand": 50,
+   "why": "Futsal ala; known mainly to futsal fans"
+  },
+  "Pedro Porro": {
+   "demand": 50,
+   "why": "Spurs attacking right-back"
+  },
+  "Sergey Zuev": {
+   "demand": 50,
+   "why": "Russia futsal goalkeeper; known mainly to futsal fans"
+  },
+  "Stefano Mammarella": {
+   "demand": 50,
+   "why": "Italy's Euro 2014 winning futsal goalkeeper"
+  },
+  "Willian Pacho": {
+   "demand": 50,
+   "why": "Ecuador defender; 2025 Champions League winner with PSG"
+  },
+  "Aicardo": {
+   "demand": 48,
+   "why": "Futsal fixo; known mainly to futsal fans"
+  },
+  "Gabriel": {
+   "demand": 48,
+   "why": "Futsal fixo; known mainly to futsal fans"
+  },
+  "Gregor Kobel": {
+   "demand": 48,
+   "why": "Borussia Dortmund goalkeeper; known mainly to club fans"
+  },
+  "Julio García Mera": {
+   "demand": 48,
+   "why": "Futsal fixo; known mainly to futsal fans"
+  },
+  "Luciano Gauna": {
+   "demand": 48,
+   "why": "Futsal ala; known mainly to futsal fans"
+  },
+  "Mellado": {
+   "demand": 48,
+   "why": "Spain futsal ala; known mainly to futsal fans"
+  },
+  "Mostafa Nazari": {
+   "demand": 48,
+   "why": "Iran futsal goalkeeper; known mainly to futsal fans"
+  },
+  "Pablo Ramírez": {
+   "demand": 48,
+   "why": "Futsal pivot; known mainly to futsal fans"
+  },
+  "Afonso Jesus": {
+   "demand": 46,
+   "why": "Portugal futsal defender; known mainly to futsal fans"
+  },
+  "Bernardo Paçó": {
+   "demand": 46,
+   "why": "Portugal's young futsal goalkeeper"
+  },
+  "Catela": {
+   "demand": 46,
+   "why": "Futsal ala; known mainly to futsal fans"
+  },
+  "Cirilo": {
+   "demand": 46,
+   "why": "Futsal pivot; known mainly to futsal fans"
+  },
+  "Daniel Ibañes": {
+   "demand": 46,
+   "why": "Futsal ala; known mainly to futsal fans"
+  },
+  "Edu": {
+   "demand": 46,
+   "why": "Spain futsal goalkeeper at recent tournaments"
+  },
+  "Mamadou Touré": {
+   "demand": 46,
+   "why": "Futsal ala; known mainly to futsal fans"
+  },
+  "Matheus Rodrigues": {
+   "demand": 46,
+   "why": "Brazil futsal ala; known mainly to futsal fans"
+  },
+  "Pervis Estupiñán": {
+   "demand": 46,
+   "why": "Ecuador left-back; known mainly to Premier League fans"
+  },
+  "Sergio González": {
+   "demand": 46,
+   "why": "Futsal ala; known mainly to futsal fans"
+  },
+  "Antonio Pérez": {
+   "demand": 44,
+   "why": "Spain futsal fixo; known mainly to futsal fans"
+  },
+  "Artem Fareniuk": {
+   "demand": 44,
+   "why": "Ukraine futsal pivot; known mainly to futsal fans"
+  },
+  "Danyil Abakshyn": {
+   "demand": 44,
+   "why": "Ukraine futsal pivot; known mainly to futsal fans"
+  },
+  "Douglas Junior": {
+   "demand": 44,
+   "why": "Futsal fixo; known mainly to futsal fans"
+  },
+  "Gustavo Lobo": {
+   "demand": 44,
+   "why": "Brazil futsal goalkeeper; known mainly to futsal fans"
+  },
+  "Higor": {
+   "demand": 44,
+   "why": "Futsal pivot; known mainly to futsal fans"
+  },
+  "Jesús Gordillo": {
+   "demand": 44,
+   "why": "Futsal pivot; known mainly to futsal fans"
+  },
+  "Marcio Forte": {
+   "demand": 44,
+   "why": "Futsal fixo; known mainly to futsal fans"
+  },
+  "Ouassini Guirio": {
+   "demand": 44,
+   "why": "Futsal pivot; known mainly to futsal fans"
+  },
+  "Raúl Gómez": {
+   "demand": 44,
+   "why": "Futsal pivot; known mainly to futsal fans"
+  },
+  "Sergei Sergeev": {
+   "demand": 44,
+   "why": "Russia futsal defender; known mainly to futsal fans"
+  },
+  "Sid Belhaj": {
+   "demand": 44,
+   "why": "Morocco futsal fixo; known mainly to futsal fans"
+  },
+  "Souheil Mouhoudine": {
+   "demand": 44,
+   "why": "France futsal fixo; known mainly to futsal fans"
+  },
+  "Tiago Marinho": {
+   "demand": 44,
+   "why": "Brazil futsal goalkeeper; known mainly to futsal fans"
+  },
+  "Willian Dorn": {
+   "demand": 44,
+   "why": "Brazil futsal goalkeeper at the 2024 World Cup"
+  },
+  "Adrián Rivera": {
+   "demand": 42,
+   "why": "Futsal fixo; known mainly to futsal fans"
+  },
+  "Chemi": {
+   "demand": 42,
+   "why": "Spain futsal goalkeeper; known mainly to futsal fans"
+  },
+  "João Victor": {
+   "demand": 42,
+   "why": "Brazil futsal fixo; known mainly to futsal fans"
+  },
+  "Luan Muller": {
+   "demand": 42,
+   "why": "Brazil futsal goalkeeper; known mainly to futsal fans"
+  },
+  "Miquel Feixas": {
+   "demand": 42,
+   "why": "Spain futsal goalkeeper; known mainly to futsal fans"
+  },
+  "Mykola Mykytiuk": {
+   "demand": 42,
+   "why": "Ukraine futsal fixo; known mainly to futsal fans"
+  },
+  "Santiago Elías": {
+   "demand": 42,
+   "why": "Argentina futsal goalkeeper; known mainly to futsal fans"
+  },
+  "Mathi Fernández": {
+   "demand": 40,
+   "why": "Spain futsal goalkeeper; known mainly to futsal fans"
+  },
+  "Ricardo Mayor": {
+   "demand": 40,
+   "why": "Futsal fixo; known mainly to futsal fans"
+  },
+  "Ivan Rakitić": {
+   "demand": 60,
+   "why": "Scored in the 2015 Champions League final; 2018 World Cup finalist"
+  },
+  "Raphaël Varane": {
+   "demand": 68,
+   "why": "2018 World Cup winner and four-time Champions League winner"
+  },
+  "Anthony Gordon": {
+   "demand": 60,
+   "why": "England winger; four goals in one Champions League game, now at Barcelona"
+  },
+  "Juan Román Riquelme": {
+   "demand": 68,
+   "why": "Boca Juniors legend and classic No. 10; best known to older fans"
+  },
+  "Jay-Jay Okocha": {
+   "demand": 64,
+   "why": "Nigeria's great trickster, famous for his stepovers"
+  },
+  "Endrick": {
+   "demand": 62,
+   "why": "Real Madrid's teenage Brazil striker with a big young fanbase"
+  },
+  "Karim Adeyemi": {
+   "demand": 56,
+   "why": "Germany's speedy forward, now at Barcelona"
+  },
+  "Pepe": {
+   "demand": 64,
+   "why": "Euro 2016 winner and three-time Champions League winner"
+  },
+  "Elliot Anderson": {
+   "demand": 54,
+   "why": "England midfielder; known mainly to Premier League fans"
+  },
+  "Park Ji-sung": {
+   "demand": 62,
+   "why": "First Asian Champions League winner; a legend across Asia"
+  },
+  "Sandro Tonali": {
+   "demand": 56,
+   "why": "Italy midfielder; Serie A winner with Milan"
+  },
+  "Gareth Bale": {
+   "demand": 82,
+   "why": "Five Champions Leagues and the 2018 final overhead kick; Wales' record scorer"
+  },
+  "Ángel Di María": {
+   "demand": 80,
+   "why": "Scored in the 2022 World Cup final and won the 2021 Copa América final"
+  },
+  "Mesut Özil": {
+   "demand": 74,
+   "why": "2014 World Cup winner and a famous assist-maker at Real Madrid and Arsenal"
+  },
+  "Jordi Alba": {
+   "demand": 60,
+   "why": "Euro 2012 winner who scored in the final"
+  },
+  "Javier Mascherano": {
+   "demand": 62,
+   "why": "Two Champions Leagues with Barcelona; Argentina's second most-capped player"
+  },
+  "Carlos Tevez": {
+   "demand": 64,
+   "why": "Won the league with both Manchester clubs; a Boca Juniors hero"
+  },
+  "Sergio Agüero": {
+   "demand": 80,
+   "why": "Manchester City's record scorer and the famous 93:20 title winner"
+  },
+  "Mario Balotelli": {
+   "demand": 66,
+   "why": "Famous for his Euro 2012 double against Germany"
+  },
+  "Rodrigo De Paul": {
+   "demand": 64,
+   "why": "2022 World Cup winner and Messi’s teammate at Inter Miami"
+  },
+  "Vincent Kompany": {
+   "demand": 66,
+   "why": "Manchester City captain with four Premier League titles"
+  },
+  "Vozinha": {
+   "demand": 60,
+   "why": "World Cup 2026 cult hero who held Spain to a 0-0 draw"
+  },
+  "Jonathan David": {
+   "demand": 60,
+   "why": "Canada's record scorer and first World Cup hat-trick hero"
+  },
+  "Brahim Díaz": {
+   "demand": 62,
+   "why": "Real Madrid dribbler and Golden Boot winner at the 2025 Africa Cup of Nations"
+  },
+  "Leonardo Bonucci": {
+   "demand": 62,
+   "why": "Euro 2020 winner who scored in the final"
+  },
+  "Cesc Fàbregas": {
+   "demand": 72,
+   "why": "World Cup and two-time Euro winner who set up the 2010 final winner"
+  },
+  "Edinson Cavani": {
+   "demand": 72,
+   "why": "PSG's first 200-goal striker and a Uruguay great; level with Giroud and Fàbregas"
+  },
+  "Eric Cantona": {
+   "demand": 80,
+   "why": "Manchester United's \"King Eric\"; four league titles in five seasons and the famous collar"
+  },
+  "Thomas Müller": {
+   "demand": 77,
+   "why": "2014 World Cup winner, 2010 Golden Boot and a record 13 Bundesliga titles"
+  },
+  "Olivier Giroud": {
+   "demand": 72,
+   "why": "2018 World Cup winner, France's record goalscorer and the 2017 scorpion kick"
+  },
+  "Keylor Navas": {
+   "demand": 68,
+   "why": "Three Champions Leagues in a row with Real Madrid; Costa Rica's 2014 World Cup hero"
+  },
+  "Lúcio": {
+   "demand": 64,
+   "why": "2002 World Cup winner and Inter's 2010 treble; Brazil captain"
+  },
+  "Kyle Walker": {
+   "demand": 64,
+   "why": "Six Premier League titles and the 2023 treble with Manchester City; famous for his speed"
+  },
+  "İlkay Gündoğan": {
+   "demand": 64,
+   "why": "Captain of Manchester City's 2023 treble; scored after 12 seconds in the FA Cup final"
+  },
+  "Nico O'Reilly": {
+   "demand": 56,
+   "why": "Man City academy left-back; headed both goals in the 2026 League Cup final"
+  },
+  "Ronald Koeman": {
+   "demand": 66,
+   "why": "Euro 1988 winner and Barcelona’s 1992 European Cup final hero; level with Baresi and Terry"
+  },
+  "Ricardo Quaresma": {
+   "demand": 62,
+   "why": "Euro 2016 winner whose trivela and rabona tricks fans love"
+  },
+  "Bastian Schweinsteiger": {
+   "demand": 72,
+   "why": "2014 World Cup final warrior and Champions League winner; level with Lahm"
+  },
+  "Wesley Sneijder": {
+   "demand": 70,
+   "why": "2010 treble winner and World Cup finalist; just below Özil and Fàbregas"
+  },
+  "Ruud Gullit": {
+   "demand": 74,
+   "why": "1987 Ballon d'Or and Euro 88 captain; just above Van Basten"
+  },
+  "Ian Rush": {
+   "demand": 62,
+   "why": "Liverpool's record goalscorer; best known to older fans"
+  },
+  "Peter Crouch": {
+   "demand": 60,
+   "why": "Premier League headed-goals record holder, famous for his robot dance"
+  },
+  "Freddie Ljungberg": {
+   "demand": 58,
+   "why": "Arsenal Invincibles winger; known mainly to older Premier League fans"
+  },
+  "Robin van Persie": {
+   "demand": 74,
+   "why": "Two Premier League Golden Boots and the 2014 flying header; near Drogba"
+  },
+  "Laurent Blanc": {
+   "demand": 62,
+   "why": "1998 World Cup and Euro 2000 winner; the first World Cup golden goal"
+  },
+  "James Rodríguez": {
+   "demand": 70,
+   "why": "2014 Golden Boot and Puskás winner with a huge fanbase; just below Elite at 35"
+  },
+  "Filippo Inzaghi": {
+   "demand": 64,
+   "why": "2006 World Cup winner and two-time Champions League winner; level with Owen"
+  }
+ }
+}

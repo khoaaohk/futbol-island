@@ -439,10 +439,21 @@ const inkOf=(f:InkFill):[string,number]|null=>f==null||f==='paper'?null:typeof f
 
 
 // ─────────────────────────────────────────── 2D geometry ───────────────────────────────────────────
-function hull(pts:Pt[]):Pt[]{if(pts.length<3)return pts.slice();const p=pts.slice().sort((a,b)=>a[0]-b[0]||a[1]-b[1]),cr=(o:Pt,a:Pt,b:Pt)=>(a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0]);
- const lo:Pt[]=[],up:Pt[]=[];for(const q of p){while(lo.length>=2&&cr(lo[lo.length-2],lo[lo.length-1],q)<=0)lo.pop();lo.push(q);}
- for(let i=p.length-1;i>=0;i--){const q=p[i];while(up.length>=2&&cr(up[up.length-2],up[up.length-1],q)<=0)up.pop();up.push(q);}
- up.pop();lo.pop();return lo.concat(up);}
+/** Convex hull (Andrew's monotone chain), lower chain then upper chain. The hottest function of a card film frame (every torso, head,
+ * hand, boot and ground shadow). Performance (Sep 26 2026): a stable merge sort by x then y (insertion-sorted runs of 8, then bottom-up
+ * merges; the same order as the stable sort((a,b)=>a[0]-b[0]||a[1]-b[1]) without a comparator call per step) and one stack for both
+ * chains: ~2× faster, same points in the same order (tests/riso-engine-perf.cjs). */
+let hullTmp:Pt[]=[];
+function hull(pts:Pt[]):Pt[]{const n=pts.length;if(n<3)return pts.slice();const p=pts.slice();
+ for(let s=0;s<n;s+=8){const e=Math.min(n,s+8);for(let i=s+1;i<e;i++){const v=p[i],x=v[0],y=v[1];let j=i-1;while(j>=s){const w=p[j];if(w[0]>x||(w[0]===x&&w[1]>y)){p[j+1]=w;j--;}else break;}p[j+1]=v;}}
+ if(n>8){let src=p,dst=hullTmp.length>=n?hullTmp:(hullTmp=new Array(n));
+  for(let w=8;w<n;w*=2){for(let lo=0;lo<n;lo+=2*w){const mid=Math.min(n,lo+w),hi=Math.min(n,lo+2*w);let i=lo,j=mid,k=lo;
+    while(i<mid&&j<hi){const a=src[i],b=src[j];if(b[0]<a[0]||(b[0]===a[0]&&b[1]<a[1])){dst[k++]=b;j++;}else{dst[k++]=a;i++;}}while(i<mid)dst[k++]=src[i++];while(j<hi)dst[k++]=src[j++];}
+   const t=src;src=dst;dst=t;}
+  if(src!==p)for(let i=0;i<n;i++)p[i]=src[i];}
+ const h:Pt[]=[];for(let i=0;i<n;i++){const q=p[i];while(h.length>=2){const o=h[h.length-2],a=h[h.length-1];if((a[0]-o[0])*(q[1]-o[1])-(a[1]-o[1])*(q[0]-o[0])<=0)h.pop();else break;}h.push(q);}
+ const lower=h.length;for(let i=n-2;i>=0;i--){const q=p[i];while(h.length>lower){const o=h[h.length-2],a=h[h.length-1];if((a[0]-o[0])*(q[1]-o[1])-(a[1]-o[1])*(q[0]-o[0])<=0)h.pop();else break;}h.push(q);}
+ h.pop();return h;}
 function orient(q:Pt[]):Pt[]{let A=0;for(let i=0;i<q.length;i++){const a=q[i],b=q[(i+1)%q.length];A+=a[0]*b[1]-b[0]*a[1];}return A<0?q.slice().reverse():q;}
 function poly(q:Pt[]){const p=new Path2D();if(q.length<2)return p;const r=orient(q);p.moveTo(r[0][0],r[0][1]);for(let i=1;i<r.length;i++)p.lineTo(r[i][0],r[i][1]);p.closePath();return p;}
 function ellipse(c:Pt,rx:number,ry:number,rot=0,n=14):Pt[]{const o:Pt[]=[],cs=Math.cos(rot),sn=Math.sin(rot);for(let i=0;i<n;i++){const a=i/n*TAU,x=Math.cos(a)*rx,y=Math.sin(a)*ry;o.push([c[0]+x*cs-y*sn,c[1]+x*sn+y*cs]);}return o;}
@@ -634,9 +645,15 @@ function drawTorsoHead(C:Ctx,L:Layer,sk:Skeleton){
  // number on the back (a paper number is a hole in the shirt ink: no knockout needed)
  let num:Path2D|null=null;
  if(st.number!=null&&!low){const Tb=mul(axis(T,0),-1),o=add(ringPt(lerpRing(shirtR[2],shirtR[3],.1),Math.PI),mul(Tb,.012*s));
-  if(facing(C,o,Tb)>.18){const str=String(st.number),Y=mul(axis(T,1),-1),S=.1*s,gw=1.45,w0=(str.length*gw-.45)/2,t=.34;num=new Path2D();
-   // glyph x runs across the back; flip it when the projection (or a mirroring sheet transform) would mirror the digits, so they read left to right
-   let X=axis(T,2);{const p0=C.px(o),px=C.px(add(o,mul(X,S))),py=C.px(add(o,mul(Y,S))),m=C.s.getTransform();if(((px[0]-p0[0])*(py[1]-p0[1])-(px[1]-p0[1])*(py[0]-p0[0]))*(m.a*m.d-m.b*m.c)<0)X=mul(X,-1);}
+  if(facing(C,o,Tb)>.18){const str=String(st.number),S=.1*s,gw=1.45,w0=(str.length*gw-.45)/2,t=.34;num=new Path2D();
+   // glyph x runs across the back, glyph y down it. Both are checked on the DEVICE (sheet transform × projection, so a mirroring
+   // projector, a negative-x sheet scale or a camera roll all count): a mirrored pair flips x, so the digits never print back to front;
+   // an upside-down pair (a keeper lying head-down, a fallen player seen from above) turns 180°, because a 7-segment 3 or 10 turned over
+   // reads as its mirror image (Ɛ, 01). The bias keeps a torso near horizontal from toggling between frames.
+   let X=axis(T,2),Y=mul(axis(T,1),-1);{const m=C.s.getTransform(),dv=(p:V3):Pt=>{const q=C.px(p);return[m.a*q[0]+m.c*q[1],m.b*q[0]+m.d*q[1]];};
+    const p0=dv(o),px=dv(add(o,mul(X,S))),py=dv(add(o,mul(Y,S))),vx=[px[0]-p0[0],px[1]-p0[1]],vy=[py[0]-p0[0],py[1]-p0[1]];
+    if(vx[0]*vy[1]-vx[1]*vy[0]<0)X=mul(X,-1);
+    if(vy[1]<-.2*Math.hypot(vy[0],vy[1])){X=mul(X,-1);Y=mul(Y,-1);}}
    [...str].forEach((ch,ci)=>{for(const sg of DIGITS[ch]??''){const[[x0,y0],[x1,y1]]=SEGS[sg],ox=ci*gw-w0,hx=x1===x0?t/2:0,hy=y1===y0?t/2:0,ex=x1===x0?0:t/2,ey=y1===y0?0:t/2;
      const q:Pt[]=[[x0-hx-ex,y0-hy-ey],[x1+hx+ex,y0-hy-ey],[x1+hx+ex,y1+hy+ey],[x0-hx-ex,y1+hy+ey]].map(([gx,gy])=>C.px(add(o,add(mul(X,(gx+ox)*S),mul(Y,(gy-1)*S)))) as Pt);
      num!.addPath(poly(q));}});
@@ -685,14 +702,14 @@ function drawTorsoHead(C:Ctx,L:Layer,sk:Skeleton){
 // ─────────────────────────────────────────── public drawing ───────────────────────────────────────────
 export type DrawResult={sk:Skeleton;joints:Record<JointName,Pt>;heightPx:number;detail:Detail;ops:number};
 /** groundShadow: a soft footprint of the body on the ground (one op), fading as the body leaves the ground */
-export function groundShadow(s:Sheet,sk:Skeleton,camera:Projector|CameraSpec,fill:InkFill,groundY=0){
+function groundShadowInner(s:Sheet,sk:Skeleton,camera:Projector|CameraSpec,fill:InkFill,groundY=0){
  const k=inkOf(fill);if(!k)return;const cam=asProjector(camera),pts:Pt[]=[];let low=Infinity;
  for(const j of ['lToe','rToe','lHeel','rHeel','lKn','rKn','pelvis','chest','head','lHa','rHa'] as JointName[]){const q=sk[j],h=q[1]-groundY;low=Math.min(low,h);if(h>1.3*sk.s)continue;const r=(.13-.05*Math.min(1,h))*sk.s;for(let i=0;i<8;i++){const a=i/8*TAU;const p=cam.project([q[0]+Math.cos(a)*r*1.4,groundY,q[2]+Math.sin(a)*r]);pts.push([p[0],p[1]]);}}
  if(pts.length<3)return;s.fill(k[0],poly(smoothPts(hull(pts),true,4,2.6)),k[1]*clamp(1-Math.max(0,low)*.5,.3,1));
 }
 /** drawAthlete(sheet, pose, camera, style, place?, motion?) — motion.prev (the pose one drawn frame earlier, e.g. gen(t − 1/12)) turns on
  * secondary motion: hair and the shirt hem trail the movement. */
-export function drawAthlete(s:Sheet,pose:Pose,camera:Projector|CameraSpec,style:AthleteStyle,place:Place={},motion:Motion={}):DrawResult{
+function drawAthleteInner(s:Sheet,pose:Pose,camera:Projector|CameraSpec,style:AthleteStyle,place:Place={},motion:Motion={}):DrawResult{
  const ops0=s._ops,cam=asProjector(camera),sc=style.scale??1,sk=solve(pose,style.build,place,sc);
  // squash & stretch: a volume-preserving 2D scale along the body's axis, anchored at the lowest point
  const raw=(p:V3):Pt=>{const q=cam.project(p);return[q[0],q[1]];},kq=pose.squash||0;
@@ -728,7 +745,7 @@ export function drawAthlete(s:Sheet,pose:Pose,camera:Projector|CameraSpec,style:
 }
 /** motionSmear: for hands/feet/head that moved more than `threshold` css px since prevPose, print a halftone echo of the limb and
  * tapered speed lines along its arc — call BEFORE drawAthlete so the body prints over its own trail. ≤ 2 ops. */
-export function motionSmear(s:Sheet,prevPose:Pose,pose:Pose,camera:Projector|CameraSpec,style:AthleteStyle,place:Place={},o:{prevPlace?:Place;ink?:InkFill;threshold?:number;lines?:boolean}={}){
+function motionSmearInner(s:Sheet,prevPose:Pose,pose:Pose,camera:Projector|CameraSpec,style:AthleteStyle,place:Place={},o:{prevPlace?:Place;ink?:InkFill;threshold?:number;lines?:boolean}={}){
  const cam=asProjector(camera),pp=o.prevPlace??place,ppu=pxPer(s),thr=o.threshold??7,sc=style.scale??1;
  const mixPlace=(u:number):Place=>({x:(pp.x??0)+((place.x??0)-(pp.x??0))*u,y:(pp.y??0)+((place.y??0)-(pp.y??0))*u,z:(pp.z??0)+((place.z??0)-(pp.z??0))*u,yaw:(pp.yaw??0)+((place.yaw??0)-(pp.yaw??0))*u});
  const skAt=(u:number)=>solve(blendPose(prevPose,pose,u),style.build,mixPlace(u),sc),a=skAt(0),b=skAt(1),px=(p:V3):Pt=>{const q=cam.project(p);return[q[0],q[1]];};
@@ -740,3 +757,13 @@ export function motionSmear(s:Sheet,prevPose:Pose,pose:Pose,camera:Projector|Cam
    for(const off of[-1,0,1])lines.addPath(ribbon(path.map(p=>[p[0]+nx*off*gap,p[1]+ny*off*gap] as Pt),(1.6-.4*Math.abs(off))/ppu,{seed:(style.seed??1)+off+7,taper:.9,pressure:.2,wobble:0}));}}
  if(!any)return;const ink=inkOf(o.ink??[style.line,.45]);if(ink)s.fill(ink[0],echo,ink[1]);if(o.lines!==false)s.fill(style.line,lines,.8);
 }
+
+// Figures are "action": while one prints, sheet._flat > 0 and the card films' "action" dot mode prints its tints without a screen
+// (lib/paths/riso/sheet.ts DotMode). No effect in the classic riso mode.
+const figure=<A extends unknown[],R>(fn:(s:Sheet,...a:A)=>R)=>(s:Sheet,...a:A):R=>{s._flat=(s._flat||0)+1;try{return fn(s,...a);}finally{s._flat--;}};
+/** groundShadow: a soft footprint of the body on the ground (one op), fading as the body leaves the ground */
+export const groundShadow=figure(groundShadowInner);
+/** drawAthlete(sheet, pose, camera, style, place?, motion?) — see drawAthleteInner */
+export const drawAthlete=figure(drawAthleteInner);
+/** motionSmear: halftone echo and speed lines of fast limbs — see motionSmearInner */
+export const motionSmear=figure(motionSmearInner);

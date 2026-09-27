@@ -1,0 +1,386 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: the 2012 semi-final",
+   "text": "The 2012 Futsal Euro semi-final: Croatia against Russia, in Zagreb. In the sixth minute, Fukin threads the ball in from the left. Cirilo turns it first time past the keeper. Two nil!",
+   "src": "/plays/narration/cirilo-futsal-signature/1.m4a",
+   "seconds": 14.2,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "2012",
+     "at": 0.425
+    },
+    {
+     "w": "Futsal",
+     "at": 1.188
+    },
+    {
+     "w": "Euro",
+     "at": 1.625
+    },
+    {
+     "w": "semi-final",
+     "at": 1.988
+    },
+    {
+     "w": "Croatia",
+     "at": 2.987
+    },
+    {
+     "w": "against",
+     "at": 3.55
+    },
+    {
+     "w": "Russia",
+     "at": 3.913
+    },
+    {
+     "w": "in",
+     "at": 4.475
+    },
+    {
+     "w": "Zagreb",
+     "at": 4.625
+    },
+    {
+     "w": "In",
+     "at": 5.737
+    },
+    {
+     "w": "the",
+     "at": 5.862
+    },
+    {
+     "w": "sixth",
+     "at": 5.963
+    },
+    {
+     "w": "minute",
+     "at": 6.325
+    },
+    {
+     "w": "Fukin",
+     "at": 6.888
+    },
+    {
+     "w": "threads",
+     "at": 7.312
+    },
+    {
+     "w": "the",
+     "at": 7.65
+    },
+    {
+     "w": "ball",
+     "at": 7.775
+    },
+    {
+     "w": "in",
+     "at": 8.15
+    },
+    {
+     "w": "from",
+     "at": 8.375
+    },
+    {
+     "w": "the",
+     "at": 8.537
+    },
+    {
+     "w": "left",
+     "at": 8.625
+    },
+    {
+     "w": "Cirilo",
+     "at": 9.525
+    },
+    {
+     "w": "turns",
+     "at": 10.088
+    },
+    {
+     "w": "it",
+     "at": 10.475
+    },
+    {
+     "w": "first",
+     "at": 10.6
+    },
+    {
+     "w": "time",
+     "at": 10.875
+    },
+    {
+     "w": "past",
+     "at": 11.213
+    },
+    {
+     "w": "the",
+     "at": 11.562
+    },
+    {
+     "w": "keeper",
+     "at": 11.65
+    },
+    {
+     "w": "Two",
+     "at": 12.525
+    },
+    {
+     "w": "nil",
+     "at": 12.812
+    }
+   ]
+  },
+  {
+   "label": "Replay: one touch",
+   "text": "Watch again, in slow motion. One touch, and it\u2019s in! Russia win four two and reach the final!",
+   "src": "/plays/narration/cirilo-futsal-signature/2.m4a",
+   "seconds": 7.0,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "in",
+     "at": 1.062
+    },
+    {
+     "w": "slow",
+     "at": 1.212
+    },
+    {
+     "w": "motion",
+     "at": 1.45
+    },
+    {
+     "w": "One",
+     "at": 2.337
+    },
+    {
+     "w": "touch",
+     "at": 2.587
+    },
+    {
+     "w": "and",
+     "at": 3.025
+    },
+    {
+     "w": "it\u2019s",
+     "at": 3.138
+    },
+    {
+     "w": "in",
+     "at": 3.3
+    },
+    {
+     "w": "Russia",
+     "at": 3.987
+    },
+    {
+     "w": "win",
+     "at": 4.35
+    },
+    {
+     "w": "four",
+     "at": 4.588
+    },
+    {
+     "w": "two",
+     "at": 4.838
+    },
+    {
+     "w": "and",
+     "at": 5.1
+    },
+    {
+     "w": "reach",
+     "at": 5.225
+    },
+    {
+     "w": "the",
+     "at": 5.475
+    },
+    {
+     "w": "final",
+     "at": 5.588
+    }
+   ]
+  },
+  {
+   "label": "Hold it up",
+   "text": "How does a pivot hold it up? He keeps his body between the ball and the defender. He waits for his teammates. Then he lays it off! Keep the ball and wait for your teammates to join the attack.",
+   "src": "/plays/narration/cirilo-futsal-signature/3.m4a",
+   "seconds": 12.1,
+   "words": [
+    {
+     "w": "How",
+     "at": 0.375
+    },
+    {
+     "w": "does",
+     "at": 0.512
+    },
+    {
+     "w": "a",
+     "at": 0.662
+    },
+    {
+     "w": "pivot",
+     "at": 0.738
+    },
+    {
+     "w": "hold",
+     "at": 1.1
+    },
+    {
+     "w": "it",
+     "at": 1.337
+    },
+    {
+     "w": "up",
+     "at": 1.413
+    },
+    {
+     "w": "He",
+     "at": 1.975
+    },
+    {
+     "w": "keeps",
+     "at": 2.125
+    },
+    {
+     "w": "his",
+     "at": 2.388
+    },
+    {
+     "w": "body",
+     "at": 2.562
+    },
+    {
+     "w": "between",
+     "at": 2.95
+    },
+    {
+     "w": "the",
+     "at": 3.237
+    },
+    {
+     "w": "ball",
+     "at": 3.337
+    },
+    {
+     "w": "and",
+     "at": 3.775
+    },
+    {
+     "w": "the",
+     "at": 3.888
+    },
+    {
+     "w": "defender",
+     "at": 3.975
+    },
+    {
+     "w": "He",
+     "at": 4.95
+    },
+    {
+     "w": "waits",
+     "at": 5.1
+    },
+    {
+     "w": "for",
+     "at": 5.4
+    },
+    {
+     "w": "his",
+     "at": 5.513
+    },
+    {
+     "w": "teammates",
+     "at": 5.675
+    },
+    {
+     "w": "Then",
+     "at": 6.713
+    },
+    {
+     "w": "he",
+     "at": 6.875
+    },
+    {
+     "w": "lays",
+     "at": 7.0
+    },
+    {
+     "w": "it",
+     "at": 7.263
+    },
+    {
+     "w": "off",
+     "at": 7.35
+    },
+    {
+     "w": "Keep",
+     "at": 8.137
+    },
+    {
+     "w": "the",
+     "at": 8.387
+    },
+    {
+     "w": "ball",
+     "at": 8.475
+    },
+    {
+     "w": "and",
+     "at": 8.85
+    },
+    {
+     "w": "wait",
+     "at": 8.975
+    },
+    {
+     "w": "for",
+     "at": 9.225
+    },
+    {
+     "w": "your",
+     "at": 9.338
+    },
+    {
+     "w": "teammates",
+     "at": 9.488
+    },
+    {
+     "w": "to",
+     "at": 10.075
+    },
+    {
+     "w": "join",
+     "at": 10.213
+    },
+    {
+     "w": "the",
+     "at": 10.488
+    },
+    {
+     "w": "attack",
+     "at": 10.625
+    }
+   ]
+  }
+ ]
+}

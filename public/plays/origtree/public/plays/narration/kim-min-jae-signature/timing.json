@@ -1,0 +1,398 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Title night",
+   "text": "Udine, 2023. One point makes Napoli champions. Their defender Kim Min-jae is called the Monster. Here\u2019s how he defends. Udinese look for their striker\u2026 but Kim steps in first!",
+   "src": "/plays/narration/kim-min-jae-signature/1.m4a",
+   "seconds": 14.0,
+   "words": [
+    {
+     "w": "Udine",
+     "at": 0.375
+    },
+    {
+     "w": "2023",
+     "at": 0.9
+    },
+    {
+     "w": "One",
+     "at": 2.375
+    },
+    {
+     "w": "point",
+     "at": 2.663
+    },
+    {
+     "w": "makes",
+     "at": 2.95
+    },
+    {
+     "w": "Napoli",
+     "at": 3.237
+    },
+    {
+     "w": "champions",
+     "at": 3.712
+    },
+    {
+     "w": "Their",
+     "at": 4.838
+    },
+    {
+     "w": "defender",
+     "at": 5.0
+    },
+    {
+     "w": "Kim",
+     "at": 5.513
+    },
+    {
+     "w": "Min-jae",
+     "at": 5.775
+    },
+    {
+     "w": "is",
+     "at": 6.3
+    },
+    {
+     "w": "called",
+     "at": 6.45
+    },
+    {
+     "w": "the",
+     "at": 6.713
+    },
+    {
+     "w": "Monster",
+     "at": 6.8
+    },
+    {
+     "w": "Here",
+     "at": 7.8
+    },
+    {
+     "w": "s",
+     "at": 8.275
+    },
+    {
+     "w": "how",
+     "at": 8.45
+    },
+    {
+     "w": "he",
+     "at": 8.613
+    },
+    {
+     "w": "defends",
+     "at": 8.725
+    },
+    {
+     "w": "Udinese",
+     "at": 9.762
+    },
+    {
+     "w": "look",
+     "at": 10.45
+    },
+    {
+     "w": "for",
+     "at": 10.65
+    },
+    {
+     "w": "their",
+     "at": 10.762
+    },
+    {
+     "w": "striker",
+     "at": 10.963
+    },
+    {
+     "w": "but",
+     "at": 11.575
+    },
+    {
+     "w": "Kim",
+     "at": 11.762
+    },
+    {
+     "w": "steps",
+     "at": 12.162
+    },
+    {
+     "w": "in",
+     "at": 12.5
+    },
+    {
+     "w": "first",
+     "at": 12.662
+    }
+   ]
+  },
+  {
+   "label": "The replay",
+   "text": "Watch again, slowly. Kim watches the passer\u2019s eyes. He sees the pass coming, so he steps out early\u2026 in front of the striker!",
+   "src": "/plays/narration/kim-min-jae-signature/2.m4a",
+   "seconds": 8.9,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.212
+    },
+    {
+     "w": "Kim",
+     "at": 2.237
+    },
+    {
+     "w": "watches",
+     "at": 2.5
+    },
+    {
+     "w": "the",
+     "at": 2.925
+    },
+    {
+     "w": "passer\u2019s",
+     "at": 3.025
+    },
+    {
+     "w": "eyes",
+     "at": 3.525
+    },
+    {
+     "w": "He",
+     "at": 4.3
+    },
+    {
+     "w": "sees",
+     "at": 4.463
+    },
+    {
+     "w": "the",
+     "at": 4.737
+    },
+    {
+     "w": "pass",
+     "at": 4.838
+    },
+    {
+     "w": "coming",
+     "at": 5.25
+    },
+    {
+     "w": "so",
+     "at": 5.8
+    },
+    {
+     "w": "he",
+     "at": 5.912
+    },
+    {
+     "w": "steps",
+     "at": 6.025
+    },
+    {
+     "w": "out",
+     "at": 6.312
+    },
+    {
+     "w": "early",
+     "at": 6.525
+    },
+    {
+     "w": "in",
+     "at": 6.938
+    },
+    {
+     "w": "front",
+     "at": 7.075
+    },
+    {
+     "w": "of",
+     "at": 7.263
+    },
+    {
+     "w": "the",
+     "at": 7.338
+    },
+    {
+     "w": "striker",
+     "at": 7.425
+    }
+   ]
+  },
+  {
+   "label": "The break",
+   "text": "Ball stolen! Kim lifts his head and hits a long pass at once. Napoli break away! It ended one\u2013one: champions!",
+   "src": "/plays/narration/kim-min-jae-signature/3.m4a",
+   "seconds": 8.7,
+   "words": [
+    {
+     "w": "Ball",
+     "at": 0.375
+    },
+    {
+     "w": "stolen",
+     "at": 0.637
+    },
+    {
+     "w": "Kim",
+     "at": 1.462
+    },
+    {
+     "w": "lifts",
+     "at": 1.725
+    },
+    {
+     "w": "his",
+     "at": 1.988
+    },
+    {
+     "w": "head",
+     "at": 2.125
+    },
+    {
+     "w": "and",
+     "at": 2.337
+    },
+    {
+     "w": "hits",
+     "at": 2.45
+    },
+    {
+     "w": "a",
+     "at": 2.663
+    },
+    {
+     "w": "long",
+     "at": 2.75
+    },
+    {
+     "w": "pass",
+     "at": 3.087
+    },
+    {
+     "w": "at",
+     "at": 3.438
+    },
+    {
+     "w": "once",
+     "at": 3.525
+    },
+    {
+     "w": "Napoli",
+     "at": 4.4
+    },
+    {
+     "w": "break",
+     "at": 4.875
+    },
+    {
+     "w": "away",
+     "at": 5.1
+    },
+    {
+     "w": "It",
+     "at": 5.825
+    },
+    {
+     "w": "ended",
+     "at": 5.975
+    },
+    {
+     "w": "one",
+     "at": 6.325
+    },
+    {
+     "w": "one",
+     "at": 6.625
+    },
+    {
+     "w": "champions",
+     "at": 7.037
+    }
+   ]
+  },
+  {
+   "label": "The lesson",
+   "text": "So remember: watch the passer\u2019s eyes, and step in front of the striker to steal it!",
+   "src": "/plays/narration/kim-min-jae-signature/4.m4a",
+   "seconds": 5.9,
+   "words": [
+    {
+     "w": "So",
+     "at": 0.4
+    },
+    {
+     "w": "remember",
+     "at": 0.575
+    },
+    {
+     "w": "watch",
+     "at": 1.538
+    },
+    {
+     "w": "the",
+     "at": 1.85
+    },
+    {
+     "w": "passer\u2019s",
+     "at": 1.95
+    },
+    {
+     "w": "eyes",
+     "at": 2.487
+    },
+    {
+     "w": "and",
+     "at": 3.0
+    },
+    {
+     "w": "step",
+     "at": 3.138
+    },
+    {
+     "w": "in",
+     "at": 3.388
+    },
+    {
+     "w": "front",
+     "at": 3.5
+    },
+    {
+     "w": "of",
+     "at": 3.688
+    },
+    {
+     "w": "the",
+     "at": 3.763
+    },
+    {
+     "w": "striker",
+     "at": 3.85
+    },
+    {
+     "w": "to",
+     "at": 4.275
+    },
+    {
+     "w": "steal",
+     "at": 4.412
+    },
+    {
+     "w": "it",
+     "at": 4.775
+    }
+   ]
+  }
+ ]
+}

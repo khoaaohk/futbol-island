@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Boston, 1994. Italy and Spain are level, two minutes left. Signori flicks it through, and Roberto Baggio runs clear! The keeper rushes out... Baggio goes round him... goal!",
+   "src": "/plays/narration/baggio-spain-1994/1.m4a",
+   "seconds": 13.5,
+   "words": [
+    {
+     "w": "Boston",
+     "at": 0.375
+    },
+    {
+     "w": "1994",
+     "at": 0.925
+    },
+    {
+     "w": "Italy",
+     "at": 2.413
+    },
+    {
+     "w": "and",
+     "at": 2.775
+    },
+    {
+     "w": "Spain",
+     "at": 2.913
+    },
+    {
+     "w": "are",
+     "at": 3.35
+    },
+    {
+     "w": "level",
+     "at": 3.45
+    },
+    {
+     "w": "two",
+     "at": 3.837
+    },
+    {
+     "w": "minutes",
+     "at": 4.05
+    },
+    {
+     "w": "left",
+     "at": 4.375
+    },
+    {
+     "w": "Signori",
+     "at": 5.2
+    },
+    {
+     "w": "flicks",
+     "at": 5.787
+    },
+    {
+     "w": "it",
+     "at": 6.1
+    },
+    {
+     "w": "through",
+     "at": 6.263
+    },
+    {
+     "w": "and",
+     "at": 6.65
+    },
+    {
+     "w": "Roberto",
+     "at": 6.775
+    },
+    {
+     "w": "Baggio",
+     "at": 7.275
+    },
+    {
+     "w": "runs",
+     "at": 7.675
+    },
+    {
+     "w": "clear",
+     "at": 7.987
+    },
+    {
+     "w": "The",
+     "at": 8.775
+    },
+    {
+     "w": "keeper",
+     "at": 8.875
+    },
+    {
+     "w": "rushes",
+     "at": 9.25
+    },
+    {
+     "w": "out",
+     "at": 9.65
+    },
+    {
+     "w": "Baggio",
+     "at": 10.338
+    },
+    {
+     "w": "goes",
+     "at": 10.725
+    },
+    {
+     "w": "round",
+     "at": 11.05
+    },
+    {
+     "w": "him",
+     "at": 11.363
+    },
+    {
+     "w": "goal",
+     "at": 12.113
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again, slowly. Baggio stays calm and takes the ball wide, around keeper Zubizarreta. It runs a little too far...",
+   "src": "/plays/narration/baggio-spain-1994/2.m4a",
+   "seconds": 9.2,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "slowly",
+     "at": 1.312
+    },
+    {
+     "w": "Baggio",
+     "at": 2.375
+    },
+    {
+     "w": "stays",
+     "at": 2.837
+    },
+    {
+     "w": "calm",
+     "at": 3.263
+    },
+    {
+     "w": "and",
+     "at": 3.65
+    },
+    {
+     "w": "takes",
+     "at": 3.775
+    },
+    {
+     "w": "the",
+     "at": 4.075
+    },
+    {
+     "w": "ball",
+     "at": 4.175
+    },
+    {
+     "w": "wide",
+     "at": 4.475
+    },
+    {
+     "w": "around",
+     "at": 4.925
+    },
+    {
+     "w": "keeper",
+     "at": 5.338
+    },
+    {
+     "w": "Zubizarreta",
+     "at": 5.725
+    },
+    {
+     "w": "It",
+     "at": 6.775
+    },
+    {
+     "w": "runs",
+     "at": 6.925
+    },
+    {
+     "w": "a",
+     "at": 7.188
+    },
+    {
+     "w": "little",
+     "at": 7.25
+    },
+    {
+     "w": "too",
+     "at": 7.487
+    },
+    {
+     "w": "far",
+     "at": 7.713
+    }
+   ]
+  },
+  {
+   "label": "Tight angle",
+   "text": "But from a tight angle, past a defender on the line, he passes it into the net. Italy are into the semi-final!",
+   "src": "/plays/narration/baggio-spain-1994/3.m4a",
+   "seconds": 8.1,
+   "words": [
+    {
+     "w": "But",
+     "at": 0.35
+    },
+    {
+     "w": "from",
+     "at": 0.475
+    },
+    {
+     "w": "a",
+     "at": 0.613
+    },
+    {
+     "w": "tight",
+     "at": 0.713
+    },
+    {
+     "w": "angle",
+     "at": 1.038
+    },
+    {
+     "w": "past",
+     "at": 1.688
+    },
+    {
+     "w": "a",
+     "at": 2.013
+    },
+    {
+     "w": "defender",
+     "at": 2.075
+    },
+    {
+     "w": "on",
+     "at": 2.587
+    },
+    {
+     "w": "the",
+     "at": 2.688
+    },
+    {
+     "w": "line",
+     "at": 2.775
+    },
+    {
+     "w": "he",
+     "at": 3.5
+    },
+    {
+     "w": "passes",
+     "at": 3.638
+    },
+    {
+     "w": "it",
+     "at": 4.125
+    },
+    {
+     "w": "into",
+     "at": 4.237
+    },
+    {
+     "w": "the",
+     "at": 4.425
+    },
+    {
+     "w": "net",
+     "at": 4.525
+    },
+    {
+     "w": "Italy",
+     "at": 5.362
+    },
+    {
+     "w": "are",
+     "at": 5.787
+    },
+    {
+     "w": "into",
+     "at": 5.95
+    },
+    {
+     "w": "the",
+     "at": 6.225
+    },
+    {
+     "w": "semi-final",
+     "at": 6.362
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: one-on-one with the keeper? Stay calm, take it around them, and pass it into the net.",
+   "src": "/plays/narration/baggio-spain-1994/4.m4a",
+   "seconds": 6.4,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.512
+    },
+    {
+     "w": "one-on-one",
+     "at": 1.087
+    },
+    {
+     "w": "with",
+     "at": 1.488
+    },
+    {
+     "w": "the",
+     "at": 1.587
+    },
+    {
+     "w": "keeper",
+     "at": 1.675
+    },
+    {
+     "w": "Stay",
+     "at": 2.65
+    },
+    {
+     "w": "calm",
+     "at": 2.938
+    },
+    {
+     "w": "take",
+     "at": 3.425
+    },
+    {
+     "w": "it",
+     "at": 3.638
+    },
+    {
+     "w": "around",
+     "at": 3.712
+    },
+    {
+     "w": "them",
+     "at": 4.013
+    },
+    {
+     "w": "and",
+     "at": 4.237
+    },
+    {
+     "w": "pass",
+     "at": 4.362
+    },
+    {
+     "w": "it",
+     "at": 4.713
+    },
+    {
+     "w": "into",
+     "at": 4.787
+    },
+    {
+     "w": "the",
+     "at": 4.963
+    },
+    {
+     "w": "net",
+     "at": 5.05
+    }
+   ]
+  }
+ ]
+}

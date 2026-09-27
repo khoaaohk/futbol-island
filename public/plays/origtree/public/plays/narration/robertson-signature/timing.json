@@ -1,0 +1,378 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The switch",
+   "text": "Anfield, 2019. Liverpool against Manchester City. Trent Alexander-Arnold sends the ball across to Andy Robertson. One touch, a sprint, a cross, and Mo Salah heads it in!",
+   "src": "/plays/narration/robertson-signature/1.m4a",
+   "seconds": 14.0,
+   "words": [
+    {
+     "w": "Anfield",
+     "at": 0.4
+    },
+    {
+     "w": "2019",
+     "at": 1.0
+    },
+    {
+     "w": "Liverpool",
+     "at": 2.375
+    },
+    {
+     "w": "against",
+     "at": 2.975
+    },
+    {
+     "w": "Manchester",
+     "at": 3.413
+    },
+    {
+     "w": "City",
+     "at": 4.037
+    },
+    {
+     "w": "Trent",
+     "at": 4.975
+    },
+    {
+     "w": "Alexander-Arnold",
+     "at": 5.338
+    },
+    {
+     "w": "sends",
+     "at": 6.463
+    },
+    {
+     "w": "the",
+     "at": 6.812
+    },
+    {
+     "w": "ball",
+     "at": 6.9
+    },
+    {
+     "w": "across",
+     "at": 7.225
+    },
+    {
+     "w": "to",
+     "at": 7.6
+    },
+    {
+     "w": "Andy",
+     "at": 7.725
+    },
+    {
+     "w": "Robertson",
+     "at": 8.05
+    },
+    {
+     "w": "One",
+     "at": 9.175
+    },
+    {
+     "w": "touch",
+     "at": 9.488
+    },
+    {
+     "w": "a",
+     "at": 10.1
+    },
+    {
+     "w": "sprint",
+     "at": 10.225
+    },
+    {
+     "w": "a",
+     "at": 10.825
+    },
+    {
+     "w": "cross",
+     "at": 10.938
+    },
+    {
+     "w": "and",
+     "at": 11.6
+    },
+    {
+     "w": "Mo",
+     "at": 11.725
+    },
+    {
+     "w": "Salah",
+     "at": 11.925
+    },
+    {
+     "w": "heads",
+     "at": 12.325
+    },
+    {
+     "w": "it",
+     "at": 12.562
+    },
+    {
+     "w": "in",
+     "at": 12.65
+    }
+   ]
+  },
+  {
+   "label": "The sprint",
+   "text": "Watch Robertson. One touch, then he races into the space in front of him. No waiting. He whips the ball in early!",
+   "src": "/plays/narration/robertson-signature/2.m4a",
+   "seconds": 8.3,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "Robertson",
+     "at": 0.7
+    },
+    {
+     "w": "One",
+     "at": 1.762
+    },
+    {
+     "w": "touch",
+     "at": 2.038
+    },
+    {
+     "w": "then",
+     "at": 2.475
+    },
+    {
+     "w": "he",
+     "at": 2.612
+    },
+    {
+     "w": "races",
+     "at": 2.725
+    },
+    {
+     "w": "into",
+     "at": 3.138
+    },
+    {
+     "w": "the",
+     "at": 3.312
+    },
+    {
+     "w": "space",
+     "at": 3.413
+    },
+    {
+     "w": "in",
+     "at": 3.788
+    },
+    {
+     "w": "front",
+     "at": 3.925
+    },
+    {
+     "w": "of",
+     "at": 4.112
+    },
+    {
+     "w": "him",
+     "at": 4.188
+    },
+    {
+     "w": "No",
+     "at": 4.812
+    },
+    {
+     "w": "waiting",
+     "at": 5.088
+    },
+    {
+     "w": "He",
+     "at": 5.95
+    },
+    {
+     "w": "whips",
+     "at": 6.1
+    },
+    {
+     "w": "the",
+     "at": 6.35
+    },
+    {
+     "w": "ball",
+     "at": 6.45
+    },
+    {
+     "w": "in",
+     "at": 6.775
+    },
+    {
+     "w": "early",
+     "at": 6.9
+    }
+   ]
+  },
+  {
+   "label": "The header",
+   "text": "The cross flies past the defenders. Salah rushes in and heads it back across the keeper. Goal!",
+   "src": "/plays/narration/robertson-signature/3.m4a",
+   "seconds": 7.1,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "cross",
+     "at": 0.425
+    },
+    {
+     "w": "flies",
+     "at": 0.825
+    },
+    {
+     "w": "past",
+     "at": 1.212
+    },
+    {
+     "w": "the",
+     "at": 1.562
+    },
+    {
+     "w": "defenders",
+     "at": 1.65
+    },
+    {
+     "w": "Salah",
+     "at": 2.675
+    },
+    {
+     "w": "rushes",
+     "at": 3.025
+    },
+    {
+     "w": "in",
+     "at": 3.425
+    },
+    {
+     "w": "and",
+     "at": 3.638
+    },
+    {
+     "w": "heads",
+     "at": 3.75
+    },
+    {
+     "w": "it",
+     "at": 3.987
+    },
+    {
+     "w": "back",
+     "at": 4.075
+    },
+    {
+     "w": "across",
+     "at": 4.312
+    },
+    {
+     "w": "the",
+     "at": 4.65
+    },
+    {
+     "w": "keeper",
+     "at": 4.75
+    },
+    {
+     "w": "Goal",
+     "at": 5.675
+    }
+   ]
+  },
+  {
+   "label": "The lesson",
+   "text": "That is the overlap and cross. Sprint past your winger on the outside, then whip the ball in early!",
+   "src": "/plays/narration/robertson-signature/4.m4a",
+   "seconds": 7.3,
+   "words": [
+    {
+     "w": "That",
+     "at": 0.375
+    },
+    {
+     "w": "is",
+     "at": 0.575
+    },
+    {
+     "w": "the",
+     "at": 0.688
+    },
+    {
+     "w": "overlap",
+     "at": 0.838
+    },
+    {
+     "w": "and",
+     "at": 1.475
+    },
+    {
+     "w": "cross",
+     "at": 1.613
+    },
+    {
+     "w": "Sprint",
+     "at": 2.625
+    },
+    {
+     "w": "past",
+     "at": 3.0
+    },
+    {
+     "w": "your",
+     "at": 3.312
+    },
+    {
+     "w": "winger",
+     "at": 3.45
+    },
+    {
+     "w": "on",
+     "at": 3.737
+    },
+    {
+     "w": "the",
+     "at": 3.837
+    },
+    {
+     "w": "outside",
+     "at": 3.95
+    },
+    {
+     "w": "then",
+     "at": 4.825
+    },
+    {
+     "w": "whip",
+     "at": 5.05
+    },
+    {
+     "w": "the",
+     "at": 5.25
+    },
+    {
+     "w": "ball",
+     "at": 5.35
+    },
+    {
+     "w": "in",
+     "at": 5.675
+    },
+    {
+     "w": "early",
+     "at": 5.825
+    }
+   ]
+  }
+ ]
+}

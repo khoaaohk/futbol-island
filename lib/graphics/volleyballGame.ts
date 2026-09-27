@@ -3,6 +3,7 @@ import {VOLLEYBALL_NPCS} from '../town/volleyballNpcs';
 import {createPlayer} from './player';
 import {playerBatch} from './playerBatch';
 import {DEFAULT_CUSTOMIZATION} from '../town/customization';
+import {sideGameDress,npcDress} from '../town/beanLooks';
 import type {NpcDefinition} from '../town/npcDialogues';
 import type {BallReactions} from './ballReactions';
 
@@ -14,7 +15,7 @@ export function createVolleyballGame(scene:T.Scene,reactions:BallReactions){
  const homes=[{x:66,z:196},{x:68,z:200},{x:78,z:200},{x:76,z:196}];
  const entries=homes.map((home,i)=>{
   const definition:NpcDefinition={id:'volleyball-'+i,...VOLLEYBALL_NPCS[i],...home,character:i%2?'male':'female',face:i===2?'deep':i===0?'light':'warm',clothing:i<2?'sunset':'coast'};
-  const rig=createPlayer(definition.id,i<2?'home':'away');rig.setAppearance({...DEFAULT_CUSTOMIZATION,...{character:definition.character,face:definition.face,clothing:definition.clothing}});rig.root.name=definition.id;rig.root.traverse(o=>o.userData.volleyballNpcId=definition.id);
+  const rig=createPlayer(definition.id,i<2?'home':'away');rig.setAppearance({...DEFAULT_CUSTOMIZATION,...{character:definition.character,face:definition.face,clothing:definition.clothing}});const dress=sideGameDress(definition.id,i<2?'home':'away'),hat=npcDress(definition).look;rig.setBeanLook({...dress.look,headwear:hat.headwear,headwearColor:hat.headwearColor,headwearColor2:hat.headwearColor2},dress.outfit);rig.root.name=definition.id;rig.root.traverse(o=>o.userData.volleyballNpcId=definition.id);
   const drawn=new T.Scene();batchScene.add(drawn);const batch=playerBatch(drawn,48),fallback=new T.Group();fallback.name='volleyball-edge-'+i;fallback.add(rig.root);root.add(fallback);
   return {id:definition.id,definition,rig,batch,drawn,fallback,position:{...home,y:0},home,shoulders:['left','right'].map(side=>rig.root.getObjectByName(side+'-shoulder')!),elbows:['left','right'].map(side=>rig.root.getObjectByName(side+'-elbow')!)};
  });

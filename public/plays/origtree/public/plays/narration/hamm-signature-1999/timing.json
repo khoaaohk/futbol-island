@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "New Jersey, 1999. The first game of the Women\u2019s World Cup: USA against Denmark. Brandi Chastain floats a long ball. Mia Hamm brings it down, pops it over a defender... and scores!",
+   "src": "/plays/narration/hamm-signature-1999/1.m4a",
+   "seconds": 14.5,
+   "words": [
+    {
+     "w": "New",
+     "at": 0.425
+    },
+    {
+     "w": "Jersey",
+     "at": 0.613
+    },
+    {
+     "w": "1999",
+     "at": 1.125
+    },
+    {
+     "w": "The",
+     "at": 2.65
+    },
+    {
+     "w": "first",
+     "at": 2.763
+    },
+    {
+     "w": "game",
+     "at": 3.05
+    },
+    {
+     "w": "of",
+     "at": 3.263
+    },
+    {
+     "w": "the",
+     "at": 3.337
+    },
+    {
+     "w": "Women\u2019s",
+     "at": 3.425
+    },
+    {
+     "w": "World",
+     "at": 3.775
+    },
+    {
+     "w": "Cup",
+     "at": 4.088
+    },
+    {
+     "w": "USA",
+     "at": 4.713
+    },
+    {
+     "w": "against",
+     "at": 5.4
+    },
+    {
+     "w": "Denmark",
+     "at": 5.838
+    },
+    {
+     "w": "Brandi",
+     "at": 6.888
+    },
+    {
+     "w": "Chastain",
+     "at": 7.338
+    },
+    {
+     "w": "floats",
+     "at": 8.012
+    },
+    {
+     "w": "a",
+     "at": 8.325
+    },
+    {
+     "w": "long",
+     "at": 8.425
+    },
+    {
+     "w": "ball",
+     "at": 8.75
+    },
+    {
+     "w": "Mia",
+     "at": 9.55
+    },
+    {
+     "w": "Hamm",
+     "at": 9.825
+    },
+    {
+     "w": "brings",
+     "at": 10.125
+    },
+    {
+     "w": "it",
+     "at": 10.412
+    },
+    {
+     "w": "down",
+     "at": 10.525
+    },
+    {
+     "w": "pops",
+     "at": 11.012
+    },
+    {
+     "w": "it",
+     "at": 11.338
+    },
+    {
+     "w": "over",
+     "at": 11.412
+    },
+    {
+     "w": "a",
+     "at": 11.637
+    },
+    {
+     "w": "defender",
+     "at": 11.7
+    },
+    {
+     "w": "and",
+     "at": 12.675
+    },
+    {
+     "w": "scores",
+     "at": 12.85
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. Hamm traps it on her chest. She flicks it over Katrine Pedersen and runs round her.",
+   "src": "/plays/narration/hamm-signature-1999/2.m4a",
+   "seconds": 7.7,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.262
+    },
+    {
+     "w": "Hamm",
+     "at": 2.237
+    },
+    {
+     "w": "traps",
+     "at": 2.562
+    },
+    {
+     "w": "it",
+     "at": 2.913
+    },
+    {
+     "w": "on",
+     "at": 2.987
+    },
+    {
+     "w": "her",
+     "at": 3.087
+    },
+    {
+     "w": "chest",
+     "at": 3.237
+    },
+    {
+     "w": "She",
+     "at": 4.013
+    },
+    {
+     "w": "flicks",
+     "at": 4.188
+    },
+    {
+     "w": "it",
+     "at": 4.463
+    },
+    {
+     "w": "over",
+     "at": 4.537
+    },
+    {
+     "w": "Katrine",
+     "at": 4.725
+    },
+    {
+     "w": "Pedersen",
+     "at": 5.15
+    },
+    {
+     "w": "and",
+     "at": 5.725
+    },
+    {
+     "w": "runs",
+     "at": 5.85
+    },
+    {
+     "w": "round",
+     "at": 6.175
+    },
+    {
+     "w": "her",
+     "at": 6.487
+    }
+   ]
+  },
+  {
+   "label": "Left foot",
+   "text": "Left foot! She fires it past the keeper\u2019s hand, just under the bar. Nearly eighty thousand fans go wild!",
+   "src": "/plays/narration/hamm-signature-1999/3.m4a",
+   "seconds": 8.2,
+   "words": [
+    {
+     "w": "Left",
+     "at": 0.4
+    },
+    {
+     "w": "foot",
+     "at": 0.688
+    },
+    {
+     "w": "She",
+     "at": 1.413
+    },
+    {
+     "w": "fires",
+     "at": 1.587
+    },
+    {
+     "w": "it",
+     "at": 1.962
+    },
+    {
+     "w": "past",
+     "at": 2.05
+    },
+    {
+     "w": "the",
+     "at": 2.362
+    },
+    {
+     "w": "keeper\u2019s",
+     "at": 2.45
+    },
+    {
+     "w": "hand",
+     "at": 2.875
+    },
+    {
+     "w": "just",
+     "at": 3.55
+    },
+    {
+     "w": "under",
+     "at": 3.763
+    },
+    {
+     "w": "the",
+     "at": 3.962
+    },
+    {
+     "w": "bar",
+     "at": 4.05
+    },
+    {
+     "w": "Nearly",
+     "at": 4.963
+    },
+    {
+     "w": "eighty",
+     "at": 5.362
+    },
+    {
+     "w": "thousand",
+     "at": 5.737
+    },
+    {
+     "w": "fans",
+     "at": 6.188
+    },
+    {
+     "w": "go",
+     "at": 6.6
+    },
+    {
+     "w": "wild",
+     "at": 6.775
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: run at defenders with confidence. Keep your eyes up, and when you see the gap, finish!",
+   "src": "/plays/narration/hamm-signature-1999/4.m4a",
+   "seconds": 6.9,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "run",
+     "at": 1.188
+    },
+    {
+     "w": "at",
+     "at": 1.413
+    },
+    {
+     "w": "defenders",
+     "at": 1.5
+    },
+    {
+     "w": "with",
+     "at": 2.087
+    },
+    {
+     "w": "confidence",
+     "at": 2.25
+    },
+    {
+     "w": "Keep",
+     "at": 3.438
+    },
+    {
+     "w": "your",
+     "at": 3.663
+    },
+    {
+     "w": "eyes",
+     "at": 3.775
+    },
+    {
+     "w": "up",
+     "at": 4.1
+    },
+    {
+     "w": "and",
+     "at": 4.5
+    },
+    {
+     "w": "when",
+     "at": 4.612
+    },
+    {
+     "w": "you",
+     "at": 4.737
+    },
+    {
+     "w": "see",
+     "at": 4.85
+    },
+    {
+     "w": "the",
+     "at": 5.037
+    },
+    {
+     "w": "gap",
+     "at": 5.125
+    },
+    {
+     "w": "finish",
+     "at": 5.475
+    }
+   ]
+  }
+ ]
+}

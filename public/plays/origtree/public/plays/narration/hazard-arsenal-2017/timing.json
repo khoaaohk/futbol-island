@@ -1,0 +1,366 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Chelsea versus Arsenal, 2017. Eden Hazard gets the ball near halfway. He shrugs off Coquelin, and away he goes, faster and faster! Into the box, past Koscielny... goal!",
+   "src": "/plays/narration/hazard-arsenal-2017/1.m4a",
+   "seconds": 13.7,
+   "words": [
+    {
+     "w": "Chelsea",
+     "at": 0.375
+    },
+    {
+     "w": "versus",
+     "at": 0.775
+    },
+    {
+     "w": "Arsenal",
+     "at": 1.175
+    },
+    {
+     "w": "2017",
+     "at": 1.775
+    },
+    {
+     "w": "Eden",
+     "at": 3.237
+    },
+    {
+     "w": "Hazard",
+     "at": 3.55
+    },
+    {
+     "w": "gets",
+     "at": 3.9
+    },
+    {
+     "w": "the",
+     "at": 4.15
+    },
+    {
+     "w": "ball",
+     "at": 4.25
+    },
+    {
+     "w": "near",
+     "at": 4.55
+    },
+    {
+     "w": "halfway",
+     "at": 4.775
+    },
+    {
+     "w": "He",
+     "at": 5.775
+    },
+    {
+     "w": "shrugs",
+     "at": 5.938
+    },
+    {
+     "w": "off",
+     "at": 6.25
+    },
+    {
+     "w": "Coquelin",
+     "at": 6.487
+    },
+    {
+     "w": "and",
+     "at": 7.15
+    },
+    {
+     "w": "away",
+     "at": 7.263
+    },
+    {
+     "w": "he",
+     "at": 7.525
+    },
+    {
+     "w": "goes",
+     "at": 7.65
+    },
+    {
+     "w": "faster",
+     "at": 8.213
+    },
+    {
+     "w": "and",
+     "at": 8.725
+    },
+    {
+     "w": "faster",
+     "at": 8.863
+    },
+    {
+     "w": "Into",
+     "at": 9.8
+    },
+    {
+     "w": "the",
+     "at": 10.05
+    },
+    {
+     "w": "box",
+     "at": 10.15
+    },
+    {
+     "w": "past",
+     "at": 10.625
+    },
+    {
+     "w": "Koscielny",
+     "at": 11.0
+    },
+    {
+     "w": "goal",
+     "at": 12.238
+    }
+   ]
+  },
+  {
+   "label": "Slow motion",
+   "text": "Slow motion: he puts his body between the ball and the defender. Low and strong, he stays on his feet, then bursts away.",
+   "src": "/plays/narration/hazard-arsenal-2017/2.m4a",
+   "seconds": 9.0,
+   "words": [
+    {
+     "w": "Slow",
+     "at": 0.4
+    },
+    {
+     "w": "motion",
+     "at": 0.65
+    },
+    {
+     "w": "he",
+     "at": 1.475
+    },
+    {
+     "w": "puts",
+     "at": 1.6
+    },
+    {
+     "w": "his",
+     "at": 1.812
+    },
+    {
+     "w": "body",
+     "at": 1.975
+    },
+    {
+     "w": "between",
+     "at": 2.325
+    },
+    {
+     "w": "the",
+     "at": 2.587
+    },
+    {
+     "w": "ball",
+     "at": 2.688
+    },
+    {
+     "w": "and",
+     "at": 3.1
+    },
+    {
+     "w": "the",
+     "at": 3.212
+    },
+    {
+     "w": "defender",
+     "at": 3.3
+    },
+    {
+     "w": "Low",
+     "at": 4.45
+    },
+    {
+     "w": "and",
+     "at": 4.775
+    },
+    {
+     "w": "strong",
+     "at": 4.912
+    },
+    {
+     "w": "he",
+     "at": 5.575
+    },
+    {
+     "w": "stays",
+     "at": 5.737
+    },
+    {
+     "w": "on",
+     "at": 6.088
+    },
+    {
+     "w": "his",
+     "at": 6.188
+    },
+    {
+     "w": "feet",
+     "at": 6.388
+    },
+    {
+     "w": "then",
+     "at": 6.875
+    },
+    {
+     "w": "bursts",
+     "at": 7.112
+    },
+    {
+     "w": "away",
+     "at": 7.525
+    }
+   ]
+  },
+  {
+   "label": "Past the keeper",
+   "text": "A quick shift past Koscielny, and he drives it past Petr \u010cech!",
+   "src": "/plays/narration/hazard-arsenal-2017/3.m4a",
+   "seconds": 5.1,
+   "words": [
+    {
+     "w": "A",
+     "at": 0.375
+    },
+    {
+     "w": "quick",
+     "at": 0.45
+    },
+    {
+     "w": "shift",
+     "at": 0.713
+    },
+    {
+     "w": "past",
+     "at": 1.025
+    },
+    {
+     "w": "Koscielny",
+     "at": 1.375
+    },
+    {
+     "w": "and",
+     "at": 2.45
+    },
+    {
+     "w": "he",
+     "at": 2.562
+    },
+    {
+     "w": "drives",
+     "at": 2.65
+    },
+    {
+     "w": "it",
+     "at": 3.038
+    },
+    {
+     "w": "past",
+     "at": 3.125
+    },
+    {
+     "w": "Petr",
+     "at": 3.45
+    },
+    {
+     "w": "\u010cech",
+     "at": 3.788
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: protect the ball with your body, keep low and balanced, then change pace to leave defenders behind.",
+   "src": "/plays/narration/hazard-arsenal-2017/4.m4a",
+   "seconds": 8.2,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.525
+    },
+    {
+     "w": "protect",
+     "at": 1.3
+    },
+    {
+     "w": "the",
+     "at": 1.688
+    },
+    {
+     "w": "ball",
+     "at": 1.775
+    },
+    {
+     "w": "with",
+     "at": 2.062
+    },
+    {
+     "w": "your",
+     "at": 2.188
+    },
+    {
+     "w": "body",
+     "at": 2.3
+    },
+    {
+     "w": "keep",
+     "at": 2.987
+    },
+    {
+     "w": "low",
+     "at": 3.288
+    },
+    {
+     "w": "and",
+     "at": 3.65
+    },
+    {
+     "w": "balanced",
+     "at": 3.775
+    },
+    {
+     "w": "then",
+     "at": 4.7
+    },
+    {
+     "w": "change",
+     "at": 4.938
+    },
+    {
+     "w": "pace",
+     "at": 5.338
+    },
+    {
+     "w": "to",
+     "at": 5.675
+    },
+    {
+     "w": "leave",
+     "at": 5.8
+    },
+    {
+     "w": "defenders",
+     "at": 6.1
+    },
+    {
+     "w": "behind",
+     "at": 6.65
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The save, live",
+   "text": "Sydney, the 2023 World Cup final. Spain lead England one-nil, and win a penalty. Jenni Hermoso steps up. Mary Earps waits on her line... Hermoso shoots low. Earps dives to her left. Saved!",
+   "src": "/plays/narration/earps-save-2023/1.m4a",
+   "seconds": 15.0,
+   "words": [
+    {
+     "w": "Sydney",
+     "at": 0.4
+    },
+    {
+     "w": "the",
+     "at": 0.8
+    },
+    {
+     "w": "2023",
+     "at": 0.9
+    },
+    {
+     "w": "World",
+     "at": 1.812
+    },
+    {
+     "w": "Cup",
+     "at": 2.125
+    },
+    {
+     "w": "final",
+     "at": 2.35
+    },
+    {
+     "w": "Spain",
+     "at": 3.263
+    },
+    {
+     "w": "lead",
+     "at": 3.7
+    },
+    {
+     "w": "England",
+     "at": 3.925
+    },
+    {
+     "w": "one-nil",
+     "at": 4.325
+    },
+    {
+     "w": "and",
+     "at": 4.9
+    },
+    {
+     "w": "win",
+     "at": 5.025
+    },
+    {
+     "w": "a",
+     "at": 5.213
+    },
+    {
+     "w": "penalty",
+     "at": 5.275
+    },
+    {
+     "w": "Jenni",
+     "at": 6.3
+    },
+    {
+     "w": "Hermoso",
+     "at": 6.575
+    },
+    {
+     "w": "steps",
+     "at": 7.188
+    },
+    {
+     "w": "up",
+     "at": 7.55
+    },
+    {
+     "w": "Mary",
+     "at": 8.088
+    },
+    {
+     "w": "Earps",
+     "at": 8.425
+    },
+    {
+     "w": "waits",
+     "at": 8.75
+    },
+    {
+     "w": "on",
+     "at": 8.988
+    },
+    {
+     "w": "her",
+     "at": 9.088
+    },
+    {
+     "w": "line",
+     "at": 9.225
+    },
+    {
+     "w": "Hermoso",
+     "at": 10.075
+    },
+    {
+     "w": "shoots",
+     "at": 10.725
+    },
+    {
+     "w": "low",
+     "at": 11.075
+    },
+    {
+     "w": "Earps",
+     "at": 11.675
+    },
+    {
+     "w": "dives",
+     "at": 12.0
+    },
+    {
+     "w": "to",
+     "at": 12.5
+    },
+    {
+     "w": "her",
+     "at": 12.588
+    },
+    {
+     "w": "left",
+     "at": 12.725
+    },
+    {
+     "w": "Saved",
+     "at": 13.562
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again, slowly. Earps stays big and patient. Then she springs low, and both strong hands stop the ball.",
+   "src": "/plays/narration/earps-save-2023/2.m4a",
+   "seconds": 8.3,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "slowly",
+     "at": 1.188
+    },
+    {
+     "w": "Earps",
+     "at": 2.188
+    },
+    {
+     "w": "stays",
+     "at": 2.475
+    },
+    {
+     "w": "big",
+     "at": 2.862
+    },
+    {
+     "w": "and",
+     "at": 3.163
+    },
+    {
+     "w": "patient",
+     "at": 3.275
+    },
+    {
+     "w": "Then",
+     "at": 4.188
+    },
+    {
+     "w": "she",
+     "at": 4.425
+    },
+    {
+     "w": "springs",
+     "at": 4.588
+    },
+    {
+     "w": "low",
+     "at": 5.025
+    },
+    {
+     "w": "and",
+     "at": 5.425
+    },
+    {
+     "w": "both",
+     "at": 5.55
+    },
+    {
+     "w": "strong",
+     "at": 5.825
+    },
+    {
+     "w": "hands",
+     "at": 6.225
+    },
+    {
+     "w": "stop",
+     "at": 6.6
+    },
+    {
+     "w": "the",
+     "at": 6.888
+    },
+    {
+     "w": "ball",
+     "at": 6.975
+    }
+   ]
+  },
+  {
+   "label": "Right by the post",
+   "text": "From behind the goal: both gloves, right by the post. England are still in it!",
+   "src": "/plays/narration/earps-save-2023/3.m4a",
+   "seconds": 5.7,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.375
+    },
+    {
+     "w": "behind",
+     "at": 0.512
+    },
+    {
+     "w": "the",
+     "at": 0.887
+    },
+    {
+     "w": "goal",
+     "at": 0.975
+    },
+    {
+     "w": "both",
+     "at": 1.6
+    },
+    {
+     "w": "gloves",
+     "at": 1.863
+    },
+    {
+     "w": "right",
+     "at": 2.375
+    },
+    {
+     "w": "by",
+     "at": 2.6
+    },
+    {
+     "w": "the",
+     "at": 2.737
+    },
+    {
+     "w": "post",
+     "at": 2.825
+    },
+    {
+     "w": "England",
+     "at": 3.638
+    },
+    {
+     "w": "are",
+     "at": 4.062
+    },
+    {
+     "w": "still",
+     "at": 4.162
+    },
+    {
+     "w": "in",
+     "at": 4.438
+    },
+    {
+     "w": "it",
+     "at": 4.55
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "The secret? Keepers, stay big. Read the kicker's body: the hips and the planting foot. Then dive with strong hands.",
+   "src": "/plays/narration/earps-save-2023/4.m4a",
+   "seconds": 8.3,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "secret",
+     "at": 0.463
+    },
+    {
+     "w": "Keepers",
+     "at": 1.188
+    },
+    {
+     "w": "stay",
+     "at": 1.7
+    },
+    {
+     "w": "big",
+     "at": 1.95
+    },
+    {
+     "w": "Read",
+     "at": 2.638
+    },
+    {
+     "w": "the",
+     "at": 2.837
+    },
+    {
+     "w": "kicker's",
+     "at": 2.925
+    },
+    {
+     "w": "body",
+     "at": 3.3
+    },
+    {
+     "w": "the",
+     "at": 3.825
+    },
+    {
+     "w": "hips",
+     "at": 3.962
+    },
+    {
+     "w": "and",
+     "at": 4.325
+    },
+    {
+     "w": "the",
+     "at": 4.438
+    },
+    {
+     "w": "planting",
+     "at": 4.525
+    },
+    {
+     "w": "foot",
+     "at": 5.0
+    },
+    {
+     "w": "Then",
+     "at": 5.763
+    },
+    {
+     "w": "dive",
+     "at": 6.0
+    },
+    {
+     "w": "with",
+     "at": 6.338
+    },
+    {
+     "w": "strong",
+     "at": 6.475
+    },
+    {
+     "w": "hands",
+     "at": 6.875
+    }
+   ]
+  }
+ ]
+}

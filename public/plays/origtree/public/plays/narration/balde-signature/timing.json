@@ -1,0 +1,386 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The break, live",
+   "text": "Super Cup final, January 2025. Real Madrid lose the ball at a short corner, and Barcelona break! Yamal and Raphinha race away, and flying up the left comes Alejandro Balde! Raphinha picks him out\u2026 goal!",
+   "src": "/plays/narration/balde-signature/1.m4a",
+   "seconds": 16.2,
+   "words": [
+    {
+     "w": "Super",
+     "at": 0.4
+    },
+    {
+     "w": "Cup",
+     "at": 0.75
+    },
+    {
+     "w": "final",
+     "at": 0.975
+    },
+    {
+     "w": "January",
+     "at": 1.663
+    },
+    {
+     "w": "2025",
+     "at": 2.212
+    },
+    {
+     "w": "Real",
+     "at": 3.8
+    },
+    {
+     "w": "Madrid",
+     "at": 4.075
+    },
+    {
+     "w": "lose",
+     "at": 4.513
+    },
+    {
+     "w": "the",
+     "at": 4.8
+    },
+    {
+     "w": "ball",
+     "at": 4.9
+    },
+    {
+     "w": "at",
+     "at": 5.225
+    },
+    {
+     "w": "a",
+     "at": 5.312
+    },
+    {
+     "w": "short",
+     "at": 5.425
+    },
+    {
+     "w": "corner",
+     "at": 5.75
+    },
+    {
+     "w": "and",
+     "at": 6.375
+    },
+    {
+     "w": "Barcelona",
+     "at": 6.5
+    },
+    {
+     "w": "break",
+     "at": 7.125
+    },
+    {
+     "w": "Yamal",
+     "at": 8.075
+    },
+    {
+     "w": "and",
+     "at": 8.575
+    },
+    {
+     "w": "Raphinha",
+     "at": 8.7
+    },
+    {
+     "w": "race",
+     "at": 9.25
+    },
+    {
+     "w": "away",
+     "at": 9.55
+    },
+    {
+     "w": "and",
+     "at": 10.1
+    },
+    {
+     "w": "flying",
+     "at": 10.238
+    },
+    {
+     "w": "up",
+     "at": 10.613
+    },
+    {
+     "w": "the",
+     "at": 10.8
+    },
+    {
+     "w": "left",
+     "at": 10.925
+    },
+    {
+     "w": "comes",
+     "at": 11.25
+    },
+    {
+     "w": "Alejandro",
+     "at": 11.55
+    },
+    {
+     "w": "Balde",
+     "at": 12.175
+    },
+    {
+     "w": "Raphinha",
+     "at": 13.137
+    },
+    {
+     "w": "picks",
+     "at": 13.65
+    },
+    {
+     "w": "him",
+     "at": 13.887
+    },
+    {
+     "w": "out",
+     "at": 14.025
+    },
+    {
+     "w": "goal",
+     "at": 14.713
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again, slowly. Balde stays wide and does not rush ahead. Then he sprints, and arrives just as Raphinha is ready to pass.",
+   "src": "/plays/narration/balde-signature/2.m4a",
+   "seconds": 9.6,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "slowly",
+     "at": 1.312
+    },
+    {
+     "w": "Balde",
+     "at": 2.337
+    },
+    {
+     "w": "stays",
+     "at": 2.763
+    },
+    {
+     "w": "wide",
+     "at": 3.163
+    },
+    {
+     "w": "and",
+     "at": 3.575
+    },
+    {
+     "w": "does",
+     "at": 3.688
+    },
+    {
+     "w": "not",
+     "at": 3.825
+    },
+    {
+     "w": "rush",
+     "at": 4.025
+    },
+    {
+     "w": "ahead",
+     "at": 4.25
+    },
+    {
+     "w": "Then",
+     "at": 5.088
+    },
+    {
+     "w": "he",
+     "at": 5.275
+    },
+    {
+     "w": "sprints",
+     "at": 5.412
+    },
+    {
+     "w": "and",
+     "at": 6.05
+    },
+    {
+     "w": "arrives",
+     "at": 6.162
+    },
+    {
+     "w": "just",
+     "at": 6.662
+    },
+    {
+     "w": "as",
+     "at": 6.95
+    },
+    {
+     "w": "Raphinha",
+     "at": 7.1
+    },
+    {
+     "w": "is",
+     "at": 7.7
+    },
+    {
+     "w": "ready",
+     "at": 7.85
+    },
+    {
+     "w": "to",
+     "at": 8.1
+    },
+    {
+     "w": "pass",
+     "at": 8.2
+    }
+   ]
+  },
+  {
+   "label": "The finish",
+   "text": "Balde finishes past Thibaut Courtois! Barcelona win the final five to two.",
+   "src": "/plays/narration/balde-signature/3.m4a",
+   "seconds": 6.1,
+   "words": [
+    {
+     "w": "Balde",
+     "at": 0.375
+    },
+    {
+     "w": "finishes",
+     "at": 0.738
+    },
+    {
+     "w": "past",
+     "at": 1.212
+    },
+    {
+     "w": "Thibaut",
+     "at": 1.637
+    },
+    {
+     "w": "Courtois",
+     "at": 2.0
+    },
+    {
+     "w": "Barcelona",
+     "at": 3.038
+    },
+    {
+     "w": "win",
+     "at": 3.675
+    },
+    {
+     "w": "the",
+     "at": 3.837
+    },
+    {
+     "w": "final",
+     "at": 3.938
+    },
+    {
+     "w": "five",
+     "at": 4.338
+    },
+    {
+     "w": "to",
+     "at": 4.65
+    },
+    {
+     "w": "two",
+     "at": 4.787
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: time your run, so you arrive just as your teammate is ready to pass!",
+   "src": "/plays/narration/balde-signature/4.m4a",
+   "seconds": 5.8,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "time",
+     "at": 1.363
+    },
+    {
+     "w": "your",
+     "at": 1.637
+    },
+    {
+     "w": "run",
+     "at": 1.775
+    },
+    {
+     "w": "so",
+     "at": 2.25
+    },
+    {
+     "w": "you",
+     "at": 2.375
+    },
+    {
+     "w": "arrive",
+     "at": 2.525
+    },
+    {
+     "w": "just",
+     "at": 2.975
+    },
+    {
+     "w": "as",
+     "at": 3.188
+    },
+    {
+     "w": "your",
+     "at": 3.288
+    },
+    {
+     "w": "teammate",
+     "at": 3.438
+    },
+    {
+     "w": "is",
+     "at": 3.938
+    },
+    {
+     "w": "ready",
+     "at": 4.075
+    },
+    {
+     "w": "to",
+     "at": 4.287
+    },
+    {
+     "w": "pass",
+     "at": 4.375
+    }
+   ]
+  }
+ ]
+}

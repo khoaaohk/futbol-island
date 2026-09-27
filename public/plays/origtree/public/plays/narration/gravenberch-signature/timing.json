@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live at Old Trafford",
+   "text": "Old Trafford, 2024: Manchester United against Liverpool. A United pass goes astray, and Liverpool break fast. Gravenberch finds Salah on the right. Salah crosses to the far post, and D\u00edaz heads it in. Goal!",
+   "src": "/plays/narration/gravenberch-signature/1.m4a",
+   "seconds": 15.9,
+   "words": [
+    {
+     "w": "Old",
+     "at": 0.375
+    },
+    {
+     "w": "Trafford",
+     "at": 0.625
+    },
+    {
+     "w": "2024",
+     "at": 1.125
+    },
+    {
+     "w": "Manchester",
+     "at": 2.388
+    },
+    {
+     "w": "United",
+     "at": 3.0
+    },
+    {
+     "w": "against",
+     "at": 3.438
+    },
+    {
+     "w": "Liverpool",
+     "at": 3.85
+    },
+    {
+     "w": "A",
+     "at": 4.888
+    },
+    {
+     "w": "United",
+     "at": 5.0
+    },
+    {
+     "w": "pass",
+     "at": 5.463
+    },
+    {
+     "w": "goes",
+     "at": 5.875
+    },
+    {
+     "w": "astray",
+     "at": 6.125
+    },
+    {
+     "w": "and",
+     "at": 6.75
+    },
+    {
+     "w": "Liverpool",
+     "at": 6.875
+    },
+    {
+     "w": "break",
+     "at": 7.4
+    },
+    {
+     "w": "fast",
+     "at": 7.688
+    },
+    {
+     "w": "Gravenberch",
+     "at": 8.675
+    },
+    {
+     "w": "finds",
+     "at": 9.3
+    },
+    {
+     "w": "Salah",
+     "at": 9.65
+    },
+    {
+     "w": "on",
+     "at": 10.037
+    },
+    {
+     "w": "the",
+     "at": 10.137
+    },
+    {
+     "w": "right",
+     "at": 10.225
+    },
+    {
+     "w": "Salah",
+     "at": 11.025
+    },
+    {
+     "w": "crosses",
+     "at": 11.375
+    },
+    {
+     "w": "to",
+     "at": 11.85
+    },
+    {
+     "w": "the",
+     "at": 11.938
+    },
+    {
+     "w": "far",
+     "at": 12.037
+    },
+    {
+     "w": "post",
+     "at": 12.312
+    },
+    {
+     "w": "and",
+     "at": 12.775
+    },
+    {
+     "w": "D\u00edaz",
+     "at": 12.9
+    },
+    {
+     "w": "heads",
+     "at": 13.25
+    },
+    {
+     "w": "it",
+     "at": 13.488
+    },
+    {
+     "w": "in",
+     "at": 13.575
+    },
+    {
+     "w": "Goal",
+     "at": 14.45
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. The pass comes loose, and Gravenberch finds Salah in a flash. Nobody marks the far post, and D\u00edaz heads it home.",
+   "src": "/plays/narration/gravenberch-signature/2.m4a",
+   "seconds": 9.9,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.137
+    },
+    {
+     "w": "The",
+     "at": 2.175
+    },
+    {
+     "w": "pass",
+     "at": 2.275
+    },
+    {
+     "w": "comes",
+     "at": 2.6
+    },
+    {
+     "w": "loose",
+     "at": 2.913
+    },
+    {
+     "w": "and",
+     "at": 3.5
+    },
+    {
+     "w": "Gravenberch",
+     "at": 3.625
+    },
+    {
+     "w": "finds",
+     "at": 4.225
+    },
+    {
+     "w": "Salah",
+     "at": 4.575
+    },
+    {
+     "w": "in",
+     "at": 4.975
+    },
+    {
+     "w": "a",
+     "at": 5.062
+    },
+    {
+     "w": "flash",
+     "at": 5.138
+    },
+    {
+     "w": "Nobody",
+     "at": 6.125
+    },
+    {
+     "w": "marks",
+     "at": 6.5
+    },
+    {
+     "w": "the",
+     "at": 6.825
+    },
+    {
+     "w": "far",
+     "at": 6.925
+    },
+    {
+     "w": "post",
+     "at": 7.188
+    },
+    {
+     "w": "and",
+     "at": 7.725
+    },
+    {
+     "w": "D\u00edaz",
+     "at": 7.85
+    },
+    {
+     "w": "heads",
+     "at": 8.2
+    },
+    {
+     "w": "it",
+     "at": 8.438
+    },
+    {
+     "w": "home",
+     "at": 8.525
+    }
+   ]
+  },
+  {
+   "label": "How he does it",
+   "text": "How he does it: win the ball, look up, and spot the open grass. Carry it forward, fast. Defenders must back away. After you win it, run into the space in front!",
+   "src": "/plays/narration/gravenberch-signature/3.m4a",
+   "seconds": 11.3,
+   "words": [
+    {
+     "w": "How",
+     "at": 0.375
+    },
+    {
+     "w": "he",
+     "at": 0.512
+    },
+    {
+     "w": "does",
+     "at": 0.625
+    },
+    {
+     "w": "it",
+     "at": 0.863
+    },
+    {
+     "w": "win",
+     "at": 1.288
+    },
+    {
+     "w": "the",
+     "at": 1.488
+    },
+    {
+     "w": "ball",
+     "at": 1.575
+    },
+    {
+     "w": "look",
+     "at": 2.025
+    },
+    {
+     "w": "up",
+     "at": 2.188
+    },
+    {
+     "w": "and",
+     "at": 2.388
+    },
+    {
+     "w": "spot",
+     "at": 2.513
+    },
+    {
+     "w": "the",
+     "at": 2.837
+    },
+    {
+     "w": "open",
+     "at": 2.95
+    },
+    {
+     "w": "grass",
+     "at": 3.275
+    },
+    {
+     "w": "Carry",
+     "at": 4.263
+    },
+    {
+     "w": "it",
+     "at": 4.588
+    },
+    {
+     "w": "forward",
+     "at": 4.675
+    },
+    {
+     "w": "fast",
+     "at": 5.125
+    },
+    {
+     "w": "Defenders",
+     "at": 5.9
+    },
+    {
+     "w": "must",
+     "at": 6.525
+    },
+    {
+     "w": "back",
+     "at": 6.8
+    },
+    {
+     "w": "away",
+     "at": 7.075
+    },
+    {
+     "w": "After",
+     "at": 7.963
+    },
+    {
+     "w": "you",
+     "at": 8.275
+    },
+    {
+     "w": "win",
+     "at": 8.412
+    },
+    {
+     "w": "it",
+     "at": 8.65
+    },
+    {
+     "w": "run",
+     "at": 8.863
+    },
+    {
+     "w": "into",
+     "at": 9.088
+    },
+    {
+     "w": "the",
+     "at": 9.262
+    },
+    {
+     "w": "space",
+     "at": 9.363
+    },
+    {
+     "w": "in",
+     "at": 9.775
+    },
+    {
+     "w": "front",
+     "at": 9.938
+    }
+   ]
+  }
+ ]
+}

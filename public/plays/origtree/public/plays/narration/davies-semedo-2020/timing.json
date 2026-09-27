@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The run, live",
+   "text": "Lisbon, 2020, an empty stadium. Alphonso Davies takes off down the left wing. Past Messi, past Vidal! Now Semedo... he's past him! Cut back... Kimmich scores!",
+   "src": "/plays/narration/davies-semedo-2020/1.m4a",
+   "seconds": 12.7,
+   "words": [
+    {
+     "w": "Lisbon",
+     "at": 0.425
+    },
+    {
+     "w": "2020",
+     "at": 0.875
+    },
+    {
+     "w": "an",
+     "at": 1.6
+    },
+    {
+     "w": "empty",
+     "at": 1.738
+    },
+    {
+     "w": "stadium",
+     "at": 2.1
+    },
+    {
+     "w": "Alphonso",
+     "at": 3.138
+    },
+    {
+     "w": "Davies",
+     "at": 3.725
+    },
+    {
+     "w": "takes",
+     "at": 4.15
+    },
+    {
+     "w": "off",
+     "at": 4.4
+    },
+    {
+     "w": "down",
+     "at": 4.625
+    },
+    {
+     "w": "the",
+     "at": 4.838
+    },
+    {
+     "w": "left",
+     "at": 4.925
+    },
+    {
+     "w": "wing",
+     "at": 5.213
+    },
+    {
+     "w": "Past",
+     "at": 5.912
+    },
+    {
+     "w": "Messi",
+     "at": 6.3
+    },
+    {
+     "w": "past",
+     "at": 6.725
+    },
+    {
+     "w": "Vidal",
+     "at": 7.075
+    },
+    {
+     "w": "Now",
+     "at": 7.737
+    },
+    {
+     "w": "Semedo",
+     "at": 7.987
+    },
+    {
+     "w": "he's",
+     "at": 8.875
+    },
+    {
+     "w": "past",
+     "at": 9.088
+    },
+    {
+     "w": "him",
+     "at": 9.463
+    },
+    {
+     "w": "Cut",
+     "at": 9.787
+    },
+    {
+     "w": "back",
+     "at": 10.05
+    },
+    {
+     "w": "Kimmich",
+     "at": 10.838
+    },
+    {
+     "w": "scores",
+     "at": 11.188
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again, slowly. Semedo waits. Davies dances: inside, outside, then full speed down the line! One quick turn, he's in the box.",
+   "src": "/plays/narration/davies-semedo-2020/2.m4a",
+   "seconds": 10.3,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "slowly",
+     "at": 1.163
+    },
+    {
+     "w": "Semedo",
+     "at": 2.1
+    },
+    {
+     "w": "waits",
+     "at": 2.612
+    },
+    {
+     "w": "Davies",
+     "at": 3.487
+    },
+    {
+     "w": "dances",
+     "at": 3.95
+    },
+    {
+     "w": "inside",
+     "at": 4.838
+    },
+    {
+     "w": "outside",
+     "at": 5.438
+    },
+    {
+     "w": "then",
+     "at": 5.963
+    },
+    {
+     "w": "full",
+     "at": 6.162
+    },
+    {
+     "w": "speed",
+     "at": 6.388
+    },
+    {
+     "w": "down",
+     "at": 6.775
+    },
+    {
+     "w": "the",
+     "at": 6.938
+    },
+    {
+     "w": "line",
+     "at": 7.025
+    },
+    {
+     "w": "One",
+     "at": 7.688
+    },
+    {
+     "w": "quick",
+     "at": 7.925
+    },
+    {
+     "w": "turn",
+     "at": 8.175
+    },
+    {
+     "w": "he's",
+     "at": 8.55
+    },
+    {
+     "w": "in",
+     "at": 8.762
+    },
+    {
+     "w": "the",
+     "at": 8.838
+    },
+    {
+     "w": "box",
+     "at": 8.925
+    }
+   ]
+  },
+  {
+   "label": "The cut-back",
+   "text": "He looks up and cuts it back. Joshua Kimmich side-foots it in! Bayern went on to win eight to two.",
+   "src": "/plays/narration/davies-semedo-2020/3.m4a",
+   "seconds": 6.9,
+   "words": [
+    {
+     "w": "He",
+     "at": 0.35
+    },
+    {
+     "w": "looks",
+     "at": 0.475
+    },
+    {
+     "w": "up",
+     "at": 0.713
+    },
+    {
+     "w": "and",
+     "at": 0.887
+    },
+    {
+     "w": "cuts",
+     "at": 1.0
+    },
+    {
+     "w": "it",
+     "at": 1.262
+    },
+    {
+     "w": "back",
+     "at": 1.35
+    },
+    {
+     "w": "Joshua",
+     "at": 2.125
+    },
+    {
+     "w": "Kimmich",
+     "at": 2.6
+    },
+    {
+     "w": "side-foots",
+     "at": 2.962
+    },
+    {
+     "w": "it",
+     "at": 3.538
+    },
+    {
+     "w": "in",
+     "at": 3.625
+    },
+    {
+     "w": "Bayern",
+     "at": 4.325
+    },
+    {
+     "w": "went",
+     "at": 4.737
+    },
+    {
+     "w": "on",
+     "at": 4.888
+    },
+    {
+     "w": "to",
+     "at": 5.013
+    },
+    {
+     "w": "win",
+     "at": 5.1
+    },
+    {
+     "w": "eight",
+     "at": 5.237
+    },
+    {
+     "w": "to",
+     "at": 5.4
+    },
+    {
+     "w": "two",
+     "at": 5.537
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: on the wing, use your pace and quick changes of direction, then look up and cut it back!",
+   "src": "/plays/narration/davies-semedo-2020/4.m4a",
+   "seconds": 7.0,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "on",
+     "at": 1.35
+    },
+    {
+     "w": "the",
+     "at": 1.512
+    },
+    {
+     "w": "wing",
+     "at": 1.613
+    },
+    {
+     "w": "use",
+     "at": 2.263
+    },
+    {
+     "w": "your",
+     "at": 2.462
+    },
+    {
+     "w": "pace",
+     "at": 2.612
+    },
+    {
+     "w": "and",
+     "at": 3.0
+    },
+    {
+     "w": "quick",
+     "at": 3.125
+    },
+    {
+     "w": "changes",
+     "at": 3.388
+    },
+    {
+     "w": "of",
+     "at": 3.788
+    },
+    {
+     "w": "direction",
+     "at": 3.875
+    },
+    {
+     "w": "then",
+     "at": 4.7
+    },
+    {
+     "w": "look",
+     "at": 4.9
+    },
+    {
+     "w": "up",
+     "at": 5.062
+    },
+    {
+     "w": "and",
+     "at": 5.237
+    },
+    {
+     "w": "cut",
+     "at": 5.35
+    },
+    {
+     "w": "it",
+     "at": 5.537
+    },
+    {
+     "w": "back",
+     "at": 5.625
+    }
+   ]
+  }
+ ]
+}

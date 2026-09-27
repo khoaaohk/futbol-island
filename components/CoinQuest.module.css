@@ -17,7 +17,7 @@
 
 .summaryCard{background:#f4f6ee;border-color:#cbd5c1}.summaryCard:hover{background:#eaf0e2}
 
-.ballSelector{display:grid;grid-template-columns:repeat(auto-fit,minmax(40px,1fr));gap:8px;max-height:none;overflow:visible;padding:3px;flex-shrink:0}.ballSelector button{position:relative;display:grid;place-items:center;min-height:44px;min-width:0;border:1px dashed #acb59b;border-radius:10px;background:#faf9ef;color:#506345;font:700 14px/1 inherit;cursor:pointer}.ballSelector button[data-earned=true]{background:#e6edda;border-style:solid}.ballSelector button[aria-pressed=true]{background:#294f43;color:#fff3d1;border:2px solid #294f43;box-shadow:0 0 0 2px #d7b45f}.ballSelector button>span{position:absolute;right:3px;bottom:2px;font-size:9px}.ballSelector button:focus-visible{outline:3px solid #c28f36;outline-offset:1px}.selectedBall{border-top:1px solid #d8cfb3;padding-top:16px}.selectedBall h4{font-size:17px;margin:0 0 12px}.selectedBall p{margin:0 0 14px}.selectedBall .discoveryActions{margin-top:0}
+.ballSelector{display:grid;grid-template-columns:repeat(auto-fit,minmax(44px,1fr));gap:8px;max-height:none;overflow:visible;padding:3px;flex-shrink:0}.ballSelector button{position:relative;display:grid;place-items:center;min-height:44px;min-width:0;border:1px dashed #acb59b;border-radius:10px;background:#faf9ef;color:#506345;font:700 14px/1 inherit;cursor:pointer}.ballSelector button[data-earned=true]{background:#e6edda;border-style:solid}.ballSelector button[aria-pressed=true]{background:#294f43;color:#fff3d1;border:2px solid #294f43;box-shadow:0 0 0 2px #d7b45f}.ballSelector button>span{position:absolute;right:3px;bottom:2px;font-size:9px}.ballSelector button:focus-visible{outline:3px solid #c28f36;outline-offset:1px}.selectedBall{border-top:1px solid #d8cfb3;padding-top:16px}.selectedBall h4{font-size:17px;margin:0 0 12px}.selectedBall p{margin:0 0 14px}.selectedBall .discoveryActions{margin-top:0}
 .summaryCard{background:transparent;border:1px solid #294f4366;box-shadow:none;color:#294f43}.summaryCard:hover{background:#294f430c}
 
 .quest{border:0;background:transparent;padding:0;border-radius:0;min-width:0}.quest>h3{margin:8px 0 0}.quest>p{margin:0 0 8px}
@@ -34,3 +34,12 @@
 @media(prefers-reduced-motion:reduce){.ballSelector button{transition:none;translate:none!important}}
 .quest{padding:32px}
 @media(max-width:600px){.quest{padding:24px 22px}}
+
+/* Shared families (docs/ui/BUTTONS.md): green primary pill and mint secondary pill; 44px tap height everywhere. */
+.primary,.secondary{border-radius:var(--btn-radius);font-family:var(--btn-font);transition:translate .16s,box-shadow .16s}
+.primary{background:var(--btn-green);color:var(--btn-ink-on-dark);box-shadow:0 4px 0 var(--btn-green-edge)}
+.secondary{background:var(--btn-mint);color:var(--btn-ink);border:0;box-shadow:0 4px 0 var(--btn-mint-edge)}
+.primary:active{translate:0 2px;box-shadow:0 2px 0 var(--btn-green-edge)}
+.secondary:active{translate:0 2px;box-shadow:0 2px 0 var(--btn-mint-edge)}
+.overview .compactHeading .secondary{min-height:var(--btn-height)}
+.ballSelector{gap:8px}

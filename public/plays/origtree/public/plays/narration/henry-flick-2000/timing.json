@@ -1,0 +1,398 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Highbury",
+   "text": "Highbury, 2000. Arsenal, in red with white sleeves, play Manchester United. Thierry Henry is far from goal, back to it, with a defender tight behind him. Here comes the pass. Look at this... goal!",
+   "src": "/plays/narration/henry-flick-2000/1.m4a",
+   "seconds": 14.7,
+   "words": [
+    {
+     "w": "Highbury",
+     "at": 0.375
+    },
+    {
+     "w": "2000",
+     "at": 0.912
+    },
+    {
+     "w": "Arsenal",
+     "at": 2.163
+    },
+    {
+     "w": "in",
+     "at": 2.75
+    },
+    {
+     "w": "red",
+     "at": 2.913
+    },
+    {
+     "w": "with",
+     "at": 3.188
+    },
+    {
+     "w": "white",
+     "at": 3.362
+    },
+    {
+     "w": "sleeves",
+     "at": 3.688
+    },
+    {
+     "w": "play",
+     "at": 4.3
+    },
+    {
+     "w": "Manchester",
+     "at": 4.575
+    },
+    {
+     "w": "United",
+     "at": 5.175
+    },
+    {
+     "w": "Thierry",
+     "at": 6.138
+    },
+    {
+     "w": "Henry",
+     "at": 6.475
+    },
+    {
+     "w": "is",
+     "at": 6.875
+    },
+    {
+     "w": "far",
+     "at": 7.025
+    },
+    {
+     "w": "from",
+     "at": 7.275
+    },
+    {
+     "w": "goal",
+     "at": 7.487
+    },
+    {
+     "w": "back",
+     "at": 8.025
+    },
+    {
+     "w": "to",
+     "at": 8.3
+    },
+    {
+     "w": "it",
+     "at": 8.475
+    },
+    {
+     "w": "with",
+     "at": 8.613
+    },
+    {
+     "w": "a",
+     "at": 8.713
+    },
+    {
+     "w": "defender",
+     "at": 8.775
+    },
+    {
+     "w": "tight",
+     "at": 9.287
+    },
+    {
+     "w": "behind",
+     "at": 9.6
+    },
+    {
+     "w": "him",
+     "at": 10.012
+    },
+    {
+     "w": "Here",
+     "at": 10.713
+    },
+    {
+     "w": "comes",
+     "at": 10.95
+    },
+    {
+     "w": "the",
+     "at": 11.213
+    },
+    {
+     "w": "pass",
+     "at": 11.312
+    },
+    {
+     "w": "Look",
+     "at": 12.062
+    },
+    {
+     "w": "at",
+     "at": 12.238
+    },
+    {
+     "w": "this",
+     "at": 12.35
+    },
+    {
+     "w": "goal",
+     "at": 13.238
+    }
+   ]
+  },
+  {
+   "label": "Flick and spin",
+   "text": "Watch again, slowly. Henry flicks the ball up with his right foot, spins round, and volleys it before it lands.",
+   "src": "/plays/narration/henry-flick-2000/2.m4a",
+   "seconds": 8.2,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.238
+    },
+    {
+     "w": "Henry",
+     "at": 2.312
+    },
+    {
+     "w": "flicks",
+     "at": 2.712
+    },
+    {
+     "w": "the",
+     "at": 3.025
+    },
+    {
+     "w": "ball",
+     "at": 3.125
+    },
+    {
+     "w": "up",
+     "at": 3.413
+    },
+    {
+     "w": "with",
+     "at": 3.562
+    },
+    {
+     "w": "his",
+     "at": 3.663
+    },
+    {
+     "w": "right",
+     "at": 3.837
+    },
+    {
+     "w": "foot",
+     "at": 4.162
+    },
+    {
+     "w": "spins",
+     "at": 4.763
+    },
+    {
+     "w": "round",
+     "at": 5.2
+    },
+    {
+     "w": "and",
+     "at": 5.75
+    },
+    {
+     "w": "volleys",
+     "at": 5.888
+    },
+    {
+     "w": "it",
+     "at": 6.325
+    },
+    {
+     "w": "before",
+     "at": 6.412
+    },
+    {
+     "w": "it",
+     "at": 6.713
+    },
+    {
+     "w": "lands",
+     "at": 6.8
+    }
+   ]
+  },
+  {
+   "label": "Top corner",
+   "text": "From behind, see it loop over Barthez and dip into the top corner. The only goal of the game!",
+   "src": "/plays/narration/henry-flick-2000/3.m4a",
+   "seconds": 6.8,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "behind",
+     "at": 0.5
+    },
+    {
+     "w": "see",
+     "at": 1.413
+    },
+    {
+     "w": "it",
+     "at": 1.6
+    },
+    {
+     "w": "loop",
+     "at": 1.725
+    },
+    {
+     "w": "over",
+     "at": 1.913
+    },
+    {
+     "w": "Barthez",
+     "at": 2.125
+    },
+    {
+     "w": "and",
+     "at": 2.675
+    },
+    {
+     "w": "dip",
+     "at": 2.812
+    },
+    {
+     "w": "into",
+     "at": 3.013
+    },
+    {
+     "w": "the",
+     "at": 3.188
+    },
+    {
+     "w": "top",
+     "at": 3.275
+    },
+    {
+     "w": "corner",
+     "at": 3.55
+    },
+    {
+     "w": "The",
+     "at": 4.513
+    },
+    {
+     "w": "only",
+     "at": 4.675
+    },
+    {
+     "w": "goal",
+     "at": 4.987
+    },
+    {
+     "w": "of",
+     "at": 5.263
+    },
+    {
+     "w": "the",
+     "at": 5.338
+    },
+    {
+     "w": "game",
+     "at": 5.425
+    }
+   ]
+  },
+  {
+   "label": "First touch",
+   "text": "A clever first touch can set up your shot. Flick, turn and strike in one smooth movement.",
+   "src": "/plays/narration/henry-flick-2000/4.m4a",
+   "seconds": 6.6,
+   "words": [
+    {
+     "w": "A",
+     "at": 0.35
+    },
+    {
+     "w": "clever",
+     "at": 0.425
+    },
+    {
+     "w": "first",
+     "at": 0.812
+    },
+    {
+     "w": "touch",
+     "at": 1.1
+    },
+    {
+     "w": "can",
+     "at": 1.4
+    },
+    {
+     "w": "set",
+     "at": 1.575
+    },
+    {
+     "w": "up",
+     "at": 1.738
+    },
+    {
+     "w": "your",
+     "at": 1.837
+    },
+    {
+     "w": "shot",
+     "at": 1.962
+    },
+    {
+     "w": "Flick",
+     "at": 2.8
+    },
+    {
+     "w": "turn",
+     "at": 3.462
+    },
+    {
+     "w": "and",
+     "at": 3.812
+    },
+    {
+     "w": "strike",
+     "at": 3.938
+    },
+    {
+     "w": "in",
+     "at": 4.325
+    },
+    {
+     "w": "one",
+     "at": 4.475
+    },
+    {
+     "w": "smooth",
+     "at": 4.75
+    },
+    {
+     "w": "movement",
+     "at": 5.175
+    }
+   ]
+  }
+ ]
+}

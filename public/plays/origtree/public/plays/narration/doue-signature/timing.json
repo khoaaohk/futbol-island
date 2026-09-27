@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Paris, 2025. Aston Villa lead Paris Saint-Germain. Nuno Mendes passes to D\u00e9sir\u00e9 Dou\u00e9 on the left. He runs straight at Morgan Rogers, cuts inside... and bang! Off the crossbar and in!",
+   "src": "/plays/narration/doue-signature/1.m4a",
+   "seconds": 15.1,
+   "words": [
+    {
+     "w": "Paris",
+     "at": 0.35
+    },
+    {
+     "w": "2025",
+     "at": 0.8
+    },
+    {
+     "w": "Aston",
+     "at": 2.25
+    },
+    {
+     "w": "Villa",
+     "at": 2.688
+    },
+    {
+     "w": "lead",
+     "at": 3.0
+    },
+    {
+     "w": "Paris",
+     "at": 3.237
+    },
+    {
+     "w": "Saint-Germain",
+     "at": 3.688
+    },
+    {
+     "w": "Nuno",
+     "at": 4.975
+    },
+    {
+     "w": "Mendes",
+     "at": 5.35
+    },
+    {
+     "w": "passes",
+     "at": 5.862
+    },
+    {
+     "w": "to",
+     "at": 6.35
+    },
+    {
+     "w": "D\u00e9sir\u00e9",
+     "at": 6.475
+    },
+    {
+     "w": "Dou\u00e9",
+     "at": 7.1
+    },
+    {
+     "w": "on",
+     "at": 7.487
+    },
+    {
+     "w": "the",
+     "at": 7.588
+    },
+    {
+     "w": "left",
+     "at": 7.675
+    },
+    {
+     "w": "He",
+     "at": 8.45
+    },
+    {
+     "w": "runs",
+     "at": 8.6
+    },
+    {
+     "w": "straight",
+     "at": 8.938
+    },
+    {
+     "w": "at",
+     "at": 9.275
+    },
+    {
+     "w": "Morgan",
+     "at": 9.375
+    },
+    {
+     "w": "Rogers",
+     "at": 9.75
+    },
+    {
+     "w": "cuts",
+     "at": 10.338
+    },
+    {
+     "w": "inside",
+     "at": 10.65
+    },
+    {
+     "w": "and",
+     "at": 11.75
+    },
+    {
+     "w": "bang",
+     "at": 11.912
+    },
+    {
+     "w": "Off",
+     "at": 12.688
+    },
+    {
+     "w": "the",
+     "at": 12.95
+    },
+    {
+     "w": "crossbar",
+     "at": 13.05
+    },
+    {
+     "w": "and",
+     "at": 13.65
+    },
+    {
+     "w": "in",
+     "at": 13.775
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. Rogers blocks the way. Dou\u00e9 does not wait for help. He drives at him and zips inside, away from the challenge.",
+   "src": "/plays/narration/doue-signature/2.m4a",
+   "seconds": 9.6,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.163
+    },
+    {
+     "w": "Rogers",
+     "at": 2.125
+    },
+    {
+     "w": "blocks",
+     "at": 2.575
+    },
+    {
+     "w": "the",
+     "at": 2.925
+    },
+    {
+     "w": "way",
+     "at": 3.025
+    },
+    {
+     "w": "Dou\u00e9",
+     "at": 3.812
+    },
+    {
+     "w": "does",
+     "at": 4.125
+    },
+    {
+     "w": "not",
+     "at": 4.287
+    },
+    {
+     "w": "wait",
+     "at": 4.475
+    },
+    {
+     "w": "for",
+     "at": 4.7
+    },
+    {
+     "w": "help",
+     "at": 4.825
+    },
+    {
+     "w": "He",
+     "at": 5.5
+    },
+    {
+     "w": "drives",
+     "at": 5.625
+    },
+    {
+     "w": "at",
+     "at": 6.025
+    },
+    {
+     "w": "him",
+     "at": 6.125
+    },
+    {
+     "w": "and",
+     "at": 6.375
+    },
+    {
+     "w": "zips",
+     "at": 6.513
+    },
+    {
+     "w": "inside",
+     "at": 6.85
+    },
+    {
+     "w": "away",
+     "at": 7.5
+    },
+    {
+     "w": "from",
+     "at": 7.825
+    },
+    {
+     "w": "the",
+     "at": 7.963
+    },
+    {
+     "w": "challenge",
+     "at": 8.062
+    }
+   ]
+  },
+  {
+   "label": "The finish",
+   "text": "Then a booming right-foot curler! It beats Emi Mart\u00ednez, hits the underside of the bar, and bounces in. One all!",
+   "src": "/plays/narration/doue-signature/3.m4a",
+   "seconds": 8.3,
+   "words": [
+    {
+     "w": "Then",
+     "at": 0.375
+    },
+    {
+     "w": "a",
+     "at": 0.487
+    },
+    {
+     "w": "booming",
+     "at": 0.588
+    },
+    {
+     "w": "right-foot",
+     "at": 1.025
+    },
+    {
+     "w": "curler",
+     "at": 1.475
+    },
+    {
+     "w": "It",
+     "at": 2.3
+    },
+    {
+     "w": "beats",
+     "at": 2.45
+    },
+    {
+     "w": "Emi",
+     "at": 2.725
+    },
+    {
+     "w": "Mart\u00ednez",
+     "at": 3.0
+    },
+    {
+     "w": "hits",
+     "at": 3.95
+    },
+    {
+     "w": "the",
+     "at": 4.225
+    },
+    {
+     "w": "underside",
+     "at": 4.35
+    },
+    {
+     "w": "of",
+     "at": 4.812
+    },
+    {
+     "w": "the",
+     "at": 4.888
+    },
+    {
+     "w": "bar",
+     "at": 4.975
+    },
+    {
+     "w": "and",
+     "at": 5.338
+    },
+    {
+     "w": "bounces",
+     "at": 5.45
+    },
+    {
+     "w": "in",
+     "at": 5.95
+    },
+    {
+     "w": "One",
+     "at": 6.7
+    },
+    {
+     "w": "all",
+     "at": 6.975
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: be brave! Whenever you get the chance, take on your defender.",
+   "src": "/plays/narration/doue-signature/4.m4a",
+   "seconds": 5.1,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "be",
+     "at": 0.925
+    },
+    {
+     "w": "brave",
+     "at": 1.087
+    },
+    {
+     "w": "Whenever",
+     "at": 2.0
+    },
+    {
+     "w": "you",
+     "at": 2.375
+    },
+    {
+     "w": "get",
+     "at": 2.475
+    },
+    {
+     "w": "the",
+     "at": 2.638
+    },
+    {
+     "w": "chance",
+     "at": 2.737
+    },
+    {
+     "w": "take",
+     "at": 3.2
+    },
+    {
+     "w": "on",
+     "at": 3.413
+    },
+    {
+     "w": "your",
+     "at": 3.513
+    },
+    {
+     "w": "defender",
+     "at": 3.612
+    }
+   ]
+  }
+ ]
+}

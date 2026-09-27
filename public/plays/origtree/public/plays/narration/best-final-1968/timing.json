@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Extra time",
+   "text": "Wembley, 1968, the European Cup final against Benfica, extra time. The keeper kicks it long, Kidd heads it on, and George Best, in blue, races past the defence! Round the keeper, and... goal!",
+   "src": "/plays/narration/best-final-1968/1.m4a",
+   "seconds": 15.0,
+   "words": [
+    {
+     "w": "Wembley",
+     "at": 0.4
+    },
+    {
+     "w": "1968",
+     "at": 0.875
+    },
+    {
+     "w": "the",
+     "at": 2.075
+    },
+    {
+     "w": "European",
+     "at": 2.175
+    },
+    {
+     "w": "Cup",
+     "at": 2.7
+    },
+    {
+     "w": "final",
+     "at": 2.987
+    },
+    {
+     "w": "against",
+     "at": 3.375
+    },
+    {
+     "w": "Benfica",
+     "at": 3.725
+    },
+    {
+     "w": "extra",
+     "at": 4.575
+    },
+    {
+     "w": "time",
+     "at": 4.975
+    },
+    {
+     "w": "The",
+     "at": 5.938
+    },
+    {
+     "w": "keeper",
+     "at": 6.05
+    },
+    {
+     "w": "kicks",
+     "at": 6.425
+    },
+    {
+     "w": "it",
+     "at": 6.662
+    },
+    {
+     "w": "long",
+     "at": 6.775
+    },
+    {
+     "w": "Kidd",
+     "at": 7.275
+    },
+    {
+     "w": "heads",
+     "at": 7.5
+    },
+    {
+     "w": "it",
+     "at": 7.737
+    },
+    {
+     "w": "on",
+     "at": 7.825
+    },
+    {
+     "w": "and",
+     "at": 8.425
+    },
+    {
+     "w": "George",
+     "at": 8.562
+    },
+    {
+     "w": "Best",
+     "at": 8.988
+    },
+    {
+     "w": "in",
+     "at": 9.387
+    },
+    {
+     "w": "blue",
+     "at": 9.525
+    },
+    {
+     "w": "races",
+     "at": 9.963
+    },
+    {
+     "w": "past",
+     "at": 10.463
+    },
+    {
+     "w": "the",
+     "at": 10.812
+    },
+    {
+     "w": "defence",
+     "at": 10.9
+    },
+    {
+     "w": "Round",
+     "at": 11.925
+    },
+    {
+     "w": "the",
+     "at": 12.238
+    },
+    {
+     "w": "keeper",
+     "at": 12.325
+    },
+    {
+     "w": "and",
+     "at": 12.762
+    },
+    {
+     "w": "goal",
+     "at": 13.537
+    }
+   ]
+  },
+  {
+   "label": "The dummy",
+   "text": "Watch again, slowly. Keeper Henrique rushes out. Best drops his shoulder one way, the keeper is fooled, and one touch takes it round him.",
+   "src": "/plays/narration/best-final-1968/2.m4a",
+   "seconds": 9.9,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.238
+    },
+    {
+     "w": "Keeper",
+     "at": 2.263
+    },
+    {
+     "w": "Henrique",
+     "at": 2.65
+    },
+    {
+     "w": "rushes",
+     "at": 3.1
+    },
+    {
+     "w": "out",
+     "at": 3.475
+    },
+    {
+     "w": "Best",
+     "at": 4.162
+    },
+    {
+     "w": "drops",
+     "at": 4.5
+    },
+    {
+     "w": "his",
+     "at": 4.812
+    },
+    {
+     "w": "shoulder",
+     "at": 4.987
+    },
+    {
+     "w": "one",
+     "at": 5.375
+    },
+    {
+     "w": "way",
+     "at": 5.6
+    },
+    {
+     "w": "the",
+     "at": 5.963
+    },
+    {
+     "w": "keeper",
+     "at": 6.05
+    },
+    {
+     "w": "is",
+     "at": 6.425
+    },
+    {
+     "w": "fooled",
+     "at": 6.612
+    },
+    {
+     "w": "and",
+     "at": 7.25
+    },
+    {
+     "w": "one",
+     "at": 7.375
+    },
+    {
+     "w": "touch",
+     "at": 7.612
+    },
+    {
+     "w": "takes",
+     "at": 7.95
+    },
+    {
+     "w": "it",
+     "at": 8.213
+    },
+    {
+     "w": "round",
+     "at": 8.3
+    },
+    {
+     "w": "him",
+     "at": 8.613
+    }
+   ]
+  },
+  {
+   "label": "No rush",
+   "text": "The goal is empty. No rush: Best calmly rolls it in with his left foot!",
+   "src": "/plays/narration/best-final-1968/3.m4a",
+   "seconds": 5.9,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "goal",
+     "at": 0.45
+    },
+    {
+     "w": "is",
+     "at": 0.775
+    },
+    {
+     "w": "empty",
+     "at": 0.938
+    },
+    {
+     "w": "No",
+     "at": 1.825
+    },
+    {
+     "w": "rush",
+     "at": 2.1
+    },
+    {
+     "w": "Best",
+     "at": 2.825
+    },
+    {
+     "w": "calmly",
+     "at": 3.125
+    },
+    {
+     "w": "rolls",
+     "at": 3.525
+    },
+    {
+     "w": "it",
+     "at": 3.788
+    },
+    {
+     "w": "in",
+     "at": 3.875
+    },
+    {
+     "w": "with",
+     "at": 4.062
+    },
+    {
+     "w": "his",
+     "at": 4.162
+    },
+    {
+     "w": "left",
+     "at": 4.325
+    },
+    {
+     "w": "foot",
+     "at": 4.612
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: one on one, fake one way, touch it round the keeper, pass it in calmly.",
+   "src": "/plays/narration/best-final-1968/4.m4a",
+   "seconds": 6.1,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.512
+    },
+    {
+     "w": "one",
+     "at": 1.337
+    },
+    {
+     "w": "on",
+     "at": 1.512
+    },
+    {
+     "w": "one",
+     "at": 1.65
+    },
+    {
+     "w": "fake",
+     "at": 1.975
+    },
+    {
+     "w": "one",
+     "at": 2.2
+    },
+    {
+     "w": "way",
+     "at": 2.425
+    },
+    {
+     "w": "touch",
+     "at": 2.875
+    },
+    {
+     "w": "it",
+     "at": 3.112
+    },
+    {
+     "w": "round",
+     "at": 3.2
+    },
+    {
+     "w": "the",
+     "at": 3.438
+    },
+    {
+     "w": "keeper",
+     "at": 3.525
+    },
+    {
+     "w": "pass",
+     "at": 4.05
+    },
+    {
+     "w": "it",
+     "at": 4.362
+    },
+    {
+     "w": "in",
+     "at": 4.438
+    },
+    {
+     "w": "calmly",
+     "at": 4.588
+    }
+   ]
+  }
+ ]
+}

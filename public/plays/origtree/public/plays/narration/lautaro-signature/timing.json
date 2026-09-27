@@ -1,0 +1,382 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The winner, live",
+   "text": "Miami, 2024, the Copa Am\u00e9rica final. Extra time, still nil-nil. Paredes wins the ball, Lo Celso slides it through, and Lautaro Mart\u00ednez races away from Cuesta... and scores!",
+   "src": "/plays/narration/lautaro-signature/1.m4a",
+   "seconds": 14.7,
+   "words": [
+    {
+     "w": "Miami",
+     "at": 0.4
+    },
+    {
+     "w": "2024",
+     "at": 0.975
+    },
+    {
+     "w": "the",
+     "at": 1.85
+    },
+    {
+     "w": "Copa",
+     "at": 1.962
+    },
+    {
+     "w": "Am\u00e9rica",
+     "at": 2.362
+    },
+    {
+     "w": "final",
+     "at": 2.888
+    },
+    {
+     "w": "Extra",
+     "at": 3.888
+    },
+    {
+     "w": "time",
+     "at": 4.3
+    },
+    {
+     "w": "still",
+     "at": 4.862
+    },
+    {
+     "w": "nil-nil",
+     "at": 5.15
+    },
+    {
+     "w": "Paredes",
+     "at": 6.237
+    },
+    {
+     "w": "wins",
+     "at": 6.838
+    },
+    {
+     "w": "the",
+     "at": 7.15
+    },
+    {
+     "w": "ball",
+     "at": 7.25
+    },
+    {
+     "w": "Lo",
+     "at": 7.763
+    },
+    {
+     "w": "Celso",
+     "at": 8.075
+    },
+    {
+     "w": "slides",
+     "at": 8.613
+    },
+    {
+     "w": "it",
+     "at": 9.012
+    },
+    {
+     "w": "through",
+     "at": 9.162
+    },
+    {
+     "w": "and",
+     "at": 9.85
+    },
+    {
+     "w": "Lautaro",
+     "at": 9.975
+    },
+    {
+     "w": "Mart\u00ednez",
+     "at": 10.475
+    },
+    {
+     "w": "races",
+     "at": 11.1
+    },
+    {
+     "w": "away",
+     "at": 11.5
+    },
+    {
+     "w": "from",
+     "at": 11.775
+    },
+    {
+     "w": "Cuesta",
+     "at": 11.95
+    },
+    {
+     "w": "and",
+     "at": 12.95
+    },
+    {
+     "w": "scores",
+     "at": 13.113
+    }
+   ]
+  },
+  {
+   "label": "No waiting",
+   "text": "Watch again, slowly. Lautaro sprints past Cuesta into the box. He does not wait: he shoots before Cuesta can block!",
+   "src": "/plays/narration/lautaro-signature/2.m4a",
+   "seconds": 8.8,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.113
+    },
+    {
+     "w": "Lautaro",
+     "at": 2.112
+    },
+    {
+     "w": "sprints",
+     "at": 2.663
+    },
+    {
+     "w": "past",
+     "at": 3.1
+    },
+    {
+     "w": "Cuesta",
+     "at": 3.475
+    },
+    {
+     "w": "into",
+     "at": 3.837
+    },
+    {
+     "w": "the",
+     "at": 4.013
+    },
+    {
+     "w": "box",
+     "at": 4.1
+    },
+    {
+     "w": "He",
+     "at": 4.9
+    },
+    {
+     "w": "does",
+     "at": 5.013
+    },
+    {
+     "w": "not",
+     "at": 5.138
+    },
+    {
+     "w": "wait",
+     "at": 5.325
+    },
+    {
+     "w": "he",
+     "at": 5.975
+    },
+    {
+     "w": "shoots",
+     "at": 6.15
+    },
+    {
+     "w": "before",
+     "at": 6.475
+    },
+    {
+     "w": "Cuesta",
+     "at": 6.825
+    },
+    {
+     "w": "can",
+     "at": 7.2
+    },
+    {
+     "w": "block",
+     "at": 7.4
+    }
+   ]
+  },
+  {
+   "label": "Champions",
+   "text": "Past Vargas, into the net! One-nil in the 112th minute, and Argentina are champions again!",
+   "src": "/plays/narration/lautaro-signature/3.m4a",
+   "seconds": 7.9,
+   "words": [
+    {
+     "w": "Past",
+     "at": 0.35
+    },
+    {
+     "w": "Vargas",
+     "at": 0.7
+    },
+    {
+     "w": "into",
+     "at": 1.55
+    },
+    {
+     "w": "the",
+     "at": 1.825
+    },
+    {
+     "w": "net",
+     "at": 1.95
+    },
+    {
+     "w": "One-nil",
+     "at": 2.788
+    },
+    {
+     "w": "in",
+     "at": 3.275
+    },
+    {
+     "w": "the",
+     "at": 3.362
+    },
+    {
+     "w": "112th",
+     "at": 3.45
+    },
+    {
+     "w": "minute",
+     "at": 4.275
+    },
+    {
+     "w": "and",
+     "at": 4.85
+    },
+    {
+     "w": "Argentina",
+     "at": 4.975
+    },
+    {
+     "w": "are",
+     "at": 5.675
+    },
+    {
+     "w": "champions",
+     "at": 5.838
+    },
+    {
+     "w": "again",
+     "at": 6.425
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "His favourite finish is a quick turn and shot. Your turn: in the box, spin quickly and shoot before the defender can block!",
+   "src": "/plays/narration/lautaro-signature/4.m4a",
+   "seconds": 8.5,
+   "words": [
+    {
+     "w": "His",
+     "at": 0.35
+    },
+    {
+     "w": "favourite",
+     "at": 0.525
+    },
+    {
+     "w": "finish",
+     "at": 0.887
+    },
+    {
+     "w": "is",
+     "at": 1.25
+    },
+    {
+     "w": "a",
+     "at": 1.363
+    },
+    {
+     "w": "quick",
+     "at": 1.425
+    },
+    {
+     "w": "turn",
+     "at": 1.675
+    },
+    {
+     "w": "and",
+     "at": 1.988
+    },
+    {
+     "w": "shot",
+     "at": 2.125
+    },
+    {
+     "w": "Your",
+     "at": 3.013
+    },
+    {
+     "w": "turn",
+     "at": 3.212
+    },
+    {
+     "w": "in",
+     "at": 4.013
+    },
+    {
+     "w": "the",
+     "at": 4.138
+    },
+    {
+     "w": "box",
+     "at": 4.225
+    },
+    {
+     "w": "spin",
+     "at": 4.812
+    },
+    {
+     "w": "quickly",
+     "at": 5.188
+    },
+    {
+     "w": "and",
+     "at": 5.625
+    },
+    {
+     "w": "shoot",
+     "at": 5.812
+    },
+    {
+     "w": "before",
+     "at": 6.15
+    },
+    {
+     "w": "the",
+     "at": 6.412
+    },
+    {
+     "w": "defender",
+     "at": 6.5
+    },
+    {
+     "w": "can",
+     "at": 6.95
+    },
+    {
+     "w": "block",
+     "at": 7.1
+    }
+   ]
+  }
+ ]
+}

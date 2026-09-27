@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The charge, live",
+   "text": "Milan, May 2025: Inter against Barcelona, a Champions League semi-final. Dimarco wins the ball with a crunching tackle. Straight away, Denzel Dumfries sprints forward. The pass sends him clean through, and he sets up Lautaro Mart\u00ednez to score!",
+   "src": "/plays/narration/dumfries-signature/1.m4a",
+   "seconds": 18.4,
+   "words": [
+    {
+     "w": "Milan",
+     "at": 0.4
+    },
+    {
+     "w": "May",
+     "at": 0.9
+    },
+    {
+     "w": "2025",
+     "at": 1.125
+    },
+    {
+     "w": "Inter",
+     "at": 2.525
+    },
+    {
+     "w": "against",
+     "at": 2.85
+    },
+    {
+     "w": "Barcelona",
+     "at": 3.25
+    },
+    {
+     "w": "a",
+     "at": 4.225
+    },
+    {
+     "w": "Champions",
+     "at": 4.338
+    },
+    {
+     "w": "League",
+     "at": 5.013
+    },
+    {
+     "w": "semi-final",
+     "at": 5.312
+    },
+    {
+     "w": "Dimarco",
+     "at": 6.588
+    },
+    {
+     "w": "wins",
+     "at": 7.112
+    },
+    {
+     "w": "the",
+     "at": 7.425
+    },
+    {
+     "w": "ball",
+     "at": 7.525
+    },
+    {
+     "w": "with",
+     "at": 7.838
+    },
+    {
+     "w": "a",
+     "at": 7.963
+    },
+    {
+     "w": "crunching",
+     "at": 8.037
+    },
+    {
+     "w": "tackle",
+     "at": 8.55
+    },
+    {
+     "w": "Straight",
+     "at": 9.5
+    },
+    {
+     "w": "away",
+     "at": 9.825
+    },
+    {
+     "w": "Denzel",
+     "at": 10.463
+    },
+    {
+     "w": "Dumfries",
+     "at": 10.9
+    },
+    {
+     "w": "sprints",
+     "at": 11.463
+    },
+    {
+     "w": "forward",
+     "at": 11.875
+    },
+    {
+     "w": "The",
+     "at": 12.887
+    },
+    {
+     "w": "pass",
+     "at": 13.012
+    },
+    {
+     "w": "sends",
+     "at": 13.387
+    },
+    {
+     "w": "him",
+     "at": 13.688
+    },
+    {
+     "w": "clean",
+     "at": 13.863
+    },
+    {
+     "w": "through",
+     "at": 14.287
+    },
+    {
+     "w": "and",
+     "at": 14.95
+    },
+    {
+     "w": "he",
+     "at": 15.062
+    },
+    {
+     "w": "sets",
+     "at": 15.188
+    },
+    {
+     "w": "up",
+     "at": 15.463
+    },
+    {
+     "w": "Lautaro",
+     "at": 15.65
+    },
+    {
+     "w": "Mart\u00ednez",
+     "at": 16.15
+    },
+    {
+     "w": "to",
+     "at": 16.8
+    },
+    {
+     "w": "score",
+     "at": 16.938
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again. The moment Inter win the ball, Dumfries runs, forward into the space behind the defence.",
+   "src": "/plays/narration/dumfries-signature/2.m4a",
+   "seconds": 7.4,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.7
+    },
+    {
+     "w": "The",
+     "at": 1.587
+    },
+    {
+     "w": "moment",
+     "at": 1.7
+    },
+    {
+     "w": "Inter",
+     "at": 1.988
+    },
+    {
+     "w": "win",
+     "at": 2.225
+    },
+    {
+     "w": "the",
+     "at": 2.413
+    },
+    {
+     "w": "ball",
+     "at": 2.5
+    },
+    {
+     "w": "Dumfries",
+     "at": 3.0
+    },
+    {
+     "w": "runs",
+     "at": 3.55
+    },
+    {
+     "w": "forward",
+     "at": 4.287
+    },
+    {
+     "w": "into",
+     "at": 4.662
+    },
+    {
+     "w": "the",
+     "at": 4.838
+    },
+    {
+     "w": "space",
+     "at": 4.938
+    },
+    {
+     "w": "behind",
+     "at": 5.375
+    },
+    {
+     "w": "the",
+     "at": 5.763
+    },
+    {
+     "w": "defence",
+     "at": 5.85
+    }
+   ]
+  },
+  {
+   "label": "The finish",
+   "text": "From behind the goal: an easy finish for Lautaro. Inter won four three, after extra time.",
+   "src": "/plays/narration/dumfries-signature/3.m4a",
+   "seconds": 7.2,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "behind",
+     "at": 0.487
+    },
+    {
+     "w": "the",
+     "at": 0.863
+    },
+    {
+     "w": "goal",
+     "at": 0.95
+    },
+    {
+     "w": "an",
+     "at": 1.6
+    },
+    {
+     "w": "easy",
+     "at": 1.762
+    },
+    {
+     "w": "finish",
+     "at": 2.138
+    },
+    {
+     "w": "for",
+     "at": 2.525
+    },
+    {
+     "w": "Lautaro",
+     "at": 2.65
+    },
+    {
+     "w": "Inter",
+     "at": 3.75
+    },
+    {
+     "w": "won",
+     "at": 4.0
+    },
+    {
+     "w": "four",
+     "at": 4.237
+    },
+    {
+     "w": "three",
+     "at": 4.487
+    },
+    {
+     "w": "after",
+     "at": 4.975
+    },
+    {
+     "w": "extra",
+     "at": 5.325
+    },
+    {
+     "w": "time",
+     "at": 5.725
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: when your team wins the ball, sprint forward on the outside to stretch the defence!",
+   "src": "/plays/narration/dumfries-signature/4.m4a",
+   "seconds": 6.4,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "when",
+     "at": 1.375
+    },
+    {
+     "w": "your",
+     "at": 1.512
+    },
+    {
+     "w": "team",
+     "at": 1.663
+    },
+    {
+     "w": "wins",
+     "at": 1.975
+    },
+    {
+     "w": "the",
+     "at": 2.237
+    },
+    {
+     "w": "ball",
+     "at": 2.325
+    },
+    {
+     "w": "sprint",
+     "at": 2.837
+    },
+    {
+     "w": "forward",
+     "at": 3.212
+    },
+    {
+     "w": "on",
+     "at": 3.538
+    },
+    {
+     "w": "the",
+     "at": 3.638
+    },
+    {
+     "w": "outside",
+     "at": 3.725
+    },
+    {
+     "w": "to",
+     "at": 4.25
+    },
+    {
+     "w": "stretch",
+     "at": 4.375
+    },
+    {
+     "w": "the",
+     "at": 4.75
+    },
+    {
+     "w": "defence",
+     "at": 4.85
+    }
+   ]
+  }
+ ]
+}

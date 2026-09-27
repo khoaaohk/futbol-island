@@ -1,0 +1,398 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Giants Stadium",
+   "text": "World Cup 1994, Mexico against Bulgaria. Jorge Campos, in a bright kit he designed himself, was small for a keeper. Here's how he played: Bulgaria go long, Campos sprints off his line to win it first!",
+   "src": "/plays/narration/campos-signature/1.m4a",
+   "seconds": 15.3,
+   "words": [
+    {
+     "w": "World",
+     "at": 0.375
+    },
+    {
+     "w": "Cup",
+     "at": 0.675
+    },
+    {
+     "w": "1994",
+     "at": 0.9
+    },
+    {
+     "w": "Mexico",
+     "at": 2.237
+    },
+    {
+     "w": "against",
+     "at": 2.8
+    },
+    {
+     "w": "Bulgaria",
+     "at": 3.175
+    },
+    {
+     "w": "Jorge",
+     "at": 4.412
+    },
+    {
+     "w": "Campos",
+     "at": 4.787
+    },
+    {
+     "w": "in",
+     "at": 5.45
+    },
+    {
+     "w": "a",
+     "at": 5.537
+    },
+    {
+     "w": "bright",
+     "at": 5.612
+    },
+    {
+     "w": "kit",
+     "at": 5.963
+    },
+    {
+     "w": "he",
+     "at": 6.2
+    },
+    {
+     "w": "designed",
+     "at": 6.325
+    },
+    {
+     "w": "himself",
+     "at": 6.713
+    },
+    {
+     "w": "was",
+     "at": 7.225
+    },
+    {
+     "w": "small",
+     "at": 7.375
+    },
+    {
+     "w": "for",
+     "at": 7.8
+    },
+    {
+     "w": "a",
+     "at": 7.912
+    },
+    {
+     "w": "keeper",
+     "at": 7.975
+    },
+    {
+     "w": "Here's",
+     "at": 8.887
+    },
+    {
+     "w": "how",
+     "at": 9.175
+    },
+    {
+     "w": "he",
+     "at": 9.338
+    },
+    {
+     "w": "played",
+     "at": 9.463
+    },
+    {
+     "w": "Bulgaria",
+     "at": 10.387
+    },
+    {
+     "w": "go",
+     "at": 11.0
+    },
+    {
+     "w": "long",
+     "at": 11.175
+    },
+    {
+     "w": "Campos",
+     "at": 11.738
+    },
+    {
+     "w": "sprints",
+     "at": 12.312
+    },
+    {
+     "w": "off",
+     "at": 12.738
+    },
+    {
+     "w": "his",
+     "at": 12.887
+    },
+    {
+     "w": "line",
+     "at": 13.05
+    },
+    {
+     "w": "to",
+     "at": 13.4
+    },
+    {
+     "w": "win",
+     "at": 13.525
+    },
+    {
+     "w": "it",
+     "at": 13.75
+    },
+    {
+     "w": "first",
+     "at": 13.912
+    }
+   ]
+  },
+  {
+   "label": "Off his line",
+   "text": "Watch again, slowly. He reads the long ball as it's kicked, and he's off his line in a flash.",
+   "src": "/plays/narration/campos-signature/2.m4a",
+   "seconds": 6.9,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.238
+    },
+    {
+     "w": "He",
+     "at": 2.237
+    },
+    {
+     "w": "reads",
+     "at": 2.4
+    },
+    {
+     "w": "the",
+     "at": 2.725
+    },
+    {
+     "w": "long",
+     "at": 2.85
+    },
+    {
+     "w": "ball",
+     "at": 3.175
+    },
+    {
+     "w": "as",
+     "at": 3.5
+    },
+    {
+     "w": "it's",
+     "at": 3.612
+    },
+    {
+     "w": "kicked",
+     "at": 3.812
+    },
+    {
+     "w": "and",
+     "at": 4.35
+    },
+    {
+     "w": "he's",
+     "at": 4.463
+    },
+    {
+     "w": "off",
+     "at": 4.6
+    },
+    {
+     "w": "his",
+     "at": 4.787
+    },
+    {
+     "w": "line",
+     "at": 4.95
+    },
+    {
+     "w": "in",
+     "at": 5.287
+    },
+    {
+     "w": "a",
+     "at": 5.362
+    },
+    {
+     "w": "flash",
+     "at": 5.438
+    }
+   ]
+  },
+  {
+   "label": "Brave and quick",
+   "text": "Outside his box he can't use his hands, so he slides in bravely and clears it, a split second before the striker.",
+   "src": "/plays/narration/campos-signature/3.m4a",
+   "seconds": 8.4,
+   "words": [
+    {
+     "w": "Outside",
+     "at": 0.35
+    },
+    {
+     "w": "his",
+     "at": 0.838
+    },
+    {
+     "w": "box",
+     "at": 1.012
+    },
+    {
+     "w": "he",
+     "at": 1.413
+    },
+    {
+     "w": "can't",
+     "at": 1.525
+    },
+    {
+     "w": "use",
+     "at": 1.775
+    },
+    {
+     "w": "his",
+     "at": 1.962
+    },
+    {
+     "w": "hands",
+     "at": 2.125
+    },
+    {
+     "w": "so",
+     "at": 2.975
+    },
+    {
+     "w": "he",
+     "at": 3.125
+    },
+    {
+     "w": "slides",
+     "at": 3.275
+    },
+    {
+     "w": "in",
+     "at": 3.763
+    },
+    {
+     "w": "bravely",
+     "at": 3.938
+    },
+    {
+     "w": "and",
+     "at": 4.5
+    },
+    {
+     "w": "clears",
+     "at": 4.638
+    },
+    {
+     "w": "it",
+     "at": 5.062
+    },
+    {
+     "w": "a",
+     "at": 5.638
+    },
+    {
+     "w": "split",
+     "at": 5.763
+    },
+    {
+     "w": "second",
+     "at": 6.138
+    },
+    {
+     "w": "before",
+     "at": 6.525
+    },
+    {
+     "w": "the",
+     "at": 6.838
+    },
+    {
+     "w": "striker",
+     "at": 6.925
+    }
+   ]
+  },
+  {
+   "label": "Win it first",
+   "text": "Not the tallest? Quick feet and bravery help you win the ball first.",
+   "src": "/plays/narration/campos-signature/4.m4a",
+   "seconds": 5.1,
+   "words": [
+    {
+     "w": "Not",
+     "at": 0.4
+    },
+    {
+     "w": "the",
+     "at": 0.562
+    },
+    {
+     "w": "tallest",
+     "at": 0.662
+    },
+    {
+     "w": "Quick",
+     "at": 1.65
+    },
+    {
+     "w": "feet",
+     "at": 1.913
+    },
+    {
+     "w": "and",
+     "at": 2.112
+    },
+    {
+     "w": "bravery",
+     "at": 2.225
+    },
+    {
+     "w": "help",
+     "at": 2.725
+    },
+    {
+     "w": "you",
+     "at": 2.975
+    },
+    {
+     "w": "win",
+     "at": 3.1
+    },
+    {
+     "w": "the",
+     "at": 3.263
+    },
+    {
+     "w": "ball",
+     "at": 3.35
+    },
+    {
+     "w": "first",
+     "at": 3.663
+    }
+   ]
+  }
+ ]
+}

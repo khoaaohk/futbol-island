@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: the 2022 Finalissima",
+   "text": "The 2022 futsal Finalissima, in Buenos Aires. Spain and Portugal draw one all. Penalties! Portugal win four to two, and goalkeeper Edu celebrates.",
+   "src": "/plays/narration/edu-futsal-signature/1.m4a",
+   "seconds": 12.4,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "2022",
+     "at": 0.425
+    },
+    {
+     "w": "futsal",
+     "at": 1.35
+    },
+    {
+     "w": "Finalissima",
+     "at": 1.825
+    },
+    {
+     "w": "in",
+     "at": 2.825
+    },
+    {
+     "w": "Buenos",
+     "at": 2.975
+    },
+    {
+     "w": "Aires",
+     "at": 3.538
+    },
+    {
+     "w": "Spain",
+     "at": 4.562
+    },
+    {
+     "w": "and",
+     "at": 5.075
+    },
+    {
+     "w": "Portugal",
+     "at": 5.2
+    },
+    {
+     "w": "draw",
+     "at": 5.725
+    },
+    {
+     "w": "one",
+     "at": 5.975
+    },
+    {
+     "w": "all",
+     "at": 6.2
+    },
+    {
+     "w": "Penalties",
+     "at": 6.912
+    },
+    {
+     "w": "Portugal",
+     "at": 8.037
+    },
+    {
+     "w": "win",
+     "at": 8.575
+    },
+    {
+     "w": "four",
+     "at": 8.812
+    },
+    {
+     "w": "to",
+     "at": 9.05
+    },
+    {
+     "w": "two",
+     "at": 9.188
+    },
+    {
+     "w": "and",
+     "at": 9.625
+    },
+    {
+     "w": "goalkeeper",
+     "at": 9.762
+    },
+    {
+     "w": "Edu",
+     "at": 10.412
+    },
+    {
+     "w": "celebrates",
+     "at": 10.738
+    }
+   ]
+  },
+  {
+   "label": "How he does it",
+   "text": "This is how he does it. Edu catches the shot, looks up, and throws it fast to a teammate. Counter!",
+   "src": "/plays/narration/edu-futsal-signature/2.m4a",
+   "seconds": 7.2,
+   "words": [
+    {
+     "w": "This",
+     "at": 0.375
+    },
+    {
+     "w": "is",
+     "at": 0.55
+    },
+    {
+     "w": "how",
+     "at": 0.675
+    },
+    {
+     "w": "he",
+     "at": 0.875
+    },
+    {
+     "w": "does",
+     "at": 1.0
+    },
+    {
+     "w": "it",
+     "at": 1.238
+    },
+    {
+     "w": "Edu",
+     "at": 1.812
+    },
+    {
+     "w": "catches",
+     "at": 2.112
+    },
+    {
+     "w": "the",
+     "at": 2.525
+    },
+    {
+     "w": "shot",
+     "at": 2.675
+    },
+    {
+     "w": "looks",
+     "at": 3.15
+    },
+    {
+     "w": "up",
+     "at": 3.4
+    },
+    {
+     "w": "and",
+     "at": 3.612
+    },
+    {
+     "w": "throws",
+     "at": 3.737
+    },
+    {
+     "w": "it",
+     "at": 4.088
+    },
+    {
+     "w": "fast",
+     "at": 4.213
+    },
+    {
+     "w": "to",
+     "at": 4.6
+    },
+    {
+     "w": "a",
+     "at": 4.688
+    },
+    {
+     "w": "teammate",
+     "at": 4.75
+    },
+    {
+     "w": "Counter",
+     "at": 5.737
+    }
+   ]
+  },
+  {
+   "label": "Replay: find the free player",
+   "text": "Again, slowly. One teammate is marked, but this one is free. Edu throws it flat, in front of him, so he never stops running. Two against one!",
+   "src": "/plays/narration/edu-futsal-signature/3.m4a",
+   "seconds": 10.4,
+   "words": [
+    {
+     "w": "Again",
+     "at": 0.375
+    },
+    {
+     "w": "slowly",
+     "at": 0.887
+    },
+    {
+     "w": "One",
+     "at": 1.9
+    },
+    {
+     "w": "teammate",
+     "at": 2.188
+    },
+    {
+     "w": "is",
+     "at": 2.7
+    },
+    {
+     "w": "marked",
+     "at": 2.862
+    },
+    {
+     "w": "but",
+     "at": 3.263
+    },
+    {
+     "w": "this",
+     "at": 3.4
+    },
+    {
+     "w": "one",
+     "at": 3.6
+    },
+    {
+     "w": "is",
+     "at": 3.75
+    },
+    {
+     "w": "free",
+     "at": 3.913
+    },
+    {
+     "w": "Edu",
+     "at": 4.8
+    },
+    {
+     "w": "throws",
+     "at": 5.162
+    },
+    {
+     "w": "it",
+     "at": 5.525
+    },
+    {
+     "w": "flat",
+     "at": 5.688
+    },
+    {
+     "w": "in",
+     "at": 6.088
+    },
+    {
+     "w": "front",
+     "at": 6.2
+    },
+    {
+     "w": "of",
+     "at": 6.388
+    },
+    {
+     "w": "him",
+     "at": 6.463
+    },
+    {
+     "w": "so",
+     "at": 6.75
+    },
+    {
+     "w": "he",
+     "at": 6.9
+    },
+    {
+     "w": "never",
+     "at": 7.025
+    },
+    {
+     "w": "stops",
+     "at": 7.25
+    },
+    {
+     "w": "running",
+     "at": 7.6
+    },
+    {
+     "w": "Two",
+     "at": 8.4
+    },
+    {
+     "w": "against",
+     "at": 8.65
+    },
+    {
+     "w": "one",
+     "at": 9.075
+    }
+   ]
+  },
+  {
+   "label": "Practise it",
+   "text": "Try it with a friend. After a save, throw it fast to a free teammate to start a counter!",
+   "src": "/plays/narration/edu-futsal-signature/4.m4a",
+   "seconds": 6.2,
+   "words": [
+    {
+     "w": "Try",
+     "at": 0.35
+    },
+    {
+     "w": "it",
+     "at": 0.588
+    },
+    {
+     "w": "with",
+     "at": 0.662
+    },
+    {
+     "w": "a",
+     "at": 0.762
+    },
+    {
+     "w": "friend",
+     "at": 0.838
+    },
+    {
+     "w": "After",
+     "at": 1.738
+    },
+    {
+     "w": "a",
+     "at": 2.038
+    },
+    {
+     "w": "save",
+     "at": 2.138
+    },
+    {
+     "w": "throw",
+     "at": 2.688
+    },
+    {
+     "w": "it",
+     "at": 2.962
+    },
+    {
+     "w": "fast",
+     "at": 3.05
+    },
+    {
+     "w": "to",
+     "at": 3.388
+    },
+    {
+     "w": "a",
+     "at": 3.462
+    },
+    {
+     "w": "free",
+     "at": 3.562
+    },
+    {
+     "w": "teammate",
+     "at": 3.837
+    },
+    {
+     "w": "to",
+     "at": 4.35
+    },
+    {
+     "w": "start",
+     "at": 4.45
+    },
+    {
+     "w": "a",
+     "at": 4.662
+    },
+    {
+     "w": "counter",
+     "at": 4.725
+    }
+   ]
+  }
+ ]
+}

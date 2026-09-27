@@ -93,6 +93,14 @@ OVERRIDES = {
     'Sophia Wilson': ['Sophia Wilson', 'Sophia Smith (soccer)'],
     'Sam Kerr': ['Sam Kerr'],
     'Khadija Shaw': ['Khadija Shaw'],
+    'João Pedro': ['João Pedro (footballer, born 2001)'],
+    'Casemiro': ['Casemiro'],
+    'Fermín López': ['Fermín López'],
+    'Raúl Jiménez': ['Raúl Jiménez'],
+    'Anthony Gordon': ['Anthony Gordon (footballer)'],
+    'Endrick': ['Endrick (footballer)'],
+    'Vozinha': ['Vozinha', 'Vozinha (footballer)'],
+    'Jonathan David': ['Jonathan David (soccer)', 'Jonathan David (footballer)'],
 }
 
 # Other names the same player is filed under on Commons.
@@ -100,6 +108,8 @@ ALIASES = {
     'Lindsey Heaps': ['Lindsey Horan'], 'Sophia Wilson': ['Sophia Smith'], 'Patri Guijarro': ['Patricia Guijarro'],
     'Mapi León': ['María Pilar León', 'Mapi Leon'], 'Son Heung-min': ['Heung-min Son'], 'Kim Min-jae': ['Min-jae Kim'],
     'Khadija Shaw': ['Bunny Shaw'], 'Andrew Robertson': ['Andy Robertson'], 'Clàudia Pina': ['Claudia Pina'],
+    'Kenan Yıldız': ['Kenan Yildiz'], 'João Pedro': ['João Pedro Junqueira'], "N'Golo Kanté": ['Ngolo Kante'],
+    'İlkay Gündoğan': ['Ilkay Gundogan'], 'Vozinha': ['Josimar Dias'], 'Brahim Díaz': ['Brahim Diaz'],
 }
 
 # name -> (current club keywords, (joined year, month), national-team keywords, former-club keywords)
@@ -180,6 +190,70 @@ CLUBS = {
     'Karim Benzema': (['ittihad', 'al-hilal', 'al hilal'], (2023, 7), ['france'], ['real madrid']),
     'Antoine Griezmann': (['atletico', 'atlético'], (2021, 8), ['france'], ['barcelona', 'barca']),
     'Romelu Lukaku': (['napoli'], (2024, 8), ['belgium', 'belgique', 'belgie'], ['chelsea', 'roma', 'inter']),
+    # Fox Sports "World Cup 2026 best 100" additions (cards 309-353). Clubs from the cached Wikipedia intros
+    # (Sep 2026). Where the current move is recent, the club(s) before it inside the photo window also count
+    # as playing kit, so "joined" is the start of the earliest listed club.
+    'Moisés Caicedo': (['chelsea', 'brighton'], (2021, 2), ['ecuador'], ['beerschot', 'independiente']),
+    'Antoine Semenyo': (['manchester city', 'man city', 'bournemouth'], (2023, 1), ['ghana'], ['bristol']),
+    'Aurélien Tchouaméni': (['real madrid'], (2022, 7), ['france'], ['monaco', 'bordeaux']),
+    'Joshua Kimmich': (['bayern'], (2015, 7), ['germany', 'deutschland', 'dfb'], ['leipzig', 'stuttgart']),
+    'Bernardo Silva': (['real madrid', 'manchester city', 'man city'], (2017, 7), ['portugal'], ['monaco', 'benfica']),
+    'Denzel Dumfries': (['real madrid', 'inter'], (2021, 8), ['netherlands', 'nederland', 'holland'], ['psv']),
+    'Jérémy Doku': (['manchester city', 'man city', 'rennes'], (2020, 10), ['belgium', 'belgique', 'belgie'], ['anderlecht']),
+    'Rayan Cherki': (['manchester city', 'man city', 'lyon', 'olympique lyonnais'], (2019, 7), ['france'], []),
+    "N'Golo Kanté": (['fenerbahce', 'fenerbahçe', 'ittihad', 'chelsea'], (2016, 7), ['france'], ['leicester', 'caen']),
+    'Tijjani Reijnders': (['qadsiah', 'manchester city', 'man city', 'milan'], (2023, 7), ['netherlands', 'nederland', 'holland'], ['alkmaar', 'zwolle']),
+    'Bruno Guimarães': (['arsenal', 'newcastle'], (2022, 1), ['brazil', 'brasil'], ['lyon', 'athletico']),
+    'Frenkie de Jong': (['barcelona', 'barca', 'barça'], (2019, 7), ['netherlands', 'nederland', 'holland'], ['ajax']),
+    'Marc Cucurella': (['real madrid', 'chelsea'], (2022, 8), ['spain', 'espana'], ['brighton', 'getafe']),
+    'Sadio Mané': (['nassr', 'bayern'], (2022, 7), ['senegal'], ['liverpool', 'southampton']),
+    'Martín Zubimendi': (['arsenal', 'real sociedad'], (2019, 1), ['spain', 'espana'], []),
+    'Enzo Fernández': (['manchester city', 'man city', 'chelsea', 'benfica'], (2022, 7), ['argentin'], ['river plate']),
+    'Willian Pacho': (['paris', 'psg', 'frankfurt', 'eintracht'], (2023, 7), ['ecuador'], ['antwerp']),
+    'Scott McTominay': (['napoli', 'manchester united', 'man utd', 'man united'], (2017, 5), ['scotland'], []),
+    'Ryan Gravenberch': (['liverpool', 'bayern'], (2022, 7), ['netherlands', 'nederland', 'holland'], ['ajax']),
+    'Fermín López': (['barcelona', 'barca', 'barça'], (2023, 7), ['spain', 'espana'], ['linares']),
+    'Cody Gakpo': (['liverpool', 'psv'], (2018, 2), ['netherlands', 'nederland', 'holland'], []),
+    'João Pedro': (['chelsea', 'brighton'], (2023, 7), ['brazil', 'brasil'], ['watford', 'fluminense']),
+    'Ismaïla Sarr': (['crystal palace', 'marseille'], (2023, 8), ['senegal'], ['watford', 'rennes']),
+    'Rafael Leão': (['galatasaray', 'milan'], (2019, 8), ['portugal'], ['lille', 'sporting']),
+    'Alexis Mac Allister': (['liverpool', 'brighton'], (2020, 1), ['argentin'], ['boca', 'argentinos']),
+    'Weston McKennie': (['juventus', 'leeds'], (2020, 8), ['united states', 'usmnt', 'usa'], ['schalke']),
+    'Gabriel Martinelli': (['al-hilal', 'al hilal', 'alhilal', 'arsenal'], (2019, 7), ['brazil', 'brasil'], ['ituano']),
+    'João Cancelo': (['barcelona', 'barca', 'barça', 'al-hilal', 'al hilal', 'alhilal'], (2023, 9), ['portugal'], ['manchester city', 'man city', 'bayern', 'juventus']),
+    'Dani Olmo': (['barcelona', 'barca', 'barça', 'leipzig'], (2020, 1), ['spain', 'espana'], ['dinamo', 'zagreb']),
+    'Arda Güler': (['real madrid', 'fenerbahce', 'fenerbahçe'], (2021, 1), ['turkey', 'turkiye', 'türkiye'], []),
+    'Marc Guéhi': (['manchester city', 'man city', 'crystal palace'], (2021, 7), ['england'], ['swansea', 'chelsea']),
+    'Fabián Ruiz': (['paris', 'psg'], (2022, 8), ['spain', 'espana'], ['napoli', 'betis']),
+    'Casemiro': (['inter miami', 'manchester united', 'man utd', 'man united'], (2022, 8), ['brazil', 'brasil'], ['real madrid', 'porto']),
+    'Mikel Merino': (['arsenal', 'real sociedad'], (2018, 7), ['spain', 'espana'], ['newcastle', 'dortmund', 'osasuna']),
+    'Eberechi Eze': (['arsenal', 'crystal palace'], (2020, 8), ['england'], ['queens park', 'qpr']),
+    'Kenan Yıldız': (['juventus'], (2022, 7), ['turkey', 'turkiye', 'türkiye'], ['bayern']),
+    'Raúl Jiménez': (['fulham', 'wolves', 'wolverhampton'], (2018, 6), ['mexico', 'méxico'], ['benfica', 'atletico']),
+    'Gonçalo Ramos': (['milan', 'paris', 'psg', 'benfica'], (2020, 1), ['portugal'], []),
+    'Mikel Oyarzabal': (['real sociedad'], (2016, 1), ['spain', 'espana'], []),
+    'Marcus Thuram': (['inter'], (2023, 7), ['france'], ['gladbach', 'monchengladbach', 'guingamp']),
+    'Kaoru Mitoma': (['brighton'], (2021, 8), ['japan', 'nippon'], ['saint-gilloise', 'kawasaki']),
+    'Phil Foden': (['manchester city', 'man city'], (2017, 7), ['england'], []),
+    'Lisandro Martínez': (['manchester united', 'man utd', 'man united'], (2022, 7), ['argentin'], ['ajax']),
+    'Bradley Barcola': (['liverpool', 'paris', 'psg', 'lyon'], (2020, 1), ['france'], []),
+    'Pervis Estupiñán': (['milan', 'brighton'], (2021, 8), ['ecuador'], ['villarreal']),
+    # Sep 25 2026 additions (cards 354-372; clubs from the en.wikipedia infoboxes fetched that day). Recent movers: the
+    # club before the 2026 move also counts as playing kit.
+    'Anthony Gordon': (['barcelona', 'barca', 'barça', 'newcastle'], (2023, 1), ['england'], ['everton']),
+    'Endrick': (['real madrid', 'lyon', 'olympique lyonnais', 'palmeiras'], (2022, 10), ['brazil', 'brasil'], []),
+    'Karim Adeyemi': (['barcelona', 'barca', 'barça', 'dortmund', 'bvb'], (2022, 7), ['germany', 'deutschland', 'dfb'], ['salzburg']),
+    'Elliot Anderson': (['manchester city', 'man city', 'nottingham forest', 'forest'], (2024, 7), ['england'], ['newcastle']),
+    'Sandro Tonali': (['tottenham', 'spurs', 'newcastle'], (2023, 7), ['italy', 'italia'], ['milan', 'brescia']),
+    # Sep 25 2026 batch A/B additions (cards 373-388)
+    'Rodrigo De Paul': (['inter miami', 'atletico', 'atlético'], (2021, 7), ['argentin'], ['udinese']),
+    'Vozinha': (['colo-colo', 'colo colo', 'chaves', 'trencin', 'trenčín'], (2022, 1), ['cape verde', 'cabo verde'], ['ael', 'limassol']),
+    'Jonathan David': (['atletico', 'atlético', 'juventus', 'lille'], (2020, 8), ['canada'], ['gent']),
+    'Brahim Díaz': (['real madrid', 'milan'], (2020, 9), ['morocco', 'maroc'], ['manchester city']),
+    'Olivier Giroud': (['lille', 'los angeles fc', 'lafc', 'milan'], (2021, 7), ['france'], ['chelsea', 'arsenal']),
+    'Kyle Walker': (['burnley', 'milan', 'manchester city', 'man city'], (2017, 7), ['england'], ['tottenham', 'spurs']),
+    'İlkay Gündoğan': (['galatasaray', 'manchester city', 'man city', 'barcelona', 'barca', 'barça'], (2016, 7), ['germany', 'deutschland', 'dfb'], ['dortmund']),
+    "Nico O'Reilly": (['manchester city', 'man city'], (2023, 1), ['england'], []),
     # women's game (owned by the separate women-photo batch; listed here for reference only)
     'Hannah Hampton': (['chelsea'], (2023, 7), ['england', 'lionesses'], ['aston villa']),
     'Mary Earps': (['paris', 'psg'], (2024, 7), ['england', 'lionesses'], ['manchester united', 'man utd']),
@@ -231,11 +305,33 @@ PRIORITY = ['Kevin De Bruyne', 'Neymar', 'Son Heung-min', 'Jamal Musiala', 'Mart
 # Hand-reviewed overrides from the contact sheets.
 #   PICKS: name -> exact Commons file title (without "File:").
 #   BLOCK: Commons file titles never to use.   DROP: players left to drawn art.
-PICKS = {}
+PICKS = {
+    # Sep 25 2026: Italy kit, Norway v Italy (6 Jun 2025) close-up; only failed face confidence (0.85 bar) in the auto run.
+    'Gianluigi Donnarumma': 'Norway Italy - June 2025 B 33 - Gianluigi Donnarumma (close-up).jpg',
+    # Sep 26 2026 deep audit (scripts/fetch-player-photos-deep.py), crops checked by eye; they failed only the
+    # automatic yaw / face-confidence bars here:
+    'Jordan Pickford': 'Jordan Pickford England v Ghana 23 June 2026-049.jpg',        # England GK kit
+    'Reece James': 'Reece James England v Ghana 23 June 2026-248.jpg',                 # England No. 24
+    'Kim Min-jae': 'FC Red Bull Salzburg gegen Bayern München (2025-01-06 Testspiel) 26.jpg',  # Bayern warm-up, depicts Kim only
+    'Fermín López': 'Fermín López (cropped).jpg',   # re-reviewed Sep 26: face clear enough, Spain kit (was BLOCKed as soft)
+}
 BLOCK = {
     'Neymar Junior Brazil V Morocco 13 June 2026-145.jpg',        # in the stands, cap + casual shirt
     'Christian Pulisic Australia v USA 19 June 2026-67 (cropped).jpg',  # plain tee + necklace, not match kit
     'Christian Pulisic Australia v USA 19 June 2026-67.jpg',
+    # Fox45 review (Sep 25 2026), looked at every accepted crop:
+    'Antoine Semenyo 11, Reece James 24 England v Ghana at 2026 Fifa World Cup by YantsImages 01.jpg',  # head turned up/away, arm across
+    'Bradley Barcola France v Senegal 16 June 2026-398.jpg',           # towel over head + training bib, not match kit
+    'Joshua Kimmich 6, Nilson Angulo 20 Ecuador v Germany at 2026 Fifa World Cup by YantsImages 03.jpg',  # head down, three-quarter
+    'Kaoru Mitoma and Nils Ramming 24012026 (1).jpg',                 # black hoodie, eyes down: not in kit
+    'Nikola Vlasic Rafael Leao Croatia v Portugal 2 July 2026-125.jpg',  # head bowed, face half hidden
+    'Raúl Jiménez 24082024.jpg',                                      # civilian tee + bag strap, blurred, looking down
+    'Ryan Gravenberch, Dominik Szoboszlai and Conor Bradley 04012026 (1).jpg',  # dark, blurred, looking down
+    'Ousmane Dembele Sadio Mane France v Senegal 16 June 2026-380.jpg',  # mid-action grimace, eyes shut
+    'Fermín López.jpg',                                               # same shot uncropped: looking down
+    'Raúl Jiménez 06042025 (1).jpg',                                  # arrival: training top + bag strap, waving
+    # Sep 25 2026 new-card review
+    'Anthony Gordon England v Ghana 23 June 2026-179.jpg',            # head down, No. 8 shirt (Anderson's number): identity unsure
 }
 DROP = {}
 
@@ -345,9 +441,9 @@ class Net:
                 return data if binary else data.decode('utf-8')
         host = urllib.parse.urlparse(url).netloc
         assert host in self.HOSTS, host
-        delay = 5.0
+        delay = 20.0   # 429 / 5xx: wait at least this long (doubling), even when Retry-After is shorter
         for _ in range(10):
-            gap = {'commons.wikimedia.org': 2.0}.get(host, 1.5)   # single shared runner: <= 1 req / 1.5-2 s
+            gap = 4.0   # single shared runner: <= 1 req / 4 s on every Wikimedia host (project rule, Sep 2026)
             wait = self.last + gap - time.time()
             if wait > 0:
                 time.sleep(wait)
@@ -368,7 +464,7 @@ class Net:
                     pause = max(delay, float(ra) if ra and ra.isdigit() else 0)
                     print(f'   http {e.code}, backing off {pause:.0f}s', file=sys.stderr, flush=True)
                     time.sleep(pause)
-                    delay = min(delay * 2, 120)
+                    delay = min(delay * 2, 300)
                     continue
                 return None
             except (urllib.error.URLError, TimeoutError, ConnectionError):
@@ -971,7 +1067,7 @@ def evaluate(net, faces, scene, c, refs, tmp, log):
     fw = float(best[2])
     if fw < FACE_MIN:
         return False, f'face too small ({fw:.0f}px, needs {FACE_MIN:.0f})'
-    if best[14] < 0.85:
+    if best[14] < (0.80 if c['file'] in PICKS.values() else 0.85):   # a hand-reviewed pick may sit just under the bar
         return False, f'low face confidence {best[14]:.2f}'
     yw, eyes = yaw(best)
     if abs(yw) > YAW_MAX or eyes < 0.28:
@@ -1055,6 +1151,10 @@ def main():
             write_manifest(manifest, allnames)
             print(f'{tag}: DROP {reason}', flush=True)
 
+        if (manifest.get(name) or {}).get('source', '').startswith('wikimedia/deep-audit'):
+            # reviewed by hand in scripts/fetch-player-photos-deep.py (Sep 26 2026): never re-judge or drop it here
+            print(f'{tag}: KEEP deep-audit pick', flush=True)
+            return
         if name in DROP:
             reject(DROP[name])
             return

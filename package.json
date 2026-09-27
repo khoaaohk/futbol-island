@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start -p 8092",
     "typecheck": "tsc --noEmit",
-    "test": "node tests/town.cjs"
+    "test": "node tests/town.cjs && node tests/lesson-gestures.cjs && node tests/frame-cap.cjs && node tests/ball-hunt-lesson-steps.cjs && node tests/device-guards.cjs && node tests/ride-unlocks.cjs && node tests/idle-audio.cjs && node tests/heat-pass3.cjs && node tests/heat-tiers.cjs && node tests/heat-pass4.cjs && node tests/heat-pass5.cjs && node tests/path-progress.cjs && node tests/island-idle-audio.cjs",
+    "test:devices": "playwright test",
+    "test:devices:ios": "playwright test --project=iphone-se --project=iphone-15 --project=ipad-gen7 --project=ipad-pro-11"
   },
   "dependencies": {
     "@babylonjs/core": "^7.54.3",
@@ -20,6 +22,7 @@
     "three": "0.169.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@types/node": "20.16.11",
     "@types/react": "18.3.11",
     "@types/react-dom": "^18.3.7",

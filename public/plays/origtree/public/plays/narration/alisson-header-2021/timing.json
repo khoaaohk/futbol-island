@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "One last corner",
+   "text": "The Hawthorns, 2021. Liverpool must win, but it's one-all and time is up. So goalkeeper Alisson runs up for one last corner! Trent Alexander-Arnold swings it in... Alisson heads it! Goal!",
+   "src": "/plays/narration/alisson-header-2021/1.m4a",
+   "seconds": 14.8,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.375
+    },
+    {
+     "w": "Hawthorns",
+     "at": 0.45
+    },
+    {
+     "w": "2021",
+     "at": 1.125
+    },
+    {
+     "w": "Liverpool",
+     "at": 2.575
+    },
+    {
+     "w": "must",
+     "at": 3.15
+    },
+    {
+     "w": "win",
+     "at": 3.438
+    },
+    {
+     "w": "but",
+     "at": 3.8
+    },
+    {
+     "w": "it's",
+     "at": 3.938
+    },
+    {
+     "w": "one-all",
+     "at": 4.1
+    },
+    {
+     "w": "and",
+     "at": 4.55
+    },
+    {
+     "w": "time",
+     "at": 4.688
+    },
+    {
+     "w": "is",
+     "at": 5.05
+    },
+    {
+     "w": "up",
+     "at": 5.175
+    },
+    {
+     "w": "So",
+     "at": 5.95
+    },
+    {
+     "w": "goalkeeper",
+     "at": 6.162
+    },
+    {
+     "w": "Alisson",
+     "at": 6.812
+    },
+    {
+     "w": "runs",
+     "at": 7.338
+    },
+    {
+     "w": "up",
+     "at": 7.638
+    },
+    {
+     "w": "for",
+     "at": 7.825
+    },
+    {
+     "w": "one",
+     "at": 7.987
+    },
+    {
+     "w": "last",
+     "at": 8.225
+    },
+    {
+     "w": "corner",
+     "at": 8.6
+    },
+    {
+     "w": "Trent",
+     "at": 9.363
+    },
+    {
+     "w": "Alexander-Arnold",
+     "at": 9.7
+    },
+    {
+     "w": "swings",
+     "at": 10.762
+    },
+    {
+     "w": "it",
+     "at": 11.137
+    },
+    {
+     "w": "in",
+     "at": 11.225
+    },
+    {
+     "w": "Alisson",
+     "at": 11.938
+    },
+    {
+     "w": "heads",
+     "at": 12.425
+    },
+    {
+     "w": "it",
+     "at": 12.713
+    },
+    {
+     "w": "Goal",
+     "at": 13.325
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. Alisson finds space at the near post, and nobody follows him. He jumps and flicks it on with his head.",
+   "src": "/plays/narration/alisson-header-2021/2.m4a",
+   "seconds": 8.9,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.238
+    },
+    {
+     "w": "Alisson",
+     "at": 2.3
+    },
+    {
+     "w": "finds",
+     "at": 2.8
+    },
+    {
+     "w": "space",
+     "at": 3.138
+    },
+    {
+     "w": "at",
+     "at": 3.538
+    },
+    {
+     "w": "the",
+     "at": 3.612
+    },
+    {
+     "w": "near",
+     "at": 3.7
+    },
+    {
+     "w": "post",
+     "at": 3.938
+    },
+    {
+     "w": "and",
+     "at": 4.5
+    },
+    {
+     "w": "nobody",
+     "at": 4.625
+    },
+    {
+     "w": "follows",
+     "at": 4.987
+    },
+    {
+     "w": "him",
+     "at": 5.412
+    },
+    {
+     "w": "He",
+     "at": 6.05
+    },
+    {
+     "w": "jumps",
+     "at": 6.225
+    },
+    {
+     "w": "and",
+     "at": 6.625
+    },
+    {
+     "w": "flicks",
+     "at": 6.763
+    },
+    {
+     "w": "it",
+     "at": 7.037
+    },
+    {
+     "w": "on",
+     "at": 7.125
+    },
+    {
+     "w": "with",
+     "at": 7.312
+    },
+    {
+     "w": "his",
+     "at": 7.412
+    },
+    {
+     "w": "head",
+     "at": 7.575
+    }
+   ]
+  },
+  {
+   "label": "Behind the goal",
+   "text": "From behind the goal: it flies into the far top corner. The whole team runs to hug him!",
+   "src": "/plays/narration/alisson-header-2021/3.m4a",
+   "seconds": 6.6,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.375
+    },
+    {
+     "w": "behind",
+     "at": 0.512
+    },
+    {
+     "w": "the",
+     "at": 0.887
+    },
+    {
+     "w": "goal",
+     "at": 0.975
+    },
+    {
+     "w": "it",
+     "at": 1.663
+    },
+    {
+     "w": "flies",
+     "at": 1.812
+    },
+    {
+     "w": "into",
+     "at": 2.188
+    },
+    {
+     "w": "the",
+     "at": 2.362
+    },
+    {
+     "w": "far",
+     "at": 2.487
+    },
+    {
+     "w": "top",
+     "at": 2.775
+    },
+    {
+     "w": "corner",
+     "at": 3.05
+    },
+    {
+     "w": "The",
+     "at": 3.938
+    },
+    {
+     "w": "whole",
+     "at": 4.05
+    },
+    {
+     "w": "team",
+     "at": 4.312
+    },
+    {
+     "w": "runs",
+     "at": 4.65
+    },
+    {
+     "w": "to",
+     "at": 5.0
+    },
+    {
+     "w": "hug",
+     "at": 5.125
+    },
+    {
+     "w": "him",
+     "at": 5.35
+    }
+   ]
+  },
+  {
+   "label": "Never give up",
+   "text": "Never give up! In the last seconds, even the goalkeeper can go up and help the team.",
+   "src": "/plays/narration/alisson-header-2021/4.m4a",
+   "seconds": 5.9,
+   "words": [
+    {
+     "w": "Never",
+     "at": 0.4
+    },
+    {
+     "w": "give",
+     "at": 0.7
+    },
+    {
+     "w": "up",
+     "at": 0.9
+    },
+    {
+     "w": "In",
+     "at": 1.562
+    },
+    {
+     "w": "the",
+     "at": 1.663
+    },
+    {
+     "w": "last",
+     "at": 1.75
+    },
+    {
+     "w": "seconds",
+     "at": 2.075
+    },
+    {
+     "w": "even",
+     "at": 2.675
+    },
+    {
+     "w": "the",
+     "at": 2.913
+    },
+    {
+     "w": "goalkeeper",
+     "at": 3.0
+    },
+    {
+     "w": "can",
+     "at": 3.6
+    },
+    {
+     "w": "go",
+     "at": 3.725
+    },
+    {
+     "w": "up",
+     "at": 3.9
+    },
+    {
+     "w": "and",
+     "at": 4.062
+    },
+    {
+     "w": "help",
+     "at": 4.175
+    },
+    {
+     "w": "the",
+     "at": 4.412
+    },
+    {
+     "w": "team",
+     "at": 4.513
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Frankfurt",
+   "text": "Frankfurt, 2011, the World Cup final. Japan, in blue, are losing to the USA, in white. Three minutes left. Corner! Homare Sawa sprints to the near post... goal!",
+   "src": "/plays/narration/sawa-final-2011/1.m4a",
+   "seconds": 12.6,
+   "words": [
+    {
+     "w": "Frankfurt",
+     "at": 0.375
+    },
+    {
+     "w": "2011",
+     "at": 0.85
+    },
+    {
+     "w": "the",
+     "at": 1.55
+    },
+    {
+     "w": "World",
+     "at": 1.65
+    },
+    {
+     "w": "Cup",
+     "at": 1.95
+    },
+    {
+     "w": "final",
+     "at": 2.175
+    },
+    {
+     "w": "Japan",
+     "at": 3.038
+    },
+    {
+     "w": "in",
+     "at": 3.575
+    },
+    {
+     "w": "blue",
+     "at": 3.725
+    },
+    {
+     "w": "are",
+     "at": 4.15
+    },
+    {
+     "w": "losing",
+     "at": 4.3
+    },
+    {
+     "w": "to",
+     "at": 4.7
+    },
+    {
+     "w": "the",
+     "at": 4.787
+    },
+    {
+     "w": "USA",
+     "at": 4.912
+    },
+    {
+     "w": "in",
+     "at": 5.675
+    },
+    {
+     "w": "white",
+     "at": 5.825
+    },
+    {
+     "w": "Three",
+     "at": 6.475
+    },
+    {
+     "w": "minutes",
+     "at": 6.725
+    },
+    {
+     "w": "left",
+     "at": 7.05
+    },
+    {
+     "w": "Corner",
+     "at": 7.812
+    },
+    {
+     "w": "Homare",
+     "at": 8.55
+    },
+    {
+     "w": "Sawa",
+     "at": 9.037
+    },
+    {
+     "w": "sprints",
+     "at": 9.387
+    },
+    {
+     "w": "to",
+     "at": 9.85
+    },
+    {
+     "w": "the",
+     "at": 9.938
+    },
+    {
+     "w": "near",
+     "at": 10.025
+    },
+    {
+     "w": "post",
+     "at": 10.25
+    },
+    {
+     "w": "goal",
+     "at": 11.213
+    }
+   ]
+  },
+  {
+   "label": "Outside of the foot",
+   "text": "Watch again, slowly. Sawa gets there first and flicks it with the outside of her right foot, over Hope Solo.",
+   "src": "/plays/narration/sawa-final-2011/2.m4a",
+   "seconds": 7.9,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.262
+    },
+    {
+     "w": "Sawa",
+     "at": 2.325
+    },
+    {
+     "w": "gets",
+     "at": 2.65
+    },
+    {
+     "w": "there",
+     "at": 2.888
+    },
+    {
+     "w": "first",
+     "at": 3.062
+    },
+    {
+     "w": "and",
+     "at": 3.413
+    },
+    {
+     "w": "flicks",
+     "at": 3.538
+    },
+    {
+     "w": "it",
+     "at": 3.837
+    },
+    {
+     "w": "with",
+     "at": 3.913
+    },
+    {
+     "w": "the",
+     "at": 4.013
+    },
+    {
+     "w": "outside",
+     "at": 4.125
+    },
+    {
+     "w": "of",
+     "at": 4.612
+    },
+    {
+     "w": "her",
+     "at": 4.688
+    },
+    {
+     "w": "right",
+     "at": 4.838
+    },
+    {
+     "w": "foot",
+     "at": 5.162
+    },
+    {
+     "w": "over",
+     "at": 5.775
+    },
+    {
+     "w": "Hope",
+     "at": 6.05
+    },
+    {
+     "w": "Solo",
+     "at": 6.338
+    }
+   ]
+  },
+  {
+   "label": "Two all",
+   "text": "From behind, see it clip Abby Wambach into the net. Two all! Japan won the shootout, and Sawa won the Golden Ball and Golden Boot.",
+   "src": "/plays/narration/sawa-final-2011/3.m4a",
+   "seconds": 9.2,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "behind",
+     "at": 0.487
+    },
+    {
+     "w": "see",
+     "at": 1.225
+    },
+    {
+     "w": "it",
+     "at": 1.363
+    },
+    {
+     "w": "clip",
+     "at": 1.45
+    },
+    {
+     "w": "Abby",
+     "at": 1.7
+    },
+    {
+     "w": "Wambach",
+     "at": 2.0
+    },
+    {
+     "w": "into",
+     "at": 2.462
+    },
+    {
+     "w": "the",
+     "at": 2.638
+    },
+    {
+     "w": "net",
+     "at": 2.725
+    },
+    {
+     "w": "Two",
+     "at": 3.625
+    },
+    {
+     "w": "all",
+     "at": 3.913
+    },
+    {
+     "w": "Japan",
+     "at": 4.688
+    },
+    {
+     "w": "won",
+     "at": 5.125
+    },
+    {
+     "w": "the",
+     "at": 5.263
+    },
+    {
+     "w": "shootout",
+     "at": 5.375
+    },
+    {
+     "w": "and",
+     "at": 5.95
+    },
+    {
+     "w": "Sawa",
+     "at": 6.088
+    },
+    {
+     "w": "won",
+     "at": 6.425
+    },
+    {
+     "w": "the",
+     "at": 6.562
+    },
+    {
+     "w": "Golden",
+     "at": 6.65
+    },
+    {
+     "w": "Ball",
+     "at": 7.05
+    },
+    {
+     "w": "and",
+     "at": 7.4
+    },
+    {
+     "w": "Golden",
+     "at": 7.525
+    },
+    {
+     "w": "Boot",
+     "at": 7.925
+    }
+   ]
+  },
+  {
+   "label": "Near post",
+   "text": "Attack the near post early, and use any part of your foot to redirect the ball.",
+   "src": "/plays/narration/sawa-final-2011/4.m4a",
+   "seconds": 5.7,
+   "words": [
+    {
+     "w": "Attack",
+     "at": 0.375
+    },
+    {
+     "w": "the",
+     "at": 0.725
+    },
+    {
+     "w": "near",
+     "at": 0.825
+    },
+    {
+     "w": "post",
+     "at": 1.05
+    },
+    {
+     "w": "early",
+     "at": 1.425
+    },
+    {
+     "w": "and",
+     "at": 2.225
+    },
+    {
+     "w": "use",
+     "at": 2.35
+    },
+    {
+     "w": "any",
+     "at": 2.575
+    },
+    {
+     "w": "part",
+     "at": 2.775
+    },
+    {
+     "w": "of",
+     "at": 2.987
+    },
+    {
+     "w": "your",
+     "at": 3.062
+    },
+    {
+     "w": "foot",
+     "at": 3.225
+    },
+    {
+     "w": "to",
+     "at": 3.55
+    },
+    {
+     "w": "redirect",
+     "at": 3.675
+    },
+    {
+     "w": "the",
+     "at": 4.162
+    },
+    {
+     "w": "ball",
+     "at": 4.25
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,398 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: World Cup 2012",
+   "text": "The 2012 Futsal World Cup. Spain play Morocco and lead three one. Torras works the ball on the left and crosses. Big Fernand\u00e3o chests it into the net! Four one!",
+   "src": "/plays/narration/fernandao-futsal-signature/1.m4a",
+   "seconds": 12.6,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "2012",
+     "at": 0.425
+    },
+    {
+     "w": "Futsal",
+     "at": 1.188
+    },
+    {
+     "w": "World",
+     "at": 1.65
+    },
+    {
+     "w": "Cup",
+     "at": 2.013
+    },
+    {
+     "w": "Spain",
+     "at": 2.862
+    },
+    {
+     "w": "play",
+     "at": 3.275
+    },
+    {
+     "w": "Morocco",
+     "at": 3.5
+    },
+    {
+     "w": "and",
+     "at": 4.1
+    },
+    {
+     "w": "lead",
+     "at": 4.225
+    },
+    {
+     "w": "three",
+     "at": 4.487
+    },
+    {
+     "w": "one",
+     "at": 4.75
+    },
+    {
+     "w": "Torras",
+     "at": 5.463
+    },
+    {
+     "w": "works",
+     "at": 5.95
+    },
+    {
+     "w": "the",
+     "at": 6.225
+    },
+    {
+     "w": "ball",
+     "at": 6.325
+    },
+    {
+     "w": "on",
+     "at": 6.638
+    },
+    {
+     "w": "the",
+     "at": 6.737
+    },
+    {
+     "w": "left",
+     "at": 6.85
+    },
+    {
+     "w": "and",
+     "at": 7.225
+    },
+    {
+     "w": "crosses",
+     "at": 7.35
+    },
+    {
+     "w": "Big",
+     "at": 8.45
+    },
+    {
+     "w": "Fernand\u00e3o",
+     "at": 8.713
+    },
+    {
+     "w": "chests",
+     "at": 9.4
+    },
+    {
+     "w": "it",
+     "at": 9.775
+    },
+    {
+     "w": "into",
+     "at": 9.863
+    },
+    {
+     "w": "the",
+     "at": 10.05
+    },
+    {
+     "w": "net",
+     "at": 10.175
+    },
+    {
+     "w": "Four",
+     "at": 10.85
+    },
+    {
+     "w": "one",
+     "at": 11.213
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again. He puts his big body in the way, and in it goes off his chest. Spain win five one!",
+   "src": "/plays/narration/fernandao-futsal-signature/2.m4a",
+   "seconds": 7.3,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "He",
+     "at": 1.375
+    },
+    {
+     "w": "puts",
+     "at": 1.5
+    },
+    {
+     "w": "his",
+     "at": 1.712
+    },
+    {
+     "w": "big",
+     "at": 1.875
+    },
+    {
+     "w": "body",
+     "at": 2.1
+    },
+    {
+     "w": "in",
+     "at": 2.438
+    },
+    {
+     "w": "the",
+     "at": 2.513
+    },
+    {
+     "w": "way",
+     "at": 2.6
+    },
+    {
+     "w": "and",
+     "at": 3.025
+    },
+    {
+     "w": "in",
+     "at": 3.15
+    },
+    {
+     "w": "it",
+     "at": 3.3
+    },
+    {
+     "w": "goes",
+     "at": 3.4
+    },
+    {
+     "w": "off",
+     "at": 3.675
+    },
+    {
+     "w": "his",
+     "at": 3.862
+    },
+    {
+     "w": "chest",
+     "at": 4.037
+    },
+    {
+     "w": "Spain",
+     "at": 4.95
+    },
+    {
+     "w": "win",
+     "at": 5.35
+    },
+    {
+     "w": "five",
+     "at": 5.625
+    },
+    {
+     "w": "one",
+     "at": 6.0
+    }
+   ]
+  },
+  {
+   "label": "How he does it",
+   "text": "He is a pivot. This is how he does it: back to goal, he shields the ball with his size, feels the defender, turns and shoots!",
+   "src": "/plays/narration/fernandao-futsal-signature/3.m4a",
+   "seconds": 8.7,
+   "words": [
+    {
+     "w": "He",
+     "at": 0.35
+    },
+    {
+     "w": "is",
+     "at": 0.5
+    },
+    {
+     "w": "a",
+     "at": 0.613
+    },
+    {
+     "w": "pivot",
+     "at": 0.688
+    },
+    {
+     "w": "This",
+     "at": 1.512
+    },
+    {
+     "w": "is",
+     "at": 1.75
+    },
+    {
+     "w": "how",
+     "at": 1.875
+    },
+    {
+     "w": "he",
+     "at": 2.075
+    },
+    {
+     "w": "does",
+     "at": 2.2
+    },
+    {
+     "w": "it",
+     "at": 2.438
+    },
+    {
+     "w": "back",
+     "at": 3.013
+    },
+    {
+     "w": "to",
+     "at": 3.3
+    },
+    {
+     "w": "goal",
+     "at": 3.4
+    },
+    {
+     "w": "he",
+     "at": 3.85
+    },
+    {
+     "w": "shields",
+     "at": 4.025
+    },
+    {
+     "w": "the",
+     "at": 4.412
+    },
+    {
+     "w": "ball",
+     "at": 4.5
+    },
+    {
+     "w": "with",
+     "at": 4.787
+    },
+    {
+     "w": "his",
+     "at": 4.888
+    },
+    {
+     "w": "size",
+     "at": 5.037
+    },
+    {
+     "w": "feels",
+     "at": 5.638
+    },
+    {
+     "w": "the",
+     "at": 5.975
+    },
+    {
+     "w": "defender",
+     "at": 6.075
+    },
+    {
+     "w": "turns",
+     "at": 6.737
+    },
+    {
+     "w": "and",
+     "at": 7.188
+    },
+    {
+     "w": "shoots",
+     "at": 7.325
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: use your size to shield the ball, then turn and shoot!",
+   "src": "/plays/narration/fernandao-futsal-signature/4.m4a",
+   "seconds": 4.8,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.5
+    },
+    {
+     "w": "use",
+     "at": 1.238
+    },
+    {
+     "w": "your",
+     "at": 1.438
+    },
+    {
+     "w": "size",
+     "at": 1.55
+    },
+    {
+     "w": "to",
+     "at": 1.875
+    },
+    {
+     "w": "shield",
+     "at": 2.013
+    },
+    {
+     "w": "the",
+     "at": 2.288
+    },
+    {
+     "w": "ball",
+     "at": 2.375
+    },
+    {
+     "w": "then",
+     "at": 2.775
+    },
+    {
+     "w": "turn",
+     "at": 2.987
+    },
+    {
+     "w": "and",
+     "at": 3.288
+    },
+    {
+     "w": "shoot",
+     "at": 3.425
+    }
+   ]
+  }
+ ]
+}

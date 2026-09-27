@@ -1,6 +1,40 @@
 import type {LearningId} from './learningJourneys';
 export const COIN_REWARD_ID='matchday-fox',COIN_STORAGE_KEY='fi2-matchday-coins-v1';
-export type CoinSpot={id:string;name:string;x:number;y:number;z:number;kind:'hidden'|'kick'|'landing';parachute?:boolean;grass?:boolean;truck?:number;ramp?:string;wall?:{x:number;y:number;z:number;high?:boolean;round?:boolean;facing?:'south'|'east'};clue:string;detail:string;teaching:string;lesson:LearningId};
+export type CoinSpot={id:string;name:string;x:number;y:number;z:number;kind:'hidden'|'kick'|'landing';parachute?:boolean;grass?:boolean;truck?:number;ramp?:string;wall?:{x:number;y:number;z:number;high?:boolean;round?:boolean;facing?:'south'|'east'};clue:string;detail:string;teaching:string;lesson:LearningId;manhole?:boolean};
+/** Landing radius around a manhole centre. The drawn cover is 1 m wide with a 1.22 m rim. */
+export const MANHOLE_RADIUS=1.5;
+const manhole=(slug:string,x:number,z:number,near:string,place:'crossroads'|'junction'|'corner',lesson:LearningId,teaching:string):CoinSpot=>({id:'manhole-'+slug,name:`Manhole · ${near} ${place}`,x,y:0,z,kind:'landing',manhole:true,clue:`Look down on the ${place} by ${near}. A football pattern marks the cover in the middle of the road.`,detail:`Fly above the middle of the ${place} by ${near}, right over the manhole cover. Then choose Walk to drop straight down onto it. Walking or driving over the cover will not open it.`,teaching,lesson});
+/**
+ * One football manhole at the centre of every road junction (world.ts roadJunctions, checked by tests/manhole-balls.cjs).
+ * Each ball teaches a "from above" idea: vision, scanning, shape and finding space, seen the way a flyer sees the island.
+ */
+const MANHOLE_SPOTS:CoinSpot[]=[
+ manhole('promenade',-16,65,'Promenade Café','junction','support',"Find the free teammate. From above, it is easy to spot the one player with no opponent close by. Before you receive, count the defenders near each teammate and look for the one standing alone."),
+ manhole('rua-90',-16,-118,'Rua 90','junction','support',"Split two defenders. Looking down on the pitch, you can see the gap between two opponents. A firm ground pass through that gap takes both of them out of the game at once."),
+ manhole('cafe-mare',-16,-37.5,'Café Maré','crossroads','support',"Look forward first. A bird’s-eye view shows which forward passes are open. Check for a pass toward goal before choosing a sideways one, and play safe only when the forward route is closed."),
+ manhole('visitor-centre',-16,-159,'Park Visitor Centre','junction','support',"Keep a safety player. From above, you can see what happens when everyone runs forward: nobody is left to stop a quick counter-attack. When your team attacks, one teammate stays back in balance."),
+ manhole('classrooms',48,65,'Classrooms','junction','support',"Make a diamond. Seen from above, four teammates can form a diamond: one ahead, one behind and one on each side. The ball carrier then has options forward, sideways and back."),
+ manhole('rua-nova',48,-118,'Rua Nova','junction','support',"Know your third. Picture the pitch from above in three bands: defending, middle and attacking. Near your own goal, choose safe passes; in the attacking third, be brave with dribbles, crosses and shots."),
+ manhole('fish-market',48,-37.5,'Fish Market','junction','movement',"Move on the blind side. A defender watching the ball cannot see a runner behind their shoulder. From above you can see that blind spot; drift into it quietly, then step into view as the pass is played."),
+ manhole('park-library',48,-159,'Park Library','junction','width',"Overlap around the outside. From above, you can see one defender stuck between two attackers. When you run around the outside of the teammate with the ball, the defender has to choose, and one of you gets free."),
+ manhole('island-market',48,-80,'Island Market','junction','support',"Show them the sideline. Seen from above, the middle is the most dangerous place for an attacker to reach. As a defender, stand at an angle that steers the dribbler toward the touchline, where they have fewer options."),
+ manhole('courtside',48,-12,'Courtside','junction','movement',"Fill three spaces in the box. From above, a cross is easy to defend when every attacker runs to the same spot. Spread out: one runner to the near post, one to the far post and one to the penalty spot."),
+ manhole('west-market',-45,65,'West Market','corner','width',"Pull it back from the end line. When a winger reaches the end line, defenders rush back toward their goal. From above you can see the space they leave behind; a pass pulled back into it finds a teammate facing the goal."),
+ manhole('corner-deli',-45,-37.5,'Corner Deli','junction','movement',"Look forward when you win it. The moment your team wins the ball, the other team is still spread out from attacking. Lift your head, find the space they left behind and move the ball there quickly."),
+ manhole('west-end-books',-45,-159,'West End Books','corner','width',"Use the build-out line. In 7v7, when your keeper has a goal kick or the ball in their hands, opponents must go back behind the build-out line until the ball is played. From above, you can see the free space: defenders spread wide for a safe first pass."),
+ manhole('junior-club',124,-159,'Junior Club','junction','movement',"Move for the throw-in. From above, a throw-in often looks crowded because everyone stands still. Two teammates can help: one checks short toward the thrower and one runs down the line, so the thrower has two moving options."),
+ manhole('arcade',124,-61,'Arcade','junction','support',"Stand in the passing lane. Looking down, you can draw a line from the ball to the most dangerous attacker. As a defender, stand on that line: you do not need to tackle to stop the pass, you just need to be in the way."),
+ manhole('nursery',124,-80,'The Nursery','junction','width',"Pass quickly to move the defence. From above, you can watch defenders slide across every time the ball moves. Quick, simple passes make them shift again and again until a gap opens between them."),
+ manhole('high-school',124,-12,'Island High School','corner','support',"Curve your press. Seen from above, a straight run at the ball carrier leaves the easy pass open behind you. Run in a curve instead, so your body blocks the pass to their teammate while you close them down."),
+ manhole('community-hall',196,-159,'Community Hall','corner','support',"Step up together. From above, a defensive line looks like a piece of string. When the other team passes backward, every defender moves up at the same time, so the line stays straight and the attackers have less space."),
+ manhole('garden-cafe',196,-61,'The Garden Café','corner','movement',"Carry into open grass. From above, you may see a big empty space in front of you and no teammate ready for a pass. Push the ball forward with longer touches, run into the space and look for the next option."),
+ manhole('arts-wing',88,65,'Arts Wing','junction','support',"Dribble with your head up. A player looking down only sees the ball and their feet. Lift your eyes between touches and, like a bird above the pitch, you will spot the teammate, the space and the defender coming."),
+ manhole('courtyard',88,34,'Courtside Courtyard','junction','support',"The keeper sweeps behind. From above, the space between the last defender and the goal can be big. A keeper who stands a few steps off the line can run out and clear a long ball before an attacker reaches it."),
+ manhole('pier-bakery',88,165,'Pier Bakery','corner','support',"Share the goal with the wall. At a free kick near goal, the wall blocks one side of the goal and the keeper guards the other. Looking down, you can see how they work together so no part of the goal is left open."),
+ manhole('humanities',88,-12,'Humanities','junction','movement',"Press on a heavy touch. From above you can see the moment an opponent’s touch pushes the ball away from their feet. That is the signal to press: close them down quickly while the ball is loose."),
+ manhole('school-offices',182,34,'School Offices','corner','movement',"Take a quick free kick. Right after a foul, many opponents are still walking back. From above you can spot an unmarked teammate; a quick, simple restart can find them before the defence is ready, unless the referee asks you to wait."),
+ manhole('history-museum',182,165,'History Museum','corner','support',"Look for a better-placed teammate. Before you shoot from a tight angle, picture the pitch from above: a teammate may have a clear view of the goal. A simple pass to them can be the smartest way to score."),
+];
 export const COIN_QUEST:CoinSpot[]=[
  {id:'store',name:'Store gardens',x:78,y:0,z:-46,kind:'hidden',clue:'Start where island players choose their gear.',detail:'Look beside the small training bag west of the Store entrance.',teaching:"Scan before receiving. A quick look over your shoulder can reveal pressure before the ball arrives. Try spotting one teammate and one open space before your next touch.",lesson:'support'},
  {id:'coaches',name:'Soccer wall · left target',x:150,y:0,z:-27.7,kind:'kick',wall:{x:150,y:1.02,z:-29.27},clue:'A coach has left a target near the practice wall.',detail:'Kick the left target on the soccer practice wall. Then collect the ball in front of it.',teaching:"Inside-foot accuracy. The broad inside of your foot gives you a useful surface for a short pass. Point your standing foot toward the target and follow through along the passing line.",lesson:'support'},
@@ -57,21 +91,51 @@ export const COIN_QUEST:CoinSpot[]=[
  {"id": "sky-plaza", "name": "Plaza sky", "x": 112, "y": 120, "z": -12, "kind": "hidden", "parachute": true, "clue": "Look above plaza. A ball floats away from the rooftops.", "detail": "Use your flight launch to rise above this high floating ball, then steer down through it with your parachute open. Only an open parachute can collect it; you have room around it to line up your descent.", "teaching": "Shield without pushing. Turn your body between the opponent and the ball, keeping it within playing distance. Keep your balance and arms relaxed. Protect the ball without shoving the opponent.", "lesson": "movement"},
  {"id": "sky-east", "name": "Garden sky", "x": 219, "y": 100, "z": 22, "kind": "hidden", "parachute": true, "clue": "Look above garden. A ball floats away from the rooftops.", "detail": "Use your flight launch to rise above this high floating ball, then steer down through it with your parachute open. Only an open parachute can collect it; you have room around it to line up your descent.", "teaching": "Reset after a mistake. Take one slow breath and let your shoulders relax. Choose one helpful next action, such as encouraging a teammate. One mistake does not define your game.", "lesson": "movement"},
  {"id": "sky-pier", "name": "Pier sky", "x": 119, "y": 140, "z": 195, "kind": "hidden", "parachute": true, "clue": "Look above pier. A ball floats away from the rooftops.", "detail": "Use your flight launch to rise above this high floating ball, then steer down through it with your parachute open. Only an open parachute can collect it; you have room around it to line up your descent.", "teaching": "Respect after a challenge. When play has stopped and it is safe, check whether they are okay. Offer a hand if they want help. Competing hard and showing care belong together.", "lesson": "movement"},
+ ...MANHOLE_SPOTS,
 ];
-export type CoinProgress={version:3;allCostumesUnlocked?:boolean;rewardUnlocked:boolean;revealed:string[];collected:string[];hint:string|null;celebrated:boolean};
-export const emptyCoinProgress=():CoinProgress=>({version:3,rewardUnlocked:false,revealed:[],collected:[],hint:null,celebrated:false});
+export type CoinProgress={version:4;allCostumesUnlocked?:boolean;rewardUnlocked:boolean;revealed:string[];collected:string[];hint:string|null;celebrated:boolean};
+export const emptyCoinProgress=():CoinProgress=>({version:4,rewardUnlocked:false,revealed:[],collected:[],hint:null,celebrated:false});
 const ids=new Set(COIN_QUEST.map(c=>c.id));
 // The original forty IDs stay in their original order. Old completed saves keep their earned outfit.
 const originalRewardIds=COIN_QUEST.slice(0,40).map(spot=>spot.id);
+// The fifty-five balls from before the manhole covers. A pre-version-4 save with all of them keeps its fox and costumes.
+const preManholeIds=COIN_QUEST.filter(spot=>!spot.manhole).map(spot=>spot.id);
 export function sanitizeCoinProgress(raw:unknown):CoinProgress{
  const r=raw as (Omit<Partial<CoinProgress>,'version'>&{version?:number})|null;if(!r||typeof r!=='object')return emptyCoinProgress();
  const clean=(v:unknown)=>Array.isArray(v)?[...new Set(v.filter((id):id is string=>typeof id==='string'&&ids.has(id)))]:[];
- const collected=clean(r.collected),legacyReward=(r.version??1)<2&&originalRewardIds.every(id=>collected.includes(id));
- const rewardUnlocked=r.rewardUnlocked===true||legacyReward||collected.length===COIN_QUEST.length;
- const allCostumesUnlocked=r.allCostumesUnlocked===true||((r.version??1)<3&&COIN_QUEST.slice(0,50).every(s=>collected.includes(s.id)))||collected.length===COIN_QUEST.length;
- return{version:3,allCostumesUnlocked,rewardUnlocked,revealed:[...new Set([...clean(r.revealed),...collected])],collected,hint:typeof r.hint==='string'&&ids.has(r.hint)?r.hint:null,celebrated:r.celebrated===true&&collected.length===COIN_QUEST.length};
+ const collected=clean(r.collected),legacyReward=(r.version??1)<2&&originalRewardIds.every(id=>collected.includes(id)),legacyFiftyFive=(r.version??1)<4&&preManholeIds.every(id=>collected.includes(id));
+ const rewardUnlocked=r.rewardUnlocked===true||legacyReward||legacyFiftyFive||collected.length===COIN_QUEST.length;
+ const allCostumesUnlocked=r.allCostumesUnlocked===true||((r.version??1)<3&&COIN_QUEST.slice(0,50).every(s=>collected.includes(s.id)))||legacyFiftyFive||collected.length===COIN_QUEST.length;
+ return{version:4,allCostumesUnlocked,rewardUnlocked,revealed:[...new Set([...clean(r.revealed),...collected])],collected,hint:typeof r.hint==='string'&&ids.has(r.hint)?r.hint:null,celebrated:r.celebrated===true&&collected.length===COIN_QUEST.length};
 }
 export const coinRewardEarned=(s:CoinProgress)=>s.rewardUnlocked===true||s.collected.length===COIN_QUEST.length;
 export function applyCoinEvent(s:CoinProgress,id:string,kind:'reveal'|'collect'):CoinProgress{if(!ids.has(id))return s;const spot=COIN_QUEST.find(c=>c.id===id)!;if(kind==='collect'&&spot.kind!=='hidden'&&!s.revealed.includes(id))return s;if(s[kind==='collect'?'collected':'revealed'].includes(id))return s;return{...s,revealed:[...new Set([...s.revealed,id])],collected:kind==='collect'?[...s.collected,id]:s.collected,hint:kind==='collect'&&s.hint===id?null:s.hint};}
 
 export const allCostumesEarned=(s:CoinProgress)=>s.allCostumesUnlocked===true||COIN_QUEST.every(spot=>s.collected.includes(spot.id));
+
+// ── Costume unlocks (user, Sep 25 2026: "after every 10 balls it unlocks three costumes"). Edit the order here: each run of three
+// unlocks together at 10, 20, 30 … balls collected; a mix of countries and animals in every group; the Matchday Fox (the gold
+// "you found them all" costume) is last, at every ball. Unlocks only grow with collected balls, and the saved all-costumes / fox
+// flags from the old all-balls rule still unlock everything they did, so nothing is ever re-locked.
+export const BALLS_PER_COSTUME_MILESTONE=10,COSTUMES_PER_MILESTONE=3;
+export const COSTUME_UNLOCK_ORDER=[
+ 'barcelona','bayern','flamengo',
+ 'arsenal','juventus','kashima',
+ 'psg','dortmund','santos',
+ 'liverpool','roma','pumas',
+ 'benfica','koln','river-plate',
+ 'chelsea','palmeiras','nagoya',
+ 'leicester','atletico-mineiro','cerezo',
+ 'botafogo','sutton',COIN_REWARD_ID,
+] as const;
+/** Balls needed for a costume: its group's milestone (the fox always needs every ball). */
+export function costumeUnlockBalls(id:string){if(id===COIN_REWARD_ID)return COIN_QUEST.length;const i=(COSTUME_UNLOCK_ORDER as readonly string[]).indexOf(id);
+ return i<0?COIN_QUEST.length:Math.min(COIN_QUEST.length,(Math.floor(i/COSTUMES_PER_MILESTONE)+1)*BALLS_PER_COSTUME_MILESTONE);}
+export function costumeEarned(s:CoinProgress,id:string){
+ if(id===COIN_REWARD_ID)return coinRewardEarned(s);
+ return s.allCostumesUnlocked===true||s.collected.length>=costumeUnlockBalls(id);}
+/** The highest milestone reached (0 before the first), and the next one (null once every costume is unlocked). */
+export const costumeMilestoneReached=(balls:number)=>Math.min(Math.floor(balls/BALLS_PER_COSTUME_MILESTONE)*BALLS_PER_COSTUME_MILESTONE,Math.ceil(COSTUME_UNLOCK_ORDER.length/COSTUMES_PER_MILESTONE)*BALLS_PER_COSTUME_MILESTONE);
+export function nextCostumeMilestone(balls:number){const next=(Math.floor(balls/BALLS_PER_COSTUME_MILESTONE)+1)*BALLS_PER_COSTUME_MILESTONE;return next>Math.max(...COSTUME_UNLOCK_ORDER.map(costumeUnlockBalls))?null:next;}
+/** How many costumes unlock at a milestone. */
+export const costumesAtMilestone=(balls:number)=>COSTUME_UNLOCK_ORDER.filter(id=>costumeUnlockBalls(id)===balls).length;

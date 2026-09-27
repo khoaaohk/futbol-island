@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: the 2024 World Cup final",
+   "text": "The 2024 Futsal World Cup final, in Tashkent. Brazil beat Argentina two one! Goalkeeper Willian, number three, even tries two shots, and wins the Golden Glove.",
+   "src": "/plays/narration/willian-dorn-futsal-signature/1.m4a",
+   "seconds": 13.1,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "2024",
+     "at": 0.425
+    },
+    {
+     "w": "Futsal",
+     "at": 1.4
+    },
+    {
+     "w": "World",
+     "at": 1.85
+    },
+    {
+     "w": "Cup",
+     "at": 2.15
+    },
+    {
+     "w": "final",
+     "at": 2.375
+    },
+    {
+     "w": "in",
+     "at": 3.05
+    },
+    {
+     "w": "Tashkent",
+     "at": 3.2
+    },
+    {
+     "w": "Brazil",
+     "at": 4.463
+    },
+    {
+     "w": "beat",
+     "at": 4.888
+    },
+    {
+     "w": "Argentina",
+     "at": 5.15
+    },
+    {
+     "w": "two",
+     "at": 5.812
+    },
+    {
+     "w": "one",
+     "at": 6.088
+    },
+    {
+     "w": "Goalkeeper",
+     "at": 6.95
+    },
+    {
+     "w": "Willian",
+     "at": 7.6
+    },
+    {
+     "w": "number",
+     "at": 8.25
+    },
+    {
+     "w": "three",
+     "at": 8.537
+    },
+    {
+     "w": "even",
+     "at": 9.175
+    },
+    {
+     "w": "tries",
+     "at": 9.488
+    },
+    {
+     "w": "two",
+     "at": 9.988
+    },
+    {
+     "w": "shots",
+     "at": 10.262
+    },
+    {
+     "w": "and",
+     "at": 10.775
+    },
+    {
+     "w": "wins",
+     "at": 10.9
+    },
+    {
+     "w": "the",
+     "at": 11.2
+    },
+    {
+     "w": "Golden",
+     "at": 11.3
+    },
+    {
+     "w": "Glove",
+     "at": 11.7
+    }
+   ]
+  },
+  {
+   "label": "How he plays out",
+   "text": "This is how he plays out. The ball comes back. Willian stops it with his sole, looks up, and passes to the free teammate. Three against two!",
+   "src": "/plays/narration/willian-dorn-futsal-signature/2.m4a",
+   "seconds": 9.7,
+   "words": [
+    {
+     "w": "This",
+     "at": 0.35
+    },
+    {
+     "w": "is",
+     "at": 0.525
+    },
+    {
+     "w": "how",
+     "at": 0.65
+    },
+    {
+     "w": "he",
+     "at": 0.838
+    },
+    {
+     "w": "plays",
+     "at": 0.95
+    },
+    {
+     "w": "out",
+     "at": 1.275
+    },
+    {
+     "w": "The",
+     "at": 1.875
+    },
+    {
+     "w": "ball",
+     "at": 1.975
+    },
+    {
+     "w": "comes",
+     "at": 2.275
+    },
+    {
+     "w": "back",
+     "at": 2.6
+    },
+    {
+     "w": "Willian",
+     "at": 3.413
+    },
+    {
+     "w": "stops",
+     "at": 3.9
+    },
+    {
+     "w": "it",
+     "at": 4.213
+    },
+    {
+     "w": "with",
+     "at": 4.287
+    },
+    {
+     "w": "his",
+     "at": 4.412
+    },
+    {
+     "w": "sole",
+     "at": 4.562
+    },
+    {
+     "w": "looks",
+     "at": 5.075
+    },
+    {
+     "w": "up",
+     "at": 5.35
+    },
+    {
+     "w": "and",
+     "at": 5.562
+    },
+    {
+     "w": "passes",
+     "at": 5.688
+    },
+    {
+     "w": "to",
+     "at": 6.2
+    },
+    {
+     "w": "the",
+     "at": 6.287
+    },
+    {
+     "w": "free",
+     "at": 6.388
+    },
+    {
+     "w": "teammate",
+     "at": 6.638
+    },
+    {
+     "w": "Three",
+     "at": 7.65
+    },
+    {
+     "w": "against",
+     "at": 7.9
+    },
+    {
+     "w": "two",
+     "at": 8.338
+    }
+   ]
+  },
+  {
+   "label": "Watch again: the pass",
+   "text": "Again, slowly. One attacker presses him, so a teammate is free. A flat, firm pass, right to his feet.",
+   "src": "/plays/narration/willian-dorn-futsal-signature/3.m4a",
+   "seconds": 7.9,
+   "words": [
+    {
+     "w": "Again",
+     "at": 0.375
+    },
+    {
+     "w": "slowly",
+     "at": 0.812
+    },
+    {
+     "w": "One",
+     "at": 1.788
+    },
+    {
+     "w": "attacker",
+     "at": 1.975
+    },
+    {
+     "w": "presses",
+     "at": 2.45
+    },
+    {
+     "w": "him",
+     "at": 2.812
+    },
+    {
+     "w": "so",
+     "at": 3.05
+    },
+    {
+     "w": "a",
+     "at": 3.163
+    },
+    {
+     "w": "teammate",
+     "at": 3.237
+    },
+    {
+     "w": "is",
+     "at": 3.737
+    },
+    {
+     "w": "free",
+     "at": 3.888
+    },
+    {
+     "w": "A",
+     "at": 4.713
+    },
+    {
+     "w": "flat",
+     "at": 4.838
+    },
+    {
+     "w": "firm",
+     "at": 5.312
+    },
+    {
+     "w": "pass",
+     "at": 5.662
+    },
+    {
+     "w": "right",
+     "at": 6.15
+    },
+    {
+     "w": "to",
+     "at": 6.375
+    },
+    {
+     "w": "his",
+     "at": 6.463
+    },
+    {
+     "w": "feet",
+     "at": 6.625
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn! A futsal keeper is a fifth outfield player: be ready to pass with your feet!",
+   "src": "/plays/narration/willian-dorn-futsal-signature/4.m4a",
+   "seconds": 6.6,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "A",
+     "at": 1.363
+    },
+    {
+     "w": "futsal",
+     "at": 1.488
+    },
+    {
+     "w": "keeper",
+     "at": 1.925
+    },
+    {
+     "w": "is",
+     "at": 2.3
+    },
+    {
+     "w": "a",
+     "at": 2.413
+    },
+    {
+     "w": "fifth",
+     "at": 2.525
+    },
+    {
+     "w": "outfield",
+     "at": 2.888
+    },
+    {
+     "w": "player",
+     "at": 3.45
+    },
+    {
+     "w": "be",
+     "at": 4.25
+    },
+    {
+     "w": "ready",
+     "at": 4.4
+    },
+    {
+     "w": "to",
+     "at": 4.612
+    },
+    {
+     "w": "pass",
+     "at": 4.7
+    },
+    {
+     "w": "with",
+     "at": 4.987
+    },
+    {
+     "w": "your",
+     "at": 5.088
+    },
+    {
+     "w": "feet",
+     "at": 5.225
+    }
+   ]
+  }
+ ]
+}

@@ -8,9 +8,11 @@ export function createParachute(){
  const cylinder=new T.CylinderGeometry(.17,.2,.7,8);geometries.push(cylinder);for(const x of [-.25,.25]){const mesh=new T.Mesh(cylinder,dark);mesh.position.x=x;pack.add(mesh);}root.add(pack);
  let wasOpen=false,dropAge=0,coverAge=2,detached=false,detachedAge=0,releaseYaw=0;const drop=new T.Vector3(),landing=new T.Vector3();
  const handLocal=new T.Vector3();
- return {root,attachHands(left:T.Vector3,right:T.Vector3){
+ // Bean fit (lane F): an optional harness anchor (vehicle.harnessAnchor) starts the lines at the bean's shoulders,
+ // from where they run up past the raised hands; without one (classic body) they start at the hands as before.
+ return {root,attachHands(left:T.Vector3,right:T.Vector3,anchor?:(side:-1|1,z:-1|1,out:T.Vector3)=>boolean){
   if(!wasOpen)return;canopy.updateWorldMatrix(true,false);const width=(canopy.children[0] as T.Mesh).scale.x;let i=0;
-  for(const child of canopy.children){if(!(child instanceof T.Line))continue;const side=i<2?-1:1,z=i%2===0?-1:1;handLocal.copy(side<0?left:right);canopy.worldToLocal(handLocal);const positions=child.geometry.getAttribute('position') as T.BufferAttribute;positions.setXYZ(0,handLocal.x,handLocal.y,handLocal.z);positions.setXYZ(1,side*Math.SQRT1_2*2.5*width,5.2,z*Math.SQRT1_2*2.5*width);positions.needsUpdate=true;child.geometry.computeBoundingSphere();i++;}
+  for(const child of canopy.children){if(!(child instanceof T.Line))continue;const side=(i<2?-1:1) as -1|1,z=(i%2===0?-1:1) as -1|1;if(!anchor?.(side,z,handLocal))handLocal.copy(side<0?left:right);canopy.worldToLocal(handLocal);const positions=child.geometry.getAttribute('position') as T.BufferAttribute;positions.setXYZ(0,handLocal.x,handLocal.y,handLocal.z);positions.setXYZ(1,side*Math.SQRT1_2*2.5*width,5.2,z*Math.SQRT1_2*2.5*width);positions.needsUpdate=true;child.geometry.computeBoundingSphere();i++;}
  },covering:()=>coverAge<.65,update(x:number,y:number,z:number,yaw:number,open:boolean,age:number,dt:number,floor:number,reduced:boolean,cut=false){
   if(!open&&!wasOpen&&(detached?detachedAge:coverAge)>=1.5){canopy.visible=false;pack.visible=false;return;}
   if(open&&!wasOpen){drop.set(x,y+1,z);dropAge=0;coverAge=2;detached=false;}

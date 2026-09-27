@@ -1,0 +1,402 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The final",
+   "text": "Munich, 2025: the Champions League final against Inter. Vitinha passes to Ousmane Demb\u00e9l\u00e9, and keeps running. Demb\u00e9l\u00e9 flicks it back into his path. Vitinha charges on\u2026 and rolls it through for D\u00e9sir\u00e9 Dou\u00e9!",
+   "src": "/plays/narration/vitinha-signature/1.m4a",
+   "seconds": 16.1,
+   "words": [
+    {
+     "w": "Munich",
+     "at": 0.4
+    },
+    {
+     "w": "2025",
+     "at": 0.8
+    },
+    {
+     "w": "the",
+     "at": 2.225
+    },
+    {
+     "w": "Champions",
+     "at": 2.337
+    },
+    {
+     "w": "League",
+     "at": 2.925
+    },
+    {
+     "w": "final",
+     "at": 3.212
+    },
+    {
+     "w": "against",
+     "at": 3.625
+    },
+    {
+     "w": "Inter",
+     "at": 4.025
+    },
+    {
+     "w": "Vitinha",
+     "at": 4.938
+    },
+    {
+     "w": "passes",
+     "at": 5.45
+    },
+    {
+     "w": "to",
+     "at": 5.925
+    },
+    {
+     "w": "Ousmane",
+     "at": 6.062
+    },
+    {
+     "w": "Demb\u00e9l\u00e9",
+     "at": 6.6
+    },
+    {
+     "w": "and",
+     "at": 7.4
+    },
+    {
+     "w": "keeps",
+     "at": 7.525
+    },
+    {
+     "w": "running",
+     "at": 7.838
+    },
+    {
+     "w": "Demb\u00e9l\u00e9",
+     "at": 8.825
+    },
+    {
+     "w": "flicks",
+     "at": 9.45
+    },
+    {
+     "w": "it",
+     "at": 9.738
+    },
+    {
+     "w": "back",
+     "at": 9.825
+    },
+    {
+     "w": "into",
+     "at": 10.113
+    },
+    {
+     "w": "his",
+     "at": 10.312
+    },
+    {
+     "w": "path",
+     "at": 10.488
+    },
+    {
+     "w": "Vitinha",
+     "at": 11.338
+    },
+    {
+     "w": "charges",
+     "at": 11.863
+    },
+    {
+     "w": "on",
+     "at": 12.275
+    },
+    {
+     "w": "and",
+     "at": 12.8
+    },
+    {
+     "w": "rolls",
+     "at": 12.938
+    },
+    {
+     "w": "it",
+     "at": 13.35
+    },
+    {
+     "w": "through",
+     "at": 13.512
+    },
+    {
+     "w": "for",
+     "at": 13.838
+    },
+    {
+     "w": "D\u00e9sir\u00e9",
+     "at": 14.012
+    },
+    {
+     "w": "Dou\u00e9",
+     "at": 14.625
+    }
+   ]
+  },
+  {
+   "label": "The replay",
+   "text": "Watch again, slowly. Vitinha gives the pass, then sprints into space. The flick finds him at full speed.",
+   "src": "/plays/narration/vitinha-signature/2.m4a",
+   "seconds": 8.0,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.137
+    },
+    {
+     "w": "Vitinha",
+     "at": 2.112
+    },
+    {
+     "w": "gives",
+     "at": 2.6
+    },
+    {
+     "w": "the",
+     "at": 2.862
+    },
+    {
+     "w": "pass",
+     "at": 2.962
+    },
+    {
+     "w": "then",
+     "at": 3.5
+    },
+    {
+     "w": "sprints",
+     "at": 3.712
+    },
+    {
+     "w": "into",
+     "at": 4.138
+    },
+    {
+     "w": "space",
+     "at": 4.362
+    },
+    {
+     "w": "The",
+     "at": 5.275
+    },
+    {
+     "w": "flick",
+     "at": 5.412
+    },
+    {
+     "w": "finds",
+     "at": 5.7
+    },
+    {
+     "w": "him",
+     "at": 6.013
+    },
+    {
+     "w": "at",
+     "at": 6.138
+    },
+    {
+     "w": "full",
+     "at": 6.263
+    },
+    {
+     "w": "speed",
+     "at": 6.537
+    }
+   ]
+  },
+  {
+   "label": "The finish",
+   "text": "Then Vitinha rolls it in front of Dou\u00e9, racing down the right. First time, far corner! Paris won five\u2013nil, their first Champions League!",
+   "src": "/plays/narration/vitinha-signature/3.m4a",
+   "seconds": 10.0,
+   "words": [
+    {
+     "w": "Then",
+     "at": 0.375
+    },
+    {
+     "w": "Vitinha",
+     "at": 0.525
+    },
+    {
+     "w": "rolls",
+     "at": 1.025
+    },
+    {
+     "w": "it",
+     "at": 1.375
+    },
+    {
+     "w": "in",
+     "at": 1.462
+    },
+    {
+     "w": "front",
+     "at": 1.55
+    },
+    {
+     "w": "of",
+     "at": 1.738
+    },
+    {
+     "w": "Dou\u00e9",
+     "at": 1.825
+    },
+    {
+     "w": "racing",
+     "at": 2.487
+    },
+    {
+     "w": "down",
+     "at": 2.925
+    },
+    {
+     "w": "the",
+     "at": 3.138
+    },
+    {
+     "w": "right",
+     "at": 3.225
+    },
+    {
+     "w": "First",
+     "at": 4.1
+    },
+    {
+     "w": "time",
+     "at": 4.4
+    },
+    {
+     "w": "far",
+     "at": 4.812
+    },
+    {
+     "w": "corner",
+     "at": 5.088
+    },
+    {
+     "w": "Paris",
+     "at": 5.938
+    },
+    {
+     "w": "won",
+     "at": 6.362
+    },
+    {
+     "w": "five",
+     "at": 6.65
+    },
+    {
+     "w": "nil",
+     "at": 7.05
+    },
+    {
+     "w": "their",
+     "at": 7.5
+    },
+    {
+     "w": "first",
+     "at": 7.713
+    },
+    {
+     "w": "Champions",
+     "at": 8.037
+    },
+    {
+     "w": "League",
+     "at": 8.6
+    }
+   ]
+  },
+  {
+   "label": "The lesson",
+   "text": "Remember Vitinha: pass and move! Give it, then find a new space to get it back.",
+   "src": "/plays/narration/vitinha-signature/4.m4a",
+   "seconds": 6.1,
+   "words": [
+    {
+     "w": "Remember",
+     "at": 0.4
+    },
+    {
+     "w": "Vitinha",
+     "at": 0.725
+    },
+    {
+     "w": "pass",
+     "at": 1.538
+    },
+    {
+     "w": "and",
+     "at": 1.875
+    },
+    {
+     "w": "move",
+     "at": 2.0
+    },
+    {
+     "w": "Give",
+     "at": 2.888
+    },
+    {
+     "w": "it",
+     "at": 3.15
+    },
+    {
+     "w": "then",
+     "at": 3.375
+    },
+    {
+     "w": "find",
+     "at": 3.6
+    },
+    {
+     "w": "a",
+     "at": 3.837
+    },
+    {
+     "w": "new",
+     "at": 3.9
+    },
+    {
+     "w": "space",
+     "at": 4.088
+    },
+    {
+     "w": "to",
+     "at": 4.475
+    },
+    {
+     "w": "get",
+     "at": 4.575
+    },
+    {
+     "w": "it",
+     "at": 4.713
+    },
+    {
+     "w": "back",
+     "at": 4.8
+    }
+   ]
+  }
+ ]
+}

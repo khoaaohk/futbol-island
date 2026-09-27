@@ -1,5 +1,7 @@
 // Loaded with the collection lesson, never from the island render loop.
-export type DiagramKind='shot-place'|'keeper-set'|'shield-hold'|'reset-breath'|'help-up'|'carrier-angle'|'team-lines'|'rebound'|'cushion'|'request-foot'|'recovery'|'stretch'|'pivot-switch'|'vacate'|'goal-side'|'balance'|'rescan'|'body-open'|'far-foot'|'weight'|'pass-or-carry'|'run-timing'|'support-after'|'pace'|'first-time'|'distance'|'scan'|'pass'|'wide'|'lane'|'community'|'touch'|'triangle'|'lead'|'return'|'cut'|'switch'|'lines'|'decoy'|'check'|'third'|'curve'|'feet'|'height'|'talk'|'behind'|'onside'|'disguise'|'feet-both'|'depth'|'stagger'|'compact'|'overload'|'channels'|'moving-triangle';
+export type DiagramKind='shot-place'|'keeper-set'|'shield-hold'|'reset-breath'|'help-up'|'carrier-angle'|'team-lines'|'rebound'|'cushion'|'request-foot'|'recovery'|'stretch'|'pivot-switch'|'vacate'|'goal-side'|'balance'|'rescan'|'body-open'|'far-foot'|'weight'|'pass-or-carry'|'run-timing'|'support-after'|'pace'|'first-time'|'distance'|'scan'|'pass'|'wide'|'lane'|'community'|'touch'|'triangle'|'lead'|'return'|'cut'|'switch'|'lines'|'decoy'|'check'|'third'|'curve'|'feet'|'height'|'talk'|'behind'|'onside'|'disguise'|'feet-both'|'depth'|'stagger'|'compact'|'overload'|'channels'|'moving-triangle'
+ /* Manhole balls: from above lessons. */
+ |'free-player'|'split'|'forward-first'|'safety'|'diamond'|'thirds'|'blind-side'|'overlap'|'show-outside'|'box-runs'|'cutback'|'counter'|'build-out'|'throw-in'|'lane-block'|'tempo'|'press-curve'|'step-up'|'carry'|'head-up'|'sweeper-keeper'|'free-kick-wall'|'press-trigger'|'quick-free-kick'|'better-placed';
 export type BallLesson={kind:DiagramKind;steps:[string,string,string];actions:[string,string]};
 const lesson=(kind:DiagramKind,a:string,b:string,c:string,x:string,y:string):BallLesson=>({kind,steps:[a,b,c],actions:[x,y]});
 export const BALL_HUNT_LESSONS:Record<string,BallLesson>={
@@ -59,6 +61,33 @@ export const BALL_HUNT_LESSONS:Record<string,BallLesson>={
  'parcel-west':lesson('pass-or-carry','A teammate is already in a useful position farther ahead.','Look up before deciding to dribble the whole distance.','A pass moves the ball to that teammate while the passer can move to support.','Spot the teammate','Let the ball travel'),
  'parcel-school':lesson('talk','A receiver may not see the defender approaching behind them.','Give early, useful information: “Man on!” when pressure is close.','The receiver uses the warning to choose a safe touch. Say “Time” when there really is space.','Call the pressure','React to the message'),
  "parcel-south":lesson("recovery","Your team has lost the ball. Chasing it with everyone leaves gaps.","The nearest player slows the attacker while teammates recover toward their own goal.","The recovering players protect passing routes. Delaying the attack buys time to regroup.","Delay the attacker","Recover behind the ball"),
+
+ // Manhole balls: dropping in from the sky, each lesson is about what the whole pitch looks like from above.
+ "manhole-promenade":lesson("free-player","Three teammates want the ball. Two of them have a defender close by.","Count the pressure: one defender each on the left and in the middle. The teammate on the right is alone.","Pass to the free teammate. They have time to take a touch and look forward.","Count the defenders","Pass to the free player"),
+ "manhole-rua-90":lesson("split","Two defenders stand side by side with a gap between them.","Your teammate moves behind the gap. The passing line now runs straight between the defenders.","A firm ground pass splits them. Both defenders are now behind the ball.","Find the gap","Play through it"),
+ "manhole-cafe-mare":lesson("forward-first","You have the ball. A sideways pass is easy, but is there something better?","Look up the pitch first. The striker is free between two defenders.","The forward pass is on, so play it. If it had been blocked, the sideways pass would still be there.","Look up the pitch","Play forward"),
+ "manhole-visitor-centre":lesson("safety","Your team is attacking. Everyone wants to join in.","If every player runs forward, the space behind them is empty.","One teammate stays back as a safety player. If the ball is lost, they can slow the counter-attack.","See the empty space","Keep one back"),
+ "manhole-classrooms":lesson("diamond","Four teammates stand in a flat line. One defender can block most of the passes.","Move into a diamond: one ahead, one on each side and the ball carrier at the back.","The carrier has three different options. Pass to the corner the defender is not covering.","Build the diamond","Pick the open corner"),
+ "manhole-rua-nova":lesson("thirds","Split the pitch into three bands, from your goal to theirs.","In your defending third, a lost ball is close to your own goal. Play safe and simple.","In the attacking third, a lost ball is far from your goal. Be brave: dribble, cross or shoot.","Play safe at the back","Be brave up front"),
+ "manhole-fish-market":lesson("blind-side","The defender faces the ball. You stand where they can see you.","Drift behind their shoulder, onto the side they cannot see.","As the pass is played, step into the space. The defender turns too late.","Drift out of sight","Arrive for the pass"),
+ "manhole-park-library":lesson("overlap","Your winger has the ball near the touchline, facing one defender.","Run around the outside of the winger and down the line.","The defender cannot follow both of you. Receive the pass in the space down the line.","Run around the outside","Receive down the line"),
+ "manhole-island-market":lesson("show-outside","An attacker dribbles at you through the middle.","Stand slightly inside them, at an angle. Leave the outside path open.","The attacker goes wide. The touchline works like an extra defender.","Angle your body","Steer them wide"),
+ "manhole-courtside":lesson("box-runs","A winger is about to cross. All three attackers run to the same spot.","Split the runs: one to the near post, one to the far post and one to the penalty spot.","The crosser picks the free runner. Spreading out makes the defence choose.","Split the runs","Cross to the free space"),
+ "manhole-west-market":lesson("cutback","Your winger dribbles toward the end line.","Defenders sprint back toward their goal. Space opens behind them.","The winger pulls the ball back. A teammate arrives facing the goal.","Reach the end line","Pull it back"),
+ "manhole-corner-deli":lesson("counter","The opponents are attacking. Most of their players are near your goal.","You win the ball. Look up: the space behind them is wide open.","One quick forward pass to a running teammate starts the counter-attack.","Win it and look up","Go forward fast"),
+ "manhole-west-end-books":lesson("build-out","Your keeper has a goal kick. Opponents stand close to your defenders.","The build-out line: in 7v7, opponents must go back behind it until the ball is played.","Defenders spread wide into the free space. The keeper plays a safe pass to one of them.","Retreat to the line","Spread and pass"),
+ "manhole-junior-club":lesson("throw-in","Your teammate has a throw-in. Everyone nearby is standing still and marked.","One teammate checks short toward the ball while another runs down the line.","The thrower picks the free runner and throws the ball to their feet.","Check and run","Throw to the free runner"),
+ "manhole-arcade":lesson("lane-block","The ball carrier wants to pass to the striker behind you.","Draw the line from the ball to the striker. You are standing beside it.","Step onto the line. The pass is blocked, so the carrier has to go sideways.","Draw the passing line","Step into the lane"),
+ "manhole-nursery":lesson("tempo","The defence is set. There is no gap between the two defenders.","Two quick passes across the back. The defenders have to slide across with the ball.","A gap opens where they were. Play forward through it before they close it.","Move the ball quickly","Play through the gap"),
+ "manhole-high-school":lesson("press-curve","Two opponents pass the ball between them. You want to press.","A straight run leaves the pass to the other opponent wide open.","Curve your run so your body blocks that pass. The carrier has fewer choices.","Try a straight run","Curve the press"),
+ "manhole-community-hall":lesson("step-up","Your defenders stand in a straight line near your goal.","The opponents pass backward. Their attack moves away from your goal.","Move up together and keep the line straight. The attackers now have less space.","Watch the back pass","Step up together"),
+ "manhole-garden-cafe":lesson("carry","You have the ball. No defender is close and the space ahead is empty.","Push the ball forward with longer touches and run after it.","A defender comes to meet you. Now pass to the teammate they left free.","Carry into space","Pass when they come"),
+ "manhole-arts-wing":lesson("head-up","You dribble looking at your feet. You only see the ball.","Lift your head between touches. Now you see a teammate and the space beside them.","Pass before the defender arrives. Looking up turned a dribble into a chance.","Lift your head","Pass into space"),
+ "manhole-courtyard":lesson("sweeper-keeper","Your defenders are high up the pitch. There is a lot of space behind them.","The keeper steps off the goal line toward the edge of the box, watching the ball.","A long ball goes over the defence. The keeper gets there first and clears it wide.","Step off the line","Sweep behind"),
+ "manhole-pier-bakery":lesson("free-kick-wall","The other team has a free kick near your goal.","Players line up in a wall to block one side of the goal.","The keeper guards the other side. Together, the wall and the keeper cover the whole goal.","Build the wall","Guard the other side"),
+ "manhole-humanities":lesson("press-trigger","An opponent is about to receive a pass. You wait at a safe distance.","Their first touch is heavy. The ball rolls away from their feet.","That is your signal. Press quickly and win the loose ball.","Watch the first touch","Press the loose ball"),
+ "manhole-school-offices":lesson("quick-free-kick","Your team wins a free kick. Opponents are complaining and slow to get back.","Look up while they are not ready. A teammate is unmarked in space.","Take the free kick quickly and pass to them before the defence is organised.","Spot the free teammate","Restart quickly"),
+ "manhole-history-museum":lesson("better-placed","You are near the goal but at a tight angle. The keeper covers your shot.","Look across: your teammate is in the middle with a clear view of the goal.","Pass across to them. They have a much easier finish.","Look across","Pass for the finish"),
 };
 
 export type DiagramNode={id:string;x:number;y:number;label:string;role:'team'|'opponent'|'ball'|'club';angle?:number};
@@ -71,6 +100,7 @@ export function ballLessonFrame(kind:DiagramKind,step:number):DiagramFrame{
  if(kind==='shield-hold')return {nodes:[person('a',step?163:130,145,'You'),person('d',step===2?200:220,145,'Opponent','opponent'),person('ball',145,165,'','ball')],paths:step?['M175 115L175 185']:[],note:step===2?'Hold balance · no pushing':step?'Body between opponent and ball':'Protect a ball within playing distance'};
  if(kind==='reset-breath')return {nodes:[person('a',105,140,step===0?'Frustrated':step===1?'Breathe':'Ready'),person('b',240,140,step===2?'You’ve got this!':'Teammate')],zone:step===1?[60,90,90,95]:undefined,paths:step===2?['M125 125Q170 65 220 125']:[],note:step===0?'Mistake → pause':step===1?'Slow breath · relax shoulders':'Encourage your teammate'};
  if(kind==='help-up')return {nodes:[person('a',step?160:85,145,'You'),person('d',200,step===2?140:185,step===2?'Back up':'Opponent','opponent')],paths:step===2?['M173 145L188 145']:[],run:step===1?'M85 145L160 145':undefined,note:step===0?'Play stopped · check it is safe':step===1?'Are you okay?':'Offer a hand · respect the answer'};
+ const sky=skyLessonFrame(kind,step);if(sky)return sky;
  const distinct=distinctLessonFrame(kind,step);if(distinct)return distinct;
  const n=(id:string,x:number,y:number,label:string,role:DiagramNode['role']='team'):DiagramNode=>({id,x,y,label,role});
  const a=n('a',65,170,'You'),b=n('b',265,65,'Teammate'),d=n('d',166,118,'Defender','opponent'),ball=n('ball',81,168,'','ball');
@@ -128,6 +158,172 @@ export function ballLessonFrame(kind:DiagramKind,step:number):DiagramFrame{
   if(step===2){ball.x=247;ball.y=74;a.x=150;a.y=158;b.x=253;b.y=108;c.x=202;c.y=166;a.label='Cover';b.label='Press';f.paths=['M92 68L247 74'];f.run='M178 158L253 108M83 105L150 158M129 164L202 166';}
  }
  return f;
+}
+
+/** Manhole lessons: bird's-eye situations built from the same bounded SVG primitives. Attack toward the top. */
+function skyLessonFrame(kind:DiagramKind,step:number):DiagramFrame|undefined{
+ const n=(id:string,x:number,y:number,label:string,role:DiagramNode['role']='team'):DiagramNode=>({id,x,y,label,role});
+ const at=(o:DiagramNode,x:number,y:number)=>{o.x=x;o.y=y;};
+ switch(kind){
+ case 'free-player':{
+  const a=n('a',165,200,'You'),b=n('b',70,115,'Teammate'),c=n('c',165,115,'Teammate'),e=n('e',262,115,'Teammate'),d=n('d',70,62,'Defender','opponent'),d2=n('d2',165,62,'Defender','opponent'),ball=n('ball',180,192,'','ball');
+  const f:DiagramFrame={nodes:[a,b,c,e,d,d2,ball],paths:[],note:'Who has nobody near them?'};
+  if(step){f.zone=[232,86,62,58];f.note='Two marked · one free';}
+  if(step===2){at(ball,248,124);f.paths=['M180 192L248 124'];f.note='Pass to the free teammate';}
+  return f;}
+ case 'split':{
+  const a=n('a',165,205,'You'),b=n('b',255,65,'Teammate'),d=n('d',118,125,'Defender','opponent'),d2=n('d2',212,125,'Defender','opponent'),ball=n('ball',165,190,'','ball');
+  const f:DiagramFrame={nodes:[a,b,d,d2,ball],paths:[],note:'Two defenders · one gap'};
+  if(step){at(b,165,62);f.run='M255 65L165 62';f.zone=[140,103,50,44];f.note='Teammate behind the gap';}
+  if(step===2){at(ball,165,82);f.paths=['M165 190L165 84'];f.note='Both defenders beaten';}
+  return f;}
+ case 'forward-first':{
+  const a=n('a',90,200,'You'),c=n('c',235,200,'Side option'),b=n('b',165,58,'Striker'),d=n('d',105,62,'Defender','opponent'),d2=n('d2',228,62,'Defender','opponent'),ball=n('ball',105,193,'','ball');
+  const f:DiagramFrame={nodes:[a,c,b,d,d2,ball],paths:['M105 193L221 200'],note:'An easy sideways pass'};
+  if(step){f.zone=[138,34,54,50];f.paths.push('M105 193L158 72');f.note='The forward pass is open';}
+  if(step===2){at(ball,158,72);f.paths=['M105 193L158 72'];f.note='Play forward when it is on';}
+  return f;}
+ case 'safety':{
+  const a=n('a',165,120,'Carrier'),b=n('b',80,140,'Teammate'),c=n('c',250,140,'Teammate'),s=n('s',165,185,'Teammate'),d=n('d',222,200,'Opponent','opponent'),d2=n('d2',205,45,'Defender','opponent'),ball=n('ball',178,112,'','ball');
+  const f:DiagramFrame={nodes:[a,b,c,s,d,d2,ball],paths:[],note:'Everyone wants to attack'};
+  if(step){at(a,165,82);at(ball,178,74);at(b,80,78);at(c,250,78);}
+  if(step===1){at(s,120,112);f.run='M165 185L120 112';f.zone=[95,150,140,55];f.note='Nobody left behind';}
+  if(step===2){at(s,185,172);s.label='Safety';f.run='M165 185L185 172';f.note='One stays back in balance';}
+  return f;}
+ case 'diamond':{
+  const a=n('a',90,150,'You'),b=n('b',150,150,'Teammate'),c=n('c',210,150,'Teammate'),e=n('e',270,150,'Teammate'),d=n('d',150,105,'Defender','opponent'),ball=n('ball',104,160,'','ball');
+  const f:DiagramFrame={nodes:[a,b,c,e,d,ball],paths:[],note:'A flat line is easy to block'};
+  if(step){at(a,165,200);at(ball,165,186);at(b,85,130);at(c,245,130);at(e,165,58);at(d,122,88);f.paths=['M165 186L85 130','M165 186L245 130','M165 186L165 72'];f.note='One ahead · two sides · one behind';}
+  if(step===2){at(ball,231,138);f.paths=['M165 186L231 138'];f.note='Pass to the open corner';}
+  return f;}
+ case 'thirds':{
+  const lines=['M20 92H310','M20 162H310'],a=n('a',240,185,'You'),b=n('b',150,150,'Teammate'),d=n('d',245,132,'Defender','opponent'),ball=n('ball',226,182,'','ball');
+  const f:DiagramFrame={nodes:[n('g',165,212,'Your goal','club'),n('g2',165,34,'Their goal','club'),a,b,d,ball],paths:[...lines],note:'Defending · middle · attacking'};
+  if(step===1){at(ball,164,156);f.paths.push('M226 182L166 157');f.zone=[20,164,290,38];f.note='Near your goal: safe and simple';}
+  if(step===2){at(a,165,72);at(ball,178,64);at(b,95,110);at(d,215,78);f.paths.push('M178 64L170 44');f.zone=[20,40,290,50];f.note='Near their goal: be brave';}
+  return f;}
+ case 'blind-side':{
+  const p=n('p',70,195,'Passer'),a=n('a',155,160,'You'),d=n('d',185,125,'Defender','opponent'),ball=n('ball',86,188,'','ball');
+  const f:DiagramFrame={nodes:[p,a,d,ball],paths:[],note:'The defender watches the ball'};
+  if(step===1){at(a,232,92);f.run='M155 160Q230 165 232 92';f.zone=[210,40,70,45];f.note='Behind their shoulder';}
+  if(step===2){at(a,238,62);at(ball,224,70);f.run='M232 92L238 62';f.paths=['M86 188L224 70'];f.zone=[210,40,70,45];f.note='Arrive as the pass is played';}
+  return f;}
+ case 'overlap':{
+  const w=n('w',250,145,'Winger'),a=n('a',195,195,'You'),d=n('d',250,75,'Defender','opponent'),ball=n('ball',236,138,'','ball');
+  const f:DiagramFrame={nodes:[w,a,d,ball],paths:[],note:'One defender faces the winger'};
+  if(step===1){at(a,292,112);f.run='M195 195Q300 200 292 112';f.note='Run around the outside';}
+  if(step===2){at(a,292,52);at(ball,280,62);f.run='M292 112L292 52';f.paths=['M236 138L280 64'];f.zone=[268,30,38,48];f.note='The defender cannot follow both';}
+  return f;}
+ case 'show-outside':{
+  const d=n('d',165,70,'Attacker','opponent'),a=n('a',165,150,'You'),ball=n('ball',165,86,'','ball');
+  const f:DiagramFrame={nodes:[n('g',165,212,'Your goal','club'),d,a,ball],paths:[],note:'The attacker heads for the middle'};
+  if(step){at(a,140,138);a.angle=35;f.zone=[250,40,55,150];f.note='Guard the middle · leave the outside';}
+  if(step===2){at(d,272,120);at(ball,272,136);at(a,228,150);f.run='M165 70L272 120';f.paths=['M165 86L272 136'];f.note='The touchline helps you defend';}
+  return f;}
+ case 'box-runs':{
+  const a=n('a',135,160,''),b=n('b',165,175,'Runners'),c=n('c',195,160,''),d=n('d',215,112,'Defender','opponent'),ball=n('ball',285,135,'','ball');
+  const f:DiagramFrame={nodes:[n('g',165,34,'Goal','club'),n('w',285,150,'Winger'),a,b,c,d,ball],paths:[],note:'Three runners, one spot'};
+  if(step){at(a,210,72);a.label='Near post';at(b,118,72);b.label='Far post';at(c,165,120);c.label='Spot';f.run='M135 160L210 72M165 175L118 72M195 160L165 120';f.note='Near post · far post · penalty spot';}
+  if(step===2){at(d,238,92);at(ball,132,78);f.paths=['M285 135Q220 30 132 78'];f.note='Cross to the free runner';}
+  return f;}
+ case 'cutback':{
+  const a=n('a',255,110,'Winger'),b=n('b',165,160,'Teammate'),d=n('d',180,78,'Defender','opponent'),d2=n('d2',130,92,'Defender','opponent'),ball=n('ball',255,96,'','ball');
+  const f:DiagramFrame={nodes:[n('g',165,32,'Goal','club'),a,b,d,d2,ball],paths:[],note:'The winger heads for the end line'};
+  if(step){at(a,262,58);at(ball,250,52);at(d,205,62);at(d2,125,66);f.run='M180 78L205 62M130 92L125 66';f.zone=[125,95,90,45];f.note='Defenders run back · space opens';}
+  if(step===2){at(b,165,112);f.run='M165 160L165 112';f.paths=['M250 52L178 104'];at(ball,178,104);f.note='Pull it back to a teammate facing goal';}
+  return f;}
+ case 'counter':{
+  const a=n('a',125,185,'You'),b=n('b',232,112,'Teammate'),ball=n('ball',184,146,'','ball');
+  const f:DiagramFrame={nodes:[a,b,n('d',170,150,'Attacker','opponent'),n('d2',60,150,'Attacker','opponent'),n('d3',250,180,'Attacker','opponent'),n('d4',110,60,'Defender','opponent'),ball],paths:[],note:'They attack your goal'};
+  if(step){at(ball,139,180);f.paths=step===1?['M184 146L141 179']:[];f.zone=[175,32,120,60];f.note='Win it · look up · space behind';}
+  if(step===2){at(b,255,62);at(ball,242,70);f.run='M232 112L255 62';f.paths=['M139 180L242 70'];f.note='One quick pass forward';}
+  return f;}
+ case 'build-out':{
+  const b=n('b',135,178,'Teammate'),c=n('c',195,178,'Teammate'),d=n('d',95,150,'Attacker','opponent'),d2=n('d2',235,150,'Attacker','opponent'),ball=n('ball',165,196,'','ball');
+  const f:DiagramFrame={nodes:[n('k',165,210,'Keeper'),b,c,d,d2,ball],paths:['M20 110H310'],note:'Goal kick · opponents close'};
+  if(step){at(d,95,86);at(d2,235,86);f.zone=[20,116,290,62];}
+  if(step===1){f.run='M95 150L95 86M235 150L235 86';f.note='They wait behind the build-out line';}
+  if(step===2){at(b,58,160);at(c,272,160);at(ball,258,166);f.paths.push('M165 196L258 166');f.note='Spread wide · safe first pass';}
+  return f;}
+ case 'throw-in':{
+  const b=n('b',245,128,'Teammate'),c=n('c',250,182,'Teammate'),ball=n('ball',300,90,'','ball');
+  const f:DiagramFrame={nodes:[n('t',300,105,'Thrower'),b,c,n('d',205,100,'Defender','opponent'),n('d2',208,160,'Defender','opponent'),ball],paths:[],note:'Everyone is standing still'};
+  if(step){at(b,268,148);at(c,288,58);f.run='M245 128L268 148M250 182L288 58';f.note='One checks short · one runs down the line';}
+  if(step===2){at(ball,276,68);f.paths=['M300 90L278 70'];f.note='Throw to the free runner';}
+  return f;}
+ case 'lane-block':{
+  const a=n('a',150,140,'You'),ball=n('ball',165,76,'','ball');
+  const f:DiagramFrame={nodes:[n('d',165,60,'Carrier','opponent'),n('d2',230,182,'Striker','opponent'),a,n('b',82,190,'Teammate'),ball],paths:[],note:'The striker is behind you'};
+  if(step===1){f.paths=['M165 76L226 176'];f.note='Draw the passing line';}
+  if(step===2){at(a,200,130);at(ball,104,70);f.run='M150 140L200 130';f.paths=['M165 76L106 70'];f.note='On the line · the pass is blocked';}
+  return f;}
+ case 'tempo':{
+  const d=n('d',142,112,'Defenders','opponent'),d2=n('d2',188,112,'','opponent'),e=n('e',165,58,'Striker'),ball=n('ball',84,184,'','ball');
+  const f:DiagramFrame={nodes:[n('a',70,190,'Teammate'),n('b',165,200,'You'),n('c',260,190,'Teammate'),d,d2,e,ball],paths:[],note:'The defence is set · no gap'};
+  if(step){at(ball,246,184);at(d,208,112);at(d2,254,112);}
+  if(step===1){f.paths=['M84 184L151 196','M165 200L246 186'];f.run='M142 112L208 112M188 112L254 112';f.note='Quick passes · defenders slide';}
+  if(step===2){at(e,140,62);at(ball,142,76);f.run='M165 58L140 62';f.paths=['M246 184L142 76'];f.zone=[70,92,110,40];f.note='Play through the gap';}
+  return f;}
+ case 'press-curve':{
+  const a=n('a',205,182,'You');
+  const f:DiagramFrame={nodes:[n('d',110,70,'Opponent','opponent'),n('d2',240,60,'Opponent','opponent'),a,n('ball',124,76,'','ball')],paths:['M124 76L226 62'],note:'They pass between them'};
+  if(step===1){at(a,150,108);f.run='M205 182L150 108';f.note='Straight run · the pass stays open';}
+  if(step===2){at(a,162,71);f.run='M205 182Q228 100 162 71';f.paths=[];f.note='A curved run blocks the pass';}
+  return f;}
+ case 'step-up':{
+  const a=n('a',70,165,'Teammate'),b=n('b',165,170,'You'),c=n('c',260,165,'Teammate'),d=n('d',130,122,'Attacker','opponent'),ball=n('ball',144,114,'','ball');
+  const f:DiagramFrame={nodes:[a,b,c,d,n('d2',200,58,'Midfielder','opponent'),ball],paths:[],note:'A straight line near your goal'};
+  if(step){at(ball,214,66);}
+  if(step===1){f.paths=['M144 114L212 68'];f.note='They pass backward';}
+  if(step===2){at(a,70,128);at(b,165,128);at(c,260,128);at(d,110,98);f.run='M70 165L70 128M165 170L165 128M260 165L260 128';f.note='Step up together · less space';}
+  return f;}
+ case 'carry':{
+  const a=n('a',90,200,'You'),d=n('d',232,52,'Defender','opponent'),ball=n('ball',104,190,'','ball');
+  const f:DiagramFrame={nodes:[a,d,n('b',262,122,'Teammate'),ball],paths:[],zone:[60,70,130,95],note:'Open space ahead'};
+  if(step){at(a,120,132);at(ball,132,120);}
+  if(step===1){f.run='M90 200L120 132';f.paths=['M104 190L132 120'];f.note='Longer touches into the space';}
+  if(step===2){at(d,172,92);at(ball,248,126);f.run='M232 52L172 92';f.paths=['M132 120L248 126'];f.zone=undefined;f.note='A defender comes · now pass';}
+  return f;}
+ case 'head-up':{
+  const a=n('a',90,165,'You'),d=n('d',185,122,'Defender','opponent'),ball=n('ball',100,150,'','ball');a.angle=180;
+  const f:DiagramFrame={nodes:[a,n('b',252,72,'Teammate'),d,ball],paths:[],note:'Eyes on the ball only'};
+  if(step){at(a,112,140);a.angle=55;at(ball,124,128);f.zone=[222,44,65,55];f.note='Head up · a teammate and space';}
+  if(step===2){at(d,162,112);at(ball,238,80);f.paths=['M124 128L238 80'];f.note='Pass before the defender arrives';}
+  return f;}
+ case 'sweeper-keeper':{
+  const k=n('k',165,165,'Keeper'),d=n('d',185,94,'Attacker','opponent'),ball=n('ball',165,56,'','ball');
+  const f:DiagramFrame={nodes:[n('g',165,220,'Goal','club'),k,n('b',100,108,'Teammate'),n('c',230,108,'Teammate'),d,n('d2',165,40,'Passer','opponent'),ball],paths:[],zone:[40,122,250,34],note:'Big space behind the defence'};
+  if(step===1){at(k,165,138);f.run='M165 165L165 138';f.note='The keeper steps off the line';}
+  if(step===2){at(k,150,152);at(d,205,128);at(ball,72,148);f.zone=undefined;f.run='M185 94L205 128';f.paths=['M165 56Q150 100 152 140','M152 140L74 148'];f.note='Keeper first · clear it wide';}
+  return f;}
+ case 'free-kick-wall':{
+  const k=n('k',200,75,'Keeper'),a=n('a',200,170,''),b=n('b',235,150,'Defenders'),c=n('c',265,172,'');
+  const f:DiagramFrame={nodes:[n('g',200,40,'Goal','club'),k,n('d',90,195,'Kicker','opponent'),a,b,c,n('ball',104,185,'','ball')],paths:[],note:'A free kick near your goal'};
+  if(step){at(a,120,116);at(b,148,128);b.label='Wall';at(c,176,140);}
+  if(step===1){f.run='M200 170L120 116M235 150L148 128M265 172L176 140';f.paths=['M104 185L180 52'];f.note='The wall blocks one side';}
+  if(step===2){at(k,218,70);f.run='M200 75L218 70';f.paths=['M104 185L180 52','M104 185L222 52'];f.note='The keeper guards the other side';}
+  return f;}
+ case 'press-trigger':{
+  const a=n('a',172,172,'You'),ball=n('ball',80,68,'','ball');
+  const f:DiagramFrame={nodes:[n('d',165,92,'Opponent','opponent'),n('d2',60,62,'Passer','opponent'),a,ball],paths:['M80 68L152 90'],note:'Wait at a safe distance'};
+  if(step){at(ball,196,124);}
+  if(step===1){f.paths=['M165 100L194 122'];f.note='Heavy touch · the ball runs loose';}
+  if(step===2){at(a,204,140);f.run='M172 172L204 140';f.paths=[];f.note='That is the signal · press';}
+  return f;}
+ case 'quick-free-kick':{
+  const d2=n('d2',205,108,'Opponent','opponent'),ball=n('ball',165,150,'','ball');
+  const f:DiagramFrame={nodes:[n('a',150,175,'Kicker'),n('d',112,125,'Opponent','opponent'),d2,n('d3',240,165,'Opponent','opponent'),n('b',90,66,'Teammate'),ball],paths:[],note:'Opponents are slow to get back'};
+  if(step){at(d2,215,82);f.run='M205 108L215 82';f.zone=[62,38,58,55];f.note='A teammate is unmarked';}
+  if(step===2){at(ball,104,74);f.paths=['M165 150L104 74'];f.note='Restart before they are ready';}
+  return f;}
+ case 'better-placed':{
+  const ball=n('ball',262,96,'','ball');
+  const f:DiagramFrame={nodes:[n('g',165,34,'Goal','club'),n('k',205,62,'Keeper','opponent'),n('a',272,84,'You'),n('b',160,112,'Teammate'),n('d',222,128,'Defender','opponent'),ball],paths:['M262 96L208 50'],note:'Tight angle · the keeper covers'};
+  if(step){f.paths=[];f.zone=[128,86,64,52];f.note='Your teammate sees the goal';}
+  if(step===2){at(ball,146,114);f.paths=['M262 96L148 112'];f.note='Pass for an easy finish';}
+  return f;}
+ default:return undefined;
+ }
 }
 
 /** Distinct situations use the same bounded SVG primitives and only advance on a tap. */
@@ -270,4 +466,29 @@ export const BALL_HUNT_PRACTICE:Record<string,string>={
  'high-apartments':'The direct switch is blocked. Which supporting player can connect the two sides?',
  'high-clubgrounds':'Who should leave this pocket so another player can arrive into it?',
  'high-promenade':'Where should the defender recover to stand between the attacker and their own goal?',
+ 'manhole-promenade':'Count the defenders near each teammate. Which one is standing alone?',
+ 'manhole-rua-90':'Where is the gap between the two defenders? Where should your teammate stand to use it?',
+ 'manhole-cafe-mare':'Before the easy sideways pass, is anyone free further up the pitch?',
+ 'manhole-visitor-centre':'If everyone attacks, who stops a quick counter? Choose your safety player.',
+ 'manhole-classrooms':'Move four teammates into a diamond. Which corner is the defender not covering?',
+ 'manhole-rua-nova':'Which third is the ball in? Should this player play safe or be brave?',
+ 'manhole-fish-market':'Where can the runner stand so the defender watching the ball cannot see them?',
+ 'manhole-park-library':'Which way should you run around the winger to make the defender choose?',
+ 'manhole-island-market':'Where should the defender stand to steer the dribbler toward the touchline?',
+ 'manhole-courtside':'Send one runner to each space: near post, far post and penalty spot. Who will be free?',
+ 'manhole-west-market':'When the defenders run back toward goal, where does the space open?',
+ 'manhole-corner-deli':'You just won the ball. Where is the space the other team left behind?',
+ 'manhole-west-end-books':'Where must opponents wait at a 7v7 goal kick? Where should your defenders go?',
+ 'manhole-junior-club':'Which teammate should check short, and which should run down the line?',
+ 'manhole-arcade':'Draw a line from the ball to the striker. Where should the defender stand?',
+ 'manhole-nursery':'After two quick passes, where does a gap open between the defenders?',
+ 'manhole-high-school':'Which way should you curve your press to block the pass to the other opponent?',
+ 'manhole-community-hall':'The opponents just passed backward. What should the whole defensive line do?',
+ 'manhole-garden-cafe':'Nobody is pressing you and the space ahead is empty. Carry or pass? When does that change?',
+ 'manhole-arts-wing':'Lift your head in your mind. Which teammate and which space can you see now?',
+ 'manhole-courtyard':'Where should the keeper stand when the defence is high up the pitch?',
+ 'manhole-pier-bakery':'The wall covers one side of the goal. Where should the keeper stand?',
+ 'manhole-humanities':'Watch the first touch. Is it close to the feet, or is this the moment to press?',
+ 'manhole-school-offices':'The defence is not ready yet. Who is unmarked for a quick restart?',
+ 'manhole-history-museum':'Shoot from the tight angle, or pass? Find the teammate with the clearer view.',
 };

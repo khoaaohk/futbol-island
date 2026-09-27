@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: World Cup 2024",
+   "text": "The 2024 Futsal World Cup, in Uzbekistan. France play Thailand in the round of sixteen. Abdessamad Mohammed sets up Mamadou Tour\u00e9, and he scores! France win five two.",
+   "src": "/plays/narration/mamadou-toure-futsal-signature/1.m4a",
+   "seconds": 14.0,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "2024",
+     "at": 0.425
+    },
+    {
+     "w": "Futsal",
+     "at": 1.45
+    },
+    {
+     "w": "World",
+     "at": 1.9
+    },
+    {
+     "w": "Cup",
+     "at": 2.212
+    },
+    {
+     "w": "in",
+     "at": 2.8
+    },
+    {
+     "w": "Uzbekistan",
+     "at": 2.925
+    },
+    {
+     "w": "France",
+     "at": 4.3
+    },
+    {
+     "w": "play",
+     "at": 4.713
+    },
+    {
+     "w": "Thailand",
+     "at": 5.013
+    },
+    {
+     "w": "in",
+     "at": 5.588
+    },
+    {
+     "w": "the",
+     "at": 5.662
+    },
+    {
+     "w": "round",
+     "at": 5.75
+    },
+    {
+     "w": "of",
+     "at": 6.062
+    },
+    {
+     "w": "sixteen",
+     "at": 6.162
+    },
+    {
+     "w": "Abdessamad",
+     "at": 7.263
+    },
+    {
+     "w": "Mohammed",
+     "at": 7.95
+    },
+    {
+     "w": "sets",
+     "at": 8.588
+    },
+    {
+     "w": "up",
+     "at": 8.863
+    },
+    {
+     "w": "Mamadou",
+     "at": 9.025
+    },
+    {
+     "w": "Tour\u00e9",
+     "at": 9.488
+    },
+    {
+     "w": "and",
+     "at": 10.175
+    },
+    {
+     "w": "he",
+     "at": 10.287
+    },
+    {
+     "w": "scores",
+     "at": 10.412
+    },
+    {
+     "w": "France",
+     "at": 11.5
+    },
+    {
+     "w": "win",
+     "at": 11.912
+    },
+    {
+     "w": "five",
+     "at": 12.25
+    },
+    {
+     "w": "two",
+     "at": 12.637
+    }
+   ]
+  },
+  {
+   "label": "How he dribbles",
+   "text": "Mamadou plays on the wing, as an ala. This is how he dribbles: he keeps his body between the defender and the ball. Then he turns, and bursts away. Shoot!",
+   "src": "/plays/narration/mamadou-toure-futsal-signature/2.m4a",
+   "seconds": 10.9,
+   "words": [
+    {
+     "w": "Mamadou",
+     "at": 0.4
+    },
+    {
+     "w": "plays",
+     "at": 0.812
+    },
+    {
+     "w": "on",
+     "at": 1.137
+    },
+    {
+     "w": "the",
+     "at": 1.238
+    },
+    {
+     "w": "wing",
+     "at": 1.363
+    },
+    {
+     "w": "as",
+     "at": 1.8
+    },
+    {
+     "w": "an",
+     "at": 1.913
+    },
+    {
+     "w": "ala",
+     "at": 2.013
+    },
+    {
+     "w": "This",
+     "at": 2.812
+    },
+    {
+     "w": "is",
+     "at": 3.05
+    },
+    {
+     "w": "how",
+     "at": 3.175
+    },
+    {
+     "w": "he",
+     "at": 3.375
+    },
+    {
+     "w": "dribbles",
+     "at": 3.513
+    },
+    {
+     "w": "he",
+     "at": 4.35
+    },
+    {
+     "w": "keeps",
+     "at": 4.475
+    },
+    {
+     "w": "his",
+     "at": 4.737
+    },
+    {
+     "w": "body",
+     "at": 4.9
+    },
+    {
+     "w": "between",
+     "at": 5.275
+    },
+    {
+     "w": "the",
+     "at": 5.562
+    },
+    {
+     "w": "defender",
+     "at": 5.65
+    },
+    {
+     "w": "and",
+     "at": 6.175
+    },
+    {
+     "w": "the",
+     "at": 6.287
+    },
+    {
+     "w": "ball",
+     "at": 6.375
+    },
+    {
+     "w": "Then",
+     "at": 7.15
+    },
+    {
+     "w": "he",
+     "at": 7.287
+    },
+    {
+     "w": "turns",
+     "at": 7.412
+    },
+    {
+     "w": "and",
+     "at": 7.975
+    },
+    {
+     "w": "bursts",
+     "at": 8.113
+    },
+    {
+     "w": "away",
+     "at": 8.525
+    },
+    {
+     "w": "Shoot",
+     "at": 9.537
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Slow motion. Shield it with your body and your arm. Now burst past, before the defender can turn. Score!",
+   "src": "/plays/narration/mamadou-toure-futsal-signature/3.m4a",
+   "seconds": 7.8,
+   "words": [
+    {
+     "w": "Slow",
+     "at": 0.4
+    },
+    {
+     "w": "motion",
+     "at": 0.65
+    },
+    {
+     "w": "Shield",
+     "at": 1.45
+    },
+    {
+     "w": "it",
+     "at": 1.738
+    },
+    {
+     "w": "with",
+     "at": 1.812
+    },
+    {
+     "w": "your",
+     "at": 1.913
+    },
+    {
+     "w": "body",
+     "at": 2.025
+    },
+    {
+     "w": "and",
+     "at": 2.425
+    },
+    {
+     "w": "your",
+     "at": 2.538
+    },
+    {
+     "w": "arm",
+     "at": 2.712
+    },
+    {
+     "w": "Now",
+     "at": 3.438
+    },
+    {
+     "w": "burst",
+     "at": 3.625
+    },
+    {
+     "w": "past",
+     "at": 3.987
+    },
+    {
+     "w": "before",
+     "at": 4.487
+    },
+    {
+     "w": "the",
+     "at": 4.763
+    },
+    {
+     "w": "defender",
+     "at": 4.85
+    },
+    {
+     "w": "can",
+     "at": 5.25
+    },
+    {
+     "w": "turn",
+     "at": 5.425
+    },
+    {
+     "w": "Score",
+     "at": 6.263
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: shield the ball with your body, then burst away!",
+   "src": "/plays/narration/mamadou-toure-futsal-signature/4.m4a",
+   "seconds": 4.5,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.5
+    },
+    {
+     "w": "shield",
+     "at": 1.25
+    },
+    {
+     "w": "the",
+     "at": 1.538
+    },
+    {
+     "w": "ball",
+     "at": 1.625
+    },
+    {
+     "w": "with",
+     "at": 1.913
+    },
+    {
+     "w": "your",
+     "at": 2.013
+    },
+    {
+     "w": "body",
+     "at": 2.125
+    },
+    {
+     "w": "then",
+     "at": 2.575
+    },
+    {
+     "w": "burst",
+     "at": 2.775
+    },
+    {
+     "w": "away",
+     "at": 3.1
+    }
+   ]
+  }
+ ]
+}

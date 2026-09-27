@@ -1,0 +1,374 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Last minute, live",
+   "text": "Nineteen ninety-seven, Denmark against Greece. Nil-nil, last minute: a draw sends Denmark to the World Cup. Suddenly a Greek striker is clean through on Peter Schmeichel!",
+   "src": "/plays/narration/schmeichel-star-1996/1.m4a",
+   "seconds": 12.6,
+   "words": [
+    {
+     "w": "Nineteen",
+     "at": 0.4
+    },
+    {
+     "w": "ninety-seven",
+     "at": 0.8
+    },
+    {
+     "w": "Denmark",
+     "at": 1.812
+    },
+    {
+     "w": "against",
+     "at": 2.35
+    },
+    {
+     "w": "Greece",
+     "at": 2.775
+    },
+    {
+     "w": "Nil-nil",
+     "at": 3.8
+    },
+    {
+     "w": "last",
+     "at": 4.475
+    },
+    {
+     "w": "minute",
+     "at": 4.85
+    },
+    {
+     "w": "a",
+     "at": 5.513
+    },
+    {
+     "w": "draw",
+     "at": 5.638
+    },
+    {
+     "w": "sends",
+     "at": 6.062
+    },
+    {
+     "w": "Denmark",
+     "at": 6.438
+    },
+    {
+     "w": "to",
+     "at": 6.95
+    },
+    {
+     "w": "the",
+     "at": 7.037
+    },
+    {
+     "w": "World",
+     "at": 7.125
+    },
+    {
+     "w": "Cup",
+     "at": 7.487
+    },
+    {
+     "w": "Suddenly",
+     "at": 8.325
+    },
+    {
+     "w": "a",
+     "at": 8.775
+    },
+    {
+     "w": "Greek",
+     "at": 8.887
+    },
+    {
+     "w": "striker",
+     "at": 9.2
+    },
+    {
+     "w": "is",
+     "at": 9.65
+    },
+    {
+     "w": "clean",
+     "at": 9.812
+    },
+    {
+     "w": "through",
+     "at": 10.238
+    },
+    {
+     "w": "on",
+     "at": 10.5
+    },
+    {
+     "w": "Peter",
+     "at": 10.7
+    },
+    {
+     "w": "Schmeichel",
+     "at": 11.062
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. Schmeichel races off his line to get close to him.",
+   "src": "/plays/narration/schmeichel-star-1996/2.m4a",
+   "seconds": 5.8,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.35
+    },
+    {
+     "w": "Schmeichel",
+     "at": 2.35
+    },
+    {
+     "w": "races",
+     "at": 2.775
+    },
+    {
+     "w": "off",
+     "at": 3.175
+    },
+    {
+     "w": "his",
+     "at": 3.362
+    },
+    {
+     "w": "line",
+     "at": 3.525
+    },
+    {
+     "w": "to",
+     "at": 3.85
+    },
+    {
+     "w": "get",
+     "at": 3.938
+    },
+    {
+     "w": "close",
+     "at": 4.1
+    },
+    {
+     "w": "to",
+     "at": 4.4
+    },
+    {
+     "w": "him",
+     "at": 4.5
+    }
+   ]
+  },
+  {
+   "label": "The star jump",
+   "text": "From behind the goal: he jumps into a giant star, arms and legs wide, and blocks the shot!",
+   "src": "/plays/narration/schmeichel-star-1996/3.m4a",
+   "seconds": 7.0,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "behind",
+     "at": 0.487
+    },
+    {
+     "w": "the",
+     "at": 0.863
+    },
+    {
+     "w": "goal",
+     "at": 0.95
+    },
+    {
+     "w": "he",
+     "at": 1.75
+    },
+    {
+     "w": "jumps",
+     "at": 1.913
+    },
+    {
+     "w": "into",
+     "at": 2.212
+    },
+    {
+     "w": "a",
+     "at": 2.45
+    },
+    {
+     "w": "giant",
+     "at": 2.562
+    },
+    {
+     "w": "star",
+     "at": 2.962
+    },
+    {
+     "w": "arms",
+     "at": 3.688
+    },
+    {
+     "w": "and",
+     "at": 4.112
+    },
+    {
+     "w": "legs",
+     "at": 4.225
+    },
+    {
+     "w": "wide",
+     "at": 4.588
+    },
+    {
+     "w": "and",
+     "at": 5.013
+    },
+    {
+     "w": "blocks",
+     "at": 5.125
+    },
+    {
+     "w": "the",
+     "at": 5.475
+    },
+    {
+     "w": "shot",
+     "at": 5.612
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Denmark are off to the World Cup! Your turn: when a striker gets close, spread your arms and legs wide like a star to block the shot.",
+   "src": "/plays/narration/schmeichel-star-1996/4.m4a",
+   "seconds": 9.4,
+   "words": [
+    {
+     "w": "Denmark",
+     "at": 0.4
+    },
+    {
+     "w": "are",
+     "at": 0.875
+    },
+    {
+     "w": "off",
+     "at": 0.975
+    },
+    {
+     "w": "to",
+     "at": 1.2
+    },
+    {
+     "w": "the",
+     "at": 1.288
+    },
+    {
+     "w": "World",
+     "at": 1.375
+    },
+    {
+     "w": "Cup",
+     "at": 1.712
+    },
+    {
+     "w": "Your",
+     "at": 2.513
+    },
+    {
+     "w": "turn",
+     "at": 2.712
+    },
+    {
+     "w": "when",
+     "at": 3.55
+    },
+    {
+     "w": "a",
+     "at": 3.688
+    },
+    {
+     "w": "striker",
+     "at": 3.75
+    },
+    {
+     "w": "gets",
+     "at": 4.2
+    },
+    {
+     "w": "close",
+     "at": 4.45
+    },
+    {
+     "w": "spread",
+     "at": 5.088
+    },
+    {
+     "w": "your",
+     "at": 5.412
+    },
+    {
+     "w": "arms",
+     "at": 5.562
+    },
+    {
+     "w": "and",
+     "at": 6.025
+    },
+    {
+     "w": "legs",
+     "at": 6.15
+    },
+    {
+     "w": "wide",
+     "at": 6.562
+    },
+    {
+     "w": "like",
+     "at": 6.938
+    },
+    {
+     "w": "a",
+     "at": 7.062
+    },
+    {
+     "w": "star",
+     "at": 7.15
+    },
+    {
+     "w": "to",
+     "at": 7.55
+    },
+    {
+     "w": "block",
+     "at": 7.65
+    },
+    {
+     "w": "the",
+     "at": 7.95
+    },
+    {
+     "w": "shot",
+     "at": 8.062
+    }
+   ]
+  }
+ ]
+}

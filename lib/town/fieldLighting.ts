@@ -9,7 +9,8 @@ type LightingVenue=Omit<Venue,'id'>&{id:Format|'knockout'};
 type FieldEntry={venue:LightingVenue;root:T.Group;surface?:T.MeshStandardMaterial;height:number;side:number;dayColor:T.Color;nightColor:T.Color;nightEmission:T.Color};
 /** Four visible floodlight banks per court, with four shared real non-shadow lights
  * shared by the relevant pitch. Far pitches retain a modest material fill.
- * Fixed light count avoids shader recompiles during time-of-day changes. */
+ * The light count is fixed within night (lessons and pitch changes never recompile); outside night the pool is hidden
+ * (heat audit pass 2), so only entering and leaving night switch shader variants. */
 export function createFieldLighting(scene:T.Scene,roots:Map<string,T.Group>,surfaces:Map<string,T.MeshStandardMaterial>,goal:T.MeshStandardMaterial,markings:T.LineBasicMaterial){
  const dayMarkings=markings.color.clone(),nightMarkings=new T.Color().setRGB(2,2,2);
  const steel=new T.MeshStandardMaterial({color:'#596269',roughness:.72});
@@ -73,6 +74,11 @@ export function createFieldLighting(scene:T.Scene,roots:Map<string,T.Group>,surf
   const oldBlend=blend,oldGain=lightGain;const target=night?1:0,k=reduced?1:1-Math.exp(-Math.min(.1,dt)*4);
   blend=T.MathUtils.lerp(blend,target,k);if(Math.abs(blend-target)<.0005)blend=target;
   const targetGain=night&&chosen?1:0;lightGain=T.MathUtils.lerp(lightGain,targetGain,k);if(Math.abs(lightGain-targetGain)<.0005)lightGain=targetGain;
+  // Out of night mode (once the fade has finished) all four pooled spots are at intensity 0, yet every lit fragment on
+  // the island would still evaluate them (about a third of the phone colour pass in emulation). Hiding the pool drops
+  // them from the shader: pixel-identical, at the cost of one shader-variant switch when night starts and after it ends.
+  // Within night (including zero-intensity teaching views) the pool stays visible, so lessons never recompile.
+  lightRoot.visible=night||blend>0;
   if(changed||oldBlend!==blend){lenses.emissiveIntensity=blend*2.1;
   for(const entry of entries){if(!entry.surface)continue;entry.surface.color.copy(entry.dayColor).lerp(entry.nightColor,blend);entry.surface.emissive.copy(entry.nightEmission);entry.surface.emissiveIntensity=blend*(entry.venue.id==='futsal'?.246:.025);}
   goal.emissiveIntensity=blend*.16;markings.color.copy(dayMarkings).lerp(nightMarkings,blend);}

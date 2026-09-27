@@ -1,0 +1,386 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Qatar, live",
+   "text": "World Cup semi-final, 2022. Morocco kept crossing, and Ibrahima Konat\u00e9 kept clearing. This is how he did it. Hakim Ziyech curls one to the near post. Konat\u00e9 attacks it, jumps, and heads it away. Cleared!",
+   "src": "/plays/narration/konate-signature/1.m4a",
+   "seconds": 15.9,
+   "words": [
+    {
+     "w": "World",
+     "at": 0.375
+    },
+    {
+     "w": "Cup",
+     "at": 0.7
+    },
+    {
+     "w": "semi-final",
+     "at": 0.925
+    },
+    {
+     "w": "2022",
+     "at": 1.65
+    },
+    {
+     "w": "Morocco",
+     "at": 3.087
+    },
+    {
+     "w": "kept",
+     "at": 3.65
+    },
+    {
+     "w": "crossing",
+     "at": 3.938
+    },
+    {
+     "w": "and",
+     "at": 4.525
+    },
+    {
+     "w": "Ibrahima",
+     "at": 4.638
+    },
+    {
+     "w": "Konat\u00e9",
+     "at": 5.15
+    },
+    {
+     "w": "kept",
+     "at": 5.75
+    },
+    {
+     "w": "clearing",
+     "at": 6.062
+    },
+    {
+     "w": "This",
+     "at": 6.938
+    },
+    {
+     "w": "is",
+     "at": 7.15
+    },
+    {
+     "w": "how",
+     "at": 7.275
+    },
+    {
+     "w": "he",
+     "at": 7.475
+    },
+    {
+     "w": "did",
+     "at": 7.612
+    },
+    {
+     "w": "it",
+     "at": 7.825
+    },
+    {
+     "w": "Hakim",
+     "at": 8.438
+    },
+    {
+     "w": "Ziyech",
+     "at": 8.863
+    },
+    {
+     "w": "curls",
+     "at": 9.387
+    },
+    {
+     "w": "one",
+     "at": 9.787
+    },
+    {
+     "w": "to",
+     "at": 10.025
+    },
+    {
+     "w": "the",
+     "at": 10.113
+    },
+    {
+     "w": "near",
+     "at": 10.2
+    },
+    {
+     "w": "post",
+     "at": 10.425
+    },
+    {
+     "w": "Konat\u00e9",
+     "at": 11.312
+    },
+    {
+     "w": "attacks",
+     "at": 11.925
+    },
+    {
+     "w": "it",
+     "at": 12.425
+    },
+    {
+     "w": "jumps",
+     "at": 12.637
+    },
+    {
+     "w": "and",
+     "at": 13.05
+    },
+    {
+     "w": "heads",
+     "at": 13.175
+    },
+    {
+     "w": "it",
+     "at": 13.412
+    },
+    {
+     "w": "away",
+     "at": 13.5
+    },
+    {
+     "w": "Cleared",
+     "at": 14.4
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. Konat\u00e9 reads the curl early. He steps across, in front of Youssef En-Nesyri, and takes off first. Forehead through the ball, and it flies high and wide.",
+   "src": "/plays/narration/konate-signature/2.m4a",
+   "seconds": 12.3,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.188
+    },
+    {
+     "w": "Konat\u00e9",
+     "at": 2.188
+    },
+    {
+     "w": "reads",
+     "at": 2.812
+    },
+    {
+     "w": "the",
+     "at": 3.15
+    },
+    {
+     "w": "curl",
+     "at": 3.25
+    },
+    {
+     "w": "early",
+     "at": 3.625
+    },
+    {
+     "w": "He",
+     "at": 4.5
+    },
+    {
+     "w": "steps",
+     "at": 4.625
+    },
+    {
+     "w": "across",
+     "at": 4.912
+    },
+    {
+     "w": "in",
+     "at": 5.487
+    },
+    {
+     "w": "front",
+     "at": 5.6
+    },
+    {
+     "w": "of",
+     "at": 5.787
+    },
+    {
+     "w": "Youssef",
+     "at": 5.875
+    },
+    {
+     "w": "En-Nesyri",
+     "at": 6.287
+    },
+    {
+     "w": "and",
+     "at": 6.987
+    },
+    {
+     "w": "takes",
+     "at": 7.1
+    },
+    {
+     "w": "off",
+     "at": 7.362
+    },
+    {
+     "w": "first",
+     "at": 7.588
+    },
+    {
+     "w": "Forehead",
+     "at": 8.45
+    },
+    {
+     "w": "through",
+     "at": 8.9
+    },
+    {
+     "w": "the",
+     "at": 9.1
+    },
+    {
+     "w": "ball",
+     "at": 9.2
+    },
+    {
+     "w": "and",
+     "at": 9.675
+    },
+    {
+     "w": "it",
+     "at": 9.787
+    },
+    {
+     "w": "flies",
+     "at": 9.887
+    },
+    {
+     "w": "high",
+     "at": 10.338
+    },
+    {
+     "w": "and",
+     "at": 10.7
+    },
+    {
+     "w": "wide",
+     "at": 10.838
+    }
+   ]
+  },
+  {
+   "label": "The lesson",
+   "text": "His signature: the powerful headed clearance. Attack the ball at its highest point. Use your forehead. Head it high and wide, away from danger!",
+   "src": "/plays/narration/konate-signature/3.m4a",
+   "seconds": 9.9,
+   "words": [
+    {
+     "w": "His",
+     "at": 0.35
+    },
+    {
+     "w": "signature",
+     "at": 0.537
+    },
+    {
+     "w": "the",
+     "at": 1.275
+    },
+    {
+     "w": "powerful",
+     "at": 1.375
+    },
+    {
+     "w": "headed",
+     "at": 1.925
+    },
+    {
+     "w": "clearance",
+     "at": 2.237
+    },
+    {
+     "w": "Attack",
+     "at": 3.237
+    },
+    {
+     "w": "the",
+     "at": 3.6
+    },
+    {
+     "w": "ball",
+     "at": 3.7
+    },
+    {
+     "w": "at",
+     "at": 4.025
+    },
+    {
+     "w": "its",
+     "at": 4.112
+    },
+    {
+     "w": "highest",
+     "at": 4.25
+    },
+    {
+     "w": "point",
+     "at": 4.675
+    },
+    {
+     "w": "Use",
+     "at": 5.475
+    },
+    {
+     "w": "your",
+     "at": 5.737
+    },
+    {
+     "w": "forehead",
+     "at": 5.888
+    },
+    {
+     "w": "Head",
+     "at": 6.763
+    },
+    {
+     "w": "it",
+     "at": 6.938
+    },
+    {
+     "w": "high",
+     "at": 7.037
+    },
+    {
+     "w": "and",
+     "at": 7.4
+    },
+    {
+     "w": "wide",
+     "at": 7.537
+    },
+    {
+     "w": "away",
+     "at": 8.0
+    },
+    {
+     "w": "from",
+     "at": 8.275
+    },
+    {
+     "w": "danger",
+     "at": 8.475
+    }
+   ]
+  }
+ ]
+}

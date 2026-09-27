@@ -3,15 +3,18 @@ import {memo,startTransition,useEffect,useId,useLayoutEffect,useMemo,useRef,useS
 import type React from 'react';
 import {createPortal} from 'react-dom';
 import MiniCard from './MiniCard';
+import {preloadPlayerPhotos} from './PlayerArt';
 import {hasPlayFilm} from '@/lib/plays/riso/registry';
-import {DoneButton} from './DoneButton';
+import {NavigationButton} from './DoneButton';
 import navStyles from './DoneButton.module.css';
 import BinderLeaf,{type LeafHandle} from './BinderLeaf';
 import {matchesCard} from './cardSearch';
 import {buildBinder,pageOf,sectionOf,sectionsOf,viewStart,type BinderPage} from './binder';
 import profiles from '@/lib/town/playerProfiles.json';
 import {CARD_ENTRIES,ROLE_ORDER,readCollection} from '@/lib/town/cardCollection';
-import {CARD_ADDED,cardRewardsActive,takeCardSpot} from '@/lib/town/cardRewardStore';
+import {CARD_ADDED,CARD_SPOT,cardRewardsActive,takeCardSpot} from '@/lib/town/cardRewardStore';
+import {cardTier} from '@/lib/town/cardTiers';
+import {TIER_TEACHING_LINE} from '@/lib/town/cardRewards';
 import {CardOfferPill} from './CardOfferBadges';
 import styles from './CardCollection.module.css';
 /** The full card loads on demand (preloaded when the binder mounts) and is then rendered directly, not through a lazy
@@ -34,6 +37,9 @@ const pad=(n:number)=>String(n).padStart(3,'0');
 const EARN_COPY='Earn cards by learning: quizzes, the Ball hunt and exploring the island. Coming soon.';
 /** With card rewards on: every found ball, finished chat or passed quiz lets you choose one of three new cards. */
 const EARN_ACTIVE_COPY='Find a Ball hunt ball, finish a chat with an islander or pass a quiz, then choose one of three new players.';
+/** Value tiers (Sep 25 2026): a greyed Icon or Elite card says when it can turn up, so the wait is explained, not hidden. */
+const TIER_HINT:Record<string,string>={icon:`${TIER_TEACHING_LINE} Icon cards appear near the end of a path, and finishing a path always brings one.`,elite:'Elite cards unlock halfway along a path. Keep learning to meet them.'};
+const earnCopy=(name:string)=>cardRewardsActive()?TIER_HINT[cardTier(name)]??EARN_ACTIVE_COPY:EARN_COPY;
 const PLURAL:Record<string,string>={goalkeeper:'Goalkeepers',fullback:'Full-backs',centerback:'Centre-backs',midfielder:'Midfielders',winger:'Wingers',striker:'Strikers',goleiro:'Goleiros',fixo:'Fixos',ala:'Alas',pivot:'Pivôs'};
 const SHORT:Record<string,string>={goalkeeper:'Goalkeeper',fullback:'Full-back',centerback:'Centre-back',midfielder:'Midfielder',winger:'Winger',striker:'Striker',goleiro:'Goleiro',fixo:'Fixo',ala:'Ala',pivot:'Pivô'};
 /** Divider tab labels that fit a phone's narrow tabs. */
@@ -124,11 +130,12 @@ export default function CardCollection(){
  turnRef.current=turn;sizeLock.current=searchOpen;prepRef.current=prep;
  const [PlayerCard,setPlayerCard]=useState<PlayerCardView|null>(()=>playerCardView);
  useEffect(()=>{setOwned(readCollection());setField(readField());let live=true;loadPlayerCard().then(view=>{if(live)setPlayerCard(()=>view);}).catch(()=>{});return ()=>{live=false;};},[]);
- // Card rewards (docs/card-rewards.md): a card just chosen from an offer lands in its pocket. The binder re-reads the collection,
+ // Card rewards (docs/card-rewards.md): a card just chosen from an offer lands in its pocket (CARD_SPOT: the position guide's
+ // "See it in my binder" turns to a card the same way, without collecting it). The binder re-reads the collection,
  // opens the chosen card's binder and page, and lights its pocket (the same "Found" mark as search).
  useEffect(()=>{const land=(name:string|null)=>{if(!name)return;const entry=ENTRY.get(name);if(!entry)return;const target:Field=entry.futsal?'futsal':'football';
    setOwned(readCollection());setField(target);saveField(target);setPage(Math.max(0,pageOf(BINDERS[target].pages,name)));setSpot(name);};
-  land(takeCardSpot());const added=()=>land(takeCardSpot());window.addEventListener(CARD_ADDED,added);return ()=>window.removeEventListener(CARD_ADDED,added);},[]);
+  land(takeCardSpot());const added=()=>land(takeCardSpot());window.addEventListener(CARD_ADDED,added);window.addEventListener(CARD_SPOT,added);return ()=>{window.removeEventListener(CARD_ADDED,added);window.removeEventListener(CARD_SPOT,added);};},[]);
  // Everything renders at the dialog's top level (the modal body has its own padding and stacking context): the binder
  // under the floating header, the dock, search and the lifted card over it.
  useLayoutEffect(()=>{setHost(root.current?.closest('dialog')??null);},[]);
@@ -162,6 +169,12 @@ export default function CardCollection(){
   return {cover,spine,tab,headH,inner,gap,pocketPad,pocketW,pocketH,cardW,pageW,pageH,binderW,binderH,top};
  },[W,H,spread]);
  const step=spread?2:1,start=viewStart(page,spread),last=viewStart(pages.length-1,spread),strips=spread?5:4;
+ // Photos for the pages on show and the next spread load ahead, so a lifted card never waits for its photo.
+ useEffect(()=>{preloadPlayerPhotos(pages.slice(start,start+step*2).flatMap(p=>p.slots));},[start,step,pages]);
+ // A single page that reaches the screen's left edge (portrait phones): a sheet turned past p = .65 lies off-screen but for a
+ // 1–6 px sliver over the binder's edge, so BinderLeaf hides it there instead of snapping that sliver away when the turn
+ // settles. Where there is room beside the binder (a landscape phone) the turned sheet stays visible as before.
+ const away=!spread&&(W-g.binderW-g.tab)/2+g.cover<=8?.65:undefined;
  useEffect(()=>{setPage(current=>Math.min(viewStart(current,spread),viewStart(pages.length-1,spread)));},[spread,pages.length]);
 
  // ── Page turns. planTurn lays out the sheets; run() animates them on requestAnimationFrame; finish() hands over to the
@@ -204,7 +217,13 @@ export default function CardCollection(){
  /** The turn to play: the prebuilt one when it matches (same id, so its sheets stay mounted), else planned now. */
  const ready=(to:number,drag:boolean):Turn=>{const p=prepRef.current;prepRef.current=null;setPrep(null);return p&&p.key===prepKey&&p.to===to?{...p,drag}:planTurn(start,to,drag);};
  useEffect(()=>{if(prep&&prep.key!==prepKey)setPrep(null);},[prep,prepKey]);
- useEffect(()=>{if(turn||lift||!W)return;if(prepRef.current?.key===prepKey)return;const run=()=>prepare(start<last?step:-step);
+ // The idle prebuild follows the direction of travel (the last turn's), falling back to the other way at either end of the
+ // binder: after a back turn the next back turn is the likely one, and the pointer usually still rests on the arrow just
+ // pressed (no new pointerenter to prebuild it). Predicting "next" there left every consecutive back turn unprebuilt, and
+ // desktop Chrome then stalled one 67–133 ms frame rasterising the newly shown sheet (docs/performance-guide.md, Sep 25).
+ const lastDir=useRef<1|-1>(1);
+ useLayoutEffect(()=>{lastDir.current=1;},[field]);
+ useEffect(()=>{if(turn||lift||!W)return;if(prepRef.current?.key===prepKey)return;const ahead=lastDir.current*step,run=()=>prepare(start+ahead>=0&&start+ahead<=last?ahead:-ahead);
   const w=window as Window&{requestIdleCallback?:(cb:()=>void,o?:{timeout:number})=>number;cancelIdleCallback?:(id:number)=>void};
   if(w.requestIdleCallback&&w.cancelIdleCallback){const id=w.requestIdleCallback(run,{timeout:1200});return ()=>w.cancelIdleCallback!(id);}
   const id=window.setTimeout(run,350);return ()=>window.clearTimeout(id);
@@ -220,7 +239,7 @@ export default function CardCollection(){
   // eslint-disable-next-line react-hooks/exhaustive-deps
  },[turn]);
  // A planned (not dragged) turn starts once its sheets are mounted, from their first frame.
- useLayoutEffect(()=>{if(!turn||turn.settling)return;leaves.current.forEach(leaf=>leaf?.reveal());const u=underRef.current;if(u?.hasAttribute('data-prep')){u.style.opacity='';u.removeAttribute('data-prep');}
+ useLayoutEffect(()=>{if(!turn||turn.settling)return;lastDir.current=turn.dir;leaves.current.forEach(leaf=>leaf?.reveal());const u=underRef.current;if(u?.hasAttribute('data-prep')){u.style.opacity='';u.removeAttribute('data-prep');}
   if(turn.drag){const d=dragging.current;const leaf=turn.leaves[0];leaves.current[0]?.pose(leaf.reverse?1-(d?.p??0):(d?.p??0));castShadows(leaf.reverse?1-(d?.p??0):(d?.p??0),turn);return;}
   poseAll(turn,0);run(turn);
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -275,10 +294,24 @@ export default function CardCollection(){
   if(event.key==='Enter'&&results[active]){event.preventDefault();pick(results[active].name);}
  };
  useEffect(()=>{searchPanel.current?.querySelector(`#${searchId}-opt-${active}`)?.scrollIntoView({block:'nearest'});},[active,searchId]);
- // With the phone keyboard up, only the floating search rides above it (visualViewport events while search is open).
+ // Search takes the dock's place: the dock hides and the search bar sits at the TOP of the visible area with the results directly
+ // under it, down to the keyboard (iPhone, Sep 26 2026: with the bar docked above the keyboard the matches had to squeeze in above
+ // it, and on iOS they didn't show at all). iOS keeps the layout viewport and only shrinks (and may offset) the visual viewport, so
+ // --vvt is the visual viewport's top relative to the fixed layer and --vvh its height; the panel is capped to that band.
+ // data-kb marks a keyboard (the bottom safe-area inset no longer applies). Phones: the bar covers the header row (user: "cover the
+ // Back and Done buttons"), which fades out and goes inert + aria-hidden until search closes. Tablets and desktop keep the header:
+ // --floor starts the panel just under it. visualViewport events only, while search is open.
  useEffect(()=>{const vv=typeof window!=='undefined'?window.visualViewport:null,el=searchPanel.current;if(!searchOpen||!vv||!el)return;
-  const update=()=>el.style.setProperty('--kb',`${Math.max(0,Math.round(innerHeight-vv.height-vv.offsetTop))}px`);update();
-  vv.addEventListener('resize',update);vv.addEventListener('scroll',update);return ()=>{vv.removeEventListener('resize',update);vv.removeEventListener('scroll',update);};},[searchOpen]);
+  const header=host?.querySelector<HTMLElement>(':scope > section > header')??null,phone=matchMedia('(max-width: 699px)').matches,wasInert=!!header?.inert;
+  if(header&&phone){header.style.transition='opacity .18s ease-out';header.style.opacity='0';header.inert=true;header.setAttribute('aria-hidden','true');}
+  // iOS may scroll the page to reveal the focused field; the binder is all fixed, so put it back (the panel follows offsetTop anyway).
+  const update=()=>{if((document.scrollingElement?.scrollTop??0)>0)document.scrollingElement!.scrollTop=0;const top=layer.current?.getBoundingClientRect().top??0;
+   el.style.setProperty('--vvt',`${Math.max(0,Math.round(vv.offsetTop-top))}px`);el.style.setProperty('--vvh',`${Math.round(vv.height)}px`);
+   el.style.setProperty('--floor',header&&!phone?`${Math.round(header.getBoundingClientRect().bottom-top+6)}px`:'0px');
+   el.toggleAttribute('data-kb',innerHeight-vv.height>120);};update();
+  vv.addEventListener('resize',update);vv.addEventListener('scroll',update);
+  return ()=>{vv.removeEventListener('resize',update);vv.removeEventListener('scroll',update);
+   if(header&&phone){header.style.opacity='';header.inert=wasInert;header.removeAttribute('aria-hidden');window.setTimeout(()=>{header.style.transition='';},250);}};},[searchOpen,host]);
 
  // ── Lift: the card rises out of its pocket into the viewer (FLIP from the pocket's rect to the card's), over the blurred binder.
  const liftCard=(name:string,from:HTMLElement)=>{if(lift||turn||performance.now()-swiped.current<350)return;const entry=ENTRY.get(name);if(!entry)return;
@@ -348,7 +381,7 @@ export default function CardCollection(){
   if(event.key in keys){event.preventDefault();turnBy(keys[event.key]);return;}
   if(event.key==='Home'){event.preventDefault();goTo(0);return;}
   if(event.key==='End'){event.preventDefault();goTo(last);return;}
-  if(event.key==='/'){event.preventDefault();setSearchOpen(true);requestAnimationFrame(()=>search.current?.focus());}
+  if(event.key==='/'){event.preventDefault();setSearchOpen(true);requestAnimationFrame(()=>search.current?.focus({preventScroll:true}));}
  };
  const inert=(on:boolean)=>(on?{inert:''}:{}) as Record<string,string>;
  const chooseField=(next:Field)=>{if(next===field||turn)return;setField(next);saveField(next);setPage(0);};
@@ -392,10 +425,10 @@ export default function CardCollection(){
  const vars={'--cover':`${g.cover}px`,'--spine':`${g.spine}px`,'--tab':`${g.tab}px`,'--head':`${g.headH}px`,'--inner':`${g.inner}px`,'--gap':`${g.gap}px`,'--pp':`${g.pocketPad}px`,'--pw':`${g.pocketW}px`,'--ph':`${g.pocketH}px`,'--w':`${g.cardW}px`,'--page-w':`${g.pageW}px`,'--page-h':`${g.pageH}px`,top:g.top,width:g.binderW,height:g.binderH} as React.CSSProperties;
  const shown=turn??(prep&&prep.key===prepKey?prep:null);
  // Memoized so that starting the prebuilt turn (reveal() on its first frame) re-renders none of its page copies.
- const sheets=useMemo(()=>shown?.leaves.map((leaf,j)=><BinderLeaf key={`${shown.id}-${j}`} ref={el=>{leaves.current[j]=el;}} hinge={leaf.hinge} offset={spread?g.spine/2:0} width={g.pageW} height={g.pageH} strips={leaf.strips} left={leaf.left} z={leaf.z} hidden={!turn}
+ const sheets=useMemo(()=>shown?.leaves.map((leaf,j)=><BinderLeaf key={`${shown.id}-${j}`} ref={el=>{leaves.current[j]=el;}} hinge={leaf.hinge} offset={spread?g.spine/2:0} width={g.pageW} height={g.pageH} strips={leaf.strips} left={leaf.left} z={leaf.z} hidden={!turn} away={away}
    front={(a:number,b:number)=>renderPage(leaf.front,spread?(leaf.hinge==='left'?'right':'left'):'single',[a,b])} back={leaf.back>=0?(a:number,b:number)=>renderPage(leaf.back,leaf.hinge==='left'?'left':'right',[a,b]):blank}/>),
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  [shown?.id,g,spread,pages,sections,have,matches,spot,lift]);
+  [shown?.id,g,spread,away,pages,sections,have,matches,spot,lift]);
  const under=shown?.under;
  const underCopy=useMemo(()=>under&&<div ref={underRef} className={styles.underCopy} style={turn?undefined:{opacity:.001}} data-prep={turn?undefined:''} aria-hidden="true" {...inert(true)}>{renderPage(under.index,under.side)}</div>,
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -438,7 +471,7 @@ export default function CardCollection(){
  </div>;
 
  // The dock: fixed to the bottom, always visible (under the lifted card): page arrows, Football / Futsal, search.
- const dock=<nav className={styles.dock} data-leaving={leaving||undefined} aria-label="Binder" {...inert(!!lift)}>
+ const dock=<nav className={styles.dock} data-leaving={leaving||undefined} data-searching={searchOpen||undefined} aria-label="Binder" {...inert(!!lift||searchOpen)}>
   <button type="button" className={styles.turn} aria-label="Previous page" disabled={start<=0} onPointerEnter={()=>prepare(-step)} onFocus={()=>prepare(-step)} onClick={()=>turnBy(-step)}><Arrow dir={-1}/></button>
   <button type="button" className={styles.turn} aria-label="Next page" disabled={start>=last} onPointerEnter={()=>prepare(step)} onFocus={()=>prepare(step)} onClick={()=>turnBy(step)}><Arrow dir={1}/></button>
   <div className={styles.seg} role="group" aria-label="Choose binder">
@@ -447,41 +480,43 @@ export default function CardCollection(){
   {!spot&&!searchOpen&&<CardOfferPill/>}
   {spot&&!searchOpen&&<div className={styles.found} role="status"><span>Found: <b>{spot}</b></span><button type="button" aria-label={`Clear search for ${spot}`} onClick={()=>{setSpot(null);requestAnimationFrame(()=>host?.querySelector<HTMLElement>('[data-search-toggle]')?.focus());}}>×</button></div>}
   <button type="button" data-search-toggle="" className={styles.searchButton} aria-label="Search cards" aria-expanded={searchOpen} aria-controls={searchOpen?searchId:undefined}
-   onClick={()=>{if(searchOpen)closeSearch();else{setSearchOpen(true);requestAnimationFrame(()=>search.current?.focus());}}}><span className={styles.searchIcon} aria-hidden="true"/></button>
+   onClick={()=>{if(searchOpen)closeSearch();else{setSearchOpen(true);requestAnimationFrame(()=>search.current?.focus({preventScroll:true}));}}}><span className={styles.searchIcon} aria-hidden="true"/></button>
  </nav>;
 
- // Search: a floating bar with a results list above everything; tapping outside closes it. The binder never moves.
+ // Search: a floating bar at the top of the visible area with its results list directly below it, over everything; tapping outside
+ // closes it. The binder never moves.
  const searchLayer=searchOpen&&<>
   <div className={styles.searchCatcher} aria-hidden="true" onPointerDown={()=>closeSearch(false)}/>
   <div ref={searchPanel} className={styles.searchPanel} role="dialog" aria-label="Search cards">
+   <div className={styles.searchRow}>
+    <label className={styles.search}>
+     <span className={styles.srOnly}>Find a player</span><span className={styles.searchIcon} aria-hidden="true"/>
+     <input ref={search} id={searchId} type="search" value={query} placeholder="Find a player or card No." autoComplete="off" spellCheck={false} inputMode="search" enterKeyHint="search"
+      role="combobox" aria-expanded={searching} aria-controls={`${searchId}-list`} aria-activedescendant={searching&&results.length?`${searchId}-opt-${active}`:undefined} aria-autocomplete="list"
+      onChange={event=>setQuery(event.target.value)} onKeyDown={onSearchKey}/>
+    </label>
+    {searching&&<span className={styles.count} aria-hidden="true">{results.length} {results.length===1?'match':'matches'}</span>}
+    <button type="button" className={styles.clear} aria-label="Close search" onClick={()=>closeSearch()}>×</button>
+   </div>
    {searching&&<ul id={`${searchId}-list`} className={styles.results} role="listbox" aria-label="Matching cards">
     {results.length?results.slice(0,40).map((entry,i)=>{const got=have.has(entry.name);
      return <li key={entry.name} id={`${searchId}-opt-${i}`} role="option" aria-selected={i===active} className={styles.result} onPointerDown={event=>event.preventDefault()} onClick={()=>pick(entry.name)} onPointerEnter={()=>setActive(i)}>
       <span className={`${styles.resultThumb} ${got?'':styles.ghost}`}><MiniCard name={entry.name} number={entry.number} era={entry.era} got compact thumb/></span>
-      <span className={styles.resultText}><b>{got?entry.name:'???'}</b><small>No. {pad(entry.number)} · {SHORT[entry.role]} · {entry.futsal?'Futsal':'Futbol'}</small></span>
-     </li>;}):<li className={styles.noResult} role="option" aria-selected="false" aria-disabled="true">No card matches “{q}”. Try fewer letters, or a card number.</li>}
+      <span className={styles.resultText}><b>{entry.name}</b>{/* real names for every card, as on the binder's greyed cards (user, Sep 25 2026); the greyed thumb marks not collected */}{!got&&<span className={styles.srOnly}> Not collected yet.</span>}<small>No. {pad(entry.number)} · {SHORT[entry.role]} · {entry.futsal?'Futsal':'Futbol'}</small></span>
+     </li>;}):<li className={styles.noResult} role="option" aria-selected="false" aria-disabled="true">No players match “{q}”. Try fewer letters, or a card number.</li>}
    </ul>}
-   <div className={styles.searchRow}>
-    <label className={styles.search}>
-     <span className={styles.srOnly}>Find a player</span><span className={styles.searchIcon} aria-hidden="true"/>
-     <input ref={search} id={searchId} type="search" value={query} placeholder="Find a player or card No." autoComplete="off" spellCheck={false} enterKeyHint="go"
-      role="combobox" aria-expanded={searching} aria-controls={`${searchId}-list`} aria-activedescendant={searching&&results.length?`${searchId}-opt-${active}`:undefined} aria-autocomplete="list"
-      onChange={event=>setQuery(event.target.value)} onKeyDown={onSearchKey}/>
-    </label>
-    <button type="button" className={styles.clear} aria-label="Close search" onClick={()=>closeSearch()}>×</button>
-   </div>
    <p className={styles.srOnly} aria-live="polite">{searching?(results.length?`${results.length} ${results.length===1?'card matches':'cards match'}. Arrow keys choose, Enter opens its page.`:'No card matches.'):''}</p>
   </div>
  </>;
 
  return <div ref={root} className={styles.anchor} onKeyDown={onKeyDown}>
-  {host&&createPortal(binder,host)}
+  {host&&createPortal(<><div className={styles.layerArt} data-leaving={leaving||undefined} aria-hidden="true"/>{binder}</>,host)}
   {host&&createPortal(dock,host)}
   {host&&searchLayer&&createPortal(searchLayer,host)}
   {host&&lift&&liftEntry&&createPortal(<div ref={viewer} className={styles.viewer} data-phase={lift.phase} data-band={lift.got&&lift.band?'':undefined} style={lift.got&&lift.band?{'--band-top':`${lift.band.top}px`,'--band-gap':`${lift.band.gap}px`} as React.CSSProperties:undefined} role="dialog" aria-modal="true" aria-label={lift.got?`${lift.name} card`:undefined} aria-labelledby={lift.got?undefined:`${uid}-back`}>
    <div ref={backdrop} className={styles.viewerBackdrop} aria-hidden="true"/>
    <div className={styles.viewerBar}>
-    <DoneButton key={lift.phase==='in'?'in':'live'/* a tap while the card is still rising resets once it lands */} className={styles.viewerBack} onDone={closeLift} autoFocus/>
+    <NavigationButton key={lift.phase==='in'?'in':'live'/* a tap while the card is still rising resets once it lands */} back className={styles.viewerBack} onNavigate={closeLift} autoFocus/>
     {lift.got&&<button type="button" className={`${styles.viewerFlip} ${navStyles.button}`} data-navigation="done" aria-pressed={flipped} onClick={flipCard}><span className={navStyles.label}>Flip</span></button>}
    </div>
    {lift.got?<>
@@ -494,7 +529,7 @@ export default function CardCollection(){
     <h3 id={`${uid}-back`} className={styles.srOnly}>No. {pad(liftEntry.number)} · {SHORT[liftEntry.role]??liftEntry.roleLabel} · {lift.name}. Not collected yet.</h3>
     <div className={`${styles.cardHost} ${styles.ghostCard}`}>
      {PlayerCard&&<PlayerCard name={lift.name} role={liftEntry.roleLabel.replace('Futsal ','')} era={lift.era} team="gold" format={liftEntry.futsal?'futsal':'11v11'} firstName={lift.name.split(' ')[0]} compact
-      blurb={`Not collected yet. ${cardRewardsActive()?EARN_ACTIVE_COPY:EARN_COPY}`} strengths={[]}/>}
+      blurb={`Not collected yet. ${earnCopy(lift.name)}`} strengths={[]}/>}
     </div>
    </>}
   </div>,host)}

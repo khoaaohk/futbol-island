@@ -4,6 +4,7 @@ import {playerBatch} from '../graphics/playerBatch';
 import type {BallReactions} from '../graphics/ballReactions';
 import {PRACTICE_NPCS} from './practiceNpcs';
 import {DEFAULT_CUSTOMIZATION} from './customization';
+import {npcDress} from './beanLooks';
 import type {NpcDefinition} from './npcDialogues';
 
 type Position={x:number;y:number;z:number};
@@ -15,7 +16,7 @@ export function createCoachPractice(scene:T.Scene,reactions?:BallReactions){
  const panelGeo=new T.CircleGeometry(.066,5),panelMat=new T.MeshStandardMaterial({color:'#34483f',roughness:1});
  const balls=[150,162].map(x=>{const b=new T.Mesh(geo,mat);b.position.set(x,.21,-20);b.castShadow=true;root.add(b);for(const xyz of [[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]]){const direction=new T.Vector3(...xyz),p=new T.Mesh(panelGeo,panelMat);p.position.copy(direction.clone().multiplyScalar(.212));p.quaternion.setFromUnitVectors(new T.Vector3(0,0,1),direction);b.add(p);}return b;});
  const entries=PRACTICE_NPCS.map((definition,index)=>{
-  const rig=createPlayer(index?'coach-wall-green':'coach-wall-gold',index?'away':'home',false),position={x:definition.x,y:.02,z:definition.z};rig.setAppearance({...DEFAULT_CUSTOMIZATION,character:definition.character,face:definition.face,clothing:definition.clothing,body:definition.body??'balanced'});rig.update(position.x,position.z,0,0,false,{facing:Math.PI});rig.root.position.y=position.y;rig.root.traverse(object=>{object.userData.practiceNpcId=definition.id;});
+  const rig=createPlayer(index?'coach-wall-green':'coach-wall-gold',index?'away':'home',false),position={x:definition.x,y:.02,z:definition.z};rig.setAppearance({...DEFAULT_CUSTOMIZATION,character:definition.character,face:definition.face,clothing:definition.clothing,body:definition.body??'balanced'});const dress=npcDress(definition);rig.setBeanLook(dress.look,dress.outfit);rig.update(position.x,position.z,0,0,false,{facing:Math.PI});rig.root.position.y=position.y;rig.root.traverse(object=>{object.userData.practiceNpcId=definition.id;});
   const canvas=document.createElement('canvas');canvas.width=512;canvas.height=160;const ctx=canvas.getContext('2d')!;ctx.fillStyle='#294f43';ctx.beginPath();ctx.roundRect(3,3,506,154,44);ctx.fill();ctx.textAlign='center';ctx.fillStyle='#fff0cc';ctx.font='700 43px sans-serif';ctx.fillText(definition.name,256,66);ctx.fillStyle='#e6cb8b';ctx.font='700 29px sans-serif';ctx.fillText('WALL PRACTICE · TALK',256,115);
   const texture=new T.CanvasTexture(canvas);texture.colorSpace=T.SRGBColorSpace;const material=new T.SpriteMaterial({map:texture,depthTest:true,depthWrite:false});const label=new T.Sprite(material);label.scale.set(3.5,1.094,1);label.position.set(position.x,2.5,position.z);label.userData.practiceNpcId=definition.id;root.add(label);
   return {id:definition.id,definition,position,offset:{x:0,z:0},rig,label,texture,material,clock:index*1.7};

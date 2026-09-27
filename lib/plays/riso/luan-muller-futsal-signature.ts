@@ -2,8 +2,9 @@
  *
  * WHO: Luan Muller Barboza (born 17 Mar 1993, São Paulo, Brazil; 1.73 m), goalkeeper of (Illes Balears) Palma Futsal, No. 3; capped by
  *  Brazil in 2018, now plays for ARMENIA (Wikipedia: "Born in Brazil, he plays for the Armenian national team"; UEFA lists him "ARM"). The
- *  card (lib/town/playerAppearance.json country "Brazil"; playerBios "Brazilian-born Armenia goleiro who won the Champions League with Palma
- *  Futsal …") is the same person: the flag shows his birth country — no namesake / country mismatch. Palma's own site calls him "El brasileño".
+ *  card (lib/town/playerAppearance.json country "Armenia", lib/town/countryArt.ts Armenia red/blue/orange; bio "Brazilian-born Armenia goleiro
+ *  who won the Champions League with Palma Futsal …") is the same person: the flag shows his national team (FFA call-up news, 3 Oct 2022,
+ *  https://www.ffa.am/hy/news/FutsalNTCamp) — no namesake / country mismatch. Palma's own site calls him "El brasileño".
  * WHY THIS MOMENT: his entry (lib/town/iconicPlays.json) is a signature — the close-range stop ("Stay square to the ball so shots hit your
  *  body") — not one match. The best-documented big match where HE is the story: the 2024–25 UEFA Futsal Champions League SEMI-FINAL,
  *  Sporting CP 0–3 Palma Futsal, 2 May 2025, 21:00, Antarès, Le Mans. Palma's match report: "En el primer minuto, Merlim y Tomás Paçó pusieron

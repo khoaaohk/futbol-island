@@ -1,0 +1,378 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The FA Cup final",
+   "text": "Wembley, 2025, the FA Cup final. Crystal Palace break against Manchester City. Daniel Mu\u00f1oz races down the right and crosses. Eberechi Eze volleys it in! Palace win the Cup!",
+   "src": "/plays/narration/eze-signature/1.m4a",
+   "seconds": 14.0,
+   "words": [
+    {
+     "w": "Wembley",
+     "at": 0.4
+    },
+    {
+     "w": "2025",
+     "at": 0.925
+    },
+    {
+     "w": "the",
+     "at": 1.925
+    },
+    {
+     "w": "FA",
+     "at": 2.062
+    },
+    {
+     "w": "Cup",
+     "at": 2.325
+    },
+    {
+     "w": "final",
+     "at": 2.55
+    },
+    {
+     "w": "Crystal",
+     "at": 3.513
+    },
+    {
+     "w": "Palace",
+     "at": 3.938
+    },
+    {
+     "w": "break",
+     "at": 4.388
+    },
+    {
+     "w": "against",
+     "at": 4.725
+    },
+    {
+     "w": "Manchester",
+     "at": 5.1
+    },
+    {
+     "w": "City",
+     "at": 5.713
+    },
+    {
+     "w": "Daniel",
+     "at": 6.55
+    },
+    {
+     "w": "Mu\u00f1oz",
+     "at": 7.0
+    },
+    {
+     "w": "races",
+     "at": 7.562
+    },
+    {
+     "w": "down",
+     "at": 8.025
+    },
+    {
+     "w": "the",
+     "at": 8.262
+    },
+    {
+     "w": "right",
+     "at": 8.363
+    },
+    {
+     "w": "and",
+     "at": 8.662
+    },
+    {
+     "w": "crosses",
+     "at": 8.775
+    },
+    {
+     "w": "Eberechi",
+     "at": 9.812
+    },
+    {
+     "w": "Eze",
+     "at": 10.387
+    },
+    {
+     "w": "volleys",
+     "at": 10.713
+    },
+    {
+     "w": "it",
+     "at": 11.125
+    },
+    {
+     "w": "in",
+     "at": 11.225
+    },
+    {
+     "w": "Palace",
+     "at": 11.887
+    },
+    {
+     "w": "win",
+     "at": 12.338
+    },
+    {
+     "w": "the",
+     "at": 12.562
+    },
+    {
+     "w": "Cup",
+     "at": 12.662
+    }
+   ]
+  },
+  {
+   "label": "How he does it",
+   "text": "Eze loves to dribble, too. This is how he does it. He runs at the defender, dips a shoulder... and glides away!",
+   "src": "/plays/narration/eze-signature/2.m4a",
+   "seconds": 8.0,
+   "words": [
+    {
+     "w": "Eze",
+     "at": 0.4
+    },
+    {
+     "w": "loves",
+     "at": 0.675
+    },
+    {
+     "w": "to",
+     "at": 0.95
+    },
+    {
+     "w": "dribble",
+     "at": 1.075
+    },
+    {
+     "w": "too",
+     "at": 1.488
+    },
+    {
+     "w": "This",
+     "at": 2.163
+    },
+    {
+     "w": "is",
+     "at": 2.4
+    },
+    {
+     "w": "how",
+     "at": 2.525
+    },
+    {
+     "w": "he",
+     "at": 2.725
+    },
+    {
+     "w": "does",
+     "at": 2.85
+    },
+    {
+     "w": "it",
+     "at": 3.087
+    },
+    {
+     "w": "He",
+     "at": 3.6
+    },
+    {
+     "w": "runs",
+     "at": 3.763
+    },
+    {
+     "w": "at",
+     "at": 4.112
+    },
+    {
+     "w": "the",
+     "at": 4.188
+    },
+    {
+     "w": "defender",
+     "at": 4.275
+    },
+    {
+     "w": "dips",
+     "at": 4.85
+    },
+    {
+     "w": "a",
+     "at": 5.088
+    },
+    {
+     "w": "shoulder",
+     "at": 5.2
+    },
+    {
+     "w": "and",
+     "at": 6.05
+    },
+    {
+     "w": "glides",
+     "at": 6.175
+    },
+    {
+     "w": "away",
+     "at": 6.575
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. His shoulder drops left. The defender leans that way. Eze pushes the ball right, and he is gone!",
+   "src": "/plays/narration/eze-signature/3.m4a",
+   "seconds": 8.9,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.113
+    },
+    {
+     "w": "His",
+     "at": 1.975
+    },
+    {
+     "w": "shoulder",
+     "at": 2.163
+    },
+    {
+     "w": "drops",
+     "at": 2.55
+    },
+    {
+     "w": "left",
+     "at": 2.9
+    },
+    {
+     "w": "The",
+     "at": 3.625
+    },
+    {
+     "w": "defender",
+     "at": 3.725
+    },
+    {
+     "w": "leans",
+     "at": 4.225
+    },
+    {
+     "w": "that",
+     "at": 4.575
+    },
+    {
+     "w": "way",
+     "at": 4.8
+    },
+    {
+     "w": "Eze",
+     "at": 5.638
+    },
+    {
+     "w": "pushes",
+     "at": 5.95
+    },
+    {
+     "w": "the",
+     "at": 6.325
+    },
+    {
+     "w": "ball",
+     "at": 6.425
+    },
+    {
+     "w": "right",
+     "at": 6.725
+    },
+    {
+     "w": "and",
+     "at": 7.088
+    },
+    {
+     "w": "he",
+     "at": 7.188
+    },
+    {
+     "w": "is",
+     "at": 7.325
+    },
+    {
+     "w": "gone",
+     "at": 7.475
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn! Drop your shoulder to fake one way, then go the other.",
+   "src": "/plays/narration/eze-signature/4.m4a",
+   "seconds": 4.9,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "Drop",
+     "at": 1.363
+    },
+    {
+     "w": "your",
+     "at": 1.613
+    },
+    {
+     "w": "shoulder",
+     "at": 1.738
+    },
+    {
+     "w": "to",
+     "at": 2.087
+    },
+    {
+     "w": "fake",
+     "at": 2.2
+    },
+    {
+     "w": "one",
+     "at": 2.425
+    },
+    {
+     "w": "way",
+     "at": 2.65
+    },
+    {
+     "w": "then",
+     "at": 3.075
+    },
+    {
+     "w": "go",
+     "at": 3.275
+    },
+    {
+     "w": "the",
+     "at": 3.438
+    },
+    {
+     "w": "other",
+     "at": 3.575
+    }
+   ]
+  }
+ ]
+}

@@ -20,3 +20,6 @@
 .art{background:#e8d5ad url('/stories/films/assets/entry-grain.png') repeat!important;background-size:128px 128px!important;background-blend-mode:soft-light}
 
 .dialog .menu>header::before,.dialog .menu>header::after{display:none!important}
+
+/* Pass Puzzles card: same coast art, its own corner of the painting. */
+.art[data-game=puzzle]{background-color:#a9cee1;background-position:60% 20%}

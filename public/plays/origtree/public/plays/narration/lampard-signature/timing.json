@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Bolton, 2005. One more win and Chelsea are champions. Drogba heads it on... and here comes Frank Lampard, arriving late from midfield. Goal!",
+   "src": "/plays/narration/lampard-signature/1.m4a",
+   "seconds": 11.4,
+   "words": [
+    {
+     "w": "Bolton",
+     "at": 0.375
+    },
+    {
+     "w": "2005",
+     "at": 0.9
+    },
+    {
+     "w": "One",
+     "at": 2.288
+    },
+    {
+     "w": "more",
+     "at": 2.525
+    },
+    {
+     "w": "win",
+     "at": 2.763
+    },
+    {
+     "w": "and",
+     "at": 3.0
+    },
+    {
+     "w": "Chelsea",
+     "at": 3.138
+    },
+    {
+     "w": "are",
+     "at": 3.6
+    },
+    {
+     "w": "champions",
+     "at": 3.737
+    },
+    {
+     "w": "Drogba",
+     "at": 4.688
+    },
+    {
+     "w": "heads",
+     "at": 5.1
+    },
+    {
+     "w": "it",
+     "at": 5.338
+    },
+    {
+     "w": "on",
+     "at": 5.425
+    },
+    {
+     "w": "and",
+     "at": 6.25
+    },
+    {
+     "w": "here",
+     "at": 6.375
+    },
+    {
+     "w": "comes",
+     "at": 6.6
+    },
+    {
+     "w": "Frank",
+     "at": 6.9
+    },
+    {
+     "w": "Lampard",
+     "at": 7.2
+    },
+    {
+     "w": "arriving",
+     "at": 7.825
+    },
+    {
+     "w": "late",
+     "at": 8.312
+    },
+    {
+     "w": "from",
+     "at": 8.625
+    },
+    {
+     "w": "midfield",
+     "at": 8.8
+    },
+    {
+     "w": "Goal",
+     "at": 9.925
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again. Bolton's defenders are watching the strikers, so nobody picks up Lampard. He wins the bouncing ball at the edge of the box, cuts inside and drills it home.",
+   "src": "/plays/narration/lampard-signature/2.m4a",
+   "seconds": 11.8,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.7
+    },
+    {
+     "w": "Bolton's",
+     "at": 1.575
+    },
+    {
+     "w": "defenders",
+     "at": 2.175
+    },
+    {
+     "w": "are",
+     "at": 2.775
+    },
+    {
+     "w": "watching",
+     "at": 2.9
+    },
+    {
+     "w": "the",
+     "at": 3.263
+    },
+    {
+     "w": "strikers",
+     "at": 3.35
+    },
+    {
+     "w": "so",
+     "at": 4.237
+    },
+    {
+     "w": "nobody",
+     "at": 4.438
+    },
+    {
+     "w": "picks",
+     "at": 4.85
+    },
+    {
+     "w": "up",
+     "at": 5.088
+    },
+    {
+     "w": "Lampard",
+     "at": 5.275
+    },
+    {
+     "w": "He",
+     "at": 6.338
+    },
+    {
+     "w": "wins",
+     "at": 6.5
+    },
+    {
+     "w": "the",
+     "at": 6.8
+    },
+    {
+     "w": "bouncing",
+     "at": 6.9
+    },
+    {
+     "w": "ball",
+     "at": 7.375
+    },
+    {
+     "w": "at",
+     "at": 7.662
+    },
+    {
+     "w": "the",
+     "at": 7.737
+    },
+    {
+     "w": "edge",
+     "at": 7.888
+    },
+    {
+     "w": "of",
+     "at": 8.113
+    },
+    {
+     "w": "the",
+     "at": 8.188
+    },
+    {
+     "w": "box",
+     "at": 8.275
+    },
+    {
+     "w": "cuts",
+     "at": 8.988
+    },
+    {
+     "w": "inside",
+     "at": 9.3
+    },
+    {
+     "w": "and",
+     "at": 9.887
+    },
+    {
+     "w": "drills",
+     "at": 10.0
+    },
+    {
+     "w": "it",
+     "at": 10.338
+    },
+    {
+     "w": "home",
+     "at": 10.425
+    }
+   ]
+  },
+  {
+   "label": "Behind the goal",
+   "text": "From behind the goal: the late run, the strike... and Chelsea are on their way to the title!",
+   "src": "/plays/narration/lampard-signature/3.m4a",
+   "seconds": 6.3,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.375
+    },
+    {
+     "w": "behind",
+     "at": 0.512
+    },
+    {
+     "w": "the",
+     "at": 0.887
+    },
+    {
+     "w": "goal",
+     "at": 0.975
+    },
+    {
+     "w": "the",
+     "at": 1.675
+    },
+    {
+     "w": "late",
+     "at": 1.8
+    },
+    {
+     "w": "run",
+     "at": 2.1
+    },
+    {
+     "w": "the",
+     "at": 2.487
+    },
+    {
+     "w": "strike",
+     "at": 2.587
+    },
+    {
+     "w": "and",
+     "at": 3.5
+    },
+    {
+     "w": "Chelsea",
+     "at": 3.638
+    },
+    {
+     "w": "are",
+     "at": 4.1
+    },
+    {
+     "w": "on",
+     "at": 4.225
+    },
+    {
+     "w": "their",
+     "at": 4.388
+    },
+    {
+     "w": "way",
+     "at": 4.55
+    },
+    {
+     "w": "to",
+     "at": 4.75
+    },
+    {
+     "w": "the",
+     "at": 4.838
+    },
+    {
+     "w": "title",
+     "at": 4.925
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: when defenders watch the strikers, wait... then arrive late at the edge of the box.",
+   "src": "/plays/narration/lampard-signature/4.m4a",
+   "seconds": 6.7,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "when",
+     "at": 1.275
+    },
+    {
+     "w": "defenders",
+     "at": 1.425
+    },
+    {
+     "w": "watch",
+     "at": 2.0
+    },
+    {
+     "w": "the",
+     "at": 2.325
+    },
+    {
+     "w": "strikers",
+     "at": 2.425
+    },
+    {
+     "w": "wait",
+     "at": 3.038
+    },
+    {
+     "w": "then",
+     "at": 3.9
+    },
+    {
+     "w": "arrive",
+     "at": 4.05
+    },
+    {
+     "w": "late",
+     "at": 4.463
+    },
+    {
+     "w": "at",
+     "at": 4.737
+    },
+    {
+     "w": "the",
+     "at": 4.812
+    },
+    {
+     "w": "edge",
+     "at": 4.95
+    },
+    {
+     "w": "of",
+     "at": 5.138
+    },
+    {
+     "w": "the",
+     "at": 5.213
+    },
+    {
+     "w": "box",
+     "at": 5.3
+    }
+   ]
+  }
+ ]
+}

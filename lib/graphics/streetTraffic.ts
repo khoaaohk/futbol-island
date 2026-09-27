@@ -8,6 +8,7 @@ import {createTrafficRouteSamples} from '../town/trafficRouteSamples';
 import {TRAVEL_MODES} from '../town/travelModes';
 import * as T from 'three';
 import {batchRigidMeshes} from './batchMeshes';
+import {characterStyle} from './characterStyle';
 import {createTruckLandingGlowAssets} from './truckLandingGlow';
 import {buildRoadNetwork,type TrafficRoad,type RoadNode} from '../town/roadNetwork';
 import {blocked,type Obstacle} from '../town/simulation';
@@ -27,7 +28,12 @@ export function createStreetTraffic(scene:T.Scene,obstacles:Obstacle[],roads:Tra
  const cars=['#bb6857','#638d9c','#d9b563','#7eaa81','#ab8eaf','#e1b796','#6a919e','#319c8c','#efad45'].map((color,i)=>{const group=new T.Group();group.name='street-car-'+i;root.add(group);const paint=new T.MeshStandardMaterial({color,roughness:.7});materials.push(paint);
   const pickup=i>=7;if(pickup){group.name='matchday-pickup-'+(i-7);
    mesh(group,new T.BoxGeometry(2,.4,4.4),paint,0,.65,0);
-   mesh(group,new T.BoxGeometry(1.9,.12,2.25),cream,0,.92,-.95);
+   // Bean riders (lane F, docs/bean-characters/CONTRACT.md): the rig sits with its hips .44 m above the bed point
+   // and its soles .12 m below it. The bean's round bottom is .31 m up, so it gets a cooler to sit on, and the bed
+   // floor drops .12 m so the boots rest on it instead of inside it. The bed point (rider, coins, landing) is unchanged.
+   const beanBed=characterStyle()==='bean';
+   mesh(group,new T.BoxGeometry(1.9,.12,2.25),cream,0,beanBed?.8:.92,-.95);
+   if(beanBed){mesh(group,new T.BoxGeometry(.7,.43,.46),glass,0,.86+.215,-1.25).name='pickup-cooler-seat';mesh(group,new T.BoxGeometry(.72,.04,.48),cream,0,1.29,-1.25);}
    mesh(group,new T.BoxGeometry(1.65,.85,1.25),glass,0,1.25,.8);mesh(group,new T.BoxGeometry(1.9,.12,1.4),paint,0,1.73,.8);
    for(const side of [-1,1])mesh(group,new T.BoxGeometry(.14,.55,2.4),paint,side*.94,1.1,-.95);
    mesh(group,new T.BoxGeometry(2,.55,.14),paint,0,1.1,-2.12);

@@ -1,0 +1,378 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The late run, live",
+   "text": "Bilbao, the 2024 Champions League final, in stoppage time. Barcelona lead Lyon one-nil. Ona Batlle breaks forward and finds Cl\u00e0udia Pina on the left. Alexia Putellas, on for just three minutes, runs into the box. Pina passes. Goal!",
+   "src": "/plays/narration/alexia-signature/1.m4a",
+   "seconds": 17.7,
+   "words": [
+    {
+     "w": "Bilbao",
+     "at": 0.375
+    },
+    {
+     "w": "the",
+     "at": 0.825
+    },
+    {
+     "w": "2024",
+     "at": 0.925
+    },
+    {
+     "w": "Champions",
+     "at": 1.863
+    },
+    {
+     "w": "League",
+     "at": 2.45
+    },
+    {
+     "w": "final",
+     "at": 2.712
+    },
+    {
+     "w": "in",
+     "at": 3.2
+    },
+    {
+     "w": "stoppage",
+     "at": 3.362
+    },
+    {
+     "w": "time",
+     "at": 3.888
+    },
+    {
+     "w": "Barcelona",
+     "at": 4.787
+    },
+    {
+     "w": "lead",
+     "at": 5.475
+    },
+    {
+     "w": "Lyon",
+     "at": 5.75
+    },
+    {
+     "w": "one-nil",
+     "at": 6.15
+    },
+    {
+     "w": "Ona",
+     "at": 7.112
+    },
+    {
+     "w": "Batlle",
+     "at": 7.375
+    },
+    {
+     "w": "breaks",
+     "at": 7.75
+    },
+    {
+     "w": "forward",
+     "at": 8.075
+    },
+    {
+     "w": "and",
+     "at": 8.463
+    },
+    {
+     "w": "finds",
+     "at": 8.575
+    },
+    {
+     "w": "Cl\u00e0udia",
+     "at": 8.938
+    },
+    {
+     "w": "Pina",
+     "at": 9.338
+    },
+    {
+     "w": "on",
+     "at": 9.662
+    },
+    {
+     "w": "the",
+     "at": 9.762
+    },
+    {
+     "w": "left",
+     "at": 9.85
+    },
+    {
+     "w": "Alexia",
+     "at": 10.713
+    },
+    {
+     "w": "Putellas",
+     "at": 11.225
+    },
+    {
+     "w": "on",
+     "at": 11.95
+    },
+    {
+     "w": "for",
+     "at": 12.175
+    },
+    {
+     "w": "just",
+     "at": 12.3
+    },
+    {
+     "w": "three",
+     "at": 12.562
+    },
+    {
+     "w": "minutes",
+     "at": 12.8
+    },
+    {
+     "w": "runs",
+     "at": 13.262
+    },
+    {
+     "w": "into",
+     "at": 13.613
+    },
+    {
+     "w": "the",
+     "at": 13.787
+    },
+    {
+     "w": "box",
+     "at": 13.875
+    },
+    {
+     "w": "Pina",
+     "at": 14.762
+    },
+    {
+     "w": "passes",
+     "at": 15.113
+    },
+    {
+     "w": "Goal",
+     "at": 16.225
+    }
+   ]
+  },
+  {
+   "label": "Timing the run",
+   "text": "Watch again. Alexia starts in midfield, then bursts forward as Pina gets the ball.",
+   "src": "/plays/narration/alexia-signature/2.m4a",
+   "seconds": 6.6,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "Alexia",
+     "at": 1.512
+    },
+    {
+     "w": "starts",
+     "at": 2.05
+    },
+    {
+     "w": "in",
+     "at": 2.362
+    },
+    {
+     "w": "midfield",
+     "at": 2.462
+    },
+    {
+     "w": "then",
+     "at": 3.325
+    },
+    {
+     "w": "bursts",
+     "at": 3.525
+    },
+    {
+     "w": "forward",
+     "at": 3.938
+    },
+    {
+     "w": "as",
+     "at": 4.35
+    },
+    {
+     "w": "Pina",
+     "at": 4.5
+    },
+    {
+     "w": "gets",
+     "at": 4.8
+    },
+    {
+     "w": "the",
+     "at": 5.05
+    },
+    {
+     "w": "ball",
+     "at": 5.15
+    }
+   ]
+  },
+  {
+   "label": "Just in time",
+   "text": "She arrives just as the ball does, and crashes it high into the net with her left foot!",
+   "src": "/plays/narration/alexia-signature/3.m4a",
+   "seconds": 6.0,
+   "words": [
+    {
+     "w": "She",
+     "at": 0.4
+    },
+    {
+     "w": "arrives",
+     "at": 0.525
+    },
+    {
+     "w": "just",
+     "at": 1.038
+    },
+    {
+     "w": "as",
+     "at": 1.35
+    },
+    {
+     "w": "the",
+     "at": 1.488
+    },
+    {
+     "w": "ball",
+     "at": 1.575
+    },
+    {
+     "w": "does",
+     "at": 1.875
+    },
+    {
+     "w": "and",
+     "at": 2.6
+    },
+    {
+     "w": "crashes",
+     "at": 2.725
+    },
+    {
+     "w": "it",
+     "at": 3.175
+    },
+    {
+     "w": "high",
+     "at": 3.288
+    },
+    {
+     "w": "into",
+     "at": 3.587
+    },
+    {
+     "w": "the",
+     "at": 3.763
+    },
+    {
+     "w": "net",
+     "at": 3.875
+    },
+    {
+     "w": "with",
+     "at": 4.138
+    },
+    {
+     "w": "her",
+     "at": 4.237
+    },
+    {
+     "w": "left",
+     "at": 4.375
+    },
+    {
+     "w": "foot",
+     "at": 4.662
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "The secret? Time your run from midfield, so you arrive just as the ball does.",
+   "src": "/plays/narration/alexia-signature/4.m4a",
+   "seconds": 5.8,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "secret",
+     "at": 0.463
+    },
+    {
+     "w": "Time",
+     "at": 1.288
+    },
+    {
+     "w": "your",
+     "at": 1.587
+    },
+    {
+     "w": "run",
+     "at": 1.7
+    },
+    {
+     "w": "from",
+     "at": 1.925
+    },
+    {
+     "w": "midfield",
+     "at": 2.075
+    },
+    {
+     "w": "so",
+     "at": 2.875
+    },
+    {
+     "w": "you",
+     "at": 3.025
+    },
+    {
+     "w": "arrive",
+     "at": 3.175
+    },
+    {
+     "w": "just",
+     "at": 3.625
+    },
+    {
+     "w": "as",
+     "at": 3.875
+    },
+    {
+     "w": "the",
+     "at": 4.013
+    },
+    {
+     "w": "ball",
+     "at": 4.1
+    },
+    {
+     "w": "does",
+     "at": 4.4
+    }
+   ]
+  }
+ ]
+}

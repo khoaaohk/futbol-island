@@ -1,4 +1,5 @@
 'use client';
+import {registerIslandNarration,islandNarrationAllowed} from '@/lib/audio/islandNarration';
 import {useEffect,useLayoutEffect,useRef,useState,type CSSProperties} from 'react';
 import {DoneButton} from './DoneButton';
 import StoryPlaybackBar from './StoryPlaybackBar';
@@ -33,7 +34,7 @@ export default function StoryFilmPlayer({story,onClose,onComplete,origin}:{story
   const releaseWorld=holdVideoPlayback(),previous=document.activeElement as HTMLElement|null;
   const siblings=Array.from(node.parentElement?.children??[]).filter(child=>child!==node) as HTMLElement[],oldInert=siblings.map(child=>child.inert);siblings.forEach(child=>child.inert=true);
   node.querySelector<HTMLButtonElement>('button')?.focus({preventScroll:true});
-  const media=new Audio();audio.current=media;media.preload='auto';media.volume=getSoundVolume();media.muted=state.current.muted;
+  const media=new Audio(),releaseNarration=registerIslandNarration(media);audio.current=media;media.preload='auto';media.volume=getSoundVolume();media.muted=state.current.muted;
   const narrationBuffer=createNarrationBuffer();let sourceKey='';
   const prepareNext=()=>{if(!track&&!document.hidden)narrationBuffer.prepare(story.chapters[state.current.chapter+1]?.audio);};
   media.addEventListener('playing',prepareNext);
@@ -65,12 +66,12 @@ export default function StoryFilmPlayer({story,onClose,onComplete,origin}:{story
   const stopFrame=()=>{if(frame)cancelAnimationFrame(frame);frame=0;last=0;};
   const failAudio=()=>{s.audioFailed=true;setAudioFailed(true);};media.addEventListener('error',failAudio);
   const loadAudio=(index:number)=>{s.audioFailed=false;setAudioFailed(false);const source=track?(story.audio.mode==='track'?story.audio.src:undefined):story.chapters[index].audio;if(source){if(sourceKey!==source||media.error){sourceKey=source;media.src=track?source:narrationBuffer.take(source);media.load();}else{media.currentTime=0;}}else{sourceKey='';media.removeAttribute('src');media.load();failAudio();}};
-  const startAudio=()=>{if(disposed||document.hidden||!visible||s.status!=='playing'||media.ended||scripted)return;if(!track&&!story.chapters[s.chapter].audio)return;void media.play().catch(error=>{if(disposed||error?.name==='AbortError')return;if(error?.name==='NotAllowedError'){pause();}else failAudio();});};
+  const startAudio=()=>{if(disposed||!islandNarrationAllowed()||document.hidden||!visible||s.status!=='playing'||media.ended||scripted)return;if(!track&&!story.chapters[s.chapter].audio)return;void media.play().then(()=>{if(disposed||!islandNarrationAllowed())media.pause();}).catch(error=>{if(disposed||error?.name==='AbortError')return;if(error?.name==='NotAllowedError'){pause();}else failAudio();});};
   const setPhase=(next:Status)=>{s.status=next;setStatus(next);};
   const seam=(index:number)=>{setChapter(index);if(!reduced&&s.status==='playing'&&typeof navigator.vibrate==='function'){try{navigator.vibrate(8);}catch{}}};
   const finish=()=>{s.time=duration;media.pause();setPhase('finished');setClock(Math.round(duration));paint();if(!reported.current){reported.current=true;completion.current?.();}};
   const pause=(redraw=true)=>{clearTimeout(introTimer);introTimer=undefined;media.pause();stopFrame();if(s.status!=='playing')return;setPhase('paused');if(redraw)paint();};
-  const tick=(now:number)=>{frame=0;if(disposed||document.hidden||!visible||s.status!=='playing')return;const dt=last?Math.min(.15,(now-last)/1000):0;last=now;
+  const tick=(now:number)=>{frame=0;if(disposed||!islandNarrationAllowed()||document.hidden||!visible||s.status!=='playing')return;const dt=last?Math.min(.15,(now-last)/1000):0;last=now;
    if(track){if(audioLive())s.time=media.currentTime;else if(media.ended)s.time=duration;else if(s.audioFailed||scripted||!media.getAttribute('src'))s.time+=dt;if(s.time>=duration&&(s.audioFailed||media.ended||!media.getAttribute('src'))){finish();return;}}
    else{if(audioLive())s.time=starts[s.chapter]+Math.min(media.currentTime,seconds(s.chapter));else if(s.audioFailed||scripted||!media.getAttribute('src'))s.time+=dt;else if(media.ended)s.time=starts[s.chapter]+seconds(s.chapter);
     const next=starts[s.chapter]+seconds(s.chapter);if(s.time>=next){
@@ -82,7 +83,7 @@ export default function StoryFilmPlayer({story,onClose,onComplete,origin}:{story
    if(now-lastUI>=250){setClock(s.time);lastUI=now;}
    frame=requestAnimationFrame(tick);
   };
-  const resume=()=>{if(disposed||document.hidden||!visible||s.status!=='playing')return;last=0;startAudio();if(!frame)frame=requestAnimationFrame(tick);};
+  const resume=()=>{if(disposed||!islandNarrationAllowed()||document.hidden||!visible||s.status!=='playing')return;last=0;startAudio();if(!frame)frame=requestAnimationFrame(tick);};
   const play=()=>{if(disposed)return;if(document.hidden||!visible){setPhase('paused');return;}if(s.status==='finished'){s.time=0;s.chapter=0;setChapter(0);setClock(0);if(track)media.currentTime=0;loadAudio(0);}setPhase('playing');resume();};
   const seek=(index:number)=>{stopFrame();media.pause();cutHeadline();s.chapter=index;s.time=starts[index];setChapter(index);setClock(Math.floor(starts[index]));loadAudio(index);paint();if(s.status==='finished')setPhase('paused');if(s.status==='playing')resume();};
   const seekTime=(time:number)=>{const at=Math.max(0,Math.min(duration,time));cutHeadline();s.time=at;if(media.getAttribute('src')&&!s.audioFailed){try{media.currentTime=at;}catch{}}setClock(at);if(s.status==='finished')setPhase('paused');paint();};
@@ -111,7 +112,7 @@ export default function StoryFilmPlayer({story,onClose,onComplete,origin}:{story
    (window as Window&{__risoFrame?:unknown}).__risoFrame=(time:number)=>{stopFrame();media.pause();scripted=true;cutHeadline();if(s.status==='playing')setPhase('paused');const f=frameFor(story,time);s.time=time;s.chapter=f.chapter;setChapter(f.chapter);setClock(time);paint();return{...f,width,height};};}
   // Opening a story is the viewer's intent to watch. Audio-policy rejection falls back to the visible play control through startAudio().
   if(origin&&!reduced)introTimer=setTimeout(()=>{if(!document.hidden)play();},matchMedia('(max-width:600px), (pointer:coarse)').matches?120:1350);else if(!document.hidden)play();
-  return()=>{disposed=true;clearTimeout(introTimer);stopFrame();observer.disconnect();trayObserver.disconnect();trayMountObserver.disconnect();visibility.disconnect();media.pause();media.removeEventListener('playing',prepareNext);media.removeEventListener('error',failAudio);media.removeAttribute('src');media.load();narrationBuffer.dispose();audio.current=null;document.removeEventListener('visibilitychange',hide);node.removeEventListener('keydown',keys);el.removeEventListener('pointerdown',down);el.removeEventListener('pointermove',move);if(process.env.NODE_ENV!=='production')delete(window as Window&{__risoFrame?:unknown}).__risoFrame;siblings.forEach((child,i)=>child.inert=oldInert[i]);releaseWorld();previous?.focus?.({preventScroll:true});};
+  return()=>{disposed=true;releaseNarration();clearTimeout(introTimer);stopFrame();observer.disconnect();trayObserver.disconnect();trayMountObserver.disconnect();visibility.disconnect();media.pause();media.removeEventListener('playing',prepareNext);media.removeEventListener('error',failAudio);media.removeAttribute('src');media.load();narrationBuffer.dispose();audio.current=null;document.removeEventListener('visibilitychange',hide);node.removeEventListener('keydown',keys);el.removeEventListener('pointerdown',down);el.removeEventListener('pointermove',move);if(process.env.NODE_ENV!=='production')delete(window as Window&{__risoFrame?:unknown}).__risoFrame;siblings.forEach((child,i)=>child.inert=oldInert[i]);releaseWorld();previous?.focus?.({preventScroll:true});};
  // Story identity owns one timeline and one audio element for its full lifetime.
  // eslint-disable-next-line react-hooks/exhaustive-deps
  },[story]);

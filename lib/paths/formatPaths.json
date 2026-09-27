@@ -39,7 +39,7 @@
             "id": "f_pivot",
             "name": "Pivot: Turn or Combine",
             "steps": 8,
-            "questions": 5
+            "questions": 6
           },
           {
             "id": "learnf_farpost",
@@ -85,7 +85,7 @@
             "id": "bld_f_splitcb",
             "name": "Goal-Clearance Options",
             "steps": 9,
-            "questions": 5
+            "questions": 6
           },
           {
             "id": "set_f_throwin",
@@ -248,7 +248,7 @@
             "id": "learn7_receive",
             "name": "Look, Then Turn or Return",
             "steps": 10,
-            "questions": 5
+            "questions": 6
           },
           {
             "id": "learn7_carry",
@@ -329,7 +329,7 @@
         "id": "next7_dribbleroom",
         "name": "Give Your Teammate Room to Dribble",
         "steps": 8,
-        "questions": 5
+        "questions": 6
       },
       {
         "id": "next7_shotreaction",
@@ -538,7 +538,7 @@
         "id": "next9_shortcornerbudget",
         "name": "Short Corner: Borrow One of Two Outlets",
         "steps": 13,
-        "questions": 5
+        "questions": 6
       }
     ],
     "openingStory": "grit"
@@ -612,7 +612,7 @@
             "id": "trn_11_recover",
             "name": "Can We Win It Back?",
             "steps": 10,
-            "questions": 5
+            "questions": 6
           },
           {
             "id": "trn_11_restdefense",

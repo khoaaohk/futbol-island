@@ -1,0 +1,378 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: the 2000 World Cup final",
+   "text": "World Cup final, 2000. Brazil lead Spain three two, with five minutes left. Then Javi scores. Three all! And another! Four three to Spain!",
+   "src": "/plays/narration/javi-rodriguez-futsal-signature/1.m4a",
+   "seconds": 11.2,
+   "words": [
+    {
+     "w": "World",
+     "at": 0.375
+    },
+    {
+     "w": "Cup",
+     "at": 0.7
+    },
+    {
+     "w": "final",
+     "at": 0.925
+    },
+    {
+     "w": "2000",
+     "at": 1.387
+    },
+    {
+     "w": "Brazil",
+     "at": 2.688
+    },
+    {
+     "w": "lead",
+     "at": 3.15
+    },
+    {
+     "w": "Spain",
+     "at": 3.438
+    },
+    {
+     "w": "three",
+     "at": 3.862
+    },
+    {
+     "w": "two",
+     "at": 4.138
+    },
+    {
+     "w": "with",
+     "at": 4.463
+    },
+    {
+     "w": "five",
+     "at": 4.638
+    },
+    {
+     "w": "minutes",
+     "at": 4.987
+    },
+    {
+     "w": "left",
+     "at": 5.3
+    },
+    {
+     "w": "Then",
+     "at": 6.062
+    },
+    {
+     "w": "Javi",
+     "at": 6.3
+    },
+    {
+     "w": "scores",
+     "at": 6.662
+    },
+    {
+     "w": "Three",
+     "at": 7.4
+    },
+    {
+     "w": "all",
+     "at": 7.725
+    },
+    {
+     "w": "And",
+     "at": 8.225
+    },
+    {
+     "w": "another",
+     "at": 8.363
+    },
+    {
+     "w": "Four",
+     "at": 9.062
+    },
+    {
+     "w": "three",
+     "at": 9.287
+    },
+    {
+     "w": "to",
+     "at": 9.525
+    },
+    {
+     "w": "Spain",
+     "at": 9.662
+    }
+   ]
+  },
+  {
+   "label": "World champions",
+   "text": "The buzzer goes. Spain are world champions for the first time! Brazil had won the three World Cups before.",
+   "src": "/plays/narration/javi-rodriguez-futsal-signature/2.m4a",
+   "seconds": 7.9,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "buzzer",
+     "at": 0.425
+    },
+    {
+     "w": "goes",
+     "at": 0.75
+    },
+    {
+     "w": "Spain",
+     "at": 1.712
+    },
+    {
+     "w": "are",
+     "at": 2.2
+    },
+    {
+     "w": "world",
+     "at": 2.35
+    },
+    {
+     "w": "champions",
+     "at": 2.688
+    },
+    {
+     "w": "for",
+     "at": 3.3
+    },
+    {
+     "w": "the",
+     "at": 3.413
+    },
+    {
+     "w": "first",
+     "at": 3.513
+    },
+    {
+     "w": "time",
+     "at": 3.8
+    },
+    {
+     "w": "Brazil",
+     "at": 4.588
+    },
+    {
+     "w": "had",
+     "at": 5.075
+    },
+    {
+     "w": "won",
+     "at": 5.188
+    },
+    {
+     "w": "the",
+     "at": 5.312
+    },
+    {
+     "w": "three",
+     "at": 5.425
+    },
+    {
+     "w": "World",
+     "at": 5.75
+    },
+    {
+     "w": "Cups",
+     "at": 6.075
+    },
+    {
+     "w": "before",
+     "at": 6.375
+    }
+   ]
+  },
+  {
+   "label": "How he does it",
+   "text": "Javi was a sharp ala, a winger, brilliant one against one. Watch how he does it: he dribbles slowly, the defender relaxes, then boom! He explodes past him and shoots!",
+   "src": "/plays/narration/javi-rodriguez-futsal-signature/3.m4a",
+   "seconds": 12.2,
+   "words": [
+    {
+     "w": "Javi",
+     "at": 0.4
+    },
+    {
+     "w": "was",
+     "at": 0.7
+    },
+    {
+     "w": "a",
+     "at": 0.838
+    },
+    {
+     "w": "sharp",
+     "at": 0.95
+    },
+    {
+     "w": "ala",
+     "at": 1.337
+    },
+    {
+     "w": "a",
+     "at": 1.938
+    },
+    {
+     "w": "winger",
+     "at": 2.062
+    },
+    {
+     "w": "brilliant",
+     "at": 2.538
+    },
+    {
+     "w": "one",
+     "at": 3.013
+    },
+    {
+     "w": "against",
+     "at": 3.15
+    },
+    {
+     "w": "one",
+     "at": 3.575
+    },
+    {
+     "w": "Watch",
+     "at": 4.412
+    },
+    {
+     "w": "how",
+     "at": 4.725
+    },
+    {
+     "w": "he",
+     "at": 4.9
+    },
+    {
+     "w": "does",
+     "at": 5.025
+    },
+    {
+     "w": "it",
+     "at": 5.263
+    },
+    {
+     "w": "he",
+     "at": 5.75
+    },
+    {
+     "w": "dribbles",
+     "at": 5.888
+    },
+    {
+     "w": "slowly",
+     "at": 6.325
+    },
+    {
+     "w": "the",
+     "at": 7.0
+    },
+    {
+     "w": "defender",
+     "at": 7.1
+    },
+    {
+     "w": "relaxes",
+     "at": 7.625
+    },
+    {
+     "w": "then",
+     "at": 8.363
+    },
+    {
+     "w": "boom",
+     "at": 8.588
+    },
+    {
+     "w": "He",
+     "at": 9.475
+    },
+    {
+     "w": "explodes",
+     "at": 9.6
+    },
+    {
+     "w": "past",
+     "at": 10.162
+    },
+    {
+     "w": "him",
+     "at": 10.512
+    },
+    {
+     "w": "and",
+     "at": 10.662
+    },
+    {
+     "w": "shoots",
+     "at": 10.8
+    }
+   ]
+  },
+  {
+   "label": "Practise it",
+   "text": "Your turn: go slow, then change speed suddenly, and lose your defender!",
+   "src": "/plays/narration/javi-rodriguez-futsal-signature/4.m4a",
+   "seconds": 5.6,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.5
+    },
+    {
+     "w": "go",
+     "at": 1.225
+    },
+    {
+     "w": "slow",
+     "at": 1.425
+    },
+    {
+     "w": "then",
+     "at": 2.075
+    },
+    {
+     "w": "change",
+     "at": 2.288
+    },
+    {
+     "w": "speed",
+     "at": 2.663
+    },
+    {
+     "w": "suddenly",
+     "at": 3.062
+    },
+    {
+     "w": "and",
+     "at": 3.65
+    },
+    {
+     "w": "lose",
+     "at": 3.775
+    },
+    {
+     "w": "your",
+     "at": 4.013
+    },
+    {
+     "w": "defender",
+     "at": 4.112
+    }
+   ]
+  }
+ ]
+}

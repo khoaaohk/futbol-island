@@ -1,0 +1,386 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: the 2022 final",
+   "text": "The 2022 Futsal Euro final. Russia lead two one. Then Portugal get a kick-in. Andr\u00e9 Coelho drives it hard at goal. It hits the keeper\u2019s leg and goes in. Two all!",
+   "src": "/plays/narration/andre-coelho-futsal-signature/1.m4a",
+   "seconds": 13.1,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "2022",
+     "at": 0.425
+    },
+    {
+     "w": "Futsal",
+     "at": 1.35
+    },
+    {
+     "w": "Euro",
+     "at": 1.825
+    },
+    {
+     "w": "final",
+     "at": 2.138
+    },
+    {
+     "w": "Russia",
+     "at": 3.1
+    },
+    {
+     "w": "lead",
+     "at": 3.475
+    },
+    {
+     "w": "two",
+     "at": 3.737
+    },
+    {
+     "w": "one",
+     "at": 3.95
+    },
+    {
+     "w": "Then",
+     "at": 4.662
+    },
+    {
+     "w": "Portugal",
+     "at": 4.912
+    },
+    {
+     "w": "get",
+     "at": 5.45
+    },
+    {
+     "w": "a",
+     "at": 5.588
+    },
+    {
+     "w": "kick-in",
+     "at": 5.65
+    },
+    {
+     "w": "Andr\u00e9",
+     "at": 6.65
+    },
+    {
+     "w": "Coelho",
+     "at": 7.1
+    },
+    {
+     "w": "drives",
+     "at": 7.588
+    },
+    {
+     "w": "it",
+     "at": 7.987
+    },
+    {
+     "w": "hard",
+     "at": 8.075
+    },
+    {
+     "w": "at",
+     "at": 8.338
+    },
+    {
+     "w": "goal",
+     "at": 8.425
+    },
+    {
+     "w": "It",
+     "at": 9.1
+    },
+    {
+     "w": "hits",
+     "at": 9.25
+    },
+    {
+     "w": "the",
+     "at": 9.525
+    },
+    {
+     "w": "keeper\u2019s",
+     "at": 9.625
+    },
+    {
+     "w": "leg",
+     "at": 10.062
+    },
+    {
+     "w": "and",
+     "at": 10.4
+    },
+    {
+     "w": "goes",
+     "at": 10.525
+    },
+    {
+     "w": "in",
+     "at": 10.85
+    },
+    {
+     "w": "Two",
+     "at": 11.5
+    },
+    {
+     "w": "all",
+     "at": 11.787
+    }
+   ]
+  },
+  {
+   "label": "Replay: the driven kick-in",
+   "text": "Watch again. The ball sits on the line, and he hits it hard. The keeper cannot stop it! Later he scores again, and Portugal win four two. Champions of Europe!",
+   "src": "/plays/narration/andre-coelho-futsal-signature/2.m4a",
+   "seconds": 11.1,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "The",
+     "at": 1.425
+    },
+    {
+     "w": "ball",
+     "at": 1.525
+    },
+    {
+     "w": "sits",
+     "at": 1.837
+    },
+    {
+     "w": "on",
+     "at": 2.087
+    },
+    {
+     "w": "the",
+     "at": 2.188
+    },
+    {
+     "w": "line",
+     "at": 2.275
+    },
+    {
+     "w": "and",
+     "at": 2.688
+    },
+    {
+     "w": "he",
+     "at": 2.788
+    },
+    {
+     "w": "hits",
+     "at": 2.9
+    },
+    {
+     "w": "it",
+     "at": 3.112
+    },
+    {
+     "w": "hard",
+     "at": 3.2
+    },
+    {
+     "w": "The",
+     "at": 4.025
+    },
+    {
+     "w": "keeper",
+     "at": 4.125
+    },
+    {
+     "w": "cannot",
+     "at": 4.5
+    },
+    {
+     "w": "stop",
+     "at": 4.875
+    },
+    {
+     "w": "it",
+     "at": 5.225
+    },
+    {
+     "w": "Later",
+     "at": 5.825
+    },
+    {
+     "w": "he",
+     "at": 6.15
+    },
+    {
+     "w": "scores",
+     "at": 6.287
+    },
+    {
+     "w": "again",
+     "at": 6.675
+    },
+    {
+     "w": "and",
+     "at": 7.062
+    },
+    {
+     "w": "Portugal",
+     "at": 7.175
+    },
+    {
+     "w": "win",
+     "at": 7.7
+    },
+    {
+     "w": "four",
+     "at": 7.975
+    },
+    {
+     "w": "two",
+     "at": 8.3
+    },
+    {
+     "w": "Champions",
+     "at": 9.025
+    },
+    {
+     "w": "of",
+     "at": 9.662
+    },
+    {
+     "w": "Europe",
+     "at": 9.75
+    }
+   ]
+  },
+  {
+   "label": "Strike low and hard",
+   "text": "In futsal, a low shot is the hardest to save. The keeper must get down fast, and legs get in the way. So strike it low and hard!",
+   "src": "/plays/narration/andre-coelho-futsal-signature/3.m4a",
+   "seconds": 9.5,
+   "words": [
+    {
+     "w": "In",
+     "at": 0.4
+    },
+    {
+     "w": "futsal",
+     "at": 0.537
+    },
+    {
+     "w": "a",
+     "at": 1.2
+    },
+    {
+     "w": "low",
+     "at": 1.312
+    },
+    {
+     "w": "shot",
+     "at": 1.625
+    },
+    {
+     "w": "is",
+     "at": 1.913
+    },
+    {
+     "w": "the",
+     "at": 2.038
+    },
+    {
+     "w": "hardest",
+     "at": 2.138
+    },
+    {
+     "w": "to",
+     "at": 2.538
+    },
+    {
+     "w": "save",
+     "at": 2.663
+    },
+    {
+     "w": "The",
+     "at": 3.575
+    },
+    {
+     "w": "keeper",
+     "at": 3.675
+    },
+    {
+     "w": "must",
+     "at": 4.05
+    },
+    {
+     "w": "get",
+     "at": 4.275
+    },
+    {
+     "w": "down",
+     "at": 4.45
+    },
+    {
+     "w": "fast",
+     "at": 4.737
+    },
+    {
+     "w": "and",
+     "at": 5.35
+    },
+    {
+     "w": "legs",
+     "at": 5.475
+    },
+    {
+     "w": "get",
+     "at": 5.825
+    },
+    {
+     "w": "in",
+     "at": 5.987
+    },
+    {
+     "w": "the",
+     "at": 6.062
+    },
+    {
+     "w": "way",
+     "at": 6.15
+    },
+    {
+     "w": "So",
+     "at": 6.938
+    },
+    {
+     "w": "strike",
+     "at": 7.125
+    },
+    {
+     "w": "it",
+     "at": 7.425
+    },
+    {
+     "w": "low",
+     "at": 7.588
+    },
+    {
+     "w": "and",
+     "at": 7.9
+    },
+    {
+     "w": "hard",
+     "at": 8.037
+    }
+   ]
+  }
+ ]
+}

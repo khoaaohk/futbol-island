@@ -1,0 +1,386 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The big save",
+   "text": "Basel, the 2025 Euro final. Penalties! Hannah Hampton has saved one already. Now Aitana Bonmat\u00ed, the tournament's best player. Hampton stays big on her line. She waits. Bonmat\u00ed hits it well... Hampton leaps to her right and palms it away!",
+   "src": "/plays/narration/hampton-signature/1.m4a",
+   "seconds": 18.2,
+   "words": [
+    {
+     "w": "Basel",
+     "at": 0.4
+    },
+    {
+     "w": "the",
+     "at": 0.863
+    },
+    {
+     "w": "2025",
+     "at": 0.95
+    },
+    {
+     "w": "Euro",
+     "at": 1.925
+    },
+    {
+     "w": "final",
+     "at": 2.237
+    },
+    {
+     "w": "Penalties",
+     "at": 3.163
+    },
+    {
+     "w": "Hannah",
+     "at": 4.213
+    },
+    {
+     "w": "Hampton",
+     "at": 4.525
+    },
+    {
+     "w": "has",
+     "at": 5.05
+    },
+    {
+     "w": "saved",
+     "at": 5.237
+    },
+    {
+     "w": "one",
+     "at": 5.625
+    },
+    {
+     "w": "already",
+     "at": 5.787
+    },
+    {
+     "w": "Now",
+     "at": 6.725
+    },
+    {
+     "w": "Aitana",
+     "at": 6.938
+    },
+    {
+     "w": "Bonmat\u00ed",
+     "at": 7.4
+    },
+    {
+     "w": "the",
+     "at": 8.15
+    },
+    {
+     "w": "tournament's",
+     "at": 8.262
+    },
+    {
+     "w": "best",
+     "at": 8.85
+    },
+    {
+     "w": "player",
+     "at": 9.162
+    },
+    {
+     "w": "Hampton",
+     "at": 10.088
+    },
+    {
+     "w": "stays",
+     "at": 10.55
+    },
+    {
+     "w": "big",
+     "at": 10.963
+    },
+    {
+     "w": "on",
+     "at": 11.162
+    },
+    {
+     "w": "her",
+     "at": 11.262
+    },
+    {
+     "w": "line",
+     "at": 11.4
+    },
+    {
+     "w": "She",
+     "at": 12.113
+    },
+    {
+     "w": "waits",
+     "at": 12.287
+    },
+    {
+     "w": "Bonmat\u00ed",
+     "at": 13.162
+    },
+    {
+     "w": "hits",
+     "at": 13.75
+    },
+    {
+     "w": "it",
+     "at": 13.963
+    },
+    {
+     "w": "well",
+     "at": 14.075
+    },
+    {
+     "w": "Hampton",
+     "at": 14.85
+    },
+    {
+     "w": "leaps",
+     "at": 15.3
+    },
+    {
+     "w": "to",
+     "at": 15.575
+    },
+    {
+     "w": "her",
+     "at": 15.662
+    },
+    {
+     "w": "right",
+     "at": 15.8
+    },
+    {
+     "w": "and",
+     "at": 16.125
+    },
+    {
+     "w": "palms",
+     "at": 16.262
+    },
+    {
+     "w": "it",
+     "at": 16.637
+    },
+    {
+     "w": "away",
+     "at": 16.725
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again, slowly. Hampton stands big and still... then springs to her right!",
+   "src": "/plays/narration/hampton-signature/2.m4a",
+   "seconds": 6.2,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "slowly",
+     "at": 1.163
+    },
+    {
+     "w": "Hampton",
+     "at": 1.988
+    },
+    {
+     "w": "stands",
+     "at": 2.375
+    },
+    {
+     "w": "big",
+     "at": 2.763
+    },
+    {
+     "w": "and",
+     "at": 3.062
+    },
+    {
+     "w": "still",
+     "at": 3.188
+    },
+    {
+     "w": "then",
+     "at": 3.95
+    },
+    {
+     "w": "springs",
+     "at": 4.162
+    },
+    {
+     "w": "to",
+     "at": 4.625
+    },
+    {
+     "w": "her",
+     "at": 4.713
+    },
+    {
+     "w": "right",
+     "at": 4.85
+    }
+   ]
+  },
+  {
+   "label": "Two saves",
+   "text": "From the goal line: full stretch, strong hand! Two saves in the final, and England win the shootout.",
+   "src": "/plays/narration/hampton-signature/3.m4a",
+   "seconds": 7.2,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "the",
+     "at": 0.487
+    },
+    {
+     "w": "goal",
+     "at": 0.575
+    },
+    {
+     "w": "line",
+     "at": 0.8
+    },
+    {
+     "w": "full",
+     "at": 1.512
+    },
+    {
+     "w": "stretch",
+     "at": 1.762
+    },
+    {
+     "w": "strong",
+     "at": 2.263
+    },
+    {
+     "w": "hand",
+     "at": 2.675
+    },
+    {
+     "w": "Two",
+     "at": 3.612
+    },
+    {
+     "w": "saves",
+     "at": 3.862
+    },
+    {
+     "w": "in",
+     "at": 4.237
+    },
+    {
+     "w": "the",
+     "at": 4.312
+    },
+    {
+     "w": "final",
+     "at": 4.412
+    },
+    {
+     "w": "and",
+     "at": 4.912
+    },
+    {
+     "w": "England",
+     "at": 5.025
+    },
+    {
+     "w": "win",
+     "at": 5.475
+    },
+    {
+     "w": "the",
+     "at": 5.662
+    },
+    {
+     "w": "shootout",
+     "at": 5.763
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "The secret? Stay big on your line. Be patient: wait for the ball. Then dive!",
+   "src": "/plays/narration/hampton-signature/4.m4a",
+   "seconds": 5.5,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "secret",
+     "at": 0.463
+    },
+    {
+     "w": "Stay",
+     "at": 1.163
+    },
+    {
+     "w": "big",
+     "at": 1.45
+    },
+    {
+     "w": "on",
+     "at": 1.637
+    },
+    {
+     "w": "your",
+     "at": 1.738
+    },
+    {
+     "w": "line",
+     "at": 1.85
+    },
+    {
+     "w": "Be",
+     "at": 2.25
+    },
+    {
+     "w": "patient",
+     "at": 2.4
+    },
+    {
+     "w": "wait",
+     "at": 2.95
+    },
+    {
+     "w": "for",
+     "at": 3.15
+    },
+    {
+     "w": "the",
+     "at": 3.263
+    },
+    {
+     "w": "ball",
+     "at": 3.35
+    },
+    {
+     "w": "Then",
+     "at": 3.825
+    },
+    {
+     "w": "dive",
+     "at": 4.05
+    }
+   ]
+  }
+ ]
+}

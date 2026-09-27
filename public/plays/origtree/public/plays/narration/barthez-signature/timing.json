@@ -1,0 +1,362 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The save, live",
+   "text": "World Cup final, 1998. France lead Brazil by two goals. Roberto Carlos races down the left and crosses. Ronaldo shoots from close range... but Fabien Barthez stops it!",
+   "src": "/plays/narration/barthez-signature/1.m4a",
+   "seconds": 13.8,
+   "words": [
+    {
+     "w": "World",
+     "at": 0.4
+    },
+    {
+     "w": "Cup",
+     "at": 0.725
+    },
+    {
+     "w": "final",
+     "at": 0.95
+    },
+    {
+     "w": "1998",
+     "at": 1.475
+    },
+    {
+     "w": "France",
+     "at": 2.975
+    },
+    {
+     "w": "lead",
+     "at": 3.462
+    },
+    {
+     "w": "Brazil",
+     "at": 3.75
+    },
+    {
+     "w": "by",
+     "at": 4.225
+    },
+    {
+     "w": "two",
+     "at": 4.438
+    },
+    {
+     "w": "goals",
+     "at": 4.65
+    },
+    {
+     "w": "Roberto",
+     "at": 5.562
+    },
+    {
+     "w": "Carlos",
+     "at": 6.088
+    },
+    {
+     "w": "races",
+     "at": 6.588
+    },
+    {
+     "w": "down",
+     "at": 7.075
+    },
+    {
+     "w": "the",
+     "at": 7.312
+    },
+    {
+     "w": "left",
+     "at": 7.4
+    },
+    {
+     "w": "and",
+     "at": 7.713
+    },
+    {
+     "w": "crosses",
+     "at": 7.825
+    },
+    {
+     "w": "Ronaldo",
+     "at": 8.787
+    },
+    {
+     "w": "shoots",
+     "at": 9.387
+    },
+    {
+     "w": "from",
+     "at": 9.75
+    },
+    {
+     "w": "close",
+     "at": 9.9
+    },
+    {
+     "w": "range",
+     "at": 10.25
+    },
+    {
+     "w": "but",
+     "at": 11.15
+    },
+    {
+     "w": "Fabien",
+     "at": 11.3
+    },
+    {
+     "w": "Barthez",
+     "at": 11.775
+    },
+    {
+     "w": "stops",
+     "at": 12.213
+    },
+    {
+     "w": "it",
+     "at": 12.662
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. Barthez is up on his toes as the cross comes over. He shuffles across and steps out to close the angle.",
+   "src": "/plays/narration/barthez-signature/2.m4a",
+   "seconds": 9.1,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.3
+    },
+    {
+     "w": "Barthez",
+     "at": 2.362
+    },
+    {
+     "w": "is",
+     "at": 2.85
+    },
+    {
+     "w": "up",
+     "at": 2.975
+    },
+    {
+     "w": "on",
+     "at": 3.138
+    },
+    {
+     "w": "his",
+     "at": 3.237
+    },
+    {
+     "w": "toes",
+     "at": 3.4
+    },
+    {
+     "w": "as",
+     "at": 3.85
+    },
+    {
+     "w": "the",
+     "at": 3.987
+    },
+    {
+     "w": "cross",
+     "at": 4.075
+    },
+    {
+     "w": "comes",
+     "at": 4.45
+    },
+    {
+     "w": "over",
+     "at": 4.713
+    },
+    {
+     "w": "He",
+     "at": 5.45
+    },
+    {
+     "w": "shuffles",
+     "at": 5.612
+    },
+    {
+     "w": "across",
+     "at": 6.0
+    },
+    {
+     "w": "and",
+     "at": 6.575
+    },
+    {
+     "w": "steps",
+     "at": 6.7
+    },
+    {
+     "w": "out",
+     "at": 7.0
+    },
+    {
+     "w": "to",
+     "at": 7.2
+    },
+    {
+     "w": "close",
+     "at": 7.3
+    },
+    {
+     "w": "the",
+     "at": 7.612
+    },
+    {
+     "w": "angle",
+     "at": 7.75
+    }
+   ]
+  },
+  {
+   "label": "Quick reflex",
+   "text": "So close! A lightning reflex: he springs, blocks the shot, and holds on tight.",
+   "src": "/plays/narration/barthez-signature/3.m4a",
+   "seconds": 6.2,
+   "words": [
+    {
+     "w": "So",
+     "at": 0.375
+    },
+    {
+     "w": "close",
+     "at": 0.55
+    },
+    {
+     "w": "A",
+     "at": 1.337
+    },
+    {
+     "w": "lightning",
+     "at": 1.45
+    },
+    {
+     "w": "reflex",
+     "at": 1.825
+    },
+    {
+     "w": "he",
+     "at": 2.725
+    },
+    {
+     "w": "springs",
+     "at": 2.888
+    },
+    {
+     "w": "blocks",
+     "at": 3.475
+    },
+    {
+     "w": "the",
+     "at": 3.825
+    },
+    {
+     "w": "shot",
+     "at": 3.938
+    },
+    {
+     "w": "and",
+     "at": 4.312
+    },
+    {
+     "w": "holds",
+     "at": 4.425
+    },
+    {
+     "w": "on",
+     "at": 4.713
+    },
+    {
+     "w": "tight",
+     "at": 4.912
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: before a shot, stay on your toes, so you can spring either way!",
+   "src": "/plays/narration/barthez-signature/4.m4a",
+   "seconds": 5.5,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.5
+    },
+    {
+     "w": "before",
+     "at": 1.225
+    },
+    {
+     "w": "a",
+     "at": 1.562
+    },
+    {
+     "w": "shot",
+     "at": 1.663
+    },
+    {
+     "w": "stay",
+     "at": 2.05
+    },
+    {
+     "w": "on",
+     "at": 2.312
+    },
+    {
+     "w": "your",
+     "at": 2.413
+    },
+    {
+     "w": "toes",
+     "at": 2.525
+    },
+    {
+     "w": "so",
+     "at": 3.05
+    },
+    {
+     "w": "you",
+     "at": 3.175
+    },
+    {
+     "w": "can",
+     "at": 3.263
+    },
+    {
+     "w": "spring",
+     "at": 3.438
+    },
+    {
+     "w": "either",
+     "at": 3.8
+    },
+    {
+     "w": "way",
+     "at": 4.1
+    }
+   ]
+  }
+ ]
+}

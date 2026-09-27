@@ -1,0 +1,366 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Free in the box",
+   "text": "Porto, 2021, the Champions League final. Kevin De Bruyne slips a pass to Phil Foden. Foden is free in the box! But Antonio R\u00fcdiger keeps running.",
+   "src": "/plays/narration/rudiger-signature/1.m4a",
+   "seconds": 12.1,
+   "words": [
+    {
+     "w": "Porto",
+     "at": 0.325
+    },
+    {
+     "w": "2021",
+     "at": 0.9
+    },
+    {
+     "w": "the",
+     "at": 2.05
+    },
+    {
+     "w": "Champions",
+     "at": 2.188
+    },
+    {
+     "w": "League",
+     "at": 2.825
+    },
+    {
+     "w": "final",
+     "at": 3.112
+    },
+    {
+     "w": "Kevin",
+     "at": 4.062
+    },
+    {
+     "w": "De",
+     "at": 4.4
+    },
+    {
+     "w": "Bruyne",
+     "at": 4.525
+    },
+    {
+     "w": "slips",
+     "at": 5.0
+    },
+    {
+     "w": "a",
+     "at": 5.338
+    },
+    {
+     "w": "pass",
+     "at": 5.412
+    },
+    {
+     "w": "to",
+     "at": 5.825
+    },
+    {
+     "w": "Phil",
+     "at": 5.963
+    },
+    {
+     "w": "Foden",
+     "at": 6.263
+    },
+    {
+     "w": "Foden",
+     "at": 7.2
+    },
+    {
+     "w": "is",
+     "at": 7.625
+    },
+    {
+     "w": "free",
+     "at": 7.787
+    },
+    {
+     "w": "in",
+     "at": 8.037
+    },
+    {
+     "w": "the",
+     "at": 8.113
+    },
+    {
+     "w": "box",
+     "at": 8.2
+    },
+    {
+     "w": "But",
+     "at": 9.05
+    },
+    {
+     "w": "Antonio",
+     "at": 9.213
+    },
+    {
+     "w": "R\u00fcdiger",
+     "at": 9.963
+    },
+    {
+     "w": "keeps",
+     "at": 10.4
+    },
+    {
+     "w": "running",
+     "at": 10.7
+    }
+   ]
+  },
+  {
+   "label": "The replay",
+   "text": "Watch again, slowly. R\u00fcdiger races back. Foden shoots, and R\u00fcdiger stretches out one long leg. Blocked!",
+   "src": "/plays/narration/rudiger-signature/2.m4a",
+   "seconds": 8.1,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.662
+    },
+    {
+     "w": "slowly",
+     "at": 1.087
+    },
+    {
+     "w": "R\u00fcdiger",
+     "at": 2.038
+    },
+    {
+     "w": "races",
+     "at": 2.475
+    },
+    {
+     "w": "back",
+     "at": 2.9
+    },
+    {
+     "w": "Foden",
+     "at": 3.487
+    },
+    {
+     "w": "shoots",
+     "at": 3.9
+    },
+    {
+     "w": "and",
+     "at": 4.263
+    },
+    {
+     "w": "R\u00fcdiger",
+     "at": 4.375
+    },
+    {
+     "w": "stretches",
+     "at": 4.8
+    },
+    {
+     "w": "out",
+     "at": 5.2
+    },
+    {
+     "w": "one",
+     "at": 5.425
+    },
+    {
+     "w": "long",
+     "at": 5.65
+    },
+    {
+     "w": "leg",
+     "at": 5.9
+    },
+    {
+     "w": "Blocked",
+     "at": 6.612
+    }
+   ]
+  },
+  {
+   "label": "Safe",
+   "text": "Behind the goal: the ball loops off his boot, into Mendy\u2019s arms. Chelsea went on to win the final.",
+   "src": "/plays/narration/rudiger-signature/3.m4a",
+   "seconds": 7.1,
+   "words": [
+    {
+     "w": "Behind",
+     "at": 0.35
+    },
+    {
+     "w": "the",
+     "at": 0.713
+    },
+    {
+     "w": "goal",
+     "at": 0.8
+    },
+    {
+     "w": "the",
+     "at": 1.525
+    },
+    {
+     "w": "ball",
+     "at": 1.625
+    },
+    {
+     "w": "loops",
+     "at": 1.925
+    },
+    {
+     "w": "off",
+     "at": 2.163
+    },
+    {
+     "w": "his",
+     "at": 2.337
+    },
+    {
+     "w": "boot",
+     "at": 2.513
+    },
+    {
+     "w": "into",
+     "at": 2.975
+    },
+    {
+     "w": "Mendy\u2019s",
+     "at": 3.25
+    },
+    {
+     "w": "arms",
+     "at": 3.675
+    },
+    {
+     "w": "Chelsea",
+     "at": 4.625
+    },
+    {
+     "w": "went",
+     "at": 5.05
+    },
+    {
+     "w": "on",
+     "at": 5.213
+    },
+    {
+     "w": "to",
+     "at": 5.338
+    },
+    {
+     "w": "win",
+     "at": 5.425
+    },
+    {
+     "w": "the",
+     "at": 5.612
+    },
+    {
+     "w": "final",
+     "at": 5.713
+    }
+   ]
+  },
+  {
+   "label": "The lesson",
+   "text": "That is the never-give-up tackle! Chase every ball like it matters: keep sprinting, stretch, and block. Hard work wins it back.",
+   "src": "/plays/narration/rudiger-signature/4.m4a",
+   "seconds": 8.9,
+   "words": [
+    {
+     "w": "That",
+     "at": 0.375
+    },
+    {
+     "w": "is",
+     "at": 0.575
+    },
+    {
+     "w": "the",
+     "at": 0.725
+    },
+    {
+     "w": "never-give-up",
+     "at": 0.85
+    },
+    {
+     "w": "tackle",
+     "at": 1.475
+    },
+    {
+     "w": "Chase",
+     "at": 2.337
+    },
+    {
+     "w": "every",
+     "at": 2.688
+    },
+    {
+     "w": "ball",
+     "at": 3.0
+    },
+    {
+     "w": "like",
+     "at": 3.312
+    },
+    {
+     "w": "it",
+     "at": 3.487
+    },
+    {
+     "w": "matters",
+     "at": 3.575
+    },
+    {
+     "w": "keep",
+     "at": 4.362
+    },
+    {
+     "w": "sprinting",
+     "at": 4.638
+    },
+    {
+     "w": "stretch",
+     "at": 5.263
+    },
+    {
+     "w": "and",
+     "at": 5.763
+    },
+    {
+     "w": "block",
+     "at": 5.875
+    },
+    {
+     "w": "Hard",
+     "at": 6.662
+    },
+    {
+     "w": "work",
+     "at": 6.975
+    },
+    {
+     "w": "wins",
+     "at": 7.225
+    },
+    {
+     "w": "it",
+     "at": 7.438
+    },
+    {
+     "w": "back",
+     "at": 7.525
+    }
+   ]
+  }
+ ]
+}

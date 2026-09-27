@@ -1,0 +1,378 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The final",
+   "text": "Manchester, 2003: the Champions League final, Juventus against Milan. Just before half-time, the ball bounces around Milan's box. It drops to Ciro Ferrara, two yards out... Alessandro Nesta gets there first, and hooks it off his toe!",
+   "src": "/plays/narration/nesta-signature/1.m4a",
+   "seconds": 17.3,
+   "words": [
+    {
+     "w": "Manchester",
+     "at": 0.425
+    },
+    {
+     "w": "2003",
+     "at": 1.1
+    },
+    {
+     "w": "the",
+     "at": 2.45
+    },
+    {
+     "w": "Champions",
+     "at": 2.562
+    },
+    {
+     "w": "League",
+     "at": 3.2
+    },
+    {
+     "w": "final",
+     "at": 3.487
+    },
+    {
+     "w": "Juventus",
+     "at": 4.125
+    },
+    {
+     "w": "against",
+     "at": 4.725
+    },
+    {
+     "w": "Milan",
+     "at": 5.15
+    },
+    {
+     "w": "Just",
+     "at": 6.125
+    },
+    {
+     "w": "before",
+     "at": 6.4
+    },
+    {
+     "w": "half-time",
+     "at": 6.725
+    },
+    {
+     "w": "the",
+     "at": 7.312
+    },
+    {
+     "w": "ball",
+     "at": 7.4
+    },
+    {
+     "w": "bounces",
+     "at": 7.713
+    },
+    {
+     "w": "around",
+     "at": 8.225
+    },
+    {
+     "w": "Milan's",
+     "at": 8.55
+    },
+    {
+     "w": "box",
+     "at": 9.062
+    },
+    {
+     "w": "It",
+     "at": 9.9
+    },
+    {
+     "w": "drops",
+     "at": 10.05
+    },
+    {
+     "w": "to",
+     "at": 10.4
+    },
+    {
+     "w": "Ciro",
+     "at": 10.537
+    },
+    {
+     "w": "Ferrara",
+     "at": 10.9
+    },
+    {
+     "w": "two",
+     "at": 11.588
+    },
+    {
+     "w": "yards",
+     "at": 11.8
+    },
+    {
+     "w": "out",
+     "at": 12.125
+    },
+    {
+     "w": "Alessandro",
+     "at": 13.037
+    },
+    {
+     "w": "Nesta",
+     "at": 13.75
+    },
+    {
+     "w": "gets",
+     "at": 14.1
+    },
+    {
+     "w": "there",
+     "at": 14.35
+    },
+    {
+     "w": "first",
+     "at": 14.562
+    },
+    {
+     "w": "and",
+     "at": 15.2
+    },
+    {
+     "w": "hooks",
+     "at": 15.325
+    },
+    {
+     "w": "it",
+     "at": 15.537
+    },
+    {
+     "w": "off",
+     "at": 15.613
+    },
+    {
+     "w": "his",
+     "at": 15.787
+    },
+    {
+     "w": "toe",
+     "at": 15.95
+    }
+   ]
+  },
+  {
+   "label": "The replay",
+   "text": "Watch again, slowly. Nesta keeps his eyes on the ball. His leg reaches in low, and takes the ball, not Ferrara.",
+   "src": "/plays/narration/nesta-signature/2.m4a",
+   "seconds": 8.2,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.113
+    },
+    {
+     "w": "Nesta",
+     "at": 2.1
+    },
+    {
+     "w": "keeps",
+     "at": 2.45
+    },
+    {
+     "w": "his",
+     "at": 2.688
+    },
+    {
+     "w": "eyes",
+     "at": 2.862
+    },
+    {
+     "w": "on",
+     "at": 3.138
+    },
+    {
+     "w": "the",
+     "at": 3.237
+    },
+    {
+     "w": "ball",
+     "at": 3.325
+    },
+    {
+     "w": "His",
+     "at": 4.05
+    },
+    {
+     "w": "leg",
+     "at": 4.25
+    },
+    {
+     "w": "reaches",
+     "at": 4.55
+    },
+    {
+     "w": "in",
+     "at": 4.925
+    },
+    {
+     "w": "low",
+     "at": 5.075
+    },
+    {
+     "w": "and",
+     "at": 5.55
+    },
+    {
+     "w": "takes",
+     "at": 5.675
+    },
+    {
+     "w": "the",
+     "at": 5.975
+    },
+    {
+     "w": "ball",
+     "at": 6.075
+    },
+    {
+     "w": "not",
+     "at": 6.45
+    },
+    {
+     "w": "Ferrara",
+     "at": 6.7
+    }
+   ]
+  },
+  {
+   "label": "From behind the goal",
+   "text": "From behind the goal: the ball spins away. No foul, and no goal!",
+   "src": "/plays/narration/nesta-signature/3.m4a",
+   "seconds": 5.3,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.375
+    },
+    {
+     "w": "behind",
+     "at": 0.512
+    },
+    {
+     "w": "the",
+     "at": 0.887
+    },
+    {
+     "w": "goal",
+     "at": 0.975
+    },
+    {
+     "w": "the",
+     "at": 1.575
+    },
+    {
+     "w": "ball",
+     "at": 1.675
+    },
+    {
+     "w": "spins",
+     "at": 1.988
+    },
+    {
+     "w": "away",
+     "at": 2.325
+    },
+    {
+     "w": "No",
+     "at": 3.062
+    },
+    {
+     "w": "foul",
+     "at": 3.263
+    },
+    {
+     "w": "and",
+     "at": 3.638
+    },
+    {
+     "w": "no",
+     "at": 3.75
+    },
+    {
+     "w": "goal",
+     "at": 3.925
+    }
+   ]
+  },
+  {
+   "label": "The lesson",
+   "text": "That's Nesta. Slide with your leg low, and take the ball, not the player!",
+   "src": "/plays/narration/nesta-signature/4.m4a",
+   "seconds": 5.4,
+   "words": [
+    {
+     "w": "That's",
+     "at": 0.375
+    },
+    {
+     "w": "Nesta",
+     "at": 0.65
+    },
+    {
+     "w": "Slide",
+     "at": 1.525
+    },
+    {
+     "w": "with",
+     "at": 1.913
+    },
+    {
+     "w": "your",
+     "at": 2.013
+    },
+    {
+     "w": "leg",
+     "at": 2.125
+    },
+    {
+     "w": "low",
+     "at": 2.35
+    },
+    {
+     "w": "and",
+     "at": 2.825
+    },
+    {
+     "w": "take",
+     "at": 2.95
+    },
+    {
+     "w": "the",
+     "at": 3.163
+    },
+    {
+     "w": "ball",
+     "at": 3.25
+    },
+    {
+     "w": "not",
+     "at": 3.612
+    },
+    {
+     "w": "the",
+     "at": 3.788
+    },
+    {
+     "w": "player",
+     "at": 3.875
+    }
+   ]
+  }
+ ]
+}

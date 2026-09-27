@@ -1,0 +1,398 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: the 2008 final",
+   "text": "Moscow, 2008, the European final. Sinara and El Pozo draw four all, so it goes to penalties. Zuev dives. Saved! He stops three penalties, and Sinara are champions of Europe!",
+   "src": "/plays/narration/zuev-futsal-signature/1.m4a",
+   "seconds": 14.1,
+   "words": [
+    {
+     "w": "Moscow",
+     "at": 0.4
+    },
+    {
+     "w": "2008",
+     "at": 0.975
+    },
+    {
+     "w": "the",
+     "at": 1.825
+    },
+    {
+     "w": "European",
+     "at": 1.925
+    },
+    {
+     "w": "final",
+     "at": 2.462
+    },
+    {
+     "w": "Sinara",
+     "at": 3.425
+    },
+    {
+     "w": "and",
+     "at": 3.925
+    },
+    {
+     "w": "El",
+     "at": 4.037
+    },
+    {
+     "w": "Pozo",
+     "at": 4.213
+    },
+    {
+     "w": "draw",
+     "at": 4.75
+    },
+    {
+     "w": "four",
+     "at": 5.062
+    },
+    {
+     "w": "all",
+     "at": 5.325
+    },
+    {
+     "w": "so",
+     "at": 5.625
+    },
+    {
+     "w": "it",
+     "at": 5.763
+    },
+    {
+     "w": "goes",
+     "at": 5.85
+    },
+    {
+     "w": "to",
+     "at": 6.125
+    },
+    {
+     "w": "penalties",
+     "at": 6.225
+    },
+    {
+     "w": "Zuev",
+     "at": 7.362
+    },
+    {
+     "w": "dives",
+     "at": 7.825
+    },
+    {
+     "w": "Saved",
+     "at": 8.887
+    },
+    {
+     "w": "He",
+     "at": 9.775
+    },
+    {
+     "w": "stops",
+     "at": 9.925
+    },
+    {
+     "w": "three",
+     "at": 10.3
+    },
+    {
+     "w": "penalties",
+     "at": 10.525
+    },
+    {
+     "w": "and",
+     "at": 11.225
+    },
+    {
+     "w": "Sinara",
+     "at": 11.363
+    },
+    {
+     "w": "are",
+     "at": 11.875
+    },
+    {
+     "w": "champions",
+     "at": 12.037
+    },
+    {
+     "w": "of",
+     "at": 12.613
+    },
+    {
+     "w": "Europe",
+     "at": 12.738
+    }
+   ]
+  },
+  {
+   "label": "How he did it",
+   "text": "Now, how he did it. Pressed, a team-mate passes back. Zuev stops it with his sole, looks up and passes wide, like an outfield player.",
+   "src": "/plays/narration/zuev-futsal-signature/2.m4a",
+   "seconds": 10.0,
+   "words": [
+    {
+     "w": "Now",
+     "at": 0.4
+    },
+    {
+     "w": "how",
+     "at": 0.65
+    },
+    {
+     "w": "he",
+     "at": 0.825
+    },
+    {
+     "w": "did",
+     "at": 0.95
+    },
+    {
+     "w": "it",
+     "at": 1.15
+    },
+    {
+     "w": "Pressed",
+     "at": 1.738
+    },
+    {
+     "w": "a",
+     "at": 2.4
+    },
+    {
+     "w": "team-mate",
+     "at": 2.513
+    },
+    {
+     "w": "passes",
+     "at": 3.05
+    },
+    {
+     "w": "back",
+     "at": 3.475
+    },
+    {
+     "w": "Zuev",
+     "at": 4.375
+    },
+    {
+     "w": "stops",
+     "at": 4.825
+    },
+    {
+     "w": "it",
+     "at": 5.162
+    },
+    {
+     "w": "with",
+     "at": 5.237
+    },
+    {
+     "w": "his",
+     "at": 5.362
+    },
+    {
+     "w": "sole",
+     "at": 5.525
+    },
+    {
+     "w": "looks",
+     "at": 6.025
+    },
+    {
+     "w": "up",
+     "at": 6.263
+    },
+    {
+     "w": "and",
+     "at": 6.463
+    },
+    {
+     "w": "passes",
+     "at": 6.588
+    },
+    {
+     "w": "wide",
+     "at": 7.112
+    },
+    {
+     "w": "like",
+     "at": 7.675
+    },
+    {
+     "w": "an",
+     "at": 7.838
+    },
+    {
+     "w": "outfield",
+     "at": 7.963
+    },
+    {
+     "w": "player",
+     "at": 8.55
+    }
+   ]
+  },
+  {
+   "label": "Replay: eyes up",
+   "text": "Again, slowly. One touch to stop it. Eyes up: the free player. A calm, low pass. Ball kept!",
+   "src": "/plays/narration/zuev-futsal-signature/3.m4a",
+   "seconds": 7.1,
+   "words": [
+    {
+     "w": "Again",
+     "at": 0.375
+    },
+    {
+     "w": "slowly",
+     "at": 0.738
+    },
+    {
+     "w": "One",
+     "at": 1.488
+    },
+    {
+     "w": "touch",
+     "at": 1.725
+    },
+    {
+     "w": "to",
+     "at": 1.975
+    },
+    {
+     "w": "stop",
+     "at": 2.075
+    },
+    {
+     "w": "it",
+     "at": 2.425
+    },
+    {
+     "w": "Eyes",
+     "at": 2.888
+    },
+    {
+     "w": "up",
+     "at": 3.112
+    },
+    {
+     "w": "the",
+     "at": 3.288
+    },
+    {
+     "w": "free",
+     "at": 3.375
+    },
+    {
+     "w": "player",
+     "at": 3.6
+    },
+    {
+     "w": "A",
+     "at": 4.1
+    },
+    {
+     "w": "calm",
+     "at": 4.213
+    },
+    {
+     "w": "low",
+     "at": 4.625
+    },
+    {
+     "w": "pass",
+     "at": 4.888
+    },
+    {
+     "w": "Ball",
+     "at": 5.487
+    },
+    {
+     "w": "kept",
+     "at": 5.812
+    }
+   ]
+  },
+  {
+   "label": "Practise it",
+   "text": "Try it with a friend. Use your feet to pass calmly, so your team keeps the ball!",
+   "src": "/plays/narration/zuev-futsal-signature/4.m4a",
+   "seconds": 5.7,
+   "words": [
+    {
+     "w": "Try",
+     "at": 0.35
+    },
+    {
+     "w": "it",
+     "at": 0.588
+    },
+    {
+     "w": "with",
+     "at": 0.662
+    },
+    {
+     "w": "a",
+     "at": 0.762
+    },
+    {
+     "w": "friend",
+     "at": 0.838
+    },
+    {
+     "w": "Use",
+     "at": 1.738
+    },
+    {
+     "w": "your",
+     "at": 1.938
+    },
+    {
+     "w": "feet",
+     "at": 2.087
+    },
+    {
+     "w": "to",
+     "at": 2.3
+    },
+    {
+     "w": "pass",
+     "at": 2.4
+    },
+    {
+     "w": "calmly",
+     "at": 2.7
+    },
+    {
+     "w": "so",
+     "at": 3.325
+    },
+    {
+     "w": "your",
+     "at": 3.475
+    },
+    {
+     "w": "team",
+     "at": 3.638
+    },
+    {
+     "w": "keeps",
+     "at": 3.95
+    },
+    {
+     "w": "the",
+     "at": 4.25
+    },
+    {
+     "w": "ball",
+     "at": 4.35
+    }
+   ]
+  }
+ ]
+}

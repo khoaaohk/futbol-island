@@ -14,7 +14,7 @@ export function createMatchEffects(parent:T.Group,venue:Venue){
  // Purple identifies lofted passes over the top; ground passes keep the team tint.
  // Shots use the character's classic ball colour (BALL_COLORS.classic).
  let flying=false,shotFlight=false,pendingLaunch=false,flightDt=0,flightColor='#eee4c4';
- let lastGold=0,lastBlue=0,celebration=9,lastPasses=0,lastShots=0,lastTurnovers=0,sequence=0;
+ let lastGold=0,lastBlue=0,celebration=9,lastPasses=0,lastShots=0,lastTurnovers=0,sequence=0,lastCombo=0;
  const events:MatchEvent[]=[];const announce=(sim:MatchSim,text:string)=>{events.push({id:++sequence,time:sim.stats.time,text});if(events.length>80)events.shift();};
  const stats={passes:0,shots:0,goals:0,trailVertices:0};
  const ringGeometry=new T.RingGeometry(.85,1,40),ringMaterial=new T.MeshBasicMaterial({color:'#efbb54',transparent:true,opacity:0,depthWrite:false,side:T.DoubleSide,toneMapped:false});
@@ -53,6 +53,8 @@ export function createMatchEffects(parent:T.Group,venue:Venue){
   if(sim.stats.shots>lastShots){stats.shots+=sim.stats.shots-lastShots;pendingLaunch=true;announce(sim,`${sim.possession==='gold'?'Gold':'Blue'} shoots toward goal.`);}
   if(sim.stats.turnovers>lastTurnovers)announce(sim,`${sim.possession==='gold'?'Gold':'Blue'} wins possession.`);lastTurnovers=sim.stats.turnovers;
   lastPasses=sim.stats.passes;lastShots=sim.stats.shots;
+  // [combos] combination plays announce themselves with the reason they work (lib/town/match/combos.ts)
+  const feed=sim.combos?.feed;if(feed&&feed.serial!==lastCombo){lastCombo=feed.serial;announce(sim,feed.reason?`${feed.text} ${feed.reason}.`:`${feed.text}.`);}
   if(sim.score.gold>lastGold||sim.score.blue>lastBlue){celebration=0;stats.goals++;announce(sim,`Goal for ${sim.score.gold>lastGold?'Gold':'Blue'}! Gold ${sim.score.gold}, Blue ${sim.score.blue}.`);const home=sim.score.gold>lastGold;paintLight(home);const c=canvas.getContext('2d')!;c.clearRect(0,0,512,192);c.fillStyle='rgba(243,166,196,.65)';c.fillRect(0,0,512,192);c.textAlign='center';c.fillStyle='#502b40';c.font='bold 72px Arial';c.fillText('GOAL!',256,82);c.fillStyle='#502b40';c.font='bold 40px Arial';c.fillText(`${sim.score.gold}  —  ${sim.score.blue}`,256,150);texture.needsUpdate=true;badge.position.set(venue.x,5,venue.z);rings.forEach(r=>{r.material.color.copy(home?gold:blue);r.position.set(venue.x,.24,venue.z+(home?-1:1)*venue.length/2);});}
   lastGold=sim.score.gold;lastBlue=sim.score.blue;
   badge.visible=enabled&&celebration<2.5;badge.material.opacity=Math.min(1,(2.5-celebration)*2);const pop=reduced?1:1+.1*Math.sin(Math.min(1,celebration/.35)*Math.PI);badge.scale.set(9*pop,3.375*pop,1);badge.position.y=5+(reduced?0:Math.min(.7,celebration*.3));

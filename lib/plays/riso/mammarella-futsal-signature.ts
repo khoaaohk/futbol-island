@@ -25,17 +25,20 @@
  *  - Wikipedia, "UEFA Futsal Euro 2014" (raw): final 8 Feb 2014 20:30, Sportpaleis Antwerp, Italy 3–1 Russia, attendance 11,552.
  *  - Wikipedia, "Stefano Mammarella" (raw): goalkeeper, 1.77 m, Acqua e Sapone; Futsal EURO 2014 winner; FIFA Futsal World Cup 2012 best
  *    goalkeeper (Golden Glove, also in wiki "2012 FIFA Futsal World Cup").
+ * VERIFIED FOOT: Eder Lima shoots with his RIGHT foot. Footage reviewed 2026-09-25: UEFA.com EURO 2014 final highlights
+ *  (youtube.com/watch?v=yIZwUQ26ad8, ≈0:18) show his 9:33 "turn and diagonal shot" from behind — left foot planted, right foot strikes; FIFA TV's
+ *  2016 World Cup final highlights (youtube.com/watch?v=O7izyt2LrfI, ≈1:49) show his second penalty, also right-footed. (FotMob's
+ *  "left-footed Éder Lima" is a different player, a defender born 1986.) The 18:38 save itself was not in the clips reviewed.
  * CONFIRMED: match, date, venue, score before (2–1) and after (3–1), minute 18:38–18:39, shooter Eder Lima (#8) trying "a turn and diagonal
  *  shot" again, Mammarella (#1) tipping it over the bar, the corner that followed, Giasson's break for 3–1 at 18:56, Italy champions.
  * INFERRED (not named in the narration): kits — Italy blue shirts / white shorts / blue socks, Russia white shirts / navy shorts,
  *  Mammarella in a red keeper kit with long sleeves; the wooden court colour; which goal, which top corner (the near post from the camera),
- *  the dive side (his right) and tipping hand (the top glove), Eder Lima's shooting foot (LEFT, from the card's `foot` param in
- *  iconicPlays.json, matching the Eder Lima film), where everyone else stood, the pass before the turn;
- *  Mammarella's hair (short). No video was reviewed. Mammarella was NOT captain in this final (Gabriel Lima was): no armband is drawn.
+ *  the dive side (his right) and tipping hand (the top glove), where everyone else stood, the pass before the turn;
+ *  Mammarella's hair (short). Mammarella was NOT captain in this final (Gabriel Lima was): no armband is drawn.
  *  Chapters 3–4 are a coaching demonstration of how a goleiro organises the four in front of him, not footage of a particular match.
  * Players: the shared athlete library (./athlete.ts) through ONE adapter `athlete()` → drawAthlete (prev → hem/hair follow-through,
  * motionSmear on the strike and the dive). Our stages are LEFT-handed (X right, Z away from the camera), so `projector()` maps library
- * z → −Z. Eder Lima cushions, dribbles and strikes with the LEFT foot (foot:'l'; the ball sits at the solved left toe at contact, as in
+ * z → −Z. Eder Lima cushions, dribbles and strikes with the RIGHT foot (foot:'r'; the ball sits at the solved right toe at contact, as in
  * the Eder Lima film); Mammarella dives to his right (keeperDive side 'r') and the ball meets his top glove — the ball's target IS the
  * solved glove position, so hand and ball always meet.
  * Timing: the SCRIPT's cues are estimated (≈2.7 words/s) until the lead voices it; `authored()` maps each chapter's recorded clock through
@@ -156,10 +159,10 @@ function athlete(s:Sheet,st:Stage,gen:Gen,t:number,style:AthleteStyle,o:{detail?
  if(o.smear){const c=gen(t-o.smear);motionSmear(s,c.pose,a.pose,cm,style,pl,{prevPlace:placeAt(c.X,c.Z,c.yaw),ink:[Y,.75],threshold:5});}
  return drawAthlete(s,a.pose,cm,{...style,detail:o.detail??'auto'},pl,{prev:b.pose,prevPlace:pp});
 }
-/** Eder Lima's LEFT-foot strike (card param, as in his own film) */
-const strikeL=(t:number)=>strike(t,{foot:'l'});
-/** where the ball sits at the left-foot strike's contact: just past the left toe (library coords, place at the origin, turned to yaw) */
-function strikeBall(yaw:number):V3{const sk=solve(strikeL(STRIKE_CONTACT),BUILD_S,{yaw}),toe=sk.lToe,an=sk.lAn,d:V3=[toe[0]-an[0],0,toe[2]-an[2]],l=Math.hypot(d[0],d[2])||1;return[toe[0]+d[0]/l*.08,BALL_R,toe[2]+d[2]/l*.08];}
+/** Eder Lima's RIGHT-foot strike (verified from footage — see header; as in his own film) */
+const strikeR=(t:number)=>strike(t,{foot:'r'});
+/** where the ball sits at the right-foot strike's contact: just past the right toe (library coords, place at the origin, turned to yaw) */
+function strikeBall(yaw:number):V3{const sk=solve(strikeR(STRIKE_CONTACT),BUILD_S,{yaw}),toe=sk.rToe,an=sk.rAn,d:V3=[toe[0]-an[0],0,toe[2]-an[2]],l=Math.hypot(d[0],d[2])||1;return[toe[0]+d[0]/l*.08,BALL_R,toe[2]+d[2]/l*.08];}
 /** the dive (to his right, top-corner height); the ball meets his TOP glove (the left, uppermost as he rolls onto his right side)
  * at .45, while he is still rising, before full extension */
 const DIVE_H=1,DIVE_TIP=.45;
@@ -317,7 +320,7 @@ function liveBall(T:number):{X:number;Y:number;Z:number;flying:boolean;spin:numb
  if(T<T_TIP+.75){const u=sm(T_TIP,T_TIP+.75,T,linear),p=quad3(TIP1,OVER,DROP,u);return{X:p[0],Y:p[1],Z:p[2],flying:true,spin:60+u*20};}
  const u=sm(T_TIP+.75,T_TIP+1.6,T,easeOut),bo=Math.abs(Math.sin(u*Math.PI*2))*.35*(1-u);return{X:DROP[0]-1.1*u,Y:BALL_R+bo,Z:DROP[2]-.4*u,flying:false,spin:80+u*10};
 }
-/** Eder Lima: comes short → back to goal for the pass → cushions it → turns (past the camera side) → left-foot strike → hands to head */
+/** Eder Lima: comes short → back to goal for the pass → cushions it → turns (past the camera side) → right-foot strike → hands to head */
 const S_T0=T_HIT-.62;
 const liveE:Gen=T=>{
  const stT=key(T,[[S_T0,0],[S_T0+.3,.22],[T_HIT,STRIKE_CONTACT],[T_HIT+.55,1]],linear);
@@ -325,10 +328,10 @@ const liveE:Gen=T=>{
  const Z=key(T,[[0,13.8],[P2[0]-.3,12.6,easeIO],[P2[1],RECV[1]+.1],[S_T0,PLANT[1]+.2,easeIO],[T_HIT,PLANT[1],easeOut],[T_HIT+.5,PLANT[1]-.15,easeOut],[C1.end,PLANT[1]-.3,easeIO]]);
  const faceABR=yawTo(ABR[0]-RECV[0],ABR[1]-RECV[1]);let pose:Pose,yaw=faceABR;
  if(T<P2[0]-.3)pose=runCycle(T*runCadence(.3),{speed:.3});
- else if(T<P2[1]+.08)pose=blendPose(stand(),mirrorPose(posed({rHipF:30,rKnee:32,rAnk:-6,lKnee:24,lean:16,neckP:26,lShA:36,rShA:30,lElb:40,rElb:40})),sm(P2[0],P2[1],T));
- else if(T<S_T0)pose=dribble((T-P2[1])*1.7+.2,{foot:'l',speed:.25});
- else if(T<T_HIT+.55)pose=blendPose(dribble((S_T0-P2[1])*1.7+.2,{foot:'l',speed:.25}),strikeL(stT),sm(S_T0,S_T0+.12,T));
- else{const u=sm(T_HIT+.55,T_TIP+.7,T,easeIO);pose=blendPose(strikeL(1),posed({lHipF:10,rHipF:14,lKnee:14,rKnee:16,lean:-8,neckP:-24,lShF:150,rShF:150,lShA:30,rShA:30,lElb:120,rElb:120}),u);}
+ else if(T<P2[1]+.08)pose=blendPose(stand(),posed({rHipF:30,rKnee:32,rAnk:-6,lKnee:24,lean:16,neckP:26,lShA:36,rShA:30,lElb:40,rElb:40}),sm(P2[0],P2[1],T));
+ else if(T<S_T0)pose=dribble((T-P2[1])*1.7+.2,{foot:'r',speed:.25});
+ else if(T<T_HIT+.55)pose=blendPose(dribble((S_T0-P2[1])*1.7+.2,{foot:'r',speed:.25}),strikeR(stT),sm(S_T0,S_T0+.12,T));
+ else{const u=sm(T_HIT+.55,T_TIP+.7,T,easeIO);pose=blendPose(strikeR(1),posed({lHipF:10,rHipF:14,lKnee:14,rKnee:16,lean:-8,neckP:-24,lShF:150,rShF:150,lShA:30,rShA:30,lElb:120,rElb:120}),u);}
  // the turn: from facing the passer to facing the near post, turning through the camera side (his right)
  if(T>=P2[1]+.08&&T<T_HIT+.55){let d=YAW_SHOT-faceABR;while(d>0)d-=TAU;while(d<-TAU)d+=TAU;yaw=faceABR+d*sm(P2[1]+.08,S_T0+.2,T,easeIO);}
  else if(T>=T_HIT+.55){let d=YAW_SHOT-faceABR;while(d>0)d-=TAU;yaw=faceABR+d;}
@@ -395,7 +398,7 @@ const RSB=toMine(strikeBall(RYAW)),RPL:[number,number]=[RB[0]-RSB[0],RB[1]-RSB[2
 const R_HIT=C2.watch+1.05,R_TIP=Math.max(R_HIT+1.2,C2.fing+.45),R_LAND=R_TIP+1.6;
 const ROVER:V3=[RT[0]-.15,2.8,GZ+.35],RDROP:V3=[RT[0]-.3,BALL_R,GZ+1.7];
 const rT=(t:number)=>key(t,[[0,.06],[R_HIT-.9,.3],[R_HIT,STRIKE_CONTACT],[R_HIT+1.6,.8],[C2.brk,1]],linear);
-const repE:Gen=t=>{let pose=strikeL(rT(t));const X=RPL[0]+key(t,[[0,.3],[R_HIT,0,easeOut],[R_HIT+1.8,-.15]]),Z=RPL[1]+key(t,[[0,-.55],[R_HIT,0,easeOut],[R_HIT+1.8,.25]]);
+const repE:Gen=t=>{let pose=strikeR(rT(t));const X=RPL[0]+key(t,[[0,.3],[R_HIT,0,easeOut],[R_HIT+1.8,-.15]]),Z=RPL[1]+key(t,[[0,-.55],[R_HIT,0,easeOut],[R_HIT+1.8,.25]]);
  pose=blendPose(pose,posed({lHipF:10,rHipF:14,lKnee:14,rKnee:16,lean:-8,neckP:-24,lShF:150,rShF:150,lShA:30,rShA:30,lElb:120,rElb:120}),sm(R_TIP+.4,R_TIP+1.4,t,easeIO));
  return{pose,yaw:RYAW,X,Z};};
 function repBall(t:number){
@@ -410,9 +413,9 @@ const repK:Gen=t=>{const u=key(t,[[R_HIT-.35,0],[R_HIT+.2,.2],[R_TIP,DIVE_TIP],[
 /** the Italian defender who blocks late (D1) and the Russian pivot at the far post */
 const repD:Gen=t=>({pose:blendPose(backpedal(.2),lunge(key(t,[[R_HIT-1,0],[R_HIT+.3,.6],[R_HIT+2,1]],linear),{side:'r'}),sm(R_HIT-1.1,R_HIT-.8,t)),yaw:FACE_CAMERA-.5,X:RB[0]+.9,Z:RB[1]+2.6});
 const repP:Gen=t=>({pose:blendPose(backpedal(t*.4),stand(),.5),yaw:FACE_CAMERA-.6,X:2.6,Z:GZ-3.4});
-/** the replay camera rides with the shooter's plant (the left-foot contact puts him ≈.3 m right of the right-foot solve), so he keeps
- * the same foreground framing over his left shoulder */
-const st2=(t:number):Stage=>({F:1500,eye:1.45,cx:RPL[0]-1.12,cz:RPL[1]-4.32+.8*sm(R_HIT,R_TIP,t,easeIO)});
+/** the replay camera is pinned to the ball on the shot spot (RB), over the shooter's left shoulder: the right-foot plant sits ≈.3 m left of
+ * the ball, so ball and kicking boot stay in frame (camera offsets are the ones the left-foot plant used to give) */
+const st2=(t:number):Stage=>({F:1500,eye:1.45,cx:RB[0]-.88,cz:RB[1]-4.49+.8*sm(R_HIT,R_TIP,t,easeIO)});
 const sc2:Scene={
  draw(s,t0){
   const{tt,tc:t}=clock(1,t0),st=st2(tt),hit=pulse(t,R_HIT,.4),tip=pulse(t,R_TIP,.6);

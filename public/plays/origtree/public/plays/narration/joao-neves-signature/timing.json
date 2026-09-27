@@ -1,0 +1,402 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The press",
+   "text": "Atlanta, 2025: the Club World Cup. Paris play Inter Miami, and Jo\u00e3o Neves never stops running. Busquets gets the ball\u2026 Paris press him fast. Ball won!",
+   "src": "/plays/narration/joao-neves-signature/1.m4a",
+   "seconds": 12.4,
+   "words": [
+    {
+     "w": "Atlanta",
+     "at": 0.4
+    },
+    {
+     "w": "2025",
+     "at": 0.95
+    },
+    {
+     "w": "the",
+     "at": 2.25
+    },
+    {
+     "w": "Club",
+     "at": 2.35
+    },
+    {
+     "w": "World",
+     "at": 2.625
+    },
+    {
+     "w": "Cup",
+     "at": 2.987
+    },
+    {
+     "w": "Paris",
+     "at": 3.837
+    },
+    {
+     "w": "play",
+     "at": 4.225
+    },
+    {
+     "w": "Inter",
+     "at": 4.463
+    },
+    {
+     "w": "Miami",
+     "at": 4.675
+    },
+    {
+     "w": "and",
+     "at": 5.225
+    },
+    {
+     "w": "Jo\u00e3o",
+     "at": 5.35
+    },
+    {
+     "w": "Neves",
+     "at": 5.763
+    },
+    {
+     "w": "never",
+     "at": 6.15
+    },
+    {
+     "w": "stops",
+     "at": 6.475
+    },
+    {
+     "w": "running",
+     "at": 6.85
+    },
+    {
+     "w": "Busquets",
+     "at": 7.688
+    },
+    {
+     "w": "gets",
+     "at": 8.25
+    },
+    {
+     "w": "the",
+     "at": 8.5
+    },
+    {
+     "w": "ball",
+     "at": 8.6
+    },
+    {
+     "w": "Paris",
+     "at": 9.1
+    },
+    {
+     "w": "press",
+     "at": 9.475
+    },
+    {
+     "w": "him",
+     "at": 9.713
+    },
+    {
+     "w": "fast",
+     "at": 9.887
+    },
+    {
+     "w": "Ball",
+     "at": 10.75
+    },
+    {
+     "w": "won",
+     "at": 11.075
+    }
+   ]
+  },
+  {
+   "label": "The replay",
+   "text": "Watch again, slowly. Paris close Busquets down the moment the ball arrives. Too quick for him\u2026 robbed! And Neves keeps running.",
+   "src": "/plays/narration/joao-neves-signature/2.m4a",
+   "seconds": 9.2,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.113
+    },
+    {
+     "w": "Paris",
+     "at": 2.112
+    },
+    {
+     "w": "close",
+     "at": 2.5
+    },
+    {
+     "w": "Busquets",
+     "at": 2.85
+    },
+    {
+     "w": "down",
+     "at": 3.375
+    },
+    {
+     "w": "the",
+     "at": 3.587
+    },
+    {
+     "w": "moment",
+     "at": 3.675
+    },
+    {
+     "w": "the",
+     "at": 3.962
+    },
+    {
+     "w": "ball",
+     "at": 4.05
+    },
+    {
+     "w": "arrives",
+     "at": 4.35
+    },
+    {
+     "w": "Too",
+     "at": 5.287
+    },
+    {
+     "w": "quick",
+     "at": 5.5
+    },
+    {
+     "w": "for",
+     "at": 5.75
+    },
+    {
+     "w": "him",
+     "at": 5.9
+    },
+    {
+     "w": "robbed",
+     "at": 6.125
+    },
+    {
+     "w": "And",
+     "at": 6.875
+    },
+    {
+     "w": "Neves",
+     "at": 7.05
+    },
+    {
+     "w": "keeps",
+     "at": 7.475
+    },
+    {
+     "w": "running",
+     "at": 7.775
+    }
+   ]
+  },
+  {
+   "label": "The goal",
+   "text": "Ruiz rolls it across, and Neves side-foots into an empty net. Two\u2013nil! Paris won four\u2013nil, and Neves was player of the match.",
+   "src": "/plays/narration/joao-neves-signature/3.m4a",
+   "seconds": 9.7,
+   "words": [
+    {
+     "w": "Ruiz",
+     "at": 0.4
+    },
+    {
+     "w": "rolls",
+     "at": 0.825
+    },
+    {
+     "w": "it",
+     "at": 1.137
+    },
+    {
+     "w": "across",
+     "at": 1.212
+    },
+    {
+     "w": "and",
+     "at": 1.9
+    },
+    {
+     "w": "Neves",
+     "at": 2.025
+    },
+    {
+     "w": "side-foots",
+     "at": 2.413
+    },
+    {
+     "w": "into",
+     "at": 3.013
+    },
+    {
+     "w": "an",
+     "at": 3.212
+    },
+    {
+     "w": "empty",
+     "at": 3.3
+    },
+    {
+     "w": "net",
+     "at": 3.6
+    },
+    {
+     "w": "Two",
+     "at": 4.475
+    },
+    {
+     "w": "nil",
+     "at": 4.85
+    },
+    {
+     "w": "Paris",
+     "at": 5.562
+    },
+    {
+     "w": "won",
+     "at": 5.95
+    },
+    {
+     "w": "four",
+     "at": 6.2
+    },
+    {
+     "w": "nil",
+     "at": 6.6
+    },
+    {
+     "w": "and",
+     "at": 7.075
+    },
+    {
+     "w": "Neves",
+     "at": 7.2
+    },
+    {
+     "w": "was",
+     "at": 7.625
+    },
+    {
+     "w": "player",
+     "at": 7.812
+    },
+    {
+     "w": "of",
+     "at": 8.238
+    },
+    {
+     "w": "the",
+     "at": 8.312
+    },
+    {
+     "w": "match",
+     "at": 8.4
+    }
+   ]
+  },
+  {
+   "label": "The lesson",
+   "text": "That\u2019s Jo\u00e3o Neves. When you lose the ball, press quickly: the first few seconds are best to win it back!",
+   "src": "/plays/narration/joao-neves-signature/4.m4a",
+   "seconds": 7.2,
+   "words": [
+    {
+     "w": "That\u2019s",
+     "at": 0.375
+    },
+    {
+     "w": "Jo\u00e3o",
+     "at": 0.65
+    },
+    {
+     "w": "Neves",
+     "at": 0.95
+    },
+    {
+     "w": "When",
+     "at": 1.875
+    },
+    {
+     "w": "you",
+     "at": 2.025
+    },
+    {
+     "w": "lose",
+     "at": 2.15
+    },
+    {
+     "w": "the",
+     "at": 2.425
+    },
+    {
+     "w": "ball",
+     "at": 2.525
+    },
+    {
+     "w": "press",
+     "at": 2.975
+    },
+    {
+     "w": "quickly",
+     "at": 3.275
+    },
+    {
+     "w": "the",
+     "at": 4.1
+    },
+    {
+     "w": "first",
+     "at": 4.213
+    },
+    {
+     "w": "few",
+     "at": 4.55
+    },
+    {
+     "w": "seconds",
+     "at": 4.787
+    },
+    {
+     "w": "are",
+     "at": 5.162
+    },
+    {
+     "w": "best",
+     "at": 5.25
+    },
+    {
+     "w": "to",
+     "at": 5.537
+    },
+    {
+     "w": "win",
+     "at": 5.625
+    },
+    {
+     "w": "it",
+     "at": 5.763
+    },
+    {
+     "w": "back",
+     "at": 5.85
+    }
+   ]
+  }
+ ]
+}

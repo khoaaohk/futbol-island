@@ -1,0 +1,24 @@
+@font-face{font-family:IslandReturnBrush;src:url('/stories/films/assets/IslandBrush-Regular.ttf') format('truetype');font-display:swap}
+.screen{position:fixed;inset:0;z-index:2000;overflow:hidden;isolation:isolate;background:#2b53e5;color:#fff2d3;text-align:center;opacity:1;transition:opacity .22s ease;pointer-events:auto;font-family:var(--font-body),Arial,sans-serif}
+.screen::before{content:'';position:absolute;inset:0;z-index:3;background:url('/stories/films/assets/entry-grain.png');opacity:.38;pointer-events:none}
+.copy{position:absolute;top:27%;left:24px;right:24px;transform:translateY(-50%);z-index:2}
+.eyebrow{font-size:clamp(10px,1.1vw,14px);font-weight:800;letter-spacing:.17em}
+.copy h2{font:clamp(32px,4.3vw,62px)/1.18 IslandReturnBrush,Arial,sans-serif;letter-spacing:-.025em;margin:16px 0 10px;text-shadow:0 3px 0 #1d3cb4,0 10px 26px #0b1f7a55}
+.caption{margin:0 0 22px;font-size:clamp(13px,1.35vw,18px);font-weight:700;color:#fff2d3e6}
+.copy :global(.island-loading-track){display:block;margin:0 auto;width:180px;height:6px;background:#fff2d338}
+.copy :global(.island-loading-track)>span{background:#f9d55d}
+.scenery{position:absolute;bottom:0;left:0;width:100%;height:43%;pointer-events:none}
+.character{position:absolute;height:54%;width:auto;max-width:94%;bottom:2%;left:50%;transform:translateX(-50%);overflow:visible;animation:arrive .65s cubic-bezier(.2,.8,.25,1) both}
+.exiting{pointer-events:none;animation:returnReveal .28s .7s ease both}
+@keyframes arrive{from{opacity:1;transform:translateX(-50%) translateY(18px) rotate(-3deg)}to{opacity:1;transform:translateX(-50%) translateY(0) rotate(0)}}
+@media(max-width:700px) and (max-aspect-ratio:5/6){.copy{top:max(8%,calc(env(safe-area-inset-top,0px) + 16px));left:20px;right:20px;transform:none}.copy h2{font-size:clamp(30px,8vw,48px)}.caption{font-size:14px;margin-bottom:18px}.character{height:auto;width:min(90%,370px,42vh);bottom:4%;left:55%}.scenery{height:40%}}
+@media(max-height:560px){.copy{top:23%}.copy h2{font-size:28px;margin:8px 0}.eyebrow{font-size:9px}.caption{font-size:12px;margin-bottom:12px}.character{height:56%;bottom:0}.scenery{height:38%}}
+@media(prefers-reduced-motion:reduce){.screen{transition:none}.character{animation:none}}
+
+.land{transform-origin:50% 100%;overflow:visible}
+.exiting .land{z-index:3;animation:returnLandFill .7s cubic-bezier(.55,.05,.35,1) both}
+.exiting .copy,.exiting .character,.exiting .shoreLine{animation:returnDetailsAway .22s ease both}
+@keyframes returnLandFill{0%{transform:scale(1)}25%{transform:scale(1.12,.96)}60%{transform:scale(4,5)}100%{transform:scale(22)}}
+@keyframes returnDetailsAway{to{opacity:0}}
+@keyframes returnReveal{to{opacity:0}}
+@media(prefers-reduced-motion:reduce){.exiting,.exiting .land,.exiting .copy,.exiting .character,.exiting .shoreLine{animation:none}.exiting{opacity:0}}

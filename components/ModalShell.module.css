@@ -19,7 +19,9 @@
 .header>button{grid-column:3;grid-row:1;justify-self:end}
 .header>button[aria-label^="Back"]{grid-column:1;justify-self:start}
 .header::before{content:'';grid-column:1;grid-row:1;display:block;width:40px;height:40px;border-radius:12px;background:#244d40 url('/icon.svg') center/30px 30px no-repeat}
-.header:has(button[aria-label^="Back"])::before{display:none}
+/* Matched on data-navigation (every Back is a BackButton), not aria-label: an aria-label in a :has() made every label change on the page
+   (Play → Stop, Flip, …) invalidate all :has() anchors up to <body>, a whole-document style recalc (card films, Sep 26 2026). */
+.header:has(button[data-navigation=back])::before{display:none}
 .header>div button[aria-label^="Back"]{position:absolute;left:24px;top:50%;transform:translateY(-50%)}
 @media(max-width:600px){.header{gap:10px}.header>div button[aria-label^="Back"]{left:18px}}
 

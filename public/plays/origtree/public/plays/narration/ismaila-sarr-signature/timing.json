@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Watford against Liverpool, 2020. Liverpool were unbeaten in the league. Will Hughes backheels it, Troy Deeney looks up... and Isma\u00efla Sarr is already sprinting in behind. He races clear of everyone... and lifts it over the keeper. Goal!",
+   "src": "/plays/narration/ismaila-sarr-signature/1.m4a",
+   "seconds": 16.4,
+   "words": [
+    {
+     "w": "Watford",
+     "at": 0.4
+    },
+    {
+     "w": "against",
+     "at": 0.838
+    },
+    {
+     "w": "Liverpool",
+     "at": 1.25
+    },
+    {
+     "w": "2020",
+     "at": 1.875
+    },
+    {
+     "w": "Liverpool",
+     "at": 3.075
+    },
+    {
+     "w": "were",
+     "at": 3.625
+    },
+    {
+     "w": "unbeaten",
+     "at": 3.8
+    },
+    {
+     "w": "in",
+     "at": 4.338
+    },
+    {
+     "w": "the",
+     "at": 4.412
+    },
+    {
+     "w": "league",
+     "at": 4.5
+    },
+    {
+     "w": "Will",
+     "at": 5.125
+    },
+    {
+     "w": "Hughes",
+     "at": 5.312
+    },
+    {
+     "w": "backheels",
+     "at": 5.675
+    },
+    {
+     "w": "it",
+     "at": 6.2
+    },
+    {
+     "w": "Troy",
+     "at": 6.362
+    },
+    {
+     "w": "Deeney",
+     "at": 6.675
+    },
+    {
+     "w": "looks",
+     "at": 6.95
+    },
+    {
+     "w": "up",
+     "at": 7.2
+    },
+    {
+     "w": "and",
+     "at": 7.875
+    },
+    {
+     "w": "Isma\u00efla",
+     "at": 8.0
+    },
+    {
+     "w": "Sarr",
+     "at": 8.625
+    },
+    {
+     "w": "is",
+     "at": 8.975
+    },
+    {
+     "w": "already",
+     "at": 9.137
+    },
+    {
+     "w": "sprinting",
+     "at": 9.537
+    },
+    {
+     "w": "in",
+     "at": 10.025
+    },
+    {
+     "w": "behind",
+     "at": 10.15
+    },
+    {
+     "w": "He",
+     "at": 11.15
+    },
+    {
+     "w": "races",
+     "at": 11.3
+    },
+    {
+     "w": "clear",
+     "at": 11.713
+    },
+    {
+     "w": "of",
+     "at": 12.062
+    },
+    {
+     "w": "everyone",
+     "at": 12.15
+    },
+    {
+     "w": "and",
+     "at": 13.1
+    },
+    {
+     "w": "lifts",
+     "at": 13.225
+    },
+    {
+     "w": "it",
+     "at": 13.525
+    },
+    {
+     "w": "over",
+     "at": 13.613
+    },
+    {
+     "w": "the",
+     "at": 13.812
+    },
+    {
+     "w": "keeper",
+     "at": 13.9
+    },
+    {
+     "w": "Goal",
+     "at": 14.9
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again. The moment Deeney looks up, Sarr runs past the last defender.",
+   "src": "/plays/narration/ismaila-sarr-signature/2.m4a",
+   "seconds": 5.8,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "The",
+     "at": 1.475
+    },
+    {
+     "w": "moment",
+     "at": 1.575
+    },
+    {
+     "w": "Deeney",
+     "at": 1.875
+    },
+    {
+     "w": "looks",
+     "at": 2.15
+    },
+    {
+     "w": "up",
+     "at": 2.4
+    },
+    {
+     "w": "Sarr",
+     "at": 2.862
+    },
+    {
+     "w": "runs",
+     "at": 3.15
+    },
+    {
+     "w": "past",
+     "at": 3.513
+    },
+    {
+     "w": "the",
+     "at": 3.862
+    },
+    {
+     "w": "last",
+     "at": 3.95
+    },
+    {
+     "w": "defender",
+     "at": 4.287
+    }
+   ]
+  },
+  {
+   "label": "Behind the goal",
+   "text": "From behind the goal: the keeper rushes out, so Sarr stays calm and lifts it over him. Two goals in six minutes!",
+   "src": "/plays/narration/ismaila-sarr-signature/3.m4a",
+   "seconds": 8.1,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "behind",
+     "at": 0.487
+    },
+    {
+     "w": "the",
+     "at": 0.863
+    },
+    {
+     "w": "goal",
+     "at": 0.95
+    },
+    {
+     "w": "the",
+     "at": 1.675
+    },
+    {
+     "w": "keeper",
+     "at": 1.775
+    },
+    {
+     "w": "rushes",
+     "at": 2.15
+    },
+    {
+     "w": "out",
+     "at": 2.525
+    },
+    {
+     "w": "so",
+     "at": 2.9
+    },
+    {
+     "w": "Sarr",
+     "at": 3.087
+    },
+    {
+     "w": "stays",
+     "at": 3.413
+    },
+    {
+     "w": "calm",
+     "at": 3.862
+    },
+    {
+     "w": "and",
+     "at": 4.25
+    },
+    {
+     "w": "lifts",
+     "at": 4.375
+    },
+    {
+     "w": "it",
+     "at": 4.662
+    },
+    {
+     "w": "over",
+     "at": 4.737
+    },
+    {
+     "w": "him",
+     "at": 4.975
+    },
+    {
+     "w": "Two",
+     "at": 5.75
+    },
+    {
+     "w": "goals",
+     "at": 5.975
+    },
+    {
+     "w": "in",
+     "at": 6.3
+    },
+    {
+     "w": "six",
+     "at": 6.463
+    },
+    {
+     "w": "minutes",
+     "at": 6.75
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: when your teammate looks up to pass, run in behind the defence straight away!",
+   "src": "/plays/narration/ismaila-sarr-signature/4.m4a",
+   "seconds": 6.3,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "when",
+     "at": 1.3
+    },
+    {
+     "w": "your",
+     "at": 1.438
+    },
+    {
+     "w": "teammate",
+     "at": 1.587
+    },
+    {
+     "w": "looks",
+     "at": 2.125
+    },
+    {
+     "w": "up",
+     "at": 2.337
+    },
+    {
+     "w": "to",
+     "at": 2.475
+    },
+    {
+     "w": "pass",
+     "at": 2.575
+    },
+    {
+     "w": "run",
+     "at": 3.288
+    },
+    {
+     "w": "in",
+     "at": 3.538
+    },
+    {
+     "w": "behind",
+     "at": 3.725
+    },
+    {
+     "w": "the",
+     "at": 4.088
+    },
+    {
+     "w": "defence",
+     "at": 4.175
+    },
+    {
+     "w": "straight",
+     "at": 4.638
+    },
+    {
+     "w": "away",
+     "at": 4.938
+    }
+   ]
+  }
+ ]
+}

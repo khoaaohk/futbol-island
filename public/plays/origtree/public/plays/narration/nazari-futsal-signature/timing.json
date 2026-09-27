@@ -1,0 +1,354 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: the 2010 Asian final",
+   "text": "Tashkent, twenty ten: the Asian Futsal Championship final. Iran beat the hosts, Uzbekistan, eight to three! In goal, number twelve: Mostafa Nazari. That year, he was named the best futsal goalkeeper in the world.",
+   "src": "/plays/narration/nazari-futsal-signature/1.m4a",
+   "seconds": 15.7,
+   "words": [
+    {
+     "w": "Tashkent",
+     "at": 0.35
+    },
+    {
+     "w": "twenty",
+     "at": 1.0
+    },
+    {
+     "w": "ten",
+     "at": 1.312
+    },
+    {
+     "w": "the",
+     "at": 1.975
+    },
+    {
+     "w": "Asian",
+     "at": 2.138
+    },
+    {
+     "w": "Futsal",
+     "at": 2.562
+    },
+    {
+     "w": "Championship",
+     "at": 3.062
+    },
+    {
+     "w": "final",
+     "at": 3.75
+    },
+    {
+     "w": "Iran",
+     "at": 4.675
+    },
+    {
+     "w": "beat",
+     "at": 5.062
+    },
+    {
+     "w": "the",
+     "at": 5.275
+    },
+    {
+     "w": "hosts",
+     "at": 5.412
+    },
+    {
+     "w": "Uzbekistan",
+     "at": 6.075
+    },
+    {
+     "w": "eight",
+     "at": 7.05
+    },
+    {
+     "w": "to",
+     "at": 7.3
+    },
+    {
+     "w": "three",
+     "at": 7.438
+    },
+    {
+     "w": "In",
+     "at": 8.287
+    },
+    {
+     "w": "goal",
+     "at": 8.45
+    },
+    {
+     "w": "number",
+     "at": 8.925
+    },
+    {
+     "w": "twelve",
+     "at": 9.213
+    },
+    {
+     "w": "Mostafa",
+     "at": 10.037
+    },
+    {
+     "w": "Nazari",
+     "at": 10.675
+    },
+    {
+     "w": "That",
+     "at": 11.738
+    },
+    {
+     "w": "year",
+     "at": 12.0
+    },
+    {
+     "w": "he",
+     "at": 12.262
+    },
+    {
+     "w": "was",
+     "at": 12.338
+    },
+    {
+     "w": "named",
+     "at": 12.475
+    },
+    {
+     "w": "the",
+     "at": 12.688
+    },
+    {
+     "w": "best",
+     "at": 12.787
+    },
+    {
+     "w": "futsal",
+     "at": 13.188
+    },
+    {
+     "w": "goalkeeper",
+     "at": 13.65
+    },
+    {
+     "w": "in",
+     "at": 14.238
+    },
+    {
+     "w": "the",
+     "at": 14.312
+    },
+    {
+     "w": "world",
+     "at": 14.4
+    }
+   ]
+  },
+  {
+   "label": "How he blocks (demo)",
+   "text": "How he blocks: the shot comes from close, so there is no time to dive. He steps across into the line of the ball, drops low and makes a wall. Chest behind it. Blocked!",
+   "src": "/plays/narration/nazari-futsal-signature/2.m4a",
+   "seconds": 11.7,
+   "words": [
+    {
+     "w": "How",
+     "at": 0.375
+    },
+    {
+     "w": "he",
+     "at": 0.512
+    },
+    {
+     "w": "blocks",
+     "at": 0.625
+    },
+    {
+     "w": "the",
+     "at": 1.4
+    },
+    {
+     "w": "shot",
+     "at": 1.538
+    },
+    {
+     "w": "comes",
+     "at": 1.825
+    },
+    {
+     "w": "from",
+     "at": 2.075
+    },
+    {
+     "w": "close",
+     "at": 2.25
+    },
+    {
+     "w": "so",
+     "at": 2.65
+    },
+    {
+     "w": "there",
+     "at": 2.8
+    },
+    {
+     "w": "is",
+     "at": 2.95
+    },
+    {
+     "w": "no",
+     "at": 3.1
+    },
+    {
+     "w": "time",
+     "at": 3.288
+    },
+    {
+     "w": "to",
+     "at": 3.65
+    },
+    {
+     "w": "dive",
+     "at": 3.775
+    },
+    {
+     "w": "He",
+     "at": 4.7
+    },
+    {
+     "w": "steps",
+     "at": 4.85
+    },
+    {
+     "w": "across",
+     "at": 5.15
+    },
+    {
+     "w": "into",
+     "at": 5.612
+    },
+    {
+     "w": "the",
+     "at": 5.787
+    },
+    {
+     "w": "line",
+     "at": 5.9
+    },
+    {
+     "w": "of",
+     "at": 6.162
+    },
+    {
+     "w": "the",
+     "at": 6.237
+    },
+    {
+     "w": "ball",
+     "at": 6.325
+    },
+    {
+     "w": "drops",
+     "at": 6.75
+    },
+    {
+     "w": "low",
+     "at": 7.213
+    },
+    {
+     "w": "and",
+     "at": 7.6
+    },
+    {
+     "w": "makes",
+     "at": 7.713
+    },
+    {
+     "w": "a",
+     "at": 7.938
+    },
+    {
+     "w": "wall",
+     "at": 8.037
+    },
+    {
+     "w": "Chest",
+     "at": 8.825
+    },
+    {
+     "w": "behind",
+     "at": 9.175
+    },
+    {
+     "w": "it",
+     "at": 9.6
+    },
+    {
+     "w": "Blocked",
+     "at": 10.225
+    }
+   ]
+  },
+  {
+   "label": "Practise it",
+   "text": "Practise with a friend. Be brave, and get your body behind the ball!",
+   "src": "/plays/narration/nazari-futsal-signature/3.m4a",
+   "seconds": 5.1,
+   "words": [
+    {
+     "w": "Practise",
+     "at": 0.35
+    },
+    {
+     "w": "with",
+     "at": 0.812
+    },
+    {
+     "w": "a",
+     "at": 0.938
+    },
+    {
+     "w": "friend",
+     "at": 1.012
+    },
+    {
+     "w": "Be",
+     "at": 1.875
+    },
+    {
+     "w": "brave",
+     "at": 2.038
+    },
+    {
+     "w": "and",
+     "at": 2.587
+    },
+    {
+     "w": "get",
+     "at": 2.7
+    },
+    {
+     "w": "your",
+     "at": 2.837
+    },
+    {
+     "w": "body",
+     "at": 2.95
+    },
+    {
+     "w": "behind",
+     "at": 3.275
+    },
+    {
+     "w": "the",
+     "at": 3.638
+    },
+    {
+     "w": "ball",
+     "at": 3.725
+    }
+   ]
+  }
+ ]
+}

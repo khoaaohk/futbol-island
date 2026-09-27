@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Six minutes left, live",
+   "text": "April two thousand and three, FA Cup semi-final. Arsenal lead Sheffield United one-nil, six minutes left. Asaba shoots, and Peschisolido heads it towards an open goal!",
+   "src": "/plays/narration/seaman-signature/1.m4a",
+   "seconds": 12.6,
+   "words": [
+    {
+     "w": "April",
+     "at": 0.35
+    },
+    {
+     "w": "two",
+     "at": 0.675
+    },
+    {
+     "w": "thousand",
+     "at": 0.863
+    },
+    {
+     "w": "and",
+     "at": 1.375
+    },
+    {
+     "w": "three",
+     "at": 1.512
+    },
+    {
+     "w": "FA",
+     "at": 2.237
+    },
+    {
+     "w": "Cup",
+     "at": 2.538
+    },
+    {
+     "w": "semi-final",
+     "at": 2.8
+    },
+    {
+     "w": "Arsenal",
+     "at": 4.013
+    },
+    {
+     "w": "lead",
+     "at": 4.5
+    },
+    {
+     "w": "Sheffield",
+     "at": 4.8
+    },
+    {
+     "w": "United",
+     "at": 5.275
+    },
+    {
+     "w": "one-nil",
+     "at": 5.7
+    },
+    {
+     "w": "six",
+     "at": 6.575
+    },
+    {
+     "w": "minutes",
+     "at": 6.9
+    },
+    {
+     "w": "left",
+     "at": 7.225
+    },
+    {
+     "w": "Asaba",
+     "at": 8.088
+    },
+    {
+     "w": "shoots",
+     "at": 8.562
+    },
+    {
+     "w": "and",
+     "at": 9.1
+    },
+    {
+     "w": "Peschisolido",
+     "at": 9.225
+    },
+    {
+     "w": "heads",
+     "at": 10.05
+    },
+    {
+     "w": "it",
+     "at": 10.287
+    },
+    {
+     "w": "towards",
+     "at": 10.375
+    },
+    {
+     "w": "an",
+     "at": 10.688
+    },
+    {
+     "w": "open",
+     "at": 10.812
+    },
+    {
+     "w": "goal",
+     "at": 11.175
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. David Seaman is over at his near post, so he springs backwards and flings his right hand.",
+   "src": "/plays/narration/seaman-signature/2.m4a",
+   "seconds": 8.5,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.262
+    },
+    {
+     "w": "David",
+     "at": 2.35
+    },
+    {
+     "w": "Seaman",
+     "at": 2.788
+    },
+    {
+     "w": "is",
+     "at": 3.175
+    },
+    {
+     "w": "over",
+     "at": 3.337
+    },
+    {
+     "w": "at",
+     "at": 3.7
+    },
+    {
+     "w": "his",
+     "at": 3.788
+    },
+    {
+     "w": "near",
+     "at": 3.95
+    },
+    {
+     "w": "post",
+     "at": 4.188
+    },
+    {
+     "w": "so",
+     "at": 4.9
+    },
+    {
+     "w": "he",
+     "at": 5.05
+    },
+    {
+     "w": "springs",
+     "at": 5.188
+    },
+    {
+     "w": "backwards",
+     "at": 5.662
+    },
+    {
+     "w": "and",
+     "at": 6.25
+    },
+    {
+     "w": "flings",
+     "at": 6.388
+    },
+    {
+     "w": "his",
+     "at": 6.713
+    },
+    {
+     "w": "right",
+     "at": 6.875
+    },
+    {
+     "w": "hand",
+     "at": 7.125
+    }
+   ]
+  },
+  {
+   "label": "Behind the ball",
+   "text": "From behind the goal: his glove gets behind the ball on the line and scoops it away. Arsenal are through to the final!",
+   "src": "/plays/narration/seaman-signature/3.m4a",
+   "seconds": 7.9,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "behind",
+     "at": 0.5
+    },
+    {
+     "w": "the",
+     "at": 0.887
+    },
+    {
+     "w": "goal",
+     "at": 0.975
+    },
+    {
+     "w": "his",
+     "at": 1.7
+    },
+    {
+     "w": "glove",
+     "at": 1.913
+    },
+    {
+     "w": "gets",
+     "at": 2.275
+    },
+    {
+     "w": "behind",
+     "at": 2.525
+    },
+    {
+     "w": "the",
+     "at": 2.888
+    },
+    {
+     "w": "ball",
+     "at": 2.975
+    },
+    {
+     "w": "on",
+     "at": 3.288
+    },
+    {
+     "w": "the",
+     "at": 3.388
+    },
+    {
+     "w": "line",
+     "at": 3.475
+    },
+    {
+     "w": "and",
+     "at": 3.875
+    },
+    {
+     "w": "scoops",
+     "at": 4.013
+    },
+    {
+     "w": "it",
+     "at": 4.338
+    },
+    {
+     "w": "away",
+     "at": 4.425
+    },
+    {
+     "w": "Arsenal",
+     "at": 5.35
+    },
+    {
+     "w": "are",
+     "at": 5.9
+    },
+    {
+     "w": "through",
+     "at": 6.062
+    },
+    {
+     "w": "to",
+     "at": 6.275
+    },
+    {
+     "w": "the",
+     "at": 6.362
+    },
+    {
+     "w": "final",
+     "at": 6.463
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Safe hands! Your turn: get your body behind the ball, so even if it slips, it will not go in.",
+   "src": "/plays/narration/seaman-signature/4.m4a",
+   "seconds": 7.1,
+   "words": [
+    {
+     "w": "Safe",
+     "at": 0.4
+    },
+    {
+     "w": "hands",
+     "at": 0.675
+    },
+    {
+     "w": "Your",
+     "at": 1.613
+    },
+    {
+     "w": "turn",
+     "at": 1.812
+    },
+    {
+     "w": "get",
+     "at": 2.625
+    },
+    {
+     "w": "your",
+     "at": 2.788
+    },
+    {
+     "w": "body",
+     "at": 2.9
+    },
+    {
+     "w": "behind",
+     "at": 3.225
+    },
+    {
+     "w": "the",
+     "at": 3.538
+    },
+    {
+     "w": "ball",
+     "at": 3.625
+    },
+    {
+     "w": "so",
+     "at": 4.025
+    },
+    {
+     "w": "even",
+     "at": 4.2
+    },
+    {
+     "w": "if",
+     "at": 4.438
+    },
+    {
+     "w": "it",
+     "at": 4.537
+    },
+    {
+     "w": "slips",
+     "at": 4.688
+    },
+    {
+     "w": "it",
+     "at": 5.162
+    },
+    {
+     "w": "will",
+     "at": 5.237
+    },
+    {
+     "w": "not",
+     "at": 5.375
+    },
+    {
+     "w": "go",
+     "at": 5.6
+    },
+    {
+     "w": "in",
+     "at": 5.8
+    }
+   ]
+  }
+ ]
+}

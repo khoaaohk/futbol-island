@@ -1,0 +1,366 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Soccer City",
+   "text": "Johannesburg, 2010, the World Cup final. Spain, in dark blue, play the Netherlands, in orange. Nil-nil, with four minutes of extra time left. F\u00e0bregas passes to Andr\u00e9s Iniesta, and... goal!",
+   "src": "/plays/narration/iniesta-final-2010/1.m4a",
+   "seconds": 14.9,
+   "words": [
+    {
+     "w": "Johannesburg",
+     "at": 0.375
+    },
+    {
+     "w": "2010",
+     "at": 1.25
+    },
+    {
+     "w": "the",
+     "at": 1.9
+    },
+    {
+     "w": "World",
+     "at": 2.0
+    },
+    {
+     "w": "Cup",
+     "at": 2.3
+    },
+    {
+     "w": "final",
+     "at": 2.525
+    },
+    {
+     "w": "Spain",
+     "at": 3.513
+    },
+    {
+     "w": "in",
+     "at": 4.075
+    },
+    {
+     "w": "dark",
+     "at": 4.225
+    },
+    {
+     "w": "blue",
+     "at": 4.513
+    },
+    {
+     "w": "play",
+     "at": 5.013
+    },
+    {
+     "w": "the",
+     "at": 5.275
+    },
+    {
+     "w": "Netherlands",
+     "at": 5.375
+    },
+    {
+     "w": "in",
+     "at": 6.05
+    },
+    {
+     "w": "orange",
+     "at": 6.213
+    },
+    {
+     "w": "Nil-nil",
+     "at": 7.15
+    },
+    {
+     "w": "with",
+     "at": 7.8
+    },
+    {
+     "w": "four",
+     "at": 7.987
+    },
+    {
+     "w": "minutes",
+     "at": 8.25
+    },
+    {
+     "w": "of",
+     "at": 8.537
+    },
+    {
+     "w": "extra",
+     "at": 8.662
+    },
+    {
+     "w": "time",
+     "at": 9.075
+    },
+    {
+     "w": "left",
+     "at": 9.4
+    },
+    {
+     "w": "F\u00e0bregas",
+     "at": 10.275
+    },
+    {
+     "w": "passes",
+     "at": 10.912
+    },
+    {
+     "w": "to",
+     "at": 11.4
+    },
+    {
+     "w": "Andr\u00e9s",
+     "at": 11.537
+    },
+    {
+     "w": "Iniesta",
+     "at": 11.95
+    },
+    {
+     "w": "and",
+     "at": 12.637
+    },
+    {
+     "w": "goal",
+     "at": 13.387
+    }
+   ]
+  },
+  {
+   "label": "Calm",
+   "text": "Watch again, slowly. Iniesta stays calm. He lets the ball bounce, keeps his head down and his body still.",
+   "src": "/plays/narration/iniesta-final-2010/2.m4a",
+   "seconds": 8.0,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.113
+    },
+    {
+     "w": "Iniesta",
+     "at": 2.087
+    },
+    {
+     "w": "stays",
+     "at": 2.575
+    },
+    {
+     "w": "calm",
+     "at": 2.987
+    },
+    {
+     "w": "He",
+     "at": 3.8
+    },
+    {
+     "w": "lets",
+     "at": 3.925
+    },
+    {
+     "w": "the",
+     "at": 4.175
+    },
+    {
+     "w": "ball",
+     "at": 4.275
+    },
+    {
+     "w": "bounce",
+     "at": 4.575
+    },
+    {
+     "w": "keeps",
+     "at": 5.05
+    },
+    {
+     "w": "his",
+     "at": 5.312
+    },
+    {
+     "w": "head",
+     "at": 5.45
+    },
+    {
+     "w": "down",
+     "at": 5.675
+    },
+    {
+     "w": "and",
+     "at": 6.013
+    },
+    {
+     "w": "his",
+     "at": 6.112
+    },
+    {
+     "w": "body",
+     "at": 6.25
+    },
+    {
+     "w": "still",
+     "at": 6.638
+    }
+   ]
+  },
+  {
+   "label": "The strike",
+   "text": "Then he strikes it cleanly with his right foot, past Stekelenburg. Spain are world champions for the first time!",
+   "src": "/plays/narration/iniesta-final-2010/3.m4a",
+   "seconds": 8.0,
+   "words": [
+    {
+     "w": "Then",
+     "at": 0.35
+    },
+    {
+     "w": "he",
+     "at": 0.475
+    },
+    {
+     "w": "strikes",
+     "at": 0.6
+    },
+    {
+     "w": "it",
+     "at": 0.938
+    },
+    {
+     "w": "cleanly",
+     "at": 1.062
+    },
+    {
+     "w": "with",
+     "at": 1.525
+    },
+    {
+     "w": "his",
+     "at": 1.637
+    },
+    {
+     "w": "right",
+     "at": 1.8
+    },
+    {
+     "w": "foot",
+     "at": 2.112
+    },
+    {
+     "w": "past",
+     "at": 2.75
+    },
+    {
+     "w": "Stekelenburg",
+     "at": 3.138
+    },
+    {
+     "w": "Spain",
+     "at": 4.537
+    },
+    {
+     "w": "are",
+     "at": 5.025
+    },
+    {
+     "w": "world",
+     "at": 5.175
+    },
+    {
+     "w": "champions",
+     "at": 5.513
+    },
+    {
+     "w": "for",
+     "at": 6.125
+    },
+    {
+     "w": "the",
+     "at": 6.237
+    },
+    {
+     "w": "first",
+     "at": 6.338
+    },
+    {
+     "w": "time",
+     "at": 6.65
+    }
+   ]
+  },
+  {
+   "label": "Big moments",
+   "text": "In the biggest moment, stay calm. Settle your body, and strike the ball cleanly.",
+   "src": "/plays/narration/iniesta-final-2010/4.m4a",
+   "seconds": 5.9,
+   "words": [
+    {
+     "w": "In",
+     "at": 0.375
+    },
+    {
+     "w": "the",
+     "at": 0.463
+    },
+    {
+     "w": "biggest",
+     "at": 0.55
+    },
+    {
+     "w": "moment",
+     "at": 0.925
+    },
+    {
+     "w": "stay",
+     "at": 1.488
+    },
+    {
+     "w": "calm",
+     "at": 1.762
+    },
+    {
+     "w": "Settle",
+     "at": 2.65
+    },
+    {
+     "w": "your",
+     "at": 2.962
+    },
+    {
+     "w": "body",
+     "at": 3.075
+    },
+    {
+     "w": "and",
+     "at": 3.487
+    },
+    {
+     "w": "strike",
+     "at": 3.6
+    },
+    {
+     "w": "the",
+     "at": 3.913
+    },
+    {
+     "w": "ball",
+     "at": 4.0
+    },
+    {
+     "w": "cleanly",
+     "at": 4.312
+    }
+   ]
+  }
+ ]
+}

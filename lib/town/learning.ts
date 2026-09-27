@@ -1,7 +1,7 @@
 export type Point = {x:number;z:number};
 export const PASSER = {x:11,z:21};
 export const DEFENDER = {x:11,z:15};
-export type LessonPhase = 'intro' | 'watch' | 'practice' | 'passing' | 'complete';
+export type LessonPhase = 'intro' | 'watch' | 'practice' | 'aim' | 'passing' | 'replay' | 'complete';
 export function passingLane(receiver:Point) {
   const dx=receiver.x-PASSER.x,dz=receiver.z-PASSER.z,length=Math.hypot(dx,dz);
   const t=Math.max(0,Math.min(1,((DEFENDER.x-PASSER.x)*dx+(DEFENDER.z-PASSER.z)*dz)/(length*length||1)));

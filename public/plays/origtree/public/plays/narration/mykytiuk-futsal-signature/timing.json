@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: World Cup 2024",
+   "text": "The 2024 Futsal World Cup quarter-final, in Tashkent. Ukraine play Venezuela. Defender Mykola Mykytiuk scores the ninth goal. Ukraine win nine four, on the way to a bronze medal!",
+   "src": "/plays/narration/mykytiuk-futsal-signature/1.m4a",
+   "seconds": 14.6,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "2024",
+     "at": 0.425
+    },
+    {
+     "w": "Futsal",
+     "at": 1.475
+    },
+    {
+     "w": "World",
+     "at": 1.925
+    },
+    {
+     "w": "Cup",
+     "at": 2.225
+    },
+    {
+     "w": "quarter-final",
+     "at": 2.5
+    },
+    {
+     "w": "in",
+     "at": 3.475
+    },
+    {
+     "w": "Tashkent",
+     "at": 3.625
+    },
+    {
+     "w": "Ukraine",
+     "at": 4.838
+    },
+    {
+     "w": "play",
+     "at": 5.388
+    },
+    {
+     "w": "Venezuela",
+     "at": 5.7
+    },
+    {
+     "w": "Defender",
+     "at": 7.037
+    },
+    {
+     "w": "Mykola",
+     "at": 7.575
+    },
+    {
+     "w": "Mykytiuk",
+     "at": 8.125
+    },
+    {
+     "w": "scores",
+     "at": 8.738
+    },
+    {
+     "w": "the",
+     "at": 9.175
+    },
+    {
+     "w": "ninth",
+     "at": 9.275
+    },
+    {
+     "w": "goal",
+     "at": 9.6
+    },
+    {
+     "w": "Ukraine",
+     "at": 10.438
+    },
+    {
+     "w": "win",
+     "at": 10.988
+    },
+    {
+     "w": "nine",
+     "at": 11.225
+    },
+    {
+     "w": "four",
+     "at": 11.55
+    },
+    {
+     "w": "on",
+     "at": 12.175
+    },
+    {
+     "w": "the",
+     "at": 12.312
+    },
+    {
+     "w": "way",
+     "at": 12.4
+    },
+    {
+     "w": "to",
+     "at": 12.6
+    },
+    {
+     "w": "a",
+     "at": 12.688
+    },
+    {
+     "w": "bronze",
+     "at": 12.75
+    },
+    {
+     "w": "medal",
+     "at": 13.238
+    }
+   ]
+  },
+  {
+   "label": "How he defends",
+   "text": "This is how he defends: he stays close behind the pivot. The pass comes. The pivot tries to turn, but he slides across. Again, blocked! Then he pokes it away and goes!",
+   "src": "/plays/narration/mykytiuk-futsal-signature/2.m4a",
+   "seconds": 12.1,
+   "words": [
+    {
+     "w": "This",
+     "at": 0.35
+    },
+    {
+     "w": "is",
+     "at": 0.525
+    },
+    {
+     "w": "how",
+     "at": 0.65
+    },
+    {
+     "w": "he",
+     "at": 0.85
+    },
+    {
+     "w": "defends",
+     "at": 0.975
+    },
+    {
+     "w": "he",
+     "at": 1.75
+    },
+    {
+     "w": "stays",
+     "at": 1.875
+    },
+    {
+     "w": "close",
+     "at": 2.2
+    },
+    {
+     "w": "behind",
+     "at": 2.525
+    },
+    {
+     "w": "the",
+     "at": 2.888
+    },
+    {
+     "w": "pivot",
+     "at": 2.975
+    },
+    {
+     "w": "The",
+     "at": 3.775
+    },
+    {
+     "w": "pass",
+     "at": 3.888
+    },
+    {
+     "w": "comes",
+     "at": 4.312
+    },
+    {
+     "w": "The",
+     "at": 5.175
+    },
+    {
+     "w": "pivot",
+     "at": 5.275
+    },
+    {
+     "w": "tries",
+     "at": 5.625
+    },
+    {
+     "w": "to",
+     "at": 5.95
+    },
+    {
+     "w": "turn",
+     "at": 6.088
+    },
+    {
+     "w": "but",
+     "at": 6.513
+    },
+    {
+     "w": "he",
+     "at": 6.638
+    },
+    {
+     "w": "slides",
+     "at": 6.775
+    },
+    {
+     "w": "across",
+     "at": 7.213
+    },
+    {
+     "w": "Again",
+     "at": 8.162
+    },
+    {
+     "w": "blocked",
+     "at": 8.713
+    },
+    {
+     "w": "Then",
+     "at": 9.613
+    },
+    {
+     "w": "he",
+     "at": 9.8
+    },
+    {
+     "w": "pokes",
+     "at": 9.925
+    },
+    {
+     "w": "it",
+     "at": 10.188
+    },
+    {
+     "w": "away",
+     "at": 10.262
+    },
+    {
+     "w": "and",
+     "at": 10.55
+    },
+    {
+     "w": "goes",
+     "at": 10.675
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. Stay close, slide across, keep him in front, poke it away!",
+   "src": "/plays/narration/mykytiuk-futsal-signature/3.m4a",
+   "seconds": 6.2,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.662
+    },
+    {
+     "w": "slowly",
+     "at": 1.137
+    },
+    {
+     "w": "Stay",
+     "at": 2.1
+    },
+    {
+     "w": "close",
+     "at": 2.438
+    },
+    {
+     "w": "slide",
+     "at": 2.9
+    },
+    {
+     "w": "across",
+     "at": 3.188
+    },
+    {
+     "w": "keep",
+     "at": 3.7
+    },
+    {
+     "w": "him",
+     "at": 3.913
+    },
+    {
+     "w": "in",
+     "at": 4.037
+    },
+    {
+     "w": "front",
+     "at": 4.188
+    },
+    {
+     "w": "poke",
+     "at": 4.55
+    },
+    {
+     "w": "it",
+     "at": 4.737
+    },
+    {
+     "w": "away",
+     "at": 4.812
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: keep the attacker in front of you, and don\u2019t let them turn!",
+   "src": "/plays/narration/mykytiuk-futsal-signature/4.m4a",
+   "seconds": 4.9,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "keep",
+     "at": 1.312
+    },
+    {
+     "w": "the",
+     "at": 1.538
+    },
+    {
+     "w": "attacker",
+     "at": 1.675
+    },
+    {
+     "w": "in",
+     "at": 2.138
+    },
+    {
+     "w": "front",
+     "at": 2.275
+    },
+    {
+     "w": "of",
+     "at": 2.462
+    },
+    {
+     "w": "you",
+     "at": 2.55
+    },
+    {
+     "w": "and",
+     "at": 2.875
+    },
+    {
+     "w": "don\u2019t",
+     "at": 2.987
+    },
+    {
+     "w": "let",
+     "at": 3.175
+    },
+    {
+     "w": "them",
+     "at": 3.312
+    },
+    {
+     "w": "turn",
+     "at": 3.487
+    }
+   ]
+  }
+ ]
+}

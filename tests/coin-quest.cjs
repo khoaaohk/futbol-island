@@ -11,12 +11,12 @@ function environment(initial={},browser=true){
 const e=environment(),q=e.load('lib/town/coinQuest.ts'),{COIN_QUEST,COIN_STORAGE_KEY,COIN_REWARD_ID,emptyCoinProgress,sanitizeCoinProgress,applyCoinEvent,coinRewardEarned}=q;
 assert.equal(new Set(COIN_QUEST.map(c=>c.teaching)).size,COIN_QUEST.length,'Every found ball teaches a different idea');
 const ids=COIN_QUEST.map(c=>c.id),hidden=COIN_QUEST.find(c=>c.kind==='hidden').id,parcel=COIN_QUEST.find(c=>c.kind==='kick').id;
-assert.equal(ids.length,55);assert.equal(new Set(ids).size,55);assert(COIN_QUEST.every(c=>Number.isFinite(c.x+c.y+c.z)&&c.clue&&c.detail&&c.teaching));
+assert.equal(ids.length,80);assert.equal(new Set(ids).size,80);assert(COIN_QUEST.every(c=>Number.isFinite(c.x+c.y+c.z)&&c.clue&&c.detail&&c.teaching));
 for(const raw of [null,undefined,false,1,'oops'])assert.equal(sanitizeCoinProgress(raw).collected.length,0);
 const dirty=sanitizeCoinProgress({revealed:[parcel,parcel,'fake',4],collected:[hidden,hidden,'fake',null],hint:'fake',celebrated:true});
 assert.equal(dirty.collected.length,1);assert(dirty.revealed.includes(hidden));assert.equal(dirty.revealed.length,2);assert.equal(dirty.hint,null);assert.equal(dirty.celebrated,false);
 const oldTen=sanitizeCoinProgress({revealed:ids.slice(0,10),collected:ids.slice(0,10),hint:null,celebrated:true});assert.equal(oldTen.collected.length,10,'previous ten collectibles persist');assert(!coinRewardEarned(oldTen),'new goal requires fifty');assert(!oldTen.celebrated);
-const nineteen=sanitizeCoinProgress({version:2,collected:ids.slice(0,-1)});assert.equal(nineteen.collected.length,54);assert(!coinRewardEarned(nineteen));
+const nineteen=sanitizeCoinProgress({version:4,collected:ids.slice(0,-1)});assert.equal(nineteen.collected.length,79);assert(!coinRewardEarned(nineteen));
 let s=emptyCoinProgress();assert.equal(applyCoinEvent(s,'fake','collect'),s);assert.equal(applyCoinEvent(s,parcel,'collect'),s,'cannot collect closed parcel');
 s=applyCoinEvent({...s,hint:hidden},hidden,'collect');assert(s.collected.includes(hidden));assert.equal(s.hint,null);assert.equal(applyCoinEvent(s,hidden,'collect'),s,'duplicate pickup no-op');
 s=applyCoinEvent(s,parcel,'reveal');assert.equal(applyCoinEvent(s,parcel,'reveal'),s);assert(!s.collected.includes(parcel));s=applyCoinEvent(s,parcel,'collect');assert(s.collected.includes(parcel));
@@ -32,16 +32,34 @@ for(const id of ids){p.recordCoin(id,'reveal');p.recordCoin(id,'collect');}p.dis
 // SSR reads must not mark storage loaded before browser hydration.
 const ssr=environment({[COIN_STORAGE_KEY]:JSON.stringify(s)},false),sp=ssr.load('lib/town/coinProgress.ts'),custom=ssr.load('lib/town/customization.ts');assert.equal(sp.readCoinProgress().collected.length,0);assert.equal(custom.sanitizeCustomization({costume:COIN_REWARD_ID}).costume,'none');ssr.hydrate();assert.equal(sp.readCoinProgress().collected.length,COIN_QUEST.length);assert.equal(custom.sanitizeCustomization({costume:COIN_REWARD_ID}).costume,COIN_REWARD_ID);
 const broken=environment({[COIN_STORAGE_KEY]:'not JSON'}),bp=broken.load('lib/town/coinProgress.ts');assert.equal(bp.readCoinProgress().collected.length,0);broken.block();assert(bp.recordCoin(hidden,'collect'));assert(bp.readCoinProgress().collected.includes(hidden),'private browsing retains session progress');
-console.log('PASS coin quest: 55 locations, sanitization, reveal/collect gating, duplicates, hints, persistence, cross-tab merge, completion, SSR hydration, blocked storage');
+console.log('PASS coin quest: 80 locations, sanitization, reveal/collect gating, duplicates, hints, persistence, cross-tab merge, completion, SSR hydration, blocked storage');
 
 // Expanding the hunt never takes an already-earned costume away.
 const legacy40={revealed:ids.slice(0,40),collected:ids.slice(0,40),hint:null,celebrated:true};
-const migrated=sanitizeCoinProgress(legacy40);assert.equal(migrated.version,3);assert(migrated.rewardUnlocked);assert(coinRewardEarned(migrated));assert.equal(migrated.collected.length,40);assert(!migrated.celebrated,'new fifty-ball finale remains available');
+const migrated=sanitizeCoinProgress(legacy40);assert.equal(migrated.version,4);assert(migrated.rewardUnlocked);assert(coinRewardEarned(migrated));assert.equal(migrated.collected.length,40);assert(!migrated.celebrated,'new fifty-ball finale remains available');
 assert(!coinRewardEarned(sanitizeCoinProgress({...legacy40,collected:ids.slice(0,39)})),'incomplete old save does not unlock');
 assert(!coinRewardEarned(sanitizeCoinProgress({...legacy40,version:2,rewardUnlocked:false})),'new players need all fifty');
-const legacyEnv=environment({[COIN_STORAGE_KEY]:JSON.stringify(legacy40)}),legacyProgress=legacyEnv.load('lib/town/coinProgress.ts');assert(coinRewardEarned(legacyProgress.readCoinProgress()));legacyProgress.setCoinHint(ids[40]);const persisted=JSON.parse(legacyEnv.data.get(COIN_STORAGE_KEY));assert.equal(persisted.version,3);assert(persisted.rewardUnlocked);assert(coinRewardEarned(sanitizeCoinProgress(persisted)));
+const legacyEnv=environment({[COIN_STORAGE_KEY]:JSON.stringify(legacy40)}),legacyProgress=legacyEnv.load('lib/town/coinProgress.ts');assert(coinRewardEarned(legacyProgress.readCoinProgress()));legacyProgress.setCoinHint(ids[40]);const persisted=JSON.parse(legacyEnv.data.get(COIN_STORAGE_KEY));assert.equal(persisted.version,4);assert(persisted.rewardUnlocked);assert(coinRewardEarned(sanitizeCoinProgress(persisted)));
 console.log('PASS fifty-ball migration: completed original40 keeps reward, partial40 does not, new saves require50');
 
 assert(!q.allCostumesEarned({...emptyCoinProgress(),collected:ids.slice(0,49)}));assert(q.allCostumesEarned({...emptyCoinProgress(),collected:ids}));assert(!q.allCostumesEarned({...emptyCoinProgress(),collected:ids.slice(0,40),rewardUnlocked:true}),'Legacy fox reward does not skip the new all-costume goal');console.log('PASS all costumes unlock at 50; legacy fox remains separate');
 
 const oldFull=sanitizeCoinProgress({version:2,collected:ids.slice(0,50)});assert(q.allCostumesEarned(oldFull),"previous completed fifty-ball saves keep costumes");assert(!q.allCostumesEarned(sanitizeCoinProgress({version:3,collected:ids.slice(0,50)})),"new saves need fifty-five");
+// Three costumes unlock every 10 balls (user, Sep 25 2026), in one fixed order with the Matchday Fox last; nothing ever re-locks.
+{const {COSTUME_UNLOCK_ORDER,costumeUnlockBalls,costumeEarned,nextCostumeMilestone,costumesAtMilestone,BALLS_PER_COSTUME_MILESTONE,COSTUMES_PER_MILESTONE}=q;
+ const src=require('fs').readFileSync('lib/town/costumes.ts','utf8'),clubIds=[...src.matchAll(/^\s*id:'([^']+)',club:/gm)].map(m=>m[1]);
+ assert.equal(COSTUME_UNLOCK_ORDER.length,clubIds.length+1,'every club costume plus the fox');assert.equal(new Set(COSTUME_UNLOCK_ORDER).size,COSTUME_UNLOCK_ORDER.length,'no duplicates');
+ assert.deepEqual([...COSTUME_UNLOCK_ORDER].filter(id=>id!==COIN_REWARD_ID).sort(),[...clubIds].sort(),'the order lists exactly the club costumes');
+ assert.equal(COSTUME_UNLOCK_ORDER[COSTUME_UNLOCK_ORDER.length-1],COIN_REWARD_ID,'the fox is last');
+ assert.equal(BALLS_PER_COSTUME_MILESTONE,10);assert.equal(COSTUMES_PER_MILESTONE,3);assert.equal(COIN_QUEST.length,80);
+ for(let m=10;m<=80;m+=10)assert.equal(costumesAtMilestone(m),3,`${m} balls unlock exactly three`);
+ assert.equal(COSTUME_UNLOCK_ORDER.map(costumeUnlockBalls).join(),[10,10,10,20,20,20,30,30,30,40,40,40,50,50,50,60,60,60,70,70,70,80,80,80].join(),'stable order');
+ const at=n=>({...emptyCoinProgress(),collected:ids.slice(0,n)}),count=n=>COSTUME_UNLOCK_ORDER.filter(id=>costumeEarned(at(n),id)).length;
+ assert.equal(count(0),0);assert.equal(count(9),0);assert.equal(count(10),3);assert.equal(count(29),6);assert.equal(count(30),9);assert.equal(count(79),21);assert.equal(count(80),24);
+ assert.equal(nextCostumeMilestone(17),20);assert.equal(nextCostumeMilestone(79),80);assert.equal(nextCostumeMilestone(80),null);
+ assert(!costumeEarned(at(79),COIN_REWARD_ID)&&costumeEarned(at(80),COIN_REWARD_ID),'the fox needs every ball');
+ // Migration: old saves keep what the all-balls rule gave them, and a save with N balls gets every group up to N at once.
+ const oldAll=sanitizeCoinProgress({version:3,collected:ids.slice(0,55)});assert(COSTUME_UNLOCK_ORDER.every(id=>costumeEarned(oldAll,id)),'finished 55-ball saves keep every costume');
+ assert.equal(COSTUME_UNLOCK_ORDER.filter(id=>costumeEarned(sanitizeCoinProgress({version:4,collected:ids.slice(0,43)}),id)).length,12,'43 balls: four groups at once');
+ const store=require('fs').readFileSync('components/IslandStore.tsx','utf8');assert(!/\b55\b/.test(store)&&/COIN_QUEST\.length/.test(store),'the store banner uses the ball total constant');
+ console.log('PASS costumes: 3 per 10 balls in a fixed order, fox last, no re-locking, store total from the constant');}

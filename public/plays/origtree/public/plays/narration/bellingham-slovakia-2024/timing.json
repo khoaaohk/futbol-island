@@ -1,0 +1,382 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Gelsenkirchen, 2024. England are losing to Slovakia. Ninety-fifth minute. Walker's long throw. Gu\u00e9hi flicks it on. Bellingham... overhead kick! One-one!",
+   "src": "/plays/narration/bellingham-slovakia-2024/1.m4a",
+   "seconds": 12.2,
+   "words": [
+    {
+     "w": "Gelsenkirchen",
+     "at": 0.4
+    },
+    {
+     "w": "2024",
+     "at": 1.3
+    },
+    {
+     "w": "England",
+     "at": 2.663
+    },
+    {
+     "w": "are",
+     "at": 3.1
+    },
+    {
+     "w": "losing",
+     "at": 3.25
+    },
+    {
+     "w": "to",
+     "at": 3.65
+    },
+    {
+     "w": "Slovakia",
+     "at": 3.775
+    },
+    {
+     "w": "Ninety-fifth",
+     "at": 4.85
+    },
+    {
+     "w": "minute",
+     "at": 5.575
+    },
+    {
+     "w": "Walker's",
+     "at": 6.162
+    },
+    {
+     "w": "long",
+     "at": 6.65
+    },
+    {
+     "w": "throw",
+     "at": 6.938
+    },
+    {
+     "w": "Gu\u00e9hi",
+     "at": 7.638
+    },
+    {
+     "w": "flicks",
+     "at": 8.05
+    },
+    {
+     "w": "it",
+     "at": 8.375
+    },
+    {
+     "w": "on",
+     "at": 8.5
+    },
+    {
+     "w": "Bellingham",
+     "at": 8.762
+    },
+    {
+     "w": "overhead",
+     "at": 9.725
+    },
+    {
+     "w": "kick",
+     "at": 10.188
+    },
+    {
+     "w": "One-one",
+     "at": 10.688
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Slow motion. Back to goal, Jude jumps and gets his body under the ball. His leg swings up and across, over his head.",
+   "src": "/plays/narration/bellingham-slovakia-2024/2.m4a",
+   "seconds": 8.6,
+   "words": [
+    {
+     "w": "Slow",
+     "at": 0.4
+    },
+    {
+     "w": "motion",
+     "at": 0.675
+    },
+    {
+     "w": "Back",
+     "at": 1.613
+    },
+    {
+     "w": "to",
+     "at": 1.9
+    },
+    {
+     "w": "goal",
+     "at": 2.025
+    },
+    {
+     "w": "Jude",
+     "at": 2.638
+    },
+    {
+     "w": "jumps",
+     "at": 2.987
+    },
+    {
+     "w": "and",
+     "at": 3.337
+    },
+    {
+     "w": "gets",
+     "at": 3.45
+    },
+    {
+     "w": "his",
+     "at": 3.663
+    },
+    {
+     "w": "body",
+     "at": 3.825
+    },
+    {
+     "w": "under",
+     "at": 4.162
+    },
+    {
+     "w": "the",
+     "at": 4.362
+    },
+    {
+     "w": "ball",
+     "at": 4.45
+    },
+    {
+     "w": "His",
+     "at": 5.275
+    },
+    {
+     "w": "leg",
+     "at": 5.475
+    },
+    {
+     "w": "swings",
+     "at": 5.787
+    },
+    {
+     "w": "up",
+     "at": 6.112
+    },
+    {
+     "w": "and",
+     "at": 6.263
+    },
+    {
+     "w": "across",
+     "at": 6.362
+    },
+    {
+     "w": "over",
+     "at": 6.95
+    },
+    {
+     "w": "his",
+     "at": 7.162
+    },
+    {
+     "w": "head",
+     "at": 7.325
+    }
+   ]
+  },
+  {
+   "label": "Behind the goal",
+   "text": "The keeper is beaten. Thirty seconds from going home, and England are still alive!",
+   "src": "/plays/narration/bellingham-slovakia-2024/3.m4a",
+   "seconds": 6.0,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "keeper",
+     "at": 0.425
+    },
+    {
+     "w": "is",
+     "at": 0.8
+    },
+    {
+     "w": "beaten",
+     "at": 0.963
+    },
+    {
+     "w": "Thirty",
+     "at": 1.837
+    },
+    {
+     "w": "seconds",
+     "at": 2.163
+    },
+    {
+     "w": "from",
+     "at": 2.538
+    },
+    {
+     "w": "going",
+     "at": 2.675
+    },
+    {
+     "w": "home",
+     "at": 2.975
+    },
+    {
+     "w": "and",
+     "at": 3.575
+    },
+    {
+     "w": "England",
+     "at": 3.725
+    },
+    {
+     "w": "are",
+     "at": 4.15
+    },
+    {
+     "w": "still",
+     "at": 4.25
+    },
+    {
+     "w": "alive",
+     "at": 4.525
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Beginners: only practise on soft mats, with a coach. Get under the ball, swing your leg across it, land on your hands and back. And never, ever give up!",
+   "src": "/plays/narration/bellingham-slovakia-2024/4.m4a",
+   "seconds": 10.6,
+   "words": [
+    {
+     "w": "Beginners",
+     "at": 0.35
+    },
+    {
+     "w": "only",
+     "at": 1.125
+    },
+    {
+     "w": "practise",
+     "at": 1.438
+    },
+    {
+     "w": "on",
+     "at": 1.962
+    },
+    {
+     "w": "soft",
+     "at": 2.175
+    },
+    {
+     "w": "mats",
+     "at": 2.575
+    },
+    {
+     "w": "with",
+     "at": 2.987
+    },
+    {
+     "w": "a",
+     "at": 3.112
+    },
+    {
+     "w": "coach",
+     "at": 3.188
+    },
+    {
+     "w": "Get",
+     "at": 4.162
+    },
+    {
+     "w": "under",
+     "at": 4.312
+    },
+    {
+     "w": "the",
+     "at": 4.487
+    },
+    {
+     "w": "ball",
+     "at": 4.575
+    },
+    {
+     "w": "swing",
+     "at": 5.037
+    },
+    {
+     "w": "your",
+     "at": 5.263
+    },
+    {
+     "w": "leg",
+     "at": 5.375
+    },
+    {
+     "w": "across",
+     "at": 5.562
+    },
+    {
+     "w": "it",
+     "at": 6.013
+    },
+    {
+     "w": "land",
+     "at": 6.438
+    },
+    {
+     "w": "on",
+     "at": 6.812
+    },
+    {
+     "w": "your",
+     "at": 6.912
+    },
+    {
+     "w": "hands",
+     "at": 7.05
+    },
+    {
+     "w": "and",
+     "at": 7.5
+    },
+    {
+     "w": "back",
+     "at": 7.625
+    },
+    {
+     "w": "And",
+     "at": 8.425
+    },
+    {
+     "w": "never",
+     "at": 8.6
+    },
+    {
+     "w": "ever",
+     "at": 9.025
+    },
+    {
+     "w": "give",
+     "at": 9.25
+    },
+    {
+     "w": "up",
+     "at": 9.45
+    }
+   ]
+  }
+ ]
+}

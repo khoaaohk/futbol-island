@@ -1,0 +1,366 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: the 2012 quarter-final",
+   "text": "Bangkok, 2012, a Futsal World Cup quarter-final. Argentina against Brazil, two all, four minutes left. Leandro Cuzzolino shoots from far out. Tiago leaps. What a save!",
+   "src": "/plays/narration/tiago-marinho-futsal-signature/1.m4a",
+   "seconds": 13.4,
+   "words": [
+    {
+     "w": "Bangkok",
+     "at": 0.4
+    },
+    {
+     "w": "2012",
+     "at": 0.975
+    },
+    {
+     "w": "a",
+     "at": 1.8
+    },
+    {
+     "w": "Futsal",
+     "at": 1.913
+    },
+    {
+     "w": "World",
+     "at": 2.375
+    },
+    {
+     "w": "Cup",
+     "at": 2.675
+    },
+    {
+     "w": "quarter-final",
+     "at": 2.925
+    },
+    {
+     "w": "Argentina",
+     "at": 4.112
+    },
+    {
+     "w": "against",
+     "at": 4.75
+    },
+    {
+     "w": "Brazil",
+     "at": 5.125
+    },
+    {
+     "w": "two",
+     "at": 5.787
+    },
+    {
+     "w": "all",
+     "at": 6.0
+    },
+    {
+     "w": "four",
+     "at": 6.338
+    },
+    {
+     "w": "minutes",
+     "at": 6.6
+    },
+    {
+     "w": "left",
+     "at": 6.925
+    },
+    {
+     "w": "Leandro",
+     "at": 7.85
+    },
+    {
+     "w": "Cuzzolino",
+     "at": 8.425
+    },
+    {
+     "w": "shoots",
+     "at": 9.025
+    },
+    {
+     "w": "from",
+     "at": 9.4
+    },
+    {
+     "w": "far",
+     "at": 9.613
+    },
+    {
+     "w": "out",
+     "at": 9.875
+    },
+    {
+     "w": "Tiago",
+     "at": 10.562
+    },
+    {
+     "w": "leaps",
+     "at": 10.975
+    },
+    {
+     "w": "What",
+     "at": 11.675
+    },
+    {
+     "w": "a",
+     "at": 11.812
+    },
+    {
+     "w": "save",
+     "at": 11.925
+    }
+   ]
+  },
+  {
+   "label": "Replay: ride with the ball",
+   "text": "Ride with the ball. It gets there in a blink, so Tiago has to react fast. Brazil won three to two after extra time, and became world champions!",
+   "src": "/plays/narration/tiago-marinho-futsal-signature/2.m4a",
+   "seconds": 10.7,
+   "words": [
+    {
+     "w": "Ride",
+     "at": 0.425
+    },
+    {
+     "w": "with",
+     "at": 0.738
+    },
+    {
+     "w": "the",
+     "at": 0.863
+    },
+    {
+     "w": "ball",
+     "at": 0.95
+    },
+    {
+     "w": "It",
+     "at": 1.775
+    },
+    {
+     "w": "gets",
+     "at": 1.925
+    },
+    {
+     "w": "there",
+     "at": 2.175
+    },
+    {
+     "w": "in",
+     "at": 2.362
+    },
+    {
+     "w": "a",
+     "at": 2.438
+    },
+    {
+     "w": "blink",
+     "at": 2.513
+    },
+    {
+     "w": "so",
+     "at": 3.15
+    },
+    {
+     "w": "Tiago",
+     "at": 3.337
+    },
+    {
+     "w": "has",
+     "at": 3.85
+    },
+    {
+     "w": "to",
+     "at": 4.05
+    },
+    {
+     "w": "react",
+     "at": 4.15
+    },
+    {
+     "w": "fast",
+     "at": 4.588
+    },
+    {
+     "w": "Brazil",
+     "at": 5.662
+    },
+    {
+     "w": "won",
+     "at": 6.125
+    },
+    {
+     "w": "three",
+     "at": 6.362
+    },
+    {
+     "w": "to",
+     "at": 6.6
+    },
+    {
+     "w": "two",
+     "at": 6.737
+    },
+    {
+     "w": "after",
+     "at": 7.0
+    },
+    {
+     "w": "extra",
+     "at": 7.3
+    },
+    {
+     "w": "time",
+     "at": 7.7
+    },
+    {
+     "w": "and",
+     "at": 8.262
+    },
+    {
+     "w": "became",
+     "at": 8.363
+    },
+    {
+     "w": "world",
+     "at": 8.75
+    },
+    {
+     "w": "champions",
+     "at": 9.037
+    }
+   ]
+  },
+  {
+   "label": "How he does it (demo)",
+   "text": "How he does it: weight forward, up on your toes, knees soft. Flat on your heels, you are too late. Keep your weight forward, on your toes, ready to spring!",
+   "src": "/plays/narration/tiago-marinho-futsal-signature/3.m4a",
+   "seconds": 10.0,
+   "words": [
+    {
+     "w": "How",
+     "at": 0.375
+    },
+    {
+     "w": "he",
+     "at": 0.525
+    },
+    {
+     "w": "does",
+     "at": 0.625
+    },
+    {
+     "w": "it",
+     "at": 0.863
+    },
+    {
+     "w": "weight",
+     "at": 1.337
+    },
+    {
+     "w": "forward",
+     "at": 1.613
+    },
+    {
+     "w": "up",
+     "at": 2.062
+    },
+    {
+     "w": "on",
+     "at": 2.212
+    },
+    {
+     "w": "your",
+     "at": 2.312
+    },
+    {
+     "w": "toes",
+     "at": 2.438
+    },
+    {
+     "w": "knees",
+     "at": 3.0
+    },
+    {
+     "w": "soft",
+     "at": 3.312
+    },
+    {
+     "w": "Flat",
+     "at": 4.225
+    },
+    {
+     "w": "on",
+     "at": 4.487
+    },
+    {
+     "w": "your",
+     "at": 4.588
+    },
+    {
+     "w": "heels",
+     "at": 4.7
+    },
+    {
+     "w": "you",
+     "at": 5.175
+    },
+    {
+     "w": "are",
+     "at": 5.275
+    },
+    {
+     "w": "too",
+     "at": 5.412
+    },
+    {
+     "w": "late",
+     "at": 5.625
+    },
+    {
+     "w": "Keep",
+     "at": 6.463
+    },
+    {
+     "w": "your",
+     "at": 6.688
+    },
+    {
+     "w": "weight",
+     "at": 6.8
+    },
+    {
+     "w": "forward",
+     "at": 7.062
+    },
+    {
+     "w": "on",
+     "at": 7.487
+    },
+    {
+     "w": "your",
+     "at": 7.588
+    },
+    {
+     "w": "toes",
+     "at": 7.737
+    },
+    {
+     "w": "ready",
+     "at": 8.238
+    },
+    {
+     "w": "to",
+     "at": 8.438
+    },
+    {
+     "w": "spring",
+     "at": 8.537
+    }
+   ]
+  }
+ ]
+}

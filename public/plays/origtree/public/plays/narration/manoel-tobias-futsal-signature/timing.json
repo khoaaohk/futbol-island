@@ -1,0 +1,382 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: the 1996 final",
+   "text": "Barcelona, 1996, the Futsal World Cup final. Brazil lead Spain five to four, with less than a minute left. Then Manoel Tobias scores. Six to four! Brazil are world champions.",
+   "src": "/plays/narration/manoel-tobias-futsal-signature/1.m4a",
+   "seconds": 14.2,
+   "words": [
+    {
+     "w": "Barcelona",
+     "at": 0.375
+    },
+    {
+     "w": "1996",
+     "at": 1.075
+    },
+    {
+     "w": "the",
+     "at": 2.125
+    },
+    {
+     "w": "Futsal",
+     "at": 2.237
+    },
+    {
+     "w": "World",
+     "at": 2.7
+    },
+    {
+     "w": "Cup",
+     "at": 3.0
+    },
+    {
+     "w": "final",
+     "at": 3.225
+    },
+    {
+     "w": "Brazil",
+     "at": 4.162
+    },
+    {
+     "w": "lead",
+     "at": 4.65
+    },
+    {
+     "w": "Spain",
+     "at": 4.938
+    },
+    {
+     "w": "five",
+     "at": 5.412
+    },
+    {
+     "w": "to",
+     "at": 5.75
+    },
+    {
+     "w": "four",
+     "at": 5.888
+    },
+    {
+     "w": "with",
+     "at": 6.263
+    },
+    {
+     "w": "less",
+     "at": 6.425
+    },
+    {
+     "w": "than",
+     "at": 6.725
+    },
+    {
+     "w": "a",
+     "at": 6.838
+    },
+    {
+     "w": "minute",
+     "at": 6.9
+    },
+    {
+     "w": "left",
+     "at": 7.175
+    },
+    {
+     "w": "Then",
+     "at": 8.062
+    },
+    {
+     "w": "Manoel",
+     "at": 8.3
+    },
+    {
+     "w": "Tobias",
+     "at": 8.85
+    },
+    {
+     "w": "scores",
+     "at": 9.363
+    },
+    {
+     "w": "Six",
+     "at": 10.312
+    },
+    {
+     "w": "to",
+     "at": 10.65
+    },
+    {
+     "w": "four",
+     "at": 10.787
+    },
+    {
+     "w": "Brazil",
+     "at": 11.537
+    },
+    {
+     "w": "are",
+     "at": 12.075
+    },
+    {
+     "w": "world",
+     "at": 12.225
+    },
+    {
+     "w": "champions",
+     "at": 12.588
+    }
+   ]
+  },
+  {
+   "label": "The move on his card",
+   "text": "This is the move on his card: the one v one, and the toe-poke. Watch it slowly. He takes on the defender, and slips past. Then he pokes it with his toe, before the keeper is ready. Goal!",
+   "src": "/plays/narration/manoel-tobias-futsal-signature/2.m4a",
+   "seconds": 12.7,
+   "words": [
+    {
+     "w": "This",
+     "at": 0.375
+    },
+    {
+     "w": "is",
+     "at": 0.575
+    },
+    {
+     "w": "the",
+     "at": 0.725
+    },
+    {
+     "w": "move",
+     "at": 0.863
+    },
+    {
+     "w": "on",
+     "at": 1.188
+    },
+    {
+     "w": "his",
+     "at": 1.288
+    },
+    {
+     "w": "card",
+     "at": 1.45
+    },
+    {
+     "w": "the",
+     "at": 2.125
+    },
+    {
+     "w": "one",
+     "at": 2.225
+    },
+    {
+     "w": "v",
+     "at": 2.45
+    },
+    {
+     "w": "one",
+     "at": 2.688
+    },
+    {
+     "w": "and",
+     "at": 3.075
+    },
+    {
+     "w": "the",
+     "at": 3.188
+    },
+    {
+     "w": "toe-poke",
+     "at": 3.288
+    },
+    {
+     "w": "Watch",
+     "at": 4.237
+    },
+    {
+     "w": "it",
+     "at": 4.537
+    },
+    {
+     "w": "slowly",
+     "at": 4.688
+    },
+    {
+     "w": "He",
+     "at": 5.725
+    },
+    {
+     "w": "takes",
+     "at": 5.85
+    },
+    {
+     "w": "on",
+     "at": 6.088
+    },
+    {
+     "w": "the",
+     "at": 6.188
+    },
+    {
+     "w": "defender",
+     "at": 6.275
+    },
+    {
+     "w": "and",
+     "at": 6.812
+    },
+    {
+     "w": "slips",
+     "at": 6.938
+    },
+    {
+     "w": "past",
+     "at": 7.312
+    },
+    {
+     "w": "Then",
+     "at": 8.2
+    },
+    {
+     "w": "he",
+     "at": 8.338
+    },
+    {
+     "w": "pokes",
+     "at": 8.463
+    },
+    {
+     "w": "it",
+     "at": 8.738
+    },
+    {
+     "w": "with",
+     "at": 8.812
+    },
+    {
+     "w": "his",
+     "at": 8.912
+    },
+    {
+     "w": "toe",
+     "at": 9.088
+    },
+    {
+     "w": "before",
+     "at": 9.475
+    },
+    {
+     "w": "the",
+     "at": 9.762
+    },
+    {
+     "w": "keeper",
+     "at": 9.85
+    },
+    {
+     "w": "is",
+     "at": 10.225
+    },
+    {
+     "w": "ready",
+     "at": 10.375
+    },
+    {
+     "w": "Goal",
+     "at": 11.25
+    }
+   ]
+  },
+  {
+   "label": "Try it",
+   "text": "Try it! A toe-poke has no big swing, so it is quick. It surprises the keeper before they are ready.",
+   "src": "/plays/narration/manoel-tobias-futsal-signature/3.m4a",
+   "seconds": 7.4,
+   "words": [
+    {
+     "w": "Try",
+     "at": 0.35
+    },
+    {
+     "w": "it",
+     "at": 0.688
+    },
+    {
+     "w": "A",
+     "at": 1.163
+    },
+    {
+     "w": "toe-poke",
+     "at": 1.275
+    },
+    {
+     "w": "has",
+     "at": 1.825
+    },
+    {
+     "w": "no",
+     "at": 2.025
+    },
+    {
+     "w": "big",
+     "at": 2.2
+    },
+    {
+     "w": "swing",
+     "at": 2.45
+    },
+    {
+     "w": "so",
+     "at": 3.05
+    },
+    {
+     "w": "it",
+     "at": 3.212
+    },
+    {
+     "w": "is",
+     "at": 3.288
+    },
+    {
+     "w": "quick",
+     "at": 3.438
+    },
+    {
+     "w": "It",
+     "at": 4.275
+    },
+    {
+     "w": "surprises",
+     "at": 4.45
+    },
+    {
+     "w": "the",
+     "at": 5.0
+    },
+    {
+     "w": "keeper",
+     "at": 5.1
+    },
+    {
+     "w": "before",
+     "at": 5.475
+    },
+    {
+     "w": "they",
+     "at": 5.763
+    },
+    {
+     "w": "are",
+     "at": 5.9
+    },
+    {
+     "w": "ready",
+     "at": 6.05
+    }
+   ]
+  }
+ ]
+}

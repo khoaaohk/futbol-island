@@ -52,7 +52,12 @@ export default function MiniCard({name,number,era,got,revealName=false,compact=f
  </span>;
 }
 
-/** A plain card back, for the fanned cards under a stack's top card. */
-export function CardBack({className='',style}:{className?:string;style?:React.CSSProperties}){
- return <span className={`${styles.card} ${styles.down} ${styles.compact} ${styles.plainBack} ${className}`} style={style} aria-hidden="true"><span className={styles.downMark}/></span>;
+/** A plain card back, for the fanned cards under a stack's top card. `mystery`: the full-size face-down card with "No. ???" and
+ *  "???" (the binder's uncollected card with nothing that could identify the player; the Pick a card deck). `children` sit on the
+ *  card and turn with it (the deck's foil shine). */
+export function CardBack({className='',style,mystery=false,children}:{className?:string;style?:React.CSSProperties;mystery?:boolean;children?:React.ReactNode}){
+ if(mystery)return <span className={`${styles.card} ${styles.down} ${className}`} style={style} aria-hidden="true">
+  <span className={styles.downNo}>No. ???</span><span className={styles.downMark}/><span className={styles.downName}><span>???</span></span>{children}
+ </span>;
+ return <span className={`${styles.card} ${styles.down} ${styles.compact} ${styles.plainBack} ${className}`} style={style} aria-hidden="true"><span className={styles.downMark}/>{children}</span>;
 }

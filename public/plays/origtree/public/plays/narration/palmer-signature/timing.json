@@ -1,0 +1,398 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Penalty, live",
+   "text": "London, December 2024. Chelsea lead Tottenham late on. Penalty! Cole Palmer steps up. He has never missed one in the Premier League. A slow run... he chips it down the middle! Goal!",
+   "src": "/plays/narration/palmer-signature/1.m4a",
+   "seconds": 13.7,
+   "words": [
+    {
+     "w": "London",
+     "at": 0.425
+    },
+    {
+     "w": "December",
+     "at": 0.875
+    },
+    {
+     "w": "2024",
+     "at": 1.325
+    },
+    {
+     "w": "Chelsea",
+     "at": 2.75
+    },
+    {
+     "w": "lead",
+     "at": 3.2
+    },
+    {
+     "w": "Tottenham",
+     "at": 3.438
+    },
+    {
+     "w": "late",
+     "at": 4.0
+    },
+    {
+     "w": "on",
+     "at": 4.225
+    },
+    {
+     "w": "Penalty",
+     "at": 4.938
+    },
+    {
+     "w": "Cole",
+     "at": 5.838
+    },
+    {
+     "w": "Palmer",
+     "at": 6.138
+    },
+    {
+     "w": "steps",
+     "at": 6.575
+    },
+    {
+     "w": "up",
+     "at": 6.925
+    },
+    {
+     "w": "He",
+     "at": 7.4
+    },
+    {
+     "w": "has",
+     "at": 7.513
+    },
+    {
+     "w": "never",
+     "at": 7.675
+    },
+    {
+     "w": "missed",
+     "at": 7.925
+    },
+    {
+     "w": "one",
+     "at": 8.175
+    },
+    {
+     "w": "in",
+     "at": 8.363
+    },
+    {
+     "w": "the",
+     "at": 8.438
+    },
+    {
+     "w": "Premier",
+     "at": 8.525
+    },
+    {
+     "w": "League",
+     "at": 8.925
+    },
+    {
+     "w": "A",
+     "at": 9.363
+    },
+    {
+     "w": "slow",
+     "at": 9.512
+    },
+    {
+     "w": "run",
+     "at": 9.912
+    },
+    {
+     "w": "he",
+     "at": 10.7
+    },
+    {
+     "w": "chips",
+     "at": 10.863
+    },
+    {
+     "w": "it",
+     "at": 11.175
+    },
+    {
+     "w": "down",
+     "at": 11.275
+    },
+    {
+     "w": "the",
+     "at": 11.488
+    },
+    {
+     "w": "middle",
+     "at": 11.575
+    },
+    {
+     "w": "Goal",
+     "at": 12.238
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again, slowly. Palmer sees the keeper getting ready to dive. So he stays calm, and dinks it softly, straight down the middle.",
+   "src": "/plays/narration/palmer-signature/2.m4a",
+   "seconds": 9.3,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "slowly",
+     "at": 1.238
+    },
+    {
+     "w": "Palmer",
+     "at": 2.288
+    },
+    {
+     "w": "sees",
+     "at": 2.712
+    },
+    {
+     "w": "the",
+     "at": 2.987
+    },
+    {
+     "w": "keeper",
+     "at": 3.075
+    },
+    {
+     "w": "getting",
+     "at": 3.45
+    },
+    {
+     "w": "ready",
+     "at": 3.75
+    },
+    {
+     "w": "to",
+     "at": 3.975
+    },
+    {
+     "w": "dive",
+     "at": 4.1
+    },
+    {
+     "w": "So",
+     "at": 4.938
+    },
+    {
+     "w": "he",
+     "at": 5.088
+    },
+    {
+     "w": "stays",
+     "at": 5.213
+    },
+    {
+     "w": "calm",
+     "at": 5.638
+    },
+    {
+     "w": "and",
+     "at": 6.125
+    },
+    {
+     "w": "dinks",
+     "at": 6.25
+    },
+    {
+     "w": "it",
+     "at": 6.487
+    },
+    {
+     "w": "softly",
+     "at": 6.638
+    },
+    {
+     "w": "straight",
+     "at": 7.362
+    },
+    {
+     "w": "down",
+     "at": 7.7
+    },
+    {
+     "w": "the",
+     "at": 7.912
+    },
+    {
+     "w": "middle",
+     "at": 8.0
+    }
+   ]
+  },
+  {
+   "label": "Behind the goal",
+   "text": "From behind the goal: the keeper has gone, and the ball floats in. Twelve penalties, twelve goals. Ice cold!",
+   "src": "/plays/narration/palmer-signature/3.m4a",
+   "seconds": 7.8,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "behind",
+     "at": 0.487
+    },
+    {
+     "w": "the",
+     "at": 0.863
+    },
+    {
+     "w": "goal",
+     "at": 0.95
+    },
+    {
+     "w": "the",
+     "at": 1.6
+    },
+    {
+     "w": "keeper",
+     "at": 1.7
+    },
+    {
+     "w": "has",
+     "at": 2.038
+    },
+    {
+     "w": "gone",
+     "at": 2.2
+    },
+    {
+     "w": "and",
+     "at": 2.562
+    },
+    {
+     "w": "the",
+     "at": 2.663
+    },
+    {
+     "w": "ball",
+     "at": 2.75
+    },
+    {
+     "w": "floats",
+     "at": 3.062
+    },
+    {
+     "w": "in",
+     "at": 3.413
+    },
+    {
+     "w": "Twelve",
+     "at": 4.188
+    },
+    {
+     "w": "penalties",
+     "at": 4.525
+    },
+    {
+     "w": "twelve",
+     "at": 5.175
+    },
+    {
+     "w": "goals",
+     "at": 5.5
+    },
+    {
+     "w": "Ice",
+     "at": 6.05
+    },
+    {
+     "w": "cold",
+     "at": 6.338
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "The secret? Take a deep breath. Look calm, then pick your spot, and trust it.",
+   "src": "/plays/narration/palmer-signature/4.m4a",
+   "seconds": 5.6,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "secret",
+     "at": 0.463
+    },
+    {
+     "w": "Take",
+     "at": 1.15
+    },
+    {
+     "w": "a",
+     "at": 1.337
+    },
+    {
+     "w": "deep",
+     "at": 1.4
+    },
+    {
+     "w": "breath",
+     "at": 1.625
+    },
+    {
+     "w": "Look",
+     "at": 2.438
+    },
+    {
+     "w": "calm",
+     "at": 2.663
+    },
+    {
+     "w": "then",
+     "at": 3.112
+    },
+    {
+     "w": "pick",
+     "at": 3.3
+    },
+    {
+     "w": "your",
+     "at": 3.462
+    },
+    {
+     "w": "spot",
+     "at": 3.587
+    },
+    {
+     "w": "and",
+     "at": 3.987
+    },
+    {
+     "w": "trust",
+     "at": 4.1
+    },
+    {
+     "w": "it",
+     "at": 4.463
+    }
+   ]
+  }
+ ]
+}

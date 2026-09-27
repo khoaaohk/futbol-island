@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: the EURO 2026 final",
+   "text": "The 2026 Futsal EURO final, in Ljubljana. Spain play Portugal. Pablo Ram\u00edrez is Spain\u2019s pivot, up front. In the second minute, he sets up Antonio P\u00e9rez. Goal! Spain win, five to three!",
+   "src": "/plays/narration/pablo-ramirez-futsal-signature/1.m4a",
+   "seconds": 15.1,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "2026",
+     "at": 0.425
+    },
+    {
+     "w": "Futsal",
+     "at": 1.363
+    },
+    {
+     "w": "EURO",
+     "at": 1.8
+    },
+    {
+     "w": "final",
+     "at": 2.112
+    },
+    {
+     "w": "in",
+     "at": 2.6
+    },
+    {
+     "w": "Ljubljana",
+     "at": 2.725
+    },
+    {
+     "w": "Spain",
+     "at": 3.938
+    },
+    {
+     "w": "play",
+     "at": 4.375
+    },
+    {
+     "w": "Portugal",
+     "at": 4.625
+    },
+    {
+     "w": "Pablo",
+     "at": 5.612
+    },
+    {
+     "w": "Ram\u00edrez",
+     "at": 6.05
+    },
+    {
+     "w": "is",
+     "at": 6.6
+    },
+    {
+     "w": "Spain\u2019s",
+     "at": 6.737
+    },
+    {
+     "w": "pivot",
+     "at": 7.263
+    },
+    {
+     "w": "up",
+     "at": 7.662
+    },
+    {
+     "w": "front",
+     "at": 7.862
+    },
+    {
+     "w": "In",
+     "at": 8.637
+    },
+    {
+     "w": "the",
+     "at": 8.738
+    },
+    {
+     "w": "second",
+     "at": 8.838
+    },
+    {
+     "w": "minute",
+     "at": 9.175
+    },
+    {
+     "w": "he",
+     "at": 9.475
+    },
+    {
+     "w": "sets",
+     "at": 9.613
+    },
+    {
+     "w": "up",
+     "at": 9.887
+    },
+    {
+     "w": "Antonio",
+     "at": 10.025
+    },
+    {
+     "w": "P\u00e9rez",
+     "at": 10.6
+    },
+    {
+     "w": "Goal",
+     "at": 11.575
+    },
+    {
+     "w": "Spain",
+     "at": 12.35
+    },
+    {
+     "w": "win",
+     "at": 12.8
+    },
+    {
+     "w": "five",
+     "at": 13.238
+    },
+    {
+     "w": "to",
+     "at": 13.6
+    },
+    {
+     "w": "three",
+     "at": 13.738
+    }
+   ]
+  },
+  {
+   "label": "How he does it",
+   "text": "This is how he does it. Back to goal, the ball comes in. He holds it up and keeps the defender behind. A teammate runs in. He lays it off. Goal!",
+   "src": "/plays/narration/pablo-ramirez-futsal-signature/2.m4a",
+   "seconds": 10.5,
+   "words": [
+    {
+     "w": "This",
+     "at": 0.375
+    },
+    {
+     "w": "is",
+     "at": 0.55
+    },
+    {
+     "w": "how",
+     "at": 0.675
+    },
+    {
+     "w": "he",
+     "at": 0.875
+    },
+    {
+     "w": "does",
+     "at": 1.0
+    },
+    {
+     "w": "it",
+     "at": 1.238
+    },
+    {
+     "w": "Back",
+     "at": 1.712
+    },
+    {
+     "w": "to",
+     "at": 2.0
+    },
+    {
+     "w": "goal",
+     "at": 2.125
+    },
+    {
+     "w": "the",
+     "at": 2.487
+    },
+    {
+     "w": "ball",
+     "at": 2.575
+    },
+    {
+     "w": "comes",
+     "at": 2.875
+    },
+    {
+     "w": "in",
+     "at": 3.175
+    },
+    {
+     "w": "He",
+     "at": 3.75
+    },
+    {
+     "w": "holds",
+     "at": 3.875
+    },
+    {
+     "w": "it",
+     "at": 4.162
+    },
+    {
+     "w": "up",
+     "at": 4.237
+    },
+    {
+     "w": "and",
+     "at": 4.388
+    },
+    {
+     "w": "keeps",
+     "at": 4.5
+    },
+    {
+     "w": "the",
+     "at": 4.8
+    },
+    {
+     "w": "defender",
+     "at": 4.9
+    },
+    {
+     "w": "behind",
+     "at": 5.4
+    },
+    {
+     "w": "A",
+     "at": 6.388
+    },
+    {
+     "w": "teammate",
+     "at": 6.513
+    },
+    {
+     "w": "runs",
+     "at": 7.05
+    },
+    {
+     "w": "in",
+     "at": 7.35
+    },
+    {
+     "w": "He",
+     "at": 7.825
+    },
+    {
+     "w": "lays",
+     "at": 7.975
+    },
+    {
+     "w": "it",
+     "at": 8.213
+    },
+    {
+     "w": "off",
+     "at": 8.3
+    },
+    {
+     "w": "Goal",
+     "at": 9.1
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. Hold it, lay it off, shot!",
+   "src": "/plays/narration/pablo-ramirez-futsal-signature/3.m4a",
+   "seconds": 4.1,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.662
+    },
+    {
+     "w": "slowly",
+     "at": 1.038
+    },
+    {
+     "w": "Hold",
+     "at": 1.837
+    },
+    {
+     "w": "it",
+     "at": 2.1
+    },
+    {
+     "w": "lay",
+     "at": 2.25
+    },
+    {
+     "w": "it",
+     "at": 2.388
+    },
+    {
+     "w": "off",
+     "at": 2.462
+    },
+    {
+     "w": "shot",
+     "at": 2.712
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: hold the ball up and lay it off for a teammate running in to shoot!",
+   "src": "/plays/narration/pablo-ramirez-futsal-signature/4.m4a",
+   "seconds": 5.4,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "hold",
+     "at": 1.387
+    },
+    {
+     "w": "the",
+     "at": 1.637
+    },
+    {
+     "w": "ball",
+     "at": 1.725
+    },
+    {
+     "w": "up",
+     "at": 2.013
+    },
+    {
+     "w": "and",
+     "at": 2.188
+    },
+    {
+     "w": "lay",
+     "at": 2.3
+    },
+    {
+     "w": "it",
+     "at": 2.513
+    },
+    {
+     "w": "off",
+     "at": 2.587
+    },
+    {
+     "w": "for",
+     "at": 2.8
+    },
+    {
+     "w": "a",
+     "at": 2.913
+    },
+    {
+     "w": "teammate",
+     "at": 2.987
+    },
+    {
+     "w": "running",
+     "at": 3.525
+    },
+    {
+     "w": "in",
+     "at": 3.763
+    },
+    {
+     "w": "to",
+     "at": 3.9
+    },
+    {
+     "w": "shoot",
+     "at": 4.05
+    }
+   ]
+  }
+ ]
+}

@@ -2,8 +2,10 @@
 export type JuggleTouch='foot'|'knee'|'shoulder'|'head'|'around-world';
 export const JUGGLE_ROUTINE:readonly JuggleTouch[]=['foot','foot','knee','knee','shoulder','head','head','shoulder','knee','foot','around-world','foot'];
 const COSTUME_JUGGLE_ROUTINE:readonly JuggleTouch[]=['foot','foot','foot','foot','around-world','foot'];
-export function juggleContact(kind:JuggleTouch,side:number,head?:JuggleHead){
+/** `headTop` (bean style, PlayerRig.headTop): the ball meets the crown instead of the classic head's authored height. */
+export function juggleContact(kind:JuggleTouch,side:number,head?:JuggleHead,headTop?:number){
  if(head&&kind==='head')return {x:0,y:head.top+.3,z:.03};
+ if(headTop!==undefined&&kind==='head')return {x:0,y:headTop+.2,z:.03};
  return kind==='head'?{x:0,y:2.04,z:.03}:kind==='shoulder'?{x:side*.28,y:1.63,z:.06}:kind==='knee'?{x:side*.108,y:1.02,z:.4}:{x:side*.108,y:.48,z:.45};
 }
 
@@ -15,7 +17,7 @@ const WALL_HEIGHT_RATIOS=[.45,.72,.9,.6,.95];
 export type WallJuggleTarget={x:number;z:number;top?:number};
 type Player={x:number;z:number;y:number;yaw:number};
 export type JuggleHead={bottom:number;top:number;front:number;width:number};
-type Environment={juggleHead?:JuggleHead;moving?:boolean;ballStyle?:CharacterCustomization['ball'];floor:(x:number,z:number)=>number;blocked:(x:number,z:number,y:number)=>boolean;impact:(x:number,y:number,z:number)=>void;strike:()=>void;receive?:()=>void;hit?:(x:number,y:number,z:number,vx:number,vz:number)=>boolean;frame?:(from:FramePoint,to:FramePoint)=>FrameHit|null};
+type Environment={juggleHead?:JuggleHead;headTop?:number;moving?:boolean;ballStyle?:CharacterCustomization['ball'];floor:(x:number,z:number)=>number;blocked:(x:number,z:number,y:number)=>boolean;impact:(x:number,y:number,z:number)=>void;strike:()=>void;receive?:()=>void;hit?:(x:number,y:number,z:number,vx:number,vz:number)=>boolean;frame?:(from:FramePoint,to:FramePoint)=>FrameHit|null};
 export function createWalkBall(){
  const state={x:0,y:.2,z:0,vx:0,vy:0,vz:0,charge:0,mode:'attached' as 'attached'|'charging'|'windup'|'shot'|'return'|'juggle'|'wall-juggle',age:0,kick:0,yaw:0,jugglePhase:0,juggleTouch:'foot' as JuggleTouch,juggleSide:1 as -1|1,bounce:0,wallTarget:null as WallJuggleTarget|null,wallPhase:'kick' as 'kick'|'outbound'|'returning'|'receive',wallAge:0};
  let shotAge=0,impactCooldown=0,wallDirection={x:0,z:1},wallLegTime=.4,contactHeight=.85,returnAge=0,receiveHeight=.85,normalTouchCycle=-1,blendAge=1,wallKickCount=0;
@@ -90,7 +92,7 @@ export function createWalkBall(){
    attach(p);const style=env.ballStyle,cycle=state.age/(style==='frost'?.8:style==='solar'?1.2:1.05),phase=cycle%1,touch=Math.floor(cycle),side=touch%2?1:-1;
    const routine=env.juggleHead?COSTUME_JUGGLE_ROUTINE:JUGGLE_ROUTINE;
    state.jugglePhase=phase;state.juggleSide=side;state.juggleTouch=movingJuggle?'foot':routine[touch%routine.length];
-   const from=juggleContact(state.juggleTouch,side,env.juggleHead),to=juggleContact(movingJuggle?'foot':routine[(touch+1)%routine.length],-side,env.juggleHead),blend=phase*phase*(3-2*phase);
+   const from=juggleContact(state.juggleTouch,side,env.juggleHead,env.headTop),to=juggleContact(movingJuggle?'foot':routine[(touch+1)%routine.length],-side,env.juggleHead,env.headTop),blend=phase*phase*(3-2*phase);
    const x=from.x+(to.x-from.x)*blend,z=from.z+(to.z-from.z)*blend;
    state.x=p.x+Math.cos(p.yaw)*x+Math.sin(p.yaw)*z;state.z=p.z-Math.sin(p.yaw)*x+Math.cos(p.yaw)*z;
    state.y=p.y+from.y+(to.y-from.y)*phase+4*phase*(1-phase)*(state.juggleTouch==='around-world'?.5:style==='solar'?1:style==='frost'?.5:.7);

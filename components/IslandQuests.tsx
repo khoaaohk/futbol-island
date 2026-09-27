@@ -1,5 +1,5 @@
 'use client';
-import {useState} from 'react';
+import {useEffect,useRef,useState} from 'react';
 import {BallHuntSummary} from './CoinQuest';
 import {CardsSummary} from './CardsSummary';
 import QuestLearningPath from './QuestLearningPath';
@@ -10,13 +10,27 @@ import journey from './IslandJourney.module.css';
 import JourneyArrivalArt from './JourneyArrivalArt';
 export default function IslandQuests({onDiscover,onExplore,onCards,exploration=false}:{onLearn:()=>void;onMap:()=>void;onStore?:()=>void;onDiscover:()=>void;onExplore?:()=>void;onCards?:()=>void;exploration?:boolean}){
  const [howOpen,setHowOpen]=useState(false);
+ // "How your journey works" opens downward only (user, Sep 25 2026): the card's min-height left spare space around the guide, so the
+ // growing guide ate that space and its divider and title slid up. Opening locks the resting layout (the rows above the guide keep
+ // their px heights, the guide keeps its top via a margin, min-height off), so only the text below the title grows the card. The lock
+ // lifts once the guide has closed again (after its 280 ms reveal), or on a resize.
+ const arrivalRef=useRef<HTMLElement>(null),guideRef=useRef<HTMLDivElement>(null);
+ const unlockGuide=()=>{const card=arrivalRef.current,guide=guideRef.current;if(!card||!guide)return;
+  card.style.removeProperty('grid-template-rows');card.style.removeProperty('min-height');guide.style.removeProperty('align-self');guide.style.removeProperty('margin-top');};
+ const toggleHow=()=>{const card=arrivalRef.current,guide=guideRef.current;
+  if(!howOpen&&card&&guide&&!card.style.gridTemplateRows){const top0=guide.getBoundingClientRect().top,rows=getComputedStyle(card).gridTemplateRows.split(' ');
+   card.style.gridTemplateRows=[...rows.slice(0,-1),'auto'].join(' ');card.style.minHeight='0';guide.style.alignSelf='start';guide.style.marginTop='0px';
+   guide.style.marginTop=`${Math.round((top0-guide.getBoundingClientRect().top)*100)/100}px`;}
+  setHowOpen(v=>!v);};
+ useEffect(()=>{if(howOpen)return;const t=setTimeout(unlockGuide,matchMedia('(prefers-reduced-motion: reduce)').matches?0:320);return ()=>clearTimeout(t);},[howOpen]);
+ useEffect(()=>{addEventListener('resize',unlockGuide);return ()=>removeEventListener('resize',unlockGuide);},[]);
  const items=useExploreChecklist(),doneCount=items.filter(item=>item.complete).length;
  return <div className={styles.content}>
  {!exploration?<>
- <section className={journey.arrival} aria-label="Your island journey">
+ <section ref={arrivalRef} className={journey.arrival} aria-label="Your island journey">
  <div className={journey.arrivalCopy}><h3>Have fun.<br/>Explore your island.</h3></div>
  <JourneyArrivalArt className={journey.arrivalArt}/>
- <div className={journey.guide}><button type="button" data-ui-sound={howOpen?'collapse':'expand'} aria-expanded={howOpen} aria-controls="island-journey-guide" onClick={()=>setHowOpen(v=>!v)}>How your journey works <span aria-hidden="true">{howOpen?'−':'+'}</span></button><div className={journey.guideReveal} data-open={howOpen} id="island-journey-guide" aria-hidden={!howOpen}><div><p>Explore, find hidden balls, and learn futsal, 7v7, 9v9, and 11v11 through lessons, quizzes, and stories. Complete each play and quiz to unlock the next stop. Stories are optional.</p><p>Build your understanding of the game to prepare for the academy island. When it opens, the Matchday Ferry will take you to the next stage of your journey.</p></div></div></div>
+ <div ref={guideRef} className={journey.guide}><button type="button" data-ui-sound={howOpen?'collapse':'expand'} aria-expanded={howOpen} aria-controls="island-journey-guide" onClick={toggleHow}>How your journey works <span aria-hidden="true">{howOpen?'−':'+'}</span></button><div className={journey.guideReveal} data-open={howOpen} id="island-journey-guide" aria-hidden={!howOpen}><div><p>Explore, find hidden balls, and learn futsal, 7v7, 9v9, and 11v11 through lessons, quizzes, and stories. Complete each play and quiz to unlock the next stop. Stories are optional.</p><p>Build your understanding of the game to prepare for the academy island. When it opens, the Matchday Ferry will take you to the next stage of your journey.</p></div></div></div>
  </section>
  <section className={journey.basecamp} aria-label="Island side quests"><div className={`${styles.pathSummaries} ${journey.sideQuests}`}>{onCards&&<CardsSummary onCards={onCards}/>}<BallHuntSummary onDiscover={onDiscover}/>
  <button type="button" className={styles.explorationSummary} onClick={onExplore} aria-haspopup="dialog"><span><strong>Explore</strong></span><span className={styles.explorationArrow}><Icon name="arrow" size={24}/></span><small>{doneCount} / {EXPLORE_ITEMS.length} <span data-count-word="">completed</span></small></button></div></section>

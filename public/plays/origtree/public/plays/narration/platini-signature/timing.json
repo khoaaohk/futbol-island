@@ -1,0 +1,370 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The free kick, live",
+   "text": "Saint-\u00c9tienne, 1984. France against Yugoslavia, and Michel Platini has scored twice. Free kick to France. Platini steps up... over the wall, top corner! Hat-trick!",
+   "src": "/plays/narration/platini-signature/1.m4a",
+   "seconds": 13.0,
+   "words": [
+    {
+     "w": "Saint-\u00c9tienne",
+     "at": 0.375
+    },
+    {
+     "w": "1984",
+     "at": 1.15
+    },
+    {
+     "w": "France",
+     "at": 2.638
+    },
+    {
+     "w": "against",
+     "at": 2.987
+    },
+    {
+     "w": "Yugoslavia",
+     "at": 3.275
+    },
+    {
+     "w": "and",
+     "at": 4.15
+    },
+    {
+     "w": "Michel",
+     "at": 4.275
+    },
+    {
+     "w": "Platini",
+     "at": 4.675
+    },
+    {
+     "w": "has",
+     "at": 5.25
+    },
+    {
+     "w": "scored",
+     "at": 5.4
+    },
+    {
+     "w": "twice",
+     "at": 5.75
+    },
+    {
+     "w": "Free",
+     "at": 6.725
+    },
+    {
+     "w": "kick",
+     "at": 6.987
+    },
+    {
+     "w": "to",
+     "at": 7.25
+    },
+    {
+     "w": "France",
+     "at": 7.375
+    },
+    {
+     "w": "Platini",
+     "at": 8.213
+    },
+    {
+     "w": "steps",
+     "at": 8.825
+    },
+    {
+     "w": "up",
+     "at": 9.175
+    },
+    {
+     "w": "over",
+     "at": 9.75
+    },
+    {
+     "w": "the",
+     "at": 9.963
+    },
+    {
+     "w": "wall",
+     "at": 10.088
+    },
+    {
+     "w": "top",
+     "at": 10.475
+    },
+    {
+     "w": "corner",
+     "at": 10.75
+    },
+    {
+     "w": "Hat-trick",
+     "at": 11.463
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again. His right foot strikes the ball's side. It loops over the wall and dips into the top corner. Left foot, head, right foot: a perfect hat-trick!",
+   "src": "/plays/narration/platini-signature/2.m4a",
+   "seconds": 11.1,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "His",
+     "at": 1.5
+    },
+    {
+     "w": "right",
+     "at": 1.7
+    },
+    {
+     "w": "foot",
+     "at": 2.013
+    },
+    {
+     "w": "strikes",
+     "at": 2.288
+    },
+    {
+     "w": "the",
+     "at": 2.675
+    },
+    {
+     "w": "ball's",
+     "at": 2.775
+    },
+    {
+     "w": "side",
+     "at": 3.163
+    },
+    {
+     "w": "It",
+     "at": 3.925
+    },
+    {
+     "w": "loops",
+     "at": 4.112
+    },
+    {
+     "w": "over",
+     "at": 4.362
+    },
+    {
+     "w": "the",
+     "at": 4.562
+    },
+    {
+     "w": "wall",
+     "at": 4.675
+    },
+    {
+     "w": "and",
+     "at": 5.05
+    },
+    {
+     "w": "dips",
+     "at": 5.188
+    },
+    {
+     "w": "into",
+     "at": 5.463
+    },
+    {
+     "w": "the",
+     "at": 5.638
+    },
+    {
+     "w": "top",
+     "at": 5.725
+    },
+    {
+     "w": "corner",
+     "at": 6.0
+    },
+    {
+     "w": "Left",
+     "at": 7.05
+    },
+    {
+     "w": "foot",
+     "at": 7.388
+    },
+    {
+     "w": "head",
+     "at": 7.812
+    },
+    {
+     "w": "right",
+     "at": 8.125
+    },
+    {
+     "w": "foot",
+     "at": 8.438
+    },
+    {
+     "w": "a",
+     "at": 9.0
+    },
+    {
+     "w": "perfect",
+     "at": 9.113
+    },
+    {
+     "w": "hat-trick",
+     "at": 9.575
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "The secret? Hit the middle and the ball flies straight. Hit its side and it spins and curls. Your turn: curl it over the wall by striking the side of the ball.",
+   "src": "/plays/narration/platini-signature/3.m4a",
+   "seconds": 10.8,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "secret",
+     "at": 0.463
+    },
+    {
+     "w": "Hit",
+     "at": 1.1
+    },
+    {
+     "w": "the",
+     "at": 1.275
+    },
+    {
+     "w": "middle",
+     "at": 1.375
+    },
+    {
+     "w": "and",
+     "at": 1.675
+    },
+    {
+     "w": "the",
+     "at": 1.788
+    },
+    {
+     "w": "ball",
+     "at": 1.875
+    },
+    {
+     "w": "flies",
+     "at": 2.212
+    },
+    {
+     "w": "straight",
+     "at": 2.612
+    },
+    {
+     "w": "Hit",
+     "at": 3.538
+    },
+    {
+     "w": "its",
+     "at": 3.688
+    },
+    {
+     "w": "side",
+     "at": 3.862
+    },
+    {
+     "w": "and",
+     "at": 4.275
+    },
+    {
+     "w": "it",
+     "at": 4.388
+    },
+    {
+     "w": "spins",
+     "at": 4.513
+    },
+    {
+     "w": "and",
+     "at": 5.05
+    },
+    {
+     "w": "curls",
+     "at": 5.188
+    },
+    {
+     "w": "Your",
+     "at": 6.213
+    },
+    {
+     "w": "turn",
+     "at": 6.412
+    },
+    {
+     "w": "curl",
+     "at": 7.162
+    },
+    {
+     "w": "it",
+     "at": 7.463
+    },
+    {
+     "w": "over",
+     "at": 7.537
+    },
+    {
+     "w": "the",
+     "at": 7.737
+    },
+    {
+     "w": "wall",
+     "at": 7.862
+    },
+    {
+     "w": "by",
+     "at": 8.25
+    },
+    {
+     "w": "striking",
+     "at": 8.438
+    },
+    {
+     "w": "the",
+     "at": 8.838
+    },
+    {
+     "w": "side",
+     "at": 8.938
+    },
+    {
+     "w": "of",
+     "at": 9.213
+    },
+    {
+     "w": "the",
+     "at": 9.287
+    },
+    {
+     "w": "ball",
+     "at": 9.375
+    }
+   ]
+  }
+ ]
+}

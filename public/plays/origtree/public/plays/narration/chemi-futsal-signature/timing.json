@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: the 2024 league final",
+   "text": "The 2024 Spanish league final. Jimbee Cartagena lead ElPozo Murcia by two goals, ten minutes left. Marlon shoots from point-blank range. Chemi blocks it!",
+   "src": "/plays/narration/chemi-futsal-signature/1.m4a",
+   "seconds": 12.5,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "2024",
+     "at": 0.425
+    },
+    {
+     "w": "Spanish",
+     "at": 1.438
+    },
+    {
+     "w": "league",
+     "at": 1.9
+    },
+    {
+     "w": "final",
+     "at": 2.15
+    },
+    {
+     "w": "Jimbee",
+     "at": 3.125
+    },
+    {
+     "w": "Cartagena",
+     "at": 3.45
+    },
+    {
+     "w": "lead",
+     "at": 4.162
+    },
+    {
+     "w": "ElPozo",
+     "at": 4.362
+    },
+    {
+     "w": "Murcia",
+     "at": 5.0
+    },
+    {
+     "w": "by",
+     "at": 5.475
+    },
+    {
+     "w": "two",
+     "at": 5.662
+    },
+    {
+     "w": "goals",
+     "at": 5.875
+    },
+    {
+     "w": "ten",
+     "at": 6.612
+    },
+    {
+     "w": "minutes",
+     "at": 6.875
+    },
+    {
+     "w": "left",
+     "at": 7.2
+    },
+    {
+     "w": "Marlon",
+     "at": 8.05
+    },
+    {
+     "w": "shoots",
+     "at": 8.588
+    },
+    {
+     "w": "from",
+     "at": 8.95
+    },
+    {
+     "w": "point-blank",
+     "at": 9.15
+    },
+    {
+     "w": "range",
+     "at": 9.725
+    },
+    {
+     "w": "Chemi",
+     "at": 10.625
+    },
+    {
+     "w": "blocks",
+     "at": 10.95
+    },
+    {
+     "w": "it",
+     "at": 11.412
+    }
+   ]
+  },
+  {
+   "label": "Replay: the reverse angle",
+   "text": "Watch from the other side. Chemi makes himself big, and the ball hits him. Jimbee won five to two, their first league title!",
+   "src": "/plays/narration/chemi-futsal-signature/2.m4a",
+   "seconds": 8.7,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "from",
+     "at": 0.725
+    },
+    {
+     "w": "the",
+     "at": 0.863
+    },
+    {
+     "w": "other",
+     "at": 0.938
+    },
+    {
+     "w": "side",
+     "at": 1.212
+    },
+    {
+     "w": "Chemi",
+     "at": 2.1
+    },
+    {
+     "w": "makes",
+     "at": 2.45
+    },
+    {
+     "w": "himself",
+     "at": 2.688
+    },
+    {
+     "w": "big",
+     "at": 3.138
+    },
+    {
+     "w": "and",
+     "at": 3.675
+    },
+    {
+     "w": "the",
+     "at": 3.788
+    },
+    {
+     "w": "ball",
+     "at": 3.875
+    },
+    {
+     "w": "hits",
+     "at": 4.175
+    },
+    {
+     "w": "him",
+     "at": 4.412
+    },
+    {
+     "w": "Jimbee",
+     "at": 5.125
+    },
+    {
+     "w": "won",
+     "at": 5.45
+    },
+    {
+     "w": "five",
+     "at": 5.688
+    },
+    {
+     "w": "to",
+     "at": 6.0
+    },
+    {
+     "w": "two",
+     "at": 6.138
+    },
+    {
+     "w": "their",
+     "at": 6.525
+    },
+    {
+     "w": "first",
+     "at": 6.713
+    },
+    {
+     "w": "league",
+     "at": 7.025
+    },
+    {
+     "w": "title",
+     "at": 7.25
+    }
+   ]
+  },
+  {
+   "label": "How he does it (demo)",
+   "text": "How he does it: on a close, low shot, drop one knee and slide the other leg wide. The bottom of the goal is covered.",
+   "src": "/plays/narration/chemi-futsal-signature/3.m4a",
+   "seconds": 8.4,
+   "words": [
+    {
+     "w": "How",
+     "at": 0.375
+    },
+    {
+     "w": "he",
+     "at": 0.512
+    },
+    {
+     "w": "does",
+     "at": 0.6
+    },
+    {
+     "w": "it",
+     "at": 0.838
+    },
+    {
+     "w": "on",
+     "at": 1.325
+    },
+    {
+     "w": "a",
+     "at": 1.462
+    },
+    {
+     "w": "close",
+     "at": 1.562
+    },
+    {
+     "w": "low",
+     "at": 2.288
+    },
+    {
+     "w": "shot",
+     "at": 2.575
+    },
+    {
+     "w": "drop",
+     "at": 3.125
+    },
+    {
+     "w": "one",
+     "at": 3.425
+    },
+    {
+     "w": "knee",
+     "at": 3.65
+    },
+    {
+     "w": "and",
+     "at": 3.875
+    },
+    {
+     "w": "slide",
+     "at": 4.013
+    },
+    {
+     "w": "the",
+     "at": 4.362
+    },
+    {
+     "w": "other",
+     "at": 4.45
+    },
+    {
+     "w": "leg",
+     "at": 4.7
+    },
+    {
+     "w": "wide",
+     "at": 4.925
+    },
+    {
+     "w": "The",
+     "at": 5.838
+    },
+    {
+     "w": "bottom",
+     "at": 5.975
+    },
+    {
+     "w": "of",
+     "at": 6.312
+    },
+    {
+     "w": "the",
+     "at": 6.388
+    },
+    {
+     "w": "goal",
+     "at": 6.487
+    },
+    {
+     "w": "is",
+     "at": 6.825
+    },
+    {
+     "w": "covered",
+     "at": 6.987
+    }
+   ]
+  },
+  {
+   "label": "Practise it",
+   "text": "Drop into a split to cover the low corners on quick futsal shots. Knee down, leg out!",
+   "src": "/plays/narration/chemi-futsal-signature/4.m4a",
+   "seconds": 6.5,
+   "words": [
+    {
+     "w": "Drop",
+     "at": 0.375
+    },
+    {
+     "w": "into",
+     "at": 0.637
+    },
+    {
+     "w": "a",
+     "at": 0.838
+    },
+    {
+     "w": "split",
+     "at": 0.912
+    },
+    {
+     "w": "to",
+     "at": 1.25
+    },
+    {
+     "w": "cover",
+     "at": 1.35
+    },
+    {
+     "w": "the",
+     "at": 1.587
+    },
+    {
+     "w": "low",
+     "at": 1.675
+    },
+    {
+     "w": "corners",
+     "at": 1.9
+    },
+    {
+     "w": "on",
+     "at": 2.312
+    },
+    {
+     "w": "quick",
+     "at": 2.475
+    },
+    {
+     "w": "futsal",
+     "at": 2.737
+    },
+    {
+     "w": "shots",
+     "at": 3.212
+    },
+    {
+     "w": "Knee",
+     "at": 4.175
+    },
+    {
+     "w": "down",
+     "at": 4.4
+    },
+    {
+     "w": "leg",
+     "at": 5.0
+    },
+    {
+     "w": "out",
+     "at": 5.225
+    }
+   ]
+  }
+ ]
+}

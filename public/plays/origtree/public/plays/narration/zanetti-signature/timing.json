@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Genoa, live",
+   "text": "Genoa against Inter, October 2009. Genoa bring it forward, and Javier Zanetti steps in and wins it! He runs with it, Inter break away, and Mario Balotelli scores! Two-nil!",
+   "src": "/plays/narration/zanetti-signature/1.m4a",
+   "seconds": 13.7,
+   "words": [
+    {
+     "w": "Genoa",
+     "at": 0.4
+    },
+    {
+     "w": "against",
+     "at": 0.85
+    },
+    {
+     "w": "Inter",
+     "at": 1.275
+    },
+    {
+     "w": "October",
+     "at": 1.887
+    },
+    {
+     "w": "2009",
+     "at": 2.388
+    },
+    {
+     "w": "Genoa",
+     "at": 3.9
+    },
+    {
+     "w": "bring",
+     "at": 4.325
+    },
+    {
+     "w": "it",
+     "at": 4.55
+    },
+    {
+     "w": "forward",
+     "at": 4.713
+    },
+    {
+     "w": "and",
+     "at": 5.425
+    },
+    {
+     "w": "Javier",
+     "at": 5.55
+    },
+    {
+     "w": "Zanetti",
+     "at": 6.0
+    },
+    {
+     "w": "steps",
+     "at": 6.463
+    },
+    {
+     "w": "in",
+     "at": 6.825
+    },
+    {
+     "w": "and",
+     "at": 7.037
+    },
+    {
+     "w": "wins",
+     "at": 7.162
+    },
+    {
+     "w": "it",
+     "at": 7.487
+    },
+    {
+     "w": "He",
+     "at": 8.075
+    },
+    {
+     "w": "runs",
+     "at": 8.238
+    },
+    {
+     "w": "with",
+     "at": 8.6
+    },
+    {
+     "w": "it",
+     "at": 8.787
+    },
+    {
+     "w": "Inter",
+     "at": 9.012
+    },
+    {
+     "w": "break",
+     "at": 9.225
+    },
+    {
+     "w": "away",
+     "at": 9.475
+    },
+    {
+     "w": "and",
+     "at": 9.95
+    },
+    {
+     "w": "Mario",
+     "at": 10.075
+    },
+    {
+     "w": "Balotelli",
+     "at": 10.5
+    },
+    {
+     "w": "scores",
+     "at": 11.162
+    },
+    {
+     "w": "Two-nil",
+     "at": 12.188
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. Zanetti closes him down and pokes the ball away. He does not stop. He pushes it into the space Genoa left behind.",
+   "src": "/plays/narration/zanetti-signature/2.m4a",
+   "seconds": 10.2,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.188
+    },
+    {
+     "w": "Zanetti",
+     "at": 2.225
+    },
+    {
+     "w": "closes",
+     "at": 2.675
+    },
+    {
+     "w": "him",
+     "at": 3.038
+    },
+    {
+     "w": "down",
+     "at": 3.225
+    },
+    {
+     "w": "and",
+     "at": 3.562
+    },
+    {
+     "w": "pokes",
+     "at": 3.675
+    },
+    {
+     "w": "the",
+     "at": 3.975
+    },
+    {
+     "w": "ball",
+     "at": 4.075
+    },
+    {
+     "w": "away",
+     "at": 4.375
+    },
+    {
+     "w": "He",
+     "at": 5.25
+    },
+    {
+     "w": "does",
+     "at": 5.362
+    },
+    {
+     "w": "not",
+     "at": 5.487
+    },
+    {
+     "w": "stop",
+     "at": 5.737
+    },
+    {
+     "w": "He",
+     "at": 6.575
+    },
+    {
+     "w": "pushes",
+     "at": 6.7
+    },
+    {
+     "w": "it",
+     "at": 7.075
+    },
+    {
+     "w": "into",
+     "at": 7.162
+    },
+    {
+     "w": "the",
+     "at": 7.338
+    },
+    {
+     "w": "space",
+     "at": 7.438
+    },
+    {
+     "w": "Genoa",
+     "at": 7.888
+    },
+    {
+     "w": "left",
+     "at": 8.35
+    },
+    {
+     "w": "behind",
+     "at": 8.6
+    }
+   ]
+  },
+  {
+   "label": "El Tractor",
+   "text": "They called him El Tractor, because he never stopped running. Head up, he carries it forward and starts the attack!",
+   "src": "/plays/narration/zanetti-signature/3.m4a",
+   "seconds": 7.6,
+   "words": [
+    {
+     "w": "They",
+     "at": 0.35
+    },
+    {
+     "w": "called",
+     "at": 0.5
+    },
+    {
+     "w": "him",
+     "at": 0.762
+    },
+    {
+     "w": "El",
+     "at": 0.887
+    },
+    {
+     "w": "Tractor",
+     "at": 1.062
+    },
+    {
+     "w": "because",
+     "at": 1.875
+    },
+    {
+     "w": "he",
+     "at": 2.138
+    },
+    {
+     "w": "never",
+     "at": 2.263
+    },
+    {
+     "w": "stopped",
+     "at": 2.575
+    },
+    {
+     "w": "running",
+     "at": 2.95
+    },
+    {
+     "w": "Head",
+     "at": 3.862
+    },
+    {
+     "w": "up",
+     "at": 4.062
+    },
+    {
+     "w": "he",
+     "at": 4.5
+    },
+    {
+     "w": "carries",
+     "at": 4.638
+    },
+    {
+     "w": "it",
+     "at": 5.05
+    },
+    {
+     "w": "forward",
+     "at": 5.213
+    },
+    {
+     "w": "and",
+     "at": 5.612
+    },
+    {
+     "w": "starts",
+     "at": 5.725
+    },
+    {
+     "w": "the",
+     "at": 6.037
+    },
+    {
+     "w": "attack",
+     "at": 6.15
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: after you win the ball, run forward with it to start the attack.",
+   "src": "/plays/narration/zanetti-signature/4.m4a",
+   "seconds": 5.4,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "after",
+     "at": 1.387
+    },
+    {
+     "w": "you",
+     "at": 1.7
+    },
+    {
+     "w": "win",
+     "at": 1.825
+    },
+    {
+     "w": "the",
+     "at": 1.988
+    },
+    {
+     "w": "ball",
+     "at": 2.075
+    },
+    {
+     "w": "run",
+     "at": 2.562
+    },
+    {
+     "w": "forward",
+     "at": 2.862
+    },
+    {
+     "w": "with",
+     "at": 3.212
+    },
+    {
+     "w": "it",
+     "at": 3.35
+    },
+    {
+     "w": "to",
+     "at": 3.475
+    },
+    {
+     "w": "start",
+     "at": 3.6
+    },
+    {
+     "w": "the",
+     "at": 3.837
+    },
+    {
+     "w": "attack",
+     "at": 3.975
+    }
+   ]
+  }
+ ]
+}

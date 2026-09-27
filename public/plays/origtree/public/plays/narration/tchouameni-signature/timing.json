@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The strike, live",
+   "text": "Qatar, 2022. France play England at the World Cup. France break forward. Griezmann lays it back to Aur\u00e9lien Tchouam\u00e9ni. Shot! Low into the corner!",
+   "src": "/plays/narration/tchouameni-signature/1.m4a",
+   "seconds": 11.6,
+   "words": [
+    {
+     "w": "Qatar",
+     "at": 0.35
+    },
+    {
+     "w": "2022",
+     "at": 0.825
+    },
+    {
+     "w": "France",
+     "at": 2.212
+    },
+    {
+     "w": "play",
+     "at": 2.587
+    },
+    {
+     "w": "England",
+     "at": 2.875
+    },
+    {
+     "w": "at",
+     "at": 3.237
+    },
+    {
+     "w": "the",
+     "at": 3.312
+    },
+    {
+     "w": "World",
+     "at": 3.4
+    },
+    {
+     "w": "Cup",
+     "at": 3.712
+    },
+    {
+     "w": "France",
+     "at": 4.475
+    },
+    {
+     "w": "break",
+     "at": 4.875
+    },
+    {
+     "w": "forward",
+     "at": 5.162
+    },
+    {
+     "w": "Griezmann",
+     "at": 6.013
+    },
+    {
+     "w": "lays",
+     "at": 6.6
+    },
+    {
+     "w": "it",
+     "at": 6.888
+    },
+    {
+     "w": "back",
+     "at": 6.975
+    },
+    {
+     "w": "to",
+     "at": 7.25
+    },
+    {
+     "w": "Aur\u00e9lien",
+     "at": 7.375
+    },
+    {
+     "w": "Tchouam\u00e9ni",
+     "at": 7.912
+    },
+    {
+     "w": "Shot",
+     "at": 8.925
+    },
+    {
+     "w": "Low",
+     "at": 9.65
+    },
+    {
+     "w": "into",
+     "at": 9.912
+    },
+    {
+     "w": "the",
+     "at": 10.088
+    },
+    {
+     "w": "corner",
+     "at": 10.175
+    }
+   ]
+  },
+  {
+   "label": "Low and hard",
+   "text": "Watch again. From twenty-five yards, he hits it low and hard across the grass.",
+   "src": "/plays/narration/tchouameni-signature/2.m4a",
+   "seconds": 5.9,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "From",
+     "at": 1.525
+    },
+    {
+     "w": "twenty-five",
+     "at": 1.7
+    },
+    {
+     "w": "yards",
+     "at": 2.275
+    },
+    {
+     "w": "he",
+     "at": 2.763
+    },
+    {
+     "w": "hits",
+     "at": 2.875
+    },
+    {
+     "w": "it",
+     "at": 3.1
+    },
+    {
+     "w": "low",
+     "at": 3.263
+    },
+    {
+     "w": "and",
+     "at": 3.65
+    },
+    {
+     "w": "hard",
+     "at": 3.775
+    },
+    {
+     "w": "across",
+     "at": 4.013
+    },
+    {
+     "w": "the",
+     "at": 4.35
+    },
+    {
+     "w": "grass",
+     "at": 4.45
+    }
+   ]
+  },
+  {
+   "label": "Too late",
+   "text": "Pickford sees it late. He dives... too late. France lead!",
+   "src": "/plays/narration/tchouameni-signature/3.m4a",
+   "seconds": 4.9,
+   "words": [
+    {
+     "w": "Pickford",
+     "at": 0.35
+    },
+    {
+     "w": "sees",
+     "at": 0.75
+    },
+    {
+     "w": "it",
+     "at": 0.963
+    },
+    {
+     "w": "late",
+     "at": 1.05
+    },
+    {
+     "w": "He",
+     "at": 1.475
+    },
+    {
+     "w": "dives",
+     "at": 1.625
+    },
+    {
+     "w": "too",
+     "at": 2.587
+    },
+    {
+     "w": "late",
+     "at": 2.8
+    },
+    {
+     "w": "France",
+     "at": 3.163
+    },
+    {
+     "w": "lead",
+     "at": 3.525
+    }
+   ]
+  },
+  {
+   "label": "How he does it",
+   "text": "Usually, Tchouam\u00e9ni is France's shield. Watch how he does it. He shuffles across, always between the ball and his goal. The attacker must go around him. Stay between the ball and your goal, so attackers have to go around you.",
+   "src": "/plays/narration/tchouameni-signature/4.m4a",
+   "seconds": 15.0,
+   "words": [
+    {
+     "w": "Usually",
+     "at": 0.425
+    },
+    {
+     "w": "Tchouam\u00e9ni",
+     "at": 0.938
+    },
+    {
+     "w": "is",
+     "at": 1.5
+    },
+    {
+     "w": "France's",
+     "at": 1.65
+    },
+    {
+     "w": "shield",
+     "at": 2.188
+    },
+    {
+     "w": "Watch",
+     "at": 3.013
+    },
+    {
+     "w": "how",
+     "at": 3.35
+    },
+    {
+     "w": "he",
+     "at": 3.525
+    },
+    {
+     "w": "does",
+     "at": 3.65
+    },
+    {
+     "w": "it",
+     "at": 3.888
+    },
+    {
+     "w": "He",
+     "at": 4.5
+    },
+    {
+     "w": "shuffles",
+     "at": 4.675
+    },
+    {
+     "w": "across",
+     "at": 5.075
+    },
+    {
+     "w": "always",
+     "at": 5.725
+    },
+    {
+     "w": "between",
+     "at": 6.175
+    },
+    {
+     "w": "the",
+     "at": 6.463
+    },
+    {
+     "w": "ball",
+     "at": 6.55
+    },
+    {
+     "w": "and",
+     "at": 6.925
+    },
+    {
+     "w": "his",
+     "at": 7.037
+    },
+    {
+     "w": "goal",
+     "at": 7.2
+    },
+    {
+     "w": "The",
+     "at": 8.0
+    },
+    {
+     "w": "attacker",
+     "at": 8.125
+    },
+    {
+     "w": "must",
+     "at": 8.65
+    },
+    {
+     "w": "go",
+     "at": 8.9
+    },
+    {
+     "w": "around",
+     "at": 9.075
+    },
+    {
+     "w": "him",
+     "at": 9.463
+    },
+    {
+     "w": "Stay",
+     "at": 10.15
+    },
+    {
+     "w": "between",
+     "at": 10.45
+    },
+    {
+     "w": "the",
+     "at": 10.762
+    },
+    {
+     "w": "ball",
+     "at": 10.85
+    },
+    {
+     "w": "and",
+     "at": 11.25
+    },
+    {
+     "w": "your",
+     "at": 11.363
+    },
+    {
+     "w": "goal",
+     "at": 11.525
+    },
+    {
+     "w": "so",
+     "at": 12.15
+    },
+    {
+     "w": "attackers",
+     "at": 12.325
+    },
+    {
+     "w": "have",
+     "at": 12.875
+    },
+    {
+     "w": "to",
+     "at": 13.075
+    },
+    {
+     "w": "go",
+     "at": 13.175
+    },
+    {
+     "w": "around",
+     "at": 13.35
+    },
+    {
+     "w": "you",
+     "at": 13.775
+    }
+   ]
+  }
+ ]
+}

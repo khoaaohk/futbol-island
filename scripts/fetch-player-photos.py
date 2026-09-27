@@ -87,6 +87,8 @@ OVERRIDES = {
     'Raúl': ['Raúl (footballer)', 'Raúl González'],
     'Paolo Rossi': ['Paolo Rossi'],
     'Rui Costa': ['Rui Costa'],
+    'Pepe': ['Pepe (footballer, born February 1983)'],
+    'Lúcio': ['Lúcio (footballer, born 1978)', 'Lúcio'],
     # futsal
     'Ricardinho': ['Ricardinho (futsal player, born 1985)', 'Ricardinho (futsal player)'],
     'Falcão': ['Falcão (futsal player)'],
@@ -170,6 +172,19 @@ CAREER = {
     'Michael Laudrup': (1981, 1998), 'Gheorghe Hagi': (1982, 2001), 'Rui Costa': (1990, 2008),
     'Clarence Seedorf': (1992, 2014), 'Claude Makélélé': (1991, 2011), 'Michael Owen': (1996, 2013),
     'Gary Lineker': (1978, 1994),
+    # Sep 25 2026 additions (cards 354-372; seasons from the en.wikipedia infoboxes)
+    'Ivan Rakitić': (2004, 2025), 'Raphaël Varane': (2010, 2024), 'Juan Román Riquelme': (1996, 2015),
+    'Jay-Jay Okocha': (1990, 2008), 'Pepe': (2001, 2024), 'Park Ji-sung': (2000, 2014), 'Gareth Bale': (2006, 2023),
+    'Ángel Di María': (2005, 2026), 'Mesut Özil': (2006, 2023), 'Jordi Alba': (2006, 2025),
+    'Javier Mascherano': (2003, 2020), 'Carlos Tevez': (2001, 2022), 'Sergio Agüero': (2003, 2021),
+    'Mario Balotelli': (2006, 2026),
+    'Vincent Kompany': (2003, 2020), 'Leonardo Bonucci': (2005, 2024), 'Cesc Fàbregas': (2003, 2023),
+    'Edinson Cavani': (2005, 2026), 'Thomas Müller': (2008, 2026), 'Keylor Navas': (2005, 2026), 'Lúcio': (1997, 2020),
+    # Sep 26 2026 additions (cards 389-400; seasons from the en.wikipedia infoboxes)
+    'Ronald Koeman': (1980, 1997), 'Ricardo Quaresma': (2001, 2022), 'Bastian Schweinsteiger': (2002, 2019),
+    'Wesley Sneijder': (2002, 2019), 'Ruud Gullit': (1979, 1998), 'Ian Rush': (1978, 2000), 'Peter Crouch': (1998, 2019),
+    'Freddie Ljungberg': (1994, 2014), 'Robin van Persie': (2001, 2019), 'Laurent Blanc': (1983, 2003),
+    'Filippo Inzaghi': (1991, 2012),
     # futsal all-time (approximate; generous where uncertain)
     'Luis Amado': (1994, 2013), 'Stefano Mammarella': (2003, 2026), 'Higuita': (2006, 2026),
     'Guitta': (2005, 2026), 'Paco Sedano': (1998, 2022), 'Mostafa Nazari': (1998, 2015),
@@ -207,6 +222,15 @@ PICKS = {
     # from behind / in profile.
     # Vision misses his face at the frame edge, so the box is given by hand.
     'Zinedine Zidane': ('Kepa Zarraga-Arregi.jpg', {'x': 0.043, 'y': 0.375, 'w': 0.119, 'h': 0.0875}),
+    # Sep 25 2026: Sweden line-up, 2006 World Cup (10 Jun 2006), yellow No. 10 kit.
+    # Frontal, face 139 px, sharp 118. The Man Utd / PSG / Galaxy match shots are
+    # small, turned or blurred faces; the June 2018 portrait is out of kit.
+    'Zlatan Ibrahimović': 'Zlatan Ibrahimovic (cropped).jpg',
+    # Sep 26 2026 deep audit (scripts/fetch-player-photos-deep.py), crops checked by eye:
+    # Kaká in AC Milan kit v Torino, 19 Apr 2009 (Tsutomu Takasu, CC BY 2.0, Flickr-reviewed).
+    'Kaká': 'Kaka of AC Milan, April 19, 2009.jpg',
+    # Jordi Alba (alone in frame) in the Inter Miami line-up v New England, 9 Jul 2025 (CC BY-SA 4.0).
+    'Jordi Alba': 'Jordi Alba NE Revolution Inter Miami 7.9.25-047 (cropped).jpg',
 }
 BLOCK = {
     'Didi pela Seleção Brasileira.jpg',   # Didi, not Nílton Santos
@@ -228,8 +252,13 @@ BLOCK = {
     '欧文 (2013).jpg',                            # Owen at a sponsor event with a microphone, retired
     'Man Utd vs Arsenal 2009-04-29.jpg',         # the clear face is an Arsenal player, not Rooney
     'Jamie Carragher 2005.jpg',                  # jacket, face turned down
+    # Sep 25 2026 new-card review
+    'NE Revolution Inter Miami 7.9.25-056 (Lionel Messi).jpg',   # the face is Messi, not Jordi Alba
+    'FWC 2018 - Group D - ARG v ISL - Photo 127.jpg',            # the face is Messi, not Mascherano
+    'Sergio Agüero 20180626.jpg',                                # small square source: crop leaves a blank band
+    'Luis Suárez NE Revolution Inter Miami 7.9.25-025.jpg',        # the face is Suárez, not Jordi Alba
 }
-DROP = set()
+DROP = set()   # Sep 26 2026: Jordi Alba now has a reviewed PICK (the Sep 25 auto picks were Messi / Suárez)
 
 LICENSE_OK = re.compile(
     r'^(cc0(\s*1\.0)?|public\s*domain.*|pd([\s-].*)?|cc[\s-]by([\s-]sa)?[\s-]\d\.\d.*)$', re.I)
@@ -348,12 +377,12 @@ class Net:
             return data if binary else data.decode('utf-8')
         host = urllib.parse.urlparse(url).netloc
         assert host in ('en.wikipedia.org', 'commons.wikimedia.org', 'upload.wikimedia.org'), host
-        delay = 2.0
+        delay = 20.0   # 429 / 5xx: wait at least this long (doubling), even when Retry-After is shorter
         for _ in range(6):
             # upload.wikimedia.org rate-limits thumbnail renders harder: go slower there
             # the Commons API throttles anonymous clients hard (Retry-After up to
             # 10 min), so it gets the slowest pace
-            gap = {'commons.wikimedia.org': 2.0}.get(host, 1.5)   # single shared runner: <= 1 req / 1.5-2 s
+            gap = 4.0   # single shared runner: <= 1 req / 4 s on every Wikimedia host (project rule, Sep 2026)
             wait = self.last + gap - time.time()
             if wait > 0:
                 time.sleep(wait)
@@ -373,10 +402,10 @@ class Net:
                     return None
                 if e.code == 429 or e.code >= 500:
                     ra = e.headers.get('Retry-After')
-                    pause = float(ra) if ra and ra.isdigit() else delay   # honour Retry-After exactly
+                    pause = max(delay, float(ra) if ra and ra.isdigit() else 0)   # Retry-After, never below the backoff
                     print(f'   http {e.code}, backing off {pause:.0f}s', file=sys.stderr, flush=True)
                     time.sleep(pause)
-                    delay *= 2
+                    delay = min(delay * 2, 300)
                     continue
                 return None
             except (urllib.error.URLError, TimeoutError, ConnectionError):
@@ -1055,6 +1084,10 @@ def main():
         article = s.get('title')
         if how == 'search' or (how == 'direct' and norm(article) != norm(name)):
             report['ambiguous'].append(f'{name} -> {article} ({how})')
+        if (manifest.get(name) or {}).get('source', '').startswith('wikimedia/deep-audit'):
+            # reviewed by hand in scripts/fetch-player-photos-deep.py (Sep 26 2026): never re-judge or drop it here
+            print(f'{tag}: KEEP deep-audit pick', flush=True)
+            continue
         if name in DROP:
             reject('dropped after review (no in-kit playing photo)')
             continue

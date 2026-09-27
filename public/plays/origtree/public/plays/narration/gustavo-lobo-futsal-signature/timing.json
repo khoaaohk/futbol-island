@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: Cali 2016",
+   "text": "The 2016 Futsal World Cup quarter-final, in Cali. Russia lead Spain five two. Spain attack with a flying keeper, so their goal is empty. Gustavo, Russia\u2019s goleiro, strikes from his own end. Goal! Six two!",
+   "src": "/plays/narration/gustavo-lobo-futsal-signature/1.m4a",
+   "seconds": 15.9,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "2016",
+     "at": 0.425
+    },
+    {
+     "w": "Futsal",
+     "at": 1.238
+    },
+    {
+     "w": "World",
+     "at": 1.675
+    },
+    {
+     "w": "Cup",
+     "at": 1.975
+    },
+    {
+     "w": "quarter-final",
+     "at": 2.2
+    },
+    {
+     "w": "in",
+     "at": 2.95
+    },
+    {
+     "w": "Cali",
+     "at": 3.112
+    },
+    {
+     "w": "Russia",
+     "at": 4.15
+    },
+    {
+     "w": "lead",
+     "at": 4.525
+    },
+    {
+     "w": "Spain",
+     "at": 4.812
+    },
+    {
+     "w": "five",
+     "at": 5.237
+    },
+    {
+     "w": "two",
+     "at": 5.612
+    },
+    {
+     "w": "Spain",
+     "at": 6.45
+    },
+    {
+     "w": "attack",
+     "at": 6.825
+    },
+    {
+     "w": "with",
+     "at": 7.188
+    },
+    {
+     "w": "a",
+     "at": 7.287
+    },
+    {
+     "w": "flying",
+     "at": 7.362
+    },
+    {
+     "w": "keeper",
+     "at": 7.812
+    },
+    {
+     "w": "so",
+     "at": 8.325
+    },
+    {
+     "w": "their",
+     "at": 8.463
+    },
+    {
+     "w": "goal",
+     "at": 8.637
+    },
+    {
+     "w": "is",
+     "at": 8.975
+    },
+    {
+     "w": "empty",
+     "at": 9.137
+    },
+    {
+     "w": "Gustavo",
+     "at": 10.088
+    },
+    {
+     "w": "Russia\u2019s",
+     "at": 10.863
+    },
+    {
+     "w": "goleiro",
+     "at": 11.25
+    },
+    {
+     "w": "strikes",
+     "at": 11.887
+    },
+    {
+     "w": "from",
+     "at": 12.25
+    },
+    {
+     "w": "his",
+     "at": 12.387
+    },
+    {
+     "w": "own",
+     "at": 12.55
+    },
+    {
+     "w": "end",
+     "at": 12.8
+    },
+    {
+     "w": "Goal",
+     "at": 13.625
+    },
+    {
+     "w": "Six",
+     "at": 14.225
+    },
+    {
+     "w": "two",
+     "at": 14.588
+    }
+   ]
+  },
+  {
+   "label": "Replay: from the empty goal",
+   "text": "Watch again, from inside the empty goal. The ball travels the whole court, all the way in!",
+   "src": "/plays/narration/gustavo-lobo-futsal-signature/2.m4a",
+   "seconds": 6.6,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "from",
+     "at": 1.275
+    },
+    {
+     "w": "inside",
+     "at": 1.45
+    },
+    {
+     "w": "the",
+     "at": 1.863
+    },
+    {
+     "w": "empty",
+     "at": 1.975
+    },
+    {
+     "w": "goal",
+     "at": 2.3
+    },
+    {
+     "w": "The",
+     "at": 3.175
+    },
+    {
+     "w": "ball",
+     "at": 3.275
+    },
+    {
+     "w": "travels",
+     "at": 3.575
+    },
+    {
+     "w": "the",
+     "at": 4.013
+    },
+    {
+     "w": "whole",
+     "at": 4.1
+    },
+    {
+     "w": "court",
+     "at": 4.362
+    },
+    {
+     "w": "all",
+     "at": 4.875
+    },
+    {
+     "w": "the",
+     "at": 5.037
+    },
+    {
+     "w": "way",
+     "at": 5.125
+    },
+    {
+     "w": "in",
+     "at": 5.35
+    }
+   ]
+  },
+  {
+   "label": "How he commands",
+   "text": "How does a goleiro command? He sees the whole court, so he talks. Left! Mark him! Step up! Short, loud words move his team.",
+   "src": "/plays/narration/gustavo-lobo-futsal-signature/3.m4a",
+   "seconds": 8.9,
+   "words": [
+    {
+     "w": "How",
+     "at": 0.35
+    },
+    {
+     "w": "does",
+     "at": 0.463
+    },
+    {
+     "w": "a",
+     "at": 0.588
+    },
+    {
+     "w": "goleiro",
+     "at": 0.65
+    },
+    {
+     "w": "command",
+     "at": 1.1
+    },
+    {
+     "w": "He",
+     "at": 1.95
+    },
+    {
+     "w": "sees",
+     "at": 2.1
+    },
+    {
+     "w": "the",
+     "at": 2.337
+    },
+    {
+     "w": "whole",
+     "at": 2.425
+    },
+    {
+     "w": "court",
+     "at": 2.663
+    },
+    {
+     "w": "so",
+     "at": 3.0
+    },
+    {
+     "w": "he",
+     "at": 3.138
+    },
+    {
+     "w": "talks",
+     "at": 3.25
+    },
+    {
+     "w": "Left",
+     "at": 4.15
+    },
+    {
+     "w": "Mark",
+     "at": 4.588
+    },
+    {
+     "w": "him",
+     "at": 4.838
+    },
+    {
+     "w": "Step",
+     "at": 5.088
+    },
+    {
+     "w": "up",
+     "at": 5.362
+    },
+    {
+     "w": "Short",
+     "at": 5.963
+    },
+    {
+     "w": "loud",
+     "at": 6.425
+    },
+    {
+     "w": "words",
+     "at": 6.75
+    },
+    {
+     "w": "move",
+     "at": 7.125
+    },
+    {
+     "w": "his",
+     "at": 7.312
+    },
+    {
+     "w": "team",
+     "at": 7.487
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn. Shout clear instructions, so your teammates know where to be.",
+   "src": "/plays/narration/gustavo-lobo-futsal-signature/4.m4a",
+   "seconds": 5.3,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "Shout",
+     "at": 1.4
+    },
+    {
+     "w": "clear",
+     "at": 1.675
+    },
+    {
+     "w": "instructions",
+     "at": 1.938
+    },
+    {
+     "w": "so",
+     "at": 2.75
+    },
+    {
+     "w": "your",
+     "at": 2.875
+    },
+    {
+     "w": "teammates",
+     "at": 3.038
+    },
+    {
+     "w": "know",
+     "at": 3.6
+    },
+    {
+     "w": "where",
+     "at": 3.775
+    },
+    {
+     "w": "to",
+     "at": 3.913
+    },
+    {
+     "w": "be",
+     "at": 3.987
+    }
+   ]
+  }
+ ]
+}

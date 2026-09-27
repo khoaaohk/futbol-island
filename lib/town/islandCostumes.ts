@@ -1,6 +1,10 @@
+import {getCostume,CLUB_KIT_COLOURS} from './costumes';
 /** Original island wardrobe identities. Keys preserve existing equipment saves;
- * real club/mascot names belong only to the separately sourced history lessons. */
-export type IslandCostume={name:string;animalLabel:string;color:number;accent:number;kitColor:number;story:string};
+ * real club/mascot names belong only to the separately sourced history lessons.
+ * Colours: user decision (Sep 25 2026) — each club costume wears its club's home-kit colours (CLUB_KIT_COLOURS in
+ * lib/town/costumes.ts): color = main kit colour, accent = second kit colour, chest = pale natural chest. No sashes.
+ * The island names and habits below stay original game fiction. The Matchday Fox has no club and keeps its gold/teal. */
+export type IslandCostume={name:string;animalLabel:string;color:number;accent:number;kitColor:number;chest?:number;story:string};
 const entries:[string,string,string,number,number,string][]=[
  ['barcelona','Cove','Wildcat',0xe9bc43,0x98264d,'finds a clear passing angle whenever a teammate is under pressure'],
  ['arsenal','Pebble','Dinosaur',0x68964f,0xf0d57d,'welcomes new teammates and makes sure everyone gets a turn'],
@@ -27,7 +31,9 @@ const entries:[string,string,string,number,number,string][]=[
  ['matchday-fox','Matchday Fox','Fox',0xf2bb45,0xfff0c4,'checks both shoulders, looks for a teammate and chooses a clear passing lane. The gold outfit celebrates exploring the island’s hidden matchday soccer balls; it does not certify football mastery'],
  ['sutton','Lookout','Giraffe',0xd9b467,0x94633b,'looks up before receiving to find an unmarked teammate']
 ];
-// Individual island training colors brighten the quieter animal palettes.
-const trainingColors:Record<string,number>={'matchday-fox':0x237b70,chelsea:0xde785e,bayern:0x408fc9,koln:0xe48765,roma:0x3ba7bc,benfica:0x43b19b,psg:0x7463c7,flamengo:0xe17e65,palmeiras:0x42a993,botafogo:0x44a8bc,pumas:0x7867c9,cerezo:0xdd846b,nagoya:0xe38466};
-export const ISLAND_COSTUMES:Record<string,IslandCostume>=Object.fromEntries(entries.map(([id,name,animalLabel,color,accent,action])=>[id,{name,animalLabel,color,accent,kitColor:trainingColors[id]??0x258b7a,story:`In our fictional island team, ${name} ${action}. Try that habit in your next football game.`}]));
+// The Matchday Fox (no club) keeps its island gold and teal training colour.
+const REWARD_KIT=0x237b70;
+export const ISLAND_COSTUMES:Record<string,IslandCostume>=Object.fromEntries(entries.map(([id,name,animalLabel,color,accent,action])=>{const club=getCostume(id);
+ const kit=CLUB_KIT_COLOURS[id];
+ return [id,{name,animalLabel,color:kit?.body??color,accent:kit?.accent??accent,kitColor:kit?.body??(club?.kitColor??REWARD_KIT),chest:kit?.chest,story:`In our fictional island team, ${name} ${action}. Try that habit in your next football game.`}];}));
 export function getIslandCostume(id:string){const item=ISLAND_COSTUMES[id];if(!item)throw new Error(`Unknown island costume: ${id}`);return item;}

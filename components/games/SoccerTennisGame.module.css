@@ -96,3 +96,6 @@
 }
 @media(pointer:coarse){.keyboard,.action>span,.mini>span{display:none}.actionRow small.hintFine{display:none}.actionRow small.hintCoarse{display:block}.action{min-height:55px}.mini{min-height:55px}.joy{display:block}}
 @media(prefers-reduced-motion:reduce){.root *{scroll-behavior:auto}}
+
+/* iOS long-press guard (tests/device-guards.cjs check 1): no "Save image / Copy / Share" callout or text selection on held controls. */
+.canvas,.joy,.joy *{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-user-drag:none}

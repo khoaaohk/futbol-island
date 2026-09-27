@@ -10,7 +10,11 @@ import {createMatchEffects,type MatchEvent} from './matchEffects';
 import {createLessonCues} from './lessonCues';
 import {playerBatch} from '../graphics/playerBatch';
 import {teachingMotion} from './teachingMotion';
-import {createPlayer,profileFor,type PlayerRig,type PlayerMotion} from '../graphics/player';
+import {createPlayer,profileFor,PLAYER_KICK_CONTACT,type PlayerRig,type PlayerMotion} from '../graphics/player';
+import {createChoreo,windupTurnShare} from './match/choreo';
+import {createComboView} from './match/combos'; // [combos] skill poses for combination plays
+import {classicShirtNumber} from '../graphics/shirtNumbers';
+import {fieldTokenDress} from './beanLooks';
 import {createMatchBallTexture} from '../graphics/matchBallTexture';
 import {MatchSim,ROLE_MOVEMENT} from './match/matchSim';
 import {VENUES,fieldPoint,type Venue,type Format} from './venues';
@@ -36,7 +40,7 @@ export const profileSeed=(venue:string,id:string)=>{let h=2166136261;for(const c
 /** Role body profile for a live rig: teaching lessons keep `mid`; applied only when the role changes (once per live rig). */
 export function assignRigProfile(rig:PlayerRig,venue:string,id:string,role:'gk'|'def'|'mid'|'fwd'){if(rig.root.userData.profileRole===role)return false;rig.setProfile(profileFor(role,profileSeed(venue,id)));rig.root.userData.profileRole=role;return true;}
 export const teachingPoseAdvances=(session:FieldSession,outcomeStep:number|null|undefined)=>outcomeStep!==undefined&&outcomeStep!==null?!session.outcomePaused&&(session.outcomeProgress??0)<1:session.playing;
-type Entry={liveFrame:ReturnType<typeof createLiveFieldFrame>;clock:ReturnType<typeof createMatchUpdateClock>;venue:Venue;sim:MatchSim;root:T.Group;rigs:Map<string,PlayerRig>;ball:T.Mesh;label:Map<string,T.Sprite>;lastLesson:string;effects:ReturnType<typeof createMatchEffects>;ballPhysics:ReturnType<typeof createLiveBallPhysics>};
+type Entry={dormant?:boolean;synced?:boolean;choreo:ReturnType<typeof createChoreo>;comboView:ReturnType<typeof createComboView>;liveFrame:ReturnType<typeof createLiveFieldFrame>;clock:ReturnType<typeof createMatchUpdateClock>;venue:Venue;sim:MatchSim;root:T.Group;rigs:Map<string,PlayerRig>;ball:T.Mesh;label:Map<string,T.Sprite>;lastLesson:string;effects:ReturnType<typeof createMatchEffects>;ballPhysics:ReturnType<typeof createLiveBallPhysics>};
 export type LiveMatchView={events:MatchEvent[];players:{id:string;x:number;y:number;home:boolean}[];ball:{x:number;y:number};score:{gold:number;blue:number}};
 export function createFieldRuntime(scene:T.Scene,reactions?:BallReactions){
  const batch=playerBatch(scene),cues=createLessonCues(scene),paused=new Set<Format>(),hoverPaused=new Set<Format>(),collisionPaused=new Set<Format>();
@@ -44,32 +48,53 @@ export function createFieldRuntime(scene:T.Scene,reactions?:BallReactions){
  const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
  const ballMap=createMatchBallTexture(),ballGeo=new T.SphereGeometry(.19,16,12),ballMat=new T.MeshStandardMaterial({color:'#ffffff',map:ballMap,roughness:.85});
  const lineMaterial=new T.LineBasicMaterial({color:'#e9c66d'}),lineGeometry=new T.BufferGeometry(),line=new T.LineSegments(lineGeometry,lineMaterial);scene.add(line);const linePositions=new T.Float32BufferAttribute(new Float32Array(1536),3);lineGeometry.setAttribute('position',linePositions);line.frustumCulled=false;
- const entries:Entry[]=VENUES.map((venue,i)=>{const root=new T.Group();root.name='match-'+venue.id;root.position.y=venue.elevation??0;scene.add(root);const ball=new T.Mesh(ballGeo,ballMat);ball.castShadow=true;root.add(ball);return {liveFrame:createLiveFieldFrame(venue.id),clock:createMatchUpdateClock(),venue,root,sim:new MatchSim(270+i*41,venue.id),rigs:new Map(),ball,label:new Map(),lastLesson:'',effects:createMatchEffects(root,venue),ballPhysics:createLiveBallPhysics(liveGameSpeed(venue.id),venue)};});
- const stats={ticks:0,visiblePlayers:0,culledPlayers:0,skippedPoses:0,rigs:0,matchTime:0};let playerCulling=true;
+ const entries:Entry[]=VENUES.map((venue,i)=>{const root=new T.Group();root.name='match-'+venue.id;root.position.y=venue.elevation??0;scene.add(root);const ball=new T.Mesh(ballGeo,ballMat);ball.castShadow=true;root.add(ball);const sim=new MatchSim(270+i*41,venue.id);sim.windupScale=liveGameSpeed(venue.id);return {choreo:createChoreo(),comboView:createComboView(),liveFrame:createLiveFieldFrame(venue.id),clock:createMatchUpdateClock(),venue,root,sim,rigs:new Map(),ball,label:new Map(),lastLesson:'',effects:createMatchEffects(root,venue),ballPhysics:createLiveBallPhysics(liveGameSpeed(venue.id),venue)};});
+ const stats={ticks:0,visiblePlayers:0,culledPlayers:0,skippedPoses:0,rigs:0,matchTime:0,dormant:0};let playerCulling=true;
  const playerView=new T.Sphere(new T.Vector3(),7);
- const frustum=new T.Frustum(),matrix=new T.Matrix4(),sphere=new T.Sphere(),emptyIds=new Set<string>(),liveContact=new T.Vector3(),receivingContact=new T.Vector3(),keeperLeft=new T.Vector3(),keeperRight=new T.Vector3();
+ const frustum=new T.Frustum(),matrix=new T.Matrix4(),sphere=new T.Sphere(),emptyIds=new Set<string>(),skillBallPoint=new T.Vector3(),liveContact=new T.Vector3(),receivingContact=new T.Vector3(),keeperLeft=new T.Vector3(),keeperRight=new T.Vector3();
  const label=(entry:Entry,id:string,text:string,home:boolean)=>{let sprite=entry.label.get(id);if(!sprite){sprite=new T.Sprite(new T.SpriteMaterial({depthTest:false,depthWrite:false,toneMapped:false}));sprite.renderOrder=5;entry.root.add(sprite);entry.label.set(id,sprite);}const key=(home?'our:':'their:')+text;if(sprite.userData.text!==key){const canvas=document.createElement('canvas');const c=canvas.getContext('2d')!;c.font='bold 44px sans-serif';canvas.width=Math.ceil(c.measureText(text).width+24);canvas.height=64;c.fillStyle='#203e35';c.fillRect(0,0,canvas.width,64);c.font='bold 44px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillStyle=home?'#efbb54':'#609de3';c.fillText(text,canvas.width/2,34,canvas.width-16);sprite.material.map?.dispose();sprite.material.map=new T.CanvasTexture(canvas);sprite.material.map.colorSpace=T.SRGBColorSpace;sprite.material.needsUpdate=true;sprite.userData.text=key;}sprite.scale.set(3,.75,1);return sprite;};
+ /** Commit one foot, contact offset and action for a whole strike (wind-up through follow-through). */
+ function commitStrike(rig:PlayerRig,e:Entry,px:number,pz:number,strikeYaw:number,kind:'pass'|'shot'|'loft',power:number){
+  const ud=rig.root.userData,scale=Math.max(.1,rig.root.scale.x);
+  const bx=(e.ball.position.x-px)/scale,bz=(e.ball.position.z-pz)/scale,lateral=bx*Math.cos(strikeYaw)-bz*Math.sin(strikeYaw);
+  // Commit one foot for the whole action; jittering reception plans cannot switch it mid-swing.
+  ud.actionKind=kind;ud.strikePower=power;
+  ud.strikeSide=Math.abs(lateral)>.04?(lateral>0?1:-1):(ud.contactSide??1);
+  ud.strikeX=T.MathUtils.clamp(lateral,-.25,.25);
+  ud.strikeZ=T.MathUtils.clamp(bx*Math.sin(strikeYaw)+bz*Math.cos(strikeYaw),.55,.92);
+ }
  function update(dt:number,time:number,camera:T.Camera,session:FieldSession|null,active:boolean,viewingFormat:Format|null=null,viewportHeight=window.innerHeight){
  const question=session?.quiz?session.lesson.questions[session.question]:undefined;
  const outcomeStep=quizOutcomeStep(session);
  if(session){if(outcomeStep!==undefined&&outcomeStep!==null)session.outcomeProgress=Math.min(1,(session.outcomeProgress??0)+(active&&!session.outcomePaused?dt:0)/lessonStepSeconds(session.lesson.steps[outcomeStep]));else session.outcomeProgress=0;}
  const visualSession=session&&outcomeStep!==undefined&&outcomeStep!==null?{...session,step:outcomeStep,progress:session.outcomeProgress??0}:session;
 
- batch.begin();stats.visiblePlayers=0;stats.culledPlayers=0;stats.skippedPoses=0;stats.ticks++;stats.matchTime=time;
+ batch.begin();stats.visiblePlayers=0;stats.culledPlayers=0;stats.skippedPoses=0;stats.dormant=0;stats.ticks++;stats.matchTime=time;
  camera.updateMatrixWorld();frustum.setFromProjectionMatrix(matrix.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse));
  for(const e of entries){const v=e.venue,teaching=session?.format===v.id?session:null;
  sphere.center.set(v.x,1+(v.elevation??0),v.z);sphere.radius=Math.hypot(v.width,v.length)/2+2;
  const visible=(!viewingFormat||v.id===viewingFormat)&&(!session||!!teaching)&&frustum.intersectsSphere(sphere)&&(!!viewingFormat||camera.position.distanceTo(sphere.center)<240);
  // Nearby matches remain responsive to island ball hits, even just outside the view.
- const immediate=visible||viewingFormat===v.id||camera.position.distanceTo(sphere.center)<sphere.radius+45;
+ const camDistance=camera.position.distanceTo(sphere.center);
+ // Heat pass 5: a field that is off screen and far away is dormant: no clock, sim, bookkeeping or effects at all; it resumes exactly
+ // where it paused when the camera comes back (sleep beyond radius + 60 m, wake inside radius + 50 m or as soon as it is in view — the
+ // frustum + 240 m test runs before anything is drawn; the island ball-hit zone is radius + 45 m).
+ const dormant=!visible&&viewingFormat!==v.id&&!teaching&&(e.dormant?camDistance>sphere.radius+50:camDistance>sphere.radius+60);
+ if(dormant!==e.dormant){e.dormant=dormant;if(dormant){e.root.visible=false;e.effects.update(e.sim,0,false,reduced);}}
+ if(dormant){stats.dormant++;continue;}
+ const immediate=visible||viewingFormat===v.id||camDistance<sphere.radius+45;
  const collisionToken=reactions?.states.size?e.liveFrame.tokens.find(token=>reactions.get(e.liveFrame.rows.get(token.id)!.hitId)?.cause==='truck'):undefined;
  const collisionHit=collisionToken?reactions?.get(e.liveFrame.rows.get(collisionToken.id)!.hitId):undefined;
  if(collisionHit)collisionPaused.add(v.id);else collisionPaused.delete(v.id);
  const matchDt=e.clock.take(dt,immediate,active&&!teaching&&!isPaused(v.id));
- e.liveFrame.sync(e.sim.players);
+ // Audit F23: the live frame only changes when the sim steps (and once for a fresh field).
+ if(matchDt>0||!e.synced){e.liveFrame.sync(e.sim.players);e.synced=true;}
  if(matchDt>0){for(const token of e.liveFrame.tokens){const row=e.liveFrame.rows.get(token.id)!,p=e.sim.players[token.id];row.frozen=!!reactions?.get(row.hitId);if(row.frozen){row.x=p.x;row.y=p.y;}}e.sim.step(matchDt*liveGameSpeed(e.venue.id));for(const token of e.liveFrame.tokens){const row=e.liveFrame.rows.get(token.id)!,p=e.sim.players[token.id];if(row.frozen&&p){p.x=row.x;p.y=row.y;p.vx=p.vy=0;}}e.liveFrame.sync(e.sim.players);}
+ // Touch events → reactions/squash/calls: bookkeeping only, read even offscreen so nothing replays late.
+ e.choreo.consume(e.sim,teaching?0:matchDt);
+ e.comboView.consume(e.sim,teaching?0:matchDt); // [combos] skill events → timed poses
  // Ball height: real gravity and bounces (render-only), stepped even offscreen so a kick is never replayed late.
- const ballHeight=e.ballPhysics.step(e.sim,matchDt*liveGameSpeed(e.venue.id),!e.sim.ball.owner);
+ const ballHeight=e.ballPhysics.step(e.sim,matchDt*liveGameSpeed(e.venue.id),!e.sim.ball.owner,e.comboView.kickStyle(e.sim.kicks)); // [combos] chip / knuckleball render arcs
  e.root.visible=visible;e.effects.update(e.sim,active&&!isPaused(v.id)?dt:0,visible&&!teaching,reduced);if(!visible)continue;
  let teachingPose:ReturnType<typeof teachingMotion>|undefined;
  let emphasized=emptyIds,callouts=emptyIds;
@@ -85,16 +110,28 @@ export function createFieldRuntime(scene:T.Scene,reactions?:BallReactions){
 
 
  }
+ const windup=!teaching?e.sim.kickWindup:null;
  const approachId=!teaching&&!e.sim.ball.owner?(e.sim.ball.intBy??e.sim.ball.target):null,approachPlayer=approachId?e.sim.players[approachId]:undefined;
  const approachPlan=approachPlayer&&!approachPlayer.isGK?e.sim.receptionPlan(approachId!):undefined;
  const approachDistance=approachPlayer?Math.hypot(e.sim.ball.x-approachPlayer.x,e.sim.ball.y-approachPlayer.y):Infinity;
- const approachT=approachPlan&&e.sim.ball.height<.65?Math.max(0,Math.min(1,(e.sim.receptionRadius*2.5-approachDistance)/(e.sim.receptionRadius*1.5))):0,approachWeight=approachT*approachT*(3-2*approachT);
+ const highApproach=e.sim.ball.height>=.65,approachT=approachPlan&&e.sim.ball.height<2.2?Math.max(0,Math.min(1,(e.sim.receptionRadius*2.5-approachDistance)/(e.sim.receptionRadius*1.5))):0,approachWeight=approachT*approachT*(3-2*approachT);
  const used=teaching?new Set(tokens.map(t=>t.id)):e.liveFrame.used;for(const [id,rig] of e.rigs)rig.root.visible=used.has(id);for(const sprite of e.label.values())sprite.visible=false;
- for(const token of tokens){let rig=e.rigs.get(token.id);if(!rig){rig=createPlayer(token.id,token.home?'home':'away',false);e.rigs.set(token.id,rig);stats.rigs++;}rig.root.visible=true;const position=poses.get(token.id)!,px=v.x+(position.x-135)/250*v.width,pz=v.z+(position.y-200)/380*v.length;const live=e.sim.players[token.id];assignRigProfile(rig,v.id,token.id,teaching?'mid':live?.role??'mid');const hitId=e.liveFrame.rows.get(token.id)?.hitId??'field:'+v.id+':'+token.id,stunned=!teaching?reactions?.get(hitId):undefined;const reception=e.sim.recv.id===token.id&&e.sim.recv.t>0?e.sim.recv:null;
+ for(const token of tokens){let rig=e.rigs.get(token.id);if(!rig){rig=createPlayer(token.id,token.home?'home':'away',false);const shirtNumber=classicShirtNumber(v.id,token.id);rig.setShirtNumber(shirtNumber);const dress=fieldTokenDress(v.id,token,shirtNumber,!!e.sim.players[token.id]?.isGK);rig.setBeanLook(dress.look,dress.outfit);e.rigs.set(token.id,rig);stats.rigs++;}rig.root.visible=true;const position=poses.get(token.id)!,px=v.x+(position.x-135)/250*v.width,pz=v.z+(position.y-200)/380*v.length;const live=e.sim.players[token.id];assignRigProfile(rig,v.id,token.id,teaching?'mid':live?.role??'mid');const hitId=e.liveFrame.rows.get(token.id)?.hitId??'field:'+v.id+':'+token.id,stunned=!teaching?reactions?.get(hitId):undefined;const reception=e.sim.recv.id===token.id&&e.sim.recv.t>0?e.sim.recv:null;
  const motion:PlayerMotion=teachingPose?.motions.get(token.id)??(teaching?{}:e.liveFrame.rows.get(token.id)!.motion);
  if(!teachingPose?.motions.has(token.id)){motion.stunAge=stunned?.age;motion.rooftopPose=stunned&&stunned.age>1.85?'dizzy':undefined;motion.dribbling=e.sim.ball.owner===token.id;motion.kick=live?.kick>0&&liveKickPhase(live.kick,liveGameSpeed(e.venue.id))<1?liveKickPhase(live.kick,liveGameSpeed(e.venue.id)):undefined;motion.facing=undefined;motion.receive=undefined;motion.receiveProgress=0;motion.shotPower=undefined;motion.kickSide=undefined;motion.samplePose=undefined;motion.scanYaw=undefined;motion.actionKind=undefined;motion.strikeX=motion.strikeZ=motion.intentHeading=motion.stopDistance=undefined;motion.jockey=0;motion.runIntensity=undefined;motion.keeper=0;motion.keeperReach=0;}
- if(!teaching&&reception){motion.facing=Math.atan2(reception.faceX*v.width/250,reception.faceY*v.length/380);motion.receive=Math.min(1,reception.t/Math.max(.001,reception.dur)*2);motion.receiveProgress=1-reception.t/Math.max(.001,reception.dur);motion.kickSide=reception.foot==='R'?-1:1;/* Sim right=(-faceY,faceX); rig side+= (cos(yaw),-sin(yaw)), so these signs intentionally differ. */}
- else if(!teaching&&approachId===token.id&&approachPlan){motion.facing=Math.atan2(approachPlan.faceX*v.width/250,approachPlan.faceY*v.length/380);motion.receive=approachWeight;motion.kickSide=approachPlan.foot==='R'?-1:1;}
+ if(!teaching&&reception&&windup?.id!==token.id){motion.facing=Math.atan2(reception.faceX*v.width/250,reception.faceY*v.length/380);motion.receive=Math.min(1,reception.t/Math.max(.001,reception.dur)*2);motion.receiveProgress=1-reception.t/Math.max(.001,reception.dur);motion.kickSide=reception.foot==='R'?-1:1;/* Sim right=(-faceY,faceX); rig side+= (cos(yaw),-sin(yaw)), so these signs intentionally differ. */}
+ else if(!teaching&&approachId===token.id&&approachPlan){motion.facing=Math.atan2(approachPlan.faceX*v.width/250,approachPlan.faceY*v.length/380);if(!highApproach){motion.receive=approachWeight;motion.kickSide=approachPlan.foot==='R'?-1:1;}}
+ else if(!teaching&&windup?.id===token.id){
+ // Wind-up (CONTRACT §5): turn to face the target first, then the leg swing runs the strike from
+ // phase 0 up to contact, so the live release (liveKickPhase starts at contact) continues it.
+ const ud=rig.root.userData,progress=1-windup.t/Math.max(1e-6,windup.dur),share=windupTurnShare(windup.turn);
+ motion.facing=Math.atan2((windup.tx-live.x)*v.width/250,(windup.ty-live.y)*v.length/380);
+ const swing=Math.max(0,Math.min(1,(progress-share)/Math.max(1e-6,1-share)));
+ if(ud.windupRef!==windup){ud.windupRef=windup;ud.windupCommitted=false;}
+ if(swing>0){
+   if(!ud.windupCommitted){commitStrike(rig,e,px,pz,motion.facing,windup.kind==='loft'?'loft':windup.kind==='pass'?'pass':'shot',windup.kind==='shot'||windup.kind==='clear'?.85:windup.kind==='loft'?.7:.45);ud.windupCommitted=true;}
+   motion.kick=PLAYER_KICK_CONTACT*swing;motion.actionKind=ud.actionKind;motion.kickSide=ud.strikeSide;motion.strikeX=ud.strikeX;motion.strikeZ=ud.strikeZ;motion.shotPower=ud.strikePower;
+ }}
  else if(!teaching&&live?.kick>0){const release=e.sim.passRelease;if(live.kick>(rig.root.userData.lastKick??0)||rig.root.userData.releaseFacing===undefined)rig.root.userData.releaseFacing=release?.id===token.id?Math.atan2((release.tx-live.x)*v.width/250,(release.ty-live.y)*v.length/380):Math.atan2(e.sim.ball.vx*v.width/250,e.sim.ball.vy*v.length/380);if(motion.kick!==undefined){
  const releaseYaw=rig.root.userData.releaseFacing,travelSpeed=Math.hypot(live.vx*v.width/250,live.vy*v.length/380)*liveGameSpeed(v.id);
  const recovery=T.MathUtils.smoothstep(motion.kick,.4,1),travelYaw=Math.atan2(live.vx*v.width/250,live.vy*v.length/380);
@@ -104,14 +141,11 @@ export function createFieldRuntime(scene:T.Scene,reactions?:BallReactions){
  motion.kickSide??=rig.root.userData.contactSide??1;
  if(!teaching&&live){
    if(live.kick>0){if(live.kick>(rig.root.userData.lastKick??0)){
-     rig.root.userData.actionKind=e.sim.ball.lofted?'loft':e.sim.passRelease?.id===token.id?'pass':'shot';
-     const strikeYaw=rig.root.userData.releaseFacing??rig.root.rotation.y,scale=Math.max(.1,rig.root.scale.x);
-     const bx=(e.ball.position.x-px)/scale,bz=(e.ball.position.z-pz)/scale,lateral=bx*Math.cos(strikeYaw)-bz*Math.sin(strikeYaw);
-     // Commit one foot for the whole action; jittering reception plans cannot switch it mid-swing.
+     // A wound-up kick already committed its foot and action at the start of the swing: keep them
+     // through contact (only the power follows the real ball pace). Otherwise commit now.
+     const wound=rig.root.userData.windupCommitted;rig.root.userData.windupCommitted=false;rig.root.userData.windupRef=undefined;
+     if(!wound)commitStrike(rig,e,px,pz,rig.root.userData.releaseFacing??rig.root.rotation.y,e.sim.ball.lofted?'loft':e.sim.passRelease?.id===token.id?'pass':'shot',0);
      rig.root.userData.strikePower=T.MathUtils.clamp(Math.hypot(e.sim.ball.vx*v.width/250,e.sim.ball.vy*v.length/380)/25,0,1);
-     rig.root.userData.strikeSide=Math.abs(lateral)>.04?(lateral>0?1:-1):(rig.root.userData.contactSide??1);
-     rig.root.userData.strikeX=T.MathUtils.clamp(lateral,-.25,.25);
-     rig.root.userData.strikeZ=T.MathUtils.clamp(bx*Math.sin(strikeYaw)+bz*Math.cos(strikeYaw),.55,.92);
      // Continue from the last visible boot contact instead of popping to sim root.
      if(e.root.userData.lastBallOwner===token.id&&e.sim.stats.time-(e.root.userData.lastBallTime??-Infinity)<.12){
        const release=e.sim.passRelease?.id===token.id?e.sim.passRelease:live,target=e.sim.ball.target?e.sim.players[e.sim.ball.target]:undefined,pace=Math.hypot(e.sim.ball.vx,e.sim.ball.vy);
@@ -157,6 +191,9 @@ export function createFieldRuntime(scene:T.Scene,reactions?:BallReactions){
    // never at pace (a sprint in a deep crouch reads wrong).
    const ballLive=!owner||owner.team!==live.team;
    motion.stance=(live.role==='gk'||live.role==='def')&&ballLive&&!motion.kick&&!motion.dribbling&&!reception&&pace<READY_MAX_PACE&&(pace<.15||motion.jockey>0)&&ballDistance<(live.isGK?24:14)?'ready':undefined;
+   // Readable intent: called receiver, ready marker, reactions and the squash spring (choreo.ts).
+   e.choreo.apply(token.id,motion,pace);
+   e.comboView.apply(token.id,motion,rig.root.rotation.y);e.comboView.settle(motion); // [combos] skill moves (skillMoves.ts / lane B moves) timed to the sim's touch
    motion.keeper=live.isGK?1:0;motion.keeperReach=live.isGK?(e.sim.ball.owner===token.id?.65:!e.sim.ball.owner&&ballDistance<3?Math.max(0,1-ballDistance/3):0):0;
    if((e.sim.ball.target===token.id||approachId===token.id)&&!reception){if(!approachPlan)motion.facing=Math.atan2((e.sim.ball.x-live.x)*v.width/250,(e.sim.ball.y-live.y)*v.length/380);motion.scanYaw=Math.sin(Math.PI*Math.min(1,Math.max(0,(ballDistance-3)/8)))*.35*(motion.kickSide??1);}
    if(motion.dribbling){const travelled=rig.root.userData.wasDribbling?Math.min(.5,Math.hypot(px-rig.root.position.x,pz-rig.root.position.z)):0;rig.root.userData.dribbleDistance=(rig.root.userData.dribbleDistance??0)+travelled;}else rig.root.userData.dribbleDistance=0;
@@ -181,6 +218,8 @@ export function createFieldRuntime(scene:T.Scene,reactions?:BallReactions){
  if(!holdLivePose)rig.update(px,pz,active&&!stunned&&(teaching?teachingPoseAdvances(teaching,outcomeStep):(!isPaused(v.id)||protesting&&!paused.has(v.id)&&!hoverPaused.has(v.id)))?dt:0,poseClock,reduced,motion);
  rig.root.userData.posed=true;rig.root.userData.poseClock=poseClock;rig.root.userData.contactSide=motion.kickSide??1;rig.root.userData.teachingMotion=teaching?motion:undefined;rig.root.userData.liveMotion=!teaching?motion:undefined;rig.root.position.y=(v.elevation??0)+.105;if(!teaching)reactions?.apply(hitId,rig.root,false);
  if(protesting)applyTruckProtest(rig.root,time,reduced);else if(!stunned)rig.root.rotation.z=0;
+ // Main-character bump (lib/town/fieldCollision): render-only sidestep + lean; the sim position is untouched.
+ if(!teaching&&!stunned){const nudge=rig.root.userData.fieldNudge as {x:number;z:number;lean:number}|undefined;if(nudge||rig.root.userData.fieldNudged){rig.root.position.x=px+(nudge?.x??0);rig.root.position.z=pz+(nudge?.z??0);if(nudge)rig.root.rotation.z+=nudge.lean;}rig.root.userData.fieldNudged=!!nudge;}
  // The live batch has no per-instance frustum culling. Retain an oversized
  // body + sunset-shadow volume; teaching always keeps every participant.
  if(inView){batch.draw(rig.root);stats.visiblePlayers++;}else stats.culledPlayers++;
@@ -204,7 +243,9 @@ export function createFieldRuntime(scene:T.Scene,reactions?:BallReactions){
        rig.update(root.x,root.z,0,rig.root.userData.poseClock,reduced,current);rig.root.position.y=(v.elevation??0)+.105;
        return point;
      };
-     anchors={lesson:teaching.lesson,step:visualStep,beat:frame.beat,clock:contactClock,release:sampleContact(teachingPose.source,frame.releaseProgress,teachingPose.release),arrival:sampleContact(teachingPose.receiver,frame.arrivalProgress,teachingPose.arrival)};
+     // A keeper's throw or roll-out leaves from his hand, not a boot (the step's skill, teachingMotion).
+     const hand=teachingPose.skill?.release;
+     anchors={lesson:teaching.lesson,step:visualStep,beat:frame.beat,clock:contactClock,release:hand?new T.Vector3(hand.x,hand.y,hand.z):sampleContact(teachingPose.source,frame.releaseProgress,teachingPose.release),arrival:sampleContact(teachingPose.receiver,frame.arrivalProgress,teachingPose.arrival)};
      e.root.userData.teachingContacts=anchors;
    }
    e.ball.position.copy(anchors.release).lerp(anchors.arrival,teachingPose.travel);
@@ -212,19 +253,33 @@ export function createFieldRuntime(scene:T.Scene,reactions?:BallReactions){
    // released flight freezes its origin. This joins the sampled boot at .18.
    if(teachingPose.travel===0&&teachingPose.source){const source=teachingPose.poses.get(teachingPose.source)!;e.ball.position.x+=source.x-teachingPose.releaseRoot.x;e.ball.position.z+=source.z-teachingPose.releaseRoot.z;}
    if(teachingPose.landed){const received=contact(teachingPose.receiver);if(received)e.ball.position.copy(received).setY(.295);}
- }else {const a=contact(teachingPose.source);if(a)e.ball.position.copy(a).setY(.295);}
+   // Skills: the keeper holds the ball on the move's hand path until he lets go; an overarm throw flies in an arc.
+   const sk=teachingPose.skill;
+   if(sk?.ball&&sk.weight>0&&teachingPose.travel===0)e.ball.position.lerp(skillBallPoint.set(sk.ball.x,sk.ball.y,sk.ball.z),sk.weight);
+   if(sk?.type==='keeperThrow'&&teachingPose.travel>0&&teachingPose.travel<1)e.ball.position.y+=1.1*4*teachingPose.travel*(1-teachingPose.travel);
+ }else {const a=contact(teachingPose.source);if(a)e.ball.position.copy(a).setY(.295);
+   // A turn or a shield in this step: the ball follows the move's authored path at the boot, then hands back.
+   const sk=teachingPose.skill;if(sk?.ball&&sk.weight>0)e.ball.position.lerp(skillBallPoint.set(sk.ball.x,sk.ball.y,sk.ball.z),sk.weight);}
   teaching.renderedBall={x:e.ball.position.x,z:e.ball.position.z,landed:teachingPose.landed};if(visualSession)visualSession.renderedBall=teaching.renderedBall;
- }else if(e.sim.ball.owner&&e.sim.players[e.sim.ball.owner]?.isGK){const keeper=e.rigs.get(e.sim.ball.owner);if(keeper){keeper.handPositions(keeperLeft,keeperRight);e.ball.position.copy(keeperLeft).lerp(keeperRight,.5);e.ball.position.y-=v.elevation??0;}}
+ }else if(e.sim.ball.owner&&e.sim.players[e.sim.ball.owner]?.isGK){const keeper=e.rigs.get(e.sim.ball.owner);if(keeper){keeper.handPositions(keeperLeft,keeperRight);e.ball.position.copy(keeperLeft).lerp(keeperRight,.5);e.ball.position.y-=v.elevation??0;
+ // [combos] a throw, roll-out or punt carries the ball on the move's authored hand path (one hand for the throw).
+ if(e.comboView.holds(e.sim.ball.owner))e.comboView.ball(e.sim.ball.owner,e.ball.position,keeper.root.position,keeper.root.scale.x,.295);}}
  else if(e.sim.ball.owner){const ownerRig=e.rigs.get(e.sim.ball.owner),owner=e.sim.players[e.sim.ball.owner];if(ownerRig){
  const speed=Math.hypot(owner.vx*v.width/250,owner.vy*v.length/380)*liveGameSpeed(v.id);
  const held=groundDribbleContact(ownerRig.root.position.x,ownerRig.root.position.z,ownerRig.root.rotation.y,ownerRig.root.userData.contactSide??1,ownerRig.root.userData.dribbleDistance??0,speed,liveContact,ownerRig.root.scale.x,ownerRig.dribbleContact(receivingContact));
  const recv=e.sim.recv,q=recv.id===e.sim.ball.owner?Math.min(1,recv.t/Math.max(.001,recv.dur)):0;
- if(q>0){ownerRig.ballContact(ownerRig.root.userData.contactSide??1,receivingContact);receivingContact.y=.295;held.lerp(receivingContact,q*q*(3-2*q));}
+ if(q>0){ownerRig.ballContact(ownerRig.root.userData.contactSide??1,receivingContact);receivingContact.y=.295;held.lerp(receivingContact,q*q*(3-2*q));
+ // A chest/thigh/head control: the ball falls from the touch height to the feet over the cushion.
+ const drop=e.choreo.touchHeight(e.sim.ball.owner);if(drop>.05)held.y+=drop*(1-(1-q)*(1-q));}
+ // A futsal flick-up lifts the ball off the boot (choreo times it to the flick's contact).
+ held.y+=e.choreo.ballLift(e.sim.ball.owner);
+ // [combos] during a skill the ball follows the move's authored path (its contacts are pinned to the boots)
+ e.comboView.ball(e.sim.ball.owner,held,ownerRig.root.position,ownerRig.root.scale.x,.295);
  e.ball.position.copy(held);
  }}
  if(!teaching&&!e.sim.ball.owner){const flight=e.root.userData.releaseContact;if(flight){const t=Math.max(0,Math.min(1,(e.sim.stats.time-flight.time)/flight.duration)),weight=1-t*t*(3-2*t);e.ball.position.x+=flight.x*weight;e.ball.position.z+=flight.z*weight;e.ball.position.y+=(flight.y??0)*weight;if(t>=1)e.root.userData.releaseContact=undefined;}}
  else e.root.userData.releaseContact=undefined;
- if(approachWeight>0&&approachId){const receiver=e.rigs.get(approachId);if(receiver){receiver.ballContact(receiver.root.userData.contactSide??1,receivingContact);receivingContact.y=.295;e.ball.position.lerp(receivingContact,approachWeight);}}
+ if(approachWeight>0&&approachId){const receiver=e.rigs.get(approachId);if(receiver){receiver.ballContact(receiver.root.userData.contactSide??1,receivingContact);receivingContact.y=.295;const y=e.ball.position.y;e.ball.position.lerp(receivingContact,approachWeight);if(highApproach)e.ball.position.y=y;/* a high ball is met in the air, not pulled to the boot */}}
  e.root.userData.lastBallOwner=teaching?undefined:e.sim.ball.owner;e.root.userData.lastBallTime=e.sim.stats.time;
  if(teaching){e.ball.rotation.x=e.ball.position.z/.19;e.ball.rotation.z=-e.ball.position.x/.19;}
  else{e.ballPhysics.roll(e.ball,ballHeight<.02,active&&!isPaused(v.id)?dt:0);e.effects.trail(e.ball.position,camera,reduced);if(e.ballPhysics.landing>2&&!reduced)e.effects.impact(e.ball.position.x,e.ball.position.y,e.ball.position.z);}

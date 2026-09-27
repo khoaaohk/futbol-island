@@ -1,0 +1,358 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Three down",
+   "text": "Goodison Park, 1966, World Cup quarter-final. Portugal are losing three-nil to North Korea! Eus\u00e9bio, the Black Panther, in red, races onto the pass, and... bang! A rocket into the net!",
+   "src": "/plays/narration/eusebio-signature-1966/1.m4a",
+   "seconds": 14.8,
+   "words": [
+    {
+     "w": "Goodison",
+     "at": 0.35
+    },
+    {
+     "w": "Park",
+     "at": 0.787
+    },
+    {
+     "w": "1966",
+     "at": 1.25
+    },
+    {
+     "w": "World",
+     "at": 2.587
+    },
+    {
+     "w": "Cup",
+     "at": 2.95
+    },
+    {
+     "w": "quarter-final",
+     "at": 3.175
+    },
+    {
+     "w": "Portugal",
+     "at": 4.463
+    },
+    {
+     "w": "are",
+     "at": 5.0
+    },
+    {
+     "w": "losing",
+     "at": 5.125
+    },
+    {
+     "w": "three-nil",
+     "at": 5.513
+    },
+    {
+     "w": "to",
+     "at": 6.0
+    },
+    {
+     "w": "North",
+     "at": 6.125
+    },
+    {
+     "w": "Korea",
+     "at": 6.4
+    },
+    {
+     "w": "Eus\u00e9bio",
+     "at": 7.375
+    },
+    {
+     "w": "the",
+     "at": 8.25
+    },
+    {
+     "w": "Black",
+     "at": 8.35
+    },
+    {
+     "w": "Panther",
+     "at": 8.662
+    },
+    {
+     "w": "in",
+     "at": 9.15
+    },
+    {
+     "w": "red",
+     "at": 9.312
+    },
+    {
+     "w": "races",
+     "at": 9.787
+    },
+    {
+     "w": "onto",
+     "at": 10.275
+    },
+    {
+     "w": "the",
+     "at": 10.512
+    },
+    {
+     "w": "pass",
+     "at": 10.6
+    },
+    {
+     "w": "and",
+     "at": 11.137
+    },
+    {
+     "w": "bang",
+     "at": 11.863
+    },
+    {
+     "w": "A",
+     "at": 12.637
+    },
+    {
+     "w": "rocket",
+     "at": 12.762
+    },
+    {
+     "w": "into",
+     "at": 13.162
+    },
+    {
+     "w": "the",
+     "at": 13.35
+    },
+    {
+     "w": "net",
+     "at": 13.45
+    }
+   ]
+  },
+  {
+   "label": "The rocket",
+   "text": "Watch again, slowly. Eyes on the ball, standing foot beside it, laces through the middle... and his leg follows through toward the goal.",
+   "src": "/plays/narration/eusebio-signature-1966/2.m4a",
+   "seconds": 9.0,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.188
+    },
+    {
+     "w": "Eyes",
+     "at": 2.138
+    },
+    {
+     "w": "on",
+     "at": 2.388
+    },
+    {
+     "w": "the",
+     "at": 2.487
+    },
+    {
+     "w": "ball",
+     "at": 2.575
+    },
+    {
+     "w": "standing",
+     "at": 3.075
+    },
+    {
+     "w": "foot",
+     "at": 3.462
+    },
+    {
+     "w": "beside",
+     "at": 3.7
+    },
+    {
+     "w": "it",
+     "at": 4.1
+    },
+    {
+     "w": "laces",
+     "at": 4.362
+    },
+    {
+     "w": "through",
+     "at": 4.8
+    },
+    {
+     "w": "the",
+     "at": 5.0
+    },
+    {
+     "w": "middle",
+     "at": 5.1
+    },
+    {
+     "w": "and",
+     "at": 5.925
+    },
+    {
+     "w": "his",
+     "at": 6.037
+    },
+    {
+     "w": "leg",
+     "at": 6.213
+    },
+    {
+     "w": "follows",
+     "at": 6.562
+    },
+    {
+     "w": "through",
+     "at": 7.05
+    },
+    {
+     "w": "toward",
+     "at": 7.287
+    },
+    {
+     "w": "the",
+     "at": 7.562
+    },
+    {
+     "w": "goal",
+     "at": 7.65
+    }
+   ]
+  },
+  {
+   "label": "Four goals",
+   "text": "The keeper can't reach it! Eus\u00e9bio scores four that day, and Portugal win five-three!",
+   "src": "/plays/narration/eusebio-signature-1966/3.m4a",
+   "seconds": 6.4,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "keeper",
+     "at": 0.425
+    },
+    {
+     "w": "can't",
+     "at": 0.8
+    },
+    {
+     "w": "reach",
+     "at": 1.075
+    },
+    {
+     "w": "it",
+     "at": 1.363
+    },
+    {
+     "w": "Eus\u00e9bio",
+     "at": 1.962
+    },
+    {
+     "w": "scores",
+     "at": 2.538
+    },
+    {
+     "w": "four",
+     "at": 2.975
+    },
+    {
+     "w": "that",
+     "at": 3.125
+    },
+    {
+     "w": "day",
+     "at": 3.35
+    },
+    {
+     "w": "and",
+     "at": 3.85
+    },
+    {
+     "w": "Portugal",
+     "at": 3.975
+    },
+    {
+     "w": "win",
+     "at": 4.5
+    },
+    {
+     "w": "five-three",
+     "at": 4.763
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: hit it with your laces, and follow through toward the goal!",
+   "src": "/plays/narration/eusebio-signature-1966/4.m4a",
+   "seconds": 4.7,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "hit",
+     "at": 1.275
+    },
+    {
+     "w": "it",
+     "at": 1.413
+    },
+    {
+     "w": "with",
+     "at": 1.488
+    },
+    {
+     "w": "your",
+     "at": 1.587
+    },
+    {
+     "w": "laces",
+     "at": 1.7
+    },
+    {
+     "w": "and",
+     "at": 2.3
+    },
+    {
+     "w": "follow",
+     "at": 2.425
+    },
+    {
+     "w": "through",
+     "at": 2.763
+    },
+    {
+     "w": "toward",
+     "at": 2.975
+    },
+    {
+     "w": "the",
+     "at": 3.237
+    },
+    {
+     "w": "goal",
+     "at": 3.325
+    }
+   ]
+  }
+ ]
+}

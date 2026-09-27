@@ -962,6 +962,10 @@ def main():
                         os.remove(f)
             print(f'{tag}: DROP {reason}', flush=True)
 
+        if (manifest.get(name) or {}).get('source', '').startswith('wikimedia/deep-audit'):
+            # reviewed by hand in scripts/fetch-player-photos-deep.py (Sep 26 2026): never re-judge or drop it here
+            print(f'{tag}: KEEP deep-audit pick', flush=True)
+            return
         if name in DROP:
             reject(DROP[name])
             return

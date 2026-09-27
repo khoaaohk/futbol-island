@@ -4,10 +4,11 @@ import {UPCOMING_STORIES,type UpcomingStory as UpcomingStoryData} from '@/lib/pa
 import UpcomingStory from './UpcomingStory';
 import {useEffect,useLayoutEffect,useState,useRef,type CSSProperties} from 'react';
 import {createPortal} from 'react-dom';
-import {FORMAT_PATHS,FORMAT_PATH_LAUNCH,lessonEvidence,type PathLesson} from '@/lib/paths/formatPaths';
+import {FORMAT_PATHS,FORMAT_PATH_LAUNCH,lessonEvidence,pathLessonLocked,type PathLesson} from '@/lib/paths/formatPaths';
 import {STORY_CARDS,STORY_KEY,readStoryProgress,type StoryId} from '@/lib/paths/stories';
 import {earnForStory} from '@/lib/town/cardRewardTriggers';
 import {loadOptionalStoryProgress,completeOptionalStory} from '@/lib/paths/optionalStoryProgress';
+import {placeBetweenStops} from '@/lib/paths/betweenStops';
 import {useQuestEvidence} from '@/lib/town/questProgress';
 import {useQuizCompletions} from '@/lib/town/quizProgress';
 import {launchLearning,endLearningPreview} from '@/lib/town/learningProgress';
@@ -103,7 +104,9 @@ export default function QuestLearningPath(){
  const nodes:{lesson:PathLesson;story?:StoryId;index:number;upcoming?:UpcomingStoryData}[]=[...(path.openingStory?[{lesson:core[0],story:path.openingStory,index:-1}]:[]),...core.flatMap((lesson,i)=>[{lesson,story:undefined as StoryId|undefined,index:i},...(lesson.story?[{lesson,story:lesson.story,index:i}]:[]),...(slots.includes(i)&&UPCOMING_STORIES[format]?.[slots.indexOf(i)]?[{lesson,index:i,upcoming:UPCOMING_STORIES[format][slots.indexOf(i)]}]:[])])];
  let chapterGap=0;
  const route=({futsal:{amplitude:54,frequency:1.45,bend:85},'7v7':{amplitude:60,frequency:1.05,bend:65},'9v9':{amplitude:-58,frequency:1.25,bend:100},'11v11':{amplitude:62,frequency:.82,bend:115}} as Record<string,{amplitude:number;frequency:number;bend:number}>)[format];
- const stops=nodes.map((node,index)=>{if(!node.story&&path.chapters.slice(1).some(c=>c.lessons[0].id===node.lesson.id))chapterGap+=110;return {...node,x:160+Math.sin(index*route.frequency)*route.amplitude,y:84+index*200+chapterGap-(node.story&&node.index===-1?40:0)};}),height=stops[stops.length-1].y+210;
+ const stops=nodes.map((node,index)=>{if(!node.story&&path.chapters.slice(1).some(c=>c.lessons[0].id===node.lesson.id))chapterGap+=110;return {...node,x:160+Math.sin(index*route.frequency)*route.amplitude,y:84+index*200+chapterGap-(node.story&&node.index===-1?40:0)};});
+ placeBetweenStops(stops,path.chapters.map(c=>c.lessons[c.lessons.length-1].id));
+ const height=stops[stops.length-1].y+210;
  return <section ref={root} className={`${styles.learningPath} ${journey.journey}`} aria-label="Format learning paths" onTouchStart={swipeStart} onTouchEnd={swipeEnd} onTouchCancel={()=>{swipe.current=null;}} onClickCapture={e=>{if(performance.now()<suppressClickUntil.current){e.preventDefault();e.stopPropagation();}}}>
  <div className={`${ui.overview} ${journey.bearing} ${journey.landing}`}>
  <div className={journey.landingHead}><span className={journey.eyebrow}>{untouched?'YOUR FIRST LANDING':'WHERE YOU LEFT OFF'}</span><h3>{path.title} Pitch</h3></div>
@@ -133,7 +136,7 @@ export default function QuestLearningPath(){
  <div data-path-foreground className={journey.pathForeground}>{stops.slice(1).map((stop,i)=>{const prev=stops[i];return <svg key={i} className={styles.questRoad} style={{top:prev.y-8,height:stop.y-prev.y+16}} viewBox={`0 ${prev.y-8} 320 ${stop.y-prev.y+16}`} preserveAspectRatio="none" aria-hidden="true"><path data-path-line d={`M${prev.x} ${prev.y} C${prev.x} ${prev.y+route.bend} ${stop.x} ${stop.y-route.bend} ${stop.x} ${stop.y}`} fill="none" stroke="#c8ceb0" strokeWidth="12" strokeLinecap="round"/></svg>;})}
 
  {path.chapters.map((chapter,ci)=>{const first=stops.find(n=>!n.story&&!n.upcoming&&n.lesson.id===chapter.lessons[0].id)!;return <div className={journey.chapterFlag} key={chapter.title} style={{top:first.y-90}}>{!['Meet the team and restart','Receive inside the team shape','Find your unit and receive','Find your connection'].includes(chapter.title)&&<strong>{chapter.title}</strong>}</div>;})}
- <ol className={styles.questStops}>{stops.map(stop=>{const s=status(stop.lesson),card=stop.upcoming?{title:stop.upcoming.title,skill:stop.upcoming.theme}:stop.story?STORY_CARDS.find(c=>c.id===stop.story):undefined,done=stop.upcoming?optionalDone.includes(stop.upcoming.id):stop.story?storyDone.includes(stop.story):s.complete,locked=!stop.upcoming&&!stop.story&&!done&&s.watched===0&&s.correct===0&&!!next&&stop.index>core.indexOf(next);return <li key={stop.upcoming?.id??stop.story??stop.lesson.id} className={`${styles.questStop} ${locked?journey.lockedStop:''} ${stop.story||stop.upcoming?styles.storyStop:''} ${done?styles.questDone:!stop.story&&next?.id===stop.lesson.id?styles.questCurrent:''}`} style={{left:`${stop.x/320*100}%`,top:stop.y-32}}>
+ <ol className={styles.questStops}>{stops.map(stop=>{const s=status(stop.lesson),card=stop.upcoming?{title:stop.upcoming.title,skill:stop.upcoming.theme}:stop.story?STORY_CARDS.find(c=>c.id===stop.story):undefined,done=stop.upcoming?optionalDone.includes(stop.upcoming.id):stop.story?storyDone.includes(stop.story):s.complete,locked=!stop.upcoming&&!stop.story&&pathLessonLocked(path,stop.lesson,steps,answers);return <li key={stop.upcoming?.id??stop.story??stop.lesson.id} className={`${styles.questStop} ${locked?journey.lockedStop:''} ${stop.story||stop.upcoming?styles.storyStop:''} ${done?styles.questDone:!stop.story&&next?.id===stop.lesson.id?styles.questCurrent:''}`} style={{left:`${stop.x/320*100}%`,top:stop.y-32}}>
  <button type="button" disabled={locked} aria-label={card?`Story: ${card.title}${done?'. Completed, replay':''}`:`${stop.index+1}. ${stop.lesson.name}. ${locked?'Locked. Complete the previous stop to unlock':done?'Completed, replay':`${s.watched}/${stop.lesson.steps} play steps, ${s.correct}/${stop.lesson.questions} quiz answers`}`} onClick={event=>{if(stop.upcoming)setUpcoming(stop.upcoming);else if(stop.story)openStory(stop.story,event.currentTarget);else launch(stop.lesson,done);}}><StopIcon kind={locked?'lock':stop.story||stop.upcoming?'story':done?'check':s.quiz?'ball':'play'}/></button>
  <strong>{card?`Story · ${card.title}`:`${stop.index+1}. ${stop.lesson.name}`}</strong><small>{card?`${card.skill} · ${done?'Completed · Replay anytime':stop.upcoming?'1 minute · Optional':'Optional'}`:locked?'Complete the previous stop to unlock':done?'Completed · Replay anytime':null}</small>
  </li>;})}</ol></div></div>

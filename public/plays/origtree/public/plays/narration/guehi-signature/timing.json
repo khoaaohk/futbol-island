@@ -1,0 +1,374 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The Euros, live",
+   "text": "Gelsenkirchen, 2024. England play Serbia at the Euros. Early on, Marc Gu\u00e9hi wins a tackle against the big striker Du\u0161an Vlahovi\u0107. Moments later, Vlahovi\u0107 shoots... blocked by Gu\u00e9hi!",
+   "src": "/plays/narration/guehi-signature/1.m4a",
+   "seconds": 14.7,
+   "words": [
+    {
+     "w": "Gelsenkirchen",
+     "at": 0.375
+    },
+    {
+     "w": "2024",
+     "at": 1.35
+    },
+    {
+     "w": "England",
+     "at": 2.712
+    },
+    {
+     "w": "play",
+     "at": 3.188
+    },
+    {
+     "w": "Serbia",
+     "at": 3.5
+    },
+    {
+     "w": "at",
+     "at": 3.975
+    },
+    {
+     "w": "the",
+     "at": 4.062
+    },
+    {
+     "w": "Euros",
+     "at": 4.162
+    },
+    {
+     "w": "Early",
+     "at": 5.188
+    },
+    {
+     "w": "on",
+     "at": 5.55
+    },
+    {
+     "w": "Marc",
+     "at": 5.95
+    },
+    {
+     "w": "Gu\u00e9hi",
+     "at": 6.225
+    },
+    {
+     "w": "wins",
+     "at": 6.6
+    },
+    {
+     "w": "a",
+     "at": 6.838
+    },
+    {
+     "w": "tackle",
+     "at": 6.912
+    },
+    {
+     "w": "against",
+     "at": 7.375
+    },
+    {
+     "w": "the",
+     "at": 7.737
+    },
+    {
+     "w": "big",
+     "at": 7.862
+    },
+    {
+     "w": "striker",
+     "at": 8.213
+    },
+    {
+     "w": "Du\u0161an",
+     "at": 8.688
+    },
+    {
+     "w": "Vlahovi\u0107",
+     "at": 9.1
+    },
+    {
+     "w": "Moments",
+     "at": 10.225
+    },
+    {
+     "w": "later",
+     "at": 10.688
+    },
+    {
+     "w": "Vlahovi\u0107",
+     "at": 11.162
+    },
+    {
+     "w": "shoots",
+     "at": 11.775
+    },
+    {
+     "w": "blocked",
+     "at": 12.613
+    },
+    {
+     "w": "by",
+     "at": 13.025
+    },
+    {
+     "w": "Gu\u00e9hi",
+     "at": 13.225
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. Gu\u00e9hi reads it early. He steps across into the shot, stays on his feet and keeps his body facing the ball. Bang, it hits him and bounces away!",
+   "src": "/plays/narration/guehi-signature/2.m4a",
+   "seconds": 11.9,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.137
+    },
+    {
+     "w": "Gu\u00e9hi",
+     "at": 2.1
+    },
+    {
+     "w": "reads",
+     "at": 2.462
+    },
+    {
+     "w": "it",
+     "at": 2.775
+    },
+    {
+     "w": "early",
+     "at": 2.875
+    },
+    {
+     "w": "He",
+     "at": 3.75
+    },
+    {
+     "w": "steps",
+     "at": 3.875
+    },
+    {
+     "w": "across",
+     "at": 4.175
+    },
+    {
+     "w": "into",
+     "at": 4.612
+    },
+    {
+     "w": "the",
+     "at": 4.787
+    },
+    {
+     "w": "shot",
+     "at": 4.912
+    },
+    {
+     "w": "stays",
+     "at": 5.487
+    },
+    {
+     "w": "on",
+     "at": 5.838
+    },
+    {
+     "w": "his",
+     "at": 5.938
+    },
+    {
+     "w": "feet",
+     "at": 6.138
+    },
+    {
+     "w": "and",
+     "at": 6.425
+    },
+    {
+     "w": "keeps",
+     "at": 6.55
+    },
+    {
+     "w": "his",
+     "at": 6.812
+    },
+    {
+     "w": "body",
+     "at": 6.975
+    },
+    {
+     "w": "facing",
+     "at": 7.362
+    },
+    {
+     "w": "the",
+     "at": 7.737
+    },
+    {
+     "w": "ball",
+     "at": 7.825
+    },
+    {
+     "w": "Bang",
+     "at": 8.725
+    },
+    {
+     "w": "it",
+     "at": 9.325
+    },
+    {
+     "w": "hits",
+     "at": 9.45
+    },
+    {
+     "w": "him",
+     "at": 9.688
+    },
+    {
+     "w": "and",
+     "at": 9.875
+    },
+    {
+     "w": "bounces",
+     "at": 10.0
+    },
+    {
+     "w": "away",
+     "at": 10.475
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn. When a striker shoots, don't dive in. Stay on your feet, get in the way, and block the shot with your body facing the ball!",
+   "src": "/plays/narration/guehi-signature/3.m4a",
+   "seconds": 8.9,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.512
+    },
+    {
+     "w": "When",
+     "at": 1.3
+    },
+    {
+     "w": "a",
+     "at": 1.438
+    },
+    {
+     "w": "striker",
+     "at": 1.5
+    },
+    {
+     "w": "shoots",
+     "at": 1.975
+    },
+    {
+     "w": "don't",
+     "at": 2.5
+    },
+    {
+     "w": "dive",
+     "at": 2.75
+    },
+    {
+     "w": "in",
+     "at": 3.038
+    },
+    {
+     "w": "Stay",
+     "at": 3.825
+    },
+    {
+     "w": "on",
+     "at": 4.112
+    },
+    {
+     "w": "your",
+     "at": 4.213
+    },
+    {
+     "w": "feet",
+     "at": 4.375
+    },
+    {
+     "w": "get",
+     "at": 4.8
+    },
+    {
+     "w": "in",
+     "at": 4.938
+    },
+    {
+     "w": "the",
+     "at": 5.013
+    },
+    {
+     "w": "way",
+     "at": 5.1
+    },
+    {
+     "w": "and",
+     "at": 5.5
+    },
+    {
+     "w": "block",
+     "at": 5.625
+    },
+    {
+     "w": "the",
+     "at": 5.925
+    },
+    {
+     "w": "shot",
+     "at": 6.075
+    },
+    {
+     "w": "with",
+     "at": 6.388
+    },
+    {
+     "w": "your",
+     "at": 6.487
+    },
+    {
+     "w": "body",
+     "at": 6.6
+    },
+    {
+     "w": "facing",
+     "at": 6.987
+    },
+    {
+     "w": "the",
+     "at": 7.388
+    },
+    {
+     "w": "ball",
+     "at": 7.475
+    }
+   ]
+  }
+ ]
+}

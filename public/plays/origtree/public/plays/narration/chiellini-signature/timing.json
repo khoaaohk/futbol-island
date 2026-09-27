@@ -1,0 +1,370 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The final",
+   "text": "Wembley, the Euro 2020 final, extra time. Henderson finds Raheem Sterling on the left. Sterling drives into the box and tries to pass to Kane\u2026 But Giorgio Chiellini is there. Blocked! Corner.",
+   "src": "/plays/narration/chiellini-signature/1.m4a",
+   "seconds": 14.6,
+   "words": [
+    {
+     "w": "Wembley",
+     "at": 0.4
+    },
+    {
+     "w": "the",
+     "at": 0.925
+    },
+    {
+     "w": "Euro",
+     "at": 1.025
+    },
+    {
+     "w": "2020",
+     "at": 1.35
+    },
+    {
+     "w": "final",
+     "at": 1.962
+    },
+    {
+     "w": "extra",
+     "at": 2.525
+    },
+    {
+     "w": "time",
+     "at": 2.925
+    },
+    {
+     "w": "Henderson",
+     "at": 3.862
+    },
+    {
+     "w": "finds",
+     "at": 4.45
+    },
+    {
+     "w": "Raheem",
+     "at": 4.775
+    },
+    {
+     "w": "Sterling",
+     "at": 5.325
+    },
+    {
+     "w": "on",
+     "at": 5.787
+    },
+    {
+     "w": "the",
+     "at": 5.888
+    },
+    {
+     "w": "left",
+     "at": 5.975
+    },
+    {
+     "w": "Sterling",
+     "at": 6.875
+    },
+    {
+     "w": "drives",
+     "at": 7.375
+    },
+    {
+     "w": "into",
+     "at": 7.787
+    },
+    {
+     "w": "the",
+     "at": 7.963
+    },
+    {
+     "w": "box",
+     "at": 8.05
+    },
+    {
+     "w": "and",
+     "at": 8.488
+    },
+    {
+     "w": "tries",
+     "at": 8.6
+    },
+    {
+     "w": "to",
+     "at": 8.925
+    },
+    {
+     "w": "pass",
+     "at": 9.025
+    },
+    {
+     "w": "to",
+     "at": 9.325
+    },
+    {
+     "w": "Kane",
+     "at": 9.463
+    },
+    {
+     "w": "But",
+     "at": 10.175
+    },
+    {
+     "w": "Giorgio",
+     "at": 10.338
+    },
+    {
+     "w": "Chiellini",
+     "at": 10.75
+    },
+    {
+     "w": "is",
+     "at": 11.3
+    },
+    {
+     "w": "there",
+     "at": 11.45
+    },
+    {
+     "w": "Blocked",
+     "at": 12.3
+    },
+    {
+     "w": "Corner",
+     "at": 13.113
+    }
+   ]
+  },
+  {
+   "label": "The replay",
+   "text": "Watch again, slowly. Chiellini covers the middle, right where the pass must go. He stretches, and blocks it.",
+   "src": "/plays/narration/chiellini-signature/2.m4a",
+   "seconds": 7.7,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.137
+    },
+    {
+     "w": "Chiellini",
+     "at": 2.163
+    },
+    {
+     "w": "covers",
+     "at": 2.625
+    },
+    {
+     "w": "the",
+     "at": 3.025
+    },
+    {
+     "w": "middle",
+     "at": 3.125
+    },
+    {
+     "w": "right",
+     "at": 3.538
+    },
+    {
+     "w": "where",
+     "at": 3.788
+    },
+    {
+     "w": "the",
+     "at": 3.913
+    },
+    {
+     "w": "pass",
+     "at": 4.013
+    },
+    {
+     "w": "must",
+     "at": 4.425
+    },
+    {
+     "w": "go",
+     "at": 4.7
+    },
+    {
+     "w": "He",
+     "at": 5.35
+    },
+    {
+     "w": "stretches",
+     "at": 5.5
+    },
+    {
+     "w": "and",
+     "at": 6.062
+    },
+    {
+     "w": "blocks",
+     "at": 6.175
+    },
+    {
+     "w": "it",
+     "at": 6.612
+    }
+   ]
+  },
+  {
+   "label": "Behind the goal",
+   "text": "From behind the goal: off his boot, and out. England\u2019s big chance is gone.",
+   "src": "/plays/narration/chiellini-signature/3.m4a",
+   "seconds": 5.8,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.375
+    },
+    {
+     "w": "behind",
+     "at": 0.512
+    },
+    {
+     "w": "the",
+     "at": 0.887
+    },
+    {
+     "w": "goal",
+     "at": 0.975
+    },
+    {
+     "w": "off",
+     "at": 1.663
+    },
+    {
+     "w": "his",
+     "at": 1.863
+    },
+    {
+     "w": "boot",
+     "at": 2.038
+    },
+    {
+     "w": "and",
+     "at": 2.337
+    },
+    {
+     "w": "out",
+     "at": 2.45
+    },
+    {
+     "w": "England\u2019s",
+     "at": 3.112
+    },
+    {
+     "w": "big",
+     "at": 3.638
+    },
+    {
+     "w": "chance",
+     "at": 3.888
+    },
+    {
+     "w": "is",
+     "at": 4.237
+    },
+    {
+     "w": "gone",
+     "at": 4.375
+    }
+   ]
+  },
+  {
+   "label": "The lesson",
+   "text": "That\u2019s teamwork. Chiellini was always talking to his partner, Bonucci. Defenders: talk to your partner, and cover each other!",
+   "src": "/plays/narration/chiellini-signature/4.m4a",
+   "seconds": 8.8,
+   "words": [
+    {
+     "w": "That\u2019s",
+     "at": 0.35
+    },
+    {
+     "w": "teamwork",
+     "at": 0.65
+    },
+    {
+     "w": "Chiellini",
+     "at": 1.613
+    },
+    {
+     "w": "was",
+     "at": 2.125
+    },
+    {
+     "w": "always",
+     "at": 2.275
+    },
+    {
+     "w": "talking",
+     "at": 2.65
+    },
+    {
+     "w": "to",
+     "at": 3.05
+    },
+    {
+     "w": "his",
+     "at": 3.138
+    },
+    {
+     "w": "partner",
+     "at": 3.3
+    },
+    {
+     "w": "Bonucci",
+     "at": 3.775
+    },
+    {
+     "w": "Defenders",
+     "at": 4.787
+    },
+    {
+     "w": "talk",
+     "at": 5.812
+    },
+    {
+     "w": "to",
+     "at": 6.1
+    },
+    {
+     "w": "your",
+     "at": 6.188
+    },
+    {
+     "w": "partner",
+     "at": 6.3
+    },
+    {
+     "w": "and",
+     "at": 6.775
+    },
+    {
+     "w": "cover",
+     "at": 6.912
+    },
+    {
+     "w": "each",
+     "at": 7.237
+    },
+    {
+     "w": "other",
+     "at": 7.438
+    }
+   ]
+  }
+ ]
+}

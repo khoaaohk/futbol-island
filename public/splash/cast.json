@@ -1,0 +1,42 @@
+{
+ "hero-kick": {
+  "width": 707,
+  "height": 678,
+  "sm": [
+   354,
+   339
+  ]
+ },
+ "hero-cheer": {
+  "width": 530,
+  "height": 812,
+  "sm": [
+   265,
+   406
+  ]
+ },
+ "keeper": {
+  "width": 886,
+  "height": 607,
+  "sm": [
+   444,
+   304
+  ]
+ },
+ "cat": {
+  "width": 649,
+  "height": 603,
+  "sm": [
+   325,
+   302
+  ]
+ },
+ "rival": {
+  "width": 430,
+  "height": 661,
+  "sm": [
+   215,
+   331
+  ]
+ }
+}

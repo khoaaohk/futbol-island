@@ -1,0 +1,378 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The winner, live",
+   "text": "Goodison Park, November 2025. Everton and Manchester City are level at one-all. Leila Ouahabi swings in a cross... Bunny Shaw rises above her defender and heads it home!",
+   "src": "/plays/narration/shaw-signature/1.m4a",
+   "seconds": 13.1,
+   "words": [
+    {
+     "w": "Goodison",
+     "at": 0.35
+    },
+    {
+     "w": "Park",
+     "at": 0.812
+    },
+    {
+     "w": "November",
+     "at": 1.45
+    },
+    {
+     "w": "2025",
+     "at": 1.925
+    },
+    {
+     "w": "Everton",
+     "at": 3.438
+    },
+    {
+     "w": "and",
+     "at": 3.925
+    },
+    {
+     "w": "Manchester",
+     "at": 4.05
+    },
+    {
+     "w": "City",
+     "at": 4.662
+    },
+    {
+     "w": "are",
+     "at": 5.0
+    },
+    {
+     "w": "level",
+     "at": 5.15
+    },
+    {
+     "w": "at",
+     "at": 5.475
+    },
+    {
+     "w": "one-all",
+     "at": 5.575
+    },
+    {
+     "w": "Leila",
+     "at": 6.525
+    },
+    {
+     "w": "Ouahabi",
+     "at": 6.85
+    },
+    {
+     "w": "swings",
+     "at": 7.438
+    },
+    {
+     "w": "in",
+     "at": 7.963
+    },
+    {
+     "w": "a",
+     "at": 8.037
+    },
+    {
+     "w": "cross",
+     "at": 8.1
+    },
+    {
+     "w": "Bunny",
+     "at": 9.088
+    },
+    {
+     "w": "Shaw",
+     "at": 9.475
+    },
+    {
+     "w": "rises",
+     "at": 9.812
+    },
+    {
+     "w": "above",
+     "at": 10.325
+    },
+    {
+     "w": "her",
+     "at": 10.588
+    },
+    {
+     "w": "defender",
+     "at": 10.7
+    },
+    {
+     "w": "and",
+     "at": 11.225
+    },
+    {
+     "w": "heads",
+     "at": 11.35
+    },
+    {
+     "w": "it",
+     "at": 11.588
+    },
+    {
+     "w": "home",
+     "at": 11.675
+    }
+   ]
+  },
+  {
+   "label": "Beside her defender",
+   "text": "Watch it again. Bunny waits for the cross beside her defender, then springs up, higher than Rion Ishikawa.",
+   "src": "/plays/narration/shaw-signature/2.m4a",
+   "seconds": 7.9,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "Bunny",
+     "at": 1.65
+    },
+    {
+     "w": "waits",
+     "at": 2.025
+    },
+    {
+     "w": "for",
+     "at": 2.3
+    },
+    {
+     "w": "the",
+     "at": 2.413
+    },
+    {
+     "w": "cross",
+     "at": 2.5
+    },
+    {
+     "w": "beside",
+     "at": 2.9
+    },
+    {
+     "w": "her",
+     "at": 3.288
+    },
+    {
+     "w": "defender",
+     "at": 3.388
+    },
+    {
+     "w": "then",
+     "at": 4.175
+    },
+    {
+     "w": "springs",
+     "at": 4.388
+    },
+    {
+     "w": "up",
+     "at": 4.825
+    },
+    {
+     "w": "higher",
+     "at": 5.338
+    },
+    {
+     "w": "than",
+     "at": 5.725
+    },
+    {
+     "w": "Rion",
+     "at": 5.9
+    },
+    {
+     "w": "Ishikawa",
+     "at": 6.225
+    }
+   ]
+  },
+  {
+   "label": "Crash it home",
+   "text": "Her forehead crashes it past the keeper. Two-one! Manchester City go top of the league.",
+   "src": "/plays/narration/shaw-signature/3.m4a",
+   "seconds": 6.6,
+   "words": [
+    {
+     "w": "Her",
+     "at": 0.35
+    },
+    {
+     "w": "forehead",
+     "at": 0.512
+    },
+    {
+     "w": "crashes",
+     "at": 0.95
+    },
+    {
+     "w": "it",
+     "at": 1.4
+    },
+    {
+     "w": "past",
+     "at": 1.5
+    },
+    {
+     "w": "the",
+     "at": 1.812
+    },
+    {
+     "w": "keeper",
+     "at": 1.9
+    },
+    {
+     "w": "Two-one",
+     "at": 2.775
+    },
+    {
+     "w": "Manchester",
+     "at": 3.712
+    },
+    {
+     "w": "City",
+     "at": 4.338
+    },
+    {
+     "w": "go",
+     "at": 4.6
+    },
+    {
+     "w": "top",
+     "at": 4.775
+    },
+    {
+     "w": "of",
+     "at": 5.013
+    },
+    {
+     "w": "the",
+     "at": 5.088
+    },
+    {
+     "w": "league",
+     "at": 5.175
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "The secret? Use your body to hold off the defender. Then attack the ball with your forehead, eyes open, and head it with power.",
+   "src": "/plays/narration/shaw-signature/4.m4a",
+   "seconds": 8.8,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "secret",
+     "at": 0.463
+    },
+    {
+     "w": "Use",
+     "at": 1.262
+    },
+    {
+     "w": "your",
+     "at": 1.512
+    },
+    {
+     "w": "body",
+     "at": 1.625
+    },
+    {
+     "w": "to",
+     "at": 1.975
+    },
+    {
+     "w": "hold",
+     "at": 2.075
+    },
+    {
+     "w": "off",
+     "at": 2.312
+    },
+    {
+     "w": "the",
+     "at": 2.525
+    },
+    {
+     "w": "defender",
+     "at": 2.625
+    },
+    {
+     "w": "Then",
+     "at": 3.688
+    },
+    {
+     "w": "attack",
+     "at": 3.925
+    },
+    {
+     "w": "the",
+     "at": 4.3
+    },
+    {
+     "w": "ball",
+     "at": 4.4
+    },
+    {
+     "w": "with",
+     "at": 4.688
+    },
+    {
+     "w": "your",
+     "at": 4.812
+    },
+    {
+     "w": "forehead",
+     "at": 4.963
+    },
+    {
+     "w": "eyes",
+     "at": 5.688
+    },
+    {
+     "w": "open",
+     "at": 6.025
+    },
+    {
+     "w": "and",
+     "at": 6.7
+    },
+    {
+     "w": "head",
+     "at": 6.838
+    },
+    {
+     "w": "it",
+     "at": 7.037
+    },
+    {
+     "w": "with",
+     "at": 7.112
+    },
+    {
+     "w": "power",
+     "at": 7.287
+    }
+   ]
+  }
+ ]
+}

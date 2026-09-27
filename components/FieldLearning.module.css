@@ -109,3 +109,23 @@
 /* Visual quiz questions (VisualQuestion.tsx) carry their own mini pitch, so the card may grow; it still scrolls inside. */
 .bottom[data-quiz=true] .quizUnified[data-visual]{max-height:min(calc(100dvh - 200px),720px)}
 @media(max-width:600px),(pointer:coarse){.bottom[data-quiz=true] .quizUnified[data-visual]{max-height:calc(100dvh - 170px);padding:12px 14px}}
+/* While a question waits for a tap on the pitch, the card lets taps through to the 3D view (on portrait phones a marked
+   route can sit under it); its own controls stay pressable. tests/e2e/paths.spec.ts checks the routes are tappable. */
+.playback .quizUnified[data-pitch-pick]{pointer-events:none}
+.playback .quizUnified[data-pitch-pick] :is(button,a,input,select,textarea,[role=button],[tabindex]){pointer-events:auto}
+
+/* End-of-play choices (Quiz yourself / Watch again) are the shared gold primary pill (docs/ui/BUTTONS.md), matching
+   the textured round transport controls beside them instead of a flat #f4cc7c face with a thin rim. */
+.bottom .endActions>button{min-height:var(--btn-height);padding:8px 18px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius);background:var(--btn-gold) var(--btn-grain) center/128px 128px;color:var(--btn-ink);font:700 14px/1.2 var(--btn-font);box-shadow:var(--btn-shadow-gold);transition:translate .16s,box-shadow .16s;background-blend-mode:soft-light}
+.bottom .endActions>button:hover{background:var(--btn-gold) var(--btn-grain) center/128px 128px;transform:none;background-blend-mode:soft-light}
+.bottom .endActions>button:active{translate:0 var(--btn-press);box-shadow:var(--btn-shadow-gold-pressed)}
+@media(prefers-reduced-motion:reduce){.bottom .endActions>button{transition:none}}
+/* Error retry in the plays picker: the shared green primary pill. */
+.retry{min-height:var(--btn-height);padding:8px 18px;border:0;border-radius:var(--btn-radius);background:var(--btn-green);color:var(--btn-ink-on-dark);font:700 14px/1.2 var(--btn-font);box-shadow:0 4px 0 var(--btn-green-edge)}
+.retry:active{translate:0 2px;box-shadow:0 2px 0 var(--btn-green-edge)}
+/* Quiz feedback actions (Next question / Try again / Show me): green primary pill and mint secondary pill. */
+.bottom .quizActions button{border-radius:var(--btn-radius);font-family:var(--btn-font);transition:translate .16s,box-shadow .16s}
+.bottom .quizActions .quizPrimary{background:var(--btn-green);color:var(--btn-ink-on-dark);border:0;box-shadow:0 4px 0 var(--btn-green-edge)}
+.bottom .quizActions .quizSecondary{background:var(--btn-mint);color:var(--btn-ink);border:0;box-shadow:0 4px 0 var(--btn-mint-edge)}
+.bottom .quizActions .quizPrimary:active{translate:0 2px;box-shadow:0 2px 0 var(--btn-green-edge)}
+.bottom .quizActions .quizSecondary:active{translate:0 2px;box-shadow:0 2px 0 var(--btn-mint-edge)}

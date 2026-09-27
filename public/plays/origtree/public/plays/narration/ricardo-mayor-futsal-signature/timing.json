@@ -1,0 +1,314 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: the 2026 final",
+   "text": "The 2026 European final. Spain beat Portugal, five goals to three, and become champions of Europe! Ricardo Mayor, number three, celebrates with his team.",
+   "src": "/plays/narration/ricardo-mayor-futsal-signature/1.m4a",
+   "seconds": 12.0,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "2026",
+     "at": 0.425
+    },
+    {
+     "w": "European",
+     "at": 1.35
+    },
+    {
+     "w": "final",
+     "at": 1.887
+    },
+    {
+     "w": "Spain",
+     "at": 2.888
+    },
+    {
+     "w": "beat",
+     "at": 3.325
+    },
+    {
+     "w": "Portugal",
+     "at": 3.575
+    },
+    {
+     "w": "five",
+     "at": 4.412
+    },
+    {
+     "w": "goals",
+     "at": 4.775
+    },
+    {
+     "w": "to",
+     "at": 5.1
+    },
+    {
+     "w": "three",
+     "at": 5.237
+    },
+    {
+     "w": "and",
+     "at": 5.725
+    },
+    {
+     "w": "become",
+     "at": 5.838
+    },
+    {
+     "w": "champions",
+     "at": 6.188
+    },
+    {
+     "w": "of",
+     "at": 6.737
+    },
+    {
+     "w": "Europe",
+     "at": 6.825
+    },
+    {
+     "w": "Ricardo",
+     "at": 7.737
+    },
+    {
+     "w": "Mayor",
+     "at": 8.25
+    },
+    {
+     "w": "number",
+     "at": 8.85
+    },
+    {
+     "w": "three",
+     "at": 9.137
+    },
+    {
+     "w": "celebrates",
+     "at": 9.725
+    },
+    {
+     "w": "with",
+     "at": 10.338
+    },
+    {
+     "w": "his",
+     "at": 10.438
+    },
+    {
+     "w": "team",
+     "at": 10.613
+    }
+   ]
+  },
+  {
+   "label": "How he does it",
+   "text": "He plays at the back, and wins the ball. Watch how he does it: he reads the pass, steps in front, and cuts it out. Then he looks up, and passes forward fast!",
+   "src": "/plays/narration/ricardo-mayor-futsal-signature/2.m4a",
+   "seconds": 10.7,
+   "words": [
+    {
+     "w": "He",
+     "at": 0.325
+    },
+    {
+     "w": "plays",
+     "at": 0.45
+    },
+    {
+     "w": "at",
+     "at": 0.738
+    },
+    {
+     "w": "the",
+     "at": 0.812
+    },
+    {
+     "w": "back",
+     "at": 0.9
+    },
+    {
+     "w": "and",
+     "at": 1.262
+    },
+    {
+     "w": "wins",
+     "at": 1.375
+    },
+    {
+     "w": "the",
+     "at": 1.675
+    },
+    {
+     "w": "ball",
+     "at": 1.775
+    },
+    {
+     "w": "Watch",
+     "at": 2.638
+    },
+    {
+     "w": "how",
+     "at": 2.975
+    },
+    {
+     "w": "he",
+     "at": 3.138
+    },
+    {
+     "w": "does",
+     "at": 3.25
+    },
+    {
+     "w": "it",
+     "at": 3.487
+    },
+    {
+     "w": "he",
+     "at": 3.975
+    },
+    {
+     "w": "reads",
+     "at": 4.138
+    },
+    {
+     "w": "the",
+     "at": 4.5
+    },
+    {
+     "w": "pass",
+     "at": 4.612
+    },
+    {
+     "w": "steps",
+     "at": 5.237
+    },
+    {
+     "w": "in",
+     "at": 5.575
+    },
+    {
+     "w": "front",
+     "at": 5.737
+    },
+    {
+     "w": "and",
+     "at": 6.15
+    },
+    {
+     "w": "cuts",
+     "at": 6.287
+    },
+    {
+     "w": "it",
+     "at": 6.562
+    },
+    {
+     "w": "out",
+     "at": 6.65
+    },
+    {
+     "w": "Then",
+     "at": 7.463
+    },
+    {
+     "w": "he",
+     "at": 7.625
+    },
+    {
+     "w": "looks",
+     "at": 7.75
+    },
+    {
+     "w": "up",
+     "at": 8.0
+    },
+    {
+     "w": "and",
+     "at": 8.262
+    },
+    {
+     "w": "passes",
+     "at": 8.387
+    },
+    {
+     "w": "forward",
+     "at": 8.875
+    },
+    {
+     "w": "fast",
+     "at": 9.275
+    }
+   ]
+  },
+  {
+   "label": "Win it, go!",
+   "text": "So remember: after you win the ball, pass forward fast, before they get back!",
+   "src": "/plays/narration/ricardo-mayor-futsal-signature/3.m4a",
+   "seconds": 5.7,
+   "words": [
+    {
+     "w": "So",
+     "at": 0.4
+    },
+    {
+     "w": "remember",
+     "at": 0.575
+    },
+    {
+     "w": "after",
+     "at": 1.488
+    },
+    {
+     "w": "you",
+     "at": 1.8
+    },
+    {
+     "w": "win",
+     "at": 1.925
+    },
+    {
+     "w": "the",
+     "at": 2.087
+    },
+    {
+     "w": "ball",
+     "at": 2.175
+    },
+    {
+     "w": "pass",
+     "at": 2.625
+    },
+    {
+     "w": "forward",
+     "at": 2.975
+    },
+    {
+     "w": "fast",
+     "at": 3.325
+    },
+    {
+     "w": "before",
+     "at": 3.812
+    },
+    {
+     "w": "they",
+     "at": 4.088
+    },
+    {
+     "w": "get",
+     "at": 4.225
+    },
+    {
+     "w": "back",
+     "at": 4.4
+    }
+   ]
+  }
+ ]
+}

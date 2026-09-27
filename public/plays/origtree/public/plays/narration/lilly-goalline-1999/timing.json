@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The corner, live",
+   "text": "Pasadena, 1999. The World Cup final, USA against China. Extra time, and no goals. China take a corner... a header! Cleared off the line by Kristine Lilly!",
+   "src": "/plays/narration/lilly-goalline-1999/1.m4a",
+   "seconds": 12.7,
+   "words": [
+    {
+     "w": "Pasadena",
+     "at": 0.325
+    },
+    {
+     "w": "1999",
+     "at": 0.975
+    },
+    {
+     "w": "The",
+     "at": 2.525
+    },
+    {
+     "w": "World",
+     "at": 2.625
+    },
+    {
+     "w": "Cup",
+     "at": 2.925
+    },
+    {
+     "w": "final",
+     "at": 3.15
+    },
+    {
+     "w": "USA",
+     "at": 3.612
+    },
+    {
+     "w": "against",
+     "at": 4.225
+    },
+    {
+     "w": "China",
+     "at": 4.638
+    },
+    {
+     "w": "Extra",
+     "at": 5.513
+    },
+    {
+     "w": "time",
+     "at": 5.925
+    },
+    {
+     "w": "and",
+     "at": 6.338
+    },
+    {
+     "w": "no",
+     "at": 6.45
+    },
+    {
+     "w": "goals",
+     "at": 6.625
+    },
+    {
+     "w": "China",
+     "at": 7.4
+    },
+    {
+     "w": "take",
+     "at": 7.775
+    },
+    {
+     "w": "a",
+     "at": 7.963
+    },
+    {
+     "w": "corner",
+     "at": 8.025
+    },
+    {
+     "w": "a",
+     "at": 8.875
+    },
+    {
+     "w": "header",
+     "at": 8.975
+    },
+    {
+     "w": "Cleared",
+     "at": 9.713
+    },
+    {
+     "w": "off",
+     "at": 10.012
+    },
+    {
+     "w": "the",
+     "at": 10.2
+    },
+    {
+     "w": "line",
+     "at": 10.325
+    },
+    {
+     "w": "by",
+     "at": 10.675
+    },
+    {
+     "w": "Kristine",
+     "at": 10.85
+    },
+    {
+     "w": "Lilly",
+     "at": 11.325
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. Lilly guards the post. As the corner comes in, she steps across to make the goal smaller.",
+   "src": "/plays/narration/lilly-goalline-1999/2.m4a",
+   "seconds": 8.2,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.163
+    },
+    {
+     "w": "Lilly",
+     "at": 2.125
+    },
+    {
+     "w": "guards",
+     "at": 2.425
+    },
+    {
+     "w": "the",
+     "at": 2.75
+    },
+    {
+     "w": "post",
+     "at": 2.85
+    },
+    {
+     "w": "As",
+     "at": 3.725
+    },
+    {
+     "w": "the",
+     "at": 3.913
+    },
+    {
+     "w": "corner",
+     "at": 4.0
+    },
+    {
+     "w": "comes",
+     "at": 4.4
+    },
+    {
+     "w": "in",
+     "at": 4.725
+    },
+    {
+     "w": "she",
+     "at": 5.075
+    },
+    {
+     "w": "steps",
+     "at": 5.225
+    },
+    {
+     "w": "across",
+     "at": 5.513
+    },
+    {
+     "w": "to",
+     "at": 5.95
+    },
+    {
+     "w": "make",
+     "at": 6.037
+    },
+    {
+     "w": "the",
+     "at": 6.237
+    },
+    {
+     "w": "goal",
+     "at": 6.325
+    },
+    {
+     "w": "smaller",
+     "at": 6.625
+    }
+   ]
+  },
+  {
+   "label": "Eyes on the ball",
+   "text": "Fan Yunjie\u2019s header flies past the keeper. Eyes on the ball, Lilly heads it clear! Later, Brandi Chastain\u2019s penalty won the Cup.",
+   "src": "/plays/narration/lilly-goalline-1999/3.m4a",
+   "seconds": 9.4,
+   "words": [
+    {
+     "w": "Fan",
+     "at": 0.375
+    },
+    {
+     "w": "Yunjie\u2019s",
+     "at": 0.65
+    },
+    {
+     "w": "header",
+     "at": 1.15
+    },
+    {
+     "w": "flies",
+     "at": 1.462
+    },
+    {
+     "w": "past",
+     "at": 1.875
+    },
+    {
+     "w": "the",
+     "at": 2.188
+    },
+    {
+     "w": "keeper",
+     "at": 2.275
+    },
+    {
+     "w": "Eyes",
+     "at": 3.175
+    },
+    {
+     "w": "on",
+     "at": 3.462
+    },
+    {
+     "w": "the",
+     "at": 3.562
+    },
+    {
+     "w": "ball",
+     "at": 3.65
+    },
+    {
+     "w": "Lilly",
+     "at": 4.225
+    },
+    {
+     "w": "heads",
+     "at": 4.5
+    },
+    {
+     "w": "it",
+     "at": 4.737
+    },
+    {
+     "w": "clear",
+     "at": 4.825
+    },
+    {
+     "w": "Later",
+     "at": 5.725
+    },
+    {
+     "w": "Brandi",
+     "at": 6.35
+    },
+    {
+     "w": "Chastain\u2019s",
+     "at": 6.787
+    },
+    {
+     "w": "penalty",
+     "at": 7.4
+    },
+    {
+     "w": "won",
+     "at": 7.9
+    },
+    {
+     "w": "the",
+     "at": 8.062
+    },
+    {
+     "w": "Cup",
+     "at": 8.15
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "At corners, guard the post. Stay alert and keep your eyes on the ball: one header can save the game!",
+   "src": "/plays/narration/lilly-goalline-1999/4.m4a",
+   "seconds": 7.3,
+   "words": [
+    {
+     "w": "At",
+     "at": 0.35
+    },
+    {
+     "w": "corners",
+     "at": 0.5
+    },
+    {
+     "w": "guard",
+     "at": 1.125
+    },
+    {
+     "w": "the",
+     "at": 1.413
+    },
+    {
+     "w": "post",
+     "at": 1.5
+    },
+    {
+     "w": "Stay",
+     "at": 2.425
+    },
+    {
+     "w": "alert",
+     "at": 2.775
+    },
+    {
+     "w": "and",
+     "at": 3.163
+    },
+    {
+     "w": "keep",
+     "at": 3.275
+    },
+    {
+     "w": "your",
+     "at": 3.487
+    },
+    {
+     "w": "eyes",
+     "at": 3.638
+    },
+    {
+     "w": "on",
+     "at": 3.938
+    },
+    {
+     "w": "the",
+     "at": 4.037
+    },
+    {
+     "w": "ball",
+     "at": 4.125
+    },
+    {
+     "w": "one",
+     "at": 4.787
+    },
+    {
+     "w": "header",
+     "at": 5.05
+    },
+    {
+     "w": "can",
+     "at": 5.35
+    },
+    {
+     "w": "save",
+     "at": 5.537
+    },
+    {
+     "w": "the",
+     "at": 5.838
+    },
+    {
+     "w": "game",
+     "at": 5.925
+    }
+   ]
+  }
+ ]
+}

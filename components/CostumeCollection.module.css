@@ -10,3 +10,12 @@
 
 /* Costume collection follows the island journey card system. */
 .collection,.scroll{background:transparent}.collection{gap:20px}.toolbar{background:#fff2d3;border-radius:22px;padding:16px;gap:16px}.toolbar button,.back{background:#beded1;border:0;border-radius:16px;font-weight:700}.scroll{contain:none}.scroll>.identityNote{background:#fff2d3;padding:16px 20px;border-radius:22px;line-height:1.6}.grid{gap:20px;padding-bottom:8px}.card{border:0;border-radius:28px 38px 24px 24px;background:#fff2d3;box-shadow:0 6px 0 #173e3740}.picture{background:#e8d5ad url('/stories/films/assets/entry-grain.png');background-blend-mode:soft-light;border-bottom:0;height:190px}.cardBody{padding:18px;gap:10px}.card h3{font:400 24px/1.2 IslandBrush,sans-serif}.primary,.secondary{border-radius:18px}.secondary{background:#beded1;border:0}.primary:disabled{opacity:.65}.card[data-equipped=true]{outline:3px solid #f9d665;outline-offset:-3px}.story{background:transparent}.storyTop,.history,.quiz{background:#fff2d3;border:0;border-radius:28px;padding:22px}.storyTop .hero{border-radius:24px}.intro h3{font-family:IslandBrush,sans-serif;font-weight:400}.collection button{transition:transform .18s,box-shadow .18s}@media(hover:hover){.collection button:not(:disabled):hover{transform:translateY(-2px)}}.collection button:not(:disabled):active{transform:translateY(2px)}@media(max-width:600px){.grid{gap:12px}.picture{height:150px}.cardBody{padding:12px}.card h3{font-size:20px}.storyTop{grid-template-columns:1fr}.storyTop,.history,.quiz{padding:18px}}@media(prefers-reduced-motion:reduce){.collection button{transition:none;transform:none!important}}
+
+/* Shared families (docs/ui/BUTTONS.md): Equip is the green primary pill, story/explore and Remove costume are the mint
+   secondary pill. */
+.primary,.secondary,.toolbar button,.back{border-radius:var(--btn-radius);font-family:var(--btn-font)}
+.primary{background:var(--btn-green);color:var(--btn-ink-on-dark);box-shadow:0 4px 0 var(--btn-green-edge)}
+.card[data-equipped=true] .primary{box-shadow:none}
+.secondary,.toolbar button,.back{background:var(--btn-mint);color:var(--btn-ink);box-shadow:0 4px 0 var(--btn-mint-edge)}
+.primary:not(:disabled):active,.secondary:active,.toolbar button:active,.back:active{translate:0 2px;box-shadow:0 2px 0 var(--btn-green-edge)}
+.secondary:active,.toolbar button:active,.back:active{box-shadow:0 2px 0 var(--btn-mint-edge)}

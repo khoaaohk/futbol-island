@@ -1,0 +1,47 @@
+{
+ "about": "Exceptions for tests/device-guards.cjs. Match: same check + file, and key (the element/selector printed in the failure; * is a wildcard). bug:true = a real violation waiting for a fix (listed as a known bug on every run; delete the entry once fixed). Without bug, the exception is intentional and the reason says why. Baseline 2026-09-25; the 46 known bugs from that baseline were fixed the same night.",
+ "entries": [
+  {
+   "check": 1,
+   "file": "components/SplashLab.tsx",
+   "key": "div",
+   "reason": "Dev-only /splash-lab render page driven by scripts/render-splash-characters.cjs; no press interaction."
+  },
+  {
+   "check": 1,
+   "file": "components/CardFilmPlayer.tsx",
+   "key": "canvas",
+   "reason": "Decorative film on the back of a card (aria-hidden); no press interaction."
+  },
+  {
+   "check": 1,
+   "file": "components/PlayerPortrait.tsx",
+   "key": "canvas",
+   "reason": "Static portrait canvas; no press interaction."
+  },
+  {
+   "check": 1,
+   "file": "components/QuestLearningPath.tsx",
+   "key": "section.learningPath.journey*",
+   "reason": "Swipe-between-chapters list of readable lesson text; a long press is not an input, and text stays selectable."
+  },
+  {
+   "check": 1,
+   "file": "components/Pitch.tsx",
+   "key": "div.pitch-canvas",
+   "reason": "Legacy Academy pitch; Academy.tsx is not imported anywhere (dead code)."
+  },
+  {
+   "check": 4,
+   "file": "components/Academy.tsx",
+   "key": "input*",
+   "reason": "Legacy Academy screen; not imported anywhere (dead code)."
+  },
+  {
+   "check": 1,
+   "file": "components/ArcadeRoom.tsx",
+   "key": "button",
+   "reason": "Held room action buttons are built by the actionButton() helper, so the static scan can't see their container: they render inside .travel-actions (globals.css guard) and .roomActions (ArcadeRoom.module.css guard), both with -webkit-touch-callout:none + user-select:none."
+  }
+ ]
+}

@@ -1,0 +1,386 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: the 2016 final",
+   "text": "The 2016 Futsal Euro final, in Belgrade. Spain lead Russia six to two. Mario Rivillos has the ball far out, and chips it in. Seven!",
+   "src": "/plays/narration/rivillos-futsal-signature/1.m4a",
+   "seconds": 11.0,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "2016",
+     "at": 0.425
+    },
+    {
+     "w": "Futsal",
+     "at": 1.238
+    },
+    {
+     "w": "Euro",
+     "at": 1.675
+    },
+    {
+     "w": "final",
+     "at": 1.988
+    },
+    {
+     "w": "in",
+     "at": 2.6
+    },
+    {
+     "w": "Belgrade",
+     "at": 2.75
+    },
+    {
+     "w": "Spain",
+     "at": 3.913
+    },
+    {
+     "w": "lead",
+     "at": 4.35
+    },
+    {
+     "w": "Russia",
+     "at": 4.612
+    },
+    {
+     "w": "six",
+     "at": 5.013
+    },
+    {
+     "w": "to",
+     "at": 5.3
+    },
+    {
+     "w": "two",
+     "at": 5.438
+    },
+    {
+     "w": "Mario",
+     "at": 6.162
+    },
+    {
+     "w": "Rivillos",
+     "at": 6.6
+    },
+    {
+     "w": "has",
+     "at": 7.2
+    },
+    {
+     "w": "the",
+     "at": 7.388
+    },
+    {
+     "w": "ball",
+     "at": 7.475
+    },
+    {
+     "w": "far",
+     "at": 7.787
+    },
+    {
+     "w": "out",
+     "at": 8.075
+    },
+    {
+     "w": "and",
+     "at": 8.338
+    },
+    {
+     "w": "chips",
+     "at": 8.463
+    },
+    {
+     "w": "it",
+     "at": 8.738
+    },
+    {
+     "w": "in",
+     "at": 8.825
+    },
+    {
+     "w": "Seven",
+     "at": 9.588
+    }
+   ]
+  },
+  {
+   "label": "Replay: the chip",
+   "text": "Watch again. A soft, high chip from far out. Spain win the final, seven to three!",
+   "src": "/plays/narration/rivillos-futsal-signature/2.m4a",
+   "seconds": 6.7,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "A",
+     "at": 1.387
+    },
+    {
+     "w": "soft",
+     "at": 1.525
+    },
+    {
+     "w": "high",
+     "at": 1.95
+    },
+    {
+     "w": "chip",
+     "at": 2.188
+    },
+    {
+     "w": "from",
+     "at": 2.45
+    },
+    {
+     "w": "far",
+     "at": 2.625
+    },
+    {
+     "w": "out",
+     "at": 2.9
+    },
+    {
+     "w": "Spain",
+     "at": 3.65
+    },
+    {
+     "w": "win",
+     "at": 4.05
+    },
+    {
+     "w": "the",
+     "at": 4.237
+    },
+    {
+     "w": "final",
+     "at": 4.338
+    },
+    {
+     "w": "seven",
+     "at": 4.812
+    },
+    {
+     "w": "to",
+     "at": 5.15
+    },
+    {
+     "w": "three",
+     "at": 5.287
+    }
+   ]
+  },
+  {
+   "label": "How he did it",
+   "text": "His trademark: the curled shot. How he did it: start on the right wing, cut inside onto the left foot, and curl it round the keeper to the far post.",
+   "src": "/plays/narration/rivillos-futsal-signature/3.m4a",
+   "seconds": 10.1,
+   "words": [
+    {
+     "w": "His",
+     "at": 0.35
+    },
+    {
+     "w": "trademark",
+     "at": 0.525
+    },
+    {
+     "w": "the",
+     "at": 1.425
+    },
+    {
+     "w": "curled",
+     "at": 1.525
+    },
+    {
+     "w": "shot",
+     "at": 1.913
+    },
+    {
+     "w": "How",
+     "at": 2.812
+    },
+    {
+     "w": "he",
+     "at": 3.025
+    },
+    {
+     "w": "did",
+     "at": 3.163
+    },
+    {
+     "w": "it",
+     "at": 3.375
+    },
+    {
+     "w": "start",
+     "at": 3.888
+    },
+    {
+     "w": "on",
+     "at": 4.138
+    },
+    {
+     "w": "the",
+     "at": 4.237
+    },
+    {
+     "w": "right",
+     "at": 4.325
+    },
+    {
+     "w": "wing",
+     "at": 4.638
+    },
+    {
+     "w": "cut",
+     "at": 5.138
+    },
+    {
+     "w": "inside",
+     "at": 5.375
+    },
+    {
+     "w": "onto",
+     "at": 5.888
+    },
+    {
+     "w": "the",
+     "at": 6.088
+    },
+    {
+     "w": "left",
+     "at": 6.2
+    },
+    {
+     "w": "foot",
+     "at": 6.487
+    },
+    {
+     "w": "and",
+     "at": 6.925
+    },
+    {
+     "w": "curl",
+     "at": 7.088
+    },
+    {
+     "w": "it",
+     "at": 7.412
+    },
+    {
+     "w": "round",
+     "at": 7.5
+    },
+    {
+     "w": "the",
+     "at": 7.787
+    },
+    {
+     "w": "keeper",
+     "at": 7.875
+    },
+    {
+     "w": "to",
+     "at": 8.25
+    },
+    {
+     "w": "the",
+     "at": 8.338
+    },
+    {
+     "w": "far",
+     "at": 8.438
+    },
+    {
+     "w": "post",
+     "at": 8.7
+    }
+   ]
+  },
+  {
+   "label": "Practise it",
+   "text": "Practise it! Cut in, and shoot for the far post. Keepers find it hard to reach!",
+   "src": "/plays/narration/rivillos-futsal-signature/4.m4a",
+   "seconds": 5.8,
+   "words": [
+    {
+     "w": "Practise",
+     "at": 0.325
+    },
+    {
+     "w": "it",
+     "at": 0.787
+    },
+    {
+     "w": "Cut",
+     "at": 1.262
+    },
+    {
+     "w": "in",
+     "at": 1.488
+    },
+    {
+     "w": "and",
+     "at": 1.688
+    },
+    {
+     "w": "shoot",
+     "at": 1.825
+    },
+    {
+     "w": "for",
+     "at": 2.1
+    },
+    {
+     "w": "the",
+     "at": 2.212
+    },
+    {
+     "w": "far",
+     "at": 2.3
+    },
+    {
+     "w": "post",
+     "at": 2.55
+    },
+    {
+     "w": "Keepers",
+     "at": 3.362
+    },
+    {
+     "w": "find",
+     "at": 3.8
+    },
+    {
+     "w": "it",
+     "at": 4.037
+    },
+    {
+     "w": "hard",
+     "at": 4.125
+    },
+    {
+     "w": "to",
+     "at": 4.35
+    },
+    {
+     "w": "reach",
+     "at": 4.45
+    }
+   ]
+  }
+ ]
+}

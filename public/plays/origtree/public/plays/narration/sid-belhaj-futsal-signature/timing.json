@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: World Cup 2024",
+   "text": "The 2024 Futsal World Cup, in Uzbekistan. It is France\u2019s first time. They play Venezuela. Near the end, Sid Belhaj scores the seventh goal! France win seven three.",
+   "src": "/plays/narration/sid-belhaj-futsal-signature/1.m4a",
+   "seconds": 13.6,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "2024",
+     "at": 0.425
+    },
+    {
+     "w": "Futsal",
+     "at": 1.387
+    },
+    {
+     "w": "World",
+     "at": 1.825
+    },
+    {
+     "w": "Cup",
+     "at": 2.138
+    },
+    {
+     "w": "in",
+     "at": 2.5
+    },
+    {
+     "w": "Uzbekistan",
+     "at": 2.625
+    },
+    {
+     "w": "It",
+     "at": 3.9
+    },
+    {
+     "w": "is",
+     "at": 4.05
+    },
+    {
+     "w": "France\u2019s",
+     "at": 4.2
+    },
+    {
+     "w": "first",
+     "at": 4.725
+    },
+    {
+     "w": "time",
+     "at": 5.0
+    },
+    {
+     "w": "They",
+     "at": 5.7
+    },
+    {
+     "w": "play",
+     "at": 5.888
+    },
+    {
+     "w": "Venezuela",
+     "at": 6.175
+    },
+    {
+     "w": "Near",
+     "at": 7.55
+    },
+    {
+     "w": "the",
+     "at": 7.787
+    },
+    {
+     "w": "end",
+     "at": 7.925
+    },
+    {
+     "w": "Sid",
+     "at": 8.463
+    },
+    {
+     "w": "Belhaj",
+     "at": 8.7
+    },
+    {
+     "w": "scores",
+     "at": 9.213
+    },
+    {
+     "w": "the",
+     "at": 9.6
+    },
+    {
+     "w": "seventh",
+     "at": 9.75
+    },
+    {
+     "w": "goal",
+     "at": 10.175
+    },
+    {
+     "w": "France",
+     "at": 10.975
+    },
+    {
+     "w": "win",
+     "at": 11.412
+    },
+    {
+     "w": "seven",
+     "at": 11.838
+    },
+    {
+     "w": "three",
+     "at": 12.238
+    }
+   ]
+  },
+  {
+   "label": "How he builds attacks",
+   "text": "Belhaj plays at the back. This is how he builds attacks: he passes into the pivot\u2019s feet. Then he moves into space, and gets it back. Shoot!",
+   "src": "/plays/narration/sid-belhaj-futsal-signature/2.m4a",
+   "seconds": 9.9,
+   "words": [
+    {
+     "w": "Belhaj",
+     "at": 0.4
+    },
+    {
+     "w": "plays",
+     "at": 0.887
+    },
+    {
+     "w": "at",
+     "at": 1.188
+    },
+    {
+     "w": "the",
+     "at": 1.262
+    },
+    {
+     "w": "back",
+     "at": 1.35
+    },
+    {
+     "w": "This",
+     "at": 2.087
+    },
+    {
+     "w": "is",
+     "at": 2.325
+    },
+    {
+     "w": "how",
+     "at": 2.45
+    },
+    {
+     "w": "he",
+     "at": 2.65
+    },
+    {
+     "w": "builds",
+     "at": 2.775
+    },
+    {
+     "w": "attacks",
+     "at": 3.075
+    },
+    {
+     "w": "he",
+     "at": 3.9
+    },
+    {
+     "w": "passes",
+     "at": 4.025
+    },
+    {
+     "w": "into",
+     "at": 4.463
+    },
+    {
+     "w": "the",
+     "at": 4.638
+    },
+    {
+     "w": "pivot\u2019s",
+     "at": 4.725
+    },
+    {
+     "w": "feet",
+     "at": 5.138
+    },
+    {
+     "w": "Then",
+     "at": 5.838
+    },
+    {
+     "w": "he",
+     "at": 6.025
+    },
+    {
+     "w": "moves",
+     "at": 6.15
+    },
+    {
+     "w": "into",
+     "at": 6.438
+    },
+    {
+     "w": "space",
+     "at": 6.662
+    },
+    {
+     "w": "and",
+     "at": 7.162
+    },
+    {
+     "w": "gets",
+     "at": 7.275
+    },
+    {
+     "w": "it",
+     "at": 7.487
+    },
+    {
+     "w": "back",
+     "at": 7.575
+    },
+    {
+     "w": "Shoot",
+     "at": 8.5
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Slow motion. Pass it in. Now move away from your defender, while he watches the ball. Get it back, score!",
+   "src": "/plays/narration/sid-belhaj-futsal-signature/3.m4a",
+   "seconds": 7.5,
+   "words": [
+    {
+     "w": "Slow",
+     "at": 0.4
+    },
+    {
+     "w": "motion",
+     "at": 0.675
+    },
+    {
+     "w": "Pass",
+     "at": 1.512
+    },
+    {
+     "w": "it",
+     "at": 1.812
+    },
+    {
+     "w": "in",
+     "at": 1.9
+    },
+    {
+     "w": "Now",
+     "at": 2.587
+    },
+    {
+     "w": "move",
+     "at": 2.775
+    },
+    {
+     "w": "away",
+     "at": 2.975
+    },
+    {
+     "w": "from",
+     "at": 3.25
+    },
+    {
+     "w": "your",
+     "at": 3.388
+    },
+    {
+     "w": "defender",
+     "at": 3.487
+    },
+    {
+     "w": "while",
+     "at": 3.987
+    },
+    {
+     "w": "he",
+     "at": 4.138
+    },
+    {
+     "w": "watches",
+     "at": 4.25
+    },
+    {
+     "w": "the",
+     "at": 4.675
+    },
+    {
+     "w": "ball",
+     "at": 4.775
+    },
+    {
+     "w": "Get",
+     "at": 5.438
+    },
+    {
+     "w": "it",
+     "at": 5.588
+    },
+    {
+     "w": "back",
+     "at": 5.675
+    },
+    {
+     "w": "score",
+     "at": 6.037
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: pass into the pivot\u2019s feet, then move to get the ball back!",
+   "src": "/plays/narration/sid-belhaj-futsal-signature/4.m4a",
+   "seconds": 5.3,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.4
+    },
+    {
+     "w": "turn",
+     "at": 0.588
+    },
+    {
+     "w": "pass",
+     "at": 1.363
+    },
+    {
+     "w": "into",
+     "at": 1.663
+    },
+    {
+     "w": "the",
+     "at": 1.837
+    },
+    {
+     "w": "pivot\u2019s",
+     "at": 1.925
+    },
+    {
+     "w": "feet",
+     "at": 2.337
+    },
+    {
+     "w": "then",
+     "at": 2.825
+    },
+    {
+     "w": "move",
+     "at": 3.025
+    },
+    {
+     "w": "to",
+     "at": 3.288
+    },
+    {
+     "w": "get",
+     "at": 3.375
+    },
+    {
+     "w": "the",
+     "at": 3.538
+    },
+    {
+     "w": "ball",
+     "at": 3.625
+    },
+    {
+     "w": "back",
+     "at": 3.925
+    }
+   ]
+  }
+ ]
+}

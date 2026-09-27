@@ -12,3 +12,7 @@ node_modules/
 __pycache__/
 *.pyc
 .venv/
+
+# Playwright device suite output (docs/testing-devices.md)
+/test-results/
+/playwright-report/

@@ -1,0 +1,358 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Stamford Bridge",
+   "text": "Stamford Bridge, 2005: Barcelona are losing to Chelsea. Ronaldinho gets the ball twenty yards out, four blue shirts around him. Then... goal!",
+   "src": "/plays/narration/ronaldinho-chelsea-2005/1.m4a",
+   "seconds": 11.6,
+   "words": [
+    {
+     "w": "Stamford",
+     "at": 0.375
+    },
+    {
+     "w": "Bridge",
+     "at": 0.875
+    },
+    {
+     "w": "2005",
+     "at": 1.375
+    },
+    {
+     "w": "Barcelona",
+     "at": 2.788
+    },
+    {
+     "w": "are",
+     "at": 3.5
+    },
+    {
+     "w": "losing",
+     "at": 3.65
+    },
+    {
+     "w": "to",
+     "at": 4.05
+    },
+    {
+     "w": "Chelsea",
+     "at": 4.175
+    },
+    {
+     "w": "Ronaldinho",
+     "at": 5.162
+    },
+    {
+     "w": "gets",
+     "at": 5.825
+    },
+    {
+     "w": "the",
+     "at": 6.062
+    },
+    {
+     "w": "ball",
+     "at": 6.15
+    },
+    {
+     "w": "twenty",
+     "at": 6.45
+    },
+    {
+     "w": "yards",
+     "at": 6.75
+    },
+    {
+     "w": "out",
+     "at": 7.05
+    },
+    {
+     "w": "four",
+     "at": 7.438
+    },
+    {
+     "w": "blue",
+     "at": 7.763
+    },
+    {
+     "w": "shirts",
+     "at": 8.05
+    },
+    {
+     "w": "around",
+     "at": 8.375
+    },
+    {
+     "w": "him",
+     "at": 8.688
+    },
+    {
+     "w": "Then",
+     "at": 9.325
+    },
+    {
+     "w": "goal",
+     "at": 10.213
+    }
+   ]
+  },
+  {
+   "label": "The shimmy",
+   "text": "Watch again, slowly. He pretends to shoot, twice, and his hips sway left and right. The defenders freeze, like someone pressed pause!",
+   "src": "/plays/narration/ronaldinho-chelsea-2005/2.m4a",
+   "seconds": 9.6,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.113
+    },
+    {
+     "w": "He",
+     "at": 2.1
+    },
+    {
+     "w": "pretends",
+     "at": 2.225
+    },
+    {
+     "w": "to",
+     "at": 2.675
+    },
+    {
+     "w": "shoot",
+     "at": 2.825
+    },
+    {
+     "w": "twice",
+     "at": 3.263
+    },
+    {
+     "w": "and",
+     "at": 3.95
+    },
+    {
+     "w": "his",
+     "at": 4.062
+    },
+    {
+     "w": "hips",
+     "at": 4.225
+    },
+    {
+     "w": "sway",
+     "at": 4.537
+    },
+    {
+     "w": "left",
+     "at": 4.912
+    },
+    {
+     "w": "and",
+     "at": 5.3
+    },
+    {
+     "w": "right",
+     "at": 5.425
+    },
+    {
+     "w": "The",
+     "at": 6.2
+    },
+    {
+     "w": "defenders",
+     "at": 6.3
+    },
+    {
+     "w": "freeze",
+     "at": 6.888
+    },
+    {
+     "w": "like",
+     "at": 7.412
+    },
+    {
+     "w": "someone",
+     "at": 7.575
+    },
+    {
+     "w": "pressed",
+     "at": 7.825
+    },
+    {
+     "w": "pause",
+     "at": 8.162
+    }
+   ]
+  },
+  {
+   "label": "Toe-poke",
+   "text": "From behind: no big backswing. He pokes it with his toe, past a stunned Petr \u010cech.",
+   "src": "/plays/narration/ronaldinho-chelsea-2005/3.m4a",
+   "seconds": 6.5,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "behind",
+     "at": 0.487
+    },
+    {
+     "w": "no",
+     "at": 1.288
+    },
+    {
+     "w": "big",
+     "at": 1.475
+    },
+    {
+     "w": "backswing",
+     "at": 1.7
+    },
+    {
+     "w": "He",
+     "at": 2.775
+    },
+    {
+     "w": "pokes",
+     "at": 2.9
+    },
+    {
+     "w": "it",
+     "at": 3.163
+    },
+    {
+     "w": "with",
+     "at": 3.237
+    },
+    {
+     "w": "his",
+     "at": 3.337
+    },
+    {
+     "w": "toe",
+     "at": 3.513
+    },
+    {
+     "w": "past",
+     "at": 4.0
+    },
+    {
+     "w": "a",
+     "at": 4.287
+    },
+    {
+     "w": "stunned",
+     "at": 4.4
+    },
+    {
+     "w": "Petr",
+     "at": 4.85
+    },
+    {
+     "w": "\u010cech",
+     "at": 5.213
+    }
+   ]
+  },
+  {
+   "label": "Freeze them",
+   "text": "A small body feint freezes defenders, and you can score without a big backswing. A quick toe-poke surprises the keeper.",
+   "src": "/plays/narration/ronaldinho-chelsea-2005/4.m4a",
+   "seconds": 8.6,
+   "words": [
+    {
+     "w": "A",
+     "at": 0.375
+    },
+    {
+     "w": "small",
+     "at": 0.463
+    },
+    {
+     "w": "body",
+     "at": 0.85
+    },
+    {
+     "w": "feint",
+     "at": 1.238
+    },
+    {
+     "w": "freezes",
+     "at": 1.587
+    },
+    {
+     "w": "defenders",
+     "at": 2.075
+    },
+    {
+     "w": "and",
+     "at": 3.075
+    },
+    {
+     "w": "you",
+     "at": 3.188
+    },
+    {
+     "w": "can",
+     "at": 3.275
+    },
+    {
+     "w": "score",
+     "at": 3.462
+    },
+    {
+     "w": "without",
+     "at": 3.85
+    },
+    {
+     "w": "a",
+     "at": 4.138
+    },
+    {
+     "w": "big",
+     "at": 4.213
+    },
+    {
+     "w": "backswing",
+     "at": 4.45
+    },
+    {
+     "w": "A",
+     "at": 5.612
+    },
+    {
+     "w": "quick",
+     "at": 5.725
+    },
+    {
+     "w": "toe-poke",
+     "at": 5.975
+    },
+    {
+     "w": "surprises",
+     "at": 6.525
+    },
+    {
+     "w": "the",
+     "at": 7.075
+    },
+    {
+     "w": "keeper",
+     "at": 7.175
+    }
+   ]
+  }
+ ]
+}

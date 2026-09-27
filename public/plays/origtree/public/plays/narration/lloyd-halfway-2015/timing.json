@@ -1,0 +1,386 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "From halfway, live",
+   "text": "Vancouver, 2015, the World Cup final. Carli Lloyd has scored twice already, and Japan's keeper is far off her line. Lloyd wins the ball, looks up, and shoots from the halfway line! Up it goes... and in!",
+   "src": "/plays/narration/lloyd-halfway-2015/1.m4a",
+   "seconds": 14.7,
+   "words": [
+    {
+     "w": "Vancouver",
+     "at": 0.375
+    },
+    {
+     "w": "2015",
+     "at": 1.025
+    },
+    {
+     "w": "the",
+     "at": 1.85
+    },
+    {
+     "w": "World",
+     "at": 1.95
+    },
+    {
+     "w": "Cup",
+     "at": 2.25
+    },
+    {
+     "w": "final",
+     "at": 2.475
+    },
+    {
+     "w": "Carli",
+     "at": 3.462
+    },
+    {
+     "w": "Lloyd",
+     "at": 3.85
+    },
+    {
+     "w": "has",
+     "at": 4.162
+    },
+    {
+     "w": "scored",
+     "at": 4.3
+    },
+    {
+     "w": "twice",
+     "at": 4.65
+    },
+    {
+     "w": "already",
+     "at": 4.975
+    },
+    {
+     "w": "and",
+     "at": 5.6
+    },
+    {
+     "w": "Japan's",
+     "at": 5.713
+    },
+    {
+     "w": "keeper",
+     "at": 6.237
+    },
+    {
+     "w": "is",
+     "at": 6.625
+    },
+    {
+     "w": "far",
+     "at": 6.787
+    },
+    {
+     "w": "off",
+     "at": 7.075
+    },
+    {
+     "w": "her",
+     "at": 7.263
+    },
+    {
+     "w": "line",
+     "at": 7.4
+    },
+    {
+     "w": "Lloyd",
+     "at": 8.35
+    },
+    {
+     "w": "wins",
+     "at": 8.725
+    },
+    {
+     "w": "the",
+     "at": 9.0
+    },
+    {
+     "w": "ball",
+     "at": 9.1
+    },
+    {
+     "w": "looks",
+     "at": 9.55
+    },
+    {
+     "w": "up",
+     "at": 9.825
+    },
+    {
+     "w": "and",
+     "at": 10.1
+    },
+    {
+     "w": "shoots",
+     "at": 10.275
+    },
+    {
+     "w": "from",
+     "at": 10.613
+    },
+    {
+     "w": "the",
+     "at": 10.738
+    },
+    {
+     "w": "halfway",
+     "at": 10.825
+    },
+    {
+     "w": "line",
+     "at": 11.3
+    },
+    {
+     "w": "Up",
+     "at": 12.025
+    },
+    {
+     "w": "it",
+     "at": 12.188
+    },
+    {
+     "w": "goes",
+     "at": 12.3
+    },
+    {
+     "w": "and",
+     "at": 13.225
+    },
+    {
+     "w": "in",
+     "at": 13.375
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. The ball sails over the keeper. She scrambles back and touches it, but it clips the post and goes in. A hat-trick in sixteen minutes!",
+   "src": "/plays/narration/lloyd-halfway-2015/2.m4a",
+   "seconds": 10.9,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.188
+    },
+    {
+     "w": "The",
+     "at": 2.188
+    },
+    {
+     "w": "ball",
+     "at": 2.3
+    },
+    {
+     "w": "sails",
+     "at": 2.688
+    },
+    {
+     "w": "over",
+     "at": 3.087
+    },
+    {
+     "w": "the",
+     "at": 3.288
+    },
+    {
+     "w": "keeper",
+     "at": 3.375
+    },
+    {
+     "w": "She",
+     "at": 4.138
+    },
+    {
+     "w": "scrambles",
+     "at": 4.312
+    },
+    {
+     "w": "back",
+     "at": 4.875
+    },
+    {
+     "w": "and",
+     "at": 5.162
+    },
+    {
+     "w": "touches",
+     "at": 5.287
+    },
+    {
+     "w": "it",
+     "at": 5.725
+    },
+    {
+     "w": "but",
+     "at": 5.862
+    },
+    {
+     "w": "it",
+     "at": 5.987
+    },
+    {
+     "w": "clips",
+     "at": 6.075
+    },
+    {
+     "w": "the",
+     "at": 6.375
+    },
+    {
+     "w": "post",
+     "at": 6.487
+    },
+    {
+     "w": "and",
+     "at": 6.925
+    },
+    {
+     "w": "goes",
+     "at": 7.05
+    },
+    {
+     "w": "in",
+     "at": 7.4
+    },
+    {
+     "w": "A",
+     "at": 8.225
+    },
+    {
+     "w": "hat-trick",
+     "at": 8.35
+    },
+    {
+     "w": "in",
+     "at": 8.85
+    },
+    {
+     "w": "sixteen",
+     "at": 9.012
+    },
+    {
+     "w": "minutes",
+     "at": 9.5
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "Here is the secret. Look up before the ball reaches you, and find the keeper. Then be brave, and strike cleanly through the ball.",
+   "src": "/plays/narration/lloyd-halfway-2015/3.m4a",
+   "seconds": 8.5,
+   "words": [
+    {
+     "w": "Here",
+     "at": 0.375
+    },
+    {
+     "w": "is",
+     "at": 0.575
+    },
+    {
+     "w": "the",
+     "at": 0.725
+    },
+    {
+     "w": "secret",
+     "at": 0.863
+    },
+    {
+     "w": "Look",
+     "at": 1.762
+    },
+    {
+     "w": "up",
+     "at": 1.938
+    },
+    {
+     "w": "before",
+     "at": 2.125
+    },
+    {
+     "w": "the",
+     "at": 2.388
+    },
+    {
+     "w": "ball",
+     "at": 2.475
+    },
+    {
+     "w": "reaches",
+     "at": 2.775
+    },
+    {
+     "w": "you",
+     "at": 3.175
+    },
+    {
+     "w": "and",
+     "at": 3.5
+    },
+    {
+     "w": "find",
+     "at": 3.625
+    },
+    {
+     "w": "the",
+     "at": 3.913
+    },
+    {
+     "w": "keeper",
+     "at": 4.0
+    },
+    {
+     "w": "Then",
+     "at": 4.963
+    },
+    {
+     "w": "be",
+     "at": 5.2
+    },
+    {
+     "w": "brave",
+     "at": 5.362
+    },
+    {
+     "w": "and",
+     "at": 5.95
+    },
+    {
+     "w": "strike",
+     "at": 6.075
+    },
+    {
+     "w": "cleanly",
+     "at": 6.412
+    },
+    {
+     "w": "through",
+     "at": 6.85
+    },
+    {
+     "w": "the",
+     "at": 7.05
+    },
+    {
+     "w": "ball",
+     "at": 7.15
+    }
+   ]
+  }
+ ]
+}

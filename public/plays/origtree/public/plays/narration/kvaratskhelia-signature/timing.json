@@ -1,0 +1,370 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Naples, 2023, against Atalanta. Osimhen lays it off to Khvicha Kvaratskhelia on the left. He slaloms past one defender, two, three... bang, into the roof of the net!",
+   "src": "/plays/narration/kvaratskhelia-signature/1.m4a",
+   "seconds": 13.1,
+   "words": [
+    {
+     "w": "Naples",
+     "at": 0.425
+    },
+    {
+     "w": "2023",
+     "at": 0.975
+    },
+    {
+     "w": "against",
+     "at": 1.975
+    },
+    {
+     "w": "Atalanta",
+     "at": 2.375
+    },
+    {
+     "w": "Osimhen",
+     "at": 3.6
+    },
+    {
+     "w": "lays",
+     "at": 4.15
+    },
+    {
+     "w": "it",
+     "at": 4.412
+    },
+    {
+     "w": "off",
+     "at": 4.5
+    },
+    {
+     "w": "to",
+     "at": 4.725
+    },
+    {
+     "w": "Khvicha",
+     "at": 4.825
+    },
+    {
+     "w": "Kvaratskhelia",
+     "at": 5.2
+    },
+    {
+     "w": "on",
+     "at": 5.963
+    },
+    {
+     "w": "the",
+     "at": 6.062
+    },
+    {
+     "w": "left",
+     "at": 6.15
+    },
+    {
+     "w": "He",
+     "at": 7.025
+    },
+    {
+     "w": "slaloms",
+     "at": 7.188
+    },
+    {
+     "w": "past",
+     "at": 7.713
+    },
+    {
+     "w": "one",
+     "at": 8.137
+    },
+    {
+     "w": "defender",
+     "at": 8.375
+    },
+    {
+     "w": "two",
+     "at": 9.113
+    },
+    {
+     "w": "three",
+     "at": 9.688
+    },
+    {
+     "w": "bang",
+     "at": 10.613
+    },
+    {
+     "w": "into",
+     "at": 11.062
+    },
+    {
+     "w": "the",
+     "at": 11.25
+    },
+    {
+     "w": "roof",
+     "at": 11.387
+    },
+    {
+     "w": "of",
+     "at": 11.662
+    },
+    {
+     "w": "the",
+     "at": 11.738
+    },
+    {
+     "w": "net",
+     "at": 11.825
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again. Tiny touches keep the ball close, so no defender can reach it. He shimmies left, then right. Which way?",
+   "src": "/plays/narration/kvaratskhelia-signature/2.m4a",
+   "seconds": 8.6,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "Tiny",
+     "at": 1.387
+    },
+    {
+     "w": "touches",
+     "at": 1.725
+    },
+    {
+     "w": "keep",
+     "at": 2.15
+    },
+    {
+     "w": "the",
+     "at": 2.337
+    },
+    {
+     "w": "ball",
+     "at": 2.425
+    },
+    {
+     "w": "close",
+     "at": 2.725
+    },
+    {
+     "w": "so",
+     "at": 3.15
+    },
+    {
+     "w": "no",
+     "at": 3.325
+    },
+    {
+     "w": "defender",
+     "at": 3.525
+    },
+    {
+     "w": "can",
+     "at": 3.975
+    },
+    {
+     "w": "reach",
+     "at": 4.125
+    },
+    {
+     "w": "it",
+     "at": 4.412
+    },
+    {
+     "w": "He",
+     "at": 4.95
+    },
+    {
+     "w": "shimmies",
+     "at": 5.125
+    },
+    {
+     "w": "left",
+     "at": 5.562
+    },
+    {
+     "w": "then",
+     "at": 5.963
+    },
+    {
+     "w": "right",
+     "at": 6.15
+    },
+    {
+     "w": "Which",
+     "at": 6.888
+    },
+    {
+     "w": "way",
+     "at": 7.162
+    }
+   ]
+  },
+  {
+   "label": "The finish",
+   "text": "Then a quick shift to his right foot, and a thumping shot, high into the net! Fans call him Kvaradona.",
+   "src": "/plays/narration/kvaratskhelia-signature/3.m4a",
+   "seconds": 7.2,
+   "words": [
+    {
+     "w": "Then",
+     "at": 0.35
+    },
+    {
+     "w": "a",
+     "at": 0.463
+    },
+    {
+     "w": "quick",
+     "at": 0.525
+    },
+    {
+     "w": "shift",
+     "at": 0.787
+    },
+    {
+     "w": "to",
+     "at": 1.075
+    },
+    {
+     "w": "his",
+     "at": 1.163
+    },
+    {
+     "w": "right",
+     "at": 1.325
+    },
+    {
+     "w": "foot",
+     "at": 1.613
+    },
+    {
+     "w": "and",
+     "at": 2.225
+    },
+    {
+     "w": "a",
+     "at": 2.337
+    },
+    {
+     "w": "thumping",
+     "at": 2.413
+    },
+    {
+     "w": "shot",
+     "at": 2.825
+    },
+    {
+     "w": "high",
+     "at": 3.388
+    },
+    {
+     "w": "into",
+     "at": 3.638
+    },
+    {
+     "w": "the",
+     "at": 3.812
+    },
+    {
+     "w": "net",
+     "at": 3.9
+    },
+    {
+     "w": "Fans",
+     "at": 4.725
+    },
+    {
+     "w": "call",
+     "at": 5.15
+    },
+    {
+     "w": "him",
+     "at": 5.362
+    },
+    {
+     "w": "Kvaradona",
+     "at": 5.55
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: keep the ball close with small touches, so defenders can't reach it.",
+   "src": "/plays/narration/kvaratskhelia-signature/4.m4a",
+   "seconds": 5.9,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.562
+    },
+    {
+     "w": "keep",
+     "at": 1.325
+    },
+    {
+     "w": "the",
+     "at": 1.488
+    },
+    {
+     "w": "ball",
+     "at": 1.575
+    },
+    {
+     "w": "close",
+     "at": 1.875
+    },
+    {
+     "w": "with",
+     "at": 2.188
+    },
+    {
+     "w": "small",
+     "at": 2.35
+    },
+    {
+     "w": "touches",
+     "at": 2.65
+    },
+    {
+     "w": "so",
+     "at": 3.425
+    },
+    {
+     "w": "defenders",
+     "at": 3.6
+    },
+    {
+     "w": "can't",
+     "at": 4.175
+    },
+    {
+     "w": "reach",
+     "at": 4.45
+    },
+    {
+     "w": "it",
+     "at": 4.737
+    }
+   ]
+  }
+ ]
+}

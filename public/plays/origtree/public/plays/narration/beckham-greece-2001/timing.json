@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The free kick, live",
+   "text": "Old Trafford, 2001. England are losing to Greece, and time is almost up. One last free kick, thirty yards out. David Beckham steps up... Goal!",
+   "src": "/plays/narration/beckham-greece-2001/1.m4a",
+   "seconds": 11.5,
+   "words": [
+    {
+     "w": "Old",
+     "at": 0.375
+    },
+    {
+     "w": "Trafford",
+     "at": 0.625
+    },
+    {
+     "w": "2001",
+     "at": 1.137
+    },
+    {
+     "w": "England",
+     "at": 2.587
+    },
+    {
+     "w": "are",
+     "at": 3.025
+    },
+    {
+     "w": "losing",
+     "at": 3.175
+    },
+    {
+     "w": "to",
+     "at": 3.525
+    },
+    {
+     "w": "Greece",
+     "at": 3.65
+    },
+    {
+     "w": "and",
+     "at": 4.125
+    },
+    {
+     "w": "time",
+     "at": 4.263
+    },
+    {
+     "w": "is",
+     "at": 4.562
+    },
+    {
+     "w": "almost",
+     "at": 4.675
+    },
+    {
+     "w": "up",
+     "at": 5.125
+    },
+    {
+     "w": "One",
+     "at": 5.787
+    },
+    {
+     "w": "last",
+     "at": 6.025
+    },
+    {
+     "w": "free",
+     "at": 6.4
+    },
+    {
+     "w": "kick",
+     "at": 6.662
+    },
+    {
+     "w": "thirty",
+     "at": 7.037
+    },
+    {
+     "w": "yards",
+     "at": 7.375
+    },
+    {
+     "w": "out",
+     "at": 7.7
+    },
+    {
+     "w": "David",
+     "at": 8.287
+    },
+    {
+     "w": "Beckham",
+     "at": 8.7
+    },
+    {
+     "w": "steps",
+     "at": 9.05
+    },
+    {
+     "w": "up",
+     "at": 9.4
+    },
+    {
+     "w": "Goal",
+     "at": 10.088
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again, from behind. It rises over the wall, curls left and dips into the top corner. The keeper has no chance!",
+   "src": "/plays/narration/beckham-greece-2001/2.m4a",
+   "seconds": 8.8,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "from",
+     "at": 1.2
+    },
+    {
+     "w": "behind",
+     "at": 1.35
+    },
+    {
+     "w": "It",
+     "at": 2.35
+    },
+    {
+     "w": "rises",
+     "at": 2.525
+    },
+    {
+     "w": "over",
+     "at": 2.913
+    },
+    {
+     "w": "the",
+     "at": 3.112
+    },
+    {
+     "w": "wall",
+     "at": 3.237
+    },
+    {
+     "w": "curls",
+     "at": 3.763
+    },
+    {
+     "w": "left",
+     "at": 4.213
+    },
+    {
+     "w": "and",
+     "at": 4.6
+    },
+    {
+     "w": "dips",
+     "at": 4.737
+    },
+    {
+     "w": "into",
+     "at": 5.013
+    },
+    {
+     "w": "the",
+     "at": 5.188
+    },
+    {
+     "w": "top",
+     "at": 5.275
+    },
+    {
+     "w": "corner",
+     "at": 5.55
+    },
+    {
+     "w": "The",
+     "at": 6.463
+    },
+    {
+     "w": "keeper",
+     "at": 6.575
+    },
+    {
+     "w": "has",
+     "at": 6.95
+    },
+    {
+     "w": "no",
+     "at": 7.15
+    },
+    {
+     "w": "chance",
+     "at": 7.338
+    }
+   ]
+  },
+  {
+   "label": "Two-all!",
+   "text": "Two-all! Beckham runs to the fans, arms wide. England are going to the World Cup!",
+   "src": "/plays/narration/beckham-greece-2001/3.m4a",
+   "seconds": 6.5,
+   "words": [
+    {
+     "w": "Two-all",
+     "at": 0.35
+    },
+    {
+     "w": "Beckham",
+     "at": 1.238
+    },
+    {
+     "w": "runs",
+     "at": 1.625
+    },
+    {
+     "w": "to",
+     "at": 1.925
+    },
+    {
+     "w": "the",
+     "at": 2.013
+    },
+    {
+     "w": "fans",
+     "at": 2.112
+    },
+    {
+     "w": "arms",
+     "at": 2.7
+    },
+    {
+     "w": "wide",
+     "at": 3.087
+    },
+    {
+     "w": "England",
+     "at": 3.913
+    },
+    {
+     "w": "are",
+     "at": 4.312
+    },
+    {
+     "w": "going",
+     "at": 4.4
+    },
+    {
+     "w": "to",
+     "at": 4.675
+    },
+    {
+     "w": "the",
+     "at": 4.763
+    },
+    {
+     "w": "World",
+     "at": 4.85
+    },
+    {
+     "w": "Cup",
+     "at": 5.213
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "The secret? Lean over the ball and strike across it with the inside of your foot. It spins, rises over the wall, and curls down.",
+   "src": "/plays/narration/beckham-greece-2001/4.m4a",
+   "seconds": 9.4,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "secret",
+     "at": 0.463
+    },
+    {
+     "w": "Lean",
+     "at": 1.35
+    },
+    {
+     "w": "over",
+     "at": 1.613
+    },
+    {
+     "w": "the",
+     "at": 1.812
+    },
+    {
+     "w": "ball",
+     "at": 1.9
+    },
+    {
+     "w": "and",
+     "at": 2.225
+    },
+    {
+     "w": "strike",
+     "at": 2.362
+    },
+    {
+     "w": "across",
+     "at": 2.7
+    },
+    {
+     "w": "it",
+     "at": 3.1
+    },
+    {
+     "w": "with",
+     "at": 3.212
+    },
+    {
+     "w": "the",
+     "at": 3.312
+    },
+    {
+     "w": "inside",
+     "at": 3.462
+    },
+    {
+     "w": "of",
+     "at": 3.962
+    },
+    {
+     "w": "your",
+     "at": 4.037
+    },
+    {
+     "w": "foot",
+     "at": 4.2
+    },
+    {
+     "w": "It",
+     "at": 5.075
+    },
+    {
+     "w": "spins",
+     "at": 5.287
+    },
+    {
+     "w": "rises",
+     "at": 6.188
+    },
+    {
+     "w": "over",
+     "at": 6.662
+    },
+    {
+     "w": "the",
+     "at": 6.862
+    },
+    {
+     "w": "wall",
+     "at": 6.975
+    },
+    {
+     "w": "and",
+     "at": 7.388
+    },
+    {
+     "w": "curls",
+     "at": 7.513
+    },
+    {
+     "w": "down",
+     "at": 7.95
+    }
+   ]
+  }
+ ]
+}

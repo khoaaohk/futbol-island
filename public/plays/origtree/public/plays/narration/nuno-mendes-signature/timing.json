@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The final",
+   "text": "Munich, 2025: the Nations League final, Portugal against Spain. Nuno Mendes flies up the left wing, right past Lamine Yamal. He crosses\u2026 and Cristiano Ronaldo volleys it in!",
+   "src": "/plays/narration/nuno-mendes-signature/1.m4a",
+   "seconds": 14.4,
+   "words": [
+    {
+     "w": "Munich",
+     "at": 0.4
+    },
+    {
+     "w": "2025",
+     "at": 0.8
+    },
+    {
+     "w": "the",
+     "at": 2.175
+    },
+    {
+     "w": "Nations",
+     "at": 2.275
+    },
+    {
+     "w": "League",
+     "at": 2.775
+    },
+    {
+     "w": "final",
+     "at": 3.038
+    },
+    {
+     "w": "Portugal",
+     "at": 3.525
+    },
+    {
+     "w": "against",
+     "at": 4.025
+    },
+    {
+     "w": "Spain",
+     "at": 4.463
+    },
+    {
+     "w": "Nuno",
+     "at": 5.525
+    },
+    {
+     "w": "Mendes",
+     "at": 5.888
+    },
+    {
+     "w": "flies",
+     "at": 6.438
+    },
+    {
+     "w": "up",
+     "at": 6.787
+    },
+    {
+     "w": "the",
+     "at": 6.938
+    },
+    {
+     "w": "left",
+     "at": 7.05
+    },
+    {
+     "w": "wing",
+     "at": 7.338
+    },
+    {
+     "w": "right",
+     "at": 7.938
+    },
+    {
+     "w": "past",
+     "at": 8.262
+    },
+    {
+     "w": "Lamine",
+     "at": 8.7
+    },
+    {
+     "w": "Yamal",
+     "at": 9.1
+    },
+    {
+     "w": "He",
+     "at": 10.125
+    },
+    {
+     "w": "crosses",
+     "at": 10.275
+    },
+    {
+     "w": "and",
+     "at": 11.025
+    },
+    {
+     "w": "Cristiano",
+     "at": 11.162
+    },
+    {
+     "w": "Ronaldo",
+     "at": 11.9
+    },
+    {
+     "w": "volleys",
+     "at": 12.488
+    },
+    {
+     "w": "it",
+     "at": 12.925
+    },
+    {
+     "w": "in",
+     "at": 13.05
+    }
+   ]
+  },
+  {
+   "label": "The replay",
+   "text": "Watch again, slowly. Nuno sprints down the outside, and Yamal cannot keep up. He looks up and whips in a cross.",
+   "src": "/plays/narration/nuno-mendes-signature/2.m4a",
+   "seconds": 8.0,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.238
+    },
+    {
+     "w": "Nuno",
+     "at": 2.25
+    },
+    {
+     "w": "sprints",
+     "at": 2.612
+    },
+    {
+     "w": "down",
+     "at": 3.025
+    },
+    {
+     "w": "the",
+     "at": 3.188
+    },
+    {
+     "w": "outside",
+     "at": 3.3
+    },
+    {
+     "w": "and",
+     "at": 3.888
+    },
+    {
+     "w": "Yamal",
+     "at": 3.987
+    },
+    {
+     "w": "cannot",
+     "at": 4.35
+    },
+    {
+     "w": "keep",
+     "at": 4.7
+    },
+    {
+     "w": "up",
+     "at": 4.938
+    },
+    {
+     "w": "He",
+     "at": 5.525
+    },
+    {
+     "w": "looks",
+     "at": 5.65
+    },
+    {
+     "w": "up",
+     "at": 5.862
+    },
+    {
+     "w": "and",
+     "at": 6.013
+    },
+    {
+     "w": "whips",
+     "at": 6.125
+    },
+    {
+     "w": "in",
+     "at": 6.388
+    },
+    {
+     "w": "a",
+     "at": 6.463
+    },
+    {
+     "w": "cross",
+     "at": 6.525
+    }
+   ]
+  },
+  {
+   "label": "The finish",
+   "text": "It flicks off a defender and drops behind Cucurella. Ronaldo holds him off and volleys it in. Two\u2013two! Portugal won the final on penalties!",
+   "src": "/plays/narration/nuno-mendes-signature/3.m4a",
+   "seconds": 10.1,
+   "words": [
+    {
+     "w": "It",
+     "at": 0.325
+    },
+    {
+     "w": "flicks",
+     "at": 0.45
+    },
+    {
+     "w": "off",
+     "at": 0.725
+    },
+    {
+     "w": "a",
+     "at": 0.912
+    },
+    {
+     "w": "defender",
+     "at": 0.975
+    },
+    {
+     "w": "and",
+     "at": 1.5
+    },
+    {
+     "w": "drops",
+     "at": 1.625
+    },
+    {
+     "w": "behind",
+     "at": 2.0
+    },
+    {
+     "w": "Cucurella",
+     "at": 2.35
+    },
+    {
+     "w": "Ronaldo",
+     "at": 3.487
+    },
+    {
+     "w": "holds",
+     "at": 4.025
+    },
+    {
+     "w": "him",
+     "at": 4.287
+    },
+    {
+     "w": "off",
+     "at": 4.425
+    },
+    {
+     "w": "and",
+     "at": 4.713
+    },
+    {
+     "w": "volleys",
+     "at": 4.825
+    },
+    {
+     "w": "it",
+     "at": 5.213
+    },
+    {
+     "w": "in",
+     "at": 5.3
+    },
+    {
+     "w": "Two\u2013two",
+     "at": 6.05
+    },
+    {
+     "w": "Portugal",
+     "at": 7.088
+    },
+    {
+     "w": "won",
+     "at": 7.6
+    },
+    {
+     "w": "the",
+     "at": 7.787
+    },
+    {
+     "w": "final",
+     "at": 7.888
+    },
+    {
+     "w": "on",
+     "at": 8.262
+    },
+    {
+     "w": "penalties",
+     "at": 8.425
+    }
+   ]
+  },
+  {
+   "label": "The lesson",
+   "text": "Remember Nuno: sprint past your winger on the outside, and they have an easy pass!",
+   "src": "/plays/narration/nuno-mendes-signature/4.m4a",
+   "seconds": 6.1,
+   "words": [
+    {
+     "w": "Remember",
+     "at": 0.375
+    },
+    {
+     "w": "Nuno",
+     "at": 0.725
+    },
+    {
+     "w": "sprint",
+     "at": 1.675
+    },
+    {
+     "w": "past",
+     "at": 2.0
+    },
+    {
+     "w": "your",
+     "at": 2.312
+    },
+    {
+     "w": "winger",
+     "at": 2.425
+    },
+    {
+     "w": "on",
+     "at": 2.712
+    },
+    {
+     "w": "the",
+     "at": 2.812
+    },
+    {
+     "w": "outside",
+     "at": 2.925
+    },
+    {
+     "w": "and",
+     "at": 3.725
+    },
+    {
+     "w": "they",
+     "at": 3.837
+    },
+    {
+     "w": "have",
+     "at": 3.975
+    },
+    {
+     "w": "an",
+     "at": 4.162
+    },
+    {
+     "w": "easy",
+     "at": 4.287
+    },
+    {
+     "w": "pass",
+     "at": 4.625
+    }
+   ]
+  }
+ ]
+}

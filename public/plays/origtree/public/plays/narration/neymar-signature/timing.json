@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Santos against Flamengo, July 2011. Neymar gets it by the touchline. Two defenders close in. He cuts inside and races away! Pass to Borges, straight back... one defender left... goal!",
+   "src": "/plays/narration/neymar-signature/1.m4a",
+   "seconds": 14.6,
+   "words": [
+    {
+     "w": "Santos",
+     "at": 0.4
+    },
+    {
+     "w": "against",
+     "at": 0.9
+    },
+    {
+     "w": "Flamengo",
+     "at": 1.275
+    },
+    {
+     "w": "July",
+     "at": 1.925
+    },
+    {
+     "w": "2011",
+     "at": 2.25
+    },
+    {
+     "w": "Neymar",
+     "at": 3.55
+    },
+    {
+     "w": "gets",
+     "at": 3.975
+    },
+    {
+     "w": "it",
+     "at": 4.188
+    },
+    {
+     "w": "by",
+     "at": 4.275
+    },
+    {
+     "w": "the",
+     "at": 4.425
+    },
+    {
+     "w": "touchline",
+     "at": 4.525
+    },
+    {
+     "w": "Two",
+     "at": 5.463
+    },
+    {
+     "w": "defenders",
+     "at": 5.675
+    },
+    {
+     "w": "close",
+     "at": 6.225
+    },
+    {
+     "w": "in",
+     "at": 6.625
+    },
+    {
+     "w": "He",
+     "at": 7.2
+    },
+    {
+     "w": "cuts",
+     "at": 7.325
+    },
+    {
+     "w": "inside",
+     "at": 7.625
+    },
+    {
+     "w": "and",
+     "at": 8.162
+    },
+    {
+     "w": "races",
+     "at": 8.275
+    },
+    {
+     "w": "away",
+     "at": 8.7
+    },
+    {
+     "w": "Pass",
+     "at": 9.387
+    },
+    {
+     "w": "to",
+     "at": 9.725
+    },
+    {
+     "w": "Borges",
+     "at": 9.85
+    },
+    {
+     "w": "straight",
+     "at": 10.45
+    },
+    {
+     "w": "back",
+     "at": 10.75
+    },
+    {
+     "w": "one",
+     "at": 11.537
+    },
+    {
+     "w": "defender",
+     "at": 11.8
+    },
+    {
+     "w": "left",
+     "at": 12.3
+    },
+    {
+     "w": "goal",
+     "at": 13.162
+    }
+   ]
+  },
+  {
+   "label": "Watch the trick",
+   "text": "Watch the trick, slowly. The defender steps in front. Neymar pokes the ball past one side, runs round the other side, and picks it up!",
+   "src": "/plays/narration/neymar-signature/2.m4a",
+   "seconds": 9.5,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.375
+    },
+    {
+     "w": "the",
+     "at": 0.675
+    },
+    {
+     "w": "trick",
+     "at": 0.787
+    },
+    {
+     "w": "slowly",
+     "at": 1.212
+    },
+    {
+     "w": "The",
+     "at": 2.237
+    },
+    {
+     "w": "defender",
+     "at": 2.35
+    },
+    {
+     "w": "steps",
+     "at": 2.862
+    },
+    {
+     "w": "in",
+     "at": 3.2
+    },
+    {
+     "w": "front",
+     "at": 3.362
+    },
+    {
+     "w": "Neymar",
+     "at": 4.213
+    },
+    {
+     "w": "pokes",
+     "at": 4.625
+    },
+    {
+     "w": "the",
+     "at": 4.925
+    },
+    {
+     "w": "ball",
+     "at": 5.025
+    },
+    {
+     "w": "past",
+     "at": 5.325
+    },
+    {
+     "w": "one",
+     "at": 5.675
+    },
+    {
+     "w": "side",
+     "at": 5.912
+    },
+    {
+     "w": "runs",
+     "at": 6.562
+    },
+    {
+     "w": "round",
+     "at": 6.925
+    },
+    {
+     "w": "the",
+     "at": 7.162
+    },
+    {
+     "w": "other",
+     "at": 7.237
+    },
+    {
+     "w": "side",
+     "at": 7.487
+    },
+    {
+     "w": "and",
+     "at": 7.888
+    },
+    {
+     "w": "picks",
+     "at": 8.0
+    },
+    {
+     "w": "it",
+     "at": 8.238
+    },
+    {
+     "w": "up",
+     "at": 8.312
+    }
+   ]
+  },
+  {
+   "label": "Past the keeper",
+   "text": "Even as he falls, he slides it past the keeper. It won the Pusk\u00e1s Award!",
+   "src": "/plays/narration/neymar-signature/3.m4a",
+   "seconds": 5.8,
+   "words": [
+    {
+     "w": "Even",
+     "at": 0.375
+    },
+    {
+     "w": "as",
+     "at": 0.625
+    },
+    {
+     "w": "he",
+     "at": 0.738
+    },
+    {
+     "w": "falls",
+     "at": 0.863
+    },
+    {
+     "w": "he",
+     "at": 1.5
+    },
+    {
+     "w": "slides",
+     "at": 1.663
+    },
+    {
+     "w": "it",
+     "at": 2.038
+    },
+    {
+     "w": "past",
+     "at": 2.125
+    },
+    {
+     "w": "the",
+     "at": 2.438
+    },
+    {
+     "w": "keeper",
+     "at": 2.525
+    },
+    {
+     "w": "It",
+     "at": 3.4
+    },
+    {
+     "w": "won",
+     "at": 3.538
+    },
+    {
+     "w": "the",
+     "at": 3.663
+    },
+    {
+     "w": "Pusk\u00e1s",
+     "at": 3.75
+    },
+    {
+     "w": "Award",
+     "at": 4.275
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: practise one trick again and again, until it's automatic. Then use it when a defender gets close!",
+   "src": "/plays/narration/neymar-signature/4.m4a",
+   "seconds": 8.0,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "practise",
+     "at": 1.337
+    },
+    {
+     "w": "one",
+     "at": 1.887
+    },
+    {
+     "w": "trick",
+     "at": 2.163
+    },
+    {
+     "w": "again",
+     "at": 2.4
+    },
+    {
+     "w": "and",
+     "at": 2.75
+    },
+    {
+     "w": "again",
+     "at": 2.862
+    },
+    {
+     "w": "until",
+     "at": 3.45
+    },
+    {
+     "w": "it's",
+     "at": 3.737
+    },
+    {
+     "w": "automatic",
+     "at": 3.9
+    },
+    {
+     "w": "Then",
+     "at": 5.062
+    },
+    {
+     "w": "use",
+     "at": 5.312
+    },
+    {
+     "w": "it",
+     "at": 5.575
+    },
+    {
+     "w": "when",
+     "at": 5.688
+    },
+    {
+     "w": "a",
+     "at": 5.812
+    },
+    {
+     "w": "defender",
+     "at": 5.875
+    },
+    {
+     "w": "gets",
+     "at": 6.325
+    },
+    {
+     "w": "close",
+     "at": 6.575
+    }
+   ]
+  }
+ ]
+}

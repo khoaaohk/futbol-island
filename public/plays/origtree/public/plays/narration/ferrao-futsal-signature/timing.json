@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: the 2022 final",
+   "text": "The 2022 Futsal Champions League final, in Riga. Barcelona play Sporting. Ferr\u00e3o is Bar\u00e7a\u2019s pivot, the player up front. He scores the third goal, and Bar\u00e7a win four nil!",
+   "src": "/plays/narration/ferrao-futsal-signature/1.m4a",
+   "seconds": 13.3,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "2022",
+     "at": 0.425
+    },
+    {
+     "w": "Futsal",
+     "at": 1.375
+    },
+    {
+     "w": "Champions",
+     "at": 1.837
+    },
+    {
+     "w": "League",
+     "at": 2.45
+    },
+    {
+     "w": "final",
+     "at": 2.688
+    },
+    {
+     "w": "in",
+     "at": 3.175
+    },
+    {
+     "w": "Riga",
+     "at": 3.325
+    },
+    {
+     "w": "Barcelona",
+     "at": 4.275
+    },
+    {
+     "w": "play",
+     "at": 5.0
+    },
+    {
+     "w": "Sporting",
+     "at": 5.287
+    },
+    {
+     "w": "Ferr\u00e3o",
+     "at": 6.325
+    },
+    {
+     "w": "is",
+     "at": 6.8
+    },
+    {
+     "w": "Bar\u00e7a\u2019s",
+     "at": 6.963
+    },
+    {
+     "w": "pivot",
+     "at": 7.438
+    },
+    {
+     "w": "the",
+     "at": 7.975
+    },
+    {
+     "w": "player",
+     "at": 8.088
+    },
+    {
+     "w": "up",
+     "at": 8.488
+    },
+    {
+     "w": "front",
+     "at": 8.662
+    },
+    {
+     "w": "He",
+     "at": 9.425
+    },
+    {
+     "w": "scores",
+     "at": 9.588
+    },
+    {
+     "w": "the",
+     "at": 10.025
+    },
+    {
+     "w": "third",
+     "at": 10.162
+    },
+    {
+     "w": "goal",
+     "at": 10.5
+    },
+    {
+     "w": "and",
+     "at": 10.9
+    },
+    {
+     "w": "Bar\u00e7a",
+     "at": 11.025
+    },
+    {
+     "w": "win",
+     "at": 11.4
+    },
+    {
+     "w": "four",
+     "at": 11.675
+    },
+    {
+     "w": "nil",
+     "at": 11.963
+    }
+   ]
+  },
+  {
+   "label": "How he does it",
+   "text": "Pivots play with their back to goal. This is how he does it: he holds the defender off with his arm and body. He feels where the defender leans, spins the other way and shoots!",
+   "src": "/plays/narration/ferrao-futsal-signature/2.m4a",
+   "seconds": 11.9,
+   "words": [
+    {
+     "w": "Pivots",
+     "at": 0.325
+    },
+    {
+     "w": "play",
+     "at": 0.725
+    },
+    {
+     "w": "with",
+     "at": 0.975
+    },
+    {
+     "w": "their",
+     "at": 1.113
+    },
+    {
+     "w": "back",
+     "at": 1.275
+    },
+    {
+     "w": "to",
+     "at": 1.55
+    },
+    {
+     "w": "goal",
+     "at": 1.675
+    },
+    {
+     "w": "This",
+     "at": 2.487
+    },
+    {
+     "w": "is",
+     "at": 2.725
+    },
+    {
+     "w": "how",
+     "at": 2.875
+    },
+    {
+     "w": "he",
+     "at": 3.075
+    },
+    {
+     "w": "does",
+     "at": 3.2
+    },
+    {
+     "w": "it",
+     "at": 3.438
+    },
+    {
+     "w": "he",
+     "at": 3.975
+    },
+    {
+     "w": "holds",
+     "at": 4.125
+    },
+    {
+     "w": "the",
+     "at": 4.45
+    },
+    {
+     "w": "defender",
+     "at": 4.55
+    },
+    {
+     "w": "off",
+     "at": 5.075
+    },
+    {
+     "w": "with",
+     "at": 5.338
+    },
+    {
+     "w": "his",
+     "at": 5.463
+    },
+    {
+     "w": "arm",
+     "at": 5.638
+    },
+    {
+     "w": "and",
+     "at": 6.0
+    },
+    {
+     "w": "body",
+     "at": 6.125
+    },
+    {
+     "w": "He",
+     "at": 7.088
+    },
+    {
+     "w": "feels",
+     "at": 7.263
+    },
+    {
+     "w": "where",
+     "at": 7.638
+    },
+    {
+     "w": "the",
+     "at": 7.763
+    },
+    {
+     "w": "defender",
+     "at": 7.85
+    },
+    {
+     "w": "leans",
+     "at": 8.375
+    },
+    {
+     "w": "spins",
+     "at": 9.15
+    },
+    {
+     "w": "the",
+     "at": 9.6
+    },
+    {
+     "w": "other",
+     "at": 9.75
+    },
+    {
+     "w": "way",
+     "at": 10.05
+    },
+    {
+     "w": "and",
+     "at": 10.3
+    },
+    {
+     "w": "shoots",
+     "at": 10.463
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. Arm out, stay low, turn and finish!",
+   "src": "/plays/narration/ferrao-futsal-signature/3.m4a",
+   "seconds": 4.9,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.662
+    },
+    {
+     "w": "slowly",
+     "at": 1.087
+    },
+    {
+     "w": "Arm",
+     "at": 1.988
+    },
+    {
+     "w": "out",
+     "at": 2.225
+    },
+    {
+     "w": "stay",
+     "at": 2.5
+    },
+    {
+     "w": "low",
+     "at": 2.8
+    },
+    {
+     "w": "turn",
+     "at": 3.125
+    },
+    {
+     "w": "and",
+     "at": 3.388
+    },
+    {
+     "w": "finish",
+     "at": 3.513
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: hold the defender off with your arm and body, then turn and finish!",
+   "src": "/plays/narration/ferrao-futsal-signature/4.m4a",
+   "seconds": 5.9,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "hold",
+     "at": 1.363
+    },
+    {
+     "w": "the",
+     "at": 1.613
+    },
+    {
+     "w": "defender",
+     "at": 1.7
+    },
+    {
+     "w": "off",
+     "at": 2.175
+    },
+    {
+     "w": "with",
+     "at": 2.388
+    },
+    {
+     "w": "your",
+     "at": 2.487
+    },
+    {
+     "w": "arm",
+     "at": 2.638
+    },
+    {
+     "w": "and",
+     "at": 2.938
+    },
+    {
+     "w": "body",
+     "at": 3.05
+    },
+    {
+     "w": "then",
+     "at": 3.725
+    },
+    {
+     "w": "turn",
+     "at": 3.938
+    },
+    {
+     "w": "and",
+     "at": 4.3
+    },
+    {
+     "w": "finish",
+     "at": 4.438
+    }
+   ]
+  }
+ ]
+}

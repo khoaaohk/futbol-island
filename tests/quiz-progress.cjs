@@ -10,4 +10,13 @@ api=load();assert.equal(api.getQuizProgress().completed,1,'Saved mastery survive
 for(const [f,ls] of Object.entries(manifest))for(const [lesson,count] of Object.entries(ls))for(let i=0;i<count;i++)api.recordCorrectQuizAnswer(f,lesson,i);
 assert.equal(api.getQuizProgress().completed,api.TOTAL_QUIZ_QUESTIONS);storage.set(api.QUIZ_STORAGE_KEY,'["fake",null,{},"fake"]');assert.equal(load().getQuizProgress().completed,0,'Reject invalid saved keys');
 const first=load(),second=load();storage.set(first.QUIZ_STORAGE_KEY,'[]');first.getQuizProgress();second.getQuizProgress();first.recordCorrectQuizAnswer(format,id,0);second.recordCorrectQuizAnswer(format,id,1);assert.equal(JSON.parse(storage.get(first.QUIZ_STORAGE_KEY)).length,2,'Concurrent tabs merge correct answers');
-console.log('Quiz progress: catalog parity, deduplication, persistence, full mastery, invalid storage passed.');
+// Quiz growth migration: a pre-6th-question save that passed a grown lesson 5/5 keeps it passed (no Paths re-lock); a partial
+// pass, a new device and a second load get nothing extra.
+{const growth=load().QUIZ_GROWTH,[grown,before]=Object.entries(growth)[0],[other]=Object.entries(growth)[1],[gf,gid]=grown.split(':');
+ assert.equal(manifest[gf][gid],before+1,'the grown lesson now has one more question');
+ storage.clear();storage.set(api.QUIZ_STORAGE_KEY,JSON.stringify([...Array.from({length:before},(_,i)=>`${grown}:${i}`),`${other}:0`]));
+ let m=load();assert(m.hasCorrectQuizAnswer(gf,gid,before),'old 5/5 save: the added question is credited');const [of,oid]=other.split(':');assert(!m.hasCorrectQuizAnswer(of,oid,before),'a partly answered lesson gets nothing');
+ assert(JSON.parse(storage.get(api.QUIZ_STORAGE_KEY)).includes(`${grown}:${before}`),'the credit is saved for raw-storage readers (cardTiers, rideUnlocks)');
+ storage.set(api.QUIZ_STORAGE_KEY,JSON.stringify(Array.from({length:before},(_,i)=>`${grown}:${i}`)));m=load();assert(!m.hasCorrectQuizAnswer(gf,gid,before),'the migration runs once per device');
+ storage.clear();m=load();storage.set(api.QUIZ_STORAGE_KEY,JSON.stringify(Array.from({length:before},(_,i)=>`${grown}:${i}`)));m=load();assert(!m.hasCorrectQuizAnswer(gf,gid,before),'a new player still answers every question');}
+console.log('Quiz progress: catalog parity, deduplication, persistence, full mastery, invalid storage, growth migration passed.');

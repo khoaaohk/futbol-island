@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Soccer City",
+   "text": "Johannesburg, 2010, the World Cup final, nil-nil. Spain in dark blue, the Netherlands in orange. Sneijder slips a pass, and Arjen Robben is through on Iker Casillas... saved!",
+   "src": "/plays/narration/casillas-robben-2010/1.m4a",
+   "seconds": 13.7,
+   "words": [
+    {
+     "w": "Johannesburg",
+     "at": 0.375
+    },
+    {
+     "w": "2010",
+     "at": 1.25
+    },
+    {
+     "w": "the",
+     "at": 2.05
+    },
+    {
+     "w": "World",
+     "at": 2.15
+    },
+    {
+     "w": "Cup",
+     "at": 2.45
+    },
+    {
+     "w": "final",
+     "at": 2.688
+    },
+    {
+     "w": "nil-nil",
+     "at": 3.25
+    },
+    {
+     "w": "Spain",
+     "at": 4.287
+    },
+    {
+     "w": "in",
+     "at": 4.725
+    },
+    {
+     "w": "dark",
+     "at": 4.875
+    },
+    {
+     "w": "blue",
+     "at": 5.188
+    },
+    {
+     "w": "the",
+     "at": 5.7
+    },
+    {
+     "w": "Netherlands",
+     "at": 5.825
+    },
+    {
+     "w": "in",
+     "at": 6.45
+    },
+    {
+     "w": "orange",
+     "at": 6.612
+    },
+    {
+     "w": "Sneijder",
+     "at": 7.675
+    },
+    {
+     "w": "slips",
+     "at": 8.188
+    },
+    {
+     "w": "a",
+     "at": 8.463
+    },
+    {
+     "w": "pass",
+     "at": 8.537
+    },
+    {
+     "w": "and",
+     "at": 9.075
+    },
+    {
+     "w": "Arjen",
+     "at": 9.238
+    },
+    {
+     "w": "Robben",
+     "at": 9.65
+    },
+    {
+     "w": "is",
+     "at": 10.05
+    },
+    {
+     "w": "through",
+     "at": 10.213
+    },
+    {
+     "w": "on",
+     "at": 10.475
+    },
+    {
+     "w": "Iker",
+     "at": 10.688
+    },
+    {
+     "w": "Casillas",
+     "at": 11.025
+    },
+    {
+     "w": "saved",
+     "at": 12.225
+    }
+   ]
+  },
+  {
+   "label": "Stay big",
+   "text": "Watch again, slowly. Casillas stays on his feet and makes himself big. Robben waits for him to dive.",
+   "src": "/plays/narration/casillas-robben-2010/2.m4a",
+   "seconds": 7.6,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.238
+    },
+    {
+     "w": "Casillas",
+     "at": 2.212
+    },
+    {
+     "w": "stays",
+     "at": 2.7
+    },
+    {
+     "w": "on",
+     "at": 3.038
+    },
+    {
+     "w": "his",
+     "at": 3.138
+    },
+    {
+     "w": "feet",
+     "at": 3.325
+    },
+    {
+     "w": "and",
+     "at": 3.562
+    },
+    {
+     "w": "makes",
+     "at": 3.663
+    },
+    {
+     "w": "himself",
+     "at": 3.888
+    },
+    {
+     "w": "big",
+     "at": 4.338
+    },
+    {
+     "w": "Robben",
+     "at": 5.1
+    },
+    {
+     "w": "waits",
+     "at": 5.5
+    },
+    {
+     "w": "for",
+     "at": 5.825
+    },
+    {
+     "w": "him",
+     "at": 5.938
+    },
+    {
+     "w": "to",
+     "at": 6.1
+    },
+    {
+     "w": "dive",
+     "at": 6.225
+    }
+   ]
+  },
+  {
+   "label": "The toe",
+   "text": "Robben shoots low, past his hands, but Casillas sticks out his right foot. His toe turns it wide!",
+   "src": "/plays/narration/casillas-robben-2010/3.m4a",
+   "seconds": 7.3,
+   "words": [
+    {
+     "w": "Robben",
+     "at": 0.4
+    },
+    {
+     "w": "shoots",
+     "at": 0.775
+    },
+    {
+     "w": "low",
+     "at": 1.1
+    },
+    {
+     "w": "past",
+     "at": 1.675
+    },
+    {
+     "w": "his",
+     "at": 1.962
+    },
+    {
+     "w": "hands",
+     "at": 2.1
+    },
+    {
+     "w": "but",
+     "at": 2.65
+    },
+    {
+     "w": "Casillas",
+     "at": 2.8
+    },
+    {
+     "w": "sticks",
+     "at": 3.4
+    },
+    {
+     "w": "out",
+     "at": 3.663
+    },
+    {
+     "w": "his",
+     "at": 3.788
+    },
+    {
+     "w": "right",
+     "at": 3.95
+    },
+    {
+     "w": "foot",
+     "at": 4.237
+    },
+    {
+     "w": "His",
+     "at": 5.075
+    },
+    {
+     "w": "toe",
+     "at": 5.275
+    },
+    {
+     "w": "turns",
+     "at": 5.562
+    },
+    {
+     "w": "it",
+     "at": 5.862
+    },
+    {
+     "w": "wide",
+     "at": 5.95
+    }
+   ]
+  },
+  {
+   "label": "One on one",
+   "text": "One on one, stay on your feet as long as you can, make yourself big, and save it with any part of your body.",
+   "src": "/plays/narration/casillas-robben-2010/4.m4a",
+   "seconds": 7.7,
+   "words": [
+    {
+     "w": "One",
+     "at": 0.4
+    },
+    {
+     "w": "on",
+     "at": 0.588
+    },
+    {
+     "w": "one",
+     "at": 0.775
+    },
+    {
+     "w": "stay",
+     "at": 1.438
+    },
+    {
+     "w": "on",
+     "at": 1.712
+    },
+    {
+     "w": "your",
+     "at": 1.812
+    },
+    {
+     "w": "feet",
+     "at": 1.975
+    },
+    {
+     "w": "as",
+     "at": 2.3
+    },
+    {
+     "w": "long",
+     "at": 2.45
+    },
+    {
+     "w": "as",
+     "at": 2.638
+    },
+    {
+     "w": "you",
+     "at": 2.725
+    },
+    {
+     "w": "can",
+     "at": 2.862
+    },
+    {
+     "w": "make",
+     "at": 3.575
+    },
+    {
+     "w": "yourself",
+     "at": 3.763
+    },
+    {
+     "w": "big",
+     "at": 4.188
+    },
+    {
+     "w": "and",
+     "at": 4.9
+    },
+    {
+     "w": "save",
+     "at": 5.05
+    },
+    {
+     "w": "it",
+     "at": 5.362
+    },
+    {
+     "w": "with",
+     "at": 5.463
+    },
+    {
+     "w": "any",
+     "at": 5.6
+    },
+    {
+     "w": "part",
+     "at": 5.825
+    },
+    {
+     "w": "of",
+     "at": 6.062
+    },
+    {
+     "w": "your",
+     "at": 6.138
+    },
+    {
+     "w": "body",
+     "at": 6.25
+    }
+   ]
+  }
+ ]
+}

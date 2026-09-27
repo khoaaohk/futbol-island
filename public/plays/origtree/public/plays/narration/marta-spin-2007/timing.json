@@ -1,0 +1,382 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Hangzhou",
+   "text": "Hangzhou, China, 2007, a World Cup semi-final. Brazil, in yellow, play the United States. Marta, number ten, has her back to goal. A defender is tight behind her. Here comes the ball. Watch her feet... she scores! Four nil!",
+   "src": "/plays/narration/marta-spin-2007/1.m4a",
+   "seconds": 16.5,
+   "words": [
+    {
+     "w": "Hangzhou",
+     "at": 0.375
+    },
+    {
+     "w": "China",
+     "at": 0.863
+    },
+    {
+     "w": "2007",
+     "at": 1.363
+    },
+    {
+     "w": "a",
+     "at": 2.4
+    },
+    {
+     "w": "World",
+     "at": 2.5
+    },
+    {
+     "w": "Cup",
+     "at": 2.825
+    },
+    {
+     "w": "semi-final",
+     "at": 3.075
+    },
+    {
+     "w": "Brazil",
+     "at": 4.237
+    },
+    {
+     "w": "in",
+     "at": 4.775
+    },
+    {
+     "w": "yellow",
+     "at": 4.925
+    },
+    {
+     "w": "play",
+     "at": 5.338
+    },
+    {
+     "w": "the",
+     "at": 5.6
+    },
+    {
+     "w": "United",
+     "at": 5.7
+    },
+    {
+     "w": "States",
+     "at": 6.15
+    },
+    {
+     "w": "Marta",
+     "at": 7.15
+    },
+    {
+     "w": "number",
+     "at": 7.513
+    },
+    {
+     "w": "ten",
+     "at": 7.787
+    },
+    {
+     "w": "has",
+     "at": 8.15
+    },
+    {
+     "w": "her",
+     "at": 8.312
+    },
+    {
+     "w": "back",
+     "at": 8.425
+    },
+    {
+     "w": "to",
+     "at": 8.7
+    },
+    {
+     "w": "goal",
+     "at": 8.825
+    },
+    {
+     "w": "A",
+     "at": 9.425
+    },
+    {
+     "w": "defender",
+     "at": 9.5
+    },
+    {
+     "w": "is",
+     "at": 10.025
+    },
+    {
+     "w": "tight",
+     "at": 10.188
+    },
+    {
+     "w": "behind",
+     "at": 10.5
+    },
+    {
+     "w": "her",
+     "at": 10.912
+    },
+    {
+     "w": "Here",
+     "at": 11.537
+    },
+    {
+     "w": "comes",
+     "at": 11.775
+    },
+    {
+     "w": "the",
+     "at": 12.075
+    },
+    {
+     "w": "ball",
+     "at": 12.175
+    },
+    {
+     "w": "Watch",
+     "at": 12.688
+    },
+    {
+     "w": "her",
+     "at": 12.988
+    },
+    {
+     "w": "feet",
+     "at": 13.15
+    },
+    {
+     "w": "she",
+     "at": 13.95
+    },
+    {
+     "w": "scores",
+     "at": 14.125
+    },
+    {
+     "w": "Four",
+     "at": 14.85
+    },
+    {
+     "w": "nil",
+     "at": 15.15
+    }
+   ]
+  },
+  {
+   "label": "Flick and spin",
+   "text": "Watch again, slowly. Marta flicks the ball round one side of the defender, and spins round the other. Then she beats one more, and slots it past the keeper.",
+   "src": "/plays/narration/marta-spin-2007/2.m4a",
+   "seconds": 10.6,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.25
+    },
+    {
+     "w": "Marta",
+     "at": 2.337
+    },
+    {
+     "w": "flicks",
+     "at": 2.688
+    },
+    {
+     "w": "the",
+     "at": 3.0
+    },
+    {
+     "w": "ball",
+     "at": 3.1
+    },
+    {
+     "w": "round",
+     "at": 3.45
+    },
+    {
+     "w": "one",
+     "at": 3.712
+    },
+    {
+     "w": "side",
+     "at": 3.962
+    },
+    {
+     "w": "of",
+     "at": 4.237
+    },
+    {
+     "w": "the",
+     "at": 4.312
+    },
+    {
+     "w": "defender",
+     "at": 4.4
+    },
+    {
+     "w": "and",
+     "at": 4.975
+    },
+    {
+     "w": "spins",
+     "at": 5.125
+    },
+    {
+     "w": "round",
+     "at": 5.575
+    },
+    {
+     "w": "the",
+     "at": 5.787
+    },
+    {
+     "w": "other",
+     "at": 5.875
+    },
+    {
+     "w": "Then",
+     "at": 6.625
+    },
+    {
+     "w": "she",
+     "at": 6.862
+    },
+    {
+     "w": "beats",
+     "at": 7.025
+    },
+    {
+     "w": "one",
+     "at": 7.3
+    },
+    {
+     "w": "more",
+     "at": 7.525
+    },
+    {
+     "w": "and",
+     "at": 8.15
+    },
+    {
+     "w": "slots",
+     "at": 8.3
+    },
+    {
+     "w": "it",
+     "at": 8.688
+    },
+    {
+     "w": "past",
+     "at": 8.787
+    },
+    {
+     "w": "the",
+     "at": 9.137
+    },
+    {
+     "w": "keeper",
+     "at": 9.225
+    }
+   ]
+  },
+  {
+   "label": "One way, the other",
+   "text": "When a defender is tight behind you, use a clever touch. Flick the ball one way, and run the other!",
+   "src": "/plays/narration/marta-spin-2007/3.m4a",
+   "seconds": 7.3,
+   "words": [
+    {
+     "w": "When",
+     "at": 0.375
+    },
+    {
+     "w": "a",
+     "at": 0.487
+    },
+    {
+     "w": "defender",
+     "at": 0.55
+    },
+    {
+     "w": "is",
+     "at": 1.075
+    },
+    {
+     "w": "tight",
+     "at": 1.238
+    },
+    {
+     "w": "behind",
+     "at": 1.5
+    },
+    {
+     "w": "you",
+     "at": 1.9
+    },
+    {
+     "w": "use",
+     "at": 2.413
+    },
+    {
+     "w": "a",
+     "at": 2.612
+    },
+    {
+     "w": "clever",
+     "at": 2.712
+    },
+    {
+     "w": "touch",
+     "at": 3.087
+    },
+    {
+     "w": "Flick",
+     "at": 4.05
+    },
+    {
+     "w": "the",
+     "at": 4.325
+    },
+    {
+     "w": "ball",
+     "at": 4.425
+    },
+    {
+     "w": "one",
+     "at": 4.75
+    },
+    {
+     "w": "way",
+     "at": 4.975
+    },
+    {
+     "w": "and",
+     "at": 5.425
+    },
+    {
+     "w": "run",
+     "at": 5.562
+    },
+    {
+     "w": "the",
+     "at": 5.812
+    },
+    {
+     "w": "other",
+     "at": 5.95
+    }
+   ]
+  }
+ ]
+}

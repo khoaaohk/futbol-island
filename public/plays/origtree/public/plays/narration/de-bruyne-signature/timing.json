@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The winner, live",
+   "text": "Belgium against Japan, two all, the last minute. Courtois throws it to Kevin De Bruyne. Off he races with the ball, on and on and on... then the pass, into space for Meunier! Low cross... Chadli scores!",
+   "src": "/plays/narration/de-bruyne-signature/1.m4a",
+   "seconds": 14.5,
+   "words": [
+    {
+     "w": "Belgium",
+     "at": 0.4
+    },
+    {
+     "w": "against",
+     "at": 0.8
+    },
+    {
+     "w": "Japan",
+     "at": 1.2
+    },
+    {
+     "w": "two",
+     "at": 1.788
+    },
+    {
+     "w": "all",
+     "at": 2.0
+    },
+    {
+     "w": "the",
+     "at": 2.312
+    },
+    {
+     "w": "last",
+     "at": 2.4
+    },
+    {
+     "w": "minute",
+     "at": 2.775
+    },
+    {
+     "w": "Courtois",
+     "at": 3.587
+    },
+    {
+     "w": "throws",
+     "at": 4.037
+    },
+    {
+     "w": "it",
+     "at": 4.388
+    },
+    {
+     "w": "to",
+     "at": 4.475
+    },
+    {
+     "w": "Kevin",
+     "at": 4.6
+    },
+    {
+     "w": "De",
+     "at": 4.925
+    },
+    {
+     "w": "Bruyne",
+     "at": 5.025
+    },
+    {
+     "w": "Off",
+     "at": 5.838
+    },
+    {
+     "w": "he",
+     "at": 6.037
+    },
+    {
+     "w": "races",
+     "at": 6.15
+    },
+    {
+     "w": "with",
+     "at": 6.588
+    },
+    {
+     "w": "the",
+     "at": 6.713
+    },
+    {
+     "w": "ball",
+     "at": 6.8
+    },
+    {
+     "w": "on",
+     "at": 7.263
+    },
+    {
+     "w": "and",
+     "at": 7.625
+    },
+    {
+     "w": "on",
+     "at": 7.75
+    },
+    {
+     "w": "and",
+     "at": 8.05
+    },
+    {
+     "w": "on",
+     "at": 8.175
+    },
+    {
+     "w": "then",
+     "at": 9.0
+    },
+    {
+     "w": "the",
+     "at": 9.188
+    },
+    {
+     "w": "pass",
+     "at": 9.287
+    },
+    {
+     "w": "into",
+     "at": 9.762
+    },
+    {
+     "w": "space",
+     "at": 10.037
+    },
+    {
+     "w": "for",
+     "at": 10.425
+    },
+    {
+     "w": "Meunier",
+     "at": 10.55
+    },
+    {
+     "w": "Low",
+     "at": 11.425
+    },
+    {
+     "w": "cross",
+     "at": 11.713
+    },
+    {
+     "w": "Chadli",
+     "at": 12.588
+    },
+    {
+     "w": "scores",
+     "at": 12.988
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. De Bruyne does not pass to Meunier's feet. He passes into the space in front of him.",
+   "src": "/plays/narration/de-bruyne-signature/2.m4a",
+   "seconds": 7.8,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.7
+    },
+    {
+     "w": "slowly",
+     "at": 1.288
+    },
+    {
+     "w": "De",
+     "at": 2.263
+    },
+    {
+     "w": "Bruyne",
+     "at": 2.425
+    },
+    {
+     "w": "does",
+     "at": 2.825
+    },
+    {
+     "w": "not",
+     "at": 3.0
+    },
+    {
+     "w": "pass",
+     "at": 3.225
+    },
+    {
+     "w": "to",
+     "at": 3.575
+    },
+    {
+     "w": "Meunier's",
+     "at": 3.675
+    },
+    {
+     "w": "feet",
+     "at": 4.188
+    },
+    {
+     "w": "He",
+     "at": 4.9
+    },
+    {
+     "w": "passes",
+     "at": 5.025
+    },
+    {
+     "w": "into",
+     "at": 5.463
+    },
+    {
+     "w": "the",
+     "at": 5.638
+    },
+    {
+     "w": "space",
+     "at": 5.737
+    },
+    {
+     "w": "in",
+     "at": 6.175
+    },
+    {
+     "w": "front",
+     "at": 6.325
+    },
+    {
+     "w": "of",
+     "at": 6.513
+    },
+    {
+     "w": "him",
+     "at": 6.588
+    }
+   ]
+  },
+  {
+   "label": "Onto it",
+   "text": "Meunier never slows down. Low cross, Lukaku lets it run... goal!",
+   "src": "/plays/narration/de-bruyne-signature/3.m4a",
+   "seconds": 5.8,
+   "words": [
+    {
+     "w": "Meunier",
+     "at": 0.4
+    },
+    {
+     "w": "never",
+     "at": 0.8
+    },
+    {
+     "w": "slows",
+     "at": 1.075
+    },
+    {
+     "w": "down",
+     "at": 1.425
+    },
+    {
+     "w": "Low",
+     "at": 2.112
+    },
+    {
+     "w": "cross",
+     "at": 2.325
+    },
+    {
+     "w": "Lukaku",
+     "at": 2.75
+    },
+    {
+     "w": "lets",
+     "at": 3.25
+    },
+    {
+     "w": "it",
+     "at": 3.462
+    },
+    {
+     "w": "run",
+     "at": 3.55
+    },
+    {
+     "w": "goal",
+     "at": 4.362
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: spot your teammate's run and pass into the space in front of them, so they can run onto it.",
+   "src": "/plays/narration/de-bruyne-signature/4.m4a",
+   "seconds": 7.2,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.562
+    },
+    {
+     "w": "spot",
+     "at": 1.425
+    },
+    {
+     "w": "your",
+     "at": 1.738
+    },
+    {
+     "w": "teammate's",
+     "at": 1.863
+    },
+    {
+     "w": "run",
+     "at": 2.413
+    },
+    {
+     "w": "and",
+     "at": 2.75
+    },
+    {
+     "w": "pass",
+     "at": 2.888
+    },
+    {
+     "w": "into",
+     "at": 3.263
+    },
+    {
+     "w": "the",
+     "at": 3.438
+    },
+    {
+     "w": "space",
+     "at": 3.538
+    },
+    {
+     "w": "in",
+     "at": 3.913
+    },
+    {
+     "w": "front",
+     "at": 4.05
+    },
+    {
+     "w": "of",
+     "at": 4.237
+    },
+    {
+     "w": "them",
+     "at": 4.312
+    },
+    {
+     "w": "so",
+     "at": 4.85
+    },
+    {
+     "w": "they",
+     "at": 5.0
+    },
+    {
+     "w": "can",
+     "at": 5.15
+    },
+    {
+     "w": "run",
+     "at": 5.35
+    },
+    {
+     "w": "onto",
+     "at": 5.575
+    },
+    {
+     "w": "it",
+     "at": 5.987
+    }
+   ]
+  }
+ ]
+}

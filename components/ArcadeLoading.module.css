@@ -1,0 +1,22 @@
+@font-face{font-family:ArcadeLoadingBrush;src:url('/stories/films/assets/IslandBrush-Regular.ttf') format('truetype');font-display:swap}.screen{position:absolute;inset:0;z-index:90;overflow:hidden;isolation:isolate;background:#030405;color:#fff2d3;opacity:1;transition:opacity .65s ease;pointer-events:auto}.screen::after{content:'';position:absolute;inset:0;background:url('/stories/films/assets/entry-grain.png');opacity:.22;pointer-events:none;z-index:2}.copy{position:absolute;top:27%;left:24px;right:24px;transform:translateY(-50%);text-align:center;z-index:1}.copy h2{font:clamp(48px,7vw,84px)/1.18 ArcadeLoadingBrush,Arial,sans-serif;margin:0 0 26px;letter-spacing:-.025em}.copy :global(.island-loading-track){width:180px;height:6px;background:#fff2d338}.copy :global(.island-loading-track)>span{background:#f9d55d}.art{position:absolute;left:50%;bottom:2%;transform:translateX(-50%);width:min(86vw,105vh);height:auto;max-height:62%;overflow:visible}.exiting{pointer-events:none;animation:arcadeReveal .65s 1.75s cubic-bezier(.4,0,.2,1) both}@media(max-aspect-ratio:5/6){.copy{top:25%}.art{width:126%;max-height:57%;bottom:9%}}@media(max-height:500px) and (orientation:landscape){.copy{top:24%}.copy h2{font-size:44px;margin-bottom:14px}.art{max-height:66%;bottom:-3%}}@media(prefers-reduced-motion:reduce){.screen{transition:none}}
+
+/* Same cast placement as the island splash; the cabinets occupy the island's central space. */
+.art{width:min(53vw,79vh);max-height:48%;bottom:14%;z-index:0}
+
+.castLayer{position:absolute;inset:0;z-index:1;pointer-events:none}
+.machine{transform-box:fill-box;transform-origin:50% 90%}
+.exiting .machine{animation:arcadeMachineAway .5s ease both}
+.exiting .machine[data-arcade-loading-machine="1"]{animation-delay:.18s}
+.exiting .machine[data-arcade-loading-machine="2"]{animation-delay:.36s}
+.exiting .copy,.exiting .scenery{animation:arcadeDetailsAway .4s .65s ease both}
+.exiting .castLayer [data-cast]{animation:arcadeCharacterAway .2s var(--arcade-exit-delay) ease-in both}
+@keyframes arcadeMachineAway{0%{transform:scale(1);opacity:1}24%{transform:translateY(3px) scale(1.05,.93);opacity:1}48%{transform:translateY(-8px) scale(.86,1.04);opacity:1}100%{transform:translateY(6px) scale(0);opacity:0}}
+@keyframes arcadeCharacterAway{from{opacity:1;transform:translateX(-50%) scale(1)}to{opacity:0;transform:translateX(-50%) scale(.15)}}
+@keyframes arcadeDetailsAway{to{opacity:0}}
+@keyframes arcadeReveal{to{opacity:0}}
+@media(max-aspect-ratio:5/6){.art{width:92%;height:auto;max-height:38%;bottom:39%}.copy{top:16%}}
+@media(max-width:700px) and (max-aspect-ratio:5/6){.copy{top:max(8%,calc(env(safe-area-inset-top,0px) + 16px));transform:none}.copy h2{font-size:clamp(32px,8vw,48px);margin-bottom:22px}}
+@media(prefers-reduced-motion:reduce){.exiting,.exiting .art,.exiting .copy,.exiting .castLayer,.exiting .machine,.exiting .scenery,.exiting .castLayer [data-cast]{animation:none}.exiting{opacity:0}}
+
+.copy h2{color:#ffdef5;text-shadow:0 0 3px #ff65c8,0 0 18px #ff65c86b,0 0 42px #ab37bd35}
+.copy :global(.island-loading-track){background:#b991ff30}.copy :global(.island-loading-track)>span{background:#60e9f2;box-shadow:0 0 10px #60e9f280}

@@ -1,0 +1,386 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Porto Alegre",
+   "text": "World Cup 2014, Porto Alegre, nil-nil. Germany in white push up high. Algeria in green go long, and Slimani chases... but Manuel Neuer races out of his box and heads it away!",
+   "src": "/plays/narration/neuer-algeria-2014/1.m4a",
+   "seconds": 13.9,
+   "words": [
+    {
+     "w": "World",
+     "at": 0.375
+    },
+    {
+     "w": "Cup",
+     "at": 0.7
+    },
+    {
+     "w": "2014",
+     "at": 0.925
+    },
+    {
+     "w": "Porto",
+     "at": 2.025
+    },
+    {
+     "w": "Alegre",
+     "at": 2.45
+    },
+    {
+     "w": "nil-nil",
+     "at": 3.05
+    },
+    {
+     "w": "Germany",
+     "at": 4.0
+    },
+    {
+     "w": "in",
+     "at": 4.475
+    },
+    {
+     "w": "white",
+     "at": 4.625
+    },
+    {
+     "w": "push",
+     "at": 4.9
+    },
+    {
+     "w": "up",
+     "at": 5.162
+    },
+    {
+     "w": "high",
+     "at": 5.35
+    },
+    {
+     "w": "Algeria",
+     "at": 6.25
+    },
+    {
+     "w": "in",
+     "at": 6.825
+    },
+    {
+     "w": "green",
+     "at": 6.975
+    },
+    {
+     "w": "go",
+     "at": 7.325
+    },
+    {
+     "w": "long",
+     "at": 7.513
+    },
+    {
+     "w": "and",
+     "at": 8.025
+    },
+    {
+     "w": "Slimani",
+     "at": 8.162
+    },
+    {
+     "w": "chases",
+     "at": 8.688
+    },
+    {
+     "w": "but",
+     "at": 9.775
+    },
+    {
+     "w": "Manuel",
+     "at": 9.938
+    },
+    {
+     "w": "Neuer",
+     "at": 10.425
+    },
+    {
+     "w": "races",
+     "at": 10.725
+    },
+    {
+     "w": "out",
+     "at": 11.175
+    },
+    {
+     "w": "of",
+     "at": 11.312
+    },
+    {
+     "w": "his",
+     "at": 11.387
+    },
+    {
+     "w": "box",
+     "at": 11.562
+    },
+    {
+     "w": "and",
+     "at": 12.025
+    },
+    {
+     "w": "heads",
+     "at": 12.15
+    },
+    {
+     "w": "it",
+     "at": 12.387
+    },
+    {
+     "w": "away",
+     "at": 12.475
+    }
+   ]
+  },
+  {
+   "label": "Read it early",
+   "text": "Watch again, slowly. Neuer reads the ball over the top the moment it's kicked, and he's off before it bounces.",
+   "src": "/plays/narration/neuer-algeria-2014/2.m4a",
+   "seconds": 7.9,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.275
+    },
+    {
+     "w": "Neuer",
+     "at": 2.375
+    },
+    {
+     "w": "reads",
+     "at": 2.75
+    },
+    {
+     "w": "the",
+     "at": 3.075
+    },
+    {
+     "w": "ball",
+     "at": 3.175
+    },
+    {
+     "w": "over",
+     "at": 3.487
+    },
+    {
+     "w": "the",
+     "at": 3.663
+    },
+    {
+     "w": "top",
+     "at": 3.75
+    },
+    {
+     "w": "the",
+     "at": 4.075
+    },
+    {
+     "w": "moment",
+     "at": 4.175
+    },
+    {
+     "w": "it's",
+     "at": 4.537
+    },
+    {
+     "w": "kicked",
+     "at": 4.737
+    },
+    {
+     "w": "and",
+     "at": 5.375
+    },
+    {
+     "w": "he's",
+     "at": 5.487
+    },
+    {
+     "w": "off",
+     "at": 5.625
+    },
+    {
+     "w": "before",
+     "at": 5.875
+    },
+    {
+     "w": "it",
+     "at": 6.213
+    },
+    {
+     "w": "bounces",
+     "at": 6.3
+    }
+   ]
+  },
+  {
+   "label": "First to it",
+   "text": "Outside his box he can't use his hands, so he heads it, a split second before Slimani, out for a throw-in.",
+   "src": "/plays/narration/neuer-algeria-2014/3.m4a",
+   "seconds": 8.1,
+   "words": [
+    {
+     "w": "Outside",
+     "at": 0.375
+    },
+    {
+     "w": "his",
+     "at": 0.863
+    },
+    {
+     "w": "box",
+     "at": 1.038
+    },
+    {
+     "w": "he",
+     "at": 1.413
+    },
+    {
+     "w": "can't",
+     "at": 1.525
+    },
+    {
+     "w": "use",
+     "at": 1.775
+    },
+    {
+     "w": "his",
+     "at": 1.962
+    },
+    {
+     "w": "hands",
+     "at": 2.125
+    },
+    {
+     "w": "so",
+     "at": 3.013
+    },
+    {
+     "w": "he",
+     "at": 3.175
+    },
+    {
+     "w": "heads",
+     "at": 3.325
+    },
+    {
+     "w": "it",
+     "at": 3.6
+    },
+    {
+     "w": "a",
+     "at": 4.1
+    },
+    {
+     "w": "split",
+     "at": 4.213
+    },
+    {
+     "w": "second",
+     "at": 4.588
+    },
+    {
+     "w": "before",
+     "at": 4.938
+    },
+    {
+     "w": "Slimani",
+     "at": 5.25
+    },
+    {
+     "w": "out",
+     "at": 6.013
+    },
+    {
+     "w": "for",
+     "at": 6.275
+    },
+    {
+     "w": "a",
+     "at": 6.425
+    },
+    {
+     "w": "throw-in",
+     "at": 6.537
+    }
+   ]
+  },
+  {
+   "label": "Sweeper keeper",
+   "text": "Read the through ball early, and a keeper can sweep up behind the defence.",
+   "src": "/plays/narration/neuer-algeria-2014/4.m4a",
+   "seconds": 5.3,
+   "words": [
+    {
+     "w": "Read",
+     "at": 0.4
+    },
+    {
+     "w": "the",
+     "at": 0.675
+    },
+    {
+     "w": "through",
+     "at": 0.812
+    },
+    {
+     "w": "ball",
+     "at": 1.05
+    },
+    {
+     "w": "early",
+     "at": 1.375
+    },
+    {
+     "w": "and",
+     "at": 2.15
+    },
+    {
+     "w": "a",
+     "at": 2.263
+    },
+    {
+     "w": "keeper",
+     "at": 2.325
+    },
+    {
+     "w": "can",
+     "at": 2.7
+    },
+    {
+     "w": "sweep",
+     "at": 2.888
+    },
+    {
+     "w": "up",
+     "at": 3.188
+    },
+    {
+     "w": "behind",
+     "at": 3.337
+    },
+    {
+     "w": "the",
+     "at": 3.712
+    },
+    {
+     "w": "defence",
+     "at": 3.8
+    }
+   ]
+  }
+ ]
+}

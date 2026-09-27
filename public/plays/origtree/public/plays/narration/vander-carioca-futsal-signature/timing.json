@@ -1,0 +1,386 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: third place, 2004",
+   "text": "Taipei, 2004, the Futsal World Cup, the match for third place. Pivot Vander Carioca wears number fourteen. At half-time, Brazil lead Argentina six to one. Final whistle: seven to four! Brazil win bronze.",
+   "src": "/plays/narration/vander-carioca-futsal-signature/1.m4a",
+   "seconds": 16.2,
+   "words": [
+    {
+     "w": "Taipei",
+     "at": 0.35
+    },
+    {
+     "w": "2004",
+     "at": 0.9
+    },
+    {
+     "w": "the",
+     "at": 1.825
+    },
+    {
+     "w": "Futsal",
+     "at": 1.962
+    },
+    {
+     "w": "World",
+     "at": 2.45
+    },
+    {
+     "w": "Cup",
+     "at": 2.763
+    },
+    {
+     "w": "the",
+     "at": 3.225
+    },
+    {
+     "w": "match",
+     "at": 3.35
+    },
+    {
+     "w": "for",
+     "at": 3.725
+    },
+    {
+     "w": "third",
+     "at": 3.888
+    },
+    {
+     "w": "place",
+     "at": 4.2
+    },
+    {
+     "w": "Pivot",
+     "at": 5.138
+    },
+    {
+     "w": "Vander",
+     "at": 5.45
+    },
+    {
+     "w": "Carioca",
+     "at": 5.825
+    },
+    {
+     "w": "wears",
+     "at": 6.45
+    },
+    {
+     "w": "number",
+     "at": 6.75
+    },
+    {
+     "w": "fourteen",
+     "at": 7.037
+    },
+    {
+     "w": "At",
+     "at": 8.125
+    },
+    {
+     "w": "half-time",
+     "at": 8.275
+    },
+    {
+     "w": "Brazil",
+     "at": 8.975
+    },
+    {
+     "w": "lead",
+     "at": 9.425
+    },
+    {
+     "w": "Argentina",
+     "at": 9.65
+    },
+    {
+     "w": "six",
+     "at": 10.35
+    },
+    {
+     "w": "to",
+     "at": 10.675
+    },
+    {
+     "w": "one",
+     "at": 10.8
+    },
+    {
+     "w": "Final",
+     "at": 11.675
+    },
+    {
+     "w": "whistle",
+     "at": 12.1
+    },
+    {
+     "w": "seven",
+     "at": 12.787
+    },
+    {
+     "w": "to",
+     "at": 13.1
+    },
+    {
+     "w": "four",
+     "at": 13.238
+    },
+    {
+     "w": "Brazil",
+     "at": 13.988
+    },
+    {
+     "w": "win",
+     "at": 14.45
+    },
+    {
+     "w": "bronze",
+     "at": 14.688
+    }
+   ]
+  },
+  {
+   "label": "The move on his card",
+   "text": "This is the move on his card: the lay-off. Watch it slowly. His back is to goal. The pass comes in. He holds off the defender. One touch sets it back. His teammate shoots. Goal!",
+   "src": "/plays/narration/vander-carioca-futsal-signature/2.m4a",
+   "seconds": 13.0,
+   "words": [
+    {
+     "w": "This",
+     "at": 0.375
+    },
+    {
+     "w": "is",
+     "at": 0.55
+    },
+    {
+     "w": "the",
+     "at": 0.7
+    },
+    {
+     "w": "move",
+     "at": 0.812
+    },
+    {
+     "w": "on",
+     "at": 1.087
+    },
+    {
+     "w": "his",
+     "at": 1.188
+    },
+    {
+     "w": "card",
+     "at": 1.35
+    },
+    {
+     "w": "the",
+     "at": 1.875
+    },
+    {
+     "w": "lay-off",
+     "at": 2.0
+    },
+    {
+     "w": "Watch",
+     "at": 2.562
+    },
+    {
+     "w": "it",
+     "at": 2.862
+    },
+    {
+     "w": "slowly",
+     "at": 3.013
+    },
+    {
+     "w": "His",
+     "at": 3.9
+    },
+    {
+     "w": "back",
+     "at": 4.1
+    },
+    {
+     "w": "is",
+     "at": 4.388
+    },
+    {
+     "w": "to",
+     "at": 4.525
+    },
+    {
+     "w": "goal",
+     "at": 4.65
+    },
+    {
+     "w": "The",
+     "at": 5.45
+    },
+    {
+     "w": "pass",
+     "at": 5.55
+    },
+    {
+     "w": "comes",
+     "at": 5.9
+    },
+    {
+     "w": "in",
+     "at": 6.2
+    },
+    {
+     "w": "He",
+     "at": 6.725
+    },
+    {
+     "w": "holds",
+     "at": 6.85
+    },
+    {
+     "w": "off",
+     "at": 7.112
+    },
+    {
+     "w": "the",
+     "at": 7.312
+    },
+    {
+     "w": "defender",
+     "at": 7.4
+    },
+    {
+     "w": "One",
+     "at": 8.262
+    },
+    {
+     "w": "touch",
+     "at": 8.512
+    },
+    {
+     "w": "sets",
+     "at": 8.838
+    },
+    {
+     "w": "it",
+     "at": 9.113
+    },
+    {
+     "w": "back",
+     "at": 9.2
+    },
+    {
+     "w": "His",
+     "at": 9.875
+    },
+    {
+     "w": "teammate",
+     "at": 10.088
+    },
+    {
+     "w": "shoots",
+     "at": 10.65
+    },
+    {
+     "w": "Goal",
+     "at": 11.525
+    }
+   ]
+  },
+  {
+   "label": "Let the ball work",
+   "text": "Let the ball do the work! A pass beats any runner, and saves your legs. Vander played until he was forty-two.",
+   "src": "/plays/narration/vander-carioca-futsal-signature/3.m4a",
+   "seconds": 7.9,
+   "words": [
+    {
+     "w": "Let",
+     "at": 0.375
+    },
+    {
+     "w": "the",
+     "at": 0.512
+    },
+    {
+     "w": "ball",
+     "at": 0.6
+    },
+    {
+     "w": "do",
+     "at": 0.9
+    },
+    {
+     "w": "the",
+     "at": 1.025
+    },
+    {
+     "w": "work",
+     "at": 1.125
+    },
+    {
+     "w": "A",
+     "at": 1.887
+    },
+    {
+     "w": "pass",
+     "at": 2.013
+    },
+    {
+     "w": "beats",
+     "at": 2.438
+    },
+    {
+     "w": "any",
+     "at": 2.737
+    },
+    {
+     "w": "runner",
+     "at": 2.925
+    },
+    {
+     "w": "and",
+     "at": 3.325
+    },
+    {
+     "w": "saves",
+     "at": 3.462
+    },
+    {
+     "w": "your",
+     "at": 3.812
+    },
+    {
+     "w": "legs",
+     "at": 3.925
+    },
+    {
+     "w": "Vander",
+     "at": 4.85
+    },
+    {
+     "w": "played",
+     "at": 5.312
+    },
+    {
+     "w": "until",
+     "at": 5.713
+    },
+    {
+     "w": "he",
+     "at": 5.938
+    },
+    {
+     "w": "was",
+     "at": 6.037
+    },
+    {
+     "w": "forty-two",
+     "at": 6.2
+    }
+   ]
+  }
+ ]
+}

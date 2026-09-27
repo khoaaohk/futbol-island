@@ -79,6 +79,31 @@
      }
     ]
    }
+  },
+  {
+   "q": "This is a goal clearance. How does the goalkeeper send the ball out?",
+   "options": [
+    "Throws or rolls it with the hands",
+    "Kicks it off the floor",
+    "Dribbles it out"
+   ],
+   "correct": 0,
+   "explain": "Right. In futsal a goal clearance is thrown, and a roll is the easiest pass to control.",
+   "choiceExplanations": [
+    "Right. In futsal a goal clearance is thrown, and a roll is the easiest pass to control.",
+    "In futsal the goalkeeper must throw a goal clearance, not kick it.",
+    "A goal clearance is thrown to a teammate, not dribbled."
+   ],
+   "visual": {
+    "kind": "whatNext",
+    "frame": {
+     "step": 1,
+     "focus": [
+      "gk",
+      "rm"
+     ]
+    }
+   }
   }
  ]
 }

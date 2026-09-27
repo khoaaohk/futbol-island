@@ -1,6 +1,7 @@
 /** Shared, text-free island controls. The parent button supplies its accessible name. */
 export default function TravelIcon({kind}:{kind:string}){
  const paths:Record<string,string>={
+ ballFeint:'M9 17a3 3 0 1 0 6 0 3 3 0 0 0-6 0 M4 14a8 8 0 0 1 16 0 M16 10l4 4 2-5',
  walk:'M14 4a1.5 1.5 0 1 0 0 .01 M10 21l2-7-3-3 2-4 4 2 3 1 M7 13l2-4 M12 14l5 6',
  map:'m3 5 6-2 6 2 6-2v16l-6 2-6-2-6 2V5 M9 3v16 M15 5v16',
  minus:'M5 12h14',stop:'M7 7h10v10H7z',

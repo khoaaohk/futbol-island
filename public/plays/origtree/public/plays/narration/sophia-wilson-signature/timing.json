@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Lyon, 2024, the Olympic semi-final: USA against Germany, in extra time. Mallory Swanson passes in behind. Sophia Smith, now Sophia Wilson, bursts past the defender... the keeper rushes out... she lifts it over her. Goal!",
+   "src": "/plays/narration/sophia-wilson-signature/1.m4a",
+   "seconds": 17.9,
+   "words": [
+    {
+     "w": "Lyon",
+     "at": 0.4
+    },
+    {
+     "w": "2024",
+     "at": 0.85
+    },
+    {
+     "w": "the",
+     "at": 1.688
+    },
+    {
+     "w": "Olympic",
+     "at": 1.825
+    },
+    {
+     "w": "semi-final",
+     "at": 2.225
+    },
+    {
+     "w": "USA",
+     "at": 3.237
+    },
+    {
+     "w": "against",
+     "at": 3.85
+    },
+    {
+     "w": "Germany",
+     "at": 4.263
+    },
+    {
+     "w": "in",
+     "at": 4.8
+    },
+    {
+     "w": "extra",
+     "at": 4.95
+    },
+    {
+     "w": "time",
+     "at": 5.35
+    },
+    {
+     "w": "Mallory",
+     "at": 6.2
+    },
+    {
+     "w": "Swanson",
+     "at": 6.737
+    },
+    {
+     "w": "passes",
+     "at": 7.287
+    },
+    {
+     "w": "in",
+     "at": 7.775
+    },
+    {
+     "w": "behind",
+     "at": 7.9
+    },
+    {
+     "w": "Sophia",
+     "at": 8.95
+    },
+    {
+     "w": "Smith",
+     "at": 9.5
+    },
+    {
+     "w": "now",
+     "at": 10.025
+    },
+    {
+     "w": "Sophia",
+     "at": 10.262
+    },
+    {
+     "w": "Wilson",
+     "at": 10.787
+    },
+    {
+     "w": "bursts",
+     "at": 11.412
+    },
+    {
+     "w": "past",
+     "at": 11.887
+    },
+    {
+     "w": "the",
+     "at": 12.262
+    },
+    {
+     "w": "defender",
+     "at": 12.35
+    },
+    {
+     "w": "the",
+     "at": 13.325
+    },
+    {
+     "w": "keeper",
+     "at": 13.438
+    },
+    {
+     "w": "rushes",
+     "at": 13.825
+    },
+    {
+     "w": "out",
+     "at": 14.225
+    },
+    {
+     "w": "she",
+     "at": 14.912
+    },
+    {
+     "w": "lifts",
+     "at": 15.088
+    },
+    {
+     "w": "it",
+     "at": 15.387
+    },
+    {
+     "w": "over",
+     "at": 15.463
+    },
+    {
+     "w": "her",
+     "at": 15.725
+    },
+    {
+     "w": "Goal",
+     "at": 16.475
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again. Sophia starts running before the pass. She races Felicitas Rauch into the space behind and gets there first.",
+   "src": "/plays/narration/sophia-wilson-signature/2.m4a",
+   "seconds": 8.8,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.7
+    },
+    {
+     "w": "Sophia",
+     "at": 1.525
+    },
+    {
+     "w": "starts",
+     "at": 2.05
+    },
+    {
+     "w": "running",
+     "at": 2.413
+    },
+    {
+     "w": "before",
+     "at": 2.75
+    },
+    {
+     "w": "the",
+     "at": 3.013
+    },
+    {
+     "w": "pass",
+     "at": 3.1
+    },
+    {
+     "w": "She",
+     "at": 4.013
+    },
+    {
+     "w": "races",
+     "at": 4.175
+    },
+    {
+     "w": "Felicitas",
+     "at": 4.55
+    },
+    {
+     "w": "Rauch",
+     "at": 5.3
+    },
+    {
+     "w": "into",
+     "at": 5.562
+    },
+    {
+     "w": "the",
+     "at": 5.737
+    },
+    {
+     "w": "space",
+     "at": 5.838
+    },
+    {
+     "w": "behind",
+     "at": 6.225
+    },
+    {
+     "w": "and",
+     "at": 6.8
+    },
+    {
+     "w": "gets",
+     "at": 6.925
+    },
+    {
+     "w": "there",
+     "at": 7.175
+    },
+    {
+     "w": "first",
+     "at": 7.388
+    }
+   ]
+  },
+  {
+   "label": "Over the keeper",
+   "text": "Ann-Katrin Berger slides out, so Sophia lifts the ball over her, into the net. The USA won gold!",
+   "src": "/plays/narration/sophia-wilson-signature/3.m4a",
+   "seconds": 8.1,
+   "words": [
+    {
+     "w": "Ann-Katrin",
+     "at": 0.375
+    },
+    {
+     "w": "Berger",
+     "at": 1.05
+    },
+    {
+     "w": "slides",
+     "at": 1.438
+    },
+    {
+     "w": "out",
+     "at": 1.825
+    },
+    {
+     "w": "so",
+     "at": 2.4
+    },
+    {
+     "w": "Sophia",
+     "at": 2.587
+    },
+    {
+     "w": "lifts",
+     "at": 3.05
+    },
+    {
+     "w": "the",
+     "at": 3.375
+    },
+    {
+     "w": "ball",
+     "at": 3.475
+    },
+    {
+     "w": "over",
+     "at": 3.775
+    },
+    {
+     "w": "her",
+     "at": 4.025
+    },
+    {
+     "w": "into",
+     "at": 4.4
+    },
+    {
+     "w": "the",
+     "at": 4.65
+    },
+    {
+     "w": "net",
+     "at": 4.75
+    },
+    {
+     "w": "The",
+     "at": 5.612
+    },
+    {
+     "w": "USA",
+     "at": 5.763
+    },
+    {
+     "w": "won",
+     "at": 6.35
+    },
+    {
+     "w": "gold",
+     "at": 6.575
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: run into the space behind the defence, then finish before they catch you.",
+   "src": "/plays/narration/sophia-wilson-signature/4.m4a",
+   "seconds": 6.2,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "run",
+     "at": 1.363
+    },
+    {
+     "w": "into",
+     "at": 1.587
+    },
+    {
+     "w": "the",
+     "at": 1.762
+    },
+    {
+     "w": "space",
+     "at": 1.863
+    },
+    {
+     "w": "behind",
+     "at": 2.25
+    },
+    {
+     "w": "the",
+     "at": 2.612
+    },
+    {
+     "w": "defence",
+     "at": 2.688
+    },
+    {
+     "w": "then",
+     "at": 3.525
+    },
+    {
+     "w": "finish",
+     "at": 3.763
+    },
+    {
+     "w": "before",
+     "at": 4.125
+    },
+    {
+     "w": "they",
+     "at": 4.45
+    },
+    {
+     "w": "catch",
+     "at": 4.612
+    },
+    {
+     "w": "you",
+     "at": 4.938
+    }
+   ]
+  }
+ ]
+}

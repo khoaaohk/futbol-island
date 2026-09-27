@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The final",
+   "text": "Porto, 2021: the Champions League final. Manchester City pass it around. Here\u2019s how Thiago Silva defends. He watches the passer\u2026 The pass goes forward. Silva steps in front, and it\u2019s his!",
+   "src": "/plays/narration/thiago-silva-signature/1.m4a",
+   "seconds": 15.1,
+   "words": [
+    {
+     "w": "Porto",
+     "at": 0.325
+    },
+    {
+     "w": "2021",
+     "at": 0.825
+    },
+    {
+     "w": "the",
+     "at": 2.025
+    },
+    {
+     "w": "Champions",
+     "at": 2.138
+    },
+    {
+     "w": "League",
+     "at": 2.775
+    },
+    {
+     "w": "final",
+     "at": 3.038
+    },
+    {
+     "w": "Manchester",
+     "at": 3.975
+    },
+    {
+     "w": "City",
+     "at": 4.612
+    },
+    {
+     "w": "pass",
+     "at": 4.938
+    },
+    {
+     "w": "it",
+     "at": 5.237
+    },
+    {
+     "w": "around",
+     "at": 5.325
+    },
+    {
+     "w": "Here",
+     "at": 6.225
+    },
+    {
+     "w": "s",
+     "at": 6.8
+    },
+    {
+     "w": "how",
+     "at": 7.0
+    },
+    {
+     "w": "Thiago",
+     "at": 7.188
+    },
+    {
+     "w": "Silva",
+     "at": 7.763
+    },
+    {
+     "w": "defends",
+     "at": 8.15
+    },
+    {
+     "w": "He",
+     "at": 9.262
+    },
+    {
+     "w": "watches",
+     "at": 9.425
+    },
+    {
+     "w": "the",
+     "at": 9.825
+    },
+    {
+     "w": "passer",
+     "at": 9.925
+    },
+    {
+     "w": "The",
+     "at": 10.412
+    },
+    {
+     "w": "pass",
+     "at": 10.512
+    },
+    {
+     "w": "goes",
+     "at": 10.925
+    },
+    {
+     "w": "forward",
+     "at": 11.238
+    },
+    {
+     "w": "Silva",
+     "at": 12.1
+    },
+    {
+     "w": "steps",
+     "at": 12.5
+    },
+    {
+     "w": "in",
+     "at": 12.825
+    },
+    {
+     "w": "front",
+     "at": 12.988
+    },
+    {
+     "w": "and",
+     "at": 13.4
+    },
+    {
+     "w": "it\u2019s",
+     "at": 13.512
+    },
+    {
+     "w": "his",
+     "at": 13.675
+    }
+   ]
+  },
+  {
+   "label": "The replay",
+   "text": "Watch again, slowly. Silva reads the pass before it\u2019s played. He moves early. He doesn\u2019t dive in: he steps into the ball\u2019s path and takes it.",
+   "src": "/plays/narration/thiago-silva-signature/2.m4a",
+   "seconds": 10.3,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.113
+    },
+    {
+     "w": "Silva",
+     "at": 2.138
+    },
+    {
+     "w": "reads",
+     "at": 2.562
+    },
+    {
+     "w": "the",
+     "at": 2.9
+    },
+    {
+     "w": "pass",
+     "at": 3.013
+    },
+    {
+     "w": "before",
+     "at": 3.425
+    },
+    {
+     "w": "it\u2019s",
+     "at": 3.737
+    },
+    {
+     "w": "played",
+     "at": 3.925
+    },
+    {
+     "w": "He",
+     "at": 4.7
+    },
+    {
+     "w": "moves",
+     "at": 4.85
+    },
+    {
+     "w": "early",
+     "at": 5.225
+    },
+    {
+     "w": "He",
+     "at": 6.075
+    },
+    {
+     "w": "doesn\u2019t",
+     "at": 6.188
+    },
+    {
+     "w": "dive",
+     "at": 6.45
+    },
+    {
+     "w": "in",
+     "at": 6.737
+    },
+    {
+     "w": "he",
+     "at": 7.2
+    },
+    {
+     "w": "steps",
+     "at": 7.325
+    },
+    {
+     "w": "into",
+     "at": 7.612
+    },
+    {
+     "w": "the",
+     "at": 7.787
+    },
+    {
+     "w": "ball\u2019s",
+     "at": 7.875
+    },
+    {
+     "w": "path",
+     "at": 8.262
+    },
+    {
+     "w": "and",
+     "at": 8.637
+    },
+    {
+     "w": "takes",
+     "at": 8.75
+    },
+    {
+     "w": "it",
+     "at": 9.137
+    }
+   ]
+  },
+  {
+   "label": "Calm",
+   "text": "Then he looks up, and passes it to a teammate. No foul! Chelsea attack!",
+   "src": "/plays/narration/thiago-silva-signature/3.m4a",
+   "seconds": 5.4,
+   "words": [
+    {
+     "w": "Then",
+     "at": 0.375
+    },
+    {
+     "w": "he",
+     "at": 0.487
+    },
+    {
+     "w": "looks",
+     "at": 0.6
+    },
+    {
+     "w": "up",
+     "at": 0.825
+    },
+    {
+     "w": "and",
+     "at": 1.038
+    },
+    {
+     "w": "passes",
+     "at": 1.15
+    },
+    {
+     "w": "it",
+     "at": 1.512
+    },
+    {
+     "w": "to",
+     "at": 1.6
+    },
+    {
+     "w": "a",
+     "at": 1.688
+    },
+    {
+     "w": "teammate",
+     "at": 1.75
+    },
+    {
+     "w": "No",
+     "at": 2.775
+    },
+    {
+     "w": "foul",
+     "at": 3.062
+    },
+    {
+     "w": "Chelsea",
+     "at": 3.612
+    },
+    {
+     "w": "attack",
+     "at": 4.025
+    }
+   ]
+  },
+  {
+   "label": "The lesson",
+   "text": "That\u2019s Thiago Silva. Good defenders read the pass early, so they don\u2019t need to dive in!",
+   "src": "/plays/narration/thiago-silva-signature/4.m4a",
+   "seconds": 6.5,
+   "words": [
+    {
+     "w": "That\u2019s",
+     "at": 0.375
+    },
+    {
+     "w": "Thiago",
+     "at": 0.7
+    },
+    {
+     "w": "Silva",
+     "at": 1.188
+    },
+    {
+     "w": "Good",
+     "at": 2.138
+    },
+    {
+     "w": "defenders",
+     "at": 2.35
+    },
+    {
+     "w": "read",
+     "at": 2.95
+    },
+    {
+     "w": "the",
+     "at": 3.138
+    },
+    {
+     "w": "pass",
+     "at": 3.225
+    },
+    {
+     "w": "early",
+     "at": 3.625
+    },
+    {
+     "w": "so",
+     "at": 4.325
+    },
+    {
+     "w": "they",
+     "at": 4.463
+    },
+    {
+     "w": "don\u2019t",
+     "at": 4.562
+    },
+    {
+     "w": "need",
+     "at": 4.713
+    },
+    {
+     "w": "to",
+     "at": 4.9
+    },
+    {
+     "w": "dive",
+     "at": 5.0
+    },
+    {
+     "w": "in",
+     "at": 5.287
+    }
+   ]
+  }
+ ]
+}

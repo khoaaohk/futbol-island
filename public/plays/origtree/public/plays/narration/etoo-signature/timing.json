@@ -1,0 +1,350 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Paris, 2006",
+   "text": "Paris, 2006, the Champions League final, in pouring rain. Barcelona trail Arsenal. Larsson flicks it on, and Samuel Eto'o is already sprinting in behind. Goal!",
+   "src": "/plays/narration/etoo-signature/1.m4a",
+   "seconds": 13.1,
+   "words": [
+    {
+     "w": "Paris",
+     "at": 0.35
+    },
+    {
+     "w": "2006",
+     "at": 0.85
+    },
+    {
+     "w": "the",
+     "at": 2.075
+    },
+    {
+     "w": "Champions",
+     "at": 2.188
+    },
+    {
+     "w": "League",
+     "at": 2.775
+    },
+    {
+     "w": "final",
+     "at": 3.062
+    },
+    {
+     "w": "in",
+     "at": 3.525
+    },
+    {
+     "w": "pouring",
+     "at": 3.675
+    },
+    {
+     "w": "rain",
+     "at": 4.075
+    },
+    {
+     "w": "Barcelona",
+     "at": 4.862
+    },
+    {
+     "w": "trail",
+     "at": 5.537
+    },
+    {
+     "w": "Arsenal",
+     "at": 5.888
+    },
+    {
+     "w": "Larsson",
+     "at": 6.95
+    },
+    {
+     "w": "flicks",
+     "at": 7.412
+    },
+    {
+     "w": "it",
+     "at": 7.713
+    },
+    {
+     "w": "on",
+     "at": 7.8
+    },
+    {
+     "w": "and",
+     "at": 8.3
+    },
+    {
+     "w": "Samuel",
+     "at": 8.438
+    },
+    {
+     "w": "Eto'o",
+     "at": 8.9
+    },
+    {
+     "w": "is",
+     "at": 9.35
+    },
+    {
+     "w": "already",
+     "at": 9.5
+    },
+    {
+     "w": "sprinting",
+     "at": 9.887
+    },
+    {
+     "w": "in",
+     "at": 10.375
+    },
+    {
+     "w": "behind",
+     "at": 10.5
+    },
+    {
+     "w": "Goal",
+     "at": 11.65
+    }
+   ]
+  },
+  {
+   "label": "Level",
+   "text": "Watch again. Eto'o waits level with the last defender: level is onside! Arsenal said offside, but the flag stayed down. Then he bursts past Ebou\u00e9, into the space.",
+   "src": "/plays/narration/etoo-signature/2.m4a",
+   "seconds": 12.4,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "Eto'o",
+     "at": 1.538
+    },
+    {
+     "w": "waits",
+     "at": 1.938
+    },
+    {
+     "w": "level",
+     "at": 2.275
+    },
+    {
+     "w": "with",
+     "at": 2.562
+    },
+    {
+     "w": "the",
+     "at": 2.663
+    },
+    {
+     "w": "last",
+     "at": 2.75
+    },
+    {
+     "w": "defender",
+     "at": 3.125
+    },
+    {
+     "w": "level",
+     "at": 3.987
+    },
+    {
+     "w": "is",
+     "at": 4.3
+    },
+    {
+     "w": "onside",
+     "at": 4.425
+    },
+    {
+     "w": "Arsenal",
+     "at": 5.588
+    },
+    {
+     "w": "said",
+     "at": 6.1
+    },
+    {
+     "w": "offside",
+     "at": 6.325
+    },
+    {
+     "w": "but",
+     "at": 6.987
+    },
+    {
+     "w": "the",
+     "at": 7.112
+    },
+    {
+     "w": "flag",
+     "at": 7.213
+    },
+    {
+     "w": "stayed",
+     "at": 7.638
+    },
+    {
+     "w": "down",
+     "at": 8.025
+    },
+    {
+     "w": "Then",
+     "at": 8.912
+    },
+    {
+     "w": "he",
+     "at": 9.062
+    },
+    {
+     "w": "bursts",
+     "at": 9.188
+    },
+    {
+     "w": "past",
+     "at": 9.613
+    },
+    {
+     "w": "Ebou\u00e9",
+     "at": 10.037
+    },
+    {
+     "w": "into",
+     "at": 10.662
+    },
+    {
+     "w": "the",
+     "at": 10.838
+    },
+    {
+     "w": "space",
+     "at": 10.938
+    }
+   ]
+  },
+  {
+   "label": "Near post",
+   "text": "From behind the goal: low and hard, past Almunia at the near post.",
+   "src": "/plays/narration/etoo-signature/3.m4a",
+   "seconds": 5.3,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.375
+    },
+    {
+     "w": "behind",
+     "at": 0.512
+    },
+    {
+     "w": "the",
+     "at": 0.887
+    },
+    {
+     "w": "goal",
+     "at": 0.975
+    },
+    {
+     "w": "low",
+     "at": 1.8
+    },
+    {
+     "w": "and",
+     "at": 2.062
+    },
+    {
+     "w": "hard",
+     "at": 2.175
+    },
+    {
+     "w": "past",
+     "at": 2.65
+    },
+    {
+     "w": "Almunia",
+     "at": 2.95
+    },
+    {
+     "w": "at",
+     "at": 3.475
+    },
+    {
+     "w": "the",
+     "at": 3.562
+    },
+    {
+     "w": "near",
+     "at": 3.65
+    },
+    {
+     "w": "post",
+     "at": 3.875
+    }
+   ]
+  },
+  {
+   "label": "Time your run",
+   "text": "Time your run so you're onside, then sprint in behind the defence!",
+   "src": "/plays/narration/etoo-signature/4.m4a",
+   "seconds": 4.8,
+   "words": [
+    {
+     "w": "Time",
+     "at": 0.35
+    },
+    {
+     "w": "your",
+     "at": 0.588
+    },
+    {
+     "w": "run",
+     "at": 0.7
+    },
+    {
+     "w": "so",
+     "at": 0.95
+    },
+    {
+     "w": "you're",
+     "at": 1.062
+    },
+    {
+     "w": "onside",
+     "at": 1.175
+    },
+    {
+     "w": "then",
+     "at": 2.15
+    },
+    {
+     "w": "sprint",
+     "at": 2.362
+    },
+    {
+     "w": "in",
+     "at": 2.712
+    },
+    {
+     "w": "behind",
+     "at": 2.85
+    },
+    {
+     "w": "the",
+     "at": 3.212
+    },
+    {
+     "w": "defence",
+     "at": 3.3
+    }
+   ]
+  }
+ ]
+}

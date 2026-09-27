@@ -435,8 +435,10 @@ const ch2:Scene={
   const lf=sm(q.lf-.1,q.lf+.25,tt,easeOutBack)*(1-sm(q.sp,q.sp+.4,tt));if(lf>.02){const sk=solve(poseOf(GUL,tp).pose,GB,poseOf(GUL,tp).place),p=P(c,sk.lToe),r=.3*kAt(c,sk.lToe)*lf;yRing(s,p[0],p[1],r,Math.max(4,.035*kAt(c,sk.lToe)));}
   const sb=sm(q.sb-.1,q.sb+.3,tt)*(1-sm(q.bd,q.bd+.5,tt));if(sb>.02&&depthOf(c,w.ball)>NEAR+.4){const bp=P(c,w.ball),r=Math.max(22,BALL_R*kAt(c,w.ball))*1.9,pts:Pt[]=[];for(let i=0;i<=16;i++){const a=Math.PI*.45+i/16*2.6*sb;pts.push([bp[0]+Math.cos(a)*r,bp[1]+Math.sin(a)*r*.6]);}
    if(pts.length>2){const ww=Math.max(5,r*.12);yInk(s,ribbon(pts,ww,{taper:.2,wobble:.5}),.95);yInk(s,head(pts,ww),.95);}}
-  // "spins": short spin ticks round the flying ball
-  const spn=sm(q.sp-.1,q.sp+.2,tt)*(1-sm(q.fp,q.fp+.4,tt));if(spn>.02&&tp>CONTACT&&depthOf(c,w.ball)>NEAR+.5){const bp=P(c,w.ball),r=Math.max(18,BALL_R*kAt(c,w.ball))*1.7,sp0=-tt*14,pk=new Path2D();for(let i=0;i<3;i++){const a=sp0+i*TAU/3,pts:Pt[]=[];for(let j=0;j<=6;j++){const aa=a+j/6*.9;pts.push([bp[0]+Math.cos(aa)*r,bp[1]+Math.sin(aa)*r]);}pk.addPath(ribbon(pts,Math.max(4,r*.1),{taper:.5,wobble:.4}));}yInk(s,pk,.95*spn);}
+  // "spins": short spin ticks round the flying ball, on the same flattened ring as the wrap arrow and turning the same way — CLOCKWISE on
+  // screen, which from this camera behind and a little above him is the left foot's clockwise-from-above sidespin (near side sweeping left,
+  // the ball's left side going forward) that bends it left-to-right; a counter-clockwise ring would be a right-footer's curl
+  const spn=sm(q.sp-.1,q.sp+.2,tt)*(1-sm(q.fp,q.fp+.4,tt));if(spn>.02&&tp>CONTACT&&depthOf(c,w.ball)>NEAR+.5){const bp=P(c,w.ball),r=Math.max(18,BALL_R*kAt(c,w.ball))*1.7,sp0=tt*14,pk=new Path2D();for(let i=0;i<3;i++){const a=sp0+i*TAU/3,pts:Pt[]=[];for(let j=0;j<=6;j++){const aa=a+j/6*.9;pts.push([bp[0]+Math.cos(aa)*r,bp[1]+Math.sin(aa)*r*.6]);}pk.addPath(ribbon(pts,Math.max(4,r*.1),{taper:.5,wobble:.4}));}yInk(s,pk,.95*spn);}
   if(tp>=CONTACT&&tp<CONTACT+.25){const p=P(c,[B2[0],.15,B2[1]]);sparkBurst(s,Y,p[0],p[1],110+100*sm(CONTACT,CONTACT+.1,tp,easeOut),{n:10,seed:14,g:1-sm(CONTACT+.1,CONTACT+.25,tp),width:12});}
   if(tp>=CONTACT&&tp<CONTACT+.6&&depthOf(c,w.ball)>NEAR+.5){const a=P(c,ballAt(tp-.05)),b=P(c,w.ball);speedLines(s,K,b[0],b[1],Math.atan2(b[1]-a[1],b[0]-a[0]),{n:5,seed:15,len:150,width:6,cov:.8});}
   cornerBracket(s,c,sm(q.fp-.1,q.fp+.3,tt,easeOutBack));

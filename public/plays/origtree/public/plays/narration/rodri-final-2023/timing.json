@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Istanbul, 2023. Champions League final: Manchester City against Inter. Akanji finds Bernardo Silva. His pull-back hits a defender and rolls to Rodri, arriving at the edge of the box... Goal!",
+   "src": "/plays/narration/rodri-final-2023/1.m4a",
+   "seconds": 15.3,
+   "words": [
+    {
+     "w": "Istanbul",
+     "at": 0.35
+    },
+    {
+     "w": "2023",
+     "at": 1.125
+    },
+    {
+     "w": "Champions",
+     "at": 2.55
+    },
+    {
+     "w": "League",
+     "at": 3.15
+    },
+    {
+     "w": "final",
+     "at": 3.413
+    },
+    {
+     "w": "Manchester",
+     "at": 4.162
+    },
+    {
+     "w": "City",
+     "at": 4.787
+    },
+    {
+     "w": "against",
+     "at": 5.1
+    },
+    {
+     "w": "Inter",
+     "at": 5.5
+    },
+    {
+     "w": "Akanji",
+     "at": 6.425
+    },
+    {
+     "w": "finds",
+     "at": 6.987
+    },
+    {
+     "w": "Bernardo",
+     "at": 7.388
+    },
+    {
+     "w": "Silva",
+     "at": 8.0
+    },
+    {
+     "w": "His",
+     "at": 8.9
+    },
+    {
+     "w": "pull-back",
+     "at": 9.1
+    },
+    {
+     "w": "hits",
+     "at": 9.575
+    },
+    {
+     "w": "a",
+     "at": 9.787
+    },
+    {
+     "w": "defender",
+     "at": 9.85
+    },
+    {
+     "w": "and",
+     "at": 10.375
+    },
+    {
+     "w": "rolls",
+     "at": 10.512
+    },
+    {
+     "w": "to",
+     "at": 10.925
+    },
+    {
+     "w": "Rodri",
+     "at": 11.05
+    },
+    {
+     "w": "arriving",
+     "at": 11.7
+    },
+    {
+     "w": "at",
+     "at": 12.213
+    },
+    {
+     "w": "the",
+     "at": 12.287
+    },
+    {
+     "w": "edge",
+     "at": 12.438
+    },
+    {
+     "w": "of",
+     "at": 12.688
+    },
+    {
+     "w": "the",
+     "at": 12.762
+    },
+    {
+     "w": "box",
+     "at": 12.85
+    },
+    {
+     "w": "Goal",
+     "at": 13.863
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. Rodri waits outside the box, then arrives late. No big swing: he opens his foot and side-foots it low.",
+   "src": "/plays/narration/rodri-final-2023/2.m4a",
+   "seconds": 9.4,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.113
+    },
+    {
+     "w": "Rodri",
+     "at": 2.062
+    },
+    {
+     "w": "waits",
+     "at": 2.45
+    },
+    {
+     "w": "outside",
+     "at": 2.712
+    },
+    {
+     "w": "the",
+     "at": 3.087
+    },
+    {
+     "w": "box",
+     "at": 3.175
+    },
+    {
+     "w": "then",
+     "at": 3.638
+    },
+    {
+     "w": "arrives",
+     "at": 3.775
+    },
+    {
+     "w": "late",
+     "at": 4.237
+    },
+    {
+     "w": "No",
+     "at": 5.1
+    },
+    {
+     "w": "big",
+     "at": 5.35
+    },
+    {
+     "w": "swing",
+     "at": 5.6
+    },
+    {
+     "w": "he",
+     "at": 6.275
+    },
+    {
+     "w": "opens",
+     "at": 6.425
+    },
+    {
+     "w": "his",
+     "at": 6.763
+    },
+    {
+     "w": "foot",
+     "at": 6.963
+    },
+    {
+     "w": "and",
+     "at": 7.275
+    },
+    {
+     "w": "side-foots",
+     "at": 7.412
+    },
+    {
+     "w": "it",
+     "at": 7.963
+    },
+    {
+     "w": "low",
+     "at": 8.075
+    }
+   ]
+  },
+  {
+   "label": "Bottom corner",
+   "text": "Past Bastoni, past Andr\u00e9 Onana, into the bottom corner! That goal won City their first Champions League.",
+   "src": "/plays/narration/rodri-final-2023/3.m4a",
+   "seconds": 8.2,
+   "words": [
+    {
+     "w": "Past",
+     "at": 0.35
+    },
+    {
+     "w": "Bastoni",
+     "at": 0.675
+    },
+    {
+     "w": "past",
+     "at": 1.613
+    },
+    {
+     "w": "Andr\u00e9",
+     "at": 1.988
+    },
+    {
+     "w": "Onana",
+     "at": 2.388
+    },
+    {
+     "w": "into",
+     "at": 3.0
+    },
+    {
+     "w": "the",
+     "at": 3.212
+    },
+    {
+     "w": "bottom",
+     "at": 3.3
+    },
+    {
+     "w": "corner",
+     "at": 3.675
+    },
+    {
+     "w": "That",
+     "at": 4.662
+    },
+    {
+     "w": "goal",
+     "at": 4.9
+    },
+    {
+     "w": "won",
+     "at": 5.15
+    },
+    {
+     "w": "City",
+     "at": 5.388
+    },
+    {
+     "w": "their",
+     "at": 5.7
+    },
+    {
+     "w": "first",
+     "at": 5.912
+    },
+    {
+     "w": "Champions",
+     "at": 6.263
+    },
+    {
+     "w": "League",
+     "at": 6.85
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: holding midfielders, arrive late at the edge of the box. Stay calm, and place it. Don't blast it.",
+   "src": "/plays/narration/rodri-final-2023/4.m4a",
+   "seconds": 7.8,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "holding",
+     "at": 1.075
+    },
+    {
+     "w": "midfielders",
+     "at": 1.425
+    },
+    {
+     "w": "arrive",
+     "at": 2.125
+    },
+    {
+     "w": "late",
+     "at": 2.487
+    },
+    {
+     "w": "at",
+     "at": 2.737
+    },
+    {
+     "w": "the",
+     "at": 2.812
+    },
+    {
+     "w": "edge",
+     "at": 2.95
+    },
+    {
+     "w": "of",
+     "at": 3.163
+    },
+    {
+     "w": "the",
+     "at": 3.237
+    },
+    {
+     "w": "box",
+     "at": 3.325
+    },
+    {
+     "w": "Stay",
+     "at": 4.25
+    },
+    {
+     "w": "calm",
+     "at": 4.588
+    },
+    {
+     "w": "and",
+     "at": 4.963
+    },
+    {
+     "w": "place",
+     "at": 5.075
+    },
+    {
+     "w": "it",
+     "at": 5.438
+    },
+    {
+     "w": "Don't",
+     "at": 5.938
+    },
+    {
+     "w": "blast",
+     "at": 6.175
+    },
+    {
+     "w": "it",
+     "at": 6.638
+    }
+   ]
+  }
+ ]
+}

@@ -37,6 +37,51 @@ export function buildTown(scene: T.Scene) {
     const mesh=new T.Mesh(new T.PlaneGeometry(w,h),material);mesh.position.set(x,y,z);mesh.rotation.y=rotation;town.add(mesh);return mesh;
   };
 
+  // Arcade roof neon. Letters are polylines in a 1.3 m cap height; every tube
+  // segment is a cylinder with a sphere at each joint, merged into one geometry.
+  function buildArcadeNeon(){
+    type P=[number,number];
+    const arc=(cx:number,cy:number,rx:number,ry:number,a0:number,a1:number,n=12):P[]=>Array.from({length:n+1},(_,i)=>{const a=a0+(a1-a0)*i/n;return [cx+Math.cos(a)*rx,cy+Math.sin(a)*ry] as P;});
+    const H=1.3,W=1.05,gap=.42,letters:P[][][]=[
+      [[[0,0],[W/2,H],[W,0]],[[.2,.46],[W-.2,.46]]],
+      [[[0,0],[0,H],[.58,H],...arc(.58,H-.34,.36,.34,Math.PI/2,-Math.PI/2,10).slice(1),[0,H-.68]],[[.42,H-.68],[W,0]]],
+      [arc(.6,H/2,.56,H/2,Math.PI*.28,Math.PI*1.72,16)],
+      [[[.36,0],[0,0],[0,H],[.36,H],...arc(.36,H/2,.66,H/2,Math.PI/2,-Math.PI/2,14).slice(1)]],
+      [[[W-.05,H],[0,H],[0,0],[W-.05,0]],[[0,H/2],[W-.25,H/2]]],
+    ],word=[0,1,2,0,3,4],total=word.length*W+(word.length-1)*gap;
+    const strokes:{pts:P[];color:string}[]=[];
+    // k sizes the letters to the neighbouring STORE sign's lettering (~0.9 m caps).
+    const k=.68;word.forEach((glyph,i)=>{const ox=-total/2+i*(W+gap),oy=-H/2+.04;for(const line of letters[glyph])strokes.push({pts:line.map(([x,y])=>[(x+ox)*k,(y+oy)*k] as P),color:'#ff4fb4'});});
+    const bw=7.5,bh=1.56,r=.22;
+    strokes.push({pts:[...arc(bw/2-r,bh/2-r,r,r,0,Math.PI/2,5),...arc(-bw/2+r,bh/2-r,r,r,Math.PI/2,Math.PI,5),...arc(-bw/2+r,-bh/2+r,r,r,Math.PI,Math.PI*1.5,5),...arc(bw/2-r,-bh/2+r,r,r,Math.PI*1.5,Math.PI*2,5),[bw/2,bh/2-r]],color:'#3fe6ff'});
+    const tube=(radius:number,colored:boolean)=>{
+      const parts:T.BufferGeometry[]=[],up=new T.Vector3(0,1,0),c=new T.Color();
+      const paint=(g:T.BufferGeometry,color:string)=>{if(!colored)return g;c.set(color);const n=g.getAttribute('position').count,a=new Float32Array(n*3);for(let i=0;i<n;i++)a.set([c.r,c.g,c.b],i*3);g.setAttribute('color',new T.BufferAttribute(a,3));return g;};
+      for(const {pts,color} of strokes)pts.forEach(([x,y],i)=>{
+        parts.push(paint(new T.SphereGeometry(radius,8,6).translate(x,y,0),color));
+        if(i===0)return;const [px,py]=pts[i-1],a=new T.Vector3(px,py,0),b=new T.Vector3(x,y,0),len=a.distanceTo(b);if(len<1e-3)return;
+        const g=new T.CylinderGeometry(radius,radius,len,8,1,true);g.applyQuaternion(new T.Quaternion().setFromUnitVectors(up,b.clone().sub(a).normalize()));g.translate((px+x)/2,(py+y)/2,0);parts.push(paint(g,color));
+      });
+      for(const g of parts)g.deleteAttribute('uv');
+      const merged=mergeGeometries(parts)!;parts.forEach(g=>g.dispose());return merged;
+    };
+    // Tubes ignore scene light and tone mapping, so they read as lit glass day and night.
+    const glass=new T.MeshBasicMaterial({vertexColors:true,toneMapped:false});materials.push(glass);
+    const tubes=new T.Mesh(tube(.052,true),glass);tubes.castShadow=false;tubes.receiveShadow=false;tubes.name='arcade-neon-tubes';
+    // Darker, fatter tube behind: the unlit glass/mounting that gives the letters depth.
+    const backing=new T.Mesh(tube(.078,false),mat('#3a2340'));backing.name='arcade-neon-backing';
+    // Halo: the same strokes blurred once into a canvas, added on top of the dark board.
+    const canvas=document.createElement('canvas'),scale=80,cw=9.3,ch=3.2;canvas.width=Math.round(cw*scale);canvas.height=Math.round(ch*scale);
+    const ctx=canvas.getContext('2d')!;ctx.lineCap=ctx.lineJoin='round';
+    const trace=(width:number,alpha:number,blur:number)=>{for(const {pts,color} of strokes){ctx.strokeStyle=color;ctx.shadowColor=color;ctx.shadowBlur=blur;ctx.globalAlpha=alpha;ctx.lineWidth=width;ctx.beginPath();pts.forEach(([x,y],i)=>{const px=(x+cw/2)*scale,py=(ch/2-y)*scale;if(i)ctx.lineTo(px,py);else ctx.moveTo(px,py);});ctx.stroke();}};
+    trace(40,.28,48);trace(18,.5,26);trace(8,.7,10);
+    const glowTexture=new T.CanvasTexture(canvas);glowTexture.colorSpace=T.SRGBColorSpace;textures.push(glowTexture);
+    const glow=new T.MeshBasicMaterial({map:glowTexture,transparent:true,blending:T.AdditiveBlending,depthWrite:false,toneMapped:false,opacity:.8});materials.push(glow);
+    const halo=new T.Mesh(new T.PlaneGeometry(cw,ch),glow);halo.castShadow=false;halo.receiveShadow=false;halo.renderOrder=1;halo.name='arcade-neon-halo';
+    return {tubes,backing,halo,glow};
+  }
+  let arcadeNeonGlow:T.MeshBasicMaterial|null=null;
+
   // A single ocean surrounds the curved foundation on every side.
   const waterRipples=createWaterRipples();textures.push(waterRipples.texture);
   const oceanMat=new T.MeshStandardMaterial({color:'#67b8af',map:waterRipples.texture,roughness:.36,metalness:.16});materials.push(oceanMat);
@@ -70,7 +115,7 @@ export function buildTown(scene: T.Scene) {
     'RUA DO SOL','WEST END BOOKS','CASA DO SOL','CORNER DELI','PIER BAKERY']);
   const buildingRadius=(label:string)=>label==='CAFE BY THE SEA'?4:softBuildings.has(label)?1.5:0;
   function building(x:number,z:number,w:number,d:number,h:number,color:string,label:string,accent='#bd7657'){
-    const radius=buildingRadius(label),rounded=radius>0,knockout=label==='ROOFTOP KNOCKOUT',front=w-radius*2;
+    const radius=buildingRadius(label),rounded=radius>0,knockout=label==='ROOFTOP KNOCKOUT',arcade=label==='ARCADE',front=w-radius*2;
     if(rounded){roundedBlock(w,h,d,radius,color,x,0,z);roundedBlock(w+.45,.23,d+.5,radius+.2,'#eddfbb',x,h-.035,z);roundedBlock(w+.15,.35,d+.16,radius+.1,'#d2bc94',x,.005,z);}
     else{box(w,h,d,color,x,h/2,z);box(w+.45,.23,d+.5,'#eddfbb',x,h+.08,z);box(w+.15,.35,d+.16,'#d2bc94',x,.18,z);}
     obstacles.push({x,z,w,d,...(rounded?{cornerRadius:radius}:{})});
@@ -79,14 +124,18 @@ export function buildTown(scene: T.Scene) {
       const xx=x-front/2+(col+.5)*front/columns, yy=1.35+floor*2.45;
       // The knockout stair occupies the western 21 m of this facade.
       if(knockout&&(floor===0||xx<x+w/2-5))continue;
+      // Arcade: keep the wall above the double door clear of windows/balconies.
+      if(arcade&&floor>0&&Math.abs(xx-x)<2.4)continue;
       box(.88,1.25,.06,'#365b56',xx,yy,z+d/2+.04);box(1.04,.09,.21,'#f0debb',xx,yy-.65,z+d/2+.1);
       if(!knockout&&floor>0&&col%2===0){box(1.4,.11,.7,'#e9cfa5',xx,yy-.64,z+d/2+.35);for(let q=-2;q<=2;q++)cylinder(.018,.55,'#647169',xx+q*.26,yy-.32,z+d/2+.65);box(1.4,.04,.045,'#526b5e',xx,yy-.04,z+d/2+.65);}
     }
     // Side windows remain visible from the follow camera.
     for(let floor=0;floor<floors;floor++)for(let k=0;k<3;k++)if(!knockout||k!==1)box(.065,1.22,.86,'#3d625c',x+w/2+.035,1.4+floor*2.45,z-d/2+(k+.5)*d/3);
     if(knockout)return; // Plain stair wall: no shopfront, balcony or awning projections.
-    if(label)sign(label,front*.86,.62,x,2.45,z+d/2+.1);
-    for(let col=0;col<8;col++){const awning=box(front/8,.10,1.3,col%2?'#ecdcb8':accent,x-front/2+(col+.5)*front/8,2.08,z+d/2+.58);awning.rotation.x=.14;}
+    // The arcade's name lives on its roof neon only; its awning splits around the door.
+    if(label&&!arcade)sign(label,front*.86,.62,x,2.45,z+d/2+.1);
+    if(arcade)for(const side of [-1,1])for(let col=0;col<3;col++){const inner=2.35,span=(front/2-inner)/3,awning=box(span,.10,1.3,col%2?'#ecdcb8':accent,x+side*(inner+(col+.5)*span),2.08,z+d/2+.58);awning.rotation.x=.14;}
+    else for(let col=0;col<8;col++){const awning=box(front/8,.10,1.3,col%2?'#ecdcb8':accent,x-front/2+(col+.5)*front/8,2.08,z+d/2+.58);awning.rotation.x=.14;}
     box(front-.6,1.65,.06,'#274c48',x,.97,z+d/2+.07);
     for(let col=1;col<3;col++)box(.055,1.7,.09,'#d7c49e',x-front/2+col*front/3,.96,z+d/2+.13);
     if(label!=='ROOFTOP KNOCKOUT')box(1.2,1.1,1.1,'#dbccaa',x+w*.22,h+.7,z-d*.2);
@@ -495,21 +544,14 @@ export function buildTown(scene: T.Scene) {
   const storeSign=sign('STORE',12.7,2.1,60+sx,9.1,.37+sz,'#294f43','#f4cc7c');storeSign.name='store-sign';
   sign('BALLS · RIDES · GEAR',11,.8,60+sx,5.8,.35+sz,'#294f43','#fff0cf');
   house(78+sx,-6+sz,14,12,6.2,'ARCADE',1);
-  // Roof marquee: emissive surfaces, no extra real-time lights or render loop.
-  for(const dx of [-4,4])box(.16,2.3,.18,'#385a4e',78+sx+dx,7.5,-.2+sz);
-  box(12.4,2.6,.4,'#bd7657',78+sx,8.8,.1+sz);
-  const marquee=sign('ARCADE',11.3,2.05,78+sx,8.8,.32+sz,'#244d49','#ffe3a0');
-  const marqueeMaterial=marquee.material as T.MeshStandardMaterial;marqueeMaterial.emissive.set('#ffe0a0');marqueeMaterial.emissiveMap=marqueeMaterial.map;marqueeMaterial.emissiveIntensity=.65;
-  const arcadeBulbs=[0,1].map(()=>{const m=new T.MeshStandardMaterial({color:'#ffe5ac',emissive:'#ffd179',emissiveIntensity:1.8,roughness:.5});materials.push(m);return m;});
-  let bulbIndex=0;
-  const bulb=(x:number,y:number)=>{const mesh=new T.Mesh(new T.SphereGeometry(.12,8,6),arcadeBulbs[bulbIndex++%2]);mesh.position.set(x,y,.37+sz);town.add(mesh);};
-  for(let dx=-5.6;dx<=5.7;dx+=.7){bulb(78+sx+dx,7.68);bulb(78+sx+dx,9.92);}
-  for(const dx of [-5.9,5.9])for(const dy of [-.7,0,.7])bulb(78+sx+dx,8.8+dy);
-  box(9.4,1.65,.25,'#244d49',78+sx,5.1,.2+sz);sign('ARCADE',8.5,1.25,78+sx,5.1,.34+sz,'#244d49','#f8d9a2');
+  // Roof neon: static glass tubes on a dark board. One vertex-coloured unlit
+  // tube mesh + one additive halo plane, drawn once; no lights, no loop.
+  for(const dx of [-3,3])box(.16,2,.18,'#385a4e',78+sx+dx,7.2,-.2+sz);
+  box(8.3,1.95,.34,'#1c2530',78+sx,8.3,.1+sz);box(8.6,.12,.42,'#385a4e',78+sx,9.3,.1+sz);box(8.6,.12,.42,'#385a4e',78+sx,7.3,.1+sz);
+  const neon=buildArcadeNeon();arcadeNeonGlow=neon.glow;neon.tubes.position.set(78+sx,8.3,.36+sz);neon.backing.position.set(78+sx,8.3,.3+sz);neon.halo.position.set(78+sx,8.3,.28+sz);
+  town.add(neon.backing,neon.halo,neon.tubes);
   box(4.1,3.35,.22,'#eddfbb',78+sx,1.72,.25+sz);box(3.4,2.94,.08,'#274c48',78+sx,1.5,.39+sz);box(.1,2.9,.1,'#d7c49e',78+sx,1.5,.47+sz);
   for(const dx of [-.3,.3])box(.07,.48,.1,'#f8d9a2',78+sx+dx,1.35,.56+sz);
-  const welcome=sign('PLAY GAMES',4.6,.9,78+sx,3.7,.41+sz,'#477c6a','#fff0cf');
-  (welcome.material as T.MeshStandardMaterial).emissive.set('#53704b');(welcome.material as T.MeshStandardMaterial).emissiveIntensity=.4;
   for(const side of [-1,1])for(const [dx,dy] of [[0,0],[-1,0],[1,0],[0,1],[0,-1]])box(.34,.34,.09,'#d69b61',78+sx+side*5.7+dx*.35,2.9+dy*.35,.4+sz);
   // Keep the square’s southern landing/runout lane clear; move its corner planter north-east.
   for(const [x,z] of [[165,-109],[215,-109],[165,-89],[218,-95]])planter(x,z);
@@ -1103,5 +1145,6 @@ export function buildTown(scene: T.Scene) {
   nightRoot.userData.detailPoolCount=16;
   nightRoot.userData.lampSites=lampSites;nightRoot.userData.lampCount=lampSites.length;nightRoot.userData.poolChunkCount=poolChunks.size;
   const sceneryRoots=scene.children.filter(root=>!existingRoots.has(root));
-  return {ferry,ferryBounds:new T.Box3(new T.Vector3(241.5,-.4,190),new T.Vector3(250.5,5.1,208)),ferryLockBounds:new T.Box3(new T.Vector3(243,6.8,196),new T.Vector3(249,12.4,202)),setFerryLockHovered:(hovered:boolean)=>{lockMaterial.opacity=hovered?1:.48;},setVisible:(visible:boolean)=>{for(const root of sceneryRoots)root.visible=visible;},dynamicScenery:town,umbrellaReaction,arenaBounds:new T.Box3(new T.Vector3(ar.x-ar.w/2,0,ar.z-ar.d/2),new T.Vector3(ar.x+ar.w/2,ar.height+5,ar.z+ar.d/2)),updateFerry,museumBounds:new T.Box3(new T.Vector3(152.7,0,176.2),new T.Vector3(183.3,8.8,185.8)),walkSurfaces,updateWater:waterRipples.update,updateTrafficSignals:(mode:string)=>{const night=mode==='night',dusk=mode==='sunset';for(const lens of signalLenses)lens.emissiveIntensity=night?.85:dusk?.55:.35;const glow=night?.82:dusk?.16:0;const windowColor=night?'#ffc176':'#ffd294';windowPaint.emissive.set(windowColor);windowPaint.emissiveIntensity=glow;for(const material of windowSources){material.emissive.set(windowColor);material.emissiveIntensity=glow;}lampLens.emissive.set(night?'#ffcb82':'#ffd294');lampLens.emissiveIntensity=night?1.7:dusk?.4:0;for(const state of signStates)state.material.emissiveIntensity=Math.max(state.intensity,night?.75:dusk?.12:0);for(const material of gardenPlantMaterials.values())material.emissiveIntensity=night?.09:0;nightPools.visible=night;},coachesBounds:new T.Box3(new T.Vector3(149.7,0,-49.3),new T.Vector3(172.3,11,-36.4)),arcadeBounds:new T.Box3(new T.Vector3(95.7,0,-65.3),new T.Vector3(110.3,10.3,-52.3)),storeBounds:new T.Box3(new T.Vector3(77.7,0,-65.3),new T.Vector3(92.3,10.5,-52.4)),storeDoor:{x:85,z:-50},walls:[...buildings.map(b=>({...b,top:b.height,floor:0})),...roofObstacles,{x:156,z:-29.5,w:26,d:.35,top:2.4,floor:0}],obstacles,roofObstacles,waves,oceanMat,squareArrival,arcadeDoor,buildings,roads,roadJunctions,assets,surfaceAreas,destinations,updateArcade:(time:number,reduced:boolean)=>{const pulse=reduced?.5:(Math.sin(time*Math.PI*2)+1)/2;arcadeBulbs[0].emissiveIntensity=.25+pulse*1.75;arcadeBulbs[1].emissiveIntensity=2-pulse*1.75;},dispose:()=>{nightPools.traverse(o=>{if(o instanceof T.InstancedMesh)o.dispose();});nightRoot.removeFromParent();poolGeometry.dispose();umbrellaReaction.dispose();ferry.traverse(o=>{if(o instanceof T.Mesh||o instanceof T.Points)o.geometry.dispose();});ferry.removeFromParent();water.removeFromParent();water.geometry.dispose();for(const mesh of mergedMeshes){mesh.removeFromParent();mesh.geometry.dispose();}textures.forEach(t=>t.dispose());materials.forEach(m=>m.dispose());}};
+  return {ferry,ferryBounds:new T.Box3(new T.Vector3(241.5,-.4,190),new T.Vector3(250.5,5.1,208)),ferryLockBounds:new T.Box3(new T.Vector3(243,6.8,196),new T.Vector3(249,12.4,202)),setFerryLockHovered:(hovered:boolean)=>{lockMaterial.opacity=hovered?1:.48;},setVisible:(visible:boolean)=>{for(const root of sceneryRoots)root.visible=visible;},dynamicScenery:town,umbrellaReaction,arenaBounds:new T.Box3(new T.Vector3(ar.x-ar.w/2,0,ar.z-ar.d/2),new T.Vector3(ar.x+ar.w/2,ar.height+5,ar.z+ar.d/2)),updateFerry,museumBounds:new T.Box3(new T.Vector3(152.7,0,176.2),new T.Vector3(183.3,8.8,185.8)),walkSurfaces,updateWater:waterRipples.update,updateTrafficSignals:(mode:string)=>{const night=mode==='night',dusk=mode==='sunset';for(const lens of signalLenses)lens.emissiveIntensity=night?.85:dusk?.55:.35;const glow=night?.82:dusk?.16:0;const windowColor=night?'#ffc176':'#ffd294';windowPaint.emissive.set(windowColor);windowPaint.emissiveIntensity=glow;for(const material of windowSources){material.emissive.set(windowColor);material.emissiveIntensity=glow;}lampLens.emissive.set(night?'#ffcb82':'#ffd294');lampLens.emissiveIntensity=night?1.7:dusk?.4:0;for(const state of signStates)state.material.emissiveIntensity=Math.max(state.intensity,night?.75:dusk?.12:0);for(const material of gardenPlantMaterials.values())material.emissiveIntensity=night?.09:0;nightPools.visible=night;if(arcadeNeonGlow)arcadeNeonGlow.opacity=night?1:dusk?.9:.8;},coachesBounds:new T.Box3(new T.Vector3(149.7,0,-49.3),new T.Vector3(172.3,11,-36.4)),arcadeBounds:new T.Box3(new T.Vector3(95.7,0,-65.3),new T.Vector3(110.3,9.45,-52.3)),storeBounds:new T.Box3(new T.Vector3(77.7,0,-65.3),new T.Vector3(92.3,10.5,-52.4)),storeDoor:{x:85,z:-50},walls:[...buildings.map(b=>({...b,top:b.height,floor:0})),...roofObstacles,{x:156,z:-29.5,w:26,d:.35,top:2.4,floor:0}],obstacles,roofObstacles,waves,oceanMat,squareArrival,arcadeDoor,buildings,roads,roadJunctions,assets,surfaceAreas,destinations,// The roof neon is static (heat): kept as a no-op so callers need no change.
+    updateArcade:(_time:number,_reduced:boolean)=>{},dispose:()=>{nightPools.traverse(o=>{if(o instanceof T.InstancedMesh)o.dispose();});nightRoot.removeFromParent();poolGeometry.dispose();umbrellaReaction.dispose();ferry.traverse(o=>{if(o instanceof T.Mesh||o instanceof T.Points)o.geometry.dispose();});ferry.removeFromParent();water.removeFromParent();water.geometry.dispose();for(const mesh of mergedMeshes){mesh.removeFromParent();mesh.geometry.dispose();}textures.forEach(t=>t.dispose());materials.forEach(m=>m.dispose());}};
 }

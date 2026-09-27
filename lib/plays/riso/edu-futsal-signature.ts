@@ -3,8 +3,8 @@
  * WHO: the card's Edu is the FUTSAL goalkeeper Edu Sousa — Eduardo Filipe Sousa Veiga (b. 19 Aug 1996, Mirandela, Portugal; 1.90 m), who
  *  moved to Eibar aged 12 and has played all his club futsal in SPAIN (Debabarrena, Zierbena, Osasuna Magna, Viña Albali Valdepeñas 2019–23,
  *  ElPozo Murcia 2023–): "played in Spain's top league" (lib/town/playerBios.json). He plays for PORTUGAL (from 2019). Not the Brazilian
- *  footballers called Edu, nor Azerbaijan's futsal Edu (Eduardo Mello Borges, an outfield scorer). NOTE for the lead: lib/town/
- *  playerAppearance.json gives him country "Spain" — his national team is Portugal (his CLUB is in Spain).
+ *  footballers called Edu, nor Azerbaijan's futsal Edu (Eduardo Mello Borges, an outfield scorer). The card's flag
+ *  (lib/town/playerAppearance.json country) is "Portugal" — his national team (his CLUB is in Spain); the film's kits match (Portugal red).
  * WHY THIS MOMENT: Edu's entry (lib/town/iconicPlays.json) is a signature — the quick throw to start an attack — not one match. No written
  *  source we could reach describes ONE dated Edu throw (UEFA's match pages are script shells; the reports we found name goals and penalties,
  *  not goalkeeper throws), so the film follows the brief's honest FALLBACK: the real-match chapter shows only confirmed things from a real,

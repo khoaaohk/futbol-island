@@ -2,39 +2,12 @@ import type {TravelMode} from '../town/travelModes';
 
 const OCEAN_STARTS=[.6,5.7,11.1],OCEAN_LENGTHS=[4.5,4.8,4.2];
 export type BottleOceanSample={wash:number;froth:number};
-/** Shared 16-second swell envelope for sound, water and buoyancy. */
+/** Shared 16-second swell envelope for the bottle intro's water and buoyancy (visual only: the island has no ocean sound). */
 export function sampleBottleOcean(time:number,out:BottleOceanSample){
  const t=((time%16)+16)%16;out.wash=0;out.froth=0;
  for(let i=0;i<3;i++){const u=(t-OCEAN_STARTS[i])/OCEAN_LENGTHS[i];if(u>0&&u<1){const attack=Math.min(1,u/.2),recede=Math.max(0,1-(u-.2)/.8),envelope=attack*attack*(3-2*attack)*recede*recede;out.wash+=envelope;out.froth+=envelope*Math.sin(Math.PI*Math.min(1,u/.55))**2;}}
  return out;
 }
-let bottleOceanClock:(()=>number)|null=null;
-export function readBottleOceanTime(fallback:number){const t=bottleOceanClock?.();return t!==undefined&&Number.isFinite(t)?t:fallback;}
-
-/** A cached shore wash: separate breaking waves and long, thinning backwash.
- * Remove low rumble before colouring the foam; a constant low-passed bed sounds like traffic.
- */
-export function fillBottleOcean(data:Float32Array,sampleRate:number,random:()=>number=Math.random){
- const duration=data.length/sampleRate,hp=Math.exp(-2*Math.PI*180/sampleRate),bodyRate=1-Math.exp(-2*Math.PI*900/sampleRate);
- const controls=Math.ceil(duration*100)+1;
- const amplitudes=new Float32Array(controls),rates=new Float32Array(controls),swell={wash:0,froth:0};
- // Envelopes/cutoffs need only 100 Hz control samples; interpolate them in the audio buffer.
- // All expensive trig/exponentials are outside the sample-rate loop.
- for(let i=0;i<controls;i++){
-  const t=i/100,{wash,froth}=sampleBottleOcean(t,swell);
-  amplitudes[i]=(.025+.65*wash)*Math.max(0,Math.min(1,t/.35,(duration-t)/.35));
-  rates[i]=1-Math.exp(-2*Math.PI*(1500+1700*froth)/sampleRate);
- }
- let previous=0,high=0,body=0,foam=0;
- for(let i=0;i<data.length;i++){
-  const position=i/sampleRate*100,index=Math.floor(position),blend=position-index;
-  const white=random()*2-1;high=hp*(high+white-previous);previous=white;body+=bodyRate*(high-body);
-  const foamRate=rates[index]+(rates[index+1]-rates[index])*blend;foam+=foamRate*(high-foam);
-  data[i]=(body*.65+foam*.35)*(amplitudes[index]+(amplitudes[index+1]-amplitudes[index])*blend);
- }
- data[0]=data[data.length-1]=0;
-}
-
 /** Quiet, self-contained game Foley. One gesture-unlocked context, no downloads. */
 export function createIslandSound(initialMuted=false,initialVolume=.5){
   let context:AudioContext|null=null,master:GainNode|null=null,noise:AudioBuffer|null=null;
@@ -42,8 +15,28 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
   let mediaPaused=false;
   let disposed=false,muted=initialMuted,hidden=document.hidden;
   const cooldown=new Map<string,number>();
-  const sources=new Set<AudioScheduledSourceNode>();
-  const debug={unlocked:false,volume,muted,hidden,disposed:false,contextState:'locked',counts:{} as Record<string,number>};
+  // Each live source with the gain that shapes it, so a forced stop can fade instead of cutting mid-wave.
+  const sources=new Map<AudioScheduledSourceNode,GainNode|null>();
+  /** Stopping a sounding oscillator or loop at a non-zero level is a DC step: an audible click. Fade it first. */
+  const RELEASE=.04;
+  function release(source:AudioScheduledSourceNode,gain:GainNode|null,after?:()=>void){
+    const c=context;
+    if(gain&&c&&c.state==='running'){
+      try{const t=c.currentTime;gain.gain.cancelScheduledValues(t);gain.gain.setValueAtTime(gain.gain.value,t);gain.gain.linearRampToValueAtTime(0,t+RELEASE);
+        if(after)source.onended=after;source.stop(t+RELEASE+.01);return;}catch{/* fall through to a plain stop */}
+    }
+    try{source.stop();}catch{}after?.();
+  }
+  // Hover/slide ticks answer the pointer or keyboard. Without this, a runner NPC crossing a resting cursor, a live
+  // label drifting under it or a dialog handing focus to a button on its own "clicks" while the child sits idle.
+  const HOVER_INPUT_MS=400;let lastInput=-Infinity,lastPointer=-Infinity;
+  const markInput=(event:Event)=>{lastInput=performance.now();if(event.type!=='keydown')lastPointer=lastInput;};
+  const INPUT_EVENTS=['pointermove','pointerdown','keydown'];
+  for(const type of INPUT_EVENTS)document.addEventListener(type,markInput,{capture:true,passive:true});
+  /** 3D scene hover (character, NPC, building, ferry under the cursor). Only a pointer that just moved: a held key moving the
+   * camera sweeps a resting cursor's ray across the world. Off in flight (camera always drifts; flight is engine + music only). */
+  function sceneHover(flying=false){if(flying||performance.now()-lastPointer>HOVER_INPUT_MS)return;ui('hover');}
+  const debug={unlocked:false,volume,muted,hidden,disposed:false,contextState:'locked',idleSuspends:0,idle:false,counts:{} as Record<string,number>};
   function getContext(){
     if(disposed)return null;
     try{
@@ -59,14 +52,42 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
       return context;
     }catch{return null;}
   }
+  /** Heat pass 4 (user decision Sep 26 2026): the shared context suspends 2 s after nothing is audible (no music, one-shot, engine or
+   * ride hum), so the audio thread sleeps; any input unlock, or a sound the game wants to play, resumes it. */
+  const IDLE_SUSPEND_MS=2000;let musicAudible=false,idleSuspended=false,idleTimer:ReturnType<typeof setTimeout>|undefined;
+  const audible=()=>musicAudible||sources.size>0||!!engine||!!travelHum;
+  function scheduleIdle(){if(typeof setTimeout!=='function')return;if(idleTimer!==undefined)clearTimeout(idleTimer);idleTimer=setTimeout(checkIdle,IDLE_SUSPEND_MS);}
+  function checkIdle(){idleTimer=undefined;if(disposed||!context||context.state!=='running')return;if(audible())return;idleSuspended=true;debug.idleSuspends++;void context.suspend().catch(()=>{});}
+  function wakeIdle(){if(!idleSuspended||!context||hidden||muted||disposed)return;idleSuspended=false;if(context.state==='suspended')void context.resume().catch(()=>{});}
+  function setMusicAudible(on:boolean){musicAudible=on;if(on)wakeIdle();else scheduleIdle();}
+  /** Island idle (driven by islandMusic's one idle controller): fade the whole mix out over 1.5 s, stop the ride hums and suspend;
+   * nothing is scheduled while idle, so waking replays nothing. Waking resumes with a short fade-in. */
+  let idleFaded=false,idleFadeTimer:ReturnType<typeof setTimeout>|undefined;
+  const IDLE_FADE=1.5,WAKE_FADE=.25,level=()=>muted||idleFaded?0:.64*volume;
+  function setIdle(on:boolean){
+    if(on===idleFaded||disposed)return;idleFaded=on;debug.idle=on;if(idleFadeTimer!==undefined)clearTimeout(idleFadeTimer);idleFadeTimer=undefined;
+    const c=context,g=master;
+    if(on){
+      stopEngine();stopTravelHum();
+      if(c&&g&&c.state==='running'){const t=c.currentTime;g.gain.cancelScheduledValues(t);g.gain.setValueAtTime(g.gain.value,t);g.gain.linearRampToValueAtTime(0,t+IDLE_FADE);}
+      idleFadeTimer=setTimeout(()=>{idleFadeTimer=undefined;if(!idleFaded||!context)return;silence(true);if(context.state==='running'){idleSuspended=true;void context.suspend().catch(()=>{});}},IDLE_FADE*1000+100);
+      return;
+    }
+    if(!c||!g||hidden)return;
+    idleSuspended=false;if(c.state==='suspended')void c.resume().catch(()=>{});
+    const t=c.currentTime;g.gain.cancelScheduledValues(t);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(level(),t+WAKE_FADE);
+  }
   function unlock(){
     if(disposed||hidden||muted)return;
     const current=getContext();if(!current)return;
-    debug.unlocked=true;debug.contextState=current.state;
+    debug.unlocked=true;debug.contextState=current.state;idleSuspended=false;
     if(current.state!=='running'&&current.state!=='closed')void current.resume().catch(()=>{});
+    if(!audible())scheduleIdle();
   }
   function ready(key:string,interval:number){
-    if(disposed||muted||volume===0||hidden||!context||context.state!=='running'||!master)return false;
+    if(disposed||muted||idleFaded||volume===0||hidden||!context||!master)return false;
+    // A context we idle-suspended resumes on demand: the sound is scheduled now and plays as soon as the resume lands.
+    if(context.state!=='running'){if(!(idleSuspended&&context.state==='suspended'))return false;wakeIdle();}
     const now=context.currentTime;if(now-(cooldown.get(key)??-Infinity)<interval)return false;
     cooldown.set(key,now);debug.counts[key]=(debug.counts[key]??0)+1;return true;
   }
@@ -74,7 +95,7 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
     const c=context!,gain=c.createGain(),t=c.currentTime+delay;
     gain.gain.setValueAtTime(.0001,t);gain.gain.exponentialRampToValueAtTime(Math.max(.0002,volume),t+attack);
     gain.gain.exponentialRampToValueAtTime(.0001,t+duration);output.connect(gain);gain.connect(master!);
-    sources.add(source);source.onended=()=>{sources.delete(source);source.disconnect();output.disconnect();gain.disconnect();};
+    sources.set(source,gain);source.onended=()=>{sources.delete(source);source.disconnect();output.disconnect();gain.disconnect();if(!audible())scheduleIdle();};
     source.start(t);source.stop(t+duration+.015);
   }
   function tone(hz:number,end:number,duration:number,volume:number,type:OscillatorType='sine',delay=0,attack=.009){
@@ -98,6 +119,7 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
       const requested=performance.now();
       void context.resume().then(()=>{if(context?.state==='running'&&performance.now()-requested<300)ui(kind);}).catch(()=>{});return;
     }
+    if((kind==='hover'||kind==='slide')&&performance.now()-lastInput>HOVER_INPUT_MS)return;
     if(kind==='slide'){if(ready('slide',.09))slide();return;}
     if(!ready(kind,kind==='hover'?.075:.04))return;
     if(kind==='path-pop'){tone(660,980,.085,.038,'sine',0,.006);return;}
@@ -125,9 +147,9 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
     if(mode==='jetpack'){tone(240,350,.9,.012,'sine',0,.32);tone(480,700,1.05,.003,'sine',.08,.35);}
   }
   let travelHum:{mode:TravelMode;voices:{osc:OscillatorNode;gain:GainNode}[]}|null=null,humUpdate=-Infinity;
-  function stopTravelHum(){if(!travelHum)return;for(const {osc,gain} of travelHum.voices){osc.stop();osc.disconnect();gain.disconnect();}travelHum=null;}
+  function stopTravelHum(){if(!travelHum)return;for(const {osc,gain} of travelHum.voices)release(osc,gain,()=>{osc.disconnect();gain.disconnect();});travelHum=null;if(!audible())scheduleIdle();}
   function move(mode:TravelMode,speed:number,active:boolean){
-    if(!active||muted||volume===0||hidden||disposed||!context||context.state!=='running'||!master||speed<.3&&mode!=='jetpack'){stopTravelHum();return;}
+    if(!active||muted||idleFaded||volume===0||hidden||disposed||!context||context.state!=='running'||!master||speed<.3&&mode!=='jetpack'){stopTravelHum();return;}
     if(mode==='jetpack'||mode==='moped'){
       if(travelHum?.mode!==mode){stopTravelHum();travelHum={mode,voices:[0,1].map(i=>{const osc=context!.createOscillator(),gain=context!.createGain();osc.type=mode==='moped'&&i===1?'triangle':'sine';gain.gain.value=0;osc.connect(gain);gain.connect(master!);osc.start();return {osc,gain};})};humUpdate=-Infinity;debug.counts['hum-start:'+mode]=(debug.counts['hum-start:'+mode]??0)+1;}
       if(context.currentTime-humUpdate>=.1){humUpdate=context.currentTime;const flying=mode==='jetpack',hum=flying?235+Math.min(speed,40)*.8+Math.sin(context.currentTime*.7)*2:66+Math.min(speed,28)*.8;travelHum.voices.forEach(({osc,gain},i)=>{osc.frequency.setTargetAtTime(hum*(i?(flying?2.005:2):1),context!.currentTime,.12);gain.gain.setTargetAtTime(i?(flying?.002:.007):(flying?.009:.026),context!.currentTime,.14);});}
@@ -166,37 +188,22 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
     else{tone(160,600,.8,.11,'sine',0,.08);tone(260,900,.9,.04,'sine',.04,.1);hiss(600,.7,.045);}
   }
   let engine:{osc:OscillatorNode;gain:GainNode}|null=null,engineUpdate=-Infinity;
-  function stopEngine(){if(!engine)return;engine.osc.stop();engine.osc.disconnect();engine.gain.disconnect();engine=null;}
+  function stopEngine(){if(!engine)return;const {osc,gain}=engine;release(osc,gain,()=>{osc.disconnect();gain.disconnect();});engine=null;if(!audible())scheduleIdle();}
   function truck(speed:number,active:boolean){
-    if(!active||Math.abs(speed)<.2||muted||volume===0||hidden||disposed||!context||context.state!=='running'||!master){stopEngine();return;}
+    if(!active||Math.abs(speed)<.2||muted||idleFaded||volume===0||hidden||disposed||!context||context.state!=='running'||!master){stopEngine();return;}
     if(!engine){const osc=context.createOscillator(),gain=context.createGain();osc.type='triangle';gain.gain.value=0;osc.connect(gain);gain.connect(master);osc.start();engine={osc,gain};engineUpdate=-Infinity;}
     // Reuse a single voice; update its pitch at 10 Hz instead of allocating per frame.
     if(context.currentTime-engineUpdate>.1){engineUpdate=context.currentTime;engine.osc.frequency.setTargetAtTime(48+Math.abs(speed)*5,context.currentTime,.12);engine.gain.gain.setTargetAtTime(.045+Math.min(Math.abs(speed),12)*.002,context.currentTime,.08);}
     if(speed<-.2&&ready('truck-reverse',.8))tone(850,850,.22,.09,'sine',0,.015);
   }
   function honk(){if(!ready('honk',.7))return;tone(350,345,.42,.1,'sawtooth',0,.012);tone(440,435,.42,.085,'sawtooth',0,.012);tone(700,690,.35,.025,'sine',0,.01);}
-  let oceanSource:AudioBufferSourceNode|null=null,oceanGain:GainNode|null=null,oceanRequested=false,oceanVersion=0;
-  let oceanBuffer:AudioBuffer|null=null;
-  function bottleOcean(event:Event){
-    oceanRequested=Boolean((event as CustomEvent<boolean>).detail);const version=++oceanVersion;
-    if(oceanSource){const previous=oceanSource;try{if(!oceanRequested&&oceanGain&&context&&context.state==='running'){oceanGain.gain.cancelScheduledValues(context.currentTime);oceanGain.gain.setValueAtTime(oceanGain.gain.value,context.currentTime);oceanGain.gain.linearRampToValueAtTime(0,context.currentTime+1.25);previous.stop(context.currentTime+1.3);}else previous.stop();}catch{}oceanSource=null;oceanGain=null;}
-    if(!oceanRequested||muted||volume===0||hidden||disposed)return;
-    unlock();const c=getContext();if(!c||!master)return;
-    const start=()=>{if(version!==oceanVersion||!oceanRequested||muted||volume===0||hidden||disposed||!master)return;const source=c.createBufferSource(),filter=c.createBiquadFilter(),gain=c.createGain();
-      const buffer=oceanBuffer??c.createBuffer(1,c.sampleRate*16,c.sampleRate);
-      if(!oceanBuffer){fillBottleOcean(buffer.getChannelData(0),c.sampleRate);oceanBuffer=buffer;}
-      source.buffer=buffer;source.loop=true;filter.type='lowpass';filter.frequency.value=3600;gain.gain.value=0;gain.gain.setValueAtTime(0,c.currentTime);gain.gain.linearRampToValueAtTime(.22,c.currentTime+1.8);source.connect(filter);filter.connect(gain);gain.connect(master);sources.add(source);oceanSource=source;oceanGain=gain;
-      const startedAt=c.currentTime,clock=()=>c.currentTime-startedAt;bottleOceanClock=clock;
-      source.onended=()=>{if(bottleOceanClock===clock)bottleOceanClock=null;sources.delete(source);source.disconnect();filter.disconnect();gain.disconnect();if(oceanSource===source){oceanSource=null;oceanGain=null;}};source.start();
-    };if(c.state==='running')start();else void c.resume().then(start).catch(()=>{});
-  }
-  document.addEventListener('fi2-bottle-ocean',bottleOcean);
   const bottlePop=()=>{if(!ready('bottle-pop',.3))return;tone(420,170,.12,.14,'sine');hiss(1600,.08,.06);};
   document.addEventListener('fi2-bottle-pop',bottlePop);
-  function silence(keepOcean=false){stopEngine();stopTravelHum();for(const source of sources){if(keepOcean&&source===oceanSource)continue;try{source.stop();}catch{}sources.delete(source);}}
-  function setVolume(value:number){if(!Number.isFinite(value))return;const wasSilent=volume===0;volume=Math.max(0,Math.min(1,value));debug.volume=volume;if(volume===0)silence();if(master&&context)master.gain.setTargetAtTime(muted?0:.64*volume,context.currentTime,.04);if(wasSilent&&volume>0&&oceanRequested)bottleOcean(new CustomEvent('fi2-bottle-ocean',{detail:true}));}
-  function setMuted(value:boolean){muted=value;debug.muted=value;silence();if(master&&context)master.gain.setTargetAtTime(value?0:.64*volume,context.currentTime,.04);if(!value){unlock();if(oceanRequested)bottleOcean(new CustomEvent('fi2-bottle-ocean',{detail:true}));}}
-  function visibility(){hidden=document.hidden||mediaPaused;debug.hidden=hidden;silence();if(hidden){if(context?.state==='running')void context.suspend().catch(()=>{});}else if(debug.unlocked){unlock();if(oceanRequested)bottleOcean(new CustomEvent('fi2-bottle-ocean',{detail:true}));}}
-  function dispose(){document.removeEventListener('fi2-path-cue',pathCue);document.removeEventListener('fi2-bottle-pop',bottlePop);document.removeEventListener('fi2-bottle-ocean',bottleOcean);document.removeEventListener('fi2-story-cue',storyCue);disposed=true;debug.disposed=true;silence();if(context){context.onstatechange=null;void context.close().catch(()=>{});}debug.contextState='closed';}
-  return {setMediaPaused(value:boolean){mediaPaused=value;visibility();},debug,getContext,unlock,ui,ride,move,stair,boundary,fall,impact,ball,boost,honk,truck,setVolume,setMuted,visibility,silence,dispose};
+  /** Fades live sources out (blur, mute). `now` = hard stop: the page is hiding and the context suspends at once anyway. */
+  function silence(now=false){stopEngine();stopTravelHum();for(const [source,gain] of sources){release(source,now?null:gain);sources.delete(source);}}
+  function setVolume(value:number){if(!Number.isFinite(value))return;volume=Math.max(0,Math.min(1,value));debug.volume=volume;if(volume===0)silence();if(master&&context)master.gain.setTargetAtTime(level(),context.currentTime,.04);}
+  function setMuted(value:boolean){muted=value;debug.muted=value;silence();if(master&&context)master.gain.setTargetAtTime(level(),context.currentTime,.04);if(!value)unlock();}
+  function visibility(){hidden=document.hidden||mediaPaused;debug.hidden=hidden;silence(hidden);if(hidden){if(context?.state==='running')void context.suspend().catch(()=>{});}else if(debug.unlocked)unlock();}
+  function dispose(){if(idleFadeTimer!==undefined)clearTimeout(idleFadeTimer);if(idleTimer!==undefined&&typeof clearTimeout==='function')clearTimeout(idleTimer);for(const type of INPUT_EVENTS)document.removeEventListener(type,markInput,{capture:true});document.removeEventListener('fi2-path-cue',pathCue);document.removeEventListener('fi2-bottle-pop',bottlePop);document.removeEventListener('fi2-story-cue',storyCue);disposed=true;debug.disposed=true;silence();if(context){context.onstatechange=null;void context.close().catch(()=>{});}debug.contextState='closed';}
+  return {setMediaPaused(value:boolean){mediaPaused=value;visibility();},debug,getContext,unlock,setMusicAudible,setIdle,ui,sceneHover,ride,move,stair,boundary,fall,impact,ball,boost,honk,truck,setVolume,setMuted,visibility,silence,dispose};
 }

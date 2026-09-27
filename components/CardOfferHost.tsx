@@ -2,7 +2,10 @@
 import dynamic from 'next/dynamic';
 import {useEffect,useState} from 'react';
 import {CARD_COMPLETE,CARD_OFFER_OPEN,cardRewardsActive,readCardOffers,useCardOffers} from '@/lib/town/cardRewardStore';
-import {CARD_EXPLORE_ITEMS,earnForExplore,earnForJourney} from '@/lib/town/cardRewardTriggers';
+import {CARD_EXPLORE_ITEMS,earnForExplore,earnForJourney,earnForPath} from '@/lib/town/cardRewardTriggers';
+import {pathProgressFrom} from '@/lib/town/cardTiers';
+import {useQuestEvidence} from '@/lib/town/questProgress';
+import {useQuizCompletions} from '@/lib/town/quizProgress';
 import {LEARNING_STAGE_COMPLETE} from '@/lib/town/learningProgress';
 import {useExploreChecklist} from '@/lib/town/exploreChecklist';
 const CardOffer=dynamic(()=>import('./CardOffer'),{ssr:false});
@@ -26,6 +29,23 @@ function ExploreCardWatcher(){
  },[key]);
  return null;
 }
+/** Paths already finished when the path watcher first ran; only later finishes pay (no catch-up picks). */
+let pathBaseline:Set<string>|null=null;
+/**
+ * Finishing a path's starter lessons has no event either (a lesson completes when its last step or quiz answer is saved), so
+ * this watcher compares the finished paths with those finished when it first ran and pays each new one once (earnForPath: a
+ * pick of Icon cards, docs/card-rewards.md "Value tiers"). Same stores the Paths screen reads; mounted only while rewards are on.
+ */
+function PathCardWatcher(){
+ const evidence=useQuestEvidence(),answers=useQuizCompletions();
+ const key=pathProgressFrom(new Set(evidence.steps),answers).finished.join('|');
+ useEffect(()=>{
+  const done=key?key.split('|'):[];
+  if(pathBaseline===null){pathBaseline=new Set(done);return;}
+  for(const format of done)if(!pathBaseline.has(format)){pathBaseline.add(format);earnForPath(format);}
+ },[key]);
+ return null;
+}
 /**
  * Mounted once in Town. Nothing renders (and the offer code is not loaded) until there is an offer to show. A new offer opens
  * at the next calm moment (`blocked` is false: no ball lesson, chat or other card dialog in the way); an offer set aside opens
@@ -44,7 +64,7 @@ export default function CardOfferHost({blocked,onOpenChange}:{blocked:boolean;on
   return()=>{window.removeEventListener(CARD_OFFER_OPEN,open);window.removeEventListener(CARD_COMPLETE,done);window.removeEventListener(LEARNING_STAGE_COMPLETE,stage);};},[]);
  const showing=!!openId||(complete&&!blocked);
  useEffect(()=>{onOpenChange(showing);},[showing,onOpenChange]);
- const watcher=cardRewardsActive()&&<ExploreCardWatcher/>;
+ const watcher=cardRewardsActive()&&<><ExploreCardWatcher/><PathCardWatcher/></>;
  if(!showing)return watcher||null;
  return <>{watcher}<CardOffer key={openId??'note'} offerId={openId} complete={complete&&!openId}
   onClose={()=>{setOpenId(null);setComplete(false);}}/></>;

@@ -1,0 +1,386 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Seven minutes left, live",
+   "text": "July twenty twenty-four, Euro last sixteen. France and Belgium, nil-nil, seven minutes left. Doku and Lukaku break down the left, and Kevin De Bruyne hits a low, rasping shot!",
+   "src": "/plays/narration/maignan-signature/1.m4a",
+   "seconds": 13.4,
+   "words": [
+    {
+     "w": "July",
+     "at": 0.375
+    },
+    {
+     "w": "twenty",
+     "at": 0.675
+    },
+    {
+     "w": "twenty-four",
+     "at": 0.975
+    },
+    {
+     "w": "Euro",
+     "at": 1.738
+    },
+    {
+     "w": "last",
+     "at": 2.05
+    },
+    {
+     "w": "sixteen",
+     "at": 2.438
+    },
+    {
+     "w": "France",
+     "at": 3.575
+    },
+    {
+     "w": "and",
+     "at": 4.0
+    },
+    {
+     "w": "Belgium",
+     "at": 4.125
+    },
+    {
+     "w": "nil-nil",
+     "at": 4.8
+    },
+    {
+     "w": "seven",
+     "at": 5.588
+    },
+    {
+     "w": "minutes",
+     "at": 5.95
+    },
+    {
+     "w": "left",
+     "at": 6.275
+    },
+    {
+     "w": "Doku",
+     "at": 7.2
+    },
+    {
+     "w": "and",
+     "at": 7.65
+    },
+    {
+     "w": "Lukaku",
+     "at": 7.775
+    },
+    {
+     "w": "break",
+     "at": 8.35
+    },
+    {
+     "w": "down",
+     "at": 8.625
+    },
+    {
+     "w": "the",
+     "at": 8.838
+    },
+    {
+     "w": "left",
+     "at": 8.925
+    },
+    {
+     "w": "and",
+     "at": 9.5
+    },
+    {
+     "w": "Kevin",
+     "at": 9.637
+    },
+    {
+     "w": "De",
+     "at": 9.975
+    },
+    {
+     "w": "Bruyne",
+     "at": 10.1
+    },
+    {
+     "w": "hits",
+     "at": 10.562
+    },
+    {
+     "w": "a",
+     "at": 10.85
+    },
+    {
+     "w": "low",
+     "at": 10.95
+    },
+    {
+     "w": "rasping",
+     "at": 11.463
+    },
+    {
+     "w": "shot",
+     "at": 12.025
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. Mike Maignan pushes off hard with the foot nearest the ball, and flies low across his goal.",
+   "src": "/plays/narration/maignan-signature/2.m4a",
+   "seconds": 8.3,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.288
+    },
+    {
+     "w": "Mike",
+     "at": 2.362
+    },
+    {
+     "w": "Maignan",
+     "at": 2.6
+    },
+    {
+     "w": "pushes",
+     "at": 3.075
+    },
+    {
+     "w": "off",
+     "at": 3.375
+    },
+    {
+     "w": "hard",
+     "at": 3.6
+    },
+    {
+     "w": "with",
+     "at": 3.862
+    },
+    {
+     "w": "the",
+     "at": 3.962
+    },
+    {
+     "w": "foot",
+     "at": 4.1
+    },
+    {
+     "w": "nearest",
+     "at": 4.412
+    },
+    {
+     "w": "the",
+     "at": 4.763
+    },
+    {
+     "w": "ball",
+     "at": 4.85
+    },
+    {
+     "w": "and",
+     "at": 5.55
+    },
+    {
+     "w": "flies",
+     "at": 5.688
+    },
+    {
+     "w": "low",
+     "at": 6.112
+    },
+    {
+     "w": "across",
+     "at": 6.425
+    },
+    {
+     "w": "his",
+     "at": 6.763
+    },
+    {
+     "w": "goal",
+     "at": 6.925
+    }
+   ]
+  },
+  {
+   "label": "Full stretch",
+   "text": "From the goal line: at full stretch, his glove pushes the ball away. Two minutes later, France score!",
+   "src": "/plays/narration/maignan-signature/3.m4a",
+   "seconds": 7.1,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "the",
+     "at": 0.487
+    },
+    {
+     "w": "goal",
+     "at": 0.575
+    },
+    {
+     "w": "line",
+     "at": 0.8
+    },
+    {
+     "w": "at",
+     "at": 1.538
+    },
+    {
+     "w": "full",
+     "at": 1.7
+    },
+    {
+     "w": "stretch",
+     "at": 1.962
+    },
+    {
+     "w": "his",
+     "at": 2.388
+    },
+    {
+     "w": "glove",
+     "at": 2.562
+    },
+    {
+     "w": "pushes",
+     "at": 2.925
+    },
+    {
+     "w": "the",
+     "at": 3.263
+    },
+    {
+     "w": "ball",
+     "at": 3.35
+    },
+    {
+     "w": "away",
+     "at": 3.625
+    },
+    {
+     "w": "Two",
+     "at": 4.463
+    },
+    {
+     "w": "minutes",
+     "at": 4.612
+    },
+    {
+     "w": "later",
+     "at": 4.925
+    },
+    {
+     "w": "France",
+     "at": 5.3
+    },
+    {
+     "w": "score",
+     "at": 5.638
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "What a flying save! Your turn: push off hard with the foot nearest the ball, and you will dive further.",
+   "src": "/plays/narration/maignan-signature/4.m4a",
+   "seconds": 7.2,
+   "words": [
+    {
+     "w": "What",
+     "at": 0.375
+    },
+    {
+     "w": "a",
+     "at": 0.487
+    },
+    {
+     "w": "flying",
+     "at": 0.562
+    },
+    {
+     "w": "save",
+     "at": 1.025
+    },
+    {
+     "w": "Your",
+     "at": 1.887
+    },
+    {
+     "w": "turn",
+     "at": 2.087
+    },
+    {
+     "w": "push",
+     "at": 2.938
+    },
+    {
+     "w": "off",
+     "at": 3.188
+    },
+    {
+     "w": "hard",
+     "at": 3.4
+    },
+    {
+     "w": "with",
+     "at": 3.663
+    },
+    {
+     "w": "the",
+     "at": 3.763
+    },
+    {
+     "w": "foot",
+     "at": 3.9
+    },
+    {
+     "w": "nearest",
+     "at": 4.175
+    },
+    {
+     "w": "the",
+     "at": 4.513
+    },
+    {
+     "w": "ball",
+     "at": 4.6
+    },
+    {
+     "w": "and",
+     "at": 5.05
+    },
+    {
+     "w": "you",
+     "at": 5.175
+    },
+    {
+     "w": "will",
+     "at": 5.3
+    },
+    {
+     "w": "dive",
+     "at": 5.45
+    },
+    {
+     "w": "further",
+     "at": 5.812
+    }
+   ]
+  }
+ ]
+}

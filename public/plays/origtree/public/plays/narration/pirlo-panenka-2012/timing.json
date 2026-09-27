@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Penalties, live",
+   "text": "Kyiv, 2012. Italy and England go to penalties, and England lead. Andrea Pirlo steps up. The keeper jumps around on his line. Pirlo stays calm... and chips it down the middle. Goal!",
+   "src": "/plays/narration/pirlo-panenka-2012/1.m4a",
+   "seconds": 14.1,
+   "words": [
+    {
+     "w": "Kyiv",
+     "at": 0.35
+    },
+    {
+     "w": "2012",
+     "at": 0.8
+    },
+    {
+     "w": "Italy",
+     "at": 1.975
+    },
+    {
+     "w": "and",
+     "at": 2.3
+    },
+    {
+     "w": "England",
+     "at": 2.425
+    },
+    {
+     "w": "go",
+     "at": 2.8
+    },
+    {
+     "w": "to",
+     "at": 2.962
+    },
+    {
+     "w": "penalties",
+     "at": 3.05
+    },
+    {
+     "w": "and",
+     "at": 3.7
+    },
+    {
+     "w": "England",
+     "at": 3.825
+    },
+    {
+     "w": "lead",
+     "at": 4.263
+    },
+    {
+     "w": "Andrea",
+     "at": 4.95
+    },
+    {
+     "w": "Pirlo",
+     "at": 5.487
+    },
+    {
+     "w": "steps",
+     "at": 5.963
+    },
+    {
+     "w": "up",
+     "at": 6.325
+    },
+    {
+     "w": "The",
+     "at": 6.95
+    },
+    {
+     "w": "keeper",
+     "at": 7.05
+    },
+    {
+     "w": "jumps",
+     "at": 7.438
+    },
+    {
+     "w": "around",
+     "at": 7.775
+    },
+    {
+     "w": "on",
+     "at": 8.137
+    },
+    {
+     "w": "his",
+     "at": 8.238
+    },
+    {
+     "w": "line",
+     "at": 8.4
+    },
+    {
+     "w": "Pirlo",
+     "at": 9.162
+    },
+    {
+     "w": "stays",
+     "at": 9.613
+    },
+    {
+     "w": "calm",
+     "at": 10.088
+    },
+    {
+     "w": "and",
+     "at": 10.9
+    },
+    {
+     "w": "chips",
+     "at": 11.037
+    },
+    {
+     "w": "it",
+     "at": 11.35
+    },
+    {
+     "w": "down",
+     "at": 11.475
+    },
+    {
+     "w": "the",
+     "at": 11.688
+    },
+    {
+     "w": "middle",
+     "at": 11.775
+    },
+    {
+     "w": "Goal",
+     "at": 12.625
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again, slowly. Pirlo waits for the keeper to move. The keeper dives, and the ball floats gently into the middle.",
+   "src": "/plays/narration/pirlo-panenka-2012/2.m4a",
+   "seconds": 8.6,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "slowly",
+     "at": 1.288
+    },
+    {
+     "w": "Pirlo",
+     "at": 2.312
+    },
+    {
+     "w": "waits",
+     "at": 2.75
+    },
+    {
+     "w": "for",
+     "at": 3.025
+    },
+    {
+     "w": "the",
+     "at": 3.138
+    },
+    {
+     "w": "keeper",
+     "at": 3.225
+    },
+    {
+     "w": "to",
+     "at": 3.6
+    },
+    {
+     "w": "move",
+     "at": 3.725
+    },
+    {
+     "w": "The",
+     "at": 4.525
+    },
+    {
+     "w": "keeper",
+     "at": 4.625
+    },
+    {
+     "w": "dives",
+     "at": 5.0
+    },
+    {
+     "w": "and",
+     "at": 5.65
+    },
+    {
+     "w": "the",
+     "at": 5.763
+    },
+    {
+     "w": "ball",
+     "at": 5.85
+    },
+    {
+     "w": "floats",
+     "at": 6.162
+    },
+    {
+     "w": "gently",
+     "at": 6.6
+    },
+    {
+     "w": "into",
+     "at": 7.013
+    },
+    {
+     "w": "the",
+     "at": 7.188
+    },
+    {
+     "w": "middle",
+     "at": 7.275
+    }
+   ]
+  },
+  {
+   "label": "From behind the net",
+   "text": "From behind the net: the keeper is already on the ground. Italy go on to win the shootout!",
+   "src": "/plays/narration/pirlo-panenka-2012/3.m4a",
+   "seconds": 6.4,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.375
+    },
+    {
+     "w": "behind",
+     "at": 0.55
+    },
+    {
+     "w": "the",
+     "at": 0.963
+    },
+    {
+     "w": "net",
+     "at": 1.05
+    },
+    {
+     "w": "the",
+     "at": 1.75
+    },
+    {
+     "w": "keeper",
+     "at": 1.85
+    },
+    {
+     "w": "is",
+     "at": 2.225
+    },
+    {
+     "w": "already",
+     "at": 2.375
+    },
+    {
+     "w": "on",
+     "at": 2.737
+    },
+    {
+     "w": "the",
+     "at": 2.837
+    },
+    {
+     "w": "ground",
+     "at": 2.925
+    },
+    {
+     "w": "Italy",
+     "at": 3.788
+    },
+    {
+     "w": "go",
+     "at": 4.1
+    },
+    {
+     "w": "on",
+     "at": 4.275
+    },
+    {
+     "w": "to",
+     "at": 4.475
+    },
+    {
+     "w": "win",
+     "at": 4.575
+    },
+    {
+     "w": "the",
+     "at": 4.763
+    },
+    {
+     "w": "shootout",
+     "at": 4.9
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "The secret? Under pressure, stay calm and watch the keeper. A calm mind makes good decisions.",
+   "src": "/plays/narration/pirlo-panenka-2012/4.m4a",
+   "seconds": 6.9,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "secret",
+     "at": 0.463
+    },
+    {
+     "w": "Under",
+     "at": 1.225
+    },
+    {
+     "w": "pressure",
+     "at": 1.45
+    },
+    {
+     "w": "stay",
+     "at": 2.013
+    },
+    {
+     "w": "calm",
+     "at": 2.337
+    },
+    {
+     "w": "and",
+     "at": 2.688
+    },
+    {
+     "w": "watch",
+     "at": 2.8
+    },
+    {
+     "w": "the",
+     "at": 3.1
+    },
+    {
+     "w": "keeper",
+     "at": 3.2
+    },
+    {
+     "w": "A",
+     "at": 4.062
+    },
+    {
+     "w": "calm",
+     "at": 4.188
+    },
+    {
+     "w": "mind",
+     "at": 4.525
+    },
+    {
+     "w": "makes",
+     "at": 4.862
+    },
+    {
+     "w": "good",
+     "at": 5.1
+    },
+    {
+     "w": "decisions",
+     "at": 5.275
+    }
+   ]
+  }
+ ]
+}

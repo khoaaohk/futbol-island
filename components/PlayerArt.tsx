@@ -334,29 +334,31 @@ function FigureValues({id,f,kind,colour}:{id:string;f:Look;kind:'i'|'t';colour:s
  // Skin: the tone pass prints it in the warm skin ink (coverage rises with skin depth and shading); the green ink
  // only touches skin in its deepest shadows, lightly, so faces never read green.
  const warm=screen(id,'s',skinInk(f)),skinFill=(v:number,shadow:number)=>kind==='t'?warm(clamp01(.42+(v-.22)*1.05)):at(shadow*(.35+.65*V.d));
- const R=({d,v,sk}:{d:string;v:number;sk?:number})=><><path d={d} fill="#fff"/><path d={d} fill={sk===undefined?s(v):skinFill(v,sk)}/></>;
+ // Plain functions called in place, not components defined in render: a component type made per render remounts its SVG on every
+ // parent re-render (card captions, binder, guide lists), and each remount trips the page's :has() rules into a whole-page recalc.
+ const R=(d:string,v:number,sk?:number)=><><path d={d} fill="#fff"/><path d={d} fill={sk===undefined?s(v):skinFill(v,sk)}/></>;
  // Light and red hair print in their own colour on the tone pass; dark hair stays with the ink.
  const ownHair=kind==='t'&&(V.red||V.h<.55),hairTone=screen(id,'h',hairInk(f));
  const hs=(v:number)=>ownHair?hairTone(V.red?.8:.8):s(v);
- const H=({front,v,light}:{front:boolean;v:number;light:number})=><g transform={G.hairFit}><Hair style={f.style} front={front} fill="#fff" shade="#fff" light="#fff"/><Hair style={f.style} front={front} fill={hs(v)} shade={hs(Math.min(1,v+.1))} light={ownHair?hairTone(.46):s(light)}/></g>;
+ const H=(front:boolean,v:number,light:number)=><g transform={G.hairFit}><Hair style={f.style} front={front} fill="#fff" shade="#fff" light="#fff"/><Hair style={f.style} front={front} fill={hs(v)} shade={hs(Math.min(1,v+.1))} light={ownHair?hairTone(.46):s(light)}/></g>;
  const ears=[G.L,G.R].map(x=>ell(x,108,9*g.ear,13*g.ear)).join('');
  return <>
-  <H front={false} v={V.hair} light={V.hair}/>
+  {H(false,V.hair,V.hair)}
   {/* shirt: a mid value, the far side and the near arm in shadow */}
-  <R d={SHIRT} v={V.kit}/><R d={SHIRT_SHADE} v={V.kitShade}/>
-  <R d="M-12 316 C-10 256 0 214 38 200 C52 195 62 192 70 190 C40 214 30 260 28 316Z" v={V.kitShade-.1}/>
+  {R(SHIRT,V.kit)}{R(SHIRT_SHADE,V.kitShade)}
+  {R("M-12 316 C-10 256 0 214 38 200 C52 195 62 192 70 190 C40 214 30 260 28 316Z",V.kitShade-.1)}
   {/* neck in shadow, darkest under the chin */}
-  <R d={G.neck} v={V.shade} sk={.1}/><R d={V_NECK} v={V.shade+.08} sk={.16}/><R d={G.chinShadow} v={V.shade+.14} sk={.28}/>
+  {R(G.neck,V.shade,.1)}{R(V_NECK,V.shade+.08,.16)}{R(G.chinShadow,V.shade+.14,.28)}
   {/* ears and head: lit side, far-side shadow, eye sockets, lips, facial hair */}
-  <R d={ears} v={V.skin+.1} sk={0}/>
-  <R d={G.head} v={V.skin} sk={0}/>
-  <R d={G.shadow} v={V.shade} sk={.12}/>
-  <R d={G.eyes.map(e=>ell(e.cx,e.cy-3,e.rx+5,e.ry+5)).join('')} v={V.skin+.12} sk={.1}/>
-  <R d={ell(120,G.mouthY+1,g.mouthW*.75,3.4)} v={V.skin+.14} sk={0}/>
-  <R d={ell(120,G.mouthY+6,g.mouthW*.55,2.8)} v={V.skin+.24} sk={.1}/>
-  {f.facial==='beard'&&<R d={G.beard} v={Math.max(.72,V.hair)}/>}
+  {R(ears,V.skin+.1,0)}
+  {R(G.head,V.skin,0)}
+  {R(G.shadow,V.shade,.12)}
+  {R(G.eyes.map(e=>ell(e.cx,e.cy-3,e.rx+5,e.ry+5)).join(''),V.skin+.12,.1)}
+  {R(ell(120,G.mouthY+1,g.mouthW*.75,3.4),V.skin+.14,0)}
+  {R(ell(120,G.mouthY+6,g.mouthW*.55,2.8),V.skin+.24,.1)}
+  {f.facial==='beard'&&R(G.beard,Math.max(.72,V.hair))}
   {f.facial==='stubble'&&<path d={G.stubble} fill={kind==='t'?'none':at(.2)}/>}
-  <H front v={V.hair} light={V.hair*.55}/>
+  {H(true,V.hair,V.hair*.55)}
  </>;
 }
 
@@ -459,6 +461,15 @@ export type PlayerPhoto={slug:string;article:string;file:string;artist:string;li
 /** Photo manifests are split by batch (legends / current stars / futsal) so separate agents never write the same file; later batches win. */
 const PHOTOS:Record<string,PlayerPhoto>={...(photos as Record<string,PlayerPhoto>),...(starPhotos as Record<string,PlayerPhoto>),...(futsalPhotos as Record<string,PlayerPhoto>),...(womenPhotos as Record<string,PlayerPhoto>)};
 export const photoFor=(name:string):PlayerPhoto|undefined=>PHOTOS[name];
+/** Warm the browser cache with players' riso photo masks (ink + tone, ~25 KB each) before their cards appear, so a card
+ *  never sits with its backdrop and silhouette while the photo trickles in. Each file is requested once per session. */
+const warmed=new Set<string>();
+export function preloadPlayerPhotos(names:Iterable<string|null|undefined>){
+ if(typeof window==='undefined')return;
+ for(const name of names){const photo=name?PHOTOS[name]:undefined;if(!photo)continue;
+  for(const layer of ['ink','tone']){const src=`/players/${photo.slug}-${layer}.webp`;if(warmed.has(src))continue;warmed.add(src);
+   const image=new Image();image.decoding='async';image.src=src;void image.decode?.().catch(()=>{});}}
+}
 /** The riso halftone ink: the flag's strongest colour, never its white or black. */
 const toneInk=(country?:string)=>countryArt(country).flag.find(c=>c!=='#ffffff'&&c!=='#000000')??'#e9798b';
 
@@ -476,14 +487,17 @@ const bandsFor=(country?:string)=>{const [a,b,c]=countryArt(country).flag.map(pa
 export default function PlayerArt({name,team='gold',layered=false,size,look,country,silhouette=false}:{name:string;team?:Team;layered?:boolean;size?:number;look?:Look;country?:string;silhouette?:boolean}){
  const id=useId().replace(/:/g,''),authored=lookFor(name),f=look??authored.look;country=country??authored.country;
  void team;
- const view='0 0 240 240',photo=photoFor(name);
+ const view='0 0 240 240',known=photoFor(name);
+ // The two riso masks: the player's pre-printed photo.
+ const photo=known?{ink:`/players/${known.slug}-ink.webp`,tone:`/players/${known.slug}-tone.webp`}:undefined;
+ const maskOf=(part:'ink'|'tone')=>photo?{WebkitMaskImage:`url("${photo[part]}")`,maskImage:`url("${photo[part]}")`}:{};
  if(silhouette)return <svg className={styles.flat} viewBox="0 0 240 240" width={size} height={size} aria-hidden="true">
   <defs><pattern id={`${id}sh`} patternUnits="userSpaceOnUse" width={PITCH} height={PITCH} patternTransform="rotate(45)"><circle cx={PITCH/2} cy={PITCH/2} r={PITCH*.46} fill="#33403a"/></pattern></defs>
   <rect width="240" height="240" rx="40" fill="#c9bc9d"/><path d="M40 240 V112 A80 80 0 0 1 200 112 V240Z" fill="#d8ccb0"/>
   <svg x="12" y="0" width="216" height="240" viewBox={PRINT_VIEW} preserveAspectRatio="xMidYMax meet"><g opacity=".8"><FigureShape f={f} fill={`url(#${id}sh)`}/></g></svg>
  </svg>;
  if(!layered&&size!=null){
-  const mask=(part:'ink'|'tone')=>photo?{WebkitMaskImage:`url(/players/${photo.slug}-${part}.webp)`,maskImage:`url(/players/${photo.slug}-${part}.webp)`}:{};
+  const mask=maskOf;
   return <span className={styles.thumb} style={{width:size,height:size,background:bandsFor(country)}} aria-hidden="true">
    {photo?<><span className={styles.thumbPaper}/><span className={`${styles.thumbMask} ${styles.thumbTone}`} style={{...mask('tone'),background:toneInk(country)}}/><span className={`${styles.thumbMask} ${styles.ink}`} style={mask('ink')}/></>
    :<RisoPrint id={id} f={f} country={country} cls={{paper:styles.thumbPaper,tone:`${styles.print} ${styles.thumbPrint} ${styles.thumbTone}`,ink:`${styles.print} ${styles.thumbPrint} ${styles.printInk}`}}/>}
@@ -493,21 +507,23 @@ export default function PlayerArt({name,team='gold',layered=false,size,look,coun
   <CoastBackdrop seed={f.seed} country={country} className={styles.fillBackdrop}/>
   <span className={styles.fillPortrait}>
    {photo?<><span className={styles.fillPaper}/>
-    <span className={`${styles.maskPart} ${styles.tone}`} style={{background:toneInk(country),WebkitMaskImage:`url(/players/${photo.slug}-tone.webp)`,maskImage:`url(/players/${photo.slug}-tone.webp)`}}/>
-    <span className={`${styles.maskPart} ${styles.ink}`} style={{WebkitMaskImage:`url(/players/${photo.slug}-ink.webp)`,maskImage:`url(/players/${photo.slug}-ink.webp)`}}/></>
+    <span className={`${styles.maskPart} ${styles.tone}`} style={{background:toneInk(country),...maskOf('tone')}}/>
+    <span className={`${styles.maskPart} ${styles.ink}`} style={maskOf('ink')}/></>
    :<RisoPrint id={id} f={f} country={country} cls={{paper:styles.fillPaper,tone:`${styles.print} ${styles.printTone} ${styles.small}`,ink:`${styles.print} ${styles.printInk}`}}/>}
   </span>
  </span>;
  return <div className={styles.layers} aria-hidden="true">
-  <svg className={`${styles.layer} ${styles.back}`} viewBox={view} preserveAspectRatio="xMidYMid slice"><Backdrop id={id} f={f} country={country} live/></svg>
+  {/* The SVG planes sit inside HTML boxes that carry the parallax transform, so a tilt moves a rasterised layer instead of
+      repainting the SVG every frame (iPhone tilt, Sep 25 2026). */}
+  <div className={`${styles.layer} ${styles.back}`}><svg className={styles.plane} viewBox={view} preserveAspectRatio="xMidYMid slice"><Backdrop id={id} f={f} country={country} live/></svg></div>
   <LiveScenery seed={f.seed} country={country} className={`${styles.layer} ${styles.back} ${styles.live}`}/>
   <div className={`${styles.layer} ${styles.mid} ${styles.riso}`}>
    {photo?<>
     <span className={styles.paper}/>
-    <span className={styles.tone} style={{background:toneInk(country),WebkitMaskImage:`url(/players/${photo.slug}-tone.webp)`,maskImage:`url(/players/${photo.slug}-tone.webp)`}}/>
-    <span className={styles.ink} style={{WebkitMaskImage:`url(/players/${photo.slug}-ink.webp)`,maskImage:`url(/players/${photo.slug}-ink.webp)`}}/>
+    <span className={styles.tone} style={{background:toneInk(country),...maskOf('tone')}}/>
+    <span className={styles.ink} style={maskOf('ink')}/>
    </>:<RisoPrint id={id} f={f} country={country} cls={{paper:styles.paper,tone:`${styles.print} ${styles.printTone}`,ink:`${styles.print} ${styles.printInk}`}} pitch={BIG_PITCH}/>}
   </div>
-  <svg className={`${styles.layer} ${styles.front}`} viewBox={view} preserveAspectRatio="xMidYMax slice"><Foreground f={f}/></svg>
+  <div className={`${styles.layer} ${styles.front}`}><svg className={styles.plane} viewBox={view} preserveAspectRatio="xMidYMax slice"><Foreground f={f}/></svg></div>
  </div>;
 }

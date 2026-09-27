@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: the Euro 2022 quarter-final",
+   "text": "Euro 2022, the quarter-final against Finland. Afonso Jesus, Portugal\u2019s fixo, scores early. Finland equalise, then Afonso scores again! Two one!",
+   "src": "/plays/narration/afonso-jesus-futsal-signature/1.m4a",
+   "seconds": 12.4,
+   "words": [
+    {
+     "w": "Euro",
+     "at": 0.4
+    },
+    {
+     "w": "2022",
+     "at": 0.675
+    },
+    {
+     "w": "the",
+     "at": 1.65
+    },
+    {
+     "w": "quarter-final",
+     "at": 1.75
+    },
+    {
+     "w": "against",
+     "at": 2.45
+    },
+    {
+     "w": "Finland",
+     "at": 2.825
+    },
+    {
+     "w": "Afonso",
+     "at": 3.888
+    },
+    {
+     "w": "Jesus",
+     "at": 4.475
+    },
+    {
+     "w": "Portugal\u2019s",
+     "at": 5.175
+    },
+    {
+     "w": "fixo",
+     "at": 5.75
+    },
+    {
+     "w": "scores",
+     "at": 6.362
+    },
+    {
+     "w": "early",
+     "at": 6.825
+    },
+    {
+     "w": "Finland",
+     "at": 7.75
+    },
+    {
+     "w": "equalise",
+     "at": 8.2
+    },
+    {
+     "w": "then",
+     "at": 8.838
+    },
+    {
+     "w": "Afonso",
+     "at": 8.975
+    },
+    {
+     "w": "scores",
+     "at": 9.537
+    },
+    {
+     "w": "again",
+     "at": 9.975
+    },
+    {
+     "w": "Two",
+     "at": 10.75
+    },
+    {
+     "w": "one",
+     "at": 11.062
+    }
+   ]
+  },
+  {
+   "label": "Into the semi-final",
+   "text": "Final whistle: three two! Portugal are into the semi-final, and they go on to win Euro 2022!",
+   "src": "/plays/narration/afonso-jesus-futsal-signature/2.m4a",
+   "seconds": 7.7,
+   "words": [
+    {
+     "w": "Final",
+     "at": 0.375
+    },
+    {
+     "w": "whistle",
+     "at": 0.725
+    },
+    {
+     "w": "three",
+     "at": 1.525
+    },
+    {
+     "w": "two",
+     "at": 1.85
+    },
+    {
+     "w": "Portugal",
+     "at": 2.688
+    },
+    {
+     "w": "are",
+     "at": 3.225
+    },
+    {
+     "w": "into",
+     "at": 3.325
+    },
+    {
+     "w": "the",
+     "at": 3.538
+    },
+    {
+     "w": "semi-final",
+     "at": 3.638
+    },
+    {
+     "w": "and",
+     "at": 4.475
+    },
+    {
+     "w": "they",
+     "at": 4.588
+    },
+    {
+     "w": "go",
+     "at": 4.725
+    },
+    {
+     "w": "on",
+     "at": 4.888
+    },
+    {
+     "w": "to",
+     "at": 5.05
+    },
+    {
+     "w": "win",
+     "at": 5.175
+    },
+    {
+     "w": "Euro",
+     "at": 5.4
+    },
+    {
+     "w": "2022",
+     "at": 5.688
+    }
+   ]
+  },
+  {
+   "label": "How he does it",
+   "text": "His card move is the last-man block. Watch how he does it. An attacker runs at goal, and Afonso is the last defender. He stays on his feet, gets his body in line, and blocks the shot!",
+   "src": "/plays/narration/afonso-jesus-futsal-signature/3.m4a",
+   "seconds": 13.3,
+   "words": [
+    {
+     "w": "His",
+     "at": 0.35
+    },
+    {
+     "w": "card",
+     "at": 0.537
+    },
+    {
+     "w": "move",
+     "at": 0.9
+    },
+    {
+     "w": "is",
+     "at": 1.225
+    },
+    {
+     "w": "the",
+     "at": 1.375
+    },
+    {
+     "w": "last-man",
+     "at": 1.5
+    },
+    {
+     "w": "block",
+     "at": 2.15
+    },
+    {
+     "w": "Watch",
+     "at": 2.987
+    },
+    {
+     "w": "how",
+     "at": 3.325
+    },
+    {
+     "w": "he",
+     "at": 3.487
+    },
+    {
+     "w": "does",
+     "at": 3.6
+    },
+    {
+     "w": "it",
+     "at": 3.837
+    },
+    {
+     "w": "An",
+     "at": 4.487
+    },
+    {
+     "w": "attacker",
+     "at": 4.6
+    },
+    {
+     "w": "runs",
+     "at": 5.15
+    },
+    {
+     "w": "at",
+     "at": 5.425
+    },
+    {
+     "w": "goal",
+     "at": 5.562
+    },
+    {
+     "w": "and",
+     "at": 6.175
+    },
+    {
+     "w": "Afonso",
+     "at": 6.287
+    },
+    {
+     "w": "is",
+     "at": 6.925
+    },
+    {
+     "w": "the",
+     "at": 7.075
+    },
+    {
+     "w": "last",
+     "at": 7.2
+    },
+    {
+     "w": "defender",
+     "at": 7.575
+    },
+    {
+     "w": "He",
+     "at": 8.65
+    },
+    {
+     "w": "stays",
+     "at": 8.8
+    },
+    {
+     "w": "on",
+     "at": 9.137
+    },
+    {
+     "w": "his",
+     "at": 9.238
+    },
+    {
+     "w": "feet",
+     "at": 9.438
+    },
+    {
+     "w": "gets",
+     "at": 9.95
+    },
+    {
+     "w": "his",
+     "at": 10.162
+    },
+    {
+     "w": "body",
+     "at": 10.325
+    },
+    {
+     "w": "in",
+     "at": 10.675
+    },
+    {
+     "w": "line",
+     "at": 10.825
+    },
+    {
+     "w": "and",
+     "at": 11.275
+    },
+    {
+     "w": "blocks",
+     "at": 11.4
+    },
+    {
+     "w": "the",
+     "at": 11.775
+    },
+    {
+     "w": "shot",
+     "at": 11.912
+    }
+   ]
+  },
+  {
+   "label": "Practise it",
+   "text": "Your turn: stay on your feet, get in line, and block it with your body!",
+   "src": "/plays/narration/afonso-jesus-futsal-signature/4.m4a",
+   "seconds": 5.2,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "stay",
+     "at": 1.35
+    },
+    {
+     "w": "on",
+     "at": 1.637
+    },
+    {
+     "w": "your",
+     "at": 1.738
+    },
+    {
+     "w": "feet",
+     "at": 1.9
+    },
+    {
+     "w": "get",
+     "at": 2.375
+    },
+    {
+     "w": "in",
+     "at": 2.513
+    },
+    {
+     "w": "line",
+     "at": 2.65
+    },
+    {
+     "w": "and",
+     "at": 3.062
+    },
+    {
+     "w": "block",
+     "at": 3.175
+    },
+    {
+     "w": "it",
+     "at": 3.462
+    },
+    {
+     "w": "with",
+     "at": 3.538
+    },
+    {
+     "w": "your",
+     "at": 3.638
+    },
+    {
+     "w": "body",
+     "at": 3.75
+    }
+   ]
+  }
+ ]
+}

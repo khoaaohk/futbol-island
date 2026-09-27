@@ -1,0 +1,398 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The final",
+   "text": "Munich, 2025: the Champions League final against Inter. Paris break out from their own corner and find Ousmane Demb\u00e9l\u00e9. He gallops away, head up\u2026 and curls it across to D\u00e9sir\u00e9 Dou\u00e9!",
+   "src": "/plays/narration/dembele-signature/1.m4a",
+   "seconds": 14.3,
+   "words": [
+    {
+     "w": "Munich",
+     "at": 0.4
+    },
+    {
+     "w": "2025",
+     "at": 0.9
+    },
+    {
+     "w": "the",
+     "at": 2.325
+    },
+    {
+     "w": "Champions",
+     "at": 2.438
+    },
+    {
+     "w": "League",
+     "at": 3.025
+    },
+    {
+     "w": "final",
+     "at": 3.312
+    },
+    {
+     "w": "against",
+     "at": 3.725
+    },
+    {
+     "w": "Inter",
+     "at": 4.15
+    },
+    {
+     "w": "Paris",
+     "at": 5.162
+    },
+    {
+     "w": "break",
+     "at": 5.612
+    },
+    {
+     "w": "out",
+     "at": 5.9
+    },
+    {
+     "w": "from",
+     "at": 6.1
+    },
+    {
+     "w": "their",
+     "at": 6.237
+    },
+    {
+     "w": "own",
+     "at": 6.4
+    },
+    {
+     "w": "corner",
+     "at": 6.662
+    },
+    {
+     "w": "and",
+     "at": 7.1
+    },
+    {
+     "w": "find",
+     "at": 7.237
+    },
+    {
+     "w": "Ousmane",
+     "at": 7.612
+    },
+    {
+     "w": "Demb\u00e9l\u00e9",
+     "at": 8.2
+    },
+    {
+     "w": "He",
+     "at": 9.363
+    },
+    {
+     "w": "gallops",
+     "at": 9.525
+    },
+    {
+     "w": "away",
+     "at": 9.95
+    },
+    {
+     "w": "head",
+     "at": 10.5
+    },
+    {
+     "w": "up",
+     "at": 10.688
+    },
+    {
+     "w": "and",
+     "at": 11.15
+    },
+    {
+     "w": "curls",
+     "at": 11.287
+    },
+    {
+     "w": "it",
+     "at": 11.662
+    },
+    {
+     "w": "across",
+     "at": 11.738
+    },
+    {
+     "w": "to",
+     "at": 12.15
+    },
+    {
+     "w": "D\u00e9sir\u00e9",
+     "at": 12.275
+    },
+    {
+     "w": "Dou\u00e9",
+     "at": 12.875
+    }
+   ]
+  },
+  {
+   "label": "The replay",
+   "text": "Watch again, slowly. Demb\u00e9l\u00e9 can use both feet, so the defender can\u2019t guess which way he\u2019ll go. He looks up\u2026 and switches the play.",
+   "src": "/plays/narration/dembele-signature/2.m4a",
+   "seconds": 9.5,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.188
+    },
+    {
+     "w": "Demb\u00e9l\u00e9",
+     "at": 2.275
+    },
+    {
+     "w": "can",
+     "at": 2.8
+    },
+    {
+     "w": "use",
+     "at": 2.925
+    },
+    {
+     "w": "both",
+     "at": 3.175
+    },
+    {
+     "w": "feet",
+     "at": 3.525
+    },
+    {
+     "w": "so",
+     "at": 4.1
+    },
+    {
+     "w": "the",
+     "at": 4.263
+    },
+    {
+     "w": "defender",
+     "at": 4.35
+    },
+    {
+     "w": "can\u2019t",
+     "at": 4.875
+    },
+    {
+     "w": "guess",
+     "at": 5.15
+    },
+    {
+     "w": "which",
+     "at": 5.475
+    },
+    {
+     "w": "way",
+     "at": 5.675
+    },
+    {
+     "w": "he\u2019ll",
+     "at": 5.925
+    },
+    {
+     "w": "go",
+     "at": 6.1
+    },
+    {
+     "w": "He",
+     "at": 6.875
+    },
+    {
+     "w": "looks",
+     "at": 7.0
+    },
+    {
+     "w": "up",
+     "at": 7.213
+    },
+    {
+     "w": "and",
+     "at": 7.438
+    },
+    {
+     "w": "switches",
+     "at": 7.562
+    },
+    {
+     "w": "the",
+     "at": 7.975
+    },
+    {
+     "w": "play",
+     "at": 8.075
+    }
+   ]
+  },
+  {
+   "label": "The finish",
+   "text": "Dou\u00e9 chests it down and shoots. It flicks off a defender and in! Paris won five\u2013nil, their first Champions League!",
+   "src": "/plays/narration/dembele-signature/3.m4a",
+   "seconds": 8.5,
+   "words": [
+    {
+     "w": "Dou\u00e9",
+     "at": 0.375
+    },
+    {
+     "w": "chests",
+     "at": 0.713
+    },
+    {
+     "w": "it",
+     "at": 1.038
+    },
+    {
+     "w": "down",
+     "at": 1.125
+    },
+    {
+     "w": "and",
+     "at": 1.475
+    },
+    {
+     "w": "shoots",
+     "at": 1.625
+    },
+    {
+     "w": "It",
+     "at": 2.425
+    },
+    {
+     "w": "flicks",
+     "at": 2.575
+    },
+    {
+     "w": "off",
+     "at": 2.837
+    },
+    {
+     "w": "a",
+     "at": 3.013
+    },
+    {
+     "w": "defender",
+     "at": 3.062
+    },
+    {
+     "w": "and",
+     "at": 3.575
+    },
+    {
+     "w": "in",
+     "at": 3.7
+    },
+    {
+     "w": "Paris",
+     "at": 4.438
+    },
+    {
+     "w": "won",
+     "at": 4.862
+    },
+    {
+     "w": "five",
+     "at": 5.112
+    },
+    {
+     "w": "nil",
+     "at": 5.625
+    },
+    {
+     "w": "their",
+     "at": 6.075
+    },
+    {
+     "w": "first",
+     "at": 6.263
+    },
+    {
+     "w": "Champions",
+     "at": 6.55
+    },
+    {
+     "w": "League",
+     "at": 7.1
+    }
+   ]
+  },
+  {
+   "label": "The lesson",
+   "text": "Remember Demb\u00e9l\u00e9: practise with both feet, so defenders never know which way you\u2019ll go!",
+   "src": "/plays/narration/dembele-signature/4.m4a",
+   "seconds": 6.6,
+   "words": [
+    {
+     "w": "Remember",
+     "at": 0.4
+    },
+    {
+     "w": "Demb\u00e9l\u00e9",
+     "at": 0.875
+    },
+    {
+     "w": "practise",
+     "at": 1.938
+    },
+    {
+     "w": "with",
+     "at": 2.4
+    },
+    {
+     "w": "both",
+     "at": 2.575
+    },
+    {
+     "w": "feet",
+     "at": 2.888
+    },
+    {
+     "w": "so",
+     "at": 3.4
+    },
+    {
+     "w": "defenders",
+     "at": 3.575
+    },
+    {
+     "w": "never",
+     "at": 4.1
+    },
+    {
+     "w": "know",
+     "at": 4.375
+    },
+    {
+     "w": "which",
+     "at": 4.6
+    },
+    {
+     "w": "way",
+     "at": 4.825
+    },
+    {
+     "w": "you\u2019ll",
+     "at": 5.05
+    },
+    {
+     "w": "go",
+     "at": 5.225
+    }
+   ]
+  }
+ ]
+}

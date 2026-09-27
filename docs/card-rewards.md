@@ -23,8 +23,8 @@ There are 353 cards: 276 football cards and 77 futsal cards.
 1. A trigger fires: a ball is found, a chat is finished, or a quiz is passed.
 2. The game makes one **offer**: 3 cards drawn at random from the cards the child doesn't own.
 3. The offer opens at the next calm moment, never on top of the ball lesson or the chat.
-4. All three cards are shown **face-up** (portrait, name, number, Star or Legend) as a **deck** (user, Sep 24 2026): one large card in front, as big as the screen allows without scrolling, with the other two smaller, turned and dimmed behind it. The arrows, a swipe, the arrow keys (Home/End too) or a tap on a card behind bring a card to the front. Under the front card are "1 of 3", its position and one strength, and a clear **"Choose [first name]"** pill.
-5. After Choose, the other cards slip away and the chosen card **spins once** (≈0.85 s, transform only, none with reduced motion) into the full **PlayerCard**, the binder viewer's card, loaded lazily. It has hover tilt, "Flip card" for the back (Strengths / Top Plays / History) and "Play" for the player's film. Escape or Stop ends only the film and returns to the reveal. "[Name] is yours" and "Keep playing" / "See it in my binder" are the way out. The card goes into the binder and is never offered again. In the binder itself (the pill), the dialog still closes straight away so the card lands in its pocket.
+4. All three cards are shown **face-down** as mystery cards (since 25 Sep 2026, see "Mystery cards" below; before that they were face-up) in a **deck** (user, Sep 24 2026): one large card in front, as big as the screen allows without scrolling, with the other two smaller, turned and dimmed behind it. The arrows, a swipe, the arrow keys (Home/End too) or a tap on a card behind bring a card to the front. Under the front card are "1 of 3", its position and one strength, and a clear **"Choose [first name]"** pill.
+5. After Choose, the other cards slip away and the chosen card **spins once** (≈0.85 s, transform only, none with reduced motion) into the full **PlayerCard**, loaded lazily. The reveal is the binder's card viewer (user, Sep 24 2026): the same top bar (the animated **Done** at the top left, **Play** at the top centre, **Flip** at the top right, with Flip doing the card's foil turn) and the same large card size. Escape or Stop ends only the film and returns to the reveal. "Added to your binder / [Name] is yours / No. · position" and **"See it in my binder"** sit in a **bottom sheet** that slides up as the card lands. Its grab handle ("Hide"), or a swipe down, tucks it away to a small tab at the bottom; a tap on the tab (or a swipe up) brings it back. While the sheet is up the card leaves room for it; tucked away, the card grows back to the viewer's full size. On screens 1200 px and wider the sheet docks bottom right, beside the card. **Done** (or Escape) shrinks to its check and returns the child to the game. The "N of 353 collected" line shows only on the choosing deck. The card goes into the binder and is never offered again. In the binder itself (the pill), the dialog still closes straight away so the card lands in its pocket.
 6. **The child picks one there and then** (user, Sep 24 2026): there is no "Choose later" and Escape can't skip it. If the page is closed mid-offer, the offer stays pending and reopens on the next visit (the Paths badge, the Collect cards tile and the binder pill also reopen it). A pick that has been earned is never lost.
 7. If fewer than 3 cards are missing, the offer shows what is left. When nothing is missing, the child sees a friendly "Every card is in your binder!" message instead (once per session).
 
@@ -32,7 +32,7 @@ There are 353 cards: 276 football cards and 77 futsal cards.
 
 The earlier proposal (scratchpad `research/card-rewards.md`) recommended themed rewards with no randomness. It rested on RETENTION-RESEARCH.md: "no duplicates, random packs…". The user asked for random offers, so this build takes the **safe parts of randomness** and keeps the proposal's guardrails:
 
-- **Random offers, but no gamble.** Nothing is hidden and nothing is revealed after a pick. The child sees all three cards and chooses, so there are no packs, no odds and no "rare pull". This is the proposal's "Alternative B: choose 1 of 3", with random draws in place of themed ones.
+- **Random offers, no packs or odds.** Since 25 Sep 2026 the three cards are face-down and the pick is blind (user request, see "Mystery cards"). What keeps it safe: every card on offer is a new card (no duplicates, so every pick completes the set), no rarity is shown before the pick, there are no odds, no "rare pull" copy, nothing to buy or trade, and exactly one card is granted per earned pick. This is the proposal's "Alternative B: choose 1 of 3", with random draws in place of themed ones.
 - **No duplicates.** An offer only ever holds missing cards. If a card is collected somewhere else before an offer is opened, that card is replaced when the offer opens (`refreshOffer`). Two pending offers avoid sharing cards while enough cards remain. Because every pick is a new card, 353 picks always complete the set, so there is no "last 10%" wall. `tests/card-rewards.cjs` simulates this.
 - **The teaching link.** Each offer carries a one-line reason tied to what the child just did, for example:
   - "You found a ball and learned 'Scan before receiving'."
@@ -44,6 +44,116 @@ The earlier proposal (scratchpad `research/card-rewards.md`) recommended themed 
   - `themeFromText` reads the lesson category and title, the ball tip's **title**, or the chat text.
   - When no card of the theme is uncollected, the offer falls back to fully random and makes no claim.
   - The reason line names the match, e.g. "…a quiz about goalkeeping. … Jorge Campos (goalkeeper) matches what you just learned about goalkeeping." It stops naming it if that card is later swapped out.
+
+## Mystery cards: face-down pick and unpack (25 Sep 2026)
+
+User: "after clicking on the ball, instead of seeing the three cards, the user can choose three cards exactly how it is now, but won't know who it is. Then you can choose a card to unpack the card and show."
+
+- **Same offer, same deck.** The three cards are drawn exactly as before (random from uncollected cards, `THEME_ONE_CARD`, no duplicates, shuffled at draw time), with the same deck: one big card in front and two behind, arrows, swipe, arrow keys, Home and End, and a tap on a card behind. Which player the child gets depends only on which face-down card they open.
+- **Face-down.** Each card is the binder's uncollected card back (`CardBack mystery` in `MiniCard.tsx`: "No. ???", the island mark, "???"). Above the card: "2 of 3 · Mystery card · Who's inside? Open a card to find out." The pill reads **"Open this card"**. A foil shine (the PlayerCard turn light's glare band) crosses the front card once on hover (real pointers only).
+- **No leaks before the pick.** The deck never renders a name, portrait, number, position or strength. Cards are keyed by place, labelled "Mystery card 1 of 3", and turning the deck announces "Mystery card 2 of 3." No player portrait is requested until the card is chosen (the chosen card's riso masks start loading during the lift, and the other two are never requested). The offer order is saved, so a reload shows the same three backs.
+- **The unpack (≈1.4–1.7 s, tap to skip).** The card is granted first (`chooseOfferCard`, once). Then the chosen card lifts forward with the shine crossing it while the other two slide away to their sides (`LIFT_MS` 340 ms, CSS). Then it turns over into the full PlayerCard (`FLY_MS` 1050 ms, half a Y turn): the back speeds into edge-on, the PlayerCard's front takes over there and opens to face the child with a small overshoot. The card's own foil turn light plays at edge-on through a new `glint` prop on `PlayerCard`: the glare sweep on the arriving face, the edge catch light and the sparks, with no flip or lift (the host moves the card). A tap anywhere, or Escape, finishes the unpack at once. It never closes the offer. With reduced motion there's no lift or turn: the reveal crossfades in (180 ms).
+- **Reveal as before.** "Added to your binder!", the full PlayerCard with Flip, Play and the bio (position, era and blurb), "See it in my binder", and Done. Only the chosen card is shown; the other two stay unknown and go back into the pool. The unpack now also plays when the pick is opened from the binder pill (before, the dialog closed at once there). A face-down pick with no reveal would hide the card, so now the child sees it and the binder turns to its pocket behind the dialog.
+- **Rules unchanged.** There is still no "Choose later", Escape can't skip the offer, and exactly one card is granted, only after a pick. The session-cap rule (none), NPC daily limits and `THEME_ONE_CARD` are unchanged.
+- **Phone heat.** The backs are static (no portrait images at all before the pick). The shine, lift, slide-away and turn are one-shot transform/opacity animations. The glint timer is one `setTimeout`, cleared on skip or close. Nothing loops beyond the existing twinkling stars.
+- **Checks.** `tests/card-rewards.cjs` has new mystery-card assertions: no identity in the deck, "Mystery card N of 3" labels, one grant call, warm-up only after the pick, tap and Escape skip, reduced motion, the `glint` reveal, and a back with no number or name. The end-to-end run is the session scratchpad's `mystery/m.mjs <w> <h> [reduced|skip|live]`. It seeds one offer and checks that before the pick no name or slug is in the page HTML and no portrait is requested. It then checks the deck turns anonymously, Escape doesn't close, card 2 of 3 is revealed and nothing else, the collection is exactly `[chosen]`, the offer is resolved, the other two portraits are never requested, and there are no page errors. It passed at 390×844, 1280×800, reduced motion and skip.
+
+## Value tiers: the greatest players come later (25 Sep 2026)
+
+User: "We need to keep the cards like Messi, Ronaldo, high-value cards to be only available towards the end of paths." Then: "Make it harder to get. Analyze the cards that have high value and are wanted by fans, and make them harder to get."
+
+### The tiers
+
+Every card has a **fan-demand score** (0–100) and a one-line reason in `lib/town/cardTiers.json`. The score is a **judgement score**, not follower data: it weighs global fame, current superstar status, iconic moments that children know, and the major honours (Ballon d'Or, World Cup, FIFA awards). No web data or follower numbers were used, so nothing is cited. Women's players are scored by their own fans' demand, and futsal players on the futsal community's scale, so each game has its own icons (Falcão, Ricardinho, Marta, Aitana).
+
+The tier is derived from the score, so moving a card is one edit:
+- **Icon**: demand 85 or more (34 cards).
+- **Elite**: demand 72 to 84 (62 cards).
+- **Regular**: the rest (257 cards).
+
+Change a card's `demand`, move the `thresholds`, or pin a card with `overrides` (`"Name": "icon" | "elite" | "regular"`). Players missing from the file count as Regular. The Star and Legend labels (current / all-time) are unchanged; tiers are a separate thing and are never shown on the face-down deck.
+
+**Icon (34):** Cristiano Ronaldo 100, Lionel Messi 100, Kylian Mbappé 96, Pelé 96, Diego Maradona 95, Erling Haaland 94, Lamine Yamal 93, Neymar 92, Ronaldinho 92, Ronaldo Nazário 92, Zinedine Zidane 91, Vinícius Júnior 90, David Beckham 89, Jude Bellingham 89, Falcão 88, Johan Cruyff 88, Marta 88, Mohamed Salah 88, Aitana Bonmatí 87, Ricardinho 87, Zlatan Ibrahimović 87, Alexia Putellas 86, Harry Kane 86, Luka Modrić 86, Mia Hamm 86, Thierry Henry 86, Andrés Iniesta 85, Franz Beckenbauer 85, Gianluigi Buffon 85, Kaká 85, Kevin De Bruyne 85, Ousmane Dembélé 85, Paolo Maldini 85, Sergio Ramos 85.
+
+**Elite (62):** Karim Benzema 82, Manuel Neuer 82, Robert Lewandowski 82, Roberto Carlos 82, Rodri 82, Son Heung-min 82, Alex Morgan 80, Cole Palmer 80, Iker Casillas 80, Luis Suárez 80, Megan Rapinoe 80, Sam Kerr 80, Toni Kroos 80, Virgil van Dijk 80, Wayne Rooney 80, Xavi Hernández 80, Andrea Pirlo 78, Antoine Griezmann 78, Bukayo Saka 78, Cafu 78, Jamal Musiala 78, Manoel Tobias 78, Steven Gerrard 78, Arjen Robben 76, Didier Drogba 76, Eden Hazard 76, Emiliano Martínez 76, Ferrão 76, Marcelo 76, Pedri 76, Roberto Baggio 76, Thibaut Courtois 76, Florian Wirtz 74, Francesco Totti 74, Garrincha 74, Julián Álvarez 74, Lev Yashin 74, Lucy Bronze 74, Luís Figo 74, N'Golo Kanté 74, Romário 74, Trent Alexander-Arnold 74, Zicky Té 74, Achraf Hakimi 72, Alessandro Del Piero 72, Alisson 72, Bruno Fernandes 72, Dani Alves 72, Eusébio 72, Fabio Cannavaro 72, Ferenc Puskás 72, Frank Lampard 72, George Best 72, Guitta 72, Luis Amado 72, Marco van Basten 72, Phil Foden 72, Philipp Lahm 72, Pito 72, Raphinha 72, Sadio Mané 72, Samuel Eto'o 72.
+
+Close to the Elite line (70–71, now Regular): Donnarumma, Kahn, Alphonso Davies, Carlos Alberto, Bobby Moore, Puyol, Thiago Silva, Valverde, Ødegaard, Casemiro, Bobby Charlton, Carli Lloyd, Kvaratskhelia, Nico Williams, Leão, Rivaldo, Lautaro, Osimhen, Hegerberg, Gerd Müller, Di Stéfano, Wambach, Bergkamp, Higuita and Kike Boned. Lowering `thresholds.elite` to 70 would bring them all in (87 Elite).
+
+### How progress unlocks them
+
+**Progress** is the share of starter lessons complete in the child's **furthest path** (futsal, 7v7, 9v9 or 11v11; each has 12 starter lessons in four chapters). It uses the same "complete" rule as the Paths screen (`lessonEvidence`: every quiz question answered correctly, retries allowed; since Sep 26 2026 watching every play step is no longer required, so passing a lesson's quiz unlocks the next stop), read straight from storage (`readPathProgress` in `lib/town/cardTiers.ts`). The optional "Go deeper" lessons don't count toward it.
+
+All the constants are in `lib/town/cardRewards.ts`:
+
+| Constant | Value | Meaning |
+|---|---|---|
+| `TIER_UNLOCK.elite` | 0.5 | Elite cards can be drawn from 6 of 12 lessons in any path. |
+| `TIER_UNLOCK.icon` | 0.8 | Icon cards can be drawn from 10 of 12 lessons, the final chapter. |
+| `TIER_WEIGHT` | Regular 1, Elite 0.35, Icon 0.12 | The draw weight of one unlocked card. An Elite card is about a third as likely as a Regular card to be drawn. |
+| `MAX_ICONS_PER_OFFER` | 1 | Never more than one Icon among the three (except the path-finish pick). |
+| `ICON_TRIGGERS` | path, quiz, journey | The big moments that may offer an Icon: finishing a path, a perfect first-try quiz of 5+ questions, and a Learning Journey stage. A ball, an NPC chat, an Explore item or a story never offers an Icon. |
+| `PATH_FINISH_ICON` | true | Finishing a path pays one pick of **Icons only**. |
+
+**Why the furthest path, not the active path.** Tiers unlock when the child has shown mastery once, anywhere. A child who finished futsal and starts 7v7 isn't sent back to the start, and a child who likes one format isn't pushed into another. Most triggers (balls, chats, Explore) belong to no path, so "the active path" often has no answer. The furthest path is also the simplest rule to explain: "the greatest players unlock as you master the game".
+
+**The path-finish pick.** When every starter lesson of a path is complete for the first time, `PathCardWatcher` (in `components/CardOfferHost.tsx`) calls `earnForPath(format)`. The offer holds three face-down Icons, so whichever card the child opens is an Icon: the late, earned treat. It is a guarantee, not a gamble. If fewer than three Icons are missing, it fills with Elite, then Regular. It pays once per path, ever (`path:<format>` in the ledger), and only for paths finished after rewards are on (no catch-up picks). Its reason line is "You finished the Futsal path! The greatest players unlock as you master the game." Finishing the last lesson also pays that lesson's quiz as usual when it was a clean first-try run. Finishing a path is treated as a separate, bigger achievement, and this is an open decision below.
+
+**The draw.** The three face-down cards come only from the **eligible pool**: uncollected cards whose tier is unlocked for this progress and trigger. The pool is weighted by `TIER_WEIGHT`, with at most one Icon. `THEME_ONE_CARD` still picks its matched card from inside the pool, so a goalkeeping quiz early on brings a Regular keeper.
+
+**Small pools, never a lost pick:**
+- Fewer than three eligible cards left: the offer shows fewer cards. No locked card is added.
+- No eligible card left but locked ones are missing: the offer draws from the lowest locked tier (Elite before Icon). An earned pick is never lost, and one pick per offer still completes all 353 cards (`tests/card-tiers.cjs` simulates this).
+- `refreshOffer` follows the same gate: a replacement for a card collected elsewhere never adds a second Icon or a locked card, and a path-finish pick stays all Icons.
+
+**What the child sees:**
+- Nothing about tiers appears on the face-down deck, and there are no odds, rarity or "rare" copy before the pick (the approved kid-safety rules). Weights change only *which* new cards are drawn, never how many. There is nothing to buy, and there are no timers or streaks.
+- In the binder, a greyed **Icon** card says: "Not collected yet. The greatest players unlock as you master the game. Icon cards appear near the end of a path, and finishing a path always brings one."
+- A greyed **Elite** card says: "Not collected yet. Elite cards unlock halfway along a path. Keep learning to meet them."
+- Regular cards keep the usual earn line. Names stay real on greyed cards (the earlier decision).
+
+**The learning purpose.** The famous players are the reward for learning the game: roles, support, defending and restarts, lesson by lesson. They are not a reward for grinding balls or chats. The path-finish pick ties the biggest names to the biggest learning milestone.
+
+### Simulation
+
+`node scripts/card-tier-sim.cjs [children]` runs the real draw code (`drawThemedOffer`, `tierGate`, `cardTiers.json`) for 500 simulated children with fixed seeds, so the result is the same every run.
+
+The typical child:
+- plays the paths one after another (futsal, 7v7, 9v9, 11v11);
+- earns per lesson: one Ball-hunt ball (41 in all), one NPC chat, and a quiz pick 60% of the time (a clean first-try run);
+- every third lesson, also earns a Journey stage (18), a story (18) and an Explore item (15);
+- picks blindly from the three face-down cards.
+
+Results (25 Sep 2026):
+
+| | Result |
+|---|---|
+| First Elite | median lesson 9 (the 30th pick) |
+| First Icon | median lesson 12 (the 44th pick): 96% at the first path finish, 4% from a quiz or stage just before it |
+| After futsal (lesson 12) | ~44 cards; Icons: median 1 (min 1, max 2); Elite: median 2 |
+| After 7v7 (lesson 24) | ~88 cards; Icons: median 2 (min 2, max 4); Elite: median 6 |
+| After 9v9 (lesson 36) | ~133 cards; Icons: median 3 (min 3, max 6); Elite: median 11 |
+| After 11v11 (lesson 48) | ~169 cards; Icons: median 5 (min 4, max 8); Elite: median 15 |
+
+So the first Icon is the first path's finish, and each later path brings its guaranteed Icon, plus about one more every two paths from late quizzes and stages. After all four paths, the rest (29 Icons, ~47 Elite) come from the "Go deeper" lessons, more Journey stages and daily chats. Chats and balls reach Icons only once nothing else is missing.
+
+### Dev and test modes
+
+- `UNLOCK_ALL_CARDS`, `?cards=earn` and `?cards=all` work as before.
+- **`?cardpath=85`** (dev builds only, remembered under `fi2-cards-dev-progress-v1`) pretends the furthest path is 85% complete, to preview the gates: 0 shows Regular only, 50 adds Elite, 80+ adds Icons on quizzes and stages. `?cardpath=off` goes back to real progress. It is ignored when `NODE_ENV==='production'`.
+- `node tests/card-tiers.cjs` covers:
+  - the data;
+  - no Icon or Elite before the thresholds, on every trigger;
+  - the Elite weight;
+  - Icons after 80%, only on big triggers, at most one;
+  - the path-finish guarantee and its fallbacks;
+  - the small-pool fallback;
+  - no duplicates through a full collection;
+  - refresh under the gate;
+  - the wiring.
+
+### Phone heat
+
+No timers or loops were added. `PathCardWatcher` subscribes to the two stores the Paths screen already uses, and it recomputes only when a step or answer is saved (48 lessons, trivial). `readPathProgress` runs once per earned offer. `cardTiers.json` (~40 KB with the reasons) is parsed once with the card-reward code.
 
 ## Triggers and the exact hooks
 
@@ -82,6 +192,7 @@ These pay the same way as the first three:
 | Explore items | An item on the island checklist **newly** completes. `knock-characters` never pays: RETENTION-RESEARCH.md rules out learning rewards for knocking people over. | There is no completion event (completion is derived from four stores). `ExploreCardWatcher` in `components/CardOfferHost.tsx` watches `useExploreChecklist()` and pays items that weren't complete on its first run (`earnForExplore`). It is mounted only while rewards are on. | Themed from the item title, e.g. "Visit the futsal court" → futsal, "Shoot 5 targets" → forwards. The reason is the item plus its first teaching sentence: "You completed 'Visit the Store' on your island checklist. Explore the gear and the stories behind the animal costumes." |
 | Learning Journey stages | A stage (0–5) is completed for the first time. | `lib/town/learningProgress.ts`: `completeLearningStage` now fires `LEARNING_STAGE_COMPLETE` after the write. `CardOfferHost` listens and calls `earnForJourney(id, stage)`. An event is used because a direct import would create a cycle, and `FieldLearning.tsx` is left alone. | Themed from the journey concept, e.g. support angles → passing and support. Reason: "You finished 'See it' in the Support angles journey, practising support angles." |
 | Stories | A life story or an optional path story is watched to the end. | `components/QuestLearningPath.tsx`: `finishStory` (the life story's `onFinish`, or closing it once `data-story-complete` is set) and the `UpcomingStory` `onClose(completed)` callback both call `earnForStory(id)`. | Futsal stories get a futsal card; the others are random, since life skills don't map to a position. Reason: "You watched 'The Chalk Line' to the end, a story about creative confidence." |
+| Path finish (25 Sep) | Every starter lesson of a path is complete for the first time. | `PathCardWatcher` in `components/CardOfferHost.tsx` watches the quest and quiz stores (the Paths screen's own `lessonEvidence` rule) and calls `earnForPath(format)` for a path that wasn't finished on its first run. | Icons only (see "Value tiers"). Reason: "You finished the Futsal path! The greatest players unlock as you master the game." |
 
 ### NPC frequency (user decision, 24 Sep)
 
@@ -108,21 +219,22 @@ Removed on Sep 24 2026 (user: "there are no users yet"). Past progress earns not
 
 ### Session cap
 
-`MAX_OFFERS_PER_SESSION = 6` (kept, user approved): at most 6 offers per browser tab session (sessionStorage). This stops the offers from turning into spam. Once the cap is reached, triggers in that session offer nothing, and nothing is taken away. A ball or quiz found after the cap is marked as not paid, so replaying that quiz in a later session can still pay. A ball cannot be collected twice, so a capped ball does not pay later.
+**No per-session cap** (removed Sep 25 2026). The old `MAX_OFFERS_PER_SESSION = 6` silently skipped the 7th achievement in a visit, and a ball can only be found once, so the child lost a card they had earned (reported by the user). Every trigger is already one-time (balls, quizzes, Explore items, Journey stages, stories) or capped per day (NPC chats, 5), so there is nothing to spam.
 
 ## Kid-safety guardrails
 
-- **The choice is informed.** All cards are face-up: no blind reveal, no odds, no rarity pressure. Star and Legend are shown as text labels only.
+- **Blind, but nothing to lose.** Since 25 Sep 2026 the cards are face-down (user request). Every card offered is new to the child, so any pick is a good pick; no odds or rarity are shown before the pick, and Star and Legend appear as text labels only after the reveal.
 - **No time pressure.** There are no timers, and there is no "limited" or "expiring" copy.
 - **No return nudges.** There are no streaks, daily login bonuses or notifications.
 - **Nothing to buy.** There is no currency, no trading, and no purchase anywhere near the cards.
 - **Nothing is taken away.** Earned picks stay pending until the child uses them. Nothing expires, and cards are never removed.
-- **Calm stops.** Each offer ends with "Keep playing", and nothing moves on automatically.
+- **Calm stops.** Each offer ends with "Done" (the collection-complete note with "Keep playing"), and nothing moves on automatically.
 - **Learning preview earns nothing.** `isLearningPreview()` and FieldLearning's own preview guard both block rewards.
 - **Accessibility:**
   - It is a real modal `<dialog>` with a Tab focus trap, and focus goes back to where it was.
   - The Choose pill takes focus. Arrow keys, Home and End turn the deck (announced politely as "Card 2 of 3: …"), and Enter or Space on Choose chooses. The front card is a labelled group, and the cards behind are pointer shortcuts hidden from screen readers (the arrow buttons do the same).
-  - Escape does nothing until a card is chosen.
+  - Escape does nothing until a card is chosen. After the reveal, focus starts on Done, and Escape works like Done (a playing film is stopped first, and only the film).
+  - The sheet's handle is a button ("Hide" / "Show [name]'s note", with `aria-expanded`); tucked away, the sheet's content is `inert`, so it leaves the tab order.
   - Each card has a full label (name, position, rarity, number, strength), and an `aria-live` region confirms the pick.
   - Touch targets are 44 px or larger.
 
@@ -136,7 +248,7 @@ Removed on Sep 24 2026 (user: "there are no users yet"). Past progress earns not
   - If storage is blocked, the state is kept in memory for the session.
 - **Flags:**
   - `CARD_REWARDS_LAUNCH` (`lib/town/cardRewards.ts`, false) drives `CARD_REWARDS_ENABLED` (off) and `UNLOCK_ALL_CARDS` (on, in `cardCollection.ts`).
-  - Also in `cardRewards.ts`: `THEME_ONE_CARD` (true), `MAX_OFFERS_PER_SESSION` (6), `NPC_PICKS_PER_DAY` (5).
+  - Also in `cardRewards.ts`: `THEME_ONE_CARD` (true), `NPC_PICKS_PER_DAY` (5).
 - **Dev switch (`cardDevEarn`):**
   - `?cards=earn` turns unlock-all off and rewards on in that browser. It is remembered under `fi2-cards-dev-v1`.
   - `?cards=all` switches back.
@@ -146,11 +258,12 @@ Removed on Sep 24 2026 (user: "there are no users yet"). Past progress earns not
 
 | File | Role |
 |---|---|
-| `lib/town/cardRewards.ts` | Pure rules and constants: draw, refresh, theme, NPC day rules, sanitize and merge. Tested in Node. |
+| `lib/town/cardRewards.ts` | Pure rules and constants: draw, refresh, theme, NPC day rules, sanitize and merge, and the value-tier rules (`TIER_UNLOCK`, `TIER_WEIGHT`, `ICON_TRIGGERS`, `PATH_FINISH_ICON`, `tierGate`). Tested in Node. |
+| `lib/town/cardTiers.json` + `cardTiers.ts` | Fan-demand scores, reasons and thresholds per card; `cardTier`, the furthest-path progress (`readPathProgress`, `pathProgressFrom`) and the `?cardpath` dev preview. |
 | `lib/town/cardRewardStore.ts` | Client store (`useSyncExternalStore`): `earnCardOffer`, `chooseOfferCard`, `markOfferSeen`, `liveOffer`, and the events. |
-| `lib/town/cardRewardTriggers.ts` | `earnForBall` / `earnForNpc` / `earnForQuiz` / `earnForExplore` / `earnForJourney` / `earnForStory`, `quizEligibleForCard`: the reason lines and themes. |
+| `lib/town/cardRewardTriggers.ts` | `earnForBall` / `earnForNpc` / `earnForQuiz` / `earnForExplore` / `earnForJourney` / `earnForStory` / `earnForPath`, `quizEligibleForCard`: the reason lines and themes. |
 | `components/CardOfferHost.tsx` | Mounted in Town. Hosts the Explore watcher and the journey-stage listener. Renders nothing until an offer exists. It opens fresh offers when the island is calm and sleeps the 3D scene while one is open (`settingsRef`). |
-| `components/CardOffer.tsx` + `.module.css` | The modal: the deck of MiniCards, then the lazily loaded PlayerCard reveal. It reuses the binder viewer's dark scrim, the cream note card, the gold paper pill, the cream pill and the dock's round yellow arrows. |
+| `components/CardOffer.tsx` + `.module.css` | The modal: the deck of face-down mystery cards (`CardBack mystery`), the unpack, then the lazily loaded PlayerCard reveal. The reveal uses the binder viewer's own classes (`CardCollection.module.css` `.viewer`, `.viewerBar`, `.viewerFlip`, `.cardHost`, with `DoneButton` and `navStyles`), so it matches the viewer exactly; only the room left for the bottom sheet (`--sheet-room`, measured by a ResizeObserver) is added to the viewer's `--card-w`. The deck reuses the dark scrim, the cream note card, the gold paper pill and the dock's round yellow arrows. |
 | `components/CardOfferBadges.tsx` | The tile badge, the Paths dot and the binder pill. |
 
 ## Phone heat
@@ -164,7 +277,7 @@ Removed on Sep 24 2026 (user: "there are no users yet"). Past progress earns not
   - Paths art behind the offer rests and isn't woken by the offer's taps and keys (`lib/sceneryRest.ts`, fixed Sep 24; see the performance guide);
   - music keeps playing, as it does under the other island menus;
   - the modal is static MiniCards on a flat scrim, with no `backdrop-filter`;
-  - turning the deck is one 0.3 s transform transition, choosing is a 0.24 s fade plus the one-shot spin, and the revealed PlayerCard's scenery loops are held still. There is no endless animation in the dialog, and nothing moves with reduced motion.
+  - turning the deck is one 0.3 s transform transition, choosing is a 0.24 s fade plus the one-shot spin, the bottom sheet slides up once (0.3 s) and on each Hide / Show (0.24 s, transform only), Done shrinks once (0.24 s), and the revealed PlayerCard's scenery loops are held still. The card re-sizes at once when the sheet is tucked away (no animation). There is no endless animation in the dialog, and nothing moves with reduced motion.
   - PlayerCard's chunk loads only once an offer is open.
 
 None of this is measured on a real iPhone. It is reduced work, not a proven cooling gain.
@@ -183,7 +296,7 @@ None of this is measured on a real iPhone. It is reduced work, not a proven cool
 4. Open `?cards=all` to go back to the shipped behaviour (every card unlocked).
 5. Automated checks:
    - `node tests/card-rewards.cjs` for the rules;
-   - the end-to-end runs in the session scratchpad: `pickcard/ui.mjs <w> <h> [reduced]` (the deck, Choose, the spin and reveal, Flip, Play/Escape, with no scrolling) and `pickcard/bg-probe.mjs <w> <h> [ball|paths]` (what runs behind the offer). Also `card-rewards-e2e.mjs` and `cr-more.mjs` for the triggers; `card-rewards-e2e.mjs` still expects the old three-across layout and "Choose later".
+   - the end-to-end runs in the session scratchpad: `reveal2/r.mjs <w> <h> [reduced]` (the reveal: top bar order and position, no count line, sheet up / tucked / restored / swiped, no overlap with the card, header Flip, Play/Escape, focus trap, Done shrink and close, Escape closes, island asleep, nothing running at rest), `pickcard/ui.mjs <w> <h> [reduced]` (the deck; its reveal checks predate the viewer layout) and `pickcard/bg-probe.mjs <w> <h> [ball|paths]` (what runs behind the offer). Also `card-rewards-e2e.mjs` and `cr-more.mjs` for the triggers; `card-rewards-e2e.mjs` still expects the old three-across layout and "Choose later".
 
 ## Open decisions for the user
 
@@ -197,3 +310,7 @@ Decided on 24 Sep:
 Still open:
 1. **When to launch:** flip `CARD_REWARDS_LAUNCH` once the films are done.
 2. **Explore item `ride-truck`:** it pays today. Keep it, or leave it out like `knock-characters`?
+3. **Value tiers (25 Sep):**
+   - Check the Icon and Elite lists in `cardTiers.json`; the scores are judgement calls.
+   - The path-finish pick is a separate pick on top of the last lesson's quiz pick. Keep it that way, or fold it into that quiz pick? The alternative is `PATH_FINISH_ICON=false`, where a path finish is only a big trigger and Icons stay a rare draw.
+   - Should Journey stages stay a big (Icon) trigger?

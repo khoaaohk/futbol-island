@@ -41,3 +41,7 @@
 @media(max-width:420px){.visual button svg.thumb{max-height:96px}.choices{grid-template-columns:1fr}.choices.pair{grid-template-columns:1fr 1fr}.visual button.choice{min-height:46px;font-size:13.5px}.pictures,.pictures.four{grid-template-columns:1fr 1fr}.thumb{max-height:96px}}
 @media(max-height:560px){.board{max-height:44dvh}.visual button svg.thumb{max-height:72px}}
 @media(prefers-reduced-motion:reduce){.target .ring,.visual button.choice,.visual button.picture{transition:none}.visual button.choice:hover:not(:disabled),.visual button.picture:hover:not(:disabled){transform:none}}
+
+/* iOS long-press guard (tests/device-guards.cjs check 1): no "Save image / Copy / Share" callout or text selection on held controls. */
+.board,.board *{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-user-drag:none}
+.token{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}

@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Marseille",
+   "text": "Marseille, 1998, a World Cup quarter-final. The Netherlands, in orange, and Argentina are level at one-one in the last minute. Frank de Boer hits a long, long pass for Dennis Bergkamp. One, two, three... goal!",
+   "src": "/plays/narration/bergkamp-argentina-1998/1.m4a",
+   "seconds": 16.0,
+   "words": [
+    {
+     "w": "Marseille",
+     "at": 0.375
+    },
+    {
+     "w": "1998",
+     "at": 0.925
+    },
+    {
+     "w": "a",
+     "at": 2.05
+    },
+    {
+     "w": "World",
+     "at": 2.15
+    },
+    {
+     "w": "Cup",
+     "at": 2.45
+    },
+    {
+     "w": "quarter-final",
+     "at": 2.7
+    },
+    {
+     "w": "The",
+     "at": 3.913
+    },
+    {
+     "w": "Netherlands",
+     "at": 4.025
+    },
+    {
+     "w": "in",
+     "at": 4.7
+    },
+    {
+     "w": "orange",
+     "at": 4.862
+    },
+    {
+     "w": "and",
+     "at": 5.362
+    },
+    {
+     "w": "Argentina",
+     "at": 5.475
+    },
+    {
+     "w": "are",
+     "at": 6.175
+    },
+    {
+     "w": "level",
+     "at": 6.325
+    },
+    {
+     "w": "at",
+     "at": 6.65
+    },
+    {
+     "w": "one-one",
+     "at": 6.775
+    },
+    {
+     "w": "in",
+     "at": 7.25
+    },
+    {
+     "w": "the",
+     "at": 7.338
+    },
+    {
+     "w": "last",
+     "at": 7.425
+    },
+    {
+     "w": "minute",
+     "at": 7.85
+    },
+    {
+     "w": "Frank",
+     "at": 8.7
+    },
+    {
+     "w": "de",
+     "at": 9.025
+    },
+    {
+     "w": "Boer",
+     "at": 9.162
+    },
+    {
+     "w": "hits",
+     "at": 9.55
+    },
+    {
+     "w": "a",
+     "at": 9.775
+    },
+    {
+     "w": "long",
+     "at": 9.887
+    },
+    {
+     "w": "long",
+     "at": 10.375
+    },
+    {
+     "w": "pass",
+     "at": 10.713
+    },
+    {
+     "w": "for",
+     "at": 11.125
+    },
+    {
+     "w": "Dennis",
+     "at": 11.275
+    },
+    {
+     "w": "Bergkamp",
+     "at": 11.6
+    },
+    {
+     "w": "One",
+     "at": 12.725
+    },
+    {
+     "w": "two",
+     "at": 13.188
+    },
+    {
+     "w": "three",
+     "at": 13.637
+    },
+    {
+     "w": "goal",
+     "at": 14.613
+    }
+   ]
+  },
+  {
+   "label": "Three touches",
+   "text": "Watch again, slowly. Touch one: his right foot cushions the ball dead. Touch two: inside Roberto Ayala. Touch three: the outside of his foot.",
+   "src": "/plays/narration/bergkamp-argentina-1998/2.m4a",
+   "seconds": 10.7,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.062
+    },
+    {
+     "w": "Touch",
+     "at": 1.988
+    },
+    {
+     "w": "one",
+     "at": 2.3
+    },
+    {
+     "w": "his",
+     "at": 2.8
+    },
+    {
+     "w": "right",
+     "at": 2.975
+    },
+    {
+     "w": "foot",
+     "at": 3.288
+    },
+    {
+     "w": "cushions",
+     "at": 3.55
+    },
+    {
+     "w": "the",
+     "at": 3.962
+    },
+    {
+     "w": "ball",
+     "at": 4.05
+    },
+    {
+     "w": "dead",
+     "at": 4.35
+    },
+    {
+     "w": "Touch",
+     "at": 5.162
+    },
+    {
+     "w": "two",
+     "at": 5.487
+    },
+    {
+     "w": "inside",
+     "at": 5.938
+    },
+    {
+     "w": "Roberto",
+     "at": 6.525
+    },
+    {
+     "w": "Ayala",
+     "at": 6.95
+    },
+    {
+     "w": "Touch",
+     "at": 7.763
+    },
+    {
+     "w": "three",
+     "at": 8.088
+    },
+    {
+     "w": "the",
+     "at": 8.575
+    },
+    {
+     "w": "outside",
+     "at": 8.725
+    },
+    {
+     "w": "of",
+     "at": 9.137
+    },
+    {
+     "w": "his",
+     "at": 9.213
+    },
+    {
+     "w": "foot",
+     "at": 9.412
+    }
+   ]
+  },
+  {
+   "label": "Far corner",
+   "text": "Over the keeper, Carlos Roa, into the far corner. Two-one! The Netherlands are into the semi-final!",
+   "src": "/plays/narration/bergkamp-argentina-1998/3.m4a",
+   "seconds": 7.5,
+   "words": [
+    {
+     "w": "Over",
+     "at": 0.35
+    },
+    {
+     "w": "the",
+     "at": 0.537
+    },
+    {
+     "w": "keeper",
+     "at": 0.625
+    },
+    {
+     "w": "Carlos",
+     "at": 1.225
+    },
+    {
+     "w": "Roa",
+     "at": 1.7
+    },
+    {
+     "w": "into",
+     "at": 2.25
+    },
+    {
+     "w": "the",
+     "at": 2.438
+    },
+    {
+     "w": "far",
+     "at": 2.538
+    },
+    {
+     "w": "corner",
+     "at": 2.8
+    },
+    {
+     "w": "Two-one",
+     "at": 3.775
+    },
+    {
+     "w": "The",
+     "at": 4.65
+    },
+    {
+     "w": "Netherlands",
+     "at": 4.75
+    },
+    {
+     "w": "are",
+     "at": 5.375
+    },
+    {
+     "w": "into",
+     "at": 5.463
+    },
+    {
+     "w": "the",
+     "at": 5.688
+    },
+    {
+     "w": "semi-final",
+     "at": 5.812
+    }
+   ]
+  },
+  {
+   "label": "First touch",
+   "text": "A perfect first touch kills the ball dead and sets up your next move.",
+   "src": "/plays/narration/bergkamp-argentina-1998/4.m4a",
+   "seconds": 5.3,
+   "words": [
+    {
+     "w": "A",
+     "at": 0.375
+    },
+    {
+     "w": "perfect",
+     "at": 0.45
+    },
+    {
+     "w": "first",
+     "at": 0.9
+    },
+    {
+     "w": "touch",
+     "at": 1.2
+    },
+    {
+     "w": "kills",
+     "at": 1.587
+    },
+    {
+     "w": "the",
+     "at": 1.913
+    },
+    {
+     "w": "ball",
+     "at": 2.0
+    },
+    {
+     "w": "dead",
+     "at": 2.3
+    },
+    {
+     "w": "and",
+     "at": 2.95
+    },
+    {
+     "w": "sets",
+     "at": 3.112
+    },
+    {
+     "w": "up",
+     "at": 3.388
+    },
+    {
+     "w": "your",
+     "at": 3.487
+    },
+    {
+     "w": "next",
+     "at": 3.6
+    },
+    {
+     "w": "move",
+     "at": 3.925
+    }
+   ]
+  }
+ ]
+}

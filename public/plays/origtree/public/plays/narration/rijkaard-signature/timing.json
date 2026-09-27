@@ -1,0 +1,382 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Vienna, live",
+   "text": "Vienna, 1990, the European Cup final. Milan against Benfica, nil-nil. Costacurta plays it forward to Marco van Basten, a soft pass, and Frank Rijkaard races through... Goal!",
+   "src": "/plays/narration/rijkaard-signature/1.m4a",
+   "seconds": 13.9,
+   "words": [
+    {
+     "w": "Vienna",
+     "at": 0.425
+    },
+    {
+     "w": "1990",
+     "at": 0.9
+    },
+    {
+     "w": "the",
+     "at": 1.75
+    },
+    {
+     "w": "European",
+     "at": 1.85
+    },
+    {
+     "w": "Cup",
+     "at": 2.375
+    },
+    {
+     "w": "final",
+     "at": 2.625
+    },
+    {
+     "w": "Milan",
+     "at": 3.487
+    },
+    {
+     "w": "against",
+     "at": 3.95
+    },
+    {
+     "w": "Benfica",
+     "at": 4.325
+    },
+    {
+     "w": "nil-nil",
+     "at": 5.075
+    },
+    {
+     "w": "Costacurta",
+     "at": 6.112
+    },
+    {
+     "w": "plays",
+     "at": 6.8
+    },
+    {
+     "w": "it",
+     "at": 7.112
+    },
+    {
+     "w": "forward",
+     "at": 7.2
+    },
+    {
+     "w": "to",
+     "at": 7.575
+    },
+    {
+     "w": "Marco",
+     "at": 7.7
+    },
+    {
+     "w": "van",
+     "at": 8.1
+    },
+    {
+     "w": "Basten",
+     "at": 8.35
+    },
+    {
+     "w": "a",
+     "at": 9.137
+    },
+    {
+     "w": "soft",
+     "at": 9.275
+    },
+    {
+     "w": "pass",
+     "at": 9.688
+    },
+    {
+     "w": "and",
+     "at": 10.162
+    },
+    {
+     "w": "Frank",
+     "at": 10.287
+    },
+    {
+     "w": "Rijkaard",
+     "at": 10.6
+    },
+    {
+     "w": "races",
+     "at": 11.05
+    },
+    {
+     "w": "through",
+     "at": 11.537
+    },
+    {
+     "w": "Goal",
+     "at": 12.488
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. Two quick passes forward, and Benfica are not ready. Van Basten rolls it into the space, and Rijkaard runs onto it.",
+   "src": "/plays/narration/rijkaard-signature/2.m4a",
+   "seconds": 10.5,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.212
+    },
+    {
+     "w": "Two",
+     "at": 2.212
+    },
+    {
+     "w": "quick",
+     "at": 2.425
+    },
+    {
+     "w": "passes",
+     "at": 2.712
+    },
+    {
+     "w": "forward",
+     "at": 3.2
+    },
+    {
+     "w": "and",
+     "at": 3.9
+    },
+    {
+     "w": "Benfica",
+     "at": 4.025
+    },
+    {
+     "w": "are",
+     "at": 4.638
+    },
+    {
+     "w": "not",
+     "at": 4.8
+    },
+    {
+     "w": "ready",
+     "at": 5.025
+    },
+    {
+     "w": "Van",
+     "at": 5.925
+    },
+    {
+     "w": "Basten",
+     "at": 6.225
+    },
+    {
+     "w": "rolls",
+     "at": 6.713
+    },
+    {
+     "w": "it",
+     "at": 7.125
+    },
+    {
+     "w": "into",
+     "at": 7.213
+    },
+    {
+     "w": "the",
+     "at": 7.388
+    },
+    {
+     "w": "space",
+     "at": 7.487
+    },
+    {
+     "w": "and",
+     "at": 8.05
+    },
+    {
+     "w": "Rijkaard",
+     "at": 8.175
+    },
+    {
+     "w": "runs",
+     "at": 8.65
+    },
+    {
+     "w": "onto",
+     "at": 8.925
+    },
+    {
+     "w": "it",
+     "at": 9.338
+    }
+   ]
+  },
+  {
+   "label": "Into the corner",
+   "text": "The outside of his right foot... past the keeper, into the corner! One-nil. Milan are champions of Europe again!",
+   "src": "/plays/narration/rijkaard-signature/3.m4a",
+   "seconds": 7.9,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "outside",
+     "at": 0.475
+    },
+    {
+     "w": "of",
+     "at": 0.963
+    },
+    {
+     "w": "his",
+     "at": 1.038
+    },
+    {
+     "w": "right",
+     "at": 1.2
+    },
+    {
+     "w": "foot",
+     "at": 1.512
+    },
+    {
+     "w": "past",
+     "at": 2.25
+    },
+    {
+     "w": "the",
+     "at": 2.538
+    },
+    {
+     "w": "keeper",
+     "at": 2.625
+    },
+    {
+     "w": "into",
+     "at": 2.987
+    },
+    {
+     "w": "the",
+     "at": 3.163
+    },
+    {
+     "w": "corner",
+     "at": 3.25
+    },
+    {
+     "w": "One-nil",
+     "at": 4.013
+    },
+    {
+     "w": "Milan",
+     "at": 5.062
+    },
+    {
+     "w": "are",
+     "at": 5.475
+    },
+    {
+     "w": "champions",
+     "at": 5.612
+    },
+    {
+     "w": "of",
+     "at": 6.162
+    },
+    {
+     "w": "Europe",
+     "at": 6.25
+    },
+    {
+     "w": "again",
+     "at": 6.55
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: win the ball, then pass it forward quickly, before the other team is ready.",
+   "src": "/plays/narration/rijkaard-signature/4.m4a",
+   "seconds": 6.2,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "win",
+     "at": 1.363
+    },
+    {
+     "w": "the",
+     "at": 1.6
+    },
+    {
+     "w": "ball",
+     "at": 1.7
+    },
+    {
+     "w": "then",
+     "at": 2.212
+    },
+    {
+     "w": "pass",
+     "at": 2.4
+    },
+    {
+     "w": "it",
+     "at": 2.7
+    },
+    {
+     "w": "forward",
+     "at": 2.8
+    },
+    {
+     "w": "quickly",
+     "at": 3.175
+    },
+    {
+     "w": "before",
+     "at": 3.9
+    },
+    {
+     "w": "the",
+     "at": 4.188
+    },
+    {
+     "w": "other",
+     "at": 4.263
+    },
+    {
+     "w": "team",
+     "at": 4.425
+    },
+    {
+     "w": "is",
+     "at": 4.725
+    },
+    {
+     "w": "ready",
+     "at": 4.875
+    }
+   ]
+  }
+ ]
+}

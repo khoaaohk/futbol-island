@@ -4,6 +4,10 @@ import {sweepGoalFrame,type FrameHit} from '../goalCollisions';
 import {shotProgress,shotHeightAt,shotOffsetAt} from '../shotPlacement';
 import {firstTouchDirection} from "./firstTouch";
 import { laneAdjustment, screenPosition } from "./tacticalMovement";
+import { windupSeconds } from "./choreo";
+import { Combos, comboSettings } from "./combos"; // [combos]
+/** Lane B: xG multiplier of an acrobatic first-time finish (volley, scissor, bicycle, diving header). */
+const ACRO_XG = 0.7;
 // Standalone two-way football match simulation (the "brain + body").
 // Pure logic in field space (270 x 400) with NO rendering/DOM deps, so it can be
 // unit-tested in Node at full speed. BabylonStage just reads positions each frame.
@@ -12,6 +16,12 @@ import { laneAdjustment, screenPosition } from "./tacticalMovement";
 
 export type Team = "gold" | "blue";
 export type Role = "gk" | "def" | "mid" | "fwd";
+/** A ball touch the view turns into a body action (lib/town/match/choreo.ts). `height` is the ball's
+ * height (m) at the touch, `speed` the ball's pace (u/s) arriving (or leaving, for `kick`),
+ * `heavy` a first touch that pops out of stride, `other` the dispossessed carrier of a tackle. */
+export type TouchKind = "receive" | "intercept" | "tackle" | "heavy" | "parry" | "goal" | "kick";
+export type TouchEvent = { serial: number; kind: TouchKind; id: string; other: string | null; team: Team; height: number; speed: number; heavy: boolean; time: number };
+export type KickWindup = { id: string; kind: "pass" | "loft" | "shot" | "clear"; to: string | null; firm: number; loftKind: "through" | "cross" | "switch"; t: number; dur: number; tx: number; ty: number; turn: number };
 
 export interface SimPlayer {
   id: string;
@@ -36,6 +46,10 @@ export interface SimPlayer {
   moveDistance?: number;
 }
 
+// The composure beat absorbs the wind-up of a typical kick (a 60° turn): square-on kicks leave
+// the foot a touch sooner than before the wind-up existed, big turns a touch later.
+const WINDUP_LEAD_TURN = Math.PI / 3;
+const WINDUP_FINISH: Record<string, number> = { futsal: 1.75, "7v7": 1.3, "9v9": 1.45, "11v11": 1.15 };
 const GY_TOP = 8;
 const GY_BOT = 392;
 const GHALF = 19; // goal half-width in field units (~6.4m of a 45.7m pitch)
@@ -364,7 +378,7 @@ export class MatchSim {
   private mom: Record<string, { floor: number; cool: number; back: boolean; backT: number }> = {};
 
   // stats (for testing) — carries counts SUSTAINED drives (a carry episode >= 15 units)
-  stats = { passes: 0, turnovers: 0, shots: 0, shotsGold: 0, shotsBlue: 0, interceptions: 0, possGold: 0, possBlue: 0, time: 0, recvOwn: 0, looseOwn: 0, looseOpp: 0, carries: 0, carryDist: 0, decided: 0, xgSum: 0, combinations: 0, combinationReturns: 0, crosses:0, switches:0 };
+  stats = { passes: 0, turnovers: 0, shots: 0, shotsGold: 0, shotsBlue: 0, interceptions: 0, possGold: 0, possBlue: 0, time: 0, recvOwn: 0, looseOwn: 0, looseOpp: 0, carries: 0, carryDist: 0, decided: 0, xgSum: 0, combinations: 0, combinationReturns: 0, crosses:0, switches:0, firstTime:0 };
   private nextAerial=0;
   private aerialKind:'cross'|'switch'='switch';
   private carryAcc = 0; // distance covered in the current carry episode
@@ -375,6 +389,43 @@ export class MatchSim {
   // Flips false automatically on every resolution path: goal (goal-line crossing clears
   // ballIsShot), save/catch, parry, fizzle-out, out-of-bounds restart, or any claim.
   get shotActive(): boolean { return this.ballIsShot && this.ball.owner === null; }
+  // ---- keeper dive / aerial reads (additive — consumed by choreo.ts, lane B of docs/bean-characters) ----
+  /** The venue this match is played on (field → world scale, goal size). */
+  get venue(): Readonly<Venue> { return this.goalVenue; }
+  /** A lofted ball in flight: its clock, flight time, peak height (m) and whether its target may head it. */
+  get aerial(): { t: number; dur: number; peak: number; header: boolean } | null {
+    if (this.loftDur <= 0 || !this.ball.lofted) return null;
+    const a = this.aerialRead; a.t = this.loftT; a.dur = this.loftDur; a.peak = this.loftPeak; a.header = this.headerBall; return a;
+  }
+  private aerialRead = { t: 0, dur: 0, peak: 0, header: false };
+  /** A keeper finishing a save at full stretch: he travels to where he met the ball (x, y) over t sim seconds. */
+  get keeperDive(): Readonly<{ id: string; x: number; y: number; t: number }> | null { return this.gkDive; }
+  /** The keeper stops a shot once it is this close to him (sim units). */
+  get saveReach(): number { return P.gkReach + 1; }
+  /** Sim seconds before the ball in flight can be stopped or received (the strike's keep-out). */
+  get flightHold(): number { return Math.max(0, this.ballFlight); }
+  private gkDive: { id: string; x: number; y: number; t: number } | null = null;
+  /** [combos] combination plays, rebounds and skills (lib/town/match/combos.ts); null when switched off. */
+  combos: Combos | null = null;
+  /** A lofted ball its target will finish first time (volley / scissor / bicycle / diving header) if he meets it. */
+  get acrobatic(): Readonly<{ to: string }> | null { return this.acro; }
+  private acro: { to: string } | null = null; // an acrobatic first-time finish is harder than a set strike: xG × ACRO_XG
+  // The keeper's save outcome is rolled at the strike (same 20 % deflection as before), so the view can shape
+  // the hands before the contact: a high ball is tipped over the bar, anything else parried out to the side.
+  private saveRoll = -1;
+  /** How the keeper will deal with the shot in flight if he gets to it: 'catch' | 'parry' | 'tip' ('goal' = beaten). */
+  get saveOutcome(): 'catch' | 'parry' | 'tip' | 'goal' {
+    if (this.shotIsGoal) return 'goal';
+    if (this.saveRoll >= 0 && this.saveRoll < 0.2) return this.lastKick.shotHeight >= 0.9 ? 'tip' : 'parry';
+    return 'catch';
+  }
+  // A save further than this from the keeper is made at full stretch (a dive); he lands where he met it.
+  private diveAt(id: string) {
+    const g = this.players[id];
+    if (!g || dist(g.x, g.y, this.ball.x, this.ball.y) < 3.5 || this.windupScale <= 0) return;
+    // ≈ .19 real seconds from the hands meeting the ball to landing on the side (choreo DIVE timing).
+    this.gkDive = { id, x: this.ball.x, y: this.ball.y, t: 0.19 * this.windupScale };
+  }
   // ---- public reception read (additive — consumed by BabylonStage's first-touch pose) ----
   // ONE shared object mutated in place (zero per-frame allocations): who is taking a
   // first touch right now (id, else null), the countdown t / total dur of the cushion,
@@ -384,6 +435,52 @@ export class MatchSim {
   // to the passer. Foot convention: with y-down field coords, a player facing (fx,fy)
   // has his right-hand side along (-fy, fx).
   recv = { id: null as string | null, t: 0, dur: 0, foot: "R" as "L" | "R", faceX: 0, faceY: -1 };
+  // ---- touch events (additive — consumed by choreo.ts) ----
+  // A fixed ring of 8 preallocated events; touchSerial counts every touch ever emitted, so a
+  // reader keeps its last serial and reads the newer ones (zero allocations per touch).
+  touches: TouchEvent[] = Array.from({ length: 8 }, () => ({ serial: 0, kind: "receive" as TouchKind, id: "", other: null, team: "gold" as Team, height: 0, speed: 0, heavy: false, time: 0 }));
+  touchSerial = 0;
+  // ---- kick wind-up (CONTRACT §5) ----
+  // An AI kick does not leave the foot the instant it is chosen: the kicker winds up for
+  // windupSeconds(turn) real seconds (longer the further he must turn to face the target),
+  // converted to sim time by windupScale (the live playback speed; 0 disables it).
+  windupScale = 0.32;
+  private windup: KickWindup | null = null;
+  private releasing = false;
+  private deciding = false;
+  private passIntended: string | null = null; // the receiver a pass in flight was meant for (even if it's being cut out)
+  private trapHeavy = false;
+  private headerBall = false; // a cross in flight: its target may meet it at head height
+  /** The kick being wound up right now (read-only for the view), else null. */
+  get kickWindup(): Readonly<KickWindup> | null { return this.windup; }
+  /** Who is calling for the ball: the target of a kick being wound up or of a pass in flight. */
+  get callFor(): string | null {
+    if (this.restart || this.goalHold > 0) return null;
+    if (this.windup) return this.windup.to;
+    return this.ball.owner === null && !this.ballIsShot && (this.ball.target || this.ball.intBy) ? this.passIntended : null;
+  }
+  private touch(kind: TouchKind, id: string, other: string | null, height: number, speed: number, heavy = false) {
+    const e = this.touches[this.touchSerial % this.touches.length];
+    this.touchSerial++;
+    e.serial = this.touchSerial; e.kind = kind; e.id = id; e.other = other; e.team = this.players[id]?.team ?? "gold";
+    e.height = height; e.speed = speed; e.heavy = heavy; e.time = this.stats.time;
+  }
+  // Defer an AI kick into a wind-up. Returns true when the kick was deferred (the caller stops);
+  // the release re-enters the same doPass/doLoft/doShot/doClear with fresh positions.
+  private defer(fromId: string, kind: KickWindup["kind"], to: string | null, firm = 1, loftKind: KickWindup["loftKind"] = "through"): boolean {
+    if (!this.deciding || this.releasing || this.windupScale <= 0 || fromId === this.userId) return false;
+    if (this.windup) return true;
+    const from = this.players[fromId], gy = this.atkGoalY(from.team);
+    const t = to ? this.players[to] : null;
+    const tx = t ? t.x : kind === "shot" ? 135 : from.x, ty = t ? t.y : gy;
+    // body direction: his run, else the way the first touch opened him, else up the pitch
+    let fx = from.vx, fy = from.vy;
+    if (Math.hypot(fx, fy) < 12) { if (this.recv.id === fromId) { fx = this.recv.faceX; fy = this.recv.faceY; } else { fx = 0; fy = this.dirY(from.team); } }
+    const turn = Math.abs(Math.atan2(fx * (ty - from.y) - fy * (tx - from.x), fx * (tx - from.x) + fy * (ty - from.y)));
+    const dur = windupSeconds(turn) * this.windupScale;
+    this.windup = { id: fromId, kind, to, firm, loftKind, t: dur, dur, tx, ty, turn };
+    return true;
+  }
 
   constructor(seed = 1, format: "9v9" | "11v11" | "futsal" | "7v7" = "9v9", squads?: { gold: [string, number, number, Role][]; blue: [string, number, number, Role][] }) {
     this.goalVenue=venueById(format);this.frameVenues=[this.goalVenue];
@@ -396,6 +493,7 @@ export class MatchSim {
     const gold = squads?.gold ?? (format === "11v11" ? GOLD_HOME_11 : format === "futsal" ? GOLD_HOME_5 : format === "7v7" ? GOLD_HOME_7 : GOLD_HOME);
     const blue = squads?.blue ?? (format === "11v11" ? BLUE_HOME_11 : format === "futsal" ? BLUE_HOME_5 : format === "7v7" ? BLUE_HOME_7 : BLUE_HOME);
     if (format === "futsal") this.passMul = 1.22; // zippier passing for the quick small-sided game
+    this.windupScale = format === "futsal" ? 0.48 : 0.32; // = liveGameSpeed(format) in fieldRuntime, which sets it too
     if (format === "11v11") this.allowLoft = true; // big field → balls over the top / crosses
     // finish (xG multiplier) is tuned so a full 180-sim-second game averages ~1.2–1.5 goals
     // in EVERY format — enough that a typical 2–3 minute viewing window contains a goal (and
@@ -410,6 +508,10 @@ export class MatchSim {
     if (format === "futsal") this.T = { press: 1.7, lane: 1.9, misplace: 2.0, shoot: 1.8, openReq: 8, laneReq: 6, loftP: 0, switchAt: 3, carryP: 0.52, fwdAdv: 145, shotRange: 155, finish: 1.22, lineUp: 50, lineDn: 88 };
     else if (format === "7v7") this.T = { press: 1.5, lane: 1.7, misplace: 1.8, shoot: 1.6, openReq: 9, laneReq: 6.5, loftP: 0, switchAt: 3, carryP: 0.45, fwdAdv: 135, shotRange: 135, finish: 1.2, lineUp: 46, lineDn: 82 };
     else if (format === "11v11") this.T = { press: 1.15, lane: 1.15, misplace: 1.1, shoot: 0.85, openReq: 11, laneReq: 8, loftP: 0.03, switchAt: 4, carryP: 0.28, fwdAdv: 120, shotRange: 110, finish: 0.73, lineUp: 30, lineDn: 62 };
+    // Kick wind-up compensation: the wind-up gives keepers and lane defenders a beat to set
+    // (fewer keeper-out-of-position goals, more read passes), so finishing is eased to hold
+    // goals/game on the 96-seed balance sample (docs/pass-puzzle/CONTRACT.md, lane B status).
+    this.T.finish *= WINDUP_FINISH[format];
     this.useBuildOut = format === "7v7";
     this.useOffside = format === "11v11" || format === "9v9"; // futsal & 7v7 don't play offside
     // deal the philosophy cards for this match (seeded → reproducible): two DISTINCT
@@ -435,6 +537,7 @@ export class MatchSim {
       const mean = defs.reduce((s, id) => s + Math.abs(this.players[id].hy - own), 0) / (defs.length || 1);
       for (const id of defs) this.defOff[id] = Math.abs(this.players[id].hy - own) - mean;
     }
+    this.combos = comboSettings.enabled ? new Combos(this, seed) : null; // [combos]
     this.kickOff("gold");
   }
   private add(id: string, team: Team, x: number, y: number, role: Role) {
@@ -644,7 +747,7 @@ export class MatchSim {
     this.passCd = 0.8;
     this.lastFrom = null;
     this.counterT = 0; this.counterTeam = null; // a restart is never a counter
-    this.restart = null;
+    this.restart = null; this.gkDive = null;
     this.endTrap(); // cold placement — the restart choreography owns the ball
   }
   // A goal does NOT teleport everyone back to their spots — the ball is placed dead on
@@ -873,6 +976,7 @@ export class MatchSim {
     if(this.combination&&!(fromId===this.combination.wall&&target===this.combination.runner))this.combination=null;
     this.carrying=false;this.carryUntil=0;
     this.passRelease=target?{id:fromId,x:from.x,y:from.y,tx,ty,target}:null;
+    this.windup = null; this.passIntended = null; this.headerBall = false; this.acro = null; this.saveRoll = -1;
     const dx = tx - from.x;
     const dy = ty - from.y;
     const L = Math.hypot(dx, dy) || 1;
@@ -892,10 +996,12 @@ export class MatchSim {
     this.kicks++; this.lastKick.height = height; this.lastKick.loft = loft; this.lastKick.dur = this.loftDur;
     this.lastKick.shotHeight=0;this.lastKick.fromY=from.y;this.lastKick.goalY=ty;this.lastKick.aimX=tx;
     from.kick = 1;
+    this.touch("kick", fromId, target, height + loft, speed);
   }
   // a lofted ball over the top — flies through the air (no ground interception), arcs down
   // to a forward runner. Used only in 11v11 (bigger field).
   private doLoft(fromId: string, toId: string,kind:'through'|'cross'|'switch'='through') {
+    if (this.defer(fromId, "loft", toId, 1, kind)) return;
     const from = this.players[fromId];
     const t = this.players[toId];
     const dir = this.dirY(from.team);
@@ -905,6 +1011,9 @@ export class MatchSim {
     const speed = clamp(D * 1.5 + 165, 250, 430);
     const peak=kind==='cross'?3.2:kind==='switch'?Math.min(5,3+D*.006):4.4;
     this.launch(fromId, tx, ty, speed, 0, toId, peak);
+    this.passIntended = toId; this.headerBall = kind === "cross";
+    // In range of goal a cross or ball over the top is sometimes met first time (acrobatic finish).
+    if (kind !== 'switch' && dist(t.x, t.y, 135, this.atkGoalY(from.team)) < 75 && this.rng() < 0.28) this.acro = { to: toId };
     if(kind!=='through'){
       // Integrate the same air drag as ballLogic so the ball lands at its receiving lane.
       const drag=P.friction*.35;this.loftDur=-Math.log(Math.max(.05,1-drag*D/speed))/drag;this.lastKick.dur=this.loftDur;
@@ -919,6 +1028,7 @@ export class MatchSim {
   }
   // firm: pass pace multiplier — >1 is a driven/hard ball, <1 is a gentle roll-in.
   private doPass(fromId: string, toId: string, firm = 1) {
+    if (this.defer(fromId, "pass", toId, firm)) return;
     const from = this.players[fromId];
     const t = this.players[toId];
     const dir = this.dirY(from.team);
@@ -939,8 +1049,10 @@ export class MatchSim {
         oy = (this.rng() * 2 - 1) * err * 11;
       }
     }
-    const tx = t.x + ox;
-    const ty = t.y + dir * 5 + oy; // lead the runner a touch
+    let tx = t.x + ox;
+    let ty = t.y + dir * 5 + oy; // lead the runner a touch
+    // [combos] a through ball / cut-back is played into the runner's path, not to his feet
+    const comboLead = this.combos ? this.combos.passLead(fromId, toId) : null; if (comboLead) { tx = comboLead.x; ty = comboLead.y; }
     // weight the pass so it ARRIVES at the receiver's feet; firmness varies the pace so
     // driven balls zip in flat while recycles roll in gently (still reaches the target)
     const D = dist(from.x, from.y, tx, ty);
@@ -974,6 +1086,7 @@ export class MatchSim {
     } else {
       this.launch(fromId, tx, ty, speed, height, toId);
     }
+    this.passIntended = toId;
     const prior=this.combination;
     this.combination=null;
     if(!intercepted&&prior?.wall===fromId&&prior.runner===toId){
@@ -992,7 +1105,8 @@ export class MatchSim {
     this.passCd = 0.48;
     this.stats.passes++;
   }
-  private doShot(fromId: string) {
+  private doShot(fromId: string, xgMul = 1) { // [combos] xgMul: quality of a planned first-time finish
+    if (this.defer(fromId, "shot", null)) return;
     const from = this.players[fromId];
     const gy = this.atkGoalY(from.team);
     // Outcome is decided AT THE STRIKE (same philosophy as passes): an xG from range and
@@ -1001,7 +1115,7 @@ export class MatchSim {
     // enough for a set keeper, a miss rolls just wide and restarts with the other team.
     const distGoal = dist(from.x, from.y, 135, gy);
     const angle = Math.abs(from.x - 135);
-    const xg = clamp(0.34 - (distGoal - 28) * 0.0035, 0.05, 0.34) * clamp(1.15 - angle / 60, 0.35, 1) * this.T.finish;
+    const xg = clamp(0.34 - (distGoal - 28) * 0.0035, 0.05, 0.34) * clamp(1.15 - angle / 60, 0.35, 1) * this.T.finish * xgMul; // [combos] xgMul
     const roll = this.rng();
     const side = this.rng() < 0.5 ? -1 : 1;
     let aimx: number;
@@ -1033,6 +1147,7 @@ export class MatchSim {
     // Compact-court strikes should snap toward goal rather than read like a pass.
     if (this.goalVenue.id === 'futsal') spd *= 1.3;
     this.launch(fromId, aimx, gy, spd, 1.0, null);
+    this.saveRoll = this.rng();
     // Placement is presentation metadata: preserve the existing outcome and random sequence.
     // Some finishes stay low; the strongest corner placements rise into the upper net.
     this.lastKick.shotHeight=roll<xg*.65?.96:roll<xg?.18:roll>=xg+.07&&roll<xg+.12?1.25:.45;
@@ -1058,6 +1173,7 @@ export class MatchSim {
     // ~20% over the original (1.25 + 0.55·pw) so the human's strike rips too
     this.launch(fromId, aimx, gy, P.shotSpeed * (1.5 + 0.66 * pw) * (this.goalVenue.id === 'futsal' ? 1.3 : 1), 0.5 + 0.6 * pw, null);
     this.lastKick.shotHeight=.22+.74*pw;
+    this.saveRoll = this.rng();
     this.ballIsShot = true;
     this.shotIsGoal = false; // no pre-decided outcome for the human
     this.shotRead = 80; // the keeper reads a human strike honestly — placement & power decide it
@@ -1068,6 +1184,7 @@ export class MatchSim {
     this.msg = "Shot!"; this.msgT = 1.0;
   }
   private doClear(fromId: string) {
+    if (this.defer(fromId, "clear", null)) return;
     const from = this.players[fromId];
     const gy = this.atkGoalY(from.team);
     this.launch(fromId, from.x + this.rng() * 40 - 20, gy, P.clearSpeed, 0.7, null);
@@ -1083,6 +1200,7 @@ export class MatchSim {
   }
   private stepOnce(dt: number) {
     this.stats.time += dt;
+    if (this.windup && (this.restart || this.goalHold > 0)) this.windup = null;
     const combination=this.combination;
     if(combination&&(this.stats.time>combination.expires||this.possession!==combination.team||this.restart||this.goalHold>0))this.combination=null;
 
@@ -1179,6 +1297,8 @@ export class MatchSim {
       : null;
     if (this.restart) this.restartLogic(dt);
     else this.ballLogic(dt);
+    this.combos?.step(dt); // [combos] plan bookkeeping, rebounds, pending skills
+    if (this.windup && this.windup.id !== this.ball.owner) this.windup = null; // robbed mid wind-up: no ghost kick or call
     this.updateShape(dt); // team line heights first (the shared prior)…
     this.brainLogic(dt); // …then each player's throttled individual read of it
     this.computeTargets(dt);
@@ -1320,7 +1440,7 @@ export class MatchSim {
     this.ball.lofted = false; this.loftDur = 0;
     const bvx = this.ball.vx, bvy = this.ball.vy;
     this.ball.vx = 0; this.ball.vy = 0;
-    if (p.isGK) { this.trapT = 0; this.recv.id = null; this.recv.t = 0; return; } // hands — caught clean, no trap
+    if (p.isGK) { this.trapT = 0; this.recv.id = null; this.recv.t = 0; this.trapHeavy = false; return; } // hands — caught clean, no trap
     const inSp = Math.hypot(bvx, bvy); // pace still on the arriving ball
     const {foot,faceX:fx,faceY:fy,ux,uy,mv,tight}=this.receptionPlan(id,bvx,bvy);
     const rx=-fy,ry=fx;
@@ -1332,7 +1452,9 @@ export class MatchSim {
     const heavy = pace * 0.6 + this.fatigue * 0.25 + lapse * 0.5;
     let ahead = (2 + Math.min(3, mv / 28)) * (tight ? 0.8 : 1); // in-stride 2..5, tighter for the human
     let dur = 0.14 + pace * (tight ? 0.1 : 0.16); // cushion ~0.14-0.3s
+    this.trapHeavy = false;
     if (!tight && this.rng() < heavy * 0.3) {
+      this.trapHeavy = true;
       ahead = 6 + this.rng() * 2; // a heavy touch — out to ~6-8 units
       dur = 0.3 + this.rng() * 0.12;
     }
@@ -1387,7 +1509,12 @@ export class MatchSim {
     this.ball.vx = 0; this.ball.vy = 0;
   }
 
+  // AI kicks chosen inside ballLogic wind up first; a direct doPass/doShot (tests, tools) is immediate.
   private ballLogic(dt: number) {
+    this.deciding = true;
+    try { this.ballLogicStep(dt); } finally { this.deciding = false; }
+  }
+  private ballLogicStep(dt: number) {
     let owner = this.ball.owner;
 
     // ---- HUMAN manual tackle (space while an opponent has the ball) ----
@@ -1398,6 +1525,7 @@ export class MatchSim {
       if (dist(u.x, u.y, o.x, o.y) < P.tackleDist + 2.5 && this.protect <= 0 && this.rng() < 0.82) {
         this.ball.owner = this.userId; this.possession = this.userTeam;
         this.startTrap(this.userId); // won ball eases across, not a teleport (tight — human touch)
+        this.touch("tackle", this.userId, owner, 0, Math.hypot(u.vx, u.vy));
         this.passCd = 0.45; this.protect = P.protectTime; this.lastFrom = null;
         this.startCounter(this.userTeam); // won it in open play → break fast
         this.stats.turnovers++; this.msg = "Tackle won!"; this.msgT = 0.9;
@@ -1436,11 +1564,32 @@ export class MatchSim {
           // a defender right on the user can still win it (keeps the game a challenge)
           this.ball.owner = nfu.p.id; this.possession = nfu.p.team;
           this.startTrap(nfu.p.id); // the steal eases across to the winner's feet
+          this.touch("tackle", nfu.p.id, owner, 0, Math.hypot(nfu.p.vx, nfu.p.vy));
           this.passCd = 0.45; this.protect = P.protectTime; this.lastFrom = null;
           this.startCounter(nfu.p.team);
           this.stats.turnovers++; this.msg = "Tackled!"; this.msgT = 0.9;
         }
         return; // skip the AI decision for the human's player
+      }
+      // ---- kick wind-up: the chosen kick releases once the wind-up has run ----
+      // No new decision while winding up; a tackle can still take the ball off him (below).
+      let winding = false;
+      if (this.windup) {
+        const w = this.windup;
+        if (w.id !== owner) this.windup = null;
+        else {
+          w.t -= dt;
+          if (w.t > 0) winding = true;
+          else {
+            this.windup = null; this.releasing = true;
+            if (w.kind === "pass" && w.to) this.doPass(owner, w.to, w.firm);
+            else if (w.kind === "loft" && w.to) this.doLoft(owner, w.to, w.loftKind);
+            else if (w.kind === "shot") this.doShot(owner);
+            else this.doClear(owner);
+            this.releasing = false;
+            if (this.ball.owner !== owner) return;
+          }
+        }
       }
 
       const atkGoalY = this.atkGoalY(o.team);
@@ -1457,7 +1606,7 @@ export class MatchSim {
         if ((f.y - o.y) * dir > 0 && dist(f.x, f.y, o.x, o.y) < 30 && Math.abs(f.x - o.x) < 22) { clearAhead = false; break; }
       }
       // point-blank chance — taken almost always
-      const clearChance = !o.isGK && distGoal < 40 && angle < 24;
+      const clearChance = !winding && !o.isGK && distGoal < 40 && angle < 24;
       // graded shooting instinct in the final third: closer + more central + a clear
       // sight of goal (few defenders in the shot lane) → higher chance to shoot. This
       // is what actually produces shots against a compact block.
@@ -1474,7 +1623,10 @@ export class MatchSim {
         const angleF = clamp((50 - angle) / 50, 0, 1);
         shootChance = (0.24 + closeF * 0.7 + angleF * 0.36) * (laneBlockers === 0 ? 1 : laneBlockers === 1 ? 0.62 : 0.18) * this.T.shoot * this.tempoMul; // arcs: eager early/late, shy in the lull
       }
-      const canAct = this.passCd <= 0 || (pressured && this.passCd < 0.15) || this.hold > 1.6;
+      // The composure beat already includes the shortest wind-up (a square-on kick), so the
+      // decision comes that much earlier and the ball leaves the foot on the old rhythm.
+      const lead = owner === this.userId ? 0 : windupSeconds(WINDUP_LEAD_TURN) * this.windupScale;
+      const canAct = !winding && (this.passCd <= lead || (pressured && this.passCd < 0.15 + lead) || this.hold > 1.6);
 
       // ---- GK on the ball: purposeful distribution ----
       // unpressed → a quick roll-out to an open team-mate keeps the build alive; pressed
@@ -1504,10 +1656,12 @@ export class MatchSim {
 
       // decision (Man-City progression: pass forward if on, else CARRY into space,
       // else recycle to keep it — shoot when a real sight of goal opens up)
-      const returnTo=canAct?this.combinationReturn(owner):null;
-      if(returnTo&&!clearChance){
+      // [combos] multi-step sequences and skills (combos.ts) take this beat when they have a plan (the tackle check below still runs)
+      const comboTook = canAct && !clearChance && !!this.combos && this.combos.onBall(owner, pressured, nf ? nf.p.id : null, pressure);
+      const returnTo=canAct&&!comboTook?this.combinationReturn(owner):null;
+      if (comboTook) { /* [combos] took the beat */ } else if(returnTo&&!clearChance){
         this.carrying=false;this.doPass(owner,returnTo,1.12);
-      } else if (clearChance && (this.passCd <= 0 || pressured)) {
+      } else if (clearChance && (this.passCd <= lead || pressured)) {
         this.carrying = false;
         this.doShot(owner);
       } else if (canAct && shootChance > 0 && this.rng() < shootChance) {
@@ -1544,7 +1698,7 @@ export class MatchSim {
           return;
         }
         let handled = false;
-        const aerial=this.hold>.25&&!clearChance?this.bestAerial(owner):null;
+        const aerial=this.hold>.25-lead&&!clearChance?this.bestAerial(owner):null;
         if(aerial&&!pressured&&this.rng()<(this.aerialKind==='cross'?.65:.5)){
           this.doLoft(owner,aerial,this.aerialKind);return;
         }
@@ -1574,6 +1728,7 @@ export class MatchSim {
             this.protect = 0.3; // the touch buys half a step on the lunging defender
             this.passCd = 0.42;
             handled = true;
+            this.combos?.onBeatMan(owner, nf.p.id, side); // [combos] show the skill that beat him
           } else this.carrying = false; // engaged and not beating him → release below
         }
         // 11v11: occasionally play a ball OVER THE TOP before considering ground passes
@@ -1645,11 +1800,14 @@ export class MatchSim {
       // has just settled it; a fresh touch is protected so possession doesn't ping-pong).
       // While the human JOCKEYS, their player contains without lunging — no auto-tackle.
       const jockeying = this.userJockey && nf && nf.p.id === this.userId;
+      // A presser can still rob him mid wind-up (the composure beat was shortened by the lead,
+      // so his total exposure matches the pre-wind-up rhythm).
       if (!jockeying && this.ball.owner === owner && this.protect <= 0 && nf && nf.d < P.tackleDist && this.rng() < P.tackleChance * this.T.press * this.persona[nf.p.team].press * this.fairMul * dt) {
         this.carrying = false;
         this.ball.owner = nf.p.id;
         this.possession = nf.p.team;
         this.startTrap(nf.p.id); // the won ball eases to the tackler's feet, no teleport
+        this.touch("tackle", nf.p.id, owner, 0, Math.hypot(nf.p.vx, nf.p.vy));
         this.passCd = 0.45; // can act (clear to safety) while still protected
         this.protect = P.protectTime;
         this.lastFrom = null;
@@ -1669,6 +1827,7 @@ export class MatchSim {
             this.ball.owner = defGkId;
             this.possession = g.team;
             this.startTrap(defGkId); // GK smother → hands, snaps clean (startTrap no-ops the trap for keepers)
+            this.touch("tackle", defGkId, owner, 0, Math.hypot(g.vx, g.vy));
             this.passCd = 0.7; this.protect = 0.8; this.lastFrom = null;
             this.stats.turnovers++;
             this.msg = "Smothered by the keeper!"; this.msgT = 1.0;
@@ -1713,6 +1872,8 @@ export class MatchSim {
         this.ball.height = Math.max(0, this.ball.height - dt * 2.4);
       }
       const airborne = this.ball.lofted && this.ball.height > 1.2; // too high to be controlled
+      // a dropping cross can be met by its target at head height (a header, see choreo)
+      const headerReach = airborne && this.headerBall && !!this.ball.target && this.ball.height <= 2.1 && this.loftT > this.loftDur * 0.5;
       const sp = Math.hypot(this.ball.vx, this.ball.vy);
       // UNSTICK: a loose ball that has rolled dead must always be claimable. If the
       // nearest man is the last kicker (normally barred from re-collecting his own pass)
@@ -1734,11 +1895,13 @@ export class MatchSim {
         const f = (lineY - prevBY) / (this.ball.y - prevBY || 1);
         const xc = prevBX + (this.ball.x - prevBX) * f; // x where it actually crossed the line
         const shotHeight=this.ballIsShot&&this.lastKick.shotHeight>0?shotHeightAt(this.lastKick,shotProgress(this.lastKick,lineY),this.goalVenue.goalHeight):0;
-        if (Math.abs(xc - 135) < GHALF&&shotHeight+.295+.19<this.goalVenue.goalHeight+.105) {
+        const crossHeight=this.ballIsShot?shotHeight:Math.max(shotHeight,this.ball.height);
+        if (Math.abs(xc - 135) < GHALF&&crossHeight+.295+.19<this.goalVenue.goalHeight+.105) {
           if (crossedTop) { this.score.gold++; this.msg = "GOAL — Gold!"; this.goalNet = "top"; }
           else { this.score.blue++; this.msg = "GOAL — Blue!"; this.goalNet = "bottom"; }
           this.msgT = 2.4;
           this.scorerId = this.lastFrom; // launch() stamped the striker
+          if (this.scorerId) { this.touch("goal", this.scorerId, null, 0, sp); this.touches[(this.touchSerial - 1) % this.touches.length].team = crossedTop ? "gold" : "blue"; }
           this.goalHold = 1.8; this.ballImpact = Math.min(1, sp / 220);
           this.ball.x = clamp(xc, 135 - GHALF + 1.5, 135 + GHALF - 1.5); // nestle inside the posts for the net bulge
           this.ball.owner = null; this.ballIsShot = false; this.shotIsGoal = false; this.ball.target = null; this.ball.intBy = null;
@@ -1792,16 +1955,26 @@ export class MatchSim {
           // ~1 in 5 stops is a PARRY, not a catch: the keeper touches it last (so a ball
           // over the line is a CORNER) and a deflection kept in play is a live rebound —
           // restarts and scrambles the critic can actually see.
-          if (this.rng() < 0.2) {
+          const outcome = this.saveOutcome;
+          if (outcome === 'parry' || outcome === 'tip' || (this.saveRoll < 0 && this.rng() < 0.2)) {
             this.possession = g.team; // keeper's touch counts as the last touch
             const outX = Math.sign(this.ball.x - 135) || (this.rng() < 0.5 ? -1 : 1);
             this.ball.vx = outX * (70 + this.rng() * 50);
             this.ball.vy = Math.sign(this.ownGoalY(g.team) - 200) * (30 + this.rng() * 45);
             this.ball.height = 0.4; this.ballIsShot = false; this.shotIsGoal = false;
+            // Tipped over: fingertips push it UP and over the bar, it drops behind the goal (a corner).
+            if (outcome === 'tip') {
+              // Fast enough to clear the bar before the height decays (2.4 m/s): over the line within ~.2 s.
+              const toLine = Math.abs(this.ownGoalY(g.team) - this.ball.y);
+              this.ball.vx = outX * (8 + this.rng() * 14); this.ball.vy = Math.sign(this.ownGoalY(g.team) - 200) * Math.max(70, toLine / 0.2) * 1.3; this.ball.height = this.goalVenue.goalHeight + 0.8;
+            }
             this.ball.target = null; this.ball.intBy = null; this.ballFlight = 0.25;
             this.lastFrom = defGk!; // the keeper can't instantly re-collect his own parry
             this.msg = "Great save!"; this.msgT = 1.2;
-          } else { claimer = defGk!; claimVia = "shot"; }
+            this.diveAt(defGk!);
+            this.touch("parry", defGk!, null, 0.4, sp);
+            this.combos?.onParry(defGk!, outcome); // [combos] some parries drop into the danger zone: a live rebound
+          } else { this.diveAt(defGk!); claimer = defGk!; claimVia = "shot"; }
         }
         else if (sp < 40) {
           if (this.shotIsGoal) {
@@ -1813,7 +1986,7 @@ export class MatchSim {
             this.ball.vx = (dxa / L) * 65; this.ball.vy = (dya / L) * 65;
           } else { this.ballIsShot = false; this.shotIsGoal = false; } // shot has fizzled out → live ball again
         }
-      } else if (this.ballFlight <= 0 && !airborne) {
+      } else if (this.ballFlight <= 0 && (!airborne || headerReach)) {
         // Outcome was decided at launch. A pass reaches its receiver (or its chosen
         // interceptor) when the ball arrives in their control zone. No random defender
         // can vacuum it up mid-flight — that was turning every pass into a scramble.
@@ -1849,6 +2022,18 @@ export class MatchSim {
       }
       if (claimer) {
         const cp = this.players[claimer];
+        // First-time acrobatic finish: the target strikes the dropping ball at once (no trap), from where he met it.
+        // [combos] a planned first-time finish (rebound, cut-back, near/far post, lay-off, one-two): see combos.ts
+        const comboFinish = this.combos ? this.combos.finishOnClaim(claimer, claimVia) : 0;
+        if (((this.acro && this.acro.to === claimer && claimVia === "recv") || comboFinish > 0) && !cp.isGK) {
+          const h = this.ball.height;
+          this.acro = null; this.possession = cp.team; this.ball.owner = claimer; this.ball.target = null; this.ball.intBy = null;
+          this.passIntended = null; this.stats.recvOwn++; this.stats.firstTime++;
+          // Struck on the contact (no wind-up): the move's contact phase is timed to this claim.
+          this.releasing = true; try { this.doShot(claimer, comboFinish || ACRO_XG); } finally { this.releasing = false; } // [combos] xgMul
+          this.ball.height = Math.max(this.ball.height, h);
+          return;
+        }
         // ---- rare genuinely LOOSE first touch → an organic 50/50 ----
         // the ball squirts on past the touch in its direction of travel; the toucher is
         // barred from an instant re-claim (lastFrom), so a pressing defender can pounce.
@@ -1870,6 +2055,7 @@ export class MatchSim {
             this.ballFlight = 0.12;
             this.deadT = 0;
             this.msg = "Heavy touch!"; this.msgT = 0.9;
+            this.touch("heavy", claimer, null, this.ball.height, sp, true);
             return;
           }
         }
@@ -1896,7 +2082,10 @@ export class MatchSim {
         this.protect = 0.4;
         // first touch: cushion the arriving ball in (reads incoming velocity — must run
         // while the flight momentum is still on the ball)
+        const touchHeight = this.ball.height;
         this.startTrap(claimer);
+        this.touch(claimVia === "inter" ? "intercept" : "receive", claimer, null, touchHeight, sp, this.trapHeavy);
+        this.passIntended = null;
         if(!cp.isGK&&claimer!==this.userId&&claimVia==='recv'){
           const returnTo=this.combinationReturn(claimer);
           const nearby=this.nearestFoe(claimer,cp.x,cp.y);
@@ -2155,6 +2344,9 @@ export class MatchSim {
         this.targets[id] = { x: clamp(tx, 14, 256), y: clamp(ty, 12, 388) };
         continue;
       }
+      // [combos] planned runs: box runs, lay-off / through-ball runners, rebound racers, rotations, sole rolls
+      const comboRun = this.combos ? this.combos.runTarget(id) : null;
+      if (comboRun) { this.targets[id] = comboRun; continue; }
       if (p.isGK) {
         const ogy = this.ownGoalY(p.team);
         // ...but only once the shot is inside his REACTION window (~0.5s of flight) — a
@@ -2401,6 +2593,18 @@ export class MatchSim {
     const fatigueBrake = 1 - this.fatigue * 0.025; // tired legs brake a touch softer (half the legsMul bite)
     for (const id of this.ids) {
       const p = this.players[id];
+      // A diving keeper is in the air: he carries on to where he met the ball, then lands (no steering).
+      const dive = this.gkDive;
+      if (dive && dive.id === id) {
+        const k = Math.min(1, dt / Math.max(dt, dive.t));
+        p.vx = (dive.x - p.x) / Math.max(dt, dive.t); p.vy = (dive.y - p.y) / Math.max(dt, dive.t);
+        p.x = clamp(p.x + (dive.x - p.x) * k, 8, 262); p.y = clamp(p.y + (dive.y - p.y) * k, 6, 396);
+        p.brake = 0; p.backpedal = 0; p.plant = 0; p.intentX = p.vx; p.intentY = p.vy; p.moveDistance = 0;
+        dive.t -= dt; if (dive.t <= 0) { this.gkDive = null; p.vx = p.vy = 0; }
+        continue;
+      }
+      // [combos] a keeper who parried at full stretch is still on the grass (combos.ts rebound)
+      if (this.combos && this.combos.pinned(id)) { p.vx = 0; p.vy = 0; p.brake = 0; p.backpedal = 0; p.plant = 0; continue; }
       const t = this.targets[id];
       const rm = ROLE_MOVEMENT[p.role];
       const isUser = id === this.userId;

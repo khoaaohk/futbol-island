@@ -1951,7 +1951,7 @@
     "params": {
       "side": "center",
       "distance": "edge",
-      "foot": "left"
+      "foot": "right"
     },
     "lesson": "Turn and shoot hard and low from just outside the area."
   },
@@ -3616,5 +3616,580 @@
       "side": "left"
     },
     "lesson": "Time your overlap so you arrive just as your winger is ready to pass."
+  },
+  "Ivan Rakitić": {
+    "kind": "moment",
+    "title": "The Early Goal in the Champions League Final",
+    "year": 2015,
+    "event": "Juventus v Barcelona, Champions League final",
+    "template": "volley_goal",
+    "params": {
+      "side": "center",
+      "distance": "box"
+    },
+    "lesson": "Arrive in the box at the right moment and finish first time, before a defender can block."
+  },
+  "Raphaël Varane": {
+    "kind": "moment",
+    "title": "The World Cup Header v Uruguay",
+    "year": 2018,
+    "event": "Uruguay v France, World Cup quarter-final",
+    "template": "header_goal",
+    "params": {
+      "side": "center",
+      "distance": "box"
+    },
+    "lesson": "At a free kick, time your run and attack the ball with your forehead."
+  },
+  "Anthony Gordon": {
+    "kind": "moment",
+    "title": "Four Goals in One Night",
+    "year": 2026,
+    "event": "Newcastle United's 6–1 win over Qarabağ, Champions League play-offs",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "left",
+      "beaten": 1,
+      "distance": "box"
+    },
+    "lesson": "Keep making runs behind the defence: one good run can turn into many goals."
+  },
+  "Juan Román Riquelme": {
+    "kind": "moment",
+    "title": "The Nutmeg on Yepes",
+    "year": 2000,
+    "event": "Boca Juniors v River Plate, Copa Libertadores quarter-final",
+    "template": "skill_move",
+    "params": {
+      "trick": "nutmeg"
+    },
+    "lesson": "Shield the ball with your body, then slip it through the defender’s legs when they get too close."
+  },
+  "Jay-Jay Okocha": {
+    "kind": "moment",
+    "title": "Dancing Past Oliver Kahn",
+    "year": 1993,
+    "event": "Eintracht Frankfurt v Karlsruher SC, Bundesliga",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "center",
+      "beaten": 3,
+      "distance": "box"
+    },
+    "lesson": "Stay calm in the box: quick changes of direction can beat defenders and even the keeper."
+  },
+  "Endrick": {
+    "kind": "moment",
+    "title": "The Teenage Winner at Wembley",
+    "year": 2024,
+    "event": "England v Brazil, friendly",
+    "template": "volley_goal",
+    "params": {
+      "side": "center",
+      "distance": "box"
+    },
+    "lesson": "Be ready near goal: a quick first-time finish gives the keeper no time to set."
+  },
+  "Karim Adeyemi": {
+    "kind": "moment",
+    "title": "The Hat-trick v Celtic",
+    "year": 2024,
+    "event": "Borussia Dortmund v Celtic, Champions League",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "right",
+      "beaten": 1,
+      "distance": "box"
+    },
+    "lesson": "Use your speed early: attack the space behind the defence before it closes."
+  },
+  "Pepe": {
+    "kind": "moment",
+    "title": "The Euro 2016 Final Wall",
+    "year": 2016,
+    "event": "Portugal v France, Euro 2016 final",
+    "template": "aerial_clearance",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Stay close to your striker, stay on your feet and head every cross away."
+  },
+  "Elliot Anderson": {
+    "kind": "signature",
+    "title": "Signature: win it and drive forward",
+    "template": "interception_counter",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Win the ball, lift your head and carry it forward into the space in front of you."
+  },
+  "Park Ji-sung": {
+    "kind": "moment",
+    "title": "The World Cup Winner v Portugal",
+    "year": 2002,
+    "event": "South Korea v Portugal, World Cup",
+    "template": "volley_goal",
+    "params": {
+      "side": "left",
+      "distance": "box"
+    },
+    "lesson": "Control the ball with your chest, then shoot before the defender can block."
+  },
+  "Sandro Tonali": {
+    "kind": "moment",
+    "title": "The Goal on His Premier League Debut",
+    "year": 2023,
+    "event": "Newcastle United v Aston Villa, Premier League",
+    "template": "volley_goal",
+    "params": {
+      "side": "center",
+      "distance": "box"
+    },
+    "lesson": "Arrive late in the box: a midfielder’s run is the hardest one for defenders to follow."
+  },
+  "Gareth Bale": {
+    "kind": "moment",
+    "title": "The Overhead Kick in the Final",
+    "year": 2018,
+    "event": "Real Madrid v Liverpool, Champions League final",
+    "template": "bicycle_kick",
+    "params": {
+      "side": "center",
+      "distance": "box"
+    },
+    "lesson": "Be brave when the ball is in the air and keep your eyes on it as you kick."
+  },
+  "Ángel Di María": {
+    "kind": "moment",
+    "title": "The Maracanã Chip",
+    "year": 2021,
+    "event": "Argentina v Brazil, Copa América final",
+    "template": "chip_goal",
+    "params": {
+      "distance": "box",
+      "foot": "left"
+    },
+    "lesson": "When the keeper rushes out, lift the ball gently over them."
+  },
+  "Mesut Özil": {
+    "kind": "moment",
+    "title": "The Solo Goal v Ludogorets",
+    "year": 2016,
+    "event": "Ludogorets v Arsenal, Champions League",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "center",
+      "beaten": 3,
+      "distance": "box",
+      "foot": "left"
+    },
+    "lesson": "Stay calm in front of goal: one more touch can send the defenders sliding past."
+  },
+  "Jordi Alba": {
+    "kind": "moment",
+    "title": "The Sprint and Finish in the Euro Final",
+    "year": 2012,
+    "event": "Spain v Italy, Euro 2012 final",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "left",
+      "beaten": 1,
+      "distance": "box",
+      "foot": "left"
+    },
+    "lesson": "When a teammate looks up, sprint into the space behind the defence."
+  },
+  "Javier Mascherano": {
+    "kind": "moment",
+    "title": "The Tackle on Robben",
+    "year": 2014,
+    "event": "Netherlands v Argentina, World Cup semi-final",
+    "template": "last_ditch_tackle",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Stay on your feet as long as you can, and only slide when you are sure you can reach the ball."
+  },
+  "Carlos Tevez": {
+    "kind": "moment",
+    "title": "The Olympic Final Winner",
+    "year": 2004,
+    "event": "Argentina v Paraguay, Olympic final",
+    "template": "volley_goal",
+    "params": {
+      "side": "center",
+      "distance": "box"
+    },
+    "lesson": "Keep moving in the box so you are ready the moment the chance arrives."
+  },
+  "Sergio Agüero": {
+    "kind": "moment",
+    "title": "The 93:20 Title Winner",
+    "year": 2012,
+    "event": "Manchester City v QPR, Premier League",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "right",
+      "beaten": 1,
+      "distance": "box",
+      "foot": "right"
+    },
+    "lesson": "Never stop believing: a quick one-two in the box can win a match in the last minute."
+  },
+  "Mario Balotelli": {
+    "kind": "moment",
+    "title": "The Thunderbolt v Germany",
+    "year": 2012,
+    "event": "Germany v Italy, Euro 2012 semi-final",
+    "template": "long_range_goal",
+    "params": {
+      "side": "center",
+      "distance": "edge",
+      "foot": "right"
+    },
+    "lesson": "Stay on the shoulder of the last defender, then strike hard the moment you break through."
+  },
+  "Rodrigo De Paul": {
+    "kind": "moment",
+    "title": "The Long Pass That Won the Copa",
+    "year": 2021,
+    "event": "Argentina v Brazil, Copa América final",
+    "template": "through_ball_assist",
+    "params": {
+      "side": "right",
+      "foot": "right"
+    },
+    "lesson": "Look up early: one long pass over the defence can find a runner in space."
+  },
+  "Vincent Kompany": {
+    "kind": "moment",
+    "title": "The Captain’s Long-Range Title Winner",
+    "year": 2019,
+    "event": "Manchester City v Leicester City, Premier League",
+    "template": "long_range_goal",
+    "params": {
+      "side": "center",
+      "distance": "long",
+      "foot": "right"
+    },
+    "lesson": "If the defence backs off and nobody closes you down, a strong, clean strike can surprise the keeper."
+  },
+  "Vozinha": {
+    "kind": "moment",
+    "title": "Seven Saves Against Spain",
+    "year": 2026,
+    "event": "Spain v Cape Verde, World Cup group stage",
+    "template": "save",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Stay on your toes and set your feet before the shot, so you can spring either way."
+  },
+  "Jonathan David": {
+    "kind": "moment",
+    "title": "Canada’s First World Cup Hat-Trick",
+    "year": 2026,
+    "event": "Canada v Qatar, World Cup group stage",
+    "template": "volley_goal",
+    "params": {
+      "side": "center",
+      "distance": "box",
+      "foot": "right"
+    },
+    "lesson": "Keep moving in the box and hit the ball first time, before the defender can block it."
+  },
+  "Brahim Díaz": {
+    "kind": "moment",
+    "title": "The Slalom Goal in Leipzig",
+    "year": 2024,
+    "event": "RB Leipzig v Real Madrid, Champions League round of 16",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "center",
+      "distance": "box",
+      "beaten": 3
+    },
+    "lesson": "Keep the ball close with small touches so you can change direction past each defender."
+  },
+  "Leonardo Bonucci": {
+    "kind": "moment",
+    "title": "The Euro Final Equaliser",
+    "year": 2021,
+    "event": "Italy v England, Euro 2020 final",
+    "template": "volley_goal",
+    "params": {
+      "side": "center",
+      "distance": "box"
+    },
+    "lesson": "Follow every shot in: rebounds from corners fall to the player who keeps going."
+  },
+  "Cesc Fàbregas": {
+    "kind": "moment",
+    "title": "The Pass for the World Cup Winner",
+    "year": 2010,
+    "event": "Netherlands v Spain, World Cup final",
+    "template": "through_ball_assist",
+    "params": {
+      "side": "right",
+      "foot": "right"
+    },
+    "lesson": "Keep your head up in extra time too: one calm pass into space can win the biggest game."
+  },
+  "Edinson Cavani": {
+    "kind": "moment",
+    "title": "The One-Two Header Against Portugal",
+    "year": 2018,
+    "event": "Uruguay v Portugal, World Cup round of 16",
+    "template": "header_goal",
+    "params": {
+      "side": "center",
+      "distance": "box"
+    },
+    "lesson": "Pass and keep running: the ball can come straight back to you in the box."
+  },
+  "Eric Cantona": {
+    "kind": "moment",
+    "title": "The Chip v Sunderland",
+    "year": 1996,
+    "event": "Manchester United v Sunderland, Premier League",
+    "template": "chip_goal",
+    "params": {
+      "side": "center",
+      "distance": "box",
+      "foot": "right",
+      "beaten": 2
+    },
+    "lesson": "When the keeper rushes out, stay calm and lift the ball gently over them."
+  },
+  "Thomas Müller": {
+    "kind": "moment",
+    "title": "The Free Volley at the Back Post",
+    "year": 2014,
+    "event": "Brazil v Germany, World Cup semi-final",
+    "template": "volley_goal",
+    "params": {
+      "side": "center",
+      "distance": "box",
+      "foot": "right"
+    },
+    "lesson": "Move away from your marker before the ball comes, so you are free when it arrives."
+  },
+  "Olivier Giroud": {
+    "kind": "moment",
+    "title": "The Scorpion Kick",
+    "year": 2017,
+    "event": "Arsenal v Crystal Palace, Premier League",
+    "template": "volley_goal",
+    "params": {
+      "side": "center",
+      "distance": "box",
+      "foot": "left"
+    },
+    "lesson": "If the ball comes behind you, be brave and creative: keep your eye on it and try a flick."
+  },
+  "Keylor Navas": {
+    "kind": "moment",
+    "title": "The Shootout Save v Greece",
+    "year": 2014,
+    "event": "Costa Rica v Greece, World Cup round of 16",
+    "template": "penalty_save",
+    "params": {
+      "dive": "right"
+    },
+    "lesson": "Stay on your toes and push off hard; a strong hand can stop even a high shot."
+  },
+  "Lúcio": {
+    "kind": "moment",
+    "title": "The Captain's Header in the Final",
+    "year": 2009,
+    "event": "USA v Brazil, Confederations Cup final",
+    "template": "header_goal",
+    "params": {
+      "side": "center",
+      "distance": "box"
+    },
+    "lesson": "Defenders can score too: attack the corner and head the ball down hard."
+  },
+  "Kyle Walker": {
+    "kind": "signature",
+    "title": "Signature: the recovery sprint",
+    "template": "last_ditch_tackle",
+    "params": {
+      "side": "right"
+    },
+    "lesson": "If a winger gets past you, don't give up: sprint back on the inside and win the ball."
+  },
+  "İlkay Gündoğan": {
+    "kind": "moment",
+    "title": "The 12-Second Cup Final Volley",
+    "year": 2023,
+    "event": "Manchester City v Manchester United, FA Cup final",
+    "template": "volley_goal",
+    "params": {
+      "side": "center",
+      "distance": "edge",
+      "foot": "right"
+    },
+    "lesson": "Be switched on from the first second, and hit a falling ball with your laces on the volley."
+  },
+  "Nico O'Reilly": {
+    "kind": "moment",
+    "title": "Two Headers in the Cup Final",
+    "year": 2026,
+    "event": "Arsenal v Manchester City, EFL Cup final",
+    "template": "header_goal",
+    "params": {
+      "side": "center",
+      "distance": "box"
+    },
+    "lesson": "Full-backs can score too: arrive late in the box and attack the ball with your forehead."
+  },
+  "Ronald Koeman": {
+    "kind": "moment",
+    "title": "The Free Kick That Won the European Cup",
+    "year": 1992,
+    "event": "Barcelona v Sampdoria, European Cup final",
+    "template": "free_kick_goal",
+    "params": {
+      "side": "center",
+      "distance": "long",
+      "foot": "right"
+    },
+    "lesson": "Strike through the middle of the ball with your laces for a powerful free kick."
+  },
+  "Ricardo Quaresma": {
+    "kind": "moment",
+    "title": "The Trivela v Iran",
+    "year": 2018,
+    "event": "Iran v Portugal, World Cup",
+    "template": "long_range_goal",
+    "params": {
+      "side": "right",
+      "distance": "edge",
+      "foot": "right"
+    },
+    "lesson": "Hit the ball with the outside of your foot to make it curve away from the keeper."
+  },
+  "Bastian Schweinsteiger": {
+    "kind": "moment",
+    "title": "The Warrior of the World Cup Final",
+    "year": 2014,
+    "event": "Germany v Argentina, World Cup final",
+    "template": "interception_counter",
+    "params": {
+      "side": "center"
+    },
+    "lesson": "Stay goal-side, win the ball back and keep going, even when the game gets tough."
+  },
+  "Wesley Sneijder": {
+    "kind": "moment",
+    "title": "The Header That Beat Brazil",
+    "year": 2010,
+    "event": "Netherlands v Brazil, World Cup quarter-final",
+    "template": "header_goal",
+    "params": {
+      "side": "center",
+      "distance": "box"
+    },
+    "lesson": "At corners, even small players can score: find the space and attack the ball."
+  },
+  "Ruud Gullit": {
+    "kind": "moment",
+    "title": "The Captain’s Header in the Euro Final",
+    "year": 1988,
+    "event": "Netherlands v Soviet Union, Euro 1988 final",
+    "template": "header_goal",
+    "params": {
+      "side": "center",
+      "distance": "box"
+    },
+    "lesson": "Jump early, keep your eyes open and head the ball down towards the goal."
+  },
+  "Ian Rush": {
+    "kind": "moment",
+    "title": "Two Goals in the FA Cup Final Derby",
+    "year": 1986,
+    "event": "Liverpool v Everton, FA Cup final",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "center",
+      "beaten": 1,
+      "distance": "box"
+    },
+    "lesson": "Time your run so you are onside, then take the ball round the keeper."
+  },
+  "Peter Crouch": {
+    "kind": "moment",
+    "title": "The Long-Range Volley v Man City",
+    "year": 2012,
+    "event": "Stoke City v Manchester City, Premier League",
+    "template": "volley_goal",
+    "params": {
+      "side": "center",
+      "distance": "long"
+    },
+    "lesson": "Keep your eyes on the dropping ball and strike it cleanly before it bounces."
+  },
+  "Freddie Ljungberg": {
+    "kind": "moment",
+    "title": "The Curler in the FA Cup Final",
+    "year": 2002,
+    "event": "Arsenal v Chelsea, FA Cup final",
+    "template": "long_range_goal",
+    "params": {
+      "side": "right",
+      "distance": "edge"
+    },
+    "lesson": "Run at the defender, then curl the ball into the far corner before they can block."
+  },
+  "Robin van Persie": {
+    "kind": "moment",
+    "title": "The Flying Header v Spain",
+    "year": 2014,
+    "event": "Spain v Netherlands, World Cup",
+    "template": "header_goal",
+    "params": {
+      "side": "center",
+      "distance": "edge"
+    },
+    "lesson": "Watch the long ball all the way and be brave: dive to meet it with your forehead."
+  },
+  "Laurent Blanc": {
+    "kind": "moment",
+    "title": "The First Golden Goal",
+    "year": 1998,
+    "event": "France v Paraguay, World Cup round of 16",
+    "template": "volley_goal",
+    "params": {
+      "side": "center",
+      "distance": "box"
+    },
+    "lesson": "Defenders who join the attack late are hard to mark: be ready to finish first time."
+  },
+  "James Rodríguez": {
+    "kind": "moment",
+    "title": "The Puskás Volley v Uruguay",
+    "year": 2014,
+    "event": "Colombia v Uruguay, World Cup round of 16",
+    "template": "volley_goal",
+    "params": {
+      "side": "center",
+      "distance": "edge",
+      "foot": "left"
+    },
+    "lesson": "Cushion the ball on your chest, turn, and volley it before it touches the ground."
+  },
+  "Filippo Inzaghi": {
+    "kind": "moment",
+    "title": "Two Goals in the Champions League Final",
+    "year": 2007,
+    "event": "AC Milan v Liverpool, Champions League final",
+    "template": "solo_dribble_goal",
+    "params": {
+      "side": "center",
+      "beaten": 1,
+      "distance": "box"
+    },
+    "lesson": "Stay on the shoulder of the last defender and go the moment the pass is played."
   }
 }

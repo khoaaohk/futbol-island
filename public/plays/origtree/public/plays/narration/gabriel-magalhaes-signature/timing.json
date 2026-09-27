@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Derby day",
+   "text": "North London derby, September 2024: Tottenham in white, Arsenal in black. Still no goals after sixty-four minutes. Bukayo Saka curls in a corner... Gabriel attacks it... Goal!",
+   "src": "/plays/narration/gabriel-magalhaes-signature/1.m4a",
+   "seconds": 14.3,
+   "words": [
+    {
+     "w": "North",
+     "at": 0.4
+    },
+    {
+     "w": "London",
+     "at": 0.675
+    },
+    {
+     "w": "derby",
+     "at": 1.05
+    },
+    {
+     "w": "September",
+     "at": 1.525
+    },
+    {
+     "w": "2024",
+     "at": 2.025
+    },
+    {
+     "w": "Tottenham",
+     "at": 3.362
+    },
+    {
+     "w": "in",
+     "at": 3.925
+    },
+    {
+     "w": "white",
+     "at": 4.088
+    },
+    {
+     "w": "Arsenal",
+     "at": 4.562
+    },
+    {
+     "w": "in",
+     "at": 5.1
+    },
+    {
+     "w": "black",
+     "at": 5.25
+    },
+    {
+     "w": "Still",
+     "at": 6.062
+    },
+    {
+     "w": "no",
+     "at": 6.35
+    },
+    {
+     "w": "goals",
+     "at": 6.575
+    },
+    {
+     "w": "after",
+     "at": 7.0
+    },
+    {
+     "w": "sixty-four",
+     "at": 7.312
+    },
+    {
+     "w": "minutes",
+     "at": 7.9
+    },
+    {
+     "w": "Bukayo",
+     "at": 8.85
+    },
+    {
+     "w": "Saka",
+     "at": 9.35
+    },
+    {
+     "w": "curls",
+     "at": 9.787
+    },
+    {
+     "w": "in",
+     "at": 10.25
+    },
+    {
+     "w": "a",
+     "at": 10.338
+    },
+    {
+     "w": "corner",
+     "at": 10.4
+    },
+    {
+     "w": "Gabriel",
+     "at": 11.238
+    },
+    {
+     "w": "attacks",
+     "at": 11.75
+    },
+    {
+     "w": "it",
+     "at": 12.262
+    },
+    {
+     "w": "Goal",
+     "at": 12.912
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. Gabriel waits behind Cristian Romero. The keeper, Vicario, is boxed in. Gabriel moves late, jumps, and powers it home.",
+   "src": "/plays/narration/gabriel-magalhaes-signature/2.m4a",
+   "seconds": 10.7,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.087
+    },
+    {
+     "w": "Gabriel",
+     "at": 2.062
+    },
+    {
+     "w": "waits",
+     "at": 2.575
+    },
+    {
+     "w": "behind",
+     "at": 2.875
+    },
+    {
+     "w": "Cristian",
+     "at": 3.225
+    },
+    {
+     "w": "Romero",
+     "at": 3.65
+    },
+    {
+     "w": "The",
+     "at": 4.562
+    },
+    {
+     "w": "keeper",
+     "at": 4.675
+    },
+    {
+     "w": "Vicario",
+     "at": 5.075
+    },
+    {
+     "w": "is",
+     "at": 5.725
+    },
+    {
+     "w": "boxed",
+     "at": 5.888
+    },
+    {
+     "w": "in",
+     "at": 6.287
+    },
+    {
+     "w": "Gabriel",
+     "at": 6.963
+    },
+    {
+     "w": "moves",
+     "at": 7.475
+    },
+    {
+     "w": "late",
+     "at": 7.787
+    },
+    {
+     "w": "jumps",
+     "at": 8.262
+    },
+    {
+     "w": "and",
+     "at": 8.688
+    },
+    {
+     "w": "powers",
+     "at": 8.812
+    },
+    {
+     "w": "it",
+     "at": 9.238
+    },
+    {
+     "w": "home",
+     "at": 9.325
+    }
+   ]
+  },
+  {
+   "label": "From the corner",
+   "text": "From behind Saka: the ball curls toward goal. Romero loses track of Gabriel, and Gabriel rises highest to head it in!",
+   "src": "/plays/narration/gabriel-magalhaes-signature/3.m4a",
+   "seconds": 9.3,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "behind",
+     "at": 0.487
+    },
+    {
+     "w": "Saka",
+     "at": 0.963
+    },
+    {
+     "w": "the",
+     "at": 1.775
+    },
+    {
+     "w": "ball",
+     "at": 1.875
+    },
+    {
+     "w": "curls",
+     "at": 2.188
+    },
+    {
+     "w": "toward",
+     "at": 2.663
+    },
+    {
+     "w": "goal",
+     "at": 3.0
+    },
+    {
+     "w": "Romero",
+     "at": 3.987
+    },
+    {
+     "w": "loses",
+     "at": 4.513
+    },
+    {
+     "w": "track",
+     "at": 4.938
+    },
+    {
+     "w": "of",
+     "at": 5.263
+    },
+    {
+     "w": "Gabriel",
+     "at": 5.375
+    },
+    {
+     "w": "and",
+     "at": 6.15
+    },
+    {
+     "w": "Gabriel",
+     "at": 6.275
+    },
+    {
+     "w": "rises",
+     "at": 6.775
+    },
+    {
+     "w": "highest",
+     "at": 7.237
+    },
+    {
+     "w": "to",
+     "at": 7.675
+    },
+    {
+     "w": "head",
+     "at": 7.775
+    },
+    {
+     "w": "it",
+     "at": 7.938
+    },
+    {
+     "w": "in",
+     "at": 8.025
+    }
+   ]
+  },
+  {
+   "label": "Attack the ball",
+   "text": "Never stand still on the spot. Start your run late, and attack the ball. Don't wait for it!",
+   "src": "/plays/narration/gabriel-magalhaes-signature/4.m4a",
+   "seconds": 6.4,
+   "words": [
+    {
+     "w": "Never",
+     "at": 0.425
+    },
+    {
+     "w": "stand",
+     "at": 0.7
+    },
+    {
+     "w": "still",
+     "at": 1.113
+    },
+    {
+     "w": "on",
+     "at": 1.363
+    },
+    {
+     "w": "the",
+     "at": 1.462
+    },
+    {
+     "w": "spot",
+     "at": 1.562
+    },
+    {
+     "w": "Start",
+     "at": 2.413
+    },
+    {
+     "w": "your",
+     "at": 2.663
+    },
+    {
+     "w": "run",
+     "at": 2.775
+    },
+    {
+     "w": "late",
+     "at": 3.025
+    },
+    {
+     "w": "and",
+     "at": 3.337
+    },
+    {
+     "w": "attack",
+     "at": 3.438
+    },
+    {
+     "w": "the",
+     "at": 3.8
+    },
+    {
+     "w": "ball",
+     "at": 3.9
+    },
+    {
+     "w": "Don't",
+     "at": 4.638
+    },
+    {
+     "w": "wait",
+     "at": 4.85
+    },
+    {
+     "w": "for",
+     "at": 5.1
+    },
+    {
+     "w": "it",
+     "at": 5.275
+    }
+   ]
+  }
+ ]
+}

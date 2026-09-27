@@ -1,0 +1,362 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The free kick, live",
+   "text": "New York, 1994: Bulgaria against Germany, World Cup quarter-final. Germany lead one-nil. Free kick, in Hristo Stoichkov's favourite spot. Left foot... It's in! One-one!",
+   "src": "/plays/narration/stoichkov-signature/1.m4a",
+   "seconds": 13.7,
+   "words": [
+    {
+     "w": "New",
+     "at": 0.425
+    },
+    {
+     "w": "York",
+     "at": 0.6
+    },
+    {
+     "w": "1994",
+     "at": 0.925
+    },
+    {
+     "w": "Bulgaria",
+     "at": 2.188
+    },
+    {
+     "w": "against",
+     "at": 2.825
+    },
+    {
+     "w": "Germany",
+     "at": 3.212
+    },
+    {
+     "w": "World",
+     "at": 3.75
+    },
+    {
+     "w": "Cup",
+     "at": 4.075
+    },
+    {
+     "w": "quarter-final",
+     "at": 4.3
+    },
+    {
+     "w": "Germany",
+     "at": 5.35
+    },
+    {
+     "w": "lead",
+     "at": 5.85
+    },
+    {
+     "w": "one-nil",
+     "at": 6.1
+    },
+    {
+     "w": "Free",
+     "at": 7.05
+    },
+    {
+     "w": "kick",
+     "at": 7.338
+    },
+    {
+     "w": "in",
+     "at": 7.675
+    },
+    {
+     "w": "Hristo",
+     "at": 7.825
+    },
+    {
+     "w": "Stoichkov's",
+     "at": 8.325
+    },
+    {
+     "w": "favourite",
+     "at": 9.125
+    },
+    {
+     "w": "spot",
+     "at": 9.5
+    },
+    {
+     "w": "Left",
+     "at": 10.325
+    },
+    {
+     "w": "foot",
+     "at": 10.637
+    },
+    {
+     "w": "It's",
+     "at": 11.387
+    },
+    {
+     "w": "in",
+     "at": 11.6
+    },
+    {
+     "w": "One-one",
+     "at": 12.088
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again, from behind. One whip of his left foot, and the ball swerves up over the wall and down into the net. Three minutes later, Bulgaria scored again and won!",
+   "src": "/plays/narration/stoichkov-signature/2.m4a",
+   "seconds": 12.0,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.375
+    },
+    {
+     "w": "it",
+     "at": 0.637
+    },
+    {
+     "w": "again",
+     "at": 0.713
+    },
+    {
+     "w": "from",
+     "at": 1.275
+    },
+    {
+     "w": "behind",
+     "at": 1.425
+    },
+    {
+     "w": "One",
+     "at": 2.5
+    },
+    {
+     "w": "whip",
+     "at": 2.8
+    },
+    {
+     "w": "of",
+     "at": 2.987
+    },
+    {
+     "w": "his",
+     "at": 3.062
+    },
+    {
+     "w": "left",
+     "at": 3.225
+    },
+    {
+     "w": "foot",
+     "at": 3.513
+    },
+    {
+     "w": "and",
+     "at": 4.1
+    },
+    {
+     "w": "the",
+     "at": 4.213
+    },
+    {
+     "w": "ball",
+     "at": 4.312
+    },
+    {
+     "w": "swerves",
+     "at": 4.737
+    },
+    {
+     "w": "up",
+     "at": 5.188
+    },
+    {
+     "w": "over",
+     "at": 5.338
+    },
+    {
+     "w": "the",
+     "at": 5.537
+    },
+    {
+     "w": "wall",
+     "at": 5.662
+    },
+    {
+     "w": "and",
+     "at": 6.1
+    },
+    {
+     "w": "down",
+     "at": 6.263
+    },
+    {
+     "w": "into",
+     "at": 6.662
+    },
+    {
+     "w": "the",
+     "at": 6.85
+    },
+    {
+     "w": "net",
+     "at": 6.95
+    },
+    {
+     "w": "Three",
+     "at": 7.85
+    },
+    {
+     "w": "minutes",
+     "at": 8.1
+    },
+    {
+     "w": "later",
+     "at": 8.425
+    },
+    {
+     "w": "Bulgaria",
+     "at": 9.05
+    },
+    {
+     "w": "scored",
+     "at": 9.688
+    },
+    {
+     "w": "again",
+     "at": 10.05
+    },
+    {
+     "w": "and",
+     "at": 10.488
+    },
+    {
+     "w": "won",
+     "at": 10.637
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "Stoichkov had scored lots from there, and he'd just missed one, so he tried again. Your turn: practise on your strong foot, until it's powerful and accurate.",
+   "src": "/plays/narration/stoichkov-signature/3.m4a",
+   "seconds": 10.5,
+   "words": [
+    {
+     "w": "Stoichkov",
+     "at": 0.35
+    },
+    {
+     "w": "had",
+     "at": 0.963
+    },
+    {
+     "w": "scored",
+     "at": 1.1
+    },
+    {
+     "w": "lots",
+     "at": 1.45
+    },
+    {
+     "w": "from",
+     "at": 1.775
+    },
+    {
+     "w": "there",
+     "at": 1.95
+    },
+    {
+     "w": "and",
+     "at": 2.55
+    },
+    {
+     "w": "he'd",
+     "at": 2.663
+    },
+    {
+     "w": "just",
+     "at": 2.8
+    },
+    {
+     "w": "missed",
+     "at": 3.05
+    },
+    {
+     "w": "one",
+     "at": 3.3
+    },
+    {
+     "w": "so",
+     "at": 3.675
+    },
+    {
+     "w": "he",
+     "at": 3.825
+    },
+    {
+     "w": "tried",
+     "at": 3.95
+    },
+    {
+     "w": "again",
+     "at": 4.213
+    },
+    {
+     "w": "Your",
+     "at": 5.162
+    },
+    {
+     "w": "turn",
+     "at": 5.362
+    },
+    {
+     "w": "practise",
+     "at": 6.112
+    },
+    {
+     "w": "on",
+     "at": 6.638
+    },
+    {
+     "w": "your",
+     "at": 6.737
+    },
+    {
+     "w": "strong",
+     "at": 6.862
+    },
+    {
+     "w": "foot",
+     "at": 7.325
+    },
+    {
+     "w": "until",
+     "at": 7.763
+    },
+    {
+     "w": "it's",
+     "at": 8.037
+    },
+    {
+     "w": "powerful",
+     "at": 8.213
+    },
+    {
+     "w": "and",
+     "at": 8.85
+    },
+    {
+     "w": "accurate",
+     "at": 8.988
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Mexico City, 1970. Brazil against Italy, the World Cup final. Clodoaldo dribbles past four players... Rivellino sends it down the wing to Jairzinho. He cuts inside to Pel\u00e9... and here comes Carlos Alberto! Goal!",
+   "src": "/plays/narration/carlos-alberto-1970/1.m4a",
+   "seconds": 16.8,
+   "words": [
+    {
+     "w": "Mexico",
+     "at": 0.4
+    },
+    {
+     "w": "City",
+     "at": 0.875
+    },
+    {
+     "w": "1970",
+     "at": 1.275
+    },
+    {
+     "w": "Brazil",
+     "at": 2.587
+    },
+    {
+     "w": "against",
+     "at": 3.05
+    },
+    {
+     "w": "Italy",
+     "at": 3.425
+    },
+    {
+     "w": "the",
+     "at": 3.85
+    },
+    {
+     "w": "World",
+     "at": 3.975
+    },
+    {
+     "w": "Cup",
+     "at": 4.325
+    },
+    {
+     "w": "final",
+     "at": 4.55
+    },
+    {
+     "w": "Clodoaldo",
+     "at": 5.438
+    },
+    {
+     "w": "dribbles",
+     "at": 6.112
+    },
+    {
+     "w": "past",
+     "at": 6.537
+    },
+    {
+     "w": "four",
+     "at": 6.938
+    },
+    {
+     "w": "players",
+     "at": 7.213
+    },
+    {
+     "w": "Rivellino",
+     "at": 8.287
+    },
+    {
+     "w": "sends",
+     "at": 8.988
+    },
+    {
+     "w": "it",
+     "at": 9.312
+    },
+    {
+     "w": "down",
+     "at": 9.4
+    },
+    {
+     "w": "the",
+     "at": 9.637
+    },
+    {
+     "w": "wing",
+     "at": 9.762
+    },
+    {
+     "w": "to",
+     "at": 10.075
+    },
+    {
+     "w": "Jairzinho",
+     "at": 10.2
+    },
+    {
+     "w": "He",
+     "at": 11.375
+    },
+    {
+     "w": "cuts",
+     "at": 11.5
+    },
+    {
+     "w": "inside",
+     "at": 11.8
+    },
+    {
+     "w": "to",
+     "at": 12.3
+    },
+    {
+     "w": "Pel\u00e9",
+     "at": 12.4
+    },
+    {
+     "w": "and",
+     "at": 13.325
+    },
+    {
+     "w": "here",
+     "at": 13.45
+    },
+    {
+     "w": "comes",
+     "at": 13.675
+    },
+    {
+     "w": "Carlos",
+     "at": 13.975
+    },
+    {
+     "w": "Alberto",
+     "at": 14.45
+    },
+    {
+     "w": "Goal",
+     "at": 15.363
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. Jairzinho drags his defender left, leaving empty space on the right.",
+   "src": "/plays/narration/carlos-alberto-1970/2.m4a",
+   "seconds": 7.2,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.262
+    },
+    {
+     "w": "Jairzinho",
+     "at": 2.325
+    },
+    {
+     "w": "drags",
+     "at": 2.975
+    },
+    {
+     "w": "his",
+     "at": 3.388
+    },
+    {
+     "w": "defender",
+     "at": 3.55
+    },
+    {
+     "w": "left",
+     "at": 4.025
+    },
+    {
+     "w": "leaving",
+     "at": 4.537
+    },
+    {
+     "w": "empty",
+     "at": 4.888
+    },
+    {
+     "w": "space",
+     "at": 5.263
+    },
+    {
+     "w": "on",
+     "at": 5.662
+    },
+    {
+     "w": "the",
+     "at": 5.763
+    },
+    {
+     "w": "right",
+     "at": 5.85
+    }
+   ]
+  },
+  {
+   "label": "The overlap",
+   "text": "Carlos Alberto, the right-back, sprints into it. Pel\u00e9 rolls the ball into his path. First time... what a team goal!",
+   "src": "/plays/narration/carlos-alberto-1970/3.m4a",
+   "seconds": 8.7,
+   "words": [
+    {
+     "w": "Carlos",
+     "at": 0.35
+    },
+    {
+     "w": "Alberto",
+     "at": 0.775
+    },
+    {
+     "w": "the",
+     "at": 1.375
+    },
+    {
+     "w": "right-back",
+     "at": 1.5
+    },
+    {
+     "w": "sprints",
+     "at": 2.087
+    },
+    {
+     "w": "into",
+     "at": 2.462
+    },
+    {
+     "w": "it",
+     "at": 2.763
+    },
+    {
+     "w": "Pel\u00e9",
+     "at": 3.388
+    },
+    {
+     "w": "rolls",
+     "at": 3.812
+    },
+    {
+     "w": "the",
+     "at": 4.225
+    },
+    {
+     "w": "ball",
+     "at": 4.35
+    },
+    {
+     "w": "into",
+     "at": 4.662
+    },
+    {
+     "w": "his",
+     "at": 4.838
+    },
+    {
+     "w": "path",
+     "at": 5.013
+    },
+    {
+     "w": "First",
+     "at": 5.737
+    },
+    {
+     "w": "time",
+     "at": 6.025
+    },
+    {
+     "w": "what",
+     "at": 6.8
+    },
+    {
+     "w": "a",
+     "at": 6.938
+    },
+    {
+     "w": "team",
+     "at": 7.013
+    },
+    {
+     "w": "goal",
+     "at": 7.325
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: full-backs, overlap and sprint into the space. Teammates, pass into the runner's path, so they can shoot without stopping.",
+   "src": "/plays/narration/carlos-alberto-1970/4.m4a",
+   "seconds": 9.3,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "full-backs",
+     "at": 1.188
+    },
+    {
+     "w": "overlap",
+     "at": 2.0
+    },
+    {
+     "w": "and",
+     "at": 2.625
+    },
+    {
+     "w": "sprint",
+     "at": 2.763
+    },
+    {
+     "w": "into",
+     "at": 3.138
+    },
+    {
+     "w": "the",
+     "at": 3.312
+    },
+    {
+     "w": "space",
+     "at": 3.413
+    },
+    {
+     "w": "Teammates",
+     "at": 4.463
+    },
+    {
+     "w": "pass",
+     "at": 5.15
+    },
+    {
+     "w": "into",
+     "at": 5.463
+    },
+    {
+     "w": "the",
+     "at": 5.638
+    },
+    {
+     "w": "runner's",
+     "at": 5.725
+    },
+    {
+     "w": "path",
+     "at": 6.112
+    },
+    {
+     "w": "so",
+     "at": 6.65
+    },
+    {
+     "w": "they",
+     "at": 6.787
+    },
+    {
+     "w": "can",
+     "at": 6.925
+    },
+    {
+     "w": "shoot",
+     "at": 7.138
+    },
+    {
+     "w": "without",
+     "at": 7.438
+    },
+    {
+     "w": "stopping",
+     "at": 7.775
+    }
+   ]
+  }
+ ]
+}

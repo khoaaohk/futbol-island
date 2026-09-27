@@ -6,6 +6,8 @@ import shell from './ModalShell.module.css';
 import {Icon} from './Icon';
 
 import {useEffect,useRef,useState,type KeyboardEvent} from 'react';
+import {useSceneryRest} from '@/lib/sceneryRest';
+import {batterySaverOn,setBatterySaver,subscribeHeatTier} from '@/lib/graphics/heatTier';
 import {COACH_VOICES} from '@/lib/town/useLessonVoice';
 import styles from './IslandSettings.module.css';
 import IslandQuests from './IslandQuests';
@@ -14,6 +16,14 @@ import dynamicImport from 'next/dynamic';
 import {CardOfferDot,pendingPicksLabel,usePendingPicks} from './CardOfferBadges';
 import {OPEN_CARDS_EVENT} from '@/lib/town/cardRewardStore';
 const CardCollection=dynamicImport(()=>import('./CardCollection'),{ssr:false});
+/** Ms until the Paths button's 3 s cycle is between swaps and shakes (250–2350 ms: one icon fully shown, button still), so a rest never
+ * freezes a half-blurred icon or a tilted button. The icons' 3 s / 6 s delays keep them on the button's cycle. */
+function hudSettle(nav:HTMLElement){const a=nav.querySelector('[data-tour=quests]')?.getAnimations()[0];const t=Number(a?.currentTime);if(!a||!Number.isFinite(t))return 0;const phase=t%3000;return phase>=250&&phase<=2350?0:(3250-phase)%3000;}
+/** Steady gameplay input (heat pass 3): the joystick, ride/kick buttons and movement keys. While held, the Paths loops rest, so the
+ * compositor follows the 30 fps island instead of running at display rate. Letting go leaves them resting (heat pass 4). Exported for tests. */
+export const HUD_HOLD_KEYS=new Set(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright',' ','j','shift']);
+export const HUD_HOLD_SELECTOR='.touch-controls,.joystick,.touch-actions,.travel-actions,.town-scene';// .town-scene: canvas taps/drags (heat pass 4, audit F7)
+export function hudHold(event:Event){if(event.type==='keydown')return HUD_HOLD_KEYS.has(String((event as globalThis.KeyboardEvent).key).toLowerCase());const target=event.target;return target instanceof Element&&!!target.closest(HUD_HOLD_SELECTOR);}
 
 type TimeOfDay='day'|'sunset'|'night';
 type Props={
@@ -41,6 +51,11 @@ function Symbol({kind}:{kind:'settings'|'about'|'close'}){
 export default function IslandSettings({voiceEnabled,onVoiceChange,coachVoice,onCoachVoiceChange,controlsFlipped,onControlsFlippedChange,open,onOpenChange,onOpenMap,onStartLearning,onOpenStore,pathsRequest,onRestartOnboarding,musicEnabled,musicVolume,soundVolume,onMusicVolumeChange,onSoundVolumeChange,onMusicChange,soundMuted,onSoundMutedChange,timeOfDay,onTimeOfDayChange}:Props){
   const storeItem=useRef<string|undefined>(undefined);
   const triggers=useRef<HTMLElement>(null);
+  // The Paths button's loops (and, via globals.css, the field prompt's pulse) rest 6 s after the last input, on a clean frame (phone heat),
+  // and while the child steers or holds a ride button (they wake when it is released).
+  useSceneryRest(triggers,styles.hudRest,hudSettle,hudHold);
+  // Battery saver (heat pass 4): read after mount (localStorage), and follow changes made elsewhere.
+  const [saver,setSaver]=useState(false);useEffect(()=>{setSaver(batterySaverOn());return subscribeHeatTier(()=>setSaver(batterySaverOn()));},[]);
   useEffect(()=>{const sync=()=>{if(triggers.current)triggers.current.dataset.pageHidden=String(document.hidden);};sync();document.addEventListener('visibilitychange',sync);return()=>document.removeEventListener('visibilitychange',sync);},[]);
   const mapAfterClose=useRef(false),learnAfterClose=useRef(false),storeAfterClose=useRef(false),welcomeAfterClose=useRef(false);
   const [backward,setBackward]=useState(false);
@@ -68,9 +83,10 @@ export default function IslandSettings({voiceEnabled,onVoiceChange,coachVoice,on
   },[open]);
   useEffect(()=>()=>{if(restoreFocus.current?.isConnected)restoreFocus.current.focus();},[]);
   const show=(next:'settings'|'about'|'quests'|'balls'|'exploration'|'shortcuts'|'cards')=>{setBackward(false);setTab(next);onOpenChange(true);};
+  const backPage=()=>{if(tab==='settings'||tab==='quests'){onOpenChange(false);return;}setBackward(true);setTab(tab==='about'||tab==='shortcuts'?'settings':'quests');};
   const keyboard=(event:KeyboardEvent<HTMLDialogElement>)=>{
     event.stopPropagation();
-    if(event.key==='Escape'){event.preventDefault();onOpenChange(false);return;}
+    if(event.key==='Escape'){event.preventDefault();backPage();return;}
     if(event.key!=='Tab')return;
     const controls=Array.from(dialog.current?.querySelectorAll<HTMLElement>('button:not(:disabled), [href], input:not(:disabled), select:not(:disabled), [tabindex="0"]')??[]).filter(el=>el.checkVisibility()&&!el.closest('[inert]'));
     if(!controls?.length)return;
@@ -79,19 +95,19 @@ export default function IslandSettings({voiceEnabled,onVoiceChange,coachVoice,on
     else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
   };
   return <>
-    <nav ref={triggers} className={styles.triggers} aria-label="Island information">
+    <nav ref={triggers} className={styles.triggers} data-hud-triggers aria-label="Island information">
       <button type="button" className={styles.circle} aria-label="Settings" aria-haspopup="dialog" aria-expanded={open&&tab==='settings'} onClick={()=>show('settings')}><Symbol kind="settings"/></button>
       <button type="button" className={`${styles.circle} ${styles.questsTrigger}`} data-tour="quests" aria-label={`Paths${pendingPicksLabel(picks)}`} aria-haspopup="dialog" aria-expanded={open&&(tab==='quests'||tab==='balls'||tab==='exploration'||tab==='cards')} onClick={()=>show('quests')}><CardOfferDot/><span className={styles.pathIconCycle} aria-hidden="true">{['bolt','book','play'].map(name=><span key={name} data-path-icon={name}><Icon name={name} size={24}/></span>)}</span></button>
     </nav>
-    <dialog ref={dialog} className={`${styles.dialog} ${styles.fullModal} ${tab==='balls'?styles.ballsModal:tab==='exploration'?styles.exploreModal:''} ${tab==='quests'||tab==='balls'||tab==='exploration'||tab==='cards'?styles.pathsModal:''} ${open?styles.entering:styles.leaving}`} aria-labelledby="island-settings-title" aria-modal="true" onKeyDown={keyboard} onKeyUp={e=>e.stopPropagation()} onCancel={e=>{e.preventDefault();onOpenChange(false);}} onClick={e=>{if(e.target===e.currentTarget)onOpenChange(false);}}>
+    <dialog ref={dialog} className={`${styles.dialog} ${styles.fullModal} ${tab==='balls'?styles.ballsModal:tab==='exploration'?styles.exploreModal:''} ${tab==='quests'||tab==='balls'||tab==='exploration'||tab==='cards'?styles.pathsModal:''} ${open?styles.entering:styles.leaving}`} aria-labelledby="island-settings-title" aria-modal="true" onKeyDown={keyboard} onKeyUp={e=>e.stopPropagation()} onCancel={e=>{e.preventDefault();backPage();}} onClick={e=>{if(e.target===e.currentTarget)onOpenChange(false);}}>
       <section data-paths-host={tab==='quests'||tab==='balls'||tab==='exploration'||tab==='cards'?'true':undefined} className={`${styles.panel} ${shell.shell} ${tab==='quests'||tab==='balls'||tab==='exploration'||tab==='cards'?shell.white:shell.drawer}`}>
-        <header className={`${styles.header} ${shell.header}`}>{tab==='quests'&&<IslandBottleLogo/>}{(tab==='balls'||tab==='exploration'||tab==='cards'||tab==='about'||tab==='shortcuts')&&<BackButton className={styles.headerBack} onBack={()=>{setBackward(true);setTab(tab==='about'||tab==='shortcuts'?'settings':'quests');}}/>}<div><h2 id="island-settings-title" className={tab==='settings'?styles.settingsTitle:undefined}>{tab==='settings'?'Make it your island':tab==='quests'?'Island paths':tab==='balls'?'Ball hunt':tab==='cards'?'Collect cards':tab==='exploration'?'Explore':tab==='shortcuts'?'Keyboard shortcuts':'About us'}</h2></div><DoneButton ref={close} className={`${styles.circle} ${styles.close}`} onDone={()=>onOpenChange(false)}/></header><div ref={body} className={shell.body}>{tab==='about'&&<p className={styles.aboutSubtitle}>A playful island for learning football together.</p>}
+        <header className={`${styles.header} ${shell.header}`}>{tab==='quests'&&<IslandBottleLogo/>}{(tab==='balls'||tab==='exploration'||tab==='cards'||tab==='about'||tab==='shortcuts')&&<BackButton ref={close} className={styles.headerBack} onBack={backPage}/>}<div><h2 id="island-settings-title" className={tab==='settings'?styles.settingsTitle:undefined}>{tab==='settings'?'Make it your island':tab==='quests'?'Island paths':tab==='balls'?'Ball hunt':tab==='cards'?'Collect cards':tab==='exploration'?'Explore':tab==='shortcuts'?'Keyboard shortcuts':'About us'}</h2></div>{/* Sub-pages use Back only; an invisible spacer keeps the title centred. */}{tab==='about'||tab==='shortcuts'||tab==='cards'||tab==='balls'||tab==='exploration'?<span className={`${styles.circle} ${styles.close}`} aria-hidden="true" style={{visibility:'hidden'}}/>:<DoneButton ref={close} className={`${styles.circle} ${styles.close}`} onDone={()=>onOpenChange(false)}/>}</header><div ref={body} className={shell.body}>{tab==='about'&&<p className={styles.aboutSubtitle}>A playful island for learning football together.</p>}
         <div key={tab} className={backward?styles.subpageBack:styles.subpage}>
         {(tab==='quests'||tab==='exploration')?<IslandQuests exploration={tab==='exploration'} onExplore={()=>{setBackward(false);setTab('exploration');}} onDiscover={()=>{setBackward(false);setTab('balls');}} onCards={()=>{setBackward(false);setTab('cards');}} onMap={()=>{mapAfterClose.current=true;onOpenChange(false);}} onStore={onOpenStore?()=>{storeAfterClose.current=true;onOpenChange(false);}:undefined} onLearn={()=>{learnAfterClose.current=true;onOpenChange(false);}}/>:tab==='cards'?<div className={styles.content}><CardCollection/></div>:tab==='balls'?<div className={styles.content}><CoinQuest onStore={()=>{storeItem.current='costume:matchday-fox';storeAfterClose.current=true;onOpenChange(false);}}/></div>:tab==='shortcuts'?<div className={styles.content}><dl id="desktop-keyboard-shortcuts" className={styles.shortcutList}>{[['WASD / ↑ ↓ ← →','Move'],['Space','Kick · hold for a stronger, higher shot'],['J','Juggle / stop juggling'],['R','Change ride'],['E','Talk to a nearby island character'],['M','Open / close map'],['Space / J','Use your ride’s two actions'],['Space / J in a truck','Speed up / honk'],['Esc','Close the map or current panel']].map(([key,action])=><div key={key}><dt><kbd>{key}</kbd></dt><dd>{action}</dd></div>)}</dl></div>:tab==='settings'?<div className={`${styles.content} ${styles.settingsJourney}`}>
           <p className={styles.settingsEyebrow}>YOUR ISLAND, YOUR WAY</p>
           <div className={styles.settingsEntries}><button className={`${styles.mapButton} ${styles.secondaryButton}`} onClick={()=>{setBackward(false);setTab('about');}}><span className={styles.entryCopy}><strong>About us</strong><small>Why we built Futbol Island.</small></span><span aria-hidden="true"><Icon name="arrow"/></span></button>
           <button type="button" className={`${styles.mapButton} ${styles.secondaryButton}`} onClick={()=>{mapAfterClose.current=true;onOpenChange(false);}}>Open full map <span aria-hidden="true"><Icon name="external"/></span></button>
-          {onRestartOnboarding&&<div className={styles.walkthrough}><button type="button" className={`${styles.mapButton} ${styles.secondaryButton}`} onClick={()=>{welcomeAfterClose.current=true;onOpenChange(false);}}>See Walkthrough <span aria-hidden="true"><Icon name="arrow"/></span></button></div>}
+          {onRestartOnboarding&&<div className={styles.walkthrough}><button type="button" className={`${styles.mapButton} ${styles.secondaryButton}`} onClick={()=>{welcomeAfterClose.current=true;onOpenChange(false);}}>See walkthrough <span aria-hidden="true"><Icon name="arrow"/></span></button></div>}
           <div className={styles.desktopShortcuts}><button type="button" className={`${styles.mapButton} ${styles.secondaryButton}`} onClick={()=>{setBackward(false);setTab('shortcuts');}}>Keyboard shortcuts <Icon name="arrow"/></button></div>
           </div><section className={styles.preferenceCard}><h3>Time of day</h3><p className={styles.copy}>Choose the light for your next lap.</p>
           <div className={styles.times} role="group" aria-label="Time of day">{(['day','sunset','night'] as const).map(time=><button type="button" key={time} aria-pressed={timeOfDay===time} onClick={()=>onTimeOfDayChange(time)}><span aria-hidden="true"><Icon name={time==='day'?'sun':time==='sunset'?'sunset':'moon'} size={24}/></span>{time[0].toUpperCase()+time.slice(1)}</button>)}</div>
@@ -103,7 +119,7 @@ export default function IslandSettings({voiceEnabled,onVoiceChange,coachVoice,on
           </section><section className={styles.preferenceCard}><h3>Lesson narration</h3>
           <button type="button" className={styles.toggle} aria-label="Lesson voice" aria-pressed={voiceEnabled} onClick={()=>onVoiceChange(!voiceEnabled)}><span><strong>Lesson voice</strong><small>Hear your coach explain each play.</small></span><span className={styles.switch} aria-hidden="true">{voiceEnabled?'On':'Off'}</span></button>
           <label className={styles.voiceSelect}>Coach voice<select aria-label="Coach voice" value={coachVoice} onChange={e=>onCoachVoiceChange(e.target.value)}>{COACH_VOICES.map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></label>
-          </section><section className={`${styles.mobileControls} ${styles.preferenceCard}`} aria-label="Mobile controls"><h3>Mobile controls</h3><button type="button" className={styles.toggle} aria-label="Flip controls" aria-pressed={controlsFlipped} onClick={()=>onControlsFlippedChange(!controlsFlipped)}><span><strong>Flip controls</strong><small>{controlsFlipped?'Move on the right. Map and actions on the left.':'Move on the left. Map and actions on the right.'}</small></span><span className={styles.switch} aria-hidden="true">{controlsFlipped?'On':'Off'}</span></button></section>
+          </section><section className={`${styles.mobileControls} ${styles.preferenceCard}`} aria-label="Mobile controls"><h3>Mobile controls</h3><button type="button" className={styles.toggle} aria-label="Flip controls" aria-pressed={controlsFlipped} onClick={()=>onControlsFlippedChange(!controlsFlipped)}><span><strong>Flip controls</strong><small>{controlsFlipped?'Move on the right. Map and actions on the left.':'Move on the left. Map and actions on the right.'}</small></span><span className={styles.switch} aria-hidden="true">{controlsFlipped?'On':'Off'}</span></button></section><section className={styles.preferenceCard} aria-label="Battery"><h3>Battery</h3><button type="button" className={styles.toggle} aria-label="Battery saver" aria-pressed={saver} data-battery-saver onClick={()=>setBatterySaver(!saver)}><span><strong>Battery saver</strong><small>Keeps your device cooler with slightly softer graphics, a gentler frame rate and calm water.</small></span><span className={styles.switch} aria-hidden="true">{saver?'On':'Off'}</span></button></section>
 
           
         </div>:<div className={`${styles.content} ${styles.about}`}>

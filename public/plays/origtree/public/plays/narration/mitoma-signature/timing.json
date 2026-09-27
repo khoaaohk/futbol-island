@@ -1,0 +1,362 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Past three",
+   "text": "A sunny day at Molineux. Mitoma picks up the ball and runs at the defence. Past one, past two, past three! He opens his body and scores!",
+   "src": "/plays/narration/mitoma-signature/1.m4a",
+   "seconds": 10.5,
+   "words": [
+    {
+     "w": "A",
+     "at": 0.375
+    },
+    {
+     "w": "sunny",
+     "at": 0.463
+    },
+    {
+     "w": "day",
+     "at": 0.825
+    },
+    {
+     "w": "at",
+     "at": 1.075
+    },
+    {
+     "w": "Molineux",
+     "at": 1.175
+    },
+    {
+     "w": "Mitoma",
+     "at": 2.163
+    },
+    {
+     "w": "picks",
+     "at": 2.7
+    },
+    {
+     "w": "up",
+     "at": 2.913
+    },
+    {
+     "w": "the",
+     "at": 3.013
+    },
+    {
+     "w": "ball",
+     "at": 3.1
+    },
+    {
+     "w": "and",
+     "at": 3.425
+    },
+    {
+     "w": "runs",
+     "at": 3.55
+    },
+    {
+     "w": "at",
+     "at": 3.837
+    },
+    {
+     "w": "the",
+     "at": 3.913
+    },
+    {
+     "w": "defence",
+     "at": 4.0
+    },
+    {
+     "w": "Past",
+     "at": 5.013
+    },
+    {
+     "w": "one",
+     "at": 5.388
+    },
+    {
+     "w": "past",
+     "at": 5.9
+    },
+    {
+     "w": "two",
+     "at": 6.287
+    },
+    {
+     "w": "past",
+     "at": 6.675
+    },
+    {
+     "w": "three",
+     "at": 7.062
+    },
+    {
+     "w": "He",
+     "at": 7.775
+    },
+    {
+     "w": "opens",
+     "at": 7.938
+    },
+    {
+     "w": "his",
+     "at": 8.287
+    },
+    {
+     "w": "body",
+     "at": 8.45
+    },
+    {
+     "w": "and",
+     "at": 8.787
+    },
+    {
+     "w": "scores",
+     "at": 8.912
+    }
+   ]
+  },
+  {
+   "label": "Glued to his feet",
+   "text": "Watch again, slowly. Small touches keep the ball glued to his feet.",
+   "src": "/plays/narration/mitoma-signature/2.m4a",
+   "seconds": 5.4,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.662
+    },
+    {
+     "w": "slowly",
+     "at": 1.212
+    },
+    {
+     "w": "Small",
+     "at": 2.2
+    },
+    {
+     "w": "touches",
+     "at": 2.5
+    },
+    {
+     "w": "keep",
+     "at": 2.925
+    },
+    {
+     "w": "the",
+     "at": 3.087
+    },
+    {
+     "w": "ball",
+     "at": 3.175
+    },
+    {
+     "w": "glued",
+     "at": 3.487
+    },
+    {
+     "w": "to",
+     "at": 3.85
+    },
+    {
+     "w": "his",
+     "at": 3.938
+    },
+    {
+     "w": "feet",
+     "at": 4.1
+    }
+   ]
+  },
+  {
+   "label": "Goal of the Month",
+   "text": "Brighton won four to one. Later, it was named Goal of the Month!",
+   "src": "/plays/narration/mitoma-signature/3.m4a",
+   "seconds": 4.9,
+   "words": [
+    {
+     "w": "Brighton",
+     "at": 0.375
+    },
+    {
+     "w": "won",
+     "at": 0.75
+    },
+    {
+     "w": "four",
+     "at": 0.988
+    },
+    {
+     "w": "to",
+     "at": 1.225
+    },
+    {
+     "w": "one",
+     "at": 1.35
+    },
+    {
+     "w": "Later",
+     "at": 2.125
+    },
+    {
+     "w": "it",
+     "at": 2.562
+    },
+    {
+     "w": "was",
+     "at": 2.638
+    },
+    {
+     "w": "named",
+     "at": 2.75
+    },
+    {
+     "w": "Goal",
+     "at": 3.038
+    },
+    {
+     "w": "of",
+     "at": 3.362
+    },
+    {
+     "w": "the",
+     "at": 3.438
+    },
+    {
+     "w": "Month",
+     "at": 3.525
+    }
+   ]
+  },
+  {
+   "label": "How he does it",
+   "text": "How does he do it? Mitoma wrote a university project on dribbling. Feet can trick you. Watch the defender's hips, not their feet, to know when to go past!",
+   "src": "/plays/narration/mitoma-signature/4.m4a",
+   "seconds": 10.6,
+   "words": [
+    {
+     "w": "How",
+     "at": 0.375
+    },
+    {
+     "w": "does",
+     "at": 0.487
+    },
+    {
+     "w": "he",
+     "at": 0.613
+    },
+    {
+     "w": "do",
+     "at": 0.738
+    },
+    {
+     "w": "it",
+     "at": 0.938
+    },
+    {
+     "w": "Mitoma",
+     "at": 1.488
+    },
+    {
+     "w": "wrote",
+     "at": 2.05
+    },
+    {
+     "w": "a",
+     "at": 2.263
+    },
+    {
+     "w": "university",
+     "at": 2.362
+    },
+    {
+     "w": "project",
+     "at": 3.1
+    },
+    {
+     "w": "on",
+     "at": 3.587
+    },
+    {
+     "w": "dribbling",
+     "at": 3.775
+    },
+    {
+     "w": "Feet",
+     "at": 4.812
+    },
+    {
+     "w": "can",
+     "at": 5.1
+    },
+    {
+     "w": "trick",
+     "at": 5.275
+    },
+    {
+     "w": "you",
+     "at": 5.537
+    },
+    {
+     "w": "Watch",
+     "at": 6.188
+    },
+    {
+     "w": "the",
+     "at": 6.525
+    },
+    {
+     "w": "defender's",
+     "at": 6.625
+    },
+    {
+     "w": "hips",
+     "at": 7.2
+    },
+    {
+     "w": "not",
+     "at": 7.6
+    },
+    {
+     "w": "their",
+     "at": 7.812
+    },
+    {
+     "w": "feet",
+     "at": 8.0
+    },
+    {
+     "w": "to",
+     "at": 8.45
+    },
+    {
+     "w": "know",
+     "at": 8.575
+    },
+    {
+     "w": "when",
+     "at": 8.762
+    },
+    {
+     "w": "to",
+     "at": 8.887
+    },
+    {
+     "w": "go",
+     "at": 8.963
+    },
+    {
+     "w": "past",
+     "at": 9.137
+    }
+   ]
+  }
+ ]
+}

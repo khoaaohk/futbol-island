@@ -1,0 +1,378 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: the 2021 final",
+   "text": "The 2021 Futsal Champions League final. Barcelona lead Sporting two nil. Then Tom\u00e1s Pa\u00e7\u00f3, just twenty, plays it across. Zicky T\u00e9 controls it and rolls it in. Two one!",
+   "src": "/plays/narration/tomas-paco-futsal-signature/1.m4a",
+   "seconds": 13.5,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "2021",
+     "at": 0.425
+    },
+    {
+     "w": "Futsal",
+     "at": 1.337
+    },
+    {
+     "w": "Champions",
+     "at": 1.788
+    },
+    {
+     "w": "League",
+     "at": 2.4
+    },
+    {
+     "w": "final",
+     "at": 2.625
+    },
+    {
+     "w": "Barcelona",
+     "at": 3.487
+    },
+    {
+     "w": "lead",
+     "at": 4.125
+    },
+    {
+     "w": "Sporting",
+     "at": 4.412
+    },
+    {
+     "w": "two",
+     "at": 4.888
+    },
+    {
+     "w": "nil",
+     "at": 5.125
+    },
+    {
+     "w": "Then",
+     "at": 5.862
+    },
+    {
+     "w": "Tom\u00e1s",
+     "at": 6.1
+    },
+    {
+     "w": "Pa\u00e7\u00f3",
+     "at": 6.525
+    },
+    {
+     "w": "just",
+     "at": 7.075
+    },
+    {
+     "w": "twenty",
+     "at": 7.287
+    },
+    {
+     "w": "plays",
+     "at": 7.875
+    },
+    {
+     "w": "it",
+     "at": 8.162
+    },
+    {
+     "w": "across",
+     "at": 8.238
+    },
+    {
+     "w": "Zicky",
+     "at": 9.287
+    },
+    {
+     "w": "T\u00e9",
+     "at": 9.675
+    },
+    {
+     "w": "controls",
+     "at": 9.95
+    },
+    {
+     "w": "it",
+     "at": 10.475
+    },
+    {
+     "w": "and",
+     "at": 10.6
+    },
+    {
+     "w": "rolls",
+     "at": 10.725
+    },
+    {
+     "w": "it",
+     "at": 11.062
+    },
+    {
+     "w": "in",
+     "at": 11.15
+    },
+    {
+     "w": "Two",
+     "at": 11.875
+    },
+    {
+     "w": "one",
+     "at": 12.162
+    }
+   ]
+  },
+  {
+   "label": "Replay: the calm pass",
+   "text": "Watch again, slowly. Tom\u00e1s takes his time. He finds Zicky, who is free, and passes it across. Zicky controls it, and scores. A calm pass!",
+   "src": "/plays/narration/tomas-paco-futsal-signature/2.m4a",
+   "seconds": 10.5,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.087
+    },
+    {
+     "w": "Tom\u00e1s",
+     "at": 1.988
+    },
+    {
+     "w": "takes",
+     "at": 2.425
+    },
+    {
+     "w": "his",
+     "at": 2.663
+    },
+    {
+     "w": "time",
+     "at": 2.825
+    },
+    {
+     "w": "He",
+     "at": 3.625
+    },
+    {
+     "w": "finds",
+     "at": 3.75
+    },
+    {
+     "w": "Zicky",
+     "at": 4.05
+    },
+    {
+     "w": "who",
+     "at": 4.425
+    },
+    {
+     "w": "is",
+     "at": 4.575
+    },
+    {
+     "w": "free",
+     "at": 4.737
+    },
+    {
+     "w": "and",
+     "at": 5.088
+    },
+    {
+     "w": "passes",
+     "at": 5.2
+    },
+    {
+     "w": "it",
+     "at": 5.612
+    },
+    {
+     "w": "across",
+     "at": 5.688
+    },
+    {
+     "w": "Zicky",
+     "at": 6.725
+    },
+    {
+     "w": "controls",
+     "at": 7.1
+    },
+    {
+     "w": "it",
+     "at": 7.625
+    },
+    {
+     "w": "and",
+     "at": 7.763
+    },
+    {
+     "w": "scores",
+     "at": 7.9
+    },
+    {
+     "w": "A",
+     "at": 8.738
+    },
+    {
+     "w": "calm",
+     "at": 8.85
+    },
+    {
+     "w": "pass",
+     "at": 9.15
+    }
+   ]
+  },
+  {
+   "label": "Full time",
+   "text": "Sporting keep attacking. From two nil down, they win four three. Champions of Europe!",
+   "src": "/plays/narration/tomas-paco-futsal-signature/3.m4a",
+   "seconds": 6.4,
+   "words": [
+    {
+     "w": "Sporting",
+     "at": 0.375
+    },
+    {
+     "w": "keep",
+     "at": 0.825
+    },
+    {
+     "w": "attacking",
+     "at": 1.038
+    },
+    {
+     "w": "From",
+     "at": 2.05
+    },
+    {
+     "w": "two",
+     "at": 2.263
+    },
+    {
+     "w": "nil",
+     "at": 2.475
+    },
+    {
+     "w": "down",
+     "at": 2.7
+    },
+    {
+     "w": "they",
+     "at": 3.05
+    },
+    {
+     "w": "win",
+     "at": 3.2
+    },
+    {
+     "w": "four",
+     "at": 3.438
+    },
+    {
+     "w": "three",
+     "at": 3.688
+    },
+    {
+     "w": "Champions",
+     "at": 4.362
+    },
+    {
+     "w": "of",
+     "at": 4.963
+    },
+    {
+     "w": "Europe",
+     "at": 5.05
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn. Stay calm on the ball. Look up, and pass to the teammate who is free!",
+   "src": "/plays/narration/tomas-paco-futsal-signature/4.m4a",
+   "seconds": 5.8,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.512
+    },
+    {
+     "w": "Stay",
+     "at": 1.35
+    },
+    {
+     "w": "calm",
+     "at": 1.65
+    },
+    {
+     "w": "on",
+     "at": 1.887
+    },
+    {
+     "w": "the",
+     "at": 1.988
+    },
+    {
+     "w": "ball",
+     "at": 2.075
+    },
+    {
+     "w": "Look",
+     "at": 2.612
+    },
+    {
+     "w": "up",
+     "at": 2.788
+    },
+    {
+     "w": "and",
+     "at": 3.062
+    },
+    {
+     "w": "pass",
+     "at": 3.175
+    },
+    {
+     "w": "to",
+     "at": 3.475
+    },
+    {
+     "w": "the",
+     "at": 3.562
+    },
+    {
+     "w": "teammate",
+     "at": 3.663
+    },
+    {
+     "w": "who",
+     "at": 4.162
+    },
+    {
+     "w": "is",
+     "at": 4.275
+    },
+    {
+     "w": "free",
+     "at": 4.438
+    }
+   ]
+  }
+ ]
+}

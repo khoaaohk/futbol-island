@@ -1,0 +1,370 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Old Trafford, 2008. Manchester United against Barcelona, Champions League semi-final. Ronaldo is tackled... the clearance drops to Paul Scholes. First time... goal!",
+   "src": "/plays/narration/scholes-barcelona-2008/1.m4a",
+   "seconds": 13.2,
+   "words": [
+    {
+     "w": "Old",
+     "at": 0.375
+    },
+    {
+     "w": "Trafford",
+     "at": 0.625
+    },
+    {
+     "w": "2008",
+     "at": 1.1
+    },
+    {
+     "w": "Manchester",
+     "at": 2.362
+    },
+    {
+     "w": "United",
+     "at": 2.975
+    },
+    {
+     "w": "against",
+     "at": 3.388
+    },
+    {
+     "w": "Barcelona",
+     "at": 3.75
+    },
+    {
+     "w": "Champions",
+     "at": 4.612
+    },
+    {
+     "w": "League",
+     "at": 5.263
+    },
+    {
+     "w": "semi-final",
+     "at": 5.562
+    },
+    {
+     "w": "Ronaldo",
+     "at": 6.612
+    },
+    {
+     "w": "is",
+     "at": 7.225
+    },
+    {
+     "w": "tackled",
+     "at": 7.388
+    },
+    {
+     "w": "the",
+     "at": 8.4
+    },
+    {
+     "w": "clearance",
+     "at": 8.5
+    },
+    {
+     "w": "drops",
+     "at": 8.975
+    },
+    {
+     "w": "to",
+     "at": 9.325
+    },
+    {
+     "w": "Paul",
+     "at": 9.425
+    },
+    {
+     "w": "Scholes",
+     "at": 9.738
+    },
+    {
+     "w": "First",
+     "at": 10.562
+    },
+    {
+     "w": "time",
+     "at": 10.875
+    },
+    {
+     "w": "goal",
+     "at": 11.838
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. No touch to stop it. Eyes on the ball, head still, body over it, and he strikes it with his laces.",
+   "src": "/plays/narration/scholes-barcelona-2008/2.m4a",
+   "seconds": 8.6,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.113
+    },
+    {
+     "w": "No",
+     "at": 2.062
+    },
+    {
+     "w": "touch",
+     "at": 2.25
+    },
+    {
+     "w": "to",
+     "at": 2.525
+    },
+    {
+     "w": "stop",
+     "at": 2.65
+    },
+    {
+     "w": "it",
+     "at": 3.0
+    },
+    {
+     "w": "Eyes",
+     "at": 3.587
+    },
+    {
+     "w": "on",
+     "at": 3.837
+    },
+    {
+     "w": "the",
+     "at": 3.938
+    },
+    {
+     "w": "ball",
+     "at": 4.025
+    },
+    {
+     "w": "head",
+     "at": 4.475
+    },
+    {
+     "w": "still",
+     "at": 4.713
+    },
+    {
+     "w": "body",
+     "at": 5.15
+    },
+    {
+     "w": "over",
+     "at": 5.5
+    },
+    {
+     "w": "it",
+     "at": 5.825
+    },
+    {
+     "w": "and",
+     "at": 6.075
+    },
+    {
+     "w": "he",
+     "at": 6.188
+    },
+    {
+     "w": "strikes",
+     "at": 6.312
+    },
+    {
+     "w": "it",
+     "at": 6.688
+    },
+    {
+     "w": "with",
+     "at": 6.763
+    },
+    {
+     "w": "his",
+     "at": 6.862
+    },
+    {
+     "w": "laces",
+     "at": 7.025
+    }
+   ]
+  },
+  {
+   "label": "Top corner",
+   "text": "Twenty-five yards, rising, past Victor Vald\u00e9s into the top corner! One-nil: United are going to the final.",
+   "src": "/plays/narration/scholes-barcelona-2008/3.m4a",
+   "seconds": 8.2,
+   "words": [
+    {
+     "w": "Twenty-five",
+     "at": 0.35
+    },
+    {
+     "w": "yards",
+     "at": 0.875
+    },
+    {
+     "w": "rising",
+     "at": 1.4
+    },
+    {
+     "w": "past",
+     "at": 2.15
+    },
+    {
+     "w": "Victor",
+     "at": 2.5
+    },
+    {
+     "w": "Vald\u00e9s",
+     "at": 2.825
+    },
+    {
+     "w": "into",
+     "at": 3.337
+    },
+    {
+     "w": "the",
+     "at": 3.513
+    },
+    {
+     "w": "top",
+     "at": 3.6
+    },
+    {
+     "w": "corner",
+     "at": 3.875
+    },
+    {
+     "w": "One-nil",
+     "at": 4.838
+    },
+    {
+     "w": "United",
+     "at": 5.763
+    },
+    {
+     "w": "are",
+     "at": 6.237
+    },
+    {
+     "w": "going",
+     "at": 6.325
+    },
+    {
+     "w": "to",
+     "at": 6.6
+    },
+    {
+     "w": "the",
+     "at": 6.688
+    },
+    {
+     "w": "final",
+     "at": 6.787
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: when a clearance drops to you, don't take a touch. Body over the ball, strike it first time.",
+   "src": "/plays/narration/scholes-barcelona-2008/4.m4a",
+   "seconds": 6.8,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.512
+    },
+    {
+     "w": "when",
+     "at": 1.15
+    },
+    {
+     "w": "a",
+     "at": 1.288
+    },
+    {
+     "w": "clearance",
+     "at": 1.35
+    },
+    {
+     "w": "drops",
+     "at": 1.775
+    },
+    {
+     "w": "to",
+     "at": 2.125
+    },
+    {
+     "w": "you",
+     "at": 2.225
+    },
+    {
+     "w": "don't",
+     "at": 2.425
+    },
+    {
+     "w": "take",
+     "at": 2.625
+    },
+    {
+     "w": "a",
+     "at": 2.812
+    },
+    {
+     "w": "touch",
+     "at": 2.888
+    },
+    {
+     "w": "Body",
+     "at": 3.763
+    },
+    {
+     "w": "over",
+     "at": 4.088
+    },
+    {
+     "w": "the",
+     "at": 4.287
+    },
+    {
+     "w": "ball",
+     "at": 4.375
+    },
+    {
+     "w": "strike",
+     "at": 4.787
+    },
+    {
+     "w": "it",
+     "at": 5.088
+    },
+    {
+     "w": "first",
+     "at": 5.175
+    },
+    {
+     "w": "time",
+     "at": 5.45
+    }
+   ]
+  }
+ ]
+}

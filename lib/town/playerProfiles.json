@@ -1992,7 +1992,7 @@
     ]
   },
   "João Victor": {
-    "blurb": "Brazilian fixo, also known as Neguinho, who won the 2024 Futsal World Cup and Copa América with Brazil and is known for his powerful shot.",
+    "blurb": "Brazilian fixo, also known as Neguinho, who won Youth Olympic gold in 2018 and the 2024 Futsal World Cup and Copa América with Brazil, known for his powerful shot.",
     "strengths": [
       "Power shots from the back",
       "Solid 1v1 defending",
@@ -2821,6 +2821,382 @@
       "Overlapping runs",
       "Accurate crosses",
       "Tireless on the flank"
+    ]
+  },
+  "Ivan Rakitić": {
+    "blurb": "Croatian midfielder who scored in the 2015 Champions League final for Barcelona and helped Croatia reach the 2018 World Cup final.",
+    "strengths": [
+      "Tireless box-to-box running",
+      "Accurate passing",
+      "Powerful long shots"
+    ]
+  },
+  "Raphaël Varane": {
+    "blurb": "French centre-back who won four Champions Leagues with Real Madrid and played every minute of France's 2018 World Cup win.",
+    "strengths": [
+      "Lightning recovery speed",
+      "Calm reading of the game",
+      "Strong in the air"
+    ]
+  },
+  "Anthony Gordon": {
+    "blurb": "England winger known for his speed, who scored four goals in one Champions League night for Newcastle before joining Barcelona in 2026.",
+    "strengths": [
+      "Explosive pace",
+      "Runs in behind",
+      "Presses from the front"
+    ]
+  },
+  "Juan Román Riquelme": {
+    "blurb": "Argentine playmaker who won three Copa Libertadores with Boca Juniors and captained Argentina to Olympic gold in 2008.",
+    "strengths": [
+      "Slows the game to his pace",
+      "Clever, hidden passes",
+      "Free-kick skill"
+    ]
+  },
+  "Jay-Jay Okocha": {
+    "blurb": "Nigerian playmaker famous for his tricks and stepovers, so skilful that fans sang he was so good they named him twice.",
+    "strengths": [
+      "Magic stepovers",
+      "Close ball control",
+      "Creative flicks and feints"
+    ]
+  },
+  "Endrick": {
+    "blurb": "Brazilian striker who scored for Brazil at Wembley aged 17 and joined Real Madrid in 2024.",
+    "strengths": [
+      "Powerful left-foot shot",
+      "Strong and quick",
+      "Never stops pressing"
+    ]
+  },
+  "Karim Adeyemi": {
+    "blurb": "Germany forward known for his speed, who scored a Champions League hat-trick for Borussia Dortmund before joining Barcelona in 2026.",
+    "strengths": [
+      "Blistering speed",
+      "Runs in behind",
+      "Direct attacking"
+    ]
+  },
+  "Pepe": {
+    "blurb": "Tough Portugal centre-back who won three Champions Leagues with Real Madrid and was player of the match in the Euro 2016 final.",
+    "strengths": [
+      "Fierce tackling",
+      "Wins headers",
+      "Never gives up"
+    ]
+  },
+  "Elliot Anderson": {
+    "blurb": "England midfielder who starred for Nottingham Forest and joined Manchester City in 2026.",
+    "strengths": [
+      "Carries the ball forward",
+      "Wins the ball back",
+      "Smart passing"
+    ]
+  },
+  "Park Ji-sung": {
+    "blurb": "South Korean midfielder nicknamed \"Three-Lung\" Park for his endless running, and the first Asian player to win the Champions League.",
+    "strengths": [
+      "Endless stamina",
+      "Clever runs off the ball",
+      "Works hard for the team"
+    ]
+  },
+  "Sandro Tonali": {
+    "blurb": "Italian midfielder often compared to Andrea Pirlo, who won Serie A with AC Milan and joined Tottenham in 2026.",
+    "strengths": [
+      "Long passing with both feet",
+      "Tough tackling",
+      "Drives the team forward"
+    ]
+  },
+  "Gareth Bale": {
+    "blurb": "Wales' record goalscorer and a five-time Champions League winner with Real Madrid, famous for his overhead kick in the 2018 final.",
+    "strengths": [
+      "Explosive speed",
+      "Powerful left foot",
+      "Big-game goals"
+    ]
+  },
+  "Ángel Di María": {
+    "blurb": "Argentine winger who scored in the 2022 World Cup final and won the 2021 Copa América final with a chip over the keeper.",
+    "strengths": [
+      "Magic left foot",
+      "Dribbling at speed",
+      "Great assists"
+    ]
+  },
+  "Mesut Özil": {
+    "blurb": "German playmaker and 2014 World Cup winner, famous for his assists at Real Madrid and Arsenal.",
+    "strengths": [
+      "Sees passes others miss",
+      "Silky first touch",
+      "Assist master"
+    ]
+  },
+  "Jordi Alba": {
+    "blurb": "Speedy Spanish left-back who scored in the Euro 2012 final and won the Champions League with Barcelona.",
+    "strengths": [
+      "Lightning overlaps",
+      "Cut-backs to teammates",
+      "Never stops running"
+    ]
+  },
+  "Javier Mascherano": {
+    "blurb": "Argentina's tough leader in midfield and defence, who won two Champions Leagues with Barcelona and two Olympic golds.",
+    "strengths": [
+      "Perfectly timed tackles",
+      "Reads danger early",
+      "Leads by example"
+    ]
+  },
+  "Carlos Tevez": {
+    "blurb": "Hard-working Argentine forward who won the Champions League with Manchester United and the Premier League with both Manchester clubs.",
+    "strengths": [
+      "Never-stop energy",
+      "Low, strong dribbling",
+      "Shoots from anywhere"
+    ]
+  },
+  "Sergio Agüero": {
+    "blurb": "Argentine striker and Manchester City's all-time top scorer, whose last-minute goal in 2012 won the Premier League.",
+    "strengths": [
+      "Deadly finishing",
+      "Quick turns in the box",
+      "Goals in big moments"
+    ]
+  },
+  "Mario Balotelli": {
+    "blurb": "Italian striker who scored twice against Germany to send Italy to the Euro 2012 final, and set up Manchester City’s famous 2012 title winner.",
+    "strengths": [
+      "Powerful shooting",
+      "Calm penalties",
+      "Strong hold-up play"
+    ]
+  },
+  "Rodrigo De Paul": {
+    "blurb": "Argentine midfielder who won the 2022 World Cup and two Copa Américas, set up Di María’s winner in the 2021 Copa final, and scored in Inter Miami’s 2025 MLS Cup win.",
+    "strengths": [
+      "Never-stop running",
+      "Long, accurate passes",
+      "Protecting his teammates"
+    ]
+  },
+  "Vincent Kompany": {
+    "blurb": "Belgian centre-back who captained Manchester City to four Premier League titles, including a famous long-range winner against Leicester in 2019.",
+    "strengths": [
+      "Strong in the air",
+      "Leading his team",
+      "Brave, well-timed tackles"
+    ]
+  },
+  "Vozinha": {
+    "blurb": "Cape Verde goalkeeper who helped his country reach its first World Cup in 2026, then made seven saves to hold Spain to a 0-0 draw.",
+    "strengths": [
+      "Quick reflex saves",
+      "Calm under pressure",
+      "Organising his defence"
+    ]
+  },
+  "Jonathan David": {
+    "blurb": "Canada’s record men’s goalscorer, a Ligue 1 champion with Lille, who scored his country’s first World Cup hat-trick against Qatar in 2026.",
+    "strengths": [
+      "Clever runs in behind",
+      "Calm finishing with both feet",
+      "Pressing defenders"
+    ]
+  },
+  "Brahim Díaz": {
+    "blurb": "Real Madrid and Morocco playmaker who won the Champions League in 2024, Serie A with Milan, and the Golden Boot at the 2025 Africa Cup of Nations.",
+    "strengths": [
+      "Slaloming dribbles",
+      "Quick feet in tight spaces",
+      "Uses both feet"
+    ]
+  },
+  "Leonardo Bonucci": {
+    "blurb": "Italian centre-back who won eight Serie A titles with Juventus and scored the equaliser as Italy won the Euro 2020 final at Wembley.",
+    "strengths": [
+      "Long passes from the back",
+      "Reading the game",
+      "Staying calm in big games"
+    ]
+  },
+  "Cesc Fàbregas": {
+    "blurb": "Spanish playmaker who won the 2010 World Cup, setting up Iniesta’s winner in the final, plus two Euros, and two Premier League titles with Chelsea.",
+    "strengths": [
+      "Killer through balls",
+      "Seeing passes early",
+      "Arriving late in the box"
+    ]
+  },
+  "Edinson Cavani": {
+    "blurb": "Uruguayan striker who won the 2011 Copa América, became the first player to score 200 goals for Paris Saint-Germain, and scored twice to knock Portugal out of the 2018 World Cup.",
+    "strengths": [
+      "Brave headers",
+      "Never stops pressing",
+      "First-time finishing"
+    ]
+  },
+  "Eric Cantona": {
+    "blurb": "French forward nicknamed \"King Eric\" who won four Premier League titles and two FA Cups with Manchester United, famous for his turned-up collar and cool chips.",
+    "strengths": [
+      "Clever chips and volleys",
+      "Creative passing to teammates",
+      "Calm leader in big games"
+    ]
+  },
+  "Thomas Müller": {
+    "blurb": "German forward who won the 2014 World Cup and a record 13 Bundesliga titles at Bayern Munich, famous for finding space that nobody else sees.",
+    "strengths": [
+      "Finds space in the box",
+      "Clever first-time finishes",
+      "Unselfish assists"
+    ]
+  },
+  "Olivier Giroud": {
+    "blurb": "Tall French striker who won the 2018 World Cup and became France's all-time top scorer, famous for his headers and a Puskás Award scorpion kick.",
+    "strengths": [
+      "Powerful headers",
+      "Holds the ball up for teammates",
+      "Left-footed first-time finishes"
+    ]
+  },
+  "Keylor Navas": {
+    "blurb": "Costa Rican goalkeeper who won three Champions Leagues in a row with Real Madrid and led Costa Rica to their first World Cup quarter-final in 2014.",
+    "strengths": [
+      "Lightning reflexes",
+      "Brave one-on-one saves",
+      "Penalty shootout hero"
+    ]
+  },
+  "Lúcio": {
+    "blurb": "Brazilian centre-back who won the 2002 World Cup and the 2010 treble with Inter Milan, famous for charging forward with the ball from defence.",
+    "strengths": [
+      "Strong tackling",
+      "Powerful runs out of defence",
+      "Great in the air"
+    ]
+  },
+  "Kyle Walker": {
+    "blurb": "English right-back known as one of the fastest defenders in the world, who won six Premier League titles and the 2023 treble with Manchester City.",
+    "strengths": [
+      "Blistering recovery speed",
+      "Strong one-on-one defending",
+      "Overlapping runs down the right"
+    ]
+  },
+  "İlkay Gündoğan": {
+    "blurb": "German midfielder who captained Manchester City to the 2023 treble and scored the fastest goal in FA Cup final history, just 12 seconds in.",
+    "strengths": [
+      "Smart late runs into the box",
+      "Calm, accurate passing",
+      "Clean first-time finishes"
+    ]
+  },
+  "Nico O'Reilly": {
+    "blurb": "Young English left-back from Manchester City's academy who headed both goals in the 2026 League Cup final and played for England at the 2026 World Cup.",
+    "strengths": [
+      "Left-footed passing and crossing",
+      "Late runs into the box",
+      "Strong heading for a full-back"
+    ]
+  },
+  "Ronald Koeman": {
+    "blurb": "Dutch defender famous for his free kicks, who scored the winner for Barcelona in the 1992 European Cup final and won Euro 1988.",
+    "strengths": [
+      "Thunderous free kicks",
+      "Long passes from the back",
+      "Cool penalties"
+    ]
+  },
+  "Ricardo Quaresma": {
+    "blurb": "Portuguese winger famous for his rabonas and his trivela, a curling shot with the outside of the foot, who won Euro 2016.",
+    "strengths": [
+      "Outside-of-the-foot shots",
+      "Rabona tricks",
+      "Tricky one-on-one dribbling"
+    ]
+  },
+  "Bastian Schweinsteiger": {
+    "blurb": "German midfielder who won the 2014 World Cup, playing on through knocks in the final, and the Champions League with Bayern Munich.",
+    "strengths": [
+      "Never gives up",
+      "Wins the ball back",
+      "Controls the tempo"
+    ]
+  },
+  "Wesley Sneijder": {
+    "blurb": "Dutch playmaker who won the treble with Inter Milan in 2010, reached that year's World Cup final and is the Netherlands' most-capped player.",
+    "strengths": [
+      "Two-footed passing",
+      "Long-range shots",
+      "Set-piece skill"
+    ]
+  },
+  "Ruud Gullit": {
+    "blurb": "Dutch star with famous dreadlocks who won the 1987 Ballon d’Or, captained the Netherlands to Euro 1988 and won two European Cups with AC Milan.",
+    "strengths": [
+      "Plays in any position",
+      "Strong and fast",
+      "Powerful headers"
+    ]
+  },
+  "Ian Rush": {
+    "blurb": "Welsh striker and Liverpool's all-time top scorer, who won five league titles, three FA Cups and two European Cups.",
+    "strengths": [
+      "Clinical finishing",
+      "Quick runs behind",
+      "Presses defenders"
+    ]
+  },
+  "Peter Crouch": {
+    "blurb": "Very tall English striker who scored 22 goals for England and holds the record for the most headed goals in Premier League history.",
+    "strengths": [
+      "Record-breaking headers",
+      "Neat touch for a tall player",
+      "Holds the ball up"
+    ]
+  },
+  "Freddie Ljungberg": {
+    "blurb": "Swedish winger who won two Premier League titles and three FA Cups with Arsenal, scoring in the 2002 final, and captained Sweden.",
+    "strengths": [
+      "Late runs into the box",
+      "Quick feet",
+      "Tireless running"
+    ]
+  },
+  "Robin van Persie": {
+    "blurb": "Dutch striker who won the Premier League Golden Boot with Arsenal and Manchester United, and scored a famous flying header against Spain in 2014.",
+    "strengths": [
+      "Sweet left foot",
+      "Volleys and technique",
+      "Clever movement"
+    ]
+  },
+  "Laurent Blanc": {
+    "blurb": "French centre-back nicknamed \"Le Président\" who won the 1998 World Cup and Euro 2000, and scored the first golden goal in World Cup history.",
+    "strengths": [
+      "Calm on the ball",
+      "Reads the game",
+      "Scores from set pieces"
+    ]
+  },
+  "James Rodríguez": {
+    "blurb": "Colombian playmaker who won the 2014 World Cup Golden Boot and the Puskás Award for his volley against Uruguay, and is Colombia's most-capped player.",
+    "strengths": [
+      "Magic left foot",
+      "Chest control and volleys",
+      "Creative passing"
+    ]
+  },
+  "Filippo Inzaghi": {
+    "blurb": "Italian striker famous for always being in the right place, who won the 2006 World Cup and scored twice in the 2007 Champions League final.",
+    "strengths": [
+      "Perfect timing of runs",
+      "Lives on the last defender",
+      "Finishes any chance"
     ]
   }
 }

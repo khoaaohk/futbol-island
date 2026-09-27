@@ -4,6 +4,7 @@ import * as T from 'three';
 import { Lesson, lessonFrame } from '@/lib/curriculum';
 import { Icon } from './Icon';
 import { createPlayer, PlayerRig } from '@/lib/graphics/player';
+import { matchPlayerDress, isKeeperSlot } from '@/lib/town/beanLooks';
 import { graphicsQuality, FrameBudget } from '@/lib/graphics/quality';
 
 type Props = { lesson: Lesson; beat: number; progress: number; overview?: boolean; challenge?: boolean; selected?: string | null; aerial?: boolean; onSelect?: (id: string) => void };
@@ -68,7 +69,7 @@ export default function Pitch(props: Props) {
     const actors=new Map<string,{root:T.Group;rig:PlayerRig;ring:T.Mesh;tag:T.Sprite}>();
     const textureList:T.Texture[]=[];
     function actor(id:string,side:string,label:string){
-      const rig=createPlayer(id,side),root=rig.root;root.userData.playerId=id;actorGroup.add(root);
+      const rig=createPlayer(id,side),root=rig.root;const dress=matchPlayerDress('pitch:'+id,side==='home'?'home':'away',isKeeperSlot(id)||/\b(gk|keeper|goalkeeper)\b/i.test(label),side==='home'&&/^\d+$/.test(id)?Number(id):null);rig.setBeanLook(dress.look,dress.outfit);root.userData.playerId=id;actorGroup.add(root);
       const ringMaterial=new T.MeshBasicMaterial({color:'#faf0c6',transparent:true,opacity:.9,side:T.DoubleSide});materials.push(ringMaterial);
       const ring=add(new T.RingGeometry(.45,.49,40),ringMaterial,0,.08,0,root);ring.rotation.x=-Math.PI/2;ring.castShadow=false;
       const canvas=document.createElement('canvas');canvas.width=128;canvas.height=64;const context=canvas.getContext('2d')!;context.fillStyle='#183b32';context.beginPath();context.roundRect(34,8,60,44,12);context.fill();context.fillStyle='#fffbeb';context.font='bold 30px sans-serif';context.textAlign='center';context.fillText(id.startsWith('d')?'•':id,64,41);

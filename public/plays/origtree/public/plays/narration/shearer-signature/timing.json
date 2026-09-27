@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Wembley, live",
+   "text": "Wembley, Euro 96. England lead the Netherlands two-nil. Paul Gascoigne bursts down the left and slides it inside to Teddy Sheringham... Shearer! Goal!",
+   "src": "/plays/narration/shearer-signature/1.m4a",
+   "seconds": 11.5,
+   "words": [
+    {
+     "w": "Wembley",
+     "at": 0.4
+    },
+    {
+     "w": "Euro",
+     "at": 0.963
+    },
+    {
+     "w": "96",
+     "at": 1.3
+    },
+    {
+     "w": "England",
+     "at": 2.438
+    },
+    {
+     "w": "lead",
+     "at": 2.9
+    },
+    {
+     "w": "the",
+     "at": 3.087
+    },
+    {
+     "w": "Netherlands",
+     "at": 3.175
+    },
+    {
+     "w": "two-nil",
+     "at": 3.737
+    },
+    {
+     "w": "Paul",
+     "at": 4.713
+    },
+    {
+     "w": "Gascoigne",
+     "at": 4.975
+    },
+    {
+     "w": "bursts",
+     "at": 5.513
+    },
+    {
+     "w": "down",
+     "at": 5.925
+    },
+    {
+     "w": "the",
+     "at": 6.112
+    },
+    {
+     "w": "left",
+     "at": 6.2
+    },
+    {
+     "w": "and",
+     "at": 6.575
+    },
+    {
+     "w": "slides",
+     "at": 6.725
+    },
+    {
+     "w": "it",
+     "at": 7.162
+    },
+    {
+     "w": "inside",
+     "at": 7.25
+    },
+    {
+     "w": "to",
+     "at": 7.75
+    },
+    {
+     "w": "Teddy",
+     "at": 7.875
+    },
+    {
+     "w": "Sheringham",
+     "at": 8.213
+    },
+    {
+     "w": "Shearer",
+     "at": 9.325
+    },
+    {
+     "w": "Goal",
+     "at": 10.088
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. Sheringham shapes to shoot, and the defenders freeze. But he rolls it sideways, into the path of Alan Shearer.",
+   "src": "/plays/narration/shearer-signature/2.m4a",
+   "seconds": 9.6,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.188
+    },
+    {
+     "w": "Sheringham",
+     "at": 2.2
+    },
+    {
+     "w": "shapes",
+     "at": 2.763
+    },
+    {
+     "w": "to",
+     "at": 3.125
+    },
+    {
+     "w": "shoot",
+     "at": 3.275
+    },
+    {
+     "w": "and",
+     "at": 3.65
+    },
+    {
+     "w": "the",
+     "at": 3.763
+    },
+    {
+     "w": "defenders",
+     "at": 3.85
+    },
+    {
+     "w": "freeze",
+     "at": 4.412
+    },
+    {
+     "w": "But",
+     "at": 5.325
+    },
+    {
+     "w": "he",
+     "at": 5.463
+    },
+    {
+     "w": "rolls",
+     "at": 5.588
+    },
+    {
+     "w": "it",
+     "at": 5.963
+    },
+    {
+     "w": "sideways",
+     "at": 6.112
+    },
+    {
+     "w": "into",
+     "at": 6.925
+    },
+    {
+     "w": "the",
+     "at": 7.138
+    },
+    {
+     "w": "path",
+     "at": 7.237
+    },
+    {
+     "w": "of",
+     "at": 7.612
+    },
+    {
+     "w": "Alan",
+     "at": 7.737
+    },
+    {
+     "w": "Shearer",
+     "at": 8.125
+    }
+   ]
+  },
+  {
+   "label": "Bang!",
+   "text": "Shearer runs onto it. Head over the ball, laces through the middle... bang! It thunders in at the near post. Three-nil!",
+   "src": "/plays/narration/shearer-signature/3.m4a",
+   "seconds": 8.3,
+   "words": [
+    {
+     "w": "Shearer",
+     "at": 0.425
+    },
+    {
+     "w": "runs",
+     "at": 0.75
+    },
+    {
+     "w": "onto",
+     "at": 1.0
+    },
+    {
+     "w": "it",
+     "at": 1.413
+    },
+    {
+     "w": "Head",
+     "at": 1.8
+    },
+    {
+     "w": "over",
+     "at": 1.962
+    },
+    {
+     "w": "the",
+     "at": 2.138
+    },
+    {
+     "w": "ball",
+     "at": 2.225
+    },
+    {
+     "w": "laces",
+     "at": 2.6
+    },
+    {
+     "w": "through",
+     "at": 3.0
+    },
+    {
+     "w": "the",
+     "at": 3.2
+    },
+    {
+     "w": "middle",
+     "at": 3.3
+    },
+    {
+     "w": "bang",
+     "at": 4.088
+    },
+    {
+     "w": "It",
+     "at": 4.75
+    },
+    {
+     "w": "thunders",
+     "at": 4.963
+    },
+    {
+     "w": "in",
+     "at": 5.438
+    },
+    {
+     "w": "at",
+     "at": 5.562
+    },
+    {
+     "w": "the",
+     "at": 5.638
+    },
+    {
+     "w": "near",
+     "at": 5.725
+    },
+    {
+     "w": "post",
+     "at": 5.963
+    },
+    {
+     "w": "Three-nil",
+     "at": 6.775
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: plant your foot beside the ball, lock your ankle, and strike through the middle to keep a powerful shot on target.",
+   "src": "/plays/narration/shearer-signature/4.m4a",
+   "seconds": 8.2,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "plant",
+     "at": 1.363
+    },
+    {
+     "w": "your",
+     "at": 1.637
+    },
+    {
+     "w": "foot",
+     "at": 1.8
+    },
+    {
+     "w": "beside",
+     "at": 2.05
+    },
+    {
+     "w": "the",
+     "at": 2.388
+    },
+    {
+     "w": "ball",
+     "at": 2.475
+    },
+    {
+     "w": "lock",
+     "at": 3.05
+    },
+    {
+     "w": "your",
+     "at": 3.263
+    },
+    {
+     "w": "ankle",
+     "at": 3.4
+    },
+    {
+     "w": "and",
+     "at": 4.2
+    },
+    {
+     "w": "strike",
+     "at": 4.338
+    },
+    {
+     "w": "through",
+     "at": 4.675
+    },
+    {
+     "w": "the",
+     "at": 4.875
+    },
+    {
+     "w": "middle",
+     "at": 4.975
+    },
+    {
+     "w": "to",
+     "at": 5.25
+    },
+    {
+     "w": "keep",
+     "at": 5.35
+    },
+    {
+     "w": "a",
+     "at": 5.537
+    },
+    {
+     "w": "powerful",
+     "at": 5.612
+    },
+    {
+     "w": "shot",
+     "at": 6.225
+    },
+    {
+     "w": "on",
+     "at": 6.537
+    },
+    {
+     "w": "target",
+     "at": 6.725
+    }
+   ]
+  }
+ ]
+}

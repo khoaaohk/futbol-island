@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: the Euro 2026 semi-final",
+   "text": "The 2026 Futsal Euro semi-final, in Ljubljana. Spain play Croatia. Mellado is Spain\u2019s ala, a wide player. He scores the second goal, and Spain win two to one!",
+   "src": "/plays/narration/mellado-futsal-signature/1.m4a",
+   "seconds": 13.3,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "2026",
+     "at": 0.425
+    },
+    {
+     "w": "Futsal",
+     "at": 1.363
+    },
+    {
+     "w": "Euro",
+     "at": 1.8
+    },
+    {
+     "w": "semi-final",
+     "at": 2.163
+    },
+    {
+     "w": "in",
+     "at": 2.925
+    },
+    {
+     "w": "Ljubljana",
+     "at": 3.075
+    },
+    {
+     "w": "Spain",
+     "at": 4.237
+    },
+    {
+     "w": "play",
+     "at": 4.713
+    },
+    {
+     "w": "Croatia",
+     "at": 4.975
+    },
+    {
+     "w": "Mellado",
+     "at": 6.112
+    },
+    {
+     "w": "is",
+     "at": 6.65
+    },
+    {
+     "w": "Spain\u2019s",
+     "at": 6.787
+    },
+    {
+     "w": "ala",
+     "at": 7.312
+    },
+    {
+     "w": "a",
+     "at": 7.825
+    },
+    {
+     "w": "wide",
+     "at": 7.938
+    },
+    {
+     "w": "player",
+     "at": 8.312
+    },
+    {
+     "w": "He",
+     "at": 9.25
+    },
+    {
+     "w": "scores",
+     "at": 9.412
+    },
+    {
+     "w": "the",
+     "at": 9.838
+    },
+    {
+     "w": "second",
+     "at": 9.938
+    },
+    {
+     "w": "goal",
+     "at": 10.3
+    },
+    {
+     "w": "and",
+     "at": 10.825
+    },
+    {
+     "w": "Spain",
+     "at": 10.963
+    },
+    {
+     "w": "win",
+     "at": 11.35
+    },
+    {
+     "w": "two",
+     "at": 11.613
+    },
+    {
+     "w": "to",
+     "at": 11.825
+    },
+    {
+     "w": "one",
+     "at": 11.95
+    }
+   ]
+  },
+  {
+   "label": "How he does it",
+   "text": "His trick is the sole roll. Watch how he does it, from the left wing. Sole on the ball, roll it across, and the defender follows. Drag it back, and he is away!",
+   "src": "/plays/narration/mellado-futsal-signature/2.m4a",
+   "seconds": 10.9,
+   "words": [
+    {
+     "w": "His",
+     "at": 0.35
+    },
+    {
+     "w": "trick",
+     "at": 0.525
+    },
+    {
+     "w": "is",
+     "at": 0.8
+    },
+    {
+     "w": "the",
+     "at": 0.95
+    },
+    {
+     "w": "sole",
+     "at": 1.1
+    },
+    {
+     "w": "roll",
+     "at": 1.4
+    },
+    {
+     "w": "Watch",
+     "at": 2.237
+    },
+    {
+     "w": "how",
+     "at": 2.55
+    },
+    {
+     "w": "he",
+     "at": 2.725
+    },
+    {
+     "w": "does",
+     "at": 2.85
+    },
+    {
+     "w": "it",
+     "at": 3.075
+    },
+    {
+     "w": "from",
+     "at": 3.225
+    },
+    {
+     "w": "the",
+     "at": 3.362
+    },
+    {
+     "w": "left",
+     "at": 3.45
+    },
+    {
+     "w": "wing",
+     "at": 3.763
+    },
+    {
+     "w": "Sole",
+     "at": 4.612
+    },
+    {
+     "w": "on",
+     "at": 4.963
+    },
+    {
+     "w": "the",
+     "at": 5.062
+    },
+    {
+     "w": "ball",
+     "at": 5.15
+    },
+    {
+     "w": "roll",
+     "at": 5.612
+    },
+    {
+     "w": "it",
+     "at": 5.888
+    },
+    {
+     "w": "across",
+     "at": 5.963
+    },
+    {
+     "w": "and",
+     "at": 6.55
+    },
+    {
+     "w": "the",
+     "at": 6.662
+    },
+    {
+     "w": "defender",
+     "at": 6.75
+    },
+    {
+     "w": "follows",
+     "at": 7.263
+    },
+    {
+     "w": "Drag",
+     "at": 8.3
+    },
+    {
+     "w": "it",
+     "at": 8.613
+    },
+    {
+     "w": "back",
+     "at": 8.7
+    },
+    {
+     "w": "and",
+     "at": 9.1
+    },
+    {
+     "w": "he",
+     "at": 9.225
+    },
+    {
+     "w": "is",
+     "at": 9.375
+    },
+    {
+     "w": "away",
+     "at": 9.5
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. Sole on top, roll, drag back, go!",
+   "src": "/plays/narration/mellado-futsal-signature/3.m4a",
+   "seconds": 5.1,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.662
+    },
+    {
+     "w": "slowly",
+     "at": 1.087
+    },
+    {
+     "w": "Sole",
+     "at": 2.0
+    },
+    {
+     "w": "on",
+     "at": 2.237
+    },
+    {
+     "w": "top",
+     "at": 2.425
+    },
+    {
+     "w": "roll",
+     "at": 2.775
+    },
+    {
+     "w": "drag",
+     "at": 3.125
+    },
+    {
+     "w": "back",
+     "at": 3.45
+    },
+    {
+     "w": "go",
+     "at": 3.775
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: roll the ball with the sole of your foot. Keep it close in tight spaces!",
+   "src": "/plays/narration/mellado-futsal-signature/4.m4a",
+   "seconds": 6.1,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "roll",
+     "at": 1.238
+    },
+    {
+     "w": "the",
+     "at": 1.512
+    },
+    {
+     "w": "ball",
+     "at": 1.6
+    },
+    {
+     "w": "with",
+     "at": 1.887
+    },
+    {
+     "w": "the",
+     "at": 1.988
+    },
+    {
+     "w": "sole",
+     "at": 2.112
+    },
+    {
+     "w": "of",
+     "at": 2.413
+    },
+    {
+     "w": "your",
+     "at": 2.487
+    },
+    {
+     "w": "foot",
+     "at": 2.65
+    },
+    {
+     "w": "Keep",
+     "at": 3.438
+    },
+    {
+     "w": "it",
+     "at": 3.663
+    },
+    {
+     "w": "close",
+     "at": 3.75
+    },
+    {
+     "w": "in",
+     "at": 4.075
+    },
+    {
+     "w": "tight",
+     "at": 4.225
+    },
+    {
+     "w": "spaces",
+     "at": 4.525
+    }
+   ]
+  }
+ ]
+}

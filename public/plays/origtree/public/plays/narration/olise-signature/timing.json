@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Berlin, the German Cup final, Bayern against Stuttgart. A free kick, then the ball finds Michael Olise on the right. He curls a cross... Harry Kane heads it in!",
+   "src": "/plays/narration/olise-signature/1.m4a",
+   "seconds": 11.3,
+   "words": [
+    {
+     "w": "Berlin",
+     "at": 0.375
+    },
+    {
+     "w": "the",
+     "at": 0.95
+    },
+    {
+     "w": "German",
+     "at": 1.062
+    },
+    {
+     "w": "Cup",
+     "at": 1.45
+    },
+    {
+     "w": "final",
+     "at": 1.712
+    },
+    {
+     "w": "Bayern",
+     "at": 2.288
+    },
+    {
+     "w": "against",
+     "at": 2.7
+    },
+    {
+     "w": "Stuttgart",
+     "at": 3.025
+    },
+    {
+     "w": "A",
+     "at": 4.037
+    },
+    {
+     "w": "free",
+     "at": 4.162
+    },
+    {
+     "w": "kick",
+     "at": 4.463
+    },
+    {
+     "w": "then",
+     "at": 4.925
+    },
+    {
+     "w": "the",
+     "at": 5.062
+    },
+    {
+     "w": "ball",
+     "at": 5.15
+    },
+    {
+     "w": "finds",
+     "at": 5.463
+    },
+    {
+     "w": "Michael",
+     "at": 5.825
+    },
+    {
+     "w": "Olise",
+     "at": 6.175
+    },
+    {
+     "w": "on",
+     "at": 6.688
+    },
+    {
+     "w": "the",
+     "at": 6.787
+    },
+    {
+     "w": "right",
+     "at": 6.875
+    },
+    {
+     "w": "He",
+     "at": 7.65
+    },
+    {
+     "w": "curls",
+     "at": 7.8
+    },
+    {
+     "w": "a",
+     "at": 8.113
+    },
+    {
+     "w": "cross",
+     "at": 8.175
+    },
+    {
+     "w": "Harry",
+     "at": 9.05
+    },
+    {
+     "w": "Kane",
+     "at": 9.338
+    },
+    {
+     "w": "heads",
+     "at": 9.675
+    },
+    {
+     "w": "it",
+     "at": 9.912
+    },
+    {
+     "w": "in",
+     "at": 10.0
+    }
+   ]
+  },
+  {
+   "label": "Watch Olise",
+   "text": "Watch Olise again. He loves his stronger left foot. He opens his body and curls it behind the defenders, onto Kane's head.",
+   "src": "/plays/narration/olise-signature/2.m4a",
+   "seconds": 9.2,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "Olise",
+     "at": 0.675
+    },
+    {
+     "w": "again",
+     "at": 1.2
+    },
+    {
+     "w": "He",
+     "at": 2.0
+    },
+    {
+     "w": "loves",
+     "at": 2.163
+    },
+    {
+     "w": "his",
+     "at": 2.513
+    },
+    {
+     "w": "stronger",
+     "at": 2.663
+    },
+    {
+     "w": "left",
+     "at": 3.225
+    },
+    {
+     "w": "foot",
+     "at": 3.513
+    },
+    {
+     "w": "He",
+     "at": 4.325
+    },
+    {
+     "w": "opens",
+     "at": 4.487
+    },
+    {
+     "w": "his",
+     "at": 4.838
+    },
+    {
+     "w": "body",
+     "at": 5.0
+    },
+    {
+     "w": "and",
+     "at": 5.4
+    },
+    {
+     "w": "curls",
+     "at": 5.537
+    },
+    {
+     "w": "it",
+     "at": 5.938
+    },
+    {
+     "w": "behind",
+     "at": 6.013
+    },
+    {
+     "w": "the",
+     "at": 6.388
+    },
+    {
+     "w": "defenders",
+     "at": 6.463
+    },
+    {
+     "w": "onto",
+     "at": 7.225
+    },
+    {
+     "w": "Kane's",
+     "at": 7.5
+    },
+    {
+     "w": "head",
+     "at": 7.925
+    }
+   ]
+  },
+  {
+   "label": "Behind the goal",
+   "text": "From behind the goal: Kane rises and heads it in from close range. His eighth cup goal!",
+   "src": "/plays/narration/olise-signature/3.m4a",
+   "seconds": 6.7,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.375
+    },
+    {
+     "w": "behind",
+     "at": 0.512
+    },
+    {
+     "w": "the",
+     "at": 0.887
+    },
+    {
+     "w": "goal",
+     "at": 0.975
+    },
+    {
+     "w": "Kane",
+     "at": 1.688
+    },
+    {
+     "w": "rises",
+     "at": 2.038
+    },
+    {
+     "w": "and",
+     "at": 2.538
+    },
+    {
+     "w": "heads",
+     "at": 2.65
+    },
+    {
+     "w": "it",
+     "at": 2.888
+    },
+    {
+     "w": "in",
+     "at": 2.962
+    },
+    {
+     "w": "from",
+     "at": 3.15
+    },
+    {
+     "w": "close",
+     "at": 3.3
+    },
+    {
+     "w": "range",
+     "at": 3.65
+    },
+    {
+     "w": "His",
+     "at": 4.525
+    },
+    {
+     "w": "eighth",
+     "at": 4.725
+    },
+    {
+     "w": "cup",
+     "at": 5.037
+    },
+    {
+     "w": "goal",
+     "at": 5.3
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn! Know your stronger foot. Get it on the ball, look up, and curl your pass into your teammate's path!",
+   "src": "/plays/narration/olise-signature/4.m4a",
+   "seconds": 7.3,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.512
+    },
+    {
+     "w": "Know",
+     "at": 1.238
+    },
+    {
+     "w": "your",
+     "at": 1.475
+    },
+    {
+     "w": "stronger",
+     "at": 1.6
+    },
+    {
+     "w": "foot",
+     "at": 2.125
+    },
+    {
+     "w": "Get",
+     "at": 2.987
+    },
+    {
+     "w": "it",
+     "at": 3.138
+    },
+    {
+     "w": "on",
+     "at": 3.212
+    },
+    {
+     "w": "the",
+     "at": 3.312
+    },
+    {
+     "w": "ball",
+     "at": 3.4
+    },
+    {
+     "w": "look",
+     "at": 3.875
+    },
+    {
+     "w": "up",
+     "at": 4.037
+    },
+    {
+     "w": "and",
+     "at": 4.312
+    },
+    {
+     "w": "curl",
+     "at": 4.425
+    },
+    {
+     "w": "your",
+     "at": 4.662
+    },
+    {
+     "w": "pass",
+     "at": 4.775
+    },
+    {
+     "w": "into",
+     "at": 5.062
+    },
+    {
+     "w": "your",
+     "at": 5.237
+    },
+    {
+     "w": "teammate's",
+     "at": 5.362
+    },
+    {
+     "w": "path",
+     "at": 5.9
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,386 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Near Boston, 1999. The World Cup semi-final: China against Norway. Liu Ailing\u2019s long pass finds Jin Yan. Saved... but Sun Wen scores!",
+   "src": "/plays/narration/sun-wen-signature/1.m4a",
+   "seconds": 11.8,
+   "words": [
+    {
+     "w": "Near",
+     "at": 0.4
+    },
+    {
+     "w": "Boston",
+     "at": 0.6
+    },
+    {
+     "w": "1999",
+     "at": 1.175
+    },
+    {
+     "w": "The",
+     "at": 2.65
+    },
+    {
+     "w": "World",
+     "at": 2.75
+    },
+    {
+     "w": "Cup",
+     "at": 3.05
+    },
+    {
+     "w": "semi-final",
+     "at": 3.275
+    },
+    {
+     "w": "China",
+     "at": 4.138
+    },
+    {
+     "w": "against",
+     "at": 4.5
+    },
+    {
+     "w": "Norway",
+     "at": 4.9
+    },
+    {
+     "w": "Liu",
+     "at": 5.75
+    },
+    {
+     "w": "Ailing\u2019s",
+     "at": 6.088
+    },
+    {
+     "w": "long",
+     "at": 6.612
+    },
+    {
+     "w": "pass",
+     "at": 6.938
+    },
+    {
+     "w": "finds",
+     "at": 7.325
+    },
+    {
+     "w": "Jin",
+     "at": 7.775
+    },
+    {
+     "w": "Yan",
+     "at": 8.0
+    },
+    {
+     "w": "Saved",
+     "at": 8.662
+    },
+    {
+     "w": "but",
+     "at": 9.525
+    },
+    {
+     "w": "Sun",
+     "at": 9.738
+    },
+    {
+     "w": "Wen",
+     "at": 10.0
+    },
+    {
+     "w": "scores",
+     "at": 10.238
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. The defenders all watch Jin Yan\u2019s shot. Sun Wen waits in the space behind them, where nobody is looking.",
+   "src": "/plays/narration/sun-wen-signature/2.m4a",
+   "seconds": 9.2,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.238
+    },
+    {
+     "w": "The",
+     "at": 2.263
+    },
+    {
+     "w": "defenders",
+     "at": 2.375
+    },
+    {
+     "w": "all",
+     "at": 2.95
+    },
+    {
+     "w": "watch",
+     "at": 3.15
+    },
+    {
+     "w": "Jin",
+     "at": 3.487
+    },
+    {
+     "w": "Yan\u2019s",
+     "at": 3.737
+    },
+    {
+     "w": "shot",
+     "at": 4.15
+    },
+    {
+     "w": "Sun",
+     "at": 4.975
+    },
+    {
+     "w": "Wen",
+     "at": 5.275
+    },
+    {
+     "w": "waits",
+     "at": 5.5
+    },
+    {
+     "w": "in",
+     "at": 5.812
+    },
+    {
+     "w": "the",
+     "at": 5.888
+    },
+    {
+     "w": "space",
+     "at": 5.987
+    },
+    {
+     "w": "behind",
+     "at": 6.375
+    },
+    {
+     "w": "them",
+     "at": 6.812
+    },
+    {
+     "w": "where",
+     "at": 7.088
+    },
+    {
+     "w": "nobody",
+     "at": 7.263
+    },
+    {
+     "w": "is",
+     "at": 7.675
+    },
+    {
+     "w": "looking",
+     "at": 7.825
+    }
+   ]
+  },
+  {
+   "label": "Trap, turn, shoot",
+   "text": "The keeper saves, and the ball bounces out to Sun. She traps it, turns hard, and scores with her left foot! Only three minutes gone!",
+   "src": "/plays/narration/sun-wen-signature/3.m4a",
+   "seconds": 9.3,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "keeper",
+     "at": 0.425
+    },
+    {
+     "w": "saves",
+     "at": 0.812
+    },
+    {
+     "w": "and",
+     "at": 1.312
+    },
+    {
+     "w": "the",
+     "at": 1.413
+    },
+    {
+     "w": "ball",
+     "at": 1.5
+    },
+    {
+     "w": "bounces",
+     "at": 1.8
+    },
+    {
+     "w": "out",
+     "at": 2.25
+    },
+    {
+     "w": "to",
+     "at": 2.45
+    },
+    {
+     "w": "Sun",
+     "at": 2.587
+    },
+    {
+     "w": "She",
+     "at": 3.438
+    },
+    {
+     "w": "traps",
+     "at": 3.575
+    },
+    {
+     "w": "it",
+     "at": 3.962
+    },
+    {
+     "w": "turns",
+     "at": 4.275
+    },
+    {
+     "w": "hard",
+     "at": 4.662
+    },
+    {
+     "w": "and",
+     "at": 5.088
+    },
+    {
+     "w": "scores",
+     "at": 5.213
+    },
+    {
+     "w": "with",
+     "at": 5.662
+    },
+    {
+     "w": "her",
+     "at": 5.763
+    },
+    {
+     "w": "left",
+     "at": 5.9
+    },
+    {
+     "w": "foot",
+     "at": 6.188
+    },
+    {
+     "w": "Only",
+     "at": 6.938
+    },
+    {
+     "w": "three",
+     "at": 7.287
+    },
+    {
+     "w": "minutes",
+     "at": 7.525
+    },
+    {
+     "w": "gone",
+     "at": 7.85
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: find space where the defenders are not looking. When the ball comes to you, finish quickly!",
+   "src": "/plays/narration/sun-wen-signature/4.m4a",
+   "seconds": 7.2,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "find",
+     "at": 1.288
+    },
+    {
+     "w": "space",
+     "at": 1.613
+    },
+    {
+     "w": "where",
+     "at": 2.062
+    },
+    {
+     "w": "the",
+     "at": 2.188
+    },
+    {
+     "w": "defenders",
+     "at": 2.275
+    },
+    {
+     "w": "are",
+     "at": 2.812
+    },
+    {
+     "w": "not",
+     "at": 2.9
+    },
+    {
+     "w": "looking",
+     "at": 3.125
+    },
+    {
+     "w": "When",
+     "at": 4.025
+    },
+    {
+     "w": "the",
+     "at": 4.162
+    },
+    {
+     "w": "ball",
+     "at": 4.25
+    },
+    {
+     "w": "comes",
+     "at": 4.55
+    },
+    {
+     "w": "to",
+     "at": 4.875
+    },
+    {
+     "w": "you",
+     "at": 4.975
+    },
+    {
+     "w": "finish",
+     "at": 5.338
+    },
+    {
+     "w": "quickly",
+     "at": 5.675
+    }
+   ]
+  }
+ ]
+}

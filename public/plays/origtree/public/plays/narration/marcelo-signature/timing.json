@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Extra time",
+   "text": "Lisbon, 2014, the Champions League final, extra time. Marcelo is Real Madrid's left-back, a defender. But Real have the ball, so off he goes, sprinting forward! Cristiano Ronaldo squares it, Marcelo charges at goal and shoots with his left foot... Goal! Real lead three to one!",
+   "src": "/plays/narration/marcelo-signature/1.m4a",
+   "seconds": 19.9,
+   "words": [
+    {
+     "w": "Lisbon",
+     "at": 0.425
+    },
+    {
+     "w": "2014",
+     "at": 0.925
+    },
+    {
+     "w": "the",
+     "at": 1.8
+    },
+    {
+     "w": "Champions",
+     "at": 1.913
+    },
+    {
+     "w": "League",
+     "at": 2.5
+    },
+    {
+     "w": "final",
+     "at": 2.763
+    },
+    {
+     "w": "extra",
+     "at": 3.2
+    },
+    {
+     "w": "time",
+     "at": 3.6
+    },
+    {
+     "w": "Marcelo",
+     "at": 4.487
+    },
+    {
+     "w": "is",
+     "at": 5.05
+    },
+    {
+     "w": "Real",
+     "at": 5.213
+    },
+    {
+     "w": "Madrid's",
+     "at": 5.5
+    },
+    {
+     "w": "left-back",
+     "at": 5.963
+    },
+    {
+     "w": "a",
+     "at": 6.513
+    },
+    {
+     "w": "defender",
+     "at": 6.575
+    },
+    {
+     "w": "But",
+     "at": 7.5
+    },
+    {
+     "w": "Real",
+     "at": 7.65
+    },
+    {
+     "w": "have",
+     "at": 7.925
+    },
+    {
+     "w": "the",
+     "at": 8.113
+    },
+    {
+     "w": "ball",
+     "at": 8.213
+    },
+    {
+     "w": "so",
+     "at": 8.675
+    },
+    {
+     "w": "off",
+     "at": 8.85
+    },
+    {
+     "w": "he",
+     "at": 9.037
+    },
+    {
+     "w": "goes",
+     "at": 9.15
+    },
+    {
+     "w": "sprinting",
+     "at": 9.688
+    },
+    {
+     "w": "forward",
+     "at": 10.188
+    },
+    {
+     "w": "Cristiano",
+     "at": 11.287
+    },
+    {
+     "w": "Ronaldo",
+     "at": 12.025
+    },
+    {
+     "w": "squares",
+     "at": 12.588
+    },
+    {
+     "w": "it",
+     "at": 13.037
+    },
+    {
+     "w": "Marcelo",
+     "at": 13.425
+    },
+    {
+     "w": "charges",
+     "at": 13.988
+    },
+    {
+     "w": "at",
+     "at": 14.375
+    },
+    {
+     "w": "goal",
+     "at": 14.512
+    },
+    {
+     "w": "and",
+     "at": 14.875
+    },
+    {
+     "w": "shoots",
+     "at": 15.062
+    },
+    {
+     "w": "with",
+     "at": 15.412
+    },
+    {
+     "w": "his",
+     "at": 15.512
+    },
+    {
+     "w": "left",
+     "at": 15.675
+    },
+    {
+     "w": "foot",
+     "at": 15.963
+    },
+    {
+     "w": "Goal",
+     "at": 16.837
+    },
+    {
+     "w": "Real",
+     "at": 17.55
+    },
+    {
+     "w": "lead",
+     "at": 17.875
+    },
+    {
+     "w": "three",
+     "at": 18.163
+    },
+    {
+     "w": "to",
+     "at": 18.4
+    },
+    {
+     "w": "one",
+     "at": 18.525
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. Ronaldo squares it, and Marcelo is already there, running from deep. He carries it, looks up, and fires past the keeper.",
+   "src": "/plays/narration/marcelo-signature/2.m4a",
+   "seconds": 10.2,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.113
+    },
+    {
+     "w": "Ronaldo",
+     "at": 2.138
+    },
+    {
+     "w": "squares",
+     "at": 2.737
+    },
+    {
+     "w": "it",
+     "at": 3.15
+    },
+    {
+     "w": "and",
+     "at": 3.425
+    },
+    {
+     "w": "Marcelo",
+     "at": 3.538
+    },
+    {
+     "w": "is",
+     "at": 4.075
+    },
+    {
+     "w": "already",
+     "at": 4.225
+    },
+    {
+     "w": "there",
+     "at": 4.625
+    },
+    {
+     "w": "running",
+     "at": 5.013
+    },
+    {
+     "w": "from",
+     "at": 5.35
+    },
+    {
+     "w": "deep",
+     "at": 5.562
+    },
+    {
+     "w": "He",
+     "at": 6.35
+    },
+    {
+     "w": "carries",
+     "at": 6.475
+    },
+    {
+     "w": "it",
+     "at": 6.888
+    },
+    {
+     "w": "looks",
+     "at": 7.15
+    },
+    {
+     "w": "up",
+     "at": 7.4
+    },
+    {
+     "w": "and",
+     "at": 7.675
+    },
+    {
+     "w": "fires",
+     "at": 7.825
+    },
+    {
+     "w": "past",
+     "at": 8.338
+    },
+    {
+     "w": "the",
+     "at": 8.688
+    },
+    {
+     "w": "keeper",
+     "at": 8.775
+    }
+   ]
+  },
+  {
+   "label": "Join the attack",
+   "text": "A full-back can attack too! First, your team keeps the ball safely. Then time your run, and join the attack.",
+   "src": "/plays/narration/marcelo-signature/3.m4a",
+   "seconds": 7.7,
+   "words": [
+    {
+     "w": "A",
+     "at": 0.375
+    },
+    {
+     "w": "full-back",
+     "at": 0.45
+    },
+    {
+     "w": "can",
+     "at": 0.925
+    },
+    {
+     "w": "attack",
+     "at": 1.038
+    },
+    {
+     "w": "too",
+     "at": 1.438
+    },
+    {
+     "w": "First",
+     "at": 2.25
+    },
+    {
+     "w": "your",
+     "at": 2.65
+    },
+    {
+     "w": "team",
+     "at": 2.8
+    },
+    {
+     "w": "keeps",
+     "at": 3.1
+    },
+    {
+     "w": "the",
+     "at": 3.362
+    },
+    {
+     "w": "ball",
+     "at": 3.45
+    },
+    {
+     "w": "safely",
+     "at": 3.763
+    },
+    {
+     "w": "Then",
+     "at": 4.662
+    },
+    {
+     "w": "time",
+     "at": 4.912
+    },
+    {
+     "w": "your",
+     "at": 5.213
+    },
+    {
+     "w": "run",
+     "at": 5.35
+    },
+    {
+     "w": "and",
+     "at": 5.713
+    },
+    {
+     "w": "join",
+     "at": 5.838
+    },
+    {
+     "w": "the",
+     "at": 6.112
+    },
+    {
+     "w": "attack",
+     "at": 6.25
+    }
+   ]
+  }
+ ]
+}

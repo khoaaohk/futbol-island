@@ -1,0 +1,374 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: the 2019 semi-final",
+   "text": "Almaty, 2019, the European futsal semi-final. Sporting lead Inter four to two, with seconds left. Then Cardinal scores! Five two!",
+   "src": "/plays/narration/cardinal-futsal-signature/1.m4a",
+   "seconds": 10.8,
+   "words": [
+    {
+     "w": "Almaty",
+     "at": 0.375
+    },
+    {
+     "w": "2019",
+     "at": 1.0
+    },
+    {
+     "w": "the",
+     "at": 1.8
+    },
+    {
+     "w": "European",
+     "at": 1.9
+    },
+    {
+     "w": "futsal",
+     "at": 2.438
+    },
+    {
+     "w": "semi-final",
+     "at": 2.962
+    },
+    {
+     "w": "Sporting",
+     "at": 4.175
+    },
+    {
+     "w": "lead",
+     "at": 4.713
+    },
+    {
+     "w": "Inter",
+     "at": 4.963
+    },
+    {
+     "w": "four",
+     "at": 5.213
+    },
+    {
+     "w": "to",
+     "at": 5.45
+    },
+    {
+     "w": "two",
+     "at": 5.588
+    },
+    {
+     "w": "with",
+     "at": 5.925
+    },
+    {
+     "w": "seconds",
+     "at": 6.112
+    },
+    {
+     "w": "left",
+     "at": 6.525
+    },
+    {
+     "w": "Then",
+     "at": 7.287
+    },
+    {
+     "w": "Cardinal",
+     "at": 7.525
+    },
+    {
+     "w": "scores",
+     "at": 8.113
+    },
+    {
+     "w": "Five",
+     "at": 9.0
+    },
+    {
+     "w": "two",
+     "at": 9.387
+    }
+   ]
+  },
+  {
+   "label": "How he does it",
+   "text": "Here is how he does it. He keeps moving between the defenders. The pass comes across the box, and he arrives at the back post. Goal!",
+   "src": "/plays/narration/cardinal-futsal-signature/2.m4a",
+   "seconds": 9.2,
+   "words": [
+    {
+     "w": "Here",
+     "at": 0.375
+    },
+    {
+     "w": "is",
+     "at": 0.575
+    },
+    {
+     "w": "how",
+     "at": 0.725
+    },
+    {
+     "w": "he",
+     "at": 0.925
+    },
+    {
+     "w": "does",
+     "at": 1.05
+    },
+    {
+     "w": "it",
+     "at": 1.288
+    },
+    {
+     "w": "He",
+     "at": 1.75
+    },
+    {
+     "w": "keeps",
+     "at": 1.875
+    },
+    {
+     "w": "moving",
+     "at": 2.15
+    },
+    {
+     "w": "between",
+     "at": 2.438
+    },
+    {
+     "w": "the",
+     "at": 2.763
+    },
+    {
+     "w": "defenders",
+     "at": 2.85
+    },
+    {
+     "w": "The",
+     "at": 3.95
+    },
+    {
+     "w": "pass",
+     "at": 4.05
+    },
+    {
+     "w": "comes",
+     "at": 4.45
+    },
+    {
+     "w": "across",
+     "at": 4.688
+    },
+    {
+     "w": "the",
+     "at": 5.025
+    },
+    {
+     "w": "box",
+     "at": 5.125
+    },
+    {
+     "w": "and",
+     "at": 5.612
+    },
+    {
+     "w": "he",
+     "at": 5.713
+    },
+    {
+     "w": "arrives",
+     "at": 5.825
+    },
+    {
+     "w": "at",
+     "at": 6.312
+    },
+    {
+     "w": "the",
+     "at": 6.388
+    },
+    {
+     "w": "back",
+     "at": 6.475
+    },
+    {
+     "w": "post",
+     "at": 6.775
+    },
+    {
+     "w": "Goal",
+     "at": 7.725
+    }
+   ]
+  },
+  {
+   "label": "Replay: the blind side",
+   "text": "Again, slowly. The defenders watch the ball. Cardinal slips behind them to the back post, where nobody is looking. Free! One touch, and in.",
+   "src": "/plays/narration/cardinal-futsal-signature/3.m4a",
+   "seconds": 10.4,
+   "words": [
+    {
+     "w": "Again",
+     "at": 0.375
+    },
+    {
+     "w": "slowly",
+     "at": 0.863
+    },
+    {
+     "w": "The",
+     "at": 1.837
+    },
+    {
+     "w": "defenders",
+     "at": 1.95
+    },
+    {
+     "w": "watch",
+     "at": 2.5
+    },
+    {
+     "w": "the",
+     "at": 2.8
+    },
+    {
+     "w": "ball",
+     "at": 2.9
+    },
+    {
+     "w": "Cardinal",
+     "at": 3.688
+    },
+    {
+     "w": "slips",
+     "at": 4.263
+    },
+    {
+     "w": "behind",
+     "at": 4.575
+    },
+    {
+     "w": "them",
+     "at": 4.963
+    },
+    {
+     "w": "to",
+     "at": 5.1
+    },
+    {
+     "w": "the",
+     "at": 5.188
+    },
+    {
+     "w": "back",
+     "at": 5.275
+    },
+    {
+     "w": "post",
+     "at": 5.562
+    },
+    {
+     "w": "where",
+     "at": 5.987
+    },
+    {
+     "w": "nobody",
+     "at": 6.15
+    },
+    {
+     "w": "is",
+     "at": 6.525
+    },
+    {
+     "w": "looking",
+     "at": 6.675
+    },
+    {
+     "w": "Free",
+     "at": 7.537
+    },
+    {
+     "w": "One",
+     "at": 8.287
+    },
+    {
+     "w": "touch",
+     "at": 8.588
+    },
+    {
+     "w": "and",
+     "at": 8.975
+    },
+    {
+     "w": "in",
+     "at": 9.1
+    }
+   ]
+  },
+  {
+   "label": "Practise it",
+   "text": "Your turn: keep moving between defenders, so you are free when the pass comes!",
+   "src": "/plays/narration/cardinal-futsal-signature/4.m4a",
+   "seconds": 5.6,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "keep",
+     "at": 1.337
+    },
+    {
+     "w": "moving",
+     "at": 1.6
+    },
+    {
+     "w": "between",
+     "at": 1.887
+    },
+    {
+     "w": "defenders",
+     "at": 2.225
+    },
+    {
+     "w": "so",
+     "at": 2.975
+    },
+    {
+     "w": "you",
+     "at": 3.125
+    },
+    {
+     "w": "are",
+     "at": 3.25
+    },
+    {
+     "w": "free",
+     "at": 3.362
+    },
+    {
+     "w": "when",
+     "at": 3.587
+    },
+    {
+     "w": "the",
+     "at": 3.712
+    },
+    {
+     "w": "pass",
+     "at": 3.8
+    },
+    {
+     "w": "comes",
+     "at": 4.15
+    }
+   ]
+  }
+ ]
+}

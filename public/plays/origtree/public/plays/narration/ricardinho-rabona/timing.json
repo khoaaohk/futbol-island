@@ -1,0 +1,350 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: the problem",
+   "text": "This is Ricardinho, Portugal\u2019s futsal magician. The ball is on his wrong side, and a defender is rushing in.",
+   "src": "/plays/narration/ricardinho-rabona/1.m4a",
+   "seconds": 8.7,
+   "words": [
+    {
+     "w": "This",
+     "at": 0.375
+    },
+    {
+     "w": "is",
+     "at": 0.613
+    },
+    {
+     "w": "Ricardinho",
+     "at": 0.812
+    },
+    {
+     "w": "Portugal\u2019s",
+     "at": 1.962
+    },
+    {
+     "w": "futsal",
+     "at": 2.587
+    },
+    {
+     "w": "magician",
+     "at": 3.075
+    },
+    {
+     "w": "The",
+     "at": 4.188
+    },
+    {
+     "w": "ball",
+     "at": 4.325
+    },
+    {
+     "w": "is",
+     "at": 4.675
+    },
+    {
+     "w": "on",
+     "at": 4.787
+    },
+    {
+     "w": "his",
+     "at": 4.912
+    },
+    {
+     "w": "wrong",
+     "at": 5.075
+    },
+    {
+     "w": "side",
+     "at": 5.45
+    },
+    {
+     "w": "and",
+     "at": 6.175
+    },
+    {
+     "w": "a",
+     "at": 6.287
+    },
+    {
+     "w": "defender",
+     "at": 6.35
+    },
+    {
+     "w": "is",
+     "at": 6.875
+    },
+    {
+     "w": "rushing",
+     "at": 7.025
+    },
+    {
+     "w": "in",
+     "at": 7.425
+    }
+   ]
+  },
+  {
+   "label": "Live: the rabona",
+   "text": "No time to switch feet. So he wraps one leg behind the other. Goal!",
+   "src": "/plays/narration/ricardinho-rabona/2.m4a",
+   "seconds": 5.6,
+   "words": [
+    {
+     "w": "No",
+     "at": 0.4
+    },
+    {
+     "w": "time",
+     "at": 0.575
+    },
+    {
+     "w": "to",
+     "at": 0.875
+    },
+    {
+     "w": "switch",
+     "at": 1.0
+    },
+    {
+     "w": "feet",
+     "at": 1.312
+    },
+    {
+     "w": "So",
+     "at": 1.95
+    },
+    {
+     "w": "he",
+     "at": 2.062
+    },
+    {
+     "w": "wraps",
+     "at": 2.175
+    },
+    {
+     "w": "one",
+     "at": 2.5
+    },
+    {
+     "w": "leg",
+     "at": 2.725
+    },
+    {
+     "w": "behind",
+     "at": 2.975
+    },
+    {
+     "w": "the",
+     "at": 3.312
+    },
+    {
+     "w": "other",
+     "at": 3.4
+    },
+    {
+     "w": "Goal",
+     "at": 4.15
+    }
+   ]
+  },
+  {
+   "label": "Replay: behind the leg",
+   "text": "Watch the replay. He plants his standing foot beside the ball, swings his kicking leg behind it, and strikes with the laces.",
+   "src": "/plays/narration/ricardinho-rabona/3.m4a",
+   "seconds": 8.5,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.375
+    },
+    {
+     "w": "the",
+     "at": 0.675
+    },
+    {
+     "w": "replay",
+     "at": 0.775
+    },
+    {
+     "w": "He",
+     "at": 1.75
+    },
+    {
+     "w": "plants",
+     "at": 1.9
+    },
+    {
+     "w": "his",
+     "at": 2.212
+    },
+    {
+     "w": "standing",
+     "at": 2.325
+    },
+    {
+     "w": "foot",
+     "at": 2.812
+    },
+    {
+     "w": "beside",
+     "at": 3.1
+    },
+    {
+     "w": "the",
+     "at": 3.438
+    },
+    {
+     "w": "ball",
+     "at": 3.525
+    },
+    {
+     "w": "swings",
+     "at": 4.2
+    },
+    {
+     "w": "his",
+     "at": 4.612
+    },
+    {
+     "w": "kicking",
+     "at": 4.787
+    },
+    {
+     "w": "leg",
+     "at": 5.15
+    },
+    {
+     "w": "behind",
+     "at": 5.375
+    },
+    {
+     "w": "it",
+     "at": 5.8
+    },
+    {
+     "w": "and",
+     "at": 6.175
+    },
+    {
+     "w": "strikes",
+     "at": 6.312
+    },
+    {
+     "w": "with",
+     "at": 6.737
+    },
+    {
+     "w": "the",
+     "at": 6.862
+    },
+    {
+     "w": "laces",
+     "at": 6.95
+    }
+   ]
+  },
+  {
+   "label": "Practise it",
+   "text": "It curls past the defender! That\u2019s a rabona. Practise it slowly: plant, swing behind, strike. Only use it when it\u2019s the smart choice.",
+   "src": "/plays/narration/ricardinho-rabona/4.m4a",
+   "seconds": 9.9,
+   "words": [
+    {
+     "w": "It",
+     "at": 0.325
+    },
+    {
+     "w": "curls",
+     "at": 0.45
+    },
+    {
+     "w": "past",
+     "at": 0.812
+    },
+    {
+     "w": "the",
+     "at": 1.163
+    },
+    {
+     "w": "defender",
+     "at": 1.25
+    },
+    {
+     "w": "That\u2019s",
+     "at": 2.1
+    },
+    {
+     "w": "a",
+     "at": 2.337
+    },
+    {
+     "w": "rabona",
+     "at": 2.4
+    },
+    {
+     "w": "Practise",
+     "at": 3.438
+    },
+    {
+     "w": "it",
+     "at": 3.9
+    },
+    {
+     "w": "slowly",
+     "at": 4.062
+    },
+    {
+     "w": "plant",
+     "at": 4.912
+    },
+    {
+     "w": "swing",
+     "at": 5.438
+    },
+    {
+     "w": "behind",
+     "at": 5.725
+    },
+    {
+     "w": "strike",
+     "at": 6.287
+    },
+    {
+     "w": "Only",
+     "at": 7.088
+    },
+    {
+     "w": "use",
+     "at": 7.412
+    },
+    {
+     "w": "it",
+     "at": 7.625
+    },
+    {
+     "w": "when",
+     "at": 7.713
+    },
+    {
+     "w": "it\u2019s",
+     "at": 7.838
+    },
+    {
+     "w": "the",
+     "at": 7.987
+    },
+    {
+     "w": "smart",
+     "at": 8.088
+    },
+    {
+     "w": "choice",
+     "at": 8.463
+    }
+   ]
+  }
+ ]
+}

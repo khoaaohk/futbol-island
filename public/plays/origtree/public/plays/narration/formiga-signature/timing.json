@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Montreal, 2015, the Women's World Cup. Brazil against South Korea. Formiga hunts in midfield, right behind her opponent. Korea pass back... too softly! Formiga nips in, and slides it past the keeper. Goal!",
+   "src": "/plays/narration/formiga-signature/1.m4a",
+   "seconds": 16.2,
+   "words": [
+    {
+     "w": "Montreal",
+     "at": 0.4
+    },
+    {
+     "w": "2015",
+     "at": 1.075
+    },
+    {
+     "w": "the",
+     "at": 1.85
+    },
+    {
+     "w": "Women's",
+     "at": 1.975
+    },
+    {
+     "w": "World",
+     "at": 2.35
+    },
+    {
+     "w": "Cup",
+     "at": 2.712
+    },
+    {
+     "w": "Brazil",
+     "at": 3.513
+    },
+    {
+     "w": "against",
+     "at": 4.0
+    },
+    {
+     "w": "South",
+     "at": 4.438
+    },
+    {
+     "w": "Korea",
+     "at": 4.75
+    },
+    {
+     "w": "Formiga",
+     "at": 5.713
+    },
+    {
+     "w": "hunts",
+     "at": 6.213
+    },
+    {
+     "w": "in",
+     "at": 6.55
+    },
+    {
+     "w": "midfield",
+     "at": 6.675
+    },
+    {
+     "w": "right",
+     "at": 7.338
+    },
+    {
+     "w": "behind",
+     "at": 7.6
+    },
+    {
+     "w": "her",
+     "at": 7.963
+    },
+    {
+     "w": "opponent",
+     "at": 8.075
+    },
+    {
+     "w": "Korea",
+     "at": 8.963
+    },
+    {
+     "w": "pass",
+     "at": 9.412
+    },
+    {
+     "w": "back",
+     "at": 9.775
+    },
+    {
+     "w": "too",
+     "at": 10.537
+    },
+    {
+     "w": "softly",
+     "at": 10.8
+    },
+    {
+     "w": "Formiga",
+     "at": 11.713
+    },
+    {
+     "w": "nips",
+     "at": 12.175
+    },
+    {
+     "w": "in",
+     "at": 12.475
+    },
+    {
+     "w": "and",
+     "at": 12.738
+    },
+    {
+     "w": "slides",
+     "at": 12.875
+    },
+    {
+     "w": "it",
+     "at": 13.312
+    },
+    {
+     "w": "past",
+     "at": 13.4
+    },
+    {
+     "w": "the",
+     "at": 13.713
+    },
+    {
+     "w": "keeper",
+     "at": 13.8
+    },
+    {
+     "w": "Goal",
+     "at": 14.7
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again. She stays close to her opponent. The back-pass is slow, so she darts in and wins it.",
+   "src": "/plays/narration/formiga-signature/2.m4a",
+   "seconds": 7.4,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "She",
+     "at": 1.488
+    },
+    {
+     "w": "stays",
+     "at": 1.625
+    },
+    {
+     "w": "close",
+     "at": 1.95
+    },
+    {
+     "w": "to",
+     "at": 2.275
+    },
+    {
+     "w": "her",
+     "at": 2.362
+    },
+    {
+     "w": "opponent",
+     "at": 2.475
+    },
+    {
+     "w": "The",
+     "at": 3.475
+    },
+    {
+     "w": "back-pass",
+     "at": 3.575
+    },
+    {
+     "w": "is",
+     "at": 4.2
+    },
+    {
+     "w": "slow",
+     "at": 4.35
+    },
+    {
+     "w": "so",
+     "at": 4.95
+    },
+    {
+     "w": "she",
+     "at": 5.125
+    },
+    {
+     "w": "darts",
+     "at": 5.287
+    },
+    {
+     "w": "in",
+     "at": 5.638
+    },
+    {
+     "w": "and",
+     "at": 5.812
+    },
+    {
+     "w": "wins",
+     "at": 5.925
+    },
+    {
+     "w": "it",
+     "at": 6.237
+    }
+   ]
+  },
+  {
+   "label": "Right foot",
+   "text": "Her right foot rolls it into the corner. At thirty-seven, Formiga became the oldest goalscorer at a Women's World Cup!",
+   "src": "/plays/narration/formiga-signature/3.m4a",
+   "seconds": 8.5,
+   "words": [
+    {
+     "w": "Her",
+     "at": 0.35
+    },
+    {
+     "w": "right",
+     "at": 0.512
+    },
+    {
+     "w": "foot",
+     "at": 0.85
+    },
+    {
+     "w": "rolls",
+     "at": 1.238
+    },
+    {
+     "w": "it",
+     "at": 1.65
+    },
+    {
+     "w": "into",
+     "at": 1.738
+    },
+    {
+     "w": "the",
+     "at": 1.913
+    },
+    {
+     "w": "corner",
+     "at": 2.0
+    },
+    {
+     "w": "At",
+     "at": 2.962
+    },
+    {
+     "w": "thirty-seven",
+     "at": 3.15
+    },
+    {
+     "w": "Formiga",
+     "at": 4.213
+    },
+    {
+     "w": "became",
+     "at": 4.7
+    },
+    {
+     "w": "the",
+     "at": 5.062
+    },
+    {
+     "w": "oldest",
+     "at": 5.188
+    },
+    {
+     "w": "goalscorer",
+     "at": 5.6
+    },
+    {
+     "w": "at",
+     "at": 6.275
+    },
+    {
+     "w": "a",
+     "at": 6.362
+    },
+    {
+     "w": "Women's",
+     "at": 6.45
+    },
+    {
+     "w": "World",
+     "at": 6.8
+    },
+    {
+     "w": "Cup",
+     "at": 7.138
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: stay close to your opponent, and nip in when the pass is loose.",
+   "src": "/plays/narration/formiga-signature/4.m4a",
+   "seconds": 5.4,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "stay",
+     "at": 1.363
+    },
+    {
+     "w": "close",
+     "at": 1.6
+    },
+    {
+     "w": "to",
+     "at": 1.925
+    },
+    {
+     "w": "your",
+     "at": 2.013
+    },
+    {
+     "w": "opponent",
+     "at": 2.125
+    },
+    {
+     "w": "and",
+     "at": 2.75
+    },
+    {
+     "w": "nip",
+     "at": 2.888
+    },
+    {
+     "w": "in",
+     "at": 3.112
+    },
+    {
+     "w": "when",
+     "at": 3.263
+    },
+    {
+     "w": "the",
+     "at": 3.388
+    },
+    {
+     "w": "pass",
+     "at": 3.487
+    },
+    {
+     "w": "is",
+     "at": 3.875
+    },
+    {
+     "w": "loose",
+     "at": 4.037
+    }
+   ]
+  }
+ ]
+}

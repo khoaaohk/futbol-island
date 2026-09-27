@@ -171,4 +171,35 @@ export const CLUB_COSTUMES:ClubCostume[]=[
  }
 ];
 
+/**
+ * Club home-kit colours for the wearable island costumes (user decision, Sep 25 2026: a costume reads as its club's
+ * kit at a glance). body = main kit colour (fur, hood, limbs), accent = second kit colour (manes, stripes, ears,
+ * paws), chest = the pale natural chest/belly that keeps the animal readable. The `color`/`accent` fields above stay
+ * the mascot colours used by the history lessons.
+ */
+export const CLUB_KIT_COLOURS:Record<string,{body:number;accent:number;chest:number}>={
+ barcelona:{body:0x1d4f9c,accent:0xa50044,chest:0xf4efe4},       // blaugrana: blue and garnet
+ arsenal:{body:0xdb0007,accent:0xf4efe4,chest:0xf4efe4},         // red with white
+ liverpool:{body:0xc8102e,accent:0xf6c343,chest:0xf4efe4},       // red; the Liver bird crest detail in gold
+ chelsea:{body:0x034694,accent:0xf4efe4,chest:0xf4efe4},         // royal blue and white
+ leicester:{body:0x003090,accent:0xf4efe4,chest:0xf4efe4},       // blue and white
+ bayern:{body:0xdc052d,accent:0xf4efe4,chest:0xf4efe4},          // red and white
+ dortmund:{body:0xfde100,accent:0x1a1a1a,chest:0xfde100},        // yellow and black
+ koln:{body:0xf4efe4,accent:0xed1c24,chest:0xffffff},            // white and red
+ juventus:{body:0xf4f2ec,accent:0x1a1a1a,chest:0xf4f2ec},        // black and white stripes
+ roma:{body:0x8e1f2f,accent:0xf0a030,chest:0xf6d9a0},            // burgundy (giallorosso) and orange-gold
+ benfica:{body:0xe20e17,accent:0xf4efe4,chest:0xf4efe4},         // red and white
+ psg:{body:0x004170,accent:0xda291c,chest:0xf4efe4},             // navy with the red band colour
+ flamengo:{body:0xc4161c,accent:0x1b1b1b,chest:0xc4161c},        // red and black hoops
+ palmeiras:{body:0x006437,accent:0xf4efe4,chest:0xf4efe4},       // green and white
+ 'atletico-mineiro':{body:0x1b1b1b,accent:0xf4efe4,chest:0x2f2f2f},// black and white stripes
+ santos:{body:0x1b1b1b,accent:0xf4efe4,chest:0xf4efe4},          // white and black
+ botafogo:{body:0x1b1b1b,accent:0xf4efe4,chest:0xf4efe4},        // black and white
+ 'river-plate':{body:0xf4efe4,accent:0xe2231a,chest:0xffffff},   // white with red
+ pumas:{body:0x0a2240,accent:0xc5a45a,chest:0xe8d6a0},           // UNAM navy and gold
+ kashima:{body:0xa3162c,accent:0x1c2b5a,chest:0xf4efe4},         // deep red with navy
+ cerezo:{body:0xe8388a,accent:0x1b2a55,chest:0xf4efe4},          // cherry pink and navy
+ nagoya:{body:0xd7182a,accent:0xf4efe4,chest:0xf4efe4},          // red and white
+ sutton:{body:0xf0a31c,accent:0x4a2c1a,chest:0xf6d9a0},          // amber and chocolate
+};
 export function getCostume(id:string|null|undefined):ClubCostume|undefined{return CLUB_COSTUMES.find(costume=>costume.id===id);}

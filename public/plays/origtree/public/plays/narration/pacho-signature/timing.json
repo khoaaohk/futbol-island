@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The final",
+   "text": "Munich, 2025, the Champions League final. Paris beat Inter five\u2013nil, and Willian Pacho became the first Ecuadorian to win it! One reporter said he was world class at tracking back.",
+   "src": "/plays/narration/pacho-signature/1.m4a",
+   "seconds": 14.0,
+   "words": [
+    {
+     "w": "Munich",
+     "at": 0.4
+    },
+    {
+     "w": "2025",
+     "at": 0.925
+    },
+    {
+     "w": "the",
+     "at": 2.275
+    },
+    {
+     "w": "Champions",
+     "at": 2.388
+    },
+    {
+     "w": "League",
+     "at": 3.025
+    },
+    {
+     "w": "final",
+     "at": 3.312
+    },
+    {
+     "w": "Paris",
+     "at": 4.312
+    },
+    {
+     "w": "beat",
+     "at": 4.763
+    },
+    {
+     "w": "Inter",
+     "at": 5.013
+    },
+    {
+     "w": "five",
+     "at": 5.263
+    },
+    {
+     "w": "nil",
+     "at": 5.825
+    },
+    {
+     "w": "and",
+     "at": 6.45
+    },
+    {
+     "w": "Willian",
+     "at": 6.575
+    },
+    {
+     "w": "Pacho",
+     "at": 7.037
+    },
+    {
+     "w": "became",
+     "at": 7.525
+    },
+    {
+     "w": "the",
+     "at": 7.862
+    },
+    {
+     "w": "first",
+     "at": 7.975
+    },
+    {
+     "w": "Ecuadorian",
+     "at": 8.338
+    },
+    {
+     "w": "to",
+     "at": 8.975
+    },
+    {
+     "w": "win",
+     "at": 9.1
+    },
+    {
+     "w": "it",
+     "at": 9.338
+    },
+    {
+     "w": "One",
+     "at": 10.05
+    },
+    {
+     "w": "reporter",
+     "at": 10.325
+    },
+    {
+     "w": "said",
+     "at": 10.85
+    },
+    {
+     "w": "he",
+     "at": 11.012
+    },
+    {
+     "w": "was",
+     "at": 11.125
+    },
+    {
+     "w": "world",
+     "at": 11.312
+    },
+    {
+     "w": "class",
+     "at": 11.688
+    },
+    {
+     "w": "at",
+     "at": 12.15
+    },
+    {
+     "w": "tracking",
+     "at": 12.25
+    },
+    {
+     "w": "back",
+     "at": 12.7
+    }
+   ]
+  },
+  {
+   "label": "How he does it",
+   "text": "Watch how he does it. The ball goes over his head\u2026 so Pacho turns and sprints back!",
+   "src": "/plays/narration/pacho-signature/2.m4a",
+   "seconds": 6.1,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "how",
+     "at": 0.675
+    },
+    {
+     "w": "he",
+     "at": 0.812
+    },
+    {
+     "w": "does",
+     "at": 0.925
+    },
+    {
+     "w": "it",
+     "at": 1.163
+    },
+    {
+     "w": "The",
+     "at": 1.65
+    },
+    {
+     "w": "ball",
+     "at": 1.75
+    },
+    {
+     "w": "goes",
+     "at": 2.05
+    },
+    {
+     "w": "over",
+     "at": 2.263
+    },
+    {
+     "w": "his",
+     "at": 2.462
+    },
+    {
+     "w": "head",
+     "at": 2.625
+    },
+    {
+     "w": "so",
+     "at": 3.263
+    },
+    {
+     "w": "Pacho",
+     "at": 3.45
+    },
+    {
+     "w": "turns",
+     "at": 3.837
+    },
+    {
+     "w": "and",
+     "at": 4.237
+    },
+    {
+     "w": "sprints",
+     "at": 4.362
+    },
+    {
+     "w": "back",
+     "at": 4.775
+    }
+   ]
+  },
+  {
+   "label": "The replay",
+   "text": "Watch again, slowly. He turns his hips, pumps his arms, and gets between the ball and the goal. Now he wins it!",
+   "src": "/plays/narration/pacho-signature/3.m4a",
+   "seconds": 8.0,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.113
+    },
+    {
+     "w": "He",
+     "at": 2.1
+    },
+    {
+     "w": "turns",
+     "at": 2.225
+    },
+    {
+     "w": "his",
+     "at": 2.487
+    },
+    {
+     "w": "hips",
+     "at": 2.65
+    },
+    {
+     "w": "pumps",
+     "at": 3.1
+    },
+    {
+     "w": "his",
+     "at": 3.413
+    },
+    {
+     "w": "arms",
+     "at": 3.587
+    },
+    {
+     "w": "and",
+     "at": 4.062
+    },
+    {
+     "w": "gets",
+     "at": 4.175
+    },
+    {
+     "w": "between",
+     "at": 4.425
+    },
+    {
+     "w": "the",
+     "at": 4.737
+    },
+    {
+     "w": "ball",
+     "at": 4.838
+    },
+    {
+     "w": "and",
+     "at": 5.2
+    },
+    {
+     "w": "the",
+     "at": 5.312
+    },
+    {
+     "w": "goal",
+     "at": 5.4
+    },
+    {
+     "w": "Now",
+     "at": 6.162
+    },
+    {
+     "w": "he",
+     "at": 6.4
+    },
+    {
+     "w": "wins",
+     "at": 6.562
+    },
+    {
+     "w": "it",
+     "at": 6.888
+    }
+   ]
+  },
+  {
+   "label": "The lesson",
+   "text": "If an attacker gets past you, turn and sprint back goal side first. Then try to win the ball.",
+   "src": "/plays/narration/pacho-signature/4.m4a",
+   "seconds": 6.9,
+   "words": [
+    {
+     "w": "If",
+     "at": 0.35
+    },
+    {
+     "w": "an",
+     "at": 0.487
+    },
+    {
+     "w": "attacker",
+     "at": 0.575
+    },
+    {
+     "w": "gets",
+     "at": 1.025
+    },
+    {
+     "w": "past",
+     "at": 1.275
+    },
+    {
+     "w": "you",
+     "at": 1.65
+    },
+    {
+     "w": "turn",
+     "at": 2.112
+    },
+    {
+     "w": "and",
+     "at": 2.462
+    },
+    {
+     "w": "sprint",
+     "at": 2.587
+    },
+    {
+     "w": "back",
+     "at": 2.95
+    },
+    {
+     "w": "goal",
+     "at": 3.225
+    },
+    {
+     "w": "side",
+     "at": 3.487
+    },
+    {
+     "w": "first",
+     "at": 3.8
+    },
+    {
+     "w": "Then",
+     "at": 4.662
+    },
+    {
+     "w": "try",
+     "at": 4.9
+    },
+    {
+     "w": "to",
+     "at": 5.138
+    },
+    {
+     "w": "win",
+     "at": 5.225
+    },
+    {
+     "w": "the",
+     "at": 5.388
+    },
+    {
+     "w": "ball",
+     "at": 5.475
+    }
+   ]
+  }
+ ]
+}

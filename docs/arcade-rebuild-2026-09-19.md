@@ -42,3 +42,13 @@ This is a local rebuild, not a production deployment. Desktop Chromium mobile em
 ## A new soccer arena game later
 
 A suitable adaptation of the reference's arena concept is **Last Goal Standing**: short rounds in a compact street pitch, seven AI opponents, a shared ball and changing open goals. A receding playable boundary can become closing pitch gates rather than poison gas. Actions are dribble, tackle, pass and shoot; special abilities should represent football skills and have readable recovery times. Start with possession, interception and support AI, a fixed camera and one sun. Add night lamps or selective postprocessing only after physical-phone profiling. Build this after validating the rebuilt existing games, rather than mixing a new ruleset into their migration.
+
+## September 25 continuation — four games
+
+The current local implementation supersedes the Live Match description above: **Island Strikers** is a three-minute, eight-player, 4-a-side arcade match with its own bounded simulation, board rebounds, passing, tackling, sprint stamina and charged shots. Keyboard, on-screen touch controls and the existing phone-controller protocol are connected. Football teaching messages explain moving after a pass, finding space and following rebounds. Physical second-device pairing remains unverified.
+
+The resumed four-agent review covers one game per agent. See `arcade-tennis-2026-09-25.md`, `arcade-pinball-2026-09-25.md` and `arcade-breakaway-2026-09-25.md` for their findings.
+
+Strikers' first browser checks passed gameplay but screenshot review caught a completely fogged-out portrait pitch. Its camera now fits the stadium corners and sets the fog and far plane relative to camera distance. This runs only on resize, with no added animation work. The whole stadium remains visible at 390 × 844 and 1280 × 800. `scripts/check-island-strikers-browser.cjs` checks these camera bounds alongside desktop/touch charging, shooting, goal scoring, pause/resume, full-time sleep and restart. `tests/striker-match.cjs` passes simulation checks at 30/60/120 Hz.
+
+All work remains local and uncommitted. Browser mobile profiles do not establish real-device heat or Safari behavior.

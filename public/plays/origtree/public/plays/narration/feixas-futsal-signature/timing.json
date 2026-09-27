@@ -1,0 +1,398 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: Bar\u00e7a v Palma, 2024",
+   "text": "Barcelona against Palma, March 2024. No goals, last minute. Palma swap their goalkeeper for an attacker, so their goal is empty. A shot! Feixas blocks it, then volleys it the whole way. Goal!",
+   "src": "/plays/narration/feixas-futsal-signature/1.m4a",
+   "seconds": 15.0,
+   "words": [
+    {
+     "w": "Barcelona",
+     "at": 0.375
+    },
+    {
+     "w": "against",
+     "at": 1.05
+    },
+    {
+     "w": "Palma",
+     "at": 1.438
+    },
+    {
+     "w": "March",
+     "at": 1.975
+    },
+    {
+     "w": "2024",
+     "at": 2.275
+    },
+    {
+     "w": "No",
+     "at": 3.675
+    },
+    {
+     "w": "goals",
+     "at": 3.875
+    },
+    {
+     "w": "last",
+     "at": 4.35
+    },
+    {
+     "w": "minute",
+     "at": 4.725
+    },
+    {
+     "w": "Palma",
+     "at": 5.537
+    },
+    {
+     "w": "swap",
+     "at": 5.912
+    },
+    {
+     "w": "their",
+     "at": 6.237
+    },
+    {
+     "w": "goalkeeper",
+     "at": 6.4
+    },
+    {
+     "w": "for",
+     "at": 7.0
+    },
+    {
+     "w": "an",
+     "at": 7.112
+    },
+    {
+     "w": "attacker",
+     "at": 7.2
+    },
+    {
+     "w": "so",
+     "at": 7.8
+    },
+    {
+     "w": "their",
+     "at": 7.95
+    },
+    {
+     "w": "goal",
+     "at": 8.137
+    },
+    {
+     "w": "is",
+     "at": 8.475
+    },
+    {
+     "w": "empty",
+     "at": 8.637
+    },
+    {
+     "w": "A",
+     "at": 9.438
+    },
+    {
+     "w": "shot",
+     "at": 9.575
+    },
+    {
+     "w": "Feixas",
+     "at": 10.375
+    },
+    {
+     "w": "blocks",
+     "at": 10.912
+    },
+    {
+     "w": "it",
+     "at": 11.35
+    },
+    {
+     "w": "then",
+     "at": 11.525
+    },
+    {
+     "w": "volleys",
+     "at": 11.762
+    },
+    {
+     "w": "it",
+     "at": 12.225
+    },
+    {
+     "w": "the",
+     "at": 12.312
+    },
+    {
+     "w": "whole",
+     "at": 12.4
+    },
+    {
+     "w": "way",
+     "at": 12.65
+    },
+    {
+     "w": "Goal",
+     "at": 13.575
+    }
+   ]
+  },
+  {
+   "label": "Replay: block, bounce, volley",
+   "text": "Again, slowly. He blocks the shot. The ball bounces, and his left foot sends it off the crossbar and in!",
+   "src": "/plays/narration/feixas-futsal-signature/2.m4a",
+   "seconds": 7.9,
+   "words": [
+    {
+     "w": "Again",
+     "at": 0.375
+    },
+    {
+     "w": "slowly",
+     "at": 0.887
+    },
+    {
+     "w": "He",
+     "at": 1.8
+    },
+    {
+     "w": "blocks",
+     "at": 1.925
+    },
+    {
+     "w": "the",
+     "at": 2.275
+    },
+    {
+     "w": "shot",
+     "at": 2.413
+    },
+    {
+     "w": "The",
+     "at": 3.225
+    },
+    {
+     "w": "ball",
+     "at": 3.325
+    },
+    {
+     "w": "bounces",
+     "at": 3.625
+    },
+    {
+     "w": "and",
+     "at": 4.275
+    },
+    {
+     "w": "his",
+     "at": 4.388
+    },
+    {
+     "w": "left",
+     "at": 4.562
+    },
+    {
+     "w": "foot",
+     "at": 4.862
+    },
+    {
+     "w": "sends",
+     "at": 5.162
+    },
+    {
+     "w": "it",
+     "at": 5.487
+    },
+    {
+     "w": "off",
+     "at": 5.562
+    },
+    {
+     "w": "the",
+     "at": 5.737
+    },
+    {
+     "w": "crossbar",
+     "at": 5.825
+    },
+    {
+     "w": "and",
+     "at": 6.4
+    },
+    {
+     "w": "in",
+     "at": 6.537
+    }
+   ]
+  },
+  {
+   "label": "How he blocks (demo)",
+   "text": "This is how he blocks. A player breaks through, so he rushes out and makes himself big. The angle shrinks. Blocked!",
+   "src": "/plays/narration/feixas-futsal-signature/3.m4a",
+   "seconds": 8.1,
+   "words": [
+    {
+     "w": "This",
+     "at": 0.375
+    },
+    {
+     "w": "is",
+     "at": 0.575
+    },
+    {
+     "w": "how",
+     "at": 0.7
+    },
+    {
+     "w": "he",
+     "at": 0.887
+    },
+    {
+     "w": "blocks",
+     "at": 1.0
+    },
+    {
+     "w": "A",
+     "at": 1.887
+    },
+    {
+     "w": "player",
+     "at": 2.0
+    },
+    {
+     "w": "breaks",
+     "at": 2.4
+    },
+    {
+     "w": "through",
+     "at": 2.725
+    },
+    {
+     "w": "so",
+     "at": 3.075
+    },
+    {
+     "w": "he",
+     "at": 3.212
+    },
+    {
+     "w": "rushes",
+     "at": 3.325
+    },
+    {
+     "w": "out",
+     "at": 3.675
+    },
+    {
+     "w": "and",
+     "at": 3.862
+    },
+    {
+     "w": "makes",
+     "at": 3.962
+    },
+    {
+     "w": "himself",
+     "at": 4.162
+    },
+    {
+     "w": "big",
+     "at": 4.588
+    },
+    {
+     "w": "The",
+     "at": 5.388
+    },
+    {
+     "w": "angle",
+     "at": 5.55
+    },
+    {
+     "w": "shrinks",
+     "at": 5.925
+    },
+    {
+     "w": "Blocked",
+     "at": 6.638
+    }
+   ]
+  },
+  {
+   "label": "Practise it",
+   "text": "Try it! Come off your line and close the angle fast when a player breaks through.",
+   "src": "/plays/narration/feixas-futsal-signature/4.m4a",
+   "seconds": 5.5,
+   "words": [
+    {
+     "w": "Try",
+     "at": 0.35
+    },
+    {
+     "w": "it",
+     "at": 0.688
+    },
+    {
+     "w": "Come",
+     "at": 1.225
+    },
+    {
+     "w": "off",
+     "at": 1.363
+    },
+    {
+     "w": "your",
+     "at": 1.538
+    },
+    {
+     "w": "line",
+     "at": 1.65
+    },
+    {
+     "w": "and",
+     "at": 2.0
+    },
+    {
+     "w": "close",
+     "at": 2.125
+    },
+    {
+     "w": "the",
+     "at": 2.438
+    },
+    {
+     "w": "angle",
+     "at": 2.55
+    },
+    {
+     "w": "fast",
+     "at": 2.938
+    },
+    {
+     "w": "when",
+     "at": 3.362
+    },
+    {
+     "w": "a",
+     "at": 3.487
+    },
+    {
+     "w": "player",
+     "at": 3.55
+    },
+    {
+     "w": "breaks",
+     "at": 3.875
+    },
+    {
+     "w": "through",
+     "at": 4.2
+    }
+   ]
+  }
+ ]
+}

@@ -2,17 +2,25 @@ import {useEffect,useRef,useId,useMemo,memo} from 'react';
 import {ARCADE_DOOR,COACHES_DOOR,STORE_DOOR,VENUES,type Format} from '@/lib/town/venues';
 import {ISLAND_SHORE,SHORE_SAND,INTERIOR_GRASS,INTERIOR_GRASS_COLOR,NORTH_BEACH_UMBRELLAS,NORTH_BEACH_PATHS,onIsland} from '@/lib/town/shoreline';
 import {FLIGHT_BOUNDS,FLIGHT_WATER_MARGIN} from '@/lib/town/simulation';
+/** SVG point text with fixed precision: the shoreline comes from trig, which differs in the last digits between Node (SSR)
+ *  and WebKit/V8 in the browser, so unrounded values caused a hydration mismatch. 0.01 map units is far below a pixel. */
+const svgPoint=(p:{x:number;z:number})=>`${Math.round(p.x*100)/100},${Math.round(p.z*100)/100}`;
 export type MapFootprint={x:number;z:number;w:number;d:number;cornerRadius?:number};
 export type MapDestination=Format|'square'|'store'|'coaches';
-function IslandOverview({roads,buildings,position,markerPosition,onSelect,active=true}:{roads:MapFootprint[];buildings:MapFootprint[];position?:{x:number;z:number};markerPosition?:{x:number;z:number};onSelect?:(destination:MapDestination)=>void;active?:boolean}){
+function IslandOverview({roads,buildings,position,markerPosition,onSelect,active=true,frames}:{roads:MapFootprint[];buildings:MapFootprint[];position?:{x:number;z:number};markerPosition?:{x:number;z:number};onSelect?:(destination:MapDestination)=>void;active?:boolean;frames?:(listener:(x:number,z:number)=>void)=>()=>void}){
  const destination=(id:MapDestination,label:string)=>onSelect?{role:'button',tabIndex:0,'aria-label':`Travel to ${label}`,className:'map-destination',onClick:()=>onSelect(id),onKeyDown:(event:React.KeyboardEvent<SVGGElement>)=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();onSelect(id);}}}:{'aria-label':label};
  const boundaryMask=useId();
  const b=FLIGHT_BOUNDS,w=b.maxX-b.minX,h=b.maxZ-b.minZ;
  const previous=useRef(position);
  const jumped=!!(position&&previous.current&&Math.hypot(position.x-previous.current.x,position.z-previous.current.z)>25);
  useEffect(()=>{previous.current=position;},[position]);
+ // Heat pass 3: with a frame source (Town's rendered frames) the layer moves on the island's own frames and has no CSS transition,
+ // so a moving minimap adds no compositor frames of its own. React then leaves the transform to this writer.
+ const layer=useRef<HTMLDivElement>(null),latest=useRef(position);latest.current=position;
+ useEffect(()=>{const el=layer.current;if(!frames||!el)return;let last='';const write=(x:number,z:number)=>{const t=`translate(${(b.minX-8-x)/(w+16)*100}%, ${(b.minZ-8-z)/(h+16)*100}%)`;if(t!==last){last=t;el.style.transform=t;}};
+  if(latest.current)write(latest.current.x,latest.current.z);return frames(write);},[frames,b.minX,b.minZ,w,h]);
  const radius=position&&!onIsland(position.x,position.z)?95:65;
- const shorePoints=ISLAND_SHORE.map(p=>`${p.x},${p.z}`).join(' ');
+ const shorePoints=ISLAND_SHORE.map(p=>svgPoint(p)).join(' ');
  const view=position?`${-radius} ${-radius} ${radius*2} ${radius*2}`:`${b.minX-8} ${b.minZ-8} ${w+16} ${h+16}`;
  const localMap=!!position;
  const terrain=useMemo(()=> <>
@@ -23,9 +31,9 @@ function IslandOverview({roads,buildings,position,markerPosition,onSelect,active
   </g>
   {localMap&&<g aria-label="Flight boundary" pointerEvents="none"><rect x={b.minX-8} y={b.minZ-8} width={w+16} height={h+16} mask={`url(#${boundaryMask})`} style={{fill:'#795433',fillOpacity:1,stroke:'none'}}/></g>}
   <polygon points={shorePoints} fill="#e1d3ae" stroke="#f1d6a1" strokeWidth="5"/>
-  <polygon aria-label="Interior grass" points={INTERIOR_GRASS.map(p=>`${p.x},${p.z}`).join(' ')} fill={INTERIOR_GRASS_COLOR}/>
+  <polygon aria-label="Interior grass" points={INTERIOR_GRASS.map(p=>svgPoint(p)).join(' ')} fill={INTERIOR_GRASS_COLOR}/>
   <g aria-label="Ferry dock"><path d="M210 190H238L235 204L226.5 215H210Z" fill="#b98f62" stroke="#91704d" strokeWidth=".7"/><rect x="202" y="190.5" width="8" height="5" fill="#b98f62"/><rect aria-label="Ferry boarding ramp" x="234" y="204" width="10" height="3.2" fill="#b98f62" stroke="#fff0cf" strokeWidth=".3"/><rect x="242" y="190.5" width="8" height="17" rx="2" fill="#477c6a"/><rect x="243" y="194" width="6" height="10" fill="#fff0cf"/></g>
-  {SHORE_SAND.map((p,i)=>{const next=SHORE_SAND[(i+1)%SHORE_SAND.length];return <polygon key={'sand'+i} points={[p.outer,next.outer,next.inner,p.inner].map(p=>`${p.x},${p.z}`).join(' ')} fill="#f1d6a1"/>;})}
+  {SHORE_SAND.map((p,i)=>{const next=SHORE_SAND[(i+1)%SHORE_SAND.length];return <polygon key={'sand'+i} points={[p.outer,next.outer,next.inner,p.inner].map(p=>svgPoint(p)).join(' ')} fill="#f1d6a1"/>;})}
   {NORTH_BEACH_PATHS.map((r,i)=><rect key={'beach-path'+i} x={r.x-r.w/2} y={r.z-r.d/2} width={r.w} height={r.d} fill="#eddfbb"/>)}
   {NORTH_BEACH_UMBRELLAS.map((p,i)=><circle key={'umbrella'+i} cx={p.x} cy={p.z} r={localMap?2.5:2} fill={i%2?'#477c6a':'#bd7657'}/>)}
   <g aria-label="North Beach"><text x="80" y="-214" textAnchor="middle" fontSize={localMap?9:11} fill="#76583a" fontWeight="700">NORTH BEACH</text></g>
@@ -50,7 +58,7 @@ function IslandOverview({roads,buildings,position,markerPosition,onSelect,active
    <polygon points={shorePoints} fill="black" stroke="black" strokeWidth={FLIGHT_WATER_MARGIN*2-6} strokeLinejoin="round"/>
   </mask></defs>;
  if(position)return <div className="island-overview local-overview" role="img" aria-label="Nearby streets and fields around your current position" style={{position:'relative',overflow:'hidden',background:'transparent'}}>
-  <div className="minimap-layer" style={{width:`${(w+16)/(radius*2)*100}%`,height:`${(h+16)/(radius*2)*100}%`,transform:`translate(${(b.minX-8-position.x)/(w+16)*100}%, ${(b.minZ-8-position.z)/(h+16)*100}%)`,transitionDuration:jumped?'0ms':undefined}}>
+  <div ref={layer} className="minimap-layer" data-frame-driven={frames?'true':undefined} style={frames?{width:`${(w+16)/(radius*2)*100}%`,height:`${(h+16)/(radius*2)*100}%`,transition:'none'}:{width:`${(w+16)/(radius*2)*100}%`,height:`${(h+16)/(radius*2)*100}%`,transform:`translate(${(b.minX-8-position.x)/(w+16)*100}%, ${(b.minZ-8-position.z)/(h+16)*100}%)`,transitionDuration:jumped?'0ms':undefined}}>
    <svg viewBox={`${b.minX-8} ${b.minZ-8} ${w+16} ${h+16}`} width="100%" height="100%" aria-hidden="true">{boundaryDefs}<g className="minimap-terrain">{terrain}</g></svg>
   </div>
   <svg className="minimap-player" viewBox={view} aria-hidden="true"><g aria-label="Your position"><circle cx={0} cy={0} r="4.5" fill="#314f43"/><circle cx={0} cy={0} r="3" fill="#fff0cf" stroke="#fff0cf" strokeWidth="1"/></g></svg>
@@ -58,4 +66,4 @@ function IslandOverview({roads,buildings,position,markerPosition,onSelect,active
  return <svg className="island-overview" viewBox={view} style={{background:'#83b5ac'}} role={onSelect?'group':'img'} aria-label="Island map with Store, Arcade, Coaches Centre and four football fields">{terrain}</svg>;
 }
 
-export default memo(IslandOverview,(a,b)=>a.roads===b.roads&&a.buildings===b.buildings&&a.markerPosition===b.markerPosition&&a.onSelect===b.onSelect&&a.active===b.active&&(b.active===false||a.position===b.position));
+export default memo(IslandOverview,(a,b)=>a.roads===b.roads&&a.buildings===b.buildings&&a.markerPosition===b.markerPosition&&a.onSelect===b.onSelect&&a.active===b.active&&a.frames===b.frames&&(b.active===false||a.position===b.position));

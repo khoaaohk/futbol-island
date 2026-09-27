@@ -1,7 +1,8 @@
 import * as T from 'three';
 /** Back-face shells follow the rig's own animated parts without changing its size. */
 export function createCharacterGlow(root:T.Object3D,options:{outlineScale?:number;auraScale?:T.Vector3}={}){
- const sources:T.Mesh[]=[];root.traverse(object=>{if(object instanceof T.Mesh)sources.push(object);});
+ // Bean limbs/hair/hat are shaped in their vertex shader (their raw geometry is a rest pose): no shell for them.
+ const sources:T.Mesh[]=[];root.traverse(object=>{if(object instanceof T.Mesh&&(!object.userData.beanPart||object.userData.beanPart==='body'))sources.push(object);});
  const materials=[.045,.095].map((width,index)=>new T.ShaderMaterial({uniforms:{width:{value:width*(options.outlineScale??1)},strength:{value:0},tint:{value:new T.Color(index?'#48baff':'#83f2cf')}},vertexShader:'uniform float width; void main(){gl_Position=projectionMatrix*modelViewMatrix*vec4(position+normal*width,1.0);}',fragmentShader:'uniform vec3 tint; uniform float strength; void main(){gl_FragColor=vec4(tint,strength);}',side:T.BackSide,transparent:true,depthWrite:false,blending:T.AdditiveBlending}));
  const shells:T.Mesh[]=[];for(const source of sources)for(const material of materials){const shell=new T.Mesh(source.geometry,material);shell.name='character-selection-glow';shell.raycast=()=>{};shell.visible=false;source.add(shell);shells.push(shell);}
  const aura=new T.Group();aura.name='character-orbit-aura';root.add(aura);aura.visible=false;if(options.auraScale)aura.scale.copy(options.auraScale);

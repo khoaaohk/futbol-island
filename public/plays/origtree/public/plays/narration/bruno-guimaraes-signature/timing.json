@@ -1,0 +1,350 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Wembley, full time",
+   "text": "Wembley, 2025, the League Cup final. The whistle blows! Newcastle beat Liverpool, two goals to one.",
+   "src": "/plays/narration/bruno-guimaraes-signature/1.m4a",
+   "seconds": 8.2,
+   "words": [
+    {
+     "w": "Wembley",
+     "at": 0.4
+    },
+    {
+     "w": "2025",
+     "at": 0.95
+    },
+    {
+     "w": "the",
+     "at": 1.913
+    },
+    {
+     "w": "League",
+     "at": 2.0
+    },
+    {
+     "w": "Cup",
+     "at": 2.225
+    },
+    {
+     "w": "final",
+     "at": 2.45
+    },
+    {
+     "w": "The",
+     "at": 3.362
+    },
+    {
+     "w": "whistle",
+     "at": 3.475
+    },
+    {
+     "w": "blows",
+     "at": 3.8
+    },
+    {
+     "w": "Newcastle",
+     "at": 4.713
+    },
+    {
+     "w": "beat",
+     "at": 5.3
+    },
+    {
+     "w": "Liverpool",
+     "at": 5.525
+    },
+    {
+     "w": "two",
+     "at": 6.162
+    },
+    {
+     "w": "goals",
+     "at": 6.375
+    },
+    {
+     "w": "to",
+     "at": 6.7
+    },
+    {
+     "w": "one",
+     "at": 6.825
+    }
+   ]
+  },
+  {
+   "label": "The trophy",
+   "text": "Their captain, Bruno Guimar\u00e3es, lifts the trophy with Kieran Trippier. The fans had waited seventy years for an English cup!",
+   "src": "/plays/narration/bruno-guimaraes-signature/2.m4a",
+   "seconds": 8.8,
+   "words": [
+    {
+     "w": "Their",
+     "at": 0.35
+    },
+    {
+     "w": "captain",
+     "at": 0.5
+    },
+    {
+     "w": "Bruno",
+     "at": 1.238
+    },
+    {
+     "w": "Guimar\u00e3es",
+     "at": 1.625
+    },
+    {
+     "w": "lifts",
+     "at": 2.538
+    },
+    {
+     "w": "the",
+     "at": 2.875
+    },
+    {
+     "w": "trophy",
+     "at": 2.975
+    },
+    {
+     "w": "with",
+     "at": 3.425
+    },
+    {
+     "w": "Kieran",
+     "at": 3.612
+    },
+    {
+     "w": "Trippier",
+     "at": 4.05
+    },
+    {
+     "w": "The",
+     "at": 5.112
+    },
+    {
+     "w": "fans",
+     "at": 5.263
+    },
+    {
+     "w": "had",
+     "at": 5.662
+    },
+    {
+     "w": "waited",
+     "at": 5.8
+    },
+    {
+     "w": "seventy",
+     "at": 6.15
+    },
+    {
+     "w": "years",
+     "at": 6.55
+    },
+    {
+     "w": "for",
+     "at": 6.9
+    },
+    {
+     "w": "an",
+     "at": 7.013
+    },
+    {
+     "w": "English",
+     "at": 7.1
+    },
+    {
+     "w": "cup",
+     "at": 7.513
+    }
+   ]
+  },
+  {
+   "label": "How he does it",
+   "text": "How he does it: Bruno wins the ball back. Then, before anything else, he looks forward. A teammate is running! One quick pass, and his team is attacking.",
+   "src": "/plays/narration/bruno-guimaraes-signature/3.m4a",
+   "seconds": 10.5,
+   "words": [
+    {
+     "w": "How",
+     "at": 0.375
+    },
+    {
+     "w": "he",
+     "at": 0.525
+    },
+    {
+     "w": "does",
+     "at": 0.65
+    },
+    {
+     "w": "it",
+     "at": 0.887
+    },
+    {
+     "w": "Bruno",
+     "at": 1.363
+    },
+    {
+     "w": "wins",
+     "at": 1.788
+    },
+    {
+     "w": "the",
+     "at": 2.1
+    },
+    {
+     "w": "ball",
+     "at": 2.2
+    },
+    {
+     "w": "back",
+     "at": 2.5
+    },
+    {
+     "w": "Then",
+     "at": 3.263
+    },
+    {
+     "w": "before",
+     "at": 3.538
+    },
+    {
+     "w": "anything",
+     "at": 3.875
+    },
+    {
+     "w": "else",
+     "at": 4.2
+    },
+    {
+     "w": "he",
+     "at": 4.487
+    },
+    {
+     "w": "looks",
+     "at": 4.6
+    },
+    {
+     "w": "forward",
+     "at": 4.85
+    },
+    {
+     "w": "A",
+     "at": 5.763
+    },
+    {
+     "w": "teammate",
+     "at": 5.888
+    },
+    {
+     "w": "is",
+     "at": 6.388
+    },
+    {
+     "w": "running",
+     "at": 6.525
+    },
+    {
+     "w": "One",
+     "at": 7.213
+    },
+    {
+     "w": "quick",
+     "at": 7.45
+    },
+    {
+     "w": "pass",
+     "at": 7.713
+    },
+    {
+     "w": "and",
+     "at": 8.188
+    },
+    {
+     "w": "his",
+     "at": 8.287
+    },
+    {
+     "w": "team",
+     "at": 8.463
+    },
+    {
+     "w": "is",
+     "at": 8.8
+    },
+    {
+     "w": "attacking",
+     "at": 8.925
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn! After you win the ball, look forward first, for a quick pass.",
+   "src": "/plays/narration/bruno-guimaraes-signature/4.m4a",
+   "seconds": 5.3,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.512
+    },
+    {
+     "w": "After",
+     "at": 1.363
+    },
+    {
+     "w": "you",
+     "at": 1.675
+    },
+    {
+     "w": "win",
+     "at": 1.8
+    },
+    {
+     "w": "the",
+     "at": 1.962
+    },
+    {
+     "w": "ball",
+     "at": 2.05
+    },
+    {
+     "w": "look",
+     "at": 2.45
+    },
+    {
+     "w": "forward",
+     "at": 2.65
+    },
+    {
+     "w": "first",
+     "at": 3.025
+    },
+    {
+     "w": "for",
+     "at": 3.45
+    },
+    {
+     "w": "a",
+     "at": 3.562
+    },
+    {
+     "w": "quick",
+     "at": 3.625
+    },
+    {
+     "w": "pass",
+     "at": 3.875
+    }
+   ]
+  }
+ ]
+}

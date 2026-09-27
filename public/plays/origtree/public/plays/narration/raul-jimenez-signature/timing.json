@@ -1,0 +1,362 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Arsenal v Wolves, 2019",
+   "text": "The Emirates Stadium, 2019. Wolves are losing to Arsenal, one goal to nil. A throw-in, and Jo\u00e3o Moutinho stands up a cross. Ra\u00fal Jim\u00e9nez throws himself at it... Header! Goal! Wolves are level!",
+   "src": "/plays/narration/raul-jimenez-signature/1.m4a",
+   "seconds": 14.8,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "Emirates",
+     "at": 0.475
+    },
+    {
+     "w": "Stadium",
+     "at": 0.9
+    },
+    {
+     "w": "2019",
+     "at": 1.475
+    },
+    {
+     "w": "Wolves",
+     "at": 2.8
+    },
+    {
+     "w": "are",
+     "at": 3.175
+    },
+    {
+     "w": "losing",
+     "at": 3.3
+    },
+    {
+     "w": "to",
+     "at": 3.7
+    },
+    {
+     "w": "Arsenal",
+     "at": 3.837
+    },
+    {
+     "w": "one",
+     "at": 4.463
+    },
+    {
+     "w": "goal",
+     "at": 4.7
+    },
+    {
+     "w": "to",
+     "at": 4.95
+    },
+    {
+     "w": "nil",
+     "at": 5.088
+    },
+    {
+     "w": "A",
+     "at": 5.812
+    },
+    {
+     "w": "throw-in",
+     "at": 5.938
+    },
+    {
+     "w": "and",
+     "at": 6.575
+    },
+    {
+     "w": "Jo\u00e3o",
+     "at": 6.713
+    },
+    {
+     "w": "Moutinho",
+     "at": 7.05
+    },
+    {
+     "w": "stands",
+     "at": 7.713
+    },
+    {
+     "w": "up",
+     "at": 8.062
+    },
+    {
+     "w": "a",
+     "at": 8.188
+    },
+    {
+     "w": "cross",
+     "at": 8.25
+    },
+    {
+     "w": "Ra\u00fal",
+     "at": 9.225
+    },
+    {
+     "w": "Jim\u00e9nez",
+     "at": 9.55
+    },
+    {
+     "w": "throws",
+     "at": 10.113
+    },
+    {
+     "w": "himself",
+     "at": 10.438
+    },
+    {
+     "w": "at",
+     "at": 10.887
+    },
+    {
+     "w": "it",
+     "at": 11.037
+    },
+    {
+     "w": "Header",
+     "at": 11.662
+    },
+    {
+     "w": "Goal",
+     "at": 12.35
+    },
+    {
+     "w": "Wolves",
+     "at": 12.938
+    },
+    {
+     "w": "are",
+     "at": 13.325
+    },
+    {
+     "w": "level",
+     "at": 13.45
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. Two defenders are right beside him, but Ra\u00fal is stronger and gets there first. Eyes on the ball, he heads it past the keeper.",
+   "src": "/plays/narration/raul-jimenez-signature/2.m4a",
+   "seconds": 10.0,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.188
+    },
+    {
+     "w": "Two",
+     "at": 2.2
+    },
+    {
+     "w": "defenders",
+     "at": 2.425
+    },
+    {
+     "w": "are",
+     "at": 2.975
+    },
+    {
+     "w": "right",
+     "at": 3.1
+    },
+    {
+     "w": "beside",
+     "at": 3.288
+    },
+    {
+     "w": "him",
+     "at": 3.663
+    },
+    {
+     "w": "but",
+     "at": 4.15
+    },
+    {
+     "w": "Ra\u00fal",
+     "at": 4.312
+    },
+    {
+     "w": "is",
+     "at": 4.675
+    },
+    {
+     "w": "stronger",
+     "at": 4.812
+    },
+    {
+     "w": "and",
+     "at": 5.35
+    },
+    {
+     "w": "gets",
+     "at": 5.475
+    },
+    {
+     "w": "there",
+     "at": 5.725
+    },
+    {
+     "w": "first",
+     "at": 5.912
+    },
+    {
+     "w": "Eyes",
+     "at": 6.8
+    },
+    {
+     "w": "on",
+     "at": 7.112
+    },
+    {
+     "w": "the",
+     "at": 7.213
+    },
+    {
+     "w": "ball",
+     "at": 7.3
+    },
+    {
+     "w": "he",
+     "at": 7.75
+    },
+    {
+     "w": "heads",
+     "at": 7.9
+    },
+    {
+     "w": "it",
+     "at": 8.137
+    },
+    {
+     "w": "past",
+     "at": 8.225
+    },
+    {
+     "w": "the",
+     "at": 8.562
+    },
+    {
+     "w": "keeper",
+     "at": 8.65
+    }
+   ]
+  },
+  {
+   "label": "How he does it",
+   "text": "Today Ra\u00fal wears a head guard, and he still scores headers. Watch the ball onto your forehead, and aim down towards the goal!",
+   "src": "/plays/narration/raul-jimenez-signature/3.m4a",
+   "seconds": 8.7,
+   "words": [
+    {
+     "w": "Today",
+     "at": 0.35
+    },
+    {
+     "w": "Ra\u00fal",
+     "at": 0.688
+    },
+    {
+     "w": "wears",
+     "at": 1.05
+    },
+    {
+     "w": "a",
+     "at": 1.312
+    },
+    {
+     "w": "head",
+     "at": 1.375
+    },
+    {
+     "w": "guard",
+     "at": 1.6
+    },
+    {
+     "w": "and",
+     "at": 2.325
+    },
+    {
+     "w": "he",
+     "at": 2.438
+    },
+    {
+     "w": "still",
+     "at": 2.55
+    },
+    {
+     "w": "scores",
+     "at": 2.837
+    },
+    {
+     "w": "headers",
+     "at": 3.275
+    },
+    {
+     "w": "Watch",
+     "at": 4.325
+    },
+    {
+     "w": "the",
+     "at": 4.675
+    },
+    {
+     "w": "ball",
+     "at": 4.775
+    },
+    {
+     "w": "onto",
+     "at": 5.1
+    },
+    {
+     "w": "your",
+     "at": 5.338
+    },
+    {
+     "w": "forehead",
+     "at": 5.463
+    },
+    {
+     "w": "and",
+     "at": 6.2
+    },
+    {
+     "w": "aim",
+     "at": 6.362
+    },
+    {
+     "w": "down",
+     "at": 6.65
+    },
+    {
+     "w": "towards",
+     "at": 6.925
+    },
+    {
+     "w": "the",
+     "at": 7.263
+    },
+    {
+     "w": "goal",
+     "at": 7.35
+    }
+   ]
+  }
+ ]
+}

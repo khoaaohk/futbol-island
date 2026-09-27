@@ -1,0 +1,398 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: Spain v Hungary",
+   "text": "Futsal Euro 2016, in Belgrade. Spain lead Hungary three to one. Alex cuts the ball back, and Miguel\u00edn smashes it in. Four to one!",
+   "src": "/plays/narration/miguelin-futsal-signature/1.m4a",
+   "seconds": 10.7,
+   "words": [
+    {
+     "w": "Futsal",
+     "at": 0.375
+    },
+    {
+     "w": "Euro",
+     "at": 0.8
+    },
+    {
+     "w": "2016",
+     "at": 1.1
+    },
+    {
+     "w": "in",
+     "at": 1.975
+    },
+    {
+     "w": "Belgrade",
+     "at": 2.125
+    },
+    {
+     "w": "Spain",
+     "at": 3.288
+    },
+    {
+     "w": "lead",
+     "at": 3.725
+    },
+    {
+     "w": "Hungary",
+     "at": 3.95
+    },
+    {
+     "w": "three",
+     "at": 4.412
+    },
+    {
+     "w": "to",
+     "at": 4.65
+    },
+    {
+     "w": "one",
+     "at": 4.787
+    },
+    {
+     "w": "Alex",
+     "at": 5.562
+    },
+    {
+     "w": "cuts",
+     "at": 5.975
+    },
+    {
+     "w": "the",
+     "at": 6.275
+    },
+    {
+     "w": "ball",
+     "at": 6.375
+    },
+    {
+     "w": "back",
+     "at": 6.675
+    },
+    {
+     "w": "and",
+     "at": 7.05
+    },
+    {
+     "w": "Miguel\u00edn",
+     "at": 7.175
+    },
+    {
+     "w": "smashes",
+     "at": 7.662
+    },
+    {
+     "w": "it",
+     "at": 8.175
+    },
+    {
+     "w": "in",
+     "at": 8.3
+    },
+    {
+     "w": "Four",
+     "at": 8.975
+    },
+    {
+     "w": "to",
+     "at": 9.2
+    },
+    {
+     "w": "one",
+     "at": 9.325
+    }
+   ]
+  },
+  {
+   "label": "Replay: first time",
+   "text": "Watch again. He arrives on time and hits it first time. Spain win five to two. Later, Miguel\u00edn is named best player of the Euro!",
+   "src": "/plays/narration/miguelin-futsal-signature/2.m4a",
+   "seconds": 9.9,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "He",
+     "at": 1.425
+    },
+    {
+     "w": "arrives",
+     "at": 1.575
+    },
+    {
+     "w": "on",
+     "at": 1.988
+    },
+    {
+     "w": "time",
+     "at": 2.188
+    },
+    {
+     "w": "and",
+     "at": 2.562
+    },
+    {
+     "w": "hits",
+     "at": 2.675
+    },
+    {
+     "w": "it",
+     "at": 2.888
+    },
+    {
+     "w": "first",
+     "at": 2.975
+    },
+    {
+     "w": "time",
+     "at": 3.25
+    },
+    {
+     "w": "Spain",
+     "at": 4.213
+    },
+    {
+     "w": "win",
+     "at": 4.65
+    },
+    {
+     "w": "five",
+     "at": 4.912
+    },
+    {
+     "w": "to",
+     "at": 5.25
+    },
+    {
+     "w": "two",
+     "at": 5.388
+    },
+    {
+     "w": "Later",
+     "at": 6.125
+    },
+    {
+     "w": "Miguel\u00edn",
+     "at": 6.625
+    },
+    {
+     "w": "is",
+     "at": 7.075
+    },
+    {
+     "w": "named",
+     "at": 7.225
+    },
+    {
+     "w": "best",
+     "at": 7.513
+    },
+    {
+     "w": "player",
+     "at": 7.812
+    },
+    {
+     "w": "of",
+     "at": 8.238
+    },
+    {
+     "w": "the",
+     "at": 8.312
+    },
+    {
+     "w": "Euro",
+     "at": 8.412
+    }
+   ]
+  },
+  {
+   "label": "How he does it",
+   "text": "His trademark: the clever wing pass. How he does it: on the left wing, look up before the ball arrives. Spot the run, and slide it inside!",
+   "src": "/plays/narration/miguelin-futsal-signature/3.m4a",
+   "seconds": 10.0,
+   "words": [
+    {
+     "w": "His",
+     "at": 0.35
+    },
+    {
+     "w": "trademark",
+     "at": 0.525
+    },
+    {
+     "w": "the",
+     "at": 1.35
+    },
+    {
+     "w": "clever",
+     "at": 1.45
+    },
+    {
+     "w": "wing",
+     "at": 1.837
+    },
+    {
+     "w": "pass",
+     "at": 2.087
+    },
+    {
+     "w": "How",
+     "at": 3.013
+    },
+    {
+     "w": "he",
+     "at": 3.225
+    },
+    {
+     "w": "does",
+     "at": 3.35
+    },
+    {
+     "w": "it",
+     "at": 3.587
+    },
+    {
+     "w": "on",
+     "at": 4.05
+    },
+    {
+     "w": "the",
+     "at": 4.188
+    },
+    {
+     "w": "left",
+     "at": 4.275
+    },
+    {
+     "w": "wing",
+     "at": 4.588
+    },
+    {
+     "w": "look",
+     "at": 5.0
+    },
+    {
+     "w": "up",
+     "at": 5.162
+    },
+    {
+     "w": "before",
+     "at": 5.312
+    },
+    {
+     "w": "the",
+     "at": 5.562
+    },
+    {
+     "w": "ball",
+     "at": 5.65
+    },
+    {
+     "w": "arrives",
+     "at": 5.95
+    },
+    {
+     "w": "Spot",
+     "at": 7.013
+    },
+    {
+     "w": "the",
+     "at": 7.375
+    },
+    {
+     "w": "run",
+     "at": 7.475
+    },
+    {
+     "w": "and",
+     "at": 7.838
+    },
+    {
+     "w": "slide",
+     "at": 7.975
+    },
+    {
+     "w": "it",
+     "at": 8.338
+    },
+    {
+     "w": "inside",
+     "at": 8.425
+    }
+   ]
+  },
+  {
+   "label": "Practise it",
+   "text": "Practise it! Look up before the ball arrives, so you know your next pass.",
+   "src": "/plays/narration/miguelin-futsal-signature/4.m4a",
+   "seconds": 5.2,
+   "words": [
+    {
+     "w": "Practise",
+     "at": 0.325
+    },
+    {
+     "w": "it",
+     "at": 0.812
+    },
+    {
+     "w": "Look",
+     "at": 1.363
+    },
+    {
+     "w": "up",
+     "at": 1.538
+    },
+    {
+     "w": "before",
+     "at": 1.688
+    },
+    {
+     "w": "the",
+     "at": 1.913
+    },
+    {
+     "w": "ball",
+     "at": 2.0
+    },
+    {
+     "w": "arrives",
+     "at": 2.275
+    },
+    {
+     "w": "so",
+     "at": 2.9
+    },
+    {
+     "w": "you",
+     "at": 3.025
+    },
+    {
+     "w": "know",
+     "at": 3.15
+    },
+    {
+     "w": "your",
+     "at": 3.325
+    },
+    {
+     "w": "next",
+     "at": 3.45
+    },
+    {
+     "w": "pass",
+     "at": 3.75
+    }
+   ]
+  }
+ ]
+}

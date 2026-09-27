@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The run, live",
+   "text": "San Siro, May 2022. Theo Hern\u00e1ndez picks up the ball on the edge of his own box, and off he goes! Past one, past another, still running, into their box... goal!",
+   "src": "/plays/narration/theo-hernandez-signature/1.m4a",
+   "seconds": 12.4,
+   "words": [
+    {
+     "w": "San",
+     "at": 0.375
+    },
+    {
+     "w": "Siro",
+     "at": 0.637
+    },
+    {
+     "w": "May",
+     "at": 1.15
+    },
+    {
+     "w": "2022",
+     "at": 1.35
+    },
+    {
+     "w": "Theo",
+     "at": 2.85
+    },
+    {
+     "w": "Hern\u00e1ndez",
+     "at": 3.175
+    },
+    {
+     "w": "picks",
+     "at": 3.8
+    },
+    {
+     "w": "up",
+     "at": 4.013
+    },
+    {
+     "w": "the",
+     "at": 4.112
+    },
+    {
+     "w": "ball",
+     "at": 4.2
+    },
+    {
+     "w": "on",
+     "at": 4.513
+    },
+    {
+     "w": "the",
+     "at": 4.612
+    },
+    {
+     "w": "edge",
+     "at": 4.725
+    },
+    {
+     "w": "of",
+     "at": 4.963
+    },
+    {
+     "w": "his",
+     "at": 5.037
+    },
+    {
+     "w": "own",
+     "at": 5.2
+    },
+    {
+     "w": "box",
+     "at": 5.45
+    },
+    {
+     "w": "and",
+     "at": 5.95
+    },
+    {
+     "w": "off",
+     "at": 6.075
+    },
+    {
+     "w": "he",
+     "at": 6.263
+    },
+    {
+     "w": "goes",
+     "at": 6.375
+    },
+    {
+     "w": "Past",
+     "at": 7.237
+    },
+    {
+     "w": "one",
+     "at": 7.65
+    },
+    {
+     "w": "past",
+     "at": 8.1
+    },
+    {
+     "w": "another",
+     "at": 8.425
+    },
+    {
+     "w": "still",
+     "at": 8.963
+    },
+    {
+     "w": "running",
+     "at": 9.25
+    },
+    {
+     "w": "into",
+     "at": 9.637
+    },
+    {
+     "w": "their",
+     "at": 9.812
+    },
+    {
+     "w": "box",
+     "at": 9.975
+    },
+    {
+     "w": "goal",
+     "at": 10.963
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again, slowly. See all that empty grass? He pushes the ball far ahead and sprints on to it, again and again.",
+   "src": "/plays/narration/theo-hernandez-signature/2.m4a",
+   "seconds": 8.5,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "slowly",
+     "at": 1.288
+    },
+    {
+     "w": "See",
+     "at": 2.275
+    },
+    {
+     "w": "all",
+     "at": 2.487
+    },
+    {
+     "w": "that",
+     "at": 2.65
+    },
+    {
+     "w": "empty",
+     "at": 2.825
+    },
+    {
+     "w": "grass",
+     "at": 3.15
+    },
+    {
+     "w": "He",
+     "at": 4.0
+    },
+    {
+     "w": "pushes",
+     "at": 4.125
+    },
+    {
+     "w": "the",
+     "at": 4.487
+    },
+    {
+     "w": "ball",
+     "at": 4.575
+    },
+    {
+     "w": "far",
+     "at": 4.888
+    },
+    {
+     "w": "ahead",
+     "at": 5.125
+    },
+    {
+     "w": "and",
+     "at": 5.388
+    },
+    {
+     "w": "sprints",
+     "at": 5.513
+    },
+    {
+     "w": "on",
+     "at": 5.888
+    },
+    {
+     "w": "to",
+     "at": 6.1
+    },
+    {
+     "w": "it",
+     "at": 6.312
+    },
+    {
+     "w": "again",
+     "at": 6.575
+    },
+    {
+     "w": "and",
+     "at": 6.975
+    },
+    {
+     "w": "again",
+     "at": 7.088
+    }
+   ]
+  },
+  {
+   "label": "The finish",
+   "text": "Ninety-five metres later, he slots it low past keeper Juan Musso. A week later, Milan were champions!",
+   "src": "/plays/narration/theo-hernandez-signature/3.m4a",
+   "seconds": 7.8,
+   "words": [
+    {
+     "w": "Ninety-five",
+     "at": 0.425
+    },
+    {
+     "w": "metres",
+     "at": 1.1
+    },
+    {
+     "w": "later",
+     "at": 1.475
+    },
+    {
+     "w": "he",
+     "at": 2.1
+    },
+    {
+     "w": "slots",
+     "at": 2.263
+    },
+    {
+     "w": "it",
+     "at": 2.638
+    },
+    {
+     "w": "low",
+     "at": 2.725
+    },
+    {
+     "w": "past",
+     "at": 2.962
+    },
+    {
+     "w": "keeper",
+     "at": 3.35
+    },
+    {
+     "w": "Juan",
+     "at": 3.725
+    },
+    {
+     "w": "Musso",
+     "at": 4.025
+    },
+    {
+     "w": "A",
+     "at": 4.963
+    },
+    {
+     "w": "week",
+     "at": 5.075
+    },
+    {
+     "w": "later",
+     "at": 5.325
+    },
+    {
+     "w": "Milan",
+     "at": 5.688
+    },
+    {
+     "w": "were",
+     "at": 6.062
+    },
+    {
+     "w": "champions",
+     "at": 6.188
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: when there is space in front of you, push the ball ahead and run into it!",
+   "src": "/plays/narration/theo-hernandez-signature/4.m4a",
+   "seconds": 5.7,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "when",
+     "at": 1.325
+    },
+    {
+     "w": "there",
+     "at": 1.462
+    },
+    {
+     "w": "is",
+     "at": 1.562
+    },
+    {
+     "w": "space",
+     "at": 1.688
+    },
+    {
+     "w": "in",
+     "at": 2.062
+    },
+    {
+     "w": "front",
+     "at": 2.2
+    },
+    {
+     "w": "of",
+     "at": 2.388
+    },
+    {
+     "w": "you",
+     "at": 2.475
+    },
+    {
+     "w": "push",
+     "at": 2.925
+    },
+    {
+     "w": "the",
+     "at": 3.175
+    },
+    {
+     "w": "ball",
+     "at": 3.275
+    },
+    {
+     "w": "ahead",
+     "at": 3.55
+    },
+    {
+     "w": "and",
+     "at": 3.888
+    },
+    {
+     "w": "run",
+     "at": 4.0
+    },
+    {
+     "w": "into",
+     "at": 4.237
+    },
+    {
+     "w": "it",
+     "at": 4.537
+    }
+   ]
+  }
+ ]
+}

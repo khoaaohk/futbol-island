@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Two goals, live",
+   "text": "France v Croatia, 1998. Croatia score first! Straight away, right-back Lilian Thuram wins the ball, plays a one-two with Djorkaeff, and scores! Then he steals it again and curls it in... goal!",
+   "src": "/plays/narration/thuram-croatia-1998/1.m4a",
+   "seconds": 14.6,
+   "words": [
+    {
+     "w": "France",
+     "at": 0.35
+    },
+    {
+     "w": "v",
+     "at": 0.675
+    },
+    {
+     "w": "Croatia",
+     "at": 0.85
+    },
+    {
+     "w": "1998",
+     "at": 1.575
+    },
+    {
+     "w": "Croatia",
+     "at": 3.038
+    },
+    {
+     "w": "score",
+     "at": 3.587
+    },
+    {
+     "w": "first",
+     "at": 3.962
+    },
+    {
+     "w": "Straight",
+     "at": 4.775
+    },
+    {
+     "w": "away",
+     "at": 5.1
+    },
+    {
+     "w": "right-back",
+     "at": 5.612
+    },
+    {
+     "w": "Lilian",
+     "at": 6.15
+    },
+    {
+     "w": "Thuram",
+     "at": 6.7
+    },
+    {
+     "w": "wins",
+     "at": 7.15
+    },
+    {
+     "w": "the",
+     "at": 7.425
+    },
+    {
+     "w": "ball",
+     "at": 7.525
+    },
+    {
+     "w": "plays",
+     "at": 7.925
+    },
+    {
+     "w": "a",
+     "at": 8.213
+    },
+    {
+     "w": "one-two",
+     "at": 8.275
+    },
+    {
+     "w": "with",
+     "at": 8.75
+    },
+    {
+     "w": "Djorkaeff",
+     "at": 8.938
+    },
+    {
+     "w": "and",
+     "at": 9.575
+    },
+    {
+     "w": "scores",
+     "at": 9.725
+    },
+    {
+     "w": "Then",
+     "at": 10.775
+    },
+    {
+     "w": "he",
+     "at": 10.925
+    },
+    {
+     "w": "steals",
+     "at": 11.062
+    },
+    {
+     "w": "it",
+     "at": 11.387
+    },
+    {
+     "w": "again",
+     "at": 11.463
+    },
+    {
+     "w": "and",
+     "at": 11.775
+    },
+    {
+     "w": "curls",
+     "at": 11.912
+    },
+    {
+     "w": "it",
+     "at": 12.287
+    },
+    {
+     "w": "in",
+     "at": 12.4
+    },
+    {
+     "w": "goal",
+     "at": 13.188
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. He wins the ball back, then curls it with his left foot, round the keeper, into the far corner.",
+   "src": "/plays/narration/thuram-croatia-1998/2.m4a",
+   "seconds": 8.3,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.188
+    },
+    {
+     "w": "He",
+     "at": 2.263
+    },
+    {
+     "w": "wins",
+     "at": 2.425
+    },
+    {
+     "w": "the",
+     "at": 2.688
+    },
+    {
+     "w": "ball",
+     "at": 2.775
+    },
+    {
+     "w": "back",
+     "at": 3.075
+    },
+    {
+     "w": "then",
+     "at": 3.55
+    },
+    {
+     "w": "curls",
+     "at": 3.763
+    },
+    {
+     "w": "it",
+     "at": 4.175
+    },
+    {
+     "w": "with",
+     "at": 4.287
+    },
+    {
+     "w": "his",
+     "at": 4.388
+    },
+    {
+     "w": "left",
+     "at": 4.55
+    },
+    {
+     "w": "foot",
+     "at": 4.838
+    },
+    {
+     "w": "round",
+     "at": 5.438
+    },
+    {
+     "w": "the",
+     "at": 5.763
+    },
+    {
+     "w": "keeper",
+     "at": 5.85
+    },
+    {
+     "w": "into",
+     "at": 6.312
+    },
+    {
+     "w": "the",
+     "at": 6.487
+    },
+    {
+     "w": "far",
+     "at": 6.588
+    },
+    {
+     "w": "corner",
+     "at": 6.85
+    }
+   ]
+  },
+  {
+   "label": "The thinker",
+   "text": "His only two goals for France! He kneels, finger on chin, like a thinker.",
+   "src": "/plays/narration/thuram-croatia-1998/3.m4a",
+   "seconds": 5.8,
+   "words": [
+    {
+     "w": "His",
+     "at": 0.35
+    },
+    {
+     "w": "only",
+     "at": 0.5
+    },
+    {
+     "w": "two",
+     "at": 0.812
+    },
+    {
+     "w": "goals",
+     "at": 1.025
+    },
+    {
+     "w": "for",
+     "at": 1.3
+    },
+    {
+     "w": "France",
+     "at": 1.425
+    },
+    {
+     "w": "He",
+     "at": 2.325
+    },
+    {
+     "w": "kneels",
+     "at": 2.475
+    },
+    {
+     "w": "finger",
+     "at": 3.138
+    },
+    {
+     "w": "on",
+     "at": 3.487
+    },
+    {
+     "w": "chin",
+     "at": 3.7
+    },
+    {
+     "w": "like",
+     "at": 4.088
+    },
+    {
+     "w": "a",
+     "at": 4.213
+    },
+    {
+     "w": "thinker",
+     "at": 4.287
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: defenders can win the ball high and join the attack. If the other team scores, reply straight away!",
+   "src": "/plays/narration/thuram-croatia-1998/4.m4a",
+   "seconds": 8.0,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "defenders",
+     "at": 1.3
+    },
+    {
+     "w": "can",
+     "at": 1.875
+    },
+    {
+     "w": "win",
+     "at": 2.025
+    },
+    {
+     "w": "the",
+     "at": 2.188
+    },
+    {
+     "w": "ball",
+     "at": 2.275
+    },
+    {
+     "w": "high",
+     "at": 2.587
+    },
+    {
+     "w": "and",
+     "at": 2.95
+    },
+    {
+     "w": "join",
+     "at": 3.087
+    },
+    {
+     "w": "the",
+     "at": 3.362
+    },
+    {
+     "w": "attack",
+     "at": 3.5
+    },
+    {
+     "w": "If",
+     "at": 4.5
+    },
+    {
+     "w": "the",
+     "at": 4.638
+    },
+    {
+     "w": "other",
+     "at": 4.75
+    },
+    {
+     "w": "team",
+     "at": 4.975
+    },
+    {
+     "w": "scores",
+     "at": 5.287
+    },
+    {
+     "w": "reply",
+     "at": 5.9
+    },
+    {
+     "w": "straight",
+     "at": 6.338
+    },
+    {
+     "w": "away",
+     "at": 6.638
+    }
+   ]
+  }
+ ]
+}

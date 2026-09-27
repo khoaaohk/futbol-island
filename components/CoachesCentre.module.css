@@ -22,3 +22,7 @@
 .dialog .panel>header{padding:20px 24px!important;align-items:center!important}.dialog .panel>header::before{width:44px;height:44px;align-self:center}.dialog .panel>header button{padding:0;transform:none!important}@media(max-width:600px){.dialog .panel>header{padding:16px 18px!important}}
 
 .dialog .panel>header::before,.dialog .panel>header::after{display:none!important}
+
+/* IDP card opens the plan view. */
+.cardButton{display:block;width:100%;padding:0;text-align:left;font:inherit;color:inherit;cursor:pointer}
+.titleWrap{flex:1;min-width:0}

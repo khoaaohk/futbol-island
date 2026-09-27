@@ -1,0 +1,374 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: the 2025 final",
+   "text": "Champions League final, 2025, in France. Palma, in green, play Kairat. Early on, the pivot Jes\u00fas Gordillo fires Palma in front! The green corner of fans goes wild. Palma win nine four, a third title in a row!",
+   "src": "/plays/narration/gordillo-futsal-signature/1.m4a",
+   "seconds": 17.1,
+   "words": [
+    {
+     "w": "Champions",
+     "at": 0.35
+    },
+    {
+     "w": "League",
+     "at": 0.875
+    },
+    {
+     "w": "final",
+     "at": 1.137
+    },
+    {
+     "w": "2025",
+     "at": 1.85
+    },
+    {
+     "w": "in",
+     "at": 2.812
+    },
+    {
+     "w": "France",
+     "at": 2.962
+    },
+    {
+     "w": "Palma",
+     "at": 3.938
+    },
+    {
+     "w": "in",
+     "at": 4.45
+    },
+    {
+     "w": "green",
+     "at": 4.612
+    },
+    {
+     "w": "play",
+     "at": 5.237
+    },
+    {
+     "w": "Kairat",
+     "at": 5.562
+    },
+    {
+     "w": "Early",
+     "at": 6.588
+    },
+    {
+     "w": "on",
+     "at": 6.925
+    },
+    {
+     "w": "the",
+     "at": 7.213
+    },
+    {
+     "w": "pivot",
+     "at": 7.3
+    },
+    {
+     "w": "Jes\u00fas",
+     "at": 7.6
+    },
+    {
+     "w": "Gordillo",
+     "at": 8.125
+    },
+    {
+     "w": "fires",
+     "at": 8.738
+    },
+    {
+     "w": "Palma",
+     "at": 9.188
+    },
+    {
+     "w": "in",
+     "at": 9.575
+    },
+    {
+     "w": "front",
+     "at": 9.738
+    },
+    {
+     "w": "The",
+     "at": 10.475
+    },
+    {
+     "w": "green",
+     "at": 10.575
+    },
+    {
+     "w": "corner",
+     "at": 10.938
+    },
+    {
+     "w": "of",
+     "at": 11.338
+    },
+    {
+     "w": "fans",
+     "at": 11.463
+    },
+    {
+     "w": "goes",
+     "at": 11.9
+    },
+    {
+     "w": "wild",
+     "at": 12.188
+    },
+    {
+     "w": "Palma",
+     "at": 13.137
+    },
+    {
+     "w": "win",
+     "at": 13.5
+    },
+    {
+     "w": "nine",
+     "at": 13.725
+    },
+    {
+     "w": "four",
+     "at": 14.05
+    },
+    {
+     "w": "a",
+     "at": 14.55
+    },
+    {
+     "w": "third",
+     "at": 14.675
+    },
+    {
+     "w": "title",
+     "at": 15.037
+    },
+    {
+     "w": "in",
+     "at": 15.45
+    },
+    {
+     "w": "a",
+     "at": 15.537
+    },
+    {
+     "w": "row",
+     "at": 15.637
+    }
+   ]
+  },
+  {
+   "label": "How he does it (demo)",
+   "text": "Watch how he does it. The winger drives down the side. Gordillo pins his defender, then slips to the back post. The pass comes across, and he hits it first time. Goal!",
+   "src": "/plays/narration/gordillo-futsal-signature/2.m4a",
+   "seconds": 12.0,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "how",
+     "at": 0.7
+    },
+    {
+     "w": "he",
+     "at": 0.875
+    },
+    {
+     "w": "does",
+     "at": 1.0
+    },
+    {
+     "w": "it",
+     "at": 1.238
+    },
+    {
+     "w": "The",
+     "at": 1.75
+    },
+    {
+     "w": "winger",
+     "at": 1.887
+    },
+    {
+     "w": "drives",
+     "at": 2.237
+    },
+    {
+     "w": "down",
+     "at": 2.725
+    },
+    {
+     "w": "the",
+     "at": 2.913
+    },
+    {
+     "w": "side",
+     "at": 3.013
+    },
+    {
+     "w": "Gordillo",
+     "at": 3.837
+    },
+    {
+     "w": "pins",
+     "at": 4.412
+    },
+    {
+     "w": "his",
+     "at": 4.737
+    },
+    {
+     "w": "defender",
+     "at": 4.9
+    },
+    {
+     "w": "then",
+     "at": 5.45
+    },
+    {
+     "w": "slips",
+     "at": 5.7
+    },
+    {
+     "w": "to",
+     "at": 6.075
+    },
+    {
+     "w": "the",
+     "at": 6.162
+    },
+    {
+     "w": "back",
+     "at": 6.25
+    },
+    {
+     "w": "post",
+     "at": 6.562
+    },
+    {
+     "w": "The",
+     "at": 7.475
+    },
+    {
+     "w": "pass",
+     "at": 7.575
+    },
+    {
+     "w": "comes",
+     "at": 7.95
+    },
+    {
+     "w": "across",
+     "at": 8.162
+    },
+    {
+     "w": "and",
+     "at": 8.738
+    },
+    {
+     "w": "he",
+     "at": 8.838
+    },
+    {
+     "w": "hits",
+     "at": 8.95
+    },
+    {
+     "w": "it",
+     "at": 9.175
+    },
+    {
+     "w": "first",
+     "at": 9.325
+    },
+    {
+     "w": "time",
+     "at": 9.6
+    },
+    {
+     "w": "Goal",
+     "at": 10.55
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn. Be ready at the back post, and finish first time, with no extra touch!",
+   "src": "/plays/narration/gordillo-futsal-signature/3.m4a",
+   "seconds": 6.0,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.512
+    },
+    {
+     "w": "Be",
+     "at": 1.387
+    },
+    {
+     "w": "ready",
+     "at": 1.55
+    },
+    {
+     "w": "at",
+     "at": 1.812
+    },
+    {
+     "w": "the",
+     "at": 1.887
+    },
+    {
+     "w": "back",
+     "at": 1.975
+    },
+    {
+     "w": "post",
+     "at": 2.25
+    },
+    {
+     "w": "and",
+     "at": 2.737
+    },
+    {
+     "w": "finish",
+     "at": 2.862
+    },
+    {
+     "w": "first",
+     "at": 3.15
+    },
+    {
+     "w": "time",
+     "at": 3.425
+    },
+    {
+     "w": "with",
+     "at": 3.788
+    },
+    {
+     "w": "no",
+     "at": 3.95
+    },
+    {
+     "w": "extra",
+     "at": 4.175
+    },
+    {
+     "w": "touch",
+     "at": 4.575
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The free-kick, live",
+   "text": "Le Havre, 2019. England play Norway at the World Cup. Free-kick out wide. Beth Mead raises her hand... then cuts it back to Lucy Bronze. First time! Roof of the net!",
+   "src": "/plays/narration/bronze-norway-2019/1.m4a",
+   "seconds": 12.6,
+   "words": [
+    {
+     "w": "Le",
+     "at": 0.4
+    },
+    {
+     "w": "Havre",
+     "at": 0.525
+    },
+    {
+     "w": "2019",
+     "at": 0.85
+    },
+    {
+     "w": "England",
+     "at": 2.138
+    },
+    {
+     "w": "play",
+     "at": 2.575
+    },
+    {
+     "w": "Norway",
+     "at": 2.8
+    },
+    {
+     "w": "at",
+     "at": 3.163
+    },
+    {
+     "w": "the",
+     "at": 3.237
+    },
+    {
+     "w": "World",
+     "at": 3.325
+    },
+    {
+     "w": "Cup",
+     "at": 3.688
+    },
+    {
+     "w": "Free-kick",
+     "at": 4.312
+    },
+    {
+     "w": "out",
+     "at": 4.775
+    },
+    {
+     "w": "wide",
+     "at": 5.0
+    },
+    {
+     "w": "Beth",
+     "at": 5.775
+    },
+    {
+     "w": "Mead",
+     "at": 6.1
+    },
+    {
+     "w": "raises",
+     "at": 6.4
+    },
+    {
+     "w": "her",
+     "at": 6.787
+    },
+    {
+     "w": "hand",
+     "at": 6.9
+    },
+    {
+     "w": "then",
+     "at": 7.8
+    },
+    {
+     "w": "cuts",
+     "at": 8.037
+    },
+    {
+     "w": "it",
+     "at": 8.312
+    },
+    {
+     "w": "back",
+     "at": 8.4
+    },
+    {
+     "w": "to",
+     "at": 8.65
+    },
+    {
+     "w": "Lucy",
+     "at": 8.775
+    },
+    {
+     "w": "Bronze",
+     "at": 9.125
+    },
+    {
+     "w": "First",
+     "at": 9.975
+    },
+    {
+     "w": "time",
+     "at": 10.325
+    },
+    {
+     "w": "Roof",
+     "at": 10.85
+    },
+    {
+     "w": "of",
+     "at": 11.113
+    },
+    {
+     "w": "the",
+     "at": 11.2
+    },
+    {
+     "w": "net",
+     "at": 11.3
+    }
+   ]
+  },
+  {
+   "label": "Arrive late",
+   "text": "Watch it again. Nobody marks Bronze. She waits outside the box, then arrives late, just as the ball does.",
+   "src": "/plays/narration/bronze-norway-2019/2.m4a",
+   "seconds": 7.6,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "Nobody",
+     "at": 1.488
+    },
+    {
+     "w": "marks",
+     "at": 1.85
+    },
+    {
+     "w": "Bronze",
+     "at": 2.15
+    },
+    {
+     "w": "She",
+     "at": 3.112
+    },
+    {
+     "w": "waits",
+     "at": 3.25
+    },
+    {
+     "w": "outside",
+     "at": 3.487
+    },
+    {
+     "w": "the",
+     "at": 3.862
+    },
+    {
+     "w": "box",
+     "at": 3.95
+    },
+    {
+     "w": "then",
+     "at": 4.412
+    },
+    {
+     "w": "arrives",
+     "at": 4.55
+    },
+    {
+     "w": "late",
+     "at": 5.013
+    },
+    {
+     "w": "just",
+     "at": 5.45
+    },
+    {
+     "w": "as",
+     "at": 5.7
+    },
+    {
+     "w": "the",
+     "at": 5.838
+    },
+    {
+     "w": "ball",
+     "at": 5.925
+    },
+    {
+     "w": "does",
+     "at": 6.225
+    }
+   ]
+  },
+  {
+   "label": "Through the ball",
+   "text": "Knee over the ball, she strikes through it. Past the keeper's hands. Three-nil!",
+   "src": "/plays/narration/bronze-norway-2019/3.m4a",
+   "seconds": 5.6,
+   "words": [
+    {
+     "w": "Knee",
+     "at": 0.425
+    },
+    {
+     "w": "over",
+     "at": 0.6
+    },
+    {
+     "w": "the",
+     "at": 0.812
+    },
+    {
+     "w": "ball",
+     "at": 0.9
+    },
+    {
+     "w": "she",
+     "at": 1.275
+    },
+    {
+     "w": "strikes",
+     "at": 1.425
+    },
+    {
+     "w": "through",
+     "at": 1.8
+    },
+    {
+     "w": "it",
+     "at": 2.038
+    },
+    {
+     "w": "Past",
+     "at": 2.5
+    },
+    {
+     "w": "the",
+     "at": 2.788
+    },
+    {
+     "w": "keeper's",
+     "at": 2.875
+    },
+    {
+     "w": "hands",
+     "at": 3.275
+    },
+    {
+     "w": "Three-nil",
+     "at": 4.05
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "The secret? Arrive late, so no one can mark you. Plant beside the ball, knee over it, ankle locked, and strike through it first time.",
+   "src": "/plays/narration/bronze-norway-2019/4.m4a",
+   "seconds": 9.0,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "secret",
+     "at": 0.463
+    },
+    {
+     "w": "Arrive",
+     "at": 1.238
+    },
+    {
+     "w": "late",
+     "at": 1.625
+    },
+    {
+     "w": "so",
+     "at": 2.05
+    },
+    {
+     "w": "no",
+     "at": 2.175
+    },
+    {
+     "w": "one",
+     "at": 2.337
+    },
+    {
+     "w": "can",
+     "at": 2.475
+    },
+    {
+     "w": "mark",
+     "at": 2.6
+    },
+    {
+     "w": "you",
+     "at": 2.9
+    },
+    {
+     "w": "Plant",
+     "at": 3.638
+    },
+    {
+     "w": "beside",
+     "at": 3.95
+    },
+    {
+     "w": "the",
+     "at": 4.287
+    },
+    {
+     "w": "ball",
+     "at": 4.375
+    },
+    {
+     "w": "knee",
+     "at": 4.825
+    },
+    {
+     "w": "over",
+     "at": 5.0
+    },
+    {
+     "w": "it",
+     "at": 5.35
+    },
+    {
+     "w": "ankle",
+     "at": 5.675
+    },
+    {
+     "w": "locked",
+     "at": 6.013
+    },
+    {
+     "w": "and",
+     "at": 6.487
+    },
+    {
+     "w": "strike",
+     "at": 6.612
+    },
+    {
+     "w": "through",
+     "at": 6.95
+    },
+    {
+     "w": "it",
+     "at": 7.15
+    },
+    {
+     "w": "first",
+     "at": 7.3
+    },
+    {
+     "w": "time",
+     "at": 7.575
+    }
+   ]
+  }
+ ]
+}

@@ -5,8 +5,9 @@
 .card[data-active]{transition:transform .08s linear}
 .blue{--team:#6fa6e3;--team-deep:#2f5f99}
 .gold{--team:#e9b949;--team-deep:#9c6a1f}
-.flip{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .7s cubic-bezier(.3,1.3,.4,1)}
-.card[data-flipped] .flip{transform:rotateY(180deg)}
+.flip{position:absolute;inset:0;transform-style:preserve-3d;transition:transform var(--turn,.7s) var(--turn-ease,cubic-bezier(.3,1.3,.4,1))}
+.flip{transform:rotateY(var(--spin,0deg))}.card[data-flipped] .flip{transform:rotateY(var(--spin,180deg))}
+/* --spin (PlayerCard.tsx, Spin): the flip turns the same way every time; the fallbacks cover the first paint. */
 .face{position:absolute;inset:0;box-sizing:border-box;border-radius:22px 34px 22px 22px;backface-visibility:hidden;-webkit-backface-visibility:hidden;overflow:hidden;
  border:6px solid #fff1d3;box-shadow:0 0 0 2px var(--edge),0 14px 0 #183b3440,0 26px 40px #0f2a2f55}
 /* Card stock: warm tan grain shared with the island's item previews. */
@@ -24,9 +25,18 @@
 .strengths li{font-size:12px;font-weight:700;background:#244d40;color:#fff1d3;padding:4px 9px;border-radius:999px}
 /* Foil glare follows the pointer; legends get a holographic spectrum, stars a gold sheen. */
 .foil{position:absolute;inset:0;pointer-events:none;mix-blend-mode:color-dodge;opacity:.35;transition:opacity .3s}
-.star .foil{background:radial-gradient(circle at var(--mx) var(--my),#fff6c9 0,#ffd66b55 22%,transparent 48%)}
-.legend .foil{opacity:.45;background:radial-gradient(circle at var(--mx) var(--my),#ffffffcc 0,transparent 38%),
- linear-gradient(115deg,transparent 20%,#ff9ad266 32%,#8fe3ff66 44%,#b9ff9a66 56%,#ffe07a66 68%,transparent 80%);background-size:100% 100%,220% 220%;background-position:0 0,var(--mx) var(--my)}
+/* The glare is painted once and MOVED (transform only; iPhone tilt, Sep 25 2026): a gradient re-centred on the pointer repainted the whole
+   foil every frame. ::before is the hotspot, 2× the card and centred, so --px/--py (-1..1) slide its centre across the card; the legend's
+   spectrum (::after, 220%) slides as its old background-position did. At rest --py defaults to -.4 (the old 30% hotspot height). */
+.foil{overflow:hidden;border-radius:inherit}
+.foil::before,.foil::after{content:'';position:absolute;pointer-events:none}
+.foil::before{left:-50%;top:-50%;width:200%;height:200%;transform:translate3d(calc(var(--px,0) * 25%),calc(var(--py,-.4) * 25%),0)}
+.star .foil::before{background:radial-gradient(circle at 50% 50%,#fff6c9 0,#ffd66b55 14%,transparent 31%)}
+.legend .foil{opacity:.45}
+.legend .foil::before{background:radial-gradient(circle at 50% 50%,#ffffffcc 0,transparent 24%)}
+.legend .foil::after{left:0;top:0;width:220%;height:220%;background:linear-gradient(115deg,transparent 20%,#ff9ad266 32%,#8fe3ff66 44%,#b9ff9a66 56%,#ffe07a66 68%,transparent 80%);
+ transform:translate3d(calc(-27.27% - var(--px,0) * 27.27%),calc(-27.27% - var(--py,-.4) * 27.27%),0)}
+.card[data-motion] .foil::before,.card[data-motion] .foil::after{will-change:transform}
 .card[data-active] .foil{opacity:.7}
 .legend{--edge:#8a6fc9}
 .legend .face{box-shadow:0 0 0 2px var(--edge),0 0 0 5px #fff1d3,0 0 0 7px #e98acb88,0 14px 0 #183b3440,0 26px 40px #0f2a2f55}
@@ -39,8 +49,8 @@
 .back .tryIt{margin-top:auto;background:#fff1d3;color:#244d40;padding:10px 12px;border-radius:14px 22px 14px 14px;font-weight:700}
 .back .number{color:#fff1d3cc}
 .controls{display:grid;justify-items:center;gap:6px}
-.flipButton{min-height:44px;padding:0 22px;border-radius:999px;border:3px solid #fff1d3;background:#ffd451;color:#244d40;font:inherit;font-weight:800;box-shadow:0 5px 0 #a8792b;cursor:pointer}
-.flipButton:active{transform:translateY(3px);box-shadow:0 2px 0 #a8792b}
+.flipButton{min-height:44px;padding:0 22px;border-radius:999px;border:3px solid #fff1d3;background:var(--btn-gold-bright);color:#244d40;font:inherit;font-weight:800;box-shadow:0 5px 0 var(--btn-gold-bright-edge);cursor:pointer}
+.flipButton:active{transform:translateY(3px);box-shadow:0 2px 0 var(--btn-gold-bright-edge)}
 .flipButton:focus-visible{outline:3px solid #ffd451;outline-offset:3px}
 .collection{margin:0;font-size:13px;font-weight:700;color:#fff1d3;background:#183b34cc;padding:6px 14px;border-radius:999px}
 @media(prefers-reduced-motion:reduce){.card,.card[data-active],.flip{transition:none}.card{transform:none}.foil{opacity:.3!important}}
@@ -123,9 +133,9 @@
 .stage{--card-w:min(410px,84vw,calc((100dvh - 320px) / 1.52))}
 .card{width:var(--card-w)}
 .controls{width:var(--card-w);box-sizing:border-box;display:flex;justify-content:space-between;align-items:center;gap:12px}
-.playButton{flex:none;position:relative;width:52px;height:52px;padding:0;border-radius:50%;border:3px solid #fff1d3;background:#ffd451;color:#244d40;box-shadow:0 5px 0 #a8792b;cursor:pointer}
+.playButton{flex:none;position:relative;width:52px;height:52px;padding:0;border-radius:50%;border:3px solid #fff1d3;background:var(--btn-gold-bright);color:#244d40;box-shadow:0 5px 0 var(--btn-gold-bright-edge);cursor:pointer}
 .playButton span{position:absolute;left:50%;top:50%;width:0;height:0;border-left:16px solid currentColor;border-top:10px solid transparent;border-bottom:10px solid transparent;transform:translate(-38%,-50%)}
-.playButton:active{transform:translateY(3px);box-shadow:0 2px 0 #a8792b}
+.playButton:active{transform:translateY(3px);box-shadow:0 2px 0 var(--btn-gold-bright-edge)}
 .playButton:focus-visible{outline:3px solid #ffd451;outline-offset:3px}
 /* One button (no film for this player): Flip sits centred under the card. */
 .controls[data-single]{justify-content:center}
@@ -146,8 +156,14 @@
 .card[data-playing]{--rx:0deg!important;--ry:0deg!important;--px:0!important;--py:0!important}
 /* Caption: the narration sentence being spoken, cue words marked. */
 .filmBio .eraLine{background:#9c6a1f}
-.stage .card .filmBio p{-webkit-line-clamp:4}
+/* A fixed four-line caption box (line-height 1.4): the picture window, and so the film canvas, keeps one size for the whole film. A caption
+   that wrapped to a different line count used to resize the window, which reallocated the film's five canvases mid-film (iPhone stalls,
+   Sep 26 2026). */
+.stage .card .filmBio p{-webkit-line-clamp:4;height:5.6em}
+/* Everything under a playing film holds still (the canvas keeps its own fade-in). */
+.window:has(>canvas[data-card-film]) :not(canvas){animation-play-state:paused!important}
 .filmBio mark{background:#ffd451;color:#244d40;border-radius:4px;padding:0 2px;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.filmBio mark[data-empty]{display:none}
 @media(prefers-reduced-motion:reduce){.window canvas.filmCanvas{animation:none;transition:opacity .2s linear}}
 /* The live scenery sleeps while a film covers the picture window. */
 .window:has(canvas[data-card-film]) svg *{animation-play-state:paused!important}
@@ -225,10 +241,15 @@
 /* Band offsets in 4-face-widths units: the leaving face is crossed from ≈−0.5w to +0.15w, the arriving one from ≈−0.45w to +0.6w. */
 .turnLight{--from:-12%;--mid:4%;--in:-11%;--to:15%}
 .turnLight[data-dir=front]{--from:12%;--mid:-4%;--in:11%;--to:-15%}
-.turnLight[data-face=out]>i{animation:sweepOut 95ms cubic-bezier(.4,0,1,1) both}
-.turnLight[data-face=in]>i{animation:sweepIn .42s 80ms cubic-bezier(.2,.6,.3,1) both}
-.turnLight[data-face=out]>b{animation:shadeOut 95ms ease-in both}
-.turnLight[data-face=in]>b{animation:shadeIn .32s 80ms ease-out both}
+/* Turn timing: desktop edge-on ≈90 ms into a 0.7 s turn. Phones and tablets (hover: none or a coarse pointer) turn in 0.95 s on
+   an ease that lingers through edge-on (≈320 ms in), and every part of the turn light is retimed to that moment. PHONE_TURN in
+   PlayerCard.tsx mirrors these numbers for the lift, the shadow and the sparks. */
+.card{--turn:.7s;--turn-ease:cubic-bezier(.3,1.3,.4,1);--edge-out:95ms;--edge-in:80ms;--sweep-in:.42s;--shade-in:.32s;--catch:.3s}
+@media(hover:none),(pointer:coarse){.card{--turn:.95s;--turn-ease:cubic-bezier(.4,.15,.25,1.1);--edge-out:325ms;--edge-in:305ms;--sweep-in:.56s;--shade-in:.44s;--catch:1.07s}}
+.turnLight[data-face=out]>i{animation:sweepOut var(--edge-out) cubic-bezier(.4,0,1,1) both}
+.turnLight[data-face=in]>i{animation:sweepIn var(--sweep-in) var(--edge-in) cubic-bezier(.2,.6,.3,1) both}
+.turnLight[data-face=out]>b{animation:shadeOut var(--edge-out) ease-in both}
+.turnLight[data-face=in]>b{animation:shadeIn var(--shade-in) var(--edge-in) ease-out both}
 @keyframes sweepOut{0%{opacity:.15;transform:translateX(var(--from))}92%{opacity:.95;transform:translateX(var(--mid))}100%{opacity:0;transform:translateX(var(--mid))}}
 @keyframes sweepIn{0%{opacity:.95;transform:translateX(var(--in))}35%{opacity:.7}100%{opacity:0;transform:translateX(var(--to))}}
 @keyframes shadeOut{0%{opacity:0}92%{opacity:1}100%{opacity:0}}
@@ -237,15 +258,22 @@
 .catchLight>i{position:absolute;top:22px;bottom:22px;display:block;width:calc(var(--thick) + 8px);opacity:0;transform:rotateY(90deg);
  background:linear-gradient(90deg,#ffd45100,#ffd451d9 22%,#fffbea 38% 62%,#ffd451d9 78%,#ffd45100);
  -webkit-mask-image:linear-gradient(180deg,#0000,#000 12% 88%,#0000);mask-image:linear-gradient(180deg,#0000,#000 12% 88%,#0000);
- animation:catchLight .3s linear both}
+ animation:catchLight var(--catch) linear both}
 /* Just outside the side strips (not coplanar with them). */
 .catchLight>i:nth-child(1){left:calc(-11.5px - var(--thick) / 2 - 4px)}
 .catchLight>i:nth-child(2){right:calc(-11.5px - var(--thick) / 2 - 4px);top:34px}
 @keyframes catchLight{0%{opacity:0}18%{opacity:.35}30%{opacity:1}42%{opacity:.6}70%{opacity:0}100%{opacity:0}}
 @media(prefers-reduced-motion:reduce){.face>.turnLight,.catchLight{display:none}}
+/* Motion sparks (TurnSparks): one small layer per flip, in front of the whole card. It sits at translateZ(320px) (more than half the
+   widest card, so the turning card never hides a speck) and is scaled by (1400 − 320) / 1400 so its pixels land exactly where the
+   flat card's would. The specks are 1–2 px cream dots with a gold glow and a faint tail (the gradient; rotated to the travel), moved and faded by Web Animations (transform, opacity). */
+.sparks{position:absolute;inset:0;pointer-events:none;transform:translateZ(320px) scale(.7714)}
+.sparks>i{position:absolute;left:0;top:0;width:2px;height:2px;margin:-1px 0 0 -1px;border-radius:50%;opacity:0;background:linear-gradient(90deg,#fff6c400,#fffdf2 75%);box-shadow:0 0 1px .5px #b8860bcc,0 0 4px 1px #ffd451aa}
+@media(prefers-reduced-motion:reduce){.sparks{display:none}}
 /* The front's live scenery sleeps while the back is showing (it is hidden behind the card). */
 .card[data-flipped] .front .window *{animation-play-state:paused!important}
-/* Free spin (touch, viewer): the finger drives the turn directly, so the class transitions step aside while it is held or coasting. */
+/* Touch tilt: where the host cannot scroll the card takes every drag (pinch zoom stays); in a scrolling host vertical drags scroll. */
+.card[data-touch="tilt"]{touch-action:pinch-zoom}
 .card[data-motion],.card[data-motion] .flip{transition:none}
 .card[data-motion] .flip{will-change:transform}
 /* Card thickness (about 4–6 px, scaled to the card): the faces sit half the thickness out from the middle, three rim slices
@@ -255,17 +283,21 @@
 .card{--thick:clamp(4px,calc(var(--card-w,360px) * .012),6px)}
 .front{transform:translateZ(calc(var(--thick) / 2))}
 .back{transform:rotateY(180deg) translateZ(calc(var(--thick) / 2))}
-.edge{position:absolute;inset:0;transform-style:preserve-3d;pointer-events:none}
-.edge>*{position:absolute;box-sizing:border-box;display:block}
-.edge>b{inset:-11px;border-radius:33px 45px 33px 33px;background:var(--flag2,#fff1d3)}
-.edge>b:nth-child(1){transform:translateZ(calc(var(--thick) / -4))}
-.edge>b:nth-child(2){background:#c9ad7c}
-.edge>b:nth-child(3){transform:translateZ(calc(var(--thick) / 4))}
-.edge>i{background:linear-gradient(90deg,var(--flag2,#fff1d3) 0 24%,#c9ad7c 24% 76%,var(--flag2,#fff1d3) 76%)}
-.edge>i:nth-of-type(1){left:calc(-11px - var(--thick) / 2);width:var(--thick);top:22px;bottom:22px;transform:rotateY(90deg)}
-.edge>i:nth-of-type(2){right:calc(-11px - var(--thick) / 2);width:var(--thick);top:34px;bottom:22px;transform:rotateY(90deg)}
-.edge>i:nth-of-type(3){top:calc(-11px - var(--thick) / 2);height:var(--thick);left:22px;right:34px;transform:rotateX(90deg);background:linear-gradient(180deg,var(--flag2,#fff1d3) 0 24%,#c9ad7c 24% 76%,var(--flag2,#fff1d3) 76%)}
-.edge>i:nth-of-type(4){bottom:calc(-11px - var(--thick) / 2);height:var(--thick);left:22px;right:22px;transform:rotateX(90deg);background:linear-gradient(180deg,var(--flag2,#fff1d3) 0 24%,#c9ad7c 24% 76%,var(--flag2,#fff1d3) 76%)}
+.rim,.side{position:absolute;box-sizing:border-box;display:block;pointer-events:none}
+/* The rim slices are RINGS (a 14 px band: the 11 px trim plus a little of the face's border), not full slabs, and they show only
+   while the card turns ([data-turning]). Edge-on a ring has the same outline as a slab; face-on the faces and trim cover it. Chrome
+   could intermittently composite a full slab over the showing face after the card resized (the "solid blue back" bug, which no
+   depth change cured): a ring can't cover the face, and at rest there is nothing to mis-sort. */
+.rim{inset:-11px;border-radius:33px 45px 33px 33px;border:14px solid var(--flag2,#fff1d3);visibility:hidden}
+.card[data-turning] .rim{visibility:visible}
+.flip>.rim:nth-of-type(1){transform:translateZ(calc(var(--thick) / -4))}
+.flip>.rim:nth-of-type(2){border-color:#c9ad7c;transform:translateZ(0)}
+.flip>.rim:nth-of-type(3){transform:translateZ(calc(var(--thick) / 4))}
+.side{background:linear-gradient(90deg,var(--flag2,#fff1d3) 0 24%,#c9ad7c 24% 76%,var(--flag2,#fff1d3) 76%)}
+.flip>.side:nth-of-type(1){left:calc(-11px - var(--thick) / 2);width:var(--thick);top:22px;bottom:22px;transform:rotateY(90deg)}
+.flip>.side:nth-of-type(2){right:calc(-11px - var(--thick) / 2);width:var(--thick);top:34px;bottom:22px;transform:rotateY(90deg)}
+.flip>.side:nth-of-type(3){top:calc(-11px - var(--thick) / 2);height:var(--thick);left:22px;right:34px;transform:rotateX(90deg);background:linear-gradient(180deg,var(--flag2,#fff1d3) 0 24%,#c9ad7c 24% 76%,var(--flag2,#fff1d3) 76%)}
+.flip>.side:nth-of-type(4){bottom:calc(-11px - var(--thick) / 2);height:var(--thick);left:22px;right:22px;transform:rotateX(90deg);background:linear-gradient(180deg,var(--flag2,#fff1d3) 0 24%,#c9ad7c 24% 76%,var(--flag2,#fff1d3) 76%)}
 /* Ground shadow: a soft ellipse under the card that narrows and slides as it turns (written with the turn; static at rest). */
 .groundShadow{position:absolute;left:8%;right:8%;bottom:-7%;height:7%;border-radius:50%;pointer-events:none;opacity:.5;
  background:radial-gradient(closest-side,#0f2a2f73,#0f2a2f00);transform-origin:50% 50%}
@@ -307,7 +339,12 @@
    box-shadow only (hosts keep their own drop colours), .16 s; none with reduced motion. */
 .stage .controls .flipButton,.stage .controls .playButton{transition:translate .16s,box-shadow .16s}
 @media(hover:hover){.stage .controls .flipButton:hover,.stage .controls .playButton:hover{translate:0 -2px}
- .flipButton:hover,.playButton:hover{box-shadow:0 7px 0 #a8792b}}
+ .flipButton:hover,.playButton:hover{box-shadow:0 7px 0 var(--btn-gold-bright-edge)}}
 .stage .controls .flipButton:active,.stage .controls .playButton:active{transform:none;translate:0 3px}
-.flipButton:active,.playButton:active{box-shadow:0 2px 0 #a8792b}
+.flipButton:active,.playButton:active{box-shadow:0 2px 0 var(--btn-gold-bright-edge)}
 @media(prefers-reduced-motion:reduce){.stage .controls .flipButton,.stage .controls .playButton{transition:none}.stage .controls .flipButton:hover,.stage .controls .playButton:hover{translate:none}}
+/* WebKit (iPhone/iPad Safari) drops backface-visibility when an ancestor flattens the 3D context (the binder's grey
+   uncollected filter, the viewer's opacity fades), and then paints the mirrored back over the front. Hide the face that
+   is turned away explicitly, swapping at edge-on (--edge-out = time to 90°), so the right face shows in every engine. */
+.face{transition:visibility 0s linear var(--edge-out,95ms)}
+.card:not([data-flipped]) .back,.card[data-flipped] .front{visibility:hidden}

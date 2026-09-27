@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: the 2022 semi-final",
+   "text": "The 2022 Futsal Champions League semi-final, in Riga. Bar\u00e7a were three nil down to Benfica, but fought back. Four all, extra time. With seconds left, Adolfo scores the winner. Five four!",
+   "src": "/plays/narration/adolfo-futsal-signature/1.m4a",
+   "seconds": 14.8,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "2022",
+     "at": 0.425
+    },
+    {
+     "w": "Futsal",
+     "at": 1.375
+    },
+    {
+     "w": "Champions",
+     "at": 1.837
+    },
+    {
+     "w": "League",
+     "at": 2.45
+    },
+    {
+     "w": "semi-final",
+     "at": 2.763
+    },
+    {
+     "w": "in",
+     "at": 3.663
+    },
+    {
+     "w": "Riga",
+     "at": 3.825
+    },
+    {
+     "w": "Bar\u00e7a",
+     "at": 4.825
+    },
+    {
+     "w": "were",
+     "at": 5.25
+    },
+    {
+     "w": "three",
+     "at": 5.425
+    },
+    {
+     "w": "nil",
+     "at": 5.7
+    },
+    {
+     "w": "down",
+     "at": 5.95
+    },
+    {
+     "w": "to",
+     "at": 6.25
+    },
+    {
+     "w": "Benfica",
+     "at": 6.338
+    },
+    {
+     "w": "but",
+     "at": 7.0
+    },
+    {
+     "w": "fought",
+     "at": 7.188
+    },
+    {
+     "w": "back",
+     "at": 7.475
+    },
+    {
+     "w": "Four",
+     "at": 8.225
+    },
+    {
+     "w": "all",
+     "at": 8.5
+    },
+    {
+     "w": "extra",
+     "at": 8.825
+    },
+    {
+     "w": "time",
+     "at": 9.225
+    },
+    {
+     "w": "With",
+     "at": 10.05
+    },
+    {
+     "w": "seconds",
+     "at": 10.262
+    },
+    {
+     "w": "left",
+     "at": 10.675
+    },
+    {
+     "w": "Adolfo",
+     "at": 11.137
+    },
+    {
+     "w": "scores",
+     "at": 11.713
+    },
+    {
+     "w": "the",
+     "at": 12.15
+    },
+    {
+     "w": "winner",
+     "at": 12.25
+    },
+    {
+     "w": "Five",
+     "at": 13.075
+    },
+    {
+     "w": "four",
+     "at": 13.438
+    }
+   ]
+  },
+  {
+   "label": "How he does it",
+   "text": "This is how he does it. He takes it on the right wing and runs at his defender, fast. A quick fake inside, then he bursts past and shoots early, before the keeper is ready!",
+   "src": "/plays/narration/adolfo-futsal-signature/2.m4a",
+   "seconds": 12.0,
+   "words": [
+    {
+     "w": "This",
+     "at": 0.35
+    },
+    {
+     "w": "is",
+     "at": 0.55
+    },
+    {
+     "w": "how",
+     "at": 0.7
+    },
+    {
+     "w": "he",
+     "at": 0.9
+    },
+    {
+     "w": "does",
+     "at": 1.025
+    },
+    {
+     "w": "it",
+     "at": 1.262
+    },
+    {
+     "w": "He",
+     "at": 1.875
+    },
+    {
+     "w": "takes",
+     "at": 2.0
+    },
+    {
+     "w": "it",
+     "at": 2.263
+    },
+    {
+     "w": "on",
+     "at": 2.337
+    },
+    {
+     "w": "the",
+     "at": 2.438
+    },
+    {
+     "w": "right",
+     "at": 2.538
+    },
+    {
+     "w": "wing",
+     "at": 2.862
+    },
+    {
+     "w": "and",
+     "at": 3.25
+    },
+    {
+     "w": "runs",
+     "at": 3.388
+    },
+    {
+     "w": "at",
+     "at": 3.8
+    },
+    {
+     "w": "his",
+     "at": 3.888
+    },
+    {
+     "w": "defender",
+     "at": 4.05
+    },
+    {
+     "w": "fast",
+     "at": 4.713
+    },
+    {
+     "w": "A",
+     "at": 5.737
+    },
+    {
+     "w": "quick",
+     "at": 5.85
+    },
+    {
+     "w": "fake",
+     "at": 6.112
+    },
+    {
+     "w": "inside",
+     "at": 6.425
+    },
+    {
+     "w": "then",
+     "at": 7.375
+    },
+    {
+     "w": "he",
+     "at": 7.513
+    },
+    {
+     "w": "bursts",
+     "at": 7.638
+    },
+    {
+     "w": "past",
+     "at": 8.062
+    },
+    {
+     "w": "and",
+     "at": 8.575
+    },
+    {
+     "w": "shoots",
+     "at": 8.725
+    },
+    {
+     "w": "early",
+     "at": 9.1
+    },
+    {
+     "w": "before",
+     "at": 9.725
+    },
+    {
+     "w": "the",
+     "at": 10.012
+    },
+    {
+     "w": "keeper",
+     "at": 10.1
+    },
+    {
+     "w": "is",
+     "at": 10.475
+    },
+    {
+     "w": "ready",
+     "at": 10.625
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. Speed at the defender, fake, burst past, shoot early!",
+   "src": "/plays/narration/adolfo-futsal-signature/3.m4a",
+   "seconds": 6.0,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.662
+    },
+    {
+     "w": "slowly",
+     "at": 1.087
+    },
+    {
+     "w": "Speed",
+     "at": 2.05
+    },
+    {
+     "w": "at",
+     "at": 2.388
+    },
+    {
+     "w": "the",
+     "at": 2.462
+    },
+    {
+     "w": "defender",
+     "at": 2.55
+    },
+    {
+     "w": "fake",
+     "at": 3.075
+    },
+    {
+     "w": "burst",
+     "at": 3.425
+    },
+    {
+     "w": "past",
+     "at": 3.75
+    },
+    {
+     "w": "shoot",
+     "at": 4.338
+    },
+    {
+     "w": "early",
+     "at": 4.6
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: attack your defender at speed, and shoot early!",
+   "src": "/plays/narration/adolfo-futsal-signature/4.m4a",
+   "seconds": 4.4,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.5
+    },
+    {
+     "w": "attack",
+     "at": 1.2
+    },
+    {
+     "w": "your",
+     "at": 1.512
+    },
+    {
+     "w": "defender",
+     "at": 1.613
+    },
+    {
+     "w": "at",
+     "at": 2.013
+    },
+    {
+     "w": "speed",
+     "at": 2.1
+    },
+    {
+     "w": "and",
+     "at": 2.538
+    },
+    {
+     "w": "shoot",
+     "at": 2.675
+    },
+    {
+     "w": "early",
+     "at": 2.95
+    }
+   ]
+  }
+ ]
+}

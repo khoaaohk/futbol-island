@@ -1,0 +1,29 @@
+# Arcade game-developer audit — next gameplay priorities
+
+Scope: current local arcade, after reactive Pinball defense, Breakaway moving defenders and charged shots, motion corrections and main-app control styling. No deployment. Evidence combines code/sequence inspection, deterministic fixtures and automated real-input browser play. These are not human playtests or physical-phone measurements.
+
+## Verdict
+
+The controls and repeated exchanges are materially stronger, but polished motion alone cannot create sustained interest. The next investment should make decisions clearer, introduce readable tactical variety, and reward deliberate execution. Tiny actors also limit how much joint detail a phone player can perceive; composition and silhouettes deserve priority over adding more animation layers.
+
+## Ranked work
+
+| Priority | Finding and evidence | Proposed change | What success should look like |
+| --- | --- | --- | --- |
+| 1 | Breakaway's ordinary touch driver traversed598m,11lane changes and3precision goals without damage. Safe routes and defensive commitments are now readable but highly predictable. This demonstrates predictability for that driver, not that every human finds it easy. | Introduce later-stage patterns that combine two decisions: draw a defender, change lane, then decide whether to shoot or save the ball. Allow one clearly telegraphed cross-lane challenge after a forgiving opening, with at least1second warning and one reachable escape. | Players can explain a mistake and improve on retry; different actions become useful rather than repeating one avoidance strategy. |
+| 2 | Pinball ordinary mobile run:12strikes,1goal,0completed moves. The build/switch/finish system exists, but this run does not show mastery of it. | A brief playable first-ball lesson: light the useful flipper as the ball approaches, acknowledge the first strike, then reveal the opposite-foot opportunity. Keep prompts at the relevant table object. Teach catching/settling before precise release if the physics supports it. | New players deliberately complete one move without reading a paragraph; repeated play needs less assistance. |
+| 3 | All games route feedback through a shared goal/non-goal sound callback. Contact types are visually richer than their audio. | Separate kick, boot block, keeper save, rail, charge and net events. Add a short rising charge cue and a distinct full-power release; cap simultaneous sounds and honor existing sound preferences. Optional brief haptics only where supported and enabled. | Players recognize what happened without reading the HUD. No constant sound bed or perpetual vibration. |
+| 4 | Breakaway's five-ball automatic boost already produces power goals; holding Shoot adds penetration but overlaps that reward. Charge can also hide the ball behind the runner from the rear view. | Make quick accurate shots, charged penetration and movement boost serve distinct purposes. Stage the charge ball beside the loaded foot so it remains visible; retain free movement and clear cancellation. | Holding is useful in selected situations, not the automatic best choice for every shot. |
+| 5 | Tennis has deliberate placement and short/deep rival choices. Long automated rallies show controllable returns; they do not establish varied opponent identity. | Give opponents readable tendencies: a net attacker, a deep retriever, an aggressive wide hitter. Show the tendency through positioning, then reward the correct lob/drop/drive. | Players change shot selection to exploit a visible habit rather than merely reacting faster. |
+| 6 | Strikers supports pass-and-run, receiver highlighting and goal-directed shots. Latest ordinary landscape run completed1pass and1shot in55seconds, losing0–1. Players remain small on a wide pitch. | Sharpen possession/contact silhouettes; improve one-two-pass feedback and show the runner's space at the moment of the pass. Start with short2v1/3v2 attacking situations before a full match. | A new player creates an intentional chance in the first minute and can identify who to pass to at phone size. |
+| 7 | Current end states emphasize score/retry. Each game already tracks useful football actions. | Offer one concrete rematch challenge: beat a keeper at the far post, complete a two-foot move, score after a one-two, or win with a lob. Show the relevant personal best, not a new currency system. | Retry has a specific purpose tied to a skill learned in the previous round. |
+
+## Already implemented in this pass
+
+- Pinball defenders sample incoming lanes, accelerate within bounded patrol space, commit to a foot block and recover. The keeper commits to a dive with reaching arms and a matching extended save capsule. Impact vibration is brief and disabled with reduced motion.
+- Breakaway defenders patrol, read, then commit to a bounded challenge. The running pose uses a stance/swing cycle with planted-foot articulation. Shots include preparation, follow-through, net response and a caught goal ball. Tap shoots; hold builds a stronger blast; release fires; cancellation never spends a ball. The yellow forward line is removed.
+- Mobile controls reuse the main app's paper-grain surface, cream rims, rounded action shapes and colored bases. Pinball, Tennis and Strikers touch checks pass after styling; Breakaway's mobile charge and ordinary play checks also pass.
+
+## Next playable slice
+
+Prioritize Breakaway's varied defensive patterns and a visible tradeoff between quick placement and a charged blast, then Pinball's first-ball learning exchange. Add event-specific sound while testing those exchanges. Validate with several first-time human players on actual phones: observe the first30seconds, ask what caused their first failure, and see whether the next attempt changes their decisions. Use their behavior to tune difficulty before adding more levels or cosmetic effects.

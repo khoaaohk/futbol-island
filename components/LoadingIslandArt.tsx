@@ -1,11 +1,13 @@
 import styles from './IslandLoading.module.css';
+export const LOADING_LAND_PATH='M197 273C230 194 325 203 387 158C434 124 483 178 514 206C573 245 676 242 713 305C771 399 657 442 555 458C466 470 449 529 367 509C286 489 280 423 210 389C154 361 165 319 197 273Z';
 /** Existing island vectors, layered for a one-time zoom through the tan land. */
 export default function LoadingIslandArt(){return <><svg className={styles.mobileArt} viewBox="0 0 900 740" preserveAspectRatio="xMidYMax slice" fill="none" aria-hidden="true"><g className={styles.surroundings}><circle cx="708" cy="123" r="91" fill="#F9D55D" />
-<path d="M16 359C178 186 234 413 407 305S690 160 916 278V703H0Z" fill="#153F43" />
-<path d="M-46 565C95 383 257 613 435 478S746 400 933 474V736H-46Z" fill="#EF8FD0" />
-<path d="M-24 617C145 436 285 703 460 556S766 465 930 529" stroke="#FFF2D3" strokeWidth="19" />
+<path d="M-260 420C-120 330 -40 300 16 359C178 186 234 413 407 305S690 160 916 278C1000 250 1080 260 1160 300V703H-260Z" fill="#153F43" />
+<path d="M-260 600C-150 520 -90 600 -46 565C95 383 257 613 435 478S746 400 933 474C1020 505 1090 500 1160 480V736H-260Z" fill="#EF8FD0" />
+<rect className={styles.foreground} x="-260" y="734" width="1420" height="1400" fill="#EF8FD0" />
+<path d="M-260 660C-150 600 -80 660 -24 617C145 436 285 703 460 556S766 465 930 529C1020 560 1090 555 1160 540" stroke="#FFF2D3" strokeWidth="19" />
 </g><g className={styles.shore}><path d="M159 265C190 165 305 162 367 116C426 74 495 137 532 173C596 218 720 207 759 290C826 429 679 487 569 502C486 514 471 579 365 558C260 537 247 459 177 424C98 384 113 315 159 265Z" fill="#78d7df" />
-<path d="M197 273C230 194 325 203 387 158C434 124 483 178 514 206C573 245 676 242 713 305C771 399 657 442 555 458C466 470 449 529 367 509C286 489 280 423 210 389C154 361 165 319 197 273Z" fill="#DFC587" />
+<path data-loading-tan-land d={LOADING_LAND_PATH} fill="#DFC587" />
 </g><g className={styles.details}><g className={styles.detailItem}><path d="M216 327C282 287 310 360 382 322S453 239 514 272S634 331 689 307" stroke="#FFF2D3" strokeWidth="20" strokeLinecap="round" />
 </g><g className={styles.detailItem}><path d="M388 509C426 453 487 433 451 380C424 341 403 342 382 322" stroke="#FFF2D3" strokeWidth="16" strokeLinecap="round" strokeDasharray="4 28" />
 </g><g className={styles.detailItem}><g transform="translate(502 354) rotate(-13)"><rect width="139" height="83" rx="5" fill="#2E9A5B" stroke="#FFF2D3" strokeWidth="4" /><path d="M69 1V82M0 24H18V60H0M139 24H121V60H139" stroke="#FFF2D3" strokeWidth="3" /><circle cx="69" cy="41" r="17" stroke="#FFF2D3" strokeWidth="3" /></g>
@@ -21,7 +23,7 @@ export default function LoadingIslandArt(){return <><svg className={styles.mobil
 <path d="M-450 565C-200 430 -100 620 -46 565C95 383 257 613 435 478S746 400 933 474C1100 560 1200 480 1350 570V740H-450Z" fill="#EF8FD0" />
 <path d="M-450 617C-200 550 -100 680 -24 617C145 436 285 703 460 556S766 465 930 529C1100 600 1240 540 1350 620" stroke="#FFF2D3" strokeWidth="19" />
 </g><g className={styles.shore}><path d="M159 265C190 165 305 162 367 116C426 74 495 137 532 173C596 218 720 207 759 290C826 429 679 487 569 502C486 514 471 579 365 558C260 537 247 459 177 424C98 384 113 315 159 265Z" fill="#78d7df" />
-<path d="M197 273C230 194 325 203 387 158C434 124 483 178 514 206C573 245 676 242 713 305C771 399 657 442 555 458C466 470 449 529 367 509C286 489 280 423 210 389C154 361 165 319 197 273Z" fill="#DFC587" />
+<path data-loading-tan-land d={LOADING_LAND_PATH} fill="#DFC587" />
 </g><g className={styles.details}><g className={styles.detailItem}><path d="M216 327C282 287 310 360 382 322S453 239 514 272S634 331 689 307" stroke="#FFF2D3" strokeWidth="20" strokeLinecap="round" />
 </g><g className={styles.detailItem}><path d="M388 509C426 453 487 433 451 380C424 341 403 342 382 322" stroke="#FFF2D3" strokeWidth="16" strokeLinecap="round" strokeDasharray="4 28" />
 </g><g className={styles.detailItem}><g transform="translate(502 354) rotate(-13)"><rect width="139" height="83" rx="5" fill="#2E9A5B" stroke="#FFF2D3" strokeWidth="4" /><path d="M69 1V82M0 24H18V60H0M139 24H121V60H139" stroke="#FFF2D3" strokeWidth="3" /><circle cx="69" cy="41" r="17" stroke="#FFF2D3" strokeWidth="3" /></g>

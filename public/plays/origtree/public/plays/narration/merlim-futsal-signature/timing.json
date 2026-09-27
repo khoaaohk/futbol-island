@@ -1,0 +1,370 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: the 2026 final",
+   "text": "The 2026 European futsal final, in Pesaro, Italy. Alex Merlim starts for Sporting, at thirty-nine! The whistle goes. Sporting beat Palma two nil, and Merlim celebrates.",
+   "src": "/plays/narration/merlim-futsal-signature/1.m4a",
+   "seconds": 13.8,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "2026",
+     "at": 0.425
+    },
+    {
+     "w": "European",
+     "at": 1.35
+    },
+    {
+     "w": "futsal",
+     "at": 1.887
+    },
+    {
+     "w": "final",
+     "at": 2.388
+    },
+    {
+     "w": "in",
+     "at": 3.075
+    },
+    {
+     "w": "Pesaro",
+     "at": 3.225
+    },
+    {
+     "w": "Italy",
+     "at": 3.9
+    },
+    {
+     "w": "Alex",
+     "at": 4.912
+    },
+    {
+     "w": "Merlim",
+     "at": 5.275
+    },
+    {
+     "w": "starts",
+     "at": 5.8
+    },
+    {
+     "w": "for",
+     "at": 6.125
+    },
+    {
+     "w": "Sporting",
+     "at": 6.263
+    },
+    {
+     "w": "at",
+     "at": 6.825
+    },
+    {
+     "w": "thirty-nine",
+     "at": 6.987
+    },
+    {
+     "w": "The",
+     "at": 8.025
+    },
+    {
+     "w": "whistle",
+     "at": 8.15
+    },
+    {
+     "w": "goes",
+     "at": 8.475
+    },
+    {
+     "w": "Sporting",
+     "at": 9.4
+    },
+    {
+     "w": "beat",
+     "at": 9.9
+    },
+    {
+     "w": "Palma",
+     "at": 10.162
+    },
+    {
+     "w": "two",
+     "at": 10.575
+    },
+    {
+     "w": "nil",
+     "at": 10.838
+    },
+    {
+     "w": "and",
+     "at": 11.4
+    },
+    {
+     "w": "Merlim",
+     "at": 11.525
+    },
+    {
+     "w": "celebrates",
+     "at": 12.125
+    }
+   ]
+  },
+  {
+   "label": "How he does it",
+   "text": "Here is how he shoots from far out. The pass comes. One touch to set it, then bang! Goal!",
+   "src": "/plays/narration/merlim-futsal-signature/2.m4a",
+   "seconds": 6.5,
+   "words": [
+    {
+     "w": "Here",
+     "at": 0.375
+    },
+    {
+     "w": "is",
+     "at": 0.562
+    },
+    {
+     "w": "how",
+     "at": 0.675
+    },
+    {
+     "w": "he",
+     "at": 0.812
+    },
+    {
+     "w": "shoots",
+     "at": 0.95
+    },
+    {
+     "w": "from",
+     "at": 1.238
+    },
+    {
+     "w": "far",
+     "at": 1.4
+    },
+    {
+     "w": "out",
+     "at": 1.65
+    },
+    {
+     "w": "The",
+     "at": 2.15
+    },
+    {
+     "w": "pass",
+     "at": 2.25
+    },
+    {
+     "w": "comes",
+     "at": 2.575
+    },
+    {
+     "w": "One",
+     "at": 3.438
+    },
+    {
+     "w": "touch",
+     "at": 3.675
+    },
+    {
+     "w": "to",
+     "at": 3.925
+    },
+    {
+     "w": "set",
+     "at": 4.05
+    },
+    {
+     "w": "it",
+     "at": 4.237
+    },
+    {
+     "w": "then",
+     "at": 4.338
+    },
+    {
+     "w": "bang",
+     "at": 4.525
+    },
+    {
+     "w": "Goal",
+     "at": 5.112
+    }
+   ]
+  },
+  {
+   "label": "Replay: one touch, then shoot",
+   "text": "Again, slowly. His first touch pushes the ball forward, out of his feet. His head comes up. Then he hits it hard, with his laces.",
+   "src": "/plays/narration/merlim-futsal-signature/3.m4a",
+   "seconds": 9.2,
+   "words": [
+    {
+     "w": "Again",
+     "at": 0.375
+    },
+    {
+     "w": "slowly",
+     "at": 0.887
+    },
+    {
+     "w": "His",
+     "at": 1.875
+    },
+    {
+     "w": "first",
+     "at": 2.075
+    },
+    {
+     "w": "touch",
+     "at": 2.375
+    },
+    {
+     "w": "pushes",
+     "at": 2.7
+    },
+    {
+     "w": "the",
+     "at": 3.1
+    },
+    {
+     "w": "ball",
+     "at": 3.2
+    },
+    {
+     "w": "forward",
+     "at": 3.513
+    },
+    {
+     "w": "out",
+     "at": 3.975
+    },
+    {
+     "w": "of",
+     "at": 4.112
+    },
+    {
+     "w": "his",
+     "at": 4.188
+    },
+    {
+     "w": "feet",
+     "at": 4.388
+    },
+    {
+     "w": "His",
+     "at": 5.075
+    },
+    {
+     "w": "head",
+     "at": 5.275
+    },
+    {
+     "w": "comes",
+     "at": 5.5
+    },
+    {
+     "w": "up",
+     "at": 5.8
+    },
+    {
+     "w": "Then",
+     "at": 6.412
+    },
+    {
+     "w": "he",
+     "at": 6.575
+    },
+    {
+     "w": "hits",
+     "at": 6.7
+    },
+    {
+     "w": "it",
+     "at": 6.912
+    },
+    {
+     "w": "hard",
+     "at": 7.0
+    },
+    {
+     "w": "with",
+     "at": 7.412
+    },
+    {
+     "w": "his",
+     "at": 7.513
+    },
+    {
+     "w": "laces",
+     "at": 7.675
+    }
+   ]
+  },
+  {
+   "label": "Practise it",
+   "text": "Now you try. Take one touch to set yourself, then shoot with confidence!",
+   "src": "/plays/narration/merlim-futsal-signature/4.m4a",
+   "seconds": 5.5,
+   "words": [
+    {
+     "w": "Now",
+     "at": 0.425
+    },
+    {
+     "w": "you",
+     "at": 0.625
+    },
+    {
+     "w": "try",
+     "at": 0.787
+    },
+    {
+     "w": "Take",
+     "at": 1.6
+    },
+    {
+     "w": "one",
+     "at": 1.825
+    },
+    {
+     "w": "touch",
+     "at": 2.05
+    },
+    {
+     "w": "to",
+     "at": 2.3
+    },
+    {
+     "w": "set",
+     "at": 2.4
+    },
+    {
+     "w": "yourself",
+     "at": 2.562
+    },
+    {
+     "w": "then",
+     "at": 3.15
+    },
+    {
+     "w": "shoot",
+     "at": 3.438
+    },
+    {
+     "w": "with",
+     "at": 3.737
+    },
+    {
+     "w": "confidence",
+     "at": 3.9
+    }
+   ]
+  }
+ ]
+}

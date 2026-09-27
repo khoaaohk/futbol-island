@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The last cross, live",
+   "text": "World Cup 2006, third place match. Lu\u00eds Figo comes on for his last game for Portugal. Two minutes left. Figo on the wing... he looks up, crosses... Nuno Gomes heads it in!",
+   "src": "/plays/narration/figo-signature/1.m4a",
+   "seconds": 13.7,
+   "words": [
+    {
+     "w": "World",
+     "at": 0.4
+    },
+    {
+     "w": "Cup",
+     "at": 0.725
+    },
+    {
+     "w": "2006",
+     "at": 0.95
+    },
+    {
+     "w": "third",
+     "at": 2.112
+    },
+    {
+     "w": "place",
+     "at": 2.425
+    },
+    {
+     "w": "match",
+     "at": 2.775
+    },
+    {
+     "w": "Lu\u00eds",
+     "at": 3.675
+    },
+    {
+     "w": "Figo",
+     "at": 4.112
+    },
+    {
+     "w": "comes",
+     "at": 4.525
+    },
+    {
+     "w": "on",
+     "at": 4.8
+    },
+    {
+     "w": "for",
+     "at": 5.025
+    },
+    {
+     "w": "his",
+     "at": 5.138
+    },
+    {
+     "w": "last",
+     "at": 5.3
+    },
+    {
+     "w": "game",
+     "at": 5.65
+    },
+    {
+     "w": "for",
+     "at": 5.925
+    },
+    {
+     "w": "Portugal",
+     "at": 6.05
+    },
+    {
+     "w": "Two",
+     "at": 6.938
+    },
+    {
+     "w": "minutes",
+     "at": 7.15
+    },
+    {
+     "w": "left",
+     "at": 7.475
+    },
+    {
+     "w": "Figo",
+     "at": 8.2
+    },
+    {
+     "w": "on",
+     "at": 8.637
+    },
+    {
+     "w": "the",
+     "at": 8.738
+    },
+    {
+     "w": "wing",
+     "at": 8.838
+    },
+    {
+     "w": "he",
+     "at": 9.625
+    },
+    {
+     "w": "looks",
+     "at": 9.775
+    },
+    {
+     "w": "up",
+     "at": 10.025
+    },
+    {
+     "w": "crosses",
+     "at": 10.3
+    },
+    {
+     "w": "Nuno",
+     "at": 11.312
+    },
+    {
+     "w": "Gomes",
+     "at": 11.7
+    },
+    {
+     "w": "heads",
+     "at": 12.1
+    },
+    {
+     "w": "it",
+     "at": 12.338
+    },
+    {
+     "w": "in",
+     "at": 12.425
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. Before he crosses, Figo lifts his head. He sees where Nuno Gomes is running... and curls it there.",
+   "src": "/plays/narration/figo-signature/2.m4a",
+   "seconds": 8.7,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.113
+    },
+    {
+     "w": "Before",
+     "at": 2.025
+    },
+    {
+     "w": "he",
+     "at": 2.312
+    },
+    {
+     "w": "crosses",
+     "at": 2.425
+    },
+    {
+     "w": "Figo",
+     "at": 3.062
+    },
+    {
+     "w": "lifts",
+     "at": 3.45
+    },
+    {
+     "w": "his",
+     "at": 3.712
+    },
+    {
+     "w": "head",
+     "at": 3.875
+    },
+    {
+     "w": "He",
+     "at": 4.5
+    },
+    {
+     "w": "sees",
+     "at": 4.662
+    },
+    {
+     "w": "where",
+     "at": 4.987
+    },
+    {
+     "w": "Nuno",
+     "at": 5.162
+    },
+    {
+     "w": "Gomes",
+     "at": 5.525
+    },
+    {
+     "w": "is",
+     "at": 5.912
+    },
+    {
+     "w": "running",
+     "at": 6.05
+    },
+    {
+     "w": "and",
+     "at": 6.8
+    },
+    {
+     "w": "curls",
+     "at": 6.938
+    },
+    {
+     "w": "it",
+     "at": 7.338
+    },
+    {
+     "w": "there",
+     "at": 7.45
+    }
+   ]
+  },
+  {
+   "label": "Behind the goal",
+   "text": "Behind the goal: Gomes heads it in from close range. Figo's last assist for Portugal!",
+   "src": "/plays/narration/figo-signature/3.m4a",
+   "seconds": 6.8,
+   "words": [
+    {
+     "w": "Behind",
+     "at": 0.35
+    },
+    {
+     "w": "the",
+     "at": 0.713
+    },
+    {
+     "w": "goal",
+     "at": 0.8
+    },
+    {
+     "w": "Gomes",
+     "at": 1.512
+    },
+    {
+     "w": "heads",
+     "at": 1.9
+    },
+    {
+     "w": "it",
+     "at": 2.138
+    },
+    {
+     "w": "in",
+     "at": 2.212
+    },
+    {
+     "w": "from",
+     "at": 2.4
+    },
+    {
+     "w": "close",
+     "at": 2.55
+    },
+    {
+     "w": "range",
+     "at": 2.875
+    },
+    {
+     "w": "Figo's",
+     "at": 3.8
+    },
+    {
+     "w": "last",
+     "at": 4.3
+    },
+    {
+     "w": "assist",
+     "at": 4.675
+    },
+    {
+     "w": "for",
+     "at": 5.075
+    },
+    {
+     "w": "Portugal",
+     "at": 5.2
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: beat your defender, then look up before you cross the ball, so you know where your striker is running.",
+   "src": "/plays/narration/figo-signature/4.m4a",
+   "seconds": 7.2,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.562
+    },
+    {
+     "w": "beat",
+     "at": 1.312
+    },
+    {
+     "w": "your",
+     "at": 1.55
+    },
+    {
+     "w": "defender",
+     "at": 1.675
+    },
+    {
+     "w": "then",
+     "at": 2.575
+    },
+    {
+     "w": "look",
+     "at": 2.8
+    },
+    {
+     "w": "up",
+     "at": 2.962
+    },
+    {
+     "w": "before",
+     "at": 3.138
+    },
+    {
+     "w": "you",
+     "at": 3.4
+    },
+    {
+     "w": "cross",
+     "at": 3.525
+    },
+    {
+     "w": "the",
+     "at": 3.85
+    },
+    {
+     "w": "ball",
+     "at": 3.95
+    },
+    {
+     "w": "so",
+     "at": 4.45
+    },
+    {
+     "w": "you",
+     "at": 4.575
+    },
+    {
+     "w": "know",
+     "at": 4.675
+    },
+    {
+     "w": "where",
+     "at": 4.85
+    },
+    {
+     "w": "your",
+     "at": 5.0
+    },
+    {
+     "w": "striker",
+     "at": 5.162
+    },
+    {
+     "w": "is",
+     "at": 5.625
+    },
+    {
+     "w": "running",
+     "at": 5.775
+    }
+   ]
+  }
+ ]
+}

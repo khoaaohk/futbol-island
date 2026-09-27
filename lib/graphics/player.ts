@@ -4,12 +4,19 @@ import type {JuggleTouch} from '../town/walkBall';
 import * as T from 'three';
 import type { CharacterCustomization } from '../town/customization';
 import type { FlightPose } from './flightMotion';
+import { flightChannel, FC, ORBIT_POSE } from './flightPoses';
 import type { TravelMode } from '../town/travelModes';
 import {createClubCostume} from './clubCostume';
 import {inertialResponse,poseResponse} from './poseResponse';
 import {strikePose,STRIKE_CONTACT,type StrikePose} from './strikeMotion';
 import {createLegContactSolver} from './legContact';
 import {sampleMotionReference} from './sampleMotionReference';
+import {createShirtNumber} from './shirtNumbers';
+import {characterStyle} from './characterStyle';
+import {attachBeanSkin} from './beanSkin';
+import {attachBeanCostumes} from './beanCostumes';
+import type {BeanLook,Outfit,BeanExpression} from './beanLook';
+import {createSkillDriver,type SkillMotion} from './skillMoves';
 
 export const PLAYER_KICK_CONTACT = STRIKE_CONTACT;
 export type PlayerMotion = {
@@ -73,8 +80,160 @@ export type PlayerMotion = {
   plant?: number;
   /** Defensive ready stance (staggered feet, low, arms out) even when still. */
   stance?: 'ready';
+  /** 0..1: an arm-raised "to me!" call for the ball; the rig eases in and out. */
+  called?: number;
+  /** 0..1: a marker's ready stance (knees bent, on the toes, arms out for balance). */
+  ready?: number;
+  /** One-shot reaction pose. Progress runs 0→1 over the action; undefined = none. */
+  reaction?: 'chest'|'thigh'|'header'|'stumble'|'deflect'|'slide'|'dejected';
+  reactionProgress?: number;
+  /** Squash-spring impulse. The rig applies `squash` once each time `squashSerial` changes.
+   *  Negative = squash (receive), positive = stretch (strike/header). Typical range −3.5 … +4. */
+  squash?: number;
+  squashSerial?: number;
+  /** Keeper dive, progress 0→1 over the whole action (see DIVE_PHASE): set, push off the near foot, full
+   *  stretch leading with the hands, land on the side, get up. `dir` is the rig-local side (+1 = +x) and
+   *  `height` 0 (along the grass) … 1 (top corner). The host still owns root travel; both boots are free
+   *  from the push-off until the keeper is back on his feet. Undefined = none (fades out over ~.15 s). */
+  dive?: {progress:number;dir:-1|1;height?:number;kind?:DiveKind;outcome?:SaveOutcome};
+  /** Signature move, progress 0→1 (see MOVE_PHASE: the ball meets the boot/head at `contact`). `side` is the
+   *  kicking leg (−1 left, +1 right); `height` 0 … 1 picks a half-volley … full volley (volley only). Airborne
+   *  moves (bicycle, scissor, diving header) free both boots and land with a squash; leg moves plant the other boot. */
+  move?: {kind:SignatureMove;progress:number;side:-1|1;height?:number};
+  /** Skill move (lib/graphics/skillMoves.ts, docs/player-moves/MOVES.md): feints, turns, shield, scan, rainbow flick… */
+  skill?: SkillMotion;
+  /** Jump, progress 0→1 (see JUMP_PHASE): load, take-off, peak (header contact), landing squash on both
+   *  feet. `height` is the peak lift of the body in metres (≈ .1 … .55). Combine with reaction 'header'. */
+  jump?: {progress:number;height:number};
 };
+/** Dive milestones on `dive.progress`: push-off, feet leave, hands meet the ball, land, start and end of the get-up. */
+export const DIVE_PHASE = {push:.1,lift:.18,contact:.3,land:.42,rise:.6,up:.92} as const;
+/** Jump milestones on `jump.progress`: take-off, peak (header contact) and landing. */
+export const JUMP_PHASE = {takeoff:.24,peak:.47,land:.7} as const;
+/** Keeper save types: low collapse (ground shot near the body), full-stretch side dive, high diving tip (top
+ *  corner), spring save (mid height), smother/spread at the feet (one-on-one) and a standing catch (at the body). */
+export type DiveKind='side'|'collapse'|'tip'|'spring'|'smother'|'stand';
+/** What the hands do at contact: catch (W above the head, basket at the chest, gather in), parry out, tip over. */
+export type SaveOutcome='catch'|'parry'|'tip';
+/** Per save type: push-off, feet leave, hands meet the ball, land, get-up start/end, body roll (rad), flight arc (m) + per height. */
+export const DIVE_KINDS:Record<DiveKind,{push:number;lift:number;contact:number;land:number;rise:number;up:number;roll:number;air:number;airH:number}>={
+  side:{...DIVE_PHASE,roll:1.42,air:.24,airH:.3},
+  collapse:{push:.07,lift:.13,contact:.22,land:.3,rise:.52,up:.84,roll:1.5,air:.05,airH:.04},
+  tip:{push:.1,lift:.17,contact:.31,land:.47,rise:.63,up:.93,roll:1.12,air:.46,airH:.12},
+  spring:{push:.09,lift:.16,contact:.28,land:.42,rise:.6,up:.9,roll:.95,air:.4,airH:.1},
+  smother:{push:.06,lift:1,contact:.24,land:1,rise:.62,up:.92,roll:0,air:0,airH:0},
+  stand:{push:1,lift:1,contact:.3,land:1,rise:.6,up:.9,roll:0,air:0,airH:0},
+};
+export type SignatureMove='bicycle'|'scissor'|'divingHeader'|'volley'|'backHeel'|'soleRoll'|'flickUp';
+/** Signature moves: ball contact, landing (airborne moves; 1 = none) and real seconds (choreo mirrors these). */
+export const MOVE_PHASE:Record<SignatureMove,{contact:number;land:number;seconds:number}>={
+  bicycle:{contact:.36,land:.54,seconds:1.5},scissor:{contact:.33,land:.56,seconds:1.3},divingHeader:{contact:.3,land:.46,seconds:1.4},
+  volley:{contact:.42,land:1,seconds:.8},backHeel:{contact:.45,land:1,seconds:.6},soleRoll:{contact:.25,land:1,seconds:.8},flickUp:{contact:.38,land:1,seconds:.7},
+};
+const AIR_MOVES:ReadonlySet<SignatureMove>=new Set(['bicycle','scissor','divingHeader']);
+/** Smoothstep keyframes: flat [t0,v0,t1,v1,…]; holds the end values outside. */
+const kf=(p:number,k:readonly number[])=>{if(p<=k[0])return k[1];for(let i=2;i<k.length;i+=2)if(p<=k[i]){const a=k[i-2];return k[i-1]+(k[i+1]-k[i-1])*smooth((p-a)/(k[i]-a||1));}return k[k.length-1];};
+// Leg-move keyframes (kicking leg): weight, foot x (× side, + = own side), foot z, lift, toe (+ = pointed).
+const MK={
+  volley:{w:[0,0,.12,1,.75,1,1,0],x:[0,0,.42,.02,.6,-.18,.85,0],z:[0,0,.28,-.18,.42,.52,.6,.6,.85,.1],toe:[0,0,.3,.2,.42,.55,.7,.3,1,0],env:[0,0,.3,1,.6,1,1,0]},
+  backHeel:{w:[0,0,.1,1,.75,1,1,0],x:[0,0,.25,.02,.45,-.18,.6,-.2,.9,0],z:[0,0,.25,.22,.45,-.3,.6,-.36,.9,0],lift:[0,0,.25,.1,.45,.12,.6,.16,.9,0],toe:[0,0,.45,-.15,1,0],env:[0,0,.2,1,.7,1,1,0]},
+  soleRoll:{w:[0,0,.12,1,.8,1,1,0],x:[0,.04,.2,.08,.7,-.08,1,-.04],z:[0,.2,.15,.5,.8,.5,1,.2],lift:[0,0,.15,.3,.8,.3,1,0],toe:[0,0,.15,-.12,.8,-.12,1,0],env:[0,0,.15,1,.8,1,1,0]},
+  flickUp:{w:[0,0,.1,1,.7,1,1,0],x:[0,0,1,0],z:[0,.1,.25,.48,.38,.42,.5,.3,.8,.05],lift:[0,0,.25,.02,.38,.18,.5,.4,.8,.02],toe:[0,0,.25,-.25,.38,-.5,.5,-.2,.8,0],env:[0,0,.15,1,.65,1,1,0]},
+} as const;
+// Airborne-move keyframes.
+const BK={back:[0,0,.1,0,.36,1,.54,1.1,.7,1.1,.95,0],lie:[.15,0,.54,1,.7,1,.95,0],body:[0,0,.12,0,.2,1,.7,1,.95,0],
+  kickHip:[.12,.1,.22,.4,.36,-2.3,.5,-1.6,.62,-.9],kickKnee:[.12,.4,.22,1.3,.34,.15,.5,.3,.62,.5],baseHip:[.12,0,.24,-1.9,.36,-.7,.5,-.9],baseKnee:[.12,.3,.24,.6,.36,.9,.6,.6],
+  land:[.4,0,.5,1,.7,1,.9,0]};
+const SK={roll:[.1,0,.33,1.05,.56,1.3,.68,1.3,.93,0],lie:[.15,0,.56,1,.68,1,.93,0],body:[0,0,.1,0,.18,1,.66,1,.93,0],
+  kickHip:[.1,.2,.22,.5,.33,-1.75,.45,-1.8,.6,-.8],kickKnee:[.1,.3,.22,1.1,.33,.05,.45,.3,.6,.5],baseHip:[.1,0,.22,-1.3,.33,-.2,.5,.1],baseKnee:[.1,.3,.22,.8,.33,.5,.6,.4],
+  land:[.44,0,.54,1,.68,1,.86,0]};
+const DK={pitch:[0,0,.08,.25,.18,1.2,.3,1.45,.46,1.5,.64,1.5,.94,0],lie:[.14,0,.46,1,.64,1,.94,0],body:[0,0,.06,0,.14,1,.64,1,.94,0],fwd:[.1,0,.46,.3,.64,.3,.94,0],
+  arms:[.14,0,.24,1,.94,1],brace:[.22,0,.36,1,.64,1,.9,0]};
 const smooth = (value: number) => { const t = T.MathUtils.clamp(value, 0, 1); return t * t * (3 - 2 * t); };
+
+export type PlayerReaction = NonNullable<PlayerMotion['reaction']>;
+/**
+ * One-shot reaction channels (radians / metres), accumulated so an outgoing reaction can cross-fade
+ * into the next. Pelvis rotations and drop are applied BEFORE the leg solve (the IK keeps every
+ * planted boot where it stands); torso, spine, head and arms are applied after it.
+ * Arms and legs are weighted targets: each stores its weight and weight × target, per rig side.
+ */
+export const REACT = {
+  pelvisPitch: 0, pelvisYaw: 1, pelvisRoll: 2, pelvisDrop: 3, torsoPitch: 4, torsoYaw: 5, torsoRoll: 6,
+  headPitch: 7, headYaw: 8, headRoll: 9, chestArch: 10, lumbarBend: 11, toesUp: 12, hold: 13,
+  arm: 14,   // + index*4: weight, shoulder x, shoulder z, elbow x
+  leg: 22,   // + index*6: weight, foot x, foot z, lift, toe, free (release the boot's lock)
+  size: 34,
+} as const;
+/** Torso squash spring: ω = 14 rad/s, damping ratio .6 (under critical: one soft ~1 % rebound). Integrated
+ *  at ≤1/60 s substeps, a −3.5 receive squashes ~9 %, a +4 strike stretches ~10 %, settled in ~.75 s. */
+export const SQUASH_STIFFNESS = 196, SQUASH_DAMPING = 16.8;
+const bell = (p: number, rise: number, fall: number) => smooth(p/rise)*(1-smooth((p-fall)/(1-fall)));
+/** Adds `kind` at progress p (0→1) and weight w to `out`. `lead` is the reacting side (−1 left, +1 right). */
+export function reactionPose(kind: PlayerReaction, p: number, w: number, lead: -1|1, out: Float64Array) {
+  if (w <= 0) return;
+  p = T.MathUtils.clamp(p, 0, 1);
+  const R = REACT, other = -lead as -1|1;
+  const arm = (side: -1|1, weight: number, shX: number, shZ: number, elX: number) => {
+    const b = R.arm+(side<0?0:1)*4, k = weight*w; if (k <= 0) return;
+    out[b] += k; out[b+1] += k*shX; out[b+2] += k*side*shZ; out[b+3] += k*elX;
+  };
+  const leg = (side: -1|1, weight: number, footX: number, footZ: number, lift: number, toe: number) => {
+    const b = R.leg+(side<0?0:1)*6, k = weight*w; if (k <= 0) return;
+    out[b] += k; out[b+1] += k*side*footX; out[b+2] += k*footZ; out[b+3] += k*lift; out[b+4] += k*toe;
+    // Free (lock released) from the start until the leg is nearly home: the last of the set-down is
+    // handed back to the gait, which re-plants the boot through its own touch-down/lift-off blends.
+    if (p < .5 || k > .12) out[b+5] = Math.max(out[b+5], w);
+  };
+  const add = (channel: number, value: number) => { out[channel] += value*w; };
+  if (kind === 'chest') {
+    // Chest control: sit back under the ball (knees soft), puff the chest out, arms back and wide, eyes on the ball.
+    const e = bell(p, .2, .5);
+    add(R.pelvisPitch, -.12*e); add(R.pelvisDrop, .06*e); add(R.torsoPitch, -.32*e); add(R.chestArch, -.22*e); add(R.headPitch, .84*e);
+    arm(-1, e, .75, .95, -.8); arm(1, e, .75, .95, -.8);
+  } else if (kind === 'thigh') {
+    // Thigh control: the receiving thigh rises to meet the ball and gives with it; the support boot holds.
+    const e = bell(p, .2, .5);
+    leg(lead, e, .02, .24, .4, .5); add(R.hold, smooth(p/.04)*(1-smooth((p-.9)/.1)));
+    add(R.pelvisDrop, .03*e); add(R.pelvisRoll, -lead*.05*e); add(R.torsoPitch, -.14*e); add(R.headPitch, .55*e);
+    add(R.torsoRoll, lead*.06*e);
+    arm(-1, .85*e, -.25, .9, -.55); arm(1, .85*e, -.25, .9, -.55);
+  } else if (kind === 'header') {
+    // Header: load back (eyes up, knees dip), then snap the neck and torso through the ball; arms up for balance.
+    const load = smooth(p/.28)*(1-smooth((p-.3)/.16)), snap = smooth((p-.32)/.14)*(1-smooth((p-.55)/.45));
+    add(R.torsoPitch, -.3*load+.34*snap); add(R.chestArch, -.2*load+.12*snap); add(R.headPitch, -.6*load+.5*snap);
+    add(R.pelvisPitch, -.06*load+.06*snap); add(R.pelvisDrop, .07*load); add(R.toesUp, .2*load+.32*snap);
+    arm(-1, load, -1.7, .7, -1.0); arm(1, load, -1.7, .7, -1.0);
+    arm(-1, snap, -.7, .95, -.8); arm(1, snap, -.7, .95, -.8);
+  } else if (kind === 'stumble') {
+    // Heavy touch: the ball runs away and the body lurches after it, arms flung out to catch the balance.
+    const e = bell(p, .12, .42), wobble = Math.sin(p*Math.PI*3)*e;
+    add(R.torsoPitch, .42*e); add(R.pelvisPitch, .14*e); add(R.pelvisDrop, .08*e); add(R.headPitch, -.42*e);
+    add(R.torsoYaw, lead*.16*e); add(R.torsoRoll, lead*.1*wobble); add(R.pelvisRoll, -lead*.04*wobble);
+    arm(lead, e, -1.25, .55, -.35); arm(other, e, .7, .7, -.3);
+  } else if (kind === 'deflect') {
+    // The ball cannons off the body: a quick flinch, shoulder turned into it, forearms tucked, head away.
+    const e = bell(p, .1, .35);
+    add(R.torsoYaw, -lead*.45*e); add(R.pelvisYaw, -lead*.18*e); add(R.torsoRoll, lead*.14*e); add(R.torsoPitch, .14*e);
+    add(R.headYaw, -lead*.5*e); add(R.headPitch, .22*e); add(R.pelvisDrop, .05*e);
+    arm(-1, e, -.75, .28, -1.95); arm(1, e, -.75, .28, -1.95);
+  } else if (kind === 'slide') {
+    // Sliding tackle/block: hips right down on the grass, the whole body leaning back, leading leg long and
+    // flat along the ground to the ball, trailing leg tucked under, the trailing hand back on the turf and the
+    // other arm up for balance. Boots slide by design. The leading leg shoots out first, then the hips go down.
+    // (A round bean body reads upright unless the hips really drop and the chest goes back ~45°.)
+    const e = bell(p, .2, .62), reach = bell(p, .1, .66);
+    add(R.pelvisDrop, .6*e); add(R.pelvisPitch, -.45*e); add(R.pelvisRoll, lead*.14*e); add(R.torsoPitch, -.5*e); add(R.headPitch, .78*e);
+    add(R.torsoRoll, -lead*.12*e);
+    leg(lead, reach, .03, .8, .02+.1*(reach-e), -.3); leg(other, e, .17, -.12, .05, .35);
+    arm(lead, e, -1.1, 1.05, -.5); arm(other, e, .35, 1.1, -.3);
+  } else {
+    // Dejected: head down, chest rounded, shoulders slumped, arms hanging.
+    const e = smooth(p/.25)*(1-smooth((p-.8)/.2));
+    add(R.torsoPitch, .3*e); add(R.chestArch, .26*e); add(R.lumbarBend, .1*e); add(R.headPitch, .7*e); add(R.pelvisDrop, .04*e);
+    arm(-1, e, -.12, .04, -.08); arm(1, e, -.12, .04, -.08);
+  }
+}
 
 /**
  * Body and motion profile per player type. Body fields are joint-GROUP scales only
@@ -124,6 +283,9 @@ export type PlayerRig = {
   readonly bikeRoll: number;
   readonly rideTurnRoll: number;
   readonly juggleHead: {bottom:number;top:number;front:number;width:number}|undefined;
+  /** Bean style only: crown height above the root (world metres, hair allowance included) for the juggling head
+   *  touch; undefined when the classic body renders (classic juggling keeps its authored contact). */
+  readonly headTop: number|undefined;
   /** Root-scale multiplier from the profile; hosts that overwrite root.scale multiply by it. */
   readonly profileScale: number;
   readonly profile: PlayerProfile;
@@ -134,6 +296,12 @@ export type PlayerRig = {
   setAppearance: (value: CharacterCustomization) => void;
   /** Applies group scales once (no new geometry) and stores the motion multipliers. */
   setProfile: (profile: PlayerProfile) => void;
+  /** Back number 1–99 in the shirt font (null hides it). Ink follows the shirt colour; batching keeps it one draw. */
+  setShirtNumber: (n: number|null) => void;
+  /** Bean skin look + outfit (docs/bean-characters/CONTRACT.md); a no-op in classic style. */
+  setBeanLook: (look: BeanLook, outfit: Outfit) => void;
+  /** Bean face expression (atlas cell); a no-op in classic style. */
+  setExpression: (e: BeanExpression) => void;
   update: (x: number, z: number, dt: number, time: number, reduced: boolean, motion?: PlayerMotion) => void;
   dispose: () => void;
 };
@@ -162,6 +330,8 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
   // An athletic silhouette: tapered waist, broad shoulders and an oval ribcage.
   const spineSurfaces=acquireSpineSurfaces();
   const jersey=new T.Mesh(spineSurfaces.male,shirt);jersey.name='player-jersey';jersey.castShadow=true;jersey.receiveShadow=true;jersey.userData.playerId=id;torso.add(jersey);
+  // Hidden back-number panel on the jersey (shares its morphs); shown by setShirtNumber.
+  const shirtNumber=createShirtNumber(jersey,shirt);
   ellipsoid(chest, trim, 0, .49-CHEST_HEIGHT, 0, .115, .028, .085);
   mesh(new T.CylinderGeometry(.063, .073, .11, 12), skin, chest, 0, .535-CHEST_HEIGHT);
   const head = new T.Group(); head.name='player-head';head.position.set(0, .69-CHEST_HEIGHT, .005); chest.add(head);
@@ -222,9 +392,11 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
   // uniform hip scale avoids shearing the shin when the knee rotates.
   let P:PlayerProfile={...IDENTITY_PROFILE},strideScale=1,profileScale=1,bodyScaleX=1,faceScaleX=1,shoulderX=.235;
   const rootBase=new T.Vector3(1,1,1);
+  // Torso shape scale before the squash spring multiplies it (the spring never changes geometry).
+  const torsoBase=new T.Vector3(1,1,1);
   const applyShape=()=>{
     const build=P.build,depth=1+(build-1)*.5;
-    torso.scale.set(bodyScaleX*build,1,depth);
+    torsoBase.set(bodyScaleX*build,1,depth);torso.scale.copy(torsoBase);
     head.scale.set(faceScaleX/build,1,1/depth);
     arms.forEach((arm,i)=>arm.shoulder.position.x=(i===0?-1:1)*shoulderX*(1+(build-1)*.25));
     for(const leg of legs)leg.hip.scale.setScalar(P.legs);
@@ -241,7 +413,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
     skin.color.set({warm:'#bc8562',deep:'#765039',light:'#d4a17c'}[value.face]);
     shirt.color.set({classic:'#edb957',coast:'#356478',sunset:'#c8734f'}[value.clothing]);
     shorts.color.set(value.clothing==='sunset'?'#655549':'#26453e');
-    const female=value.character==='female';longHair.visible=female;jersey.geometry=female?spineSurfaces.female:spineSurfaces.male;
+    const female=value.character==='female';longHair.visible=female;jersey.geometry=female?spineSurfaces.female:spineSurfaces.male;shirtNumber.sync(female);
     shoulderX=female?.22:.235;
     captainBand.visible=value.character==='captain';explorerHat.visible=value.character==='explorer';
     faceScaleX=(value.face==='deep'?1.07:value.face==='light'?.94:1)*(female?.96:1);
@@ -312,11 +484,243 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
     if(!footLocked[index])return;footLocked[index]=false;lockBlend[index]=0;
     replant[index]=replantTotal[index]=T.MathUtils.clamp(.18-.02*speed,.1,.18);replantAnchors[index].copy(shownFeet[index]);liftOff[index]=false;
   };
+  // Readable intent (pass puzzle): the "to me!" call, one-shot reactions and the torso squash spring.
+  // All of it idles at zero cost when the host never sets the fields.
+  let calledBlend=0,calledSide:-1|1=1;
+  let reactKind:PlayerReaction|undefined,reactP=0,reactSide:-1|1=1,reactFade=0;
+  let prevKind:PlayerReaction|undefined,prevP=0,prevSide:-1|1=1,prevFade=0,reacting=false;
+  const react=new Float64Array(REACT.size);
+  let squashX=0,squashV=0,squashSeen:number|undefined,squashActive=false;
   let truckPreviousSpeed=0,truckLean=0,truckSway=0,truckPhase=0,wasTruckRiding=false;
+  // Keeper dive / jump (lane B, docs/bean-characters/CONTRACT.md): pose from progress, faded out over ~.15 s
+  // when the host clears the field; `…Last` remembers the previous progress so the landing squash fires once.
+  let diveP=0,diveDir:-1|1=1,diveH=.5,diveFade=0,diveLast=-1,jumpP=0,jumpH=0,jumpFade=0,jumpLast=-1;
+  let diveKind:DiveKind='side',diveOut:SaveOutcome='catch';
+  // Signature move state; `moveReact` = this rig wrote a move/footwork pose into the reaction channels last frame.
+  let moveKind:SignatureMove='volley',moveP=0,moveSide:-1|1=1,moveH=.5,moveFade=0,moveLast=-1,moveReact=false;
+  const skill=createSkillDriver();let skillSupport:-1|0|1=0,plantKick=false; // skill moves lane (skillMoves.ts)
+  // Ground guard body shape (torso-local [y, radius] spheres): the bean lathe of the widest build (bean.js:
+  // y −.13 … 1.02, r = .32·(1−|2u−1|^2.2)^(1/2.2)) or the classic jersey. Rounder bodies rest higher.
+  // (Lane A) The bean spheres come from whatever renders: root.userData.beanBody.ground (exact per build) exists only
+  // while the bean skin shows; classic style and a classic costume fallback use the classic jersey.
+  const groundClassic=[.08,.17,.3,.19,.5,.18];
+  const diveQ=new T.Quaternion(),poseQ=new T.Quaternion(),poseE=new T.Euler(),AXIS_X=new T.Vector3(1,0,0),AXIS_Z=new T.Vector3(0,0,1),NO_TURN=new T.Quaternion(),groundM=new T.Matrix4();
+  const slerpEuler=(q:T.Quaternion,x:number,y:number,z:number,k:number)=>{if(k>0)q.slerp(poseQ.setFromEuler(poseE.set(x,y,z,'XYZ')),Math.min(1,k));};
+  const slerpBend=(q:T.Quaternion,x:number,k:number)=>{if(k>0)q.slerp(poseQ.setFromAxisAngle(AXIS_X,x),Math.min(1,k));};
+  /** Keeper dive over the solved body. The roll lives on the pelvis (the body root): hosts own root.position.y
+   *  and root.rotation.z. Set → power step on the near foot, far knee drives → airborne stretch, the hands lead
+   *  (top hand over, bottom hand under) → land on the side → up via the knees. The type (DIVE_KINDS) sets the timing,
+   *  roll and flight; the outcome sets the hands: a catch gathers the ball into the chest, a parry pushes it out
+   *  (the top arm stays long), a tip fingertips it up and over with the top hand. */
+  const poseDive=(dt:number,reduced:boolean,cut:boolean)=>{
+    const p=diveP,d=diveDir,w=smooth(diveFade),D=DIVE_KINDS[diveKind];
+    if(diveKind==='stand'||diveKind==='smother'){poseKeeperHands(p,w,D);diveLast=p;return;}
+    const rise=smooth((p-D.rise)/(D.up-D.rise));
+    // Until the near boot leaves the grass the lean is pre-solve (the IK keeps it planted); the roll and the
+    // trailing legs take over from the lift.
+    const roll=smooth((p-D.lift+.04)/(D.contact-D.lift+.04))*(1-rise);
+    const flight=smooth((p-D.lift+.04)/.11)*(1-rise);
+    const u=T.MathUtils.clamp((p-D.lift)/(D.land-D.lift),0,1),air=p>D.lift&&p<D.land?4*u*(1-u)*(D.air+D.airH*diveH)*(reduced?.55:1):0;
+    const lying=smooth((p-D.lift)/(D.land-D.lift))*(1-rise);
+    const impact=smooth((p-D.land)/.03)*(1-smooth((p-D.land-.03)/.12));
+    const stretch=smooth((p-D.push)/.12)*(1-smooth((p-D.land)/.14));
+    const cushion=smooth((p-D.land+.05)/.06)*(1-smooth((p-D.rise-.12)/.2));
+    const gather=diveOut==='catch'?smooth((p-D.contact-.01)/.1)*(1-smooth((p-D.rise-.05)/.25)):0;
+    const kneel=smooth((p-D.rise)/.1)*(1-smooth((p-D.rise-.12)/.2));
+    const k=flight*w;
+    // After landing every type settles fully onto its side (a tip or spring flies more upright).
+    const settle=smooth((p-D.land)/.1)*(1-rise);
+    diveQ.setFromAxisAngle(AXIS_Z,-d*(D.roll*roll+(1.42-D.roll)*settle+.08*impact)*w);
+    pelvis.quaternion.slerp(NO_TURN,k*.85).premultiply(diveQ);
+    // The hips follow a flight arc down onto the grass (the ground guard below rests the body ON it).
+    pelvis.position.y=T.MathUtils.lerp(pelvis.position.y,.12,lying*w)+air*w;
+    pelvis.position.x+=d*.16*lying*w;pelvis.position.z+=.1*lying*w;
+    torso.rotation.x*=1-.8*k;torso.rotation.y*=1-k;torso.rotation.z*=1-.8*k;
+    head.rotation.z+=d*.3*roll*w;head.rotation.x*=1-.5*k;
+    for(let i=0;i<2;i++){
+      const s=i===0?-1:1,under=s===d,leg=legs[i],arm=arms[i];
+      // Legs trail long and slightly bent, the upper one a touch higher, toes pointed.
+      slerpEuler(leg.hip.quaternion,under?.08:-.26,0,under?-s*.03:s*.13,k);slerpBend(leg.knee.quaternion,under?.28:.62,k);slerpEuler(leg.ankle.quaternion,.45,0,0,k);
+      if(kneel>0){leg.hip.rotation.x-=1.05*kneel*w;leg.knee.rotation.x+=1.45*kneel*w;}
+      // Arms: a narrow Y over the head along the body line, so after the roll both gloves point at the ball
+      // (the top hand a little over the bottom one). A tip: the top hand goes long and flicks, the other tucks.
+      const reachW=Math.max(stretch,cushion*(under?1:1-smooth((p-D.rise)/.12)),gather)*w;if(reachW<=0)continue;
+      // A catch brings the gloves together behind the ball (past ±π the arms converge); a parry keeps the Y.
+      let sx=.15,sz=s*(diveOut==='catch'?3.26:3.02),el=diveOut==='catch'?-.3:-.1;
+      if(diveOut==='tip'){if(under){sx=1.2;sz=s*3.45;el=-1.6;}else{sx=.05;sz=s*3.14;el=0;}}
+      // Landing: the underneath arm comes forward to cushion on the grass in front of the chest; the top arm stays long.
+      // (With the arm up, +x swings it forward in the sagittal plane, so it never sweeps down through the grass.)
+      if(cushion>0&&gather<1){const c=cushion*(1-gather);sx+=((under?1.35:diveOut==='tip'?.55:.2)-sx)*c;sz+=((under?s*3.24:s*3.0)-sz)*c;el+=((under?-.7:-.25)-el)*c;}
+      // A catch: both gloves pull the ball in to the chest.
+      // (Swung forward in the sagittal plane from the overhead reach, never down through the grass.)
+      // (Past ±π the upper arm crosses inward, so both gloves meet round the ball at the chest.)
+      if(gather>0){sx+=(1.3-sx)*gather;sz+=(s*3.4-sz)*gather;el+=(-1.8-el)*gather;}
+      slerpEuler(arm.shoulder.quaternion,sx,0,sz,reachW);
+      arm.elbow.rotation.x+=(el-arm.elbow.rotation.x)*reachW;arm.elbow.rotation.y*=1-reachW;
+      arm.hand.quaternion.slerp(NO_TURN,reachW);
+      // The tipping fingers flick up at contact.
+      if(diveOut==='tip'&&!under){const f=smooth((p-D.contact+.03)/.04)*(1-smooth((p-D.contact-.05)/.1))*w;arm.hand.rotation.x-=.9*f;}
+    }
+    if(!cut&&dt>0&&diveLast>=0&&diveLast<D.land&&p>=D.land){squashV-=3.2*(reduced?.4:1);squashActive=true;}
+    diveLast=p;
+  };
+  /** Standing save (no dive): W catch above the head for high balls, basket at the chest for mid ones, then the
+   *  ball is gathered in; a parry palms it away, a tip pushes it up with one straight arm. Smother: the arms spread. */
+  const poseKeeperHands=(p:number,w:number,D:typeof DIVE_KINDS.stand)=>{
+    if(diveKind==='smother')return;
+    const high=diveH>.55,reach=smooth((p-.06)/(D.contact-.06))*(1-smooth((p-D.contact-.03)/.1)),after=smooth((p-D.contact)/.08)*(1-smooth((p-D.rise)/.28));
+    for(let i=0;i<2;i++){
+      const s=i===0?-1:1,arm=arms[i],k=Math.max(reach,after)*w;if(k<=0)continue;
+      let sx:number,sz:number,el:number;
+      // W catch: thumbs almost touching in front of the forehead; basket: palms up at the chest; then held in.
+      if(diveOut==='catch'){sx=high?-2.35:-.7;sz=-s*(high?.18:.3);el=high?-.85:-1.55;sx+=(-.5-sx)*after;sz+=(-s*.3-sz)*after;el+=(-2.05-el)*after;}
+      else if(diveOut==='parry'){sx=high?-2.3:-1.45;sz=s*.22;el=-.12;sx+=((high?-2.6:-1.6)-sx)*after;sz+=(s*.5-sz)*after;}
+      else{const lead=s===diveDir;sx=lead?-2.9:-.4;sz=s*(lead?.2:.4);el=lead?-.05:-.6;}
+      slerpEuler(arm.shoulder.quaternion,sx,0,sz,k);arm.elbow.rotation.x+=(el-arm.elbow.rotation.x)*k;arm.elbow.rotation.y*=1-k;arm.hand.quaternion.slerp(NO_TURN,k);
+    }
+  };
+  // Reaction-channel writers (pre-solve: the leg IK plants/frees each boot and the pelvis/torso/arms blend in).
+  const rLeg=(out:Float64Array,side:-1|1,k:number,footX:number,footZ:number,lift:number,toe:number,free:boolean)=>{
+    if(k<=0)return;const b=REACT.leg+(side<0?0:1)*6;out[b]+=k;out[b+1]+=k*side*footX;out[b+2]+=k*footZ;out[b+3]+=k*lift;out[b+4]+=k*toe;if(free)out[b+5]=Math.max(out[b+5],k);
+  };
+  const rArm=(out:Float64Array,side:-1|1,k:number,shX:number,shZ:number,elX:number)=>{if(k<=0)return;const b=REACT.arm+(side<0?0:1)*4;out[b]+=k;out[b+1]+=k*shX;out[b+2]+=k*side*shZ;out[b+3]+=k*elX;};
+  /** Keeper footwork before the take-off: the NEAR foot (dive side) power-steps out and drives, the far knee
+   *  lifts across first, so the near boot is the last to leave the grass. A collapse side-steps then drops;
+   *  a standing save steps in line and dips; a smother spreads wide and low. */
+  const diveFootwork=(out:Float64Array,w:number)=>{
+    const p=diveP,d=diveDir,o=-d as -1|1,D=DIVE_KINDS[diveKind];
+    if(diveKind==='smother'){
+      const e=kf(p,[0,0,D.contact,1,D.rise,1,D.up,0])*w;
+      rLeg(out,-1,e,.42,.12,0,0,true);rLeg(out,1,e,.42,.12,0,0,true);
+      out[REACT.pelvisDrop]+=.36*e;out[REACT.torsoPitch]+=.3*e;out[REACT.headPitch]-=.25*e;
+      rArm(out,-1,e,-.35,1.25,-.25);rArm(out,1,e,-.35,1.25,-.25);return;
+    }
+    if(diveKind==='stand'){
+      const e=kf(p,[0,0,.12,1,D.rise,1,D.up,0])*w,dip=kf(p,[0,0,D.contact,1,D.contact+.15,.3,D.up,0])*w;
+      rLeg(out,d,e,.1,.04,.05*Math.sin(Math.PI*T.MathUtils.clamp(p/.12,0,1)),0,p<.12);out[REACT.pelvisDrop]+=.05*dip;return;
+    }
+    const step=kf(p,[0,0,D.push*.4,1,D.lift,1,D.lift+.04,0])*w,arc=Math.sin(Math.PI*T.MathUtils.clamp(p/(D.push*.8),0,1));
+    rLeg(out,d,step,diveKind==='collapse'?.34:diveKind==='spring'?.36:.42,.06,.07*arc,.5*smooth((p-D.push*.8)/(D.lift-D.push*.8)),p<D.push*.8);
+    if(diveKind!=='collapse')rLeg(out,o,kf(p,[D.push-.04,0,D.push,1,D.lift+.03,1,D.lift+.08,0])*w,-.05,.14,.3,.2,true);
+  };
+  /** Leg moves (volley, back heel, sole roll, flick-up): the kicking leg follows keyframes, the other boot bears
+   *  the weight (world-planted); torso, head and arms balance the strike. */
+  const signatureLegs=(out:Float64Array,w:number)=>{
+    const p=moveP,s=moveSide,o=-s as -1|1,h=moveH;
+    if(moveKind==='volley'){
+      const K=MK.volley,e=kf(p,K.env)*w,lift=kf(p,[0,0,.28,.25+.2*h,.42,.12+.7*h,.6,.27+.7*h,.85,.05]);
+      rLeg(out,s,kf(p,K.w)*w,kf(p,K.x),kf(p,K.z),lift,kf(p,K.toe),true);out[REACT.hold]+=kf(p,K.w)*w;
+      out[REACT.pelvisRoll]-=s*.18*h*e;out[REACT.torsoRoll]-=s*.25*h*e;out[REACT.torsoPitch]+=(-.15*h+.12*(1-h))*e;out[REACT.headPitch]+=.4*e;out[REACT.pelvisDrop]+=.05*e;
+      rArm(out,o,e,-.3,1.3,-.4);rArm(out,s,e,.3,.6,-.5);return;
+    }
+    const K=MK[moveKind as 'backHeel'|'soleRoll'|'flickUp'],e=kf(p,K.env)*w,lw=kf(p,K.w)*w;
+    rLeg(out,s,lw,kf(p,K.x),kf(p,K.z),kf(p,K.lift),kf(p,K.toe),true);out[REACT.hold]+=lw;
+    if(moveKind==='backHeel'){out[REACT.torsoPitch]+=.15*e;out[REACT.headPitch]+=.35*e;out[REACT.torsoYaw]+=s*.12*e;rArm(out,o,e,-.2,.55,-.4);rArm(out,s,e,.25,.4,-.35);}
+    else if(moveKind==='soleRoll'){out[REACT.pelvisDrop]+=.05*e;out[REACT.torsoPitch]+=.12*e;out[REACT.headPitch]+=.45*e;rArm(out,o,e,-.2,.7,-.4);rArm(out,s,e,.1,.45,-.3);}
+    else{out[REACT.torsoPitch]+=kf(p,[0,0,.25,.12,.5,-.05,1,0])*w;out[REACT.headPitch]+=.4*e;out[REACT.pelvisDrop]+=.04*e;rArm(out,o,e,-.25,.75,-.45);rArm(out,s,e,.15,.5,-.35);}
+  };
+  /** Airborne signature moves over the solved body (pelvis = body root, both boots free):
+   *  bicycle — plant, fall back, the base leg swings up, the kicking leg scissors over the head at contact, land on
+   *  the back with the hands cushioning; scissor — side-on in the air, the top leg sweeps through the ball, land on
+   *  the side and bottom arm; diving header — launch flat toward a low ball, head first, land on the chest and hands. */
+  const poseAirMove=(dt:number,reduced:boolean,cut:boolean)=>{
+    const p=moveP,s=moveSide,o=-s as -1|1,w=smooth(moveFade),M=MOVE_PHASE[moveKind];
+    const u=T.MathUtils.clamp((p-.14)/(M.land-.14),0,1),airborne=p>.14&&p<M.land;
+    if(moveKind==='bicycle'){
+      const back=kf(p,BK.back),k=kf(p,BK.body)*w,lie=kf(p,BK.lie),landW=kf(p,BK.land)*w,rise=smooth((p-.7)/.25);
+      diveQ.setFromAxisAngle(AXIS_X,-1.25*back*w);pelvis.quaternion.slerp(NO_TURN,k*.85).premultiply(diveQ);
+      pelvis.position.y=T.MathUtils.lerp(pelvis.position.y,.12,lie*w)+(airborne?4*u*(1-u)*.7*(reduced?.55:1):0)*w;
+      torso.rotation.x*=1-.8*k;torso.rotation.z*=1-.8*k;head.rotation.x+=(.35*back)*w;
+      for(let i=0;i<2;i++){const side=i===0?-1:1,leg=legs[i],arm=arms[i],kick=side===s;
+        slerpEuler(leg.hip.quaternion,kf(p,kick?BK.kickHip:BK.baseHip),0,side*.08,k);slerpBend(leg.knee.quaternion,kf(p,kick?BK.kickKnee:BK.baseKnee),k);slerpEuler(leg.ankle.quaternion,.4,0,0,k);
+        const kneel=smooth((p-.72)/.1)*(1-rise*rise)*w;if(kneel>0){leg.hip.rotation.x-=1.0*kneel;leg.knee.rotation.x+=1.4*kneel;}
+        const aw=k;slerpEuler(arm.shoulder.quaternion,.2+.7*landW,0,side*(1.4-.7*landW),aw);arm.elbow.rotation.x+=(-.3+.1*landW-arm.elbow.rotation.x)*aw;arm.hand.quaternion.slerp(NO_TURN,aw);}
+    }else if(moveKind==='scissor'){
+      const d=o,roll=kf(p,SK.roll),k=kf(p,SK.body)*w,lie=kf(p,SK.lie),landW=kf(p,SK.land)*w;
+      diveQ.setFromAxisAngle(AXIS_Z,-d*roll*w);pelvis.quaternion.slerp(NO_TURN,k*.85).premultiply(diveQ);
+      pelvis.position.y=T.MathUtils.lerp(pelvis.position.y,.12,lie*w)+(airborne?4*u*(1-u)*.64*(reduced?.55:1):0)*w;pelvis.position.x+=d*.12*lie*w;
+      torso.rotation.x*=1-.8*k;torso.rotation.z*=1-.8*k;head.rotation.z+=d*.25*roll*w;
+      for(let i=0;i<2;i++){const side=i===0?-1:1,leg=legs[i],arm=arms[i],kick=side===s,under=side===d;
+        slerpEuler(leg.hip.quaternion,kf(p,kick?SK.kickHip:SK.baseHip),0,kick?side*.15:-side*.03,k);slerpBend(leg.knee.quaternion,kf(p,kick?SK.kickKnee:SK.baseKnee),k);slerpEuler(leg.ankle.quaternion,.35,0,0,k);
+        const kneel=smooth((p-.68)/.1)*(1-smooth((p-.8)/.13))*w;if(kneel>0){leg.hip.rotation.x-=1.0*kneel;leg.knee.rotation.x+=1.4*kneel;}
+        // Arms out for balance in the air; the bottom arm reaches for the grass and cushions the landing.
+        const sx=under?-.2+(1.35+.2)*landW:-.3,sz=under?side*(2.6+.64*landW):side*1.5,el=under?-.2-.5*landW:-.35;
+        slerpEuler(arm.shoulder.quaternion,sx,0,sz,k);arm.elbow.rotation.x+=(el-arm.elbow.rotation.x)*k;arm.hand.quaternion.slerp(NO_TURN,k);}
+    }else{
+      const pitch=kf(p,DK.pitch),k=kf(p,DK.body)*w,lie=kf(p,DK.lie),brace=kf(p,DK.brace)*w,armW=kf(p,DK.arms)*w;
+      diveQ.setFromAxisAngle(AXIS_X,pitch*w);pelvis.quaternion.slerp(NO_TURN,k*.85).premultiply(diveQ);
+      pelvis.position.y=T.MathUtils.lerp(pelvis.position.y,.12,lie*w)+(airborne?4*u*(1-u)*.28*(reduced?.55:1):0)*w;pelvis.position.z+=kf(p,DK.fwd)*w;
+      torso.rotation.x*=1-.8*k;torso.rotation.z*=1-.8*k;torso.rotation.y*=1-k;head.rotation.x-=.9*(pitch/1.5)*w;
+      for(let i=0;i<2;i++){const side=i===0?-1:1,leg=legs[i],arm=arms[i];
+        slerpEuler(leg.hip.quaternion,.15,0,side*.08,k);slerpBend(leg.knee.quaternion,.25,k);slerpEuler(leg.ankle.quaternion,.45,0,0,k);
+        const kneel=smooth((p-.66)/.1)*(1-smooth((p-.78)/.16))*w;if(kneel>0){leg.hip.rotation.x-=1.05*kneel;leg.knee.rotation.x+=1.45*kneel;}
+        // Arms back along the sides for the header, then forward (down, after the pitch) to take the landing.
+        const sx=.4+(-1.4-.4)*brace,sz=side*(.4+.25*brace),el=-.2-.9*brace;
+        slerpEuler(arm.shoulder.quaternion,sx,0,sz,armW);arm.elbow.rotation.x+=(el-arm.elbow.rotation.x)*armW;arm.hand.quaternion.slerp(NO_TURN,armW);}
+    }
+  };
+  /** Jump over the solved body: root lift on the pelvis, legs tucked in the air, toes drive the take-off; arms
+   *  swing back then up unless a reaction (the header) owns them. Landing squash fires once. */
+  const poseJump=(dt:number,reduced:boolean,cut:boolean,armsFree:boolean)=>{
+    const p=jumpP,w=smooth(jumpFade),J=JUMP_PHASE,airborne=p>J.takeoff&&p<J.land;
+    const u=T.MathUtils.clamp((p-J.takeoff)/(J.land-J.takeoff),0,1),air=airborne?4*u*(1-u):0,big=Math.min(1,jumpH/.35);
+    pelvis.position.y+=jumpH*(reduced?.6:1)*air*w;
+    const tuck=airborne?Math.sin(Math.PI*u)*w*(.55+.45*big):0,extend=smooth((p-J.takeoff+.07)/.05)*(1-smooth((p-J.takeoff-.01)/.08))*w;
+    for(let i=0;i<2;i++){const leg=legs[i];leg.hip.rotation.x-=(i?.7:.48)*tuck;leg.knee.rotation.x+=(i?1.2:.95)*tuck;leg.ankle.rotation.x+=.3*tuck+.45*extend;}
+    if(armsFree){
+      const load=smooth(p/.17)*(1-smooth((p-J.takeoff+.04)/.06)),up=smooth((p-J.takeoff+.05)/.08)*(1-smooth((p-J.land)/.15)),k=Math.max(load,up)*w;
+      for(let i=0;i<2;i++){const arm=arms[i],s=i===0?-1:1;
+        arm.shoulder.rotation.x+=(.55*load*(1-up)-1.45*up-arm.shoulder.rotation.x)*k;arm.shoulder.rotation.z+=(s*(.3+.25*up)-arm.shoulder.rotation.z)*k;arm.elbow.rotation.x+=(-.3-.4*up-arm.elbow.rotation.x)*k;}
+    }
+    if(!cut&&dt>0&&jumpLast>=0){
+      if(jumpLast<J.takeoff&&p>=J.takeoff){squashV+=(1.2+1.4*big)*(reduced?.4:1);squashActive=true;}
+      if(jumpLast<J.land&&p>=J.land){squashV-=(2+2.2*big)*(reduced?.4:1);squashActive=true;}
+    }
+    jumpLast=p;
+  };
+  // Chain matrix of a joint in rig-local space (no world matrices, no scene traversal: only this joint's parents).
+  const groundChain=(joint:T.Object3D)=>{groundM.identity();for(let o:T.Object3D|null=joint;o&&o!==root;o=o.parent){o.updateMatrix();groundM.premultiply(o.matrix);}return groundM;};
+  /** Keeps every part of the body and limbs on or above the pitch while diving, jumping, sliding or stumbling.
+   *  Each part is an ellipsoid on its joint; its exact lowest point under the current chain (roll, pitch, scale)
+   *  is c.y − √Σ(M₁ⱼrⱼ)². Body, head, arms and knees keep ≥ 1.5 cm of air; a boot may rest as deep as it stands
+   *  flat in the ordinary gait (ankle at .075, whatever the leg scale), so standing on the grass never lifts. */
+  const groundGuard=()=>{
+    let lift=0;
+    const need=(m:T.Matrix4,x:number,y:number,z:number,rx:number,ry:number,rz:number,clear:number)=>{
+      const e=m.elements,cy=e[1]*x+e[5]*y+e[9]*z+e[13],low=cy-Math.sqrt((e[1]*rx)**2+(e[5]*ry)**2+(e[9]*rz)**2);
+      if(clear-low>lift)lift=clear-low;
+    };
+    const groundBody=(root.userData.beanBody as {ground?:number[]}|undefined)?.ground??groundClassic;
+    let m=groundChain(torso);for(let k=0;k<groundBody.length;k+=2){const r=groundBody[k+1];need(m,0,groundBody[k],0,r,r,r,.015);}
+    m=groundChain(head);need(m,0,0,0,.14,.18,.14,.015);
+    for(let i=0;i<2;i++){
+      m=groundChain(arms[i].shoulder);need(m,0,-.055,0,.095,.125,.095,.012);
+      m=groundChain(arms[i].elbow);need(m,0,0,0,.055,.055,.055,.012);need(m,0,-.265,0,.062,.07,.06,.012);
+      m=groundChain(legs[i].hip);need(m,0,-.14,0,.11,.11,.11,.012);
+      m=groundChain(legs[i].knee);need(m,0,0,.008,.07,.07,.07,.012);
+      m=groundChain(legs[i].ankle);const e=m.elements,legScale=Math.hypot(e[4],e[5],e[6]);need(m,0,-.028,.06,.072,.058,.145,.075-(root.userData.beanBody?.086:.079)*legScale);
+    }
+    if(lift>0)pelvis.position.y+=lift;
+    return lift;
+  };
   const update = (x: number, z: number, dt: number, time: number, reduced: boolean, motion?: PlayerMotion) => {
     // A seek/teleport must not look like a sprint. Cap integration after a suspended tab.
     dt = Math.max(0, Math.min(dt, .1));
     ws = Math.max(.05, Math.abs(root.scale.x));
+    // Dive / jump state first: a diving keeper's yaw must not chase his own sideways travel.
+    const airAllowed=!motion?.truckRiding&&!(motion?.travelMode&&motion.travelMode!=='walk')&&!motion?.parachute&&!motion?.rooftopPose&&motion?.stunAge===undefined&&!motion?.wallSplat&&motion?.shotStep===undefined&&motion?.juggle===undefined;
+    const diveIn=airAllowed?motion?.dive:undefined,jumpIn=airAllowed?motion?.jump:undefined;
+    const airJump=!initialized||!!motion?.resumePose;
+    if(diveIn){const p=T.MathUtils.clamp(diveIn.progress,0,1);if(diveFade===0||p<diveP-.3)diveLast=-1;diveP=p;diveDir=diveIn.dir<0?-1:1;diveH=T.MathUtils.clamp(diveIn.height??.5,0,1);diveFade=1;}
+    else if(diveFade>0)diveFade=airJump||!airAllowed?0:Math.max(0,diveFade-dt/.15);
+    if(jumpIn){const p=T.MathUtils.clamp(jumpIn.progress,0,1);if(jumpFade===0||p<jumpP-.3)jumpLast=-1;jumpP=p;jumpH=T.MathUtils.clamp(jumpIn.height,0,.8);jumpFade=1;}
+    else if(jumpFade>0)jumpFade=airJump||!airAllowed?0:Math.max(0,jumpFade-dt/.15);
+    if(diveIn){diveKind=diveIn.kind??'side';diveOut=diveIn.outcome??'catch';}
+    const moveIn=airAllowed?motion?.move:undefined;
+    if(moveIn){const p=T.MathUtils.clamp(moveIn.progress,0,1);if(moveFade===0||moveIn.kind!==moveKind||p<moveP-.3)moveLast=-1;moveKind=moveIn.kind;moveP=p;moveSide=moveIn.side<0?-1:1;moveH=T.MathUtils.clamp(moveIn.height??.5,0,1);moveFade=1;}
+    else if(moveFade>0)moveFade=airJump||!airAllowed?0:Math.max(0,moveFade-dt/.15);
+    const diving=diveFade>0,jumping=jumpFade>0,signing=moveFade>0,airMove=signing&&AIR_MOVES.has(moveKind);
+    skill.input(airAllowed?motion?.skill:undefined,dt,airJump||!airAllowed);const skilling=skill.active; // skill moves lane
     const dx = x - previousX, dz = z - previousZ, distance = Math.hypot(dx, dz);
     const discontinuity = !initialized || !!motion?.resumePose || distance > (motion?.travelMode && motion.travelMode !== 'walk' ? 3 : 1.2);
     const velocity = motion?.truckRiding || discontinuity || dt <= 0 ? 0 : Math.min(distance / dt, 8);
@@ -333,7 +737,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
     else{const h=Math.atan2(dx,dz),d=Math.atan2(Math.sin(h-travelHeading),Math.cos(h-travelHeading));travelRate=T.MathUtils.damp(travelRate,dt>0?d/dt:0,25,dt);travelHeading=h;}
     const previousYaw = yaw;
     let delta = 0;
-    if (motion?.facing !== undefined || velocity > .05) {
+    if (motion?.facing !== undefined || velocity > .05 && !diving && !airMove) {
       const target = motion?.facing ?? Math.atan2(dx, dz);
       delta = Math.atan2(Math.sin(target-yaw), Math.cos(target-yaw));
       if (discontinuity || dt===0 || motion?.samplePose) yaw = target;
@@ -359,7 +763,9 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
     const lateral=smooth((Math.abs(sideways)-.35)/.55)*amount;
     // The ready stance is a set position: it fades out as the player gets going (gone by ~2.5 m/s),
     // so a sprinting defender never runs in a lunge.
-    const ready=motion?.stance==='ready'?1-smooth((speed-1)/1.5):0;
+    // `ready` (0..1) is the marker's graded version of the same set position.
+    const readyInput=Math.max(motion?.stance==='ready'?1:0,T.MathUtils.clamp(motion?.ready??0,0,1));
+    const ready=readyInput>0?readyInput*(1-smooth((speed-1)/1.5)):0;
     readyBlend=discontinuity||sample||rideBase?ready:T.MathUtils.damp(readyBlend,ready,8,dt);
     const jockey=T.MathUtils.clamp(motion?.jockey??0,0,1),defensive=Math.max(jockey,readyBlend);
     // A defensive shuffle is a slow-speed footwork: running sideways fast becomes a crossover run.
@@ -393,12 +799,53 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
     if(discontinuity||sample||action>0&&previousAction===0){strikeFoot=motion?.kickSide??(lastFootZ[0]>lastFootZ[1]?1:-1);}
     const kickSide = action>0?strikeFoot:motion?.kickSide??1;
     if(action>0&&previousAction===0)strikeStart.copy(shownFeet[kickSide<0?0:1]);
+    if(action>0&&previousAction===0)plantKick=true; // skill moves lane: plant step (kickHold below)
     const finishedStrike=previousAction>0&&action===0;
     previousAction=action;
     contactOffsets[0].set(0,-.025,.405);contactOffsets[1].set(0,-.025,.405);
     if(action>0)contactOffsets[kickSide<0?0:1].set(strikeKind==='pass'?-kickSide*.21:0,.08,strikeKind==='pass'?.062:.32);
+    // One-shot reactions: the host drives progress; the rig fades a cleared reaction out over ~.15 s and
+    // cross-fades a new one over the old, so a pose never snaps.
+    const reactOK=!rideBase&&!motion?.parachute&&!motion?.rooftopPose&&motion?.stunAge===undefined&&!motion?.wallSplat&&motion?.shotStep===undefined&&motion?.juggle===undefined;
+    const nextReaction=reactOK?motion?.reaction:undefined;
+    if(nextReaction||reactKind||prevKind){
+      const nextP=T.MathUtils.clamp(motion?.reactionProgress??0,0,1);
+      if(nextReaction&&(nextReaction!==reactKind||nextP<reactP-.3)){
+        if(reactKind&&reactFade>0){prevKind=reactKind;prevP=reactP;prevSide=reactSide;prevFade=reactFade;}
+        reactKind=nextReaction;reactSide=motion?.kickSide??1;
+      }
+      const fadeStep=discontinuity||!reactOK?1:dt/.15;
+      if(nextReaction){reactP=nextP;reactFade=1;}
+      else if(reactKind){reactFade=Math.max(0,reactFade-fadeStep);if(reactFade===0)reactKind=undefined;}
+      if(prevKind){prevFade=Math.max(0,prevFade-fadeStep);if(prevFade===0)prevKind=undefined;}
+      react.fill(0);
+      const amp=reduced?.6:1;
+      if(reactKind)reactionPose(reactKind,reactP,smooth(reactFade)*amp,reactSide,react);
+      if(prevKind)reactionPose(prevKind,prevP,smooth(prevFade)*amp,prevSide,react);
+      reacting=!!(reactKind||prevKind);
+      if(!reacting)react.fill(0);
+    }
+    // Airborne (dive from the push-off until back on the feet; jump from take-off to landing): both boots are
+    // free, so no gait stance, brake, plant or kick-support lock may hold either of them to the pitch.
+    // Signature leg moves and keeper footwork write into the same channels (a move over a reaction adds to it).
+    if(moveReact&&!(nextReaction||reactKind||prevKind)){react.fill(0);reacting=false;}
+    moveReact=false;
+    const legMove=signing&&!airMove,diveLegs=diving&&(diveKind==='stand'||diveKind==='smother'||diveP<DIVE_KINDS[diveKind].lift+.08);
+    skillSupport=0;
+    if(legMove||diveLegs||skilling){
+      if(!reacting)react.fill(0);
+      if(legMove)signatureLegs(react,smooth(moveFade)*(reduced?.6:1));
+      if(diveLegs)diveFootwork(react,smooth(diveFade));
+      if(skilling)skillSupport=skill.write(react,reduced);
+      reacting=true;moveReact=true;
+    }
+    const DK_=DIVE_KINDS[diveKind];
+    const airFree=diving&&diveFade>.3&&diveP>=DK_.lift&&diveP<DK_.up-.02||jumping&&jumpFade>.3&&jumpP>=JUMP_PHASE.takeoff-.03&&jumpP<JUMP_PHASE.land||airMove&&moveFade>.3&&moveP>=.12&&moveP<.9;
+    const reactFree0=reacting&&react[REACT.leg+5]>0||airFree,reactFree1=reacting&&react[REACT.leg+11]>0||airFree;
+    // Thigh control: the other boot bears the weight, world-planted like a kick's support boot.
+    const reactHold=reacting&&react[REACT.hold]>.01;
     // A trace of receive (the live approach blend) is not a touch: it must not cancel brakes, plants and locks.
-    const busy=action>0||receive>.05||motion?.juggle!==undefined;
+    const busy=action>0||receive>.05||motion?.juggle!==undefined||reactFree0||reactFree1;
     // Weight: the body's own momentum drives acceleration lean, braking and plants.
     const drive=anticipates||frozen&&!rideBase&&!reduced?T.MathUtils.clamp(acceleration/5,-1,1):0;
     const accelLean=Math.max(0,drive)*smooth(speed/.9)*(1-backpedal);
@@ -455,12 +902,13 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
     if(dt>0||resetBody){bodyMode=nextBodyMode;priorKick=kick;}
     bodyResponseActive=flowingBody;
     // Kicking on the move: the non-kicking boot bears the weight, world-planted, stepping along with the body.
-    const kickHold=action>0&&motion?.juggle===undefined&&!hardReset,supportIndex=kickSide<0?1:0;
+    const kickHold=(action>0||reactHold)&&motion?.juggle===undefined&&!hardReset;
+    const supportIndex=skillSupport!==0&&action===0?(skillSupport<0?0:1):action>0||!reactHold?kickSide<0?1:0:(legMove&&moveReact?moveSide:reactKind==='thigh'?reactSide:prevSide)<0?1:0;
     if(hardReset){replant[0]=replant[1]=0;stancePlanted[0]=stancePlanted[1]=false;footLocked[0]=footLocked[1]=false;lockBlend[0]=lockBlend[1]=0;plantSide=0;plantTimer=0;brakeHold=0;planted[0]=planted[1]=liftOff[0]=liftOff[1]=false;kickSupport=-1;}
     else if(busy){
       // A touch takes over the touching leg (both for keep-ups); a boot on the ground leaves from where it
       // stands (blended, never popped). The other leg keeps bearing weight on its gait/kick-support locks.
-      for(let i=0;i<2;i++)if(motion?.juggle!==undefined||i!==supportIndex){releaseFoot(i);stancePlanted[i]=false;}
+      for(let i=0;i<2;i++)if(motion?.juggle!==undefined||i!==supportIndex||(i===0?reactFree0:reactFree1)){releaseFoot(i);stancePlanted[i]=false;}
       plantSide=0;plantTimer=0;brakeHold=0;
     }
     if(hardReset||busy)recoveryRemaining=0;
@@ -529,6 +977,9 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
     }
     if(kickHold){
       const i=supportIndex,side=i===0?-1:1,lead=Math.min(speed,8)*.09;kickSupport=i;
+      // (Skill moves lane) Plant foot up beside the ball, not left behind: the kick starts with a short step of the
+      // support boot to ~.3 m beside the ball and ~.4 m behind its centre (.46 for a loft), toe by the ball.
+      if(plantKick&&action>0){plantKick=false;const bx=motion?.strikeX??kickSide*.14,bz=motion?.strikeZ??.65;stepFoot(i,x,z,yaw,bx-kickSide*.3,bz-(strikeKind==='loft'?.46:.4),.1);}
       // A grounded boot plants where it stands and cancels any old gait release.
       // An airborne one reaches down beside the body's path.
       if(!footLocked[i]){
@@ -589,6 +1040,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
     const sink=(.03+.075*P.weight)*brake+(.02+.04*P.weight)*plantBlend;
     pelvis.position.x = reduced||rideBase?0:balanceShift;
     pelvis.position.z = -.04*brake*gaitFwd+(.065*strike.drive+Math.max(0,(motion?.strikeZ??.65)-.65)*.55)*action;
+    if(action>0&&!hardReset)pelvis.position.z+=.12*smooth(kick/.2)*action; // skill moves lane: hips over the plant foot
     pelvis.position.y = pelvisRest + Math.cos(phase*2)*.012*effort*(1-brake) + breathing - .018*receive - (.05+.035*strike.load+Math.max(0,(motion?.strikeZ??.65)-.65)*.35)*action-crouch-(.05+.025*run)*effort-sink;
     // Hips carry mass: sinks, dwells and releases (brake, plant, stance, run effort) move the pelvis at
     // most ~2 cm per 1/60 s frame. Seeks, teleports, rides and authored samples still snap.
@@ -619,6 +1071,23 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
       inertialResponse(bodyResponse,0,torso.rotation.x,dt,32,resetBody,transitionBody),
       inertialResponse(bodyResponse,1,torso.rotation.y,dt,32,resetBody,transitionBody),
       inertialResponse(bodyResponse,2,torso.rotation.z-weightShift*.045,dt,32,resetBody,transitionBody)+weightShift*.045);
+    // Reaction body: pelvis pitch/roll/yaw and drop go in before the leg solve, which re-targets every
+    // boot in the new pelvis frame, so planted boots stay put. (Pelvis translation would drag free feet.)
+    if(reacting){
+      pelvis.rotation.x+=react[REACT.pelvisPitch];pelvis.rotation.y+=react[REACT.pelvisYaw];pelvis.rotation.z+=react[REACT.pelvisRoll];
+      pelvis.position.y-=react[REACT.pelvisDrop];
+      torso.rotation.x+=react[REACT.torsoPitch];torso.rotation.y+=react[REACT.torsoYaw];torso.rotation.z+=react[REACT.torsoRoll];
+    }
+    // Dive set / jump load and landing: the hips sink before the leg solve, so any boot still on the grass stays put.
+    if(diving){
+      const p=diveP,w=smooth(diveFade)*(DK_.roll>0?1:0),set=smooth(p/.08)*(1-smooth((p-DK_.push-.03)/.07)),push=smooth((p-DK_.push+.03)/.07)*(1-smooth((p-DK_.lift-.02)/.08));
+      pelvis.position.y-=(.07*set+.03*push)*w;torso.rotation.z-=diveDir*.28*push*w;pelvis.rotation.z-=diveDir*.1*push*w;
+    }
+    if(jumping){
+      const p=jumpP,w=smooth(jumpFade),J=JUMP_PHASE,load=smooth(p/.17)*(1-smooth((p-J.takeoff+.04)/.05)),land=smooth((p-J.land)/.05)*(1-smooth((p-J.land-.08)/.2));
+      pelvis.position.y-=((.1+.08*Math.min(1,jumpH/.4))*load+(.06+.12*Math.min(1,jumpH/.4))*land)*w;
+      torso.rotation.x+=(.18*load+.12*land)*w;
+    }
 
     // Balance follows contact and momentum: quiet at rest, counter-sway in the upper body.
     if(!reduced&&!rideBase){head.rotation.z=-torso.rotation.z*.4;head.rotation.y-=coil*.3;}else head.rotation.z=0;
@@ -706,14 +1175,16 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
       // Raw travel counts too, so the first step off a standstill is already world-locked.
       const moving=speed>.3||velocity>.3,supportKick=kickHold&&index===supportIndex;
       // The weight-bearing leg while the other one kicks or receives (not during keep-ups).
-      const supportLeg=index===supportIndex&&motion?.juggle===undefined&&(action>0||receive>0);
-      const plantStance=!sample&&!reduced&&!motion?.juggle&&stance&&moving&&action===0&&(receive<.05||supportLeg);
+      const supportLeg=index===supportIndex&&motion?.juggle===undefined&&(action>0||receive>0||reactHold);
+      // A reacting leg (thigh raised, slide) is free: no gait stance may lock it to the pitch.
+      const reactFree=index===0?reactFree0:reactFree1;
+      const plantStance=!sample&&!reduced&&!motion?.juggle&&stance&&moving&&action===0&&(receive<.05||supportLeg)&&!reactFree;
       // World-locked feet: gait stance, stationary pivot, and brake/plant locks (blended in fast).
       if(!stance)spent[index]=false;
       // A boot still finishing a step (release or lift-off blend) lands when the blend ends, not mid-air.
       // A boot that was already on the pitch last frame locks on its first stance frame (no landing skid).
       // A late swing that is already back on the pitch has touched down: it holds too.
-      const touchDown=!stance&&t>.7&&!sample&&!reduced&&!motion?.juggle&&moving&&action===0&&(receive<.05||supportLeg)&&shownFeet[index].y<.09&&!liftOff[index];
+      const touchDown=!stance&&t>.7&&!sample&&!reduced&&!motion?.juggle&&moving&&action===0&&(receive<.05||supportLeg)&&!reactFree&&shownFeet[index].y<.09&&!liftOff[index];
       const gaitLock=(plantStance||touchDown)&&(stancePlanted[index]||shownFeet[index].y<.09&&!liftOff[index])&&!spent[index]&&!(replant[index]>0&&!footLocked[index]);
       let lockWeight=(pivotSide===side||gaitLock)&&!discontinuity?1:0;
       if(footLocked[index]&&!discontinuity)lockWeight=Math.max(lockWeight,lockBlend[index]);
@@ -739,6 +1210,12 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
         const swingTime=(1-duty)*stride*ws/Math.max(speed,velocity,.5);
         replant[index]=replantTotal[index]=T.MathUtils.clamp(.55*swingTime,.05,.12);replantAnchors[index].copy(shownFeet[index]);liftOff[index]=true;
       }
+      // (Skill moves lane) Coming to rest from a slow walk: a boot that loses its gait lock steps to its rest spot
+      // (it used to snap there in one frame, up to ~20 cm). Boots already at their spot stay put (no idle bumps).
+      else if(planted[index]&&lockWeight===0&&replant[index]===0&&!moving&&!hardReset&&!contactStrike){
+        const wx=(shownFeet[index].x-x)/ws,wz=(shownFeet[index].z-z)/ws,ax=wx*cosYaw-wz*sinYaw-pelvis.position.x-side*.108,az=wx*sinYaw+wz*cosYaw-pelvis.position.z;
+        if(Math.hypot(ax-footX,az-footZ)>.03){replant[index]=replantTotal[index]=.16;replantAnchors[index].copy(shownFeet[index]);liftOff[index]=false;}
+      }
       if(lockWeight>0){
         const lx=T.MathUtils.clamp(lockX,-lateralReach,lateralReach),lz=T.MathUtils.clamp(lockZ,-.62,.62);
         footX+=(lx-footX)*lockWeight;footZ+=(lz-footZ)*lockWeight;footY+=(ly-footY)*lockWeight;
@@ -762,6 +1239,15 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
         }
         replant[index]=Math.max(0,replant[index]-dt);
         if(replant[index]===0)liftOff[index]=false;
+      }
+      // Reaction leg targets (thigh raised to cushion; slide lead leg long, trail leg tucked) blend in last,
+      // from wherever the boot is, before the reach clamp.
+      let reactToe=0;
+      if(reacting){
+        const b=REACT.leg+index*6,w=react[b];reactToe=react[REACT.toesUp];
+        // Height leads the horizontal blend: a boot lifts before it travels and is back over its spot
+        // before it sets down, so it never lands with a skid.
+        if(w>1e-5){const k=Math.min(w,1),kh=smooth((k-.3)/.7);footX+=(react[b+1]/w-footX)*kh;footZ+=(react[b+2]/w-footZ)*kh;footY+=(.075-pelvis.position.y+react[b+3]/w-footY)*k;reactToe+=react[b+4]/w*k;}
       }
       // Keep the requested sole within reach instead of solving an overlong leg,
       // which otherwise lifts a nominally planted boot above the pitch. Clamp in the
@@ -811,7 +1297,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
         hip.quaternion.slerp(contactHip,1-action);knee.quaternion.slerp(contactKnee,1-action);
       }
       // Flat sole under a pitched pelvis; toe-first backpedal steps and heels up in the ready stance.
-      const toe=(1-action)*(1-receive)*(backpedal*(stance?.06:.3*swing)+.14*still);
+      const toe=(1-action)*(1-receive)*(backpedal*(stance?.06:.3*swing)+.14*still)+reactToe;
       ankle.rotation.x = -hipAngle-kneeAngle-pelvisPitch + (stance ? 0 : -.12*swing*effort) + toe;
       // Cancel the whole parent rotation, not only its sagittal angles. Abducted hips and
       // banking otherwise tip the support boot onto its edge (especially in a wide jockey).
@@ -829,14 +1315,17 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
         ankle.quaternion.copy(ankleParent.invert()).multiply(soleTarget);
       }
       const arm = arms[index];
-      arm.shoulder.position.y=.385-CHEST_HEIGHT+(flowingBody&&!reduced?Math.sin(phase+index*Math.PI-.45)*(.012+.01*(1-brake))*effort:0);
+      arm.shoulder.position.y=.385-CHEST_HEIGHT+(flowingBody&&!reduced?Math.sin(phase+(1-index)*Math.PI-.45)*(.012+.01*(1-brake))*effort:0);
       // Flight and parachuting twist this axis; walking owns a neutral shoulder yaw.
       arm.shoulder.rotation.y = reduced?0:side*(.065+.1*(.5+.5*Math.sin(phase+index*Math.PI-.5)))*effort-coil*.6+turnBalance*.3;
       // Arms swing from the shoulder; the elbow closes on the forward swing and opens behind.
-      const armSwing=Math.sin(phase+index*Math.PI-.32),armAmp=(.42+.5*sprint)*(1-.65*shuffle)*(1-.7*backpedal)*P.armSwing*effort;
+      // (Skill moves lane) Arms swing with the OPPOSITE leg (and the chest coil): (1-index)·π, not index·π, which paced.
+      // (The shoulder yaw above stays coil-driven, as before.)
+      // The coil now adds to the swing instead of cancelling it, so the amplitude is ~20 % smaller for a similar hand travel.
+      const armSwing=Math.sin(phase+(1-index)*Math.PI-.32),armAmp=(.34+.4*sprint)*(1-.65*shuffle)*(1-.7*backpedal)*P.armSwing*effort;
       let shoulderX=armSwing*armAmp - .16*receive - .15*defensive;
-      let shoulderZ=side*(.12+.16*action+.09*receive+.2*compact)+(reduced?0:side*.075*Math.sin(phase+index*Math.PI-.6)*effort-weightShift*.04-turnBalance*.4)-bank*.3;
-      let elbowX=-.3-(.5+.3*sprint)*effort-.12*action+(reduced?0:(.34+.32*sprint)*P.armSwing*Math.sin(phase+index*Math.PI-.55)*effort);
+      let shoulderZ=side*(.12+.16*action+.09*receive+.2*compact)+(reduced?0:side*.075*Math.sin(phase+(1-index)*Math.PI-.6)*effort-weightShift*.04-turnBalance*.4)-bank*.3;
+      let elbowX=-.3-(.5+.3*sprint)*effort-.12*action+(reduced?0:(.34+.32*sprint)*P.armSwing*Math.sin(phase+(1-index)*Math.PI-.55)*effort);
       // Balance arms for braking, planting, backpedalling and the ready stance: elbows bent, upper arms
       // out and turned out, hands low and wide beside the hips. Never both arms reaching straight ahead.
       const balance=Math.max(sitBack,plantBlend,backpedal,readyBlend)*(1-action)*(1-receive);
@@ -942,19 +1431,20 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
     }
     if(!motion?.truckRiding){wasTruckRiding=false;truckPreviousSpeed=0;truckLean=0;truckSway=0;truckPhase=0;}
     if(motion?.travelMode==='moped'&&(motion.mopedStand??0)>0){
-      const stand=motion.mopedStand!;pelvis.position.y+=.62*stand;torso.rotation.x*=1-stand;head.rotation.x*=1-stand;
+      // The bean's round body and noodle legs sit ~17 cm lower on the saddle than the classic legs: lift further.
+      const stand=motion.mopedStand!;pelvis.position.y+=(root.userData.beanBody?.79:.62)*stand;torso.rotation.x*=1-stand;head.rotation.x*=1-stand;
       for(let i=0;i<2;i++){const side=i===0?-1:1;legs[i].hip.rotation.x*=1-stand;legs[i].knee.rotation.x*=1-stand;legs[i].ankle.rotation.x*=1-stand;arms[i].shoulder.rotation.x*=1-stand;arms[i].shoulder.rotation.z=side*1.1*stand;arms[i].elbow.rotation.x*=1-stand;}
     }
     for(let index=0;index<arms.length;index++){
       const arm=arms[index],side=index===0?-1:1,detail=flowingBody&&!reduced?amount*(1-.7*action):0;
-      const follow=Math.sin(phase+index*Math.PI-.65),channel=14+index*4;
+      const follow=Math.sin(phase+(1-index)*Math.PI-.65),channel=14+index*4;
       // Forearm rotation and a delayed, relaxed wrist follow the arm swing.
       // Rest/vehicles reset these joints; no secondary animation timer is needed.
       arm.elbow.rotation.y=inertialResponse(bodyResponse,channel,side*(.12+.16*follow)*detail,dt,26,resetBody,transitionBody);
       arm.hand.rotation.set(
         inertialResponse(bodyResponse,channel+1,(-.08+.14*follow)*detail,dt,24,resetBody,transitionBody),
         inertialResponse(bodyResponse,channel+2,side*.08*detail,dt,24,resetBody,transitionBody),
-        inertialResponse(bodyResponse,channel+3,side*(.06+.08*Math.cos(phase+index*Math.PI-.65))*detail,dt,24,resetBody,transitionBody));
+        inertialResponse(bodyResponse,channel+3,side*(.06+.08*Math.cos(phase+(1-index)*Math.PI-.65))*detail,dt,24,resetBody,transitionBody));
     }
     const freeFlight=motion?.travelMode==='jetpack'&&!motion.parachute&&!motion.rocketboard&&!motion.flyingCar&&!motion.rooftopPose;
     if(!freeFlight){flightActive=false;flightClock=0;}
@@ -973,19 +1463,25 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
         flightJoints[index]=!flightActive||discontinuity?value:T.MathUtils.damp(flightJoints[index],value,rate,dt);
         return flightJoints[index];
       };
+      // Expressive poses (Superman, one-arm, glide, dive, climb, hover) blend over the base flight pose;
+      // weights are eased in flightPoses.ts and each joint keeps its own follow() lag.
+      const st=freeFlight?flight?.style:undefined,sw=st?st.total:0,orb=st?st.weights[ORBIT_POSE]:0,flat=st?Math.max(0,sw-st.weights[6]-orb):0,armBank=st?st.bank*.2*sw:0;
+      // Banked orbit: chest rolls a little further into the turn, head turns toward the centre and levels against the bank.
+      const inTurn=orb*(st?st.orbitTurn:0);
       pelvis.position.set(0,.88+.13*air-compress,0);
       pelvis.rotation.set(0,follow(0,-steer*.13,4),follow(1,-steer*.055+sway*.16,5));
-      torso.rotation.set(.035+compress*.7+drive*.06,follow(2,steer*.16,7),follow(3,-steer*.11-sway*.3,6));
-      head.rotation.set(follow(4,-.04-cruise*.11-compress*.25+brace*.1,9),follow(5,steer*.32,10),follow(6,steer*.07,8));
+      torso.rotation.set(flightChannel(st,FC.torsoX,-1,.035+compress*.7+drive*.06),follow(2,steer*.16,7),follow(3,-steer*.11-sway*.3-armBank*.6-inTurn*.12,6));
+      head.rotation.set(follow(4,flightChannel(st,FC.headX,-1,-.04-cruise*.11-compress*.25+brace*.1),9),follow(5,steer*.32+inTurn*.3,10),follow(6,steer*.07+inTurn*.2,8));
       for(let i=0;i<2;i++){
         const side=i===0?-1:1,leg=legs[i],arm=arms[i],n=7+i*11;
         const wave=Math.sin(flightClock+i*1.8)*flow,lag=Math.sin(flightClock-.75+i*1.8)*flow;
-        leg.hip.rotation.set(follow(n,.06*air+cruise*.12+drive*.12+wave-.13*brace-compress*2.1,4.5),follow(n+1,-steer*.13,3.5),side*(.045+.055*brace)+follow(n+2,-steer*.09,4));
-        leg.knee.rotation.x=follow(n+3,.1+.23*air+.2*launch+cruise*.14+Math.max(0,drive)*.18+lag*.9+compress*4.2,5);
-        leg.ankle.rotation.set(follow(n+4,-.08-.12*air-cruise*.13-lag*.65+compress*.35,3.5),0,follow(n+5,steer*.06,4));
-        arm.shoulder.rotation.set(follow(n+6,-.12-.22*launch-compress*.8+cruise*.6-boost*.18-drive*.16+wave*.7,7),side*cruise*.1,follow(n+7,side*(.2+.16*brace+cruise*.13)+steer*.14+sway*.4,6));
-        arm.elbow.rotation.x=follow(n+8,-.48-.2*launch-.25*brace+cruise*.18-lag*.8-drive*.12,5);
-        if(freeFlight)arm.hand.rotation.set(follow(n+9,-drive*.16+lag*.6,4),0,follow(n+10,side*.08+steer*.12,4));
+        // Flat poses swap the dangling flow for a small alternating flutter kick.
+        leg.hip.rotation.set(follow(n,flightChannel(st,FC.hipX,side,.06*air+cruise*.12+drive*.12+wave-.13*brace-compress*2.1)+flat*wave*.8,4.5),follow(n+1,-steer*.13,3.5),flightChannel(st,FC.hipZ,side,side*(.045+.055*brace))+follow(n+2,-steer*.09,4));
+        leg.knee.rotation.x=follow(n+3,Math.max(.02,flightChannel(st,FC.knee,side,.1+.23*air+.2*launch+cruise*.14+Math.max(0,drive)*.18+lag*.9+compress*4.2)+flat*lag*.7),5);
+        leg.ankle.rotation.set(follow(n+4,flightChannel(st,FC.ankle,side,-.08-.12*air-cruise*.13-lag*.65+compress*.35),3.5),0,follow(n+5,steer*.06,4));
+        arm.shoulder.rotation.set(follow(n+6,flightChannel(st,FC.shoulderX,side,-.12-.22*launch-compress*.8+cruise*.6-boost*.18-drive*.16+wave*.7)+flat*wave*.22,7),side*cruise*.1*(1-sw),follow(n+7,flightChannel(st,FC.shoulderZ,side,side*(.2+.16*brace+cruise*.13)+steer*.14*(1-orb)+sway*.4)+armBank*(1-orb)+flat*sway*.3,6));
+        arm.elbow.rotation.x=follow(n+8,flightChannel(st,FC.elbow,side,-.48-.2*launch-.25*brace+cruise*.18-lag*.8-drive*.12),5);
+        if(freeFlight)arm.hand.rotation.set(follow(n+9,flightChannel(st,FC.handX,side,-drive*.16+lag*.6),4),0,follow(n+10,side*.08+steer*.12,4));
       }
       flightActive=freeFlight;
     }
@@ -1074,10 +1570,77 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
       inertialResponse(spineResponse,3,-bend*.55+.025*strike.follow*strikeSpine,dt,34,resetBody,transitionBody),
       inertialResponse(spineResponse,4,twist+chestTurn,dt,34,resetBody,transitionBody),
       inertialResponse(spineResponse,5,-sway*.65,dt,34,resetBody,transitionBody));
+    if(reacting){lumbar.rotation.x+=react[REACT.lumbarBend];chest.rotation.x+=react[REACT.chestArch];}
     applySpineSurface(jersey,lumbar.rotation,chest.rotation);
     // Keep the gaze stable while the upper spine moves beneath it.
     head.rotation.x-=(lumbar.rotation.x+chest.rotation.x)*.65;
     head.rotation.z-=(lumbar.rotation.z+chest.rotation.z)*.65;
+    // "To me!": the receiver raises the ball-side arm high and waves it; the rig eases in and out.
+    const calledTarget=reactOK?T.MathUtils.clamp(motion?.called??0,0,1):0;
+    if(calledTarget>0||calledBlend>0){
+      if(calledBlend<.02&&calledTarget>0){
+        const bx=(motion?.lookX??x)-x,bz=(motion?.lookZ??z)-z,local=bx*Math.cos(yaw)-bz*Math.sin(yaw);
+        calledSide=Math.abs(local)>.05?(local<0?-1:1):1;
+      }
+      calledBlend=discontinuity||sample?calledTarget:T.MathUtils.damp(calledBlend,calledTarget,6.5,dt);
+      if(calledTarget===0&&calledBlend<1e-3)calledBlend=0;
+      if(calledBlend>0&&reactOK){
+        const k=smooth(calledBlend),up=arms[calledSide<0?0:1],off=arms[calledSide<0?1:0];
+        const wave=reduced?0:Math.sin(time*9+seed),s=calledSide;
+        // Raised through the side to high above the head (frontal plane): the hand clears the head
+        // and shoulders, so the call still reads from an elevated match camera. The wave swings it side to side.
+        up.shoulder.rotation.x+=(-.3-up.shoulder.rotation.x)*k;
+        up.shoulder.rotation.y+=(0-up.shoulder.rotation.y)*k;
+        up.shoulder.rotation.z+=(s*(2.62+.2*wave)-up.shoulder.rotation.z)*k;
+        up.elbow.rotation.x+=(-.2-.1*wave-up.elbow.rotation.x)*k;
+        up.elbow.rotation.y*=1-k;up.hand.rotation.x*=1-k;
+        // The other arm opens a little for balance; the chest leans off the raised arm.
+        off.shoulder.rotation.z+=(-s*.35-off.shoulder.rotation.z)*k*.5;
+        torso.rotation.z-=s*.05*k;head.rotation.z+=s*.04*k;
+      }
+    }
+    if(reacting){
+      head.rotation.x+=react[REACT.headPitch];head.rotation.y+=react[REACT.headYaw];head.rotation.z+=react[REACT.headRoll];
+      for(let i=0;i<2;i++){
+        const b=REACT.arm+i*4,w=react[b];if(w<=1e-5)continue;
+        const k=Math.min(w,1),arm=arms[i];
+        arm.shoulder.rotation.x+=(react[b+1]/w-arm.shoulder.rotation.x)*k;
+        arm.shoulder.rotation.y*=1-k;
+        arm.shoulder.rotation.z+=(react[b+2]/w-arm.shoulder.rotation.z)*k;
+        arm.elbow.rotation.x+=(react[b+3]/w-arm.elbow.rotation.x)*k;
+        arm.elbow.rotation.y*=1-k;
+      }
+    }
+    // Dive / jump over the finished pose, then the ground guard (also for the slide and the stumble).
+    if(diving)poseDive(dt,reduced,discontinuity);
+    if(jumping)poseJump(dt,reduced,discontinuity,!reacting);
+    if(airMove)poseAirMove(dt,reduced,discontinuity);
+    if(signing){
+      const M=MOVE_PHASE[moveKind];
+      if(!discontinuity&&dt>0&&moveLast>=0){
+        if(moveLast<M.contact&&moveP>=M.contact&&moveKind!=='soleRoll'){squashV+=(airMove?1.4:1.1)*(reduced?.4:1);squashActive=true;}
+        if(M.land<1&&moveLast<M.land&&moveP>=M.land){squashV-=3*(reduced?.4:1);squashActive=true;}
+      }
+      moveLast=moveP;
+    }
+    if(skilling){const q=skill.squash(discontinuity,dt);if(q){squashV+=q*(reduced?.4:1);squashActive=true;}} // skill moves lane
+    if(diving||jumping||signing||skilling||reacting&&(reactKind==='slide'||reactKind==='stumble'||prevKind==='slide'||prevKind==='stumble'))groundGuard();
+    // Squash spring on the torso group: volume-preserving (1/√s, s, 1/√s) over the shape scale.
+    // One impulse per squashSerial change, damping ratio .6, ≤60 Hz substeps, asleep once settled.
+    if(squashActive&&discontinuity&&initialized){squashX=squashV=0;squashActive=false;torso.scale.copy(torsoBase);}
+    if(motion?.squashSerial!==undefined&&motion.squashSerial!==squashSeen){
+      squashSeen=motion.squashSerial;
+      const impulse=T.MathUtils.clamp(motion.squash??0,-6,6)*(reduced?.4:1);
+      if(impulse!==0&&reactOK){squashV+=impulse;squashActive=true;}
+    }
+    if(squashActive){
+      if(dt>0){
+        const steps=Math.min(6,Math.ceil(dt*60-1e-9)),h=dt/steps;
+        for(let i=0;i<steps;i++){squashV+=(-SQUASH_STIFFNESS*squashX-SQUASH_DAMPING*squashV)*h;squashX+=squashV*h;}
+      }
+      if(Math.abs(squashX)<2e-4&&Math.abs(squashV)<3e-3){squashX=squashV=0;squashActive=false;torso.scale.copy(torsoBase);}
+      else{const s=1+T.MathUtils.clamp(squashX,-.22,.25),r=1/Math.sqrt(s);torso.scale.set(torsoBase.x*r,torsoBase.y*s,torsoBase.z*r);}
+    }
     root.position.set(x, 0, z); root.rotation.y = yaw;
     // A rolling ball follows a quiet forward lane; the feet meet that lane.
     // Do not feed IK corrections back into the ball's trajectory.
@@ -1089,6 +1652,8 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
     const scale=Math.abs(root.scale.x);
     return out.set(root.position.x+Math.sin(yaw)*dribbleLead*scale,root.position.y+.19,root.position.z+Math.cos(yaw)*dribbleLead*scale);
   };
-  return { root, update, dribbleContact, ballContact:(side:-1|1,out:T.Vector3)=>{if(dribbleActive)return dribbleContact(out);root.updateWorldMatrix(true,true);legs[side===-1?0:1].ankle.localToWorld(out.copy(contactOffsets[side===-1?0:1]).divideScalar(P.legs));const forward=(out.x-root.position.x)*Math.sin(yaw)+(out.z-root.position.z)*Math.cos(yaw);if(forward<contactLead){out.x+=Math.sin(yaw)*(contactLead-forward);out.z+=Math.cos(yaw)*(contactLead-forward);}
- out.y=Math.max(root.position.y+.19,out.y);return out;}, get juggleHead(){return juggleHead;}, get rideTurnRoll(){return rideTurnRoll;}, get bikeRoll(){return bikeRoll;}, get profileScale(){return profileScale;}, get profile(){return P;}, setAppearance, setProfile, handPositions:(left:T.Vector3,right:T.Vector3)=>{root.updateWorldMatrix(true,true);arms[0].elbow.localToWorld(left.set(0,-.265,0));arms[1].elbow.localToWorld(right.set(0,-.265,0));}, dispose: () => { clubCostume?.dispose();spineSurfaces.dispose();geometries.forEach(g => g.dispose()); materials.forEach(m => m.dispose()); root.removeFromParent(); } };
+  // Bean skin hook (lane A, lib/graphics/beanSkin.ts): hides the classic meshes and attaches the bean in 'bean' style.
+  // Lane E (lib/graphics/beanCostumes.ts) wraps the skinned rig for bean-fitted costumes; a no-op in classic style.
+  return attachBeanCostumes(attachBeanSkin({ root, update, dribbleContact, ballContact:(side:-1|1,out:T.Vector3)=>{if(dribbleActive)return dribbleContact(out);root.updateWorldMatrix(true,true);legs[side===-1?0:1].ankle.localToWorld(out.copy(contactOffsets[side===-1?0:1]).divideScalar(P.legs));const forward=(out.x-root.position.x)*Math.sin(yaw)+(out.z-root.position.z)*Math.cos(yaw);if(forward<contactLead){out.x+=Math.sin(yaw)*(contactLead-forward);out.z+=Math.cos(yaw)*(contactLead-forward);}
+ out.y=Math.max(root.position.y+.19,out.y);return out;}, get juggleHead(){return juggleHead;}, get headTop(){const b=root.userData.beanBody as {attach:{headTop:{y:number}}}|undefined;return b?(.88+(P.legs-1)*.83+b.attach.headTop.y+.03)*Math.abs(root.scale.y):undefined;}, get rideTurnRoll(){return rideTurnRoll;}, get bikeRoll(){return bikeRoll;}, get profileScale(){return profileScale;}, get profile(){return P;}, setAppearance, setProfile, setShirtNumber:shirtNumber.set, setBeanLook:(look:BeanLook,outfit:Outfit)=>{void look;void outfit;}, setExpression:(e:BeanExpression)=>{void e;}, handPositions:(left:T.Vector3,right:T.Vector3)=>{root.updateWorldMatrix(true,true);arms[0].elbow.localToWorld(left.set(0,-.265,0));arms[1].elbow.localToWorld(right.set(0,-.265,0));}, dispose: () => { clubCostume?.dispose();shirtNumber.dispose();spineSurfaces.dispose();geometries.forEach(g => g.dispose()); materials.forEach(m => m.dispose()); root.removeFromParent(); } },{root,pelvis,torso,lumbar,chest,head,arms,legs},id,team,articulatedHands,characterStyle()));
 }

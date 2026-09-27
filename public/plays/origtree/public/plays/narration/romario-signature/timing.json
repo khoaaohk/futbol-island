@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Camp Nou, January 1994. Barcelona against Real Madrid. Rom\u00e1rio waits at the edge of the box, a defender on his back. Guardiola passes... one swish of the foot, a toe-poke... goal!",
+   "src": "/plays/narration/romario-signature/1.m4a",
+   "seconds": 14.6,
+   "words": [
+    {
+     "w": "Camp",
+     "at": 0.35
+    },
+    {
+     "w": "Nou",
+     "at": 0.65
+    },
+    {
+     "w": "January",
+     "at": 1.012
+    },
+    {
+     "w": "1994",
+     "at": 1.575
+    },
+    {
+     "w": "Barcelona",
+     "at": 3.038
+    },
+    {
+     "w": "against",
+     "at": 3.725
+    },
+    {
+     "w": "Real",
+     "at": 4.1
+    },
+    {
+     "w": "Madrid",
+     "at": 4.375
+    },
+    {
+     "w": "Rom\u00e1rio",
+     "at": 5.263
+    },
+    {
+     "w": "waits",
+     "at": 5.888
+    },
+    {
+     "w": "at",
+     "at": 6.188
+    },
+    {
+     "w": "the",
+     "at": 6.263
+    },
+    {
+     "w": "edge",
+     "at": 6.4
+    },
+    {
+     "w": "of",
+     "at": 6.612
+    },
+    {
+     "w": "the",
+     "at": 6.688
+    },
+    {
+     "w": "box",
+     "at": 6.787
+    },
+    {
+     "w": "a",
+     "at": 7.263
+    },
+    {
+     "w": "defender",
+     "at": 7.325
+    },
+    {
+     "w": "on",
+     "at": 7.838
+    },
+    {
+     "w": "his",
+     "at": 7.938
+    },
+    {
+     "w": "back",
+     "at": 8.1
+    },
+    {
+     "w": "Guardiola",
+     "at": 8.938
+    },
+    {
+     "w": "passes",
+     "at": 9.637
+    },
+    {
+     "w": "one",
+     "at": 10.688
+    },
+    {
+     "w": "swish",
+     "at": 11.05
+    },
+    {
+     "w": "of",
+     "at": 11.387
+    },
+    {
+     "w": "the",
+     "at": 11.463
+    },
+    {
+     "w": "foot",
+     "at": 11.6
+    },
+    {
+     "w": "a",
+     "at": 11.95
+    },
+    {
+     "w": "toe-poke",
+     "at": 12.062
+    },
+    {
+     "w": "goal",
+     "at": 13.213
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again, slowly. He drags the ball round the defender without it leaving his foot. The Spanish call it the cow's tail.",
+   "src": "/plays/narration/romario-signature/2.m4a",
+   "seconds": 8.9,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "slowly",
+     "at": 1.363
+    },
+    {
+     "w": "He",
+     "at": 2.35
+    },
+    {
+     "w": "drags",
+     "at": 2.5
+    },
+    {
+     "w": "the",
+     "at": 2.925
+    },
+    {
+     "w": "ball",
+     "at": 3.025
+    },
+    {
+     "w": "round",
+     "at": 3.35
+    },
+    {
+     "w": "the",
+     "at": 3.562
+    },
+    {
+     "w": "defender",
+     "at": 3.65
+    },
+    {
+     "w": "without",
+     "at": 4.175
+    },
+    {
+     "w": "it",
+     "at": 4.487
+    },
+    {
+     "w": "leaving",
+     "at": 4.6
+    },
+    {
+     "w": "his",
+     "at": 4.888
+    },
+    {
+     "w": "foot",
+     "at": 5.088
+    },
+    {
+     "w": "The",
+     "at": 5.85
+    },
+    {
+     "w": "Spanish",
+     "at": 5.987
+    },
+    {
+     "w": "call",
+     "at": 6.562
+    },
+    {
+     "w": "it",
+     "at": 6.838
+    },
+    {
+     "w": "the",
+     "at": 6.938
+    },
+    {
+     "w": "cow's",
+     "at": 7.037
+    },
+    {
+     "w": "tail",
+     "at": 7.45
+    }
+   ]
+  },
+  {
+   "label": "The toe-poke",
+   "text": "No big backswing: a quick toe-poke into the corner, before keeper Buyo is set. Barcelona won five-nil!",
+   "src": "/plays/narration/romario-signature/3.m4a",
+   "seconds": 7.8,
+   "words": [
+    {
+     "w": "No",
+     "at": 0.425
+    },
+    {
+     "w": "big",
+     "at": 0.65
+    },
+    {
+     "w": "backswing",
+     "at": 0.875
+    },
+    {
+     "w": "a",
+     "at": 1.75
+    },
+    {
+     "w": "quick",
+     "at": 1.85
+    },
+    {
+     "w": "toe-poke",
+     "at": 2.1
+    },
+    {
+     "w": "into",
+     "at": 2.587
+    },
+    {
+     "w": "the",
+     "at": 2.763
+    },
+    {
+     "w": "corner",
+     "at": 2.85
+    },
+    {
+     "w": "before",
+     "at": 3.263
+    },
+    {
+     "w": "keeper",
+     "at": 3.6
+    },
+    {
+     "w": "Buyo",
+     "at": 3.987
+    },
+    {
+     "w": "is",
+     "at": 4.375
+    },
+    {
+     "w": "set",
+     "at": 4.513
+    },
+    {
+     "w": "Barcelona",
+     "at": 5.287
+    },
+    {
+     "w": "won",
+     "at": 5.938
+    },
+    {
+     "w": "five-nil",
+     "at": 6.237
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: in the box, a small feint buys you the space to shoot. Then shoot quickly!",
+   "src": "/plays/narration/romario-signature/4.m4a",
+   "seconds": 6.3,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.5
+    },
+    {
+     "w": "in",
+     "at": 1.2
+    },
+    {
+     "w": "the",
+     "at": 1.312
+    },
+    {
+     "w": "box",
+     "at": 1.4
+    },
+    {
+     "w": "a",
+     "at": 1.788
+    },
+    {
+     "w": "small",
+     "at": 1.863
+    },
+    {
+     "w": "feint",
+     "at": 2.188
+    },
+    {
+     "w": "buys",
+     "at": 2.525
+    },
+    {
+     "w": "you",
+     "at": 2.8
+    },
+    {
+     "w": "the",
+     "at": 2.888
+    },
+    {
+     "w": "space",
+     "at": 2.975
+    },
+    {
+     "w": "to",
+     "at": 3.325
+    },
+    {
+     "w": "shoot",
+     "at": 3.475
+    },
+    {
+     "w": "Then",
+     "at": 4.263
+    },
+    {
+     "w": "shoot",
+     "at": 4.562
+    },
+    {
+     "w": "quickly",
+     "at": 4.85
+    }
+   ]
+  }
+ ]
+}

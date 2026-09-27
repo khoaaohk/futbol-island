@@ -1,0 +1,374 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Wembley, live",
+   "text": "Wembley, 2025, the League Cup final. Newcastle lead Liverpool one-nil. Tino Livramento hangs up a high cross. Jacob Murphy wins the header... Alexander Isak! Goal!",
+   "src": "/plays/narration/isak-signature/1.m4a",
+   "seconds": 13.3,
+   "words": [
+    {
+     "w": "Wembley",
+     "at": 0.4
+    },
+    {
+     "w": "2025",
+     "at": 0.875
+    },
+    {
+     "w": "the",
+     "at": 1.837
+    },
+    {
+     "w": "League",
+     "at": 1.925
+    },
+    {
+     "w": "Cup",
+     "at": 2.15
+    },
+    {
+     "w": "final",
+     "at": 2.375
+    },
+    {
+     "w": "Newcastle",
+     "at": 3.275
+    },
+    {
+     "w": "lead",
+     "at": 3.925
+    },
+    {
+     "w": "Liverpool",
+     "at": 4.175
+    },
+    {
+     "w": "one-nil",
+     "at": 4.725
+    },
+    {
+     "w": "Tino",
+     "at": 5.688
+    },
+    {
+     "w": "Livramento",
+     "at": 6.075
+    },
+    {
+     "w": "hangs",
+     "at": 6.737
+    },
+    {
+     "w": "up",
+     "at": 7.062
+    },
+    {
+     "w": "a",
+     "at": 7.188
+    },
+    {
+     "w": "high",
+     "at": 7.25
+    },
+    {
+     "w": "cross",
+     "at": 7.513
+    },
+    {
+     "w": "Jacob",
+     "at": 8.4
+    },
+    {
+     "w": "Murphy",
+     "at": 8.85
+    },
+    {
+     "w": "wins",
+     "at": 9.225
+    },
+    {
+     "w": "the",
+     "at": 9.525
+    },
+    {
+     "w": "header",
+     "at": 9.625
+    },
+    {
+     "w": "Alexander",
+     "at": 10.4
+    },
+    {
+     "w": "Isak",
+     "at": 11.075
+    },
+    {
+     "w": "Goal",
+     "at": 11.863
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again, slowly. Murphy beats Andy Robertson in the air and heads it down into the box. Isak is already there, calm and ready.",
+   "src": "/plays/narration/isak-signature/2.m4a",
+   "seconds": 9.8,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "slowly",
+     "at": 1.312
+    },
+    {
+     "w": "Murphy",
+     "at": 2.312
+    },
+    {
+     "w": "beats",
+     "at": 2.675
+    },
+    {
+     "w": "Andy",
+     "at": 2.95
+    },
+    {
+     "w": "Robertson",
+     "at": 3.275
+    },
+    {
+     "w": "in",
+     "at": 3.812
+    },
+    {
+     "w": "the",
+     "at": 3.888
+    },
+    {
+     "w": "air",
+     "at": 4.037
+    },
+    {
+     "w": "and",
+     "at": 4.375
+    },
+    {
+     "w": "heads",
+     "at": 4.5
+    },
+    {
+     "w": "it",
+     "at": 4.737
+    },
+    {
+     "w": "down",
+     "at": 4.825
+    },
+    {
+     "w": "into",
+     "at": 5.088
+    },
+    {
+     "w": "the",
+     "at": 5.263
+    },
+    {
+     "w": "box",
+     "at": 5.35
+    },
+    {
+     "w": "Isak",
+     "at": 6.325
+    },
+    {
+     "w": "is",
+     "at": 6.875
+    },
+    {
+     "w": "already",
+     "at": 7.025
+    },
+    {
+     "w": "there",
+     "at": 7.4
+    },
+    {
+     "w": "calm",
+     "at": 7.912
+    },
+    {
+     "w": "and",
+     "at": 8.3
+    },
+    {
+     "w": "ready",
+     "at": 8.425
+    }
+   ]
+  },
+  {
+   "label": "The half-volley",
+   "text": "Relaxed, he lets it bounce once, then sweeps a half-volley low past Kelleher, into the corner. Newcastle lead two-nil!",
+   "src": "/plays/narration/isak-signature/3.m4a",
+   "seconds": 8.7,
+   "words": [
+    {
+     "w": "Relaxed",
+     "at": 0.4
+    },
+    {
+     "w": "he",
+     "at": 1.075
+    },
+    {
+     "w": "lets",
+     "at": 1.2
+    },
+    {
+     "w": "it",
+     "at": 1.413
+    },
+    {
+     "w": "bounce",
+     "at": 1.5
+    },
+    {
+     "w": "once",
+     "at": 1.875
+    },
+    {
+     "w": "then",
+     "at": 2.575
+    },
+    {
+     "w": "sweeps",
+     "at": 2.788
+    },
+    {
+     "w": "a",
+     "at": 3.112
+    },
+    {
+     "w": "half-volley",
+     "at": 3.175
+    },
+    {
+     "w": "low",
+     "at": 3.775
+    },
+    {
+     "w": "past",
+     "at": 4.088
+    },
+    {
+     "w": "Kelleher",
+     "at": 4.45
+    },
+    {
+     "w": "into",
+     "at": 4.987
+    },
+    {
+     "w": "the",
+     "at": 5.162
+    },
+    {
+     "w": "corner",
+     "at": 5.25
+    },
+    {
+     "w": "Newcastle",
+     "at": 6.275
+    },
+    {
+     "w": "lead",
+     "at": 6.875
+    },
+    {
+     "w": "two-nil",
+     "at": 7.162
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn! Stay relaxed on the ball. Soft, calm touches keep it under your control.",
+   "src": "/plays/narration/isak-signature/4.m4a",
+   "seconds": 6.6,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.512
+    },
+    {
+     "w": "Stay",
+     "at": 1.225
+    },
+    {
+     "w": "relaxed",
+     "at": 1.525
+    },
+    {
+     "w": "on",
+     "at": 2.013
+    },
+    {
+     "w": "the",
+     "at": 2.112
+    },
+    {
+     "w": "ball",
+     "at": 2.2
+    },
+    {
+     "w": "Soft",
+     "at": 3.062
+    },
+    {
+     "w": "calm",
+     "at": 3.65
+    },
+    {
+     "w": "touches",
+     "at": 3.95
+    },
+    {
+     "w": "keep",
+     "at": 4.375
+    },
+    {
+     "w": "it",
+     "at": 4.612
+    },
+    {
+     "w": "under",
+     "at": 4.688
+    },
+    {
+     "w": "your",
+     "at": 4.888
+    },
+    {
+     "w": "control",
+     "at": 5.0
+    }
+   ]
+  }
+ ]
+}

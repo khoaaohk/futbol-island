@@ -33,3 +33,8 @@
  .captionArea{min-height:0;max-height:none;overflow:visible}
  .caption{white-space:pre-line;text-wrap:wrap;min-height:2lh}
 }
+
+/* 44px tap target without changing the drawn size (tests/device-guards.cjs check 3). */
+.tray .replay{position:relative}
+.tray .replay::before{content:'';position:absolute;inset:-2px -6px}
+.dot::after{content:'';position:absolute;inset:-13px 0}

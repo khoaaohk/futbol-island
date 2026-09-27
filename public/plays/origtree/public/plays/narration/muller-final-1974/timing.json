@@ -1,0 +1,382 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live",
+   "text": "Munich, 1974, the World Cup final. West Germany, in white, play the Netherlands, in orange. It's one each, just before half-time. Rainer Bonhof races down the right and passes. Gerd M\u00fcller turns and shoots. Goal!",
+   "src": "/plays/narration/muller-final-1974/1.m4a",
+   "seconds": 16.2,
+   "words": [
+    {
+     "w": "Munich",
+     "at": 0.4
+    },
+    {
+     "w": "1974",
+     "at": 0.825
+    },
+    {
+     "w": "the",
+     "at": 1.938
+    },
+    {
+     "w": "World",
+     "at": 2.025
+    },
+    {
+     "w": "Cup",
+     "at": 2.325
+    },
+    {
+     "w": "final",
+     "at": 2.55
+    },
+    {
+     "w": "West",
+     "at": 3.45
+    },
+    {
+     "w": "Germany",
+     "at": 3.763
+    },
+    {
+     "w": "in",
+     "at": 4.275
+    },
+    {
+     "w": "white",
+     "at": 4.425
+    },
+    {
+     "w": "play",
+     "at": 4.888
+    },
+    {
+     "w": "the",
+     "at": 5.15
+    },
+    {
+     "w": "Netherlands",
+     "at": 5.25
+    },
+    {
+     "w": "in",
+     "at": 5.9
+    },
+    {
+     "w": "orange",
+     "at": 6.062
+    },
+    {
+     "w": "It's",
+     "at": 6.95
+    },
+    {
+     "w": "one",
+     "at": 7.2
+    },
+    {
+     "w": "each",
+     "at": 7.425
+    },
+    {
+     "w": "just",
+     "at": 7.8
+    },
+    {
+     "w": "before",
+     "at": 8.012
+    },
+    {
+     "w": "half-time",
+     "at": 8.325
+    },
+    {
+     "w": "Rainer",
+     "at": 9.5
+    },
+    {
+     "w": "Bonhof",
+     "at": 9.9
+    },
+    {
+     "w": "races",
+     "at": 10.463
+    },
+    {
+     "w": "down",
+     "at": 10.9
+    },
+    {
+     "w": "the",
+     "at": 11.113
+    },
+    {
+     "w": "right",
+     "at": 11.2
+    },
+    {
+     "w": "and",
+     "at": 11.463
+    },
+    {
+     "w": "passes",
+     "at": 11.575
+    },
+    {
+     "w": "Gerd",
+     "at": 12.488
+    },
+    {
+     "w": "M\u00fcller",
+     "at": 12.775
+    },
+    {
+     "w": "turns",
+     "at": 13.162
+    },
+    {
+     "w": "and",
+     "at": 13.613
+    },
+    {
+     "w": "shoots",
+     "at": 13.75
+    },
+    {
+     "w": "Goal",
+     "at": 14.75
+    }
+   ]
+  },
+  {
+   "label": "The replay",
+   "text": "Watch it again. The pass bounces off M\u00fcller, and two defenders close in. No time to think! He spins on the spot and hits it low, early, into the corner. The keeper is wrong-footed.",
+   "src": "/plays/narration/muller-final-1974/2.m4a",
+   "seconds": 12.8,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "The",
+     "at": 1.575
+    },
+    {
+     "w": "pass",
+     "at": 1.675
+    },
+    {
+     "w": "bounces",
+     "at": 2.038
+    },
+    {
+     "w": "off",
+     "at": 2.525
+    },
+    {
+     "w": "M\u00fcller",
+     "at": 2.812
+    },
+    {
+     "w": "and",
+     "at": 3.35
+    },
+    {
+     "w": "two",
+     "at": 3.487
+    },
+    {
+     "w": "defenders",
+     "at": 3.7
+    },
+    {
+     "w": "close",
+     "at": 4.275
+    },
+    {
+     "w": "in",
+     "at": 4.65
+    },
+    {
+     "w": "No",
+     "at": 5.4
+    },
+    {
+     "w": "time",
+     "at": 5.6
+    },
+    {
+     "w": "to",
+     "at": 5.9
+    },
+    {
+     "w": "think",
+     "at": 6.037
+    },
+    {
+     "w": "He",
+     "at": 6.75
+    },
+    {
+     "w": "spins",
+     "at": 6.912
+    },
+    {
+     "w": "on",
+     "at": 7.263
+    },
+    {
+     "w": "the",
+     "at": 7.362
+    },
+    {
+     "w": "spot",
+     "at": 7.463
+    },
+    {
+     "w": "and",
+     "at": 7.9
+    },
+    {
+     "w": "hits",
+     "at": 8.025
+    },
+    {
+     "w": "it",
+     "at": 8.25
+    },
+    {
+     "w": "low",
+     "at": 8.4
+    },
+    {
+     "w": "early",
+     "at": 8.825
+    },
+    {
+     "w": "into",
+     "at": 9.262
+    },
+    {
+     "w": "the",
+     "at": 9.438
+    },
+    {
+     "w": "corner",
+     "at": 9.525
+    },
+    {
+     "w": "The",
+     "at": 10.438
+    },
+    {
+     "w": "keeper",
+     "at": 10.575
+    },
+    {
+     "w": "is",
+     "at": 10.95
+    },
+    {
+     "w": "wrong-footed",
+     "at": 11.1
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "M\u00fcller's goal won the World Cup. In the box, turn quickly and shoot early, before defenders can block it.",
+   "src": "/plays/narration/muller-final-1974/3.m4a",
+   "seconds": 7.9,
+   "words": [
+    {
+     "w": "M\u00fcller's",
+     "at": 0.4
+    },
+    {
+     "w": "goal",
+     "at": 0.825
+    },
+    {
+     "w": "won",
+     "at": 1.15
+    },
+    {
+     "w": "the",
+     "at": 1.312
+    },
+    {
+     "w": "World",
+     "at": 1.4
+    },
+    {
+     "w": "Cup",
+     "at": 1.75
+    },
+    {
+     "w": "In",
+     "at": 2.587
+    },
+    {
+     "w": "the",
+     "at": 2.712
+    },
+    {
+     "w": "box",
+     "at": 2.8
+    },
+    {
+     "w": "turn",
+     "at": 3.5
+    },
+    {
+     "w": "quickly",
+     "at": 3.812
+    },
+    {
+     "w": "and",
+     "at": 4.25
+    },
+    {
+     "w": "shoot",
+     "at": 4.425
+    },
+    {
+     "w": "early",
+     "at": 4.725
+    },
+    {
+     "w": "before",
+     "at": 5.375
+    },
+    {
+     "w": "defenders",
+     "at": 5.675
+    },
+    {
+     "w": "can",
+     "at": 6.25
+    },
+    {
+     "w": "block",
+     "at": 6.4
+    },
+    {
+     "w": "it",
+     "at": 6.725
+    }
+   ]
+  }
+ ]
+}

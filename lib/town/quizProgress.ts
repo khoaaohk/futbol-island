@@ -6,11 +6,36 @@ import manifest from './quizManifest.json';
 export const QUIZ_STORAGE_KEY='futbol-island-quiz-progress-v1';
 const keys=new Set(Object.entries(manifest).flatMap(([format,lessons])=>Object.entries(lessons).flatMap(([id,count])=>Array.from({length:count},(_,index)=>`${format}:${id}:${index}`))));
 export const TOTAL_QUIZ_QUESTIONS=keys.size;
+/**
+ * Quiz growth migration (Sep 26 2026): these lessons gained a 6th "which move" question (appended, so indices 0-4 are
+ * unchanged). A save made before that had passed them 5/5; with the path rule "complete = every question correct" they would
+ * drop to 5/6, and the next Paths stop, card tier and finished-path count would re-lock. Once per device, a save that predates
+ * the marker gets the added questions credited for every lesson it had fully passed at the old count. A device whose first
+ * load is after the change (empty save) just gets the marker, so new players still answer all 6. Runs at module load, so the
+ * raw-storage readers that import QUIZ_STORAGE_KEY (cardTiers, rideUnlocks) see the migrated save too. Add rows, bump the key.
+ */
+export const QUIZ_GROWTH_KEY='futbol-island-quiz-growth-v1';
+export const QUIZ_GROWTH:Record<string,number>={'futsal:f_pivot':5,'futsal:bld_f_splitcb':5,'7v7:learn7_receive':5,'7v7:next7_dribbleroom':5,'9v9:next9_shortcornerbudget':5,'11v11:trn_11_recover':5};
+export function migrateQuizGrowth(){
+ if(typeof window==='undefined')return;
+ try{
+  if(localStorage.getItem(QUIZ_GROWTH_KEY))return;
+  const saved=JSON.parse(localStorage.getItem(QUIZ_STORAGE_KEY)??'[]');
+  if(Array.isArray(saved)&&saved.length){
+   const have=new Set(saved.filter((k:unknown):k is string=>typeof k==='string')),add:string[]=[];
+   for(const [lesson,before] of Object.entries(QUIZ_GROWTH)){const [format,id]=lesson.split(':'),now=(manifest as Record<string,Record<string,number>>)[format]?.[id]??0;
+    if(now>before&&Array.from({length:before},(_,i)=>have.has(`${lesson}:${i}`)).every(Boolean))for(let i=before;i<now;i++)if(!have.has(`${lesson}:${i}`))add.push(`${lesson}:${i}`);}
+   if(add.length)localStorage.setItem(QUIZ_STORAGE_KEY,JSON.stringify([...saved,...add]));
+  }
+  localStorage.setItem(QUIZ_GROWTH_KEY,'1');
+ }catch{}
+}
+migrateQuizGrowth();
 const listeners=new Set<()=>void>();
 let completed=new Set<string>(),loaded=false;
 function read(){
   if(typeof window==='undefined'||loaded)return;
-  loaded=true;
+  loaded=true;migrateQuizGrowth();
   try{const value=JSON.parse(localStorage.getItem(QUIZ_STORAGE_KEY)??'[]');if(Array.isArray(value))completed=new Set(value.filter(key=>typeof key==='string'&&keys.has(key)));}catch{}
 }
 function notify(){listeners.forEach(listener=>listener());}

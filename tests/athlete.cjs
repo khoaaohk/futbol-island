@@ -96,3 +96,33 @@ console.log(`Athlete football: ${R.join(', ')} checked.`);
   const top=fc.project([0,1.8,0]);assert.ok(Math.abs(Math.hypot(top[0]-g[0],top[1]-g[1])-500)<60,`figureCam az ${az}: body height ≈ requested`);}
  const side=A.figureCam({x:0,y:0,height:500,azimuth:0}),sk=A.solve(A.stand());assert.ok(side.project(sk.rSh)[2]<side.project(sk.lSh)[2],'side view (azimuth 0) sees the right side nearest');}
 console.log('Athlete cameras: target centring, figureCam placement and scale, side view near side.');
+
+// shirt numbers read correctly on the device whatever the facing, projection or sheet transform (regression: digits printed mirrored on
+// back views). A recording Path2D + mock Sheet capture the number path; "17" must read 1 then 7, and the 7's bar sits above its stem,
+// which sits to the right of the bar — a mirrored number fails the stem test, an upside-down one fails the bar test.
+{
+ class RecPath{constructor(src){this.polys=src?src.polys.map(q=>q.slice()):[];this.cur=null;}
+  moveTo(x,y){this.cur=[[x,y]];this.polys.push(this.cur);}lineTo(x,y){(this.cur??=(this.polys.push([]),this.polys[this.polys.length-1])).push([x,y]);}
+  closePath(){}rect(){}arc(){}bezierCurveTo(){}quadraticCurveTo(){}addPath(p){for(const q of p.polys)this.polys.push(q.slice());}}
+ globalThis.Path2D=RecPath;
+ const NUM='numInk',style={shirt:'blue',shorts:'blue',socks:'paper',boots:'navy',skin:[['yellow',.88]],hair:'navy',line:'navy',number:17,numberInk:NUM,detail:'high',shadow:false};
+ const mat=(a,b,c,d,e,f)=>({a,b,c,d,e,f});
+ const draw=(m,cam,pose,place)=>{let num=null;const sheet={dpr:1,_ops:0,getTransform:()=>m,fill(ink,p){this._ops++;if(ink===NUM)num=p;},stroke(){},clip(){},knockout(){},save(){},restore(){}};
+  A.drawAthlete(sheet,pose,cam,style,place);return num?num.polys.map(q=>{const c=q.reduce((s,p)=>[s[0]+p[0]/q.length,s[1]+p[1]/q.length],[0,0]);return[m.a*c[0]+m.c*c[1]+m.e,m.b*c[0]+m.d*c[1]+m.f];}):null;};
+ const reads=(q,what)=>{assert.ok(q&&q.length===5,`${what}: the number is drawn (1 = 2 segments, 7 = 3)`);const mean=(a)=>[a.reduce((s,p)=>s+p[0],0)/a.length,a.reduce((s,p)=>s+p[1],0)/a.length];
+  const one=mean(q.slice(0,2)),seven=mean(q.slice(2)),bar=q[2],stem=mean(q.slice(3));
+  assert.ok(one[0]<seven[0],`${what}: "17" reads 1 then 7, left to right (not mirrored)`);assert.ok(stem[0]>bar[0],`${what}: the 7's stem is on the right of its bar (not mirrored)`);
+  assert.ok(bar[1]<stem[1],`${what}: the 7's bar is on top (not upside down)`);};
+ const mirrorCam=c=>({eye:c.eye,project:p=>{const q=c.project(p);return[-q[0],q[1],q[2]];},scale:p=>c.scale(p)});
+ const SHEETS={'plain sheet':mat(2,0,0,2,0,0),'negative-x sheet scale':mat(-2,0,0,2,1200,0),'negative-y sheet scale':mat(2,0,0,-2,0,1200),'camera rolled 180°':mat(-2,0,0,-2,1200,1200)};
+ let n=0;
+ for(const [facing,yaw,az] of [['facing +x',0,-90],['facing −x',Math.PI,90],['facing +x, back three-quarter',0,-125],['facing −x, back three-quarter',Math.PI,55]])
+  for(const [mirror,camOf] of [['',c=>c],[', mirrored projector',mirrorCam]])for(const [sn,m] of Object.entries(SHEETS))for(const pose of [A.stand(),A.runCycle(.3)]){
+   const cam=camOf(A.figureCam({x:300,y:560,height:420,azimuth:az,elevation:8,fov:24}));reads(draw(m,cam,pose,{yaw}),`back view ${facing}${mirror}, ${sn}`);n++;}
+ // a player lying face down, seen from above his head (a keeper after a dive, a fallen defender): the torso runs up the screen
+ for(const yaw of [0,Math.PI]){const d=[Math.cos(yaw),-Math.sin(yaw)],pose=A.posed({pitch:95});
+  const cam=A.makeCamera({pos:[d[0]*5,3.2,d[1]*5],target:[d[0]*.6,.2,d[1]*.6],fov:30,size:1000,center:[500,500]});
+  for(const [sn,m] of Object.entries(SHEETS)){reads(draw(m,cam,pose,{yaw}),`face-down player yaw ${yaw.toFixed(2)}, ${sn}`);n++;}}
+ delete globalThis.Path2D;
+ console.log(`Athlete shirt numbers: ${n} back views (both facings, three-quarter, mirrored projector, ±x/±y sheet scales, 180° roll, face-down) read left to right, upright.`);
+}

@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The pass, live",
+   "text": "El Sadar, Pamplona, October 1993. Osasuna against Barcelona. Laudrup has the ball, and no gap to pass through. He looks at the crowd... but scoops it over the defence! Rom\u00e1rio lobs the keeper. Goal!",
+   "src": "/plays/narration/laudrup-signature/1.m4a",
+   "seconds": 15.5,
+   "words": [
+    {
+     "w": "El",
+     "at": 0.375
+    },
+    {
+     "w": "Sadar",
+     "at": 0.562
+    },
+    {
+     "w": "Pamplona",
+     "at": 1.05
+    },
+    {
+     "w": "October",
+     "at": 1.762
+    },
+    {
+     "w": "1993",
+     "at": 2.2
+    },
+    {
+     "w": "Osasuna",
+     "at": 3.612
+    },
+    {
+     "w": "against",
+     "at": 4.225
+    },
+    {
+     "w": "Barcelona",
+     "at": 4.6
+    },
+    {
+     "w": "Laudrup",
+     "at": 5.85
+    },
+    {
+     "w": "has",
+     "at": 6.325
+    },
+    {
+     "w": "the",
+     "at": 6.575
+    },
+    {
+     "w": "ball",
+     "at": 6.675
+    },
+    {
+     "w": "and",
+     "at": 7.1
+    },
+    {
+     "w": "no",
+     "at": 7.225
+    },
+    {
+     "w": "gap",
+     "at": 7.4
+    },
+    {
+     "w": "to",
+     "at": 7.7
+    },
+    {
+     "w": "pass",
+     "at": 7.8
+    },
+    {
+     "w": "through",
+     "at": 8.15
+    },
+    {
+     "w": "He",
+     "at": 8.8
+    },
+    {
+     "w": "looks",
+     "at": 8.95
+    },
+    {
+     "w": "at",
+     "at": 9.162
+    },
+    {
+     "w": "the",
+     "at": 9.238
+    },
+    {
+     "w": "crowd",
+     "at": 9.325
+    },
+    {
+     "w": "but",
+     "at": 10.2
+    },
+    {
+     "w": "scoops",
+     "at": 10.387
+    },
+    {
+     "w": "it",
+     "at": 10.738
+    },
+    {
+     "w": "over",
+     "at": 10.812
+    },
+    {
+     "w": "the",
+     "at": 10.988
+    },
+    {
+     "w": "defence",
+     "at": 11.075
+    },
+    {
+     "w": "Rom\u00e1rio",
+     "at": 11.912
+    },
+    {
+     "w": "lobs",
+     "at": 12.588
+    },
+    {
+     "w": "the",
+     "at": 12.975
+    },
+    {
+     "w": "keeper",
+     "at": 13.075
+    },
+    {
+     "w": "Goal",
+     "at": 14.0
+    }
+   ]
+  },
+  {
+   "label": "Watch his eyes",
+   "text": "Watch his eyes. Laudrup looks to the side, but his foot lifts the ball forward, like a spoon. His famous no-look pass!",
+   "src": "/plays/narration/laudrup-signature/2.m4a",
+   "seconds": 8.5,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.375
+    },
+    {
+     "w": "his",
+     "at": 0.637
+    },
+    {
+     "w": "eyes",
+     "at": 0.812
+    },
+    {
+     "w": "Laudrup",
+     "at": 1.688
+    },
+    {
+     "w": "looks",
+     "at": 2.125
+    },
+    {
+     "w": "to",
+     "at": 2.375
+    },
+    {
+     "w": "the",
+     "at": 2.462
+    },
+    {
+     "w": "side",
+     "at": 2.562
+    },
+    {
+     "w": "but",
+     "at": 2.962
+    },
+    {
+     "w": "his",
+     "at": 3.087
+    },
+    {
+     "w": "foot",
+     "at": 3.288
+    },
+    {
+     "w": "lifts",
+     "at": 3.538
+    },
+    {
+     "w": "the",
+     "at": 3.875
+    },
+    {
+     "w": "ball",
+     "at": 3.975
+    },
+    {
+     "w": "forward",
+     "at": 4.287
+    },
+    {
+     "w": "like",
+     "at": 4.763
+    },
+    {
+     "w": "a",
+     "at": 4.912
+    },
+    {
+     "w": "spoon",
+     "at": 4.987
+    },
+    {
+     "w": "His",
+     "at": 5.95
+    },
+    {
+     "w": "famous",
+     "at": 6.188
+    },
+    {
+     "w": "no-look",
+     "at": 6.688
+    },
+    {
+     "w": "pass",
+     "at": 7.088
+    }
+   ]
+  },
+  {
+   "label": "Over the top",
+   "text": "No space along the grass, so the ball flies over the top. Rom\u00e1rio runs in and chips keeper Unanua.",
+   "src": "/plays/narration/laudrup-signature/3.m4a",
+   "seconds": 7.6,
+   "words": [
+    {
+     "w": "No",
+     "at": 0.4
+    },
+    {
+     "w": "space",
+     "at": 0.588
+    },
+    {
+     "w": "along",
+     "at": 0.95
+    },
+    {
+     "w": "the",
+     "at": 1.238
+    },
+    {
+     "w": "grass",
+     "at": 1.325
+    },
+    {
+     "w": "so",
+     "at": 2.075
+    },
+    {
+     "w": "the",
+     "at": 2.188
+    },
+    {
+     "w": "ball",
+     "at": 2.275
+    },
+    {
+     "w": "flies",
+     "at": 2.587
+    },
+    {
+     "w": "over",
+     "at": 2.938
+    },
+    {
+     "w": "the",
+     "at": 3.112
+    },
+    {
+     "w": "top",
+     "at": 3.2
+    },
+    {
+     "w": "Rom\u00e1rio",
+     "at": 4.062
+    },
+    {
+     "w": "runs",
+     "at": 4.675
+    },
+    {
+     "w": "in",
+     "at": 5.037
+    },
+    {
+     "w": "and",
+     "at": 5.25
+    },
+    {
+     "w": "chips",
+     "at": 5.388
+    },
+    {
+     "w": "keeper",
+     "at": 5.7
+    },
+    {
+     "w": "Unanua",
+     "at": 6.075
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: look one way and pass the other, to fool the defenders!",
+   "src": "/plays/narration/laudrup-signature/4.m4a",
+   "seconds": 5.1,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "look",
+     "at": 1.387
+    },
+    {
+     "w": "one",
+     "at": 1.6
+    },
+    {
+     "w": "way",
+     "at": 1.825
+    },
+    {
+     "w": "and",
+     "at": 2.062
+    },
+    {
+     "w": "pass",
+     "at": 2.175
+    },
+    {
+     "w": "the",
+     "at": 2.5
+    },
+    {
+     "w": "other",
+     "at": 2.65
+    },
+    {
+     "w": "to",
+     "at": 2.962
+    },
+    {
+     "w": "fool",
+     "at": 3.087
+    },
+    {
+     "w": "the",
+     "at": 3.362
+    },
+    {
+     "w": "defenders",
+     "at": 3.45
+    }
+   ]
+  }
+ ]
+}

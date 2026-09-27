@@ -2,13 +2,13 @@ import {teachingPresentation} from './teachingPresentation';
 import * as T from 'three';
 import {trimTeachingRoute,remainingPassRoute} from './teachingRoutes';
 import {fieldPoint,type Venue} from './venues';
-import {createTeachingGround,teachingAreaContains,type TeachingHitArea} from './teachingGround';
+import {createTeachingGround,teachingAreaContains,uploadPrefix,type TeachingHitArea} from './teachingGround';
 import {quizOutcomeStep,lessonVisualFrame,lessonPositions,type FieldSession,type Point,type CuePoint} from './formatLessons';
 
 /** Reusable teaching geometry; no per-frame textures or extra render loop. */
 export function createLessonCues(scene:T.Scene){
  const root=new T.Group();root.name='lesson-cues';scene.add(root);const ground=createTeachingGround();root.add(ground.mesh);
- const geometry=new T.BufferGeometry(),positions=new T.Float32BufferAttribute(new Float32Array(12288),3),colors=new T.Float32BufferAttribute(new Float32Array(12288),3);
+ const geometry=new T.BufferGeometry(),positions=new T.Float32BufferAttribute(new Float32Array(12288),3),colors=new T.Float32BufferAttribute(new Float32Array(12288),3);const sentPositions={data:new Float32Array(0),count:-1},sentColors={data:new Float32Array(0),count:-1};
  geometry.setAttribute('position',positions);geometry.setAttribute('color',colors);
  const material=new T.LineBasicMaterial({vertexColors:true,transparent:true,opacity:.9,depthWrite:false});
  const lines=new T.LineSegments(geometry,material);lines.frustumCulled=false;root.add(lines);
@@ -134,7 +134,7 @@ export function createLessonCues(scene:T.Scene){
     if(Math.hypot(best.x-origin.x,best.y-origin.y)>8)segment(original,sprite.position,neutral);
    }
   }
-  geometry.setDrawRange(0,count/3);positions.needsUpdate=true;colors.needsUpdate=true;ground.finish();
+  geometry.setDrawRange(0,count/3);uploadPrefix(positions,count,sentPositions);uploadPrefix(colors,count,sentColors);ground.finish();
  }
  return {root,update,pick(ndc:T.Vector2,camera:T.Camera){raycaster.setFromCamera(ndc,camera);const labelHit=raycaster.intersectObjects(targets,false)[0]?.object.userData.answer as number|undefined;if(labelHit!==undefined)return labelHit;
   const groundHit=raycaster.ray.intersectPlane(hitPlane,hitPoint);if(groundHit){const area=hitAreas.find(area=>teachingAreaContains(area,groundHit));if(area)return area.answer;}

@@ -1,0 +1,398 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Montju\u00efc",
+   "text": "Barcelona against Napoli, 2024. Pau Cubars\u00ed is seventeen, in his first Champions League game. On the ball at the back\u2026 look up\u2026 and a long pass flies over the defence!",
+   "src": "/plays/narration/cubarsi-signature/1.m4a",
+   "seconds": 13.4,
+   "words": [
+    {
+     "w": "Barcelona",
+     "at": 0.375
+    },
+    {
+     "w": "against",
+     "at": 1.05
+    },
+    {
+     "w": "Napoli",
+     "at": 1.475
+    },
+    {
+     "w": "2024",
+     "at": 2.225
+    },
+    {
+     "w": "Pau",
+     "at": 3.737
+    },
+    {
+     "w": "Cubars\u00ed",
+     "at": 4.013
+    },
+    {
+     "w": "is",
+     "at": 4.737
+    },
+    {
+     "w": "seventeen",
+     "at": 4.912
+    },
+    {
+     "w": "in",
+     "at": 5.975
+    },
+    {
+     "w": "his",
+     "at": 6.062
+    },
+    {
+     "w": "first",
+     "at": 6.263
+    },
+    {
+     "w": "Champions",
+     "at": 6.638
+    },
+    {
+     "w": "League",
+     "at": 7.25
+    },
+    {
+     "w": "game",
+     "at": 7.525
+    },
+    {
+     "w": "On",
+     "at": 8.35
+    },
+    {
+     "w": "the",
+     "at": 8.488
+    },
+    {
+     "w": "ball",
+     "at": 8.575
+    },
+    {
+     "w": "at",
+     "at": 8.887
+    },
+    {
+     "w": "the",
+     "at": 8.963
+    },
+    {
+     "w": "back",
+     "at": 9.05
+    },
+    {
+     "w": "look",
+     "at": 9.475
+    },
+    {
+     "w": "up",
+     "at": 9.65
+    },
+    {
+     "w": "and",
+     "at": 10.175
+    },
+    {
+     "w": "a",
+     "at": 10.287
+    },
+    {
+     "w": "long",
+     "at": 10.387
+    },
+    {
+     "w": "pass",
+     "at": 10.762
+    },
+    {
+     "w": "flies",
+     "at": 11.162
+    },
+    {
+     "w": "over",
+     "at": 11.562
+    },
+    {
+     "w": "the",
+     "at": 11.762
+    },
+    {
+     "w": "defence",
+     "at": 11.85
+    }
+   ]
+  },
+  {
+   "label": "The replay",
+   "text": "Watch again, slowly. Head up, Cubars\u00ed spots Ferm\u00edn L\u00f3pez running behind the defenders. One pass skips the midfield and the defence.",
+   "src": "/plays/narration/cubarsi-signature/2.m4a",
+   "seconds": 10.0,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.212
+    },
+    {
+     "w": "Head",
+     "at": 2.212
+    },
+    {
+     "w": "up",
+     "at": 2.413
+    },
+    {
+     "w": "Cubars\u00ed",
+     "at": 2.825
+    },
+    {
+     "w": "spots",
+     "at": 3.388
+    },
+    {
+     "w": "Ferm\u00edn",
+     "at": 3.8
+    },
+    {
+     "w": "L\u00f3pez",
+     "at": 4.25
+    },
+    {
+     "w": "running",
+     "at": 4.7
+    },
+    {
+     "w": "behind",
+     "at": 4.987
+    },
+    {
+     "w": "the",
+     "at": 5.312
+    },
+    {
+     "w": "defenders",
+     "at": 5.388
+    },
+    {
+     "w": "One",
+     "at": 6.5
+    },
+    {
+     "w": "pass",
+     "at": 6.787
+    },
+    {
+     "w": "skips",
+     "at": 7.188
+    },
+    {
+     "w": "the",
+     "at": 7.55
+    },
+    {
+     "w": "midfield",
+     "at": 7.65
+    },
+    {
+     "w": "and",
+     "at": 8.275
+    },
+    {
+     "w": "the",
+     "at": 8.387
+    },
+    {
+     "w": "defence",
+     "at": 8.475
+    }
+   ]
+  },
+  {
+   "label": "The chance",
+   "text": "Ferm\u00edn brings it down and lifts it over the keeper\u2026 just over the bar! Barcelona won three-one, and Cubars\u00ed was Player of the Match.",
+   "src": "/plays/narration/cubarsi-signature/3.m4a",
+   "seconds": 9.5,
+   "words": [
+    {
+     "w": "Ferm\u00edn",
+     "at": 0.375
+    },
+    {
+     "w": "brings",
+     "at": 0.85
+    },
+    {
+     "w": "it",
+     "at": 1.137
+    },
+    {
+     "w": "down",
+     "at": 1.25
+    },
+    {
+     "w": "and",
+     "at": 1.6
+    },
+    {
+     "w": "lifts",
+     "at": 1.725
+    },
+    {
+     "w": "it",
+     "at": 2.013
+    },
+    {
+     "w": "over",
+     "at": 2.087
+    },
+    {
+     "w": "the",
+     "at": 2.288
+    },
+    {
+     "w": "keeper",
+     "at": 2.375
+    },
+    {
+     "w": "just",
+     "at": 3.138
+    },
+    {
+     "w": "over",
+     "at": 3.388
+    },
+    {
+     "w": "the",
+     "at": 3.587
+    },
+    {
+     "w": "bar",
+     "at": 3.675
+    },
+    {
+     "w": "Barcelona",
+     "at": 4.662
+    },
+    {
+     "w": "won",
+     "at": 5.375
+    },
+    {
+     "w": "three-one",
+     "at": 5.612
+    },
+    {
+     "w": "and",
+     "at": 6.475
+    },
+    {
+     "w": "Cubars\u00ed",
+     "at": 6.612
+    },
+    {
+     "w": "was",
+     "at": 7.325
+    },
+    {
+     "w": "Player",
+     "at": 7.513
+    },
+    {
+     "w": "of",
+     "at": 7.963
+    },
+    {
+     "w": "the",
+     "at": 8.037
+    },
+    {
+     "w": "Match",
+     "at": 8.125
+    }
+   ]
+  },
+  {
+   "label": "The lesson",
+   "text": "Remember Cubars\u00ed\u2019s trick. Look forward first! One pass through the lines skips lots of defenders.",
+   "src": "/plays/narration/cubarsi-signature/4.m4a",
+   "seconds": 7.2,
+   "words": [
+    {
+     "w": "Remember",
+     "at": 0.375
+    },
+    {
+     "w": "Cubars\u00ed\u2019s",
+     "at": 0.725
+    },
+    {
+     "w": "trick",
+     "at": 1.35
+    },
+    {
+     "w": "Look",
+     "at": 2.013
+    },
+    {
+     "w": "forward",
+     "at": 2.225
+    },
+    {
+     "w": "first",
+     "at": 2.6
+    },
+    {
+     "w": "One",
+     "at": 3.438
+    },
+    {
+     "w": "pass",
+     "at": 3.675
+    },
+    {
+     "w": "through",
+     "at": 4.025
+    },
+    {
+     "w": "the",
+     "at": 4.225
+    },
+    {
+     "w": "lines",
+     "at": 4.35
+    },
+    {
+     "w": "skips",
+     "at": 4.838
+    },
+    {
+     "w": "lots",
+     "at": 5.237
+    },
+    {
+     "w": "of",
+     "at": 5.537
+    },
+    {
+     "w": "defenders",
+     "at": 5.612
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The screamer, live",
+   "text": "Stamford Bridge, the Champions League semi-final. Cl\u00e0udia Pina is trapped near her own box, but slips a pass to Aitana Bonmat\u00ed, and sprints forward. Bonmat\u00ed races up the pitch, two against two. The ball finds Pina. She curls it... into the far corner!",
+   "src": "/plays/narration/pina-signature/1.m4a",
+   "seconds": 17.9,
+   "words": [
+    {
+     "w": "Stamford",
+     "at": 0.375
+    },
+    {
+     "w": "Bridge",
+     "at": 0.912
+    },
+    {
+     "w": "the",
+     "at": 1.45
+    },
+    {
+     "w": "Champions",
+     "at": 1.587
+    },
+    {
+     "w": "League",
+     "at": 2.263
+    },
+    {
+     "w": "semi-final",
+     "at": 2.587
+    },
+    {
+     "w": "Cl\u00e0udia",
+     "at": 3.837
+    },
+    {
+     "w": "Pina",
+     "at": 4.237
+    },
+    {
+     "w": "is",
+     "at": 4.6
+    },
+    {
+     "w": "trapped",
+     "at": 4.75
+    },
+    {
+     "w": "near",
+     "at": 5.1
+    },
+    {
+     "w": "her",
+     "at": 5.312
+    },
+    {
+     "w": "own",
+     "at": 5.45
+    },
+    {
+     "w": "box",
+     "at": 5.675
+    },
+    {
+     "w": "but",
+     "at": 6.15
+    },
+    {
+     "w": "slips",
+     "at": 6.338
+    },
+    {
+     "w": "a",
+     "at": 6.638
+    },
+    {
+     "w": "pass",
+     "at": 6.713
+    },
+    {
+     "w": "to",
+     "at": 7.075
+    },
+    {
+     "w": "Aitana",
+     "at": 7.213
+    },
+    {
+     "w": "Bonmat\u00ed",
+     "at": 7.675
+    },
+    {
+     "w": "and",
+     "at": 8.35
+    },
+    {
+     "w": "sprints",
+     "at": 8.488
+    },
+    {
+     "w": "forward",
+     "at": 8.9
+    },
+    {
+     "w": "Bonmat\u00ed",
+     "at": 9.925
+    },
+    {
+     "w": "races",
+     "at": 10.55
+    },
+    {
+     "w": "up",
+     "at": 10.938
+    },
+    {
+     "w": "the",
+     "at": 11.062
+    },
+    {
+     "w": "pitch",
+     "at": 11.162
+    },
+    {
+     "w": "two",
+     "at": 11.637
+    },
+    {
+     "w": "against",
+     "at": 11.85
+    },
+    {
+     "w": "two",
+     "at": 12.287
+    },
+    {
+     "w": "The",
+     "at": 13.088
+    },
+    {
+     "w": "ball",
+     "at": 13.2
+    },
+    {
+     "w": "finds",
+     "at": 13.512
+    },
+    {
+     "w": "Pina",
+     "at": 13.912
+    },
+    {
+     "w": "She",
+     "at": 14.662
+    },
+    {
+     "w": "curls",
+     "at": 14.838
+    },
+    {
+     "w": "it",
+     "at": 15.287
+    },
+    {
+     "w": "into",
+     "at": 15.85
+    },
+    {
+     "w": "the",
+     "at": 16.038
+    },
+    {
+     "w": "far",
+     "at": 16.137
+    },
+    {
+     "w": "corner",
+     "at": 16.413
+    }
+   ]
+  },
+  {
+   "label": "Calm under pressure",
+   "text": "Watch again. Four Chelsea players close in. Pina stays calm, and threads it with the outside of her foot.",
+   "src": "/plays/narration/pina-signature/2.m4a",
+   "seconds": 7.7,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "Four",
+     "at": 1.413
+    },
+    {
+     "w": "Chelsea",
+     "at": 1.663
+    },
+    {
+     "w": "players",
+     "at": 2.1
+    },
+    {
+     "w": "close",
+     "at": 2.5
+    },
+    {
+     "w": "in",
+     "at": 2.875
+    },
+    {
+     "w": "Pina",
+     "at": 3.587
+    },
+    {
+     "w": "stays",
+     "at": 3.913
+    },
+    {
+     "w": "calm",
+     "at": 4.338
+    },
+    {
+     "w": "and",
+     "at": 4.825
+    },
+    {
+     "w": "threads",
+     "at": 4.963
+    },
+    {
+     "w": "it",
+     "at": 5.275
+    },
+    {
+     "w": "with",
+     "at": 5.362
+    },
+    {
+     "w": "the",
+     "at": 5.463
+    },
+    {
+     "w": "outside",
+     "at": 5.6
+    },
+    {
+     "w": "of",
+     "at": 6.088
+    },
+    {
+     "w": "her",
+     "at": 6.162
+    },
+    {
+     "w": "foot",
+     "at": 6.325
+    }
+   ]
+  },
+  {
+   "label": "Hard and true",
+   "text": "She strikes it hard and true, bending it past Hannah Hampton!",
+   "src": "/plays/narration/pina-signature/3.m4a",
+   "seconds": 4.8,
+   "words": [
+    {
+     "w": "She",
+     "at": 0.375
+    },
+    {
+     "w": "strikes",
+     "at": 0.5
+    },
+    {
+     "w": "it",
+     "at": 0.838
+    },
+    {
+     "w": "hard",
+     "at": 0.925
+    },
+    {
+     "w": "and",
+     "at": 1.262
+    },
+    {
+     "w": "true",
+     "at": 1.387
+    },
+    {
+     "w": "bending",
+     "at": 2.138
+    },
+    {
+     "w": "it",
+     "at": 2.525
+    },
+    {
+     "w": "past",
+     "at": 2.625
+    },
+    {
+     "w": "Hannah",
+     "at": 2.95
+    },
+    {
+     "w": "Hampton",
+     "at": 3.2
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "The secret? Lock your ankle and strike through the ball, so it flies hard and true.",
+   "src": "/plays/narration/pina-signature/4.m4a",
+   "seconds": 5.7,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "secret",
+     "at": 0.463
+    },
+    {
+     "w": "Lock",
+     "at": 1.337
+    },
+    {
+     "w": "your",
+     "at": 1.538
+    },
+    {
+     "w": "ankle",
+     "at": 1.675
+    },
+    {
+     "w": "and",
+     "at": 1.962
+    },
+    {
+     "w": "strike",
+     "at": 2.075
+    },
+    {
+     "w": "through",
+     "at": 2.4
+    },
+    {
+     "w": "the",
+     "at": 2.513
+    },
+    {
+     "w": "ball",
+     "at": 2.6
+    },
+    {
+     "w": "so",
+     "at": 3.075
+    },
+    {
+     "w": "it",
+     "at": 3.212
+    },
+    {
+     "w": "flies",
+     "at": 3.3
+    },
+    {
+     "w": "hard",
+     "at": 3.688
+    },
+    {
+     "w": "and",
+     "at": 4.112
+    },
+    {
+     "w": "true",
+     "at": 4.237
+    }
+   ]
+  }
+ ]
+}

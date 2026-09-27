@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Berlin, 2024",
+   "text": "Berlin, 2024, the Euro final. At half time, Rodri was hurt, so calm Mart\u00edn Zubimendi came on. Spain beat England, two-one!",
+   "src": "/plays/narration/zubimendi-signature/1.m4a",
+   "seconds": 10.5,
+   "words": [
+    {
+     "w": "Berlin",
+     "at": 0.375
+    },
+    {
+     "w": "2024",
+     "at": 0.95
+    },
+    {
+     "w": "the",
+     "at": 1.812
+    },
+    {
+     "w": "Euro",
+     "at": 1.9
+    },
+    {
+     "w": "final",
+     "at": 2.237
+    },
+    {
+     "w": "At",
+     "at": 3.15
+    },
+    {
+     "w": "half",
+     "at": 3.3
+    },
+    {
+     "w": "time",
+     "at": 3.55
+    },
+    {
+     "w": "Rodri",
+     "at": 3.975
+    },
+    {
+     "w": "was",
+     "at": 4.338
+    },
+    {
+     "w": "hurt",
+     "at": 4.5
+    },
+    {
+     "w": "so",
+     "at": 5.1
+    },
+    {
+     "w": "calm",
+     "at": 5.287
+    },
+    {
+     "w": "Mart\u00edn",
+     "at": 5.6
+    },
+    {
+     "w": "Zubimendi",
+     "at": 6.112
+    },
+    {
+     "w": "came",
+     "at": 6.7
+    },
+    {
+     "w": "on",
+     "at": 6.95
+    },
+    {
+     "w": "Spain",
+     "at": 7.737
+    },
+    {
+     "w": "beat",
+     "at": 8.175
+    },
+    {
+     "w": "England",
+     "at": 8.425
+    },
+    {
+     "w": "two-one",
+     "at": 8.963
+    }
+   ]
+  },
+  {
+   "label": "How he does it",
+   "text": "This is how he does it. The other team wants to pass forward to their striker. Mart\u00edn stands right in the path. The ball has to go through him, and he wins it!",
+   "src": "/plays/narration/zubimendi-signature/2.m4a",
+   "seconds": 10.7,
+   "words": [
+    {
+     "w": "This",
+     "at": 0.375
+    },
+    {
+     "w": "is",
+     "at": 0.575
+    },
+    {
+     "w": "how",
+     "at": 0.725
+    },
+    {
+     "w": "he",
+     "at": 0.95
+    },
+    {
+     "w": "does",
+     "at": 1.1
+    },
+    {
+     "w": "it",
+     "at": 1.337
+    },
+    {
+     "w": "The",
+     "at": 1.85
+    },
+    {
+     "w": "other",
+     "at": 1.975
+    },
+    {
+     "w": "team",
+     "at": 2.237
+    },
+    {
+     "w": "wants",
+     "at": 2.575
+    },
+    {
+     "w": "to",
+     "at": 2.825
+    },
+    {
+     "w": "pass",
+     "at": 2.925
+    },
+    {
+     "w": "forward",
+     "at": 3.288
+    },
+    {
+     "w": "to",
+     "at": 3.675
+    },
+    {
+     "w": "their",
+     "at": 3.763
+    },
+    {
+     "w": "striker",
+     "at": 3.95
+    },
+    {
+     "w": "Mart\u00edn",
+     "at": 4.987
+    },
+    {
+     "w": "stands",
+     "at": 5.55
+    },
+    {
+     "w": "right",
+     "at": 5.938
+    },
+    {
+     "w": "in",
+     "at": 6.263
+    },
+    {
+     "w": "the",
+     "at": 6.338
+    },
+    {
+     "w": "path",
+     "at": 6.438
+    },
+    {
+     "w": "The",
+     "at": 7.275
+    },
+    {
+     "w": "ball",
+     "at": 7.4
+    },
+    {
+     "w": "has",
+     "at": 7.75
+    },
+    {
+     "w": "to",
+     "at": 7.95
+    },
+    {
+     "w": "go",
+     "at": 8.05
+    },
+    {
+     "w": "through",
+     "at": 8.238
+    },
+    {
+     "w": "him",
+     "at": 8.475
+    },
+    {
+     "w": "and",
+     "at": 8.925
+    },
+    {
+     "w": "he",
+     "at": 9.037
+    },
+    {
+     "w": "wins",
+     "at": 9.188
+    },
+    {
+     "w": "it",
+     "at": 9.512
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. As the passer moves, Mart\u00edn slides across to stay in the line. Then, a calm, simple pass.",
+   "src": "/plays/narration/zubimendi-signature/3.m4a",
+   "seconds": 8.9,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.113
+    },
+    {
+     "w": "As",
+     "at": 2.125
+    },
+    {
+     "w": "the",
+     "at": 2.312
+    },
+    {
+     "w": "passer",
+     "at": 2.4
+    },
+    {
+     "w": "moves",
+     "at": 2.825
+    },
+    {
+     "w": "Mart\u00edn",
+     "at": 3.325
+    },
+    {
+     "w": "slides",
+     "at": 3.837
+    },
+    {
+     "w": "across",
+     "at": 4.263
+    },
+    {
+     "w": "to",
+     "at": 4.6
+    },
+    {
+     "w": "stay",
+     "at": 4.7
+    },
+    {
+     "w": "in",
+     "at": 4.963
+    },
+    {
+     "w": "the",
+     "at": 5.037
+    },
+    {
+     "w": "line",
+     "at": 5.125
+    },
+    {
+     "w": "Then",
+     "at": 5.963
+    },
+    {
+     "w": "a",
+     "at": 6.425
+    },
+    {
+     "w": "calm",
+     "at": 6.537
+    },
+    {
+     "w": "simple",
+     "at": 7.088
+    },
+    {
+     "w": "pass",
+     "at": 7.45
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: stand where the forward pass has to go through you, not around you.",
+   "src": "/plays/narration/zubimendi-signature/4.m4a",
+   "seconds": 5.5,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "stand",
+     "at": 1.337
+    },
+    {
+     "w": "where",
+     "at": 1.688
+    },
+    {
+     "w": "the",
+     "at": 1.812
+    },
+    {
+     "w": "forward",
+     "at": 1.913
+    },
+    {
+     "w": "pass",
+     "at": 2.25
+    },
+    {
+     "w": "has",
+     "at": 2.6
+    },
+    {
+     "w": "to",
+     "at": 2.8
+    },
+    {
+     "w": "go",
+     "at": 2.9
+    },
+    {
+     "w": "through",
+     "at": 3.087
+    },
+    {
+     "w": "you",
+     "at": 3.312
+    },
+    {
+     "w": "not",
+     "at": 3.775
+    },
+    {
+     "w": "around",
+     "at": 3.95
+    },
+    {
+     "w": "you",
+     "at": 4.325
+    }
+   ]
+  }
+ ]
+}

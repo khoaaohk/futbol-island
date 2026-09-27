@@ -1,0 +1,386 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The header, live",
+   "text": "Barcelona, 1982. Italy lead Brazil three goals to two, and time is almost up. \u00c9der curls a free kick beyond the far post. Oscar heads it hard at goal!",
+   "src": "/plays/narration/zoff-brazil-1982/1.m4a",
+   "seconds": 12.3,
+   "words": [
+    {
+     "w": "Barcelona",
+     "at": 0.375
+    },
+    {
+     "w": "1982",
+     "at": 1.175
+    },
+    {
+     "w": "Italy",
+     "at": 2.663
+    },
+    {
+     "w": "lead",
+     "at": 3.05
+    },
+    {
+     "w": "Brazil",
+     "at": 3.325
+    },
+    {
+     "w": "three",
+     "at": 3.812
+    },
+    {
+     "w": "goals",
+     "at": 4.075
+    },
+    {
+     "w": "to",
+     "at": 4.4
+    },
+    {
+     "w": "two",
+     "at": 4.537
+    },
+    {
+     "w": "and",
+     "at": 5.0
+    },
+    {
+     "w": "time",
+     "at": 5.138
+    },
+    {
+     "w": "is",
+     "at": 5.5
+    },
+    {
+     "w": "almost",
+     "at": 5.625
+    },
+    {
+     "w": "up",
+     "at": 6.05
+    },
+    {
+     "w": "\u00c9der",
+     "at": 6.763
+    },
+    {
+     "w": "curls",
+     "at": 7.088
+    },
+    {
+     "w": "a",
+     "at": 7.487
+    },
+    {
+     "w": "free",
+     "at": 7.588
+    },
+    {
+     "w": "kick",
+     "at": 7.888
+    },
+    {
+     "w": "beyond",
+     "at": 8.2
+    },
+    {
+     "w": "the",
+     "at": 8.488
+    },
+    {
+     "w": "far",
+     "at": 8.588
+    },
+    {
+     "w": "post",
+     "at": 8.85
+    },
+    {
+     "w": "Oscar",
+     "at": 9.7
+    },
+    {
+     "w": "heads",
+     "at": 10.175
+    },
+    {
+     "w": "it",
+     "at": 10.412
+    },
+    {
+     "w": "hard",
+     "at": 10.5
+    },
+    {
+     "w": "at",
+     "at": 10.762
+    },
+    {
+     "w": "goal",
+     "at": 10.85
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. Italy's forty-year-old captain, Dino Zoff, plunges to his left. The ball slips from his hands...",
+   "src": "/plays/narration/zoff-brazil-1982/2.m4a",
+   "seconds": 8.8,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.188
+    },
+    {
+     "w": "Italy's",
+     "at": 2.237
+    },
+    {
+     "w": "forty-year-old",
+     "at": 2.675
+    },
+    {
+     "w": "captain",
+     "at": 3.425
+    },
+    {
+     "w": "Dino",
+     "at": 4.0
+    },
+    {
+     "w": "Zoff",
+     "at": 4.312
+    },
+    {
+     "w": "plunges",
+     "at": 4.862
+    },
+    {
+     "w": "to",
+     "at": 5.325
+    },
+    {
+     "w": "his",
+     "at": 5.412
+    },
+    {
+     "w": "left",
+     "at": 5.575
+    },
+    {
+     "w": "The",
+     "at": 6.275
+    },
+    {
+     "w": "ball",
+     "at": 6.4
+    },
+    {
+     "w": "slips",
+     "at": 6.713
+    },
+    {
+     "w": "from",
+     "at": 7.0
+    },
+    {
+     "w": "his",
+     "at": 7.138
+    },
+    {
+     "w": "hands",
+     "at": 7.3
+    }
+   ]
+  },
+  {
+   "label": "On the line",
+   "text": "But he grabs it, right on the line! Brazil appeal, but it has not crossed. Italy hold on and win!",
+   "src": "/plays/narration/zoff-brazil-1982/3.m4a",
+   "seconds": 7.3,
+   "words": [
+    {
+     "w": "But",
+     "at": 0.325
+    },
+    {
+     "w": "he",
+     "at": 0.438
+    },
+    {
+     "w": "grabs",
+     "at": 0.562
+    },
+    {
+     "w": "it",
+     "at": 1.0
+    },
+    {
+     "w": "right",
+     "at": 1.363
+    },
+    {
+     "w": "on",
+     "at": 1.613
+    },
+    {
+     "w": "the",
+     "at": 1.712
+    },
+    {
+     "w": "line",
+     "at": 1.8
+    },
+    {
+     "w": "Brazil",
+     "at": 2.688
+    },
+    {
+     "w": "appeal",
+     "at": 3.15
+    },
+    {
+     "w": "but",
+     "at": 3.612
+    },
+    {
+     "w": "it",
+     "at": 3.737
+    },
+    {
+     "w": "has",
+     "at": 3.812
+    },
+    {
+     "w": "not",
+     "at": 3.975
+    },
+    {
+     "w": "crossed",
+     "at": 4.2
+    },
+    {
+     "w": "Italy",
+     "at": 5.037
+    },
+    {
+     "w": "hold",
+     "at": 5.375
+    },
+    {
+     "w": "on",
+     "at": 5.625
+    },
+    {
+     "w": "and",
+     "at": 5.838
+    },
+    {
+     "w": "win",
+     "at": 5.963
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn, keepers: stay focused right to the final whistle. Get your body behind the ball, and hold on tight!",
+   "src": "/plays/narration/zoff-brazil-1982/4.m4a",
+   "seconds": 7.8,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "keepers",
+     "at": 0.975
+    },
+    {
+     "w": "stay",
+     "at": 1.812
+    },
+    {
+     "w": "focused",
+     "at": 2.163
+    },
+    {
+     "w": "right",
+     "at": 2.625
+    },
+    {
+     "w": "to",
+     "at": 2.85
+    },
+    {
+     "w": "the",
+     "at": 2.938
+    },
+    {
+     "w": "final",
+     "at": 3.038
+    },
+    {
+     "w": "whistle",
+     "at": 3.425
+    },
+    {
+     "w": "Get",
+     "at": 4.388
+    },
+    {
+     "w": "your",
+     "at": 4.562
+    },
+    {
+     "w": "body",
+     "at": 4.675
+    },
+    {
+     "w": "behind",
+     "at": 5.0
+    },
+    {
+     "w": "the",
+     "at": 5.312
+    },
+    {
+     "w": "ball",
+     "at": 5.4
+    },
+    {
+     "w": "and",
+     "at": 5.787
+    },
+    {
+     "w": "hold",
+     "at": 5.912
+    },
+    {
+     "w": "on",
+     "at": 6.263
+    },
+    {
+     "w": "tight",
+     "at": 6.463
+    }
+   ]
+  }
+ ]
+}

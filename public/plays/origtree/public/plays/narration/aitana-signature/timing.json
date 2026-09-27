@@ -1,0 +1,374 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The assist, live",
+   "text": "Auckland, 2023. Spain against Switzerland at the World Cup. A Swiss pass runs loose, and Aitana Bonmat\u00ed pounces. She turns and slides it through to Jenni Hermoso. Left foot... Goal!",
+   "src": "/plays/narration/aitana-signature/1.m4a",
+   "seconds": 14.7,
+   "words": [
+    {
+     "w": "Auckland",
+     "at": 0.4
+    },
+    {
+     "w": "2023",
+     "at": 0.9
+    },
+    {
+     "w": "Spain",
+     "at": 2.288
+    },
+    {
+     "w": "against",
+     "at": 2.725
+    },
+    {
+     "w": "Switzerland",
+     "at": 3.138
+    },
+    {
+     "w": "at",
+     "at": 3.788
+    },
+    {
+     "w": "the",
+     "at": 3.862
+    },
+    {
+     "w": "World",
+     "at": 3.95
+    },
+    {
+     "w": "Cup",
+     "at": 4.312
+    },
+    {
+     "w": "A",
+     "at": 5.037
+    },
+    {
+     "w": "Swiss",
+     "at": 5.175
+    },
+    {
+     "w": "pass",
+     "at": 5.537
+    },
+    {
+     "w": "runs",
+     "at": 5.975
+    },
+    {
+     "w": "loose",
+     "at": 6.287
+    },
+    {
+     "w": "and",
+     "at": 6.775
+    },
+    {
+     "w": "Aitana",
+     "at": 6.912
+    },
+    {
+     "w": "Bonmat\u00ed",
+     "at": 7.388
+    },
+    {
+     "w": "pounces",
+     "at": 7.95
+    },
+    {
+     "w": "She",
+     "at": 9.012
+    },
+    {
+     "w": "turns",
+     "at": 9.188
+    },
+    {
+     "w": "and",
+     "at": 9.65
+    },
+    {
+     "w": "slides",
+     "at": 9.787
+    },
+    {
+     "w": "it",
+     "at": 10.213
+    },
+    {
+     "w": "through",
+     "at": 10.338
+    },
+    {
+     "w": "to",
+     "at": 10.575
+    },
+    {
+     "w": "Jenni",
+     "at": 10.713
+    },
+    {
+     "w": "Hermoso",
+     "at": 11.05
+    },
+    {
+     "w": "Left",
+     "at": 12.0
+    },
+    {
+     "w": "foot",
+     "at": 12.35
+    },
+    {
+     "w": "Goal",
+     "at": 13.238
+    }
+   ]
+  },
+  {
+   "label": "Look first",
+   "text": "Here's how Aitana plays. Before the ball comes, she checks over her shoulder, so she already knows where Hermoso is running.",
+   "src": "/plays/narration/aitana-signature/2.m4a",
+   "seconds": 8.5,
+   "words": [
+    {
+     "w": "Here's",
+     "at": 0.35
+    },
+    {
+     "w": "how",
+     "at": 0.625
+    },
+    {
+     "w": "Aitana",
+     "at": 0.812
+    },
+    {
+     "w": "plays",
+     "at": 1.275
+    },
+    {
+     "w": "Before",
+     "at": 2.25
+    },
+    {
+     "w": "the",
+     "at": 2.538
+    },
+    {
+     "w": "ball",
+     "at": 2.625
+    },
+    {
+     "w": "comes",
+     "at": 2.938
+    },
+    {
+     "w": "she",
+     "at": 3.55
+    },
+    {
+     "w": "checks",
+     "at": 3.725
+    },
+    {
+     "w": "over",
+     "at": 4.062
+    },
+    {
+     "w": "her",
+     "at": 4.263
+    },
+    {
+     "w": "shoulder",
+     "at": 4.412
+    },
+    {
+     "w": "so",
+     "at": 5.15
+    },
+    {
+     "w": "she",
+     "at": 5.325
+    },
+    {
+     "w": "already",
+     "at": 5.475
+    },
+    {
+     "w": "knows",
+     "at": 5.85
+    },
+    {
+     "w": "where",
+     "at": 6.213
+    },
+    {
+     "w": "Hermoso",
+     "at": 6.35
+    },
+    {
+     "w": "is",
+     "at": 6.975
+    },
+    {
+     "w": "running",
+     "at": 7.125
+    }
+   ]
+  },
+  {
+   "label": "Turn and play forward",
+   "text": "So one touch turns her to face the goal, one pass splits the defence, and Hermoso does the rest!",
+   "src": "/plays/narration/aitana-signature/3.m4a",
+   "seconds": 7.1,
+   "words": [
+    {
+     "w": "So",
+     "at": 0.375
+    },
+    {
+     "w": "one",
+     "at": 0.55
+    },
+    {
+     "w": "touch",
+     "at": 0.787
+    },
+    {
+     "w": "turns",
+     "at": 1.125
+    },
+    {
+     "w": "her",
+     "at": 1.413
+    },
+    {
+     "w": "to",
+     "at": 1.512
+    },
+    {
+     "w": "face",
+     "at": 1.625
+    },
+    {
+     "w": "the",
+     "at": 1.925
+    },
+    {
+     "w": "goal",
+     "at": 2.025
+    },
+    {
+     "w": "one",
+     "at": 2.788
+    },
+    {
+     "w": "pass",
+     "at": 3.038
+    },
+    {
+     "w": "splits",
+     "at": 3.413
+    },
+    {
+     "w": "the",
+     "at": 3.8
+    },
+    {
+     "w": "defence",
+     "at": 3.9
+    },
+    {
+     "w": "and",
+     "at": 4.75
+    },
+    {
+     "w": "Hermoso",
+     "at": 4.875
+    },
+    {
+     "w": "does",
+     "at": 5.475
+    },
+    {
+     "w": "the",
+     "at": 5.662
+    },
+    {
+     "w": "rest",
+     "at": 5.75
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "The secret? Check your shoulder before the ball comes. Then turn, and play forward.",
+   "src": "/plays/narration/aitana-signature/4.m4a",
+   "seconds": 6.1,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "secret",
+     "at": 0.463
+    },
+    {
+     "w": "Check",
+     "at": 1.337
+    },
+    {
+     "w": "your",
+     "at": 1.562
+    },
+    {
+     "w": "shoulder",
+     "at": 1.688
+    },
+    {
+     "w": "before",
+     "at": 2.1
+    },
+    {
+     "w": "the",
+     "at": 2.388
+    },
+    {
+     "w": "ball",
+     "at": 2.475
+    },
+    {
+     "w": "comes",
+     "at": 2.775
+    },
+    {
+     "w": "Then",
+     "at": 3.587
+    },
+    {
+     "w": "turn",
+     "at": 3.837
+    },
+    {
+     "w": "and",
+     "at": 4.213
+    },
+    {
+     "w": "play",
+     "at": 4.325
+    },
+    {
+     "w": "forward",
+     "at": 4.588
+    }
+   ]
+  }
+ ]
+}

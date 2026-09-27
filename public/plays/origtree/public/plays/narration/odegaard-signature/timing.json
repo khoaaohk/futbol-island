@@ -1,0 +1,374 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The pass, live",
+   "text": "Arsenal against Porto, 2024. Martin \u00d8degaard has the ball. He turns away from one defender, fakes a shot, and beats another. Then the pass, through the gap to Trossard... Goal!",
+   "src": "/plays/narration/odegaard-signature/1.m4a",
+   "seconds": 13.3,
+   "words": [
+    {
+     "w": "Arsenal",
+     "at": 0.375
+    },
+    {
+     "w": "against",
+     "at": 0.85
+    },
+    {
+     "w": "Porto",
+     "at": 1.225
+    },
+    {
+     "w": "2024",
+     "at": 1.775
+    },
+    {
+     "w": "Martin",
+     "at": 3.2
+    },
+    {
+     "w": "\u00d8degaard",
+     "at": 3.6
+    },
+    {
+     "w": "has",
+     "at": 4.05
+    },
+    {
+     "w": "the",
+     "at": 4.25
+    },
+    {
+     "w": "ball",
+     "at": 4.35
+    },
+    {
+     "w": "He",
+     "at": 5.15
+    },
+    {
+     "w": "turns",
+     "at": 5.275
+    },
+    {
+     "w": "away",
+     "at": 5.55
+    },
+    {
+     "w": "from",
+     "at": 5.875
+    },
+    {
+     "w": "one",
+     "at": 6.075
+    },
+    {
+     "w": "defender",
+     "at": 6.3
+    },
+    {
+     "w": "fakes",
+     "at": 6.963
+    },
+    {
+     "w": "a",
+     "at": 7.263
+    },
+    {
+     "w": "shot",
+     "at": 7.375
+    },
+    {
+     "w": "and",
+     "at": 7.75
+    },
+    {
+     "w": "beats",
+     "at": 7.875
+    },
+    {
+     "w": "another",
+     "at": 8.175
+    },
+    {
+     "w": "Then",
+     "at": 9.062
+    },
+    {
+     "w": "the",
+     "at": 9.3
+    },
+    {
+     "w": "pass",
+     "at": 9.412
+    },
+    {
+     "w": "through",
+     "at": 10.0
+    },
+    {
+     "w": "the",
+     "at": 10.2
+    },
+    {
+     "w": "gap",
+     "at": 10.3
+    },
+    {
+     "w": "to",
+     "at": 10.6
+    },
+    {
+     "w": "Trossard",
+     "at": 10.7
+    },
+    {
+     "w": "Goal",
+     "at": 11.912
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. As he dodges, \u00d8degaard already sees Trossard sneaking in behind a defender who only watches the ball.",
+   "src": "/plays/narration/odegaard-signature/2.m4a",
+   "seconds": 9.1,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.288
+    },
+    {
+     "w": "As",
+     "at": 2.325
+    },
+    {
+     "w": "he",
+     "at": 2.487
+    },
+    {
+     "w": "dodges",
+     "at": 2.6
+    },
+    {
+     "w": "\u00d8degaard",
+     "at": 3.413
+    },
+    {
+     "w": "already",
+     "at": 3.9
+    },
+    {
+     "w": "sees",
+     "at": 4.287
+    },
+    {
+     "w": "Trossard",
+     "at": 4.625
+    },
+    {
+     "w": "sneaking",
+     "at": 5.2
+    },
+    {
+     "w": "in",
+     "at": 5.612
+    },
+    {
+     "w": "behind",
+     "at": 5.75
+    },
+    {
+     "w": "a",
+     "at": 6.112
+    },
+    {
+     "w": "defender",
+     "at": 6.175
+    },
+    {
+     "w": "who",
+     "at": 6.7
+    },
+    {
+     "w": "only",
+     "at": 6.85
+    },
+    {
+     "w": "watches",
+     "at": 7.162
+    },
+    {
+     "w": "the",
+     "at": 7.6
+    },
+    {
+     "w": "ball",
+     "at": 7.7
+    }
+   ]
+  },
+  {
+   "label": "Through the gap",
+   "text": "He punches it through the gap. First touch, then a low shot into the far corner!",
+   "src": "/plays/narration/odegaard-signature/3.m4a",
+   "seconds": 5.8,
+   "words": [
+    {
+     "w": "He",
+     "at": 0.35
+    },
+    {
+     "w": "punches",
+     "at": 0.475
+    },
+    {
+     "w": "it",
+     "at": 0.875
+    },
+    {
+     "w": "through",
+     "at": 1.0
+    },
+    {
+     "w": "the",
+     "at": 1.188
+    },
+    {
+     "w": "gap",
+     "at": 1.275
+    },
+    {
+     "w": "First",
+     "at": 2.1
+    },
+    {
+     "w": "touch",
+     "at": 2.45
+    },
+    {
+     "w": "then",
+     "at": 3.05
+    },
+    {
+     "w": "a",
+     "at": 3.188
+    },
+    {
+     "w": "low",
+     "at": 3.275
+    },
+    {
+     "w": "shot",
+     "at": 3.6
+    },
+    {
+     "w": "into",
+     "at": 3.862
+    },
+    {
+     "w": "the",
+     "at": 4.037
+    },
+    {
+     "w": "far",
+     "at": 4.138
+    },
+    {
+     "w": "corner",
+     "at": 4.4
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: scan the pitch before the ball comes to you. Then you already know your next pass.",
+   "src": "/plays/narration/odegaard-signature/4.m4a",
+   "seconds": 6.5,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "scan",
+     "at": 1.275
+    },
+    {
+     "w": "the",
+     "at": 1.587
+    },
+    {
+     "w": "pitch",
+     "at": 1.675
+    },
+    {
+     "w": "before",
+     "at": 1.975
+    },
+    {
+     "w": "the",
+     "at": 2.263
+    },
+    {
+     "w": "ball",
+     "at": 2.35
+    },
+    {
+     "w": "comes",
+     "at": 2.65
+    },
+    {
+     "w": "to",
+     "at": 2.975
+    },
+    {
+     "w": "you",
+     "at": 3.1
+    },
+    {
+     "w": "Then",
+     "at": 3.737
+    },
+    {
+     "w": "you",
+     "at": 3.975
+    },
+    {
+     "w": "already",
+     "at": 4.1
+    },
+    {
+     "w": "know",
+     "at": 4.475
+    },
+    {
+     "w": "your",
+     "at": 4.65
+    },
+    {
+     "w": "next",
+     "at": 4.775
+    },
+    {
+     "w": "pass",
+     "at": 5.075
+    }
+   ]
+  }
+ ]
+}

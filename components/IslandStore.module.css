@@ -34,7 +34,7 @@
 @media(hover:hover){.dialog button:hover{transform:translateY(-3px)}}
 @media(max-width:600px){.dialog .panel>header{padding:16px 18px!important}.dialog .panel>div{padding:16px 16px 28px}}
 @media(prefers-reduced-motion:reduce){.dialog button{transition:none}.dialog button:hover,.dialog button:active{transform:none}}
-.welcome{padding:25px 24px;margin:0 0 22px;background:#fff1d3;border-radius:28px 48px 24px 28px;box-shadow:0 7px 0 #193f372b}.welcome strong{font-family:IslandBrush,sans-serif;font-size:clamp(22px,3vw,32px);font-weight:400;display:block;max-width:80%}.welcome p{color:#315547;font-size:14px}.welcome>span{position:static;display:inline-block;margin-top:14px;background:#f8d651;color:#244d40}.tabs button{background:#fff1d3;border:0;color:#254b3f;box-shadow:0 4px 0 #193f3733;font-size:13px}.tabs button[aria-pressed=true]{background:#e98acb;color:#233f39}.grid{gap:20px}.card{border:0;border-radius:26px 40px 24px 24px;background:#fff1d3;box-shadow:0 7px 0 #183b3433}.image{height:190px;background:#bfded1 url('/stories/paths/store-coast.svg') center/800px auto}.details{padding:20px}.details h3{font-size:20px}.details p{font-size:13px;color:#46604b}.details button{border-radius:999px}.footer{background:#fff1d3!important;padding:18px 22px;border-radius:20px;margin-top:24px}.footer p{margin:0;color:#315547}.equipped{outline:3px solid #f8d651;outline-offset:-3px}@media(max-width:600px){.grid{gap:12px}.image{height:135px}.details{padding:13px}.details h3{font-size:17px}.welcome strong{max-width:none}.details p{font-size:12px}}
+.welcome{padding:25px 24px;margin:0 0 22px;background:#fff1d3;border-radius:28px 48px 24px 28px;box-shadow:0 7px 0 #193f372b}.welcome strong{font-family:IslandBrush,sans-serif;font-size:clamp(22px,3vw,32px);font-weight:400;display:block;max-width:80%}.welcome p{color:#315547;font-size:14px}.welcome>span{position:static;display:inline-block;margin-top:14px;background:#f8d651;color:#244d40}.tabs button{background:var(--btn-cream);border:0;color:var(--btn-ink);box-shadow:0 4px 0 var(--btn-cream-edge);font-size:13px}.tabs button[aria-pressed=true]{background:var(--btn-pink);color:var(--btn-ink)}.grid{gap:20px}.card{border:0;border-radius:26px 40px 24px 24px;background:#fff1d3;box-shadow:0 7px 0 #183b3433}.image{height:190px;background:#bfded1 url('/stories/paths/store-coast.svg') center/800px auto}.details{padding:20px}.details h3{font-size:20px}.details p{font-size:13px;color:#46604b}.details button{border-radius:999px}.footer{background:#fff1d3!important;padding:18px 22px;border-radius:20px;margin-top:24px}.footer p{margin:0;color:#315547}.equipped{outline:3px solid #f8d651;outline-offset:-3px}@media(max-width:600px){.grid{gap:12px}.image{height:135px}.details{padding:13px}.details h3{font-size:17px}.welcome strong{max-width:none}.details p{font-size:12px}}
 
 /* Item previews share one quiet textured tan surface. */
 .image{background:#e8d5ad url('/stories/films/assets/entry-grain.png') repeat!important;background-size:128px 128px!important;background-blend-mode:soft-light}
@@ -50,3 +50,16 @@
 /* Include padding in the rail width and leave space after the last pill. */
 .dialog .tabs{box-sizing:border-box;scroll-padding-inline:8px;padding-inline:8px}
 .dialog .tabs::after{content:'';flex:0 0 8px}
+
+/* Locked rides (one unlocks per finished path, lib/town/rideUnlocks.ts): muted preview, quiet paper button. */
+.locked .image{filter:grayscale(.55) opacity(.7)}
+.details button:disabled{background:#e5e1c8;color:#61705b;cursor:not-allowed;justify-content:center}
+@media(hover:hover){.dialog .details button:disabled:hover{transform:none}}
+
+/* Equip is the shared green primary pill (docs/ui/BUTTONS.md): #244d40 face, cream ink, short green edge. The equipped
+   and locked states keep their quiet faces without the edge. */
+.details button:not(.learnButton){background:var(--btn-green);color:var(--btn-ink-on-dark);border-radius:var(--btn-radius);box-shadow:0 4px 0 var(--btn-green-edge);transition:translate .16s,box-shadow .16s}
+.details button:not(.learnButton):not(:disabled):active{translate:0 2px;box-shadow:0 2px 0 var(--btn-green-edge)}
+.equipped .details button:not(.learnButton),.details button:not(.learnButton):disabled{box-shadow:none}
+.equipped .details button:not(.learnButton){background:#e5e9ce;color:#355840}
+.details button:not(.learnButton):disabled{background:#e5e1c8;color:#61705b}

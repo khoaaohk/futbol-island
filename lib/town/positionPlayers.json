@@ -16,7 +16,8 @@
       "Jordan Pickford",
       "Hannah Hampton",
       "Mary Earps",
-      "Alyssa Naeher"
+      "Alyssa Naeher",
+      "Vozinha"
     ],
     "allTime": [
       "Lev Yashin",
@@ -34,7 +35,8 @@
       "Fabien Barthez",
       "Jorge Campos",
       "Hope Solo",
-      "Nadine Angerer"
+      "Nadine Angerer",
+      "Keylor Navas"
     ]
   },
   "fullback": {
@@ -55,7 +57,9 @@
       "Denzel Dumfries",
       "Marc Cucurella",
       "João Cancelo",
-      "Pervis Estupiñán"
+      "Pervis Estupiñán",
+      "Kyle Walker",
+      "Nico O'Reilly"
     ],
     "allTime": [
       "Cafu",
@@ -71,7 +75,8 @@
       "Marcelo",
       "Lilian Thuram",
       "Patrice Evra",
-      "Giacinto Facchetti"
+      "Giacinto Facchetti",
+      "Jordi Alba"
     ]
   },
   "centerback": {
@@ -111,7 +116,14 @@
       "Nemanja Vidić",
       "Gerard Piqué",
       "Thiago Silva",
-      "Giorgio Chiellini"
+      "Giorgio Chiellini",
+      "Raphaël Varane",
+      "Pepe",
+      "Vincent Kompany",
+      "Leonardo Bonucci",
+      "Lúcio",
+      "Ronald Koeman",
+      "Laurent Blanc"
     ]
   },
   "midfielder": {
@@ -156,7 +168,12 @@
       "Casemiro",
       "Mikel Merino",
       "Eberechi Eze",
-      "Phil Foden"
+      "Phil Foden",
+      "Elliot Anderson",
+      "Sandro Tonali",
+      "Rodrigo De Paul",
+      "İlkay Gündoğan",
+      "James Rodríguez"
     ],
     "allTime": [
       "Zinedine Zidane",
@@ -184,7 +201,18 @@
       "Gheorghe Hagi",
       "Rui Costa",
       "Clarence Seedorf",
-      "Claude Makélélé"
+      "Claude Makélélé",
+      "Ivan Rakitić",
+      "Juan Román Riquelme",
+      "Jay-Jay Okocha",
+      "Park Ji-sung",
+      "Mesut Özil",
+      "Javier Mascherano",
+      "Cesc Fàbregas",
+      "Thomas Müller",
+      "Bastian Schweinsteiger",
+      "Wesley Sneijder",
+      "Ruud Gullit"
     ]
   },
   "winger": {
@@ -217,7 +245,10 @@
       "Gabriel Martinelli",
       "Kenan Yıldız",
       "Kaoru Mitoma",
-      "Bradley Barcola"
+      "Bradley Barcola",
+      "Anthony Gordon",
+      "Karim Adeyemi",
+      "Brahim Díaz"
     ],
     "allTime": [
       "Garrincha",
@@ -238,7 +269,11 @@
       "Eden Hazard",
       "Megan Rapinoe",
       "Kristine Lilly",
-      "Lieke Martens"
+      "Lieke Martens",
+      "Gareth Bale",
+      "Ángel Di María",
+      "Ricardo Quaresma",
+      "Freddie Ljungberg"
     ]
   },
   "striker": {
@@ -272,7 +307,10 @@
       "Raúl Jiménez",
       "Gonçalo Ramos",
       "Mikel Oyarzabal",
-      "Marcus Thuram"
+      "Marcus Thuram",
+      "Endrick",
+      "Jonathan David",
+      "Olivier Giroud"
     ],
     "allTime": [
       "Pelé",
@@ -309,7 +347,16 @@
       "George Weah",
       "Kenny Dalglish",
       "Michael Owen",
-      "Gary Lineker"
+      "Gary Lineker",
+      "Carlos Tevez",
+      "Sergio Agüero",
+      "Mario Balotelli",
+      "Edinson Cavani",
+      "Eric Cantona",
+      "Ian Rush",
+      "Peter Crouch",
+      "Robin van Persie",
+      "Filippo Inzaghi"
     ]
   },
   "goleiro": {

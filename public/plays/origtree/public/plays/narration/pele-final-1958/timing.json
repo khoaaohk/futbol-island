@@ -1,0 +1,382 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The final",
+   "text": "Sweden, 1958, the World Cup final. Brazil, in blue, lead Sweden two goals to one. Now a high ball drops into the box, where seventeen-year-old Pel\u00e9 is waiting.",
+   "src": "/plays/narration/pele-final-1958/1.m4a",
+   "seconds": 12.8,
+   "words": [
+    {
+     "w": "Sweden",
+     "at": 0.375
+    },
+    {
+     "w": "1958",
+     "at": 0.825
+    },
+    {
+     "w": "the",
+     "at": 1.95
+    },
+    {
+     "w": "World",
+     "at": 2.05
+    },
+    {
+     "w": "Cup",
+     "at": 2.35
+    },
+    {
+     "w": "final",
+     "at": 2.575
+    },
+    {
+     "w": "Brazil",
+     "at": 3.513
+    },
+    {
+     "w": "in",
+     "at": 4.1
+    },
+    {
+     "w": "blue",
+     "at": 4.25
+    },
+    {
+     "w": "lead",
+     "at": 4.888
+    },
+    {
+     "w": "Sweden",
+     "at": 5.188
+    },
+    {
+     "w": "two",
+     "at": 5.612
+    },
+    {
+     "w": "goals",
+     "at": 5.825
+    },
+    {
+     "w": "to",
+     "at": 6.15
+    },
+    {
+     "w": "one",
+     "at": 6.275
+    },
+    {
+     "w": "Now",
+     "at": 7.225
+    },
+    {
+     "w": "a",
+     "at": 7.55
+    },
+    {
+     "w": "high",
+     "at": 7.65
+    },
+    {
+     "w": "ball",
+     "at": 7.9
+    },
+    {
+     "w": "drops",
+     "at": 8.2
+    },
+    {
+     "w": "into",
+     "at": 8.512
+    },
+    {
+     "w": "the",
+     "at": 8.688
+    },
+    {
+     "w": "box",
+     "at": 8.775
+    },
+    {
+     "w": "where",
+     "at": 9.45
+    },
+    {
+     "w": "seventeen-year-old",
+     "at": 9.637
+    },
+    {
+     "w": "Pel\u00e9",
+     "at": 10.787
+    },
+    {
+     "w": "is",
+     "at": 11.225
+    },
+    {
+     "w": "waiting",
+     "at": 11.375
+    }
+   ]
+  },
+  {
+   "label": "Chest control",
+   "text": "Watch again, slowly. Pel\u00e9 cushions the ball on his chest, and it drops softly, right in front of him.",
+   "src": "/plays/narration/pele-final-1958/2.m4a",
+   "seconds": 7.6,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.163
+    },
+    {
+     "w": "Pel\u00e9",
+     "at": 2.212
+    },
+    {
+     "w": "cushions",
+     "at": 2.612
+    },
+    {
+     "w": "the",
+     "at": 3.062
+    },
+    {
+     "w": "ball",
+     "at": 3.15
+    },
+    {
+     "w": "on",
+     "at": 3.462
+    },
+    {
+     "w": "his",
+     "at": 3.562
+    },
+    {
+     "w": "chest",
+     "at": 3.737
+    },
+    {
+     "w": "and",
+     "at": 4.3
+    },
+    {
+     "w": "it",
+     "at": 4.412
+    },
+    {
+     "w": "drops",
+     "at": 4.5
+    },
+    {
+     "w": "softly",
+     "at": 4.888
+    },
+    {
+     "w": "right",
+     "at": 5.638
+    },
+    {
+     "w": "in",
+     "at": 5.912
+    },
+    {
+     "w": "front",
+     "at": 6.05
+    },
+    {
+     "w": "of",
+     "at": 6.237
+    },
+    {
+     "w": "him",
+     "at": 6.312
+    }
+   ]
+  },
+  {
+   "label": "Flick and volley",
+   "text": "A defender rushes in. Pel\u00e9 flicks the ball over his head, spins round him, and volleys it in before it lands!",
+   "src": "/plays/narration/pele-final-1958/3.m4a",
+   "seconds": 8.2,
+   "words": [
+    {
+     "w": "A",
+     "at": 0.375
+    },
+    {
+     "w": "defender",
+     "at": 0.45
+    },
+    {
+     "w": "rushes",
+     "at": 1.0
+    },
+    {
+     "w": "in",
+     "at": 1.375
+    },
+    {
+     "w": "Pel\u00e9",
+     "at": 2.237
+    },
+    {
+     "w": "flicks",
+     "at": 2.638
+    },
+    {
+     "w": "the",
+     "at": 2.95
+    },
+    {
+     "w": "ball",
+     "at": 3.05
+    },
+    {
+     "w": "over",
+     "at": 3.362
+    },
+    {
+     "w": "his",
+     "at": 3.562
+    },
+    {
+     "w": "head",
+     "at": 3.725
+    },
+    {
+     "w": "spins",
+     "at": 4.312
+    },
+    {
+     "w": "round",
+     "at": 4.75
+    },
+    {
+     "w": "him",
+     "at": 5.062
+    },
+    {
+     "w": "and",
+     "at": 5.425
+    },
+    {
+     "w": "volleys",
+     "at": 5.562
+    },
+    {
+     "w": "it",
+     "at": 5.963
+    },
+    {
+     "w": "in",
+     "at": 6.05
+    },
+    {
+     "w": "before",
+     "at": 6.25
+    },
+    {
+     "w": "it",
+     "at": 6.588
+    },
+    {
+     "w": "lands",
+     "at": 6.675
+    }
+   ]
+  },
+  {
+   "label": "Soft touch",
+   "text": "Cushion the ball like Pel\u00e9 and it stays close. A soft first touch buys you time and space.",
+   "src": "/plays/narration/pele-final-1958/4.m4a",
+   "seconds": 6.9,
+   "words": [
+    {
+     "w": "Cushion",
+     "at": 0.35
+    },
+    {
+     "w": "the",
+     "at": 0.688
+    },
+    {
+     "w": "ball",
+     "at": 0.775
+    },
+    {
+     "w": "like",
+     "at": 1.062
+    },
+    {
+     "w": "Pel\u00e9",
+     "at": 1.275
+    },
+    {
+     "w": "and",
+     "at": 1.85
+    },
+    {
+     "w": "it",
+     "at": 1.962
+    },
+    {
+     "w": "stays",
+     "at": 2.05
+    },
+    {
+     "w": "close",
+     "at": 2.375
+    },
+    {
+     "w": "A",
+     "at": 3.288
+    },
+    {
+     "w": "soft",
+     "at": 3.413
+    },
+    {
+     "w": "first",
+     "at": 3.812
+    },
+    {
+     "w": "touch",
+     "at": 4.15
+    },
+    {
+     "w": "buys",
+     "at": 4.475
+    },
+    {
+     "w": "you",
+     "at": 4.8
+    },
+    {
+     "w": "time",
+     "at": 4.963
+    },
+    {
+     "w": "and",
+     "at": 5.338
+    },
+    {
+     "w": "space",
+     "at": 5.463
+    }
+   ]
+  }
+ ]
+}

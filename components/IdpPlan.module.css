@@ -1,0 +1,62 @@
+/* IDP plan: same cream cards, deep green ink and yellow accents as the Coaches Centre. */
+.plan{display:grid;gap:18px;color:#244d40}
+.local,.lead{margin:0;background:#fff1d3;border-radius:22px 34px 20px 22px;padding:14px 18px;font-size:13px;line-height:1.5;color:#48604c}
+.lead{font-size:16px;color:#244d40}
+.row{display:flex;flex-wrap:wrap;gap:10px}
+.primary,.ghost{min-height:44px;padding:10px 18px;border-radius:999px;font:inherit;font-size:14px;font-weight:700;line-height:1.2;cursor:pointer}
+.primary{background:#244d40;color:#fff1d3;border:1px solid #244d40;box-shadow:0 4px 0 #183b34}
+.primary:disabled{opacity:.45;cursor:default;box-shadow:none}
+.ghost{background:#fff1d3;color:#244d40;border:1px solid #a8b78d}
+.focus,.lessons,.note,.grownup,.due,.goal,.format{background:#fff1d3;border-radius:26px 40px 22px 24px;box-shadow:0 6px 0 #183b3438}
+.focus{padding:24px}
+.focus h3{font-family:IslandBrush,sans-serif;font-weight:400;font-size:clamp(24px,3.4vw,34px);line-height:1.1;margin:12px 0 8px}
+.focus p{margin:0;font-size:15px;line-height:1.55;color:#48604c}
+.focus .meta{margin-top:14px;font-size:12px;color:#69715d}
+.try{margin-top:16px;display:grid;gap:4px;background:#f8d651;border-radius:16px;padding:14px 16px;font-size:15px;line-height:1.45}
+.try b{font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+.corner{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.05em;padding:6px 10px;border-radius:20px;background:#e7e7d1;color:#244d40}
+.corner[data-corner=technical]{background:#cfe3f2}.corner[data-corner=tactical]{background:#d5e8c8}.corner[data-corner=physical]{background:#f6d3b5}.corner[data-corner=social]{background:#f1cfe2}
+.due{padding:18px;display:grid;gap:12px;font-size:14px;line-height:1.5;background:#f8d651}
+.lessons{padding:20px;display:grid;gap:12px}
+.lessons h4,.note h4{margin:0;font-size:16px}
+.lesson{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-top:1px solid #244d401f}
+.lesson>div{display:grid;gap:4px;min-width:0}
+.lesson small,.caveat{font-size:12px;color:#69715d;line-height:1.4}
+.notes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.note{padding:20px;display:grid;gap:10px;align-content:start}
+.note[data-kind=coach]{background:#e9efd9}
+.note form{display:grid;gap:8px}
+.note label{font-size:13px;color:#48604c;line-height:1.4}
+.note textarea{width:100%;resize:vertical;min-height:64px;border:1px solid #a8b78d;border-radius:14px;padding:10px 12px;font:inherit;font-size:16px;line-height:1.4;color:#244d40;background:#fffaf0}
+.note textarea:focus-visible{outline:3px solid #477c6a;outline-offset:1px}
+.note form button{justify-self:start}
+.note ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.note li{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:start;font-size:14px;line-height:1.45;padding-top:8px;border-top:1px solid #244d401f}
+.note time{font-size:11px;font-weight:700;color:#69715d;padding-top:2px;white-space:nowrap}
+.note li span{overflow-wrap:anywhere}
+.note li button{width:32px;height:32px;border-radius:50%;border:1px solid #a8b78d;background:transparent;color:#244d40;font-size:18px;line-height:1;cursor:pointer}
+.grownup{padding:18px 20px;display:grid;gap:6px;font-size:15px;line-height:1.45}
+.grownup b{font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+.grownup small{font-size:12px;color:#69715d}
+.formats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.format{border:2px solid transparent;padding:12px 14px;display:grid;gap:2px;text-align:left;color:#244d40;cursor:pointer;border-radius:20px}
+.format b{font-size:17px}.format small{font-size:12px;color:#69715d;line-height:1.3}
+.format[aria-selected=true]{border-color:#244d40;background:var(--btn-gold-bright)}
+.goals{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.goal{border:2px solid transparent;padding:18px;display:grid;gap:8px;justify-items:start;text-align:left;color:#244d40;cursor:pointer}
+.goal b{font-size:18px;line-height:1.25}.goal small{font-size:13px;line-height:1.45;color:#48604c}
+.goal em{font-style:normal;font-size:11px;font-weight:800;color:#244d40;background:#f8d651;border-radius:20px;padding:4px 9px}
+.goal[aria-pressed=true]{border-color:#244d40}
+@media(max-width:600px){.notes,.goals{grid-template-columns:1fr}.formats{grid-template-columns:repeat(2,minmax(0,1fr))}.focus{padding:20px}.lesson{flex-direction:column;align-items:stretch}.lesson .primary{align-self:flex-start}}
+
+/* 44px tap target without changing the drawn size (tests/device-guards.cjs check 3). */
+.note li button{position:relative}
+.note li button::before{content:'';position:absolute;inset:-6px;border-radius:50%}
+
+/* Shared families (docs/ui/BUTTONS.md): green primary pill and mint secondary pill, both with the solid edge and press. */
+.primary,.ghost{font-family:var(--btn-font);border-radius:var(--btn-radius);transition:translate .16s,box-shadow .16s}
+.primary{background:var(--btn-green);color:var(--btn-ink-on-dark);border-color:var(--btn-green);box-shadow:0 4px 0 var(--btn-green-edge)}
+.ghost{background:var(--btn-mint);color:var(--btn-ink);border:0;box-shadow:0 4px 0 var(--btn-mint-edge)}
+.primary:not(:disabled):active{translate:0 2px;box-shadow:0 2px 0 var(--btn-green-edge)}
+.ghost:active{translate:0 2px;box-shadow:0 2px 0 var(--btn-mint-edge)}
+.primary:disabled{box-shadow:none}

@@ -1,0 +1,386 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Lisbon, 2024. Manchester City lead Sporting. Geovany Quenda slides a pass through, and Viktor Gy\u00f6keres is off! Strong and fast, he drives on. Right foot... far corner!",
+   "src": "/plays/narration/gyokeres-signature/1.m4a",
+   "seconds": 13.6,
+   "words": [
+    {
+     "w": "Lisbon",
+     "at": 0.425
+    },
+    {
+     "w": "2024",
+     "at": 0.875
+    },
+    {
+     "w": "Manchester",
+     "at": 2.163
+    },
+    {
+     "w": "City",
+     "at": 2.788
+    },
+    {
+     "w": "lead",
+     "at": 3.125
+    },
+    {
+     "w": "Sporting",
+     "at": 3.413
+    },
+    {
+     "w": "Geovany",
+     "at": 4.45
+    },
+    {
+     "w": "Quenda",
+     "at": 5.037
+    },
+    {
+     "w": "slides",
+     "at": 5.463
+    },
+    {
+     "w": "a",
+     "at": 5.812
+    },
+    {
+     "w": "pass",
+     "at": 5.875
+    },
+    {
+     "w": "through",
+     "at": 6.237
+    },
+    {
+     "w": "and",
+     "at": 6.6
+    },
+    {
+     "w": "Viktor",
+     "at": 6.725
+    },
+    {
+     "w": "Gy\u00f6keres",
+     "at": 7.075
+    },
+    {
+     "w": "is",
+     "at": 7.6
+    },
+    {
+     "w": "off",
+     "at": 7.725
+    },
+    {
+     "w": "Strong",
+     "at": 8.463
+    },
+    {
+     "w": "and",
+     "at": 8.963
+    },
+    {
+     "w": "fast",
+     "at": 9.088
+    },
+    {
+     "w": "he",
+     "at": 9.562
+    },
+    {
+     "w": "drives",
+     "at": 9.675
+    },
+    {
+     "w": "on",
+     "at": 10.075
+    },
+    {
+     "w": "Right",
+     "at": 10.75
+    },
+    {
+     "w": "foot",
+     "at": 11.1
+    },
+    {
+     "w": "far",
+     "at": 11.863
+    },
+    {
+     "w": "corner",
+     "at": 12.137
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again, slowly. He keeps his body between the defender and the ball. Then he pushes on, past the next defender.",
+   "src": "/plays/narration/gyokeres-signature/2.m4a",
+   "seconds": 8.6,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "slowly",
+     "at": 1.312
+    },
+    {
+     "w": "He",
+     "at": 2.325
+    },
+    {
+     "w": "keeps",
+     "at": 2.45
+    },
+    {
+     "w": "his",
+     "at": 2.712
+    },
+    {
+     "w": "body",
+     "at": 2.875
+    },
+    {
+     "w": "between",
+     "at": 3.225
+    },
+    {
+     "w": "the",
+     "at": 3.487
+    },
+    {
+     "w": "defender",
+     "at": 3.575
+    },
+    {
+     "w": "and",
+     "at": 4.1
+    },
+    {
+     "w": "the",
+     "at": 4.213
+    },
+    {
+     "w": "ball",
+     "at": 4.3
+    },
+    {
+     "w": "Then",
+     "at": 5.112
+    },
+    {
+     "w": "he",
+     "at": 5.3
+    },
+    {
+     "w": "pushes",
+     "at": 5.425
+    },
+    {
+     "w": "on",
+     "at": 5.85
+    },
+    {
+     "w": "past",
+     "at": 6.338
+    },
+    {
+     "w": "the",
+     "at": 6.688
+    },
+    {
+     "w": "next",
+     "at": 6.775
+    },
+    {
+     "w": "defender",
+     "at": 7.062
+    }
+   ]
+  },
+  {
+   "label": "The finish",
+   "text": "A hard, low shot across Ederson, and Sporting are level! He scored a hat-trick that night, and Sporting won four-one.",
+   "src": "/plays/narration/gyokeres-signature/3.m4a",
+   "seconds": 8.3,
+   "words": [
+    {
+     "w": "A",
+     "at": 0.4
+    },
+    {
+     "w": "hard",
+     "at": 0.487
+    },
+    {
+     "w": "low",
+     "at": 1.062
+    },
+    {
+     "w": "shot",
+     "at": 1.363
+    },
+    {
+     "w": "across",
+     "at": 1.613
+    },
+    {
+     "w": "Ederson",
+     "at": 1.95
+    },
+    {
+     "w": "and",
+     "at": 2.725
+    },
+    {
+     "w": "Sporting",
+     "at": 2.862
+    },
+    {
+     "w": "are",
+     "at": 3.325
+    },
+    {
+     "w": "level",
+     "at": 3.425
+    },
+    {
+     "w": "He",
+     "at": 4.275
+    },
+    {
+     "w": "scored",
+     "at": 4.4
+    },
+    {
+     "w": "a",
+     "at": 4.662
+    },
+    {
+     "w": "hat-trick",
+     "at": 4.725
+    },
+    {
+     "w": "that",
+     "at": 5.225
+    },
+    {
+     "w": "night",
+     "at": 5.45
+    },
+    {
+     "w": "and",
+     "at": 6.0
+    },
+    {
+     "w": "Sporting",
+     "at": 6.138
+    },
+    {
+     "w": "won",
+     "at": 6.6
+    },
+    {
+     "w": "four-one",
+     "at": 6.838
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: when a defender gets close, use your body to shield the ball, and drive toward goal!",
+   "src": "/plays/narration/gyokeres-signature/4.m4a",
+   "seconds": 6.8,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.562
+    },
+    {
+     "w": "when",
+     "at": 1.375
+    },
+    {
+     "w": "a",
+     "at": 1.512
+    },
+    {
+     "w": "defender",
+     "at": 1.575
+    },
+    {
+     "w": "gets",
+     "at": 2.05
+    },
+    {
+     "w": "close",
+     "at": 2.3
+    },
+    {
+     "w": "use",
+     "at": 2.987
+    },
+    {
+     "w": "your",
+     "at": 3.188
+    },
+    {
+     "w": "body",
+     "at": 3.3
+    },
+    {
+     "w": "to",
+     "at": 3.625
+    },
+    {
+     "w": "shield",
+     "at": 3.775
+    },
+    {
+     "w": "the",
+     "at": 4.088
+    },
+    {
+     "w": "ball",
+     "at": 4.175
+    },
+    {
+     "w": "and",
+     "at": 4.6
+    },
+    {
+     "w": "drive",
+     "at": 4.725
+    },
+    {
+     "w": "toward",
+     "at": 5.138
+    },
+    {
+     "w": "goal",
+     "at": 5.45
+    }
+   ]
+  }
+ ]
+}

@@ -1,4 +1,5 @@
 import * as T from 'three';
+import {gearState} from './beanGearFit';
 
 /** Twin downward plumes share a fixed pool and one draw call. */
 export function createJetExhaust(){
@@ -9,8 +10,10 @@ export function createJetExhaust(){
  return {root,update(x:number,y:number,z:number,yaw:number,floor:number,dt:number,enabled:boolean,boost:boolean,reduced:boolean){
   if(Math.hypot(x-lastX,z-lastZ)>12||reduced){for(const p of particles)p.life=0;credit=0;}lastX=x;lastZ=z;
   if(enabled&&!reduced&&dt>0){credit+=dt*(boost?200:140);const emit=Math.floor(credit);credit-=emit;
+   // Nozzles sit further back when the pack rides a bean's back (gearState.packBack, lane F).
+   const back=.34+gearState.packBack;
    for(let i=0;i<emit;i++){const p=particles[index%112],side=index++%2?1:-1,angle=index*2.399;
-    p.x=x+Math.cos(yaw)*side*.3-Math.sin(yaw)*.34;p.z=z-Math.sin(yaw)*side*.3-Math.cos(yaw)*.34;p.y=y+.82;
+    p.x=x+Math.cos(yaw)*side*.3-Math.sin(yaw)*back;p.z=z-Math.sin(yaw)*side*.3-Math.cos(yaw)*back;p.y=y+.82;
     const groundBoost=boost&&y-floor<2;
     p.vx=Math.cos(angle)*(groundBoost?3.5:boost?1.8:1.1);p.vz=Math.sin(angle)*(groundBoost?3.5:boost?1.8:1.1);p.age=0;p.life=boost?.53:.43;p.size=boost?.26:.2;p.drop=boost?14:10;p.floor=floor+.06;
    }

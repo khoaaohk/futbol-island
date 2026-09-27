@@ -1,4 +1,5 @@
 'use client';
+import { readIslandReturnPosition, saveIslandReturnPosition } from '@/lib/arcade/islandReturnPosition';
 import {createGroundBallRoll} from '../lib/graphics/groundBallRoll';
 import {FORMAT_PATH_LAUNCH,validPathLaunch,type FormatPathLaunch} from '@/lib/paths/formatPaths';
 import {createTruckReactions} from '@/lib/graphics/truckReactions';
@@ -16,23 +17,29 @@ import {createHiddenTransformGate} from '@/lib/graphics/hiddenTransformGate';
 import {Icon} from './Icon';
 import { useEffect, useRef, useState } from 'react';
 import {createIslandSound} from '@/lib/audio/islandSound';
+import {stopIslandNarration} from '@/lib/audio/islandNarration';
 import {createIslandMusic} from '@/lib/audio/islandMusic';
 import * as T from 'three';
 import CoachLesson from './CoachLesson';
 import TravelIcon from './TravelIcon';
 import {createSpinGesture} from '@/lib/town/spinGesture';
 import {tapHaptic} from '@/lib/town/haptics';
+import {frameCapSlot} from '@/lib/town/frameCap';
+import {createIslandHeat} from '@/lib/graphics/islandHeat';
+import {heatOptions} from '@/lib/graphics/heatTier';
+import {applyLambertScenery,sharpenSceneTextures} from '@/lib/graphics/lambertScenery';
+import {emitIslandFrame} from '@/lib/town/islandFrames';
 import {findWallJuggleTarget} from '@/lib/town/wallJuggleTarget';
 import {assistedShotYaw} from '@/lib/town/shotAssist';
 import {goalFinish} from '@/lib/town/goalFinish';
 import {sweepGoalFrame,type FrameHit} from '@/lib/town/goalCollisions';
 import IslandSettings from './IslandSettings';
 import IslandLoading from './IslandLoading';
+import IslandReturnLoading from './IslandReturnLoading';
 import CharacterCustomizer from './CharacterCustomizer';
 import IslandStore from './IslandStore';
 import CoachesCentre from './CoachesCentre';
 import {positionInfo,type PositionSelection} from '@/lib/town/playerPositions';
-import Arcade from './Arcade';
 import dynamic from 'next/dynamic';
 import IslandOnboarding from './IslandOnboarding';
 import {shouldShowIslandOnboarding} from '@/lib/town/onboarding';
@@ -46,8 +53,9 @@ import type {NpcDefinition} from '@/lib/town/npcDialogues';
 import {useQuizProgress,getQuizProgress} from '@/lib/town/quizProgress';
 import {equippedActions} from '@/lib/town/equipmentActions';
 import {createBallAppearance} from '@/lib/graphics/ballAppearance';
-import {DEFAULT_CUSTOMIZATION,loadCustomization,saveCustomization,sanitizeCustomization,BALL_COLORS,type CharacterCustomization} from '@/lib/town/customization';
-import {COACH_VOICES} from '@/lib/town/useLessonVoice';
+import {DEFAULT_CUSTOMIZATION,loadCustomization,saveCustomization,sanitizeCustomization,BALL_COLORS,beanLookFor,playerOutfit,type CharacterCustomization} from '@/lib/town/customization';
+import {enforceRideUnlocks} from '@/lib/town/rideUnlocks';
+import {COACH_VOICES,primeLessonVoice,lessonVoiceSpeaking} from '@/lib/town/useLessonVoice';
 import {createIslandLighting,type TimeOfDay} from '@/lib/graphics/islandLighting';
 import {createStaticShadowBatches} from '@/lib/graphics/staticShadowBatches';
 import {createStaticShadowCache} from '@/lib/graphics/staticShadowCache';
@@ -58,14 +66,18 @@ import Museum from './Museum';
 import FerryPreview from './FerryPreview';
 import {createLiveKnockout} from '@/lib/graphics/liveKnockout';
 import {createRooftopTravel,ROOF_RECOVERY_TIME} from '@/lib/town/rooftopTravel';
+import {roofJumpMotion,applyRoofJumpPose} from '@/lib/town/rooftopJump';
 import FieldLearning from './FieldLearning';
 import {type MapFootprint} from './IslandOverview';
 import {VENUES,ISLAND_SQUARE,ARCADE_DOOR,COACHES_DOOR,STORE_DOOR,venueById,venueEntrance,nearestVenue,fieldSurfaceHeight,type Format} from '@/lib/town/venues';
 import {buildFormatFields} from '@/lib/town/fields';
-import {createFieldRuntime} from '@/lib/town/fieldRuntime';
-import type {FieldSession} from '@/lib/town/formatLessons';
+import {createFieldRuntime,teachingPoseAdvances} from '@/lib/town/fieldRuntime';
+import {createFieldCollision} from '@/lib/town/fieldCollision';
+import {quizOutcomeStep,type FieldSession} from '@/lib/town/formatLessons';
 import { PASSER, DEFENDER, passingLane, LessonPhase } from '@/lib/town/learning';
-import { fitIslandShadows } from '@/lib/graphics/islandShadows';
+import { lessonFormat, newAttempts, recordAttempt, readLessonStroke, predictLessonPass, lessonFrame, createLessonWorld, replayLessonPass, strokeStartsAtBall, PASSER_FACING, REPLAY_SPEED, LESSON_FORMAT_KEY, type AttemptState, type AttemptRecord, type LessonFormat, type LessonPrediction, type StrokePoint } from '@/lib/town/learningPass';
+import type { PuzzleWorld, PuzzleState } from '@/lib/passPuzzle';
+import { fitIslandShadows, fitShadowsToBox } from '@/lib/graphics/islandShadows';
 import { createVehicle } from '@/lib/graphics/vehicle';
 import {createCoachPractice} from '@/lib/town/coachPractice';
 import {createFlightMotion} from '@/lib/graphics/flightMotion';
@@ -92,26 +104,31 @@ import {createOnboardingNpcFocus,type OnboardingNpcTarget} from '@/lib/graphics/
 import {createCraterEffect} from '@/lib/graphics/craterEffect';
 import {createParachuteTrail} from '@/lib/graphics/parachuteTrail';
 import {createParachute} from '@/lib/graphics/parachute';
+import {createKnockdownFace,knockdownLift} from '@/lib/graphics/knockdown';
 import {planRoofRamps,planRideRamps,rampSurface,createRampMotion} from '@/lib/town/rideRamps';
 import {createRideRampVisuals} from '@/lib/graphics/rideRamps';
 import {createRideTricks,isHeldRideAction} from '@/lib/town/rideTricks';
 import {createWalkBall,SHOT_WINDUP} from '@/lib/town/walkBall';
 import {createBallEffects} from '@/lib/graphics/ballEffects';
 import { createPlayer, profileFor } from '@/lib/graphics/player';
-import { graphicsQuality, FrameBudget } from '@/lib/graphics/quality';
+import { sideGameDress, mainPlayerDress } from '@/lib/town/beanLooks';
+import { DEFAULT_PLAYER_NUMBER } from '@/lib/graphics/shirtNumbers';
+import { graphicsQuality, FrameBudget, MotionResolution, dynamicResolutionEnabled } from '@/lib/graphics/quality';
 import { buildTown } from '@/lib/town/world';
 import { District, DISTRICTS, districtAt, stepPlayer, blocked, flightBlocked, ISLAND_BOUNDS } from '@/lib/town/simulation';
 
 const BallHuntLesson=dynamic(()=>import('./BallHuntLesson'),{ssr:false});
 import CardOfferHost from './CardOfferHost';
+import CostumeMilestoneToast from './CostumeMilestoneToast';
+import RideUnlockToast from './RideUnlockToast';
 import {earnForBall} from '@/lib/town/cardRewardTriggers';
 /** The position guide (PlayerCard, PlayerArt, photo manifests, film registry and player) loads on the first live-player tap, not with the island. */
 const PositionGuide=dynamic(()=>import('./PositionGuide'),{ssr:false});
-const LiveArcadeMatch=dynamic(()=>import('./LiveArcadeMatch'),{ssr:false});
 const INITIAL_SPAWN={x:103,z:-8};
 const INITIAL_FLIGHT_HEIGHT=28;
 type Input = {charging?:boolean;shotPower?:number;x:number;z:number;sprint:boolean;kick:boolean;juggle:boolean};
-export default function Island() {
+export default function Island({returningFromArcade=false,openArcadePacks=false}:{returningFromArcade?:boolean;openArcadePacks?:boolean}={}) {
+  const initialSpawn=returningFromArcade?ARCADE_DOOR:INITIAL_SPAWN;
   const [videoPlaying,setVideoPlaying]=useState(false);
   const [talkingNpc,setTalkingNpc]=useState<NpcDefinition|null>(null),[conversationOpen,setConversationOpen]=useState(false);
   const [nearbyNpc,setNearbyNpc]=useState<NpcDefinition|null>(null),nearbyNpcRef=useRef<NpcDefinition|null>(null);
@@ -119,13 +136,16 @@ export default function Island() {
   const quizProgress=useQuizProgress();
   const onboardingNpcStep=useRef(false),onboardingNpcTarget=useRef<OnboardingNpcTarget|null>(null);
   const [onboardingOpen,setOnboardingOpen]=useState(false),onboardingRef=useRef(false);onboardingRef.current=onboardingOpen;
-  const [arcadeOpen,setArcadeOpen]=useState(false),[liveArcadeOpen,setLiveArcadeOpen]=useState(false);
-  const [storeOpen,setStoreOpen]=useState(false);
+  const [arcadeOpen,setArcadeOpen]=useState(false);
+  const saveArcadeDeparture=useRef<()=>void>(()=>{});
+  // A document boundary aborts island loading and releases its complete runtime.
+  useEffect(()=>{if(!arcadeOpen)return;saveArcadeDeparture.current();musicRef.current?.setSceneActive(false);stopIslandNarration();soundRef.current?.dispose();const timer=setTimeout(()=>window.location.assign('/arcade'),matchMedia('(prefers-reduced-motion:reduce)').matches?60:380);return()=>clearTimeout(timer);},[arcadeOpen]);
+  const [storeOpen,setStoreOpen]=useState(openArcadePacks);
   const [formatPathRequest,setFormatPathRequest]=useState<FormatPathLaunch|null>(null);
-  useEffect(()=>{const launch=(event:Event)=>{const detail=(event as CustomEvent).detail;if(!validPathLaunch(detail))return;setFormatPathRequest(detail);setLearningRequest(null);setSettingsOpen(false);setStoreOpen(false);setConversationOpen(false);setMap(false);setFieldCatalog(detail.format);setHint(false);};window.addEventListener(FORMAT_PATH_LAUNCH,launch);return()=>window.removeEventListener(FORMAT_PATH_LAUNCH,launch);},[]);
+  useEffect(()=>{const launch=(event:Event)=>{const detail=(event as CustomEvent).detail;if(!validPathLaunch(detail))return;primeLessonVoice();setFormatPathRequest(detail);setLearningRequest(null);setSettingsOpen(false);setStoreOpen(false);setConversationOpen(false);setMap(false);setFieldCatalog(detail.format);setHint(false);};window.addEventListener(FORMAT_PATH_LAUNCH,launch);return()=>window.removeEventListener(FORMAT_PATH_LAUNCH,launch);},[]);
   const [learningRequest,setLearningRequest]=useState<{id:LearningId;nonce:number}|null>(null);
-  useEffect(()=>{const launch=(event:Event)=>{const detail=(event as CustomEvent<{id:LearningId;nonce:number}>).detail,j=journeyById(detail?.id);if(!j)return;setFormatPathRequest(null);setLearningRequest(detail);setSettingsOpen(false);setStoreOpen(false);setConversationOpen(false);setMap(false);setFieldCatalog(j.format);setHint(false);};window.addEventListener(LEARNING_LAUNCH,launch);return()=>window.removeEventListener(LEARNING_LAUNCH,launch);},[]);
-  const [storeItemRequest,setStoreItemRequest]=useState<{id:string;nonce:number}|null>(null),[pathsRequest,setPathsRequest]=useState<{nonce:number}|null>(null);
+  useEffect(()=>{const launch=(event:Event)=>{const detail=(event as CustomEvent<{id:LearningId;nonce:number}>).detail,j=journeyById(detail?.id);if(!j)return;primeLessonVoice();setFormatPathRequest(null);setLearningRequest(detail);setSettingsOpen(false);setStoreOpen(false);setConversationOpen(false);setMap(false);setFieldCatalog(j.format);setHint(false);};window.addEventListener(LEARNING_LAUNCH,launch);return()=>window.removeEventListener(LEARNING_LAUNCH,launch);},[]);
+  const [storeItemRequest,setStoreItemRequest]=useState<{id:string;nonce:number}|null>(openArcadePacks?{id:'packs:legend',nonce:0}:null),[pathsRequest,setPathsRequest]=useState<{nonce:number}|null>(null);
   const [coachesOpen,setCoachesOpen]=useState(false);
   const [ferryOpen,setFerryOpen]=useState(false);
   const [museumOpen,setMuseumOpen]=useState(false);
@@ -141,11 +161,13 @@ export default function Island() {
   const openStore=(itemId?:string)=>{if(itemId)setStoreItemRequest({id:itemId,nonce:Date.now()});setSettingsOpen(false);setCustomizerOpen(false);setConversationOpen(false);setMap(false);setStoreOpen(true);setHint(false);};
   const [customizerOpen,setCustomizerOpen]=useState(false),customizerRef=useRef(false);customizerRef.current=customizerOpen;
   const [customization,setCustomization]=useState<CharacterCustomization>({...DEFAULT_CUSTOMIZATION}),customizationRef=useRef(customization);customizationRef.current=customization;
-  useEffect(()=>{const progress=getQuizProgress();setCustomization(loadCustomization(progress.completed,progress.total));},[]);
-  const changeCustomization=(value:CharacterCustomization)=>{const progress=getQuizProgress(),safe=sanitizeCustomization(value,progress.completed,progress.total);customizationRef.current=safe;setCustomization(safe);saveCustomization(safe);};
+  useEffect(()=>{const progress=getQuizProgress();setCustomization(enforceRideUnlocks(loadCustomization(progress.completed,progress.total)));},[]);
+  const changeCustomization=(value:CharacterCustomization)=>{const progress=getQuizProgress(),safe=enforceRideUnlocks(sanitizeCustomization(value,progress.completed,progress.total));customizationRef.current=safe;setCustomization(safe);saveCustomization(safe);};
   // Wakes the island's render loop after it slept behind a paused menu (see wakeLoop); runs after every Town render.
+  // Replays the character's arrival burst when the loading screen leaves (on first load it would otherwise finish unseen underneath).
+  const arrivalRestartRef=useRef<()=>void>(()=>{});
   const wakeLoopRef=useRef<()=>void>(()=>{});useEffect(()=>{wakeLoopRef.current();});
-  const [settingsOpen,setSettingsOpen]=useState(false),settingsRef=useRef(false);settingsRef.current=settingsOpen||customizerOpen||conversationOpen||storeOpen||onboardingOpen||arcadeOpen||liveArcadeOpen||coachesOpen||museumOpen||ferryOpen||!!positionSelection||ballLessons.length>0||cardOfferOpen;
+  const [settingsOpen,setSettingsOpen]=useState(false),settingsRef=useRef(false);settingsRef.current=settingsOpen||customizerOpen||conversationOpen||storeOpen||onboardingOpen||arcadeOpen||coachesOpen||museumOpen||ferryOpen||!!positionSelection||ballLessons.length>0||cardOfferOpen;
   const [voiceEnabled,setVoiceEnabled]=useState(true),[coachVoice,setCoachVoice]=useState('kokoro_af_bella'),[controlsFlipped,setControlsFlipped]=useState(false);
   useEffect(()=>{try{setVoiceEnabled(localStorage.getItem('fi2-voice-enabled')!=='false');const coach=localStorage.getItem('fi2-coach-voice');if(COACH_VOICES.some(([id])=>id===coach))setCoachVoice(coach!);setControlsFlipped(localStorage.getItem('fi2-controls-flipped')==='true');}catch{}},[]);
   const savePreference=(key:string,value:string)=>{try{localStorage.setItem(key,value);}catch{}};
@@ -164,7 +186,7 @@ export default function Island() {
   const [juggling,setJuggling]=useState(false);
   const [parachuting,setParachuting]=useState(false),parachutingRef=useRef(false);
   const [skyJuggling,setSkyJuggling]=useState(false),skyJugglingRef=useRef(false);
-  const [rideMode,setRideMode]=useState<TravelMode>('jetpack'),rideRef=useRef<TravelMode>('jetpack');
+  const [rideMode,setRideMode]=useState<TravelMode>(returningFromArcade?'walk':'jetpack'),rideRef=useRef<TravelMode>(returningFromArcade?'walk':'jetpack');
   const pendingRide=useRef<TravelMode|null>(null),cancelLanding=useRef(false);
   const nearbyTruck=useRef<number|null>(null),requestedTruck=useRef<number|null>(null),truckExitRequested=useRef(false),truckBoostRequested=useRef(false),truckHonkRequested=useRef(false);
   const [truckRiding,setTruckRiding]=useState(false);
@@ -180,7 +202,13 @@ export default function Island() {
   const goField=(id:Format)=>{if(lessonRef.current)lessonCommand.current='exit';travel.current=null;fieldSession.current=null;setFieldCatalog(null);fieldTravel.current=id;setMap(false);setHint(false);};
   const [lesson,setLesson]=useState<LessonPhase|null>(null),[laneOpen,setLaneOpen]=useState(false),[coachFeedback,setCoachFeedback]=useState('');
   const lessonRef=useRef<LessonPhase|null>(null),lessonCommand=useRef<LessonPhase|'exit'|null>(null);
-  const requestLesson=(phase:LessonPhase|'exit')=>{selectRide('walk');lessonCommand.current=phase;setHint(false);setMap(false);setCoachFeedback('');};
+  const requestLesson=(phase:LessonPhase|'exit')=>{selectRide('walk');lessonCommand.current=phase;setHint(false);setMap(false);setCoachFeedback('');if(phase==='intro'||phase==='practice'){setPassAttempts(newAttempts(passFormat));setAimStatus('none');}};
+  // Draw-the-pass lesson flow (lib/town/learningPass.ts): brief → hint → 3 attempts, wording scaled by format.
+  const [passFormat,setPassFormat]=useState<LessonFormat>('7v7'),[passAttempts,setPassAttempts]=useState<AttemptState>(()=>newAttempts('7v7')),[aimStatus,setAimStatus]=useState<'none'|'clear'|'threat'|'nobody'>('none');
+  const passAttemptsRef=useRef(passAttempts);passAttemptsRef.current=passAttempts;
+  const lessonAim=useRef<{straight:()=>void;play:()=>void;cancel:()=>void;replay:()=>void}|null>(null);
+  useEffect(()=>{let stored:Storage|null=null;try{stored=localStorage;}catch{}const f=lessonFormat(stored);setPassFormat(f);setPassAttempts(a=>a.used?a:newAttempts(f));},[]);
+  const choosePassFormat=(f:LessonFormat)=>{setPassFormat(f);setPassAttempts(a=>({...a,format:f}));try{localStorage.setItem(LESSON_FORMAT_KEY,f);}catch{}};
   const heldRidePointers=useRef(new Map<number,{action:number;button:HTMLButtonElement}>());
   const host=useRef<HTMLDivElement>(null),input=useRef<Input>({x:0,z:0,sprint:false,kick:false,juggle:false});
   const shotHold=useRef<{id:number|'keyboard';start:number;button?:HTMLButtonElement}|null>(null);
@@ -198,17 +226,20 @@ export default function Island() {
   },[]);
   const travel=useRef<District|'square'|'coaches'|'store'|null>(null),mapRef=useRef(false);
   const [district,setDistrict]=useState<District>('coast'),[sceneReady,setSceneReady]=useState(false),[failed,setFailed]=useState(false);
-  const [minimumLoadElapsed,setMinimumLoadElapsed]=useState(false);
+  const [minimumLoadElapsed,setMinimumLoadElapsed]=useState(returningFromArcade);
   const loadingComplete=sceneReady&&minimumLoadElapsed;
   const [ready,setReady]=useState(false);
-  useEffect(()=>{if(!loadingComplete)return;const timer=window.setTimeout(()=>setReady(true),window.matchMedia('(prefers-reduced-motion: reduce)').matches?80:2050);return()=>window.clearTimeout(timer);},[loadingComplete]);
-  useEffect(()=>{const timer=window.setTimeout(()=>setMinimumLoadElapsed(true),3000);return()=>window.clearTimeout(timer);},[]);
-  useEffect(()=>{if(ready&&!failed&&shouldShowIslandOnboarding())setOnboardingOpen(true);},[ready,failed]);
+  useEffect(()=>{if(!loadingComplete)return;const timer=window.setTimeout(()=>setReady(true),window.matchMedia('(prefers-reduced-motion: reduce)').matches?60:returningFromArcade?1050:2050);return()=>window.clearTimeout(timer);},[loadingComplete,returningFromArcade]);
+  // The loading screen starts sliding away 1.55 s after loadingComplete (IslandLoading .exiting delay): start the arrival as it departs.
+  useEffect(()=>{if(!loadingComplete||returningFromArcade)return;const timer=window.setTimeout(()=>arrivalRestartRef.current(),window.matchMedia('(prefers-reduced-motion: reduce)').matches?80:1500);return()=>window.clearTimeout(timer);},[loadingComplete,returningFromArcade]);
+  useEffect(()=>{if(returningFromArcade)return;const timer=window.setTimeout(()=>setMinimumLoadElapsed(true),3000);return()=>window.clearTimeout(timer);},[returningFromArcade]);
+  useEffect(()=>{if(ready&&!failed&&!returningFromArcade&&shouldShowIslandOnboarding())setOnboardingOpen(true);},[ready,failed]);
+  useEffect(()=>{if(!ready||failed)return;const url=new URL(window.location.href);if(url.searchParams.get('store')!=='packs')return;setStoreItemRequest({id:'packs:legend',nonce:Date.now()});setStoreOpen(true);url.searchParams.delete('store');window.history.replaceState(null,'',url.pathname+url.search);},[ready,failed]);
   const [minimapCollapsed,setMinimapCollapsed]=useState(false);
   const [map,setMap]=useState(false),[goals,setGoals]=useState(0),[scored,setScored]=useState(false);
-  const [positionStore]=useState(()=>createPositionStore(INITIAL_SPAWN)),[hint,setHint]=useState(true);
+  const [positionStore]=useState(()=>createPositionStore(initialSpawn)),[hint,setHint]=useState(!returningFromArcade);
   const zoneAt=(x:number,z:number)=>(nearestVenue(x,z)?1:0)|(Math.abs(x-ISLAND_SQUARE.x)<40&&Math.abs(z-ISLAND_SQUARE.z)<35?2:0);
-  const [locationZone,setLocationZone]=useState(()=>zoneAt(INITIAL_SPAWN.x,INITIAL_SPAWN.z)),zoneRef=useRef(locationZone),hudRenders=useRef(0);hudRenders.current++;
+  const [locationZone,setLocationZone]=useState(()=>zoneAt(initialSpawn.x,initialSpawn.z)),zoneRef=useRef(locationZone),hudRenders=useRef(0);hudRenders.current++;
   const joystickPointer=useRef<number|null>(null),spinGesture=useRef(createSpinGesture()),spinRequested=useRef(false);
   const joystick=useRef<HTMLDivElement>(null);
   const joystickBounds=useJoystickBounds(joystick,ready&&!failed);
@@ -220,15 +251,22 @@ export default function Island() {
     for(const name of gestures)element.addEventListener(name,prevent,{passive:false,capture:true});
     return()=>{for(const name of gestures)element.removeEventListener(name,prevent,true);};
   },[ready,failed]);
-  const setStick=({x,y}:{x:number;y:number})=>paintJoystick(joystick.current,x,y);
+  // Heat pass 3: thumb moves paint on the island's next rendered frame (one compositor frame per island frame, not one per touch
+  // event at 60–120 Hz); the input itself still updates at once. Resets, or an island that is not drawing, paint immediately.
+  const stickPaint=useRef<{x:number;y:number}|null>(null),islandFrameAt=useRef(0);
+  const setStick=({x,y}:{x:number;y:number})=>{if(x===0&&y===0||performance.now()-islandFrameAt.current>100){stickPaint.current=null;paintJoystick(joystick.current,x,y);}else stickPaint.current={x,y};};
   const [mapMounted,setMapMounted]=useState(false);
   useEffect(()=>{if(map){setMapMounted(true);return;}const timer=setTimeout(()=>setMapMounted(false),window.matchMedia('(prefers-reduced-motion: reduce)').matches?0:380);return()=>clearTimeout(timer);},[map]);
   mapRef.current=map||mapMounted;
   const go=(to:District|'square'|'coaches'|'store')=>{if(to==='coast'||to==='oldtown'){goField(to==='coast'?'futsal':'7v7');return;}fieldSession.current=null;setFieldCatalog(null);if(lessonRef.current)lessonCommand.current='exit';travel.current=to;setMap(false);setHint(false);};
   useEffect(()=>{
     const parent=host.current;if(!parent)return;
+    const departure=returningFromArcade?readIslandReturnPosition():null;
+    const sceneSpawn=departure?{x:departure.x,z:departure.z}:initialSpawn;
+    if(departure){rideRef.current=departure.ride;setRideMode(departure.ride);positionStore.publish(sceneSpawn);const zone=zoneAt(sceneSpawn.x,sceneSpawn.z);zoneRef.current=zone;setLocationZone(zone);}
     let renderer:T.WebGLRenderer;
-    try{renderer=new T.WebGLRenderer({antialias:true,powerPreference:'default'});}catch{setFailed(true);return;}
+    // MSAA per lib/graphics/quality phoneGraphicsFor (kept on for phones after the Sep 26 2026 visual check; the lever is PHONE_ANTIALIAS_OFF_AT_DPR2).
+    try{renderer=new T.WebGLRenderer({antialias:graphicsQuality().antialias,powerPreference:'default'});}catch{setFailed(true);return;}
     let savedMuted=false;try{savedMuted=localStorage.getItem('fi2-sound-muted')==='true';}catch{}
     const savedVolume=(key:string,fallback:number)=>{try{const raw=localStorage.getItem(key),n=raw===null?fallback:Number(raw);return Number.isFinite(n)?Math.max(0,Math.min(1,n)):fallback;}catch{return fallback;}};
     // Apply the requested mix once to existing saves, then retain slider edits.
@@ -236,20 +274,24 @@ export default function Island() {
     const initialSoundVolume=useNewAudioMix?.5:savedVolume('fi2-sound-volume',.5),initialMusicVolume=useNewAudioMix?.04:savedVolume('fi2-music-volume',.04);setSoundVolume(initialSoundVolume);setMusicVolume(initialMusicVolume);
     const sound=createIslandSound(savedMuted,initialSoundVolume);soundRef.current=sound;setSoundMuted(savedMuted);
     let savedMusic=true;try{savedMusic=localStorage.getItem('fi2-music-enabled')!=='false';}catch{}
-    const music=createIslandMusic(savedMusic,initialMusicVolume,sound.getContext);musicRef.current=music;setMusicEnabled(savedMusic);
-    const quality=graphicsQuality(),budget=new FrameBudget();renderer.setPixelRatio(quality.pixelRatio);renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.0;parent.appendChild(renderer.domElement);
+    const music=createIslandMusic(savedMusic,initialMusicVolume,sound.getContext,sound.setMusicAudible,{active:()=>isVideoPlaying()||lessonVoiceSpeaking()||Boolean(fieldSession.current?.playing),onIdle:sound.setIdle});musicRef.current=music;setMusicEnabled(savedMusic);
+    const quality=graphicsQuality(),budget=new FrameBudget();renderer.setPixelRatio(quality.pixelRatio);
+    // Phones/tablets: 1.5x pixel ratio while the view moves, full sharpness after 0.5 s still (heat audit pass 2, proposal A).
+    // Phones hold one resolution (the governor's tier sets it); the moving/still switch stays a desktop-free no-op on them.
+    const motionResolution=new MotionResolution(quality.pixelRatio,dynamicResolutionEnabled(window.devicePixelRatio||1,window.matchMedia('(pointer: coarse)').matches),quality.phone?quality.pixelRatio:undefined);
+    renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.0;parent.appendChild(renderer.domElement);
     const scene=new T.Scene();scene.background=new T.Color('#e8b98b');scene.fog=null;
     const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),setCoinNear,c=>{earnForBall(c);setBallLessons(queue=>queue.includes(c.id)?queue:[...queue,c.id]);});
-    const characterArrival=createCharacterArrival(scene);
-    const camera=new T.PerspectiveCamera(40,1,1,500);
+    let suppressInitialArrival=returningFromArcade;const characterArrival=createCharacterArrival(scene);arrivalRestartRef.current=()=>{suppressInitialArrival=false;characterArrival.restart();wakeLoopRef.current();};
+    const camera=new T.PerspectiveCamera(40,1,1,500);if(returningFromArcade)camera.position.set(initialSpawn.x+18,23+fieldSurfaceHeight(initialSpawn.x,initialSpawn.z),initialSpawn.z+30);
     const hemi=new T.HemisphereLight('#ffe0aa','#9b785c',2.0);scene.add(hemi);
-    const sun=new T.DirectionalLight('#ffc477',3.0);sun.position.set(-288,252,198);sun.castShadow=true;sun.shadow.mapSize.set(quality.shadowSize,quality.shadowSize);Object.assign(sun.shadow.camera,{left:-35,right:35,top:35,bottom:-35,near:1,far:100});sun.shadow.normalBias=.12;sun.shadow.bias=-.0002;sun.shadow.radius=3;scene.add(sun);scene.add(sun.target);
+    const sun=new T.DirectionalLight('#ffc477',3.0);sun.position.set(-288,252,198);sun.castShadow=true;sun.shadow.mapSize.set(quality.shadowSize,quality.shadowSize);Object.assign(sun.shadow.camera,{left:-35,right:35,top:35,bottom:-35,near:1,far:100});sun.shadow.normalBias=.12*2048/quality.shadowSize;/* bias scales with the texel: 1024² phones would show acne stripes on flat roofs at .12 (heat pass 4) */sun.shadow.bias=-.0002;sun.shadow.radius=3;scene.add(sun);scene.add(sun.target);
     try{const saved=localStorage.getItem('fi2-time-of-day');if(saved==='day'||saved==='sunset'||saved==='night'){timeRef.current=saved;setTimeOfDay(saved);}}catch{}
     const lighting=createIslandLighting(scene,hemi,sun,renderer);lighting.update(timeRef.current,0,true);
     let wasSettingsOpen=false;
     const learningView=createLearningView();let wasLearning=false;
     const quizView=createQuizViewControls(renderer.domElement,camera,()=>Boolean(learningFormat.current));resetQuizView.current=quizView.reset;
-    const world=buildTown(scene),fields=buildFormatFields(scene),ballReactions=createBallReactions(scene),games=createFieldRuntime(scene,ballReactions);gamesRef.current=games;
+    const world=buildTown(scene),fields=buildFormatFields(scene),ballReactions=createBallReactions(scene),games=createFieldRuntime(scene,ballReactions);gamesRef.current=games;const fieldBump=createFieldCollision();
     const shadowBatches=createStaticShadowBatches(renderer,scene,window.matchMedia("(pointer: coarse)").matches);
     const shadowVisibility=createShadowVisibility(renderer,scene,sun);
     const shadowCache=createStaticShadowCache(renderer,scene,sun,!window.matchMedia("(pointer: coarse)").matches);
@@ -264,7 +306,7 @@ export default function Island() {
     renderer.domElement.addEventListener('pointerup',chooseFieldTarget);
     setMapFootprints({roads:world.roads,buildings:world.buildings});
     const liveKnockout=createLiveKnockout(scene);
-    const player=createPlayer('you','home',true,true);player.setProfile(profileFor('you',0));scene.add(player.root);player.root.scale.setScalar(1.12);player.root.name='main-character';player.root.rotation.y=Math.atan2(16,33);const characterGlow=createCharacterGlow(player.root);
+    const player=createPlayer('you','home',true,true);player.setShirtNumber(DEFAULT_PLAYER_NUMBER);player.setBeanLook(beanLookFor(customizationRef.current),playerOutfit(customizationRef.current));player.setProfile(profileFor('you',0));scene.add(player.root);player.root.scale.setScalar(1.12);player.root.name='main-character';player.root.rotation.y=departure?.yaw??(returningFromArcade?0:Math.atan2(16,33));const characterGlow=createCharacterGlow(player.root);
     const characterRay=new T.Raycaster();let hoverPoint:T.Vector2|null=null,characterHovered=false;
     const ferryGlow=createBuildingGlow(world.ferry,8.3,17.3,4.8,'ferry');
     let ferryWasHovered=false;
@@ -315,8 +357,8 @@ export default function Island() {
     const splat=new T.Mesh(new T.RingGeometry(.6,1,16),splatMaterial);splat.rotation.x=-Math.PI/2;splat.visible=false;scene.add(splat);
     const rideTrail=createRideTrail(),flightTrail=createFlightTrail();scene.add(rideTrail.root,flightTrail.root);
     const stairRidePose={height:0,pitch:0};
-    const vehicle=createVehicle();scene.add(vehicle.root);vehicle.root.scale.setScalar(1.12);let appliedCustomization:CharacterCustomization|null=null;let previousRide:TravelMode='jetpack';let arrivalFacing:number|undefined=Math.atan2(16,33);
-    const npcs=Array.from({length:2},(_,i)=>{const rig=createPlayer('local'+i,i%2?'away':'home');scene.add(rig.root);return rig;});
+    const vehicle=createVehicle();scene.add(vehicle.root);const knockFace=createKnockdownFace(e=>player.setExpression(e));vehicle.root.scale.setScalar(1.12);let appliedCustomization:CharacterCustomization|null=null;let appliedTeamLook=false;let previousRide:TravelMode=rideRef.current;let arrivalFacing:number|undefined=departure?.yaw??(returningFromArcade?0:Math.atan2(16,33));
+    const npcs=Array.from({length:2},(_,i)=>{const rig=createPlayer('local'+i,i%2?'away':'home');rig.setShirtNumber(i?4:8);const dress=sideGameDress('local'+i,i%2?'away':'home',i?4:8);rig.setBeanLook(dress.look,dress.outfit);scene.add(rig.root);return rig;});
     const ballMaterial=new T.MeshStandardMaterial({color:'#f4edd3',roughness:.7});const ballAppearance=createBallAppearance(ballMaterial);const ball=new T.Mesh(new T.SphereGeometry(.19,20,16),ballMaterial);ball.castShadow=true;ball.name='player-ball';scene.add(ball);
     const patchMaterial=new T.MeshStandardMaterial({color:'#344c43',roughness:.8});
     for(const direction of [[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]]){const v=new T.Vector3(...direction as [number,number,number]);const patch=new T.Mesh(new T.CircleGeometry(.078,5),patchMaterial);patch.position.copy(v.clone().multiplyScalar(.187));patch.quaternion.setFromUnitVectors(new T.Vector3(0,0,1),v);ball.add(patch);}
@@ -327,13 +369,58 @@ export default function Island() {
     const receiveRing=new T.Mesh(new T.RingGeometry(.65,.72,48),new T.MeshBasicMaterial({color:'#b7e7a6',side:T.DoubleSide,transparent:true,opacity:.8}));receiveRing.rotation.x=-Math.PI/2;receiveRing.visible=false;scene.add(receiveRing);
     let lessonTime=0,lastLane=false;
     const setPhase=(phase:LessonPhase|null)=>{lessonRef.current=phase;setLesson(phase);lessonTime=0;};
-    const location={...INITIAL_SPAWN},velocity={x:0,z:0},orb={x:INITIAL_SPAWN.x+.7,z:INITIAL_SPAWN.z,vx:0,vz:0};
+    // Draw-the-pass: one fixed-size predicted-path line, a red threat ring and a target ring. Prediction
+    // runs only on pointer move; while the child aims, the frozen scene sleeps until the stroke changes.
+    // The path is a flat ground ribbon (a 1px line vanishes on a phone), rewritten only when the stroke changes.
+    const AIM_POINTS=37,aimGeometry=new T.BufferGeometry();aimGeometry.setAttribute('position',new T.BufferAttribute(new Float32Array(AIM_POINTS*6),3));
+    aimGeometry.setIndex(Array.from({length:AIM_POINTS-1},(_,i)=>[i*2,i*2+1,i*2+2,i*2+1,i*2+3,i*2+2]).flat());
+    const aimMaterial=new T.MeshBasicMaterial({color:'#b7f1a4',depthTest:false,transparent:true,opacity:.85,side:T.DoubleSide});
+    const aimLine=new T.Mesh(aimGeometry,aimMaterial);aimLine.renderOrder=3;aimLine.visible=false;aimLine.frustumCulled=false;scene.add(aimLine);
+    const threatRing=new T.Mesh(new T.RingGeometry(.62,.8,48),new T.MeshBasicMaterial({color:'#e0533d',side:T.DoubleSide,transparent:true,opacity:.9,depthTest:false}));threatRing.rotation.x=-Math.PI/2;threatRing.renderOrder=3;threatRing.visible=false;scene.add(threatRing);
+    const aimTarget=new T.Mesh(new T.RingGeometry(.4,.48,40),new T.MeshBasicMaterial({color:'#ffd17b',side:T.DoubleSide,transparent:true,opacity:.9,depthTest:false}));aimTarget.rotation.x=-Math.PI/2;aimTarget.renderOrder=3;aimTarget.visible=false;scene.add(aimTarget);
+    const lessonDefender={x:DEFENDER.x,z:DEFENDER.z};let passerKick=0,passerFacing=PASSER_FACING,aimRevision=0,stroke:StrokePoint[]|null=null,strokePointer=-1,aimPrediction:LessonPrediction|null=null,aimRecord:AttemptRecord|null=null,lessonPass:AttemptRecord|null=null,replayReturn:LessonPhase='practice',lessonWorld:PuzzleWorld|null=null,lessonSim:{state:()=>PuzzleState;advance:(dt:number)=>void}|null=null,lessonCalled=0,lessonHold=0;
+    const aimRay=new T.Raycaster(),aimPlane=new T.Plane(new T.Vector3(0,1,0),0),aimHit=new T.Vector3(),aimScreen=new T.Vector3();
+    const showAim=(prediction:LessonPrediction|null)=>{aimPrediction=prediction;aimRevision++;
+      if(!prediction){aimLine.visible=threatRing.visible=aimTarget.visible=false;return;}
+      const a=aimGeometry.attributes.position.array as Float32Array,path=prediction.path;
+      for(let i=0;i<AIM_POINTS;i++){const q=path[Math.min(i,path.length-1)],p0=path[Math.max(0,Math.min(i,path.length-1)-1)],p1=path[Math.min(path.length-1,i+1)];
+        const tx=p1.x-p0.x,tz=p1.z-p0.z,l=Math.hypot(tx,tz)||1,w=.13*(1-.45*i/(AIM_POINTS-1)),nx=-tz/l*w,nz=tx/l*w,y=.05+fieldSurfaceHeight(q.x,q.z);
+        a.set([q.x+nx,y,q.z+nz,q.x-nx,y,q.z-nz],i*6);}
+      aimGeometry.attributes.position.needsUpdate=true;aimGeometry.computeBoundingSphere();
+      const threat=prediction.threats.length>0;aimMaterial.color.set(threat?'#f1a06c':'#b7f1a4');aimLine.visible=true;
+      threatRing.visible=threat;const end=path[path.length-1];aimTarget.position.set(end.x,.15+fieldSurfaceHeight(end.x,end.z),end.z);aimTarget.visible=true;};
+    // Lane C's engine (lib/passPuzzle) owns stroke reading, prediction, the pass itself and the replay.
+    const updateAim=()=>{const kick=stroke&&lessonWorld?readLessonStroke(stroke,lessonWorld):null;
+      if(!kick||!lessonWorld){aimRecord=null;showAim(null);setAimStatus('none');return;}
+      const prediction=predictLessonPass(lessonWorld,kick);
+      aimRecord={kick,prediction,receiver:{x:location.x,z:location.z},defender:{x:DEFENDER.x,z:DEFENDER.z},start:lessonWorld.snapshot(),inputs:[]};showAim(prediction);setAimStatus(prediction.threats.length||prediction.end==='intercept'?'threat':prediction.end==='receive'?'clear':'nobody');};
+    const groundAt=(event:PointerEvent)=>{const r=renderer.domElement.getBoundingClientRect(),view=renderer.getViewport(new T.Vector4()),top=r.height-view.y-view.w;
+      aimRay.setFromCamera(new T.Vector2((event.clientX-r.left-view.x)/view.z*2-1,1-(event.clientY-r.top-top)/view.w*2),camera);aimPlane.constant=-fieldSurfaceHeight(PASSER.x,PASSER.z);
+      return aimRay.ray.intersectPlane(aimPlane,aimHit)?{x:aimHit.x,z:aimHit.z}:null;};
+    const nearBallOnScreen=(event:PointerEvent)=>{const r=renderer.domElement.getBoundingClientRect();aimScreen.set(PASSER.x,fieldSurfaceHeight(PASSER.x,PASSER.z)+.2,PASSER.z).project(camera);return Math.hypot((aimScreen.x+1)/2*r.width+r.left-event.clientX,(1-aimScreen.y)/2*r.height+r.top-event.clientY)<=56;};
+    const startLessonPass=(record:AttemptRecord)=>{const world=lessonWorld;if(!world||!world.kick(record.kick))return;record.inputs=world.inputs();lessonPass=record;lessonSim={state:()=>world.state,advance:dt=>world.step(dt)};lessonHold=0;stroke=null;strokePointer=-1;velocity.x=velocity.z=0;setPhase('passing');};
+    const aimDown=(event:PointerEvent)=>{if(lessonRef.current!=='aim'||event.button>0)return;const p=groundAt(event);if(!p||!(strokeStartsAtBall(p)||nearBallOnScreen(event)))return;
+      event.preventDefault();strokePointer=event.pointerId;try{renderer.domElement.setPointerCapture(event.pointerId);}catch{}stroke=[{x:PASSER.x,z:PASSER.z,t:event.timeStamp/1000}];updateAim();wakeLoop();};
+    const aimMove=(event:PointerEvent)=>{if(event.pointerId!==strokePointer||!stroke||lessonRef.current!=='aim')return;const p=groundAt(event);if(!p)return;const last=stroke[stroke.length-1];if(Math.hypot(p.x-last.x,p.z-last.z)<.2)return;
+      if(stroke.length>=64)stroke.splice(1,1);stroke.push({x:p.x,z:p.z,t:event.timeStamp/1000});updateAim();wakeLoop();};
+    const aimUp=(event:PointerEvent)=>{if(event.pointerId!==strokePointer)return;strokePointer=-1;if(lessonRef.current==='aim'&&aimRecord)startLessonPass(aimRecord);else{stroke=null;updateAim();}wakeLoop();};
+    renderer.domElement.addEventListener('pointerdown',aimDown);renderer.domElement.addEventListener('pointermove',aimMove);renderer.domElement.addEventListener('pointerup',aimUp);renderer.domElement.addEventListener('pointercancel',aimUp);
+    // Keyboard / switch access: preview a straight pass to the receiver, then play it.
+    lessonAim.current={
+      straight:()=>{if(lessonRef.current!=='aim')return;stroke=[{x:PASSER.x,z:PASSER.z,t:0},{x:location.x,z:location.z,t:.3}];updateAim();wakeLoop();},
+      play:()=>{if(lessonRef.current==='aim'&&aimRecord)startLessonPass(aimRecord);wakeLoop();},
+      cancel:()=>{if(lessonRef.current!=='aim')return;stroke=null;updateAim();setPhase('practice');wakeLoop();},
+      replay:()=>{const last=passAttemptsRef.current.last;if(!last||lessonRef.current==='replay'||lessonRef.current==='passing')return;replayReturn=lessonRef.current==='complete'?'complete':'practice';lessonPass=last;const run=replayLessonPass(last.start,last.inputs,REPLAY_SPEED);lessonSim={state:()=>run.world.state,advance:dt=>{run.advance(dt);}};lessonHold=0;showAim(last.prediction);setPhase('replay');wakeLoop();},
+    };
+    const location={...sceneSpawn},velocity={x:0,z:0},orb={x:sceneSpawn.x+.7,z:sceneSpawn.z,vx:0,vz:0};
     const volleyballGame=createVolleyballGame(scene,ballReactions);
     const truckReactions=createTruckReactions(scene);
     const rideRamps=[...planRideRamps(world.roads,world.obstacles,world.surfaceAreas.filter(area=>area.kind==='path')),...planRoofRamps(world.buildings)],rampVisuals=createRideRampVisuals(rideRamps),rampMotion=createRampMotion(rideRamps,world.obstacles,world.buildings,world.walls);scene.add(rampVisuals.root);
     const streetTraffic=createStreetTraffic(scene,world.obstacles,world.roads,rideRamps);
     const rooftop=createRooftopTravel([...world.buildings,...world.walkSurfaces],world.obstacles,location,world.roofObstacles,(x,z)=>rampSurface(rideRamps,x,z));
     const islandNpcs=createIslandNpcs(scene,{isWalkable:(x,z)=>rooftop.canLand(x,z)&&Math.abs(rooftop.surface(x,z)-fieldSurfaceHeight(x,z))<.2&&!world.roads.some(road=>Math.abs(x-road.x)<road.w/2+.4&&Math.abs(z-road.z)<road.d/2+.4),heightAt:fieldSurfaceHeight},ballReactions);
+    shadowVisibility.addDynamicRoots([islandNpcs.root,streetTraffic.root]);
+    const noObstacles:Parameters<typeof blocked>[2]=[],fieldBumpCtx={entries:games.entries,npcs:islandNpcs.entries,height:0,ride:'walk',disabled:false,canMove:(x:number,z:number)=>!blocked(x,z,noObstacles,0)};
     const onboardingNpcFocus=createOnboardingNpcFocus(islandNpcs),npcHover=createNpcHover(scene);
     let hoveredNpcId:string|null=null;
     const leftHand=new T.Vector3(),rightHand=new T.Vector3();
@@ -343,8 +430,13 @@ export default function Island() {
     const walkingFrameHit:FrameHit={x:0,y:0,z:0,t:0,nx:0,ny:0,nz:0,part:'post'};
     const landingMarker=createLandingMarker();scene.add(landingMarker.root);
     let landingPreview:{x:number;z:number}|null=null,previewX=Infinity,previewZ=Infinity,previewAge=1;
-    const flight={height:INITIAL_FLIGHT_HEIGHT,takeoffTime:1.05,startHeight:fieldSurfaceHeight(location.x,location.z),landTime:-1,landHeight:0,landing:null as {x:number;z:number}|null};
-    (window as unknown as {__fi2?:unknown}).__fi2={get hudRenders(){return hudRenders.current;},positionStore,get hiddenTransforms(){return hiddenTransforms;},get renderStats(){return renderStats;},shadowCache,shadowVisibility,shadowBatches,liveKnockout,player,characterArrival,coinHunt,treeDebris,rideRamps,rampMotion,streetTraffic,volleyballGame,music:music.getState,sound:sound.debug,scene,renderer,camera,games,world,coachPractice,islandNpcs,truckReactions,walkBall,rideTricks,jetActions,ballReactions,fieldSession,fieldTravel,location,velocity,rideRef,vehicle,flight,rooftop,pendingRide,bounds:ISLAND_BOUNDS};
+    const flight={cruiseHeight:departure?.ride==='jetpack'?departure.flightHeight:INITIAL_FLIGHT_HEIGHT,height:departure?.flightHeight??(returningFromArcade?fieldSurfaceHeight(location.x,location.z):INITIAL_FLIGHT_HEIGHT),takeoffTime:1.05,startHeight:fieldSurfaceHeight(location.x,location.z),landTime:-1,landHeight:0,landing:null as {x:number;z:number}|null};
+    saveArcadeDeparture.current=()=>saveIslandReturnPosition({version:1,x:location.x,z:location.z,yaw:player.root.rotation.y,ride:rideRef.current,flightHeight:flight.height,camera:{x:camera.position.x,y:camera.position.y,z:camera.position.z}});
+    (window as unknown as {__fi2?:unknown}).__fi2={get hudRenders(){return hudRenders.current;},get lessonPass(){return {phase:lessonRef.current,time:lessonTime,sleeping:loopSleeping,prediction:aimPrediction,record:lessonPass,defender:{...lessonDefender},threatVisible:threatRing.visible,aimVisible:aimLine.visible,camera,canvas:renderer.domElement};},positionStore,get hiddenTransforms(){return hiddenTransforms;},get renderStats(){return renderStats;},shadowCache,shadowVisibility,shadowBatches,liveKnockout,player,characterArrival,coinHunt,treeDebris,rideRamps,rampMotion,streetTraffic,volleyballGame,music:music.getState,sound:sound.debug,scene,renderer,camera,games,world,coachPractice,islandNpcs,truckReactions,walkBall,rideTricks,jetActions,ballReactions,fieldSession,fieldTravel,location,velocity,rideRef,vehicle,flight,flightPoses:flightMotion.poses,rooftop,pendingRide,bounds:ISLAND_BOUNDS};
+    (window as unknown as {__fi2:Record<string,unknown>}).__fi2.motionResolution=motionResolution;
+    // Heat pass 4: thermal fallback tiers + Battery saver (lib/graphics/heatTier). Tier 0 (default) changes nothing.
+    const heat=createIslandHeat({renderer,sun,resolution:motionResolution,npcs:islandNpcs,traffic:streetTraffic,governed:quality.phone});(window as unknown as {__fi2:Record<string,unknown>}).__fi2.heat=heat;if(quality.phone&&heatOptions().lambertScenery)applyLambertScenery(scene);// visible option, off by default
+    sharpenSceneTextures(scene,renderer.capabilities.getMaxAnisotropy());// quality pass: crisp textures at grazing angles
     const targetMovement=(target:BallHitTarget):{canMove:(nx:number,nz:number)=>boolean;move:(nx:number,nz:number)=>void}=>( {canMove:(nx,nz)=>rooftop.canLand(nx,nz)&&Math.abs(rooftop.surface(nx,nz)-target.y)<.3,move:(nx,nz)=>{const npc=islandNpcs.entries.find(e=>'npc:'+e.id===target.id);if(npc){npc.position.x=nx;npc.position.z=nz;return;}const volleyball=volleyballGame.entries.find(e=>'npc:'+e.id===target.id);if(volleyball){volleyball.position.x=nx;volleyball.position.z=nz;return;}const coach=coachPractice.entries.find(e=>'npc:'+e.id===target.id);if(coach){coach.offset.x+=nx-coach.position.x;coach.offset.z+=nz-coach.position.z;coach.position.x=nx;coach.position.z=nz;return;}for(const field of games.entries){const prefix='field:'+field.venue.id+':';if(target.id.startsWith(prefix)){const actor=field.sim.players[target.id.slice(prefix.length)];if(actor){actor.x=135+(nx-field.venue.x)/field.venue.width*250;actor.y=200+(nz-field.venue.z)/field.venue.length*380;actor.vx=actor.vy=0;}break;}}}} );
     let truckHitAge=0,lastHitTruck=-1;const lastTruckHitPosition={x:0,z:0},lightRidePosition=new T.Vector3();
     const previousLocation={...location},visualLocation={...location};
@@ -352,7 +444,8 @@ export default function Island() {
     const jetpackBreakup=createJetpackBreakup();scene.add(jetpackBreakup.root);
     let spinCrashAge=Infinity;
     const renderStats={rendered:0,skipped:0,sleeps:0};let loopSleeping=false,resizeRevision=0,idleSince=0,idleRevision=-1,idleAppearance:CharacterCustomization|null=null,idleTimeOfDay='',idleGrace=0;
-    // A quiz question waiting for its answer sleeps like a menu once the camera has settled. Canvas gestures bump quizInput and wake it.
+    // A quiz question waiting for its answer (or answered, once its replay has ended or paused) sleeps like a menu once the camera
+    // has settled. Canvas gestures bump quizInput and wake it.
     let idleQuiz='',quizInput=0,cameraMoving=false,lastCameraZoom=1;const lastCameraPosition=new T.Vector3(),lastCameraQuaternion=new T.Quaternion();
     const wakeQuizInput=(event:Event)=>{if(!fieldSession.current?.quiz||event.type==='pointermove'&&!(event as PointerEvent).buttons)return;quizInput++;wakeLoop();};
     for(const name of ['pointerdown','pointermove','wheel','touchstart','touchmove'] as const)renderer.domElement.addEventListener(name,wakeQuizInput,{passive:true});
@@ -371,7 +464,7 @@ export default function Island() {
     const resetInputs=(preserveMovement=false)=>{cancelShotHold();heldRidePointers.current.clear();spinGesture.current.reset();spinRequested.current=false;if(!preserveMovement)keys.clear();input.current={x:preserveMovement?input.current.x:0,z:preserveMovement?input.current.z:0,sprint:preserveMovement&&input.current.sprint,kick:false,juggle:false};if(!preserveMovement)releaseStick();};
     const keydown=(e:KeyboardEvent)=>{sound.unlock();music.unlock();if(settingsRef.current)return;if(e.target instanceof HTMLButtonElement&&['Enter',' '].includes(e.key))return;if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();keys.add(e.key.toLowerCase());if(e.repeat)return;if(e.key.toLowerCase()==='r'&&!fieldMenu.current&&!lessonRef.current)cycleRide();if(e.key.toLowerCase()==='e'&&nearbyNpcRef.current&&!fieldMenu.current&&!lessonRef.current&&!mapRef.current)openConversation(nearbyNpcRef.current);if(e.key.toLowerCase()==='m')setMap(v=>!v);if(e.key==='Escape')setMap(false);if(e.code==='Space'){if(streetTraffic.rider.index>=0)truckBoostRequested.current=true;else if(rideRef.current==='walk'&&!lessonRef.current&&!fieldMenu.current)beginShotHold('keyboard');else input.current.kick=true;}if(e.key.toLowerCase()==='j'&&!fieldMenu.current&&!lessonRef.current){if(streetTraffic.rider.index>=0)truckHonkRequested.current=true;else input.current.juggle=true;}};
     const keyup=(e:KeyboardEvent)=>{keys.delete(e.key.toLowerCase());if(e.code==='Space'&&shotHold.current?.id==='keyboard')finishShotHold();};
-    const blur=()=>{resetInputs();sound.silence(true);};
+    const blur=()=>{resetInputs();sound.silence();};
     const visibility=()=>{sound.visibility();music.visibility();last=performance.now();accumulator=0;if(document.hidden)blur();};
     const finishJoystick=(event:PointerEvent)=>{releaseStick(event);releaseRideAction(event.pointerId);};
     const finishTouches=(event:TouchEvent)=>{if(event.touches.length===0)releaseStick();};
@@ -381,10 +474,10 @@ export default function Island() {
     const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     function liftJetpack(dt:number){
       flight.takeoffTime=Math.min(1.05,flight.takeoffTime+dt);const t=flight.takeoffTime/1.05,q=t-1;
-      const ease=reduced?t:1+1.9*q*q*q+.9*q*q;flight.height=flight.startHeight+(28-flight.startHeight)*ease;
+      const ease=reduced?t:1+1.9*q*q*q+.9*q*q;flight.height=flight.startHeight+(flight.cruiseHeight-flight.startHeight)*ease;
     }
     function landingImpact(height:number){
-      coinHunt.land({x:location.x,y:height,z:location.z});
+      coinHunt.land({x:location.x,y:height,z:location.z},true);
       const nearby:BallHitTarget[]=[...islandNpcs.entries.map(e=>({id:'npc:'+e.id,...e.position})),...volleyballGame.entries.filter(()=>volleyballGame.root.visible).map(e=>({id:'npc:'+e.id,...e.position})),...coachPractice.entries.map(e=>({id:'npc:'+e.id,...e.position})),...games.entries.flatMap(e=>Array.from(e.rigs.entries()).filter(([,rig])=>e.root.visible&&rig.root.visible).map(([id,rig])=>({id:'field:'+e.venue.id+':'+id,x:rig.root.position.x,y:rig.root.position.y,z:rig.root.position.z})))];
       let hit=false;for(const p of nearby){const dx=p.x-location.x,dz=p.z-location.z;if(Math.abs(p.y-height)>.8||Math.hypot(dx,dz)>4)continue;const yaw=Math.hypot(dx,dz)>.05?Math.atan2(dx,dz):player.root.rotation.y;hit=ballReactions.hit(p,Math.sin(yaw)*14,Math.cos(yaw)*14)||hit;}
       if(hit){sound.impact();tapHaptic();}
@@ -470,7 +563,22 @@ export default function Island() {
           if(lessonTime>6){location.x=11;location.z=9;orb.x=PASSER.x;orb.z=PASSER.z;setPhase('practice');}
           return;
         }
-        if(phase==='passing'){const t=Math.min(1,lessonTime/1.15);orb.x=T.MathUtils.lerp(PASSER.x,location.x,t);orb.z=T.MathUtils.lerp(PASSER.z,location.z,t);if(t===1)setPhase('complete');return;}
+        if((phase==='passing'||phase==='replay')&&lessonPass&&lessonSim){
+          // The live pass steps the engine; "Watch again" re-runs the recorded kick through replay() at 0.38×.
+          const record=lessonPass,sim=lessonSim;sim.advance(dt);const f=lessonFrame(sim.state());
+          orb.x=f.ball.x;orb.z=f.ball.z;location.x=f.receiver.x;location.z=f.receiver.z;lessonDefender.x=f.defender.x;lessonDefender.z=f.defender.z;passerKick=f.kick;passerFacing=f.passerFacing;lessonCalled=f.done||!f.flying&&f.kick>=.36?0:1;
+          threatRing.position.set(lessonDefender.x,.15+fieldSurfaceHeight(lessonDefender.x,lessonDefender.z),lessonDefender.z);
+          if(f.done)lessonHold+=dt;
+          if(f.done&&lessonHold>(phase==='replay'?.9:.6)){
+            if(phase==='passing')record.outcome=f.outcome;
+            const success=record.outcome==='receive',back=phase==='replay'?replayReturn:success?'complete':'practice';
+            if(phase==='passing')setPassAttempts(recordAttempt(passAttemptsRef.current,record));
+            if(back==='practice'){location.x=record.receiver.x;location.z=record.receiver.z;orb.x=PASSER.x;orb.z=PASSER.z;}
+            lessonDefender.x=DEFENDER.x;lessonDefender.z=DEFENDER.z;passerKick=0;passerFacing=PASSER_FACING;lessonPass=null;lessonSim=null;lessonCalled=0;showAim(null);setAimStatus('none');setPhase(back);
+          }
+          return;
+        }
+        if(phase==='aim'){if(input.current.kick){input.current.kick=false;if(aimRecord)startLessonPass(aimRecord);}velocity.x=velocity.z=0;return;}
         if(phase!=='practice')return;
       }
       const sx=(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0)+input.current.x;
@@ -499,6 +607,8 @@ export default function Island() {
       const stairBefore=rooftop.state.height;
       const rampBefore={...location},rampStep=rampMotion.update(dt,location,velocity,rideRef.current,reduced);
       if(!rampStep.owns)rooftop.update(dt,location,velocity,{x:walkBall.state.mode==='windup'||parachute.covering()?0:ix,z:walkBall.state.mode==='windup'||parachute.covering()?0:iz,sprint:input.current.sprint||keys.has('shift')},rideRef.current);
+      // Live-field players are solid: slide round them with a soft bump, never a knockdown (lib/town/fieldCollision).
+      {fieldBumpCtx.height=rooftop.state.height;fieldBumpCtx.ride=rideRef.current;fieldBumpCtx.disabled=rampStep.owns||rooftop.state.falling||rooftop.state.recovery>0||!!phase||liveKnockout.joined;const bump=fieldBump.step(dt,location,velocity,fieldBumpCtx);if(bump&&fieldBump.feedbackReady()){sound.ball('receive');if(!reduced)navigator.vibrate?.(bump.strength>.6?12:8);}}
       const stairDelta=rooftop.state.height-stairBefore;
       if(!rampStep.owns&&!wasFalling&&!rooftop.state.falling&&rooftop.state.recovery===0&&Math.abs(stairDelta)>.01&&Math.abs(stairDelta)<=1&&world.walkSurfaces.some(s=>Math.abs(location.x-s.x)<=s.w/2+.1&&Math.abs(location.z-s.z)<=s.d/2+.5))sound.stair(rideRef.current,stairDelta>0?'up':'down');
       if(rampStep.crashed){resetInputs();rideTricks.reset();sound.impact();if(!reduced)navigator.vibrate?.([25,30,35]);}
@@ -506,12 +616,15 @@ export default function Island() {
       if(rampStep.landed){if(rampMotion.state.ramp?.cannon)recordExploreActivity('ramp');coinHunt.land({x:location.x,y:rooftop.surface(location.x,location.z),z:location.z});rooftop.reset(location.x,location.z);sound.ball('bounce');if(!reduced)navigator.vibrate?.(18);}
       if(!rampStep.owns&&!rooftop.state.falling&&rooftop.state.recovery===0&&rampMotion.enter(rampBefore,location,velocity,rideRef.current,rooftop.state.height)){rooftop.reset(location.x,location.z,rampMotion.state.ramp?.base??0);rideTricks.reset();sound.boost('forward');}
       if(!wasFalling&&rooftop.state.falling)sound.fall();
+      if(rooftop.jump.started)sound.boost('up');if(rooftop.jump.landed){sound.stair(rideRef.current,'down');if(!reduced)navigator.vibrate?.(18);}
       if(rooftop.state.impact){coinHunt.land({x:location.x,y:rooftop.state.height,z:location.z});sound.impact();}
       if(rooftop.state.impact&&!reduced)navigator.vibrate?.([45,30,65]);
       if(phase==='practice'){
         location.x=T.MathUtils.clamp(location.x,3.8,18.2);location.z=T.MathUtils.clamp(location.z,6,12);
         const lane=passingLane(location);
-        if(input.current.kick){if(lane.open){velocity.x=velocity.z=0;setCoachFeedback('');setPhase('passing');}else setCoachFeedback('That pass would meet the defender. Move farther to either side, then call again.');input.current.kick=false;}
+        // Calling for the ball freezes play: the receiver waves, and the child draws the pass from the ball.
+        if(input.current.kick&&passAttemptsRef.current.result==='spent')input.current.kick=false;
+        if(input.current.kick){velocity.x=velocity.z=0;setCoachFeedback(lane.open?'':'You called from behind the defender. Watch for the red ring.');stroke=null;aimRecord=null;lessonWorld=createLessonWorld({x:location.x,z:location.z},passAttemptsRef.current.format);showAim(null);setAimStatus('none');setPhase('aim');input.current.kick=false;}
         return;
       }
       if(liveKnockout.frozen)return;
@@ -537,7 +650,7 @@ export default function Island() {
 
       walkBall.update(dt,ballPlayer,{
         frame:(from,to)=>sweepGoalFrame(from,to,.2,walkingFrameHit)?walkingFrameHit:null,
-        juggleHead:player.juggleHead,
+        juggleHead:player.juggleHead,headTop:player.headTop,
         moving:Math.hypot(velocity.x,velocity.z)>.15||Math.hypot(input.current.x,input.current.z)>.1,
         ballStyle:customizationRef.current.ball,
         floor:rooftop.surface,
@@ -558,17 +671,18 @@ export default function Island() {
       loopSleeping=false;
       if(disposed||isVideoPlaying()){last=now;accumulator=0;return;}frame=requestAnimationFrame(animate);
       if(document.hidden){last=now;return;}
-      const paused=(mapRef.current||settingsRef.current)&&!onboardingRef.current,quiz=fieldSession.current,quizWaiting=!paused&&Boolean(quiz?.quiz&&quiz.answer===null);
-      const quizKey=quizWaiting?`${quiz!.lesson.id}:${quiz!.question}:${learningAngle.current}:${quizInput}`:'';
-      if(!paused&&!quizWaiting){idleSince=0;idleTimeOfDay=timeRef.current;}else{
-        if(!idleSince||idleRevision!==resizeRevision||idleAppearance!==customizationRef.current||idleTimeOfDay!==timeRef.current||idleQuiz!==quizKey||quizWaiting&&cameraMoving){idleGrace=idleTimeOfDay!==timeRef.current?3000:quizWaiting?1200:0;idleSince=now;idleRevision=resizeRevision;idleAppearance=customizationRef.current;idleTimeOfDay=timeRef.current;idleQuiz=quizKey;}
+      const paused=(mapRef.current||settingsRef.current)&&!(onboardingRef.current&&onboardingNpcStep.current),quiz=fieldSession.current,quizWaiting=!paused&&Boolean(quiz?.quiz&&(quiz.answer===null||!teachingPoseAdvances(quiz,quizOutcomeStep(quiz))));
+      // A frozen draw-the-pass aim sleeps like a waiting quiz; each stroke change (aimRevision) wakes one short burst.
+      const aimWaiting=!paused&&!quizWaiting&&lessonRef.current==='aim'&&strokePointer<0;
+      const quizKey=quizWaiting?`${quiz!.lesson.id}:${quiz!.question}:${learningAngle.current}:${quizInput}:${quiz!.answer}:${quiz!.outcomeProgress??0}`:aimWaiting?`aim:${aimRevision}`:'';
+      if(!paused&&!quizWaiting&&!aimWaiting){idleSince=0;idleTimeOfDay=timeRef.current;}else{
+        if(!idleSince||idleRevision!==resizeRevision||idleAppearance!==customizationRef.current||idleTimeOfDay!==timeRef.current||idleQuiz!==quizKey||quizWaiting&&cameraMoving){idleGrace=idleTimeOfDay!==timeRef.current?3000:quizWaiting||aimWaiting?1200:0;idleSince=now;idleRevision=resizeRevision;idleAppearance=customizationRef.current;idleTimeOfDay=timeRef.current;idleQuiz=quizKey;}
         if(now-idleSince>idleGrace){last=now;accumulator=0;renderStats.skipped++;renderStats.sleeps++;cancelAnimationFrame(frame);loopSleeping=true;return;}
       }
-      if(coarse&&now-lastRendered<1000/30-1)return;
-      lastRendered=coarse?now-Math.max(0,(now-lastRendered)%(1000/30)):now;
+      if(coarse||heat.cap30){const slot=frameCapSlot(now,lastRendered,heat.frameMs);if(slot<0)return;lastRendered=slot;}else lastRendered=now;
       const ms=now-last;last=now;
       const dt=Math.max(0,Math.min(ms/1000,.05)),active=!mapRef.current&&!settingsRef.current;
-      coinHunt.update(dt,{x:location.x,y:rideRef.current==='jetpack'?flight.height:rooftop.state.height+rampMotion.state.lift,z:location.z},active&&!fieldMenu.current&&!lessonRef.current,reduced,rampMotion.state.phase==='air'?rampMotion.state.ramp?.id??null:null,jetActions.state.phase==='parachute');
+      coinHunt.update(dt,{x:location.x,y:rideRef.current==='jetpack'?flight.height:rooftop.state.height+rampMotion.state.lift,z:location.z},active&&!fieldMenu.current&&!lessonRef.current,reduced,rampMotion.state.phase==='air'?rampMotion.state.ramp?.id??null:null,jetActions.state.phase==='parachute',rideRef.current==='jetpack');
       world.umbrellaReaction.update(active&&!fieldMenu.current?dt:0,reduced);
       treeDebris.update(active&&!fieldMenu.current?dt:0,!fieldMenu.current&&!lessonRef.current,reduced);
       ballReactions.update(active&&!fieldMenu.current?dt:0,camera,reduced,!fieldMenu.current&&!lessonRef.current);
@@ -596,10 +710,12 @@ export default function Island() {
             movement.canMove=(x,z)=>!blocked(x,z,ballObstacleGrid.query(x,z,.4).filter(o=>!o.dynamic),.4)&&Math.abs(rooftop.surface(x,z)-target.y)<.3;
             if(ballReactions.hit(target,hitTruck?Math.sin(yaw)*hitTruck.driveSpeed:velocity.x,hitTruck?Math.cos(yaw)*hitTruck.driveSpeed:velocity.z,'sunset',movement,'truck')){collision=true;sound.impact();}
           };
-          for(const e of islandNpcs.entries)strike({id:'npc:'+e.id,...e.position});
+          // Townsfolk get the soft fieldCollision bump from the character's own rides; only a truck knocks them over.
+          if(hitTruck)for(const e of islandNpcs.entries)strike({id:'npc:'+e.id,...e.position});
           for(const e of volleyballGame.entries)if(volleyballGame.root.visible)strike({id:'npc:'+e.id,...e.position});
           for(const e of coachPractice.entries)strike({id:'npc:'+e.id,...e.position});
-          for(const e of games.entries)if(Math.abs((e.venue.elevation??0)-position.y)<1&&Math.abs(e.venue.x-position.x)<e.venue.width/2+8&&Math.abs(e.venue.z-position.z)<e.venue.length/2+8)for(const token of e.liveFrame.tokens){const p=e.sim.players[token.id];strike({id:'field:'+e.venue.id+':'+token.id,x:e.venue.x+(p.x-135)/250*e.venue.width,y:(e.venue.elevation??0)+.105,z:e.venue.z+(p.y-200)/380*e.venue.length});}
+          // Live-field players only get the soft fieldCollision bump from the character's own rides; a truck still knocks them.
+          for(const e of games.entries)if(hitTruck&&Math.abs((e.venue.elevation??0)-position.y)<1&&Math.abs(e.venue.x-position.x)<e.venue.width/2+8&&Math.abs(e.venue.z-position.z)<e.venue.length/2+8)for(const token of e.liveFrame.tokens){const p=e.sim.players[token.id];strike({id:'field:'+e.venue.id+':'+token.id,x:e.venue.x+(p.x-135)/250*e.venue.width,y:(e.venue.elevation??0)+.105,z:e.venue.z+(p.y-200)/380*e.venue.length});}
           if(collision){
             const witnesses:{root:T.Object3D;id?:string}[]=[];
             const add=(root:T.Object3D,id?:string)=>{if(!root.visible||Math.hypot(root.position.x-position.x,root.position.z-position.z)>19||Math.abs(root.position.y-position.y)>2||witnesses.some(w=>w.root.position.distanceTo(root.position)<5))return;witnesses.push({root,id});};
@@ -617,11 +733,12 @@ export default function Island() {
       // Keep the approved resolution steady; reduce repeated work instead of lowering graphics.
       if(lessonCommand.current&&rideRef.current!=='jetpack'){
         const command=lessonCommand.current;lessonCommand.current=null;resetInputs();velocity.x=velocity.z=orb.vx=orb.vz=0;
+        stroke=null;strokePointer=-1;lessonPass=null;lessonSim=null;lessonWorld=null;lessonCalled=0;aimRecord=null;showAim(null);lessonDefender.x=DEFENDER.x;lessonDefender.z=DEFENDER.z;passerKick=0;passerFacing=PASSER_FACING;
         if(command==='exit'){setPhase(null);location.x=-7;location.z=14;orb.x=-6.3;orb.z=14;}else{setPhase(command);location.x=11;location.z=9;orb.x=PASSER.x;orb.z=PASSER.z;setCoachFeedback('');}
       }
-      if(fieldTravel.current){streetTraffic.rider.index=-1;rampMotion.reset();arrivalFacing=Math.atan2(16,33);player.root.rotation.y=arrivalFacing;characterArrival.restart();const v=venueById(fieldTravel.current),p=venueEntrance(v);location.x=p.x;location.z=p.z;velocity.x=velocity.z=0;orb.x=p.x+.7;orb.z=p.z;orb.vx=orb.vz=0;fieldTravel.current=null;rooftop.reset(p.x,p.z);camera.position.set(p.x+18,23+fieldSurfaceHeight(p.x,p.z),p.z+30);resetInputs();}
-      if(travel.current){streetTraffic.rider.index=-1;rampMotion.reset();arrivalFacing=Math.atan2(16,33);player.root.rotation.y=arrivalFacing;characterArrival.restart();const target=travel.current==='square'?ARCADE_DOOR:travel.current==='coaches'?COACHES_DOOR:travel.current==='store'?STORE_DOOR:DISTRICTS[travel.current];location.x=target.x;location.z=target.z;velocity.x=velocity.z=0;orb.x=target.x+.7;orb.z=target.z;orb.vx=orb.vz=0;travel.current=null;rooftop.reset(target.x,target.z);camera.position.set(target.x+18,23+fieldSurfaceHeight(target.x,target.z),target.z+30);resetInputs();}
-      if(previousRide!==rideRef.current){rampMotion.reset();rideChange.trigger(({walk:1,scooter:1.65,bike:2.15,moped:2.3,jetpack:1.4} as const)[rideRef.current]*.54);jetActions.reset();sound.ride(rideRef.current);if(rideRef.current==='jetpack'){flightMotion.reset();flight.height=rooftop.state.height;flight.startHeight=flight.height;flight.takeoffTime=0;flight.landTime=-1;flight.landing=null;}velocity.x=velocity.z=0;walkBall.reset({...location,y:rooftop.state.height,yaw:player.root.rotation.y});resetInputs(true);previousRide=rideRef.current;}
+      if(fieldTravel.current){suppressInitialArrival=false;streetTraffic.rider.index=-1;rampMotion.reset();arrivalFacing=Math.atan2(16,33);player.root.rotation.y=arrivalFacing;characterArrival.restart();const v=venueById(fieldTravel.current),p=venueEntrance(v);location.x=p.x;location.z=p.z;velocity.x=velocity.z=0;orb.x=p.x+.7;orb.z=p.z;orb.vx=orb.vz=0;fieldTravel.current=null;rooftop.reset(p.x,p.z);camera.position.set(p.x+18,23+fieldSurfaceHeight(p.x,p.z),p.z+30);resetInputs();}
+      if(travel.current){suppressInitialArrival=false;streetTraffic.rider.index=-1;rampMotion.reset();arrivalFacing=Math.atan2(16,33);player.root.rotation.y=arrivalFacing;characterArrival.restart();const target=travel.current==='square'?ARCADE_DOOR:travel.current==='coaches'?COACHES_DOOR:travel.current==='store'?STORE_DOOR:DISTRICTS[travel.current];location.x=target.x;location.z=target.z;velocity.x=velocity.z=0;orb.x=target.x+.7;orb.z=target.z;orb.vx=orb.vz=0;travel.current=null;rooftop.reset(target.x,target.z);camera.position.set(target.x+18,23+fieldSurfaceHeight(target.x,target.z),target.z+30);resetInputs();}
+      if(previousRide!==rideRef.current){rampMotion.reset();rideChange.trigger(({walk:1,scooter:1.65,bike:2.15,moped:2.3,jetpack:1.4} as const)[rideRef.current]*.54);jetActions.reset();sound.ride(rideRef.current);if(rideRef.current==='jetpack'){flightMotion.reset();flight.cruiseHeight=INITIAL_FLIGHT_HEIGHT;flight.height=rooftop.state.height;flight.startHeight=flight.height;flight.takeoffTime=0;flight.landTime=-1;flight.landing=null;}velocity.x=velocity.z=0;walkBall.reset({...location,y:rooftop.state.height,yaw:player.root.rotation.y});resetInputs(true);previousRide=rideRef.current;}
       if(Math.hypot(location.x-visualLocation.x,location.z-visualLocation.z)>3){previousLocation.x=location.x;previousLocation.z=location.z;accumulator=0;}
       if(fieldMenu.current){if(!wasLearning)resetInputs();velocity.x=velocity.z=0;accumulator=0;previousLocation.x=location.x;previousLocation.z=location.z;}
       if(active){elapsed+=dt;if(!fieldMenu.current){accumulator+=dt;while(accumulator>=1/60){previousLocation.x=location.x;previousLocation.z=location.z;tick(1/60);accumulator-=1/60;}}}
@@ -631,11 +748,14 @@ export default function Island() {
       sound.move(rideRef.current,Math.hypot(velocity.x,velocity.z),active&&!fieldMenu.current&&!lessonRef.current&&!['parachute','fall'].includes(jetActions.state.phase)&&(rideRef.current==='jetpack'||!rooftop.state.falling&&rooftop.state.recovery===0));
       const blend=accumulator*60;
       visualLocation.x=active?T.MathUtils.lerp(previousLocation.x,location.x,blend):location.x;visualLocation.z=active?T.MathUtils.lerp(previousLocation.z,location.z,blend):location.z;
-      if(appliedCustomization!==customizationRef.current){appliedCustomization=customizationRef.current;player.setAppearance(appliedCustomization);vehicle.setCustomization(appliedCustomization);ballAppearance.setStyle(appliedCustomization.ball);}
+      const customizationChanged=appliedCustomization!==customizationRef.current;
+      if(appliedCustomization!==customizationRef.current){appliedCustomization=customizationRef.current;player.setAppearance(appliedCustomization);player.setBeanLook(beanLookFor(appliedCustomization),playerOutfit(appliedCustomization));vehicle.setCustomization(appliedCustomization);ballAppearance.setStyle(appliedCustomization.ball);}
+      // Team colours for the player's own character while the draw-the-pass lesson or rooftop knockout is on (lib/town/beanLooks mainPlayerDress); own look restored after.
+      {const inTeam=Boolean(lessonRef.current)||liveKnockout.joined;if(inTeam!==appliedTeamLook||inTeam&&customizationChanged){appliedTeamLook=inTeam;const c=customizationRef.current,d=mainPlayerDress(beanLookFor(c),playerOutfit(c),inTeam,DEFAULT_PLAYER_NUMBER);player.setBeanLook(d.look,d.outfit);}}
       const isParachuting=jetActions.state.phase==='parachute',airJuggling=isParachuting&&jetActions.state.juggleAge>=0,airJuggleCycle=jetActions.state.juggleAge/.8,airJugglePhase=airJuggleCycle-Math.floor(airJuggleCycle),airJuggleSide=(Math.floor(airJuggleCycle)%2===0?1:-1) as -1|1;if(skyJugglingRef.current!==airJuggling){skyJugglingRef.current=airJuggling;setSkyJuggling(airJuggling);}if(parachutingRef.current!==isParachuting){parachutingRef.current=isParachuting;setParachuting(isParachuting);}
       player.root.visible=!fieldMenu.current;ring.visible=!fieldMenu.current&&rideRef.current!=='jetpack';ball.visible=!fieldMenu.current&&(rideRef.current==='walk'||airJuggling);
       if(Math.hypot(velocity.x,velocity.z)>.1)arrivalFacing=undefined;
-      const flightPose=rideRef.current==='jetpack'?flightMotion.update(active?dt:0,elapsed,velocity.x,velocity.z,flightHeading,flight.landTime>=0?'landing':flight.takeoffTime<1.05?'takeoff':'cruise',flight.landTime>=0?flight.landTime/.95:flight.takeoffTime/1.05,reduced):undefined;
+      const flightPose=rideRef.current==='jetpack'?flightMotion.update(active?dt:0,elapsed,velocity.x,velocity.z,flightHeading,flight.landTime>=0?'landing':flight.takeoffTime<1.05?'takeoff':'cruise',flight.landTime>=0?flight.landTime/.95:flight.takeoffTime/1.05,reduced,location.x,location.z,flight.height,jetActions.state.phase,customizationRef.current.jetpack):undefined;
       if(rooftop.state.falling||rooftop.state.recovery>0)rideTricks.reset();
       const groundVariant=rideRef.current==='scooter'||rideRef.current==='bike'||rideRef.current==='moped'?customizationRef.current[rideRef.current]:'classic';
       const trickPose=rideTricks.update(active?dt:0,rideRef.current,reduced,groundVariant,keys.has(rideTricks.state.action===0?' ':'j')||Array.from(heldRidePointers.current.values()).some(hold=>hold.action===rideTricks.state.action));
@@ -646,12 +766,12 @@ export default function Island() {
       const steering=Math.hypot(input.current.x,input.current.z)>.1||keys.has('w')||keys.has('a')||keys.has('s')||keys.has('d')||keys.has('arrowup')||keys.has('arrowdown')||keys.has('arrowleft')||keys.has('arrowright');
       const intentSX=input.current.x+(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0),intentSZ=input.current.z+(keys.has('s')||keys.has('arrowdown')?1:0)-(keys.has('w')||keys.has('arrowup')?1:0);
       const walkBrake=rideRef.current==='walk'&&!steering&&!rooftop.state.falling&&streetTraffic.rider.index<0?T.MathUtils.smoothstep(Math.hypot(velocity.x,velocity.z),1,3.2):0;
-      player.update(visualLocation.x,visualLocation.z,active?dt:0,elapsed,reduced,{intentHeading:rideRef.current==='walk'&&Math.hypot(intentSX,intentSZ)>.05?Math.atan2(intentSX*.857+intentSZ*.515,-intentSX*.515+intentSZ*.857):undefined,brake:walkBrake,truckRiding:streetTraffic.rider.index>=0,truckSpeed:streetTraffic.rider.index>=0?streetTraffic.cars[streetTraffic.rider.index].driveSpeed:0,turnSmoothing:jetActions.state.phase==='parachute'?(jetActions.state.scanAge>=0?18:3):undefined,juggleTouch:walkBall.state.mode==='juggle'?walkBall.state.juggleTouch:'foot',parachute:jetActions.state.phase==='parachute',parachuteSpin:jetActions.state.scanIntensity,parachuteJuggle:airJuggling?{phase:airJugglePhase,side:airJuggleSide}:undefined,wallSplat:rampMotion.state.phase==='splat',mopedStand:trickPose.stand,mopedSuperman:reduced?0:rampMotion.state.trickStretch,flyingCar:['flying-car','mini-plane'].includes(customizationRef.current.jetpack),rocketboard:customizationRef.current.jetpack==='rocketboard',rooftopPose:jetActions.state.phase==='fall'?(jetActions.state.age<.65?'hang':'fall'):rideRef.current==='jetpack'?undefined:rooftop.state.falling?(rooftop.state.hangTime>0?'hang':'fall'):rooftop.state.recovery>0?'dizzy':undefined,flight:flightPose,facing:jetActions.state.scanAge>=0&&!reduced?jetActions.state.scanYaw:streetTraffic.rider.index>=0?streetTraffic.cars[streetTraffic.rider.index].group.rotation.y:rideRef.current==='walk'&&(walkBall.state.mode==='windup'||walkBall.state.kick>0)?walkBall.state.yaw:arrivalFacing,travelMode:rideRef.current,shotStep:steppingBack?(walkBall.state.age-.18)/.47:steppingIn?walkBall.state.age/(SHOT_WINDUP*.55):undefined,actionKind:rideRef.current==='walk'&&walkBall.state.kick>0?'shot':undefined,strikeX:rideRef.current==='walk'&&walkBall.state.kick>0?0:undefined,strikeZ:rideRef.current==='walk'&&walkBall.state.kick>0?.65/Math.max(.1,player.root.scale.x):undefined,shotPower:walkBall.state.charge,shotCharge:rideRef.current==='walk'&&walkBall.state.mode==='charging'?walkBall.state.charge:undefined,powerKick:rideRef.current==='walk'&&(walkBall.state.mode==='windup'||walkBall.state.mode==='shot'&&walkBall.state.kick>0),dribbling:liveKnockout.joined?liveKnockout.hasBall:rideRef.current==='walk'&&Math.hypot(orb.x-visualLocation.x,orb.z-visualLocation.z)<1.3,kick:rideRef.current==='walk'?(liveKnockout.joined?liveKnockout.kickPose:walkBall.state.kick):undefined,juggle:rideRef.current==='walk'&&(walkBall.state.mode==='juggle'||walkBall.state.mode==='wall-juggle'&&(walkBall.state.wallPhase==='receive'||walkBall.state.wallPhase==='kick'))?walkBall.state.jugglePhase:undefined,kickSide:walkBall.state.juggleSide});
+      player.update(visualLocation.x,visualLocation.z,active?dt:0,elapsed,reduced,{called:lessonRef.current==='aim'?1:lessonRef.current==='passing'||lessonRef.current==='replay'?lessonCalled:lessonRef.current?0:undefined,intentHeading:rideRef.current==='walk'&&Math.hypot(intentSX,intentSZ)>.05?Math.atan2(intentSX*.857+intentSZ*.515,-intentSX*.515+intentSZ*.857):undefined,brake:walkBrake,truckRiding:streetTraffic.rider.index>=0,truckSpeed:streetTraffic.rider.index>=0?streetTraffic.cars[streetTraffic.rider.index].driveSpeed:0,turnSmoothing:jetActions.state.phase==='parachute'?(jetActions.state.scanAge>=0?18:3):undefined,juggleTouch:walkBall.state.mode==='juggle'?walkBall.state.juggleTouch:'foot',parachute:jetActions.state.phase==='parachute',parachuteSpin:jetActions.state.scanIntensity,parachuteJuggle:airJuggling?{phase:airJugglePhase,side:airJuggleSide}:undefined,wallSplat:rampMotion.state.phase==='splat',mopedStand:trickPose.stand,mopedSuperman:reduced?0:rampMotion.state.trickStretch,flyingCar:['flying-car','mini-plane'].includes(customizationRef.current.jetpack),rocketboard:customizationRef.current.jetpack==='rocketboard',jump:roofJumpMotion(rooftop.jump,rideRef.current),rooftopPose:jetActions.state.phase==='fall'?(jetActions.state.age<.65?'hang':'fall'):rideRef.current==='jetpack'?undefined:rooftop.state.falling?(rooftop.state.hangTime>0?'hang':'fall'):rooftop.state.recovery>0?'dizzy':undefined,flight:flightPose,facing:jetActions.state.scanAge>=0&&!reduced?jetActions.state.scanYaw:streetTraffic.rider.index>=0?streetTraffic.cars[streetTraffic.rider.index].group.rotation.y:rideRef.current==='walk'&&(walkBall.state.mode==='windup'||walkBall.state.kick>0)?walkBall.state.yaw:arrivalFacing,travelMode:rideRef.current,shotStep:steppingBack?(walkBall.state.age-.18)/.47:steppingIn?walkBall.state.age/(SHOT_WINDUP*.55):undefined,actionKind:rideRef.current==='walk'&&walkBall.state.kick>0?'shot':undefined,strikeX:rideRef.current==='walk'&&walkBall.state.kick>0?0:undefined,strikeZ:rideRef.current==='walk'&&walkBall.state.kick>0?.65/Math.max(.1,player.root.scale.x):undefined,shotPower:walkBall.state.charge,shotCharge:rideRef.current==='walk'&&walkBall.state.mode==='charging'?walkBall.state.charge:undefined,powerKick:rideRef.current==='walk'&&(walkBall.state.mode==='windup'||walkBall.state.mode==='shot'&&walkBall.state.kick>0),dribbling:liveKnockout.joined?liveKnockout.hasBall:rideRef.current==='walk'&&Math.hypot(orb.x-visualLocation.x,orb.z-visualLocation.z)<1.3,kick:rideRef.current==='walk'?(liveKnockout.joined?liveKnockout.kickPose:walkBall.state.kick):undefined,juggle:rideRef.current==='walk'&&(walkBall.state.mode==='juggle'||walkBall.state.mode==='wall-juggle'&&(walkBall.state.wallPhase==='receive'||walkBall.state.wallPhase==='kick'))?walkBall.state.jugglePhase:undefined,kickSide:walkBall.state.juggleSide});
       flightHeading=player.root.rotation.y;
       vehicle.update(rideRef.current,visualLocation.x,visualLocation.z,player.root.rotation.y,active?dt:0,Math.hypot(velocity.x,velocity.z),flightPose);vehicle.root.visible=vehicle.root.visible&&!fieldMenu.current&&(customizationRef.current.jetpack==='ironman'||!['parachute','fall'].includes(jetActions.state.phase));
       let groundY=rooftop.state.height;let ridePitch=0;
       if(rideRef.current!=='walk'&&rideRef.current!=='jetpack'&&!rooftop.state.falling&&groundY<=fieldSurfaceHeight(visualLocation.x,visualLocation.z)+.2){const yaw=player.root.rotation.y,front=(rideRef.current==='scooter'?.5:.62)*1.12,rear=(rideRef.current==='scooter'?.4:.53)*1.12;const hf=fieldSurfaceHeight(visualLocation.x+Math.sin(yaw)*front,visualLocation.z+Math.cos(yaw)*front),hr=fieldSurfaceHeight(visualLocation.x-Math.sin(yaw)*rear,visualLocation.z-Math.cos(yaw)*rear);ridePitch=Math.atan2(hr-hf,front+rear);groundY=(hf*rear+hr*front)/(front+rear)+.005;}
-      if(rideRef.current!=='walk'&&rideRef.current!=='jetpack'&&!rooftop.state.falling&&groundY>fieldSurfaceHeight(visualLocation.x,visualLocation.z)+.2&&rampMotion.state.phase==='idle'&&streetTraffic.rider.index<0){rideSurfacePose(rideRef.current,visualLocation.x,visualLocation.z,player.root.rotation.y,rooftop.state.height,rooftop.surface,stairRidePose);ridePitch=stairRidePose.pitch;groundY=stairRidePose.height;}
+      if(rideRef.current!=='walk'&&rideRef.current!=='jetpack'&&!rooftop.state.falling&&!rooftop.jump.active&&groundY>fieldSurfaceHeight(visualLocation.x,visualLocation.z)+.2&&rampMotion.state.phase==='idle'&&streetTraffic.rider.index<0){rideSurfacePose(rideRef.current,visualLocation.x,visualLocation.z,player.root.rotation.y,rooftop.state.height,rooftop.surface,stairRidePose);ridePitch=stairRidePose.pitch;groundY=stairRidePose.height;}
       if(rideRef.current==='jetpack')groundY=flight.height;
       if(streetTraffic.rider.index>=0){const truck=streetTraffic.cars[streetTraffic.rider.index],bed=streetTraffic.bedPoint(truck.index);groundY=bed.y;ridePitch=truck.group.rotation.x;player.root.position.x=bed.x;player.root.position.z=bed.z;}
       player.root.rotation.order='YXZ';player.root.rotation.x=ridePitch;vehicle.root.rotation.order='YXZ';vehicle.root.rotation.x=ridePitch;player.root.position.y=groundY;vehicle.root.position.y=groundY;
@@ -660,16 +780,16 @@ export default function Island() {
       const squash=(crash>.5?1:T.MathUtils.smoothstep(crash,.28,.5))*collapse;
       let hovering=false;
       if(hoverPoint&&active&&!fieldMenu.current&&!lessonRef.current){characterRay.setFromCamera(hoverPoint,camera);hovering=characterRay.intersectObject(player.root,true).length>0||nearCharacter(hoverPoint);}
-      if(hovering&&!characterHovered)sound.ui('hover');characterHovered=hovering;
+      if(hovering&&!characterHovered)sound.sceneHover(rideRef.current==='jetpack');characterHovered=hovering;
       const canEnter=active&&!fieldMenu.current&&!lessonRef.current;
       const nearEntrance=(x:number,z:number,width:number)=>canEnter&&rideRef.current!=='jetpack'&&!rooftop.state.falling&&Math.abs(groundY)<1&&location.z>z-3&&location.z<z+8&&Math.abs(location.x-x)<width;
       nearMuseum=nearEntrance(168,188,16);
       nearStore=nearEntrance(85,-50,8);nearArcade=nearEntrance(103,-50,8);nearCoaches=nearEntrance(161,-34,11);
       const flightNear=(bounds:T.Box3)=>canEnter&&rideRef.current==='jetpack'&&flight.height<bounds.max.y+40&&Math.hypot(Math.max(bounds.min.x-location.x,0,location.x-bounds.max.x),Math.max(bounds.min.z-location.z,0,location.z-bounds.max.z))<12;
       const overMuseum=!!(hoverPoint&&canEnter&&pointsAtMuseum());
-      if(overMuseum&&!museumHovered)sound.ui('hover');museumHovered=overMuseum;
+      if(overMuseum&&!museumHovered)sound.sceneHover(rideRef.current==='jetpack');museumHovered=overMuseum;
       const overStore=!!(hoverPoint&&canEnter&&pointsAtStore()),overArcade=!!(hoverPoint&&canEnter&&pointsAtArcade()),overCoaches=!!(hoverPoint&&canEnter&&pointsAtCoaches());
-      if(overStore&&!storeHovered||overArcade&&!arcadeHovered||overCoaches&&!coachesHovered)sound.ui('hover');storeHovered=overStore;arcadeHovered=overArcade;coachesHovered=overCoaches;
+      if(overStore&&!storeHovered||overArcade&&!arcadeHovered||overCoaches&&!coachesHovered)sound.sceneHover(rideRef.current==='jetpack');storeHovered=overStore;arcadeHovered=overArcade;coachesHovered=overCoaches;
       const hoveredBuilding=overStore?'store':overArcade?'arcade':overCoaches?'coaches':overMuseum?'museum':'';if(hoveredBuilding){buildingHoverKind=hoveredBuilding;buildingHoverUntil=now+450;}
       const buildingTargets=[{index:0,kind:'store',x:85,z:-53,active:overStore||nearStore||flightNear(world.storeBounds)},{index:1,kind:'arcade',x:103,z:-53,active:overArcade||nearArcade||flightNear(world.arcadeBounds)},{index:2,kind:'coaches',x:161,z:-37,active:overCoaches||nearCoaches||flightNear(world.coachesBounds)},{index:3,kind:'museum',x:168,z:186,active:overMuseum||nearMuseum||flightNear(world.museumBounds)}];
       const singleBuilding=coarse||viewportW<=600;
@@ -679,13 +799,14 @@ export default function Island() {
       let hoveredNpc=hoverPoint&&canEnter&&!hovering?(islandNpcs.pick(characterRay)??coachPractice.pick(characterRay)??volleyballGame.pick(characterRay)):null;
       if(!hoveredNpc&&hoverPoint&&canEnter&&!hovering&&hoveredNpcId){const last=islandNpcs.entries.find(e=>e.id===hoveredNpcId)??coachPractice.entries.find(e=>e.id===hoveredNpcId)??volleyballGame.entries.find(e=>e.id===hoveredNpcId);if(last&&!ballReactions.get('npc:'+last.id)){const center=new T.Vector3(last.position.x,last.position.y+1,last.position.z);if(characterRay.ray.distanceToPoint(center)<1.1&&characterRay.ray.origin.distanceTo(center)<90)hoveredNpc=last.definition;}}
       const hoveredEntry=hoveredNpc?(islandNpcs.entries.find(e=>e.id===hoveredNpc.id)??coachPractice.entries.find(e=>e.id===hoveredNpc.id)??volleyballGame.entries.find(e=>e.id===hoveredNpc.id)):undefined;
-      if(hoveredNpc&&hoveredNpc.id!==hoveredNpcId)sound.ui('hover');hoveredNpcId=hoveredNpc?.id??null;
+      if(hoveredNpc&&hoveredNpc.id!==hoveredNpcId)sound.sceneHover(rideRef.current==='jetpack');hoveredNpcId=hoveredNpc?.id??null;
       npcHover.update(hoveredEntry?{id:hoveredEntry.id,...hoveredEntry.position}:null,dt,reduced);
       renderer.domElement.style.cursor=hovering||hoveredNpc||overStore||overArcade||overCoaches||overMuseum?'pointer':'';
       characterGlow.update(hovering,dt,reduced);
       player.root.scale.set(1+squash*.65,1-squash*.82,1+squash*.65);vehicle.root.scale.setScalar(1.12);player.root.rotation.z=streetTraffic.rider.index>=0?streetTraffic.cars[streetTraffic.rider.index].group.rotation.z:0;
       if(crash>0&&!reduced){player.root.rotation.z=Math.sin(elapsed*5)*.15*(1-squash);player.root.rotation.x+=Math.cos(elapsed*4)*.1*(1-squash);}
       if(Number.isFinite(spinCrashAge)&&crash>0){player.root.rotation.z+=squash*.8;if(rideRef.current!=='walk')player.root.position.x+=Math.cos(player.root.rotation.y)*squash*.65;}
+      fieldBump.pose(player.root,active?dt:0,reduced);
       vehicle.setCrash(crash*collapse);
       splat.visible=crash>0&&!fieldMenu.current;
       if(splat.visible){const progress=1-crash;splat.position.set(location.x,groundY+.04,location.z);splat.scale.setScalar(1+progress*3);splatMaterial.opacity=(1-progress)*.65;}
@@ -714,15 +835,20 @@ export default function Island() {
         else if(flight.landing)landingPreview=flight.landing;
         else if(rooftop.canLand(location.x,location.z)){landingPreview={x:location.x,z:location.z};previewX=location.x;previewZ=location.z;}
         else if(previewAge>=.12&&(Math.hypot(location.x-previewX,location.z-previewZ)>.3||!landingPreview)){landingPreview=rooftop.findLanding(location.x,location.z);previewX=location.x;previewZ=location.z;previewAge=0;}
+        const cover=coinHunt.manholeTarget();if(cover)landingPreview=cover;// right over an unopened manhole: target its cover
       }
-      landingMarker.update(landingPreview,flight.height,rooftop.surface,showLanding&&!overPickup,elapsed,reduced);
+      landingMarker.update(landingPreview,flight.height,rooftop.surface,showLanding&&!overPickup,elapsed,reduced,showLanding&&!overPickup&&coinHunt.manholeTarget()?3.2:1);// the same ring, sized to sit around a manhole's rim
       if(streetTraffic.rider.index>=0&&!reduced&&streetTraffic.rider.landingAge<.85){const age=streetTraffic.rider.landingAge,settle=Math.exp(-age*5),compress=Math.sin(Math.min(1,age/.3)*Math.PI)*.18;player.root.scale.y*=1-compress;player.root.scale.x*=1+compress*.2;player.root.rotation.z+=Math.sin(age*20)*settle*.1;player.root.position.y+=Math.sin(age*16)*settle*.06;}
       boundaryFeedback.update(active?dt:0,reduced,camera);boundaryFeedback.root.visible=!fieldMenu.current;
+      applyRoofJumpPose(rooftop.jump,rideRef.current,reduced,player.root,vehicle.root);
       player.root.position.y+=trickPose.lift;vehicle.root.position.y+=trickPose.lift;player.root.rotation.x+=trickPose.pitch;vehicle.root.rotation.x+=trickPose.pitch;player.root.rotation.y+=trickPose.yaw;vehicle.root.rotation.y+=trickPose.yaw;player.root.rotation.z+=trickPose.roll;vehicle.root.rotation.z+=trickPose.roll;
       if(wallSplat){const yaw=rampMotion.state.ramp!.yaw,flatten=reduced?.55:.2;player.root.rotation.set(0,yaw,0,'YXZ');player.root.scale.set(1.28,1.1,flatten);player.root.position.x+=Math.sin(yaw)*.6;player.root.position.z+=Math.cos(yaw)*.6;vehicle.root.rotation.set(.3,yaw,.55,'YXZ');vehicle.root.position.y=groundY+Math.max(0,rampMotion.state.lift-.8);}
       if(!reduced&&(jetActions.state.phase==='blast'||jetActions.state.phase==='dash')){const t=Math.min(1,jetActions.state.age/(jetActions.state.phase==='dash'?.45:1.05)),twist=Math.PI*(customizationRef.current.jetpack==='helicopter'?4:2)*t*t*(3-2*t);if(customizationRef.current.jetpack==='mini-plane'&&jetActions.state.phase==='blast'){player.root.rotateX(-twist);vehicle.root.rotateX(-twist);}else if(['flying-car','mini-plane'].includes(customizationRef.current.jetpack)){player.root.rotateZ(twist);vehicle.root.rotateZ(twist);}else if(customizationRef.current.jetpack==='rocketboard'){if(jetActions.state.phase==='blast'){player.root.rotateY(twist*1.5);vehicle.root.rotateY(twist*1.5);}else{player.root.rotateX(twist);vehicle.root.rotateX(twist);}}else if(customizationRef.current.jetpack==='ironman'){const surge=Math.sin(t*Math.PI)*.3;player.root.rotateX(-surge);vehicle.root.rotateX(-surge);}else{player.root.rotateY(twist);vehicle.root.rotateY(twist);}}
-      const arrivalScale=characterArrival.update(dt,visualLocation.x,groundY,visualLocation.z,reduced,!fieldMenu.current&&!lessonRef.current);
+      const arrivalScale=characterArrival.update(dt,visualLocation.x,groundY,visualLocation.z,reduced||suppressInitialArrival,!fieldMenu.current&&!lessonRef.current);if(suppressInitialArrival&&characterArrival.getState().done)suppressInitialArrival=false;
       player.root.scale.multiplyScalar(arrivalScale);vehicle.root.scale.multiplyScalar(arrivalScale);
+      // Falls with bean bodies (lane F): keep a squashed or knocked-over body on the ground, and show the fall on the face.
+      if(crash>0)player.root.position.y+=knockdownLift(player.root,groundY);
+      knockFace.update(active?dt:0,rooftop.state.falling||jetActions.state.phase==='fall',crash>0||wallSplat);
       vehicle.syncArmor(player.root,rideRef.current==='jetpack'&&!['parachute','fall'].includes(jetActions.state.phase));
       craterEffect.update(active?dt:0,reduced);if(fieldMenu.current)craterEffect.root.visible=false;
       jetpackBreakup.update(active?dt:0,rooftop.surface,!fieldMenu.current);
@@ -730,18 +856,21 @@ export default function Island() {
       parachuteTrail.root.visible=!fieldMenu.current;parachuteTrail.update(visualLocation.x,groundY,visualLocation.z,player.root.rotation.y,active?dt:0,jetActions.state.phase==='parachute',reduced);if(fieldMenu.current)parachuteTrail.root.visible=false;
       parachute.root.visible=!fieldMenu.current;parachute.update(visualLocation.x,groundY,visualLocation.z,player.root.rotation.y,jetActions.state.phase==='parachute',jetActions.state.age,active?dt:0,rooftop.surface(visualLocation.x,visualLocation.z),reduced,jetActions.state.phase==='fall');
 
-      if(jetActions.state.phase==='parachute'){player.handPositions(leftHand,rightHand);parachute.attachHands(leftHand,rightHand);}
+      if(jetActions.state.phase==='parachute'){player.handPositions(leftHand,rightHand);parachute.attachHands(leftHand,rightHand,vehicle.harnessAnchor);}
       jetExhaust.update(visualLocation.x,groundY+bob,visualLocation.z,player.root.rotation.y,fieldSurfaceHeight(visualLocation.x,visualLocation.z),active?dt:0,vehicle.root.visible&&rideRef.current==='jetpack'&&customizationRef.current.jetpack==='classic'&&active,flight.takeoffTime<1.05||Boolean(flight.landing)||['charge','blast','dash'].includes(jetActions.state.phase),reduced);
       flightTrail.root.visible=!fieldMenu.current;flightTrail.update(visualLocation.x,groundY+bob,visualLocation.z,flightHeading,Math.hypot(velocity.x,velocity.z),active?dt:0,customizationRef.current.jetpack,vehicle.root.visible&&rideRef.current==='jetpack'&&customizationRef.current.jetpack!=='classic'&&active&&!['parachute','fall'].includes(jetActions.state.phase),['dash','blast'].includes(jetActions.state.phase),reduced,jetActions.state.phase==='blast');
       rideTrail.update(visualLocation.x,groundY,visualLocation.z,player.root.rotation.y,Math.hypot(velocity.x,velocity.z),active?dt:0,vehicle.root.visible&&rideRef.current!=='walk'&&rideRef.current!=='jetpack'&&active&&!fieldMenu.current&&rampMotion.state.phase!=='air',reduced,groundVariant,rideTricks.state.active||rampMotion.state.phase==='climb');
       islandNpcs.root.visible=!fieldMenu.current&&!lessonRef.current;
-      islandNpcs.update(active?dt:0,elapsed,reduced,{x:visualLocation.x,y:groundY,z:visualLocation.z},!active||!islandNpcs.root.visible,!coarse&&viewportW>600,hoveredNpcId,camera);
+      islandNpcs.update(active?dt:0,elapsed,reduced,{x:visualLocation.x,y:groundY,z:visualLocation.z},!active||!islandNpcs.root.visible,!coarse&&viewportW>600,hoveredNpcId,camera);fieldBump.applyNpcNudges();
       if(now-lastHud>150){const visitor={x:visualLocation.x,y:groundY,z:visualLocation.z};const next=[islandNpcs.root.visible?islandNpcs.nearest(visitor):null,coachPractice.nearest(visitor),volleyballGame.nearest(visitor)].filter((npc):npc is NpcDefinition=>npc!==null).sort((a,b)=>Math.hypot(a.x-visitor.x,a.z-visitor.z)-Math.hypot(b.x-visitor.x,b.z-visitor.z))[0]??null;if(next?.id!==nearbyNpcRef.current?.id){nearbyNpcRef.current=next;setNearbyNpc(next);}}
       npcs.forEach((rig,i)=>{
         rig.root.visible=Boolean(lessonRef.current);if(!lessonRef.current)return;
-        if(lessonRef.current&&i<2){const point=i===0?PASSER:DEFENDER;rig.update(point.x,point.z,dt,elapsed,reduced);rig.root.position.y=fieldSurfaceHeight(point.x,point.z);return;}
+        if(lessonRef.current&&i<2){const phase=lessonRef.current,live=phase==='aim'||phase==='passing'||phase==='replay',point=i===0?PASSER:lessonDefender;
+          // Passer: wind-up and strike on the pass (kick contact = release). Marker: ready stance while the pass is on.
+          rig.update(point.x,point.z,dt,elapsed,reduced,!live?undefined:i===0?{facing:passerFacing,kick:passerKick,actionKind:'pass'}:{ready:1,lookX:orb.x,lookZ:orb.z});rig.root.position.y=fieldSurfaceHeight(point.x,point.z);return;}
         const center=i<3?15:-38,angle=elapsed*.22+i*2.1;rig.update(10+Math.sin(angle)*4+(i%2),center+Math.cos(angle)*7,dt,elapsed,reduced);});
-      guide.visible=receiveRing.visible=Boolean(lessonRef.current);
+      guide.visible=receiveRing.visible=Boolean(lessonRef.current)&&!aimLine.visible&&lessonRef.current!=='passing'&&lessonRef.current!=='replay';
+      if(threatRing.visible&&lessonRef.current==='aim')threatRing.position.set(lessonDefender.x,.15+fieldSurfaceHeight(lessonDefender.x,lessonDefender.z),lessonDefender.z);
       if(lessonRef.current){const lane=passingLane(location);guideMaterial.color.set(lane.open?'#b7f1a4':'#f1a06c');const a=guide.geometry.attributes.position.array as Float32Array;a.set([PASSER.x,.16+fieldSurfaceHeight(PASSER.x,PASSER.z),PASSER.z,location.x,.16+groundY,location.z]);guide.geometry.attributes.position.needsUpdate=true;guide.computeLineDistances();receiveRing.position.set(PASSER.x,.14+fieldSurfaceHeight(PASSER.x,PASSER.z),PASSER.z);if(lane.open!==lastLane){lastLane=lane.open;setLaneOpen(lane.open);}}
       const walkingBall=rideRef.current==='walk'&&!lessonRef.current&&!liveKnockout.joined;
       if(walkingBall&&walkBall.state.mode==='attached'){
@@ -772,6 +901,9 @@ export default function Island() {
       // One consistent island view. Walking/travel changes position, never zoom or angle.
       const flying=rideRef.current==='jetpack',rampCamera=['climb','air','splat'].includes(rampMotion.state.phase),mobileTravel=coarse&&(rideRef.current!=='walk'||streetTraffic.rider.index>=0);
       camTarget.set(visualLocation.x+(flying||mobileTravel?16:18),23+groundY+(rampCamera?rampMotion.state.lift:0)+(mobileTravel?1:0),visualLocation.z+(flying||mobileTravel?33:30));
+      // Coach lesson on a portrait phone: frame passer, marker and receiver above the coach card (same view angle).
+      if(lessonRef.current&&camera.aspect<.85){const fx=(PASSER.x+lessonDefender.x+location.x)/3,fz=(PASSER.z+lessonDefender.z+location.z)/3,shift=5.5/Math.hypot(16,33),scale=1.2;
+        camTarget.set(fx+16*shift+16*scale,groundY+23*scale,fz+33*shift+33*scale);}
       if(!learningFormat.current){camera.position.lerp(camTarget,reduced?1:1-Math.exp(-dt*(mobileTravel?20:flying?14:rampCamera?10:4)));
         // Bound follow lag on phones so boosted rides stay near the center.
         if(mobileTravel){const lag=camera.position.distanceTo(camTarget);if(lag>1.2)camera.position.lerp(camTarget,1-1.2/lag);}
@@ -790,27 +922,28 @@ export default function Island() {
       if(learning){learningView.update(camera,venueById(learning),fieldSession.current,dt,reduced,learningAngle.current,{width:viewportWidth,height:viewportHeight,mobile:fullWidth<=600||window.matchMedia('(pointer:coarse)').matches});quizView.apply([fieldSession.current?.lesson.id,fieldSession.current?.quiz,fieldSession.current?.question,learningAngle.current].join(':'),learningView.target,dt,reduced);}
       else if(wasLearning){camera.up.set(0,1,0);camera.zoom=1;camera.updateProjectionMatrix();learningView.reset();camera.position.set(location.x+18,23+groundY,location.z+30);camera.lookAt(location.x+2,groundY,location.z-3);}
       if(Boolean(learning)!==wasLearning){
-        world.setVisible(!learning);
+        world.setVisible(!learning);coinHunt.setSceneryVisible(!learning);
         fields.setIsolated(Boolean(learning));
       }
       fields.roots.forEach((root,id)=>root.visible=!learning||id===learning);wasLearning=Boolean(learning);
       fields.updateLighting(timeRef.current,camera,learning,dt,reduced,liveKnockout.joined,player.root.position);
       onboardingNpcTarget.current=onboardingNpcFocus.update(camera,onboardingRef.current&&onboardingNpcStep.current,location,fullWidth,fullHeight,dt,reduced);
-      const neededShadowElevation=Math.ceil(Math.max(0,camera.position.y-23)/4)*4;
-      if(neededShadowElevation!==shadowElevation){shadowElevation=neededShadowElevation;fitIslandShadows(sun,camera,shadowElevation);}
-      sun.target.position.set(camera.position.x-18,0,camera.position.z-30);
+      // Quality pass: the watch view fits the shadow map to the watched pitch (the view-based fit spanned ~680 m there).
+      const watchedVenue=learning?venueById(learning):null,neededShadowElevation=watchedVenue?-1-VENUES.indexOf(watchedVenue):Math.ceil(Math.max(0,camera.position.y-23)/4)*4;
+      if(neededShadowElevation!==shadowElevation){shadowElevation=neededShadowElevation;if(watchedVenue)fitShadowsToBox(sun,watchedVenue.width/2+3,watchedVenue.length/2+3,0,6);else fitIslandShadows(sun,camera,shadowElevation);}
+      if(watchedVenue)sun.target.position.set(watchedVenue.x,watchedVenue.elevation??0,watchedVenue.z);else sun.target.position.set(camera.position.x-18,0,camera.position.z-30);
       // Keep the shadow texture aligned to its texels as the flying camera moves.
       const shadowCamera=sun.shadow.camera,texelX=(shadowCamera.right-shadowCamera.left)/sun.shadow.mapSize.x,texelY=(shadowCamera.top-shadowCamera.bottom)/sun.shadow.mapSize.y;
       const shadowX=sun.target.position.dot(shadowRight),shadowY=sun.target.position.dot(shadowUp);
       sun.target.position.addScaledVector(shadowRight,Math.round(shadowX/texelX)*texelX-shadowX).addScaledVector(shadowUp,Math.round(shadowY/texelY)*texelY-shadowY);
       sun.position.set(sun.target.position.x-288,sun.target.position.y+252,sun.target.position.z+198);
       const inspectEnabled=active&&!fieldSession.current&&!lessonRef.current&&!quizView.blocksSelection();
-      let ferryHovered=false;if(inspectEnabled&&hoverPoint){characterRay.setFromCamera(hoverPoint,camera);ferryHovered=pointsAtFerry();}world.setFerryLockHovered(ferryHovered);ferryGlow.update(ferryHovered,dt,reduced);if(ferryHovered&&!ferryWasHovered)sound.ui('hover');ferryWasHovered=ferryHovered;if(ferryHovered)renderer.domElement.style.cursor='pointer';
+      let ferryHovered=false;if(inspectEnabled&&hoverPoint){characterRay.setFromCamera(hoverPoint,camera);ferryHovered=pointsAtFerry();}world.setFerryLockHovered(ferryHovered);ferryGlow.update(ferryHovered,dt,reduced);if(ferryHovered&&!ferryWasHovered)sound.sceneHover(rideRef.current==='jetpack');ferryWasHovered=ferryHovered;if(ferryHovered)renderer.domElement.style.cursor='pointer';
       livePlayerHover=inspectEnabled&&hoverPoint?games.pickPlayer(hoverPoint,camera,fullWidth,fullHeight,learning):null;
       games.setHoverPaused(positionSelectionRef.current?.format??livePlayerHover?.format??null);
       livePlayerGlow.update(livePlayerHover?{id:livePlayerHover.format+':'+livePlayerHover.id,x:livePlayerHover.x,y:livePlayerHover.y,z:livePlayerHover.z}:null,dt,reduced);
       const positionTip=uiElement<HTMLDivElement>('[data-position-tip]');if(positionTip){setUIHidden(positionTip,!livePlayerHover);if(livePlayerHover){const tip=positionInfo(livePlayerHover)?.name+" · What’s this position?";if(positionTip.textContent!==tip)positionTip.textContent=tip;placeUI(positionTip,T.MathUtils.clamp(livePlayerHover.screenX,120,fullWidth-120),Math.max(90,livePlayerHover.screenY-46));renderer.domElement.style.cursor='pointer';}}
-      games.update(active?dt:0,elapsed,camera,fieldSession.current,active,learning,viewportHeight);
+      fieldBump.updateNudges(active?dt:0,reduced);games.update(active?dt:0,elapsed,camera,fieldSession.current,active,learning,viewportHeight);
       coachPractice.update(active?dt:0,elapsed,camera,!learning,reduced,hoveredNpcId);
       volleyballGame.update(active?dt:0,camera,!learning&&!lessonRef.current,reduced,hoveredNpcId);
       // One stable screen-space entry point for whichever field is in view.
@@ -830,9 +963,9 @@ export default function Island() {
       for(const v of VENUES){const button=uiElement<HTMLButtonElement>(`[data-field="${v.id}"]`);if(!button)continue;if(v.id===visibleVenue){if(button.hidden||button.disabled){button.hidden=false;button.disabled=false;button.tabIndex=0;delete button.dataset.leaving;fieldCardExit.delete(button);}}else if(!button.hidden){button.disabled=true;button.tabIndex=-1;if(!fieldCardExit.has(button)){fieldCardExit.set(button,now);button.dataset.leaving='true';}if(reduced||now-fieldCardExit.get(button)!>=350){button.hidden=true;delete button.dataset.leaving;fieldCardExit.delete(button);}}}
 
       world.updateArcade(elapsed,reduced);
-      world.updateWater(active&&!learning?dt:0,reduced);
-      world.updateFerry(active&&!learning?dt:0,reduced);
-      if(active&&!learning&&!reduced)world.waves.forEach((wave,i)=>{wave.position.x+=Math.sin(elapsed*.6+i)*dt*.065;});
+      world.updateWater(active&&!learning?dt:0,reduced||heat.staticAmbience);
+      world.updateFerry(active&&!learning?dt:0,reduced||heat.staticAmbience);
+      if(active&&!learning&&!reduced&&!heat.staticAmbience)world.waves.forEach((wave,i)=>{wave.position.x+=Math.sin(elapsed*.6+i)*dt*.065;});
       if(now-lastHud>150){if(active&&!fieldMenu.current&&!lessonRef.current&&rideRef.current!=='jetpack'&&!rooftop.state.falling&&Math.abs(player.root.position.y-fieldSurfaceHeight(location.x,location.z))<1){const visited=nearestVenue(location.x,location.z);if(visited)recordQuestVisit(visited.id);}const nextJuggling=rideRef.current==='walk'&&(walkBall.state.mode==='juggle'||walkBall.state.mode==='wall-juggle');if(hudJuggling!==nextJuggling){hudJuggling=nextJuggling;setJuggling(nextJuggling);}if(hudX!==location.x||hudZ!==location.z){hudX=location.x;hudZ=location.z;positionStore.publish({x:hudX,z:hudZ});const zone=zoneAt(hudX,hudZ);if(zone!==zoneRef.current){zoneRef.current=zone;setLocationZone(zone);}}lastHud=now;}
       const mobileEntry=coarse||fullWidth<=600;
       const entries=[['store',nearStore,85,11.2,-53,world.storeBounds],['arcade',nearArcade,103,11,-53,world.arcadeBounds],['coaches',nearCoaches,161,11.8,-37,world.coachesBounds],['museum',nearMuseum,168,9.5,186,world.museumBounds]] as const;
@@ -845,20 +978,24 @@ export default function Island() {
       for(const [kind,near,x,y,z] of entries){const prompt=uiElement<HTMLButtonElement>(`[data-${kind}-enter]`);if(prompt){const hoverEntry=canEnter&&!mobileEntry&&((kind===buildingHoverKind&&now<buildingHoverUntil)||prompt.matches(':hover'));let hidden=!!truckCandidate||(mobileEntry?kind!==closestEntry:!near&&!hoverEntry);if(!hidden){storePromptPoint.set(x,y,z).project(camera);hidden=storePromptPoint.z< -1||storePromptPoint.z>1;if(!hidden)placeUI(prompt,T.MathUtils.clamp((storePromptPoint.x+1)*fullWidth/2,75,fullWidth-75),T.MathUtils.clamp((1-storePromptPoint.y)*fullHeight/2,90,fullHeight-160));}setUIHidden(prompt,hidden);}}
       if(closestEntry||(mobileEntry&&truckCandidate)||streetTraffic.rider.index>=0)for(const venue of VENUES){const prompt=uiElement<HTMLElement>(`.field-learn-card[data-field="${venue.id}"]`);if(prompt)setUIHidden(prompt,true);}
 
-      renderer.render(scene,camera);renderStats.rendered++;
+      // Dynamic resolution switches at this frame boundary; the canvas CSS size is unchanged, only the drawing buffer.
+      const viewMoved=camera.position.distanceToSquared(lastCameraPosition)>1e-6||1-Math.abs(camera.quaternion.dot(lastCameraQuaternion))>1e-9||camera.zoom!==lastCameraZoom;
+      const resolution=motionResolution.update(now,viewMoved||Math.hypot(velocity.x,velocity.z)>.1||Boolean(learning&&!quiz?.quiz),paused||Boolean(quiz?.quiz)||aimWaiting);
+      if(resolution){renderer.setPixelRatio(resolution);renderer.setViewport(0,fullHeight-viewportHeight,viewportWidth,viewportHeight);}
+      heat.beforeRender(location,Boolean(learning&&!quiz?.quiz)||(!learning&&!viewMoved&&Math.hypot(velocity.x,velocity.z)<.05&&games.stats.visiblePlayers>0));renderer.render(scene,camera);renderStats.rendered++;heat.afterRender(now,ms,performance.now()-now,renderer.info.render.calls,learning??'');positionStore.frame(location.x,location.z);emitIslandFrame(now);islandFrameAt.current=performance.now();if(stickPaint.current){paintJoystick(joystick.current,stickPaint.current.x,stickPaint.current.y);stickPaint.current=null;}// minimap and thumb move on this frame (heat pass 3)
       cameraMoving=camera.position.distanceToSquared(lastCameraPosition)>1e-8||1-Math.abs(camera.quaternion.dot(lastCameraQuaternion))>1e-10||camera.zoom!==lastCameraZoom;lastCameraPosition.copy(camera.position);lastCameraQuaternion.copy(camera.quaternion);lastCameraZoom=camera.zoom;
       if(firstFrame){firstFrame=false;setSceneReady(true);}
     }
     if(new URLSearchParams(window.location.search).get('lesson')==='space'){rideRef.current='walk';setRideMode('walk');previousRide='walk';lessonCommand.current='intro';}
     const hiddenTransforms=createHiddenTransformGate(scene);
-    const initialFlying=rideRef.current==='jetpack',initialHeight=initialFlying?INITIAL_FLIGHT_HEIGHT:fieldSurfaceHeight(INITIAL_SPAWN.x,INITIAL_SPAWN.z);
+    const initialFlying=rideRef.current==='jetpack',initialHeight=initialFlying?flight.height:fieldSurfaceHeight(sceneSpawn.x,sceneSpawn.z);
     const stopVideoSubscription=subscribeVideoPlayback(playing=>{
       setVideoPlaying(playing);sound.setMediaPaused(playing);music.setMediaPaused(playing);
       cancelAnimationFrame(frame);last=performance.now();accumulator=0;
       if(playing)resetInputs();else if(!disposed)frame=requestAnimationFrame(animate);
     });
-    camera.position.set(INITIAL_SPAWN.x+(initialFlying?16:18),23+initialHeight,INITIAL_SPAWN.z+(initialFlying?33:30));camera.lookAt(camera.position.x-16,initialHeight,camera.position.z-33);cancelAnimationFrame(frame);if(!isVideoPlaying())frame=requestAnimationFrame(animate);
-    return()=>{liveKnockout.dispose();hiddenTransforms.dispose();shadowCache.dispose();shadowVisibility.dispose();shadowBatches.dispose();characterArrival.dispose();coinHunt.dispose();treeDebris.dispose();rampVisuals.dispose();livePlayerGlow.dispose();npcHover.dispose();onboardingNpcFocus.dispose();buildingEffects.forEach(effect=>effect.dispose());ferryGlow.dispose();jetpackBreakup.dispose();quizView.dispose();resetQuizView.current=()=>{};rideChange.dispose();craterEffect.dispose();parachuteTrail.dispose();ballReactions.dispose();sonicBurst.dispose();characterGlow.dispose();parachute.dispose();ballAppearance.dispose();ballEffects.dispose();islandNpcs.dispose();landingMarker.dispose();stopVideoSubscription();music.dispose();musicRef.current=null;sound.dispose();soundRef.current=null;disposed=true;cancelAnimationFrame(frame);observer.disconnect();window.removeEventListener('resize',resize);window.visualViewport?.removeEventListener('resize',resize);window.removeEventListener('pointerup',finishJoystick,true);window.removeEventListener('pointercancel',finishJoystick,true);window.removeEventListener('touchend',finishTouches);window.removeEventListener('touchcancel',finishTouches);window.removeEventListener('pagehide',blur);window.removeEventListener('keydown',keydown);window.removeEventListener('keyup',keyup);window.removeEventListener('blur',blur);document.removeEventListener('visibilitychange',visibility);boundaryFeedback.dispose();starGeometry.dispose();starMaterial.dispose();dizzyStars.removeFromParent();splat.geometry.dispose();splatMaterial.dispose();splat.removeFromParent();jetExhaust.dispose();rideTrail.dispose();flightTrail.dispose();truckReactions.dispose();streetTraffic.dispose();volleyballGame.dispose();vehicle.dispose();player.dispose();npcs.forEach(r=>r.dispose());coachPractice.dispose();renderer.domElement.removeEventListener('pointermove',trackCharacterHover);renderer.domElement.removeEventListener('pointerleave',clearCharacterHover);renderer.domElement.removeEventListener('pointerdown',beginCharacterTap);renderer.domElement.removeEventListener('pointerup',pickCharacter);renderer.domElement.removeEventListener('pointerup',chooseFieldTarget);for(const name of ['pointerdown','pointermove','wheel','touchstart','touchmove'] as const)renderer.domElement.removeEventListener(name,wakeQuizInput);games.dispose();fields.dispose();world.dispose();delete (window as unknown as {__fi2?:unknown}).__fi2;guide.geometry.dispose();guideMaterial.dispose();scene.traverse(object=>{if(object instanceof T.Mesh){object.geometry.dispose();const mats=Array.isArray(object.material)?object.material:[object.material];mats.forEach(m=>m.dispose());}});renderer.dispose();renderer.domElement.remove();};
+    camera.position.set(sceneSpawn.x+(initialFlying?16:18),23+initialHeight,sceneSpawn.z+(initialFlying?33:30));if(departure?.camera)camera.position.set(departure.camera.x,departure.camera.y,departure.camera.z);camera.lookAt(camera.position.x-16,initialHeight,camera.position.z-33);cancelAnimationFrame(frame);if(!isVideoPlaying())frame=requestAnimationFrame(animate);
+    return()=>{saveArcadeDeparture.current=()=>{};heat.dispose();liveKnockout.dispose();hiddenTransforms.dispose();shadowCache.dispose();shadowVisibility.dispose();shadowBatches.dispose();characterArrival.dispose();coinHunt.dispose();treeDebris.dispose();rampVisuals.dispose();livePlayerGlow.dispose();npcHover.dispose();onboardingNpcFocus.dispose();buildingEffects.forEach(effect=>effect.dispose());ferryGlow.dispose();jetpackBreakup.dispose();quizView.dispose();resetQuizView.current=()=>{};rideChange.dispose();craterEffect.dispose();parachuteTrail.dispose();ballReactions.dispose();sonicBurst.dispose();characterGlow.dispose();parachute.dispose();ballAppearance.dispose();ballEffects.dispose();islandNpcs.dispose();landingMarker.dispose();stopVideoSubscription();music.dispose();musicRef.current=null;sound.dispose();soundRef.current=null;disposed=true;cancelAnimationFrame(frame);observer.disconnect();window.removeEventListener('resize',resize);window.visualViewport?.removeEventListener('resize',resize);window.removeEventListener('pointerup',finishJoystick,true);window.removeEventListener('pointercancel',finishJoystick,true);window.removeEventListener('touchend',finishTouches);window.removeEventListener('touchcancel',finishTouches);window.removeEventListener('pagehide',blur);window.removeEventListener('keydown',keydown);window.removeEventListener('keyup',keyup);window.removeEventListener('blur',blur);document.removeEventListener('visibilitychange',visibility);boundaryFeedback.dispose();starGeometry.dispose();starMaterial.dispose();dizzyStars.removeFromParent();splat.geometry.dispose();splatMaterial.dispose();splat.removeFromParent();jetExhaust.dispose();rideTrail.dispose();flightTrail.dispose();truckReactions.dispose();streetTraffic.dispose();volleyballGame.dispose();vehicle.dispose();player.dispose();npcs.forEach(r=>r.dispose());coachPractice.dispose();renderer.domElement.removeEventListener('pointermove',trackCharacterHover);renderer.domElement.removeEventListener('pointerleave',clearCharacterHover);renderer.domElement.removeEventListener('pointerdown',beginCharacterTap);renderer.domElement.removeEventListener('pointerup',pickCharacter);renderer.domElement.removeEventListener('pointerup',chooseFieldTarget);for(const name of ['pointerdown','pointermove','wheel','touchstart','touchmove'] as const)renderer.domElement.removeEventListener(name,wakeQuizInput);games.dispose();fields.dispose();world.dispose();delete (window as unknown as {__fi2?:unknown}).__fi2;guide.geometry.dispose();aimGeometry.dispose();aimMaterial.dispose();lessonAim.current=null;renderer.domElement.removeEventListener('pointerdown',aimDown);renderer.domElement.removeEventListener('pointermove',aimMove);renderer.domElement.removeEventListener('pointerup',aimUp);renderer.domElement.removeEventListener('pointercancel',aimUp);guideMaterial.dispose();scene.traverse(object=>{if(object instanceof T.Mesh){object.geometry.dispose();const mats=Array.isArray(object.material)?object.material:[object.material];mats.forEach(m=>m.dispose());}});renderer.dispose();renderer.domElement.remove();};
   },[]);
   useEffect(()=>{musicRef.current?.setDucked(Boolean(fieldCatalog||lesson));},[fieldCatalog,lesson]);
   // The card code (PlayerCard, PlayerArt, photo manifests, film registry) is no longer in the island bundle: warm it while
@@ -874,12 +1011,10 @@ export default function Island() {
   const actionDown=(e:React.PointerEvent<HTMLButtonElement>,action:'kick'|'juggle')=>{const mode=rideRef.current,variant=mode==='bike'?customizationRef.current.bike:mode==='moped'?customizationRef.current.moped:'';if(!truckRiding&&(isHeldRideAction(mode,variant,action==='kick'?0:1)||mode==='jetpack'&&parachutingRef.current&&action==='kick')){e.preventDefault();heldRidePointers.current.set(e.pointerId,{action:action==='kick'?0:1,button:e.currentTarget});e.currentTarget.setPointerCapture(e.pointerId);e.currentTarget.dataset.touchActionUntil=String(performance.now()+700);input.current[action]=true;tapHaptic();soundRef.current?.ui('click');return;}if(!truckRiding&&action==='kick'&&rideRef.current==='walk'&&!lessonRef.current&&e.button===0){e.preventDefault();if(shotHold.current)return;beginShotHold(e.pointerId,e.currentTarget);e.currentTarget.setPointerCapture(e.pointerId);return;}if(e.pointerType==='mouse')return;e.preventDefault();e.currentTarget.dataset.touchActionUntil=String(performance.now()+700);if(truckRiding){if(action==='kick')truckBoostRequested.current=true;else truckHonkRequested.current=true;}else input.current[action]=true;tapHaptic();soundRef.current?.ui('click');};
   const actionClick=(e:React.MouseEvent<HTMLButtonElement>,action:'kick'|'juggle')=>{if(performance.now()<Number(e.currentTarget.dataset.touchActionUntil??0))return;if(truckRiding){if(action==='kick')truckBoostRequested.current=true;else truckHonkRequested.current=true;}else input.current[action]=true;};
   const releaseStick=(e?:{pointerId:number})=>{if(e&&e.pointerId!==joystickPointer.current)return;const pointer=joystickPointer.current;joystickPointer.current=null;joystickBounds.current=null;if(pointer!==null&&joystick.current?.hasPointerCapture(pointer))joystick.current.releasePointerCapture(pointer);spinGesture.current.reset();setStick({x:0,y:0});input.current.x=input.current.z=0;};
-  return <main onPointerDownCapture={unlockAudio} onPointerUpCapture={unlockAudio} onKeyDownCapture={unlockAudio} onPointerOverCapture={e=>{const button=soundButton(e.target);if(e.pointerType!=='touch'&&button&&!(e.relatedTarget instanceof Node&&button.contains(e.relatedTarget)))soundRef.current?.ui(button.getAttribute('data-sound')==='slide'?'slide':'hover');}} onFocusCapture={e=>{if(soundButton(e.target))soundRef.current?.ui('hover');}} onClickCapture={e=>{const button=soundButton(e.target);if(button&&!(e.detail!==0&&performance.now()<Number((button as HTMLElement).dataset.touchActionUntil??0))){tapHaptic();const cue=(button as HTMLElement).dataset.uiSound;soundRef.current?.ui(cue==='expand'||cue==='collapse'?cue:'click');}}} className={'town-app'+(loadingComplete?' island-revealing':'')+' district-'+district+(controlsFlipped?' controls-flipped':'')+(lesson||fieldCatalog?' in-lesson':'')+(locationZone&1?' at-field':'')+(locationZone&2?' at-square':'')}>
+  return <main onPointerDownCapture={unlockAudio} onPointerUpCapture={unlockAudio} onKeyDownCapture={unlockAudio} onPointerOverCapture={e=>{const button=soundButton(e.target);/* relatedTarget null = the browser re-hit-testing after the DOM changed under a resting pointer (an animating preview re-rendering a button), not the pointer arriving: no hover tick, or it repeats while you hover Done. */if(e.pointerType!=='touch'&&button&&e.relatedTarget instanceof Node&&!button.contains(e.relatedTarget))soundRef.current?.ui(button.getAttribute('data-sound')==='slide'?'slide':'hover');}} onFocusCapture={e=>{if(soundButton(e.target))soundRef.current?.ui('hover');}} onClickCapture={e=>{const button=soundButton(e.target);if(button&&!(e.detail!==0&&performance.now()<Number((button as HTMLElement).dataset.touchActionUntil??0))){tapHaptic();const cue=(button as HTMLElement).dataset.uiSound;soundRef.current?.ui(cue==='expand'||cue==='collapse'?cue:'click');}}} className={'town-app'+(loadingComplete?' island-revealing':'')+' district-'+district+(controlsFlipped?' controls-flipped':'')+(lesson||fieldCatalog?' in-lesson':'')+(locationZone&1?' at-field':'')+(locationZone&2?' at-square':'')}>
     {ready&&!failed&&<NpcConversation npc={talkingNpc} open={conversationOpen} onOpenChange={setConversationOpen}/>}
     {ready&&!failed&&nearbyNpc&&!conversationOpen&&!customizerOpen&&!storeOpen&&!settingsOpen&&!map&&!fieldCatalog&&!lesson&&<button className="npc-talk-prompt" data-tour="npcs" aria-keyshortcuts="E" onClick={()=>openConversation(nearbyNpc)}>Talk to {nearbyNpc.name}</button>}
-    {ready&&!failed&&<IslandOnboarding npcTarget={onboardingNpcTarget} onNpcStepChange={active=>{onboardingNpcStep.current=active;}} open={onboardingOpen} onClose={()=>setOnboardingOpen(false)} value={customization} onChange={changeCustomization}/>}
-    {ready&&!failed&&liveArcadeOpen&&<LiveArcadeMatch onExit={()=>{setLiveArcadeOpen(false);setArcadeOpen(true);}}/>}
-    {ready&&!failed&&<Arcade open={arcadeOpen} onOpenChange={setArcadeOpen} onPlayLive={()=>{setArcadeOpen(false);setLiveArcadeOpen(true);}}/>}
+    {ready&&!failed&&<IslandOnboarding npcTarget={onboardingNpcTarget} onNpcStepChange={active=>{onboardingNpcStep.current=active;if(active)wakeLoopRef.current();}} open={onboardingOpen} onClose={()=>setOnboardingOpen(false)} value={customization} onChange={changeCustomization}/>}
     {ready&&!failed&&!settingsRef.current&&!map&&!fieldCatalog&&!lesson&&<CoinHuntHud near={coinNear}/>}
     {ready&&!failed&&<FerryPreview open={ferryOpen} onOpenChange={setFerryOpen}/>}
     {ready&&!failed&&<Museum open={museumOpen} onOpenChange={setMuseumOpen}/>}
@@ -891,6 +1026,7 @@ export default function Island() {
     <button type="button" className="store-enter-prompt" data-truck-land hidden onPointerDown={e=>travelControlDown(e,landOnTruck)} onClick={e=>travelControlClick(e,landOnTruck)}>Land on truck</button>
     <button type="button" className="store-enter-prompt" data-store-enter aria-label="Enter Store" hidden onClick={()=>openStore()}>Enter</button>
     <button type="button" className="store-enter-prompt" data-arcade-enter aria-label="Enter Arcade" hidden onClick={()=>setArcadeOpen(true)}>Enter</button>
+    {arcadeOpen&&<div className="arcade-departure-fade" data-arcade-departure aria-hidden="true"/>}
     <div data-knockout-status className="knockout-status" role="status" hidden/>
     <button type="button" className="store-enter-prompt" data-museum-enter aria-label="Enter History Museum" hidden onClick={()=>setMuseumOpen(true)}>Enter</button>
     <button type="button" className="store-enter-prompt" data-coaches-enter aria-label="Enter Coaches" hidden onClick={()=>setCoachesOpen(true)}>Enter</button>
@@ -904,11 +1040,12 @@ export default function Island() {
 
     <div className="travel-actions" data-tour="controls"><button className="travel-mode" onPointerDown={e=>travelControlDown(e,cycleRide)} onClick={e=>travelControlClick(e,cycleRide)} aria-label={`Travel mode: ${rideMode==='jetpack'?({classic:'Twin jet','flying-car':'Flying car',helicopter:'Helicopter pack',ironman:'Iron Man suit',rocketboard:'Rocket surfboard','mini-plane':'Mini airplane'}[customization.jetpack]):TRAVEL_MODES[rideMode].label}. Change ride`}><TravelIcon kind={rideMode}/></button><button className="minimap-toggle" aria-label={minimapCollapsed?'Expand map':'Minimize map'} aria-expanded={!minimapCollapsed} aria-controls="corner-map" onPointerDown={e=>travelControlDown(e,()=>setMinimapCollapsed(value=>!value))} onClick={e=>travelControlClick(e,()=>setMinimapCollapsed(value=>!value))}><TravelIcon kind={minimapCollapsed?'map':'minus'}/></button><div className="touch-actions"><button className="touch-shoot" aria-label={truckRiding?'Speed up':lesson?'Call for pass':(parachuting?'Sky scan':equippedActions(rideMode,customization)[0])} onPointerDown={e=>actionDown(e,'kick')} onPointerUp={e=>{releaseRideAction(e.pointerId);if(shotHold.current?.id===e.pointerId)finishShotHold();}} onPointerCancel={e=>{releaseRideAction(e.pointerId);if(shotHold.current?.id===e.pointerId)cancelShotHold();}} onLostPointerCapture={e=>{releaseRideAction(e.pointerId);if(shotHold.current?.id===e.pointerId)cancelShotHold();}} onContextMenu={e=>e.preventDefault()} onKeyDown={e=>{if(e.code==='Space'&&parachutingRef.current){e.preventDefault();e.stopPropagation();heldRidePointers.current.set(-1,{action:0,button:e.currentTarget});if(!e.repeat)input.current.kick=true;return;}if(e.code==='Space'&&!truckRiding&&rideRef.current==='walk'&&!lessonRef.current){e.preventDefault();e.stopPropagation();if(!e.repeat)beginShotHold('keyboard',e.currentTarget);}}} onKeyUp={e=>{if(e.code==='Space'&&parachutingRef.current){e.preventDefault();e.stopPropagation();releaseRideAction(-1);return;}if(e.code==='Space'&&shotHold.current?.id==='keyboard'){e.preventDefault();e.stopPropagation();finishShotHold();}}} onBlur={e=>{releaseRideAction(-1);if(shotHold.current?.button===e.currentTarget)cancelShotHold();}} title={`${truckRiding?'Speed up':(parachuting?'Sky scan — hold to spin faster and look for open space':equippedActions(rideMode,customization)[0])} · Space${rideMode==='walk'&&!truckRiding?'. Hold for a higher, stronger kick.':''}`} onClick={e=>actionClick(e,'kick')}>{truckRiding?<TravelIcon kind="boost"/>:<TravelIcon kind={parachuting?'spin':rideMode==='scooter'?'spin':rideMode==='bike'?'front':rideMode==='moped'?'stand':rideMode==='jetpack'?'boost':'shoot'}/>}</button><button className="touch-juggle" hidden={Boolean(lesson)} aria-label={truckRiding?'Honk':rideMode==='walk'&&juggling?'Stop juggling':(parachuting?(skyJuggling?'Stop juggling':'Juggle'):equippedActions(rideMode,customization)[1])} title={`${truckRiding?'Honk':(parachuting?'Juggle in the sky — alternate soft touches while you glide':equippedActions(rideMode,customization)[1])} · J`} aria-pressed={parachuting?skyJuggling:rideMode==='walk'?juggling:undefined} onPointerDown={e=>actionDown(e,'juggle')} onLostPointerCapture={e=>releaseRideAction(e.pointerId)} onClick={e=>actionClick(e,'juggle')}>{truckRiding?<Icon name="horn" size={26}/>:<TravelIcon kind={parachuting?(skyJuggling?'stop':'juggle'):rideMode==='bike'?'back':rideMode==='scooter'||rideMode==='moped'?'jump':rideMode==='jetpack'?'skydive':juggling?'stop':'juggle'}/>}</button></div></div><div className="touch-controls"><div className="joystick" data-edge="false" ref={joystick} draggable={false} onDragStart={e=>e.preventDefault()} onContextMenu={e=>e.preventDefault()} onPointerDown={e=>{if(joystickPointer.current!==null){if(e.currentTarget.hasPointerCapture(joystickPointer.current))return;releaseStick();}e.preventDefault();joystickBounds.current=null;joystickPointer.current=e.pointerId;e.currentTarget.setPointerCapture(e.pointerId);updateStick(e);}} onPointerMove={e=>{if(e.pointerId===joystickPointer.current&&e.currentTarget.hasPointerCapture(e.pointerId)){e.preventDefault();updateStick(e);}}} onPointerUp={releaseStick} onPointerCancel={releaseStick} onLostPointerCapture={releaseStick} role="group" aria-label="Drag to move"><i className="joystick-contact" aria-hidden="true"><i className="joystick-contact-arc"/></i><span  aria-hidden="true"/></div></div>
     {scored&&<div className="goal-toast" role="status">GOLAZO! <span>GO GET ANOTHER.</span></div>}</>}
-    {ready&&!failed&&<CardOfferHost blocked={ballLessons.length>0||conversationOpen||onboardingOpen||customizerOpen||storeOpen||arcadeOpen||liveArcadeOpen||coachesOpen||museumOpen||ferryOpen||map||!!positionSelection} onOpenChange={setCardOfferOpen}/>}
+    {ready&&!failed&&<CardOfferHost blocked={ballLessons.length>0||conversationOpen||onboardingOpen||customizerOpen||storeOpen||arcadeOpen||coachesOpen||museumOpen||ferryOpen||map||!!positionSelection} onOpenChange={setCardOfferOpen}/>}
+    {ready&&!failed&&<CostumeMilestoneToast blocked={cardOfferOpen||ballLessons.length>0||conversationOpen||onboardingOpen||customizerOpen||storeOpen||arcadeOpen||coachesOpen||museumOpen||ferryOpen||map||!!positionSelection||settingsOpen}/>}{ready&&!failed&&<RideUnlockToast blocked={cardOfferOpen||ballLessons.length>0||conversationOpen||onboardingOpen||customizerOpen||storeOpen||arcadeOpen||coachesOpen||museumOpen||ferryOpen||map||!!positionSelection||settingsOpen}/>}
     {ballLessons.length>0&&<BallHuntLesson key={ballLessons[0]} spotId={ballLessons[0]} onDismiss={()=>setBallLessons(queue=>queue.slice(1))}/>}
-    {fieldCatalog&&<FieldLearning pathRequest={formatPathRequest??undefined} learningId={learningRequest?.id} onResetQuizView={()=>resetQuizView.current()} onResizeSound={()=>soundRef.current?.ui('hover')} onWake={()=>wakeLoopRef.current()} onLivePause={paused=>gamesRef.current?.setPaused(fieldCatalog,paused)} readMatch={()=>gamesRef.current?.getView(fieldCatalog)??null} cameraAngle={learningAngle} key={formatPathRequest?.nonce??learningRequest?.nonce??fieldCatalog} format={fieldCatalog} session={fieldSession} voiceEnabled={voiceEnabled} coachVoice={coachVoice} narrationPaused={settingsOpen||map||conversationOpen||videoPlaying} onClose={()=>{fieldSession.current=null;setFieldCatalog(null);if(learningRequest||formatPathRequest){setFormatPathRequest(null);setLearningRequest(null);setPathsRequest({nonce:Date.now()});setSettingsOpen(true);}}}/>}
-    {lesson&&<CoachLesson phase={lesson} open={laneOpen} feedback={coachFeedback} onWatch={()=>requestLesson('watch')} onPractice={()=>requestLesson('practice')} onPass={()=>{input.current.kick=true;}} onExit={()=>requestLesson('exit')}/>}
-    {!ready&&!failed&&<IslandLoading exiting={loadingComplete}/>}
+    {fieldCatalog&&<FieldLearning pathRequest={formatPathRequest??undefined} learningId={learningRequest?.id} onResetQuizView={()=>resetQuizView.current()} onResizeSound={()=>soundRef.current?.ui('hover')} onWake={()=>wakeLoopRef.current()} onLivePause={paused=>gamesRef.current?.setPaused(fieldCatalog,paused)} readMatch={()=>gamesRef.current?.getView(fieldCatalog)??null} cameraAngle={learningAngle} key={formatPathRequest?.nonce??learningRequest?.nonce??fieldCatalog} format={fieldCatalog} session={fieldSession} voiceEnabled={voiceEnabled} coachVoice={coachVoice} narrationPaused={arcadeOpen||settingsOpen||map||conversationOpen||videoPlaying} onClose={()=>{fieldSession.current=null;setFieldCatalog(null);if(learningRequest||formatPathRequest){setFormatPathRequest(null);setLearningRequest(null);setPathsRequest({nonce:Date.now()});setSettingsOpen(true);}}}/>}
+    {lesson&&<CoachLesson phase={lesson} open={laneOpen} feedback={coachFeedback} onWatch={()=>requestLesson('watch')} onPractice={()=>requestLesson('practice')} onPass={()=>{input.current.kick=true;}} onExit={()=>requestLesson('exit')} format={passFormat} onFormat={choosePassFormat} attempts={passAttempts} aimStatus={aimStatus} onStraight={()=>lessonAim.current?.straight()} onPlay={()=>lessonAim.current?.play()} onCancel={()=>lessonAim.current?.cancel()} onReplay={()=>lessonAim.current?.replay()}/>}
+    {!ready&&!failed&&(returningFromArcade?<IslandReturnLoading exiting={loadingComplete}/>:<IslandLoading exiting={loadingComplete}/>)}
     {failed&&<div className="town-loading"><h2>The island needs WebGL.</h2><p>Enable hardware acceleration in your browser, then reload.</p><button className="pixel-button" onClick={()=>window.location.reload()}>TRY AGAIN</button></div>}
     {guideMounted.current&&<PositionGuide selection={positionSelection} onClose={()=>{setPositionSelection(null);gamesRef.current?.setHoverPaused(null);}}/>}
     <div data-position-tip className="live-position-tip" role="status" hidden/>

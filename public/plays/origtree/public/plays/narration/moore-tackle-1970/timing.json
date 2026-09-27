@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The break",
+   "text": "Mexico, 1970. Jairzinho of Brazil races at England\u2019s goal. Bobby Moore runs back with him, eyes on the ball. Into the box\u2026 Moore takes it!",
+   "src": "/plays/narration/moore-tackle-1970/1.m4a",
+   "seconds": 11.6,
+   "words": [
+    {
+     "w": "Mexico",
+     "at": 0.4
+    },
+    {
+     "w": "1970",
+     "at": 1.05
+    },
+    {
+     "w": "Jairzinho",
+     "at": 2.425
+    },
+    {
+     "w": "of",
+     "at": 3.188
+    },
+    {
+     "w": "Brazil",
+     "at": 3.275
+    },
+    {
+     "w": "races",
+     "at": 3.788
+    },
+    {
+     "w": "at",
+     "at": 4.275
+    },
+    {
+     "w": "England\u2019s",
+     "at": 4.375
+    },
+    {
+     "w": "goal",
+     "at": 4.85
+    },
+    {
+     "w": "Bobby",
+     "at": 5.713
+    },
+    {
+     "w": "Moore",
+     "at": 6.1
+    },
+    {
+     "w": "runs",
+     "at": 6.362
+    },
+    {
+     "w": "back",
+     "at": 6.675
+    },
+    {
+     "w": "with",
+     "at": 6.938
+    },
+    {
+     "w": "him",
+     "at": 7.062
+    },
+    {
+     "w": "eyes",
+     "at": 7.513
+    },
+    {
+     "w": "on",
+     "at": 7.888
+    },
+    {
+     "w": "the",
+     "at": 7.987
+    },
+    {
+     "w": "ball",
+     "at": 8.075
+    },
+    {
+     "w": "Into",
+     "at": 8.938
+    },
+    {
+     "w": "the",
+     "at": 9.2
+    },
+    {
+     "w": "box",
+     "at": 9.3
+    },
+    {
+     "w": "Moore",
+     "at": 9.85
+    },
+    {
+     "w": "takes",
+     "at": 10.075
+    },
+    {
+     "w": "it",
+     "at": 10.438
+    }
+   ]
+  },
+  {
+   "label": "The replay",
+   "text": "Watch again, slowly. Moore waits, and waits. Then, at just the right moment, he slides in, and his right foot takes the ball.",
+   "src": "/plays/narration/moore-tackle-1970/2.m4a",
+   "seconds": 8.9,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.137
+    },
+    {
+     "w": "Moore",
+     "at": 2.075
+    },
+    {
+     "w": "waits",
+     "at": 2.325
+    },
+    {
+     "w": "and",
+     "at": 2.737
+    },
+    {
+     "w": "waits",
+     "at": 2.85
+    },
+    {
+     "w": "Then",
+     "at": 3.825
+    },
+    {
+     "w": "at",
+     "at": 4.188
+    },
+    {
+     "w": "just",
+     "at": 4.275
+    },
+    {
+     "w": "the",
+     "at": 4.487
+    },
+    {
+     "w": "right",
+     "at": 4.575
+    },
+    {
+     "w": "moment",
+     "at": 4.85
+    },
+    {
+     "w": "he",
+     "at": 5.287
+    },
+    {
+     "w": "slides",
+     "at": 5.425
+    },
+    {
+     "w": "in",
+     "at": 5.875
+    },
+    {
+     "w": "and",
+     "at": 6.213
+    },
+    {
+     "w": "his",
+     "at": 6.312
+    },
+    {
+     "w": "right",
+     "at": 6.475
+    },
+    {
+     "w": "foot",
+     "at": 6.787
+    },
+    {
+     "w": "takes",
+     "at": 7.075
+    },
+    {
+     "w": "the",
+     "at": 7.375
+    },
+    {
+     "w": "ball",
+     "at": 7.475
+    }
+   ]
+  },
+  {
+   "label": "Clean",
+   "text": "Jairzinho tumbles over, but it\u2019s clean: Moore touched only the ball. He gets up and carries it away.",
+   "src": "/plays/narration/moore-tackle-1970/3.m4a",
+   "seconds": 7.4,
+   "words": [
+    {
+     "w": "Jairzinho",
+     "at": 0.425
+    },
+    {
+     "w": "tumbles",
+     "at": 1.113
+    },
+    {
+     "w": "over",
+     "at": 1.55
+    },
+    {
+     "w": "but",
+     "at": 1.887
+    },
+    {
+     "w": "it\u2019s",
+     "at": 2.013
+    },
+    {
+     "w": "clean",
+     "at": 2.188
+    },
+    {
+     "w": "Moore",
+     "at": 3.112
+    },
+    {
+     "w": "touched",
+     "at": 3.413
+    },
+    {
+     "w": "only",
+     "at": 3.775
+    },
+    {
+     "w": "the",
+     "at": 4.062
+    },
+    {
+     "w": "ball",
+     "at": 4.15
+    },
+    {
+     "w": "He",
+     "at": 4.9
+    },
+    {
+     "w": "gets",
+     "at": 5.025
+    },
+    {
+     "w": "up",
+     "at": 5.237
+    },
+    {
+     "w": "and",
+     "at": 5.388
+    },
+    {
+     "w": "carries",
+     "at": 5.5
+    },
+    {
+     "w": "it",
+     "at": 5.862
+    },
+    {
+     "w": "away",
+     "at": 5.95
+    }
+   ]
+  },
+  {
+   "label": "The lesson",
+   "text": "That tackle by Moore! Be patient: run back, watch the ball, and time your tackle. Win it cleanly, then pass it out.",
+   "src": "/plays/narration/moore-tackle-1970/4.m4a",
+   "seconds": 8.2,
+   "words": [
+    {
+     "w": "That",
+     "at": 0.35
+    },
+    {
+     "w": "tackle",
+     "at": 0.525
+    },
+    {
+     "w": "by",
+     "at": 0.875
+    },
+    {
+     "w": "Moore",
+     "at": 1.05
+    },
+    {
+     "w": "Be",
+     "at": 1.675
+    },
+    {
+     "w": "patient",
+     "at": 1.825
+    },
+    {
+     "w": "run",
+     "at": 2.737
+    },
+    {
+     "w": "back",
+     "at": 3.0
+    },
+    {
+     "w": "watch",
+     "at": 3.375
+    },
+    {
+     "w": "the",
+     "at": 3.675
+    },
+    {
+     "w": "ball",
+     "at": 3.775
+    },
+    {
+     "w": "and",
+     "at": 4.162
+    },
+    {
+     "w": "time",
+     "at": 4.275
+    },
+    {
+     "w": "your",
+     "at": 4.537
+    },
+    {
+     "w": "tackle",
+     "at": 4.65
+    },
+    {
+     "w": "Win",
+     "at": 5.588
+    },
+    {
+     "w": "it",
+     "at": 5.737
+    },
+    {
+     "w": "cleanly",
+     "at": 5.825
+    },
+    {
+     "w": "then",
+     "at": 6.375
+    },
+    {
+     "w": "pass",
+     "at": 6.575
+    },
+    {
+     "w": "it",
+     "at": 6.862
+    },
+    {
+     "w": "out",
+     "at": 6.95
+    }
+   ]
+  }
+ ]
+}

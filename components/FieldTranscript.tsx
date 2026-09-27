@@ -21,7 +21,8 @@ export default function FieldTranscript({docked=false,onResizeSound,open,onClose
   }else message={id:`${chosen.id}:s${step}`,label:`Step ${step+1}`,text:chosen.steps[step].say??chosen.steps[step].desc};
   if(!seen.current.has(message.id)){seen.current.add(message.id);setFeed(old=>[...old,message]);}
  },[chosen,step,quiz,question,answer]);
- useEffect(()=>{if(chosen)return;const update=()=>setMatch(readMatch?.()??null);update();const timer=setInterval(update,500);return()=>clearInterval(timer);},[chosen,readMatch]);
+ // Heat pass 4 (audit F11): poll only while the panel is shown, and re-render only when the score or the feed changed.
+ useEffect(()=>{if(chosen||!mounted)return;const update=()=>{const next=readMatch?.()??null;setMatch(old=>old&&next&&old.events.length===next.events.length&&old.events[old.events.length-1]?.id===next.events[next.events.length-1]?.id&&old.score.gold===next.score.gold&&old.score.blue===next.score.blue?old:next);};update();const timer=setInterval(update,500);return()=>clearInterval(timer);},[chosen,readMatch,mounted]);
  useEffect(()=>{if(open){setMounted(true);return;}if(!mounted)return;const finish=()=>{const restore=panel.current?.contains(document.activeElement);setMounted(false);if(restore)trigger.current?.focus({preventScroll:true});};if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){finish();return;}const timer=setTimeout(finish,240);return()=>clearTimeout(timer);},[open,trigger]);
  useEffect(()=>{if(open&&mounted){resizeGrip.current?.focus({preventScroll:true});follow.current=true;}},[open,mounted]);
  const currentId=chosen?`${chosen.id}:${quiz?'q'+question+(answer===null?'':':a'+answer):'s'+step}`:null;

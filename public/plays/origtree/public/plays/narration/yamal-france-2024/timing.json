@@ -1,0 +1,398 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Munich, live",
+   "text": "Munich, 2024. Spain, in red, are losing to France in the Euro semi-final. Sixteen-year-old Lamine Yamal gets the ball outside the box. A defender blocks his way. One step inside... he shoots... off the post! Goal!",
+   "src": "/plays/narration/yamal-france-2024/1.m4a",
+   "seconds": 16.9,
+   "words": [
+    {
+     "w": "Munich",
+     "at": 0.4
+    },
+    {
+     "w": "2024",
+     "at": 0.825
+    },
+    {
+     "w": "Spain",
+     "at": 2.163
+    },
+    {
+     "w": "in",
+     "at": 2.7
+    },
+    {
+     "w": "red",
+     "at": 2.85
+    },
+    {
+     "w": "are",
+     "at": 3.2
+    },
+    {
+     "w": "losing",
+     "at": 3.35
+    },
+    {
+     "w": "to",
+     "at": 3.725
+    },
+    {
+     "w": "France",
+     "at": 3.862
+    },
+    {
+     "w": "in",
+     "at": 4.275
+    },
+    {
+     "w": "the",
+     "at": 4.362
+    },
+    {
+     "w": "Euro",
+     "at": 4.463
+    },
+    {
+     "w": "semi-final",
+     "at": 4.838
+    },
+    {
+     "w": "Sixteen-year-old",
+     "at": 6.125
+    },
+    {
+     "w": "Lamine",
+     "at": 7.075
+    },
+    {
+     "w": "Yamal",
+     "at": 7.5
+    },
+    {
+     "w": "gets",
+     "at": 7.95
+    },
+    {
+     "w": "the",
+     "at": 8.2
+    },
+    {
+     "w": "ball",
+     "at": 8.3
+    },
+    {
+     "w": "outside",
+     "at": 8.625
+    },
+    {
+     "w": "the",
+     "at": 9.037
+    },
+    {
+     "w": "box",
+     "at": 9.125
+    },
+    {
+     "w": "A",
+     "at": 9.925
+    },
+    {
+     "w": "defender",
+     "at": 10.0
+    },
+    {
+     "w": "blocks",
+     "at": 10.525
+    },
+    {
+     "w": "his",
+     "at": 10.838
+    },
+    {
+     "w": "way",
+     "at": 11.0
+    },
+    {
+     "w": "One",
+     "at": 11.65
+    },
+    {
+     "w": "step",
+     "at": 11.95
+    },
+    {
+     "w": "inside",
+     "at": 12.25
+    },
+    {
+     "w": "he",
+     "at": 13.275
+    },
+    {
+     "w": "shoots",
+     "at": 13.463
+    },
+    {
+     "w": "off",
+     "at": 14.25
+    },
+    {
+     "w": "the",
+     "at": 14.475
+    },
+    {
+     "w": "post",
+     "at": 14.588
+    },
+    {
+     "w": "Goal",
+     "at": 15.475
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. He opens his body and wraps his left foot round the ball. It swerves around the defender toward the far post.",
+   "src": "/plays/narration/yamal-france-2024/2.m4a",
+   "seconds": 9.3,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.262
+    },
+    {
+     "w": "He",
+     "at": 2.288
+    },
+    {
+     "w": "opens",
+     "at": 2.45
+    },
+    {
+     "w": "his",
+     "at": 2.788
+    },
+    {
+     "w": "body",
+     "at": 2.95
+    },
+    {
+     "w": "and",
+     "at": 3.35
+    },
+    {
+     "w": "wraps",
+     "at": 3.475
+    },
+    {
+     "w": "his",
+     "at": 3.763
+    },
+    {
+     "w": "left",
+     "at": 3.938
+    },
+    {
+     "w": "foot",
+     "at": 4.237
+    },
+    {
+     "w": "round",
+     "at": 4.5
+    },
+    {
+     "w": "the",
+     "at": 4.713
+    },
+    {
+     "w": "ball",
+     "at": 4.8
+    },
+    {
+     "w": "It",
+     "at": 5.575
+    },
+    {
+     "w": "swerves",
+     "at": 5.8
+    },
+    {
+     "w": "around",
+     "at": 6.275
+    },
+    {
+     "w": "the",
+     "at": 6.562
+    },
+    {
+     "w": "defender",
+     "at": 6.65
+    },
+    {
+     "w": "toward",
+     "at": 7.175
+    },
+    {
+     "w": "the",
+     "at": 7.438
+    },
+    {
+     "w": "far",
+     "at": 7.537
+    },
+    {
+     "w": "post",
+     "at": 7.838
+    }
+   ]
+  },
+  {
+   "label": "The far post",
+   "text": "From behind: past Maignan's dive, in off the post! The youngest scorer in Euro history!",
+   "src": "/plays/narration/yamal-france-2024/3.m4a",
+   "seconds": 6.7,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "behind",
+     "at": 0.487
+    },
+    {
+     "w": "past",
+     "at": 1.413
+    },
+    {
+     "w": "Maignan's",
+     "at": 1.725
+    },
+    {
+     "w": "dive",
+     "at": 2.25
+    },
+    {
+     "w": "in",
+     "at": 2.638
+    },
+    {
+     "w": "off",
+     "at": 2.712
+    },
+    {
+     "w": "the",
+     "at": 2.888
+    },
+    {
+     "w": "post",
+     "at": 2.975
+    },
+    {
+     "w": "The",
+     "at": 3.75
+    },
+    {
+     "w": "youngest",
+     "at": 3.875
+    },
+    {
+     "w": "scorer",
+     "at": 4.312
+    },
+    {
+     "w": "in",
+     "at": 4.775
+    },
+    {
+     "w": "Euro",
+     "at": 4.9
+    },
+    {
+     "w": "history",
+     "at": 5.175
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: open your body, and curl it around the defender toward the far post.",
+   "src": "/plays/narration/yamal-france-2024/4.m4a",
+   "seconds": 6.0,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.562
+    },
+    {
+     "w": "open",
+     "at": 1.413
+    },
+    {
+     "w": "your",
+     "at": 1.725
+    },
+    {
+     "w": "body",
+     "at": 1.85
+    },
+    {
+     "w": "and",
+     "at": 2.375
+    },
+    {
+     "w": "curl",
+     "at": 2.538
+    },
+    {
+     "w": "it",
+     "at": 2.862
+    },
+    {
+     "w": "around",
+     "at": 2.95
+    },
+    {
+     "w": "the",
+     "at": 3.263
+    },
+    {
+     "w": "defender",
+     "at": 3.35
+    },
+    {
+     "w": "toward",
+     "at": 3.875
+    },
+    {
+     "w": "the",
+     "at": 4.138
+    },
+    {
+     "w": "far",
+     "at": 4.237
+    },
+    {
+     "w": "post",
+     "at": 4.537
+    }
+   ]
+  }
+ ]
+}

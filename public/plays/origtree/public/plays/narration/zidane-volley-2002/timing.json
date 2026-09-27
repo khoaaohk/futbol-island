@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The cross is coming",
+   "text": "Glasgow, 2002. The Champions League final. Real Madrid and Bayer Leverkusen are level, one each. Roberto Carlos swings a high, looping cross in from the left.",
+   "src": "/plays/narration/zidane-volley-2002/1.m4a",
+   "seconds": 12.7,
+   "words": [
+    {
+     "w": "Glasgow",
+     "at": 0.375
+    },
+    {
+     "w": "2002",
+     "at": 1.025
+    },
+    {
+     "w": "The",
+     "at": 2.462
+    },
+    {
+     "w": "Champions",
+     "at": 2.587
+    },
+    {
+     "w": "League",
+     "at": 3.2
+    },
+    {
+     "w": "final",
+     "at": 3.462
+    },
+    {
+     "w": "Real",
+     "at": 4.275
+    },
+    {
+     "w": "Madrid",
+     "at": 4.575
+    },
+    {
+     "w": "and",
+     "at": 5.075
+    },
+    {
+     "w": "Bayer",
+     "at": 5.2
+    },
+    {
+     "w": "Leverkusen",
+     "at": 5.575
+    },
+    {
+     "w": "are",
+     "at": 6.25
+    },
+    {
+     "w": "level",
+     "at": 6.375
+    },
+    {
+     "w": "one",
+     "at": 6.963
+    },
+    {
+     "w": "each",
+     "at": 7.225
+    },
+    {
+     "w": "Roberto",
+     "at": 8.162
+    },
+    {
+     "w": "Carlos",
+     "at": 8.662
+    },
+    {
+     "w": "swings",
+     "at": 9.188
+    },
+    {
+     "w": "a",
+     "at": 9.525
+    },
+    {
+     "w": "high",
+     "at": 9.637
+    },
+    {
+     "w": "looping",
+     "at": 10.213
+    },
+    {
+     "w": "cross",
+     "at": 10.637
+    },
+    {
+     "w": "in",
+     "at": 10.988
+    },
+    {
+     "w": "from",
+     "at": 11.175
+    },
+    {
+     "w": "the",
+     "at": 11.312
+    },
+    {
+     "w": "left",
+     "at": 11.4
+    }
+   ]
+  },
+  {
+   "label": "The ball drops",
+   "text": "Zinedine Zidane waits at the edge of the box. His eyes never leave the ball. Arms out, balanced, he lets it drop.",
+   "src": "/plays/narration/zidane-volley-2002/2.m4a",
+   "seconds": 8.6,
+   "words": [
+    {
+     "w": "Zinedine",
+     "at": 0.425
+    },
+    {
+     "w": "Zidane",
+     "at": 0.975
+    },
+    {
+     "w": "waits",
+     "at": 1.425
+    },
+    {
+     "w": "at",
+     "at": 1.712
+    },
+    {
+     "w": "the",
+     "at": 1.788
+    },
+    {
+     "w": "edge",
+     "at": 1.925
+    },
+    {
+     "w": "of",
+     "at": 2.163
+    },
+    {
+     "w": "the",
+     "at": 2.237
+    },
+    {
+     "w": "box",
+     "at": 2.325
+    },
+    {
+     "w": "His",
+     "at": 3.2
+    },
+    {
+     "w": "eyes",
+     "at": 3.4
+    },
+    {
+     "w": "never",
+     "at": 3.775
+    },
+    {
+     "w": "leave",
+     "at": 4.05
+    },
+    {
+     "w": "the",
+     "at": 4.312
+    },
+    {
+     "w": "ball",
+     "at": 4.4
+    },
+    {
+     "w": "Arms",
+     "at": 5.213
+    },
+    {
+     "w": "out",
+     "at": 5.625
+    },
+    {
+     "w": "balanced",
+     "at": 6.0
+    },
+    {
+     "w": "he",
+     "at": 6.725
+    },
+    {
+     "w": "lets",
+     "at": 6.875
+    },
+    {
+     "w": "it",
+     "at": 7.112
+    },
+    {
+     "w": "drop",
+     "at": 7.2
+    }
+   ]
+  },
+  {
+   "label": "The volley",
+   "text": "Then, with his left foot, he volleys it. Straight into the top corner! Real Madrid lead, two goals to one.",
+   "src": "/plays/narration/zidane-volley-2002/3.m4a",
+   "seconds": 7.5,
+   "words": [
+    {
+     "w": "Then",
+     "at": 0.375
+    },
+    {
+     "w": "with",
+     "at": 0.588
+    },
+    {
+     "w": "his",
+     "at": 0.688
+    },
+    {
+     "w": "left",
+     "at": 0.85
+    },
+    {
+     "w": "foot",
+     "at": 1.137
+    },
+    {
+     "w": "he",
+     "at": 1.45
+    },
+    {
+     "w": "volleys",
+     "at": 1.587
+    },
+    {
+     "w": "it",
+     "at": 2.038
+    },
+    {
+     "w": "Straight",
+     "at": 2.7
+    },
+    {
+     "w": "into",
+     "at": 3.013
+    },
+    {
+     "w": "the",
+     "at": 3.188
+    },
+    {
+     "w": "top",
+     "at": 3.275
+    },
+    {
+     "w": "corner",
+     "at": 3.55
+    },
+    {
+     "w": "Real",
+     "at": 4.338
+    },
+    {
+     "w": "Madrid",
+     "at": 4.625
+    },
+    {
+     "w": "lead",
+     "at": 5.025
+    },
+    {
+     "w": "two",
+     "at": 5.537
+    },
+    {
+     "w": "goals",
+     "at": 5.75
+    },
+    {
+     "w": "to",
+     "at": 6.075
+    },
+    {
+     "w": "one",
+     "at": 6.2
+    }
+   ]
+  },
+  {
+   "label": "What it teaches",
+   "text": "Want to hit a volley like Zidane? Watch the dropping ball, stay balanced, and strike through the middle of it.",
+   "src": "/plays/narration/zidane-volley-2002/4.m4a",
+   "seconds": 7.2,
+   "words": [
+    {
+     "w": "Want",
+     "at": 0.375
+    },
+    {
+     "w": "to",
+     "at": 0.537
+    },
+    {
+     "w": "hit",
+     "at": 0.625
+    },
+    {
+     "w": "a",
+     "at": 0.762
+    },
+    {
+     "w": "volley",
+     "at": 0.838
+    },
+    {
+     "w": "like",
+     "at": 1.225
+    },
+    {
+     "w": "Zidane",
+     "at": 1.425
+    },
+    {
+     "w": "Watch",
+     "at": 2.362
+    },
+    {
+     "w": "the",
+     "at": 2.7
+    },
+    {
+     "w": "dropping",
+     "at": 2.8
+    },
+    {
+     "w": "ball",
+     "at": 3.25
+    },
+    {
+     "w": "stay",
+     "at": 3.763
+    },
+    {
+     "w": "balanced",
+     "at": 4.075
+    },
+    {
+     "w": "and",
+     "at": 4.8
+    },
+    {
+     "w": "strike",
+     "at": 4.938
+    },
+    {
+     "w": "through",
+     "at": 5.3
+    },
+    {
+     "w": "the",
+     "at": 5.5
+    },
+    {
+     "w": "middle",
+     "at": 5.6
+    },
+    {
+     "w": "of",
+     "at": 5.85
+    },
+    {
+     "w": "it",
+     "at": 5.987
+    }
+   ]
+  }
+ ]
+}

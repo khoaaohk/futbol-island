@@ -1,0 +1,382 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Cardiff, 2006, the FA Cup final. Liverpool are losing three-two in added time, and Steven Gerrard waits, thirty-five yards out. The ball is headed clear... it drops... first time... goal! Three-three!",
+   "src": "/plays/narration/gerrard-cup-2006/1.m4a",
+   "seconds": 14.6,
+   "words": [
+    {
+     "w": "Cardiff",
+     "at": 0.35
+    },
+    {
+     "w": "2006",
+     "at": 0.8
+    },
+    {
+     "w": "the",
+     "at": 1.725
+    },
+    {
+     "w": "FA",
+     "at": 1.863
+    },
+    {
+     "w": "Cup",
+     "at": 2.125
+    },
+    {
+     "w": "final",
+     "at": 2.375
+    },
+    {
+     "w": "Liverpool",
+     "at": 3.325
+    },
+    {
+     "w": "are",
+     "at": 3.875
+    },
+    {
+     "w": "losing",
+     "at": 4.0
+    },
+    {
+     "w": "three-two",
+     "at": 4.412
+    },
+    {
+     "w": "in",
+     "at": 4.875
+    },
+    {
+     "w": "added",
+     "at": 5.037
+    },
+    {
+     "w": "time",
+     "at": 5.388
+    },
+    {
+     "w": "and",
+     "at": 5.825
+    },
+    {
+     "w": "Steven",
+     "at": 5.963
+    },
+    {
+     "w": "Gerrard",
+     "at": 6.35
+    },
+    {
+     "w": "waits",
+     "at": 6.75
+    },
+    {
+     "w": "thirty-five",
+     "at": 7.175
+    },
+    {
+     "w": "yards",
+     "at": 7.725
+    },
+    {
+     "w": "out",
+     "at": 8.05
+    },
+    {
+     "w": "The",
+     "at": 8.575
+    },
+    {
+     "w": "ball",
+     "at": 8.675
+    },
+    {
+     "w": "is",
+     "at": 8.988
+    },
+    {
+     "w": "headed",
+     "at": 9.1
+    },
+    {
+     "w": "clear",
+     "at": 9.438
+    },
+    {
+     "w": "it",
+     "at": 10.35
+    },
+    {
+     "w": "drops",
+     "at": 10.475
+    },
+    {
+     "w": "first",
+     "at": 11.325
+    },
+    {
+     "w": "time",
+     "at": 11.625
+    },
+    {
+     "w": "goal",
+     "at": 12.412
+    },
+    {
+     "w": "Three-three",
+     "at": 12.963
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. Tired legs, but head down, body leaning over the ball, and he strikes right through the middle.",
+   "src": "/plays/narration/gerrard-cup-2006/2.m4a",
+   "seconds": 8.1,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.188
+    },
+    {
+     "w": "Tired",
+     "at": 2.237
+    },
+    {
+     "w": "legs",
+     "at": 2.675
+    },
+    {
+     "w": "but",
+     "at": 3.163
+    },
+    {
+     "w": "head",
+     "at": 3.3
+    },
+    {
+     "w": "down",
+     "at": 3.525
+    },
+    {
+     "w": "body",
+     "at": 4.0
+    },
+    {
+     "w": "leaning",
+     "at": 4.35
+    },
+    {
+     "w": "over",
+     "at": 4.662
+    },
+    {
+     "w": "the",
+     "at": 4.862
+    },
+    {
+     "w": "ball",
+     "at": 4.95
+    },
+    {
+     "w": "and",
+     "at": 5.475
+    },
+    {
+     "w": "he",
+     "at": 5.588
+    },
+    {
+     "w": "strikes",
+     "at": 5.713
+    },
+    {
+     "w": "right",
+     "at": 6.138
+    },
+    {
+     "w": "through",
+     "at": 6.45
+    },
+    {
+     "w": "the",
+     "at": 6.65
+    },
+    {
+     "w": "middle",
+     "at": 6.75
+    }
+   ]
+  },
+  {
+   "label": "Bottom corner",
+   "text": "Low and hard, past keeper Shaka Hislop, into the bottom corner! Liverpool win the cup on penalties.",
+   "src": "/plays/narration/gerrard-cup-2006/3.m4a",
+   "seconds": 7.5,
+   "words": [
+    {
+     "w": "Low",
+     "at": 0.425
+    },
+    {
+     "w": "and",
+     "at": 0.675
+    },
+    {
+     "w": "hard",
+     "at": 0.8
+    },
+    {
+     "w": "past",
+     "at": 1.4
+    },
+    {
+     "w": "keeper",
+     "at": 1.762
+    },
+    {
+     "w": "Shaka",
+     "at": 2.163
+    },
+    {
+     "w": "Hislop",
+     "at": 2.55
+    },
+    {
+     "w": "into",
+     "at": 3.163
+    },
+    {
+     "w": "the",
+     "at": 3.337
+    },
+    {
+     "w": "bottom",
+     "at": 3.425
+    },
+    {
+     "w": "corner",
+     "at": 3.8
+    },
+    {
+     "w": "Liverpool",
+     "at": 4.75
+    },
+    {
+     "w": "win",
+     "at": 5.275
+    },
+    {
+     "w": "the",
+     "at": 5.438
+    },
+    {
+     "w": "cup",
+     "at": 5.525
+    },
+    {
+     "w": "on",
+     "at": 5.737
+    },
+    {
+     "w": "penalties",
+     "at": 5.85
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: body over the ball, strike through the middle, and your long shot stays low and powerful.",
+   "src": "/plays/narration/gerrard-cup-2006/4.m4a",
+   "seconds": 7.2,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "body",
+     "at": 1.337
+    },
+    {
+     "w": "over",
+     "at": 1.663
+    },
+    {
+     "w": "the",
+     "at": 1.863
+    },
+    {
+     "w": "ball",
+     "at": 1.95
+    },
+    {
+     "w": "strike",
+     "at": 2.35
+    },
+    {
+     "w": "through",
+     "at": 2.675
+    },
+    {
+     "w": "the",
+     "at": 2.875
+    },
+    {
+     "w": "middle",
+     "at": 2.975
+    },
+    {
+     "w": "and",
+     "at": 3.65
+    },
+    {
+     "w": "your",
+     "at": 3.763
+    },
+    {
+     "w": "long",
+     "at": 3.9
+    },
+    {
+     "w": "shot",
+     "at": 4.275
+    },
+    {
+     "w": "stays",
+     "at": 4.625
+    },
+    {
+     "w": "low",
+     "at": 5.037
+    },
+    {
+     "w": "and",
+     "at": 5.4
+    },
+    {
+     "w": "powerful",
+     "at": 5.537
+    }
+   ]
+  }
+ ]
+}

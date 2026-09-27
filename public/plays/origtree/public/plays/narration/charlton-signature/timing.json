@@ -1,0 +1,358 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Thunderbolt",
+   "text": "Wembley, 1966, World Cup. England against Mexico. Bobby Charlton, in white, picks it up in his own half. Straight down the middle, jinks left, jinks right... boom! A thunderbolt into the top corner!",
+   "src": "/plays/narration/charlton-signature/1.m4a",
+   "seconds": 14.9,
+   "words": [
+    {
+     "w": "Wembley",
+     "at": 0.4
+    },
+    {
+     "w": "1966",
+     "at": 0.9
+    },
+    {
+     "w": "World",
+     "at": 2.175
+    },
+    {
+     "w": "Cup",
+     "at": 2.538
+    },
+    {
+     "w": "England",
+     "at": 3.288
+    },
+    {
+     "w": "against",
+     "at": 3.725
+    },
+    {
+     "w": "Mexico",
+     "at": 4.15
+    },
+    {
+     "w": "Bobby",
+     "at": 5.287
+    },
+    {
+     "w": "Charlton",
+     "at": 5.638
+    },
+    {
+     "w": "in",
+     "at": 6.138
+    },
+    {
+     "w": "white",
+     "at": 6.275
+    },
+    {
+     "w": "picks",
+     "at": 6.65
+    },
+    {
+     "w": "it",
+     "at": 6.862
+    },
+    {
+     "w": "up",
+     "at": 6.938
+    },
+    {
+     "w": "in",
+     "at": 7.088
+    },
+    {
+     "w": "his",
+     "at": 7.162
+    },
+    {
+     "w": "own",
+     "at": 7.3
+    },
+    {
+     "w": "half",
+     "at": 7.525
+    },
+    {
+     "w": "Straight",
+     "at": 8.4
+    },
+    {
+     "w": "down",
+     "at": 8.75
+    },
+    {
+     "w": "the",
+     "at": 8.963
+    },
+    {
+     "w": "middle",
+     "at": 9.05
+    },
+    {
+     "w": "jinks",
+     "at": 9.412
+    },
+    {
+     "w": "left",
+     "at": 9.8
+    },
+    {
+     "w": "jinks",
+     "at": 10.287
+    },
+    {
+     "w": "right",
+     "at": 10.65
+    },
+    {
+     "w": "boom",
+     "at": 11.488
+    },
+    {
+     "w": "A",
+     "at": 12.213
+    },
+    {
+     "w": "thunderbolt",
+     "at": 12.338
+    },
+    {
+     "w": "into",
+     "at": 12.912
+    },
+    {
+     "w": "the",
+     "at": 13.088
+    },
+    {
+     "w": "top",
+     "at": 13.175
+    },
+    {
+     "w": "corner",
+     "at": 13.45
+    }
+   ]
+  },
+  {
+   "label": "Left, then right",
+   "text": "Watch again, slowly. Left, then right, opening a gap. Then his right foot hits it from twenty-five yards!",
+   "src": "/plays/narration/charlton-signature/2.m4a",
+   "seconds": 8.1,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.137
+    },
+    {
+     "w": "Left",
+     "at": 2.175
+    },
+    {
+     "w": "then",
+     "at": 2.675
+    },
+    {
+     "w": "right",
+     "at": 2.913
+    },
+    {
+     "w": "opening",
+     "at": 3.35
+    },
+    {
+     "w": "a",
+     "at": 3.725
+    },
+    {
+     "w": "gap",
+     "at": 3.8
+    },
+    {
+     "w": "Then",
+     "at": 4.588
+    },
+    {
+     "w": "his",
+     "at": 4.825
+    },
+    {
+     "w": "right",
+     "at": 5.013
+    },
+    {
+     "w": "foot",
+     "at": 5.338
+    },
+    {
+     "w": "hits",
+     "at": 5.6
+    },
+    {
+     "w": "it",
+     "at": 5.812
+    },
+    {
+     "w": "from",
+     "at": 5.9
+    },
+    {
+     "w": "twenty-five",
+     "at": 6.05
+    },
+    {
+     "w": "yards",
+     "at": 6.6
+    }
+   ]
+  },
+  {
+   "label": "Either foot",
+   "text": "The keeper can't reach it! Charlton could strike like that with either foot.",
+   "src": "/plays/narration/charlton-signature/3.m4a",
+   "seconds": 5.1,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "keeper",
+     "at": 0.425
+    },
+    {
+     "w": "can't",
+     "at": 0.8
+    },
+    {
+     "w": "reach",
+     "at": 1.075
+    },
+    {
+     "w": "it",
+     "at": 1.363
+    },
+    {
+     "w": "Charlton",
+     "at": 1.938
+    },
+    {
+     "w": "could",
+     "at": 2.425
+    },
+    {
+     "w": "strike",
+     "at": 2.6
+    },
+    {
+     "w": "like",
+     "at": 2.913
+    },
+    {
+     "w": "that",
+     "at": 3.1
+    },
+    {
+     "w": "with",
+     "at": 3.312
+    },
+    {
+     "w": "either",
+     "at": 3.45
+    },
+    {
+     "w": "foot",
+     "at": 3.775
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: practise shooting with both feet, so you can shoot whichever way the ball comes!",
+   "src": "/plays/narration/charlton-signature/4.m4a",
+   "seconds": 6.4,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "practise",
+     "at": 1.35
+    },
+    {
+     "w": "shooting",
+     "at": 1.812
+    },
+    {
+     "w": "with",
+     "at": 2.138
+    },
+    {
+     "w": "both",
+     "at": 2.3
+    },
+    {
+     "w": "feet",
+     "at": 2.587
+    },
+    {
+     "w": "so",
+     "at": 3.1
+    },
+    {
+     "w": "you",
+     "at": 3.225
+    },
+    {
+     "w": "can",
+     "at": 3.325
+    },
+    {
+     "w": "shoot",
+     "at": 3.538
+    },
+    {
+     "w": "whichever",
+     "at": 3.875
+    },
+    {
+     "w": "way",
+     "at": 4.325
+    },
+    {
+     "w": "the",
+     "at": 4.537
+    },
+    {
+     "w": "ball",
+     "at": 4.625
+    },
+    {
+     "w": "comes",
+     "at": 4.925
+    }
+   ]
+  }
+ ]
+}

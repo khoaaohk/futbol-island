@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The final",
+   "text": "Bilbao, twenty twenty-five: the Europa League final. Manchester United kept hitting long balls at Tottenham. Here is how Spurs captain Cristian Romero handled them: race, and slide!",
+   "src": "/plays/narration/romero-signature/1.m4a",
+   "seconds": 13.4,
+   "words": [
+    {
+     "w": "Bilbao",
+     "at": 0.35
+    },
+    {
+     "w": "twenty",
+     "at": 0.875
+    },
+    {
+     "w": "twenty-five",
+     "at": 1.175
+    },
+    {
+     "w": "the",
+     "at": 2.25
+    },
+    {
+     "w": "Europa",
+     "at": 2.35
+    },
+    {
+     "w": "League",
+     "at": 2.825
+    },
+    {
+     "w": "final",
+     "at": 3.087
+    },
+    {
+     "w": "Manchester",
+     "at": 4.05
+    },
+    {
+     "w": "United",
+     "at": 4.675
+    },
+    {
+     "w": "kept",
+     "at": 5.15
+    },
+    {
+     "w": "hitting",
+     "at": 5.4
+    },
+    {
+     "w": "long",
+     "at": 5.7
+    },
+    {
+     "w": "balls",
+     "at": 6.025
+    },
+    {
+     "w": "at",
+     "at": 6.45
+    },
+    {
+     "w": "Tottenham",
+     "at": 6.55
+    },
+    {
+     "w": "Here",
+     "at": 7.662
+    },
+    {
+     "w": "is",
+     "at": 7.9
+    },
+    {
+     "w": "how",
+     "at": 8.025
+    },
+    {
+     "w": "Spurs",
+     "at": 8.225
+    },
+    {
+     "w": "captain",
+     "at": 8.7
+    },
+    {
+     "w": "Cristian",
+     "at": 9.125
+    },
+    {
+     "w": "Romero",
+     "at": 9.55
+    },
+    {
+     "w": "handled",
+     "at": 10.062
+    },
+    {
+     "w": "them",
+     "at": 10.5
+    },
+    {
+     "w": "race",
+     "at": 11.15
+    },
+    {
+     "w": "and",
+     "at": 11.75
+    },
+    {
+     "w": "slide",
+     "at": 11.925
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. Romero reads where the ball will drop. He is a step closer than the striker. Now he slides.",
+   "src": "/plays/narration/romero-signature/2.m4a",
+   "seconds": 8.2,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.113
+    },
+    {
+     "w": "Romero",
+     "at": 2.087
+    },
+    {
+     "w": "reads",
+     "at": 2.6
+    },
+    {
+     "w": "where",
+     "at": 2.888
+    },
+    {
+     "w": "the",
+     "at": 3.013
+    },
+    {
+     "w": "ball",
+     "at": 3.1
+    },
+    {
+     "w": "will",
+     "at": 3.388
+    },
+    {
+     "w": "drop",
+     "at": 3.55
+    },
+    {
+     "w": "He",
+     "at": 4.225
+    },
+    {
+     "w": "is",
+     "at": 4.35
+    },
+    {
+     "w": "a",
+     "at": 4.463
+    },
+    {
+     "w": "step",
+     "at": 4.525
+    },
+    {
+     "w": "closer",
+     "at": 4.8
+    },
+    {
+     "w": "than",
+     "at": 5.237
+    },
+    {
+     "w": "the",
+     "at": 5.338
+    },
+    {
+     "w": "striker",
+     "at": 5.425
+    },
+    {
+     "w": "Now",
+     "at": 6.263
+    },
+    {
+     "w": "he",
+     "at": 6.5
+    },
+    {
+     "w": "slides",
+     "at": 6.638
+    }
+   ]
+  },
+  {
+   "label": "Ball first",
+   "text": "His boot reaches the ball first, pokes it away. Clean! That night, Romero was named player of the match.",
+   "src": "/plays/narration/romero-signature/3.m4a",
+   "seconds": 7.7,
+   "words": [
+    {
+     "w": "His",
+     "at": 0.35
+    },
+    {
+     "w": "boot",
+     "at": 0.537
+    },
+    {
+     "w": "reaches",
+     "at": 0.8
+    },
+    {
+     "w": "the",
+     "at": 1.137
+    },
+    {
+     "w": "ball",
+     "at": 1.225
+    },
+    {
+     "w": "first",
+     "at": 1.538
+    },
+    {
+     "w": "pokes",
+     "at": 2.075
+    },
+    {
+     "w": "it",
+     "at": 2.337
+    },
+    {
+     "w": "away",
+     "at": 2.413
+    },
+    {
+     "w": "Clean",
+     "at": 3.375
+    },
+    {
+     "w": "That",
+     "at": 4.312
+    },
+    {
+     "w": "night",
+     "at": 4.575
+    },
+    {
+     "w": "Romero",
+     "at": 4.862
+    },
+    {
+     "w": "was",
+     "at": 5.287
+    },
+    {
+     "w": "named",
+     "at": 5.425
+    },
+    {
+     "w": "player",
+     "at": 5.713
+    },
+    {
+     "w": "of",
+     "at": 6.138
+    },
+    {
+     "w": "the",
+     "at": 6.213
+    },
+    {
+     "w": "match",
+     "at": 6.3
+    }
+   ]
+  },
+  {
+   "label": "Be smart",
+   "text": "Be brave, be smart: slide only when you are sure you can reach the ball first. Too late? Stay on your feet!",
+   "src": "/plays/narration/romero-signature/4.m4a",
+   "seconds": 7.6,
+   "words": [
+    {
+     "w": "Be",
+     "at": 0.35
+    },
+    {
+     "w": "brave",
+     "at": 0.512
+    },
+    {
+     "w": "be",
+     "at": 0.975
+    },
+    {
+     "w": "smart",
+     "at": 1.15
+    },
+    {
+     "w": "slide",
+     "at": 1.875
+    },
+    {
+     "w": "only",
+     "at": 2.325
+    },
+    {
+     "w": "when",
+     "at": 2.612
+    },
+    {
+     "w": "you",
+     "at": 2.737
+    },
+    {
+     "w": "are",
+     "at": 2.825
+    },
+    {
+     "w": "sure",
+     "at": 2.938
+    },
+    {
+     "w": "you",
+     "at": 3.1
+    },
+    {
+     "w": "can",
+     "at": 3.2
+    },
+    {
+     "w": "reach",
+     "at": 3.325
+    },
+    {
+     "w": "the",
+     "at": 3.575
+    },
+    {
+     "w": "ball",
+     "at": 3.675
+    },
+    {
+     "w": "first",
+     "at": 3.987
+    },
+    {
+     "w": "Too",
+     "at": 4.875
+    },
+    {
+     "w": "late",
+     "at": 5.1
+    },
+    {
+     "w": "Stay",
+     "at": 5.725
+    },
+    {
+     "w": "on",
+     "at": 6.037
+    },
+    {
+     "w": "your",
+     "at": 6.138
+    },
+    {
+     "w": "feet",
+     "at": 6.3
+    }
+   ]
+  }
+ ]
+}

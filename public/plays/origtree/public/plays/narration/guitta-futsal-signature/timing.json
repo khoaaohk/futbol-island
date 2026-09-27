@@ -1,0 +1,362 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: the 2019 final",
+   "text": "The 2019 European futsal final, in Almaty. The whistle goes! Sporting beat Kairat two to one, and their goalkeeper Guitta celebrates.",
+   "src": "/plays/narration/guitta-futsal-signature/1.m4a",
+   "seconds": 10.7,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "2019",
+     "at": 0.425
+    },
+    {
+     "w": "European",
+     "at": 1.225
+    },
+    {
+     "w": "futsal",
+     "at": 1.812
+    },
+    {
+     "w": "final",
+     "at": 2.312
+    },
+    {
+     "w": "in",
+     "at": 2.95
+    },
+    {
+     "w": "Almaty",
+     "at": 3.075
+    },
+    {
+     "w": "The",
+     "at": 4.213
+    },
+    {
+     "w": "whistle",
+     "at": 4.35
+    },
+    {
+     "w": "goes",
+     "at": 4.675
+    },
+    {
+     "w": "Sporting",
+     "at": 5.675
+    },
+    {
+     "w": "beat",
+     "at": 6.15
+    },
+    {
+     "w": "Kairat",
+     "at": 6.438
+    },
+    {
+     "w": "two",
+     "at": 6.862
+    },
+    {
+     "w": "to",
+     "at": 7.075
+    },
+    {
+     "w": "one",
+     "at": 7.213
+    },
+    {
+     "w": "and",
+     "at": 7.825
+    },
+    {
+     "w": "their",
+     "at": 7.938
+    },
+    {
+     "w": "goalkeeper",
+     "at": 8.088
+    },
+    {
+     "w": "Guitta",
+     "at": 8.725
+    },
+    {
+     "w": "celebrates",
+     "at": 9.062
+    }
+   ]
+  },
+  {
+   "label": "How he did it",
+   "text": "Here is how he did it. A quick shot from close range, and his hand flies out. Saved!",
+   "src": "/plays/narration/guitta-futsal-signature/2.m4a",
+   "seconds": 6.1,
+   "words": [
+    {
+     "w": "Here",
+     "at": 0.375
+    },
+    {
+     "w": "is",
+     "at": 0.575
+    },
+    {
+     "w": "how",
+     "at": 0.7
+    },
+    {
+     "w": "he",
+     "at": 0.9
+    },
+    {
+     "w": "did",
+     "at": 1.025
+    },
+    {
+     "w": "it",
+     "at": 1.225
+    },
+    {
+     "w": "A",
+     "at": 1.675
+    },
+    {
+     "w": "quick",
+     "at": 1.75
+    },
+    {
+     "w": "shot",
+     "at": 2.013
+    },
+    {
+     "w": "from",
+     "at": 2.263
+    },
+    {
+     "w": "close",
+     "at": 2.4
+    },
+    {
+     "w": "range",
+     "at": 2.725
+    },
+    {
+     "w": "and",
+     "at": 3.112
+    },
+    {
+     "w": "his",
+     "at": 3.212
+    },
+    {
+     "w": "hand",
+     "at": 3.325
+    },
+    {
+     "w": "flies",
+     "at": 3.65
+    },
+    {
+     "w": "out",
+     "at": 3.975
+    },
+    {
+     "w": "Saved",
+     "at": 4.688
+    }
+   ]
+  },
+  {
+   "label": "Replay: watch the foot",
+   "text": "Again, slowly. Guitta watches the shooter\u2019s foot, not his body. The hips point one way, but the foot sends it the other. He is already moving. Saved!",
+   "src": "/plays/narration/guitta-futsal-signature/3.m4a",
+   "seconds": 10.6,
+   "words": [
+    {
+     "w": "Again",
+     "at": 0.375
+    },
+    {
+     "w": "slowly",
+     "at": 0.887
+    },
+    {
+     "w": "Guitta",
+     "at": 1.925
+    },
+    {
+     "w": "watches",
+     "at": 2.25
+    },
+    {
+     "w": "the",
+     "at": 2.675
+    },
+    {
+     "w": "shooter\u2019s",
+     "at": 2.812
+    },
+    {
+     "w": "foot",
+     "at": 3.263
+    },
+    {
+     "w": "not",
+     "at": 3.575
+    },
+    {
+     "w": "his",
+     "at": 3.763
+    },
+    {
+     "w": "body",
+     "at": 3.925
+    },
+    {
+     "w": "The",
+     "at": 4.75
+    },
+    {
+     "w": "hips",
+     "at": 4.85
+    },
+    {
+     "w": "point",
+     "at": 5.138
+    },
+    {
+     "w": "one",
+     "at": 5.475
+    },
+    {
+     "w": "way",
+     "at": 5.7
+    },
+    {
+     "w": "but",
+     "at": 5.938
+    },
+    {
+     "w": "the",
+     "at": 6.062
+    },
+    {
+     "w": "foot",
+     "at": 6.2
+    },
+    {
+     "w": "sends",
+     "at": 6.463
+    },
+    {
+     "w": "it",
+     "at": 6.787
+    },
+    {
+     "w": "the",
+     "at": 6.862
+    },
+    {
+     "w": "other",
+     "at": 7.0
+    },
+    {
+     "w": "He",
+     "at": 7.6
+    },
+    {
+     "w": "is",
+     "at": 7.75
+    },
+    {
+     "w": "already",
+     "at": 7.875
+    },
+    {
+     "w": "moving",
+     "at": 8.25
+    },
+    {
+     "w": "Saved",
+     "at": 9.137
+    }
+   ]
+  },
+  {
+   "label": "Practise it",
+   "text": "Try it with a friend. Watch the shooter\u2019s foot, not their body, to react quicker!",
+   "src": "/plays/narration/guitta-futsal-signature/4.m4a",
+   "seconds": 5.7,
+   "words": [
+    {
+     "w": "Try",
+     "at": 0.35
+    },
+    {
+     "w": "it",
+     "at": 0.588
+    },
+    {
+     "w": "with",
+     "at": 0.662
+    },
+    {
+     "w": "a",
+     "at": 0.762
+    },
+    {
+     "w": "friend",
+     "at": 0.838
+    },
+    {
+     "w": "Watch",
+     "at": 1.738
+    },
+    {
+     "w": "the",
+     "at": 2.05
+    },
+    {
+     "w": "shooter\u2019s",
+     "at": 2.163
+    },
+    {
+     "w": "foot",
+     "at": 2.612
+    },
+    {
+     "w": "not",
+     "at": 3.025
+    },
+    {
+     "w": "their",
+     "at": 3.188
+    },
+    {
+     "w": "body",
+     "at": 3.35
+    },
+    {
+     "w": "to",
+     "at": 3.775
+    },
+    {
+     "w": "react",
+     "at": 3.875
+    },
+    {
+     "w": "quicker",
+     "at": 4.275
+    }
+   ]
+  }
+ ]
+}

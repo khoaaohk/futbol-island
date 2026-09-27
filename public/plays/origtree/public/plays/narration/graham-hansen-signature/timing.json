@@ -1,0 +1,374 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The dribble, live",
+   "text": "Bilbao, the 2024 Champions League final, six minutes in. Barcelona break against Lyon. Caroline Graham Hansen carries the ball down the right wing, runs at the full-back, dances into the box and sets up Salma Paralluelo. Endler saves!",
+   "src": "/plays/narration/graham-hansen-signature/1.m4a",
+   "seconds": 17.7,
+   "words": [
+    {
+     "w": "Bilbao",
+     "at": 0.375
+    },
+    {
+     "w": "the",
+     "at": 0.875
+    },
+    {
+     "w": "2024",
+     "at": 0.975
+    },
+    {
+     "w": "Champions",
+     "at": 1.913
+    },
+    {
+     "w": "League",
+     "at": 2.5
+    },
+    {
+     "w": "final",
+     "at": 2.788
+    },
+    {
+     "w": "six",
+     "at": 3.438
+    },
+    {
+     "w": "minutes",
+     "at": 3.725
+    },
+    {
+     "w": "in",
+     "at": 4.025
+    },
+    {
+     "w": "Barcelona",
+     "at": 4.862
+    },
+    {
+     "w": "break",
+     "at": 5.525
+    },
+    {
+     "w": "against",
+     "at": 5.838
+    },
+    {
+     "w": "Lyon",
+     "at": 6.25
+    },
+    {
+     "w": "Caroline",
+     "at": 7.312
+    },
+    {
+     "w": "Graham",
+     "at": 7.825
+    },
+    {
+     "w": "Hansen",
+     "at": 8.238
+    },
+    {
+     "w": "carries",
+     "at": 8.775
+    },
+    {
+     "w": "the",
+     "at": 9.175
+    },
+    {
+     "w": "ball",
+     "at": 9.275
+    },
+    {
+     "w": "down",
+     "at": 9.625
+    },
+    {
+     "w": "the",
+     "at": 9.787
+    },
+    {
+     "w": "right",
+     "at": 9.875
+    },
+    {
+     "w": "wing",
+     "at": 10.188
+    },
+    {
+     "w": "runs",
+     "at": 10.887
+    },
+    {
+     "w": "at",
+     "at": 11.262
+    },
+    {
+     "w": "the",
+     "at": 11.338
+    },
+    {
+     "w": "full-back",
+     "at": 11.438
+    },
+    {
+     "w": "dances",
+     "at": 12.262
+    },
+    {
+     "w": "into",
+     "at": 12.738
+    },
+    {
+     "w": "the",
+     "at": 12.912
+    },
+    {
+     "w": "box",
+     "at": 13.0
+    },
+    {
+     "w": "and",
+     "at": 13.45
+    },
+    {
+     "w": "sets",
+     "at": 13.588
+    },
+    {
+     "w": "up",
+     "at": 13.863
+    },
+    {
+     "w": "Salma",
+     "at": 14.062
+    },
+    {
+     "w": "Paralluelo",
+     "at": 14.45
+    },
+    {
+     "w": "Endler",
+     "at": 15.725
+    },
+    {
+     "w": "saves",
+     "at": 16.163
+    }
+   ]
+  },
+  {
+   "label": "Slow down",
+   "text": "Watch again. She slows right down, almost stopping. The defender leans in to win the ball.",
+   "src": "/plays/narration/graham-hansen-signature/2.m4a",
+   "seconds": 7.0,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "She",
+     "at": 1.488
+    },
+    {
+     "w": "slows",
+     "at": 1.663
+    },
+    {
+     "w": "right",
+     "at": 2.075
+    },
+    {
+     "w": "down",
+     "at": 2.35
+    },
+    {
+     "w": "almost",
+     "at": 2.8
+    },
+    {
+     "w": "stopping",
+     "at": 3.2
+    },
+    {
+     "w": "The",
+     "at": 4.125
+    },
+    {
+     "w": "defender",
+     "at": 4.225
+    },
+    {
+     "w": "leans",
+     "at": 4.725
+    },
+    {
+     "w": "in",
+     "at": 5.037
+    },
+    {
+     "w": "to",
+     "at": 5.225
+    },
+    {
+     "w": "win",
+     "at": 5.35
+    },
+    {
+     "w": "the",
+     "at": 5.537
+    },
+    {
+     "w": "ball",
+     "at": 5.625
+    }
+   ]
+  },
+  {
+   "label": "Then burst",
+   "text": "Then one quick touch, and a burst of speed. She is gone, into the box!",
+   "src": "/plays/narration/graham-hansen-signature/3.m4a",
+   "seconds": 5.4,
+   "words": [
+    {
+     "w": "Then",
+     "at": 0.375
+    },
+    {
+     "w": "one",
+     "at": 0.5
+    },
+    {
+     "w": "quick",
+     "at": 0.725
+    },
+    {
+     "w": "touch",
+     "at": 0.988
+    },
+    {
+     "w": "and",
+     "at": 1.45
+    },
+    {
+     "w": "a",
+     "at": 1.562
+    },
+    {
+     "w": "burst",
+     "at": 1.625
+    },
+    {
+     "w": "of",
+     "at": 1.938
+    },
+    {
+     "w": "speed",
+     "at": 2.038
+    },
+    {
+     "w": "She",
+     "at": 2.987
+    },
+    {
+     "w": "is",
+     "at": 3.125
+    },
+    {
+     "w": "gone",
+     "at": 3.275
+    },
+    {
+     "w": "into",
+     "at": 3.663
+    },
+    {
+     "w": "the",
+     "at": 3.862
+    },
+    {
+     "w": "box",
+     "at": 3.95
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "The secret? Slow down to tempt the defender, then burst past with a quick touch.",
+   "src": "/plays/narration/graham-hansen-signature/4.m4a",
+   "seconds": 6.1,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "secret",
+     "at": 0.463
+    },
+    {
+     "w": "Slow",
+     "at": 1.35
+    },
+    {
+     "w": "down",
+     "at": 1.7
+    },
+    {
+     "w": "to",
+     "at": 1.95
+    },
+    {
+     "w": "tempt",
+     "at": 2.05
+    },
+    {
+     "w": "the",
+     "at": 2.312
+    },
+    {
+     "w": "defender",
+     "at": 2.4
+    },
+    {
+     "w": "then",
+     "at": 3.2
+    },
+    {
+     "w": "burst",
+     "at": 3.413
+    },
+    {
+     "w": "past",
+     "at": 3.788
+    },
+    {
+     "w": "with",
+     "at": 4.237
+    },
+    {
+     "w": "a",
+     "at": 4.338
+    },
+    {
+     "w": "quick",
+     "at": 4.4
+    },
+    {
+     "w": "touch",
+     "at": 4.662
+    }
+   ]
+  }
+ ]
+}

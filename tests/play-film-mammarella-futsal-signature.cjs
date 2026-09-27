@@ -28,7 +28,7 @@ assert.ok(/goleiro/i.test(film.chapters[2].narration)&&/all four in front of you
 assert.ok(/Talk to your defenders/.test(film.chapters[3].narration)&&/organised/.test(film.chapters[3].narration),'ends with the entry lesson');
 assert.ok(/8 Feb 2014/.test(src)&&/18:38/.test(src)&&/tipped over/.test(src),'header states the match date, minute and source quote');
 for(const ch of film.chapters)for(const c of ch.cues)assert.ok(!/^[^\s]*[’'-]/.test(c.words),`cue "${c.words}" starts with a plain word`);
-// Eder Lima shoots LEFT-footed (card `foot` param, matching the Eder Lima film)
-assert.ok(/const strikeL=\(t:number\)=>strike\(t,\{foot:'l'\}\)/.test(src)&&!/strike\([^)]*\{foot:'r'\}\)/.test(src),'Eder Lima strikes with the left foot');
+// Eder Lima shoots RIGHT-footed (verified from 2014 EURO final + 2016 World Cup final footage, matching the Eder Lima film)
+assert.ok(/const strikeR=\(t:number\)=>strike\(t,\{foot:'r'\}\)/.test(src)&&!/strike\([^)]*\{foot:'l'\}\)/.test(src)&&!/dribble\([^)]*\{foot:'l'/.test(src),'Eder Lima strikes with the right foot');
 const iconic=JSON.parse(fs.readFileSync(path.join(root,'lib/town/iconicPlays.json'),'utf8'));assert.equal(iconic['Stefano Mammarella'].kind,'signature');
 console.log(`Mammarella signature film: ${film.chapters.length} chapters, ${total.toFixed(1)} s, ${n} words, ${words.length} characters — contract passed.`);

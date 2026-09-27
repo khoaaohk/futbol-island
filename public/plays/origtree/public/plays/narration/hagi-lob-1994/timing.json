@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The lob, live",
+   "text": "The Rose Bowl, 1994. Romania against Colombia at the World Cup. Gheorghe Hagi gets the ball wide on the left, forty yards out. He looks up. The keeper is off his line! Hagi lifts it... Goal!",
+   "src": "/plays/narration/hagi-lob-1994/1.m4a",
+   "seconds": 14.7,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.375
+    },
+    {
+     "w": "Rose",
+     "at": 0.475
+    },
+    {
+     "w": "Bowl",
+     "at": 0.825
+    },
+    {
+     "w": "1994",
+     "at": 1.225
+    },
+    {
+     "w": "Romania",
+     "at": 2.737
+    },
+    {
+     "w": "against",
+     "at": 3.325
+    },
+    {
+     "w": "Colombia",
+     "at": 3.675
+    },
+    {
+     "w": "at",
+     "at": 4.225
+    },
+    {
+     "w": "the",
+     "at": 4.312
+    },
+    {
+     "w": "World",
+     "at": 4.4
+    },
+    {
+     "w": "Cup",
+     "at": 4.763
+    },
+    {
+     "w": "Gheorghe",
+     "at": 5.675
+    },
+    {
+     "w": "Hagi",
+     "at": 6.1
+    },
+    {
+     "w": "gets",
+     "at": 6.425
+    },
+    {
+     "w": "the",
+     "at": 6.675
+    },
+    {
+     "w": "ball",
+     "at": 6.775
+    },
+    {
+     "w": "wide",
+     "at": 7.075
+    },
+    {
+     "w": "on",
+     "at": 7.362
+    },
+    {
+     "w": "the",
+     "at": 7.463
+    },
+    {
+     "w": "left",
+     "at": 7.55
+    },
+    {
+     "w": "forty",
+     "at": 8.012
+    },
+    {
+     "w": "yards",
+     "at": 8.35
+    },
+    {
+     "w": "out",
+     "at": 8.675
+    },
+    {
+     "w": "He",
+     "at": 9.15
+    },
+    {
+     "w": "looks",
+     "at": 9.275
+    },
+    {
+     "w": "up",
+     "at": 9.525
+    },
+    {
+     "w": "The",
+     "at": 10.175
+    },
+    {
+     "w": "keeper",
+     "at": 10.275
+    },
+    {
+     "w": "is",
+     "at": 10.65
+    },
+    {
+     "w": "off",
+     "at": 10.775
+    },
+    {
+     "w": "his",
+     "at": 10.963
+    },
+    {
+     "w": "line",
+     "at": 11.125
+    },
+    {
+     "w": "Hagi",
+     "at": 11.762
+    },
+    {
+     "w": "lifts",
+     "at": 12.125
+    },
+    {
+     "w": "it",
+     "at": 12.488
+    },
+    {
+     "w": "Goal",
+     "at": 13.213
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again. His left foot slides under the ball, and it floats high.",
+   "src": "/plays/narration/hagi-lob-1994/2.m4a",
+   "seconds": 5.3,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "His",
+     "at": 1.525
+    },
+    {
+     "w": "left",
+     "at": 1.725
+    },
+    {
+     "w": "foot",
+     "at": 2.013
+    },
+    {
+     "w": "slides",
+     "at": 2.288
+    },
+    {
+     "w": "under",
+     "at": 2.712
+    },
+    {
+     "w": "the",
+     "at": 2.888
+    },
+    {
+     "w": "ball",
+     "at": 2.975
+    },
+    {
+     "w": "and",
+     "at": 3.388
+    },
+    {
+     "w": "it",
+     "at": 3.487
+    },
+    {
+     "w": "floats",
+     "at": 3.575
+    },
+    {
+     "w": "high",
+     "at": 3.9
+    }
+   ]
+  },
+  {
+   "label": "Behind the goal",
+   "text": "From behind the goal: C\u00f3rdoba scrambles back, but it drops into the far corner.",
+   "src": "/plays/narration/hagi-lob-1994/3.m4a",
+   "seconds": 5.9,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.375
+    },
+    {
+     "w": "behind",
+     "at": 0.55
+    },
+    {
+     "w": "the",
+     "at": 0.963
+    },
+    {
+     "w": "goal",
+     "at": 1.05
+    },
+    {
+     "w": "C\u00f3rdoba",
+     "at": 1.837
+    },
+    {
+     "w": "scrambles",
+     "at": 2.312
+    },
+    {
+     "w": "back",
+     "at": 2.9
+    },
+    {
+     "w": "but",
+     "at": 3.312
+    },
+    {
+     "w": "it",
+     "at": 3.438
+    },
+    {
+     "w": "drops",
+     "at": 3.525
+    },
+    {
+     "w": "into",
+     "at": 3.862
+    },
+    {
+     "w": "the",
+     "at": 4.037
+    },
+    {
+     "w": "far",
+     "at": 4.138
+    },
+    {
+     "w": "corner",
+     "at": 4.425
+    }
+   ]
+  },
+  {
+   "label": "Look up!",
+   "text": "Romania won three-one! The secret? Always look up. If the keeper is off the line, a well-weighted lob can beat them from far away.",
+   "src": "/plays/narration/hagi-lob-1994/4.m4a",
+   "seconds": 9.7,
+   "words": [
+    {
+     "w": "Romania",
+     "at": 0.4
+    },
+    {
+     "w": "won",
+     "at": 0.988
+    },
+    {
+     "w": "three-one",
+     "at": 1.262
+    },
+    {
+     "w": "The",
+     "at": 2.225
+    },
+    {
+     "w": "secret",
+     "at": 2.362
+    },
+    {
+     "w": "Always",
+     "at": 3.188
+    },
+    {
+     "w": "look",
+     "at": 3.6
+    },
+    {
+     "w": "up",
+     "at": 3.8
+    },
+    {
+     "w": "If",
+     "at": 4.5
+    },
+    {
+     "w": "the",
+     "at": 4.638
+    },
+    {
+     "w": "keeper",
+     "at": 4.725
+    },
+    {
+     "w": "is",
+     "at": 5.088
+    },
+    {
+     "w": "off",
+     "at": 5.2
+    },
+    {
+     "w": "the",
+     "at": 5.425
+    },
+    {
+     "w": "line",
+     "at": 5.55
+    },
+    {
+     "w": "a",
+     "at": 6.075
+    },
+    {
+     "w": "well-weighted",
+     "at": 6.188
+    },
+    {
+     "w": "lob",
+     "at": 6.812
+    },
+    {
+     "w": "can",
+     "at": 7.225
+    },
+    {
+     "w": "beat",
+     "at": 7.425
+    },
+    {
+     "w": "them",
+     "at": 7.612
+    },
+    {
+     "w": "from",
+     "at": 7.8
+    },
+    {
+     "w": "far",
+     "at": 8.012
+    },
+    {
+     "w": "away",
+     "at": 8.3
+    }
+   ]
+  }
+ ]
+}

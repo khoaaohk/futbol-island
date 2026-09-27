@@ -1,0 +1,30 @@
+/* IslandSelect: the island's own dropdown on the shared --btn-* tokens (docs/ui/BUTTONS.md chip family). Trigger = bright gold pill (44px, 16px bold, no iOS zoom);
+   list = a cream island card; the chosen row uses the pink selected-chip colour. */
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.label{font:700 14px/1.2 var(--font-body),Arial,sans-serif;color:#244d40}
+.trigger{box-sizing:border-box;display:flex;align-items:center;gap:8px;width:100%;min-width:0;min-height:44px;margin:0;padding:6px 12px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:var(--btn-radius,999px);background:var(--btn-gold-bright,#f9d665);box-shadow:0 4px 0 var(--btn-gold-bright-edge,#aa8b3e);color:var(--btn-ink,#244d40);font:700 16px/1.2 var(--font-body),Arial,sans-serif;text-align:left;cursor:pointer;transition:filter .15s,translate .15s,box-shadow .15s}
+.trigger:hover{filter:brightness(1.04)}
+.trigger:active{translate:0 var(--btn-press,3px);box-shadow:0 1px 0 var(--btn-gold-bright-edge,#aa8b3e)}
+.trigger[data-open]{filter:brightness(1.04)}
+.trigger:focus-visible{outline:3px solid #c47b33;outline-offset:3px}
+.trigger:disabled{opacity:.55;cursor:default;translate:none;filter:none;box-shadow:0 4px 0 var(--btn-gold-bright-edge,#aa8b3e)}
+.value{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.placeholder{font-weight:400;color:#4d6456}
+.chevron{flex:none;width:8px;height:8px;margin:-4px 2px 0 0;border-right:2.5px solid currentColor;border-bottom:2.5px solid currentColor;transform:rotate(45deg);transition:transform .15s}
+.trigger[data-open] .chevron{transform:translateY(4px) rotate(-135deg)}
+.dot{flex:none;box-sizing:border-box;width:18px;height:18px;border-radius:50%;border:2px solid #fff8df;box-shadow:0 0 0 1px #244d4040}
+.list{position:fixed;z-index:1000;box-sizing:border-box;margin:0;padding:6px;list-style:none;overflow:auto;overscroll-behavior:contain;background:var(--btn-cream,#fff1d3);border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:20px;box-shadow:0 7px 0 #6a3b5e40,0 14px 32px #142e2933;color:#244d40;outline:none;animation:listIn .14s ease-out both}
+.list[data-up]{animation-name:listUp}
+.list:focus-visible{outline:3px solid #c47b33;outline-offset:2px}
+@keyframes listIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+@keyframes listUp{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.option{display:flex;align-items:center;gap:10px;min-height:44px;padding:6px 12px;border-radius:14px;font:700 16px/1.25 var(--font-body),Arial,sans-serif;cursor:pointer;-webkit-user-select:none;user-select:none}
+.option+.option{margin-top:2px}
+.option[data-active]{background:var(--btn-gold-bright,#f9d665)}
+.option[aria-selected=true]{background:var(--btn-pink,#ed9dce);box-shadow:inset 0 -3px 0 var(--btn-pink-edge,#aa6590)}
+.option[aria-disabled=true]{opacity:.55;cursor:default}
+.option[aria-disabled=true][data-active]{background:none}
+.optionText{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.optionText small{font-size:13px;font-weight:400;line-height:1.3;color:#4d6456}
+.check{flex:none;width:6px;height:12px;margin:-3px 4px 0 0;border-right:2.5px solid currentColor;border-bottom:2.5px solid currentColor;transform:rotate(45deg)}
+@media(prefers-reduced-motion:reduce){.trigger,.chevron{transition:none}.list{animation:none}}

@@ -1,0 +1,346 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The long kick, live",
+   "text": "Huddersfield, 2018. A City goal kick. Ederson looks up, finds Ag\u00fcero seventy yards away. The keeper rushes out, Ag\u00fcero lifts it over. Goal!",
+   "src": "/plays/narration/ederson-signature/1.m4a",
+   "seconds": 11.3,
+   "words": [
+    {
+     "w": "Huddersfield",
+     "at": 0.375
+    },
+    {
+     "w": "2018",
+     "at": 1.1
+    },
+    {
+     "w": "A",
+     "at": 2.263
+    },
+    {
+     "w": "City",
+     "at": 2.388
+    },
+    {
+     "w": "goal",
+     "at": 2.675
+    },
+    {
+     "w": "kick",
+     "at": 2.962
+    },
+    {
+     "w": "Ederson",
+     "at": 3.788
+    },
+    {
+     "w": "looks",
+     "at": 4.275
+    },
+    {
+     "w": "up",
+     "at": 4.525
+    },
+    {
+     "w": "finds",
+     "at": 4.8
+    },
+    {
+     "w": "Ag\u00fcero",
+     "at": 5.1
+    },
+    {
+     "w": "seventy",
+     "at": 5.537
+    },
+    {
+     "w": "yards",
+     "at": 5.925
+    },
+    {
+     "w": "away",
+     "at": 6.225
+    },
+    {
+     "w": "The",
+     "at": 7.025
+    },
+    {
+     "w": "keeper",
+     "at": 7.125
+    },
+    {
+     "w": "rushes",
+     "at": 7.5
+    },
+    {
+     "w": "out",
+     "at": 7.875
+    },
+    {
+     "w": "Ag\u00fcero",
+     "at": 8.213
+    },
+    {
+     "w": "lifts",
+     "at": 8.7
+    },
+    {
+     "w": "it",
+     "at": 8.988
+    },
+    {
+     "w": "over",
+     "at": 9.062
+    },
+    {
+     "w": "Goal",
+     "at": 9.875
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again. Huddersfield press high, but Ag\u00fcero is free behind them. His left foot sends it over the press.",
+   "src": "/plays/narration/ederson-signature/2.m4a",
+   "seconds": 7.8,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.7
+    },
+    {
+     "w": "Huddersfield",
+     "at": 1.438
+    },
+    {
+     "w": "press",
+     "at": 2.05
+    },
+    {
+     "w": "high",
+     "at": 2.325
+    },
+    {
+     "w": "but",
+     "at": 2.8
+    },
+    {
+     "w": "Ag\u00fcero",
+     "at": 2.962
+    },
+    {
+     "w": "is",
+     "at": 3.45
+    },
+    {
+     "w": "free",
+     "at": 3.612
+    },
+    {
+     "w": "behind",
+     "at": 3.85
+    },
+    {
+     "w": "them",
+     "at": 4.237
+    },
+    {
+     "w": "His",
+     "at": 4.925
+    },
+    {
+     "w": "left",
+     "at": 5.125
+    },
+    {
+     "w": "foot",
+     "at": 5.412
+    },
+    {
+     "w": "sends",
+     "at": 5.713
+    },
+    {
+     "w": "it",
+     "at": 6.037
+    },
+    {
+     "w": "over",
+     "at": 6.112
+    },
+    {
+     "w": "the",
+     "at": 6.312
+    },
+    {
+     "w": "press",
+     "at": 6.4
+    }
+   ]
+  },
+  {
+   "label": "Behind the goal",
+   "text": "Behind the goal: Ag\u00fcero checks back and lobs Ben Hamer. One kick did it all.",
+   "src": "/plays/narration/ederson-signature/3.m4a",
+   "seconds": 6.2,
+   "words": [
+    {
+     "w": "Behind",
+     "at": 0.35
+    },
+    {
+     "w": "the",
+     "at": 0.713
+    },
+    {
+     "w": "goal",
+     "at": 0.8
+    },
+    {
+     "w": "Ag\u00fcero",
+     "at": 1.488
+    },
+    {
+     "w": "checks",
+     "at": 1.913
+    },
+    {
+     "w": "back",
+     "at": 2.225
+    },
+    {
+     "w": "and",
+     "at": 2.513
+    },
+    {
+     "w": "lobs",
+     "at": 2.625
+    },
+    {
+     "w": "Ben",
+     "at": 3.0
+    },
+    {
+     "w": "Hamer",
+     "at": 3.25
+    },
+    {
+     "w": "One",
+     "at": 4.075
+    },
+    {
+     "w": "kick",
+     "at": 4.388
+    },
+    {
+     "w": "did",
+     "at": 4.675
+    },
+    {
+     "w": "it",
+     "at": 4.812
+    },
+    {
+     "w": "all",
+     "at": 4.9
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: look up before you kick. A long pass to a free teammate starts an attack in one touch.",
+   "src": "/plays/narration/ederson-signature/4.m4a",
+   "seconds": 7.0,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "look",
+     "at": 1.238
+    },
+    {
+     "w": "up",
+     "at": 1.413
+    },
+    {
+     "w": "before",
+     "at": 1.562
+    },
+    {
+     "w": "you",
+     "at": 1.825
+    },
+    {
+     "w": "kick",
+     "at": 1.95
+    },
+    {
+     "w": "A",
+     "at": 2.763
+    },
+    {
+     "w": "long",
+     "at": 2.875
+    },
+    {
+     "w": "pass",
+     "at": 3.212
+    },
+    {
+     "w": "to",
+     "at": 3.575
+    },
+    {
+     "w": "a",
+     "at": 3.663
+    },
+    {
+     "w": "free",
+     "at": 3.737
+    },
+    {
+     "w": "teammate",
+     "at": 3.987
+    },
+    {
+     "w": "starts",
+     "at": 4.575
+    },
+    {
+     "w": "an",
+     "at": 4.812
+    },
+    {
+     "w": "attack",
+     "at": 4.888
+    },
+    {
+     "w": "in",
+     "at": 5.287
+    },
+    {
+     "w": "one",
+     "at": 5.425
+    },
+    {
+     "w": "touch",
+     "at": 5.662
+    }
+   ]
+  }
+ ]
+}

@@ -161,6 +161,15 @@
     "license": "CC BY-SA 3.0",
     "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
   },
+  "Keylor Navas": {
+    "slug": "keylor-navas",
+    "article": "Keylor Navas",
+    "file": "https://commons.wikimedia.org/wiki/File:Bra-Cos_(10).jpg",
+    "date": "2018-06-22",
+    "artist": "Кирилл Венедиктов",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+  },
   "Achraf Hakimi": {
     "slug": "achraf-hakimi",
     "article": "Achraf Hakimi",
@@ -493,12 +502,58 @@
     "license": "CC BY-SA 3.0",
     "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
   },
+  "Thiago Silva": {
+    "slug": "thiago-silva",
+    "article": "Thiago Silva",
+    "file": "https://commons.wikimedia.org/wiki/File:20180610_FIFA_Friendly_Match_Austria_vs._Brazil_Thiago_Silva_850_1582.jpg",
+    "artist": "Granada",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2018-06-10",
+    "source": "wikimedia/infobox"
+  },
   "Giorgio Chiellini": {
     "slug": "giorgio-chiellini",
     "article": "Giorgio Chiellini",
     "file": "https://commons.wikimedia.org/wiki/File:FC_Zenit_Saint_Petersburg_vs._Juventus,_20_October_2021_47_(cropped).jpg",
     "date": "2021-10-20",
     "artist": "Kirill Venediktov",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+  },
+  "Raphaël Varane": {
+    "slug": "raphael-varane",
+    "article": "Raphaël Varane",
+    "file": "https://commons.wikimedia.org/wiki/File:Rapha%C3%ABl_Varane_2018.jpg",
+    "date": "2018-06-30",
+    "artist": "Антон Зайцев",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+  },
+  "Pepe": {
+    "slug": "pepe",
+    "article": "Pepe (footballer, born February 1983)",
+    "file": "https://commons.wikimedia.org/wiki/File:Pepe_-_Portugal_v_Mexico_02072017.jpg",
+    "date": "2017-07-02",
+    "artist": "Дмитрий Садовников",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+  },
+  "Vincent Kompany": {
+    "slug": "vincent-kompany",
+    "article": "Vincent Kompany",
+    "file": "https://commons.wikimedia.org/wiki/File:Kompany_2018.png",
+    "date": "2018-06-28",
+    "artist": "Кирилл Венедиктов",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+  },
+  "Lúcio": {
+    "slug": "lucio",
+    "article": "Lúcio",
+    "file": "https://commons.wikimedia.org/wiki/File:L%C3%BAcio_-_Inter_Mailand_(4).jpg",
+    "date": "2009-08-16",
+    "artist": "Steindy",
     "license": "CC BY-SA 3.0",
     "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
   },
@@ -692,6 +747,15 @@
     "license": "CC BY-SA 4.0",
     "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
   },
+  "Toni Kroos": {
+    "slug": "toni-kroos",
+    "article": "Toni Kroos",
+    "file": "https://commons.wikimedia.org/wiki/File:FIFA_WC-qualification_2014_-_Austria_vs._Germany_2012-09-11_-_Toni_Kroos.JPG",
+    "date": "2012-09-11",
+    "artist": "Michael Kranewitter",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+  },
   "Bobby Charlton": {
     "slug": "bobby-charlton",
     "article": "Bobby Charlton",
@@ -700,6 +764,60 @@
     "artist": "Panini",
     "license": "Public domain",
     "licenseUrl": ""
+  },
+  "Ivan Rakitić": {
+    "slug": "ivan-rakitic",
+    "article": "Ivan Rakitić",
+    "file": "https://commons.wikimedia.org/wiki/File:Ivan_Rakiti%C4%87.jpg",
+    "date": "2018-07-07",
+    "artist": "Анна Нэсси",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+  },
+  "Park Ji-sung": {
+    "slug": "park-ji-sung",
+    "article": "Park Ji-sung",
+    "file": "https://commons.wikimedia.org/wiki/File:Ji-Sung_Park_vs_Fulham.jpg",
+    "date": "2010-08-22",
+    "artist": "Magnus D",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0"
+  },
+  "Mesut Özil": {
+    "slug": "mesut-ozil",
+    "article": "Mesut Özil",
+    "file": "https://commons.wikimedia.org/wiki/File:Mesut_%C3%96zil,_Germany_national_football_team_(04).jpg",
+    "date": "2011-06-03",
+    "artist": "Steindy",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+  },
+  "Javier Mascherano": {
+    "slug": "javier-mascherano",
+    "article": "Javier Mascherano",
+    "file": "https://commons.wikimedia.org/wiki/File:2017_FRIENDLY_MATCH_RUSSIA_v_ARGENTINA_-_Javier_Mascherano.jpg",
+    "date": "2017-11-11",
+    "artist": "Voltmetro",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+  },
+  "Cesc Fàbregas": {
+    "slug": "cesc-fabregas",
+    "article": "Cesc Fàbregas",
+    "file": "https://commons.wikimedia.org/wiki/File:Cesc_Fabregas_vs_Maccabi_Tel-Aviv,_Sep_2015.jpg",
+    "date": "2015-09-16",
+    "artist": "joshjdss",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0"
+  },
+  "Thomas Müller": {
+    "slug": "thomas-muller",
+    "article": "Thomas Müller",
+    "file": "https://commons.wikimedia.org/wiki/File:FC_Red_Bull_Salzburg_gegen_Bayern_M%C3%BCnchen_(2025-01-06_Testspiel)_20.jpg",
+    "date": "2025-01-06",
+    "artist": "Werner100359",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
   },
   "Lamine Yamal": {
     "slug": "lamine-yamal",
@@ -891,6 +1009,24 @@
     "license": "CC BY-SA 3.0",
     "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
   },
+  "Gareth Bale": {
+    "slug": "gareth-bale",
+    "article": "Gareth Bale",
+    "file": "https://commons.wikimedia.org/wiki/File:2022_FIFA_World_Cup_United_States_1%E2%80%931_Wales_-_(32)_(cropped).jpg",
+    "date": "2022-11-21",
+    "artist": "حسین ظهروند",
+    "license": "CC BY 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0"
+  },
+  "Ángel Di María": {
+    "slug": "angel-di-maria",
+    "article": "Ángel Di María",
+    "file": "https://commons.wikimedia.org/wiki/File:NIG-ARG_(5).jpg",
+    "date": "2018-06-26",
+    "artist": "Кирилл Венедиктов",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+  },
   "Kylian Mbappé": {
     "slug": "kylian-mbappe",
     "article": "Kylian Mbappé",
@@ -1052,6 +1188,16 @@
     "license": "Public domain",
     "licenseUrl": ""
   },
+  "Wayne Rooney": {
+    "slug": "wayne-rooney",
+    "article": "Wayne Rooney",
+    "file": "https://commons.wikimedia.org/wiki/File:Wayne_Rooney_(50121495731)_(cropped).jpg",
+    "artist": "All-Pro Reels from District of Columbia, USA",
+    "license": "CC BY-SA 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+    "date": "2018-08-19",
+    "source": "wikimedia/infobox"
+  },
   "Didier Drogba": {
     "slug": "didier-drogba",
     "article": "Didier Drogba",
@@ -1069,6 +1215,25 @@
     "artist": "Steindy",
     "license": "CC BY-SA 3.0",
     "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+  },
+  "Zlatan Ibrahimović": {
+    "slug": "zlatan-ibrahimovic",
+    "article": "Zlatan Ibrahimović",
+    "file": "https://commons.wikimedia.org/wiki/File:Zlatan_Ibrahimovic_(cropped).jpg",
+    "date": "2006-06-10",
+    "artist": "Ricardo Alvarez",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0"
+  },
+  "Ferenc Puskás": {
+    "slug": "ferenc-puskas",
+    "article": "Ferenc Puskás",
+    "file": "https://commons.wikimedia.org/wiki/File:Ferenc_Puskas_en_1965.jpg",
+    "artist": "Panini",
+    "license": "Public domain",
+    "licenseUrl": "",
+    "date": "2018-09-16",
+    "source": "wikimedia/infobox"
   },
   "Luis Suárez": {
     "slug": "luis-suarez",
@@ -1141,6 +1306,42 @@
     "artist": "Unknown author",
     "license": "Public domain",
     "licenseUrl": ""
+  },
+  "Carlos Tevez": {
+    "slug": "carlos-tevez",
+    "article": "Carlos Tevez",
+    "file": "https://commons.wikimedia.org/wiki/File:Carlos_Tevez,_UEFA_CL_match_Celtic_vs_Manchester_-_by_Tsutomu_Takasu.jpg",
+    "date": "2008-11-05",
+    "artist": "Tsutomu Takasu",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0"
+  },
+  "Sergio Agüero": {
+    "slug": "sergio-aguero",
+    "article": "Sergio Agüero",
+    "file": "https://commons.wikimedia.org/wiki/File:Sergio_Ag%C3%BCero_2018.jpg",
+    "date": "2018-06-16",
+    "artist": "Екатерина Лаут",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+  },
+  "Mario Balotelli": {
+    "slug": "mario-balotelli",
+    "article": "Mario Balotelli",
+    "file": "https://commons.wikimedia.org/wiki/File:Mario-Balotelli-Al-Ittifaq-2026.jpg",
+    "date": "2026-02-20",
+    "artist": "Amirhosseinnakhaeii",
+    "license": "CC0",
+    "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en"
+  },
+  "Edinson Cavani": {
+    "slug": "edinson-cavani",
+    "article": "Edinson Cavani",
+    "file": "https://commons.wikimedia.org/wiki/File:Manchester_United_v_West_Ham_United,_22_January_2022_(24).jpg",
+    "date": "2022-01-22",
+    "artist": "Ardfern",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
   },
   "Willian Dorn": {
     "slug": "willian-dorn",
@@ -1335,34 +1536,154 @@
     "license": "CC BY-SA 4.0",
     "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
   },
-  "Thiago Silva": {
-    "slug": "thiago-silva",
-    "article": "Thiago Silva",
-    "file": "https://commons.wikimedia.org/wiki/File:20180610_FIFA_Friendly_Match_Austria_vs._Brazil_Thiago_Silva_850_1582.jpg",
-    "artist": "Granada",
+  "Kaká": {
+    "slug": "kaka",
+    "article": "Kaká",
+    "file": "https://commons.wikimedia.org/wiki/File:Kaka_of_AC_Milan,_April_19,_2009.jpg",
+    "artist": "Tsutomu Takasu (Flickr: gowestphoto)",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+    "date": "2009-04-19",
+    "source": "wikimedia/deep-audit"
+  },
+  "Jordi Alba": {
+    "slug": "jordi-alba",
+    "article": "Jordi Alba",
+    "file": "https://commons.wikimedia.org/wiki/File:Jordi_Alba_NE_Revolution_Inter_Miami_7.9.25-047_(cropped).jpg",
+    "artist": "Bryan Berlin",
     "license": "CC BY-SA 4.0",
     "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
-    "date": "2018-06-10",
-    "source": "wikimedia/infobox"
+    "date": "2025-07-09",
+    "source": "wikimedia/deep-audit"
   },
-  "Ferenc Puskás": {
-    "slug": "ferenc-puskas",
-    "article": "Ferenc Puskás",
-    "file": "https://commons.wikimedia.org/wiki/File:Ferenc_Puskas_en_1965.jpg",
-    "artist": "Panini",
+  "Stanley Matthews": {
+    "slug": "stanley-matthews",
+    "article": "Stanley Matthews",
+    "file": "https://commons.wikimedia.org/wiki/File:Stanley_Matthews_1962_(crop).jpg",
+    "artist": "Harry Pot for Anefo (Nationaal Archief)",
+    "license": "CC0",
+    "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "date": "1962-04-04",
+    "source": "wikimedia/deep-audit"
+  },
+  "Marcelo": {
+    "slug": "marcelo",
+    "article": "Marcelo (footballer, born 1988)",
+    "file": "https://commons.wikimedia.org/wiki/File:RealM-Shahter15_(7).jpg",
+    "artist": "Богдан Заяц",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "date": "2015-10-01",
+    "source": "wikimedia/deep-audit"
+  },
+  "Lilian Thuram": {
+    "slug": "lilian-thuram",
+    "article": "Lilian Thuram",
+    "file": "https://commons.wikimedia.org/wiki/File:Lilian_Thuram_-_001.jpg",
+    "artist": "Mutari",
     "license": "Public domain",
     "licenseUrl": "",
-    "date": "2018-09-16",
-    "source": "wikimedia/infobox"
+    "date": "2008-03-07",
+    "source": "wikimedia/deep-audit"
   },
-  "Wayne Rooney": {
-    "slug": "wayne-rooney",
-    "article": "Wayne Rooney",
-    "file": "https://commons.wikimedia.org/wiki/File:Wayne_Rooney_(50121495731)_(cropped).jpg",
-    "artist": "All-Pro Reels from District of Columbia, USA",
-    "license": "CC BY-SA 2.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
-    "date": "2018-08-19",
-    "source": "wikimedia/infobox"
+  "Giacinto Facchetti": {
+    "slug": "giacinto-facchetti",
+    "article": "Giacinto Facchetti",
+    "file": "https://commons.wikimedia.org/wiki/File:UEFA_Euro_1968_Final_-_Italy_v_Yugoslavia_-_Ilija_Petkovi%C4%87_and_Giacinto_Facchetti.jpg",
+    "artist": "Unknown author (restoration: Danyele, Skblzz1)",
+    "license": "Public domain",
+    "licenseUrl": "",
+    "date": "1968",
+    "source": "wikimedia/deep-audit"
+  },
+  "Zico": {
+    "slug": "zico",
+    "article": "Zico (footballer)",
+    "file": "https://commons.wikimedia.org/wiki/File:Coppa_Italia_1983-84_-_Triestina_vs_Udinese_-_Zico_e_Franco_De_Falco.jpg",
+    "artist": "Enzo Lasorte / Il Piccolo",
+    "license": "Public domain",
+    "licenseUrl": "",
+    "date": "1984-02-08",
+    "source": "wikimedia/deep-audit"
+  },
+  "Ronald Koeman": {
+    "slug": "ronald-koeman",
+    "article": "Ronald Koeman",
+    "file": "https://commons.wikimedia.org/wiki/File:Ronald_Koeman_1983.jpg",
+    "artist": "Marcel Antonisse / Anefo",
+    "license": "CC0",
+    "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "date": "1983-12-13",
+    "source": "wikimedia/deep-audit"
+  },
+  "Ricardo Quaresma": {
+    "slug": "ricardo-quaresma",
+    "article": "Ricardo Quaresma",
+    "file": "https://commons.wikimedia.org/wiki/File:Ricardo_Quaresma_-_Inter_Mailand_(1).jpg",
+    "artist": "Steindy ( talk ) 10:54, 29 November 2009 (UTC)",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "date": "2009-08-16",
+    "source": "wikimedia/deep-audit"
+  },
+  "Bastian Schweinsteiger": {
+    "slug": "bastian-schweinsteiger",
+    "article": "Bastian Schweinsteiger",
+    "file": "https://commons.wikimedia.org/wiki/File:CINvCHI_2017-06-28_-_Bastian_Schweinsteiger_(27329406048)_(cropped).jpg",
+    "artist": "Hayden Schiff from Cincinnati, USA",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+    "date": "2017-06-28",
+    "source": "wikimedia/deep-audit"
+  },
+  "Wesley Sneijder": {
+    "slug": "wesley-sneijder",
+    "article": "Wesley Sneijder",
+    "file": "https://commons.wikimedia.org/wiki/File:Wesley_Sneijder_(15487233555)_(cropped).jpg",
+    "artist": "Kathi Rudminat",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+    "date": "2014-10-09",
+    "source": "wikimedia/deep-audit"
+  },
+  "Ruud Gullit": {
+    "slug": "ruud-gullit",
+    "article": "Ruud Gullit",
+    "file": "https://commons.wikimedia.org/wiki/File:GullitCruijffFeyenoord1983.jpg",
+    "artist": "Marcel Antonisse (ANEFO)",
+    "license": "CC0",
+    "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "date": "1983-10-31",
+    "source": "wikimedia/deep-audit"
+  },
+  "Peter Crouch": {
+    "slug": "peter-crouch",
+    "article": "Peter Crouch",
+    "file": "https://commons.wikimedia.org/wiki/File:Crouch2.jpg",
+    "artist": "Brian Minkoff-London Pixels",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "date": "2012-09-22",
+    "source": "wikimedia/deep-audit"
+  },
+  "Freddie Ljungberg": {
+    "slug": "freddie-ljungberg",
+    "article": "Freddie Ljungberg",
+    "file": "https://commons.wikimedia.org/wiki/File:Fredrik_Ljungberg_2006.jpg",
+    "artist": "Ricardo Alvarez",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+    "date": "2006-06",
+    "source": "wikimedia/deep-audit"
+  },
+  "Robin van Persie": {
+    "slug": "robin-van-persie",
+    "article": "Robin van Persie",
+    "file": "https://commons.wikimedia.org/wiki/File:Van_Persie_(15300483040)_(crop).jpg",
+    "artist": "Kathi Rudminat",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+    "date": "2014-10-09",
+    "source": "wikimedia/deep-audit"
   }
 }

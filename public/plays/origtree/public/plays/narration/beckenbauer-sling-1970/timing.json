@@ -1,0 +1,378 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The run",
+   "text": "Mexico, 1970. England lead West Germany two-nil. The ball bounces loose. Franz Beckenbauer takes it and runs, head up, on and on, past a defender, and scores!",
+   "src": "/plays/narration/beckenbauer-sling-1970/1.m4a",
+   "seconds": 13.0,
+   "words": [
+    {
+     "w": "Mexico",
+     "at": 0.4
+    },
+    {
+     "w": "1970",
+     "at": 1.05
+    },
+    {
+     "w": "England",
+     "at": 2.413
+    },
+    {
+     "w": "lead",
+     "at": 2.875
+    },
+    {
+     "w": "West",
+     "at": 3.15
+    },
+    {
+     "w": "Germany",
+     "at": 3.425
+    },
+    {
+     "w": "two-nil",
+     "at": 3.862
+    },
+    {
+     "w": "The",
+     "at": 4.725
+    },
+    {
+     "w": "ball",
+     "at": 4.825
+    },
+    {
+     "w": "bounces",
+     "at": 5.15
+    },
+    {
+     "w": "loose",
+     "at": 5.662
+    },
+    {
+     "w": "Franz",
+     "at": 6.65
+    },
+    {
+     "w": "Beckenbauer",
+     "at": 7.025
+    },
+    {
+     "w": "takes",
+     "at": 7.662
+    },
+    {
+     "w": "it",
+     "at": 8.0
+    },
+    {
+     "w": "and",
+     "at": 8.125
+    },
+    {
+     "w": "runs",
+     "at": 8.262
+    },
+    {
+     "w": "head",
+     "at": 8.9
+    },
+    {
+     "w": "up",
+     "at": 9.088
+    },
+    {
+     "w": "on",
+     "at": 9.4
+    },
+    {
+     "w": "and",
+     "at": 9.7
+    },
+    {
+     "w": "on",
+     "at": 9.825
+    },
+    {
+     "w": "past",
+     "at": 10.35
+    },
+    {
+     "w": "a",
+     "at": 10.662
+    },
+    {
+     "w": "defender",
+     "at": 10.725
+    },
+    {
+     "w": "and",
+     "at": 11.262
+    },
+    {
+     "w": "scores",
+     "at": 11.387
+    }
+   ]
+  },
+  {
+   "label": "The replay",
+   "text": "Watch again, slowly. He wins the loose ball and lifts his head: open grass ahead! So he carries it into midfield.",
+   "src": "/plays/narration/beckenbauer-sling-1970/2.m4a",
+   "seconds": 8.7,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.163
+    },
+    {
+     "w": "He",
+     "at": 2.15
+    },
+    {
+     "w": "wins",
+     "at": 2.3
+    },
+    {
+     "w": "the",
+     "at": 2.575
+    },
+    {
+     "w": "loose",
+     "at": 2.712
+    },
+    {
+     "w": "ball",
+     "at": 3.025
+    },
+    {
+     "w": "and",
+     "at": 3.375
+    },
+    {
+     "w": "lifts",
+     "at": 3.5
+    },
+    {
+     "w": "his",
+     "at": 3.763
+    },
+    {
+     "w": "head",
+     "at": 3.925
+    },
+    {
+     "w": "open",
+     "at": 4.562
+    },
+    {
+     "w": "grass",
+     "at": 4.9
+    },
+    {
+     "w": "ahead",
+     "at": 5.275
+    },
+    {
+     "w": "So",
+     "at": 6.037
+    },
+    {
+     "w": "he",
+     "at": 6.188
+    },
+    {
+     "w": "carries",
+     "at": 6.312
+    },
+    {
+     "w": "it",
+     "at": 6.725
+    },
+    {
+     "w": "into",
+     "at": 6.812
+    },
+    {
+     "w": "midfield",
+     "at": 7.05
+    }
+   ]
+  },
+  {
+   "label": "The shot",
+   "text": "A low shot with his right foot, under the diving keeper, into the far corner!",
+   "src": "/plays/narration/beckenbauer-sling-1970/3.m4a",
+   "seconds": 5.8,
+   "words": [
+    {
+     "w": "A",
+     "at": 0.4
+    },
+    {
+     "w": "low",
+     "at": 0.487
+    },
+    {
+     "w": "shot",
+     "at": 0.812
+    },
+    {
+     "w": "with",
+     "at": 1.137
+    },
+    {
+     "w": "his",
+     "at": 1.238
+    },
+    {
+     "w": "right",
+     "at": 1.4
+    },
+    {
+     "w": "foot",
+     "at": 1.712
+    },
+    {
+     "w": "under",
+     "at": 2.4
+    },
+    {
+     "w": "the",
+     "at": 2.587
+    },
+    {
+     "w": "diving",
+     "at": 2.675
+    },
+    {
+     "w": "keeper",
+     "at": 3.075
+    },
+    {
+     "w": "into",
+     "at": 3.75
+    },
+    {
+     "w": "the",
+     "at": 3.938
+    },
+    {
+     "w": "far",
+     "at": 4.037
+    },
+    {
+     "w": "corner",
+     "at": 4.325
+    }
+   ]
+  },
+  {
+   "label": "The lesson",
+   "text": "Germany won three\u2013two! Win the ball, lift your head, and if there\u2019s space, carry it into midfield, like the Kaiser, Franz Beckenbauer.",
+   "src": "/plays/narration/beckenbauer-sling-1970/4.m4a",
+   "seconds": 9.3,
+   "words": [
+    {
+     "w": "Germany",
+     "at": 0.4
+    },
+    {
+     "w": "won",
+     "at": 0.825
+    },
+    {
+     "w": "three\u2013two",
+     "at": 1.062
+    },
+    {
+     "w": "Win",
+     "at": 2.212
+    },
+    {
+     "w": "the",
+     "at": 2.413
+    },
+    {
+     "w": "ball",
+     "at": 2.5
+    },
+    {
+     "w": "lift",
+     "at": 2.938
+    },
+    {
+     "w": "your",
+     "at": 3.188
+    },
+    {
+     "w": "head",
+     "at": 3.3
+    },
+    {
+     "w": "and",
+     "at": 3.9
+    },
+    {
+     "w": "if",
+     "at": 4.013
+    },
+    {
+     "w": "there\u2019s",
+     "at": 4.125
+    },
+    {
+     "w": "space",
+     "at": 4.338
+    },
+    {
+     "w": "carry",
+     "at": 5.1
+    },
+    {
+     "w": "it",
+     "at": 5.412
+    },
+    {
+     "w": "into",
+     "at": 5.487
+    },
+    {
+     "w": "midfield",
+     "at": 5.725
+    },
+    {
+     "w": "like",
+     "at": 6.362
+    },
+    {
+     "w": "the",
+     "at": 6.513
+    },
+    {
+     "w": "Kaiser",
+     "at": 6.612
+    },
+    {
+     "w": "Franz",
+     "at": 7.237
+    },
+    {
+     "w": "Beckenbauer",
+     "at": 7.65
+    }
+   ]
+  }
+ ]
+}

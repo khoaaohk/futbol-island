@@ -1,0 +1,386 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Manchester City against Real Madrid, Champions League semi-final. City pass on the right. De Bruyne slides it through, Bernardo Silva is in... near post, goal!",
+   "src": "/plays/narration/bernardo-silva-signature/1.m4a",
+   "seconds": 12.1,
+   "words": [
+    {
+     "w": "Manchester",
+     "at": 0.425
+    },
+    {
+     "w": "City",
+     "at": 0.988
+    },
+    {
+     "w": "against",
+     "at": 1.3
+    },
+    {
+     "w": "Real",
+     "at": 1.675
+    },
+    {
+     "w": "Madrid",
+     "at": 1.925
+    },
+    {
+     "w": "Champions",
+     "at": 2.663
+    },
+    {
+     "w": "League",
+     "at": 3.3
+    },
+    {
+     "w": "semi-final",
+     "at": 3.575
+    },
+    {
+     "w": "City",
+     "at": 4.75
+    },
+    {
+     "w": "pass",
+     "at": 5.062
+    },
+    {
+     "w": "on",
+     "at": 5.412
+    },
+    {
+     "w": "the",
+     "at": 5.513
+    },
+    {
+     "w": "right",
+     "at": 5.6
+    },
+    {
+     "w": "De",
+     "at": 6.362
+    },
+    {
+     "w": "Bruyne",
+     "at": 6.525
+    },
+    {
+     "w": "slides",
+     "at": 6.963
+    },
+    {
+     "w": "it",
+     "at": 7.388
+    },
+    {
+     "w": "through",
+     "at": 7.537
+    },
+    {
+     "w": "Bernardo",
+     "at": 8.062
+    },
+    {
+     "w": "Silva",
+     "at": 8.675
+    },
+    {
+     "w": "is",
+     "at": 9.1
+    },
+    {
+     "w": "in",
+     "at": 9.25
+    },
+    {
+     "w": "near",
+     "at": 10.012
+    },
+    {
+     "w": "post",
+     "at": 10.262
+    },
+    {
+     "w": "goal",
+     "at": 10.75
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. Bernardo sneaks into the space behind the defenders, and lifts it inside the near post.",
+   "src": "/plays/narration/bernardo-silva-signature/2.m4a",
+   "seconds": 8.2,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.325
+    },
+    {
+     "w": "Bernardo",
+     "at": 2.45
+    },
+    {
+     "w": "sneaks",
+     "at": 3.075
+    },
+    {
+     "w": "into",
+     "at": 3.438
+    },
+    {
+     "w": "the",
+     "at": 3.612
+    },
+    {
+     "w": "space",
+     "at": 3.712
+    },
+    {
+     "w": "behind",
+     "at": 4.125
+    },
+    {
+     "w": "the",
+     "at": 4.487
+    },
+    {
+     "w": "defenders",
+     "at": 4.562
+    },
+    {
+     "w": "and",
+     "at": 5.5
+    },
+    {
+     "w": "lifts",
+     "at": 5.625
+    },
+    {
+     "w": "it",
+     "at": 5.95
+    },
+    {
+     "w": "inside",
+     "at": 6.1
+    },
+    {
+     "w": "the",
+     "at": 6.513
+    },
+    {
+     "w": "near",
+     "at": 6.6
+    },
+    {
+     "w": "post",
+     "at": 6.825
+    }
+   ]
+  },
+  {
+   "label": "How he does it",
+   "text": "Here's how he keeps the ball, even from big defenders. Tiny touches with his left foot, his body in the way. One defender, two... and he wriggles free!",
+   "src": "/plays/narration/bernardo-silva-signature/3.m4a",
+   "seconds": 10.5,
+   "words": [
+    {
+     "w": "Here's",
+     "at": 0.35
+    },
+    {
+     "w": "how",
+     "at": 0.6
+    },
+    {
+     "w": "he",
+     "at": 0.762
+    },
+    {
+     "w": "keeps",
+     "at": 0.875
+    },
+    {
+     "w": "the",
+     "at": 1.175
+    },
+    {
+     "w": "ball",
+     "at": 1.275
+    },
+    {
+     "w": "even",
+     "at": 1.825
+    },
+    {
+     "w": "from",
+     "at": 2.125
+    },
+    {
+     "w": "big",
+     "at": 2.337
+    },
+    {
+     "w": "defenders",
+     "at": 2.575
+    },
+    {
+     "w": "Tiny",
+     "at": 3.737
+    },
+    {
+     "w": "touches",
+     "at": 4.162
+    },
+    {
+     "w": "with",
+     "at": 4.588
+    },
+    {
+     "w": "his",
+     "at": 4.713
+    },
+    {
+     "w": "left",
+     "at": 4.875
+    },
+    {
+     "w": "foot",
+     "at": 5.162
+    },
+    {
+     "w": "his",
+     "at": 5.5
+    },
+    {
+     "w": "body",
+     "at": 5.675
+    },
+    {
+     "w": "in",
+     "at": 6.013
+    },
+    {
+     "w": "the",
+     "at": 6.088
+    },
+    {
+     "w": "way",
+     "at": 6.175
+    },
+    {
+     "w": "One",
+     "at": 6.925
+    },
+    {
+     "w": "defender",
+     "at": 7.2
+    },
+    {
+     "w": "two",
+     "at": 7.763
+    },
+    {
+     "w": "and",
+     "at": 8.5
+    },
+    {
+     "w": "he",
+     "at": 8.613
+    },
+    {
+     "w": "wriggles",
+     "at": 8.738
+    },
+    {
+     "w": "free",
+     "at": 9.137
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: keep the ball glued to your foot, and use your body to shield it.",
+   "src": "/plays/narration/bernardo-silva-signature/4.m4a",
+   "seconds": 5.3,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "keep",
+     "at": 1.35
+    },
+    {
+     "w": "the",
+     "at": 1.562
+    },
+    {
+     "w": "ball",
+     "at": 1.65
+    },
+    {
+     "w": "glued",
+     "at": 1.962
+    },
+    {
+     "w": "to",
+     "at": 2.25
+    },
+    {
+     "w": "your",
+     "at": 2.337
+    },
+    {
+     "w": "foot",
+     "at": 2.5
+    },
+    {
+     "w": "and",
+     "at": 3.0
+    },
+    {
+     "w": "use",
+     "at": 3.125
+    },
+    {
+     "w": "your",
+     "at": 3.312
+    },
+    {
+     "w": "body",
+     "at": 3.425
+    },
+    {
+     "w": "to",
+     "at": 3.75
+    },
+    {
+     "w": "shield",
+     "at": 3.888
+    },
+    {
+     "w": "it",
+     "at": 4.2
+    }
+   ]
+  }
+ ]
+}

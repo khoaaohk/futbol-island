@@ -26,6 +26,33 @@
     "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
     "date": "2026-06-06"
   },
+  "Marc Cucurella": {
+    "slug": "marc-cucurella",
+    "article": "Marc Cucurella",
+    "file": "https://commons.wikimedia.org/wiki/File:Marc_Cucurella_France_v_Spain_7.24.26-149_(cropped).jpg",
+    "artist": "Bryan Berlin",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2026-07-14"
+  },
+  "João Cancelo": {
+    "slug": "joao-cancelo",
+    "article": "João Cancelo",
+    "file": "https://commons.wikimedia.org/wiki/File:Joao_Cancelo_Croatia_v_Portugal_2_July_2026-002.jpg",
+    "artist": "Bryan Berlin",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2026-07-02"
+  },
+  "Nico O'Reilly": {
+    "slug": "nico-o-reilly",
+    "article": "Nico O'Reilly",
+    "file": "https://commons.wikimedia.org/wiki/File:Nico_O%27Reilly_England_v_Ghana_23_June_2026-043_(cropped).jpg",
+    "artist": "Bryan Berlin",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2026-06-23"
+  },
   "Joško Gvardiol": {
     "slug": "josko-gvardiol",
     "article": "Joško Gvardiol",
@@ -34,6 +61,34 @@
     "license": "CC BY-SA 4.0",
     "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
     "date": "2026-07-02"
+  },
+  "Willian Pacho": {
+    "slug": "willian-pacho",
+    "article": "Willian Pacho",
+    "file": "https://commons.wikimedia.org/wiki/File:Willian_Pacho_Ecuador_v_Germany_25_June_2026-228.jpg",
+    "artist": "Bryan Berlin",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2026-06-25",
+    "source": "wikimedia/infobox"
+  },
+  "Marc Guéhi": {
+    "slug": "marc-guehi",
+    "article": "Marc Guéhi",
+    "file": "https://commons.wikimedia.org/wiki/File:Marc_Guehi_England_v_Ghana_23_June_2026-122.jpg",
+    "artist": "Bryan Berlin",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2026-06-23"
+  },
+  "Lisandro Martínez": {
+    "slug": "lisandro-martinez",
+    "article": "Lisandro Martínez",
+    "file": "https://commons.wikimedia.org/wiki/File:Lisandro_Martinez_Argentina_v_Egypt_7_July_2026-343_(cropped).jpg",
+    "artist": "Bryan Berlin",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2026-07-07"
   },
   "Pedri": {
     "slug": "pedri",
@@ -71,6 +126,195 @@
     "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
     "date": "2026-06-26"
   },
+  "Moisés Caicedo": {
+    "slug": "moises-caicedo",
+    "article": "Moisés Caicedo",
+    "file": "https://commons.wikimedia.org/wiki/File:Moises_Caicedo_23_Ecuador_v_Germany_at_2026_Fifa_World_Cup_by_YantsImages_01_(cropped).jpg",
+    "artist": "YantsImages",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2026-06-25"
+  },
+  "Aurélien Tchouaméni": {
+    "slug": "aurelien-tchouameni",
+    "article": "Aurélien Tchouaméni",
+    "file": "https://commons.wikimedia.org/wiki/File:Aurelien_Tchouameni_France_v_Norway_26_June_26-101.jpg",
+    "artist": "Bryan Berlin",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2026-06-26"
+  },
+  "Joshua Kimmich": {
+    "slug": "joshua-kimmich",
+    "article": "Joshua Kimmich",
+    "file": "https://commons.wikimedia.org/wiki/File:Joshua_Kimmich_Ecuador_v_Germany_25_June_2026-149.jpg",
+    "artist": "Bryan Berlin",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2026-06-25"
+  },
+  "Bernardo Silva": {
+    "slug": "bernardo-silva",
+    "article": "Bernardo Silva",
+    "file": "https://commons.wikimedia.org/wiki/File:Bernardo_Silva_Croatia_v_Portugal_2_July_2026-238.jpg",
+    "artist": "Bryan Berlin",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2026-07-02"
+  },
+  "Rayan Cherki": {
+    "slug": "rayan-cherki",
+    "article": "Rayan Cherki",
+    "file": "https://commons.wikimedia.org/wiki/File:Rayan_Cherki_France_v_Norway_26_June_26-114.jpg",
+    "artist": "Bryan Berlin",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2026-06-26"
+  },
+  "N'Golo Kanté": {
+    "slug": "n-golo-kante",
+    "article": "N'Golo Kanté",
+    "file": "https://commons.wikimedia.org/wiki/File:N%27Golo_Kante_France_v_Senegal_16_June_2026-267.jpg",
+    "artist": "Bryan Berlin",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2026-06-16"
+  },
+  "Tijjani Reijnders": {
+    "slug": "tijjani-reijnders",
+    "article": "Tijjani Reijnders",
+    "file": "https://commons.wikimedia.org/wiki/File:Manchester_City_2025_06_26_Juventus.jpg",
+    "artist": "Equipos de fútbol",
+    "license": "CC BY 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
+    "date": "2025-06-26"
+  },
+  "Bruno Guimarães": {
+    "slug": "bruno-guimaraes",
+    "article": "Bruno Guimarães",
+    "file": "https://commons.wikimedia.org/wiki/File:Bruno_Guimaraes_Brazil_V_Morocco_13_June_2026-78_(cropped).jpg",
+    "artist": "Bryan Berlin",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2026-06-13"
+  },
+  "Martín Zubimendi": {
+    "slug": "martin-zubimendi",
+    "article": "Martín Zubimendi",
+    "file": "https://commons.wikimedia.org/wiki/File:Martin_Zubimendi_Argentina_v_Spain_19_July_2026-010.jpg",
+    "artist": "Bryan Berlin",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2026-07-19"
+  },
+  "Enzo Fernández": {
+    "slug": "enzo-fernandez",
+    "article": "Enzo Fernández",
+    "file": "https://commons.wikimedia.org/wiki/File:Enzo_Fernandez_Argentina_v_Egypt_7_July_2026-058.jpg",
+    "artist": "Bryan Berlin",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2026-07-07"
+  },
+  "Scott McTominay": {
+    "slug": "scott-mctominay",
+    "article": "Scott McTominay",
+    "file": "https://commons.wikimedia.org/wiki/File:Scott_McTominay_Scotland_v_Bolivia_6_June_2026-114.jpg",
+    "artist": "Bryan Berlin",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2026-06-06"
+  },
+  "Alexis Mac Allister": {
+    "slug": "alexis-mac-allister",
+    "article": "Alexis Mac Allister",
+    "file": "https://commons.wikimedia.org/wiki/File:Alexis_Mac_Allister_Argentina_v_Egypt_7_July_2026-052.jpg",
+    "artist": "Bryan Berlin",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2026-07-07"
+  },
+  "Weston McKennie": {
+    "slug": "weston-mckennie",
+    "article": "Weston McKennie",
+    "file": "https://commons.wikimedia.org/wiki/File:Weston_McKennie_Australia_v_USA_19_June_2026-126.jpg",
+    "artist": "Bryan Berlin",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2026-06-19"
+  },
+  "Dani Olmo": {
+    "slug": "dani-olmo",
+    "article": "Dani Olmo",
+    "file": "https://commons.wikimedia.org/wiki/File:Dani_Olmo_France_v_Spain_7.24.26-176_(cropped).jpg",
+    "artist": "Bryan Berlin",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2026-07-14"
+  },
+  "Fabián Ruiz": {
+    "slug": "fabian-ruiz",
+    "article": "Fabián Ruiz",
+    "file": "https://commons.wikimedia.org/wiki/File:Fabian_Ruiz_France_v_Spain_7.24.26-109.jpg",
+    "artist": "Bryan Berlin",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2026-07-14"
+  },
+  "Casemiro": {
+    "slug": "casemiro",
+    "article": "Casemiro",
+    "file": "https://commons.wikimedia.org/wiki/File:Casemiro_Brazil_V_Morocco_13_June_2026-76_(cropped).jpg",
+    "artist": "Bryan Berlin",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2026-06-13"
+  },
+  "Mikel Merino": {
+    "slug": "mikel-merino",
+    "article": "Mikel Merino",
+    "file": "https://commons.wikimedia.org/wiki/File:Mikel_Merino_France_v_Spain_7.24.26-240.jpg",
+    "artist": "Bryan Berlin",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2026-07-14"
+  },
+  "Eberechi Eze": {
+    "slug": "eberechi-eze",
+    "article": "Eberechi Eze",
+    "file": "https://commons.wikimedia.org/wiki/File:Eberechi_Eze_England_v_Ghana_23_June_2026-039.jpg",
+    "artist": "Bryan Berlin",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2026-06-23"
+  },
+  "Phil Foden": {
+    "slug": "phil-foden",
+    "article": "Phil Foden",
+    "file": "https://commons.wikimedia.org/wiki/File:2023-10-04_Fu%C3%9Fball,_M%C3%A4nner,_UEFA_Champions_League,_RB_Leipzig_-_Manchester_City_FC_1DX_2724_(cropped).jpg",
+    "artist": "Original: Steffen Prößdorf ; Derivative work: Goodreg3",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2023-10-04"
+  },
+  "Elliot Anderson": {
+    "slug": "elliot-anderson",
+    "article": "Elliot Anderson",
+    "file": "https://commons.wikimedia.org/wiki/File:Elliot_Anderson_8_England_v_Ghana_at_2026_Fifa_World_Cup_by_YantsImages_01.jpg",
+    "artist": "YantsImages",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2026-06-24"
+  },
+  "Sandro Tonali": {
+    "slug": "sandro-tonali",
+    "article": "Sandro Tonali",
+    "file": "https://commons.wikimedia.org/wiki/File:Norway_Italy_-_June_2025_D_04_(Sandro_Tonali).jpg",
+    "artist": "MichaelEmilio",
+    "license": "CC BY 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
+    "date": "2025-06-06"
+  },
   "Neymar": {
     "slug": "neymar",
     "article": "Neymar",
@@ -88,6 +332,69 @@
     "license": "CC BY-SA 4.0",
     "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
     "date": "2026-06-19"
+  },
+  "Antoine Semenyo": {
+    "slug": "antoine-semenyo",
+    "article": "Antoine Semenyo",
+    "file": "https://commons.wikimedia.org/wiki/File:Ezri_Konsa_2,_Antoine_Semenyo_11_England_v_Ghana_at_2026_Fifa_World_Cup_by_YantsImages_01.jpg",
+    "artist": "YantsImages",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2026-06-24"
+  },
+  "Jérémy Doku": {
+    "slug": "jeremy-doku",
+    "article": "Jérémy Doku",
+    "file": "https://commons.wikimedia.org/wiki/File:J%C3%A9r%C3%A9my_Doku_USMNT_v_Belgium_Mar_28_2026-169.jpg",
+    "artist": "Bryan Berlin",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2026-03-28"
+  },
+  "Sadio Mané": {
+    "slug": "sadio-mane",
+    "article": "Sadio Mané",
+    "file": "https://commons.wikimedia.org/wiki/File:Sadio_Mane_Dayot_Upamecano_France_v_Senegal_16_June_2026-432.jpg",
+    "artist": "Bryan Berlin",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2026-06-16"
+  },
+  "Ismaïla Sarr": {
+    "slug": "ismaila-sarr",
+    "article": "Ismaïla Sarr",
+    "file": "https://commons.wikimedia.org/wiki/File:Ismaila_Sarr_France_v_Senegal_16_June_2026-348.jpg",
+    "artist": "Bryan Berlin",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2026-06-16"
+  },
+  "Gabriel Martinelli": {
+    "slug": "gabriel-martinelli",
+    "article": "Gabriel Martinelli",
+    "file": "https://commons.wikimedia.org/wiki/File:Gabriel_Martinelli_Brazil_V_Morocco_13_June_2026-141.jpg",
+    "artist": "Bryan Berlin",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2026-06-13"
+  },
+  "Anthony Gordon": {
+    "slug": "anthony-gordon",
+    "article": "Anthony Gordon (footballer)",
+    "file": "https://commons.wikimedia.org/wiki/File:Anthony_Gordon_18,_Marvin_Senaya_26_England_v_Ghana_at_2026_Fifa_World_Cup_by_YantsImages_04_(cropped).jpg",
+    "artist": "YantsImages",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2026-06-24"
+  },
+  "Brahim Díaz": {
+    "slug": "brahim-diaz",
+    "article": "Brahim Díaz",
+    "file": "https://commons.wikimedia.org/wiki/File:Brahim_Diaz_Brazil_V_Morocco_13_June_2026-129.jpg",
+    "artist": "Bryan Berlin",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2026-06-13"
   },
   "Antoine Griezmann": {
     "slug": "antoine-griezmann",
@@ -107,5 +414,228 @@
     "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
     "date": "2021-12-08",
     "source": "wikimedia/infobox"
+  },
+  "Raúl Jiménez": {
+    "slug": "raul-jimenez",
+    "article": "Raúl Jiménez",
+    "file": "https://commons.wikimedia.org/wiki/File:Ra%C3%BAl_Jim%C3%A9nez_04032026_(1).jpg",
+    "artist": "Timmy96",
+    "license": "CC0",
+    "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "date": "2026-03-04"
+  },
+  "Gonçalo Ramos": {
+    "slug": "goncalo-ramos",
+    "article": "Gonçalo Ramos",
+    "file": "https://commons.wikimedia.org/wiki/File:Gon%C3%A7alo_Ramos_USMNT_v_Portugal_Mar_31_2026-13.jpg",
+    "artist": "Bryan Berlin",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2026-03-31"
+  },
+  "Mikel Oyarzabal": {
+    "slug": "mikel-oyarzabal",
+    "article": "Mikel Oyarzabal",
+    "file": "https://commons.wikimedia.org/wiki/File:Mikel_Oyarzabal_France_v_Spain_7.24.26-056.jpg",
+    "artist": "Bryan Berlin",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2026-07-14"
+  },
+  "Marcus Thuram": {
+    "slug": "marcus-thuram",
+    "article": "Marcus Thuram",
+    "file": "https://commons.wikimedia.org/wiki/File:Marcus_Thuram_France_v_Senegal_16_June_2026-261_(cropped).jpg",
+    "artist": "Bryan Berlin",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2026-06-16"
+  },
+  "Endrick": {
+    "slug": "endrick",
+    "article": "Endrick",
+    "file": "https://commons.wikimedia.org/wiki/File:Team_Brazil_at_2026_FIFA_World_Cup_by_YantsImages_(Endrick).jpg",
+    "artist": "YantsImages",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2026-06-14"
+  },
+  "Jonathan David": {
+    "slug": "jonathan-david",
+    "article": "Jonathan David",
+    "file": "https://commons.wikimedia.org/wiki/File:Jonathan_David_Canada_v_Qatar_18_June_2026-177.jpg",
+    "artist": "Bryan Berlin",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2026-06-18"
+  },
+  "Olivier Giroud": {
+    "slug": "olivier-giroud",
+    "article": "Olivier Giroud",
+    "file": "https://commons.wikimedia.org/wiki/File:Houston_Dynamo_vs_LAFC_(Apr_2025)_05_(Olivier_Giroud).jpg",
+    "artist": "u/reepers_hellcat",
+    "license": "CC BY 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
+    "date": "2025-04-05"
+  },
+  "Gianluigi Donnarumma": {
+    "slug": "gianluigi-donnarumma",
+    "article": "Gianluigi Donnarumma",
+    "file": "https://commons.wikimedia.org/wiki/File:Norway_Italy_-_June_2025_B_33_-_Gianluigi_Donnarumma_(close-up).jpg",
+    "artist": "Original: MichaelEmilio / Derivative work: Danyele",
+    "license": "CC BY 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
+    "date": "2025-06-06",
+    "source": "wikimedia/deep-audit"
+  },
+  "Jordan Pickford": {
+    "slug": "jordan-pickford",
+    "article": "Jordan Pickford",
+    "file": "https://commons.wikimedia.org/wiki/File:Jordan_Pickford_England_v_Ghana_23_June_2026-049.jpg",
+    "artist": "Bryan Berlin",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2026-06-23",
+    "source": "wikimedia/deep-audit"
+  },
+  "Reece James": {
+    "slug": "reece-james",
+    "article": "Reece James",
+    "file": "https://commons.wikimedia.org/wiki/File:Reece_James_England_v_Ghana_23_June_2026-248.jpg",
+    "artist": "Bryan Berlin",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2026-06-23",
+    "source": "wikimedia/deep-audit"
+  },
+  "Kim Min-jae": {
+    "slug": "kim-min-jae",
+    "article": "Kim Min-jae (footballer)",
+    "file": "https://commons.wikimedia.org/wiki/File:FC_Red_Bull_Salzburg_gegen_Bayern_M%C3%BCnchen_(2025-01-06_Testspiel)_26.jpg",
+    "artist": "Werner100359",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2025-01-06",
+    "source": "wikimedia/deep-audit"
+  },
+  "Cody Gakpo": {
+    "slug": "cody-gakpo",
+    "article": "Cody Gakpo",
+    "file": "https://commons.wikimedia.org/wiki/File:Austria_U-18_vs._Netherlands_U-18_2017-03-23_(078).jpg",
+    "artist": "Steindy",
+    "license": "CC BY 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "date": "2017-03-23",
+    "source": "wikimedia/deep-audit"
+  },
+  "Rodrigo De Paul": {
+    "slug": "rodrigo-de-paul",
+    "article": "Rodrigo De Paul",
+    "file": "https://commons.wikimedia.org/wiki/File:Rodrigo_De_Paul_Argentina_v_Spain_19_July_2026-159.jpg",
+    "artist": "Bryan Berlin",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2026-07-19",
+    "source": "wikimedia/deep-audit"
+  },
+  "Son Heung-min": {
+    "slug": "son-heung-min",
+    "article": "Son Heung-min",
+    "file": "https://commons.wikimedia.org/wiki/File:Son_Heung-min_2016.jpg",
+    "artist": "Дмитрий Голубович",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "date": "2016-09-27",
+    "source": "wikimedia/deep-audit"
+  },
+  "Kaoru Mitoma": {
+    "slug": "kaoru-mitoma",
+    "article": "Kaoru Mitoma",
+    "file": "https://commons.wikimedia.org/wiki/File:Kaoru_Mitoma_(2022).jpg",
+    "artist": "jamesboyes",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+    "date": "2022-07-30",
+    "source": "wikimedia/deep-audit"
+  },
+  "Karim Adeyemi": {
+    "slug": "karim-adeyemi",
+    "article": "Karim Adeyemi",
+    "file": "https://commons.wikimedia.org/wiki/File:FC_RB_Salzburg_gegen_SK_Sturm_Graz_(24._Oktober_2021)_70.jpg",
+    "artist": "Werner100359",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2021-10-24",
+    "source": "wikimedia/deep-audit"
+  },
+  "Vozinha": {
+    "slug": "vozinha",
+    "article": "Vozinha",
+    "file": "https://commons.wikimedia.org/wiki/File:Vozinha_Fifa_World_Cup_2026_Saudia_Arabia_vs_Cabo_Verde_(cropped).jpg",
+    "artist": "Petsbikes",
+    "license": "CC BY 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
+    "date": "2026-06-26",
+    "source": "wikimedia/deep-audit"
+  },
+  "Kyle Walker": {
+    "slug": "kyle-walker",
+    "article": "Kyle Walker",
+    "file": "https://commons.wikimedia.org/wiki/File:Kyle_Walker_2021-12-07_1.jpg",
+    "artist": "Steffen Prößdorf (Stepro), crop by Mattythewhite",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2021-12-07",
+    "source": "wikimedia/deep-audit"
+  },
+  "İlkay Gündoğan": {
+    "slug": "ilkay-gundogan",
+    "article": "İlkay Gündoğan",
+    "file": "https://commons.wikimedia.org/wiki/File:2021-12-07_Fu%C3%9Fball,_M%C3%A4nner,_UEFA_Champions_League,_RB_Leipzig_-_Manchester_City_FC_1DX_2686_by_Stepro.jpg",
+    "artist": "Steffen Prößdorf",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2021-12-07",
+    "source": "wikimedia/deep-audit"
+  },
+  "Karim Benzema": {
+    "slug": "karim-benzema",
+    "article": "Karim Benzema",
+    "file": "https://commons.wikimedia.org/wiki/File:Karim_Benzema_vs._FC_Schalke_04_(16647992937).jpg",
+    "artist": "Chris Deahr",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+    "date": "2015-03-11",
+    "source": "wikimedia/deep-audit"
+  },
+  "Ryan Gravenberch": {
+    "slug": "ryan-gravenberch",
+    "article": "Ryan Gravenberch",
+    "file": "https://commons.wikimedia.org/wiki/File:2022-07-30_Fu%C3%9Fball,_M%C3%A4nner,_DFL-Supercup,_RB_Leipzig_-_FC_Bayern_M%C3%BCnchen_1DX_3342_by_Stepro_(cropped).jpg",
+    "artist": "Steffen Prößdorf (Stepro), crop by Sepguilherme",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2022-07-30",
+    "source": "wikimedia/deep-audit"
+  },
+  "Fermín López": {
+    "slug": "fermin-lopez",
+    "article": "Fermín López",
+    "file": "https://commons.wikimedia.org/wiki/File:Ferm%C3%ADn_L%C3%B3pez_(cropped).jpg",
+    "artist": "Biso",
+    "license": "CC BY 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
+    "date": "2025-09-04",
+    "source": "wikimedia/deep-audit"
+  },
+  "James Rodríguez": {
+    "slug": "james-rodriguez",
+    "article": "James Rodríguez",
+    "file": "https://commons.wikimedia.org/wiki/File:James_Rodr%C3%ADguez_(cropped).jpg",
+    "artist": "Copa2014.gov.br",
+    "license": "CC BY 3.0 br",
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0/br/deed.en",
+    "date": "2014-06-19",
+    "source": "wikimedia/deep-audit"
   }
 }

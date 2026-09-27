@@ -1,0 +1,382 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Extra time, live",
+   "text": "Moscow, 2008, in the rain. Champions League final, extra time. Patrice Evra dances down the left and pulls it back. Ryan Giggs shoots over the keeper... John Terry heads it off the line!",
+   "src": "/plays/narration/terry-signature/1.m4a",
+   "seconds": 13.8,
+   "words": [
+    {
+     "w": "Moscow",
+     "at": 0.4
+    },
+    {
+     "w": "2008",
+     "at": 1.062
+    },
+    {
+     "w": "in",
+     "at": 1.925
+    },
+    {
+     "w": "the",
+     "at": 2.013
+    },
+    {
+     "w": "rain",
+     "at": 2.1
+    },
+    {
+     "w": "Champions",
+     "at": 2.962
+    },
+    {
+     "w": "League",
+     "at": 3.525
+    },
+    {
+     "w": "final",
+     "at": 3.812
+    },
+    {
+     "w": "extra",
+     "at": 4.25
+    },
+    {
+     "w": "time",
+     "at": 4.65
+    },
+    {
+     "w": "Patrice",
+     "at": 5.438
+    },
+    {
+     "w": "Evra",
+     "at": 5.95
+    },
+    {
+     "w": "dances",
+     "at": 6.25
+    },
+    {
+     "w": "down",
+     "at": 6.75
+    },
+    {
+     "w": "the",
+     "at": 6.987
+    },
+    {
+     "w": "left",
+     "at": 7.075
+    },
+    {
+     "w": "and",
+     "at": 7.438
+    },
+    {
+     "w": "pulls",
+     "at": 7.55
+    },
+    {
+     "w": "it",
+     "at": 7.85
+    },
+    {
+     "w": "back",
+     "at": 7.95
+    },
+    {
+     "w": "Ryan",
+     "at": 8.825
+    },
+    {
+     "w": "Giggs",
+     "at": 9.238
+    },
+    {
+     "w": "shoots",
+     "at": 9.713
+    },
+    {
+     "w": "over",
+     "at": 10.037
+    },
+    {
+     "w": "the",
+     "at": 10.213
+    },
+    {
+     "w": "keeper",
+     "at": 10.3
+    },
+    {
+     "w": "John",
+     "at": 11.162
+    },
+    {
+     "w": "Terry",
+     "at": 11.488
+    },
+    {
+     "w": "heads",
+     "at": 11.825
+    },
+    {
+     "w": "it",
+     "at": 12.062
+    },
+    {
+     "w": "off",
+     "at": 12.137
+    },
+    {
+     "w": "the",
+     "at": 12.325
+    },
+    {
+     "w": "line",
+     "at": 12.425
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. Terry was caught on the wrong foot, but he never gives up. He races back to the line, stays on his feet and stretches up. Header, behind for a corner!",
+   "src": "/plays/narration/terry-signature/2.m4a",
+   "seconds": 11.6,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.137
+    },
+    {
+     "w": "Terry",
+     "at": 2.138
+    },
+    {
+     "w": "was",
+     "at": 2.475
+    },
+    {
+     "w": "caught",
+     "at": 2.663
+    },
+    {
+     "w": "on",
+     "at": 2.938
+    },
+    {
+     "w": "the",
+     "at": 3.038
+    },
+    {
+     "w": "wrong",
+     "at": 3.125
+    },
+    {
+     "w": "foot",
+     "at": 3.5
+    },
+    {
+     "w": "but",
+     "at": 3.862
+    },
+    {
+     "w": "he",
+     "at": 3.987
+    },
+    {
+     "w": "never",
+     "at": 4.1
+    },
+    {
+     "w": "gives",
+     "at": 4.35
+    },
+    {
+     "w": "up",
+     "at": 4.6
+    },
+    {
+     "w": "He",
+     "at": 5.2
+    },
+    {
+     "w": "races",
+     "at": 5.35
+    },
+    {
+     "w": "back",
+     "at": 5.775
+    },
+    {
+     "w": "to",
+     "at": 6.05
+    },
+    {
+     "w": "the",
+     "at": 6.138
+    },
+    {
+     "w": "line",
+     "at": 6.25
+    },
+    {
+     "w": "stays",
+     "at": 6.888
+    },
+    {
+     "w": "on",
+     "at": 7.237
+    },
+    {
+     "w": "his",
+     "at": 7.338
+    },
+    {
+     "w": "feet",
+     "at": 7.537
+    },
+    {
+     "w": "and",
+     "at": 7.825
+    },
+    {
+     "w": "stretches",
+     "at": 7.95
+    },
+    {
+     "w": "up",
+     "at": 8.4
+    },
+    {
+     "w": "Header",
+     "at": 9.088
+    },
+    {
+     "w": "behind",
+     "at": 9.55
+    },
+    {
+     "w": "for",
+     "at": 10.025
+    },
+    {
+     "w": "a",
+     "at": 10.137
+    },
+    {
+     "w": "corner",
+     "at": 10.2
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn. When your keeper is beaten, get back between the ball and the goal. Stay on your feet and be brave!",
+   "src": "/plays/narration/terry-signature/3.m4a",
+   "seconds": 7.5,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "When",
+     "at": 1.325
+    },
+    {
+     "w": "your",
+     "at": 1.462
+    },
+    {
+     "w": "keeper",
+     "at": 1.575
+    },
+    {
+     "w": "is",
+     "at": 1.925
+    },
+    {
+     "w": "beaten",
+     "at": 2.087
+    },
+    {
+     "w": "get",
+     "at": 2.575
+    },
+    {
+     "w": "back",
+     "at": 2.75
+    },
+    {
+     "w": "between",
+     "at": 3.025
+    },
+    {
+     "w": "the",
+     "at": 3.288
+    },
+    {
+     "w": "ball",
+     "at": 3.388
+    },
+    {
+     "w": "and",
+     "at": 3.775
+    },
+    {
+     "w": "the",
+     "at": 3.888
+    },
+    {
+     "w": "goal",
+     "at": 3.975
+    },
+    {
+     "w": "Stay",
+     "at": 4.825
+    },
+    {
+     "w": "on",
+     "at": 5.112
+    },
+    {
+     "w": "your",
+     "at": 5.213
+    },
+    {
+     "w": "feet",
+     "at": 5.375
+    },
+    {
+     "w": "and",
+     "at": 5.7
+    },
+    {
+     "w": "be",
+     "at": 5.812
+    },
+    {
+     "w": "brave",
+     "at": 5.963
+    }
+   ]
+  }
+ ]
+}

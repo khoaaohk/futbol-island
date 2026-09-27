@@ -82,6 +82,31 @@
      "trails": false
     }
    }
+  },
+  {
+   "q": "You want to turn with the ball close. Which move does that?",
+   "options": [
+    "Cruyff turn: pretend to kick, then turn",
+    "Kick it far and chase it",
+    "Stand still with the ball"
+   ],
+   "correct": 0,
+   "explain": "Yes. Pretend to kick, pull the ball behind your leg, and turn.",
+   "choiceExplanations": [
+    "Yes. Pretend to kick, pull the ball behind your leg, and turn.",
+    "A far kick is easy for the defender to win.",
+    "Standing still lets the defender come and take it."
+   ],
+   "visual": {
+    "kind": "whatNext",
+    "frame": {
+     "step": 2,
+     "focus": [
+      "cm",
+      "dcm"
+     ]
+    }
+   }
   }
  ]
 }

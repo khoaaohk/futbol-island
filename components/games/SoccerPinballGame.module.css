@@ -60,3 +60,6 @@
  .card p{font-size:11px;margin-bottom:10px}
  .card button{padding:10px 15px}
 }
+
+/* iOS long-press guard (tests/device-guards.cjs check 1): no "Save image / Copy / Share" callout or text selection on held controls. */
+.table,.table *,.controls,.controls *{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-user-drag:none}

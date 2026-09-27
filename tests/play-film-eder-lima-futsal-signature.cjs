@@ -29,6 +29,6 @@ assert.ok(/Argentina are champions/.test(film.chapters[1].narration),'the result
 for(const ch of film.chapters.slice(0,2))assert.ok(!/right foot|left foot|low|corner|post/i.test(ch.narration),'match chapters claim no inferred foot / placement');
 assert.ok(/turn/i.test(film.chapters[2].narration)&&/hard and low/i.test(film.chapters[2].narration)&&/just outside the area/i.test(film.chapters[2].narration),'ends with the entry lesson');
 assert.ok(/1 Oct 2016/.test(src)&&/39:41/.test(src)&&/successfully converts the second penalty/.test(src),'header states the match date, minute and the source wording');
-assert.ok(/foot:'l'/.test(src),'left-foot strikes (card param)');
+assert.ok(/strike\(t,\{foot:'r'\}\)/.test(src)&&!/foot:'l'/.test(src),'right-foot strikes and touches (verified from footage)');
 const iconic=JSON.parse(fs.readFileSync(path.join(root,'lib/town/iconicPlays.json'),'utf8'));assert.equal(iconic['Eder Lima'].kind,'signature');
 console.log(`Eder Lima signature film: ${film.chapters.length} chapters, ${total.toFixed(1)} s, ${n} words, ${words.length} characters — contract passed.`);

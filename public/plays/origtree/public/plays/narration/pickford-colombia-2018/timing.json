@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The save, live",
+   "text": "Moscow, World Cup 2018: penalties against Colombia! Jordan Henderson's kick is saved, but England keep believing. Carlos Bacca steps up. Jordan Pickford waits. Bacca shoots, Pickford dives right... Saved! Eric Dier scores. England win!",
+   "src": "/plays/narration/pickford-colombia-2018/1.m4a",
+   "seconds": 18.4,
+   "words": [
+    {
+     "w": "Moscow",
+     "at": 0.4
+    },
+    {
+     "w": "World",
+     "at": 1.0
+    },
+    {
+     "w": "Cup",
+     "at": 1.35
+    },
+    {
+     "w": "2018",
+     "at": 1.575
+    },
+    {
+     "w": "penalties",
+     "at": 2.663
+    },
+    {
+     "w": "against",
+     "at": 3.212
+    },
+    {
+     "w": "Colombia",
+     "at": 3.5
+    },
+    {
+     "w": "Jordan",
+     "at": 4.463
+    },
+    {
+     "w": "Henderson's",
+     "at": 4.85
+    },
+    {
+     "w": "kick",
+     "at": 5.463
+    },
+    {
+     "w": "is",
+     "at": 5.75
+    },
+    {
+     "w": "saved",
+     "at": 5.888
+    },
+    {
+     "w": "but",
+     "at": 6.4
+    },
+    {
+     "w": "England",
+     "at": 6.55
+    },
+    {
+     "w": "keep",
+     "at": 7.013
+    },
+    {
+     "w": "believing",
+     "at": 7.3
+    },
+    {
+     "w": "Carlos",
+     "at": 8.312
+    },
+    {
+     "w": "Bacca",
+     "at": 8.8
+    },
+    {
+     "w": "steps",
+     "at": 9.188
+    },
+    {
+     "w": "up",
+     "at": 9.55
+    },
+    {
+     "w": "Jordan",
+     "at": 10.2
+    },
+    {
+     "w": "Pickford",
+     "at": 10.625
+    },
+    {
+     "w": "waits",
+     "at": 11.025
+    },
+    {
+     "w": "Bacca",
+     "at": 11.887
+    },
+    {
+     "w": "shoots",
+     "at": 12.287
+    },
+    {
+     "w": "Pickford",
+     "at": 12.75
+    },
+    {
+     "w": "dives",
+     "at": 13.15
+    },
+    {
+     "w": "right",
+     "at": 13.65
+    },
+    {
+     "w": "Saved",
+     "at": 14.5
+    },
+    {
+     "w": "Eric",
+     "at": 15.162
+    },
+    {
+     "w": "Dier",
+     "at": 15.512
+    },
+    {
+     "w": "scores",
+     "at": 15.787
+    },
+    {
+     "w": "England",
+     "at": 16.562
+    },
+    {
+     "w": "win",
+     "at": 17.038
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it slowly. Pickford dives early. The ball flies above him, so he whips up his back hand!",
+   "src": "/plays/narration/pickford-colombia-2018/2.m4a",
+   "seconds": 7.4,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "slowly",
+     "at": 0.812
+    },
+    {
+     "w": "Pickford",
+     "at": 1.738
+    },
+    {
+     "w": "dives",
+     "at": 2.175
+    },
+    {
+     "w": "early",
+     "at": 2.675
+    },
+    {
+     "w": "The",
+     "at": 3.538
+    },
+    {
+     "w": "ball",
+     "at": 3.65
+    },
+    {
+     "w": "flies",
+     "at": 3.962
+    },
+    {
+     "w": "above",
+     "at": 4.35
+    },
+    {
+     "w": "him",
+     "at": 4.662
+    },
+    {
+     "w": "so",
+     "at": 4.925
+    },
+    {
+     "w": "he",
+     "at": 5.075
+    },
+    {
+     "w": "whips",
+     "at": 5.2
+    },
+    {
+     "w": "up",
+     "at": 5.412
+    },
+    {
+     "w": "his",
+     "at": 5.513
+    },
+    {
+     "w": "back",
+     "at": 5.65
+    },
+    {
+     "w": "hand",
+     "at": 5.925
+    }
+   ]
+  },
+  {
+   "label": "From behind the goal",
+   "text": "From behind: that left hand! Pickford jumps and punches the air.",
+   "src": "/plays/narration/pickford-colombia-2018/3.m4a",
+   "seconds": 5.3,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.375
+    },
+    {
+     "w": "behind",
+     "at": 0.512
+    },
+    {
+     "w": "that",
+     "at": 1.375
+    },
+    {
+     "w": "left",
+     "at": 1.575
+    },
+    {
+     "w": "hand",
+     "at": 1.825
+    },
+    {
+     "w": "Pickford",
+     "at": 2.587
+    },
+    {
+     "w": "jumps",
+     "at": 2.987
+    },
+    {
+     "w": "and",
+     "at": 3.337
+    },
+    {
+     "w": "punches",
+     "at": 3.45
+    },
+    {
+     "w": "the",
+     "at": 3.837
+    },
+    {
+     "w": "air",
+     "at": 3.987
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "The secret? Keepers, commit to your dive and reach with a strong hand. If your team misses, keep believing! Bacca was brave to step up.",
+   "src": "/plays/narration/pickford-colombia-2018/4.m4a",
+   "seconds": 9.6,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "secret",
+     "at": 0.463
+    },
+    {
+     "w": "Keepers",
+     "at": 1.238
+    },
+    {
+     "w": "commit",
+     "at": 1.85
+    },
+    {
+     "w": "to",
+     "at": 2.1
+    },
+    {
+     "w": "your",
+     "at": 2.188
+    },
+    {
+     "w": "dive",
+     "at": 2.325
+    },
+    {
+     "w": "and",
+     "at": 2.725
+    },
+    {
+     "w": "reach",
+     "at": 2.85
+    },
+    {
+     "w": "with",
+     "at": 3.138
+    },
+    {
+     "w": "a",
+     "at": 3.237
+    },
+    {
+     "w": "strong",
+     "at": 3.3
+    },
+    {
+     "w": "hand",
+     "at": 3.725
+    },
+    {
+     "w": "If",
+     "at": 4.625
+    },
+    {
+     "w": "your",
+     "at": 4.787
+    },
+    {
+     "w": "team",
+     "at": 4.938
+    },
+    {
+     "w": "misses",
+     "at": 5.25
+    },
+    {
+     "w": "keep",
+     "at": 5.775
+    },
+    {
+     "w": "believing",
+     "at": 6.05
+    },
+    {
+     "w": "Bacca",
+     "at": 6.987
+    },
+    {
+     "w": "was",
+     "at": 7.375
+    },
+    {
+     "w": "brave",
+     "at": 7.562
+    },
+    {
+     "w": "to",
+     "at": 7.975
+    },
+    {
+     "w": "step",
+     "at": 8.075
+    },
+    {
+     "w": "up",
+     "at": 8.35
+    }
+   ]
+  }
+ ]
+}

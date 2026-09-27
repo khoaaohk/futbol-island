@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Villa Park, 1999, extra time. Ryan Giggs pounces on a loose pass in his own half. Past Vieira, past Dixon twice, past Keown, past Adams... he scores!",
+   "src": "/plays/narration/giggs-arsenal-1999/1.m4a",
+   "seconds": 12.7,
+   "words": [
+    {
+     "w": "Villa",
+     "at": 0.4
+    },
+    {
+     "w": "Park",
+     "at": 0.625
+    },
+    {
+     "w": "1999",
+     "at": 1.05
+    },
+    {
+     "w": "extra",
+     "at": 2.15
+    },
+    {
+     "w": "time",
+     "at": 2.55
+    },
+    {
+     "w": "Ryan",
+     "at": 3.475
+    },
+    {
+     "w": "Giggs",
+     "at": 3.85
+    },
+    {
+     "w": "pounces",
+     "at": 4.2
+    },
+    {
+     "w": "on",
+     "at": 4.638
+    },
+    {
+     "w": "a",
+     "at": 4.737
+    },
+    {
+     "w": "loose",
+     "at": 4.838
+    },
+    {
+     "w": "pass",
+     "at": 5.138
+    },
+    {
+     "w": "in",
+     "at": 5.487
+    },
+    {
+     "w": "his",
+     "at": 5.562
+    },
+    {
+     "w": "own",
+     "at": 5.7
+    },
+    {
+     "w": "half",
+     "at": 5.9
+    },
+    {
+     "w": "Past",
+     "at": 6.737
+    },
+    {
+     "w": "Vieira",
+     "at": 7.075
+    },
+    {
+     "w": "past",
+     "at": 7.6
+    },
+    {
+     "w": "Dixon",
+     "at": 7.925
+    },
+    {
+     "w": "twice",
+     "at": 8.3
+    },
+    {
+     "w": "past",
+     "at": 8.825
+    },
+    {
+     "w": "Keown",
+     "at": 9.175
+    },
+    {
+     "w": "past",
+     "at": 9.7
+    },
+    {
+     "w": "Adams",
+     "at": 10.05
+    },
+    {
+     "w": "he",
+     "at": 11.025
+    },
+    {
+     "w": "scores",
+     "at": 11.188
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again, slowly. Close touches keep the ball tight to his left foot. At full speed he changes direction: out, in, out! Defenders can't keep up.",
+   "src": "/plays/narration/giggs-arsenal-1999/2.m4a",
+   "seconds": 10.7,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "slowly",
+     "at": 1.188
+    },
+    {
+     "w": "Close",
+     "at": 2.237
+    },
+    {
+     "w": "touches",
+     "at": 2.55
+    },
+    {
+     "w": "keep",
+     "at": 2.975
+    },
+    {
+     "w": "the",
+     "at": 3.163
+    },
+    {
+     "w": "ball",
+     "at": 3.25
+    },
+    {
+     "w": "tight",
+     "at": 3.55
+    },
+    {
+     "w": "to",
+     "at": 3.8
+    },
+    {
+     "w": "his",
+     "at": 3.888
+    },
+    {
+     "w": "left",
+     "at": 4.05
+    },
+    {
+     "w": "foot",
+     "at": 4.338
+    },
+    {
+     "w": "At",
+     "at": 5.075
+    },
+    {
+     "w": "full",
+     "at": 5.287
+    },
+    {
+     "w": "speed",
+     "at": 5.588
+    },
+    {
+     "w": "he",
+     "at": 5.938
+    },
+    {
+     "w": "changes",
+     "at": 6.062
+    },
+    {
+     "w": "direction",
+     "at": 6.475
+    },
+    {
+     "w": "out",
+     "at": 7.338
+    },
+    {
+     "w": "in",
+     "at": 7.75
+    },
+    {
+     "w": "out",
+     "at": 8.1
+    },
+    {
+     "w": "Defenders",
+     "at": 8.525
+    },
+    {
+     "w": "can't",
+     "at": 9.05
+    },
+    {
+     "w": "keep",
+     "at": 9.3
+    },
+    {
+     "w": "up",
+     "at": 9.537
+    }
+   ]
+  },
+  {
+   "label": "Into the roof",
+   "text": "From a tight angle, he lashes it high over David Seaman, into the roof of the net!",
+   "src": "/plays/narration/giggs-arsenal-1999/3.m4a",
+   "seconds": 6.3,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "a",
+     "at": 0.487
+    },
+    {
+     "w": "tight",
+     "at": 0.562
+    },
+    {
+     "w": "angle",
+     "at": 0.875
+    },
+    {
+     "w": "he",
+     "at": 1.575
+    },
+    {
+     "w": "lashes",
+     "at": 1.725
+    },
+    {
+     "w": "it",
+     "at": 2.175
+    },
+    {
+     "w": "high",
+     "at": 2.312
+    },
+    {
+     "w": "over",
+     "at": 2.65
+    },
+    {
+     "w": "David",
+     "at": 2.913
+    },
+    {
+     "w": "Seaman",
+     "at": 3.337
+    },
+    {
+     "w": "into",
+     "at": 4.15
+    },
+    {
+     "w": "the",
+     "at": 4.375
+    },
+    {
+     "w": "roof",
+     "at": 4.513
+    },
+    {
+     "w": "of",
+     "at": 4.787
+    },
+    {
+     "w": "the",
+     "at": 4.862
+    },
+    {
+     "w": "net",
+     "at": 4.95
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: dribble with close touches, change direction at speed, and when the keeper goes down, finish high!",
+   "src": "/plays/narration/giggs-arsenal-1999/4.m4a",
+   "seconds": 7.7,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "dribble",
+     "at": 1.262
+    },
+    {
+     "w": "with",
+     "at": 1.613
+    },
+    {
+     "w": "close",
+     "at": 1.788
+    },
+    {
+     "w": "touches",
+     "at": 2.125
+    },
+    {
+     "w": "change",
+     "at": 2.913
+    },
+    {
+     "w": "direction",
+     "at": 3.3
+    },
+    {
+     "w": "at",
+     "at": 3.75
+    },
+    {
+     "w": "speed",
+     "at": 3.888
+    },
+    {
+     "w": "and",
+     "at": 4.7
+    },
+    {
+     "w": "when",
+     "at": 4.812
+    },
+    {
+     "w": "the",
+     "at": 4.938
+    },
+    {
+     "w": "keeper",
+     "at": 5.025
+    },
+    {
+     "w": "goes",
+     "at": 5.4
+    },
+    {
+     "w": "down",
+     "at": 5.65
+    },
+    {
+     "w": "finish",
+     "at": 6.05
+    },
+    {
+     "w": "high",
+     "at": 6.35
+    }
+   ]
+  }
+ ]
+}

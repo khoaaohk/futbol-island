@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "D\u00fcsseldorf, Euro 2024. England are losing to Switzerland, with ten minutes left. The ball comes to Bukayo Saka on the right. He faces up his defender... cuts inside... shoots... one-one!",
+   "src": "/plays/narration/saka-signature/1.m4a",
+   "seconds": 14.4,
+   "words": [
+    {
+     "w": "D\u00fcsseldorf",
+     "at": 0.375
+    },
+    {
+     "w": "Euro",
+     "at": 1.1
+    },
+    {
+     "w": "2024",
+     "at": 1.438
+    },
+    {
+     "w": "England",
+     "at": 2.837
+    },
+    {
+     "w": "are",
+     "at": 3.275
+    },
+    {
+     "w": "losing",
+     "at": 3.438
+    },
+    {
+     "w": "to",
+     "at": 3.85
+    },
+    {
+     "w": "Switzerland",
+     "at": 3.987
+    },
+    {
+     "w": "with",
+     "at": 4.725
+    },
+    {
+     "w": "ten",
+     "at": 4.912
+    },
+    {
+     "w": "minutes",
+     "at": 5.175
+    },
+    {
+     "w": "left",
+     "at": 5.5
+    },
+    {
+     "w": "The",
+     "at": 6.325
+    },
+    {
+     "w": "ball",
+     "at": 6.425
+    },
+    {
+     "w": "comes",
+     "at": 6.75
+    },
+    {
+     "w": "to",
+     "at": 7.05
+    },
+    {
+     "w": "Bukayo",
+     "at": 7.15
+    },
+    {
+     "w": "Saka",
+     "at": 7.688
+    },
+    {
+     "w": "on",
+     "at": 8.088
+    },
+    {
+     "w": "the",
+     "at": 8.188
+    },
+    {
+     "w": "right",
+     "at": 8.275
+    },
+    {
+     "w": "He",
+     "at": 8.925
+    },
+    {
+     "w": "faces",
+     "at": 9.075
+    },
+    {
+     "w": "up",
+     "at": 9.438
+    },
+    {
+     "w": "his",
+     "at": 9.562
+    },
+    {
+     "w": "defender",
+     "at": 9.725
+    },
+    {
+     "w": "cuts",
+     "at": 10.613
+    },
+    {
+     "w": "inside",
+     "at": 10.95
+    },
+    {
+     "w": "shoots",
+     "at": 12.062
+    },
+    {
+     "w": "one-one",
+     "at": 12.887
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. Saka runs straight at the defender and makes him stop. Then he drives inside, and suddenly the goal opens up.",
+   "src": "/plays/narration/saka-signature/2.m4a",
+   "seconds": 9.6,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.238
+    },
+    {
+     "w": "Saka",
+     "at": 2.275
+    },
+    {
+     "w": "runs",
+     "at": 2.65
+    },
+    {
+     "w": "straight",
+     "at": 2.913
+    },
+    {
+     "w": "at",
+     "at": 3.237
+    },
+    {
+     "w": "the",
+     "at": 3.312
+    },
+    {
+     "w": "defender",
+     "at": 3.4
+    },
+    {
+     "w": "and",
+     "at": 3.925
+    },
+    {
+     "w": "makes",
+     "at": 4.037
+    },
+    {
+     "w": "him",
+     "at": 4.263
+    },
+    {
+     "w": "stop",
+     "at": 4.438
+    },
+    {
+     "w": "Then",
+     "at": 5.287
+    },
+    {
+     "w": "he",
+     "at": 5.525
+    },
+    {
+     "w": "drives",
+     "at": 5.662
+    },
+    {
+     "w": "inside",
+     "at": 6.125
+    },
+    {
+     "w": "and",
+     "at": 7.0
+    },
+    {
+     "w": "suddenly",
+     "at": 7.138
+    },
+    {
+     "w": "the",
+     "at": 7.55
+    },
+    {
+     "w": "goal",
+     "at": 7.65
+    },
+    {
+     "w": "opens",
+     "at": 8.0
+    },
+    {
+     "w": "up",
+     "at": 8.4
+    }
+   ]
+  },
+  {
+   "label": "Into the corner",
+   "text": "He shoots low, across the keeper, into the far corner. Yann Sommer can't reach it. Five minutes after Switzerland scored, it's one-one!",
+   "src": "/plays/narration/saka-signature/3.m4a",
+   "seconds": 9.3,
+   "words": [
+    {
+     "w": "He",
+     "at": 0.35
+    },
+    {
+     "w": "shoots",
+     "at": 0.512
+    },
+    {
+     "w": "low",
+     "at": 0.887
+    },
+    {
+     "w": "across",
+     "at": 1.45
+    },
+    {
+     "w": "the",
+     "at": 1.825
+    },
+    {
+     "w": "keeper",
+     "at": 1.925
+    },
+    {
+     "w": "into",
+     "at": 2.362
+    },
+    {
+     "w": "the",
+     "at": 2.538
+    },
+    {
+     "w": "far",
+     "at": 2.638
+    },
+    {
+     "w": "corner",
+     "at": 2.9
+    },
+    {
+     "w": "Yann",
+     "at": 3.825
+    },
+    {
+     "w": "Sommer",
+     "at": 4.162
+    },
+    {
+     "w": "can't",
+     "at": 4.55
+    },
+    {
+     "w": "reach",
+     "at": 4.825
+    },
+    {
+     "w": "it",
+     "at": 5.112
+    },
+    {
+     "w": "Five",
+     "at": 5.7
+    },
+    {
+     "w": "minutes",
+     "at": 6.013
+    },
+    {
+     "w": "after",
+     "at": 6.3
+    },
+    {
+     "w": "Switzerland",
+     "at": 6.6
+    },
+    {
+     "w": "scored",
+     "at": 7.213
+    },
+    {
+     "w": "it's",
+     "at": 7.713
+    },
+    {
+     "w": "one-one",
+     "at": 7.875
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: face up your defender, then drive inside to open up the shot.",
+   "src": "/plays/narration/saka-signature/4.m4a",
+   "seconds": 5.5,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "face",
+     "at": 1.375
+    },
+    {
+     "w": "up",
+     "at": 1.688
+    },
+    {
+     "w": "your",
+     "at": 1.812
+    },
+    {
+     "w": "defender",
+     "at": 1.913
+    },
+    {
+     "w": "then",
+     "at": 2.6
+    },
+    {
+     "w": "drive",
+     "at": 2.825
+    },
+    {
+     "w": "inside",
+     "at": 3.163
+    },
+    {
+     "w": "to",
+     "at": 3.6
+    },
+    {
+     "w": "open",
+     "at": 3.725
+    },
+    {
+     "w": "up",
+     "at": 3.987
+    },
+    {
+     "w": "the",
+     "at": 4.088
+    },
+    {
+     "w": "shot",
+     "at": 4.188
+    }
+   ]
+  }
+ ]
+}

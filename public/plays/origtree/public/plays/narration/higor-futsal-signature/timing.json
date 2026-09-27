@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: Yerevan 2024",
+   "text": "Yerevan, 2024. Benfica play Sporting for third place in Europe. Their pivot, Higor, scores three goals, a hat trick. Benfica win six three!",
+   "src": "/plays/narration/higor-futsal-signature/1.m4a",
+   "seconds": 11.3,
+   "words": [
+    {
+     "w": "Yerevan",
+     "at": 0.4
+    },
+    {
+     "w": "2024",
+     "at": 1.025
+    },
+    {
+     "w": "Benfica",
+     "at": 2.362
+    },
+    {
+     "w": "play",
+     "at": 2.85
+    },
+    {
+     "w": "Sporting",
+     "at": 3.138
+    },
+    {
+     "w": "for",
+     "at": 3.6
+    },
+    {
+     "w": "third",
+     "at": 3.763
+    },
+    {
+     "w": "place",
+     "at": 4.05
+    },
+    {
+     "w": "in",
+     "at": 4.375
+    },
+    {
+     "w": "Europe",
+     "at": 4.5
+    },
+    {
+     "w": "Their",
+     "at": 5.287
+    },
+    {
+     "w": "pivot",
+     "at": 5.513
+    },
+    {
+     "w": "Higor",
+     "at": 6.0
+    },
+    {
+     "w": "scores",
+     "at": 6.562
+    },
+    {
+     "w": "three",
+     "at": 6.987
+    },
+    {
+     "w": "goals",
+     "at": 7.225
+    },
+    {
+     "w": "a",
+     "at": 7.75
+    },
+    {
+     "w": "hat",
+     "at": 7.825
+    },
+    {
+     "w": "trick",
+     "at": 8.075
+    },
+    {
+     "w": "Benfica",
+     "at": 8.838
+    },
+    {
+     "w": "win",
+     "at": 9.375
+    },
+    {
+     "w": "six",
+     "at": 9.65
+    },
+    {
+     "w": "three",
+     "at": 9.975
+    }
+   ]
+  },
+  {
+   "label": "How he does it",
+   "text": "Here\u2019s how he does it. Back to goal, he stays low and wide, his body between the ball and the defender. The defender reaches round, so he turns the other way and shoots!",
+   "src": "/plays/narration/higor-futsal-signature/2.m4a",
+   "seconds": 12.0,
+   "words": [
+    {
+     "w": "Here",
+     "at": 0.375
+    },
+    {
+     "w": "s",
+     "at": 0.75
+    },
+    {
+     "w": "how",
+     "at": 0.95
+    },
+    {
+     "w": "he",
+     "at": 1.113
+    },
+    {
+     "w": "does",
+     "at": 1.225
+    },
+    {
+     "w": "it",
+     "at": 1.462
+    },
+    {
+     "w": "Back",
+     "at": 2.087
+    },
+    {
+     "w": "to",
+     "at": 2.375
+    },
+    {
+     "w": "goal",
+     "at": 2.475
+    },
+    {
+     "w": "he",
+     "at": 3.0
+    },
+    {
+     "w": "stays",
+     "at": 3.163
+    },
+    {
+     "w": "low",
+     "at": 3.612
+    },
+    {
+     "w": "and",
+     "at": 3.95
+    },
+    {
+     "w": "wide",
+     "at": 4.088
+    },
+    {
+     "w": "his",
+     "at": 4.75
+    },
+    {
+     "w": "body",
+     "at": 4.963
+    },
+    {
+     "w": "between",
+     "at": 5.35
+    },
+    {
+     "w": "the",
+     "at": 5.638
+    },
+    {
+     "w": "ball",
+     "at": 5.737
+    },
+    {
+     "w": "and",
+     "at": 6.15
+    },
+    {
+     "w": "the",
+     "at": 6.263
+    },
+    {
+     "w": "defender",
+     "at": 6.35
+    },
+    {
+     "w": "The",
+     "at": 7.463
+    },
+    {
+     "w": "defender",
+     "at": 7.575
+    },
+    {
+     "w": "reaches",
+     "at": 8.1
+    },
+    {
+     "w": "round",
+     "at": 8.488
+    },
+    {
+     "w": "so",
+     "at": 9.1
+    },
+    {
+     "w": "he",
+     "at": 9.25
+    },
+    {
+     "w": "turns",
+     "at": 9.387
+    },
+    {
+     "w": "the",
+     "at": 9.738
+    },
+    {
+     "w": "other",
+     "at": 9.85
+    },
+    {
+     "w": "way",
+     "at": 10.15
+    },
+    {
+     "w": "and",
+     "at": 10.4
+    },
+    {
+     "w": "shoots",
+     "at": 10.562
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. The defender can\u2019t get to the ball. His body is the shield.",
+   "src": "/plays/narration/higor-futsal-signature/3.m4a",
+   "seconds": 6.1,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.137
+    },
+    {
+     "w": "The",
+     "at": 2.1
+    },
+    {
+     "w": "defender",
+     "at": 2.2
+    },
+    {
+     "w": "can\u2019t",
+     "at": 2.675
+    },
+    {
+     "w": "get",
+     "at": 2.9
+    },
+    {
+     "w": "to",
+     "at": 3.075
+    },
+    {
+     "w": "the",
+     "at": 3.163
+    },
+    {
+     "w": "ball",
+     "at": 3.25
+    },
+    {
+     "w": "His",
+     "at": 3.8
+    },
+    {
+     "w": "body",
+     "at": 4.0
+    },
+    {
+     "w": "is",
+     "at": 4.35
+    },
+    {
+     "w": "the",
+     "at": 4.5
+    },
+    {
+     "w": "shield",
+     "at": 4.65
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn. Stay low, and use your body as a shield to protect the ball from behind!",
+   "src": "/plays/narration/higor-futsal-signature/4.m4a",
+   "seconds": 6.2,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "Stay",
+     "at": 1.425
+    },
+    {
+     "w": "low",
+     "at": 1.75
+    },
+    {
+     "w": "and",
+     "at": 2.25
+    },
+    {
+     "w": "use",
+     "at": 2.375
+    },
+    {
+     "w": "your",
+     "at": 2.562
+    },
+    {
+     "w": "body",
+     "at": 2.675
+    },
+    {
+     "w": "as",
+     "at": 3.05
+    },
+    {
+     "w": "a",
+     "at": 3.163
+    },
+    {
+     "w": "shield",
+     "at": 3.275
+    },
+    {
+     "w": "to",
+     "at": 3.65
+    },
+    {
+     "w": "protect",
+     "at": 3.737
+    },
+    {
+     "w": "the",
+     "at": 4.112
+    },
+    {
+     "w": "ball",
+     "at": 4.2
+    },
+    {
+     "w": "from",
+     "at": 4.5
+    },
+    {
+     "w": "behind",
+     "at": 4.638
+    }
+   ]
+  }
+ ]
+}

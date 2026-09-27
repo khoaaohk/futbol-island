@@ -1,0 +1,386 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live from the Bridge",
+   "text": "Stamford Bridge, 2024: Chelsea against Bournemouth. Keeper Neto rushes out and wins the ball, but Gallagher chases him, and his clearance goes wrong. Caicedo is waiting. He steps in and shoots from near halfway. Over the keeper... goal!",
+   "src": "/plays/narration/caicedo-signature/1.m4a",
+   "seconds": 16.9,
+   "words": [
+    {
+     "w": "Stamford",
+     "at": 0.375
+    },
+    {
+     "w": "Bridge",
+     "at": 0.887
+    },
+    {
+     "w": "2024",
+     "at": 1.4
+    },
+    {
+     "w": "Chelsea",
+     "at": 2.612
+    },
+    {
+     "w": "against",
+     "at": 3.05
+    },
+    {
+     "w": "Bournemouth",
+     "at": 3.45
+    },
+    {
+     "w": "Keeper",
+     "at": 4.487
+    },
+    {
+     "w": "Neto",
+     "at": 4.85
+    },
+    {
+     "w": "rushes",
+     "at": 5.237
+    },
+    {
+     "w": "out",
+     "at": 5.65
+    },
+    {
+     "w": "and",
+     "at": 5.862
+    },
+    {
+     "w": "wins",
+     "at": 5.975
+    },
+    {
+     "w": "the",
+     "at": 6.275
+    },
+    {
+     "w": "ball",
+     "at": 6.375
+    },
+    {
+     "w": "but",
+     "at": 6.763
+    },
+    {
+     "w": "Gallagher",
+     "at": 6.9
+    },
+    {
+     "w": "chases",
+     "at": 7.388
+    },
+    {
+     "w": "him",
+     "at": 7.85
+    },
+    {
+     "w": "and",
+     "at": 8.225
+    },
+    {
+     "w": "his",
+     "at": 8.338
+    },
+    {
+     "w": "clearance",
+     "at": 8.512
+    },
+    {
+     "w": "goes",
+     "at": 9.0
+    },
+    {
+     "w": "wrong",
+     "at": 9.262
+    },
+    {
+     "w": "Caicedo",
+     "at": 10.238
+    },
+    {
+     "w": "is",
+     "at": 10.825
+    },
+    {
+     "w": "waiting",
+     "at": 10.988
+    },
+    {
+     "w": "He",
+     "at": 11.825
+    },
+    {
+     "w": "steps",
+     "at": 11.975
+    },
+    {
+     "w": "in",
+     "at": 12.325
+    },
+    {
+     "w": "and",
+     "at": 12.55
+    },
+    {
+     "w": "shoots",
+     "at": 12.7
+    },
+    {
+     "w": "from",
+     "at": 13.025
+    },
+    {
+     "w": "near",
+     "at": 13.175
+    },
+    {
+     "w": "halfway",
+     "at": 13.4
+    },
+    {
+     "w": "Over",
+     "at": 14.262
+    },
+    {
+     "w": "the",
+     "at": 14.488
+    },
+    {
+     "w": "keeper",
+     "at": 14.575
+    },
+    {
+     "w": "goal",
+     "at": 15.512
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. The ball sails over the stranded keeper and dips under the bar, before a defender can head it. His first Chelsea goal!",
+   "src": "/plays/narration/caicedo-signature/2.m4a",
+   "seconds": 9.9,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.25
+    },
+    {
+     "w": "The",
+     "at": 2.288
+    },
+    {
+     "w": "ball",
+     "at": 2.4
+    },
+    {
+     "w": "sails",
+     "at": 2.725
+    },
+    {
+     "w": "over",
+     "at": 3.163
+    },
+    {
+     "w": "the",
+     "at": 3.362
+    },
+    {
+     "w": "stranded",
+     "at": 3.45
+    },
+    {
+     "w": "keeper",
+     "at": 3.975
+    },
+    {
+     "w": "and",
+     "at": 4.375
+    },
+    {
+     "w": "dips",
+     "at": 4.513
+    },
+    {
+     "w": "under",
+     "at": 4.787
+    },
+    {
+     "w": "the",
+     "at": 4.987
+    },
+    {
+     "w": "bar",
+     "at": 5.075
+    },
+    {
+     "w": "before",
+     "at": 5.625
+    },
+    {
+     "w": "a",
+     "at": 5.938
+    },
+    {
+     "w": "defender",
+     "at": 6.0
+    },
+    {
+     "w": "can",
+     "at": 6.525
+    },
+    {
+     "w": "head",
+     "at": 6.675
+    },
+    {
+     "w": "it",
+     "at": 6.875
+    },
+    {
+     "w": "His",
+     "at": 7.525
+    },
+    {
+     "w": "first",
+     "at": 7.725
+    },
+    {
+     "w": "Chelsea",
+     "at": 8.088
+    },
+    {
+     "w": "goal",
+     "at": 8.525
+    }
+   ]
+  },
+  {
+   "label": "How he does it",
+   "text": "How he does it: watch the passer's eyes and hips. They point where the ball will go. Guess the pass, step in, steal it, then go!",
+   "src": "/plays/narration/caicedo-signature/3.m4a",
+   "seconds": 8.5,
+   "words": [
+    {
+     "w": "How",
+     "at": 0.375
+    },
+    {
+     "w": "he",
+     "at": 0.512
+    },
+    {
+     "w": "does",
+     "at": 0.6
+    },
+    {
+     "w": "it",
+     "at": 0.825
+    },
+    {
+     "w": "watch",
+     "at": 1.05
+    },
+    {
+     "w": "the",
+     "at": 1.288
+    },
+    {
+     "w": "passer's",
+     "at": 1.375
+    },
+    {
+     "w": "eyes",
+     "at": 1.887
+    },
+    {
+     "w": "and",
+     "at": 2.237
+    },
+    {
+     "w": "hips",
+     "at": 2.35
+    },
+    {
+     "w": "They",
+     "at": 3.125
+    },
+    {
+     "w": "point",
+     "at": 3.25
+    },
+    {
+     "w": "where",
+     "at": 3.462
+    },
+    {
+     "w": "the",
+     "at": 3.587
+    },
+    {
+     "w": "ball",
+     "at": 3.675
+    },
+    {
+     "w": "will",
+     "at": 3.975
+    },
+    {
+     "w": "go",
+     "at": 4.15
+    },
+    {
+     "w": "Guess",
+     "at": 4.912
+    },
+    {
+     "w": "the",
+     "at": 5.175
+    },
+    {
+     "w": "pass",
+     "at": 5.287
+    },
+    {
+     "w": "step",
+     "at": 5.825
+    },
+    {
+     "w": "in",
+     "at": 6.112
+    },
+    {
+     "w": "steal",
+     "at": 6.388
+    },
+    {
+     "w": "it",
+     "at": 6.775
+    },
+    {
+     "w": "then",
+     "at": 6.912
+    },
+    {
+     "w": "go",
+     "at": 7.125
+    }
+   ]
+  }
+ ]
+}

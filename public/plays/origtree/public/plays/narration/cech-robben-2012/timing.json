@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Extra time",
+   "text": "Munich, 2012, the Champions League final. Extra time, one-all. Penalty to Bayern! Arjen Robben steps up against his old Chelsea teammate, Petr \u010cech... saved!",
+   "src": "/plays/narration/cech-robben-2012/1.m4a",
+   "seconds": 12.4,
+   "words": [
+    {
+     "w": "Munich",
+     "at": 0.4
+    },
+    {
+     "w": "2012",
+     "at": 0.8
+    },
+    {
+     "w": "the",
+     "at": 1.6
+    },
+    {
+     "w": "Champions",
+     "at": 1.712
+    },
+    {
+     "w": "League",
+     "at": 2.325
+    },
+    {
+     "w": "final",
+     "at": 2.587
+    },
+    {
+     "w": "Extra",
+     "at": 3.462
+    },
+    {
+     "w": "time",
+     "at": 3.875
+    },
+    {
+     "w": "one-all",
+     "at": 4.3
+    },
+    {
+     "w": "Penalty",
+     "at": 5.213
+    },
+    {
+     "w": "to",
+     "at": 5.675
+    },
+    {
+     "w": "Bayern",
+     "at": 5.8
+    },
+    {
+     "w": "Arjen",
+     "at": 6.688
+    },
+    {
+     "w": "Robben",
+     "at": 7.1
+    },
+    {
+     "w": "steps",
+     "at": 7.475
+    },
+    {
+     "w": "up",
+     "at": 7.763
+    },
+    {
+     "w": "against",
+     "at": 7.912
+    },
+    {
+     "w": "his",
+     "at": 8.238
+    },
+    {
+     "w": "old",
+     "at": 8.4
+    },
+    {
+     "w": "Chelsea",
+     "at": 8.688
+    },
+    {
+     "w": "teammate",
+     "at": 9.137
+    },
+    {
+     "w": "Petr",
+     "at": 9.75
+    },
+    {
+     "w": "\u010cech",
+     "at": 10.113
+    },
+    {
+     "w": "saved",
+     "at": 10.975
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. \u010cech stays big and still, and waits for the kick. Then he pushes off strongly to his left, and stops it.",
+   "src": "/plays/narration/cech-robben-2012/2.m4a",
+   "seconds": 8.9,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.188
+    },
+    {
+     "w": "\u010cech",
+     "at": 2.225
+    },
+    {
+     "w": "stays",
+     "at": 2.5
+    },
+    {
+     "w": "big",
+     "at": 2.888
+    },
+    {
+     "w": "and",
+     "at": 3.163
+    },
+    {
+     "w": "still",
+     "at": 3.3
+    },
+    {
+     "w": "and",
+     "at": 3.825
+    },
+    {
+     "w": "waits",
+     "at": 3.95
+    },
+    {
+     "w": "for",
+     "at": 4.225
+    },
+    {
+     "w": "the",
+     "at": 4.338
+    },
+    {
+     "w": "kick",
+     "at": 4.438
+    },
+    {
+     "w": "Then",
+     "at": 5.188
+    },
+    {
+     "w": "he",
+     "at": 5.362
+    },
+    {
+     "w": "pushes",
+     "at": 5.475
+    },
+    {
+     "w": "off",
+     "at": 5.825
+    },
+    {
+     "w": "strongly",
+     "at": 6.062
+    },
+    {
+     "w": "to",
+     "at": 6.575
+    },
+    {
+     "w": "his",
+     "at": 6.662
+    },
+    {
+     "w": "left",
+     "at": 6.825
+    },
+    {
+     "w": "and",
+     "at": 7.213
+    },
+    {
+     "w": "stops",
+     "at": 7.338
+    },
+    {
+     "w": "it",
+     "at": 7.787
+    }
+   ]
+  },
+  {
+   "label": "Behind the goal",
+   "text": "From behind the goal: Robben wanted it high, but it stays low. The ball spins loose... and \u010cech pounces on the rebound!",
+   "src": "/plays/narration/cech-robben-2012/3.m4a",
+   "seconds": 8.6,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "behind",
+     "at": 0.487
+    },
+    {
+     "w": "the",
+     "at": 0.863
+    },
+    {
+     "w": "goal",
+     "at": 0.95
+    },
+    {
+     "w": "Robben",
+     "at": 1.613
+    },
+    {
+     "w": "wanted",
+     "at": 2.0
+    },
+    {
+     "w": "it",
+     "at": 2.288
+    },
+    {
+     "w": "high",
+     "at": 2.375
+    },
+    {
+     "w": "but",
+     "at": 2.737
+    },
+    {
+     "w": "it",
+     "at": 2.862
+    },
+    {
+     "w": "stays",
+     "at": 2.95
+    },
+    {
+     "w": "low",
+     "at": 3.362
+    },
+    {
+     "w": "The",
+     "at": 4.15
+    },
+    {
+     "w": "ball",
+     "at": 4.25
+    },
+    {
+     "w": "spins",
+     "at": 4.575
+    },
+    {
+     "w": "loose",
+     "at": 5.062
+    },
+    {
+     "w": "and",
+     "at": 5.925
+    },
+    {
+     "w": "\u010cech",
+     "at": 6.062
+    },
+    {
+     "w": "pounces",
+     "at": 6.338
+    },
+    {
+     "w": "on",
+     "at": 6.812
+    },
+    {
+     "w": "the",
+     "at": 6.912
+    },
+    {
+     "w": "rebound",
+     "at": 7.0
+    }
+   ]
+  },
+  {
+   "label": "Do your homework",
+   "text": "Keepers, do your homework on penalty takers. Stay big, wait, then push off strongly. And always follow the rebound!",
+   "src": "/plays/narration/cech-robben-2012/4.m4a",
+   "seconds": 8.8,
+   "words": [
+    {
+     "w": "Keepers",
+     "at": 0.35
+    },
+    {
+     "w": "do",
+     "at": 0.838
+    },
+    {
+     "w": "your",
+     "at": 0.938
+    },
+    {
+     "w": "homework",
+     "at": 1.05
+    },
+    {
+     "w": "on",
+     "at": 1.488
+    },
+    {
+     "w": "penalty",
+     "at": 1.6
+    },
+    {
+     "w": "takers",
+     "at": 2.05
+    },
+    {
+     "w": "Stay",
+     "at": 3.075
+    },
+    {
+     "w": "big",
+     "at": 3.413
+    },
+    {
+     "w": "wait",
+     "at": 3.888
+    },
+    {
+     "w": "then",
+     "at": 4.475
+    },
+    {
+     "w": "push",
+     "at": 4.7
+    },
+    {
+     "w": "off",
+     "at": 4.963
+    },
+    {
+     "w": "strongly",
+     "at": 5.175
+    },
+    {
+     "w": "And",
+     "at": 6.25
+    },
+    {
+     "w": "always",
+     "at": 6.4
+    },
+    {
+     "w": "follow",
+     "at": 6.8
+    },
+    {
+     "w": "the",
+     "at": 7.1
+    },
+    {
+     "w": "rebound",
+     "at": 7.2
+    }
+   ]
+  }
+ ]
+}

@@ -10,6 +10,7 @@ import {createKnockoutBallTrails} from './knockoutBallTrails';
 import {createKnockoutHitEffects} from './knockoutHitEffects';
 import {createKnockout,KNOCKOUT_ROOF as roof,ARENA_QUEUES} from '../games/rooftopKnockout';
 import {DEFAULT_CUSTOMIZATION} from '../town/customization';
+import {sideGameDress} from '../town/beanLooks';
 export function createLiveKnockout(scene:T.Scene){
  const root=new T.Group();root.name='live-rooftop-knockout';root.position.set(roof.x,roof.height,roof.z);scene.add(root);
  // Source rigs stay detached: their matrices are local to the translated arena.
@@ -17,7 +18,7 @@ export function createLiveKnockout(scene:T.Scene){
  const viewProjection=new T.Matrix4(),frustum=new T.Frustum();
  // Includes players, cage-height effects and a generous allowance for cast shadows.
  const visibilitySphere=new T.Sphere(new T.Vector3(roof.x,roof.height+3,roof.z),42);
- const rigs=Array.from({length:6},(_,i)=>{const r=createPlayer('roof-player-'+i,i%2?'home':'away',false);r.setAppearance({...DEFAULT_CUSTOMIZATION,character:i%2?'female':'male',clothing:i%2?'coast':'sunset',face:i%3?'light':'deep'});return r;});
+ const rigs=Array.from({length:6},(_,i)=>{const r=createPlayer('roof-player-'+i,i%2?'home':'away',false);r.setAppearance({...DEFAULT_CUSTOMIZATION,character:i%2?'female':'male',clothing:i%2?'coast':'sunset',face:i%3?'light':'deep'});const dress=sideGameDress('roof-player-'+i,i%2?'home':'away');r.setBeanLook(dress.look,dress.outfit);return r;});
  const geo=new T.SphereGeometry(.25,10,8),mat=new T.MeshStandardMaterial({color:'#fff5db'}),balls=new T.InstancedMesh(geo,mat,32),dummy=new T.Object3D();balls.instanceMatrix.setUsage(T.DynamicDrawUsage);balls.frustumCulled=false;root.add(balls);
  const counter=createKnockoutCountdown(root);
  const queueWalls=createKnockoutQueueWalls(root);
@@ -56,7 +57,9 @@ export function createLiveKnockout(scene:T.Scene){
    batch.end();
    // Shared match batches disable frustum culling; restore it for this compact arena.
    // Three tests these same bounds independently against the view and shadow cameras.
-   for(const object of batchScene.children){const mesh=object as T.InstancedMesh;if(!mesh.visible)continue;mesh.frustumCulled=true;mesh.computeBoundingSphere();}
+   // Heat pass 5 (audit F19): one arena-sized sphere (arena-local; players, queues and knock-back fit within 40 m), assigned once,
+   // instead of recomputing every mesh's bounds over all instances each frame.
+   for(const object of batchScene.children){const mesh=object as T.InstancedMesh;if(!mesh.visible)continue;mesh.frustumCulled=true;if(!mesh.userData.arenaBounds){mesh.boundingSphere=new T.Sphere(new T.Vector3(0,1,0),40);mesh.userData.arenaBounds=true;}}
 
    hitEffects.update(game.state.players,game.state.time,joined,camera,reduced);
    shields.count=0;

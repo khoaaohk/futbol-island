@@ -6,7 +6,7 @@ for(const spot of COIN_QUEST){const lesson=BALL_HUNT_LESSONS[spot.id];assert(les
 // These concepts must not inherit an incompatible give-and-go/receiving diagram.
 const back=ballLessonFrame(BALL_HUNT_LESSONS['dock-entry'].kind,2);assert(back.nodes.find(n=>n.id==='b').y>back.nodes.find(n=>n.id==='a').y,'support behind stays behind ball carrier');
 const before=ballLessonFrame('onside',1),after=ballLessonFrame('onside',2);assert(before.nodes.find(n=>n.id==='b').y>=110);assert(after.nodes.find(n=>n.id==='b').y<110,'runner crosses line only after pass');
-console.log('PASS ball hunt lessons: all 55 discoveries have bounded three-stage diagrams; support/onside semantics checked');
+console.log(`PASS ball hunt lessons: all ${COIN_QUEST.length} discoveries have bounded three-stage diagrams; support/onside semantics checked`);
 
 const depth=ballLessonFrame('depth',1);assert(depth.nodes.find(n=>n.id==='b').y<depth.nodes.find(n=>n.id==='a').y);assert(depth.nodes.find(n=>n.id==='c').y>depth.nodes.find(n=>n.id==='a').y);
 const stagger=ballLessonFrame('stagger',1);assert.notEqual(stagger.nodes.find(n=>n.id==='b').y,stagger.nodes.find(n=>n.id==='c').y);
@@ -30,7 +30,7 @@ assert.notEqual(node('vacate',0,'a').x,node('vacate',1,'a').x,'first player leav
 assert.notEqual(node('vacate',1,'b').x,node('vacate',2,'b').x,'second player arrives');
 assert(node('weight',1,'ball').x<node('weight',2,'ball').x,'soft pass stops short');
 const {BALL_HUNT_PRACTICE}=load('lib/town/ballHuntLessons.ts');
-assert.equal(Object.keys(BALL_HUNT_PRACTICE).length,55);assert.equal(new Set(Object.values(BALL_HUNT_PRACTICE)).size,55);
+assert.equal(Object.keys(BALL_HUNT_PRACTICE).length,COIN_QUEST.length);assert.equal(new Set(Object.values(BALL_HUNT_PRACTICE)).size,COIN_QUEST.length);
 for(const spot of COIN_QUEST)assert(BALL_HUNT_PRACTICE[spot.id]);
 console.log('PASS 50 distinct visual sequences and prediction tasks; receiver/carrier, pace, scan, weight, recovery and pocket semantics');
 const visualPatterns=new Map();

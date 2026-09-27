@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Ninety-three minutes",
+   "text": "Lisbon, 2014, the Champions League final. Real Madrid are losing to Atl\u00e9tico, and time is almost up. Luka Modri\u0107 swings in a corner... Sergio Ramos heads it in! One-all!",
+   "src": "/plays/narration/ramos-header-2014/1.m4a",
+   "seconds": 13.2,
+   "words": [
+    {
+     "w": "Lisbon",
+     "at": 0.425
+    },
+    {
+     "w": "2014",
+     "at": 0.925
+    },
+    {
+     "w": "the",
+     "at": 1.8
+    },
+    {
+     "w": "Champions",
+     "at": 1.913
+    },
+    {
+     "w": "League",
+     "at": 2.525
+    },
+    {
+     "w": "final",
+     "at": 2.788
+    },
+    {
+     "w": "Real",
+     "at": 3.65
+    },
+    {
+     "w": "Madrid",
+     "at": 3.925
+    },
+    {
+     "w": "are",
+     "at": 4.3
+    },
+    {
+     "w": "losing",
+     "at": 4.425
+    },
+    {
+     "w": "to",
+     "at": 4.8
+    },
+    {
+     "w": "Atl\u00e9tico",
+     "at": 4.925
+    },
+    {
+     "w": "and",
+     "at": 5.7
+    },
+    {
+     "w": "time",
+     "at": 5.838
+    },
+    {
+     "w": "is",
+     "at": 6.2
+    },
+    {
+     "w": "almost",
+     "at": 6.35
+    },
+    {
+     "w": "up",
+     "at": 6.8
+    },
+    {
+     "w": "Luka",
+     "at": 7.525
+    },
+    {
+     "w": "Modri\u0107",
+     "at": 7.8
+    },
+    {
+     "w": "swings",
+     "at": 8.25
+    },
+    {
+     "w": "in",
+     "at": 8.688
+    },
+    {
+     "w": "a",
+     "at": 8.762
+    },
+    {
+     "w": "corner",
+     "at": 8.825
+    },
+    {
+     "w": "Sergio",
+     "at": 9.762
+    },
+    {
+     "w": "Ramos",
+     "at": 10.25
+    },
+    {
+     "w": "heads",
+     "at": 10.725
+    },
+    {
+     "w": "it",
+     "at": 10.963
+    },
+    {
+     "w": "in",
+     "at": 11.05
+    },
+    {
+     "w": "One-all",
+     "at": 11.662
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. Ramos waits outside the box, then sprints in, times his jump, and heads the ball into the corner.",
+   "src": "/plays/narration/ramos-header-2014/2.m4a",
+   "seconds": 8.7,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.188
+    },
+    {
+     "w": "Ramos",
+     "at": 2.237
+    },
+    {
+     "w": "waits",
+     "at": 2.7
+    },
+    {
+     "w": "outside",
+     "at": 2.962
+    },
+    {
+     "w": "the",
+     "at": 3.362
+    },
+    {
+     "w": "box",
+     "at": 3.45
+    },
+    {
+     "w": "then",
+     "at": 4.05
+    },
+    {
+     "w": "sprints",
+     "at": 4.263
+    },
+    {
+     "w": "in",
+     "at": 4.675
+    },
+    {
+     "w": "times",
+     "at": 5.15
+    },
+    {
+     "w": "his",
+     "at": 5.487
+    },
+    {
+     "w": "jump",
+     "at": 5.662
+    },
+    {
+     "w": "and",
+     "at": 6.15
+    },
+    {
+     "w": "heads",
+     "at": 6.275
+    },
+    {
+     "w": "the",
+     "at": 6.55
+    },
+    {
+     "w": "ball",
+     "at": 6.65
+    },
+    {
+     "w": "into",
+     "at": 6.963
+    },
+    {
+     "w": "the",
+     "at": 7.138
+    },
+    {
+     "w": "corner",
+     "at": 7.225
+    }
+   ]
+  },
+  {
+   "label": "Behind the goal",
+   "text": "From behind the goal, see it fly past the keeper. Real Madrid go on to win four\u2013one in extra time!",
+   "src": "/plays/narration/ramos-header-2014/3.m4a",
+   "seconds": 7.7,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "behind",
+     "at": 0.487
+    },
+    {
+     "w": "the",
+     "at": 0.863
+    },
+    {
+     "w": "goal",
+     "at": 0.95
+    },
+    {
+     "w": "see",
+     "at": 1.55
+    },
+    {
+     "w": "it",
+     "at": 1.688
+    },
+    {
+     "w": "fly",
+     "at": 1.775
+    },
+    {
+     "w": "past",
+     "at": 2.038
+    },
+    {
+     "w": "the",
+     "at": 2.388
+    },
+    {
+     "w": "keeper",
+     "at": 2.475
+    },
+    {
+     "w": "Real",
+     "at": 3.425
+    },
+    {
+     "w": "Madrid",
+     "at": 3.7
+    },
+    {
+     "w": "go",
+     "at": 4.125
+    },
+    {
+     "w": "on",
+     "at": 4.3
+    },
+    {
+     "w": "to",
+     "at": 4.45
+    },
+    {
+     "w": "win",
+     "at": 4.55
+    },
+    {
+     "w": "four",
+     "at": 4.825
+    },
+    {
+     "w": "one",
+     "at": 5.525
+    },
+    {
+     "w": "in",
+     "at": 5.775
+    },
+    {
+     "w": "extra",
+     "at": 5.9
+    },
+    {
+     "w": "time",
+     "at": 6.3
+    }
+   ]
+  },
+  {
+   "label": "Never stop",
+   "text": "Keep going until the final whistle! Wait outside the box, time your run, jump, and head it down.",
+   "src": "/plays/narration/ramos-header-2014/4.m4a",
+   "seconds": 7.0,
+   "words": [
+    {
+     "w": "Keep",
+     "at": 0.35
+    },
+    {
+     "w": "going",
+     "at": 0.575
+    },
+    {
+     "w": "until",
+     "at": 0.887
+    },
+    {
+     "w": "the",
+     "at": 1.113
+    },
+    {
+     "w": "final",
+     "at": 1.212
+    },
+    {
+     "w": "whistle",
+     "at": 1.6
+    },
+    {
+     "w": "Wait",
+     "at": 2.462
+    },
+    {
+     "w": "outside",
+     "at": 2.663
+    },
+    {
+     "w": "the",
+     "at": 3.062
+    },
+    {
+     "w": "box",
+     "at": 3.15
+    },
+    {
+     "w": "time",
+     "at": 3.85
+    },
+    {
+     "w": "your",
+     "at": 4.088
+    },
+    {
+     "w": "run",
+     "at": 4.263
+    },
+    {
+     "w": "jump",
+     "at": 4.763
+    },
+    {
+     "w": "and",
+     "at": 5.15
+    },
+    {
+     "w": "head",
+     "at": 5.275
+    },
+    {
+     "w": "it",
+     "at": 5.438
+    },
+    {
+     "w": "down",
+     "at": 5.525
+    }
+   ]
+  }
+ ]
+}

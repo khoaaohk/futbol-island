@@ -1,0 +1,362 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Shanghai, 2007: the World Cup final, Germany against Brazil. Stegemann's long pass finds Sandra Smisek. She shields, turns... Birgit Prinz shoots first time. Goal!",
+   "src": "/plays/narration/prinz-signature/1.m4a",
+   "seconds": 13.7,
+   "words": [
+    {
+     "w": "Shanghai",
+     "at": 0.4
+    },
+    {
+     "w": "2007",
+     "at": 0.875
+    },
+    {
+     "w": "the",
+     "at": 2.05
+    },
+    {
+     "w": "World",
+     "at": 2.15
+    },
+    {
+     "w": "Cup",
+     "at": 2.45
+    },
+    {
+     "w": "final",
+     "at": 2.688
+    },
+    {
+     "w": "Germany",
+     "at": 3.188
+    },
+    {
+     "w": "against",
+     "at": 3.65
+    },
+    {
+     "w": "Brazil",
+     "at": 4.0
+    },
+    {
+     "w": "Stegemann's",
+     "at": 5.075
+    },
+    {
+     "w": "long",
+     "at": 5.662
+    },
+    {
+     "w": "pass",
+     "at": 5.963
+    },
+    {
+     "w": "finds",
+     "at": 6.388
+    },
+    {
+     "w": "Sandra",
+     "at": 6.812
+    },
+    {
+     "w": "Smisek",
+     "at": 7.263
+    },
+    {
+     "w": "She",
+     "at": 8.287
+    },
+    {
+     "w": "shields",
+     "at": 8.475
+    },
+    {
+     "w": "turns",
+     "at": 9.012
+    },
+    {
+     "w": "Birgit",
+     "at": 9.963
+    },
+    {
+     "w": "Prinz",
+     "at": 10.35
+    },
+    {
+     "w": "shoots",
+     "at": 10.738
+    },
+    {
+     "w": "first",
+     "at": 11.075
+    },
+    {
+     "w": "time",
+     "at": 11.35
+    },
+    {
+     "w": "Goal",
+     "at": 12.2
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again, slowly. Smisek keeps her body between the defender and the ball. She turns and slides it across. Prinz strikes before the keeper can move!",
+   "src": "/plays/narration/prinz-signature/2.m4a",
+   "seconds": 10.8,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "slowly",
+     "at": 1.312
+    },
+    {
+     "w": "Smisek",
+     "at": 2.337
+    },
+    {
+     "w": "keeps",
+     "at": 2.875
+    },
+    {
+     "w": "her",
+     "at": 3.138
+    },
+    {
+     "w": "body",
+     "at": 3.25
+    },
+    {
+     "w": "between",
+     "at": 3.6
+    },
+    {
+     "w": "the",
+     "at": 3.888
+    },
+    {
+     "w": "defender",
+     "at": 3.975
+    },
+    {
+     "w": "and",
+     "at": 4.5
+    },
+    {
+     "w": "the",
+     "at": 4.612
+    },
+    {
+     "w": "ball",
+     "at": 4.7
+    },
+    {
+     "w": "She",
+     "at": 5.513
+    },
+    {
+     "w": "turns",
+     "at": 5.688
+    },
+    {
+     "w": "and",
+     "at": 6.15
+    },
+    {
+     "w": "slides",
+     "at": 6.287
+    },
+    {
+     "w": "it",
+     "at": 6.713
+    },
+    {
+     "w": "across",
+     "at": 6.787
+    },
+    {
+     "w": "Prinz",
+     "at": 7.763
+    },
+    {
+     "w": "strikes",
+     "at": 8.062
+    },
+    {
+     "w": "before",
+     "at": 8.5
+    },
+    {
+     "w": "the",
+     "at": 8.787
+    },
+    {
+     "w": "keeper",
+     "at": 8.875
+    },
+    {
+     "w": "can",
+     "at": 9.25
+    },
+    {
+     "w": "move",
+     "at": 9.45
+    }
+   ]
+  },
+  {
+   "label": "Past the keeper",
+   "text": "From behind the goal: past Andreia, and in! Germany went on to win two-nil.",
+   "src": "/plays/narration/prinz-signature/3.m4a",
+   "seconds": 6.0,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.375
+    },
+    {
+     "w": "behind",
+     "at": 0.512
+    },
+    {
+     "w": "the",
+     "at": 0.887
+    },
+    {
+     "w": "goal",
+     "at": 0.975
+    },
+    {
+     "w": "past",
+     "at": 1.65
+    },
+    {
+     "w": "Andreia",
+     "at": 1.975
+    },
+    {
+     "w": "and",
+     "at": 2.475
+    },
+    {
+     "w": "in",
+     "at": 2.612
+    },
+    {
+     "w": "Germany",
+     "at": 3.375
+    },
+    {
+     "w": "went",
+     "at": 3.85
+    },
+    {
+     "w": "on",
+     "at": 4.013
+    },
+    {
+     "w": "to",
+     "at": 4.138
+    },
+    {
+     "w": "win",
+     "at": 4.25
+    },
+    {
+     "w": "two-nil",
+     "at": 4.487
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "The secret? Shield the ball with your body. Turn. Then shoot with power, like Birgit Prinz!",
+   "src": "/plays/narration/prinz-signature/4.m4a",
+   "seconds": 6.7,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "secret",
+     "at": 0.463
+    },
+    {
+     "w": "Shield",
+     "at": 1.175
+    },
+    {
+     "w": "the",
+     "at": 1.462
+    },
+    {
+     "w": "ball",
+     "at": 1.55
+    },
+    {
+     "w": "with",
+     "at": 1.837
+    },
+    {
+     "w": "your",
+     "at": 1.938
+    },
+    {
+     "w": "body",
+     "at": 2.05
+    },
+    {
+     "w": "Turn",
+     "at": 2.812
+    },
+    {
+     "w": "Then",
+     "at": 3.663
+    },
+    {
+     "w": "shoot",
+     "at": 3.925
+    },
+    {
+     "w": "with",
+     "at": 4.162
+    },
+    {
+     "w": "power",
+     "at": 4.338
+    },
+    {
+     "w": "like",
+     "at": 4.812
+    },
+    {
+     "w": "Birgit",
+     "at": 5.013
+    },
+    {
+     "w": "Prinz",
+     "at": 5.375
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: the 2022 final",
+   "text": "The 2022 Futsal Champions League final. Barcelona lead Sporting. Pito wins the ball in the middle, drives forward and scores. Two nil!",
+   "src": "/plays/narration/pito-futsal-signature/1.m4a",
+   "seconds": 11.0,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "2022",
+     "at": 0.425
+    },
+    {
+     "w": "Futsal",
+     "at": 1.375
+    },
+    {
+     "w": "Champions",
+     "at": 1.837
+    },
+    {
+     "w": "League",
+     "at": 2.45
+    },
+    {
+     "w": "final",
+     "at": 2.675
+    },
+    {
+     "w": "Barcelona",
+     "at": 3.587
+    },
+    {
+     "w": "lead",
+     "at": 4.3
+    },
+    {
+     "w": "Sporting",
+     "at": 4.562
+    },
+    {
+     "w": "Pito",
+     "at": 5.513
+    },
+    {
+     "w": "wins",
+     "at": 5.925
+    },
+    {
+     "w": "the",
+     "at": 6.2
+    },
+    {
+     "w": "ball",
+     "at": 6.3
+    },
+    {
+     "w": "in",
+     "at": 6.612
+    },
+    {
+     "w": "the",
+     "at": 6.688
+    },
+    {
+     "w": "middle",
+     "at": 6.775
+    },
+    {
+     "w": "drives",
+     "at": 7.287
+    },
+    {
+     "w": "forward",
+     "at": 7.763
+    },
+    {
+     "w": "and",
+     "at": 8.175
+    },
+    {
+     "w": "scores",
+     "at": 8.312
+    },
+    {
+     "w": "Two",
+     "at": 9.4
+    },
+    {
+     "w": "nil",
+     "at": 9.662
+    }
+   ]
+  },
+  {
+   "label": "Replay: behind the goal",
+   "text": "Watch again, in slow motion. He steals it, and carries it forward with his head up. He finishes past the keeper, just before half time.",
+   "src": "/plays/narration/pito-futsal-signature/2.m4a",
+   "seconds": 9.6,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "in",
+     "at": 1.175
+    },
+    {
+     "w": "slow",
+     "at": 1.35
+    },
+    {
+     "w": "motion",
+     "at": 1.65
+    },
+    {
+     "w": "He",
+     "at": 2.6
+    },
+    {
+     "w": "steals",
+     "at": 2.763
+    },
+    {
+     "w": "it",
+     "at": 3.237
+    },
+    {
+     "w": "and",
+     "at": 3.6
+    },
+    {
+     "w": "carries",
+     "at": 3.737
+    },
+    {
+     "w": "it",
+     "at": 4.15
+    },
+    {
+     "w": "forward",
+     "at": 4.312
+    },
+    {
+     "w": "with",
+     "at": 4.688
+    },
+    {
+     "w": "his",
+     "at": 4.787
+    },
+    {
+     "w": "head",
+     "at": 4.95
+    },
+    {
+     "w": "up",
+     "at": 5.138
+    },
+    {
+     "w": "He",
+     "at": 5.825
+    },
+    {
+     "w": "finishes",
+     "at": 5.987
+    },
+    {
+     "w": "past",
+     "at": 6.438
+    },
+    {
+     "w": "the",
+     "at": 6.763
+    },
+    {
+     "w": "keeper",
+     "at": 6.85
+    },
+    {
+     "w": "just",
+     "at": 7.4
+    },
+    {
+     "w": "before",
+     "at": 7.612
+    },
+    {
+     "w": "half",
+     "at": 7.975
+    },
+    {
+     "w": "time",
+     "at": 8.225
+    }
+   ]
+  },
+  {
+   "label": "How he does it",
+   "text": "His famous move is the pivot spin. Here\u2019s how he does it: back to goal, he feels the defender lean one way, then spins the other way and shoots!",
+   "src": "/plays/narration/pito-futsal-signature/3.m4a",
+   "seconds": 10.7,
+   "words": [
+    {
+     "w": "His",
+     "at": 0.35
+    },
+    {
+     "w": "famous",
+     "at": 0.55
+    },
+    {
+     "w": "move",
+     "at": 0.988
+    },
+    {
+     "w": "is",
+     "at": 1.35
+    },
+    {
+     "w": "the",
+     "at": 1.5
+    },
+    {
+     "w": "pivot",
+     "at": 1.613
+    },
+    {
+     "w": "spin",
+     "at": 2.013
+    },
+    {
+     "w": "Here",
+     "at": 3.0
+    },
+    {
+     "w": "s",
+     "at": 3.5
+    },
+    {
+     "w": "how",
+     "at": 3.675
+    },
+    {
+     "w": "he",
+     "at": 3.85
+    },
+    {
+     "w": "does",
+     "at": 3.975
+    },
+    {
+     "w": "it",
+     "at": 4.213
+    },
+    {
+     "w": "back",
+     "at": 4.75
+    },
+    {
+     "w": "to",
+     "at": 5.025
+    },
+    {
+     "w": "goal",
+     "at": 5.15
+    },
+    {
+     "w": "he",
+     "at": 5.675
+    },
+    {
+     "w": "feels",
+     "at": 5.838
+    },
+    {
+     "w": "the",
+     "at": 6.175
+    },
+    {
+     "w": "defender",
+     "at": 6.275
+    },
+    {
+     "w": "lean",
+     "at": 6.8
+    },
+    {
+     "w": "one",
+     "at": 7.088
+    },
+    {
+     "w": "way",
+     "at": 7.325
+    },
+    {
+     "w": "then",
+     "at": 7.825
+    },
+    {
+     "w": "spins",
+     "at": 8.05
+    },
+    {
+     "w": "the",
+     "at": 8.488
+    },
+    {
+     "w": "other",
+     "at": 8.6
+    },
+    {
+     "w": "way",
+     "at": 8.9
+    },
+    {
+     "w": "and",
+     "at": 9.125
+    },
+    {
+     "w": "shoots",
+     "at": 9.275
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn. Feel where the defender is, then turn the other way!",
+   "src": "/plays/narration/pito-futsal-signature/4.m4a",
+   "seconds": 4.9,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "Feel",
+     "at": 1.325
+    },
+    {
+     "w": "where",
+     "at": 1.587
+    },
+    {
+     "w": "the",
+     "at": 1.712
+    },
+    {
+     "w": "defender",
+     "at": 1.8
+    },
+    {
+     "w": "is",
+     "at": 2.312
+    },
+    {
+     "w": "then",
+     "at": 2.725
+    },
+    {
+     "w": "turn",
+     "at": 2.95
+    },
+    {
+     "w": "the",
+     "at": 3.212
+    },
+    {
+     "w": "other",
+     "at": 3.288
+    },
+    {
+     "w": "way",
+     "at": 3.525
+    }
+   ]
+  }
+ ]
+}

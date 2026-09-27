@@ -1,15 +1,22 @@
 import {CAFE_NPC_ROUTES,onCafeRoute} from '../town/cafeRoutes';
 import {applyTruckProtest} from './truckReactions';
 import * as T from 'three';
+import {heatOptions} from './heatTier';
 import type {BallReactions} from './ballReactions';
 import {createNpcRide} from './npcRide';
 import {createPlayer} from './player';
 import {createNpcActivity} from './npcActivity';
 import {advanceNpcRoutines,createNpcRoutine,safeNpcPath} from '../town/npcBehavior';
 import {DEFAULT_CUSTOMIZATION} from '../town/customization';
+import {npcDress} from '../town/beanLooks';
 import {NPC_DIALOGUES,type NpcDefinition} from '../town/npcDialogues';
 type Position={x:number;y:number;z:number};
 type Placement={isWalkable:(x:number,z:number)=>boolean;heightAt:(x:number,z:number)=>number};
+/** Heat pass 5: a townsperson's appearance is set once and never takes a costume, so the classic body meshes the bean skin hides
+ * (userData.beanHidden) can never show again. Their geometry data (≈ 0.37 MB per townsperson, ≈ 25 MB for the 66) is released
+ * for one shared empty geometry. Picking already ignores hidden meshes; joints (Groups) and the bean meshes are untouched. */
+const RELEASED=new T.BufferGeometry();
+function releaseHiddenClassic(root:T.Object3D){root.traverse(o=>{if(o instanceof T.Mesh&&o.userData.beanHidden&&o.geometry!==RELEASED){o.geometry.dispose();o.geometry=RELEASED;}});}
 export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:BallReactions){
  const root=new T.Group();root.name='island-townsfolk';scene.add(root);
  const textures:T.Texture[]=[],materials:T.Material[]=[];
@@ -18,7 +25,7 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
   const authoredRoute=CAFE_NPC_ROUTES[definition.id];
   let x=authoredRoute?.[0].x??definition.x,z=authoredRoute?.[0].z??definition.z;
   search:for(let radius=0;radius<=12&&!authoredRoute;radius+=1){for(let angle=0;angle<16;angle++){const px=definition.x+Math.cos(angle*Math.PI/8)*radius,pz=definition.z+Math.sin(angle*Math.PI/8)*radius;if(placement.isWalkable(px,pz)){x=px;z=pz;break search;}}}
-  const rig=createPlayer(`town-npc-${definition.id}`,'home');rig.setAppearance({...DEFAULT_CUSTOMIZATION,character:definition.character,face:definition.face,clothing:definition.clothing,body:definition.body??'balanced'});root.add(rig.root);
+  const rig=createPlayer(`town-npc-${definition.id}`,'home');rig.setAppearance({...DEFAULT_CUSTOMIZATION,character:definition.character,face:definition.face,clothing:definition.clothing,body:definition.body??'balanced'});const dress=npcDress(definition);rig.setBeanLook(dress.look,dress.outfit);releaseHiddenClassic(rig.root);root.add(rig.root);
   rig.root.traverse(object=>{object.userData.npcId=definition.id;});
   const canvas=document.createElement('canvas');canvas.width=512;canvas.height=160;const ctx=canvas.getContext('2d')!;
   ctx.fillStyle='#294f43';ctx.beginPath();ctx.roundRect(3,3,506,154,44);ctx.fill();ctx.textAlign='center';ctx.fillStyle='#fff0cc';ctx.font='700 43px sans-serif';ctx.fillText(definition.name,256,66);ctx.fillStyle='#e6cb8b';ctx.font='700 29px sans-serif';ctx.fillText('LET’S TALK',256,115);
@@ -42,19 +49,31 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
  });
  const neighborhood:typeof entries=[],frozen=new Set<string>(),entryById=new Map(entries.map(entry=>[entry.id,entry]));
  const viewFrustum=new T.Frustum(),viewMatrix=new T.Matrix4(),viewSphere=new T.Sphere();
- const stats={posed:0,offscreenSkipped:0};
+ const stats={posed:0,offscreenSkipped:0,slowRoutine:0};
  const truckWitnesses=new Map<string,{remaining:number;x:number;z:number}>();
  const reactToTruck=(id:string,x:number,z:number)=>{truckWitnesses.set(id,{remaining:4.8,x,z});};
- const nearest=(player:Position,maxDistance=6)=>{let best:NpcDefinition|null=null,distance=maxDistance;for(const entry of entries){if(reactions?.get('npc:'+entry.id))continue;const d=Math.hypot(entry.position.x-player.x,entry.position.z-player.z,entry.position.y-player.y);if(d<distance){distance=d;best=entry.definition;}}return best;};
+ const nearest=(player:Position,maxDistance=6)=>{let best:NpcDefinition|null=null,distance=maxDistance;for(const entry of entries){if(reactions?.get('npc:'+entry.id)||isThinned(entry))continue;const d=Math.hypot(entry.position.x-player.x,entry.position.z-player.z,entry.position.y-player.y);if(d<distance){distance=d;best=entry.definition;}}return best;};
+ /** Heat pass 4 (lib/graphics/islandHeat): tier 3 / Battery saver draws and poses ambient townsfolk only within this range. */
+ let drawLimit:number|null=null;
+ const fastRoutine:typeof entries=[],slowRoutine:typeof entries=[];let slowRoutineDt=0;
+ // fewerAmbient (visible heat option, OFF by default; lib/graphics/heatTier HEAT_OPTIONS): 40% of townsfolk are not drawn, routined or talkable on phones.
+ const thinAmbient=heatOptions().fewerAmbient&&typeof window!=='undefined'&&window.matchMedia('(pointer: coarse)').matches;let thinnedSet:Set<object>|null=null;const isThinned=(entry:object)=>thinAmbient&&(thinnedSet??=new Set(entries.filter((_,i)=>i%5===1||i%5===3))).has(entry);
  const update=(dt:number,time:number,reduced:boolean,player:Position,paused:boolean,desktop=false,hoveredId:string|null=null,camera?:T.Camera)=>{
   stats.posed=stats.offscreenSkipped=0;if(camera){camera.updateMatrixWorld();viewMatrix.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse);viewFrustum.setFromProjectionMatrix(viewMatrix);}
   for(const entry of entries){entry.distance=Math.hypot(entry.position.x-player.x,entry.position.z-player.z,entry.position.y-player.y);entry.near=entry.distance<7;entry.stunned=Boolean(reactions?.get('npc:'+entry.id));}
   neighborhood.length=0;frozen.clear();
-  for(const entry of entries){if(entry.distance<(desktop?112:88)||entry.routine.partner!==null||entry.stunned)neighborhood.push(entry);if(hoveredId!==null&&(entry.id===hoveredId||entry.routine.partner===hoveredId))frozen.add(entry.id);}
+  for(const entry of entries){if(isThinned(entry))continue;if(entry.distance<(desktop?112:88)||entry.routine.partner!==null||entry.stunned)neighborhood.push(entry);if(hoveredId!==null&&(entry.id===hoveredId||entry.routine.partner===hoveredId))frozen.add(entry.id);}
   for(const [id,witness] of truckWitnesses){witness.remaining-=paused?0:dt;if(witness.remaining<=0)truckWitnesses.delete(id);else frozen.add(id);}
-  advanceNpcRoutines(neighborhood,paused?0:dt,canTravel,frozen);
+  // Heat pass 5: townsfolk off screen (frustum + margin) step their routines at 10 Hz (the stepper's own 0.1 s clamp); anyone near,
+  // stunned, frozen or in a conversation, and everyone on screen, steps every frame. Posing is already skipped off screen.
+  fastRoutine.length=0;slowRoutine.length=0;
+  for(const entry of neighborhood){if(!camera||entry.near||entry.stunned||entry.routine.partner!==null||frozen.has(entry.id)){fastRoutine.push(entry);continue;}
+   viewSphere.center.set(entry.position.x,entry.position.y+1.5,entry.position.z);viewSphere.radius=8+Math.max(0,entry.position.y)*1.4;
+   (viewFrustum.intersectsSphere(viewSphere)?fastRoutine:slowRoutine).push(entry);}
+  advanceNpcRoutines(fastRoutine,paused?0:dt,canTravel,frozen);
+  slowRoutineDt+=paused?0:dt;if(slowRoutineDt>=.1||!slowRoutine.length){if(slowRoutine.length)advanceNpcRoutines(slowRoutine,slowRoutineDt,canTravel,frozen);stats.slowRoutine=slowRoutine.length;slowRoutineDt=0;}
   for(const id of truckWitnesses.keys())if(id!==hoveredId)frozen.delete(id);
-  for(const entry of entries){if(frozen.has(entry.id))continue;const distance=entry.distance;entry.rig.root.visible=distance<(desktop?96:72);if(entry.ride)entry.ride.root.visible=entry.rig.root.visible&&!entry.stunned;entry.rigElapsed+=paused?0:dt;if(!entry.rig.root.visible&&!entry.stunned)continue;if(camera&&!entry.near&&!entry.stunned){viewSphere.center.set(entry.position.x,entry.position.y+1.5,entry.position.z);viewSphere.radius=5+Math.max(0,entry.position.y)*1.4;if(!viewFrustum.intersectsSphere(viewSphere)){entry.rig.root.position.set(entry.position.x,entry.position.y,entry.position.z);if(entry.ride)entry.ride.root.position.copy(entry.rig.root.position);entry.label.visible=false;stats.offscreenSkipped++;continue;}}if(distance>32&&!entry.definition.travel&&!['walk','approach'].includes(entry.routine.mode)&&!entry.stunned&&entry.rigElapsed<.1)continue;const poseDt=Math.min(entry.rigElapsed,.1);entry.rigElapsed=0;const r=entry.routine,stunned=reactions?.get('npc:'+entry.id),partner=r.partner===null?undefined:entryById.get(r.partner);
+  for(const entry of entries){if(frozen.has(entry.id))continue;const distance=entry.distance;entry.rig.root.visible=!isThinned(entry)&&distance<(drawLimit??(desktop?96:72));if(entry.ride)entry.ride.root.visible=entry.rig.root.visible&&!entry.stunned;entry.rigElapsed+=paused?0:dt;if(!entry.rig.root.visible&&!entry.stunned)continue;if(camera&&!entry.near&&!entry.stunned){viewSphere.center.set(entry.position.x,entry.position.y+1.5,entry.position.z);viewSphere.radius=5+Math.max(0,entry.position.y)*1.4;if(!viewFrustum.intersectsSphere(viewSphere)){entry.rig.root.position.set(entry.position.x,entry.position.y,entry.position.z);if(entry.ride)entry.ride.root.position.copy(entry.rig.root.position);entry.label.visible=false;stats.offscreenSkipped++;continue;}}if(distance>32&&!entry.definition.travel&&!['walk','approach'].includes(entry.routine.mode)&&!entry.stunned&&entry.rigElapsed<.1)continue;const poseDt=Math.min(entry.rigElapsed,.1);entry.rigElapsed=0;const r=entry.routine,stunned=reactions?.get('npc:'+entry.id),partner=r.partner===null?undefined:entryById.get(r.partner);
    let facing=entry.near?Math.atan2(player.x-entry.position.x,player.z-entry.position.z):r.mode==='social'&&partner?Math.atan2(partner.position.x-entry.position.x,partner.position.z-entry.position.z):r.mode==='work'?entry.definition.workYaw:undefined;
    if(r.mode==='rest')facing=(entry.definition.workYaw??0)+(reduced?0:Math.sin(r.clock*.35)*.4);
    if(entry.definition.travel&&!entry.near){const dx=entry.position.x-entry.lastPosition.x,dz=entry.position.z-entry.lastPosition.z;facing=Math.hypot(dx,dz)>.0001?Math.atan2(dx,dz):entry.rig.root.rotation.y;}
@@ -76,5 +95,5 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
  };
  const visibleInScene=(object:T.Object3D)=>{for(let current:T.Object3D|null=object;current;current=current.parent){if(!current.visible)return false;}return true;};
  const pick=(raycaster:T.Raycaster)=>{if(!root.visible)return null;const hit=raycaster.intersectObject(root,true).find(hit=>hit.distance<90&&visibleInScene(hit.object)&&hit.object.userData.npcId&&!reactions?.get('npc:'+hit.object.userData.npcId));return hit?NPC_DIALOGUES.find(npc=>npc.id===hit.object.userData.npcId)??null:null;};
- return {reactToTruck,stats,root,entries,update,nearest,pick,dispose:()=>{entries.forEach(entry=>{entry.activity?.dispose();entry.ride?.dispose();entry.rig.dispose();});textures.forEach(texture=>texture.dispose());materials.forEach(material=>material.dispose());root.removeFromParent();}};
+ return {reactToTruck,stats,root,entries,update,nearest,pick,setDrawDistance(metres:number|null){drawLimit=metres;},dispose:()=>{entries.forEach(entry=>{entry.activity?.dispose();entry.ride?.dispose();entry.rig.dispose();});textures.forEach(texture=>texture.dispose());materials.forEach(material=>material.dispose());root.removeFromParent();}};
 }

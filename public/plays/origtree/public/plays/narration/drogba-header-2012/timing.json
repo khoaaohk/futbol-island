@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Two minutes left",
+   "text": "Munich, 2012, the Champions League final. Bayern lead Chelsea one\u2013nil, two minutes left. Chelsea win their first corner. Juan Mata whips it in... Didier Drogba powers a header in! One-all!",
+   "src": "/plays/narration/drogba-header-2012/1.m4a",
+   "seconds": 14.0,
+   "words": [
+    {
+     "w": "Munich",
+     "at": 0.4
+    },
+    {
+     "w": "2012",
+     "at": 0.8
+    },
+    {
+     "w": "the",
+     "at": 1.6
+    },
+    {
+     "w": "Champions",
+     "at": 1.712
+    },
+    {
+     "w": "League",
+     "at": 2.3
+    },
+    {
+     "w": "final",
+     "at": 2.562
+    },
+    {
+     "w": "Bayern",
+     "at": 3.55
+    },
+    {
+     "w": "lead",
+     "at": 3.975
+    },
+    {
+     "w": "Chelsea",
+     "at": 4.213
+    },
+    {
+     "w": "one",
+     "at": 4.65
+    },
+    {
+     "w": "nil",
+     "at": 4.975
+    },
+    {
+     "w": "two",
+     "at": 5.412
+    },
+    {
+     "w": "minutes",
+     "at": 5.625
+    },
+    {
+     "w": "left",
+     "at": 5.95
+    },
+    {
+     "w": "Chelsea",
+     "at": 6.725
+    },
+    {
+     "w": "win",
+     "at": 7.175
+    },
+    {
+     "w": "their",
+     "at": 7.375
+    },
+    {
+     "w": "first",
+     "at": 7.588
+    },
+    {
+     "w": "corner",
+     "at": 7.9
+    },
+    {
+     "w": "Juan",
+     "at": 8.713
+    },
+    {
+     "w": "Mata",
+     "at": 9.025
+    },
+    {
+     "w": "whips",
+     "at": 9.325
+    },
+    {
+     "w": "it",
+     "at": 9.562
+    },
+    {
+     "w": "in",
+     "at": 9.65
+    },
+    {
+     "w": "Didier",
+     "at": 10.363
+    },
+    {
+     "w": "Drogba",
+     "at": 10.725
+    },
+    {
+     "w": "powers",
+     "at": 11.137
+    },
+    {
+     "w": "a",
+     "at": 11.525
+    },
+    {
+     "w": "header",
+     "at": 11.6
+    },
+    {
+     "w": "in",
+     "at": 11.925
+    },
+    {
+     "w": "One-all",
+     "at": 12.488
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. Drogba sprints to the near post, gets there first, and uses his forehead to power it into the top corner.",
+   "src": "/plays/narration/drogba-header-2012/2.m4a",
+   "seconds": 9.1,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.275
+    },
+    {
+     "w": "Drogba",
+     "at": 2.4
+    },
+    {
+     "w": "sprints",
+     "at": 2.862
+    },
+    {
+     "w": "to",
+     "at": 3.3
+    },
+    {
+     "w": "the",
+     "at": 3.388
+    },
+    {
+     "w": "near",
+     "at": 3.475
+    },
+    {
+     "w": "post",
+     "at": 3.712
+    },
+    {
+     "w": "gets",
+     "at": 4.35
+    },
+    {
+     "w": "there",
+     "at": 4.6
+    },
+    {
+     "w": "first",
+     "at": 4.812
+    },
+    {
+     "w": "and",
+     "at": 5.5
+    },
+    {
+     "w": "uses",
+     "at": 5.625
+    },
+    {
+     "w": "his",
+     "at": 5.912
+    },
+    {
+     "w": "forehead",
+     "at": 6.1
+    },
+    {
+     "w": "to",
+     "at": 6.525
+    },
+    {
+     "w": "power",
+     "at": 6.662
+    },
+    {
+     "w": "it",
+     "at": 7.075
+    },
+    {
+     "w": "into",
+     "at": 7.162
+    },
+    {
+     "w": "the",
+     "at": 7.338
+    },
+    {
+     "w": "top",
+     "at": 7.425
+    },
+    {
+     "w": "corner",
+     "at": 7.7
+    }
+   ]
+  },
+  {
+   "label": "Behind the goal",
+   "text": "From behind the goal, see how fast it flies. The keeper has no time to move. Chelsea win on penalties!",
+   "src": "/plays/narration/drogba-header-2012/3.m4a",
+   "seconds": 7.9,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "behind",
+     "at": 0.487
+    },
+    {
+     "w": "the",
+     "at": 0.863
+    },
+    {
+     "w": "goal",
+     "at": 0.95
+    },
+    {
+     "w": "see",
+     "at": 1.525
+    },
+    {
+     "w": "how",
+     "at": 1.7
+    },
+    {
+     "w": "fast",
+     "at": 1.887
+    },
+    {
+     "w": "it",
+     "at": 2.237
+    },
+    {
+     "w": "flies",
+     "at": 2.325
+    },
+    {
+     "w": "The",
+     "at": 3.25
+    },
+    {
+     "w": "keeper",
+     "at": 3.35
+    },
+    {
+     "w": "has",
+     "at": 3.725
+    },
+    {
+     "w": "no",
+     "at": 3.925
+    },
+    {
+     "w": "time",
+     "at": 4.1
+    },
+    {
+     "w": "to",
+     "at": 4.4
+    },
+    {
+     "w": "move",
+     "at": 4.5
+    },
+    {
+     "w": "Chelsea",
+     "at": 5.325
+    },
+    {
+     "w": "win",
+     "at": 5.775
+    },
+    {
+     "w": "on",
+     "at": 5.987
+    },
+    {
+     "w": "penalties",
+     "at": 6.175
+    }
+   ]
+  },
+  {
+   "label": "Attack the near post",
+   "text": "Attack the near post! Get there first, jump, and power your header where you aim.",
+   "src": "/plays/narration/drogba-header-2012/4.m4a",
+   "seconds": 5.7,
+   "words": [
+    {
+     "w": "Attack",
+     "at": 0.375
+    },
+    {
+     "w": "the",
+     "at": 0.713
+    },
+    {
+     "w": "near",
+     "at": 0.8
+    },
+    {
+     "w": "post",
+     "at": 1.025
+    },
+    {
+     "w": "Get",
+     "at": 1.913
+    },
+    {
+     "w": "there",
+     "at": 2.062
+    },
+    {
+     "w": "first",
+     "at": 2.237
+    },
+    {
+     "w": "jump",
+     "at": 2.763
+    },
+    {
+     "w": "and",
+     "at": 3.138
+    },
+    {
+     "w": "power",
+     "at": 3.263
+    },
+    {
+     "w": "your",
+     "at": 3.625
+    },
+    {
+     "w": "header",
+     "at": 3.75
+    },
+    {
+     "w": "where",
+     "at": 4.062
+    },
+    {
+     "w": "you",
+     "at": 4.2
+    },
+    {
+     "w": "aim",
+     "at": 4.362
+    }
+   ]
+  }
+ ]
+}

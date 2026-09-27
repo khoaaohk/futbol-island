@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Near post, live",
+   "text": "Lusail, World Cup 2022. Portugal lead Switzerland two-nil. Diogo Dalot zips down the right... and drives it low to the near post. Ramos darts across... flicks it in, first time! Goal!",
+   "src": "/plays/narration/goncalo-ramos-signature/1.m4a",
+   "seconds": 14.5,
+   "words": [
+    {
+     "w": "Lusail",
+     "at": 0.4
+    },
+    {
+     "w": "World",
+     "at": 0.975
+    },
+    {
+     "w": "Cup",
+     "at": 1.325
+    },
+    {
+     "w": "2022",
+     "at": 1.6
+    },
+    {
+     "w": "Portugal",
+     "at": 2.962
+    },
+    {
+     "w": "lead",
+     "at": 3.5
+    },
+    {
+     "w": "Switzerland",
+     "at": 3.788
+    },
+    {
+     "w": "two-nil",
+     "at": 4.362
+    },
+    {
+     "w": "Diogo",
+     "at": 5.213
+    },
+    {
+     "w": "Dalot",
+     "at": 5.675
+    },
+    {
+     "w": "zips",
+     "at": 6.1
+    },
+    {
+     "w": "down",
+     "at": 6.425
+    },
+    {
+     "w": "the",
+     "at": 6.662
+    },
+    {
+     "w": "right",
+     "at": 6.75
+    },
+    {
+     "w": "and",
+     "at": 7.5
+    },
+    {
+     "w": "drives",
+     "at": 7.625
+    },
+    {
+     "w": "it",
+     "at": 8.025
+    },
+    {
+     "w": "low",
+     "at": 8.15
+    },
+    {
+     "w": "to",
+     "at": 8.45
+    },
+    {
+     "w": "the",
+     "at": 8.537
+    },
+    {
+     "w": "near",
+     "at": 8.625
+    },
+    {
+     "w": "post",
+     "at": 8.863
+    },
+    {
+     "w": "Ramos",
+     "at": 9.688
+    },
+    {
+     "w": "darts",
+     "at": 10.175
+    },
+    {
+     "w": "across",
+     "at": 10.463
+    },
+    {
+     "w": "flicks",
+     "at": 11.375
+    },
+    {
+     "w": "it",
+     "at": 11.662
+    },
+    {
+     "w": "in",
+     "at": 11.75
+    },
+    {
+     "w": "first",
+     "at": 12.062
+    },
+    {
+     "w": "time",
+     "at": 12.375
+    },
+    {
+     "w": "Goal",
+     "at": 13.012
+    }
+   ]
+  },
+  {
+   "label": "Keep moving",
+   "text": "Watch again, slowly. See Ramos keep moving? He gets in front of his defender, at the near post.",
+   "src": "/plays/narration/goncalo-ramos-signature/2.m4a",
+   "seconds": 7.1,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.212
+    },
+    {
+     "w": "See",
+     "at": 2.188
+    },
+    {
+     "w": "Ramos",
+     "at": 2.425
+    },
+    {
+     "w": "keep",
+     "at": 2.9
+    },
+    {
+     "w": "moving",
+     "at": 3.15
+    },
+    {
+     "w": "He",
+     "at": 3.925
+    },
+    {
+     "w": "gets",
+     "at": 4.05
+    },
+    {
+     "w": "in",
+     "at": 4.263
+    },
+    {
+     "w": "front",
+     "at": 4.375
+    },
+    {
+     "w": "of",
+     "at": 4.562
+    },
+    {
+     "w": "his",
+     "at": 4.638
+    },
+    {
+     "w": "defender",
+     "at": 4.775
+    },
+    {
+     "w": "at",
+     "at": 5.312
+    },
+    {
+     "w": "the",
+     "at": 5.388
+    },
+    {
+     "w": "near",
+     "at": 5.475
+    },
+    {
+     "w": "post",
+     "at": 5.7
+    }
+   ]
+  },
+  {
+   "label": "One touch",
+   "text": "From behind the goal: one touch, and it squeezes through the keeper's legs. Portugal lead three-nil!",
+   "src": "/plays/narration/goncalo-ramos-signature/3.m4a",
+   "seconds": 7.1,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "behind",
+     "at": 0.487
+    },
+    {
+     "w": "the",
+     "at": 0.863
+    },
+    {
+     "w": "goal",
+     "at": 0.95
+    },
+    {
+     "w": "one",
+     "at": 1.637
+    },
+    {
+     "w": "touch",
+     "at": 1.913
+    },
+    {
+     "w": "and",
+     "at": 2.4
+    },
+    {
+     "w": "it",
+     "at": 2.513
+    },
+    {
+     "w": "squeezes",
+     "at": 2.612
+    },
+    {
+     "w": "through",
+     "at": 3.175
+    },
+    {
+     "w": "the",
+     "at": 3.362
+    },
+    {
+     "w": "keeper's",
+     "at": 3.45
+    },
+    {
+     "w": "legs",
+     "at": 3.875
+    },
+    {
+     "w": "Portugal",
+     "at": 4.763
+    },
+    {
+     "w": "lead",
+     "at": 5.3
+    },
+    {
+     "w": "three-nil",
+     "at": 5.588
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: keep moving in the box. When you keep moving, your defender can't settle next to you. Then hit it first time!",
+   "src": "/plays/narration/goncalo-ramos-signature/4.m4a",
+   "seconds": 8.1,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "keep",
+     "at": 1.075
+    },
+    {
+     "w": "moving",
+     "at": 1.325
+    },
+    {
+     "w": "in",
+     "at": 1.613
+    },
+    {
+     "w": "the",
+     "at": 1.688
+    },
+    {
+     "w": "box",
+     "at": 1.775
+    },
+    {
+     "w": "When",
+     "at": 2.675
+    },
+    {
+     "w": "you",
+     "at": 2.812
+    },
+    {
+     "w": "keep",
+     "at": 2.9
+    },
+    {
+     "w": "moving",
+     "at": 3.15
+    },
+    {
+     "w": "your",
+     "at": 3.65
+    },
+    {
+     "w": "defender",
+     "at": 3.775
+    },
+    {
+     "w": "can't",
+     "at": 4.287
+    },
+    {
+     "w": "settle",
+     "at": 4.638
+    },
+    {
+     "w": "next",
+     "at": 5.0
+    },
+    {
+     "w": "to",
+     "at": 5.275
+    },
+    {
+     "w": "you",
+     "at": 5.375
+    },
+    {
+     "w": "Then",
+     "at": 5.987
+    },
+    {
+     "w": "hit",
+     "at": 6.225
+    },
+    {
+     "w": "it",
+     "at": 6.362
+    },
+    {
+     "w": "first",
+     "at": 6.475
+    },
+    {
+     "w": "time",
+     "at": 6.75
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,386 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The equaliser, live",
+   "text": "Basel, the 2025 Euro final. England are losing to Spain. Walsh finds Stanway, out wide to Chloe Kelly. Kelly crosses... Alessia Russo heads it in!",
+   "src": "/plays/narration/russo-final-2025/1.m4a",
+   "seconds": 12.3,
+   "words": [
+    {
+     "w": "Basel",
+     "at": 0.4
+    },
+    {
+     "w": "the",
+     "at": 0.838
+    },
+    {
+     "w": "2025",
+     "at": 0.925
+    },
+    {
+     "w": "Euro",
+     "at": 1.9
+    },
+    {
+     "w": "final",
+     "at": 2.175
+    },
+    {
+     "w": "England",
+     "at": 3.013
+    },
+    {
+     "w": "are",
+     "at": 3.45
+    },
+    {
+     "w": "losing",
+     "at": 3.6
+    },
+    {
+     "w": "to",
+     "at": 3.975
+    },
+    {
+     "w": "Spain",
+     "at": 4.112
+    },
+    {
+     "w": "Walsh",
+     "at": 5.075
+    },
+    {
+     "w": "finds",
+     "at": 5.5
+    },
+    {
+     "w": "Stanway",
+     "at": 5.825
+    },
+    {
+     "w": "out",
+     "at": 6.588
+    },
+    {
+     "w": "wide",
+     "at": 6.85
+    },
+    {
+     "w": "to",
+     "at": 7.225
+    },
+    {
+     "w": "Chloe",
+     "at": 7.325
+    },
+    {
+     "w": "Kelly",
+     "at": 7.65
+    },
+    {
+     "w": "Kelly",
+     "at": 8.438
+    },
+    {
+     "w": "crosses",
+     "at": 8.775
+    },
+    {
+     "w": "Alessia",
+     "at": 9.825
+    },
+    {
+     "w": "Russo",
+     "at": 10.3
+    },
+    {
+     "w": "heads",
+     "at": 10.7
+    },
+    {
+     "w": "it",
+     "at": 10.938
+    },
+    {
+     "w": "in",
+     "at": 11.025
+    }
+   ]
+  },
+  {
+   "label": "Watch her run",
+   "text": "Watch it again. Russo waits, then times her run into the space, and jumps above her defender.",
+   "src": "/plays/narration/russo-final-2025/2.m4a",
+   "seconds": 6.9,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "Russo",
+     "at": 1.6
+    },
+    {
+     "w": "waits",
+     "at": 2.038
+    },
+    {
+     "w": "then",
+     "at": 2.8
+    },
+    {
+     "w": "times",
+     "at": 3.0
+    },
+    {
+     "w": "her",
+     "at": 3.312
+    },
+    {
+     "w": "run",
+     "at": 3.45
+    },
+    {
+     "w": "into",
+     "at": 3.663
+    },
+    {
+     "w": "the",
+     "at": 3.837
+    },
+    {
+     "w": "space",
+     "at": 3.938
+    },
+    {
+     "w": "and",
+     "at": 4.475
+    },
+    {
+     "w": "jumps",
+     "at": 4.612
+    },
+    {
+     "w": "above",
+     "at": 4.975
+    },
+    {
+     "w": "her",
+     "at": 5.237
+    },
+    {
+     "w": "defender",
+     "at": 5.35
+    }
+   ]
+  },
+  {
+   "label": "Back across goal",
+   "text": "Her forehead sends it back across the keeper, into the top corner. One-all! England went on to win on penalties!",
+   "src": "/plays/narration/russo-final-2025/3.m4a",
+   "seconds": 8.0,
+   "words": [
+    {
+     "w": "Her",
+     "at": 0.35
+    },
+    {
+     "w": "forehead",
+     "at": 0.512
+    },
+    {
+     "w": "sends",
+     "at": 0.988
+    },
+    {
+     "w": "it",
+     "at": 1.238
+    },
+    {
+     "w": "back",
+     "at": 1.325
+    },
+    {
+     "w": "across",
+     "at": 1.613
+    },
+    {
+     "w": "the",
+     "at": 1.95
+    },
+    {
+     "w": "keeper",
+     "at": 2.05
+    },
+    {
+     "w": "into",
+     "at": 2.7
+    },
+    {
+     "w": "the",
+     "at": 2.888
+    },
+    {
+     "w": "top",
+     "at": 2.975
+    },
+    {
+     "w": "corner",
+     "at": 3.25
+    },
+    {
+     "w": "One-all",
+     "at": 4.225
+    },
+    {
+     "w": "England",
+     "at": 5.138
+    },
+    {
+     "w": "went",
+     "at": 5.562
+    },
+    {
+     "w": "on",
+     "at": 5.713
+    },
+    {
+     "w": "to",
+     "at": 5.838
+    },
+    {
+     "w": "win",
+     "at": 5.95
+    },
+    {
+     "w": "on",
+     "at": 6.138
+    },
+    {
+     "w": "penalties",
+     "at": 6.325
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "The secret? Time your run and attack the cross. Eyes open, meet it with your forehead, and direct it down or back across the keeper.",
+   "src": "/plays/narration/russo-final-2025/4.m4a",
+   "seconds": 9.4,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "secret",
+     "at": 0.463
+    },
+    {
+     "w": "Time",
+     "at": 1.262
+    },
+    {
+     "w": "your",
+     "at": 1.6
+    },
+    {
+     "w": "run",
+     "at": 1.788
+    },
+    {
+     "w": "and",
+     "at": 2.125
+    },
+    {
+     "w": "attack",
+     "at": 2.237
+    },
+    {
+     "w": "the",
+     "at": 2.6
+    },
+    {
+     "w": "cross",
+     "at": 2.7
+    },
+    {
+     "w": "Eyes",
+     "at": 3.775
+    },
+    {
+     "w": "open",
+     "at": 4.1
+    },
+    {
+     "w": "meet",
+     "at": 4.737
+    },
+    {
+     "w": "it",
+     "at": 4.938
+    },
+    {
+     "w": "with",
+     "at": 5.013
+    },
+    {
+     "w": "your",
+     "at": 5.138
+    },
+    {
+     "w": "forehead",
+     "at": 5.287
+    },
+    {
+     "w": "and",
+     "at": 6.05
+    },
+    {
+     "w": "direct",
+     "at": 6.175
+    },
+    {
+     "w": "it",
+     "at": 6.513
+    },
+    {
+     "w": "down",
+     "at": 6.662
+    },
+    {
+     "w": "or",
+     "at": 7.075
+    },
+    {
+     "w": "back",
+     "at": 7.2
+    },
+    {
+     "w": "across",
+     "at": 7.525
+    },
+    {
+     "w": "the",
+     "at": 7.875
+    },
+    {
+     "w": "keeper",
+     "at": 7.975
+    }
+   ]
+  }
+ ]
+}

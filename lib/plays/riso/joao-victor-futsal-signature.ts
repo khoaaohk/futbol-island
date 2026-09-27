@@ -32,6 +32,9 @@
  *    São Paulo, 1.73 m, defender; clubs; Brazil 2022–; honours incl. FIFA Futsal World Cup 2024, Copa América 2024.
  *  - ge.globo, "Conheça os jogadores que representam o Brasil na Copa do Mundo de Futsal" (12 Sep 2024): "Neguinho - Fixo … João Victor
  *    Alves Sena, conhecido como Neguinho" (Corinthians, Atlântico, Palma; the squad of 14).
+ *  - Comitê Olímpico do Brasil, "Buenos Aires-2018" (https://www.cob.org.br/time-brasil/participacoes/3579-buenos-aires): the gold-medal
+ *    boys' futsal team lists "João Victor Sena"; Lance! (16 Sep 2024) says Neguinho, Brazil's No. 5 at the 2024 World Cup, captained that
+ *    2018 Youth Olympics team. Card bio only (Youth Olympic gold 2018); not used in the narration.
  *  - Wikipedia, "FC Barcelona (futsal)" (raw, cached): squad lists "João Victor" (Neguinho, born 2000) as a defender.
  *  - Two search-engine requests (DuckDuckGo, Bing) returned bot challenges / unrelated pages; no further fetching.
  * CONFIRMED: the match (round of 16), date, venue, city, attendance, the 5–0 score line and that HE scored 4–0 at 35:09 and 5–0 at 39:34;

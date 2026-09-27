@@ -1,0 +1,366 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: Bras\u00edlia 2008",
+   "text": "Bras\u00edlia, 2008: the World Cup, at home in Brazil. Brazil play Russia. Their pivot, Len\u00edsio, scores twice, and Brazil win seven nil!",
+   "src": "/plays/narration/lenisio-futsal-signature/1.m4a",
+   "seconds": 11.2,
+   "words": [
+    {
+     "w": "Bras\u00edlia",
+     "at": 0.35
+    },
+    {
+     "w": "2008",
+     "at": 1.0
+    },
+    {
+     "w": "the",
+     "at": 2.2
+    },
+    {
+     "w": "World",
+     "at": 2.3
+    },
+    {
+     "w": "Cup",
+     "at": 2.638
+    },
+    {
+     "w": "at",
+     "at": 2.975
+    },
+    {
+     "w": "home",
+     "at": 3.1
+    },
+    {
+     "w": "in",
+     "at": 3.4
+    },
+    {
+     "w": "Brazil",
+     "at": 3.513
+    },
+    {
+     "w": "Brazil",
+     "at": 4.588
+    },
+    {
+     "w": "play",
+     "at": 5.05
+    },
+    {
+     "w": "Russia",
+     "at": 5.275
+    },
+    {
+     "w": "Their",
+     "at": 6.112
+    },
+    {
+     "w": "pivot",
+     "at": 6.338
+    },
+    {
+     "w": "Len\u00edsio",
+     "at": 6.825
+    },
+    {
+     "w": "scores",
+     "at": 7.588
+    },
+    {
+     "w": "twice",
+     "at": 8.037
+    },
+    {
+     "w": "and",
+     "at": 8.55
+    },
+    {
+     "w": "Brazil",
+     "at": 8.675
+    },
+    {
+     "w": "win",
+     "at": 9.15
+    },
+    {
+     "w": "seven",
+     "at": 9.438
+    },
+    {
+     "w": "nil",
+     "at": 9.825
+    }
+   ]
+  },
+  {
+   "label": "How he does it",
+   "text": "His famous move is the quick finish. Here\u2019s how he does it. The pass comes into the box, and he shoots first time, low, before the keeper is ready!",
+   "src": "/plays/narration/lenisio-futsal-signature/2.m4a",
+   "seconds": 10.4,
+   "words": [
+    {
+     "w": "His",
+     "at": 0.35
+    },
+    {
+     "w": "famous",
+     "at": 0.55
+    },
+    {
+     "w": "move",
+     "at": 0.963
+    },
+    {
+     "w": "is",
+     "at": 1.325
+    },
+    {
+     "w": "the",
+     "at": 1.475
+    },
+    {
+     "w": "quick",
+     "at": 1.575
+    },
+    {
+     "w": "finish",
+     "at": 1.863
+    },
+    {
+     "w": "Here",
+     "at": 2.8
+    },
+    {
+     "w": "s",
+     "at": 3.375
+    },
+    {
+     "w": "how",
+     "at": 3.575
+    },
+    {
+     "w": "he",
+     "at": 3.737
+    },
+    {
+     "w": "does",
+     "at": 3.85
+    },
+    {
+     "w": "it",
+     "at": 4.088
+    },
+    {
+     "w": "The",
+     "at": 4.787
+    },
+    {
+     "w": "pass",
+     "at": 4.9
+    },
+    {
+     "w": "comes",
+     "at": 5.3
+    },
+    {
+     "w": "into",
+     "at": 5.562
+    },
+    {
+     "w": "the",
+     "at": 5.737
+    },
+    {
+     "w": "box",
+     "at": 5.825
+    },
+    {
+     "w": "and",
+     "at": 6.438
+    },
+    {
+     "w": "he",
+     "at": 6.537
+    },
+    {
+     "w": "shoots",
+     "at": 6.688
+    },
+    {
+     "w": "first",
+     "at": 7.025
+    },
+    {
+     "w": "time",
+     "at": 7.3
+    },
+    {
+     "w": "low",
+     "at": 7.675
+    },
+    {
+     "w": "before",
+     "at": 8.125
+    },
+    {
+     "w": "the",
+     "at": 8.412
+    },
+    {
+     "w": "keeper",
+     "at": 8.5
+    },
+    {
+     "w": "is",
+     "at": 8.875
+    },
+    {
+     "w": "ready",
+     "at": 9.025
+    }
+   ]
+  },
+  {
+   "label": "Watch again",
+   "text": "Watch again, slowly. The keeper is still moving across. The ball is already past him.",
+   "src": "/plays/narration/lenisio-futsal-signature/3.m4a",
+   "seconds": 6.6,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.137
+    },
+    {
+     "w": "The",
+     "at": 2.075
+    },
+    {
+     "w": "keeper",
+     "at": 2.175
+    },
+    {
+     "w": "is",
+     "at": 2.538
+    },
+    {
+     "w": "still",
+     "at": 2.625
+    },
+    {
+     "w": "moving",
+     "at": 2.9
+    },
+    {
+     "w": "across",
+     "at": 3.2
+    },
+    {
+     "w": "The",
+     "at": 4.0
+    },
+    {
+     "w": "ball",
+     "at": 4.1
+    },
+    {
+     "w": "is",
+     "at": 4.425
+    },
+    {
+     "w": "already",
+     "at": 4.55
+    },
+    {
+     "w": "past",
+     "at": 4.925
+    },
+    {
+     "w": "him",
+     "at": 5.312
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn. Shoot early in the box, because futsal keepers have less time to react!",
+   "src": "/plays/narration/lenisio-futsal-signature/4.m4a",
+   "seconds": 6.0,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.512
+    },
+    {
+     "w": "Shoot",
+     "at": 1.413
+    },
+    {
+     "w": "early",
+     "at": 1.7
+    },
+    {
+     "w": "in",
+     "at": 2.013
+    },
+    {
+     "w": "the",
+     "at": 2.087
+    },
+    {
+     "w": "box",
+     "at": 2.175
+    },
+    {
+     "w": "because",
+     "at": 2.638
+    },
+    {
+     "w": "futsal",
+     "at": 2.913
+    },
+    {
+     "w": "keepers",
+     "at": 3.35
+    },
+    {
+     "w": "have",
+     "at": 3.75
+    },
+    {
+     "w": "less",
+     "at": 3.975
+    },
+    {
+     "w": "time",
+     "at": 4.2
+    },
+    {
+     "w": "to",
+     "at": 4.45
+    },
+    {
+     "w": "react",
+     "at": 4.55
+    }
+   ]
+  }
+ ]
+}

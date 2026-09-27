@@ -1,0 +1,386 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: the Euro 2022 semi-final",
+   "text": "Euro 2022 semi-final. Portugal were two down to Spain, but Zicky made it two all. One minute to go, and Zicky scores again! Three two!",
+   "src": "/plays/narration/zicky-te-futsal-signature/1.m4a",
+   "seconds": 10.7,
+   "words": [
+    {
+     "w": "Euro",
+     "at": 0.4
+    },
+    {
+     "w": "2022",
+     "at": 0.7
+    },
+    {
+     "w": "semi-final",
+     "at": 1.637
+    },
+    {
+     "w": "Portugal",
+     "at": 2.812
+    },
+    {
+     "w": "were",
+     "at": 3.312
+    },
+    {
+     "w": "two",
+     "at": 3.438
+    },
+    {
+     "w": "down",
+     "at": 3.65
+    },
+    {
+     "w": "to",
+     "at": 3.913
+    },
+    {
+     "w": "Spain",
+     "at": 4.037
+    },
+    {
+     "w": "but",
+     "at": 4.65
+    },
+    {
+     "w": "Zicky",
+     "at": 4.812
+    },
+    {
+     "w": "made",
+     "at": 5.2
+    },
+    {
+     "w": "it",
+     "at": 5.388
+    },
+    {
+     "w": "two",
+     "at": 5.487
+    },
+    {
+     "w": "all",
+     "at": 5.7
+    },
+    {
+     "w": "One",
+     "at": 6.412
+    },
+    {
+     "w": "minute",
+     "at": 6.612
+    },
+    {
+     "w": "to",
+     "at": 6.85
+    },
+    {
+     "w": "go",
+     "at": 6.95
+    },
+    {
+     "w": "and",
+     "at": 7.3
+    },
+    {
+     "w": "Zicky",
+     "at": 7.438
+    },
+    {
+     "w": "scores",
+     "at": 7.838
+    },
+    {
+     "w": "again",
+     "at": 8.275
+    },
+    {
+     "w": "Three",
+     "at": 8.975
+    },
+    {
+     "w": "two",
+     "at": 9.325
+    }
+   ]
+  },
+  {
+   "label": "Champions of Europe",
+   "text": "Two days later, Portugal beat Russia in the final. Champions of Europe! And Zicky is player of the tournament.",
+   "src": "/plays/narration/zicky-te-futsal-signature/2.m4a",
+   "seconds": 7.8,
+   "words": [
+    {
+     "w": "Two",
+     "at": 0.35
+    },
+    {
+     "w": "days",
+     "at": 0.525
+    },
+    {
+     "w": "later",
+     "at": 0.8
+    },
+    {
+     "w": "Portugal",
+     "at": 1.275
+    },
+    {
+     "w": "beat",
+     "at": 1.8
+    },
+    {
+     "w": "Russia",
+     "at": 2.087
+    },
+    {
+     "w": "in",
+     "at": 2.45
+    },
+    {
+     "w": "the",
+     "at": 2.538
+    },
+    {
+     "w": "final",
+     "at": 2.638
+    },
+    {
+     "w": "Champions",
+     "at": 3.525
+    },
+    {
+     "w": "of",
+     "at": 4.138
+    },
+    {
+     "w": "Europe",
+     "at": 4.225
+    },
+    {
+     "w": "And",
+     "at": 4.95
+    },
+    {
+     "w": "Zicky",
+     "at": 5.138
+    },
+    {
+     "w": "is",
+     "at": 5.525
+    },
+    {
+     "w": "player",
+     "at": 5.688
+    },
+    {
+     "w": "of",
+     "at": 6.138
+    },
+    {
+     "w": "the",
+     "at": 6.213
+    },
+    {
+     "w": "tournament",
+     "at": 6.3
+    }
+   ]
+  },
+  {
+   "label": "How he does it",
+   "text": "His trademark is the hold-up and turn. Here\u2019s how he does it: back to goal, he sits low and holds off the defender. He feels him lean, spins, and shoots!",
+   "src": "/plays/narration/zicky-te-futsal-signature/3.m4a",
+   "seconds": 11.1,
+   "words": [
+    {
+     "w": "His",
+     "at": 0.35
+    },
+    {
+     "w": "trademark",
+     "at": 0.537
+    },
+    {
+     "w": "is",
+     "at": 1.113
+    },
+    {
+     "w": "the",
+     "at": 1.25
+    },
+    {
+     "w": "hold-up",
+     "at": 1.363
+    },
+    {
+     "w": "and",
+     "at": 1.85
+    },
+    {
+     "w": "turn",
+     "at": 1.988
+    },
+    {
+     "w": "Here",
+     "at": 2.913
+    },
+    {
+     "w": "s",
+     "at": 3.375
+    },
+    {
+     "w": "how",
+     "at": 3.55
+    },
+    {
+     "w": "he",
+     "at": 3.725
+    },
+    {
+     "w": "does",
+     "at": 3.85
+    },
+    {
+     "w": "it",
+     "at": 4.088
+    },
+    {
+     "w": "back",
+     "at": 4.575
+    },
+    {
+     "w": "to",
+     "at": 4.85
+    },
+    {
+     "w": "goal",
+     "at": 4.95
+    },
+    {
+     "w": "he",
+     "at": 5.375
+    },
+    {
+     "w": "sits",
+     "at": 5.513
+    },
+    {
+     "w": "low",
+     "at": 5.8
+    },
+    {
+     "w": "and",
+     "at": 6.125
+    },
+    {
+     "w": "holds",
+     "at": 6.25
+    },
+    {
+     "w": "off",
+     "at": 6.537
+    },
+    {
+     "w": "the",
+     "at": 6.75
+    },
+    {
+     "w": "defender",
+     "at": 6.85
+    },
+    {
+     "w": "He",
+     "at": 7.875
+    },
+    {
+     "w": "feels",
+     "at": 8.037
+    },
+    {
+     "w": "him",
+     "at": 8.287
+    },
+    {
+     "w": "lean",
+     "at": 8.488
+    },
+    {
+     "w": "spins",
+     "at": 9.025
+    },
+    {
+     "w": "and",
+     "at": 9.588
+    },
+    {
+     "w": "shoots",
+     "at": 9.725
+    }
+   ]
+  },
+  {
+   "label": "Practise it",
+   "text": "Your turn: back to goal, hold off the defender, spin and shoot!",
+   "src": "/plays/narration/zicky-te-futsal-signature/4.m4a",
+   "seconds": 4.9,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.525
+    },
+    {
+     "w": "back",
+     "at": 1.225
+    },
+    {
+     "w": "to",
+     "at": 1.5
+    },
+    {
+     "w": "goal",
+     "at": 1.6
+    },
+    {
+     "w": "hold",
+     "at": 2.0
+    },
+    {
+     "w": "off",
+     "at": 2.237
+    },
+    {
+     "w": "the",
+     "at": 2.413
+    },
+    {
+     "w": "defender",
+     "at": 2.487
+    },
+    {
+     "w": "spin",
+     "at": 3.013
+    },
+    {
+     "w": "and",
+     "at": 3.375
+    },
+    {
+     "w": "shoot",
+     "at": 3.525
+    }
+   ]
+  }
+ ]
+}

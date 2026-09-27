@@ -1,0 +1,386 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Live: the 2026 final",
+   "text": "The 2026 Futsal Euro final: Spain against Portugal, with D\u00eddac Plana in goal. Spain win, five goals to three! He is famous for lightning saves.",
+   "src": "/plays/narration/didac-plana-futsal-signature/1.m4a",
+   "seconds": 11.7,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "2026",
+     "at": 0.425
+    },
+    {
+     "w": "Futsal",
+     "at": 1.363
+    },
+    {
+     "w": "Euro",
+     "at": 1.8
+    },
+    {
+     "w": "final",
+     "at": 2.112
+    },
+    {
+     "w": "Spain",
+     "at": 2.95
+    },
+    {
+     "w": "against",
+     "at": 3.35
+    },
+    {
+     "w": "Portugal",
+     "at": 3.725
+    },
+    {
+     "w": "with",
+     "at": 4.3
+    },
+    {
+     "w": "D\u00eddac",
+     "at": 4.487
+    },
+    {
+     "w": "Plana",
+     "at": 4.912
+    },
+    {
+     "w": "in",
+     "at": 5.275
+    },
+    {
+     "w": "goal",
+     "at": 5.425
+    },
+    {
+     "w": "Spain",
+     "at": 6.537
+    },
+    {
+     "w": "win",
+     "at": 6.975
+    },
+    {
+     "w": "five",
+     "at": 7.463
+    },
+    {
+     "w": "goals",
+     "at": 7.825
+    },
+    {
+     "w": "to",
+     "at": 8.15
+    },
+    {
+     "w": "three",
+     "at": 8.287
+    },
+    {
+     "w": "He",
+     "at": 9.05
+    },
+    {
+     "w": "is",
+     "at": 9.2
+    },
+    {
+     "w": "famous",
+     "at": 9.35
+    },
+    {
+     "w": "for",
+     "at": 9.75
+    },
+    {
+     "w": "lightning",
+     "at": 9.875
+    },
+    {
+     "w": "saves",
+     "at": 10.262
+    }
+   ]
+  },
+  {
+   "label": "How he saves (demo)",
+   "text": "This is how he saves. He stays up on his toes, knees soft, hands ready. The shot comes, and he snaps out a leg. Blocked!",
+   "src": "/plays/narration/didac-plana-futsal-signature/2.m4a",
+   "seconds": 9.0,
+   "words": [
+    {
+     "w": "This",
+     "at": 0.375
+    },
+    {
+     "w": "is",
+     "at": 0.575
+    },
+    {
+     "w": "how",
+     "at": 0.7
+    },
+    {
+     "w": "he",
+     "at": 0.9
+    },
+    {
+     "w": "saves",
+     "at": 1.038
+    },
+    {
+     "w": "He",
+     "at": 1.9
+    },
+    {
+     "w": "stays",
+     "at": 2.025
+    },
+    {
+     "w": "up",
+     "at": 2.312
+    },
+    {
+     "w": "on",
+     "at": 2.462
+    },
+    {
+     "w": "his",
+     "at": 2.562
+    },
+    {
+     "w": "toes",
+     "at": 2.725
+    },
+    {
+     "w": "knees",
+     "at": 3.225
+    },
+    {
+     "w": "soft",
+     "at": 3.55
+    },
+    {
+     "w": "hands",
+     "at": 3.975
+    },
+    {
+     "w": "ready",
+     "at": 4.35
+    },
+    {
+     "w": "The",
+     "at": 5.1
+    },
+    {
+     "w": "shot",
+     "at": 5.237
+    },
+    {
+     "w": "comes",
+     "at": 5.525
+    },
+    {
+     "w": "and",
+     "at": 5.912
+    },
+    {
+     "w": "he",
+     "at": 6.013
+    },
+    {
+     "w": "snaps",
+     "at": 6.138
+    },
+    {
+     "w": "out",
+     "at": 6.513
+    },
+    {
+     "w": "a",
+     "at": 6.662
+    },
+    {
+     "w": "leg",
+     "at": 6.725
+    },
+    {
+     "w": "Blocked",
+     "at": 7.525
+    }
+   ]
+  },
+  {
+   "label": "From behind him (demo)",
+   "text": "From behind him: the ball is so close, there is no time to dive. Quick feet and quick hands win it.",
+   "src": "/plays/narration/didac-plana-futsal-signature/3.m4a",
+   "seconds": 7.3,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.375
+    },
+    {
+     "w": "behind",
+     "at": 0.525
+    },
+    {
+     "w": "him",
+     "at": 0.963
+    },
+    {
+     "w": "the",
+     "at": 1.475
+    },
+    {
+     "w": "ball",
+     "at": 1.575
+    },
+    {
+     "w": "is",
+     "at": 1.875
+    },
+    {
+     "w": "so",
+     "at": 2.013
+    },
+    {
+     "w": "close",
+     "at": 2.263
+    },
+    {
+     "w": "there",
+     "at": 2.8
+    },
+    {
+     "w": "is",
+     "at": 2.95
+    },
+    {
+     "w": "no",
+     "at": 3.1
+    },
+    {
+     "w": "time",
+     "at": 3.275
+    },
+    {
+     "w": "to",
+     "at": 3.575
+    },
+    {
+     "w": "dive",
+     "at": 3.675
+    },
+    {
+     "w": "Quick",
+     "at": 4.537
+    },
+    {
+     "w": "feet",
+     "at": 4.812
+    },
+    {
+     "w": "and",
+     "at": 5.1
+    },
+    {
+     "w": "quick",
+     "at": 5.225
+    },
+    {
+     "w": "hands",
+     "at": 5.475
+    },
+    {
+     "w": "win",
+     "at": 5.9
+    },
+    {
+     "w": "it",
+     "at": 6.138
+    }
+   ]
+  },
+  {
+   "label": "Stay on your toes",
+   "text": "Now you: stay on your toes, so you can react fast to shots from close range!",
+   "src": "/plays/narration/didac-plana-futsal-signature/4.m4a",
+   "seconds": 5.8,
+   "words": [
+    {
+     "w": "Now",
+     "at": 0.425
+    },
+    {
+     "w": "you",
+     "at": 0.662
+    },
+    {
+     "w": "stay",
+     "at": 1.238
+    },
+    {
+     "w": "on",
+     "at": 1.512
+    },
+    {
+     "w": "your",
+     "at": 1.613
+    },
+    {
+     "w": "toes",
+     "at": 1.725
+    },
+    {
+     "w": "so",
+     "at": 2.35
+    },
+    {
+     "w": "you",
+     "at": 2.475
+    },
+    {
+     "w": "can",
+     "at": 2.562
+    },
+    {
+     "w": "react",
+     "at": 2.675
+    },
+    {
+     "w": "fast",
+     "at": 3.087
+    },
+    {
+     "w": "to",
+     "at": 3.438
+    },
+    {
+     "w": "shots",
+     "at": 3.562
+    },
+    {
+     "w": "from",
+     "at": 3.888
+    },
+    {
+     "w": "close",
+     "at": 4.025
+    },
+    {
+     "w": "range",
+     "at": 4.325
+    }
+   ]
+  }
+ ]
+}

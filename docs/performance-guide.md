@@ -1,5 +1,653 @@
 # Performance reference for future Futbol Island updates
 
+## Arcade bean-motion integration — September 26, 2026 (local, not deployed)
+
+Game-developer pass across Breakaway, Tennis, Pinball and Strikers preserves the bean shader/mesh architecture and shared island solver. The adapter now carries latched strike targets, action kind and power, authored dive/jump/skill channels, and state-driven face expressions. Game simulations still own ball release and root travel. Breakaway removes manual post-solver tackle rotations and hidden-classic role materials; visible bean outfits update on pooled role changes. Pinball reuses save structs and updates world matrices only when locating a downed player's star anchor. Strikers differentiates pass/shot/save and resets rig channels on retry. No new render loops, effect pools, lights or geometry. See [the integration review](arcade-bean-review-2026-09-26.md) for evidence and limitations. Mobile browser checks are emulation, not measurements of physical phone heat.
+
+## Card film stall on a real iPhone (deploy 3) — September 26, 2026
+
+Evidence: a Safari Web Inspector timeline of the live deploy-3 build, the Nadine Angerer film at 385–420 s. From about 391 s the film's rAF chain stops re-requesting frames (0–2 `animation-frame-requested` per 5 s, against ~55 before). Rendering frames last 0.8–6 s with composites up to 1.3 s, while WebContent CPU is ~6%. So the film was not drawing at all; rAF was not throttled, and the island's WebGL loop was already asleep. Root cause, reproduced in Playwright WebKit: the card's picture window changed height whenever the caption wrapped to a different number of lines (3 resizes in 12 s), and every resize reallocated the film canvas and its four plate canvases. With DPR-2 surfaces, iOS's lazily released canvas memory and the island's WebGL canvas, that churn stalls compositing. A plate canvas iOS refuses (null 2D context) threw in `paint()` outside its try, which ended the rAF loop silently while Stop still showed. Fixes: a fixed four-line caption box (`.filmBio p{height:5.6em}`), so the window keeps one size for the whole film (1 resize, at the start); `CardFilmPlayer` paints through a guard that frees the plates, steps the DPR down (1.5, then 1) and retries, ending the film cleanly after four failures in a row; `releaseSheet()` frees plate memory on resize and stop, and the visible canvas is zeroed on unmount; phones and tablets (coarse pointer) cap the film at DPR 1.5 (desktop 2, within heat-pass-4's `filmDprCap()`); animations under a playing film are paused (`.window:has(>canvas[data-card-film]) :not(canvas)`). The iterating CSS animations in the recording are the rest-timed scenery and HUD loops, which the user's taps during the film kept waking. Verified: WebKit iPhone emulation draws ~18.5 frames/s at DPR 1.5 with a stable canvas; riso output unchanged (190/190 frames); 360 film tests, cards e2e 4/4 and iconic-play UI green. Still to confirm on the device.
+
+## Card film sharpness: DPR 2 and "dots off the action" — September 26, 2026 (for deploy 3)
+
+User: the card stories looked blurry; the halftone dots were the main cause. Card films now print with `DotMode` 'action' (`lib/paths/riso/sheet.ts`, set per canvas by `CardFilmPlayer` via `setSheetDots`; `?dots=riso|off|action|fine` switches and remembers it for comparison). In 'action' mode these tints print flat: figures (`drawAthlete`/`groundShadow`/`motionSmear` raise `sheet._flat`), every ribbon, helper-built shapes under a fifth of the short side (bounds recorded in `pathExtent` by `polyPath`/`circlePath`/`rectPath`/`ribbon`/`crescent`), the two lightest levels (nets, mist, shadows) and paper knockouts. Large fields keep a fine, low-contrast screen (60% flat tint plus about 1.6 css px dots). Speckle is 0.55×, grain 0.8× and registration 0.7× of the spec, and plates register on whole device pixels. Path stories stay classic 'riso' (the bible's halftone art direction at full-screen size) and are pixel-identical to before. The card canvas cap is DPR 2, stepping down once to 1.5 if drawing holds under 17 fps over a 2 s window (a pause restarts the window). Measurements: DPR 3 was too heavy in phone emulation (14–18 fps and 39–82 long tasks for Banks, Rossi and Güler); DPR 2 is in the DPR 1.5 range. In WebKit (script plus raster), 'action'@2 took p50 17–21 ms against riso@1.5's 22–24 ms, because flat fills are cheaper than pattern fills. Comparison sheets (original, A dots off, B action, C fine) were reviewed by the user, who chose B. Tests: tsc, npm test, 360 film tests, 0 seam diffs (22 stories), cards e2e 4/4, iconic-play UI green. `tests/iconic-play-ui.cjs` now waits for the card's turn to settle (`turnSettled`) instead of a fixed 300 ms: a phone flip takes 950 ms, and a face caught mid-turn has no rendered text. The old wait failed on a loaded machine with the pre-round code as well.
+
+## Card Play Moment films ("a little laggy") — September 26, 2026 (local, not deployed)
+
+Profiled in headless Chrome, phone emulation (390×844, DPR 3, 4× CPU throttle) and desktop 1280×800. This is emulation, not an iPhone. What was already right: canvas 426×530 backing store for a 284×353 css window (DPR cap 1.5), one rAF loop, draws capped at 24 fps (20 fps at 60 Hz), the island's loop asleep (`holdVideoPlayback`), the card tilt off during a film, no per-frame `getImageData`, filters or `shadowBlur`. What was wrong:
+
+1. **Whole-document style recalcs under the film.** Every caption change re-rendered `PlayerCard`; `PlayerArt` then remounted ~50 SVG groups of its print (`FigureValues` defines its parts inline), and the caption swapped its `<mark>` in and out. Each node insert/remove under `<body>` trips the page's `body:has(…)`/`.town-app:has(…)` rules into a recalc of all ~3,400 elements: 35–135 ms each at 4×, about once a caption. Fixed in the card host: the portrait element is memoised (`useMemo`), and the caption always has the same three nodes (text, mark, text, with a zero-width space for an empty part; an unused mark is `data-empty`, hidden), so a cue only rewrites text. In a 14 s trace there is now no big recalc after the first second. Follow-ups the same day: `FigureValues` in `PlayerArt.tsx` now calls its paint parts as plain functions instead of defining components in render, so the portrait never remounts on a parent re-render anywhere (print-SVG markup and pixels of 5 drawn portraits identical); ModalShell's header rule matches `:has(button[data-navigation=back])` instead of `aria-label^="Back"` (every Back there is a `BackButton`), so label changes such as Play → Stop no longer recalc the whole page. Still open: the scenery-rest `data-scenery` toggle (`body:has([data-hud-triggers][data-scenery…])`) costs one such recalc; a film start pays ~2 for inserting the canvas and caption. Ricardinho's small in-app gain (41→38 missed vsyncs) was machine load (load average ~30); on a quiet machine, back to back: 6/11 → 3/1, garbage 57→42 MB/s. It is the lightest of the six films; nothing specific to it.
+2. **The film's JS scene building** (~75% of the main thread at 4×; athlete figures ~35–50% of it). Engine-level, pixel-identical: `key`/`keyPath`/`camKeys` read padded key values in place instead of re-padding every key list per call (was up to 13% of a frame); `ribbon` computes its `smoothPts → wob` centreline and edges in reused flat buffers; the athlete `hull` uses a comparator-free stable merge sort (~2×). `sheet.ts`: halftone/speckle/grain/mottle tiles are drawn once per session and shared by all films (a new film no longer rebuilds them on its first frames); pattern transforms are set once per transform change instead of per fill (getTransform + inverse + setTransform per fill: 80–110 → ~20 per frame); knockout/speckle/multiply skip a plate that is still empty. `CardFilmPlayer` checks the caption on drawn frames (not every display refresh) and splits each narration into sentences once.
+
+Validation: 190 frames of 19 films/stories at fixed timestamps are pixel-identical before/after (max channel diff 0); `review-riso-story.mjs` 0 seam diffs (22 stories); `tests/riso-engine-perf.cjs` compares the fast paths with the originals (278k exact comparisons). Same-page interleaved A/B of the engine alone: Chrome 1.14× (Banks 1.46×), WebKit 1.20×. In-app phone emulation, 10 s per film, before → after: missed vsyncs Messi 37→9, Zidane 43→4, Ricardinho 41→38, Banks 219→49, Rossi 140→40, Güler 74→9; long tasks 41 (3.2 s) → 14 (0.9 s); paint p95 25→22, 16→12, 18→15, 44→30, 38→25, 30→22 ms. Desktop was already smooth (paint 5–8 ms). Not tried: lower card DPR (WebKit raster cost did not change between DPR 1 and 1.5, it is path-bound), rendering in a worker (OffscreenCanvas; bigger change). Baking paper/bands/grain stays rejected (pass 2 row 9).
+
+## Bean character skin (lane A) — September 25, 2026 (local, not deployed)
+
+The bean characters (`docs/bean-characters/CONTRACT.md`) are a skin on the unchanged motion solver: `lib/graphics/beanSkin.ts`, `beanLook.ts`, `characterStyle.ts`, extended `playerBatch.ts`, and the hook at the end of `createPlayer`. `?characters=classic` renders the old body, for A/B comparisons in the browser.
+
+**How it stays cheap.**
+- **Four meshes per character**, shared by every rig: body, limbs, hair and hat. The same geometry, programs and textures serve every rig.
+- **Body.** One bean geometry covers every build. The shape and the weighted lumbar/chest bend are evaluated in the vertex shader. The body fragment shader paints the kit bands, the face (one shared 1120×640 face atlas, a cell chosen per character) and the back number (the existing shirt digit atlas). The face and number cost no extra draw, and both fade out when tiny, like the jersey numbers.
+- **Limbs.** Four noodle tubes, two mittens and two boots in one geometry. The tubes are bent in the vertex shader from the solver's shoulder/elbow/hand and hip/knee/ankle joints along a straight → arc → straight curve that cannot cusp. Thumbs vanish when the character is under about 34 px tall.
+- **Hair and hats.** Every style lives in one geometry each; the selected style keeps its vertices and the rest collapse outside the clip volume. Hair casts no shadow.
+- **Per-character data** is a 46-texel row:
+  - An individually rendered rig sends it as a uniform array. three.js caches it, so it is re-sent only when it changes, with no texture upload.
+  - `playerBatch` gives each bean batch two float textures with one row per instance (`gl_InstanceID`). The appearance texels (colours, face cell, number, shape) re-upload only when a look changes. The pose texels (2 per body/hair/hat row, 30 per limbs row) upload each moving frame: about 18 KB per frame for 32 characters, instead of about 50 KB with a single texture.
+- The pose row is refreshed once per render (`onBeforeRender`/`onBeforeShadow`, guarded by the renderer frame) or by the batch after its `updateMatrixWorld`. That is about 16 matrix reads per character, with no new loop or timer and no per-frame allocation.
+
+**Measured (emulation, not iPhone temperature).** Setup: dev server :8092, headless Chrome with ANGLE/Metal on the Mac. Phone profile: 390×844, DPR 3, touch, 4× CDP CPU throttle. Desktop: 1280×800, DPR 1. Values are medians of five alternating classic/bean runs of 60 renders each. "Town" is the app's own camera after load; "live 11v11" is the match camera over the 11v11 pitch with the simulation stepping. Draw calls and triangles include the shadow pass. Timings are one `renderer.render()` call (CPU), and the same plus a 1-pixel `readPixels` sync (GPU finished).
+
+| View | Style | Draw calls | Triangles | render() CPU | render + GPU sync |
+|---|---|---:|---:|---:|---:|
+| Town, phone | classic | 353 | 114k | 15.0 ms | 20.9 ms |
+| Town, phone | bean | **213** | 118k | 11.0 ms | 16.5 ms |
+| Live 11v11, phone | classic | 106 | ~178k | 10.5 ms | 14.6 ms |
+| Live 11v11, phone | bean | **98** | ~189k | 7.1 ms | 11.7 ms |
+| Town, desktop | classic | 687 | 311k | 4.2 ms | 9.7 ms |
+| Town, desktop | bean | **416** | 334k | 2.9 ms | 8.2 ms |
+| Live 11v11, desktop | classic | 247 | 319k | 2.2 ms | 6.9 ms |
+| Live 11v11, desktop | bean | **189** | 345k | 2.2 ms | 7.4 ms |
+
+- 32 characters in one batch (`tests/bean-skin.cjs`, real `renderer.info`): classic 21 draws (colour + shadow), bean 5.
+- Town draw calls fall about 40%: an individually rendered NPC is 4 draws instead of about 18 merged classic meshes. Live-match draws fall 8–23%; the rest of the scene dominates that view.
+- **Tradeoff:** counted triangles rise 4–8%. `renderer.info` counts the hair/hat styles that are collapsed and never rasterised. Per character, the rasterised cost is about 1.9k (body) + 3.0k (limbs) + one style's 0.25–1k triangles, against about 6.8k classic.
+- The run-to-run spread was large (machine load about 2–12, other agents building). Treat the timing columns as "not worse", not as a measured saving.
+- Validation: `tests/bean-skin.cjs` (below), plus tsc, `npm test` and the player, shirt-number, choreo, live, heat and frame-cap tests in their default (classic Node) fixtures.
+- Headless Node, and fixtures that only mock `document`, keep the classic body so the existing mesh-count tests keep their fixtures. With bean forced in, every motion test passes. Only the classic-geometry counts differ (batch counts, jersey morph texture, classic number panel).
+- `player-body-review`, `movement-work`, `live-knockout-work` and `volleyball-batch` fail identically in classic style. They fail from earlier or parallel work: `live-knockout-work` already showed `13 !== 14` at 13:41 today, before this lane.
+
+## Manhole ball hunt — September 25, 2026 (local, not deployed)
+
+Twenty-five football manhole covers, one at every `world.roadJunctions` centre, each hiding a Ball hunt ball (55 → 80) opened only by flying over and dropping onto it (`lib/graphics/manholeCovers.ts`, `coinHunt.ts`, data in `coinQuest.ts`, 25 "from above" lessons in `ballHuntLessons.ts`, tests `tests/manhole-balls.cjs`). **Added runtime cost:** three instanced draws (rims, covers, glints; the glint mesh is hidden unless a flyer is within 45 m of an unfound cover), one baked 128² colour and bump `DataTexture` shared by every cover, receive-only shadows, no colliders. Per frame there is no new loop: arming, glint and hint checks run inside the existing ball-hunt proximity loop, and matrices upload only during a 0.6 s one-shot opening tween or when a glint toggles. The glint mesh has `frustumCulled=false` because its instances start at zero scale. Not measured on an iPhone.
+
+## Heat audit — September 25, 2026 (local, not deployed)
+
+User report: "the phone is still warm at times." This section covers reduced work measured in emulation. It is **not** a measured iPhone temperature drop.
+
+**Method.** Dev server :8092, headless Chrome (Playwright), phone profile 390×844 DPR 3 with touch and a 4× CDP CPU throttle, machine load about 2. An init script counts rAF callbacks (attributed by callback), WebGL/2D draw frames per canvas, timers, live WebGL contexts, AudioContext states and playing media. CDP `Performance.getMetrics` gives Script/Task/Style/Layout ms per second. A trace gives compositor swaps (`Display::DrawAndSwap`), Paint and GPU `FinishPaintRenderPass` time per 4 s window. Scripts are in the session scratchpad under `heat/` (`lib.mjs`, `s1`–`s4.mjs`, `hudab.mjs`, `bottleab.mjs`, `strikers.mjs`, `prof.mjs`).
+
+**Already quiet (no change needed):** the island sleeps (0 frames, 0 rAF) behind Paths, the binder, the card viewer, the arcade menu, Pass Puzzles, the card offer, a waiting or answered quiz, a draw-the-pass aim and a story film. The binder, the card viewer (after its 6 s scenery rest) and Paths all measure 0 swaps at rest. Pass Puzzles renders nothing on its level list, brief, aim or result, and about 28 fps only while the ball flies. Backgrounding stops island renders and suspends audio. In a CPU profile of live 11v11 watching, choreo took 6 ms of 7.5 s. The 3D shirt numbers are one instanced mesh (22 instances) with no per-frame upload. Island DPR 2 / 30 fps, story and arcade DPR 1.5, bottle DPR 2.
+
+**Implemented.**
+1. **Bottle wave grain moved out of the per-frame canvas** (`components/IslandBottle.tsx`, `IslandBottle.module.css` `.waveGrain`). The 24 fps loop had filled the whole 780×1688 canvas with a `multiply` grain pattern on every draw. An A/B with only that fill skipped showed it was about 90% of the scene's main-thread time. The grain is now one static CSS layer (`mix-blend-mode:multiply`, opacity .36, the same image at the same CSS-pixel scale and origin). JS clips it to the drawn water with `clip-path`, writing only when the edge moves (during entry and exit).
+   - Parity: reduced-motion settled frames before and after differ by at most 8/255, mean 0.41, 0 pixels over 24. The mid-entrance frame was checked by eye.
+   - Bottle floating: TaskDuration 784–866 → 29 ms/s. Script 5–7 → 3–4 ms/s. Swaps unchanged at 20/s. GPU pass 3.3–8.8 → 6.2–6.6 ms per 4 s.
+2. **Bottle loop stops with its dialog.** Escape (or Android back) with the quote showing closed Paths itself. The bottle stayed mounted with a zero-size canvas, its rAF chain ran on at 60/s behind the island, and the ocean event never ended. Now the loop stops on a zero-size canvas and restarts on resize, and the bottle closes when its host `<dialog>` fires `close`. After Escape: 60 → 0 wave rAF/s.
+3. **Covered Paths art rests under the bottle** (`lib/sceneryRest.ts`). Taps inside the bottle (an in-page `[role=dialog][aria-modal=true]` inside the Paths `<dialog>`) woke the hidden landing art and the badge colour repaint behind it. The cover check now includes in-page modal layers. Quote showing: 5 → 0 running loops, TaskDuration 853 → 11.5 ms/s. The card viewer's own scenery is inside its modal layer, so it still wakes normally.
+4. **HUD loops pause under Island Strikers** (`components/LiveArcadeMatch.tsx` `data-fullscreen-game`, `IslandSettings.module.css`). Strikers is a full-screen `<section>`, not a `<dialog>`, so the Paths button shake, sparkle and icon cycle (and the field prompt pulse) kept the compositor at 60 fps under it. Portrait "turn sideways" screen: 59.9 → 0 swaps/s, GPU 10.7 → 0 ms and paint 15.8 → 0 ms per 4 s, 7 → 0 animations. Landscape play is now 31.5 swaps/s at its 30 fps loop.
+- Tests: `tests/heat-idle.cjs` (new, source checks). `tests/card-rewards.cjs` has its scenery-guard regex updated. `tsc`, `npm test`, bottle-motion, bottle-audio, frame-cap and lighting-idle pass.
+
+**Approved follow-up, implemented the same day (user approved proposals 5–8).** Before and after use the same scripts and the same phone profile (`heat/hudrest.mjs`, `offer2.mjs`, `s2.mjs live`). The load average was about 2.5.
+5. **HUD loops and field prompt pulse rest 6 s after the last input** (`components/IslandSettings.tsx` `useSceneryRest(triggers, hudRest, hudSettle)`, `IslandSettings.module.css` `.hudRest`, `app/globals.css`).
+   - Any pointer, wheel, key or focus event wakes them.
+   - `useSceneryRest` gained an optional `settle(el)` delay. The HUD uses it to freeze only between swaps and shakes (250–2350 ms into the button's 3 s cycle), so a rest never shows a half-blurred icon or a tilted button.
+   - The sparkle dots fade out (a 0.5 s `filter:opacity(0)` transition) instead of freezing mid-fade.
+   - The field card's pulse pauses via `body:has([data-hud-triggers][data-scenery=rest])`. Only the pulse pauses; the entry fade keeps running.
+   - Checked across four rests: one icon fully shown, `transform:none`, 0 running animations. It wakes on a pointer move and rests again after Paths closes.
+   - Island idle by the pitch, 8–17 s after input:
+
+     | | Before | After |
+     |---|---|---|
+     | Swaps/s | 60 | 30 |
+     | GPU per 4 s | 42–49 ms | 3.9–4 ms |
+     | Paint per 4 s | 61–68 ms | 0 |
+     | Style | 59–61 ms/s | 0 |
+     | TaskDuration | 526–558 ms/s | 366–380 ms/s |
+
+   - The first 4 s after input (loops awake): GPU 50 → 20 ms per 4 s, mostly from change 6.
+   - Trade-off: the discoverability loops stop while the child is idle and restart on the next touch or key.
+6. **Field card: no backdrop blur.** `rgba(244,232,193,.95)` replaces `.86` plus `blur(6px)` (the hover state already used .95). Card crops before and after: mean difference 3.1/255, 0.16% of pixels over 24 (the scene behind shows through slightly less).
+7. **Pick-a-card stars rest** (`CardOffer.tsx` `Sparkles` with `useSceneryRest`, `CardOffer.module.css` `.sparklesRest`).
+   - The 18 stars freeze on their current frame (still visible) 6 s after they appear or after the last input, on the deck and around the revealed card. Arrows and pointer moves wake them.
+   - The reveal's scenery-pause rule now excludes `[data-sparkles]`.
+   - Deck at rest and reveal at rest: 60 → 0 swaps/s, 13–17 → 0 ms GPU per 4 s.
+8. **No lesson-beat timer without a lesson** (`FieldLearning.tsx`: `FieldVisualBeat` is hidden while `!chosen`).
+   - Live watching: 3 intervals at 11 wakeups/s → 2 at 2.5/s.
+   - The beat still appears once a play is chosen (browser-checked).
+- Gates: `tsc`, `npm test`, `tests/heat-idle.cjs` (extended) and `tests/card-rewards.cjs` pass, with two source regexes updated for the new selectors. `lighting-idle` also passes.
+
+**Still open (not implemented):**
+
+| Cause | Measured cost | Option |
+|---|---|---|
+| Arcade `renderer.dispose()` without `forceContextLoss()` | The WebGL context lingers until GC after leaving a game (memory, not per-frame work) | Not safe in the shared stage: Pass Puzzles and ArcadeGame3D reuse their React canvas (and Strict Mode remounts), and a lost context would break the next renderer. Only safe where the canvas is created fresh (Strikers). |
+| `FieldTranscript` refreshes the live match summary at 2 Hz | 2 small re-renders/s while watching | Minor; left as is. |
+| Riso story film: one offscreen plate canvas per ink plus the visible canvas, both about 20 fps | TaskDuration 148 ms/s, 25 swaps/s | Engine-owned art pipeline; no change. |
+
+Notes: the second island WebGL context seen in dev is React Strict Mode's discarded first mount (dev only). Flight was not touched; another agent owns the flight files.
+
+## Heat audit pass 2: 3D rendering — September 25, 2026 (local, not deployed)
+
+**These are emulation measurements, not iPhone temperatures.** Reduced work in headless Chrome on a Mac does not prove a cooler phone. The desktop GPU also switches clock states during a run, so the same frame can take 1.6 or 2.7 ms. Only interleaved A/B runs in the same session are compared below, and effects smaller than about 10% are called "not measurable".
+
+**Method.** Dev server :8092. Headless Chrome (Playwright), 390×844 CSS at DPR 3, touch, and a 4× CDP CPU throttle (1× for the parity and capture scripts). Load average was 2–5.
+- A wrapper around `renderer.render` counts colour and shadow draw calls and triangles per frame, since three's own `info` resets after the shadow pass.
+- It also records the CPU time inside `render()`, the time of Town's `animate()` callback, and `EXT_disjoint_timer_query_webgl2` GPU time for the shadow pass and the colour pass.
+- CDP `Performance.getMetrics` gives task and script ms/s. Traces give swaps and GPU passes. The CDP sampling profiler gives per-function costs.
+- Scripts are in the session scratchpad under `heat2/`:
+  - `lib2.mjs`, `scen.mjs`: the per-scenario measurements.
+  - `prof.mjs`: CPU profiles.
+  - `calls.mjs`: draw calls broken down by object.
+  - `ab.mjs`: interleaved A/B of render settings.
+  - `parity.mjs`: same-frame pixel diffs.
+  - `tod.mjs`: time-of-day switch hitches.
+  - `shots.mjs`, `compose.py`: proposal screenshots.
+  - `story.mjs`, `riso-perf2.mjs`: the film.
+
+**Baseline per scenario** (before this pass; GPU is the median per rendered frame; the island renders at 30 fps):
+
+| Scenario | Draw calls, colour / shadow | Triangles, colour / shadow | `render()` CPU | `animate()` | GPU shadow + colour | Task ms/s |
+|---|---|---|---|---|---|---|
+| Idle hover at spawn | 380 / 356 | 120k / 137k | 7.8 ms | 11.4 ms | 0.98 + 4.29 ms | 418 |
+| Flying (default cruise, heads out over the sea) | 119 / 108 | 44k / 54k | 4.2 | 6.8 | 0.90 + 3.06 | 311 |
+| Beach and ocean, hover / flying | 292 / 230 · 285 / 322 | 230k / 239k | 6.0 · 8.1 | 9.6 · 11.5 | 0.78 + 2.97 · 1.22 + 4.49 | 303 · 447 |
+| Walking idle / running in town | 300 / 354 · 245 / 353 | 96k / 139k | 6.7 | 9.7 · 9.9 | 1.01 + 3.53 · 1.02 + 3.76 | 321 · 371 |
+| Moped driving | 180 / 246 | 55k / 94k | 5.8 | 8.5 | 0.99 + 3.58 | 315 |
+| Live 11v11, watching (isolated field view) | 35 / 12 | 162k / 151k | 0.9 | 3.4 | 0.84 + 2.86 | 117 |
+| Night, idle / flying | 390 / 356 · 124 / 106 | same as day | 7.6 · 4.4 | 11.2 · 6.8 | 0.98 + 4.41 · 0.89 + 2.98 | 403 · 298 |
+
+- Pass Puzzles: 0 frames on its level list, aim and result. About 28 fps only while the ball flies (task 151 ms/s, GPU passes 1.4 ms per 4 s).
+- A story film (Love Futsal): 20 fps canvas, task 90–129 ms/s, script 66–89 ms/s, GPU passes 4–5 ms per 4 s.
+- Render resolution:
+  - The island draws 780×1688 into a 390×844 canvas: DPR is capped at 2 on a DPR 3 phone.
+  - `FrameBudget` is constructed in Town but never sampled, so there is no dynamic resolution.
+  - MSAA (`antialias:true`), ACES tone mapping, no fog, no postprocessing.
+- Shadows:
+  - One 2048² PCFSoft sun shadow map. `autoUpdate` is on (the mobile framebuffer shadow cache stays disabled; see the rejected experiments).
+  - The frustum is fitted per elevation to about 268 × 99 m.
+  - 4 spot lights never cast shadows.
+- Programs: 23 in the day and 36 after visiting night.
+- Frame cap: the 30 fps slot cap holds. Frames are skipped entirely only when nothing is alive (menus, quizzes, aim). An idle hover is not unchanged: townsfolk, traffic, water and matches keep moving.
+- GC: 1.9 ms/s of garbage collection while walking (4×). Per-frame allocation churn is not a measurable cost.
+- Audio: 0 oscillators and 0 buffer sources while hovering or walking idle. (Corrected in pass 4: the shared context actually stayed running for the whole visible session; it now suspends when nothing is audible.)
+
+**Ranked findings** (idle hover unless noted; savings are per rendered frame at 30 fps):
+
+| # | Scenario | Cause | Measured cost | Estimated saving | Visual risk | Status |
+|---|---|---|---|---|---|---|
+| 1 | All daytime and sunset island views | 4 pooled pitch spot lights kept at intensity 0 by day, but still evaluated in every lit fragment | Colour pass 4.3 → 2.8 ms; forcing them on in a frozen frame costs +54% | −18% to −35% colour-pass GPU | None (same-frame diff ≤ 17 px at 1/255) | **Implemented** |
+| 2 | Resolution, all island views | DPR 2 cap on DPR 3 phones means 1.32 Mpx | 1.5 → 0.74 Mpx (−44% fragments) | −6% to −25% frame GPU in emulation; likely larger on a fill-bound phone GPU | Softer edges and text on signs | **Proposal A** |
+| 3 | Idle, walking | NPC walkability checks: the rooftop landing surfaces wrapped every static roof prop in getters, so the obstacle grid scanned them all on every query | `canTravel` 37.9 ms/s (4×), 9% of `animate()` | 37.9 → 19.0 ms/s; `islandNpcs.update` 61 → 50 ms/s | None (20,000-point parity) | **Implemented** |
+| 4 | All | Shadow pass CPU: 356 depth draws/frame, mostly the 25–45 meshes of each townsperson rig | 1.6 ms of `render()` CPU (21%) + 1.0 ms GPU | See #5 and proposals B/D | — | Partly addressed |
+| 5 | Beach, town edges | Moving shadow casters (rigs, rides, cars) whose shadow cannot reach the view were still drawn into the shadow map | 0–26 extra shadow draws/frame | 0–5% of draws | None (0 px diff, 6 views) | **Implemented** |
+| 6 | Shadows | 2048² PCFSoft map | 0.98 ms | −0.26 to −0.4 ms with 1024² | Blurrier shadows | **Proposal B** |
+| 7 | Scenery materials | `MeshStandardMaterial` on all static scenery | — | Not measurable to −16% colour (inconsistent between runs) | Flatter shading | **Proposal C (weak)** |
+| 8 | Characters | Tiny parts (hands, elbows, ponytails) cast their own shadows | About 70 shadow draws/frame | No measurable GPU change | Missing hand shadows up close | **Proposal D (weak)** |
+| 9 | Story film | The riso JS scene construction (`wob`, `smoothPts`, `ribbon` paths) dominates. Plate compositing is small: `drawImage` 7 ms/s | Script 66–89 ms/s at 4× | Baking the paper, stock bands and grain into one cached layer: no measurable in-app change | 3/255 rounding | Tried, **not kept** |
+| 10 | Live 11v11 | Sim, poses, numbers, trail | 3.4 ms `animate()`; `matchSim` about 16 ms/s | — | — | Fine as is |
+| 11 | MSAA | `antialias:true` at DPR 2 | Not measurable here (clock noise larger than the effect); tile GPUs resolve MSAA on-chip | — | Jaggies | Not proposed |
+
+**Implemented (pixel-identical, gates below).**
+1. **Pitch spot pool leaves the shader outside night** (`lib/town/fieldLighting.ts`).
+   - `lightRoot.visible = night || blend > 0`. In day and sunset, once the fade has settled, the four zero-intensity spots are not in the light list, so every lit material compiles without them.
+   - Within night, the pool stays visible even in zero-intensity teaching views, so lessons never switch shader variants.
+   - Cost: the first switch into night in a session compiles the second variant, one 117 ms frame at 4× CPU behind the Settings sheet. Later switches measured ≤ 16.8 ms frames (both variants cached: 36 programs). A saved-night start compiles as before.
+   - Same-frame parity in 5 views: at most 17 of 1.32 M pixels differ, each by 1/255.
+   - GPU colour pass, interleaved in one session: idle 3.48 → 2.84 ms, beach 3.96 → 2.57 ms; day after a round trip 3.8–4.4 → 2.7–2.8 ms. Night is unchanged (4.4 ms), as expected.
+2. **Dynamic shadow-caster culling** (`lib/graphics/shadowVisibility.ts` `addDynamicRoots`; Town registers `islandNpcs.root` and `streetTraffic.root`).
+   - Each direct child (a rig, a ride or a car) gets a bounding sphere measured once around its origin, padded by 2.5 m for poses (minimum 3 m).
+   - Each shadow frame, that sphere is swept along the sunlight to y = −8 like the static chunks. A unit whose volume misses the view is hidden for the shadow pass only and restored in `finally`.
+   - Parity: 0 differing pixels in idle, town, square, beach, walk and fly views.
+   - Saves 0–26 shadow draws a frame (8 idle, 26 beach, 26 flying). Tightening the padding to 0.5 m would not cull more: the rigs beyond the colour frustum mostly do throw shadows into view.
+3. **Rooftop landing surfaces index static roof props** (`lib/town/rooftopTravel.ts`).
+   - Only dynamic or getter-backed props (the opening ball-hunt boxes) keep live getters. Static rails and roof props are copied once, so the obstacle grid indexes them instead of scanning roughly 100 getter objects on every `roofAt`.
+   - `canLand` and `surface` are identical to the all-live path at 20,000 random points, and an opened dynamic box still updates.
+   - Idle profile at 4×: `canTravel` 37.9 → 19.0 ms/s.
+
+**Proposals that need the user's decision** (visible trade-offs, not implemented). Same-frame captures are in the session scratchpad at `heat2/shots/{idle,walk}/compare-<option>.png`. Each shows the full frame at half size and a 2× centre crop, current on the left.
+- **A. Pixel ratio 1.5 on phones.** The user approved this as a dynamic version, now implemented; see "Proposal A implemented" below. The captures are `compare-pr15.png` and `compare-pr175.png`.
+- **B. Shadow map 1024²**: shadow pass −0.26 to −0.4 ms. Visible: blurrier, blockier shadow edges, most at building bases (`compare-shadow1024.png`).
+- **C. Lambert for static scenery**: GPU effect inconsistent (not measurable up to −16% colour). Visible: flatter, slightly different highlights (`compare-lambert.png`). Not recommended without a real-device measurement.
+- **D. No shadows from hands, elbows and ponytails**: about 70 fewer depth draws a frame (CPU), with no measurable GPU change. Visible only up close (`compare-noSmall.png`). Low value.
+- **Not a visual trade-off, but a large change: batch townsfolk rigs into shared instanced draws**, like the volleyball and knockout crowds. This is where most colour and shadow draws, and most `render()` CPU, go. It needs picking, hover, labels, costumes and per-part culling kept, and an earlier broad NPC batching attempt was discarded, so it would be its own project.
+
+**Proposal A implemented: dynamic resolution while moving (user-approved).**
+
+Code: `lib/graphics/quality.ts` `MotionResolution` and `dynamicResolutionEnabled`, plus additive lines in `components/Town.tsx`: the helper next to the existing `graphicsQuality()` setup, a `__fi2.motionResolution` debug hook, and three lines just before `renderer.render`. The unused `FrameBudget` helper averages frame times to degrade permanently, so it did not fit this switch and was left alone (`Pitch.tsx` still uses it).
+
+- **Where.** It is enabled only on phones and tablets (coarse pointer or DPR > 2). Desktop is unchanged: fine pointer at DPR ≤ 2 is never enabled, and the helper returns no switch. A DPR 1.5 device has nothing to drop.
+- **Rule.** Moving drops the island to a 1.5 pixel ratio on the same frame. It returns to the existing sharp cap (`min(DPR, 2)`) after 500 ms of continuous stillness. Menus, quizzes and the draw-the-pass aim return to sharp at once, so a paused menu's single frozen frame, a quiz and screenshots are always sharp. Jittery move/still input never goes back to sharp before a full 500 ms still: the test alternates every 100 ms for 5 s and gets exactly one switch.
+- **"Moving" means any of these:**
+  - The camera moved since the last rendered frame (> 1 mm, or a rotation above about 0.05 px).
+  - The player's speed is over 0.1 m/s.
+  - An isolated field view is showing live play or a teaching play, without a quiz.
+- **Switch.** `renderer.setPixelRatio` is called at the frame boundary, right before drawing, and the viewport is re-applied. The canvas CSS size never changes, so there is no layout; only the drawing buffer (with its MSAA storage) is reallocated.
+- **Switch-frame cost** (4× CPU): `animate()` took 13.5–18.6 ms on switch frames, against a p95 of 7.9 ms on ordinary frames at lower load. That is about 6–10 ms extra, still inside the 33 ms phone slot, with no dropped frames seen. The first switch in one run took 44 ms. Under heavy machine load, switch frames (32–50 ms) were indistinguishable from ordinary ones (p95 35.6 ms). The buffer reallocation on a real iPhone is unmeasured.
+- **Frequency.** Switches happen only when movement starts, and 0.5 s after the view settles: 8–10 switches across 12–16 scripted start/stop cycles. After releasing flight, the view returns to sharp about 1.45 s later, because the follow camera eases out for about 0.9 s first.
+- **Checks** (phone profile): 1.5 while flying, sharp in the frozen Settings frame (and 0 frames while the menu is open), sharp after 1.5 s still while walking. Desktop reports disabled and stays at 2 throughout. Every frame of the live 11v11 dynamic rounds rendered at 1.5.
+- **GPU per rendered frame.** Interleaved, same session, dynamic vs forced 2×; the machine load average was 12–31, so these numbers are noisy:
+
+  | Scenario | Dynamic (buffer 585×1266) | Fixed 2× (buffer 780×1688) | Change |
+  |---|---|---|---|
+  | Flying | 1.20–2.86 ms | 1.74–4.37 ms | −31% / −34% (two runs) |
+  | Walking | 3.47 ms | 4.05 ms | −14% |
+  | Live 11v11 watching | 1.77 · 3.74 ms | 2.35 · 3.56 ms | −25% / +5% (two runs) |
+
+  Desktop GPU clocks drop when the work drops, so a desktop timer understates fill savings. The buffer has 44% fewer pixels, and a fill-bound phone GPU should gain more, but that needs a real device.
+- **Trade-off (accepted by the user).** Softer edges and sign text while moving, and a visible sharpening step about 0.5 s after the view settles.
+- **Tests.** `tests/heat-render.cjs` section 4:
+  - Enable conditions.
+  - Desktop never switches.
+  - Movement → 1.5 at once, no early return to sharp, sharp after the settle time.
+  - Menus/quizzes sharp at once.
+  - No thrash.
+  - Source checks of Town's wiring and of the frame-boundary switch.
+
+**Gates.** `tsc`, `npm test` (includes `frame-cap`) and the new `tests/heat-render.cjs` pass. That test covers:
+- The spot pool is hidden in day and sunset, kept in night and in night lessons, and hidden again only once the fade settles.
+- Dynamic culling, restoring after an exception, and a rig walking back into view.
+- Rooftop parity and a live dynamic box.
+
+These also pass:
+- `heat-idle`, `field-lighting` (updated to assert that the pool is hidden in the day), `lighting-idle`, `shadow-visibility`, `static-shadow-batches`, `hidden-transform-gate`.
+- `npc-behavior`, `npc-personalities`, `cafe-routes`, `rooftop-travel`, `rooftop-knockout`, `obstacle-grid`, `traffic-separation`, `ride-ramps`.
+- `live-field-frame`, `live-game-effects`, `live-match-patterns`, `live-ball-physics`, `player-batch`, `player-motion`, `match-update-clock`.
+
+Pre-existing failures, the same with this pass's library files reverted to HEAD: `live-knockout-work` (canvas stub lacks `rect`), `night-atmosphere` (92 lamps, expected 86) and `movement-work` (mesh-merge count). The riso engine is unchanged, so the film gates were not needed. The trial edit to `sheet.ts` was reverted.
+
+**Not done.** No real-device check. The next step is a five-minute Safari Web Inspector timeline on a 60 Hz iPhone and a ProMotion iPhone, comparing day against night: night keeps the four spot lights, so it should cost more. No commit, push or deploy.
+
+## Heat audit pass 3: compositor and overlays — September 26, 2026 (local, not deployed)
+
+User report: "still a little warm" on iPhone/iPad. **These are emulation measurements, not iPhone temperatures.** Reduced work in headless Chrome on a Mac does not prove a cooler phone.
+
+**Method.** The pass 2 harness plus three additions: GPU upload counters (texture and buffer bytes per rendered frame), a census of visible `backdrop-filter` elements that overlap the island canvas, and running-animation lists. The setup is the same as before: 390×844, DPR 3, touch, 4× CPU throttle and traces for compositor swaps and GPU passes. Scripts are in the session scratchpad under `heat3/`:
+- `scen3.mjs`: every scene.
+- `hudfly.mjs`, `flytouch.mjs`: steering A/B, with a real held touch on the joystick through CDP at 60 Hz.
+- `transcript.mjs`, `breakaway.mjs`: blur A/B.
+- `shadowab.mjs`: shadow pass A/B.
+- `shots3.mjs`: captures.
+
+The load average was 2–5 for the baseline and 17–18 for part of the after run, because other agents were building. Only interleaved A/B runs in the same session are compared.
+
+**Scenes (baseline, 4×).** GPU values come from the desktop timer, which is unreliable (see finding 6).
+
+| Scene | Island fps | Compositor swaps/s | Draw calls, colour/shadow | `animate()` | Task ms/s | Uploads/frame | Backdrop blur over canvas | Sleeps? |
+|---|---|---|---|---|---|---|---|---|
+| Idle hover, HUD rested | 30 | 30 | 220/121 | 12 ms | 398 | 5.7 KB buffers | none | No: ambience is alive (by design) |
+| Flying (steering) | 30 | **60** | 93/42 | 9.6 ms | 448 | 6.3 KB | none | — |
+| Walking (steering) | 30 | **60** | 36/23 | 8 ms | 359 | 1.5 KB | none | — |
+| Live 11v11 watching | 30 | 30 | 23/5 | 8.5 ms | 303 | 4 textures / 18–28 KB (bean pose) | none | — |
+| Live futsal watching | 30 | 30 | 27/3 | 4.7 ms | 177 | 3 textures / 17 KB | none | — |
+| Live match, transcript open | 30 | 30 | — | — | 457–535 | — | **blur(22px) saturate(1.4), 340×333 px** | — |
+| Store / binder / Make it yours | 0 | 0.5–0.7 | — | — | 15–103 | 0 | dialog `::backdrop` over the frozen frame | Yes |
+| Card reveal (animating → rest) | 0 | 60 → 0 | — | — | 95 → 1.7 | 0 | none | Yes (stars rest after 6 s) |
+
+**Ranked findings.**
+1. **Steering doubled the compositor rate (60 swaps/s over a 30 fps island).** This happens during all active play: walking, riding, flying. There were three causes:
+   - The Paths button loops (shake, icon swap, and the sparkle `::before`/`::after`) woke on every joystick `pointermove` and key repeat, so they never rested while playing. Style cost 60–90 ms/s.
+   - The minimap layer eased a 160 ms CSS `transform` transition on every 150 ms position publish, a continuous compositor animation at display rate.
+   - The joystick thumb was painted on every touch event (60–120 Hz).
+
+   Pausing the first two alone (flying, 4×) gave 60 → 30 swaps/s, compositor GPU 11–12 → 5–6 ms per 3 s, style 64–74 → 0 ms/s and task −30%. **Implemented** (changes 1–3).
+2. **Transcript panel blur over the live match.** `backdrop-filter: blur(22px) saturate(1.4)` sits over a canvas that changes 30 times a second, so it is re-blurred every frame (on iOS, a known heavy path). Interleaved: compositor GPU 9.1–10.4 → 5.2–6.5 ms per 3 s without it. **Implemented** (change 4).
+3. **Live 11v11 CPU.** `fieldRuntime.update` takes 121 ms/s at 4×: rig poses 60, batch matrices 42, sim about 10. All 22 players are on screen, so rate or pose LOD would be visible. Hidden fields already skip every rig: `if(!visible)continue` comes before any `createPlayer`/`rig.update`, distant matches step on the 100 ms match clock, and choreo/combos/ball height do bookkeeping only. **No change.**
+4. **Bean pose texture uploads:** 17–28 KB per frame while watching. Futsal uploads the whole 32-row texture for about 10 players. three r169 has no partial texture uploads (`Texture.updateRanges` is newer). Starting batches at 16 rows would save about 8 KB per frame (≈ 250 KB/s), which is negligible next to the render. **Not done.**
+5. **Idle hover CPU:** 75% is `renderer.render` (scene projection, 220 colour + 121 depth draws). Each NPC scooter is a full player vehicle, 12 colour + 12 depth draws, and each skateboard is 5 + 5. Merging the skateboard parts would save about 12 draws per frame (≈ 0.2 ms at 4×). **Not done:** low value, and the scooter is the shared `vehicle.ts`.
+6. **Apparent shadow-pass GPU jump (4.5–6.2 ms vs 0.98 in pass 2): not real.** Classic and bean alternated in back-to-back runs, and both swung between 0.7 and 5.3 ms in the same way. That is desktop GPU clock and contention noise from other agents. The shadow pass has fewer draws than in pass 2 (121 vs 356).
+7. **Already quiet (verified):**
+   - The island sleeps (0 frames) under the Store, the binder, Make it yours, the card offer and reveal, NPC conversations and the map.
+   - Every dialog `::backdrop` blur sits over that frozen frame.
+   - Audio suspends when hidden. (Pass 4 correction: while visible the shared context never suspended; it now does when nothing is audible.)
+   - No per-frame texture uploads in town.
+   - GC is not a measurable cost (pass 2).
+   - Breakaway's in-play button blurs do not apply on phones (the census shows none), and an A/B showed no difference.
+
+**Implemented.**
+1. **The HUD loops rest while the child steers** (`lib/sceneryRest.ts` gets an optional `hold(event)`; `components/IslandSettings.tsx` adds `hudHold`).
+   - A `pointerdown` on `.touch-controls/.joystick/.touch-actions/.travel-actions`, or a held movement, kick or juggle key (WASD, arrows, space, J, Shift), starts a hold. While any hold is down, the loops rest on a clean frame (the existing `hudSettle`), and that pointer's moves and key repeats never wake them.
+   - Releasing the last hold wakes them for the usual 6 s. Other taps wake them as before, and window blur drops stale holds. Without `hold` the hook behaves as before (card stars, bottle and others are unchanged).
+   - Trade-off: the discoverability shake, icon swap and sparkle play when the child pauses, not while steering.
+2. **The minimap moves on island frames** (`lib/town/positionStore.ts` gets `frame`/`subscribeFrame`; `components/MovingIslandMap.tsx`; `components/IslandOverview.tsx`; one call after `renderer.render` in `Town.tsx`).
+   - The local minimap layer writes its own transform, with the same formula, once per rendered frame when the position changed. It has `transition:none`, and React no longer writes its transform.
+   - No listener means one Set iteration per frame.
+   - The map moves at the island's 30 fps instead of easing at display rate. Reduced-motion users previously saw 150 ms jumps and now also get the smooth 30 fps follow.
+3. **Joystick thumb paints are coalesced into the island frame** (`Town.tsx` `setStick`).
+   - Input values still update on every touch event, so gameplay input is unchanged. Only the thumb graphic is painted right after the next island render.
+   - A reset to centre, or an island that has not drawn for 100 ms (asleep, video), paints at once.
+   - Trade-off: the thumb follows the finger at 30 fps, the same rate as the character.
+4. **Transcript panel without backdrop blur** (`components/FieldTranscript.module.css` `.panel`): `rgba(46,55,39,.97)`, the uniform colour the old navy .74 + blur + saturate settled to above the pitch.
+   - Same-frame crops (match paused, 390×844 DPR 3): mean difference 1.8/255, 0 pixels over 24 (`heat3/shots/transcript-compare.png`).
+   - Over a very different backdrop (night, futsal court) the old glass would have tinted differently. The new panel keeps the pitch-green look.
+
+**After** (steering with a held 60 Hz touch, interleaved with an emulation of the old behaviour: the minimap transition restored plus a HUD wake every 100 ms; 3 rounds, 4×):
+
+| Scene | Swaps/s | Compositor GPU per 3 s | Style ms/s | Task ms/s | Running animations |
+|---|---|---|---|---|---|
+| Flying, before (emulated) | 52–60 | 12.2–14.8 ms | 71–76 | 303–341 | 0–1 (8 when woken) |
+| Flying, after | **30** | **4.8–7.4 ms** | 16–18 | 222–328 | 0 |
+| Walking, before (emulated) | 60 | 14.1–15.7 ms | 72–81 | 388–432 | 0–1 |
+| Walking, after | **30** | **5.5–7.0 ms** | 14–20 | 292–349 | 0 |
+
+- The genuine baseline (`scen3`, keyboard flight before the change) was flying at 60 swaps/s, 7 animations, style 61 ms/s and 38 ms GPU passes per 4 s. After: 30.1 swaps/s, style 19 ms/s, 19.7 ms per 4 s. Walking went from 59.9 swaps/s with style 58 to 30.4 with style 9. These ran under different machine loads (2.8 vs 17), so use them only as a direction.
+- Releasing the joystick: the loops wake (6 animations) and rest again after 6 s (0).
+- The emulation's "before" already includes the coalesced thumb, so the real before was at least as costly.
+
+**Tests.** New `tests/heat-pass3.cjs`, added to `npm test`:
+- The hold logic in a fake DOM: rests at once, moves never wake it, a second pointer is held, the last release wakes it, it rests again after 6 s, keys behave the same, other taps wake it, blur clears holds, listeners are removed, and it is unchanged without `hold`.
+- `hudHold`'s selector names Town's real control classes.
+- The `positionStore` frame channel, with source checks of the Town render line, the thumb coalescing and the transition-free minimap layer.
+- An allowlist of every remaining `backdrop-filter` rule per CSS file: a new blur fails with a message to use a solid background or blur only a paused view. The transcript panel is checked explicitly.
+- Hidden fields `continue` before any rig work and use the throttled match clock.
+- The five main menus pause the island, and a paused island cancels its rAF.
+
+`tests/heat-idle.cjs` has its HUD regex updated to accept the fourth argument.
+
+**Gates.**
+- `npx tsc --noEmit` passes.
+- `npx playwright test --project=iphone-15`: 13/13 pass.
+- These pass: `heat-pass3`, `heat-render`, `heat-idle`, `frame-cap`, `lighting-idle`, `idle-audio`, `ride-unlocks`, `bean-skin` (browser), `bean-looks`, `bean-costumes`, `bean-vehicles`, `card-rewards`, `choreo`, `match-combos`, `skill-moves`, `live-field-frame`, `live-game-effects`, `live-match-patterns`, `live-ball-physics`, `match-update-clock`, `match-story`, `player-batch`, `position-store`, `field-lighting`, `field-light-collisions`, `striker-match`.
+- `npm test` currently stops at `device-guards` on `CharacterCustomizer.tsx:67` (a `<select>` under 16 px). That file belongs to the character-preview agent's in-progress work.
+- `live-knockout-work` fails as before (13 !== 14, recorded in pass 2).
+
+**Not done, and why.**
+- **20 fps for idle ambience** (about −33% of idle work). This is a visible cadence change and needs the user's decision. The user also reports cooling when stationary, so idle is not the warm case.
+- **Animation LOD for live players:** visible in the match view, where everyone is on screen.
+- **Shadow proposals B and D from pass 2** are still awaiting the user.
+- **Partial bean-pose uploads:** needs a three upgrade, and the gain is negligible.
+- **NPC ride mesh merging:** about 0.2 ms at 4×, and the scooter lives in the shared `vehicle.ts`.
+- **For the character-preview owner:** "Make it yours" now keeps a 60/s rAF chain drawing at about 20 fps while open. An hour earlier it measured 0.2 rAF/s and 0.5 swaps/s. Worth checking that the new celebrations and preview animation sleep when idle.
+
+**Quality-gated trade-offs (user: "do the heat trade-off if it doesn't impact quality").** Each pending trade-off was evaluated at 390×844 DPR 3 and 1280×800 DPR 2 and implemented only if visually indistinguishable during normal play, with motion smoothness counted as quality. **None qualified, so nothing changed.** Scripts are `heat3/idlemotion.mjs`, `lod.mjs` and `shadowB.mjs`; sheets are in `heat3/shots/`.
+- **20 fps idle ambience: skipped.** The rule allows it only where nothing visibly moves. The pixels changed between consecutive rendered frames were read back right after `render()`, 15 frame pairs per view, at 5 spots per viewport:
+  - Hovering, the player's own jetpack bob and exhaust change 1,500–3,600 px inside the player's box on every frame, at every spot, on both viewports. 0 of 15 consecutive frames were identical.
+  - Walking, busy spots change 13–22k px per frame (NPCs, traffic, water). Even the emptiest spots (−40,−150 and 80,−200) change 5–900 px per frame: the player's idle breathing plus distant motion.
+  - No island view is still. Lowering the rate would reduce the smoothness of motion that is on screen. The saving would have been about 33% of idle work in the rare still case.
+- **Pose LOD for live players: skipped (nothing qualifies).** On-screen heights of every posed field rig and NPC rig were measured at 10 spots per viewport. The smallest was **11 CSS px** (33 device px on the phone); field rigs go down to 11 px and NPC rigs to 14 px, and none was under 8 px. The camera distance is fixed, and offscreen or far (> 240 m) fields are already skipped before any rig work. A player "a few pixels tall" never occurs, and at 11–13 px a stride or kick still spans several pixels, so a reduced rate would read as choppier running.
+- **Shadow proposal B (1024² map): skipped.** Both maps were rendered in the same task, so the scene state is identical:
+  - Phone: mean difference 0.29–0.67/255, 4.7–10% of pixels changed.
+  - Desktop: mean difference 0.63–1.12/255, 10–17.5% of pixels changed.
+  - By eye (`sheetB-phone.png`, `sheetB-desktop.png`): diagonal shadow-acne stripes on flat roofs, softer balcony and bench shadows, and blurrier lamppost and palm edges. The saving would have been 0.26–0.4 ms of shadow-pass GPU (pass 2).
+- **Shadow proposal D (no hand, elbow or ponytail shadows): obsolete.** Bean characters draw hands inside the single limbs mesh (one depth draw with the tubes), and hair already casts no shadow, so there are no tiny caster meshes left to drop. It would only apply to `?characters=classic`.
+- Guard: `tests/heat-pass3.cjs` asserts that the sun shadow map stays at 2048² and that the phone frame cap has a single 30 fps interval. Changing either needs a new quality review.
+
+No real-device check, commit, push or deploy. The next step is still a five-minute Safari Web Inspector timeline on an iPhone, flying with the joystick held, where the compositor should now show about 30 frames per second instead of 60.
+
+## Heat audit pass 5: view-based work on phones — September 26, 2026 (local, not deployed)
+
+The user's direction was: "on mobile the space is small; pause work on things outside the view and only load what's needed." Everything below looks identical on screen, and tests guard that.
+- Numbers are phone emulation at 4× CPU, reduced work, **not iPhone temperatures**.
+- The desktop GPU timer was dominated by noise on this shared machine: a frozen-frame A/B with no actual change read −25%. GPU effects are therefore given as pixel, draw and frame proxies.
+- Scripts are in the session scratchpad under `heat4/`: `subsys.mjs`, `geobytes*.mjs`, `options.mjs`, `lever5.mjs`, `npctap.mjs`.
+
+**Invisible changes (implemented)**
+
+1. **Dormant far, off-screen live fields** (`lib/town/fieldRuntime.ts`).
+   - A field that is not in view and is more than radius + 60 m from the camera does no work at all: no match clock, sim step, choreo or combo bookkeeping, ball physics or effects. It resumes exactly where it paused.
+   - Wake: inside radius + 50 m (hysteresis), or as soon as the frustum + 240 m visibility test sees it. That test runs before anything is drawn, so a field in view is never dormant.
+   - At the spawn 2 of 4 fields sleep; flying over the sea, all 4.
+   - Idle: `fieldRuntime` 36 → 32 ms/s, `matchSim` 16.3 → 12.7. Flying: `fieldRuntime` 24 → 16.6, `matchSim` 10.4 → 6.7.
+   - Scores of a sleeping field pause. Nothing shows them while you are away.
+2. **Off-screen townsfolk step their routines at 10 Hz** (`lib/graphics/islandNpcs.ts`). This matches the stepper's own 0.1 s clamp. Anyone on screen (frustum + margin), near, stunned, frozen or in a conversation still steps every frame. Posing was already skipped off screen. Routines: idle 16.4 → 13.7 ms/s, flying 9.3 → 4.3.
+3. **Hidden townsfolk geometry released.**
+   - Each townsperson built the full classic body under the bean skin: 3,347 meshes in the townsfolk group, 80 visible at the spawn.
+   - Their appearance is set once and never takes a costume, so the skin-hidden classic meshes now share one empty geometry.
+   - JS geometry memory at start: **69.9 → 45.2 MB (−24.7 MB)**. Unique geometries: 4,470 → 2,227. The iPhone timeline had logged memory-pressure "critical" events.
+   - NPC taps still open conversations (checked). A scooter rider that does not respond to taps behaves the same before and after.
+4. **Audit F19:** the knockout arena's batch bounds are one fixed arena sphere (radius 40 m, arena-local), assigned once. Before, every mesh's bounds were recomputed over all instances each frame.
+5. **Audit F23:** a field's live frame is re-synced only when its sim steps (and once for a fresh field).
+6. **Governor fix (affects the live hotfix).** At a 24 fps slot (tier 3), every healthy frame is 41.7 ms. That read as "slow" against the 33.3 ms budget, so the governor stepped down, and never as "calm", so it never stepped back up. Samples are now normalised to the active frame slot. `tests/heat-tiers.cjs` §13 fails without the fix and passes with it.
+
+**Not done, and why.**
+- **Proximity streaming of districts and venues:** nothing is downloaded for the island. It is procedural, with no GLBs or large textures. The largest deferrable item, the hidden classic geometry (above), is done. The hidden-at-start volleyball game (3 MB, 177 meshes) could be created on approach, but that means Town setup edits while another session is changing Town.
+- **Off-screen traffic at a low tick rate:** traffic costs 3–4 ms/s at 4×, and slower stepping risks collision timing with the player.
+- **Audit F12** (teaching rebuild allocations): medium effort, teaching-only.
+- **Audit F14/F15/F17/F21:** each changes the look or sound slightly.
+- **Audit F16/F18:** arcade files owned by another session.
+- **Audit F20:** instancing the translucent ghosts changes how they blend.
+- **Audit F22/F24:** per-frame `Town.tsx` literals and cursor writes, left alone while another session edits Town.
+- **Memory after 5 minutes:** the development build's JS heap (340–1,020 MB, including React dev and source maps) is not representative. Geometry bytes were measured instead.
+
+**Visible options: prepared, OFF** (`HEAT_OPTIONS` in `lib/graphics/heatTier.ts`, all false). A development-only override for captures is `window.__fiHeatOptions`. The screenshots are 390×844 in `heat4/shots/`.
+
+| Option | What it does | Measured (4×) | Look |
+|---|---|---|---|
+| `spectate24` | 24 fps while spectating on phones (watch view, or standing still with live players on screen) | 20% fewer frames; pitch-side task 263/267 → 179/228 ms/s | Motion cadence 24 instead of 30 while watching; stills are identical |
+| `spectateDpr125` | DPR 1.25 while spectating | 31% fewer pixels (585×1266 → 487×1055) | Slightly softer players and lines (`crop-opt-dpr125-view.png`, `crop-opt-dpr125-side.png`) |
+| `fewerAmbient` | 40% of townsfolk and ordinary cars not drawn on phones | Idle draws 219/121 → 184/92; walking 147/106 → 110/78, task 199/194 → 167/169 ms/s | Visibly emptier town. Hidden townsfolk lose their conversations (`sheet-opt-ambient.png`). Enabling it for real also needs the cars out of the traffic sim. |
+| `lambertScenery` | MeshLambert for static scenery chunks | GPU not measurable here (pass 2: 0 to −16%) | **Visible regression:** windows and awnings turn dark green, colours shift (`crop-opt-lambert.png`). Not recommended as implemented. |
+
+**Tests.**
+- `tests/heat-pass5.cjs`, added to `npm test`, covers:
+  - dormancy with hysteresis, after the visibility decision;
+  - 10 Hz off-screen routines;
+  - the geometry release (hidden meshes only);
+  - the arena bounds;
+  - options off in production, ignoring the dev override;
+  - Lambert on scenery chunks only.
+- `tests/e2e/offscreen-work.spec.ts`, device suite:
+  - dormant fields do not advance, and a watched field resumes without fast-forwarding;
+  - over 120 frames flying across the fields and 120 pitch-side, every live player and townsperson whose body projects on screen is posed and drawn.
+- `tests/e2e/live-players.spec.ts`: the flashing guard, tiers 0–3.
+
+## Hotfix after deploy 4: "players on the live games are flashing" — September 26, 2026 (local)
+
+**Cause.** The pass-4 thermal tiers switched per-frame drawing on the real iPhone. The phone was already at ~50 ms frames, so the governor reached tiers 2–3 within about 35 s. There, three levers produced blinking:
+- **Shadow map every 2nd/3rd frame.** At 15–20 fps, player shadow blobs lagged and snapped at ~5–7 Hz. In `heat4/shots/strip-shadow-old-vs-fix.png` (8 consecutive frames, old cadence on top, fix below), the old cadence shows shadows detaching from the feet, and blobs with no player.
+- **Distance-based NPC/traffic hiding (40 m / 60 m).** It had no hysteresis, so walkers pacing near the line popped in and out. Hidden cars also kept driving and could still hit the player.
+- **DPR 1.0.** Sub-pixel limbs on 11–13 px players blinked.
+
+**Ruled out.** None of these reproduced in Chromium or WebKit emulation, in the watch view or pitch-side, at any tier:
+- **The hidden-classic-mesh matrix skip.** Limb continuity over 60 frames is identical to the full `updateMatrixWorld` path. The contact helpers call `updateWorldMatrix(true,true)` first.
+- **Batch visibility and instance counts.** Every frame over 300: 0 changes and 0 zero-scale instances.
+- **Pixels.** 0 of 5,280 player-frames were missing from the canvas.
+
+**Fix** (`lib/graphics/heatTier.ts`). The tier ladder now uses only uniform levers:
+- **Tier 1:** DPR 1.25 and card film DPR 1.5.
+- **Tier 2:** adds static water, waves and ferry.
+- **Tier 3:** adds a uniform 24 fps cap (`frameCapSlot(…,heat.frameMs)`).
+
+Shadows are refreshed every frame at every tier, nothing is hidden by distance, and the pixel ratio never drops below 1.25. The Battery saver line now reads "Keeps your device cooler with slightly softer graphics, a gentler frame rate and calm water."
+
+**Tests.**
+- `tests/heat-tiers.cjs`: no tier may refresh shadows less than every frame, hide NPCs or traffic, or go below DPR 1.25. The adapter hides nothing at any tier.
+- New device-suite test `tests/e2e/live-players.spec.ts`: in the 11v11 watch view at tiers 0–3, over 300 consecutive frames each, no live player's drawn state toggles, bean batch counts are stable, there are no zero-scale instance matrices, and body pixels are present on every checked frame.
+
+## Heat audit pass 4: iPhone timeline, approved phone defaults, thermal fallback — September 26, 2026 (local, not deployed)
+
+The user reported that the phone still heats up, "even just watching a live game standing idle". This pass had four inputs:
+- Phone emulation of the current build (390×844, DPR 3, 4× CPU; interleaved A/B only).
+- Playwright WebKit.
+- The static audit `docs/heat-audit-2026-09-26.md`.
+- **Two real Safari Web Inspector timelines from an iPhone** (deploy 3). Recording 1 is 160 s; recording 2 adds a later session.
+
+Emulation numbers are reduced work, **not iPhone temperatures**. The iPhone timelines are real device evidence of frame timing, not of temperature. Scripts are in the session scratchpad under `heat4/`:
+- `watch.mjs`, `lines.mjs`: the live-match scene and line-level profiles.
+- `tiers.mjs`, `govcheck.mjs`: tier savings and the governor in the app.
+- `defaults.mjs`: legacy vs new phone defaults, with screenshots.
+- `rec.py`: the per-second breakdown of the timeline.
+- `radar.mjs`, `viewer.mjs`, `wkviewer.cjs`, `behave.mjs`, `rigparity.mjs`: the individual checks.
+
+### What the iPhone timeline shows
+
+These come from `heat4/rec.py`, which streams the 359 MB export into a per-second table with screenshots every 5 s.
+- **Flying (0–60 s): the phone is GPU-bound.**
+  - Rendering frames had a median of 48–60 ms (p90 up to 196), so rAF delivered 16–20/s instead of 30.
+  - WebContent CPU was ~20–30%, and the main thread ~20–25%. The frames wait on the GPU process, which Safari's CPU instrument does not count.
+  - Recording 2 (300–370 s, flying over the fields) shows frame medians creeping 51 → 55 → 83 → 99 ms over ~70 s at a similar scene load, with CPU steady at 30–37%. That is thermal throttling of the GPU.
+- **Animation restarts: gameplay taps.**
+  - `animationstart` came in bursts of 8–28/s that follow `pointerdown`. Joystick-only seconds show 60–120 `touchmove`/s with 0–2 `animationstart`/s.
+  - The most-painted quad was (28,26)–(52,50), the 24 px Paths icon, 10–25 paints/s. The next was the tapped action button.
+  - Cause: heat pass 3's "release wakes the HUD loops". Every Blast or parachute tap's release restarted the shake, sparkle and blur icon swap, and the `filter: blur` swap repaints.
+- **Message events (~4–6/s while flying): React's scheduler.** The minimap re-rendered on every 150 ms position publish.
+- **Card viewer and binder (60–160 s): no rAF, and no continuous paints.**
+  - The paint bursts (60–190 in one second) are the film playing and page turns.
+  - While idle, most seconds have 0 paints. The rest are single frames that line up with taps (Play, Flip).
+  - Emulation and WebKit both show every card-art loop (rays, clouds, flag, birds, wings) resting after ~6 s, with 0 running animations.
+  - No change was needed. The film part of recording 2 went to the card-film agent.
+
+### The priority scene: watching a live match, standing still
+
+Baseline, 4× CPU, 5 s samples, 30 fps in every case:
+
+| Scene | Task ms/s | `animate()` | Draws (colour/shadow) | Uploads/frame | DOM mutations/s |
+|---|---|---|---|---|---|
+| Pitch-side 11v11 (walk, idle) | 318 | 9.5 ms | 98/39 | 17 KB (bean pose) | 0 |
+| Pitch-side futsal (rooftop, idle) | 323 | 9.8 ms | 119/46 | 18 KB | 0 |
+| Watch view 11v11 | 194 | 5.8 ms | 24/4 | 18 KB | 0 |
+| Watch view futsal | 95 | 2.4 ms | 14/3 | 17 KB | 0 |
+
+Watch view 11v11, by subsystem (inclusive ms/s at 4×):
+- `fieldRuntime.update`: 105, of which the rig solve (`player.update` plus its inlined code) ≈ 75 and batch matrices ≈ 30.
+- Render: 34.
+- NPC routines: 16.
+- `matchSim`: 10.
+
+`fieldRuntime`'s own logic, choreo, combos and skill moves are each under 0.5 ms/s. The line profile spreads the solver's cost with no hot line; the top line is 0.6 ms/s.
+
+The coordinator's candidates for this scene:
+- **30 fps cap:** already on for phones.
+- **Field collision while idle:** not in the profile. Skipping it would let players run through a standing child, so it was not done.
+- **Solve skills/choreo only for active players, reuse idle poses:** both already under 1 ms/s, and live players are rarely idle.
+- **Batch the pose uploads:** already batched, 3–4 textures a frame. three r169 has no partial texture uploads.
+- **Feed and DOM updates:** 0 DOM mutations/s. The closed transcript still polled at 2 Hz, now gated (below).
+- **Does the sim step faster than needed?** It is about 10 ms/s. Changing the step would change the sim, so it was not done.
+- **Hidden UI re-rendering per frame:** none found.
+- **Static shadow cache with a player-only pass:** it is the rejected mobile framebuffer cache, and the watch view's shadow pass is only 4–5 draws.
+
+The wins for this scene are therefore:
+- The hidden classic meshes (audit F8, below): −14 ms/s CPU at 4×.
+- The approved GPU defaults: watch-view GPU **−45%**, pitch-side −24%.
+- The music idle pause and the audio-context suspend.
+- The thermal tiers.
+
+### Approved phone defaults (user decision, September 26, 2026)
+
+Phones and tablets (coarse pointer or DPR > 2; `lib/graphics/quality.ts` `phoneGraphicsFor`) get:
+- **Pixel ratio 1.5 at all times.** The sharp-when-still switch becomes a no-op because `MotionResolution` disables itself.
+- **A 1024² sun shadow map.**
+
+Desktop is unchanged: DPR ≤ 2, 2048², MSAA, uncapped.
+
+**MSAA stays on.** The approved "antialias off on DPR ≥ 2" was checked (`heat4/shots/sheet-phone-watch.png`, `sheet-ipad-idle.png`). At DPR 1.5 without MSAA, thin pitch lines broke into dashes (the centre circle read as dotted even at full-frame scale). Sign lettering, roof edges and railings stair-stepped, with moiré on roofs on the iPad. That is the "clearly jagged" case, so AA was kept, as the user asked for that outcome. The lever is `PHONE_ANTIALIAS_OFF_AT_DPR2`, read at renderer creation. With MSAA at 1.5, the look stays clean: solid pitch lines, slightly softer sign text and small rooftop shadows (`crop-phone-watch.png`, `crop-phone-idle.png`).
+
+**Shadow bias.** The 1024² map first showed the diagonal acne stripes on flat roofs that pass 3 had flagged (visible on the iPad). The sun's `normalBias` now scales with the texel (`.12 × 2048 / size`, also when a tier changes the size). The stripes are gone in the recaptures (`crop-ipad-idle.png`). What remains is the approved softness: small rooftop shadows are fainter.
+
+GPU per rendered frame, legacy (DPR 2 still, 2048², MSAA) against new, in alternating page loads (4×, 30 fps held):
+
+| Scene | Legacy, shadow + colour | New, shadow + colour | Change |
+|---|---|---|---|
+| Town idle | 0.99 + 2.86 ms (780×1688) | 0.83 + 2.11 ms (585×1266) | **−24%** |
+| Flying (1.5 already while moving) | 0.69 + 1.30 ms | 0.41 + 1.23 ms | **−18%** |
+| Watch view 11v11 | 0.63 + 1.20 ms | 0.37 + 0.61 ms | **−45%** |
+
+The iPad Pro 11 went from 1668×2388 to 1251×1791. The development-only `window.__fiLegacyQuality` restores the old defaults for A/B captures.
+
+**Music and audio (approved).**
+- Music fades out (~1 s) after 30 s with no pointer, key or wheel input (`lib/audio/islandMusic.ts` `MUSIC_IDLE_MS`). A held joystick's `pointermove` counts as input.
+- It fades back in on the next input, inside the gesture as iOS requires.
+- The shared AudioContext (`islandSound.ts`) suspends 2 s after nothing is audible: no music, one-shots, truck engine or ride hum.
+- An input unlock resumes it. So does any sound the game wants to play: `ready()` resumes an idle-suspended context and schedules the sound.
+- Browser check (`behave.mjs music`): after 31 s idle, music is paused at volume 0 and the context is `suspended`. A tap brings back `running` and volume 0.04.
+- **Correction:** the earlier line "the shared context runs only for music" was wrong (audit F5). It ran for the whole visible session.
+
+### Fixes (no visible change unless noted)
+
+1. **HUD loops no longer restart on gameplay taps** (`lib/sceneryRest.ts`). Releasing a held gameplay pointer or key ends the hold but does not wake the art. The loops wake only on other input (HUD buttons, menus, focus) or `SCENERY_WAKE_EVENT`.
+   - `HUD_HOLD_SELECTOR` adds `.town-scene`, so canvas taps and drags count as gameplay (audit F7).
+   - Check: six action-button taps leave the HUD resting with 0 running animations; a HUD tap wakes it.
+   - Trade-off: the discoverability loops play after menu or HUD interaction, not after gameplay taps.
+2. **Minimap re-renders only at the shoreline** (`MovingIslandMap.tsx`). Its layer already moves on island frames (pass 3), so React subscribes to the island/sea state instead of every publish.
+3. **Teaching buffers** (audit F4; `teachingGround.ts` `uploadPrefix`, `lessonCues.ts`) upload only the used prefix, and nothing when the rebuilt prefix is unchanged. A teaching play went from **≈484 KB to 5.1 KB/frame** of buffer uploads, the same as live watching.
+4. **Pitch radar** (audit F3).
+   - It updates on island frames (`lib/town/islandFrames.ts`, `emitIslandFrame` after the render in Town), with no own rAF, and writes SVG attributes only on change.
+   - Its frame has no backdrop blur. `IslandMapFrame.module.css` uses `rgba(46,55,45,.97)`, the colour the .74 navy over `blur(5px)` settled to.
+   - Same-frame crops: mean difference 2.4/255, 0 pixels over 24.
+   - Radar open: swaps 42 → **30/s** and rAF 120 → **60/s** (audit baseline vs now); compositor GPU with the blur restored vs now: 5.9–7.3 → **1.2–1.6 ms** per 4 s.
+   - The `heat-pass3` allowlist entry was corrected (it had treated the radar as over a paused view).
+5. **Transcript** (audit F11): the 2 Hz match poll runs only while the panel is shown, and re-renders only when the score or the feed changes.
+6. **Island Strikers thumb** (audit F13): the rect is read once per gesture, and the thumb paints on the game frame instead of on each move event.
+7. **Hidden classic body meshes** (audit F8).
+   - The bean skin marks the childless classic meshes it hides (`userData.beanHidden`; joints are Groups and never flagged). `playerBatch.updateRigMatrices` skips them.
+   - Those are 40 of 45 meshes per live rig.
+   - Matrix walk for 22 rigs: 0.147 → 0.030 ms per frame without throttle, i.e. **≈ −14 ms/s at 4×** in the watch view.
+   - Parity: 88 bean pose rows and 65 visible meshes identical (max difference 0) to `updateMatrixWorld(true)`.
+8. **Bottle waves** (audit F9): the 24 fps wave canvas holds its frame once the note is shown and restarts on leaving. This is visible: the sea is still behind the note.
+9. **Onboarding** (audit F10).
+   - The island pauses behind the tour except on the NPC-highlight step. The loop wakes when that step starts. Measured: 0 island frames on steps 1, 2 and 4, 30 fps on step 3, and asleep behind the welcome card after load.
+   - The 350 ms `querySelectorAll` + `getBoundingClientRect` poll is gone: highlights are measured on the step, 300 and 900 ms later, and on resize, and set only on change.
+   - The NPC spotlight's 100 ms follow sets state only when its rounded box changes.
+
+### Thermal fallback and Battery saver
+
+`lib/graphics/heatTier.ts` holds the tiers, the governor and the shared state. `lib/graphics/islandHeat.ts` applies them to the island and feeds the governor after each render. `__fi2.heat` exposes `tier`, `settings`, `governor.log` and `force(t)`.
+
+| Tier | When | Settings (on top of tier 0) |
+|---|---|---|
+| 0 | default | Phones: 30 fps, DPR 1.5, 1024², MSAA. Desktop: uncapped, DPR ≤ 2, 2048². Shadows every frame, all NPCs and traffic drawn, card film DPR 2. |
+| 1 | warm | DPR ≤ 1.25, card film DPR 1.5, 30 fps on every device |
+| 2 | hot | + shadow map every 2nd frame; ambient NPCs beyond 40 m and ordinary traffic beyond 60 m not drawn (routines and driving continue; pickups and the ridden truck always drawn) |
+| 3 | hottest, or **Battery saver** | + DPR 1.0, shadow map every 3rd frame at ≤ 1024², static water, waves and ferry |
+
+**How the governor works.**
+- It governs phones and tablets only. Desktop reaches a lower tier only through Battery saver or a forced tier.
+- Each rendered frame feeds it the interval since the last frame, the frame's work time, the draw calls and the view.
+- A 2 s window is **slow** when any of these hold:
+  - p90 interval > 1.25 × 33.3 ms (slots missed);
+  - p90 work > 0.8 × budget;
+  - the median interval has crept to 1.3 × the best median at this load in the last minute.
+- A window is **calm** when p90 interval ≤ 1.05 × budget and p90 work ≤ 0.45 × budget.
+- A load change over 35% or a view change restarts the clocks, so a heavier scene is not mistaken for a hot phone. Gaps over 250 ms (sleep, menus) are ignored.
+- **Step down:** one tier after 10 s of slow windows, then a 12 s dwell.
+- **Step up:** one tier after 180 s calm. A step-down within 120 s of a step-up doubles the calm needed, up to 20 min.
+- These thresholds were tuned on recording 2's 51 → 99 ms creep.
+
+**Tests** (`tests/heat-tiers.cjs`):
+- A cool phone stays at tier 0 for 20 min.
+- 2 s bursts, load or view changes and sleep gaps never step down.
+- Sustained slowdowns step one tier at a time, 1 → 2 → 3.
+- The recording pattern reaches tier 1 in under 12.5 s and tier 3 in under 70 s.
+- Stepping up needs 180 s calm.
+- A phone that is slow at tier 0 and fine at tier 1 flaps at most 9 times in an hour, with the calm needed growing 180 → 360 → 720 → 1200 s.
+
+**In the app** (`govcheck.mjs`, final build):
+- At 4× for 70 s it stays at tier 0 in the watch view and town.
+- In town at 30× (an emulated hot phone) it steps to tier 1 (DPR 1.25), then to tier 2 about 36 s later. The log reads "sustained slowdown: p90 interval 166.6 ms, work 166.4 ms".
+- The watch view no longer misses slots at 20× since the CPU fixes, so it correctly stays at tier 0.
+- The governor keys on phone detection (`quality.phone`), not on `MotionResolution.enabled`. That is now off on phones because sharp = moving = 1.5, and an intermediate build had silently switched the governor off this way; a source test guards it.
+
+**Battery saver** (Settings → Battery; `IslandSettings.tsx`, the standard `.toggle`/`.switch`):
+- It forces tier 3 on any device.
+- It is off by default, remembered per viewer in `localStorage` `fi2-battery-saver`.
+- The explanation line: "Keeps your device cooler with slightly simpler graphics, fewer far-away walkers and cars, and calm water."
+
+**Tier savings** (forced tiers, interleaved, 4×; before the tier re-base, when tier 1 was DPR 1.5; the desktop GPU timer is noisy):
+- Rendered pixels: 1.32 → 0.74 → 0.51 Mpx at DPR 2 / 1.5 / 1.25. Tier 3 is now 0.33 Mpx at DPR 1.0.
+- Idle town shadow draws: 121 → 62–66 at every 2nd frame, 29–34 at every 3rd.
+- Pitch-side 11v11 task: 282–378 → 220–263 ms/s at tier 2.
+- Desktop: 60 → 30 fps from tier 1.
+
+### Gates and status
+
+- `npx tsc --noEmit` passes.
+- `npm test` passes, now including `heat-tiers` and `heat-pass4`.
+- These also pass: `heat-render` and `heat-pass3` (regexes updated for the new calls), `heat-idle`, `frame-cap`, `lighting-idle`, `idle-audio`, `music-continuity`, `engine-voice-reuse`, `bean-skin` (browser), `bean-looks`, `bean-costumes`, `bean-vehicles`, `card-rewards`, `choreo`, `match-combos`, `skill-moves`, the `live-*` tests, `match-update-clock`, `player-batch`, `player-motion`, `position-store`, `field-lighting`, `shadow-visibility`, `static-shadow-batches`, `striker-match`, `npc-behavior`.
+- `live-knockout-work` fails as before (13 !== 14).
+
+**Held for the user, not changed:** none remain from the audit list; all were decided on September 26. **Not done:**
+- AA off: kept on after the visual check; the lever is ready.
+- Lambert materials (weak evidence).
+- A blob-shadow rewrite.
+- Freezing off-camera sims (it would change the scores).
+
+No commit, push or deploy from this pass. The next step is a Safari timeline on the iPhone with this build: flying and pitch-side, looking at the rendering-frame medians (target ≈ 33 ms) and `__fi2.heat.governor.log`.
+
+## September 25 game-developer overhaul (local, not deployed)
+
+See [the four-game critique and implementation report](arcade-game-developer-review-2026-09-25.md). This supersedes the earlier verification-only continuation below. Tennis adds deliberate shot placement and tactical returns; Pinball adds visible build/switch/finish chances; Breakaway adds authored readable routes and timed finishing; Strikers adds portrait-oriented play, matching controls, pass/support cues and readable defensive commitment.
+
+Shared court cameras fit into HUD/control margins only at resize, with no per-frame projection search. The UI leaves more of the game visible. Strikers' joystick thumb uses direct CSS instead of pointer-frequency React state. Its warning/receiver rings, ball shadow and pass line are fixed meshes, updated in the existing loop; its eight-player simulation keeps bounded substeps. Keeper targeting samples at 240 ms, tackles show a 260 ms commitment, and off-ball players retain width on loose balls. Flat reused turf planes remove seams without increasing the patch count.
+
+Individual notes record fixed mesh/pool additions and engine checks. All four have desktop and emulated-touch input evidence; Tennis, Pinball and Breakaway additionally complete ordinary-play failure/retry sessions. Strikers' final 55-second touch run completes a pass, creates two shots and scores once; injected goal/lifecycle checks are separately identified. The final integrated production build, type check, normal test command and four simulation suites pass. Paused/finished sleep and existing resolution/frame-rate budgets are retained. Do not interpret this as physical-phone thermal evidence or deployment.
+
+## September 25 arcade continuation (local, not deployed)
+
+Four game-specific reviews resumed the existing arcade changes. [Tennis](arcade-tennis-2026-09-25.md) now waits for exact zero velocity before sleeping, preventing a frozen residual movement state. [Breakaway](arcade-breakaway-2026-09-25.md) clears interrupted canvas pointer capture on pause, blur and restart. [Pinball](arcade-pinball-2026-09-25.md) supports focused Enter/Space hold controls with blur cancellation. These changes add no animation loops or background work; Tennis permits its final braking frames before resting.
+
+[Island Strikers](arcade-rebuild-2026-09-19.md) replaces the earlier full-field Live Match with a dedicated eight-player arcade simulation. The shared scene retains one sun and pooled effects. Its portrait camera previously put the entire pitch beyond the fixed fog range; stadium-corner fitting and camera-relative fog/far limits now run only at initialization/resize. Keyboard and touch charged shots, goals, pause/resume, full-time rendering sleep and restart pass the new `scripts/check-island-strikers-browser.cjs` at desktop and phone sizes. Phone-controller pairing still needs a second-device check.
+
+All four simulation suites and desktop/mobile Chromium checks pass. The integrated `npm run build`, TypeScript check and `npm test` also pass. Mobile checks use actual emulated touch controls, including Pinball's simultaneous flippers. These are behavior and work checks, not physical iPhone temperature measurements. No deployment was performed.
+
 Last reviewed: September 14, 2026. This is the maintained implementation guide; [the dated performance log](flight-performance-2026-09-14.md) contains measurements and experiment history. Check current code before proposing an optimization: many suggestions have already been implemented.
 
 ## Purpose and evidence
@@ -10,7 +658,7 @@ Desktop mobile emulation is useful for regression checks, CPU/GPU timings and wo
 
 ## Rendering and shadows already optimized
 
-- Mobile baseline: DPR 2, about 30 rendered frames/second, 2048 shadow maps. Player simulation remains 60 Hz. Do not silently lower resolution, shadow quality, effects or frame rate to claim a performance win.
+- Mobile baseline (since heat pass 4, user decision Sep 26 2026): phones and tablets draw at DPR 1.5 at all times with a 1024² sun shadow map and MSAA, about 30 rendered frames/second; the thermal governor (`lib/graphics/heatTier.ts`) steps lower only after a sustained slowdown, and Battery saver forces the lowest tier. Desktop: DPR ≤ 2, 2048², uncapped. Player simulation remains 60 Hz. Do not silently lower resolution, shadow quality, effects or frame rate to claim a performance win.
 - Static scenery uses 50 m spatial chunks. Compatible opaque palette materials share linear vertex colors; textured, emissive/animated and incompatible surfaces retain their material paths. Ground layering/order must remain correct.
 - Static opaque shadow geometry is batched separately from paint colors. Original shadow flags/proxy visibility are restored in `finally` blocks. Transparent, alpha-tested, displaced, clipped and custom-depth objects keep their original path.
 - Shadow-volume culling includes offscreen objects whose shadows can enter the view. Dynamic character/vehicle shadows remain supported. Moving flight cameras align shadow coverage to texels.
@@ -29,6 +677,7 @@ Relevant code: `lib/town/world.ts`, `lib/graphics/staticShadowBatches.ts`, `shad
 - Traffic positions sample cached road routes at 20 cm spacing into reusable vectors. Rebuild samples on every route change, including rejoining roads after free driving. Original curve tangents retain headings. Synthetic tests found up to 0.05055 m positional deviation: this is approximate, not pixel-exact.
 - Traffic rejects neighbors more than 8 m away before detailed yielding checks. Ordinary cars over 100 m from the player check yielding at 10 Hz; all positions still advance every frame. Pickups, nearby cars, driven trucks and road-return logic retain immediate updates. This is **not** a blanket reduction of player physics or traffic movement frequency.
 - Truck landing fixes avoid repeated hidden ground-landing searches while attached. Preserve generous landing acquisition, smooth approach, seated riding, driving/boost/reverse/honk, dismount and autonomous road return.
+- Keeper dive / jumping header / slide ground guard (lane B, Sep 25 2026, local): the dive and jump pose from `dive.progress`/`jump.progress` inside the existing `update` (no new loop, no timers, no allocation per frame; choreo reuses one motion object per action). The ground guard runs only while a rig is diving, jumping, sliding or stumbling: ~16 exact ellipsoid-low tests on joint chain matrices (`updateMatrix` on ≤ 6 parents each), no world-matrix traversal or scene query. Fields absent ⇒ joint output identical to before (golden test `tests/player-dive-jump.cjs`). Offscreen posing stays skipped; a resumed rig re-poses the dive from its clock. Signature moves (bicycle, scissor, diving header, volley, back heel, sole roll, flick-up) and keeper save types reuse the same paths: keyframe tables are module constants, leg moves write the existing reaction channels, airborne moves pose post-solve, and the guard runs only while a move plays. Choreo reads the sim ahead with one bounded ≤160-step prediction per lofted ball, and none when there is no aerial. Measured cost not profiled on device.
 
 Relevant code: `lib/graphics/player.ts`, `batchMeshes.ts`, `islandNpcs.ts`, `streetTraffic.ts`, `lib/town/trafficRouteSamples.ts`, `obstacleGrid.ts`, `components/Town.tsx`.
 
@@ -38,6 +687,7 @@ Relevant code: `lib/graphics/player.ts`, `batchMeshes.ts`, `islandNpcs.ts`, `str
 - Field classification runs at 10 Hz, with reusable clipping vectors in `pitchVisibility.ts`. Prompt placement still tracks smoothly; coordinates are rounded to half pixels and unchanged styles/text are not rewritten. Nearest-building selection uses a scan rather than filter/sort lists.
 - Normal paused menus stop the island after the first cleanup frame. Resize/appearance changes invalidate the frozen frame. Time-of-day changes retain their three-second lighting transition; onboarding retains camera motion. Resume without a large simulation catch-up.
 - Previews dispose their renderer on close, pause while offscreen, reject hidden resize draws and only reapply appearance/background when changed.
+- **While steering, only the 30 fps island may produce compositor frames** (heat pass 3): the joystick thumb and the local minimap are painted right after the island render, the HUD loops rest while a gameplay pointer or key is held, and nothing over the moving canvas uses `backdrop-filter` (`tests/heat-pass3.cjs` allowlist).
 - Joystick feedback updates CSS/transform values directly rather than React state. Preserve the bounded rim pulse and faded arc; avoid an infinite extra animation loop or broad expensive filter.
 - **Attach native non-passive gesture blockers after the joystick mounts.** Town's joystick mounts only when ready; installing them inside initial scene setup previously did nothing because its ref was null. Keep blockers scoped to the control and preserve pointer capture, multi-touch action buttons, blur/pagehide/cancel recovery and second-finger tip dismissal. Test iOS double-tap-then-hold on a real device; Chromium cannot prove native magnifier behavior.
 
@@ -46,7 +696,7 @@ Relevant code: `lib/graphics/player.ts`, `batchMeshes.ts`, `islandNpcs.ts`, `str
 - Exhaust/trail/collection particles use finite pools and skip work when disabled/empty. Known pool budgets: exhaust 112, flight trail 64, walking-ball particles 24, collection particles 72. Verify current definitions before changing budgets.
 - Walking-ball charge/trail geometry sleeps when the ball is hidden during flight. Inactive rings/ghosts skip transforms. Colors are cached and only changed when equipment changes. Box/collection effects stop updating after their lifetime; sonic bursts sleep after expiration.
 - Water ripples animate offsets of a prebuilt repeating texture. Do not replace this with per-frame canvas redraws, texture uploads, expensive reflections or a new independent render loop without measuring the cost.
-- Continuous engine sounds reuse oscillator voices; parameter updates are throttled to about 10 Hz. Muted/zero-volume effects stop sources and avoid silent allocations. Keep the shared music context running; zero effects volume must not stop music.
+- Continuous engine sounds reuse oscillator voices; parameter updates are throttled to about 10 Hz. Muted/zero-volume effects stop sources and avoid silent allocations. Zero effects volume must not stop music. Since heat pass 4 the shared context suspends 2 s after nothing is audible (music idle-paused after 30 s without input, no one-shots, engine or hum) and resumes on input or on demand.
 - Ride hum stops during parachute/fall phases, even though the selected ride remains a flight item.
 - Defaults are music 4%, effects 50%, with one-time migration `fi2-audio-mix=4-50-v1`; preserve later user preferences. Volume changes are UX choices, not evidence of reduced GPU heat.
 - Match-news requests happen when a participating conversation opens and share a five-minute cached response. They are not polled from the flight/render loop. News unavailability is a separate service issue.
@@ -606,7 +1256,7 @@ All fifteen concept explainers now use word-onset visual scores (298 moments wit
 
 ### September 19 pitch floodlights (local, not deployed)
 
-Four visible corner floodlight banks per format explain the nighttime pitch illumination. Four shared non-shadow spotlights follow the selected/relevant visible pitch; fixed light count and zero daytime intensity avoid mode-switch shader churn. Fixtures belong to field roots, preserving isolated visibility and the existing lower-ground shadow fix. Grass retains its original rich green after the lighter tint proved washed out; nighttime fill is 0.025 and grass spot strength is 50% of the initial pass. Each of the four real corner lights uses half the previous two-light per-source strength, preserving total source intensity; futsal fill is unchanged. Daytime hemi/sun/exposure are reduced to1.65/2.35/.95 to retain richer color, with no extra rendering work. Decorative pitch pools and approach bollards were removed. Per visible field: two batched draws and 560 triangles; total ten geometries across five courts, two shared materials, no new textures or shadow passes. Four additional light calculations remain a shader cost even with daytime intensity zero. Existing loop/sleep rules are preserved; no extra timers or animation loops. Targeted field, idle, live-frame and shadow tests pass. See `pitch-lighting-2026-09-19.md` for browser checks and four-corner illumination and daytime balance. No physical-device thermal claim.
+Four visible corner floodlight banks per format explain the nighttime pitch illumination. Four shared non-shadow spotlights follow the selected/relevant visible pitch; fixed light count and zero daytime intensity avoid mode-switch shader churn. Fixtures belong to field roots, preserving isolated visibility and the existing lower-ground shadow fix. Grass retains its original rich green after the lighter tint proved washed out; nighttime fill is 0.025 and grass spot strength is 50% of the initial pass. Each of the four real corner lights uses half the previous two-light per-source strength, preserving total source intensity; futsal fill is unchanged. Daytime hemi/sun/exposure are reduced to1.65/2.35/.95 to retain richer color, with no extra rendering work. Decorative pitch pools and approach bollards were removed. Per visible field: two batched draws and 560 triangles; total ten geometries across five courts, two shared materials, no new textures or shadow passes. Four additional light calculations remain a shader cost even with daytime intensity zero. (Superseded by heat audit pass 2: outside night the pool is now hidden, so day and sunset shaders skip the four lights; only entering and leaving night switch variants.) Existing loop/sleep rules are preserved; no extra timers or animation loops. Targeted field, idle, live-frame and shadow tests pass. See `pitch-lighting-2026-09-19.md` for browser checks and four-corner illumination and daytime balance. No physical-device thermal claim.
 
 
 Rooftop Knockout lighting follow-up (local): the rooftop is a fifth target for the existing four-spot pool; joining the game gives it priority without adding lights. Four corner fixtures fit within the roof/cage footprint, outside play lines. Isolated lessons hide rooftop fixtures and keep field priority. Adds two batched draws/560 triangles when visible, two geometries, no new materials/textures/shadows/loops. Daytime switches all pooled spots off; night restores them. See the pitch-lighting note for tests and browser evidence.
@@ -1163,10 +1813,43 @@ This section covers desktop and emulation numbers only. It makes no iPhone tempe
 ## Player card back, hover tilt, flip sparks — September 24, 2026 (local, not deployed)
 
 - **Back:** one flat card-stock face (same grain, trim and shadow as the front) with Strengths / Top Plays / History tabs. History (`lib/town/playerCareers`) and the Play Moment list (`iconicPlays.json`, ~90 kB) are dynamic imports loaded only when their tab shows on the back. Highlight clips (`components/CardHighlights.tsx`) fetch only while the Top Plays tab is showing; thumbnails are 80 px `mqdefault` with `loading=lazy decoding=async`; one iframe at a time (`fi2-video-play`), removed on tab change, turning the card or a hidden page. The old strengths/highlights sheets were removed.
-- **Hover tilt (mouse only, `(hover: hover) and (pointer: fine)`):** ±14° X / ±18° Y through a critically damped spring written to `.flip` once per frame. The rAF loop runs only while the spring moves and sleeps as soon as it catches up, even with the pointer resting on the card. Leaving is judged against the card's flat box, via a document `pointermove` listener attached only while hovering. Touch and pen never tilt. Perspective is now 1400 px, so a tilted card stays on screen at 1280×800.
-- **Flip:** always the CSS transition between the two faces, so it can't stop edge-on. The card is 4–6 px thick: 3 rim slices and 4 side strips, static preserve-3d layers. About 16 tiny sparks ride the leading edge inside the turning element for about 0.4 s each and unmount afterwards. They don't run with reduced motion. The drag and flick spin was removed at the user's request.
+- **Hover tilt (mouse only, `(hover: hover) and (pointer: fine)`):** ±14° X / ±18° Y through a critically damped spring written to `.flip` once per frame. The rAF loop runs only while the spring moves and sleeps as soon as it catches up, even with the pointer resting on the card. Leaving is judged against the card's flat box, via a document `pointermove` listener attached only while hovering. (Touch tilt was later restored; see the touch tilt section below.) Perspective is now 1400 px, so a tilted card stays on screen at 1280×800.
+- **Flip:** always the CSS transition between the two faces, so it can't stop edge-on. The card is 4–6 px thick: 3 rim slices and 4 side strips, static preserve-3d layers (the rim slices are now rings shown only while turning; see the blue-back fix below). (Those earlier edge sparks were replaced; see the motion sparks section below.) The drag and flick spin was removed at the user's request.
 - **Measured** in headless Chrome at 2× (median / p95 / max frame ms): hover sweep 16.7 / 16.7 / 16.8; top-bar flip 16.7 / 16.8 / 16.8–33. There were 0 rAF calls in the second after rest, both while hovering still and after leaving, and 0 on the phone at rest.
 - **Not a thermal claim:** these are desktop numbers, not iPhone measurements.
+
+## Player card touch tilt, slower phone flip, motion sparks — September 24, 2026 (local, not deployed)
+
+- **Touch tilt is back** (user: "add that gesture back"). It is tilt and parallax only, with no spin, flip or momentum. It lives in `components/PlayerCard.tsx` (`onDown`). A finger pressed on the card that moves more than 10 px tilts the card toward the finger, using the hover mapping (±14° X / ±18° Y), the same spring, planes and glare. `pointermove` only sets the spring's target, so the one sleeping rAF loop batches the writes. The card box is cached at pointerdown. Three passive document listeners (`move`, `up`, `cancel`) exist only for one gesture. On release or cancel the card springs back flat from zero velocity and hands its transform back to CSS.
+  - Below 10 px nothing is touched, so taps reach Flip, Play, the back tabs, highlights and links exactly as before.
+  - A click that ends a tilt is swallowed (capture, within 400 ms), so dragging across a link doesn't open it.
+  - There is no tilt with reduced motion, during a film, or within the turn plus 100 ms.
+  - The grey uncollected card never gets a pointerdown (`pointer-events:none`).
+  - Device orientation isn't used, because iOS asks for permission.
+- **touch-action:** the card measures its nearest scroll area (a ResizeObserver on the area and its children, with no loop).
+  - Where that area can scroll, the card keeps `pan-y`: a vertical drag scrolls (Chrome sends `pointercancel`, and the card springs back) and a sideways drag tilts.
+  - Where it can't scroll (the binder viewer, the card reveal, and the position guide at phone sizes today), the card uses `pinch-zoom`, so every drag tilts.
+  - The back's tab panel remains its own `pan-y` scroller.
+- **Slower flip on phones** (`(hover: none), (pointer: coarse)`): 0.95 s on `cubic-bezier(.4,.15,.25,1.1)`, compared with 0.7 s on desktop.
+  - Edge-on moves from about 90 ms to about 320 ms, and the edge crosses at about 0.5°/ms instead of about 0.85°/ms.
+  - The turn light is retimed through CSS variables on `.card` (`--turn`, `--edge-out`, `--edge-in`, `--sweep-in`, `--shade-in`, `--catch`), and the lift and shadow keyframes through `PHONE_TURN`.
+  - The desktop timing is unchanged.
+- **Motion sparks** (`TurnSparks`):
+  - **What:** 22 specks of 1–2 px (16 from the near edge, 6 dimmer ones from the far edge), emitted only from about 85° to about 140° of the turn. Their times and positions come from the real flip curve and the 1400 px perspective.
+  - **Motion:** each speck is kicked ahead of its edge, outward past the opening card, as a short streak (scaleX 6→1) that slows and fades in 300–500 ms.
+  - **Layer:** one layer per flip at `translateZ(320px) scale(.7714)`, so the turning card never hides a speck. It is pre-built DOM with Web Animations on transform and opacity only. It unmounts when the last speck ends, and there are none with reduced motion.
+  - **Checked:** frames scrubbed at 390 and 1280 (toBack and toFront) show horizontal streaks leaving the moving edge in the direction of travel, and 0 spark nodes after the flip.
+- **Verified** with Playwright at 390×844, `hasTouch` and `isMobile`, using CDP `Input.dispatchTouchEvent`:
+  - **Tilt:** the card tilts mid-drag (px/py about −0.8, rotateX about 12°, rotateY about −15°) and returns to rest on release.
+  - **Taps:** a 3 px wiggle tap does nothing. Flip, History and Top Plays taps work. A tilt that starts on a tab doesn't press it. The back tilts around 180°.
+  - **Still cases:** the grey card and reduced motion don't tilt.
+  - **Desktop:** hover gives exactly 8.4° / −10.8° at (0.2, 0.2) and rests after leaving.
+  - **Position guide:** it tilts sideways. When its scroll area overflows, it switches to `pan-y` and a vertical drag scrolls it (+185 px).
+  - **Idle:** 0 rAF calls in 1 s at rest.
+- **"Solid blue back" fix:** after the card resized (the reveal's bottom sheet hiding or showing, a window resize), Chrome's compositor sometimes drew the card's flag-coloured rim slab over the showing face, and kept it there. The DOM and computed transforms were correct. The failure was intermittent but, once in, persistent: in bad runs 100 % of flips at 1280 in the reveal. None of these cured it: moving the back 30 px forward, `backface-visibility`, `will-change`, nudging the rim's transform, moving the rim first in paint order, or removing its nested `preserve-3d` wrapper. Only hiding or flattening the rim did.
+  - **Fix:** the three rim slices (now direct `.rim` children of `.flip`, as are the four `.side` strips) are 14 px rings rather than full slabs, so they can never cover a face. They are also `visibility:hidden` unless the card is turning (`data-turning`, set for the turn plus 80 ms by one timer, and for a host's own spin found on mount). Edge-on, a ring has the same outline as a slab, and at rest the faces and trim covered the rim anyway.
+  - **Verified:** 0 blue backs and 0 fronts showing through across 32 backs per viewport in both the binder viewer and the reveal, at 390 (touch) and 1280, with the card resized every 4 flips, plus the reveal agent's `r.mjs` runs.
+- **Added runtime cost:** during a touch drag, the same spring loop hover uses. During a flip, 22 short compositor animations on one layer. Nothing at rest. These are emulation checks, not iPhone temperature measurements.
 
 ## Card flip turn light, viewer bar presses — September 24, 2026 (local, not deployed)
 
@@ -1193,11 +1876,44 @@ This section covers desktop and emulation numbers only. It makes no iPhone tempe
 - **The dialog's own cost.**
   - Static MiniCards on the flat scrim.
   - Changing the front card is one 0.3 s transform transition. Stacking and the dim filter switch in one step mid-move, so nothing else animates.
-  - Choosing fades the other cards once (0.24 s), and the spin is one WAAPI transform animation on PlayerCard's `.flip` (0.85 s).
+  - Choosing fades the other cards once (0.24 s), and the chosen card flies into the reveal (1 s of WAAPI transform/opacity; superseded by the September 25 flight below).
   - The revealed PlayerCard's looping scenery is paused by the offer's CSS, so the dialog has no endless animation. Its film, hover tilt and foil turn behave as in the binder.
   - PlayerCard's chunk is imported only once an offer is open.
-  - There are no animations with reduced motion.
+  - With reduced motion there is no flight or twinkle, only the reveal's 180 ms opacity fade (September 25).
 - **Checks:** `scratchpad/pickcard/ui.mjs` at 390×844, 375×667, 1280×800 and reduced motion, plus `bg-probe.mjs` for the ball and Paths cases. No phone thermal claim.
+
+### Choose → reveal flight — September 25, 2026 (local, not deployed)
+
+- **Complaint:** "the card seems to stretch and isn't smooth" after choosing.
+- **Cause, from recorded frames:**
+  - The old spin put `scale()` inside the 3D turn on `.flip` (`rotateY(-360deg) scale(.62)` → `rotateY(-180deg) scale(.9)` → `rotateY(0) scale(1)`). At 1280×800, between the back and the second edge-on, the back face widened past the screen edges for 2–3 frames when it should have narrowed.
+  - The deck's MiniCard was cut to a smaller (×0.62) PlayerCard at a different place and aspect ratio (5:7 vs 5:7.6).
+  - The top bar, heading, note and stars popped in on the same frame.
+- **Fix (`components/CardOffer.tsx`, `CardOffer.module.css`; PlayerCard unchanged): a FLIP flight, `FLY_MS` 1000, `cubic-bezier(.42,0,.22,1)`.**
+  - One shared progress drives four WAAPI animations with identical timing:
+    - the card's individual `translate`/`scale`: uniform, applied after its own `perspective()`, so the projected card scales and never skews;
+    - `rotateY` alone on `.flip`, −360° → 0°;
+    - an opacity step on PlayerCard's stage;
+    - the MiniCard's own transform, with the same lens scaled to its height.
+  - The MiniCard turns 0 → 90° from its deck rect. At edge-on (p = .25) the PlayerCard takes over at −270° with matched height, so the aspect change never shows. It lands with a 1.8 % overshoot.
+  - The flight is built paused in the commit that mounts the PlayerCard. PlayerCard's host-spin check therefore sees it and shows the rim rings for the whole turn. It plays two frames later, after that first paint.
+  - The deck stays mounted (inert) under the reveal until landing. The note, caption, Choose and arrows fade in 0.2 s.
+  - The reveal's top bar, Play pill, heading and note fade in 0.28 s after landing. The stars mount on landing.
+  - Before the flight, `warm()` awaits the PlayerCard module and fonts, and waits at most 150 ms for the webp decodes. The masks are already cached from the MiniCard and are fixed-size, so they can't reflow. The first cap was 700 ms, and a fresh decode alone took about 225 ms at 4× CPU.
+  - `--sheet-h` is now measured in a layout effect, so the card's final size is known before the flight measures it.
+  - Nothing runs after landing: all four animations use `fill:none` (the hidden MiniCard, `forwards`, unmounts with the deck).
+  - Reduced motion: no flight, only a 180 ms WAAPI opacity fade on the reveal. `globals.css` sets `*{animation:none!important}` under reduced motion, so a CSS keyframe fade wouldn't run.
+- **Validation:**
+  - Recorder: `scratchpad/revealanim/rec.cjs`, a CDP screencast at 0.25× animation rate. Contact sheets: `sheet-{before,after}-{390,1280}.jpg`.
+  - Frame timing during the motion window (rAF): phone 390×844 with touch and 4× CPU is 16.7 / 16.7 / 16.8; desktop is 16.7 / 16.7 / 16.8. There are 0 frames over 20 ms in the motion and 0 running animations afterwards.
+  - Tap to motion at 4× CPU is about 130–220 ms, including one 83 ms PlayerCard mount frame during the paused lead-in. Unthrottled it is about 80 ms.
+  - `touchtilt/blueback.cjs 16 reveal`: 0 blue backs at 390 and 1280. The back stays cream through the flight in the frames.
+  - `revealanim/behave.cjs`:
+    - Escape is ignored before and during the flight, and works as Done after it.
+    - Focus goes to Done.
+    - The rim shows mid-flight and is gone at rest.
+    - The reduced-motion fade runs.
+  - Not a thermal claim.
 
 ## New cards, binder and quiz features: second runtime round — September 24, 2026 evening (local, not deployed)
 
@@ -1293,5 +2009,338 @@ The loop keeps rendering for about 3–5 s after a question appears while the ca
 **Tradeoffs.**
 - The small idle motion of the posed players stops while the loop sleeps. That is the "at most 120 px in 6 s" noted above, and it is the same freeze the menus use.
 - Other venues' background matches pause while the loop sleeps, as they do behind menus.
-- The answered or feedback state still renders at 30 fps (phone) until the next question or close. That is unchanged and could be a follow-up once the replay ends.
+- The answered or feedback state still renders at 30 fps (phone) until the next question or close. That is unchanged and could be a follow-up once the replay ends. (Done: see "Answered quiz questions sleep once the replay ends" below.)
 - These are emulation render counts, not iPhone temperature measurements.
+
+## My card removed — September 25, 2026 (local, not deployed)
+
+The user asked to remove the "Your card" feature (the child's own card on the binder's inside front cover, added September 24). Its creator, IndexedDB store, on-device riso print, cover page, PlayerCard `custom` prop and PlayerArt `masks` prop are gone, so none of their runtime costs remain. Both binders open on their first card page again.
+
+## Binder card viewer: static heavy blur — September 25, 2026 (local, not deployed)
+
+The user asked for the binder behind a lifted card to be blurred much more. The viewer's scrim stays a flat tint (a little darker, `#12302ae0`) with no `backdrop-filter`. A full-screen backdrop blur would be re-run on every frame the lifted card's live scenery and films redraw above it. Instead, while the card is flying in or open, the binder layer, the dock and the dialog's header panel get a plain `filter: blur(18px)` (a `:has()` rule on the viewer's `data-phase` / `data-flying`). All three are inert and static then (no page turn, no pulse), so the blur is painted once and reused. It eases off over 0.3 s as the card flies back, and there is no transition with reduced motion. Validation: headless Chrome screenshots at 1280 × 800 and 390 × 844, and `tests/card-collection.cjs`. This is reduced work in principle, not a measured iPhone temperature change.
+
+## Player card flip spins one way — September 25, 2026 (local, not deployed)
+
+Every Flip now turns the card the same way (user: like a coin), with the full turn light and sparks each time. The flip layer's angle (`--spin`) grows by 180° per Flip and is folded back to 0° / 180° with the transition off once the turn settles (before the tilt may start). This adds no work: one CSS variable write per Flip and one timer. The turn light, sparks and lift are the same one-shot bursts as before. Reduced motion still flips instantly with no burst. Validation: headless Chrome mid-turn frames for three Flips in a row at 1280 × 800 and 390 × 844, and `tests/card-collection.cjs`, `tests/card-rewards.cjs` and `tests/iconic-play-ui.cjs`.
+
+## iPhone quick fixes — September 25, 2026 (local, not deployed)
+
+- **Bottom gap:** the Paths/cards dialogs, the Pick-a-card dialog and the phone `.town-app` take their height from `inset:0` instead of `100dvh` (Safari could leave dvh at the toolbar-expanded height after the toolbar collapsed, showing the tan page below). `html, body` are now island green (`#244d40`). No runtime cost.
+- **Bottom gap, follow-up (Sep 25 2026, local):** the phone/tablet rule in `app/globals.css` still forced `dialog[open]{height:100dvh!important}`, which beat the `height:auto` + `inset:0` fix on every touch device. It now uses `height:auto!important;max-height:none!important`, and the first panel uses `height:100%`. Guarded by `tests/device-guards.cjs` (checks 2/2b) and by the stale-dvh simulation in `tests/e2e/paths.spec.ts` / `cards.spec.ts`. The same pass added long-press callout guards and 44px hit areas (CSS only, no runtime cost), 16px form fields, and pitch-quiz cards that let taps through to the pitch (`data-pitch-pick`). See docs/testing-devices.md.
+- **Binder search:** the dock hides while search is open and the search bar takes its place at the bottom of the visible area, above the keyboard (visualViewport `resize`/`scroll` listeners only while search is open, as before). Results are capped to fit above the field.
+- **Page turn over the header:** the binder layer is split into a static art layer under the header (z 5) and a transparent, pointer-events-none binder layer over it (z 11), so a turning sheet passes over Back and Done. Nothing toggles when a turn starts.
+- **Found pocket:** deep green ring with a white edge and a pink halo; its pulse runs 4 times and stops.
+
+## Player card tilt: no repaint per frame — September 25, 2026 (local, not deployed)
+
+The user found the card tilt laggy on an iPhone. Measured in headless Chrome (390 × 844, DPR 3, touch, 4× CPU throttle, a 3 s circular drag on the binder viewer's card; `scratchpad/tilt/perf.cjs`):
+
+| | Paint events | Paint ms | Raster tasks | Style recalc ms | Touch moves handled |
+|---|---|---|---|---|---|
+| Before | 725 / 689 | 157 / 162 | 1031 / 969 | 729 / 752 | 91 / 85 |
+| After | 6 | 1 | 249 | 126 (idle baseline 69) | 173 |
+
+Causes and fixes (`PlayerCard.tsx`, `PlayerCard.module.css`, `PlayerArt.tsx`, `PlayerArt.module.css`):
+- Every frame repainted the backdrop SVG plane, the parallax box and the page layer: the SVG planes were transformed as SVG roots, and `--px/--py` were written on `.card`, which restyled the whole card. The SVG planes now sit inside HTML boxes that take the transform, and the spring writes each plane's `translate3d` directly. Only the foils get `--px/--py`.
+- The foil glare was a `radial-gradient` re-centred on `--mx/--my` (and a `background-position`), which repainted a full-card color-dodge layer each frame. It is now painted once, on oversized `::before`/`::after` layers that move by `transform` (`will-change` only while `data-motion`).
+- The planes kept a 0.08 s transform transition during the spring, restarting every frame and trailing the finger; it is off while `data-motion`.
+The look is unchanged (before/after screenshots at rest and tilted, legend and star). Frame times in headless were already ~16.7 ms, so the gain is main-thread and raster work, not a measured iPhone frame rate or temperature.
+
+## Pick a card deck sparkle — September 25, 2026 (local, not deployed)
+
+- 18 gold ✦ stars twinkle around the front card for as long as the choosing deck is open (user asked for them to keep going). This is the dialog's only endless animation: transform/opacity only (compositor), the island render loop is asleep behind the dialog, and the stars are removed once a card is chosen or the dialog closes. None with reduced motion.
+- Added runtime cost: 18 small composited text layers while the deck is open; no rAF, timers or layout. Not measured on an iPhone.
+
+## Answered quiz questions sleep once the replay ends — September 25, 2026 (local, not deployed)
+
+**What changed.** The quiz sleep above now also covers an answered question once nothing on the pitch is moving. Same mechanism, no new loop.
+- **Condition** (`Town.tsx` `animate()`, one line): the loop may sleep when a quiz question is waiting (`answer === null`) **or** answered with its pose no longer advancing: `!teachingPoseAdvances(quiz, quizOutcomeStep(quiz))`. That is false while an outcome replay plays (right answer, "Show me", "Replay", "Continue replay"), and true when the question has no replay, the replay has reached 1, or it is paused.
+- **Settle.** The same 1.2 s grace and camera-still check apply, so the replay's last poses and the camera's move to the feedback shot finish before it sleeps. The idle key now includes `answer` and `outcomeProgress`, so an answer, the replay's end or a pause restarts the grace.
+- **Waking.** Everything that woke the waiting question still wakes it (Try again and Next re-render `FieldLearning`, which calls `onWake`; canvas gestures bump `quizInput`; resize bumps `resizeRevision`; the camera button). `QuizReplay`'s own button (Show me / Pause / Replay / Continue replay) only re-renders itself, so it now calls a new `onWake` prop, which `FieldLearning` passes through.
+- **Unchanged:** the replay always plays in full, because it only advances on rendered frames and the loop cannot sleep while it advances.
+
+**Render counts** (dev server :8092, `perf2/quizafter.mjs m|d`, `learnf_roles31`: q4 visual trueFalse, q1 3D path tap; load 2.7–5; `window.__fi2.renderStats.rendered`). "Rest" is the 6 s window starting 2 s after the replay ends (or 2 s after the answer when there is no replay):
+
+| Case | Phone before → after, rest 6 s | Desktop before → after, rest 6 s | During replay (unchanged) |
+|---|---|---|---|
+| Visual, wrong | 180 → 11 | 361 → 17 | no replay |
+| Visual, right | 179 → 9 | 360 → 18 | no replay |
+| 3D tap, wrong | 180 → 8 | 360 → 10 | no replay |
+| 3D tap, wrong + Show me | 180 → 0 | 360 → 0 | phone 138 / 134 frames over ≈4.5 s, desktop 263 / 274 |
+| 3D tap, right (autoplay) | 180 → 0 | 360 → 0 | phone 123 / 124 over ≈4.1 s, desktop 244 / 246 |
+
+Phone is 390×844 DPR 3, touch, 4× CPU throttle; desktop is 1280×800 DPR 2. The few frames left in the rest window for the non-replay cases are the tail of the camera's move to the feedback shot. After that the count stays at 0 until the child acts.
+
+**Checks** (all pass on phone and desktop):
+- `quizafter.mjs`: each replay reaches `outcomeProgress` 1; the rested frame matches a forced fresh render (0–7 px, plus 21 px once on desktop, out of 2.9 M / 4.1 M); Replay, Try again and Next question each wake the loop.
+- `qa-pause.mjs`: Pause mid-replay stops rendering (0 frames in 3 s, progress frozen); Continue replay wakes it and the replay finishes; then 0 frames. From the answered rest, the camera button, a drag on the pitch and a resize each wake it and it settles again (3.5 s, 3.5 s, 1.4 s).
+- `quizsleep.mjs` (the pre-answer checks) passes on desktop and on two of three phone runs. The third phone run had one stale-frame check at 214 px (limit 200) on "3D after Try again", at load 7. That is the pre-answer path, which this change leaves alone. The earlier note measured 0–65 px of limb anti-aliasing noise there, and the reruns gave 57 and 82 px.
+- Gates: tsc, `npm test`, lesson-gestures, quiz-replay, quiz-outcomes and visual-quiz pass. `card-rewards.cjs` fails on a source-slice assertion, because `CardOffer.tsx` was being restructured in parallel and its `:<div className={styles.stage}` marker no longer exists. That failure is unrelated to this change.
+
+**Tradeoffs.** The feedback highlight, callouts and routes are drawn from the session state, so a slept frame shows them in full. The posed players' small idle motion stops, as it does before an answer. These are emulation render counts, not iPhone temperature measurements.
+
+**Found in passing (not changed).** The phone 30 fps cap in `animate()` (`lastRendered=now-(now-lastRendered)%(1000/30)`) can lock at 60 fps. When the gap between rendered frames lands in [32.3, 33.3) ms, the remainder is the whole gap, so the next vsync passes the `< 1000/30-1` test again. A simulation with ±0.05 ms of vsync jitter averages 42.8 fps instead of 30. One dev-server run showed a sustained 60 rendered frames/s on the phone profile, and the next run did not. A fix could be `now-Math.max(0,(gap+1)%(1000/30)-1)`, which stays at 30.0 in the same simulation. It needs its own before/after measurement. (Fixed with a slot limiter instead: see "Phone 30 fps cap holds at 30" below.)
+
+## Binder back turns: the prebuild follows the direction of travel — September 25, 2026 (local, not deployed)
+
+**Cause of the desktop back-turn stutter** ("Left over" in the Sep 24 evening round). The idle prebuild always predicted "next" (`prepare(start<last?step:-step)`). A mouse turning back several pages keeps resting on the Previous arrow, so no new `pointerenter` prebuilds the back turn. Every back turn after the first was therefore unprebuilt, and desktop Chrome stalled one frame about 0.2 s in while it rasterised the newly shown sheet. `gap.mjs` was extended to log which turn was prebuilt at each click (`perf2/gap2.mjs`). It showed `prep=next` on every back turn that stalled, and `prep=prev` on the first back turn, which never stalled.
+
+**Fix (`components/CardCollection.tsx`).**
+- A `lastDir` ref is set when any turn starts (dock, keys, corners, drag, tab, queued taps).
+- The idle prebuild uses that direction. At either end of the binder it falls back to the other direction. It resets to forward when the binder changes.
+- Still at most one prebuilt turn, built by the same interruptible transition. Hover, focus and pointerdown prebuilds are unchanged.
+
+**Phone end-of-turn sliver (`components/BinderLeaf.tsx`, `away` prop).**
+- On a portrait phone the single page's hinge is at the screen edge. A forward-turned sheet past about p = .65 lies off-screen except for a 1–6 px sliver over the binder's left edge and rings. That sliver then vanished when the turn settled.
+- That was the real content of `tests/card-collection.cjs`'s 1.9% phone snap difference. The page-corner buttons made up the rest.
+- The leaf is now hidden there the same way a prebuilt sheet is (opacity .001, so its tiles are kept). A reversed back turn shows it again below .65.
+- The switch happens where the sheet's right edge has reached x ≈ 2 px, so no pop is visible.
+- It only applies when the binder reaches the screen edge (`(W-binderW-tab)/2+cover<=8`). A landscape phone, with room beside the binder, still shows the turned sheet.
+
+**Measurements.**
+- **Builds:** two production builds from snapshots that differ only in the prediction line (`scratchpad/perf3/snapB` on :8093 = before, `snapC` on :8097 = after), run interleaved. The machine load average was 5–11, so single frames are noisy; compare counts.
+- **Scripts:** `perf2/gap2.mjs` (with `SEQ=1`, 4 next then 4 prev, hovering before each click) and `perf2/backrest.mjs` (4 forward, then back to page 1/the cover, then rest).
+
+| Desktop 1280×800 DPR 2 | Before | After |
+|---|---|---|
+| Consecutive back turns 2–4, frames > 34 ms during the motion (gap2, 3 hover→click gaps × 2 runs) | 19 frames in 18 turns, 67–200 ms | 5 frames in 18 turns, 50–83 ms (all in the loaded first run; 0 in the second) |
+| backrest back turns 2–4, frames > 34 ms in motion | 6 of 6 turns stalled (50–83 ms) | 0 of 8 |
+| Prebuilt turn at click | `next` on every back turn after the first | `prev` on every back turn |
+| Dev server, same script (before → after) | 50–133 ms on back turns 2–4 | 0 in 3 runs |
+
+| Phone 390×844 DPR 3, 4× CPU | Before | After |
+|---|---|---|
+| Back turns (5, down to the cover), frames > 34 ms in motion | 9 and 2 frames (2 runs) | 2 and 3 frames (2 runs) |
+| First back turn after going forward (touch has no hover) | Not prebuilt, 50–150 ms | Same: not prebuilt, 67–83 ms |
+
+**Cost.**
+- One prebuilt turn, as before. Composited layers at rest while travelling back: desktop 65 layers / 12.83 Mpx vs 64 / 12.53 with "next" prebuilt (about +0.3 Mpx, roughly 1.2 MB at 4 B/px). Phone 54 / 4.76 Mpx vs 56 / 4.95.
+- At rest after the sequence, before and after alike: 0 rAF, 0 timers, 0 running animations, 0–0.4% main thread, and 0 swaps, paints and raster tasks in a 3 s trace.
+- Prebuilding both neighbours was not needed and would double the hidden sheet and page copy, so it was not done.
+
+**Not fixed.**
+- The first back turn after forward turns on touch is still unprebuilt, because touch has no hover to predict it. On a spread, a finger landing on the left page already prebuilds it. A phone's single page doesn't.
+- The frames after landing (page swap plus the next prebuild) are unchanged.
+
+**Tests made robust.**
+- `tests/card-collection.cjs` waits for conditions, not fixed sleeps:
+  - Binder open: pockets present and a page announced.
+  - The held marker `__fiBinderRelease`.
+  - The settle marker: no `data-turning` and no unhidden leaf.
+  - The prebuilt leaf.
+  - All pocket portraits (CSS mask images) loaded and decoded.
+- The page-corner buttons, which are hidden under the pages while a sheet turns, are the only masked region.
+- Snap difference, now deterministic: 0.079% at 1440 and 0.125% at 390, where the phone had been 1.92–1.99%. The 2% limit is unchanged.
+- Pass B's bundle-rewriting route no longer throws when a chunk is still loading at context close.
+- `tests/iconic-play-ui.cjs` polls instead of sleeping:
+  - The guide opening.
+  - The card box settling.
+  - The film running: a Stop label and N draws.
+  - The next draw, up to 10 s, since narration can hold the clock under load.
+  - All assertions are unchanged.
+
+These are desktop and emulation numbers, not iPhone temperature measurements.
+
+### September 25 — expressive flight poses (local, not deployed)
+
+Free flight (twin jet, helicopter pack, Iron Man suit) now blends between seven body poses: Superman (both fists forward, body near horizontal, legs together), one-arm Superman (left or right), wing glide, dive (landing descent), climb/launch (take-off, blast) and a loose hover when still. A steady cruise switches between the Superman variants every 4–9 s at random; turns hold the pose and bank harder; the forward dash is always Superman. Flying car, mini plane, rocket board, parachute and fall keep their own poses.
+
+- Code: `lib/graphics/flightPoses.ts` (selection + weights), called from the existing `flightMotion.update`; `player.ts` blends 10 joint channels inside the existing jetpack branch; Town only passes position, height, jet action and jetpack kind into the one `flightMotion.update` call (and exposes `__fi2.flightPoses` for debugging).
+- Cost: no new loop, no per-frame allocation (fixed `Float32Array` weights, reused style object). All weights share one damping rate (~0.45 s, 0.3–0.6 s including joint lag) so they never sum past 1. With `dt = 0` (paused or sleeping loop) nothing advances and no variant is picked. Node micro-benchmark: about 5 µs per frame for selection and blending, plus about 4 µs per rig update. Phone profile (390×844, DPR 2, 4× CPU throttle, five A/B pairs while cruising): median rAF interval 16.7 ms and p95 33.4 ms both with and without poses; median script time per rAF 11.0 ms with poses and 11.7 ms without. That difference is window-to-window noise, not a saving.
+- Reduced motion: one calm glide, lying less flat (pitch ≤ 0.8 rad), no bob and no switching.
+- Regression check: `node tests/flight-poses.cjs`. `tests/movement-work.cjs` (mesh-merge count) and `tests/player-body-review.cjs` (walking support height) fail identically at HEAD without this change.
+
+## Phone 30 fps cap holds at 30 — September 25, 2026 (local, not deployed)
+
+**Bug.** The coarse-pointer cap in `Town.tsx` `animate()` (`if(coarse&&now-lastRendered<1000/30-1)return; lastRendered=now-(now-lastRendered)%(1000/30)`) let phones render up to twice as often as intended. When a rendered gap was just under 33.3 ms (including exact 2 × 16.67 ms vsyncs, through floating-point rounding), the remainder was the whole gap, `lastRendered` did not move forward, and the next vsync also passed.
+
+**Fix.** A pure slot limiter, `lib/town/frameCap.ts` `frameCapSlot(now, slot)`, replaces those two lines (one line in `animate()` plus the import):
+- Rendered frames sit on a fixed 33.3 ms grid. A frame renders once it reaches the next slot, with 3 ms of early tolerance for timestamp jitter. The slot then advances by exactly one interval, so the grid never creeps toward `now` and no second can hold more than 30 slots.
+- If a slot is missed (a long frame, dropped vsyncs, or the first frame after a sleep), the grid restarts at `now`. It doesn't burst to catch up.
+- This works for 60 Hz (every 2nd vsync), 90 Hz (every 3rd) and 120 Hz ProMotion (every 4th). The 3rd 120 Hz vsync arrives 25 ms after a slot, which is well outside the tolerance.
+- **Physics unchanged.** `dt` is still the real time since the previous rendered frame (clamped to 50 ms as before), and movement still runs on the fixed 1/60 s accumulator. Desktop (not coarse) is uncapped as before.
+
+**Simulation** (60 s of vsync timestamps, three seeds; `tests/frame-cap.cjs` and scratch `fcap/sim.cjs`):
+
+| Timing | Old cap | Note's `(gap+1)%…-1` idea | New slot cap |
+|---|---|---|---|
+| 60 Hz, no jitter | 47.0 fps | 30.0, gaps alternate 16.7 / 50 ms | 30.0, even 33.3 ms gaps |
+| 60 Hz, ±0.05–1 ms | 42–45.6 | 30.0 | 30.0 |
+| 120 Hz, no jitter | 47.0 | 30.0, gaps 25 / 41.7 ms | 30.0, even 33.3 ms |
+| 120 Hz, ±0.05–1 ms | 42–45.5 | 30.0 | 30.0 |
+| 120 Hz, 20 ms frames | 37.6 | 30.0 | 30.0 |
+| 60/90/120 Hz, 5% dropped vsyncs | 43.5–44.6 | 29.9–30.0 | 29.9–30.0 |
+
+The new cap never exceeds 31 frames in any 1 s window.
+
+**Browser measurement** (dev server :8092; phone profile is 390×844 DPR 3, `hasTouch`, `isMobile`, 4× CPU throttle; `window.__fi2.renderStats.rendered` per second; scratch `fcap/fps.mjs`):
+- "60 Hz" and "120 Hz" replace `requestAnimationFrame` with a synthetic vsync. It delivers callbacks once per refresh with a grid timestamp ±0.3 ms, and a slow frame misses the next vsync.
+- "Native" is headless Chrome's own rAF. Its timestamps are regular enough that the old cap already held 30 there.
+- Distance is metres per second from `__fi2.location` while holding an arrow key.
+
+| Phone profile | Before: rendered fps | After: rendered fps | Distance/s before → after (steady seconds) |
+|---|---|---|---|
+| 60 Hz, flying | 39.1 (up to 44.6) | 30.2 | 33.7–34.7 → 33.7–34.9 |
+| 60 Hz, walking | 42.5 (up to 46.2) | 30.1 | 3.64–3.73 → 3.69–3.70 |
+| 60 Hz, driving (moped) | 45.8 (up to 47.7) | 30.0 | see note |
+| 60 Hz, jetpack hover | 38.2 | 30.1 | — |
+| 120 Hz, flying | 37.4 (up to 43.3) | 26.7 (29.7–30.5 once load settled) | 32.7–34.9 → 32.8–34.0 |
+| 120 Hz, walking | 36.1 (up to 41.1) | 28.0 (29.7–30.4 most seconds) | 3.66–3.68 → 3.57–3.80 |
+| 120 Hz, driving | 42.9 (up to 48.8) | 30.0 | 23.4–27.6 → 23.2–28.5 |
+| Native rAF, fly / walk / drive | 30.0 / 30.0 / 29.9 | 24.6 / 30.0 / 30.0 | 3.69 walk both |
+
+- Seconds below 30 fps after the fix are frames that took longer than 33 ms under 4× throttle on a machine at load 12–18 (other agents were building). The cap only removes frames; it never delays a frame the device could draw on its slot.
+- The moped run reaches an obstacle after 2–4 s in every run. Its first seconds match: 24.3 / 23.1 at the native 30 fps before, and 24.2 / 28.0 / 23.3 after.
+- **Desktop** (1280×800, native rAF and synthetic 60 Hz) is still at 59.7–60.0 rendered fps for fly, walk and drive. Distances match the phone: 3.68–3.74 m/s walking and 33.6–34.4 m/s flying.
+- **Input.** Arrow-key movement and speed are unchanged. The longest wait before a new input is drawn is still one 33.3 ms slot on phones.
+
+**Sleeps still work** (phone profile):
+- The map and settings modals render 0 frames in 3 s, and 90 frames per 3 s after closing.
+- `perf2/quizsleep.mjs m`: ALL PASS. Waiting questions sleep; drag, tap, Try again and Next wake the loop; slept frames match fresh renders.
+- `perf2/quizafter.mjs m`: ALL PASS. Replays play to the end at about 30 fps (133 frames over 4.45 s), then rest at 0 frames; Replay, Try again and Next wake the loop.
+
+**Gates:** tsc, `npm test` (now includes `tests/frame-cap.cjs`), player-motion, flight-poses, offshore-flight, idle-flight-effects, jetpack-actions, parachute-landing and landing-marker all pass. `tests/movement-work.cjs` fails on the mesh-merge count (5 vs 7). That failure is from the parallel pose work and fails the same way without this change (see the note above).
+
+**Effect.** When rAF timestamps jitter, as real iOS/Android vsync does, phones now render up to about a third fewer frames: about 30 instead of 36–46 rendered fps. This is **reduced render work in emulation, not a measured iPhone temperature**. A real-device check (Safari Web Inspector timeline on a 60 Hz iPhone and a 120 Hz ProMotion iPhone) is still to do.
+
+
+### 2026-09-25 — arcade mobile and motion follow-up
+
+Shared arcade poses reuse state/joint arrays and add no render loop. Mobile remains capped at30fps; fixed frame slots replace threshold timing for more even cadence. Net vertices update only during response/reset; effects remain bounded. Rotation pauses Strikers and clears held input. Paused/hidden/settled states retain sleep, with Tennis a bounded pose settle tail. Deterministic articulation checks pass at30/60/120Hz; mobile browser checks are emulation, not physical phone heat evidence.
+
+### Reactive Pinball and island-style arcade controls
+
+Pinball adds three reused defender decision states, sampled at100ms, and one committed keeper-dive timer; existing480Hz collision substeps integrate bounded movements. Existing rigs articulate the block/dive; no extra meshes, render loop or particle pool. Impact feedback uses one bounded canvas transform in the existing render loop, decaying exponentially and disabled for reduced motion. Mobile ordinary touch play scored and completed failure/retry without errors; physical heat unmeasured. Arcade controls reuse the main app's cached paper-grain texture, cream rims and green/coral/lavender/blue palette, preserving touch sizes and safe areas. Local only.
+
+### Pinball dazed outfield defenders
+
+Separate boot/torso contacts reuse the existing bounded physics loop. Three fixed star groups (nine shared-geometry meshes total) are hidden outside a2second daze; reduced motion uses static stars. Fallen defenders skip blocking/collision, then recover. The ready-state sleep predicate permits this bounded recovery tail. Keeper logic is exempt. No new loop, timer, asset download or unbounded pool; local only, physical-phone heat unmeasured.
+
+### Breakaway goal-impact audio
+
+Goal bursts now add a short low-frequency impact and filtered net rattle through the existing gesture-unlocked AudioContext. One0.24second noise buffer is generated lazily and reused; transient nodes disconnect on completion. Existing mute/volume preferences apply, including zero volume. No audio loop, recurring timer or downloaded asset. Typecheck passes; automated browser checks exercise the callback but do not establish subjective sound quality or physical-phone heat.
+
+### Breakaway varied tackles and goal disassembly
+
+Three defender roles reuse the existing six-rig pool; kit materials are created only for Runner and explicitly disposed. Attack reach uses fixed reused role constants. Goals reuse their frame pieces plus three prebuilt net panels and three crossbar fragments per pooled goal. The1.2second burst resets transforms on reuse and then hides; reduced motion uses a small static scatter without bounce/spin. No new render loop or per-goal geometry creation. Simulation checks cover extended-foot collision, low-tackle jump/slide responses, role variety, warning time at maximum boost and bounded pools. Mobile fixtures confirm twelve burst pieces, hidden intact frame, outward movement and reset; ordinary touch run scored3goals over595.67m. Production build passes. Local only; no physical-phone thermal measurement.
+
+### Shared island rigs in all four arcade games
+
+Replaced arcade block figures with the main island `createPlayer` rig, retaining rigid-part merging and cached mesh transforms. Each actor owns reusable motion intent and virtual-travel state; no additional animation loop. The island solver supplies grounded gait and strike/slide poses. Breakaway removes its duplicate short-leg IK and follows the island dribble contact lane. Disposal releases rig-owned geometry, costumes and shared spine-surface references before the stage traverses remaining scenery.
+
+Saved avatar customization is loaded once for the Breakaway hero. Shot power is cached across release, and restart clears adapter travel/action state without moving fixed actors. Main rig detail costs more visible render work: Runner fixture samples172 desktop/92 mobile calls; prior scenes differ, so these are budgets to monitor, not a controlled before/after benchmark. Renderer resolution/caps unchanged. Mobile Runner ordinary play completed3goals over647.70m; all4simulation suites pass. Physical-phone heat and native Safari remain unverified. Local only.
+
+### Shirt back numbers (September 25, local, not deployed)
+
+`lib/graphics/shirtNumbers.ts` puts Barlow Condensed Bold (SIL OFL; ten figure outlines generated into `shirtDigits.ts` by `scripts/gen-shirt-digits.py`, so there is no web-font load race) back numbers on the procedural rig. Every number on every rig shares one 880×128 digit atlas (baked once from Path2D in ~2 ms, mipmapped, anisotropy 4) and one ~180-vertex panel geometry per body shape; there are no per-player canvases or textures. The panel is a hidden child of the jersey that shares the jersey's spine morph weights (no per-frame work); its material colour carries a number/ink code, so `playerBatch` draws all visible numbers in a match as **one** extra instanced draw (instance colour = code) with no shadow pass (`userData.batchShadow=false`). The fragment shader lays out 1–2 digits (two digits ×0.9, tight tracking, flicco's luminance ink rule, a soft dark keyline for white ink) and compensates torso width scaling; the vertex shader moves the whole panel out of the clip volume when the digit would be under 6 CSS px tall (fade to 9 px), so distant players cost only a vertex pass over the small panel. Unnumbered rigs are unchanged (the panel stays hidden and is skipped). `tests/shirt-numbers.cjs` covers glyphs, atlas cells, ink, layout, jersey conformity, orientation from behind and single-batch drawing. No physical-phone thermal claim.
+
+### Bean costumes (September 25, local, not deployed)
+
+`lib/graphics/beanCostumes.ts` refits the animal club costumes for the bean skin (docs/bean-characters/CONTRACT.md, lane E).
+- **Parts:** vertex-coloured and merged per joint, at most 7 meshes per costume (classic costumes used up to 29). They share one material for every costume. Geometry is cached per costume × build and shared by every wearer. There are no per-frame updates or rebuilds; the parts ride the solver's joints.
+- **Onesie pattern:** one 256² canvas per costume, created on demand and shared by every wearer. It is sampled by a `BeanMaterial` subclass on the rig's own data row, so the face, expression and number cost nothing extra.
+- **Hair and hats under the hood:** moved to layer 31 (not drawn, no shadow).
+- **Added cost while a costume is worn:** up to 7 draws and about 4.2k triangles for the costumed rig. These are emulation numbers, not iPhone temperature measurements.
+- **Colours (user decision, Sep 25 2026):** club home-kit colours (`CLUB_KIT_COLOURS`), no sashes (only a dog collar). No change in cost.
+
+## Island audio: idle silence, no ocean (Sep 26 2026)
+
+- **Ocean ambience removed (user request).** `lib/audio/islandSound.ts` no longer synthesizes, loops, restarts or fades an ocean buffer (the 16 s generated buffer, its source/filter/gain and the audio-clock hook are gone). The bottle intro's water and float still use the visual `sampleBottleOcean` envelope, now on page time; the cork pop and the music pause while the bottle is open are unchanged. This supersedes the ocean-loop notes above.
+- **No idle clicks.** Hover/slide ticks need input in the last 400 ms. 3D scene hovers (character, NPC, buildings, ferry) go through `sound.sceneHover(flying)`: they need a pointer move (held keys sweep the camera and a resting cursor's ray) and are off in flight, so flying plays only the jetpack hum, music and direct-action sounds (boundary, landing, etc.).
+- **Fades instead of cuts.** Ride hums, the truck engine and forced stops (blur/mute) ramp to zero over 40 ms before `stop()`; a hidden page still hard-stops because the context suspends at once.
+- **Validation:** `tests/idle-audio.cjs` (in `npm test`), `tests/bottle-audio.cjs`, and `scripts/check-idle-audio-browser.cjs` (dev server on :8092): zero sound starts over the idle window at a pitch, traffic lane, NPC plaza, parked moped, flying idle and flying on held keys; zero abrupt cuts when parking. Cost is lower (no ocean buffer or source); no device temperature claim.
+
+## Breakaway return-kick encounters — September 26, 2026 (local)
+
+Lateral defender movement now follows actual velocity into native jockey footwork; close challenges commit instead of tracking late cuts. Normal centred shots can be trapped and returned after a 0.3 s wind-up, with a fixed interception-time aim. The existing four football meshes/shot records are reused for trap, outgoing and returned paths; no extra projectile pool, renderer or animation loop. Native kick/charge channels handle the body. Unit checks at30/60/120Hz and actual desktop/touch return exchanges pass. Mobile testing is emulated, not thermal evidence. See arcade-breakaway-2026-09-26.md.
+
+## Independent arcade and drawing controls — September 26, 2026 (local, not deployed)
+
+The walkable arcade is a separate `/arcade` document, reached from Town with full navigation. Cold game links defer the room import, and opening a machine disposes its room renderer, crowd, audio and assets before mounting the selected game. Back recreates the room at the last cabinet. The physical entrance and Exit button fade into a document return to the island. Desktop and emulated-phone browser checks verify cold-route absence of island/world requests, no surviving island runtime after entry, hidden-room sleep, audio gesture unlock/mute/disposal, actual game play/back, and walking out with keyboard or touch input.
+
+The larger room uses the same coordinates on desktop and mobile with a close follow camera. Visible NPCs, attract screens and marquee bulbs share the room clock: 60 fps desktop / 30 coarse-input while active, 15 fps visible ambience after twelve quiet seconds, zero when hidden or a game is open. Static scenery and furnishing parts merge by palette, marquee bulbs are instanced, and cabinet screens do not mount game previews. No postprocessing or realtime shadow maps. This intentionally adds visible ambient activity; it is not a measured phone-cooling improvement. Detailed scope and sample render counts are in [the room review](arcade-room-2026-09-26.md). Positional sound has one gesture-created context, at most eight short voices, no downloaded tracks or additional scheduler; see [sound lifecycle evidence](arcade-room-sound-2026-09-26.md).
+
+Pass Puzzle keeps its sleeping renderer and 30 fps phone cap. Drawing retains up to 128 ordered input samples and uses a fixed 256-vertex visual line, preserving the origin and final release point instead of freezing at the previous 400-event limit. Prediction is capped at 12.5 Hz while the raw line follows input. Leaving active flight for a chooser/brief explicitly stops its loop. Desktop and touch checks cover cancellation, ordinary failure/retry/pass/goal, visible Arcade navigation and chooser sleep. See [the controls review](pass-puzzle-controls-2026-09-26.md). Tennis headers/scissors reuse the native rig and existing effect pools; see [the tennis review](arcade-tennis-2026-09-26.md).
+
+Final activity refinements add five authored 256×192 cabinet previews, updated at most eight times per second only when their screen bounds intersect the camera frustum. They are lightweight canvas illustrations, not live game instances, and freeze under reduced motion. The claw carriage, air-hockey puck/paddles and vending cue add six moving palette meshes and reuse the existing room clock. Greetings reuse current rigs. NPC avoidance checks only the bounded three/five-person population and enforces body separation, verified over 100-second routes at 15/30/60 Hz. Cabinet highlights now reuse the island building's green edge/halo/rising-wash shader with cabinet-sized geometry; the original building branches are unchanged. Effects dispose with the room. See the cabinet-attract and crowd reviews for checks; physical-phone heat remains unmeasured.
+
+## Arcade continuity, rewards and matching controls — September 26, 2026 (local)
+
+See [arcade coins and continuity](arcade-coins-2026-09-26.md). Separate entry/return black transitions preserve document isolation. Return skips startup splash assets and waits for actual first render. Arcade music is one bounded original buffer in the existing context, suspended hidden and disposed on game entry. Coin persistence runs only at changed milestones; pack equipment previews stay off. Four native character actions reuse one skill pose; finite button/slideout/reveal transitions respect reduced motion. Portrait390×844 and landscape844×390 touch checks matched all four island button positions, dimensions, borders, backgrounds and shadows exactly; all four actions responded to actual taps. No radar added. Desktop/mobile purchases, persistence, unique second card and insufficient funds passed, along with wallet concurrency/failure fixtures and mobile cold isolation. These are browser-emulation checks, not physical-phone thermal measurements. Not deployed.
+
+### Arcade audio boundary and Coins sleep follow-up (local)
+
+The island music owner now has an explicit scene gate and pagehide pause. Arcade entry shuts it down before the fade and disposes island SFX; registered card-play/story/lesson narration is stopped, including pending play promises. This prevents island voices from surviving the transition. Coins suspends the room renderer while open, without losing requested auto-walk destinations when it closes. Mobile browser checks passed:15fps idle cadence, zero hidden draws, zero draws behind Coins, room/audio disposal during game play and no island requests in the standalone arcade. Return uses the shared static grain and CSS loading track, with no splash cast preload. Applaud reuses the native thankPasser pose. No physical-device temperature claim.
+
+Arcade entry illustration follow-up: inline static SVG cabinets/characters, one cached grain texture and the already-preloaded brush font. Only the shared CSS loading bar loops; no additional canvas/WebGL context or player rig. Loading overlay unmounts after first actual room draw and a280ms fade. Desktop/mobile loading checks and TypeScript passed.
+
+### Paired arcade actions — September 26, 2026 (local)
+
+The four actions now choose the nearest visitor or prize attendant and perform a shared routine. Visitor signatures vary between high-fives, fist bumps, applause, hops and victory poses; the selected action changes the opening beat. These reinforce teammate acknowledgment and shared celebration. The attendant responds across the counter from its existing service aisle. Movement cancels an exchange, and completion releases the visitor back to its previous activity.
+
+Approach planning runs only on action input: a bounded 57×45 grid, up to 16 candidate meeting points, furniture clearance and current body positions. Stalled routes cancel. Both existing rigs use one shared clock and reused native pose structs, with additive highFive/fistBump move data; the player solver is unchanged. One pooled floor ring identifies the partner, and a short contact cue uses the existing audio pool. No extra renderer, animation loop, audio context or asset download. Existing active/idle/hidden cadence remains in effect; physical-phone temperatures are unmeasured.
+
+Validation: native skill/contact fixtures, crowd route/body-separation and social reserve/release fixtures, audio lifecycle fixtures, and TypeScript passed. Real desktop keyboard and emulated-mobile touch checks covered closest selection, distinct NPC routines, synchronized clocks, completion and movement cancellation; touch cancellation used the actual joystick. A separate keyboard walkthrough verified the attendant exchange completes at the front of the counter. Screenshots were inspected. Changes remain local, not deployed.
+
+Return-loader artwork follow-up: the main splash's blue/grain, brush heading, gold track and landscape palette now frame the native cheer character holding a Back to Island sign. The 6.3KB baked character is embedded as a data URI for first-frame display; the SVG sign and landscape remain static after a single 650ms entrance (disabled for reduced motion). No rig, renderer, new audio or image fetch is added. Desktop and mobile real Exit checks passed, including the shared button collapse, first-render dismissal and return beside the arcade. TypeScript passed; local only.
+
+### Facing, solo controls, keep-ups and shared loading cast (local follow-up)
+
+NPC controls now require close range (2.6m, with a small exit margin), a clear approach and a forward-facing cone. The selected visitor turns toward the player and pauses; looking away releases attention and restores solo actions. The attendant uses a front-counter proximity point. Automatic cabinet walking does not stop NPCs in its path. Only target changes update React; the faint ring reuses the existing mesh. Each NPC/action cycles three authored exchanges, adding alternate-hand high-fives, double hops and turn-taking cheers. These use native pose structs and the existing clock.
+
+One 20×14 ball mesh, one shared 256×128 generated panel texture and one shadow restore native dribbling. Paired keep-ups use the same ball and native foot-juggle channels: two touches, a chip to the partner, two return touches and a chip back. Selected routines allow additional space; the attendant does not juggle across furniture. Motion follows the existing capped room loop, with cached vectors and no added scheduler, renderer or audio context. Walking after the exchange retains the ball. CPU/render work is bounded; no physical-device cooling claim.
+
+The arcade loader now shares `LoadingBeanCast` with the main splash, so the same baked beans occupy exactly the same responsive positions. This intentionally adds the five cached splash stills/inline placeholders to arcade entry; it does not load live character rigs for the illustration. A black shape behind the cabinets grows during a finite 650ms transition, then the screen fades for 280ms. Reduced motion skips the expansion. The island's cast markup/layout is preserved through the shared component.
+
+Validation includes all crowd/body-separation fixtures and three variants per NPC/action, TypeScript, mobile actual joystick turning toward/away, contextual control bounds, repeated exchanges, shared keep-ups and solo ball retention. Desktop keyboard/mouse and portrait loader captures are checked separately. These changes are local and have not been deployed.
+
+## Solid live-field players and townsfolk — September 26, 2026 (local, not deployed)
+
+`lib/town/fieldCollision.ts` makes live-field players (all four venues) and island townsfolk solid for the main character: circle push-out with a tangential slide, a soft bump (small push-back, character squash/roll spring, render-only sidestep + lean on the other body), a rate-limited soft thud and 8–12 ms haptic. Never a knockdown; the player's own scooter/bike/moped no longer knock field players or townsfolk over (trucks still do).
+
+Runtime cost: runs inside the existing 60 Hz movement tick. Skipped entirely for the jetpack, falls, lessons and the rooftop knockout. Fields: one AABB test per venue; players are visited only on (or within 1.5 m of) a pitch at its height, with a squared-distance reject. Townsfolk: one compare per NPC against the `distance` islandNpcs.update already measures each frame (broad phase 3 m), so no extra distance pass. The step allocates nothing per tick (reused context and event objects; a nudge record is created once per bumped body). Nudge drawing runs only while a bump is settling (≤ .45 s) and never touches the match sim or NPC route positions. Validation: `node tests/field-collision.cjs` (overlap, slide, no knockdown, off-field no-op, sim unchanged on four venues, NPC Talk range/route) and desktop + emulated-phone joystick captures. No device thermal measurement.
+- **One idle controller, whole-mix fade (Sep 26 2026, user decision).** `createIslandMusic(..., {active,onIdle})` owns the 30 s idle timer (heat pass 4's music pause is now part of it). After 30 s with no *trusted* pointer/touch/key/wheel input, and nothing the child started still playing (`active`: a card/story film holding playback, an open lesson's voice line, or `fieldSession.playing`), the music fades out and `sound.setIdle(true)` ramps the sound master to 0 over 1.5 s, stops ride hums, then suspends the context. While idle nothing is scheduled, so waking replays nothing; the next real input resumes with a 0.25 s fade-in. Cost: one timer re-armed at most every 5 s.
+- **Narration ownership (user report: "plays audio leaking when just standing there on the island").** The shared lesson-voice element kept its last line loaded after a lesson closed (only the `src` attribute was removed), so anything that resumed it (iOS interruption end, lock-screen/headphone play, a stray `play()`) replayed the play narration over the island with music underneath; `scripts/check-narration-browser.cjs` reproduced it with a resume after close. Now closing a lesson unloads the element (`load()`), and a `play` guard pauses it unless an open lesson asked it to speak. Music has the same guard (stops if not allowed), and `registerIslandNarration` pauses other registered voices when one starts (one narration at a time).
+
+Retro-neon presentation and controls follow-up (local): room and loading art share midnight navy, cyan/magenta cabinet edges and warm gold prize accents. Cabinet rails, perimeter strips and 72 small carpet flecks join the existing static material batches; emissive materials and cached light-pool textures provide the glow without bloom, shadow maps or additional realtime lights. The original cabinet locations and green interaction highlights remain. The arcade-specific cast is baked from the native bean rig using `scripts/render-splash-characters.cjs --arcade`, with no balls, and shares the main loader's group coordinates. Tiny inline versions precede the cached WebPs. The darker textured loader uses an organic SVG black shape for its finite expansion. All four icon-only controls are now available on desktop as well as mobile; accessible names describe solo versus social actions. No visible action captions.
+
+Final transition/sign follow-up: arcade entry holds for at least three seconds before the 650ms organic black expansion and 280ms reveal; slower scene initialization extends the hold. Return foreground is sand tan and scales to full coverage over 700ms before a 280ms reveal, with the owner retaining the overlay for 1050ms. Reduced motion uses a short fade. The marquee's 56 chasing bulbs are removed: two continuous rounded neon tube frames with static translucent jackets and baked glowing lettering replace them. There is no blinking or per-frame material modulation. Desktop icon controls and mobile keep-up walkthroughs passed; the desktop neon sign screenshot and full-tan transition frame were inspected. Desktop/mobile loader and Exit checks and TypeScript passed. No deployment performed.
+
+Loader composition / store follow-up: arcade machines and the soft black shape move up together (desktop bottom14%, portrait39%); the shared bean grouping stays at its existing positions. Arcade-only baked outfits now use bright cyan, pink and violet kits with dark shorts; the main splash assets are unchanged. Render script also regenerates the tiny inline placeholders. The store uses only two pack offers (3/5 cards); no owned-card gallery is mounted. Reveals create at most five card components after purchase, and reward transactions run only on user action. Wallet correctness/partial-grant recovery and TypeScript pass; browser checks exercise mobile/desktop purchases and loading. Local, not deployed.
+
+Transition easing follow-up (local): arcade shape expansion now lasts 1.05s, followed by a 650ms eased reveal, with overlay cleanup at 1.8s. The three-second minimum hold and reduced-motion behavior remain unchanged. This extends only finite CSS transforms/opacity; no renderer or scheduler is added. Store coin balance is left-aligned in a flat pale-blue panel, with the label above its value and no button border/shadow treatment.
+
+Sequential loader departure: all foreground items (including the shared bean cast wrapper) fade together for 400ms; after 450ms the black shape begins its 1.05s expansion. Only after full coverage does the 650ms arcade reveal begin. Overlay cleanup waits 2250ms, preserving the existing three-second initial hold. The shape stays behind artwork during the first fade and moves above it only when expansion starts. Finite CSS animations only; reduced motion still skips the sequence.
+
+Staggered arcade loader departure (local): three SVG cabinets independently bounce/shrink over500ms at180ms offsets. Beans fade individually after the cabinets, with portrait ordering left-to-right and desktop ordering across the two groups. At2.1s the organic shape expands in both axes over1.2s, then holds full coverage briefly before a650ms reveal at3.45s. Cleanup waits4.2s; the initial three-second hold remains. Only finite CSS transforms and opacity, with existing reduced-motion bypass; no new assets, render loops or effects contexts.
+
+Balanced arcade wipe refinement (local): the organic SVG now interpolates from its original illustration bounds to a centered200vw×200vh rectangle. Both axes share one easing curve; the old low transform origin and16× zoom are removed. This keeps portrait/landscape coverage balanced and leaves opaque coverage before reveal. The isolated absolute SVG animates width/height/top only for the existing1.2s departure (a small finite layout cost); no polling or persistent frame loop. Staggered items and reduced-motion bypass remain unchanged.
+
+Arcade stretch timing polish (local): expansion shortened from1.2s to850ms, with a small initial squash/stretch and a210%→196%→200% settle. Coverage stays opaque through the settle; reveal starts at3.05s and cleanup at3.8s. Existing stagger and finite CSS-only cost preserved.
+
+Arcade ball controls (local): the four icon-only controls now trigger Shoot (Space), Freestyle/rainbow flick (F), Keep-ups (Q), and Step-over (C), also through touch. These use the native kick/juggle/skill channels and existing single textured ball and shadow. Freestyle and step-over sample the authored skill ball paths; keep-ups alternate feet. The practice shot uses a bounded forward/rebound path with an event-time furniture/person clearance scan. Movement, navigation, covering and visibility reset the action; no added renderer, timer, geometry, or continuous loop. Existing room frame caps and hidden sleep remain. Teaching purpose: finishing follow-through, alternating-foot control, and readable football feints. No physical-device thermal claim or deployment.
+
+Loader bean departure follow-up (local): each character now shrinks to15% while fading over200ms, staggered120ms apart. Shape expansion begins at1.75s, reveal at2.7s, cleanup at3.45s. Same finite CSS-only animation and reduced-motion bypass. Ball-action browser checks passed via desktop keyboard and emulated-mobile taps for all four actions and Coins cancellation.
+
+Arcade shooting parity and cabinet hits (local): shooting now directly reuses createWalkBall from the island, replacing the short scripted return arc. Pointer capture and keyboard down/up use the same180ms grace/1.8s charge curve. Shared windup, velocity, gravity, drag, floor/wall restitution, substeps and recall remain unchanged. Arcade adapters add room/furniture collision and a4.8m ceiling with the existing swept-frame response. Ball strikes reuse island ballReactions for visiting NPCs: fall, three stars, recovery, paused navigation; reactions stay in place to avoid pushing a prone rig through furniture. Shared impact audio stays in the arcade context. Cabinets have a480ms tinted-screen glitch, small screen displacement and existing light-pool modulation; sixteen instanced sparks share one reusable geometry/material and only update during an impact. Reduced motion suppresses sparks/shake and softens the tint. All work runs under the existing room clock/caps and sleeps hidden/covered; no island scene/assets/audio are mounted. Desktop keyboard and emulated-touch checks passed tap/held power, ceiling rebound, cabinet impact/sparks, recovery and covered hold cancellation; shared charged-shot, crowd separation, NPC knockdown and TypeScript checks passed. Physical-phone heat remains unmeasured; not deployed.
+
+Exit presentation (local): the freestanding EXIT sign/posts are replaced by a see-through green doorway glow with centered EXIT lettering. A single768×384 baked canvas texture on one transparent plane provides the soft border and tint, without an animation loop, realtime light or postprocessing. Existing walk-out trigger and return transition remain unchanged.
+
+Main loader tan expansion (local): the actual visible tan coastline is measured once when departure begins, and its shared path is reused in a viewport-level SVG. It expands from those exact bounds toward centered200vw×200vh coverage in both axes, with a small settle. This replaces the off-center whole-art zoom and rectangular tan cover/gleam. Existing item/cast exit timings and2.05s overlay lifetime stay intact. One departure-time layout read and finite700ms CSS animation; no ongoing listener or renderer.
+
+Mobile tan wipe correction: frame inspection found the front-loaded ease reached nearly full-screen in150ms. Replaced width/height/top animation with a compositor transform from the measured coastline to the viewport center, with independent x/y scale factors and even ease-in/out. Existing700ms duration and reveal timing retained. No per-frame layout. Navigation audit: single Back on nested Paths/settings pages, store history, development plan and quizzes; Escape follows parent navigation in nested dialogs and the surviving Back receives focus. Legacy Academy About duplicate removed. Desktop/mobile navigation walkthroughs and TypeScript passed.
+
+Exit cue removal (local, user request): removed the green doorway plane and its baked EXIT texture. The existing UI Exit button and physical walk-out trigger remain; this removes one texture/material/mesh from the room.
+
+Arcade ball trail parity (local): wired the shared island createBallEffects into shot launch, bounce and charge. The20-point line and14 reused trailing ball meshes use equipped-ball color/style and strengthen with charge. Effects update on the existing room clock only during shooting/charging and a450ms tail, clear on coverage/blur, suppress trails under reduced motion and dispose with the room. No extra frame loop or light; fixed pooled geometry.
+
+Held moving ball actions (local): scissors replaces the step-over and Freestyle is explicitly Rainbow flick. Q/F/C and captured action pointers repeat keep-ups/rainbow/scissors while held; release completes the current cycle, cancellation clears it. Actions no longer clear joystick/keyboard movement or cancel when walking starts. Native skill paths and the existing room loop remain. Shooting keeps release-to-charge semantics. Loader cast rotates through five lineups of the existing cached neon bean stills, retaining layout and departure timings; session selection avoids consecutive repeats with no additional artwork/renderers.
+
+NPC context restoration and idle release (local): facing a nearby available visitor swaps all four icons/accessibility names to partner actions, and keyboard shortcuts follow the same context. Turning away restores the held ball moves; active ball actions keep their controls until completion. Knocked-down NPCs cannot be selected. Fifteen seconds of still, non-interacting attention releases the NPC and hides partner controls/ring; the same idle stance cannot immediately recapture them. Movement or a new action resets the gate. One bounded timer in the existing room update; no polling or new loop.
+
+Arcade crowd congestion correction (local): removed continuously rotating lateral avoidance. Visitors now use distinct aisle waypoints, stable right-of-way and committed passing points with bounded lifetime; an occupied destination produces a wait instead of orbiting. Existing body separation, social reservations, idle attention timeout, knockdown recovery and frame caps remain. Passing targets allocate only on encounter, with no new scheduler or per-frame helper closures.220s blocked/cleared-aisle simulations at15/30/60Hz kept all bodies separated and every visitor completed5–6 cabinet visits; existing crowd/social/knockdown fixtures and TypeScript passed.
+
+Arcade loader simplification (local, user request): removed the organic SVG and its expansion. The background is near-black with the existing cached grain; machine/character stagger and five cast variations remain, followed directly by a650ms fade into the ready room. Reveal begins at1.75s after the initial minimum hold, cleanup at2.5s. Removes the large expanding layer and keeps reduced-motion behavior.
+
+Distinct NPC actions (local): replaced shared social fallbacks with72 authored exchanges (six NPCs×four actions×three variants). Each action/variant differs across visitors and all four buttons differ per visitor. Individual tempo, hop height and delayed non-contact partner responses break synchronized copies; high-five/fist-bump contacts and the fixed shared-ball keep-up clock remain coordinated. Counter attendant uses only upper-body routines. Authored data plus native pose sampling reuse the same rigs/clock and add no effects, assets or schedulers. All variety/counter constraints, crowd/knockdown/congestion tests and TypeScript passed.

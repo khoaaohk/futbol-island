@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The pass, live",
+   "text": "Germany against Hungary. A Hungary corner... Germany win the ball. Florian Wirtz looks up. Jamal Musiala is already running. Wirtz plays it forward, into his path! Musiala races away, all alone... and slots it home!",
+   "src": "/plays/narration/wirtz-signature/1.m4a",
+   "seconds": 16.1,
+   "words": [
+    {
+     "w": "Germany",
+     "at": 0.4
+    },
+    {
+     "w": "against",
+     "at": 0.85
+    },
+    {
+     "w": "Hungary",
+     "at": 1.175
+    },
+    {
+     "w": "A",
+     "at": 1.962
+    },
+    {
+     "w": "Hungary",
+     "at": 2.075
+    },
+    {
+     "w": "corner",
+     "at": 2.538
+    },
+    {
+     "w": "Germany",
+     "at": 3.413
+    },
+    {
+     "w": "win",
+     "at": 3.9
+    },
+    {
+     "w": "the",
+     "at": 4.088
+    },
+    {
+     "w": "ball",
+     "at": 4.175
+    },
+    {
+     "w": "Florian",
+     "at": 4.9
+    },
+    {
+     "w": "Wirtz",
+     "at": 5.45
+    },
+    {
+     "w": "looks",
+     "at": 5.8
+    },
+    {
+     "w": "up",
+     "at": 6.05
+    },
+    {
+     "w": "Jamal",
+     "at": 6.713
+    },
+    {
+     "w": "Musiala",
+     "at": 7.075
+    },
+    {
+     "w": "is",
+     "at": 7.7
+    },
+    {
+     "w": "already",
+     "at": 7.85
+    },
+    {
+     "w": "running",
+     "at": 8.225
+    },
+    {
+     "w": "Wirtz",
+     "at": 9.15
+    },
+    {
+     "w": "plays",
+     "at": 9.5
+    },
+    {
+     "w": "it",
+     "at": 9.825
+    },
+    {
+     "w": "forward",
+     "at": 9.963
+    },
+    {
+     "w": "into",
+     "at": 10.387
+    },
+    {
+     "w": "his",
+     "at": 10.613
+    },
+    {
+     "w": "path",
+     "at": 10.787
+    },
+    {
+     "w": "Musiala",
+     "at": 11.512
+    },
+    {
+     "w": "races",
+     "at": 12.1
+    },
+    {
+     "w": "away",
+     "at": 12.525
+    },
+    {
+     "w": "all",
+     "at": 12.95
+    },
+    {
+     "w": "alone",
+     "at": 13.175
+    },
+    {
+     "w": "and",
+     "at": 14.05
+    },
+    {
+     "w": "slots",
+     "at": 14.2
+    },
+    {
+     "w": "it",
+     "at": 14.588
+    },
+    {
+     "w": "home",
+     "at": 14.675
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. Musiala runs behind the defenders. Wirtz does not pass to his feet. He passes into his path, where he is going.",
+   "src": "/plays/narration/wirtz-signature/2.m4a",
+   "seconds": 10.1,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.188
+    },
+    {
+     "w": "Musiala",
+     "at": 2.175
+    },
+    {
+     "w": "runs",
+     "at": 2.862
+    },
+    {
+     "w": "behind",
+     "at": 3.25
+    },
+    {
+     "w": "the",
+     "at": 3.638
+    },
+    {
+     "w": "defenders",
+     "at": 3.725
+    },
+    {
+     "w": "Wirtz",
+     "at": 4.775
+    },
+    {
+     "w": "does",
+     "at": 5.125
+    },
+    {
+     "w": "not",
+     "at": 5.3
+    },
+    {
+     "w": "pass",
+     "at": 5.525
+    },
+    {
+     "w": "to",
+     "at": 5.85
+    },
+    {
+     "w": "his",
+     "at": 5.938
+    },
+    {
+     "w": "feet",
+     "at": 6.138
+    },
+    {
+     "w": "He",
+     "at": 6.85
+    },
+    {
+     "w": "passes",
+     "at": 6.975
+    },
+    {
+     "w": "into",
+     "at": 7.412
+    },
+    {
+     "w": "his",
+     "at": 7.588
+    },
+    {
+     "w": "path",
+     "at": 7.763
+    },
+    {
+     "w": "where",
+     "at": 8.213
+    },
+    {
+     "w": "he",
+     "at": 8.35
+    },
+    {
+     "w": "is",
+     "at": 8.5
+    },
+    {
+     "w": "going",
+     "at": 8.65
+    }
+   ]
+  },
+  {
+   "label": "One on one",
+   "text": "Musiala never slows down. He runs and runs, one on one with the keeper... goal!",
+   "src": "/plays/narration/wirtz-signature/3.m4a",
+   "seconds": 6.4,
+   "words": [
+    {
+     "w": "Musiala",
+     "at": 0.4
+    },
+    {
+     "w": "never",
+     "at": 0.95
+    },
+    {
+     "w": "slows",
+     "at": 1.262
+    },
+    {
+     "w": "down",
+     "at": 1.625
+    },
+    {
+     "w": "He",
+     "at": 2.275
+    },
+    {
+     "w": "runs",
+     "at": 2.425
+    },
+    {
+     "w": "and",
+     "at": 2.763
+    },
+    {
+     "w": "runs",
+     "at": 2.875
+    },
+    {
+     "w": "one",
+     "at": 3.35
+    },
+    {
+     "w": "on",
+     "at": 3.513
+    },
+    {
+     "w": "one",
+     "at": 3.675
+    },
+    {
+     "w": "with",
+     "at": 3.888
+    },
+    {
+     "w": "the",
+     "at": 3.987
+    },
+    {
+     "w": "keeper",
+     "at": 4.075
+    },
+    {
+     "w": "goal",
+     "at": 5.013
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: look for the run behind the defenders, and pass into their path.",
+   "src": "/plays/narration/wirtz-signature/4.m4a",
+   "seconds": 5.5,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.562
+    },
+    {
+     "w": "look",
+     "at": 1.413
+    },
+    {
+     "w": "for",
+     "at": 1.625
+    },
+    {
+     "w": "the",
+     "at": 1.738
+    },
+    {
+     "w": "run",
+     "at": 1.85
+    },
+    {
+     "w": "behind",
+     "at": 2.1
+    },
+    {
+     "w": "the",
+     "at": 2.487
+    },
+    {
+     "w": "defenders",
+     "at": 2.562
+    },
+    {
+     "w": "and",
+     "at": 3.3
+    },
+    {
+     "w": "pass",
+     "at": 3.438
+    },
+    {
+     "w": "into",
+     "at": 3.788
+    },
+    {
+     "w": "their",
+     "at": 3.962
+    },
+    {
+     "w": "path",
+     "at": 4.125
+    }
+   ]
+  }
+ ]
+}

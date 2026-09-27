@@ -1,0 +1,386 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The final, live",
+   "text": "Kansas City, 2024, the NWSL final. Orlando Pride against Washington Spirit. Angelina plays it forward. Barbra Banda surges down the right wing, cuts inside... and smashes it in!",
+   "src": "/plays/narration/banda-signature/1.m4a",
+   "seconds": 15.1,
+   "words": [
+    {
+     "w": "Kansas",
+     "at": 0.35
+    },
+    {
+     "w": "City",
+     "at": 0.812
+    },
+    {
+     "w": "2024",
+     "at": 1.3
+    },
+    {
+     "w": "the",
+     "at": 2.225
+    },
+    {
+     "w": "NWSL",
+     "at": 2.375
+    },
+    {
+     "w": "final",
+     "at": 3.388
+    },
+    {
+     "w": "Orlando",
+     "at": 4.375
+    },
+    {
+     "w": "Pride",
+     "at": 4.987
+    },
+    {
+     "w": "against",
+     "at": 5.263
+    },
+    {
+     "w": "Washington",
+     "at": 5.638
+    },
+    {
+     "w": "Spirit",
+     "at": 6.287
+    },
+    {
+     "w": "Angelina",
+     "at": 7.213
+    },
+    {
+     "w": "plays",
+     "at": 7.862
+    },
+    {
+     "w": "it",
+     "at": 8.225
+    },
+    {
+     "w": "forward",
+     "at": 8.375
+    },
+    {
+     "w": "Barbra",
+     "at": 9.213
+    },
+    {
+     "w": "Banda",
+     "at": 9.6
+    },
+    {
+     "w": "surges",
+     "at": 9.988
+    },
+    {
+     "w": "down",
+     "at": 10.4
+    },
+    {
+     "w": "the",
+     "at": 10.637
+    },
+    {
+     "w": "right",
+     "at": 10.725
+    },
+    {
+     "w": "wing",
+     "at": 11.037
+    },
+    {
+     "w": "cuts",
+     "at": 11.613
+    },
+    {
+     "w": "inside",
+     "at": 11.95
+    },
+    {
+     "w": "and",
+     "at": 13.075
+    },
+    {
+     "w": "smashes",
+     "at": 13.238
+    },
+    {
+     "w": "it",
+     "at": 13.75
+    },
+    {
+     "w": "in",
+     "at": 13.875
+    }
+   ]
+  },
+  {
+   "label": "The surge",
+   "text": "Watch again. Banda is strong and fast. She races away from her defender and cuts in onto her left foot.",
+   "src": "/plays/narration/banda-signature/2.m4a",
+   "seconds": 7.7,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "Banda",
+     "at": 1.488
+    },
+    {
+     "w": "is",
+     "at": 1.875
+    },
+    {
+     "w": "strong",
+     "at": 2.013
+    },
+    {
+     "w": "and",
+     "at": 2.525
+    },
+    {
+     "w": "fast",
+     "at": 2.663
+    },
+    {
+     "w": "She",
+     "at": 3.538
+    },
+    {
+     "w": "races",
+     "at": 3.675
+    },
+    {
+     "w": "away",
+     "at": 4.025
+    },
+    {
+     "w": "from",
+     "at": 4.3
+    },
+    {
+     "w": "her",
+     "at": 4.438
+    },
+    {
+     "w": "defender",
+     "at": 4.55
+    },
+    {
+     "w": "and",
+     "at": 5.075
+    },
+    {
+     "w": "cuts",
+     "at": 5.213
+    },
+    {
+     "w": "in",
+     "at": 5.487
+    },
+    {
+     "w": "onto",
+     "at": 5.675
+    },
+    {
+     "w": "her",
+     "at": 5.912
+    },
+    {
+     "w": "left",
+     "at": 6.05
+    },
+    {
+     "w": "foot",
+     "at": 6.338
+    }
+   ]
+  },
+  {
+   "label": "The strike",
+   "text": "Then, bang! A powerful strike, hard and low, past the keeper and into the net.",
+   "src": "/plays/narration/banda-signature/3.m4a",
+   "seconds": 5.9,
+   "words": [
+    {
+     "w": "Then",
+     "at": 0.375
+    },
+    {
+     "w": "bang",
+     "at": 0.625
+    },
+    {
+     "w": "A",
+     "at": 1.462
+    },
+    {
+     "w": "powerful",
+     "at": 1.575
+    },
+    {
+     "w": "strike",
+     "at": 2.025
+    },
+    {
+     "w": "hard",
+     "at": 2.5
+    },
+    {
+     "w": "and",
+     "at": 2.812
+    },
+    {
+     "w": "low",
+     "at": 2.925
+    },
+    {
+     "w": "past",
+     "at": 3.375
+    },
+    {
+     "w": "the",
+     "at": 3.663
+    },
+    {
+     "w": "keeper",
+     "at": 3.75
+    },
+    {
+     "w": "and",
+     "at": 4.125
+    },
+    {
+     "w": "into",
+     "at": 4.25
+    },
+    {
+     "w": "the",
+     "at": 4.463
+    },
+    {
+     "w": "net",
+     "at": 4.55
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "The secret? Hit the ball hard and low. Keepers find low shots the hardest to stop, because they must dive all the way down.",
+   "src": "/plays/narration/banda-signature/4.m4a",
+   "seconds": 8.9,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "secret",
+     "at": 0.463
+    },
+    {
+     "w": "Hit",
+     "at": 1.25
+    },
+    {
+     "w": "the",
+     "at": 1.425
+    },
+    {
+     "w": "ball",
+     "at": 1.525
+    },
+    {
+     "w": "hard",
+     "at": 1.837
+    },
+    {
+     "w": "and",
+     "at": 2.225
+    },
+    {
+     "w": "low",
+     "at": 2.35
+    },
+    {
+     "w": "Keepers",
+     "at": 3.237
+    },
+    {
+     "w": "find",
+     "at": 3.675
+    },
+    {
+     "w": "low",
+     "at": 3.95
+    },
+    {
+     "w": "shots",
+     "at": 4.25
+    },
+    {
+     "w": "the",
+     "at": 4.625
+    },
+    {
+     "w": "hardest",
+     "at": 4.725
+    },
+    {
+     "w": "to",
+     "at": 5.112
+    },
+    {
+     "w": "stop",
+     "at": 5.237
+    },
+    {
+     "w": "because",
+     "at": 5.9
+    },
+    {
+     "w": "they",
+     "at": 6.138
+    },
+    {
+     "w": "must",
+     "at": 6.275
+    },
+    {
+     "w": "dive",
+     "at": 6.537
+    },
+    {
+     "w": "all",
+     "at": 6.9
+    },
+    {
+     "w": "the",
+     "at": 7.088
+    },
+    {
+     "w": "way",
+     "at": 7.175
+    },
+    {
+     "w": "down",
+     "at": 7.425
+    }
+   ]
+  }
+ ]
+}
