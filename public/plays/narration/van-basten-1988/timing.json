@@ -6,7 +6,7 @@
    "label": "The final",
    "text": "Munich, 1988, the Euro final. The Netherlands, in orange, lead the Soviet Union one-nil. Arnold M\u00fchren floats a long cross from the left, and van Basten volleys it. Goal!",
    "src": "/plays/narration/van-basten-1988/1.m4a",
-   "seconds": 13.5,
+   "seconds": 13.6,
    "words": [
     {
      "w": "Munich",
@@ -18,51 +18,51 @@
     },
     {
      "w": "the",
-     "at": 1.825
+     "at": 1.875
     },
     {
      "w": "Euro",
-     "at": 1.962
+     "at": 2.013
     },
     {
      "w": "final",
-     "at": 2.312
+     "at": 2.362
     },
     {
      "w": "The",
-     "at": 3.263
+     "at": 3.312
     },
     {
      "w": "Netherlands",
-     "at": 3.375
+     "at": 3.425
     },
     {
      "w": "in",
-     "at": 4.05
+     "at": 4.088
     },
     {
      "w": "orange",
-     "at": 4.213
+     "at": 4.237
     },
     {
      "w": "lead",
-     "at": 4.862
+     "at": 4.875
     },
     {
      "w": "the",
-     "at": 5.112
+     "at": 5.088
     },
     {
      "w": "Soviet",
-     "at": 5.25
+     "at": 5.225
     },
     {
      "w": "Union",
-     "at": 5.787
+     "at": 5.763
     },
     {
      "w": "one-nil",
-     "at": 6.175
+     "at": 6.15
     },
     {
      "w": "Arnold",
@@ -110,19 +110,19 @@
     },
     {
      "w": "Basten",
-     "at": 10.363
+     "at": 10.35
     },
     {
      "w": "volleys",
-     "at": 10.863
+     "at": 10.912
     },
     {
      "w": "it",
-     "at": 11.338
+     "at": 11.387
     },
     {
      "w": "Goal",
-     "at": 12.05
+     "at": 12.1
     }
    ]
   },

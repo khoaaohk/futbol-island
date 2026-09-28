@@ -15,7 +15,7 @@ export const POWER_LEN=30;        // m of stroke for full power
 export const CURL_FULL=0.22;      // bow / chord for full curl
 export const CURL_DEAD=0.35;      // m of bow ignored (finger wobble)
 
-export function readStroke(points:StrokePoint[],world:PuzzleWorld):Kick{
+function readGesture(points:StrokePoint[],world:PuzzleWorld):Kick{
   const s=world.state,geo=geoOf(world.scenario);
   const ball=s.ball.p;
   const n=points.length;
@@ -25,16 +25,21 @@ export function readStroke(points:StrokePoint[],world:PuzzleWorld):Kick{
   while(j>0&&Math.hypot(points[j-1].x-end.x,points[j-1].z-end.z)<=HOLD_R)j--;
   const hold=n?end.t-points[Math.max(0,j)].t:0;
   const loft=hold<HOLD_MIN?0:clamp(LOFT_MIN+(1-LOFT_MIN)*(hold-HOLD_MIN)/HOLD_RAMP,0,1);
-  // length (moving part only) → power
-  let len=0;for(let i=1;i<=Math.max(0,j)&&i<n;i++)len+=Math.hypot(points[i].x-points[i-1].x,points[i].z-points[i-1].z);
-  if(n<2)len=Math.hypot(end.x-ball.x,end.z-ball.z);
-  const power=clamp(len/POWER_LEN,0.1,1);
-  // bow from the chord → curl (signed along nR = (d.z, −d.x))
+  // Distance controls automatic power; scribbling cannot add free energy.
   const st=n?points[0]:end,cx=end.x-st.x,cz=end.z-st.z,chord=Math.hypot(cx,cz);
+  let power=clamp(chord/POWER_LEN,0.1,1);
+  // Integrate the signed bow over the chord. One bad pointer sample no longer
+  // dictates spin; a deliberate smooth curve still retains its full shape.
   let curl=0;
   if(chord>1&&n>2){
-    const ux=cx/chord,uz=cz/chord,nx=uz,nz=-ux;let dev=0;
-    for(let i=1;i<n-1;i++){const o=(points[i].x-st.x)*nx+(points[i].z-st.z)*nz;if(Math.abs(o)>Math.abs(dev))dev=o;}
+    const ux=cx/chord,uz=cz/chord;let area=0,previousAlong=0,previousBow=0;
+    for(let i=1;i<n;i++){const dx=points[i].x-st.x,dz=points[i].z-st.z,along=clamp(dx*ux+dz*uz,previousAlong,chord),bow=dx*uz-dz*ux;
+      area+=(along-previousAlong)*(bow+previousBow)*.5;previousAlong=along;previousBow=bow;}
+    const dev=area/chord*(Math.PI/2);
+    // Automatic pace accounts for the intentional smooth arc, never accumulated
+    // raw zigzags. Integrate a sine bow with 16 bounded samples.
+    let arc=0;for(let i=0;i<=16;i++){const slope=Math.PI*dev/chord*Math.cos(Math.PI*i/16);arc+=Math.sqrt(1+slope*slope)*(i===0||i===16?.5:1);}
+    power=clamp(chord*arc/16/POWER_LEN,.1,1);
     if(Math.abs(dev)>CURL_DEAD)curl=clamp((dev-Math.sign(dev)*CURL_DEAD)/(CURL_FULL*chord),-1,1);
   }
   // where does it end?
@@ -63,4 +68,23 @@ export function readStroke(points:StrokePoint[],world:PuzzleWorld):Kick{
   const k:Kick={kind:'pass-space',target:{x:end.x,z:end.z},curl,loft,power};
   if(rec!=null)k.receiver=rec;
   return k;
+}
+
+export type PassControlMode='auto'|'ground'|'lift'|'shoot';
+export type PassControlOptions={mode?:PassControlMode;power?:number;shotHeight?:number};
+/** Explicit controls share one interpretation for preview and actual release. */
+export function readStroke(points:StrokePoint[],world:PuzzleWorld,options:PassControlOptions={}):Kick{
+ const kick=readGesture(points,world),mode=options.mode??'auto';
+ if(mode==='ground'){kick.loft=0;if(kick.kind==='header')kick.kind='pass-feet';}
+ if(mode==='lift'){kick.loft=.65;if(kick.kind==='pass-feet')kick.kind='header';}
+ if(mode==='shoot'){
+  const gestureLoft=kick.loft;
+  const geo=geoOf(world.scenario),ball=world.state.ball.p,end=points.at(-1)??ball,forward=end.z-ball.z;
+  const x=end.z>=geo.goalZ-1?end.x:forward>.5?ball.x+(end.x-ball.x)*(geo.goalZ-ball.z)/forward:end.x;
+  kick.kind='shot';kick.receiver=undefined;kick.target={x:clamp(x,-geo.halfGoal+.25,geo.halfGoal-.25),z:geo.goalZ};kick.loft=0;
+  if(Number.isFinite(options.shotHeight))kick.shotHeight=clamp(options.shotHeight!,0,1);
+  else kick.shotHeight=gestureLoft;
+ }
+ if(options.power!==undefined&&Number.isFinite(options.power))kick.power=clamp(options.power,.1,1);
+ return kick;
 }

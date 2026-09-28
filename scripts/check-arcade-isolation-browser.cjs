@@ -169,6 +169,8 @@ const assert=require('node:assert/strict');
  await page.getByRole('button',{name:'Coins',exact:true}).click();await page.getByRole('region',{name:'Choose your arcade machine'}).getByRole('button',{name:'Play Breakaway Run',exact:true}).click();await page.waitForSelector('[data-arcade-kind="runner"]');
  await page.waitForFunction(()=>!window.__arcadeRoom);assert.equal(await page.locator('canvas[aria-label^="Walkable arcade"]').count(),0,'room canvas removed while game mounted');assert.equal(await page.evaluate(()=>!!window.__fi2),false);
  assert.equal(await page.evaluate(()=>window.__lastRoomSound.disposed),true,'room sound disposed when game opens');assert.equal(await page.evaluate(()=>window.__lastRoomSound.voices),0);assert.equal(await page.evaluate(()=>window.__lastRoomSound.musicPlaying),false,'arcade music disposed with room');
+ // Arcade games now cost shared-wallet coins: top up this run once so the flow can start a game.
+ await page.evaluate(()=>{const w=JSON.parse(localStorage.getItem('fi2-arcade-wallet-v1')||'null')||{version:1,runs:{},packs:[]};w.runs=w.runs||{};for(let i=0;i<5;i++)w.runs['isolation-fixture-'+i]={game:'island',paid:20,reason:'fixture',at:Date.now()+i};localStorage.setItem('fi2-arcade-wallet-v1',JSON.stringify(w));window.dispatchEvent(new StorageEvent('storage',{key:'fi2-arcade-wallet-v1'}));});
  await page.getByRole('button',{name:'Play',exact:true}).click();await page.waitForFunction(()=>window.__arcade3d?.state||window.__arcade3d?.runtime.state.runner.distance>1);
  await page.locator('[data-arcade-kind="runner"] header button').first().click();await page.waitForFunction(()=>window.__arcadeRoom);
  assert.equal(await page.locator('[data-arcade-kind="runner"]').count(),0,'game unmounts on return to room');

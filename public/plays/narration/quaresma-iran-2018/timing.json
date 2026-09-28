@@ -1,0 +1,386 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Saransk, 2018",
+   "text": "Saransk, 2018, the World Cup: Portugal, in red, against Iran, in white. Ricardo Quaresma cuts in from the right, plays a quick one-two, and bends it with the outside of his right foot. Goal!",
+   "src": "/plays/narration/quaresma-iran-2018/1.m4a",
+   "seconds": 14.3,
+   "words": [
+    {
+     "w": "Saransk",
+     "at": 0.375
+    },
+    {
+     "w": "2018",
+     "at": 1.05
+    },
+    {
+     "w": "the",
+     "at": 1.9
+    },
+    {
+     "w": "World",
+     "at": 2.0
+    },
+    {
+     "w": "Cup",
+     "at": 2.337
+    },
+    {
+     "w": "Portugal",
+     "at": 2.987
+    },
+    {
+     "w": "in",
+     "at": 3.625
+    },
+    {
+     "w": "red",
+     "at": 3.788
+    },
+    {
+     "w": "against",
+     "at": 4.2
+    },
+    {
+     "w": "Iran",
+     "at": 4.625
+    },
+    {
+     "w": "in",
+     "at": 5.125
+    },
+    {
+     "w": "white",
+     "at": 5.287
+    },
+    {
+     "w": "Ricardo",
+     "at": 6.237
+    },
+    {
+     "w": "Quaresma",
+     "at": 6.75
+    },
+    {
+     "w": "cuts",
+     "at": 7.388
+    },
+    {
+     "w": "in",
+     "at": 7.662
+    },
+    {
+     "w": "from",
+     "at": 7.85
+    },
+    {
+     "w": "the",
+     "at": 7.987
+    },
+    {
+     "w": "right",
+     "at": 8.075
+    },
+    {
+     "w": "plays",
+     "at": 8.6
+    },
+    {
+     "w": "a",
+     "at": 8.912
+    },
+    {
+     "w": "quick",
+     "at": 8.975
+    },
+    {
+     "w": "one-two",
+     "at": 9.225
+    },
+    {
+     "w": "and",
+     "at": 10.0
+    },
+    {
+     "w": "bends",
+     "at": 10.137
+    },
+    {
+     "w": "it",
+     "at": 10.475
+    },
+    {
+     "w": "with",
+     "at": 10.588
+    },
+    {
+     "w": "the",
+     "at": 10.688
+    },
+    {
+     "w": "outside",
+     "at": 10.812
+    },
+    {
+     "w": "of",
+     "at": 11.363
+    },
+    {
+     "w": "his",
+     "at": 11.438
+    },
+    {
+     "w": "right",
+     "at": 11.6
+    },
+    {
+     "w": "foot",
+     "at": 11.912
+    },
+    {
+     "w": "Goal",
+     "at": 12.875
+    }
+   ]
+  },
+  {
+   "label": "The trivela",
+   "text": "Watch again, slowly. This is the trivela. The ball starts out wide, then swerves back, over keeper Beiranvand, into the far top corner.",
+   "src": "/plays/narration/quaresma-iran-2018/2.m4a",
+   "seconds": 10.2,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.188
+    },
+    {
+     "w": "This",
+     "at": 2.188
+    },
+    {
+     "w": "is",
+     "at": 2.425
+    },
+    {
+     "w": "the",
+     "at": 2.575
+    },
+    {
+     "w": "trivela",
+     "at": 2.675
+    },
+    {
+     "w": "The",
+     "at": 3.712
+    },
+    {
+     "w": "ball",
+     "at": 3.825
+    },
+    {
+     "w": "starts",
+     "at": 4.125
+    },
+    {
+     "w": "out",
+     "at": 4.438
+    },
+    {
+     "w": "wide",
+     "at": 4.65
+    },
+    {
+     "w": "then",
+     "at": 5.25
+    },
+    {
+     "w": "swerves",
+     "at": 5.5
+    },
+    {
+     "w": "back",
+     "at": 5.95
+    },
+    {
+     "w": "over",
+     "at": 6.5
+    },
+    {
+     "w": "keeper",
+     "at": 6.763
+    },
+    {
+     "w": "Beiranvand",
+     "at": 7.15
+    },
+    {
+     "w": "into",
+     "at": 7.963
+    },
+    {
+     "w": "the",
+     "at": 8.137
+    },
+    {
+     "w": "far",
+     "at": 8.238
+    },
+    {
+     "w": "top",
+     "at": 8.525
+    },
+    {
+     "w": "corner",
+     "at": 8.8
+    }
+   ]
+  },
+  {
+   "label": "Half-time lead",
+   "text": "Just before half-time! Quaresma races away, and Cristiano Ronaldo joins the celebration.",
+   "src": "/plays/narration/quaresma-iran-2018/3.m4a",
+   "seconds": 7.4,
+   "words": [
+    {
+     "w": "Just",
+     "at": 0.375
+    },
+    {
+     "w": "before",
+     "at": 0.625
+    },
+    {
+     "w": "half-time",
+     "at": 0.925
+    },
+    {
+     "w": "Quaresma",
+     "at": 2.062
+    },
+    {
+     "w": "races",
+     "at": 2.625
+    },
+    {
+     "w": "away",
+     "at": 3.05
+    },
+    {
+     "w": "and",
+     "at": 3.7
+    },
+    {
+     "w": "Cristiano",
+     "at": 3.825
+    },
+    {
+     "w": "Ronaldo",
+     "at": 4.525
+    },
+    {
+     "w": "joins",
+     "at": 5.112
+    },
+    {
+     "w": "the",
+     "at": 5.513
+    },
+    {
+     "w": "celebration",
+     "at": 5.6
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: hit the ball with the outside of your foot, and it curves away from the keeper.",
+   "src": "/plays/narration/quaresma-iran-2018/4.m4a",
+   "seconds": 5.8,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.562
+    },
+    {
+     "w": "hit",
+     "at": 1.4
+    },
+    {
+     "w": "the",
+     "at": 1.562
+    },
+    {
+     "w": "ball",
+     "at": 1.65
+    },
+    {
+     "w": "with",
+     "at": 1.962
+    },
+    {
+     "w": "the",
+     "at": 2.062
+    },
+    {
+     "w": "outside",
+     "at": 2.175
+    },
+    {
+     "w": "of",
+     "at": 2.612
+    },
+    {
+     "w": "your",
+     "at": 2.688
+    },
+    {
+     "w": "foot",
+     "at": 2.85
+    },
+    {
+     "w": "and",
+     "at": 3.375
+    },
+    {
+     "w": "it",
+     "at": 3.487
+    },
+    {
+     "w": "curves",
+     "at": 3.575
+    },
+    {
+     "w": "away",
+     "at": 3.875
+    },
+    {
+     "w": "from",
+     "at": 4.175
+    },
+    {
+     "w": "the",
+     "at": 4.312
+    },
+    {
+     "w": "keeper",
+     "at": 4.4
+    }
+   ]
+  }
+ ]
+}

@@ -14,7 +14,7 @@ function findLesson(format:Format,id:string):PathLesson|undefined{const p=FORMAT
 /** P0 IDP: one focus, linked island lessons, player reflection, coach note, grown-up cue. Local to this device. */
 export default function IdpPlan({onLaunch}:{onLaunch:()=>void}){
  const [state,setState]=useState<IdpState>(emptyIdp);
- const [choosing,setChoosing]=useState(false);
+ const [choosing,setChoosing]=useState(false),[confirmEnd,setConfirmEnd]=useState(false);
  const [format,setFormat]=useState<Format>('7v7');
  useEffect(()=>{const s=loadIdp();setState(s);if(s.plan)setFormat(goalById(s.plan.goalId)!.format);
   const sync=(e:StorageEvent)=>{if(e.key===IDP_KEY||e.key===null)setState(loadIdp());};
@@ -38,7 +38,8 @@ export default function IdpPlan({onLaunch}:{onLaunch:()=>void}){
    <Notes kind="coach" title="Coach’s note" hint="Coach: write one moment you saw and one next step." state={state} commit={commit}/>
   </div>
   <aside className={styles.grownup}><b>For a grown-up</b><span>{goal.parentCue}</span><small>Ask about what they noticed. Try not to score or coach from the sideline.</small></aside>
-  <div className={styles.row}><button type="button" className={styles.ghost} onClick={()=>setChoosing(true)}>Change focus</button><button type="button" className={styles.ghost} onClick={()=>{if(window.confirm('End this plan? Its notes will be cleared.'))commit(endPlan(state,Date.now()));}}>End plan</button></div>
+  {confirmEnd?<div className={styles.confirm} role="alertdialog" aria-labelledby="idp-end-title"><p id="idp-end-title"><strong>End this plan?</strong> Its notes will be cleared.</p><div className={styles.row}><button type="button" className={styles.ghost} autoFocus onClick={()=>setConfirmEnd(false)}>Keep my plan</button><button type="button" className={styles.primary} onClick={()=>{setConfirmEnd(false);commit(endPlan(state,Date.now()));}}>End plan</button></div></div>
+  :<div className={styles.row}><button type="button" className={styles.ghost} onClick={()=>setChoosing(true)}>Change focus</button><button type="button" className={styles.ghost} onClick={()=>setConfirmEnd(true)}>End plan</button></div>}
  </div>;
 }
 

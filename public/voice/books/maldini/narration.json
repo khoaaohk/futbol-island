@@ -1,0 +1,349 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "family": {
+      "src": "/voice/books/maldini/family.m4a?v=coach-bella-1",
+      "duration": 46.4,
+      "scriptSha256": "e9a068230db72814f0891d62323b4bc567f0e2c60d1e3f0ed58c451cd164e583",
+      "cues": [
+        {
+          "text": "The captain\u2019s son",
+          "start": 0.0,
+          "duration": 1.875
+        },
+        {
+          "text": "Paolo Maldini was born in Milan, Italy, in 1968.",
+          "start": 1.875,
+          "duration": 5.1
+        },
+        {
+          "text": "His father, Cesare, had been a defender and the captain of AC Milan and of Italy.",
+          "start": 6.975,
+          "duration": 6.075
+        },
+        {
+          "text": "At sixteen, Paolo played for Milan\u2019s first team, and he was given the number three shirt his father had once worn.",
+          "start": 13.05,
+          "duration": 7.8
+        },
+        {
+          "text": "In 1986, his father even called him up to Italy\u2019s under-21 team.",
+          "start": 20.85,
+          "duration": 5.9
+        },
+        {
+          "text": "Lift the name tag on the paper shirt.",
+          "start": 26.75,
+          "duration": 3.0
+        },
+        {
+          "text": "Following a famous parent can bring a lot of pressure.",
+          "start": 29.75,
+          "duration": 3.675
+        },
+        {
+          "text": "But Paolo\u2019s path was his own.",
+          "start": 33.425,
+          "duration": 2.45
+        },
+        {
+          "text": "He began as a winger, became a right-back at fourteen, and later made the left side his home.",
+          "start": 35.875,
+          "duration": 6.4
+        },
+        {
+          "text": "You don\u2019t have to be your parent. You only have to be yourself.",
+          "start": 42.275,
+          "duration": 4.1
+        }
+      ]
+    },
+    "debut": {
+      "src": "/voice/books/maldini/debut.m4a?v=coach-bella-1",
+      "duration": 46.9,
+      "scriptSha256": "2ec0463442cc041ff3976edc0537ca817b46738cbaf1959c0336b5f5613561b4",
+      "cues": [
+        {
+          "text": "So close with Italy",
+          "start": 0.0,
+          "duration": 2.025
+        },
+        {
+          "text": "With Italy, Paolo came very close to the biggest trophies.",
+          "start": 2.025,
+          "duration": 4.275
+        },
+        {
+          "text": "At the 1990 World Cup, Italy lost the semi-final on penalties.",
+          "start": 6.3,
+          "duration": 5.35
+        },
+        {
+          "text": "In 1994, they lost the World Cup final to Brazil on penalties.",
+          "start": 11.65,
+          "duration": 5.55
+        },
+        {
+          "text": "In 1998, they went out on penalties again, to France.",
+          "start": 17.2,
+          "duration": 4.775
+        },
+        {
+          "text": "Flip the scoreboard through the years.",
+          "start": 21.975,
+          "duration": 2.65
+        },
+        {
+          "text": "At Euro 2000, Italy led the final 1\u20130 until the very last minute, and then France won in extra time.",
+          "start": 24.625,
+          "duration": 8.575
+        },
+        {
+          "text": "Paolo never won a trophy with Italy.",
+          "start": 33.2,
+          "duration": 2.95
+        },
+        {
+          "text": "Still, he played 126 games for his country, and he was captain for eight years.",
+          "start": 36.15,
+          "duration": 6.25
+        },
+        {
+          "text": "You are more than one result. Be proud of how hard you tried.",
+          "start": 42.4,
+          "duration": 4.45
+        }
+      ]
+    },
+    "read": {
+      "src": "/voice/books/maldini/read.m4a?v=coach-bella-1",
+      "duration": 46.5,
+      "scriptSha256": "c5e745416177c251a9b6839c7de1d903ceecf11cff14aea11c69ccfa761db541",
+      "cues": [
+        {
+          "text": "Captain in the hard years",
+          "start": 0.0,
+          "duration": 2.175
+        },
+        {
+          "text": "After coach Fabio Capello left in 1996, Milan had disappointing seasons.",
+          "start": 2.175,
+          "duration": 6.875
+        },
+        {
+          "text": "For two seasons in a row, they did not qualify for European competitions.",
+          "start": 9.05,
+          "duration": 5.375
+        },
+        {
+          "text": "In 1997, when Franco Baresi retired, Paolo was made Milan\u2019s captain, in the middle of the struggles.",
+          "start": 14.425,
+          "duration": 8.225
+        },
+        {
+          "text": "Tap three times to clear the storm clouds.",
+          "start": 22.65,
+          "duration": 3.15
+        },
+        {
+          "text": "Paolo led the team through it, and in 1999 Milan won the Serie A title by one point.",
+          "start": 25.8,
+          "duration": 7.075
+        },
+        {
+          "text": "Then came more hard seasons.",
+          "start": 32.875,
+          "duration": 2.525
+        },
+        {
+          "text": "Being a leader does not mean everything goes well.",
+          "start": 35.4,
+          "duration": 3.725
+        },
+        {
+          "text": "It means you keep showing up.",
+          "start": 39.125,
+          "duration": 2.3
+        },
+        {
+          "text": "Hard seasons pass. Keep going, and keep helping the people around you.",
+          "start": 41.425,
+          "duration": 5.0
+        }
+      ]
+    },
+    "line": {
+      "src": "/voice/books/maldini/line.m4a?v=coach-bella-1",
+      "duration": 45.2,
+      "scriptSha256": "e830d97c2b5af8e21840ec24dd9435dfb5c21a31299695d1f87740a5a1817a10",
+      "cues": [
+        {
+          "text": "The finals that got away",
+          "start": 0.0,
+          "duration": 2.35
+        },
+        {
+          "text": "Paolo also knew the pain of losing big finals.",
+          "start": 2.35,
+          "duration": 3.575
+        },
+        {
+          "text": "Milan lost the Champions League final 1\u20130 to Marseille in 1993, and 1\u20130 to Ajax in 1995.",
+          "start": 5.925,
+          "duration": 9.15
+        },
+        {
+          "text": "The hardest night came in 2005, in the final against Liverpool.",
+          "start": 15.075,
+          "duration": 5.2
+        },
+        {
+          "text": "Paolo scored in the very first minute, and Milan led 3\u20130 at half-time.",
+          "start": 20.275,
+          "duration": 5.55
+        },
+        {
+          "text": "Turn the paper clock to the second half.",
+          "start": 25.825,
+          "duration": 2.875
+        },
+        {
+          "text": "Liverpool fought back to draw, and then won on penalties.",
+          "start": 28.7,
+          "duration": 4.375
+        },
+        {
+          "text": "Paolo later called it the worst moment of his career.",
+          "start": 33.075,
+          "duration": 3.65
+        },
+        {
+          "text": "A loss like that can hurt for a long time.",
+          "start": 36.725,
+          "duration": 3.3
+        },
+        {
+          "text": "It\u2019s okay to feel sad after a loss. Talk about it with someone you trust.",
+          "start": 40.025,
+          "duration": 5.15
+        }
+      ]
+    },
+    "europe": {
+      "src": "/voice/books/maldini/europe.m4a?v=coach-bella-1",
+      "duration": 45.3,
+      "scriptSha256": "0fba460fe0905a817210a2df4fea6cc5d056390cbf675789d032f092a175f597",
+      "cues": [
+        {
+          "text": "Two years later",
+          "start": 0.0,
+          "duration": 1.8
+        },
+        {
+          "text": "In 2007, Milan reached the Champions League final again, in Athens.",
+          "start": 1.8,
+          "duration": 5.95
+        },
+        {
+          "text": "Their opponents were Liverpool, once more.",
+          "start": 7.75,
+          "duration": 3.175
+        },
+        {
+          "text": "This time, Milan won 2\u20131.",
+          "start": 10.925,
+          "duration": 2.925
+        },
+        {
+          "text": "At 38, Paolo became the oldest captain ever to lift the trophy.",
+          "start": 13.85,
+          "duration": 5.125
+        },
+        {
+          "text": "Flip the calendar from 2005 to 2007.",
+          "start": 18.975,
+          "duration": 4.675
+        },
+        {
+          "text": "In all, Paolo won that trophy with Milan five times: in 1989, 1990, 1994, 2003 and 2007.",
+          "start": 23.65,
+          "duration": 11.1
+        },
+        {
+          "text": "The worst night of his career did not stop him.",
+          "start": 34.75,
+          "duration": 3.575
+        },
+        {
+          "text": "It was not the end of his story.",
+          "start": 38.325,
+          "duration": 2.6
+        },
+        {
+          "text": "A terrible night can be followed by a great one. Keep going.",
+          "start": 40.925,
+          "duration": 4.3
+        }
+      ]
+    },
+    "three": {
+      "src": "/voice/books/maldini/three.m4a?v=coach-bella-1",
+      "duration": 46.5,
+      "scriptSha256": "d415e0667ed16537f7a56665f725a9b72c2eddc4288f4ce25adf5c3b0cc5a3f9",
+      "cues": [
+        {
+          "text": "Not everyone cheered",
+          "start": 0.0,
+          "duration": 1.8
+        },
+        {
+          "text": "Paolo played his last home game at San Siro, Milan\u2019s stadium, in May 2009.",
+          "start": 1.8,
+          "duration": 6.575
+        },
+        {
+          "text": "The crowd gave him a standing ovation.",
+          "start": 8.375,
+          "duration": 3.0
+        },
+        {
+          "text": "But a group of Milan\u2019s own fans, called ultras, protested against him as he said goodbye.",
+          "start": 11.375,
+          "duration": 6.625
+        },
+        {
+          "text": "Even after twenty-five seasons, not everyone cheered.",
+          "start": 18.0,
+          "duration": 4.075
+        },
+        {
+          "text": "Raise the number three shirt.",
+          "start": 22.075,
+          "duration": 2.35
+        },
+        {
+          "text": "Milan retired it, so no one else would wear it.",
+          "start": 24.425,
+          "duration": 3.55
+        },
+        {
+          "text": "In 2016, Paolo\u2019s father Cesare, who had worn that number before him, died at 84, and his mother Marisa died later that year.",
+          "start": 27.975,
+          "duration": 9.9
+        },
+        {
+          "text": "Losing a parent is sad at any age.",
+          "start": 37.875,
+          "duration": 2.9
+        },
+        {
+          "text": "Not everyone will cheer for you, and that\u2019s okay. Hold on to the people who love you.",
+          "start": 40.775,
+          "duration": 5.675
+        }
+      ]
+    }
+  }
+}

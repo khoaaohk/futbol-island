@@ -1,0 +1,446 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Twelve seconds",
+   "text": "The 2023 FA Cup final at Wembley. Manchester City kick off! The ball goes back to the keeper, Stefan Ortega... he kicks it long. Erling Haaland heads it on. The ball pops up, and \u0130lkay G\u00fcndo\u011fan volleys it! Goal! After just twelve seconds!",
+   "src": "/plays/narration/gundogan-volley-2023/1.m4a",
+   "seconds": 17.8,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "2023",
+     "at": 0.425
+    },
+    {
+     "w": "FA",
+     "at": 1.312
+    },
+    {
+     "w": "Cup",
+     "at": 1.55
+    },
+    {
+     "w": "final",
+     "at": 1.775
+    },
+    {
+     "w": "at",
+     "at": 2.15
+    },
+    {
+     "w": "Wembley",
+     "at": 2.25
+    },
+    {
+     "w": "Manchester",
+     "at": 3.225
+    },
+    {
+     "w": "City",
+     "at": 3.862
+    },
+    {
+     "w": "kick",
+     "at": 4.162
+    },
+    {
+     "w": "off",
+     "at": 4.425
+    },
+    {
+     "w": "The",
+     "at": 5.075
+    },
+    {
+     "w": "ball",
+     "at": 5.175
+    },
+    {
+     "w": "goes",
+     "at": 5.475
+    },
+    {
+     "w": "back",
+     "at": 5.725
+    },
+    {
+     "w": "to",
+     "at": 6.0
+    },
+    {
+     "w": "the",
+     "at": 6.088
+    },
+    {
+     "w": "keeper",
+     "at": 6.175
+    },
+    {
+     "w": "Stefan",
+     "at": 6.737
+    },
+    {
+     "w": "Ortega",
+     "at": 7.175
+    },
+    {
+     "w": "he",
+     "at": 8.2
+    },
+    {
+     "w": "kicks",
+     "at": 8.325
+    },
+    {
+     "w": "it",
+     "at": 8.575
+    },
+    {
+     "w": "long",
+     "at": 8.7
+    },
+    {
+     "w": "Erling",
+     "at": 9.562
+    },
+    {
+     "w": "Haaland",
+     "at": 9.975
+    },
+    {
+     "w": "heads",
+     "at": 10.425
+    },
+    {
+     "w": "it",
+     "at": 10.662
+    },
+    {
+     "w": "on",
+     "at": 10.75
+    },
+    {
+     "w": "The",
+     "at": 11.5
+    },
+    {
+     "w": "ball",
+     "at": 11.6
+    },
+    {
+     "w": "pops",
+     "at": 11.912
+    },
+    {
+     "w": "up",
+     "at": 12.3
+    },
+    {
+     "w": "and",
+     "at": 12.575
+    },
+    {
+     "w": "\u0130lkay",
+     "at": 12.713
+    },
+    {
+     "w": "G\u00fcndo\u011fan",
+     "at": 13.162
+    },
+    {
+     "w": "volleys",
+     "at": 13.725
+    },
+    {
+     "w": "it",
+     "at": 14.213
+    },
+    {
+     "w": "Goal",
+     "at": 14.775
+    },
+    {
+     "w": "After",
+     "at": 15.425
+    },
+    {
+     "w": "just",
+     "at": 15.7
+    },
+    {
+     "w": "twelve",
+     "at": 15.925
+    },
+    {
+     "w": "seconds",
+     "at": 16.25
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again, slowly. G\u00fcndo\u011fan watches the ball drop. He keeps his head over it, and swings his right foot through. Laces!",
+   "src": "/plays/narration/gundogan-volley-2023/2.m4a",
+   "seconds": 8.9,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "slowly",
+     "at": 1.212
+    },
+    {
+     "w": "G\u00fcndo\u011fan",
+     "at": 2.163
+    },
+    {
+     "w": "watches",
+     "at": 2.725
+    },
+    {
+     "w": "the",
+     "at": 3.125
+    },
+    {
+     "w": "ball",
+     "at": 3.225
+    },
+    {
+     "w": "drop",
+     "at": 3.525
+    },
+    {
+     "w": "He",
+     "at": 4.2
+    },
+    {
+     "w": "keeps",
+     "at": 4.325
+    },
+    {
+     "w": "his",
+     "at": 4.562
+    },
+    {
+     "w": "head",
+     "at": 4.7
+    },
+    {
+     "w": "over",
+     "at": 4.888
+    },
+    {
+     "w": "it",
+     "at": 5.175
+    },
+    {
+     "w": "and",
+     "at": 5.312
+    },
+    {
+     "w": "swings",
+     "at": 5.438
+    },
+    {
+     "w": "his",
+     "at": 5.812
+    },
+    {
+     "w": "right",
+     "at": 5.975
+    },
+    {
+     "w": "foot",
+     "at": 6.263
+    },
+    {
+     "w": "through",
+     "at": 6.513
+    },
+    {
+     "w": "Laces",
+     "at": 7.325
+    }
+   ]
+  },
+  {
+   "label": "Top corner",
+   "text": "From behind the goal: the ball flies into the top corner. It's too fast for the keeper!",
+   "src": "/plays/narration/gundogan-volley-2023/3.m4a",
+   "seconds": 6.3,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.375
+    },
+    {
+     "w": "behind",
+     "at": 0.512
+    },
+    {
+     "w": "the",
+     "at": 0.912
+    },
+    {
+     "w": "goal",
+     "at": 1.0
+    },
+    {
+     "w": "the",
+     "at": 1.7
+    },
+    {
+     "w": "ball",
+     "at": 1.8
+    },
+    {
+     "w": "flies",
+     "at": 2.112
+    },
+    {
+     "w": "into",
+     "at": 2.513
+    },
+    {
+     "w": "the",
+     "at": 2.688
+    },
+    {
+     "w": "top",
+     "at": 2.775
+    },
+    {
+     "w": "corner",
+     "at": 3.05
+    },
+    {
+     "w": "It's",
+     "at": 3.85
+    },
+    {
+     "w": "too",
+     "at": 4.1
+    },
+    {
+     "w": "fast",
+     "at": 4.312
+    },
+    {
+     "w": "for",
+     "at": 4.662
+    },
+    {
+     "w": "the",
+     "at": 4.763
+    },
+    {
+     "w": "keeper",
+     "at": 4.85
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "The secret? Be switched on from the very first second. Watch a falling ball, and hit it with your laces!",
+   "src": "/plays/narration/gundogan-volley-2023/4.m4a",
+   "seconds": 7.3,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "secret",
+     "at": 0.463
+    },
+    {
+     "w": "Be",
+     "at": 1.325
+    },
+    {
+     "w": "switched",
+     "at": 1.512
+    },
+    {
+     "w": "on",
+     "at": 1.85
+    },
+    {
+     "w": "from",
+     "at": 2.075
+    },
+    {
+     "w": "the",
+     "at": 2.212
+    },
+    {
+     "w": "very",
+     "at": 2.3
+    },
+    {
+     "w": "first",
+     "at": 2.612
+    },
+    {
+     "w": "second",
+     "at": 2.925
+    },
+    {
+     "w": "Watch",
+     "at": 3.862
+    },
+    {
+     "w": "a",
+     "at": 4.162
+    },
+    {
+     "w": "falling",
+     "at": 4.237
+    },
+    {
+     "w": "ball",
+     "at": 4.65
+    },
+    {
+     "w": "and",
+     "at": 5.1
+    },
+    {
+     "w": "hit",
+     "at": 5.225
+    },
+    {
+     "w": "it",
+     "at": 5.362
+    },
+    {
+     "w": "with",
+     "at": 5.438
+    },
+    {
+     "w": "your",
+     "at": 5.562
+    },
+    {
+     "w": "laces",
+     "at": 5.675
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,314 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "sockball": {
+      "src": "/voice/books/eusebio/sockball.m4a?v=coach-bella-1",
+      "duration": 43.0,
+      "scriptSha256": "f2c1af7ce4c61a18103280fc4bd2bac68daa8f30d6c8e35c2a7a36d54b01155b",
+      "cues": [
+        {
+          "text": "A ball made of socks",
+          "start": 0.0,
+          "duration": 2.0
+        },
+        {
+          "text": "Eus\u00e9bio was born in 1942 in Mafalala, a very poor neighbourhood of Louren\u00e7o Marques, the city now called Maputo, in Mozambique.",
+          "start": 2.0,
+          "duration": 10.35
+        },
+        {
+          "text": "He loved football, and he played barefoot with his friends on bumpy, home-made pitches.",
+          "start": 12.35,
+          "duration": 5.825
+        },
+        {
+          "text": "They had no real ball, so they made one.",
+          "start": 18.175,
+          "duration": 3.225
+        },
+        {
+          "text": "Roll up the sock ball.",
+          "start": 21.4,
+          "duration": 2.1
+        },
+        {
+          "text": "The boys stuffed socks with newspaper and rolled them into a ball.",
+          "start": 23.5,
+          "duration": 4.45
+        },
+        {
+          "text": "They called their team Os Brasileiros, after Brazil\u2019s great team, and played using the names of their heroes.",
+          "start": 27.95,
+          "duration": 7.7
+        },
+        {
+          "text": "You don\u2019t need much to begin. Friends and a little imagination can turn almost nothing into something special.",
+          "start": 35.65,
+          "duration": 7.35
+        }
+      ]
+    },
+    "father": {
+      "src": "/voice/books/eusebio/father.m4a?v=coach-bella-1",
+      "duration": 42.8,
+      "scriptSha256": "7ea23d080c77e2c3f980091a6070b2b48eb8e1b071c9a3ecdc396ac3c9e43277",
+      "cues": [
+        {
+          "text": "The photo on the wall",
+          "start": 0.0,
+          "duration": 2.025
+        },
+        {
+          "text": "Eus\u00e9bio\u2019s father, Laurindo, worked on the railway.",
+          "start": 2.025,
+          "duration": 4.0
+        },
+        {
+          "text": "He had played football when he was young, and he loved the team Benfica.",
+          "start": 6.025,
+          "duration": 4.85
+        },
+        {
+          "text": "In 1950, when Eus\u00e9bio was eight years old, his father died of an illness called tetanus.",
+          "start": 10.875,
+          "duration": 6.975
+        },
+        {
+          "text": "Lift the photo frame to remember him.",
+          "start": 17.85,
+          "duration": 2.95
+        },
+        {
+          "text": "After that, his mother, Elisa, raised Eus\u00e9bio almost all by herself.",
+          "start": 20.8,
+          "duration": 5.55
+        },
+        {
+          "text": "There were five children in the family.",
+          "start": 26.35,
+          "duration": 2.8
+        },
+        {
+          "text": "Years later, his mum and his big brother would help him make the biggest choice of his life.",
+          "start": 29.15,
+          "duration": 5.825
+        },
+        {
+          "text": "When someone we love dies, it\u2019s okay to feel sad. Keep their memory close, and lean on the people who love you.",
+          "start": 34.975,
+          "duration": 7.825
+        }
+      ]
+    },
+    "doors": {
+      "src": "/voice/books/eusebio/doors.m4a?v=coach-bella-1",
+      "duration": 46.1,
+      "scriptSha256": "ea5b0b3f34b458bb481089d524ede688f450326d462bf3d3031e9dc6a25e8c14",
+      "cues": [
+        {
+          "text": "Turned away",
+          "start": 0.0,
+          "duration": 1.65
+        },
+        {
+          "text": "With some friends, Eus\u00e9bio tried to join his favourite club, Desportivo.",
+          "start": 1.65,
+          "duration": 5.325
+        },
+        {
+          "text": "They turned him away without even giving him a chance.",
+          "start": 6.975,
+          "duration": 3.875
+        },
+        {
+          "text": "Another club, Ferrovi\u00e1rio, said no too.",
+          "start": 10.85,
+          "duration": 3.375
+        },
+        {
+          "text": "Eus\u00e9bio later said the Desportivo coach was unfair to people because of the colour of their skin.",
+          "start": 14.225,
+          "duration": 6.925
+        },
+        {
+          "text": "Open the third door.",
+          "start": 21.15,
+          "duration": 2.0
+        },
+        {
+          "text": "At twelve, he tried Sporting Louren\u00e7o Marques, and they said yes to him and his friends.",
+          "start": 23.15,
+          "duration": 6.35
+        },
+        {
+          "text": "He got his first real football kit, and from 1957 to 1960 he scored 77 goals in 42 games.",
+          "start": 29.5,
+          "duration": 9.025
+        },
+        {
+          "text": "Hearing no is hard, and it isn\u2019t always fair. Keep knocking, and stay close to the friends who stay close to you.",
+          "start": 38.525,
+          "duration": 7.525
+        }
+      ]
+    },
+    "lisbon": {
+      "src": "/voice/books/eusebio/lisbon.m4a?v=coach-bella-1",
+      "duration": 44.9,
+      "scriptSha256": "1e2168e6e3ec5738b7a5200fbd3455a64788577194d8e47b5bd1a0035b8400c1",
+      "cues": [
+        {
+          "text": "Far from home",
+          "start": 0.0,
+          "duration": 1.825
+        },
+        {
+          "text": "On 15 December 1960, at eighteen, Eus\u00e9bio arrived in Lisbon, in Portugal, far from his mum and from Mozambique.",
+          "start": 1.825,
+          "duration": 9.6
+        },
+        {
+          "text": "Two big clubs argued over him, and the move took months.",
+          "start": 11.425,
+          "duration": 4.25
+        },
+        {
+          "text": "For a while, he was sent to a quiet place by the sea, and he told his mum he was going back home.",
+          "start": 15.675,
+          "duration": 6.5
+        },
+        {
+          "text": "Open the suitcase.",
+          "start": 22.175,
+          "duration": 2.075
+        },
+        {
+          "text": "His brother had helped with the deal, and his mum signed it.",
+          "start": 24.25,
+          "duration": 4.05
+        },
+        {
+          "text": "While he waited, he passed his school exam.",
+          "start": 28.3,
+          "duration": 3.275
+        },
+        {
+          "text": "In May 1961 he played his first game for Benfica, and scored three goals.",
+          "start": 31.575,
+          "duration": 6.275
+        },
+        {
+          "text": "Being new and far from home is hard. Stay in touch with your family, and ask for help when you need it.",
+          "start": 37.85,
+          "duration": 7.0
+        }
+      ]
+    },
+    "tears": {
+      "src": "/voice/books/eusebio/tears.m4a?v=coach-bella-1",
+      "duration": 46.0,
+      "scriptSha256": "43f95e42f0027969274687e730aa877823f41badc51d0f38c602b3a2a2f13a6d",
+      "cues": [
+        {
+          "text": "The Game of Tears",
+          "start": 0.0,
+          "duration": 1.925
+        },
+        {
+          "text": "At the 1966 World Cup in England, Portugal were losing 3\u20130 to North Korea.",
+          "start": 1.925,
+          "duration": 6.575
+        },
+        {
+          "text": "Eus\u00e9bio did not give up.",
+          "start": 8.5,
+          "duration": 2.525
+        },
+        {
+          "text": "He scored four goals in a row, and Portugal won 5\u20133.",
+          "start": 11.025,
+          "duration": 4.475
+        },
+        {
+          "text": "In the semi-final against England, Eus\u00e9bio scored a penalty, but Portugal lost 2\u20131.",
+          "start": 15.5,
+          "duration": 6.7
+        },
+        {
+          "text": "He walked off the pitch in tears, and players from both teams comforted him.",
+          "start": 22.2,
+          "duration": 5.2
+        },
+        {
+          "text": "Bring in the hug.",
+          "start": 27.4,
+          "duration": 1.775
+        },
+        {
+          "text": "In Portugal, that match is called the Game of Tears.",
+          "start": 29.175,
+          "duration": 3.875
+        },
+        {
+          "text": "Eus\u00e9bio still finished as the top scorer of the World Cup, with nine goals.",
+          "start": 33.05,
+          "duration": 5.525
+        },
+        {
+          "text": "It\u2019s okay to cry when something matters to you. Let others comfort you, and be kind when someone else is sad.",
+          "start": 38.575,
+          "duration": 7.425
+        }
+      ]
+    },
+    "applause": {
+      "src": "/voice/books/eusebio/applause.m4a?v=coach-bella-1",
+      "duration": 44.0,
+      "scriptSha256": "08623038a6571bf8979855d393521256b3e20f2468d5a6bd06606eedf9219e2c",
+      "cues": [
+        {
+          "text": "Clapping for the other side",
+          "start": 0.0,
+          "duration": 2.225
+        },
+        {
+          "text": "In the 1968 European Cup final, Eus\u00e9bio had a chance to win the game in the last seconds, but goalkeeper Alex Stepney saved his shot.",
+          "start": 2.225,
+          "duration": 10.05
+        },
+        {
+          "text": "Right away, Eus\u00e9bio stopped to clap for him.",
+          "start": 12.275,
+          "duration": 3.525
+        },
+        {
+          "text": "Benfica lost 4\u20131 in extra time, but Eus\u00e9bio still congratulated Stepney.",
+          "start": 15.8,
+          "duration": 6.2
+        },
+        {
+          "text": "Clap for the goalkeeper.",
+          "start": 22.0,
+          "duration": 2.225
+        },
+        {
+          "text": "The barefoot boy from Mafalala has been called Africa\u2019s first great footballer.",
+          "start": 24.225,
+          "duration": 5.875
+        },
+        {
+          "text": "In 2019, when Pope Francis visited Mozambique, he named Eus\u00e9bio as an example of perseverance.",
+          "start": 30.1,
+          "duration": 7.825
+        },
+        {
+          "text": "Win or lose, you can always be kind. Keep going, and be proud of where you come from.",
+          "start": 37.925,
+          "duration": 6.075
+        }
+      ]
+    }
+  }
+}

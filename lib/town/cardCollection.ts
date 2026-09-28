@@ -13,8 +13,15 @@ const LISTED=[...new Set(Object.values(GROUPS).flatMap(group=>[...group.current,
 export const ALL_PLAYERS=[...ROSTER.filter(name=>LISTED.includes(name)),...LISTED.filter(name=>!ROSTER.includes(name)).sort((a,b)=>a.localeCompare(b))];
 export const cardNumber=(name:string)=>ALL_PLAYERS.indexOf(name)+1;
 
-export const ROLE_LABELS:Record<string,string>={goalkeeper:'Goalkeeper',fullback:'Full-back',centerback:'Centre-back',midfielder:'Midfielder',winger:'Winger',striker:'Striker',goleiro:'Futsal goalkeeper',fixo:'Futsal fixo',ala:'Futsal ala',pivot:'Futsal pivô'};
+export const ROLE_LABELS:Record<string,string>={goalkeeper:'Goalkeeper',fullback:'Full-back',centerback:'Centre-back',midfielder:'Midfielder',winger:'Winger',striker:'Striker',goleiro:'Futsal goalkeeper',fixo:'Futsal fixo',ala:'Futsal ala',pivot:'Futsal pivô',coach:'Head coach'};
 export const FUTSAL_ROLES=new Set(['goleiro','fixo','ala','pivot']);
+/** Coach cards (user request, Sep 28 2026: "add top 25 current and all time coaches"): the `coach` role in positionPlayers.json,
+ *  numbered after every player (cardRoster.json 401–450), with their own divider in the Futbol binder. A coach who also has a
+ *  player card is keyed "<Name> (coach)"; cardDisplayName drops the suffix wherever the card itself already says Head coach. */
+export const COACH_ROLE='coach';
+const COACHES=new Set([...(GROUPS[COACH_ROLE]?.current??[]),...(GROUPS[COACH_ROLE]?.allTime??[])]);
+export const isCoachCard=(name:string)=>COACHES.has(name);
+export const cardDisplayName=(name:string)=>name.replace(/ \(coach\)$/,'');
 export type CardEntry={name:string;number:number;role:string;roleLabel:string;era:'current'|'allTime';futsal:boolean};
 /** One entry per player: their first listed role and era (a few players appear in two roles). */
 export const CARD_ENTRIES:CardEntry[]=(()=>{
@@ -23,9 +30,10 @@ export const CARD_ENTRIES:CardEntry[]=(()=>{
   if(!seen.has(name))seen.set(name,{name,number:cardNumber(name),role,roleLabel:ROLE_LABELS[role]??role,era,futsal:FUTSAL_ROLES.has(role)});
  return [...seen.values()].sort((a,b)=>a.number-b.number);
 })();
-/** Binder order, front to back (user request, Sep 24 2026): strikers first, then back through the team, goalkeepers last.
+/** Binder order, front to back (user request, Sep 24 2026): strikers first, then back through the team, goalkeepers last
+ *  among the players, then the coaches' own section (Sep 28 2026).
  *  Only the binder order; each card's role still comes from positionPlayers.json order above. */
-const BINDER_ORDER=['striker','winger','midfielder','fullback','centerback','goalkeeper','pivot','ala','fixo','goleiro'];
+const BINDER_ORDER=['striker','winger','midfielder','fullback','centerback','goalkeeper','coach','pivot','ala','fixo','goleiro'];
 export const ROLE_ORDER=[...BINDER_ORDER.filter(role=>role in GROUPS),...Object.keys(GROUPS).filter(role=>!BINDER_ORDER.includes(role))];
 
 /** TESTING (user request, Sep 23 2026): every card counts as collected so the whole set can be reviewed. Follows the launch

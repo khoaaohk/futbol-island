@@ -1,0 +1,294 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "village": {
+      "src": "/voice/books/iniesta/village.m4a?v=coach-bella-1",
+      "duration": 42.4,
+      "scriptSha256": "b05303c3845ec15b21d0c2100d8cbbe5eaf8c16e410e74772c74a59cd586fad3",
+      "cues": [
+        {
+          "text": "A small village, a big choice",
+          "start": 0.0,
+          "duration": 2.725
+        },
+        {
+          "text": "Andr\u00e9s Iniesta grew up in Fuentealbilla, a small village in Spain.",
+          "start": 2.725,
+          "duration": 5.225
+        },
+        {
+          "text": "There were no proper football pitches there, so he mostly played futsal, a small-sided game on a hard court.",
+          "start": 7.95,
+          "duration": 7.45
+        },
+        {
+          "text": "At twelve, playing for Albacete in a seven-a-side tournament, he was noticed by scouts.",
+          "start": 15.4,
+          "duration": 6.425
+        },
+        {
+          "text": "His parents knew a Barcelona youth coach, Enrique Orizaola.",
+          "start": 21.825,
+          "duration": 4.75
+        },
+        {
+          "text": "Open the farmhouse door.",
+          "start": 26.575,
+          "duration": 2.25
+        },
+        {
+          "text": "Together, the family visited La Masia, the farmhouse where Barcelona\u2019s young players live, and they decided he would go.",
+          "start": 28.825,
+          "duration": 8.35
+        },
+        {
+          "text": "Big choices feel easier when you make them together with the people who love you.",
+          "start": 37.175,
+          "duration": 5.175
+        }
+      ]
+    },
+    "masia": {
+      "src": "/voice/books/iniesta/masia.m4a?v=coach-bella-1",
+      "duration": 34.6,
+      "scriptSha256": "69bc42443faed3a2f4b5caef0777d36d8a26660eaf6b690c2615ec0dce81daf5",
+      "cues": [
+        {
+          "text": "Crying rivers",
+          "start": 0.0,
+          "duration": 1.825
+        },
+        {
+          "text": "When the day came to leave for La Masia, Andr\u00e9s later said, he cried rivers.",
+          "start": 1.825,
+          "duration": 5.45
+        },
+        {
+          "text": "At the academy he found it very hard to be apart from his parents.",
+          "start": 7.275,
+          "duration": 4.75
+        },
+        {
+          "text": "He was very shy, and he kept to himself.",
+          "start": 12.025,
+          "duration": 3.325
+        },
+        {
+          "text": "Clear the rain cloud.",
+          "start": 15.35,
+          "duration": 2.075
+        },
+        {
+          "text": "Missing home does not mean you are weak.",
+          "start": 17.425,
+          "duration": 2.925
+        },
+        {
+          "text": "It shows how much you love the people you left behind.",
+          "start": 20.35,
+          "duration": 3.75
+        },
+        {
+          "text": "Andr\u00e9s stayed at the academy, and he kept training with the other boys.",
+          "start": 24.1,
+          "duration": 4.875
+        },
+        {
+          "text": "It\u2019s okay to cry. Tears are a sign that you care, not a sign that you are weak.",
+          "start": 28.975,
+          "duration": 5.55
+        }
+      ]
+    },
+    "shy": {
+      "src": "/voice/books/iniesta/shy.m4a?v=coach-bella-1",
+      "duration": 38.8,
+      "scriptSha256": "a08dddd6e78848573f965f566ddc671f6c4a6b16115a22a48a1ecba07169b463",
+      "cues": [
+        {
+          "text": "Quiet, and a captain",
+          "start": 0.0,
+          "duration": 2.15
+        },
+        {
+          "text": "Being shy did not stop Andr\u00e9s.",
+          "start": 2.15,
+          "duration": 2.85
+        },
+        {
+          "text": "In 1999 he was captain of Barcelona\u2019s under-15 team at the Nike Premier Cup.",
+          "start": 5.0,
+          "duration": 7.15
+        },
+        {
+          "text": "In the final, he scored the winning goal in the last minute, and he was named the best player of the tournament.",
+          "start": 12.15,
+          "duration": 6.85
+        },
+        {
+          "text": "Pass the captain\u2019s armband.",
+          "start": 19.0,
+          "duration": 2.375
+        },
+        {
+          "text": "Soon after Andr\u00e9s arrived, the first-team captain, Pep Guardiola, told his teammate Xavi that this boy would one day take all their places.",
+          "start": 21.375,
+          "duration": 9.825
+        },
+        {
+          "text": "Quiet people can be brave leaders too.",
+          "start": 31.2,
+          "duration": 3.1
+        },
+        {
+          "text": "Being quiet is not a weakness. You can lead in your own way.",
+          "start": 34.3,
+          "duration": 4.425
+        }
+      ]
+    },
+    "jarque": {
+      "src": "/voice/books/iniesta/jarque.m4a?v=coach-bella-1",
+      "duration": 40.1,
+      "scriptSha256": "b02d0c589c7cb2e45affe742ad495f4f56b9e746bcc35c5abdeba9357e33d9a2",
+      "cues": [
+        {
+          "text": "Losing a friend",
+          "start": 0.0,
+          "duration": 1.9
+        },
+        {
+          "text": "By 2009, Andr\u00e9s was a star for Barcelona and Spain, but he had been injured again and again.",
+          "start": 1.9,
+          "duration": 7.725
+        },
+        {
+          "text": "Then, on 8 August 2009, his close friend Dani Jarque, a fellow footballer and the captain of Espanyol, died.",
+          "start": 9.625,
+          "duration": 8.65
+        },
+        {
+          "text": "Light a star for Dani.",
+          "start": 18.275,
+          "duration": 2.2
+        },
+        {
+          "text": "For a long time afterwards, Andr\u00e9s felt very low.",
+          "start": 20.475,
+          "duration": 4.025
+        },
+        {
+          "text": "Even when his body was fit, some days he could not finish training.",
+          "start": 24.5,
+          "duration": 4.65
+        },
+        {
+          "text": "Sadness like this can make even the strongest people feel tired and empty.",
+          "start": 29.15,
+          "duration": 5.375
+        },
+        {
+          "text": "When you feel sad for a long time, it\u2019s not your fault, and you don\u2019t have to hide it.",
+          "start": 34.525,
+          "duration": 5.5
+        }
+      ]
+    },
+    "help": {
+      "src": "/voice/books/iniesta/help.m4a?v=coach-bella-1",
+      "duration": 40.5,
+      "scriptSha256": "79ed99e264c772c4b612c93d335b5775b41122af5c38511ed9bf2bc010f0b7ac",
+      "cues": [
+        {
+          "text": "Asking for help",
+          "start": 0.0,
+          "duration": 1.875
+        },
+        {
+          "text": "Andr\u00e9s did not try to get better alone.",
+          "start": 1.875,
+          "duration": 3.2
+        },
+        {
+          "text": "He asked for help, including from a psychologist, Inma Puig.",
+          "start": 5.075,
+          "duration": 4.625
+        },
+        {
+          "text": "A psychologist\u2019s job is to help people with their thoughts and feelings.",
+          "start": 9.7,
+          "duration": 4.85
+        },
+        {
+          "text": "Knock on the helper\u2019s door.",
+          "start": 14.55,
+          "duration": 2.325
+        },
+        {
+          "text": "Years later, in 2018, Andr\u00e9s spoke openly about it in an interview.",
+          "start": 16.875,
+          "duration": 5.8
+        },
+        {
+          "text": "He said he had suffered from depression before the 2010 World Cup, because of his injuries and the death of his friend.",
+          "start": 22.675,
+          "duration": 8.1
+        },
+        {
+          "text": "Speaking up helps other people know they are not alone.",
+          "start": 30.775,
+          "duration": 3.775
+        },
+        {
+          "text": "Asking for help is brave. Talking to someone you trust can make heavy feelings lighter.",
+          "start": 34.55,
+          "duration": 5.875
+        }
+      ]
+    },
+    "final": {
+      "src": "/voice/books/iniesta/final.m4a?v=coach-bella-1",
+      "duration": 38.6,
+      "scriptSha256": "e52e6c671c0c160d9a4c5cf399d493b298471f48e21168219b0f43fceebfb602",
+      "cues": [
+        {
+          "text": "Always with us",
+          "start": 0.0,
+          "duration": 1.9
+        },
+        {
+          "text": "In 2010, Spain played the Netherlands in the World Cup final, and Andr\u00e9s scored the winning goal.",
+          "start": 1.9,
+          "duration": 6.9
+        },
+        {
+          "text": "He pulled up his shirt to show a message written on the shirt underneath: Dani Jarque, always with us.",
+          "start": 8.8,
+          "duration": 6.575
+        },
+        {
+          "text": "Lift the shirt to see the message.",
+          "start": 15.375,
+          "duration": 2.65
+        },
+        {
+          "text": "He said it showed that being a good person matters more than rivalry, or your team, or your colours.",
+          "start": 18.025,
+          "duration": 6.85
+        },
+        {
+          "text": "Later, even the fans at Espanyol, Barcelona\u2019s local rivals, stood and clapped for him because of his friendship with Dani.",
+          "start": 24.875,
+          "duration": 8.575
+        },
+        {
+          "text": "The people we love stay with us. Kindness is bigger than any rivalry.",
+          "start": 33.45,
+          "duration": 5.1
+        }
+      ]
+    }
+  }
+}

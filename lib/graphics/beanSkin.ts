@@ -1,6 +1,7 @@
 import * as T from 'three';
 import {LUMBAR_HEIGHT,CHEST_HEIGHT} from './spineSurface';
 import {shirtDigitAtlas,shirtInk,SHIRT_NUMBER_COVER_GLSL,BEAN_NUMBER_U,BEAN_DIGIT_HEIGHT} from './shirtNumbers';
+import {styleIndexRange} from './playerBatch';
 import {BEAN_EYES,BEAN_MOUTHS,BEAN_EXPRESSIONS,defaultBeanLookFor,defaultOutfitForTeam,
  type BeanLook,type Outfit,type BeanExpression,type BeanBuild,type BeanEyes,type BeanMouth} from './beanLook';
 
@@ -861,6 +862,29 @@ function finishHead(b:HeadBuilder,name:string){
 let shared:{body:T.BufferGeometry;limbs:T.BufferGeometry;hair:T.BufferGeometry;hat:T.BufferGeometry}|undefined;
 /** Shared, never-disposed bean geometry (one set for every rig). */
 export function beanGeometries(){return shared??={body:bodyGeometry(),limbs:limbGeometry(),hair:hairGeometry(),hat:hatGeometry()};}
+/**
+ * NPC style views (Sep 27 2026): a view of the shared hair or hat geometry that draws only one style's index range. It shares
+ * the base's attribute and index objects (the same GPU buffers, no copy or upload) and bounds, and has its own draw range, so an
+ * individually rendered rig (townsfolk, previews) draws only its style in the colour and shadow passes instead of every style
+ * collapsed in the vertex shader. One view per style, cached and never disposed (disposing would release the shared buffers).
+ * playerBatch keys and clones by `userData.beanStyleBase`, so batches group exactly as before. Style 0 (none, mesh hidden)
+ * and a non-contiguous style fall back to the base geometry.
+ */
+const styleViews=new WeakMap<T.BufferGeometry,Map<number,T.BufferGeometry>>();
+export function beanStyleView(base:T.BufferGeometry,style:number):T.BufferGeometry{
+ if(style<=0)return base;
+ let views=styleViews.get(base);if(!views){views=new Map();styleViews.set(base,views);}
+ let view=views.get(style);if(view)return view;
+ const range=styleIndexRange(base,style);if(!range)return base;
+ view=new T.BufferGeometry();for(const [name,attribute] of Object.entries(base.attributes))view.setAttribute(name,attribute);view.setIndex(base.index);
+ view.setDrawRange(range.start,range.count);view.boundingSphere=base.boundingSphere?.clone()??null;view.boundingBox=base.boundingBox?.clone()??null;view.name=base.name;
+ view.userData.beanStyleBase=base;view.userData.beanStyle=style;views.set(style,view);return view;
+}
+/** Picking on a hair/hat mesh tests the whole base geometry, as before the style views (taps on a townsperson are unchanged). */
+function raycastBase(this:T.Mesh,raycaster:T.Raycaster,hits:T.Intersection[]){
+ const view=this.geometry,base=view.userData.beanStyleBase as T.BufferGeometry|undefined;if(!base){T.Mesh.prototype.raycast.call(this,raycaster,hits);return;}
+ this.geometry=base;try{T.Mesh.prototype.raycast.call(this,raycaster,hits);}finally{this.geometry=view;}
+}
 
 // ---------------------------------------------------------------- rig skin
 export type BeanJoints={
@@ -901,6 +925,7 @@ export function createBeanSkin(j:BeanJoints,id:string,team:string,articulatedHan
  };
  const body=make('body',geos.body,j.torso,BEAN_STATIC_WIDTH),limbs=make('limbs',geos.limbs,j.root,BD.size);
  const hair=make('hair',geos.hair,j.torso,BEAN_STATIC_WIDTH),hat=make('hat',geos.hat,j.torso,BEAN_STATIC_WIDTH);
+ hair.raycast=hat.raycast=raycastBase;
  // The number panel is shaded on the body: no separate draw, no shadow.
  const meshes=[body,limbs,hair,hat];
  let look:BeanLook=defaultBeanLookFor(id),outfit:Outfit=defaultOutfitForTeam(team),expression:BeanExpression='neutral',number:number|null=null,active=true,cell=0;
@@ -916,6 +941,7 @@ export function createBeanSkin(j:BeanJoints,id:string,team:string,articulatedHan
   colour(BD.hat2,look.headwearColor2??(hw==='none'?'#fff4cd':outfit.shirt2),number??0);
   const s=BEAN_SHAPES[look.build]??BEAN_SHAPES.regular;put(BD.shape0,s.H,s.W,s.D,s.taper);put(BD.shape1,s.belly,s.leanX,s.leanZ,look.build==='wide'?1.08:look.build==='tall'?.95:1);
   put(BD.misc,FACE_U,BEAN_NUMBER_U,0,0);
+  hair.geometry=beanStyleView(geos.hair,hairId);hat.geometry=beanStyleView(geos.hat,HAT_IDS[hw]??0);
   hair.visible=hairId>0;hat.visible=(HAT_IDS[hw]??0)>0;
   for(const m of meshes)if(m!==hair&&m!==hat)m.visible=active;
   if(!active){hair.visible=hat.visible=false;}

@@ -1,0 +1,402 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Nizhny Novgorod, 2018",
+   "text": "Nizhny Novgorod, 2018, a World Cup quarter-final. France against Uruguay. Antoine Griezmann stands over a free kick on the right. He stops, curls it in... Rapha\u00ebl Varane glances it home!",
+   "src": "/plays/narration/varane-uruguay-2018/1.m4a",
+   "seconds": 14.3,
+   "words": [
+    {
+     "w": "Nizhny",
+     "at": 0.425
+    },
+    {
+     "w": "Novgorod",
+     "at": 0.8
+    },
+    {
+     "w": "2018",
+     "at": 1.65
+    },
+    {
+     "w": "a",
+     "at": 2.6
+    },
+    {
+     "w": "World",
+     "at": 2.7
+    },
+    {
+     "w": "Cup",
+     "at": 3.062
+    },
+    {
+     "w": "quarter-final",
+     "at": 3.325
+    },
+    {
+     "w": "France",
+     "at": 4.525
+    },
+    {
+     "w": "against",
+     "at": 4.9
+    },
+    {
+     "w": "Uruguay",
+     "at": 5.3
+    },
+    {
+     "w": "Antoine",
+     "at": 6.325
+    },
+    {
+     "w": "Griezmann",
+     "at": 6.888
+    },
+    {
+     "w": "stands",
+     "at": 7.475
+    },
+    {
+     "w": "over",
+     "at": 7.812
+    },
+    {
+     "w": "a",
+     "at": 8.012
+    },
+    {
+     "w": "free",
+     "at": 8.088
+    },
+    {
+     "w": "kick",
+     "at": 8.363
+    },
+    {
+     "w": "on",
+     "at": 8.613
+    },
+    {
+     "w": "the",
+     "at": 8.713
+    },
+    {
+     "w": "right",
+     "at": 8.8
+    },
+    {
+     "w": "He",
+     "at": 9.4
+    },
+    {
+     "w": "stops",
+     "at": 9.562
+    },
+    {
+     "w": "curls",
+     "at": 10.075
+    },
+    {
+     "w": "it",
+     "at": 10.463
+    },
+    {
+     "w": "in",
+     "at": 10.575
+    },
+    {
+     "w": "Rapha\u00ebl",
+     "at": 11.363
+    },
+    {
+     "w": "Varane",
+     "at": 11.925
+    },
+    {
+     "w": "glances",
+     "at": 12.325
+    },
+    {
+     "w": "it",
+     "at": 12.825
+    },
+    {
+     "w": "home",
+     "at": 12.925
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again. Griezmann checks his run. The ball bends in towards goal. Varane times his run from deep and gets there first.",
+   "src": "/plays/narration/varane-uruguay-2018/2.m4a",
+   "seconds": 9.1,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "Griezmann",
+     "at": 1.488
+    },
+    {
+     "w": "checks",
+     "at": 2.087
+    },
+    {
+     "w": "his",
+     "at": 2.362
+    },
+    {
+     "w": "run",
+     "at": 2.525
+    },
+    {
+     "w": "The",
+     "at": 3.263
+    },
+    {
+     "w": "ball",
+     "at": 3.375
+    },
+    {
+     "w": "bends",
+     "at": 3.712
+    },
+    {
+     "w": "in",
+     "at": 4.125
+    },
+    {
+     "w": "towards",
+     "at": 4.275
+    },
+    {
+     "w": "goal",
+     "at": 4.65
+    },
+    {
+     "w": "Varane",
+     "at": 5.362
+    },
+    {
+     "w": "times",
+     "at": 5.825
+    },
+    {
+     "w": "his",
+     "at": 6.162
+    },
+    {
+     "w": "run",
+     "at": 6.325
+    },
+    {
+     "w": "from",
+     "at": 6.55
+    },
+    {
+     "w": "deep",
+     "at": 6.763
+    },
+    {
+     "w": "and",
+     "at": 7.075
+    },
+    {
+     "w": "gets",
+     "at": 7.2
+    },
+    {
+     "w": "there",
+     "at": 7.45
+    },
+    {
+     "w": "first",
+     "at": 7.662
+    }
+   ]
+  },
+  {
+   "label": "The glance",
+   "text": "From beside the post, see his forehead flick it. The ball skims into the bottom corner. France lead, one\u2013nil!",
+   "src": "/plays/narration/varane-uruguay-2018/3.m4a",
+   "seconds": 7.8,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "beside",
+     "at": 0.487
+    },
+    {
+     "w": "the",
+     "at": 0.812
+    },
+    {
+     "w": "post",
+     "at": 0.9
+    },
+    {
+     "w": "see",
+     "at": 1.425
+    },
+    {
+     "w": "his",
+     "at": 1.562
+    },
+    {
+     "w": "forehead",
+     "at": 1.725
+    },
+    {
+     "w": "flick",
+     "at": 2.163
+    },
+    {
+     "w": "it",
+     "at": 2.438
+    },
+    {
+     "w": "The",
+     "at": 3.05
+    },
+    {
+     "w": "ball",
+     "at": 3.15
+    },
+    {
+     "w": "skims",
+     "at": 3.475
+    },
+    {
+     "w": "into",
+     "at": 3.913
+    },
+    {
+     "w": "the",
+     "at": 4.088
+    },
+    {
+     "w": "bottom",
+     "at": 4.175
+    },
+    {
+     "w": "corner",
+     "at": 4.55
+    },
+    {
+     "w": "France",
+     "at": 5.4
+    },
+    {
+     "w": "lead",
+     "at": 5.825
+    },
+    {
+     "w": "one",
+     "at": 6.175
+    },
+    {
+     "w": "nil",
+     "at": 6.5
+    }
+   ]
+  },
+  {
+   "label": "Time your run",
+   "text": "At a free kick, time your run. Attack the ball with your forehead. Glance it to the far corner.",
+   "src": "/plays/narration/varane-uruguay-2018/4.m4a",
+   "seconds": 6.8,
+   "words": [
+    {
+     "w": "At",
+     "at": 0.35
+    },
+    {
+     "w": "a",
+     "at": 0.463
+    },
+    {
+     "w": "free",
+     "at": 0.55
+    },
+    {
+     "w": "kick",
+     "at": 0.838
+    },
+    {
+     "w": "time",
+     "at": 1.387
+    },
+    {
+     "w": "your",
+     "at": 1.663
+    },
+    {
+     "w": "run",
+     "at": 1.775
+    },
+    {
+     "w": "Attack",
+     "at": 2.487
+    },
+    {
+     "w": "the",
+     "at": 2.875
+    },
+    {
+     "w": "ball",
+     "at": 2.975
+    },
+    {
+     "w": "with",
+     "at": 3.263
+    },
+    {
+     "w": "your",
+     "at": 3.362
+    },
+    {
+     "w": "forehead",
+     "at": 3.487
+    },
+    {
+     "w": "Glance",
+     "at": 4.412
+    },
+    {
+     "w": "it",
+     "at": 4.787
+    },
+    {
+     "w": "to",
+     "at": 4.875
+    },
+    {
+     "w": "the",
+     "at": 4.963
+    },
+    {
+     "w": "far",
+     "at": 5.062
+    },
+    {
+     "w": "corner",
+     "at": 5.35
+    }
+   ]
+  }
+ ]
+}

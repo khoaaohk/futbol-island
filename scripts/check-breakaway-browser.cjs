@@ -3,8 +3,7 @@ const assert=require('node:assert/strict');
 (async()=>{const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'});try{
  const mobile=process.argv.includes('--mobile'),reduced=process.argv.includes('--reduced'),page=await browser.newPage({viewport:mobile?{width:390,height:844}:{width:1280,height:800},isMobile:mobile,hasTouch:mobile,reducedMotion:reduced?'reduce':'no-preference'}),errors=[];
  page.on('pageerror',e=>errors.push(e.message));await page.addInitScript(()=>localStorage.setItem('fi2-welcome-v1','completed'));
- await page.goto(process.env.FUTBOL_BASE_URL||'http://localhost:8092');await page.waitForFunction(()=>window.__fi2,null,{timeout:90000});
- await page.evaluate(()=>document.querySelector('[data-arcade-enter]').click());await page.getByRole('button',{name:/Breakaway Run/}).click();await page.getByRole('button',{name:'Play',exact:true}).click();
+ await page.goto(new URL('/arcade?game=runner',process.env.FUTBOL_BASE_URL||'http://localhost:8092').href);await page.getByRole('button',{name:'Play',exact:true}).click();
  await page.waitForFunction(()=>window.__arcade3d?.phaseRef.current==='playing');
  const canvas=page.locator('[data-arcade-kind="runner"] canvas');
  const rigIdentity=await page.evaluate(()=>{const root=window.__arcade3d.runtime.stage.scene.getObjectByName('runner-player');return{island:!!root?.userData.islandRig,bean:!!root?.userData.beanBody&&!!root?.getObjectByName('bean-body')?.visible,joints:['player-pelvis','left-hip','right-hip','left-knee','right-knee','left-ankle','right-ankle'].every(name=>!!root?.getObjectByName(name))};});assert.deepEqual(rigIdentity,{island:true,bean:true,joints:true},'Breakaway uses the actual island character and articulated joints');

@@ -22,15 +22,25 @@ export function buildFarmersMarket({box,cylinder,put,sign,path,obstacles,buildin
  sign('EAST COAST FARMERS MARKET',18,1.1,221,3.2,98,'#477c6a');
  for(const x of [212.5,229.5]){cylinder(.09,3.2,'#9d805b',x,1.6,98);obstacles.push({x,z:98,w:.2,d:.2});}
  for(let i=0;i<labels.length;i++){
-  const x=230,z=21+i*14,footprint={x,z,w:7,d:6};
+  const rosa=i===1;
+  const x=230,z=21+i*14,footprint={x,z,w:rosa?7.5:7,d:rosa?9:6};
   if(![[-4,-4],[-4,4],[4,-4],[4,4]].every(([dx,dz])=>onIsland(x+dx,z+dz)))continue;
   if([...buildings,...roads,...obstacles].some(o=>overlap(footprint,o,1)))continue;
   path(226,z,6,4);
-  const canopy=colors[i%colors.length];
-  for(const dx of [-3,3])for(const dz of [-2.4,2.4])cylinder(.065,2.7,'#9d805b',x+dx,1.35,z+dz);
+  const canopy=rosa?'#bf6658':colors[i%colors.length],roofY=rosa?3.55:2.75,depthScale=rosa?1.5:1; 
+  for(const dx of [-3,3])for(const dz of [-2.4,2.4])cylinder(rosa?.095:.065,roofY-.05,'#9d805b',x+dx,(roofY-.05)/2,z+dz*depthScale);
   // Striped awning, a solid produce counter facing west toward the promenade.
-  for(let stripe=0;stripe<8;stripe++)box(6.7,.16,.7,stripe%2?'#eddfbb':canopy,x,2.75,z-2.45+stripe*.7);
-  box(1.1,1,4.6,'#a67d55',x-2,.5,z);
+  for(let stripe=0;stripe<8;stripe++)box(rosa?7.4:6.7,.16,.7*depthScale,stripe%2?'#eddfbb':canopy,x,roofY,z+(-2.45+stripe*.7)*depthScale);
+  box(1.1,1,rosa?7.4:4.6,'#a67d55',x-2,.5,z);
+  if(rosa){
+   // Taller scalloped-looking striped fascia and warm trim distinguish the sell stand.
+   box(.14,.35,8.4,canopy,x-3.7,roofY-.16,z);
+   box(.18,.09,8.5,'#edcf94',x-3.74,roofY-.36,z);
+   for(const dz of [-3.15,3.15]){
+    box(.95,.48,.9,'#d2bc94',x-2,1.24,z+dz);
+    for(const dx of [-.23,.23])put(new T.IcosahedronGeometry(.23,0),dz<0?'#d69b61':'#739568',x-2+dx,1.6,z+dz);
+   }
+  }
   for(let crate=0;crate<3;crate++){
    const cz=z-1.5+crate*1.5;
    box(.9,.22,1.15,'#d2bc94',x-2,1.1,cz);
@@ -39,7 +49,7 @@ export function buildFarmersMarket({box,cylinder,put,sign,path,obstacles,buildin
     put(new T.IcosahedronGeometry(i%4===2?.22:.18,0),['#739568','#d69b61','#edcf94','#bd7657'][i%4],px,1.34,pz);
    }
   }
-  sign(labels[i],4.8,.52,x-3.12,2.16,z,canopy,'#fff0cf',-Math.PI/2);
+  sign(rosa?'ROSA’S MARKET':labels[i],rosa?7:4.8,rosa?.8:.52,x-(rosa?3.78:3.12),rosa?2.88:2.16,z,canopy,'#fff0cf',-Math.PI/2);
   // A seated vendor keeps each stall inhabited without adding animation loops.
   const vx=x+.25,vz=z;
   box(.55,.75,.38,canopy,vx,1.12,vz);

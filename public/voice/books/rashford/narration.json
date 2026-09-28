@@ -1,0 +1,309 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "mum": {
+      "src": "/voice/books/rashford/mum.m4a?v=coach-bella-1",
+      "duration": 39.2,
+      "scriptSha256": "55f2b76c9fd4525a115133c2ca9f271ddf5ba8ff71b67e309a4b04a6c2d5fac5",
+      "cues": [
+        {
+          "text": "A mum who worked so hard",
+          "start": 0.0,
+          "duration": 2.275
+        },
+        {
+          "text": "Marcus Rashford was born in 1997 in Manchester, England.",
+          "start": 2.275,
+          "duration": 5.6
+        },
+        {
+          "text": "He was the youngest of five children.",
+          "start": 7.875,
+          "duration": 2.875
+        },
+        {
+          "text": "His mum, Melanie, brought them up on her own, and she worked more than one job to pay for everything.",
+          "start": 10.75,
+          "duration": 6.925
+        },
+        {
+          "text": "Money was very tight.",
+          "start": 17.675,
+          "duration": 2.15
+        },
+        {
+          "text": "Sometimes his mum skipped her own meals, so that her children had enough to eat.",
+          "start": 19.825,
+          "duration": 5.6
+        },
+        {
+          "text": "Lift the plate cover.",
+          "start": 25.425,
+          "duration": 2.1
+        },
+        {
+          "text": "Marcus later said that, all through his childhood, his mum was the leader of the family.",
+          "start": 27.525,
+          "duration": 6.125
+        },
+        {
+          "text": "Notice the people who look after you, and thank them. Their love is a kind of strength.",
+          "start": 33.65,
+          "duration": 5.525
+        }
+      ]
+    },
+    "rides": {
+      "src": "/voice/books/rashford/rides.m4a?v=coach-bella-1",
+      "duration": 39.4,
+      "scriptSha256": "4b0739a50c7e6e154fd75796cc8531640f5d792463358c3a871b24c5a4b74192",
+      "cues": [
+        {
+          "text": "No way to get to training",
+          "start": 0.0,
+          "duration": 2.175
+        },
+        {
+          "text": "Marcus started playing at Fletcher Moss Rangers when he was five, first as a goalkeeper.",
+          "start": 2.175,
+          "duration": 6.125
+        },
+        {
+          "text": "At seven, he joined the Manchester United academy.",
+          "start": 8.3,
+          "duration": 4.2
+        },
+        {
+          "text": "His big brothers helped him choose.",
+          "start": 12.5,
+          "duration": 2.725
+        },
+        {
+          "text": "But there was a problem.",
+          "start": 15.225,
+          "duration": 2.0
+        },
+        {
+          "text": "His mum and brothers were at work, so often nobody could take him, and he missed training.",
+          "start": 17.225,
+          "duration": 6.025
+        },
+        {
+          "text": "Drive the car to training.",
+          "start": 23.25,
+          "duration": 2.275
+        },
+        {
+          "text": "His youth coaches, Dave Bushell, Eamon Mulvey and Tony Whelan, found drivers to take him there.",
+          "start": 25.525,
+          "duration": 6.875
+        },
+        {
+          "text": "If something is stopping you, tell someone. Asking for help is brave, and people often want to help.",
+          "start": 32.4,
+          "duration": 6.975
+        }
+      ]
+    },
+    "meals": {
+      "src": "/voice/books/rashford/meals.m4a?v=coach-bella-1",
+      "duration": 41.1,
+      "scriptSha256": "d18907ed359ddb08abc29ec34e5549a43725db12386a746bc196bc9e928ab991",
+      "cues": [
+        {
+          "text": "Meals for hungry children",
+          "start": 0.0,
+          "duration": 2.425
+        },
+        {
+          "text": "In March 2020, Britain went into lockdown because of the COVID-19 pandemic.",
+          "start": 2.425,
+          "duration": 6.525
+        },
+        {
+          "text": "Many children usually got a free lunch at school, called free school meals.",
+          "start": 8.95,
+          "duration": 5.15
+        },
+        {
+          "text": "Now, they were missing out.",
+          "start": 14.1,
+          "duration": 2.225
+        },
+        {
+          "text": "Marcus remembered where he came from.",
+          "start": 16.325,
+          "duration": 3.1
+        },
+        {
+          "text": "He teamed up with a charity called FareShare to get food to children who needed it.",
+          "start": 19.425,
+          "duration": 5.45
+        },
+        {
+          "text": "Fill the three food boxes.",
+          "start": 24.875,
+          "duration": 2.375
+        },
+        {
+          "text": "People gave over \u00a320 million, and by June the charity had given out 3 million meals across the country.",
+          "start": 27.25,
+          "duration": 7.725
+        },
+        {
+          "text": "Remember where you came from. When you know how something feels, you can help others who feel it.",
+          "start": 34.975,
+          "duration": 6.1
+        }
+      ]
+    },
+    "letter": {
+      "src": "/voice/books/rashford/letter.m4a?v=coach-bella-1",
+      "duration": 39.7,
+      "scriptSha256": "f82c8269a34911082338aef5f2621202716ef7f5eaadbfd94886bde0e78e0959",
+      "cues": [
+        {
+          "text": "A letter to the government",
+          "start": 0.0,
+          "duration": 2.175
+        },
+        {
+          "text": "On 15 June 2020, Marcus wrote an open letter to the government.",
+          "start": 2.175,
+          "duration": 5.55
+        },
+        {
+          "text": "He asked them to help end child poverty, which means children growing up without enough money for the things they need.",
+          "start": 7.725,
+          "duration": 7.525
+        },
+        {
+          "text": "Just one day later, the government changed its plan, and children kept getting free meals over the summer holidays.",
+          "start": 15.25,
+          "duration": 7.775
+        },
+        {
+          "text": "Post the letter.",
+          "start": 23.025,
+          "duration": 1.8
+        },
+        {
+          "text": "Marcus said he was proud of helping 1.3 million children.",
+          "start": 24.825,
+          "duration": 4.575
+        },
+        {
+          "text": "Later, FareShare named its new warehouse after his mum.",
+          "start": 29.4,
+          "duration": 4.2
+        },
+        {
+          "text": "Your voice matters. Speaking up clearly and kindly can help change things for other people.",
+          "start": 33.6,
+          "duration": 6.075
+        }
+      ]
+    },
+    "post": {
+      "src": "/voice/books/rashford/post.m4a?v=coach-bella-1",
+      "duration": 43.7,
+      "scriptSha256": "9c41129e8d8d23e335a3c1c8312453582f11090ddeba5d21974926005a1e81bb",
+      "cues": [
+        {
+          "text": "The penalty that hit the post",
+          "start": 0.0,
+          "duration": 2.325
+        },
+        {
+          "text": "In July 2021, England played Italy in the final of Euro 2020.",
+          "start": 2.325,
+          "duration": 6.025
+        },
+        {
+          "text": "Marcus came on near the end of extra time.",
+          "start": 8.35,
+          "duration": 3.575
+        },
+        {
+          "text": "In the penalty shoot-out, he took England\u2019s third penalty, but it hit the post, and Italy won.",
+          "start": 11.925,
+          "duration": 6.65
+        },
+        {
+          "text": "Flip the scoreboard.",
+          "start": 18.575,
+          "duration": 2.0
+        },
+        {
+          "text": "Afterwards, some people sent him racist messages online.",
+          "start": 20.575,
+          "duration": 4.625
+        },
+        {
+          "text": "Racism means being unfair to someone because of the colour of their skin.",
+          "start": 25.2,
+          "duration": 5.7
+        },
+        {
+          "text": "A mural of Marcus in Withington, where he had lived as a boy, was damaged.",
+          "start": 30.9,
+          "duration": 5.45
+        },
+        {
+          "text": "A miss does not make you a failure. Racism is never okay: if you see it, tell a grown-up you trust.",
+          "start": 36.35,
+          "duration": 7.3
+        }
+      ]
+    },
+    "hearts": {
+      "src": "/voice/books/rashford/hearts.m4a?v=coach-bella-1",
+      "duration": 38.8,
+      "scriptSha256": "ccbb2a85f61cac397a2eaa62889d01b50d0c9faef938601cc8f3a1c1d775b77a",
+      "cues": [
+        {
+          "text": "A wall of hearts",
+          "start": 0.0,
+          "duration": 1.85
+        },
+        {
+          "text": "Then something wonderful happened.",
+          "start": 1.85,
+          "duration": 2.65
+        },
+        {
+          "text": "People from the neighbourhood covered the wall with hearts and kind messages for Marcus.",
+          "start": 4.5,
+          "duration": 5.8
+        },
+        {
+          "text": "The artist, Akse, came back and painted the mural as good as new.",
+          "start": 10.3,
+          "duration": 4.825
+        },
+        {
+          "text": "Put the three hearts on the wall.",
+          "start": 15.125,
+          "duration": 2.375
+        },
+        {
+          "text": "Marcus had a tough year and a half after that.",
+          "start": 17.5,
+          "duration": 3.375
+        },
+        {
+          "text": "But he kept going, and at the 2022 World Cup in Qatar, he scored three goals for England: one against Iran, just after coming on, and two against Wales.",
+          "start": 20.875,
+          "duration": 11.4
+        },
+        {
+          "text": "When someone is unkind, kindness can answer back. And you are always more than one result.",
+          "start": 32.275,
+          "duration": 6.5
+        }
+      ]
+    }
+  }
+}

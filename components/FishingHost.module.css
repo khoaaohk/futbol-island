@@ -1,0 +1,69 @@
+/* Live fishing HUD: small, at the edges, never covering the water. Shared --btn-* tokens (docs/ui/BUTTONS.md); no blur, no loops
+   except the bite pulse (at most ~1.4 s). The HUD layer ignores pointers except on its own buttons, so water taps remain available. */
+@font-face{font-family:IslandBrush;src:url('/stories/films/assets/IslandBrush-Regular.ttf') format('truetype');font-display:swap}
+.hud{position:absolute;inset:0;z-index:30;pointer-events:none}
+.hint{position:absolute;left:50%;top:calc(22px + env(safe-area-inset-top,0px));transform:translateX(-50%);margin:0;max-width:min(520px,calc(100% - 200px));padding:8px 16px;border:2px solid #fff2cd;border-radius:999px;background:#fff1d3;color:#244d40;box-shadow:0 3px 0 #a8863d;font-size:14px;font-weight:800;text-align:center;line-height:1.3}
+.hud[data-phase=bite] .hint{background:var(--btn-gold-bright);box-shadow:0 3px 0 var(--btn-gold-bright-edge)}
+.toast{position:absolute;left:50%;top:calc(70px + env(safe-area-inset-top,0px));transform:translateX(-50%);margin:0;max-width:min(480px,calc(100% - 40px));padding:9px 14px;border-radius:16px 24px 16px 16px;background:#244d40e8;color:#fff1d3;font-size:12.5px;line-height:1.45;box-shadow:0 4px 0 #17352b88;animation:toastIn .3s ease-out both}
+.toast{border:0;font:inherit;font-size:12.5px;text-align:left;pointer-events:auto;cursor:pointer}
+.toast b{color:#f9d665}
+/* Phones: at most two lines; tap to read the whole lesson. */
+@media(max-width:600px),(pointer:coarse){.toast:not([data-expanded=true])>span{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden}.toast{font-size:12px;padding:7px 12px}}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,-6px)}}
+/* Match the island's bottom action row; navigation lives separately at top left. */
+.back{position:absolute;left:calc(24px + env(safe-area-inset-left,0px));top:calc(20px + env(safe-area-inset-top,0px));pointer-events:auto}
+.controls{--fish-action-size:72px;position:absolute;right:calc(24px + env(safe-area-inset-right,0px));bottom:24px;display:flex;align-items:center;gap:12px;pointer-events:none}
+.controls button{box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:auto;touch-action:manipulation;-webkit-tap-highlight-color:transparent;font:inherit;font-weight:800;cursor:pointer;width:var(--fish-action-size);height:var(--fish-action-size);min-width:var(--fish-action-size);min-height:var(--fish-action-size);padding:5px;border:3px solid #fff2cd;border-radius:50%;background:var(--btn-gold) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;color:var(--btn-ink);box-shadow:0 5px 0 #a8863d,0 0 0 4px #fff2cd40;transition:translate .16s,box-shadow .16s}
+.controls button:active{translate:0 var(--btn-press);box-shadow:0 2px 0 #a8863d,0 0 0 4px #fff2cd40}
+.controls button:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
+.reel{font-size:16px!important;line-height:1.1}
+.reel[data-phase=bite]{background-color:var(--btn-gold-bright);animation:pulse .35s ease-in-out 4 alternate}
+.reel[aria-disabled=true]{opacity:.6;cursor:default}
+.controls .book{background-color:#a9cee1;box-shadow:0 5px 0 #6d98af,0 0 0 4px #fff2cd40}
+.controls .book:active{box-shadow:0 2px 0 #6d98af,0 0 0 4px #fff2cd40}
+@keyframes pulse{to{box-shadow:0 5px 0 var(--btn-gold-bright-edge),0 0 0 10px #ffd45166}}
+@media(max-width:600px),(pointer:coarse){
+ .back{left:calc(18px + env(safe-area-inset-left,0px));top:calc(16px + env(safe-area-inset-top,0px))}
+ .controls{--fish-action-size:58px;right:calc(18px + env(safe-area-inset-right,0px));bottom:var(--control-bottom,calc(28px + env(safe-area-inset-bottom,0px)));gap:16px}
+ .reel{font-size:14px!important}
+ .hint{top:calc(96px + env(safe-area-inset-top,0px));max-width:calc(100% - 40px);font-size:13px}
+ .toast{top:calc(142px + env(safe-area-inset-top,0px))}
+}
+@media(max-width:350px){.controls{--fish-action-size:52px;right:calc(10px + env(safe-area-inset-right,0px));gap:12px}}
+@media(pointer:coarse) and (orientation:landscape) and (max-height:500px){
+ .hint{top:calc(72px + env(safe-area-inset-top,0px));max-width:calc(100% - 240px)}.toast{left:calc(16px + env(safe-area-inset-left,0px));transform:none;top:calc(118px + env(safe-area-inset-top,0px));max-width:min(300px,36vw);animation:none}
+}
+/* In-world catch label (placed above the held-up fish by fishingWorld.ts). */
+.catch{position:absolute;z-index:29;left:0;top:0;transform:translate(-50%,-100%);width:min(300px,calc(100vw - 40px));box-sizing:border-box;padding:10px 14px 12px;border:3px solid #fff2cd;border-radius:18px 26px 18px 18px;background:#fff1d3f2;color:#244d40;box-shadow:0 5px 0 #183b3440;pointer-events:none;animation:pop .35s cubic-bezier(.2,1.4,.4,1) both}
+.catch[hidden]{display:none}
+.catch[data-side=right]{transform:translate(0,-50%)}
+.catch[data-side=below]{transform:translate(-50%,0)}
+.catch[data-side=top]{transform:translate(-50%,0)}
+.catch[data-side=top]::after{display:none}
+.catch::after{content:'';position:absolute;border:9px solid transparent}
+.catch[data-side=right]::after{left:-12px;top:50%;margin-top:-9px;border-right-color:#fff2cd;border-left:0}
+.catch[data-side=below]::after{left:50%;top:-12px;margin-left:-9px;border-bottom-color:#fff2cd;border-top:0}
+.catch p{margin:0}
+.catchTop{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.catchTop b{font-family:IslandBrush,sans-serif;font-weight:400;font-size:24px;line-height:1.1}
+.catchTop em{font-style:normal;font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:999px;background:var(--btn-pink)}
+.catchMeta{font-size:11.5px;font-weight:700;color:#61705b;margin-top:2px!important}
+.catchClub{margin-top:6px!important;font-size:13px;font-weight:800}
+.catchClub span{display:block;font-size:9.5px;letter-spacing:.07em;text-transform:uppercase;color:#61705b}
+.catchFact{font-size:12px;line-height:1.45;color:#48604c;margin-top:2px!important}
+@keyframes pop{from{opacity:0;scale:.85}}
+@media(prefers-reduced-motion:reduce){.catch,.toast{animation:none}.reel[data-phase=bite]{animation:none}.controls button{transition:none}}
+
+.reelProgress{display:block;width:100%;height:5px;margin-top:4px;border-radius:99px;background:#244d4033;overflow:hidden}.reelProgress i{display:block;width:100%;height:100%;background:#244d40;transform-origin:left;transition:transform .12s ease-out}.reel[data-phase=reeling]{background-color:var(--btn-gold-bright)}
+@media(prefers-reduced-motion:reduce){.reelProgress i{transition:none}}
+
+/* One status card below the navigation/wallet row, rather than two overlapping
+   banners. The optional lesson expands inside this same surface. */
+.message{position:absolute;top:calc(88px + env(safe-area-inset-top,0px));left:50%;translate:-50% 0;box-sizing:border-box;width:max-content;max-width:min(460px,calc(100% - 40px));padding:11px 16px;border:2px solid #fff2cd;border-radius:18px 24px 18px 18px;background:#fff1d3;color:#244d40;box-shadow:0 4px 0 #a8863d;text-align:center}
+.messageTitle{margin:0;font-size:14px;font-weight:800;line-height:1.35}
+.messageLesson{display:block;margin:7px 0 0;padding:7px 0 0;min-height:44px;width:100%;border:0;border-top:1px solid #244d4026;background:transparent;color:#3a5b50;font:inherit;font-size:13px;line-height:1.4;text-align:center;pointer-events:auto;cursor:pointer}
+.messageLesson:focus-visible{outline:var(--btn-focus);outline-offset:3px;border-radius:4px}
+.messageLesson:not([data-expanded=true])>span{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+.hud[data-phase=bite] .message{background:var(--btn-gold-bright)}
+@media(max-width:600px),(pointer:coarse){.message{top:calc(90px + env(safe-area-inset-top,0px));max-width:calc(100% - 36px);padding:9px 13px}.messageTitle{font-size:13px}.messageLesson{font-size:12px}}
+@media(orientation:landscape) and (max-height:500px){.message{top:calc(78px + env(safe-area-inset-top,0px));max-width:min(440px,calc(100% - 220px))}}

@@ -2,7 +2,8 @@ const assert=require('node:assert/strict');
 const pos=require('../lib/town/positionPlayers.json'),plays=require('../lib/town/iconicPlays.json');
 const TEMPLATES=new Set(['solo_dribble_goal','long_range_goal','free_kick_goal','header_goal','volley_goal','bicycle_kick','chip_goal','penalty_goal','through_ball_assist','cross_assist','save','penalty_save','last_ditch_tackle','aerial_clearance','interception_counter','skill_move','overlap_run','sweeper_keeper']);
 const TRICKS=new Set(['roulette','elastico','stepover','cruyff_turn','rabona','nutmeg','flip_flap','drag_back','la_croqueta']);
-const names=new Set();for(const v of Object.values(pos))for(const k of ['current','allTime'])for(const n of v[k]||[])names.add(n);
+// Coach cards (role "coach", Sep 28 2026) teach a coaching idea (lib/town/coachIdeas.json), not an iconic play.
+const names=new Set();for(const [role,v] of Object.entries(pos))if(role!=='coach')for(const k of ['current','allTime'])for(const n of v[k]||[])names.add(n);
 assert.equal(names.size,400,'expected 400 unique players');
 for(const n of names)assert(plays[n],'missing entry: '+n);
 for(const n of Object.keys(plays))assert(names.has(n),'extra key: '+n);

@@ -1,0 +1,304 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "village": {
+      "src": "/voice/books/salah/village.m4a?v=coach-bella-1",
+      "duration": 35.9,
+      "scriptSha256": "960a416b4216086e5a70f5d460bd9218daf60c887eff4bb1c267d44738a7e2fe",
+      "cues": [
+        {
+          "text": "A village boy",
+          "start": 0.0,
+          "duration": 1.825
+        },
+        {
+          "text": "Mohamed Salah was born in 1992 and grew up in Nagrig, a village in the north of Egypt where many families have very little money.",
+          "start": 1.825,
+          "duration": 9.8
+        },
+        {
+          "text": "His mother looked after the home, and his father worked in a hospital office.",
+          "start": 11.625,
+          "duration": 5.175
+        },
+        {
+          "text": "Mohamed spent most of his free time playing football in the streets.",
+          "start": 16.8,
+          "duration": 4.475
+        },
+        {
+          "text": "Roll the ball down the street.",
+          "start": 21.275,
+          "duration": 2.375
+        },
+        {
+          "text": "At twelve, he joined a small local team, Ittihad Basyoun, and a year later a club in the nearby city of Tanta.",
+          "start": 23.65,
+          "duration": 8.4
+        },
+        {
+          "text": "Where you start does not decide how far you can go.",
+          "start": 32.05,
+          "duration": 3.8
+        }
+      ]
+    },
+    "journey": {
+      "src": "/voice/books/salah/journey.m4a?v=coach-bella-1",
+      "duration": 40.0,
+      "scriptSha256": "1eb368c11d02080e16bfbd6c3189b16b84b3f34c9dd1994f4f2b724a0c6de70a",
+      "cues": [
+        {
+          "text": "The long journey",
+          "start": 0.0,
+          "duration": 1.85
+        },
+        {
+          "text": "In 2006, when Mohamed was fourteen, a scout came to watch another child play, but he noticed Mohamed instead.",
+          "start": 1.85,
+          "duration": 8.775
+        },
+        {
+          "text": "Mohamed joined the youth team of Al Mokawloon, a club in Egypt\u2019s capital, Cairo, more than 150 kilometres from home.",
+          "start": 10.625,
+          "duration": 9.175
+        },
+        {
+          "text": "Follow the long road.",
+          "start": 19.8,
+          "duration": 2.1
+        },
+        {
+          "text": "The journey to training took about three hours, and he often had to miss school to make it.",
+          "start": 21.9,
+          "duration": 5.75
+        },
+        {
+          "text": "He later said that when he got home at night, he had to go straight to sleep and wake up early the next day.",
+          "start": 27.65,
+          "duration": 6.825
+        },
+        {
+          "text": "Big dreams can take a lot of tired days. Rest well, then keep going.",
+          "start": 34.475,
+          "duration": 5.45
+        }
+      ]
+    },
+    "tears": {
+      "src": "/voice/books/salah/tears.m4a?v=coach-bella-1",
+      "duration": 43.1,
+      "scriptSha256": "12b8de0e5b6f31ba8cc5270f9686a2b8091f3132b115b1cb55e4ddd08a78eedb",
+      "cues": [
+        {
+          "text": "Tears after the game",
+          "start": 0.0,
+          "duration": 2.125
+        },
+        {
+          "text": "When Mohamed was fifteen, the first-team manager, Mohamed Radwan, moved him up to train with the grown-ups.",
+          "start": 2.125,
+          "duration": 7.625
+        },
+        {
+          "text": "He was still growing, so the club gave him a special diet and training plan.",
+          "start": 9.75,
+          "duration": 5.075
+        },
+        {
+          "text": "In 2010, he began playing in the Egyptian Premier League.",
+          "start": 14.825,
+          "duration": 4.525
+        },
+        {
+          "text": "Lift the rain cloud.",
+          "start": 19.35,
+          "duration": 2.1
+        },
+        {
+          "text": "At first, Mohamed struggled to score.",
+          "start": 21.45,
+          "duration": 3.325
+        },
+        {
+          "text": "Sometimes he cried in the dressing room after matches.",
+          "start": 24.775,
+          "duration": 4.175
+        },
+        {
+          "text": "His manager said this only made him want to get better.",
+          "start": 28.95,
+          "duration": 4.05
+        },
+        {
+          "text": "On Christmas Day 2010, he scored his first goal for the club.",
+          "start": 33.0,
+          "duration": 4.7
+        },
+        {
+          "text": "It\u2019s okay to cry when things are hard. Your feelings can help you try again.",
+          "start": 37.7,
+          "duration": 5.325
+        }
+      ]
+    },
+    "basel": {
+      "src": "/voice/books/salah/basel.m4a?v=coach-bella-1",
+      "duration": 39.1,
+      "scriptSha256": "32d0aa7a1cb3c411ab66ed543c88379bc290e03c39bd0dba5b2a6e3240ebb52d",
+      "cues": [
+        {
+          "text": "A new country",
+          "start": 0.0,
+          "duration": 1.875
+        },
+        {
+          "text": "In February 2012, something terrible happened at a stadium in the city of Port Said, and many people died.",
+          "start": 1.875,
+          "duration": 7.575
+        },
+        {
+          "text": "Afterwards, the Egyptian league was stopped, and the rest of the season was cancelled.",
+          "start": 9.45,
+          "duration": 5.725
+        },
+        {
+          "text": "Open the door to Switzerland.",
+          "start": 15.175,
+          "duration": 2.5
+        },
+        {
+          "text": "The Swiss club Basel had been watching Mohamed, and they signed him.",
+          "start": 17.675,
+          "duration": 4.6
+        },
+        {
+          "text": "At first, it was hard to settle.",
+          "start": 22.275,
+          "duration": 2.8
+        },
+        {
+          "text": "He could not speak the language, and he was replacing a well-known player.",
+          "start": 25.075,
+          "duration": 4.7
+        },
+        {
+          "text": "But Basel won the Swiss league in his first season.",
+          "start": 29.775,
+          "duration": 3.375
+        },
+        {
+          "text": "Being new somewhere is hard. Settling in takes time, so be patient with yourself.",
+          "start": 33.15,
+          "duration": 5.925
+        }
+      ]
+    },
+    "bench": {
+      "src": "/voice/books/salah/bench.m4a?v=coach-bella-1",
+      "duration": 41.8,
+      "scriptSha256": "7cc43a342184bcc8738338428b77828c13b83d92f9973f7b447537c1105e05b1",
+      "cues": [
+        {
+          "text": "Left on the bench",
+          "start": 0.0,
+          "duration": 2.05
+        },
+        {
+          "text": "In 2014, Mohamed became the first Egyptian to join Chelsea, in London.",
+          "start": 2.05,
+          "duration": 6.15
+        },
+        {
+          "text": "But in his second season there, he was rarely picked.",
+          "start": 8.2,
+          "duration": 3.75
+        },
+        {
+          "text": "He played only three Premier League games, and his manager criticised him in public.",
+          "start": 11.95,
+          "duration": 5.925
+        },
+        {
+          "text": "Flip the shirt.",
+          "start": 17.875,
+          "duration": 1.775
+        },
+        {
+          "text": "In 2015, Chelsea sent him on loan to Fiorentina in Italy.",
+          "start": 19.65,
+          "duration": 5.175
+        },
+        {
+          "text": "He chose the number 74, to honour the people who died in Port Said.",
+          "start": 24.825,
+          "duration": 5.225
+        },
+        {
+          "text": "Then, on loan at Roma, he scored 15 goals and was named the club\u2019s Player of the Season.",
+          "start": 30.05,
+          "duration": 6.45
+        },
+        {
+          "text": "Being left out doesn\u2019t mean you\u2019re not good enough. A fresh start can help you shine.",
+          "start": 36.5,
+          "duration": 5.3
+        }
+      ]
+    },
+    "liverpool": {
+      "src": "/voice/books/salah/liverpool.m4a?v=coach-bella-1",
+      "duration": 39.4,
+      "scriptSha256": "08106f6d7de3afd4937f7e4cbfad7869446136627937ff7edd5263c69ba3da4d",
+      "cues": [
+        {
+          "text": "Remembering home",
+          "start": 0.0,
+          "duration": 1.95
+        },
+        {
+          "text": "In 2017, Mohamed joined Liverpool.",
+          "start": 1.95,
+          "duration": 3.875
+        },
+        {
+          "text": "In his first season, he scored 32 Premier League goals, a record for a 38-game season.",
+          "start": 5.825,
+          "duration": 7.225
+        },
+        {
+          "text": "Later, he helped Liverpool become champions of Europe and champions of England.",
+          "start": 13.05,
+          "duration": 5.85
+        },
+        {
+          "text": "Build the school.",
+          "start": 18.9,
+          "duration": 1.825
+        },
+        {
+          "text": "Mohamed never forgot Nagrig.",
+          "start": 20.725,
+          "duration": 2.8
+        },
+        {
+          "text": "He has given money to help build a school and a hospital there, and he helps many families.",
+          "start": 23.525,
+          "duration": 5.85
+        },
+        {
+          "text": "The boy who once travelled for hours to train is now helping his village.",
+          "start": 29.375,
+          "duration": 5.075
+        },
+        {
+          "text": "Remember where you came from. Helping others is a way of saying thank you.",
+          "start": 34.45,
+          "duration": 4.925
+        }
+      ]
+    }
+  }
+}

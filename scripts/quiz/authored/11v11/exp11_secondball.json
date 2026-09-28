@@ -47,16 +47,16 @@
    "options": [
     "Forwards hold different depths",
     "A challenged touch leaves it loose",
-    "Near midfielder arrives underneath",
-    "Blue wins it, recover through the middle"
+    "Near midfielder arrives to support",
+    "Blue wins it, so switch to recovery"
    ],
    "correct": 0,
-   "explain": "Right. Set the depths, the ball drops loose, support arrives, then recover when Blue wins it.",
+   "explain": "Right. Set the depths, the ball drops loose, support arrives, then switch to recovery when Blue wins it.",
    "choiceExplanations": [
-    "Right. Set the depths, the ball drops loose, support arrives, then recover when Blue wins it.",
+    "Right. Set the depths, the ball drops loose, support arrives, then switch to recovery when Blue wins it.",
     "The ball only drops loose after the forwards set their depths and contest it.",
-    "The midfielder arrives once the ball is loose, not before the challenge.",
-    "Recovering comes last, once Blue has reached the next touch first."
+    "The midfielder arrives to support once the ball is loose, not before the challenge.",
+    "Recovery comes last: the support job only changes once Blue reaches the next touch first."
    ],
    "visual": {
     "kind": "order",

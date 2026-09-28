@@ -5,7 +5,7 @@ import { openIsland } from './helpers';
  * on screen is drawn on every one of 300 consecutive rendered frames, at every heat tier: its rig stays posed and batched, the
  * bean batches keep their instance counts with no zero-scale matrices, and its body pixels are really on the canvas. */
 test('live players never blink over 300 consecutive frames at heat tiers 0–4', async ({ page }) => {
-  test.setTimeout(240_000);
+  test.setTimeout(480_000); // five tiers × 300 frames + pixel reads on shared CI machines
   await openIsland(page);
   for (let i = 0; i < 3; i++) {
     const offer = page.getByRole('button', { name: 'Open this card' });

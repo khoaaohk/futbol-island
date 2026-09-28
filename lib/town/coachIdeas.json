@@ -1,0 +1,850 @@
+{
+ "_note": "Coach cards (Sep 28 2026): the one coaching idea each coach card teaches (idea + lesson, original Futbol Island writing for children, never a quote), career highlights, and sources. Careers are in playerCareers.json (role \"coach\"), blurbs and strengths in playerProfiles.json. Current coaches were checked to be in their job in September 2026.",
+ "Luis Enrique": {
+  "idea": "Press as a pack",
+  "lesson": "When the ball is lost, the nearest players jump in together within seconds. One presser gets dribbled past; three together win the ball back.",
+  "highlights": [
+   "Champions League 2015 (Barcelona)",
+   "Champions League 2025 and 2026 (PSG)",
+   "Ligue 1 titles with PSG"
+  ],
+  "sources": [
+   {
+    "title": "Luis Enrique (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Luis_Enrique"
+   },
+   {
+    "title": "PSG extend Luis Enrique to 2030 (Sep 2026)",
+    "url": "https://www.washingtonpost.com/sports/soccer/2026/09/04/psg-luis-enrique-contact/27c7796c-a89e-11f1-9e38-f705d048bd5a_story.html"
+   }
+  ]
+ },
+ "Mikel Arteta": {
+  "idea": "Set pieces are a playbook",
+  "lesson": "Corners and free kicks are practised like planned moves: every player has a job, such as blocking a path or running to the near post, so a dead ball becomes a chance.",
+  "highlights": [
+   "Premier League 2026",
+   "FA Cup 2020",
+   "Premier League Manager of the Season 2025–26"
+  ],
+  "sources": [
+   {
+    "title": "Mikel Arteta (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Mikel_Arteta"
+   },
+   {
+    "title": "Arteta wins Manager of the Season (Arsenal.com)",
+    "url": "https://www.arsenal.com/news/arteta-wins-premier-league-manager-season"
+   }
+  ]
+ },
+ "Hansi Flick": {
+  "idea": "A high defensive line",
+  "lesson": "The defenders step up together toward halfway. That squeezes the space, and a striker who runs too early is caught offside. It only works if the whole line moves as one.",
+  "highlights": [
+   "Champions League 2020 (Bayern)",
+   "La Liga 2025 and 2026 (Barcelona)",
+   "Copa del Rey 2025"
+  ],
+  "sources": [
+   {
+    "title": "Hansi Flick (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Hansi_Flick"
+   },
+   {
+    "title": "Hansi Flick extends contract until 2028 (FC Barcelona)",
+    "url": "https://www.fcbarcelona.com/en/football/first-team/news/4505340/hansi-flick-extends-contract-until-2028"
+   }
+  ]
+ },
+ "Carlo Ancelotti": {
+  "idea": "Build around your players",
+  "lesson": "Instead of forcing one system, pick the shape that lets your best players shine, then keep the whole squad calm and happy.",
+  "highlights": [
+   "5 Champions Leagues (2003, 2007, 2014, 2022, 2024)",
+   "League titles in Italy, England, France, Germany and Spain",
+   "Brazil coach until 2030"
+  ],
+  "sources": [
+   {
+    "title": "Carlo Ancelotti (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Carlo_Ancelotti"
+   },
+   {
+    "title": "Carlo Ancelotti signs Brazil extension until 2030 (FIFA)",
+    "url": "https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/carlo-ancelotti-brazil-contract-extension"
+   }
+  ]
+ },
+ "Luis de la Fuente": {
+  "idea": "Grow a team together",
+  "lesson": "He coached many of Spain’s players in the youth teams, so they already knew each other’s runs. Playing together for years builds an understanding you can’t buy.",
+  "highlights": [
+   "World Cup 2026",
+   "Euro 2024",
+   "Nations League 2023",
+   "U19 Euro 2015 and U21 Euro 2019"
+  ],
+  "sources": [
+   {
+    "title": "Luis de la Fuente (footballer, born 1961) (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Luis_de_la_Fuente_(footballer,_born_1961)"
+   },
+   {
+    "title": "Spain win the 2026 World Cup (NPR)",
+    "url": "https://www.npr.org/2026/07/19/nx-s1-5899071/2026-world-cup-fifa-argentina-spain-final-championship"
+   }
+  ]
+ },
+ "Jürgen Klopp": {
+  "idea": "Gegenpressing",
+  "lesson": "The moment you lose the ball, hunt it straight back. The other team is not organised yet, so winning it there can be the best chance of the game.",
+  "highlights": [
+   "Champions League 2019",
+   "Premier League 2020",
+   "Bundesliga 2011 and 2012"
+  ],
+  "sources": [
+   {
+    "title": "Jürgen Klopp (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Jürgen_Klopp"
+   },
+   {
+    "title": "Jürgen Klopp appointed Germany head coach (Bundesliga)",
+    "url": "https://www.bundesliga.com/en/bundesliga/news/jurgen-klopp-new-germany-head-coach-nagelsmann-liverpool-38077"
+   }
+  ]
+ },
+ "Zinedine Zidane (coach)": {
+  "idea": "Use the whole squad",
+  "lesson": "Zidane rotated his players so everyone stayed fresh and felt important. A whole squad, not just eleven players, wins a long season.",
+  "highlights": [
+   "Champions League 2016, 2017 and 2018",
+   "La Liga 2017 and 2020",
+   "France head coach from 2026"
+  ],
+  "sources": [
+   {
+    "title": "Zinedine Zidane (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Zinedine_Zidane"
+   },
+   {
+    "title": "Zidane named France coach (FIFA)",
+    "url": "https://www.fifa.com/en/articles/zidane-named-france-coach"
+   }
+  ]
+ },
+ "José Mourinho": {
+  "idea": "Defend compact, counter fast",
+  "lesson": "Defend in a tight block so there is no space behind, then break forward quickly when you win the ball, before the other team can get back.",
+  "highlights": [
+   "Champions League 2004 (Porto) and 2010 (Inter)",
+   "3 Premier League titles with Chelsea",
+   "Europa League 2017 and Conference League 2022"
+  ],
+  "sources": [
+   {
+    "title": "José Mourinho (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/José_Mourinho"
+   },
+   {
+    "title": "Official announcement: José Mourinho (Real Madrid)",
+    "url": "https://www.realmadrid.com/en-US/news/club/latest-news/comunicado-oficial-mourinho-11-06-2026"
+   }
+  ]
+ },
+ "Diego Simeone": {
+  "idea": "The 4-4-2 block",
+  "lesson": "Two lines of four stay close together and slide as one toward the ball. The gaps are so small that the other team has to pass around the outside.",
+  "highlights": [
+   "La Liga 2014 and 2021",
+   "Europa League 2012 and 2018",
+   "Champions League finals 2014 and 2016"
+  ],
+  "sources": [
+   {
+    "title": "Diego Simeone (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Diego_Simeone"
+   }
+  ]
+ },
+ "Vincent Kompany (coach)": {
+  "idea": "Build up from the back",
+  "lesson": "The goalkeeper and centre-backs pass short to draw the opponents forward. When they press, space opens behind them, and one sharp pass starts the attack.",
+  "highlights": [
+   "Bundesliga 2025 and 2026 (Bayern)",
+   "EFL Championship 2023 (Burnley)",
+   "Premier League winner as a City player"
+  ],
+  "sources": [
+   {
+    "title": "Vincent Kompany (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Vincent_Kompany"
+   }
+  ]
+ },
+ "Thomas Tuchel": {
+  "idea": "Switch the shape",
+  "lesson": "Tuchel often switches between a back four and a back three. One extra centre-back lets the wing-backs push high, so the team defends safely and still attacks wide.",
+  "highlights": [
+   "Champions League 2021 (Chelsea)",
+   "Ligue 1 2019 and 2020 (PSG)",
+   "Bundesliga 2023 (Bayern)"
+  ],
+  "sources": [
+   {
+    "title": "Thomas Tuchel (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Thomas_Tuchel"
+   },
+   {
+    "title": "England v Spain, Tuchel reaction (England Football, Sep 2026)",
+    "url": "https://www.englandfootball.com/articles/2026/Sep/26/england-spain-uefa-nations-league-thomas-tuchel-reaction-20262609"
+   }
+  ]
+ },
+ "Lionel Scaloni": {
+  "idea": "A team that works for its star",
+  "lesson": "Scaloni built a hard-working midfield that won the ball and covered space, so Messi could save his energy for the moments that decide games.",
+  "highlights": [
+   "World Cup 2022",
+   "Copa América 2021 and 2024",
+   "World Cup final 2026"
+  ],
+  "sources": [
+   {
+    "title": "Lionel Scaloni (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Lionel_Scaloni"
+   },
+   {
+    "title": "Scaloni on his Argentina future (Mundo Albiceleste, Sep 2026)",
+    "url": "https://mundoalbiceleste.com/2026/09/19/argentina-national-team-coach-lionel-scaloni-on-his-future-world-cup/"
+   }
+  ]
+ },
+ "Xabi Alonso": {
+  "idea": "Wing-backs give width",
+  "lesson": "Leverkusen played three centre-backs, with wing-backs who stayed wide and high. That stretched the defence and left gaps between the lines for the playmakers.",
+  "highlights": [
+   "Bundesliga 2024 (unbeaten)",
+   "DFB-Pokal 2024",
+   "Chelsea manager from 2026"
+  ],
+  "sources": [
+   {
+    "title": "Xabi Alonso (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Xabi_Alonso"
+   },
+   {
+    "title": "Xabi Alonso appointed Chelsea manager (Chelsea FC)",
+    "url": "https://www.chelseafc.com/en/news/article/xabi-alonso-appointed-chelsea-manager"
+   }
+  ]
+ },
+ "Enzo Maresca": {
+  "idea": "The inverted full-back",
+  "lesson": "When his team has the ball, a full-back steps into midfield beside the holding midfielder. That extra player in the middle helps keep the ball and stops counter-attacks.",
+  "highlights": [
+   "Club World Cup 2025 (Chelsea)",
+   "Conference League 2025 (Chelsea)",
+   "EFL Championship 2024 (Leicester)"
+  ],
+  "sources": [
+   {
+    "title": "Enzo Maresca (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Enzo_Maresca"
+   },
+   {
+    "title": "Maresca appointed Man City manager (Al Jazeera)",
+    "url": "https://www.aljazeera.com/sports/2026/6/29/enzo-maresca-appointed-man-city-manager-to-succeed-pep-guardiola"
+   }
+  ]
+ },
+ "Unai Emery": {
+  "idea": "Study the opponent",
+  "lesson": "Emery watches hours of video of every opponent, then gives each player a small, clear job for that game. Knowing their habits helps you beat them.",
+  "highlights": [
+   "Europa League 2014, 2015 and 2016 (Sevilla)",
+   "Europa League 2021 (Villarreal)",
+   "Ligue 1 2018 (PSG)"
+  ],
+  "sources": [
+   {
+    "title": "Unai Emery (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Unai_Emery"
+   },
+   {
+    "title": "Emery on rotation v Coventry (VAVEL, Sep 2026)",
+    "url": "https://www.vavel.com/en/football/2026/09/16/aston-villa/1271688-emery-explains-plans-for-rotation-against-coventry.html"
+   }
+  ]
+ },
+ "Andoni Iraola": {
+  "idea": "Man-to-man pressing",
+  "lesson": "Each player picks up an opponent near the ball and presses hard and fast. If everyone commits, the other team has no easy pass and has to kick it long.",
+  "highlights": [
+   "Promotion to La Liga with Rayo Vallecano",
+   "Bournemouth’s first European place",
+   "Liverpool head coach from 2026"
+  ],
+  "sources": [
+   {
+    "title": "Andoni Iraola (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Andoni_Iraola"
+   },
+   {
+    "title": "Liverpool appoint Andoni Iraola (Liverpool FC)",
+    "url": "https://www.liverpoolfc.com/news/liverpool-fc-appoint-andoni-iraola-new-head-coach"
+   }
+  ]
+ },
+ "Cristian Chivu": {
+  "idea": "The 3-5-2 and wing-backs",
+  "lesson": "Three centre-backs protect the goal while two wing-backs run the whole touchline: defenders when the other team attacks, wingers when Inter attack.",
+  "highlights": [
+   "Inter head coach since 2025",
+   "Coached Inter’s youth teams (2018–2024)",
+   "Treble winner as an Inter player (2010)"
+  ],
+  "sources": [
+   {
+    "title": "Cristian Chivu (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Cristian_Chivu"
+   },
+   {
+    "title": "Serie A 2026/27 head coaches (Lega Serie A)",
+    "url": "https://en.legaseriea.it/serie-a/news/serie-a-enilive-2026-27-head-coaches"
+   }
+  ]
+ },
+ "Luciano Spalletti": {
+  "idea": "The false nine",
+  "lesson": "At Roma he played Totti as a “false nine”: the striker drops into midfield, the defenders don’t know whether to follow, and runners burst into the space he leaves.",
+  "highlights": [
+   "Serie A 2023 (Napoli)",
+   "Russian Premier League 2010 and 2012 (Zenit)",
+   "Coppa Italia 2007 and 2008 (Roma)"
+  ],
+  "sources": [
+   {
+    "title": "Luciano Spalletti (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Luciano_Spalletti"
+   },
+   {
+    "title": "Serie A 2026/27 head coaches (Lega Serie A)",
+    "url": "https://en.legaseriea.it/serie-a/news/serie-a-enilive-2026-27-head-coaches"
+   }
+  ]
+ },
+ "Massimiliano Allegri": {
+  "idea": "Manage the moments",
+  "lesson": "A match has moments: sometimes you attack, sometimes you sit tight and protect a lead. Allegri’s teams knew when to be patient, and that wins titles.",
+  "highlights": [
+   "6 Serie A titles (Milan 2011, Juventus 2015–2019)",
+   "Coppa Italia with Juventus",
+   "Champions League finals 2015 and 2017"
+  ],
+  "sources": [
+   {
+    "title": "Massimiliano Allegri (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Massimiliano_Allegri"
+   },
+   {
+    "title": "Serie A 2026/27 head coaches (Lega Serie A)",
+    "url": "https://en.legaseriea.it/serie-a/news/serie-a-enilive-2026-27-head-coaches"
+   }
+  ]
+ },
+ "Rúben Amorim": {
+  "idea": "The 3-4-3",
+  "lesson": "Three centre-backs, two wing-backs and two inside forwards: in attack the wing-backs push up, so five players stretch the defence across the whole width.",
+  "highlights": [
+   "Primeira Liga 2021 and 2024 (Sporting)",
+   "Portuguese League Cups with Braga and Sporting",
+   "Europa League final 2025"
+  ],
+  "sources": [
+   {
+    "title": "Ruben Amorim (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Ruben_Amorim"
+   },
+   {
+    "title": "AC Milan appoints Rúben Amorim (AC Milan)",
+    "url": "https://www.acmilan.com/en/news/articles/media/2026-06-16/ac-milan-appoints-ruben-amorim-as-head-coach-of-the-men-s-first-team"
+   }
+  ]
+ },
+ "Michael Carrick": {
+  "idea": "Scan, then switch play",
+  "lesson": "Carrick played with his head up. Before the ball arrives, look over both shoulders, then pass to the side of the pitch with more space.",
+  "highlights": [
+   "Middlesbrough head coach 2022–2025",
+   "Manchester United head coach from 2026",
+   "Champions League winner as a player (2008)"
+  ],
+  "sources": [
+   {
+    "title": "Michael Carrick (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Michael_Carrick"
+   },
+   {
+    "title": "Premier League managers 2026/27 (Sky Sports)",
+    "url": "https://www.skysports.com/football/news/11661/13574814/premier-league-managers-2026-27-record-new-bosses-manager-changes-and-tenure"
+   }
+  ]
+ },
+ "Sarina Wiegman": {
+  "idea": "Clear roles, calm plans",
+  "lesson": "Wiegman gives every player a clear job and keeps a settled team, so players know where their teammates will be. A calm plan beats panic in a final.",
+  "highlights": [
+   "Euro 2017 (Netherlands)",
+   "Euro 2022 and Euro 2025 (England)",
+   "World Cup finals 2019 and 2023"
+  ],
+  "sources": [
+   {
+    "title": "Sarina Wiegman (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Sarina_Wiegman"
+   },
+   {
+    "title": "Five years of Sarina Wiegman (England Football, Sep 2026)",
+    "url": "https://www.englandfootball.com/articles/2026/Sep/01/Five-years-of-Sarina-Wiegman-in-numbers"
+   }
+  ]
+ },
+ "Emma Hayes": {
+  "idea": "Fit the plan to the players",
+  "lesson": "Hayes studies what each player does best and shapes the plan around it, then changes the shape during a game if it isn’t working.",
+  "highlights": [
+   "Olympic gold 2024 (USA)",
+   "7 Women’s Super League titles (Chelsea)",
+   "First Ballon d’Or Women’s Coach of the Year (2024)"
+  ],
+  "sources": [
+   {
+    "title": "Emma Hayes (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Emma_Hayes"
+   },
+   {
+    "title": "Emma Hayes (U.S. Soccer)",
+    "url": "https://www.ussoccer.com/coaches/emma-hayes/uswnt"
+   }
+  ]
+ },
+ "Pere Romeu": {
+  "idea": "Find the free player",
+  "lesson": "Barça spread out in set positions so there is always a free teammate. Pass to make a 2 v 1, then play the ball to whoever is free.",
+  "highlights": [
+   "Women’s Champions League 2026",
+   "Liga F titles with Barcelona",
+   "Contract renewed to 2028"
+  ],
+  "sources": [
+   {
+    "title": "Pere Romeu (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Pere_Romeu"
+   },
+   {
+    "title": "2026 Women’s Champions League final (UEFA)",
+    "url": "https://www.uefa.com/womenschampionsleague/news/02a5-20b2372a6365-2baba1547370-1000--where-the-2026-women-s-champions-league-final-was-won-barc/"
+   }
+  ]
+ },
+ "Jonatan Giráldez": {
+  "idea": "Win it back high",
+  "lesson": "Giráldez’s teams press high as a unit: lose the ball near the other goal, win it back there, and you are already close to scoring.",
+  "highlights": [
+   "Women’s Champions League 2023 and 2024 (Barcelona)",
+   "Liga F titles 2022–2024",
+   "OL Lyonnes head coach since 2025"
+  ],
+  "sources": [
+   {
+    "title": "Jonatan Giráldez (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Jonatan_Giráldez"
+   },
+   {
+    "title": "Giráldez named OL Lyonnes coach (ESPN)",
+    "url": "https://www.espn.com/soccer/story/_/id/45435102/ex-washington-boss-jonatan-giraldez-named-new-ol-lyonnes-coach"
+   }
+  ]
+ },
+ "Rinus Michels": {
+  "idea": "Total Football",
+  "lesson": "Players swap positions during play: a defender can attack and a forward can defend. When one player moves up, a teammate fills the gap, so the shape never breaks.",
+  "highlights": [
+   "European Cup 1971 (Ajax)",
+   "Euro 1988 (Netherlands)",
+   "World Cup final 1974"
+  ],
+  "sources": [
+   {
+    "title": "Rinus Michels (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Rinus_Michels"
+   }
+  ]
+ },
+ "Alex Ferguson": {
+  "idea": "Play to the final whistle",
+  "lesson": "His teams kept attacking right to the end, and many games were won in the last minutes, like the 1999 Champions League final comeback.",
+  "highlights": [
+   "13 English league titles",
+   "Champions League 1999 and 2008",
+   "Cup Winners’ Cup 1983 (Aberdeen)"
+  ],
+  "sources": [
+   {
+    "title": "Alex Ferguson (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Alex_Ferguson"
+   }
+  ]
+ },
+ "Arrigo Sacchi": {
+  "idea": "A compact, pressing team",
+  "lesson": "The whole team stays about 25 metres from front to back and guards space, not players. Close together, they can press the ball as a pack.",
+  "highlights": [
+   "European Cup 1989 and 1990 (Milan)",
+   "Serie A 1988 (Milan)",
+   "World Cup final 1994 (Italy)"
+  ],
+  "sources": [
+   {
+    "title": "Arrigo Sacchi (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Arrigo_Sacchi"
+   }
+  ]
+ },
+ "Johan Cruyff (coach)": {
+  "idea": "Rondos",
+  "lesson": "In a rondo, players in a circle keep the ball away from one or two in the middle. It trains quick touches, scanning and triangles, the heart of Barça’s style.",
+  "highlights": [
+   "European Cup 1992 (Barcelona)",
+   "4 La Liga titles in a row (1991–1994)",
+   "Cup Winners’ Cup 1987 (Ajax) and 1989 (Barcelona)"
+  ],
+  "sources": [
+   {
+    "title": "Johan Cruyff (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Johan_Cruyff"
+   }
+  ]
+ },
+ "Pep Guardiola": {
+  "idea": "Positional play",
+  "lesson": "Players spread into five lanes across the pitch so there is always a free passing option. Move the ball quickly to find a teammate between the opponent’s lines.",
+  "highlights": [
+   "Champions League 2009, 2011 and 2023",
+   "6 Premier League titles (Manchester City)",
+   "Treble 2023 (Manchester City)"
+  ],
+  "sources": [
+   {
+    "title": "Pep Guardiola (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Pep_Guardiola"
+   },
+   {
+    "title": "Guardiola’s next job revealed (Yahoo Sports)",
+    "url": "https://sports.yahoo.com/articles/pep-guardiola-next-job-revealed-105649563.html"
+   }
+  ]
+ },
+ "Bob Paisley": {
+  "idea": "Pass and move",
+  "lesson": "Paisley’s Liverpool passed the ball, then moved into space for the return. Short passes and constant movement are simple to learn and hard to stop.",
+  "highlights": [
+   "European Cup 1977, 1978 and 1981",
+   "6 English league titles",
+   "UEFA Cup 1976"
+  ],
+  "sources": [
+   {
+    "title": "Bob Paisley (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Bob_Paisley"
+   }
+  ]
+ },
+ "Ernst Happel": {
+  "idea": "Step up together",
+  "lesson": "Happel’s defenders stepped forward together to catch strikers offside, and his teams pressed high to win the ball near the other goal.",
+  "highlights": [
+   "European Cup 1970 (Feyenoord)",
+   "European Cup 1983 (Hamburg)",
+   "World Cup final 1978 (Netherlands)"
+  ],
+  "sources": [
+   {
+    "title": "Ernst Happel (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Ernst_Happel"
+   }
+  ]
+ },
+ "Helenio Herrera": {
+  "idea": "Catenaccio and the libero",
+  "lesson": "A spare defender, the libero (“free man”), stays behind the others to sweep up any ball that gets through. Then the team hits fast counter-attacks.",
+  "highlights": [
+   "European Cup 1964 and 1965 (Inter)",
+   "3 Serie A titles (Inter)",
+   "La Liga 1959 and 1960 (Barcelona)"
+  ],
+  "sources": [
+   {
+    "title": "Helenio Herrera (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Helenio_Herrera"
+   }
+  ]
+ },
+ "Vicente del Bosque": {
+  "idea": "Keep the ball",
+  "lesson": "Spain passed and passed. If you keep the ball, the other team can’t score, and they get tired chasing it.",
+  "highlights": [
+   "World Cup 2010",
+   "Euro 2012",
+   "Champions League 2000 and 2002 (Real Madrid)"
+  ],
+  "sources": [
+   {
+    "title": "Vicente del Bosque (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Vicente_del_Bosque"
+   }
+  ]
+ },
+ "Marcello Lippi": {
+  "idea": "Everyone can score, everyone defends",
+  "lesson": "Lippi’s 2006 Italy had ten different goalscorers at the World Cup. When every player can score and defend, opponents can’t just stop one star.",
+  "highlights": [
+   "World Cup 2006 (Italy)",
+   "Champions League 1996 (Juventus)",
+   "AFC Champions League 2013 (Guangzhou)"
+  ],
+  "sources": [
+   {
+    "title": "Marcello Lippi (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Marcello_Lippi"
+   }
+  ]
+ },
+ "Giovanni Trapattoni": {
+  "idea": "Mixed marking",
+  "lesson": "Some defenders mark a player man-to-man while others guard zones of the pitch. Mixing both keeps a team solid and ready to break forward.",
+  "highlights": [
+   "European Cup 1985 (Juventus)",
+   "UEFA Cups 1977 and 1993 (Juventus), 1991 (Inter)",
+   "League titles in Italy, Germany, Portugal and Austria"
+  ],
+  "sources": [
+   {
+    "title": "Giovanni Trapattoni (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Giovanni_Trapattoni"
+   }
+  ]
+ },
+ "Bill Shankly": {
+  "idea": "Lots of touches in training",
+  "lesson": "Shankly’s training used small-sided games and passing against wooden boards, so players got many touches and learned to control and pass quickly.",
+  "highlights": [
+   "3 English league titles",
+   "FA Cup 1965 and 1974",
+   "UEFA Cup 1973"
+  ],
+  "sources": [
+   {
+    "title": "Bill Shankly (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Bill_Shankly"
+   }
+  ]
+ },
+ "Matt Busby": {
+  "idea": "Give young players a chance",
+  "lesson": "Busby picked teenagers from the youth team for the first team. Young players who learn the club’s way together can grow into champions.",
+  "highlights": [
+   "European Cup 1968",
+   "5 English league titles",
+   "FA Cup 1948 and 1963"
+  ],
+  "sources": [
+   {
+    "title": "Matt Busby (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Matt_Busby"
+   }
+  ]
+ },
+ "Brian Clough": {
+  "idea": "Keep it on the grass",
+  "lesson": "Clough wanted football played on the ground: keep the ball low and pass to feet, because a high ball is harder to control.",
+  "highlights": [
+   "European Cup 1979 and 1980 (Forest)",
+   "League title 1972 (Derby) and 1978 (Forest)",
+   "4 League Cups (Forest)"
+  ],
+  "sources": [
+   {
+    "title": "Brian Clough (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Brian_Clough"
+   }
+  ]
+ },
+ "Arsène Wenger": {
+  "idea": "Look after the body",
+  "lesson": "Wenger changed what his players ate and how they stretched and rested. A body looked after well trains harder and plays faster.",
+  "highlights": [
+   "3 Premier League titles",
+   "7 FA Cups (a record)",
+   "Unbeaten league season 2003–04"
+  ],
+  "sources": [
+   {
+    "title": "Arsène Wenger (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Arsène_Wenger"
+   }
+  ]
+ },
+ "Valeriy Lobanovskyi": {
+  "idea": "Football as a system",
+  "lesson": "Lobanovskyi measured runs, passes and tackles to plan training. Every player had clear tasks, and the team pressed together to make the pitch small.",
+  "highlights": [
+   "Cup Winners’ Cup 1975 and 1986 (Dynamo Kyiv)",
+   "European Super Cup 1975",
+   "Euro 1988 final (USSR)"
+  ],
+  "sources": [
+   {
+    "title": "Valeriy Lobanovskyi (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Valeriy_Lobanovskyi"
+   }
+  ]
+ },
+ "Béla Guttmann": {
+  "idea": "Attack with numbers",
+  "lesson": "Four forwards and two midfielders: Guttmann’s Benfica attacked with lots of players and aimed to score one goal more than the other team.",
+  "highlights": [
+   "European Cup 1961 and 1962 (Benfica)",
+   "Portuguese league titles (Benfica, Porto)",
+   "Hungarian league titles with Újpest"
+  ],
+  "sources": [
+   {
+    "title": "Béla Guttmann (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Béla_Guttmann"
+   }
+  ]
+ },
+ "Vittorio Pozzo": {
+  "idea": "Il metodo",
+  "lesson": "Pozzo’s “metodo” shape used a centre-half who dropped back to help defend and then started attacks: an early version of today’s holding midfielder.",
+  "highlights": [
+   "World Cup 1934 and 1938",
+   "Olympic gold 1936",
+   "Central European International Cup"
+  ],
+  "sources": [
+   {
+    "title": "Vittorio Pozzo (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Vittorio_Pozzo"
+   }
+  ]
+ },
+ "Mário Zagallo": {
+  "idea": "The winger who helps defend",
+  "lesson": "As a player Zagallo was a winger who ran back to help midfield. As a coach he used that idea, so Brazil could defend with more players and still attack.",
+  "highlights": [
+   "World Cup 1970 (coach)",
+   "World Cup 1958 and 1962 (player)",
+   "Copa América 1997 (coach)"
+  ],
+  "sources": [
+   {
+    "title": "Mário Zagallo (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Mário_Zagallo"
+   }
+  ]
+ },
+ "Telê Santana": {
+  "idea": "Attack with joy",
+  "lesson": "Telê wanted beautiful attacking football: short passes, dribbles and lots of players joining the attack, with the players enjoying their game.",
+  "highlights": [
+   "Copa Libertadores 1992 and 1993 (São Paulo)",
+   "Intercontinental Cup 1992 and 1993",
+   "Brazil’s 1982 World Cup team"
+  ],
+  "sources": [
+   {
+    "title": "Telê Santana (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Telê_Santana"
+   }
+  ]
+ },
+ "Jupp Heynckes": {
+  "idea": "Balance wins",
+  "lesson": "Heynckes’s 2013 Bayern defended as hard as they attacked: even the star wingers ran back. Balance between attack and defence wins trebles.",
+  "highlights": [
+   "Champions League 1998 (Real Madrid)",
+   "Champions League 2013 (Bayern)",
+   "Treble 2013 (Bayern)"
+  ],
+  "sources": [
+   {
+    "title": "Jupp Heynckes (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Jupp_Heynckes"
+   }
+  ]
+ },
+ "Alf Ramsey": {
+  "idea": "The “Wingless Wonders”",
+  "lesson": "Ramsey left out traditional wingers and used hard-working midfielders who could defend and attack. Four in midfield made England hard to beat.",
+  "highlights": [
+   "World Cup 1966 (England)",
+   "League title 1962 (Ipswich Town)",
+   "Second Division title 1961 (Ipswich)"
+  ],
+  "sources": [
+   {
+    "title": "Alf Ramsey (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Alf_Ramsey"
+   }
+  ]
+ },
+ "Pia Sundhage": {
+  "idea": "Play with confidence",
+  "lesson": "Sundhage asked her teams to keep the ball and play with courage, and built a happy team where players felt free to try things.",
+  "highlights": [
+   "Olympic gold 2008 and 2012 (USA)",
+   "Olympic silver 2016 (Sweden)",
+   "World Cup final 2011 (USA)"
+  ],
+  "sources": [
+   {
+    "title": "Pia Sundhage (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Pia_Sundhage"
+   }
+  ]
+ },
+ "Jill Ellis": {
+  "idea": "Squad depth",
+  "lesson": "Ellis used her whole squad at tournaments, so fresh legs were always ready. A team with 23 ready players beats a team that depends on 11.",
+  "highlights": [
+   "Women’s World Cup 2015",
+   "Women’s World Cup 2019",
+   "FIFA Women’s Coach of the Year 2015 and 2019"
+  ],
+  "sources": [
+   {
+    "title": "Jill Ellis (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Jill_Ellis"
+   }
+  ]
+ },
+ "Silvia Neid": {
+  "idea": "Defence wins tournaments",
+  "lesson": "Germany won the 2007 World Cup without letting in a single goal. Neid’s teams stayed compact, won their duels and made every opponent work hard.",
+  "highlights": [
+   "Women’s World Cup 2007",
+   "Euro 2009 and Euro 2013",
+   "Olympic gold 2016"
+  ],
+  "sources": [
+   {
+    "title": "Silvia Neid (Wikipedia)",
+    "url": "https://en.wikipedia.org/wiki/Silvia_Neid"
+   }
+  ]
+ }
+}

@@ -11,12 +11,12 @@ export const CLIP_CHANNELS:Record<NewsLeague,{id:string;name:string}>={
  'eng.w.1':{id:'UCnQpt1UxLq00NFULxTDHMww',name:'Barclays WSL'},'usa.1':{id:'UCSZbXT5TLLW_i-5W8FZpFsg',name:'MLS'},
 };
 const decode=(s:string)=>s.replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/&#39;|&apos;/g,"'").replace(/&lt;/g,'<').replace(/&gt;/g,'>');
-export function parseClipFeed(xml:string,league:NewsLeague,now=Date.now(),publisher?:{id:string;name:string}):IslandClip[]{
+export function parseClipFeed(xml:string,league:NewsLeague,now=Date.now(),publisher?:{id:string;name:string;evergreen?:boolean}):IslandClip[]{
  if(!/<feed\b/.test(xml))throw Error('Invalid video feed');const source=publisher??CLIP_CHANNELS[league];
  return [...xml.matchAll(/<entry>([\s\S]*?)<\/entry>/g)].flatMap(([,entry])=>{
   const read=(tag:string)=>decode(entry.match(new RegExp(`<${tag}>([\\s\\S]*?)<\\/${tag}>`))?.[1]??'');
   const id=read('yt:videoId'),title=read('title'),publishedAt=read('published'),date=Date.parse(publishedAt);
-  if(read('yt:channelId')!==source.id||!/^[-\w]{11}$/.test(id)||!title||!Number.isFinite(date)||date>now||date<now-14*86400000)return [];
+  if(read('yt:channelId')!==source.id||!/^[-\w]{11}$/.test(id)||!title||!Number.isFinite(date)||date>now||(!publisher?.evergreen&&date<now-14*86400000))return [];
   // Do not present old-game retrospectives as fresh match highlights.
   if(/\b(classic|throwback|archive|full match|live stream)\b/i.test(title))return [];
   if(!publisher&&league==='uefa.champions'&&!/champions|\bucl\b/i.test(title))return [];

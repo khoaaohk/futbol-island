@@ -2,6 +2,7 @@
 export type ArcadePoseOptions={vx?:number;vz?:number;charge?:number;slide?:number;stun?:number;celebrate?:number;anticipate?:number;stride?:number;dribbling?:boolean;
  /** Contact coordinates in unscaled rig-local metres; latched for the follow-through. */
  strikeX?:number;strikeZ?:number;shotPower?:number;actionKind?:'pass'|'shot'|'loft';
+ receive?:number;receiveProgress?:number;
  keeper?:number;jockey?:number;dive?:import('../graphics/player').PlayerMotion['dive'];jumpProgress?:number;jumpHeight?:number;
  reaction?:import('../graphics/player').PlayerMotion['reaction'];reactionProgress?:number;
  skill?:import('../graphics/player').PlayerMotion['skill'];move?:import('../graphics/player').PlayerMotion['move'];

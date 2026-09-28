@@ -1,0 +1,414 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Vancouver, 2026. World Cup: Canada against Qatar. Tajon Buchanan drives in from the right and shoots. It deflects up... and Jonathan David volleys it first time. Goal!",
+   "src": "/plays/narration/jonathan-david-qatar-2026/1.m4a",
+   "seconds": 13.7,
+   "words": [
+    {
+     "w": "Vancouver",
+     "at": 0.375
+    },
+    {
+     "w": "2026",
+     "at": 1.025
+    },
+    {
+     "w": "World",
+     "at": 2.45
+    },
+    {
+     "w": "Cup",
+     "at": 2.837
+    },
+    {
+     "w": "Canada",
+     "at": 3.438
+    },
+    {
+     "w": "against",
+     "at": 3.875
+    },
+    {
+     "w": "Qatar",
+     "at": 4.25
+    },
+    {
+     "w": "Tajon",
+     "at": 5.237
+    },
+    {
+     "w": "Buchanan",
+     "at": 5.675
+    },
+    {
+     "w": "drives",
+     "at": 6.275
+    },
+    {
+     "w": "in",
+     "at": 6.662
+    },
+    {
+     "w": "from",
+     "at": 6.85
+    },
+    {
+     "w": "the",
+     "at": 6.987
+    },
+    {
+     "w": "right",
+     "at": 7.088
+    },
+    {
+     "w": "and",
+     "at": 7.4
+    },
+    {
+     "w": "shoots",
+     "at": 7.588
+    },
+    {
+     "w": "It",
+     "at": 8.125
+    },
+    {
+     "w": "deflects",
+     "at": 8.238
+    },
+    {
+     "w": "up",
+     "at": 8.675
+    },
+    {
+     "w": "and",
+     "at": 9.35
+    },
+    {
+     "w": "Jonathan",
+     "at": 9.488
+    },
+    {
+     "w": "David",
+     "at": 10.012
+    },
+    {
+     "w": "volleys",
+     "at": 10.438
+    },
+    {
+     "w": "it",
+     "at": 10.85
+    },
+    {
+     "w": "first",
+     "at": 11.0
+    },
+    {
+     "w": "time",
+     "at": 11.275
+    },
+    {
+     "w": "Goal",
+     "at": 12.2
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. David keeps moving in the box, so he is ready when the ball pops up. Eyes on the ball, then a right-footed volley.",
+   "src": "/plays/narration/jonathan-david-qatar-2026/2.m4a",
+   "seconds": 9.6,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.188
+    },
+    {
+     "w": "David",
+     "at": 2.2
+    },
+    {
+     "w": "keeps",
+     "at": 2.625
+    },
+    {
+     "w": "moving",
+     "at": 2.9
+    },
+    {
+     "w": "in",
+     "at": 3.188
+    },
+    {
+     "w": "the",
+     "at": 3.263
+    },
+    {
+     "w": "box",
+     "at": 3.35
+    },
+    {
+     "w": "so",
+     "at": 3.95
+    },
+    {
+     "w": "he",
+     "at": 4.125
+    },
+    {
+     "w": "is",
+     "at": 4.275
+    },
+    {
+     "w": "ready",
+     "at": 4.438
+    },
+    {
+     "w": "when",
+     "at": 4.713
+    },
+    {
+     "w": "the",
+     "at": 4.838
+    },
+    {
+     "w": "ball",
+     "at": 4.925
+    },
+    {
+     "w": "pops",
+     "at": 5.225
+    },
+    {
+     "w": "up",
+     "at": 5.6
+    },
+    {
+     "w": "Eyes",
+     "at": 6.3
+    },
+    {
+     "w": "on",
+     "at": 6.562
+    },
+    {
+     "w": "the",
+     "at": 6.662
+    },
+    {
+     "w": "ball",
+     "at": 6.75
+    },
+    {
+     "w": "then",
+     "at": 7.188
+    },
+    {
+     "w": "a",
+     "at": 7.325
+    },
+    {
+     "w": "right-footed",
+     "at": 7.438
+    },
+    {
+     "w": "volley",
+     "at": 8.075
+    }
+   ]
+  },
+  {
+   "label": "Bottom corner",
+   "text": "Into the bottom corner! David scores a hat-trick, and Canada win their first ever World Cup game.",
+   "src": "/plays/narration/jonathan-david-qatar-2026/3.m4a",
+   "seconds": 7.4,
+   "words": [
+    {
+     "w": "Into",
+     "at": 0.35
+    },
+    {
+     "w": "the",
+     "at": 0.625
+    },
+    {
+     "w": "bottom",
+     "at": 0.725
+    },
+    {
+     "w": "corner",
+     "at": 1.1
+    },
+    {
+     "w": "David",
+     "at": 2.025
+    },
+    {
+     "w": "scores",
+     "at": 2.475
+    },
+    {
+     "w": "a",
+     "at": 2.788
+    },
+    {
+     "w": "hat-trick",
+     "at": 2.85
+    },
+    {
+     "w": "and",
+     "at": 3.7
+    },
+    {
+     "w": "Canada",
+     "at": 3.837
+    },
+    {
+     "w": "win",
+     "at": 4.275
+    },
+    {
+     "w": "their",
+     "at": 4.5
+    },
+    {
+     "w": "first",
+     "at": 4.725
+    },
+    {
+     "w": "ever",
+     "at": 5.125
+    },
+    {
+     "w": "World",
+     "at": 5.425
+    },
+    {
+     "w": "Cup",
+     "at": 5.75
+    },
+    {
+     "w": "game",
+     "at": 6.0
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn, strikers: keep moving in the box. When the ball comes to you, hit it first time, before the defender can block it.",
+   "src": "/plays/narration/jonathan-david-qatar-2026/4.m4a",
+   "seconds": 8.5,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "strikers",
+     "at": 0.975
+    },
+    {
+     "w": "keep",
+     "at": 1.863
+    },
+    {
+     "w": "moving",
+     "at": 2.138
+    },
+    {
+     "w": "in",
+     "at": 2.487
+    },
+    {
+     "w": "the",
+     "at": 2.562
+    },
+    {
+     "w": "box",
+     "at": 2.65
+    },
+    {
+     "w": "When",
+     "at": 3.625
+    },
+    {
+     "w": "the",
+     "at": 3.763
+    },
+    {
+     "w": "ball",
+     "at": 3.85
+    },
+    {
+     "w": "comes",
+     "at": 4.15
+    },
+    {
+     "w": "to",
+     "at": 4.475
+    },
+    {
+     "w": "you",
+     "at": 4.6
+    },
+    {
+     "w": "hit",
+     "at": 4.95
+    },
+    {
+     "w": "it",
+     "at": 5.088
+    },
+    {
+     "w": "first",
+     "at": 5.225
+    },
+    {
+     "w": "time",
+     "at": 5.5
+    },
+    {
+     "w": "before",
+     "at": 5.938
+    },
+    {
+     "w": "the",
+     "at": 6.213
+    },
+    {
+     "w": "defender",
+     "at": 6.3
+    },
+    {
+     "w": "can",
+     "at": 6.825
+    },
+    {
+     "w": "block",
+     "at": 7.0
+    },
+    {
+     "w": "it",
+     "at": 7.362
+    }
+   ]
+  }
+ ]
+}

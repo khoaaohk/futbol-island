@@ -1,0 +1,55 @@
+/* Vending machine controller surfaces (docs/vending-machines.md): the full-screen pass-through layer, the minimal HUD (Leave +
+   coin pill), and the reward / club-story panels drawn on the machine face (VendingFace's overlay rect). The machine face art
+   itself lives in VendingFace.module.css. No backdrop blur over the island; one-shot animations only. */
+.root{position:fixed;inset:0;z-index:40;pointer-events:none;color:#1c1f25;font-family:inherit}
+.root>*{pointer-events:auto}
+/* While the machine is in use the rest of the island HUD steps aside (the old modal's backdrop used to cover it). */
+:global(.town-app):has(> .root)>:not(.root):not(:global(.town-scene)){visibility:hidden!important;pointer-events:none!important}
+.hudBack{position:fixed;z-index:3;left:max(24px,env(safe-area-inset-left,0px));top:calc(20px + env(safe-area-inset-top,0px))}
+.hudCoins small{font-size:12px}
+.hudCoins{position:fixed!important;z-index:3;top:calc(18px + env(safe-area-inset-top,0px))!important;right:calc(16px + env(safe-area-inset-right,0px))!important}
+
+.pack{display:grid!important;place-items:center}.packCard{--w:min(46px,66%)}.packCardBig{--w:70px}
+.placeholder{font-weight:900;font-size:var(--fs,12px)}
+
+/* Reward moment: the item pops up out of the tray over the glass; packs show their cards (the wallet's pack flow). */
+.reward{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;gap:6px;overflow:auto;overscroll-behavior:contain;box-sizing:border-box;
+ padding:12px 12px 10px;border:3px solid #fff2cd;border-radius:14px;background:#fff1d3;color:#244d40;text-align:center;box-shadow:0 6px 0 #a8863d,0 18px 40px #0f2a2f66;
+ transform-origin:50% 100%;animation:popOut .38s cubic-bezier(.2,.9,.3,1.25) both}
+@keyframes popOut{from{opacity:0;transform:translateY(45%) scale(.5)}to{opacity:1;transform:none}}
+.rewardArt{width:min(70%,220px);flex:0 1 42%;min-height:60px;display:grid;place-items:center}
+.rewardArt img{width:100%;height:100%;object-fit:contain}.rewardArt[data-kind=ball] img{transform:scale(1.5)}
+.rewardTitle{margin:0;font-family:IslandBrush,sans-serif;font-size:calc(var(--fs,12px) * 1.8);line-height:1.05}
+.rewardNote{margin:0;font-size:var(--fs,12px);line-height:1.4;color:#4d5d49}
+.rewardActions{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:auto;padding-top:4px}
+.cards{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;width:100%}
+.cards article{flex:0 1 150px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:1px 8px;align-items:center;text-align:left;animation:cardUp .35s calc(.15s + var(--i) * 120ms) ease-out both}
+.mini{--w:44px;grid-row:span 3}.cards b{font-size:var(--fs,12px)}.cards small{font-size:12px;color:#61705b}
+.cards p{margin:0;font-size:12px;line-height:1.3;color:#4d5d49;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+@keyframes cardUp{from{opacity:0;transform:translateY(14px) rotate(-4deg)}to{opacity:1;transform:none}}
+/* Costume selected: its football-history story is one tap away (on the LED's corner). */
+.storyChip{position:absolute;right:6px;bottom:6px;min-height:44px;max-width:60%;padding:6px 12px;border:2px solid #fff2cd;border-radius:22px;background:#fff1d3;color:#244d40;font-size:12px;font-weight:800;line-height:1.15;box-shadow:0 3px 0 #a8863d;cursor:pointer}
+
+/* Club story: on the machine over the glass (the costume's football history and quiz). */
+.story{position:absolute;inset:0;display:flex;flex-direction:column;min-height:0;border-radius:12px;background:#f7f0db;overflow:hidden;box-shadow:0 0 0 3px #23272e}
+.storyBar{display:flex;align-items:center;gap:12px;padding:8px 10px;border-bottom:1px solid #294f431a}.storyBar strong{font-size:16px}
+.storyBody{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;padding:10px 12px}
+@media(prefers-reduced-motion:reduce){.reward,.cards article{animation:none}}
+
+/* Card-back microprint is decorative at shelf scale; the item name is outside the art. */
+.packCard [class*=downNo],.packCard [class*=downName]{display:none}
+
+.root[data-reading-book]>.hudBack,.root[data-reading-book]>.hudCoins{visibility:hidden;pointer-events:none}
+
+/* Same cached-layer treatment as the collection viewer: storeOpen already sleeps
+   the island. The foreground card animates independently of those cached layers. */
+:global(.town-app):has(>.root[data-card-reveal])>:global(.town-scene){filter:blur(7px)!important}
+.root[data-card-reveal]>[data-vending-face]{filter:blur(7px);pointer-events:none}
+.root[data-card-reveal]>[data-vending-face] *{animation:none!important;transition:none!important}
+.root[data-card-reveal]>.hudBack,.root[data-card-reveal]>.hudCoins{visibility:hidden}
+
+@media(max-width:600px){.hudBack{left:max(18px,env(safe-area-inset-left,0px));top:calc(16px + env(safe-area-inset-top,0px))}}
+
+/* UI audit (Sep 27): the coins pill shares the Back row — 44px tall at desktop 24/20 and phone 18/16. */
+.hudCoins.hudCoins{top:calc(20px + env(safe-area-inset-top,0px))!important;right:calc(24px + env(safe-area-inset-right,0px))!important;min-height:var(--btn-height,44px);box-sizing:border-box;display:inline-flex;align-items:center}
+@media(max-width:600px),(pointer:coarse){.hudCoins.hudCoins{top:calc(16px + env(safe-area-inset-top,0px))!important;right:calc(18px + env(safe-area-inset-right,0px))!important}}

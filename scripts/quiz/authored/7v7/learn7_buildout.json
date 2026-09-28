@@ -45,16 +45,16 @@
    "options": [
     "Blue moves back past the line",
     "Keeper kicks to the left defender",
-    "Blue may now cross the line",
+    "Blue runs in toward our defender",
     "Defender passes to midfield"
    ],
    "correct": 0,
-   "explain": "Right. Blue moves back, we kick, blue may come, so we pass on.",
+   "explain": "Right. Blue moves back, we kick, blue runs in, so we pass on.",
    "choiceExplanations": [
-    "Right. Blue moves back, we kick, blue may come, so we pass on.",
+    "Right. Blue moves back, we kick, blue runs in, so we pass on.",
     "The keeper kicks only after blue has moved back past the line.",
-    "Blue may cross the line only after the kick moves the ball.",
-    "The defender passes to midfield last, before the pressure arrives."
+    "Blue can only run in after the kick moves the ball.",
+    "The defender passes on last, because blue is running in."
    ],
    "visual": {
     "kind": "order",

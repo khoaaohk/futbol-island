@@ -6,7 +6,8 @@ import careers from './playerCareers.json';
  * team but not the years. `source: 'missing'` means no sourced club history was found (clubs is empty). */
 export type CareerClub={club:string;from:number;to:number|null;loan?:boolean};
 export type CareerNational={team:string;from?:number;to?:number|null};
-export type PlayerCareer={clubs:CareerClub[];national?:CareerNational;source:string;checked:string};
+/** Coach cards (`role: 'coach'`, Sep 28 2026) list the teams coached in `clubs`, national teams included (from the manager infobox). */
+export type PlayerCareer={clubs:CareerClub[];national?:CareerNational;role?:'coach';source:string;checked:string};
 
 const CAREERS=careers as Record<string,PlayerCareer>;
 

@@ -1,5 +1,44 @@
 # Performance reference for future Futbol Island updates
 
+## Fishing spots and market stand — September 27, 2026 (local, not deployed; reworked the same day into live in-world fishing)
+
+Five fishing posts, live fishing in the island view, and Rosa's market stand ([details](fishing.md), [visuals hand-off](fishing-visuals-HANDOFF.md)).
+
+**Always present (static).**
+- The five posts are one merged, vertex-coloured mesh (one colour draw, one shadow caster).
+- The five marker floats are one `InstancedMesh`.
+- The stand adds two static meshes and one 512×96 canvas texture.
+- One shared `buildingGlow` (kind `cabinet`) moves to the active post, and one (kind `ferry`, scaled) sits on the stand. Both are invisible (no draws) when inactive.
+
+**Idle away from the water.**
+- Each frame does about 15 distance checks, plus six ray–box tests on desktop hover.
+- The live-fishing visuals (`fishingVisuals.ts`) **do not exist**. They are created when the player comes within 45 m of a spot, and disposed at 80 m once idle.
+- Measured in headless Chromium: at the square, the scene has no `fishing-live` or foam objects; near West Cove, both exist.
+
+**Near a spot.**
+- The shoreline foam, shallow band and ripple lines are static merged meshes (three draws), visible only within 45 m.
+- The marker floats bob only within 45 m, never with reduced motion.
+
+**While fishing.**
+- The island loop keeps running as normal, because fishing is not in `settingsRef` and the governor is unchanged.
+- Per frame:
+  - one state-machine step;
+  - rod and line placement (a 12-point line);
+  - at most five fading rings, one shadow and one held fish;
+  - the camera blend;
+  - one label placement.
+- The HUD re-renders only on phase changes. The only timeout is the lesson toast.
+- Sounds reuse the island sound cues, so no new audio context is created.
+- With no taps, the line reels in after three fish swim off.
+
+**Dialogs.** The Fishbook and market stand are lazy dialogs with solid backdrops (no `backdrop-filter`, `tests/heat-pass3.cjs`), and they pause the island like other dialogs.
+
+These are reductions in work seen in emulation, not a measured iPhone temperature.
+
+## Island vending machines — September 27, 2026 (local, not deployed)
+
+Eight vending machines replace the Store ([details](vending-machines.md)). **Added runtime cost:** one merged, frustum-culled mesh per machine (one colour draw, one shadow caster, ~280 vertices). All eight share one `MeshStandardMaterial` with one 512×1024 canvas atlas used as both map and emissive map, so the lit sign and shelves need no lights. One `buildingGlow` (kind `vending`) is shared and moved to the targeted machine. Idle frames do eight distance checks, plus eight ray/box tests only while a desktop pointer hovers. Measured 0.39 µs per idle `update` and 0.03 µs per idle `applyCamera`, and +1 draw call at Island Square (197 vs 196), all in desktop Chrome with `scripts/check-vending-browser.cjs`. The glow, prompt placement and camera blend run only while a machine is targeted, fading or zooming. The dialog keeps the old Store's pause (`storeOpen` in `settingsRef`), uses no backdrop blur, and its only motion is a one-shot 0.9 s dispense drop. Miniatures render once per visit in one temporary context. Not measured on an iPhone.
+
 ## Arcade bean-motion integration — September 26, 2026 (local, not deployed)
 
 Game-developer pass across Breakaway, Tennis, Pinball and Strikers preserves the bean shader/mesh architecture and shared island solver. The adapter now carries latched strike targets, action kind and power, authored dive/jump/skill channels, and state-driven face expressions. Game simulations still own ball release and root travel. Breakaway removes manual post-solver tackle rotations and hidden-classic role materials; visible bean outfits update on pooled role changes. Pinball reuses save structs and updates world matrices only when locating a downed player's star anchor. Strikers differentiates pass/shot/save and resets rig channels on retry. No new render loops, effect pools, lights or geometry. See [the integration review](arcade-bean-review-2026-09-26.md) for evidence and limitations. Mobile browser checks are emulation, not measurements of physical phone heat.
@@ -55,6 +94,41 @@ The bean characters (`docs/bean-characters/CONTRACT.md`) are a skin on the uncha
 - Validation: `tests/bean-skin.cjs` (below), plus tsc, `npm test` and the player, shirt-number, choreo, live, heat and frame-cap tests in their default (classic Node) fixtures.
 - Headless Node, and fixtures that only mock `document`, keep the classic body so the existing mesh-count tests keep their fixtures. With bean forced in, every motion test passes. Only the classic-geometry counts differ (batch counts, jersey morph texture, classic number panel).
 - `player-body-review`, `movement-work`, `live-knockout-work` and `volleyball-batch` fail identically in classic style. They fail from earlier or parallel work: `live-knockout-work` already showed `13 !== 14` at 13:41 today, before this lane.
+
+## Player pop-up books: all eight books — September 27, 2026 (local, not deployed)
+
+Seven more books share the Messi engine. Nothing new runs while a book is closed.
+
+- **Loading:** each book's spreads are a separate chunk (`lib/books/library.ts` `loadSpreads`), imported only when that book opens. Narration manifests are small JSON files, and the audio is fetched only after Play.
+- **Plate density:** plates paint at 150 px per world unit on desktop and 112 on phones (`createPlateCache(px)`), to cut paint time and texture memory on phones.
+- **Build time:** measured build per spread (desktop Chromium, warm JIT, `data-build-ms`) is about 200–290 ms. Builds happen at open, and during idle prefetch of the next page after each turn. A backward turn to a page that isn't prefetched builds during the turn.
+  - Falcão's author measured 560–820 ms cold, first spread; Messi was 340–460 ms measured the same way.
+  - Real phone CPUs will be slower. This has not been measured on an iPhone.
+- **Frame behaviour is unchanged:**
+  - bounded open, turn, close and action tweens;
+  - at most 30 fps while narrating;
+  - zero frames at rest or while paused (browser checks for Messi).
+- **Disposal:** everything is released on close.
+
+## Messi pop-up book: paper engine — September 27, 2026 (local, not deployed)
+
+One WebGL context exists only while the book is open. It uses DPR ≤1.75 on desktop and ≤2 on phones, no tone mapping and no post-processing.
+
+- **Shadows:** one PCF soft shadow map from a directional light, 2048 on desktop and 1024 on phones.
+- **Draw calls and textures:** about 50–65 draw calls and 140–170 triangles. Each cut-out is one alpha-to-coverage plane, and the current spread plus one idle-prefetched neighbour stay resident. 29–45 textures were measured across the six spreads, and the count did not grow over repeated turns.
+- **Frames are drawn only while paper moves:**
+  - opening 2.1 s;
+  - turn 3.0 s;
+  - close 1.0 s;
+  - action tween 0.9 s.
+  - These run at up to 60 fps. They are bounded. (The close fold was shortened to 0.6 s on Sep 28.)
+  - While narration plays, frames run at ≤30 fps.
+  - Otherwise one frame is drawn per seek, resize or visibility wake. The browser check measured 30 renders/s playing and 0 paused.
+- **Plates:** Canvas painting runs once per spread (tens of ms), not per frame. Plates are ref-counted and disposed with their spread, and everything is released on close, including `forceContextLoss`.
+- **Reduced motion:** transitions are instant, and narration beats snap per sentence without a loop.
+- The island stays asleep behind the reader (browser-checked).
+
+This is not an iPhone temperature measurement.
 
 ## Manhole ball hunt — September 25, 2026 (local, not deployed)
 
@@ -362,6 +436,109 @@ The load average was 2–5 for the baseline and 17–18 for part of the after ru
 - Guard: `tests/heat-pass3.cjs` asserts that the sun shadow map stays at 2048² and that the phone frame cap has a single 30 fps interval. Changing either needs a new quality review.
 
 No real-device check, commit, push or deploy. The next step is still a five-minute Safari Web Inspector timeline on an iPhone, flying with the joystick held, where the compositor should now show about 30 frames per second instead of 60.
+
+## Budget-reallocation pass: cut invisible work, reinvest on screen — September 27, 2026 (local, not deployed)
+
+The user's direction: "People only care about what they can see, not anything outside of that view." Phones and tablets only.
+- Numbers are phone emulation (390×844, DPR 3; iPad Pro 11), not iPhone temperatures.
+- The machine's load average was 15–20, from other agents, so GPU timers were unusable. Costs are given as triangles, draws and pixel or texel counts.
+- Scripts are in `heat4/`: `invisible.mjs`, `beanparts.mjs`, `styleparity.mjs`, `shadow1536.mjs`.
+
+**Invisible-work audit, ranked by cost.**
+
+| # | Invisible work | Measured | Action |
+|---|---|---|---|
+| 1 | Bean hair and hat geometries hold **every style**, and the unused ones are collapsed in the vertex shader. A batched player spent ~60% of its hair and hat vertex work, and its hat shadow, on styles nobody sees. | Watch view 11v11, one frame: **300.5k → 232.2k triangles (−23%)**, colour + shadow | **Cut** (below) |
+| 2 | Live players just off screen, still drawn by the batch (it has no frustum culling; the per-player sphere is oversized so their shadows reach the view) | Pitch-side: 15–18% of the colour triangles | Kept: those players' shadows fall on screen |
+| 3 | The 25 manhole covers are instanced and always drawn | ~9.8k triangles, 2–4 draws | Kept: negligible |
+| 4 | Everything else in the colour pass off screen | 0–4% (static chunks are frustum-culled per 50 m chunk; objects without culling are hidden pools or batches) | — |
+| 5 | Menus, modals and the card viewer | The island already sleeps (0 fps; heat passes 1–3) | Verified |
+| 6 | Sea and sky beyond the horizon | Ocean 2 draws, no sky mesh (clear colour) | — |
+| 7 | Off-screen animation and poses | Already skipped: posing off screen, dormant far fields, 10 Hz off-screen routines (pass 5) | — |
+| 8 | Far buildings at full detail | Vertex work only; the phone is fill-bound, and LOD would change silhouettes | Not done |
+| 9 | Townsfolk (individually rendered) share one hair/hat geometry, collapsed styles included | Townsfolk hair/hat: 28.8k → 4.1k triangles in town, 34.5k → 5.2k at the square (colour + shadow) | **Cut** (NPC style views, below) |
+
+**Cut (pixel-identical).** `lib/graphics/playerBatch.ts` `styleIndexRange`.
+- Hair and hat styles are built one after another, so each style is one contiguous index range (the style id is in `beanAnchor.w`).
+- Batches key hair and hat by the rig's style (row texel 10 for hair, 11 for hat) and draw only that range. The depth material uses the same geometry, so the hat shadow shrinks too.
+- If a style were ever not contiguous, the whole geometry is drawn, as before.
+- Same-frame parity: **0 of 1,007,314 pixels differ** (watch view and town).
+- Cost: a few more draws, one per hair or hat style in use: watch view 36 → 40 draws. In `tests/bean-skin.cjs` the fixture goes from 423k to 333k counted triangles for 32 characters, and the draw budget there was raised to 14. It also checks that each style batch draws exactly its style's whole range.
+
+**Cut, townsfolk (pixel-identical): NPC style views.** `lib/graphics/beanSkin.ts` `beanStyleView`, keyed back in `lib/graphics/playerBatch.ts`.
+- Townsfolk are individually rendered rigs, so a draw range has to live on the geometry each mesh holds. A view is a `BufferGeometry` that shares the base hair or hat geometry's attribute and index objects (the same GPU buffers: no copy, no upload) and bounds, with its own draw range: that style's contiguous index range (`styleIndexRange`).
+- One view per style, cached and never disposed. `writeStatic` puts the view on the hair and hat meshes whenever the look changes. Style 0 (none, mesh hidden) and a non-contiguous style keep the base geometry.
+- The shadow pass draws the same mesh geometry with its depth material, so the hat shadow shrinks too. Hair still casts no shadow, as before.
+- **Batches are unchanged:** `playerBatch` keys, finds the style range and clones by `geometry.userData.beanStyleBase`, so the key is the base geometry's, as before. There is one batch per style in use, never one per view or rig.
+- **Picking is unchanged:** hair and hat meshes raycast against the whole base geometry (`raycastBase`), exactly as before, so NPC tap targets do not move.
+- Looks, costumes (the view stays; only visibility changes), animation, collision, the 10 Hz off-screen routines, released hidden-classic geometry and the classic style are untouched. Other individually rendered bean rigs (previews, the volleyball fallback) get the same saving.
+- **Measured** (`npc-styles/measure.mjs` in the session scratchpad): 390×844 at DPR 3 in headless Chromium, emulation counts rather than iPhone temperatures. One frozen frame, colour + shadow, compared with the same frame rendered with every townsperson's hair and hat set back to the full geometry.
+
+| View | Draw calls | Triangles | Townsfolk hair/hat triangles | Pixels different |
+|---|---|---|---|---|
+| Busy town (spawn) | 348 → 348 | 257.8k → 233.1k (−9.6%) | 28.8k → 4.1k (−86%) | **0 of 1,007,314** |
+| Square | 253 → 253 | 243.8k → 214.6k (−12.0%) | 34.5k → 5.2k (−85%) | **0 of 1,007,314** |
+
+- Shadow pass alone: town 138.3k → 126.7k, square 115.0k → 103.4k triangles.
+- A re-render of the same frame drifts 0 pixels, so the zero difference is exact.
+- Screenshots: `npc-styles/after-town.png`, `npc-styles/after-square.png`, plus `before-*.png` from the unchanged code.
+- The live-match watch view still matches pixel for pixel between the ranged and full batches (`heat4/styleparity.mjs`, 0 pixels). Its draw count depends on the match's styles in use.
+- **Tests.** `tests/npc-style-batches.cjs` is added to `npm test`. It checks that:
+  - each of the 66 townsfolk (dressed as `islandNpcs` does) draws exactly its own style's whole range, sharing the base buffers and bounds (90 hair and hat meshes: 121k of 739k indices, 84% fewer);
+  - look changes, a covering hat over short hair, and a costume round trip keep the right view;
+  - a mixed batch has one batch per style in use, and each draws only its range;
+  - picking matches the whole base on 216 rays.
+  `tests/bean-skin.cjs` is unchanged and still passes: 10 draws and 333k triangles for 32 characters.
+
+**Reinvested on screen.**
+- **Shadow map 1536² while cool.** Phones start at 1536² (`PHONE_SHADOW_SIZE`); tiers 1+ cap it at 1024², so a warming phone drops to 1024² together with resolution 1.5.
+  - With the tight fit this is about 8.5 cm per texel in town, and about 9 cm on the watched pitch.
+  - Cost: 2.25× the shadow-map texels, in a shadow pass whose triangles fell by up to 23% (above).
+  - Crops: `sh-phone-town-sheet.png`, `sh-ipad-town-sheet.png`. Parapet and lamp shadows are finer, with no acne at the 2-texel bias (≈ 17 cm).
+  - When a tier changes the map size, the adapter keeps the bias at 2 texels.
+- **Already reinvested in the quality pass:** resolution 1.75 while cool, the tight shadow fit, the 5× sharper watch-view fit, and 4× anisotropy. MSAA stays on.
+- **Not enabled: resolution 2.0 while cool.** That is +31% pixels over 1.75. The phone is GPU-bound: ~50 ms flying frames in the recordings, and heat was the original complaint. The savings found here are vertex work, not the fill 2.0 would add, so there is no measured headroom to pay for it. It is a one-constant change (`PHONE_PIXEL_RATIO`) if a real-device timeline shows headroom.
+- **Not done: more character segments up close.** It adds vertex work to the most numerous draw, and the user rejected changes to the bean look.
+
+**Net.** Watch view: −23% triangles; the shadow map is 1536² while cool, 1024² once warm. Town: −10 to −12% triangles from the townsfolk style views, with the same draws; shadow texels 2.25× while cool. The governor still steps down on a rising frame-time trend.
+
+## Quality-recovery pass — September 26, 2026 (local; part in deploy p49yyvzbx)
+
+The user reported "Heat is solved, but visual quality dropped noticeably on the phone". Measurements are phone emulation (390×844, DPR 3), not iPhone temperatures. Crops are in the session scratchpad under `heat4/shots/` (`q-*`, `bias-*`).
+
+**A. Governor: trend, not absolute slowness** (`lib/graphics/heatTier.ts`).
+- The iPhone renders ~50 ms frames while flying even when cool. The pass-4 rule (p90 > 41.7 ms = "slow") therefore put a cool phone at tier 1, **resolution 1.25**, within seconds. That was most likely the visible quality drop.
+- The governor now learns a baseline median per tier and scene-load bucket (the lowest window median in the last 5 minutes, trusted after 14 s).
+  - **Step down:** frames stay at ≥ 1.3 × baseline for 12 s (a rising trend, i.e. throttling), or are severe (p90 ≥ 100 ms).
+  - **Step up:** after **75 s** calm (median ≤ 1.12 × baseline), doubling after each relapse up to 20 min.
+- Tests: a cool iPhone flying at 44–58 ms stays at tier 0 for 20 minutes. The recording's 51 → 99 ms creep steps down within 20–45 s, one tier at a time. There are also tests for severe frames, load and view changes, gaps, the 75 s step-up, and flap backoff.
+- **Hidden readout:** open the island with `?heat=1` to see a small overlay: tier, resolution, fps, median, baseline and the governor's state.
+- **In the app:** 4× for 70 s and 12× for 140 s in town stayed at tier 0 and 1.75. The island is still capped at 30 fps there, so there is no trend.
+
+**Adaptive 1.75 (user-approved, enabled).**
+- Phones start at resolution **1.75** (`PHONE_PIXEL_RATIO`). `MotionResolution` stays a no-op on phones (Town passes the phone base as its moving ratio).
+- Ladder: tier 0 = 1.75 (desktop unchanged); 1 = 1.5; 2 = 1.25 with card film DPR 1.5; 3 = still water; 4 = 24 fps (also Battery saver). No tier changes what is drawn per frame (the flashing hotfix).
+- Cost: 682 × 1477 = 1.01 Mpx, **1.36×** the pixels of 1.5. From the stable pass-4 A/B (DPR 2 vs 1.5 = +31% GPU for 1.78× the pixels), that is about **+15% GPU** while cool.
+- **Heat risk, honestly:** a GPU-bound phone does ~15% more work until the governor sees a 30% frame-time rise sustained for 12 s. In recording 2 that would take roughly 20–35 s of heating. Warmth builds a little before the step to 1.5, and a hot phone then steps to 1.5 and lower as before.
+- Crops: `q-live-pr-sheet.png`, `q-town-pr-sheet.png` (1.5 / 1.75 / 2).
+
+**B. Crisper shadows at the same 1024² map** (`lib/graphics/islandShadows.ts`).
+- The fit now covers only the visible receivers: each view corner ray at the ground and at roof height, receivers 0–24 m, with a 4 m margin, instead of a y = −8 plane with ±8 m margins.
+  - Phone at the spawn: 268 × 99 → 244 × 77 m.
+  - Walking: 140 × 71 → 98 × 47 m, i.e. **1.4–1.5× sharper**.
+- **Watch view:** the high camera made the view-based fit ~683 × 192 m (67 cm per texel under the players). It now fits the watched pitch: **132 × 79 m, ≈ 13 cm per texel, 5× sharper**, and player shadows are defined instead of blobs (`q-live-shadow-sheet.png`).
+- **Bias:** `normalBias` follows the texel. At 0.92 texel the tighter fit showed vertical acne on roof parapets; at **2 texels** (≈ the previous 0.24 m) the stripes are gone on phone and iPad (`bias-phone-sheet.png`, `bias-ipad-sheet.png`).
+- `tests/quality-pass.cjs` checks that every receiver on the corner and edge rays (0–20 m) is inside the frustum at four aspects and elevations.
+
+**C. Anisotropic filtering** (`sharpenSceneTextures`, `lib/graphics/lambertScenery.ts`): 4× (capped by the device) on the 104 mipmapped scene textures, set once at setup. Mipmaps were already on for those. The ground, roads, pitches and buildings are vertex-coloured, not textured, so this mainly sharpens the ocean ripple tile and sign or stripe maps at grazing angles (`q-beach-aniso-sheet.png`).
+
+**D. Other softening checked.**
+- The canvas buffer equals the CSS size × resolution (682 × 1477 for 390 × 844 at 1.75), with no CSS transform or scaling.
+- `MotionResolution` is disabled on phones (no drop while flying: 1.75 measured in flight).
+- The card film is capped at DPR 1.5 on phones by the card-film agent (`CardFilmPlayer.tsx` `PHONE_DPR`), with tier 2+ also 1.5. Left to them.
+- MSAA stays on.
+
+**Status.** Parts A–C and the 1.75 tier were already in the tree when deploy p49yyvzbx was snapshotted. The watch-view pitch fit (`fitShadowsToBox`), the 2-texel bias (the snapshot had 0.92) and `tests/quality-pass.cjs` came after.
 
 ## Heat audit pass 5: view-based work on phones — September 26, 2026 (local, not deployed)
 
@@ -676,6 +853,7 @@ Relevant code: `lib/town/world.ts`, `lib/graphics/staticShadowBatches.ts`, `shad
 - Movement, roof, truck, ball-ground, ball-wall and ball-roof queries use spatial collision lookups. Preserve live dynamic/breakable obstacles, swept collisions and full aiming reach.
 - Traffic positions sample cached road routes at 20 cm spacing into reusable vectors. Rebuild samples on every route change, including rejoining roads after free driving. Original curve tangents retain headings. Synthetic tests found up to 0.05055 m positional deviation: this is approximate, not pixel-exact.
 - Traffic rejects neighbors more than 8 m away before detailed yielding checks. Ordinary cars over 100 m from the player check yielding at 10 Hz; all positions still advance every frame. Pickups, nearby cars, driven trucks and road-return logic retain immediate updates. This is **not** a blanket reduction of player physics or traffic movement frequency.
+- Junction boxes (Sep 28 2026 jam fix, local): 2-link corners and dead ends are now owned one car at a time, like 3+ way junctions. Every turn curve bends through the node centre, so unguarded L-corner left/right turners met nose to nose and the queue behind them locked for good (~15 simulated minutes on the real roads). Guarded nodes under 24 m apart share one owner, and a car leaving a box never waits for ownership, which also covers a pickup that rejoins the road at a junction. The per-node lookups are precomputed once, with no new per-frame allocations or scans. Regression check: `node tests/traffic-junctions.cjs` runs 30 + 10 + 10 simulated minutes on the island roads, a dense 3x3 grid, a short link and a pickup parked in a junction. It checks body overlap and requires no stop over 20 s.
 - Truck landing fixes avoid repeated hidden ground-landing searches while attached. Preserve generous landing acquisition, smooth approach, seated riding, driving/boost/reverse/honk, dismount and autonomous road return.
 - Keeper dive / jumping header / slide ground guard (lane B, Sep 25 2026, local): the dive and jump pose from `dive.progress`/`jump.progress` inside the existing `update` (no new loop, no timers, no allocation per frame; choreo reuses one motion object per action). The ground guard runs only while a rig is diving, jumping, sliding or stumbling: ~16 exact ellipsoid-low tests on joint chain matrices (`updateMatrix` on ≤ 6 parents each), no world-matrix traversal or scene query. Fields absent ⇒ joint output identical to before (golden test `tests/player-dive-jump.cjs`). Offscreen posing stays skipped; a resumed rig re-poses the dive from its clock. Signature moves (bicycle, scissor, diving header, volley, back heel, sole roll, flick-up) and keeper save types reuse the same paths: keyframe tables are module constants, leg moves write the existing reaction channels, airborne moves pose post-solve, and the guard runs only while a move plays. Choreo reads the sim ahead with one bounded ≤160-step prediction per lofted ball, and none when there is no aerial. Measured cost not profiled on device.
 
@@ -2207,7 +2385,7 @@ The new cap never exceeds 31 frames in any 1 s window.
 
 ### 2026-09-25 — arcade mobile and motion follow-up
 
-Shared arcade poses reuse state/joint arrays and add no render loop. Mobile remains capped at30fps; fixed frame slots replace threshold timing for more even cadence. Net vertices update only during response/reset; effects remain bounded. Rotation pauses Strikers and clears held input. Paused/hidden/settled states retain sleep, with Tennis a bounded pose settle tail. Deterministic articulation checks pass at30/60/120Hz; mobile browser checks are emulation, not physical phone heat evidence.
+Shared arcade poses reuse state/joint arrays and add no render loop. Mobile remains capped at30fps; fixed frame slots replace threshold timing for more even cadence. Net vertices update only during response/reset; effects remain bounded. Rotation pauses Strikers and clears held input. Paused/hidden/settled states retain sleep, with Tennis a bounded pose settle tail. Deterministic articulation checks pass at 30/60/120Hz; mobile browser checks are emulation, not physical phone heat evidence.
 
 ### Reactive Pinball and island-style arcade controls
 
@@ -2253,7 +2431,7 @@ Saved avatar customization is loaded once for the Breakaway hero. Shot power is 
 
 ## Breakaway return-kick encounters — September 26, 2026 (local)
 
-Lateral defender movement now follows actual velocity into native jockey footwork; close challenges commit instead of tracking late cuts. Normal centred shots can be trapped and returned after a 0.3 s wind-up, with a fixed interception-time aim. The existing four football meshes/shot records are reused for trap, outgoing and returned paths; no extra projectile pool, renderer or animation loop. Native kick/charge channels handle the body. Unit checks at30/60/120Hz and actual desktop/touch return exchanges pass. Mobile testing is emulated, not thermal evidence. See arcade-breakaway-2026-09-26.md.
+Lateral defender movement now follows actual velocity into native jockey footwork; close challenges commit instead of tracking late cuts. Normal centred shots can be trapped and returned after a 0.3 s wind-up, with a fixed interception-time aim. The existing four football meshes/shot records are reused for trap, outgoing and returned paths; no extra projectile pool, renderer or animation loop. Native kick/charge channels handle the body. Unit checks at 30/60/120Hz and actual desktop/touch return exchanges pass. Mobile testing is emulated, not thermal evidence. See arcade-breakaway-2026-09-26.md.
 
 ## Independent arcade and drawing controls — September 26, 2026 (local, not deployed)
 
@@ -2344,3 +2522,186 @@ Arcade crowd congestion correction (local): removed continuously rotating latera
 Arcade loader simplification (local, user request): removed the organic SVG and its expansion. The background is near-black with the existing cached grain; machine/character stagger and five cast variations remain, followed directly by a650ms fade into the ready room. Reveal begins at1.75s after the initial minimum hold, cleanup at2.5s. Removes the large expanding layer and keeps reduced-motion behavior.
 
 Distinct NPC actions (local): replaced shared social fallbacks with72 authored exchanges (six NPCs×four actions×three variants). Each action/variant differs across visitors and all four buttons differ per visitor. Individual tempo, hop height and delayed non-contact partner responses break synchronized copies; high-five/fist-bump contacts and the fixed shared-ball keep-up clock remain coordinated. Counter attendant uses only upper-body routines. Authored data plus native pose sampling reuse the same rigs/clock and add no effects, assets or schedulers. All variety/counter constraints, crowd/knockdown/congestion tests and TypeScript passed.
+
+### Arcade mobile framing and input feedback (2026-09-26)
+- Tennis and pinball fit the actual court bounds into the usable HUD/control area; resize-only projection fitting centers asymmetric perspective bounds. Tennis uses the shared 132px island joystick and 58px action targets, with Serve/Kick above Scissor. Pinball's score replaces its title row.
+- Pass Puzzle removes the redundant raw stroke line and its GPU buffer. Dirty gestures refresh the prediction once per existing rendered frame (30fps mobile); held loft previews remain throttled to 80ms. No additional animation loop. Engine fixture prediction measurements were 0.28–0.38ms wall time on this development machine; not phone thermal measurements.
+- Pinball flipper/launch cues reuse the game audio context. Charge is one bounded oscillator with a rising pitch; release, cancellation, pause and unmount stop it. Mute/volume preferences apply. No audio assets, polling or extra contexts.
+- Validation: TypeScript; desktop/mobile tennis play/pause/input checks; mobile pinball mechanics; mobile puzzle drag preview; bounded drawing and puzzle engine fixtures. Local changes, not deployed.
+
+### Strikers controls, assisted passing and charged-shot focus (2026-09-26)
+- Uses the island joystick markup/132px geometry, safe-area anchors and shared thumb/rim feedback. Gesture bounds stay cached and feedback paints in the existing game frame. Camera frames the pitch more closely; action controls sit at screen edges.
+- Pass targeting weights clear lanes, scales kick speed by distance, and helps the selected receiver approach an incoming pass only with neutral directional input. Through balls still lead into space. Engine fixtures cover 8/18/28m receptions.
+- A held shot progressively slows simulation to 35%, zooms toward the carrier, and uses the native charged-shot pose. Charge and match clock remain real-time; a strong release gets 180ms impact focus and a pooled expanding ring. Camera eases back; reduced-motion disables zoom/pulse/ring animation. No extra renderer, post-processing, audio context or animation loop. Two small reusable ring meshes added.
+- Verified mobile Strikers play/charge/zoom/slowdown/release/pause flow, 30/60/120Hz charge timing and passing fixtures. Pinball audio trigger/mute browser check passed. Local only; no real-phone temperature claim.
+
+### Retro neon courts and reactive glass floors (2026-09-26)
+- All five games now share dark cabinet-world surfaces, cyan pitch lines, pink impact accents and yellow possession/charge signals. Constant lighting replaces the day-to-dusk transition. A static grid uses one line draw; no bloom, post-processing or extra shadow lights.
+- Glass courts use one instanced tile draw plus one transparent surface (112 tiles normally, 192 for the scrolling runner). Color feedback follows the ball, charge, impact or planned pass. Pinball adds four low-opacity underglow layers, edge rails and flipper light/recoil feedback. Reuses existing 30fps mobile/60fps desktop loops; paused/hidden/settled states still sleep. Puzzle level changes dispose the replaced glass resources.
+- Breakaway charge makes the projectile and trail larger; stronger release/impact adds two pooled expanding rings and a stronger existing particle burst. Reduced-motion skips the expanding rings.
+- Pinball framing tightened again; tennis scoreboard replaces its title and uses the freed vertical space. Local validation: mobile pinball and Breakaway gameplay/input/pause checks passed; all five neon scenes opened without browser errors. Not deployed; physical phone temperature not measured.
+- The arcade room now shares the glass-floor renderer (180 tiles, one instanced draw + one skin), replacing its checkerboard/confetti geometry. Lights follow dribbling/shot position and charge. Existing 15fps idle, 30fps mobile activity, 60fps desktop activity and covered/hidden shutdown remain unchanged; no new loop or lights.
+- Final room verification limitation: the full held-actions browser check timed out navigating the dev server. The final whole-repository TypeScript run was blocked by an unrelated missing `public/plays/narration/varane-uruguay-2018/timing.json` import; earlier arcade TypeScript runs passed. Do not interpret this as a clean final repository-wide check.
+
+- User reverted the arcade-room glass floor: restored its previous checkerboard/confetti geometry and removed room tile updates. The five games retain their illuminated glass floors.
+
+### Arcade mechanics and neon refinement (2026-09-26)
+- Tennis adds a Perfect Return for a planted, close touch 45–260ms after the first bounce: better contact accuracy and modest extra pace. Aerial input buffering expands to 480ms. Existing net/flight rules remain authoritative.
+- Pinball gains one rescue nudge per launch, with cooldown and recharge from alternating-foot combinations. The existing Launch control becomes Nudge during play; no extra mobile target.
+- Breakaway supports jump-and-shoot aerial volleys using the native volley pose and elevated projectile; airborne volleys beat a planted foot block. Shots still consume inventory and obey cooldown.
+- Strikers buffers Pass/Through for 650ms before receiving. Neutral direction returns to the original passer for a one-two; directional input picks the next teammate. Switching player clears the buffer.
+- Pass Puzzles offers one rewind of the last failed pass per attempt. Restores a bounded snapshot, clears stale event/replay state, and withholds the first-try star after a rewind. No saved progress or awarded coins are rolled back.
+- Softer neon court spill uses one construction-time 128px canvas texture and one flat draw per floor; disposal covers the owned texture. Replaces four hard pinball underglow layers. No new lights, bloom, animation loops or render targets. The room retains its reverted original floor. Room Exit/Coins adopt cyan/pink navigation, with green floating Play and existing interactions.
+- Validation: tennis/pinball/runner/Strikers existing engine suites, new mechanics at 30/60/120Hz, puzzle snapshot/physics suite, TypeScript, and mobile browser nudge/volley/rewind/pause checks. Local changes only; no physical-device thermal claim.
+- Mobile tennis framing now derives camera tilt from available viewport proportions, uses tighter court bounds, and fills up to 98.5% of the available width. Tall phones use a more overhead view; short screens tilt the court to retain both baselines. Resize-only calculation, no additional frame work. Mobile tennis movement/serve/rally/cancel/pause checks passed; desktop framing retained.
+
+### Arcade gameplay depth, feedback and room detail (2026-09-27)
+- Strikers' four rounds vary pressure and central cover; tackles latch their aim and retain a recovery window. Goal-plane interpolation fixes crossbar decisions. Tactical work stays inside the existing 120Hz/eight-player step; no extra loops or meshes.
+- Tennis adds five tactical courts, stable per-shot AI reads, physical tape clips and equal aerial recovery penalties. Breakaway adds six named stages, authored two-line routes, exact jump integration and swept contacts. Pinball adds four skill divisions and capped one-off rewards; existing 480Hz physics retained. Runner's ten-minute simulation peaked at 15 objects/four shots; shot penetration search is bounded to three contacts.
+- Native rig poses remain authoritative. Tennis's 620ms slam/scissor camera beat slows simulation to 32%, then restores the fitted view. Breakaway's charged camera eases toward the player and back. Reduced motion retains the stable camera. The same render loop drives these transforms; no extra render target or post-processing.
+- Event feedback reuses each game's gesture-unlocked AudioContext, max six short voices, with rate-limited optional vibration. Sound mute/zero volume, hidden state and reduced motion are respected. Charge notes occur only at thresholds. Saved personal records and unlocked courts/rounds use event-driven localStorage writes, no polling.
+- Room static cabinet/furniture detail remains palette-batched. Two contact-light meshes and one ticket-strip group use the existing room clock; no new lights/shadows/RAF. NPC console timing varies by visitor. Original room floor and 1.4m service aisle retained.
+- Validation: each game's existing and new engine suites; desktop/mobile gameplay checks; tennis camera/round persistence and real-touch runner charge/cancel checks; room ordinary movement/social/spacing, hidden and covered zero draws, 15fps idle, and disposal on game entry. Feedback/record tests cover mute, reduced motion, unsupported vibration and corrupted storage. Room sample draws were 82 desktop/59 mobile from different viewpoints, not a comparative performance benchmark.
+- Scope limits: later-stage balance needs longer human play sessions. Physical-phone heat, native haptics and battery use were not measured. Changes are local, not deployed. See arcade-gameplay-review.md for game-specific evidence.
+
+### Arcade loading, puzzle control and drawer refinement (2026-09-27)
+- All five game chunk fallbacks use the existing dark grain, brush type and animated loading track. CSS-only presentation, no new rendering loop or enforced wait. Delayed-chunk browser checks verified each named fallback and successful game initialization.
+- Pass Puzzle moves its counter into the header. Ground/Lift/Shoot and an optional 10–100% power slider share the same kick interpretation between prediction and release. Screen-space adaptive filtering suppresses small pointer jitter; signed curve area and a bounded 16-sample smooth-arc estimate replace single-sample spin and raw scribble energy. Pointer bounds are cached per gesture, cancellation clears input, and long strokes remain bounded.
+- Clean opening foot-shots can solve goal puzzles; reach-zone and header objectives remain strict. Long-distance shots are capped at 18 + 20 × power m/s rather than manufacturing extreme speed to fit an arc. Existing authored routes and challenge solutions remain valid. Native keeper dives now own push-off, landing and recovery; the root is never rolled sideways.
+- Flight trails reuse 24 instances and goal feedback reuses two rings plus existing net/particles. Aiming defenders scan and shift weight at 15fps (added visible idle work); active touch play remains 30fps, desktop 60fps. Results settle for at most 1.7s; chooser, brief, settled result and hidden states sleep. Reduced motion skips ambient aiming work and expanding/trailing effects.
+- Coins drawer uses static grain and neon CSS with a scrolling flex body. Desktop tennis actions match island 72px circles, 12px gaps and 24px offsets. No new effects loops. Drawer desktop, portrait and landscape checks passed scrolling, bounds, closure and room sleep.
+- Validation: TypeScript; puzzle engine, 20 authored solutions, three advanced challenges, opening-shot/replay tests at 30/60/120Hz, and filter/mode/power tests. Ordinary mouse and real browser touch events passed failure/retry, deliberate pass/goal, held loft, cancellation and exit. Local changes only; physical-phone heat and haptics remain unmeasured.
+- Final visual checks waited for the entry overlay to disappear: puzzle toolbar/mode switching and power reset passed desktop/touch; a real Lift gesture produced the expected loft and live trail. A separate render-only keeper fixture confirmed dive and upright recovery (not evidence of ordinary save balance). Tennis control bounds passed at 1280px/601px desktop and 390px touch; desktop joystick now has a non-collapsing 132px base and centered 64px puck, with no action overlap.
+
+## Island jobs and Community Garden (27 Sep 2026, local)
+
+`lib/town/jobs/jobScene.ts` (docs/island-jobs.md). Idle: six job signs, bins and rebound-wall paint are one merged vertex-colour mesh plus one label-atlas mesh (2 draws, static); a 0.25 s throttled distance check over 6 signs and a 0.1 s garden-range check. Running job: one targets `InstancedMesh` (+ placed cones), a 2-mesh beacon and a carried ball, built on start and disposed on finish; ≤16 distance checks per frame; beacon bob frozen under reduced motion. Garden: one 39-instance `InstancedMesh`, visible only within 55 m, repainted on entry, on a pick and every 5 s inside. Update is skipped while the island is paused. The HUD (`components/IslandJobs.tsx`) re-renders only on view changes. Desktop checks only; no phone thermal measurement.
+
+**27 Sep 2026 additions (docs/island-jobs.md §3b, §8).** Ten job signs now (still 2 static draws; atlas 1024×640). The kit room, offside and pump jobs build their props on start and dispose them at the end; the offside replay rewrites 5 capsule matrices only while a ~3 s clip plays and uses the shared `lib/town/shotCamera.ts` blend (idle: one early return). The **Boot Room visit** builds nothing until Enter: then one merged unlit vertex-colour mesh, one chalkboard texture and one still coach rig, disposed as soon as the camera is back outside; no lights added, no loop; the island rests while the story card is open. Idle cost: one door-distance check per frame (plus a desktop hover ray test). Desktop headless checks only; no phone thermal measurement.
+
+### Fishing and vending art; arcade entry (2026-09-27)
+- Fishing visual module now owns two 512×128 original canvas decals: blue shallow-water layers and broken foam strands with transparent gaps. Local shoreline geometry remains merged. Rod/reel/guide and red/cream float detail, a fish belly/eyes/fin, and 12 reused splash instances replace placeholders. Decorative water offset and splash work use the existing busy-only driver; no timers, extra RAF, blur, global-sea changes or fishing-rule changes. Thin ripple rings improve surface readability. Existing nearby creation / 80m disposal remains authoritative.
+- Vending keeps one merged mesh per machine and one shared material. The shared atlas grows from 512×1024 to 1024×1024 (eight 256px-wide glass tiles, no per-machine texture or material); both colour and emissive maps remain shared. This increases bounded texture memory, not draw count. Real special names and original ball/foil-pack miniature art are shared with small canvases painted only when the interactive face mounts or its product changes. Plain cabinet texels stay lit; printed face texels preserve their source colours so HTML does not introduce a lighting-driven palette change.
+- Cabinet trim, feet and vent detail remain below the existing 800-vertex-per-machine gate. Tray item and pickup label occupy separate regions. Garden zoom follows a 7m elevated arc and returns to the same final camera fit, avoiding the classroom corner.
+- Runtime vending check: no placement/reachability issues; sampled 195 draws with machines vs194 without (+1), 0.51µs idle update and0.045µs inactive camera. This is one local scene sample, not a physical-phone thermal measurement. Portrait market flow passed purchase, tray pickup, insufficient-funds response, page navigation and exit, with no text below12px or buttons below44px.
+- Fishing desktop West Cove and390×844 Harbour Wall captures passed cast, shadow, nibble, bite, catch and exit with no browser errors. Harbour Wall framing still clips the float near the phone’s bottom controls; camera code is expressly outside the visual handoff, so its correction awaits ownership approval.
+- All five games now request a persisted3-coin payment for each new play; pause/resume is free, puzzle entry includes its built-in attempts, successful replay/new entry costs3. A shared hook prevents double-click charges. Wallet core adds idempotent debits and an island earning source, including migration of identifiable legacy job/welcome/market/card-trade run IDs. Debit persistence, reload, storage failure, affordability and cross-tab serialization tests pass. Vending/jobs adapter integration remains pending the ownership decision; existing vending-ledger spend is not yet migrated into core debits.
+- Removed displayed pack odds and fixed the tennis select to16px. `npm test` passed all suites, including device guards and heat checks; TypeScript passed. Five-game browser entry checks confirmed3-coin charges and free resume; empty wallet stays on ready screen with an earning explanation. No commit, deployment or server restart.
+- Final vending visual comparisons confirmed matching product identities/colours and separate label/price bands. Portrait and landscape label-overlap assertions passed; face bounds were367×454 and290×359 CSSpx respectively. Artwork is original procedural canvas drawing, with no external character assets.
+
+### September 27 — repeated reeling and vending shelf refinement (local only)
+- Fishing now hooks first and requires 6–12 separate reel taps, depending on fish size. A 120ms debounce and an eight-second inactivity escape prevent hold-to-win and idle rewards. Only final landing writes the catch. Reeling progress updates React only per accepted tap; the fish wriggle, taut line, approach and landing arc use the existing active frame callback and shared fish geometry. No timers or extra render loops. Reduced motion skips the wriggle and landing arc.
+- Surrounding sea uses a blue palette; fishing shallows blend outward with lower opacity and vertex-alpha fades at both ends. Existing ocean ripple update and nearby-only fishing disposal are preserved.
+- Vending sign, category strip and LED heights reduced; product slots gained height. Original store mesh snapshots replace generic ball miniatures; nine small baked product PNGs share the existing world atlas with load callbacks detached on disposal. Shelf selection, coin acceptance and tray settle are bounded CSS animations, disabled with reduced motion. Selection audio uses the existing muted/idle-aware sound engine. No extra world draw calls.
+- Each machine has six exclusive specials: its existing ball and pack plus four premium home previews (book, print, lamp, trophy). Display items are blocked by both UI and purchase ledger, including a funded-wallet regression test. Existing sale prices are unchanged. Removed the found-count/footer labels and duplicate padlock; LOCKED remains on the price button.
+- TypeScript and npm test passed. Browser purchase flow passed desktop, 390×844 portrait and 844×390 landscape with select/coin/thunk/pop audio counters and no errors. Final layout checks: slots 108×125, 81×94 and149×172 respectively; all buttons ≥44px, labels ≥12px, no label/price overlap. Fishing desktop and mobile repeated-tap catch/exit passed. No physical-phone temperature measurement, commit, deploy or server restart.
+
+### September 27 — distinct vending control sounds (local only)
+- Previous/next use descending/ascending two-note ticks; category uses a three-note chime; product selection, purchase confirmation, coin-slot press, equip and collection each have separate short timbres. Existing coin clinks, tray thumps and refusal cues remain.
+- Dispatch lives in the controller so mouse, touch and keyboard share feedback without duplicate face-layer sounds. Existing AudioContext, mute/volume/visibility gates, 70ms per-cue throttling and source disposal are preserved. Each cue schedules at most three short voices; no audio files, loops or new timers.
+- TypeScript, vending regression and idle-audio checks passed. Local changes only; no deployment or measured physical-phone thermal claim.
+
+### September 27 — fish swim direction and articulated motion (local only)
+- Corrected approaching-shadow heading by π: its local head is -Z while simulation headings use +Z. Reeling mesh keeps its separate -X nose convention toward the angler.
+- Swimming silhouette uses a travelling bend in its existing position buffer. The caught/reeling fish shares articulated tail and paired side-fin geometry; two extra draws only for the visible fish while fishing. Tail beats, subtle body sway and fin motion respond to reel taps. Reduced motion keeps the fish still. All work stays in the active fishing callback, with existing nearby creation/disposal and no timers or new animation loops.
+- TypeScript and fishing regression checks passed; no deployment or physical-device heat measurement.
+- Live desktop direction check measured nose/travel alignment 1.000 (forward) and changing silhouette vertices; mobile catch/exit passed without browser errors. Heat regression passed.
+
+### September 27 — centered wallet and split basket HUD (local only)
+- The island wallet sits centered in the existing Paths/Settings row with the same 44px height and safe-area offset. Venue learning cards sit below; nearby NPC prompts move below visible venue cards. Vending wallet layout is unchanged.
+- Fish and produce each use a small original SVG icon, count and accessible label. Two primitive external-store snapshots update only when their category total changes; no polling, timers or frame work.
+- TypeScript passed. Browser checks at390×844 and 1280×800 verified exact centering, aligned tops, matching44px heights and separate seeded counts (3 fish,6 produce). The jobs suite currently fails its separate economy-bound assertion (284 total); this change does not modify job payouts. Local only, not deployed.
+
+### September 27 — remaining integration pass (local only)
+- Vending payments now debit the shared wallet; island and vending HUDs no longer subtract the old ledger again. Legacy debits migrate by stable identities and new receipts retain ownership through interrupted secondary writes. Purchases serialize through the existing wallet lock; the vending projection uses its own lock to avoid nested acquisition. No polling or timers were added.
+- Harbour Wall portrait framing now keeps the cast float above the joystick region while preserving the raised view over the harbour wall. Other portrait spots use the same improved composition; desktop framing remains unchanged. Camera work remains within the existing active transition and resize path.
+- Home placement/inventory implementation is staged behind HOME_DECOR_ENABLED=false. Its Settings entry is hidden, its dynamic chunk is not mounted, and decorations remain unpurchasable previews. The phone purchase/place/turn/reload/move/put-away flow passed before it was hidden; desktop home staging still needs visual review before enabling. Pure placement, ownership and wallet failure/concurrency tests pass.
+- Updated the outdated six-job economy/catalog tests for the ten-job catalog and explicit task interactions, without changing payout amounts. The full npm suite passes again, including device and heat guards. TypeScript passed. Phone/desktop browser wallet checks confirm consistent balance, idempotent migration/reload, successful gear purchases and blocked home purchases. Harbour Wall phone cast/reel/catch/exit passed, with nose/travel alignment1.000 and no browser errors.
+- No commit, deployment, server restart or real-phone thermal measurement. Remaining external validation: physical iPhone/Android touch, audio and sustained heat.
+
+### September 27 — production deployment verified
+- Deployed the current workspace with user approval to https://futbolisland.app; Vercel deployment dpl_H5AD5HhU3KRrQKFgTYy6cy1LZXqE is READY. Production build, TypeScript and the full pre-deployment npm test suite passed. No commit or development-server restart was performed.
+- Isolated production browser checks passed at 390×844 and 1280×800: shared wallet balance, legacy migration, vending purchase, reload without double debit, hidden My Home entry and blocked decoration previews. The browser script now accepts FUTBOL_BASE_URL for repeatable production checks.
+- Physical iPhone/Android touch, audio and sustained thermal testing remain unmeasured; browser emulation is not a physical-device heat test.
+
+### September 27 — autonomous polish follow-up (local, after production deployment)
+- Fishing uses a cached segmented rod, elastic bend and reel crank in the existing active callback. Fish are attached at their transformed mouth rather than their body/tail; escape silhouettes face their travel. Reused splash instances follow the fish. Back uses the shared exit animation, Cast/Reel and Fishbook use island action dimensions, and the hidden joystick releases any captured input. Desktop, 390×844 and 844×390 repeated-tap catch/exit checks passed; mouth endpoint error was below0.000004m. See `fishing-polish-pass.md`.
+- Vending removes the redundant ISLAND SHOP sign and moves category/navigation into that space. Both world atlas and projected interactive face share the expanded layout, yielding about20% more portrait shelf height. The entry uses a finite420ms fade,680ms sweep and four glints, with no entry blur or continuous animation. The visit latch prevents replay on book return; canceled visits cannot deliver stale purchase animation into another machine. See `vending-polish-pass.md`.
+- The finished Messi book is lazy loaded after purchase (or explicit testing preview). Six original riso SVG spreads have finite, input-triggered paper motions; only one spread mounts, with no timer, frame loop or WebGL context. Reduced motion disables transforms. The island sleeps while reading. Phone, desktop and short-landscape tests passed purchase once, bookmark/reopen, all spread interactions, focus and render sleep. Sources and implementation notes: `player-books-research.md`.
+- `?preview=all` offers temporary vending equipment/card/book previews without writing purchases, grants, customization or collection progress. Only the completed Messi book is readable; unfinished stories remain previews. Adding `testCoins=50000` explicitly credits50,000 spendable testing coins once per saved wallet using an idempotent reserved grant. Reloads and concurrent requests cannot repeat it; failed persistence yields no temporary balance. Browser tests verified30→50,030 once and persistence outside preview; wallet tests cover spending, concurrency and failed storage. Normal earning caps remain unchanged.
+- The former Boot Room interior/story/entry runtime is removed. Its existing exterior remains as Clubhouse, and the outdoor kit-assistant job retains its progress and reward. No replacement interior or rendering loop was added.
+- These follow-up changes are local, not part of the earlier deployment. Browser emulation and draw/sleep checks do not establish physical-phone temperature improvements.
+- Arcade follow-up: tennis timing cues now share the return-window predicate; pinball gets one bounded opening rescue; Breakaway buffers landing/recovery input without losing charged shots; Strikers keeper dives use actual contact direction. Puzzle coalesced input preserves original timestamps and its idle anticipation stops after four seconds. All changes reuse existing loops/geometry. `arcade-polish-pass.md` records per-game ordinary-input coverage separately from deterministic/injected checks and identifies remaining upper-level balance and physical-phone limits.
+- Vending tray follow-up: pack pickup expands from its measured tray position into a full-size, one-card-at-a-time collection-art viewer. Tap/swipe/keyboard navigation and a bounded entry animation replace the small pack grid. A static filter blurs the sleeping world and inert face beneath a tinted overlay; there is no backdrop-filter, extra render loop or autoplay card film. Reduced motion bypasses the flight; close removes the filter and restores machine interaction. The user subsequently requested a dimensional book rebuild; the earlier SVG-book measurements above describe the prior implementation, pending revalidation of the replacement.
+- Daily play reward: once per local calendar day,30 seconds of direction-controlled on-foot displacement credits40 coins under the wallet lock. Idle, background, menus, automatic movement and flying do not count. Qualification uses the existing Town frame, not a timer. A stable daily receipt prevents reload/cross-tab duplication; failed writes grant nothing. Pure tests and ordinary-input browser checks passed idle/no grant, walking/grant and reload/no duplicate; see `daily-play.md`.
+- Book soundtrack: an original finite13-second music-box phrase is rendered into a24kHz mono buffer only on use, with at most two cached phrases. Paper swish/action chime buffers are reused. No music sequencer, polling or repeating timer; at most four short voices, context suspension after sound ends, hard stop on hidden/mute and disposal on close. `book-audio.cjs` verifies lazy allocation, bounds and lifecycle. Island media remains independently paused by playback ownership.
+
+### September 27 — dimensional vending cabinet and shelves (local only)
+- Close-up uses a level three-quarter camera with a broad visible cabinet side; short landscape uses a shallower angle to preserve touch targets. The existing four-corner projection keeps the interactive face attached to the world mesh.
+- Category navigation is roughly30% shorter in the shared layout. The product display uses two continuous shelves, recessed side returns, contact shadows and integrated name/price rails. The world atlas uses the same layout. Back matches the story-screen anchor (18/16px phone,24/20px desktop plus safe areas) and retains the shared shrink exit.
+- Raised cabinet/glass/tray rims and shelf lips stay inside the existing merged mesh and material: one draw per machine and fewer than800 vertices. No extra textures, idle animation loops, timers, lighting passes or blur are added. Small-screen controls retain minimum touch areas with bounded layout adjustment.
+- Vending regression and the full npm test suite passed. Browser checks passed purchases, pickup, paging, Back anchors/exit, readable text and ≥44px buttons at390×844,844×390 and 1280×800. A subsequent visual correction removes the double-perspective shelf trapezoid and product badges/glows. Full TypeScript currently reports an unrelated concurrent popupEngine.ts type error; vending had passed before that book edit. No restart, commit, deployment or physical-device temperature claim.
+
+- Vending glass refinement: a pointer-transparent front pane adds restrained sky reflections and layered edge thickness above the products. Stock settles once after paging; a dispense gives a short shelf/glass vibration; coin keys and pickup flap have physical press feedback. All new animation is finite, disabled under reduced motion, and adds no JS frame callback. Item highlighting remains removed.
+- Display miniatures use a tightly framed128px canvas with a shared shelf baseline, no detached baked shadow, and consistent visible scale. Pack and ball previews are enlarged to compensate for source padding. The world atlas uses the same display-art baseline. Vending/heat regressions pass; ongoing book changes currently block the full TypeScript check outside vending files.
+
+### September 28 — larger vending vehicle previews (local only)
+- Vending snapshots trim transparent camera margins for scooters, bikes, mopeds and flight equipment, then fit the visible silhouette to a shared bottom baseline. Other store consumers and ball framing are unchanged.
+- The existing one-time preview batch reuses two340×220 canvases for alpha bounds and resampling, releases them afterward, and keeps using the vending snapshot cache. No persistent renderer, polling or animation loop is added. Vending regression passed; phone vehicle-page screenshots verify the resulting presentation.
+
+### September 28 — Fishbook drawer and protected catch reading (local only)
+- Fishbook uses a right-hand drawer (full width on phones), the existing NPC coastal/grain textures and colorful collection cards. Native modal focus, Escape, outside click and focus restoration remain. Radar, movement/actions and fishing HUD stay hidden through the closing animation.
+- Fishing sessions explicitly pause while Fishbook or the market is open; overlay entry no longer cancels the session when building-entry input is disabled. Fishing tap/key handlers detach while these drawers are open. The existing island loop sleeps behind the book; no new render loop or blur is added.
+- Catch information survives repeated Reel taps. A new cast requires three seconds for the catch moment and a0.7-second pause in tapping, using existing simulation time with no new timer. The test holds a six-second tap burst without losing the fish, then checks an intentional recast; drawer input cannot cast. Fishing regression passes.
+
+- Phone390×844 and desktop1280×800 browser checks passed drawer placement, ten species, hidden HUD, frozen island render count, Escape/Done closing and fishing-HUD restoration. TypeScript, fishing and heat guards passed. No deployment or physical-phone thermal measurement.
+- Fishing HUD status and keeper tip now share one compact card below the navigation/wallet row. The tip expands within that card; duplicate lesson headings and stacked banners are removed. No new timers, rendering work or animation loops. TypeScript, fishing and device checks pass; local only.
+
+### September 28 — Japanese convenience-store market exterior (local only)
+- Replaced the Island Market house facade with a low Japanese7-Eleven-style storefront: orange/red/green wraparound fascia, flat canopy, aluminium-framed glazing, sliding-door artwork, stocked window shelves and a football match-day poster. The building retains its existing10×10m plot and collision footprint; its new roof height is registered in building metadata.
+- Relocated the main plaza vending machine to74.2,-51.9, facing the paved approach beside the market doors. Its ID, stock, ownership and prices stay intact. Other machines remain in place. Existing generic placement tests now derive the main machine's coordinates from the catalog rather than its old location.
+- Geometry uses the existing static material/spatial batches and sign-texture disposal. No point lights, transparency passes or animation loops were added. TypeScript, town and vending checks passed; phone portrait, landscape and desktop browser checks verified walk-up, entry, projected controls and readable targets. No deployment or measured physical-phone thermal claim.
+
+## Konbini parking and Kit Room sign — September 28, 2026 (local, not deployed)
+
+Renamed the convenience store Konbini. Its west-side parking court uses static boxes for three marked bays, wheel stops, an open drive entrance and a pedestrian crossing; all reuse the world material/batching lifecycle. No lights, animation loops or additional textures. Removed the Kit Room sign posts, board and label quads while preserving the activity. Town and island-job checks passed; no physical-phone temperature measurement.
+
+Parking follow-up: trimmed the south edge back to z=-52 and removed the entrance arrow, exposing the existing grass/path border instead of projecting asphalt into the square. Static geometry only; town checks passed.
+
+## Square futsal court — September 28, 2026 (local, not deployed)
+
+Replaced the Clubhouse building with a 20×12 m pocket court spanning x76–96, directly between Konbini and the arcade. Static marked surface, two mini goals and fine mesh cage reuse spatial/material batching; fine wires do not cast shadows. Cage colliders have a 2.4 m front entrance. Removing the house also removes its building/roof collision. No animation loop, lights or new texture; town checks and TypeScript passed. This is an accessible practice space, not a new scored match mode.
+
+## Cage freestylers, floodlights and ferry gateway — September 28, 2026 (local, not deployed)
+
+Four fictional court residents use the existing NPC rig, culling, distance tiers, pause and disposal. Each stays in a separate practice area, with different authored foot/knee/shoulder/head/around-world sequences using the existing juggle contact solver. Each ball is one merged draw; no extra rAF, interval, physics simulation or trail. Talking uses the existing textured conversation drawer. Two curated clips load thumbnails only when the conversation opens and mount the shared video player only on a tap; closing/hidden-page stops playback. Existing video holds pause the island during playback. Desktop and 390×844 checks cover four residents inside the fence, moving balls, paused dialogue, clipping-free drawer, clip switching and closing. TypeScript and npm test passed before the final single-draw ball refinement; TypeScript rechecked afterward. These are browser checks, not physical-phone thermal measurements.
+
+Four wall fixtures on Konbini/arcade use shared emissive lenses and four static floor light washes in the existing night pool batches. No additional dynamic lights or shadow passes. The ferry sign has two lamps outside its posts at x214.8/229.2, z190.6; procedural lamps are excluded from the lettering zone. The former Clubhouse rooftop collectible is relocated to Konbini with its stable save ID.
+
+Clip references: [Andrew Henderson, FATV](https://www.youtube.com/watch?v=2hvClyF2j0I), [Erlend vs Brynjar Fagerli, Flair20 TV](https://www.youtube.com/watch?v=3Iq0Rtxt6K4). Publisher embeds remain subject to availability/region; the drawer includes direct source links and an error fallback. No downloaded/rehosted footage or unrelated news fallback.
+
+## Island pocket balance drawer — September 28, 2026 (local, not deployed)
+
+The centered coins/fish/produce bar is now one accessible 44px button that lazy-loads a colorful, textured native-dialog drawer. It shows the shared coin balance, separate basket categories/item quantities and total basket capacity, with short earning/spending explanations. Values subscribe to existing stores; no polling or new economy rules. The drawer joins Town's pause gate, hides movement/radar/fishing HUD and preserves an active cast through FishingHost's external pause flag. Its finite 320ms entrance/240ms exit supports reduced motion; focus returns to the bar. No backdrop blur. Desktop and touch 390×844 checks verify counts, no horizontal overflow, sleeping renderer, Done/Escape, focus restoration and fishing continuation. TypeScript, device guards, heat-pass3 and fishing tests passed. No physical-phone thermal claim.
+
+## Arcade control and possession pass — September 28, 2026 (local)
+
+Pass Puzzle prediction now honors an 80ms minimum interval even while pointer samples are dirty. The latest dirty sample stays pending, and a stationary held gesture sleeps after its feedback settles. A mobile browser run measured a minimum 98.5ms interval under the existing frame cap, then verified sleep and wake on movement. Shot-height selection shares the same bounded prediction/launch path and introduces no rendering loop.
+
+Pinball soft possession uses the existing fixed physics step and three defender records. Recipient selection happens on receipt, is limited to three candidates, and permits at most two passes before a shot. Released balls use existing gravity/collision. Carrier and receiver feedback recolors existing ring materials; receive/kick motion uses existing player rigs. Flipper tap buffering is 65ms of simulation time, cleared on pause/cancel, with no timeout. Sounds use the existing capped event-voice context. Mobile controlled exchange and flipper return passed; pause rendering slept.
+
+Strikers first-touch cushioning uses existing pose fields and ball draw position; it does not add colliders or render objects. Tennis's after-bounce receiving guide reuses its existing throttled prediction. No additional shadow lights, bloom, canvas blur or offscreen work were introduced. Browser checks do not establish physical-phone thermal behavior.
+
+## Connected high school — September 28, 2026 (local)
+
+The school uses five touching static volumes with 17/13/9m roofs, four north garden beds and 12 faceted shrubs. Benches and south beds were removed for clear walking routes. Six stairs provide 118 treads and six landings indexed by the existing rooftop collision grids. Landing art stops at the receiving cornice to avoid coplanar flicker while walk support stays continuous. Green perimeter rails have height-aware collision and open stair entrances. No additional animation loops, timers, lights or vegetation animation.
+
+The purple cabinet keeps stable market ID at x135,z8,y17.23, reusing existing vending rendering and interaction. The live browser movement solver walked both sides through every level to (135,10.4), then back to ground, without blocked or falling steps. Central and outer rail checks stop the character at the roof edge. TypeScript, town and vending checks passed; close-up art was reviewed. No physical-phone thermal claim.
+
+### September 28 follow-up: map landmarks and static market/school art (local)
+
+Five fishing F badges and Rosa’s Market label live in the existing memoized SVG terrain; vending V badges use actual machine positions and the obsolete Shop pin is removed. No frame subscriptions, timers or map animation were added. Desktop/390×844 browser checks confirmed all markers and clean hydration. Rosa’s stall is taller and 7.5×9m, with static striped canopy, counters, produce and larger signs; shared geometry/material batching is retained and hover bounds match its new size. Its existing front approach and sell interaction still work.
+
+School hangout adds compact north-side pergola seating and a tiled vending nook with individual roof-height furniture colliders, static bulbs and existing night-pool batches. No canopy collision box; actual solver checks traverse underneath and both stair routes. Greenhouse transparent panels share one non-refractive material; aerial landing exclusions redirect outside while both ground entrances remain walkable. No added background loops or blur. Desktop browser validation does not establish phone temperature.
+
+Pinball mobile framing now computes an aspect-aware tilt during resize and reserves144px below the table for feedback/controls. No per-frame fit work. Reviewed390×844 possession/counterattack screenshots show readable full table above the controls; touch counter return and pause sleeping pass. Tennis/runner cinematic fixtures verified camera recovery/cancel and reduced-motion stability, with no haptics in reduced mode.

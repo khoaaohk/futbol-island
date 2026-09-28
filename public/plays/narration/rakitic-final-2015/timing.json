@@ -1,0 +1,370 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Berlin, 2015",
+   "text": "Berlin, 2015, the Champions League final. Barcelona against Juventus, just four minutes in. Jordi Alba races down the left. Neymar, then Andr\u00e9s Iniesta... Ivan Rakiti\u0107 sidefoots it in!",
+   "src": "/plays/narration/rakitic-final-2015/1.m4a",
+   "seconds": 14.5,
+   "words": [
+    {
+     "w": "Berlin",
+     "at": 0.4
+    },
+    {
+     "w": "2015",
+     "at": 1.025
+    },
+    {
+     "w": "the",
+     "at": 1.9
+    },
+    {
+     "w": "Champions",
+     "at": 2.013
+    },
+    {
+     "w": "League",
+     "at": 2.65
+    },
+    {
+     "w": "final",
+     "at": 2.913
+    },
+    {
+     "w": "Barcelona",
+     "at": 3.875
+    },
+    {
+     "w": "against",
+     "at": 4.575
+    },
+    {
+     "w": "Juventus",
+     "at": 4.925
+    },
+    {
+     "w": "just",
+     "at": 5.55
+    },
+    {
+     "w": "four",
+     "at": 5.812
+    },
+    {
+     "w": "minutes",
+     "at": 6.075
+    },
+    {
+     "w": "in",
+     "at": 6.375
+    },
+    {
+     "w": "Jordi",
+     "at": 7.1
+    },
+    {
+     "w": "Alba",
+     "at": 7.5
+    },
+    {
+     "w": "races",
+     "at": 7.8
+    },
+    {
+     "w": "down",
+     "at": 8.25
+    },
+    {
+     "w": "the",
+     "at": 8.488
+    },
+    {
+     "w": "left",
+     "at": 8.575
+    },
+    {
+     "w": "Neymar",
+     "at": 9.312
+    },
+    {
+     "w": "then",
+     "at": 9.85
+    },
+    {
+     "w": "Andr\u00e9s",
+     "at": 10.037
+    },
+    {
+     "w": "Iniesta",
+     "at": 10.512
+    },
+    {
+     "w": "Ivan",
+     "at": 11.625
+    },
+    {
+     "w": "Rakiti\u0107",
+     "at": 12.0
+    },
+    {
+     "w": "sidefoots",
+     "at": 12.625
+    },
+    {
+     "w": "it",
+     "at": 13.137
+    },
+    {
+     "w": "in",
+     "at": 13.225
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again. Neymar flicks it inside. Iniesta dances into the box and slides it across.",
+   "src": "/plays/narration/rakitic-final-2015/2.m4a",
+   "seconds": 7.0,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "Neymar",
+     "at": 1.438
+    },
+    {
+     "w": "flicks",
+     "at": 1.863
+    },
+    {
+     "w": "it",
+     "at": 2.163
+    },
+    {
+     "w": "inside",
+     "at": 2.25
+    },
+    {
+     "w": "Iniesta",
+     "at": 3.263
+    },
+    {
+     "w": "dances",
+     "at": 3.725
+    },
+    {
+     "w": "into",
+     "at": 4.162
+    },
+    {
+     "w": "the",
+     "at": 4.338
+    },
+    {
+     "w": "box",
+     "at": 4.425
+    },
+    {
+     "w": "and",
+     "at": 4.875
+    },
+    {
+     "w": "slides",
+     "at": 5.013
+    },
+    {
+     "w": "it",
+     "at": 5.438
+    },
+    {
+     "w": "across",
+     "at": 5.513
+    }
+   ]
+  },
+  {
+   "label": "Right on time",
+   "text": "Rakiti\u0107 arrives on the penalty spot at just the right moment. A calm sidefoot, and it is in! Barcelona lead, one\u2013nil.",
+   "src": "/plays/narration/rakitic-final-2015/3.m4a",
+   "seconds": 9.3,
+   "words": [
+    {
+     "w": "Rakiti\u0107",
+     "at": 0.4
+    },
+    {
+     "w": "arrives",
+     "at": 0.95
+    },
+    {
+     "w": "on",
+     "at": 1.438
+    },
+    {
+     "w": "the",
+     "at": 1.538
+    },
+    {
+     "w": "penalty",
+     "at": 1.625
+    },
+    {
+     "w": "spot",
+     "at": 2.087
+    },
+    {
+     "w": "at",
+     "at": 2.45
+    },
+    {
+     "w": "just",
+     "at": 2.55
+    },
+    {
+     "w": "the",
+     "at": 2.763
+    },
+    {
+     "w": "right",
+     "at": 2.85
+    },
+    {
+     "w": "moment",
+     "at": 3.125
+    },
+    {
+     "w": "A",
+     "at": 4.112
+    },
+    {
+     "w": "calm",
+     "at": 4.237
+    },
+    {
+     "w": "sidefoot",
+     "at": 4.625
+    },
+    {
+     "w": "and",
+     "at": 5.375
+    },
+    {
+     "w": "it",
+     "at": 5.487
+    },
+    {
+     "w": "is",
+     "at": 5.575
+    },
+    {
+     "w": "in",
+     "at": 5.725
+    },
+    {
+     "w": "Barcelona",
+     "at": 6.487
+    },
+    {
+     "w": "lead",
+     "at": 7.125
+    },
+    {
+     "w": "one",
+     "at": 7.638
+    },
+    {
+     "w": "nil",
+     "at": 8.025
+    }
+   ]
+  },
+  {
+   "label": "Arrive and finish",
+   "text": "Arrive in the box at the right moment. Then finish fast, before a defender can block your shot.",
+   "src": "/plays/narration/rakitic-final-2015/4.m4a",
+   "seconds": 6.7,
+   "words": [
+    {
+     "w": "Arrive",
+     "at": 0.4
+    },
+    {
+     "w": "in",
+     "at": 0.787
+    },
+    {
+     "w": "the",
+     "at": 0.863
+    },
+    {
+     "w": "box",
+     "at": 0.95
+    },
+    {
+     "w": "at",
+     "at": 1.337
+    },
+    {
+     "w": "the",
+     "at": 1.413
+    },
+    {
+     "w": "right",
+     "at": 1.5
+    },
+    {
+     "w": "moment",
+     "at": 1.75
+    },
+    {
+     "w": "Then",
+     "at": 2.612
+    },
+    {
+     "w": "finish",
+     "at": 2.862
+    },
+    {
+     "w": "fast",
+     "at": 3.212
+    },
+    {
+     "w": "before",
+     "at": 3.925
+    },
+    {
+     "w": "a",
+     "at": 4.237
+    },
+    {
+     "w": "defender",
+     "at": 4.287
+    },
+    {
+     "w": "can",
+     "at": 4.8
+    },
+    {
+     "w": "block",
+     "at": 4.95
+    },
+    {
+     "w": "your",
+     "at": 5.237
+    },
+    {
+     "w": "shot",
+     "at": 5.362
+    }
+   ]
+  }
+ ]
+}

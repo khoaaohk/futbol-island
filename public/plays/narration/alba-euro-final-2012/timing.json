@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Kyiv, 2012: the Euro final, Spain against Italy. Jordi Alba passes to Xavi in his own half... and keeps running! Xavi slides the ball through. Alba finishes with his left foot. Two nil to Spain!",
+   "src": "/plays/narration/alba-euro-final-2012/1.m4a",
+   "seconds": 14.7,
+   "words": [
+    {
+     "w": "Kyiv",
+     "at": 0.35
+    },
+    {
+     "w": "2012",
+     "at": 0.7
+    },
+    {
+     "w": "the",
+     "at": 1.8
+    },
+    {
+     "w": "Euro",
+     "at": 1.9
+    },
+    {
+     "w": "final",
+     "at": 2.237
+    },
+    {
+     "w": "Spain",
+     "at": 2.737
+    },
+    {
+     "w": "against",
+     "at": 3.1
+    },
+    {
+     "w": "Italy",
+     "at": 3.475
+    },
+    {
+     "w": "Jordi",
+     "at": 4.275
+    },
+    {
+     "w": "Alba",
+     "at": 4.65
+    },
+    {
+     "w": "passes",
+     "at": 4.95
+    },
+    {
+     "w": "to",
+     "at": 5.4
+    },
+    {
+     "w": "Xavi",
+     "at": 5.55
+    },
+    {
+     "w": "in",
+     "at": 5.963
+    },
+    {
+     "w": "his",
+     "at": 6.037
+    },
+    {
+     "w": "own",
+     "at": 6.175
+    },
+    {
+     "w": "half",
+     "at": 6.4
+    },
+    {
+     "w": "and",
+     "at": 7.275
+    },
+    {
+     "w": "keeps",
+     "at": 7.4
+    },
+    {
+     "w": "running",
+     "at": 7.7
+    },
+    {
+     "w": "Xavi",
+     "at": 8.4
+    },
+    {
+     "w": "slides",
+     "at": 8.812
+    },
+    {
+     "w": "the",
+     "at": 9.275
+    },
+    {
+     "w": "ball",
+     "at": 9.375
+    },
+    {
+     "w": "through",
+     "at": 9.688
+    },
+    {
+     "w": "Alba",
+     "at": 10.438
+    },
+    {
+     "w": "finishes",
+     "at": 10.762
+    },
+    {
+     "w": "with",
+     "at": 11.238
+    },
+    {
+     "w": "his",
+     "at": 11.338
+    },
+    {
+     "w": "left",
+     "at": 11.5
+    },
+    {
+     "w": "foot",
+     "at": 11.787
+    },
+    {
+     "w": "Two",
+     "at": 12.55
+    },
+    {
+     "w": "nil",
+     "at": 12.8
+    },
+    {
+     "w": "to",
+     "at": 13.05
+    },
+    {
+     "w": "Spain",
+     "at": 13.188
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again. Alba sprints fifty metres, into the space behind the defence. The pass goes between two defenders, right into his path.",
+   "src": "/plays/narration/alba-euro-final-2012/2.m4a",
+   "seconds": 9.9,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.7
+    },
+    {
+     "w": "Alba",
+     "at": 1.488
+    },
+    {
+     "w": "sprints",
+     "at": 1.812
+    },
+    {
+     "w": "fifty",
+     "at": 2.225
+    },
+    {
+     "w": "metres",
+     "at": 2.525
+    },
+    {
+     "w": "into",
+     "at": 3.2
+    },
+    {
+     "w": "the",
+     "at": 3.388
+    },
+    {
+     "w": "space",
+     "at": 3.487
+    },
+    {
+     "w": "behind",
+     "at": 3.9
+    },
+    {
+     "w": "the",
+     "at": 4.287
+    },
+    {
+     "w": "defence",
+     "at": 4.375
+    },
+    {
+     "w": "The",
+     "at": 5.487
+    },
+    {
+     "w": "pass",
+     "at": 5.612
+    },
+    {
+     "w": "goes",
+     "at": 6.025
+    },
+    {
+     "w": "between",
+     "at": 6.375
+    },
+    {
+     "w": "two",
+     "at": 6.787
+    },
+    {
+     "w": "defenders",
+     "at": 7.0
+    },
+    {
+     "w": "right",
+     "at": 7.888
+    },
+    {
+     "w": "into",
+     "at": 8.188
+    },
+    {
+     "w": "his",
+     "at": 8.387
+    },
+    {
+     "w": "path",
+     "at": 8.562
+    }
+   ]
+  },
+  {
+   "label": "The finish",
+   "text": "One touch to control it, then he slots it past Gianluigi Buffon. His first goal for Spain!",
+   "src": "/plays/narration/alba-euro-final-2012/3.m4a",
+   "seconds": 7.2,
+   "words": [
+    {
+     "w": "One",
+     "at": 0.4
+    },
+    {
+     "w": "touch",
+     "at": 0.637
+    },
+    {
+     "w": "to",
+     "at": 0.95
+    },
+    {
+     "w": "control",
+     "at": 1.05
+    },
+    {
+     "w": "it",
+     "at": 1.525
+    },
+    {
+     "w": "then",
+     "at": 1.975
+    },
+    {
+     "w": "he",
+     "at": 2.125
+    },
+    {
+     "w": "slots",
+     "at": 2.263
+    },
+    {
+     "w": "it",
+     "at": 2.638
+    },
+    {
+     "w": "past",
+     "at": 2.725
+    },
+    {
+     "w": "Gianluigi",
+     "at": 3.138
+    },
+    {
+     "w": "Buffon",
+     "at": 3.75
+    },
+    {
+     "w": "His",
+     "at": 4.825
+    },
+    {
+     "w": "first",
+     "at": 5.025
+    },
+    {
+     "w": "goal",
+     "at": 5.3
+    },
+    {
+     "w": "for",
+     "at": 5.525
+    },
+    {
+     "w": "Spain",
+     "at": 5.662
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: when a teammate looks up, sprint into the space behind the defence!",
+   "src": "/plays/narration/alba-euro-final-2012/4.m4a",
+   "seconds": 5.7,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "when",
+     "at": 1.325
+    },
+    {
+     "w": "a",
+     "at": 1.462
+    },
+    {
+     "w": "teammate",
+     "at": 1.538
+    },
+    {
+     "w": "looks",
+     "at": 2.05
+    },
+    {
+     "w": "up",
+     "at": 2.3
+    },
+    {
+     "w": "sprint",
+     "at": 2.688
+    },
+    {
+     "w": "into",
+     "at": 3.013
+    },
+    {
+     "w": "the",
+     "at": 3.188
+    },
+    {
+     "w": "space",
+     "at": 3.288
+    },
+    {
+     "w": "behind",
+     "at": 3.7
+    },
+    {
+     "w": "the",
+     "at": 4.062
+    },
+    {
+     "w": "defence",
+     "at": 4.15
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,294 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "genk": {
+      "src": "/voice/books/debruyne/genk.m4a?v=coach-bella-1",
+      "duration": 34.0,
+      "scriptSha256": "dad0cc87d0d540bd5fad4ef9b94a0cd5a82acf98f5887b520a2eac1ba014729c",
+      "cues": [
+        {
+          "text": "Far from home",
+          "start": 0.0,
+          "duration": 1.825
+        },
+        {
+          "text": "Kevin De Bruyne grew up in Drongen, near the city of Ghent, in Belgium.",
+          "start": 1.825,
+          "duration": 5.325
+        },
+        {
+          "text": "When he was fourteen, he left home to join the youth academy of the club Genk, in another part of the country.",
+          "start": 7.15,
+          "duration": 7.2
+        },
+        {
+          "text": "Open the suitcase.",
+          "start": 14.35,
+          "duration": 2.075
+        },
+        {
+          "text": "For his first year he lived in a boarding house.",
+          "start": 16.425,
+          "duration": 3.425
+        },
+        {
+          "text": "Then he went to live with a host family, a family who looks after a young player.",
+          "start": 19.85,
+          "duration": 5.4
+        },
+        {
+          "text": "It turned out to be a very hard time for him.",
+          "start": 25.25,
+          "duration": 3.325
+        },
+        {
+          "text": "Being far from home is hard. It is okay to miss home, and to say so.",
+          "start": 28.575,
+          "duration": 5.35
+        }
+      ]
+    },
+    "host": {
+      "src": "/voice/books/debruyne/host.m4a?v=coach-bella-1",
+      "duration": 35.1,
+      "scriptSha256": "820ab93bc6e952490e73d829d39c017fcfdca41b74c905b7a7c38fc433b939ff",
+      "cues": [
+        {
+          "text": "Not welcome any more",
+          "start": 0.0,
+          "duration": 2.075
+        },
+        {
+          "text": "After one season, the host family did not want Kevin to stay any longer.",
+          "start": 2.075,
+          "duration": 5.25
+        },
+        {
+          "text": "They thought he was too quiet, too shy with people, and too stubborn.",
+          "start": 7.325,
+          "duration": 4.5
+        },
+        {
+          "text": "Carry the suitcase to the new house.",
+          "start": 11.825,
+          "duration": 2.625
+        },
+        {
+          "text": "At sixteen, he had to move out, into another boarding house.",
+          "start": 14.45,
+          "duration": 4.525
+        },
+        {
+          "text": "Many people would feel hurt and alone if that happened to them.",
+          "start": 18.975,
+          "duration": 4.475
+        },
+        {
+          "text": "Being told you are not wanted is one of the hardest things there is.",
+          "start": 23.45,
+          "duration": 4.775
+        },
+        {
+          "text": "Being quiet is not a bad thing. If people do not understand you, it is not the end of your story.",
+          "start": 28.225,
+          "duration": 6.825
+        }
+      ]
+    },
+    "five": {
+      "src": "/voice/books/debruyne/five.m4a?v=coach-bella-1",
+      "duration": 34.2,
+      "scriptSha256": "a2be7a22f0300209eed4ca72b97ce6c76aefd45edc8e4b1cfd590f980952999c",
+      "cues": [
+        {
+          "text": "Five goals in one half",
+          "start": 0.0,
+          "duration": 2.125
+        },
+        {
+          "text": "Kevin picked himself up.",
+          "start": 2.125,
+          "duration": 2.275
+        },
+        {
+          "text": "He trained harder than before.",
+          "start": 4.4,
+          "duration": 2.35
+        },
+        {
+          "text": "Once, coming on as a substitute for Genk\u2019s second team, he scored five goals in just one half.",
+          "start": 6.75,
+          "duration": 6.775
+        },
+        {
+          "text": "Kick the ball five times.",
+          "start": 13.525,
+          "duration": 2.35
+        },
+        {
+          "text": "He later said the hard time with the host family was a lesson for life.",
+          "start": 15.875,
+          "duration": 5.025
+        },
+        {
+          "text": "In 2009 he played his first game for Genk\u2019s first team, and in 2011 Genk became champions of Belgium.",
+          "start": 20.9,
+          "duration": 8.575
+        },
+        {
+          "text": "You can turn hurt into effort. Keep working at the things you love.",
+          "start": 29.475,
+          "duration": 4.65
+        }
+      ]
+    },
+    "chelsea": {
+      "src": "/voice/books/debruyne/chelsea.m4a?v=coach-bella-1",
+      "duration": 35.2,
+      "scriptSha256": "bb6f361d409229c09054561e7fc728c13353a68a2dbc61755a1c8ad99c757458",
+      "cues": [
+        {
+          "text": "Stuck on the bench",
+          "start": 0.0,
+          "duration": 1.975
+        },
+        {
+          "text": "In 2012, Kevin signed for Chelsea in England, a dream move.",
+          "start": 1.975,
+          "duration": 5.25
+        },
+        {
+          "text": "First he was loaned to Werder Bremen in Germany, where he played well.",
+          "start": 7.225,
+          "duration": 4.95
+        },
+        {
+          "text": "Back at Chelsea, he set up a goal in his first league game.",
+          "start": 12.175,
+          "duration": 4.25
+        },
+        {
+          "text": "Turn the calendar pages.",
+          "start": 16.425,
+          "duration": 2.225
+        },
+        {
+          "text": "After that, he was mostly left on the bench.",
+          "start": 18.65,
+          "duration": 3.4
+        },
+        {
+          "text": "The manager, Jos\u00e9 Mourinho, said he did not fit Chelsea\u2019s style.",
+          "start": 22.05,
+          "duration": 4.775
+        },
+        {
+          "text": "With so few chances to play, Kevin lost his form.",
+          "start": 26.825,
+          "duration": 4.1
+        },
+        {
+          "text": "Not being picked hurts. It does not mean you are not good enough.",
+          "start": 30.925,
+          "duration": 4.275
+        }
+      ]
+    },
+    "wolfsburg": {
+      "src": "/voice/books/debruyne/wolfsburg.m4a?v=coach-bella-1",
+      "duration": 37.5,
+      "scriptSha256": "6bfc7583e250acbe210c78b93d9a17cf73d7d56d2fe9c17b3e58ff6163739a04",
+      "cues": [
+        {
+          "text": "Brave enough to move",
+          "start": 0.0,
+          "duration": 2.125
+        },
+        {
+          "text": "Belgium\u2019s coach told his players to play as much as they could for their clubs.",
+          "start": 2.125,
+          "duration": 5.1
+        },
+        {
+          "text": "Kevin was hardly playing, so he asked to leave Chelsea.",
+          "start": 7.225,
+          "duration": 4.0
+        },
+        {
+          "text": "In January 2014, he joined Wolfsburg in Germany.",
+          "start": 11.225,
+          "duration": 4.725
+        },
+        {
+          "text": "Open the door to Wolfsburg.",
+          "start": 15.95,
+          "duration": 2.35
+        },
+        {
+          "text": "There, he became one of the best players in the Bundesliga.",
+          "start": 18.3,
+          "duration": 4.075
+        },
+        {
+          "text": "In the 2014 to 2015 season he set a Bundesliga record with 21 assists, and scored in the German Cup final, which Wolfsburg won.",
+          "start": 22.375,
+          "duration": 10.475
+        },
+        {
+          "text": "Sometimes you need a fresh start. Asking for a change is okay.",
+          "start": 32.85,
+          "duration": 4.625
+        }
+      ]
+    },
+    "city": {
+      "src": "/voice/books/debruyne/city.m4a?v=coach-bella-1",
+      "duration": 35.8,
+      "scriptSha256": "12a11826518e0aed911ab929db680a65052970dfadf797b785cc9714d3efc5ce",
+      "cues": [
+        {
+          "text": "Not finished",
+          "start": 0.0,
+          "duration": 1.7
+        },
+        {
+          "text": "In 2015, Manchester City paid a club record fee to sign Kevin.",
+          "start": 1.7,
+          "duration": 5.575
+        },
+        {
+          "text": "He stayed for ten seasons.",
+          "start": 7.275,
+          "duration": 2.35
+        },
+        {
+          "text": "He won the Champions League and six Premier League titles, and helped City become the only team to reach 100 points in a Premier League season.",
+          "start": 9.625,
+          "duration": 9.375
+        },
+        {
+          "text": "Raise the trophy.",
+          "start": 19.0,
+          "duration": 1.95
+        },
+        {
+          "text": "He also won five League Cups and two FA Cups.",
+          "start": 20.95,
+          "duration": 3.425
+        },
+        {
+          "text": "The boy who was sent away from his host family became one of the best players of his generation.",
+          "start": 24.375,
+          "duration": 6.825
+        },
+        {
+          "text": "Other people\u2019s opinions do not decide your future. Keep going.",
+          "start": 31.2,
+          "duration": 4.6
+        }
+      ]
+    }
+  }
+}

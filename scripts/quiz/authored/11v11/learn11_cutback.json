@@ -30,16 +30,16 @@
    "options": [
     "Look up at the side of the box",
     "Defender follows the runner toward goal",
-    "Pull the ball back",
-    "Teammate chooses their next touch"
+    "The lane behind the defender opens",
+    "Pull it back to the waiting teammate"
    ],
    "correct": 0,
-   "explain": "Yes. Look first, see the defender follow the run, then pull it back to the free teammate.",
+   "explain": "Yes. Look first, see the defender follow the run, and pull it back into the lane they left.",
    "choiceExplanations": [
-    "Yes. Look first, see the defender follow the run, then pull it back to the free teammate.",
+    "Yes. Look first, see the defender follow the run, and pull it back into the lane they left.",
     "You only see the defender follow the runner once you have taken a look.",
-    "Pull it back only after the defender has left the lane clear.",
-    "The teammate chooses their touch last, once the cut-back has reached them."
+    "The lane behind only opens because the defender has followed the runner toward goal.",
+    "Pull it back last, once the defender has left the cut-back lane clear."
    ],
    "visual": {
     "kind": "order",

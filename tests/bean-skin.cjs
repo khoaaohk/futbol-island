@@ -225,8 +225,14 @@ const jointsOf=r=>{const n=x=>r.root.getObjectByName(x);return {root:r.root,pelv
  const frame=t=>{batch.begin();rigs.forEach((r,i)=>{r.update(i*.9,Math.sin(t+i),1/30,t,false,{runIntensity:.6});batch.draw(r.root);});batch.end();};
  frame(0);frame(1/30);
  const groups=scene.children.filter(o=>o.isInstancedMesh&&o.visible);
- assert.deepEqual(groups.map(o=>o.geometry.name).sort(),['bean-body','bean-hair','bean-hat','bean-limbs'].filter(n=>groups.some(o=>o.geometry.name===n)).sort());
- assert(groups.length<=4,`32 characters in ${groups.length} instanced draws`);
+ assert.deepEqual([...new Set(groups.map(o=>o.geometry.name))].sort(),['bean-body','bean-hair','bean-hat','bean-limbs'].filter(n=>groups.some(o=>o.geometry.name===n)).sort());
+ // Budget pass (Sep 27 2026): hair/hat batches are split by style and draw only that style's index range (not every style collapsed).
+ const styleOf=(r,texel)=>Math.round(B.beanSkinOf(r).data[texel*4+3]);
+ const hairStyles=new Set(rigs.map(r=>styleOf(r,10)).filter(s=>s>0)),hatStyles=new Set(rigs.map(r=>styleOf(r,11)).filter(s=>s>0));
+ assert(groups.length<=2+hairStyles.size+hatStyles.size,`32 characters in ${groups.length} instanced draws (${hairStyles.size} hair + ${hatStyles.size} hat styles)`);
+ for(const g of groups.filter(o=>/bean-(hair|hat)/.test(o.geometry.name))){const full=g.geometry.index.count,dr=g.geometry.drawRange,anchor=g.geometry.getAttribute('beanAnchor'),idx=g.geometry.index;
+  assert(dr.count<full,`${g.geometry.name}: draws ${dr.count} of ${full} indices`);const st=new Set();for(let i=dr.start;i<dr.start+dr.count;i++)st.add(Math.round(anchor.getW(idx.getX(i))));assert.equal(st.size,1,'one style per batch range');
+  let outside=0;const s0=[...st][0];for(let i=0;i<full;i++)if((i<dr.start||i>=dr.start+dr.count)&&Math.round(anchor.getW(idx.getX(i)))===s0)outside++;assert.equal(outside,0,'the whole style is inside the range');}
  const limbs=groups.find(o=>o.geometry.name==='bean-limbs');assert.equal(limbs.count,32);
  const rows=limbs.material.beanUniforms.beanData.value,pose=limbs.material.beanUniforms.beanDyn.value,fw=rows.image.width,pw=pose.image.width;
  assert.equal(fw,ROW.lumbar,'static texels in their own texture');assert.equal(fw+pw,ROW.size,'pose texels in the other');
@@ -287,8 +293,9 @@ out.parity={both,either,iou:both/Math.max(1,either)};window.__out=out;
   await tab.goto(`http://localhost:${server.address().port}/`);await tab.waitForFunction(()=>window.__out,null,{timeout:90000});
   const out=await tab.evaluate(()=>window.__out);
   assert.deepEqual(errors.filter(e=>!/favicon|404/.test(e)),[],'no shader or page errors');
-  // Colour + shadow passes: bean = 4 parts × 2 passes at most; classic ≥ 10 batches × 2.
-  assert(out.bean.calls<=8,`bean: ${out.bean.calls} draw calls for 32 characters`);assert(out.classic.calls>out.bean.calls*2,`classic ${out.classic.calls}`);
+  // Colour + shadow passes: bean = 4 parts × 2 passes plus one batch per hair/hat style in use (budget pass Sep 27 2026: each style
+  // batch draws only its own index range, far fewer vertices than every style collapsed); classic ≥ 10 batches × 2.
+  assert(out.bean.calls<=14,`bean: ${out.bean.calls} draw calls for 32 characters`);assert(out.classic.calls>out.bean.calls*1.5,`classic ${out.classic.calls}`);
   assert(out.parity.iou>.97,`GPU limbs match the CPU mirror (IoU ${out.parity.iou.toFixed(3)})`);
   console.log('BROWSER_PASS renderer.info 32 characters: bean',JSON.stringify(out.bean),'classic',JSON.stringify(out.classic),'limb GPU/CPU IoU',out.parity.iou.toFixed(4));
  }finally{await browser.close();server.close();}

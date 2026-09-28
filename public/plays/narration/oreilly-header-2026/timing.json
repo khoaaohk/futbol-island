@@ -1,0 +1,378 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Wembley, 2026",
+   "text": "Wembley, the 2026 League Cup final. Arsenal against Manchester City. Nico O'Reilly has just scored a header. Four minutes later, Matheus Nunes crosses from the right... O'Reilly arrives at the far post. Another header! Goal!",
+   "src": "/plays/narration/oreilly-header-2026/1.m4a",
+   "seconds": 16.6,
+   "words": [
+    {
+     "w": "Wembley",
+     "at": 0.425
+    },
+    {
+     "w": "the",
+     "at": 0.875
+    },
+    {
+     "w": "2026",
+     "at": 0.975
+    },
+    {
+     "w": "League",
+     "at": 1.9
+    },
+    {
+     "w": "Cup",
+     "at": 2.125
+    },
+    {
+     "w": "final",
+     "at": 2.35
+    },
+    {
+     "w": "Arsenal",
+     "at": 3.163
+    },
+    {
+     "w": "against",
+     "at": 3.7
+    },
+    {
+     "w": "Manchester",
+     "at": 4.125
+    },
+    {
+     "w": "City",
+     "at": 4.737
+    },
+    {
+     "w": "Nico",
+     "at": 5.65
+    },
+    {
+     "w": "O'Reilly",
+     "at": 6.088
+    },
+    {
+     "w": "has",
+     "at": 6.6
+    },
+    {
+     "w": "just",
+     "at": 6.775
+    },
+    {
+     "w": "scored",
+     "at": 6.975
+    },
+    {
+     "w": "a",
+     "at": 7.287
+    },
+    {
+     "w": "header",
+     "at": 7.35
+    },
+    {
+     "w": "Four",
+     "at": 8.125
+    },
+    {
+     "w": "minutes",
+     "at": 8.363
+    },
+    {
+     "w": "later",
+     "at": 8.675
+    },
+    {
+     "w": "Matheus",
+     "at": 9.1
+    },
+    {
+     "w": "Nunes",
+     "at": 9.762
+    },
+    {
+     "w": "crosses",
+     "at": 10.2
+    },
+    {
+     "w": "from",
+     "at": 10.65
+    },
+    {
+     "w": "the",
+     "at": 10.787
+    },
+    {
+     "w": "right",
+     "at": 10.875
+    },
+    {
+     "w": "O'Reilly",
+     "at": 11.688
+    },
+    {
+     "w": "arrives",
+     "at": 12.15
+    },
+    {
+     "w": "at",
+     "at": 12.662
+    },
+    {
+     "w": "the",
+     "at": 12.738
+    },
+    {
+     "w": "far",
+     "at": 12.838
+    },
+    {
+     "w": "post",
+     "at": 13.113
+    },
+    {
+     "w": "Another",
+     "at": 14.012
+    },
+    {
+     "w": "header",
+     "at": 14.375
+    },
+    {
+     "w": "Goal",
+     "at": 15.125
+    }
+   ]
+  },
+  {
+   "label": "Arrive late",
+   "text": "Watch again. He starts outside the box, then runs in late, behind the defenders, to the far post.",
+   "src": "/plays/narration/oreilly-header-2026/2.m4a",
+   "seconds": 7.4,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.7
+    },
+    {
+     "w": "He",
+     "at": 1.525
+    },
+    {
+     "w": "starts",
+     "at": 1.675
+    },
+    {
+     "w": "outside",
+     "at": 1.988
+    },
+    {
+     "w": "the",
+     "at": 2.388
+    },
+    {
+     "w": "box",
+     "at": 2.475
+    },
+    {
+     "w": "then",
+     "at": 3.125
+    },
+    {
+     "w": "runs",
+     "at": 3.337
+    },
+    {
+     "w": "in",
+     "at": 3.725
+    },
+    {
+     "w": "late",
+     "at": 3.875
+    },
+    {
+     "w": "behind",
+     "at": 4.35
+    },
+    {
+     "w": "the",
+     "at": 4.737
+    },
+    {
+     "w": "defenders",
+     "at": 4.825
+    },
+    {
+     "w": "to",
+     "at": 5.525
+    },
+    {
+     "w": "the",
+     "at": 5.612
+    },
+    {
+     "w": "far",
+     "at": 5.713
+    },
+    {
+     "w": "post",
+     "at": 6.013
+    }
+   ]
+  },
+  {
+   "label": "The header",
+   "text": "From beside the goal: forehead, eyes open, and power it down! Two headers in four minutes.",
+   "src": "/plays/narration/oreilly-header-2026/3.m4a",
+   "seconds": 6.7,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "beside",
+     "at": 0.487
+    },
+    {
+     "w": "the",
+     "at": 0.838
+    },
+    {
+     "w": "goal",
+     "at": 0.925
+    },
+    {
+     "w": "forehead",
+     "at": 1.613
+    },
+    {
+     "w": "eyes",
+     "at": 2.237
+    },
+    {
+     "w": "open",
+     "at": 2.525
+    },
+    {
+     "w": "and",
+     "at": 2.913
+    },
+    {
+     "w": "power",
+     "at": 3.038
+    },
+    {
+     "w": "it",
+     "at": 3.337
+    },
+    {
+     "w": "down",
+     "at": 3.425
+    },
+    {
+     "w": "Two",
+     "at": 4.263
+    },
+    {
+     "w": "headers",
+     "at": 4.475
+    },
+    {
+     "w": "in",
+     "at": 4.875
+    },
+    {
+     "w": "four",
+     "at": 5.037
+    },
+    {
+     "w": "minutes",
+     "at": 5.3
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "Full-backs can score too! Arrive late in the box, and attack the ball with your forehead.",
+   "src": "/plays/narration/oreilly-header-2026/4.m4a",
+   "seconds": 6.2,
+   "words": [
+    {
+     "w": "Full-backs",
+     "at": 0.375
+    },
+    {
+     "w": "can",
+     "at": 0.875
+    },
+    {
+     "w": "score",
+     "at": 1.05
+    },
+    {
+     "w": "too",
+     "at": 1.363
+    },
+    {
+     "w": "Arrive",
+     "at": 2.163
+    },
+    {
+     "w": "late",
+     "at": 2.562
+    },
+    {
+     "w": "in",
+     "at": 2.812
+    },
+    {
+     "w": "the",
+     "at": 2.888
+    },
+    {
+     "w": "box",
+     "at": 2.975
+    },
+    {
+     "w": "and",
+     "at": 3.6
+    },
+    {
+     "w": "attack",
+     "at": 3.712
+    },
+    {
+     "w": "the",
+     "at": 4.075
+    },
+    {
+     "w": "ball",
+     "at": 4.175
+    },
+    {
+     "w": "with",
+     "at": 4.463
+    },
+    {
+     "w": "your",
+     "at": 4.562
+    },
+    {
+     "w": "forehead",
+     "at": 4.688
+    }
+   ]
+  }
+ ]
+}

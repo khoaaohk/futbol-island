@@ -59,7 +59,7 @@ const focused=page=>page.evaluate(()=>document.activeElement?.getAttribute('aria
 const live=page=>page.evaluate(()=>[...document.querySelectorAll('dialog[open] p[aria-live=polite]')].map(p=>p.textContent).find(t=>/^Page /.test(t))??'');
 const box=(page,sel)=>page.evaluate(s=>{const r=document.querySelector(s).getBoundingClientRect();return [r.x,r.y,r.width,r.height].map(v=>Math.round(v*10)/10).join();},sel);
 const onTop=(page,sel)=>page.evaluate(s=>{const el=document.querySelector(s);if(!el)return false;const r=el.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return !!hit&&el.contains(hit);},sel);
-const doneOnTop=page=>page.evaluate(()=>{const done=[...document.querySelectorAll('dialog[open] button')].find(b=>/^Done$/.test(b.textContent.trim()));const r=done.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return done===hit||done.contains(hit);});
+const doneOnTop=page=>page.evaluate(()=>{const done=[...document.querySelectorAll('dialog[open] header button')].find(b=>/^(Done|Back)$/.test(b.getAttribute('aria-label')||b.textContent.trim()));/* sub-pages use Back only */const r=done.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return done===hit||done.contains(hit);});
 const noOverflow=async(page,label)=>{const o=await page.evaluate(()=>({doc:document.documentElement.scrollWidth>innerWidth||document.documentElement.scrollHeight>innerHeight,side:[...document.querySelectorAll('dialog[open] *')].some(el=>el.scrollWidth>el.clientWidth+1&&/auto|scroll/.test(getComputedStyle(el).overflowX))}));
  assert.equal(o.doc,false,`${label}: the page scrolls`);assert.equal(o.side,false,`${label}: something scrolls sideways`);};
 /** Minimal PNG decoder (8-bit RGB/RGBA, non-interlaced, as Chrome writes them) for pixel diffs. */
@@ -208,7 +208,10 @@ async function open(browser,[w,h],{faceDown=false}={}){
     assert.equal(await page.evaluate(()=>localStorage.getItem('fi2-cards-field-v1')),'football','the chosen binder is remembered');
     await dock.getByRole('button',{name:'Search cards'}).click();await page.keyboard.press('Escape');await page.waitForTimeout(300);
     assert.equal(await count(page,'dialog[open] input[type=search]'),0,'Escape closes search');
-    await page.keyboard.press('Escape');await until(page,'dialog[open]',0);
+    await page.keyboard.press('Escape');await page.waitForTimeout(500);
+    // The binder is a Paths sub-page: Escape acts as Back (to Paths), then a second Escape closes the modal.
+    if(await page.evaluate(()=>!!document.querySelector('dialog[open]'))){assert.equal(await count(page,`${BINDER} li button`),0,'Escape leaves the binder first');await page.keyboard.press('Escape');}
+    await until(page,'dialog[open]',0);
     assert.equal(await page.evaluate(()=>!!document.querySelector('dialog[open]')),false,'Escape closes the modal last');
     assert.deepEqual(page.errs,[],'no page errors');
     await context.close();}

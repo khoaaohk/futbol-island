@@ -1,0 +1,314 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "marseille": {
+      "src": "/voice/books/zidane/marseille.m4a?v=coach-bella-1",
+      "duration": 46.6,
+      "scriptSha256": "4476c42291e07eb557fa3f6f5c73462d63e00319d9973beb9736808882e4e3ea",
+      "cues": [
+        {
+          "text": "Two homes, one family",
+          "start": 0.0,
+          "duration": 2.525
+        },
+        {
+          "text": "In 1953, Zidane\u2019s parents left their village in Kabylia, Algeria, and moved to Paris.",
+          "start": 2.525,
+          "duration": 7.55
+        },
+        {
+          "text": "Work was hard to find, so in the 1960s they moved to La Castellane, a tough part of Marseille.",
+          "start": 10.075,
+          "duration": 7.1
+        },
+        {
+          "text": "Zinedine was born there in 1972, the youngest of five children.",
+          "start": 17.175,
+          "duration": 5.775
+        },
+        {
+          "text": "Open the suitcase.",
+          "start": 22.95,
+          "duration": 2.075
+        },
+        {
+          "text": "His father often worked night shifts in a warehouse and as a security guard.",
+          "start": 25.025,
+          "duration": 5.3
+        },
+        {
+          "text": "His parents were strict, and Zidane calls his father the guiding light of his career.",
+          "start": 30.325,
+          "duration": 5.575
+        },
+        {
+          "text": "He later said he is proud of being French, and proud of his family\u2019s roots too.",
+          "start": 35.9,
+          "duration": 5.375
+        },
+        {
+          "text": "Your family\u2019s story is part of you. Coming from two places can be a strength.",
+          "start": 41.275,
+          "duration": 5.275
+        }
+      ]
+    },
+    "scan": {
+      "src": "/voice/books/zidane/scan.m4a?v=coach-bella-1",
+      "duration": 44.4,
+      "scriptSha256": "0da187ac7f5c3fc75f1d2af8717d520a0aaff3ba3622c3780bda521d0618937a",
+      "cues": [
+        {
+          "text": "Far from home",
+          "start": 0.0,
+          "duration": 1.825
+        },
+        {
+          "text": "When Zidane was fourteen, a scout from the club Cannes, Jean Varraud, spotted him at a training camp.",
+          "start": 1.825,
+          "duration": 6.875
+        },
+        {
+          "text": "He went to Cannes for six weeks, and ended up staying for four years.",
+          "start": 8.7,
+          "duration": 4.675
+        },
+        {
+          "text": "That meant leaving his family and sleeping in a dormitory with twenty other young players.",
+          "start": 13.375,
+          "duration": 5.95
+        },
+        {
+          "text": "Knock three times on the paper door.",
+          "start": 19.325,
+          "duration": 2.8
+        },
+        {
+          "text": "The club\u2019s director, Jean-Claude Elineau, invited Zidane to leave the dormitory and live with his own family.",
+          "start": 22.125,
+          "duration": 7.65
+        },
+        {
+          "text": "Zidane later said that in their home he found balance.",
+          "start": 29.775,
+          "duration": 3.825
+        },
+        {
+          "text": "Being far from home is hard, and a kind grown-up can make a big difference.",
+          "start": 33.6,
+          "duration": 5.15
+        },
+        {
+          "text": "Being new somewhere is hard. It\u2019s okay to ask for help and to accept kindness.",
+          "start": 38.75,
+          "duration": 5.65
+        }
+      ]
+    },
+    "ninetyeight": {
+      "src": "/voice/books/zidane/ninetyeight.m4a?v=coach-bella-1",
+      "duration": 44.7,
+      "scriptSha256": "da51f56b62064b14a0a7408ca6315b7293d53f5fe02a52ccb0797072d4c2b644",
+      "cues": [
+        {
+          "text": "Words that hurt",
+          "start": 0.0,
+          "duration": 1.85
+        },
+        {
+          "text": "At Cannes, some spectators shouted insults about Zidane\u2019s race and his family.",
+          "start": 1.85,
+          "duration": 5.825
+        },
+        {
+          "text": "His first coaches saw that he was sensitive.",
+          "start": 7.675,
+          "duration": 3.45
+        },
+        {
+          "text": "Once he punched an opponent who had mocked the neighbourhood he came from, and as a punishment he spent his first weeks cleaning.",
+          "start": 11.125,
+          "duration": 8.0
+        },
+        {
+          "text": "Lift the flap to see who helped.",
+          "start": 19.125,
+          "duration": 2.5
+        },
+        {
+          "text": "His coach, Jean Varraud, encouraged him to turn his anger into focus on his own game.",
+          "start": 21.625,
+          "duration": 6.2
+        },
+        {
+          "text": "Some writers describe Zidane as caught between two cultures.",
+          "start": 27.825,
+          "duration": 4.575
+        },
+        {
+          "text": "Unkind words about who you are are never okay, and hitting back only makes things harder.",
+          "start": 32.4,
+          "duration": 6.225
+        },
+        {
+          "text": "If someone is unkind about who you are, it is not your fault. Tell someone you trust.",
+          "start": 38.625,
+          "duration": 6.0
+        }
+      ]
+    },
+    "volley": {
+      "src": "/voice/books/zidane/volley.m4a?v=coach-bella-1",
+      "duration": 41.2,
+      "scriptSha256": "452a5cbb87da8346c9f2d3a3f182ff867b688aaf343f521b81f205a1ecc7a868",
+      "cues": [
+        {
+          "text": "Sent off, then back",
+          "start": 0.0,
+          "duration": 2.15
+        },
+        {
+          "text": "In 1998, France hosted the World Cup.",
+          "start": 2.15,
+          "duration": 3.975
+        },
+        {
+          "text": "In France\u2019s second match, Zidane was sent off for stamping on an opponent.",
+          "start": 6.125,
+          "duration": 5.25
+        },
+        {
+          "text": "He became the first French player ever shown a red card at a World Cup, and for a while he could only watch.",
+          "start": 11.375,
+          "duration": 7.3
+        },
+        {
+          "text": "Open the tunnel gate to bring him back.",
+          "start": 18.675,
+          "duration": 2.95
+        },
+        {
+          "text": "His team won without him, and when he returned they kept going, all the way to the final against Brazil.",
+          "start": 21.625,
+          "duration": 7.025
+        },
+        {
+          "text": "There, Zidane scored two headers, and France won 3\u20130.",
+          "start": 28.65,
+          "duration": 4.375
+        },
+        {
+          "text": "A red card was not the end of his story.",
+          "start": 33.025,
+          "duration": 3.1
+        },
+        {
+          "text": "A setback isn\u2019t the end of the story. Your team can carry you while you\u2019re out.",
+          "start": 36.125,
+          "duration": 5.05
+        }
+      ]
+    },
+    "calm": {
+      "src": "/voice/books/zidane/calm.m4a?v=coach-bella-1",
+      "duration": 45.4,
+      "scriptSha256": "d948a2caefb85129de0883fdf29c40764ccaa34c2a9972186ba293766b6580b8",
+      "cues": [
+        {
+          "text": "Coming back",
+          "start": 0.0,
+          "duration": 1.625
+        },
+        {
+          "text": "In 2004, after France were knocked out of the European Championship by Greece, Zidane retired from playing for France.",
+          "start": 1.625,
+          "duration": 8.75
+        },
+        {
+          "text": "Other older players left too, and France struggled to qualify for the 2006 World Cup.",
+          "start": 10.375,
+          "duration": 6.9
+        },
+        {
+          "text": "Unfold the bridge back to the team.",
+          "start": 17.275,
+          "duration": 2.775
+        },
+        {
+          "text": "The coach, Raymond Domenech, urged Zidane to return, and in 2005 he came back as captain, with his old teammates Lilian Thuram and Claude Mak\u00e9l\u00e9l\u00e9.",
+          "start": 20.05,
+          "duration": 11.575
+        },
+        {
+          "text": "Together they helped France climb from fourth place to the top of their group.",
+          "start": 31.625,
+          "duration": 5.05
+        },
+        {
+          "text": "Sometimes the bravest thing is to come back and help.",
+          "start": 36.675,
+          "duration": 3.7
+        },
+        {
+          "text": "It\u2019s okay to step away. Coming back when people need you is brave too.",
+          "start": 40.375,
+          "duration": 5.0
+        }
+      ]
+    },
+    "coach": {
+      "src": "/voice/books/zidane/coach.m4a?v=coach-bella-1",
+      "duration": 46.2,
+      "scriptSha256": "ce9c85a1c378646df5941bd5dbe7a95a1d9b5f58a3f69f52620bfcee37d54f16",
+      "cues": [
+        {
+          "text": "A hard night, and after",
+          "start": 0.0,
+          "duration": 2.525
+        },
+        {
+          "text": "The 2006 World Cup final against Italy was Zidane\u2019s last match.",
+          "start": 2.525,
+          "duration": 5.75
+        },
+        {
+          "text": "He scored a penalty, but in extra time a player insulted his sister, and Zidane pushed his head into the player\u2019s chest.",
+          "start": 8.275,
+          "duration": 8.2
+        },
+        {
+          "text": "He was sent off, and France lost on penalties.",
+          "start": 16.475,
+          "duration": 3.725
+        },
+        {
+          "text": "Clear the storm cloud.",
+          "start": 20.2,
+          "duration": 2.1
+        },
+        {
+          "text": "Back in Paris, thousands of fans still cheered his name.",
+          "start": 22.3,
+          "duration": 4.2
+        },
+        {
+          "text": "Zidane later said twelve of his fourteen red cards came after someone provoked him, but that this was no excuse.",
+          "start": 26.5,
+          "duration": 7.725
+        },
+        {
+          "text": "Later, as Real Madrid\u2019s coach, he won the Champions League three years in a row.",
+          "start": 34.225,
+          "duration": 5.7
+        },
+        {
+          "text": "When someone tries to make you angry, breathe and walk away. You are more than one bad moment.",
+          "start": 39.925,
+          "duration": 6.25
+        }
+      ]
+    }
+  }
+}

@@ -2,88 +2,74 @@
 .dialog::backdrop{background:#0c1c1a88}.dialog[open]{display:grid;place-items:center}
 .card{position:relative;z-index:1;width:min(440px,calc(100vw - 24px));height:350px;border:1px solid #d9dfd2;border-radius:22px;background:#f7f0db;color:#25483e;box-shadow:0 18px 70px #071c2844;box-sizing:border-box}
 .header h2{font:750 25px/1.15 system-ui;letter-spacing:-.7px;outline:none}.header button{flex:none;border:1px solid #bfcbb9;border-radius:50%;color:#315745;background:transparent;cursor:pointer}
-.body{padding:18px!important}.content{min-height:0}.eyebrow{font:700 10px system-ui;letter-spacing:1.4px;color:#647a56;margin:0 0 12px}.copy{font:14px/1.5 system-ui;color:#4c6157;margin:0}
+.body{padding:18px!important}.content{min-height:0}.eyebrow{font:700 10px system-ui;letter-spacing:1.4px;color:#647a56;margin:0 0 12px}.copy{font:15px/1.5 system-ui;color:#4c6157;margin:0}
 .note{display:flex;gap:12px;align-items:center;background:#e7e7ce;color:#315745;border-radius:14px;padding:14px;margin-top:16px;font:14px/1.4 system-ui}.note svg{flex:none;color:#527744}
-.welcome{height:min(660px,calc(100dvh - 24px))}.welcome .body{display:flex;overflow:hidden}.welcome .content{display:flex;flex-direction:column;width:100%;flex:1;min-height:0}.welcome .copy,.welcome .eyebrow,.choices{flex:none}.preview{flex:1;min-height:100px;max-height:340px;margin:14px 0 12px;overflow:hidden;border-radius:14px}.preview>div{height:100%;min-height:0;max-height:none;margin:0;border:0;border-radius:0}
-.choices{display:flex;gap:10px}.choices button{flex:1;border:1px solid #bac8b2;border-radius:12px;background:#ece5ce;color:#315745;min-height:44px;font:700 14px system-ui;cursor:pointer}.choices button[aria-pressed=true]{background:#294f43;color:#fff0cc;border-color:#294f43}
-.footer{flex:none;padding:14px 18px;border-top:1px solid #dfe5d9;display:flex;align-items:center;gap:8px;justify-content:space-between;background:#f7f0db}.progress{display:flex;gap:4px;flex:none}.progress span{width:5px;height:5px;border-radius:50%;background:#c6d2bd}.progress .current{width:12px;border-radius:3px;background:#f3cb7d}.actions{display:flex;gap:6px;margin-left:auto}.actions button{min-height:44px;border-radius:12px;padding:9px 10px;font:700 13px system-ui;cursor:pointer}.skip{color:#315745;border:1px solid #bac8b2;background:#ece5ce}.next{display:flex;align-items:center;gap:6px;color:#fff0cc;background:#294f43;border:1px solid #294f43}.dialog button:focus-visible{outline:3px solid #477c6a;outline-offset:2px}
+.welcome{height:min(660px,calc(100dvh - 24px))}.welcome .body{display:flex;overflow:hidden}.welcome .content{display:flex;flex-direction:column;width:100%;flex:1;min-height:0}.welcome .copy,.welcome .eyebrow{flex:none}.preview{flex:1;min-height:100px;max-height:340px;margin:14px 0 12px;overflow:hidden;border-radius:14px}.preview>div{height:100%;min-height:0;max-height:none;margin:0;border:0;border-radius:0}
+.footer{flex:none;padding:14px 18px;border-top:1px solid #dfe5d9;display:flex;align-items:center;gap:8px;justify-content:space-between;background:#f7f0db}.dialog button:focus-visible{outline:3px solid #477c6a;outline-offset:2px}
 .highlight{position:fixed;pointer-events:none;box-sizing:border-box;border:3px solid #f3cb7d;border-radius:18px;box-shadow:0 0 0 5px #f3cb7d22,0 0 25px #f3cb7d55}
-.npcStep::backdrop{background:transparent}.npcStep .card{justify-self:end;margin-right:max(0px,calc((100vw - 1100px)/2))}.npcSpotlight{position:fixed;box-sizing:border-box;border:3px solid #f3cb7d;border-radius:24px;box-shadow:0 0 0 200vmax #0c1c1a88,0 0 24px #f3cb7d88;pointer-events:none}.npcSpotlight>span{position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%);padding:7px 12px;border-radius:12px;background:#f7f0db;color:#25483e;font:700 13px system-ui;text-align:center;min-width:150px;max-width:calc(100vw - 28px)}
-@media(max-width:600px){.header h2{font-size:23px}.npcStep .card{align-self:end;justify-self:center;margin:0;height:300px}.npcSpotlight>span{bottom:auto;top:calc(100% + 8px)}}
-@media(max-width:360px){.footer{flex-wrap:wrap;padding:10px 14px}.actions button{padding-inline:9px}}
-@media(max-height:480px) and (min-width:601px){.welcome .content{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:10px}.welcome .preview{grid-column:2;grid-row:1/4;height:100%;max-height:none;margin:0}.welcome .choices{grid-column:1}.npcStep .card{width:46%;height:280px}}
+@media(max-width:600px){.header h2{font-size:23px}}
+@media(max-height:480px) and (min-width:601px){.welcome .content{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:10px}.welcome .preview{grid-column:2;grid-row:1/4;height:100%;max-height:none;margin:0}.welcome .choicesLayout{grid-column:1}}
 
 .card{transition:top .45s cubic-bezier(.22,.7,.25,1),left .45s cubic-bezier(.22,.7,.25,1),height .45s cubic-bezier(.22,.7,.25,1),width .45s cubic-bezier(.22,.7,.25,1)}
 .content{animation:tour-content-in .28s ease-out both}
 .highlight{transition:top .4s ease,left .4s ease,width .4s ease,height .4s ease}
-.npcSpotlight{transition:top .12s linear,left .12s linear,width .12s linear,height .12s linear}
 @keyframes tour-content-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-@media(prefers-reduced-motion:reduce){.card,.highlight,.npcSpotlight{transition:none}.content{animation:none}}
+@media(prefers-reduced-motion:reduce){.card,.highlight{transition:none}.content{animation:none}}
 
-.saved{flex:none;margin:10px 0 0;font:12px/1.45 system-ui;color:#61705b}.progress .stepLabel{width:auto;height:auto;background:none;border-radius:0;font:700 11px/1 system-ui;color:#61705b;white-space:nowrap}.footer{flex-wrap:wrap}.actions{flex-wrap:wrap;justify-content:flex-end}.welcome .body{overflow:auto}.preview{flex-shrink:1}.header h2{overflow-wrap:normal}
-@media(max-width:380px){.footer{gap:10px}.progress{width:100%}.actions{width:100%;justify-content:space-between}.actions button{padding-inline:9px;font-size:12px}}
+.saved{flex:none;margin:10px 0 0;font:12px/1.45 system-ui;color:#61705b}.welcome .body{overflow:auto}.preview{flex-shrink:1}.header h2{overflow-wrap:normal}
 @media(max-height:560px){.welcome .preview{min-height:90px}.welcome .eyebrow{margin-bottom:6px}.welcome .copy{font-size:13px}.saved{font-size:11px}}
 /* The tour uses the same paper, ink and coast palette as Paths. */
 .dialog .card{background:#fff2d3 url('/stories/films/assets/entry-grain.png')!important;background-blend-mode:soft-light;border:0;border-radius:30px 42px 26px 26px;box-shadow:0 8px 0 #173e3750,0 20px 60px #102d3540}
 .dialog .card>.header{background:transparent!important;border:0}
 .header h2{font:400 clamp(21px,4vw,28px)/1.2 IslandBrush,sans-serif;letter-spacing:0}
 .eyebrow{color:#32775c;font-weight:800}.note{background:#beded1;border-radius:22px 28px 20px 18px}.note svg{color:#244d40}.preview{background:#e8d5ad url('/stories/films/assets/entry-grain.png');background-blend-mode:soft-light;border-radius:26px}
-.dialog .card>.footer{background:transparent!important;border:0;padding-top:10px}.choices button,.actions button{border:0;border-radius:18px;background:#f9d665;color:#244d40;box-shadow:0 4px 0 #aa8b3e;transition:translate .16s}.choices button[aria-pressed=true],.actions .next{background:#244d40;color:#fff2d3;box-shadow:0 4px 0 #17352b}.actions .skip{background:#beded1;box-shadow:0 4px 0 #8bac9d}.choices button:active,.actions button:active{translate:0 3px}.progress .stepLabel{background:#edabd2;color:#244d40;padding:9px 12px;border-radius:12px}.saved{color:#40594c}@media(prefers-reduced-motion:reduce){.choices button,.actions button{transition:none}}
+.dialog .card>.footer{background:transparent!important;border:0;padding-top:10px}.saved{color:#40594c}
 .dialog[open]>.card{width:var(--tour-width)!important;height:var(--tour-height)!important;max-height:calc(100dvh - 24px)!important;border-radius:30px 42px 26px 26px!important}
 
-/* Stable header and three evenly anchored tour controls. */
+/* Stable header and three evenly anchored tour controls (Skip left, progress centre, Next/Done right; same size). */
 .dialog .card>.header{align-items:center!important;grid-template-columns:76px minmax(0,1fr) 76px}
 .dialog .card>.header>h2{align-self:center;min-height:44px}
 .dialog .card>.header>button{align-self:center!important}
 .dialog .card>.footer{display:grid;grid-template-columns:76px minmax(0,1fr) 76px;align-items:center;gap:12px;padding:16px 18px 22px;flex-wrap:nowrap}
-.footer>.progress{width:auto;justify-self:center;justify-content:center}
+.footer>.progress{justify-self:center}
 .footer>button:first-child{justify-self:start}.footer>button:last-child{justify-self:end}
 
-.choices{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:0;padding:4px;border:3px solid #fff2cd;border-radius:999px;background:#efd58c;box-shadow:0 4px 0 #aa8b3e;isolation:isolate}
-.choices::before{content:'';position:absolute;left:4px;top:4px;bottom:4px;width:calc(50% - 4px);border-radius:999px;background:#244d40;transition:transform .26s cubic-bezier(.22,.7,.3,1);z-index:-1}
-.choices[data-character=female]::before{transform:translateX(100%)}
-.choices button,.choices button[aria-pressed=true]{position:relative;background:transparent;border:0;box-shadow:none;border-radius:999px;min-height:44px;translate:none;transition:color .2s}
-.choices button[aria-pressed=true]{color:#fff2cd}.choices button[aria-pressed=false]{color:#244d40}
-@media(prefers-reduced-motion:reduce){.choices::before,.choices button{transition:none}}
+/* Progress dots: the current step is a wider pink pill (the old "n / 6" label colour). */
+.progress{display:flex;align-items:center;justify-content:center;gap:6px}
+.progress>span{width:8px;height:8px;border-radius:999px;background:#c9d4c0;transition:width .26s cubic-bezier(.22,.7,.3,1),background-color .26s}
+.progress>span.current{width:22px;background:#edabd2}
+@media(prefers-reduced-motion:reduce){.progress>span{transition:none}}
 
 /* Skip and Next keep the shared navigation face (grain included), not a flat gold that drops the texture. */
 .dialog .card>.footer button[data-navigation]{background:var(--btn-gold) var(--btn-grain) center/128px 128px!important;background-blend-mode:soft-light!important}
 
 .dialog .welcome>.header>h2{grid-column:1/-1;white-space:nowrap;font-size:clamp(16px,4.5vw,28px)}
 
-.choicesLayout{flex:none}@media(max-height:480px) and (min-width:601px){.welcome .choicesLayout{grid-column:1}}
-/* Match the Paths cue: shake the symbol, then blur into lessons and plays. */
-.lessonIconCycle{position:relative;display:block;flex:0 0 28px;width:28px;height:28px;animation:lessonIconShake 3s linear infinite}
-.lessonIconCycle>span{position:absolute;inset:0;opacity:0;animation:lessonIconSwap 9s linear infinite}
-.lessonIconCycle>span:nth-child(2){animation-delay:3s}
-.lessonIconCycle>span:nth-child(3){animation-delay:6s}
-@keyframes lessonIconShake{0%,80%,92%,100%{transform:none}83%,89%{transform:translateX(-2px) rotate(-5deg)}86%{transform:translateX(2px) rotate(5deg)}}
-@keyframes lessonIconSwap{0%{opacity:0;filter:blur(2px)}2%,30%{opacity:1;filter:blur(0)}31.5%{opacity:.6;filter:blur(2px)}33.333%,100%{opacity:0;filter:blur(2px)}}
-.dialog[data-page-hidden=true] .lessonIconCycle,.dialog[data-page-hidden=true] .lessonIconCycle>span,.dialog:not([open]) .lessonIconCycle,.dialog:not([open]) .lessonIconCycle>span{animation-play-state:paused}
-@media(prefers-reduced-motion:reduce){.lessonIconCycle{animation:none}.lessonIconCycle>span{animation:none;opacity:0;filter:none}.lessonIconCycle>span:first-child{opacity:1}}
-/* Give the Paths introduction enough room without shrinking readable text. */
-@media(max-width:600px),(max-height:480px){
- .dialog .pathsStep>.header{padding:12px 16px!important;grid-template-columns:64px minmax(0,1fr) 64px;gap:8px}
- .pathsStep .body{padding:12px 16px!important;scrollbar-gutter:auto}
- .pathsStep .eyebrow{margin-bottom:8px}
- .pathsStep .note{padding:12px;gap:10px;margin-top:12px}
- .dialog .pathsStep>.footer{padding:10px 16px 16px;gap:8px}
-}
-@media(min-width:601px) and (max-height:480px){
- .pathsStep .content{display:grid;grid-template-columns:1fr 1fr;column-gap:20px;align-items:center}
- .pathsStep .eyebrow{grid-column:1}
- .pathsStep .copy{grid-column:1}
- .pathsStep .note{grid-column:2;grid-row:1/3;margin-top:0}
-}
+.choicesLayout{flex:none}
 
-/* Explore step: a real card from the binder shows what exploring earns (a face-up card over two mystery backs). Never scrolls. */
-.cardsStep .body{overflow:hidden!important;scrollbar-gutter:auto}
-.cardsNote{display:flex;gap:16px;align-items:center;background:#beded1;color:#244d40;border-radius:22px 28px 20px 18px;padding:12px 14px;margin-top:14px;font:14px/1.4 system-ui}
-.cardsNote strong{display:block;font-weight:800;margin-bottom:2px}
-.cardFan{position:relative;flex:none;width:92px;height:100px}
-.cardFan>*{position:absolute;left:14px;top:0;--w:68px}
-.cardFan .fanBack{rotate:-14deg;translate:-12px 4px}
-.cardFan .fanMid{rotate:-6deg;translate:-5px 1px}
-.cardFan .fanFront{rotate:5deg;translate:6px 0;box-shadow:0 5px 0 #173e3740}
-@media(max-height:520px){.cardFan{width:70px;height:74px}.cardFan>*{--w:50px;left:10px}.cardsNote{padding:10px 12px;margin-top:10px;font-size:13px}}
-@media(max-height:480px){.cardsStep .eyebrow{display:none}.cardsStep .copy{font-size:13px}}
+/* Step pictures: a row of existing island art (ride icons, fish, fruit, coin, card, book, pack) on the mint note ground. Static. */
+.tour .body{overflow:auto;scrollbar-gutter:auto}
+.showcase{display:flex;align-items:flex-end;justify-content:center;gap:10px;margin-top:16px;padding:14px 12px 12px;background:#e8d5ad url('/stories/films/assets/entry-grain.png');background-blend-mode:soft-light;border-radius:22px 28px 20px 18px;color:#244d40}
+.ride{display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:var(--btn-mint,#beded1);box-shadow:0 4px 0 var(--btn-mint-edge,#8bac9d)}
+.ride:first-child{background:var(--btn-gold-bright,#f9d665);box-shadow:0 4px 0 var(--btn-gold-bright-edge,#aa8b3e)}
+.item{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+.item small{font:800 12px/1 system-ui;color:#244d40}
+.art{display:grid;place-items:center;width:62px;height:62px}
+.art>canvas{display:block}
+.art svg{color:#244d40}
+.fruit{display:block;width:34px;height:34px;border-radius:50%;box-shadow:inset -5px -6px 0 #0000001f,inset 4px 4px 0 #ffffff40}
+.coin{width:40px;height:40px;box-shadow:inset 0 0 0 3px #b27a17}
+.arrow{display:grid;place-items:center;height:62px;color:#32775c;align-self:flex-start}
+.card3d{--w:50px;rotate:-5deg}
+[data-onboarding-step=learn] .art{width:70px;height:74px}
+.art.ballArt{padding:12px 10px 4px;box-sizing:border-box}
+@media(max-width:380px){.showcase{gap:6px;padding-inline:8px}.art{width:52px;height:52px}.card3d{--w:38px}}
+@media(max-height:560px){.showcase{margin-top:10px;padding-block:8px}.art{width:48px;height:48px}.card3d{--w:34px}.note{margin-top:10px;padding:10px 12px}}
+@media(max-height:430px){.showcase{display:none}.tour .eyebrow{margin-bottom:6px}}
+/* Paths step: three path stops in the Paths map inks, joined by a dotted trail. Gear ball: the vending shelf snapshot, cropped to the ball. */
+.pathStop{display:flex;align-items:flex-start}
+.pathLink{width:28px;height:0;margin:25px 4px 0;border-top:4px dotted #32775c}
+.stop{display:grid;place-items:center;width:54px;height:54px;border-radius:50%}
+.art.ballArt{overflow:hidden;padding:0}
+.art.ballArt img{width:100%;height:100%;object-fit:cover;scale:1.9;object-position:center 48%}
+@media(max-width:380px){.pathLink{width:16px}.stop{width:46px;height:46px}}

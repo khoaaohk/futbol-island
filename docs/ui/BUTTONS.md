@@ -138,3 +138,26 @@ No button was missing a focus-visible style: the global `button:focus-visible` o
 `IslandSettings.module.css` (end of file) builds on `useSceneryRest` (`lib/sceneryRest.ts`); there is no new timer or hook. The shake, the icon swap (bolt → book → play → bolt) and the sparkle each run once. When the HUD rests (`hudRest`), the animations are removed, so the button stays still on the bolt icon. When the existing wake triggers (input, `SCENERY_WAKE_EVENT`) remove `hudRest`, exactly one cycle restarts. With reduced motion there is no animation at all. `tests/heat-idle.cjs` and `tests/heat-pass3.cjs` still pass.
 
 Desktop-chromium rerun (1 worker, its own output folder): 13 passed, 2 skipped, 0 failed. The earlier failures came from an overloaded machine (load average about 44, with other agents' browsers running). Headless Chromium was producing about one frame every 2–4 s, so Playwright's scroll and screenshot steps stalled. The CSS in this pass was not the cause.
+
+## UI consistency audit — September 27, 2026 (local, not deployed)
+This round measured the newest screens in headless Chromium at 390×844 and 1280×800. After the fixes, every Back, Exit and Done control sits at the shared anchors (phone 18/16, desktop 24/20, plus safe areas) and is 76×44.
+- **Card reveal:** the custom "×" became the shared `DoneButton`, pinned to the viewport corner (`VendingCardReveal.module.css .reveal button.close.close.close`, because `DoneButton.module.css` forces `position:relative`). Previous and Next use the bright-gold chip tokens.
+- **Header anchors:**
+  - Island Strikers (`LiveArcadeMatch.module.css`);
+  - Arcade room (`ArcadeRoom.module.css`), where Exit and Coins are now both 44px;
+  - Arcade game headers and Pass Puzzles (`games/ArcadeGame3D.module.css`, `games/PassPuzzleGame.module.css`);
+  - the coins panel (`ArcadeCoinsPanel.module.css`);
+  - Fishing Back on phones (`FishingHost.module.css`, 16 → 18 px);
+  - the vending coins pill (`VendingMachine.module.css .hudCoins`), now 44px on the Back row.
+- **Island Strikers portrait:** the joystick, action buttons and footer are hidden under the "Turn sideways" screen (`data-rotate`).
+- **Fishing wallet:** while fishing, the centred jobs wallet leaves room for the 76px Back pill on both sides.
+- **44px minimum:** Pass Puzzles pass-mode and power buttons, and "Stop job".
+- **Shared families:**
+  - jobs primary is green and secondary is mint, with the shared press;
+  - pop-up book Previous/Next are bright-gold chips and the page action is a pink chip; the page buttons use `data-page-nav`, not the navigation attribute;
+  - Make it yours dropdowns use bright gold;
+  - Market tabs have the 3px rim.
+- **Dialog motion:** Fishbook and Market stand get the shared .26s open fade and rise, with a reduced-motion guard.
+- **Bug fix:** vending shelf artwork could overflow its window and cover the ▶ page arrow, swallowing taps. Artwork is now `pointer-events:none` (`VendingFace.module.css`).
+
+Resolved on Sep 28: "Visit store" is a pink primary button (not a Done/Back nav pill). IdpPlan's End plan uses an in-app confirm (Keep my plan / End plan) instead of `window.confirm`. The IslandHome tools are mint, Shop is green and collection tiles have cream edges, all with the shared press. The unused `LegendPackStore.tsx` and `Arcade.tsx` (and their CSS) were deleted.

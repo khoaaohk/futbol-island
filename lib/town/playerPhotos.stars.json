@@ -637,5 +637,65 @@
     "licenseUrl": "https://creativecommons.org/licenses/by/3.0/br/deed.en",
     "date": "2014-06-19",
     "source": "wikimedia/deep-audit"
+  },
+  "Bradley Barcola": {
+    "slug": "bradley-barcola",
+    "article": "Bradley Barcola",
+    "file": "https://commons.wikimedia.org/wiki/File:Bradley_Barcola_France_v_Spain_7.24.26-112_(cropped).jpg",
+    "artist": "Bryan Berlin",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2026-07-14",
+    "source": "wikimedia/deep-audit"
+  },
+  "Pervis Estupiñán": {
+    "slug": "pervis-estupinan",
+    "article": "Pervis Estupiñán",
+    "file": "https://commons.wikimedia.org/wiki/File:Pervis_Estupi%C3%B1%C3%A1n_2015.jpg",
+    "artist": "Agencia de Noticias ANDES",
+    "license": "CC BY-SA 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+    "date": "2015-11-21",
+    "source": "wikimedia/deep-audit"
+  },
+  "Arda Güler": {
+    "slug": "arda-guler",
+    "article": "Arda Güler",
+    "file": "https://commons.wikimedia.org/wiki/File:Arda_G%C3%BCler_2025.jpg",
+    "artist": "LawEnthusiast",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2026-06-22",
+    "source": "wikimedia/deep-audit"
+  },
+  "Rafael Leão": {
+    "slug": "rafael-leao",
+    "article": "Rafael Leão",
+    "file": "https://commons.wikimedia.org/wiki/File:LeaoFCSalzburg2022(cropped).jpg",
+    "artist": "Werner100359",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2022-09-06",
+    "source": "wikimedia/deep-audit"
+  },
+  "Denzel Dumfries": {
+    "slug": "denzel-dumfries",
+    "article": "Denzel Dumfries",
+    "file": "https://commons.wikimedia.org/wiki/File:Edison_ndreca_inter_egnati_(cropped_Denzel_Dumfries).jpg",
+    "artist": "Erjonallaraj",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2023-09-04",
+    "source": "wikimedia/deep-audit"
+  },
+  "Kenan Yıldız": {
+    "slug": "kenan-yldz",
+    "article": "Kenan Yıldız",
+    "file": "https://commons.wikimedia.org/wiki/File:Kenan_Y%C4%B1ld%C4%B1z_in_the_international_match_(March_2025)_(cropped).jpg",
+    "artist": "mlsz.hu – Hungarian Football Federation (derivative: Danyele)",
+    "license": "Attribution only (mlsz.hu – Hungarian Football Federation)",
+    "licenseUrl": "https://en.mlsz.hu/imprint",
+    "date": "2025-03-20",
+    "source": "wikimedia/deep-audit"
   }
 }

@@ -1,0 +1,374 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "How he does it",
+   "text": "Elliot Anderson played for England at the 2026 World Cup, where they won bronze. This is how he wins the ball and drives forward. He reads the pass, steps in... and he is away!",
+   "src": "/plays/narration/elliot-anderson-signature/1.m4a",
+   "seconds": 13.2,
+   "words": [
+    {
+     "w": "Elliot",
+     "at": 0.4
+    },
+    {
+     "w": "Anderson",
+     "at": 0.787
+    },
+    {
+     "w": "played",
+     "at": 1.413
+    },
+    {
+     "w": "for",
+     "at": 1.725
+    },
+    {
+     "w": "England",
+     "at": 1.875
+    },
+    {
+     "w": "at",
+     "at": 2.288
+    },
+    {
+     "w": "the",
+     "at": 2.362
+    },
+    {
+     "w": "2026",
+     "at": 2.45
+    },
+    {
+     "w": "World",
+     "at": 3.45
+    },
+    {
+     "w": "Cup",
+     "at": 3.788
+    },
+    {
+     "w": "where",
+     "at": 4.375
+    },
+    {
+     "w": "they",
+     "at": 4.513
+    },
+    {
+     "w": "won",
+     "at": 4.65
+    },
+    {
+     "w": "bronze",
+     "at": 4.875
+    },
+    {
+     "w": "This",
+     "at": 5.925
+    },
+    {
+     "w": "is",
+     "at": 6.2
+    },
+    {
+     "w": "how",
+     "at": 6.325
+    },
+    {
+     "w": "he",
+     "at": 6.525
+    },
+    {
+     "w": "wins",
+     "at": 6.675
+    },
+    {
+     "w": "the",
+     "at": 6.975
+    },
+    {
+     "w": "ball",
+     "at": 7.075
+    },
+    {
+     "w": "and",
+     "at": 7.425
+    },
+    {
+     "w": "drives",
+     "at": 7.562
+    },
+    {
+     "w": "forward",
+     "at": 8.037
+    },
+    {
+     "w": "He",
+     "at": 8.925
+    },
+    {
+     "w": "reads",
+     "at": 9.088
+    },
+    {
+     "w": "the",
+     "at": 9.425
+    },
+    {
+     "w": "pass",
+     "at": 9.537
+    },
+    {
+     "w": "steps",
+     "at": 10.137
+    },
+    {
+     "w": "in",
+     "at": 10.525
+    },
+    {
+     "w": "and",
+     "at": 11.325
+    },
+    {
+     "w": "he",
+     "at": 11.45
+    },
+    {
+     "w": "is",
+     "at": 11.6
+    },
+    {
+     "w": "away",
+     "at": 11.725
+    }
+   ]
+  },
+  {
+   "label": "Read the pass",
+   "text": "Watch again. He watches the passer, then steps across at just the right moment.",
+   "src": "/plays/narration/elliot-anderson-signature/2.m4a",
+   "seconds": 5.8,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.7
+    },
+    {
+     "w": "He",
+     "at": 1.525
+    },
+    {
+     "w": "watches",
+     "at": 1.675
+    },
+    {
+     "w": "the",
+     "at": 2.087
+    },
+    {
+     "w": "passer",
+     "at": 2.175
+    },
+    {
+     "w": "then",
+     "at": 2.763
+    },
+    {
+     "w": "steps",
+     "at": 2.925
+    },
+    {
+     "w": "across",
+     "at": 3.212
+    },
+    {
+     "w": "at",
+     "at": 3.725
+    },
+    {
+     "w": "just",
+     "at": 3.825
+    },
+    {
+     "w": "the",
+     "at": 4.037
+    },
+    {
+     "w": "right",
+     "at": 4.125
+    },
+    {
+     "w": "moment",
+     "at": 4.4
+    }
+   ]
+  },
+  {
+   "label": "Head up, go",
+   "text": "Now he lifts his head, sees the space in front, and carries the ball into it, fast.",
+   "src": "/plays/narration/elliot-anderson-signature/3.m4a",
+   "seconds": 6.2,
+   "words": [
+    {
+     "w": "Now",
+     "at": 0.4
+    },
+    {
+     "w": "he",
+     "at": 0.6
+    },
+    {
+     "w": "lifts",
+     "at": 0.725
+    },
+    {
+     "w": "his",
+     "at": 0.963
+    },
+    {
+     "w": "head",
+     "at": 1.1
+    },
+    {
+     "w": "sees",
+     "at": 1.762
+    },
+    {
+     "w": "the",
+     "at": 2.062
+    },
+    {
+     "w": "space",
+     "at": 2.188
+    },
+    {
+     "w": "in",
+     "at": 2.575
+    },
+    {
+     "w": "front",
+     "at": 2.737
+    },
+    {
+     "w": "and",
+     "at": 3.35
+    },
+    {
+     "w": "carries",
+     "at": 3.475
+    },
+    {
+     "w": "the",
+     "at": 3.862
+    },
+    {
+     "w": "ball",
+     "at": 3.95
+    },
+    {
+     "w": "into",
+     "at": 4.237
+    },
+    {
+     "w": "it",
+     "at": 4.525
+    },
+    {
+     "w": "fast",
+     "at": 4.713
+    }
+   ]
+  },
+  {
+   "label": "Win it and drive",
+   "text": "Like Anderson: win the ball, lift your head, and carry it forward into the space in front of you.",
+   "src": "/plays/narration/elliot-anderson-signature/4.m4a",
+   "seconds": 6.9,
+   "words": [
+    {
+     "w": "Like",
+     "at": 0.375
+    },
+    {
+     "w": "Anderson",
+     "at": 0.6
+    },
+    {
+     "w": "win",
+     "at": 1.712
+    },
+    {
+     "w": "the",
+     "at": 1.938
+    },
+    {
+     "w": "ball",
+     "at": 2.025
+    },
+    {
+     "w": "lift",
+     "at": 2.562
+    },
+    {
+     "w": "your",
+     "at": 2.812
+    },
+    {
+     "w": "head",
+     "at": 2.925
+    },
+    {
+     "w": "and",
+     "at": 3.525
+    },
+    {
+     "w": "carry",
+     "at": 3.663
+    },
+    {
+     "w": "it",
+     "at": 4.0
+    },
+    {
+     "w": "forward",
+     "at": 4.138
+    },
+    {
+     "w": "into",
+     "at": 4.487
+    },
+    {
+     "w": "the",
+     "at": 4.662
+    },
+    {
+     "w": "space",
+     "at": 4.763
+    },
+    {
+     "w": "in",
+     "at": 5.2
+    },
+    {
+     "w": "front",
+     "at": 5.35
+    },
+    {
+     "w": "of",
+     "at": 5.537
+    },
+    {
+     "w": "you",
+     "at": 5.625
+    }
+   ]
+  }
+ ]
+}

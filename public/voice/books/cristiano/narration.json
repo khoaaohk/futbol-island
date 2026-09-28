@@ -1,0 +1,309 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "madeira": {
+      "src": "/voice/books/cristiano/madeira.m4a?v=coach-bella-1",
+      "duration": 41.0,
+      "scriptSha256": "3360be83839ad162d41487479e1e07d8d2a18a3255d563b2b2ef3e96740bdf0d",
+      "cues": [
+        {
+          "text": "One room, a whole family",
+          "start": 0.0,
+          "duration": 2.675
+        },
+        {
+          "text": "Cristiano Ronaldo was born in 1985 in Funchal, on the Portuguese island of Madeira.",
+          "start": 2.675,
+          "duration": 7.3
+        },
+        {
+          "text": "His family was poor.",
+          "start": 9.975,
+          "duration": 2.125
+        },
+        {
+          "text": "He shared one bedroom with his brother, Hugo, and his sisters, Elma and K\u00e1tia.",
+          "start": 12.1,
+          "duration": 5.85
+        },
+        {
+          "text": "Open the window of the little house.",
+          "start": 17.95,
+          "duration": 2.775
+        },
+        {
+          "text": "His mother, Dolores, worked as a cook and a cleaner.",
+          "start": 20.725,
+          "duration": 3.95
+        },
+        {
+          "text": "His father, Jos\u00e9, was a gardener, and helped look after the kit at a local club, Andorinha.",
+          "start": 24.675,
+          "duration": 6.625
+        },
+        {
+          "text": "That is where Cristiano started playing, when he was seven.",
+          "start": 31.3,
+          "duration": 4.175
+        },
+        {
+          "text": "You don\u2019t need a lot of things to have a big dream. Your family can be your first team.",
+          "start": 35.475,
+          "duration": 5.475
+        }
+      ]
+    },
+    "lisbon": {
+      "src": "/voice/books/cristiano/lisbon.m4a?v=coach-bella-1",
+      "duration": 39.5,
+      "scriptSha256": "d36a9a2ed460be062b2e1cab7ca5c82deab5c00f1d8d5c8c4fa5e7d9da16b0c2",
+      "cues": [
+        {
+          "text": "Across the sea at twelve",
+          "start": 0.0,
+          "duration": 2.2
+        },
+        {
+          "text": "In 1997, when Cristiano was twelve, the big club Sporting, in Lisbon, gave him a three-day trial, and then signed him.",
+          "start": 2.2,
+          "duration": 9.45
+        },
+        {
+          "text": "He had to leave Madeira and his family behind, and move across the sea to Lisbon.",
+          "start": 11.65,
+          "duration": 5.775
+        },
+        {
+          "text": "Sail the boat to Lisbon.",
+          "start": 17.425,
+          "duration": 2.2
+        },
+        {
+          "text": "Moving so far from home at twelve would be hard for anyone.",
+          "start": 19.625,
+          "duration": 4.375
+        },
+        {
+          "text": "At his new school he was popular, but he found schoolwork difficult.",
+          "start": 24.0,
+          "duration": 4.65
+        },
+        {
+          "text": "Once he lost his temper with a teacher, and he had to leave that school.",
+          "start": 28.65,
+          "duration": 4.8
+        },
+        {
+          "text": "Being new somewhere is hard. It\u2019s okay to miss home, and to ask a grown-up for help.",
+          "start": 33.45,
+          "duration": 6.025
+        }
+      ]
+    },
+    "heart": {
+      "src": "/voice/books/cristiano/heart.m4a?v=coach-bella-1",
+      "duration": 37.2,
+      "scriptSha256": "19442189b5a2d5c348928e036294d124dd5645ec42785e74aeeb69063d921c8b",
+      "cues": [
+        {
+          "text": "A racing heart",
+          "start": 0.0,
+          "duration": 1.9
+        },
+        {
+          "text": "When Cristiano was fifteen, doctors found a problem with his heart.",
+          "start": 1.9,
+          "duration": 4.875
+        },
+        {
+          "text": "Sometimes it beat much too fast.",
+          "start": 6.775,
+          "duration": 2.675
+        },
+        {
+          "text": "The problem was serious enough that it could have stopped him playing football.",
+          "start": 9.45,
+          "duration": 4.825
+        },
+        {
+          "text": "Slow the racing heart.",
+          "start": 14.275,
+          "duration": 2.075
+        },
+        {
+          "text": "The club told his mother, Dolores, and she agreed that he should go to hospital.",
+          "start": 16.35,
+          "duration": 5.4
+        },
+        {
+          "text": "Doctors fixed the problem with a laser, in an operation on his heart.",
+          "start": 21.75,
+          "duration": 4.925
+        },
+        {
+          "text": "He went home the same day, and a few days later he was training again.",
+          "start": 26.675,
+          "duration": 4.85
+        },
+        {
+          "text": "If something feels wrong in your body, tell a grown-up. Asking for help is brave.",
+          "start": 31.525,
+          "duration": 5.625
+        }
+      ]
+    },
+    "father": {
+      "src": "/voice/books/cristiano/father.m4a?v=coach-bella-1",
+      "duration": 41.1,
+      "scriptSha256": "c4091398afe41dd51b149872c0b4cb1f88853c71838826c3ba755f692fd646ae",
+      "cues": [
+        {
+          "text": "Missing his dad",
+          "start": 0.0,
+          "duration": 1.95
+        },
+        {
+          "text": "In 2003, at eighteen, Cristiano moved to Manchester United in England.",
+          "start": 1.95,
+          "duration": 6.5
+        },
+        {
+          "text": "Later he called his manager there, Alex Ferguson, his father in sport.",
+          "start": 8.45,
+          "duration": 5.4
+        },
+        {
+          "text": "But in 2005, when Cristiano was twenty, his own father, Jos\u00e9, died after a long illness.",
+          "start": 13.85,
+          "duration": 7.675
+        },
+        {
+          "text": "Jos\u00e9 had been the kit man at Cristiano\u2019s very first club.",
+          "start": 21.525,
+          "duration": 4.475
+        },
+        {
+          "text": "Lift the photo frame to remember him.",
+          "start": 26.0,
+          "duration": 2.95
+        },
+        {
+          "text": "Losing a parent is one of the saddest things that can happen, and feeling better can take a long time.",
+          "start": 28.95,
+          "duration": 6.675
+        },
+        {
+          "text": "Grief can feel heavy. Talk about the people you miss, and let others care for you.",
+          "start": 35.625,
+          "duration": 5.4
+        }
+      ]
+    },
+    "booed": {
+      "src": "/voice/books/cristiano/booed.m4a?v=coach-bella-1",
+      "duration": 39.3,
+      "scriptSha256": "7149a8003f9b1160e6507d5daf4b4ae26ec5480cb492b29c897f0c2aeec6d341",
+      "cues": [
+        {
+          "text": "Booed, but not beaten",
+          "start": 0.0,
+          "duration": 2.175
+        },
+        {
+          "text": "At the 2006 World Cup, Portugal played England.",
+          "start": 2.175,
+          "duration": 4.55
+        },
+        {
+          "text": "After an incident involving Cristiano, his Manchester United teammate Wayne Rooney was sent off.",
+          "start": 6.725,
+          "duration": 7.05
+        },
+        {
+          "text": "Back in England, crowds booed Cristiano all through the next season.",
+          "start": 13.775,
+          "duration": 4.85
+        },
+        {
+          "text": "He asked to leave the club, but United said no.",
+          "start": 18.625,
+          "duration": 3.75
+        },
+        {
+          "text": "Turn the boos into cheers.",
+          "start": 22.375,
+          "duration": 2.35
+        },
+        {
+          "text": "Cristiano kept playing his best.",
+          "start": 24.725,
+          "duration": 2.75
+        },
+        {
+          "text": "That season he scored twenty league goals for the first time, and Manchester United won the Premier League.",
+          "start": 27.475,
+          "duration": 6.775
+        },
+        {
+          "text": "When people are unkind, you don\u2019t have to believe them. Keep doing your best.",
+          "start": 34.25,
+          "duration": 5.05
+        }
+      ]
+    },
+    "captain": {
+      "src": "/voice/books/cristiano/captain.m4a?v=coach-bella-1",
+      "duration": 44.3,
+      "scriptSha256": "1c0c9d3f0d0dd1972b5809996dd6d23265efd8a3d7bf908395813dd6d3fac78c",
+      "cues": [
+        {
+          "text": "Carried by his team",
+          "start": 0.0,
+          "duration": 2.1
+        },
+        {
+          "text": "In 2004, when Cristiano was nineteen, Portugal lost the final of the European Championship to Greece.",
+          "start": 2.1,
+          "duration": 8.225
+        },
+        {
+          "text": "Twelve years later, at Euro 2016, he was Portugal\u2019s captain in the final against France.",
+          "start": 10.325,
+          "duration": 6.675
+        },
+        {
+          "text": "But he was taken off after twenty-five minutes.",
+          "start": 17.0,
+          "duration": 3.475
+        },
+        {
+          "text": "Lift the trophy.",
+          "start": 20.475,
+          "duration": 1.975
+        },
+        {
+          "text": "His teammates kept going, and Portugal won their first ever major trophy.",
+          "start": 22.45,
+          "duration": 5.45
+        },
+        {
+          "text": "In Madeira, the airport was renamed after him.",
+          "start": 27.9,
+          "duration": 3.75
+        },
+        {
+          "text": "Years earlier, he had given money to the hospital that saved his mother\u2019s life, to build a cancer centre.",
+          "start": 31.65,
+          "duration": 7.1
+        },
+        {
+          "text": "Your team can carry you when you can\u2019t go on. Later, you can help carry others.",
+          "start": 38.75,
+          "duration": 5.5
+        }
+      ]
+    }
+  }
+}

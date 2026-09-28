@@ -23,7 +23,7 @@ export function getIslandQuests(evidence:QuestEvidence,quizKeys:ReadonlySet<stri
   {id:'first-play',title:'Read the game',goal:'Play every step of one lesson. You can pause and return.',value:watched,target:1,points:20,action:'learn',cta:'Choose a play'},
   {id:'first-answer',title:'Make your first read',goal:'Answer one quiz question correctly. Use the feedback and retry freely.',value:quizKeys.size,target:1,points:10,action:'learn',cta:'Try a quiz'},
   {id:'explorer',title:'Find another pitch',goal:'Arrive on foot or a ground ride near two different pitches. Map travel counts.',value:evidence.visits.length,target:2,points:20,action:'map',cta:'Explore the map'},
-  {id:'your-style',title:'Make it yours',goal:'Equip any item from the Island Store. Every item is free.',value:evidence.equipment?1:0,target:1,points:10,action:'store',cta:'Visit the Store'},
+  {id:'your-style',title:'Make it yours',goal:'Equip any item from an island vending machine. Your starter ball and rides are already yours.',value:evidence.equipment?1:0,target:1,points:10,action:'store',cta:'Find a vending machine'},
   {id:'playbook',title:'Build your playbook',goal:'Play every step of three different lessons.',value:watched,target:3,points:30,action:'learn',cta:'Choose another play'},
   {id:'two-formats',title:'See a different game',goal:'Answer a quiz question correctly in two different formats.',value:quizFormats,target:2,points:20,action:'learn',cta:'Explore plays'},
   {id:'island-tour',title:'Know your island',goal:'Arrive near all four pitches: futsal, 7v7, 9v9 and 11v11.',value:evidence.visits.length,target:4,points:30,action:'map',cta:'Find a pitch'},

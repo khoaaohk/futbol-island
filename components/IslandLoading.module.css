@@ -110,3 +110,7 @@
 .exiting .tanWipe{will-change:transform;animation:tanStretch .7s .8s cubic-bezier(.45,0,.55,1) forwards}
 @keyframes tanStretch{from{opacity:1;transform:translate(-50%,-50%) translate(0,0) scale(1,1)}to{opacity:1;transform:translate(-50%,-50%) translate(var(--land-dx),var(--land-dy)) scale(var(--land-sx),var(--land-sy))}}
 @media(prefers-reduced-motion:reduce){.exiting .tanWipe{animation:none}}
+
+/* Tagline removed (user, Sep 27 2026): keep breathing room between the title and the loading track. */
+.copy :global(.island-loading-track){margin-top:18px}
+@media(max-height:560px){.copy :global(.island-loading-track){margin-top:12px}}

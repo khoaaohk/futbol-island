@@ -10,7 +10,7 @@
  * Only phones and tablets are governed; desktop reaches a lower tier only through Battery saver (or a test's forced tier).
  *   tier 0  cool     phones: resolution 1.75 (quality.ts; user decision Sep 26 2026: adaptive 1.75 while cool), 1024² shadows, MSAA,
  *                    30 fps; desktop: uncapped, DPR ≤ 2, 2048². Card film DPR 2.
- *   tier 1  warm     resolution ≤ 1.5 (the previous phone default), 30 fps on every device
+ *   tier 1  warm     resolution ≤ 1.5 (the previous phone default), shadow map ≤ 1024² (phones start at 1536²), 30 fps on every device
  *   tier 2  hot      resolution ≤ 1.25, card film DPR 1.5
  *   tier 3  hotter   + static water, waves and ferry
  *   tier 4  hottest / Battery saver  + a uniform 24 fps cap
@@ -21,10 +21,10 @@ export type TierSettings={cap30Everywhere:boolean;maxPixelRatio:number;shadowEve
 const tier=(o:Partial<TierSettings>):TierSettings=>({cap30Everywhere:true,maxPixelRatio:Infinity,shadowEvery:1,shadowSize:2048,npcDrawDistance:null,trafficDrawDistance:null,staticAmbience:false,filmDpr:2,frameMs:1000/30,...o});
 export const TIERS:Record<HeatTier,TierSettings>={
  0:tier({cap30Everywhere:false}),
- 1:tier({maxPixelRatio:1.5}),
- 2:tier({maxPixelRatio:1.25,filmDpr:1.5}),
- 3:tier({maxPixelRatio:1.25,filmDpr:1.5,staticAmbience:true}),
- 4:tier({maxPixelRatio:1.25,filmDpr:1.5,staticAmbience:true,frameMs:1000/24}),
+ 1:tier({maxPixelRatio:1.5,shadowSize:1024}),
+ 2:tier({maxPixelRatio:1.25,filmDpr:1.5,shadowSize:1024}),
+ 3:tier({maxPixelRatio:1.25,filmDpr:1.5,staticAmbience:true,shadowSize:1024}),
+ 4:tier({maxPixelRatio:1.25,filmDpr:1.5,staticAmbience:true,frameMs:1000/24,shadowSize:1024}),
 };
 export const LOWEST_TIER:HeatTier=4;
 

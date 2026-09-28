@@ -3,6 +3,7 @@ import type React from 'react';
 import PlayerArt,{PlayerBackdrop,lookFor,photoFor} from './PlayerArt';
 import {countryArt} from '@/lib/town/countryArt';
 import {hasPlayFilm} from '@/lib/plays/riso/registry';
+import {cardDisplayName,isCoachCard} from '@/lib/town/cardCollection';
 import styles from './MiniCard.module.css';
 
 const pad=(n:number)=>String(n).padStart(3,'0');
@@ -34,7 +35,7 @@ export default function MiniCard({name,number,era,got,revealName=false,compact=f
  const {country}=lookFor(name),[f1,f2,f3]=countryArt(country).flag,photo=photoFor(name);
  const flag={'--flag1':f1,'--flag2':f2,'--flag3':f3,...style} as React.CSSProperties;
  return <span className={`${styles.card} ${legend?styles.legend:styles.star} ${compact?styles.compact:''} ${thumb&&photo?styles.thumb:''} ${className}`} style={flag} aria-hidden="true">
-  <span className={styles.top}><span className={styles.rarity}>{legend?'Legend':'Star'}</span><span className={styles.no}>No. {pad(number)}</span></span>
+  <span className={styles.top}><span className={styles.rarity}>{legend?'Legend':isCoachCard(name)?'Coach':'Star'}</span><span className={styles.no}>No. {pad(number)}</span></span>
   <span className={styles.window}>
    {photo&&thumb?<span className={styles.photo}><span className={styles.paper}/><span className={styles.ink} style={{WebkitMaskImage:`url(/players/${photo.slug}-ink.webp)`,maskImage:`url(/players/${photo.slug}-ink.webp)`}}/></span>
    :photo?<>
@@ -46,7 +47,7 @@ export default function MiniCard({name,number,era,got,revealName=false,compact=f
     </span>
    </>:<PlayerArt name={name}/>}
   </span>
-  <span className={styles.plate}><span>{name}</span></span>
+  <span className={styles.plate}><span>{cardDisplayName(name)}</span></span>
   <span className={styles.stripe}/>
   {hasPlayFilm(name)&&<span className={styles.film} title="Has a Play Moment"><svg viewBox="0 0 24 24"><path d="M12 2.6l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17l-5.7 3.1 1.2-6.4-4.7-4.4 6.4-.8z"/></svg></span>}
  </span>;

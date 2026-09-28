@@ -1,0 +1,309 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "ealing": {
+      "src": "/voice/books/saka/ealing.m4a?v=coach-bella-1",
+      "duration": 36.4,
+      "scriptSha256": "36f86df1f109e608aa3c77039197c2ad9c20bab8fb28cf33de4ffa01f77f3180",
+      "cues": [
+        {
+          "text": "A family in Ealing",
+          "start": 0.0,
+          "duration": 2.15
+        },
+        {
+          "text": "Bukayo Saka was born in 2001 in Ealing, in London.",
+          "start": 2.15,
+          "duration": 5.05
+        },
+        {
+          "text": "His parents, Adenike and Yomi, had moved to London from Nigeria to find work.",
+          "start": 7.2,
+          "duration": 5.85
+        },
+        {
+          "text": "Bukayo did very well at school, with top grades in his exams.",
+          "start": 13.05,
+          "duration": 4.725
+        },
+        {
+          "text": "Lift the flap to see who kept him steady.",
+          "start": 17.775,
+          "duration": 3.225
+        },
+        {
+          "text": "Bukayo has called his dad, Yomi, a massive inspiration.",
+          "start": 21.0,
+          "duration": 4.75
+        },
+        {
+          "text": "He said that from when he was young, his dad always kept him grounded and humble.",
+          "start": 25.75,
+          "duration": 5.65
+        },
+        {
+          "text": "Family can be your anchor. Stay close to the people who keep you steady.",
+          "start": 31.4,
+          "duration": 4.95
+        }
+      ]
+    },
+    "haleend": {
+      "src": "/voice/books/saka/haleend.m4a?v=coach-bella-1",
+      "duration": 39.0,
+      "scriptSha256": "6c4681c98e85ddd436c7ac2c9d526eb0028dbef4fb13041c10ed66f6a48012eb",
+      "cues": [
+        {
+          "text": "Little Chilli",
+          "start": 0.0,
+          "duration": 1.725
+        },
+        {
+          "text": "At seven, Bukayo joined Arsenal\u2019s youth academy at Hale End.",
+          "start": 1.725,
+          "duration": 4.675
+        },
+        {
+          "text": "He was not the biggest player.",
+          "start": 6.4,
+          "duration": 2.4
+        },
+        {
+          "text": "His captain later nicknamed him Little Chilli, because he had so much energy and power, and was quite small.",
+          "start": 8.8,
+          "duration": 7.15
+        },
+        {
+          "text": "His youth coach said Bukayo always stood out, with a really good character.",
+          "start": 15.95,
+          "duration": 5.2
+        },
+        {
+          "text": "Flip the shirt.",
+          "start": 21.15,
+          "duration": 1.775
+        },
+        {
+          "text": "In 2018, at seventeen, Bukayo played his first game for the first team.",
+          "start": 22.925,
+          "duration": 6.025
+        },
+        {
+          "text": "He played wherever the team needed him, on the wing, and even at left-back.",
+          "start": 28.95,
+          "duration": 5.2
+        },
+        {
+          "text": "Being small doesn\u2019t make you less. Your energy and your heart count too.",
+          "start": 34.15,
+          "duration": 4.775
+        }
+      ]
+    },
+    "fifth": {
+      "src": "/voice/books/saka/fifth.m4a?v=coach-bella-1",
+      "duration": 39.9,
+      "scriptSha256": "92551eb4b3fd9267a07acea4f9ce7cf7ce67297de627fe4fe438c944d914be96",
+      "cues": [
+        {
+          "text": "The fifth penalty",
+          "start": 0.0,
+          "duration": 2.125
+        },
+        {
+          "text": "In 2021, England reached the final of Euro 2020 against Italy, at Wembley in London.",
+          "start": 2.125,
+          "duration": 7.4
+        },
+        {
+          "text": "Bukayo was nineteen.",
+          "start": 9.525,
+          "duration": 2.125
+        },
+        {
+          "text": "He came on as a substitute, and after extra time the final went to a penalty shoot-out.",
+          "start": 11.65,
+          "duration": 6.125
+        },
+        {
+          "text": "Bukayo was chosen to take England\u2019s fifth penalty.",
+          "start": 17.775,
+          "duration": 3.875
+        },
+        {
+          "text": "It was his first penalty for England\u2019s senior team.",
+          "start": 21.65,
+          "duration": 3.725
+        },
+        {
+          "text": "Many people would feel nervous.",
+          "start": 25.375,
+          "duration": 2.475
+        },
+        {
+          "text": "Kick the ball.",
+          "start": 27.85,
+          "duration": 1.75
+        },
+        {
+          "text": "The goalkeeper, Gianluigi Donnarumma, saved it, and Italy won the cup.",
+          "start": 29.6,
+          "duration": 5.025
+        },
+        {
+          "text": "Being brave doesn\u2019t always mean winning. Trying when it\u2019s hard takes courage.",
+          "start": 34.625,
+          "duration": 5.25
+        }
+      ]
+    },
+    "unkind": {
+      "src": "/voice/books/saka/unkind.m4a?v=coach-bella-1",
+      "duration": 36.6,
+      "scriptSha256": "7120f9b34ffd4d3e51d0b4149766b076ce623da8ec168af38b46b5af064f04e9",
+      "cues": [
+        {
+          "text": "Unkind words",
+          "start": 0.0,
+          "duration": 1.975
+        },
+        {
+          "text": "After the final, Bukayo and two teammates who had also missed, Marcus Rashford and Jadon Sancho, were sent hurtful racist messages online.",
+          "start": 1.975,
+          "duration": 10.0
+        },
+        {
+          "text": "Some people attacked them because of the colour of their skin.",
+          "start": 11.975,
+          "duration": 4.25
+        },
+        {
+          "text": "That is never okay.",
+          "start": 16.225,
+          "duration": 2.075
+        },
+        {
+          "text": "Raise the shield.",
+          "start": 18.3,
+          "duration": 1.875
+        },
+        {
+          "text": "Bukayo spoke up.",
+          "start": 20.175,
+          "duration": 2.0
+        },
+        {
+          "text": "He said he knew straight away the kind of hate he would receive, and that social media companies were not doing enough to stop these messages.",
+          "start": 22.175,
+          "duration": 8.425
+        },
+        {
+          "text": "If someone is unkind to you online, you are not alone. Tell a grown-up you trust.",
+          "start": 30.6,
+          "duration": 6.0
+        }
+      ]
+    },
+    "support": {
+      "src": "/voice/books/saka/support.m4a?v=coach-bella-1",
+      "duration": 36.0,
+      "scriptSha256": "325c72c1d90624538bb29335ccc38d4a31bbde83b3039b55d9b0466304667789",
+      "cues": [
+        {
+          "text": "Hearts and messages",
+          "start": 0.0,
+          "duration": 2.05
+        },
+        {
+          "text": "Many people stood with Bukayo.",
+          "start": 2.05,
+          "duration": 2.6
+        },
+        {
+          "text": "The Football Association said the abuse was wrong, and promised to do all it could to support the players.",
+          "start": 4.65,
+          "duration": 7.275
+        },
+        {
+          "text": "The Prime Minister and Prince William spoke out against the racism too.",
+          "start": 11.925,
+          "duration": 4.975
+        },
+        {
+          "text": "Lift the three hearts.",
+          "start": 16.9,
+          "duration": 2.125
+        },
+        {
+          "text": "In Manchester, a digital mural showing Bukayo, Marcus and Jadon was unveiled.",
+          "start": 19.025,
+          "duration": 6.175
+        },
+        {
+          "text": "Within three days, all three players thanked people for the support they had received.",
+          "start": 25.2,
+          "duration": 5.525
+        },
+        {
+          "text": "Kind words can be louder than cruel ones. Be the one who sends kindness.",
+          "start": 30.725,
+          "duration": 5.275
+        }
+      ]
+    },
+    "again": {
+      "src": "/voice/books/saka/again.m4a?v=coach-bella-1",
+      "duration": 37.5,
+      "scriptSha256": "6bf1c9ad63156f5393960f54c1dacefe17f57884a2db3bc070e201de9b56c99a",
+      "cues": [
+        {
+          "text": "Stepping up again",
+          "start": 0.0,
+          "duration": 1.875
+        },
+        {
+          "text": "Bukayo kept going.",
+          "start": 1.875,
+          "duration": 2.15
+        },
+        {
+          "text": "In 2022, and again in 2023, he was named England Men\u2019s Player of the Year.",
+          "start": 4.025,
+          "duration": 7.025
+        },
+        {
+          "text": "At Euro 2024, England played Switzerland in the quarter-final, and Bukayo scored to make it 1\u20131.",
+          "start": 11.05,
+          "duration": 7.575
+        },
+        {
+          "text": "The game went to a penalty shoot-out again.",
+          "start": 18.625,
+          "duration": 3.15
+        },
+        {
+          "text": "Kick the ball.",
+          "start": 21.775,
+          "duration": 1.75
+        },
+        {
+          "text": "Just like three years before, Bukayo stepped up.",
+          "start": 23.525,
+          "duration": 3.55
+        },
+        {
+          "text": "This time he scored, England went through, and he was named player of the match.",
+          "start": 27.075,
+          "duration": 5.45
+        },
+        {
+          "text": "One hard moment does not decide your future. You can step up again.",
+          "start": 32.525,
+          "duration": 4.95
+        }
+      ]
+    }
+  }
+}

@@ -154,6 +154,12 @@
 /* The field entry card follows the visible format, in the reference's paper style. */
 .field-learn-card:not([hidden]){display:block;top:50%;bottom:auto;left:auto;right:24px;width:295px;padding:22px 20px;background:#f3e5bc;color:#294c40;border:1px solid #ffefd0;box-shadow:none;transform:translateY(-50%);}
 .field-learn-card[hidden]{display:none!important;}
+/* While fishing, the venue card steps aside so the hint and the water stay clear (attribute set by FishingHost). */
+.town-app[data-fishing] .field-learn-card{visibility:hidden;}
+/* Live fishing keeps the water clear: movement, map, ride actions and Paths step aside; coins and settings stay. */
+.town-app[data-fishing] :is(.town-minimap,.travel-actions,.touch-actions,.touch-controls,button[data-tour]){visibility:hidden;pointer-events:none;}
+/* The assistant-referee replay view (components/IslandJobs.tsx) hides the map and ride controls. */
+.town-app[data-job-camera] :is(.town-minimap,.travel-actions,.touch-actions,button[data-tour],.field-learn-card){visibility:hidden;pointer-events:none;}
 .field-learn-card>span{display:block;font:700 9px/1.5 monospace;letter-spacing:1.3px;}
 .field-learn-card strong{font-size:25px;line-height:1.2;margin:18px 0 22px;}
 .field-learn-card small{font:700 11px/1.4 monospace;letter-spacing:1px;}
@@ -636,3 +642,8 @@ body:has([data-hud-triggers][data-scenery=rest]) .field-learn-card:not([hidden])
 .arcade-departure-fade{position:fixed;inset:0;z-index:100000;background:#000;animation:arcadeDeparture .35s ease both;pointer-events:auto}
 @keyframes arcadeDeparture{from{opacity:0}to{opacity:1}}
 @media(prefers-reduced-motion:reduce){.arcade-departure-fade{animation:none;opacity:1}}
+
+/* Keep the learning invitation below the Paths / coin-basket / Settings row. */
+.town-app .field-learn-card:not([hidden]){top:calc(80px + env(safe-area-inset-top,0px));left:50%;right:auto;transform:translateX(-50%);width:min(360px,calc(100% - 36px))}
+@media(max-width:600px),(pointer:coarse){.town-app .field-learn-card:not([hidden]){top:calc(76px + env(safe-area-inset-top,0px))}}
+.town-app:has(.field-learn-card:not([hidden])) .npc-talk-prompt{top:calc(164px + env(safe-area-inset-top,0px))}

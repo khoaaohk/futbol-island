@@ -4,7 +4,7 @@ import * as T from 'three';
 export function createWaterRipples() {
   const canvas=document.createElement('canvas');canvas.width=canvas.height=256;
   const ctx=canvas.getContext('2d')!;
-  ctx.fillStyle='#edf5f2';ctx.fillRect(0,0,256,256);
+  ctx.fillStyle='#eef5ff';ctx.fillRect(0,0,256,256);
   ctx.lineCap='round';
   for(let i=0;i<22;i++){
     const x=(i*97)%256,y=(i*61)%256,length=18+(i*13)%48;

@@ -24,7 +24,9 @@ export type Scenario={
   defenders:{x:number;z:number;mark?:number;press?:boolean}[]; // mark = attacker index
   keeper?:{x:number;z:number};
   attempts:number;                     // usually 3
-  require:{minPasses:number;finish:'goal'|'reach-zone';zone?:{x:number;z:number;r:number}};
+  require:{minPasses:number;finish:'goal'|'reach-zone';zone?:{x:number;z:number;r:number};
+    /** Arcade free-choice mode: a clean opening shot can solve a goal puzzle without the pass route. */
+    allowDirectShot?:boolean};
   bonus?:{kind:'curl'|'chip'|'header'|'first-time'|'scorer';scorer?:number;label:string};
   lesson:string;                       // what the child learned, shown after success
 };
@@ -49,6 +51,8 @@ export type Kick={
   loft:number;
   /** 0..1, from stroke length. */
   power:number;
+  /** Optional goal height: 0 = low, 1 = just below the crossbar. Independent of chip loft. */
+  shotHeight?:number;
 };
 
 export type PuzzleEventType='kick'|'receive'|'intercept'|'save'|'heavy_touch'|'deflect'|'parry'|'goal'|'out';

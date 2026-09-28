@@ -56,8 +56,27 @@ export type PinballBall = {
     contactY: number;
 };
 export type PinballDefender = { x: number; y: number; r: number };
-export type PinballCue = 'scan' | 'strike' | 'save' | 'corner' | 'goal' | 'dazed' | 'block';
+export type PinballCue = 'scan' | 'strike' | 'save' | 'corner' | 'goal' | 'dazed' | 'block' | 'nudge' | 'rescue' | 'control' | 'pass' | 'attack' | 'concede';
+export const PINBALL_DIVISIONS = [
+    { name: 'Build Up', objective: 'Use both flippers, then finish', bonus: 0 },
+    { name: 'Find the Corner', objective: 'Finish beside a post', bonus: 250 },
+    { name: 'Play the Angles', objective: 'Bank off a side rail, then score', bonus: 400 },
+    { name: 'Complete Forward', objective: 'Combine both feet and finish in a corner', bonus: 600 },
+] as const;
+export function pinballDivision(s: Pick<PinballState, 'level'>) { return PINBALL_DIVISIONS[s.level - 1]; }
 export type PinballState = {
+    /** Two goals advance a division. Final division remains a mastery challenge. */
+    level: number;
+    challengeComplete: boolean;
+    lastChallengeBonus: number;
+    challengeBall: boolean;
+    /** Meaningful side-rail contact since the last attacking flipper strike. */
+    banked: boolean;
+    /** One opening grace ball per run; never replenished by relaunching. */
+    openingRescue:boolean;
+    launchGrace:number;
+    nudges:number;
+    nudgeCooldown:number;
     ball: PinballBall;
     phase: 'ready' | 'playing' | 'goal' | 'lost' | 'over';
     score: number;
@@ -87,6 +106,14 @@ export type PinballState = {
     keeperDirection: number;
     defenderAI: { offset: number; velocity: number; target: number; think: number; block: number; cooldown: number; aim: number; dazed: number; hitX: number; hitY: number; fallYaw: number }[];
     keeperTarget: number;
+    /** Defender possession is bounded; released passes always use ordinary ball physics. */
+    possession: number;
+    possessionTime: number;
+    attackReceiver: number;
+    counterAttack: boolean;
+    attackPasses: number;
+    passTarget: number;
+    passTime: number;
     keeperThink: number;
     flash: number;
     hitX: number;
@@ -94,6 +121,7 @@ export type PinballState = {
     hitId: number;
     bumperCooldown: number[];
     flipperCooldown: number[];
+    flipperPulse: [number,number];
     accumulator: number;
     /** plunger pull-back 0..1 while charging in 'ready' */
     plunger: number;
@@ -134,8 +162,19 @@ export type PinballState = {
  * DEAD_BOUNCE   below this approach speed a bounce is fully damped, which is
  *               what lets the ball settle and cradle on a flipper w/o jitter. */
 const GRAVITY = 380, AIR_DRAG = .018, MAGNUS = .0008, SPIN_DECAY = .6, MAX_SPEED = 1500, DEAD_BOUNCE = 30;
+/** Advisory timing light, never an automatic strike. Project only the short,
+ * unobstructed drop above the bats; rising balls and the launch lane stay dark. */
+export function pinballReadyFoot(s:PinballState): -1|0|1 {
+ const b=s.ball;if(s.phase!=='playing'||b.vy<=20||b.y<420||b.y>545||b.x>=LANE_WALL)return -1;
+ const eta=Math.max(0,(-b.vy+Math.sqrt(Math.max(0,b.vy*b.vy+2*GRAVITY*(535-b.y))))/GRAVITY);
+ if(eta>.28)return -1;
+ const x=b.x+b.vx*eta;
+ return x>=88&&x<=166?0:x>=194&&x<=272?1:-1;
+}
 function freshBall(): PinballBall { return { x: LANE_X, y: PLUNGER_TIP - 7, vx: 0, vy: 0, r: 7, spin: 0, omega: 0, contact: 0, contactX: 0, contactY: 1 }; }
-export function createPinballState(): PinballState { return { ball: freshBall(), phase: 'ready', score: 0, goals: 0, balls: 3, time: 0, timer: 0, left: 0, right: 0, keeper: 180, keeperVelocity: 0, cue: 'scan', cueTime: 0, lastGoalPoints: 500, moveTime: 0, moves: 0, lastGoalBonus: 0, combination: 0, lastFoot: -1, lastStrikeAt: -10, defenders: pinballDefenders(0), previousDefenders: pinballDefenders(0), keeperCommit: 0, keeperDirection: 1, defenderAI: Array.from({length:3},()=>({offset:0,velocity:0,target:0,think:0,block:0,cooldown:0,aim:0,dazed:0,hitX:0,hitY:0,fallYaw:0})), keeperDive: 0, keeperTarget: 180, keeperThink: 0, flash: 0, hitX: 0, hitY: 0, hitId: 0, bumperCooldown: [0, 0, 0], flipperCooldown: [0, 0], accumulator: 0, plunger: 0, plungerSnap: 0, launchPower: 0, defs: 1, defJoin: 0, sfx: { wall: 0, wallV: 0, bumper: 0, bumperI: 0, flipper: 0, flipperV: 0, keeper: 0, keeperV: 0, gate: 0, join: 0 } }; }
+export function createPinballState(): PinballState { return { level:1,challengeComplete:false,lastChallengeBonus:0,challengeBall:false,banked:false,openingRescue:true,launchGrace:0,nudges:1,nudgeCooldown:0,ball: freshBall(), phase: 'ready', score: 0, goals: 0, balls: 3, time: 0, timer: 0, left: 0, right: 0, keeper: 180, keeperVelocity: 0, cue: 'scan', cueTime: 0, lastGoalPoints: 500, moveTime: 0, moves: 0, lastGoalBonus: 0, combination: 0, lastFoot: -1, lastStrikeAt: -10, defenders: pinballDefenders(0), previousDefenders: pinballDefenders(0), keeperCommit: 0, keeperDirection: 1, defenderAI: Array.from({length:3},()=>({offset:0,velocity:0,target:0,think:0,block:0,cooldown:0,aim:0,dazed:0,hitX:0,hitY:0,fallYaw:0})), keeperDive: 0, keeperTarget: 180, possession:-1,possessionTime:0,attackReceiver:-1,counterAttack:false,attackPasses:0,passTarget:-1,passTime:0,keeperThink: 0, flash: 0, hitX: 0, hitY: 0, hitId: 0, bumperCooldown: [0, 0, 0], flipperCooldown: [0, 0], flipperPulse:[0,0], accumulator: 0, plunger: 0, plungerSnap: 0, launchPower: 0, defs: 1, defJoin: 0, sfx: { wall: 0, wallV: 0, bumper: 0, bumperI: 0, flipper: 0, flipperV: 0, keeper: 0, keeperV: 0, gate: 0, join: 0 } }; }
+/** Preserve a tap even when down/up both arrive between rendered frames. */
+export function tapPinballFlipper(s:PinballState,side:0|1){if(s.phase==='playing'||s.phase==='ready')s.flipperPulse[side]=.065;}
 /** Fires the ball up the launch lane. With no explicit power the current
  * plunger pull is mapped through plungerPull(): tap = the standard launch,
  * short hold = the soft band, long hold ramps monotonically to full power. */
@@ -145,6 +184,9 @@ export function launchPinball(s: PinballState, power?: number) {
     const pull = power !== undefined ? power : plungerPull(s.plunger);
     const p = Math.max(.12, Math.min(1, pull));
     s.ball = { x: LANE_X, y: PLUNGER_TIP - 7, vx: 0, vy: -(430 + 810 * p), r: 7, spin: 0, omega: 0, contact: 0, contactX: 0, contactY: 1 };
+    s.possession=-1;s.possessionTime=0;s.counterAttack=false;s.attackPasses=0;s.passTarget=-1;s.passTime=0;
+    s.nudges=1;s.nudgeCooldown=0;s.banked=false;s.lastChallengeBonus=0;s.challengeBall=false;
+    s.launchGrace = s.openingRescue ? 3 : 0;
     s.launchPower = p;
     s.plungerSnap = 1;
     s.plunger = 0;
@@ -154,6 +196,8 @@ export function launchPinball(s: PinballState, power?: number) {
     s.phase = 'playing';
     return true;
 }
+/** Rescue a falling ball; earn another nudge by switching flippers. */
+export function nudgePinball(s:PinballState){if(s.phase!=='playing'||s.nudges<=0||s.nudgeCooldown>0||s.ball.x>=LANE_WALL)return false;s.nudges--;s.nudgeCooldown=1.2;if(s.possession>=0)s.bumperCooldown[s.possession]=.4;s.possession=-1;s.passTarget=-1;s.attackPasses=0;s.counterAttack=false;s.ball.vy=Math.min(s.ball.vy,-240);s.ball.vx+=(180-s.ball.x)*1.1;s.cue='nudge';s.cueTime=1.2;s.hitX=s.ball.x;s.hitY=s.ball.y;s.hitId++;return true;}
 /** Active defender patrols. The squad grows with goals: slot 0 is the mid-
  * table patroller (the most central threat, on from kickoff), slot 1 adds the
  * left-high lane, slot 2 the right-high lane. While `join` > 0 the newest slot
@@ -175,6 +219,20 @@ export function pinballDefenders(t: number, count = 3, join = 0, joinI = -1, out
         d.y += Math.sin(e * Math.PI * 3) * 5 * join;
     }
     return list;
+}
+function attackReceiver(s:PinballState,owner:number){
+    const defenders=s.defenders,d=defenders[owner],b=s.ball;let receiver=-1,best=-Infinity;
+    if(s.attackPasses<2)for(let j=0;j<defenders.length;j++){
+            if(j===owner||s.defenderAI[j].dazed>0||s.defJoin>0&&j===s.defs-1)continue;
+            const q=defenders[j];let clear=true;
+            for(let k=0;k<defenders.length;k++)if(k!==owner&&k!==j&&s.defenderAI[k].dazed<=0){
+                const r=defenders[k],dx=q.x-b.x,dy=q.y-b.y,t=clamp(((r.x-b.x)*dx+(r.y-b.y)*dy)/(dx*dx+dy*dy),0,1);
+                if(Math.hypot(r.x-b.x-dx*t,r.y-b.y-dy*t)<34)clear=false;
+            }
+            const value=q.y-d.y-Math.abs(q.x-d.x)*.15;
+            if(clear&&value>best){best=value;receiver=j;}
+        }
+    return receiver;
 }
 /* Flippers sit wider apart and reach a touch shorter than the classic layout
  * (pivots 99/261, length 63 vs the old 105/255 x 66): the uncovered center
@@ -227,21 +285,29 @@ function wall(s: PinballState, ax: number, ay: number, bx: number, by: number, r
     if (approach > 70) {
         s.sfx.wall++;
         s.sfx.wallV = approach;
+        if(approach>180 && ax===LANE_WALL && bx===LANE_WALL && c.nx<0 && s.ball.y>100 && s.ball.y<455)s.banked=true;
     }
     return true;
 }
 function tick(s: PinballState, input: PinballInput, dt: number) {
     s.time += dt;
     s.ball.contact = Math.max(0, s.ball.contact - dt * 9);
-    if (s.phase === 'playing') s.moveTime = Math.max(0, s.moveTime - dt);
+    if (s.phase === 'playing') {
+        s.moveTime = Math.max(0, s.moveTime - dt);
+        // Count only time on the table, not the variable-speed launch lane.
+        if(s.ball.x < LANE_WALL)s.launchGrace=Math.max(0,s.launchGrace-dt);
+        if(s.launchGrace===0)s.openingRescue=false;
+    }
     s.flash = Math.max(0, s.flash - dt * 3);
     s.cueTime = Math.max(0, s.cueTime - dt);
     if (!s.cueTime) s.cue = 'scan';
     for(const ai of s.defenderAI){ai.dazed=Math.max(0,ai.dazed-dt);ai.block=Math.max(0,ai.block-dt);ai.cooldown=Math.max(0,ai.cooldown-dt);}
+    s.nudgeCooldown=Math.max(0,s.nudgeCooldown-dt);
     s.keeperCommit = Math.max(0, s.keeperCommit - dt);
     const oldLeft = s.left, oldRight = s.right;
-    s.left += clamp((input.left ? 1 : 0) - s.left, -dt * 10, dt * 22);
-    s.right += clamp((input.right ? 1 : 0) - s.right, -dt * 10, dt * 22);
+    s.left += clamp((input.left||s.flipperPulse[0]>0 ? 1 : 0) - s.left, -dt * 10, dt * 22);
+    s.right += clamp((input.right||s.flipperPulse[1]>0 ? 1 : 0) - s.right, -dt * 10, dt * 22);
+    s.flipperPulse[0]=Math.max(0,s.flipperPulse[0]-dt);s.flipperPulse[1]=Math.max(0,s.flipperPulse[1]-dt);
     // Plunger: pulls back over ~1.1s while charging, springs home otherwise;
     // the post-release snap value only feeds the launch animation.
     s.plungerSnap = Math.max(0, s.plungerSnap - dt * 6);
@@ -260,6 +326,8 @@ function tick(s: PinballState, input: PinballInput, dt: number) {
                 // Difficulty ramp: each goal calls another defender onto the
                 // pitch (1 at kickoff, up to the full back three); he jogs in
                 // from the sideline while the next ball waits on the plunger.
+                const nextLevel = Math.min(4, 1 + Math.floor(s.goals / 2));
+                if(nextLevel !== s.level){s.level=nextLevel;s.challengeComplete=false;}
                 const want = Math.min(3, 1 + s.goals);
                 if (s.phase === 'ready' && want > s.defs) {
                     s.defs = want;
@@ -271,6 +339,7 @@ function tick(s: PinballState, input: PinballInput, dt: number) {
         return;
     }
     const b = s.ball;
+    s.passTime=Math.max(0,s.passTime-dt);if(s.passTime===0)s.passTarget=-1;
     // Keeper: thinks on a human-ish interval, only PARTIALLY leads the shot
     // (.45 of true intercept). The mouth is now 160 wide but his patrol range
     // grew far less (140-220): each post hides a real ~18px scoring pocket
@@ -278,10 +347,10 @@ function tick(s: PinballState, input: PinballInput, dt: number) {
     // straight center floater is still always savable. His pace scales with
     // the squad — a lone-defender kickoff faces a slower keeper (~107 px/s)
     // than the full back three (~125 px/s).
-    const keeperPace = 98 + 9 * s.defs;
+    const keeperPace = 98 + 9 * s.defs + (s.level - 1) * 3;
     s.keeperThink -= dt;
     if (s.keeperThink <= 0) {
-        s.keeperThink = .12;
+        s.keeperThink = .15 - s.level * .01;
         if (b.vy < -120 && b.y < 240) {
             const eta = clamp((83 - b.y) / b.vy, 0, .55);
             s.keeperTarget = clamp(b.x + b.vx * eta * .45, 140, 220);
@@ -327,6 +396,7 @@ function tick(s: PinballState, input: PinballInput, dt: number) {
         if (a > 70) {
             s.sfx.wall++;
             s.sfx.wallV = a;
+            if(a>180 && b.x<LANE_WALL && b.y>100 && b.y<455)s.banked=true;
         }
         touched = true;
     }
@@ -336,6 +406,7 @@ function tick(s: PinballState, input: PinballInput, dt: number) {
         if (a > 70) {
             s.sfx.wall++;
             s.sfx.wallV = a;
+            if(a>180 && b.x<LANE_WALL && b.y>100 && b.y<455)s.banked=true;
         }
         touched = true;
     }
@@ -344,11 +415,18 @@ function tick(s: PinballState, input: PinballInput, dt: number) {
         const corner = b.x < GOAL_LEFT + 32 || b.x > GOAL_RIGHT - 32;
         s.lastGoalBonus = s.moveTime > 0 ? 750 + Math.min(3, s.moves) * 250 : 0;
         if (s.lastGoalBonus) s.moves++;
-        s.lastGoalPoints = (corner ? 650 : 500) + s.lastGoalBonus;
+        // These optional challenges reward a football technique, never prevent
+        // an ordinary goal or narrow the goal mouth. Each pays once per division.
+        const challenge = !s.challengeComplete && (s.level===2 ? corner : s.level===3 ? s.banked : s.level===4 ? corner && s.lastGoalBonus>0 : false);
+        s.lastChallengeBonus=challenge?pinballDivision(s).bonus:0;
+        s.challengeBall=challenge && s.balls<3;
+        if(challenge){s.challengeComplete=true;s.balls=Math.min(3,s.balls+1);}
+        s.lastGoalPoints = (corner ? 650 : 500) + s.lastGoalBonus + s.lastChallengeBonus;
         s.moveTime = 0;
         s.cue = corner ? 'corner' : 'goal';
         s.cueTime = 2.5;
         hit(s, b.x, 45, s.lastGoalPoints);
+        s.openingRescue=false;s.launchGrace=0;
         s.phase = 'goal';
         s.timer = 1.5;
         b.vx = b.vy = b.omega = 0;
@@ -405,21 +483,36 @@ function tick(s: PinballState, input: PinballInput, dt: number) {
     // Each guide ends exactly at its flipper pivot — no seam to slip through.
     touched = wall(s, 20, 455, 99, 535, 7, .45, .18) || touched;
     touched = wall(s, 338, 458, 261, 535, 7, .45, .18) || touched;
-    // Defenders are moving bodies: their drift velocity carries into the bounce,
-    // and a fresh hit adds a firm "shove" kick along the contact normal.
+    // Soft arrivals can be cushioned; fast contacts remain moving-body collisions.
+    // Foot blocks use drift velocity and a firm impulse along the contact normal.
     const defenders = pinballDefenders(s.time, s.defs, s.defJoin, s.defs - 1, s.defenders), before = pinballDefenders(s.time - dt, s.defs, Math.min(1, s.defJoin + dt * .8), s.defs - 1, s.previousDefenders);
     for (let i = 0; i < defenders.length; i++) {
         const d = defenders[i], ai=s.defenderAI[i];
         if(ai.dazed>0){const t=clamp(1-ai.dazed/.4,0,1),stand=t*t*(3-2*t);d.x=ai.hitX+(d.x+ai.offset-ai.hitX)*stand;d.y=ai.hitY+(d.y-ai.hitY)*stand;ai.velocity=0;continue;}
         ai.think-=dt;
-        if(ai.think<=0){ai.think=.1;ai.target=Math.hypot(b.x-d.x,b.y-d.y)<150 ? clamp(b.x+b.vx*.10-d.x,-22,22) : 0;}
+        if(ai.think<=0){
+            // The central player screens; wide players anticipate the passing
+            // lane. Decisions remain committed during an extended foot block.
+            ai.think=.16-(s.level-1)*.02+i*.012;
+            if(ai.block===0){const lead=.10+(s.level-1)*.012+i*.014;ai.target=Math.hypot(b.x-d.x,b.y-d.y)<150 ? clamp(b.x+b.vx*lead-d.x,-22,22) : 0;}
+        }
         const oldOffset=ai.offset;
         ai.velocity+=clamp((ai.target-ai.offset)*9-ai.velocity,-420*dt,420*dt);
         ai.velocity=clamp(ai.velocity,-55,55);ai.offset=clamp(ai.offset+ai.velocity*dt,-24,24);
         const dvx=(d.x-before[i].x+ai.offset-oldOffset)/dt,dvy=(d.y-before[i].y)/dt;
         d.x+=ai.offset;
         const dx=b.x-d.x,dy=b.y-d.y,distance=Math.hypot(dx,dy);
-        if(ai.cooldown===0&&distance<85&&dx*b.vx+dy*b.vy<0){ai.block=.38;ai.cooldown=.8;ai.aim=Math.atan2(dx,dy);}
+        if(s.possession>=0)continue;
+        // A soft ball can be cushioned at the feet. Fast body hits retain knockdowns.
+        const receiving=s.passTarget===i&&s.passTime>0;
+        if(s.bumperCooldown[i]===0&&distance<(receiving?38:30)&&Math.hypot(b.vx-dvx,b.vy-dvy)<(receiving?520:230)&&dx*(b.vx-dvx)+dy*(b.vy-dvy)<10){
+            s.possession=i;s.counterAttack=false;s.possessionTime=.72-(s.level-1)*.05;s.passTarget=-1;s.passTime=0;
+            if(!receiving)s.attackPasses=0;
+            s.attackReceiver=attackReceiver(s,i);
+            ai.block=0;ai.aim=Math.atan2(dx,dy);s.cue='control';s.cueTime=1.2;hit(s,b.x,b.y);
+            b.vx=b.vy=b.omega=0;continue;
+        }
+        if(ai.cooldown===0&&distance<85&&dx*b.vx+dy*b.vy<0){ai.block=.38;ai.cooldown=1.04-(s.level-1)*.065+i*.04;ai.aim=Math.atan2(dx,dy);}
         const reach=ai.block>0?Math.sin(Math.PI*(1-ai.block/.38))*14:0;
         // Only the extended boot can earn a block; the torso is a separate target.
         const boot=reach>3 ? capsuleContact(b,d.x+Math.sin(ai.aim)*10,d.y+Math.cos(ai.aim)*10,d.x+Math.sin(ai.aim)*(10+reach),d.y+Math.cos(ai.aim)*(10+reach),5) : null;
@@ -437,6 +530,44 @@ function tick(s: PinballState, input: PinballInput, dt: number) {
                 s.sfx.bumperI = i;
             }
         }
+    }
+    if(s.possession>=0){
+        const owner=s.possession,d=defenders[owner],ai=s.defenderAI[owner];
+        s.possessionTime=Math.max(0,s.possessionTime-dt);
+        // Face down-table during the wind-up; keep the ball visibly at the boot.
+        const partner=s.attackReceiver>=0?defenders[s.attackReceiver]:null;
+        const facing=partner?Math.atan2(partner.x-d.x,partner.y-d.y):0;
+        const turn=Math.atan2(Math.sin(facing-ai.aim),Math.cos(facing-ai.aim));ai.aim+=turn*(1-Math.exp(-dt*9));
+        b.x=d.x+Math.sin(ai.aim)*24;b.y=d.y+Math.cos(ai.aim)*24;
+        b.vx=b.vy=0;
+        if(s.possessionTime>0)return;
+        const receiver=s.attackReceiver>=0&&s.defenderAI[s.attackReceiver].dazed===0?s.attackReceiver:-1;
+        let targetX:number,targetY:number,flight:number;
+        if(receiver>=0){
+            const q=defenders[receiver],prev=before[receiver];flight=clamp(Math.hypot(q.x-b.x,q.y-b.y)/380,.35,.65);
+            targetX=clamp(q.x+clamp((q.x-prev.x-s.defenderAI[receiver].offset)/dt+s.defenderAI[receiver].velocity,-65,65)*flight,40,320);
+            targetY=q.y+clamp((q.y-prev.y)/dt,-25,25)*flight;
+            s.passTarget=receiver;s.passTime=flight+.3;s.attackPasses++;s.cue='pass';
+        }else{
+            // Alternate threats toward reachable flipper lanes, not an unavoidable centre drain.
+            targetY=525;targetX=d.x<180?135:225;
+            let clearance=-Infinity;
+            for(const lane of [135,225]){let nearest=Infinity;
+                for(let j=0;j<defenders.length;j++)if(j!==owner&&s.defenderAI[j].dazed<=0){
+                    const q=defenders[j],dx=lane-d.x,dy=targetY-d.y,t=clamp(((q.x-d.x)*dx+(q.y-d.y)*dy)/(dx*dx+dy*dy),0,1);
+                    nearest=Math.min(nearest,Math.hypot(q.x-d.x-dx*t,q.y-d.y-dy*t));
+                }
+                if(nearest>clearance){clearance=nearest;targetX=lane;}
+            }
+            flight=.78-(s.level-1)*.04;s.passTarget=-1;s.attackPasses=0;s.counterAttack=true;s.cue='attack';
+        }
+        // Release on the target-facing boot, never through the kicker's own torso.
+        const aim=Math.atan2(targetX-d.x,targetY-d.y);b.x=d.x+Math.sin(aim)*27;b.y=d.y+Math.cos(aim)*27;
+        b.vx=(targetX-b.x)/flight;b.vy=(targetY-b.y)/flight-.5*GRAVITY*flight;b.omega=0;
+        ai.aim=Math.atan2(b.vx,b.vy);ai.block=.38;ai.cooldown=.8;s.bumperCooldown[owner]=.22;
+        s.possession=-1;s.cueTime=1.6;s.sfx.bumper++;s.sfx.bumperI=owner;
+        hit(s,b.x,b.y);
+        return;
     }
     // The keeper is a body too: soft restitution (he absorbs the shot) plus his
     // own lateral velocity, so a diving save slaps the ball away with him.
@@ -468,14 +599,16 @@ function tick(s: PinballState, input: PinballInput, dt: number) {
             touched = true;
             const relX = c.cx - x, relY = c.cy - y;
             const approach = resolve(b, c.nx, c.ny, -omega * relY, omega * relX, .45, .5);
-            if (Math.abs(omega) > 5 && approach > 40 && s.flipperCooldown[i] === 0) {
+            if ((i ? omega > 5 : omega < -5) && approach > 40 && s.flipperCooldown[i] === 0) {
                 s.flipperCooldown[i] = .1;
+                s.counterAttack=false;s.banked=false;s.attackPasses=0;s.passTarget=-1;s.passTime=0;
                 hit(s, b.x, b.y);
                 // Alternating feet on successive returns rewards adapting to
                 // the rebound instead of holding both flippers permanently.
                 s.combination = s.lastFoot !== i && s.time - s.lastStrikeAt < 6 ? Math.min(4, s.combination + 1) : 1;
                 if (s.combination > 1) {
                     s.moveTime = 14;
+                    s.nudges=1;
                 }
                 s.lastFoot = i;
                 s.lastStrikeAt = s.time;
@@ -500,7 +633,11 @@ function tick(s: PinballState, input: PinballInput, dt: number) {
     }
     if (b.y > PINBALL_HEIGHT + b.r && b.x < LANE_WALL) {
         s.moveTime = 0;
-        s.balls--;
+        if(s.openingRescue&&s.launchGrace>0){
+            s.openingRescue=false;s.launchGrace=0;s.cue='rescue';s.cueTime=2.5;
+            hit(s,180,590);
+        }else{s.balls--;if(s.counterAttack){s.cue='concede';s.cueTime=2;hit(s,180,590);}}
+        s.counterAttack=false;
         s.phase = 'lost';
         s.timer = 1.0;
         b.vx = b.vy = b.omega = 0;

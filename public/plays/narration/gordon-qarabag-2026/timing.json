@@ -1,0 +1,378 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Baku, 2026",
+   "text": "Baku, 2026, the Champions League play-offs. Qaraba\u011f against Newcastle, not even three minutes in. Dan Burn charges forward and spots Anthony Gordon running. Gordon shoots across the keeper... goal!",
+   "src": "/plays/narration/gordon-qarabag-2026/1.m4a",
+   "seconds": 14.9,
+   "words": [
+    {
+     "w": "Baku",
+     "at": 0.375
+    },
+    {
+     "w": "2026",
+     "at": 0.9
+    },
+    {
+     "w": "the",
+     "at": 1.925
+    },
+    {
+     "w": "Champions",
+     "at": 2.038
+    },
+    {
+     "w": "League",
+     "at": 2.65
+    },
+    {
+     "w": "play-offs",
+     "at": 2.9
+    },
+    {
+     "w": "Qaraba\u011f",
+     "at": 4.05
+    },
+    {
+     "w": "against",
+     "at": 4.562
+    },
+    {
+     "w": "Newcastle",
+     "at": 4.9
+    },
+    {
+     "w": "not",
+     "at": 5.725
+    },
+    {
+     "w": "even",
+     "at": 5.888
+    },
+    {
+     "w": "three",
+     "at": 6.162
+    },
+    {
+     "w": "minutes",
+     "at": 6.4
+    },
+    {
+     "w": "in",
+     "at": 6.688
+    },
+    {
+     "w": "Dan",
+     "at": 7.438
+    },
+    {
+     "w": "Burn",
+     "at": 7.725
+    },
+    {
+     "w": "charges",
+     "at": 8.062
+    },
+    {
+     "w": "forward",
+     "at": 8.488
+    },
+    {
+     "w": "and",
+     "at": 8.887
+    },
+    {
+     "w": "spots",
+     "at": 9.012
+    },
+    {
+     "w": "Anthony",
+     "at": 9.463
+    },
+    {
+     "w": "Gordon",
+     "at": 9.988
+    },
+    {
+     "w": "running",
+     "at": 10.4
+    },
+    {
+     "w": "Gordon",
+     "at": 11.175
+    },
+    {
+     "w": "shoots",
+     "at": 11.688
+    },
+    {
+     "w": "across",
+     "at": 12.062
+    },
+    {
+     "w": "the",
+     "at": 12.4
+    },
+    {
+     "w": "keeper",
+     "at": 12.5
+    },
+    {
+     "w": "goal",
+     "at": 13.438
+    }
+   ]
+  },
+  {
+   "label": "Watch the run",
+   "text": "Watch the run again. Gordon sprints in behind the defenders, and the pass lands right in his path.",
+   "src": "/plays/narration/gordon-qarabag-2026/2.m4a",
+   "seconds": 7.2,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "the",
+     "at": 0.7
+    },
+    {
+     "w": "run",
+     "at": 0.8
+    },
+    {
+     "w": "again",
+     "at": 1.0
+    },
+    {
+     "w": "Gordon",
+     "at": 1.863
+    },
+    {
+     "w": "sprints",
+     "at": 2.288
+    },
+    {
+     "w": "in",
+     "at": 2.75
+    },
+    {
+     "w": "behind",
+     "at": 2.875
+    },
+    {
+     "w": "the",
+     "at": 3.263
+    },
+    {
+     "w": "defenders",
+     "at": 3.337
+    },
+    {
+     "w": "and",
+     "at": 4.225
+    },
+    {
+     "w": "the",
+     "at": 4.338
+    },
+    {
+     "w": "pass",
+     "at": 4.438
+    },
+    {
+     "w": "lands",
+     "at": 4.85
+    },
+    {
+     "w": "right",
+     "at": 5.237
+    },
+    {
+     "w": "in",
+     "at": 5.562
+    },
+    {
+     "w": "his",
+     "at": 5.638
+    },
+    {
+     "w": "path",
+     "at": 5.812
+    }
+   ]
+  },
+  {
+   "label": "Across the keeper",
+   "text": "One strike with his right foot, across the keeper and into the far corner. It is the first of his four goals that night!",
+   "src": "/plays/narration/gordon-qarabag-2026/3.m4a",
+   "seconds": 8.1,
+   "words": [
+    {
+     "w": "One",
+     "at": 0.4
+    },
+    {
+     "w": "strike",
+     "at": 0.688
+    },
+    {
+     "w": "with",
+     "at": 1.062
+    },
+    {
+     "w": "his",
+     "at": 1.188
+    },
+    {
+     "w": "right",
+     "at": 1.363
+    },
+    {
+     "w": "foot",
+     "at": 1.7
+    },
+    {
+     "w": "across",
+     "at": 2.35
+    },
+    {
+     "w": "the",
+     "at": 2.725
+    },
+    {
+     "w": "keeper",
+     "at": 2.825
+    },
+    {
+     "w": "and",
+     "at": 3.362
+    },
+    {
+     "w": "into",
+     "at": 3.5
+    },
+    {
+     "w": "the",
+     "at": 3.688
+    },
+    {
+     "w": "far",
+     "at": 3.788
+    },
+    {
+     "w": "corner",
+     "at": 4.075
+    },
+    {
+     "w": "It",
+     "at": 5.025
+    },
+    {
+     "w": "is",
+     "at": 5.162
+    },
+    {
+     "w": "the",
+     "at": 5.287
+    },
+    {
+     "w": "first",
+     "at": 5.412
+    },
+    {
+     "w": "of",
+     "at": 5.737
+    },
+    {
+     "w": "his",
+     "at": 5.812
+    },
+    {
+     "w": "four",
+     "at": 6.0
+    },
+    {
+     "w": "goals",
+     "at": 6.25
+    },
+    {
+     "w": "that",
+     "at": 6.575
+    },
+    {
+     "w": "night",
+     "at": 6.775
+    }
+   ]
+  },
+  {
+   "label": "Keep running",
+   "text": "Keep making runs behind the defence. One good run can turn into many goals.",
+   "src": "/plays/narration/gordon-qarabag-2026/4.m4a",
+   "seconds": 6.1,
+   "words": [
+    {
+     "w": "Keep",
+     "at": 0.35
+    },
+    {
+     "w": "making",
+     "at": 0.625
+    },
+    {
+     "w": "runs",
+     "at": 1.038
+    },
+    {
+     "w": "behind",
+     "at": 1.45
+    },
+    {
+     "w": "the",
+     "at": 1.837
+    },
+    {
+     "w": "defence",
+     "at": 1.925
+    },
+    {
+     "w": "One",
+     "at": 2.95
+    },
+    {
+     "w": "good",
+     "at": 3.225
+    },
+    {
+     "w": "run",
+     "at": 3.45
+    },
+    {
+     "w": "can",
+     "at": 3.775
+    },
+    {
+     "w": "turn",
+     "at": 3.95
+    },
+    {
+     "w": "into",
+     "at": 4.213
+    },
+    {
+     "w": "many",
+     "at": 4.4
+    },
+    {
+     "w": "goals",
+     "at": 4.625
+    }
+   ]
+  }
+ ]
+}

@@ -1,1 +1,56 @@
-.dialog{position:fixed;inset:0 0 0 auto;margin:0;width:min(440px,100%);max-width:100%;height:100dvh;max-height:100dvh;border:0;border-radius:24px 0 0 24px;background:#f7f0db;color:#244d40;padding:0;box-shadow:-16px 0 70px #0005;overflow:hidden;animation:arrive .28s ease both;font-family:var(--font-body,Arial,sans-serif)}.dialog::backdrop{background:#081a1d99}.dialog header{padding:max(22px,env(safe-area-inset-top)) 22px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px}.dialog h2{font-size:28px;margin:0;letter-spacing:-.04em}.body{height:calc(100% - 88px);overflow:auto;overscroll-behavior:contain;padding:0 22px max(24px,env(safe-area-inset-bottom))}.balance{display:grid;text-align:center;border-radius:20px;background:#ebc968;padding:24px 15px;gap:4px}.balance strong{font-size:58px;line-height:1;font-variant-numeric:tabular-nums}.balance span{font-weight:700}.balance small{margin-top:8px}.pack{padding:20px 0}.pack button{--navigation-width:116px}.dialog h3{font-size:18px;margin:0 0 8px}.dialog p{font-size:13px;line-height:1.55;margin:6px 0 14px}.detail{color:#647462}.machine{border:1px solid #d8dcc4;border-left:5px solid var(--cabinet);background:#fff9e9;border-radius:14px;padding:14px;margin:12px 0}.machine>div{display:flex;align-items:center;justify-content:space-between;gap:12px}.machine h4{margin:0;font-size:15px}.machine b{font-size:11px;white-space:nowrap}.machine p{font-size:12px;margin:8px 0}.machine button{min-height:44px;padding:8px 16px;border:1px solid #bbc8ad;border-radius:24px;background:#edf0dc;color:#244d40;font-size:12px;font-weight:700}.machine button:last-child{background:#315845;color:#fff3d1}.machine button:active{transform:scale(.95)}.history{list-style:none;margin:0 0 18px;padding:0}.history li{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #d9deca;font-size:13px}.history small{display:block;font-size:11px;color:#647462;margin-top:4px}@keyframes arrive{from{transform:translateX(100%)}to{transform:translateX(0)}}@media(prefers-reduced-motion:reduce){.dialog{animation:none}.machine button:active{transform:none}}
+@font-face{font-family:ArcadeWalletBrush;src:url('/stories/films/assets/IslandBrush-Regular.ttf') format('truetype');font-display:swap}
+.dialog{
+ --btn-gold:#20243d;--btn-ink:#e8ffff;--btn-rim:#70f5ec;
+ --btn-shadow-gold:0 4px 0 #101323,0 0 14px #4debd533;
+ --btn-shadow-gold-pressed:0 1px 0 #101323,0 0 18px #4debd54d;
+ --btn-focus:3px solid #b6fff7;
+ position:fixed;inset:0 0 0 auto;margin:0;width:min(440px,100%);max-width:100%;height:100dvh;max-height:100dvh;
+ box-sizing:border-box;border:1px solid #ff85d950;border-left:2px solid #ff85d9;border-radius:24px 0 0 24px;
+ background:#101022;color:#f5efff;padding:0;box-shadow:-16px 0 70px #0009,-3px 0 22px #ff62c226;
+ overflow:hidden;animation:arrive .28s ease both;font-family:var(--font-body,Arial,sans-serif);isolation:isolate;
+}
+.dialog[open]{display:flex;flex-direction:column}
+.dialog::before{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;background:url('/stories/films/assets/entry-grain.png') center/128px 128px;opacity:.055}
+.dialog::backdrop{background:#030410b8}
+.dialog header{padding:max(22px,env(safe-area-inset-top)) 22px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;border-bottom:1px solid #ff85d925}
+.dialog h2{font-family:ArcadeWalletBrush,Georgia,serif;font-weight:normal;font-size:36px;line-height:1.15;margin:0;color:#ffeafa;text-shadow:0 0 18px #ff62c244}
+.body{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;padding:22px 22px max(24px,env(safe-area-inset-bottom));scrollbar-color:#8264a0 #151328}
+.balance{position:relative;display:grid;text-align:center;border:1px solid #ffe58c80;border-radius:20px;background:#242039;padding:24px 15px;gap:5px;box-shadow:inset 0 0 26px #ffd96b08,0 0 16px #ffd96b0b}
+.balance strong{font-size:58px;line-height:1.1;font-variant-numeric:tabular-nums;color:#ffe58c;text-shadow:0 0 20px #f4c94e40}
+.balance span{font-size:13px;font-weight:700;color:#fff0b9;letter-spacing:.06em}
+.balance small{margin-top:8px;color:#c2b5d5;font-size:12px}
+.pack{padding:24px 0;border-bottom:1px solid #ab91cc30;margin-bottom:22px}
+.pack button{--navigation-width:116px;--btn-gold:#35213f;--btn-rim:#ff85d9;--btn-ink:#ffeafa;--btn-shadow-gold:0 4px 0 #1b1027,0 0 14px #ff62c233;--btn-shadow-gold-pressed:0 1px 0 #1b1027,0 0 18px #ff62c24d}
+.dialog h3{font-size:18px;line-height:1.3;margin:0 0 8px;color:#f4eaff}
+.dialog p{font-size:13px;line-height:1.6;margin:6px 0 16px;color:#c9bddc}
+.dialog p.detail{color:#b6abc9}
+.machine{border:1px solid #6c5b824d;border-left:3px solid var(--cabinet);background:#1b182e;border-radius:14px;padding:16px;margin:12px 0;box-shadow:inset 3px 0 14px #ffffff03}
+.machine>div{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.machine h4{margin:0;font-size:15px;color:#f7f0ff;line-height:1.3}
+.machine b{font-size:11px;white-space:nowrap;color:var(--cabinet);font-variant-numeric:tabular-nums}
+.machine p{font-size:12px;margin:10px 0 15px;color:#bfb4d1}
+.machine button{min-height:44px;padding:8px 16px;border:2px solid #70f5ec;border-radius:24px;background:#202c3d;color:#e8ffff;font:inherit;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 3px 0 #0c1220;transition:transform .16s,background-color .16s,box-shadow .16s;touch-action:manipulation}
+.machine button:last-child{min-width:82px;border-color:#ceffbf;background:#91f58f;color:#113a2a;box-shadow:0 3px 0 #347a49,0 0 12px #78ff8b22}
+.machine button:hover{background:#293d4f;box-shadow:0 3px 0 #0c1220,0 0 12px #70f5ec24}
+.machine button:last-child:hover{background:#b1ffa5;box-shadow:0 3px 0 #347a49,0 0 16px #78ff8b44}
+.machine button:active{transform:translateY(2px) scale(.96);box-shadow:0 1px 0 #0c1220}
+.machine button:focus-visible{outline:3px solid #fff0b9;outline-offset:4px}
+.machine button:disabled{opacity:.4;cursor:default;transform:none}
+.history{list-style:none;margin:0 0 18px;padding:0}
+.history li{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #ab91cc30;font-size:13px}
+.history b{color:#91f58f;font-variant-numeric:tabular-nums}
+.history small{display:block;font-size:11px;color:#b6abc9;margin-top:4px}
+@keyframes arrive{from{transform:translateX(100%)}to{transform:translateX(0)}}
+@media(max-width:440px){.dialog{border-radius:0;border-right:0}.dialog header{padding-left:20px;padding-right:20px}.body{padding-left:20px;padding-right:20px}}
+@media(prefers-reduced-motion:reduce){.dialog{animation:none}.machine button{transition:none}.machine button:active{transform:none}}
+
+/* UI audit (Sep 27): Done at the modal anchors — desktop 24/20, phone 18/16. */
+.dialog header{padding:calc(20px + env(safe-area-inset-top,0px)) calc(24px + env(safe-area-inset-right,0px)) 20px 24px}
+@media(max-width:600px),(pointer:coarse){.dialog header{padding:calc(16px + env(safe-area-inset-top,0px)) calc(18px + env(safe-area-inset-right,0px)) 18px 18px}}
+
+/* Follow-up (Sep 28): "Visit store" goes somewhere new, so it is a primary action in the arcade neon palette, not a Done/Back nav pill that collapses to a checkmark. */
+.pack .storeLink{min-height:var(--btn-height,44px);padding:8px 18px;border:var(--btn-rim-width,3px) solid #ff85d9;border-radius:var(--btn-radius,999px);background:#35213f;color:#ffeafa;font:inherit;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 0 #1b1027,0 0 14px #ff62c233;transition:translate .15s,box-shadow .15s}
+.pack .storeLink:hover{background:#4b2853;box-shadow:0 4px 0 #1b1027,0 0 20px #ff62c24d}
+.pack .storeLink:active{translate:0 var(--btn-press,3px);box-shadow:0 1px 0 #1b1027,0 0 18px #ff62c24d}
+.pack .storeLink:focus-visible{outline:3px solid #fff0b9;outline-offset:4px}
+@media(prefers-reduced-motion:reduce){.pack .storeLink{transition:none}}

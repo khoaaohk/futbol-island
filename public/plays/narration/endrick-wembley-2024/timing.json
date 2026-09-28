@@ -1,0 +1,374 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Wembley, 2024",
+   "text": "Wembley, 2024. England against Brazil, ten minutes to go. A long ball sends Vin\u00edcius J\u00fanior clear. Jordan Pickford saves... but seventeen-year-old Endrick taps it in!",
+   "src": "/plays/narration/endrick-wembley-2024/1.m4a",
+   "seconds": 13.6,
+   "words": [
+    {
+     "w": "Wembley",
+     "at": 0.4
+    },
+    {
+     "w": "2024",
+     "at": 0.925
+    },
+    {
+     "w": "England",
+     "at": 2.263
+    },
+    {
+     "w": "against",
+     "at": 2.7
+    },
+    {
+     "w": "Brazil",
+     "at": 3.075
+    },
+    {
+     "w": "ten",
+     "at": 3.763
+    },
+    {
+     "w": "minutes",
+     "at": 4.025
+    },
+    {
+     "w": "to",
+     "at": 4.35
+    },
+    {
+     "w": "go",
+     "at": 4.45
+    },
+    {
+     "w": "A",
+     "at": 5.188
+    },
+    {
+     "w": "long",
+     "at": 5.312
+    },
+    {
+     "w": "ball",
+     "at": 5.65
+    },
+    {
+     "w": "sends",
+     "at": 6.037
+    },
+    {
+     "w": "Vin\u00edcius",
+     "at": 6.4
+    },
+    {
+     "w": "J\u00fanior",
+     "at": 7.138
+    },
+    {
+     "w": "clear",
+     "at": 7.537
+    },
+    {
+     "w": "Jordan",
+     "at": 8.4
+    },
+    {
+     "w": "Pickford",
+     "at": 8.825
+    },
+    {
+     "w": "saves",
+     "at": 9.287
+    },
+    {
+     "w": "but",
+     "at": 10.225
+    },
+    {
+     "w": "seventeen-year-old",
+     "at": 10.412
+    },
+    {
+     "w": "Endrick",
+     "at": 11.525
+    },
+    {
+     "w": "taps",
+     "at": 11.963
+    },
+    {
+     "w": "it",
+     "at": 12.287
+    },
+    {
+     "w": "in",
+     "at": 12.375
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again. Vin\u00edcius races through and shoots. The keeper blocks it, but look who is following in.",
+   "src": "/plays/narration/endrick-wembley-2024/2.m4a",
+   "seconds": 7.2,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "Vin\u00edcius",
+     "at": 1.413
+    },
+    {
+     "w": "races",
+     "at": 2.075
+    },
+    {
+     "w": "through",
+     "at": 2.538
+    },
+    {
+     "w": "and",
+     "at": 2.8
+    },
+    {
+     "w": "shoots",
+     "at": 2.95
+    },
+    {
+     "w": "The",
+     "at": 3.85
+    },
+    {
+     "w": "keeper",
+     "at": 3.95
+    },
+    {
+     "w": "blocks",
+     "at": 4.325
+    },
+    {
+     "w": "it",
+     "at": 4.75
+    },
+    {
+     "w": "but",
+     "at": 4.888
+    },
+    {
+     "w": "look",
+     "at": 5.025
+    },
+    {
+     "w": "who",
+     "at": 5.2
+    },
+    {
+     "w": "is",
+     "at": 5.35
+    },
+    {
+     "w": "following",
+     "at": 5.5
+    },
+    {
+     "w": "in",
+     "at": 5.95
+    }
+   ]
+  },
+  {
+   "label": "In the right place",
+   "text": "Endrick is in the right place. The ball drops right at his feet, and he taps it home. Brazil win, one\u2013nil!",
+   "src": "/plays/narration/endrick-wembley-2024/3.m4a",
+   "seconds": 7.8,
+   "words": [
+    {
+     "w": "Endrick",
+     "at": 0.4
+    },
+    {
+     "w": "is",
+     "at": 0.825
+    },
+    {
+     "w": "in",
+     "at": 0.938
+    },
+    {
+     "w": "the",
+     "at": 1.012
+    },
+    {
+     "w": "right",
+     "at": 1.1
+    },
+    {
+     "w": "place",
+     "at": 1.375
+    },
+    {
+     "w": "The",
+     "at": 2.15
+    },
+    {
+     "w": "ball",
+     "at": 2.25
+    },
+    {
+     "w": "drops",
+     "at": 2.55
+    },
+    {
+     "w": "right",
+     "at": 2.913
+    },
+    {
+     "w": "at",
+     "at": 3.163
+    },
+    {
+     "w": "his",
+     "at": 3.237
+    },
+    {
+     "w": "feet",
+     "at": 3.4
+    },
+    {
+     "w": "and",
+     "at": 3.663
+    },
+    {
+     "w": "he",
+     "at": 3.763
+    },
+    {
+     "w": "taps",
+     "at": 3.85
+    },
+    {
+     "w": "it",
+     "at": 4.138
+    },
+    {
+     "w": "home",
+     "at": 4.225
+    },
+    {
+     "w": "Brazil",
+     "at": 5.112
+    },
+    {
+     "w": "win",
+     "at": 5.612
+    },
+    {
+     "w": "one",
+     "at": 6.112
+    },
+    {
+     "w": "nil",
+     "at": 6.475
+    }
+   ]
+  },
+  {
+   "label": "Be ready",
+   "text": "Always follow a shot in. Be ready near goal: a quick finish gives the keeper no time to get up.",
+   "src": "/plays/narration/endrick-wembley-2024/4.m4a",
+   "seconds": 7.0,
+   "words": [
+    {
+     "w": "Always",
+     "at": 0.375
+    },
+    {
+     "w": "follow",
+     "at": 0.775
+    },
+    {
+     "w": "a",
+     "at": 1.075
+    },
+    {
+     "w": "shot",
+     "at": 1.188
+    },
+    {
+     "w": "in",
+     "at": 1.462
+    },
+    {
+     "w": "Be",
+     "at": 2.112
+    },
+    {
+     "w": "ready",
+     "at": 2.3
+    },
+    {
+     "w": "near",
+     "at": 2.55
+    },
+    {
+     "w": "goal",
+     "at": 2.775
+    },
+    {
+     "w": "a",
+     "at": 3.487
+    },
+    {
+     "w": "quick",
+     "at": 3.6
+    },
+    {
+     "w": "finish",
+     "at": 3.862
+    },
+    {
+     "w": "gives",
+     "at": 4.25
+    },
+    {
+     "w": "the",
+     "at": 4.487
+    },
+    {
+     "w": "keeper",
+     "at": 4.575
+    },
+    {
+     "w": "no",
+     "at": 4.963
+    },
+    {
+     "w": "time",
+     "at": 5.188
+    },
+    {
+     "w": "to",
+     "at": 5.487
+    },
+    {
+     "w": "get",
+     "at": 5.575
+    },
+    {
+     "w": "up",
+     "at": 5.75
+    }
+   ]
+  }
+ ]
+}

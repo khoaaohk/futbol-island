@@ -53,17 +53,17 @@
   {
    "q": "Put these moments in order, first to last.",
    "options": [
-    "Forward stays short of the far line",
-    "Pass reaches the forward",
-    "Forward runs past the far line",
-    "Forward comes back before the pass"
+    "Forward waits before the far line",
+    "First pass reaches the forward",
+    "Forward then runs past the line",
+    "Forward comes back before the next pass"
    ],
    "correct": 0,
    "explain": "Yes. First the forward waits short of the line, where offside cannot apply.",
    "choiceExplanations": [
     "Yes. First the forward waits short of the line, where offside cannot apply.",
-    "The pass comes after the forward finds that safe area.",
-    "The forward runs past the line after the ball comes back.",
+    "The first pass comes after the forward finds that safe area.",
+    "The forward runs past the line after the ball goes back.",
     "Coming back is last, just before the next pass."
    ],
    "visual": {

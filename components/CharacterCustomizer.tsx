@@ -16,6 +16,13 @@ import {IslandSelect,type IslandSelectOption} from './IslandSelect';
 import {PREVIEW_MOVES,moveCaption,stepMoveIndex} from '@/lib/graphics/previewMoves';
 import {StorePreview,useStorePreviews} from './StorePreviews';
 import {STORE_ITEMS,type StoreCategory} from '@/lib/town/store';
+import {isVendingOwned} from '@/lib/town/vendingWallet';
+import dynamic from 'next/dynamic';
+import Backpack from './Backpack';
+import {ensureStarterKit} from '@/lib/town/backpackStore';
+import {showCardInBinder} from '@/lib/town/cardRewardStore';
+import type {PlayerBookId} from '@/lib/books/catalog';
+const PlayerPopUpBook=dynamic(()=>import('./PlayerPopUpBook'),{ssr:false});
 type Props={open:boolean;onOpenChange:(open:boolean)=>void;value:CharacterCustomization;onChange:(value:CharacterCustomization)=>void;completedQuizCount:number;totalQuizCount:number;onEquipRide?:(mode:TravelMode)=>void};
 const labels:Record<CustomizationKey,string>={costume:'Island costume',character:'Your character',face:'Face',body:'Body',clothing:'Kit',ball:'Dribbling ball',scooter:'Scooters',bike:'Bikes',moped:'Mopeds',jetpack:'Flight',bodyColor:'Body colour',skinTone:'Skin',eyes:'Eyes',mouth:'Mouth',hair:'Hair',hairColor:'Hair colour',build:'Build',headwear:'Headwear',headwearColor:'Headwear colour'};
 /** Rarely used fine-tuning, tucked behind More, in two-column order (Build | Headwear, Headwear colour | Body colour, Eyes | Mouth). */
@@ -46,13 +53,18 @@ export default function CharacterCustomizer({open,onOpenChange,value,onChange,co
  useCoinProgress();
  const rides=useRideUnlocks();
  const dialog=useRef<HTMLDialogElement>(null),close=useRef<HTMLButtonElement>(null),restore=useRef<HTMLElement|null>(null);
- // Character only (user, Sep 26 2026): balls and rides are chosen in the Store, not here.
+ // Character only (user, Sep 26 2026): balls and rides are chosen at the vending machines (docs/vending-machines.md), not here.
  const [tab]=useState<'character'|'rides'>('character');
  const [extra,setExtra]=useState<'why'|'more'|null>(null);
  const [previewCategory,setPreviewCategory]=useState<StoreCategory>('ball');
  // The preview's move; the Skills showcase (0) plays each time Make it yours opens.
  const [moveIndex,setMoveIndex]=useState(0);
- useEffect(()=>{if(open)setMoveIndex(0);},[open]);
+ useEffect(()=>{if(open){setMoveIndex(0);setView('look');}},[open]);
+ // Look | Backpack (user, Sep 28 2026). The backpack is a view of what the player owns (lib/town/backpack.ts); the starter kit is
+ // granted once per save when the island first loads (this component mounts with the island).
+ const [view,setView]=useState<'look'|'backpack'>('look');
+ const [book,setBook]=useState<PlayerBookId|null>(null);
+ useEffect(()=>{ensureStarterKit();},[]);
  const previews=useStorePreviews(open&&tab==='rides');
  const previewItem=STORE_ITEMS.find(item=>item.category===previewCategory&&item.option.id===value[previewCategory])!;
  useEffect(()=>{const el=dialog.current;if(!el)return;let timer:ReturnType<typeof setTimeout>|undefined;
@@ -67,7 +79,7 @@ export default function CharacterCustomizer({open,onOpenChange,value,onChange,co
  /** A customization key as a dropdown; colour keys show dots, costumes keep their lock rule and unlock label. */
  const keyDropdown=(key:CustomizationKey,opts:{label?:string;disabled?:boolean;wide?:boolean}={})=>
   dropdown({id:key,label:opts.label??labels[key],current:value[key],disabled:opts.disabled,wide:opts.wide,onPick:id=>choose(key,id),
-   options:CUSTOMIZATION_OPTIONS[key].map(option=>{const unlocked=isCustomizationUnlocked(option,completedQuizCount,totalQuizCount);return {value:option.id,label:option.label,dot:DOT_KEYS.has(key)?option.color:undefined,disabled:!unlocked,note:unlocked?undefined:`Unlocks at ${costumeUnlockBalls(option.id)} matchday soccer balls`};})});
+   options:CUSTOMIZATION_OPTIONS[key].map(option=>{const earned=isCustomizationUnlocked(option,completedQuizCount,totalQuizCount),owned=key!=='costume'||isVendingOwned(`costume:${option.id}`),unlocked=earned&&owned;return {value:option.id,label:option.label,dot:DOT_KEYS.has(key)?option.color:undefined,disabled:!unlocked,note:unlocked?undefined:earned?'At the island vending machines':`Unlocks at ${costumeUnlockBalls(option.id)} matchday soccer balls`};})});
  const preset=value.character==='female'?'female':'male';
  const costumed=value.costume!=='none';
  const matchedLook=matchingLook(value)?.id;
@@ -75,6 +87,8 @@ export default function CharacterCustomizer({open,onOpenChange,value,onChange,co
  {/* Warm the wardrobe background before the first open, so the fade-in never swaps from the fallback colour to the pattern. */}
  <link rel="preload" as="image" href="/stories/paths/costume-coast.svg"/><link rel="preload" as="image" href="/stories/films/assets/entry-grain.png"/>
  <section className={`${styles.panel} ${shell.shell} ${shell.drawer}`}><header className={`${styles.header} ${shell.header}`}><div><h2 id="character-customizer-title">Make it yours</h2></div><DoneButton ref={close} className={styles.close} onDone={()=>onOpenChange(false)}/></header><div className={`${shell.body} ${styles.body}`}>
+  <div className={styles.toggleLayout} data-view-toggle><CharacterToggle value={view} onChange={setView} label="Make it yours" options={[{value:'look',label:'Look'},{value:'backpack',label:'Backpack'}]}/></div>
+  {view==='backpack'?<Backpack active={open&&view==='backpack'} value={value} onEquip={(key,id)=>choose(key,id)} onWear={costume=>onChange({...value,costume})} onOpenBook={id=>setBook(id as PlayerBookId)} onShowCard={name=>{onOpenChange(false);showCardInBinder(name);}}/>:
   <div className={styles.layout} data-tab={tab}><div className={styles.previewColumn}>{tab==='character'?<CharacterPreview open={open} value={value} move={moveIndex}/>:<div className={styles.equipmentPreview} data-equipment-preview={previewItem.id}><StorePreview item={previewItem} src={previews[previewItem.id]}/></div>}
  <div className={styles.summary}><div><strong>{tab==='character'?`${preset==='female'?'Female':'Male'} · No. ${MAIN_PLAYER_NUMBER}`:previewItem.option.label}</strong><small>{tab==='character'?<><span className={styles.dragHint}>Drag the preview to turn. Your choices save automatically.</span>{costumed&&<span data-costume-note> Your island costume is on; choose No costume under More options to take it off.</span>}</>:`${labels[previewCategory]} · Select below to equip and save.`}</small></div></div>
  {tab==='character'&&<MoveArrows index={moveIndex} onChange={setMoveIndex}/>}
@@ -99,5 +113,5 @@ export default function CharacterCustomizer({open,onOpenChange,value,onChange,co
   </div>
   :<div className={styles.selectors}>{(['ball','scooter','bike','moped','jetpack'] as CustomizationKey[]).map(selectField)}<p className={styles.note} data-ride-progress="">{rideProgressLine(rides.finished,rides.total)}. Each path you finish unlocks the next ride in every category.</p></div>}</div>
 
- </div></section></dialog>;
+ }</div></section>{book&&<PlayerPopUpBook bookId={book} onClose={()=>setBook(null)}/>}</dialog>;
 }

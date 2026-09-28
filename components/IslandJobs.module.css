@@ -1,0 +1,83 @@
+/* Island jobs HUD: reuses the island's cream notice pill (CostumeMilestoneToast) and gold prompt button tokens (.npc-talk-prompt). */
+@font-face{font-family:IslandBrush;src:url('/stories/films/assets/IslandBrush-Regular.ttf') format('truetype');font-display:swap}
+.wallet{position:absolute;z-index:6;right:max(20px,env(safe-area-inset-right));top:calc(78px + env(safe-area-inset-top,0px));display:flex;align-items:center;gap:6px;min-height:34px;padding:5px 12px 5px 8px;
+ border:2px solid #fff2cd;border-radius:18px;background:#fff1d3;color:#244d40;box-shadow:0 3px 0 #a8863d,0 8px 18px #0f2a2f40;pointer-events:none;font-size:13px}
+.wallet b{font-family:IslandBrush,sans-serif;font-weight:400;font-size:20px;line-height:1}
+.wallet small{font-weight:700;color:#61705b}
+.wallet em{font-style:normal;font-weight:700;font-size:11px;margin-left:4px;padding:2px 7px;border-radius:10px;background:#e6efd0;color:#3c6a45}
+.coin{display:inline-block;flex:0 0 auto;width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff3b0 0 18%,#f6c948 19% 58%,#c98f1f 59%);box-shadow:inset 0 0 0 2px #b27a17}
+.offer{position:absolute;z-index:33;left:50%;top:calc(152px + env(safe-area-inset-top,0px));transform:translateX(-50%);display:grid;grid-template-columns:1fr auto;column-gap:14px;align-items:center;text-align:left;
+ max-width:calc(100% - 36px);min-height:48px;padding:8px 10px 8px 18px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:var(--btn-radius,24px);
+ background:var(--btn-gold,#f4cc7c) var(--btn-grain,none) center/128px 128px;background-blend-mode:soft-light;color:var(--btn-ink,#244d40);box-shadow:var(--btn-shadow-gold,0 4px 0 #a8863d);font-size:15px;font-weight:700;white-space:nowrap}
+.offer small{grid-column:1;font-size:10px;letter-spacing:.08em;text-transform:uppercase;opacity:.8}
+.offer span{grid-column:2;grid-row:1/3;display:grid;place-items:center;min-width:40px;height:32px;padding:0 10px;border-radius:16px;background:#244d40;color:#fff1d3;font-size:13px}
+.offer:active{box-shadow:var(--btn-shadow-gold-pressed,0 1px 0 #a8863d);transform:translate(-50%,2px)}
+.offer:focus-visible{outline:var(--btn-focus,3px solid #ffc35b);outline-offset:3px}
+.card{position:absolute;z-index:36;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:min(440px,calc(100% - 32px));max-height:calc(100dvh - 180px);overflow:auto;box-sizing:border-box;
+ padding:18px 20px 16px;border:3px solid #fff2cd;border-radius:22px;background:#fff1d3;color:#244d40;box-shadow:0 6px 0 #a8863d,0 0 0 4px #fff2cd40,0 18px 40px #0f2a2f66;animation:cardIn .3s cubic-bezier(.2,.9,.3,1.15) both}
+.card h2{margin:2px 0 8px;font-family:IslandBrush,sans-serif;font-weight:400;font-size:30px;line-height:1.05}
+.card p{margin:0 0 10px;font-size:14px;line-height:1.45}
+.eyebrow{font-size:11px!important;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#61705b;margin-bottom:2px!important}
+.pay{display:flex;align-items:center;gap:8px;font-weight:700}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.primary,.secondary{min-height:44px;padding:10px 20px;border-radius:22px;font-weight:700;font-size:15px}
+.primary{border:var(--btn-rim-width) solid var(--btn-rim);background:var(--btn-green);color:var(--btn-ink-on-dark);box-shadow:0 4px 0 var(--btn-green-edge)}
+.primary:active{translate:0 var(--btn-press);box-shadow:0 1px 0 var(--btn-green-edge)}
+.primary:disabled{opacity:.6}
+.secondary{border:var(--btn-rim-width) solid var(--btn-rim);background:var(--btn-mint);color:var(--btn-ink);box-shadow:0 4px 0 var(--btn-mint-edge)}
+.secondary:active{translate:0 var(--btn-press);box-shadow:0 1px 0 var(--btn-mint-edge)}
+.hud{position:absolute;z-index:32;left:50%;top:calc(150px + env(safe-area-inset-top,0px));transform:translateX(-50%);width:min(360px,calc(100% - 32px));box-sizing:border-box;display:grid;grid-template-columns:1fr auto;gap:2px 10px;
+ padding:10px 12px 10px 16px;border:2px solid #fff2cd;border-radius:18px;background:#fff1d3ee;color:#244d40;box-shadow:0 4px 0 #a8863d,0 10px 24px #0f2a2f40}
+.hud div{display:grid}
+.hud small{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#61705b}
+.hud b{font-family:IslandBrush,sans-serif;font-weight:400;font-size:20px;line-height:1.1}
+.hud strong{grid-column:1/-1;display:flex;justify-content:space-between;font-size:13px;margin-top:4px}
+.hud strong em{font-style:normal;font-family:IslandBrush,sans-serif;font-weight:400;font-size:20px;line-height:1}
+.hud p{grid-column:1/-1;margin:2px 0 0;font-size:13px;line-height:1.35}
+.stop{grid-column:2;grid-row:1;align-self:start;min-height:44px;padding:4px 12px;border:2px solid #244d4055;border-radius:18px;background:transparent;color:#244d40;font-size:12px;font-weight:700}
+.payout{position:relative;display:flex;align-items:baseline;gap:8px;margin:6px 0 10px}
+.payout b{font-family:IslandBrush,sans-serif;font-weight:400;font-size:44px;line-height:1;color:#b27a17;text-shadow:0 2px 0 #fff8e0}
+.payout small{font-weight:700;color:#61705b}
+.burst{position:absolute;left:18px;top:20px;width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff3b0 0 18%,#f6c948 19% 58%,#c98f1f 59%);opacity:0;
+ animation:coinPop .9s calc(var(--i) * 70ms) cubic-bezier(.2,.8,.3,1) both}
+@keyframes coinPop{0%{opacity:0;transform:translate(0,0) scale(.4)}25%{opacity:1}100%{opacity:0;transform:translate(calc((var(--i) - 2) * 26px),-54px) scale(1)}}
+.lesson{padding:10px 12px;border-left:4px solid #6e9678;border-radius:4px 12px 12px 4px;background:#e6efd0}
+.lesson b{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#3c6a45;margin-bottom:3px}
+.note{font-size:13px!important;color:#4d5d49}
+.lines{list-style:none;margin:0 0 10px;padding:0}
+.lines li{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed #244d4033;font-size:14px}
+.toast{position:absolute;z-index:31;left:50%;top:calc(214px + env(safe-area-inset-top,0px));transform:translateX(-50%);display:grid;gap:2px;justify-items:center;width:max-content;max-width:min(400px,calc(100vw - 32px));box-sizing:border-box;min-height:44px;
+ padding:9px 18px;border:3px solid #fff2cd;border-radius:22px;background:#fff1d3;color:#244d40;font:inherit;text-align:center;cursor:pointer;box-shadow:0 5px 0 #a8863d,0 14px 30px #0f2a2f55;animation:toastIn .3s ease both}
+.toast b{font-family:IslandBrush,sans-serif;font-weight:400;font-size:20px;line-height:1.1}
+.toast span{font-size:13px;font-weight:700;color:#4d5d49;line-height:1.35}
+@keyframes cardIn{from{opacity:0;transform:translate(-50%,14px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}
+@media(max-width:600px){.card{bottom:calc(176px + env(safe-area-inset-bottom,0px));max-height:calc(100dvh - 320px);padding:14px 16px 12px}.card h2{font-size:26px}.card p{font-size:13px}.offer{top:calc(140px + env(safe-area-inset-top,0px));font-size:14px}.hud{top:calc(138px + env(safe-area-inset-top,0px));padding:8px 10px 8px 14px}.hud b{font-size:18px}.hud p{font-size:12px}.toast{top:calc(206px + env(safe-area-inset-top,0px))}.wallet{top:calc(70px + env(safe-area-inset-top,0px))}}
+@media(prefers-reduced-motion:reduce){.card,.toast{animation:none}.burst{display:none}}
+/* Task jobs (offside calls, ball pump): the HUD grows a row of the card buttons and a pressure gauge. */
+.hud .taskActions{grid-column:1/-1;display:flex;gap:8px;margin-top:8px}
+.taskActions .primary,.taskActions .secondary{flex:1 1 0;min-width:0;min-height:44px;padding:6px 8px;font-size:14px;line-height:1.15;white-space:normal}
+.gauge{grid-column:1/-1;position:relative;height:18px;margin:10px 0 18px;border:2px solid #244d4055;border-radius:10px;background:#f3dfb4}
+.gauge .zone{position:absolute;top:0;bottom:0;border-radius:6px;background:#8fc27a}
+.gauge i{position:absolute;top:-5px;width:4px;height:24px;margin-left:-2px;border-radius:2px;background:#244d40;transition:left .2s ease}
+.gauge small{position:absolute;left:0;right:0;top:20px;font-size:11px;font-weight:700;text-align:center;color:#4d5d49}
+/* Progress counter pops each time it ticks up (remounted by value). */
+.hud strong em.tick{display:inline-block;animation:tickPop .35s cubic-bezier(.2,.9,.3,1.4) both}
+@keyframes tickPop{0%{transform:scale(1)}40%{transform:scale(1.35);color:#b27a17}100%{transform:scale(1)}}
+@media(prefers-reduced-motion:reduce){.gauge i{transition:none}.hud strong em.tick{animation:none}}
+:global(.in-lesson) .wallet,:global(.in-lesson) .offer,:global(.in-lesson) .hud{display:none}
+
+/* Island-only wallet: centered in the same 44px row as Paths and Settings. */
+.wallet[data-job-wallet]{left:50%;right:auto;top:calc(20px + env(safe-area-inset-top,0px));transform:translateX(-50%);height:44px;min-height:44px;max-width:calc(100% - 156px);padding:4px 10px;gap:5px;white-space:nowrap;box-sizing:border-box}
+.wallet .basketCount{display:flex;align-items:center;gap:3px;margin:0;padding:3px 4px;font-size:12px;line-height:1}
+.basketCount svg{flex:none}
+@media(max-width:600px),(pointer:coarse){.wallet[data-job-wallet]{top:calc(16px + env(safe-area-inset-top,0px))}}
+@media(max-width:380px){.wallet[data-job-wallet]{gap:3px;padding:4px 6px}.wallet[data-job-wallet] small{display:none}}
+
+/* UI audit (Sep 27): while fishing, the 76px Back pill sits top-left, so the centred wallet leaves room for it on both sides. */
+:global(.town-app[data-fishing]) .wallet[data-job-wallet]{max-width:calc(100% - 2 * (24px + var(--btn-nav-width,76px) + 8px))}
+@media(max-width:600px),(pointer:coarse){:global(.town-app[data-fishing]) .wallet[data-job-wallet]{max-width:calc(100% - 2 * (18px + var(--btn-nav-width,76px) + 6px))}:global(.town-app[data-fishing]) .wallet[data-job-wallet] small{display:none}}
+
+.wallet[data-job-wallet]{pointer-events:auto;cursor:pointer;font-family:inherit;transition:box-shadow .16s,background-color .16s;-webkit-tap-highlight-color:transparent}.wallet[data-job-wallet]:hover{background-color:#fff6df}.wallet[data-job-wallet]:active{box-shadow:0 1px 0 #a8863d}.wallet[data-job-wallet]:focus-visible{outline:3px solid #2c7869;outline-offset:5px}
+/* Sep 28 (pm): desktop pocket pill breathes a little more between coins, fish and fruit. */
+@media(min-width:601px) and (pointer:fine){.wallet[data-job-wallet]{gap:8px;padding:4px 14px 4px 10px}.wallet[data-job-wallet] small{margin-right:4px}.wallet[data-job-wallet] .basketCount{gap:5px;padding:3px 8px;margin-left:2px}}

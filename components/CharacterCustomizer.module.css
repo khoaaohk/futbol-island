@@ -41,7 +41,7 @@
 .dialog .preview{margin:0;height:clamp(280px,45dvh,460px);border-radius:22px}
 .dialog .summary{background:none;padding:4px 8px;margin:18px 0 4px}.summary small{font-size:14px;line-height:1.5}
 .dialog .selectors{margin:0;background:#fff2d3;padding:24px;border-radius:32px;gap:20px;box-shadow:0 7px 0 #6a3b5e40}
-.dialog .selection{font-size:15px}.dialog .selection select{background:#efcf82;border:3px solid #fff8df;border-radius:22px;padding:12px;box-shadow:0 4px 0 #ac8d49;cursor:pointer}
+.dialog .selection{font-size:15px}.dialog .selection select{background:var(--btn-gold-bright) var(--btn-grain) center/128px 128px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:22px;padding:12px;box-shadow:0 4px 0 var(--btn-gold-bright-edge);cursor:pointer}
 .dialog .equipmentPreview{height:clamp(280px,45dvh,460px);margin:0}.dialog .equipmentPreview img{max-height:400px}
 .dialog .selection select:hover{background-color:#f4d997}
 .entering .panel{animation:wardrobeIn .24s ease-out both}.leaving .panel{animation:wardrobeIn .2s ease-in reverse both}

@@ -8,7 +8,7 @@ import {TRAVEL_MODES,type TravelMode} from './travelModes';
 import {createRoofJump,planRoofJump,planRoofLaunch} from './rooftopJump';
 export const ROOF_HANG_TIME=1, ROOF_RECOVERY_TIME=4.2;
 export type Roof=Obstacle&{height:number};
-export function createRooftopTravel(roofs:Roof[],obstacles:Obstacle[],start:{x:number;z:number},roofProps:(Obstacle&{floor:number;top:number;noLanding?:boolean})[]=[],extraSurface:(x:number,z:number)=>number=()=>0){
+export function createRooftopTravel(roofs:Roof[],obstacles:Obstacle[],start:{x:number;z:number},roofProps:(Obstacle&{floor:number;top:number;noLanding?:boolean})[]=[],extraSurface:(x:number,z:number)=>number=()=>0,landingExclusions:Obstacle[]=[]){
  const state={height:fieldSurfaceHeight(start.x,start.z),verticalSpeed:0,falling:false,hangTime:0,dropStart:0,recovery:0,impact:false};
  let driftX=0,driftZ=0,collisionRadius=.32;
  // Roof-to-roof gap jumps (lib/town/rooftopJump.ts): planned only on the frame an edge fall would start.
@@ -26,6 +26,8 @@ export function createRooftopTravel(roofs:Roof[],obstacles:Obstacle[],start:{x:n
  const surface=(x:number,z:number)=>Math.max(fieldSurfaceHeight(x,z),roofAt(x,z)?.height??0,extraSurface(x,z));
  function reset(x:number,z:number,height=surface(x,z)){collisionRadius=.32;jump.reset();Object.assign(state,{height,verticalSpeed:0,falling:false,hangTime:0,dropStart:height,recovery:0,impact:false});}
  function canLand(x:number,z:number){
+  // Glazed interiors remain walkable through doors, but are never aerial destinations.
+  if(landingExclusions.some(area=>insideObstacle(x,z,area,.8)))return false;
   const roof=roofAt(x,z);
   if(blocked(x,z,propGrid.query(x,z,1).filter(p=>p.noLanding&&p.w>0&&p.d>0),1))return false;
   if(blocked(x,z,goalBarriersAt(surface(x,z)),.8))return false;

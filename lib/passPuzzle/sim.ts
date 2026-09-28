@@ -80,10 +80,16 @@ export function kickLaunch(geo:Geo,o:Vec3,k:Kick,fromHead:boolean):{v:Vec3;spin:
   };
   if(k.kind==='shot'){
     let h=15+15*pw;
-    if(loft>0.4)h+=(10-h)*((loft-0.4)/0.6);
+    const aimed=Number.isFinite(k.shotHeight);
+    if(!aimed&&loft>0.4)h+=(10-h)*((loft-0.4)/0.6);
     if(fromHead)h=Math.min(h,14);
-    const yT=Math.min(geo.barH-0.35,0.3+loft*(geo.barH-0.7));
-    return {v:lofted(yT,h,Math.min(2.5+4*loft,0.9+0.3*d)),spin};
+    const yT=aimed?0.3+clamp(k.shotHeight!,0,1)*(geo.barH-0.55):Math.min(geo.barH-0.35,0.3+loft*(geo.barH-0.7));
+    const v=aimed?lofted(yT,h,6.5):lofted(yT,h,Math.min(2.5+4*loft,0.9+0.3*d));
+    // An aim solver must not manufacture pace to hit any distance at a low apex.
+    // Long low shots can land and bounce before goal; loft trades pace for clearance.
+    const speed=hyp(v.x,v.z,v.y),limit=18+20*pw;
+    if(speed>limit){const scale=limit/speed;v.x*=scale;v.y*=scale;v.z*=scale;}
+    return {v,spin};
   }
   let h=8+14*pw;
   if(fromHead)h=Math.min(h,12);
@@ -116,6 +122,7 @@ export function beginKick(s:PuzzleState,k:Kick):boolean{
   const {turn,windup}=turnFor(s,k);
   const kick:Kick={kind:k.kind,target:{x:k.target.x,z:k.target.z},curl:clamp(k.curl||0,-1,1),loft:clamp(k.loft||0,0,1),power:clamp(k.power||0,0,1)};
   if(k.receiver!=null)kick.receiver=k.receiver;
+  if(Number.isFinite(k.shotHeight))kick.shotHeight=clamp(k.shotHeight!,0,1);
   s.pending={kick,kicker:s.carrier,left:windup,total:windup,turn,fromHead:s.ball.atHead};
   s.phase='windup';
   return true;
@@ -251,7 +258,7 @@ export function tick(ctx:Ctx,s:PuzzleState,emit:Emit){
   if(s.tick%2===0){
     for(const a of s.attackers)brakeStop(a);
     for(const d of s.defenders)brakeStop(d);
-    if(s.keeper)brakeStop(s.keeper);
+    if(s.keeper){brakeStop(s.keeper);s.keeper.dive=Math.max(0,s.keeper.dive-ADT*3);if(s.keeper.dive===0&&s.keeper.mode==='dive')s.keeper.mode='set';}
   }
   const r=s.result?.reason;
   if(s.ball.owner==null&&r!=='save'&&r!=='intercept')stepBall(s.ball,ctx.geo,s.result?.outcome==='success'&&s.ball.p.z>ctx.geo.goalZ);
@@ -312,7 +319,8 @@ function flightTick(ctx:Ctx,s:PuzzleState,emit:Emit){
   if(flags&F_GOAL){
     const scorer=b.lastTouch?.side==='att'?b.lastTouch.i:f.kicker;
     emit(ev(s,'goal',{attacker:scorer}));
-    const ok=s.passes>=ctx.sc.require.minPasses;
+    const direct=ctx.sc.require.allowDirectShot===true&&ctx.sc.require.finish==='goal'&&s.passes===0&&s.chain.length===1&&f.kick.kind==='shot'&&!f.header&&!f.dirty&&b.lastTouch?.side==='att'&&b.lastTouch.i===f.kicker;
+    const ok=s.passes>=ctx.sc.require.minPasses||direct;
     finish(ctx,s,ok?'success':'fail',ok?undefined:'too-few-passes',scorer);return;
   }
   if(flags&F_OUT){

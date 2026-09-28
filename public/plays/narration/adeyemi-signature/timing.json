@@ -1,0 +1,370 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "How he does it",
+   "text": "Karim Adeyemi is one of the fastest players in football. In 2024, he scored a hat-trick against Celtic in just one half! Here's how he does it: he sprints behind the defence, onto the pass, and scores.",
+   "src": "/plays/narration/adeyemi-signature/1.m4a",
+   "seconds": 14.8,
+   "words": [
+    {
+     "w": "Karim",
+     "at": 0.35
+    },
+    {
+     "w": "Adeyemi",
+     "at": 0.787
+    },
+    {
+     "w": "is",
+     "at": 1.425
+    },
+    {
+     "w": "one",
+     "at": 1.55
+    },
+    {
+     "w": "of",
+     "at": 1.688
+    },
+    {
+     "w": "the",
+     "at": 1.762
+    },
+    {
+     "w": "fastest",
+     "at": 1.9
+    },
+    {
+     "w": "players",
+     "at": 2.487
+    },
+    {
+     "w": "in",
+     "at": 3.0
+    },
+    {
+     "w": "football",
+     "at": 3.163
+    },
+    {
+     "w": "In",
+     "at": 4.213
+    },
+    {
+     "w": "2024",
+     "at": 4.35
+    },
+    {
+     "w": "he",
+     "at": 5.6
+    },
+    {
+     "w": "scored",
+     "at": 5.75
+    },
+    {
+     "w": "a",
+     "at": 6.013
+    },
+    {
+     "w": "hat-trick",
+     "at": 6.075
+    },
+    {
+     "w": "against",
+     "at": 6.55
+    },
+    {
+     "w": "Celtic",
+     "at": 6.925
+    },
+    {
+     "w": "in",
+     "at": 7.4
+    },
+    {
+     "w": "just",
+     "at": 7.525
+    },
+    {
+     "w": "one",
+     "at": 7.775
+    },
+    {
+     "w": "half",
+     "at": 8.0
+    },
+    {
+     "w": "Here's",
+     "at": 8.887
+    },
+    {
+     "w": "how",
+     "at": 9.175
+    },
+    {
+     "w": "he",
+     "at": 9.35
+    },
+    {
+     "w": "does",
+     "at": 9.475
+    },
+    {
+     "w": "it",
+     "at": 9.713
+    },
+    {
+     "w": "he",
+     "at": 10.275
+    },
+    {
+     "w": "sprints",
+     "at": 10.438
+    },
+    {
+     "w": "behind",
+     "at": 10.825
+    },
+    {
+     "w": "the",
+     "at": 11.213
+    },
+    {
+     "w": "defence",
+     "at": 11.3
+    },
+    {
+     "w": "onto",
+     "at": 12.075
+    },
+    {
+     "w": "the",
+     "at": 12.412
+    },
+    {
+     "w": "pass",
+     "at": 12.512
+    },
+    {
+     "w": "and",
+     "at": 13.025
+    },
+    {
+     "w": "scores",
+     "at": 13.175
+    }
+   ]
+  },
+  {
+   "label": "Go early",
+   "text": "Watch again. He starts running before the pass, while the defender is still watching the ball.",
+   "src": "/plays/narration/adeyemi-signature/2.m4a",
+   "seconds": 6.3,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.7
+    },
+    {
+     "w": "He",
+     "at": 1.525
+    },
+    {
+     "w": "starts",
+     "at": 1.65
+    },
+    {
+     "w": "running",
+     "at": 2.0
+    },
+    {
+     "w": "before",
+     "at": 2.263
+    },
+    {
+     "w": "the",
+     "at": 2.513
+    },
+    {
+     "w": "pass",
+     "at": 2.6
+    },
+    {
+     "w": "while",
+     "at": 3.225
+    },
+    {
+     "w": "the",
+     "at": 3.388
+    },
+    {
+     "w": "defender",
+     "at": 3.475
+    },
+    {
+     "w": "is",
+     "at": 4.0
+    },
+    {
+     "w": "still",
+     "at": 4.125
+    },
+    {
+     "w": "watching",
+     "at": 4.4
+    },
+    {
+     "w": "the",
+     "at": 4.787
+    },
+    {
+     "w": "ball",
+     "at": 4.875
+    }
+   ]
+  },
+  {
+   "label": "Touch and finish",
+   "text": "One touch to go past, then a calm finish. The defender never catches him.",
+   "src": "/plays/narration/adeyemi-signature/3.m4a",
+   "seconds": 5.9,
+   "words": [
+    {
+     "w": "One",
+     "at": 0.4
+    },
+    {
+     "w": "touch",
+     "at": 0.637
+    },
+    {
+     "w": "to",
+     "at": 0.95
+    },
+    {
+     "w": "go",
+     "at": 1.038
+    },
+    {
+     "w": "past",
+     "at": 1.212
+    },
+    {
+     "w": "then",
+     "at": 1.925
+    },
+    {
+     "w": "a",
+     "at": 2.062
+    },
+    {
+     "w": "calm",
+     "at": 2.163
+    },
+    {
+     "w": "finish",
+     "at": 2.513
+    },
+    {
+     "w": "The",
+     "at": 3.375
+    },
+    {
+     "w": "defender",
+     "at": 3.475
+    },
+    {
+     "w": "never",
+     "at": 4.0
+    },
+    {
+     "w": "catches",
+     "at": 4.3
+    },
+    {
+     "w": "him",
+     "at": 4.688
+    }
+   ]
+  },
+  {
+   "label": "Use your speed",
+   "text": "Like Adeyemi: use your speed early, and attack the space behind the defence before it closes.",
+   "src": "/plays/narration/adeyemi-signature/4.m4a",
+   "seconds": 7.0,
+   "words": [
+    {
+     "w": "Like",
+     "at": 0.375
+    },
+    {
+     "w": "Adeyemi",
+     "at": 0.6
+    },
+    {
+     "w": "use",
+     "at": 1.712
+    },
+    {
+     "w": "your",
+     "at": 1.962
+    },
+    {
+     "w": "speed",
+     "at": 2.112
+    },
+    {
+     "w": "early",
+     "at": 2.5
+    },
+    {
+     "w": "and",
+     "at": 3.1
+    },
+    {
+     "w": "attack",
+     "at": 3.212
+    },
+    {
+     "w": "the",
+     "at": 3.575
+    },
+    {
+     "w": "space",
+     "at": 3.688
+    },
+    {
+     "w": "behind",
+     "at": 4.075
+    },
+    {
+     "w": "the",
+     "at": 4.438
+    },
+    {
+     "w": "defence",
+     "at": 4.525
+    },
+    {
+     "w": "before",
+     "at": 5.0
+    },
+    {
+     "w": "it",
+     "at": 5.338
+    },
+    {
+     "w": "closes",
+     "at": 5.425
+    }
+   ]
+  }
+ ]
+}

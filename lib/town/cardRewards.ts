@@ -19,8 +19,9 @@ export const CARD_REWARDS_ENABLED=CARD_REWARDS_LAUNCH;
 /** Cards shown in one offer (fewer when fewer are missing). */
 export const OFFER_SIZE=3;
 /** NPC chats (user decision, Sep 24 2026): at most one pick per NPC per day and this many NPC picks per day in total,
- *  resetting at local midnight. Nothing carries over and nothing is lost by skipping a day. */
-export const NPC_PICKS_PER_DAY=5;
+ *  resetting at local midnight. Nothing carries over and nothing is lost by skipping a day. 5 → 3 in the economy pass
+ *  (docs/economy/ECONOMY_PROPOSAL.md, 28 Sep 2026), so NPC chats alone cannot flood the binder. */
+export const NPC_PICKS_PER_DAY=3;
 /** Teaching weight (user approved, Sep 24 2026): one of the three is drawn from the positions the activity was about (a goalkeeper
  *  after a goalkeeping quiz, a futsal card after futsal); the other two stay random. Falls back to fully random when no card
  *  of that theme is missing. */
@@ -179,7 +180,10 @@ const ROLE_WORDS:[RegExp,string,string,string][]=[
  [/midfield|scan|receiv|pass|support|triangle|third|between lines|build|control|combine/i,'midfielder','ala','passing and support'],
 ];
 /** The theme an activity teaches, from its text (lesson category and title, ball tip, chat topic). */
+/** Lessons about team shape and tactics theme a coach card (football only: futsal lessons keep their futsal cards). */
+const COACH_WORDS=/formation|tactic|game ?plan|team systems?|offside trap|total football|\bcoach/i;
 export function themeFromText(text:string,futsal=false):Theme|undefined{
+ if(!futsal&&COACH_WORDS.test(text))return {roles:['coach'],label:'tactics and team shape'};
  const hit=ROLE_WORDS.find(([pattern])=>pattern.test(text));
  if(futsal&&!hit)return {roles:['goleiro','fixo','ala','pivot'],label:'futsal'};
  if(!hit)return undefined;

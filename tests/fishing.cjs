@@ -1,0 +1,182 @@
+// Fishing + market stand: catch logic, values, soft cap, Fishbook persistence, selling into the shared wallet, club facts.
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),ts=require('typescript');
+const ROOT=path.resolve(__dirname,'..');
+function environment(){
+ const data=new Map(),events=new Map(),cache=new Map();
+ const localStorage={getItem:k=>data.has(k)?data.get(k):null,setItem:(k,v)=>data.set(k,String(v)),removeItem:k=>data.delete(k)};
+ const window={addEventListener:(n,f)=>events.set(n,f),removeEventListener:(n,f)=>{if(events.get(n)===f)events.delete(n);}};
+ const context=vm.createContext({console,Set,Map,Math,Date,JSON,Promise,Object,Array,Number,String,Error,URL,localStorage,window,structuredClone,queueMicrotask});
+ const overrides=new Map();
+ function load(name){const file=path.resolve(ROOT,name);if(overrides.has(file))return overrides.get(file);if(cache.has(file))return cache.get(file);const mod={exports:{}};cache.set(file,mod.exports);
+  const code=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText;
+  vm.runInContext('(function(exports,module,require){'+code+'\n})',context)(mod.exports,mod,id=>id==='react'?{useSyncExternalStore:(_s,get)=>get()}:id.startsWith('.')?load(path.resolve(path.dirname(file),id+'.ts')):require(id));
+  cache.set(file,mod.exports);return mod.exports;}
+ return {load,data,override:(name,value)=>overrides.set(path.resolve(ROOT,name),value)};
+}
+const lcg=seed=>()=>{seed=(seed*1664525+1013904223)>>>0;return seed/2**32;};
+
+(async()=>{
+const e=environment();
+const cat=e.load('lib/town/fishing/fishCatalog.ts'),core=e.load('lib/town/fishing/fishingCore.ts');
+const {FISH,FISH_SPOTS,KEEPER_LESSONS,RARITY_LABEL,MARKET_STAND,fishById}=cat;
+
+// ---- Catalogue + football facts ----
+assert(FISH.length>=8&&FISH.length<=12,'8-12 species');
+assert.equal(new Set(FISH.map(f=>f.id)).size,FISH.length,'unique ids');
+for(const f of FISH){
+ assert(f.club&&f.club.name&&f.club.fact.length>30&&f.club.fact.length<200,`${f.id}: one-line club fact`);
+ assert(/^https:\/\//.test(f.club.source),`${f.id}: cited source`);
+ assert(['Nickname','Port city','Fan culture','Football culture'].includes(f.club.link),`${f.id}: link kind`);
+ assert(Number.isInteger(f.price)&&f.price>=2&&f.price<=12,`${f.id}: price in the jobs economy range`);
+ assert(f.size[0]>0&&f.size[1]>f.size[0],`${f.id}: size range`);
+ assert(FISH_SPOTS.some(s=>f.id in s.weights),`${f.id}: catchable somewhere`);
+}
+for(const s of FISH_SPOTS){assert(Object.keys(s.weights).every(id=>fishById(id)),`${s.id}: valid species`);assert(s.story,'island story text');}
+assert(FISH_SPOTS.length>=4&&FISH_SPOTS.length<=6,'4-6 fishing spots');
+// Kid safety: no odds or percentages anywhere the player reads.
+const shown=[...Object.values(RARITY_LABEL),...FISH.flatMap(f=>[f.name,f.club.fact]),...Object.values(KEEPER_LESSONS).flatMap(l=>[l.title,l.text]),...FISH_SPOTS.map(s=>s.story)];
+assert(shown.every(t=>!/%|percent|chance|odds/i.test(t)),'no odds shown');
+assert(/sciencedirect/.test(KEEPER_LESSONS.nibble.source),'the nibble (patience) lesson cites Bar-Eli et al.');
+// Kid safety (user, Sep 27 2026): the kid-facing fishing + market UI shows no clickable external links. Sources stay in the data
+// (asserted above) and docs; the Fishbook shows a plain-text credit only.
+for(const f of ['components/FishingHost.tsx','components/Fishbook.tsx','components/MarketStand.tsx','components/MarketCardsSection.tsx','components/FishArt.tsx']){
+ const src=fs.readFileSync(path.join(ROOT,f),'utf8');
+ assert(!/<a[\s>]/.test(src),`${f}: no anchor tags in kid-facing fishing UI`);
+ assert(!/href=/.test(src),`${f}: no hrefs`);
+ assert(!/window\.open\(|target="_blank"/.test(src),`${f}: no external navigation`);
+}
+assert(/Source: \{host\(f\.club\.source\)\}/.test(fs.readFileSync(path.join(ROOT,'components/Fishbook.tsx'),'utf8')),'Fishbook keeps a plain-text source credit');
+// Specific verified facts stay precise (see docs/fishing.md).
+assert(/8 out of 8/.test(fishById('octopus').club.fact));assert(/1989/.test(fishById('haddock').club.fact));assert(/first French club/.test(fishById('sea-bass').club.fact));assert(/Europe's biggest/.test(fishById('mackerel').club.fact));
+assert(Math.max(...FISH.map(f=>f.price))===fishById('octopus').price,'octopus is the priciest item');
+
+// ---- Catch rolls ----
+const pier=FISH_SPOTS[0];assert.equal(core.rollCatch(pier,0),Object.keys(pier.weights)[0]);
+{const rand=lcg(7),n={};for(let i=0;i<20000;i++){const id=core.rollCatch(pier,rand());n[id]=(n[id]??0)+1;}
+ assert(Object.keys(n).every(id=>id in pier.weights),'only spot species');
+ const rare=Object.entries(n).filter(([id])=>['rare','legendary'].includes(fishById(id).rarity)).reduce((a,[,v])=>a+v,0);assert(rare>0&&rare<20000*.15,'rare fish stay rare');}
+for(const f of FISH){const a=core.rollSize(f.id,0),b=core.rollSize(f.id,1),m=core.rollSize(f.id,.5);assert(a===f.size[0]&&b===f.size[1]&&m>a&&m<b);assert(cat.SHADOW_LENGTH[f.shadow]>0,`${f.id}: shadow size`);}
+assert(cat.SHADOW_LENGTH.small<cat.SHADOW_LENGTH.medium&&cat.SHADOW_LENGTH.medium<cat.SHADOW_LENGTH.large&&cat.SHADOW_LENGTH.large<cat.SHADOW_LENGTH.huge);
+assert(fishById('tuna').shadow==='huge'&&fishById('shrimp').shadow==='small','shadow size hints at the species');
+
+// ---- Geometry: every spot casts into the water; shadows start in the water ----
+const shore=e.load('lib/town/shoreline.ts');
+for(const s of FISH_SPOTS){const c=core.castPoint(s,s);assert(!shore.onIsland(c.x,c.z),`${s.id}: float lands in the water`);assert(c.distance>3&&c.distance<=30);
+ const r=lcg(3);for(let i=0;i<10;i++){const p=core.shadowSpawn(c,r);assert(!shore.onIsland(c.x+p.x,c.z+p.z)||Math.hypot(p.x,p.z)<4,`${s.id}: shadow starts in the water`);}}
+
+// ---- Live session: cast -> float -> shadow -> nibbles -> bite -> tap window ----
+const spawn={spawn:()=>({x:3,z:0})};
+const run=(s,spot,rand,until,max=40)=>{const ev=[];for(let t=0;t<max;t+=1/30){ev.push(...core.stepSession(s,spot,1/30,rand,spawn));if(until(s,ev))return ev;}return ev;};
+{const s=core.createSession(),r=lcg(21);assert.equal(core.tapSession(s),'cast');assert.equal(s.phase,'casting');
+ const ev=run(s,pier,r,x=>x.phase==='bite');
+ assert.equal(s.phase,'bite','a real bite always comes');const order=ev.filter(x=>x!=='nibble');assert.deepEqual([...order],['splash','notice','bite']);
+ const nib=ev.filter(x=>x==='nibble').length;assert(nib>=1&&nib<=4,`1-4 nibbles (${nib})`);
+ assert.equal(core.tapSession(s),'reel');assert.equal(s.phase,'reeling');assert.equal(core.tapSession(s),null,'duplicate tap cannot reel instantly');while(s.phase==='reeling'){core.stepSession(s,pier,.1,r,spawn);core.stepSession(s,pier,.1,r,spawn);core.tapSession(s);}assert.equal(s.phase,'caught');assert(s.fish&&fishById(s.fish.id),'the hooked fish is known');
+ const landedFish=s.fish;
+ for(let i=0;i<120;i++){core.stepSession(s,pier,.05,r,spawn);assert.equal(core.tapSession(s),null,'rapid reel taps cannot dismiss a catch');}
+ assert.equal(s.phase,'caught');assert.equal(s.fish,landedFish,'catch fact remains available throughout the tap burst');
+ for(let i=0;i<8;i++)core.stepSession(s,pier,.1,r,spawn);
+ assert.equal(core.tapSession(s),'cast','an intentional tap after a pause casts again');}
+// Nibble counts across seeds; legendary fish nibble faster and more.
+{const counts=new Set();for(let seed=1;seed<60;seed++){const s=core.createSession(),r=lcg(seed);core.tapSession(s);const ev=run(s,pier,r,x=>x.phase==='bite');counts.add(ev.filter(x=>x==='nibble').length);}
+ assert([...counts].every(n=>n>=1&&n<=4)&&counts.size>=3,'nibble count varies 1-4');}
+// Reaction windows: about 0.6-1 s, a little longer in easy mode.
+for(const [r,w] of Object.entries(core.BITE_WINDOW)){assert(w>=.6&&w<=1,`${r} window ${w}`);assert(w+core.EASY_BONUS<=1.4);}
+// Too late: the fish swims off, then a new shadow comes (nothing lost).
+{const s=core.createSession(),r=lcg(5);core.tapSession(s);run(s,pier,r,x=>x.phase==='bite');const w=s.window;const ev=run(s,pier,r,x=>x.phase==='escaped',5);
+ assert.equal(s.phase,'escaped');assert(ev.includes('escaped'));assert(Math.abs(s.t)<.1);
+ run(s,pier,r,x=>x.phase==='floating',5);assert.equal(s.phase,'floating');assert.equal(s.fish,null);
+ const ev2=run(s,pier,r,(x,e)=>e.includes('notice'),10);assert(ev2.includes('notice'),'another fish comes along');assert(w>0);}
+// Too early: tapping on a nibble scares the fish (no catch).
+{const s=core.createSession(),r=lcg(9);core.tapSession(s);run(s,pier,r,(x,e)=>e.includes('nibble'));assert.equal(s.phase,'nibble');
+ assert.equal(core.tapSession(s),'scared');assert.equal(s.phase,'scared');run(s,pier,r,x=>x.phase==='floating',5);assert.equal(s.phase,'floating','a new shadow will come');}
+// Tapping while nothing is biting just reels the line in.
+{const s=core.createSession(),r=lcg(2);core.tapSession(s);run(s,pier,r,x=>x.phase==='floating');assert.equal(core.tapSession(s),'reeled-in');assert.equal(s.phase,'ready');}
+// Idle: with no taps at all, the line is reeled in after a few fish (no endless cycle).
+{const s=core.createSession(),r=lcg(4);core.tapSession(s);const ev=run(s,pier,r,x=>x.phase==='ready',200);assert.equal(s.phase,'ready','idle session winds down');assert.equal(ev.filter(x=>x==='escaped').length,core.IDLE_ESCAPES);assert(ev.includes('reeled-in'));}
+
+// ---- Session store (HUD bridge): snapshot per phase, lessons, cues, landing ----
+{const sessMod=e.load('lib/town/fishing/fishingSession.ts'),cues=[],landed=[];
+ const api=sessMod.createFishingSession((id,size)=>{landed.push([id,size]);return {isNew:true,isBiggest:false,inBasket:true};},k=>cues.push(k));
+ let renders=0;api.subscribe(()=>renders++);
+ api.start('nope');assert.equal(api.takePending(),null,'unknown spot ignored');
+ api.start('west-cove');assert.equal(api.takePending(),'west-cove');api.begin('west-cove');assert(api.getView().active);
+ api.pause(true);api.tap();assert.equal(api.session.phase,'ready','drawer input cannot cast');api.pause(false);
+ api.tap();assert.equal(api.session.phase,'casting');assert(cues.includes('cast'));
+ const r=lcg(8);let steps=0;const rendersBefore=renders;
+ while(api.session.phase!=='bite'&&steps++<1500)api.handle(core.stepSession(api.session,FISH_SPOTS[4],1/30,r,spawn));
+ assert(renders-rendersBefore<20,'the HUD re-renders on phase changes only, not per frame');
+ assert(cues.includes('tick')&&cues.includes('plunge')&&cues.includes('splash'));
+ assert.equal(api.getView().hint,'Now! Reel it in!');assert(api.getView().lesson,'a keeper lesson was shown');
+ api.tap();assert.equal(api.getView().phase,'reeling');assert.equal(landed.length,0,'hooking alone does not award a fish');while(api.session.phase==='reeling'){api.handle(core.stepSession(api.session,FISH_SPOTS[4],.1,r,spawn));api.handle(core.stepSession(api.session,FISH_SPOTS[4],.1,r,spawn));api.tap();}assert.equal(api.getView().phase,'caught');assert.equal(landed.length,1,'the catch is landed once (Fishbook + basket)');assert(api.getView().caught?.isNew);
+ assert(cues.includes('fanfare'));assert.equal(api.drainTapEvents().filter(x=>x==='hooked').length,1);
+ api.stop();assert(api.takeStop());api.end();assert.equal(api.getView().active,false);assert.equal(api.getView().catches,1);}
+
+// ---- Fishbook + persistence ----
+for(const raw of [null,1,'x',{species:{nope:{count:3}},total:-4},{species:{cod:{count:'9'}}}])assert.equal(core.speciesCaught(core.sanitizeFishbook(raw)),0);
+let book=core.emptyFishbook();let rec=core.recordCatch(book,'cod',50,1000);assert(rec.isNew&&!rec.isBiggest);book=rec.book;
+rec=core.recordCatch(book,'cod',70,2000);assert(!rec.isNew&&rec.isBiggest);book=rec.book;rec=core.recordCatch(book,'cod',60,3000);assert(!rec.isBiggest);book=rec.book;
+assert.equal(JSON.stringify(book.species.cod),JSON.stringify({count:3,biggest:70,first:1000}));assert.equal(book.total,3);
+assert.equal(core.sanitizeFishbook({species:{cod:{count:1,biggest:9999,first:1}}}).species.cod.biggest,fishById('cod').size[1],'sizes are clamped');
+const merged=core.mergeFishbooks(book,core.recordCatch(core.emptyFishbook(),'tuna',100,5).book);assert.equal(core.speciesCaught(merged),2);
+
+// ---- Market: goods registry, soft cap, sell one / all, into the shared wallet ----
+const goods=e.load('lib/town/market/goods.ts'),market=e.load('lib/town/market/market.ts'),stand=e.load('lib/town/market/marketStand.ts');
+for(const f of FISH){const g=goods.goodById(f.id);assert(g&&g.kind==='fish'&&g.price===f.price&&g.lesson.includes(f.club.name),`${f.id} is a sellable good`);}
+assert(goods.PRODUCE_GOODS.length>0&&goods.GOODS.some(g=>g.kind==='produce'),'produce entries kept');
+const walletCore=e.load('lib/arcade/arcadeWalletCore.ts'),jobWallet=e.load('lib/town/jobs/jobWallet.ts');
+let saved=null,serial=0,queue=Promise.resolve();
+const wallet=walletCore.createArcadeWallet({read:()=>saved&&JSON.parse(JSON.stringify(saved)),write:v=>{saved=JSON.parse(JSON.stringify(v));},lock:fn=>{const t=queue.then(fn);queue=t.catch(()=>{});return t;},valid:new Set(),grant:()=>true,notify:()=>{},now:()=>1700000000000+serial,id:()=>`id-${++serial}`,random:()=>0});
+const bridge=jobWallet.createJobWallet({creditRun:(id,game,target,reason)=>wallet.creditRun(id,game,target,reason),balance:()=>wallet.load().balance,caps:walletCore.ARCADE_COIN_CAPS,read:()=>({version:1,day:'',today:{},lifetime:{},earned:0,best:{},starter:true}),write:(u,n)=>u({version:1,day:'',today:{},lifetime:{},earned:0,best:{},starter:true})});
+const day=market.localMarketDay();
+const store=e.data;store.set(market.MARKET_STORAGE_KEY,JSON.stringify({version:1,day,basket:{mackerel:3,octopus:1,orange:2},soldToday:0,sales:0,lifetime:0}));
+const live=market.createMarket({read:()=>JSON.parse(store.get(market.MARKET_STORAGE_KEY)??'null'),write:v=>store.set(market.MARKET_STORAGE_KEY,JSON.stringify(v)),credit:(id,a,r)=>bridge.credit(id,a,r)});
+const ports={read:()=>JSON.parse(store.get(market.MARKET_STORAGE_KEY)??'null'),write:v=>store.set(market.MARKET_STORAGE_KEY,JSON.stringify(v)),credit:(id,a,r)=>bridge.credit(id,a,r),refresh:()=>live.refresh()};
+assert.equal(stand.unitPrice(live.read(),'mackerel'),4);
+const one=await stand.sellOneGood('mackerel',ports);assert(one.ok&&one.coins===4&&one.credited===4,'sell one pays its price');
+assert.equal(live.read().basket.mackerel,2);assert.equal(wallet.load().balance,4);
+assert.equal((await stand.sellOneGood('cod',ports)).ok,false,'cannot sell what you do not have');
+const all=await live.sell('fish');assert(all.ok&&all.coins===4*2+12&&all.credited===20);assert.equal(wallet.load().balance,24);
+assert.equal(stand.basketLines(live.read(),'fish').length,0);assert.equal(stand.basketLines(live.read(),'produce')[0].count,2,'produce stays for its own section');
+// Soft cap: after MARKET_FULL_PRICE_COINS of sales today, prices halve (min 1) — shared by fish and produce.
+store.set(market.MARKET_STORAGE_KEY,JSON.stringify({...JSON.parse(store.get(market.MARKET_STORAGE_KEY)),basket:{octopus:2,shrimp:1},soldToday:market.MARKET_FULL_PRICE_COINS}));live.refresh();
+assert.equal(stand.unitPrice(live.read(),'octopus'),6);assert.equal(stand.allowanceUsed(live.read()),1);
+const half=await stand.sellOneGood('octopus',ports);assert(half.ok&&half.coins===6&&half.halfPrice);
+const plan=stand.planSellOne({version:1,day,basket:{shrimp:1},soldToday:39,sales:0,lifetime:0},'shrimp');assert.equal(plan.coins,3,'the item that crosses the cap is still full price');
+// Idempotent wallet runs: replaying a sale id never pays twice.
+const before=wallet.load().balance;assert.equal(await bridge.credit(`market:${day}:1`,4,'replay'),0);assert.equal(wallet.load().balance,before);
+
+// ---- Browser store: landing a fish logs it and fills the shared basket ----
+e.override('lib/town/jobs/islandWallet.ts',{islandMarket:live});
+const fishingStore=e.load('lib/town/fishing/fishingStore.ts');
+const landed=fishingStore.landFish('herring',25,9000);assert(landed.isNew&&landed.inBasket);
+assert.equal(JSON.parse(store.get(core.FISHBOOK_STORAGE_KEY)).species.herring.count,1,'Fishbook persists in localStorage');
+assert.equal(live.read().basket.herring,1);
+store.set(market.MARKET_STORAGE_KEY,JSON.stringify({version:1,day,basket:{shrimp:market.BASKET_LIMIT},soldToday:0,sales:9,lifetime:0}));live.refresh();
+const full=fishingStore.landFish('herring',30,9100);assert(!full.inBasket&&full.isBiggest,'full basket: logged, swims free');
+assert.equal(JSON.parse(store.get(core.FISHBOOK_STORAGE_KEY)).species.herring.count,2);
+
+// ---- Portrait framing: head and float both clear the top HUD and bottom controls ----
+{const T=require('three'),{createFishingCamera}=e.load('lib/town/fishing/fishingCamera.ts');
+ for(const spot of FISH_SPOTS)for(const [width,height] of [[390,844],[375,667]]){
+  const stand={x:spot.x,z:spot.z},cast=core.castPoint(spot,stand),camera=new T.PerspectiveCamera(40,width/height,.1,1000),rig=createFishingCamera();rig.begin(stand,cast.dir,cast.distance,undefined,spot.camera);rig.apply(camera,.05,true);camera.updateMatrixWorld();
+  const float=new T.Vector3(cast.x,-.35,cast.z).project(camera),head=new T.Vector3(stand.x,1.6,stand.z).project(camera);
+  assert(float.y>-.6&&float.y<.6,`${spot.id} float stays between HUD and controls at ${width}x${height}`);assert(Math.abs(float.x)<.8&&head.y<.65&&head.y>-.1,'angler and float are framed');
+ }}
+
+// ---- Heat: world props are merged/instanced and idle work is bounded ----
+const world=fs.readFileSync(path.join(ROOT,'lib/town/fishing/fishingWorld.ts'),'utf8');
+assert(/mergeGeometries\(all\)/.test(world)&&/InstancedMesh/.test(world),'posts merged, floats instanced');
+assert(!/requestAnimationFrame|setInterval/.test(world),'world never schedules its own frames');
+const visualsSrc=fs.readFileSync(path.join(ROOT,'lib/town/fishing/fishingVisuals.ts'),'utf8'),hud=fs.readFileSync(path.join(ROOT,'components/FishingHost.tsx'),'utf8');
+assert(!/requestAnimationFrame|setInterval|setTimeout/.test(visualsSrc),'visuals never schedule their own frames');assert(!/requestAnimationFrame|setInterval/.test(hud),'no polling or loops in the HUD');
+assert(!/stepSession|tapSession|rollCatch|landFish|islandMarket/.test(visualsSrc),'the visuals module holds no game logic');
+assert(/visuals\.dispose\(\);visuals=null/.test(world)&&/nearAnySpot\(c\.x,c\.z,80\)/.test(world),'visuals are disposed once the player is far from every spot');
+assert(!fs.existsSync(path.join(ROOT,'components/FishingPanel.tsx')),'no fishing modal: the flow is live in the island');
+const hostCss=fs.readFileSync(path.join(ROOT,'components/FishingHost.module.css'),'utf8');assert(!/backdrop-filter/.test(hostCss),'no blur over the island canvas');
+assert.equal(MARKET_STAND.z,35,'one stand: the CITRUS & FRUIT stall the jobs sale uses');
+
+for(const hz of [30,60,120]){const s=core.createSession();s.fish={id:'cod',size:40};s.phase='bite';core.tapSession(s);for(let i=0;i<hz*9;i++)core.stepSession(s,pier,1/hz,()=>.5,spawn);assert.notEqual(s.phase,'caught','idle reeling never awards a fish');assert(['escaped','floating'].includes(s.phase));}
+
+console.log(`FISHING_PASS: ${FISH.length} species with cited club facts, ${FISH_SPOTS.length} spots, live bite timing (nibbles, 0.7-1 s window, early = scared, late = escaped, idle reels in), Fishbook persists, sell one/all + soft cap pay the shared wallet`);
+})().catch(err=>{console.error(err);process.exit(1);});

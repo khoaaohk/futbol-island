@@ -1,0 +1,458 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Johannesburg, 2009",
+   "text": "Johannesburg, the 2009 Confederations Cup final. Brazil against the USA. The USA led two-nil, but Brazil came back to two-two! Six minutes left. Elano swings in a corner... Captain L\u00facio heads it in! Brazil lead three-two!",
+   "src": "/plays/narration/lucio-header-2009/1.m4a",
+   "seconds": 17.7,
+   "words": [
+    {
+     "w": "Johannesburg",
+     "at": 0.4
+    },
+    {
+     "w": "the",
+     "at": 1.163
+    },
+    {
+     "w": "2009",
+     "at": 1.262
+    },
+    {
+     "w": "Confederations",
+     "at": 2.225
+    },
+    {
+     "w": "Cup",
+     "at": 3.075
+    },
+    {
+     "w": "final",
+     "at": 3.325
+    },
+    {
+     "w": "Brazil",
+     "at": 4.188
+    },
+    {
+     "w": "against",
+     "at": 4.65
+    },
+    {
+     "w": "the",
+     "at": 5.05
+    },
+    {
+     "w": "USA",
+     "at": 5.15
+    },
+    {
+     "w": "The",
+     "at": 6.388
+    },
+    {
+     "w": "USA",
+     "at": 6.5
+    },
+    {
+     "w": "led",
+     "at": 7.075
+    },
+    {
+     "w": "two-nil",
+     "at": 7.312
+    },
+    {
+     "w": "but",
+     "at": 7.85
+    },
+    {
+     "w": "Brazil",
+     "at": 8.0
+    },
+    {
+     "w": "came",
+     "at": 8.45
+    },
+    {
+     "w": "back",
+     "at": 8.7
+    },
+    {
+     "w": "to",
+     "at": 8.975
+    },
+    {
+     "w": "two-two",
+     "at": 9.113
+    },
+    {
+     "w": "Six",
+     "at": 10.037
+    },
+    {
+     "w": "minutes",
+     "at": 10.375
+    },
+    {
+     "w": "left",
+     "at": 10.7
+    },
+    {
+     "w": "Elano",
+     "at": 11.488
+    },
+    {
+     "w": "swings",
+     "at": 12.037
+    },
+    {
+     "w": "in",
+     "at": 12.562
+    },
+    {
+     "w": "a",
+     "at": 12.637
+    },
+    {
+     "w": "corner",
+     "at": 12.7
+    },
+    {
+     "w": "Captain",
+     "at": 13.625
+    },
+    {
+     "w": "L\u00facio",
+     "at": 14.025
+    },
+    {
+     "w": "heads",
+     "at": 14.475
+    },
+    {
+     "w": "it",
+     "at": 14.713
+    },
+    {
+     "w": "in",
+     "at": 14.8
+    },
+    {
+     "w": "Brazil",
+     "at": 15.463
+    },
+    {
+     "w": "lead",
+     "at": 15.9
+    },
+    {
+     "w": "three-two",
+     "at": 16.188
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. L\u00facio starts away from the goal. He escapes his marker and runs to the far post. Nobody is with him!",
+   "src": "/plays/narration/lucio-header-2009/2.m4a",
+   "seconds": 9.1,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.188
+    },
+    {
+     "w": "L\u00facio",
+     "at": 2.25
+    },
+    {
+     "w": "starts",
+     "at": 2.725
+    },
+    {
+     "w": "away",
+     "at": 3.038
+    },
+    {
+     "w": "from",
+     "at": 3.3
+    },
+    {
+     "w": "the",
+     "at": 3.438
+    },
+    {
+     "w": "goal",
+     "at": 3.525
+    },
+    {
+     "w": "He",
+     "at": 4.2
+    },
+    {
+     "w": "escapes",
+     "at": 4.35
+    },
+    {
+     "w": "his",
+     "at": 4.737
+    },
+    {
+     "w": "marker",
+     "at": 4.9
+    },
+    {
+     "w": "and",
+     "at": 5.3
+    },
+    {
+     "w": "runs",
+     "at": 5.438
+    },
+    {
+     "w": "to",
+     "at": 5.825
+    },
+    {
+     "w": "the",
+     "at": 5.912
+    },
+    {
+     "w": "far",
+     "at": 6.013
+    },
+    {
+     "w": "post",
+     "at": 6.287
+    },
+    {
+     "w": "Nobody",
+     "at": 7.1
+    },
+    {
+     "w": "is",
+     "at": 7.525
+    },
+    {
+     "w": "with",
+     "at": 7.675
+    },
+    {
+     "w": "him",
+     "at": 7.862
+    }
+   ]
+  },
+  {
+   "label": "In off the post",
+   "text": "From beside the goal: he heads it down hard. It goes in off the post! L\u00facio sprints to the corner flag to hug Elano.",
+   "src": "/plays/narration/lucio-header-2009/3.m4a",
+   "seconds": 8.7,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "beside",
+     "at": 0.5
+    },
+    {
+     "w": "the",
+     "at": 0.887
+    },
+    {
+     "w": "goal",
+     "at": 0.975
+    },
+    {
+     "w": "he",
+     "at": 1.625
+    },
+    {
+     "w": "heads",
+     "at": 1.775
+    },
+    {
+     "w": "it",
+     "at": 2.013
+    },
+    {
+     "w": "down",
+     "at": 2.1
+    },
+    {
+     "w": "hard",
+     "at": 2.4
+    },
+    {
+     "w": "It",
+     "at": 3.225
+    },
+    {
+     "w": "goes",
+     "at": 3.375
+    },
+    {
+     "w": "in",
+     "at": 3.612
+    },
+    {
+     "w": "off",
+     "at": 3.712
+    },
+    {
+     "w": "the",
+     "at": 3.888
+    },
+    {
+     "w": "post",
+     "at": 3.987
+    },
+    {
+     "w": "L\u00facio",
+     "at": 4.925
+    },
+    {
+     "w": "sprints",
+     "at": 5.438
+    },
+    {
+     "w": "to",
+     "at": 5.85
+    },
+    {
+     "w": "the",
+     "at": 5.938
+    },
+    {
+     "w": "corner",
+     "at": 6.025
+    },
+    {
+     "w": "flag",
+     "at": 6.438
+    },
+    {
+     "w": "to",
+     "at": 6.85
+    },
+    {
+     "w": "hug",
+     "at": 6.975
+    },
+    {
+     "w": "Elano",
+     "at": 7.2
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "Defenders can score too! Attack the far post, get free of your marker, and head the ball down hard, toward the corner.",
+   "src": "/plays/narration/lucio-header-2009/4.m4a",
+   "seconds": 8.1,
+   "words": [
+    {
+     "w": "Defenders",
+     "at": 0.35
+    },
+    {
+     "w": "can",
+     "at": 0.925
+    },
+    {
+     "w": "score",
+     "at": 1.113
+    },
+    {
+     "w": "too",
+     "at": 1.438
+    },
+    {
+     "w": "Attack",
+     "at": 2.263
+    },
+    {
+     "w": "the",
+     "at": 2.625
+    },
+    {
+     "w": "far",
+     "at": 2.737
+    },
+    {
+     "w": "post",
+     "at": 3.013
+    },
+    {
+     "w": "get",
+     "at": 3.625
+    },
+    {
+     "w": "free",
+     "at": 3.837
+    },
+    {
+     "w": "of",
+     "at": 4.062
+    },
+    {
+     "w": "your",
+     "at": 4.138
+    },
+    {
+     "w": "marker",
+     "at": 4.25
+    },
+    {
+     "w": "and",
+     "at": 4.8
+    },
+    {
+     "w": "head",
+     "at": 4.925
+    },
+    {
+     "w": "the",
+     "at": 5.112
+    },
+    {
+     "w": "ball",
+     "at": 5.2
+    },
+    {
+     "w": "down",
+     "at": 5.5
+    },
+    {
+     "w": "hard",
+     "at": 5.775
+    },
+    {
+     "w": "toward",
+     "at": 6.35
+    },
+    {
+     "w": "the",
+     "at": 6.612
+    },
+    {
+     "w": "corner",
+     "at": 6.7
+    }
+   ]
+  }
+ ]
+}

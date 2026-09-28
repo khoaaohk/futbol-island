@@ -35,15 +35,15 @@
   {
    "q": "Blue breaks past your screen. Put these moments in order, first to last.",
    "options": [
-    "Left screen blocks the near outlet",
+    "Left screen blocks outlet while we attack",
     "Blue wins a loose inside pass",
     "Blue passes around the screen wide",
     "Midfielder recovers inside the delaying defender"
    ],
    "correct": 0,
-   "explain": "Right. The screen sets up first, then Blue wins the ball, goes around it, and you recover.",
+   "explain": "Right. The screen is set while we attack, Blue wins the ball, goes around it, and you recover.",
    "choiceExplanations": [
-    "Right. The screen sets up first, then Blue wins the ball, goes around it, and you recover.",
+    "Right. The screen is set while we attack, Blue wins the ball, goes around it, and you recover.",
     "Blue can only win that pass after the screen is already set during your attack.",
     "Blue goes around the screen only after winning the ball in the middle.",
     "Recovering comes last, once the pass has already gone beyond your screen."

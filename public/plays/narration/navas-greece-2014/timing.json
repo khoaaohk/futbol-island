@@ -1,0 +1,510 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The save, live",
+   "text": "Recife, the 2014 World Cup. Costa Rica against Greece, and it goes to penalties! Costa Rica lead four-three. Theofanis Gekas steps up. Keylor Navas bounces on his line... Gekas shoots. Navas flies to his right. Saved!",
+   "src": "/plays/narration/navas-greece-2014/1.m4a",
+   "seconds": 17.5,
+   "words": [
+    {
+     "w": "Recife",
+     "at": 0.375
+    },
+    {
+     "w": "the",
+     "at": 0.875
+    },
+    {
+     "w": "2014",
+     "at": 0.975
+    },
+    {
+     "w": "World",
+     "at": 1.8
+    },
+    {
+     "w": "Cup",
+     "at": 2.163
+    },
+    {
+     "w": "Costa",
+     "at": 2.987
+    },
+    {
+     "w": "Rica",
+     "at": 3.4
+    },
+    {
+     "w": "against",
+     "at": 3.725
+    },
+    {
+     "w": "Greece",
+     "at": 4.112
+    },
+    {
+     "w": "and",
+     "at": 4.575
+    },
+    {
+     "w": "it",
+     "at": 4.688
+    },
+    {
+     "w": "goes",
+     "at": 4.775
+    },
+    {
+     "w": "to",
+     "at": 5.075
+    },
+    {
+     "w": "penalties",
+     "at": 5.175
+    },
+    {
+     "w": "Costa",
+     "at": 6.312
+    },
+    {
+     "w": "Rica",
+     "at": 6.75
+    },
+    {
+     "w": "lead",
+     "at": 7.075
+    },
+    {
+     "w": "four-three",
+     "at": 7.312
+    },
+    {
+     "w": "Theofanis",
+     "at": 8.238
+    },
+    {
+     "w": "Gekas",
+     "at": 8.85
+    },
+    {
+     "w": "steps",
+     "at": 9.325
+    },
+    {
+     "w": "up",
+     "at": 9.675
+    },
+    {
+     "w": "Keylor",
+     "at": 10.287
+    },
+    {
+     "w": "Navas",
+     "at": 10.75
+    },
+    {
+     "w": "bounces",
+     "at": 11.137
+    },
+    {
+     "w": "on",
+     "at": 11.588
+    },
+    {
+     "w": "his",
+     "at": 11.713
+    },
+    {
+     "w": "line",
+     "at": 11.875
+    },
+    {
+     "w": "Gekas",
+     "at": 12.713
+    },
+    {
+     "w": "shoots",
+     "at": 13.287
+    },
+    {
+     "w": "Navas",
+     "at": 14.05
+    },
+    {
+     "w": "flies",
+     "at": 14.562
+    },
+    {
+     "w": "to",
+     "at": 14.975
+    },
+    {
+     "w": "his",
+     "at": 15.062
+    },
+    {
+     "w": "right",
+     "at": 15.225
+    },
+    {
+     "w": "Saved",
+     "at": 16.012
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch it again, slowly. Navas stays on his toes. He pushes off hard, and reaches across with his left hand. Strong hand! The ball bounces away.",
+   "src": "/plays/narration/navas-greece-2014/2.m4a",
+   "seconds": 10.8,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "it",
+     "at": 0.662
+    },
+    {
+     "w": "again",
+     "at": 0.738
+    },
+    {
+     "w": "slowly",
+     "at": 1.188
+    },
+    {
+     "w": "Navas",
+     "at": 2.15
+    },
+    {
+     "w": "stays",
+     "at": 2.6
+    },
+    {
+     "w": "on",
+     "at": 2.938
+    },
+    {
+     "w": "his",
+     "at": 3.038
+    },
+    {
+     "w": "toes",
+     "at": 3.2
+    },
+    {
+     "w": "He",
+     "at": 4.025
+    },
+    {
+     "w": "pushes",
+     "at": 4.15
+    },
+    {
+     "w": "off",
+     "at": 4.475
+    },
+    {
+     "w": "hard",
+     "at": 4.725
+    },
+    {
+     "w": "and",
+     "at": 5.088
+    },
+    {
+     "w": "reaches",
+     "at": 5.2
+    },
+    {
+     "w": "across",
+     "at": 5.525
+    },
+    {
+     "w": "with",
+     "at": 5.912
+    },
+    {
+     "w": "his",
+     "at": 6.013
+    },
+    {
+     "w": "left",
+     "at": 6.175
+    },
+    {
+     "w": "hand",
+     "at": 6.425
+    },
+    {
+     "w": "Strong",
+     "at": 7.263
+    },
+    {
+     "w": "hand",
+     "at": 7.75
+    },
+    {
+     "w": "The",
+     "at": 8.45
+    },
+    {
+     "w": "ball",
+     "at": 8.55
+    },
+    {
+     "w": "bounces",
+     "at": 8.85
+    },
+    {
+     "w": "away",
+     "at": 9.325
+    }
+   ]
+  },
+  {
+   "label": "From behind the goal",
+   "text": "From behind the goal: what a stop! Navas jumps up and roars. Next kick, Costa Rica score, and they reach the quarter-finals for the first time!",
+   "src": "/plays/narration/navas-greece-2014/3.m4a",
+   "seconds": 10.0,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "behind",
+     "at": 0.487
+    },
+    {
+     "w": "the",
+     "at": 0.863
+    },
+    {
+     "w": "goal",
+     "at": 0.95
+    },
+    {
+     "w": "what",
+     "at": 1.65
+    },
+    {
+     "w": "a",
+     "at": 1.788
+    },
+    {
+     "w": "stop",
+     "at": 1.863
+    },
+    {
+     "w": "Navas",
+     "at": 2.688
+    },
+    {
+     "w": "jumps",
+     "at": 3.163
+    },
+    {
+     "w": "up",
+     "at": 3.487
+    },
+    {
+     "w": "and",
+     "at": 3.663
+    },
+    {
+     "w": "roars",
+     "at": 3.788
+    },
+    {
+     "w": "Next",
+     "at": 4.787
+    },
+    {
+     "w": "kick",
+     "at": 5.125
+    },
+    {
+     "w": "Costa",
+     "at": 5.525
+    },
+    {
+     "w": "Rica",
+     "at": 5.95
+    },
+    {
+     "w": "score",
+     "at": 6.287
+    },
+    {
+     "w": "and",
+     "at": 6.825
+    },
+    {
+     "w": "they",
+     "at": 6.938
+    },
+    {
+     "w": "reach",
+     "at": 7.075
+    },
+    {
+     "w": "the",
+     "at": 7.325
+    },
+    {
+     "w": "quarter-finals",
+     "at": 7.425
+    },
+    {
+     "w": "for",
+     "at": 8.15
+    },
+    {
+     "w": "the",
+     "at": 8.262
+    },
+    {
+     "w": "first",
+     "at": 8.35
+    },
+    {
+     "w": "time",
+     "at": 8.625
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "The secret? Keepers, stay on your toes. Watch the ball. Push off hard with your legs, and make a strong hand. Even a hard shot can't beat a strong hand!",
+   "src": "/plays/narration/navas-greece-2014/4.m4a",
+   "seconds": 10.7,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "secret",
+     "at": 0.463
+    },
+    {
+     "w": "Keepers",
+     "at": 1.163
+    },
+    {
+     "w": "stay",
+     "at": 1.75
+    },
+    {
+     "w": "on",
+     "at": 2.013
+    },
+    {
+     "w": "your",
+     "at": 2.112
+    },
+    {
+     "w": "toes",
+     "at": 2.225
+    },
+    {
+     "w": "Watch",
+     "at": 3.038
+    },
+    {
+     "w": "the",
+     "at": 3.375
+    },
+    {
+     "w": "ball",
+     "at": 3.475
+    },
+    {
+     "w": "Push",
+     "at": 4.338
+    },
+    {
+     "w": "off",
+     "at": 4.588
+    },
+    {
+     "w": "hard",
+     "at": 4.8
+    },
+    {
+     "w": "with",
+     "at": 5.062
+    },
+    {
+     "w": "your",
+     "at": 5.188
+    },
+    {
+     "w": "legs",
+     "at": 5.325
+    },
+    {
+     "w": "and",
+     "at": 5.787
+    },
+    {
+     "w": "make",
+     "at": 5.888
+    },
+    {
+     "w": "a",
+     "at": 6.062
+    },
+    {
+     "w": "strong",
+     "at": 6.125
+    },
+    {
+     "w": "hand",
+     "at": 6.525
+    },
+    {
+     "w": "Even",
+     "at": 7.438
+    },
+    {
+     "w": "a",
+     "at": 7.7
+    },
+    {
+     "w": "hard",
+     "at": 7.775
+    },
+    {
+     "w": "shot",
+     "at": 8.062
+    },
+    {
+     "w": "can't",
+     "at": 8.4
+    },
+    {
+     "w": "beat",
+     "at": 8.65
+    },
+    {
+     "w": "a",
+     "at": 8.838
+    },
+    {
+     "w": "strong",
+     "at": 8.9
+    },
+    {
+     "w": "hand",
+     "at": 9.275
+    }
+   ]
+  }
+ ]
+}

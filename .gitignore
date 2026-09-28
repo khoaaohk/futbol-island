@@ -16,3 +16,4 @@ __pycache__/
 # Playwright device suite output (docs/testing-devices.md)
 /test-results/
 /playwright-report/
+/shots/

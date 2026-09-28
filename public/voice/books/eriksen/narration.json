@@ -1,0 +1,289 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "parken": {
+      "src": "/voice/books/eriksen/parken.m4a?v=coach-bella-1",
+      "duration": 38.8,
+      "scriptSha256": "c249f6b81247c2bc3e12a8c139c66a9926aa83be70385f4d55e60206cd8584de",
+      "cues": [
+        {
+          "text": "A sudden, scary moment",
+          "start": 0.0,
+          "duration": 2.3
+        },
+        {
+          "text": "On 12 June 2021, Denmark played Finland at the European Championship, in Copenhagen.",
+          "start": 2.3,
+          "duration": 7.65
+        },
+        {
+          "text": "Just before half-time, Christian Eriksen was about to receive a throw-in when he suddenly fell to the ground.",
+          "start": 9.95,
+          "duration": 7.275
+        },
+        {
+          "text": "Wave the help flag.",
+          "start": 17.225,
+          "duration": 2.125
+        },
+        {
+          "text": "His heart had stopped beating properly.",
+          "start": 19.35,
+          "duration": 2.825
+        },
+        {
+          "text": "This is called a cardiac arrest, and it is very rare.",
+          "start": 22.175,
+          "duration": 4.025
+        },
+        {
+          "text": "Straight away, his captain, Simon Kj\u00e6r, turned him onto his side, and the medical team rushed onto the pitch.",
+          "start": 26.2,
+          "duration": 7.8
+        },
+        {
+          "text": "In an emergency, stay calm and get a grown-up to help straight away.",
+          "start": 34.0,
+          "duration": 4.775
+        }
+      ]
+    },
+    "circle": {
+      "src": "/voice/books/eriksen/circle.m4a?v=coach-bella-1",
+      "duration": 34.2,
+      "scriptSha256": "1a727c611c38d524b209bda1a75d0d932c5bde8ba2761e2e4be0501a05c91c74",
+      "cues": [
+        {
+          "text": "A circle of friends",
+          "start": 0.0,
+          "duration": 2.025
+        },
+        {
+          "text": "While the doctors worked, his Denmark teammates stood together in a circle around him.",
+          "start": 2.025,
+          "duration": 5.75
+        },
+        {
+          "text": "They made a wall with their backs, so that cameras could not see, and he had some privacy.",
+          "start": 7.775,
+          "duration": 5.9
+        },
+        {
+          "text": "Close the circle.",
+          "start": 13.675,
+          "duration": 1.925
+        },
+        {
+          "text": "Captain Simon Kj\u00e6r also comforted Eriksen\u2019s partner, and helped his teammates support each other.",
+          "start": 15.6,
+          "duration": 7.0
+        },
+        {
+          "text": "On the worst day, the team did not leave their friend alone.",
+          "start": 22.6,
+          "duration": 4.3
+        },
+        {
+          "text": "They stood by him.",
+          "start": 26.9,
+          "duration": 1.95
+        },
+        {
+          "text": "Good friends look after each other. Standing together is a kind of kindness.",
+          "start": 28.85,
+          "duration": 5.3
+        }
+      ]
+    },
+    "helpers": {
+      "src": "/voice/books/eriksen/helpers.m4a?v=coach-bella-1",
+      "duration": 37.7,
+      "scriptSha256": "65abce3874dccbddd01672d9de4e74ccf20b8b72e21bc8a823d2c2b85a8c0d4a",
+      "cues": [
+        {
+          "text": "Helpers who knew what to do",
+          "start": 0.0,
+          "duration": 2.35
+        },
+        {
+          "text": "The medical team gave him CPR, which means pressing on the chest to keep blood moving.",
+          "start": 2.35,
+          "duration": 6.275
+        },
+        {
+          "text": "They also used a defibrillator, a machine that can help a heart find its beat again.",
+          "start": 8.625,
+          "duration": 5.65
+        },
+        {
+          "text": "Their quick work saved his life.",
+          "start": 14.275,
+          "duration": 2.5
+        },
+        {
+          "text": "Turn over the helper cards.",
+          "start": 16.775,
+          "duration": 2.35
+        },
+        {
+          "text": "About an hour later, officials said he was stable and awake.",
+          "start": 19.125,
+          "duration": 4.225
+        },
+        {
+          "text": "Later in 2021, UEFA gave its President\u2019s Award to Kj\u00e6r and to Denmark\u2019s medical staff, for their heroic help.",
+          "start": 23.35,
+          "duration": 9.0
+        },
+        {
+          "text": "Helpers are heroes too. Learning first aid can help save a life one day.",
+          "start": 32.35,
+          "duration": 5.35
+        }
+      ]
+    },
+    "icd": {
+      "src": "/voice/books/eriksen/icd.m4a?v=coach-bella-1",
+      "duration": 37.2,
+      "scriptSha256": "e4b71c730e5c58ce14a1f2cd92bb0381b8f69f2b350b1766cd04c6ceab018983",
+      "cues": [
+        {
+          "text": "A tiny helper inside",
+          "start": 0.0,
+          "duration": 2.275
+        },
+        {
+          "text": "In hospital, doctors fitted Eriksen with an ICD.",
+          "start": 2.275,
+          "duration": 4.35
+        },
+        {
+          "text": "It is a small device, placed inside the body, that watches the heartbeat and can help the heart if its rhythm goes wrong.",
+          "start": 6.625,
+          "duration": 7.975
+        },
+        {
+          "text": "On 18 June, he left hospital.",
+          "start": 14.6,
+          "duration": 3.125
+        },
+        {
+          "text": "Open the door home.",
+          "start": 17.725,
+          "duration": 2.025
+        },
+        {
+          "text": "He visited his teammates, then went home to his family.",
+          "start": 19.75,
+          "duration": 4.0
+        },
+        {
+          "text": "The Danish team dedicated their next win, 4\u20131 against Russia, to him, and went all the way to the semi-finals.",
+          "start": 23.75,
+          "duration": 7.85
+        },
+        {
+          "text": "After something scary, it is okay to rest and be close to the people you love.",
+          "start": 31.6,
+          "duration": 5.525
+        }
+      ]
+    },
+    "inter": {
+      "src": "/voice/books/eriksen/inter.m4a?v=coach-bella-1",
+      "duration": 35.5,
+      "scriptSha256": "5eb61f0f5d3a96dbf6c084661c6b505e7d3574bce95c1a50dab35bdfd978a897",
+      "cues": [
+        {
+          "text": "A new way back",
+          "start": 0.0,
+          "duration": 1.825
+        },
+        {
+          "text": "There was another problem.",
+          "start": 1.825,
+          "duration": 2.125
+        },
+        {
+          "text": "In Italy, where Eriksen played for Inter Milan, the rules did not allow players with an ICD to play.",
+          "start": 3.95,
+          "duration": 7.375
+        },
+        {
+          "text": "In December 2021, Inter ended his contract.",
+          "start": 11.325,
+          "duration": 4.525
+        },
+        {
+          "text": "He had to find a new way back.",
+          "start": 15.85,
+          "duration": 2.4
+        },
+        {
+          "text": "Open the gate to a new club.",
+          "start": 18.25,
+          "duration": 2.45
+        },
+        {
+          "text": "He trained on his own at OB, his old youth club in Denmark.",
+          "start": 20.7,
+          "duration": 4.275
+        },
+        {
+          "text": "Then he signed for Brentford in England, and played again eight months after his cardiac arrest.",
+          "start": 24.975,
+          "duration": 6.325
+        },
+        {
+          "text": "When one door closes, you can look for another way forward.",
+          "start": 31.3,
+          "duration": 4.175
+        }
+      ]
+    },
+    "back": {
+      "src": "/voice/books/eriksen/back.m4a?v=coach-bella-1",
+      "duration": 36.7,
+      "scriptSha256": "be9b82dabda42f915856992bc328813f89f2675cfa327aa797a8016e5cfe9ea7",
+      "cues": [
+        {
+          "text": "Back with his team",
+          "start": 0.0,
+          "duration": 1.95
+        },
+        {
+          "text": "In March 2022, Eriksen played for Denmark again, and scored two minutes after coming on.",
+          "start": 1.95,
+          "duration": 6.925
+        },
+        {
+          "text": "That summer he joined Manchester United, where he won the League Cup and the FA Cup.",
+          "start": 8.875,
+          "duration": 5.725
+        },
+        {
+          "text": "Flip the counter.",
+          "start": 14.6,
+          "duration": 1.85
+        },
+        {
+          "text": "At Euro 2024, he scored in Denmark\u2019s first match, and he became the most-capped player in Denmark\u2019s history, with 133 games.",
+          "start": 16.45,
+          "duration": 10.525
+        },
+        {
+          "text": "He had come back, with a whole team of helpers behind him.",
+          "start": 26.975,
+          "duration": 4.175
+        },
+        {
+          "text": "Nobody gets through hard times alone. Remember to thank the people who help you.",
+          "start": 31.15,
+          "duration": 5.525
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,304 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "rosengard": {
+      "src": "/voice/books/ibrahimovic/rosengard.m4a?v=coach-bella-1",
+      "duration": 41.7,
+      "scriptSha256": "ccc2cb02ed3f07bf74d39a75d0e911397367fd603af4b2455a690cc1d618fda8",
+      "cues": [
+        {
+          "text": "A family from far away",
+          "start": 0.0,
+          "duration": 2.45
+        },
+        {
+          "text": "Zlatan Ibrahimovi\u0107 was born in 1981 in Malm\u00f6, Sweden.",
+          "start": 2.45,
+          "duration": 5.325
+        },
+        {
+          "text": "His father was a Bosniak, and his mother was a Croat.",
+          "start": 7.775,
+          "duration": 4.175
+        },
+        {
+          "text": "Both had moved to Sweden, where they met.",
+          "start": 11.95,
+          "duration": 3.05
+        },
+        {
+          "text": "Zlatan grew up in Roseng\u00e5rd, a part of Malm\u00f6 where many families had come from other countries.",
+          "start": 15.0,
+          "duration": 6.75
+        },
+        {
+          "text": "At six, he got a pair of football boots and began to play.",
+          "start": 21.75,
+          "duration": 4.35
+        },
+        {
+          "text": "Open the club door.",
+          "start": 26.1,
+          "duration": 1.975
+        },
+        {
+          "text": "One of his first clubs, FBK Balkan, was started by people who had moved from Yugoslavia.",
+          "start": 28.075,
+          "duration": 6.875
+        },
+        {
+          "text": "Coming from more than one place is not a problem. Your family\u2019s story is part of what makes you, you.",
+          "start": 34.95,
+          "duration": 6.725
+        }
+      ]
+    },
+    "dinner": {
+      "src": "/voice/books/ibrahimovic/dinner.m4a?v=coach-bella-1",
+      "duration": 37.3,
+      "scriptSha256": "fe50eaa2ad69fe1f16185c7f418650af7ded142297d0c1d1eebcc760802eb20b",
+      "cues": [
+        {
+          "text": "Running home for dinner",
+          "start": 0.0,
+          "duration": 2.15
+        },
+        {
+          "text": "Zlatan\u2019s parents were divorced, and his mum had five children to look after.",
+          "start": 2.15,
+          "duration": 5.525
+        },
+        {
+          "text": "When he was nine, Zlatan went to live with his father.",
+          "start": 7.675,
+          "duration": 3.925
+        },
+        {
+          "text": "There often was not much food at his dad\u2019s home, and Zlatan often went hungry.",
+          "start": 11.6,
+          "duration": 5.65
+        },
+        {
+          "text": "Run along the path to Mum\u2019s.",
+          "start": 17.25,
+          "duration": 2.675
+        },
+        {
+          "text": "When he was hungry, Zlatan would run to his mum\u2019s home for dinner.",
+          "start": 19.925,
+          "duration": 4.675
+        },
+        {
+          "text": "Many children would find that very hard.",
+          "start": 24.6,
+          "duration": 3.025
+        },
+        {
+          "text": "When home is hard, it is never a child\u2019s fault.",
+          "start": 27.625,
+          "duration": 3.475
+        },
+        {
+          "text": "If home feels hard, tell a teacher or a grown-up you trust. You deserve help and care.",
+          "start": 31.1,
+          "duration": 6.125
+        }
+      ]
+    },
+    "clothes": {
+      "src": "/voice/books/ibrahimovic/clothes.m4a?v=coach-bella-1",
+      "duration": 38.3,
+      "scriptSha256": "37cbc41cf7498752140531502b5314f3898ebfbeff0e21f5e340a411fc38bb06",
+      "cues": [
+        {
+          "text": "The wrong clothes",
+          "start": 0.0,
+          "duration": 1.875
+        },
+        {
+          "text": "When Zlatan played with children from richer families, he felt he did not fit in, because he had the wrong clothes and no money.",
+          "start": 1.875,
+          "duration": 8.425
+        },
+        {
+          "text": "His co-author, David Lagercrantz, wrote that Zlatan told himself: one day I\u2019ll show them!",
+          "start": 10.3,
+          "duration": 6.7
+        },
+        {
+          "text": "Flip the card.",
+          "start": 17.0,
+          "duration": 1.775
+        },
+        {
+          "text": "That feeling became his motivation.",
+          "start": 18.775,
+          "duration": 2.925
+        },
+        {
+          "text": "As a boy, he also went to taekwondo classes at a Malm\u00f6 club called Enighet, which means unity.",
+          "start": 21.7,
+          "duration": 7.075
+        },
+        {
+          "text": "His football hero was the Brazilian striker Ronaldo.",
+          "start": 28.775,
+          "duration": 4.225
+        },
+        {
+          "text": "You do not need expensive things to belong. Being different can be a strength.",
+          "start": 33.0,
+          "duration": 5.3
+        }
+      ]
+    },
+    "port": {
+      "src": "/voice/books/ibrahimovic/port.m4a?v=coach-bella-1",
+      "duration": 38.0,
+      "scriptSha256": "c0e1c7bb567e55733147946a4876c2ead0292c46eb3962668080e6b0918148b4",
+      "cues": [
+        {
+          "text": "Almost giving up",
+          "start": 0.0,
+          "duration": 1.875
+        },
+        {
+          "text": "In his early teens, Zlatan played for his hometown club, Malm\u00f6 FF.",
+          "start": 1.875,
+          "duration": 5.5
+        },
+        {
+          "text": "But at fifteen, he nearly gave up football.",
+          "start": 7.375,
+          "duration": 3.45
+        },
+        {
+          "text": "He thought about taking a job at the Port of Malm\u00f6, where the big ships come in.",
+          "start": 10.825,
+          "duration": 5.075
+        },
+        {
+          "text": "Open the gate back to the pitch.",
+          "start": 15.9,
+          "duration": 2.45
+        },
+        {
+          "text": "His manager convinced him to keep playing.",
+          "start": 18.35,
+          "duration": 3.35
+        },
+        {
+          "text": "Zlatan stayed, and in 1999 he moved up to Malm\u00f6\u2019s first team.",
+          "start": 21.7,
+          "duration": 5.5
+        },
+        {
+          "text": "In 2001, he joined Ajax in the Netherlands.",
+          "start": 27.2,
+          "duration": 4.375
+        },
+        {
+          "text": "When you feel like giving up, talk to someone who believes in you. They may see what you cannot see yet.",
+          "start": 31.575,
+          "duration": 6.425
+        }
+      ]
+    },
+    "court": {
+      "src": "/voice/books/ibrahimovic/court.m4a?v=coach-bella-1",
+      "duration": 35.8,
+      "scriptSha256": "36d5e7c244d95b09c1b8e89174cf9c344ce998d8c4b40277a6351ce3e91eec14",
+      "cues": [
+        {
+          "text": "A pitch for the next kids",
+          "start": 0.0,
+          "duration": 2.25
+        },
+        {
+          "text": "In late 2007, Zlatan paid for a new football pitch in the streets of Roseng\u00e5rd, with help from a sports company.",
+          "start": 2.25,
+          "duration": 8.5
+        },
+        {
+          "text": "It was called Zlatan Court.",
+          "start": 10.75,
+          "duration": 2.375
+        },
+        {
+          "text": "It had a playing mat, goalposts, lights and a new fence.",
+          "start": 13.125,
+          "duration": 4.325
+        },
+        {
+          "text": "Switch on the lights.",
+          "start": 17.45,
+          "duration": 1.95
+        },
+        {
+          "text": "The next year, he gave new kits to his old youth club, FBK Balkan.",
+          "start": 19.4,
+          "duration": 5.3
+        },
+        {
+          "text": "The boy who had once felt left out made sure that the children after him had a good place to play.",
+          "start": 24.7,
+          "duration": 6.3
+        },
+        {
+          "text": "Remember where you came from, and help the children who come after you.",
+          "start": 31.0,
+          "duration": 4.8
+        }
+      ]
+    },
+    "knee": {
+      "src": "/voice/books/ibrahimovic/knee.m4a?v=coach-bella-1",
+      "duration": 40.7,
+      "scriptSha256": "08ef6872ec2675b092eed0acaa2e7ab6635f0dc9b0ef0f1c62eacb4dc6cf8230",
+      "cues": [
+        {
+          "text": "Back at thirty-six",
+          "start": 0.0,
+          "duration": 1.975
+        },
+        {
+          "text": "On 20 April 2017, playing for Manchester United, Zlatan badly hurt the ligaments in his right knee.",
+          "start": 1.975,
+          "duration": 8.0
+        },
+        {
+          "text": "It was a very serious injury, and he was thirty-five.",
+          "start": 9.975,
+          "duration": 4.0
+        },
+        {
+          "text": "He worked hard to recover, and he came back on 18 November 2017.",
+          "start": 13.975,
+          "duration": 5.725
+        },
+        {
+          "text": "Unfold the bridge back.",
+          "start": 19.7,
+          "duration": 2.25
+        },
+        {
+          "text": "He kept playing for years.",
+          "start": 21.95,
+          "duration": 2.35
+        },
+        {
+          "text": "At thirty-nine, he became the oldest player from outside Italy to score in Serie A, and at forty, he won the Italian league with AC Milan.",
+          "start": 24.3,
+          "duration": 10.225
+        },
+        {
+          "text": "A setback is not the end of the story. Rest, work hard, and come back step by step.",
+          "start": 34.525,
+          "duration": 6.1
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,339 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "street": {
+      "src": "/voice/books/ronaldo/street.m4a?v=coach-bella-1",
+      "duration": 46.7,
+      "scriptSha256": "c7eda98e5254cc62ab51e3f39cbe6a7e09ab2d7e9d65b98931af98ed723ce991",
+      "cues": [
+        {
+          "text": "A boy and a ball",
+          "start": 0.0,
+          "duration": 1.9
+        },
+        {
+          "text": "Ronaldo Lu\u00eds Naz\u00e1rio de Lima was born in 1976.",
+          "start": 1.9,
+          "duration": 5.225
+        },
+        {
+          "text": "He grew up in Bento Ribeiro, a suburb of Rio de Janeiro in Brazil, and played football in the streets with friends.",
+          "start": 7.125,
+          "duration": 8.025
+        },
+        {
+          "text": "When Ronaldo was eleven, his parents separated.",
+          "start": 15.15,
+          "duration": 3.775
+        },
+        {
+          "text": "That can be a very hard change for any child.",
+          "start": 18.925,
+          "duration": 3.275
+        },
+        {
+          "text": "Ronaldo kept playing, and at twelve he joined a futsal team called Social Ramos.",
+          "start": 22.2,
+          "duration": 5.85
+        },
+        {
+          "text": "Open the futsal hall doors.",
+          "start": 28.05,
+          "duration": 2.5
+        },
+        {
+          "text": "In his first season he scored 166 goals, a city youth record.",
+          "start": 30.55,
+          "duration": 5.825
+        },
+        {
+          "text": "He later called futsal his first love.",
+          "start": 36.375,
+          "duration": 3.075
+        },
+        {
+          "text": "When your family changes, it\u2019s okay to feel sad or mixed up. Friends and the things you love can help.",
+          "start": 39.45,
+          "duration": 7.2
+        }
+      ]
+    },
+    "busfare": {
+      "src": "/voice/books/ronaldo/busfare.m4a?v=coach-bella-1",
+      "duration": 46.0,
+      "scriptSha256": "d40fc9dcf50995f91d3c60c0f83c931a49c1d931e769c51768752a27086f0b86",
+      "cues": [
+        {
+          "text": "The bus fare",
+          "start": 0.0,
+          "duration": 1.75
+        },
+        {
+          "text": "Ronaldo supported Flamengo, a big club in Rio.",
+          "start": 1.75,
+          "duration": 4.15
+        },
+        {
+          "text": "But the bus ride to their practice took an hour, and he could not afford the fare.",
+          "start": 5.9,
+          "duration": 5.25
+        },
+        {
+          "text": "He missed practice, and Flamengo turned him down.",
+          "start": 11.15,
+          "duration": 3.775
+        },
+        {
+          "text": "But Jairzinho, a former Brazil player who coached the small club S\u00e3o Crist\u00f3v\u00e3o, had seen how good Ronaldo was.",
+          "start": 14.925,
+          "duration": 8.225
+        },
+        {
+          "text": "Ronaldo played for its youth teams, and Jairzinho helped him move to the club Cruzeiro.",
+          "start": 23.15,
+          "duration": 5.975
+        },
+        {
+          "text": "Turn the bus sign to a new road.",
+          "start": 29.125,
+          "duration": 2.575
+        },
+        {
+          "text": "In 1994, at seventeen, Ronaldo was the youngest player in the Brazil squad that won the World Cup.",
+          "start": 31.7,
+          "duration": 8.05
+        },
+        {
+          "text": "A no is not the end. When someone believes in you, let them help you find another way.",
+          "start": 39.75,
+          "duration": 6.25
+        }
+      ]
+    },
+    "paris": {
+      "src": "/voice/books/ronaldo/paris.m4a?v=coach-bella-1",
+      "duration": 45.0,
+      "scriptSha256": "b831465a8482497d82a242e052e5e286ecd15e68650ddb62e771eddc45c0bcb3",
+      "cues": [
+        {
+          "text": "Hours before the final",
+          "start": 0.0,
+          "duration": 2.1
+        },
+        {
+          "text": "At the 1998 World Cup, people called Ronaldo the best player in the world.",
+          "start": 2.1,
+          "duration": 5.975
+        },
+        {
+          "text": "He scored four goals and helped Brazil reach the final against France.",
+          "start": 8.075,
+          "duration": 4.95
+        },
+        {
+          "text": "But hours before the final, Ronaldo suddenly became very ill.",
+          "start": 13.025,
+          "duration": 4.8
+        },
+        {
+          "text": "He was taken off the team sheet, but he said he felt fine and asked to play, so the coach put him back in.",
+          "start": 17.825,
+          "duration": 7.125
+        },
+        {
+          "text": "He did not play like himself, and Brazil lost 3\u20130.",
+          "start": 24.95,
+          "duration": 4.225
+        },
+        {
+          "text": "Lift the golden ball.",
+          "start": 29.175,
+          "duration": 2.2
+        },
+        {
+          "text": "He was still named the best player of the tournament.",
+          "start": 31.375,
+          "duration": 3.35
+        },
+        {
+          "text": "Ronaldo later said, \u201cWe lost the World Cup but I won another cup \u2013 my life.\u201d",
+          "start": 34.725,
+          "duration": 5.625
+        },
+        {
+          "text": "Your health matters more than any game. You are more than one result.",
+          "start": 40.35,
+          "duration": 4.625
+        }
+      ]
+    },
+    "knee": {
+      "src": "/voice/books/ronaldo/knee.m4a?v=coach-bella-1",
+      "duration": 44.8,
+      "scriptSha256": "596942308dadb19dc034a8684e52299f3e59d497c18e1950fb6af98e4e8672af",
+      "cues": [
+        {
+          "text": "The knee that gave way",
+          "start": 0.0,
+          "duration": 2.1
+        },
+        {
+          "text": "In 1999 Ronaldo was playing for Inter Milan in Italy.",
+          "start": 2.1,
+          "duration": 5.275
+        },
+        {
+          "text": "In November, during a match against Lecce, his knee buckled, and he had to limp off.",
+          "start": 7.375,
+          "duration": 5.85
+        },
+        {
+          "text": "A tendon in his knee was torn, and he needed an operation.",
+          "start": 13.225,
+          "duration": 4.3
+        },
+        {
+          "text": "Five months later, on 12 April 2000, he came back.",
+          "start": 17.525,
+          "duration": 4.65
+        },
+        {
+          "text": "After only six minutes, his knee gave way again, even worse than before.",
+          "start": 22.175,
+          "duration": 5.575
+        },
+        {
+          "text": "The injury could have ended his career.",
+          "start": 27.75,
+          "duration": 3.05
+        },
+        {
+          "text": "Lift the rain cloud.",
+          "start": 30.8,
+          "duration": 2.1
+        },
+        {
+          "text": "Ronaldo had a long road ahead, but this was not the end of his story.",
+          "start": 32.9,
+          "duration": 5.175
+        },
+        {
+          "text": "Sometimes a setback happens twice. It\u2019s okay to feel sad, and it\u2019s okay to rest and heal.",
+          "start": 38.075,
+          "duration": 6.675
+        }
+      ]
+    },
+    "recovery": {
+      "src": "/voice/books/ronaldo/recovery.m4a?v=coach-bella-1",
+      "duration": 46.0,
+      "scriptSha256": "54b6ce7f2dc7a70e5b5fb53bca51356d756ff3be39116226013483ad2d02da8f",
+      "cues": [
+        {
+          "text": "Step by step",
+          "start": 0.0,
+          "duration": 1.825
+        },
+        {
+          "text": "Getting better took a long time.",
+          "start": 1.825,
+          "duration": 2.6
+        },
+        {
+          "text": "Ronaldo had two operations, and then rehabilitation: months of exercises that help a body heal.",
+          "start": 4.425,
+          "duration": 7.55
+        },
+        {
+          "text": "A French surgeon, G\u00e9rard Saillant, operated on his knee, and a medical team helped him recover.",
+          "start": 11.975,
+          "duration": 7.0
+        },
+        {
+          "text": "He missed the whole 2000 to 2001 season.",
+          "start": 18.975,
+          "duration": 4.1
+        },
+        {
+          "text": "While he was away, his teammate Javier Zanetti became the captain.",
+          "start": 23.075,
+          "duration": 4.975
+        },
+        {
+          "text": "Climb the three steps.",
+          "start": 28.05,
+          "duration": 1.975
+        },
+        {
+          "text": "In late 2001, Ronaldo became Inter\u2019s captain.",
+          "start": 30.025,
+          "duration": 4.4
+        },
+        {
+          "text": "He said he used to picture the World Cup trophy in front of his eyes, and imagine holding it up.",
+          "start": 34.425,
+          "duration": 6.25
+        },
+        {
+          "text": "Healing takes time. Take one small step at a time, and let people help you.",
+          "start": 40.675,
+          "duration": 5.3
+        }
+      ]
+    },
+    "yokohama": {
+      "src": "/voice/books/ronaldo/yokohama.m4a?v=coach-bella-1",
+      "duration": 45.2,
+      "scriptSha256": "1df447eeb29fa605cec3b63c1b2b17fab3a47ba2f3f88589bdf642105d69aa3b",
+      "cues": [
+        {
+          "text": "The comeback",
+          "start": 0.0,
+          "duration": 1.675
+        },
+        {
+          "text": "Ronaldo had missed all of Brazil\u2019s qualifying games, but he was ready for the 2002 World Cup in South Korea and Japan.",
+          "start": 1.675,
+          "duration": 9.1
+        },
+        {
+          "text": "He scored eight goals, more than any other player.",
+          "start": 10.775,
+          "duration": 3.625
+        },
+        {
+          "text": "In the final against Germany, in Yokohama, he scored twice, and Brazil won 2\u20130.",
+          "start": 14.4,
+          "duration": 6.425
+        },
+        {
+          "text": "Lift the World Cup trophy.",
+          "start": 20.825,
+          "duration": 2.5
+        },
+        {
+          "text": "Ronaldo was the first player to go and comfort the German players.",
+          "start": 23.325,
+          "duration": 4.825
+        },
+        {
+          "text": "His surgeon was in the crowd as his guest.",
+          "start": 28.15,
+          "duration": 3.025
+        },
+        {
+          "text": "Ronaldo later dedicated his World Player of the Year award to the medical team who helped him recover.",
+          "start": 31.175,
+          "duration": 7.275
+        },
+        {
+          "text": "A setback isn\u2019t the end of the story. When you win, be kind, and thank the people who helped you.",
+          "start": 38.45,
+          "duration": 6.725
+        }
+      ]
+    }
+  }
+}

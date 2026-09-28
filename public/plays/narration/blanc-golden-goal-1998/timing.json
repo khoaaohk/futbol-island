@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Lens, 1998",
+   "text": "Lens, 1998. France against Paraguay, nil\u2013nil in extra time. The next goal wins! Pir\u00e8s crosses, Trezeguet heads it down... Laurent Blanc scores!",
+   "src": "/plays/narration/blanc-golden-goal-1998/1.m4a",
+   "seconds": 12.0,
+   "words": [
+    {
+     "w": "Lens",
+     "at": 0.4
+    },
+    {
+     "w": "1998",
+     "at": 0.8
+    },
+    {
+     "w": "France",
+     "at": 2.263
+    },
+    {
+     "w": "against",
+     "at": 2.612
+    },
+    {
+     "w": "Paraguay",
+     "at": 2.925
+    },
+    {
+     "w": "nil",
+     "at": 3.525
+    },
+    {
+     "w": "nil",
+     "at": 3.9
+    },
+    {
+     "w": "in",
+     "at": 4.125
+    },
+    {
+     "w": "extra",
+     "at": 4.25
+    },
+    {
+     "w": "time",
+     "at": 4.65
+    },
+    {
+     "w": "The",
+     "at": 5.475
+    },
+    {
+     "w": "next",
+     "at": 5.575
+    },
+    {
+     "w": "goal",
+     "at": 5.875
+    },
+    {
+     "w": "wins",
+     "at": 6.138
+    },
+    {
+     "w": "Pir\u00e8s",
+     "at": 6.838
+    },
+    {
+     "w": "crosses",
+     "at": 7.275
+    },
+    {
+     "w": "Trezeguet",
+     "at": 7.85
+    },
+    {
+     "w": "heads",
+     "at": 8.35
+    },
+    {
+     "w": "it",
+     "at": 8.588
+    },
+    {
+     "w": "down",
+     "at": 8.7
+    },
+    {
+     "w": "Laurent",
+     "at": 9.588
+    },
+    {
+     "w": "Blanc",
+     "at": 10.025
+    },
+    {
+     "w": "scores",
+     "at": 10.412
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again. Blanc is a defender, but he stays up front. His teammates wave him back... but he waits for his chance.",
+   "src": "/plays/narration/blanc-golden-goal-1998/2.m4a",
+   "seconds": 8.2,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "Blanc",
+     "at": 1.337
+    },
+    {
+     "w": "is",
+     "at": 1.75
+    },
+    {
+     "w": "a",
+     "at": 1.863
+    },
+    {
+     "w": "defender",
+     "at": 1.925
+    },
+    {
+     "w": "but",
+     "at": 2.438
+    },
+    {
+     "w": "he",
+     "at": 2.562
+    },
+    {
+     "w": "stays",
+     "at": 2.688
+    },
+    {
+     "w": "up",
+     "at": 3.062
+    },
+    {
+     "w": "front",
+     "at": 3.237
+    },
+    {
+     "w": "His",
+     "at": 3.925
+    },
+    {
+     "w": "teammates",
+     "at": 4.138
+    },
+    {
+     "w": "wave",
+     "at": 4.725
+    },
+    {
+     "w": "him",
+     "at": 4.938
+    },
+    {
+     "w": "back",
+     "at": 5.075
+    },
+    {
+     "w": "but",
+     "at": 5.9
+    },
+    {
+     "w": "he",
+     "at": 6.037
+    },
+    {
+     "w": "waits",
+     "at": 6.162
+    },
+    {
+     "w": "for",
+     "at": 6.5
+    },
+    {
+     "w": "his",
+     "at": 6.612
+    },
+    {
+     "w": "chance",
+     "at": 6.787
+    }
+   ]
+  },
+  {
+   "label": "First time",
+   "text": "Here comes the header down. Blanc hits it first time, with his right foot, before it can bounce again. The first golden goal in World Cup history!",
+   "src": "/plays/narration/blanc-golden-goal-1998/3.m4a",
+   "seconds": 10.1,
+   "words": [
+    {
+     "w": "Here",
+     "at": 0.35
+    },
+    {
+     "w": "comes",
+     "at": 0.637
+    },
+    {
+     "w": "the",
+     "at": 0.975
+    },
+    {
+     "w": "header",
+     "at": 1.075
+    },
+    {
+     "w": "down",
+     "at": 1.4
+    },
+    {
+     "w": "Blanc",
+     "at": 2.325
+    },
+    {
+     "w": "hits",
+     "at": 2.725
+    },
+    {
+     "w": "it",
+     "at": 2.938
+    },
+    {
+     "w": "first",
+     "at": 3.075
+    },
+    {
+     "w": "time",
+     "at": 3.35
+    },
+    {
+     "w": "with",
+     "at": 3.763
+    },
+    {
+     "w": "his",
+     "at": 3.862
+    },
+    {
+     "w": "right",
+     "at": 4.025
+    },
+    {
+     "w": "foot",
+     "at": 4.35
+    },
+    {
+     "w": "before",
+     "at": 4.925
+    },
+    {
+     "w": "it",
+     "at": 5.263
+    },
+    {
+     "w": "can",
+     "at": 5.338
+    },
+    {
+     "w": "bounce",
+     "at": 5.475
+    },
+    {
+     "w": "again",
+     "at": 5.8
+    },
+    {
+     "w": "The",
+     "at": 6.713
+    },
+    {
+     "w": "first",
+     "at": 6.862
+    },
+    {
+     "w": "golden",
+     "at": 7.237
+    },
+    {
+     "w": "goal",
+     "at": 7.675
+    },
+    {
+     "w": "in",
+     "at": 8.0
+    },
+    {
+     "w": "World",
+     "at": 8.125
+    },
+    {
+     "w": "Cup",
+     "at": 8.425
+    },
+    {
+     "w": "history",
+     "at": 8.625
+    }
+   ]
+  },
+  {
+   "label": "Be ready",
+   "text": "Defenders who join the attack late are hard to mark. Be ready, and finish first time!",
+   "src": "/plays/narration/blanc-golden-goal-1998/4.m4a",
+   "seconds": 6.2,
+   "words": [
+    {
+     "w": "Defenders",
+     "at": 0.35
+    },
+    {
+     "w": "who",
+     "at": 0.912
+    },
+    {
+     "w": "join",
+     "at": 1.062
+    },
+    {
+     "w": "the",
+     "at": 1.312
+    },
+    {
+     "w": "attack",
+     "at": 1.425
+    },
+    {
+     "w": "late",
+     "at": 1.8
+    },
+    {
+     "w": "are",
+     "at": 2.025
+    },
+    {
+     "w": "hard",
+     "at": 2.125
+    },
+    {
+     "w": "to",
+     "at": 2.375
+    },
+    {
+     "w": "mark",
+     "at": 2.475
+    },
+    {
+     "w": "Be",
+     "at": 3.288
+    },
+    {
+     "w": "ready",
+     "at": 3.487
+    },
+    {
+     "w": "and",
+     "at": 4.0
+    },
+    {
+     "w": "finish",
+     "at": 4.138
+    },
+    {
+     "w": "first",
+     "at": 4.525
+    },
+    {
+     "w": "time",
+     "at": 4.8
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,294 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "ajax": {
+      "src": "/voice/books/cruyff/ajax.m4a?v=coach-bella-1",
+      "duration": 44.4,
+      "scriptSha256": "9214ff7d7f6f102bb6ec2796014fc8d5f32bcca0689adb424a4eb193f197acd6",
+      "cues": [
+        {
+          "text": "The empty chair",
+          "start": 0.0,
+          "duration": 1.8
+        },
+        {
+          "text": "Johan Cruyff was born in Amsterdam, in the Netherlands, in 1947.",
+          "start": 1.8,
+          "duration": 6.3
+        },
+        {
+          "text": "His family lived five minutes from the Ajax stadium, and his father, Manus, was an Ajax fan.",
+          "start": 8.1,
+          "duration": 7.0
+        },
+        {
+          "text": "On his tenth birthday, Johan joined the Ajax youth team.",
+          "start": 15.1,
+          "duration": 4.425
+        },
+        {
+          "text": "Then, on 8 July 1959, when Johan was twelve, his father died of a heart attack.",
+          "start": 19.525,
+          "duration": 7.05
+        },
+        {
+          "text": "Lift the paper shutter to see the family photo.",
+          "start": 26.575,
+          "duration": 3.475
+        },
+        {
+          "text": "Losing a parent is one of the hardest things that can happen to anyone.",
+          "start": 30.05,
+          "duration": 5.0
+        },
+        {
+          "text": "It was a sadness that shaped the rest of his life.",
+          "start": 35.05,
+          "duration": 3.575
+        },
+        {
+          "text": "When someone you love dies, it is okay to feel sad. Talk to someone you trust.",
+          "start": 38.625,
+          "duration": 5.7
+        }
+      ]
+    },
+    "total": {
+      "src": "/voice/books/cruyff/total.m4a?v=coach-bella-1",
+      "duration": 40.9,
+      "scriptSha256": "b5ac4d67be8a8c48f5301dc48ad8fed980487e01a192bcebc6101d33b10f0340",
+      "cues": [
+        {
+          "text": "A new way for the family",
+          "start": 0.0,
+          "duration": 2.25
+        },
+        {
+          "text": "Johan\u2019s mother, Nel, could not keep the family\u2019s vegetable shop going on her own, so she had to give it up.",
+          "start": 2.25,
+          "duration": 7.025
+        },
+        {
+          "text": "Instead, she found work at Ajax as a cleaner, cleaning the lockers.",
+          "start": 9.275,
+          "duration": 4.925
+        },
+        {
+          "text": "There she met Henk Angel, the club\u2019s caretaker, and later she married him.",
+          "start": 14.2,
+          "duration": 5.325
+        },
+        {
+          "text": "Tap three times to follow the family\u2019s new path.",
+          "start": 19.525,
+          "duration": 3.65
+        },
+        {
+          "text": "The shop door closes, the club door opens, and the family grows.",
+          "start": 23.175,
+          "duration": 4.65
+        },
+        {
+          "text": "Later, Johan worked hard to give his whole family, and his new stepfamily, a safe and secure life.",
+          "start": 27.825,
+          "duration": 7.25
+        },
+        {
+          "text": "Families can change shape and still love each other. We get through hard times together.",
+          "start": 35.075,
+          "duration": 5.825
+        }
+      ]
+    },
+    "cups": {
+      "src": "/voice/books/cruyff/cups.m4a?v=coach-bella-1",
+      "duration": 42.2,
+      "scriptSha256": "23e81244bfe43b64fb7bbc8885c3d790374602fd6b05edd202b9f022529a92ea",
+      "cues": [
+        {
+          "text": "A second family",
+          "start": 0.0,
+          "duration": 1.975
+        },
+        {
+          "text": "A youth coach who lived nearby, Jany van der Veen, had spotted Johan playing and invited him to Ajax.",
+          "start": 1.975,
+          "duration": 7.675
+        },
+        {
+          "text": "Johan was small and not yet strong, so the coach Vic Buckingham encouraged him to go to the gym and made sure he ate better food.",
+          "start": 9.65,
+          "duration": 8.675
+        },
+        {
+          "text": "Later, the coach Rinus Michels became almost like a father to him, even though they often argued.",
+          "start": 18.325,
+          "duration": 6.9
+        },
+        {
+          "text": "Lift the three flaps to meet the people who helped.",
+          "start": 25.225,
+          "duration": 3.4
+        },
+        {
+          "text": "With them, Ajax won the European Cup in 1971, 1972 and 1973.",
+          "start": 28.625,
+          "duration": 7.775
+        },
+        {
+          "text": "You can find a second family: coaches, teammates and friends who look out for you.",
+          "start": 36.4,
+          "duration": 5.775
+        }
+      ]
+    },
+    "turn": {
+      "src": "/voice/books/cruyff/turn.m4a?v=coach-bella-1",
+      "duration": 46.7,
+      "scriptSha256": "6fb49b3df7afef23cc5eba93db8ad0a15698f2bb783f2d27a693d23a4b47ee21",
+      "cues": [
+        {
+          "text": "Hurt, then back",
+          "start": 0.0,
+          "duration": 1.975
+        },
+        {
+          "text": "In his early years, Johan was often injured or unwell.",
+          "start": 1.975,
+          "duration": 4.35
+        },
+        {
+          "text": "At the start of the 1970\u201371 season he hurt his groin and could not play.",
+          "start": 6.325,
+          "duration": 7.15
+        },
+        {
+          "text": "When he came back on 30 October 1970, against PSV, a teammate had his usual number 9 shirt, so he wore number 14.",
+          "start": 13.475,
+          "duration": 10.225
+        },
+        {
+          "text": "Pull the lever to turn the shirt from 9 to 14.",
+          "start": 23.7,
+          "duration": 3.775
+        },
+        {
+          "text": "He kept number 14 from then on, and it became famous.",
+          "start": 27.475,
+          "duration": 4.35
+        },
+        {
+          "text": "By the 1974 World Cup he was back at his best, and his clever turn against Sweden became known as the Cruyff Turn.",
+          "start": 31.825,
+          "duration": 8.85
+        },
+        {
+          "text": "A setback is not the end of the story. Rest, heal, and come back in your own way.",
+          "start": 40.675,
+          "duration": 5.95
+        }
+      ]
+    },
+    "final": {
+      "src": "/voice/books/cruyff/final.m4a?v=coach-bella-1",
+      "duration": 40.9,
+      "scriptSha256": "62760e5f8dd07578fb46b25b535ebd149edac544cf397fd28616eaef03c89136",
+      "cues": [
+        {
+          "text": "So close",
+          "start": 0.0,
+          "duration": 1.625
+        },
+        {
+          "text": "At the 1974 World Cup, the Netherlands reached the final against West Germany.",
+          "start": 1.625,
+          "duration": 6.35
+        },
+        {
+          "text": "In the very first minute, Johan was fouled, and his teammate Johan Neeskens scored the penalty.",
+          "start": 7.975,
+          "duration": 6.9
+        },
+        {
+          "text": "But West Germany came back and won 2\u20131.",
+          "start": 14.875,
+          "duration": 3.4
+        },
+        {
+          "text": "The defeat hurt the whole country for many years.",
+          "start": 18.275,
+          "duration": 3.525
+        },
+        {
+          "text": "Flip the score cards and watch the result change.",
+          "start": 21.8,
+          "duration": 3.75
+        },
+        {
+          "text": "Even so, Johan was voted the best player of the whole tournament, and football fans everywhere had loved his team\u2019s brave, exciting football.",
+          "start": 25.55,
+          "duration": 9.925
+        },
+        {
+          "text": "You are more than one result. You can lose and still be proud of how you played.",
+          "start": 35.475,
+          "duration": 5.35
+        }
+      ]
+    },
+    "courts": {
+      "src": "/voice/books/cruyff/courts.m4a?v=coach-bella-1",
+      "duration": 45.8,
+      "scriptSha256": "651ec4dd81e62a7fd6af2a7391bbd6d0faa6b34a552bff4e11d848ac2017fb7c",
+      "cues": [
+        {
+          "text": "Making space for others",
+          "start": 0.0,
+          "duration": 2.275
+        },
+        {
+          "text": "Johan smoked cigarettes from when he was a teenager.",
+          "start": 2.275,
+          "duration": 3.575
+        },
+        {
+          "text": "In February 1991 he had a heart attack and needed heart surgery.",
+          "start": 5.85,
+          "duration": 5.85
+        },
+        {
+          "text": "Afterwards he gave up smoking and helped health campaigns.",
+          "start": 11.7,
+          "duration": 4.25
+        },
+        {
+          "text": "In 1997 he started the Johan Cruyff Foundation, to help children who have a harder start and children with special needs.",
+          "start": 15.95,
+          "duration": 9.25
+        },
+        {
+          "text": "Unfold the court between the houses.",
+          "start": 25.2,
+          "duration": 2.825
+        },
+        {
+          "text": "His foundation has built more than 200 Cruyff Courts in 22 countries, where children of all backgrounds play together.",
+          "start": 28.025,
+          "duration": 8.225
+        },
+        {
+          "text": "Johan died of lung cancer in 2016, with his family around him.",
+          "start": 36.25,
+          "duration": 5.375
+        },
+        {
+          "text": "Look after your body, and make space for everyone to play.",
+          "start": 41.625,
+          "duration": 4.15
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,410 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Rio, 2021: the Copa Am\u00e9rica final against Brazil. Rodrigo De Paul sends a long pass from his own half. Di Mar\u00eda races in behind... and lifts it over the keeper! One nil to Argentina!",
+   "src": "/plays/narration/di-maria-maracana-2021/1.m4a",
+   "seconds": 14.9,
+   "words": [
+    {
+     "w": "Rio",
+     "at": 0.425
+    },
+    {
+     "w": "2021",
+     "at": 0.825
+    },
+    {
+     "w": "the",
+     "at": 2.125
+    },
+    {
+     "w": "Copa",
+     "at": 2.225
+    },
+    {
+     "w": "Am\u00e9rica",
+     "at": 2.612
+    },
+    {
+     "w": "final",
+     "at": 3.2
+    },
+    {
+     "w": "against",
+     "at": 3.625
+    },
+    {
+     "w": "Brazil",
+     "at": 4.0
+    },
+    {
+     "w": "Rodrigo",
+     "at": 5.1
+    },
+    {
+     "w": "De",
+     "at": 5.625
+    },
+    {
+     "w": "Paul",
+     "at": 5.763
+    },
+    {
+     "w": "sends",
+     "at": 6.188
+    },
+    {
+     "w": "a",
+     "at": 6.463
+    },
+    {
+     "w": "long",
+     "at": 6.562
+    },
+    {
+     "w": "pass",
+     "at": 6.938
+    },
+    {
+     "w": "from",
+     "at": 7.3
+    },
+    {
+     "w": "his",
+     "at": 7.438
+    },
+    {
+     "w": "own",
+     "at": 7.575
+    },
+    {
+     "w": "half",
+     "at": 7.8
+    },
+    {
+     "w": "Di",
+     "at": 8.675
+    },
+    {
+     "w": "Mar\u00eda",
+     "at": 8.875
+    },
+    {
+     "w": "races",
+     "at": 9.325
+    },
+    {
+     "w": "in",
+     "at": 9.775
+    },
+    {
+     "w": "behind",
+     "at": 9.9
+    },
+    {
+     "w": "and",
+     "at": 10.925
+    },
+    {
+     "w": "lifts",
+     "at": 11.05
+    },
+    {
+     "w": "it",
+     "at": 11.338
+    },
+    {
+     "w": "over",
+     "at": 11.412
+    },
+    {
+     "w": "the",
+     "at": 11.613
+    },
+    {
+     "w": "keeper",
+     "at": 11.7
+    },
+    {
+     "w": "One",
+     "at": 12.475
+    },
+    {
+     "w": "nil",
+     "at": 12.75
+    },
+    {
+     "w": "to",
+     "at": 13.025
+    },
+    {
+     "w": "Argentina",
+     "at": 13.175
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again. The pass flies past the defender, Renan Lodi. One touch with his left foot, and it\u2019s his. Here comes the keeper, rushing out!",
+   "src": "/plays/narration/di-maria-maracana-2021/2.m4a",
+   "seconds": 9.7,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "The",
+     "at": 1.525
+    },
+    {
+     "w": "pass",
+     "at": 1.625
+    },
+    {
+     "w": "flies",
+     "at": 1.975
+    },
+    {
+     "w": "past",
+     "at": 2.362
+    },
+    {
+     "w": "the",
+     "at": 2.712
+    },
+    {
+     "w": "defender",
+     "at": 2.8
+    },
+    {
+     "w": "Renan",
+     "at": 3.4
+    },
+    {
+     "w": "Lodi",
+     "at": 3.8
+    },
+    {
+     "w": "One",
+     "at": 4.513
+    },
+    {
+     "w": "touch",
+     "at": 4.763
+    },
+    {
+     "w": "with",
+     "at": 5.062
+    },
+    {
+     "w": "his",
+     "at": 5.162
+    },
+    {
+     "w": "left",
+     "at": 5.325
+    },
+    {
+     "w": "foot",
+     "at": 5.612
+    },
+    {
+     "w": "and",
+     "at": 5.963
+    },
+    {
+     "w": "it\u2019s",
+     "at": 6.062
+    },
+    {
+     "w": "his",
+     "at": 6.225
+    },
+    {
+     "w": "Here",
+     "at": 7.112
+    },
+    {
+     "w": "comes",
+     "at": 7.35
+    },
+    {
+     "w": "the",
+     "at": 7.612
+    },
+    {
+     "w": "keeper",
+     "at": 7.7
+    },
+    {
+     "w": "rushing",
+     "at": 8.15
+    },
+    {
+     "w": "out",
+     "at": 8.5
+    }
+   ]
+  },
+  {
+   "label": "The chip",
+   "text": "So Di Mar\u00eda does not blast it. He chips it gently over Ederson... and it drops into the net!",
+   "src": "/plays/narration/di-maria-maracana-2021/3.m4a",
+   "seconds": 7.1,
+   "words": [
+    {
+     "w": "So",
+     "at": 0.375
+    },
+    {
+     "w": "Di",
+     "at": 0.562
+    },
+    {
+     "w": "Mar\u00eda",
+     "at": 0.775
+    },
+    {
+     "w": "does",
+     "at": 1.2
+    },
+    {
+     "w": "not",
+     "at": 1.4
+    },
+    {
+     "w": "blast",
+     "at": 1.625
+    },
+    {
+     "w": "it",
+     "at": 2.112
+    },
+    {
+     "w": "He",
+     "at": 2.625
+    },
+    {
+     "w": "chips",
+     "at": 2.788
+    },
+    {
+     "w": "it",
+     "at": 3.1
+    },
+    {
+     "w": "gently",
+     "at": 3.263
+    },
+    {
+     "w": "over",
+     "at": 3.675
+    },
+    {
+     "w": "Ederson",
+     "at": 3.9
+    },
+    {
+     "w": "and",
+     "at": 4.925
+    },
+    {
+     "w": "it",
+     "at": 5.037
+    },
+    {
+     "w": "drops",
+     "at": 5.125
+    },
+    {
+     "w": "into",
+     "at": 5.487
+    },
+    {
+     "w": "the",
+     "at": 5.662
+    },
+    {
+     "w": "net",
+     "at": 5.75
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: when the keeper rushes out, stay calm. Lift the ball gently over them!",
+   "src": "/plays/narration/di-maria-maracana-2021/4.m4a",
+   "seconds": 6.1,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.5
+    },
+    {
+     "w": "when",
+     "at": 1.2
+    },
+    {
+     "w": "the",
+     "at": 1.337
+    },
+    {
+     "w": "keeper",
+     "at": 1.425
+    },
+    {
+     "w": "rushes",
+     "at": 1.8
+    },
+    {
+     "w": "out",
+     "at": 2.175
+    },
+    {
+     "w": "stay",
+     "at": 2.475
+    },
+    {
+     "w": "calm",
+     "at": 2.737
+    },
+    {
+     "w": "Lift",
+     "at": 3.575
+    },
+    {
+     "w": "the",
+     "at": 3.837
+    },
+    {
+     "w": "ball",
+     "at": 3.925
+    },
+    {
+     "w": "gently",
+     "at": 4.237
+    },
+    {
+     "w": "over",
+     "at": 4.625
+    },
+    {
+     "w": "them",
+     "at": 4.875
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,314 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "hamlet": {
+      "src": "/voice/books/modric/hamlet.m4a?v=coach-bella-1",
+      "duration": 43.4,
+      "scriptSha256": "de08dbd0d81085e797ee3149e8a82961d75d94fed5063c479ee8158c160bf20d",
+      "cues": [
+        {
+          "text": "A stone house on the mountain",
+          "start": 0.0,
+          "duration": 2.4
+        },
+        {
+          "text": "Luka Modri\u0107 was born in 1985 near Zadar, in Croatia.",
+          "start": 2.4,
+          "duration": 5.275
+        },
+        {
+          "text": "He spent most of his early years in a stone house on the slopes of the Velebit mountain, where his grandfather lived.",
+          "start": 7.675,
+          "duration": 7.275
+        },
+        {
+          "text": "Luka was named after him.",
+          "start": 14.95,
+          "duration": 2.45
+        },
+        {
+          "text": "At five, he helped look after the goats.",
+          "start": 17.4,
+          "duration": 3.2
+        },
+        {
+          "text": "In 1991 a war came to the area, and the family had to leave their home.",
+          "start": 20.6,
+          "duration": 6.3
+        },
+        {
+          "text": "That December, his grandfather Luka was killed near the house, and later the house was burned down.",
+          "start": 26.9,
+          "duration": 6.95
+        },
+        {
+          "text": "Lift the photo frame to remember him.",
+          "start": 33.85,
+          "duration": 2.95
+        },
+        {
+          "text": "When you lose someone you love, it\u2019s okay to feel sad. Share your memories with people you trust.",
+          "start": 36.8,
+          "duration": 6.525
+        }
+      ]
+    },
+    "hotel": {
+      "src": "/voice/books/modric/hotel.m4a?v=coach-bella-1",
+      "duration": 43.0,
+      "scriptSha256": "c8031a1a890e6be2825be59b0d164921516f15f0f948216137aa24f2053445ce",
+      "cues": [
+        {
+          "text": "A hotel for a home",
+          "start": 0.0,
+          "duration": 2.2
+        },
+        {
+          "text": "Luka and his family became refugees.",
+          "start": 2.2,
+          "duration": 3.425
+        },
+        {
+          "text": "For seven years they lived in the Hotel Kolovare in Zadar, and later in the Hotel I\u017e.",
+          "start": 5.625,
+          "duration": 6.25
+        },
+        {
+          "text": "His father joined the Croatian Army and worked on aircraft.",
+          "start": 11.875,
+          "duration": 4.4
+        },
+        {
+          "text": "In those years, many bombs fell on the city.",
+          "start": 16.275,
+          "duration": 3.5
+        },
+        {
+          "text": "Roll the ball across the car park.",
+          "start": 19.775,
+          "duration": 2.675
+        },
+        {
+          "text": "Luka mostly played football in the hotel\u2019s parking lot, and football was a way to escape the war.",
+          "start": 22.45,
+          "duration": 6.5
+        },
+        {
+          "text": "He later said he made friends with many other children, and their parents did not let the war spoil their childhood.",
+          "start": 28.95,
+          "duration": 7.35
+        },
+        {
+          "text": "In hard times, friends and play can help. It\u2019s okay to have fun even when life is difficult.",
+          "start": 36.3,
+          "duration": 6.65
+        }
+      ]
+    },
+    "academy": {
+      "src": "/voice/books/modric/academy.m4a?v=coach-bella-1",
+      "duration": 41.4,
+      "scriptSha256": "7f9c9c87c61b348f0cddb020ddbe425cbe039773d48cafd2bdbd915442a2c76c",
+      "cues": [
+        {
+          "text": "The people behind him",
+          "start": 0.0,
+          "duration": 2.05
+        },
+        {
+          "text": "In 1992, Luka started primary school and joined a sports academy too.",
+          "start": 2.05,
+          "duration": 6.2
+        },
+        {
+          "text": "His family had very little money, but they paid for the academy, and sometimes his uncle helped.",
+          "start": 8.25,
+          "duration": 6.675
+        },
+        {
+          "text": "Supported by his family, he trained at the club NK Zadar.",
+          "start": 14.925,
+          "duration": 4.625
+        },
+        {
+          "text": "Lift the three flaps to see who helped.",
+          "start": 19.55,
+          "duration": 2.9
+        },
+        {
+          "text": "There was his family, his uncle, and Tomislav Ba\u0161i\u0107, the head of the youth academy, whom Luka calls his sporting father.",
+          "start": 22.45,
+          "duration": 8.375
+        },
+        {
+          "text": "When people believe in you, you don\u2019t have to carry everything alone.",
+          "start": 30.825,
+          "duration": 4.55
+        },
+        {
+          "text": "You don\u2019t have to face hard things alone. Family, friends and coaches can be your team.",
+          "start": 35.375,
+          "duration": 6.025
+        }
+      ]
+    },
+    "toosmall": {
+      "src": "/voice/books/modric/toosmall.m4a?v=coach-bella-1",
+      "duration": 43.7,
+      "scriptSha256": "9c9a108fdbbd1661f7643434f31af93c0193698e40fe6d7d1aabbf855bc9b44e",
+      "cues": [
+        {
+          "text": "Too small, they said",
+          "start": 0.0,
+          "duration": 1.7
+        },
+        {
+          "text": "The big club Hajduk Split did not sign Luka, because they thought he was too young and too light.",
+          "start": 1.7,
+          "duration": 6.175
+        },
+        {
+          "text": "Many young players would feel like giving up.",
+          "start": 7.875,
+          "duration": 3.15
+        },
+        {
+          "text": "Luka kept playing.",
+          "start": 11.025,
+          "duration": 2.05
+        },
+        {
+          "text": "Open the gate.",
+          "start": 13.075,
+          "duration": 1.725
+        },
+        {
+          "text": "His coach, Tomislav Ba\u0161i\u0107, helped him move to Dinamo Zagreb at sixteen.",
+          "start": 14.8,
+          "duration": 5.95
+        },
+        {
+          "text": "In 2003 Dinamo loaned him to Zrinjski Mostar in Bosnia, a very tough league, and at eighteen he was its Player of the Year.",
+          "start": 20.75,
+          "duration": 10.1
+        },
+        {
+          "text": "In 2005, with his first long contract, he bought a flat in Zadar for his family.",
+          "start": 30.85,
+          "duration": 6.8
+        },
+        {
+          "text": "Being small, or hearing no, is not the end. Keep going, and another door can open.",
+          "start": 37.65,
+          "duration": 6.05
+        }
+      ]
+    },
+    "lightweight": {
+      "src": "/voice/books/modric/lightweight.m4a?v=coach-bella-1",
+      "duration": 39.6,
+      "scriptSha256": "a500eca32880baa47af76e46e6097e107bccb9235bf768cb183767ee02a05ec9",
+      "cues": [
+        {
+          "text": "Called a lightweight",
+          "start": 0.0,
+          "duration": 1.85
+        },
+        {
+          "text": "In 2008 Luka moved to Tottenham Hotspur in England.",
+          "start": 1.85,
+          "duration": 4.85
+        },
+        {
+          "text": "At first it was hard.",
+          "start": 6.7,
+          "duration": 2.15
+        },
+        {
+          "text": "He hurt his knee, and some newspapers, and even Arsenal\u2019s manager, called him a lightweight.",
+          "start": 8.85,
+          "duration": 6.125
+        },
+        {
+          "text": "Luka later said critics push you forward to show them they are wrong.",
+          "start": 14.975,
+          "duration": 4.6
+        },
+        {
+          "text": "In 2009 he broke a bone in his right leg and was out until December.",
+          "start": 19.575,
+          "duration": 6.075
+        },
+        {
+          "text": "Unfold the bridge back to the pitch.",
+          "start": 25.65,
+          "duration": 2.75
+        },
+        {
+          "text": "When he returned, he scored in his first game back, using the leg he had broken.",
+          "start": 28.4,
+          "duration": 5.725
+        },
+        {
+          "text": "What other people say doesn\u2019t decide who you are. You can come back from a setback.",
+          "start": 34.125,
+          "duration": 5.475
+        }
+      ]
+    },
+    "zadar": {
+      "src": "/voice/books/modric/zadar.m4a?v=coach-bella-1",
+      "duration": 41.7,
+      "scriptSha256": "f2bccb77e9d5ac13b097299db253a1701faccd478a06d54019430fb7b209de60",
+      "cues": [
+        {
+          "text": "Welcome home",
+          "start": 0.0,
+          "duration": 1.825
+        },
+        {
+          "text": "At the 2018 World Cup, Croatia played Denmark.",
+          "start": 1.825,
+          "duration": 4.225
+        },
+        {
+          "text": "Luka took a penalty in extra time, and the goalkeeper saved it.",
+          "start": 6.05,
+          "duration": 4.775
+        },
+        {
+          "text": "But in the shoot-out he stepped up again and scored, and Croatia went through.",
+          "start": 10.825,
+          "duration": 5.0
+        },
+        {
+          "text": "They reached their first World Cup final, and lost 4\u20132 to France.",
+          "start": 15.825,
+          "duration": 4.85
+        },
+        {
+          "text": "Luka was still named the best player of the tournament, and later won the Ballon d\u2019Or.",
+          "start": 20.675,
+          "duration": 5.8
+        },
+        {
+          "text": "Raise the welcome banner.",
+          "start": 26.475,
+          "duration": 2.275
+        },
+        {
+          "text": "Back in Zadar, where he had lived as a refugee, tens of thousands of people welcomed him home.",
+          "start": 28.75,
+          "duration": 6.8
+        },
+        {
+          "text": "A miss is not the end. Be brave enough to try again, and remember where you came from.",
+          "start": 35.55,
+          "duration": 6.1
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The counter",
+   "text": "Olivier Giroud flicks the ball on. Arsenal break forward. New Year\u2019s Day, 2017, against Crystal Palace. He sprints sixty yards into the box. A scorpion kick! Goal!",
+   "src": "/plays/narration/giroud-scorpion-2017/1.m4a",
+   "seconds": 13.1,
+   "words": [
+    {
+     "w": "Olivier",
+     "at": 0.4
+    },
+    {
+     "w": "Giroud",
+     "at": 0.988
+    },
+    {
+     "w": "flicks",
+     "at": 1.4
+    },
+    {
+     "w": "the",
+     "at": 1.725
+    },
+    {
+     "w": "ball",
+     "at": 1.825
+    },
+    {
+     "w": "on",
+     "at": 2.125
+    },
+    {
+     "w": "Arsenal",
+     "at": 2.712
+    },
+    {
+     "w": "break",
+     "at": 3.225
+    },
+    {
+     "w": "forward",
+     "at": 3.513
+    },
+    {
+     "w": "New",
+     "at": 4.45
+    },
+    {
+     "w": "Year\u2019s",
+     "at": 4.65
+    },
+    {
+     "w": "Day",
+     "at": 5.0
+    },
+    {
+     "w": "2017",
+     "at": 5.4
+    },
+    {
+     "w": "against",
+     "at": 6.3
+    },
+    {
+     "w": "Crystal",
+     "at": 6.675
+    },
+    {
+     "w": "Palace",
+     "at": 7.075
+    },
+    {
+     "w": "He",
+     "at": 7.975
+    },
+    {
+     "w": "sprints",
+     "at": 8.1
+    },
+    {
+     "w": "sixty",
+     "at": 8.438
+    },
+    {
+     "w": "yards",
+     "at": 8.8
+    },
+    {
+     "w": "into",
+     "at": 9.188
+    },
+    {
+     "w": "the",
+     "at": 9.363
+    },
+    {
+     "w": "box",
+     "at": 9.45
+    },
+    {
+     "w": "A",
+     "at": 10.238
+    },
+    {
+     "w": "scorpion",
+     "at": 10.363
+    },
+    {
+     "w": "kick",
+     "at": 10.963
+    },
+    {
+     "w": "Goal",
+     "at": 11.675
+    }
+   ]
+  },
+  {
+   "label": "The scorpion",
+   "text": "Watch again. Alexis S\u00e1nchez crosses, but the ball is behind Giroud. He dives forward and flicks it with his left heel, up over his own head. It loops over the keeper, in off the bar!",
+   "src": "/plays/narration/giroud-scorpion-2017/2.m4a",
+   "seconds": 13.1,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "Alexis",
+     "at": 1.512
+    },
+    {
+     "w": "S\u00e1nchez",
+     "at": 2.1
+    },
+    {
+     "w": "crosses",
+     "at": 2.638
+    },
+    {
+     "w": "but",
+     "at": 3.45
+    },
+    {
+     "w": "the",
+     "at": 3.587
+    },
+    {
+     "w": "ball",
+     "at": 3.712
+    },
+    {
+     "w": "is",
+     "at": 4.075
+    },
+    {
+     "w": "behind",
+     "at": 4.225
+    },
+    {
+     "w": "Giroud",
+     "at": 4.713
+    },
+    {
+     "w": "He",
+     "at": 5.737
+    },
+    {
+     "w": "dives",
+     "at": 5.9
+    },
+    {
+     "w": "forward",
+     "at": 6.388
+    },
+    {
+     "w": "and",
+     "at": 6.85
+    },
+    {
+     "w": "flicks",
+     "at": 6.987
+    },
+    {
+     "w": "it",
+     "at": 7.3
+    },
+    {
+     "w": "with",
+     "at": 7.412
+    },
+    {
+     "w": "his",
+     "at": 7.513
+    },
+    {
+     "w": "left",
+     "at": 7.675
+    },
+    {
+     "w": "heel",
+     "at": 7.95
+    },
+    {
+     "w": "up",
+     "at": 8.525
+    },
+    {
+     "w": "over",
+     "at": 8.688
+    },
+    {
+     "w": "his",
+     "at": 8.887
+    },
+    {
+     "w": "own",
+     "at": 9.05
+    },
+    {
+     "w": "head",
+     "at": 9.325
+    },
+    {
+     "w": "It",
+     "at": 10.125
+    },
+    {
+     "w": "loops",
+     "at": 10.312
+    },
+    {
+     "w": "over",
+     "at": 10.588
+    },
+    {
+     "w": "the",
+     "at": 10.787
+    },
+    {
+     "w": "keeper",
+     "at": 10.875
+    },
+    {
+     "w": "in",
+     "at": 11.287
+    },
+    {
+     "w": "off",
+     "at": 11.4
+    },
+    {
+     "w": "the",
+     "at": 11.625
+    },
+    {
+     "w": "bar",
+     "at": 11.725
+    }
+   ]
+  },
+  {
+   "label": "Be brave",
+   "text": "Want to be brave like Giroud? If the ball comes behind you, keep your eyes on it. Stay calm. Try something creative, like a flick with your heel.",
+   "src": "/plays/narration/giroud-scorpion-2017/3.m4a",
+   "seconds": 9.5,
+   "words": [
+    {
+     "w": "Want",
+     "at": 0.35
+    },
+    {
+     "w": "to",
+     "at": 0.512
+    },
+    {
+     "w": "be",
+     "at": 0.588
+    },
+    {
+     "w": "brave",
+     "at": 0.713
+    },
+    {
+     "w": "like",
+     "at": 1.1
+    },
+    {
+     "w": "Giroud",
+     "at": 1.325
+    },
+    {
+     "w": "If",
+     "at": 2.2
+    },
+    {
+     "w": "the",
+     "at": 2.362
+    },
+    {
+     "w": "ball",
+     "at": 2.45
+    },
+    {
+     "w": "comes",
+     "at": 2.75
+    },
+    {
+     "w": "behind",
+     "at": 3.025
+    },
+    {
+     "w": "you",
+     "at": 3.425
+    },
+    {
+     "w": "keep",
+     "at": 3.6
+    },
+    {
+     "w": "your",
+     "at": 3.788
+    },
+    {
+     "w": "eyes",
+     "at": 3.938
+    },
+    {
+     "w": "on",
+     "at": 4.275
+    },
+    {
+     "w": "it",
+     "at": 4.475
+    },
+    {
+     "w": "Stay",
+     "at": 5.0
+    },
+    {
+     "w": "calm",
+     "at": 5.338
+    },
+    {
+     "w": "Try",
+     "at": 6.188
+    },
+    {
+     "w": "something",
+     "at": 6.45
+    },
+    {
+     "w": "creative",
+     "at": 6.812
+    },
+    {
+     "w": "like",
+     "at": 7.438
+    },
+    {
+     "w": "a",
+     "at": 7.562
+    },
+    {
+     "w": "flick",
+     "at": 7.638
+    },
+    {
+     "w": "with",
+     "at": 7.912
+    },
+    {
+     "w": "your",
+     "at": 8.037
+    },
+    {
+     "w": "heel",
+     "at": 8.15
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,324 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "mollet": {
+      "src": "/voice/books/putellas/mollet.m4a?v=coach-bella-1",
+      "duration": 45.5,
+      "scriptSha256": "8e13f948d36c44a668f12db583129caefe6f69d5081f0c33346aaaec76961e1e",
+      "cues": [
+        {
+          "text": "A girl who loved football",
+          "start": 0.0,
+          "duration": 2.275
+        },
+        {
+          "text": "Alexia Putellas was born in 1994 in Mollet del Vall\u00e8s, near Barcelona.",
+          "start": 2.275,
+          "duration": 6.375
+        },
+        {
+          "text": "She often travelled with her father to watch Barcelona play at the Camp Nou.",
+          "start": 8.65,
+          "duration": 5.1
+        },
+        {
+          "text": "Alexia loved playing football at school, but back then she did not believe a girl could make football her job.",
+          "start": 13.75,
+          "duration": 7.2
+        },
+        {
+          "text": "Open the school gate.",
+          "start": 20.95,
+          "duration": 2.0
+        },
+        {
+          "text": "Her mother let her join a team only if she stopped playing at school.",
+          "start": 22.95,
+          "duration": 4.625
+        },
+        {
+          "text": "Alexia later said this showed how society was unfair to girls who played football.",
+          "start": 27.575,
+          "duration": 5.95
+        },
+        {
+          "text": "But she said her family always accepted her dreams, and she kept on playing.",
+          "start": 33.525,
+          "duration": 5.45
+        },
+        {
+          "text": "Nobody gets to decide that a dream is not for you. Stay close to the people who believe in you.",
+          "start": 38.975,
+          "duration": 6.45
+        }
+      ]
+    },
+    "sabadell": {
+      "src": "/voice/books/putellas/sabadell.m4a?v=coach-bella-1",
+      "duration": 45.2,
+      "scriptSha256": "67f8d73b2d7a94f1c95d23691a208c3c53ed50fec125300130bf1e6fafac481d",
+      "cues": [
+        {
+          "text": "Small, but finding space",
+          "start": 0.0,
+          "duration": 2.35
+        },
+        {
+          "text": "At seven, Alexia tried a local boys\u2019 team, but she trained there only three times, because she did not like the feeling there.",
+          "start": 2.35,
+          "duration": 8.3
+        },
+        {
+          "text": "She joined the girls\u2019 team at Sabadell instead.",
+          "start": 10.65,
+          "duration": 3.625
+        },
+        {
+          "text": "She was younger, smaller and weaker than many teammates, and she could not yet shoot from far away.",
+          "start": 14.275,
+          "duration": 6.625
+        },
+        {
+          "text": "That frustrated her.",
+          "start": 20.9,
+          "duration": 2.125
+        },
+        {
+          "text": "Slide the ball into the space.",
+          "start": 23.025,
+          "duration": 2.45
+        },
+        {
+          "text": "Writers said Alexia found space where there was none.",
+          "start": 25.475,
+          "duration": 3.725
+        },
+        {
+          "text": "She was even made a team captain.",
+          "start": 29.2,
+          "duration": 2.6
+        },
+        {
+          "text": "Getting her to training was hard for her family, but by 2004 she was playing all the time.",
+          "start": 31.8,
+          "duration": 6.775
+        },
+        {
+          "text": "If a place doesn\u2019t feel right, it\u2019s okay to look for a better one. Small can still find a way.",
+          "start": 38.575,
+          "duration": 6.6
+        }
+      ]
+    },
+    "masia": {
+      "src": "/voice/books/putellas/masia.m4a?v=coach-bella-1",
+      "duration": 47.2,
+      "scriptSha256": "fe284c9b2f7aaec720998a08adf20b0e6b60266becfb928685c105c9a6acbc7a",
+      "cues": [
+        {
+          "text": "The door that closed",
+          "start": 0.0,
+          "duration": 1.975
+        },
+        {
+          "text": "In 2005, Alexia\u2019s dream came true.",
+          "start": 1.975,
+          "duration": 3.975
+        },
+        {
+          "text": "She joined a Barcelona girls\u2019 youth team, and together they won their league.",
+          "start": 5.95,
+          "duration": 5.5
+        },
+        {
+          "text": "But the next year, the club changed its girls\u2019 teams, and there was no team left for her age group.",
+          "start": 11.45,
+          "duration": 6.65
+        },
+        {
+          "text": "She had to leave.",
+          "start": 18.1,
+          "duration": 1.825
+        },
+        {
+          "text": "Open the door to the new club.",
+          "start": 19.925,
+          "duration": 2.475
+        },
+        {
+          "text": "At twelve, Alexia joined Espanyol, the other club in Barcelona, along with many other girls who had to leave.",
+          "start": 22.4,
+          "duration": 7.95
+        },
+        {
+          "text": "She kept learning there, and at sixteen she played for Espanyol\u2019s first team.",
+          "start": 30.35,
+          "duration": 5.25
+        },
+        {
+          "text": "Xavi Llorens, who later coached Barcelona, said he always expected her to return.",
+          "start": 35.6,
+          "duration": 6.15
+        },
+        {
+          "text": "When one door closes, keep going. A setback isn\u2019t the end of the story.",
+          "start": 41.75,
+          "duration": 5.45
+        }
+      ]
+    },
+    "father": {
+      "src": "/voice/books/putellas/father.m4a?v=coach-bella-1",
+      "duration": 46.6,
+      "scriptSha256": "9d2afae2595133bb4038c3f002f3266254a8aeb08420e88f9c97a221705cf7ba",
+      "cues": [
+        {
+          "text": "Her biggest fan",
+          "start": 0.0,
+          "duration": 1.85
+        },
+        {
+          "text": "At seventeen, Alexia moved to the club Levante, in Valencia, far from home.",
+          "start": 1.85,
+          "duration": 6.225
+        },
+        {
+          "text": "Her father was ill with heart problems, but he still travelled to Valencia again and again to watch her play.",
+          "start": 8.075,
+          "duration": 7.375
+        },
+        {
+          "text": "Alexia even thought about studying medicine to help him.",
+          "start": 15.45,
+          "duration": 4.3
+        },
+        {
+          "text": "In 2012, just before a big youth tournament with Spain, her father died.",
+          "start": 19.75,
+          "duration": 5.775
+        },
+        {
+          "text": "Light the star for her dad.",
+          "start": 25.525,
+          "duration": 2.275
+        },
+        {
+          "text": "Less than a month later, Alexia still went to the tournament, and she was Spain\u2019s captain.",
+          "start": 27.8,
+          "duration": 6.075
+        },
+        {
+          "text": "She later said that football was her escape, and also her connection to her father.",
+          "start": 33.875,
+          "duration": 5.575
+        },
+        {
+          "text": "It\u2019s okay to feel very sad when you lose someone. Doing the things you shared can help you feel close to them.",
+          "start": 39.45,
+          "duration": 7.15
+        }
+      ]
+    },
+    "sky": {
+      "src": "/voice/books/putellas/sky.m4a?v=coach-bella-1",
+      "duration": 45.2,
+      "scriptSha256": "63f1672e25538f8b523133b8d26bada34f77d5ff64c621906c03127617cd3720",
+      "cues": [
+        {
+          "text": "Fingers to the sky",
+          "start": 0.0,
+          "duration": 2.1
+        },
+        {
+          "text": "In the summer of 2012, after her father died, Barcelona asked Alexia to come back, and she signed on 10 July.",
+          "start": 2.1,
+          "duration": 8.6
+        },
+        {
+          "text": "The next year she won her first league title with them.",
+          "start": 10.7,
+          "duration": 3.825
+        },
+        {
+          "text": "When she scores, Alexia often points her fingers to the sky, for her father.",
+          "start": 14.525,
+          "duration": 5.75
+        },
+        {
+          "text": "Lift the flap to see who she thanks.",
+          "start": 20.275,
+          "duration": 2.65
+        },
+        {
+          "text": "In 2021, Alexia won the Ballon d\u2019Or, one of the biggest prizes in football.",
+          "start": 22.925,
+          "duration": 6.575
+        },
+        {
+          "text": "She dedicated it to her father and thanked her teammates.",
+          "start": 29.5,
+          "duration": 3.95
+        },
+        {
+          "text": "One of her tattoos shows her father holding her as a baby, and handing her a football.",
+          "start": 33.45,
+          "duration": 6.225
+        },
+        {
+          "text": "The people we love stay part of our story. You can keep them close in your own way.",
+          "start": 39.675,
+          "duration": 5.525
+        }
+      ]
+    },
+    "knee": {
+      "src": "/voice/books/putellas/knee.m4a?v=coach-bella-1",
+      "duration": 45.3,
+      "scriptSha256": "7c63943c5eac59e0ca05fe8443b9ac4fb200c90568f033ee6b4db3ab69400aeb",
+      "cues": [
+        {
+          "text": "The long way back",
+          "start": 0.0,
+          "duration": 1.875
+        },
+        {
+          "text": "On 5 July 2022, the day before the European Championship began, Alexia badly hurt her left knee in training.",
+          "start": 1.875,
+          "duration": 8.8
+        },
+        {
+          "text": "She needed an operation and almost a year to recover, and she watched Spain\u2019s first match from the stands.",
+          "start": 10.675,
+          "duration": 6.975
+        },
+        {
+          "text": "She later called it one of her lowest points.",
+          "start": 17.65,
+          "duration": 3.0
+        },
+        {
+          "text": "Climb the steps back, one at a time.",
+          "start": 20.65,
+          "duration": 2.975
+        },
+        {
+          "text": "While she healed, Alexia began planning a way to help girls play football, which became her Eleven Foundation.",
+          "start": 23.625,
+          "duration": 7.8
+        },
+        {
+          "text": "In 2023 she played again, and that summer she came on in the World Cup final as Spain won.",
+          "start": 31.425,
+          "duration": 7.05
+        },
+        {
+          "text": "Getting better can take a long time. Small steps count, and helping others can help you heal too.",
+          "start": 38.475,
+          "duration": 6.75
+        }
+      ]
+    }
+  }
+}

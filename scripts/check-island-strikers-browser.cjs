@@ -3,8 +3,7 @@ const assert=require('node:assert/strict');
 (async()=>{const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'});try{
  const mobile=process.argv.includes('--mobile'),page=await browser.newPage({viewport:mobile?{width:390,height:844}:{width:1280,height:800},isMobile:mobile,hasTouch:mobile}),errors=[];
  page.on('pageerror',e=>errors.push(e.message));await page.addInitScript(()=>localStorage.setItem('fi2-welcome-v1','completed'));
- await page.goto(process.env.FUTBOL_BASE_URL||'http://localhost:8092');await page.waitForFunction(()=>window.__fi2,null,{timeout:90000});
- await page.evaluate(()=>document.querySelector('[data-arcade-enter]').click());await page.getByRole('button',{name:/Island Strikers/}).click();
+ await page.goto(new URL('/arcade?game=live',process.env.FUTBOL_BASE_URL||'http://localhost:8092').href);
  const root=page.getByRole('region',{name:'Island Strikers arcade match'}),canvas=root.locator('canvas');
  await page.waitForFunction(()=>window.__fi2Live);
  const framing=await page.evaluate(()=>{const {camera,scene}=window.__fi2Live,d=camera.position.length(),p=camera.position.clone();let extent=0;for(const x of [-26,26])for(const z of [-14,14]){p.set(x,2,z).project(camera);extent=Math.max(extent,Math.abs(p.x),Math.abs(p.y));}return{extent,d,far:camera.far,fogNear:scene.fog.near};});
@@ -13,8 +12,8 @@ const assert=require('node:assert/strict');
  await page.waitForFunction(()=>window.__fi2Live.getElapsed()>.2);
  await page.evaluate(()=>window.__fi2Live.match.reset());
  if(mobile){const box=await page.getByRole('button',{name:'Hold / Shoot',exact:true}).boundingBox(),cdp=await page.context().newCDPSession(page);await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:box.x+box.width/2,y:box.y+box.height/2,id:1}]});
-  await page.waitForFunction(()=>window.__fi2Live.sim.charge>.25);await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
- }else{await page.keyboard.down('KeyK');await page.waitForFunction(()=>window.__fi2Live.sim.charge>.25);await page.keyboard.up('KeyK');}
+  await page.waitForFunction(()=>window.__fi2Live.sim.charge>.85);assert(await page.evaluate(()=>window.__fi2Live.camera.zoom>1.7&&window.__fi2Live.sim.timeScale<.5),'charge zooms and slows match');await page.screenshot({path:'/tmp/fi-strikers-power-charge.png'});await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+ }else{await page.keyboard.down('KeyK');await page.waitForFunction(()=>window.__fi2Live.sim.charge>.85);await page.keyboard.up('KeyK');}
  await page.waitForFunction(()=>window.__fi2Live.sim.eventKind==='shot');
  const shot=await page.evaluate(()=>{const s=window.__fi2Live.sim;return{owner:s.ball.owner,speed:Math.hypot(s.ball.vx,s.ball.vz)};});assert.equal(shot.owner,-1);assert(shot.speed>27);
  if(mobile){await page.setViewportSize({width:390,height:844});await page.getByRole('heading',{name:'Turn sideways to play'}).waitFor();}else await page.getByRole('button',{name:'Pause',exact:true}).click();await page.waitForTimeout(200);const frames=await canvas.getAttribute('data-frames'),time=await page.evaluate(()=>window.__fi2Live.getElapsed());await page.waitForTimeout(350);assert.equal(await canvas.getAttribute('data-frames'),frames);assert.equal(await page.evaluate(()=>window.__fi2Live.getElapsed()),time);
@@ -29,6 +28,6 @@ const assert=require('node:assert/strict');
  await page.waitForFunction(()=>document.querySelector('section[aria-label="Island Strikers arcade match"] header b')?.textContent==='1');
  await page.screenshot({path:`/tmp/fi-strikers-${mobile?'mobile':'desktop'}.png`});
  await page.evaluate(()=>window.__fi2Live.sim.time=179.99);await page.getByRole('heading',{name:'Full time.'}).waitFor();await page.waitForTimeout(200);const endFrames=await canvas.getAttribute('data-frames');await page.waitForTimeout(300);assert.equal(await canvas.getAttribute('data-frames'),endFrames);
- await page.getByRole('button',{name:'Play again',exact:true}).click();await page.waitForFunction(()=>window.__fi2Live.getElapsed()>0&&window.__fi2Live.getElapsed()<2&&!window.__fi2Live.sim.finished);assert.equal(await page.evaluate(()=>window.__fi2Live.sim.score[0]),0);
+ await page.getByRole('button',{name:/^(Play again|Next round)$/}).click();await page.waitForFunction(()=>window.__fi2Live.getElapsed()>0&&window.__fi2Live.getElapsed()<2&&!window.__fi2Live.sim.finished);assert.equal(await page.evaluate(()=>window.__fi2Live.sim.score[0]),0);
  assert.deepEqual(errors,[]);console.log('ISLAND_STRIKERS_BROWSER_PASS',JSON.stringify({mobile,shot,pausedFrames:frames,errors}));
  }finally{await browser.close();}})().catch(e=>{console.error(e);process.exit(1);});

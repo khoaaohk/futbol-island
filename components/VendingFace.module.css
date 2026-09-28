@@ -1,0 +1,233 @@
+/* Vending machine face (original cabinet art; docs/vending-visuals-HANDOFF.md). Every part is absolutely placed from
+   VENDING_FACE_LAYOUT (inline %), matching the 3D front painted by lib/graphics/vendingMachines.ts. The root is transparent:
+   the cabinet between the panels is the real mesh. Text is --fs (≥12px), taps ≥44px at 844×390. One-shot animations only
+   (fade in, coins, leave-the-shelf, drop), none with reduced motion; no backdrop blur. */
+.face{position:absolute;left:0;top:0;transform-origin:0 0;font-size:var(--fs);line-height:1.2;color:#1c1f25}
+/* Brief crossfade only: neither the arriving face nor WebGL canvas is filtered. */
+.face[data-entry]{animation:faceIn .42s ease-out}
+@keyframes faceIn{0%{opacity:0}55%{opacity:.9}100%{opacity:1}}
+.arrival{z-index:1;pointer-events:none;overflow:hidden;border-radius:8px}
+.arrivalSweep{position:absolute;inset:-20% -65%;opacity:0;background:linear-gradient(110deg,transparent 42%,#fff1d322 47%,#ffffff77 50%,#fff1d322 53%,transparent 58%);animation:arrivalSweep .68s .05s ease-out}
+@keyframes arrivalSweep{0%{opacity:0;transform:translateX(-36%)}24%{opacity:.85}100%{opacity:0;transform:translateX(36%)}}
+.arrivalSpark{position:absolute;width:12px;height:12px;opacity:0;background:#fff5c9;clip-path:polygon(50% 0,61% 37%,100% 50%,61% 61%,50% 100%,38% 61%,0 50%,38% 38%);animation:arrivalSpark .38s calc(.16s + var(--spark) * .085s) ease-out}
+.arrivalSpark:nth-child(2){left:3%;top:19%}.arrivalSpark:nth-child(3){left:34%;top:2%}.arrivalSpark:nth-child(4){right:3%;top:46%}.arrivalSpark:nth-child(5){right:20%;bottom:2%}
+@keyframes arrivalSpark{0%{opacity:0;transform:scale(.35) rotate(-15deg)}35%{opacity:.9;transform:scale(1) rotate(0)}100%{opacity:0;transform:scale(.45) rotate(15deg)}}
+@media(prefers-reduced-motion:reduce){.face[data-entry]{animation:none}.arrival{display:none}}
+.face>*{position:absolute;box-sizing:border-box}
+:where(.face) :where(button){font:inherit;color:inherit;margin:0;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none}
+.face button:focus-visible{outline:3px solid #ffc35b;outline-offset:2px}
+/* Shelf slots: no yellow focus box around the product (the machine focuses a slot when it opens). The LED names the selected item. */
+.face .slot:focus-visible{outline:none}
+
+.glass{border:5px solid #23272e;border-radius:8px;overflow:hidden;background:linear-gradient(#f1f9ff,#cfe2ee);box-shadow:inset 0 0 0 2px #ffffff80,inset 0 10px 24px #6d8ea333}
+.glare{position:absolute;inset:0;pointer-events:none;background:linear-gradient(115deg,#ffffff00 26%,#ffffff40 31%,#ffffff00 40%)}
+.flip,.label{min-width:44px;min-height:44px;border:0;border-radius:7px;background:#23272e;color:#fff1d3;font-weight:900;cursor:pointer;box-shadow:inset 0 -3px 0 #00000055}
+.flip{font-size:calc(var(--fs) + 2px);padding:0}
+.flip:active,.label:active{transform:translateY(1px);box-shadow:none}
+.label{display:flex;align-items:center;justify-content:center;gap:8px;padding:0 8px;background:#2f3640;letter-spacing:.05em;text-transform:uppercase}
+.label span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.label small{flex:none;font:800 var(--fs)/1 ui-monospace,Menlo,monospace;color:#7cf29a}
+.labelSpecial{background:linear-gradient(90deg,#ffb800,#ffe27a,#ffb800);color:#5a2a00;box-shadow:inset 0 -3px 0 #b7830077}
+.labelSpecial small{color:#5a2a00}
+
+/* Product slot = one hit area: window, name, lit push button (its band starts at --push-y of the slot). */
+.slot,.empty{display:flex;flex-direction:column;gap:2px;padding:3px 3px 0;border:0;border-radius:8px;background:none;text-align:center;border-bottom:4px solid #8fa4b3}
+.slot{cursor:pointer}
+.window{position:relative;flex:1 1 0;min-height:0;display:grid;place-items:center;border-radius:7px;overflow:hidden;background:radial-gradient(ellipse at 50% 85%,#dfe8ee 0%,#ffffff 70%);box-shadow:inset 0 0 0 1px #8fa4b366}
+.window>img,.window>span{width:100%;height:100%;object-fit:contain}
+.window[data-kind=ball] img,.drop[data-kind=ball] img{transform:scale(1.7)}
+.slot[data-special] .window{background:radial-gradient(ellipse at 50% 80%,#ffe27a 0%,#fff8dc 72%);box-shadow:inset 0 0 0 3px #e8a91a,0 0 12px #ffcf33b3}
+.slot[data-state=locked] .window img,.slot[data-state=soldout] .window img{filter:grayscale(.85);opacity:.55}
+.name{flex:none;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:var(--fs);font-weight:800;line-height:1.12;color:#1f2630;overflow-wrap:anywhere}
+.face[data-compact] .name{-webkit-line-clamp:1}
+.push{flex:none;display:flex;align-items:center;justify-content:center;gap:5px;height:calc(100% - var(--push-y));min-height:calc(var(--fs) * 1.6);margin:0 3px 3px;border-radius:999px;background:#1c1f25;color:#7cf29a;
+ font:800 var(--fs)/1 ui-monospace,Menlo,monospace;box-shadow:inset 0 -2px 0 #000}
+.lamp{flex:none;width:.55em;height:.55em;border-radius:50%;background:#56606b;box-shadow:inset 0 1px 1px #0008}
+.push[data-lit]{background:var(--vm-light,#fff4c9);color:var(--vm-ink,#2a0a07);box-shadow:0 0 0 2px #fff,0 0 12px var(--vm-light),0 0 18px #ffe27acc}
+.push[data-lit] .lamp{background:#ff4d3d;box-shadow:0 0 8px #ff4d3d}
+.slot[aria-pressed=true] .window{box-shadow:inset 0 0 0 3px #23272e,0 0 0 2px var(--vm-light,#fff)}
+.slot[data-state=owned] .push:not([data-lit]){color:#ffd76a}.slot[data-state=equipped] .push:not([data-lit]){background:#315845;color:#fff4da}
+.slot[data-state=locked] .push:not([data-lit]),.slot[data-state=soldout] .push:not([data-lit]){color:#9aa3ad}.slot[data-state=short] .push:not([data-lit]){color:#7cf29a99}
+.slot[data-vending-out] .window>*{animation:vendOut .45s ease-in forwards}
+@keyframes vendOut{to{transform:translateY(70%) scale(.7);opacity:0}}
+.coin{display:inline-block;width:.9em;height:.9em;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff3b0,#f2b62c 55%,#b67a10);box-shadow:0 0 0 1px #8a5a0a;flex:none}
+.only{position:absolute;top:3px;left:3px;padding:2px 5px;border-radius:5px;background:#ffcf33;color:#5a2a00;font-style:normal;font-size:12px;font-weight:900;line-height:1.1;box-shadow:0 2px 0 #b78300}
+
+.led{display:flex;flex-direction:column;justify-content:center;gap:2px;padding:4px 10px;border-radius:6px;overflow:hidden;background:#152018;color:#7cf29a;box-shadow:inset 0 0 0 4px #0a0f0b,inset 0 0 18px #7cf29a22;font-family:ui-monospace,Menlo,monospace}
+.led p{margin:0}
+.ledMsg{font-weight:800;font-size:calc(var(--fs) + 1px);line-height:1.2;text-shadow:0 0 6px #7cf29a88;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ledSub{font:600 var(--fs)/1.25 system-ui,sans-serif;color:#b6f5c6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.face[data-compact] .ledSub{-webkit-line-clamp:1}
+.led[data-tone=warn]{color:#ffcf5a}.led[data-tone=warn] .ledMsg{text-shadow:0 0 6px #ffcf5a88}.led[data-tone=warn] .ledSub{color:#ffe7a8}
+.coinSlot{min-width:44px;min-height:44px;display:grid;grid-template-rows:auto 1fr auto;justify-items:center;gap:2px;padding:4px;border:0;border-radius:4px;cursor:pointer;
+ background:linear-gradient(90deg,#b9bfc8,#e1e4e9 35%,#c3c8d0);box-shadow:inset 0 0 0 2px #ffffff80}
+.coinSlot:active{transform:translateY(1px)}
+.coinCount{font:900 var(--fs)/1 ui-monospace,Menlo,monospace;letter-spacing:.08em;color:#7cf29a;background:#152018;padding:3px 6px;border-radius:4px}
+.mouth{position:relative;align-self:center;width:12px;height:80%;min-height:16px;border-radius:6px;background:#1b1d21;box-shadow:0 0 0 3px #50565f,inset 0 2px 3px #000}
+.coinSlot small{font-size:12px;font-weight:900;letter-spacing:.06em;color:#2b3440}
+.face[data-compact] .coinSlot{grid-template-rows:auto 1fr}.face[data-compact] .coinSlot small{display:none}
+.dropCoin{position:absolute;left:50%;top:0;width:18px;height:18px;margin-left:-9px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff3b0 0 18%,#f6c948 19% 58%,#c98f1f 59%);box-shadow:inset 0 0 0 2px #b27a17;
+ opacity:0;animation:coinIn .34s calc(120ms + var(--i) * 170ms) cubic-bezier(.5,0,.9,.6) both}
+@keyframes coinIn{0%{opacity:1;transform:translateY(-2.6em)}70%{opacity:1;transform:translateY(0) rotate(80deg) scaleX(.35)}100%{opacity:0;transform:translateY(4px) rotate(90deg) scaleX(.15)}}
+
+.tray{min-height:44px;display:flex;align-items:flex-end;justify-content:center;padding:0 12px 5px;border:0;border-radius:4px;overflow:hidden;background:#0c0d10;cursor:default;box-shadow:inset 0 0 0 5px #2b2f36,inset 0 14px 0 5px #3d434c}
+.tray:not(:disabled){cursor:pointer;box-shadow:inset 0 0 0 5px #2b2f36,inset 0 14px 0 5px #3d434c,0 0 0 3px #ffe27a,0 0 16px #ffe27acc}
+.trayHint{position:absolute;right:8px;bottom:8px;max-width:48%;text-align:right;z-index:1;font:900 12px/1 ui-monospace,Menlo,monospace;letter-spacing:.08em;color:#9aa3ad}
+.tray:not(:disabled) .trayHint{color:#ffe27a}
+.drop{position:absolute;left:5%;right:54%;bottom:6px;top:8px;display:grid;place-items:center;animation:drop .62s cubic-bezier(.3,0,.4,1) both}
+.drop img{width:100%;height:100%;object-fit:contain}
+@keyframes drop{0%{transform:translateY(-160%) scale(.8);opacity:0}55%{transform:translateY(6%) scale(1);opacity:1}72%{transform:translateY(-10%)}86%{transform:translateY(2%)}100%{transform:none}}
+.sticker{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:2px;padding:3px 6px;border-radius:6px;background:#fffdf6;color:#3a3f47;font-size:12px;font-weight:800;line-height:1.15;text-align:center;box-shadow:0 1px 0 #0003}
+.overlay{z-index:2;pointer-events:none}.overlay>*{pointer-events:auto}
+
+@media(hover:hover){.slot:hover .window{box-shadow:inset 0 0 0 2px #23272e}.flip:hover,.label:hover{filter:brightness(1.15)}.coinSlot:hover{filter:brightness(1.05)}}
+@media(prefers-reduced-motion:reduce){.face,.drop,.dropCoin,.slot[data-vending-out] .window>*{animation:none}.dropCoin{display:none}}
+
+.window>canvas,.drop>canvas{display:block;min-height:0;max-height:100%}.tray:not(:disabled) .trayHint{line-height:1.25}
+
+/* Keep product, label and push bands at the same fractions as the atlas. */
+.slot .window{position:absolute;left:3px;right:3px;top:3px;height:42%;display:grid}
+.slot .name{position:absolute;left:3px;right:3px;top:45%;max-height:32%;font-size:var(--fs)}
+.slot .push{position:absolute;left:6px;right:6px;top:var(--push-y);height:20%;margin:0;min-height:0}
+
+/* Physical glass, recessed shelves and short interaction-only feedback. */
+.glass{border-top-color:#141b24;border-bottom-color:#83929d;box-shadow:inset 0 0 0 2px #ffffff55,inset 5px 9px 14px #182f4566,inset -4px -3px 8px #fff8}
+.window{box-shadow:inset 0 5px 8px #253f4940,inset 0 -3px 0 #fff9}
+.flip,.label{font-size:max(12px,calc(var(--fs) * .9));border:4px solid transparent;background-clip:padding-box;box-shadow:inset 0 -3px 0 #0005}
+.slot .window>*{transition:transform .18s ease-out}
+.slot[aria-pressed=true]:not([data-vending-out]) .window>*{animation:shelfNudge .32s ease-out both}
+@keyframes shelfNudge{0%{translate:0 0}45%{translate:0 -4px;rotate:-3deg}100%{translate:0 0}}
+.face[data-phase=coins] .mouth{animation:slotAccept .55s ease-out}
+@keyframes slotAccept{45%{box-shadow:0 0 0 3px #b6c5c9,inset 0 2px 3px #000,0 0 9px #ffe79f}100%{box-shadow:0 0 0 3px #50565f,inset 0 2px 3px #000}}
+.face[data-phase=tray] .tray{animation:traySettle .24s ease-out}
+@keyframes traySettle{30%{transform:translateY(2px)}70%{transform:translateY(-1px)}100%{translate:0 0}}
+@media(prefers-reduced-motion:reduce){.slot .window>*{transition:none}.slot[aria-pressed=true]:not([data-vending-out]) .window>*,.face[data-phase=coins] .mouth,.face[data-phase=tray] .tray{animation:none}}
+
+.window[data-kind=ball] img{transform:translateY(-8%) scale(1.35)}
+.only{top:auto;bottom:2px;left:3px;background:#ffcf33e8;padding:1px 4px}
+
+.slot .window{height:50%}.slot .name{top:52%;max-height:25%}.ledMsg{font-size:var(--fs);-webkit-line-clamp:1}.ledSub{-webkit-line-clamp:2;font-size:max(12px,calc(var(--fs) * .9))}.face[data-compact] .ledSub{display:none}.coinSlot{grid-template-rows:auto 1fr}.coinSlot small{display:none}
+
+/* A spring flap and separated pickup bay explain the delivery without a new loop. */
+.tray{perspective:300px;background:linear-gradient(#090e14 0 58%,#202b34 59%,#11191f 100%);box-shadow:inset 0 0 0 5px #2b2f36,inset 0 -5px 0 #89959c}
+.trayFlap{position:absolute;left:5px;right:5px;top:5px;height:25%;pointer-events:none;transform-origin:50% 0;background:linear-gradient(#56616c,#303b46);border-bottom:2px solid #85919b;box-shadow:0 3px 4px #0007;z-index:2}
+.face[data-phase=drop] .trayFlap{animation:flapDelivery .62s ease-out both}
+.face[data-phase=tray] .trayFlap{transform:rotateX(-28deg)}
+@keyframes flapDelivery{0%,12%{transform:rotateX(0)}40%{transform:rotateX(-76deg)}72%{transform:rotateX(-16deg)}100%{transform:rotateX(-28deg)}}
+.tray .drop{top:14%;bottom:10%;left:7%;right:52%;z-index:1}
+.tray .drop[data-kind=ball] img{transform:scale(1.65)}
+.trayHint{right:12px;bottom:26%;max-width:44%;padding:5px 0;text-shadow:0 1px 0 #000}
+.tray:not(:disabled) .trayHint::before{content:'↓';display:inline-block;margin-right:7px;color:#fff1d3}
+.face[data-phase=tray] .trayHint{animation:pickupReady .42s ease-out both}
+@keyframes pickupReady{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.pageTitle{animation:pageSettle .22s ease-out both}
+@keyframes pageSettle{from{opacity:.3;transform:translateY(4px)}to{opacity:1;transform:none}}
+.slot:active .push{translate:0 2px;box-shadow:inset 0 2px 2px #0008}
+.led::after{content:'';position:absolute;inset:4px;pointer-events:none;background:repeating-linear-gradient(0deg,#0000000a 0 1px,transparent 1px 3px)}
+@media(prefers-reduced-motion:reduce){.pageTitle,.face[data-phase=drop] .trayFlap,.face[data-phase=tray] .trayHint{animation:none}.face[data-phase=tray] .trayFlap{transform:none}}
+/* Replaced images must shrink inside the grid: their 340×220 intrinsic minimum
+   otherwise extends below the tray even when object-fit is contain. */
+.tray .drop{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr)}
+.tray .drop>*{min-width:0;min-height:0;max-width:100%;max-height:100%}
+/* Short landscape still fits the category name beside its page count. */
+.face[data-compact] .label{gap:4px;padding-inline:3px;letter-spacing:0}
+
+.tray:not(:disabled){touch-action:none}.tray:not(:disabled):active .drop{translate:0 -5px;scale:1.06}
+@media(prefers-reduced-motion:reduce){.tray:not(:disabled):active .drop{translate:none;scale:none}}
+
+/* Directional light from the upper left: raised metal surrounds, deep display
+   bays and a projecting shelf edge. Static paint, no filters or idle motion. */
+.glass{border-width:6px;border-color:#b9cbc9 #34434c #52646e #90a8ae;background:linear-gradient(90deg,#718895,#d7e4e6 6%,#c5d6dc 94%,#647e8d);box-shadow:0 3px 0 #172b36,0 7px 10px #102a3540,inset 0 0 0 2px #192e3f,inset 0 12px 14px #132f4566}
+.glare{background:linear-gradient(115deg,transparent 28%,#ffffff30 29%,#ffffff08 41%,transparent 42%)}
+.flip,.label{border-width:2px;border-color:#e6eeee55 #0004 #0008 #fff3;box-shadow:0 3px 0 #14232e,inset 0 1px 0 #fff5,inset 0 -2px 0 #0003;border-radius:6px}
+.slot{border-bottom:4px solid #627988;box-shadow:0 2px 0 #edf0dd,0 5px 5px #19374644;background:linear-gradient(#d1dfe1,#a9bec8);border-radius:5px}
+.slot .window{border:1px solid #758d96;border-top:4px solid #526d79;border-bottom:4px solid #b8c8c7;background:radial-gradient(ellipse at 50% 90%,#f2f2df,#c8dadd 75%);box-shadow:inset 6px 5px 9px #1a374944,inset -3px 0 4px #fff7,0 2px 0 #445d69}
+.slot[data-special] .window{background:radial-gradient(ellipse at 50% 85%,#fff4bd,#e0cd8d);border-color:#a48b4e #d6c589 #eedbaa #8d793e;box-shadow:inset 5px 6px 9px #68552855,inset -3px 0 5px #fff7,0 2px 0 #806e40}
+.window::before,.window::after{content:'';position:absolute;top:0;bottom:0;width:10%;pointer-events:none;z-index:1}
+.window::before{left:0;background:#193b4b24;clip-path:polygon(0 0,100% 12%,100% 88%,0 100%)}
+.window::after{right:0;background:#fff8;clip-path:polygon(100% 0,0 12%,0 88%,100% 100%)}
+.name{text-shadow:0 1px 0 #fff7}
+.push{border:1px solid #071923;box-shadow:0 2px 0 #4b6572,inset 0 1px 0 #ffffff50,inset 0 -3px 0 #0008}
+.coinSlot{border:2px solid;border-color:#eff3e9 #6e828d #5c707c #cad9d9;box-shadow:0 3px 0 #243947,inset 0 0 0 1px #fff8}
+.led{border:2px solid;border-color:#334b56 #9cb1b5 #b9c8c3 #425b63;box-shadow:inset 3px 5px 9px #000b,0 2px 0 #213542}
+.tray{border:2px solid;border-color:#334650 #7e9196 #ced8cc #536d78;box-shadow:inset 0 0 0 4px #233743,inset 0 16px 12px #000b,0 4px 0 #273e49}
+
+/* Perspective shortens the farther controls slightly; retain a full touch target. */
+.flip,.label{min-height:46px}
+
+/* Two continuous shelves replace the tiled product cubbies. Their top surfaces
+   recede into the cabinet; products sit above a soft, static contact shadow. */
+.shelf{pointer-events:none;background:linear-gradient(#eaf0e5 0 28%,#a6bbc1 29% 64%,#526e7b 65% 83%,#293f50 84%);box-shadow:0 7px 7px #102d4540;clip-path:polygon(3% 0,97% 0,100% 40%,100% 100%,0 100%,0 40%)}
+.slot{background:none;border:0;box-shadow:none}
+.slot .window,.slot[data-special] .window{overflow:visible;background:none;border:0;box-shadow:none;border-radius:0}
+.window::before{left:18%;right:18%;top:auto;bottom:1%;width:auto;height:12%;background:radial-gradient(ellipse,#1d354b55,transparent 70%);clip-path:none;z-index:0}
+.window::after{display:none}
+.slot .window>img,.slot .window>canvas,.slot .window>span{position:relative;z-index:1}
+.slot .name{top:59%;max-height:19%;left:5%;right:5%;color:#233746;line-height:1.06}
+.slot[aria-pressed=true] .window{box-shadow:none;background:radial-gradient(ellipse at 50% 95%,#fff0aa70,transparent 65%)}
+@media(hover:hover){.slot:hover .window{box-shadow:none;background:radial-gradient(ellipse at 50% 95%,#fff8,transparent 65%)}}
+
+.only{z-index:2}
+/* Miniatures settle onto the shelf plane instead of hovering in their bays. */
+.window>img{object-position:center bottom}
+.window[data-kind=ball] img{transform:translateY(10%) scale(1.5)}
+.window>span{align-items:end!important}
+
+/* Reference direction: open display, broad metal shelf fronts, and integrated
+   labels/selection keys rather than six separate interface tiles. */
+.glass{background:linear-gradient(90deg,#4c7479,#81a6a5 8%,#8aafab 88%,#45676d)}
+.shelf{background:linear-gradient(#d8e7d9 0%,#b5cfcc 10%,#557986 11%,#466574 96%,#263e50 97%);clip-path:polygon(2% 0,98% 0,100% 10%,100% 100%,0 100%,0 10%);box-shadow:0 7px 8px #102d4555}
+.slot .window{height:62%}
+.slot .name{top:66%;max-height:17%;color:#fff1d3;text-shadow:0 1px 0 #233746;line-height:1.02}
+.slot .push{top:86%;height:12%;border-radius:5px;left:12%;right:12%;font-size:12px;box-shadow:inset 0 1px 0 #ffffff44,0 2px 0 #243b49}
+.flip,.label{min-height:48px}
+.only{font-size:12px;bottom:0;padding:1px 3px}
+
+/* Back wall and narrow side returns reveal the depth inside the glazed cabinet. */
+.glass::before,.glass::after{content:'';position:absolute;top:0;bottom:0;width:7%;pointer-events:none}
+.glass::before{left:0;background:linear-gradient(90deg,#284e5b,#5c8589);clip-path:polygon(0 0,100% 4%,100% 96%,0 100%)}
+.glass::after{right:0;background:linear-gradient(90deg,#c1d6c6,#739c98);clip-path:polygon(100% 0,0 4%,0 96%,100% 100%)}
+
+.slot .window{height:53%}
+.slot .name{top:59%;max-height:25%;font-size:13px;line-height:1.04}
+.only{top:1px;bottom:auto;background:#ffe08dd9}
+.window[data-kind=ball] img{transform:translateY(0) scale(1.5)}
+.ledSub{-webkit-line-clamp:1;font-size:12px}.label small{font-size:12px}
+
+.coinSlot,.tray{min-height:48px}
+
+/* The whole face already has the cabinet's projective transform. Keep shelf
+   fronts rectangular here rather than adding a second, contradictory trapezoid. */
+.shelf{clip-path:none;background:linear-gradient(#b5cfcc 0 3%,#557986 4%,#466574 96%,#263e50 97%)}
+.slot[aria-pressed=true] .window,.slot[data-special] .window{background:none;box-shadow:none}
+.push[data-lit]{background:#1c1f25;color:#7cf29a;box-shadow:inset 0 1px 0 #ffffff44,0 2px 0 #243b49}
+.push[data-lit] .lamp{background:#91c6b4;box-shadow:none}
+@media(hover:hover){.slot:hover .window{background:none;box-shadow:none}}
+
+/* A separate front pane: reflected sky sits in front of the products, while the
+   teal side returns remain behind them. Finite motion only on a real action. */
+.glassSurface{z-index:2;pointer-events:none;overflow:hidden;border-radius:2px;border:1px solid #dcfff12e;background:linear-gradient(100deg,#d1faff08,transparent 22%,transparent 80%,#b9e8e611);box-shadow:inset 2px 0 0 #e1fff233,inset -3px 0 0 #163d4655,inset 0 2px 0 #fff5,inset 0 -2px 0 #b6ddd333}
+.reflection{position:absolute;inset:-12%;pointer-events:none;background:linear-gradient(112deg,transparent 0 29%,#ffffff16 29.3% 34%,transparent 34.3% 35%,#ffffff22 35.2% 35.8%,transparent 36.1% 72%,#d8fff10b 72.3% 85%,transparent 85.3%);transform-origin:50% 50%}
+.glassEdge{position:absolute;inset:0;border-left:1px solid #f0fff950;border-right:1px solid #f0fff91c;box-shadow:inset 0 12px 14px -14px #102c40;pointer-events:none}
+.glare{opacity:.35}
+.overlay{z-index:4}
+.slot .window>*{animation:stockSettle .38s var(--shelf-delay,0ms) cubic-bezier(.2,.7,.25,1) both}
+@keyframes stockSettle{from{opacity:0;translate:0 7px;scale:.96}70%{opacity:1;translate:0 -1px;scale:1}to{opacity:1;translate:0 0;scale:1}}
+.face[data-entry] .reflection{animation:glassArrival .8s ease-out both}
+@keyframes glassArrival{from{opacity:0;translate:-8px 0}to{opacity:1;translate:0 0}}
+.face[data-phase=drop] .shelf{animation:shelfRelease .3s .07s ease-out}
+@keyframes shelfRelease{0%,100%{translate:0 0}30%{translate:0 1px}62%{translate:0 -.5px}}
+.face[data-phase=drop] .reflection{animation:glassResonance .34s .12s ease-out}
+@keyframes glassResonance{0%,100%{translate:0 0}25%{translate:1px 0}55%{translate:-.6px 0}}
+.coinSlot:active .mouth{scale:.96;translate:0 1px}
+.flip:active,.label:active{translate:0 2px;box-shadow:0 1px 0 #14232e,inset 0 2px 3px #0005}
+.tray:not(:disabled):active .trayFlap{transform:rotateX(-65deg)}
+@media(prefers-reduced-motion:reduce){.slot .window>*,.face[data-entry] .reflection,.face[data-phase=drop] .shelf,.face[data-phase=drop] .reflection{animation:none}.flip:active,.label:active,.coinSlot:active .mouth{translate:none;scale:none}.tray:not(:disabled):active .trayFlap{transform:none}}
+@media(prefers-reduced-motion:no-preference){.trayFlap{transition:transform .18s ease-out}}
+@media print{.glassSurface{display:none}}
+/* Store ball snapshots include generous transparent camera framing. Compensate
+   within the shelf bay while keeping their visible lower edge on its surface. */
+.window[data-kind=ball] img{transform:translateY(-25%) scale(2.35)}
+/* Bug fix (Sep 27): product art may overflow its window (overflow:visible) and used to cover the ▶ page arrow,
+   swallowing taps. Artwork is decorative; the slot button underneath handles the tap. */
+.slot .window>*{pointer-events:none}

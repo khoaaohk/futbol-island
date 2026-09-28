@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Cardiff, 2002",
+   "text": "Cardiff, 2002, the FA Cup final. Arsenal lead Chelsea one\u2013nil. Freddie Ljungberg races from his own half, past John Terry... and curls it in! Two\u2013nil!",
+   "src": "/plays/narration/ljungberg-cup-final-2002/1.m4a",
+   "seconds": 11.9,
+   "words": [
+    {
+     "w": "Cardiff",
+     "at": 0.35
+    },
+    {
+     "w": "2002",
+     "at": 0.8
+    },
+    {
+     "w": "the",
+     "at": 1.7
+    },
+    {
+     "w": "FA",
+     "at": 1.837
+    },
+    {
+     "w": "Cup",
+     "at": 2.075
+    },
+    {
+     "w": "final",
+     "at": 2.3
+    },
+    {
+     "w": "Arsenal",
+     "at": 3.138
+    },
+    {
+     "w": "lead",
+     "at": 3.625
+    },
+    {
+     "w": "Chelsea",
+     "at": 3.888
+    },
+    {
+     "w": "one",
+     "at": 4.338
+    },
+    {
+     "w": "nil",
+     "at": 4.65
+    },
+    {
+     "w": "Freddie",
+     "at": 5.45
+    },
+    {
+     "w": "Ljungberg",
+     "at": 5.75
+    },
+    {
+     "w": "races",
+     "at": 6.175
+    },
+    {
+     "w": "from",
+     "at": 6.575
+    },
+    {
+     "w": "his",
+     "at": 6.713
+    },
+    {
+     "w": "own",
+     "at": 6.85
+    },
+    {
+     "w": "half",
+     "at": 7.05
+    },
+    {
+     "w": "past",
+     "at": 7.425
+    },
+    {
+     "w": "John",
+     "at": 7.75
+    },
+    {
+     "w": "Terry",
+     "at": 8.037
+    },
+    {
+     "w": "and",
+     "at": 8.925
+    },
+    {
+     "w": "curls",
+     "at": 9.062
+    },
+    {
+     "w": "it",
+     "at": 9.438
+    },
+    {
+     "w": "in",
+     "at": 9.525
+    },
+    {
+     "w": "Two",
+     "at": 10.15
+    },
+    {
+     "w": "nil",
+     "at": 10.55
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. He runs straight at the defence. Terry slides in, but Freddie skips over his leg and keeps the ball.",
+   "src": "/plays/narration/ljungberg-cup-final-2002/2.m4a",
+   "seconds": 8.6,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.188
+    },
+    {
+     "w": "He",
+     "at": 2.125
+    },
+    {
+     "w": "runs",
+     "at": 2.275
+    },
+    {
+     "w": "straight",
+     "at": 2.562
+    },
+    {
+     "w": "at",
+     "at": 2.862
+    },
+    {
+     "w": "the",
+     "at": 2.938
+    },
+    {
+     "w": "defence",
+     "at": 3.025
+    },
+    {
+     "w": "Terry",
+     "at": 4.013
+    },
+    {
+     "w": "slides",
+     "at": 4.412
+    },
+    {
+     "w": "in",
+     "at": 4.85
+    },
+    {
+     "w": "but",
+     "at": 5.112
+    },
+    {
+     "w": "Freddie",
+     "at": 5.287
+    },
+    {
+     "w": "skips",
+     "at": 5.688
+    },
+    {
+     "w": "over",
+     "at": 6.013
+    },
+    {
+     "w": "his",
+     "at": 6.213
+    },
+    {
+     "w": "leg",
+     "at": 6.375
+    },
+    {
+     "w": "and",
+     "at": 6.713
+    },
+    {
+     "w": "keeps",
+     "at": 6.825
+    },
+    {
+     "w": "the",
+     "at": 7.125
+    },
+    {
+     "w": "ball",
+     "at": 7.225
+    }
+   ]
+  },
+  {
+   "label": "The curl",
+   "text": "From behind the goal, see the curl. He aims outside the far post, and it bends back in, past Cudicini!",
+   "src": "/plays/narration/ljungberg-cup-final-2002/3.m4a",
+   "seconds": 7.6,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "behind",
+     "at": 0.487
+    },
+    {
+     "w": "the",
+     "at": 0.863
+    },
+    {
+     "w": "goal",
+     "at": 0.95
+    },
+    {
+     "w": "see",
+     "at": 1.562
+    },
+    {
+     "w": "the",
+     "at": 1.775
+    },
+    {
+     "w": "curl",
+     "at": 1.875
+    },
+    {
+     "w": "He",
+     "at": 2.825
+    },
+    {
+     "w": "aims",
+     "at": 2.975
+    },
+    {
+     "w": "outside",
+     "at": 3.237
+    },
+    {
+     "w": "the",
+     "at": 3.638
+    },
+    {
+     "w": "far",
+     "at": 3.725
+    },
+    {
+     "w": "post",
+     "at": 3.95
+    },
+    {
+     "w": "and",
+     "at": 4.5
+    },
+    {
+     "w": "it",
+     "at": 4.612
+    },
+    {
+     "w": "bends",
+     "at": 4.7
+    },
+    {
+     "w": "back",
+     "at": 5.025
+    },
+    {
+     "w": "in",
+     "at": 5.312
+    },
+    {
+     "w": "past",
+     "at": 5.625
+    },
+    {
+     "w": "Cudicini",
+     "at": 5.975
+    }
+   ]
+  },
+  {
+   "label": "Curl it far",
+   "text": "Run at defenders, then look up. Use the inside of your foot and curl it into the far corner!",
+   "src": "/plays/narration/ljungberg-cup-final-2002/4.m4a",
+   "seconds": 6.9,
+   "words": [
+    {
+     "w": "Run",
+     "at": 0.425
+    },
+    {
+     "w": "at",
+     "at": 0.675
+    },
+    {
+     "w": "defenders",
+     "at": 0.775
+    },
+    {
+     "w": "then",
+     "at": 1.725
+    },
+    {
+     "w": "look",
+     "at": 1.95
+    },
+    {
+     "w": "up",
+     "at": 2.125
+    },
+    {
+     "w": "Use",
+     "at": 2.9
+    },
+    {
+     "w": "the",
+     "at": 3.188
+    },
+    {
+     "w": "inside",
+     "at": 3.325
+    },
+    {
+     "w": "of",
+     "at": 3.763
+    },
+    {
+     "w": "your",
+     "at": 3.837
+    },
+    {
+     "w": "foot",
+     "at": 4.0
+    },
+    {
+     "w": "and",
+     "at": 4.325
+    },
+    {
+     "w": "curl",
+     "at": 4.463
+    },
+    {
+     "w": "it",
+     "at": 4.787
+    },
+    {
+     "w": "into",
+     "at": 4.862
+    },
+    {
+     "w": "the",
+     "at": 5.037
+    },
+    {
+     "w": "far",
+     "at": 5.138
+    },
+    {
+     "w": "corner",
+     "at": 5.425
+    }
+   ]
+  }
+ ]
+}

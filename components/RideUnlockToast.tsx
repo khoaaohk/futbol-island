@@ -33,6 +33,6 @@ export default function RideUnlockToast({blocked}:{blocked:boolean}){
  if(shown===null)return null;
  const labels=openedLabels(shown.from,shown.to);
  return <button type="button" className={styles.toast} role="status" data-ride-toast="" onClick={()=>setShown(null)}>
-  <b>New rides unlocked!</b>{labels.length>0&&<span className={styles.list}>{labels.join(' · ')}</span>}<span>{Math.min(shown.to,PATH_COUNT)}/{PATH_COUNT} paths finished · try them in the Store</span>
+  <b>New rides unlocked!</b>{labels.length>0&&<span className={styles.list}>{labels.join(' · ')}</span>}<span>{Math.min(shown.to,PATH_COUNT)}/{PATH_COUNT} paths finished · find them in the vending machines</span>
  </button>;
 }

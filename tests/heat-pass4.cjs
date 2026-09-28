@@ -6,9 +6,9 @@ function load(file,globals={}){const m={exports:{}};vm.runInNewContext(ts.transp
 
 // 1. Phone/tablet defaults (user decision Sep 26 2026): DPR 1.5 at all times, 1024² shadows; MSAA kept (visual check); desktop unchanged.
 {const Q=load('lib/graphics/quality.ts',{process:{env:{NODE_ENV:'production'}}});
- assert.deepEqual({...Q.phoneGraphicsFor(3,true)},{phone:true,pixelRatio:1.75,shadowSize:1024,antialias:true});
- assert.deepEqual({...Q.phoneGraphicsFor(2,true)},{phone:true,pixelRatio:1.75,shadowSize:1024,antialias:true},'iPad');
- assert.deepEqual({...Q.phoneGraphicsFor(3,false)},{phone:true,pixelRatio:1.75,shadowSize:1024,antialias:true},'DPR 3 without coarse pointer is a phone');
+ assert.deepEqual({...Q.phoneGraphicsFor(3,true)},{phone:true,pixelRatio:1.75,shadowSize:1536,antialias:true});
+ assert.deepEqual({...Q.phoneGraphicsFor(2,true)},{phone:true,pixelRatio:1.75,shadowSize:1536,antialias:true},'iPad');
+ assert.deepEqual({...Q.phoneGraphicsFor(3,false)},{phone:true,pixelRatio:1.75,shadowSize:1536,antialias:true},'DPR 3 without coarse pointer is a phone');
  assert.deepEqual({...Q.phoneGraphicsFor(2,false)},{phone:false,pixelRatio:2,shadowSize:2048,antialias:true},'desktop retina unchanged');
  assert.deepEqual({...Q.phoneGraphicsFor(1,false)},{phone:false,pixelRatio:1,shadowSize:2048,antialias:true},'desktop unchanged');
  assert.equal(Q.PHONE_ANTIALIAS_OFF_AT_DPR2,false,'MSAA stays on: AA-off broke thin pitch lines into dashes at DPR 1.5 (see the guide)');

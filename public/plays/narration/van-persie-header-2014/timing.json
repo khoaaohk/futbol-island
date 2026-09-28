@@ -1,0 +1,374 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Salvador, 2014",
+   "text": "Salvador, 2014, the World Cup. Spain lead the Netherlands one\u2013nil. Daley Blind hits a long ball... Robin van Persie flies through the air! One\u2013one!",
+   "src": "/plays/narration/van-persie-header-2014/1.m4a",
+   "seconds": 11.9,
+   "words": [
+    {
+     "w": "Salvador",
+     "at": 0.4
+    },
+    {
+     "w": "2014",
+     "at": 0.975
+    },
+    {
+     "w": "the",
+     "at": 1.85
+    },
+    {
+     "w": "World",
+     "at": 1.95
+    },
+    {
+     "w": "Cup",
+     "at": 2.288
+    },
+    {
+     "w": "Spain",
+     "at": 3.05
+    },
+    {
+     "w": "lead",
+     "at": 3.475
+    },
+    {
+     "w": "the",
+     "at": 3.712
+    },
+    {
+     "w": "Netherlands",
+     "at": 3.8
+    },
+    {
+     "w": "one",
+     "at": 4.3
+    },
+    {
+     "w": "nil",
+     "at": 4.625
+    },
+    {
+     "w": "Daley",
+     "at": 5.263
+    },
+    {
+     "w": "Blind",
+     "at": 5.65
+    },
+    {
+     "w": "hits",
+     "at": 6.075
+    },
+    {
+     "w": "a",
+     "at": 6.287
+    },
+    {
+     "w": "long",
+     "at": 6.375
+    },
+    {
+     "w": "ball",
+     "at": 6.7
+    },
+    {
+     "w": "Robin",
+     "at": 7.625
+    },
+    {
+     "w": "van",
+     "at": 8.0
+    },
+    {
+     "w": "Persie",
+     "at": 8.225
+    },
+    {
+     "w": "flies",
+     "at": 8.613
+    },
+    {
+     "w": "through",
+     "at": 9.0
+    },
+    {
+     "w": "the",
+     "at": 9.2
+    },
+    {
+     "w": "air",
+     "at": 9.363
+    },
+    {
+     "w": "One",
+     "at": 10.05
+    },
+    {
+     "w": "one",
+     "at": 10.525
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. He watches the ball all the way over his shoulder, and times his run past the defender.",
+   "src": "/plays/narration/van-persie-header-2014/2.m4a",
+   "seconds": 8.0,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.325
+    },
+    {
+     "w": "He",
+     "at": 2.388
+    },
+    {
+     "w": "watches",
+     "at": 2.55
+    },
+    {
+     "w": "the",
+     "at": 2.95
+    },
+    {
+     "w": "ball",
+     "at": 3.05
+    },
+    {
+     "w": "all",
+     "at": 3.388
+    },
+    {
+     "w": "the",
+     "at": 3.587
+    },
+    {
+     "w": "way",
+     "at": 3.675
+    },
+    {
+     "w": "over",
+     "at": 3.95
+    },
+    {
+     "w": "his",
+     "at": 4.162
+    },
+    {
+     "w": "shoulder",
+     "at": 4.338
+    },
+    {
+     "w": "and",
+     "at": 5.05
+    },
+    {
+     "w": "times",
+     "at": 5.175
+    },
+    {
+     "w": "his",
+     "at": 5.513
+    },
+    {
+     "w": "run",
+     "at": 5.675
+    },
+    {
+     "w": "past",
+     "at": 5.987
+    },
+    {
+     "w": "the",
+     "at": 6.4
+    },
+    {
+     "w": "defender",
+     "at": 6.5
+    }
+   ]
+  },
+  {
+   "label": "The flying header",
+   "text": "Now from the side. He dives, flat as a plank, meets it with his forehead, and loops it over Casillas!",
+   "src": "/plays/narration/van-persie-header-2014/3.m4a",
+   "seconds": 7.2,
+   "words": [
+    {
+     "w": "Now",
+     "at": 0.4
+    },
+    {
+     "w": "from",
+     "at": 0.625
+    },
+    {
+     "w": "the",
+     "at": 0.762
+    },
+    {
+     "w": "side",
+     "at": 0.863
+    },
+    {
+     "w": "He",
+     "at": 1.837
+    },
+    {
+     "w": "dives",
+     "at": 2.013
+    },
+    {
+     "w": "flat",
+     "at": 2.763
+    },
+    {
+     "w": "as",
+     "at": 3.087
+    },
+    {
+     "w": "a",
+     "at": 3.188
+    },
+    {
+     "w": "plank",
+     "at": 3.25
+    },
+    {
+     "w": "meets",
+     "at": 3.675
+    },
+    {
+     "w": "it",
+     "at": 3.913
+    },
+    {
+     "w": "with",
+     "at": 3.987
+    },
+    {
+     "w": "his",
+     "at": 4.088
+    },
+    {
+     "w": "forehead",
+     "at": 4.25
+    },
+    {
+     "w": "and",
+     "at": 4.9
+    },
+    {
+     "w": "loops",
+     "at": 5.025
+    },
+    {
+     "w": "it",
+     "at": 5.287
+    },
+    {
+     "w": "over",
+     "at": 5.362
+    },
+    {
+     "w": "Casillas",
+     "at": 5.575
+    }
+   ]
+  },
+  {
+   "label": "Be brave",
+   "text": "Watch the long ball all the way. Be brave, dive at it, and meet it with your forehead!",
+   "src": "/plays/narration/van-persie-header-2014/4.m4a",
+   "seconds": 6.1,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "the",
+     "at": 0.7
+    },
+    {
+     "w": "long",
+     "at": 0.8
+    },
+    {
+     "w": "ball",
+     "at": 1.125
+    },
+    {
+     "w": "all",
+     "at": 1.425
+    },
+    {
+     "w": "the",
+     "at": 1.587
+    },
+    {
+     "w": "way",
+     "at": 1.675
+    },
+    {
+     "w": "Be",
+     "at": 2.513
+    },
+    {
+     "w": "brave",
+     "at": 2.675
+    },
+    {
+     "w": "dive",
+     "at": 3.312
+    },
+    {
+     "w": "at",
+     "at": 3.65
+    },
+    {
+     "w": "it",
+     "at": 3.775
+    },
+    {
+     "w": "and",
+     "at": 3.962
+    },
+    {
+     "w": "meet",
+     "at": 4.075
+    },
+    {
+     "w": "it",
+     "at": 4.263
+    },
+    {
+     "w": "with",
+     "at": 4.338
+    },
+    {
+     "w": "your",
+     "at": 4.438
+    },
+    {
+     "w": "forehead",
+     "at": 4.562
+    }
+   ]
+  }
+ ]
+}

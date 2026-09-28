@@ -1,0 +1,294 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "welcome": {
+      "src": "/voice/books/island/welcome.m4a?v=coach-bella-1",
+      "duration": 36.5,
+      "scriptSha256": "8713a056f39d5ee505e69595010c5878f480d37ef0cb2444c7eca2cc36292d00",
+      "cues": [
+        {
+          "text": "A flying start",
+          "start": 0.0,
+          "duration": 1.925
+        },
+        {
+          "text": "Welcome to Futbol Island!",
+          "start": 1.925,
+          "duration": 2.55
+        },
+        {
+          "text": "Put on your flying gear and zoom high above the rooftops.",
+          "start": 4.475,
+          "duration": 4.2
+        },
+        {
+          "text": "Below you, there are pitches everywhere: a futsal court on a roof, a sandy beach pitch, and grass fields for seven, nine and eleven players a side.",
+          "start": 8.675,
+          "duration": 10.05
+        },
+        {
+          "text": "Pull the cord on our paper page to take off.",
+          "start": 18.725,
+          "duration": 3.2
+        },
+        {
+          "text": "From up here, you can see the whole island at once.",
+          "start": 21.925,
+          "duration": 3.65
+        },
+        {
+          "text": "Good footballers do this too.",
+          "start": 25.575,
+          "duration": 2.475
+        },
+        {
+          "text": "Before the ball arrives, they look up and picture the whole pitch.",
+          "start": 28.05,
+          "duration": 4.15
+        },
+        {
+          "text": "Look up and see the whole picture, on the island and on the pitch.",
+          "start": 32.2,
+          "duration": 4.25
+        }
+      ]
+    },
+    "explore": {
+      "src": "/voice/books/island/explore.m4a?v=coach-bella-1",
+      "duration": 36.4,
+      "scriptSha256": "a714fd02279251993eefc06f3f1808b067eff906de2abfcc244f689e7528e385",
+      "cues": [
+        {
+          "text": "Ride around the town",
+          "start": 0.0,
+          "duration": 2.075
+        },
+        {
+          "text": "Back on the ground, hop on a scooter, a bike or a moped and ride through the neighbourhoods.",
+          "start": 2.075,
+          "duration": 5.75
+        },
+        {
+          "text": "Footballs are hidden all over the island.",
+          "start": 7.825,
+          "duration": 3.075
+        },
+        {
+          "text": "Ball Hunt gives you clues to find eighty hidden matchday balls, and each one teaches you a football tip.",
+          "start": 10.9,
+          "duration": 6.925
+        },
+        {
+          "text": "Tap three times to ride the scooter, the bike and the moped down our paper street.",
+          "start": 17.825,
+          "duration": 5.375
+        },
+        {
+          "text": "Exploring is a lot like finding space on the pitch.",
+          "start": 23.2,
+          "duration": 3.8
+        },
+        {
+          "text": "Keep your eyes open, and you will spot the gaps that other people miss.",
+          "start": 27.0,
+          "duration": 4.725
+        },
+        {
+          "text": "Keep exploring. The best players are always looking for space.",
+          "start": 31.725,
+          "duration": 4.6
+        }
+      ]
+    },
+    "harvest": {
+      "src": "/voice/books/island/harvest.m4a?v=coach-bella-1",
+      "duration": 39.5,
+      "scriptSha256": "c8624db6aba11cd63a2f20a0406828452f98f0d735977fbd9d9f9df3c17b05c3",
+      "cues": [
+        {
+          "text": "Fish, fruit and coins",
+          "start": 0.0,
+          "duration": 2.375
+        },
+        {
+          "text": "Down by the water, cast your fishing line and watch the float.",
+          "start": 2.375,
+          "duration": 4.275
+        },
+        {
+          "text": "A little nibble is like a striker\u2019s dummy, so stay set like a goalkeeper, and only tap when the fish really bites.",
+          "start": 6.65,
+          "duration": 7.825
+        },
+        {
+          "text": "In the community garden, pick ripe strawberries, tomatoes, carrots, oranges and cherries.",
+          "start": 14.475,
+          "duration": 6.2
+        },
+        {
+          "text": "Take your fish and fruit to Rosa\u2019s market stand to trade them for coins.",
+          "start": 20.675,
+          "duration": 5.1
+        },
+        {
+          "text": "You can earn coins with island jobs too, like raking leaves off a pitch or being a ball kid.",
+          "start": 25.775,
+          "duration": 6.475
+        },
+        {
+          "text": "Every job teaches something about the game.",
+          "start": 32.25,
+          "duration": 3.1
+        },
+        {
+          "text": "Be patient like a goalkeeper. Stay set, then react.",
+          "start": 35.35,
+          "duration": 4.075
+        }
+      ]
+    },
+    "arcade": {
+      "src": "/voice/books/island/arcade.m4a?v=coach-bella-1",
+      "duration": 39.0,
+      "scriptSha256": "c4dae5a317bc8953e4ee7af0dfeb6b10afe8110423fe96fb801ecf6fc48df4ba",
+      "cues": [
+        {
+          "text": "Games and vending machines",
+          "start": 0.0,
+          "duration": 2.325
+        },
+        {
+          "text": "Inside the arcade, five cabinets are waiting: Island Strikers, Breakaway Run, Futbol Tennis, Futbol Pinball and Pass Puzzles.",
+          "start": 2.325,
+          "duration": 9.225
+        },
+        {
+          "text": "Each game practises a real skill, like controlling your first touch or seeing the space for a pass.",
+          "start": 11.55,
+          "duration": 6.8
+        },
+        {
+          "text": "Around the island, bright vending machines sell card packs, balls, scooters, bikes, mopeds and flying gear.",
+          "start": 18.35,
+          "duration": 7.975
+        },
+        {
+          "text": "Some even hold pop-up books about football legends.",
+          "start": 26.325,
+          "duration": 3.825
+        },
+        {
+          "text": "Spend your coins, then press the button on our paper machine to see what drops out.",
+          "start": 30.15,
+          "duration": 5.375
+        },
+        {
+          "text": "Play games that make you a smarter footballer.",
+          "start": 35.525,
+          "duration": 3.4
+        }
+      ]
+    },
+    "learn": {
+      "src": "/voice/books/island/learn.m4a?v=coach-bella-1",
+      "duration": 36.2,
+      "scriptSha256": "a2455c89cbeb912fd7d8cec5bc5bb9f3d3ac9eb28d4986605db60c2f5f3e34c9",
+      "cues": [
+        {
+          "text": "Watch, learn and quiz",
+          "start": 0.0,
+          "duration": 2.375
+        },
+        {
+          "text": "Visit a pitch and choose Learn Plays.",
+          "start": 2.375,
+          "duration": 2.9
+        },
+        {
+          "text": "Follow the ball, the arrows and the players as they move, and see each idea in action.",
+          "start": 5.275,
+          "duration": 6.075
+        },
+        {
+          "text": "Then try a quiz.",
+          "start": 11.35,
+          "duration": 1.975
+        },
+        {
+          "text": "Answer five questions to win a player card for your collection.",
+          "start": 13.325,
+          "duration": 4.6
+        },
+        {
+          "text": "Open Paths for futsal, seven a side, nine a side or eleven a side.",
+          "start": 17.925,
+          "duration": 5.55
+        },
+        {
+          "text": "Each one has twelve core lessons to follow, and the Coaches Centre helps you practise.",
+          "start": 23.475,
+          "duration": 5.75
+        },
+        {
+          "text": "Flip our paper quiz card to check your answer.",
+          "start": 29.225,
+          "duration": 3.65
+        },
+        {
+          "text": "Watch it, try it, then check what you learned.",
+          "start": 32.875,
+          "duration": 3.325
+        }
+      ]
+    },
+    "together": {
+      "src": "/voice/books/island/together.m4a?v=coach-bella-1",
+      "duration": 34.9,
+      "scriptSha256": "b76e6e14a8a355f52d00e6f18b7cb760425eb61c1fadffc56abcb39685b141a2",
+      "cues": [
+        {
+          "text": "Everything is futbol",
+          "start": 0.0,
+          "duration": 2.1
+        },
+        {
+          "text": "Flying, riding, fishing, picking fruit, playing games and taking quizzes: everything on Futbol Island teaches you something about the beautiful game.",
+          "start": 2.1,
+          "duration": 10.3
+        },
+        {
+          "text": "You learn to look up, to find space, to be patient and to try again.",
+          "start": 12.4,
+          "duration": 4.8
+        },
+        {
+          "text": "Now everyone meets on the big pitch.",
+          "start": 17.2,
+          "duration": 2.8
+        },
+        {
+          "text": "Pull the tab and watch the whole island join in.",
+          "start": 20.0,
+          "duration": 3.7
+        },
+        {
+          "text": "Football is best when we play together, help each other and have fun.",
+          "start": 23.7,
+          "duration": 4.675
+        },
+        {
+          "text": "See you on the pitch!",
+          "start": 28.375,
+          "duration": 1.875
+        },
+        {
+          "text": "Learn, play together and have fun. That is the beautiful game.",
+          "start": 30.25,
+          "duration": 4.625
+        }
+      ]
+    }
+  }
+}

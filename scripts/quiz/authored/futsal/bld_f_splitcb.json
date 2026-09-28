@@ -4,18 +4,18 @@
   {
    "q": "Put the goal clearance in order, from first to last.",
    "options": [
-    "Goalkeeper finds the clearer side",
-    "Right ala receives the release",
-    "Fixo offers the inside pass",
+    "Goalkeeper releases to the right ala",
+    "Right ala connects with the fixo",
+    "Defender closes the right side",
     "Switch to the left ala"
    ],
    "correct": 0,
-   "explain": "Yes. The keeper finds the open side, the fixo connects, then we switch when blue blocks.",
+   "explain": "Yes. Release right, connect through the fixo, then switch left when the defender closes the right.",
    "choiceExplanations": [
-    "Yes. The keeper finds the open side, the fixo connects, then we switch when blue blocks.",
-    "The goalkeeper must find the open side before the right ala can receive.",
-    "The fixo helps after the right ala has the ball, not before.",
-    "The switch comes last, once blue covers the right side."
+    "Yes. Release right, connect through the fixo, then switch left when the defender closes the right.",
+    "The right ala can only connect with the fixo after receiving the release.",
+    "The defender closes the right side after the ball has gone there.",
+    "The switch comes last, once the defender covers the right side."
    ],
    "visual": {
     "kind": "order",

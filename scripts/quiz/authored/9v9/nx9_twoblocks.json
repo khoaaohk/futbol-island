@@ -27,18 +27,18 @@
   {
    "q": "Put the midfield link-up in order, from first to last.",
    "options": [
-    "Partner shows higher between units",
-    "Lower midfielder passes to the higher one",
+    "Right midfielder shows high, left stays low",
+    "Left midfielder passes up to the right",
     "Left midfielder moves up higher",
-    "Partner drops to the lower diagonal"
+    "Right midfielder drops to replace them"
    ],
    "correct": 0,
    "explain": "Yes. They make two heights, connect, then swap jobs so each block keeps a link.",
    "choiceExplanations": [
     "Yes. They make two heights, connect, then swap jobs so each block keeps a link.",
-    "The pass needs the higher partner in place first.",
+    "The pass needs the right midfielder showing high first.",
     "The left midfielder moves higher after the first diagonal pass.",
-    "The partner drops last, to replace the lower link the left midfielder left."
+    "The right midfielder drops last, to fill the low spot the left one left."
    ],
    "visual": {
     "kind": "order",

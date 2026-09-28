@@ -1,0 +1,350 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Athens, 2007",
+   "text": "Athens, 2007, the Champions League final. Inzaghi has already scored once. Now Kak\u00e1 slides a pass through... Inzaghi is gone! Round the keeper... two\u2013nil Milan!",
+   "src": "/plays/narration/inzaghi-final-2007/1.m4a",
+   "seconds": 12.6,
+   "words": [
+    {
+     "w": "Athens",
+     "at": 0.4
+    },
+    {
+     "w": "2007",
+     "at": 0.925
+    },
+    {
+     "w": "the",
+     "at": 1.875
+    },
+    {
+     "w": "Champions",
+     "at": 1.988
+    },
+    {
+     "w": "League",
+     "at": 2.575
+    },
+    {
+     "w": "final",
+     "at": 2.825
+    },
+    {
+     "w": "Inzaghi",
+     "at": 3.675
+    },
+    {
+     "w": "has",
+     "at": 4.188
+    },
+    {
+     "w": "already",
+     "at": 4.325
+    },
+    {
+     "w": "scored",
+     "at": 4.713
+    },
+    {
+     "w": "once",
+     "at": 5.1
+    },
+    {
+     "w": "Now",
+     "at": 5.888
+    },
+    {
+     "w": "Kak\u00e1",
+     "at": 6.075
+    },
+    {
+     "w": "slides",
+     "at": 6.513
+    },
+    {
+     "w": "a",
+     "at": 6.862
+    },
+    {
+     "w": "pass",
+     "at": 6.925
+    },
+    {
+     "w": "through",
+     "at": 7.275
+    },
+    {
+     "w": "Inzaghi",
+     "at": 8.012
+    },
+    {
+     "w": "is",
+     "at": 8.55
+    },
+    {
+     "w": "gone",
+     "at": 8.713
+    },
+    {
+     "w": "Round",
+     "at": 9.262
+    },
+    {
+     "w": "the",
+     "at": 9.537
+    },
+    {
+     "w": "keeper",
+     "at": 9.625
+    },
+    {
+     "w": "two",
+     "at": 10.512
+    },
+    {
+     "w": "nil",
+     "at": 10.9
+    },
+    {
+     "w": "Milan",
+     "at": 11.1
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again. Inzaghi waits on the shoulder of the last defender, and he runs the moment Kak\u00e1 passes.",
+   "src": "/plays/narration/inzaghi-final-2007/2.m4a",
+   "seconds": 7.4,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.7
+    },
+    {
+     "w": "Inzaghi",
+     "at": 1.575
+    },
+    {
+     "w": "waits",
+     "at": 2.1
+    },
+    {
+     "w": "on",
+     "at": 2.362
+    },
+    {
+     "w": "the",
+     "at": 2.462
+    },
+    {
+     "w": "shoulder",
+     "at": 2.575
+    },
+    {
+     "w": "of",
+     "at": 2.987
+    },
+    {
+     "w": "the",
+     "at": 3.062
+    },
+    {
+     "w": "last",
+     "at": 3.15
+    },
+    {
+     "w": "defender",
+     "at": 3.525
+    },
+    {
+     "w": "and",
+     "at": 4.4
+    },
+    {
+     "w": "he",
+     "at": 4.513
+    },
+    {
+     "w": "runs",
+     "at": 4.638
+    },
+    {
+     "w": "the",
+     "at": 5.025
+    },
+    {
+     "w": "moment",
+     "at": 5.125
+    },
+    {
+     "w": "Kak\u00e1",
+     "at": 5.45
+    },
+    {
+     "w": "passes",
+     "at": 5.862
+    }
+   ]
+  },
+  {
+   "label": "Round the keeper",
+   "text": "From behind the goal. He takes the ball round the keeper, and rolls it into the empty net!",
+   "src": "/plays/narration/inzaghi-final-2007/3.m4a",
+   "seconds": 6.2,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "behind",
+     "at": 0.5
+    },
+    {
+     "w": "the",
+     "at": 0.912
+    },
+    {
+     "w": "goal",
+     "at": 1.0
+    },
+    {
+     "w": "He",
+     "at": 1.85
+    },
+    {
+     "w": "takes",
+     "at": 1.975
+    },
+    {
+     "w": "the",
+     "at": 2.275
+    },
+    {
+     "w": "ball",
+     "at": 2.375
+    },
+    {
+     "w": "round",
+     "at": 2.675
+    },
+    {
+     "w": "the",
+     "at": 2.862
+    },
+    {
+     "w": "keeper",
+     "at": 2.95
+    },
+    {
+     "w": "and",
+     "at": 3.55
+    },
+    {
+     "w": "rolls",
+     "at": 3.688
+    },
+    {
+     "w": "it",
+     "at": 4.075
+    },
+    {
+     "w": "into",
+     "at": 4.162
+    },
+    {
+     "w": "the",
+     "at": 4.338
+    },
+    {
+     "w": "empty",
+     "at": 4.487
+    },
+    {
+     "w": "net",
+     "at": 4.85
+    }
+   ]
+  },
+  {
+   "label": "On the shoulder",
+   "text": "Stay on the shoulder of the last defender, and go the moment the pass is played!",
+   "src": "/plays/narration/inzaghi-final-2007/4.m4a",
+   "seconds": 5.5,
+   "words": [
+    {
+     "w": "Stay",
+     "at": 0.375
+    },
+    {
+     "w": "on",
+     "at": 0.688
+    },
+    {
+     "w": "the",
+     "at": 0.787
+    },
+    {
+     "w": "shoulder",
+     "at": 0.887
+    },
+    {
+     "w": "of",
+     "at": 1.288
+    },
+    {
+     "w": "the",
+     "at": 1.363
+    },
+    {
+     "w": "last",
+     "at": 1.45
+    },
+    {
+     "w": "defender",
+     "at": 1.812
+    },
+    {
+     "w": "and",
+     "at": 2.7
+    },
+    {
+     "w": "go",
+     "at": 2.825
+    },
+    {
+     "w": "the",
+     "at": 2.987
+    },
+    {
+     "w": "moment",
+     "at": 3.075
+    },
+    {
+     "w": "the",
+     "at": 3.413
+    },
+    {
+     "w": "pass",
+     "at": 3.513
+    },
+    {
+     "w": "is",
+     "at": 3.9
+    },
+    {
+     "w": "played",
+     "at": 4.062
+    }
+   ]
+  }
+ ]
+}

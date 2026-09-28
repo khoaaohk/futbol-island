@@ -19,10 +19,10 @@ export function createArcadeRoomProps(scene:T.Scene){
  const ball=(x:number,y:number,z:number,r:number,c:string)=>part(ballBase,x,y,z,r,r,r,c);
  const tube=(x:number,y:number,z:number,r:number,h:number,c:string)=>part(cylinderBase,x,y,z,r,h,r,c);
  const ink='#19152e',cream='#c8b5d1',gold='#e8b654',teal='#447d89',coral='#a34f87',wood='#65506d';
- function merge(batch:Map<string,T.BufferGeometry[]>,parent:T.Group){for(const [color,parts] of batch){const geometry=mergeGeometries(parts,false)!;geometries.push(geometry);for(const g of parts)g.dispose();const material=new T.MeshStandardMaterial({color,roughness:.82,emissive:color===gold?gold:'#000000',emissiveIntensity:color===gold?.22:0});materials.push(material);parent.add(new T.Mesh(geometry,material));}batch.clear();}
+ function merge(batch:Map<string,T.BufferGeometry[]>,parent:T.Group){for(const [color,parts] of batch){const geometry=mergeGeometries(parts,false)!;geometries.push(geometry);for(const g of parts)g.dispose();const material=new T.MeshStandardMaterial({color,roughness:.82,emissive:color===gold||color==='#60e9f2'||color==='#ff65c8'?color:'#000000',emissiveIntensity:color===gold?.22:color==='#60e9f2'||color==='#ff65c8'?.8:0});materials.push(material);parent.add(new T.Mesh(geometry,material));}batch.clear();}
  // Geometry is still merged by palette inside each independently moving part.
  function animated(name:string,build:()=>void){const group=new T.Group();group.name=name;root.add(group);const batch=new Map<string,T.BufferGeometry[]>();activeBatch=batch;build();activeBatch=batches;merge(batch,group);return group;}
- function sign(text:string,sub:string,x:number,y:number,z:number,w:number,h:number,color=gold){const canvas=document.createElement('canvas');canvas.width=512;canvas.height=160;const ctx=canvas.getContext('2d')!;ctx.fillStyle=ink;ctx.fillRect(0,0,512,160);ctx.strokeStyle=color;ctx.lineWidth=8;ctx.strokeRect(5,5,502,150);ctx.textAlign='center';ctx.fillStyle=cream;ctx.font='bold 44px sans-serif';ctx.fillText(text,256,67);ctx.fillStyle=color;ctx.font='22px sans-serif';ctx.fillText(sub,256,116);const tex=new T.CanvasTexture(canvas);tex.colorSpace=T.SRGBColorSpace;textures.push(tex);const mat=new T.MeshBasicMaterial({map:tex});materials.push(mat);const g=new T.PlaneGeometry(w,h);geometries.push(g);const mesh=new T.Mesh(g,mat);mesh.position.set(x,y,z);mesh.updateMatrix();mesh.applyMatrix4(placement);root.add(mesh);}
+ function sign(text:string,sub:string,x:number,y:number,z:number,w:number,h:number,color=gold){const canvas=document.createElement('canvas');canvas.width=512;canvas.height=160;const ctx=canvas.getContext('2d')!;ctx.fillStyle=ink;ctx.fillRect(0,0,512,160);ctx.strokeStyle=color;ctx.lineWidth=8;ctx.strokeRect(5,5,502,150);ctx.textAlign='center';ctx.fillStyle=cream;ctx.font='bold 44px sans-serif';ctx.fillText(text,256,67);ctx.fillStyle=color;ctx.font='22px sans-serif';ctx.fillText(sub,256,116);const tex=new T.CanvasTexture(canvas);tex.colorSpace=T.SRGBColorSpace;textures.push(tex);const mat=new T.MeshBasicMaterial({map:tex});materials.push(mat);const g=new T.PlaneGeometry(w,h);geometries.push(g);const mesh=new T.Mesh(g,mat);mesh.position.set(x,y,z);mesh.updateMatrix();mesh.applyMatrix4(placement);root.add(mesh);return mesh;}
  function football(x:number,y:number,z:number,r:number){ball(x,y,z,r,cream);ball(x,y+r*.1,z+r*.88,r*.28,ink);ball(x-r*.75,y+r*.36,z+r*.4,r*.22,ink);ball(x+r*.64,y+r*.57,z+r*.42,r*.2,ink);}
  function plush(x:number,y:number,z:number,color:string){ball(x,y+.2,z,.23,color);ball(x,y+.5,z,.2,color);ball(x-.15,y+.67,z,.085,color);ball(x+.15,y+.67,z,.085,color);ball(x-.07,y+.53,z+.18,.022,ink);ball(x+.07,y+.53,z+.18,.022,ink);ball(x,y+.43,z+.18,.075,cream);ball(x-.18,y+.03,z+.1,.095,color);ball(x+.18,y+.03,z+.1,.095,color);}
  place(10,-9.6,13,-2,-Math.PI/3);
@@ -66,6 +66,23 @@ export function createArcadeRoomProps(scene:T.Scene){
  for(let row=0;row<3;row++)for(let col=0;col<3;col++){const x=11.32+col*.38,y=1.24+row*.51;box(x,y,8.89,.2,.32,.12,col===1?coral:cream);tube(x,y+.2,8.89,.045,.08,gold);}for(let i=0;i<4;i++)box(12.68,1.48+i*.28,8.82,.19,.13,.1,gold);sign('REFRESH','TAKE A BREATHER',12,2.88,8.83,1.75,.45);
  const stock=animated('arcade-vending-stock-light',()=>box(12.68,2.57,8.83,.19,.08,.055,gold));
  const stockMaterial=(stock.children[0] as T.Mesh).material as T.MeshStandardMaterial;
+ placement.identity();
+ // Quiet lived-in detail stays on existing furniture, clear of walking lanes.
+ for(const z of[-6,2.5]){
+  box(-12.85,.75,z+.7,.65,.1,.5,ink);box(-12.85,.81,z+.7,.56,.012,.42,cream);
+  for(let i=0;i<4;i++)box(-13.02+i*.11,.82,z+.7,.025,.009,.3,i%2?teal:coral);
+  tube(-13.2,.92,z-.9,.12,.27,coral);tube(-13.2,1.06,z-.9,.125,.025,cream);tube(-13.2,1.18,z-.9,.015,.23,gold);
+ }
+ // Football culture posters, inset into the side wall rather than new clutter.
+ const poster=sign('PASS & MOVE','MAKE ANOTHER ANGLE',-15.58,2.65,4.5,3.2,1.05,'#60e9f2');poster.rotation.y=Math.PI/2;
+ const poster2=sign('PLAY TOGETHER','EVERY TOUCH COUNTS',15.58,2.65,4.5,3.2,1.05,'#ff65c8');poster2.rotation.y=-Math.PI/2;
+ // Air hockey rails glow at contact; a fixed set of meshes follows the room clock.
+ const hockeyLamps=[-3.2,1.2].map((z,i)=>animated(`hockey-contact-light-${i}`,()=>box(-10,1.675,z,.9,.045,.05,i?'#ff65c8':'#60e9f2')));
+ const lampMaterials=hockeyLamps.map(g=>(g.children[0] as T.Mesh).material as T.MeshStandardMaterial);
+ // Visible ticket rolls and a gently feeding strip behind the staffed counter.
+ placement.copy(prizePlacement);tube(10.9,1.28,-7.85,.15,.17,coral);tube(10.9,1.38,-7.85,.065,.015,ink);
+ const ticketFeed=animated('arcade-ticket-feed',()=>{for(let i=0;i<5;i++){box(10.88,1.15-i*.09,-7.17,.16,.1,.02,i%2?cream:coral);box(10.88,1.15-i*.09,-7.155,.08,.025,.01,ink);}});
+ placement.identity();
  // Most furniture stays one immutable batch per palette colour.
  merge(batches,root);boxBase.dispose();ballBase.dispose();cylinderBase.dispose();
  const attendant=createPlayer('arcade-prize-attendant','neutral',true,true);attendant.root.name='arcade-prize-attendant';attendant.setProfile(profileFor('npc',82));const look=defaultBeanLookFor('arcade-prize-attendant');attendant.setBeanLook(look,{...DEFAULT_CASUAL_OUTFIT,shirt:cream,shirt2:teal});root.add(attendant.root);
@@ -83,6 +100,8 @@ export function createArcadeRoomProps(scene:T.Scene){
   puck.position.set(hockeyX(t),0,reflect(t*.7+1)*1.55);
   for(let i=0;i<2;i++){const impact=(i===0?3:1)/.7,next=impact+Math.ceil((t-impact)/cycle)*cycle,previous=next-cycle,u=(t-previous)/cycle,ease=u*u*(3-2*u);paddles[i].position.set(hockeyX(previous)+(hockeyX(next)-hockeyX(previous))*ease,0,i===0?-1.87:1.87);}
   const slide=reduced?0:Math.sin(t*.43)*.52;claw.position.set(slide*Math.cos(Math.PI/3),0,-slide*Math.sin(Math.PI/3));
+  for(let i=0;i<2;i++){const end=i===0?-1:1,contact=Math.max(0,1-Math.abs(reflect(t*.7+1)-end)*12);lampMaterials[i].emissiveIntensity=reduced?.4:.35+contact*1.5;}
+  ticketFeed.position.y=reduced?0:Math.sin(t*1.7)*.015;
   stockMaterial.emissiveIntensity=reduced?.28:.25+(1+Math.sin(t*.9))*.14;
  }
  animate(0,true);let greeting=0,wasNear=false,greetTime=0;

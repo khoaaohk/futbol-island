@@ -81,7 +81,7 @@ S, LEG, FUT, WOM = B.S, B.LEG, B.FUT, B.WOM
 UA = 'FutbolIslandPhotoBot/1.0 (educational kids app)'
 GAP = 8.0          # anonymous: one runner, 1 request / 8 s on every Wikimedia host (1.5 s / 4 s drew 429s)
 GAP_AUTH = 1.0     # with WIKIMEDIA_TOKEN (OAuth 2.0, 5000 req/h): ~1 req/s on the API hosts
-GAP_UPLOAD = 7.0   # upload.wikimedia.org (never sent the token): own throttle, 1 download / 7 s
+GAP_UPLOAD = 8.0   # upload.wikimedia.org (never sent the token): own throttle, 1 download / 8 s
 AUTH_HOST = re.compile(r'(^|\.)(wikipedia\.org|wikidata\.org)$|^(commons|api)\.wikimedia\.org$')
 
 
@@ -103,6 +103,7 @@ TOKEN = _token()
 SKIP_FALLBACK_OFF = False   # True: always walk every fallback source
 REFETCH_BIG = False         # one 960 px thumbnail per candidate (upload host is the bottleneck)
 MAX_REFS = 2                # reference faces: en infobox + Wikidata P18 first
+DEEP2 = False               # --deep2: every language edition, category depth 3, extra searches, no fallback skip
 THROTTLE_FILE = os.path.join(tempfile.gettempdir(), 'futbol-wikimedia-throttle.lock')
 OK_HOST = re.compile(r'(^|\.)(wikipedia\.org|wikimedia\.org|wikidata\.org|openverse\.org|flickr\.com|'
                      r'staticflickr\.com)$')
@@ -170,6 +171,61 @@ PICKS = {
     'Freddie Ljungberg': ('Fredrik Ljungberg 2006.jpg', None),         # Sweden kit, 2006
     'Robin van Persie': ('Van Persie (15300483040) (crop).jpg', None), # Netherlands training top, 2014
     'James Rodríguez': ('James Rodríguez (cropped).jpg', None),        # Colombia kit, 2014 World Cup
+    # batch 8 (Sep 26 night, deep audit chunk1 legends sheet)
+    'Rui Costa': ('Rui Costa.jpg', None),     # Benfica v Naval, 15 Sep 2007, after scoring
+    'Michael Owen': ('Owen4.jpg', None),      # Stoke City at Chelsea, 22 Sep 2012
+    'Lindsey Heaps': ('Lindsey Heaps USWNT vs Italy Nov 28 2025-047 (cropped).jpg', None),   # USWNT match-day jacket
+    'Salma Paralluelo': ('Brann - Barça Femení CG3A6300.jpg', None),   # Barça kit, UWCL 2024
+    'Alessia Russo': ('Lewes FC Women 1 Manchester Utd Women 3 FAC QF 19 03 2023-2174 (52760249433).jpg', None),  # Man Utd, 2023
+    'Ewa Pajor': ("2018 Women's DFB-Pokal Final - Ewa Pajor (Wolfsburg) (cropped).jpg", None),   # Wolfsburg, cup final 2018
+    'Temwa Chawinga': ('NC Courage vs KC Current (Sep 2024) 007 (cropped).jpg', None),   # KC Current pre-game bib, depicts her
+    'Asisat Oshoala': ('Asisat Oshoala 2019 Champions League.jpg', None),   # Barça, UWCL final 2019
+    'Homare Sawa': ('Homare Sawa 2015 (cropped).jpg', None),   # Japan kit, 2015 Women's World Cup
+    'Catela': ('Encontro amistoso de fútbol sala masculino España - Hungría na Malata 44.jpg', None),   # Spain futsal kit (P18)
+    'Dídac Plana': ('Encontro amistoso de fútbol sala masculino España - Hungría na Malata 84.jpg', None),  # Spain GK kit (P18)
+    'Sid Belhaj': ('Sid Belhaj 2015.jpeg', None),   # KB United kit, French futsal play-off 2015 (named file)
+    # retry pass (candidates 3-4)
+    'Bradley Barcola': ('Bradley Barcola France v Spain 7.24.26-112 (cropped).jpg', None),   # France kit, 2026 WC (P18)
+    'Pervis Estupiñán': ('Pervis Estupiñán 2015.jpg', None),   # LDU Quito kit 2015 (Agencia ANDES)
+    'Nílton Santos': ('Nilton Santos 2 (1956).tif', None),     # Botafogo kit 1956 (Correio da Manhã archive, PD)
+    'Juan Román Riquelme': ('Riquelme 2009.jpg', None),   # Boca Juniors training kit, 2009 (eyes lowered)
+    'Patri Guijarro': ("2019-05-17 Fußball, Frauen, UEFA Women's Champions League, Olympique Lyonnais - FC Barcelona StP 0899 LR10 by Stepro (cropped).jpg", None),
+    'Lucy Bronze': ("2019-05-18 Fußball, Frauen, UEFA Women's Champions League, Olympique Lyonnais - FC Barcelona StP 1015 LR10 by Stepro.jpg", None),  # Lyon kit
+    'Chloe Kelly': ('Chloe Kelly Eng Women 0 Czech Rep 0 11 10 2022-317 (cropped).jpg', None),   # England match-day jacket
+    'Christine Sinclair': ('Christine Sinclair 2013-05-04 Spirit - Thorns-2.jpg', None),   # Portland Thorns warm-up, pitch
+    'Nadine Angerer': ('Nadine Angerer, Euro 2013.jpg', None),   # Germany GK kit, Euro 2013
+    'Leonardo Bonucci': ('Leonardo Bonucci and Cesc Fàbregas Euro 2012 final.jpg', 1),   # Italy kit, Euro 2012 final (right)
+    # user-chosen (Sep 27 2026): en.wikipedia lead image; Turkey kit, 2025. Auto-failed only on sharpness (21 < 40).
+    'Arda Güler': ('Arda Güler 2025.jpg', None),
+    # user-flagged (Sep 27 2026): every en/pt article image reviewed; Milan pre-match jacket in the stadium at
+    # Salzburg v Milan (UCL, 6 Sep 2022), frontal, the Wikidata P18 image. (Lille 2018 shot is indoors; the rest are
+    # small/turned action faces, a press conference or off-duty.)
+    'Rafael Leão': ('LeaoFCSalzburg2022(cropped).jpg', None),
+    # lead-image audit (Sep 27 2026): en.wikipedia lead, Inter away kit v Egnatia 2023; profile + soft (313 px original),
+    # auto-rejected only as "small". Same call as the user's Güler pick.
+    'Denzel Dumfries': ('Edison ndreca inter egnati (cropped Denzel Dumfries).jpg', None),
+    # lead-image audit: Italy futsal kit on court at his 100th-cap presentation (Divisione Calcio a 5, CC BY-SA 4.0);
+    # the scene classifier saw the officials' suits. Face 1 = Merlim (centre).
+    'Alex Merlim': ('Alex Merlim 2021.png', 1),
+    # deep2 (all language editions, category depth 3, 330 px screening)
+    'Patrick Vieira': ('Patrick Vieira - Inter Mailand (1).jpg', 's0'),   # Inter kit, pre-season 16 Aug 2009
+    'Clarence Seedorf': ('Seedorf 4 wikicommons.jpg', 's0'),   # AC Milan No. 10, 17 Dec 2011
+    'Jamie Carragher': ('Abhisith Vejjajiva - Worawi Makudi - Jamie Carragher.jpg', 's3'),  # Liverpool kit + armband, Thailand tour 2009
+    'Mia Hamm': ('Mia Hamm 1995 001 stl.jpg', 's0', 1920),   # USA No. 9 taking a corner, 1995 (photographer's own upload)
+    'Cafu': ('Cafu.JPG', 's0'),                             # Brazil training jacket on the pitch, June 2006
+    # approved by the user (Sep 27 2026) despite the house licence filter / in-kit rule; credit as each file page asks
+    'Kenan Yıldız': ('Kenan Yıldız in the international match (March 2025) (cropped).jpg', 1),   # Turkey v Hungary, right
+    'Gary Lineker': ("Prime Minister Keir Starmer hosts St George's Day Reception (54470857860) (cropped).jpg", None),
+}
+# User-approved licences outside CC0 / PD / CC BY / CC BY-SA, with the exact credit line the file page requires.
+APPROVED_CREDIT = {
+    'Kenan Yıldız': {'artist': 'mlsz.hu – Hungarian Football Federation (derivative: Danyele)',
+                     'license': 'Attribution only (mlsz.hu – Hungarian Football Federation)',
+                     'licenseUrl': 'https://en.mlsz.hu/imprint'},
+    'Gary Lineker': {'artist': 'Lauren Hurley / No 10 Downing Street. Contains public sector information licensed under '
+                               'the Open Government Licence v3.0',
+                     'license': 'OGL v3.0',
+                     'licenseUrl': 'https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/'},
 }
 # Files seen on the sheets and rejected (wrong person, suit, blurred ...).
 BLOCK = {
@@ -179,6 +235,68 @@ BLOCK = {
     'Cody Gakpo 06042025 (1) (cropped).jpg', 'Cody Gakpo 06042025 (1).jpg',   # arrival: earbuds, looking down
     'Bradley Barcola France v Norway 26 June 26-033 (cropped).jpg',   # zipped jacket + earphones: arrival, not kit
     "Pervis Estupinan Cote D'Ivoire v Ecuador 14 June 2026-73.jpg",   # plain white jacket, no kit visible
+    'Абакшин Даниил Андреевич.jpg',     # post-match interview board (press)
+    'Raúl Gómez Pato, Catoira, 2020.jpg', 'Raúl Gómez Pato, Mar de Arousa, 2020.jpg',   # civilian, likely a namesake
+    'João Pedro.jpg',                   # a Timor-Leste João Pedro, not the Brazil / Chelsea forward
+    'FC Red Bull Salzburg gegen CF Barcelona (Testspiel 4. August 2021) 34.jpg',   # de Jong: face too soft
+    'Jamie Carragher 2005.jpg',         # off-pitch event (jacket, papers)
+    'Ian Rush en Terry Yorath.jpg',     # airport arrival with Yorath (suit), not playing
+    'Raúl Gómez González.jpg', 'Raúl Gómez Samperio 2017.jpg',   # namesakes (a bishop, a fan)
+    'Sergio COPA EUROAMERICANA (18165383332) (cropped).jpg', 'Sergio COPA EUROAMERICANA (18165383332).jpg',   # press conference (and likely the Espanyol coach namesake)
+    'RafaelLeaoOff2023.png', 'RafaelLeaoOff20235.png',   # off-duty by a van (training jacket), not playing
+    'Clarence Seedorf Emirates Cup 2010.jpg',   # head down, face in shadow
+    'Fighter Seacraft- Motor Torpedo Boats, England, UK, 1943 D12556.jpg',   # deep2 screen: namesake / 1920s-40s archive or suit on the bench
+    '6-5-28 (stade de) Colombes (finale de la) coupe de France (de football), équipe du CAP (de gauche à droite devant, Georges) Ouvray, L(ucien) Laurent (Pierre) Bertrand (Marcel) Langillier (Roland) Mahieu... - btv1b53200707j.jpg',   # deep2 screen: namesake / 1920s-40s archive or suit on the bench
+    '(Stade) Buffalo, 14-10-28 (football) association (équipe du) C.A.P. (de gauche à droite, devant) Ouvray, L(ucien) Laurent, Bertrand, Quentier, Langillier (derrière) J(ean) Laurent, Colomb, Ganteroux, Blanc... - btv1b532048937.jpg',   # deep2 screen: namesake / 1920s-40s archive or suit on the bench
+    '(Stade) Buffalo, 15-3-28 (football) association, équipe du CAP (de g. à d. , debout) Blanc, Gauteroux, Fidon, Bertrand, Ottavis, Mahieu (et, accroupis) Ouvray, L. Laurent, Quentier, Langillier, J. Laurent -... - btv1b531965990.jpg',   # deep2 screen: namesake / 1920s-40s archive or suit on the bench
+    'Pippo Inzaghi.jpg',   # deep2 screen: namesake / 1920s-40s archive or suit on the bench
+    'Brocchi Inzaghi.jpg',   # deep2 screen: namesake / 1920s-40s archive or suit on the bench
+    'Milan Liverpool 2007.png',   # deep2 screen: namesake / 1920s-40s archive or suit on the bench
+    'ACMilan tifoseria.jpg',   # deep2 screen: namesake / 1920s-40s archive or suit on the bench
+    'Frenkie De Jong (2025)2 (cropped).png',   # deep2 screen (Sep 27): not usable on review (namesake, suit/civilian, sticker, team group or collage)
+    'Netherlands v Tunisia 2026 World Cup - 55374501166.jpg',   # deep2 screen (Sep 27): not usable on review (namesake, suit/civilian, sticker, team group or collage)
+    'Netherlands v Tunisia 2026 World Cup - 55374632348.jpg',   # deep2 screen (Sep 27): not usable on review (namesake, suit/civilian, sticker, team group or collage)
+    'Netherlands v Tunisia 2026 World Cup - 55374687329.jpg',   # deep2 screen (Sep 27): not usable on review (namesake, suit/civilian, sticker, team group or collage)
+    'Frenkie De Jong (2025)2.png',   # deep2 screen (Sep 27): not usable on review (namesake, suit/civilian, sticker, team group or collage)
+    'East Timor-Brunei 8 October 2024 26.jpg',   # deep2 screen (Sep 27): not usable on review (namesake, suit/civilian, sticker, team group or collage)
+    'East Timor-Brunei 8 October 2024 50.jpg',   # deep2 screen (Sep 27): not usable on review (namesake, suit/civilian, sticker, team group or collage)
+    'João Pedro 11 PFC Cherno More 20250731 (3).jpg',   # deep2 screen (Sep 27): not usable on review (namesake, suit/civilian, sticker, team group or collage)
+    'Kenan Yıldız.jpg',   # deep2 screen (Sep 27): not usable on review (namesake, suit/civilian, sticker, team group or collage)
+    'Marcos Evangelista de Moraes (Cafu) 01.jpg',   # deep2 screen (Sep 27): not usable on review (namesake, suit/civilian, sticker, team group or collage)
+    'Lev Jascin en 1966.jpg',   # deep2 screen (Sep 27): not usable on review (namesake, suit/civilian, sticker, team group or collage)
+    'Jorge Campos 1994 Jersey at MAD Paris.jpg',   # deep2 screen (Sep 27): not usable on review (namesake, suit/civilian, sticker, team group or collage)
+    'Rivaldo e Juninho Pernambucano.jpg',   # deep2 screen (Sep 27): not usable on review (namesake, suit/civilian, sticker, team group or collage)
+    'Alan Shearer 1998.jpg',   # deep2 screen (Sep 27): not usable on review (namesake, suit/civilian, sticker, team group or collage)
+    'Alan Shearer 1998 (2).jpg',   # deep2 screen (Sep 27): not usable on review (namesake, suit/civilian, sticker, team group or collage)
+    'Kenny dalglish figurita (cropped).jpg',   # deep2 screen (Sep 27): not usable on review (namesake, suit/civilian, sticker, team group or collage)
+    'Laudrup.jpg',   # deep2 screen (Sep 27): not usable on review (namesake, suit/civilian, sticker, team group or collage)
+    'Joe Cole vs Arsenal.jpg',   # deep2 screen (Sep 27): not usable on review (namesake, suit/civilian, sticker, team group or collage)
+    'Man U vs Chelsea ref.jpg',   # deep2 screen (Sep 27): not usable on review (namesake, suit/civilian, sticker, team group or collage)
+    'Olarticoechea saving vs england.jpg',   # deep2 screen (Sep 27): not usable on review (namesake, suit/civilian, sticker, team group or collage)
+    'EK voetbal in West Duitsland Engeland tegen Nederland 1-3, Bestanddeelnr 934-2662.jpg',   # deep2 screen (Sep 27): not usable on review (namesake, suit/civilian, sticker, team group or collage)
+    'Keith and Rushie.jpg',   # deep2 screen (Sep 27): not usable on review (namesake, suit/civilian, sticker, team group or collage)
+    'Guy Roux-AJ Auxerre (cropped).jpg',   # deep2 screen (Sep 27): not usable on review (namesake, suit/civilian, sticker, team group or collage)
+    'Aime Jacquet.jpg',   # deep2 screen (Sep 27): not usable on review (namesake, suit/civilian, sticker, team group or collage)
+    'Filippo Inzaghi.jpg',   # deep2 screen (Sep 27): not usable on review (namesake, suit/civilian, sticker, team group or collage)
+    'A.C. Milan lifting the European Cup after winning the 2002–03 UEFA Champions League - 20030528.jpg',   # deep2 screen (Sep 27): not usable on review (namesake, suit/civilian, sticker, team group or collage)
+    'AC Milan players 2008 09.jpg',   # deep2 screen (Sep 27): not usable on review (namesake, suit/civilian, sticker, team group or collage)
+    'Lev Yashin 1960d.jpg',   # in kit (1960 training) but the face is a grainy smudge on the card: drawn art reads better
+    'De jong Frenkie.jpg',       # "own work" upload of what looks like an agency pitchside shot (2021-22 kit, 2024 upload,
+                                 # inset face in the corner): provenance doubtful, not used
+    'Joao Pedro holder Chelsea drakt 2025.jpg',   # signing photo, black T-shirt, holding the shirt
+    'Lev Yashin 1966.jpg',       # Panini sticker scan
+    'Frenkie De Jong (2025) (cropped).png',   # suit and tie; "unknown author"
+    'Wambach boxx rampone lilly.jpg',   # Lilly holding a child, other faces in the crop
+    'Фаренюк Артём Николаевич.jpg',     # post-match interview board (press), not playing
+    'Christine Sinclair warming up.jpg',   # grimace, head down in the crop
+    'Laurent Blanc.jpg',             # coaching at Bordeaux (cap, sunglasses), not playing
+    "2019-05-17 Fußball, Frauen, UEFA Women's Champions League, Olympique Lyonnais - FC Barcelona StP 0886 LR10 by Stepro.jpg",  # face tipped up
+    "Phil Neville & Lucy Bronze (Women's World Cup 2019).jpg",   # face too pixelated in the crop
+    'Chloe Kelly Arsenal Ladies Vs Watford (19781588720).jpg',   # looking down, soft
+    'Kenny dalglish figurita.jpg',
+    'U.S. Army Sgt. Carlos Ortiz, left, and Spc. Eleanor Dunes, both cargo specialists assigned to the 390th Seaport Operations Company, based out of Ceiba, Puerto Rico, work together to plug a hole in the damage 130801-A-GT254-005.jpg',  # a different Carlos Ortiz   # sticker scan (house rule: no sticker/card scans)
+    'Gheorghe Hagi.JPG',             # undated, grey-haired: veterans / legends match, not his playing era
+    'Jj okocha.jpg',                 # held: "CC0, unknown author" for a 1996 press-style photo, provenance unverified
     'João Pedro 11 PFC Cherno More 20250731 (1).jpg', 'João Pedro 11 PFC Cherno More 20250731 (2).jpg',  # a different João Pedro
     'Ian Rush, Wales Team, 1988 (1).jpg',        # tracksuit off the pitch (arrival), not kit
     'Laurent Blanc 23.jpg',                      # Bordeaux staff polo: his coaching years
@@ -291,9 +409,28 @@ class Net:
                         except Exception:
                             pass
                     if len(Net.hits429) >= 3:
-                        print(f'STOP: three HTTP 429s within an hour (last from {host}); stopping as instructed',
-                              flush=True)
-                        raise SystemExit(3)
+                        # first trip of the session: pause >= 60 min, then resume slower (9 s downloads);
+                        # a second trip stops the run
+                        tp = THROTTLE_FILE + '.trips-' + self._lane(host)
+                        try:
+                            trips = [float(x) for x in open(tp).read().split() if now - float(x) < 4 * 3600]
+                        except (OSError, ValueError):
+                            trips = []
+                        if len(trips) >= 2:
+                            # tripping every hour: stop (policy Sep 27 2026)
+                            print(f'STOP: third 429 trip within 4 hours (last from {host}); stopping', flush=True)
+                            raise SystemExit(3)
+                        open(tp, 'w').write(' '.join(repr(x) for x in trips + [now]))
+                        open(hp, 'w').write('')
+                        Net.hits429 = []
+                        if self._lane(host) == 'upload':
+                            globals()['GAP_UPLOAD'] = min(GAP_UPLOAD * 1.5, 30.0)
+                        else:
+                            Net.slow = max(Net.slow, 2.0)
+                        print(f'PAUSE: three HTTP 429s within an hour (last from {host}); pausing 60 min, then '
+                              f'resuming at {self._gap(host):.0f} s', flush=True)
+                        time.sleep(3660)
+                        continue
                     ra = e.headers.get('Retry-After')
                     pause = max(300.0, float(ra) if ra and ra.isdigit() else 0)
                     print(f'   http 429 from {host}, backing off {pause:.0f}s, gap now {self._gap(host):.1f}s',
@@ -335,7 +472,18 @@ class Net:
 
 
 # ---------------------------------------------------------------- helpers
+EXTRA_CAREER = {'Eric Cantona': (1983, 1997)}   # legends missing from fetch-player-photos.py CAREER
+# Namesake traps: files must also carry one of these words (title / description / categories) to count.
+REQUIRE_WORDS = {'Carlos Ortiz': ['futsal', 'futbol sala', 'fútbol sala'], 'Raúl Gómez': ['futsal', 'sala'],
+                 'Sergio González': ['futsal', 'sala'], 'Edu': ['futsal'], 'Neto': ['futsal'], 'Pito': ['futsal'],
+                 'Robinho': ['futsal'], 'Cardinal': ['futsal'], 'Wilde': ['futsal'], 'Higor': ['futsal'],
+                 'Pauleta': ['futsal'], 'Schumacher': ['futsal'], 'Mamadou Touré': ['futsal'],   # an Ivorian minister
+                 'Pablo Ramírez': ['futsal', 'sala'], 'Douglas Junior': ['futsal']}
+
+
 def owner_window(name, owner):
+    if name in EXTRA_CAREER:
+        return EXTRA_CAREER[name]
     if owner == 'stars':
         return (2014, 2026)
     return B.window_of(name, owner)
@@ -407,6 +555,13 @@ COUNTRY_LANGS = {
     'Q262': ['fr', 'ar'], 'Q948': ['fr', 'ar'], 'Q1008': ['fr'], 'Q1041': ['fr'], 'Q16': ['fr'], 'Q215': ['sl'],
     'Q403': ['sr'], 'Q28': ['hu'], 'Q41': ['el'], 'Q213': ['cs'], 'Q214': ['sk'], 'Q33': ['fi'], 'Q37': ['lt'],
 }
+COUNTRY_NAME = {'Q155': 'Brazil', 'Q45': 'Portugal', 'Q29': 'Spain', 'Q414': 'Argentina', 'Q38': 'Italy', 'Q142': 'France',
+                'Q183': 'Germany', 'Q55': 'Netherlands', 'Q145': 'England', 'Q21': 'England', 'Q22': 'Scotland',
+                'Q35': 'Denmark', 'Q218': 'Romania', 'Q219': 'Bulgaria', 'Q1014': 'Liberia', 'Q1033': 'Nigeria',
+                'Q96': 'Mexico', 'Q159': 'Russia', 'Q15180': 'Soviet Union', 'Q30': 'United States', 'Q148': 'China',
+                'Q16': 'Canada', 'Q17': 'Japan', 'Q43': 'Turkey', 'Q232': 'Kazakhstan', 'Q212': 'Ukraine', 'Q794': 'Iran',
+                'Q884': 'South Korea', 'Q1041': 'Senegal', 'Q1011': 'Cape Verde', 'Q1007': 'Guinea-Bissau',
+                'Q262': 'Algeria', 'Q1028': 'Morocco', 'Q736': 'Ecuador', 'Q77': 'Uruguay', 'Q739': 'Colombia'}
 SKIP_FILE = re.compile(r'\.(svg|gif|ogg|ogv|webm|oga|mp3|wav|mid|pdf|tif)$|logo|crest|badge|escudo|emblem|flag|'
                        r'bandera|bandeira|map\b|mapa|karte|signature|firma|assinatura|autograph|chart|graph|diagram|'
                        r'icon|symbol|kit[_ ]|trikot|camiseta|jersey|shirt|stadium|stadio|estadio|est[aá]dio|stade|'
@@ -443,6 +598,9 @@ def body_langs(ident):
     if ident.get('owner') == 'futsal':
         langs += ['pt', 'es', 'ru', 'it']
     sl = (ident.get('ent') or {}).get('sitelinks', {})
+    if DEEP2:     # every Wikipedia language edition that has an article on the player
+        langs += [k[:-4] for k in sl if re.match(r'^[a-z_]+wiki$', k) and k not in (
+            'commonswiki', 'specieswiki', 'metawiki', 'wikidatawiki', 'mediawikiwiki', 'sourceswiki', 'incubatorwiki')]
     return [l for l in dict.fromkeys(langs) if f'{l}wiki' in sl or (l == 'en' and ident.get('article'))]
 
 
@@ -454,7 +612,7 @@ def body_sources(net, ident):
         title = sl.get(f'{lang}wiki') or (ident.get('article') if lang == 'en' else None)
         if not title:
             continue
-        for f, cap in body_images(net, lang, title):
+        for f, cap in body_images(net, lang.replace('_', '-'), title):
             if f not in out:
                 out[f] = (f'body-{lang}', cap)
             elif cap and not out[f][1]:
@@ -508,7 +666,7 @@ def discover_one(net, name, owner, ident, langimgs):
                 r'playing|on the ball|during|against|\bv\b|\bvs\b|match|training|warm|lining up|line-up|in action|'
                 r'celebrat|jogando|jugando|contra|partido|partida|giocando|durante|spielt|joue', S.norm(c['caption'])):
             good.append(t)
-    if len(good) >= 2 and not SKIP_FALLBACK_OFF:
+    if len(good) >= 2 and not SKIP_FALLBACK_OFF and not DEEP2:
         return {'name': name, 'owner': owner, 'qid': qid, 'article': article, 'window': window, 'aliases': als,
                 'cats': [], 'dep_files': [], 'files': files, 'fallbacks': 'skipped: captioned in-kit body photos',
                 'good_body': good}
@@ -530,7 +688,7 @@ def discover_one(net, name, owner, ident, langimgs):
     cats = S.existing_categories(net, list(dict.fromkeys(guesses))[:40])
     name_toks = S.tokens(name)
     queue = []
-    budget = 22
+    budget = 60 if DEEP2 else 22
     for c in cats[:3]:
         add(S.files_with_info(net, c, max_pages=4), 'cat')
         budget -= 1
@@ -548,17 +706,30 @@ def discover_one(net, name, owner, ident, langimgs):
         seen.add(sc)
         add(S.files_with_info(net, sc, max_pages=2), 'subcat:' + sc.split(':', 1)[1])
         budget -= 1
-        if depth < 2 and r >= 3 and budget > 4:
+        if depth < (3 if DEEP2 else 2) and (r >= 3 or DEEP2) and budget > 4:
             for ssc in S.members(net, sc, 'subcat')[:80]:
                 rr = subcat_rank(ssc, window, name_toks)
                 if rr is not None:
-                    queue.append((rr + 0.5, 2, ssc))
+                    queue.append((rr + 0.5, depth + 1, ssc))
             budget -= 1
             queue.sort(reverse=True)
     # 4. text search
     terms = ' OR '.join(f'"{n}"' for n in [name] + als[:2])
     add(gen_files(net, action='query', generator='search', gsrsearch=terms + ' filetype:bitmap', gsrnamespace=6,
                   gsrlimit=50, _pages=2), 'search')
+    if DEEP2:     # surname + club / national-team names
+        sur = name.split()[-1] if len(name.split()) > 1 else name
+        clubs = []
+        if name in S.CLUBS:
+            cur, _, nat, old = S.CLUBS[name]
+            clubs += cur[:2] + old[:2] + [nat[0] + ' national']
+        if owner == 'women' and name in WOM.PLAYERS:
+            clubs += WOM.PLAYERS[name][3][:4]
+        clubs += [COUNTRY_NAME[q] + ' national' for q in ident.get('countries', [])[:1] if q in COUNTRY_NAME]
+        clubs += ['futsal'] if owner == 'futsal' else ['football match']
+        for cl in list(dict.fromkeys(clubs))[:5]:
+            add(gen_files(net, action='query', generator='search', gsrsearch=f'"{sur}" {cl} filetype:bitmap',
+                          gsrnamespace=6, gsrlimit=50, _pages=1), 'search')
     return {'name': name, 'owner': owner, 'qid': qid, 'article': article, 'window': window, 'aliases': als,
             'cats': cats, 'dep_files': sorted(dep_files), 'files': files}
 
@@ -574,7 +745,8 @@ def meta(d, t, e, dep):
         return None, 'license'
     if re.search(r'license review needed|unreviewed|licensereview', S.norm(val('Categories'))):
         return None, 'licence review pending'
-    if ii.get('width', 0) < 400 or ii.get('height', 0) < 400:
+    lim = 250 if DEEP2 else 400      # deep2: the face-size check at screening decides instead
+    if ii.get('width', 0) < lim or ii.get('height', 0) < lim:
         return None, 'small'
     src = e['src']
     cats = val('Categories')
@@ -593,6 +765,8 @@ def meta(d, t, e, dep):
     depicted = bool(qid) and qid in dep
     if any(re.search(r'\b' + re.escape(w) + r's?\b', subject) for w in S.ID_NEG) and not (qid and dep == {qid}):
         return None, 'id-neg'
+    if name in REQUIRE_WORDS and not any(S.norm(w) in text for w in REQUIRE_WORDS[name]):
+        return None, 'namesake guard'
     base = re.sub(r'\s*\(.*\)$', '', d.get('article') or name)
     names = [name, base] + d['aliases']
     named = any(S.has_all(S.tokens(n), subject) for n in names if S.tokens(n))
@@ -613,6 +787,9 @@ def meta(d, t, e, dep):
         y = S.year_of(' '.join(re.findall(r'in (\d{4})', cats + ' ' + ' '.join(src)))) or S.year_of(t)
         date = str(y) if y else None
     w0, w1 = d['window']
+    ty = S.year_of(t)
+    if y and ty and w0 <= ty <= w1 and y > w1:
+        y, date = ty, str(ty)      # a later scan / upload date: the year in the title is when it was taken
     if y and not (w0 <= y <= w1):
         return None, f'date {y} outside {w0}-{w1}'
     pos = sum(w in text for w in S.POS_WORDS)
@@ -889,6 +1066,115 @@ def identify_all(net, todo, work):
     return idents
 
 
+# ---------------------------------------------------------------- deep2 screening (small thumbnails)
+SCREEN_NEG = ['portrait', 'award', 'ceremony', 'coach', 'manager', 'veteran', 'legends', 'gala', 'conference',
+              'reception', 'visit', 'interview', 'premiere', 'ambassador', 'charity', 'meeting', 'unveil']
+SCREEN_W = 330     # a standard thumbnail step (~20-40 KB)
+
+
+def cached_image(net, c, width):
+    """The image S.fetch_image would return, but only from the cache (no request)."""
+    if width >= (c.get('width') or 0):
+        urls = [S.upload_url(c['url'])]
+    else:
+        urls = [S.upload_url(c['thumburl'], width), S.upload_url(c['url']) if c['width'] <= 2600 else None]
+    for u in urls:
+        if not u:
+            continue
+        raw = net._cached(os.path.join(net.cache, hashlib.sha1(u.encode()).hexdigest() + '.bin'))
+        if raw and raw != b'__404__':
+            try:
+                return ImageOps.exif_transpose(Image.open(BytesIO(raw))).convert('RGB')
+            except Exception:
+                continue
+    return None
+
+
+def screen(net, work, todo, args):
+    """Rank every metadata-passing candidate, fetch the top ones as 330 px thumbnails, and draw a sheet with the
+    numbered faces and the face width each would have at full size. Nothing is accepted here: PICKS decide."""
+    faces = S.Faces(*S.ensure_models(args.models or os.path.join(work, 'models')))
+    os.makedirs(os.path.join(work, 'screen'), exist_ok=True)
+    cells = {}
+    for i, (name, owner) in enumerate(todo):
+        slug = S.slugify(name)
+        dp = os.path.join(work, 'disc2', slug + '.json')
+        if not os.path.exists(dp):
+            continue
+        d = json.load(open(dp))
+        sp = os.path.join(work, 'screen', slug + '.json')
+        if os.path.exists(sp):
+            res = json.load(open(sp))
+        else:
+            ep = os.path.join(work, 'eval', slug + '.json')
+            # only files whose crop was already on a review sheet count as seen; auto-failed ones get a look now
+            seen = {r['file'] for r in json.load(open(ep))['rows'] if r.get('crop')} if os.path.exists(ep) else set()
+            cands, why = [], {}
+            for t, e in d['files'].items():
+                c, r = meta(d, t, e, set(e.get('dep', [])))
+                if not c:
+                    why[r.split(' ')[0]] = why.get(r.split(' ')[0], 0) + 1
+                    continue
+                if t in BLOCK or t in seen:
+                    continue
+                c['score'] -= 3 * sum(w in c['text'] for w in SCREEN_NEG)
+                c['score'] += 0.5 if (c.get('width') or 0) > (c.get('height') or 0) else 0
+                cands.append(c)
+            cands.sort(key=lambda c: -c['score'])
+            rows = []
+            try:
+                for c in cands[:args.tries]:
+                    img = cached_image(net, c, 960) or S.fetch_image(net, c, SCREEN_W)
+                    row = {k: c[k] for k in ('file', 'score', 'date', 'license', 'artist', 'caption', 'width')}
+                    if img is None:
+                        row['err'] = 'download failed'
+                        rows.append(row)
+                        continue
+                    fs, _ = faces.detect(img)
+                    fs = sorted([f for f in fs if f[2] >= 8], key=lambda f: float(f[0]))
+                    row['boxes'] = [[round(float(v), 1) for v in f[:4]] for f in fs]
+                    row['size'] = list(img.size)
+                    row['full_fw'] = [round(float(f[2]) * (c.get('width') or img.size[0]) / img.size[0]) for f in fs]
+                    tp = os.path.join(work, 'screen', f'{slug}__{hashlib.sha1(c["file"].encode()).hexdigest()[:10]}.jpg')
+                    img.save(tp, quality=85)
+                    row['thumb'] = tp
+                    rows.append(row)
+            except NetFail as e:
+                print(f'[{i + 1}/{len(todo)}] {name}: network failure {e}', flush=True)
+                continue
+            res = {'name': name, 'owner': owner, 'ncands': len(cands), 'nfiles': len(d['files']),
+                   'meta_rejects': why, 'rows': rows}
+            json.dump(res, open(sp, 'w'), ensure_ascii=False, indent=1)
+        usable = [r for r in res['rows'] if r.get('full_fw') and max(r['full_fw']) >= 60]
+        print(f'[{i + 1}/{len(todo)}] {name}: {res["nfiles"]} files, {res["ncands"]} candidates, screened '
+              f'{len(res["rows"])}, {len(usable)} with a face >= 60 px at full size; requests {net.requests}', flush=True)
+        for r in usable:
+            th = Image.open(r['thumb']).convert('RGB')
+            th.thumbnail((330, 330))
+            sc = th.size[0] / r['size'][0]
+            dr = ImageDraw.Draw(th)
+            for j, b in enumerate(r['boxes']):
+                x, y, w, h = [v * sc for v in b]
+                dr.rectangle([x, y, x + w, y + h], outline=(230, 40, 60), width=2)
+                dr.text((x, max(0, y - 11)), f's{j}:{r["full_fw"][j]}', fill=(230, 40, 60), font=font(10))
+            cell = Image.new('RGB', (336, th.size[1] + 34), (255, 250, 238))
+            cell.paste(th, (0, 0))
+            d2 = ImageDraw.Draw(cell)
+            d2.text((2, th.size[1] + 2), f'{name} | {r["date"]} | {r["license"]}'[:60], fill=(20, 40, 35), font=font(11))
+            d2.text((2, th.size[1] + 17), r['file'][:60], fill=(90, 60, 60), font=font(10))
+            cells.setdefault(owner, []).append(cell)
+    for o, cl in cells.items():
+        H = max(c.size[1] for c in cl)
+        cl = [c if c.size[1] == H else _pad(c, H) for c in cl]
+        print('sheets', o, write_sheets(cl, os.path.join(work, f'screen-{o}'), per=12, cols=4), flush=True)
+
+
+def _pad(c, H):
+    out = Image.new('RGB', (c.size[0], H), (255, 250, 238))
+    out.paste(c, (0, 0))
+    return out
+
+
 # ---------------------------------------------------------------- upgrades (players that already have a photo)
 def ident_upgrades(net, players, work):
     path = os.path.join(work, 'ident-up.json')
@@ -1026,7 +1312,9 @@ def main():
     ap.add_argument('--work', required=True)
     ap.add_argument('--extra-cache', default='')
     ap.add_argument('--models', default='')
-    ap.add_argument('--stage', choices=['discover', 'evaluate', 'apply', 'probe', 'all', 'upgrades'], default='all')
+    ap.add_argument('--stage', choices=['discover', 'evaluate', 'apply', 'probe', 'all', 'upgrades', 'screen'],
+                    default='all')
+    ap.add_argument('--deep2', action='store_true', help='thorough discovery into WORK/disc2 (+ stage screen)')
     ap.add_argument('--only', default='')
     ap.add_argument('--owners', default='stars,legends,women,futsal')
     ap.add_argument('--tries', type=int, default=10)
@@ -1043,6 +1331,8 @@ def main():
         upgrades(net, work, args)
         print('requests', net.requests)
         return
+    if args.deep2:
+        globals()['DEEP2'] = True
     todo = B.missing_players()
     owners = args.owners.split(',')
     order = {o: i for i, o in enumerate(owners)}
@@ -1054,7 +1344,8 @@ def main():
         idents = identify_all(net, todo, work)
         for i, (name, owner) in enumerate(todo):
             slug = S.slugify(name)
-            out = os.path.join(work, 'disc', slug + '.json')
+            out = os.path.join(work, 'disc2' if DEEP2 else 'disc', slug + '.json')
+            os.makedirs(os.path.dirname(out), exist_ok=True)
             if os.path.exists(out):
                 continue
             idn = idents.get(name, {})
@@ -1146,7 +1437,7 @@ def main():
                 c = next((x for x in [{'file': r['file']}]), None)
                 crop = Image.open(r['crop'])
                 img = None
-                full = os.path.join(work, 'crops', f'{slug}__{k}.full.jpg')
+                full = os.path.join(work, 'crops', f'{slug}__{hashlib.sha1(r["file"].encode()).hexdigest()[:10]}.full.jpg')
                 if os.path.exists(full):
                     img = Image.open(full)
                 else:
@@ -1170,15 +1461,23 @@ def main():
         for o, cl in cells.items():
             if cl:
                 print('sheets', o, write_sheets(cl, os.path.join(work, f'review-{o}')), flush=True)
+    if args.stage == 'screen':
+        screen(net, work, todo, args)
     if args.stage == 'apply':
         faces = S.Faces(*S.ensure_models(args.models or os.path.join(work, 'models')))
         done = []
         for name, owner in todo:
             if name not in PICKS:
                 continue
-            f, face_idx = PICKS[name]
+            f, face_idx = PICKS[name][:2]
+            pick_w = PICKS[name][2] if len(PICKS[name]) > 2 else 960   # a bigger bucket for small faces in big files
             slug = S.slugify(name)
             d = json.load(open(os.path.join(work, 'disc', slug + '.json')))
+            d2p = os.path.join(work, 'disc2', slug + '.json')
+            if os.path.exists(d2p):          # deep2 discovery supersedes (superset of files)
+                d2 = json.load(open(d2p))
+                d2['files'] = {**d['files'], **d2['files']}
+                d = d2
             if f.startswith('ov:'):
                 c = next(o for o in d.get('openverse', []) if o.get('file') == f)
             else:
@@ -1189,18 +1488,19 @@ def main():
                 if not c:     # hand-reviewed: only the licence is re-checked here
                     em = e['ii'].get('extmetadata', {})
                     val = lambda k: S.strip_html(em.get(k, {}).get('value', ''))
-                    assert S.license_ok(val('LicenseShortName')), (name, f, why)
+                    assert S.license_ok(val('LicenseShortName')) or name in APPROVED_CREDIT, (name, f, why)
                     raw = val('DateTimeOriginal')
                     c = {'file': f, 'descriptionurl': e['ii'].get('descriptionurl', ''),
                          'artist': val('Artist') or 'Unknown', 'license': val('LicenseShortName'),
                          'licenseUrl': val('LicenseUrl'), 'date': raw[:10] if raw else (S.year_of(f) or ''),
                          'url': e['ii'].get('url'), 'thumburl': e['ii'].get('thumburl'),
                          'width': e['ii'].get('width')}
-            ev = json.load(open(os.path.join(work, 'eval', slug + '.json')))
+            evp = os.path.join(work, 'eval', slug + '.json')
+            ev = json.load(open(evp)) if os.path.exists(evp) else {'rows': []}
             row = next((r for r in ev['rows'] if r['file'] == f), None)
-            img = load_image(net, c, 960)
+            img = load_image(net, c, pick_w)
             fs, bgr = faces.detect(img)
-            if row and row.get('size') and row['size'][0] != img.size[0]:
+            if pick_w == 960 and row and row.get('size') and row['size'][0] != img.size[0]:
                 for b in (1280, 1920, 3840):
                     big = S.fetch_image(net, c, b)
                     if big is not None and big.size[0] == row['size'][0]:
@@ -1208,7 +1508,16 @@ def main():
                         fs, bgr = faces.detect(img)
                         break
             fs = sorted([x for x in fs if x[2] >= 28], key=lambda x: float(x[0]))
-            k = face_idx if face_idx is not None else (row['face'] if row else 0)
+            if isinstance(face_idx, str) and face_idx.startswith('s'):
+                # face number from the deep2 screening sheet: map its centre onto the full-size detection
+                sr = next(x for x in json.load(open(os.path.join(work, 'screen', slug + '.json')))['rows']
+                          if x['file'] == f)
+                bx, sw = sr['boxes'][int(face_idx[1:])], sr['size'][0]
+                cx, cy = (bx[0] + bx[2] / 2) / sw, (bx[1] + bx[3] / 2) / sw
+                k = min(range(len(fs)), key=lambda j: (float(fs[j][0] + fs[j][2] / 2) / img.size[0] - cx) ** 2 +
+                        (float(fs[j][1] + fs[j][3] / 2) / img.size[0] - cy) ** 2)
+            else:
+                k = face_idx if face_idx is not None else (row['face'] if row else 0)
             crop = S.portrait_crop(img, fs[k])
             crop.save(os.path.join(work, 'final-' + slug + '.jpg'), quality=90)
             ink, tone = S.riso(crop)
@@ -1216,9 +1525,12 @@ def main():
             S.save_mask(tone, os.path.join(S.OUT_DIR, f'{slug}-tone.webp'))
             path = B.MANIFESTS[owner]
             man = json.load(open(path, encoding='utf-8')) if os.path.exists(path) else {}   # re-read before write
+            artist = re.sub(r'\s*\(\s*talk\s*\).*$', '', c['artist']).strip() or c['artist']
             entry = {'slug': slug, 'article': d.get('article') or name, 'file': c['descriptionurl'],
-                     'artist': c['artist'], 'license': c['license'], 'licenseUrl': c['licenseUrl'],
+                     'artist': artist, 'license': c['license'], 'licenseUrl': c['licenseUrl'],
                      'date': str(c.get('date') or '')}
+            if name in APPROVED_CREDIT:
+                entry.update(APPROVED_CREDIT[name])
             if f.startswith('ov:'):
                 entry.update(source='openverse/flickr', sourceName='Flickr')
             else:

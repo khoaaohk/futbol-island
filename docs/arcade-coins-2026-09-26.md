@@ -11,6 +11,7 @@ Coins reward football actions and improvement, not time spent idle. The motivati
 - Tennis: 1 per three clean returns, 2 per point, 4 per win, at most 18 per match.
 - Strikers: 1 per three passes, 3 per goal, 5 for finishing and 3 more for winning, at most 20. User engagement is required.
 - Puzzles: 4 for a first solve and 1 per new best star. Repeated solves pay 1, at most six repeats per visit. Watching a replay earns nothing.
+  **Economy pass (28 Sep 2026):** puzzles are free to play; a first solve pays 5 + stars (cap 8), new best stars pay 1 each, a repeat pays 0. All arcade payouts (and jobs, market sales, trade-ins) now go through the daily Training meter (`lib/town/dailyMeter.ts`: full to 60, half to 120, then 1-coin tips). Packs cost 40 (3 cards) / 60 (5 cards), 3 a day; see [ECONOMY_PROPOSAL.md](economy/ECONOMY_PROPOSAL.md).
 
 The Coins slideout replaces Games and shows balance, lifetime earnings, earnings per machine, recent play and game shortcuts. It links to the store’s Mystery packs tab through the arcade return transition. Thirty coins buys one of six legends, with equal chances among the remaining legends and no repeats in this series. The selected card and debit are saved together before reveal. A completed series stops further purchases. Canonical card collection grants recover from the stored receipt. Notes are original coaching prompts; FIFA and UEFA sources separately support the historical context.
 

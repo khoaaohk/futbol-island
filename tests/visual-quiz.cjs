@@ -19,10 +19,14 @@ for(const fmt of ['7v7','9v9','11v11','futsal'])for(const lesson of JSON.parse(f
   // one short "why" per option (the card shows the first sentence) in kid-sized sentences
   for(const s of [q.q,...q.choiceExplanations])assert(s.split(/\s+/).length<=34,key+': keep lines short: '+s);
   for(const v of [q.voice,q.explainVoice,...q.choiceVoices])for(const t of tags){assert(v?.[t]?.src,key+' voice '+t);if(!process.argv.includes('--structure-only')){assert(v[t].duration>0,key+' voiced '+t+' '+v[t].src);assert(fs.statSync('public'+v[t].src).size>100);}clips++;}
-  if(q.visual.kind==='order'){const o=visual.orderDisplay(q.options.length,lesson.id+q.q);assert.deepEqual([...o].sort(),q.options.map((_,n)=>n));assert(o.some((v,n)=>v!==n),key+' order never shown solved');}
+  if(q.visual.kind==='order'){const o=visual.orderDisplay(q.options.length,lesson.id+q.q);assert.deepEqual([...o].sort(),q.options.map((_,n)=>n));assert(o.some((v,n)=>v!==n),key+' order never shown solved');assert.equal(q.correct,0,key+' order options are authored in the correct order');const w=visual.orderAnswer(o,q.correct);assert.notEqual(w,q.correct,key+' shuffled order checks wrong');assert(q.choiceExplanations[w],key+' wrong order has a why');assert.equal(visual.orderAnswer(q.options.map((_,n)=>n),q.correct),q.correct);}
   kinds[q.visual.kind]=(kinds[q.visual.kind]??0)+1;checked++;
  }
 }
+// Drag-to-reorder helpers (components/VisualQuestion.tsx OrderQuestion).
+assert.deepEqual([...visual.moveStep([2,0,1,3],0,2)],[0,1,2,3]);assert.deepEqual([...visual.moveStep([0,1,2,3],3,0)],[3,0,1,2]);
+assert.equal(visual.orderAnswer([0,1,2,3],0),0);assert.equal(visual.orderAnswer([0,2,1,3],0),2,'first misplaced step is reported');assert.equal(visual.orderAnswer([1,0,2],0),1);
+assert.equal(visual.dropSlot([10,70,130,190],0,10),0);assert.equal(visual.dropSlot([10,70,130,190],0,140),2);assert.equal(visual.dropSlot([10,70,130,190],3,50),1);
 // The quiz → card rule (single source; cardRewardTriggers.quizEligibleForCard delegates to it).
 const qp=fs.readFileSync('lib/town/quizProgress.ts','utf8');
 const rule=load('lib/town/quizProgress.ts',{'./learningProgress':{isLearningPreview:()=>false},react:{useMemo:f=>f(),useSyncExternalStore:()=>0},'./quizManifest.json':{default:JSON.parse(fs.readFileSync('lib/town/quizManifest.json'))}});

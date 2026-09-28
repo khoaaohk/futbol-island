@@ -29,16 +29,16 @@
    "q": "The ball goes across the team. Put the steps in order.",
    "options": [
     "Left defender passes inside to you",
-    "You pass the ball back",
+    "You pass back to the left defender",
     "Ball goes to the right defender",
     "You move across to help"
    ],
    "correct": 0,
-   "explain": "Right. You help, pass back, the ball switches, then you move across.",
+   "explain": "Right. You help, pass back, the ball goes across, then you move across.",
    "choiceExplanations": [
-    "Right. You help, pass back, the ball switches, then you move across.",
+    "Right. You help, pass back, the ball goes across, then you move across.",
     "You give it back only after the left defender passes to you.",
-    "The right defender gets the ball after you pass it back.",
+    "The ball goes across to the right defender after you pass it back.",
     "You move across once the ball reaches the right defender."
    ],
    "visual": {

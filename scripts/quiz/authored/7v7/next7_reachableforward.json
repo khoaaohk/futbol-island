@@ -29,7 +29,7 @@
    "options": [
     "Forward comes nearer to the ball",
     "Short pass reaches the forward",
-    "Midfielder carries the ball closer",
+    "Forward passes back, midfielder carries closer",
     "Forward moves ahead into the gap"
    ],
    "correct": 0,
@@ -37,7 +37,7 @@
    "choiceExplanations": [
     "Yes. First the forward comes nearer, so the pass can reach.",
     "The pass can only reach them after they come nearer.",
-    "The midfielder carries closer after the forward passes it back.",
+    "The forward passes back after getting the ball, then the midfielder carries.",
     "The forward moves ahead last, once the midfielder is closer."
    ],
    "visual": {

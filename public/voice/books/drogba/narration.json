@@ -1,0 +1,324 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "homesick": {
+      "src": "/voice/books/drogba/homesick.m4a?v=coach-bella-1",
+      "duration": 40.3,
+      "scriptSha256": "dee8ab40df514c4d335ae4aa49aef0d44bfef1f189d21e75e7e73e12f963c227",
+      "cues": [
+        {
+          "text": "Homesick",
+          "start": 0.0,
+          "duration": 1.575
+        },
+        {
+          "text": "Didier Drogba was born in 1978 in Abidjan, in Ivory Coast.",
+          "start": 1.575,
+          "duration": 5.7
+        },
+        {
+          "text": "When he was five, his parents sent him to France to live with his uncle, Michel Goba, who was a professional footballer.",
+          "start": 7.275,
+          "duration": 7.95
+        },
+        {
+          "text": "It was a long way from home, and Didier became homesick.",
+          "start": 15.225,
+          "duration": 4.275
+        },
+        {
+          "text": "Fly the plane home.",
+          "start": 19.5,
+          "duration": 2.05
+        },
+        {
+          "text": "After three years, he went back to Abidjan.",
+          "start": 21.55,
+          "duration": 3.575
+        },
+        {
+          "text": "There, he played football every day in a car park in the city.",
+          "start": 25.125,
+          "duration": 4.375
+        },
+        {
+          "text": "His mum even gave him a nickname: Tito.",
+          "start": 29.5,
+          "duration": 3.525
+        },
+        {
+          "text": "Missing home is a real feeling, and it\u2019s okay to say so. Telling people how you feel helps them help you.",
+          "start": 33.025,
+          "duration": 7.25
+        }
+      ]
+    },
+    "together": {
+      "src": "/voice/books/drogba/together.m4a?v=coach-bella-1",
+      "duration": 41.5,
+      "scriptSha256": "9e20dd3369d6a880570c0edb407ce8a726279d3c27fdc5e459ffdb6d10fbbfbf",
+      "cues": [
+        {
+          "text": "Together again",
+          "start": 0.0,
+          "duration": 1.675
+        },
+        {
+          "text": "But his time back home was short.",
+          "start": 1.675,
+          "duration": 2.625
+        },
+        {
+          "text": "Both of his parents lost their jobs, so Didier went back to France to live with his uncle again.",
+          "start": 4.3,
+          "duration": 6.475
+        },
+        {
+          "text": "Many children would find it hard to move away from their parents a second time.",
+          "start": 10.775,
+          "duration": 5.175
+        },
+        {
+          "text": "Slide the family together.",
+          "start": 15.95,
+          "duration": 2.3
+        },
+        {
+          "text": "In 1991 his parents came to France too, first to Vannes, and in 1993 they settled in Antony.",
+          "start": 18.25,
+          "duration": 8.825
+        },
+        {
+          "text": "At fifteen, Didier moved back in with his parents, brothers and sisters.",
+          "start": 27.075,
+          "duration": 5.2
+        },
+        {
+          "text": "The family was together again.",
+          "start": 32.275,
+          "duration": 2.55
+        },
+        {
+          "text": "When money is tight or plans change, families can still stick together. Better days can come.",
+          "start": 34.825,
+          "duration": 6.625
+        }
+      ]
+    },
+    "latestart": {
+      "src": "/voice/books/drogba/latestart.m4a?v=coach-bella-1",
+      "duration": 45.7,
+      "scriptSha256": "5751b24502a86cab256216711402ae40fa5136a1defcd1048f3cadb479a83559",
+      "cues": [
+        {
+          "text": "A late start",
+          "start": 0.0,
+          "duration": 1.8
+        },
+        {
+          "text": "In Antony, Didier joined a local youth team, and then a club called Levallois.",
+          "start": 1.8,
+          "duration": 5.75
+        },
+        {
+          "text": "He scored lots of goals for the youth team, and he even scored on his first-team debut.",
+          "start": 7.55,
+          "duration": 5.825
+        },
+        {
+          "text": "But the first-team coach was not impressed.",
+          "start": 13.375,
+          "duration": 3.05
+        },
+        {
+          "text": "Didier had never been to a football academy.",
+          "start": 16.425,
+          "duration": 3.8
+        },
+        {
+          "text": "He only began training every day as a grown-up, at Le Mans, where he also studied at university.",
+          "start": 20.225,
+          "duration": 7.175
+        },
+        {
+          "text": "At first he kept getting injured.",
+          "start": 27.4,
+          "duration": 2.775
+        },
+        {
+          "text": "Stack the four blocks.",
+          "start": 30.175,
+          "duration": 2.1
+        },
+        {
+          "text": "His coach later said it took Didier four years to be able to train every day and play every week.",
+          "start": 32.275,
+          "duration": 6.5
+        },
+        {
+          "text": "Starting later than others is okay. Progress takes time, so keep building, one day at a time.",
+          "start": 38.775,
+          "duration": 6.85
+        }
+      ]
+    },
+    "patience": {
+      "src": "/voice/books/drogba/patience.m4a?v=coach-bella-1",
+      "duration": 46.9,
+      "scriptSha256": "57ca2537c38c920bbb093a0c3eb3f7e1a8cfcc43dd34fa45d85b557622530d35",
+      "cues": [
+        {
+          "text": "Patience pays off",
+          "start": 0.0,
+          "duration": 2.025
+        },
+        {
+          "text": "By twenty-one, Didier knew he had to become a professional soon, or he might never get the chance.",
+          "start": 2.025,
+          "duration": 6.6
+        },
+        {
+          "text": "In 1999 he signed his first professional contract, and his son Isaac was born.",
+          "start": 8.625,
+          "duration": 6.875
+        },
+        {
+          "text": "Didier later said Isaac\u2019s birth was a turning point in his life.",
+          "start": 15.5,
+          "duration": 4.5
+        },
+        {
+          "text": "There were more setbacks.",
+          "start": 20.0,
+          "duration": 2.1
+        },
+        {
+          "text": "He got injured, lost his place, and then struggled to score.",
+          "start": 22.1,
+          "duration": 4.525
+        },
+        {
+          "text": "At Guingamp, the coaches were unsure about him, but they were patient.",
+          "start": 26.625,
+          "duration": 4.775
+        },
+        {
+          "text": "Pass the ball to Didier.",
+          "start": 31.4,
+          "duration": 2.2
+        },
+        {
+          "text": "The next season he scored 17 goals, and he praised his teammates, like his old friend Florent Malouda.",
+          "start": 33.6,
+          "duration": 7.425
+        },
+        {
+          "text": "Setbacks happen to everyone. Patience, and good teammates, can help you through them.",
+          "start": 41.025,
+          "duration": 5.85
+        }
+      ]
+    },
+    "peace": {
+      "src": "/voice/books/drogba/peace.m4a?v=coach-bella-1",
+      "duration": 40.8,
+      "scriptSha256": "04d29959fccf848ddab5f06010270fa37c4d157a1c3a0314fe820d8157625931",
+      "cues": [
+        {
+          "text": "A wish for peace",
+          "start": 0.0,
+          "duration": 1.9
+        },
+        {
+          "text": "For five years, there was a civil war in Didier\u2019s home country, Ivory Coast.",
+          "start": 1.9,
+          "duration": 5.575
+        },
+        {
+          "text": "On 8 October 2005, the national team beat Sudan and qualified for their first ever World Cup.",
+          "start": 7.475,
+          "duration": 7.625
+        },
+        {
+          "text": "In the changing room, Didier spoke to the TV cameras.",
+          "start": 15.1,
+          "duration": 4.2
+        },
+        {
+          "text": "He asked the people who were fighting to put down their weapons.",
+          "start": 19.3,
+          "duration": 3.85
+        },
+        {
+          "text": "Unfold the peace banner.",
+          "start": 23.15,
+          "duration": 2.325
+        },
+        {
+          "text": "His plea was answered with a ceasefire.",
+          "start": 25.475,
+          "duration": 2.925
+        },
+        {
+          "text": "Later, he helped move a big match to the city of Bouak\u00e9, which helped the peace process.",
+          "start": 28.4,
+          "duration": 6.1
+        },
+        {
+          "text": "Your voice matters. Speaking up kindly, for peace and for others, can help more than you know.",
+          "start": 34.5,
+          "duration": 6.25
+        }
+      ]
+    },
+    "hospital": {
+      "src": "/voice/books/drogba/hospital.m4a?v=coach-bella-1",
+      "duration": 44.3,
+      "scriptSha256": "b23879afb2a2156b0b826b538d018965be6190d6f9f91dbeb3c4bbbd265be779",
+      "cues": [
+        {
+          "text": "Giving back",
+          "start": 0.0,
+          "duration": 1.65
+        },
+        {
+          "text": "In 2007 the United Nations made Didier a Goodwill Ambassador.",
+          "start": 1.65,
+          "duration": 5.975
+        },
+        {
+          "text": "In 2010, Time magazine named him one of the world\u2019s 100 most influential people, because of his part in the peace process.",
+          "start": 7.625,
+          "duration": 9.225
+        },
+        {
+          "text": "In 2009 he gave three million pounds from an advertising deal to build a hospital in his hometown, Abidjan, through his own foundation.",
+          "start": 16.85,
+          "duration": 10.275
+        },
+        {
+          "text": "He decided to do it after visiting other hospitals there.",
+          "start": 27.125,
+          "duration": 4.425
+        },
+        {
+          "text": "Build the hospital.",
+          "start": 31.55,
+          "duration": 2.0
+        },
+        {
+          "text": "The homesick boy from Abidjan had come home to help.",
+          "start": 33.55,
+          "duration": 4.0
+        },
+        {
+          "text": "When you\u2019ve been through hard times, you can help others through theirs. Giving back makes everyone stronger.",
+          "start": 37.55,
+          "duration": 6.675
+        }
+      ]
+    }
+  }
+}

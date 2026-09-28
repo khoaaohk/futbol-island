@@ -21,12 +21,14 @@ async function onScreenNeverCulled(page: Page, N: number) {
     rd.render = function (scene: unknown, camera: unknown) {
       orig(scene, camera); if (scene !== f.scene) return; frames++;
       for (const e of f.games.entries) {
-        if (!e.root.visible && !e.dormant) continue;
+        // Only drawn fields: a dormant field is never in view (the frustum + 240 m test wakes it first), and fields beyond 240 m were
+        // never drawn, before or after heat pass 5 (a wide desktop view can reach them on screen).
+        if (!e.root.visible) continue;
         for (const [id, rig] of e.rigs as Map<string, any>) {
           if (!rig.root.visible || !onScreen(rig.root, .9)) continue;
           if (e.venue.elevation && f.camera.position.y < e.venue.elevation) continue; // rooftop court seen from below: hidden by the building
           checked++;
-          if (e.dormant || !e.root.visible || rig.root.userData.poseSkipped) culled.push(`${e.venue.id}:${id}@${frames}`);
+          if (e.dormant || rig.root.userData.poseSkipped) culled.push(`${e.venue.id}:${id}@${frames}`);
         }
       }
       for (const entry of f.islandNpcs.entries) {

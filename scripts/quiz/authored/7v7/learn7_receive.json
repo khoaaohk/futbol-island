@@ -29,16 +29,16 @@
    "options": [
     "Look over your shoulder",
     "Receive with your body open",
-    "Turn into the room",
-    "Look up again"
+    "Turn with a small touch",
+    "Dribble ahead with your head up"
    ],
    "correct": 0,
-   "explain": "Right. Look first, receive open, turn, then look up again.",
+   "explain": "Right. Look first, receive open, turn, then dribble ahead.",
    "choiceExplanations": [
-    "Right. Look first, receive open, turn, then look up again.",
+    "Right. Look first, receive open, turn, then dribble ahead.",
     "Receive after you have looked, so you know where the defender is.",
     "Turn only once the ball is at your feet.",
-    "Look up again last, while you move with the ball."
+    "Dribble ahead last, once you have turned into the room."
    ],
    "visual": {
     "kind": "order",

@@ -38,6 +38,7 @@ export function createArcadeRoomScene(canvas:HTMLCanvasElement,onNear:(id:Arcade
  for(const side of[-1,1]){const neon=side<0?'#ff65c8':'#60e9f2';box(scene,side*15.45,.35,0,.045,.05,24,neon);box(scene,side*15.45,3.6,0,.045,.05,24,neon);box(scene,side*7.5,.15,11.7,9,.035,.04,neon);}
  box(scene,0,3.9,-11.7,30,.045,.04,'#b991ff');
  for(let i=0;i<72;i++){const px=-13+(i*7.31)%26,pz=-10+(i*4.73)%21;const fleck=box(scene,px,.032,pz,.23,.012,.045,i%2?'#443154':'#264454');fleck.rotation.y=(i%5)*.6;}
+
  const sign=(parent:T.Object3D,text:string,sub:string,color:string,w:number,h:number,x:number,y:number,z:number)=>{const c=document.createElement('canvas');c.width=768;c.height=256;const p=c.getContext('2d')!;p.fillStyle='#0b091b';p.fillRect(0,0,768,256);p.strokeStyle=color;p.lineWidth=10;p.strokeRect(8,8,752,240);p.textAlign='center';p.fillStyle=color;p.shadowColor=color;p.shadowBlur=18;p.font='900 64px monospace';p.lineWidth=2;p.strokeText(text,384,112);p.fillStyle='#ffeffb';p.fillText(text,384,112);p.shadowBlur=0;p.fillStyle='#dcd4f7';p.font='28px sans-serif';p.fillText(sub,384,178);const tex=new T.CanvasTexture(c);tex.colorSpace=T.SRGBColorSpace;textures.push(tex);const mat=new T.MeshBasicMaterial({map:tex});const mesh=new T.Mesh(new T.PlaneGeometry(w,h),mat);mesh.position.set(x,y,z);parent.add(mesh);return mesh;};
  sign(scene,'THE ARCADE','FIVE GAMES · ALL FOOTBALL','#ff65c8',18,3,0,6,-11.75);
  // Bent neon tubing around the marquee, with cached translucent jackets instead of postprocessing.
@@ -66,6 +67,10 @@ export function createArcadeRoomScene(canvas:HTMLCanvasElement,onNear:(id:Arcade
  box(g,0,.65,.05,1.9,1.3,1.35,'#20182f');box(g,0,2,-.13,1.9,1.5,.96,'#20182f');box(g,0,.32,.71,1.64,.52,.08,'#171525');box(g,0,1.86,.68,1.58,1.35,.09,'#100f21');const console=box(g,0,1.31,.97,1.98,.22,.7,'#544266');console.rotation.x=.12;box(g,0,2.8,.33,2.05,.58,1.04,'#342345');sign(g,cabinet.short,'FREE PLAY',cabinet.color,1.85,.52,0,2.8,.88);
  const demo=createArcadeCabinetAttract(cabinet.id),screen=new T.Mesh(new T.PlaneGeometry(1.37,1.1),new T.MeshBasicMaterial({map:demo.texture}));screen.position.set(0,1.98,.735);screen.rotation.x=-.08;g.add(screen);cabinetScreens.push(screen);attract.push({id:cabinet.id,demo,bound:new T.Sphere(new T.Vector3(cabinet.x+Math.sin(cabinet.yaw)*.735,1.98,cabinet.z+Math.cos(cabinet.yaw)*.735),.95),active:false});
  box(g,-.91,1.3,.7,.045,2.4,.055,cabinet.color);box(g,.91,1.3,.7,.045,2.4,.055,cabinet.color);
+ // Recessed coin return, speaker slots and fixings make each cabinet tangible.
+ box(g,.48,.49,.765,.3,.22,.025,'#0b091b');box(g,.48,.38,.8,.32,.04,.12,'#544266');
+ for(let slot=0;slot<5;slot++)box(g,-.45+slot*.12,.4,.765,.045,.19,.025,'#0b091b');
+ for(const x of[-.78,.78])for(const y of[.2,1.1])box(g,x,y,.77,.04,.04,.025,'#b991ff');
  box(g,0,.19,.75,1.7,.035,.045,cabinet.color);box(g,0,2.48,.755,1.62,.035,.045,cabinet.color);
  box(g,-.42,1.58,1.05,.1,.35,.1,'#253c44');box(g,-.42,1.78,1.05,.23,.16,.23,cabinet.color);for(let k=0;k<2;k++)box(g,.3+k*.3,1.46,1.14,.18,.08,.18,k?'#ed8c74':'#456b67');box(g,0,.67,.71,.42,.12,.05,'#edb957');
  });

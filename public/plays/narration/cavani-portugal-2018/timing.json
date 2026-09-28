@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The switch",
+   "text": "Sochi, 2018. The World Cup, Uruguay against Portugal. Edinson Cavani sprays a long pass out to Luis Su\u00e1rez on the left, then starts to run.",
+   "src": "/plays/narration/cavani-portugal-2018/1.m4a",
+   "seconds": 11.4,
+   "words": [
+    {
+     "w": "Sochi",
+     "at": 0.375
+    },
+    {
+     "w": "2018",
+     "at": 0.875
+    },
+    {
+     "w": "The",
+     "at": 2.138
+    },
+    {
+     "w": "World",
+     "at": 2.275
+    },
+    {
+     "w": "Cup",
+     "at": 2.638
+    },
+    {
+     "w": "Uruguay",
+     "at": 3.125
+    },
+    {
+     "w": "against",
+     "at": 3.625
+    },
+    {
+     "w": "Portugal",
+     "at": 4.0
+    },
+    {
+     "w": "Edinson",
+     "at": 5.062
+    },
+    {
+     "w": "Cavani",
+     "at": 5.6
+    },
+    {
+     "w": "sprays",
+     "at": 6.088
+    },
+    {
+     "w": "a",
+     "at": 6.5
+    },
+    {
+     "w": "long",
+     "at": 6.612
+    },
+    {
+     "w": "pass",
+     "at": 6.963
+    },
+    {
+     "w": "out",
+     "at": 7.3
+    },
+    {
+     "w": "to",
+     "at": 7.5
+    },
+    {
+     "w": "Luis",
+     "at": 7.625
+    },
+    {
+     "w": "Su\u00e1rez",
+     "at": 8.012
+    },
+    {
+     "w": "on",
+     "at": 8.488
+    },
+    {
+     "w": "the",
+     "at": 8.588
+    },
+    {
+     "w": "left",
+     "at": 8.675
+    },
+    {
+     "w": "then",
+     "at": 9.325
+    },
+    {
+     "w": "starts",
+     "at": 9.55
+    },
+    {
+     "w": "to",
+     "at": 9.9
+    },
+    {
+     "w": "run",
+     "at": 10.025
+    }
+   ]
+  },
+  {
+   "label": "Keep running",
+   "text": "Watch Cavani again. He passes, and keeps running, into the box. Su\u00e1rez whips the ball across to the far post, and there is Cavani, crashing in to head it home. One nil to Uruguay!",
+   "src": "/plays/narration/cavani-portugal-2018/2.m4a",
+   "seconds": 12.9,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "Cavani",
+     "at": 0.7
+    },
+    {
+     "w": "again",
+     "at": 1.15
+    },
+    {
+     "w": "He",
+     "at": 1.95
+    },
+    {
+     "w": "passes",
+     "at": 2.112
+    },
+    {
+     "w": "and",
+     "at": 2.725
+    },
+    {
+     "w": "keeps",
+     "at": 2.85
+    },
+    {
+     "w": "running",
+     "at": 3.163
+    },
+    {
+     "w": "into",
+     "at": 3.587
+    },
+    {
+     "w": "the",
+     "at": 3.763
+    },
+    {
+     "w": "box",
+     "at": 3.85
+    },
+    {
+     "w": "Su\u00e1rez",
+     "at": 4.888
+    },
+    {
+     "w": "whips",
+     "at": 5.45
+    },
+    {
+     "w": "the",
+     "at": 5.7
+    },
+    {
+     "w": "ball",
+     "at": 5.8
+    },
+    {
+     "w": "across",
+     "at": 6.1
+    },
+    {
+     "w": "to",
+     "at": 6.45
+    },
+    {
+     "w": "the",
+     "at": 6.537
+    },
+    {
+     "w": "far",
+     "at": 6.638
+    },
+    {
+     "w": "post",
+     "at": 6.912
+    },
+    {
+     "w": "and",
+     "at": 7.6
+    },
+    {
+     "w": "there",
+     "at": 7.713
+    },
+    {
+     "w": "is",
+     "at": 7.85
+    },
+    {
+     "w": "Cavani",
+     "at": 8.0
+    },
+    {
+     "w": "crashing",
+     "at": 8.738
+    },
+    {
+     "w": "in",
+     "at": 9.213
+    },
+    {
+     "w": "to",
+     "at": 9.4
+    },
+    {
+     "w": "head",
+     "at": 9.5
+    },
+    {
+     "w": "it",
+     "at": 9.688
+    },
+    {
+     "w": "home",
+     "at": 9.775
+    },
+    {
+     "w": "One",
+     "at": 10.7
+    },
+    {
+     "w": "nil",
+     "at": 10.975
+    },
+    {
+     "w": "to",
+     "at": 11.225
+    },
+    {
+     "w": "Uruguay",
+     "at": 11.35
+    }
+   ]
+  },
+  {
+   "label": "Pass and go",
+   "text": "Want to score like Cavani? After you pass, do not stand and watch. Sprint into the box, aim for the far post, and the ball can come straight back to you.",
+   "src": "/plays/narration/cavani-portugal-2018/3.m4a",
+   "seconds": 10.2,
+   "words": [
+    {
+     "w": "Want",
+     "at": 0.35
+    },
+    {
+     "w": "to",
+     "at": 0.512
+    },
+    {
+     "w": "score",
+     "at": 0.6
+    },
+    {
+     "w": "like",
+     "at": 0.925
+    },
+    {
+     "w": "Cavani",
+     "at": 1.15
+    },
+    {
+     "w": "After",
+     "at": 2.112
+    },
+    {
+     "w": "you",
+     "at": 2.425
+    },
+    {
+     "w": "pass",
+     "at": 2.562
+    },
+    {
+     "w": "do",
+     "at": 3.15
+    },
+    {
+     "w": "not",
+     "at": 3.263
+    },
+    {
+     "w": "stand",
+     "at": 3.513
+    },
+    {
+     "w": "and",
+     "at": 3.95
+    },
+    {
+     "w": "watch",
+     "at": 4.088
+    },
+    {
+     "w": "Sprint",
+     "at": 5.0
+    },
+    {
+     "w": "into",
+     "at": 5.338
+    },
+    {
+     "w": "the",
+     "at": 5.513
+    },
+    {
+     "w": "box",
+     "at": 5.6
+    },
+    {
+     "w": "aim",
+     "at": 6.15
+    },
+    {
+     "w": "for",
+     "at": 6.425
+    },
+    {
+     "w": "the",
+     "at": 6.537
+    },
+    {
+     "w": "far",
+     "at": 6.638
+    },
+    {
+     "w": "post",
+     "at": 6.912
+    },
+    {
+     "w": "and",
+     "at": 7.45
+    },
+    {
+     "w": "the",
+     "at": 7.562
+    },
+    {
+     "w": "ball",
+     "at": 7.65
+    },
+    {
+     "w": "can",
+     "at": 7.95
+    },
+    {
+     "w": "come",
+     "at": 8.1
+    },
+    {
+     "w": "straight",
+     "at": 8.3
+    },
+    {
+     "w": "back",
+     "at": 8.6
+    },
+    {
+     "w": "to",
+     "at": 8.875
+    },
+    {
+     "w": "you",
+     "at": 9.0
+    }
+   ]
+  }
+ ]
+}

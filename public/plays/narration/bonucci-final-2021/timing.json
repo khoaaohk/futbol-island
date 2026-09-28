@@ -1,0 +1,342 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The corner",
+   "text": "Wembley, 2021. The Euro final. England lead Italy, one nil. Italy win a corner, and the ball flies into a crowd of players.",
+   "src": "/plays/narration/bonucci-final-2021/1.m4a",
+   "seconds": 10.3,
+   "words": [
+    {
+     "w": "Wembley",
+     "at": 0.4
+    },
+    {
+     "w": "2021",
+     "at": 0.925
+    },
+    {
+     "w": "The",
+     "at": 2.337
+    },
+    {
+     "w": "Euro",
+     "at": 2.487
+    },
+    {
+     "w": "final",
+     "at": 2.862
+    },
+    {
+     "w": "England",
+     "at": 3.788
+    },
+    {
+     "w": "lead",
+     "at": 4.25
+    },
+    {
+     "w": "Italy",
+     "at": 4.537
+    },
+    {
+     "w": "one",
+     "at": 5.062
+    },
+    {
+     "w": "nil",
+     "at": 5.325
+    },
+    {
+     "w": "Italy",
+     "at": 5.987
+    },
+    {
+     "w": "win",
+     "at": 6.325
+    },
+    {
+     "w": "a",
+     "at": 6.487
+    },
+    {
+     "w": "corner",
+     "at": 6.588
+    },
+    {
+     "w": "and",
+     "at": 7.1
+    },
+    {
+     "w": "the",
+     "at": 7.213
+    },
+    {
+     "w": "ball",
+     "at": 7.3
+    },
+    {
+     "w": "flies",
+     "at": 7.662
+    },
+    {
+     "w": "into",
+     "at": 8.037
+    },
+    {
+     "w": "a",
+     "at": 8.275
+    },
+    {
+     "w": "crowd",
+     "at": 8.35
+    },
+    {
+     "w": "of",
+     "at": 8.637
+    },
+    {
+     "w": "players",
+     "at": 8.725
+    }
+   ]
+  },
+  {
+   "label": "Onto the post",
+   "text": "Watch again. Verratti heads it at goal. Pickford dives and pushes it onto the post! But Leonardo Bonucci never stopped running. He gets there first, and pokes it in. One each!",
+   "src": "/plays/narration/bonucci-final-2021/2.m4a",
+   "seconds": 12.4,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "Verratti",
+     "at": 1.337
+    },
+    {
+     "w": "heads",
+     "at": 1.85
+    },
+    {
+     "w": "it",
+     "at": 2.087
+    },
+    {
+     "w": "at",
+     "at": 2.163
+    },
+    {
+     "w": "goal",
+     "at": 2.25
+    },
+    {
+     "w": "Pickford",
+     "at": 3.087
+    },
+    {
+     "w": "dives",
+     "at": 3.513
+    },
+    {
+     "w": "and",
+     "at": 4.125
+    },
+    {
+     "w": "pushes",
+     "at": 4.25
+    },
+    {
+     "w": "it",
+     "at": 4.612
+    },
+    {
+     "w": "onto",
+     "at": 4.688
+    },
+    {
+     "w": "the",
+     "at": 4.912
+    },
+    {
+     "w": "post",
+     "at": 5.0
+    },
+    {
+     "w": "But",
+     "at": 5.85
+    },
+    {
+     "w": "Leonardo",
+     "at": 6.013
+    },
+    {
+     "w": "Bonucci",
+     "at": 6.625
+    },
+    {
+     "w": "never",
+     "at": 7.15
+    },
+    {
+     "w": "stopped",
+     "at": 7.45
+    },
+    {
+     "w": "running",
+     "at": 7.825
+    },
+    {
+     "w": "He",
+     "at": 8.55
+    },
+    {
+     "w": "gets",
+     "at": 8.675
+    },
+    {
+     "w": "there",
+     "at": 8.925
+    },
+    {
+     "w": "first",
+     "at": 9.137
+    },
+    {
+     "w": "and",
+     "at": 9.562
+    },
+    {
+     "w": "pokes",
+     "at": 9.675
+    },
+    {
+     "w": "it",
+     "at": 9.938
+    },
+    {
+     "w": "in",
+     "at": 10.025
+    },
+    {
+     "w": "One",
+     "at": 10.75
+    },
+    {
+     "w": "each",
+     "at": 11.025
+    }
+   ]
+  },
+  {
+   "label": "Follow it in",
+   "text": "Want to score like Bonucci? When a teammate shoots, follow it in. Keep running, watch for the rebound, and be first to the ball.",
+   "src": "/plays/narration/bonucci-final-2021/3.m4a",
+   "seconds": 8.7,
+   "words": [
+    {
+     "w": "Want",
+     "at": 0.35
+    },
+    {
+     "w": "to",
+     "at": 0.512
+    },
+    {
+     "w": "score",
+     "at": 0.6
+    },
+    {
+     "w": "like",
+     "at": 0.9
+    },
+    {
+     "w": "Bonucci",
+     "at": 1.125
+    },
+    {
+     "w": "When",
+     "at": 2.1
+    },
+    {
+     "w": "a",
+     "at": 2.237
+    },
+    {
+     "w": "teammate",
+     "at": 2.312
+    },
+    {
+     "w": "shoots",
+     "at": 2.875
+    },
+    {
+     "w": "follow",
+     "at": 3.375
+    },
+    {
+     "w": "it",
+     "at": 3.688
+    },
+    {
+     "w": "in",
+     "at": 3.775
+    },
+    {
+     "w": "Keep",
+     "at": 4.562
+    },
+    {
+     "w": "running",
+     "at": 4.85
+    },
+    {
+     "w": "watch",
+     "at": 5.362
+    },
+    {
+     "w": "for",
+     "at": 5.675
+    },
+    {
+     "w": "the",
+     "at": 5.787
+    },
+    {
+     "w": "rebound",
+     "at": 5.875
+    },
+    {
+     "w": "and",
+     "at": 6.513
+    },
+    {
+     "w": "be",
+     "at": 6.612
+    },
+    {
+     "w": "first",
+     "at": 6.775
+    },
+    {
+     "w": "to",
+     "at": 7.125
+    },
+    {
+     "w": "the",
+     "at": 7.213
+    },
+    {
+     "w": "ball",
+     "at": 7.3
+    }
+   ]
+  }
+ ]
+}

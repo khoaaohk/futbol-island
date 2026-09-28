@@ -1,0 +1,299 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "camp": {
+      "src": "/voice/books/davies/camp.m4a?v=coach-bella-1",
+      "duration": 43.2,
+      "scriptSha256": "1a122c76bdada34a93b802dc6d13683691263c8b8076b962b5bfc52dd0c1d46b",
+      "cues": [
+        {
+          "text": "Born in a refugee camp",
+          "start": 0.0,
+          "duration": 2.3
+        },
+        {
+          "text": "Alphonso Davies was born in 2000 in Buduburam, a refugee camp in Ghana.",
+          "start": 2.3,
+          "duration": 6.475
+        },
+        {
+          "text": "His parents, Debeah and Victoria, came from Monrovia, the capital of Liberia.",
+          "start": 8.775,
+          "duration": 5.75
+        },
+        {
+          "text": "When a war came to Liberia, they had to flee.",
+          "start": 14.525,
+          "duration": 3.4
+        },
+        {
+          "text": "The war forced more than 450,000 Liberians from their homes.",
+          "start": 17.925,
+          "duration": 5.175
+        },
+        {
+          "text": "A refugee is someone who has to leave their home to stay safe.",
+          "start": 23.1,
+          "duration": 4.775
+        },
+        {
+          "text": "Alphonso grew up in a big family, with brothers and sisters.",
+          "start": 27.875,
+          "duration": 4.725
+        },
+        {
+          "text": "Light the lamp in the tent.",
+          "start": 32.6,
+          "duration": 2.175
+        },
+        {
+          "text": "His story was only beginning.",
+          "start": 34.775,
+          "duration": 2.5
+        },
+        {
+          "text": "Where you are born doesn\u2019t decide where you can go. Every child deserves to feel safe.",
+          "start": 37.275,
+          "duration": 5.875
+        }
+      ]
+    },
+    "canada": {
+      "src": "/voice/books/davies/canada.m4a?v=coach-bella-1",
+      "duration": 44.2,
+      "scriptSha256": "631f6c00003d1b65e0049dfa9b763d17f14ff6d87eeec462336ecb74899dd541",
+      "cues": [
+        {
+          "text": "A brand-new country",
+          "start": 0.0,
+          "duration": 2.175
+        },
+        {
+          "text": "In 2005, when Alphonso was five, his family moved to Canada.",
+          "start": 2.175,
+          "duration": 5.85
+        },
+        {
+          "text": "They settled in the city of Edmonton, and he started at Mother Teresa Elementary School.",
+          "start": 8.025,
+          "duration": 6.125
+        },
+        {
+          "text": "Everything was new.",
+          "start": 14.15,
+          "duration": 1.95
+        },
+        {
+          "text": "Later, at junior high, his school friends remembered that language was a problem for him at first, and his English was still broken.",
+          "start": 16.1,
+          "duration": 8.725
+        },
+        {
+          "text": "Some classmates had also come from Liberia.",
+          "start": 24.825,
+          "duration": 3.35
+        },
+        {
+          "text": "Open the school door.",
+          "start": 28.175,
+          "duration": 2.05
+        },
+        {
+          "text": "Step by step, Alphonso found his way, and one teammate remembered that soccer was the thing he wanted to get into.",
+          "start": 30.225,
+          "duration": 8.075
+        },
+        {
+          "text": "Being new somewhere is hard. Be patient with yourself, and ask for help when you need it.",
+          "start": 38.3,
+          "duration": 5.85
+        }
+      ]
+    },
+    "freefootie": {
+      "src": "/voice/books/davies/freefootie.m4a?v=coach-bella-1",
+      "duration": 41.4,
+      "scriptSha256": "e494871ff57f5b3a83389f05a978d5e83b2497dd9cb9937943584e315698ca07",
+      "cues": [
+        {
+          "text": "Everyone can play",
+          "start": 0.0,
+          "duration": 2.125
+        },
+        {
+          "text": "As a child, Alphonso first played organised soccer with Free Footie, an after-school league.",
+          "start": 2.125,
+          "duration": 6.725
+        },
+        {
+          "text": "It was for children whose families could not afford the fees or the kit, or who had no way to get to games.",
+          "start": 8.85,
+          "duration": 7.3
+        },
+        {
+          "text": "Lift the three flaps to see what Free Footie gave.",
+          "start": 16.15,
+          "duration": 3.5
+        },
+        {
+          "text": "There were no fees, there was kit to wear, and a way to get to games.",
+          "start": 19.65,
+          "duration": 4.65
+        },
+        {
+          "text": "Later he played for the Edmonton Internationals and the Edmonton Strikers.",
+          "start": 24.3,
+          "duration": 5.425
+        },
+        {
+          "text": "Today he is an ambassador for one of his old Edmonton clubs.",
+          "start": 29.725,
+          "duration": 4.75
+        },
+        {
+          "text": "When people share, everyone gets a chance. It\u2019s okay to accept help, and one day you can help others.",
+          "start": 34.475,
+          "duration": 6.85
+        }
+      ]
+    },
+    "vancouver": {
+      "src": "/voice/books/davies/vancouver.m4a?v=coach-bella-1",
+      "duration": 41.4,
+      "scriptSha256": "6e9af35b9aceb3dae3f72526f3f6923e2b114824fd0de0d3fdba9e4d0a93f884",
+      "cues": [
+        {
+          "text": "Moving away at fourteen",
+          "start": 0.0,
+          "duration": 2.325
+        },
+        {
+          "text": "In 2015, when he was fourteen, Alphonso moved on his own to Vancouver, far from his family, to join the Whitecaps FC Residency program.",
+          "start": 2.325,
+          "duration": 10.75
+        },
+        {
+          "text": "Living away from home so young is a very big step.",
+          "start": 13.075,
+          "duration": 4.025
+        },
+        {
+          "text": "Slide the suitcase to Vancouver.",
+          "start": 17.1,
+          "duration": 2.7
+        },
+        {
+          "text": "In 2016, at fifteen, he signed his first professional contract, and that July he played his first Major League Soccer game.",
+          "start": 19.8,
+          "duration": 9.425
+        },
+        {
+          "text": "He was the first player born in the 2000s to play in the league.",
+          "start": 29.225,
+          "duration": 4.5
+        },
+        {
+          "text": "Being far from home can feel lonely. Stay in touch with the people you love, and take one brave step at a time.",
+          "start": 33.725,
+          "duration": 7.675
+        }
+      ]
+    },
+    "citizen": {
+      "src": "/voice/books/davies/citizen.m4a?v=coach-bella-1",
+      "duration": 43.9,
+      "scriptSha256": "cbd58726df3f6e40f0c539e157fdc3591d02e9fa9246b16a330730eea1b6c303",
+      "cues": [
+        {
+          "text": "Officially Canadian",
+          "start": 0.0,
+          "duration": 1.85
+        },
+        {
+          "text": "Because he was born a Liberian refugee, Alphonso could not play for Canada\u2019s national team at first.",
+          "start": 1.85,
+          "duration": 7.05
+        },
+        {
+          "text": "In March 2017 he said that representing Canada was one of his dreams.",
+          "start": 8.9,
+          "duration": 5.825
+        },
+        {
+          "text": "On 6 June 2017, he passed his Canadian citizenship test and became a citizen.",
+          "start": 14.725,
+          "duration": 7.025
+        },
+        {
+          "text": "Stamp the passport.",
+          "start": 21.75,
+          "duration": 1.975
+        },
+        {
+          "text": "One week later, at sixteen, he became the youngest player ever to play for Canada\u2019s national team.",
+          "start": 23.725,
+          "duration": 6.8
+        },
+        {
+          "text": "That summer, at the Gold Cup, he scored two goals against French Guiana, and he finished as the top scorer of the tournament.",
+          "start": 30.525,
+          "duration": 8.225
+        },
+        {
+          "text": "Everyone wants to belong somewhere. A new country can become your home too.",
+          "start": 38.75,
+          "duration": 5.075
+        }
+      ]
+    },
+    "worldcup": {
+      "src": "/voice/books/davies/worldcup.m4a?v=coach-bella-1",
+      "duration": 42.8,
+      "scriptSha256": "7d657ed43d53a50d7394ef75a4553f8f423a620fc9ccfc067390bff963954d06",
+      "cues": [
+        {
+          "text": "Try again",
+          "start": 0.0,
+          "duration": 1.675
+        },
+        {
+          "text": "In 2022, Canada\u2019s men played at the World Cup for the first time since 1986.",
+          "start": 1.675,
+          "duration": 6.7
+        },
+        {
+          "text": "In the first match, against Belgium, Alphonso took a penalty, and the goalkeeper saved it.",
+          "start": 8.375,
+          "duration": 6.4
+        },
+        {
+          "text": "Canada lost 1\u20130.",
+          "start": 14.775,
+          "duration": 2.35
+        },
+        {
+          "text": "Four days later, against Croatia, he tried again and scored Canada\u2019s first ever goal at a men\u2019s World Cup.",
+          "start": 17.125,
+          "duration": 7.65
+        },
+        {
+          "text": "Kick the ball into the net.",
+          "start": 24.775,
+          "duration": 2.2
+        },
+        {
+          "text": "Today he is Canada\u2019s captain, and he was the first soccer player to become an ambassador for the United Nations refugee agency, which helps refugees around the world.",
+          "start": 26.975,
+          "duration": 11.05
+        },
+        {
+          "text": "A miss is not the end. Try again, and remember where you came from.",
+          "start": 38.025,
+          "duration": 4.775
+        }
+      ]
+    }
+  }
+}

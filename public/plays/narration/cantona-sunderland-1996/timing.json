@@ -1,0 +1,398 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The turn",
+   "text": "Old Trafford, 1996. Eric Cantona picks up the ball near halfway, with his back to goal. He spins away from two Sunderland players, and plays a one two with Brian McClair, and chips the keeper! Goal!",
+   "src": "/plays/narration/cantona-sunderland-1996/1.m4a",
+   "seconds": 14.9,
+   "words": [
+    {
+     "w": "Old",
+     "at": 0.375
+    },
+    {
+     "w": "Trafford",
+     "at": 0.625
+    },
+    {
+     "w": "1996",
+     "at": 1.2
+    },
+    {
+     "w": "Eric",
+     "at": 2.788
+    },
+    {
+     "w": "Cantona",
+     "at": 3.1
+    },
+    {
+     "w": "picks",
+     "at": 3.675
+    },
+    {
+     "w": "up",
+     "at": 3.888
+    },
+    {
+     "w": "the",
+     "at": 4.013
+    },
+    {
+     "w": "ball",
+     "at": 4.1
+    },
+    {
+     "w": "near",
+     "at": 4.4
+    },
+    {
+     "w": "halfway",
+     "at": 4.638
+    },
+    {
+     "w": "with",
+     "at": 5.4
+    },
+    {
+     "w": "his",
+     "at": 5.537
+    },
+    {
+     "w": "back",
+     "at": 5.7
+    },
+    {
+     "w": "to",
+     "at": 6.0
+    },
+    {
+     "w": "goal",
+     "at": 6.125
+    },
+    {
+     "w": "He",
+     "at": 7.025
+    },
+    {
+     "w": "spins",
+     "at": 7.15
+    },
+    {
+     "w": "away",
+     "at": 7.5
+    },
+    {
+     "w": "from",
+     "at": 7.8
+    },
+    {
+     "w": "two",
+     "at": 8.012
+    },
+    {
+     "w": "Sunderland",
+     "at": 8.3
+    },
+    {
+     "w": "players",
+     "at": 8.8
+    },
+    {
+     "w": "and",
+     "at": 9.55
+    },
+    {
+     "w": "plays",
+     "at": 9.675
+    },
+    {
+     "w": "a",
+     "at": 9.963
+    },
+    {
+     "w": "one",
+     "at": 10.025
+    },
+    {
+     "w": "two",
+     "at": 10.262
+    },
+    {
+     "w": "with",
+     "at": 10.525
+    },
+    {
+     "w": "Brian",
+     "at": 10.7
+    },
+    {
+     "w": "McClair",
+     "at": 11.075
+    },
+    {
+     "w": "and",
+     "at": 11.9
+    },
+    {
+     "w": "chips",
+     "at": 12.037
+    },
+    {
+     "w": "the",
+     "at": 12.325
+    },
+    {
+     "w": "keeper",
+     "at": 12.425
+    },
+    {
+     "w": "Goal",
+     "at": 13.4
+    }
+   ]
+  },
+  {
+   "label": "The chip",
+   "text": "Watch the keeper. Lionel P\u00e9rez rushes out, but Cantona stays calm. He lifts it up and over him, and it drops in off the post! Then he stands, and turns slowly.",
+   "src": "/plays/narration/cantona-sunderland-1996/2.m4a",
+   "seconds": 11.6,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.375
+    },
+    {
+     "w": "the",
+     "at": 0.675
+    },
+    {
+     "w": "keeper",
+     "at": 0.775
+    },
+    {
+     "w": "Lionel",
+     "at": 1.675
+    },
+    {
+     "w": "P\u00e9rez",
+     "at": 2.125
+    },
+    {
+     "w": "rushes",
+     "at": 2.525
+    },
+    {
+     "w": "out",
+     "at": 2.9
+    },
+    {
+     "w": "but",
+     "at": 3.2
+    },
+    {
+     "w": "Cantona",
+     "at": 3.35
+    },
+    {
+     "w": "stays",
+     "at": 3.913
+    },
+    {
+     "w": "calm",
+     "at": 4.338
+    },
+    {
+     "w": "He",
+     "at": 5.2
+    },
+    {
+     "w": "lifts",
+     "at": 5.35
+    },
+    {
+     "w": "it",
+     "at": 5.638
+    },
+    {
+     "w": "up",
+     "at": 5.713
+    },
+    {
+     "w": "and",
+     "at": 5.862
+    },
+    {
+     "w": "over",
+     "at": 5.975
+    },
+    {
+     "w": "him",
+     "at": 6.325
+    },
+    {
+     "w": "and",
+     "at": 6.562
+    },
+    {
+     "w": "it",
+     "at": 6.662
+    },
+    {
+     "w": "drops",
+     "at": 6.75
+    },
+    {
+     "w": "in",
+     "at": 7.138
+    },
+    {
+     "w": "off",
+     "at": 7.3
+    },
+    {
+     "w": "the",
+     "at": 7.525
+    },
+    {
+     "w": "post",
+     "at": 7.625
+    },
+    {
+     "w": "Then",
+     "at": 8.588
+    },
+    {
+     "w": "he",
+     "at": 8.8
+    },
+    {
+     "w": "stands",
+     "at": 8.938
+    },
+    {
+     "w": "and",
+     "at": 9.512
+    },
+    {
+     "w": "turns",
+     "at": 9.625
+    },
+    {
+     "w": "slowly",
+     "at": 10.012
+    }
+   ]
+  },
+  {
+   "label": "Stay calm",
+   "text": "Want to chip like Cantona? When the keeper rushes out, stay calm. Get your foot under the ball, lift it gently, and let it drop.",
+   "src": "/plays/narration/cantona-sunderland-1996/3.m4a",
+   "seconds": 8.7,
+   "words": [
+    {
+     "w": "Want",
+     "at": 0.375
+    },
+    {
+     "w": "to",
+     "at": 0.562
+    },
+    {
+     "w": "chip",
+     "at": 0.662
+    },
+    {
+     "w": "like",
+     "at": 0.925
+    },
+    {
+     "w": "Cantona",
+     "at": 1.15
+    },
+    {
+     "w": "When",
+     "at": 2.225
+    },
+    {
+     "w": "the",
+     "at": 2.362
+    },
+    {
+     "w": "keeper",
+     "at": 2.45
+    },
+    {
+     "w": "rushes",
+     "at": 2.825
+    },
+    {
+     "w": "out",
+     "at": 3.2
+    },
+    {
+     "w": "stay",
+     "at": 3.55
+    },
+    {
+     "w": "calm",
+     "at": 3.788
+    },
+    {
+     "w": "Get",
+     "at": 4.688
+    },
+    {
+     "w": "your",
+     "at": 4.838
+    },
+    {
+     "w": "foot",
+     "at": 5.0
+    },
+    {
+     "w": "under",
+     "at": 5.213
+    },
+    {
+     "w": "the",
+     "at": 5.388
+    },
+    {
+     "w": "ball",
+     "at": 5.475
+    },
+    {
+     "w": "lift",
+     "at": 5.938
+    },
+    {
+     "w": "it",
+     "at": 6.2
+    },
+    {
+     "w": "gently",
+     "at": 6.362
+    },
+    {
+     "w": "and",
+     "at": 6.975
+    },
+    {
+     "w": "let",
+     "at": 7.1
+    },
+    {
+     "w": "it",
+     "at": 7.237
+    },
+    {
+     "w": "drop",
+     "at": 7.325
+    }
+   ]
+  }
+ ]
+}

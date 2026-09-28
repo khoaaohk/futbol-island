@@ -14,7 +14,7 @@ export const EXPLORE_ITEMS=[
  {id:'watch-plays',title:'Watch 5 plays',detail:'Follow each play from start to finish. Look for runs, passing angles, and open space.'},
  {id:'try-quizzes',title:'Complete 5 quizzes',detail:'Make your decisions, watch the explanations, and retry when you need to.'},
  {id:'talk-characters',title:'Talk to 10 island characters',detail:'Meet different people and discover their futbol stories and tips.'},
- {id:'visit-store',title:'Visit the Store',detail:'Explore the gear and the stories behind the animal costumes.'},
+ {id:'visit-store',title:'Visit a vending machine',detail:'Explore the rows of gear and the stories behind the animal costumes.'},
  {id:'play-arcade',title:'Play arcade games',detail:'Try a game and practice your timing, control, and decisions.'},
  {id:'ramp-trick',title:'Use a ramp and do a trick',detail:'Pick a ride, find a ramp, and time your approach and landing.'},
  {id:'ride-truck',title:'Ride a truck',detail:'Land on a pickup and steer around the island. Scan ahead and find open routes.'},

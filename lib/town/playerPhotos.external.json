@@ -1,0 +1,57 @@
+{
+  "Claude Makélélé": {
+    "slug": "claude-makelele-x",
+    "article": "Claude Makélélé",
+    "file": "https://www.flickr.com/photos/10671903@N00/3873176997",
+    "artist": "psgmag.net",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+    "date": "2009",
+    "source": "external/flickr",
+    "sourceName": "Flickr"
+  },
+  "Formiga": {
+    "slug": "formiga-x",
+    "article": "Formiga (footballer)",
+    "file": "https://www.flickr.com/photos/53057644@N00/5912211364",
+    "artist": "Allan Patrick",
+    "license": "CC BY-SA 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0/",
+    "date": "2011-07-03",
+    "source": "external/flickr",
+    "sourceName": "Flickr"
+  },
+  "Frenkie de Jong": {
+    "slug": "frenkie-de-jong-x",
+    "article": "Frenkie de Jong",
+    "file": "https://www.dynamomania.com/album/2184-dinamo---barselona-01-2-noyabrya-2021-goda-ii/1289671",
+    "artist": "Yuliia Perekopaiko / Dynamomania.com",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "date": "2021-11-02",
+    "source": "external/dynamomania",
+    "sourceName": "Dynamomania.com"
+  },
+  "Jamie Carragher": {
+    "slug": "jamie-carragher-x",
+    "article": "Jamie Carragher",
+    "file": "https://www.flickr.com/photos/32459155@N07/7653269592",
+    "artist": "md.faisalzaman",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+    "date": "2012-07-21",
+    "source": "external/flickr",
+    "sourceName": "Flickr"
+  },
+  "Lev Yashin": {
+    "slug": "lev-yashin-x",
+    "article": "Lev Yashin",
+    "file": "https://www.mos.ru/news/item/122488073/",
+    "artist": "Vyacheslav Un Da-sin / Moscow Main Archive (Glavarkhiv), via mos.ru",
+    "license": "CC BY 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+    "date": "1962-10-28",
+    "source": "external/mos.ru",
+    "sourceName": "mos.ru (Moscow Main Archive)"
+  }
+}

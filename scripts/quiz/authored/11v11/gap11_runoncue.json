@@ -4,18 +4,18 @@
   {
    "q": "Put the striker's movements from this lesson in order, from first to last.",
    "options": [
-    "Check diagonally away from the screen",
-    "Connect and keep the attack moving",
-    "Reset in front of the back line",
-    "Run into the channel on release"
+    "Pass is screened, so check away",
+    "Connect around the screen",
+    "Screen moves left, the channel opens",
+    "Run as the midfielder releases"
    ],
    "correct": 0,
-   "explain": "Yes. Connect while the pass is screened, reset, then attack the channel once the pass is on.",
+   "explain": "Yes. Check away from the screen, connect, and only when the channel opens, run on the release.",
    "choiceExplanations": [
-    "Yes. Connect while the pass is screened, reset, then attack the channel once the pass is on.",
-    "You can only connect after checking away from the screen to open the lane.",
-    "The reset comes after the first connection, ready to read the next picture.",
-    "The channel run is last: it starts only once the lane is clear and the pass is released."
+    "Yes. Check away from the screen, connect, and only when the channel opens, run on the release.",
+    "You connect only after checking away has opened a pass around the screen.",
+    "The channel opens after the connection, when the screening opponent moves left.",
+    "The run is last: it starts only once the channel is open and the pass is released."
    ],
    "visual": {
     "kind": "order",

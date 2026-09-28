@@ -1605,6 +1605,206 @@
   "Filippo Inzaghi": {
    "demand": 64,
    "why": "2006 World Cup winner and two-time Champions League winner; level with Owen"
+  },
+  "Luis Enrique": {
+   "demand": 74,
+   "why": "Treble with Barcelona in 2015 and back-to-back Champions Leagues with PSG (2025, 2026)"
+  },
+  "Mikel Arteta": {
+   "demand": 70,
+   "why": "Won the 2026 Premier League, Arsenal’s first title in 22 years"
+  },
+  "Hansi Flick": {
+   "demand": 66,
+   "why": "Sextuple with Bayern in 2020 and two La Liga titles with Barcelona"
+  },
+  "Carlo Ancelotti": {
+   "demand": 80,
+   "why": "Record five Champions League titles as a coach; Brazil head coach"
+  },
+  "Luis de la Fuente": {
+   "demand": 68,
+   "why": "Won Euro 2024 and the 2026 World Cup with Spain"
+  },
+  "Jürgen Klopp": {
+   "demand": 80,
+   "why": "Champions League and Premier League with Liverpool; Germany head coach from 2026"
+  },
+  "Zinedine Zidane (coach)": {
+   "demand": 78,
+   "why": "Three Champions Leagues in a row as Real Madrid coach; France head coach from September 2026"
+  },
+  "José Mourinho": {
+   "demand": 80,
+   "why": "Champions League with Porto and Inter; back at Real Madrid in 2026"
+  },
+  "Diego Simeone": {
+   "demand": 70,
+   "why": "Atlético Madrid coach since 2011: two La Liga titles and two Europa Leagues"
+  },
+  "Vincent Kompany (coach)": {
+   "demand": 66,
+   "why": "Bundesliga champion with Bayern Munich in 2025 and 2026"
+  },
+  "Thomas Tuchel": {
+   "demand": 68,
+   "why": "Champions League winner with Chelsea (2021); England head coach"
+  },
+  "Lionel Scaloni": {
+   "demand": 70,
+   "why": "World Cup 2022 and two Copa Américas with Argentina"
+  },
+  "Xabi Alonso": {
+   "demand": 70,
+   "why": "Unbeaten Bundesliga title with Leverkusen (2024); Chelsea manager from 2026"
+  },
+  "Enzo Maresca": {
+   "demand": 62,
+   "why": "Club World Cup and Conference League with Chelsea; Manchester City manager from 2026"
+  },
+  "Unai Emery": {
+   "demand": 64,
+   "why": "Four Europa League titles; Aston Villa manager"
+  },
+  "Andoni Iraola": {
+   "demand": 60,
+   "why": "Took Bournemouth into Europe; Liverpool head coach from 2026"
+  },
+  "Cristian Chivu": {
+   "demand": 58,
+   "why": "Inter head coach since 2025; treble winner as an Inter player"
+  },
+  "Luciano Spalletti": {
+   "demand": 60,
+   "why": "Won Napoli’s first Serie A title in 33 years (2023); Juventus coach"
+  },
+  "Massimiliano Allegri": {
+   "demand": 62,
+   "why": "Five Serie A titles in a row with Juventus; Napoli coach from 2026"
+  },
+  "Rúben Amorim": {
+   "demand": 60,
+   "why": "Two Portuguese titles with Sporting; AC Milan coach from 2026"
+  },
+  "Michael Carrick": {
+   "demand": 58,
+   "why": "Former United midfielder; Manchester United head coach for 2026–27"
+  },
+  "Sarina Wiegman": {
+   "demand": 74,
+   "why": "Three European Championships with two countries; England women’s coach"
+  },
+  "Emma Hayes": {
+   "demand": 72,
+   "why": "Seven WSL titles with Chelsea and Olympic gold with the USA"
+  },
+  "Pere Romeu": {
+   "demand": 58,
+   "why": "Won the 2026 Women’s Champions League with Barcelona"
+  },
+  "Jonatan Giráldez": {
+   "demand": 60,
+   "why": "Two Women’s Champions Leagues with Barcelona; OL Lyonnes coach"
+  },
+  "Rinus Michels": {
+   "demand": 70,
+   "why": "FIFA Coach of the Century; the father of Total Football"
+  },
+  "Alex Ferguson": {
+   "demand": 82,
+   "why": "13 league titles and two Champions Leagues with Manchester United"
+  },
+  "Arrigo Sacchi": {
+   "demand": 68,
+   "why": "Built the AC Milan that won back-to-back European Cups (1989, 1990)"
+  },
+  "Johan Cruyff (coach)": {
+   "demand": 78,
+   "why": "Coached Barcelona’s Dream Team to their first European Cup (1992)"
+  },
+  "Pep Guardiola": {
+   "demand": 85,
+   "why": "Three Champions Leagues and six Premier League titles; the defining coach of his era"
+  },
+  "Bob Paisley": {
+   "demand": 64,
+   "why": "Six league titles and three European Cups in nine seasons at Liverpool"
+  },
+  "Ernst Happel": {
+   "demand": 60,
+   "why": "European Cup winner with two clubs (Feyenoord 1970, Hamburg 1983)"
+  },
+  "Helenio Herrera": {
+   "demand": 60,
+   "why": "Inter’s catenaccio: back-to-back European Cups (1964, 1965)"
+  },
+  "Vicente del Bosque": {
+   "demand": 66,
+   "why": "World Cup 2010 and Euro 2012 with Spain; two Champions Leagues with Real Madrid"
+  },
+  "Marcello Lippi": {
+   "demand": 64,
+   "why": "World Cup 2006 with Italy and the 1996 Champions League with Juventus"
+  },
+  "Giovanni Trapattoni": {
+   "demand": 60,
+   "why": "Ten league titles in four countries; first to win all three UEFA club trophies"
+  },
+  "Bill Shankly": {
+   "demand": 64,
+   "why": "Turned Liverpool from the Second Division into champions"
+  },
+  "Matt Busby": {
+   "demand": 64,
+   "why": "Built the Busby Babes and won Manchester United’s first European Cup (1968)"
+  },
+  "Brian Clough": {
+   "demand": 66,
+   "why": "Back-to-back European Cups with Nottingham Forest (1979, 1980)"
+  },
+  "Arsène Wenger": {
+   "demand": 74,
+   "why": "The Invincibles: a Premier League season without defeat (2003–04)"
+  },
+  "Valeriy Lobanovskyi": {
+   "demand": 58,
+   "why": "Scientific football at Dynamo Kyiv; two Cup Winners’ Cups"
+  },
+  "Béla Guttmann": {
+   "demand": 58,
+   "why": "Back-to-back European Cups with Benfica (1961, 1962)"
+  },
+  "Vittorio Pozzo": {
+   "demand": 56,
+   "why": "The only coach to win two World Cups (1934, 1938)"
+  },
+  "Mário Zagallo": {
+   "demand": 64,
+   "why": "First to win the World Cup as a player and as a coach (1970)"
+  },
+  "Telê Santana": {
+   "demand": 60,
+   "why": "Coach of the beautiful Brazil of 1982; two Libertadores with São Paulo"
+  },
+  "Jupp Heynckes": {
+   "demand": 64,
+   "why": "Champions League with Real Madrid (1998) and a treble with Bayern (2013)"
+  },
+  "Alf Ramsey": {
+   "demand": 66,
+   "why": "Won the 1966 World Cup with England"
+  },
+  "Pia Sundhage": {
+   "demand": 66,
+   "why": "Two Olympic golds with the USA (2008, 2012)"
+  },
+  "Jill Ellis": {
+   "demand": 68,
+   "why": "Back-to-back Women’s World Cups with the USA (2015, 2019)"
+  },
+  "Silvia Neid": {
+   "demand": 64,
+   "why": "World Cup 2007 without conceding, two Euros and Olympic gold with Germany"
   }
  }
 }

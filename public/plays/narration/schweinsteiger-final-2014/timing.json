@@ -1,0 +1,398 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Rio, 2014",
+   "text": "Rio de Janeiro, 2014, the World Cup final: Germany, in white, against Argentina, in dark blue. Messi races past Hummels, into the box, and pulls it back for Lavezzi... but Bastian Schweinsteiger gets there first and clears it!",
+   "src": "/plays/narration/schweinsteiger-final-2014/1.m4a",
+   "seconds": 16.8,
+   "words": [
+    {
+     "w": "Rio",
+     "at": 0.4
+    },
+    {
+     "w": "de",
+     "at": 0.725
+    },
+    {
+     "w": "Janeiro",
+     "at": 0.875
+    },
+    {
+     "w": "2014",
+     "at": 1.675
+    },
+    {
+     "w": "the",
+     "at": 2.825
+    },
+    {
+     "w": "World",
+     "at": 2.925
+    },
+    {
+     "w": "Cup",
+     "at": 3.225
+    },
+    {
+     "w": "final",
+     "at": 3.45
+    },
+    {
+     "w": "Germany",
+     "at": 4.325
+    },
+    {
+     "w": "in",
+     "at": 5.0
+    },
+    {
+     "w": "white",
+     "at": 5.162
+    },
+    {
+     "w": "against",
+     "at": 5.575
+    },
+    {
+     "w": "Argentina",
+     "at": 5.95
+    },
+    {
+     "w": "in",
+     "at": 6.8
+    },
+    {
+     "w": "dark",
+     "at": 6.95
+    },
+    {
+     "w": "blue",
+     "at": 7.237
+    },
+    {
+     "w": "Messi",
+     "at": 8.2
+    },
+    {
+     "w": "races",
+     "at": 8.525
+    },
+    {
+     "w": "past",
+     "at": 8.988
+    },
+    {
+     "w": "Hummels",
+     "at": 9.375
+    },
+    {
+     "w": "into",
+     "at": 9.887
+    },
+    {
+     "w": "the",
+     "at": 10.062
+    },
+    {
+     "w": "box",
+     "at": 10.15
+    },
+    {
+     "w": "and",
+     "at": 10.662
+    },
+    {
+     "w": "pulls",
+     "at": 10.775
+    },
+    {
+     "w": "it",
+     "at": 11.037
+    },
+    {
+     "w": "back",
+     "at": 11.125
+    },
+    {
+     "w": "for",
+     "at": 11.4
+    },
+    {
+     "w": "Lavezzi",
+     "at": 11.525
+    },
+    {
+     "w": "but",
+     "at": 12.675
+    },
+    {
+     "w": "Bastian",
+     "at": 12.825
+    },
+    {
+     "w": "Schweinsteiger",
+     "at": 13.425
+    },
+    {
+     "w": "gets",
+     "at": 14.25
+    },
+    {
+     "w": "there",
+     "at": 14.488
+    },
+    {
+     "w": "first",
+     "at": 14.662
+    },
+    {
+     "w": "and",
+     "at": 15.1
+    },
+    {
+     "w": "clears",
+     "at": 15.238
+    },
+    {
+     "w": "it",
+     "at": 15.662
+    }
+   ]
+  },
+  {
+   "label": "Goal-side",
+   "text": "Watch again, slowly. Schweinsteiger sprints back, between the ball and his goal. He reads the pass, and steps in first.",
+   "src": "/plays/narration/schweinsteiger-final-2014/2.m4a",
+   "seconds": 8.6,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.212
+    },
+    {
+     "w": "Schweinsteiger",
+     "at": 2.25
+    },
+    {
+     "w": "sprints",
+     "at": 2.987
+    },
+    {
+     "w": "back",
+     "at": 3.4
+    },
+    {
+     "w": "between",
+     "at": 3.763
+    },
+    {
+     "w": "the",
+     "at": 4.037
+    },
+    {
+     "w": "ball",
+     "at": 4.125
+    },
+    {
+     "w": "and",
+     "at": 4.5
+    },
+    {
+     "w": "his",
+     "at": 4.612
+    },
+    {
+     "w": "goal",
+     "at": 4.775
+    },
+    {
+     "w": "He",
+     "at": 5.525
+    },
+    {
+     "w": "reads",
+     "at": 5.675
+    },
+    {
+     "w": "the",
+     "at": 5.987
+    },
+    {
+     "w": "pass",
+     "at": 6.088
+    },
+    {
+     "w": "and",
+     "at": 6.562
+    },
+    {
+     "w": "steps",
+     "at": 6.675
+    },
+    {
+     "w": "in",
+     "at": 7.0
+    },
+    {
+     "w": "first",
+     "at": 7.162
+    }
+   ]
+  },
+  {
+   "label": "All 120 minutes",
+   "text": "Then he keeps going. He ran for all one hundred and twenty minutes, and Germany won the World Cup!",
+   "src": "/plays/narration/schweinsteiger-final-2014/3.m4a",
+   "seconds": 6.6,
+   "words": [
+    {
+     "w": "Then",
+     "at": 0.35
+    },
+    {
+     "w": "he",
+     "at": 0.463
+    },
+    {
+     "w": "keeps",
+     "at": 0.55
+    },
+    {
+     "w": "going",
+     "at": 0.875
+    },
+    {
+     "w": "He",
+     "at": 1.75
+    },
+    {
+     "w": "ran",
+     "at": 1.875
+    },
+    {
+     "w": "for",
+     "at": 2.175
+    },
+    {
+     "w": "all",
+     "at": 2.3
+    },
+    {
+     "w": "one",
+     "at": 2.5
+    },
+    {
+     "w": "hundred",
+     "at": 2.725
+    },
+    {
+     "w": "and",
+     "at": 3.087
+    },
+    {
+     "w": "twenty",
+     "at": 3.2
+    },
+    {
+     "w": "minutes",
+     "at": 3.5
+    },
+    {
+     "w": "and",
+     "at": 4.075
+    },
+    {
+     "w": "Germany",
+     "at": 4.213
+    },
+    {
+     "w": "won",
+     "at": 4.7
+    },
+    {
+     "w": "the",
+     "at": 4.862
+    },
+    {
+     "w": "World",
+     "at": 4.95
+    },
+    {
+     "w": "Cup",
+     "at": 5.312
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: sprint back goal-side, get to the ball first, then keep going.",
+   "src": "/plays/narration/schweinsteiger-final-2014/4.m4a",
+   "seconds": 5.4,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.525
+    },
+    {
+     "w": "sprint",
+     "at": 1.262
+    },
+    {
+     "w": "back",
+     "at": 1.55
+    },
+    {
+     "w": "goal-side",
+     "at": 1.825
+    },
+    {
+     "w": "get",
+     "at": 2.525
+    },
+    {
+     "w": "to",
+     "at": 2.663
+    },
+    {
+     "w": "the",
+     "at": 2.737
+    },
+    {
+     "w": "ball",
+     "at": 2.825
+    },
+    {
+     "w": "first",
+     "at": 3.112
+    },
+    {
+     "w": "then",
+     "at": 3.562
+    },
+    {
+     "w": "keep",
+     "at": 3.75
+    },
+    {
+     "w": "going",
+     "at": 4.0
+    }
+   ]
+  }
+ ]
+}

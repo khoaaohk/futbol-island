@@ -1121,6 +1121,10 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
       // Zero vertical velocity at lift-off and landing, with the same mid-step clearance.
       // A plain sine hits the ground at full downward speed and stops in one frame.
       let lift = stance ? 0 : swing*swing*(.15+.27*sprint)*(1-.65*compact)*amount;
+      // Sideways walk/shuffle only (duty keeps a support boot; a lateral run's flight phase is untouched): the
+      // trailing boot leaves at leg reach, so a lead boot in its last 3 cm sets down as soon as the trailing one
+      // lifts off, never leaving both boots in the air. The touch-down lock then holds it where it landed.
+      if(!stance&&t>.7&&lift<.03&&lateral>.5&&duty>.45&&liftOff[1-index])lift=0;
       // A stationary change of heading lifts the outside foot instead of skating both boots.
       lift+=pivot*(side*Math.sign(yawRate)>0?.075:0);
       // Give each foot its own lane, with wider recovery steps when defending.

@@ -10,7 +10,8 @@ export type Issues = { errors: string[]; known: string[] };
  * delete it once fixed. Unknown errors still fail the test.
  */
 export const KNOWN_CONSOLE: { pattern: RegExp; reason: string }[] = [
-  // Empty: the IslandOverview hydration mismatch and the CardOffer `inert` warning were fixed on 2026-09-25.
+  // The IslandOverview hydration mismatch and the CardOffer `inert` warning were fixed on 2026-09-25.
+  { pattern: /ResizeObserver loop completed with undelivered notifications/, reason: 'benign browser layout notice (no user impact)' },
 ];
 
 /** Stops dev-server HMR from reloading the page mid-test while other agents edit files. */

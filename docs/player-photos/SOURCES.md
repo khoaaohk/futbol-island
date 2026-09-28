@@ -238,3 +238,248 @@ reference faces rather than picks. Openverse/Flickr and match categories: 0 so f
 - `upload.wikimedia.org`, the image host, which gets no token: 429s even at 1 download every 7 s. There were three
   within an hour, around 12:05, 12:15 and 12:24, so the run stopped for the day.
 - Download budget after the top-1/2 rule: about 3 images per player.
+
+
+## Session 2 (Sep 26 23:18 to Sep 27 01:32)
+
+The roster grew to 400. Photo-less cards before this session: 104 (the 101 left over plus Ian Rush, Laurent Blanc and Filippo
+Inzaghi from the newest 12). **After: 82.** 22 photos applied, each crop checked by eye:
+
+| Player | File | Licence, author |
+| --- | --- | --- |
+| Rui Costa | Rui Costa.jpg (Benfica v Naval, 2007) | CC BY-SA 2.0, José Goulão |
+| Michael Owen | Owen4.jpg (Stoke at Chelsea, 2012) | CC BY-SA 3.0, Brian Minkoff / London Pixels |
+| Juan Román Riquelme | Riquelme 2009.jpg (Boca training kit) | CC BY-SA 3.0, Diegotóteles |
+| Nílton Santos | Nilton Santos 2 (1956).tif (Botafogo) | Public domain, Correio da Manhã collection |
+| Leonardo Bonucci | Leonardo Bonucci and Cesc Fàbregas Euro 2012 final.jpg | CC BY-SA 3.0, Илья Хохлов |
+| Bradley Barcola | Bradley Barcola France v Spain 7.24.26-112 (cropped).jpg | CC BY-SA 4.0, Bryan Berlin |
+| Pervis Estupiñán | Pervis Estupiñán 2015.jpg (LDU Quito) | CC BY-SA 2.0, Agencia de Noticias ANDES |
+| Lindsey Heaps | Lindsey Heaps USWNT vs Italy Nov 28 2025-047 (cropped).jpg | CC BY-SA 4.0, Bryan Berlin |
+| Salma Paralluelo | Brann - Barça Femení CG3A6300.jpg | CC BY-SA 4.0, MichaelEmilio |
+| Alessia Russo | Lewes FC Women 1 Manchester Utd Women 3 ... (52760249433).jpg | CC BY 2.0, James Boyes |
+| Ewa Pajor | 2018 Women's DFB-Pokal Final - Ewa Pajor (Wolfsburg) (cropped).jpg | CC BY 4.0, El Loko Foto / Danyele |
+| Temwa Chawinga | NC Courage vs KC Current (Sep 2024) 007 (cropped).jpg | CC BY-SA 4.0, Hameltion |
+| Asisat Oshoala | Asisat Oshoala 2019 Champions League.jpg | CC BY-SA 4.0, Steffen Prößdorf |
+| Homare Sawa | Homare Sawa 2015 (cropped).jpg | CC BY 2.0, GoToVan |
+| Patri Guijarro | 2019-05-17 ... StP 0899 LR10 by Stepro (cropped).jpg | CC BY-SA 4.0, Steffen Prößdorf |
+| Lucy Bronze | 2019-05-18 ... StP 1015 LR10 by Stepro.jpg (Lyon) | CC BY-SA 4.0, Steffen Prößdorf |
+| Chloe Kelly | Chloe Kelly Eng Women 0 Czech Rep 0 11 10 2022-317 (cropped).jpg | CC BY 2.0, James Boyes |
+| Christine Sinclair | Christine Sinclair 2013-05-04 Spirit - Thorns-2.jpg | CC BY 2.0, Erica McCaulley |
+| Nadine Angerer | Nadine Angerer, Euro 2013.jpg | CC BY 2.0, Rikard Fröberg |
+| Catela | Encontro amistoso de fútbol sala masculino España - Hungría na Malata 44.jpg | CC BY-SA 4.0, Estevoaei |
+| Dídac Plana | Encontro amistoso ... na Malata 84.jpg | CC BY-SA 4.0, Estevoaei |
+| Sid Belhaj | Sid Belhaj 2015.jpeg (KB United, French play-off) | CC BY-SA 4.0, Pierre-Yves Beaudouin |
+
+**Rejected on review this session:**
+- Dalglish: sticker scan.
+- Hagi: veterans match.
+- Okocha: held, because a "CC0, unknown author" 1996 press-style photo has unverified provenance.
+- Laurent Blanc: coaching, in a cap and sunglasses.
+- Ian Rush: airport shot with Terry Yorath.
+- Carragher: off-pitch event.
+- Leão: off-duty by a van.
+- Seedorf: face in shadow.
+- de Jong: every candidate is blurred.
+- Kristine Lilly: holding a child.
+- Fareniuk, Abakshyn: interview boards.
+- Namesakes: Carlos Ortiz (a US Army sergeant), Raúl Gómez (a bishop, a fan), Sergio González (a coach's press
+  conference), João Pedro (a Timor-Leste player).
+
+**Rate limits:** the upload host tripped the three-429s-per-hour rule at 00:13. The run paused 60 minutes and resumed at a
+9 s gap, then tripped again at 01:31. That second trip stopped the run as instructed. API hosts, with the token: no 429s.
+
+**Still missing (82):**
+- stars 6: Dumfries, de Jong, João Pedro, Leão, Güler, Yıldız.
+- legends 21: Cafu, Yashin, Seaman, Campos, Carragher, Vieira, Rivaldo, Stoichkov, Shearer, Weah, Dalglish, Laudrup, Hagi,
+  Seedorf, Makélélé, Lineker, Okocha, Cantona, Rush, Blanc, Inzaghi.
+- women 5: Mia Hamm, Formiga, Sun Wen, Akers, Lilly.
+- futsal 50: most have no free Commons photo at all (0 candidates). Ferrão, Wilde, Mamadou Touré, Douglas Junior and Robinho
+  still have untried candidates, many of them namesakes.
+
+Most of the missing legends and women have free photos only from after their playing days: ceremonies,
+veterans' matches, coaching. That breaks the in-kit rule, so they stay on drawn art.
+
+## Lead-image audit (Sep 27 2026)
+
+Prompted by the user's Arda Güler find, I checked the lead image (en infobox, else another language's) of every photo-less
+player. The file was always discovered. Where it was rejected, the reason is listed below.
+
+**Applied after review:**
+- **Arda Güler:** `Arda Güler 2025.jpg`, CC BY-SA 4.0, LawEnthusiast. Turkey kit on the pitch, smiling. The auto check
+  failed it only on sharpness (21 against a floor of 40). The image is soft, and only 552 px wide.
+- **Rafael Leão:** `LeaoFCSalzburg2022(cropped).jpg`, the Wikidata P18 image, CC BY-SA 4.0, Werner100359. Milan pre-match
+  jacket in the stadium at Salzburg v Milan in the Champions League, 6 Sep 2022. His en and pt article images show:
+  - a press conference (the en lead, `RafaelLeãoPortugal23.jpg`, Agência Lusa);
+  - Lille 2018, indoors;
+  - Milan v Sampdoria 2022, v Lecce 2023, v Rennes 2024 and v Cagliari 2025: all small or turned faces at full size;
+  - Portugal v Uruguay 2022: 234 px wide;
+  - two off-duty shots from a 2023 video, which were blocked.
+- **Denzel Dumfries:** `Edison ndreca inter egnati (cropped Denzel Dumfries).jpg`, CC BY-SA 4.0, Erjonallaraj. Inter away
+  kit, 2023. Rejected only as "small" (313 px wide). The face is in profile and soft.
+- **Alex Merlim:** `Alex Merlim 2021.png`, CC BY-SA 4.0, Divisione Calcio a 5. Italy futsal kit on court at his
+  100-cap presentation. The scene check saw the officials' suits either side of him.
+
+**Rejected only because of the playing-era date window** (the lead photo is from after they retired):
+- Cafu: 2026 World Cup trophy ceremony.
+- Seaman: 2012.
+- Campos: 2016.
+- Carragher: charity match, 2014.
+- Vieira: NYCFC coach, 2016.
+- Stoichkov: 2016.
+- Michelle Akers: USWNT event, 2026.
+- Laudrup: 2016.
+- Hagi: political event, 2014.
+- Seedorf: press conference, 2025.
+- Makélélé: 2024.
+- Cantona: Cannes, 2009.
+- Blanc: 2013.
+
+None of these shows him or her in playing kit, so relaxing the date window wouldn't help.
+
+**Rejected only as "small" (under 400 px) or by the scene check. I looked at each:**
+- Rivaldo: holding the World Cup trophy, 2014, in a T-shirt.
+- Shearer, Rush: civilian head shots.
+- Dalglish: event with lanyard and sunglasses.
+- Weah: White House photo with Biden.
+- Yashin (`LevYashin.JPG`): passed the metadata checks but was not downloaded. It shows him in a jacket and tie.
+- Mia Hamm: in USA kit, but the face is 23 px.
+- Kristine Lilly: 2015 fan snapshot, after she retired.
+- João Pedro: Chelsea kit at the Club World Cup final, but the face is 28 px (a 146 px wide file).
+- Frenkie de Jong: suit and tie, "unknown author".
+
+**Licence tags the filter doesn't recognise:**
+- Kenan Yıldız: `{{Attribution}}` (mlsz.hu). It's free but not literally CC BY, and the face is in profile. Held for the
+  user to decide.
+- Gary Lineker: OGL 3. That's the UK Open Government Licence, which is CC BY-compatible, but the photo is a Downing Street reception.
+
+**No free lead image:** 44 futsal players, Formiga and Sun Wen. Their articles have no lead image or only local non-free files.
+
+
+## External sources (outside Wikimedia), Sep 27 2026
+
+This was a separate pass to find photos outside Wikipedia and Commons for the cards that still had none. Entries go in
+`lib/town/playerPhotos.external.json`, which has the same shape as the other shards plus `source: external/<key>` and a
+`sourceName` for the card credit. `components/PlayerArt.tsx` spreads it **first**, so every Commons shard overrides it. External
+masks are saved as `public/players/<slug>-x-ink.webp` / `-tone.webp` (manifest `slug: "<slug>-x"`), so neither agent can
+overwrite the other's mask files. Before each write the tool checks the other shards again. Each crop went through the
+project's own `portrait_crop` + `riso` + `save_mask` (imported from `scripts/fetch-player-photos-stars.py`), and each crop
+was checked by eye. Network use: a generic User-Agent (`FutbolIslandPhotoResearch/1.0`), one request at a time per host,
+at least 5 s between requests (11 s on hosts that ask for `Crawl-delay: 10`), and robots.txt respected. Wikimedia was used
+only for a handful of lookups.
+
+### Applied (5 cards; drawn art to photo)
+
+| Player | Photo | Source | Licence, author | Licence check |
+| --- | --- | --- | --- | --- |
+| Lev Yashin | Punches clear, Dynamo Moscow v CSKA, Luzhniki, 28 Oct 1962 | mos.ru news item 122488073 (Moscow Main Archive photo) | CC BY 4.0, Vyacheslav Un Da-sin / Glavarkhiv Moskvy | mos.ru publishes under CC BY 4.0 (Commons `{{mos.ru}}`); mirror File:Lev Yashin 1962.jpg |
+| Formiga | Brazil #8 v Norway, 2011 Women's World Cup, Wolfsburg, 3 Jul 2011 | flickr.com/photos/53057644@N00/5912211364 | CC BY-SA 2.0, Allan Patrick | Openverse (Flickr API) plus Flickr upload bot review, 11 Jul 2011, on the Commons mirror |
+| Claude Makélélé | PSG warm-up before PSG 3-0 Lille, Parc des Princes, 2009 | flickr.com/photos/10671903@N00/3873176997 | CC BY 2.0, psgmag.net | Openverse (Flickr API). Tagged `makelele`; SFace 0.66 against the en infobox face |
+| Jamie Carragher | Liverpool warm-up (training bib), Liverpool v Roma, Fenway Park, 21 Jul 2012 | flickr.com/photos/32459155@N07/7653269592 | CC BY 2.0, md.faisalzaman | Openverse (Flickr API). Returned for "Carragher" (Flickr description); SFace 0.55 |
+| Frenkie de Jong | Barcelona #21, Dynamo Kyiv v Barcelona, UCL, Kyiv, 2 Nov 2021 | dynamomania.com album 2184, photo 1289671 | CC BY-SA 4.0, Yuliia Perekopaiko / Dynamomania.com | Dynamomania gave permission for **all** its photos under CC BY-SA 4.0 (VRT ticket 2024112610011294, Commons `{{Dynamomania}}`) |
+
+Also found and checked, but the Wikimedia agent applied a Commons photo for these two while this pass ran, so they are not used.
+They are recorded as alternates:
+Patrick Vieira (Inter training bib, Inter v Club América, Stanford, Jul 2009: flickr.com/photos/24293771@N00/3742310276,
+CC BY 2.0, Sona Hovasapyan, SFace 0.52) and Clarence Seedorf (Milan #10 at the Bernabéu, 19 Oct 2010:
+flickr.com/photos/37547921@N04/5097617961, CC BY-SA 2.0, Jan S0L0, FlickreviewR pass). A race had left the
+`patrick-vieira-*` masks on this pass's Flickr photo while the manifest credited Steindy's Commons file. The masks were
+regenerated from Steindy's file ("Patrick Vieira - Inter Mailand (1).jpg", face 0), so the credit and the image match again.
+
+SFace negative control (Carragher reference against Vieira's face): 0.07. The match threshold is about 0.36.
+
+### Sources evaluated
+
+| Source | Result | Notes |
+| --- | --- | --- |
+| **Openverse** `api.openverse.org/v1/images/?q=…&license=cc0,pdm,by,by-sa&excluded_source=wikimedia` | **Worked: 4 finds** | About 330 queries: name, surname, club and season, and event variants for all 78 players. The licence comes from Openverse's Flickr API ingest; the per-image `/v1/images/{id}/` detail endpoint gives the tags. It also searches Flickr descriptions (Carragher's photo is titled only "LFC vs Roma"). Coverage of Flickr is partial. It found nothing for any futsal player, João Pedro or Yıldız. |
+| **Flickr direct** | Not possible | robots.txt disallows `/` (including `/search` and `/services/`) for generic crawlers, and the API needs a key tied to an account. **Lead:** a free Flickr API key (non-commercial) would allow `flickr.photos.search` with `license=4,5,9,10` and full-size downloads. Openverse only serves the 1024 px size. |
+| **Dynamomania.com** (Ukrainian Dynamo Kyiv media) | **Worked: 1** | Site-wide CC BY-SA 4.0 permission. Albums are at `/album/<id>-<slug>/<photoId>`; photo ids go up in steps of 4 and the full size is the `..._content.jpg` at 1230 px. It covers Dynamo home European games and Ukraine senior and U-21 games. Crop away the watermark in the lower-left corner. |
+| **mos.ru** (Moscow government, CC BY 4.0) | **Worked: 1** | Publishes Moscow Main Archive photos in news items. The licence is not in the HTML (it loads from JS); rely on Commons `{{mos.ru}}` and the site's legal rules. |
+| Nationaal Archief / Anefo (CC0) | Checked, no new card | The whole CC0 set is mirrored on Commons ("Images from Nationaal Archief"), and its own search renders client-side. Anefo ends in 1989. The only 1980s hits were Lineker at Euro 88 (a 25 px background figure, unusable) and Wales 1988 (players not identifiable). Yashin's Anefo photos are training (CC BY-SA 3.0 nl) or arrivals at Schiphol. |
+| Agência Brasil (CC BY 3.0 BR) | No usable photo | Most football photos in articles are credited to CBF, FIFA, Reuters or Getty ("Direitos Reservados"), which are not CC. Only photos credited "<name>/Agência Brasil" qualify. `/search/` is disallowed and Crawl-delay is 10. |
+| Tasnim (CC BY 4.0 site-wide), Mehr | No usable photo | tasnimnews.com does not resolve from here; tasnimnews.ir works. Foreign-match photos (the 2024 Futsal World Cup and the 2026 World Cup galleries) are often wire or FIFA photos, and a site-wide CC claim cannot relicense those. Use only files credited to the agency's own photographers. |
+| Ukraine Ministry of Youth & Sport (mms.gov.ua, CC BY 4.0) | No | Its futsal bronze story uses a FIFA photo. |
+| **Governo do Paraná / AEN** (CC0 per its gallery terms, Commons `{{Governo do Paraná}}`) | **Lead, offline now** | Covered Brazil futsal at the 2025 Intercontinental Cup (São José dos Pinhais) and the Brazil v Netherlands friendlies (Foz do Iguaçu and Santa Helena). The pages return 404 during Brazil's 2026 election blackout and are not in the Wayback Machine. **Retry after the October 2026 election.** Other Brazilian state governments (Rio, Bahia) are in the same blackout. |
+| Europeana API (`wskey=api2demo`, `reusability=open`) | No | No football hits for any legend. |
+| DigitaltMuseum API (`api.dimu.org`, key `demo`) | No | The Mölndals stadsmuseum sets (CC BY-SA) show Jitex BK v Tyresö FF in 1995 and 1996, after Akers and Lilly left Tyresö. |
+| Palma Futsal / club galleries | Rejected | © club, no licence. |
+| YouTube / Vimeo CC frames | Not attempted | YouTube robots.txt disallows `/results` and `/youtubei/`, and its terms forbid downloading without a download button. Vimeo showed no relevant CC futsal footage. |
+| argentina.gob.ar / deportv.gob.ar | No | Futsal photos there are AFA's. |
+
+### Rejected candidates (this pass)
+- Mia Hamm: ExperienceLA 2003 Women's World Cup photos (CC BY 2.0). Hamm is a 22 px face or seen from behind. jdlasica 2010 photos are from retirement.
+- Kristine Lilly: only a UNC reunion photo.
+- Inzaghi: fabbio's photo is a music festival; Julien Maury's is a drawing; "Pippo Inzaghi Juventus 1998" is CC0 but claimed by a stranger on a 1998 press-style image, so its provenance is unverifiable.
+- Shearer: EwoodEddie1968's "Blackburn Rovers Champions 94-95" is a scan of a press photo.
+- Hagi and Stoichkov: legends and charity matches only (2012, 2018).
+- Laudrup, Blanc, Dalglish: coaching or ceremonies (Doha Stadium Plus and others).
+- "Rivaldo" (Agência Atlético, 2008) and "Matheus Rodrigues" (Raphael Reghin, 2010): other people with the same name.
+- "De jong Frenkie.jpg" on Commons: claimed as "own work", but it is a crop of a match photo that contains an overlay. Treated as licence laundering.
+
+### Still without a photo after both passes (as of this section)
+Legends: Cafu, Rivaldo, Stoichkov, Shearer, Weah, Dalglish, Laudrup, Hagi, Lineker, Okocha, Cantona, Rush, Blanc, Inzaghi,
+Seaman, Campos. Stars: João Pedro, Kenan Yıldız. Women: Mia Hamm, Sun Wen, Michelle Akers, Kristine Lilly. Futsal: all 49.
+Best remaining leads: a Flickr API key (legends from 2004 on, e.g. Inzaghi, Cafu and Seedorf-era Milan, Rivaldo at Olympiacos/AEK,
+Okocha at Bolton/Hull, Lilly at the Boston Breakers 2009-10); the Paraná AEN CC0 galleries after the election (Brazil futsal
+squads); more Dynamomania albums (Ukraine national-team opponents).
+
+## Session 3: thorough pass (Sep 27 2026)
+
+**Method:**
+- Every Wikipedia language edition with an article on the player (from the Wikidata sitelinks: 40 to 88 editions for the
+  stars and legends).
+- The Commons category tree to depth 3 (budget of 60 calls), the depicts (P180) search, and name searches plus surname +
+  club / national-team searches.
+- Every metadata-passing candidate ranked, with penalties for portrait / award / ceremony / coach / veteran words and a
+  bonus for landscape shots. The top 8 were screened as 330 px thumbnails, or from the cached 960 px copy when one existed.
+  Only the accepted file is fetched at full size.
+- Candidates that had failed the automatic thresholds earlier, and so never reached a review sheet, were screened
+  again by eye.
+- Two filter fixes: a year in the file title now beats a later scan or upload date (this found "Mia Hamm 1995 001 stl.jpg",
+  whose scan was dated 2017), and a namesake guard requires "futsal" for ambiguous futsal names.
+
+**Applied this session (12), each crop checked by eye:**
+- Arda Güler (user-chosen lead image).
+- Rafael Leão: all his en/pt article images reviewed.
+- Denzel Dumfries and Alex Merlim (from the lead-image audit).
+- Patrick Vieira: Inter, 2009, Steindy, CC BY-SA 3.0.
+- Clarence Seedorf: Milan No. 10, 2011, Franciaio, CC BY-SA 3.0.
+- Jamie Carragher: Liverpool kit with the captain's armband, Thailand tour 2009, Government of Thailand, CC BY 2.0.
+- Mia Hamm: USA No. 9 taking a corner, 1995, Johnmaxmena2, CC BY-SA 4.0.
+- Lev Yashin: `Lev Yashin 1960d.jpg` (USSR training in kit, 1960, Anefo) was applied and then taken back out. On the card
+  the face is an unreadable smudge, so he stays on drawn art. It can go back in if the user wants it.
+- Cafu: Brazil training jacket on the pitch, 2006, Florian K, CC BY-SA 3.0. Face in profile.
+- Plus the three from the start of the session (Leão, Güler and Dumfries are counted above).
+
+Photo-less cards now: **73 of 400.**
+
+**What the deeper search turned up for the rest (all rejected on review):**
+- de Jong: a doubtful "own work" upload of an agency-style shot; suit portraits; 2026 World Cup team line-ups where he can't
+  be identified.
+- João Pedro: namesakes (Timor-Leste, Cherno More) and a signing photo in a T-shirt.
+- Yıldız: only a CC0 photo in traditional dress, plus a profile action shot under the `{{Attribution}}` tag, held for the user.
+- Campos: a jersey exhibit. Rivaldo: a trophy collage. Shearer: England tracksuit at a fan meet. Dalglish: a sticker.
+  Laudrup, Rush: civilian. Blanc: namesakes (1920s teams, Guy Roux, Aimé Jacquet). Inzaghi: in a suit on the bench.
+  Makélélé: seen from behind in match shots. Lineker: the 1988 match photo shows other players.
+  Weah, Stoichkov, Hagi, Cantona, Okocha, Seaman: nothing in kit from their playing years.
+- Formiga, Sun Wen, Akers, Lilly: nothing usable. Their free photos are later events or too small.
+- Futsal: all 50 have either no free Commons photo or only namesakes (the Ivorian minister Mamadou Touré, a
+  Colombian Pablo Ramírez, US Army sergeants called Carlos Ortiz).
+
+## User-approved exceptions (Sep 27 2026)
+
+The user approved two held photos that sit outside the house rules. Each credit is recorded as its file page requires:
+- **Kenan Yıldız:** `Kenan Yıldız in the international match (March 2025) (cropped).jpg`. Turkey v Hungary, UEFA Nations
+  League play-off, 20 Mar 2025; cropped to Yıldız (red shirt, in profile).
+  - Licence: `{{Attribution only license}}`. The mlsz.hu imprint says photos "may be used free of charge, with the reference to the source".
+  - Credit: "mlsz.hu – Hungarian Football Federation (derivative: Danyele)"; licence link https://en.mlsz.hu/imprint.
+- **Gary Lineker:** `Prime Minister Keir Starmer hosts St George's Day Reception (54470857860) (cropped).jpg`, 22 Apr 2025.
+  A Downing Street reception in a suit, so not in kit (approved anyway).
+  - Licence: OGL v3.0.
+  - Credit: "Lauren Hurley / No 10 Downing Street. Contains public sector information licensed under the Open Government
+    Licence v3.0".
+
+In the script these sit in `PICKS` plus `APPROVED_CREDIT` (scripts/fetch-player-photos-deep.py). No other file bypasses the
+licence filter.
+
+Photo-less cards now: **71 of 400.**

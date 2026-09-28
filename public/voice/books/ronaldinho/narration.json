@@ -1,0 +1,284 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "porto": {
+      "src": "/voice/books/ronaldinho/porto.m4a?v=coach-bella-1",
+      "duration": 41.0,
+      "scriptSha256": "1eaf8dd96e6345500e004e8b84e8eed00b80c139fef59d0e7531634ba061ae72",
+      "cues": [
+        {
+          "text": "A home full of football",
+          "start": 0.0,
+          "duration": 2.075
+        },
+        {
+          "text": "Ronaldo de Assis Moreira, known as Ronaldinho, was born in 1980 in Porto Alegre, Brazil.",
+          "start": 2.075,
+          "duration": 7.8
+        },
+        {
+          "text": "His mother, Miguelina, was a salesperson who studied to become a nurse.",
+          "start": 9.875,
+          "duration": 5.4
+        },
+        {
+          "text": "His father, Jo\u00e3o, worked at a shipyard and played football for a local club.",
+          "start": 15.275,
+          "duration": 5.275
+        },
+        {
+          "text": "His big brother Roberto played for the club Gr\u00eamio, and the club gave the family a new home.",
+          "start": 20.55,
+          "duration": 6.275
+        },
+        {
+          "text": "But later an injury cut Roberto\u2019s playing career short.",
+          "start": 26.825,
+          "duration": 4.375
+        },
+        {
+          "text": "Many people would feel very sad if a dream ended like that.",
+          "start": 31.2,
+          "duration": 4.375
+        },
+        {
+          "text": "When a dream breaks, it is okay to feel sad. Your story can still go on.",
+          "start": 35.575,
+          "duration": 5.375
+        }
+      ]
+    },
+    "tricks": {
+      "src": "/voice/books/ronaldinho/tricks.m4a?v=coach-bella-1",
+      "duration": 41.5,
+      "scriptSha256": "cdefac3719d415089f8842a6c5c4ec74e381e9e0730e4928d6e0ba7aa40f6dd9",
+      "cues": [
+        {
+          "text": "Missing Dad",
+          "start": 0.0,
+          "duration": 1.75
+        },
+        {
+          "text": "When Ronaldinho was eight years old, his father died in an accident at their new home.",
+          "start": 1.75,
+          "duration": 5.85
+        },
+        {
+          "text": "Losing a parent is one of the hardest things that can happen to a child.",
+          "start": 7.6,
+          "duration": 5.025
+        },
+        {
+          "text": "Many children feel sad, confused or even angry, and those feelings can come back again and again.",
+          "start": 12.625,
+          "duration": 7.3
+        },
+        {
+          "text": "Light the paper stars, one for each happy memory.",
+          "start": 19.925,
+          "duration": 3.925
+        },
+        {
+          "text": "Families find ways to remember.",
+          "start": 23.85,
+          "duration": 2.775
+        },
+        {
+          "text": "Years later, when Ronaldinho\u2019s own son was born in 2005, he named the baby Jo\u00e3o, after his father.",
+          "start": 26.625,
+          "duration": 8.275
+        },
+        {
+          "text": "It is okay to feel sad. Talk to someone you trust, and keep remembering the people you love.",
+          "start": 34.9,
+          "duration": 6.575
+        }
+      ]
+    },
+    "u17": {
+      "src": "/voice/books/ronaldinho/u17.m4a?v=coach-bella-1",
+      "duration": 40.8,
+      "scriptSha256": "30108f89a07ae5565288aca20773adaaeae360701233c3cec06e836114d518ad",
+      "cues": [
+        {
+          "text": "The smallest player",
+          "start": 0.0,
+          "duration": 1.975
+        },
+        {
+          "text": "His football began to blossom when he was eight.",
+          "start": 1.975,
+          "duration": 3.425
+        },
+        {
+          "text": "He was often the youngest and smallest player in youth matches, so people called him Ronaldinho.",
+          "start": 5.4,
+          "duration": 6.525
+        },
+        {
+          "text": "In Portuguese, the ending \u201cinho\u201d means small, and it is also a loving, friendly word.",
+          "start": 11.925,
+          "duration": 6.575
+        },
+        {
+          "text": "He played futsal and beach football, and many of his famous moves came from futsal.",
+          "start": 18.5,
+          "duration": 5.725
+        },
+        {
+          "text": "At 13 he scored all 23 goals in a 23\u20130 win.",
+          "start": 24.225,
+          "duration": 4.9
+        },
+        {
+          "text": "In 1997 he played for Brazil at the Under-17 World Championship in Egypt.",
+          "start": 29.125,
+          "duration": 6.75
+        },
+        {
+          "text": "Being small or different can be a strength. Keep playing your own way.",
+          "start": 35.875,
+          "duration": 4.85
+        }
+      ]
+    },
+    "free": {
+      "src": "/voice/books/ronaldinho/free.m4a?v=coach-bella-1",
+      "duration": 39.5,
+      "scriptSha256": "9b88b59f3d43e1652ee0369b71eee9673bdcc46dbfb5bab57e5fa867f1711416",
+      "cues": [
+        {
+          "text": "A brother who helped",
+          "start": 0.0,
+          "duration": 1.85
+        },
+        {
+          "text": "In 2002 Ronaldinho won the World Cup with Brazil.",
+          "start": 1.85,
+          "duration": 4.8
+        },
+        {
+          "text": "In the quarter-final against England, his free kick from far out curled into the top corner and surprised the goalkeeper.",
+          "start": 6.65,
+          "duration": 7.775
+        },
+        {
+          "text": "Behind the scenes, family helped too.",
+          "start": 14.425,
+          "duration": 3.1
+        },
+        {
+          "text": "Roberto\u2019s own playing career had ended, but he found a new way to be part of football: he has worked as Ronaldinho\u2019s manager.",
+          "start": 17.525,
+          "duration": 8.975
+        },
+        {
+          "text": "Their sister Deisi has worked as his press coordinator.",
+          "start": 26.5,
+          "duration": 4.275
+        },
+        {
+          "text": "Lift the flap to see who helped.",
+          "start": 30.775,
+          "duration": 2.5
+        },
+        {
+          "text": "Families can help each other. When one dream ends, you can help someone else\u2019s dream grow.",
+          "start": 33.275,
+          "duration": 6.225
+        }
+      ]
+    },
+    "applause": {
+      "src": "/voice/books/ronaldinho/applause.m4a?v=coach-bella-1",
+      "duration": 42.9,
+      "scriptSha256": "b21b0ef6f360986e439fe172249ff354e949bbf70e0b1fb8edf2205dc51da64c",
+      "cues": [
+        {
+          "text": "Left out, then hurt",
+          "start": 0.0,
+          "duration": 2.2
+        },
+        {
+          "text": "In 2004 Brazil\u2019s coach rested his stars, and Ronaldinho was left out of the Copa Am\u00e9rica squad.",
+          "start": 2.2,
+          "duration": 8.15
+        },
+        {
+          "text": "The next year he came back as captain and led Brazil to win the 2005 Confederations Cup.",
+          "start": 10.35,
+          "duration": 7.3
+        },
+        {
+          "text": "Later came a harder time.",
+          "start": 17.65,
+          "duration": 2.45
+        },
+        {
+          "text": "At Barcelona his 2007\u201308 season was full of injuries, and in April 2008 a muscle tear in his right leg ended it.",
+          "start": 20.1,
+          "duration": 9.775
+        },
+        {
+          "text": "Barcelona sold him to AC Milan.",
+          "start": 29.875,
+          "duration": 3.175
+        },
+        {
+          "text": "In his second season there, he found his best form again.",
+          "start": 33.05,
+          "duration": 4.2
+        },
+        {
+          "text": "A setback is not the end of the story. Rest, ask for help and try again.",
+          "start": 37.25,
+          "duration": 5.575
+        }
+      ]
+    },
+    "joy": {
+      "src": "/voice/books/ronaldinho/joy.m4a?v=coach-bella-1",
+      "duration": 38.5,
+      "scriptSha256": "d233f47d3e0b79e45ebfae7dfa5036dc2a5f014f780da50ccc7da0a0b4f8902f",
+      "cues": [
+        {
+          "text": "Tears of joy",
+          "start": 0.0,
+          "duration": 1.75
+        },
+        {
+          "text": "Ronaldinho kept playing.",
+          "start": 1.75,
+          "duration": 2.425
+        },
+        {
+          "text": "At Atl\u00e9tico Mineiro in Brazil he wore number 49, for the year his mother was born, and in 2013 he helped the club win its first Copa Libertadores.",
+          "start": 4.175,
+          "duration": 11.375
+        },
+        {
+          "text": "In April 2015, playing for Quer\u00e9taro, he scored twice away at Am\u00e9rica.",
+          "start": 15.55,
+          "duration": 6.2
+        },
+        {
+          "text": "Most fans there supported Am\u00e9rica, but they stood and applauded him, and he was moved to tears.",
+          "start": 21.75,
+          "duration": 6.85
+        },
+        {
+          "text": "Madrid fans had applauded him once before, in 2005.",
+          "start": 28.6,
+          "duration": 5.0
+        },
+        {
+          "text": "Joy can come back after sadness. Share it with the people who helped you.",
+          "start": 33.6,
+          "duration": 4.825
+        }
+      ]
+    }
+  }
+}

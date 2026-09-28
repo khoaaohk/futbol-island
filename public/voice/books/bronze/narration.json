@@ -1,0 +1,299 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "alnwick": {
+      "src": "/voice/books/bronze/alnwick.m4a?v=coach-bella-1",
+      "duration": 43.3,
+      "scriptSha256": "80c8c20439ce4efee701bde2b5350b51cae13f149d6b0383d6bb066d7275afe0",
+      "cues": [
+        {
+          "text": "The rule that stopped her",
+          "start": 0.0,
+          "duration": 2.025
+        },
+        {
+          "text": "Lucy Bronze was born in 1991 in the north of England, to a Portuguese father and an English mother.",
+          "start": 2.025,
+          "duration": 7.6
+        },
+        {
+          "text": "She first played football with her older brother and his friends, then joined the boys\u2019 team at Alnwick Town.",
+          "start": 9.625,
+          "duration": 6.95
+        },
+        {
+          "text": "She was named the best player in six of her eight games.",
+          "start": 16.575,
+          "duration": 3.625
+        },
+        {
+          "text": "Open the letter.",
+          "start": 20.2,
+          "duration": 1.85
+        },
+        {
+          "text": "When Lucy turned twelve, the rules said she could no longer play on a boys\u2019 team.",
+          "start": 22.05,
+          "duration": 5.6
+        },
+        {
+          "text": "Her manager tried hard to change the rule for her.",
+          "start": 27.65,
+          "duration": 3.5
+        },
+        {
+          "text": "It did not change, but the Football Association promised more girls\u2019 teams in the countryside.",
+          "start": 31.15,
+          "duration": 6.85
+        },
+        {
+          "text": "Some rules are unfair. Speaking up can help the people who come after you.",
+          "start": 38.0,
+          "duration": 5.275
+        }
+      ]
+    },
+    "sunderland": {
+      "src": "/voice/books/bronze/sunderland.m4a?v=coach-bella-1",
+      "duration": 42.4,
+      "scriptSha256": "bcb7b26150990e83fd864870ef6734d9fc063f1b9b0749806a2e9de15743bf5d",
+      "cues": [
+        {
+          "text": "The long road",
+          "start": 0.0,
+          "duration": 1.8
+        },
+        {
+          "text": "Lucy was very shy when she was young, and she did not speak much.",
+          "start": 1.8,
+          "duration": 4.7
+        },
+        {
+          "text": "The nearest girls\u2019 team was Sunderland, hours away from home.",
+          "start": 6.5,
+          "duration": 4.6
+        },
+        {
+          "text": "Lucy said that between school and training there was time for nothing else, and the travel wore her out.",
+          "start": 11.1,
+          "duration": 6.7
+        },
+        {
+          "text": "Drive the car down the long road.",
+          "start": 17.8,
+          "duration": 2.6
+        },
+        {
+          "text": "Her mother searched for ways to help her keep playing, and found summer football camps in America.",
+          "start": 20.4,
+          "duration": 6.375
+        },
+        {
+          "text": "Lucy also joined Blyth Town, a team closer to home.",
+          "start": 26.775,
+          "duration": 4.35
+        },
+        {
+          "text": "Much later, she shared that she has autism, ADHD and dyslexia.",
+          "start": 31.125,
+          "duration": 5.45
+        },
+        {
+          "text": "Being shy or different is okay. Small, brave steps still take you forward.",
+          "start": 36.575,
+          "duration": 5.8
+        }
+      ]
+    },
+    "friend": {
+      "src": "/voice/books/bronze/friend.m4a?v=coach-bella-1",
+      "duration": 42.9,
+      "scriptSha256": "33cb804ae1d3dd43d03a7b21232a253812b60a4091d843099e2939ada128c28f",
+      "cues": [
+        {
+          "text": "Missing a friend",
+          "start": 0.0,
+          "duration": 1.85
+        },
+        {
+          "text": "In 2009, Lucy played for England\u2019s under-19 team, and they won the European Championship.",
+          "start": 1.85,
+          "duration": 7.4
+        },
+        {
+          "text": "But around that time a childhood friend of hers died, and she missed his funeral because she was playing in the tournament.",
+          "start": 9.25,
+          "duration": 7.6
+        },
+        {
+          "text": "Open the door to find help.",
+          "start": 16.85,
+          "duration": 2.275
+        },
+        {
+          "text": "Lucy felt guilty, and for a while she found she could not run.",
+          "start": 19.125,
+          "duration": 4.55
+        },
+        {
+          "text": "She went to see a sports psychologist, someone who helps athletes with their thoughts and feelings.",
+          "start": 23.675,
+          "duration": 6.05
+        },
+        {
+          "text": "Later she said that, next to losing her friend, her own pain felt small, and that helped her keep going.",
+          "start": 29.725,
+          "duration": 7.325
+        },
+        {
+          "text": "Guilt and sadness are heavy feelings. Talking to someone who can help is brave.",
+          "start": 37.05,
+          "duration": 5.8
+        }
+      ]
+    },
+    "carolina": {
+      "src": "/voice/books/bronze/carolina.m4a?v=coach-bella-1",
+      "duration": 41.2,
+      "scriptSha256": "e3bb4f2ab6e73055e3a17fcc9470d3fe4a12e64e9eb83638489dc339393f8502",
+      "cues": [
+        {
+          "text": "Across the ocean",
+          "start": 0.0,
+          "duration": 2.025
+        },
+        {
+          "text": "At seventeen, Lucy was turned down by a football programme at a university in England.",
+          "start": 2.025,
+          "duration": 6.35
+        },
+        {
+          "text": "So she moved across the ocean to study and play in North Carolina, in the United States.",
+          "start": 8.375,
+          "duration": 6.15
+        },
+        {
+          "text": "She was the youngest player on the team, and she was told she would not play much.",
+          "start": 14.525,
+          "duration": 5.175
+        },
+        {
+          "text": "Fly the plane across the sea.",
+          "start": 19.7,
+          "duration": 2.45
+        },
+        {
+          "text": "Lucy trained hard, soon started games, and became the first British player to win the American college championship.",
+          "start": 22.15,
+          "duration": 8.15
+        },
+        {
+          "text": "But England told her that if she kept playing in America, they would not pick her.",
+          "start": 30.3,
+          "duration": 5.25
+        },
+        {
+          "text": "Being new somewhere is hard. A no in one place can open a door somewhere else.",
+          "start": 35.55,
+          "duration": 5.6
+        }
+      ]
+    },
+    "knee": {
+      "src": "/voice/books/bronze/knee.m4a?v=coach-bella-1",
+      "duration": 39.8,
+      "scriptSha256": "408ec35d8572df4f5c2b717dd848db3b7014836c8dfdf4d0b58d347afb51d969",
+      "cues": [
+        {
+          "text": "The knee that would not heal",
+          "start": 0.0,
+          "duration": 2.025
+        },
+        {
+          "text": "In December 2009, back in England, Lucy hurt her knee in training.",
+          "start": 2.025,
+          "duration": 5.925
+        },
+        {
+          "text": "It became infected, and she spent much of the next year in a leg brace.",
+          "start": 7.95,
+          "duration": 4.875
+        },
+        {
+          "text": "She was told she would miss the next youth tournament, and she later said she felt a lack of support.",
+          "start": 12.825,
+          "duration": 6.4
+        },
+        {
+          "text": "Tick off the plan, one step at a time.",
+          "start": 19.225,
+          "duration": 3.25
+        },
+        {
+          "text": "At Everton she hardly played, and she worked in a pizza shop.",
+          "start": 22.475,
+          "duration": 4.4
+        },
+        {
+          "text": "But she used what she was learning in her sports science degree to make her own recovery plan, and she kept going.",
+          "start": 26.875,
+          "duration": 7.3
+        },
+        {
+          "text": "When you feel alone, keep taking small steps, and look for people who will support you.",
+          "start": 34.175,
+          "duration": 5.625
+        }
+      ]
+    },
+    "comeback": {
+      "src": "/voice/books/bronze/comeback.m4a?v=coach-bella-1",
+      "duration": 43.8,
+      "scriptSha256": "ccf3e49af77d536f5632a1f69c9429611be0471f5bd1d7dd3ed0fb4285ee7c28",
+      "cues": [
+        {
+          "text": "Stronger than before",
+          "start": 0.0,
+          "duration": 2.075
+        },
+        {
+          "text": "When Lucy first hurt her knee, she was told she probably could not keep playing past the age of twenty-seven.",
+          "start": 2.075,
+          "duration": 6.875
+        },
+        {
+          "text": "In 2012 she moved to Liverpool for better medical support, and she won the league in 2013 and 2014.",
+          "start": 8.95,
+          "duration": 8.45
+        },
+        {
+          "text": "Raise the flag.",
+          "start": 17.4,
+          "duration": 1.9
+        },
+        {
+          "text": "In 2015, after another knee operation, Lucy went to the World Cup.",
+          "start": 19.3,
+          "duration": 5.775
+        },
+        {
+          "text": "Against Norway she scored a winning goal from far outside the box, and England won 2\u20131.",
+          "start": 25.075,
+          "duration": 6.575
+        },
+        {
+          "text": "In 2020, she won FIFA\u2019s award for the best women\u2019s player in the world.",
+          "start": 31.65,
+          "duration": 5.5
+        },
+        {
+          "text": "Other people\u2019s doubts don\u2019t decide your future. You can start again, as many times as you need.",
+          "start": 37.15,
+          "duration": 6.625
+        }
+      ]
+    }
+  }
+}

@@ -31,3 +31,29 @@
 .root .card>.primary.primary{min-height:var(--btn-height-lg);padding:10px 22px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius);background:var(--btn-gold) var(--btn-grain) center/128px 128px;color:var(--btn-ink);font:700 16px/1.2 var(--btn-font);box-shadow:var(--btn-shadow-gold);background-blend-mode:soft-light}
 .root .card>.primary.primary:active{transform:none;translate:0 var(--btn-press);box-shadow:var(--btn-shadow-gold-pressed)}
 .root :is(.pause,.primary):focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
+
+@media(pointer:coarse),(max-width:700px){
+ .root{--control-bottom:calc(28px + env(safe-area-inset-bottom,0px))}
+ .root .touchControls{position:absolute;inset:0;margin:0;pointer-events:none}
+ .root .movement{position:absolute;left:calc(18px + env(safe-area-inset-left,0px));right:auto;bottom:var(--control-bottom);width:132px;height:132px;pointer-events:none}
+ .root .movement :global(.joystick){pointer-events:auto}
+ .root .actions{position:absolute;right:calc(18px + env(safe-area-inset-right,0px));bottom:var(--control-bottom);pointer-events:auto;max-width:none;grid-template-columns:58px 58px 58px;gap:12px}
+ .root .actions button{width:58px;min-height:58px;padding:3px;font-size:10px}
+ .root .actions button[data-action=shoot]{min-height:128px;font-size:12px}
+}
+@media(pointer:coarse) and (orientation:landscape){.root{--control-bottom:calc(16px + env(safe-area-inset-bottom,0px))}}
+
+.root{background:#080b1b;color:#eff8ff;--btn-ink:#ecfbff;--btn-gold:#24223e;--btn-rim:#81fbed;--btn-shadow-gold:0 4px 0 #121329,0 0 12px #4debd52e}
+.root .stage{background:#080b1b}.root .header,.root .footer{background:#080b1b;color:#eff8ff}.root .score time{background:#26223d;color:#eeebff}.root .score b{color:#fff08a}.root .score span:last-child b{color:#83dfff}
+.root .direction,.root .footer>p{color:#cef7ff}.root .meters{background:#151b32e8;color:#bdeaf2;border:1px solid #446776}
+.root .card,.root .rotate{background:#151a30;color:#eff8ff;border-color:#ef64c5}.root .actions button[data-action]{background:#193441;color:#e8ffff;border-color:#81fbed;box-shadow:0 4px 0 #101629,0 0 12px #4debd52e}
+.root .actions button[data-action=shoot]{background:#402340;color:#ffe5f6;border-color:#ff83d3;box-shadow:0 4px 0 #201428,0 0 14px #ff62c22b}
+.root .actions button[data-action=through]{background:#302744;border-color:#bf9aff}.root .actions button[data-action=switchPlayer]{background:#21334b;border-color:#8bcbff}
+
+.card select {display:block;width:100%;margin:8px 0 18px;padding:12px;border:1px solid #65eedd;border-radius:12px;background:#151c35;color:#f0fffb;font:inherit;}
+
+/* UI audit (Sep 27): shared Back/Pause anchors — desktop 24/20, phone 18/16, plus safe areas. */
+.root>.header.header{padding:calc(20px + env(safe-area-inset-top,0px)) calc(24px + env(safe-area-inset-right,0px)) 12px calc(24px + env(safe-area-inset-left,0px))}
+@media(max-width:700px),(pointer:coarse){.root>.header.header{padding:calc(16px + env(safe-area-inset-top,0px)) calc(18px + env(safe-area-inset-right,0px)) 10px calc(18px + env(safe-area-inset-left,0px))}}
+/* The "turn sideways" screen owns the view: hide the joystick, action buttons and footer under it. */
+.root[data-rotate] .touchControls,.root[data-rotate] .footer{visibility:hidden;pointer-events:none}

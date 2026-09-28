@@ -2,6 +2,10 @@
 // Run: node tests/player-dive-jump.cjs
 // Parity: with no `dive`/`jump` field every joint must match the rig from before lane B, frame for frame
 // (tests/fixtures/player-motion-parity.json, written from that rig with --write-golden PLAYER_TS=<old file>).
+// 2026-09-28: only the "keeper" hash was re-recorded (the other nine are unchanged). It is the one scenario that
+// steps sideways, and the sideways-gait fix in lib/graphics/player.ts ("a lead boot in its last 3 cm sets down as
+// soon as the trailing one lifts off") lands the lead boot one frame earlier, so both boots are never airborne.
+// No dive or jump code changed: every dive/jump/slide assertion below passes before and after.
 const assert=require('node:assert/strict'),fs=require('node:fs'),ts=require('typescript'),vm=require('node:vm'),path=require('node:path'),crypto=require('node:crypto'),T=require('three');
 const ROOT=path.resolve(__dirname,'..'),GRAPHICS=path.join(ROOT,'lib/graphics');
 const loaded=new Map();

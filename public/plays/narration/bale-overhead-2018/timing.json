@@ -1,0 +1,414 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Two minutes on",
+   "text": "Kyiv, 2018, the Champions League final. Real Madrid and Liverpool are level. Gareth Bale has just come on. Marcelo crosses from the left, but it drops behind him... so Bale kicks it over his head. Goal!",
+   "src": "/plays/narration/bale-overhead-2018/1.m4a",
+   "seconds": 14.7,
+   "words": [
+    {
+     "w": "Kyiv",
+     "at": 0.35
+    },
+    {
+     "w": "2018",
+     "at": 0.7
+    },
+    {
+     "w": "the",
+     "at": 1.55
+    },
+    {
+     "w": "Champions",
+     "at": 1.663
+    },
+    {
+     "w": "League",
+     "at": 2.3
+    },
+    {
+     "w": "final",
+     "at": 2.562
+    },
+    {
+     "w": "Real",
+     "at": 3.375
+    },
+    {
+     "w": "Madrid",
+     "at": 3.675
+    },
+    {
+     "w": "and",
+     "at": 4.2
+    },
+    {
+     "w": "Liverpool",
+     "at": 4.325
+    },
+    {
+     "w": "are",
+     "at": 4.875
+    },
+    {
+     "w": "level",
+     "at": 5.025
+    },
+    {
+     "w": "Gareth",
+     "at": 5.775
+    },
+    {
+     "w": "Bale",
+     "at": 6.175
+    },
+    {
+     "w": "has",
+     "at": 6.475
+    },
+    {
+     "w": "just",
+     "at": 6.65
+    },
+    {
+     "w": "come",
+     "at": 6.85
+    },
+    {
+     "w": "on",
+     "at": 7.075
+    },
+    {
+     "w": "Marcelo",
+     "at": 7.787
+    },
+    {
+     "w": "crosses",
+     "at": 8.412
+    },
+    {
+     "w": "from",
+     "at": 8.875
+    },
+    {
+     "w": "the",
+     "at": 9.012
+    },
+    {
+     "w": "left",
+     "at": 9.1
+    },
+    {
+     "w": "but",
+     "at": 9.463
+    },
+    {
+     "w": "it",
+     "at": 9.588
+    },
+    {
+     "w": "drops",
+     "at": 9.675
+    },
+    {
+     "w": "behind",
+     "at": 10.025
+    },
+    {
+     "w": "him",
+     "at": 10.488
+    },
+    {
+     "w": "so",
+     "at": 11.2
+    },
+    {
+     "w": "Bale",
+     "at": 11.375
+    },
+    {
+     "w": "kicks",
+     "at": 11.662
+    },
+    {
+     "w": "it",
+     "at": 11.912
+    },
+    {
+     "w": "over",
+     "at": 11.988
+    },
+    {
+     "w": "his",
+     "at": 12.188
+    },
+    {
+     "w": "head",
+     "at": 12.35
+    },
+    {
+     "w": "Goal",
+     "at": 13.2
+    }
+   ]
+  },
+  {
+   "label": "Back to goal",
+   "text": "Watch again. His back is to the goal. Eyes on the ball, he swings his left foot up high.",
+   "src": "/plays/narration/bale-overhead-2018/2.m4a",
+   "seconds": 6.6,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "His",
+     "at": 1.425
+    },
+    {
+     "w": "back",
+     "at": 1.625
+    },
+    {
+     "w": "is",
+     "at": 1.913
+    },
+    {
+     "w": "to",
+     "at": 2.05
+    },
+    {
+     "w": "the",
+     "at": 2.138
+    },
+    {
+     "w": "goal",
+     "at": 2.225
+    },
+    {
+     "w": "Eyes",
+     "at": 3.013
+    },
+    {
+     "w": "on",
+     "at": 3.263
+    },
+    {
+     "w": "the",
+     "at": 3.362
+    },
+    {
+     "w": "ball",
+     "at": 3.45
+    },
+    {
+     "w": "he",
+     "at": 3.85
+    },
+    {
+     "w": "swings",
+     "at": 4.025
+    },
+    {
+     "w": "his",
+     "at": 4.388
+    },
+    {
+     "w": "left",
+     "at": 4.55
+    },
+    {
+     "w": "foot",
+     "at": 4.838
+    },
+    {
+     "w": "up",
+     "at": 5.013
+    },
+    {
+     "w": "high",
+     "at": 5.175
+    }
+   ]
+  },
+  {
+   "label": "Top corner",
+   "text": "From behind the goal: it flies over the keeper, into the top corner. Madrid lead, two goals to one!",
+   "src": "/plays/narration/bale-overhead-2018/3.m4a",
+   "seconds": 7.2,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "behind",
+     "at": 0.487
+    },
+    {
+     "w": "the",
+     "at": 0.863
+    },
+    {
+     "w": "goal",
+     "at": 0.95
+    },
+    {
+     "w": "it",
+     "at": 1.688
+    },
+    {
+     "w": "flies",
+     "at": 1.825
+    },
+    {
+     "w": "over",
+     "at": 2.163
+    },
+    {
+     "w": "the",
+     "at": 2.362
+    },
+    {
+     "w": "keeper",
+     "at": 2.45
+    },
+    {
+     "w": "into",
+     "at": 2.837
+    },
+    {
+     "w": "the",
+     "at": 3.013
+    },
+    {
+     "w": "top",
+     "at": 3.1
+    },
+    {
+     "w": "corner",
+     "at": 3.375
+    },
+    {
+     "w": "Madrid",
+     "at": 4.287
+    },
+    {
+     "w": "lead",
+     "at": 4.7
+    },
+    {
+     "w": "two",
+     "at": 5.237
+    },
+    {
+     "w": "goals",
+     "at": 5.45
+    },
+    {
+     "w": "to",
+     "at": 5.75
+    },
+    {
+     "w": "one",
+     "at": 5.875
+    }
+   ]
+  },
+  {
+   "label": "Be brave",
+   "text": "Like Bale: be brave when the ball is in the air, and keep your eyes on it as you kick.",
+   "src": "/plays/narration/bale-overhead-2018/4.m4a",
+   "seconds": 6.1,
+   "words": [
+    {
+     "w": "Like",
+     "at": 0.4
+    },
+    {
+     "w": "Bale",
+     "at": 0.637
+    },
+    {
+     "w": "be",
+     "at": 1.425
+    },
+    {
+     "w": "brave",
+     "at": 1.587
+    },
+    {
+     "w": "when",
+     "at": 1.962
+    },
+    {
+     "w": "the",
+     "at": 2.087
+    },
+    {
+     "w": "ball",
+     "at": 2.175
+    },
+    {
+     "w": "is",
+     "at": 2.462
+    },
+    {
+     "w": "in",
+     "at": 2.562
+    },
+    {
+     "w": "the",
+     "at": 2.638
+    },
+    {
+     "w": "air",
+     "at": 2.788
+    },
+    {
+     "w": "and",
+     "at": 3.425
+    },
+    {
+     "w": "keep",
+     "at": 3.55
+    },
+    {
+     "w": "your",
+     "at": 3.763
+    },
+    {
+     "w": "eyes",
+     "at": 3.913
+    },
+    {
+     "w": "on",
+     "at": 4.213
+    },
+    {
+     "w": "it",
+     "at": 4.362
+    },
+    {
+     "w": "as",
+     "at": 4.45
+    },
+    {
+     "w": "you",
+     "at": 4.575
+    },
+    {
+     "w": "kick",
+     "at": 4.713
+    }
+   ]
+  }
+ ]
+}

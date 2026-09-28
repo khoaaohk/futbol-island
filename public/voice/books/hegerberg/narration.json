@@ -1,0 +1,289 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "sisters": {
+      "src": "/voice/books/hegerberg/sisters.m4a?v=coach-bella-1",
+      "duration": 38.5,
+      "scriptSha256": "264cb949845624b587e70c8cfd3da70bcf71a47f19da8e565d8c690371b068f1",
+      "cues": [
+        {
+          "text": "Two sisters, a new town",
+          "start": 0.0,
+          "duration": 2.825
+        },
+        {
+          "text": "Ada Hegerberg was born in 1995 in Molde, in Norway, and grew up in Sunndals\u00f8ra.",
+          "start": 2.825,
+          "duration": 7.125
+        },
+        {
+          "text": "She played football there with her older sister, Andrine.",
+          "start": 9.95,
+          "duration": 3.875
+        },
+        {
+          "text": "In 2007 the family moved to a new town, Kolbotn.",
+          "start": 13.825,
+          "duration": 4.975
+        },
+        {
+          "text": "Lift the flap to see who came along.",
+          "start": 18.8,
+          "duration": 2.8
+        },
+        {
+          "text": "Andrine joined the new club, Kolbotn, with her.",
+          "start": 21.6,
+          "duration": 3.65
+        },
+        {
+          "text": "In 2011, at sixteen, Ada became the youngest player ever to score a hat-trick in Norway\u2019s top women\u2019s league.",
+          "start": 25.25,
+          "duration": 8.075
+        },
+        {
+          "text": "Moving somewhere new is hard. Family by your side can make it easier.",
+          "start": 33.325,
+          "duration": 5.125
+        }
+      ]
+    },
+    "abroad": {
+      "src": "/voice/books/hegerberg/abroad.m4a?v=coach-bella-1",
+      "duration": 36.6,
+      "scriptSha256": "873eef49801aae83edf3a1169d7a932353daf92ccf57c8e4c592f5f3ac8a0a0d",
+      "cues": [
+        {
+          "text": "Far from home",
+          "start": 0.0,
+          "duration": 1.825
+        },
+        {
+          "text": "In 2013 the sisters moved to Germany, to play for Turbine Potsdam.",
+          "start": 1.825,
+          "duration": 5.775
+        },
+        {
+          "text": "That summer, Ada played for Norway in the European Championship final, and Norway lost 1\u20130 to Germany.",
+          "start": 7.6,
+          "duration": 7.6
+        },
+        {
+          "text": "Her club also finished second in the league and the cup.",
+          "start": 15.2,
+          "duration": 3.825
+        },
+        {
+          "text": "Open the door to France.",
+          "start": 19.025,
+          "duration": 2.175
+        },
+        {
+          "text": "In 2014, Ada moved on to Lyon, in France.",
+          "start": 21.2,
+          "duration": 4.375
+        },
+        {
+          "text": "In her first season there, she scored 26 goals in 22 league games.",
+          "start": 25.575,
+          "duration": 5.45
+        },
+        {
+          "text": "Coming second can hurt. It\u2019s okay to feel disappointed, and then keep going.",
+          "start": 31.025,
+          "duration": 5.55
+        }
+      ]
+    },
+    "protest": {
+      "src": "/voice/books/hegerberg/protest.m4a?v=coach-bella-1",
+      "duration": 36.1,
+      "scriptSha256": "0be22f703c40c74a70869a712c81dc9c97ac4fbfb0b20b96d81c1a5a16ca17c8",
+      "cues": [
+        {
+          "text": "Speaking up",
+          "start": 0.0,
+          "duration": 1.675
+        },
+        {
+          "text": "Ada disagreed with Norway\u2019s football association about how it treated women\u2019s football.",
+          "start": 1.675,
+          "duration": 6.25
+        },
+        {
+          "text": "In 2017, she decided to stop playing for the national team, as a protest.",
+          "start": 7.925,
+          "duration": 6.3
+        },
+        {
+          "text": "Some things got better, but she felt there was still a long way to go.",
+          "start": 14.225,
+          "duration": 4.6
+        },
+        {
+          "text": "Flip the sign.",
+          "start": 18.825,
+          "duration": 1.85
+        },
+        {
+          "text": "Standing up cost her something: she missed the 2019 World Cup.",
+          "start": 20.675,
+          "duration": 4.875
+        },
+        {
+          "text": "She later said her time with the national team had left her feeling very low.",
+          "start": 25.55,
+          "duration": 5.575
+        },
+        {
+          "text": "Speaking up for what is fair takes courage, even when it costs you something.",
+          "start": 31.125,
+          "duration": 4.95
+        }
+      ]
+    },
+    "ballon": {
+      "src": "/voice/books/hegerberg/ballon.m4a?v=coach-bella-1",
+      "duration": 36.8,
+      "scriptSha256": "73678cb488b5cb56b2b62bd5776c7876e4faa84e14485fe21c658954612a4fb5",
+      "cues": [
+        {
+          "text": "A message for girls",
+          "start": 0.0,
+          "duration": 2.125
+        },
+        {
+          "text": "In 2018, Ada became the very first winner of the women\u2019s Ballon d\u2019Or.",
+          "start": 2.125,
+          "duration": 5.75
+        },
+        {
+          "text": "She called the new award a huge step forward.",
+          "start": 7.875,
+          "duration": 3.15
+        },
+        {
+          "text": "Raise the golden ball.",
+          "start": 11.025,
+          "duration": 2.15
+        },
+        {
+          "text": "That night, she had a message for young girls around the world: believe in yourselves.",
+          "start": 13.175,
+          "duration": 5.7
+        },
+        {
+          "text": "She also said she knew how important it is to have role models to look up to.",
+          "start": 18.875,
+          "duration": 5.625
+        },
+        {
+          "text": "In 2019, she scored three goals in just 16 minutes as Lyon won the Champions League final.",
+          "start": 24.5,
+          "duration": 7.075
+        },
+        {
+          "text": "Believe in yourself, and remember that someone younger may be looking up to you.",
+          "start": 31.575,
+          "duration": 5.15
+        }
+      ]
+    },
+    "knee": {
+      "src": "/voice/books/hegerberg/knee.m4a?v=coach-bella-1",
+      "duration": 36.7,
+      "scriptSha256": "07c28143bcfdcf6e3adf9adf87facc606078a1782e118122e22950ef7f1e46d4",
+      "cues": [
+        {
+          "text": "Twenty-one months",
+          "start": 0.0,
+          "duration": 1.95
+        },
+        {
+          "text": "In January 2020, Ada badly hurt her knee.",
+          "start": 1.95,
+          "duration": 4.15
+        },
+        {
+          "text": "A scan showed that she had torn an important ligament, called the ACL.",
+          "start": 6.1,
+          "duration": 4.975
+        },
+        {
+          "text": "She would be out for a very long time.",
+          "start": 11.075,
+          "duration": 2.825
+        },
+        {
+          "text": "Flip the calendar pages.",
+          "start": 13.9,
+          "duration": 2.25
+        },
+        {
+          "text": "It took 21 months before she played for Lyon again, in October 2021.",
+          "start": 16.15,
+          "duration": 5.925
+        },
+        {
+          "text": "A month later she scored twice against Paris Saint-Germain, and in 2022 she scored in the Champions League final as Lyon won again.",
+          "start": 22.075,
+          "duration": 9.675
+        },
+        {
+          "text": "Healing takes time. Be patient with yourself, and count the small steps.",
+          "start": 31.75,
+          "duration": 4.95
+        }
+      ]
+    },
+    "return": {
+      "src": "/voice/books/hegerberg/return.m4a?v=coach-bella-1",
+      "duration": 39.7,
+      "scriptSha256": "7445d92e92e684c1c79fca43be6bed9008b588ed4f46004881ceb5a929606369",
+      "cues": [
+        {
+          "text": "Back for Norway",
+          "start": 0.0,
+          "duration": 1.875
+        },
+        {
+          "text": "Norway\u2019s football association got a new president, Lise Klaveness.",
+          "start": 1.875,
+          "duration": 5.025
+        },
+        {
+          "text": "Ada talked with her in depth about the future of women\u2019s football.",
+          "start": 6.9,
+          "duration": 4.625
+        },
+        {
+          "text": "In March 2022, Ada decided to come back to the national team after five years away.",
+          "start": 11.525,
+          "duration": 6.975
+        },
+        {
+          "text": "Open the gate.",
+          "start": 18.5,
+          "duration": 1.725
+        },
+        {
+          "text": "In her first game back, on 7 April 2022, Ada scored three goals as Norway beat Kosovo 5\u20131.",
+          "start": 20.225,
+          "duration": 8.525
+        },
+        {
+          "text": "She had stood up for fairness, and now she was back in Norway\u2019s shirt.",
+          "start": 28.75,
+          "duration": 4.55
+        },
+        {
+          "text": "Standing up for what\u2019s right can change things. When things get fairer, you can come back stronger.",
+          "start": 33.3,
+          "duration": 6.4
+        }
+      ]
+    }
+  }
+}

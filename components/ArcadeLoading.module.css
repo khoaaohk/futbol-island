@@ -20,3 +20,8 @@
 
 .copy h2{color:#ffdef5;text-shadow:0 0 3px #ff65c8,0 0 18px #ff65c86b,0 0 42px #ab37bd35}
 .copy :global(.island-loading-track){background:#b991ff30}.copy :global(.island-loading-track)>span{background:#60e9f2;box-shadow:0 0 10px #60e9f280}
+
+/* Game bundles use the entry loader's grain, brush font and neon progress track. */
+.screen .gameCopy{top:42%;left:max(24px,env(safe-area-inset-left));right:max(24px,env(safe-area-inset-right));transform:translateY(-50%)}
+.screen .gameCopy h2{font-size:clamp(36px,7vw,76px);max-width:800px;margin:0 auto 28px;text-wrap:balance}
+@media(max-height:500px){.screen .gameCopy{top:45%}.screen .gameCopy h2{font-size:clamp(30px,6vw,52px);margin-bottom:20px}}

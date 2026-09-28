@@ -1,5 +1,7 @@
 import * as T from 'three';
 import {BALL_COLORS,type CharacterCustomization} from '../town/customization';
+import {SPECIAL_BALL_IDS} from '../town/specialBalls';
+import {drawSpecialBallSkin} from './specialBallSkins';
 type BallStyle=CharacterCustomization['ball'];
 /** Tiny, locally drawn skins shared by the store and equipped ball. Textures are
  * created only when selected, reused for that renderer, and disposed with it. */
@@ -9,7 +11,8 @@ export function createBallAppearance(material:T.MeshStandardMaterial){
   const saved=textures.get(style);if(saved)return saved;
   const canvas=document.createElement('canvas');canvas.width=128;canvas.height=64;const c=canvas.getContext('2d')!;
   c.fillStyle=BALL_COLORS[style];c.fillRect(0,0,128,64);
-  if(style==='frost'){
+  if(drawSpecialBallSkin(c,style)!==null){/* vending special: drawn above */}
+  else if(style==='frost'){
    c.strokeStyle='#649fc6';c.lineWidth=2;c.lineJoin='round';
    for(let row=-1;row<4;row++)for(let col=-1;col<5;col++){
     const x=col*32+(row%2)*16,y=row*24;c.beginPath();c.moveTo(x,y+6);c.lineTo(x+16,y);c.lineTo(x+32,y+6);c.lineTo(x+32,y+18);c.lineTo(x+16,y+24);c.lineTo(x,y+18);c.closePath();c.stroke();
@@ -34,9 +37,9 @@ export function createBallAppearance(material:T.MeshStandardMaterial){
  }
  let current:BallStyle|undefined;
  return{setStyle(style:BallStyle){
-  if(style===current)return;current=style;const patterned=style==='frost'||style==='solar'||style==='cosmic';
+  if(style===current)return;current=style;const special=SPECIAL_BALL_IDS.has(style),patterned=special||style==='frost'||style==='solar'||style==='cosmic';
   material.map=patterned?texture(style):null;material.color.set(patterned?'#ffffff':BALL_COLORS[style]);
-  material.emissive.set(style==='neon'?'#527627':style==='frost'?'#305770':style==='solar'?'#8b5116':style==='cosmic'?'#4b287b':'#000000');
+  material.emissive.set(special?'#000000':style==='neon'?'#527627':style==='frost'?'#305770':style==='solar'?'#8b5116':style==='cosmic'?'#4b287b':'#000000');
   material.emissiveIntensity=style==='cosmic'?.2:.25;material.roughness=style==='frost'?.4:.7;material.needsUpdate=true;
  },dispose(){for(const map of textures.values())map.dispose();textures.clear();material.map=null;current=undefined;}};
 }

@@ -67,12 +67,12 @@ Every type draws on a static SVG mini pitch, taken from the lesson's own positio
 | `dragToZone` | drags a player dot into a zone, **or taps the zone** | The zones are buttons: "Move the FIXO to space A". |
 | `whatNext` | studies a freeze-frame (with dashed trails showing where players came from), then picks what happens next, as text or pictures | Buttons. |
 | `trueFalse` | reads a statement about the picture, then taps True ✓ or False ✗ | Buttons. |
-| `order` | taps 3–5 steps in the order they happen (shown shuffled) | Buttons with live "Tap step 2 of 4" status. |
+| `order` | drags 3–5 step cards into the order they happen (shown shuffled), then taps "Check order" | Each card also has up/down buttons and arrow-key moves on its grip; live "Moved … to place 2 of 4" status. |
 
 **Feedback:**
 - Only the child's own pick is coloured: green if right, coral if wrong.
 - The coach voices that pick's "why", and "Try again" clears the board.
-- A wrong order tap shows why that step isn't next.
+- A wrong order flags only the card in the first wrong place and shows why it isn't there; "Try again" keeps the arrangement so the child fixes it. Every step must follow from the one before (cause → effect), so only one order makes sense: no step that could fit two places, no vague "read it again" steps.
 - After a correct answer, the 3D pitch lights the `feedback.highlight` actors. If `outcomeStep` is set, the child can also tap "Show me" to watch the outcome.
 
 **Heat and motion:**

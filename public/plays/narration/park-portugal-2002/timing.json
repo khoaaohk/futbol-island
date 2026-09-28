@@ -1,0 +1,358 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Seventy minutes",
+   "text": "Incheon, 2002, the World Cup. South Korea against Portugal, no goals yet. Lee Young-pyo crosses from the left. Park Ji-sung takes it on his chest, flicks it past a defender, and shoots. Goal!",
+   "src": "/plays/narration/park-portugal-2002/1.m4a",
+   "seconds": 14.5,
+   "words": [
+    {
+     "w": "Incheon",
+     "at": 0.375
+    },
+    {
+     "w": "2002",
+     "at": 0.95
+    },
+    {
+     "w": "the",
+     "at": 1.9
+    },
+    {
+     "w": "World",
+     "at": 2.025
+    },
+    {
+     "w": "Cup",
+     "at": 2.388
+    },
+    {
+     "w": "South",
+     "at": 3.2
+    },
+    {
+     "w": "Korea",
+     "at": 3.525
+    },
+    {
+     "w": "against",
+     "at": 3.95
+    },
+    {
+     "w": "Portugal",
+     "at": 4.3
+    },
+    {
+     "w": "no",
+     "at": 4.938
+    },
+    {
+     "w": "goals",
+     "at": 5.175
+    },
+    {
+     "w": "yet",
+     "at": 5.5
+    },
+    {
+     "w": "Lee",
+     "at": 6.25
+    },
+    {
+     "w": "Young-pyo",
+     "at": 6.45
+    },
+    {
+     "w": "crosses",
+     "at": 7.013
+    },
+    {
+     "w": "from",
+     "at": 7.475
+    },
+    {
+     "w": "the",
+     "at": 7.612
+    },
+    {
+     "w": "left",
+     "at": 7.7
+    },
+    {
+     "w": "Park",
+     "at": 8.488
+    },
+    {
+     "w": "Ji-sung",
+     "at": 8.812
+    },
+    {
+     "w": "takes",
+     "at": 9.3
+    },
+    {
+     "w": "it",
+     "at": 9.562
+    },
+    {
+     "w": "on",
+     "at": 9.637
+    },
+    {
+     "w": "his",
+     "at": 9.738
+    },
+    {
+     "w": "chest",
+     "at": 9.912
+    },
+    {
+     "w": "flicks",
+     "at": 10.537
+    },
+    {
+     "w": "it",
+     "at": 10.85
+    },
+    {
+     "w": "past",
+     "at": 10.95
+    },
+    {
+     "w": "a",
+     "at": 11.287
+    },
+    {
+     "w": "defender",
+     "at": 11.35
+    },
+    {
+     "w": "and",
+     "at": 11.925
+    },
+    {
+     "w": "shoots",
+     "at": 12.113
+    },
+    {
+     "w": "Goal",
+     "at": 13.1
+    }
+   ]
+  },
+  {
+   "label": "Chest and flick",
+   "text": "Watch again. His chest cushions the ball. Then a quick flick takes it past the defender.",
+   "src": "/plays/narration/park-portugal-2002/2.m4a",
+   "seconds": 6.3,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "His",
+     "at": 1.45
+    },
+    {
+     "w": "chest",
+     "at": 1.663
+    },
+    {
+     "w": "cushions",
+     "at": 2.05
+    },
+    {
+     "w": "the",
+     "at": 2.487
+    },
+    {
+     "w": "ball",
+     "at": 2.575
+    },
+    {
+     "w": "Then",
+     "at": 3.225
+    },
+    {
+     "w": "a",
+     "at": 3.362
+    },
+    {
+     "w": "quick",
+     "at": 3.425
+    },
+    {
+     "w": "flick",
+     "at": 3.688
+    },
+    {
+     "w": "takes",
+     "at": 3.975
+    },
+    {
+     "w": "it",
+     "at": 4.213
+    },
+    {
+     "w": "past",
+     "at": 4.3
+    },
+    {
+     "w": "the",
+     "at": 4.638
+    },
+    {
+     "w": "defender",
+     "at": 4.725
+    }
+   ]
+  },
+  {
+   "label": "Through the legs",
+   "text": "From behind the goal: a left foot volley, right through the keeper's legs! Korea lead, one-nil!",
+   "src": "/plays/narration/park-portugal-2002/3.m4a",
+   "seconds": 6.7,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "behind",
+     "at": 0.487
+    },
+    {
+     "w": "the",
+     "at": 0.863
+    },
+    {
+     "w": "goal",
+     "at": 0.95
+    },
+    {
+     "w": "a",
+     "at": 1.663
+    },
+    {
+     "w": "left",
+     "at": 1.775
+    },
+    {
+     "w": "foot",
+     "at": 2.062
+    },
+    {
+     "w": "volley",
+     "at": 2.3
+    },
+    {
+     "w": "right",
+     "at": 2.7
+    },
+    {
+     "w": "through",
+     "at": 2.925
+    },
+    {
+     "w": "the",
+     "at": 3.038
+    },
+    {
+     "w": "keeper's",
+     "at": 3.125
+    },
+    {
+     "w": "legs",
+     "at": 3.525
+    },
+    {
+     "w": "Korea",
+     "at": 4.338
+    },
+    {
+     "w": "lead",
+     "at": 4.75
+    },
+    {
+     "w": "one-nil",
+     "at": 5.125
+    }
+   ]
+  },
+  {
+   "label": "Chest, then shoot",
+   "text": "Like Park: control the ball with your chest, then shoot before the defender can block.",
+   "src": "/plays/narration/park-portugal-2002/4.m4a",
+   "seconds": 6.2,
+   "words": [
+    {
+     "w": "Like",
+     "at": 0.4
+    },
+    {
+     "w": "Park",
+     "at": 0.625
+    },
+    {
+     "w": "control",
+     "at": 1.4
+    },
+    {
+     "w": "the",
+     "at": 1.837
+    },
+    {
+     "w": "ball",
+     "at": 1.925
+    },
+    {
+     "w": "with",
+     "at": 2.212
+    },
+    {
+     "w": "your",
+     "at": 2.337
+    },
+    {
+     "w": "chest",
+     "at": 2.487
+    },
+    {
+     "w": "then",
+     "at": 3.15
+    },
+    {
+     "w": "shoot",
+     "at": 3.438
+    },
+    {
+     "w": "before",
+     "at": 3.775
+    },
+    {
+     "w": "the",
+     "at": 4.037
+    },
+    {
+     "w": "defender",
+     "at": 4.125
+    },
+    {
+     "w": "can",
+     "at": 4.6
+    },
+    {
+     "w": "block",
+     "at": 4.8
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,324 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "court": {
+      "src": "/voice/books/falcao/court.m4a?v=coach-bella-1",
+      "duration": 44.2,
+      "scriptSha256": "19bf402ebbd90951afa3be943af3eab4e6664251fe8bd7fda07124486cf88a39",
+      "cues": [
+        {
+          "text": "A nickname from Dad",
+          "start": 0.0,
+          "duration": 2.15
+        },
+        {
+          "text": "Alessandro Rosa Vieira grew up in the north of S\u00e3o Paulo, Brazil.",
+          "start": 2.15,
+          "duration": 5.05
+        },
+        {
+          "text": "His father, Jo\u00e3o, was a butcher who also played football on neighbourhood fields.",
+          "start": 7.2,
+          "duration": 5.45
+        },
+        {
+          "text": "People there called Jo\u00e3o \"Falc\u00e3o\", and his son was given the same nickname.",
+          "start": 12.65,
+          "duration": 5.525
+        },
+        {
+          "text": "At twelve, the boy joined Guapira, a small futsal club near home.",
+          "start": 18.175,
+          "duration": 5.3
+        },
+        {
+          "text": "As a teenager at Corinthians, he tried the big grass game again and again.",
+          "start": 23.475,
+          "duration": 5.275
+        },
+        {
+          "text": "Seven times he spent two or three months playing on grass, and seven times he came back to futsal, the small indoor game that was his true love.",
+          "start": 28.75,
+          "duration": 9.825
+        },
+        {
+          "text": "Not every path fits the first time. It is okay to go back to what you love.",
+          "start": 38.575,
+          "duration": 5.6
+        }
+      ]
+    },
+    "sole": {
+      "src": "/voice/books/falcao/sole.m4a?v=coach-bella-1",
+      "duration": 45.6,
+      "scriptSha256": "1e452773168150556ff262ec87520314a024cd1b4c09e4c2f6fbdf876a87e287",
+      "cues": [
+        {
+          "text": "Doors that stayed shut",
+          "start": 0.0,
+          "duration": 2.15
+        },
+        {
+          "text": "For a few years, Falc\u00e3o changed teams again and again.",
+          "start": 2.15,
+          "duration": 4.1
+        },
+        {
+          "text": "In 2001, a big football club called Palmeiras gave him a trial on grass.",
+          "start": 6.25,
+          "duration": 6.05
+        },
+        {
+          "text": "He scored, and people praised his play, but the club only asked for more time and never gave him a clear answer.",
+          "start": 12.3,
+          "duration": 7.775
+        },
+        {
+          "text": "So he went back to his futsal team.",
+          "start": 20.075,
+          "duration": 2.75
+        },
+        {
+          "text": "In 2002 he tried another club, Portuguesa, and again it did not work out.",
+          "start": 22.825,
+          "duration": 6.125
+        },
+        {
+          "text": "Knock on the three paper doors.",
+          "start": 28.95,
+          "duration": 2.525
+        },
+        {
+          "text": "Two stay shut.",
+          "start": 31.475,
+          "duration": 1.85
+        },
+        {
+          "text": "The third opens in 2003, at Jaragu\u00e1, the futsal team where he finally settled.",
+          "start": 33.325,
+          "duration": 6.775
+        },
+        {
+          "text": "A no is not the end of your story. Keep knocking, and another door can open.",
+          "start": 40.1,
+          "duration": 5.425
+        }
+      ]
+    },
+    "golden": {
+      "src": "/voice/books/falcao/golden.m4a?v=coach-bella-1",
+      "duration": 46.5,
+      "scriptSha256": "e1edfbeb08c0aac65970fb3b8ba7d53b4dbee563cb637c7d813ede7411365981",
+      "cues": [
+        {
+          "text": "A dream for Dad",
+          "start": 0.0,
+          "duration": 2.0
+        },
+        {
+          "text": "Early in 2004, Falc\u00e3o's father died.",
+          "start": 2.0,
+          "duration": 3.9
+        },
+        {
+          "text": "His dad had always dreamed of seeing his son play football on a big grass pitch.",
+          "start": 5.9,
+          "duration": 5.35
+        },
+        {
+          "text": "That same year Falc\u00e3o was named the best futsal player in the world, but many people would still feel a deep sadness after losing a parent.",
+          "start": 11.25,
+          "duration": 9.2
+        },
+        {
+          "text": "In 2005, the S\u00e3o Paulo football club signed him to play on grass.",
+          "start": 20.45,
+          "duration": 5.525
+        },
+        {
+          "text": "His first game came exactly one year after his father died.",
+          "start": 25.975,
+          "duration": 4.475
+        },
+        {
+          "text": "He played thirteen games in about six months, then turned back to futsal.",
+          "start": 30.45,
+          "duration": 5.1
+        },
+        {
+          "text": "Trying something for someone you love is brave, even when it does not last.",
+          "start": 35.55,
+          "duration": 5.1
+        },
+        {
+          "text": "It is okay to feel sad and to talk about someone you miss. Their love goes with you.",
+          "start": 40.65,
+          "duration": 5.8
+        }
+      ]
+    },
+    "twelve": {
+      "src": "/voice/books/falcao/twelve.m4a?v=coach-bella-1",
+      "duration": 44.9,
+      "scriptSha256": "54565560be298ea2bb949c2c7b73057364bac5d4e79bcf3ee6d257c0db34c232",
+      "cues": [
+        {
+          "text": "So close, again and again",
+          "start": 0.0,
+          "duration": 2.625
+        },
+        {
+          "text": "Falc\u00e3o's first World Cup was in 2000, when he was twenty-three.",
+          "start": 2.625,
+          "duration": 5.0
+        },
+        {
+          "text": "Brazil reached the final but lost to Spain, four goals to three.",
+          "start": 7.625,
+          "duration": 4.725
+        },
+        {
+          "text": "In 2004 he was named the best player of the tournament, yet Brazil finished third.",
+          "start": 12.35,
+          "duration": 6.6
+        },
+        {
+          "text": "The wait for a world title went on.",
+          "start": 18.95,
+          "duration": 2.75
+        },
+        {
+          "text": "In 2008, the World Cup came to Brazil.",
+          "start": 21.7,
+          "duration": 3.925
+        },
+        {
+          "text": "Falc\u00e3o said that if they lost again, it would be hard to wear the Brazil shirt again.",
+          "start": 25.625,
+          "duration": 5.75
+        },
+        {
+          "text": "Flip the scoreboard.",
+          "start": 31.375,
+          "duration": 2.0
+        },
+        {
+          "text": "This time Brazil were champions at home, and he was the best player of the tournament once more.",
+          "start": 33.375,
+          "duration": 6.575
+        },
+        {
+          "text": "You are more than one result. A loss can be the start of trying again.",
+          "start": 39.95,
+          "duration": 4.925
+        }
+      ]
+    },
+    "record": {
+      "src": "/voice/books/falcao/record.m4a?v=coach-bella-1",
+      "duration": 42.4,
+      "scriptSha256": "1563741f0b1d971ddd98a978e6839a199de0fbf346452e8e7ac7b7af21bba6b2",
+      "cues": [
+        {
+          "text": "Hurt, but not alone",
+          "start": 0.0,
+          "duration": 2.025
+        },
+        {
+          "text": "Just days before the 2012 World Cup in Thailand, Falc\u00e3o hurt his left calf and was nearly left out of the team.",
+          "start": 2.025,
+          "duration": 8.375
+        },
+        {
+          "text": "The coaches insisted he stay with the group and have intensive treatment.",
+          "start": 10.4,
+          "duration": 4.95
+        },
+        {
+          "text": "The stress even made part of his face stop moving for a while.",
+          "start": 15.35,
+          "duration": 4.55
+        },
+        {
+          "text": "He played only thirty-seven minutes in the whole tournament.",
+          "start": 19.9,
+          "duration": 3.8
+        },
+        {
+          "text": "In the final, Brazil were losing to Spain with three minutes left, when Falc\u00e3o scored to make it level.",
+          "start": 23.7,
+          "duration": 6.975
+        },
+        {
+          "text": "Score the equaliser, then watch his teammate Neto win it in extra time, three goals to two.",
+          "start": 30.675,
+          "duration": 6.75
+        },
+        {
+          "text": "When you are hurt, let other people help you. A team can carry you through.",
+          "start": 37.425,
+          "duration": 4.95
+        }
+      ]
+    },
+    "play": {
+      "src": "/voice/books/falcao/play.m4a?v=coach-bella-1",
+      "duration": 46.3,
+      "scriptSha256": "0d0ac5327c948f12f2fb162b0a7de044514a0ca7f6538289ca2467435a40642d",
+      "cues": [
+        {
+          "text": "One last World Cup",
+          "start": 0.0,
+          "duration": 2.2
+        },
+        {
+          "text": "After 2012, Falc\u00e3o said that World Cup had been his last, but he changed his mind.",
+          "start": 2.2,
+          "duration": 6.6
+        },
+        {
+          "text": "At thirty-nine, he prepared all year for one more.",
+          "start": 8.8,
+          "duration": 3.85
+        },
+        {
+          "text": "In Colombia he scored ten goals and became the top scorer in World Cup history, with forty-eight.",
+          "start": 12.65,
+          "duration": 6.825
+        },
+        {
+          "text": "Then Brazil played Iran and drew, four goals each.",
+          "start": 19.475,
+          "duration": 3.825
+        },
+        {
+          "text": "Falc\u00e3o scored three, and his penalty too, but Brazil lost the shootout and were knocked out.",
+          "start": 23.3,
+          "duration": 6.45
+        },
+        {
+          "text": "Lift the paper players.",
+          "start": 29.75,
+          "duration": 2.25
+        },
+        {
+          "text": "The Iran team raised Falc\u00e3o into the air to honour him, and he cried.",
+          "start": 32.0,
+          "duration": 5.075
+        },
+        {
+          "text": "A sad ending can still be full of respect.",
+          "start": 37.075,
+          "duration": 3.3
+        },
+        {
+          "text": "Setbacks and new paths are part of every great story. You are more than one result.",
+          "start": 40.375,
+          "duration": 5.875
+        }
+      ]
+    }
+  }
+}

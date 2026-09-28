@@ -2,9 +2,8 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'/Users/khoado/.npm/_npx
 const assert=require('node:assert/strict');
 (async()=>{const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'});try{
  const mobile=process.argv.includes('--mobile'),page=await browser.newPage({viewport:mobile?{width:390,height:844}:{width:1280,height:800},isMobile:mobile,hasTouch:mobile,reducedMotion:process.argv.includes('--reduced')?'reduce':'no-preference'}),errors=[];
- page.on('pageerror',e=>errors.push(e.message));await page.addInitScript(()=>localStorage.setItem('fi2-welcome-v1','completed'));
- await page.goto(process.env.FUTBOL_BASE_URL||'http://localhost:8092');await page.waitForFunction(()=>window.__fi2,null,{timeout:90000});
- await page.evaluate(()=>document.querySelector('[data-arcade-enter]').click());await page.getByRole('button',{name:/Futbol Pinball/}).click();await page.getByRole('button',{name:'Play',exact:true}).click();
+ page.on('pageerror',e=>errors.push(e.message));await page.addInitScript(()=>{localStorage.setItem('fi2-welcome-v1','completed');localStorage.setItem('fi2-arcade-wallet-v1',JSON.stringify({version:1,runs:{fixture:{game:'island',paid:30,reason:'playtest entry',at:1}},packs:[]}));});
+ await page.goto(new URL('/arcade?game=pinball',process.env.FUTBOL_BASE_URL||'http://localhost:8092').href,{waitUntil:'domcontentloaded',timeout:90000});await page.getByRole('button',{name:'Play',exact:true}).click();
  await page.waitForFunction(()=>window.__arcade3d?.phaseRef.current==='playing');
  const canvas=page.locator('[data-arcade-kind="pinball"] canvas');await canvas.focus();
  await page.waitForTimeout(150);const readyFrame=await canvas.getAttribute('data-frames');await page.waitForTimeout(350);assert.equal(await canvas.getAttribute('data-frames'),readyFrame,'ready table sleeps until input');
@@ -23,7 +22,38 @@ const assert=require('node:assert/strict');
 
  if(mobile){const r=await page.getByRole('button',{name:'Launch',exact:true}).boundingBox();await page.touchscreen.tap(r.x+r.width/2,r.y+r.height/2);}else await page.keyboard.press('Space');
  await page.waitForTimeout(250);const launch=await page.evaluate(()=>{const s=window.__arcade3d.runtime.state.pinball;return{phase:s.phase,y:s.ball.y,power:s.launchPower};});assert.equal(launch.phase,'playing');assert(launch.y<585);
+ if(process.argv.includes('--possession')){
+  // Controlled incoming soft ball; the entire receive/pass/shot exchange runs in real time.
+  await page.evaluate(()=>{const r=window.__arcade3d.runtime;r.reset();const s=r.state.pinball;s.phase='playing';s.defs=3;s.openingRescue=false;Object.assign(s.ball,{x:94,y:199,vx:0,vy:-100});});
+  await canvas.focus();await page.keyboard.press('KeyA');
+  await page.waitForFunction(()=>window.__arcade3d.runtime.state.pinball.possession===1);
+  await page.screenshot({path:`/tmp/pinball-possession-${mobile?'mobile':'desktop'}.png`});
+  await page.waitForFunction(()=>window.__arcade3d.runtime.state.pinball.cue==='pass');
+  await page.screenshot({path:`/tmp/pinball-pass-${mobile?'mobile':'desktop'}.png`});
+  await page.waitForFunction(()=>window.__arcade3d.runtime.state.pinball.attackPasses===2,{},{timeout:5000});
+  await page.waitForFunction(()=>window.__arcade3d.runtime.state.pinball.cue==='attack',{},{timeout:5000});
+  const shot=await page.evaluate(()=>{const s=window.__arcade3d.runtime.state.pinball;return{y:s.ball.y,vy:s.ball.vy,passes:s.attackPasses,owner:s.possession};});assert(shot.vy>0&&shot.owner===-1,'counter shot travels down-table');
+  await page.screenshot({path:`/tmp/pinball-counter-${mobile?'mobile':'desktop'}.png`});
+  const ready=await page.waitForFunction(()=>{const s=window.__arcade3d.runtime.state.pinball;return s.ball.y>430&&s.ball.vy>0?s.ball.x<180?'left':'right':false;},{},{timeout:5000});
+  const side=await ready.jsonValue(),button=page.getByRole('button',{name:side==='left'?'Left flipper':'Right flipper',exact:true});
+  await page.waitForFunction(()=>window.__arcade3d.runtime.state.pinball.ball.y>505);
+  if(mobile){const box=await button.boundingBox();await page.touchscreen.tap(box.x+box.width/2,box.y+box.height/2);}else await page.keyboard.press(side==='left'?'KeyA':'KeyD');
+  await page.waitForTimeout(150);const returned=await page.evaluate(()=>window.__arcade3d.runtime.state.pinball.sfx.flipper);assert(returned>0,'player can return a defender counter-shot');
+  await page.getByRole('button',{name:'Pause game'}).click();await page.waitForTimeout(250);const frame=await canvas.getAttribute('data-frames');await page.waitForTimeout(350);assert.equal(await canvas.getAttribute('data-frames'),frame);
+  assert.deepEqual(errors,[]);console.log('PINBALL_POSSESSION_BROWSER_PASS',JSON.stringify({mobile,shot,returned}));return;
+ }
  await canvas.focus();await page.keyboard.down('KeyA');await page.keyboard.down('KeyD');await page.waitForTimeout(100);assert.deepEqual(await page.evaluate(()=>{const s=window.__arcade3d.runtime.state.pinball;return[s.left,s.right];}),[1,1]);await page.keyboard.up('KeyA');await page.keyboard.up('KeyD');await page.waitForTimeout(180);assert.deepEqual(await page.evaluate(()=>{const s=window.__arcade3d.runtime.state.pinball;return[s.left,s.right];}),[0,0]);
+ // Put a falling ball between the flippers, then exercise the real input edge.
+ await page.evaluate(()=>{const s=window.__arcade3d.runtime.state.pinball;Object.assign(s.ball,{x:180,y:530,vx:0,vy:150});s.nudges=1;s.nudgeCooldown=0;});
+ await canvas.focus();await page.keyboard.down('Space');
+ assert.equal(await page.evaluate(()=>window.__arcade3d.runtime.state.pinball.nudges),0,'nudge fires on key down, before release');
+ await page.keyboard.up('Space');
+ await page.evaluate(()=>window.__arcade3d.runtime.reset());
+ await page.keyboard.down('Space');await page.waitForFunction(()=>window.__arcade3d.runtime.state.pinball.plunger>.2);
+ await page.getByRole('button',{name:'Pause game'}).click();await page.keyboard.up('Space');
+ await page.getByRole('button',{name:'Resume',exact:true}).click();
+ assert.equal(await page.evaluate(()=>window.__arcade3d.runtime.state.pinball.phase),'ready','pause cancels a held launch');
+ await canvas.focus();await page.keyboard.press('Space');
  const combination=await page.evaluate(()=>{const g=window.__arcade3d.runtime,s=g.state.pinball,idle={x:0,y:0,left:false,right:false,charge:false};g.reset();g.action(2);Object.assign(s.ball,{x:145,y:540,vx:0,vy:100});for(let i=0;i<9;i++)g.update(1/120,{...idle,left:true});for(let i=0;i<18;i++)g.update(1/120,idle);Object.assign(s.ball,{x:215,y:540,vx:0,vy:100});for(let i=0;i<9;i++)g.update(1/120,{...idle,right:true});s.defs=3;g.update(1/120,idle);g.stage.render();return{combo:s.combination,score:s.score,cue:s.cue,message:g.hud().message,calls:g.stage.renderer.info.render.calls,finite:Number.isFinite(s.ball.x+s.ball.y+s.ball.vx+s.ball.vy)};});assert.equal(combination.combo,2);assert(combination.score>=50&&combination.finite);assert.match(combination.message,/FINISH/);
  await page.waitForFunction(()=>document.querySelector('[data-arcade-kind="pinball"]')?.textContent.includes('FINISH!'));
  await page.screenshot({path:`/tmp/fi-pinball-${mobile?'mobile':'desktop'}.png`});

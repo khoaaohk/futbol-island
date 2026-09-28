@@ -1,0 +1,299 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "released": {
+      "src": "/voice/books/vardy/released.m4a?v=coach-bella-1",
+      "duration": 38.0,
+      "scriptSha256": "cc3def0010709eacf7adf11aa7788b4aca8eb53e530d3a455159c2acf6cd936b",
+      "cues": [
+        {
+          "text": "Told he was too small",
+          "start": 0.0,
+          "duration": 2.025
+        },
+        {
+          "text": "Jamie Vardy grew up in Hillsborough, a part of Sheffield in England.",
+          "start": 2.025,
+          "duration": 4.775
+        },
+        {
+          "text": "He loved the local club, Sheffield Wednesday, and he played in its youth teams.",
+          "start": 6.8,
+          "duration": 5.625
+        },
+        {
+          "text": "But when he was sixteen, the club let him go.",
+          "start": 12.425,
+          "duration": 3.45
+        },
+        {
+          "text": "They thought he was too small.",
+          "start": 15.875,
+          "duration": 2.2
+        },
+        {
+          "text": "Flip the sign.",
+          "start": 18.075,
+          "duration": 1.85
+        },
+        {
+          "text": "For a while, Jamie stopped playing football altogether.",
+          "start": 19.925,
+          "duration": 3.95
+        },
+        {
+          "text": "Many people would feel hurt if they were told they were not big enough.",
+          "start": 23.875,
+          "duration": 4.775
+        },
+        {
+          "text": "But one club\u2019s opinion did not decide what he could become.",
+          "start": 28.65,
+          "duration": 4.35
+        },
+        {
+          "text": "Being small, or being told no, doesn\u2019t decide who you will become.",
+          "start": 33.0,
+          "duration": 4.925
+        }
+      ]
+    },
+    "steels": {
+      "src": "/voice/books/vardy/steels.m4a?v=coach-bella-1",
+      "duration": 38.7,
+      "scriptSha256": "6174882bfd5e4c399b5925afe30d518000be3010f6b089b5fb3e52b68dcc6611",
+      "cues": [
+        {
+          "text": "Work and football",
+          "start": 0.0,
+          "duration": 1.875
+        },
+        {
+          "text": "After a break, Jamie started playing again for Stocksbridge Park Steels, a small club far below the big leagues.",
+          "start": 1.875,
+          "duration": 7.875
+        },
+        {
+          "text": "He earned \u00a3120 a week there.",
+          "start": 9.75,
+          "duration": 3.375
+        },
+        {
+          "text": "He also had a job as a technician, making medical splints that support injured arms and legs.",
+          "start": 13.125,
+          "duration": 6.575
+        },
+        {
+          "text": "Pull the tab to move the splints along.",
+          "start": 19.7,
+          "duration": 3.025
+        },
+        {
+          "text": "Jamie worked at his job and played for his team, and he kept getting better.",
+          "start": 22.725,
+          "duration": 5.125
+        },
+        {
+          "text": "He made it into the first team, and in the end he scored 55 goals for the club.",
+          "start": 27.85,
+          "duration": 5.575
+        },
+        {
+          "text": "Doing your best in a small place still counts. Hard work is never wasted.",
+          "start": 33.425,
+          "duration": 5.225
+        }
+      ]
+    },
+    "trial": {
+      "src": "/voice/books/vardy/trial.m4a?v=coach-bella-1",
+      "duration": 41.2,
+      "scriptSha256": "c12ba46130398fd559a011ed7937be668a040a1c4cd120024efd58e4e8728c77",
+      "cues": [
+        {
+          "text": "A door that stayed shut",
+          "start": 0.0,
+          "duration": 2.15
+        },
+        {
+          "text": "In 2009, bigger clubs noticed him, and Jamie spent a week on trial with Crewe Alexandra.",
+          "start": 2.15,
+          "duration": 7.2
+        },
+        {
+          "text": "But the move did not happen, and he stayed at Stocksbridge.",
+          "start": 9.35,
+          "duration": 3.975
+        },
+        {
+          "text": "Many people would want to give up after another no.",
+          "start": 13.325,
+          "duration": 3.6
+        },
+        {
+          "text": "Knock on the doors.",
+          "start": 16.925,
+          "duration": 2.0
+        },
+        {
+          "text": "In 2010, Neil Aspin, a manager who had admired Jamie for a long time, signed him for FC Halifax Town.",
+          "start": 18.925,
+          "duration": 8.625
+        },
+        {
+          "text": "Jamie was the team\u2019s top scorer with 25 goals, and his teammates voted him their Players\u2019 Player of the Season.",
+          "start": 27.55,
+          "duration": 8.125
+        },
+        {
+          "text": "Keep going after a no. Sometimes the right person is behind the next door.",
+          "start": 35.675,
+          "duration": 5.475
+        }
+      ]
+    },
+    "ladder": {
+      "src": "/voice/books/vardy/ladder.m4a?v=coach-bella-1",
+      "duration": 40.1,
+      "scriptSha256": "42f5ae63dbc496a63a31ee734256005a76b3410caa3326ea7c80ebd0c45b192c",
+      "cues": [
+        {
+          "text": "One step at a time",
+          "start": 0.0,
+          "duration": 2.1
+        },
+        {
+          "text": "In 2011, Jamie moved up a level, to Fleetwood Town.",
+          "start": 2.1,
+          "duration": 4.55
+        },
+        {
+          "text": "He scored 31 league goals, the most in the whole division, and Fleetwood won the title and their first-ever promotion to the Football League.",
+          "start": 6.65,
+          "duration": 8.775
+        },
+        {
+          "text": "Climb the steps.",
+          "start": 15.425,
+          "duration": 1.75
+        },
+        {
+          "text": "In 2012, Leicester City signed him for about one million pounds, a record fee for a player from outside the Football League.",
+          "start": 17.175,
+          "duration": 8.7
+        },
+        {
+          "text": "Jamie was twenty-five.",
+          "start": 25.875,
+          "duration": 2.3
+        },
+        {
+          "text": "Many players reach big clubs as teenagers, but his path was longer, one step at a time.",
+          "start": 28.175,
+          "duration": 6.5
+        },
+        {
+          "text": "Your path can be slower than other people\u2019s. Every step still takes you forward.",
+          "start": 34.675,
+          "duration": 5.425
+        }
+      ]
+    },
+    "doubt": {
+      "src": "/voice/books/vardy/doubt.m4a?v=coach-bella-1",
+      "duration": 39.0,
+      "scriptSha256": "6dcd832370c84b76553e8db6467a555c8d968c7b1679a4a72bad6b8c70c4e8fd",
+      "cues": [
+        {
+          "text": "When he nearly quit",
+          "start": 0.0,
+          "duration": 1.85
+        },
+        {
+          "text": "Jamie\u2019s first season at Leicester was hard.",
+          "start": 1.85,
+          "duration": 3.1
+        },
+        {
+          "text": "He lost his form, and some supporters criticised him online.",
+          "start": 4.95,
+          "duration": 4.65
+        },
+        {
+          "text": "He even thought about leaving football.",
+          "start": 9.6,
+          "duration": 2.925
+        },
+        {
+          "text": "Lift the flap to see who helped.",
+          "start": 12.525,
+          "duration": 2.5
+        },
+        {
+          "text": "His manager, Nigel Pearson, and the assistant manager, Craig Shakespeare, convinced him to stay.",
+          "start": 15.025,
+          "duration": 6.975
+        },
+        {
+          "text": "The next season, Jamie scored 16 league goals.",
+          "start": 22.0,
+          "duration": 4.025
+        },
+        {
+          "text": "Leicester won the Championship and were promoted to the Premier League, and his teammates voted him their Players\u2019 Player of the season.",
+          "start": 26.025,
+          "duration": 8.475
+        },
+        {
+          "text": "When you feel like giving up, talk to the people who believe in you.",
+          "start": 34.5,
+          "duration": 4.475
+        }
+      ]
+    },
+    "champions": {
+      "src": "/voice/books/vardy/champions.m4a?v=coach-bella-1",
+      "duration": 35.9,
+      "scriptSha256": "4a9afb58066f6444da22b0c75591be051b12e389872904109ed475183d537e91",
+      "cues": [
+        {
+          "text": "Champions of England",
+          "start": 0.0,
+          "duration": 2.1
+        },
+        {
+          "text": "In the 2015\u201316 season, Jamie scored in eleven Premier League matches in a row, a new record.",
+          "start": 2.1,
+          "duration": 8.075
+        },
+        {
+          "text": "Leicester were the underdogs, a team few people expected to win, but they became the champions of England.",
+          "start": 10.175,
+          "duration": 7.4
+        },
+        {
+          "text": "Flip the scoreboard.",
+          "start": 17.575,
+          "duration": 2.0
+        },
+        {
+          "text": "Jamie was named the Premier League Player of the Season, and he played for England too.",
+          "start": 19.575,
+          "duration": 5.7
+        },
+        {
+          "text": "The boy who was once let go for being too small had kept going, all the way to the top.",
+          "start": 25.275,
+          "duration": 5.625
+        },
+        {
+          "text": "Everyone grows in their own time. It\u2019s never too late to keep going.",
+          "start": 30.9,
+          "duration": 4.95
+        }
+      ]
+    }
+  }
+}

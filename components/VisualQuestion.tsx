@@ -1,7 +1,7 @@
 'use client';
 import {useEffect,useId,useLayoutEffect,useMemo,useRef,useState,type KeyboardEvent,type PointerEvent as ReactPointerEvent,type ReactNode} from 'react';
 import type {FieldLesson,Point} from '@/lib/town/formatLessons';
-import {describeFrame,framePose,frameView,orderDisplay,pointOf,type FramePose,type QuizFrame,type QuizMark,type QuizTone,type VisualFieldQuestion} from '@/lib/town/visualQuiz';
+import {describeFrame,dropSlot,framePose,frameView,moveStep,orderAnswer,orderDisplay,pointOf,type FramePose,type QuizFrame,type QuizMark,type QuizTone,type VisualFieldQuestion} from '@/lib/town/visualQuiz';
 import styles from './VisualQuestion.module.css';
 
 /**
@@ -134,16 +134,68 @@ function DragQuestion({lesson,q,frame,answer,onAnswer,state,locked}:{lesson:Fiel
   </g></>}/></div>;
 }
 
+/** Drag-to-reorder: a vertical stack of step cards (shuffled), a fixed 1..n slot rail, and "Check order". Touch drags start on the
+ *  grip only (touch-action:none there), so a finger on the card text still scrolls the quiz panel; a mouse can grab the whole card.
+ *  Up/down buttons and arrow keys on the grip do the same move. Cards slide with CSS transform transitions (FLIP on drop), no loop. */
+type OrderDrag={i:number;from:number;to:number;dy:number};
 function OrderQuestion({lesson,q,answer,onAnswer}:{lesson:FieldLesson;q:VisualFieldQuestion;answer:number|null;onAnswer:(i:number)=>void}){
  const n=q.options.length,display=useMemo(()=>orderDisplay(n,lesson.id+q.q),[n,lesson.id,q.q]);
- const [placed,setPlaced]=useState<number[]>([]);
- useEffect(()=>{if(answer===null)setPlaced([]);},[answer]);
- const done=answer===q.correct,wrong=answer!==null&&!done;
- const tap=(i:number)=>{if(answer!==null||placed.includes(i))return;if(i!==placed.length){onAnswer(i);return;}const next=[...placed,i];setPlaced(next);if(next.length===n)onAnswer(q.correct);};
+ // A retry keeps the child's arrangement: they fix it instead of starting over (the flagged card is the one to rethink).
+ const [order,setOrder]=useState<number[]>(display);
+ const [drag,setDrag]=useState<OrderDrag|null>(null),[said,setSaid]=useState('');
+ const done=answer===q.correct,wrong=answer!==null&&!done,locked=answer!==null;
+ const list=useRef<HTMLOListElement|null>(null),cards=useRef(new Map<number,HTMLDivElement>());
+ const g=useRef<{pointer:number;startY:number;rects:DOMRect[];scroller:HTMLElement|null;scroll0:number}|null>(null);
+ const before=useRef<Map<number,number>|null>(null),refocus=useRef<{i:number;act:string}|null>(null);
  const frames=q.visual.frames;
+ const scrollTop=(el:HTMLElement|null)=>el?el.scrollTop:window.scrollY;
+ // Card tops (relative to the list, transforms included) just before a reorder, so the new layout can slide from them.
+ const snapshot=()=>{const top=list.current?.getBoundingClientRect().top??0,m=new Map<number,number>();cards.current.forEach((el,i)=>m.set(i,el.getBoundingClientRect().top-top));before.current=m;};
+ useLayoutEffect(()=>{
+  const from=before.current;before.current=null;
+  if(from&&list.current&&!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches){const top=list.current.getBoundingClientRect().top;
+   cards.current.forEach((el,i)=>{const was=from.get(i);if(was===undefined)return;const d=was-(el.getBoundingClientRect().top-top);if(Math.abs(d)<1)return;
+    el.style.transition='none';el.style.transform=`translateY(${d}px)`;void el.offsetHeight;el.style.transition='';el.style.transform='';});}
+  const f=refocus.current;refocus.current=null;
+  if(f){const row=list.current?.querySelector(`[data-step="${f.i}"]`);const b=row?.querySelector<HTMLButtonElement>(`[data-act="${f.act}"]`);(b&&!b.disabled?b:row?.querySelector<HTMLButtonElement>('[data-act="grip"]'))?.focus();}
+ },[order]);
+ const move=(from:number,to:number,act?:string)=>{if(locked||to<0||to>=n||to===from)return;const i=order[from];snapshot();if(act)refocus.current={i,act};setOrder(moveStep(order,from,to));setSaid(`Moved "${q.options[i]}" to place ${to+1} of ${n}.`);};
+ const scrollerOf=(el:HTMLElement)=>{for(let p=el.parentElement;p;p=p.parentElement){const s=getComputedStyle(p).overflowY;if((s==='auto'||s==='scroll')&&p.scrollHeight>p.clientHeight)return p;}return null;};
+ const down=(e:ReactPointerEvent<HTMLDivElement>,i:number)=>{
+  const t=e.target as Element;if(locked||g.current||e.button!==0||t.closest('[data-act="up"],[data-act="down"]'))return;
+  if(e.pointerType==='touch'&&!t.closest('[data-act="grip"]'))return;// finger on the text scrolls; the grip drags
+  const from=order.indexOf(i),el=e.currentTarget,scroller=scrollerOf(el);
+  e.preventDefault();el.setPointerCapture(e.pointerId);
+  g.current={pointer:e.pointerId,startY:e.clientY,rects:order.map(k=>cards.current.get(k)!.getBoundingClientRect()),scroller,scroll0:scrollTop(scroller)};
+  setDrag({i,from,to:from,dy:0});
+ };
+ const dragMove=(e:ReactPointerEvent)=>{const s=g.current;if(!s||s.pointer!==e.pointerId||!drag)return;
+  // Past the scroll box's edge, nudge it (on move only; nothing loops).
+  if(s.scroller){const r=s.scroller.getBoundingClientRect();if(e.clientY<r.top+20)s.scroller.scrollTop-=Math.min(24,r.top+20-e.clientY);else if(e.clientY>r.bottom-20)s.scroller.scrollTop+=Math.min(24,e.clientY-r.bottom+20);}
+  setDrag({...drag,...landing(s,drag.from,e.clientY)});
+ };
+ const landing=(s:NonNullable<typeof g.current>,from:number,clientY:number)=>{const dy=clientY-s.startY+scrollTop(s.scroller)-s.scroll0,r=s.rects[from];return {dy,to:dropSlot(s.rects.map(x=>x.top+x.height/2),from,r.top+r.height/2+dy)};};
+ // Recompute the slot from the release point itself: touch moves are coalesced, so the last pointermove can trail the finger.
+ const up=(e:ReactPointerEvent)=>{const s=g.current;if(!s||s.pointer!==e.pointerId)return;g.current=null;const d=drag&&{...drag,...landing(s,drag.from,e.clientY)};if(d&&d.to!==d.from){snapshot();setOrder(moveStep(order,d.from,d.to));setSaid(`Moved "${q.options[d.i]}" to place ${d.to+1} of ${n}.`);}setDrag(null);};
+ const cancel=()=>{g.current=null;setDrag(null);};
+ const shift=(k:number)=>{if(!drag||!g.current)return 0;const r=g.current.rects,{from,to}=drag,h=r[from].height+(n>1?Math.abs((r[1].top-r[0].bottom))||8:8);
+  if(k===from)return drag.dy;if(from<to&&k>from&&k<=to)return -h;if(to<from&&k>=to&&k<from)return h;return 0;};
+ const firstWrong=wrong?order.indexOf(answer!):-1;
  return <div className={styles.visual}>
-  <p className={styles.orderStatus} aria-live="polite">{done?'All in order.':`Tap step ${placed.length+1} of ${n}.`}</p>
-  <div className={`${styles.choices} ${frames?styles.pictures:''}`} role="group" aria-label="Steps to put in order">{display.map(i=>{const at=done?i:placed.indexOf(i),used=at>=0,st:State=wrong&&answer===i?'bad':used?'good':'idle';
-   return <button key={i} type="button" className={`${frames?styles.picture:styles.choice} ${styles[st]}`} disabled={used||answer!==null&&answer!==i} aria-label={`${q.options[i]}${used?`, step ${at+1}`:st==='bad'?', not next':''}`} onClick={()=>tap(i)}>{frames?.[i]&&<MiniPitch lesson={lesson} frame={frames[i]} thumb label=""/>}<span><b className={styles.badge} aria-hidden="true">{used?at+1:st==='bad'?'✗':'?'}</b>{q.options[i]}</span></button>;})}</div>
+  <ol ref={list} className={styles.orderList} aria-label="Steps to put in order">{order.map((i,k)=>{const st:State=done?'good':wrong&&answer===i?'bad':'idle',lift=drag?.i===i;
+   return <li key={i} data-step={i} className={styles.orderRow}><span className={styles.slot} aria-hidden="true">{k+1}</span>
+    <div ref={el=>{if(el)cards.current.set(i,el);else cards.current.delete(i);}} className={`${styles.orderCard} ${styles[st]} ${lift?styles.lifted:''} ${locked?'':styles.movable}`} style={drag&&g.current?{transform:`translateY(${shift(k)}px)`}:undefined}
+     onPointerDown={e=>down(e,i)} onPointerMove={dragMove} onPointerUp={up} onPointerCancel={cancel} onLostPointerCapture={e=>{if(g.current?.pointer===e.pointerId)up(e);}}>
+     <button type="button" data-act="grip" className={styles.grip} disabled={locked} aria-label={`Place ${k+1} of ${n}: ${q.options[i]}${st==='bad'?', not in the right place':st==='good'?', correct':''}. Use the up and down arrow keys to move it.`}
+      onKeyDown={e=>{if(e.key==='ArrowUp'){e.preventDefault();move(k,k-1,'grip');}else if(e.key==='ArrowDown'){e.preventDefault();move(k,k+1,'grip');}}}>
+      {st==='idle'?<svg viewBox="0 0 12 20" aria-hidden="true"><g fill="currentColor"><circle cx="3" cy="4" r="1.6"/><circle cx="9" cy="4" r="1.6"/><circle cx="3" cy="10" r="1.6"/><circle cx="9" cy="10" r="1.6"/><circle cx="3" cy="16" r="1.6"/><circle cx="9" cy="16" r="1.6"/></g></svg>:<b className={styles.badge} aria-hidden="true">{st==='good'?'✓':'✗'}</b>}
+     </button>
+     {frames?.[i]&&<MiniPitch lesson={lesson} frame={frames[i]} thumb label=""/>}
+     <span className={styles.orderText}>{q.options[i]}</span>
+     {!locked&&<><button type="button" data-act="up" className={styles.move} disabled={k===0} aria-label={`Move up: ${q.options[i]}`} onClick={()=>move(k,k-1,'up')}>▲</button>
+     <button type="button" data-act="down" className={styles.move} disabled={k===n-1} aria-label={`Move down: ${q.options[i]}`} onClick={()=>move(k,k+1,'down')}>▼</button></>}
+    </div></li>;})}</ol>
+  <p className={styles.orderStatus} aria-live="polite">{done?'All in order.':wrong?`Place ${firstWrong+1} is not right yet.`:said}</p>
+  {!locked&&<button type="button" className={styles.check} disabled={!!drag} onClick={()=>onAnswer(orderAnswer(order,q.correct))}>Check order</button>}
  </div>;
 }

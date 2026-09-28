@@ -1,0 +1,324 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "released": {
+      "src": "/voice/books/kane/released.m4a?v=coach-bella-1",
+      "duration": 40.2,
+      "scriptSha256": "31e5bc4ea682b8431cbf8da5bfac36cfa373b6587f5682ed72be17e91c1b8409",
+      "cues": [
+        {
+          "text": "Let go by Arsenal",
+          "start": 0.0,
+          "duration": 2.05
+        },
+        {
+          "text": "Harry Kane was born in London in 1993.",
+          "start": 2.05,
+          "duration": 3.9
+        },
+        {
+          "text": "He started playing for a local club, Ridgeway Rovers, when he was six.",
+          "start": 5.95,
+          "duration": 5.0
+        },
+        {
+          "text": "At eight, he joined the youth academy of Arsenal.",
+          "start": 10.95,
+          "duration": 3.775
+        },
+        {
+          "text": "But after one season, they let him go.",
+          "start": 14.725,
+          "duration": 3.125
+        },
+        {
+          "text": "The man in charge later said they felt Harry was not very athletic.",
+          "start": 17.85,
+          "duration": 4.825
+        },
+        {
+          "text": "Turn the signpost.",
+          "start": 22.675,
+          "duration": 1.95
+        },
+        {
+          "text": "Harry also had a trial at Tottenham Hotspur, but at first it did not work out.",
+          "start": 24.625,
+          "duration": 5.475
+        },
+        {
+          "text": "So he went back to his old club, Ridgeway Rovers, and kept playing.",
+          "start": 30.1,
+          "duration": 4.775
+        },
+        {
+          "text": "Being let go hurts. Going back to people who know you can help you grow again.",
+          "start": 34.875,
+          "duration": 5.25
+        }
+      ]
+    },
+    "growing": {
+      "src": "/voice/books/kane/growing.m4a?v=coach-bella-1",
+      "duration": 41.2,
+      "scriptSha256": "e177e9d4fef66aa71ad229becd4c4dd029e762ea5b1a06dc346a750e447b5b01",
+      "cues": [
+        {
+          "text": "Not the biggest, not the fastest",
+          "start": 0.0,
+          "duration": 2.675
+        },
+        {
+          "text": "In 2004, when Harry was eleven, he went on trial at Watford.",
+          "start": 2.675,
+          "duration": 5.425
+        },
+        {
+          "text": "He played well for Watford against Tottenham, and Tottenham gave him another chance.",
+          "start": 8.1,
+          "duration": 5.575
+        },
+        {
+          "text": "At first, Harry did not stand out.",
+          "start": 13.675,
+          "duration": 3.025
+        },
+        {
+          "text": "He was not big, and not very quick.",
+          "start": 16.7,
+          "duration": 2.975
+        },
+        {
+          "text": "Born in July, he was younger than many boys in his school year.",
+          "start": 19.675,
+          "duration": 4.425
+        },
+        {
+          "text": "Pull the tab.",
+          "start": 24.1,
+          "duration": 1.75
+        },
+        {
+          "text": "But his coaches noticed how much he always wanted to improve.",
+          "start": 25.85,
+          "duration": 4.45
+        },
+        {
+          "text": "A couple of years later, he had a big growth spurt that made him taller and stronger.",
+          "start": 30.3,
+          "duration": 5.525
+        },
+        {
+          "text": "Everyone grows at their own speed. Keep practising while you wait for your time.",
+          "start": 35.825,
+          "duration": 5.35
+        }
+      ]
+    },
+    "loans": {
+      "src": "/voice/books/kane/loans.m4a?v=coach-bella-1",
+      "duration": 40.0,
+      "scriptSha256": "f293ffd5966afd760481cd88a16b910bf93061e310cd2d013bc9dd48a9a3907c",
+      "cues": [
+        {
+          "text": "Sent away to learn",
+          "start": 0.0,
+          "duration": 2.025
+        },
+        {
+          "text": "Harry signed his first professional contract with Tottenham in 2010.",
+          "start": 2.025,
+          "duration": 5.075
+        },
+        {
+          "text": "His coach, Tim Sherwood, thought he could learn by playing for other clubs first.",
+          "start": 7.1,
+          "duration": 5.4
+        },
+        {
+          "text": "So in 2011 he went on loan to Leyton Orient, and then to Millwall.",
+          "start": 12.5,
+          "duration": 5.5
+        },
+        {
+          "text": "Follow the suitcase.",
+          "start": 18.0,
+          "duration": 2.125
+        },
+        {
+          "text": "At Millwall, Harry took time to get going.",
+          "start": 20.125,
+          "duration": 3.25
+        },
+        {
+          "text": "Then he scored seven goals in his last fourteen games, and he was named Millwall\u2019s Young Player of the Year.",
+          "start": 23.375,
+          "duration": 7.025
+        },
+        {
+          "text": "Starting again at a new club is hard, but he kept going.",
+          "start": 30.4,
+          "duration": 4.225
+        },
+        {
+          "text": "Being sent somewhere new can feel like a step back. It can also help you learn.",
+          "start": 34.625,
+          "duration": 5.375
+        }
+      ]
+    },
+    "injury": {
+      "src": "/voice/books/kane/injury.m4a?v=coach-bella-1",
+      "duration": 36.7,
+      "scriptSha256": "88f633953ac4365b85fcbe49c6a38b22773be9d6d26a3e463e5d843569fcb7c2",
+      "cues": [
+        {
+          "text": "A broken foot",
+          "start": 0.0,
+          "duration": 1.85
+        },
+        {
+          "text": "In 2012, Harry went on loan to Norwich City.",
+          "start": 1.85,
+          "duration": 4.1
+        },
+        {
+          "text": "In only his second game there, he broke a bone in his foot.",
+          "start": 5.95,
+          "duration": 4.225
+        },
+        {
+          "text": "He had to stop playing and spend months getting better back at Tottenham.",
+          "start": 10.175,
+          "duration": 4.875
+        },
+        {
+          "text": "Flip the calendar.",
+          "start": 15.05,
+          "duration": 1.95
+        },
+        {
+          "text": "Harry worked to recover and returned to play.",
+          "start": 17.0,
+          "duration": 3.5
+        },
+        {
+          "text": "Soon he moved on loan again, to Leicester City.",
+          "start": 20.5,
+          "duration": 3.575
+        },
+        {
+          "text": "He scored on his home debut, but he often started on the bench, and Leicester were knocked out of the play-offs.",
+          "start": 24.075,
+          "duration": 7.025
+        },
+        {
+          "text": "Getting better after an injury takes patience. Small steps each day add up.",
+          "start": 31.1,
+          "duration": 5.6
+        }
+      ]
+    },
+    "chance": {
+      "src": "/voice/books/kane/chance.m4a?v=coach-bella-1",
+      "duration": 39.7,
+      "scriptSha256": "eaa6198199f7a08e9810300586d133862162f9ac5688aa022bc624f20c66dc3f",
+      "cues": [
+        {
+          "text": "Ready for his chance",
+          "start": 0.0,
+          "duration": 2.025
+        },
+        {
+          "text": "In April 2014, Harry finally started a Premier League game for Tottenham, and he scored.",
+          "start": 2.025,
+          "duration": 7.0
+        },
+        {
+          "text": "The next season, the new manager, Mauricio Pochettino, picked him again and again.",
+          "start": 9.025,
+          "duration": 5.9
+        },
+        {
+          "text": "Harry scored 21 league goals.",
+          "start": 14.925,
+          "duration": 2.75
+        },
+        {
+          "text": "Flip the team sheet.",
+          "start": 17.675,
+          "duration": 2.05
+        },
+        {
+          "text": "There were hard moments too.",
+          "start": 19.725,
+          "duration": 2.225
+        },
+        {
+          "text": "When Tottenham lost the League Cup final, Harry called it the worst feeling in the world.",
+          "start": 21.95,
+          "duration": 5.475
+        },
+        {
+          "text": "But he was named the PFA Young Player of the Year, and in 2015 he scored on his England debut.",
+          "start": 27.425,
+          "duration": 7.05
+        },
+        {
+          "text": "Keep working, even while you wait. Then you\u2019ll be ready when your chance comes.",
+          "start": 34.475,
+          "duration": 5.15
+        }
+      ]
+    },
+    "penalty": {
+      "src": "/voice/books/kane/penalty.m4a?v=coach-bella-1",
+      "duration": 40.2,
+      "scriptSha256": "0dbef90c350d3b8c1ff419a78612012986dc1eacbf714b5a3acdc27c8fd917ab",
+      "cues": [
+        {
+          "text": "After the missed penalty",
+          "start": 0.0,
+          "duration": 2.275
+        },
+        {
+          "text": "Harry became England\u2019s captain, and in 2018 he was the top scorer at the World Cup.",
+          "start": 2.275,
+          "duration": 6.275
+        },
+        {
+          "text": "But at the 2022 World Cup, in the quarter-final against France, he missed a penalty, and England lost 2\u20131.",
+          "start": 8.55,
+          "duration": 8.275
+        },
+        {
+          "text": "Many people would feel very sad after a moment like that.",
+          "start": 16.825,
+          "duration": 4.325
+        },
+        {
+          "text": "Take the next penalty.",
+          "start": 21.15,
+          "duration": 2.2
+        },
+        {
+          "text": "A few months later, in 2023, Harry stepped up to take a penalty against Italy, and he scored.",
+          "start": 23.35,
+          "duration": 7.225
+        },
+        {
+          "text": "It was his 54th goal for England, making him the country\u2019s all-time top scorer.",
+          "start": 30.575,
+          "duration": 5.75
+        },
+        {
+          "text": "You are more than one miss. Be brave and try again.",
+          "start": 36.325,
+          "duration": 3.8
+        }
+      ]
+    }
+  }
+}

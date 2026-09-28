@@ -3,9 +3,10 @@ import {pathText} from '@/lib/paths/pathText';
 import {useEffect,useId,useLayoutEffect,useRef,useState,type KeyboardEvent} from 'react';
 import {COIN_QUEST} from '@/lib/town/coinQuest';
 import {dismissCoinCelebration,useCoinProgress} from '@/lib/town/coinProgress';
-import {BALL_HUNT_LESSONS,BALL_HUNT_PRACTICE,ballLessonFrame} from '@/lib/town/ballHuntLessons';
+import {BALL_HUNT_LESSONS,BALL_HUNT_PRACTICE,LANDSCAPE,ballLessonFrame,diagramLayout,type DiagramLayout} from '@/lib/town/ballHuntLessons';
 import {advanceLesson,canFinishLesson,canGoBack,forwardLessonStep,lessonPrimaryLabel,lessonStepKey,previousLessonStep,startLessonStepper} from '@/lib/town/ballLessonStepper';
 import {NavigationButton} from './DoneButton';
+import BallLessonDiagram from './BallLessonDiagram';
 import navStyles from './DoneButton.module.css';
 import styles from './BallHuntLesson.module.css';
 
@@ -32,8 +33,15 @@ export default function BallHuntLesson({spotId,onDismiss,replay=false,practice=f
    // Wrapped labels can take a third line on the narrowest phones: both pills take the taller height.
    el.style.removeProperty('--lesson-btn-h');if(need>room){const tall=Math.max(...[...el.querySelectorAll<HTMLElement>('button')].map(b=>b.offsetHeight));el.style.setProperty('--lesson-btn-h',`${tall}px`);}};
   fit();if(typeof ResizeObserver==='undefined')return;const observer=new ResizeObserver(fit);observer.observe(el);return ()=>observer.disconnect();},[primaryText,stepper.count]);
+ // Upright phones: the pitch is redrawn to the diagram's free box (a taller view box, lib/town/ballLessonScenes.ts pitchMap).
+ // Measured on open and on resize/rotation only (no observer on step changes, so the layout never shifts mid-lesson).
+ const illustration=useRef<HTMLDivElement>(null),[layout,setLayout]=useState<DiagramLayout>(LANDSCAPE);
+ // (A passive effect: it runs after the open effect's showModal, so the box has its real size.)
+ useEffect(()=>{const el=illustration.current;if(!el||typeof window==='undefined')return;const upright=window.matchMedia?.('(max-width:600px) and (orientation:portrait)');
+  const fit=()=>{const box=el.querySelector(`.${styles.field}`)?.getBoundingClientRect(),next=upright?.matches&&box?diagramLayout(box.width,box.height):LANDSCAPE;setLayout(prev=>prev.w===next.w&&prev.h===next.h?prev:next);};
+  fit();window.addEventListener('resize',fit);upright?.addEventListener?.('change',fit);return ()=>{window.removeEventListener('resize',fit);upright?.removeEventListener?.('change',fit);};},[spotId]);
  if(!spot||!lesson)return null;
- const step=Math.min(stepper.step,stepper.count-1),finished=canFinishLesson(stepper),frame=ballLessonFrame(lesson.kind,step),caption=lesson.steps?.[step]??'';
+ const step=Math.min(stepper.step,stepper.count-1),finished=canFinishLesson(stepper),frame=ballLessonFrame(lesson.kind,step,layout),caption=lesson.steps?.[step]??'';
  const title=spot.teaching.slice(0,spot.teaching.indexOf('.')),tip=spot.teaching.slice(spot.teaching.indexOf('.')+1).trim(),complete=!replay&&progress.collected.length===COIN_QUEST.length&&!progress.celebrated;
  const dismiss=()=>{if(!finished)return;if(complete)dismissCoinCelebration();onDismiss();};
  const pressPrimary=()=>{if(finished)dismiss();else setStepper(advanceLesson);};
@@ -47,30 +55,16 @@ export default function BallHuntLesson({spotId,onDismiss,replay=false,practice=f
  };
  return <dialog ref={dialog} className={styles.dialog} aria-labelledby={`${id}-title`} onCancel={event=>{event.preventDefault();event.stopPropagation();}} onKeyDown={keys} data-hidden={hidden}>
   <section className={styles.panel}>
-   <header className={styles.header}><p>{practice?'Practice idea':replay?'futbo discovery':'Ball found'} · {progress.collected.length}/{COIN_QUEST.length}</p><h2 id={`${id}-title`}>{title}</h2></header>
+   <header className={styles.header}><p>{practice?'Practice idea':replay?'Ball hunt tip':'Ball found'} · {progress.collected.length}/{COIN_QUEST.length}</p><h2 id={`${id}-title`}>{title}</h2></header>
    <div className={styles.body}>
     <p className={styles.tip}>{pathText(practice?BALL_HUNT_PRACTICE[spotId]:tip)}</p>
-    <div className={styles.illustration}>
-     <div className={styles.diagramHeading}><span>{practice?'Predict, then reveal':lesson.kind==='community'?'Connect the story':'See it on the pitch'}</span><span className={styles.counter} data-step-counter="">{step+1} / {stepper.count}</span></div>
-     <svg viewBox="0 0 330 248" role="img" aria-labelledby={`${id}-graphic-title ${id}-graphic-desc`} className={styles.field}>
-      <title id={`${id}-graphic-title`}>{title}: step {step+1}</title><desc id={`${id}-graphic-desc`}>{pathText(caption)} Solid arrows show the ball route. Dashed arrows show a player run.</desc>
-      <defs><marker id={`${id}-arrow`} viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#436953"/></marker></defs>
-      {lesson.kind!=='community'&&<g className={styles.pitchLines}><rect x="14" y="22" width="302" height="212" rx="8"/>{frame.side?<path d="M25 199H305"/>:<><path d="M14 127H316"/><circle cx="165" cy="127" r="32"/></>}</g>}
-      {frame.zone&&<rect x={frame.zone[0]} y={frame.zone[1]} width={frame.zone[2]} height={frame.zone[3]} rx="15" className={styles.space}/>}
-      <g className={styles.routes}>{frame.paths.map(path=><path key={path} d={path} markerEnd={`url(#${id}-arrow)`} className={styles.route}/>)}{frame.run&&step>0&&<path d={frame.run} markerEnd={`url(#${id}-arrow)`} className={styles.run}/>}</g>
-      {frame.nodes.map(node=><g key={node.id} className={`${styles.token} ${styles[node.role]}`} style={{transform:`translate(${node.x}px,${node.y}px)`}}>
-       {node.role==='ball'?<g className={styles.ballArrival}><circle r="7"/><path d="M-2-3L3-2L4 2L0 5L-4 1Z"/></g>:<>
-        {((lesson.kind==='feet'||lesson.kind==='feet-both')&&(node.id==='left'||node.id==='right')||(['far-foot','request-foot'].includes(lesson.kind)&&['a','b'].includes(node.id))||(lesson.kind==='cushion'&&node.id==='a'))?<path className={styles.foot} d="M-9 13Q-15 0-9-14Q-5-23 2-18L10 3Q15 19 1 19Z" style={{transform:`rotate(${node.id==='left'?-25:25}deg)`}}/>:<circle r={node.role==='club'?23:13}/>}
-        {node.role==='team'&&lesson.kind!=='community'&&lesson.kind!=='feet'&&lesson.kind!=='feet-both'&&<path d="M0-9L5 2H-5Z" className={styles.facing} style={{transform:`rotate(${node.angle??0}deg)`}}/>}
-        <text y={node.role==='club'?4:29} textAnchor="middle">{node.label}</text>
-       </>}
-      </g>)}
-      {frame.note&&<text className={styles.note} x="165" y="17" textAnchor="middle">{frame.note}</text>}
-     </svg>
-     <div className={styles.legend}>{lesson.kind==='community'?'People + traditions = club identity':<>● Teammates <span>● Pressure</span> <b>▰ Open space</b></>}</div>
+    <div ref={illustration} className={styles.illustration}>
+     <div className={styles.diagramHeading}><span>{practice?'Predict, then reveal':`${lesson.family} · level ${lesson.level}`}</span><span className={styles.counter} data-step-counter="">{step+1} / {stepper.count}</span></div>
+     <BallLessonDiagram frame={frame} step={step} id={id} title={title} desc={pathText(caption)}/>
+     <div className={styles.legend}>● Teammates <span>● Opponents</span> <b>▰ Open space</b> <i>- - run  — pass</i></div>
      <p className={styles.caption} aria-live="polite">{pathText(caption)}</p>
     </div>
-    {complete&&finished&&<p className={styles.reward}><strong>All {COIN_QUEST.length} balls found!</strong> All costumes are unlocked in the Store. Choose your favorite and keep exploring.</p>}
+    {complete&&finished&&<p className={styles.reward}><strong>All {COIN_QUEST.length} balls found!</strong> All costumes are unlocked. Find them in the vending machines and keep exploring.</p>}
    </div>
    <footer ref={footer} className={styles.footer}>
     {stepper.count>1&&<div className={styles.stepNav}><NavigationButton back immediate label="Previous step" className={styles.previous} disabled={!canGoBack(stepper)} onNavigate={previous}/></div>}

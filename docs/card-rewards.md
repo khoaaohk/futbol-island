@@ -155,6 +155,18 @@ So the first Icon is the first path's finish, and each later path brings its gua
 
 No timers or loops were added. `PathCardWatcher` subscribes to the two stores the Paths screen already uses, and it recomputes only when a step or answer is saved (48 lessons, trivial). `readPathProgress` runs once per earned offer. `cardTiers.json` (~40 KB with the reasons) is parsed once with the card-reward code.
 
+## Coach cards (28 Sep 2026)
+
+User: "add more cards, add top 25 current and all time coaches". 50 coach cards were added, so there are now 450 cards: 373 football cards (50 of them coaches) and 77 futsal cards. (The 353 above predates later player additions; the roster had 400 players on Sep 28.)
+
+- **Data.** The coaches are the `coach` role in `lib/town/positionPlayers.json` (`current`: in a head-coach job in September 2026, checked against club, federation and news sources; `allTime`: legendary coaches). Numbers 401–450 are appended to `cardRoster.json`, so no player is renumbered and saved collections stay valid. Each coach has the same data as a player: blurb and three strengths (`playerProfiles.json`), a drawn look and country (`playerAppearance.json`, all flagged `_uncertain`), the teams coached (`playerCareers.json`, `role: "coach"`, from the Wikipedia manager infobox) and a demand score (`cardTiers.json`). What a coach card teaches is in `lib/town/coachIdeas.json`: one coaching idea in kid language (`idea` + `lesson`, original writing, never a quote), 2–4 career highlights and the sources.
+- **Names.** A coach who already has a player card gets a separate key, `"<Name> (coach)"` (Johan Cruyff, Zinedine Zidane, Vincent Kompany). `cardDisplayName` drops the suffix on the card plate, the mini card and the card back; search and lists show the full key so the two cards can be told apart.
+- **Binder.** The Futbol binder has a Coaches divider after the goalkeepers (6 pages of 9). Futsal has none.
+- **The card.** The front says "Coach" (current) or "Legend" (all-time) and "Coaching now · Head coach" / "All-time great coach · Head coach". The back keeps its three tabs, about coaching: **Style** (the strengths), **Big idea** (the coaching idea, the lesson and career highlights; `coachIdeas.json` loads only when a coach card is turned over) and **Teams** (teams coached). Coach cards have no Play Moment and no highlight clips.
+- **Earning.** Coach cards are drawn like any card (balls, chats, quizzes, Explore, Journey, stories, path finish, vending and legend packs that draw from all cards). A football lesson about team shape or tactics (`COACH_WORDS` in `cardRewards.ts`: formation, tactic, game plan, team system, offside trap, Total Football, coach) themes a coach card; futsal lessons keep their futsal cards. Tiers (`cardTiers.json`, judgement scores like the players'): Guardiola is an Icon (85); Ferguson, Ancelotti, Klopp, Mourinho, the Cruyff and Zidane coach cards, Luis Enrique, Wiegman, Wenger and Hayes are Elite; the rest are Regular. The Elite ceiling in `tests/card-tiers.cjs` rose from 71 to 81 for the ten Elite coaches.
+- **Portraits.** `scripts/fetch-coach-photos.py` takes each coach's Wikipedia lead photo when it is CC0, public domain, CC BY or CC BY-SA on Commons, crops it on the face and prints the riso masks into `public/players/`, with the credit in `lib/town/playerPhotos.coaches.json`. Coaches may be photographed in a suit or tracksuit (they coach in them). Same politeness as the player batches: one runner, the shared lock-file throttle, one request per 8 s, backing off on 429. Coaches without a usable photo use the drawn riso portrait.
+- **Checks.** `node tests/coach-cards.cjs` (lists, numbering, binder section, data completeness, licences, theme).
+
 ## Triggers and the exact hooks
 
 | Trigger | When it pays | Hook |
@@ -197,7 +209,8 @@ These pay the same way as the first three:
 ### NPC frequency (user decision, 24 Sep)
 
 - At most **one pick per islander per day**.
-- At most **`NPC_PICKS_PER_DAY = 5`** NPC picks per day in total.
+- At most **`NPC_PICKS_PER_DAY = 3`** NPC picks per day in total (5 until the economy pass, 28 Sep 2026).
+- **Packs (economy pass, 28 Sep 2026):** 40 / 60 coins, 3 a day. Learning triggers now also pay coins once ever (`lib/town/learnCoins.ts`: quiz 12 +6 perfect first try, ball 5, story 10, journey stage 8, explore 5, path 75). Packs apply a light Icon gate: Icons are left out of every slot except the guaranteed mental-strength legend until `tierGate(progress,'quiz').icon`; a pack stays on sale while it can give one new card and tops up empty slots with other missing cards, so the last Icons can always be earned ([vending-machines.md](vending-machines.md#economy)).
 - The count resets at **local midnight** on the device clock and is stored in localStorage.
 
 Why:
@@ -314,3 +327,5 @@ Still open:
    - Check the Icon and Elite lists in `cardTiers.json`; the scores are judgement calls.
    - The path-finish pick is a separate pick on top of the last lesson's quiz pick. Keep it that way, or fold it into that quiz pick? The alternative is `PATH_FINISH_ICON=false`, where a path finish is only a big trigger and Icons stay a rare draw.
    - Should Journey stages stay a big (Icon) trigger?
+
+**Coach job verification (Sep 28):** all 25 current coaches' clubs and national teams match the `currentclub` field of their English Wikipedia infobox, checked through the Wikipedia API one request every 5 s. Spain's 2026 World Cup title matches the `champion` field of the 2026 FIFA World Cup article. The highlights for Lippi, Trapattoni and Zagallo, first written from memory, were checked against their records. The 10 coaches without a free-licence photo keep the drawn portrait.

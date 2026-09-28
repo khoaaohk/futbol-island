@@ -1,0 +1,358 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "How he defends",
+   "text": "Pepe was the man of the match in the Euro 2016 final, when Portugal beat France. This is how he defends crosses. The winger crosses... and Pepe heads it away!",
+   "src": "/plays/narration/pepe-signature/1.m4a",
+   "seconds": 12.1,
+   "words": [
+    {
+     "w": "Pepe",
+     "at": 0.35
+    },
+    {
+     "w": "was",
+     "at": 0.7
+    },
+    {
+     "w": "the",
+     "at": 0.875
+    },
+    {
+     "w": "man",
+     "at": 0.975
+    },
+    {
+     "w": "of",
+     "at": 1.262
+    },
+    {
+     "w": "the",
+     "at": 1.337
+    },
+    {
+     "w": "match",
+     "at": 1.462
+    },
+    {
+     "w": "in",
+     "at": 1.875
+    },
+    {
+     "w": "the",
+     "at": 1.962
+    },
+    {
+     "w": "Euro",
+     "at": 2.062
+    },
+    {
+     "w": "2016",
+     "at": 2.462
+    },
+    {
+     "w": "final",
+     "at": 3.312
+    },
+    {
+     "w": "when",
+     "at": 3.975
+    },
+    {
+     "w": "Portugal",
+     "at": 4.162
+    },
+    {
+     "w": "beat",
+     "at": 4.7
+    },
+    {
+     "w": "France",
+     "at": 4.987
+    },
+    {
+     "w": "This",
+     "at": 6.0
+    },
+    {
+     "w": "is",
+     "at": 6.25
+    },
+    {
+     "w": "how",
+     "at": 6.4
+    },
+    {
+     "w": "he",
+     "at": 6.625
+    },
+    {
+     "w": "defends",
+     "at": 6.75
+    },
+    {
+     "w": "crosses",
+     "at": 7.25
+    },
+    {
+     "w": "The",
+     "at": 8.238
+    },
+    {
+     "w": "winger",
+     "at": 8.387
+    },
+    {
+     "w": "crosses",
+     "at": 8.738
+    },
+    {
+     "w": "and",
+     "at": 9.85
+    },
+    {
+     "w": "Pepe",
+     "at": 9.975
+    },
+    {
+     "w": "heads",
+     "at": 10.35
+    },
+    {
+     "w": "it",
+     "at": 10.588
+    },
+    {
+     "w": "away",
+     "at": 10.675
+    }
+   ]
+  },
+  {
+   "label": "Touching distance",
+   "text": "Watch again. He stays close to the striker, at touching distance, always between him and the goal.",
+   "src": "/plays/narration/pepe-signature/2.m4a",
+   "seconds": 7.1,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "He",
+     "at": 1.5
+    },
+    {
+     "w": "stays",
+     "at": 1.625
+    },
+    {
+     "w": "close",
+     "at": 1.95
+    },
+    {
+     "w": "to",
+     "at": 2.25
+    },
+    {
+     "w": "the",
+     "at": 2.337
+    },
+    {
+     "w": "striker",
+     "at": 2.425
+    },
+    {
+     "w": "at",
+     "at": 3.087
+    },
+    {
+     "w": "touching",
+     "at": 3.225
+    },
+    {
+     "w": "distance",
+     "at": 3.625
+    },
+    {
+     "w": "always",
+     "at": 4.4
+    },
+    {
+     "w": "between",
+     "at": 4.825
+    },
+    {
+     "w": "him",
+     "at": 5.175
+    },
+    {
+     "w": "and",
+     "at": 5.475
+    },
+    {
+     "w": "the",
+     "at": 5.588
+    },
+    {
+     "w": "goal",
+     "at": 5.675
+    }
+   ]
+  },
+  {
+   "label": "Up first",
+   "text": "He stays on his feet, jumps first, and meets the ball with his forehead. High and wide!",
+   "src": "/plays/narration/pepe-signature/3.m4a",
+   "seconds": 6.1,
+   "words": [
+    {
+     "w": "He",
+     "at": 0.35
+    },
+    {
+     "w": "stays",
+     "at": 0.475
+    },
+    {
+     "w": "on",
+     "at": 0.787
+    },
+    {
+     "w": "his",
+     "at": 0.887
+    },
+    {
+     "w": "feet",
+     "at": 1.05
+    },
+    {
+     "w": "jumps",
+     "at": 1.613
+    },
+    {
+     "w": "first",
+     "at": 1.975
+    },
+    {
+     "w": "and",
+     "at": 2.312
+    },
+    {
+     "w": "meets",
+     "at": 2.425
+    },
+    {
+     "w": "the",
+     "at": 2.7
+    },
+    {
+     "w": "ball",
+     "at": 2.8
+    },
+    {
+     "w": "with",
+     "at": 3.087
+    },
+    {
+     "w": "his",
+     "at": 3.188
+    },
+    {
+     "w": "forehead",
+     "at": 3.35
+    },
+    {
+     "w": "High",
+     "at": 4.325
+    },
+    {
+     "w": "and",
+     "at": 4.612
+    },
+    {
+     "w": "wide",
+     "at": 4.725
+    }
+   ]
+  },
+  {
+   "label": "Head it away",
+   "text": "Like Pepe: stay close to your striker, stay on your feet, and head every cross away.",
+   "src": "/plays/narration/pepe-signature/4.m4a",
+   "seconds": 6.2,
+   "words": [
+    {
+     "w": "Like",
+     "at": 0.375
+    },
+    {
+     "w": "Pepe",
+     "at": 0.575
+    },
+    {
+     "w": "stay",
+     "at": 1.387
+    },
+    {
+     "w": "close",
+     "at": 1.625
+    },
+    {
+     "w": "to",
+     "at": 1.95
+    },
+    {
+     "w": "your",
+     "at": 2.038
+    },
+    {
+     "w": "striker",
+     "at": 2.15
+    },
+    {
+     "w": "stay",
+     "at": 2.812
+    },
+    {
+     "w": "on",
+     "at": 3.087
+    },
+    {
+     "w": "your",
+     "at": 3.188
+    },
+    {
+     "w": "feet",
+     "at": 3.35
+    },
+    {
+     "w": "and",
+     "at": 3.825
+    },
+    {
+     "w": "head",
+     "at": 3.95
+    },
+    {
+     "w": "every",
+     "at": 4.175
+    },
+    {
+     "w": "cross",
+     "at": 4.475
+    },
+    {
+     "w": "away",
+     "at": 4.775
+    }
+   ]
+  }
+ ]
+}

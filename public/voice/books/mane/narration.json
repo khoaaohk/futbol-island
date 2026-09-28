@@ -1,0 +1,299 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "bambali": {
+      "src": "/voice/books/mane/bambali.m4a?v=coach-bella-1",
+      "duration": 39.1,
+      "scriptSha256": "eb4448b271d0dc31bf705b658e110c879c4a3438a6f420f2d1bf1edc4a3f733b",
+      "cues": [
+        {
+          "text": "A dream in Bambali",
+          "start": 0.0,
+          "duration": 2.1
+        },
+        {
+          "text": "Sadio Man\u00e9 was born in 1992 in Bambali, a village in Senegal.",
+          "start": 2.1,
+          "duration": 5.85
+        },
+        {
+          "text": "His parents came from Guinea, and he grew up in a religious family.",
+          "start": 7.95,
+          "duration": 4.675
+        },
+        {
+          "text": "More than anything, Sadio wished to play football.",
+          "start": 12.625,
+          "duration": 3.7
+        },
+        {
+          "text": "But his father, an imam, did not allow him to play.",
+          "start": 16.325,
+          "duration": 4.125
+        },
+        {
+          "text": "He wanted Sadio to put his religious studies first.",
+          "start": 20.45,
+          "duration": 3.8
+        },
+        {
+          "text": "Then, when Sadio was seven years old, his father died.",
+          "start": 24.25,
+          "duration": 4.4
+        },
+        {
+          "text": "Lift the photo frame to remember him.",
+          "start": 28.65,
+          "duration": 2.95
+        },
+        {
+          "text": "When someone you love dies, it\u2019s okay to feel sad. Keep their memory close, and talk to people you trust.",
+          "start": 31.6,
+          "duration": 7.425
+        }
+      ]
+    },
+    "secret": {
+      "src": "/voice/books/mane/secret.m4a?v=coach-bella-1",
+      "duration": 36.8,
+      "scriptSha256": "ad2cde94c43c1a27de757f4c9bccf8016a5957ae6272d35073babc4759b178ab",
+      "cues": [
+        {
+          "text": "Leaving the village",
+          "start": 0.0,
+          "duration": 1.9
+        },
+        {
+          "text": "Sadio kept dreaming about football.",
+          "start": 1.9,
+          "duration": 2.775
+        },
+        {
+          "text": "When he was fifteen, he made a very big choice.",
+          "start": 4.675,
+          "duration": 3.425
+        },
+        {
+          "text": "With the help of a childhood friend, Luc Djiboune, he left his home village secretly and went to Dakar, the capital city of Senegal.",
+          "start": 8.1,
+          "duration": 9.025
+        },
+        {
+          "text": "Open the door to Dakar.",
+          "start": 17.125,
+          "duration": 2.225
+        },
+        {
+          "text": "It was a long way from home, and many people would find a move like that scary.",
+          "start": 19.35,
+          "duration": 5.575
+        },
+        {
+          "text": "From that time on, his family supported him in following his dream.",
+          "start": 24.925,
+          "duration": 4.975
+        },
+        {
+          "text": "Big dreams need courage, and a good friend helps. Always share your plans with a grown-up you trust.",
+          "start": 29.9,
+          "duration": 6.825
+        }
+      ]
+    },
+    "dakar": {
+      "src": "/voice/books/mane/dakar.m4a?v=coach-bella-1",
+      "duration": 35.3,
+      "scriptSha256": "5760418a7e9d3c42801a2c2c8314629d1d6f3b0d9ba6c182e8c8d39236c6be18",
+      "cues": [
+        {
+          "text": "Someone noticed",
+          "start": 0.0,
+          "duration": 1.85
+        },
+        {
+          "text": "Sadio kept playing.",
+          "start": 1.85,
+          "duration": 2.075
+        },
+        {
+          "text": "In 2009, when he was playing in the town of M\u2019Bour, scouts spotted him.",
+          "start": 3.925,
+          "duration": 5.55
+        },
+        {
+          "text": "They sent him to a club called G\u00e9n\u00e9ration Foot.",
+          "start": 9.475,
+          "duration": 3.525
+        },
+        {
+          "text": "Lift the three flaps to see who helped.",
+          "start": 13.0,
+          "duration": 2.9
+        },
+        {
+          "text": "His friend Luc helped him set off, his family stood behind him, and the club gave him a place to grow.",
+          "start": 15.9,
+          "duration": 6.9
+        },
+        {
+          "text": "In the 2010\u201311 season, Sadio helped G\u00e9n\u00e9ration Foot win promotion to the second division.",
+          "start": 22.8,
+          "duration": 7.625
+        },
+        {
+          "text": "Nobody gets there alone. Remember to thank the people who help you.",
+          "start": 30.425,
+          "duration": 4.825
+        }
+      ]
+    },
+    "metz": {
+      "src": "/voice/books/mane/metz.m4a?v=coach-bella-1",
+      "duration": 38.2,
+      "scriptSha256": "2aa0cbc7e5b44c59876d162d553576e3720b46ad1bc81f8953664291570a51b5",
+      "cues": [
+        {
+          "text": "A new country",
+          "start": 0.0,
+          "duration": 1.875
+        },
+        {
+          "text": "In 2011, Sadio moved to France to join the club Metz.",
+          "start": 1.875,
+          "duration": 4.725
+        },
+        {
+          "text": "He was nineteen and a long way from home.",
+          "start": 6.6,
+          "duration": 3.5
+        },
+        {
+          "text": "He played 19 league games that season and scored one goal, but Metz were relegated, which means they dropped down to a lower league.",
+          "start": 10.1,
+          "duration": 9.025
+        },
+        {
+          "text": "Unfold the bridge to Austria.",
+          "start": 19.125,
+          "duration": 2.55
+        },
+        {
+          "text": "In 2012 he moved to a club in Salzburg, and there he won the league and the cup.",
+          "start": 21.675,
+          "duration": 6.05
+        },
+        {
+          "text": "In 2014 he went to England, to play for Southampton.",
+          "start": 27.725,
+          "duration": 4.95
+        },
+        {
+          "text": "Being new somewhere is hard, and a bad season isn\u2019t the end. Keep going.",
+          "start": 32.675,
+          "duration": 5.475
+        }
+      ]
+    },
+    "penalty": {
+      "src": "/voice/books/mane/penalty.m4a?v=coach-bella-1",
+      "duration": 39.3,
+      "scriptSha256": "e2a9dc7730258837b0cb2576f3f3ce5905dee567fd06a02b566d05f818befc1f",
+      "cues": [
+        {
+          "text": "Missed penalties",
+          "start": 0.0,
+          "duration": 1.975
+        },
+        {
+          "text": "Sadio plays for his country, Senegal.",
+          "start": 1.975,
+          "duration": 3.225
+        },
+        {
+          "text": "At the 2017 Africa Cup of Nations, the quarter-final against Cameroon went to a penalty shoot-out.",
+          "start": 5.2,
+          "duration": 7.25
+        },
+        {
+          "text": "Sadio missed his penalty, and Senegal were knocked out.",
+          "start": 12.45,
+          "duration": 4.075
+        },
+        {
+          "text": "At the 2019 tournament, he missed two penalties in earlier games.",
+          "start": 16.525,
+          "duration": 5.025
+        },
+        {
+          "text": "Senegal reached the final, but lost 1\u20130 to Algeria.",
+          "start": 21.55,
+          "duration": 4.575
+        },
+        {
+          "text": "Lift the rain cloud.",
+          "start": 26.125,
+          "duration": 2.1
+        },
+        {
+          "text": "Even so, Sadio was named in the Team of the Tournament, and he kept stepping up for his country.",
+          "start": 28.225,
+          "duration": 6.45
+        },
+        {
+          "text": "A miss is not the end of the story. You are more than one result.",
+          "start": 34.675,
+          "duration": 4.625
+        }
+      ]
+    },
+    "final": {
+      "src": "/voice/books/mane/final.m4a?v=coach-bella-1",
+      "duration": 35.7,
+      "scriptSha256": "9f30cc5d31cb29609c341fb430bd7a3794f89021565fe9947a1801370044d2dc",
+      "cues": [
+        {
+          "text": "Brave enough to try again",
+          "start": 0.0,
+          "duration": 2.275
+        },
+        {
+          "text": "At the 2021 Africa Cup of Nations, Senegal played Egypt in the final.",
+          "start": 2.275,
+          "duration": 6.15
+        },
+        {
+          "text": "In the seventh minute, Sadio took a penalty, and the goalkeeper saved it.",
+          "start": 8.425,
+          "duration": 5.125
+        },
+        {
+          "text": "The final went to a penalty shoot-out, and Sadio stepped up again.",
+          "start": 13.55,
+          "duration": 4.6
+        },
+        {
+          "text": "He scored the winning kick, and Senegal won the cup for the first time!",
+          "start": 18.15,
+          "duration": 4.6
+        },
+        {
+          "text": "Raise the trophy.",
+          "start": 22.75,
+          "duration": 1.95
+        },
+        {
+          "text": "Sadio has also given money to build a school and a hospital in his home village, Bambali.",
+          "start": 24.7,
+          "duration": 6.425
+        },
+        {
+          "text": "Be brave enough to try again, and remember the place you came from.",
+          "start": 31.125,
+          "duration": 4.55
+        }
+      ]
+    }
+  }
+}

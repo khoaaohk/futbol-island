@@ -1,0 +1,386 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Athens, 2004: the Olympic final, Argentina against Paraguay. Fabricio Coloccini breaks out of defence. The winger races down the right and crosses to the near post. Carlos Tevez gets there first... Goal!",
+   "src": "/plays/narration/tevez-olympic-final-2004/1.m4a",
+   "seconds": 15.5,
+   "words": [
+    {
+     "w": "Athens",
+     "at": 0.4
+    },
+    {
+     "w": "2004",
+     "at": 0.95
+    },
+    {
+     "w": "the",
+     "at": 2.2
+    },
+    {
+     "w": "Olympic",
+     "at": 2.325
+    },
+    {
+     "w": "final",
+     "at": 2.712
+    },
+    {
+     "w": "Argentina",
+     "at": 3.25
+    },
+    {
+     "w": "against",
+     "at": 3.95
+    },
+    {
+     "w": "Paraguay",
+     "at": 4.35
+    },
+    {
+     "w": "Fabricio",
+     "at": 5.388
+    },
+    {
+     "w": "Coloccini",
+     "at": 6.013
+    },
+    {
+     "w": "breaks",
+     "at": 6.787
+    },
+    {
+     "w": "out",
+     "at": 7.1
+    },
+    {
+     "w": "of",
+     "at": 7.237
+    },
+    {
+     "w": "defence",
+     "at": 7.325
+    },
+    {
+     "w": "The",
+     "at": 8.312
+    },
+    {
+     "w": "winger",
+     "at": 8.463
+    },
+    {
+     "w": "races",
+     "at": 8.8
+    },
+    {
+     "w": "down",
+     "at": 9.25
+    },
+    {
+     "w": "the",
+     "at": 9.488
+    },
+    {
+     "w": "right",
+     "at": 9.575
+    },
+    {
+     "w": "and",
+     "at": 9.9
+    },
+    {
+     "w": "crosses",
+     "at": 10.037
+    },
+    {
+     "w": "to",
+     "at": 10.525
+    },
+    {
+     "w": "the",
+     "at": 10.613
+    },
+    {
+     "w": "near",
+     "at": 10.7
+    },
+    {
+     "w": "post",
+     "at": 10.938
+    },
+    {
+     "w": "Carlos",
+     "at": 11.863
+    },
+    {
+     "w": "Tevez",
+     "at": 12.363
+    },
+    {
+     "w": "gets",
+     "at": 12.8
+    },
+    {
+     "w": "there",
+     "at": 13.012
+    },
+    {
+     "w": "first",
+     "at": 13.213
+    },
+    {
+     "w": "Goal",
+     "at": 14.137
+    }
+   ]
+  },
+  {
+   "label": "Watch Tevez",
+   "text": "Watch Tevez. He never stops moving. He runs between two defenders, toward the near post, just as the cross comes in.",
+   "src": "/plays/narration/tevez-olympic-final-2004/2.m4a",
+   "seconds": 8.6,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "Tevez",
+     "at": 0.713
+    },
+    {
+     "w": "He",
+     "at": 1.575
+    },
+    {
+     "w": "never",
+     "at": 1.7
+    },
+    {
+     "w": "stops",
+     "at": 1.95
+    },
+    {
+     "w": "moving",
+     "at": 2.325
+    },
+    {
+     "w": "He",
+     "at": 3.225
+    },
+    {
+     "w": "runs",
+     "at": 3.375
+    },
+    {
+     "w": "between",
+     "at": 3.675
+    },
+    {
+     "w": "two",
+     "at": 4.037
+    },
+    {
+     "w": "defenders",
+     "at": 4.25
+    },
+    {
+     "w": "toward",
+     "at": 4.95
+    },
+    {
+     "w": "the",
+     "at": 5.213
+    },
+    {
+     "w": "near",
+     "at": 5.3
+    },
+    {
+     "w": "post",
+     "at": 5.537
+    },
+    {
+     "w": "just",
+     "at": 6.112
+    },
+    {
+     "w": "as",
+     "at": 6.375
+    },
+    {
+     "w": "the",
+     "at": 6.513
+    },
+    {
+     "w": "cross",
+     "at": 6.6
+    },
+    {
+     "w": "comes",
+     "at": 6.975
+    },
+    {
+     "w": "in",
+     "at": 7.3
+    }
+   ]
+  },
+  {
+   "label": "The finish",
+   "text": "From six yards, he prods it in! His eighth goal of the Olympics, and Argentina win the gold!",
+   "src": "/plays/narration/tevez-olympic-final-2004/3.m4a",
+   "seconds": 6.8,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "six",
+     "at": 0.537
+    },
+    {
+     "w": "yards",
+     "at": 0.85
+    },
+    {
+     "w": "he",
+     "at": 1.45
+    },
+    {
+     "w": "prods",
+     "at": 1.575
+    },
+    {
+     "w": "it",
+     "at": 1.887
+    },
+    {
+     "w": "in",
+     "at": 1.975
+    },
+    {
+     "w": "His",
+     "at": 2.75
+    },
+    {
+     "w": "eighth",
+     "at": 2.962
+    },
+    {
+     "w": "goal",
+     "at": 3.25
+    },
+    {
+     "w": "of",
+     "at": 3.487
+    },
+    {
+     "w": "the",
+     "at": 3.562
+    },
+    {
+     "w": "Olympics",
+     "at": 3.675
+    },
+    {
+     "w": "and",
+     "at": 4.3
+    },
+    {
+     "w": "Argentina",
+     "at": 4.425
+    },
+    {
+     "w": "win",
+     "at": 5.075
+    },
+    {
+     "w": "the",
+     "at": 5.263
+    },
+    {
+     "w": "gold",
+     "at": 5.35
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: keep moving in the box, so you are ready the moment the chance arrives!",
+   "src": "/plays/narration/tevez-olympic-final-2004/4.m4a",
+   "seconds": 5.5,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "keep",
+     "at": 1.363
+    },
+    {
+     "w": "moving",
+     "at": 1.625
+    },
+    {
+     "w": "in",
+     "at": 1.913
+    },
+    {
+     "w": "the",
+     "at": 1.988
+    },
+    {
+     "w": "box",
+     "at": 2.075
+    },
+    {
+     "w": "so",
+     "at": 2.625
+    },
+    {
+     "w": "you",
+     "at": 2.75
+    },
+    {
+     "w": "are",
+     "at": 2.85
+    },
+    {
+     "w": "ready",
+     "at": 2.95
+    },
+    {
+     "w": "the",
+     "at": 3.163
+    },
+    {
+     "w": "moment",
+     "at": 3.25
+    },
+    {
+     "w": "the",
+     "at": 3.562
+    },
+    {
+     "w": "chance",
+     "at": 3.663
+    },
+    {
+     "w": "arrives",
+     "at": 4.0
+    }
+   ]
+  }
+ ]
+}

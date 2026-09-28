@@ -1,0 +1,370 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "First game",
+   "text": "Newcastle, 2023. Sandro Tonali's first Premier League game, against Aston Villa. He wins the ball in midfield, and keeps running. Anthony Gordon crosses from the left... Tonali slides in and volleys it home. Goal!",
+   "src": "/plays/narration/tonali-debut-2023/1.m4a",
+   "seconds": 16.0,
+   "words": [
+    {
+     "w": "Newcastle",
+     "at": 0.4
+    },
+    {
+     "w": "2023",
+     "at": 1.075
+    },
+    {
+     "w": "Sandro",
+     "at": 2.525
+    },
+    {
+     "w": "Tonali's",
+     "at": 3.0
+    },
+    {
+     "w": "first",
+     "at": 3.612
+    },
+    {
+     "w": "Premier",
+     "at": 3.925
+    },
+    {
+     "w": "League",
+     "at": 4.3
+    },
+    {
+     "w": "game",
+     "at": 4.55
+    },
+    {
+     "w": "against",
+     "at": 4.925
+    },
+    {
+     "w": "Aston",
+     "at": 5.312
+    },
+    {
+     "w": "Villa",
+     "at": 5.775
+    },
+    {
+     "w": "He",
+     "at": 6.575
+    },
+    {
+     "w": "wins",
+     "at": 6.725
+    },
+    {
+     "w": "the",
+     "at": 7.0
+    },
+    {
+     "w": "ball",
+     "at": 7.1
+    },
+    {
+     "w": "in",
+     "at": 7.412
+    },
+    {
+     "w": "midfield",
+     "at": 7.5
+    },
+    {
+     "w": "and",
+     "at": 8.137
+    },
+    {
+     "w": "keeps",
+     "at": 8.25
+    },
+    {
+     "w": "running",
+     "at": 8.562
+    },
+    {
+     "w": "Anthony",
+     "at": 9.338
+    },
+    {
+     "w": "Gordon",
+     "at": 9.8
+    },
+    {
+     "w": "crosses",
+     "at": 10.175
+    },
+    {
+     "w": "from",
+     "at": 10.625
+    },
+    {
+     "w": "the",
+     "at": 10.762
+    },
+    {
+     "w": "left",
+     "at": 10.85
+    },
+    {
+     "w": "Tonali",
+     "at": 11.7
+    },
+    {
+     "w": "slides",
+     "at": 12.25
+    },
+    {
+     "w": "in",
+     "at": 12.7
+    },
+    {
+     "w": "and",
+     "at": 12.95
+    },
+    {
+     "w": "volleys",
+     "at": 13.075
+    },
+    {
+     "w": "it",
+     "at": 13.5
+    },
+    {
+     "w": "home",
+     "at": 13.6
+    },
+    {
+     "w": "Goal",
+     "at": 14.525
+    }
+   ]
+  },
+  {
+   "label": "The late run",
+   "text": "Watch his run again. He comes from deep in midfield, and nobody follows him.",
+   "src": "/plays/narration/tonali-debut-2023/2.m4a",
+   "seconds": 5.7,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "his",
+     "at": 0.662
+    },
+    {
+     "w": "run",
+     "at": 0.825
+    },
+    {
+     "w": "again",
+     "at": 1.025
+    },
+    {
+     "w": "He",
+     "at": 1.8
+    },
+    {
+     "w": "comes",
+     "at": 1.925
+    },
+    {
+     "w": "from",
+     "at": 2.225
+    },
+    {
+     "w": "deep",
+     "at": 2.438
+    },
+    {
+     "w": "in",
+     "at": 2.712
+    },
+    {
+     "w": "midfield",
+     "at": 2.825
+    },
+    {
+     "w": "and",
+     "at": 3.55
+    },
+    {
+     "w": "nobody",
+     "at": 3.675
+    },
+    {
+     "w": "follows",
+     "at": 4.037
+    },
+    {
+     "w": "him",
+     "at": 4.438
+    }
+   ]
+  },
+  {
+   "label": "The volley",
+   "text": "From behind the goal: he stretches, meets the cross, and it flies past the keeper. Newcastle lead!",
+   "src": "/plays/narration/tonali-debut-2023/3.m4a",
+   "seconds": 7.1,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "behind",
+     "at": 0.487
+    },
+    {
+     "w": "the",
+     "at": 0.863
+    },
+    {
+     "w": "goal",
+     "at": 0.95
+    },
+    {
+     "w": "he",
+     "at": 1.625
+    },
+    {
+     "w": "stretches",
+     "at": 1.775
+    },
+    {
+     "w": "meets",
+     "at": 2.325
+    },
+    {
+     "w": "the",
+     "at": 2.587
+    },
+    {
+     "w": "cross",
+     "at": 2.675
+    },
+    {
+     "w": "and",
+     "at": 3.138
+    },
+    {
+     "w": "it",
+     "at": 3.237
+    },
+    {
+     "w": "flies",
+     "at": 3.337
+    },
+    {
+     "w": "past",
+     "at": 3.75
+    },
+    {
+     "w": "the",
+     "at": 4.062
+    },
+    {
+     "w": "keeper",
+     "at": 4.15
+    },
+    {
+     "w": "Newcastle",
+     "at": 5.05
+    },
+    {
+     "w": "lead",
+     "at": 5.7
+    }
+   ]
+  },
+  {
+   "label": "Arrive late",
+   "text": "Like Tonali: arrive late in the box. A midfielder's run is the hardest one for defenders to follow.",
+   "src": "/plays/narration/tonali-debut-2023/4.m4a",
+   "seconds": 7.6,
+   "words": [
+    {
+     "w": "Like",
+     "at": 0.4
+    },
+    {
+     "w": "Tonali",
+     "at": 0.637
+    },
+    {
+     "w": "arrive",
+     "at": 1.562
+    },
+    {
+     "w": "late",
+     "at": 1.988
+    },
+    {
+     "w": "in",
+     "at": 2.263
+    },
+    {
+     "w": "the",
+     "at": 2.337
+    },
+    {
+     "w": "box",
+     "at": 2.425
+    },
+    {
+     "w": "A",
+     "at": 3.337
+    },
+    {
+     "w": "midfielder's",
+     "at": 3.462
+    },
+    {
+     "w": "run",
+     "at": 4.125
+    },
+    {
+     "w": "is",
+     "at": 4.45
+    },
+    {
+     "w": "the",
+     "at": 4.588
+    },
+    {
+     "w": "hardest",
+     "at": 4.713
+    },
+    {
+     "w": "one",
+     "at": 5.175
+    },
+    {
+     "w": "for",
+     "at": 5.4
+    },
+    {
+     "w": "defenders",
+     "at": 5.525
+    },
+    {
+     "w": "to",
+     "at": 6.1
+    },
+    {
+     "w": "follow",
+     "at": 6.225
+    }
+   ]
+  }
+ ]
+}

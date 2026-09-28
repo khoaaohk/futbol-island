@@ -132,6 +132,8 @@
 
 /* Desktop tiles: the count's word always sits on its own line, so all three tiles line up ("39 / 55" then "found"). */
 @media(min-width:850px){.sideQuests [data-count-word]{display:block}}
+/* Phones/tablets: the two half-width cards (Ball hunt, Explore) always put the count word on its own line, so they match. */
+@media(max-width:849px){.sideQuests.sideQuests>button:not(:first-child) [data-count-word]{display:block}}
 /* The arrival art keeps its size when "How your journey works" opens: columns may not grow with their content. */
 .arrival{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}
 @media(max-width:600px){.arrival{grid-template-columns:minmax(0,1fr)}}

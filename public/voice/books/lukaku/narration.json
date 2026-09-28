@@ -1,0 +1,304 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "wintam": {
+      "src": "/voice/books/lukaku/wintam.m4a?v=coach-bella-1",
+      "duration": 42.7,
+      "scriptSha256": "96180d714369d5a3a53d11f7baef6e474822a6f3e3aa22536ff6a89db4ad1367",
+      "cues": [
+        {
+          "text": "When money ran out",
+          "start": 0.0,
+          "duration": 1.825
+        },
+        {
+          "text": "Romelu Lukaku was born in 1993 in Antwerp, Belgium.",
+          "start": 1.825,
+          "duration": 5.45
+        },
+        {
+          "text": "His parents came from Zaire, which is now called the DR Congo.",
+          "start": 7.275,
+          "duration": 4.725
+        },
+        {
+          "text": "His father, Roger, had been a professional footballer, and played for Zaire\u2019s national team.",
+          "start": 12.0,
+          "duration": 6.325
+        },
+        {
+          "text": "But from 1999, his father only played as an amateur, and money got very tight.",
+          "start": 18.325,
+          "duration": 6.4
+        },
+        {
+          "text": "The family, in Wintam, had to sell things and be careful with food.",
+          "start": 24.725,
+          "duration": 5.125
+        },
+        {
+          "text": "Sometimes they could not even pay for the electricity.",
+          "start": 29.85,
+          "duration": 4.15
+        },
+        {
+          "text": "Switch the lamp back on.",
+          "start": 34.0,
+          "duration": 2.2
+        },
+        {
+          "text": "When money is tight, it is never a child\u2019s fault. Families can get through hard times together.",
+          "start": 36.2,
+          "duration": 6.45
+        }
+      ]
+    },
+    "promise": {
+      "src": "/voice/books/lukaku/promise.m4a?v=coach-bella-1",
+      "duration": 37.5,
+      "scriptSha256": "59866563f7571aea1c26f0cf648b13bc3f4aa65585e26d00e0574a385c813009",
+      "cues": [
+        {
+          "text": "A promise to his mother",
+          "start": 0.0,
+          "duration": 2.175
+        },
+        {
+          "text": "In those hard days, Romelu decided that he would become a professional footballer, like his father.",
+          "start": 2.175,
+          "duration": 6.85
+        },
+        {
+          "text": "He had started playing at a local club, Rupel Boom, when he was very small.",
+          "start": 9.025,
+          "duration": 5.475
+        },
+        {
+          "text": "Fold the promise into a heart.",
+          "start": 14.5,
+          "duration": 2.525
+        },
+        {
+          "text": "He made a promise to his mother: he would be a professional player by the age of sixteen.",
+          "start": 17.025,
+          "duration": 5.725
+        },
+        {
+          "text": "At Lierse he scored 121 goals in 68 matches, and at thirteen he moved to the big club Anderlecht.",
+          "start": 22.75,
+          "duration": 8.225
+        },
+        {
+          "text": "A dream can give you hope on hard days. Make a plan, and take one small step at a time.",
+          "start": 30.975,
+          "duration": 6.45
+        }
+      ]
+    },
+    "deal": {
+      "src": "/voice/books/lukaku/deal.m4a?v=coach-bella-1",
+      "duration": 36.2,
+      "scriptSha256": "9e03d627d9708b74c05a64681646882cc30afc9cfd9e760e869ea5696d58f58e",
+      "cues": [
+        {
+          "text": "Asking for a chance",
+          "start": 0.0,
+          "duration": 2.05
+        },
+        {
+          "text": "At fifteen, Romelu wanted more time on the pitch in Anderlecht\u2019s youth team.",
+          "start": 2.05,
+          "duration": 5.45
+        },
+        {
+          "text": "So he made a deal with his coach.",
+          "start": 7.5,
+          "duration": 2.425
+        },
+        {
+          "text": "If he got more playing time, he would score at least 25 goals by December 2008.",
+          "start": 9.925,
+          "duration": 6.45
+        },
+        {
+          "text": "That was a very bold deal to make.",
+          "start": 16.375,
+          "duration": 2.75
+        },
+        {
+          "text": "Count the goals up to 25.",
+          "start": 19.125,
+          "duration": 2.6
+        },
+        {
+          "text": "Romelu worked hard, and he reached 25 goals in November, a month early.",
+          "start": 21.725,
+          "duration": 5.675
+        },
+        {
+          "text": "He had asked for a chance, and then he showed what he could do with it.",
+          "start": 27.4,
+          "duration": 4.35
+        },
+        {
+          "text": "It is okay to ask for a chance. Then give it your very best.",
+          "start": 31.75,
+          "duration": 4.45
+        }
+      ]
+    },
+    "sixteen": {
+      "src": "/voice/books/lukaku/sixteen.m4a?v=coach-bella-1",
+      "duration": 40.4,
+      "scriptSha256": "3fa17f05f1409f2cfad12dcc59059c5e357f2bbceefbe8159dbfea244e044c2d",
+      "cues": [
+        {
+          "text": "A promise kept",
+          "start": 0.0,
+          "duration": 1.8
+        },
+        {
+          "text": "On 13 May 2009, his sixteenth birthday, Romelu signed his first professional contract with Anderlecht.",
+          "start": 1.8,
+          "duration": 8.375
+        },
+        {
+          "text": "He had kept the promise that he made to his mother.",
+          "start": 10.175,
+          "duration": 3.45
+        },
+        {
+          "text": "Open the stadium doors.",
+          "start": 13.625,
+          "duration": 2.275
+        },
+        {
+          "text": "Just eleven days later, he played his first match for Anderlecht\u2019s first team.",
+          "start": 15.9,
+          "duration": 5.375
+        },
+        {
+          "text": "The next season, he was the top goalscorer in the Belgian league, and Anderlecht became the champions.",
+          "start": 21.275,
+          "duration": 7.0
+        },
+        {
+          "text": "In December 2009, he was voted Belgium\u2019s biggest young sports talent of the year.",
+          "start": 28.275,
+          "duration": 6.525
+        },
+        {
+          "text": "Keeping a promise takes time and hard work. Be proud of every step along the way.",
+          "start": 34.8,
+          "duration": 5.6
+        }
+      ]
+    },
+    "bench": {
+      "src": "/voice/books/lukaku/bench.m4a?v=coach-bella-1",
+      "duration": 38.7,
+      "scriptSha256": "e7ae284ac1fa1a208f8da584ef5d33bf30f855c180e69c713e8cb9bdc68f67d0",
+      "cues": [
+        {
+          "text": "Left on the bench",
+          "start": 0.0,
+          "duration": 2.05
+        },
+        {
+          "text": "In 2011, Romelu joined Chelsea in England, a club he had loved as a boy.",
+          "start": 2.05,
+          "duration": 6.325
+        },
+        {
+          "text": "But he hardly got to play, and spent most of his first season with the reserves.",
+          "start": 8.375,
+          "duration": 5.1
+        },
+        {
+          "text": "When Chelsea won the Champions League in 2012, he would not hold the trophy.",
+          "start": 13.475,
+          "duration": 5.4
+        },
+        {
+          "text": "He said it was not him, but his team that won.",
+          "start": 18.875,
+          "duration": 3.625
+        },
+        {
+          "text": "Swing the sign to a new club.",
+          "start": 22.5,
+          "duration": 2.45
+        },
+        {
+          "text": "Chelsea loaned him to West Bromwich Albion.",
+          "start": 24.95,
+          "duration": 3.2
+        },
+        {
+          "text": "There, he scored 17 goals, more than any Chelsea player that season.",
+          "start": 28.15,
+          "duration": 5.375
+        },
+        {
+          "text": "Being left out hurts. Keep working, and your chance can come somewhere new.",
+          "start": 33.525,
+          "duration": 5.1
+        }
+      ]
+    },
+    "voice": {
+      "src": "/voice/books/lukaku/voice.m4a?v=coach-bella-1",
+      "duration": 41.6,
+      "scriptSha256": "331c11c2069438a221f8a260b9dd48cde79423ca4c738332f01103fa33a87d8d",
+      "cues": [
+        {
+          "text": "Speaking up",
+          "start": 0.0,
+          "duration": 1.675
+        },
+        {
+          "text": "In 2019, Romelu moved to Inter Milan in Italy.",
+          "start": 1.675,
+          "duration": 4.575
+        },
+        {
+          "text": "In his first season, some fans shouted racist insults at him.",
+          "start": 6.25,
+          "duration": 4.9
+        },
+        {
+          "text": "Racism means treating someone unfairly because of the colour of their skin.",
+          "start": 11.15,
+          "duration": 5.65
+        },
+        {
+          "text": "Romelu spoke out, and asked football to do more against it.",
+          "start": 16.8,
+          "duration": 4.425
+        },
+        {
+          "text": "Raise the banner.",
+          "start": 21.225,
+          "duration": 1.85
+        },
+        {
+          "text": "In 2020, after scoring, he knelt and raised a fist to support Black Lives Matter.",
+          "start": 23.075,
+          "duration": 6.775
+        },
+        {
+          "text": "By then, the boy from Wintam was Belgium\u2019s all-time top goalscorer.",
+          "start": 29.85,
+          "duration": 5.1
+        },
+        {
+          "text": "Racism is never okay. If you see it or feel it, speak up, and tell a grown-up you trust.",
+          "start": 34.95,
+          "duration": 6.65
+        }
+      ]
+    }
+  }
+}

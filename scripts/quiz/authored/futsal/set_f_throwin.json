@@ -45,18 +45,18 @@
   {
    "q": "Put the kick-in plan in order, from first to last.",
    "options": [
-    "Set up two short options",
     "Kick up the line to the pivot",
     "Pivot passes back to the ala",
+    "Defender covers the line",
     "Ala uses the backup fixo"
    ],
    "correct": 0,
-   "explain": "Yes. Two options first, use the open one, then the backup when it gets covered.",
+   "explain": "Yes. Use the open option first, then the backup when the defender covers it.",
    "choiceExplanations": [
-    "Yes. Two options first, use the open one, then the backup when it gets covered.",
-    "Before the kick, gold sets up two short options.",
+    "Yes. Use the open option first, then the backup when the defender covers it.",
     "The pivot must receive the kick-in before passing it back.",
-    "The backup comes last, after blue covers the route up the line."
+    "The defender covers the line after the first pass has gone up it.",
+    "The backup comes last, once the defender covers the route up the line."
    ],
    "visual": {
     "kind": "order",

@@ -1,0 +1,386 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Port Elizabeth, 2010",
+   "text": "Port Elizabeth, 2010, the World Cup quarter-final: the Netherlands, in orange, against Brazil, in blue. Robben swings in a corner, Kuyt flicks it on at the near post, and there is Wesley Sneijder... header! Goal!",
+   "src": "/plays/narration/sneijder-brazil-2010/1.m4a",
+   "seconds": 14.7,
+   "words": [
+    {
+     "w": "Port",
+     "at": 0.325
+    },
+    {
+     "w": "Elizabeth",
+     "at": 0.512
+    },
+    {
+     "w": "2010",
+     "at": 1.1
+    },
+    {
+     "w": "the",
+     "at": 1.775
+    },
+    {
+     "w": "World",
+     "at": 1.875
+    },
+    {
+     "w": "Cup",
+     "at": 2.225
+    },
+    {
+     "w": "quarter-final",
+     "at": 2.475
+    },
+    {
+     "w": "the",
+     "at": 3.575
+    },
+    {
+     "w": "Netherlands",
+     "at": 3.675
+    },
+    {
+     "w": "in",
+     "at": 4.325
+    },
+    {
+     "w": "orange",
+     "at": 4.487
+    },
+    {
+     "w": "against",
+     "at": 5.013
+    },
+    {
+     "w": "Brazil",
+     "at": 5.35
+    },
+    {
+     "w": "in",
+     "at": 5.95
+    },
+    {
+     "w": "blue",
+     "at": 6.1
+    },
+    {
+     "w": "Robben",
+     "at": 7.0
+    },
+    {
+     "w": "swings",
+     "at": 7.425
+    },
+    {
+     "w": "in",
+     "at": 7.838
+    },
+    {
+     "w": "a",
+     "at": 7.912
+    },
+    {
+     "w": "corner",
+     "at": 7.975
+    },
+    {
+     "w": "Kuyt",
+     "at": 8.662
+    },
+    {
+     "w": "flicks",
+     "at": 8.988
+    },
+    {
+     "w": "it",
+     "at": 9.262
+    },
+    {
+     "w": "on",
+     "at": 9.35
+    },
+    {
+     "w": "at",
+     "at": 9.562
+    },
+    {
+     "w": "the",
+     "at": 9.637
+    },
+    {
+     "w": "near",
+     "at": 9.725
+    },
+    {
+     "w": "post",
+     "at": 9.963
+    },
+    {
+     "w": "and",
+     "at": 10.5
+    },
+    {
+     "w": "there",
+     "at": 10.613
+    },
+    {
+     "w": "is",
+     "at": 10.75
+    },
+    {
+     "w": "Wesley",
+     "at": 10.912
+    },
+    {
+     "w": "Sneijder",
+     "at": 11.4
+    },
+    {
+     "w": "header",
+     "at": 12.488
+    },
+    {
+     "w": "Goal",
+     "at": 13.275
+    }
+   ]
+  },
+  {
+   "label": "The flick-on",
+   "text": "Watch again, slowly. Kuyt glances it on with his head, and Sneijder, only one metre seventy tall, is waiting in the space.",
+   "src": "/plays/narration/sneijder-brazil-2010/2.m4a",
+   "seconds": 9.0,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.262
+    },
+    {
+     "w": "Kuyt",
+     "at": 2.337
+    },
+    {
+     "w": "glances",
+     "at": 2.625
+    },
+    {
+     "w": "it",
+     "at": 3.062
+    },
+    {
+     "w": "on",
+     "at": 3.15
+    },
+    {
+     "w": "with",
+     "at": 3.337
+    },
+    {
+     "w": "his",
+     "at": 3.438
+    },
+    {
+     "w": "head",
+     "at": 3.6
+    },
+    {
+     "w": "and",
+     "at": 4.2
+    },
+    {
+     "w": "Sneijder",
+     "at": 4.35
+    },
+    {
+     "w": "only",
+     "at": 5.0
+    },
+    {
+     "w": "one",
+     "at": 5.312
+    },
+    {
+     "w": "metre",
+     "at": 5.55
+    },
+    {
+     "w": "seventy",
+     "at": 5.888
+    },
+    {
+     "w": "tall",
+     "at": 6.287
+    },
+    {
+     "w": "is",
+     "at": 6.775
+    },
+    {
+     "w": "waiting",
+     "at": 6.938
+    },
+    {
+     "w": "in",
+     "at": 7.338
+    },
+    {
+     "w": "the",
+     "at": 7.412
+    },
+    {
+     "w": "space",
+     "at": 7.513
+    }
+   ]
+  },
+  {
+   "label": "Two-one",
+   "text": "He nods it into the corner. Two-one to the Netherlands, and Brazil are out!",
+   "src": "/plays/narration/sneijder-brazil-2010/3.m4a",
+   "seconds": 5.5,
+   "words": [
+    {
+     "w": "He",
+     "at": 0.375
+    },
+    {
+     "w": "nods",
+     "at": 0.512
+    },
+    {
+     "w": "it",
+     "at": 0.863
+    },
+    {
+     "w": "into",
+     "at": 0.938
+    },
+    {
+     "w": "the",
+     "at": 1.113
+    },
+    {
+     "w": "corner",
+     "at": 1.2
+    },
+    {
+     "w": "Two-one",
+     "at": 2.1
+    },
+    {
+     "w": "to",
+     "at": 2.55
+    },
+    {
+     "w": "the",
+     "at": 2.638
+    },
+    {
+     "w": "Netherlands",
+     "at": 2.725
+    },
+    {
+     "w": "and",
+     "at": 3.525
+    },
+    {
+     "w": "Brazil",
+     "at": 3.65
+    },
+    {
+     "w": "are",
+     "at": 4.075
+    },
+    {
+     "w": "out",
+     "at": 4.2
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: at corners, find the space and attack the ball, even if you are small.",
+   "src": "/plays/narration/sneijder-brazil-2010/4.m4a",
+   "seconds": 5.9,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "at",
+     "at": 1.337
+    },
+    {
+     "w": "corners",
+     "at": 1.475
+    },
+    {
+     "w": "find",
+     "at": 2.175
+    },
+    {
+     "w": "the",
+     "at": 2.438
+    },
+    {
+     "w": "space",
+     "at": 2.538
+    },
+    {
+     "w": "and",
+     "at": 2.938
+    },
+    {
+     "w": "attack",
+     "at": 3.038
+    },
+    {
+     "w": "the",
+     "at": 3.4
+    },
+    {
+     "w": "ball",
+     "at": 3.5
+    },
+    {
+     "w": "even",
+     "at": 3.9
+    },
+    {
+     "w": "if",
+     "at": 4.138
+    },
+    {
+     "w": "you",
+     "at": 4.237
+    },
+    {
+     "w": "are",
+     "at": 4.325
+    },
+    {
+     "w": "small",
+     "at": 4.463
+    }
+   ]
+  }
+ ]
+}

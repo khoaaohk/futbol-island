@@ -1,0 +1,402 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Stoke, 2012",
+   "text": "Stoke, 2012, the Premier League: Stoke, in red and white stripes, against Manchester City, in sky blue. A long ball, Crouch heads it on, Pennant heads it back... Peter Crouch volleys from thirty yards. Goal!",
+   "src": "/plays/narration/crouch-man-city-2012/1.m4a",
+   "seconds": 14.9,
+   "words": [
+    {
+     "w": "Stoke",
+     "at": 0.375
+    },
+    {
+     "w": "2012",
+     "at": 0.75
+    },
+    {
+     "w": "the",
+     "at": 1.462
+    },
+    {
+     "w": "Premier",
+     "at": 1.55
+    },
+    {
+     "w": "League",
+     "at": 1.95
+    },
+    {
+     "w": "Stoke",
+     "at": 2.638
+    },
+    {
+     "w": "in",
+     "at": 3.175
+    },
+    {
+     "w": "red",
+     "at": 3.337
+    },
+    {
+     "w": "and",
+     "at": 3.675
+    },
+    {
+     "w": "white",
+     "at": 3.8
+    },
+    {
+     "w": "stripes",
+     "at": 4.05
+    },
+    {
+     "w": "against",
+     "at": 4.525
+    },
+    {
+     "w": "Manchester",
+     "at": 4.9
+    },
+    {
+     "w": "City",
+     "at": 5.513
+    },
+    {
+     "w": "in",
+     "at": 5.875
+    },
+    {
+     "w": "sky",
+     "at": 6.05
+    },
+    {
+     "w": "blue",
+     "at": 6.438
+    },
+    {
+     "w": "A",
+     "at": 7.3
+    },
+    {
+     "w": "long",
+     "at": 7.425
+    },
+    {
+     "w": "ball",
+     "at": 7.75
+    },
+    {
+     "w": "Crouch",
+     "at": 8.15
+    },
+    {
+     "w": "heads",
+     "at": 8.475
+    },
+    {
+     "w": "it",
+     "at": 8.713
+    },
+    {
+     "w": "on",
+     "at": 8.8
+    },
+    {
+     "w": "Pennant",
+     "at": 9.25
+    },
+    {
+     "w": "heads",
+     "at": 9.6
+    },
+    {
+     "w": "it",
+     "at": 9.838
+    },
+    {
+     "w": "back",
+     "at": 9.925
+    },
+    {
+     "w": "Peter",
+     "at": 10.75
+    },
+    {
+     "w": "Crouch",
+     "at": 11.1
+    },
+    {
+     "w": "volleys",
+     "at": 11.463
+    },
+    {
+     "w": "from",
+     "at": 11.925
+    },
+    {
+     "w": "thirty",
+     "at": 12.137
+    },
+    {
+     "w": "yards",
+     "at": 12.475
+    },
+    {
+     "w": "Goal",
+     "at": 13.45
+    }
+   ]
+  },
+  {
+   "label": "No look",
+   "text": "Watch again, slowly. He faces the corner flag, pops it up, and without looking at goal, volleys it across his body.",
+   "src": "/plays/narration/crouch-man-city-2012/2.m4a",
+   "seconds": 8.6,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.188
+    },
+    {
+     "w": "He",
+     "at": 2.25
+    },
+    {
+     "w": "faces",
+     "at": 2.413
+    },
+    {
+     "w": "the",
+     "at": 2.875
+    },
+    {
+     "w": "corner",
+     "at": 2.975
+    },
+    {
+     "w": "flag",
+     "at": 3.388
+    },
+    {
+     "w": "pops",
+     "at": 4.013
+    },
+    {
+     "w": "it",
+     "at": 4.312
+    },
+    {
+     "w": "up",
+     "at": 4.4
+    },
+    {
+     "w": "and",
+     "at": 4.9
+    },
+    {
+     "w": "without",
+     "at": 5.013
+    },
+    {
+     "w": "looking",
+     "at": 5.325
+    },
+    {
+     "w": "at",
+     "at": 5.6
+    },
+    {
+     "w": "goal",
+     "at": 5.7
+    },
+    {
+     "w": "volleys",
+     "at": 6.188
+    },
+    {
+     "w": "it",
+     "at": 6.638
+    },
+    {
+     "w": "across",
+     "at": 6.713
+    },
+    {
+     "w": "his",
+     "at": 7.037
+    },
+    {
+     "w": "body",
+     "at": 7.2
+    }
+   ]
+  },
+  {
+   "label": "Over Hart",
+   "text": "It dips over Joe Hart into the far top corner! Crouch said it was probably his best goal ever.",
+   "src": "/plays/narration/crouch-man-city-2012/3.m4a",
+   "seconds": 6.7,
+   "words": [
+    {
+     "w": "It",
+     "at": 0.35
+    },
+    {
+     "w": "dips",
+     "at": 0.512
+    },
+    {
+     "w": "over",
+     "at": 0.787
+    },
+    {
+     "w": "Joe",
+     "at": 1.038
+    },
+    {
+     "w": "Hart",
+     "at": 1.337
+    },
+    {
+     "w": "into",
+     "at": 1.688
+    },
+    {
+     "w": "the",
+     "at": 1.863
+    },
+    {
+     "w": "far",
+     "at": 1.962
+    },
+    {
+     "w": "top",
+     "at": 2.25
+    },
+    {
+     "w": "corner",
+     "at": 2.525
+    },
+    {
+     "w": "Crouch",
+     "at": 3.413
+    },
+    {
+     "w": "said",
+     "at": 3.775
+    },
+    {
+     "w": "it",
+     "at": 3.913
+    },
+    {
+     "w": "was",
+     "at": 3.987
+    },
+    {
+     "w": "probably",
+     "at": 4.125
+    },
+    {
+     "w": "his",
+     "at": 4.6
+    },
+    {
+     "w": "best",
+     "at": 4.787
+    },
+    {
+     "w": "goal",
+     "at": 5.15
+    },
+    {
+     "w": "ever",
+     "at": 5.4
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: keep your eyes on the dropping ball, and strike it cleanly before it bounces.",
+   "src": "/plays/narration/crouch-man-city-2012/4.m4a",
+   "seconds": 6.3,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "keep",
+     "at": 1.387
+    },
+    {
+     "w": "your",
+     "at": 1.613
+    },
+    {
+     "w": "eyes",
+     "at": 1.762
+    },
+    {
+     "w": "on",
+     "at": 2.087
+    },
+    {
+     "w": "the",
+     "at": 2.188
+    },
+    {
+     "w": "dropping",
+     "at": 2.275
+    },
+    {
+     "w": "ball",
+     "at": 2.75
+    },
+    {
+     "w": "and",
+     "at": 3.2
+    },
+    {
+     "w": "strike",
+     "at": 3.325
+    },
+    {
+     "w": "it",
+     "at": 3.612
+    },
+    {
+     "w": "cleanly",
+     "at": 3.737
+    },
+    {
+     "w": "before",
+     "at": 4.225
+    },
+    {
+     "w": "it",
+     "at": 4.588
+    },
+    {
+     "w": "bounces",
+     "at": 4.675
+    }
+   ]
+  }
+ ]
+}

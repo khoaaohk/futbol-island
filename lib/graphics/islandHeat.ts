@@ -16,11 +16,11 @@ export function createIslandHeat({renderer,sun,resolution,npcs,traffic,governed}
  const thinned=(car:Car)=>options.fewerAmbient&&governed&&!car.pickup&&(car.index%5===1||car.index%5===3);
  const applyLimit=()=>{const l=Math.min(settings.maxPixelRatio,spectating&&options.spectateDpr125&&governed?1.25:Infinity);if(l!==limitApplied){limitApplied=l;resolution.setLimit(l);}};
  // A tier's shadow size is a cap: phones start at 1024² (quality.ts), and tier 0 must never raise them back to 2048².
- const baseShadow=sun.shadow.mapSize.x,baseNormalBias=sun.shadow.normalBias;
+ const baseShadow=sun.shadow.mapSize.x;
  const restoreTraffic=()=>{for(const car of hidden)car.group.visible=true;hidden.clear();};
  const apply=(next:HeatTier)=>{
   tier=next;settings=TIERS[next];applyLimit();npcs.setDrawDistance(settings.npcDrawDistance);
-  const size=Math.min(baseShadow,settings.shadowSize);if(sun.shadow.mapSize.x!==size){sun.shadow.mapSize.set(size,size);if(baseNormalBias!==undefined)sun.shadow.normalBias=baseNormalBias*baseShadow/size;sun.shadow.map?.dispose();sun.shadow.map=null;}
+  const size=Math.min(baseShadow,settings.shadowSize);if(sun.shadow.mapSize.x!==size){const prev=sun.shadow.mapSize.x;sun.shadow.mapSize.set(size,size);if(sun.shadow.normalBias!==undefined)sun.shadow.normalBias*=prev/size;/* the fit sets 2 texels; keep 2 texels at the new size */sun.shadow.map?.dispose();sun.shadow.map=null;}
   renderer.shadowMap.autoUpdate=settings.shadowEvery<=1;renderer.shadowMap.needsUpdate=true;frame=0;
   if(settings.trafficDrawDistance===null)restoreTraffic();
  };

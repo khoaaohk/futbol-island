@@ -48,7 +48,7 @@ const throttled=()=>({interval:50,work:31});
 // 9. The ladder (quality pass, user decision Sep 26 2026): tier 0 = the device default (phones 1.75), 1 = 1.5, 2 = 1.25 + film 1.5,
 // 3 = still water, 4 = 24 fps. NO tier changes what is drawn per frame (flashing hotfix): shadows every frame, no distance hiding, ≥ 1.25.
 assert.deepEqual({...TIERS[0]},{cap30Everywhere:false,maxPixelRatio:Infinity,shadowEvery:1,shadowSize:2048,npcDrawDistance:null,trafficDrawDistance:null,staticAmbience:false,filmDpr:2,frameMs:1000/30});
-assert.equal(TIERS[1].maxPixelRatio,1.5);assert.equal(TIERS[1].filmDpr,2);assert.equal(TIERS[2].maxPixelRatio,1.25);assert.equal(TIERS[2].filmDpr,1.5);
+assert.equal(TIERS[1].maxPixelRatio,1.5);for(const t of [1,2,3,4])assert.equal(TIERS[t].shadowSize,1024,`tier ${t}: the phone's 1536² shadow map drops to 1024²`);assert.equal(TIERS[1].filmDpr,2);assert.equal(TIERS[2].maxPixelRatio,1.25);assert.equal(TIERS[2].filmDpr,1.5);
 for(const t of [0,1,2,3,4]){const x=TIERS[t];assert.equal(x.shadowEvery,1,`tier ${t}: shadows every frame`);assert.equal(x.npcDrawDistance,null);assert.equal(x.trafficDrawDistance,null);assert(x.maxPixelRatio>=1.25,`tier ${t}: pixel ratio ≥ 1.25 (thin limbs)`);}
 for(const t of [1,2,3,4])assert(TIERS[t].cap30Everywhere);assert(TIERS[3].staticAmbience&&TIERS[4].staticAmbience&&!TIERS[2].staticAmbience);
 assert.equal(TIERS[4].frameMs,1000/24);assert.equal(TIERS[3].frameMs,1000/30);assert.equal(H.LOWEST_TIER,4);
@@ -70,7 +70,7 @@ assert.equal(TIERS[4].frameMs,1000/24);assert.equal(TIERS[3].frameMs,1000/30);as
  const car=(i,x,pickup=false)=>({index:i,pickup,group:{visible:true,position:{x,z:0}}});const cars=[car(0,10),car(1,200),car(7,300,true),car(2,250)];
  const heat=createIslandHeat({renderer,sun,resolution:{setLimit:v=>limit=v},npcs:{setDrawDistance:v=>npc=v},traffic:{cars,rider:{index:2}},governed:true});
  for(const t of [0,1,2,3,4]){H.forceHeatTier(t);for(let i=0;i<6;i++){renderer.shadowMap.needsUpdate=false;heat.beforeRender({x:0,z:0});}
-  assert.equal(renderer.shadowMap.autoUpdate,true,`tier ${t}: shadows every frame`);assert(cars.every(c=>c.group.visible),`tier ${t}: no car hidden`);assert.equal(npc,null);assert.equal(sun.shadow.mapSize.x,2048);}
+  assert.equal(renderer.shadowMap.autoUpdate,true,`tier ${t}: shadows every frame`);assert(cars.every(c=>c.group.visible),`tier ${t}: no car hidden`);assert.equal(npc,null);assert.equal(sun.shadow.mapSize.x,t===0?2048:1024,`tier ${t}: shadow map (tier 0 = the device size, tiers 1+ ≤ 1024²)`);}
  H.forceHeatTier(1);assert.equal(limit,1.5);assert(heat.cap30);H.forceHeatTier(2);assert.equal(limit,1.25);assert.equal(heat.staticAmbience,false);H.forceHeatTier(3);assert(heat.staticAmbience);assert.equal(heat.frameMs,1000/30);H.forceHeatTier(4);assert.equal(heat.frameMs,1000/24);
  H.forceHeatTier(0);assert.equal(limit,Infinity);assert.equal(heat.frameMs,1000/30);heat.dispose();H.forceHeatTier(null);}
 // 12. Wiring (source checks).

@@ -1,0 +1,344 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "sock": {
+      "src": "/voice/books/pele/sock.m4a?v=coach-bella-1",
+      "duration": 41.7,
+      "scriptSha256": "48d14c7128d55efcb65800938c5bd444bfa7b5d1a1ed40671e0d4894df1ab414",
+      "cues": [
+        {
+          "text": "A ball made from a sock",
+          "start": 0.0,
+          "duration": 2.2
+        },
+        {
+          "text": "Edson Arantes do Nascimento, known as Pel\u00e9, was born in 1940 in Brazil.",
+          "start": 2.2,
+          "duration": 6.6
+        },
+        {
+          "text": "He grew up in poverty in the town of Bauru.",
+          "start": 8.8,
+          "duration": 3.275
+        },
+        {
+          "text": "As a boy, he earned money by serving in tea shops.",
+          "start": 12.075,
+          "duration": 3.925
+        },
+        {
+          "text": "His father, Dondinho, was a footballer, and he taught his son to play.",
+          "start": 16.0,
+          "duration": 5.0
+        },
+        {
+          "text": "Open our paper street.",
+          "start": 21.0,
+          "duration": 2.175
+        },
+        {
+          "text": "The family could not afford a proper ball.",
+          "start": 23.175,
+          "duration": 3.2
+        },
+        {
+          "text": "So Pel\u00e9 usually played with a grapefruit, or with a sock stuffed with newspaper and tied up.",
+          "start": 26.375,
+          "duration": 6.175
+        },
+        {
+          "text": "He played for several small teams, and he kept on playing.",
+          "start": 32.55,
+          "duration": 4.375
+        },
+        {
+          "text": "You do not need the best things to begin. Make the most of what you have.",
+          "start": 36.925,
+          "duration": 4.7
+        }
+      ]
+    },
+    "santos": {
+      "src": "/voice/books/pele/santos.m4a?v=coach-bella-1",
+      "duration": 41.8,
+      "scriptSha256": "010e28106562ba572cbb50a89a170751bc3754bc60525d0e6cbf77b8247a7bc9",
+      "cues": [
+        {
+          "text": "Too young?",
+          "start": 0.0,
+          "duration": 1.55
+        },
+        {
+          "text": "In Bauru, Pel\u00e9 also played futsal, a fast game on a small court.",
+          "start": 1.55,
+          "duration": 5.275
+        },
+        {
+          "text": "At one tournament, people first thought he was too young to play.",
+          "start": 6.825,
+          "duration": 4.25
+        },
+        {
+          "text": "He ended up as the top scorer.",
+          "start": 11.075,
+          "duration": 2.575
+        },
+        {
+          "text": "He later said, \u201cThat gave me a lot of confidence\u201d.",
+          "start": 13.65,
+          "duration": 3.775
+        },
+        {
+          "text": "His youth coach, Waldemar de Brito, believed in him.",
+          "start": 17.425,
+          "duration": 4.075
+        },
+        {
+          "text": "In 1956, he took the fifteen-year-old to try out for Santos, a club by the sea.",
+          "start": 21.5,
+          "duration": 6.875
+        },
+        {
+          "text": "Ride the paper train to the coast.",
+          "start": 28.375,
+          "duration": 2.6
+        },
+        {
+          "text": "Pel\u00e9 impressed the coach, signed for Santos, and scored in his first game for the first team.",
+          "start": 30.975,
+          "duration": 6.4
+        },
+        {
+          "text": "When someone believes in you, it can help you believe in yourself.",
+          "start": 37.375,
+          "duration": 4.375
+        }
+      ]
+    },
+    "fiftyeight": {
+      "src": "/voice/books/pele/fiftyeight.m4a?v=coach-bella-1",
+      "duration": 42.5,
+      "scriptSha256": "224db25d597d5b3bd409e8c84c2f4be674f6718744893805953ba6deb91e3b62",
+      "cues": [
+        {
+          "text": "Waiting on the bench",
+          "start": 0.0,
+          "duration": 2.025
+        },
+        {
+          "text": "In 1958, Pel\u00e9 went to the World Cup in Sweden.",
+          "start": 2.025,
+          "duration": 4.55
+        },
+        {
+          "text": "He was only seventeen, and he arrived with a knee injury.",
+          "start": 6.575,
+          "duration": 4.275
+        },
+        {
+          "text": "He had to sit out Brazil\u2019s first two matches.",
+          "start": 10.85,
+          "duration": 3.275
+        },
+        {
+          "text": "A team psychologist even told the coach that Pel\u00e9 was too childish to play.",
+          "start": 14.125,
+          "duration": 5.275
+        },
+        {
+          "text": "The coach, Vicente Feola, chose to play him anyway.",
+          "start": 19.4,
+          "duration": 4.2
+        },
+        {
+          "text": "Send him on from the paper bench.",
+          "start": 23.6,
+          "duration": 2.675
+        },
+        {
+          "text": "Pel\u00e9 scored in the quarter-final and the semi-final, then twice in the final, as Brazil beat Sweden 5\u20132.",
+          "start": 26.275,
+          "duration": 7.7
+        },
+        {
+          "text": "At the end, he cried as his teammates congratulated him.",
+          "start": 33.975,
+          "duration": 4.55
+        },
+        {
+          "text": "When you are hurt, be patient. Your chance can still come.",
+          "start": 38.525,
+          "duration": 3.95
+        }
+      ]
+    },
+    "thousand": {
+      "src": "/voice/books/pele/thousand.m4a?v=coach-bella-1",
+      "duration": 39.9,
+      "scriptSha256": "711eeb70d07e8d6a1fdd2b7dede44e504c4febec974935484b54a9d6be0f5f5d",
+      "cues": [
+        {
+          "text": "Hurt again",
+          "start": 0.0,
+          "duration": 1.675
+        },
+        {
+          "text": "By the 1962 World Cup in Chile, many people thought Pel\u00e9 was the best player in the world.",
+          "start": 1.675,
+          "duration": 6.975
+        },
+        {
+          "text": "He scored in Brazil\u2019s first match.",
+          "start": 8.65,
+          "duration": 2.7
+        },
+        {
+          "text": "But in the next game, against Czechoslovakia, he was hurt while trying a long shot.",
+          "start": 11.35,
+          "duration": 5.85
+        },
+        {
+          "text": "He could not play again in that World Cup.",
+          "start": 17.2,
+          "duration": 2.95
+        },
+        {
+          "text": "Tap three times to cheer his teammates on.",
+          "start": 20.15,
+          "duration": 3.15
+        },
+        {
+          "text": "Brazil kept going and won the final.",
+          "start": 23.3,
+          "duration": 2.825
+        },
+        {
+          "text": "Back then, only players in the final got a medal.",
+          "start": 26.125,
+          "duration": 3.775
+        },
+        {
+          "text": "Many years later, in 2007, Pel\u00e9 was given his winner\u2019s medal too.",
+          "start": 29.9,
+          "duration": 5.95
+        },
+        {
+          "text": "Even when you cannot play, you are still part of the team.",
+          "start": 35.85,
+          "duration": 4.0
+        }
+      ]
+    },
+    "seventy": {
+      "src": "/voice/books/pele/seventy.m4a?v=coach-bella-1",
+      "duration": 42.6,
+      "scriptSha256": "3003736b2a308fcf5d154d43cf187dc40925df2a0d75b304c795f1da60c2a8b1",
+      "cues": [
+        {
+          "text": "Knocked down, back up",
+          "start": 0.0,
+          "duration": 2.1
+        },
+        {
+          "text": "At the 1966 World Cup in England, Bulgaria\u2019s players fouled Pel\u00e9 again and again, and he was hurt.",
+          "start": 2.1,
+          "duration": 8.075
+        },
+        {
+          "text": "Against Portugal, he was fouled twice more.",
+          "start": 10.175,
+          "duration": 3.5
+        },
+        {
+          "text": "Substitutes were not allowed then, so he limped on.",
+          "start": 13.675,
+          "duration": 3.725
+        },
+        {
+          "text": "Brazil went out, and Pel\u00e9 said he would never play at a World Cup again.",
+          "start": 17.4,
+          "duration": 5.125
+        },
+        {
+          "text": "But when Brazil asked, he came back.",
+          "start": 22.525,
+          "duration": 3.0
+        },
+        {
+          "text": "In the 1970 final in Mexico, he scored with a header, and Brazil beat Italy 4\u20131.",
+          "start": 25.525,
+          "duration": 7.225
+        },
+        {
+          "text": "Head the paper ball in.",
+          "start": 32.75,
+          "duration": 2.175
+        },
+        {
+          "text": "He is the only player to win three World Cups.",
+          "start": 34.925,
+          "duration": 3.4
+        },
+        {
+          "text": "A setback is not the end of the story. You can come back.",
+          "start": 38.325,
+          "duration": 4.225
+        }
+      ]
+    },
+    "king": {
+      "src": "/voice/books/pele/king.m4a?v=coach-bella-1",
+      "duration": 39.0,
+      "scriptSha256": "59626af325192a08d463dee910e2620a8e1dcbb6db129c3b5c6e366de2678109",
+      "cues": [
+        {
+          "text": "Helping others",
+          "start": 0.0,
+          "duration": 1.825
+        },
+        {
+          "text": "People called Pel\u00e9 O Rei, the King.",
+          "start": 1.825,
+          "duration": 2.8
+        },
+        {
+          "text": "The boy who grew up poor became a man who spoke up for poor people.",
+          "start": 4.625,
+          "duration": 4.675
+        },
+        {
+          "text": "He supported many children\u2019s charities, and in 2018 he started the Pel\u00e9 Foundation, to help with poverty and education around the world.",
+          "start": 9.3,
+          "duration": 9.7
+        },
+        {
+          "text": "Pel\u00e9 died in 2022, aged 82, after an illness.",
+          "start": 19.0,
+          "duration": 5.025
+        },
+        {
+          "text": "More than 230,000 people came to say goodbye.",
+          "start": 24.025,
+          "duration": 4.75
+        },
+        {
+          "text": "On our last page, children play on the street where it all began.",
+          "start": 28.775,
+          "duration": 4.575
+        },
+        {
+          "text": "Pass the ball on.",
+          "start": 33.35,
+          "duration": 1.9
+        },
+        {
+          "text": "When things go well for you, use it to help others.",
+          "start": 35.25,
+          "duration": 3.725
+        }
+      ]
+    }
+  }
+}

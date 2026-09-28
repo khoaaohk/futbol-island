@@ -4865,5 +4865,734 @@
   "national": {"team": "Italy", "from": 1997, "to": 2007},
   "source": "wiki-infobox",
   "checked": "2026-09-26"
+ },
+ "Luis Enrique": {
+  "clubs": [
+   {"club": "Barcelona B", "from": 2008, "to": 2011},
+   {"club": "Roma", "from": 2011, "to": 2012},
+   {"club": "Celta", "from": 2013, "to": 2014},
+   {"club": "Barcelona", "from": 2014, "to": 2017},
+   {"club": "Spain", "from": 2018, "to": 2019},
+   {"club": "Spain", "from": 2019, "to": 2022},
+   {"club": "Paris Saint-Germain", "from": 2023, "to": null}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox",
+  "checked": "2026-09-28"
+ },
+ "Mikel Arteta": {
+  "clubs": [
+   {"club": "Arsenal", "from": 2019, "to": null}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox",
+  "checked": "2026-09-28"
+ },
+ "Hansi Flick": {
+  "clubs": [
+   {"club": "Victoria Bammental", "from": 1996, "to": 2000},
+   {"club": "TSG Hoffenheim", "from": 2000, "to": 2005},
+   {"club": "Bayern Munich", "from": 2019, "to": 2021},
+   {"club": "Germany", "from": 2021, "to": 2023},
+   {"club": "Barcelona", "from": 2024, "to": null}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox",
+  "checked": "2026-09-28"
+ },
+ "Carlo Ancelotti": {
+  "clubs": [
+   {"club": "Italy (assistant)", "from": 1992, "to": 1995},
+   {"club": "Reggiana", "from": 1995, "to": 1996},
+   {"club": "Parma", "from": 1996, "to": 1998},
+   {"club": "Juventus", "from": 1999, "to": 2001},
+   {"club": "AC Milan", "from": 2001, "to": 2009},
+   {"club": "Chelsea", "from": 2009, "to": 2011},
+   {"club": "Paris Saint-Germain", "from": 2011, "to": 2013},
+   {"club": "Real Madrid", "from": 2013, "to": 2015},
+   {"club": "Bayern Munich", "from": 2016, "to": 2017},
+   {"club": "Napoli", "from": 2018, "to": 2019},
+   {"club": "Everton", "from": 2019, "to": 2021},
+   {"club": "Real Madrid", "from": 2021, "to": 2025},
+   {"club": "Brazil", "from": 2025, "to": null}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox",
+  "checked": "2026-09-28"
+ },
+ "Luis de la Fuente": {
+  "clubs": [
+   {"club": "Portugalete", "from": 1997, "to": 2000},
+   {"club": "Aurrerá", "from": 2000, "to": 2001},
+   {"club": "Bilbao Athletic", "from": 2006, "to": 2007},
+   {"club": "Bilbao Athletic", "from": 2009, "to": 2011},
+   {"club": "Alavés", "from": 2011, "to": 2011},
+   {"club": "Spain U19", "from": 2013, "to": 2018},
+   {"club": "Spain U21", "from": 2018, "to": 2022},
+   {"club": "Spain Olympic", "from": 2021, "to": 2021},
+   {"club": "Spain", "from": 2022, "to": null}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox",
+  "checked": "2026-09-28"
+ },
+ "Jürgen Klopp": {
+  "clubs": [
+   {"club": "Mainz 05", "from": 2001, "to": 2008},
+   {"club": "Borussia Dortmund", "from": 2008, "to": 2015},
+   {"club": "Liverpool", "from": 2015, "to": 2024},
+   {"club": "Germany", "from": 2026, "to": null}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox",
+  "checked": "2026-09-28"
+ },
+ "Zinedine Zidane (coach)": {
+  "clubs": [
+   {"club": "Real Madrid Castilla", "from": 2014, "to": 2016},
+   {"club": "Real Madrid", "from": 2016, "to": 2018},
+   {"club": "Real Madrid", "from": 2019, "to": 2021},
+   {"club": "France", "from": 2026, "to": null}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox",
+  "checked": "2026-09-28"
+ },
+ "José Mourinho": {
+  "clubs": [
+   {"club": "Benfica", "from": 2000, "to": 2000},
+   {"club": "União de Leiria", "from": 2001, "to": 2002},
+   {"club": "Porto", "from": 2002, "to": 2004},
+   {"club": "Chelsea", "from": 2004, "to": 2007},
+   {"club": "Inter Milan", "from": 2008, "to": 2010},
+   {"club": "Real Madrid", "from": 2010, "to": 2013},
+   {"club": "Chelsea", "from": 2013, "to": 2015},
+   {"club": "Manchester United", "from": 2016, "to": 2018},
+   {"club": "Tottenham Hotspur", "from": 2019, "to": 2021},
+   {"club": "Roma", "from": 2021, "to": 2024},
+   {"club": "Fenerbahçe", "from": 2024, "to": 2025},
+   {"club": "Benfica", "from": 2025, "to": 2026},
+   {"club": "Real Madrid", "from": 2026, "to": null}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox",
+  "checked": "2026-09-28"
+ },
+ "Diego Simeone": {
+  "clubs": [
+   {"club": "Racing Club", "from": 2006, "to": 2006},
+   {"club": "Estudiantes", "from": 2006, "to": 2007},
+   {"club": "River Plate", "from": 2007, "to": 2008},
+   {"club": "San Lorenzo", "from": 2009, "to": 2010},
+   {"club": "Catania", "from": 2011, "to": 2011},
+   {"club": "Racing Club", "from": 2011, "to": 2011},
+   {"club": "Atlético Madrid", "from": 2011, "to": null}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox",
+  "checked": "2026-09-28"
+ },
+ "Vincent Kompany (coach)": {
+  "clubs": [
+   {"club": "Anderlecht", "from": 2019, "to": 2019},
+   {"club": "Anderlecht", "from": 2020, "to": 2022},
+   {"club": "Burnley", "from": 2022, "to": 2024},
+   {"club": "Bayern Munich", "from": 2024, "to": null}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox",
+  "checked": "2026-09-28"
+ },
+ "Thomas Tuchel": {
+  "clubs": [
+   {"club": "FC Augsburg II", "from": 2007, "to": 2008},
+   {"club": "Mainz 05", "from": 2009, "to": 2014},
+   {"club": "Borussia Dortmund", "from": 2015, "to": 2017},
+   {"club": "Paris Saint-Germain", "from": 2018, "to": 2020},
+   {"club": "Chelsea", "from": 2021, "to": 2022},
+   {"club": "Bayern Munich", "from": 2023, "to": 2024},
+   {"club": "England", "from": 2025, "to": null}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox",
+  "checked": "2026-09-28"
+ },
+ "Lionel Scaloni": {
+  "clubs": [
+   {"club": "Argentina U20", "from": 2018, "to": 2018},
+   {"club": "Argentina", "from": 2018, "to": null}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox",
+  "checked": "2026-09-28"
+ },
+ "Xabi Alonso": {
+  "clubs": [
+   {"club": "Real Sociedad B", "from": 2019, "to": 2022},
+   {"club": "Bayer Leverkusen", "from": 2022, "to": 2025},
+   {"club": "Real Madrid", "from": 2025, "to": 2026},
+   {"club": "Chelsea", "from": 2026, "to": null}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox",
+  "checked": "2026-09-28"
+ },
+ "Enzo Maresca": {
+  "clubs": [
+   {"club": "Ascoli (assistant)", "from": 2017, "to": 2017},
+   {"club": "Sevilla (assistant)", "from": 2017, "to": 2018},
+   {"club": "West Ham United (assistant)", "from": 2018, "to": 2019},
+   {"club": "Manchester City U23", "from": 2020, "to": 2021},
+   {"club": "Parma", "from": 2021, "to": 2021},
+   {"club": "Manchester City (assistant)", "from": 2022, "to": 2023},
+   {"club": "Leicester City", "from": 2023, "to": 2024},
+   {"club": "Chelsea", "from": 2024, "to": 2026},
+   {"club": "Manchester City", "from": 2026, "to": null}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox",
+  "checked": "2026-09-28"
+ },
+ "Unai Emery": {
+  "clubs": [
+   {"club": "Lorca Deportiva", "from": 2004, "to": 2006},
+   {"club": "Almería", "from": 2006, "to": 2008},
+   {"club": "Valencia", "from": 2008, "to": 2012},
+   {"club": "Spartak Moscow", "from": 2012, "to": 2012},
+   {"club": "Sevilla", "from": 2013, "to": 2016},
+   {"club": "Paris Saint-Germain", "from": 2016, "to": 2018},
+   {"club": "Arsenal", "from": 2018, "to": 2019},
+   {"club": "Villarreal", "from": 2020, "to": 2022},
+   {"club": "Aston Villa", "from": 2022, "to": null}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox",
+  "checked": "2026-09-28"
+ },
+ "Andoni Iraola": {
+  "clubs": [
+   {"club": "AEK Larnaca", "from": 2018, "to": 2019},
+   {"club": "Mirandés", "from": 2019, "to": 2020},
+   {"club": "Rayo Vallecano", "from": 2020, "to": 2023},
+   {"club": "Bournemouth", "from": 2023, "to": 2026},
+   {"club": "Liverpool", "from": 2026, "to": null}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox",
+  "checked": "2026-09-28"
+ },
+ "Cristian Chivu": {
+  "clubs": [
+   {"club": "Inter Milan U14", "from": 2018, "to": 2019},
+   {"club": "Inter Milan U17", "from": 2019, "to": 2020},
+   {"club": "Inter Milan U18", "from": 2020, "to": 2021},
+   {"club": "Inter Milan U19", "from": 2021, "to": 2024},
+   {"club": "Parma", "from": 2025, "to": 2025},
+   {"club": "Inter Milan", "from": 2025, "to": null}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox",
+  "checked": "2026-09-28"
+ },
+ "Luciano Spalletti": {
+  "clubs": [
+   {"club": "Empoli", "from": 1993, "to": 1994},
+   {"club": "Empoli", "from": 1995, "to": 1998},
+   {"club": "Sampdoria", "from": 1998, "to": 1998},
+   {"club": "Sampdoria", "from": 1999, "to": 1999},
+   {"club": "Venezia", "from": 1999, "to": 1999},
+   {"club": "Venezia", "from": 1999, "to": 2000},
+   {"club": "Udinese", "from": 2001, "to": 2001},
+   {"club": "Ancona", "from": 2001, "to": 2002},
+   {"club": "Udinese", "from": 2002, "to": 2005},
+   {"club": "Roma", "from": 2005, "to": 2009},
+   {"club": "Zenit Saint Petersburg", "from": 2009, "to": 2014},
+   {"club": "Roma", "from": 2016, "to": 2017},
+   {"club": "Inter Milan", "from": 2017, "to": 2019},
+   {"club": "Napoli", "from": 2021, "to": 2023},
+   {"club": "Italy", "from": 2023, "to": 2025},
+   {"club": "Juventus", "from": 2025, "to": null}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox",
+  "checked": "2026-09-28"
+ },
+ "Massimiliano Allegri": {
+  "clubs": [
+   {"club": "Aglianese", "from": 2003, "to": 2004},
+   {"club": "SPAL", "from": 2004, "to": 2005},
+   {"club": "Grosseto", "from": 2005, "to": 2006},
+   {"club": "Grosseto", "from": 2006, "to": 2007},
+   {"club": "Sassuolo", "from": 2007, "to": 2008},
+   {"club": "Cagliari", "from": 2008, "to": 2010},
+   {"club": "AC Milan", "from": 2010, "to": 2014},
+   {"club": "Juventus", "from": 2014, "to": 2019},
+   {"club": "Juventus", "from": 2021, "to": 2024},
+   {"club": "AC Milan", "from": 2025, "to": 2026},
+   {"club": "Napoli", "from": 2026, "to": null}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox",
+  "checked": "2026-09-28"
+ },
+ "Rúben Amorim": {
+  "clubs": [
+   {"club": "Casa Pia", "from": 2018, "to": 2019},
+   {"club": "Braga B", "from": 2019, "to": 2019},
+   {"club": "Braga", "from": 2019, "to": 2020},
+   {"club": "Sporting CP", "from": 2020, "to": 2024},
+   {"club": "Manchester United", "from": 2024, "to": 2026},
+   {"club": "AC Milan", "from": 2026, "to": null}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox",
+  "checked": "2026-09-28"
+ },
+ "Michael Carrick": {
+  "clubs": [
+   {"club": "Manchester United (caretaker)", "from": 2021, "to": 2021},
+   {"club": "Middlesbrough", "from": 2022, "to": 2025},
+   {"club": "Manchester United", "from": 2026, "to": null}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox",
+  "checked": "2026-09-28"
+ },
+ "Sarina Wiegman": {
+  "clubs": [
+   {"club": "Ter Leede", "from": 2006, "to": 2007},
+   {"club": "ADO Den Haag", "from": 2007, "to": 2014},
+   {"club": "Netherlands (interim)", "from": 2015, "to": 2015},
+   {"club": "Netherlands", "from": 2016, "to": 2021},
+   {"club": "England", "from": 2021, "to": null}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox",
+  "checked": "2026-09-28"
+ },
+ "Emma Hayes": {
+  "clubs": [
+   {"club": "Long Island Lady Riders", "from": 2002, "to": 2002},
+   {"club": "Iona Gaels", "from": 2003, "to": 2005},
+   {"club": "Arsenal (assistant)", "from": 2005, "to": 2008},
+   {"club": "Chicago Red Stars", "from": 2008, "to": 2010},
+   {"club": "Chelsea", "from": 2012, "to": 2024},
+   {"club": "United States", "from": 2024, "to": null}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox",
+  "checked": "2026-09-28"
+ },
+ "Pere Romeu": {
+  "clubs": [
+   {"club": "Barcelona Femení", "from": 2024, "to": null}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox",
+  "checked": "2026-09-28"
+ },
+ "Jonatan Giráldez": {
+  "clubs": [
+   {"club": "Barcelona Femení (assistant)", "from": 2019, "to": 2021},
+   {"club": "Barcelona Femení", "from": 2021, "to": 2024},
+   {"club": "Washington Spirit", "from": 2024, "to": 2025},
+   {"club": "OL Lyonnes", "from": 2025, "to": null}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox",
+  "checked": "2026-09-28"
+ },
+ "Rinus Michels": {
+  "clubs": [
+   {"club": "Asser Boys", "from": 1953, "to": 1954},
+   {"club": "JOS", "from": 1960, "to": 1964},
+   {"club": "A.F.C.", "from": 1964, "to": 1965},
+   {"club": "Ajax", "from": 1965, "to": 1971},
+   {"club": "Barcelona", "from": 1971, "to": 1975},
+   {"club": "Netherlands", "from": 1974, "to": 1974},
+   {"club": "Ajax", "from": 1975, "to": 1976},
+   {"club": "Barcelona", "from": 1976, "to": 1978},
+   {"club": "Los Angeles Aztecs", "from": 1979, "to": 1980},
+   {"club": "1. FC Köln", "from": 1980, "to": 1983},
+   {"club": "Netherlands", "from": 1984, "to": 1985},
+   {"club": "Netherlands", "from": 1986, "to": 1988},
+   {"club": "Bayer Leverkusen", "from": 1988, "to": 1989},
+   {"club": "Netherlands", "from": 1990, "to": 1992}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox",
+  "checked": "2026-09-28"
+ },
+ "Alex Ferguson": {
+  "clubs": [
+   {"club": "East Stirlingshire", "from": 1974, "to": 1974},
+   {"club": "St Mirren", "from": 1974, "to": 1978},
+   {"club": "Aberdeen", "from": 1978, "to": 1986},
+   {"club": "Scotland", "from": 1985, "to": 1986},
+   {"club": "Manchester United", "from": 1986, "to": 2013}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox",
+  "checked": "2026-09-28"
+ },
+ "Arrigo Sacchi": {
+  "clubs": [
+   {"club": "Fusignano", "from": 1973, "to": 1976},
+   {"club": "Alfonsine", "from": 1976, "to": 1977},
+   {"club": "Bellaria", "from": 1977, "to": 1978},
+   {"club": "Rimini", "from": 1982, "to": 1983},
+   {"club": "Rimini", "from": 1984, "to": 1985},
+   {"club": "Parma", "from": 1985, "to": 1987},
+   {"club": "AC Milan", "from": 1987, "to": 1991}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox",
+  "checked": "2026-09-28"
+ },
+ "Johan Cruyff (coach)": {
+  "clubs": [
+   {"club": "Ajax", "from": 1985, "to": 1988},
+   {"club": "Barcelona", "from": 1988, "to": 1996},
+   {"club": "Catalonia", "from": 2009, "to": 2013}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox",
+  "checked": "2026-09-28"
+ },
+ "Pep Guardiola": {
+  "clubs": [
+   {"club": "Barcelona B", "from": 2007, "to": 2008},
+   {"club": "Barcelona", "from": 2008, "to": 2012},
+   {"club": "Bayern Munich", "from": 2013, "to": 2016},
+   {"club": "Manchester City", "from": 2016, "to": 2026}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox",
+  "checked": "2026-09-28"
+ },
+ "Bob Paisley": {
+  "clubs": [
+   {"club": "Liverpool (assistant manager)", "from": 1959, "to": 1973},
+   {"club": "Liverpool", "from": 1974, "to": 1983}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox",
+  "checked": "2026-09-28"
+ },
+ "Ernst Happel": {
+  "clubs": [
+   {"club": "ADO Den Haag", "from": 1962, "to": 1969},
+   {"club": "San Francisco Gales", "from": 1967, "to": 1967},
+   {"club": "Feyenoord", "from": 1969, "to": 1973},
+   {"club": "Sevilla", "from": 1973, "to": 1973},
+   {"club": "Club Brugge", "from": 1974, "to": 1978},
+   {"club": "Netherlands", "from": 1977, "to": 1978},
+   {"club": "Harelbeke", "from": 1979, "to": 1979},
+   {"club": "Standard Liège", "from": 1979, "to": 1981},
+   {"club": "Hamburger SV", "from": 1981, "to": 1987},
+   {"club": "Swarovski Tirol", "from": 1987, "to": 1991},
+   {"club": "Austria", "from": 1992, "to": 1992}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox",
+  "checked": "2026-09-28"
+ },
+ "Helenio Herrera": {
+  "clubs": [
+   {"club": "Puteaux", "from": 1944, "to": 1945},
+   {"club": "Stade Français", "from": 1945, "to": 1948},
+   {"club": "Real Valladolid", "from": 1948, "to": 1949},
+   {"club": "Atlético Madrid", "from": 1949, "to": 1952},
+   {"club": "Málaga", "from": 1952, "to": 1952},
+   {"club": "Deportivo de La Coruña", "from": 1953, "to": 1953},
+   {"club": "Sevilla", "from": 1953, "to": 1957},
+   {"club": "Belenenses", "from": 1957, "to": 1958},
+   {"club": "Barcelona", "from": 1958, "to": 1960},
+   {"club": "Spain", "from": 1960, "to": 1962},
+   {"club": "Inter Milan", "from": 1960, "to": 1968},
+   {"club": "Italy", "from": 1966, "to": 1967},
+   {"club": "Roma", "from": 1968, "to": 1970},
+   {"club": "Roma", "from": 1971, "to": 1972},
+   {"club": "Inter Milan", "from": 1973, "to": 1974},
+   {"club": "Rimini", "from": 1978, "to": 1979},
+   {"club": "Barcelona", "from": 1979, "to": 1981}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox",
+  "checked": "2026-09-28"
+ },
+ "Vicente del Bosque": {
+  "clubs": [
+   {"club": "Real Madrid Castilla", "from": 1987, "to": 1990},
+   {"club": "Real Madrid", "from": 1994, "to": 1994},
+   {"club": "Real Madrid (caretaker)", "from": 1996, "to": 1996},
+   {"club": "Real Madrid", "from": 1999, "to": 2003},
+   {"club": "Beşiktaş", "from": 2004, "to": 2005},
+   {"club": "Spain", "from": 2008, "to": 2016}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox",
+  "checked": "2026-09-28"
+ },
+ "Marcello Lippi": {
+  "clubs": [
+   {"club": "Napoli", "from": 1993, "to": 1994},
+   {"club": "Juventus", "from": 1994, "to": 1999},
+   {"club": "Inter Milan", "from": 1999, "to": 2000},
+   {"club": "Juventus", "from": 2001, "to": 2004},
+   {"club": "Italy", "from": 2004, "to": 2006},
+   {"club": "Italy", "from": 2008, "to": 2010},
+   {"club": "Guangzhou Evergrande", "from": 2012, "to": 2014},
+   {"club": "China", "from": 2016, "to": 2019}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox (main teams)",
+  "checked": "2026-09-28"
+ },
+ "Giovanni Trapattoni": {
+  "clubs": [
+   {"club": "AC Milan", "from": 1975, "to": 1976},
+   {"club": "Juventus", "from": 1976, "to": 1986},
+   {"club": "Inter Milan", "from": 1986, "to": 1991},
+   {"club": "Juventus", "from": 1991, "to": 1994},
+   {"club": "Bayern Munich", "from": 1994, "to": 1995},
+   {"club": "Cagliari", "from": 1995, "to": 1996},
+   {"club": "Bayern Munich", "from": 1996, "to": 1998},
+   {"club": "Fiorentina", "from": 1998, "to": 2000},
+   {"club": "Italy", "from": 2000, "to": 2004},
+   {"club": "Benfica", "from": 2004, "to": 2005},
+   {"club": "VfB Stuttgart", "from": 2005, "to": 2006},
+   {"club": "Red Bull Salzburg", "from": 2006, "to": 2008},
+   {"club": "Republic of Ireland", "from": 2008, "to": 2013}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox (main teams)",
+  "checked": "2026-09-28"
+ },
+ "Bill Shankly": {
+  "clubs": [
+   {"club": "Carlisle United", "from": 1949, "to": 1951},
+   {"club": "Grimsby Town", "from": 1951, "to": 1954},
+   {"club": "Workington", "from": 1954, "to": 1955},
+   {"club": "Huddersfield Town", "from": 1956, "to": 1959},
+   {"club": "Liverpool", "from": 1959, "to": 1974}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox",
+  "checked": "2026-09-28"
+ },
+ "Matt Busby": {
+  "clubs": [
+   {"club": "Manchester United", "from": 1945, "to": 1969},
+   {"club": "Great Britain", "from": 1948, "to": 1948},
+   {"club": "Scotland", "from": 1958, "to": 1958},
+   {"club": "Manchester United", "from": 1970, "to": 1971}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox",
+  "checked": "2026-09-28"
+ },
+ "Brian Clough": {
+  "clubs": [
+   {"club": "Hartlepools United", "from": 1965, "to": 1967},
+   {"club": "Derby County", "from": 1967, "to": 1973},
+   {"club": "Brighton & Hove Albion", "from": 1973, "to": 1974},
+   {"club": "Leeds United", "from": 1974, "to": 1974},
+   {"club": "Nottingham Forest", "from": 1975, "to": 1993}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox",
+  "checked": "2026-09-28"
+ },
+ "Arsène Wenger": {
+  "clubs": [
+   {"club": "Nancy", "from": 1984, "to": 1987},
+   {"club": "Monaco", "from": 1987, "to": 1994},
+   {"club": "Nagoya Grampus Eight", "from": 1995, "to": 1996},
+   {"club": "Arsenal", "from": 1996, "to": 2018}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox",
+  "checked": "2026-09-28"
+ },
+ "Valeriy Lobanovskyi": {
+  "clubs": [
+   {"club": "Dnipro Dnipropetrovsk", "from": 1969, "to": 1973},
+   {"club": "Dynamo Kyiv", "from": 1973, "to": 1982},
+   {"club": "Soviet Union", "from": 1975, "to": 1976},
+   {"club": "Ukrainian SSR", "from": 1979, "to": 1979},
+   {"club": "Soviet Union", "from": 1982, "to": 1983},
+   {"club": "Dynamo Kyiv", "from": 1984, "to": 1990},
+   {"club": "Soviet Union", "from": 1986, "to": 1990},
+   {"club": "United Arab Emirates", "from": 1990, "to": 1993},
+   {"club": "Kuwait", "from": 1994, "to": 1996},
+   {"club": "Dynamo Kyiv", "from": 1997, "to": 2002},
+   {"club": "Ukraine", "from": 2000, "to": 2001}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox",
+  "checked": "2026-09-28"
+ },
+ "Béla Guttmann": {
+  "clubs": [
+   {"club": "Hakoah Wien", "from": 1933, "to": 1935},
+   {"club": "Enschede", "from": 1935, "to": 1937},
+   {"club": "Hakoah Wien", "from": 1937, "to": 1938},
+   {"club": "Újpest", "from": 1938, "to": 1939},
+   {"club": "Vasas", "from": 1945, "to": 1945},
+   {"club": "Ciocanul București", "from": 1946, "to": 1946},
+   {"club": "Újpest", "from": 1947, "to": 1947},
+   {"club": "Kispest", "from": 1947, "to": 1948},
+   {"club": "Padova", "from": 1949, "to": 1950},
+   {"club": "Triestina", "from": 1950, "to": 1951},
+   {"club": "Quilmes", "from": 1953, "to": 1953},
+   {"club": "APOEL", "from": 1953, "to": 1953},
+   {"club": "Milan", "from": 1953, "to": 1955},
+   {"club": "Vicenza", "from": 1955, "to": 1956},
+   {"club": "Honvéd", "from": 1956, "to": 1957},
+   {"club": "São Paulo", "from": 1957, "to": 1958},
+   {"club": "Porto", "from": 1958, "to": 1959},
+   {"club": "Benfica", "from": 1959, "to": 1962},
+   {"club": "Peñarol", "from": 1962, "to": 1962},
+   {"club": "Austria", "from": 1964, "to": 1964},
+   {"club": "Benfica", "from": 1965, "to": 1966},
+   {"club": "Servette", "from": 1966, "to": 1967},
+   {"club": "Panathinaikos", "from": 1967, "to": 1967},
+   {"club": "Austria Wien", "from": 1973, "to": 1973},
+   {"club": "Porto", "from": 1973, "to": 1974}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox",
+  "checked": "2026-09-28"
+ },
+ "Vittorio Pozzo": {
+  "clubs": [
+   {"club": "Italy", "from": 1912, "to": 1912},
+   {"club": "Torino", "from": 1912, "to": 1922},
+   {"club": "Italy", "from": 1921, "to": 1921},
+   {"club": "Italy", "from": 1924, "to": 1924},
+   {"club": "AC Milan", "from": 1924, "to": 1926},
+   {"club": "Italy", "from": 1929, "to": 1948}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox",
+  "checked": "2026-09-28"
+ },
+ "Mário Zagallo": {
+  "clubs": [
+   {"club": "Botafogo", "from": 1966, "to": 1970},
+   {"club": "Brazil", "from": 1970, "to": 1974},
+   {"club": "Kuwait", "from": 1976, "to": 1978},
+   {"club": "Saudi Arabia", "from": 1981, "to": 1984},
+   {"club": "United Arab Emirates", "from": 1989, "to": 1990},
+   {"club": "Brazil", "from": 1994, "to": 1998}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox (main teams)",
+  "checked": "2026-09-28"
+ },
+ "Telê Santana": {
+  "clubs": [
+   {"club": "Fluminense", "from": 1969, "to": 1970},
+   {"club": "Atlético Mineiro", "from": 1970, "to": 1972},
+   {"club": "São Paulo", "from": 1973, "to": 1973},
+   {"club": "Atlético Mineiro", "from": 1973, "to": 1975},
+   {"club": "Botafogo", "from": 1976, "to": 1976},
+   {"club": "Grêmio", "from": 1976, "to": 1978},
+   {"club": "Palmeiras", "from": 1979, "to": 1980},
+   {"club": "Brazil", "from": 1980, "to": 1982},
+   {"club": "Al-Ahli", "from": 1983, "to": 1985},
+   {"club": "Brazil", "from": 1985, "to": 1986},
+   {"club": "Atlético Mineiro", "from": 1987, "to": 1988},
+   {"club": "Flamengo", "from": 1988, "to": 1989},
+   {"club": "Fluminense", "from": 1989, "to": 1989},
+   {"club": "Palmeiras", "from": 1990, "to": 1990},
+   {"club": "São Paulo", "from": 1990, "to": 1996}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox",
+  "checked": "2026-09-28"
+ },
+ "Jupp Heynckes": {
+  "clubs": [
+   {"club": "Borussia Mönchengladbach", "from": 1979, "to": 1987},
+   {"club": "Bayern Munich", "from": 1987, "to": 1991},
+   {"club": "Athletic Bilbao", "from": 1992, "to": 1994},
+   {"club": "Eintracht Frankfurt", "from": 1994, "to": 1995},
+   {"club": "Tenerife", "from": 1995, "to": 1997},
+   {"club": "Real Madrid", "from": 1997, "to": 1998},
+   {"club": "Benfica", "from": 1999, "to": 2000},
+   {"club": "Athletic Bilbao", "from": 2001, "to": 2003},
+   {"club": "Schalke 04", "from": 2003, "to": 2004},
+   {"club": "Borussia Mönchengladbach", "from": 2006, "to": 2007},
+   {"club": "Bayern Munich (caretaker)", "from": 2009, "to": 2009},
+   {"club": "Bayer Leverkusen", "from": 2009, "to": 2011},
+   {"club": "Bayern Munich", "from": 2011, "to": 2013},
+   {"club": "Bayern Munich", "from": 2017, "to": 2018}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox",
+  "checked": "2026-09-28"
+ },
+ "Alf Ramsey": {
+  "clubs": [
+   {"club": "Ipswich Town", "from": 1955, "to": 1963},
+   {"club": "England", "from": 1963, "to": 1974},
+   {"club": "Birmingham City", "from": 1977, "to": 1978},
+   {"club": "Panathinaikos (technical director)", "from": 1979, "to": 1980}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox",
+  "checked": "2026-09-28"
+ },
+ "Pia Sundhage": {
+  "clubs": [
+   {"club": "Hammarby IF (player-manager)", "from": 1992, "to": 1994},
+   {"club": "Vallentuna BK (assistant)", "from": 1998, "to": 1999},
+   {"club": "AIK Fotboll Dam (assistant)", "from": 2000, "to": 2000},
+   {"club": "Philadelphia Charge (assistant)", "from": 2001, "to": 2002},
+   {"club": "Boston Breakers", "from": 2003, "to": 2003},
+   {"club": "Kolbotn Fotball", "from": 2004, "to": 2004},
+   {"club": "KIF Örebro DFF", "from": 2005, "to": 2006},
+   {"club": "China (assistant)", "from": 2007, "to": 2007},
+   {"club": "United States", "from": 2007, "to": 2012},
+   {"club": "Sweden", "from": 2012, "to": 2017},
+   {"club": "Sweden U-17", "from": 2018, "to": 2019},
+   {"club": "Brazil", "from": 2019, "to": 2023},
+   {"club": "Switzerland", "from": 2024, "to": 2025},
+   {"club": "Haiti", "from": 2026, "to": null}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox",
+  "checked": "2026-09-28"
+ },
+ "Jill Ellis": {
+  "clubs": [
+   {"club": "NC State Wolfpack (assistant)", "from": 1988, "to": 1990},
+   {"club": "Maryland Terrapins (assistant)", "from": 1994, "to": 1996},
+   {"club": "Virginia Cavaliers (assistant)", "from": 1996, "to": 1997},
+   {"club": "Illinois Fighting Illini", "from": 1997, "to": 1998},
+   {"club": "UCLA Bruins", "from": 1999, "to": 2010},
+   {"club": "United States U21", "from": 2000, "to": 2000},
+   {"club": "United States U21", "from": 2005, "to": 2005},
+   {"club": "United States U20", "from": 2007, "to": 2007},
+   {"club": "United States (assistant)", "from": 2008, "to": 2008},
+   {"club": "United States U20", "from": 2009, "to": 2010},
+   {"club": "United States (assistant)", "from": 2011, "to": 2012},
+   {"club": "United States (interim)", "from": 2012, "to": 2012},
+   {"club": "United States (interim)", "from": 2014, "to": 2014},
+   {"club": "United States", "from": 2014, "to": 2019}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox",
+  "checked": "2026-09-28"
+ },
+ "Silvia Neid": {
+  "clubs": [
+   {"club": "Germany", "from": 2005, "to": 2016}
+  ],
+  "role": "coach",
+  "source": "wiki-infobox",
+  "checked": "2026-09-28"
  }
 }

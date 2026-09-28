@@ -47,7 +47,7 @@
    "options": [
     "Left rear carries into space",
     "Right rear tucks inside, behind the ball",
-    "Ball goes across to the right rear",
+    "Pass across, now the right rear carries",
     "Left rear tucks inside as support"
    ],
    "correct": 0,
@@ -55,7 +55,7 @@
    "choiceExplanations": [
     "Yes. The left rear carries first, and the right rear tucks in behind to support.",
     "The support move comes after the carry, so the teammate can stay behind the ball.",
-    "The pass across comes after the pair resets, once the first carry is done.",
+    "The pass across comes after the first carry, and then the right rear carries.",
     "This comes last: now the right rear carries, so the left rear becomes the support."
    ],
    "visual": {

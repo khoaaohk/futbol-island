@@ -3198,5 +3198,405 @@
       "Lives on the last defender",
       "Finishes any chance"
     ]
+  },
+  "Luis Enrique": {
+    "blurb": "Spanish coach who won the treble with Barcelona in 2015, then led PSG to their first Champions League titles in 2025 and 2026.",
+    "strengths": [
+      "Relentless team pressing",
+      "Brave young line-ups",
+      "Fast, direct attacks"
+    ]
+  },
+  "Mikel Arteta": {
+    "blurb": "Former Arsenal captain who became their manager in 2019 and led them to the 2026 Premier League title, their first league crown in 22 years.",
+    "strengths": [
+      "Rehearsed set pieces",
+      "Rock-solid defending",
+      "Clear team roles"
+    ]
+  },
+  "Hansi Flick": {
+    "blurb": "German coach who won six trophies in one year with Bayern Munich in 2020, then La Liga in 2025 and 2026 with Barcelona.",
+    "strengths": [
+      "Brave high line",
+      "Quick vertical passing",
+      "Trusting young players"
+    ]
+  },
+  "Carlo Ancelotti": {
+    "blurb": "Italian coach with a record five Champions League titles and league titles in all five of Europe’s top leagues. He coaches Brazil.",
+    "strengths": [
+      "Calm under pressure",
+      "Flexible tactics",
+      "Players trust him"
+    ]
+  },
+  "Luis de la Fuente": {
+    "blurb": "Spanish coach who grew Spain’s young players for years, then won Euro 2024 and the 2026 World Cup, the oldest coach ever to lift it.",
+    "strengths": [
+      "Knows every young player",
+      "Team first, no egos",
+      "Keeps Spain’s passing style"
+    ]
+  },
+  "Jürgen Klopp": {
+    "blurb": "German coach who won two Bundesliga titles with Dortmund, the 2019 Champions League and 2020 Premier League with Liverpool, and became Germany coach in 2026.",
+    "strengths": [
+      "Gegenpressing",
+      "Huge energy and belief",
+      "Building team spirit"
+    ]
+  },
+  "Zinedine Zidane (coach)": {
+    "blurb": "France’s 1998 World Cup hero became a coach and won three Champions Leagues in a row with Real Madrid (2016–2018). He took over France in September 2026.",
+    "strengths": [
+      "Calm leadership",
+      "Squad rotation",
+      "Big-game decisions"
+    ]
+  },
+  "José Mourinho": {
+    "blurb": "Portuguese coach who won the Champions League with Porto (2004) and Inter (2010), league titles in four countries, and returned to Real Madrid in 2026.",
+    "strengths": [
+      "Detailed game plans",
+      "Deadly counter-attacks",
+      "Winning big finals"
+    ]
+  },
+  "Diego Simeone": {
+    "blurb": "Argentine coach in charge of Atlético Madrid since 2011: two La Liga titles (2014, 2021), two Europa Leagues and two Champions League finals.",
+    "strengths": [
+      "Tight 4-4-2 block",
+      "Never-give-up spirit",
+      "Game-by-game focus"
+    ]
+  },
+  "Vincent Kompany (coach)": {
+    "blurb": "Belgium’s former Manchester City captain won the Championship with Burnley in 2023, then the Bundesliga with Bayern Munich in 2025 and 2026.",
+    "strengths": [
+      "Brave passing from the back",
+      "Attacking full-backs",
+      "Calm, clear leadership"
+    ]
+  },
+  "Thomas Tuchel": {
+    "blurb": "German coach who won the 2021 Champions League with Chelsea and league titles with PSG and Bayern. He has coached England since 2025.",
+    "strengths": [
+      "Tactical switches mid-game",
+      "Organised back three",
+      "Detailed opponent study"
+    ]
+  },
+  "Lionel Scaloni": {
+    "blurb": "Argentine coach who led Argentina to the 2021 and 2024 Copa América and the 2022 World Cup, and to the 2026 World Cup final.",
+    "strengths": [
+      "Team built around a star",
+      "Hard-working midfield",
+      "Strong squad bond"
+    ]
+  },
+  "Xabi Alonso": {
+    "blurb": "Spanish World Cup winner turned coach: his Bayer Leverkusen won the 2024 Bundesliga without losing a league game. He joined Chelsea in 2026.",
+    "strengths": [
+      "Flexible back three",
+      "Patient, clever passing",
+      "Calm under pressure"
+    ]
+  },
+  "Enzo Maresca": {
+    "blurb": "Italian coach, once Guardiola’s assistant, who won the Championship with Leicester and the Conference League and Club World Cup with Chelsea, then took over Man City in 2026.",
+    "strengths": [
+      "Patient possession",
+      "Inverted full-backs",
+      "Control of midfield"
+    ]
+  },
+  "Unai Emery": {
+    "blurb": "Spanish coach nicknamed “Mr Europa League”: he won it three times with Sevilla and once with Villarreal, and has led Aston Villa since 2022.",
+    "strengths": [
+      "Deep video study",
+      "Well-drilled defending",
+      "Cup-final expert"
+    ]
+  },
+  "Andoni Iraola": {
+    "blurb": "Spanish coach who won promotion with Rayo Vallecano and took Bournemouth into Europe for the first time, then became Liverpool head coach in 2026.",
+    "strengths": [
+      "Man-to-man pressing",
+      "Direct, fast attacks",
+      "Fit, intense teams"
+    ]
+  },
+  "Cristian Chivu": {
+    "blurb": "Romanian former Inter defender who won the 2010 treble as a player, coached Inter’s youth teams, and has been Inter’s head coach since 2025.",
+    "strengths": [
+      "Three at the back",
+      "Wing-backs who attack",
+      "Knows the club inside out"
+    ]
+  },
+  "Luciano Spalletti": {
+    "blurb": "Italian coach who won Napoli’s first Serie A title in 33 years (2023), coached Italy from 2023 to 2025 and now leads Juventus.",
+    "strengths": [
+      "Creative attacking ideas",
+      "Quick passing combinations",
+      "Brave tactical changes"
+    ]
+  },
+  "Massimiliano Allegri": {
+    "blurb": "Italian coach who won Serie A with Milan in 2011 and five in a row with Juventus (2015–2019), reaching two Champions League finals. He joined Napoli in 2026.",
+    "strengths": [
+      "Reading the game",
+      "Protecting a lead",
+      "Flexible formations"
+    ]
+  },
+  "Rúben Amorim": {
+    "blurb": "Portuguese coach who won Sporting’s first league title in 19 years (2021) and another in 2024, managed Manchester United and joined AC Milan in 2026.",
+    "strengths": [
+      "Clear 3-4-3 system",
+      "Wing-backs who attack",
+      "Trust in young players"
+    ]
+  },
+  "Michael Carrick": {
+    "blurb": "England midfielder who won the Premier League and the 2008 Champions League as a Manchester United player, coached Middlesbrough, and became United’s head coach in 2026.",
+    "strengths": [
+      "Calm possession",
+      "Switches of play",
+      "Developing young players"
+    ]
+  },
+  "Sarina Wiegman": {
+    "blurb": "Dutch coach who won Euro 2017 with the Netherlands, then Euro 2022 and Euro 2025 with England, and reached the World Cup final in 2019 and 2023.",
+    "strengths": [
+      "Clear player roles",
+      "Calm in big finals",
+      "Smart substitutions"
+    ]
+  },
+  "Emma Hayes": {
+    "blurb": "English coach who won seven Women’s Super League titles with Chelsea, then Olympic gold with the USA in 2024 in only her tenth game in charge.",
+    "strengths": [
+      "Adapts the game plan",
+      "Develops every player",
+      "Winning mentality"
+    ]
+  },
+  "Pere Romeu": {
+    "blurb": "Spanish coach who took over Barcelona Femení in 2024 and won the 2026 Champions League final 4–0 against OL Lyonnes.",
+    "strengths": [
+      "Positional passing",
+      "Quick ball recovery",
+      "Calm young leader"
+    ]
+  },
+  "Jonatan Giráldez": {
+    "blurb": "Spanish coach who won the Champions League with Barcelona Femení in 2023 and 2024, coached Washington Spirit, and leads OL Lyonnes.",
+    "strengths": [
+      "High pressing",
+      "Attacking possession",
+      "Winning trebles"
+    ]
+  },
+  "Rinus Michels": {
+    "blurb": "Dutch coach behind “Total Football”: he won the 1971 European Cup with Ajax and Euro 1988 with the Netherlands. FIFA named him Coach of the Century.",
+    "strengths": [
+      "Total Football",
+      "Pressing high as a team",
+      "Swapping positions"
+    ]
+  },
+  "Alex Ferguson": {
+    "blurb": "Scottish manager, knighted in 1999, who won 13 league titles and two Champions Leagues (1999, 2008) in 26 years at Manchester United.",
+    "strengths": [
+      "Building new teams",
+      "Trusting academy players",
+      "Never giving up"
+    ]
+  },
+  "Arrigo Sacchi": {
+    "blurb": "Italian coach who never played professionally but built the great AC Milan that won the European Cup in 1989 and 1990. He took Italy to the 1994 World Cup final.",
+    "strengths": [
+      "Compact zonal pressing",
+      "Offside trap",
+      "Hours of team drills"
+    ]
+  },
+  "Johan Cruyff (coach)": {
+    "blurb": "The Dutch legend coached Ajax to the 1987 Cup Winners’ Cup and built Barcelona’s “Dream Team”: four league titles in a row and the club’s first European Cup in 1992.",
+    "strengths": [
+      "Rondos and possession",
+      "Attacking 3-4-3",
+      "Youth academy vision"
+    ]
+  },
+  "Pep Guardiola": {
+    "blurb": "Catalan coach who won three Champions Leagues (Barcelona 2009 and 2011, Manchester City 2023), three Bundesligas and six Premier League titles before leaving City in 2026.",
+    "strengths": [
+      "Positional play",
+      "Pressing to win it back",
+      "Always a free passer"
+    ]
+  },
+  "Bob Paisley": {
+    "blurb": "English manager who spent almost his whole working life at Liverpool; in nine seasons as manager he won six league titles and three European Cups.",
+    "strengths": [
+      "Simple pass and move",
+      "Spotting talent",
+      "Calm, modest leader"
+    ]
+  },
+  "Ernst Happel": {
+    "blurb": "Austrian coach who won the European Cup with two different clubs, Feyenoord (1970) and Hamburg (1983), and took the Netherlands to the 1978 World Cup final.",
+    "strengths": [
+      "Offside trap",
+      "Pressing high",
+      "Few words, clear plans"
+    ]
+  },
+  "Helenio Herrera": {
+    "blurb": "Argentine-born French coach who led Inter to the European Cup in 1964 and 1965 with catenaccio, after two Spanish league titles with Barcelona.",
+    "strengths": [
+      "Catenaccio defence",
+      "Fast counter-attacks",
+      "Motivating players"
+    ]
+  },
+  "Vicente del Bosque": {
+    "blurb": "Spanish coach who won two Champions Leagues with Real Madrid (2000, 2002), then the 2010 World Cup and Euro 2012 with Spain.",
+    "strengths": [
+      "Keep the ball",
+      "Calm, kind leader",
+      "Keeping stars together"
+    ]
+  },
+  "Marcello Lippi": {
+    "blurb": "Italian coach who won the 1996 Champions League and five Serie A titles with Juventus, the 2006 World Cup with Italy, and the 2013 Asian Champions League.",
+    "strengths": [
+      "Team over stars",
+      "Solid, balanced shape",
+      "Clever substitutions"
+    ]
+  },
+  "Giovanni Trapattoni": {
+    "blurb": "Italian coach who won ten league titles in four countries, and with Juventus became the first coach to win all three UEFA club competitions.",
+    "strengths": [
+      "Mixed marking defence",
+      "Winning mentality",
+      "Long, successful career"
+    ]
+  },
+  "Bill Shankly": {
+    "blurb": "Scottish manager who took Liverpool from the Second Division to the top: three league titles, two FA Cups and the 1973 UEFA Cup.",
+    "strengths": [
+      "Pass-and-move football",
+      "Fierce team spirit",
+      "Small-sided training"
+    ]
+  },
+  "Matt Busby": {
+    "blurb": "Scottish manager who built the young “Busby Babes”, survived the 1958 Munich air disaster and led Manchester United to their first European Cup in 1968.",
+    "strengths": [
+      "Trusting young players",
+      "Attacking football",
+      "Rebuilding after tragedy"
+    ]
+  },
+  "Brian Clough": {
+    "blurb": "English manager who won the league with both Derby County and Nottingham Forest, then back-to-back European Cups with Forest in 1979 and 1980.",
+    "strengths": [
+      "Pass it on the ground",
+      "Simple, clear roles",
+      "Big belief in small clubs"
+    ]
+  },
+  "Arsène Wenger": {
+    "blurb": "French manager who won three Premier League titles and a record seven FA Cups with Arsenal, including the “Invincibles” season of 2003–04 with no league defeats.",
+    "strengths": [
+      "Fast one-touch passing",
+      "Sports science and diet",
+      "Spotting young talent"
+    ]
+  },
+  "Valeriy Lobanovskyi": {
+    "blurb": "Soviet-Ukrainian coach who used science and data at Dynamo Kyiv, winning the Cup Winners’ Cup in 1975 and 1986, and took the USSR to the Euro 1988 final.",
+    "strengths": [
+      "Planning with data",
+      "Pressing together",
+      "Every player has tasks"
+    ]
+  },
+  "Béla Guttmann": {
+    "blurb": "Hungarian coach who won the European Cup twice in a row with Benfica (1961, 1962) and coached clubs in more than ten countries.",
+    "strengths": [
+      "Attack-minded 4-2-4",
+      "Spotting talent",
+      "Coaching around the world"
+    ]
+  },
+  "Vittorio Pozzo": {
+    "blurb": "Italian coach who won the World Cup in 1934 and 1938, still the only coach to win it twice, plus Olympic gold in 1936.",
+    "strengths": [
+      "The metodo shape",
+      "Strict preparation",
+      "Team discipline"
+    ]
+  },
+  "Mário Zagallo": {
+    "blurb": "Brazilian who won the World Cup twice as a player (1958, 1962) and then coached Brazil to the 1970 title, the first person to win it as both.",
+    "strengths": [
+      "A winger who tracks back",
+      "Balance in attack",
+      "Managing star players"
+    ]
+  },
+  "Telê Santana": {
+    "blurb": "Brazilian coach famous for the attacking Brazil team of 1982, who later won two Copa Libertadores and two Intercontinental Cups with São Paulo.",
+    "strengths": [
+      "Joyful attacking football",
+      "Short passing and dribbles",
+      "Many players join attacks"
+    ]
+  },
+  "Jupp Heynckes": {
+    "blurb": "German coach who won the Champions League with Real Madrid (1998) and Bayern Munich (2013), when Bayern won the league, cup and Champions League treble.",
+    "strengths": [
+      "Balance attack and defence",
+      "Stars who work hard",
+      "Calm, respected leader"
+    ]
+  },
+  "Alf Ramsey": {
+    "blurb": "English manager, knighted after winning the 1966 World Cup with England, who had earlier won the league with little Ipswich Town in 1962.",
+    "strengths": [
+      "Wingless 4-4-2",
+      "Hard-working midfield",
+      "Strong team spirit"
+    ]
+  },
+  "Pia Sundhage": {
+    "blurb": "Swedish coach who led the USA to Olympic gold in 2008 and 2012 and Sweden to Olympic silver in 2016, then coached Brazil, Switzerland and Haiti.",
+    "strengths": [
+      "Confident possession",
+      "Happy team culture",
+      "Coaching across the world"
+    ]
+  },
+  "Jill Ellis": {
+    "blurb": "English-born American coach who won back-to-back Women’s World Cups with the USA in 2015 and 2019.",
+    "strengths": [
+      "Using the whole squad",
+      "Tournament planning",
+      "Attacking full-backs"
+    ]
+  },
+  "Silvia Neid": {
+    "blurb": "German who won three European Championships as a player, then coached Germany to the 2007 World Cup, Euro 2009 and 2013 and Olympic gold in 2016.",
+    "strengths": [
+      "Tight team defending",
+      "Winning duels",
+      "Tournament winner"
+    ]
   }
 }

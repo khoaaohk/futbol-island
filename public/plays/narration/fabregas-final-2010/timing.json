@@ -1,0 +1,390 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Extra time",
+   "text": "Johannesburg, 2010. The World Cup final is still nil nil, deep in extra time. Spain break forward, the ball bounces loose, and Cesc F\u00e0bregas finds Andr\u00e9s Iniesta in space.",
+   "src": "/plays/narration/fabregas-final-2010/1.m4a",
+   "seconds": 13.6,
+   "words": [
+    {
+     "w": "Johannesburg",
+     "at": 0.375
+    },
+    {
+     "w": "2010",
+     "at": 1.175
+    },
+    {
+     "w": "The",
+     "at": 2.362
+    },
+    {
+     "w": "World",
+     "at": 2.475
+    },
+    {
+     "w": "Cup",
+     "at": 2.775
+    },
+    {
+     "w": "final",
+     "at": 3.0
+    },
+    {
+     "w": "is",
+     "at": 3.35
+    },
+    {
+     "w": "still",
+     "at": 3.475
+    },
+    {
+     "w": "nil",
+     "at": 3.763
+    },
+    {
+     "w": "nil",
+     "at": 4.062
+    },
+    {
+     "w": "deep",
+     "at": 4.737
+    },
+    {
+     "w": "in",
+     "at": 5.05
+    },
+    {
+     "w": "extra",
+     "at": 5.2
+    },
+    {
+     "w": "time",
+     "at": 5.6
+    },
+    {
+     "w": "Spain",
+     "at": 6.638
+    },
+    {
+     "w": "break",
+     "at": 7.1
+    },
+    {
+     "w": "forward",
+     "at": 7.362
+    },
+    {
+     "w": "the",
+     "at": 7.912
+    },
+    {
+     "w": "ball",
+     "at": 8.0
+    },
+    {
+     "w": "bounces",
+     "at": 8.3
+    },
+    {
+     "w": "loose",
+     "at": 8.812
+    },
+    {
+     "w": "and",
+     "at": 9.45
+    },
+    {
+     "w": "Cesc",
+     "at": 9.588
+    },
+    {
+     "w": "F\u00e0bregas",
+     "at": 9.938
+    },
+    {
+     "w": "finds",
+     "at": 10.575
+    },
+    {
+     "w": "Andr\u00e9s",
+     "at": 10.912
+    },
+    {
+     "w": "Iniesta",
+     "at": 11.412
+    },
+    {
+     "w": "in",
+     "at": 11.975
+    },
+    {
+     "w": "space",
+     "at": 12.137
+    }
+   ]
+  },
+  {
+   "label": "The pass",
+   "text": "Watch F\u00e0bregas again. He lifts his head, sees Iniesta alone on the right, and slides the ball into his path. One touch, then a shot, into the corner! Spain are world champions!",
+   "src": "/plays/narration/fabregas-final-2010/2.m4a",
+   "seconds": 12.5,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "F\u00e0bregas",
+     "at": 0.7
+    },
+    {
+     "w": "again",
+     "at": 1.25
+    },
+    {
+     "w": "He",
+     "at": 2.025
+    },
+    {
+     "w": "lifts",
+     "at": 2.175
+    },
+    {
+     "w": "his",
+     "at": 2.462
+    },
+    {
+     "w": "head",
+     "at": 2.625
+    },
+    {
+     "w": "sees",
+     "at": 3.2
+    },
+    {
+     "w": "Iniesta",
+     "at": 3.55
+    },
+    {
+     "w": "alone",
+     "at": 4.025
+    },
+    {
+     "w": "on",
+     "at": 4.388
+    },
+    {
+     "w": "the",
+     "at": 4.487
+    },
+    {
+     "w": "right",
+     "at": 4.575
+    },
+    {
+     "w": "and",
+     "at": 4.95
+    },
+    {
+     "w": "slides",
+     "at": 5.1
+    },
+    {
+     "w": "the",
+     "at": 5.575
+    },
+    {
+     "w": "ball",
+     "at": 5.675
+    },
+    {
+     "w": "into",
+     "at": 5.987
+    },
+    {
+     "w": "his",
+     "at": 6.162
+    },
+    {
+     "w": "path",
+     "at": 6.338
+    },
+    {
+     "w": "One",
+     "at": 7.275
+    },
+    {
+     "w": "touch",
+     "at": 7.588
+    },
+    {
+     "w": "then",
+     "at": 8.125
+    },
+    {
+     "w": "a",
+     "at": 8.262
+    },
+    {
+     "w": "shot",
+     "at": 8.387
+    },
+    {
+     "w": "into",
+     "at": 8.787
+    },
+    {
+     "w": "the",
+     "at": 8.963
+    },
+    {
+     "w": "corner",
+     "at": 9.05
+    },
+    {
+     "w": "Spain",
+     "at": 9.988
+    },
+    {
+     "w": "are",
+     "at": 10.475
+    },
+    {
+     "w": "world",
+     "at": 10.625
+    },
+    {
+     "w": "champions",
+     "at": 10.912
+    }
+   ]
+  },
+  {
+   "label": "Head up",
+   "text": "Want to pass like F\u00e0bregas? Stay calm, even when your legs are tired. Look up before the ball arrives. Then pass into your teammate\u2019s path, not at his feet.",
+   "src": "/plays/narration/fabregas-final-2010/3.m4a",
+   "seconds": 10.9,
+   "words": [
+    {
+     "w": "Want",
+     "at": 0.35
+    },
+    {
+     "w": "to",
+     "at": 0.512
+    },
+    {
+     "w": "pass",
+     "at": 0.6
+    },
+    {
+     "w": "like",
+     "at": 0.95
+    },
+    {
+     "w": "F\u00e0bregas",
+     "at": 1.175
+    },
+    {
+     "w": "Stay",
+     "at": 2.25
+    },
+    {
+     "w": "calm",
+     "at": 2.587
+    },
+    {
+     "w": "even",
+     "at": 3.175
+    },
+    {
+     "w": "when",
+     "at": 3.438
+    },
+    {
+     "w": "your",
+     "at": 3.562
+    },
+    {
+     "w": "legs",
+     "at": 3.7
+    },
+    {
+     "w": "are",
+     "at": 3.987
+    },
+    {
+     "w": "tired",
+     "at": 4.088
+    },
+    {
+     "w": "Look",
+     "at": 5.1
+    },
+    {
+     "w": "up",
+     "at": 5.287
+    },
+    {
+     "w": "before",
+     "at": 5.475
+    },
+    {
+     "w": "the",
+     "at": 5.737
+    },
+    {
+     "w": "ball",
+     "at": 5.825
+    },
+    {
+     "w": "arrives",
+     "at": 6.125
+    },
+    {
+     "w": "Then",
+     "at": 7.112
+    },
+    {
+     "w": "pass",
+     "at": 7.362
+    },
+    {
+     "w": "into",
+     "at": 7.688
+    },
+    {
+     "w": "your",
+     "at": 7.875
+    },
+    {
+     "w": "teammate\u2019s",
+     "at": 8.037
+    },
+    {
+     "w": "path",
+     "at": 8.637
+    },
+    {
+     "w": "not",
+     "at": 9.125
+    },
+    {
+     "w": "at",
+     "at": 9.338
+    },
+    {
+     "w": "his",
+     "at": 9.412
+    },
+    {
+     "w": "feet",
+     "at": 9.588
+    }
+   ]
+  }
+ ]
+}

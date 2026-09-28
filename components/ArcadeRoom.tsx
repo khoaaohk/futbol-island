@@ -1,5 +1,6 @@
 'use client';
 import dynamic from 'next/dynamic';
+import ArcadeGameLoading from './ArcadeGameLoading';
 import {NavigationButton} from './DoneButton';
 import ArcadeLoading from './ArcadeLoading';
 import ArcadeCoinsPanel from './ArcadeCoinsPanel';
@@ -11,10 +12,12 @@ import type {createArcadeRoomScene,ArcadeRoomAction} from '@/lib/arcade/arcadeRo
 import styles from './ArcadeRoom.module.css';
 import {paintJoystick} from '@/lib/town/joystickFeedback';
 import {useJoystickBounds} from '@/lib/town/useJoystickBounds';
-const loading=()=> <div className={styles.loading} role="status">Opening your machine…</div>;
-const ArcadeGame=dynamic(()=>import('./games/ArcadeGame3D'),{ssr:false,loading});
-const PassPuzzle=dynamic(()=>import('./games/PassPuzzleGame'),{ssr:false,loading});
-const Strikers=dynamic(()=>import('./LiveArcadeMatch'),{ssr:false,loading});
+const Tennis=dynamic(()=>import('./games/ArcadeGame3D'),{ssr:false,loading:()=> <ArcadeGameLoading game="tennis"/>});
+const Pinball=dynamic(()=>import('./games/ArcadeGame3D'),{ssr:false,loading:()=> <ArcadeGameLoading game="pinball"/>});
+const Runner=dynamic(()=>import('./games/ArcadeGame3D'),{ssr:false,loading:()=> <ArcadeGameLoading game="runner"/>});
+const PassPuzzle=dynamic(()=>import('./games/PassPuzzleGame'),{ssr:false,loading:()=> <ArcadeGameLoading game="puzzle"/>});
+const Strikers=dynamic(()=>import('./LiveArcadeMatch'),{ssr:false,loading:()=> <ArcadeGameLoading game="live"/>});
+const gameComponents={tennis:Tennis,pinball:Pinball,runner:Runner};
 export default function ArcadeRoom(){
  const [socialNear,setSocialNear]=useState<number|null>(null);
  const [revealed,setRevealed]=useState(false),[entryDone,setEntryDone]=useState(false),[minimumLoadingDone,setMinimumLoadingDone]=useState(false);
@@ -40,6 +43,7 @@ export default function ArcadeRoom(){
  const actionButton=(kind:ArcadeRoomAction,className:string,label:string,key:string)=><button key={kind} className={className} data-arcade-action={kind} data-social={socialNear!==null} aria-label={label} title={`${label} · ${key}`} onContextMenu={e=>e.preventDefault()} onPointerDown={e=>{if(!ready||e.button!==0)return;e.preventDefault();e.currentTarget.dataset.actionUntil=String(performance.now()+700);e.currentTarget.setPointerCapture(e.pointerId);e.currentTarget.dataset.charging='true';room.current?.beginAction(kind);}} onPointerUp={e=>{e.preventDefault();e.currentTarget.dataset.actionUntil=String(performance.now()+700);delete e.currentTarget.dataset.charging;room.current?.endAction(kind);if(e.currentTarget.hasPointerCapture(e.pointerId))e.currentTarget.releasePointerCapture(e.pointerId);}} onPointerCancel={e=>{delete e.currentTarget.dataset.charging;room.current?.endAction(kind,true);}} onLostPointerCapture={e=>{delete e.currentTarget.dataset.charging;room.current?.endAction(kind,true);}} onClick={e=>{if(performance.now()<Number(e.currentTarget.dataset.actionUntil??0))return;room.current?.action(kind);}}>{kind==='wave'||kind==='applaud'||kind==='celebrate'?<Icon name={kind==='wave'?'gloves':kind==='applaud'?'handshake':'star'} size={28}/>:<TravelIcon kind={kind==='jump'?'jump':kind==='shoot'?'shoot':kind==='keepups'?'juggle':kind==='rainbow'?'spin':'ballFeint'}/>}</button>;
  const chosen=arcadeCabinets.find(c=>c.id===near);
  useEffect(()=>{if(revealed||!queryReady||!minimumLoadingDone)return;if(failed||game){setRevealed(true);return;}if(!ready)return;let frame=0;const reveal=()=>{if((room.current?.state.draws??0)>0)setRevealed(true);else frame=requestAnimationFrame(reveal);};frame=requestAnimationFrame(reveal);return()=>cancelAnimationFrame(frame);},[ready,failed,game,queryReady,revealed,minimumLoadingDone]);
+ const ArcadeGame=gameComponents[game==='tennis'||game==='runner'?game:'pinball'];
  return <main aria-label="The Arcade" className={styles.root} data-entering={!revealed} data-exiting={exiting} data-arcade-room={game?'playing':'room'}>
  {game?<div className={styles.game}>{game==='live'?<Strikers onExit={back}/>:game==='puzzle'?<PassPuzzle onExit={back}/>:<ArcadeGame kind={game} onExit={back}/>}</div>:<>
  <header className={styles.header}><NavigationButton back label="Exit" onNavigate={()=>leave()}/><div className={styles.headerActions}><button onClick={()=>setList(v=>!v)} aria-expanded={list} aria-controls="arcade-coins-panel"><span className={styles.buttonFace}>Coins</span></button></div></header>

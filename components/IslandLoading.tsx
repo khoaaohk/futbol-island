@@ -24,7 +24,6 @@ export default function IslandLoading({exiting=false}:{exiting?:boolean}){
     <div className={styles.copy}>
       <span className={styles.eyebrow}>PLAY · LEARN · GROW</span>
       <h2>Futbol Island</h2>
-      <p className={styles.tagline}>Learn football by playing</p>
       <span className="island-loading-track" aria-hidden="true"><span/></span>
     </div>
   </div>;

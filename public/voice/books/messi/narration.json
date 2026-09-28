@@ -1,0 +1,304 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "journey": {
+      "src": "/voice/books/messi/journey.m4a?v=coach-bella-1",
+      "duration": 43.2,
+      "scriptSha256": "b884ab238a0a9701976f529135d0a6b5dc05adc7b8239e09942fcf00886355fc",
+      "cues": [
+        {
+          "text": "Two hard things at once",
+          "start": 0.0,
+          "duration": 2.225
+        },
+        {
+          "text": "Lionel Messi grew up in Rosario, Argentina.",
+          "start": 2.225,
+          "duration": 3.975
+        },
+        {
+          "text": "His grandmother Celia went with him to training and matches.",
+          "start": 6.2,
+          "duration": 4.45
+        },
+        {
+          "text": "She died shortly before his eleventh birthday, and he was greatly affected.",
+          "start": 10.65,
+          "duration": 5.2
+        },
+        {
+          "text": "Ever since, when he scores, he looks up and points to the sky for her.",
+          "start": 15.85,
+          "duration": 5.025
+        },
+        {
+          "text": "At ten, doctors found that Messi had a growth hormone deficiency.",
+          "start": 20.875,
+          "duration": 5.05
+        },
+        {
+          "text": "At eleven he began treatment to help him grow, but his father\u2019s health insurance paid for only two years of it.",
+          "start": 25.925,
+          "duration": 7.6
+        },
+        {
+          "text": "Lift the cloud to find the star he points to.",
+          "start": 33.525,
+          "duration": 3.275
+        },
+        {
+          "text": "It\u2019s okay to feel sad. Talk to someone you trust, and keep remembering the people you love.",
+          "start": 36.8,
+          "duration": 6.35
+        }
+      ]
+    },
+    "touch": {
+      "src": "/voice/books/messi/touch.m4a?v=coach-bella-1",
+      "duration": 43.2,
+      "scriptSha256": "1b66414fd876ffc38071e2a6ee42ed80da07051ddeb8140567e114b810a2bb7c",
+      "cues": [
+        {
+          "text": "Far from home",
+          "start": 0.0,
+          "duration": 1.825
+        },
+        {
+          "text": "At thirteen, Messi moved from Rosario to Barcelona, Spain.",
+          "start": 1.825,
+          "duration": 4.75
+        },
+        {
+          "text": "In his first year he could rarely play matches.",
+          "start": 6.575,
+          "duration": 3.575
+        },
+        {
+          "text": "He was so quiet that some teammates thought he could not speak.",
+          "start": 10.15,
+          "duration": 3.925
+        },
+        {
+          "text": "When his mother, brothers and sister moved back to Rosario, he stayed with his father and felt homesick.",
+          "start": 14.075,
+          "duration": 7.05
+        },
+        {
+          "text": "In 2002 he could finally play in every competition, and he quickly made friends, including Cesc F\u00e0bregas and Gerard Piqu\u00e9.",
+          "start": 21.125,
+          "duration": 9.7
+        },
+        {
+          "text": "He finished his treatment at fourteen.",
+          "start": 30.825,
+          "duration": 2.75
+        },
+        {
+          "text": "Wave hello three times, one new friend at a time.",
+          "start": 33.575,
+          "duration": 3.925
+        },
+        {
+          "text": "Being new somewhere is hard. Say hello, ask for help, and give friendships time.",
+          "start": 37.5,
+          "duration": 5.625
+        }
+      ]
+    },
+    "setback": {
+      "src": "/voice/books/messi/setback.m4a?v=coach-bella-1",
+      "duration": 42.7,
+      "scriptSha256": "322e8f9bcdefb0506b012a8eef88869ca0b8021bbc24a18c0bf534e9462ebd31",
+      "cues": [
+        {
+          "text": "A hard final",
+          "start": 0.0,
+          "duration": 1.775
+        },
+        {
+          "text": "Years later, Messi was the captain of Argentina.",
+          "start": 1.775,
+          "duration": 3.9
+        },
+        {
+          "text": "In 2014, his team reached the World Cup final in Brazil, and Germany won 1\u20130.",
+          "start": 5.675,
+          "duration": 7.0
+        },
+        {
+          "text": "Messi received the Golden Ball, the award for the tournament\u2019s best player, but Argentina did not lift the trophy.",
+          "start": 12.675,
+          "duration": 8.0
+        },
+        {
+          "text": "A big prize and a painful loss arrived on the same day.",
+          "start": 20.675,
+          "duration": 4.425
+        },
+        {
+          "text": "Many people would feel sad after a day like that.",
+          "start": 25.1,
+          "duration": 3.625
+        },
+        {
+          "text": "Lift the scoreboard flap to find a message.",
+          "start": 28.725,
+          "duration": 3.25
+        },
+        {
+          "text": "After a hard loss, it helps to rest, take a breath and talk with someone you trust.",
+          "start": 31.975,
+          "duration": 5.65
+        },
+        {
+          "text": "You are more than one result, and one hard day is not the whole story.",
+          "start": 37.625,
+          "duration": 5.0
+        }
+      ]
+    },
+    "return": {
+      "src": "/voice/books/messi/return.m4a?v=coach-bella-1",
+      "duration": 39.1,
+      "scriptSha256": "10f23dd941f794175dc6df18a27dc06461a3006a76b17cb145b149643b89fef7",
+      "cues": [
+        {
+          "text": "Needing a break",
+          "start": 0.0,
+          "duration": 1.8
+        },
+        {
+          "text": "Then Argentina lost the Copa Am\u00e9rica final in 2015, and again in 2016.",
+          "start": 1.8,
+          "duration": 6.725
+        },
+        {
+          "text": "Losing three finals in three years led Messi to announce that he would stop playing for his national team.",
+          "start": 8.525,
+          "duration": 7.425
+        },
+        {
+          "text": "A nationwide campaign in Argentina helped convince him to return.",
+          "start": 15.95,
+          "duration": 5.275
+        },
+        {
+          "text": "In Buenos Aires, a statue of him was even put up to encourage him.",
+          "start": 21.225,
+          "duration": 5.175
+        },
+        {
+          "text": "Soon he came back.",
+          "start": 26.4,
+          "duration": 1.95
+        },
+        {
+          "text": "Open the paper bridge to bring him home to his waiting teammates.",
+          "start": 28.35,
+          "duration": 4.675
+        },
+        {
+          "text": "It\u2019s okay to need a break. The people who care about you can help you come back when you are ready.",
+          "start": 33.025,
+          "duration": 6.025
+        }
+      ]
+    },
+    "together": {
+      "src": "/voice/books/messi/together.m4a?v=coach-bella-1",
+      "duration": 40.0,
+      "scriptSha256": "70c893ede4b42e13e893d2529f9271f99bee36ffef205c83b311cd3e8621cc39",
+      "cues": [
+        {
+          "text": "Not alone",
+          "start": 0.0,
+          "duration": 1.65
+        },
+        {
+          "text": "In 2021, Argentina won the Copa Am\u00e9rica, the team\u2019s first big trophy in 28 years.",
+          "start": 1.65,
+          "duration": 7.675
+        },
+        {
+          "text": "Messi did not do it alone.",
+          "start": 9.325,
+          "duration": 2.5
+        },
+        {
+          "text": "Goalkeeper Emiliano Mart\u00ednez made three saves in the semifinal shootout against Colombia.",
+          "start": 11.825,
+          "duration": 7.025
+        },
+        {
+          "text": "In the final, \u00c1ngel Di Mar\u00eda scored the only goal as Argentina beat Brazil 1\u20130.",
+          "start": 18.85,
+          "duration": 6.5
+        },
+        {
+          "text": "Play the pass on this page and watch a teammate arrive, ready to help.",
+          "start": 25.35,
+          "duration": 4.8
+        },
+        {
+          "text": "After years of hard finals, sharing the load with friends made the difference.",
+          "start": 30.15,
+          "duration": 5.05
+        },
+        {
+          "text": "You don\u2019t have to carry everything alone. Let the people around you help.",
+          "start": 35.2,
+          "duration": 4.75
+        }
+      ]
+    },
+    "champions": {
+      "src": "/voice/books/messi/champions.m4a?v=coach-bella-1",
+      "duration": 39.5,
+      "scriptSha256": "cfaf82d7644233cfa8cefe84842a8bee2a99fef1b7d71b2bcd190378363818bf",
+      "cues": [
+        {
+          "text": "Together, at last",
+          "start": 0.0,
+          "duration": 2.075
+        },
+        {
+          "text": "The 2022 World Cup final was full of twists.",
+          "start": 2.075,
+          "duration": 4.375
+        },
+        {
+          "text": "Argentina and France finished extra time level at 3\u20133, with two goals from Messi.",
+          "start": 6.45,
+          "duration": 6.075
+        },
+        {
+          "text": "Argentina won the penalty shootout 4\u20132, and Messi and his teammates could finally lift the World Cup together.",
+          "start": 12.525,
+          "duration": 7.6
+        },
+        {
+          "text": "Raise the trophy and watch the whole team celebrate.",
+          "start": 20.125,
+          "duration": 3.95
+        },
+        {
+          "text": "The hard days are still part of this story: losing his grandmother, the treatment, feeling homesick and the lost finals.",
+          "start": 24.075,
+          "duration": 7.75
+        },
+        {
+          "text": "They were not the end of it.",
+          "start": 31.825,
+          "duration": 2.05
+        },
+        {
+          "text": "A setback isn\u2019t the end of your story. Celebrate the people who helped you keep going.",
+          "start": 33.875,
+          "duration": 5.575
+        }
+      ]
+    }
+  }
+}

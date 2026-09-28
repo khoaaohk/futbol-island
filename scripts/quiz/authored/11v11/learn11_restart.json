@@ -31,17 +31,17 @@
    "q": "Put the goal kick in order, from first to last.",
    "options": [
     "Two teammates offer different angles",
-    "Goalkeeper reads the opponent",
-    "Pass into the open route",
-    "Receiver opens toward the field"
+    "Opponent closes one of the routes",
+    "Keeper passes into the open route",
+    "Receiver takes it and turns upfield"
    ],
    "correct": 0,
-   "explain": "Yes. Two angles give choices, the keeper reads the opponent, then passes into the open route.",
+   "explain": "Yes. Two angles give choices, the opponent can only close one, so the keeper uses the other.",
    "choiceExplanations": [
-    "Yes. Two angles give choices, the keeper reads the opponent, then passes into the open route.",
-    "The keeper needs teammates offering angles first, or there is nothing to read.",
-    "The pass comes only after the goalkeeper has read which route the opponent blocks.",
-    "The receiver opens up once the ball arrives, so this is the last step."
+    "Yes. Two angles give choices, the opponent can only close one, so the keeper uses the other.",
+    "The opponent can only close a route once teammates are offering two of them.",
+    "The keeper passes after seeing which route the opponent has closed.",
+    "The receiver turns upfield last, once the pass has arrived."
    ],
    "visual": {
     "kind": "order",

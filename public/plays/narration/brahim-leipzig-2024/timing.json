@@ -1,0 +1,378 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Leipzig, 2024. Champions League: RB Leipzig against Real Madrid. Brahim D\u00edaz gets the ball out wide. He spins away from one defender, cuts past another, and another... then curls it in!",
+   "src": "/plays/narration/brahim-leipzig-2024/1.m4a",
+   "seconds": 15.0,
+   "words": [
+    {
+     "w": "Leipzig",
+     "at": 0.4
+    },
+    {
+     "w": "2024",
+     "at": 0.95
+    },
+    {
+     "w": "Champions",
+     "at": 2.275
+    },
+    {
+     "w": "League",
+     "at": 2.9
+    },
+    {
+     "w": "RB",
+     "at": 3.575
+    },
+    {
+     "w": "Leipzig",
+     "at": 3.95
+    },
+    {
+     "w": "against",
+     "at": 4.425
+    },
+    {
+     "w": "Real",
+     "at": 4.825
+    },
+    {
+     "w": "Madrid",
+     "at": 5.1
+    },
+    {
+     "w": "Brahim",
+     "at": 6.125
+    },
+    {
+     "w": "D\u00edaz",
+     "at": 6.662
+    },
+    {
+     "w": "gets",
+     "at": 7.05
+    },
+    {
+     "w": "the",
+     "at": 7.3
+    },
+    {
+     "w": "ball",
+     "at": 7.4
+    },
+    {
+     "w": "out",
+     "at": 7.725
+    },
+    {
+     "w": "wide",
+     "at": 7.95
+    },
+    {
+     "w": "He",
+     "at": 8.75
+    },
+    {
+     "w": "spins",
+     "at": 8.912
+    },
+    {
+     "w": "away",
+     "at": 9.275
+    },
+    {
+     "w": "from",
+     "at": 9.625
+    },
+    {
+     "w": "one",
+     "at": 9.825
+    },
+    {
+     "w": "defender",
+     "at": 10.05
+    },
+    {
+     "w": "cuts",
+     "at": 10.738
+    },
+    {
+     "w": "past",
+     "at": 11.062
+    },
+    {
+     "w": "another",
+     "at": 11.475
+    },
+    {
+     "w": "and",
+     "at": 11.9
+    },
+    {
+     "w": "another",
+     "at": 12.012
+    },
+    {
+     "w": "then",
+     "at": 12.875
+    },
+    {
+     "w": "curls",
+     "at": 13.137
+    },
+    {
+     "w": "it",
+     "at": 13.55
+    },
+    {
+     "w": "in",
+     "at": 13.675
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. Small, quick touches keep the ball close to his feet, so he can change direction the moment a defender comes.",
+   "src": "/plays/narration/brahim-leipzig-2024/2.m4a",
+   "seconds": 9.3,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.275
+    },
+    {
+     "w": "Small",
+     "at": 2.388
+    },
+    {
+     "w": "quick",
+     "at": 2.925
+    },
+    {
+     "w": "touches",
+     "at": 3.175
+    },
+    {
+     "w": "keep",
+     "at": 3.6
+    },
+    {
+     "w": "the",
+     "at": 3.812
+    },
+    {
+     "w": "ball",
+     "at": 3.9
+    },
+    {
+     "w": "close",
+     "at": 4.2
+    },
+    {
+     "w": "to",
+     "at": 4.5
+    },
+    {
+     "w": "his",
+     "at": 4.588
+    },
+    {
+     "w": "feet",
+     "at": 4.787
+    },
+    {
+     "w": "so",
+     "at": 5.425
+    },
+    {
+     "w": "he",
+     "at": 5.575
+    },
+    {
+     "w": "can",
+     "at": 5.675
+    },
+    {
+     "w": "change",
+     "at": 5.862
+    },
+    {
+     "w": "direction",
+     "at": 6.25
+    },
+    {
+     "w": "the",
+     "at": 6.8
+    },
+    {
+     "w": "moment",
+     "at": 6.9
+    },
+    {
+     "w": "a",
+     "at": 7.325
+    },
+    {
+     "w": "defender",
+     "at": 7.4
+    },
+    {
+     "w": "comes",
+     "at": 7.925
+    }
+   ]
+  },
+  {
+   "label": "Far corner",
+   "text": "His left-footed shot bends around Gul\u00e1csi, into the far corner. Real Madrid win one-nil.",
+   "src": "/plays/narration/brahim-leipzig-2024/3.m4a",
+   "seconds": 6.9,
+   "words": [
+    {
+     "w": "His",
+     "at": 0.35
+    },
+    {
+     "w": "left-footed",
+     "at": 0.525
+    },
+    {
+     "w": "shot",
+     "at": 1.087
+    },
+    {
+     "w": "bends",
+     "at": 1.4
+    },
+    {
+     "w": "around",
+     "at": 1.688
+    },
+    {
+     "w": "Gul\u00e1csi",
+     "at": 2.0
+    },
+    {
+     "w": "into",
+     "at": 2.85
+    },
+    {
+     "w": "the",
+     "at": 3.038
+    },
+    {
+     "w": "far",
+     "at": 3.138
+    },
+    {
+     "w": "corner",
+     "at": 3.4
+    },
+    {
+     "w": "Real",
+     "at": 4.35
+    },
+    {
+     "w": "Madrid",
+     "at": 4.675
+    },
+    {
+     "w": "win",
+     "at": 5.112
+    },
+    {
+     "w": "one-nil",
+     "at": 5.375
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: keep the ball close with small touches. Then you can change direction past each defender.",
+   "src": "/plays/narration/brahim-leipzig-2024/4.m4a",
+   "seconds": 7.4,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "keep",
+     "at": 1.275
+    },
+    {
+     "w": "the",
+     "at": 1.438
+    },
+    {
+     "w": "ball",
+     "at": 1.525
+    },
+    {
+     "w": "close",
+     "at": 1.825
+    },
+    {
+     "w": "with",
+     "at": 2.138
+    },
+    {
+     "w": "small",
+     "at": 2.312
+    },
+    {
+     "w": "touches",
+     "at": 2.675
+    },
+    {
+     "w": "Then",
+     "at": 3.688
+    },
+    {
+     "w": "you",
+     "at": 3.925
+    },
+    {
+     "w": "can",
+     "at": 4.025
+    },
+    {
+     "w": "change",
+     "at": 4.213
+    },
+    {
+     "w": "direction",
+     "at": 4.6
+    },
+    {
+     "w": "past",
+     "at": 5.138
+    },
+    {
+     "w": "each",
+     "at": 5.562
+    },
+    {
+     "w": "defender",
+     "at": 5.85
+    }
+   ]
+  }
+ ]
+}

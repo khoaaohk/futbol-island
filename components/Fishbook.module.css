@@ -1,0 +1,56 @@
+/* Fishbook dialog: island cream dialog (ModalShell) and shared --btn-* tokens. Solid backdrop (no blur over the island canvas). */
+@font-face{font-family:IslandBrush;src:url('/stories/films/assets/IslandBrush-Regular.ttf') format('truetype');font-display:swap}
+.dialog{border:0;padding:0;border-radius:24px;width:min(820px,calc(100vw - 32px));height:min(820px,calc(100dvh - 32px));max-width:none;max-height:calc(100dvh - 32px);background:#f7f0db;color:#244d40;box-shadow:0 24px 90px #152b3d66;overflow:hidden;overscroll-behavior:contain;font-family:inherit}
+.dialog::backdrop{background:#183c42a8}
+.panel{height:100%}
+.panel h2{font-family:IslandBrush,sans-serif;font-weight:400;font-size:clamp(22px,3vw,32px);letter-spacing:0}
+@media(max-width:600px),(pointer:coarse){.dialog{width:100vw;height:100dvh;max-height:100dvh;border-radius:0}}
+.book{display:flex;flex-direction:column;gap:14px}
+.intro{margin:0;font-size:14px;line-height:1.5}
+.grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.grid li{padding:14px;border-radius:20px 32px 20px 20px;background:#fff1d3;box-shadow:0 5px 0 #183b3424}
+.grid li[data-caught=false]{background:#eee6cc;box-shadow:none;border:2px dashed #d9cfae}
+.grid h3{margin:6px 0 2px;font-size:16px}
+.grid p{margin:2px 0;font-size:12px;line-height:1.45;color:#52634e}
+.eyebrow{font-size:10.5px!important;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#61705b!important}
+.fact{margin-top:8px;padding:10px 12px;border-radius:14px;background:#f7f0db;border:1px solid #e3dbbd}
+.credit{display:block;margin-top:4px;font-size:11px;color:#52634e}
+.club{color:#244d40!important;margin-top:6px!important}
+.tag{display:inline-block;padding:3px 8px;border-radius:10px;background:#244d40;color:#fff1d3;font-size:9.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+.keeper{padding:14px 16px;border-radius:18px 28px 18px 18px;background:#fff1d3;box-shadow:0 5px 0 #183b3424}
+.keeper h3{margin:0 0 4px;font-size:15px}
+.keeper p{margin:0;font-size:13px;line-height:1.5;color:#48604c}
+.help{margin:0;font-size:12px;line-height:1.5;color:#61705b}
+
+
+/* Same grain and illustrated coastal paper as NPC conversations. Native dialog
+   keeps focus contained, while the panel slides over a sleeping island. */
+.dialog{position:fixed;inset:0;margin:0;width:100%;height:100dvh;max-width:none;max-height:none;border-radius:0;background:transparent;box-shadow:none;overflow:hidden}
+.dialog[open]{display:flex;justify-content:flex-end}
+.dialog::backdrop{background:#163b426e}
+.dialog .panel{width:min(560px,100%);height:100%;max-height:100dvh;background:url('/stories/films/assets/entry-grain.png') center/160px repeat,#2e806d url('/stories/paths/conversation-coast.svg') center top/100% 1000px repeat-y!important;box-shadow:-12px 0 36px #16352a44}
+.dialog .header{background:transparent!important;border:0;color:#fff2cd}
+.dialog .header h2{font-size:34px}
+.intro{padding:16px 18px;border-radius:20px;background:#fff0cc url('/stories/films/assets/entry-grain.png') center/160px;box-shadow:0 4px 0 #143f4140;color:#244d40}
+.intro b{display:block;font-size:20px;margin-bottom:5px}
+.grid{grid-template-columns:minmax(0,1fr);gap:16px}
+.grid li{background:#b8dfe3 url('/stories/films/assets/entry-grain.png') center/160px;padding:18px 20px;border:2px solid #fff2cd80;box-shadow:0 5px 0 #173e454d}
+.grid li:nth-child(3n+2){background-color:#f1c7b4}.grid li:nth-child(3n){background-color:#f3da90}
+.grid li[data-caught=false]{background:#bed6bc url('/stories/films/assets/entry-grain.png') center/160px;border:2px dashed #fff2cd90;box-shadow:0 4px 0 #173e4526}
+.grid h3{font-size:20px}.grid p{font-size:14px;color:#2d5050}
+.eyebrow{font-size:12px!important;letter-spacing:.03em;color:#365b58!important}
+.fact{background:#fff2cdc9;border:0;padding:14px;border-radius:16px}
+.credit,.tag{font-size:12px}.tag{letter-spacing:.02em;text-transform:none}
+.keeper{background:#f3da90 url('/stories/films/assets/entry-grain.png') center/160px}.keeper h3{font-size:19px}.keeper p{font-size:14px}
+.help{color:#fff2cd;font-size:13px}
+.entering .panel{animation:bookSlideIn .32s cubic-bezier(.2,.8,.3,1) both}
+.leaving .panel{animation:bookSlideOut .24s ease-in both}
+@keyframes bookSlideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
+@keyframes bookSlideOut{to{transform:translateX(100%)}}
+@media(prefers-reduced-motion:reduce){.entering .panel,.leaving .panel{animation:none}}
+/* Keep island controls out of the backdrop, including the whole closing motion. */
+:global(.town-app):has(.dialog[open]) :global(.town-minimap),
+:global(.town-app):has(.dialog[open]) :global(.travel-actions),
+:global(.town-app):has(.dialog[open]) :global(.touch-controls),
+:global(.town-app):has(.dialog[open]) :global([data-fishing-hud]),
+:global(.town-app):has(.dialog[open]) :global([data-fish-catch]){visibility:hidden!important;pointer-events:none!important}

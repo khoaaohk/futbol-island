@@ -1,0 +1,299 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "claratown": {
+      "src": "/voice/books/weah/claratown.m4a?v=coach-bella-1",
+      "duration": 40.9,
+      "scriptSha256": "aa5fdc40468d9777353801f28e5f139056660439ac0db4d7be296b0194d3c5a1",
+      "cues": [
+        {
+          "text": "Grandma Emma\u2019s house",
+          "start": 0.0,
+          "duration": 2.075
+        },
+        {
+          "text": "George Weah was born on 1 October 1966 in Monrovia, the capital city of Liberia.",
+          "start": 2.075,
+          "duration": 7.325
+        },
+        {
+          "text": "He grew up in Clara Town, a very poor part of the city.",
+          "start": 9.4,
+          "duration": 4.25
+        },
+        {
+          "text": "When George was still a baby, his parents separated.",
+          "start": 13.65,
+          "duration": 3.925
+        },
+        {
+          "text": "Lift the roof to see who looked after him.",
+          "start": 17.575,
+          "duration": 3.1
+        },
+        {
+          "text": "George was one of thirteen children raised mostly by his grandmother, Emma Klonjlaleh Brown.",
+          "start": 20.675,
+          "duration": 6.5
+        },
+        {
+          "text": "In her home, lots of cousins, brothers and sisters grew up together, with very little money but plenty of company.",
+          "start": 27.175,
+          "duration": 8.0
+        },
+        {
+          "text": "Families come in many shapes. The people who care for you every day are your family.",
+          "start": 35.175,
+          "duration": 5.725
+        }
+      ]
+    },
+    "survivors": {
+      "src": "/voice/books/weah/survivors.m4a?v=coach-bella-1",
+      "duration": 43.4,
+      "scriptSha256": "c4a69819e8dc47f9ec8c4f72aa568f5c29efc9cdb9f6d53c2fa1f042f995424f",
+      "cues": [
+        {
+          "text": "The Young Survivors",
+          "start": 0.0,
+          "duration": 2.0
+        },
+        {
+          "text": "At fifteen, George began playing for a small club in Clara Town.",
+          "start": 2.0,
+          "duration": 5.075
+        },
+        {
+          "text": "Its name was Young Survivors.",
+          "start": 7.075,
+          "duration": 2.575
+        },
+        {
+          "text": "In 1982, in his first game, he scored two amazing goals, and that season he scored 34 goals in the fourth division.",
+          "start": 9.65,
+          "duration": 9.325
+        },
+        {
+          "text": "Climb the steps.",
+          "start": 18.975,
+          "duration": 1.75
+        },
+        {
+          "text": "Each promotion is a step up to a higher league.",
+          "start": 20.725,
+          "duration": 3.325
+        },
+        {
+          "text": "In three years with George, Young Survivors went up twice, from the fourth level of Liberian football to the second.",
+          "start": 24.05,
+          "duration": 7.85
+        },
+        {
+          "text": "Step by step, the little club from a poor neighbourhood kept climbing.",
+          "start": 31.9,
+          "duration": 4.7
+        },
+        {
+          "text": "Where you start is not where you have to stay. Small steps, one after another, can take you a long way.",
+          "start": 36.6,
+          "duration": 6.8
+        }
+      ]
+    },
+    "bench": {
+      "src": "/voice/books/weah/bench.m4a?v=coach-bella-1",
+      "duration": 41.8,
+      "scriptSha256": "62a184957745bacf926cd01e5c46f55e227149e7a57f9c9582f7f8bb99a409bd",
+      "cues": [
+        {
+          "text": "Left on the bench",
+          "start": 0.0,
+          "duration": 2.05
+        },
+        {
+          "text": "Later, George joined Mighty Barrolle, one of the biggest clubs in Liberia.",
+          "start": 2.05,
+          "duration": 5.25
+        },
+        {
+          "text": "He scored goals often, but he still was not picked to start most games.",
+          "start": 7.3,
+          "duration": 5.05
+        },
+        {
+          "text": "Before he played abroad, he also worked at Liberia\u2019s telephone company, as a switchboard operator.",
+          "start": 12.35,
+          "duration": 6.925
+        },
+        {
+          "text": "Slide him off the bench.",
+          "start": 19.275,
+          "duration": 2.125
+        },
+        {
+          "text": "In 1986 George moved to a rival club, Invincible Eleven, to get his chance.",
+          "start": 21.4,
+          "duration": 6.925
+        },
+        {
+          "text": "In 1987 they won the league, and George was the top scorer and the player of the season.",
+          "start": 28.325,
+          "duration": 7.075
+        },
+        {
+          "text": "Being left out hurts, but it doesn\u2019t mean you aren\u2019t good enough. Keep working, and look for a new chance.",
+          "start": 35.4,
+          "duration": 6.375
+        }
+      ]
+    },
+    "monaco": {
+      "src": "/voice/books/weah/monaco.m4a?v=coach-bella-1",
+      "duration": 46.1,
+      "scriptSha256": "396dafd2a8f86b75613ef7530f384faf1001075d4567d9426a0aa1c49ffa357b",
+      "cues": [
+        {
+          "text": "Someone who believed",
+          "start": 0.0,
+          "duration": 1.95
+        },
+        {
+          "text": "In 1987 George moved to Cameroon, to play for Tonnerre Yaound\u00e9, and scored twice in his first game.",
+          "start": 1.95,
+          "duration": 8.4
+        },
+        {
+          "text": "Cameroon\u2019s national coach, Claude Le Roy, noticed him and told Ars\u00e8ne Wenger, the manager of Monaco.",
+          "start": 10.35,
+          "duration": 7.425
+        },
+        {
+          "text": "Wenger flew to Africa to watch George play.",
+          "start": 17.775,
+          "duration": 3.5
+        },
+        {
+          "text": "Open the door to Monaco.",
+          "start": 21.275,
+          "duration": 2.275
+        },
+        {
+          "text": "In 1988 George signed for Monaco, and he has said Wenger was an important influence on his career.",
+          "start": 23.55,
+          "duration": 7.525
+        },
+        {
+          "text": "In 1989 he was named African Footballer of the Year, and he took the award home for all of Liberia to celebrate.",
+          "start": 31.075,
+          "duration": 8.55
+        },
+        {
+          "text": "When someone believes in you, it can change everything. Remember to thank the people who help you.",
+          "start": 39.625,
+          "duration": 6.425
+        }
+      ]
+    },
+    "onepoint": {
+      "src": "/voice/books/weah/onepoint.m4a?v=coach-bella-1",
+      "duration": 45.5,
+      "scriptSha256": "5635cd3b57ae470b19a25e1623d28e07d80b4b9260f66edd43d1e94532ba3790",
+      "cues": [
+        {
+          "text": "One point short",
+          "start": 0.0,
+          "duration": 1.9
+        },
+        {
+          "text": "In 1995 George became the first African player to win the Ballon d\u2019Or and FIFA World Player of the Year, and he dedicated the FIFA award to Ars\u00e8ne Wenger.",
+          "start": 1.9,
+          "duration": 11.475
+        },
+        {
+          "text": "But his home country, Liberia, was a small football nation, hurt by years of war.",
+          "start": 13.375,
+          "duration": 6.3
+        },
+        {
+          "text": "George played for Liberia, later coached the team, and even paid for much of it himself.",
+          "start": 19.675,
+          "duration": 6.225
+        },
+        {
+          "text": "Flip the points card.",
+          "start": 25.9,
+          "duration": 2.1
+        },
+        {
+          "text": "In qualifying for the 2002 World Cup, Liberia finished just one point short.",
+          "start": 28.0,
+          "duration": 6.475
+        },
+        {
+          "text": "George never played at a World Cup, but he did so much for his team.",
+          "start": 34.475,
+          "duration": 4.875
+        },
+        {
+          "text": "Sometimes you try your hardest and still fall short. That doesn\u2019t erase all the good you did.",
+          "start": 39.35,
+          "duration": 6.1
+        }
+      ]
+    },
+    "school": {
+      "src": "/voice/books/weah/school.m4a?v=coach-bella-1",
+      "duration": 43.0,
+      "scriptSha256": "b72d6ab1052720b2a817750b03117b5787e9ec6bbb58817e64efa56f1c128501",
+      "cues": [
+        {
+          "text": "School first",
+          "start": 0.0,
+          "duration": 1.725
+        },
+        {
+          "text": "Liberia suffered through long years of war.",
+          "start": 1.725,
+          "duration": 3.325
+        },
+        {
+          "text": "During his playing career, George became a Goodwill Ambassador for the United Nations, and he tried to use football to bring happiness to children in Liberia.",
+          "start": 5.05,
+          "duration": 10.3
+        },
+        {
+          "text": "Open the school doors.",
+          "start": 15.35,
+          "duration": 2.15
+        },
+        {
+          "text": "In 1994 George started a club in Monrovia called Junior Professional.",
+          "start": 17.5,
+          "duration": 5.875
+        },
+        {
+          "text": "There was only one rule to join: you had to go to school.",
+          "start": 23.375,
+          "duration": 4.05
+        },
+        {
+          "text": "Many of its young players went on to play for Liberia.",
+          "start": 27.425,
+          "duration": 3.85
+        },
+        {
+          "text": "In 2004 he won the Arthur Ashe Courage Award for his work.",
+          "start": 31.275,
+          "duration": 5.15
+        },
+        {
+          "text": "When life gets better for you, reach back and help others. Learning is a strength that stays with you.",
+          "start": 36.425,
+          "duration": 6.55
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,430 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Sofia, 2016: Arsenal and Ludogorets are level near the end. Mohamed Elneny sends a long ball over the defence. Mesut \u00d6zil is through! He lifts it over the keeper, sends two defenders sliding... and rolls it in!",
+   "src": "/plays/narration/ozil-ludogorets-2016/1.m4a",
+   "seconds": 16.0,
+   "words": [
+    {
+     "w": "Sofia",
+     "at": 0.375
+    },
+    {
+     "w": "2016",
+     "at": 0.925
+    },
+    {
+     "w": "Arsenal",
+     "at": 2.138
+    },
+    {
+     "w": "and",
+     "at": 2.7
+    },
+    {
+     "w": "Ludogorets",
+     "at": 2.825
+    },
+    {
+     "w": "are",
+     "at": 3.55
+    },
+    {
+     "w": "level",
+     "at": 3.7
+    },
+    {
+     "w": "near",
+     "at": 4.025
+    },
+    {
+     "w": "the",
+     "at": 4.25
+    },
+    {
+     "w": "end",
+     "at": 4.4
+    },
+    {
+     "w": "Mohamed",
+     "at": 5.312
+    },
+    {
+     "w": "Elneny",
+     "at": 5.862
+    },
+    {
+     "w": "sends",
+     "at": 6.412
+    },
+    {
+     "w": "a",
+     "at": 6.7
+    },
+    {
+     "w": "long",
+     "at": 6.812
+    },
+    {
+     "w": "ball",
+     "at": 7.237
+    },
+    {
+     "w": "over",
+     "at": 7.625
+    },
+    {
+     "w": "the",
+     "at": 7.838
+    },
+    {
+     "w": "defence",
+     "at": 7.925
+    },
+    {
+     "w": "Mesut",
+     "at": 8.963
+    },
+    {
+     "w": "\u00d6zil",
+     "at": 9.438
+    },
+    {
+     "w": "is",
+     "at": 9.9
+    },
+    {
+     "w": "through",
+     "at": 10.062
+    },
+    {
+     "w": "He",
+     "at": 10.775
+    },
+    {
+     "w": "lifts",
+     "at": 10.925
+    },
+    {
+     "w": "it",
+     "at": 11.213
+    },
+    {
+     "w": "over",
+     "at": 11.287
+    },
+    {
+     "w": "the",
+     "at": 11.488
+    },
+    {
+     "w": "keeper",
+     "at": 11.575
+    },
+    {
+     "w": "sends",
+     "at": 12.075
+    },
+    {
+     "w": "two",
+     "at": 12.412
+    },
+    {
+     "w": "defenders",
+     "at": 12.625
+    },
+    {
+     "w": "sliding",
+     "at": 13.188
+    },
+    {
+     "w": "and",
+     "at": 14.125
+    },
+    {
+     "w": "rolls",
+     "at": 14.25
+    },
+    {
+     "w": "it",
+     "at": 14.6
+    },
+    {
+     "w": "in",
+     "at": 14.725
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again. One soft touch slows the ball down. The keeper rushes out, so \u00d6zil dinks it over him!",
+   "src": "/plays/narration/ozil-ludogorets-2016/2.m4a",
+   "seconds": 7.7,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "One",
+     "at": 1.488
+    },
+    {
+     "w": "soft",
+     "at": 1.8
+    },
+    {
+     "w": "touch",
+     "at": 2.212
+    },
+    {
+     "w": "slows",
+     "at": 2.562
+    },
+    {
+     "w": "the",
+     "at": 2.938
+    },
+    {
+     "w": "ball",
+     "at": 3.025
+    },
+    {
+     "w": "down",
+     "at": 3.325
+    },
+    {
+     "w": "The",
+     "at": 4.175
+    },
+    {
+     "w": "keeper",
+     "at": 4.275
+    },
+    {
+     "w": "rushes",
+     "at": 4.65
+    },
+    {
+     "w": "out",
+     "at": 5.025
+    },
+    {
+     "w": "so",
+     "at": 5.375
+    },
+    {
+     "w": "\u00d6zil",
+     "at": 5.562
+    },
+    {
+     "w": "dinks",
+     "at": 5.925
+    },
+    {
+     "w": "it",
+     "at": 6.162
+    },
+    {
+     "w": "over",
+     "at": 6.237
+    },
+    {
+     "w": "him",
+     "at": 6.475
+    }
+   ]
+  },
+  {
+   "label": "The fake",
+   "text": "Two defenders race back to guard the goal. \u00d6zil pretends to shoot. They both slide... and he calmly rolls it past them into the net!",
+   "src": "/plays/narration/ozil-ludogorets-2016/3.m4a",
+   "seconds": 9.6,
+   "words": [
+    {
+     "w": "Two",
+     "at": 0.35
+    },
+    {
+     "w": "defenders",
+     "at": 0.575
+    },
+    {
+     "w": "race",
+     "at": 1.175
+    },
+    {
+     "w": "back",
+     "at": 1.5
+    },
+    {
+     "w": "to",
+     "at": 1.8
+    },
+    {
+     "w": "guard",
+     "at": 1.9
+    },
+    {
+     "w": "the",
+     "at": 2.138
+    },
+    {
+     "w": "goal",
+     "at": 2.225
+    },
+    {
+     "w": "\u00d6zil",
+     "at": 3.038
+    },
+    {
+     "w": "pretends",
+     "at": 3.45
+    },
+    {
+     "w": "to",
+     "at": 3.95
+    },
+    {
+     "w": "shoot",
+     "at": 4.112
+    },
+    {
+     "w": "They",
+     "at": 4.825
+    },
+    {
+     "w": "both",
+     "at": 4.95
+    },
+    {
+     "w": "slide",
+     "at": 5.25
+    },
+    {
+     "w": "and",
+     "at": 6.325
+    },
+    {
+     "w": "he",
+     "at": 6.438
+    },
+    {
+     "w": "calmly",
+     "at": 6.562
+    },
+    {
+     "w": "rolls",
+     "at": 7.0
+    },
+    {
+     "w": "it",
+     "at": 7.388
+    },
+    {
+     "w": "past",
+     "at": 7.487
+    },
+    {
+     "w": "them",
+     "at": 7.862
+    },
+    {
+     "w": "into",
+     "at": 7.987
+    },
+    {
+     "w": "the",
+     "at": 8.162
+    },
+    {
+     "w": "net",
+     "at": 8.25
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: stay calm in front of goal. One more touch can send the defenders sliding past!",
+   "src": "/plays/narration/ozil-ludogorets-2016/4.m4a",
+   "seconds": 6.8,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "stay",
+     "at": 1.3
+    },
+    {
+     "w": "calm",
+     "at": 1.637
+    },
+    {
+     "w": "in",
+     "at": 1.887
+    },
+    {
+     "w": "front",
+     "at": 1.975
+    },
+    {
+     "w": "of",
+     "at": 2.163
+    },
+    {
+     "w": "goal",
+     "at": 2.25
+    },
+    {
+     "w": "One",
+     "at": 3.087
+    },
+    {
+     "w": "more",
+     "at": 3.3
+    },
+    {
+     "w": "touch",
+     "at": 3.538
+    },
+    {
+     "w": "can",
+     "at": 3.875
+    },
+    {
+     "w": "send",
+     "at": 4.05
+    },
+    {
+     "w": "the",
+     "at": 4.263
+    },
+    {
+     "w": "defenders",
+     "at": 4.35
+    },
+    {
+     "w": "sliding",
+     "at": 4.912
+    },
+    {
+     "w": "past",
+     "at": 5.35
+    }
+   ]
+  }
+ ]
+}

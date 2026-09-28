@@ -3692,9 +3692,9 @@
   },
   "Karim Adeyemi": {
     "kind": "moment",
-    "title": "The Hat-trick v Celtic",
+    "title": "Speed Behind the Defence",
     "year": 2024,
-    "event": "Borussia Dortmund v Celtic, Champions League",
+    "event": "How he does it · scored a hat-trick in one half v Celtic, Champions League",
     "template": "solo_dribble_goal",
     "params": {
       "side": "right",
@@ -3705,9 +3705,9 @@
   },
   "Pepe": {
     "kind": "moment",
-    "title": "The Euro 2016 Final Wall",
+    "title": "Winning Every Header",
     "year": 2016,
-    "event": "Portugal v France, Euro 2016 final",
+    "event": "How he does it · man of the match as Portugal beat France in the Euro 2016 final",
     "template": "aerial_clearance",
     "params": {
       "side": "center"
@@ -3876,9 +3876,9 @@
   },
   "Vozinha": {
     "kind": "moment",
-    "title": "Seven Saves Against Spain",
+    "title": "Goalkeeping Masterclass",
     "year": 2026,
-    "event": "Spain v Cape Verde, World Cup group stage",
+    "event": "How he does it · seven saves in a 0–0 draw with Spain, World Cup group stage",
     "template": "save",
     "params": {
       "side": "center"

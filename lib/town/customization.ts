@@ -2,12 +2,14 @@ import {COIN_REWARD_ID,costumeEarned} from './coinQuest';
 import {readCoinProgress} from './coinProgress';
 import {getIslandCostume} from './islandCostumes';
 import {CLUB_COSTUMES} from './costumes';
+/** Vending-machine specials (docs/vending-machines.md): each ball is sold at one machine only; see lib/town/vendingCatalog.ts. */
+import {SPECIAL_BALL_OPTIONS,SPECIAL_BALL_COLORS,type VendingSpecialBall} from './specialBalls';
 import {DEFAULT_HOME_KIT,DEFAULT_AWAY_KIT,type BeanLook,type Outfit,type BeanBuild,type BeanEyes,type BeanMouth,type BeanHairStyle,type BeanHeadwear} from '../graphics/beanLook';
 export type CharacterCustomization = {
   costume:string;
   character:'male'|'female'|'captain'|'explorer';
   face:'warm'|'deep'|'light'; body:'balanced'|'strong'|'slim'; clothing:'classic'|'coast'|'sunset';
-  ball:'classic'|'sunset'|'neon'|'frost'|'solar'|'cosmic'; scooter:'classic'|'coast'|'sunset'|'mint'|'stunt'|'comet'; bike:'classic'|'coast'|'sunset'|'bmx'|'road'|'mountain'; moped:'classic'|'coast'|'sunset'|'retro'|'delivery'|'sport'; jetpack:'classic'|'flying-car'|'helicopter'|'ironman'|'rocketboard'|'mini-plane';
+  ball:'classic'|'sunset'|'neon'|'frost'|'solar'|'cosmic'|VendingSpecialBall; scooter:'classic'|'coast'|'sunset'|'mint'|'stunt'|'comet'; bike:'classic'|'coast'|'sunset'|'bmx'|'road'|'mountain'; moped:'classic'|'coast'|'sunset'|'retro'|'delivery'|'sport'; jetpack:'classic'|'flying-car'|'helicopter'|'ironman'|'rocketboard'|'mini-plane';
   /** Bean builder (docs/bean-characters/CONTRACT.md, lane D). Colour fields hold palette ids, not raw hex, so saves sanitise. */
   bodyColor:string; skinTone:string; eyes:BeanEyes; mouth:BeanMouth; hair:BeanHairStyle; hairColor:string; build:BeanBuild; headwear:BeanHeadwear; headwearColor:string;
 };
@@ -22,7 +24,7 @@ export const CUSTOMIZATION_OPTIONS:Record<CustomizationKey,CustomizationOption[]
   face:[{id:'warm',label:'Warm',color:'#bc8562'},{id:'deep',label:'Deep',color:'#765039'},{id:'light',label:'Light',color:'#d4a17c'}],
   body:[{id:'balanced',label:'Balanced',color:'#819574'},{id:'strong',label:'Strong',color:'#526f58'},{id:'slim',label:'Slim',color:'#b2b386'}],
   clothing:[{id:'classic',label:'Classic kit',color:'#edb957'},{id:'coast',label:'Coast stripes',color:'#356478'},{id:'sunset',label:'Sunset jacket',color:'#c8734f'}],
-  ball:[{id:'classic',label:'Classic',color:'#eee4c4'},{id:'sunset',label:'Sunset',color:'#e89154'},{id:'neon',label:'Glow',color:'#b9e18b'},{id:'frost',label:'Frost',color:'#91dfff'},{id:'solar',label:'Solar',color:'#ffd166'},{id:'cosmic',label:'Cosmic',color:'#bd8aff'}],
+  ball:[{id:'classic',label:'Classic',color:'#eee4c4'},{id:'sunset',label:'Sunset',color:'#e89154'},{id:'neon',label:'Glow',color:'#b9e18b'},{id:'frost',label:'Frost',color:'#91dfff'},{id:'solar',label:'Solar',color:'#ffd166'},{id:'cosmic',label:'Cosmic',color:'#bd8aff'},...SPECIAL_BALL_OPTIONS],
   scooter:[{id:'classic',label:'Street',color:'#c68853'},{id:'coast',label:'Coast cruiser',color:'#589aa0'},{id:'sunset',label:'Sunset sport',color:'#c8734f'},{id:'mint',label:'Mint',color:'#65dfc5'},{id:'stunt',label:'Stunt',color:'#ed78b8'},{id:'comet',label:'Comet',color:'#ff9b55'}],
   bike:[{id:'classic',label:'City',color:'#c68853'},{id:'coast',label:'Basket cruiser',color:'#589aa0'},{id:'sunset',label:'Trail bike',color:'#c8734f'},{id:'bmx',label:'BMX',color:'#a786ef'},{id:'road',label:'Road',color:'#5bbdeb'},{id:'mountain',label:'Mountain',color:'#8bcc70'}],
   moped:[{id:'classic',label:'Classic',color:'#c68853'},{id:'coast',label:'Coast tourer',color:'#589aa0'},{id:'sunset',label:'Sunset racer',color:'#c8734f'},{id:'retro',label:'Retro',color:'#ecb878'},{id:'delivery',label:'Delivery',color:'#63c5b6'},{id:'sport',label:'Sport',color:'#f36c77'}],
@@ -121,7 +123,7 @@ export function playerOutfit(value:CharacterCustomization):Outfit{
 export const SHIRT_NUMBER_ROLES:{number:number;position:string;title:string}[]=[
   {number:1,position:'GK',title:'Goalkeeper'},{number:2,position:'RB',title:'Right back'},{number:3,position:'LB',title:'Left back'},{number:4,position:'RCB',title:'Centre-back'},{number:5,position:'LCB',title:'Centre-back'},{number:6,position:'CM',title:'Holding midfielder'},{number:7,position:'RW',title:'Right winger'},{number:8,position:'RCM',title:'Box-to-box midfielder'},{number:9,position:'ST',title:'Striker'},{number:10,position:'LCM',title:'Playmaker'},{number:11,position:'LW',title:'Left winger'}
 ];
-export const BALL_COLORS={classic:'#eee4c4',sunset:'#e89154',neon:'#b9e18b',frost:'#91dfff',solar:'#ffd166',cosmic:'#bd8aff'};
+export const BALL_COLORS={classic:'#eee4c4',sunset:'#e89154',neon:'#b9e18b',frost:'#91dfff',solar:'#ffd166',cosmic:'#bd8aff',...SPECIAL_BALL_COLORS} as Record<CharacterCustomization['ball'],string>;
 export function isCustomizationUnlocked(option:CustomizationOption,completed:number,total:number){return option.coinReward?costumeEarned(readCoinProgress(),option.id):true;}
 const LEGACY_KEYS=['costume','character','face','body','clothing','ball','scooter','bike','moped','jetpack'] as const;
 export function sanitizeCustomization(value:unknown,completed=0,total=0):CharacterCustomization{

@@ -23,7 +23,8 @@ assert.deepEqual(Object.keys(DATA.cards).filter(n=>!seen.has(n)),[],'no tier ent
 const byTier=t=>CARDS.filter(c=>c.tier===t);
 const ICONS=byTier('icon'),ELITE=byTier('elite'),REGULAR=byTier('regular');
 assert.ok(ICONS.length>=20&&ICONS.length<=35,`20–35 Icons (${ICONS.length})`);
-assert.ok(ELITE.length>=50&&ELITE.length<=71,`50–71 Elite (${ELITE.length})`);
+// Coach cards (Sep 28 2026) added one Icon (Guardiola) and ten Elite coaches, so the Elite ceiling rose from 71 to 81.
+assert.ok(ELITE.length>=50&&ELITE.length<=81,`50–81 Elite (${ELITE.length})`);
 for(const name of ['Lionel Messi','Cristiano Ronaldo','Pelé','Diego Maradona','Zinedine Zidane','Johan Cruyff','Ronaldo Nazário','Franz Beckenbauer','Marta','Mia Hamm','Kylian Mbappé','Erling Haaland','Ronaldinho','Neymar','Vinícius Júnior','Jude Bellingham','Lamine Yamal','David Beckham','Falcão','Ricardinho'])
  assert.equal(CARDS.find(c=>c.name===name).tier,'icon',`${name} is an Icon`);
 assert.ok(ICONS.filter(c=>FUTSAL.has(c.role)).length>=2&&ELITE.filter(c=>FUTSAL.has(c.role)).length>=5,'futsal has its own Icons and Elites');

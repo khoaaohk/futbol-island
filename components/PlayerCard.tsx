@@ -7,7 +7,7 @@ import {POSITION_PLAYERS} from '@/lib/town/playerPositions';
 import CardFilmPlayer,{unlockedNarration,type CardCaption} from './CardFilmPlayer';
 import {hasPlayFilm,loadPlayFilm} from '@/lib/plays/riso/registry';
 import type {RisoStory} from '@/lib/paths/riso/story';
-import {ALL_PLAYERS,CARD_STORAGE_KEY} from '@/lib/town/cardCollection';
+import {ALL_PLAYERS,CARD_STORAGE_KEY,cardDisplayName,isCoachCard} from '@/lib/town/cardCollection';
 import dynamic from 'next/dynamic';
 import styles from './PlayerCard.module.css';
 import artStyles from './PlayerArt.module.css';
@@ -25,6 +25,9 @@ function highlight({sentence,words}:CardCaption){const at=words?sentence.toLower
 /** Back-of-card tabs. The chosen tab is remembered for the session (per-viewer convenience; storage may be unavailable). */
 type BackTab='strengths'|'plays'|'history';
 const BACK_TABS:{id:BackTab;label:string}[]=[{id:'strengths',label:'Strengths'},{id:'plays',label:'Top Plays'},{id:'history',label:'History'}];
+/** Coach cards (Sep 28 2026) keep the same three tabs, about coaching: their style, the one big idea the card teaches (with
+ *  career highlights) and the teams they coached (playerCareers.json, role "coach"). */
+const COACH_TAB_LABEL:Record<BackTab,string>={strengths:'Style',plays:'Big idea',history:'Teams'};
 const TAB_KEY='fi-card-back-tab';
 const readTab=():BackTab=>{try{const v=sessionStorage.getItem(TAB_KEY);return v==='plays'||v==='history'?v:'strengths';}catch{return 'strengths';}};
 const saveTab=(tab:BackTab)=>{try{sessionStorage.setItem(TAB_KEY,tab);}catch{/* private mode: the tab just resets */}};
@@ -49,6 +52,10 @@ function toHistory(raw:unknown):History|null{
 type Moment={title:string;year?:number;event?:string;lesson?:string};
 let momentsCache:Promise<Record<string,Moment>>|null=null;
 const loadMoments=()=>momentsCache??=import('@/lib/town/iconicPlays.json').then(m=>(m.default??m) as unknown as Record<string,Moment>).catch(error=>{momentsCache=null;throw error;});
+/** A coach card's teaching idea (lib/town/coachIdeas.json): loaded only when a coach card is turned over. */
+type CoachIdea={idea:string;lesson:string;highlights:string[];sources:{title:string;url:string}[]};
+let ideasCache:Promise<Record<string,CoachIdea>>|null=null;
+const loadIdeas=()=>ideasCache??=import('@/lib/town/coachIdeas.json').then(m=>(m.default??m) as unknown as Record<string,CoachIdea>).catch(error=>{ideasCache=null;throw error;});
 /** Flip weight (Web Animations on the individual scale/translate properties, so they compose with the card's CSS transform and
  *  hover tilt): the card lifts and grows a little through the turn, then settles with a small overshoot; its ground shadow
  *  widens and softens while it is up. Offsets follow the flip curve (edge-on ≈ 13 %, overshoot peak ≈ 55 %). */
@@ -146,9 +153,15 @@ export default function PlayerCard({name,role,era,blurb,team,strengths,sources=[
  useEffect(()=>{if(!flipped||tab!=='history'||history?.name===name)return;let live=true;
   import('@/lib/town/playerCareers').then(m=>Promise.resolve(m.careerFor(name))).then(raw=>{if(live)setHistory({name,value:toHistory(raw)});}).catch(()=>{if(live)setHistory({name,value:null});});
   return ()=>{live=false;};},[flipped,tab,name,history?.name]);
- useEffect(()=>{if(!flipped||tab!=='plays'||moment?.name===name)return;let live=true;
+ useEffect(()=>{if(!flipped||tab!=='plays'||moment?.name===name||isCoachCard(name))return;let live=true;
   loadMoments().then(all=>{if(live)setMoment({name,value:all[name]??null});}).catch(()=>{if(live)setMoment({name,value:null});});
   return ()=>{live=false;};},[flipped,tab,name,moment?.name]);
+ const coach=isCoachCard(name),shown=cardDisplayName(name),first=shown.split(' ')[0];
+ const [idea,setIdea]=useState<{name:string;value:CoachIdea|null}|null>(null);
+ useEffect(()=>{if(!coach||!flipped||idea?.name===name)return;let live=true;
+  loadIdeas().then(all=>{if(live)setIdea({name,value:all[name]??null});}).catch(()=>{if(live)setIdea({name,value:null});});
+  return ()=>{live=false;};},[coach,flipped,name,idea?.name]);
+ const coachIdea=coach&&idea?.name===name?idea.value:null,refs=[...sources,...(coachIdea?.sources??[])];
  // Turn light (one short burst per flip, not on a new player, never with reduced motion), started in the same frame as the turn
  // (layout effect): a glare band sweeps the face turning away and then the face turning in, that face shades as it turns from the
  // viewer, the thickness edge catches the light at edge-on, and the card lifts (LIFT). The burst layers unmount when their last
@@ -332,23 +345,33 @@ export default function PlayerCard({name,role,era,blurb,team,strengths,sources=[
     <b className={styles.rim} aria-hidden="true"/><b className={styles.rim} aria-hidden="true"/><b className={styles.rim} aria-hidden="true"/>
     <i className={styles.side} aria-hidden="true"/><i className={styles.side} aria-hidden="true"/><i className={styles.side} aria-hidden="true"/><i className={styles.side} aria-hidden="true"/>
     <section className={`${styles.face} ${styles.front}`} aria-hidden={flipped}>
-     <div className={styles.topline}><span className={styles.rarity}>{legend?'Legend':'Star'}</span><span className={styles.number}>{numberLabel}</span></div>
+     <div className={styles.topline}><span className={styles.rarity}>{legend?'Legend':coach?'Coach':'Star'}</span><span className={styles.number}>{numberLabel}</span></div>
      <div className={styles.window}>{art}{film&&phase!=='idle'&&<CardFilmPlayer story={film.story} audio={film.audio} running={phase==='playing'} className={`${styles.filmCanvas} ${phase==='fading'?styles.filmFading:''}`} onEnd={filmEnded} onCaption={setCaption}/>}</div>
-     <div className={styles.plate}><strong>{name}</strong><span>{role}{country?` · ${country}`:''}</span></div>
+     <div className={styles.plate}><strong>{shown}</strong><span>{role}{country?` · ${country}`:''}</span></div>
      {film&&caption&&phase!=='idle'?<div className={`${styles.bio} ${styles.filmBio}`} aria-live="polite"><span className={styles.eraLine}>{film.story.title}</span><p>{highlight(caption)}</p></div>
-     :<div className={styles.bio}><span className={styles.eraLine}>{legend?'All-time great':'Current star'} · {role}</span><p>{blurb}</p></div>}
+     :<div className={styles.bio}><span className={styles.eraLine}>{coach?(legend?'All-time great coach':'Coaching now'):legend?'All-time great':'Current star'} · {role}</span><p>{blurb}</p></div>}
      <span className={styles.flagStripe} aria-hidden="true"/>
      <span className={styles.foil} aria-hidden="true"/>
      {burst&&<TurnLight key={burst.id} toBack={burst.sweep} leaving={burst.toBack} onDone={()=>setBurst(null)}/>}
     </section>
     <section className={`${styles.face} ${styles.back}`} aria-hidden={!flipped}>
-     <div className={styles.backTop}><h4>Study {name.split(' ')[0]}</h4><span className={styles.number}>{numberLabel}</span></div>
-     <div className={styles.backTabs} role="tablist" aria-label={`About ${name}`} onKeyDown={onTabKey}>
-      {BACK_TABS.map(t=><button key={t.id} type="button" role="tab" id={`${tabsId}-${t.id}`} aria-selected={tab===t.id} aria-controls={`${tabsId}-panel`} tabIndex={flipped&&tab===t.id?0:-1} onClick={event=>{event.stopPropagation();pickTab(t.id);}}>{t.label}</button>)}
+     <div className={styles.backTop}><h4>Study {first}</h4><span className={styles.number}>{numberLabel}</span></div>
+     <div className={styles.backTabs} role="tablist" aria-label={`About ${shown}`} onKeyDown={onTabKey}>
+      {BACK_TABS.map(t=><button key={t.id} type="button" role="tab" id={`${tabsId}-${t.id}`} aria-selected={tab===t.id} aria-controls={`${tabsId}-panel`} tabIndex={flipped&&tab===t.id?0:-1} onClick={event=>{event.stopPropagation();pickTab(t.id);}}>{coach?COACH_TAB_LABEL[t.id]:t.label}</button>)}
      </div>
      <div className={styles.backPanel} role="tabpanel" id={`${tabsId}-panel`} aria-labelledby={`${tabsId}-${tab}`} tabIndex={flipped?0:-1}>
       {tab==='strengths'?(strengths.length?<ul className={styles.backList}>{strengths.map(skill=><li key={skill}>{skill}</li>)}</ul>
-       :<p className={styles.backEmpty}>Strengths for {name.split(' ')[0]} are still being written. Watch how they move before the ball arrives.</p>)
+       :<p className={styles.backEmpty}>Strengths for {first} are still being written. Watch how they move before the ball arrives.</p>)
+      :tab==='plays'&&coach?(idea?.name!==name?<p className={styles.backEmpty}>Loading {first}’s big idea…</p>
+       :coachIdea?<>
+        <div className={styles.moment}>
+         <span className={styles.eraLine}>Coaching idea</span>
+         <strong>{coachIdea.idea}</strong>
+         <p>{coachIdea.lesson}</p>
+        </div>
+        <h5 className={styles.clipsTitle}>Career highlights</h5>
+        <ul className={styles.backList}>{coachIdea.highlights.map(item=><li key={item}>{item}</li>)}</ul>
+       </>:<p className={styles.backEmpty}>{first}’s big idea isn’t on the card yet. Watch how their team moves without the ball.</p>)
       :tab==='plays'?<>
        <div className={styles.moment}>
         <span className={styles.eraLine}>Play Moment</span>
@@ -359,14 +382,15 @@ export default function PlayerCard({name,role,era,blurb,team,strengths,sources=[
        <h5 className={styles.clipsTitle}>Top plays &amp; highlights</h5>
        {flipped&&<CardHighlights player={name}/>/* fetched only while this tab shows on the back */}
       </>
-      :history?.name!==name?<p className={styles.backEmpty}>Loading club history…</p>
+      :history?.name!==name?<p className={styles.backEmpty}>{coach?'Loading teams coached…':'Loading club history…'}</p>
       :history.value?<ul className={styles.clubs}>
         {history.value.clubs.map((stint,i)=><li key={`${stint.club}-${i}`}><b>{stint.club}</b>{stint.years&&<span> · {stint.years}</span>}{stint.loan&&<em>Loan</em>}</li>)}
         {history.value.national&&<li className={styles.national}><b>{history.value.national.club}</b>{history.value.national.years&&<span> · {history.value.national.years}</span>}<em>National team</em></li>}
        </ul>
-      :<p className={styles.backEmpty}>{name.split(' ')[0]}’s club history isn’t on the card yet. Look for the club badge in their highlights, and check back soon.</p>}
+      :coach?<p className={styles.backEmpty}>{first}’s coaching career isn’t on the card yet.</p>
+      :<p className={styles.backEmpty}>{first}’s club history isn’t on the card yet. Look for the club badge in their highlights, and check back soon.</p>}
      </div>
-     {(sources.length>0||!!photo)&&<div className={styles.refs}><span className={styles.refsTitle}>Player references &amp; sources</span>{sources.map(source=><a key={source.url} href={source.url} target="_blank" rel="noopener noreferrer" tabIndex={flipped?0:-1} onClick={event=>event.stopPropagation()}>{source.title} ↗</a>)}{photo&&<a className={styles.credit} href={photo.file} target="_blank" rel="noopener noreferrer" tabIndex={flipped?0:-1} onClick={event=>event.stopPropagation()}>Portrait from a photo by {photo.artist} · {photo.license} · {(photo as {sourceName?:string}).sourceName??'Wikimedia Commons'} ↗</a>}</div>}
+     {(refs.length>0||!!photo)&&<div className={styles.refs}><span className={styles.refsTitle}>{coach?'Coach':'Player'} references &amp; sources</span>{refs.map(source=><a key={source.url} href={source.url} target="_blank" rel="noopener noreferrer" tabIndex={flipped?0:-1} onClick={event=>event.stopPropagation()}>{source.title} ↗</a>)}{photo&&<a className={styles.credit} href={photo.file} target="_blank" rel="noopener noreferrer" tabIndex={flipped?0:-1} onClick={event=>event.stopPropagation()}>Portrait from a photo by {photo.artist} · {photo.license} · {(photo as {sourceName?:string}).sourceName??'Wikimedia Commons'} ↗</a>}</div>}
      <span className={styles.flagStripe} aria-hidden="true"/>
      {burst&&<TurnLight key={burst.id} toBack={burst.sweep} leaving={!burst.toBack} onDone={()=>setBurst(null)}/>}
     </section>

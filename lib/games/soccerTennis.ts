@@ -20,6 +20,8 @@ export interface TennisBall{
  last:TennisSide;bounces:number;crossed:boolean;
 }
 export interface TennisState{
+ level:number;courtsWon:number;aiReadErrorX:number;aiReadErrorY:number;
+ bounceAge:number;perfectTouches:number;perfectFlash:number;
  phase:TennisPhase;you:TennisPlayer;rival:TennisPlayer;ball:TennisBall;score:{you:number;rival:number};server:TennisSide;
  rally:number;bestRally:number;message:string;version:number;clock:number;phaseTime:number;queuedKick:number;aim:number|null;
  aiThink:number;aiReaction:number;seed:number;winner:TennisSide|null;
@@ -29,16 +31,27 @@ export interface TennisState{
  fxLand:number;fxLandX:number;fxLandY:number;fxLandI:number;
  pointWinner:TennisSide|null;shotAim:number;cleanReturns:number;cleanStreak:number;bestCleanStreak:number;rivalIntent:string;
 }
+/** Each opponent adds a football decision, not just speed: recover, change angle,
+ * vary depth, beat a forward press, then combine all four. The rules stay fixed. */
+export const TENNIS_COURTS=[
+ {name:'First Touch',lesson:'Plant your feet, return, then recover to the middle.',speed:4.1,reaction:.3,error:1.1,read:.2,press:0},
+ {name:'Open Angles',lesson:'Draw the rival wide, then play into the open side.',speed:4.35,reaction:.28,error:.95,read:.19,press:0},
+ {name:'Change Tempo',lesson:'Mix a short drop with a deep lob to open space.',speed:4.55,reaction:.26,error:.8,read:.18,press:.12},
+ {name:'Net Pressure',lesson:'Lob the forward press; recover before the next return.',speed:4.75,reaction:.24,error:.65,read:.17,press:.38},
+ {name:'Neon Final',lesson:'Move your rival with depth, then finish into the open angle.',speed:4.95,reaction:.22,error:.5,read:.16,press:.28},
+] as const;
+const court=(s:TennisState)=>TENNIS_COURTS[s.level-1];
 export const TENNIS={halfWidth:5,halfLength:8,netHeight:1.1,ballRadius:.17,gravity:10.5,winningScore:7,humanSpeed:7.3,aiSpeed:4.1,drag:.018,magnus:.012,restitution:.68,kickDuration:.42};
 const clamp=(n:number,a:number,b:number)=>Math.max(a,Math.min(b,n));
 const other=(s:TennisSide):TennisSide=>s==='you'?'rival':'you';
 const player=(y:number):TennisPlayer=>({x:0,y,vx:0,vy:0,targetX:0,targetY:y,kick:0,stride:0,kickStyle:1,moveX:0,moveY:0,direct:false,kickFacing:y>0?Math.PI:0,kickSpan:TENNIS.kickDuration,kickContactX:0,kickContactZ:.65,kickHeight:.23,kickPower:.35,kickKind:'shot'});
 const mkball=(x:number,y:number,last:TennisSide):TennisBall=>({x,y,z:.23,vx:0,vy:0,vz:0,wx:0,wy:0,wz:0,rot:0,squash:0,netHit:false,last,bounces:0,crossed:false});
-export function createTennis(seed=47):TennisState{return {phase:'ready',you:player(5.3),rival:player(-5.3),ball:mkball(.3,4.95,'you'),score:{you:0,rival:0},server:'you',rally:0,bestRally:0,message:'A little court. A good rally.',version:0,clock:0,phaseTime:0,queuedKick:0,aim:null,aiThink:0,aiReaction:0,seed:seed>>>0,winner:null,
+export function createTennis(seed=47,level=1):TennisState{return {level:clamp(Math.floor(level)||1,1,TENNIS_COURTS.length),courtsWon:0,aiReadErrorX:0,aiReadErrorY:0,bounceAge:99,perfectTouches:0,perfectFlash:0,phase:'ready',you:player(5.3),rival:player(-5.3),ball:mkball(.3,4.95,'you'),score:{you:0,rival:0},server:'you',rally:0,bestRally:0,message:'A little court. A good rally.',version:0,clock:0,phaseTime:0,queuedKick:0,aim:null,aiThink:0,aiReaction:0,seed:seed>>>0,winner:null,
  queuedShot:'auto',lastShot:'auto',lastKicker:'you',kickCount:0,aiSlam:false,fxSlam:0,fxSlamX:0,fxSlamY:0,fxSlamZ:0,fxLand:0,fxLandX:0,fxLandY:0,fxLandI:0,pointWinner:null,shotAim:0,cleanReturns:0,cleanStreak:0,bestCleanStreak:0,rivalIntent:'Ready at the baseline'};}
-export function resetTennis(s:TennisState){Object.assign(s,createTennis(s.seed));}
+/** The existing replay action advances a won court; a loss keeps its practice tier. */
+export function resetTennis(s:TennisState){const won=s.winner==='you',level=Math.min(TENNIS_COURTS.length,s.level+(won?1:0)),courtsWon=s.courtsWon+(won?1:0);Object.assign(s,createTennis(s.seed,level));s.courtsWon=courtsWon;}
 function random(s:TennisState){s.seed=(Math.imul(s.seed,1664525)+1013904223)>>>0;return s.seed/4294967296;}
-export function beginTennis(s:TennisState){s.phase='serve';s.phaseTime=0;s.message='Choose an angle. Move left or right, then Serve.';s.version++;}
+export function beginTennis(s:TennisState){s.phase='serve';s.phaseTime=0;s.message=`COURT ${s.level} · ${court(s).name}. ${court(s).lesson}`;s.version++;}
 export function setTennisTarget(s:TennisState,x:number,y:number){if(Math.abs(x-s.you.x)>.25)s.shotAim=clamp((x-s.you.x)/2,-1,1);s.you.direct=false;s.you.targetX=clamp(x,-4.55,4.55);s.you.targetY=clamp(y,.95,7.45);}
 /** Analog movement is velocity input, not a repeatedly displaced destination. A
  * released stick brakes once; pointer targets continue to use arrival steering. */
@@ -48,14 +61,14 @@ export function setTennisMovement(s:TennisState,x:number,y:number){
  if(length>.001){p.direct=true;p.moveX=x*scale;p.moveY=y*scale;}
  else if(p.direct){p.moveX=p.moveY=0;p.targetX=p.x;p.targetY=p.y;}
 }
-export function requestTennisKick(s:TennisState,aim?:number,shot:TennisShot='auto'){if(s.phase!=='rally'&&!(s.phase==='serve'&&s.server==='you'))return;if(s.phase==='serve'&&(shot==='header'||shot==='scissor')){s.message='Serve with your foot. Save aerial moves for the return.';s.version++;return;}s.queuedKick=.32;s.queuedShot=shot;s.aim=aim===undefined?s.shotAim:clamp(aim,-1,1);if(shot==='header'&&!canTennisHeader(s,'you')){s.message='Header: get underneath a high incoming ball.';s.version++;}if(shot==='scissor'&&!canTennisScissor(s,'you')){s.message='Scissor: get close as the high ball drops.';s.version++;}}
+export function requestTennisKick(s:TennisState,aim?:number,shot:TennisShot='auto'){if(s.phase!=='rally'&&!(s.phase==='serve'&&s.server==='you'))return;if(s.phase==='serve'&&(shot==='header'||shot==='scissor')){s.message='Serve with your foot. Save aerial moves for the return.';s.version++;return;}s.queuedKick=shot==='header'||shot==='scissor'?.48:.32;s.queuedShot=shot;s.aim=aim===undefined?s.shotAim:clamp(aim,-1,1);if(shot==='header'&&!canTennisHeader(s,'you')){s.message='Header: get underneath a high incoming ball.';s.version++;}if(shot==='scissor'&&!canTennisScissor(s,'you')){s.message='Scissor: get close as the high ball drops.';s.version++;}}
 /** drag + Magnus + gravity — the one acceleration model shared by the live sim and the predictor */
 function accel(b:{vx:number;vy:number;vz:number;wx:number;wy:number;wz:number}){
  const sp=Math.hypot(b.vx,b.vy,b.vz),D=TENNIS.drag*sp,M=TENNIS.magnus;
  return {ax:-D*b.vx+M*(b.wy*b.vz-b.wz*b.vy),ay:-D*b.vy+M*(b.wz*b.vx-b.wx*b.vz),az:-TENNIS.gravity-D*b.vz+M*(b.wx*b.vy-b.wy*b.vx)};
 }
 /** numerically fly the ball to its landing (ignoring the net) so predictions honor drag + spin */
-function flight(b:TennisBall){
+function flight(b:TennisBall,contactHeight=TENNIS.ballRadius){
  const c={x:b.x,y:b.y,z:b.z,vx:b.vx,vy:b.vy,vz:b.vz,wx:b.wx,wy:b.wy,wz:b.wz};
  let t=0,netZ:number|null=null;const dt=1/90,R=TENNIS.ballRadius;
  while(t<3.2){
@@ -63,12 +76,18 @@ function flight(b:TennisBall){
   const oy=c.y;c.x+=c.vx*dt;c.y+=c.vy*dt;c.z+=c.vz*dt;t+=dt;
   if(netZ===null&&((oy<0&&c.y>=0)||(oy>0&&c.y<=0)))netZ=c.z-c.vz*dt*(c.y/(c.y-oy));
   const decay=Math.max(0,1-.3*dt);c.wx*=decay;c.wy*=decay;c.wz*=decay;
-  if(c.z<=R&&c.vz<0)break;
+  if(c.z<=Math.max(R,contactHeight)&&c.vz<0)break;
  }
  return {x:c.x,y:c.y,time:t,netZ};
 }
 export function tennisLanding(s:TennisState){const f=flight(s.ball);return {x:f.x,y:f.y,time:f.time};}
+/** Keep the receiving guide useful after the bounce: show where the dropping
+ * ball reaches a comfortable foot height, rather than erasing the destination.
+ * Uses the same drag/spin path and existing throttled visual prediction. */
+export function tennisReceivingPoint(s:TennisState){const f=flight(s.ball,s.ball.bounces>0?.7:TENNIS.ballRadius);return {x:f.x,y:f.y,time:f.time};}
 export function canTennisKick(s:TennisState,side:TennisSide){if(s.phase!=='rally'||s.ball.last===side||!s.ball.crossed)return false;const p=s[side],b=s.ball;return (side==='you'?b.y>.15:b.y<-.15)&&b.z<1.15&&Math.hypot(p.x-b.x,p.y-b.y)<1.3;}
+/** The same contact test drives the mint timing cue and its reward. */
+export function canTennisPerfect(s:TennisState){const p=s.you,b=s.ball;return canTennisKick(s,'you')&&b.bounces===1&&s.bounceAge>=.045&&s.bounceAge<=.26&&Math.hypot(p.x-b.x,p.y-b.y)<.8&&Math.hypot(p.vx,p.vy)<3;}
 /** the overhead window: an incoming ball hanging HIGH within reach (near/after its apex) —
  * kicking now is a SLAM. Kept tight so it rewards reading a lob, not every loopy return. */
 export function canTennisSlam(s:TennisState,side:TennisSide){if(s.phase!=='rally'||s.ball.last===side||!s.ball.crossed)return false;const p=s[side],b=s.ball;return (side==='you'?b.y>.15:b.y<-.15)&&b.z>=1.15&&b.z<2.25&&b.vz<.4&&Math.hypot(p.x-b.x,p.y-b.y)<1.35;}
@@ -90,28 +109,35 @@ function solve(b:TennisBall,tx:number,ty:number,T:number,clear:number,flat:boole
  }
 }
 function kick(s:TennisState,side:TennisSide){
- const p=s[side],b=s.ball,sign=side==='you'?-1:1,serve=s.phase==='serve';
+ const p=s[side],b=s.ball,sign=side==='you'?-1:1,serve=s.phase==='serve',profile=court(s);
  const high=!serve&&b.z>=1.15;
  // shot selection: your queued intent (auto/drive upgrade to a SLAM on a high ball);
  // the rival mostly drives, lobs sometimes, drops when you camp deep — and spikes high balls
  let shot:TennisShot=serve?'auto':s.queuedShot;
  if(side==='rival'&&!serve){
-  if(high)shot='slam';
-  else{const r=random(s);shot=s.you.y>5.6?'drop':s.you.y<3.1?'lob':r<.78?'auto':'lob';}
-  s.rivalIntent=shot==='drop'?'SHORT BALL · close the space':shot==='lob'?'DEEP LOB · recover behind it':shot==='slam'?'SPIKE · prepare to react':'WIDE RETURN · cover the angle';
+  if(high)shot=s.level>=4&&canTennisScissor(s,'rival')&&random(s)<.32?'scissor':'slam';
+  else{
+   const r=random(s),stretched=Math.hypot(p.x-b.x,p.y-b.y)>.9;
+   // A pressured opponent buys recovery time; advanced opponents probe depth
+   // as well as width. Their choice is committed at contact, never mid-flight.
+   shot=s.level>=3&&stretched?'lob':s.you.y>5.6?'drop':s.you.y<3.1?'lob':s.level>=3&&s.you.vy>.8?'drop':r<.78?'auto':'lob';
+  }
+  s.rivalIntent=shot==='drop'?'SHORT BALL · close the space':shot==='lob'?'DEEP LOB · recover behind it':shot==='scissor'?'SCISSOR · cover the open side':shot==='slam'?'SPIKE · prepare to react':'WIDE RETURN · cover the angle';
  }
  if(high&&(shot==='auto'||shot==='drive'))shot='slam';
  if(shot==='slam'&&!high)shot='auto';
  // contact quality: planted next to the ball = clean; lunging at full stretch = scrappy.
  // An overhead slam punishes stretching hardest, and long rallies pile on pressure.
  const reach=Math.hypot(p.x-b.x,p.y-b.y),pace=Math.hypot(p.vx,p.vy);
- const pressure=side==='you'?0:Math.min(.25,s.rally*.025);
+ const pressure=side==='you'?0:Math.min(.25,s.rally*(.025-(s.level-1)*.0025));
  let q=serve?.88+random(s)*.1
   :shot==='header'?clamp(1.18-reach*.6-pace*.04-pressure,.3,1)
   :shot==='scissor'?clamp(1.22-reach*.9-pace*.07-pressure,.2,1)
   :shot==='slam'?clamp(1.2-reach*.85-pace*.07-pressure,.2,1)
   :clamp(1.18-reach*.6-pace*.05-Math.max(0,b.z-.75)*.4-pressure,.22,1);
- if(side==='rival')q=Math.min(q,.58+random(s)*.42); // the rival mixes sharp days and scrappy ones
+ const perfect=side==='you'&&!serve&&canTennisPerfect(s);
+ if(perfect){q=Math.min(1,q+.18);s.perfectTouches++;s.perfectFlash=.7;}
+ if(side==='rival')q=Math.min(q,.58+(s.level-1)*.035+random(s)*(.42-(s.level-1)*.035)); // the rival mixes sharp days and scrappy ones
  if(side==='you'&&!serve){const clean=q>=.72;s.cleanReturns+=clean?1:0;s.cleanStreak=clean?s.cleanStreak+1:0;s.bestCleanStreak=Math.max(s.bestCleanStreak,s.cleanStreak);}
  const err=(1-q)*(shot==='slam'||shot==='scissor'?2.2:1.6);
  let tx=side==='you'
@@ -133,6 +159,7 @@ function kick(s:TennisState,side:TennisSide){
  else if(shot==='lob'){T=1.45+dist*.06;clear=1.05+q*.75;ts=2+q*2.5;}
  else if(drive){T=.85+dist*.042;clear=.19+q*.12;ts=11+q*8;}
  else{T=1.22+dist*.052+(1-q)*.25;clear=.2+q*.25;ts=4+q*5;}
+ if(perfect&&shot!=='lob'&&shot!=='drop')T*=.9;
  const ss=(random(s)-.5)*(1-q)*22+(random(s)-.5)*4;  // sidespin: wild contacts slice and hook
  b.wx=-ts*dy;b.wy=ts*dx;b.wz=ss;
  b.z=clamp(b.z,.17,shot==='header'?2.75:shot==='scissor'?2.5:shot==='slam'?2.1:1.05);
@@ -152,17 +179,24 @@ function kick(s:TennisState,side:TennisSide){
  s.rally++;s.bestRally=Math.max(s.bestRally,s.rally);s.phase='rally';s.queuedKick=0;s.queuedShot='auto';
  // a slam travels ~half a second — the rival gets a hurried (imperfect) chance to dig it out;
  // and the rival only WANTS to spike some of your returns (decided here, per kick)
- s.aiReaction=(shot==='slam'||shot==='scissor')&&side==='you'?.16+random(s)*.2:.3+random(s)*.24;s.aiThink=0;
- if(side==='you')s.aiSlam=random(s)<.45;
+ s.aiReaction=(shot==='slam'||shot==='scissor')&&side==='you'?.16+random(s)*.2:profile.reaction+random(s)*.24;s.aiThink=0;
+ if(side==='you'){
+  s.aiSlam=random(s)<.45+(s.level-1)*.07;
+  // One reading error per incoming shot. Re-reading the flight should refine
+  // the same destination, rather than randomly twitch the player's feet.
+  s.aiReadErrorX=(random(s)-.5)*profile.error;
+  s.aiReadErrorY=(random(s)-.5)*profile.error*.73;
+ }
  s.message=s.rally===1?'Recover toward the middle. Read the return.'
   :side==='you'?(
-   shot==='scissor'?'SCISSOR! Extra pace — recover from the landing.'
+   perfect?'PERFECT RETURN! Early bounce, balanced feet.'
+   :shot==='scissor'?'SCISSOR! Extra pace — recover from the landing.'
    :shot==='header'?'HEADER! Meet the ball, guide it into space.'
    :shot==='slam'?(q>.55?'SLAM! Hammered down the other side.':'A wild spike — anything can happen.')
    :shot==='drop'?'A soft touch, floating just past the tape.'
    :shot==='lob'?'Up and over — deep toward the back line.'
    :q>.75?`CLEAN TOUCH${s.cleanStreak>1?' ×'+s.cleanStreak:''} · recover to the middle.`:q>.45?'Across it goes. Find your next position.':'A stretched touch — recover quickly!')
-  :(shot==='slam'?'The rival SPIKES it — dig it out!'
+  :(shot==='scissor'?'The rival goes airborne — cover the angle!':shot==='slam'?'The rival SPIKES it — dig it out!'
    :shot==='drop'?'A sneaky drop ball — sprint in!'
    :shot==='lob'?'A high lob floats deep. Get under it.'
    :q>.68?s.rivalIntent:'A scrappy return floats over. Attack it.');
@@ -170,7 +204,7 @@ function kick(s:TennisState,side:TennisSide){
 }
 function point(s:TennisState,winner:TennisSide,reason:string){s.score[winner]++;s.phaseTime=0;s.queuedKick=0;const b=s.ball;b.vx=b.vy=b.vz=0;b.wx=b.wy=b.wz=0;b.squash=0;s.pointWinner=winner;s.you.direct=s.rival.direct=false;s.you.moveX=s.you.moveY=0;s.you.targetX=s.rival.targetX=0;s.you.targetY=5.3;s.rival.targetY=-5.3;
  s.cleanStreak=0;s.message=`${winner==='you'?'YOUR POINT':'RIVAL POINT'} · ${reason}${s.rally>=5?' · '+s.rally+'-touch rally!':''}`;s.phase='point';s.version++;
- if(s.score[winner]>=TENNIS.winningScore){s.you.vx=s.you.vy=s.rival.vx=s.rival.vy=0;s.winner=winner;s.phase='over';s.message=`${winner==='you'?'COURT WON':'MATCH COMPLETE'} · ${s.cleanReturns} clean returns · best rally ${s.bestRally}`;}}
+ if(s.score[winner]>=TENNIS.winningScore){s.you.vx=s.you.vy=s.rival.vx=s.rival.vy=0;s.winner=winner;s.phase='over';s.message=`${winner==='you'?(s.level===TENNIS_COURTS.length?'CIRCUIT WON':'COURT '+s.level+' WON'):'COURT '+s.level+' · TRY AGAIN'} · ${s.cleanReturns} clean returns · best rally ${s.bestRally}`;}}
 function nextServe(s:TennisState){s.pointWinner=null;s.server=(s.score.you+s.score.rival)%2?'rival':'you';s.you=player(5.3);s.rival=player(-5.3);const p=s[s.server];s.ball=mkball(p.x+.3,p.y+(s.server==='you'?-.35:.35),s.server);s.rally=0;s.phase='serve';s.phaseTime=0;s.message=s.server==='you'?'Your serve. Take your time.':'Rival serving. Find a comfortable position.';s.version++;}
 function move(p:TennisPlayer,speed:number,dt:number){
  const dx=p.targetX-p.x,dy=p.targetY-p.y,d=Math.hypot(dx,dy);
@@ -186,7 +220,7 @@ function contain(p:TennisPlayer,minY:number,maxY:number){
  if(x!==p.x)p.vx=0;if(y!==p.y)p.vy=0;p.x=x;p.y=y;
 }
 function step(s:TennisState,dt:number){
- s.clock+=dt;s.phaseTime+=dt;s.queuedKick=Math.max(0,s.queuedKick-dt);s.aiReaction=Math.max(0,s.aiReaction-dt);
+ s.bounceAge+=dt;s.perfectFlash=Math.max(0,s.perfectFlash-dt);s.clock+=dt;s.phaseTime+=dt;s.queuedKick=Math.max(0,s.queuedKick-dt);s.aiReaction=Math.max(0,s.aiReaction-dt);
  s.fxSlam=Math.max(0,s.fxSlam-dt);s.fxLand=Math.max(0,s.fxLand-dt);
  if(s.phase==='ready'||s.phase==='over')return;
  if(s.phase==='point'){s.you.direct=false;move(s.you,TENNIS.humanSpeed*.8,dt);move(s.rival,TENNIS.aiSpeed*1.3,dt);s.ball.squash=Math.max(0,s.ball.squash-dt*2.2);if(s.phaseTime>1.55)nextServe(s);return;}
@@ -196,16 +230,21 @@ function step(s:TennisState,dt:number){
   if((s.server==='you'&&s.queuedKick>0)||(s.server==='rival'&&s.phaseTime>1.1))kick(s,s.server);return;
  }
  s.aiThink-=dt;
- if(s.aiThink<=0&&s.aiReaction<=0){s.aiThink=.16+random(s)*.08;
+ if(s.aiThink<=0&&s.aiReaction<=0){s.aiThink=court(s).read+random(s)*.04;
   if(s.ball.last==='you'){
    const land=tennisLanding(s),out=Math.abs(land.x)>5.35||land.y<-8.4;
    if(out&&random(s)<.85){s.rival.targetX=clamp(land.x*.4,-3,3);s.rival.targetY=-5.4;s.aiReaction=Math.max(s.aiReaction,.45);} // reads it long — lets it sail
    else {const bl=s.ball,hv=Math.max(.5,Math.hypot(bl.vx,bl.vy)); // read the bounce: wait a step BEHIND the landing along the ball's line
-    s.rival.targetX=clamp(land.x+bl.vx/hv*.5+(random(s)-.5)*1.1,-4.5,4.5);s.rival.targetY=clamp(land.y+bl.vy/hv*.5+(random(s)-.5)*.8,-7.4,-1);}
+    s.rival.targetX=clamp(land.x+bl.vx/hv*.5+s.aiReadErrorX,-4.5,4.5);s.rival.targetY=clamp(land.y+bl.vy/hv*.5+s.aiReadErrorY,-7.4,-1);}
   }
-  else {s.rival.targetX=clamp(s.you.x*.22,-1.1,1.1);s.rival.targetY=s.you.y<3?-5.9:-4.7;}
+  else {
+   // Bisect the possible return angles, with a visible forward press on later
+   // courts. A lob beats the press; a drop punishes a deep recovery.
+   s.rival.targetX=clamp(s.ball.x*(.22+(s.level-1)*.025),-1.5,1.5);
+   s.rival.targetY=s.you.y<3?-5.9:-4.7+court(s).press*3;
+  }
  }
- move(s.rival,TENNIS.aiSpeed,dt);contain(s.rival,-7.5,-.9);
+ move(s.rival,court(s).speed*(s.rival.kickStyle===4&&s.rival.kick>.22?.45:1),dt);contain(s.rival,-7.5,-.9);
  const b=s.ball,oldY=b.y,oldZ=b.z,a=accel(b);
  b.vx+=a.ax*dt;b.vy+=a.ay*dt;b.vz+=a.az*dt;
  b.x+=b.vx*dt;b.y+=b.vy*dt;b.z+=b.vz*dt;
@@ -219,9 +258,12 @@ function step(s:TennisState,dt:number){
    s.message='Into the net…';s.version++;
   }else if(crossZ<nh+R*.95){ // kissed the tape — it can dribble over or fall back
    const pace=Math.abs(b.vy);b.y=0;b.z=nh+R;
-   const over=random(s)<.52+Math.min(.2,pace*.015);
-   b.vy=(over?-from:from)*(.35+random(s)*Math.min(1.7,pace*.28));
-   b.vx*=.45;b.vz=.5+random(s)*1.2;b.wx*=.3;b.wy*=.3;b.wz*=.3;b.squash=.08;
+   // Contact height and momentum decide a tape clip, not a coin flip.
+   // A low, soft ball falls back; a high grazing strike keeps its direction.
+   const grazing=clamp((crossZ-(nh-R*.5))/(R*1.45),0,1);
+   const over=grazing+Math.min(.28,pace*.018)>.52;
+   b.vy=(over?-from:from)*clamp(pace*(.1+grazing*.14),.35,2.1);
+   b.vx*=.45;b.vz=clamp(Math.abs(b.vz)*.2+pace*.055,.5,2.1);b.wx*=.3;b.wy*=.3;b.wz*=.3;b.squash=.08;
    if(over){b.crossed=true;s.message='Off the tape… and over!';}else{b.netHit=true;s.message='Clipped the tape…';}
    s.version++;
   }else b.crossed=true;
@@ -235,7 +277,7 @@ function step(s:TennisState,dt:number){
   b.bounces++;if(b.bounces>1){point(s,b.last,'two bounces');return;}
   // energy-losing bounce: restitution up; friction across the ground converts spin —
   // topspin skids through low and quick, backspin checks up short
-  const R=TENNIS.ballRadius,imp=-b.vz;b.z=R;b.vz=imp*TENNIS.restitution;
+  s.bounceAge=0;const R=TENNIS.ballRadius,imp=-b.vz;b.z=R;b.vz=imp*TENNIS.restitution;
   const k=.5,pre=Math.hypot(b.vx,b.vy);
   b.vx-=k*(b.vx-b.wy*R);b.vy-=k*(b.vy+b.wx*R);
   const post=Math.hypot(b.vx,b.vy),cap=pre*.92+.2;

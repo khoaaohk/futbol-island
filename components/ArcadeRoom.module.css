@@ -23,3 +23,28 @@
 
 /* Long-press guard on the held room action buttons (device-guards check 1; added by the main session for deploy). */
 .roomActions,.roomActions *{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-user-drag:none}
+
+/* Cabinet neon navigation; retain the shared collapse and press animations. */
+.header{
+ --btn-gold:#20243d;--btn-ink:#e8ffff;--btn-rim:#70f5ec;
+ --btn-shadow-gold:0 4px 0 #101323,0 0 14px #4debd533;
+ --btn-shadow-gold-pressed:0 1px 0 #101323,0 0 18px #4debd54d;
+ --btn-focus:3px solid #b6fff7;
+}
+.headerActions{
+ --btn-ink:#ffeafa;--btn-rim:#ff85d9;
+ --btn-shadow-gold:0 4px 0 #1b1027,0 0 14px #ff62c233;
+ --btn-shadow-gold-pressed:0 1px 0 #1b1027,0 0 18px #ff62c24d;
+}
+.header .buttonFace{background:#35213f;color:var(--btn-ink)}
+.header button:hover .buttonFace{background:#4b2853;color:#fff2fc;box-shadow:0 4px 0 #1b1027,0 0 20px #ff62c24d}
+.header button:active .buttonFace{box-shadow:var(--btn-shadow-gold-pressed)}
+.header button:focus-visible{outline:3px solid #b6fff7;outline-offset:4px}
+.root .machinePrompt{background:#91f58f;color:#113a2a;border:3px solid #ceffbf;box-shadow:0 4px 0 #347a49,0 0 18px #78ff8b66}
+.root .machinePrompt:hover{background:#b1ffa5;color:#103624;box-shadow:0 4px 0 #347a49,0 0 24px #78ff8b88}
+.root .machinePrompt:active{box-shadow:0 1px 0 #347a49,0 0 14px #78ff8b66}
+
+/* UI audit (Sep 27): Exit/Coins share the modal anchors — desktop 24/20, phone 18/16 — and one 44px height. */
+.root>.header.header{padding:calc(20px + env(safe-area-inset-top,0px)) calc(24px + env(safe-area-inset-right,0px)) 12px calc(24px + env(safe-area-inset-left,0px))}
+@media(max-width:600px),(pointer:coarse){.root>.header.header{padding:calc(16px + env(safe-area-inset-top,0px)) calc(18px + env(safe-area-inset-right,0px)) 10px calc(18px + env(safe-area-inset-left,0px))}}
+.root>.header.header button{min-height:var(--btn-height,44px)}

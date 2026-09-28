@@ -25,5 +25,45 @@
     "license": "CC BY-SA 3.0",
     "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
     "date": "2012-03-10"
+  },
+  "Catela": {
+    "slug": "catela",
+    "article": "Catela",
+    "file": "https://commons.wikimedia.org/wiki/File:Encontro_amistoso_de_f%C3%BAtbol_sala_masculino_Espa%C3%B1a_-_Hungr%C3%ADa_na_Malata_44.jpg",
+    "artist": "Estevoaei",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2024-08-22",
+    "source": "wikimedia/deep-audit"
+  },
+  "Dídac Plana": {
+    "slug": "didac-plana",
+    "article": "Dídac Plana",
+    "file": "https://commons.wikimedia.org/wiki/File:Encontro_amistoso_de_f%C3%BAtbol_sala_masculino_Espa%C3%B1a_-_Hungr%C3%ADa_na_Malata_84.jpg",
+    "artist": "Estevoaei",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2024-08-22",
+    "source": "wikimedia/deep-audit"
+  },
+  "Sid Belhaj": {
+    "slug": "sid-belhaj",
+    "article": "Sid Belhaj",
+    "file": "https://commons.wikimedia.org/wiki/File:Sid_Belhaj_2015.jpeg",
+    "artist": "Pierre-Yves Beaudouin",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2015-05-23",
+    "source": "wikimedia/deep-audit"
+  },
+  "Alex Merlim": {
+    "slug": "alex-merlim",
+    "article": "Alex Merlim",
+    "file": "https://commons.wikimedia.org/wiki/File:Alex_Merlim_2021.png",
+    "artist": "Divisione Calcio a 5",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2021-12-20",
+    "source": "wikimedia/deep-audit"
   }
 }

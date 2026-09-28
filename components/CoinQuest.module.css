@@ -43,3 +43,9 @@
 .secondary:active{translate:0 2px;box-shadow:0 2px 0 var(--btn-mint-edge)}
 .overview .compactHeading .secondary{min-height:var(--btn-height)}
 .ballSelector{gap:8px}
+/* Sep 28 (pm): the ball-hunt hint takes the Learn-plays card's slot (the card steps aside while a hint shows, Town.tsx) and
+   wears the same treatment: warm cream at 95%, pale rim, 14px corners, dark green ink and the card's soft gold glow (static
+   here, no animation). One thing in that space at a time. */
+.hud{top:calc(80px + env(safe-area-inset-top,0px));width:min(360px,calc(100% - 36px))}
+.near{box-sizing:border-box;min-height:66px;display:flex;align-items:center;padding:10px 16px;border-radius:14px;background:rgba(244,232,193,.95);color:#294c40;border:1px solid #ffefd0;box-shadow:0 0 0 2px #fff3c9ad,0 0 24px #ffdd828c,0 0 40px #ffe8a838;font-size:15px;font-weight:700;line-height:1.35}
+@media(max-width:600px),(pointer:coarse){.hud{top:calc(76px + env(safe-area-inset-top,0px))}.near{min-height:58px;padding:6px 12px;font-size:14px}}

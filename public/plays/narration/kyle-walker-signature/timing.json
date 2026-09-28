@@ -1,0 +1,370 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "How he does it",
+   "text": "Kyle Walker is one of the fastest defenders in the world. Watch how he does it! A winger dribbles at him, knocks the ball past him... and races away.",
+   "src": "/plays/narration/kyle-walker-signature/1.m4a",
+   "seconds": 10.6,
+   "words": [
+    {
+     "w": "Kyle",
+     "at": 0.35
+    },
+    {
+     "w": "Walker",
+     "at": 0.637
+    },
+    {
+     "w": "is",
+     "at": 1.1
+    },
+    {
+     "w": "one",
+     "at": 1.225
+    },
+    {
+     "w": "of",
+     "at": 1.363
+    },
+    {
+     "w": "the",
+     "at": 1.438
+    },
+    {
+     "w": "fastest",
+     "at": 1.575
+    },
+    {
+     "w": "defenders",
+     "at": 2.15
+    },
+    {
+     "w": "in",
+     "at": 2.737
+    },
+    {
+     "w": "the",
+     "at": 2.812
+    },
+    {
+     "w": "world",
+     "at": 2.9
+    },
+    {
+     "w": "Watch",
+     "at": 3.737
+    },
+    {
+     "w": "how",
+     "at": 4.075
+    },
+    {
+     "w": "he",
+     "at": 4.25
+    },
+    {
+     "w": "does",
+     "at": 4.375
+    },
+    {
+     "w": "it",
+     "at": 4.612
+    },
+    {
+     "w": "A",
+     "at": 5.213
+    },
+    {
+     "w": "winger",
+     "at": 5.35
+    },
+    {
+     "w": "dribbles",
+     "at": 5.713
+    },
+    {
+     "w": "at",
+     "at": 6.138
+    },
+    {
+     "w": "him",
+     "at": 6.275
+    },
+    {
+     "w": "knocks",
+     "at": 6.737
+    },
+    {
+     "w": "the",
+     "at": 7.1
+    },
+    {
+     "w": "ball",
+     "at": 7.2
+    },
+    {
+     "w": "past",
+     "at": 7.5
+    },
+    {
+     "w": "him",
+     "at": 7.862
+    },
+    {
+     "w": "and",
+     "at": 8.55
+    },
+    {
+     "w": "races",
+     "at": 8.675
+    },
+    {
+     "w": "away",
+     "at": 9.125
+    }
+   ]
+  },
+  {
+   "label": "Don't give up",
+   "text": "But Walker doesn't give up! He turns, pumps his arms, and sprints back on the inside.",
+   "src": "/plays/narration/kyle-walker-signature/2.m4a",
+   "seconds": 6.4,
+   "words": [
+    {
+     "w": "But",
+     "at": 0.325
+    },
+    {
+     "w": "Walker",
+     "at": 0.45
+    },
+    {
+     "w": "doesn't",
+     "at": 0.8
+    },
+    {
+     "w": "give",
+     "at": 1.075
+    },
+    {
+     "w": "up",
+     "at": 1.275
+    },
+    {
+     "w": "He",
+     "at": 1.925
+    },
+    {
+     "w": "turns",
+     "at": 2.087
+    },
+    {
+     "w": "pumps",
+     "at": 2.825
+    },
+    {
+     "w": "his",
+     "at": 3.138
+    },
+    {
+     "w": "arms",
+     "at": 3.3
+    },
+    {
+     "w": "and",
+     "at": 3.788
+    },
+    {
+     "w": "sprints",
+     "at": 3.913
+    },
+    {
+     "w": "back",
+     "at": 4.325
+    },
+    {
+     "w": "on",
+     "at": 4.562
+    },
+    {
+     "w": "the",
+     "at": 4.662
+    },
+    {
+     "w": "inside",
+     "at": 4.75
+    }
+   ]
+  },
+  {
+   "label": "The replay",
+   "text": "Watch again, from behind the goal. He gets in front of the winger, and pokes the ball away. Won it!",
+   "src": "/plays/narration/kyle-walker-signature/3.m4a",
+   "seconds": 6.8,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "from",
+     "at": 1.1
+    },
+    {
+     "w": "behind",
+     "at": 1.238
+    },
+    {
+     "w": "the",
+     "at": 1.613
+    },
+    {
+     "w": "goal",
+     "at": 1.7
+    },
+    {
+     "w": "He",
+     "at": 2.475
+    },
+    {
+     "w": "gets",
+     "at": 2.587
+    },
+    {
+     "w": "in",
+     "at": 2.788
+    },
+    {
+     "w": "front",
+     "at": 2.875
+    },
+    {
+     "w": "of",
+     "at": 3.062
+    },
+    {
+     "w": "the",
+     "at": 3.138
+    },
+    {
+     "w": "winger",
+     "at": 3.225
+    },
+    {
+     "w": "and",
+     "at": 3.612
+    },
+    {
+     "w": "pokes",
+     "at": 3.725
+    },
+    {
+     "w": "the",
+     "at": 4.025
+    },
+    {
+     "w": "ball",
+     "at": 4.125
+    },
+    {
+     "w": "away",
+     "at": 4.425
+    },
+    {
+     "w": "Won",
+     "at": 5.3
+    },
+    {
+     "w": "it",
+     "at": 5.588
+    }
+   ]
+  },
+  {
+   "label": "The lesson",
+   "text": "If a winger gets past you, don't give up! Sprint back on the inside, then win the ball.",
+   "src": "/plays/narration/kyle-walker-signature/4.m4a",
+   "seconds": 6.2,
+   "words": [
+    {
+     "w": "If",
+     "at": 0.35
+    },
+    {
+     "w": "a",
+     "at": 0.487
+    },
+    {
+     "w": "winger",
+     "at": 0.575
+    },
+    {
+     "w": "gets",
+     "at": 0.875
+    },
+    {
+     "w": "past",
+     "at": 1.125
+    },
+    {
+     "w": "you",
+     "at": 1.475
+    },
+    {
+     "w": "don't",
+     "at": 1.825
+    },
+    {
+     "w": "give",
+     "at": 2.025
+    },
+    {
+     "w": "up",
+     "at": 2.212
+    },
+    {
+     "w": "Sprint",
+     "at": 2.9
+    },
+    {
+     "w": "back",
+     "at": 3.225
+    },
+    {
+     "w": "on",
+     "at": 3.462
+    },
+    {
+     "w": "the",
+     "at": 3.562
+    },
+    {
+     "w": "inside",
+     "at": 3.65
+    },
+    {
+     "w": "then",
+     "at": 4.325
+    },
+    {
+     "w": "win",
+     "at": 4.55
+    },
+    {
+     "w": "the",
+     "at": 4.737
+    },
+    {
+     "w": "ball",
+     "at": 4.825
+    }
+   ]
+  }
+ ]
+}

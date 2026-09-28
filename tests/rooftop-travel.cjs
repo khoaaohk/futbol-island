@@ -77,3 +77,11 @@ const cafeLanding=createRooftopTravel([furnishedRoof],[furnishedRoof],{x:70,z:-3
 for(const x of [70,75]){assert(!cafeLanding.canLand(x,-30),'table and umbrella are not landing pads');const safe=cafeLanding.findLanding(x,-30);assert(safe&&cafeLanding.canLand(safe.x,safe.z));assert.equal(cafeLanding.surface(safe.x,safe.z),9);}
 console.log('CAFE_LANDING_PASS tables and umbrellas redirect to clear roof');
 const seamSteps=Array.from({length:40},(_,i)=>({x:57+(i+.5)*.4,z:179,w:.4,d:4,height:(40-i)*10.23/41,stepAccess:true}));const seamTravel=createRooftopTravel(seamSteps,seamSteps,{x:67,z:179});for(let i=1;i<40;i++){const x=57+i*.4;assert(seamTravel.surface(x,179)>0,'exact tread seam retains stair support');seamTravel.reset(x,179);assert(seamTravel.state.height>0);}console.log('STAIR_SEAMS_PASS no ground-height holes between treads');
+
+// Landing-only exclusions must not become invisible walls for walkers.
+{const glass={x:70,z:-30,w:20,d:14},p={x:70,z:-42},v={x:0,z:0},travel=createRooftopTravel([],[],p,[],()=>0,[glass]);
+ assert.equal(travel.canLand(70,-30),false);assert.equal(travel.canLand(70,-37.5),false,'landing clearance stays outside glass');
+ const safe=travel.findLanding(70,-30);assert(safe&&travel.canLand(safe.x,safe.z));
+ for(let n=0;n<360;n++)travel.update(1/60,p,v,{x:0,z:1,sprint:false},'walk');assert(p.z>-25,'walking can pass through a landing exclusion');assert.equal(travel.state.height,0);
+}
+console.log('LANDING_EXCLUSIONS_PASS aerial safety preserves walk-through ground access');

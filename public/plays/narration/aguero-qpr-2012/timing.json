@@ -1,0 +1,410 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Manchester, 2012: the last day of the season. City need a goal to win the league, and it is injury time. Sergio Ag\u00fcero plays a one-two with Mario Balotelli... and scores! City are champions!",
+   "src": "/plays/narration/aguero-qpr-2012/1.m4a",
+   "seconds": 14.5,
+   "words": [
+    {
+     "w": "Manchester",
+     "at": 0.425
+    },
+    {
+     "w": "2012",
+     "at": 1.1
+    },
+    {
+     "w": "the",
+     "at": 2.225
+    },
+    {
+     "w": "last",
+     "at": 2.325
+    },
+    {
+     "w": "day",
+     "at": 2.675
+    },
+    {
+     "w": "of",
+     "at": 2.862
+    },
+    {
+     "w": "the",
+     "at": 2.938
+    },
+    {
+     "w": "season",
+     "at": 3.038
+    },
+    {
+     "w": "City",
+     "at": 4.037
+    },
+    {
+     "w": "need",
+     "at": 4.375
+    },
+    {
+     "w": "a",
+     "at": 4.562
+    },
+    {
+     "w": "goal",
+     "at": 4.625
+    },
+    {
+     "w": "to",
+     "at": 4.95
+    },
+    {
+     "w": "win",
+     "at": 5.075
+    },
+    {
+     "w": "the",
+     "at": 5.287
+    },
+    {
+     "w": "league",
+     "at": 5.375
+    },
+    {
+     "w": "and",
+     "at": 5.85
+    },
+    {
+     "w": "it",
+     "at": 5.963
+    },
+    {
+     "w": "is",
+     "at": 6.05
+    },
+    {
+     "w": "injury",
+     "at": 6.213
+    },
+    {
+     "w": "time",
+     "at": 6.688
+    },
+    {
+     "w": "Sergio",
+     "at": 7.638
+    },
+    {
+     "w": "Ag\u00fcero",
+     "at": 8.188
+    },
+    {
+     "w": "plays",
+     "at": 8.725
+    },
+    {
+     "w": "a",
+     "at": 8.988
+    },
+    {
+     "w": "one-two",
+     "at": 9.075
+    },
+    {
+     "w": "with",
+     "at": 9.575
+    },
+    {
+     "w": "Mario",
+     "at": 9.75
+    },
+    {
+     "w": "Balotelli",
+     "at": 10.225
+    },
+    {
+     "w": "and",
+     "at": 11.375
+    },
+    {
+     "w": "scores",
+     "at": 11.525
+    },
+    {
+     "w": "City",
+     "at": 12.45
+    },
+    {
+     "w": "are",
+     "at": 12.725
+    },
+    {
+     "w": "champions",
+     "at": 12.863
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again. Ag\u00fcero passes, and keeps running into the box. Balotelli, falling over, pokes it back into his path.",
+   "src": "/plays/narration/aguero-qpr-2012/2.m4a",
+   "seconds": 8.4,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "Ag\u00fcero",
+     "at": 1.475
+    },
+    {
+     "w": "passes",
+     "at": 2.013
+    },
+    {
+     "w": "and",
+     "at": 2.587
+    },
+    {
+     "w": "keeps",
+     "at": 2.7
+    },
+    {
+     "w": "running",
+     "at": 3.013
+    },
+    {
+     "w": "into",
+     "at": 3.312
+    },
+    {
+     "w": "the",
+     "at": 3.487
+    },
+    {
+     "w": "box",
+     "at": 3.575
+    },
+    {
+     "w": "Balotelli",
+     "at": 4.562
+    },
+    {
+     "w": "falling",
+     "at": 5.362
+    },
+    {
+     "w": "over",
+     "at": 5.725
+    },
+    {
+     "w": "pokes",
+     "at": 6.175
+    },
+    {
+     "w": "it",
+     "at": 6.438
+    },
+    {
+     "w": "back",
+     "at": 6.525
+    },
+    {
+     "w": "into",
+     "at": 6.763
+    },
+    {
+     "w": "his",
+     "at": 6.938
+    },
+    {
+     "w": "path",
+     "at": 7.1
+    }
+   ]
+  },
+  {
+   "label": "The finish",
+   "text": "One touch to control. He steps past the defender, and smashes it into the near corner. Ninety-three minutes and twenty seconds!",
+   "src": "/plays/narration/aguero-qpr-2012/3.m4a",
+   "seconds": 9.0,
+   "words": [
+    {
+     "w": "One",
+     "at": 0.4
+    },
+    {
+     "w": "touch",
+     "at": 0.688
+    },
+    {
+     "w": "to",
+     "at": 1.05
+    },
+    {
+     "w": "control",
+     "at": 1.15
+    },
+    {
+     "w": "He",
+     "at": 2.175
+    },
+    {
+     "w": "steps",
+     "at": 2.325
+    },
+    {
+     "w": "past",
+     "at": 2.663
+    },
+    {
+     "w": "the",
+     "at": 3.013
+    },
+    {
+     "w": "defender",
+     "at": 3.1
+    },
+    {
+     "w": "and",
+     "at": 3.8
+    },
+    {
+     "w": "smashes",
+     "at": 3.95
+    },
+    {
+     "w": "it",
+     "at": 4.5
+    },
+    {
+     "w": "into",
+     "at": 4.612
+    },
+    {
+     "w": "the",
+     "at": 4.787
+    },
+    {
+     "w": "near",
+     "at": 4.875
+    },
+    {
+     "w": "corner",
+     "at": 5.1
+    },
+    {
+     "w": "Ninety-three",
+     "at": 6.075
+    },
+    {
+     "w": "minutes",
+     "at": 6.725
+    },
+    {
+     "w": "and",
+     "at": 7.062
+    },
+    {
+     "w": "twenty",
+     "at": 7.175
+    },
+    {
+     "w": "seconds",
+     "at": 7.487
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: never stop believing. A quick one-two in the box can win a match in the last minute!",
+   "src": "/plays/narration/aguero-qpr-2012/4.m4a",
+   "seconds": 6.7,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "never",
+     "at": 1.212
+    },
+    {
+     "w": "stop",
+     "at": 1.525
+    },
+    {
+     "w": "believing",
+     "at": 1.85
+    },
+    {
+     "w": "A",
+     "at": 2.888
+    },
+    {
+     "w": "quick",
+     "at": 3.0
+    },
+    {
+     "w": "one-two",
+     "at": 3.25
+    },
+    {
+     "w": "in",
+     "at": 3.612
+    },
+    {
+     "w": "the",
+     "at": 3.688
+    },
+    {
+     "w": "box",
+     "at": 3.775
+    },
+    {
+     "w": "can",
+     "at": 4.2
+    },
+    {
+     "w": "win",
+     "at": 4.325
+    },
+    {
+     "w": "a",
+     "at": 4.463
+    },
+    {
+     "w": "match",
+     "at": 4.525
+    },
+    {
+     "w": "in",
+     "at": 4.862
+    },
+    {
+     "w": "the",
+     "at": 4.938
+    },
+    {
+     "w": "last",
+     "at": 5.025
+    },
+    {
+     "w": "minute",
+     "at": 5.375
+    }
+   ]
+  }
+ ]
+}

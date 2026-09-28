@@ -31,6 +31,12 @@
    "who": "Adolfo",
    "default": "ædˈɑlfO"
   },
+  "Aguilar": {
+   "ps": "ɑɡilˈɑɹ",
+   "source": "knowledge",
+   "who": "Abel Aguilar — ah-ghee-LAR",
+   "default": "ˈæɡwɪləɹ"
+  },
   "Agüero": {
    "ps": "ɑɡwˈɛɹO",
    "source": "knowledge",
@@ -265,6 +271,12 @@
    "who": "David Beckham",
    "default": "bˈɛkæm"
   },
+  "Beiranvand": {
+   "ps": "bˌAɹɑnvˈɑnd",
+   "source": "knowledge",
+   "who": "Alireza Beiranvand — fa bey-ran-VAND",
+   "default": "bˈɛɹənvˌænd"
+  },
   "Benfica": {
    "ps": "bɛnfˈikə",
    "source": "knowledge",
@@ -301,6 +313,12 @@
    "who": "Birgit Prinz",
    "default": "bˈɜɹʤɪt"
   },
+  "Blanc": {
+   "ps": "blˈɑn",
+   "source": "wiki-ipa",
+   "who": "Laurent Blanc — French [blɑ̃], anglicised BLAHN (blˈɑŋ was heard as \"Blong\")",
+   "default": "blˈɑŋk"
+  },
   "Boer": {
    "ps": "bˈʊɹ",
    "source": "knowledge",
@@ -312,6 +330,11 @@
    "source": "wiki-ipa",
    "who": "Aitana Bonmatí",
    "default": "bənmˈɑTi"
+  },
+  "Bonucci": {
+   "ps": "bOnˈuʧi",
+   "source": "knowledge",
+   "who": "Leonardo Bonucci"
   },
   "Borges": {
    "ps": "bˈɔɹʒɪs",
@@ -481,6 +504,12 @@
    "who": "Giorgio Chiellini",
    "default": "ʧɪˈɛlˈini"
   },
+  "Chilavert": {
+   "ps": "ʧˌilɑvˈɛɹt",
+   "source": "knowledge",
+   "who": "José Luis Chilavert — chee-la-VERT",
+   "default": "ʧˈɪləvˌɜɹt"
+  },
   "Cirilo": {
    "ps": "sɪɹˈilO",
    "source": "knowledge",
@@ -546,6 +575,12 @@
    "source": "knowledge",
    "who": "Marc Cucurella",
    "default": "kjˌukjʊɹɹˈɛlə"
+  },
+  "Cudicini": {
+   "ps": "kˌudiʧˈini",
+   "source": "knowledge",
+   "who": "Carlo Cudicini — Italian koo-dee-CHEE-nee",
+   "default": "kjˌudɪsˈini"
   },
   "Córdoba": {
    "ps": "kˈɔɹdObə",
@@ -1183,6 +1218,12 @@
    "who": "Inter Milan / Inter Miami",
    "default": "ɪntˈɜɹ"
   },
+  "Inzaghi": {
+   "ps": "intsˈɑɡi",
+   "source": "wiki-ipa",
+   "who": "Filippo Inzaghi — Italian [inˈtsaːɡi]",
+   "default": "ɪnzˈæɡhI"
+  },
   "Isak": {
    "ps": "ˈisɑk",
    "source": "wiki-ipa",
@@ -1338,6 +1379,12 @@
    "source": "knowledge",
    "who": "Sam Kerr",
    "default": "kˈɛɹ"
+  },
+  "Keylor": {
+   "ps": "kˈAlˌɔɹ",
+   "source": "knowledge",
+   "who": "Keylor Navas (KAY-lor; kˈAlɔɹ was heard as \"Kalar\", secondary stress keeps the full -lor)",
+   "default": "kˈiləɹ"
   },
   "Khvicha": {
    "ps": "kvˈiʧə",
@@ -1512,6 +1559,12 @@
    "source": "knowledge",
    "who": "Ljubljana",
    "default": "ljˌʊbliˈɑnə"
+  },
+  "Ljungberg": {
+   "ps": "jˈʌŋbɜɹɡ",
+   "source": "wiki-ipa",
+   "who": "Freddie Ljungberg — Swedish [ˈjɵ̌ŋːbærj], anglicised YUNG-berg",
+   "default": "ljˈuŋbɜɹɡ"
   },
   "Lleida": {
    "ps": "jˈAdə",
@@ -1758,6 +1811,12 @@
    "source": "wiki-ipa",
    "who": "Jamal Musiala",
    "default": "mjˈuziˈɑlə"
+  },
+  "Muslera": {
+   "ps": "muslˈɛɹə",
+   "source": "knowledge",
+   "who": "Fernando Muslera — moos-LEH-ra",
+   "default": "mˈʌsləɹɹə"
   },
   "Musso": {
    "ps": "mˈusO",
@@ -2011,6 +2070,12 @@
    "who": "Andrea Pirlo",
    "default": "pˈɜɹlO"
   },
+  "Pirès": {
+   "ps": "piɹˈɛs",
+   "source": "wiki-ipa",
+   "who": "Robert Pirès — French [piʁɛs], final stress pee-RESS",
+   "default": "pˈIəɹz"
+  },
   "Platini": {
    "ps": "plɑtˈini",
    "source": "wiki-ipa",
@@ -2040,6 +2105,12 @@
    "source": "wiki-ipa",
    "who": "Carles Puyol",
    "default": "pˈIɑl"
+  },
+  "Quaresma": {
+   "ps": "kwəɹˈɛʒmə",
+   "source": "wiki-ipa",
+   "who": "Ricardo Quaresma — pt [kwɐˈɾeʒmɐ], anglicised kwa-REZH-ma",
+   "default": "kwˈɛɹsmə"
   },
   "Quenda": {
    "ps": "kˈɛndə",
@@ -2088,6 +2159,12 @@
    "source": "wiki-ipa",
    "who": "Tijjani Reijnders",
    "default": "ɹˌiˈAndəɹz"
+  },
+  "Reina": {
+   "ps": "ɹˈAnə",
+   "source": "knowledge",
+   "who": "Pepe Reina — RAY-na",
+   "default": "ɹˌiɪnˈA"
   },
   "Remiro": {
    "ps": "ɹɛmˈiɹO",
@@ -2383,6 +2460,12 @@
    "who": "Francesco Totti",
    "default": "tˈɑTi"
   },
+  "Trezeguet": {
+   "ps": "tɹˌɛzəɡˈA",
+   "source": "wiki-ipa",
+   "who": "David Trezeguet — French [tʁezəɡɛ]",
+   "default": "tɹˈɛzɛɡɪt"
+  },
   "Trossard": {
    "ps": "tɹOsˈɑɹ",
    "source": "knowledge",
@@ -2407,6 +2490,12 @@
    "who": "Udinese",
    "default": "jˌudInˈiz"
   },
+  "Umaña": {
+   "ps": "umˈɑnjə",
+   "source": "knowledge",
+   "who": "Michael Umaña (oo-MAHN-ya)",
+   "default": "jumˈɑnjə"
+  },
   "Unanua": {
    "ps": "unˈɑnwə",
    "source": "rule",
@@ -2425,6 +2514,12 @@
    "who": "Federico Valverde",
    "default": "vˈælvəɹd"
   },
+  "Varane": {
+   "ps": "vəɹˈɑn",
+   "source": "wiki-ipa",
+   "who": "Raphaël Varane",
+   "default": "vˈæɹən"
+  },
   "Varela": {
    "ps": "vəɹˈɛlə",
    "source": "knowledge",
@@ -2436,6 +2531,11 @@
    "source": "knowledge",
    "who": "Benjamin Verbič",
    "default": "vˈɜɹbɪʧ"
+  },
+  "Verratti": {
+   "ps": "vəɹˈɑti",
+   "source": "knowledge",
+   "who": "Marco Verratti"
   },
   "Vicario": {
    "ps": "vikˈɑɹiO",
@@ -2623,6 +2723,12 @@
    "who": "Sergei Zuev",
    "default": "zwˈAv"
   },
+  "futbol": {
+   "ps": "fˈutbˌɔl",
+   "source": "knowledge",
+   "who": "Futbol Island, the app's name (FOOT-bol)",
+   "default": "fˈʌtbɑl"
+  },
   "ala": {
    "ps": "ˈɑlə",
    "source": "knowledge",
@@ -2755,6 +2861,12 @@
    "who": "Italian playmaker role",
    "default": "tɹˈɛkwɔɹtˌɪstə"
   },
+  "trivela": {
+   "ps": "tɹivˈɛlə",
+   "source": "knowledge",
+   "who": "trivela (outside-of-the-foot shot, pt tri-VEH-la)",
+   "default": "tɹIvˈɛlə"
+  },
   "Ødegaard": {
    "ps": "ˈɜdəɡɔɹ",
    "source": "wiki-ipa",
@@ -2766,6 +2878,342 @@
    "source": "wiki-ipa",
    "who": "Petr Čech",
    "default": "ʧˈɛʧ"
+  },
+  "Rakitić": {
+   "ps": "ɹˈɑkɪʧɪʧ",
+   "source": "wiki-ipa",
+   "who": "Ivan Rakitić",
+   "default": ""
+  },
+  "Schweinsteiger": {
+   "ps": "ʃvˈInʃtˌIɡəɹ",
+   "source": "wiki-ipa",
+   "who": "Bastian Schweinsteiger — de [ˈʃvaɪnʃtaɪɡɐ]",
+   "default": "ʃwˈAnstIɡəɹ"
+  },
+  "Lavezzi": {
+   "ps": "lɑvˈɛzi",
+   "source": "knowledge",
+   "who": "Ezequiel Lavezzi — la-VEH-zee",
+   "default": "lˈAvzi"
+  },
+  "Hummels": {
+   "ps": "hˈʊməlz",
+   "source": "wiki-ipa",
+   "who": "Mats Hummels — de [ˈhʊml̩s]",
+   "default": "hˈʌmᵊlz"
+  },
+  "Gullit": {
+   "ps": "hˈʊlɪt",
+   "source": "knowledge",
+   "who": "Ruud Gullit — English commentary HOO-lit (nl [ˈɣʏlɪt])",
+   "default": "ɡˈʌlɪt"
+  },
+  "Endrick": {
+   "ps": "ɛndɹˈik",
+   "source": "wiki-ipa",
+   "who": "Endrick",
+   "default": ""
+  },
+  "Cavani": {
+   "ps": "kəvˈɑni",
+   "source": "knowledge",
+   "who": "Edinson Cavani (ka-VAH-nee)"
+  },
+  "Edinson": {
+   "ps": "ˈɛdinsən",
+   "source": "knowledge",
+   "who": "Edinson Cavani"
+  },
+  "Riquelme": {
+   "ps": "ɹikˈɛlmA",
+   "source": "wiki-ipa",
+   "who": "Juan Román Riquelme",
+   "default": ""
+  },
+  "Yepes": {
+   "ps": "jˈɛpɛs",
+   "source": "wiki-ipa",
+   "who": "Mario Yepes",
+   "default": ""
+  },
+  "Kuyt": {
+   "ps": "kˈWt",
+   "source": "knowledge",
+   "who": "Dirk Kuyt — nl [kœyt], English commentary KOWT",
+   "default": "kˈIt"
+  },
+  "Montolivo": {
+   "ps": "mˌɑntəlˈivO",
+   "source": "knowledge",
+   "who": "Riccardo Montolivo (mon-to-LEE-vo)",
+   "default": "mˌɔntəlˈɪvO"
+  },
+  "Vozinha": {
+   "ps": "vɔzˈinjə",
+   "source": "knowledge",
+   "who": "Vozinha, Cape Verde goalkeeper (vo-ZEEN-ya)",
+   "default": "vˈɑzɪnhə"
+  },
+  "Brahim": {
+   "ps": "bɹɑˈim",
+   "source": "knowledge",
+   "who": "Brahim Díaz (bra-HEEM)",
+   "default": "bɹˈæhɪm"
+  },
+  "Gulácsi": {
+   "ps": "ɡˈulɑʧi",
+   "source": "knowledge",
+   "who": "Péter Gulácsi (GOO-lah-chee)",
+   "default": "ɡjˈʊlæksi"
+  },
+  "Okocha": {
+   "ps": "OkˈOʧə",
+   "source": "wiki-ipa",
+   "who": "Jay-Jay Okocha",
+   "default": ""
+  },
+  "Sánchez": {
+   "ps": "sˈɑnʧɛz",
+   "source": "knowledge",
+   "who": "Alexis Sánchez"
+  },
+  "Qarabağ": {
+   "ps": "ɡˌɑɹəbˈɑk",
+   "source": "wiki-ipa",
+   "who": "Qarabağ FK",
+   "default": ""
+  },
+  "Mølby": {
+   "ps": "mˈOlbi",
+   "source": "knowledge",
+   "who": "Jan Mølby — English commentary MOLE-bee (da [ˈmølˀpy])",
+   "default": "(not recorded)"
+  },
+  "Gündoğan": {
+   "ps": "ɡˈʊndOˌɑn",
+   "source": "knowledge",
+   "who": "İlkay Gündoğan (GUEN-doh-ahn)",
+   "default": "ɡˈundOɡən"
+  },
+  "Ortega": {
+   "ps": "ɔɹtˈAɡə",
+   "source": "knowledge",
+   "who": "Stefan Ortega",
+   "default": "ˈɔɹTɛɡə"
+  },
+  "Nunes": {
+   "ps": "nˈunɛʃ",
+   "source": "knowledge",
+   "who": "Matheus Nunes (NOO-nesh)",
+   "default": "nˈʌnz"
+  },
+  "Koeman": {
+   "ps": "kˈumən",
+   "source": "knowledge",
+   "who": "Ronald Koeman (KOO-man)",
+   "default": "kˈOmən"
+  },
+  "Bakero": {
+   "ps": "bɑkˈɛɹO",
+   "source": "knowledge",
+   "who": "José Mari Bakero (bah-KEH-ro)",
+   "default": "bækˈɛɹO"
+  },
+  "Özil": {
+   "ps": "ˈOzɪl",
+   "source": "knowledge",
+   "who": "Mesut Özil — English commentary OH-zil (de [ˈøːzil]); Kokoro default said UR-zil"
+  },
+  "Mesut": {
+   "ps": "mɛsˈut",
+   "source": "knowledge",
+   "who": "Mesut Özil (meh-SOOT)"
+  },
+  "Jordi": {
+   "ps": "ʤˈɔɹdi",
+   "source": "knowledge",
+   "who": "Jordi Alba — English broadcast JOR-dee (ca [ˈʒɔɾði])"
+  },
+  "Alba": {
+   "ps": "ˈɑlbə",
+   "source": "knowledge",
+   "who": "Jordi Alba (AHL-ba)"
+  },
+  "Mascherano": {
+   "ps": "mˌæskəɹˈɑnO",
+   "source": "knowledge",
+   "who": "Javier Mascherano — mass-keh-RAH-no (Kokoro default said mash-er-RAH-no)"
+  },
+  "Javier": {
+   "ps": "hˌɑviˈɛɹ",
+   "source": "knowledge",
+   "who": "Javier (hah-vee-AIR)"
+  },
+  "Kyiv": {
+   "ps": "kˈiv",
+   "source": "knowledge",
+   "who": "Kyiv — English broadcast KEEV"
+  },
+  "Incheon": {
+   "ps": "ˈɪnʧˌʌn",
+   "source": "knowledge",
+   "who": "Incheon, South Korea (IN-chun)"
+  },
+  "Young-pyo": {
+   "ps": "jˌʌŋpjˈO",
+   "source": "knowledge",
+   "who": "Lee Young-pyo (young-PYOH)"
+  },
+  "Ji-sung": {
+   "ps": "ʤˌisˈʌŋ",
+   "source": "knowledge",
+   "who": "Park Ji-sung (jee-SUNG)"
+  },
+  "Rosales": {
+   "ps": "ɹOsˈɑlɛs",
+   "source": "knowledge",
+   "who": "Mauro Rosales (ro-SAH-les)"
+  },
+  "Ángel": {
+   "ps": "ˈɑŋhɛl",
+   "source": "knowledge",
+   "who": "Ángel Di María (AHNG-hel), not English angel"
+  },
+  "Angel": {
+   "ps": "ˈɑŋhɛl",
+   "source": "knowledge",
+   "who": "Ángel Di María written without accent (AHNG-hel)"
+  },
+  "Adeyemi": {
+   "ps": "ˌɑdɛjˈɛmi",
+   "source": "knowledge",
+   "who": "Karim Adeyemi (ah-deh-YEH-mee)"
+  },
+  "Raphaël": {
+   "ps": "ɹˌɑfɑˈɛl",
+   "source": "knowledge",
+   "who": "Raphaël Varane (ra-fa-EL)"
+  },
+  "Laurent": {
+   "ps": "lɔɹˈɑn",
+   "source": "knowledge",
+   "who": "Laurent Blanc (lo-RAHN)"
+  },
+  "Lens": {
+   "ps": "lˈɑns",
+   "source": "knowledge",
+   "who": "Lens, France (Stade Bollaert) — LAHNSS; capitalised only, lower-case lens unaffected"
+  },
+  "Olivier": {
+   "ps": "OlˌiviˈA",
+   "source": "knowledge",
+   "who": "Olivier Giroud (oh-liv-YAY)"
+  },
+  "Ivan": {
+   "ps": "ˈivɑn",
+   "source": "knowledge",
+   "who": "Ivan Rakitić / Perišić (EE-vahn)"
+  },
+  "Rodrigo": {
+   "ps": "ɹOdɹˈiɡO",
+   "source": "knowledge",
+   "who": "Rodrigo De Paul (ro-DREE-go)"
+  },
+  "Rodríguez": {
+   "ps": "ɹOdɹˈiɡɛs",
+   "source": "knowledge",
+   "who": "James Rodríguez (ro-DREE-ges)"
+  },
+  "Román": {
+   "ps": "ɹOmˈɑn",
+   "source": "knowledge",
+   "who": "Juan Román Riquelme (ro-MAHN)"
+  },
+  "Carlos": {
+   "ps": "kˈɑɹlOs",
+   "source": "knowledge",
+   "who": "Carlos (KAR-los), not English -oz"
+  },
+  "Paulo": {
+   "ps": "pˈWlO",
+   "source": "knowledge",
+   "who": "São Paulo / Paulo (POW-lo)"
+  },
+  "Bastian": {
+   "ps": "bˈɑstiən",
+   "source": "knowledge",
+   "who": "Bastian Schweinsteiger (BAHS-tee-an)"
+  },
+  "Basten": {
+   "ps": "bˈæstɛn",
+   "source": "knowledge",
+   "who": "Marco van Basten (Van BAS-ten, a as in bath/cat; bˈɑstən and bˈɑstɛn were heard as \"Boston\")"
+  },
+  "Uwe": {
+   "ps": "ˈuvə",
+   "source": "knowledge",
+   "who": "Uwe Bein (OO-veh)"
+  },
+  "Bein": {
+   "ps": "bˈIn",
+   "source": "knowledge",
+   "who": "Uwe Bein (BINE)"
+  },
+  "Eintracht": {
+   "ps": "ˈIntɹɑkt",
+   "source": "knowledge",
+   "who": "Eintracht Frankfurt (INE-trakt)"
+  },
+  "Elneny": {
+   "ps": "ɛlnˈɛni",
+   "source": "knowledge",
+   "who": "Mohamed Elneny (el-NEN-ee)"
+  },
+  "Ludogorets": {
+   "ps": "lˌudəɡˈɔɹɛts",
+   "source": "knowledge",
+   "who": "Ludogorets Razgrad (loo-do-GOR-ets)"
+  },
+  "Fabricio": {
+   "ps": "fɑbɹˈisiO",
+   "source": "knowledge",
+   "who": "Fabricio Coloccini (fa-BREE-see-o)"
+  },
+  "Gekas": {
+   "ps": "ɡˈɛkɑs",
+   "source": "knowledge",
+   "who": "Theofanis Gekas (GEH-kas)"
+  },
+  "Horizonte": {
+   "ps": "ˌɔɹizˈɔnʧi",
+   "source": "knowledge",
+   "who": "Belo Horizonte (o-ree-ZON-chee)"
+  },
+  "Belo": {
+   "ps": "bˈɛlO",
+   "source": "knowledge",
+   "who": "Belo Horizonte (BEH-lo)"
+  },
+  "İlkay": {
+   "ps": "ˈilkI",
+   "source": "knowledge",
+   "who": "İlkay Gündoğan (EEL-kai)"
+  },
+  "Recife": {
+   "ps": "ɹɛsˈifi",
+   "source": "knowledge",
+   "who": "Recife (heh-SEE-fee, anglicised reh-SEE-fee)"
+  },
+  "Verde": {
+   "ps": "vˈɜɹdi",
+   "source": "knowledge",
+   "who": "Cape Verde (VUR-dee)"
+  },
+  "Renan": {
+   "ps": "ɹɛnˈɑn",
+   "source": "knowledge",
+   "who": "Renan Lodi (reh-NAHN)"
   }
  }
 }

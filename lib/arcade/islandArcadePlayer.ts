@@ -34,6 +34,7 @@ export function createIslandArcadePlayer(color:string,reduced:boolean,index:numb
   intent.dribbling=!!o?.dribbling&&jump<.05&&slide<.1;intent.actionKind=strikeKind;intent.kick=strike<1?strike:undefined;
   intent.shotCharge=(o?.charge??0)>.001?o?.charge:undefined;intent.shotPower=(o?.charge??0)>0?o?.charge:strikePower;intent.powerKick=strike<1;
   intent.strikeX=(o?.charge??0)>0?(o?.strikeX??0):strikeX;intent.strikeZ=(o?.charge??0)>0?(o?.strikeZ??.65/Math.max(.1,root.scale.x)):strikeZ;intent.ready=o?.anticipate??0;intent.called=o?.celebrate??0;
+  intent.receive=o?.receive??0;intent.receiveProgress=o?.receiveProgress;
   intent.dive=o?.dive;intent.keeper=o?.keeper??0;intent.jockey=o?.jockey??0;
   jumpPose.progress=o?.jumpProgress??0;jumpPose.height=o?.jumpHeight??0;intent.jump=o?.jumpProgress===undefined?undefined:jumpPose;
   intent.skill=o?.skill;intent.move=o?.move;

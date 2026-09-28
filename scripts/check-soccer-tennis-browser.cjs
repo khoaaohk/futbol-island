@@ -3,8 +3,8 @@ const assert=require('node:assert/strict');
 const captureTag=process.argv.find(arg=>arg.startsWith('--capture='))?.slice(10)||'motion';
 (async()=>{const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'});try{
  const mobile=process.argv.includes('--mobile'),page=await browser.newPage({viewport:mobile?{width:390,height:844}:{width:1280,height:800},isMobile:mobile,hasTouch:mobile}),errors=[];
- page.on('pageerror',e=>errors.push(e.message));await page.addInitScript(()=>localStorage.setItem('fi2-welcome-v1','completed'));
- await page.goto(new URL('/arcade?game=tennis',process.env.FUTBOL_BASE_URL||'http://localhost:8092').href);
+ page.on('pageerror',e=>errors.push(e.message));await page.addInitScript(()=>{localStorage.setItem('fi2-welcome-v1','completed');localStorage.setItem('fi2-arcade-wallet-v1',JSON.stringify({version:1,runs:{fixture:{game:'island',paid:30,reason:'playtest entry',at:1}},packs:[]}));});
+ await page.goto(new URL('/arcade?game=tennis',process.env.FUTBOL_BASE_URL||'http://localhost:8092').href,{waitUntil:'domcontentloaded',timeout:90000});
  await page.getByRole('button',{name:'Play',exact:true}).click();
  await page.waitForFunction(()=>window.__arcade3d?.phaseRef.current==='playing');
  const canvas=page.locator('[data-arcade-kind="tennis"] canvas');
@@ -65,7 +65,7 @@ const captureTag=process.argv.find(arg=>arg.startsWith('--capture='))?.slice(10)
    await page.waitForTimeout(100);
   }
   await steer(0,0);await cdp?.detach();if(process.argv.includes('--aerial'))assert.equal(aerialActions.size,2,'ordinary input must execute both aerial actions');if(process.argv.includes('--brief'))assert(sequenceCaptured,'brief capture requires a confirmed physical return');assert(result,`ordinary-input match finishes: ${JSON.stringify(lastView)}`);assert(result.best>=3,'ordinary input sustains an exchange');assert(result.clean>0,'ordinary input achieves planted clean returns');
-  await page.screenshot({path:`/tmp/fi-tennis-result-${mobile?'mobile':'desktop'}.png`});await page.getByRole('button',{name:'Play again',exact:true}).click();await page.waitForFunction(()=>window.__arcade3d.runtime.state.tennis.phase==='serve');
+  await page.screenshot({path:`/tmp/fi-tennis-result-${mobile?'mobile':'desktop'}.png`});await page.getByRole('button',{name:/^(Retry court|Next court|Defend the title)$/}).click();await page.waitForFunction(()=>window.__arcade3d.runtime.state.tennis.phase==='serve');
   assert.equal(await page.evaluate(()=>window.__arcade3d.runtime.state.tennis.score.you+window.__arcade3d.runtime.state.tennis.score.rival),0);
   if(mobile)await page.getByRole('button',{name:'Serve',exact:true}).tap();else{await canvas.focus();await page.keyboard.press('Space');}
   await page.waitForFunction(()=>window.__arcade3d.runtime.state.tennis.score.rival>0,null,{timeout:30000});

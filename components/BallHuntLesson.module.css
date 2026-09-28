@@ -13,7 +13,7 @@
 .space{fill:#efd078;fill-opacity:.53;stroke:#c7983a;stroke-dasharray:4 4}
 .route,.run{fill:none;stroke:#436953;stroke-width:2.5;animation:fade .4s ease-out both}
 .run{stroke-dasharray:6 5;stroke:#638263}
-.token{transition:transform .85s cubic-bezier(.25,.65,.25,1)}
+.token{transition:opacity .4s ease}
 .token circle,.foot{stroke:#fff;stroke-width:2;fill:#315f4d}
 .token text{font-size:10px;fill:#254c3d;font-weight:750;paint-order:stroke;stroke:#f4f2df;stroke-width:3px;stroke-linejoin:round}
 .opponent circle{fill:#c67664}.opponent text{fill:#8b4a3d}.club circle{fill:#e9c56d;stroke:#c9a346}.club text{font-size:10px;stroke:#e9c56d}
@@ -74,3 +74,61 @@
    full half-width is too narrow (data-wrap), the label wraps onto two balanced lines and the pill grows taller (44 px minimum). */
 .footer[data-wrap] .previous,.footer[data-wrap] .next{--btn-height:auto;min-height:var(--lesson-btn-h,52px)}/* both the same height (the taller of the two) */
 .footer[data-wrap] .previous>span:first-child,.footer[data-wrap] .next>span:first-child{position:static;display:block;white-space:normal;text-wrap:balance;text-align:center;line-height:1.15;padding:5px 14px}
+
+/* Scene diagrams (Sep 28 2026, components/BallLessonDiagram.tsx). Everything below animates once per step change and then
+   stops: finite fades/grows with a per-mark delay (--d) so the movement plays first and the result (space, lane, clock) appears after. */
+.goal{fill:#fff;stroke:#b3c3a8}
+.overlay{stroke:#a9b99d;stroke-dasharray:5 5}.overlay text{stroke:none;fill:#7d9072;font-size:7.5px;font-weight:800;letter-spacing:.04em}
+.resetScene{animation:fade .35s ease-out both}
+.zone rect{fill:#efd078;fill-opacity:.5;stroke:#c7983a;stroke-dasharray:4 4}
+.zone text{font-size:8.5px;font-weight:800;fill:#886a27;paint-order:stroke;stroke:#f7e9b8;stroke-width:2.5px}
+.zone{animation:grow .6s cubic-bezier(.2,.8,.3,1.2) var(--d,0s) both;transform-box:fill-box;transform-origin:center}
+.zone_danger rect{fill:#e6a595;fill-opacity:.32;stroke:#c67664}.zone_danger text{fill:#9e5345;stroke:#f5ddd5}
+.zone_band rect{fill:#dfe8cf;fill-opacity:.55;stroke:#9fb58f}.zone_band text{fill:#48694e;stroke:#e9efdd}.zone_band{animation:fade .5s ease-out both}
+.cone{fill:#c67664;fill-opacity:.16;stroke:#c67664;stroke-opacity:.45;stroke-dasharray:3 3}
+.shadow{fill:#315f4d;fill-opacity:.12}
+.view{fill:#f7e7a7;fill-opacity:.55;stroke:#d7b659;stroke-opacity:.6}
+.link{fill:#8fb58a;fill-opacity:.14;stroke:#638263;stroke-dasharray:3 4;stroke-width:1.5}
+.line{fill:none;stroke:#c67664;stroke-width:3;stroke-opacity:.55;stroke-linecap:round;stroke-dasharray:1 6}
+.row{stroke:#638263;stroke-opacity:.5}
+.broken{stroke-opacity:.2}
+.hint{fill:none;stroke:#9aa894;stroke-width:1.6;stroke-dasharray:3 4}
+.lane path{fill:none;stroke-width:1.6;stroke-dasharray:2 4}
+.laneOpen path{stroke:#4f8a5f}.laneOpen circle{fill:#4f8a5f}
+.laneDanger path{stroke:#c67664}.laneDanger circle{fill:#c67664}
+.laneBlocked path{stroke:#a7a096}.laneBlocked .cross{stroke:#b3503f;stroke-width:2.6;stroke-dasharray:none;stroke-linecap:round}
+.pass,.run,.enemy,.dribble{fill:none;stroke-width:2.4;stroke-linecap:round}
+.pass{stroke:#315f4d}.run{stroke:#638263;stroke-dasharray:6 5}.enemy{stroke:#c67664;stroke-dasharray:5 5;stroke-width:2}.dribble{stroke:#638263;stroke-dasharray:1.5 4;stroke-width:3}
+.draw{animation:fade .35s ease-out var(--d,0s) both}
+.ghost{opacity:.22;animation:none}
+.appear{animation:fade .45s ease-out var(--d,0s) both}
+.token[data-dim]{opacity:.42}
+.reach{fill:#315f4d;fill-opacity:.08;stroke:#315f4d;stroke-opacity:.5;stroke-dasharray:3 3;stroke-width:1.2}
+.token circle.reach,.token .clock circle{stroke-width:3.2}
+.clock circle{fill:none}
+.token .clockTrack{fill:none;stroke:#e5dfc0}
+.token .clockFill{fill:none;stroke:#c7983a;transform:rotate(-90deg);transition:stroke-dashoffset .9s ease-out .25s,stroke .4s}
+.clock[data-low] .clockFill{stroke:#c67664}
+.tag rect{fill:#fffdf3;stroke:#c9c09c}.tag text{font-size:8.5px;font-weight:800;fill:#48694e}
+.clockTag rect{fill:#fbf1cf;stroke:#c7983a}.clockTag[data-low] rect{fill:#f8e0d8;stroke:#c67664}.clockTag[data-low] text{fill:#9e5345}
+.pulseRing{fill:none;stroke:#c7983a;stroke-width:3;opacity:0;animation:pulse .8s ease-out var(--d,0s) 2;transform-box:fill-box;transform-origin:center}
+.pulseTag{animation:pop .4s cubic-bezier(.2,.8,.3,1.3) var(--d,0s) both;transform-box:fill-box;transform-origin:center}
+.pulseTag rect{fill:#315f4d}.pulseTag text{fill:#fff6d6;font-size:10px;font-weight:900;letter-spacing:.02em}
+@keyframes grow{from{opacity:0;transform:scale(.55)}to{opacity:1;transform:scale(1)}}
+@keyframes pulse{0%{opacity:.95;transform:scale(.7)}100%{opacity:0;transform:scale(2.4)}}
+@keyframes pop{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}
+.legend i{font-style:normal;color:#638263}
+/* Sep 28 (pm): upright phones — the pitch runs edge to edge (the card's side padding goes to the heading, legend and caption
+   instead), and the scene labels grow a little so names and marks read at arm's length. */
+@media(max-width:600px) and (orientation:portrait){
+ .body{padding-left:10px;padding-right:10px}
+ .tip{padding-inline:9px}
+ .illustration{padding:12px 0 10px;border-radius:16px}
+ .diagramHeading,.legend,.caption{padding-inline:12px}
+ .field{max-height:77cqi;margin-inline:-2px;width:calc(100% + 4px)}
+ /* Taller pitch (BallHuntLesson.tsx measures this box and picks the view box to match, ≤ 3:2 tall), so no empty bands. */
+ .field{max-height:152cqi}
+ .token text{font-size:11.5px}
+ .zone text{font-size:9.5px}
+ .note{font-size:10.5px}
+}

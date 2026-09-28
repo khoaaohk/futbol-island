@@ -21,7 +21,7 @@ assert.equal(R.MIN_QUIZ_QUESTIONS,5);
 assert.equal(R.quizEarnsCard(5,true),true);assert.equal(R.quizEarnsCard(8,true),true);
 assert.equal(R.quizEarnsCard(4,true),false,'short quizzes earn nothing');assert.equal(R.quizEarnsCard(5,false),false,'every answer must be right');
 assert.equal(R.MAX_CATCH_UP,undefined,'catch-up picks were removed (user, 24 Sep: no users yet)');
-assert.equal(R.OFFER_SIZE,3);assert.equal(R.NPC_PICKS_PER_DAY,5);
+assert.equal(R.OFFER_SIZE,3);assert.equal(R.NPC_PICKS_PER_DAY,3,'economy pass (28 Sep 2026): 3 NPC picks a day');
 const unlock=fs.readFileSync(path.join(__dirname,'../lib/town/cardCollection.ts'),'utf8');
 assert.match(unlock,/export const UNLOCK_ALL_CARDS=!CARD_REWARDS_LAUNCH;/,'one launch switch drives both flags: unlock-all stays on until launch');
 assert.match(unlock,/process\.env\.NODE_ENV==='production'/,'the ?cards=earn switch is ignored in production builds');
@@ -105,7 +105,8 @@ assert.doesNotMatch(store+triggers,/grantCatchUp/,'no catch-up grant');
  assert.equal(R.sourceKey('journey','support:0','2026-09-24'),'journey:support:0');assert.equal(R.sourceKey('story','futsl','2026-09-24'),R.sourceKey('story','futsl','2030-01-01'),'stories pay once ever');}
 assert.match(triggers,/export function earnForExplore[\s\S]*?earnCardOffer\(request\)/,'Explore goes through earnCardOffer (session cap, ledger, launch gate)');
 assert.match(triggers,/export function earnForJourney[\s\S]*?earnCardOffer\(request\)/);assert.match(triggers,/export function earnForStory[\s\S]*?earnCardOffer\(request\)/);
-assert.match(triggers,/filter\(item=>item\.id!=='knock-characters'\)/,'knocking characters over never pays a card');
+assert.match(triggers,/NO_CARD_EXPLORE=new Set\(\[[^\]]*'knock-characters'/,'knocking characters over never pays a card');
+for(const id of ['visit-futsal','visit-7v7','visit-9v9','visit-11v11','use-parachute','visit-store','ride-truck','roof-drop','ramp-trick'])assert.match(triggers,new RegExp(`NO_CARD_EXPLORE=new Set\\(\\[[^\\]]*'${id}'`),`${id} is too easy for a card (user, Sep 27 2026)`);
 assert.match(read('lib/town/learningProgress.ts'),/window\.dispatchEvent\(new CustomEvent\(LEARNING_STAGE_COMPLETE,\{detail:\{id,stage\}\}\)\);\n\}/,'journey stage event after the write');
 const host=read('components/CardOfferHost.tsx');
 assert.match(host,/addEventListener\(LEARNING_STAGE_COMPLETE,stage\)/,'host listens for journey stages');assert.match(host,/earnForExplore\(id\)/,'explore watcher');

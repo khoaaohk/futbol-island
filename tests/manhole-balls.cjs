@@ -148,10 +148,11 @@ console.log('PASS manhole progress persists in the existing storage key; version
   assert(!oldKinds.has(l.kind)&&!kinds.has(l.kind),`${s.id} has its own diagram`);kinds.add(l.kind);
   assert.equal(l.steps.length,3);assert.equal(new Set(l.steps).size,3);assert.equal(l.actions.length,2);assert(l.steps.every(x=>x.length>20));
   assert(typeof BALL_HUNT_PRACTICE[s.id]==='string'&&BALL_HUNT_PRACTICE[s.id].length>30,'practice prompt');
-  for(let step=0;step<3;step++){const f=ballLessonFrame(l.kind,step);assert(f.nodes.length>=3&&f.nodes.length<=8);assert(f.paths.length<=5);assert(f.nodes.some(n=>n.role==='team'));
-   for(const n of f.nodes){assert(['team','opponent','ball','club'].includes(n.role));assert(n.x>=20&&n.x<=310&&n.y>=20&&n.y<=220,`${s.id} node ${n.id} visible`);}
-   for(const d of [...f.paths,f.run??'M0 0'])assert(/^M[-\d. MLQH]+$/.test(d),`${s.id} path is plain SVG`);
-   if(f.zone)assert(f.zone[0]>=14&&f.zone[1]>=20&&f.zone[0]+f.zone[2]<=316&&f.zone[1]+f.zone[3]<=234,`${s.id} zone on the pitch`);}
+  // Scene frames (Sep 28 2026 renderer): bounded tokens, plain SVG routes, marks on the pitch.
+  for(let step=0;step<3;step++){const f=ballLessonFrame(l.kind,step);assert(f.nodes.length>=3&&f.nodes.length<=12);assert(f.arrows.length<=8);assert(f.nodes.some(n=>n.role==='team'));
+   for(const n of f.nodes){assert(['team','opponent','ball'].includes(n.role));assert(n.x>=16&&n.x<=314&&n.y>=20&&n.y<=222,`${s.id} node ${n.id} visible`);}
+   for(const d of [...f.arrows.map(a=>a.d),...f.lanes.map(a=>a.d),...f.hints])assert(/^M[-\d. MLQH]+$/.test(d),`${s.id} path is plain SVG`);
+   for(const z of f.zones)assert(z.x>=14&&z.y>=20&&z.x+z.w<=316&&z.y+z.h<=234,`${s.id} zone on the pitch`);}
  }
  assert.equal(new Set(COIN_QUEST.map(s=>s.teaching)).size,COIN_QUEST.length);assert.equal(new Set(COIN_QUEST.map(title)).size,COIN_QUEST.length,'every lesson title is unique');
 }

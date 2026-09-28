@@ -1,0 +1,362 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Frankfurt, 1993",
+   "text": "Frankfurt, 1993. Eintracht against Karlsruhe, three minutes to go. Uwe Bein could shoot, but he lays the ball back to Jay-Jay Okocha, right in the box.",
+   "src": "/plays/narration/okocha-kahn-1993/1.m4a",
+   "seconds": 11.5,
+   "words": [
+    {
+     "w": "Frankfurt",
+     "at": 0.375
+    },
+    {
+     "w": "1993",
+     "at": 0.925
+    },
+    {
+     "w": "Eintracht",
+     "at": 2.462
+    },
+    {
+     "w": "against",
+     "at": 2.938
+    },
+    {
+     "w": "Karlsruhe",
+     "at": 3.25
+    },
+    {
+     "w": "three",
+     "at": 3.987
+    },
+    {
+     "w": "minutes",
+     "at": 4.225
+    },
+    {
+     "w": "to",
+     "at": 4.55
+    },
+    {
+     "w": "go",
+     "at": 4.65
+    },
+    {
+     "w": "Uwe",
+     "at": 5.487
+    },
+    {
+     "w": "Bein",
+     "at": 5.8
+    },
+    {
+     "w": "could",
+     "at": 6.1
+    },
+    {
+     "w": "shoot",
+     "at": 6.325
+    },
+    {
+     "w": "but",
+     "at": 6.85
+    },
+    {
+     "w": "he",
+     "at": 6.987
+    },
+    {
+     "w": "lays",
+     "at": 7.1
+    },
+    {
+     "w": "the",
+     "at": 7.425
+    },
+    {
+     "w": "ball",
+     "at": 7.525
+    },
+    {
+     "w": "back",
+     "at": 7.825
+    },
+    {
+     "w": "to",
+     "at": 8.1
+    },
+    {
+     "w": "Jay-Jay",
+     "at": 8.238
+    },
+    {
+     "w": "Okocha",
+     "at": 8.738
+    },
+    {
+     "w": "right",
+     "at": 9.588
+    },
+    {
+     "w": "in",
+     "at": 9.863
+    },
+    {
+     "w": "the",
+     "at": 9.938
+    },
+    {
+     "w": "box",
+     "at": 10.025
+    }
+   ]
+  },
+  {
+   "label": "The dance",
+   "text": "Now watch him dance. He cuts one way, then the other. He beats the defenders, and Oliver Kahn ends up on the grass!",
+   "src": "/plays/narration/okocha-kahn-1993/2.m4a",
+   "seconds": 8.2,
+   "words": [
+    {
+     "w": "Now",
+     "at": 0.4
+    },
+    {
+     "w": "watch",
+     "at": 0.637
+    },
+    {
+     "w": "him",
+     "at": 0.938
+    },
+    {
+     "w": "dance",
+     "at": 1.1
+    },
+    {
+     "w": "He",
+     "at": 1.95
+    },
+    {
+     "w": "cuts",
+     "at": 2.075
+    },
+    {
+     "w": "one",
+     "at": 2.375
+    },
+    {
+     "w": "way",
+     "at": 2.6
+    },
+    {
+     "w": "then",
+     "at": 2.975
+    },
+    {
+     "w": "the",
+     "at": 3.112
+    },
+    {
+     "w": "other",
+     "at": 3.25
+    },
+    {
+     "w": "He",
+     "at": 4.05
+    },
+    {
+     "w": "beats",
+     "at": 4.175
+    },
+    {
+     "w": "the",
+     "at": 4.45
+    },
+    {
+     "w": "defenders",
+     "at": 4.55
+    },
+    {
+     "w": "and",
+     "at": 5.25
+    },
+    {
+     "w": "Oliver",
+     "at": 5.375
+    },
+    {
+     "w": "Kahn",
+     "at": 5.787
+    },
+    {
+     "w": "ends",
+     "at": 6.188
+    },
+    {
+     "w": "up",
+     "at": 6.463
+    },
+    {
+     "w": "on",
+     "at": 6.612
+    },
+    {
+     "w": "the",
+     "at": 6.713
+    },
+    {
+     "w": "grass",
+     "at": 6.8
+    }
+   ]
+  },
+  {
+   "label": "The gap",
+   "text": "Five changes of direction in eleven seconds. Then he finds the gap, and scores! Three\u2013one.",
+   "src": "/plays/narration/okocha-kahn-1993/3.m4a",
+   "seconds": 7.3,
+   "words": [
+    {
+     "w": "Five",
+     "at": 0.4
+    },
+    {
+     "w": "changes",
+     "at": 0.725
+    },
+    {
+     "w": "of",
+     "at": 1.113
+    },
+    {
+     "w": "direction",
+     "at": 1.2
+    },
+    {
+     "w": "in",
+     "at": 1.725
+    },
+    {
+     "w": "eleven",
+     "at": 1.825
+    },
+    {
+     "w": "seconds",
+     "at": 2.237
+    },
+    {
+     "w": "Then",
+     "at": 3.163
+    },
+    {
+     "w": "he",
+     "at": 3.312
+    },
+    {
+     "w": "finds",
+     "at": 3.425
+    },
+    {
+     "w": "the",
+     "at": 3.712
+    },
+    {
+     "w": "gap",
+     "at": 3.8
+    },
+    {
+     "w": "and",
+     "at": 4.138
+    },
+    {
+     "w": "scores",
+     "at": 4.263
+    },
+    {
+     "w": "Three",
+     "at": 5.275
+    },
+    {
+     "w": "one",
+     "at": 5.95
+    }
+   ]
+  },
+  {
+   "label": "Stay calm",
+   "text": "Stay calm in the box. Quick changes of direction can beat defenders, and even the keeper.",
+   "src": "/plays/narration/okocha-kahn-1993/4.m4a",
+   "seconds": 6.5,
+   "words": [
+    {
+     "w": "Stay",
+     "at": 0.375
+    },
+    {
+     "w": "calm",
+     "at": 0.688
+    },
+    {
+     "w": "in",
+     "at": 0.938
+    },
+    {
+     "w": "the",
+     "at": 1.012
+    },
+    {
+     "w": "box",
+     "at": 1.1
+    },
+    {
+     "w": "Quick",
+     "at": 2.013
+    },
+    {
+     "w": "changes",
+     "at": 2.288
+    },
+    {
+     "w": "of",
+     "at": 2.688
+    },
+    {
+     "w": "direction",
+     "at": 2.775
+    },
+    {
+     "w": "can",
+     "at": 3.3
+    },
+    {
+     "w": "beat",
+     "at": 3.475
+    },
+    {
+     "w": "defenders",
+     "at": 3.675
+    },
+    {
+     "w": "and",
+     "at": 4.6
+    },
+    {
+     "w": "even",
+     "at": 4.725
+    },
+    {
+     "w": "the",
+     "at": 4.987
+    },
+    {
+     "w": "keeper",
+     "at": 5.075
+    }
+   ]
+  }
+ ]
+}

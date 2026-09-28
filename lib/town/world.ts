@@ -17,6 +17,7 @@ export function buildTown(scene: T.Scene) {
   const town = new T.Group(); scene.add(town);
   const museumRails:(Obstacle&{floor:number;top:number})[]=[];
   const walkSurfaces:(Obstacle&{height:number})[]=[];
+  const landingExclusions:Obstacle[]=[];
   const obstacles: Obstacle[] = [], textures: T.Texture[] = [], materials: T.Material[] = [];
   const assets:{kind:string;x:number;z:number;w:number;d:number;visualW?:number;visualD?:number;canopyHeight?:number;baseY?:number}[]=[];
   const surfaceAreas:{kind:string;x:number;z:number;w:number;d:number}[]=[];
@@ -84,10 +85,10 @@ export function buildTown(scene: T.Scene) {
 
   // A single ocean surrounds the curved foundation on every side.
   const waterRipples=createWaterRipples();textures.push(waterRipples.texture);
-  const oceanMat=new T.MeshStandardMaterial({color:'#67b8af',map:waterRipples.texture,roughness:.36,metalness:.16});materials.push(oceanMat);
+  const oceanMat=new T.MeshStandardMaterial({color:'#368eb3',map:waterRipples.texture,emissive:'#185a94',emissiveIntensity:.3,roughness:.52,metalness:.02});materials.push(oceanMat);
   const water=new T.Mesh(new T.PlaneGeometry(1400,1400),oceanMat);water.rotation.x=-Math.PI/2;water.position.set(70,-.43,10);water.name='surrounding-ocean';scene.add(water);
   const waves:T.Mesh[]=[];
-  for(let i=0;i<30;i++){const w=box(.055,.008,8+(i%5)*2,'#a4d3be',-88-(i%6)*5,-.405,-300+i*13);w.rotation.y=.12;waves.push(w);}
+  for(let i=0;i<30;i++){const w=box(.055,.008,8+(i%5)*2,'#a9d9ed',-88-(i%6)*5,-.405,-300+i*13);w.rotation.y=.12;waves.push(w);}
   function palm(x:number,z:number,height=6){
     assets.push({kind:'palm',x,z,w:.45,d:.45,visualW:6.5,visualD:6.5,canopyHeight:height});
     const group=new T.Group();group.position.set(x,0,z);town.add(group);
@@ -341,8 +342,132 @@ export function buildTown(scene: T.Scene) {
   const eleven:[number,number,number,number,number,string][]=[
     [287,-112,18,15,11,'ARTS WING'],[285,-81,18,15,13,'CLASSROOMS'],[285,-55,18,18,10,'DINING HALL'],
     [415,-110,18,17,12,'SCHOOL OFFICES'],[415,-84,18,17,10,'LIBRARY'],[415,-55,18,18,13,'STUDENT CENTRE'],[415,-13.5,18,40,18,'CAFE BY THE SEA'],
-    [327,-147,19,18,12,'HUMANITIES'],[350,-147,19,18,15,'ISLAND HIGH SCHOOL'],[380,-147,19,18,12,'CLASSROOMS'],[281,-8.25,28,50.5,10,'ROOFTOP KNOCKOUT']
-  ];eleven.forEach(([x,z,w,d,h,label],i)=>house(x+ex,z+ez,w,d,h,label,i+34));
+    [281,-8.25,28,50.5,10,'ROOFTOP KNOCKOUT']
+  ];eleven.forEach(([x,z,w,d,h,label],i)=>house(x+ex,z+ez,w,d,h,label,label==='ROOFTOP KNOCKOUT'?44:i+34));
+  // One school, five touching volumes: the central hall is the summit and both
+  // teaching wings descend into planted roof terraces. No per-frame garden work.
+  const schoolX=365,schoolZ=-67;
+  function schoolRoofRail(x:number,z:number,length:number,vertical:boolean,roof:number){
+    const w=vertical?.075:length,d=vertical?length:.075;
+    for(const y of [.65,1.2])box(w,.065,d,'#477c6a',x,roof+y,z);
+    const count=Math.ceil(length/1.5);
+    for(let i=0;i<=count;i++){
+      const offset=-length/2+i*length/count;
+      box(.07,1.2,.07,'#477c6a',x+(vertical?0:offset),roof+.6,z+(vertical?offset:0));
+    }
+    museumRails.push({x:x-230,z:z+80,w,d,floor:roof-.1,top:roof+1.3});
+  }
+  const schoolVolumes=[{dx:0,w:24,h:17,name:'ISLAND HIGH SCHOOL'},
+    {dx:-18,w:12,h:13,name:'HIGH SCHOOL WEST WING'},{dx:18,w:12,h:13,name:'HIGH SCHOOL EAST WING'},
+    {dx:-30,w:12,h:9,name:'HIGH SCHOOL WEST GARDEN'},{dx:30,w:12,h:9,name:'HIGH SCHOOL EAST GARDEN'}];
+  for(const {dx,w,h,name} of schoolVolumes){
+    const x=schoolX+dx,d=20,roof=h+.23;
+    box(w,h,d,'#d6b58a',x,h/2,schoolZ);
+    box(w,.5,d+.12,'#b88472',x,.25,schoolZ);
+    box(w+.18,.23,d+.3,'#eddfbb',x,h+.115,schoolZ);
+    buildings.push({x,z:schoolZ,w,d,height:roof,name});obstacles.push({x,z:schoolZ,w,d});
+    // Deep green window bays, warm reveals and continuous floor bands tie all
+    // five pieces together; the middle bay leaves room for the entrance portal.
+    for(let y=2;y<h-1;y+=3.5){
+      for(let col=0;col<w/3;col++){
+        const xx=x-w/2+1.5+col*3;
+        if(dx===0&&Math.abs(xx-schoolX)<4.6&&y<9)continue;
+        for(const side of [-1,1]){
+          const zz=schoolZ+side*(d/2+.04);
+          box(2.05,2.1,.1,'#eddfbb',xx,y,zz);
+          box(1.7,1.8,.13,'#365b56',xx,y,zz+side*.08);
+          box(.09,1.8,.16,'#d2bc94',xx,y,zz+side*.16);
+          box(2.2,.12,.4,'#eddfbb',xx,y-1.06,zz+side*.13);
+        }
+      }
+      for(const side of [-1,1])box(w,.16,.26,'#eddfbb',x,y+1.35,schoolZ+side*10.08);
+    }
+    // Outer end walls carry the same window rhythm in the oblique island view.
+    if(Math.abs(dx)===30)for(const z of [-73,-67,-61])for(const y of [2,5.5]){
+      box(.12,2.1,2.05,'#eddfbb',x+Math.sign(dx)*6.05,y,z);
+      box(.14,1.8,1.7,'#365b56',x+Math.sign(dx)*6.13,y,z);
+    }
+    for(const side of [-1,1]){
+      box(w,.75,.22,'#d2bc94',x,roof+.375,schoolZ+side*9.7);
+      box(w+.08,.12,.34,'#eddfbb',x,roof+.8,schoolZ+side*9.7);
+      schoolRoofRail(x,schoolZ+side*9.7,w,false,roof);
+    }
+    if(dx===0){
+      for(const side of [-1,1])for(const [z,length] of [[-73.975,5.45],[-63.025,11.45]])schoolRoofRail(x+side*(w/2-.15),z,length,true,roof);
+      continue;
+    }
+    const end=x+Math.sign(dx)*(w/2-.15);
+    // An open section aligns with the landing from the next lower roof.
+    for(const [z,length] of [[-74.1,5.2],[-61.9,9.2]]){
+      box(.22,.75,length,'#d2bc94',end,roof+.375,z);
+      box(.34,.12,length,'#eddfbb',end,roof+.8,z);
+      museumRails.push({x:end-230,z:z+80,w:.25,d:length,floor:roof,top:roof+.9});
+    }
+    for(const [z,length] of [[-73.975,5.45],[-63.025,11.45]])schoolRoofRail(end,z,length,true,roof);
+    // North gardens retain the stepped silhouette; the south and middle stay
+    // open for unimpeded walking between successive stair flights.
+    for(const z of [-73]){
+      const bedX=x+Math.sign(dx)*1.6;
+      box(5.6,.55,2.8,'#bd7657',bedX,roof+.275,z);
+      box(5.2,.06,2.4,'#9d805b',bedX,roof+.58,z);
+      for(const ox of [-1.8,0,1.8]){
+        const shrub=put(new T.IcosahedronGeometry(.95,0),ox===0?'#8baa69':'#477c6a',bedX+ox,roof+1.15,z);
+        shrub.scale.set(1,.72,.85);
+      }
+    }
+    // Short masonry piers articulate the terrace ends without rail grids.
+    for(const z of [-76.65,-57.35])box(.55,1.05,.55,'#eddfbb',end,roof+.525,z);
+  }
+  // A tall civic entrance anchors the highest volume, with shaded double doors
+  // and a football-learning motto readable from the school forecourt.
+  box(10,9,.38,'#bd7657',schoolX,4.5,-56.8);
+  box(8.5,7.8,.18,'#eddfbb',schoolX,4.1,-56.55);
+  box(7.6,6.5,.16,'#365b56',schoolX,3.7,-56.39);
+  for(const x of [schoolX-2.5,schoolX,schoolX+2.5])box(.16,6.5,.18,'#d2bc94',x,3.7,-56.25);
+  box(7.6,.18,.18,'#d2bc94',schoolX,3.1,-56.25);
+  box(12,.45,3,'#eddfbb',schoolX,4.1,-55.5);
+  sign('ISLAND HIGH SCHOOL',20,1.35,schoolX,10,-56.77,'#477c6a');
+  sign('LEARN THE GAME · PLAY TOGETHER',13,.65,schoolX,8.35,-56.5,'#bd7657');
+  // Six real flights connect ground → garden → wing → central roof on both
+  // sides. Rise stays below the walking solver's .35 m step limit. Stair bodies
+  // are registered as surfaces, never mistaken for rooftop props by the batch scan.
+  function schoolStair(x:number,base:number,top:number,landingX:number,landingW:number){
+    const count=Math.ceil((top-base)/.30),run=.5,start=-69,width=2.6;
+    const tread=(xx:number,z:number,w:number,d:number,height:number,visualX=xx,visualW=w)=>{
+      const m=box(visualW,height-base,d,'#d2bc94',visualX,base+(height-base)/2,z);m.userData.skipRoofObstacle=true;
+      walkSurfaces.push({x:xx-230,z:z+80,w,d,height,stepAccess:true});obstacles.push({x:xx,z,w,d});
+    };
+    // The receiving roof already draws the inner part of the landing. Stop
+    // this mesh at its cornice edge so no two top faces occupy the same plane.
+    // Keep continuous walk support across that join, including the overhang.
+    const side=Math.sign(x-schoolX),outer=landingX+side*landingW/2;
+    const receivingEdge=schoolX+side*(base===0?36:base<10?24:12),join=receivingEdge+side*.09;
+    tread(landingX,-70,landingW,2,top,(outer+join)/2,Math.abs(outer-join));
+    for(let i=0;i<count;i++){
+      const height=top-(i+1)*(top-base)/count,z=start+(i+.5)*run;
+      // Last tread is raised one rise: the top landing provides the final step.
+      const y=height+(top-base)/count;
+      tread(x,z,width,run,y);
+      const lip=box(width,.025,.075,'#eddfbb',x,y+.015,z+run/2-.04);lip.userData.skipRoofObstacle=true;
+      if(i%2===0)for(const side of [-1,1]){
+        const post=box(.07,1.05,.07,'#477c6a',x+side*width/2,y+.525,z);post.userData.skipRoofObstacle=true;
+      }
+    }
+    // Continuous narrow colliders keep descending walkers on the stairs.
+    for(const side of [-1,1]){
+      line(new T.Vector3(x+side*width/2,top+1.05,start),new T.Vector3(x+side*width/2,base+1.05,start+count*run),.045,'#477c6a');
+      museumRails.push({x:x+side*width/2-230,z:start+count*run/2+80,w:.1,d:count*run,floor:base,top:top+1.2});
+    }
+    // Back guard and short exposed end of the landing; the roof-facing end is open.
+    for(const edge of [{x:landingX,z:-71,w:landingW,d:.1},{x:outer,z:-70,w:.1,d:2}]){
+      schoolRoofRail(edge.x,edge.z,Math.max(edge.w,edge.d),edge.d>edge.w,top);
+    }
+  }
+  for(const side of [-1,1]){
+    schoolStair(schoolX+side*37.5,0,9.23,schoolX+side*36.5,4.6);
+    schoolStair(schoolX+side*26.2,9.23,13.23,schoolX+side*24.5,6);
+    schoolStair(schoolX+side*14.2,13.23,17.23,schoolX+side*12.5,6);
+  }
   // A two-level seaside cafe with open terraces for post-match conversations.
   // Coordinates here precede the campus shift below; keep the old north wall fixed.
   sign('CAFE BY THE SEA',9.5,1.5,430,6.8,86.62,'#294f43','#f4cc7c');
@@ -480,10 +605,9 @@ export function buildTown(scene: T.Scene) {
   for(const x of [325,405])for(const z of [-34,-10,16,41,65]){if(x===405&&z===16)continue;tree(x,z);bench(x,z+4);}
   districtSign('ISLAND HIGH SCHOOL',390,77);
 
-  // A recognizable school campus: linked teaching wings, a broad gym roof,
-  // sports bleachers and an open gate into a pedestrian school forecourt.
-  path(365,-54.5,73,5);arcadeWalk(365,-55,62);
-  sign('ISLAND HIGH SCHOOL',18,1.25,365,8,-57.7,'#477c6a');
+  // A continuous shaded frontage joins the terraces to the central entrance.
+  path(365,-54.5,73,5);
+  for(const side of [-1,1])arcadeWalk(365+side*23,-55,26);
   for(let row=0;row<3;row++){
     box(.9,.4+row*.4,18,'#d2bc94',402+row,(.4+row*.4)/2,10);
     for(let z=2;z<=18;z+=1)box(.7,.12,.7,'#477c6a',402+row,.5+row*.4,z);
@@ -498,6 +622,51 @@ export function buildTown(scene: T.Scene) {
   for(let z=48;z<55;z+=1.5){line(new T.Vector3(324.5,0,z),new T.Vector3(324.5,.75,z),.035,'#477c6a');line(new T.Vector3(324.5,.75,z),new T.Vector3(326,.75,z),.035,'#477c6a');line(new T.Vector3(326,.75,z),new T.Vector3(326,0,z),.035,'#477c6a');}
   obstacles.push({x:325.25,z:51,w:1.5,d:7});
   shift(schoolStart,-230,80);
+  // North-roof hangout: the stairs meet a clear east–west lane at z10 and the
+  // entire south half remains open. Pergola beams never become a solid roof box.
+  const schoolRoofY=17.23;
+  const pergola={x:128.7,z:6.1,w:8.4,d:4.8};
+  box(8.6,.045,5,'#c59b72',pergola.x,schoolRoofY+.025,pergola.z);
+  for(const x of [124.5,132.9])for(const z of [3.7,8.5]){
+    const post=box(.16,2.8,.16,'#9d805b',x,schoolRoofY+1.4,z);post.userData.skipRoofObstacle=true;
+    museumRails.push({x,z,w:.18,d:.18,floor:schoolRoofY,top:schoolRoofY+2.85});
+  }
+  for(const z of [3.7,8.5]){const beam=box(8.8,.2,.2,'#9d805b',128.7,schoolRoofY+2.85,z);beam.userData.skipRoofObstacle=true;}
+  for(let i=0;i<12;i++){
+    const slat=box(.25,.12,5.2,i%3===0?'#eddfbb':'#d2bc94',124.65+i*.735,schoolRoofY+3,6.1);slat.userData.skipRoofObstacle=true;
+  }
+  // Cushions on low timber seats, two round tables and a small tabletop pitch.
+  for(const [x,z,color] of [[126,4.65,'#bd7657'],[130.8,4.65,'#739568'],[125.6,7.2,'#678f8d'],[131.2,7.2,'#d69b61']] as [number,number,string][]){
+    box(1.65,.18,1.15,'#9d805b',x,schoolRoofY+.13,z);
+    box(1.55,.3,1.05,color,x,schoolRoofY+.37,z);
+    const bolster=box(1.55,.36,.24,color,x,schoolRoofY+.65,z-.42);bolster.rotation.x=-.12;
+  }
+  for(const x of [127.6,129.7]){
+    cylinder(.085,.73,'#477c6a',x,schoolRoofY+.365,6.15);
+    cylinder(.66,.12,'#d2bc94',x,schoolRoofY+.79,6.15);
+  }
+  box(.72,.018,.42,'#477c6a',127.6,schoolRoofY+.86,6.15);
+  for(const x of [127.27,127.6,127.93])box(.014,.012,.36,'#fff0cf',x,schoolRoofY+.878,6.15);
+  for(const z of [5.97,6.33])box(.66,.012,.014,'#fff0cf',127.6,schoolRoofY+.878,z);
+  // Small static bulbs reuse the same emissive material as existing street lamps.
+  line(new T.Vector3(124.6,schoolRoofY+2.7,8.4),new T.Vector3(132.8,schoolRoofY+2.7,8.4),.018,'#477c6a');
+  for(let i=0;i<8;i++){
+    const bulb=put(new T.SphereGeometry(.09,6,4),'#ffe8ae',125+i*1.05,schoolRoofY+2.58,8.4);bulb.castShadow=false;bulb.userData.skipRoofObstacle=true;
+  }
+  // A painted-tile vending nook adds colour without changing the cabinet or its
+  // unobstructed southern approach. The north plants and recycling stay out of it.
+  box(7.6,.026,5.4,'#eddfbb',138.1,schoolRoofY+.018,6.3);
+  for(let row=0;row<5;row++)for(let col=0;col<7;col++)if((row+col)%2===0)box(.9,.008,.9,(row+col)%4===0?'#678f8d':'#bd7657',135.1+col,schoolRoofY+.036,4.3+row);
+  for(const [x,z] of [[135.4,4.4],[141,4.4]]){
+    cylinder(.45,.65,'#bd7657',x,schoolRoofY+.325,z);
+    put(new T.IcosahedronGeometry(.65,0),'#477c6a',x,schoolRoofY+1,z);
+  }
+  for(const [x,color] of [[141,'#477c6a'],[142.05,'#678f8d']] as [number,string][]){
+    box(.68,.95,.65,color,x,schoolRoofY+.475,8);
+    box(.74,.12,.71,'#d2bc94',x,schoolRoofY+1,8);
+    box(.35,.05,.2,'#365b56',x,schoolRoofY+1.065,8);
+  }
+  sign('SORT & RECYCLE',2.15,.35,141.52,schoolRoofY+.65,8.36,'#477c6a');
   const arenaRails:(Obstacle&{floor:number;top:number})[]=[],ar=KNOCKOUT_ROOF;
   box(24,.035,44,'#648c72',ar.x,ar.height+.02,ar.z);
   for(const side of [-1,1]){box(.09,.04,44,'#f8edc9',ar.x+side*12,ar.height+.05,ar.z);box(24,.04,.09,'#f8edc9',ar.x,ar.height+.05,ar.z+side*22);}
@@ -538,11 +707,46 @@ export function buildTown(scene: T.Scene) {
   box(57,.045,33,'#c1b699',60+sx,.005,18+sz);box(54,.045,30,'#eddfbb',60+sx,.035,18+sz);
   for(let x=34;x<88;x+=3)box(.035,.008,30,'#d2bc94',x+sx,.062,18+sz);
   for(let z=3;z<=33;z+=3)box(54,.008,.035,'#d2bc94',60+sx,.063,z+sz);
-  house(46+sx,-5+sz,10,10,5.3,'ISLAND MARKET',0);house(60+sx,-6+sz,14,12,7.2,'STORE',1);
-  for(const dx of [-4.5,4.5])box(.14,2.1,.18,'#294f43',60+sx+dx,8.1,.1+sz);
-  box(13.2,2.4,.3,'#294f43',60+sx,9.1,.2+sz);
-  const storeSign=sign('STORE',12.7,2.1,60+sx,9.1,.37+sz,'#294f43','#f4cc7c');storeSign.name='store-sign';
-  sign('BALLS · RIDES · GEAR',11,.8,60+sx,5.8,.35+sz,'#294f43','#fff0cf');
+  // Japanese convenience-store frontage: the market keeps its existing plot,
+  // with a low flat canopy, wraparound stripe fascia and a glazed shopfront.
+  {const x=46+sx,z=-5+sz,front=z+5;
+   box(10,4.5,10,'#eee9d8',x,2.25,z);
+   box(10.5,.22,10.6,'#d7ded7',x,4.61,z);
+   box(10.5,.12,1.7,'#fff1d3',x,3.45,front+.55);
+   box(10.5,.95,1.15,'#fff1d3',x,4.02,front+.35);
+   // Continuous stripes read around both corners as on a neighbourhood konbini.
+   for(const [y,h,c] of [[4.31,.13,'#ef8939'],[4.15,.10,'#bf4438'],[3.96,.2,'#247957']] as const){
+    box(10.54,h,.06,c,x,y,front+.96);
+    for(const side of [-1,1])box(.06,h,10.6,c,x+side*5.26,y,z+.25);
+   }
+   sign('KONBINI',3.15,.68,x-.3,4.08,front+1.01,'#fff7e5','#247957');
+   // Window backing, bright shelves, aluminium frames and two sliding doors.
+   box(9.4,2.7,.08,'#284e50',x,1.9,front+.04);
+   for(const wx of [x-3.5,x+2.8]){
+    box(2.5,2.2,.07,'#759f98',wx,1.8,front+.09);
+    for(const y of [.9,1.55,2.2]){
+     box(2.35,.08,.13,'#eee9d8',wx,y,front+.17);
+     for(let i=0;i<5;i++)box(.25,.31,.08,['#f3d88e','#d78563','#b4ceab'][i%3],wx-1+i*.48,y+.20,front+.14);
+    }
+    box(.04,2.3,.06,'#dde6db',wx,1.8,front+.2);
+   }
+   const door=x-.55;
+   for(const side of [-1,1]){
+    box(.86,2.6,.08,'#87b1ad',door+side*.46,1.55,front+.22);
+    box(.035,2.65,.06,'#e8e7d5',door+side*.92,1.55,front+.28);
+    box(.86,.13,.04,'#fff1d3',door+side*.46,1.52,front+.28);
+    box(.045,.5,.08,'#244d49',door+side*.12,1.4,front+.3);
+   }
+   box(.04,2.65,.06,'#e8e7d5',door,1.55,front+.28);
+   box(2, .06,.1,'#e8e7d5',door,2.9,front+.28);
+   box(2.15,.07,.75,'#879b92',door,.04,front+.35);
+   for(const side of [-1,1])box(.18,3.2,.22,'#eee9d8',x+side*4.83,1.65,front+.14);
+   sign('MATCH DAY',1.6,.55,x-3.5,2.65,front+.23,'#fff1d3','#247957');
+   box(1.8,.65,1.3,'#bac5bc',x+2.6,4.98,z-2);
+   for(let i=0;i<5;i++)box(1.3,.025,.05,'#536b65',x+2.6,5.32,z-2.4+i*.18);
+   buildings.push({x,z,w:10,d:10,height:4.72,name:'KONBINI'});
+   obstacles.push({x,z,w:10,d:10});
+  }
   house(78+sx,-6+sz,14,12,6.2,'ARCADE',1);
   // Roof neon: static glass tubes on a dark board. One vertex-coloured unlit
   // tube mesh + one additive halo plane, drawn once; no lights, no loop.
@@ -560,6 +764,67 @@ export function buildTown(scene: T.Scene) {
 
 
   shift(hubStart,-105,65);
+  // Pocket futsal court fills the entire gap: Konbini ends at x76,
+  // the arcade begins at x96. A central gate opens straight onto the square.
+  {
+   const cx=86,cz=-59;
+   surfaceAreas.push({kind:'court',x:cx,z:cz,w:20,d:12});
+   box(20,.10,12,'#477c6a',cx,0,cz);
+   box(16,.012,9,'#648c72',cx,.057,cz);
+   for(const z of [-63.5,-54.5])box(16,.014,.075,'#fff1d3',cx,.069,z);
+   for(const x of [78,94,86])box(.075,.014,9,'#fff1d3',x,.069,cz);
+   const circle=put(new T.RingGeometry(1.5,1.57,48),'#fff1d3',cx,.079,cz);circle.rotation.x=-Math.PI/2;circle.castShadow=false;
+   cylinder(.09,.018,'#fff1d3',cx,.075,cz);
+   // Wire cage with robust posts, fine mesh and a 2.4 m front entrance.
+   const fence=(x:number,z:number,length:number,vertical=false)=>{
+    const w=vertical?.12:length,d=vertical?length:.12;
+    obstacles.push({x,z,w,d});arenaRails.push({x,z,w,d,floor:0,top:3.6});
+    for(const y of [.16,3.6])box(vertical?.07:length,.07,vertical?length:.07,'#315b50',x,y,z);
+    const count=Math.ceil(length/2.5);
+    for(let i=0;i<=count;i++)box(.09,3.6,.09,'#315b50',x+(vertical?0:-length/2+i*length/count),1.8,z+(vertical?-length/2+i*length/count:0));
+    for(let t=-length/2;t<=length/2;t+=.4)box(.018,3.5,.018,'#536b65',x+(vertical?0:t),1.82,z+(vertical?t:0)).castShadow=false;
+    for(let y=.4;y<3.6;y+=.4)box(vertical?.018:length,.018,vertical?length:.018,'#536b65',x,y,z).castShadow=false;
+   };
+   fence(76,cz,12,true);fence(96,cz,12,true);fence(cx,-65,20);
+   fence(80.4,-53,8.8);fence(91.6,-53,8.8);
+   // Recessed mini goals at both ends, with shallow nets and penalty boxes.
+   for(const side of [-1,1]){
+    const gx=cx+side*8,back=gx+side*1.3,wall=cx+side*10;
+    // Solid side nets and back (filled to the cage wall so nothing slips behind); the mouth stays open for the ball.
+    for(const o of [{x:(gx+back)/2,z:cz-1.6,w:1.4,d:.12},{x:(gx+back)/2,z:cz+1.6,w:1.4,d:.12},{x:(back+wall)/2,z:cz,w:Math.abs(wall-back)+.1,d:3.32}]){obstacles.push(o);arenaRails.push({...o,floor:0,top:2.1});}
+    for(const z of [cz-1.6,cz+1.6]){
+     box(.10,2,.10,'#fff1d3',gx,1.07,z);
+     box(1.3,.07,.07,'#fff1d3',(gx+back)/2,2.07,z);
+     box(1.3,.07,.07,'#fff1d3',(gx+back)/2,.12,z);
+    }
+    box(.10,.10,3.3,'#fff1d3',gx,2.07,cz);
+    for(let y=.15;y<=2.08;y+=.25)box(.022,.022,3.2,'#c3d1b9',back,y,cz).castShadow=false;
+    for(let z=cz-1.6;z<=cz+1.61;z+=.25){box(.022,2,.022,'#c3d1b9',back,1.07,z).castShadow=false;box(1.3,.022,.022,'#c3d1b9',(gx+back)/2,2.07,z).castShadow=false;}
+    for(const z of [cz-2.5,cz+2.5])box(2.5,.014,.07,'#fff1d3',gx-side*1.25,.069,z);
+    box(.07,.014,5,'#fff1d3',gx-side*2.5,.069,cz);
+   }
+  }
+  // Small konbini parking court west of the market. Open south entrance and
+  // pedestrian strip connect to the square; all details join static batches.
+  {const x=59.5,z=-58.75;
+   // End at the storefront path; leave the existing grass and paths exposed below.
+   surfaceAreas.push({kind:'path',x,z,w:11,d:13.5});
+   box(11,.10,13.5,'#65716e',x,0,z);
+   // Pale raised edging on the back and outside, leaving the drive mouth open.
+   box(11,.16,.22,'#d2bc94',x,.05,-65.5);
+   box(.22,.16,13.5,'#d2bc94',54,.05,z);
+   box(1.05,.12,13.5,'#eddfbb',64.48,.01,z);
+   for(let i=0;i<=3;i++)box(.09,.014,5.4,'#fff1d3',54.55+i*3.05,.062,-61.7);
+   box(9.15,.014,.09,'#fff1d3',59.125,.062,-64.4);
+   for(let i=0;i<3;i++){
+    const bx=56.075+i*3.05;
+    box(1.75,.18,.32,'#d2bc94',bx,.13,-63.55);
+    for(const dx of [-.58,.58])box(.19,.018,.34,'#fff1d3',bx+dx,.229,-63.55);
+    obstacles.push({x:bx,z:-63.55,w:1.75,d:.32});
+   }
+   // Painted pedestrian crossing from the bays to the storefront walkway.
+   for(let i=0;i<6;i++)box(.32,.012,1.3,'#fff1d3',61.55+i*.55,.063,-54.2);
+  }
   // Continuous paved frontage, with open approaches to all three storefronts.
   surfaceAreas.push({kind:'path',x:88,z:-49,w:48,d:6});
   box(48,.12,6,'#eddfbb',88,0,-49);
@@ -823,11 +1088,11 @@ export function buildTown(scene: T.Scene) {
   destinations.push({name:'Coaches Centre',...COACHES_DOOR});
 
   // Community allotments east of Coaches: broad paths remain open to every ride.
-  // Keep the north edge at -40; carry the lawn18m farther south to z28.
-  // Keep the north edge at -40; the south edge now meets the boardwalk at z30.
-  box(54,.025,70,'#7a9e67',208,-.07,-5);
+  // Keep the shared island grass visible through the whole allotment area.
+  // A separate tinted lawn slab made a hard rectangular colour seam here.
+  surfaceAreas.push({kind:'garden',x:208,z:-5,w:54,d:70});
   // Low lawn tufts sit outside the paths, leaving the garden gates unobstructed.
-  for(const [x,z] of [[184,-33],[184,-25],[184,-5],[184,5],[232,-33],[232,-23],[232,-12],[232,0],[232,7],[193,8],[220,8],[184,16],[184,25],[197,26],[210,26]]){
+  for(const [x,z] of [[184,-33],[184,-25],[184,-5],[184,5],[232,-33],[232,-23],[232,-12],[232,0],[232,7],[193,8],[220,8],[184,16],[184,25]]){
     for(let i=0;i<3;i++){
       const tuft=put(new T.ConeGeometry(.12,.35+i*.04,4),'#739568',x+(i-1)*.23,.12,z+(i%2)*.2);tuft.castShadow=false;
     }
@@ -860,6 +1125,100 @@ export function buildTown(scene: T.Scene) {
   obstacles.push({x:229,z:-15,w:4,d:1.5});
   for(const x of [228,230]){cylinder(.28,.4,'#bd7657',x,1.25,-15);put(new T.IcosahedronGeometry(.35,0),'#739568',x,1.65,-15);}
   destinations.push({name:'Community Garden',x:207,z:4});
+
+  // A broad garden glasshouse fills the southern lawn, leaving the school stair
+  // corridor to its west and the existing market promenade to its east open.
+  // Thin tinted panes share one non-refractive material and the static batches.
+  const gh={x:202,z:19,w:28,d:18,eave:4.4,ridge:8.2};
+  landingExclusions.push({x:gh.x,z:gh.z,w:28.4,d:18.4});
+  // Glass is not a landing terrace: keeping it out of building roof surfaces
+  // lets the existing walking solver pass underneath it through both doors.
+  assets.push({kind:'greenhouse',x:gh.x,z:gh.z,w:gh.w,d:gh.d,canopyHeight:gh.ridge});
+  for(const wall of [{x:188,z:19,w:.28,d:18},{x:216,z:19,w:.28,d:18},
+    {x:194,z:10,w:12,d:.28},{x:210,z:10,w:12,d:.28},{x:194,z:28,w:12,d:.28},{x:210,z:28,w:12,d:.28}]){
+    obstacles.push(wall);museumRails.push({...wall,floor:0,top:gh.eave});
+  }
+  box(28.4,.18,18.4,'#d2bc94',gh.x,-.06,gh.z);
+  box(27.5,.08,17.5,'#bfae87',gh.x,.04,gh.z);
+  box(3.8,.012,18,'#eddfbb',gh.x,.086,gh.z);
+  const greenhouseGlass=new T.MeshStandardMaterial({color:'#a6d0bd',roughness:.28,metalness:.04,transparent:true,opacity:.32,depthWrite:false,side:T.DoubleSide});
+  greenhouseGlass.forceSinglePass=true;materials.push(greenhouseGlass);
+  function greenhousePane(points:[number,number,number][]){
+    const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(points.flat(),3));
+    const indices:number[]=[];for(let i=1;i<points.length-1;i++)indices.push(0,i,i+1);
+    g.setIndex(indices);g.computeVertexNormals();g.setAttribute('uv',new T.Float32BufferAttribute(points.flatMap((_,i)=>[i%2,i>1?1:0]),2));
+    const pane=new T.Mesh(g,greenhouseGlass);pane.position.set(gh.x,0,gh.z);pane.castShadow=false;pane.receiveShadow=false;town.add(pane);
+  }
+  // A low masonry plinth supports cream steel posts, dark green rails and gutters.
+  for(const side of [-1,1]){
+    for(const x of [194,210]){
+      box(12,.65,.28,'#b88472',x,.425,gh.z+side*9);
+      box(12,.15,.42,'#eddfbb',x,.82,gh.z+side*9);
+      box(12,.13,.16,'#477c6a',x,2.35,gh.z+side*9);
+    }
+    box(28.25,.13,.16,'#477c6a',gh.x,gh.eave,gh.z+side*9);
+    box(28.6,.22,.36,'#477c6a',gh.x,gh.eave+.03,gh.z+side*9.08);
+    for(let bay=0;bay<7;bay++){
+      const x0=-14+bay*4,x1=x0+4;
+      for(const [y0,y1] of bay===3?[[3.5,gh.eave]]:[[.9,2.35],[2.35,gh.eave]])greenhousePane([[x0,y0,side*9],[x1,y0,side*9],[x1,y1,side*9],[x0,y1,side*9]]);
+      // Each roof slope is divided by a continuous purlin halfway to the ridge.
+      for(let half=0;half<2;half++){
+        const z0=side*half*4.5,z1=side*(half+1)*4.5,y0=gh.ridge-half*1.9,y1=y0-1.9;
+        greenhousePane([[x0,y0,z0],[x1,y0,z0],[x1,y1,z1],[x0,y1,z1]]);
+      }
+    }
+    box(28.3,.13,.15,'#eddfbb',gh.x,6.3,gh.z+side*4.5);
+    for(let i=0;i<=7;i++){
+      const x=188+i*4;
+      box(.16,3.65,.18,'#eddfbb',x,2.625,gh.z+side*9);
+      line(new T.Vector3(x,gh.eave,gh.z+side*9),new T.Vector3(x,gh.ridge,gh.z),.085,'#eddfbb');
+    }
+  }
+  box(28.4,.2,.22,'#477c6a',gh.x,gh.ridge+.03,gh.z);
+  // Glazed gable ends expose the planting rows through a strong fan-shaped frame.
+  for(const side of [-1,1]){
+    const x=side*14;
+    box(.3,.65,18,'#b88472',gh.x+x,.425,gh.z);
+    for(const y of [.82,2.35,gh.eave])box(.2,.14,18,'#eddfbb',gh.x+x,y,gh.z);
+    greenhousePane([[x,.9,-9],[x,.9,9],[x,gh.eave,9],[x,gh.eave,-9]]);
+    greenhousePane([[x,gh.eave,-9],[x,gh.eave,9],[x,gh.ridge,0]]);
+    for(const z of [-6,-3,0,3,6]){
+      const top=gh.ridge-Math.abs(z)/9*(gh.ridge-gh.eave);
+      box(.18,top-.8,.13,'#eddfbb',gh.x+x,(top+.8)/2,gh.z+z);
+    }
+  }
+  // Three propped-open ridge vents and restrained pale reflections remain static.
+  for(const x of [194,202,210]){
+    const vent=box(3,.09,1.7,'#a6c9b5',x,7.97,17.5);vent.rotation.x=-.12;
+    for(const dx of [-1.5,1.5]){const edge=box(.09,.14,1.75,'#477c6a',x+dx,7.97,17.5);edge.rotation.x=-.12;}
+    for(const z of [16.65,18.35])box(3.1,.14,.09,'#477c6a',x,7.97+(z-17.5)*.12,z);
+    for(const dx of [-1.35,1.35])line(new T.Vector3(x+dx,7.25,17),new T.Vector3(x+dx,7.95,16.65),.035,'#477c6a');
+  }
+  // Eight planted benches surround a broad central aisle, visible through glass.
+  for(const x of [192,197,207,212])for(const z of [14.5,23.5]){
+    box(3,.62,5.8,'#a67d55',x,.49,z);box(2.7,.09,5.5,'#6e5540',x,.85,z);
+    obstacles.push({x,z,w:3,d:5.8});
+    for(const dz of [-1.8,0,1.8]){
+      const plant=put(new T.IcosahedronGeometry(.7,0),x<202?'#739568':'#477c6a',x,1.5,z+dz);plant.scale.set(1.3,.85,1);
+      if(dz===0){cylinder(.035,1.65,'#9d805b',x,1.65,z);put(new T.IcosahedronGeometry(.2,0),'#bd7657',x+.35,1.6,z);}
+    }
+  }
+  // Open double doors join a four-metre aisle from garden to boardwalk.
+  // Door leaves stay outside the passage; no automatic door or animation loop.
+  for(const side of [-1,1]){
+    const z=gh.z+side*9;
+    box(4.2,.15,.22,'#477c6a',gh.x,3.5,z);
+    for(const x of [200,204]){
+      box(.16,3.5,.16,'#477c6a',x,1.75,z);
+      box(.1,3.1,1.6,'#97bcb0',x,1.75,z+side*.85);
+      for(const y of [.2,3.3])box(.14,.12,1.75,'#477c6a',x,y,z+side*.85);
+      box(.14,3.2,.12,'#477c6a',x,1.75,z+side*1.7);
+      obstacles.push({x,z:z+side*.85,w:.16,d:1.7});
+    }
+  }
+  sign('COMMUNITY GREENHOUSE',12,.85,gh.x,3.88,28.25,'#477c6a');
+  sign('GROW & SHARE · MATCH-DAY TABLE',9,.48,gh.x,3.05,28.28,'#eddfbb','#365b56');
+  path(202,19,3.8,24);destinations.push({name:'Community Greenhouse',x:202,z:29.3});
 
   destinations.push(buildFarmersMarket({box,cylinder,put,sign,path,obstacles,buildings,roads}));
 
@@ -971,6 +1330,17 @@ export function buildTown(scene: T.Scene) {
   for(const material of windowSources){material.emissive.set('#ffd294');material.emissiveIntensity=0;}
   const windowPaint=new T.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:.85,emissive:'#ffd294',emissiveIntensity:0});materials.push(windowPaint);
   const lampLens=mat('#ffe8ae');lampLens.emissive.set('#ffd294');lampLens.emissiveIntensity=0;
+  // Four inward-facing floodlights fixed to the shop/arcade walls.
+  // Shared emissive lenses and baked floor washes avoid shadow-casting lights.
+  for(const side of [-1,1])for(const z of [-61.6,-56.4]){
+   const wall=side<0?76:96,x=wall-side*.48,y=side<0?4.05:4.8;
+   box(.12,.52,.34,'#384443',wall-side*.04,y,z);
+   box(.62,.08,.08,'#384443',wall-side*.31,y,z);
+   const fixture=new T.Group();fixture.position.set(x,y,z);fixture.rotation.z=side*.62;town.add(fixture);
+   box(.22,.55,1.04,'#384443',0,0,0,fixture);
+   const lens=box(.025,.39,.88,'#ffe8ae',-side*.125,0,0,fixture);lens.material=lampLens;lens.castShadow=false;
+   for(const dz of [-.24,0,.24])box(.03,.39,.018,'#d7ded7',-side*.145,0,dz,fixture).castShadow=false;
+  }
   type LampSite={x:number;z:number;ground:number;region?:'pier'|'north-beach'|'market'|'garden';poolDepth?:number;poolWidth?:number};
   const lampSites:LampSite[]=[];
   const lampCandidates:LampSite[]=[{x:79,z:-45,ground:.075},{x:108,z:-45,ground:.075},{x:62,z:-28,ground:.075},{x:113,z:-22,ground:.075}];
@@ -997,6 +1367,7 @@ export function buildTown(scene: T.Scene) {
   const pavedLampExclusions=[...roads,...roadJunctions,...surfaceAreas.filter(a=>a.kind==='path'||a.kind==='sand')];
   const blocksLamp=(site:{x:number;z:number})=>pavedLampExclusions.some(r=>Math.abs(site.x-r.x)<r.w/2+.65&&Math.abs(site.z-r.z)<r.d/2+.65);
   for(const candidate of lampCandidates){
+    if(candidate.x>188&&candidate.x<216&&candidate.z>10&&candidate.z<28)continue; // No street poles inside the greenhouse.
     // One-time placement search moves entrance lights off paving too. No frame work.
     let site=candidate;
     if(blocksLamp(site)){
@@ -1005,6 +1376,8 @@ export function buildTown(scene: T.Scene) {
       const clear=alternatives.sort((a,b)=>Math.hypot(a.x-candidate.x,a.z-candidate.z)-Math.hypot(b.x-candidate.x,b.z-candidate.z)).find(p=>!blocksLamp(p)&&onIsland(p.x,p.z)&&!obstacles.some(o=>Math.abs(p.x-o.x)<o.w/2+.5&&Math.abs(p.z-o.z)<o.d/2+.5));
       if(!clear)continue;site=clear;
     }
+    // Keep the ferry lettering clear; this gateway has its own paired lamps.
+    if(site.x>214&&site.x<230&&site.z>184&&site.z<196)continue;
     const onPierDeck=site.region==='pier'&&site.x>=48&&site.x<=225&&site.z>=208&&site.z<=214;
     if(lampSites.length>=96||(!onIsland(site.x,site.z)&&!onPierDeck)||lampSites.some(p=>Math.hypot(p.x-site.x,p.z-site.z)<12)
       ||asphaltRects.some(r=>Math.abs(site.x-r.x)<r.w/2+.45&&Math.abs(site.z-r.z)<r.d/2+.45)
@@ -1017,8 +1390,18 @@ export function buildTown(scene: T.Scene) {
     box(.62,.12,.62,'#384443',x,base+4.22,z).castShadow=false;box(.43,.32,.43,'#ffe8ae',x,base+3.99,z).castShadow=false;
     obstacles.push({x,z,w:.38,d:.38});assets.push({kind:'street-lamp',x,z,w:.38,d:.38,visualW:.65,visualD:.65});
   }
+  // Frame the ferry sign from outside its two posts, never across its lettering.
+  for(const x of [214.8,229.2]){
+   const z=190.6;
+   cylinder(.19,.22,'#384443',x,.11,z).castShadow=false;
+   cylinder(.065,4.2,'#384443',x,2.1,z).castShadow=false;
+   box(.62,.12,.62,'#384443',x,4.22,z).castShadow=false;
+   box(.43,.32,.43,'#ffe8ae',x,3.99,z).castShadow=false;
+   obstacles.push({x,z,w:.38,d:.38});assets.push({kind:'street-lamp',x,z,w:.38,d:.38,visualW:.65,visualD:.65});
+   lampSites.push({x,z,ground:.018,poolWidth:9,poolDepth:9});
+  }
   // Short warm lamps on both cafe terraces; shared lenses and cached pool texture.
-  for(const [x,z,floor] of [[199,165.55,9.23],[208.05,159,9.23],[208.05,152,9.23],[200,127.45,18.23],[208.05,136,18.23],[202,145.55,18.23]]){
+  for(const [x,z,floor] of [[199,165.55,9.23],[208.05,159,9.23],[208.05,152,9.23],[200,127.45,18.23],[208.05,136,18.23],[202,145.55,18.23],[132.3,4.2,17.23],[142.2,4.2,17.23]]){
     cylinder(.16,.12,'#384443',x,floor+.06,z).castShadow=false;
     cylinder(.055,1.2,'#384443',x,floor+.6,z).castShadow=false;
     box(.36,.24,.36,'#ffe8ae',x,floor+1.15,z).castShadow=false;
@@ -1121,6 +1504,7 @@ export function buildTown(scene: T.Scene) {
   const poolMaterial=new T.MeshBasicMaterial({map:poolTexture,transparent:true,depthWrite:false,blending:T.AdditiveBlending,toneMapped:false});materials.push(poolMaterial);
   const poolGeometry=new T.PlaneGeometry(1,1);poolGeometry.rotateX(-Math.PI/2);
   const poolChunks=new Map<string,typeof lampSites>();
+  for(const x of [81.5,90.5])for(const z of [-61.4,-56.6])lampSites.push({x,z,ground:.085,poolWidth:13,poolDepth:10});
   for(const site of lampSites){const key=Math.floor(site.x/50)+':'+Math.floor(site.z/50);let chunk=poolChunks.get(key);if(!chunk){chunk=[];poolChunks.set(key,chunk);}chunk.push(site);}
   const poolMatrix=new T.Matrix4(),poolPosition=new T.Vector3(),poolScale=new T.Vector3(10,1,10),poolRotation=new T.Quaternion();
   for(const [key,sites] of poolChunks){
@@ -1145,6 +1529,6 @@ export function buildTown(scene: T.Scene) {
   nightRoot.userData.detailPoolCount=16;
   nightRoot.userData.lampSites=lampSites;nightRoot.userData.lampCount=lampSites.length;nightRoot.userData.poolChunkCount=poolChunks.size;
   const sceneryRoots=scene.children.filter(root=>!existingRoots.has(root));
-  return {ferry,ferryBounds:new T.Box3(new T.Vector3(241.5,-.4,190),new T.Vector3(250.5,5.1,208)),ferryLockBounds:new T.Box3(new T.Vector3(243,6.8,196),new T.Vector3(249,12.4,202)),setFerryLockHovered:(hovered:boolean)=>{lockMaterial.opacity=hovered?1:.48;},setVisible:(visible:boolean)=>{for(const root of sceneryRoots)root.visible=visible;},dynamicScenery:town,umbrellaReaction,arenaBounds:new T.Box3(new T.Vector3(ar.x-ar.w/2,0,ar.z-ar.d/2),new T.Vector3(ar.x+ar.w/2,ar.height+5,ar.z+ar.d/2)),updateFerry,museumBounds:new T.Box3(new T.Vector3(152.7,0,176.2),new T.Vector3(183.3,8.8,185.8)),walkSurfaces,updateWater:waterRipples.update,updateTrafficSignals:(mode:string)=>{const night=mode==='night',dusk=mode==='sunset';for(const lens of signalLenses)lens.emissiveIntensity=night?.85:dusk?.55:.35;const glow=night?.82:dusk?.16:0;const windowColor=night?'#ffc176':'#ffd294';windowPaint.emissive.set(windowColor);windowPaint.emissiveIntensity=glow;for(const material of windowSources){material.emissive.set(windowColor);material.emissiveIntensity=glow;}lampLens.emissive.set(night?'#ffcb82':'#ffd294');lampLens.emissiveIntensity=night?1.7:dusk?.4:0;for(const state of signStates)state.material.emissiveIntensity=Math.max(state.intensity,night?.75:dusk?.12:0);for(const material of gardenPlantMaterials.values())material.emissiveIntensity=night?.09:0;nightPools.visible=night;if(arcadeNeonGlow)arcadeNeonGlow.opacity=night?1:dusk?.9:.8;},coachesBounds:new T.Box3(new T.Vector3(149.7,0,-49.3),new T.Vector3(172.3,11,-36.4)),arcadeBounds:new T.Box3(new T.Vector3(95.7,0,-65.3),new T.Vector3(110.3,9.45,-52.3)),storeBounds:new T.Box3(new T.Vector3(77.7,0,-65.3),new T.Vector3(92.3,10.5,-52.4)),storeDoor:{x:85,z:-50},walls:[...buildings.map(b=>({...b,top:b.height,floor:0})),...roofObstacles,{x:156,z:-29.5,w:26,d:.35,top:2.4,floor:0}],obstacles,roofObstacles,waves,oceanMat,squareArrival,arcadeDoor,buildings,roads,roadJunctions,assets,surfaceAreas,destinations,// The roof neon is static (heat): kept as a no-op so callers need no change.
+  return {ferry,ferryBounds:new T.Box3(new T.Vector3(241.5,-.4,190),new T.Vector3(250.5,5.1,208)),ferryLockBounds:new T.Box3(new T.Vector3(243,6.8,196),new T.Vector3(249,12.4,202)),setFerryLockHovered:(hovered:boolean)=>{lockMaterial.opacity=hovered?1:.48;},setVisible:(visible:boolean)=>{for(const root of sceneryRoots)root.visible=visible;},dynamicScenery:town,umbrellaReaction,arenaBounds:new T.Box3(new T.Vector3(ar.x-ar.w/2,0,ar.z-ar.d/2),new T.Vector3(ar.x+ar.w/2,ar.height+5,ar.z+ar.d/2)),updateFerry,museumBounds:new T.Box3(new T.Vector3(152.7,0,176.2),new T.Vector3(183.3,8.8,185.8)),walkSurfaces,landingExclusions,updateWater:waterRipples.update,updateTrafficSignals:(mode:string)=>{const night=mode==='night',dusk=mode==='sunset';for(const lens of signalLenses)lens.emissiveIntensity=night?.85:dusk?.55:.35;const glow=night?.82:dusk?.16:0;const windowColor=night?'#ffc176':'#ffd294';windowPaint.emissive.set(windowColor);windowPaint.emissiveIntensity=glow;for(const material of windowSources){material.emissive.set(windowColor);material.emissiveIntensity=glow;}lampLens.emissive.set(night?'#ffcb82':'#ffd294');lampLens.emissiveIntensity=night?1.7:dusk?.4:0;for(const state of signStates)state.material.emissiveIntensity=Math.max(state.intensity,night?.75:dusk?.12:0);for(const material of gardenPlantMaterials.values())material.emissiveIntensity=night?.09:0;nightPools.visible=night;if(arcadeNeonGlow)arcadeNeonGlow.opacity=night?1:dusk?.9:.8;},coachesBounds:new T.Box3(new T.Vector3(149.7,0,-49.3),new T.Vector3(172.3,11,-36.4)),arcadeBounds:new T.Box3(new T.Vector3(95.7,0,-65.3),new T.Vector3(110.3,9.45,-52.3)),storeBounds:new T.Box3(new T.Vector3(77.7,0,-65.3),new T.Vector3(92.3,10.5,-52.4)),storeDoor:{x:85,z:-50},walls:[...buildings.map(b=>({...b,top:b.height,floor:0})),...roofObstacles,{x:156,z:-29.5,w:26,d:.35,top:2.4,floor:0}],obstacles,roofObstacles,waves,oceanMat,squareArrival,arcadeDoor,buildings,roads,roadJunctions,assets,surfaceAreas,destinations,// The roof neon is static (heat): kept as a no-op so callers need no change.
     updateArcade:(_time:number,_reduced:boolean)=>{},dispose:()=>{nightPools.traverse(o=>{if(o instanceof T.InstancedMesh)o.dispose();});nightRoot.removeFromParent();poolGeometry.dispose();umbrellaReaction.dispose();ferry.traverse(o=>{if(o instanceof T.Mesh||o instanceof T.Points)o.geometry.dispose();});ferry.removeFromParent();water.removeFromParent();water.geometry.dispose();for(const mesh of mergedMeshes){mesh.removeFromParent();mesh.geometry.dispose();}textures.forEach(t=>t.dispose());materials.forEach(m=>m.dispose());}};
 }

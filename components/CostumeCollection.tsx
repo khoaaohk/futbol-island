@@ -10,13 +10,15 @@ import {COIN_QUEST,COIN_REWARD_ID,COSTUME_UNLOCK_ORDER,costumeEarned,costumeUnlo
 import {readCoinProgress,useCoinProgress} from '@/lib/town/coinProgress';
 import styles from './CostumeCollection.module.css';
 
-type Props={active:string|null;onStoryChange:(id:string|null)=>void;open:boolean;value:CharacterCustomization;onChange:(value:CharacterCustomization)=>void;onNotice:(notice:string)=>void;};
+type Props={active:string|null;onStoryChange:(id:string|null)=>void;open:boolean;value:CharacterCustomization;onChange:(value:CharacterCustomization)=>void;onNotice:(notice:string)=>void;
+ /** Vending machines: an earned costume is equippable only once it is owned (bought or already yours). */
+ isOwned?:(id:string)=>boolean;lockedText?:(id:string)=>string;};
 const storyLabel=(item:ClubCostume)=>item.storyType==='club-fiction'?'Mascot make-believe':item.storyType==='historic-symbol'?'Historic club symbol':'Club history';
-export default function CostumeCollection({active,onStoryChange,open,value,onChange,onNotice}:Props){
+export default function CostumeCollection({active,onStoryChange,open,value,onChange,onNotice,isOwned,lockedText}:Props){
  // Three costumes unlock every 10 balls (COSTUME_UNLOCK_ORDER in coinQuest.ts); the cards follow that order, the fox last.
  const progress=useCoinProgress(),balls=progress.collected.length,next=nextCostumeMilestone(balls);
- const canEquip=(id:string)=>id==='none'||costumeEarned(progress,id);
- const lockedLabel=(id:string)=>`Unlocks at ${costumeUnlockBalls(id)} balls`;
+ const canEquip=(id:string)=>id==='none'||costumeEarned(progress,id)&&(isOwned?.(id)??true);
+ const lockedLabel=(id:string)=>lockedText?.(id)??`Unlocks at ${costumeUnlockBalls(id)} balls`;
  const ordered=[...CLUB_COSTUMES].sort((a,b)=>(COSTUME_UNLOCK_ORDER as readonly string[]).indexOf(a.id)-(COSTUME_UNLOCK_ORDER as readonly string[]).indexOf(b.id));
  const [answer,setAnswer]=useState<number|null>(null);const learned=usePassport().stories;
  const scroll=useRef<HTMLDivElement>(null),heading=useRef<HTMLHeadingElement>(null),lastCard=useRef<string|null>(null),listPosition=useRef(0);
@@ -26,7 +28,7 @@ export default function CostumeCollection({active,onStoryChange,open,value,onCha
   if(item){setAnswer(null);scrollContainer()?.scrollTo(0,0);heading.current?.focus({preventScroll:true});}
   else if(lastCard.current){scrollContainer()?.scrollTo(0,listPosition.current);scroll.current?.querySelector<HTMLButtonElement>(`[data-story="${lastCard.current}"]`)?.focus({preventScroll:true});}
  },[item]);
- const equip=(costume:string)=>{const current=readCoinProgress();if(costume!=='none'&&!costumeEarned(current,costume))return;onChange({...value,costume});recordQuestEvent({type:'equip'});onNotice(costume==='none'?'Costume removed. Your original character is ready.':`${getIslandCostume(costume).name} equipped. Your character and ride stay yours.`);};
+ const equip=(costume:string)=>{const current=readCoinProgress();if(costume!=='none'&&(!costumeEarned(current,costume)||isOwned&&!isOwned(costume)))return;onChange({...value,costume});recordQuestEvent({type:'equip'});onNotice(costume==='none'?'Costume removed. Your original character is ready.':`${getIslandCostume(costume).name} equipped. Your character and ride stay yours.`);};
  const choose=(index:number)=>{
   if(!item)return;setAnswer(index);
   recordPassportAnswer('story',item.id,index);

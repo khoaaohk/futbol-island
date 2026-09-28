@@ -46,3 +46,81 @@
 .game[data-arcade-kind=tennis] .tennisActions [data-ready=true]{outline:3px solid #fff3d4;outline-offset:2px}
 .game[data-arcade-kind=tennis] .message{bottom:126px}
 @media(max-width:360px){.game[data-arcade-kind=tennis] .tennisActions{width:206px;grid-template-columns:repeat(2,minmax(52px,1fr)) 60px}.game[data-arcade-kind=tennis] .stick{width:66px;height:66px}}
+
+/* Island control geometry, with the serve directly above Scissor. */
+@media(max-width:600px),(pointer:coarse){
+ .game[data-arcade-kind=tennis]{--control-bottom:calc(28px + env(safe-area-inset-bottom,0px))}
+ .game[data-arcade-kind=tennis] .controls{inset:0;max-width:none;pointer-events:none}
+ .tennisMovement{pointer-events:none}
+ .tennisMovement :global(.joystick){pointer-events:auto}
+ .game[data-arcade-kind=tennis] .tennisActions{position:absolute;right:calc(18px + env(safe-area-inset-right,0px));bottom:var(--control-bottom);width:auto;grid-template-columns:58px 58px;grid-template-rows:repeat(3,58px);gap:16px;pointer-events:auto}
+ .game[data-arcade-kind=tennis] .tennisActions button{width:58px;height:58px;min-height:58px;padding:3px;font-size:12px;border-radius:50%}
+ .game[data-arcade-kind=tennis] .tennisActions [data-tennis-action=kick]{grid-column:2;grid-row:1;font-size:14px}
+ .game[data-arcade-kind=tennis] .tennisActions [data-tennis-action=header]{grid-column:1;grid-row:2}
+ .game[data-arcade-kind=tennis] .tennisActions [data-tennis-action=scissor]{grid-column:2;grid-row:2}
+ .game[data-arcade-kind=tennis] .tennisActions [data-tennis-action=lob]{grid-column:1;grid-row:3}
+ .game[data-arcade-kind=tennis] .tennisActions [data-tennis-action=drop]{grid-column:2;grid-row:3}
+ .game[data-arcade-kind=tennis] .message{bottom:calc(174px + env(safe-area-inset-bottom,0px));left:18px;transform:none;max-width:calc(100% - 182px);font-size:10px;padding:7px 9px}
+}
+@media(max-width:350px){
+ .game[data-arcade-kind=tennis] .tennisActions{right:calc(10px + env(safe-area-inset-right,0px));grid-template-columns:52px 52px;grid-template-rows:repeat(3,52px);gap:12px}
+ .game[data-arcade-kind=tennis] .tennisActions button{width:52px;height:52px;min-height:52px}
+}
+
+.headerScore{display:flex;align-items:center;justify-content:center;gap:10px;min-width:0;background:#fff4db;border-radius:16px;padding:8px 12px}
+.headerScore strong{font-size:28px;white-space:nowrap;flex-shrink:0}
+.headerScore span{font-size:11px;max-width:130px}
+@media(min-width:601px) and (pointer:fine){
+ .tennisMovement{display:block;position:fixed;inset:auto;left:calc(24px + env(safe-area-inset-left,0px));bottom:24px;width:132px;height:132px;pointer-events:none}
+ .tennisMovement :global(.joystick){position:relative;inset:auto;display:grid;place-items:center;flex:none;width:132px;min-width:132px;height:132px;min-height:132px;margin:0;border:2px solid #f7e7bc99;border-radius:50%;background:#294f4366;box-shadow:inset 0 0 0 7px #294f431c;pointer-events:auto;touch-action:none}
+ .tennisMovement :global(.joystick)>span{display:block;flex:none;width:64px;height:64px;border-radius:50%;pointer-events:none}
+}
+/* Desktop mirrors the island's 72px action strip, 12px spacing and corner anchor.
+   Explicit tracks prevent the former 44px rows overlapping round 58px faces. */
+@media(min-width:601px) and (pointer:fine){
+ .game[data-arcade-kind=tennis] .tennisActions{position:fixed;right:calc(24px + env(safe-area-inset-right,0px));bottom:24px;width:auto;grid-template-columns:repeat(5,72px);grid-template-rows:72px;gap:12px;pointer-events:auto}
+ .game[data-arcade-kind=tennis] .tennisActions button{width:72px;height:72px;min-width:72px;min-height:72px;padding:4px;font-size:12px;border-radius:50%;grid-row:1}
+ .game[data-arcade-kind=tennis] .tennisActions [data-tennis-action=header]{grid-column:1}
+ .game[data-arcade-kind=tennis] .tennisActions [data-tennis-action=scissor]{grid-column:2}
+ .game[data-arcade-kind=tennis] .tennisActions [data-tennis-action=lob]{grid-column:3}
+ .game[data-arcade-kind=tennis] .tennisActions [data-tennis-action=drop]{grid-column:4}
+ .game[data-arcade-kind=tennis] .tennisActions [data-tennis-action=kick]{grid-column:5;grid-row:1;font-size:14px}
+}
+
+
+/* Retro cabinet world: restrained surfaces, luminous play information. */
+.game{background:#080b1b;color:#e9f5ff;--btn-gold:#24223e;--btn-gold-bright:#313154;--btn-gold-bright-edge:#121329;--btn-gold-edge:#121329;--btn-ink:#e9f5ff;--btn-rim:#81fbed;--btn-shadow-gold:0 4px 0 #121329,0 0 12px #4debd52e}
+.header>div{text-shadow:0 0 16px #67ffed44}.header small{color:#91e6ed}.header h2{color:#edf6ff}
+.game .score,.game .headerScore{background:#171d35;color:#e9f5ff;border:1px solid #65dfda;box-shadow:0 0 16px #4debd520}
+.game .message{background:#13192eea;color:#dffcff;border:1px solid #416b86;box-shadow:none}
+.game .card{background:#151a30;color:#eff8ff;border-color:#ef64c5;box-shadow:0 0 32px #d849b320}
+.game .card small{color:#b5c7dc;border-color:#35415c}.game .badge{background:#2c2649;color:#ffb4e4}.game .overlay{background:#07091980}
+.game .controls button,.game .tennisActions button{color:#e9fbff;border-color:#88ffef;background:#18333f;box-shadow:0 4px 0 #101729,0 0 12px #64ffee22}
+.game .controls button:active{box-shadow:0 1px 0 #101729,0 0 17px #64ffee44}
+.game[data-arcade-kind=pinball] .controls>button:last-child,.game[data-arcade-kind=tennis] .tennisActions [data-tennis-action=scissor]{background:#402340;color:#ffe5f6;border-color:#ff83d3;box-shadow:0 4px 0 #1c142b,0 0 12px #ff62c22b}
+.game[data-arcade-kind=pinball] .controls>button:first-child,.game[data-arcade-kind=tennis] .tennisActions [data-tennis-action=kick]{background:#353323;color:#fff8bb;border-color:#fff08a;box-shadow:0 4px 0 #171827,0 0 12px #fff08a22}
+.game[data-arcade-kind=tennis] .tennisActions [data-tennis-action=header]{background:#21334b;color:#ddf6ff;border-color:#8bcbff;box-shadow:0 4px 0 #121a2c}
+
+@media(max-height:520px){.game .header>.headerScore{display:flex}}
+.game[data-arcade-kind=tennis] .tennisActions [data-tennis-action=lob],.game[data-arcade-kind=tennis] .tennisActions [data-tennis-action=drop]{background:#18333f;color:#e9fbff;border-color:#88ffef;box-shadow:0 4px 0 #101729,0 0 12px #64ffee22}
+.game[data-arcade-kind=runner] .actions button:last-child{background:#402340;color:#ffe5f6;border-color:#ff83d3;box-shadow:0 4px 0 #1c142b,0 0 12px #ff62c22b}
+
+/* Desktop scoreboards hug their contents instead of stretching across the header grid. */
+@media(min-width:601px) and (pointer:fine){
+ .game .headerScore{justify-self:center;width:fit-content;max-width:min(100%,360px);box-sizing:border-box;padding:6px 14px;gap:12px}
+ .game .headerScore strong{font-size:24px;white-space:nowrap}
+ .game .headerScore span{max-width:230px;font-size:11px}
+}
+
+.courtSelect {display:grid;gap:8px;text-align:left;margin:16px 0;color:#d5edff;font-size:14px;}
+.courtSelect select {width:100%;padding:12px;border:1px solid #65eedd;border-radius:12px;background:#151c35;color:#f0fffb;font:inherit;font-size:16px;}
+
+@media(max-width:600px){.headerScore strong{font-size:24px}.headerScore span{font-size:10px;line-height:1.25}.headerScore{gap:7px;padding:8px;min-height:44px;box-sizing:border-box}}
+
+/* UI audit (Sep 27): arcade headers share the modal anchors — desktop 24/20, phone 18/16, plus safe areas. */
+.game>.header.header{padding:calc(20px + env(safe-area-inset-top,0px)) calc(24px + env(safe-area-inset-right,0px)) 12px calc(24px + env(safe-area-inset-left,0px))}
+@media(max-width:600px){.game>.header.header{padding:calc(16px + env(safe-area-inset-top,0px)) calc(18px + env(safe-area-inset-right,0px)) 10px calc(18px + env(safe-area-inset-left,0px))}}
+@media(max-height:520px){.game>.header.header{padding-top:calc(10px + env(safe-area-inset-top,0px));padding-bottom:6px}}
+
+/* A steady timing rim uses the existing control; no pulsing animation loop. */
+.game[data-arcade-kind=pinball] .controls>button[data-ready=true]{outline:3px solid #effff8;outline-offset:4px}

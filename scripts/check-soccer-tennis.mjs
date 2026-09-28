@@ -108,3 +108,17 @@ const serveOnly=createTennis();beginTennis(serveOnly);requestTennisKick(serveOnl
 const own=contact();own.ball.last='you';own.ball.z=1.8;assert(!canTennisHeader(own,'you')&&!canTennisScissor(own,'you'),'aerial moves cannot double-touch own return');
 const gap=contact();gap.ball.z=1.8;gap.ball.x=1.2;assert(!canTennisScissor(gap,'you'),'scissor requires closer positioning than ordinary kick reach');
 console.log('SOCCER_TENNIS_AERIAL_PASS header/scissor contact, extra power, recovery, legal placement, deliberate windows');
+
+const {tennisReceivingPoint}=await import('../lib/games/soccerTennis.ts');
+for(const hz of [30,60,120]){
+ const game=createTennis();beginTennis(game);game.phase='rally';game.aiReaction=99;
+ Object.assign(game.you,{x:-4,y:7,targetX:-4,targetY:7});
+ Object.assign(game.ball,{x:1,y:3,z:.2,vx:1.5,vy:4,vz:3.6,wx:-3,wy:1,wz:.5,last:'rival',crossed:true,bounces:1});
+ const before=JSON.stringify(game),guide=tennisReceivingPoint(game),ground=tennisLanding(game);
+ assert.equal(JSON.stringify(game),before,'receiving prediction never advances the live ball');
+ assert(guide.time<ground.time,'after-bounce guide targets reachable foot contact before the second bounce');
+ let elapsed=0;while(elapsed<guide.time){tickTennis(game,1/hz);elapsed+=1/hz;}
+ assert(Math.hypot(game.ball.x-guide.x,game.ball.y-guide.y)<.17,`receiving guide tracks drag/spin at ${hz}Hz`);
+ assert(game.ball.z<.85&&game.ball.bounces===1,'guide arrives inside foot-contact height before point loss');
+}
+console.log('SOCCER_TENNIS_RECEIVE_GUIDE_PASS post-bounce foot contact, live trajectory agreement, pure prediction');

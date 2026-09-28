@@ -39,7 +39,7 @@ export function visualHint(q:VisualFieldQuestion){
   case 'dragToZone':return 'Drag the player to the right space, or tap a space.';
   case 'whatNext':return v.pictures?'Look at the freeze-frame. Tap what happens next.':'Look at the freeze-frame. Tap what happens next.';
   case 'trueFalse':return 'Look at the picture. Is it true or false?';
-  case 'order':return 'Tap the steps in the order they happen.';
+  case 'order':return 'Drag the steps into the order they happen, then tap Check order.';
  }
 }
 /** How many choices the visual carries (must equal options.length). */
@@ -61,6 +61,13 @@ export function orderDisplay(count:number,seed:string){
  if(count>1&&idx.every((v,i)=>v===i))idx.push(idx.shift()!);
  return idx;
 }
+/** Drag-to-reorder helpers for `order` questions (options are authored in the correct order, so slot k should hold option k). */
+export const moveStep=(order:number[],from:number,to:number)=>{const o=[...order];const [x]=o.splice(from,1);o.splice(to,0,x);return o;};
+/** Slot a dragged card lands in: how many OTHER cards' centres sit above the dragged card's centre. */
+export const dropSlot=(centers:number[],from:number,center:number)=>centers.reduce((t,c,k)=>t+(k!==from&&c<center?1:0),0);
+/** The answer a checked order reports: `correct` when solved, else the option sitting in the first wrong slot (never `correct`, so
+ *  the usual wrong → "why" → Try again flow and outcome tracking apply, and only that one card is flagged). */
+export const orderAnswer=(order:number[],correct:number)=>{const k=order.findIndex((v,i)=>v!==i);return k<0?correct:order[k];};
 
 export type FramePose={positions:Map<string,Point>;ball:Point;trails:Map<string,Point>};
 /** Resolve a frame to actor positions (static; computed once per render, no loop). */

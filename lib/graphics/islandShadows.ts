@@ -27,8 +27,9 @@ export function fitIslandShadows(light:T.DirectionalLight,view:T.PerspectiveCame
  const camera=light.shadow.camera,margin=4;
  Object.assign(camera,{left:Math.floor(left-margin),right:Math.ceil(right+margin),bottom:Math.floor(bottom-margin),top:Math.ceil(top+margin),near:Math.max(.1,near-40),far:far+32});
  camera.updateProjectionMatrix();light.shadow.needsUpdate=true;
- // ≈ 0.92 texel of normal offset: the tuned .12 at 2048² over the old 268 m frustum.
- light.shadow.normalBias=.92*Math.max(camera.right-camera.left,camera.top-camera.bottom)/Math.max(1,light.shadow.mapSize.x);
+ // 2 texels of normal offset: at 0.92 texel the tighter fit showed vertical acne on roof parapets (phone and iPad crops, quality pass);
+ // at ~13 cm texels this is ≈ the previous 0.24 m, so contact shadows at the feet are unchanged.
+ light.shadow.normalBias=2*Math.max(camera.right-camera.left,camera.top-camera.bottom)/Math.max(1,light.shadow.mapSize.x);
 }
 
 /** Quality pass: the isolated watch view looks at one pitch from a high, angled camera, so the view-based fit spanned ~680 × 190 m of
@@ -42,5 +43,5 @@ export function fitShadowsToBox(light:T.DirectionalLight,halfW:number,halfD:numb
  const camera=light.shadow.camera,margin=2;
  Object.assign(camera,{left:Math.floor(left-margin),right:Math.ceil(right+margin),bottom:Math.floor(bottom-margin),top:Math.ceil(top+margin),near:Math.max(.1,near-60),far:far+32});
  camera.updateProjectionMatrix();light.shadow.needsUpdate=true;
- light.shadow.normalBias=.92*Math.max(camera.right-camera.left,camera.top-camera.bottom)/Math.max(1,light.shadow.mapSize.x);
+ light.shadow.normalBias=2*Math.max(camera.right-camera.left,camera.top-camera.bottom)/Math.max(1,light.shadow.mapSize.x);
 }

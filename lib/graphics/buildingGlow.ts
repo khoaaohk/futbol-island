@@ -2,14 +2,16 @@ import * as T from 'three';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 /** Architectural edges and a soft upward wash, updated by the island's existing loop. */
-export function createBuildingGlow(root:T.Group,width:number,depth:number,height:number,kind:'store'|'arcade'|'coaches'|'museum'|'arena'|'ferry'|'cabinet'){
- const arcade=kind==='arcade',coaches=kind==='coaches',cabinet=kind==='cabinet';
+export function createBuildingGlow(root:T.Group,width:number,depth:number,height:number,kind:'store'|'arcade'|'coaches'|'museum'|'arena'|'ferry'|'cabinet'|'vending'){
+ const arcade=kind==='arcade',coaches=kind==='coaches',vending=kind==='vending',cabinet=kind==='cabinet'||vending;
  const effect=new T.Group();effect.name='building-outline-glow';effect.visible=false;root.add(effect);
  const uniforms={strength:{value:0},rise:{value:-2},tint:{value:new T.Color('#35ed8b')},moving:{value:1}};
  const vertexShader='varying vec3 localPoint; void main(){localPoint=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}';
  const material=(halo:boolean)=>new T.ShaderMaterial({uniforms,vertexShader,fragmentShader:`varying vec3 localPoint; uniform float strength; uniform float rise; uniform float moving; uniform vec3 tint; void main(){float band=exp(-pow((localPoint.y-rise)/1.1,2.0));float alpha=strength*${halo?'0.13':'0.7'}*(0.6+band*0.8);gl_FragColor=vec4(mix(tint,vec3(0.65,1.0,0.72),band*0.2),alpha);}`,transparent:true,depthWrite:false,blending:halo?T.AdditiveBlending:T.NormalBlending,toneMapped:false});
  const materials=[material(false),material(true)];
- const shapes=cabinet?[
+ const shapes=vending?[
+  {w:width+.1,d:depth+.1,h:height+.06,x:0,y:(height+.06)/2,z:0}
+ ]:cabinet?[
   {w:width+.12,d:depth+.12,h:1.4,x:0,y:.65,z:.05},
   {w:width+.12,d:1.08,h:1.6,x:0,y:2,z:-.13},
   {w:width+.25,d:1.18,h:.65,x:0,y:2.8,z:.33}

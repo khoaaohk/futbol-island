@@ -1685,5 +1685,105 @@
     "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
     "date": "2014-10-09",
     "source": "wikimedia/deep-audit"
+  },
+  "Rui Costa": {
+    "slug": "rui-costa",
+    "article": "Rui Costa",
+    "file": "https://commons.wikimedia.org/wiki/File:Rui_Costa.jpg",
+    "artist": "José Goulão from Lisbon, Portugal",
+    "license": "CC BY-SA 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+    "date": "2007-09-15",
+    "source": "wikimedia/deep-audit"
+  },
+  "Michael Owen": {
+    "slug": "michael-owen",
+    "article": "Michael Owen",
+    "file": "https://commons.wikimedia.org/wiki/File:Owen4.jpg",
+    "artist": "Brian Minkoff-London Pixels",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "date": "2012-09-22",
+    "source": "wikimedia/deep-audit"
+  },
+  "Nílton Santos": {
+    "slug": "nilton-santos",
+    "article": "Nílton Santos",
+    "file": "https://commons.wikimedia.org/wiki/File:Nilton_Santos_2_(1956).tif",
+    "artist": "Unknown photographer (Correio da Manhã collection, Arquivo Nacional)",
+    "license": "Public domain",
+    "licenseUrl": "",
+    "date": "1956",
+    "source": "wikimedia/deep-audit"
+  },
+  "Juan Román Riquelme": {
+    "slug": "juan-roman-riquelme",
+    "article": "Juan Román Riquelme",
+    "file": "https://commons.wikimedia.org/wiki/File:Riquelme_2009.jpg",
+    "artist": "Diegotóteles",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
+    "date": "2009",
+    "source": "wikimedia/deep-audit"
+  },
+  "Leonardo Bonucci": {
+    "slug": "leonardo-bonucci",
+    "article": "Leonardo Bonucci",
+    "file": "https://commons.wikimedia.org/wiki/File:Leonardo_Bonucci_and_Cesc_F%C3%A0bregas_Euro_2012_final.jpg",
+    "artist": "Илья Хохлов",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "date": "2012-07-02",
+    "source": "wikimedia/deep-audit"
+  },
+  "Patrick Vieira": {
+    "slug": "patrick-vieira",
+    "article": "Patrick Vieira",
+    "file": "https://commons.wikimedia.org/wiki/File:Patrick_Vieira_-_Inter_Mailand_(1).jpg",
+    "artist": "Steindy",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "date": "2009-08-16",
+    "source": "wikimedia/deep-audit"
+  },
+  "Clarence Seedorf": {
+    "slug": "clarence-seedorf",
+    "article": "Clarence Seedorf",
+    "file": "https://commons.wikimedia.org/wiki/File:Seedorf_4_wikicommons.jpg",
+    "artist": "Franciaio",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "date": "2011-12-17",
+    "source": "wikimedia/deep-audit"
+  },
+  "Jamie Carragher": {
+    "slug": "jamie-carragher",
+    "article": "Jamie Carragher",
+    "file": "https://commons.wikimedia.org/wiki/File:Abhisith_Vejjajiva_-_Worawi_Makudi_-_Jamie_Carragher.jpg",
+    "artist": "Government of Thailand",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+    "date": "2009-07-22",
+    "source": "wikimedia/deep-audit"
+  },
+  "Cafu": {
+    "slug": "cafu",
+    "article": "Cafu",
+    "file": "https://commons.wikimedia.org/wiki/File:Cafu.JPG",
+    "artist": "Florian K",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
+    "date": "2006-06-01",
+    "source": "wikimedia/deep-audit"
+  },
+  "Gary Lineker": {
+    "slug": "gary-lineker",
+    "article": "Gary Lineker",
+    "file": "https://commons.wikimedia.org/wiki/File:Prime_Minister_Keir_Starmer_hosts_St_George%27s_Day_Reception_(54470857860)_(cropped).jpg",
+    "artist": "Lauren Hurley / No 10 Downing Street. Contains public sector information licensed under the Open Government Licence v3.0",
+    "license": "OGL v3.0",
+    "licenseUrl": "https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/",
+    "date": "2025-04-22",
+    "source": "wikimedia/deep-audit"
   }
 }

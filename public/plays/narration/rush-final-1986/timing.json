@@ -1,0 +1,370 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Wembley, 1986",
+   "text": "Wembley, 1986, the FA Cup final: Liverpool, in red, against Everton, in blue. Everton lead, until Jan M\u00f8lby slides a pass through. Ian Rush races clear, steps round the keeper, and scores!",
+   "src": "/plays/narration/rush-final-1986/1.m4a",
+   "seconds": 14.9,
+   "words": [
+    {
+     "w": "Wembley",
+     "at": 0.4
+    },
+    {
+     "w": "1986",
+     "at": 0.875
+    },
+    {
+     "w": "the",
+     "at": 2.025
+    },
+    {
+     "w": "FA",
+     "at": 2.163
+    },
+    {
+     "w": "Cup",
+     "at": 2.462
+    },
+    {
+     "w": "final",
+     "at": 2.725
+    },
+    {
+     "w": "Liverpool",
+     "at": 3.562
+    },
+    {
+     "w": "in",
+     "at": 4.275
+    },
+    {
+     "w": "red",
+     "at": 4.438
+    },
+    {
+     "w": "against",
+     "at": 4.825
+    },
+    {
+     "w": "Everton",
+     "at": 5.25
+    },
+    {
+     "w": "in",
+     "at": 5.7
+    },
+    {
+     "w": "blue",
+     "at": 5.85
+    },
+    {
+     "w": "Everton",
+     "at": 6.763
+    },
+    {
+     "w": "lead",
+     "at": 7.175
+    },
+    {
+     "w": "until",
+     "at": 7.713
+    },
+    {
+     "w": "Jan",
+     "at": 8.0
+    },
+    {
+     "w": "M\u00f8lby",
+     "at": 8.3
+    },
+    {
+     "w": "slides",
+     "at": 8.738
+    },
+    {
+     "w": "a",
+     "at": 9.137
+    },
+    {
+     "w": "pass",
+     "at": 9.2
+    },
+    {
+     "w": "through",
+     "at": 9.562
+    },
+    {
+     "w": "Ian",
+     "at": 10.5
+    },
+    {
+     "w": "Rush",
+     "at": 10.863
+    },
+    {
+     "w": "races",
+     "at": 11.2
+    },
+    {
+     "w": "clear",
+     "at": 11.637
+    },
+    {
+     "w": "steps",
+     "at": 12.238
+    },
+    {
+     "w": "round",
+     "at": 12.575
+    },
+    {
+     "w": "the",
+     "at": 12.762
+    },
+    {
+     "w": "keeper",
+     "at": 12.85
+    },
+    {
+     "w": "and",
+     "at": 13.238
+    },
+    {
+     "w": "scores",
+     "at": 13.363
+    }
+   ]
+  },
+  {
+   "label": "Onside",
+   "text": "Watch again, slowly. Rush times his run, so he stays onside. The keeper, Mimms, comes out. One touch to the side, and he slots it in.",
+   "src": "/plays/narration/rush-final-1986/2.m4a",
+   "seconds": 10.1,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.113
+    },
+    {
+     "w": "Rush",
+     "at": 2.062
+    },
+    {
+     "w": "times",
+     "at": 2.4
+    },
+    {
+     "w": "his",
+     "at": 2.712
+    },
+    {
+     "w": "run",
+     "at": 2.875
+    },
+    {
+     "w": "so",
+     "at": 3.225
+    },
+    {
+     "w": "he",
+     "at": 3.375
+    },
+    {
+     "w": "stays",
+     "at": 3.5
+    },
+    {
+     "w": "onside",
+     "at": 3.875
+    },
+    {
+     "w": "The",
+     "at": 5.037
+    },
+    {
+     "w": "keeper",
+     "at": 5.188
+    },
+    {
+     "w": "Mimms",
+     "at": 5.6
+    },
+    {
+     "w": "comes",
+     "at": 5.975
+    },
+    {
+     "w": "out",
+     "at": 6.3
+    },
+    {
+     "w": "One",
+     "at": 6.987
+    },
+    {
+     "w": "touch",
+     "at": 7.225
+    },
+    {
+     "w": "to",
+     "at": 7.55
+    },
+    {
+     "w": "the",
+     "at": 7.638
+    },
+    {
+     "w": "side",
+     "at": 7.737
+    },
+    {
+     "w": "and",
+     "at": 8.188
+    },
+    {
+     "w": "he",
+     "at": 8.287
+    },
+    {
+     "w": "slots",
+     "at": 8.412
+    },
+    {
+     "w": "it",
+     "at": 8.787
+    },
+    {
+     "w": "in",
+     "at": 8.875
+    }
+   ]
+  },
+  {
+   "label": "One-all",
+   "text": "One-all! Rush scored again later, and Liverpool won three-one.",
+   "src": "/plays/narration/rush-final-1986/3.m4a",
+   "seconds": 4.9,
+   "words": [
+    {
+     "w": "One-all",
+     "at": 0.425
+    },
+    {
+     "w": "Rush",
+     "at": 1.262
+    },
+    {
+     "w": "scored",
+     "at": 1.55
+    },
+    {
+     "w": "again",
+     "at": 1.837
+    },
+    {
+     "w": "later",
+     "at": 2.125
+    },
+    {
+     "w": "and",
+     "at": 2.525
+    },
+    {
+     "w": "Liverpool",
+     "at": 2.65
+    },
+    {
+     "w": "won",
+     "at": 3.125
+    },
+    {
+     "w": "three-one",
+     "at": 3.362
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: time your run so you are onside, then take the ball round the keeper.",
+   "src": "/plays/narration/rush-final-1986/4.m4a",
+   "seconds": 5.8,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "time",
+     "at": 1.337
+    },
+    {
+     "w": "your",
+     "at": 1.613
+    },
+    {
+     "w": "run",
+     "at": 1.725
+    },
+    {
+     "w": "so",
+     "at": 2.0
+    },
+    {
+     "w": "you",
+     "at": 2.125
+    },
+    {
+     "w": "are",
+     "at": 2.225
+    },
+    {
+     "w": "onside",
+     "at": 2.325
+    },
+    {
+     "w": "then",
+     "at": 3.25
+    },
+    {
+     "w": "take",
+     "at": 3.45
+    },
+    {
+     "w": "the",
+     "at": 3.663
+    },
+    {
+     "w": "ball",
+     "at": 3.75
+    },
+    {
+     "w": "round",
+     "at": 4.05
+    },
+    {
+     "w": "the",
+     "at": 4.237
+    },
+    {
+     "w": "keeper",
+     "at": 4.325
+    }
+   ]
+  }
+ ]
+}

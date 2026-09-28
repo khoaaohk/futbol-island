@@ -1,0 +1,418 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Manchester, 2019: City against Leicester, chasing the title. Captain Vincent Kompany gets the ball, thirty yards out. Everyone shouts: don\u2019t shoot! He shoots... top corner!",
+   "src": "/plays/narration/kompany-leicester-2019/1.m4a",
+   "seconds": 12.9,
+   "words": [
+    {
+     "w": "Manchester",
+     "at": 0.4
+    },
+    {
+     "w": "2019",
+     "at": 1.025
+    },
+    {
+     "w": "City",
+     "at": 2.2
+    },
+    {
+     "w": "against",
+     "at": 2.475
+    },
+    {
+     "w": "Leicester",
+     "at": 2.85
+    },
+    {
+     "w": "chasing",
+     "at": 3.337
+    },
+    {
+     "w": "the",
+     "at": 3.737
+    },
+    {
+     "w": "title",
+     "at": 3.825
+    },
+    {
+     "w": "Captain",
+     "at": 4.763
+    },
+    {
+     "w": "Vincent",
+     "at": 5.175
+    },
+    {
+     "w": "Kompany",
+     "at": 5.575
+    },
+    {
+     "w": "gets",
+     "at": 6.1
+    },
+    {
+     "w": "the",
+     "at": 6.35
+    },
+    {
+     "w": "ball",
+     "at": 6.45
+    },
+    {
+     "w": "thirty",
+     "at": 6.888
+    },
+    {
+     "w": "yards",
+     "at": 7.225
+    },
+    {
+     "w": "out",
+     "at": 7.55
+    },
+    {
+     "w": "Everyone",
+     "at": 8.162
+    },
+    {
+     "w": "shouts",
+     "at": 8.675
+    },
+    {
+     "w": "don\u2019t",
+     "at": 9.25
+    },
+    {
+     "w": "shoot",
+     "at": 9.55
+    },
+    {
+     "w": "He",
+     "at": 10.125
+    },
+    {
+     "w": "shoots",
+     "at": 10.312
+    },
+    {
+     "w": "top",
+     "at": 11.15
+    },
+    {
+     "w": "corner",
+     "at": 11.463
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again. Nobody closes him down, so he takes a few steps, looks up, and steadies himself. Then he strikes it clean, through the middle of the ball.",
+   "src": "/plays/narration/kompany-leicester-2019/2.m4a",
+   "seconds": 10.2,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.7
+    },
+    {
+     "w": "Nobody",
+     "at": 1.488
+    },
+    {
+     "w": "closes",
+     "at": 1.85
+    },
+    {
+     "w": "him",
+     "at": 2.212
+    },
+    {
+     "w": "down",
+     "at": 2.4
+    },
+    {
+     "w": "so",
+     "at": 2.925
+    },
+    {
+     "w": "he",
+     "at": 3.075
+    },
+    {
+     "w": "takes",
+     "at": 3.2
+    },
+    {
+     "w": "a",
+     "at": 3.438
+    },
+    {
+     "w": "few",
+     "at": 3.5
+    },
+    {
+     "w": "steps",
+     "at": 3.737
+    },
+    {
+     "w": "looks",
+     "at": 4.3
+    },
+    {
+     "w": "up",
+     "at": 4.575
+    },
+    {
+     "w": "and",
+     "at": 4.812
+    },
+    {
+     "w": "steadies",
+     "at": 4.938
+    },
+    {
+     "w": "himself",
+     "at": 5.338
+    },
+    {
+     "w": "Then",
+     "at": 6.388
+    },
+    {
+     "w": "he",
+     "at": 6.625
+    },
+    {
+     "w": "strikes",
+     "at": 6.75
+    },
+    {
+     "w": "it",
+     "at": 7.112
+    },
+    {
+     "w": "clean",
+     "at": 7.263
+    },
+    {
+     "w": "through",
+     "at": 8.062
+    },
+    {
+     "w": "the",
+     "at": 8.275
+    },
+    {
+     "w": "middle",
+     "at": 8.375
+    },
+    {
+     "w": "of",
+     "at": 8.613
+    },
+    {
+     "w": "the",
+     "at": 8.688
+    },
+    {
+     "w": "ball",
+     "at": 8.775
+    }
+   ]
+  },
+  {
+   "label": "Top corner",
+   "text": "Kasper Schmeichel dives, but it flies into the top corner! The captain\u2019s goal helps City win the title.",
+   "src": "/plays/narration/kompany-leicester-2019/3.m4a",
+   "seconds": 7.6,
+   "words": [
+    {
+     "w": "Kasper",
+     "at": 0.35
+    },
+    {
+     "w": "Schmeichel",
+     "at": 0.8
+    },
+    {
+     "w": "dives",
+     "at": 1.25
+    },
+    {
+     "w": "but",
+     "at": 2.15
+    },
+    {
+     "w": "it",
+     "at": 2.288
+    },
+    {
+     "w": "flies",
+     "at": 2.388
+    },
+    {
+     "w": "into",
+     "at": 2.812
+    },
+    {
+     "w": "the",
+     "at": 2.987
+    },
+    {
+     "w": "top",
+     "at": 3.075
+    },
+    {
+     "w": "corner",
+     "at": 3.35
+    },
+    {
+     "w": "The",
+     "at": 4.3
+    },
+    {
+     "w": "captain\u2019s",
+     "at": 4.4
+    },
+    {
+     "w": "goal",
+     "at": 4.9
+    },
+    {
+     "w": "helps",
+     "at": 5.225
+    },
+    {
+     "w": "City",
+     "at": 5.537
+    },
+    {
+     "w": "win",
+     "at": 5.862
+    },
+    {
+     "w": "the",
+     "at": 6.088
+    },
+    {
+     "w": "title",
+     "at": 6.175
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: if the defence backs off and nobody closes you down, set your feet and strike it clean. You might surprise the keeper!",
+   "src": "/plays/narration/kompany-leicester-2019/4.m4a",
+   "seconds": 8.6,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "if",
+     "at": 1.175
+    },
+    {
+     "w": "the",
+     "at": 1.288
+    },
+    {
+     "w": "defence",
+     "at": 1.375
+    },
+    {
+     "w": "backs",
+     "at": 1.825
+    },
+    {
+     "w": "off",
+     "at": 2.15
+    },
+    {
+     "w": "and",
+     "at": 2.438
+    },
+    {
+     "w": "nobody",
+     "at": 2.55
+    },
+    {
+     "w": "closes",
+     "at": 2.9
+    },
+    {
+     "w": "you",
+     "at": 3.325
+    },
+    {
+     "w": "down",
+     "at": 3.45
+    },
+    {
+     "w": "set",
+     "at": 4.162
+    },
+    {
+     "w": "your",
+     "at": 4.338
+    },
+    {
+     "w": "feet",
+     "at": 4.5
+    },
+    {
+     "w": "and",
+     "at": 4.825
+    },
+    {
+     "w": "strike",
+     "at": 4.95
+    },
+    {
+     "w": "it",
+     "at": 5.237
+    },
+    {
+     "w": "clean",
+     "at": 5.338
+    },
+    {
+     "w": "You",
+     "at": 6.263
+    },
+    {
+     "w": "might",
+     "at": 6.388
+    },
+    {
+     "w": "surprise",
+     "at": 6.6
+    },
+    {
+     "w": "the",
+     "at": 7.088
+    },
+    {
+     "w": "keeper",
+     "at": 7.175
+    }
+   ]
+  }
+ ]
+}

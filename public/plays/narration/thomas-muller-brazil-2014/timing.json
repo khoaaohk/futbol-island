@@ -1,0 +1,366 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The corner",
+   "text": "Belo Horizonte, 2014. The World Cup semi final, Brazil against Germany. Toni Kroos swings in a corner, and Thomas M\u00fcller slips away from his marker.",
+   "src": "/plays/narration/thomas-muller-brazil-2014/1.m4a",
+   "seconds": 12.1,
+   "words": [
+    {
+     "w": "Belo",
+     "at": 0.4
+    },
+    {
+     "w": "Horizonte",
+     "at": 0.725
+    },
+    {
+     "w": "2014",
+     "at": 1.7
+    },
+    {
+     "w": "The",
+     "at": 3.163
+    },
+    {
+     "w": "World",
+     "at": 3.3
+    },
+    {
+     "w": "Cup",
+     "at": 3.625
+    },
+    {
+     "w": "semi",
+     "at": 3.938
+    },
+    {
+     "w": "final",
+     "at": 4.362
+    },
+    {
+     "w": "Brazil",
+     "at": 5.05
+    },
+    {
+     "w": "against",
+     "at": 5.5
+    },
+    {
+     "w": "Germany",
+     "at": 5.938
+    },
+    {
+     "w": "Toni",
+     "at": 6.963
+    },
+    {
+     "w": "Kroos",
+     "at": 7.388
+    },
+    {
+     "w": "swings",
+     "at": 7.8
+    },
+    {
+     "w": "in",
+     "at": 8.188
+    },
+    {
+     "w": "a",
+     "at": 8.262
+    },
+    {
+     "w": "corner",
+     "at": 8.325
+    },
+    {
+     "w": "and",
+     "at": 8.85
+    },
+    {
+     "w": "Thomas",
+     "at": 8.975
+    },
+    {
+     "w": "M\u00fcller",
+     "at": 9.387
+    },
+    {
+     "w": "slips",
+     "at": 9.812
+    },
+    {
+     "w": "away",
+     "at": 10.1
+    },
+    {
+     "w": "from",
+     "at": 10.375
+    },
+    {
+     "w": "his",
+     "at": 10.512
+    },
+    {
+     "w": "marker",
+     "at": 10.675
+    }
+   ]
+  },
+  {
+   "label": "Nobody with him",
+   "text": "Watch M\u00fcller. While everyone looks at the ball, he drifts to the back post. Nobody is with him! The ball drops, and he sweeps it in with one touch. Germany lead, one nil.",
+   "src": "/plays/narration/thomas-muller-brazil-2014/2.m4a",
+   "seconds": 11.9,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "M\u00fcller",
+     "at": 0.713
+    },
+    {
+     "w": "While",
+     "at": 1.637
+    },
+    {
+     "w": "everyone",
+     "at": 1.85
+    },
+    {
+     "w": "looks",
+     "at": 2.3
+    },
+    {
+     "w": "at",
+     "at": 2.513
+    },
+    {
+     "w": "the",
+     "at": 2.587
+    },
+    {
+     "w": "ball",
+     "at": 2.675
+    },
+    {
+     "w": "he",
+     "at": 3.05
+    },
+    {
+     "w": "drifts",
+     "at": 3.188
+    },
+    {
+     "w": "to",
+     "at": 3.575
+    },
+    {
+     "w": "the",
+     "at": 3.663
+    },
+    {
+     "w": "back",
+     "at": 3.75
+    },
+    {
+     "w": "post",
+     "at": 4.062
+    },
+    {
+     "w": "Nobody",
+     "at": 4.95
+    },
+    {
+     "w": "is",
+     "at": 5.35
+    },
+    {
+     "w": "with",
+     "at": 5.5
+    },
+    {
+     "w": "him",
+     "at": 5.688
+    },
+    {
+     "w": "The",
+     "at": 6.3
+    },
+    {
+     "w": "ball",
+     "at": 6.4
+    },
+    {
+     "w": "drops",
+     "at": 6.7
+    },
+    {
+     "w": "and",
+     "at": 7.225
+    },
+    {
+     "w": "he",
+     "at": 7.338
+    },
+    {
+     "w": "sweeps",
+     "at": 7.475
+    },
+    {
+     "w": "it",
+     "at": 7.812
+    },
+    {
+     "w": "in",
+     "at": 7.888
+    },
+    {
+     "w": "with",
+     "at": 8.062
+    },
+    {
+     "w": "one",
+     "at": 8.225
+    },
+    {
+     "w": "touch",
+     "at": 8.463
+    },
+    {
+     "w": "Germany",
+     "at": 9.35
+    },
+    {
+     "w": "lead",
+     "at": 9.838
+    },
+    {
+     "w": "one",
+     "at": 10.312
+    },
+    {
+     "w": "nil",
+     "at": 10.575
+    }
+   ]
+  },
+  {
+   "label": "Get free",
+   "text": "Want to be free like M\u00fcller? Move away from your marker before the ball comes. Find the empty space, and be ready to strike first time.",
+   "src": "/plays/narration/thomas-muller-brazil-2014/3.m4a",
+   "seconds": 9.1,
+   "words": [
+    {
+     "w": "Want",
+     "at": 0.375
+    },
+    {
+     "w": "to",
+     "at": 0.562
+    },
+    {
+     "w": "be",
+     "at": 0.637
+    },
+    {
+     "w": "free",
+     "at": 0.8
+    },
+    {
+     "w": "like",
+     "at": 1.05
+    },
+    {
+     "w": "M\u00fcller",
+     "at": 1.275
+    },
+    {
+     "w": "Move",
+     "at": 2.15
+    },
+    {
+     "w": "away",
+     "at": 2.4
+    },
+    {
+     "w": "from",
+     "at": 2.7
+    },
+    {
+     "w": "your",
+     "at": 2.837
+    },
+    {
+     "w": "marker",
+     "at": 2.95
+    },
+    {
+     "w": "before",
+     "at": 3.325
+    },
+    {
+     "w": "the",
+     "at": 3.612
+    },
+    {
+     "w": "ball",
+     "at": 3.7
+    },
+    {
+     "w": "comes",
+     "at": 4.0
+    },
+    {
+     "w": "Find",
+     "at": 4.95
+    },
+    {
+     "w": "the",
+     "at": 5.263
+    },
+    {
+     "w": "empty",
+     "at": 5.375
+    },
+    {
+     "w": "space",
+     "at": 5.763
+    },
+    {
+     "w": "and",
+     "at": 6.425
+    },
+    {
+     "w": "be",
+     "at": 6.537
+    },
+    {
+     "w": "ready",
+     "at": 6.675
+    },
+    {
+     "w": "to",
+     "at": 6.912
+    },
+    {
+     "w": "strike",
+     "at": 7.025
+    },
+    {
+     "w": "first",
+     "at": 7.412
+    },
+    {
+     "w": "time",
+     "at": 7.7
+    }
+   ]
+  }
+ ]
+}

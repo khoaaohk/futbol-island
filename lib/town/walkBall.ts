@@ -93,9 +93,14 @@ export function createWalkBall(){
    const routine=env.juggleHead?COSTUME_JUGGLE_ROUTINE:JUGGLE_ROUTINE;
    state.jugglePhase=phase;state.juggleSide=side;state.juggleTouch=movingJuggle?'foot':routine[touch%routine.length];
    const from=juggleContact(state.juggleTouch,side,env.juggleHead,env.headTop),to=juggleContact(movingJuggle?'foot':routine[(touch+1)%routine.length],-side,env.juggleHead,env.headTop),blend=phase*phase*(3-2*phase);
-   const x=from.x+(to.x-from.x)*blend,z=from.z+(to.z-from.z)*blend;
+   // Signature juggles (equipmentActions): Cosmic "Orbital juggle" loops the ball once around a small horizontal orbit per touch
+   // (zero offset at both contacts, so touches still meet the boot/knee/head); Solar "Solar flare juggle" is a 1.6 m lob, about the
+   // real rise for its 1.2 s touch, from the boot and knee only (shoulder/head touches keep 1 m, so the highest point stays the
+   // previous 3.04 m and indoor ceilings are unaffected). Around-the-world keeps its own low arc. A few trig ops per frame, no allocations.
+   const orbit=style==='cosmic'&&state.juggleTouch!=='around-world'?.28:0,angle=phase*Math.PI*2;
+   const x=from.x+(to.x-from.x)*blend+orbit*side*Math.sin(angle),z=from.z+(to.z-from.z)*blend+orbit*.5*(1-Math.cos(angle));
    state.x=p.x+Math.cos(p.yaw)*x+Math.sin(p.yaw)*z;state.z=p.z-Math.sin(p.yaw)*x+Math.cos(p.yaw)*z;
-   state.y=p.y+from.y+(to.y-from.y)*phase+4*phase*(1-phase)*(state.juggleTouch==='around-world'?.5:style==='solar'?1:style==='frost'?.5:.7);
+   state.y=p.y+from.y+(to.y-from.y)*phase+4*phase*(1-phase)*(state.juggleTouch==='around-world'?.5:style==='solar'?(from.y<1.5?1.6:1):style==='frost'?.5:.7);
    blendAge+=dt;if(blendAge<.35){const t=blendAge/.35,blend=t*t*(3-2*t);state.x=blendStart.x+(state.x-blendStart.x)*blend;state.y=blendStart.y+(state.y-blendStart.y)*blend;state.z=blendStart.z+(state.z-blendStart.z)*blend;}
    // Keep foot-juggle arcs clear of the plush face.
    if(env.juggleHead){const h=env.juggleHead,cy=(h.top+h.bottom)/2,ry=(h.top-h.bottom)/2+.32,rx=h.width+.32,rz=h.front+.32,dx=state.x-p.x,dz=state.z-p.z;

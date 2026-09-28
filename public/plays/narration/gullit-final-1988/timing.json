@@ -1,0 +1,386 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Munich, 1988",
+   "text": "Munich, 1988, the Euro final: the Netherlands, in orange, against the Soviet Union, in white. The ball is crossed in, Marco van Basten heads it back across, and captain Ruud Gullit heads it in!",
+   "src": "/plays/narration/gullit-final-1988/1.m4a",
+   "seconds": 14.8,
+   "words": [
+    {
+     "w": "Munich",
+     "at": 0.4
+    },
+    {
+     "w": "1988",
+     "at": 0.875
+    },
+    {
+     "w": "the",
+     "at": 2.075
+    },
+    {
+     "w": "Euro",
+     "at": 2.212
+    },
+    {
+     "w": "final",
+     "at": 2.562
+    },
+    {
+     "w": "the",
+     "at": 3.525
+    },
+    {
+     "w": "Netherlands",
+     "at": 3.65
+    },
+    {
+     "w": "in",
+     "at": 4.4
+    },
+    {
+     "w": "orange",
+     "at": 4.562
+    },
+    {
+     "w": "against",
+     "at": 5.125
+    },
+    {
+     "w": "the",
+     "at": 5.513
+    },
+    {
+     "w": "Soviet",
+     "at": 5.638
+    },
+    {
+     "w": "Union",
+     "at": 6.162
+    },
+    {
+     "w": "in",
+     "at": 6.725
+    },
+    {
+     "w": "white",
+     "at": 6.875
+    },
+    {
+     "w": "The",
+     "at": 7.838
+    },
+    {
+     "w": "ball",
+     "at": 7.975
+    },
+    {
+     "w": "is",
+     "at": 8.3
+    },
+    {
+     "w": "crossed",
+     "at": 8.45
+    },
+    {
+     "w": "in",
+     "at": 8.9
+    },
+    {
+     "w": "Marco",
+     "at": 9.45
+    },
+    {
+     "w": "van",
+     "at": 9.825
+    },
+    {
+     "w": "Basten",
+     "at": 10.075
+    },
+    {
+     "w": "heads",
+     "at": 10.625
+    },
+    {
+     "w": "it",
+     "at": 10.863
+    },
+    {
+     "w": "back",
+     "at": 10.95
+    },
+    {
+     "w": "across",
+     "at": 11.188
+    },
+    {
+     "w": "and",
+     "at": 12.05
+    },
+    {
+     "w": "captain",
+     "at": 12.175
+    },
+    {
+     "w": "Ruud",
+     "at": 12.6
+    },
+    {
+     "w": "Gullit",
+     "at": 12.825
+    },
+    {
+     "w": "heads",
+     "at": 13.175
+    },
+    {
+     "w": "it",
+     "at": 13.412
+    },
+    {
+     "w": "in",
+     "at": 13.5
+    }
+   ]
+  },
+  {
+   "label": "Unmarked",
+   "text": "Watch again, slowly. Nobody is marking Gullit. He jumps early, keeps his eyes open, and heads it past Dasayev.",
+   "src": "/plays/narration/gullit-final-1988/2.m4a",
+   "seconds": 8.2,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.113
+    },
+    {
+     "w": "Nobody",
+     "at": 2.075
+    },
+    {
+     "w": "is",
+     "at": 2.45
+    },
+    {
+     "w": "marking",
+     "at": 2.6
+    },
+    {
+     "w": "Gullit",
+     "at": 2.975
+    },
+    {
+     "w": "He",
+     "at": 3.725
+    },
+    {
+     "w": "jumps",
+     "at": 3.85
+    },
+    {
+     "w": "early",
+     "at": 4.175
+    },
+    {
+     "w": "keeps",
+     "at": 4.675
+    },
+    {
+     "w": "his",
+     "at": 4.938
+    },
+    {
+     "w": "eyes",
+     "at": 5.1
+    },
+    {
+     "w": "open",
+     "at": 5.425
+    },
+    {
+     "w": "and",
+     "at": 5.875
+    },
+    {
+     "w": "heads",
+     "at": 6.0
+    },
+    {
+     "w": "it",
+     "at": 6.237
+    },
+    {
+     "w": "past",
+     "at": 6.325
+    },
+    {
+     "w": "Dasayev",
+     "at": 6.675
+    }
+   ]
+  },
+  {
+   "label": "Champions",
+   "text": "One-nil! Gullit runs to celebrate, and the Netherlands went on to win two-nil and become champions of Europe!",
+   "src": "/plays/narration/gullit-final-1988/3.m4a",
+   "seconds": 7.7,
+   "words": [
+    {
+     "w": "One-nil",
+     "at": 0.4
+    },
+    {
+     "w": "Gullit",
+     "at": 1.413
+    },
+    {
+     "w": "runs",
+     "at": 1.775
+    },
+    {
+     "w": "to",
+     "at": 2.175
+    },
+    {
+     "w": "celebrate",
+     "at": 2.312
+    },
+    {
+     "w": "and",
+     "at": 3.15
+    },
+    {
+     "w": "the",
+     "at": 3.263
+    },
+    {
+     "w": "Netherlands",
+     "at": 3.35
+    },
+    {
+     "w": "went",
+     "at": 3.85
+    },
+    {
+     "w": "on",
+     "at": 4.013
+    },
+    {
+     "w": "to",
+     "at": 4.175
+    },
+    {
+     "w": "win",
+     "at": 4.3
+    },
+    {
+     "w": "two-nil",
+     "at": 4.562
+    },
+    {
+     "w": "and",
+     "at": 5.175
+    },
+    {
+     "w": "become",
+     "at": 5.287
+    },
+    {
+     "w": "champions",
+     "at": 5.662
+    },
+    {
+     "w": "of",
+     "at": 6.263
+    },
+    {
+     "w": "Europe",
+     "at": 6.35
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn: jump early, keep your eyes open, and head the ball down towards the goal.",
+   "src": "/plays/narration/gullit-final-1988/4.m4a",
+   "seconds": 6.2,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "jump",
+     "at": 1.363
+    },
+    {
+     "w": "early",
+     "at": 1.675
+    },
+    {
+     "w": "keep",
+     "at": 2.2
+    },
+    {
+     "w": "your",
+     "at": 2.413
+    },
+    {
+     "w": "eyes",
+     "at": 2.525
+    },
+    {
+     "w": "open",
+     "at": 2.8
+    },
+    {
+     "w": "and",
+     "at": 3.425
+    },
+    {
+     "w": "head",
+     "at": 3.55
+    },
+    {
+     "w": "the",
+     "at": 3.712
+    },
+    {
+     "w": "ball",
+     "at": 3.8
+    },
+    {
+     "w": "down",
+     "at": 4.1
+    },
+    {
+     "w": "towards",
+     "at": 4.35
+    },
+    {
+     "w": "the",
+     "at": 4.662
+    },
+    {
+     "w": "goal",
+     "at": 4.75
+    }
+   ]
+  }
+ ]
+}

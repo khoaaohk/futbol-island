@@ -1,0 +1,319 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "final": {
+      "src": "/voice/books/buffon/final.m4a?v=coach-bella-1",
+      "duration": 41.1,
+      "scriptSha256": "d45da1332281de31204918bc68028806d120c7b2b1f1bcce5fa39227c73c5d94",
+      "cues": [
+        {
+          "text": "Even the best can lose",
+          "start": 0.0,
+          "duration": 2.25
+        },
+        {
+          "text": "In 2003, Gianluigi Buffon was one of the best goalkeepers in the world.",
+          "start": 2.25,
+          "duration": 5.925
+        },
+        {
+          "text": "That year he became the only goalkeeper ever to win UEFA\u2019s award for the best club player.",
+          "start": 8.175,
+          "duration": 6.175
+        },
+        {
+          "text": "His team, Juventus, reached the Champions League final against Milan.",
+          "start": 14.35,
+          "duration": 5.25
+        },
+        {
+          "text": "Flip the scoreboard.",
+          "start": 19.6,
+          "duration": 2.0
+        },
+        {
+          "text": "The final ended in a penalty shoot-out, and Juventus lost.",
+          "start": 21.6,
+          "duration": 4.525
+        },
+        {
+          "text": "The next season was hard too, because Juventus did not play well.",
+          "start": 26.125,
+          "duration": 4.575
+        },
+        {
+          "text": "Buffon later wrote that after this defeat he began to feel very low.",
+          "start": 30.7,
+          "duration": 5.15
+        },
+        {
+          "text": "You can try your very best and still lose. A loss does not change who you are.",
+          "start": 35.85,
+          "duration": 5.2
+        }
+      ]
+    },
+    "cloud": {
+      "src": "/voice/books/buffon/cloud.m4a?v=coach-bella-1",
+      "duration": 40.8,
+      "scriptSha256": "6554810ed2fed85d50a3685cf325f031dc831e2c9b28d93dc5fc86222114672a",
+      "cues": [
+        {
+          "text": "A heavy grey cloud",
+          "start": 0.0,
+          "duration": 2.05
+        },
+        {
+          "text": "Between December 2003 and June 2004, Buffon had depression.",
+          "start": 2.05,
+          "duration": 6.025
+        },
+        {
+          "text": "Depression is an illness of the mind.",
+          "start": 8.075,
+          "duration": 3.15
+        },
+        {
+          "text": "It can make someone feel sad, tired or empty for a long time, even when everything looks fine from the outside.",
+          "start": 11.225,
+          "duration": 7.775
+        },
+        {
+          "text": "Lift the smiling flap.",
+          "start": 19.0,
+          "duration": 2.25
+        },
+        {
+          "text": "Years later, Buffon said he also had panic attacks in his early years at Juventus, and once he even missed a game because of them.",
+          "start": 21.25,
+          "duration": 8.775
+        },
+        {
+          "text": "The fans saw a superstar in goal.",
+          "start": 30.025,
+          "duration": 2.7
+        },
+        {
+          "text": "Inside, he was struggling.",
+          "start": 32.725,
+          "duration": 2.55
+        },
+        {
+          "text": "Anyone can feel low, even a hero. How you feel inside really matters.",
+          "start": 35.275,
+          "duration": 5.525
+        }
+      ]
+    },
+    "help": {
+      "src": "/voice/books/buffon/help.m4a?v=coach-bella-1",
+      "duration": 39.1,
+      "scriptSha256": "4337726f8156626fafdb282fc5689554cb3763eb2c41640d9fcf4ef4e661bbba",
+      "cues": [
+        {
+          "text": "Someone to talk to",
+          "start": 0.0,
+          "duration": 2.05
+        },
+        {
+          "text": "Buffon did not keep it all inside.",
+          "start": 2.05,
+          "duration": 2.85
+        },
+        {
+          "text": "Between December 2003 and June 2004, he went regularly to see a psychologist.",
+          "start": 4.9,
+          "duration": 7.375
+        },
+        {
+          "text": "A psychologist is a person trained to help us understand our feelings, mostly by listening and talking.",
+          "start": 12.275,
+          "duration": 7.3
+        },
+        {
+          "text": "Knock three times on the door.",
+          "start": 19.575,
+          "duration": 2.45
+        },
+        {
+          "text": "Week after week, Buffon kept going back to talk.",
+          "start": 22.025,
+          "duration": 3.825
+        },
+        {
+          "text": "It took time and patience.",
+          "start": 25.85,
+          "duration": 2.275
+        },
+        {
+          "text": "With that help, step by step, he began to feel more like himself again.",
+          "start": 28.125,
+          "duration": 5.35
+        },
+        {
+          "text": "Asking for help is strong, not weak. Tell a grown-up you trust how you feel.",
+          "start": 33.475,
+          "duration": 5.6
+        }
+      ]
+    },
+    "sunrise": {
+      "src": "/voice/books/buffon/sunrise.m4a?v=coach-bella-1",
+      "duration": 38.8,
+      "scriptSha256": "9787e234f5998b8c928d0508460673432e4d622c296693f4abe70728fbc477f8",
+      "cues": [
+        {
+          "text": "The sun comes back",
+          "start": 0.0,
+          "duration": 1.95
+        },
+        {
+          "text": "By the summer of 2004, before the European Championship, Buffon had overcome his depression.",
+          "start": 1.95,
+          "duration": 7.3
+        },
+        {
+          "text": "He played in every one of Italy\u2019s matches at Euro 2004.",
+          "start": 9.25,
+          "duration": 4.85
+        },
+        {
+          "text": "Pull the sun up over the hills.",
+          "start": 14.1,
+          "duration": 2.425
+        },
+        {
+          "text": "Two years later, at the 2006 World Cup, Buffon let in only two goals in seven matches, and kept five clean sheets.",
+          "start": 16.525,
+          "duration": 9.2
+        },
+        {
+          "text": "Italy won the World Cup, and he was named the best goalkeeper of the tournament.",
+          "start": 25.725,
+          "duration": 5.35
+        },
+        {
+          "text": "The grey cloud had not lasted for ever.",
+          "start": 31.075,
+          "duration": 2.925
+        },
+        {
+          "text": "Hard feelings can pass. With help and time, things can get better.",
+          "start": 34.0,
+          "duration": 4.775
+        }
+      ]
+    },
+    "serieb": {
+      "src": "/voice/books/buffon/serieb.m4a?v=coach-bella-1",
+      "duration": 38.6,
+      "scriptSha256": "cb6c172c6c11f56864dbdba54555d354f3fa5f707e2d53b25d401f5d78ab96a4",
+      "cues": [
+        {
+          "text": "Staying with his team",
+          "start": 0.0,
+          "duration": 2.05
+        },
+        {
+          "text": "In 2006, soon after the World Cup, Juventus were punished because of a scandal called Calciopoli.",
+          "start": 2.05,
+          "duration": 7.65
+        },
+        {
+          "text": "The club was sent down to Serie B, the second division of Italian football.",
+          "start": 9.7,
+          "duration": 5.575
+        },
+        {
+          "text": "It was a big fall for a famous team.",
+          "start": 15.275,
+          "duration": 2.825
+        },
+        {
+          "text": "Raise the flag back up the ladder.",
+          "start": 18.1,
+          "duration": 2.725
+        },
+        {
+          "text": "Buffon decided to stay with Juventus.",
+          "start": 20.825,
+          "duration": 3.1
+        },
+        {
+          "text": "He played 37 matches in Serie B, and Juventus won the title and went straight back up to Serie A.",
+          "start": 23.925,
+          "duration": 7.375
+        },
+        {
+          "text": "When his team needed him, he was there.",
+          "start": 31.3,
+          "duration": 3.025
+        },
+        {
+          "text": "Sticking with your team when times are hard is a kind of courage.",
+          "start": 34.325,
+          "duration": 4.25
+        }
+      ]
+    },
+    "talk": {
+      "src": "/voice/books/buffon/talk.m4a?v=coach-bella-1",
+      "duration": 41.5,
+      "scriptSha256": "1eb8ed063182f2995c3bcb14ae8de38e2714b8043ceb4abfc7376f5ed0576e95",
+      "cues": [
+        {
+          "text": "Brave enough to tell",
+          "start": 0.0,
+          "duration": 2.075
+        },
+        {
+          "text": "In 2008, Buffon wrote a book about his life, called Numero 1.",
+          "start": 2.075,
+          "duration": 5.375
+        },
+        {
+          "text": "In it, he told everyone about his depression.",
+          "start": 7.45,
+          "duration": 3.5
+        },
+        {
+          "text": "In 2013 and again in 2019, he spoke about it openly in interviews.",
+          "start": 10.95,
+          "duration": 6.475
+        },
+        {
+          "text": "Open the book.",
+          "start": 17.425,
+          "duration": 1.775
+        },
+        {
+          "text": "Buffon kept playing until he was 45 years old.",
+          "start": 19.2,
+          "duration": 4.275
+        },
+        {
+          "text": "In 2024 he wrote a second book.",
+          "start": 23.475,
+          "duration": 3.6
+        },
+        {
+          "text": "Its title means: fall, get back up again, fall, get back up again.",
+          "start": 27.075,
+          "duration": 5.05
+        },
+        {
+          "text": "When a hero speaks up, other people can feel less alone.",
+          "start": 32.125,
+          "duration": 4.125
+        },
+        {
+          "text": "Talking about feelings is brave. It helps you, and it can help others too.",
+          "start": 36.25,
+          "duration": 5.175
+        }
+      ]
+    }
+  }
+}

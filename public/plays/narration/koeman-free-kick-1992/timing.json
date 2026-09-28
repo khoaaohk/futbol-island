@@ -1,0 +1,458 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Wembley, 1992",
+   "text": "Wembley, 1992, the European Cup final. Barcelona against Sampdoria, still nil-nil in extra time. Free kick! Hristo Stoichkov touches it to Jos\u00e9 Mari Bakero, who stops it... Ronald Koeman strikes it with his right foot. Goal! Barcelona win their first European Cup!",
+   "src": "/plays/narration/koeman-free-kick-1992/1.m4a",
+   "seconds": 20.0,
+   "words": [
+    {
+     "w": "Wembley",
+     "at": 0.4
+    },
+    {
+     "w": "1992",
+     "at": 0.875
+    },
+    {
+     "w": "the",
+     "at": 1.825
+    },
+    {
+     "w": "European",
+     "at": 1.925
+    },
+    {
+     "w": "Cup",
+     "at": 2.45
+    },
+    {
+     "w": "final",
+     "at": 2.7
+    },
+    {
+     "w": "Barcelona",
+     "at": 3.612
+    },
+    {
+     "w": "against",
+     "at": 4.25
+    },
+    {
+     "w": "Sampdoria",
+     "at": 4.6
+    },
+    {
+     "w": "still",
+     "at": 5.562
+    },
+    {
+     "w": "nil-nil",
+     "at": 5.888
+    },
+    {
+     "w": "in",
+     "at": 6.425
+    },
+    {
+     "w": "extra",
+     "at": 6.575
+    },
+    {
+     "w": "time",
+     "at": 6.975
+    },
+    {
+     "w": "Free",
+     "at": 7.862
+    },
+    {
+     "w": "kick",
+     "at": 8.162
+    },
+    {
+     "w": "Hristo",
+     "at": 8.887
+    },
+    {
+     "w": "Stoichkov",
+     "at": 9.375
+    },
+    {
+     "w": "touches",
+     "at": 10.012
+    },
+    {
+     "w": "it",
+     "at": 10.4
+    },
+    {
+     "w": "to",
+     "at": 10.5
+    },
+    {
+     "w": "Jos\u00e9",
+     "at": 10.6
+    },
+    {
+     "w": "Mari",
+     "at": 10.975
+    },
+    {
+     "w": "Bakero",
+     "at": 11.275
+    },
+    {
+     "w": "who",
+     "at": 11.875
+    },
+    {
+     "w": "stops",
+     "at": 12.037
+    },
+    {
+     "w": "it",
+     "at": 12.488
+    },
+    {
+     "w": "Ronald",
+     "at": 13.188
+    },
+    {
+     "w": "Koeman",
+     "at": 13.637
+    },
+    {
+     "w": "strikes",
+     "at": 14.088
+    },
+    {
+     "w": "it",
+     "at": 14.475
+    },
+    {
+     "w": "with",
+     "at": 14.588
+    },
+    {
+     "w": "his",
+     "at": 14.688
+    },
+    {
+     "w": "right",
+     "at": 14.863
+    },
+    {
+     "w": "foot",
+     "at": 15.188
+    },
+    {
+     "w": "Goal",
+     "at": 16.05
+    },
+    {
+     "w": "Barcelona",
+     "at": 16.837
+    },
+    {
+     "w": "win",
+     "at": 17.475
+    },
+    {
+     "w": "their",
+     "at": 17.7
+    },
+    {
+     "w": "first",
+     "at": 17.913
+    },
+    {
+     "w": "European",
+     "at": 18.212
+    },
+    {
+     "w": "Cup",
+     "at": 18.675
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. Koeman runs in straight, head over the ball. He hits it hard, through the middle, with his laces.",
+   "src": "/plays/narration/koeman-free-kick-1992/2.m4a",
+   "seconds": 8.2,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.188
+    },
+    {
+     "w": "Koeman",
+     "at": 2.212
+    },
+    {
+     "w": "runs",
+     "at": 2.6
+    },
+    {
+     "w": "in",
+     "at": 2.975
+    },
+    {
+     "w": "straight",
+     "at": 3.15
+    },
+    {
+     "w": "head",
+     "at": 3.65
+    },
+    {
+     "w": "over",
+     "at": 3.862
+    },
+    {
+     "w": "the",
+     "at": 4.037
+    },
+    {
+     "w": "ball",
+     "at": 4.125
+    },
+    {
+     "w": "He",
+     "at": 4.85
+    },
+    {
+     "w": "hits",
+     "at": 4.975
+    },
+    {
+     "w": "it",
+     "at": 5.188
+    },
+    {
+     "w": "hard",
+     "at": 5.275
+    },
+    {
+     "w": "through",
+     "at": 5.763
+    },
+    {
+     "w": "the",
+     "at": 5.975
+    },
+    {
+     "w": "middle",
+     "at": 6.075
+    },
+    {
+     "w": "with",
+     "at": 6.388
+    },
+    {
+     "w": "his",
+     "at": 6.487
+    },
+    {
+     "w": "laces",
+     "at": 6.65
+    }
+   ]
+  },
+  {
+   "label": "Into the corner",
+   "text": "From behind the goal: it flies through the players rushing out, past the keeper's hand, into the corner! Koeman sprints to the corner flag.",
+   "src": "/plays/narration/koeman-free-kick-1992/3.m4a",
+   "seconds": 9.5,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "behind",
+     "at": 0.5
+    },
+    {
+     "w": "the",
+     "at": 0.887
+    },
+    {
+     "w": "goal",
+     "at": 0.975
+    },
+    {
+     "w": "it",
+     "at": 1.738
+    },
+    {
+     "w": "flies",
+     "at": 1.913
+    },
+    {
+     "w": "through",
+     "at": 2.325
+    },
+    {
+     "w": "the",
+     "at": 2.525
+    },
+    {
+     "w": "players",
+     "at": 2.638
+    },
+    {
+     "w": "rushing",
+     "at": 3.163
+    },
+    {
+     "w": "out",
+     "at": 3.55
+    },
+    {
+     "w": "past",
+     "at": 4.0
+    },
+    {
+     "w": "the",
+     "at": 4.312
+    },
+    {
+     "w": "keeper's",
+     "at": 4.4
+    },
+    {
+     "w": "hand",
+     "at": 4.825
+    },
+    {
+     "w": "into",
+     "at": 5.312
+    },
+    {
+     "w": "the",
+     "at": 5.487
+    },
+    {
+     "w": "corner",
+     "at": 5.575
+    },
+    {
+     "w": "Koeman",
+     "at": 6.6
+    },
+    {
+     "w": "sprints",
+     "at": 7.062
+    },
+    {
+     "w": "to",
+     "at": 7.5
+    },
+    {
+     "w": "the",
+     "at": 7.588
+    },
+    {
+     "w": "corner",
+     "at": 7.675
+    },
+    {
+     "w": "flag",
+     "at": 8.088
+    }
+   ]
+  },
+  {
+   "label": "The secret",
+   "text": "The secret? Strike through the middle of the ball with your laces, and keep it low and hard.",
+   "src": "/plays/narration/koeman-free-kick-1992/4.m4a",
+   "seconds": 6.2,
+   "words": [
+    {
+     "w": "The",
+     "at": 0.35
+    },
+    {
+     "w": "secret",
+     "at": 0.463
+    },
+    {
+     "w": "Strike",
+     "at": 1.375
+    },
+    {
+     "w": "through",
+     "at": 1.725
+    },
+    {
+     "w": "the",
+     "at": 1.863
+    },
+    {
+     "w": "middle",
+     "at": 1.95
+    },
+    {
+     "w": "of",
+     "at": 2.163
+    },
+    {
+     "w": "the",
+     "at": 2.237
+    },
+    {
+     "w": "ball",
+     "at": 2.325
+    },
+    {
+     "w": "with",
+     "at": 2.638
+    },
+    {
+     "w": "your",
+     "at": 2.737
+    },
+    {
+     "w": "laces",
+     "at": 2.85
+    },
+    {
+     "w": "and",
+     "at": 3.725
+    },
+    {
+     "w": "keep",
+     "at": 3.85
+    },
+    {
+     "w": "it",
+     "at": 4.075
+    },
+    {
+     "w": "low",
+     "at": 4.237
+    },
+    {
+     "w": "and",
+     "at": 4.6
+    },
+    {
+     "w": "hard",
+     "at": 4.737
+    }
+   ]
+  }
+ ]
+}

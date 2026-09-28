@@ -199,11 +199,25 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
   function honk(){if(!ready('honk',.7))return;tone(350,345,.42,.1,'sawtooth',0,.012);tone(440,435,.42,.085,'sawtooth',0,.012);tone(700,690,.35,.025,'sine',0,.01);}
   const bottlePop=()=>{if(!ready('bottle-pop',.3))return;tone(420,170,.12,.14,'sine');hiss(1600,.08,.06);};
   document.addEventListener('fi2-bottle-pop',bottlePop);
+  // Vending machine (components/VendingMachine.tsx): coin clink into the slot, item thunk into the tray, pop as it's taken, soft buzz for "not yet".
+  const vendingCue=(event:Event)=>{const cue=(event as CustomEvent<string>).detail;if(!ready('vending-'+cue,.07))return;
+    if(cue==='select'){tone(740,1040,.065,.035,'triangle');tone(1480,1480,.04,.015,'sine',.025);}
+    else if(cue==='previous'){tone(660,520,.055,.035,'triangle');tone(440,390,.055,.025,'triangle',.045);}
+    else if(cue==='next'){tone(520,660,.055,.035,'triangle');tone(780,880,.055,.025,'triangle',.045);}
+    else if(cue==='category'){tone(440,440,.055,.03,'sine');tone(660,660,.06,.03,'sine',.05);tone(880,880,.075,.025,'sine',.10);}
+    else if(cue==='insert'){hiss(1300,.035,.022);tone(240,160,.06,.035,'triangle');}
+    else if(cue==='confirm'){tone(390,520,.09,.04,'triangle');tone(780,1040,.095,.03,'sine',.06);}
+    else if(cue==='equip'){tone(660,660,.07,.035,'sine');tone(990,1320,.12,.03,'sine',.055);}
+    else if(cue==='coin'){tone(2350,2100,.07,.05,'triangle');tone(3500,3300,.05,.02,'sine',.012);}
+    else if(cue==='thunk'){tone(150,62,.16,.16,'sine',0,.004);hiss(420,.07,.05);}
+    else if(cue==='pop'){tone(520,1040,.10,.05,'sine');tone(1320,1560,.13,.03,'sine',.065);}
+    else if(cue==='buzz'){tone(170,160,.16,.04,'square');}};
+  document.addEventListener('fi2-vending-cue',vendingCue);
   /** Fades live sources out (blur, mute). `now` = hard stop: the page is hiding and the context suspends at once anyway. */
   function silence(now=false){stopEngine();stopTravelHum();for(const [source,gain] of sources){release(source,now?null:gain);sources.delete(source);}}
   function setVolume(value:number){if(!Number.isFinite(value))return;volume=Math.max(0,Math.min(1,value));debug.volume=volume;if(volume===0)silence();if(master&&context)master.gain.setTargetAtTime(level(),context.currentTime,.04);}
   function setMuted(value:boolean){muted=value;debug.muted=value;silence();if(master&&context)master.gain.setTargetAtTime(level(),context.currentTime,.04);if(!value)unlock();}
   function visibility(){hidden=document.hidden||mediaPaused;debug.hidden=hidden;silence(hidden);if(hidden){if(context?.state==='running')void context.suspend().catch(()=>{});}else if(debug.unlocked)unlock();}
-  function dispose(){if(idleFadeTimer!==undefined)clearTimeout(idleFadeTimer);if(idleTimer!==undefined&&typeof clearTimeout==='function')clearTimeout(idleTimer);for(const type of INPUT_EVENTS)document.removeEventListener(type,markInput,{capture:true});document.removeEventListener('fi2-path-cue',pathCue);document.removeEventListener('fi2-bottle-pop',bottlePop);document.removeEventListener('fi2-story-cue',storyCue);disposed=true;debug.disposed=true;silence();if(context){context.onstatechange=null;void context.close().catch(()=>{});}debug.contextState='closed';}
+  function dispose(){if(idleFadeTimer!==undefined)clearTimeout(idleFadeTimer);if(idleTimer!==undefined&&typeof clearTimeout==='function')clearTimeout(idleTimer);for(const type of INPUT_EVENTS)document.removeEventListener(type,markInput,{capture:true});document.removeEventListener('fi2-path-cue',pathCue);document.removeEventListener('fi2-bottle-pop',bottlePop);document.removeEventListener('fi2-vending-cue',vendingCue);document.removeEventListener('fi2-story-cue',storyCue);disposed=true;debug.disposed=true;silence();if(context){context.onstatechange=null;void context.close().catch(()=>{});}debug.contextState='closed';}
   return {setMediaPaused(value:boolean){mediaPaused=value;visibility();},debug,getContext,unlock,setMusicAudible,setIdle,ui,sceneHover,ride,move,stair,boundary,fall,impact,ball,boost,honk,truck,setVolume,setMuted,visibility,silence,dispose};
 }

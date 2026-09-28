@@ -89,13 +89,13 @@ export function createArcadeRoomCrowd({scene,mobile,reduced=false,cabinets,bound
    m.vx=(nx-m.x)/dt;m.vz=(nz-m.z)/dt;m.x=nx;m.z=nz;
    const moving=Math.hypot(m.vx,m.vz)>.06,facing=engaged?Math.atan2(playerX-m.x,playerZ-m.z):moving?Math.atan2(m.vx,m.vz):stations[m.cabinet].yaw;
    m.yaw+=Math.atan2(Math.sin(facing-m.yaw),Math.cos(facing-m.yaw))*(1-Math.exp(-dt*8));
-   const playing=!engaged&&m.phase==='play'&&!moving,beat=(m.age+i*.7)%6.5,pleased=playing&&beat>5.3?Math.sin((beat-5.3)/1.2*Math.PI)*.65:0;
+   const playing=!engaged&&m.phase==='play'&&!moving,cycle=5.4+(i%3)*1.3,beat=(m.age+i*.7)%cycle,pleased=playing&&beat>cycle-1.1?Math.sin((beat-cycle+1.1)/1.1*Math.PI)*(.45+(i%3)*.12):0;
    const greeting=engaged||m.greet>0,hello=greeting?Math.sin(m.greet/1.4*Math.PI)*.8:0;
    m.motion.facing=m.yaw;m.motion.intentHeading=moving?Math.atan2(m.vx,m.vz):undefined;m.motion.ready=playing?(reduced?.28:.32+Math.sin(time*3+i)*.07):0;m.motion.called=reduced?0:Math.max(pleased,hello);
    const cabinet=cabinets[m.cabinet];m.motion.lookX=greeting?playerX:playing?cabinet.x:m.x+Math.sin(m.yaw)*2;m.motion.lookZ=greeting?playerZ:playing?cabinet.z:m.z+Math.cos(m.yaw)*2;m.motion.lookY=greeting?1.4:1.95;m.rig.setExpression(greeting||pleased>.1?'happy':playing?'focused':'neutral');m.motion.skill=undefined;m.motion.jump=undefined;m.motion.juggle=undefined;m.motion.juggleTouch=undefined;m.motion.kickSide=undefined;if(m.social)m.socialPose(m.motion,m.social,m.socialAge,true,reduced);m.motion.stunAge=stunned?.age;m.motion.rooftopPose=stunned&&stunned.age>1.85?'dizzy':undefined;m.rig.update(m.x,m.z,dt,time,reduced,m.motion);reactions?.apply(`arcade-visitor-${i}`,m.rig.root,reduced);
    // A room-local console reach overlays only upper limbs, leaving native feet/body intact.
    m.consoleBlend+=((playing?1:0)-m.consoleBlend)*(1-Math.exp(-dt*7));
-   const reach=(stunned?0:1)*m.consoleBlend*(1-Math.max(pleased,hello));for(let a=0;a<2;a++){const arm=m.arms[a],press=reduced?0:Math.sin(time*(a?5:2.3)+i)*.035;arm.shoulder.rotation.x+=(-.78+press-arm.shoulder.rotation.x)*reach;arm.elbow.rotation.x+=(-.64-press-arm.elbow.rotation.x)*reach;}
+   const reach=(stunned?0:1)*m.consoleBlend*(1-Math.max(pleased,hello));for(let a=0;a<2;a++){const arm=m.arms[a],press=reduced?0:Math.sin(time*(a?4.1+i*.57:1.8+i*.31)+i)*(.025+(i%3)*.012);arm.shoulder.rotation.x+=(-.78+press-arm.shoulder.rotation.x)*reach;arm.elbow.rotation.x+=(-.64-press-arm.elbow.rotation.x)*reach;}
    m.shadow.position.x=m.x;m.shadow.position.z=m.z;
    const debug=debugStates[i];debug.x=m.x;debug.z=m.z;debug.phase=m.phase;debug.cabinet=m.cabinet;debug.yielding=m.yielding;debug.greeting=greeting;debug.visits=m.visits;debug.social=!!m.social;debug.socialAge=m.socialAge;debug.facing=m.yaw;debug.attentive=engaged;
   }

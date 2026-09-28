@@ -7,7 +7,9 @@ async function run(browser,mobile){
  const size=mobile?{width:390,height:844}:{width:1280,height:800},tag=mobile?'390':'1280';
  const page=await browser.newPage({viewport:size,isMobile:mobile,hasTouch:mobile}),errors=[];
  page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
- await page.addInitScript(()=>{localStorage.setItem('fi2-welcome-v1','completed');localStorage.removeItem('fi2-pass-puzzles-v1');});
+ await page.addInitScript(()=>{localStorage.setItem('fi2-welcome-v1','completed');localStorage.removeItem('fi2-pass-puzzles-v1');
+  // Puzzles cost 3 coins from the shared wallet: seed earned coins the same way the book/vending checks do.
+  if(!localStorage.getItem('ppa-coins-seeded')){localStorage.setItem('ppa-coins-seeded','1');localStorage.setItem('fi2-island-jobs-v1',JSON.stringify({version:1,day:'',today:{},lifetime:{},earned:0,best:{},starter:true}));localStorage.setItem('fi2-arcade-wallet-v1',JSON.stringify({version:1,runs:Object.fromEntries(Array.from({length:10},(_,i)=>['ppa-fixture-'+i,{game:'island',paid:20,reason:'fixture',at:i}])),packs:[]}));}});
  await page.goto((process.env.FUTBOL_BASE_URL||'http://localhost:8092')+'/arcade?game=puzzle');
  await page.waitForFunction(()=>window.__passPuzzle?.world);
  const canvas=page.locator('[data-arcade-kind="pass-puzzle"] canvas');
@@ -19,7 +21,8 @@ async function run(browser,mobile){
  await page.getByRole('button',{name:'Start puzzle'}).click();
  await page.waitForFunction(()=>window.__passPuzzle.world.state.phase==='aiming');
  // Idle aiming sleeps: no frames while nothing moves.
- await page.waitForTimeout(1600);const idle=Number(await canvas.getAttribute('data-frames'));await page.waitForTimeout(500);
+ // After input the defence scans for a bounded 4 s (15 fps), then aiming sleeps completely.
+ await page.waitForTimeout(4600);const idle=Number(await canvas.getAttribute('data-frames'));await page.waitForTimeout(600);
  assert.equal(Number(await canvas.getAttribute('data-frames')),idle,'aiming idle sleeps');
  // Draw a stroke from the ball toward the solution's first target (or the nearest teammate).
  const plan=await page.evaluate(()=>{const g=window.__passPuzzle,w=g.world,s=w.state,sol=g.solution?.(w.scenario.id);

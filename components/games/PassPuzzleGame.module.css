@@ -69,4 +69,27 @@
 .topics button{min-height:44px;border:2px solid #d9cbaa;border-radius:16px;background:#fff9e9;color:#244b43;padding:8px;font-size:13px}
 .topics button[aria-pressed=true]{background:#bdd8cd;border-color:#658d7b;box-shadow:0 3px 0 #658d7b}
 .game canvas{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
-@media(max-width:600px){.header{grid-template-columns:64px 1fr 104px;padding:14px 12px;gap:5px}.header h2{font-size:23px}.navigation>button{padding:7px;font-size:11px}.levels{max-height:calc(100dvh - 110px)}}
+@media(max-width:600px){.header{grid-template-columns:76px 1fr 112px;padding:calc(16px + env(safe-area-inset-top,0px)) calc(18px + env(safe-area-inset-right,0px)) 12px calc(18px + env(safe-area-inset-left,0px));gap:5px}.header h2{font-size:23px}.navigation>button{padding:7px;font-size:11px}.levels{max-height:calc(100dvh - 110px)}}
+
+.game .pack h4 small,.game .blurb,.game .formatChoice>p{color:#b5c7dc!important}
+.game .level{background:#202b40;color:#edf8ff;border-color:#466478}
+.game .format{--btn-pink:#703d6b;--btn-pink-edge:#35233e;color:#eff8ff}
+.game .navigation button{color:#eff8ff;background:#24334b;border-color:#76e4df}
+
+.game .rewind{display:block;width:100%;min-height:44px;margin-top:12px;border:2px solid #8cfff0;border-radius:18px;background:#183c44;color:#efffff;font-size:14px;font-weight:700;font-family:inherit}.game .rewindNote{display:block;color:#b5c7dc;font-size:11px;margin:8px 0;line-height:1.5}
+
+.game{--btn-mint:#193c46;--btn-mint-edge:#10212d}.game .hint{background:#10192c;color:#dfedff}
+
+.game .header>.passScore{display:flex;min-width:0;justify-self:center;width:fit-content;max-width:100%;box-sizing:border-box}
+.game .passScore span{white-space:normal;letter-spacing:0}
+@media(max-width:600px){.game .passScore{gap:6px;padding:7px 8px}.game .passScore strong{font-size:23px}.game .passScore span{font-size:10px;max-width:78px;line-height:1.25}}
+
+.passControls{position:absolute;bottom:calc(16px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);width:min(420px,calc(100% - 32px));padding:9px 12px;box-sizing:border-box;border:1px solid #61dfd4;border-radius:20px;background:#10192cef;color:#effbff;z-index:3}
+.passModes{display:flex;gap:6px}.passModes button{flex:1;min-height:44px;border:1px solid #54758a;border-radius:13px;background:#23334b;color:#effbff;font:inherit;font-weight:700;font-size:12px;line-height:1.1;cursor:pointer}.passModes button[aria-pressed=true]{background:#68eddf;color:#112a33;border-color:#bcfff4;box-shadow:0 0 12px #68eddf28}
+.powerControl{display:flex;align-items:center;gap:10px;font-size:11px;margin-top:8px}.powerControl>span{min-width:78px}.powerControl b{color:#83fff1}.powerControl input{flex:1;min-width:0;accent-color:#76f4e5;height:28px;touch-action:none;cursor:ew-resize}.powerControl button{min-width:44px;min-height:44px;background:transparent;border:1px solid #54758a;border-radius:10px;color:#e7f5ff;cursor:pointer}.game[data-view=play] .tip{bottom:calc(132px + env(safe-area-inset-bottom));max-width:min(520px,calc(100% - 32px))}
+.goalResult{animation:puzzleGoalReveal .3s .75s both}@keyframes puzzleGoalReveal{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.goalResult{animation:none}}
+
+.game .directHint{font-size:12px;color:#92e9df}.passControls:focus-within{border-color:#b6fff4}
+
+.shotHeight button{min-width:66px}.game[data-view=play][data-shot-height=true] .tip{bottom:calc(184px + env(safe-area-inset-bottom))}

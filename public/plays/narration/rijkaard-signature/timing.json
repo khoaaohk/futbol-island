@@ -6,7 +6,7 @@
    "label": "Vienna, live",
    "text": "Vienna, 1990, the European Cup final. Milan against Benfica, nil-nil. Costacurta plays it forward to Marco van Basten, a soft pass, and Frank Rijkaard races through... Goal!",
    "src": "/plays/narration/rijkaard-signature/1.m4a",
-   "seconds": 13.9,
+   "seconds": 14.0,
    "words": [
     {
      "w": "Vienna",
@@ -14,23 +14,23 @@
     },
     {
      "w": "1990",
-     "at": 0.9
+     "at": 0.875
     },
     {
      "w": "the",
-     "at": 1.75
+     "at": 1.725
     },
     {
      "w": "European",
-     "at": 1.85
+     "at": 1.825
     },
     {
      "w": "Cup",
-     "at": 2.375
+     "at": 2.35
     },
     {
      "w": "final",
-     "at": 2.625
+     "at": 2.6
     },
     {
      "w": "Milan",
@@ -46,75 +46,75 @@
     },
     {
      "w": "nil-nil",
-     "at": 5.075
+     "at": 5.05
     },
     {
      "w": "Costacurta",
-     "at": 6.112
+     "at": 6.088
     },
     {
      "w": "plays",
-     "at": 6.8
+     "at": 6.775
     },
     {
      "w": "it",
-     "at": 7.112
+     "at": 7.088
     },
     {
      "w": "forward",
-     "at": 7.2
+     "at": 7.175
     },
     {
      "w": "to",
-     "at": 7.575
+     "at": 7.55
     },
     {
      "w": "Marco",
-     "at": 7.7
+     "at": 7.675
     },
     {
      "w": "van",
-     "at": 8.1
+     "at": 8.075
     },
     {
      "w": "Basten",
-     "at": 8.35
+     "at": 8.325
     },
     {
      "w": "a",
-     "at": 9.137
+     "at": 9.213
     },
     {
      "w": "soft",
-     "at": 9.275
+     "at": 9.35
     },
     {
      "w": "pass",
-     "at": 9.688
+     "at": 9.762
     },
     {
      "w": "and",
-     "at": 10.162
+     "at": 10.238
     },
     {
      "w": "Frank",
-     "at": 10.287
+     "at": 10.363
     },
     {
      "w": "Rijkaard",
-     "at": 10.6
+     "at": 10.675
     },
     {
      "w": "races",
-     "at": 11.05
+     "at": 11.125
     },
     {
      "w": "through",
-     "at": 11.537
+     "at": 11.613
     },
     {
      "w": "Goal",
-     "at": 12.488
+     "at": 12.588
     }
    ]
   },
@@ -122,7 +122,7 @@
    "label": "Watch again",
    "text": "Watch again, slowly. Two quick passes forward, and Benfica are not ready. Van Basten rolls it into the space, and Rijkaard runs onto it.",
    "src": "/plays/narration/rijkaard-signature/2.m4a",
-   "seconds": 10.5,
+   "seconds": 10.6,
    "words": [
     {
      "w": "Watch",
@@ -182,43 +182,43 @@
     },
     {
      "w": "rolls",
-     "at": 6.713
+     "at": 6.787
     },
     {
      "w": "it",
-     "at": 7.125
+     "at": 7.2
     },
     {
      "w": "into",
-     "at": 7.213
+     "at": 7.287
     },
     {
      "w": "the",
-     "at": 7.388
+     "at": 7.463
     },
     {
      "w": "space",
-     "at": 7.487
+     "at": 7.562
     },
     {
      "w": "and",
-     "at": 8.05
+     "at": 8.125
     },
     {
      "w": "Rijkaard",
-     "at": 8.175
+     "at": 8.25
     },
     {
      "w": "runs",
-     "at": 8.65
+     "at": 8.725
     },
     {
      "w": "onto",
-     "at": 8.925
+     "at": 9.0
     },
     {
      "w": "it",
-     "at": 9.338
+     "at": 9.412
     }
    ]
   },

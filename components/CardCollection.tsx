@@ -40,12 +40,12 @@ const EARN_ACTIVE_COPY='Find a Ball hunt ball, finish a chat with an islander or
 /** Value tiers (Sep 25 2026): a greyed Icon or Elite card says when it can turn up, so the wait is explained, not hidden. */
 const TIER_HINT:Record<string,string>={icon:`${TIER_TEACHING_LINE} Icon cards appear near the end of a path, and finishing a path always brings one.`,elite:'Elite cards unlock halfway along a path. Keep learning to meet them.'};
 const earnCopy=(name:string)=>cardRewardsActive()?TIER_HINT[cardTier(name)]??EARN_ACTIVE_COPY:EARN_COPY;
-const PLURAL:Record<string,string>={goalkeeper:'Goalkeepers',fullback:'Full-backs',centerback:'Centre-backs',midfielder:'Midfielders',winger:'Wingers',striker:'Strikers',goleiro:'Goleiros',fixo:'Fixos',ala:'Alas',pivot:'Pivôs'};
-const SHORT:Record<string,string>={goalkeeper:'Goalkeeper',fullback:'Full-back',centerback:'Centre-back',midfielder:'Midfielder',winger:'Winger',striker:'Striker',goleiro:'Goleiro',fixo:'Fixo',ala:'Ala',pivot:'Pivô'};
+const PLURAL:Record<string,string>={coach:'Coaches',goalkeeper:'Goalkeepers',fullback:'Full-backs',centerback:'Centre-backs',midfielder:'Midfielders',winger:'Wingers',striker:'Strikers',goleiro:'Goleiros',fixo:'Fixos',ala:'Alas',pivot:'Pivôs'};
+const SHORT:Record<string,string>={coach:'Coach',goalkeeper:'Goalkeeper',fullback:'Full-back',centerback:'Centre-back',midfielder:'Midfielder',winger:'Winger',striker:'Striker',goleiro:'Goleiro',fixo:'Fixo',ala:'Ala',pivot:'Pivô'};
 /** Divider tab labels that fit a phone's narrow tabs. */
-const TAB_SHORT:Record<string,string>={goalkeeper:'Keepers',fullback:'Full-backs',centerback:'Centre',midfielder:'Midfield',winger:'Wingers',striker:'Strikers',goleiro:'Goleiros',fixo:'Fixos',ala:'Alas',pivot:'Pivôs'};
+const TAB_SHORT:Record<string,string>={coach:'Coaches',goalkeeper:'Keepers',fullback:'Full-backs',centerback:'Centre',midfielder:'Midfield',winger:'Wingers',striker:'Strikers',goleiro:'Goleiros',fixo:'Fixos',ala:'Alas',pivot:'Pivôs'};
 /** Divider tab colours (island riso palette), one per position. */
-const TAB:Record<string,string>={goalkeeper:'#ffd451',fullback:'#6ccdb0',centerback:'#8fb8f0',midfielder:'#f0a0d0',winger:'#f59f5b',striker:'#b9a0f0',goleiro:'#ffd451',fixo:'#6ccdb0',ala:'#f0a0d0',pivot:'#f59f5b'};
+const TAB:Record<string,string>={coach:'#e9798b',goalkeeper:'#ffd451',fullback:'#6ccdb0',centerback:'#8fb8f0',midfielder:'#f0a0d0',winger:'#f59f5b',striker:'#b9a0f0',goleiro:'#ffd451',fixo:'#6ccdb0',ala:'#f0a0d0',pivot:'#f59f5b'};
 /** One line per position on what to learn from its cards (the page head's and the tab's tooltip). */
 const ROLE_TIPS:Record<string,string>={
  goalkeeper:'The last line of defence: set your feet, make yourself big, and start attacks with a quick throw or pass.',
@@ -58,6 +58,7 @@ const ROLE_TIPS:Record<string,string>={
  fixo:'The last outfield player: read passes, cover teammates, and start the rotations.',
  ala:'The wide futsal player: defend your side, then burst forward as the team rotates.',
  pivot:'The target up front: receive with your back to goal, shield the ball, and set up teammates.',
+ coach:'Coaches plan how the whole team plays: turn a card over for its big idea, then try it with your team.',
 };
 /** The binder last opened (Football / Futsal), remembered per viewer; storage may be blocked. */
 const FIELD_KEY='fi2-cards-field-v1';

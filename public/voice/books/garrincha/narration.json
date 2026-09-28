@@ -1,0 +1,319 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "wren": {
+      "src": "/voice/books/garrincha/wren.m4a?v=coach-bella-1",
+      "duration": 43.3,
+      "scriptSha256": "56d1aff1f648dac51ce01cda37f40409f0c77c476cedc2e60a4117fb51117444",
+      "cues": [
+        {
+          "text": "The little wren",
+          "start": 0.0,
+          "duration": 1.8
+        },
+        {
+          "text": "Manuel Francisco dos Santos was born in 1933 in Pau Grande, a small town in the state of Rio de Janeiro, Brazil.",
+          "start": 1.8,
+          "duration": 9.725
+        },
+        {
+          "text": "His family was poor and large.",
+          "start": 11.525,
+          "duration": 2.675
+        },
+        {
+          "text": "He was born with bent legs, and his right leg was six centimetres shorter than his left.",
+          "start": 14.2,
+          "duration": 5.9
+        },
+        {
+          "text": "When he was a child, one doctor wrote that he was disabled.",
+          "start": 20.1,
+          "duration": 4.325
+        },
+        {
+          "text": "He was also smaller than other children, so his sister called him Garrincha.",
+          "start": 24.425,
+          "duration": 5.2
+        },
+        {
+          "text": "A garrincha is a little brown bird, a wren.",
+          "start": 29.625,
+          "duration": 3.55
+        },
+        {
+          "text": "Let the little bird fly.",
+          "start": 33.175,
+          "duration": 2.225
+        },
+        {
+          "text": "The name stuck.",
+          "start": 35.4,
+          "duration": 1.825
+        },
+        {
+          "text": "Being different is not a weakness. The things that make you different can become your strength.",
+          "start": 37.225,
+          "duration": 6.075
+        }
+      ]
+    },
+    "factory": {
+      "src": "/voice/books/garrincha/factory.m4a?v=coach-bella-1",
+      "duration": 42.9,
+      "scriptSha256": "375c63f968b781b9126ad61a2149d00955e6bba9619643bc1338001917856424",
+      "cues": [
+        {
+          "text": "Waiting for a chance",
+          "start": 0.0,
+          "duration": 2.025
+        },
+        {
+          "text": "At fourteen, Garrincha worked in a cloth factory and played for his town\u2019s team.",
+          "start": 2.025,
+          "duration": 5.575
+        },
+        {
+          "text": "But the coach, Carlos Pinto, would not let him play in matches.",
+          "start": 7.6,
+          "duration": 4.525
+        },
+        {
+          "text": "He thought Garrincha was too young, and he worried about the strong defenders on other teams.",
+          "start": 12.125,
+          "duration": 5.825
+        },
+        {
+          "text": "Garrincha got tired of waiting.",
+          "start": 17.95,
+          "duration": 2.625
+        },
+        {
+          "text": "He signed up with Serrano, a team in the nearby city of Petr\u00f3polis, and played there for almost a year.",
+          "start": 20.575,
+          "duration": 7.225
+        },
+        {
+          "text": "Swing the factory gate open.",
+          "start": 27.8,
+          "duration": 2.525
+        },
+        {
+          "text": "After that, Carlos Pinto finally gave him his chance, on the right wing.",
+          "start": 30.325,
+          "duration": 5.425
+        },
+        {
+          "text": "Waiting is hard. Keep practising, and remember that finding another place to grow is not giving up.",
+          "start": 35.75,
+          "duration": 7.075
+        }
+      ]
+    },
+    "trials": {
+      "src": "/voice/books/garrincha/trials.m4a?v=coach-bella-1",
+      "duration": 45.1,
+      "scriptSha256": "eae6f386bf53aa77ddef77cfd54074c6a68d3396b8b90aaf2e08b0d5134e6c80",
+      "cues": [
+        {
+          "text": "Two clubs said no",
+          "start": 0.0,
+          "duration": 1.975
+        },
+        {
+          "text": "Garrincha\u2019s games caught the eye of Arati, a former Botafogo player, who took him to the club.",
+          "start": 1.975,
+          "duration": 6.675
+        },
+        {
+          "text": "Before that, two other clubs, Vasco and S\u00e3o Crist\u00f3v\u00e3o, had turned him down.",
+          "start": 8.65,
+          "duration": 5.75
+        },
+        {
+          "text": "At his first training session with Botafogo, Garrincha dribbled past N\u00edlton Santos, a famous Brazil defender, and even put the ball through his legs.",
+          "start": 14.4,
+          "duration": 10.575
+        },
+        {
+          "text": "N\u00edlton was so impressed that he asked the club to sign him.",
+          "start": 24.975,
+          "duration": 4.25
+        },
+        {
+          "text": "Lift the flap to see who spoke up.",
+          "start": 29.225,
+          "duration": 2.725
+        },
+        {
+          "text": "On 19 July 1953, Garrincha scored three goals in his first game for the team.",
+          "start": 31.95,
+          "duration": 6.675
+        },
+        {
+          "text": "Hearing no can hurt. Keep going, because one person who believes in you can change everything.",
+          "start": 38.625,
+          "duration": 6.45
+        }
+      ]
+    },
+    "leftout": {
+      "src": "/voice/books/garrincha/leftout.m4a?v=coach-bella-1",
+      "duration": 41.6,
+      "scriptSha256": "4a79d53bdfc073d020fb4b118fc9a06431345344ef2aa6c268025d11648e4347",
+      "cues": [
+        {
+          "text": "Left out",
+          "start": 0.0,
+          "duration": 1.6
+        },
+        {
+          "text": "In his first years at Botafogo, some people said Garrincha dribbled too much.",
+          "start": 1.6,
+          "duration": 5.575
+        },
+        {
+          "text": "Brazil had other good players in his position, and he was not picked for the 1954 World Cup squad.",
+          "start": 7.175,
+          "duration": 7.325
+        },
+        {
+          "text": "Garrincha kept playing his own way for Botafogo.",
+          "start": 14.5,
+          "duration": 3.65
+        },
+        {
+          "text": "Flip the scoreboard.",
+          "start": 18.15,
+          "duration": 2.0
+        },
+        {
+          "text": "In 1957 he scored 20 goals in 26 games, and Botafogo won the Rio state championship, the Campeonato Carioca.",
+          "start": 20.15,
+          "duration": 10.175
+        },
+        {
+          "text": "That helped convince the selectors to pick him for the 1958 World Cup in Sweden.",
+          "start": 30.325,
+          "duration": 6.075
+        },
+        {
+          "text": "Being left out hurts. You can keep working hard and still be true to yourself.",
+          "start": 36.4,
+          "duration": 5.2
+        }
+      ]
+    },
+    "sweden": {
+      "src": "/voice/books/garrincha/sweden.m4a?v=coach-bella-1",
+      "duration": 44.7,
+      "scriptSha256": "b722deb007dc9635ff9a166c7e591537442a00feca2632bc8b7282d7a15e2bc4",
+      "cues": [
+        {
+          "text": "A test and a chance",
+          "start": 0.0,
+          "duration": 2.2
+        },
+        {
+          "text": "Before the 1958 World Cup, the team\u2019s psychologist gave the players a drawing test.",
+          "start": 2.2,
+          "duration": 6.375
+        },
+        {
+          "text": "Garrincha scored low, and the psychologist said taking him to the World Cup would be a mistake.",
+          "start": 8.575,
+          "duration": 6.225
+        },
+        {
+          "text": "In Sweden, he was left out of Brazil\u2019s first two matches.",
+          "start": 14.8,
+          "duration": 4.375
+        },
+        {
+          "text": "In the third match, against the Soviet Union, he finally played.",
+          "start": 19.175,
+          "duration": 4.775
+        },
+        {
+          "text": "Brazil started so brilliantly that people call it the best three minutes of football of all time.",
+          "start": 23.95,
+          "duration": 6.5
+        },
+        {
+          "text": "Unfold the pitch.",
+          "start": 30.45,
+          "duration": 2.025
+        },
+        {
+          "text": "In the final, Garrincha set up two goals, and Brazil won its first World Cup.",
+          "start": 32.475,
+          "duration": 6.0
+        },
+        {
+          "text": "A test can\u2019t measure everything about you. Stay ready, because your chance can still come.",
+          "start": 38.475,
+          "duration": 6.175
+        }
+      ]
+    },
+    "chile": {
+      "src": "/voice/books/garrincha/chile.m4a?v=coach-bella-1",
+      "duration": 43.9,
+      "scriptSha256": "b41d21b75b92076db9f0724a03345c2694368430a2596e11146e23bb24a5ce73",
+      "cues": [
+        {
+          "text": "The Joy of the People",
+          "start": 0.0,
+          "duration": 1.875
+        },
+        {
+          "text": "At the 1962 World Cup in Chile, Brazil\u2019s young star Pel\u00e9 was injured after the second match.",
+          "start": 1.875,
+          "duration": 7.3
+        },
+        {
+          "text": "Garrincha stepped up to lead his team.",
+          "start": 9.175,
+          "duration": 2.925
+        },
+        {
+          "text": "He scored four goals, two against England and two against the hosts, Chile.",
+          "start": 12.1,
+          "duration": 5.175
+        },
+        {
+          "text": "Brazil beat Czechoslovakia 3\u20131 in the final and won the World Cup again.",
+          "start": 17.275,
+          "duration": 5.7
+        },
+        {
+          "text": "Garrincha was named the best player of the tournament.",
+          "start": 22.975,
+          "duration": 3.75
+        },
+        {
+          "text": "Raise the banner.",
+          "start": 26.725,
+          "duration": 1.85
+        },
+        {
+          "text": "Brazilians called him the Joy of the People, and the Bent-Legged Angel.",
+          "start": 28.575,
+          "duration": 4.9
+        },
+        {
+          "text": "The boy with bent legs became one of the greatest dribblers of all time.",
+          "start": 33.475,
+          "duration": 5.225
+        },
+        {
+          "text": "What makes you different can bring joy to other people. Be proud of who you are.",
+          "start": 38.7,
+          "duration": 5.15
+        }
+      ]
+    }
+  }
+}

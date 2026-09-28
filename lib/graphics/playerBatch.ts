@@ -17,13 +17,27 @@ export function updateRigMatrices(o:T.Object3D){
  o.matrixWorldNeedsUpdate=false;const children=o.children;
  for(let i=0;i<children.length;i++){const child=children[i];if(child.userData.beanHidden)continue;updateRigMatrices(child);}
 }
+/** Budget pass (Sep 27 2026): bean hair and hat geometries hold every style and collapse the unused ones in the vertex shader, so a
+ * batched player spent ~60 % of its vertex work (colour and hat shadow) on styles nobody sees. Styles are built one after another,
+ * so each style is one contiguous index range: a hair/hat batch is keyed by style and draws only that range. Null when a style is
+ * not contiguous (then the whole geometry is drawn, as before). The row texel holding the style id: hair 10, hat 11 (beanSkin BD). */
+const STYLE_TEXEL:Record<string,number>={'bean-hair':10,'bean-hat':11};
+const styleRanges=new WeakMap<T.BufferGeometry,Map<number,{start:number;count:number}|null>>();
+export function styleIndexRange(g:T.BufferGeometry,style:number){
+ let byStyle=styleRanges.get(g);if(!byStyle){byStyle=new Map();styleRanges.set(g,byStyle);}
+ if(byStyle.has(style))return byStyle.get(style)!;
+ const index=g.index,anchor=g.getAttribute('beanAnchor');let range:{start:number;count:number}|null=null;
+ if(index&&anchor){let first=-1,last=-1,n=0;for(let i=0;i<index.count;i++)if(Math.round(anchor.getW(index.getX(i)))===style){if(first<0)first=i;last=i;n++;}
+  if(n>0&&n===last-first+1)range={start:first,count:n};}
+ byStyle.set(style,range);return range;
+}
 export function playerBatch(scene:T.Scene,capacity=1024){
  const geometryKeys=new WeakMap<T.BufferGeometry,string>();
  type RowTex={width:number;texture:T.DataTexture;dirty:boolean};
  type BeanRows={rows:number;fixed:RowTex;pose:RowTex};
  type Batch={mesh:T.InstancedMesh;colorStart:number;colorEnd:number;morphDirty:boolean;bean?:BeanRows};
  const groups=new Map<string,Batch>(),parts=new WeakMap<T.Object3D,T.Mesh[]>();
- type Binding={geometry:T.BufferGeometry;material:T.Material;roughness:number;side:T.Side;batch:Batch};
+ type Binding={geometry:T.BufferGeometry;material:T.Material;roughness:number;side:T.Side;style:number;batch:Batch};
  const bindings=new WeakMap<T.Mesh,Binding>();
  function rowTex(width:number,rows:number,old?:RowTex):RowTex{
   const texture=new T.DataTexture(new Float32Array(width*rows*4),width,rows,T.RGBAFormat,T.FloatType);
@@ -56,14 +70,18 @@ export function playerBatch(scene:T.Scene,capacity=1024){
     // Geometry/material grouping is stable across animation frames. Retain the
     // binding, but refresh it if an appearance replaces geometry or material.
     let binding=bindings.get(mesh);
-    if(!binding||binding.geometry!==g||binding.material!==material||binding.roughness!==material.roughness||binding.side!==material.side){
-     let geometryKey=geometryKeys.get(g);if(geometryKey===undefined){geometryKey=g.type+JSON.stringify(g.parameters??g.uuid);geometryKeys.set(g,geometryKey);}
-     const key=geometryKey+':'+material.roughness+':'+material.side;let group=groups.get(key);
-     if(!group){const mat=material.clone();mat.color.set('#ffffff');const instance=new T.InstancedMesh(g.clone(),mat,capacity);if(mesh.morphTargetInfluences?.length){instance.count=Math.min(capacity,32);instance.setMorphAt(0,mesh);instance.morphTexture!.needsUpdate=true;}instance.count=0;instance.castShadow=mesh.userData.batchShadow!==false;instance.receiveShadow=true;instance.frustumCulled=false;instance.instanceMatrix.setUsage(T.DynamicDrawUsage);scene.add(instance);group={mesh:instance,colorStart:Infinity,colorEnd:0,morphDirty:false};groups.set(key,group);
+    // A bean skin's hair/hat mesh may hold a per-style view of the shared geometry (beanSkin beanStyleView): key, range and clone use its base, so batches group as before.
+    const base=(g.userData.beanStyleBase as T.BufferGeometry|undefined)??g;
+    const styleTexel=STYLE_TEXEL[base.name],styleSource=styleTexel!==undefined?mesh.userData.beanData as BeanRowSource|undefined:undefined;
+    const style=styleSource?Math.round(styleSource.array[styleTexel*4+3]):-1,range=style>=0?styleIndexRange(base,style):null;
+    if(!binding||binding.geometry!==g||binding.material!==material||binding.roughness!==material.roughness||binding.side!==material.side||binding.style!==style){
+     let geometryKey=geometryKeys.get(base);if(geometryKey===undefined){geometryKey=base.type+JSON.stringify((base as typeof g).parameters??base.uuid);geometryKeys.set(base,geometryKey);}
+     const key=geometryKey+':'+material.roughness+':'+material.side+(range?':style'+style:'');let group=groups.get(key);
+     if(!group){const mat=material.clone();mat.color.set('#ffffff');const own=base.clone();if(range)own.setDrawRange(range.start,range.count);const instance=new T.InstancedMesh(own,mat,capacity);if(mesh.morphTargetInfluences?.length){instance.count=Math.min(capacity,32);instance.setMorphAt(0,mesh);instance.morphTexture!.needsUpdate=true;}instance.count=0;instance.castShadow=mesh.userData.batchShadow!==false;instance.receiveShadow=true;instance.frustumCulled=false;instance.instanceMatrix.setUsage(T.DynamicDrawUsage);scene.add(instance);group={mesh:instance,colorStart:Infinity,colorEnd:0,morphDirty:false};groups.set(key,group);
       const source=mesh.userData.beanData as BeanRowSource|undefined;
       if(source){const fixedW=Math.min(source.width,source.staticWidth??source.width);group.bean=beanRows(fixedW,Math.max(1,source.width-fixedW),32);(mat as BeanDataMaterial).setBeanData?.(group.bean.fixed.texture,group.bean.pose.texture);
        if(mesh.customDepthMaterial){const depth=mesh.customDepthMaterial.clone() as BeanDataMaterial;depth.setBeanData?.(group.bean.fixed.texture,group.bean.pose.texture);instance.customDepthMaterial=depth;}}}
-     binding={geometry:g,material,roughness:material.roughness,side:material.side,batch:group};bindings.set(mesh,binding);
+     binding={geometry:g,material,roughness:material.roughness,side:material.side,style,batch:group};bindings.set(mesh,binding);
     }
     const b=binding.batch;
     const batch=b.mesh,i=batch.count++;batch.setMatrixAt(i,mesh.matrixWorld);

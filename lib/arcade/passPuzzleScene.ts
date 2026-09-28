@@ -1,4 +1,5 @@
 import * as T from 'three';
+import {createGlassFloor} from './glassFloor';
 import {createArcadeStage} from './arcadeStage';
 import {createPlayer,type PlayerMotion,type PlayerRig} from '../graphics/player';
 import {DEFAULT_CUSTOMIZATION} from '../town/customization';
@@ -40,11 +41,13 @@ export function shirtNumbersFor(s:Scenario){
 }
 
 export function createPassPuzzleScene(canvas:HTMLCanvasElement){
+ let glassFloor:ReturnType<typeof createGlassFloor>|null=null;
  const stage=createArcadeStage(canvas),{scene,camera}=stage;stage.scenery.visible=false;
  // The stage ground is a sand plate; this pitch sits on it like the island fields.
  let pitch=new T.Group();scene.add(pitch);
  const pool:{attack:PlayerRig[];defend:PlayerRig[];keeper:PlayerRig|null}={attack:[],defend:[],keeper:null};
- let lastDive=0,attackers:Actor[]=[],defenders:Actor[]=[],keeper:Actor|null=null,scenario:Scenario|null=null,elapsed=0;
+ let keeperDiveAge=-1,keeperWasDiving=false,goalAge=-1,scorer=-1;const keeperDive:NonNullable<PlayerMotion['dive']>={progress:0,dir:1,height:.4,kind:'side',outcome:'parry'};
+ let attackers:Actor[]=[],defenders:Actor[]=[],keeper:Actor|null=null,scenario:Scenario|null=null,elapsed=0;
  const newActor=(rig:PlayerRig):Actor=>({tag:null,rig,motion:{},reactionLeft:0,reactionTotal:1,receiveLeft:0,kickLeft:0,called:0,callWave:0,dejected:false});
  function rigFor(kind:'attack'|'defend'|'keeper',index:number){
   if(kind==='keeper'){if(!pool.keeper){pool.keeper=createPlayer('pp-keeper','away');pool.keeper.setAppearance({...DEFAULT_CUSTOMIZATION,clothing:'sunset',face:'deep'});const dress=matchPlayerDress('pp-keeper','away',true,1);pool.keeper.setBeanLook(dress.look,dress.outfit);}return pool.keeper;}
@@ -63,7 +66,7 @@ export function createPassPuzzleScene(canvas:HTMLCanvasElement){
   const t=new T.CanvasTexture(c);t.colorSpace=T.SRGBColorSpace;tagTextures.set(key,t);m=new T.SpriteMaterial({map:t,depthWrite:false,transparent:true,toneMapped:false,fog:false,sizeAttenuation:false});tagMaterials.set(key,m);return m;}
  function setTag(a:Actor,n:number,team:'attack'|'defend'|'keeper'){if(!a.tag){a.tag=new T.Sprite();a.tag.renderOrder=6;a.tag.scale.setScalar(.023);}a.tag.material=tagMaterial(n,team);scene.add(a.tag);}
 
- // Aim graphics: one instanced dot trail + its ground shadow, pooled rings, one stroke line.
+ // Aim graphics: one instanced dot trail + its ground shadow, pooled rings.
  const dotGeo=new T.SphereGeometry(1,8,6),dotMat=new T.MeshBasicMaterial({color:'#ffe36e'}),dots=new T.InstancedMesh(dotGeo,dotMat,PATH_DOTS);dots.frustumCulled=false;dots.instanceMatrix.setUsage(T.DynamicDrawUsage);dots.renderOrder=4;scene.add(dots);
  const shadowGeo=new T.CircleGeometry(1,12),shadowMat=new T.MeshBasicMaterial({color:'#1d3f36',transparent:true,opacity:.28,depthWrite:false}),shadows=new T.InstancedMesh(shadowGeo,shadowMat,PATH_DOTS);shadows.frustumCulled=false;shadows.instanceMatrix.setUsage(T.DynamicDrawUsage);scene.add(shadows);
  const dummy=new T.Object3D();
@@ -77,17 +80,22 @@ export function createPassPuzzleScene(canvas:HTMLCanvasElement){
  const endGoal=flatRing(.45,.75,'#ffe36e'),endRest=flatRing(.35,.55,'#fff3d2'),endOut=new T.Group();
  for(const a of [1,-1]){const bar=new T.Mesh(new T.BoxGeometry(1.1,.04,.2),new T.MeshBasicMaterial({color:'#e8604c'}));bar.rotation.y=a*Math.PI/4;endOut.add(bar);}endOut.visible=false;scene.add(endOut);
  const zoneRing=flatRing(.94,1,'#fff3d2',.8);
- const strokeGeo=new T.BufferGeometry(),strokePositions=new Float32Array(256*3);strokeGeo.setAttribute('position',new T.BufferAttribute(strokePositions,3));strokeGeo.setDrawRange(0,0);
- const strokeLine=new T.Line(strokeGeo,new T.LineBasicMaterial({color:'#fff3d2',transparent:true,opacity:.55,depthWrite:false}));strokeLine.frustumCulled=false;scene.add(strokeLine);
 
+
+ const liveTrail=new T.InstancedMesh(new T.SphereGeometry(1,8,6),new T.MeshBasicMaterial({color:'#70fff0',transparent:true,opacity:.65,depthWrite:false}),24);liveTrail.name='puzzle-flight-trail';liveTrail.frustumCulled=false;liveTrail.count=0;liveTrail.instanceMatrix.setUsage(T.DynamicDrawUsage);scene.add(liveTrail);
+ const trailPoints=new Float32Array(72);let trailHead=0,trailCount=0,trailClock=0,trailLife=0;const trailMaterial=liveTrail.material as T.MeshBasicMaterial;
+ const goalRings=['#ff72cb','#73fff1'].map(color=>flatRing(.94,1,color,.8));goalRings.forEach((r,i)=>r.name='puzzle-goal-pulse-'+i);
+ const celebrations=Array.from({length:8},(_,i)=>({type:i%2?'thankPasser':'airplane',progress:0,side:1 as const})) as Array<NonNullable<PlayerMotion['skill']>>;
  const ball=stage.football(BALL_R),ballShadow=new T.Mesh(new T.CircleGeometry(.24,16),new T.MeshBasicMaterial({color:'#193e37',transparent:true,opacity:.35,depthWrite:false}));ballShadow.rotation.x=-Math.PI/2;scene.add(ballShadow);
  let net:{attribute:T.BufferAttribute;rest:Float32Array;hit:number;x:number}|null=null;
 
  function buildPitch(s:Scenario){
+  glassFloor?.dispose();glassFloor=null;
   scene.remove(pitch);pitch.traverse(o=>{if(o instanceof T.Mesh||o instanceof T.LineSegments)o.geometry.dispose();});pitch=new T.Group();scene.add(pitch);
-  const {halfWidth:hw,length:L,goalWidth:gw}=s.pitch,line='#fff1d5',half=L/2;
-  const base=new T.Mesh(new T.PlaneGeometry(hw*2+6,L+10),new T.MeshStandardMaterial({color:'#427f6c',roughness:1}));base.rotation.x=-Math.PI/2;base.position.set(0,.004,1);base.receiveShadow=true;pitch.add(base);
-  const stripes=Math.max(4,Math.round(L/5)),stripeMats=['#478673','#4d8e77'].map(color=>new T.MeshStandardMaterial({color,roughness:1}));
+  const {halfWidth:hw,length:L,goalWidth:gw}=s.pitch,line='#73fff1',half=L/2;
+  const base=new T.Mesh(new T.PlaneGeometry(hw*2+6,L+10),new T.MeshStandardMaterial({color:'#202039',roughness:1}));base.rotation.x=-Math.PI/2;base.position.set(0,.004,1);base.receiveShadow=true;pitch.add(base);
+  glassFloor=createGlassFloor(pitch,hw*2,L,8,14,.01);
+  const stripes=Math.max(4,Math.round(L/5)),stripeMats=['#193440','#203f4c'].map(color=>new T.MeshStandardMaterial({color,roughness:1}));
   for(let i=0;i<stripes;i++){const m=new T.Mesh(new T.PlaneGeometry(hw*2,L/stripes),stripeMats[i%2]);m.rotation.x=-Math.PI/2;m.position.set(0,.008,-half+(i+.5)*L/stripes);m.receiveShadow=true;pitch.add(m);}
   const paint=(x1:number,z1:number,x2:number,z2:number)=>{const m=new T.Mesh(new T.PlaneGeometry(Math.max(.1,Math.abs(x2-x1)),Math.max(.1,Math.abs(z2-z1))),new T.MeshBasicMaterial({color:line}));m.rotation.x=-Math.PI/2;m.position.set((x1+x2)/2,.014,(z1+z2)/2);pitch.add(m);};
   paint(-hw,half,hw,half);paint(-hw,-half,-hw,half);paint(hw,-half,hw,half);
@@ -106,7 +114,7 @@ export function createPassPuzzleScene(canvas:HTMLCanvasElement){
  }
 
  function load(s:Scenario){
-  scenario=s;elapsed=0;buildPitch(s);
+  scenario=s;elapsed=0;goalAge=keeperDiveAge=-1;keeperWasDiving=false;trailHead=trailCount=trailClock=trailLife=0;liveTrail.count=0;buildPitch(s);
   for(const rig of [...pool.attack,...pool.defend,...(pool.keeper?[pool.keeper]:[])])rig.root.removeFromParent();
   attackers=s.attackers.map((_,i)=>newActor(rigFor('attack',i)));defenders=s.defenders.map((_,i)=>newActor(rigFor('defend',i)));keeper=s.keeper?newActor(rigFor('keeper',0)):null;
   for(const t of scene.children.filter(o=>o instanceof T.Sprite))scene.remove(t);
@@ -136,7 +144,7 @@ export function createPassPuzzleScene(canvas:HTMLCanvasElement){
   const along=wrap(Math.PI/2-axis),across=wrap(-axis),limit=portrait?(s.require.finish==='goal'?1.05:1.45):.32,heading=Math.max(-limit,Math.min(limit,portrait?along:across*.6));
   let cx=0,cz=0;for(const p of pts){cx+=p[0];cz+=p[2];}cx/=pts.length;cz/=pts.length;base.target.set(cx,0,cz);
   const dx=Math.sin(heading),dz=Math.cos(heading);
-  const top=portrait?140:118,bottom=portrait?128:100,roomY=Math.max(.3,(h-top-bottom)/h),roomX=portrait?.8:.82;
+  const top=portrait?86:86,bottom=portrait?178:165,roomY=Math.max(.3,(h-top-bottom)/h),roomX=portrait?.8:.82;
   const place=(d:number)=>{camera.position.set(cx-dx*Math.cos(tilt)*d,Math.sin(tilt)*d,cz-dz*Math.cos(tilt)*d);camera.lookAt(base.target);camera.updateMatrixWorld();};
   const extent=()=>{let x0=1,x1=-1,y0=1,y1=-1;for(const p of pts){corner.set(p[0],p[1],p[2]).project(camera);x0=Math.min(x0,corner.x);x1=Math.max(x1,corner.x);y0=Math.min(y0,corner.y);y1=Math.max(y1,corner.y);}return{x0,x1,y0,y1};};
   let low=4,high=240;
@@ -154,20 +162,10 @@ export function createPassPuzzleScene(canvas:HTMLCanvasElement){
   camera.lookAt(look);const zoom=1+t*.18;if(camera.zoom!==zoom){camera.zoom=zoom;camera.updateProjectionMatrix();}
  }
 
- // Quadratic midpoint interpolation softens sparse pointer samples without changing
- // the engine's raw gesture. Reuse one fixed GPU buffer, including the exact tip.
- function setStroke(points:Vec2[]){
-  let count=0;const put=(x:number,z:number)=>{strokePositions[count*3]=x;strokePositions[count*3+1]=.06;strokePositions[count*3+2]=z;count++;};
-  if(points.length){put(points[0].x,points[0].z);for(let i=1;i<points.length-1&&count<253;i++){
-   const a=points[i-1],b=points[i],c=points[i+1],sx=i===1?a.x:(a.x+b.x)/2,sz=i===1?a.z:(a.z+b.z)/2,ex=(b.x+c.x)/2,ez=(b.z+c.z)/2;
-   for(let j=1;j<=2;j++){const t=j/2,u=1-t;put(u*u*sx+2*u*t*b.x+t*t*ex,u*u*sz+2*u*t*b.z+t*t*ez);}
-  }const end=points[points.length-1];if(points.length>1)put(end.x,end.z);}
-  strokeGeo.attributes.position.needsUpdate=true;strokeGeo.setDrawRange(0,count);
- }
  function setAim(view:AimView|null,state:PuzzleState){
+  if(view?.prediction?.path.length){const path=view.prediction.path,q=path[Math.floor(path.length/2)];glassFloor?.update(.1,q.x,q.z,view.loft*.4,.2);}
   const p=view?.prediction;hideDots();for(const r of threats)r.visible=false;keeperThreat.visible=receiverRing.visible=endGoal.visible=endRest.visible=endOut.visible=false;
   const carrier=state.attackers[state.carrier];carrierRing.visible=state.phase==='aiming';if(carrier)carrierRing.position.set(carrier.p.x,.035,carrier.p.z);
-  setStroke(view?.stroke??[]);
   for(const a of attackers)a.called=0;
   if(!view||!p){return;}
   // Dotted, fading path: every other sample, shrinking and thinning toward the end.
@@ -183,27 +181,28 @@ export function createPassPuzzleScene(canvas:HTMLCanvasElement){
   if(receiver!==undefined&&state.attackers[receiver]){const r=state.attackers[receiver];receiverRing.visible=true;receiverRing.position.set(r.p.x,.035,r.p.z);if(attackers[receiver])attackers[receiver].called=1;}
  }
 
- function resetActors(){for(const a of [...attackers,...defenders,...(keeper?[keeper]:[])]){a.reactionLeft=a.receiveLeft=a.kickLeft=0;a.dejected=false;a.motion.reaction=undefined;a.motion.reactionProgress=undefined;a.motion.kick=undefined;a.motion.resumePose=true;a.rig.root.rotation.z=0;}}
+ function resetActors(){goalAge=keeperDiveAge=-1;keeperWasDiving=false;trailCount=trailHead=trailLife=0;liveTrail.count=0;for(const a of [...attackers,...defenders,...(keeper?[keeper]:[])]){a.reactionLeft=a.receiveLeft=a.kickLeft=0;a.dejected=false;a.motion.reaction=undefined;a.motion.reactionProgress=undefined;a.motion.kick=undefined;a.motion.dive=undefined;a.motion.skill=undefined;a.rig.root.position.y=0;a.motion.resumePose=true;a.rig.root.rotation.z=0;}}
  function react(actor:Actor|undefined,kind:NonNullable<PlayerMotion['reaction']>,squash=0){if(!actor)return;actor.motion.reaction=kind;actor.reactionTotal=actor.reactionLeft=REACTION_SECONDS[kind];if(squash){actor.motion.squash=squash;actor.motion.squashSerial=(actor.motion.squashSerial??0)+1;}}
  /** Event → action layer: every touch type looks different. */
  function onEvent(e:PuzzleEvent){
   const att=e.attacker!==undefined?attackers[e.attacker]:undefined,def=e.defender!==undefined?defenders[e.defender]:undefined;
   switch(e.type){
-   case 'kick':if(att){att.kickLeft=.34;att.motion.squash=e.kind==='header'?3.2:2.4;att.motion.squashSerial=(att.motion.squashSerial??0)+1;if(e.kind==='header')react(att,'header');}break;
+   case 'kick':trailCount=trailHead=trailClock=0;trailLife=.35;trailMaterial.color.set(e.kind==='shot'?'#ff75cb':e.kind==='header'?'#b994ff':'#70fff0');if(att){att.kickLeft=.34;att.motion.squash=e.kind==='header'?3.2:2.4;att.motion.squashSerial=(att.motion.squashSerial??0)+1;if(e.kind==='header')react(att,'header');}break;
    case 'receive':if(att){if(e.touch==='chest')react(att,'chest',-2.6);else if(e.touch==='thigh')react(att,'thigh',-2.2);else if(e.touch==='header')react(att,'header',2.8);else{att.receiveLeft=.45;att.motion.squash=-1.8;att.motion.squashSerial=(att.motion.squashSerial??0)+1;}}break;
    case 'heavy_touch':react(att,'stumble',-3);break;
    case 'intercept':react(def,(e.speed??0)>9?'slide':'deflect',-2.2);break;
    case 'deflect':react(def,'deflect',-2);break;
-   case 'save':case 'parry':if(keeper){keeper.motion.squash=-2.4;keeper.motion.squashSerial=(keeper.motion.squashSerial??0)+1;}break;
-   case 'goal':for(const d of defenders){react(d,'dejected');d.dejected=true;}if(keeper){react(keeper,'dejected');}if(net&&!stage.reduced){net.hit=1;net.x=e.at.x;}stage.burst(e.at.x,1,e.at.z,2);break;
+   case 'save':case 'parry':if(keeper){keeperDive.outcome=e.type==='save'?'catch':'parry';if(keeperDiveAge<0){keeperDiveAge=.2;keeperDive.kind='stand';keeperDive.height=Math.min(1,e.at.y/2.5);}keeper.motion.squash=-2.4;keeper.motion.squashSerial=(keeper.motion.squashSerial??0)+1;}break;
+   case 'goal':goalAge=0;scorer=e.attacker??0;for(const r of goalRings)r.position.set(e.at.x,.065,e.at.z-.5);for(const d of defenders){react(d,'dejected');d.dejected=true;}if(keeper){react(keeper,'dejected');}if(net&&!stage.reduced){net.hit=1;net.x=e.at.x;}stage.burst(e.at.x,1,e.at.z,2);break;
    case 'out':break;
   }
  }
 
  const ballTarget=new T.Vector3();
  /** Advance visuals by dt (0 = re-pose only). Returns true while an animation still needs frames. */
- function update(state:PuzzleState,dt:number):boolean{
-  elapsed+=dt;let busy=false;tagsVisible=state.phase==='aiming';const reduced=stage.reduced,ballP=state.ball.p;
+ function update(state:PuzzleState,dt:number,idleThinking=false):boolean{
+  if(dt>0)glassFloor?.update(dt,state.ball.p.x,state.ball.p.z);
+  elapsed+=dt;if(goalAge>=0)goalAge+=dt;let busy=false;tagsVisible=state.phase==='aiming';const reduced=stage.reduced,ballP=state.ball.p;
   const pose=(a:Actor,s:{p:Vec2;facing:number},extra:(m:PlayerMotion)=>void)=>{
    const m=a.motion;m.facing=s.facing;m.lookX=ballP.x;m.lookZ=ballP.z;m.lookY=ballP.y;
    if(a.reactionLeft>0){a.reactionLeft=Math.max(0,a.reactionLeft-dt);m.reactionProgress=1-a.reactionLeft/a.reactionTotal;busy=true;if(a.reactionLeft===0&&!a.dejected){m.reaction=undefined;m.reactionProgress=undefined;}}
@@ -214,31 +213,43 @@ export function createPassPuzzleScene(canvas:HTMLCanvasElement){
   };
   state.attackers.forEach((s,i)=>{const a=attackers[i];if(!a)return;pose(a,s,m=>{
    const pending=state.pending&&state.pending.kicker===i?state.pending:null;
-   if(pending){const k=pending.kick;m.actionKind=k.kind==='shot'?'shot':k.loft>.35?'loft':'pass';m.facing=Math.atan2(k.target.x-s.p.x,k.target.z-s.p.z);m.kick=(1-pending.left/Math.max(.001,pending.total))*.5;busy=true;}
+   m.shotCharge=0;m.skill=undefined;
+   if(pending){const k=pending.kick;m.shotPower=k.power;m.powerKick=k.kind==='shot'&&k.power>.75;m.shotCharge=k.kind==='shot'?(1-pending.left/Math.max(.001,pending.total))*k.power:0;m.actionKind=k.kind==='shot'?'shot':k.loft>.35?'loft':'pass';m.facing=Math.atan2(k.target.x-s.p.x,k.target.z-s.p.z);m.kick=(1-pending.left/Math.max(.001,pending.total))*.5;busy=true;}
    else if(a.kickLeft>0){a.kickLeft=Math.max(0,a.kickLeft-dt);m.kick=a.kickLeft>0?.5+(1-a.kickLeft/.34)*.5:undefined;busy=true;}
    else m.kick=undefined;
-   m.dribbling=false;m.ready=undefined;
+   m.dribbling=false;m.ready=undefined;if(goalAge>=0&&goalAge<1.5){const celebration=celebrations[i%celebrations.length];celebration.type=i===scorer?'airplane':'thankPasser';celebration.progress=Math.min(1,goalAge/1.5);m.skill=celebration;a.rig.setExpression('happy');busy=true;}
   });});
-  state.defenders.forEach((s,i)=>{const a=defenders[i];if(!a)return;pose(a,s,m=>{m.stance='ready';m.ready=s.mode==='intercept'?.4:1;m.jockey=s.mode==='press'?.6:0;});});
-  if(keeper&&state.keeper){const k=state.keeper;pose(keeper,k,m=>{m.keeper=1;m.ready=k.mode==='set'?1:undefined;m.keeperReach=k.dive;});
-   // The dive is a committed body roll: the rig lies out along x, lifted off the grass.
-   const root=keeper.rig.root,dive=reduced?Math.min(k.dive,.5):k.dive;root.rotation.z=-k.diveDir*dive*1.25;root.position.y=Math.sin(dive*Math.PI)*.45+dive*.25;root.position.x+=k.diveDir*dive*.5;if(Math.abs(k.dive-lastDive)>1e-4)busy=true;lastDive=k.dive;}
+  state.defenders.forEach((s,i)=>{const a=defenders[i];if(!a)return;pose(a,s,m=>{m.stance='ready';const scan=idleThinking&&!reduced?Math.sin(elapsed*(.65+i*.11)+i*1.7):0;m.scanYaw=scan*.25;m.ready=s.mode==='intercept'?.4:.65+scan*.12;m.jockey=s.mode==='press'?.6:idleThinking?.35:0;if(idleThinking&&!reduced){const glance=state.attackers[(i+1)%state.attackers.length].p,attention=Math.max(0,Math.sin(elapsed*.55+i)-.45)*.8;m.lookX=ballP.x+(glance.x-ballP.x)*attention;m.lookZ=ballP.z+(glance.z-ballP.z)*attention;}});});
+  if(keeper&&state.keeper){const k=state.keeper,diving=k.mode==='dive';
+   if(diving&&!keeperWasDiving&&keeperDiveAge<0){keeperDiveAge=0;keeperDive.dir=(k.diveDir>0?-1:1);keeperDive.kind=ballP.y<.55?'collapse':ballP.y>1.8?'tip':'side';keeperDive.height=Math.min(1,ballP.y/2.5);keeperDive.outcome='parry';}keeperWasDiving=diving;
+   if(keeperDiveAge>=0){keeperDiveAge+=dt;keeperDive.progress=Math.min(1,keeperDiveAge/1.05);busy=true;if(keeperDiveAge>1.2)keeperDiveAge=-1;}
+   pose(keeper,k,m=>{m.keeper=1;m.ready=keeperDiveAge<0?.75:0;m.keeperReach=0;m.dive=keeperDiveAge>=0?keeperDive:undefined;m.scanYaw=idleThinking&&!reduced?Math.sin(elapsed*.7)*.12:0;});
+   // The native rig owns pelvis roll, near-foot push-off, landing and get-up.
+   // Never rotate the whole root or leave it lying sideways after a save.
+   keeper.rig.root.rotation.z=0;keeper.rig.root.position.y=0;
+  }
   // Ball: held at the carrier's feet while aiming, otherwise the engine's flight.
   ballTarget.set(ballP.x,Math.max(BALL_R,ballP.y*Y_SCALE),ballP.z);ball.position.copy(ballTarget);
   if(dt>0){const v=state.ball.v,speed=Math.hypot(v.x,v.z);ball.rotation.x+=speed*dt/BALL_R*Math.sign(v.z||1);ball.rotation.z-=v.x*dt/BALL_R;}
   ballShadow.position.set(ballP.x,.02,ballP.z);ballShadow.scale.setScalar(1+ballP.y*.12);(ballShadow.material as T.MeshBasicMaterial).opacity=.38/(1+ballP.y*.3);
+  const flying=state.phase==='flight'&&Math.hypot(state.ball.v.x,state.ball.v.y,state.ball.v.z)>3;
+  if(flying&&!reduced){trailLife=.3;trailClock+=dt;if(trailClock>=1/60){trailClock%=1/60;trailPoints[trailHead*3]=ball.position.x;trailPoints[trailHead*3+1]=ball.position.y;trailPoints[trailHead*3+2]=ball.position.z;trailHead=(trailHead+1)%24;trailCount=Math.min(24,trailCount+1);}}
+  else trailLife=Math.max(0,trailLife-dt);
+  liveTrail.count=reduced?0:trailLife>0?trailCount:0;
+  for(let i=0;i<liveTrail.count;i++){const index=(trailHead-1-i+24)%24;dummy.position.fromArray(trailPoints,index*3);dummy.scale.setScalar((.04+.14*(1-i/24))*Math.min(1,trailLife/.3));dummy.updateMatrix();liveTrail.setMatrixAt(i,dummy.matrix);}if(liveTrail.count){liveTrail.instanceMatrix.needsUpdate=true;busy=true;}
+  for(let i=0;i<goalRings.length;i++){const ring=goalRings[i],age=goalAge-i*.12;ring.visible=!reduced&&goalAge>=0&&age>=0&&age<.9;if(ring.visible){ring.scale.setScalar(1+age*5);ring.material.opacity=(1-age/.9)*.8;busy=true;}}
   if(net&&(net.hit>0)){net.hit=Math.max(0,net.hit-dt*.9);const t=1-net.hit,amount=net.hit>0?Math.sin(t*14)*Math.exp(-t*3.8)*.4:0;for(let i=0;i<net.rest.length;i+=3){const x=net.rest[i],y=net.rest[i+1],z=net.rest[i+2],fall=Math.exp(-((x-(-net.x))**2+(y-.8)**2)*.45);net.attribute.setZ(i/3,z+(z<-.1?-amount*fall:0));}net.attribute.needsUpdate=true;busy=true;}
   stage.effects(dt);if(stage.effectsActive())busy=true;
   if(state.phase!=='aiming'){carrierRing.visible=false;}
   return busy;
  }
  const ray=new T.Raycaster(),ndc=new T.Vector2(),ground=new T.Plane(new T.Vector3(0,1,0),0),hit=new T.Vector3();
- function pick(clientX:number,clientY:number):Vec2|null{const r=canvas.getBoundingClientRect();ndc.set((clientX-r.left)/r.width*2-1,1-(clientY-r.top)/r.height*2);ray.setFromCamera(ndc,camera);const p=ray.ray.intersectPlane(ground,hit);return p?{x:p.x,z:p.z}:null;}
+ function pick(clientX:number,clientY:number,bounds?:DOMRect):Vec2|null{const r=bounds??canvas.getBoundingClientRect();ndc.set((clientX-r.left)/r.width*2-1,1-(clientY-r.top)/r.height*2);ray.setFromCamera(ndc,camera);const p=ray.ray.intersectPlane(ground,hit);return p?{x:p.x,z:p.z}:null;}
  const projected=new T.Vector3();
  function toScreen(x:number,y:number,z:number){const r=canvas.getBoundingClientRect();projected.set(x,y,z).project(camera);return{x:(projected.x+1)/2*r.width,y:(1-projected.y)/2*r.height};}
  /** Test/inspection hook: what the aim overlay is showing right now. */
- function debug(){const m=new T.Matrix4(),v=new T.Vector3();let pathDots=0;for(let i=0;i<PATH_DOTS;i++){dots.getMatrixAt(i,m);v.setFromMatrixScale(m);if(v.x>0)pathDots++;}return{strokePoints:strokeGeo.drawRange.count,strokeEnd:strokeGeo.drawRange.count?{x:strokePositions[(strokeGeo.drawRange.count-1)*3],z:strokePositions[(strokeGeo.drawRange.count-1)*3+2]}:null,pathDots,threatRings:threats.filter(r=>r.visible).length+(keeperThreat.visible?1:0),receiverRing:receiverRing.visible,called:attackers.map(a=>a.called),end:endGoal.visible?'goal':endOut.visible?'out':endRest.visible?'rest':null,zoom:camera.zoom};}
- function dispose(){tagTextures.forEach(t=>t.dispose());tagMaterials.forEach(m=>m.dispose());for(const rig of [...pool.attack,...pool.defend,...(pool.keeper?[pool.keeper]:[])])rig.dispose();pitch.traverse(o=>{if(o instanceof T.Mesh)o.geometry.dispose();});strokeGeo.dispose();stage.dispose();}
- return{stage,debug,load,fit,update,setAim,setStroke,onEvent,resetActors,setReplayFocus,pick,toScreen,render:stage.render,dispose,get replayAmount(){return replayAmount;}};
+ function debug(){const m=new T.Matrix4(),v=new T.Vector3();let pathDots=0;for(let i=0;i<PATH_DOTS;i++){dots.getMatrixAt(i,m);v.setFromMatrixScale(m);if(v.x>0)pathDots++;}return{keeperDiveAge,goalAge,trailCount:liveTrail.count,keeperRootRoll:keeper?.rig.root.rotation.z??0,strokePoints:0,strokeEnd:null,pathDots,threatRings:threats.filter(r=>r.visible).length+(keeperThreat.visible?1:0),receiverRing:receiverRing.visible,called:attackers.map(a=>a.called),end:endGoal.visible?'goal':endOut.visible?'out':endRest.visible?'rest':null,zoom:camera.zoom};}
+ function dispose(){tagTextures.forEach(t=>t.dispose());tagMaterials.forEach(m=>m.dispose());for(const rig of [...pool.attack,...pool.defend,...(pool.keeper?[pool.keeper]:[])])rig.dispose();pitch.traverse(o=>{if(o instanceof T.Mesh)o.geometry.dispose();});stage.dispose();}
+ return{stage,debug,load,fit,update,setAim,onEvent,resetActors,setReplayFocus,pick,toScreen,render:stage.render,dispose,get replayAmount(){return replayAmount;}};
 }
 export type PassPuzzleScene=ReturnType<typeof createPassPuzzleScene>;

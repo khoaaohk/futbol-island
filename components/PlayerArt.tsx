@@ -8,6 +8,8 @@ import photos from '@/lib/town/playerPhotos.json';
 import starPhotos from '@/lib/town/playerPhotos.stars.json';
 import futsalPhotos from '@/lib/town/playerPhotos.futsal.json';
 import womenPhotos from '@/lib/town/playerPhotos.women.json';
+import externalPhotos from '@/lib/town/playerPhotos.external.json';
+import coachPhotos from '@/lib/town/playerPhotos.coaches.json';
 import {useSceneryRest} from '@/lib/sceneryRest';
 import styles from './PlayerArt.module.css';
 
@@ -459,7 +461,9 @@ function Foreground({f}:{f:{seed:number}}){
 export type PlayerPhoto={slug:string;article:string;file:string;artist:string;license:string;licenseUrl:string};
 /** A freely licensed Wikimedia photo, pre-printed as riso ink masks (scripts/fetch-player-photos.py), when one exists. */
 /** Photo manifests are split by batch (legends / current stars / futsal) so separate agents never write the same file; later batches win. */
-const PHOTOS:Record<string,PlayerPhoto>={...(photos as Record<string,PlayerPhoto>),...(starPhotos as Record<string,PlayerPhoto>),...(futsalPhotos as Record<string,PlayerPhoto>),...(womenPhotos as Record<string,PlayerPhoto>)};
+/** Coach cards (Sep 28 2026) have their own shard, playerPhotos.coaches.json (scripts/fetch-coach-photos.py). */
+/** External (non-Wikimedia) finds go first so every Commons shard overrides them: they only fill cards nothing else covers. */
+const PHOTOS:Record<string,PlayerPhoto>={...(externalPhotos as Record<string,PlayerPhoto>),...(photos as Record<string,PlayerPhoto>),...(starPhotos as Record<string,PlayerPhoto>),...(futsalPhotos as Record<string,PlayerPhoto>),...(womenPhotos as Record<string,PlayerPhoto>),...(coachPhotos as Record<string,PlayerPhoto>)};
 export const photoFor=(name:string):PlayerPhoto|undefined=>PHOTOS[name];
 /** Warm the browser cache with players' riso photo masks (ink + tone, ~25 KB each) before their cards appear, so a card
  *  never sits with its backdrop and silhouette while the photo trickles in. Each file is requested once per session. */

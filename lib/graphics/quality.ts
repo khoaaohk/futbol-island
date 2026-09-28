@@ -4,7 +4,9 @@
  * dashes (the centre circle read as dotted) and stair-stepped sign/roof edges, so it was kept on as the user asked in that case.
  * PHONE_ANTIALIAS_OFF_AT_DPR2 is the ready lever (read at renderer creation). */
 // Quality pass (user decision Sep 26 2026): phones start at 1.75 while cool; the thermal governor (heatTier.ts) drops to 1.5, then 1.25.
-export const PHONE_PIXEL_RATIO = 1.75, PHONE_SHADOW_SIZE = 1024, PHONE_ANTIALIAS_OFF_AT_DPR2 = false;
+// Budget pass (Sep 27 2026): with the shadow box now fitted to what is visible, a cool phone draws its shadows at 1536² (tier 0); the
+// governor's tiers 1+ cap it at 1024² again (heatTier TIERS shadowSize).
+export const PHONE_PIXEL_RATIO = 1.75, PHONE_SHADOW_SIZE = 1536, PHONE_ANTIALIAS_OFF_AT_DPR2 = false;
 export function phoneGraphicsFor(devicePixelRatio: number, coarsePointer: boolean) {
   const phone = dynamicResolutionEnabled(devicePixelRatio, coarsePointer), dpr = devicePixelRatio || 1;
   return phone

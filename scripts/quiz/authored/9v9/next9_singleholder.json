@@ -73,16 +73,16 @@
   {
    "q": "We lose the ball. Put what happens next in order.",
    "options": [
-    "Left midfielder delays the carrier",
-    "Attacking midfielder recovers beside the holder",
-    "Centre back controls the ball",
+    "We lose the ball",
+    "Attacking midfielder drops beside the holder",
+    "Centre back wins the ball",
     "Attacking midfielder moves higher again"
    ],
    "correct": 0,
-   "explain": "Yes. We delay, pair up in the middle, win the ball, then restore the higher link.",
+   "explain": "Yes. We lose it, pair up in the middle, win it back, then restore the higher link.",
    "choiceExplanations": [
-    "Yes. We delay, pair up in the middle, win the ball, then restore the higher link.",
-    "First the left midfielder slows the carrier, then the attacking midfielder recovers.",
+    "Yes. We lose it, pair up in the middle, win it back, then restore the higher link.",
+    "The attacking midfielder drops to help only after we lose the ball.",
     "The centre back wins it after the pair has protected the middle.",
     "The attacking midfielder only moves higher once our centre back has the ball."
    ],

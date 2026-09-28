@@ -1,0 +1,314 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "village": {
+      "src": "/voice/books/marta/village.m4a?v=coach-bella-1",
+      "duration": 41.8,
+      "scriptSha256": "b6dd90db98d9ed411847a3bfb1de1653e0265d9caa3d93b9cb83053910ef730b",
+      "cues": [
+        {
+          "text": "A girl in the boys\u2019 game",
+          "start": 0.0,
+          "duration": 2.45
+        },
+        {
+          "text": "Marta Vieira da Silva was born in 1986 in Dois Riachos, a small town in north-east Brazil.",
+          "start": 2.45,
+          "duration": 8.0
+        },
+        {
+          "text": "Her father left the family while she was a baby.",
+          "start": 10.45,
+          "duration": 3.675
+        },
+        {
+          "text": "Her mother is Tereza, and Marta has three siblings: Jos\u00e9, Valdir and Angela.",
+          "start": 14.125,
+          "duration": 6.1
+        },
+        {
+          "text": "Marta learned to play football in the streets with the boys.",
+          "start": 20.225,
+          "duration": 3.975
+        },
+        {
+          "text": "Open the gate and let her into the street game.",
+          "start": 24.2,
+          "duration": 3.45
+        },
+        {
+          "text": "Many children grow up with one parent, or are the only girl, or the only new face, in a game.",
+          "start": 27.65,
+          "duration": 6.575
+        },
+        {
+          "text": "That does not make them belong any less.",
+          "start": 34.225,
+          "duration": 2.925
+        },
+        {
+          "text": "Being different can be a strength. You belong in the game you love.",
+          "start": 37.15,
+          "duration": 4.625
+        }
+      ]
+    },
+    "bus": {
+      "src": "/voice/books/marta/bus.m4a?v=coach-bella-1",
+      "duration": 43.1,
+      "scriptSha256": "1c49eb3e2cd37b585c88dbcc8796f897ec87fcae3dba18f05661eb3605c42c56",
+      "cues": [
+        {
+          "text": "Leaving home at fourteen",
+          "start": 0.0,
+          "duration": 2.3
+        },
+        {
+          "text": "When Marta was fourteen, a coach called Helena Pacheco saw how talented she was.",
+          "start": 2.3,
+          "duration": 5.725
+        },
+        {
+          "text": "Marta left her family and travelled for about three days by bus to Rio de Janeiro, to try out for the club Vasco da Gama.",
+          "start": 8.025,
+          "duration": 8.55
+        },
+        {
+          "text": "Pull the paper bus along the road, past town after town.",
+          "start": 16.575,
+          "duration": 4.425
+        },
+        {
+          "text": "Leaving home is a very big step, even for a grown-up.",
+          "start": 21.0,
+          "duration": 4.075
+        },
+        {
+          "text": "Many people would feel excited, scared and homesick, all at once.",
+          "start": 25.075,
+          "duration": 4.825
+        },
+        {
+          "text": "Being brave does not mean you stop feeling nervous.",
+          "start": 29.9,
+          "duration": 3.675
+        },
+        {
+          "text": "It means you keep going, and you carry the people you love with you.",
+          "start": 33.575,
+          "duration": 4.425
+        },
+        {
+          "text": "Being brave does not mean you are not scared. It is okay to miss home.",
+          "start": 38.0,
+          "duration": 5.05
+        }
+      ]
+    },
+    "best": {
+      "src": "/voice/books/marta/best.m4a?v=coach-bella-1",
+      "duration": 45.4,
+      "scriptSha256": "3c9a9a17726ddabbf6b4d289dd66db9870a9ca224be45385cebb25105b26b4c4",
+      "cues": [
+        {
+          "text": "A door closes, a door opens",
+          "start": 0.0,
+          "duration": 2.925
+        },
+        {
+          "text": "Marta began playing for Vasco da Gama in 2000, but two years later the team folded.",
+          "start": 2.925,
+          "duration": 6.6
+        },
+        {
+          "text": "Marta kept going.",
+          "start": 9.525,
+          "duration": 2.075
+        },
+        {
+          "text": "She played two seasons for Santa Cruz, a small club in Minas Gerais, and in 2004 she moved far away, to the club Ume\u00e5 IK in Sweden.",
+          "start": 11.6,
+          "duration": 10.7
+        },
+        {
+          "text": "Sweden was a new country, with a new language and a new home.",
+          "start": 22.3,
+          "duration": 4.4
+        },
+        {
+          "text": "Marta learned to speak Swedish, and in her first season she helped Ume\u00e5 win the UEFA Women\u2019s Cup.",
+          "start": 26.7,
+          "duration": 6.725
+        },
+        {
+          "text": "Open the paper door to the new country.",
+          "start": 33.425,
+          "duration": 2.95
+        },
+        {
+          "text": "When one door closes it can hurt, but another door may open.",
+          "start": 36.375,
+          "duration": 4.35
+        },
+        {
+          "text": "Being new somewhere is hard. Ask for help, and give yourself time.",
+          "start": 40.725,
+          "duration": 4.65
+        }
+      ]
+    },
+    "goals": {
+      "src": "/voice/books/marta/goals.m4a?v=coach-bella-1",
+      "duration": 45.9,
+      "scriptSha256": "f05a3dc7e497fbc87427443fd8194b53e2fb103c3b59c6a43797861650514ca8",
+      "cues": [
+        {
+          "text": "So close, again and again",
+          "start": 0.0,
+          "duration": 2.625
+        },
+        {
+          "text": "With Marta, Brazil reached the biggest finals, and lost them.",
+          "start": 2.625,
+          "duration": 4.225
+        },
+        {
+          "text": "They won silver medals at the Olympics in 2004 and 2008.",
+          "start": 6.85,
+          "duration": 5.575
+        },
+        {
+          "text": "In the 2007 Women\u2019s World Cup final they lost 2\u20130 to Germany, and Marta\u2019s penalty was saved.",
+          "start": 12.425,
+          "duration": 8.075
+        },
+        {
+          "text": "But at that same World Cup, Marta won the Golden Ball as the best player and the Golden Boot as the top scorer, with seven goals.",
+          "start": 20.5,
+          "duration": 8.6
+        },
+        {
+          "text": "Lift the silver medal and look underneath.",
+          "start": 29.1,
+          "duration": 3.275
+        },
+        {
+          "text": "Losing a final hurts, and it is fine to feel sad about it.",
+          "start": 32.375,
+          "duration": 4.375
+        },
+        {
+          "text": "One game never tells the whole story of who you are.",
+          "start": 36.75,
+          "duration": 3.6
+        },
+        {
+          "text": "You are more than one result. A loss is something that happened, not who you are.",
+          "start": 40.35,
+          "duration": 5.525
+        }
+      ]
+    },
+    "space": {
+      "src": "/voice/books/marta/space.m4a?v=coach-bella-1",
+      "duration": 46.6,
+      "scriptSha256": "d2c9201fe0c81f99e9a6de29742d138812723c7c7bc1ca96e69a48666f49059e",
+      "cues": [
+        {
+          "text": "A knee to heal",
+          "start": 0.0,
+          "duration": 1.85
+        },
+        {
+          "text": "In March 2022, while playing for the Orlando Pride in the United States, Marta tore a ligament in her left knee.",
+          "start": 1.85,
+          "duration": 8.275
+        },
+        {
+          "text": "She needed an operation, and her season was over.",
+          "start": 10.125,
+          "duration": 3.9
+        },
+        {
+          "text": "Healing a knee takes many months of patience.",
+          "start": 14.025,
+          "duration": 3.25
+        },
+        {
+          "text": "In 2023 Marta came back and played eighteen games.",
+          "start": 17.275,
+          "duration": 4.825
+        },
+        {
+          "text": "In 2024 she helped the Orlando Pride win the NWSL Championship, the first NWSL title of her career.",
+          "start": 22.1,
+          "duration": 9.5
+        },
+        {
+          "text": "Unfold the paper bridge, one plank at a time, from 2022 back to the pitch.",
+          "start": 31.6,
+          "duration": 6.1
+        },
+        {
+          "text": "Small steps, one after another, can carry you a long way.",
+          "start": 37.7,
+          "duration": 4.375
+        },
+        {
+          "text": "Healing takes time. A setback is not the end of your story.",
+          "start": 42.075,
+          "duration": 4.5
+        }
+      ]
+    },
+    "girls": {
+      "src": "/voice/books/marta/girls.m4a?v=coach-bella-1",
+      "duration": 43.8,
+      "scriptSha256": "3102bda1715cb8f23488d37a975f80ddb1a29010c184ddc7fc3f54b580c1f058",
+      "cues": [
+        {
+          "text": "Cry at the beginning",
+          "start": 0.0,
+          "duration": 1.925
+        },
+        {
+          "text": "At the 2019 World Cup, Marta scored her seventeenth World Cup goal.",
+          "start": 1.925,
+          "duration": 5.7
+        },
+        {
+          "text": "No player, woman or man, has scored more goals at World Cups.",
+          "start": 7.625,
+          "duration": 4.7
+        },
+        {
+          "text": "Then Brazil were knocked out by France.",
+          "start": 12.325,
+          "duration": 2.825
+        },
+        {
+          "text": "Afterwards, Marta spoke to the television cameras.",
+          "start": 15.15,
+          "duration": 4.125
+        },
+        {
+          "text": "She asked Brazilian girls to carry on women\u2019s football, to value it more, and to \u2018cry at the beginning so you can smile at the end.\u2019 In 2018 the United Nations made her a Goodwill Ambassador for women in sport.",
+          "start": 19.275,
+          "duration": 14.475
+        },
+        {
+          "text": "Pass the ball to the next girl in line, and keep the game going.",
+          "start": 33.75,
+          "duration": 4.6
+        },
+        {
+          "text": "Lift others up. When you get through something hard, help the next person through.",
+          "start": 38.35,
+          "duration": 5.4
+        }
+      ]
+    }
+  }
+}

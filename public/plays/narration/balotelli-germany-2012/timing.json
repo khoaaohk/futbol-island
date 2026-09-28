@@ -1,0 +1,394 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "The goal, live",
+   "text": "Warsaw, 2012. Euro semi-final: Germany against Italy. Montolivo launches a long ball. Mario Balotelli beats the offside trap, chests it down, and... bang! Top corner!",
+   "src": "/plays/narration/balotelli-germany-2012/1.m4a",
+   "seconds": 13.6,
+   "words": [
+    {
+     "w": "Warsaw",
+     "at": 0.375
+    },
+    {
+     "w": "2012",
+     "at": 0.9
+    },
+    {
+     "w": "Euro",
+     "at": 2.15
+    },
+    {
+     "w": "semi-final",
+     "at": 2.487
+    },
+    {
+     "w": "Germany",
+     "at": 3.263
+    },
+    {
+     "w": "against",
+     "at": 3.7
+    },
+    {
+     "w": "Italy",
+     "at": 4.125
+    },
+    {
+     "w": "Montolivo",
+     "at": 4.963
+    },
+    {
+     "w": "launches",
+     "at": 5.6
+    },
+    {
+     "w": "a",
+     "at": 6.025
+    },
+    {
+     "w": "long",
+     "at": 6.138
+    },
+    {
+     "w": "ball",
+     "at": 6.475
+    },
+    {
+     "w": "Mario",
+     "at": 7.263
+    },
+    {
+     "w": "Balotelli",
+     "at": 7.65
+    },
+    {
+     "w": "beats",
+     "at": 8.262
+    },
+    {
+     "w": "the",
+     "at": 8.537
+    },
+    {
+     "w": "offside",
+     "at": 8.675
+    },
+    {
+     "w": "trap",
+     "at": 9.262
+    },
+    {
+     "w": "chests",
+     "at": 9.762
+    },
+    {
+     "w": "it",
+     "at": 10.088
+    },
+    {
+     "w": "down",
+     "at": 10.175
+    },
+    {
+     "w": "and",
+     "at": 10.613
+    },
+    {
+     "w": "bang",
+     "at": 11.238
+    },
+    {
+     "w": "Top",
+     "at": 11.838
+    },
+    {
+     "w": "corner",
+     "at": 12.162
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again, slowly. He waits on the shoulder of the last defender, then sprints in behind. One touch, head down, and he hits it with his laces.",
+   "src": "/plays/narration/balotelli-germany-2012/2.m4a",
+   "seconds": 10.1,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "slowly",
+     "at": 1.188
+    },
+    {
+     "w": "He",
+     "at": 2.263
+    },
+    {
+     "w": "waits",
+     "at": 2.425
+    },
+    {
+     "w": "on",
+     "at": 2.663
+    },
+    {
+     "w": "the",
+     "at": 2.763
+    },
+    {
+     "w": "shoulder",
+     "at": 2.875
+    },
+    {
+     "w": "of",
+     "at": 3.288
+    },
+    {
+     "w": "the",
+     "at": 3.362
+    },
+    {
+     "w": "last",
+     "at": 3.45
+    },
+    {
+     "w": "defender",
+     "at": 3.812
+    },
+    {
+     "w": "then",
+     "at": 4.425
+    },
+    {
+     "w": "sprints",
+     "at": 4.638
+    },
+    {
+     "w": "in",
+     "at": 5.075
+    },
+    {
+     "w": "behind",
+     "at": 5.225
+    },
+    {
+     "w": "One",
+     "at": 6.213
+    },
+    {
+     "w": "touch",
+     "at": 6.513
+    },
+    {
+     "w": "head",
+     "at": 7.0
+    },
+    {
+     "w": "down",
+     "at": 7.225
+    },
+    {
+     "w": "and",
+     "at": 7.725
+    },
+    {
+     "w": "he",
+     "at": 7.838
+    },
+    {
+     "w": "hits",
+     "at": 7.95
+    },
+    {
+     "w": "it",
+     "at": 8.188
+    },
+    {
+     "w": "with",
+     "at": 8.262
+    },
+    {
+     "w": "his",
+     "at": 8.363
+    },
+    {
+     "w": "laces",
+     "at": 8.525
+    }
+   ]
+  },
+  {
+   "label": "Top corner",
+   "text": "Manuel Neuer does not even move. Two goals for Balotelli, and Italy are in the final!",
+   "src": "/plays/narration/balotelli-germany-2012/3.m4a",
+   "seconds": 6.7,
+   "words": [
+    {
+     "w": "Manuel",
+     "at": 0.425
+    },
+    {
+     "w": "Neuer",
+     "at": 0.9
+    },
+    {
+     "w": "does",
+     "at": 1.275
+    },
+    {
+     "w": "not",
+     "at": 1.438
+    },
+    {
+     "w": "even",
+     "at": 1.587
+    },
+    {
+     "w": "move",
+     "at": 1.85
+    },
+    {
+     "w": "Two",
+     "at": 2.763
+    },
+    {
+     "w": "goals",
+     "at": 2.975
+    },
+    {
+     "w": "for",
+     "at": 3.3
+    },
+    {
+     "w": "Balotelli",
+     "at": 3.425
+    },
+    {
+     "w": "and",
+     "at": 4.35
+    },
+    {
+     "w": "Italy",
+     "at": 4.513
+    },
+    {
+     "w": "are",
+     "at": 4.912
+    },
+    {
+     "w": "in",
+     "at": 5.037
+    },
+    {
+     "w": "the",
+     "at": 5.112
+    },
+    {
+     "w": "final",
+     "at": 5.213
+    }
+   ]
+  },
+  {
+   "label": "Your turn",
+   "text": "Your turn, strikers: stay on the shoulder of the last defender. When you break through, look up, and strike it hard.",
+   "src": "/plays/narration/balotelli-germany-2012/4.m4a",
+   "seconds": 7.8,
+   "words": [
+    {
+     "w": "Your",
+     "at": 0.375
+    },
+    {
+     "w": "turn",
+     "at": 0.537
+    },
+    {
+     "w": "strikers",
+     "at": 1.0
+    },
+    {
+     "w": "stay",
+     "at": 1.925
+    },
+    {
+     "w": "on",
+     "at": 2.263
+    },
+    {
+     "w": "the",
+     "at": 2.362
+    },
+    {
+     "w": "shoulder",
+     "at": 2.475
+    },
+    {
+     "w": "of",
+     "at": 2.888
+    },
+    {
+     "w": "the",
+     "at": 2.962
+    },
+    {
+     "w": "last",
+     "at": 3.05
+    },
+    {
+     "w": "defender",
+     "at": 3.425
+    },
+    {
+     "w": "When",
+     "at": 4.45
+    },
+    {
+     "w": "you",
+     "at": 4.588
+    },
+    {
+     "w": "break",
+     "at": 4.675
+    },
+    {
+     "w": "through",
+     "at": 4.963
+    },
+    {
+     "w": "look",
+     "at": 5.438
+    },
+    {
+     "w": "up",
+     "at": 5.612
+    },
+    {
+     "w": "and",
+     "at": 5.862
+    },
+    {
+     "w": "strike",
+     "at": 5.975
+    },
+    {
+     "w": "it",
+     "at": 6.263
+    },
+    {
+     "w": "hard",
+     "at": 6.35
+    }
+   ]
+  }
+ ]
+}

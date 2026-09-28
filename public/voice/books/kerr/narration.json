@@ -1,0 +1,294 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "footy": {
+      "src": "/voice/books/kerr/footy.m4a?v=coach-bella-1",
+      "duration": 38.5,
+      "scriptSha256": "87e945513fca3fad2cd2e49fa4575c4a6223c784d249f7bfee1cfd05ff276463",
+      "cues": [
+        {
+          "text": "A new game at twelve",
+          "start": 0.0,
+          "duration": 2.1
+        },
+        {
+          "text": "Sam Kerr was born in 1993 near Perth, in Western Australia.",
+          "start": 2.1,
+          "duration": 5.575
+        },
+        {
+          "text": "Her father and her older brother Daniel both played Australian rules football as professionals.",
+          "start": 7.675,
+          "duration": 6.45
+        },
+        {
+          "text": "Sam played that game too, when she was young.",
+          "start": 14.125,
+          "duration": 3.4
+        },
+        {
+          "text": "Swap the ball.",
+          "start": 17.525,
+          "duration": 1.8
+        },
+        {
+          "text": "When Sam was twelve, she switched to soccer, mostly because of rules that limited girls in Australian rules football.",
+          "start": 19.325,
+          "duration": 8.425
+        },
+        {
+          "text": "It meant starting again, with a new ball, a new team and new skills to learn.",
+          "start": 27.75,
+          "duration": 5.425
+        },
+        {
+          "text": "When one path closes, you can find a new one. Starting again takes courage.",
+          "start": 33.175,
+          "duration": 5.325
+        }
+      ]
+    },
+    "knights": {
+      "src": "/voice/books/kerr/knights.m4a?v=coach-bella-1",
+      "duration": 44.4,
+      "scriptSha256": "6c0446c07da812ecb43191165f99e5b87915745c5f94a1ceb84d6ce0cccb9f8a",
+      "cues": [
+        {
+          "text": "Starting behind",
+          "start": 0.0,
+          "duration": 1.9
+        },
+        {
+          "text": "Sam began playing soccer as a junior at the Western Knights, in Mosman Park.",
+          "start": 1.9,
+          "duration": 5.625
+        },
+        {
+          "text": "Moving from Australian rules football to soccer was not easy, and she faced some struggles along the way.",
+          "start": 7.525,
+          "duration": 7.35
+        },
+        {
+          "text": "But she kept going, and played three years with the Knights.",
+          "start": 14.875,
+          "duration": 3.925
+        },
+        {
+          "text": "Lift the flap to see who noticed.",
+          "start": 18.8,
+          "duration": 2.525
+        },
+        {
+          "text": "At thirteen, Sam was spotted by Bobby Despotovski, a striker for Perth Glory.",
+          "start": 21.325,
+          "duration": 6.275
+        },
+        {
+          "text": "He called her athleticism and raw talent exceptional.",
+          "start": 27.6,
+          "duration": 4.225
+        },
+        {
+          "text": "At fifteen, she played for Perth Glory, the youngest player ever in her league, and for Australia too.",
+          "start": 31.825,
+          "duration": 6.95
+        },
+        {
+          "text": "Feeling behind at the start is normal. Keep practising, and people will notice.",
+          "start": 38.775,
+          "duration": 5.55
+        }
+      ]
+    },
+    "surgery": {
+      "src": "/voice/books/kerr/surgery.m4a?v=coach-bella-1",
+      "duration": 37.2,
+      "scriptSha256": "2bfd02f2774bc8c80611568ef0edd523e1734764539ffe68c137edafb3b2266a",
+      "cues": [
+        {
+          "text": "Hurt before the World Cup",
+          "start": 0.0,
+          "duration": 2.275
+        },
+        {
+          "text": "In December 2014, Sam hurt her knee and needed an operation.",
+          "start": 2.275,
+          "duration": 5.4
+        },
+        {
+          "text": "The World Cup in Canada was only months away.",
+          "start": 7.675,
+          "duration": 3.75
+        },
+        {
+          "text": "Turn the calendar pages.",
+          "start": 11.425,
+          "duration": 2.225
+        },
+        {
+          "text": "Sam worked hard with a fitness coach, Aaron Holt, to recover.",
+          "start": 13.65,
+          "duration": 4.625
+        },
+        {
+          "text": "She was ready in time, and she was Australia\u2019s starting striker in their first World Cup match.",
+          "start": 18.275,
+          "duration": 6.2
+        },
+        {
+          "text": "She helped Australia beat Nigeria 2\u20130, and later the team beat Brazil 1\u20130 and reached the quarter-finals.",
+          "start": 24.475,
+          "duration": 7.575
+        },
+        {
+          "text": "Getting better takes patience. A good helper and hard work can get you back.",
+          "start": 32.05,
+          "duration": 5.1
+        }
+      ]
+    },
+    "ankle": {
+      "src": "/voice/books/kerr/ankle.m4a?v=coach-bella-1",
+      "duration": 35.9,
+      "scriptSha256": "76576d68c882adf0432574e819bad6788a905ae424c8bc84d5da0a27a6c75164",
+      "cues": [
+        {
+          "text": "A season lost",
+          "start": 0.0,
+          "duration": 1.925
+        },
+        {
+          "text": "Back home with Perth Glory, Sam scored the winning goal in the first game of a new season.",
+          "start": 1.925,
+          "duration": 5.9
+        },
+        {
+          "text": "But it was her only goal that season.",
+          "start": 7.825,
+          "duration": 2.825
+        },
+        {
+          "text": "Her ankle gave way, with nobody even touching her, and the injury kept her out for the rest of the season.",
+          "start": 10.65,
+          "duration": 6.95
+        },
+        {
+          "text": "Roll the sun back up.",
+          "start": 17.6,
+          "duration": 2.175
+        },
+        {
+          "text": "The next season, Sam came back and scored ten goals.",
+          "start": 19.775,
+          "duration": 4.1
+        },
+        {
+          "text": "She led Perth to the Grand Final, and she won the Julie Dolan Medal, one of the biggest awards in her league.",
+          "start": 23.875,
+          "duration": 7.25
+        },
+        {
+          "text": "A lost season is not a lost dream. You can come back stronger.",
+          "start": 31.125,
+          "duration": 4.75
+        }
+      ]
+    },
+    "homecup": {
+      "src": "/voice/books/kerr/homecup.m4a?v=coach-bella-1",
+      "duration": 40.8,
+      "scriptSha256": "a4aaa75f9376b926586b8c72646e09e7d15fe82eb74f08699d18e15820d8b3c7",
+      "cues": [
+        {
+          "text": "Watching and waiting",
+          "start": 0.0,
+          "duration": 1.95
+        },
+        {
+          "text": "In 2023, the World Cup came to Australia, and Sam was the team\u2019s captain.",
+          "start": 1.95,
+          "duration": 6.4
+        },
+        {
+          "text": "But a calf injury kept her out of the first match, and then out of all three group games, while her teammates played on.",
+          "start": 8.35,
+          "duration": 7.8
+        },
+        {
+          "text": "Open the tunnel gate.",
+          "start": 16.15,
+          "duration": 2.05
+        },
+        {
+          "text": "Sam came on as a substitute against Denmark, and scored in the penalty shootout against France.",
+          "start": 18.2,
+          "duration": 6.575
+        },
+        {
+          "text": "In the semi-final against England, she scored a goal praised as one of the best of the tournament.",
+          "start": 24.775,
+          "duration": 6.225
+        },
+        {
+          "text": "Australia lost 3\u20131, but they had reached their first World Cup semi-final.",
+          "start": 31.0,
+          "duration": 5.55
+        },
+        {
+          "text": "Cheering for your team while you wait is part of being a team.",
+          "start": 36.55,
+          "duration": 4.2
+        }
+      ]
+    },
+    "acl": {
+      "src": "/voice/books/kerr/acl.m4a?v=coach-bella-1",
+      "duration": 39.9,
+      "scriptSha256": "5ef5fb809f7c2a5b64d8a0b6102ae17aecac6512a7560d2b702646259b5f0e43",
+      "cues": [
+        {
+          "text": "Back from the big injury",
+          "start": 0.0,
+          "duration": 2.175
+        },
+        {
+          "text": "In January 2024, at a training camp in Morocco, Sam badly hurt her knee.",
+          "start": 2.175,
+          "duration": 6.425
+        },
+        {
+          "text": "It was an ACL injury, and it kept her out for the rest of the season, and for a long time after that.",
+          "start": 8.6,
+          "duration": 7.05
+        },
+        {
+          "text": "Twenty months passed before she played again.",
+          "start": 15.65,
+          "duration": 3.25
+        },
+        {
+          "text": "Fill the comeback bar.",
+          "start": 18.9,
+          "duration": 2.2
+        },
+        {
+          "text": "On 14 September 2025, Sam finally returned for Chelsea.",
+          "start": 21.1,
+          "duration": 5.675
+        },
+        {
+          "text": "She came on in the seventy-fifth minute, and in the ninety-third minute she scored her hundredth goal for the club.",
+          "start": 26.775,
+          "duration": 6.825
+        },
+        {
+          "text": "Big setbacks can take a long time to heal. Keep going, and your comeback can be special.",
+          "start": 33.6,
+          "duration": 6.275
+        }
+      ]
+    }
+  }
+}

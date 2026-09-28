@@ -1,0 +1,398 @@
+{
+ "voice": "kokoro_af_bella",
+ "speed": 1.0,
+ "chapters": [
+  {
+   "label": "Maracan\u00e3, 2014",
+   "text": "Rio de Janeiro, 2014, the World Cup. Colombia play Uruguay at the Maracan\u00e3. The ball is headed to Rodr\u00edguez... chest, turn, volley! Off the crossbar and in!",
+   "src": "/plays/narration/james-volley-2014/1.m4a",
+   "seconds": 12.4,
+   "words": [
+    {
+     "w": "Rio",
+     "at": 0.425
+    },
+    {
+     "w": "de",
+     "at": 0.725
+    },
+    {
+     "w": "Janeiro",
+     "at": 0.85
+    },
+    {
+     "w": "2014",
+     "at": 1.5
+    },
+    {
+     "w": "the",
+     "at": 2.4
+    },
+    {
+     "w": "World",
+     "at": 2.525
+    },
+    {
+     "w": "Cup",
+     "at": 2.888
+    },
+    {
+     "w": "Colombia",
+     "at": 3.763
+    },
+    {
+     "w": "play",
+     "at": 4.3
+    },
+    {
+     "w": "Uruguay",
+     "at": 4.588
+    },
+    {
+     "w": "at",
+     "at": 5.088
+    },
+    {
+     "w": "the",
+     "at": 5.162
+    },
+    {
+     "w": "Maracan\u00e3",
+     "at": 5.25
+    },
+    {
+     "w": "The",
+     "at": 6.225
+    },
+    {
+     "w": "ball",
+     "at": 6.35
+    },
+    {
+     "w": "is",
+     "at": 6.7
+    },
+    {
+     "w": "headed",
+     "at": 6.85
+    },
+    {
+     "w": "to",
+     "at": 7.15
+    },
+    {
+     "w": "Rodr\u00edguez",
+     "at": 7.275
+    },
+    {
+     "w": "chest",
+     "at": 8.525
+    },
+    {
+     "w": "turn",
+     "at": 9.088
+    },
+    {
+     "w": "volley",
+     "at": 9.475
+    },
+    {
+     "w": "Off",
+     "at": 10.088
+    },
+    {
+     "w": "the",
+     "at": 10.312
+    },
+    {
+     "w": "crossbar",
+     "at": 10.4
+    },
+    {
+     "w": "and",
+     "at": 10.975
+    },
+    {
+     "w": "in",
+     "at": 11.1
+    }
+   ]
+  },
+  {
+   "label": "Watch it again",
+   "text": "Watch again. His back is to the goal, but first he takes a quick look over his shoulder. Now he knows where the goal is.",
+   "src": "/plays/narration/james-volley-2014/2.m4a",
+   "seconds": 8.1,
+   "words": [
+    {
+     "w": "Watch",
+     "at": 0.4
+    },
+    {
+     "w": "again",
+     "at": 0.675
+    },
+    {
+     "w": "His",
+     "at": 1.475
+    },
+    {
+     "w": "back",
+     "at": 1.675
+    },
+    {
+     "w": "is",
+     "at": 2.0
+    },
+    {
+     "w": "to",
+     "at": 2.15
+    },
+    {
+     "w": "the",
+     "at": 2.237
+    },
+    {
+     "w": "goal",
+     "at": 2.337
+    },
+    {
+     "w": "but",
+     "at": 2.875
+    },
+    {
+     "w": "first",
+     "at": 3.062
+    },
+    {
+     "w": "he",
+     "at": 3.388
+    },
+    {
+     "w": "takes",
+     "at": 3.475
+    },
+    {
+     "w": "a",
+     "at": 3.712
+    },
+    {
+     "w": "quick",
+     "at": 3.788
+    },
+    {
+     "w": "look",
+     "at": 4.062
+    },
+    {
+     "w": "over",
+     "at": 4.263
+    },
+    {
+     "w": "his",
+     "at": 4.438
+    },
+    {
+     "w": "shoulder",
+     "at": 4.612
+    },
+    {
+     "w": "Now",
+     "at": 5.575
+    },
+    {
+     "w": "he",
+     "at": 5.85
+    },
+    {
+     "w": "knows",
+     "at": 5.975
+    },
+    {
+     "w": "where",
+     "at": 6.325
+    },
+    {
+     "w": "the",
+     "at": 6.463
+    },
+    {
+     "w": "goal",
+     "at": 6.55
+    },
+    {
+     "w": "is",
+     "at": 6.838
+    }
+   ]
+  },
+  {
+   "label": "Chest and volley",
+   "text": "From behind the goal. He cushions it on his chest, spins, and volleys with his left foot. It dips over the keeper's fingertips!",
+   "src": "/plays/narration/james-volley-2014/3.m4a",
+   "seconds": 8.8,
+   "words": [
+    {
+     "w": "From",
+     "at": 0.35
+    },
+    {
+     "w": "behind",
+     "at": 0.5
+    },
+    {
+     "w": "the",
+     "at": 0.912
+    },
+    {
+     "w": "goal",
+     "at": 1.0
+    },
+    {
+     "w": "He",
+     "at": 1.825
+    },
+    {
+     "w": "cushions",
+     "at": 1.988
+    },
+    {
+     "w": "it",
+     "at": 2.425
+    },
+    {
+     "w": "on",
+     "at": 2.513
+    },
+    {
+     "w": "his",
+     "at": 2.612
+    },
+    {
+     "w": "chest",
+     "at": 2.8
+    },
+    {
+     "w": "spins",
+     "at": 3.475
+    },
+    {
+     "w": "and",
+     "at": 4.075
+    },
+    {
+     "w": "volleys",
+     "at": 4.213
+    },
+    {
+     "w": "with",
+     "at": 4.737
+    },
+    {
+     "w": "his",
+     "at": 4.838
+    },
+    {
+     "w": "left",
+     "at": 5.0
+    },
+    {
+     "w": "foot",
+     "at": 5.287
+    },
+    {
+     "w": "It",
+     "at": 6.075
+    },
+    {
+     "w": "dips",
+     "at": 6.25
+    },
+    {
+     "w": "over",
+     "at": 6.487
+    },
+    {
+     "w": "the",
+     "at": 6.688
+    },
+    {
+     "w": "keeper's",
+     "at": 6.775
+    },
+    {
+     "w": "fingertips",
+     "at": 7.2
+    }
+   ]
+  },
+  {
+   "label": "Chest, turn, volley",
+   "text": "Cushion the ball on your chest, turn, and volley it before it touches the ground!",
+   "src": "/plays/narration/james-volley-2014/4.m4a",
+   "seconds": 5.8,
+   "words": [
+    {
+     "w": "Cushion",
+     "at": 0.35
+    },
+    {
+     "w": "the",
+     "at": 0.688
+    },
+    {
+     "w": "ball",
+     "at": 0.775
+    },
+    {
+     "w": "on",
+     "at": 1.087
+    },
+    {
+     "w": "your",
+     "at": 1.188
+    },
+    {
+     "w": "chest",
+     "at": 1.337
+    },
+    {
+     "w": "turn",
+     "at": 2.138
+    },
+    {
+     "w": "and",
+     "at": 2.825
+    },
+    {
+     "w": "volley",
+     "at": 2.962
+    },
+    {
+     "w": "it",
+     "at": 3.325
+    },
+    {
+     "w": "before",
+     "at": 3.438
+    },
+    {
+     "w": "it",
+     "at": 3.737
+    },
+    {
+     "w": "touches",
+     "at": 3.825
+    },
+    {
+     "w": "the",
+     "at": 4.188
+    },
+    {
+     "w": "ground",
+     "at": 4.275
+    }
+   ]
+  }
+ ]
+}
