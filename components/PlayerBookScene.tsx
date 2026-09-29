@@ -12,7 +12,9 @@ import styles from './PlayerPopUpBook.module.css';
 export type BookClock=()=>{time:number;duration:number;playing:boolean;cueIndex:number;cueCount:number};
 type Props={book:BookData;bookId:string;spreads:Record<string,SpreadDef>;pageIndex:number;progress:number;onTurning?:(busy:boolean)=>void;clock:BookClock;narrationTime:number;narrationStarted:boolean;narrationPlaying:boolean;closing?:boolean;onClosed?:()=>void;label:string};
 const OPEN_MS=2100,TURN_MS=3000,CLOSE_MS=600,ACTION_MS=900;
-type Transition={kind:'open'|'close'|'turn';start:number;dur:number;from?:number;to?:number;forward?:boolean;done?:()=>void};
+/** easeTurn value from which the leaf is treated as landed (within ~3.6° of the page). */
+const LANDING=.98;
+type Transition={kind:'open'|'close'|'turn';start:number;dur:number;from?:number;to?:number;forward?:boolean;focusFrom?:number;done?:()=>void};
 
 function coverArt(title:string,subtitle:string){return paintSheet(PAGE_W+.1,PAGE_D+.2,110,k=>{
  const w=PAGE_W+.1,h=PAGE_D+.2;k.fill(`M0 0 L${w} 0 L${w} ${h} L0 ${h} Z`,INK.navy);k.dots(`M0 0 L${w} 0 L${w} ${h} L0 ${h} Z`,INK.blue,.06,(x,y)=>.2+.25*Math.sin(x*.9+y*.4));
@@ -79,7 +81,7 @@ export default function PlayerBookScene(props:Props){
   const spreads=new Map<number,Spread>();
   const ensure=(i:number)=>{let s=spreads.get(i);if(!s){const id=live.current.book.pages[i].id;const page=live.current.book.pages[i],t0=performance.now();s=buildSpread(live.current.spreads[id]??genericSpread(live.current.bookId,page,i),cache);el.dataset.buildMs=String(Math.round(performance.now()-t0));spreads.set(i,s);scene.add(s.group);}return s;};
   const trim=(keep:number[])=>{for(const [i,s] of spreads)if(!keep.includes(i)){s.dispose();spreads.delete(i);}};
-  let shown=live.current.pageIndex,renderCount=0,raf=0,last=0,disposed=false,transition:Transition|null=null,prefetch=0,closed=false;
+  let shown=live.current.pageIndex,heading=1,renderCount=0,raf=0,last=0,disposed=false,transition:Transition|null=null,prefetch=0,closed=false;
   const lastBeat=new Map<number,Beat>(),rest=(s?:Spread):Beat=>({t:s?.rest??0,duration:0,action:0,playing:false,narrated:false});
   let action=live.current.progress,actionFrom=action,actionTo=action,actionStart=0;
   // Set when the reader taps the page action while Coach Bella isn't speaking (e.g. after the story has finished). The pose
@@ -124,7 +126,11 @@ export default function PlayerBookScene(props:Props){
   const view={dir:new THREE.Vector3(),full:{target:new THREE.Vector3(),dist:10},zoom:{target:new THREE.Vector3(),dist:10},pan:0,focus:0};
   const aimTarget=new THREE.Vector3();
   const aim=(f:number)=>{view.focus=f;const k=smooth(Math.min(1,Math.abs(f))),dist=view.full.dist+(view.zoom.dist-view.full.dist)*k;aimTarget.lerpVectors(view.full.target,view.zoom.target,k);aimTarget.x=f*view.pan;camera.position.copy(aimTarget).addScaledVector(view.dir,dist);camera.lookAt(aimTarget);};
-  const draw=()=>{if(disposed||document.hidden)return;renderer.render(scene,camera);el.dataset.renderCount=String(++renderCount);el.dataset.drawCalls=String(renderer.info.render.calls);el.dataset.textures=String(renderer.info.memory.textures);el.dataset.triangles=String(renderer.info.render.triangles);};
+  const draw=()=>{if(disposed||document.hidden)return;renderer.render(scene,camera);el.dataset.renderCount=String(++renderCount);el.dataset.drawCalls=String(renderer.info.render.calls);el.dataset.textures=String(renderer.info.memory.textures);el.dataset.triangles=String(renderer.info.render.triangles);
+   // Test-only frame trace (browser scripts install window.__bookTrace); nothing runs without it.
+   const trace=(window as Window&{__bookTrace?:(f:object)=>void}).__bookTrace;
+   if(trace){const tr=transition;trace({now:performance.now(),start:tr?.start??0,kind:tr?.kind??'idle',k:tr?clamp01((performance.now()-tr.start)/tr.dur):1,shown,cam:camera.position.toArray(),fov:camera.fov,focus:view.focus,leaf:leafF.visible,
+    spreads:[...spreads].map(([i,s])=>({i,visible:s.group.visible})),canvas:[renderer.domElement.width,renderer.domElement.height],dpr:renderer.getPixelRatio(),canvasEl:renderer.domElement});}};
   const setLeaf=(front?:THREE.Texture,back?:THREE.Texture)=>{leafFrontMat.map=front??null;leafBackMat.map=back??null;leafFrontMat.needsUpdate=leafBackMat.needsUpdate=true;};
   const setPages=(left:THREE.Texture,right:THREE.Texture)=>{if(leftMat.map!==left){leftMat.map=left;leftMat.needsUpdate=true;}if(rightMat.map!==right){rightMat.map=right;rightMat.needsUpdate=true;}};
   const hideAllBut=(vis:Spread[])=>{for(const s of spreads.values())s.group.visible=vis.includes(s);};
@@ -144,11 +150,21 @@ export default function PlayerBookScene(props:Props){
     const pop=smooth(clamp01((e-.2)/.8));s.group.visible=e>.2;
     s.pose(beatFor(shown));aim(0);s.place({surface:rigidSurface(tau),back:true},{surface:RIGHT_FLAT,back:false},pop);return;}
    // Turning: the leaf is the right page of the left spread and the left page of the right spread.
-   const L=ensure(tr.forward?tr.from!:tr.to!),R=ensure(tr.forward?tr.to!:tr.from!);hideAllBut([L,R]);leftBlock.rotation.z=0;
+   const L=ensure(tr.forward?tr.from!:tr.to!),R=ensure(tr.forward?tr.to!:tr.from!);leftBlock.rotation.z=0;
    const e=easeTurn(k),a=Math.PI*(tr.forward?e:1-e);
    const curl=(tr.forward?-1:1)*.95*Math.sin(a)*Math.min(1,k*4,(1-k)*4+.2);
-   const leaf=leafSurface(a,curl);shapeLeaf(leaf);leafF.visible=leafB.visible=true;setLeaf(L.rightTex,R.leftTex);setPages(L.leftTex,R.rightTex);
-   aim(view.focus*(1-smooth(k*3)));const fromS=tr.forward?L:R,toS=tr.forward?R:L;fromS.pose(lastBeat.get(tr.from!)??rest(fromS));toS.pose(rest(toS));
+   const fromS=tr.forward?L:R,toS=tr.forward?R:L;
+   // Landing (the last ~3.6° of the sweep): the old scenery lies flat under the descending leaf, and its brad arms and
+   // flaps (≈0.013 above the page) poked through the leaf for the final frames, then vanished when the turn ended. Once
+   // the leaf is this close it covers that page, so the old pieces go and the page beneath takes the new print now.
+   const landing=e>=LANDING;hideAllBut(landing?[toS]:[L,R]);
+   const leaf=leafSurface(a,curl);shapeLeaf(leaf);leafF.visible=leafB.visible=true;setLeaf(L.rightTex,R.leftTex);
+   setPages(landing&&tr.forward?R.leftTex:L.leftTex,landing&&!tr.forward?L.rightTex:R.rightTex);
+   fromS.pose(lastBeat.get(tr.from!)??rest(fromS));
+   // The new spread is posed exactly as it will settle (its action state included), and the camera eases from the old
+   // page's focus to the whole spread and then on to the new page's settled focus, so nothing snaps when the turn ends.
+   const settled=toS.pose(beatFor(shown)),to=typeof settled==='number'?settled:0;
+   aim((tr.focusFrom??0)*(1-smooth(k/.34))+to*smooth((k-.66)/.34));
    // Choreography: the old scenery folds away first (layer by layer), the page sweeps, then the new scene unfolds.
    const fold=1-smooth(k/.3),unfold=smooth((k-.6)/.4);
    const openL=Math.min((Math.PI-a)/Math.PI,tr.forward?fold:unfold),openR=Math.min(a/Math.PI,tr.forward?unfold:fold);
@@ -165,13 +181,19 @@ export default function PlayerBookScene(props:Props){
   const begin=(t:Transition)=>{if(transition){const done=transition.done;transition=null;done?.();}
    if(reduced()){t.done?.();compose(performance.now());draw();live.current.onTurning?.(false);schedulePrefetch();return;}
    transition=t;t.start=performance.now();el.dataset.transition='moving';live.current.onTurning?.(true);wake();};
-  const schedulePrefetch=()=>{cancelPrefetch();const run=()=>{prefetch=0;if(disposed||transition)return;const next=shown+1<live.current.book.pages.length?shown+1:-1;trim(next>=0?[shown,next]:[shown]);if(next>=0&&!spreads.has(next)){ensure(next).group.visible=false;}};
+  const schedulePrefetch=()=>{cancelPrefetch();const run=()=>{prefetch=0;if(disposed||transition)return;
+    // One neighbour only: the next page, or the previous one after a backward turn (the way the reader is heading).
+    const n=live.current.book.pages.length,next=heading<0&&shown>0?shown-1:shown+1<n?shown+1:-1;trim(next>=0?[shown,next]:[shown]);
+    // Build it now, and upload its textures now too: an unrendered prefetched spread used to upload every plate on the
+    // turn's first frame (a ~0.9 s stall on WebKit that skipped the fold-away).
+    if(next>=0&&!spreads.has(next)){const s=ensure(next);s.group.visible=false;upload(s);}};
    const w=window as Window&{requestIdleCallback?:(f:()=>void,o?:{timeout:number})=>number};prefetch=w.requestIdleCallback?w.requestIdleCallback(run,{timeout:1500}):window.setTimeout(run,400);};
+  const upload=(s:Spread)=>{const seen=new Set<THREE.Texture>([s.leftTex,s.rightTex]);s.group.traverse(o=>{const m=(o as THREE.Mesh).material as THREE.MeshLambertMaterial|undefined;if(m&&!Array.isArray(m)&&m.map)seen.add(m.map);});for(const t of seen)renderer.initTexture(t);};
   const cancelPrefetch=()=>{if(!prefetch)return;const w=window as Window&{cancelIdleCallback?:(n:number)=>void};if(w.cancelIdleCallback)w.cancelIdleCallback(prefetch);else clearTimeout(prefetch);prefetch=0;};
   api.current={
    wake:()=>{const p=live.current.progress;if(p!==actionTo){if(!live.current.narrationPlaying)tapped=true;actionFrom=action;actionTo=p;actionStart=reduced()?0:performance.now();if(reduced())action=p;}wake();},
-   goto:i=>{if(i===shown)return;const from=shown,forward=i>from;cancelPrefetch();ensure(i);trim([from,i]);shown=i;tapped=false;action=live.current.progress;actionTo=action;actionStart=0;
-    begin({kind:'turn',start:0,dur:TURN_MS,from,to:i,forward,done:()=>{trim([i]);}});},
+   goto:i=>{if(i===shown)return;const from=shown,forward=i>from;heading=forward?1:-1;cancelPrefetch();upload(ensure(i));trim([from,i]);shown=i;tapped=false;action=live.current.progress;actionTo=action;actionStart=0;
+    begin({kind:'turn',start:0,dur:TURN_MS,from,to:i,forward,focusFrom:view.focus,done:()=>{trim([i]);}});},
    close:done=>{cancelPrefetch();closed=true;begin({kind:'close',start:0,dur:CLOSE_MS,done});},
   };
   const observer=new ResizeObserver(fit);observer.observe(el);

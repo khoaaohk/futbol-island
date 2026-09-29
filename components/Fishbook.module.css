@@ -54,3 +54,11 @@
 :global(.town-app):has(.dialog[open]) :global(.touch-controls),
 :global(.town-app):has(.dialog[open]) :global([data-fishing-hud]),
 :global(.town-app):has(.dialog[open]) :global([data-fish-catch]){visibility:hidden!important;pointer-events:none!important}
+/* Spot sections (shared species, then each spot's specials). Not-yet-caught cards are compact rows. */
+.spot{display:flex;flex-direction:column;gap:10px}
+.spotTitle{margin:6px 2px 0;font-family:IslandBrush,sans-serif;font-weight:400;font-size:24px;color:#fff2cd;display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.spotTitle small{font-family:system-ui,sans-serif;font-size:13px;font-weight:800;color:#fff2cd;white-space:nowrap;flex-shrink:0}
+.found{font-weight:700;color:#244d40!important}
+.grid li[data-caught=false]{display:grid;grid-template-columns:auto 1fr;column-gap:14px;align-items:center;padding:10px 16px}
+.grid li[data-caught=false] svg{grid-row:span 3;width:68px;height:auto}
+.grid li[data-caught=false] h3{font-size:16px;margin:0}

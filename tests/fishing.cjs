@@ -19,23 +19,51 @@ const lcg=seed=>()=>{seed=(seed*1664525+1013904223)>>>0;return seed/2**32;};
 const e=environment();
 const cat=e.load('lib/town/fishing/fishCatalog.ts'),core=e.load('lib/town/fishing/fishingCore.ts');
 const {FISH,FISH_SPOTS,KEEPER_LESSONS,RARITY_LABEL,MARKET_STAND,fishById}=cat;
+const straight=(r,f)=>{const pts=[];for(let i=0;i<=8;i++)pts.push({x:3-(3-cat.SHADOW_LENGTH[f.shadow]*.5-.05)*i/8,z:0});return {points:pts,circles:false,angle:0};};
+const spawn={approach:straight,out:{x:1,z:0}};
 
 // ---- Catalogue + football facts ----
-assert(FISH.length>=8&&FISH.length<=12,'8-12 species');
+assert(FISH.length>=10&&FISH.length<=60,'10 shared species + up to 50 spot specials');assert(FISH.every(f=>f.group!=='shark'||(core.reelRange(f)[0]===10&&core.reelRange(f)[1]===14)),'every shark, whatever its rarity, needs 10-14 taps');
 assert.equal(new Set(FISH.map(f=>f.id)).size,FISH.length,'unique ids');
+const SPOT_IDS=FISH_SPOTS.map(s=>s.id),PRICE={common:[2,4],uncommon:[4,7],rare:[8,11],legendary:[12,20]};
 for(const f of FISH){
- assert(f.club&&f.club.name&&f.club.fact.length>30&&f.club.fact.length<200,`${f.id}: one-line club fact`);
+ // Every species: a sourced football story, a spot and a rarity (user, Sep 28 2026).
+ assert(f.club&&f.club.name&&f.club.fact.length>30&&f.club.fact.length<=230,`${f.id}: one-line club fact`);
  assert(/^https:\/\//.test(f.club.source),`${f.id}: cited source`);
- assert(['Nickname','Port city','Fan culture','Football culture'].includes(f.club.link),`${f.id}: link kind`);
- assert(Number.isInteger(f.price)&&f.price>=2&&f.price<=12,`${f.id}: price in the jobs economy range`);
+ for(const u of f.club.sources??[])assert(/^https:\/\//.test(u),`${f.id}: extra sources are URLs`);
+ assert(['Nickname','Port city','Fan culture','Football culture','Crest','Mascot','Club name'].includes(f.club.link),`${f.id}: link kind`);
+ assert(['common','uncommon','rare','legendary'].includes(f.rarity),`${f.id}: rarity`);
+ assert(Array.isArray(f.spots)&&f.spots.length>=1&&f.spots.every(id=>SPOT_IDS.includes(id)),`${f.id}: lives at a real spot`);
+ assert(Number.isInteger(f.price)&&f.price>=PRICE[f.rarity][0]&&f.price<=PRICE[f.rarity][1],`${f.id}: price ${f.price} fits its rarity`);
  assert(f.size[0]>0&&f.size[1]>f.size[0],`${f.id}: size range`);
  assert(FISH_SPOTS.some(s=>f.id in s.weights),`${f.id}: catchable somewhere`);
+ assert(f.group&&f.shape&&cat.SHADOW_LENGTH[f.shadow],`${f.id}: group, art shape and shadow size`);
 }
+// Spot-exclusive specials: at most 10 per spot, each only at its own spot, and every spot has its own.
+const exclusives=FISH.filter(cat.isExclusive);
+for(const s of FISH_SPOTS){const own=exclusives.filter(f=>f.spots[0]===s.id);assert(own.length>=1&&own.length<=10,`${s.id}: 1-10 specials (${own.length})`);}
+assert(new Set(FISH.map(f=>f.club.name+'|'+f.name)).size===FISH.length,'no duplicate stories');
+assert.equal(FISH.filter(f=>/Paul the Octopus/.test(f.club.name)).length,1,'Paul the Octopus appears once');
+assert(FISH.filter(f=>f.group==='shark').length>=4,'sharks are included');
+// User decision (Sep 28 2026): no marine mammals or reptiles at all, not even release-only. Explicit denylist of kinds.
+const DENIED_KINDS=['dolphin','porpoise','whale','orca','seal','sea-lion','walrus','otter','manatee','dugong','turtle','tortoise','crocodile','alligator','iguana','snake','mammal','reptile'];
+const DENIED_NAMES=/\b(dolphins?|porpoises?|orcas?|seals?|sea lions?|walrus|otters?|manatees?|dugongs?|turtles?|tortoises?|crocodiles?|iguanas?|sea snakes?)\b|\bwhales?\b(?! shark)/i;
+for(const f of FISH){
+ assert(!DENIED_KINDS.includes(f.group)&&!DENIED_KINDS.includes(f.shape),`${f.id}: not a mammal or reptile (group ${f.group}, shape ${f.shape})`);
+ assert(!DENIED_NAMES.test(f.name)&&!DENIED_NAMES.test(f.id.replace(/-/g,' ')),`${f.id}: name is not a mammal or reptile`);
+}
+assert(['fish','shark','ray','eel','seahorse','crab','lobster','shellfish','octopus'].every(Boolean)&&FISH.every(f=>['fish','shark','ray','eel','seahorse','crab','lobster','shellfish','octopus'].includes(f.group)),'only fish and a few crustaceans, shellfish and the octopus');
+{const fishArt=fs.readFileSync(path.join(ROOT,'components/FishArt.tsx'),'utf8');for(const k of ['dolphin','whale','turtle','seal','dugong'])assert(!new RegExp(`case '${k}'`).test(fishArt),`FishArt has no ${k} art`);}
+// Big animals pay more, but the economy stays sane (docs/island-jobs.md: welcome 40, packs 40/60, books 100).
+assert(Math.max(...FISH.map(f=>f.price))<=20,'no catch pays more than 20 coins');
 for(const s of FISH_SPOTS){assert(Object.keys(s.weights).every(id=>fishById(id)),`${s.id}: valid species`);assert(s.story,'island story text');}
 assert(FISH_SPOTS.length>=4&&FISH_SPOTS.length<=6,'4-6 fishing spots');
 // Kid safety: no odds or percentages anywhere the player reads.
-const shown=[...Object.values(RARITY_LABEL),...FISH.flatMap(f=>[f.name,f.club.fact]),...Object.values(KEEPER_LESSONS).flatMap(l=>[l.title,l.text]),...FISH_SPOTS.map(s=>s.story)];
-assert(shown.every(t=>!/%|percent|chance|odds/i.test(t)),'no odds shown');
+const sessionMod=e.load('lib/town/fishing/fishingSession.ts');
+const shown=[...Object.values(RARITY_LABEL),...Object.values(cat.SHADOW_LABEL),...FISH.flatMap(f=>[f.name,f.plural,f.club.fact,f.club.name,f.club.nickname??'',f.club.credit??'']),...Object.values(KEEPER_LESSONS).flatMap(l=>[l.title,l.text]),...FISH_SPOTS.flatMap(s=>[s.story,s.name]),sessionMod.PULL_HINT];
+assert(shown.every(t=>!/%|percent|chance|odds|probab|\b1 in \d/i.test(t)),'no odds or percentages shown');
+for(const f of ['components/FishingHost.tsx','components/Fishbook.tsx','components/MarketStand.tsx']){const src=fs.readFileSync(path.join(ROOT,f),'utf8');
+ assert(!/\*\s*100|percent|%\s*[<'"`]|\bodds\b|RARITY_WEIGHT|\.weights\b/.test(src),`${f}: shows no odds, weights or percentages`);}
 assert(/sciencedirect/.test(KEEPER_LESSONS.nibble.source),'the nibble (patience) lesson cites Bar-Eli et al.');
 // Kid safety (user, Sep 27 2026): the kid-facing fishing + market UI shows no clickable external links. Sources stay in the data
 // (asserted above) and docs; the Fishbook shows a plain-text credit only.
@@ -45,10 +73,44 @@ for(const f of ['components/FishingHost.tsx','components/Fishbook.tsx','componen
  assert(!/href=/.test(src),`${f}: no hrefs`);
  assert(!/window\.open\(|target="_blank"/.test(src),`${f}: no external navigation`);
 }
-assert(/Source: \{host\(f\.club\.source\)\}/.test(fs.readFileSync(path.join(ROOT,'components/Fishbook.tsx'),'utf8')),'Fishbook keeps a plain-text source credit');
+assert(/Source: \{credit\(f\)\}/.test(fs.readFileSync(path.join(ROOT,'components/Fishbook.tsx'),'utf8')),'Fishbook keeps a plain-text source credit');
+assert(/Found at/.test(fs.readFileSync(path.join(ROOT,'components/Fishbook.tsx'),'utf8')),'Fishbook shows where each species lives');
 // Specific verified facts stay precise (see docs/fishing.md).
 assert(/8 out of 8/.test(fishById('octopus').club.fact));assert(/1989/.test(fishById('haddock').club.fact));assert(/first French club/.test(fishById('sea-bass').club.fact));assert(/Europe's biggest/.test(fishById('mackerel').club.fact));
-assert(Math.max(...FISH.map(f=>f.price))===fishById('octopus').price,'octopus is the priciest item');
+
+
+// ---- Catch rolls: weighted per spot, commons first (10k simulated casts per spot) ----
+const TIERS=['common','uncommon','rare','legendary'];
+for(const s of FISH_SPOTS){const rand=lcg(11+s.id.length),n={},tier={common:0,uncommon:0,rare:0,legendary:0};
+ for(let i=0;i<10000;i++){const id=core.rollCatch(s,rand());n[id]=(n[id]??0)+1;tier[fishById(id).rarity]++;}
+ for(const id of Object.keys(n)){const f=fishById(id);assert(f.spots.includes(s.id),`${s.id}: ${id} lives here`);}
+ for(const f of exclusives)if(f.spots[0]!==s.id)assert(!n[f.id],`${f.id} is only caught at ${f.spots[0]}, never at ${s.id}`);
+ const present=TIERS.filter(t=>FISH.some(f=>f.rarity===t&&f.spots.includes(s.id)));
+ for(let i=1;i<present.length;i++)assert(tier[present[i-1]]>tier[present[i]],`${s.id}: ${present[i-1]} (${tier[present[i-1]]}) beat ${present[i]} (${tier[present[i]]})`);
+ // Per species too: each common is met more often than any rare or legendary animal at the same spot.
+ const avg=t=>{const ids=FISH.filter(f=>f.rarity===t&&f.spots.includes(s.id)).map(f=>n[f.id]??0);return ids.length?ids.reduce((a,b)=>a+b,0)/ids.length:null;};
+ const avgs=present.map(avg);for(let i=1;i<avgs.length;i++)assert(avgs[i-1]>avgs[i],`${s.id}: a typical ${present[i-1]} is met more often than a ${present[i]}`);
+ assert(tier.common/10000>.5,`${s.id}: most casts bring a common catch`);
+}
+// Rarer animals are harder in every way: bigger or faster shadows, more taps, shorter bite windows.
+{const rank=f=>TIERS.indexOf(f.rarity),avgLen=t=>{const fs=FISH.filter(f=>f.rarity===t);return fs.reduce((a,f)=>a+cat.SHADOW_LENGTH[f.shadow],0)/fs.length;};
+ assert(avgLen('common')<avgLen('rare')&&avgLen('uncommon')<avgLen('legendary'),'rarer animals cast bigger shadows');
+ for(let i=1;i<TIERS.length;i++){assert(core.SWIM_SPEED[TIERS[i]]>core.SWIM_SPEED[TIERS[i-1]],'rarer is faster');assert(core.BITE_WINDOW[TIERS[i]]<core.BITE_WINDOW[TIERS[i-1]],'rarer bites are shorter');}
+ assert(core.BITE_WINDOW.legendary<core.BITE_WINDOW.common);void rank;}
+// Reel taps scale with the animal: commons 2-3, uncommon 4-5, rare 6-8, legendary and sharks 10-14.
+{const WANT={common:[2,3],uncommon:[4,5],rare:[6,8],legendary:[10,14]};
+ for(const f of FISH){const want=f.group==='shark'?WANT.legendary:WANT[f.rarity],lo=core.reelTapsFor(f,f.size[0]),hi=core.reelTapsFor(f,f.size[1]),mid=core.reelTapsFor(f,(f.size[0]+f.size[1])/2);
+  assert.equal(lo,want[0],`${f.id}: smallest needs ${want[0]} taps`);assert.equal(hi,want[1],`${f.id}: biggest needs ${want[1]} taps`);assert(mid>=lo&&mid<=hi);}
+ for(let i=1;i<TIERS.length;i++)assert(core.REEL_TAPS[TIERS[i]][0]>core.REEL_TAPS[TIERS[i-1]][1],'every tier needs more taps than the one below');}
+// Resistance: big animals pull back during a pause (never below zero); commons never do; tapping stops the pull.
+{const mk=id=>{const s=core.createSession(),f=fishById(id);s.fish={id,size:f.size[1]};s.phase='bite';s.window=1;core.tapSession(s);return s;};
+ const common=FISH.find(f=>f.rarity==='common'),big=FISH.find(f=>f.group==='shark');
+ for(const [f,pulls] of [[common,false],[big,true]]){const s=mk(f.id);const sp=FISH_SPOTS.find(x=>f.spots.includes(x.id));
+  for(let i=0;i<2;i++){for(let k=0;k<2;k++)core.stepSession(s,sp,.1,()=>.5,spawn);core.tapSession(s);}
+  const before=s.reelTaps;const ev=[];for(let i=0;i<18;i++)ev.push(...core.stepSession(s,sp,.1,()=>.5,spawn));
+  if(pulls){assert(s.reelTaps<before&&s.reelTaps>=0,`${f.id} pulls line back during a pause`);assert(ev.includes('pull')&&s.pulling);core.tapSession(s);assert(!s.pulling,'a tap stops the pull');}
+  else{assert.equal(s.reelTaps,before,'commons never pull back');assert(!ev.includes('pull'));}
+  assert.equal(s.phase,'reeling','a pause alone does not lose the fish');}}
 
 // ---- Catch rolls ----
 const pier=FISH_SPOTS[0];assert.equal(core.rollCatch(pier,0),Object.keys(pier.weights)[0]);
@@ -64,8 +126,21 @@ const shore=e.load('lib/town/shoreline.ts');
 for(const s of FISH_SPOTS){const c=core.castPoint(s,s);assert(!shore.onIsland(c.x,c.z),`${s.id}: float lands in the water`);assert(c.distance>3&&c.distance<=30);
  const r=lcg(3);for(let i=0;i<10;i++){const p=core.shadowSpawn(c,r);assert(!shore.onIsland(c.x+p.x,c.z+p.z)||Math.hypot(p.x,p.z)<4,`${s.id}: shadow starts in the water`);}}
 
+// ---- Approaches: a different direction each cast, curved paths, always in the water (user, Sep 28 2026) ----
+for(const s of FISH_SPOTS){const c=core.castPoint(s,s),r=lcg(40+s.id.length),sectors=new Set(),species=FISH.filter(f=>f.spots.includes(s.id));let loops=0,curved=0;
+ for(let i=0;i<50;i++){const f=species[i%species.length],p=core.planApproach(c,r,f);
+  assert(p.points.length>=8,'a route, not a jump');
+  for(const q of p.points)assert(core.inOpenWater(c.x+q.x,c.z+q.z),`${s.id}: ${f.id} route stays in open water`);
+  const last=p.points[p.points.length-1];assert(Math.hypot(last.x,last.z)<=cat.SHADOW_LENGTH[f.shadow]*.5+.06,'ends with its mouth at the float');
+  const a=p.points[0];sectors.add(Math.floor(((Math.atan2(a.x,a.z)+Math.PI*2)%(Math.PI*2))/(Math.PI/4)));
+  if(p.circles)loops++;
+  // Curved: the route bends away from the straight start-to-float line somewhere.
+  const L=Math.hypot(a.x,a.z),off=Math.max(...p.points.map(q=>Math.abs(q.x*a.z-q.z*a.x)/L));if(off>.2)curved++;
+ }
+ assert(sectors.size>=4,`${s.id}: shadows come from ${sectors.size} of 8 compass sectors`);assert(curved>=40,`${s.id}: most routes curve (${curved}/50)`);
+ if(species.some(f=>f.rarity==='legendary'||f.group==='shark'))assert(loops>0,`${s.id}: big or rare animals sometimes circle the float`);}
+
 // ---- Live session: cast -> float -> shadow -> nibbles -> bite -> tap window ----
-const spawn={spawn:()=>({x:3,z:0})};
 const run=(s,spot,rand,until,max=40)=>{const ev=[];for(let t=0;t<max;t+=1/30){ev.push(...core.stepSession(s,spot,1/30,rand,spawn));if(until(s,ev))return ev;}return ev;};
 {const s=core.createSession(),r=lcg(21);assert.equal(core.tapSession(s),'cast');assert.equal(s.phase,'casting');
  const ev=run(s,pier,r,x=>x.phase==='bite');
@@ -178,5 +253,5 @@ assert.equal(MARKET_STAND.z,35,'one stand: the CITRUS & FRUIT stall the jobs sal
 
 for(const hz of [30,60,120]){const s=core.createSession();s.fish={id:'cod',size:40};s.phase='bite';core.tapSession(s);for(let i=0;i<hz*9;i++)core.stepSession(s,pier,1/hz,()=>.5,spawn);assert.notEqual(s.phase,'caught','idle reeling never awards a fish');assert(['escaped','floating'].includes(s.phase));}
 
-console.log(`FISHING_PASS: ${FISH.length} species with cited club facts, ${FISH_SPOTS.length} spots, live bite timing (nibbles, 0.7-1 s window, early = scared, late = escaped, idle reels in), Fishbook persists, sell one/all + soft cap pay the shared wallet`);
+console.log(`FISHING_PASS: ${FISH.length} species with cited club facts (${exclusives.length} spot specials), ${FISH_SPOTS.length} spots, weighted catches (commons first), rarity reel taps + pull-back, varied in-water approaches, live bite timing (nibbles, 0.7-1 s window, early = scared, late = escaped, idle reels in), Fishbook persists, sell one/all + soft cap pay the shared wallet`);
 })().catch(err=>{console.error(err);process.exit(1);});

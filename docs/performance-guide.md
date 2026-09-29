@@ -33,6 +33,12 @@ Five fishing posts, live fishing in the island view, and Rosa's market stand ([d
 
 **Dialogs.** The Fishbook and market stand are lazy dialogs with solid backdrops (no `backdrop-filter`, `tests/heat-pass3.cjs`), and they pause the island like other dialogs.
 
+**Sep 28 2026 expansion (56 species, varied approaches, rarity reeling).** Added runtime cost is only while fishing:
+- `planApproach` runs **once per shadow**, not per frame: at most 24 tries of about 60 open-water point checks (each `onIsland` plus `distanceToShore`, early exit on the first dry point).
+- Per frame the shadow walks along its stored route (a few additions); no new meshes, materials, textures or draws. Shadow sizes come from the existing `SHADOW_LENGTH` scale (one new `giant` size, 1.9 m).
+- While reeling, the world calls `session.handle()` each frame so a pull-back can move the meter; it publishes only when the whole-tap count changes, so the HUD re-renders at most about once a second from a pull, never per frame.
+- Idle away from the water: unchanged (no new per-frame work when not fishing). The Fishbook adds 46 small inline SVGs, rendered only while it is open.
+
 These are reductions in work seen in emulation, not a measured iPhone temperature.
 
 ## Island vending machines — September 27, 2026 (local, not deployed)
@@ -110,6 +116,27 @@ Seven more books share the Messi engine. Nothing new runs while a book is closed
   - zero frames at rest or while paused (browser checks for Messi).
 - **Disposal:** everything is released on close.
 
+## Pop-up book: seamless end of page turn — September 28, 2026 (local, not deployed)
+
+The user saw a glitch at the end of each page turn on an iPhone (Chrome iOS). Per-frame canvas readback in WebKit (iPhone 15) and Chromium showed two causes, both in `components/PlayerBookScene.tsx`:
+- **Old scenery bleeding through the landing leaf.** The old spread lies flat under the descending leaf. Its brad arms and flaps sit about 0.013 above the page, the same height as the leaf's lift, so they poked through the leaf for the last ~100 ms. They vanished on the final frame when the old spread was hidden (final-frame diff 8–23, against about 1 for the frame before).
+  - **Fix:** once the leaf is within ~3.6° of the page (`LANDING`), the old spread is hidden and the page underneath takes the new print. The leaf covers both at that point.
+- **Camera and action snap on a revisited page.** During the turn the new spread was posed at rest with no action. The idle frame then applied the page's action state and camera focus, for example a focus of 0.6 on phones: the frame diff was 129.5 and the camera jumped 5.7 units.
+  - **Fix:** the new spread is now posed with its settled beat throughout the turn. The camera eases from the old page's focus (`focusFrom`) to the whole spread, and then to the new page's settled focus. The old frame-compounding `aim(view.focus*…)` decay is gone.
+
+Two turn-start stalls were also removed:
+- **Music-box phrase.** `lib/books/bookAudio.ts` synthesised the new page's phrase inside the first frames of a turn: ~110 ms in V8 and ~600 ms in WebKit headless. It now uses a phasor recurrence and shared envelopes, which is about 20× faster (~2 ms) with a maximum sample difference of 1.5e-8.
+- **Texture uploads.** Idle prefetch now uploads the prefetched spread's textures with `renderer.initTexture`, so they no longer upload on the first turn frame.
+- **Prefetch direction.** Prefetch picks the neighbour in the reading direction: the previous page after a backward turn. It still keeps at most one neighbour resident.
+
+**Known gap:** the first backward turn after reading forward still builds that spread on tap, before the turn starts, so the turn itself doesn't jump. That build took 1.1–2.3 s in headless WebKit, which uses a software canvas. Safari has no `requestIdleCallback`, so its prefetch uses the 400 ms timeout fallback.
+
+**Test-only trace:** `window.__bookTrace`, when a script installs it, receives per-frame state. Nothing runs without it.
+
+**Heat rules unchanged:** frames are drawn only while paper moves, capped at 30 fps while narrating, and everything is disposed on close.
+
+**Evidence:** frame strips and logs are in the session scratchpad `book-turn-glitch/`. Captures covered WebKit and Chromium at 390×844, 844×390 and 1280×800, across the Messi, Falcão, Marta and Pelé books, turning forward, back, onto a revisited acted page, and while narrating. No end-of-turn spikes remain. Not measured on a physical iPhone.
+
 ## Messi pop-up book: paper engine — September 27, 2026 (local, not deployed)
 
 One WebGL context exists only while the book is open. It uses DPR ≤1.75 on desktop and ≤2 on phones, no tone mapping and no post-processing.
@@ -133,6 +160,8 @@ This is not an iPhone temperature measurement.
 ## Manhole ball hunt — September 25, 2026 (local, not deployed)
 
 Twenty-five football manhole covers, one at every `world.roadJunctions` centre, each hiding a Ball hunt ball (55 → 80) opened only by flying over and dropping onto it (`lib/graphics/manholeCovers.ts`, `coinHunt.ts`, data in `coinQuest.ts`, 25 "from above" lessons in `ballHuntLessons.ts`, tests `tests/manhole-balls.cjs`). **Added runtime cost:** three instanced draws (rims, covers, glints; the glint mesh is hidden unless a flyer is within 45 m of an unfound cover), one baked 128² colour and bump `DataTexture` shared by every cover, receive-only shadows, no colliders. Per frame there is no new loop: arming, glint and hint checks run inside the existing ball-hunt proximity loop, and matrices upload only during a 0.6 s one-shot opening tween or when a glint toggles. The glint mesh has `frustumCulled=false` because its instances start at zero scale. Not measured on an iPhone.
+
+**September 28, 2026 (local, not deployed):** the Sep 26 "walk or ride onto it" shortcut was removed at the user's request. Only a flight drop opens a cover: `land(p,true)` from the jetpack or parachute touchdown, inside 3.5 m, after the flyer armed it by passing over above 2.5 m. Walking, scooter, bike, moped, the truck, ramp landings, roof falls and a grounded jetpack leave it closed, and the ground hint now says "Fly over it, then drop down onto it to open it." Removing it drops a per-cover branch from the proximity loop; nothing new runs per frame. Tests: `tests/manhole-ride.cjs` (in `npm test`), `tests/manhole-balls.cjs`.
 
 ## Heat audit — September 25, 2026 (local, not deployed)
 

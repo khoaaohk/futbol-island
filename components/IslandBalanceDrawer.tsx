@@ -11,6 +11,8 @@ import {TRAINING_HALF_COINS,trainingMeterView} from '@/lib/town/dailyMeter';
 import shell from './ModalShell.module.css';
 import market from './MarketStand.module.css';
 import styles from './IslandBalanceDrawer.module.css';
+import slide from './DrawerSlide.module.css';
+import {DRAWER_SLIDE_OUT_MS,showDrawer} from './drawerSlide';
 const readBasket=()=>JSON.stringify(islandMarket.read().basket);
 function BalanceIcon({kind}:{kind:'coins'|'fish'|'fruit'}){
  return <svg viewBox="0 0 64 64" width="60" height="60" aria-hidden="true">
@@ -23,15 +25,15 @@ export default function IslandBalanceDrawer({onClose}:{onClose:()=>void}){
  const fish=rows.filter(r=>r.good.kind==='fish'),fruit=rows.filter(r=>r.good.kind==='produce'),count=(list:typeof rows)=>list.reduce((n,r)=>n+r.count,0);
  const dialog=useRef<HTMLDialogElement>(null),done=useRef<HTMLButtonElement>(null),timer=useRef<ReturnType<typeof setTimeout>>(),closing=useRef(false);
  const [leaving,setLeaving]=useState(false);
- useEffect(()=>{dialog.current?.showModal();done.current?.focus();
-  // Same slide as the NPC conversation drawer (CSS only, see the module).
+ useEffect(()=>{closing.current=false;setLeaving(false);if(dialog.current)showDrawer(dialog.current,done.current);
+  // Same drawer and slide as the NPC conversation (DrawerSlide.module.css + showDrawer): no focus scroll, fresh enter on every open.
   return()=>{if(timer.current)clearTimeout(timer.current);requestAnimationFrame(()=>document.querySelector<HTMLButtonElement>('[data-job-wallet]')?.focus({preventScroll:true}));};},[]);
- const close=()=>{if(closing.current)return;closing.current=true;if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){onClose();return;}setLeaving(true);timer.current=setTimeout(onClose,240);};
+ const close=()=>{if(closing.current)return;closing.current=true;if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){onClose();return;}setLeaving(true);timer.current=setTimeout(onClose,DRAWER_SLIDE_OUT_MS);};
  // Training meter (lib/town/dailyMeter.ts): read on open from the wallet snapshot; no countdown, no timers.
  const training=trainingMeterView(coins.training.day===localPlayDay(Date.now())?coins.training.earned:0);
  const items=(list:typeof rows)=><ul className={styles.items}>{list.map(r=><li key={r.id}><span>{r.good.name}</span><b>×{r.count}</b></li>)}</ul>;
- return <dialog ref={dialog} className={`${styles.dialog} ${leaving?styles.leaving:styles.entering}`} data-island-balances aria-labelledby="island-balances-title" onCancel={e=>{e.preventDefault();close();}} onClick={e=>{if(e.target===e.currentTarget)close();}} onKeyDown={e=>e.stopPropagation()} onKeyUp={e=>e.stopPropagation()}>
- <section className={`${shell.shell} ${shell.drawer} ${styles.panel}`}>
+ return <dialog ref={dialog} className={`${styles.dialog} ${slide.drawer} ${leaving?`${styles.leaving} ${slide.leaving}`:`${styles.entering} ${slide.entering}`}`} data-island-balances aria-labelledby="island-balances-title" onCancel={e=>{e.preventDefault();close();}} onClick={e=>{if(e.target===e.currentTarget)close();}} onKeyDown={e=>e.stopPropagation()} onKeyUp={e=>e.stopPropagation()}>
+ <section className={`${shell.shell} ${shell.drawer} ${styles.panel} ${slide.panel}`}>
  <header className={`${shell.header} ${styles.header}`}><div><h2 id="island-balances-title">Your island pocket</h2></div><DoneButton ref={done} onDone={close}/></header>
  <div className={`${shell.body} ${styles.body}`}>
  <section className={`${styles.card} ${styles.coins}`} aria-labelledby="pocket-coins"><div className={styles.cardTop}><BalanceIcon kind="coins"/><div><h3 id="pocket-coins">Coins</h3><strong data-pocket-coins>{wallet.balance.toLocaleString()}</strong><span>ready to spend</span></div></div><p>Your island spending money. Use coins for arcade games and vending-machine items, including card packs and books.</p><div className={styles.note}><b>Earn more</b><p>Lessons, hidden balls, stories and finished paths pay coins the first time you complete each one. Play arcade games, help with island jobs, or sell your catch and harvest. Come back and actively play for a daily {DAILY_PLAY_COINS}-coin bonus.</p></div><div className={styles.note} data-training-meter={training.tier}><b>Training meter</b><div className={market.meter} role="meter" aria-label="Coins from jobs, arcade games and market sales today" aria-valuemin={0} aria-valuemax={TRAINING_HALF_COINS} aria-valuenow={Math.min(training.paid,TRAINING_HALF_COINS)}><div style={{transform:`scaleX(${training.fill})`}}/></div><p>{training.line}</p></div></section>

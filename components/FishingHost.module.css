@@ -35,7 +35,15 @@
 }
 /* In-world catch label (placed above the held-up fish by fishingWorld.ts). */
 .catch{position:absolute;z-index:29;left:0;top:0;transform:translate(-50%,-100%);width:min(300px,calc(100vw - 40px));box-sizing:border-box;padding:10px 14px 12px;border:3px solid #fff2cd;border-radius:18px 26px 18px 18px;background:#fff1d3f2;color:#244d40;box-shadow:0 5px 0 #183b3440;pointer-events:none;animation:pop .35s cubic-bezier(.2,1.4,.4,1) both}
-.catch[hidden]{display:none}
+.catch[hidden],.catch[data-dismissed]{display:none!important}
+/* Phones: docked just above the Fishbook / Cast actions (the angler stays visible), no pointer arrow. */
+.catch[data-side=dock]{transform:translate(-50%,calc(-100% - env(safe-area-inset-bottom,0px)))}
+.catch[data-side=dock]::after{display:none}
+.catchClose{position:absolute;top:8px;right:8px;width:40px;height:40px;display:grid;place-items:center;padding:0;border-radius:50%!important;font:800 20px/1 inherit;cursor:pointer;pointer-events:auto;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+/* Shared island Close/Dismiss face (globals.css) supplies the paper face, border and shadow; the tap area reaches 44px. */
+.catchClose::before{content:'';position:absolute;inset:-2px}
+.catchClose:focus-visible{outline:var(--btn-focus);outline-offset:2px}
+.catchTop{padding-right:40px}
 .catch[data-side=right]{transform:translate(0,-50%)}
 .catch[data-side=below]{transform:translate(-50%,0)}
 .catch[data-side=top]{transform:translate(-50%,0)}
@@ -54,7 +62,7 @@
 @keyframes pop{from{opacity:0;scale:.85}}
 @media(prefers-reduced-motion:reduce){.catch,.toast{animation:none}.reel[data-phase=bite]{animation:none}.controls button{transition:none}}
 
-.reelProgress{display:block;width:100%;height:5px;margin-top:4px;border-radius:99px;background:#244d4033;overflow:hidden}.reelProgress i{display:block;width:100%;height:100%;background:#244d40;transform-origin:left;transition:transform .12s ease-out}.reel[data-phase=reeling]{background-color:var(--btn-gold-bright)}
+.reelProgress{display:block;width:100%;height:5px;margin-top:4px;border-radius:99px;background:#244d4033;overflow:hidden}.reelProgress i{display:block;width:100%;height:100%;background:#244d40;transform-origin:left;transition:transform .12s ease-out}.reel[data-phase=reeling]{background-color:var(--btn-gold-bright)}.reel[data-pulling]{background-color:#f4a261}.reel[data-pulling] .reelProgress i{background:#b3263a}
 @media(prefers-reduced-motion:reduce){.reelProgress i{transition:none}}
 
 /* One status card below the navigation/wallet row, rather than two overlapping

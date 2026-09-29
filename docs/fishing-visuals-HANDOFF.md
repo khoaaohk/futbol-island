@@ -83,7 +83,7 @@ These come from `fishingCore.ts` and are fixed by the mechanics tests:
 | --- | --- | --- |
 | Cast | Tap (automatic when the camera arrives) | `windup` then `cast`; float `flying` for 0.7 s, then `splash('land')` |
 | Waiting | 1.2–3.5 s (1.5–3.8 s after a scare or escape) | float `floating` with a gentle idle bob |
-| Shadow appears | `notice` | `showShadow` fades in 1.9–3.2 m along the shore and swims at 0.9, 1.0, 1.2 or 1.5 m/s by rarity |
+| Shadow appears | `notice` | `showShadow` fades in 2.1–4.6 m away in any direction (open water only), follows a curved route (big or rare animals may circle once) at 0.9, 1.0, 1.2 or 1.5 m/s by rarity (sharks 1.6) |
 | Nibbles | 1–4 (legendary 2–4); 0.7–1.3 s apart (legendary 0.45–0.9 s); the first 0.6 s after arrival | `nibble()` each time |
 | Bite | After the last nibble | `splash('bite')`, float `under`, pose `strike`; the window is 1.0, 0.9, 0.8 or 0.7 s, plus 0.35 s with reduced motion |
 | Hooked | Tap within the window | `splash('hook')`, pose `holdUp`, float `hidden`, `holdUpFish(...)` |
@@ -128,3 +128,20 @@ These come from `fishingCore.ts` and are fixed by the mechanics tests:
 - **Scripted flow with screenshots.** `node scripts/check-fishing-browser.cjs <desktop|mobile|landscape> <spot>` (shots go to `$FISHING_SHOTS`, default `$TMPDIR/fishing-ac/`). It opens the spot, taps Fish, and waits for `data-phase` on `[data-fishing-hud]`: `floating`, `approach`, `nibble`, `bite` (then taps Reel), `caught`, and Stop. It shoots each beat. The phases are exposed on `[data-fishing-hud][data-phase]` and `[data-fish-reel][data-phase]`.
 - **Look at the result yourself** at both sizes, in portrait and landscape, and compare it with `docs/fishing-visuals-ref.png`.
 - **The dev server is `:8092`.** Don't restart it; the user watches it live. Check that it compiles after each edit.
+
+## Update, 28 Sep 2026 (fishing agent): new fish and sea creatures, approach routes and reeling
+
+The roster is fish only, in the style of Animal Crossing (sharks, rays, eels, seahorses, the whale shark, the coelacanth), plus a few crabs, one lobster, shellfish and the octopus. **There are no marine mammals or reptiles** (user decision): no dolphins, whales, seals or turtles to draw.
+
+Nothing here needs new art to work. The placeholders still render everything. These are notes for when you redraw:
+
+- **One minimal interface addition.** `setReelingFish` and `holdUpFish` now accept an optional `shape` (fishCatalog's `FishShape`). Values: `slim`, `round`, `long`, `shrimp`, `shark`, `hammerhead`, `octopus`, `crab`, `lobster`, `ray`, `eel`, `squid` (unused), `seahorse`, `shell`.
+  - The driver passes it; the placeholder ignores it.
+  - This is the only change in `fishingVisuals.ts`: the interface type and a documenting comment. Use it to tell a held-up crab, ray or eel from a fish.
+  - Held lengths now reach 9 m (whale shark). The placeholder's existing clamp keeps them readable; you may want to cap or stylise the biggest.
+- **A new shadow size, `giant` (1.9 m)** in `SHADOW_LENGTH`, used by the great white, thresher, whale shark, oceanic whitetip and sand tiger. `showShadow` already scales by `SHADOW_LENGTH[size]`, so it works now; a wider silhouette for rays would read better.
+- **Approach routes (mechanics).** Shadows now come from any compass direction, on curved or wandering routes, and big or rare animals may circle the float. They still arrive through the existing `showShadow({pos, heading})`: `pos` is relative to the float, and `heading` is the direction of travel (nose first). No hook was needed.
+  - Every route point is in open water (`inOpenWater` in `fishingCore.ts`).
+  - A shadow may pass on the camera side of the float, so it can be briefly under the HUD corners on phones. Keep the silhouette readable at the screen edges.
+- **Reeling.** Reeling now takes 2–14 taps, and big animals pull back when the player pauses. The bobber's `{kind:'reeling', progress}` can now **decrease** (line paid out). A `nibble()` beat marks the moment a pull-back starts, so a tug or spray there would read well.
+- **2D Fishbook art (`components/FishArt.tsx`).** It gained simple flat shapes in the existing style for all of the above. Redraw freely; keep the props `{fish, hidden, size}`.

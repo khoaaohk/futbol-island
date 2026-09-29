@@ -45,16 +45,17 @@ console.log(`PASS ${manholes.length} manhole balls, one at the centre of each ro
 }
 console.log('PASS instanced covers: three draws, shared baked texture, receive-only shadows, no traffic or landing props');
 
-// 3. Forgiving covers (user, Sep 26 2026): walking or riding onto a cover opens it; ramp air, kicks and blind far landings do not.
+// 3. Only a flight drop opens a cover (user, Sep 28 2026): walking over it, ramp air, kicks and blind far landings do not.
+// Rides, the truck and low fps are covered in tests/manhole-ride.cjs.
 {
  const t=hunt(),s=manholes[0],id=s.id;
  for(let i=0;i<30;i++)t.h.update(1/30,{x:s.x-3+i*.2,y:0,z:s.z},true,true,null,false,false);
- assert(t.p.readCoinProgress().revealed.includes(id),'walking onto the cover opens it');t.h.dispose();
+ assert(!t.p.readCoinProgress().revealed.includes(id),'walking over the cover leaves it closed');t.h.dispose();
  const r=hunt(),m=manholes[1];r.h.update(.1,{x:m.x+.5,y:1.5,z:m.z},true,true,'roof-ramp-finale',false,false);r.h.land({x:m.x,y:0,z:m.z});assert(!r.p.readCoinProgress().revealed.includes(m.id),'ramp air is not flight, and a ramp touchdown does not open it');
  r.h.land({x:m.x,y:0,z:m.z},true);assert(!r.p.readCoinProgress().revealed.includes(m.id),'a flight that never passed over the cover does nothing');
  assert(!r.h.hit(m.x,.3,m.z,0,-9),'kicks cannot open a manhole');assert.equal(r.collected.length,0);r.h.dispose();
 }
-console.log('PASS walking or riding onto a cover opens it; ramp air, kicks and unarmed flight landings do not');
+console.log('PASS walking over a cover, ramp air, kicks and unarmed flight landings leave it closed');
 
 // 4. Fly over, drop within the radius: cover opens once with a short tween and the ball uses the normal collection path.
 {

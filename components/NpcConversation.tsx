@@ -6,6 +6,8 @@ import {Icon} from './Icon';
 import {useEffect,useRef,useState} from 'react';
 import type {NpcDefinition} from '@/lib/town/npcDialogues';
 import styles from './NpcConversation.module.css';
+import slide from './DrawerSlide.module.css';
+import {DRAWER_SLIDE_OUT_MS,showDrawer} from './drawerSlide';
 import {launchLearning,readLearning} from '@/lib/town/learningProgress';
 import NpcNews from './NpcNews';
 import {earnForNpc} from '@/lib/town/cardRewardTriggers';
@@ -25,8 +27,8 @@ export default function NpcConversation({npc,open,onOpenChange}:Props){
  useEffect(()=>{if(!open||!thinkingId)return;const timer=setTimeout(()=>setThinkingId(null),800);return()=>clearTimeout(timer);},[open,npc?.id,thinkingId]);
  useEffect(()=>{if(exchanges.length){if(!thinkingId)suggestions.current?.focus({preventScroll:true});const scroller=body.current,message=latest.current;if(scroller&&message)scroller.scrollTo({top:scroller.scrollTop+message.getBoundingClientRect().top-scroller.getBoundingClientRect().top-16,behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});}},[exchanges.length,thinkingId]);
  useEffect(()=>{const el=dialog.current;if(!el)return;let timer:ReturnType<typeof setTimeout>|undefined;
-  if(open&&npc){if(!el.open){restore.current=document.activeElement instanceof HTMLElement?document.activeElement:null;el.showModal();el.scrollLeft=0;close.current?.focus({preventScroll:true});}}
-  else if(el.open){const finish=()=>{el.close();restore.current?.focus({preventScroll:true});};if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)finish();else timer=setTimeout(finish,240);}
+  if(open&&npc){if(!el.open){restore.current=document.activeElement instanceof HTMLElement?document.activeElement:null;showDrawer(el,close.current);}}
+  else if(el.open){const finish=()=>{el.close();restore.current?.focus({preventScroll:true});};if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)finish();else timer=setTimeout(finish,DRAWER_SLIDE_OUT_MS);}
   return()=>{if(timer)clearTimeout(timer);};},[open,npc]);
  const [showRanking,setShowRanking]=useState(false),[showClips,setShowClips]=useState(false);
  useEffect(()=>{setShowRanking(false);setShowClips(false);},[npc?.id,open]);
@@ -38,8 +40,8 @@ export default function NpcConversation({npc,open,onOpenChange}:Props){
  useEffect(()=>{if(open)return;const done=learned.current;learned.current=null;if(done)earnForNpc(done.npc,done.topics);},[open]);
  const cardsToday=open&&npc?npcCardsToday(npc.id):'off';
  const send=(exchange:Exchange)=>{if(thinkingId||asked.has(exchange.id))return;if((exchange.answer?.length??0)>150&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches)setThinkingId(exchange.id);setExchanges(current=>[...current,exchange]);};
- return <dialog ref={dialog} className={`${styles.dialog} ${open?styles.entering:styles.leaving}`} aria-labelledby="npc-conversation-title" aria-modal="true" onCancel={event=>{event.preventDefault();onOpenChange(false);}} onClick={event=>{if(event.target===event.currentTarget)onOpenChange(false);}} onKeyDown={event=>{event.stopPropagation();if(event.key==='Escape'){event.preventDefault();onOpenChange(false);}}} onKeyUp={event=>event.stopPropagation()}>
-  <section className={`${styles.panel} ${shell.shell} ${shell.drawer}`}>
+ return <dialog ref={dialog} className={`${styles.dialog} ${slide.drawer} ${open?`${styles.entering} ${slide.entering}`:`${styles.leaving} ${slide.leaving}`}`} aria-labelledby="npc-conversation-title" aria-modal="true" onCancel={event=>{event.preventDefault();onOpenChange(false);}} onClick={event=>{if(event.target===event.currentTarget)onOpenChange(false);}} onKeyDown={event=>{event.stopPropagation();if(event.key==='Escape'){event.preventDefault();onOpenChange(false);}}} onKeyUp={event=>event.stopPropagation()}>
+  <section className={`${styles.panel} ${slide.panel} ${shell.shell} ${shell.drawer}`}>
    <header className={`${styles.header} ${shell.header}`}><div><h2 id="npc-conversation-title">{npc?.name??'Let’s talk futbol.'}</h2></div><DoneButton ref={close} className={styles.close} onDone={()=>onOpenChange(false)}/></header>
    <div ref={body} className={`${shell.body} ${styles.body}`}>
     <p className={shell.context}>{npc?.role}</p>

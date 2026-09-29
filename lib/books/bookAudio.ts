@@ -6,10 +6,20 @@ export function createBookAudio(initialMuted=false,volume=1){
  let paper:AudioBuffer|null=null,chime:AudioBuffer|null=null;
  const rate=24000,hz=(m:number)=>440*Math.pow(2,(m-69)/12);
  function stop(){request++;if(!context)return;for(const v of voices){v.source.onended=null;try{v.source.stop();}catch{}v.source.disconnect();v.gain.disconnect();}voices.clear();void context.suspend().catch(()=>{});}
+ // Envelopes are shared by every note of the same length (three lengths in the score).
+ const envelopes=new Map<number,Float32Array>();
+ const envelope=(count:number)=>{let e=envelopes.get(count);if(!e){e=new Float32Array(count);for(let n=0;n<count;n++)e[n]=Math.min(1,n/rate/.025)*Math.pow(1-n/count,2.4);envelopes.set(count,e);}return e;};
+ /** One music-box note. The partials come from a rotating phasor (sin 2a = 2 sin a cos a, sin 4a = 2 sin 2a cos 2a), the
+  * same samples as calling Math.sin three times per sample but several times cheaper: a new page's phrase used to take
+  * ~110 ms (desktop) to ~600 ms (WebKit) inside the first frames of the page turn. */
  function tone(out:Float32Array,at:number,length:number,midi:number,level:number){
-  const start=Math.round(at*rate),count=Math.round(length*rate),f=hz(midi);
-  for(let n=0;n<count&&start+n<out.length;n++){const t=n/rate,p=n/count,env=Math.min(1,t/.025)*Math.pow(1-p,2.4),a=t*f*Math.PI*2;
-   out[start+n]+=(Math.sin(a)+.13*Math.sin(a*2)+.045*Math.sin(a*4))*env*level;}
+  const start=Math.round(at*rate),count=Math.round(length*rate),w=hz(midi)*Math.PI*2/rate,cw=Math.cos(w),sw=Math.sin(w),env=envelope(count);
+  let c=1,s=0;
+  for(let n=0;n<count&&start+n<out.length;n++){
+   if((n&1023)===0){const a=n*w;c=Math.cos(a);s=Math.sin(a);}// re-anchor the phasor so rounding never drifts
+   const s2=2*s*c,c2=1-2*s*s,s4=2*s2*c2;
+   out[start+n]+=(s+.13*s2+.045*s4)*env[n]*level;
+   const cn=c*cw-s*sw;s=s*cw+c*sw;c=cn;}
  }
  function theme(page:number){
   const key=Math.max(0,Math.min(5,page));const cached=themes.get(key);if(cached)return cached;
@@ -44,6 +54,6 @@ export function createBookAudio(initialMuted=false,volume=1){
  }
  const visibility=()=>{if(document.hidden)stop();};document.addEventListener('visibilitychange',visibility);
  return{play,setMuted(value:boolean){muted=value;if(value)stop();},
-  dispose(){disposed=true;stop();document.removeEventListener('visibilitychange',visibility);if(context)void context.close().catch(()=>{});context=null;themes.clear();paper=chime=null;},
+  dispose(){disposed=true;stop();envelopes.clear();document.removeEventListener('visibilitychange',visibility);if(context)void context.close().catch(()=>{});context=null;themes.clear();paper=chime=null;},
   inspect:()=>({muted,voices:voices.size,state:context?.state??'uncreated'})};
 }

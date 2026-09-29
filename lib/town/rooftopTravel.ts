@@ -81,6 +81,9 @@ export function createRooftopTravel(roofs:Roof[],obstacles:Obstacle[],start:{x:n
   state.falling=true;state.hangTime=ROOF_HANG_TIME;state.dropStart=state.height;state.verticalSpeed=0;const speed=Math.hypot(v.x,v.z);driftX=speed?v.x/speed*3:0;driftZ=speed?v.z/speed*3:0;v.x=v.z=0;
  }
  function findLanding(x:number,z:number){
+  // A landable point is its own landing. Off-island decks and piers skip the inner rings below (they start near the
+  // shore distance), which made a parachute over a pier retarget in a loop instead of settling where it already was.
+  if(canLand(x,z))return {x,z};
   const startRadius=onIsland(x,z)?0:Math.max(0,Math.floor(distanceToShore(x,z))-1);
   for(let r=startRadius;r<=Math.max(50,FLIGHT_WATER_MARGIN+20);r++)for(let i=0;i<(r?32:1);i++){const a=i/32*Math.PI*2,nx=x+Math.cos(a)*r,nz=z+Math.sin(a)*r;if(canLand(nx,nz))return {x:nx,z:nz};}
   return null;

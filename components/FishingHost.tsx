@@ -50,12 +50,15 @@ export default function FishingHost({onOpenChange,onDialogChange,paused=false}:{
   return()=>{window.removeEventListener('pointercancel',cancel,true);window.removeEventListener('keydown',key,true);window.removeEventListener('keyup',key,true);window.removeEventListener('pointerdown',pdown,true);window.removeEventListener('pointerup',pup,true);};
  },[view.active,book,stand]);
  const fish=view.caught?fishById(view.caught.id):undefined;
+ // The catch card can be dismissed; a new catch (different fish or size) shows it again.
+ const catchKey=view.caught?`${view.caught.id}-${view.caught.size}`:'';const [dismissed,setDismissed]=useState('');
  const waiting=view.phase==='scared'||view.phase==='escaped'||view.phase==='casting';
  return <>
   <button type="button" className="store-enter-prompt" data-fish-enter aria-label="Fish" hidden onClick={e=>{const id=e.currentTarget.dataset.spot;if(id)fishingSession.start(id);}}>Fish</button>
   <button type="button" className="store-enter-prompt" data-market-enter aria-label="Sell at the market stand" hidden onClick={()=>{setTab(undefined);setLoaded(l=>({...l,stand:true}));setStand(true);}}>Sell</button>
   {/* In-world catch label: positioned above the held-up fish by fishingWorld.ts. */}
-  <div className={styles.catch} data-fish-catch hidden aria-live="polite">{fish&&view.caught&&<>
+  <div className={styles.catch} data-fish-catch hidden aria-live="polite" data-dismissed={dismissed===catchKey&&catchKey?'':undefined}>{fish&&view.caught&&<>
+   <button type="button" className={styles.catchClose} aria-label="Dismiss" onClick={()=>setDismissed(catchKey)}><span aria-hidden="true">×</span></button>
    <p className={styles.catchTop}><b>{fish.name}</b>{view.caught.isNew&&<em>New!</em>}{view.caught.isBiggest&&<em>Biggest!</em>}</p>
    <p className={styles.catchMeta}>{RARITY_LABEL[fish.rarity]} · {view.caught.size} cm · {fish.price} coins{view.caught.inBasket?'':' · basket full'}</p>
    <p className={styles.catchClub}><span>Real football fact</span>{fish.club.name}{fish.club.nickname?` · “${fish.club.nickname}”`:''}</p>
@@ -69,7 +72,7 @@ export default function FishingHost({onOpenChange,onDialogChange,paused=false}:{
    </div>
    <div className={styles.controls}>
     <button type="button" className={styles.book} aria-label="Fishbook" title="Fishbook" onClick={()=>{setLoaded(l=>({...l,book:true}));setBook(true);}}><Icon name="book" size={28}/></button>
-    <button type="button" className={styles.reel} data-fish-reel data-phase={view.phase} aria-label={view.phase==='reeling'?'Tap to reel':REEL_LABEL[view.phase]} aria-disabled={waiting} onClick={()=>{if(!waiting)fishingSession.tap();}}>{REEL_LABEL[view.phase]}{view.phase==='reeling'&&<span className={styles.reelProgress} role="progressbar" aria-label="Fish reeled in" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(view.reelProgress*100)}><i style={{transform:`scaleX(${view.reelProgress})`}}/></span>}</button>
+    <button type="button" className={styles.reel} data-fish-reel data-phase={view.phase} data-pulling={view.pulling||undefined} aria-label={view.phase==='reeling'?'Tap to reel':REEL_LABEL[view.phase]} aria-disabled={waiting} onClick={()=>{if(!waiting)fishingSession.tap();}}>{view.phase==='reeling'&&view.pulling?'Pull!':REEL_LABEL[view.phase]}{view.phase==='reeling'&&<span className={styles.reelProgress} role="progressbar" aria-label="Reeled in" aria-valuemin={0} aria-valuemax={view.reelTarget} aria-valuenow={view.reelDone} aria-valuetext={`${view.reelDone} of ${view.reelTarget} pulls`} data-reel-meter><i style={{transform:`scaleX(${view.reelProgress})`}}/></span>}</button>
    </div>
   </div>}
   {loaded.book&&<Fishbook open={book} onClose={()=>setBook(false)}/>}

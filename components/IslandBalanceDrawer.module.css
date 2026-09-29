@@ -1,5 +1,5 @@
 @font-face{font-family:IslandBrush;src:url('/stories/films/assets/IslandBrush-Regular.ttf') format('truetype');font-display:swap}
-.dialog{position:fixed;inset:0;margin:0;padding:0;border:0;width:100%;height:100dvh;max-width:none;max-height:none;background:transparent;color:#244d40;overflow:hidden;font-family:inherit}
+.dialog{position:fixed;inset:0;margin:0;padding:0;border:0;width:100%;height:100dvh;max-width:none;max-height:none;background:transparent;color:#244d40;overflow:clip;font-family:inherit}
 .dialog[open]{display:flex;justify-content:flex-end}.dialog::backdrop{background:#163b426e}
 .dialog .panel{width:min(560px,100%);height:100%;max-height:100dvh;background:url('/stories/films/assets/entry-grain.png') center/160px repeat,#2e806d url('/stories/paths/conversation-coast.svg') center top/100% 1000px repeat-y!important;box-shadow:-12px 0 36px #16352a44}
 .dialog .header{background:transparent!important;border:0;color:#fff2cd}.header h2{font:400 clamp(23px,4vw,32px)/1.12 IslandBrush,sans-serif}
@@ -8,11 +8,8 @@
 :global(.town-app):has(.dialog[open]) :global(.town-minimap),:global(.town-app):has(.dialog[open]) :global(.travel-actions),:global(.town-app):has(.dialog[open]) :global(.touch-controls),:global(.town-app):has(.dialog[open]) :global([data-fishing-hud]),:global(.town-app):has(.dialog[open]) :global([data-fish-catch]){visibility:hidden!important;pointer-events:none!important}
 /* Fish / fruit cards get a much fainter paper grain so the pattern doesn't compete with the numbers. */
 .card.fish,.card.fruit{background-blend-mode:soft-light;background-size:220px}
-/* Sep 28 (pm): the exact NPC-conversation slide (NpcConversation.module.css): the tint fades in, then the panel slides in
-   over .24s ease-in-out; closing slides it back out over .24s. Same drawer, same motion. */
-.entering .panel{animation:pocketSlide .24s ease-in-out .14s reverse both}
-.leaving .panel{animation:pocketSlide .24s ease-in-out both}
+/* Sep 28: the panel slide is the NPC conversation's own (DrawerSlide.module.css, shared): the tint fades in, then the panel
+   slides in over .24s ease-in-out; closing slides it back out over .24s. Only the tint is local. */
 .entering::backdrop{animation:pocketTint .14s ease-out both}
-@keyframes pocketSlide{from{transform:translateX(0)}to{transform:translateX(100%)}}
 @keyframes pocketTint{from{background:#163b4200}to{background:#163b426e}}
-@media(prefers-reduced-motion:reduce){.entering .panel,.leaving .panel,.entering::backdrop{animation:none}}
+@media(prefers-reduced-motion:reduce){.entering::backdrop{animation:none}}

@@ -4,7 +4,7 @@ import {createBuildingGlow} from '../../graphics/buildingGlow';
 import {FISH_SPOTS,MARKET_STAND,type FishSpot} from './fishCatalog';
 import {createFishingVisuals,type FishingVisuals} from './fishingVisuals';
 import {createFishingCamera} from './fishingCamera';
-import {CAST_TIME,castPoint,shadowSpawn,stepSession,type SessionEvent} from './fishingCore';
+import {CAST_TIME,castPoint,planApproach,stepSession,type SessionEvent} from './fishingCore';
 import {fishById} from './fishCatalog';
 import type {FishingSessionApi} from './fishingSession';
 
@@ -80,7 +80,7 @@ export function createFishingWorld(scene:T.Scene,player?:T.Object3D,session?:Fis
  const cam=createFishingCamera();let liveSpot=-1,visuals:FishingVisuals|null=null,fishing=false,stand={x:0,z:0},cast=castPoint(FISH_SPOTS[0],FISH_SPOTS[0]);const labelPoint=new T.Vector3();
  /** Near a spot (45 m) or fishing: the visuals exist; 80 m away and idle: they are disposed (docs/fishing-visuals-HANDOFF.md). */
  const nearAnySpot=(x:number,z:number,r:number)=>FISH_SPOTS.some(s=>Math.abs(x-s.x)<r&&Math.abs(z-s.z)<r);
- const beat=(e:SessionEvent)=>{if(!visuals)return;if(e==='splash')visuals.splash('land');else if(e==='reel')visuals.nibble();else if(e==='nibble')visuals.nibble();else if(e==='bite')visuals.splash('bite');else if(e==='hooked')visuals.splash('hook');else if(e==='scared'||e==='escaped')visuals.splash('small');};
+ const beat=(e:SessionEvent)=>{if(!visuals)return;if(e==='splash')visuals.splash('land');else if(e==='reel'||e==='pull')visuals.nibble();else if(e==='nibble')visuals.nibble();else if(e==='bite')visuals.splash('bite');else if(e==='hooked')visuals.splash('hook');else if(e==='scared'||e==='escaped')visuals.splash('small');};
  const stopFishing=(api:FishingSessionApi)=>{fishing=false;cam.end();visuals?.end();api.end();hideFloat(liveSpot,false);liveSpot=-1;};
  const driver=player&&session?(c:FishingUpdate,near:number):number=>{
   // Paused under the Fishbook / market stand: the island renders one last frame after the player rig has re-posed,
@@ -94,7 +94,7 @@ export function createFishingWorld(scene:T.Scene,player?:T.Object3D,session?:Fis
   const events:SessionEvent[]=[];
   if(fishing){
    if(session.takeStop()||Math.hypot(c.x-stand.x,c.z-stand.z)>1.3||!c.onFoot||!c.canEnter)stopFishing(session);
-   else{events.push(...stepSession(session.session,FISH_SPOTS[liveSpot],c.dt,Math.random,{easy:c.reduced,spawn:r=>shadowSpawn(cast,r)}));if(events.length)session.handle(events);}
+   else{events.push(...stepSession(session.session,FISH_SPOTS[liveSpot],c.dt,Math.random,{easy:c.reduced,out:cast.dir,approach:(r,f)=>planApproach(cast,r,f)}));if(events.length||session.session.phase==='reeling')session.handle(events);}
   }else session.takeStop();
   events.push(...session.drainTapEvents());
   // Visuals lifecycle + drive (no logic in the visuals; they only show the current state).
@@ -108,16 +108,17 @@ export function createFishingWorld(scene:T.Scene,player?:T.Object3D,session?:Fis
     visuals.setBobber(ph==='ready'?{kind:'hanging'}:ph==='casting'?{kind:'flying',progress:s.t/CAST_TIME}:ph==='reeling'?{kind:'reeling',progress:s.reelTaps/Math.max(1,s.reelTarget)}:ph==='bite'?{kind:'under'}:ph==='caught'?{kind:'hidden'}:{kind:'floating'});
     const f=s.fish?fishById(s.fish.id):undefined;
     visuals.showShadow(s.shadow&&f?{size:f.shadow,pos:{x:s.shadow.x,z:s.shadow.z},heading:s.shadow.heading+(ph==='scared'||ph==='escaped'?Math.PI:0),alpha:s.shadow.alpha}:null);
-    visuals.setReelingFish(ph==='reeling'&&f&&s.fish?{color:f.color,lengthCm:s.fish.size}:null);
-    visuals.holdUpFish(ph==='caught'&&f&&s.fish?{color:f.color,lengthCm:s.fish.size}:null);
+    visuals.setReelingFish(ph==='reeling'&&f&&s.fish?{color:f.color,lengthCm:s.fish.size,shape:f.shape}:null);
+    visuals.holdUpFish(ph==='caught'&&f&&s.fish?{color:f.color,lengthCm:s.fish.size,shape:f.shape}:null);
     for(const e of events)beat(e);}
    if(visuals.busy)visuals.frame(c.dt,c.elapsed,c.reduced);
   }
   const label=c.ui<HTMLElement>('[data-fish-catch]');
   if(label){const show=fishing&&!!visuals&&session.session.phase==='caught';
    if(show){visuals!.labelAnchor(labelPoint).project(c.camera);const narrow=c.width<560,px=(labelPoint.x+1)*c.width/2,py=(1-labelPoint.y)*c.height/2;
-    // Beside the angler (the held-up fish stays visible); on narrow phones, at the top under the hint.
-    label.dataset.side=narrow?'top':'right';c.place(label,narrow?c.width/2:T.MathUtils.clamp(px+46,16,c.width-330),narrow?(c.height>600?150:70):T.MathUtils.clamp(py,150,c.height-150));}
+    // Beside the angler (the held-up fish stays visible); on narrow phones, docked just above the Fishbook/Cast actions
+    // (actions: 58px buttons at bottom 28px + safe area, see FishingHost.module.css) so it never covers the angler.
+    label.dataset.side=narrow?'dock':'right';c.place(label,narrow?c.width/2:T.MathUtils.clamp(px+46,16,c.width-330),narrow?c.height-100:T.MathUtils.clamp(py,150,c.height-150));}
    c.hide(label,!show);}
   return fishing?-1:near;
  }:null;

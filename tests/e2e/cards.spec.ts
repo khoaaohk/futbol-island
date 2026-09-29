@@ -160,6 +160,9 @@ test('card offer (?cards=earn): face-down deck, pick, reveal, "Added to your bin
   await expectNoHorizontalScroll(page, 'card offer reveal');
   if (info.project.use.isMobile) await expectDialogSurvivesStaleDvh(page, 'card offer reveal');
   const owned = await page.evaluate(() => JSON.parse(localStorage.getItem('fi2-player-cards-v1') ?? '[]'));
-  expect(owned.length, 'the picked card is saved to the collection').toBe(1);
+  // Every save also holds the Backpack starter kit's 3 cards (lib/town/backpack.ts STARTER_CARDS), so exactly one card beyond those.
+  const starter = ['Mary Earps', 'Martin Ødegaard', 'Ada Hegerberg'];
+  const earned = (owned as string[]).filter(name => !starter.includes(name));
+  expect(earned.length, 'the picked card is saved to the collection').toBe(1);
   expectNoErrors(issues, info);
 });

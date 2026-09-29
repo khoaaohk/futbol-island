@@ -1,7 +1,7 @@
 import * as T from 'three';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {ISLAND_SHORE,onIsland} from '../shoreline';
-import {FISH_SPOTS,SHADOW_LENGTH,type ShadowSize} from './fishCatalog';
+import {FISH_SPOTS,SHADOW_LENGTH,type FishShape,type ShadowSize} from './fishCatalog';
 import {castPoint} from './fishingCore';
 
 /**
@@ -30,8 +30,10 @@ export interface FishingVisuals{
  /** The fish shadow (or null to hide): size class, position relative to the float, heading (radians, yaw), 0..1 opacity. */
  showShadow(shadow:{size:ShadowSize;pos:Vec2;heading:number;alpha:number}|null):void;
  /** The held-up catch above the angler (or null). */
- setReelingFish(fish:{color:string;lengthCm:number}|null):void;
- holdUpFish(fish:{color:string;lengthCm:number}|null):void;
+ /* `shape` (optional, added Sep 28 2026 by the fishing agent for the new sea animals: crab, ray, eel, seahorse …) is
+    fishCatalog's FishShape so the art can tell a crab from a fish; the placeholder ignores it. See docs/fishing-visuals-HANDOFF.md. */
+ setReelingFish(fish:{color:string;lengthCm:number;shape?:FishShape}|null):void;
+ holdUpFish(fish:{color:string;lengthCm:number;shape?:FishShape}|null):void;
  /** The static shoreline foam / ripple lines near the spots. */
  setCoastVisible(visible:boolean):void;
  /** World point for the in-world catch label (above the angler's head). */

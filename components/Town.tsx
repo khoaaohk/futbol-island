@@ -545,7 +545,7 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
         if(jetActions.state.phase!=='idle'){
           const sx=(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0)+input.current.x,sy=(keys.has('s')||keys.has('arrowdown')?1:0)-(keys.has('w')||keys.has('arrowup')?1:0)+input.current.z;
           let scanHeld=keys.has(' ');if(!scanHeld&&jetActions.state.phase==='parachute')for(const hold of heldRidePointers.current.values()){if(hold.action===0){scanHeld=true;break;}}
-          const phase=jetActions.state.phase,oldX=location.x,oldZ=location.z,result=jetActions.update(dt,location,flight.height,{blocked:(x,z)=>flightBlocked(x,z)||(jetActions.state.phase==='parachute'&&rooftop.surface(x,z)>flight.height-1),floor:rooftop.surface,steer:{x:sx*.857+sy*.515,z:-sx*.515+sy*.857},scanHeld,reducedMotion:reduced,findLanding:rooftop.findLanding});flight.height=result.height;
+          const phase=jetActions.state.phase,oldX=location.x,oldZ=location.z,result=jetActions.update(dt,location,flight.height,{blocked:flightBlocked,floor:rooftop.surface,steer:{x:sx*.857+sy*.515,z:-sx*.515+sy*.857},scanHeld,reducedMotion:reduced,findLanding:rooftop.findLanding});flight.height=result.height;
           if(phase==='charge'&&jetActions.state.phase==='blast'){sonicBurst.trigger(location.x,flight.height,location.z,0,true,FLIGHT_TRAIL_COLORS[customizationRef.current.jetpack],false,customizationRef.current.jetpack);sound.boost('up');}
           velocity.x=(location.x-oldX)/dt;velocity.z=(location.z-oldZ)/dt;
           if(result.landed){

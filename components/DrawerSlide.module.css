@@ -1,0 +1,12 @@
+/* Right-side drawer slide shared by the NPC conversation and the island pocket, so the two can't drift apart.
+   Put .drawer plus .entering/.leaving on the <dialog> and .panel on the sliding child; open it with showDrawer() (drawerSlide.ts).
+   Enter and leave are separate keyframes on purpose: an animation only restarts when its name changes, so one keyframe flipped
+   with `reverse` leaves the finished animation in place and WebKit (iOS Safari/Chrome) jumps straight to the end: no slide.
+   overflow:clip (not hidden) keeps the dialog from being a scroll container that focus() could scroll sideways mid-slide. */
+.drawer{overflow:clip}
+.drawer[open]{display:flex;justify-content:flex-end}
+.entering .panel{animation:drawerSlideIn .24s ease-in-out .14s both}
+.leaving .panel{animation:drawerSlideOut .24s ease-in-out both}
+@keyframes drawerSlideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
+@keyframes drawerSlideOut{from{transform:translateX(0)}to{transform:translateX(100%)}}
+@media(prefers-reduced-motion:reduce){.entering .panel,.leaving .panel{animation:none}}
