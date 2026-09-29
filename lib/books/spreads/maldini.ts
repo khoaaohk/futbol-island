@@ -376,7 +376,8 @@ const line:SpreadDef={id:'line',rest:25.7,
   const bubble=mate.body.add(S.bubble('maldini-g-dots',.55,.46,'dots'),.5,1.62,{z:-.02});
   const board=B.stand(S.scoreboard('maldini-g-board',1.9,1.5,'2005 FINAL'),1.2,-1.3,{layer:1,s:0});
   board.add(card('maldini-g-pens',1.62,.66,['LIVERPOOL WON','ON PENALTIES'],INK.pink,INK.white),0,.38,{z:.012});
-  const ht=board.flap(card('maldini-g-ht',1.62,.66,['HALF-TIME','MILAN 3–0'],INK.yellow),0,1.04,{z:.026});
+  // Hinged on its right edge: the HALF-TIME card swings open like a door, so the board's 2005 FINAL header stays readable.
+  const ht=board.flap(card('maldini-g-ht',1.62,.66,['HALF-TIME','MILAN 3–0'],INK.yellow),.81,.38,{anchor:'br',axis:'y',z:.026});
   B.stand(S.goal('maldini-g-goal',1.5,.8),3.75,-1.2,{layer:1});
   const keeper=B.person('maldini-g-keeper',3.75,-.95,1,{shirt:'keeper',hair:'short',skin:SKIN[0],face:'open',layer:1,holdL:'glove',holdR:'glove'});
   const paolo=kp(B,'maldini-g-paolo',2.05,.95,1.42,{kit:MILAN,...PAOLO,adult:true,armband:true,legs:'kick',face:'smile',alt:'sad',layer:2});
@@ -398,7 +399,7 @@ const line:SpreadDef={id:'line',rest:25.7,
    const joy=beat(t,22.2,22.9);
    // Turn the clock to the second half: Liverpool fight back, penalties, the HALF-TIME card lifts away.
    clk.s=Math.max(beat(t,24.2,25),on);const turn=Math.max(n?beat(t,28.6,30.8):0,act);minute.rot=-Math.PI*turn;
-   ht.flip=-2.9*Math.max(n?beat(t,31.1,31.9):0,beat(act,.55,1));
+   ht.flip=2.2*Math.max(n?beat(t,31.1,31.9):0,beat(act,.55,1));
    const liv=Math.max(n?beat(t,31.4,32.1):0,beat(act,.6,1));livs.forEach((l,i)=>{l.armL.rot=-.12-2.4*liv-.3*wave(t,32.1,36,1.4+i*.2);l.armR.rot=.12+2.4*liv+.3*wave(t,32.1,36,1.5+i*.2);});
    const low=Math.max(n?beat(t,31.4,32.2):0,beat(act,.6,1));
    paolo.armL.rot=-.12-2.3*joy*(1-low);paolo.armR.rot=.12+2.3*joy*(1-low)+.25*wave(t,22.9,25.6,1.4)*(1-low);paolo.body.rot=.06*low;paolo.alt!.visible=low>.5;

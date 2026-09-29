@@ -187,7 +187,7 @@ const courtSpread:SpreadDef={id:'court',rest:38.4,
   const goalV=B.stand(S.goal(F+'c-vgoal',1.05,.7),-1.15,-1.9,{layer:1,s:0});
   const dad=P('c-dad',-2.6,-.1,1.5,{shirt:'casual',hair:'short',skin:HERO_SKIN,adult:true,beard:true,legs:'kick',face:'smile',layer:2});
   const dadBall=B.stand(S.ball(F+'c-dball',.12),-2.15,.02,{layer:2,tab:false,s:0});B.slot(-2.15,.02,-1.25,-1.55);
-  const dadTag=dad.body.add(twoLine('c-tagD',1.0,.44,'FALCÃO','DAD · JOÃO',INK.yellow,INK.navy),0,1.72,{z:-.02});
+  const dadTag=dad.body.add(twoLine('c-tagD',1.0,.44,'FALCÃO','DAD · JOÃO',INK.yellow,INK.navy),.35,1.72,{z:-.02});
   const kid=P('c-kid',-1.75,.85,1.1,{shirt:'casual',hair:'short',skin:HERO_SKIN,legs:'kick',face:'grin',layer:3});
   const kidBall=B.stand(futsalBall('c-kball',.1),-1.36,.98,{layer:3,tab:false,s:0});
   const kidTag=kid.body.add(twoLine('c-tagK',.9,.42,'FALCÃO','SON',INK.pink),0,1.3,{z:-.02});
@@ -198,13 +198,13 @@ const courtSpread:SpreadDef={id:'court',rest:38.4,
   tally.add(S.flipCard(F+'c-n7',.8,.55,'7',INK.pink),0,.38,{z:.01});
   const cards=[0,1,2,3,4,5,6].map(i=>tally.flap(S.flipCard(F+`c-n${i}`,.8,.55,String(i),i%2?INK.pink:INK.blue),0,.93,{z:.014+(7-i)*.003}));
   const grass=B.stand(grassBoard('c-grass',1.8,1.2),3.3,-1.35,{layer:1,s:0});
-  const wallR=B.stand(wallBoard('c-wallR',2.2,.3),2.7,-1.7,{layer:1,tab:false,s:0});
+  const wallR=B.stand(wallBoard('c-wallR',2.2,.3),2.7,-1.45,{layer:1,tab:false,s:0});
   const goalR=B.stand(S.goal(F+'c-goalR',1.2,.8),4.2,-.35,{layer:1,yaw:-.55,s:0});
   const keeper=P('c-keep',3.95,-.1,1.12,{shirt:'keeper',hair:'short',skin:'#d99a6c',holdL:'glove',holdR:'glove',face:'grin',layer:2});
   const mates=[P('c-m1',2.7,-.85,1.12,{shirt:'bib',hair:'curly',skin:'#7f5138',face:'grin',layer:2}),P('c-m2',3.3,.45,1.14,{shirt:'bib',hair:'long',skin:'#f1b88f',face:'grin',layer:2})];
   const tryT=[29.2,30.5,31.8,33.1,34.4,35.7,37.0];
   return (b:Beat)=>{const t=b.t,act=b.action,N=b.narrated;
-   sunP.dy=-.55*beat(t,0,2.6);cloud.dx=.7*beat(t,0,44)-.2;
+   sunP.dy=.55*beat(t,0,2.6);cloud.dx=.7*beat(t,0,44)-.2;
    // The boy in the north of São Paulo.
    kid.body.s=pop(t,2.6);kidBall.s=pop(t,3.0);const kp=taps(t,[3.9,4.7,5.5,6.3],.45);kid.leg!.rot=-.7*kp;kidBall.dy=.06*kp;kidBall.rot=-t*.8;
    // His father: a butcher who played on neighbourhood fields.
@@ -220,7 +220,7 @@ const courtSpread:SpreadDef={id:'court',rest:38.4,
    // Corinthians: trying the big grass game again and again, seven times, then back to futsal.
    const open=(i:number)=>Math.max(N?beat(t,37.5+i*.25,38.3+i*.25):0,clamp01(act*2.2-i*.14));
    tally.s=pop(t,23.6);grass.s=pop(t,24.3)*(1-open(0));
-   const trip=taps(t,tryT,1.1);cards.forEach((c,i)=>{c.flip=t>=tryT[i]?-2.9:0;});void count;
+   const trip=taps(t,tryT,1.1);cards.forEach((c,i)=>{c.flip=t>=tryT[i]?-2.9:0;c.visible=t<tryT[i];});void count;
    teen.body.x=1.7+1.25*trip;teen.body.z=.75-.85*trip;teenBall.x=teen.body.x+.4;teenBall.z=teen.body.z+.15;teenBall.visible=trip<.15;
    wallR.s=open(0);goalR.s=open(1);keeper.body.s=open(2);mates.forEach((m,i)=>{m.body.s=open(3+i);});back.scale=open(4);back.visible=back.scale>.02;
    const cheer=Math.max(N?beat(t,38.9,39.6):0,clamp01(act*2-1));teen.armL.rot=-.12-2.3*cheer;teen.armR.rot=.12+2.3*cheer;
@@ -374,23 +374,23 @@ const twelveSpread:SpreadDef={id:'twelve',rest:31.3,
   const gb08=heroR.body.add(S.goldenBall(F+'w-gb08',.15),0,.66,{z:.03});
   const shirt=B.stand(shirtPlate('w-shirt',.62,.62,'12'),3.55,1.25,{layer:3,s:0});
   const team=[P('w-t1',1.25,1.2,1.1,{shirt:'bib',hair:'curly',skin:'#7f5138',face:'open',layer:3}),P('w-t2',3.6,.1,1.1,{shirt:'bib',hair:'short',skin:'#f1b88f',face:'open',layer:2}),
-   P('w-t3',4.3,1.35,1.1,{shirt:'bib',hair:'long',skin:'#d99a6c',face:'open',layer:3}),P('w-gk',1.1,-.3,1.1,{shirt:'keeper',hair:'short',skin:'#d99a6c',holdL:'glove',holdR:'glove',face:'open',layer:2})];
+   P('w-t3',4.3,1.35,1.1,{shirt:'bib',hair:'long',skin:'#d99a6c',face:'open',layer:3}),P('w-gk',.5,.3,1.1,{shirt:'keeper',hair:'short',skin:'#d99a6c',holdL:'glove',holdR:'glove',face:'open',layer:2})];
   const again=B.stand(S.banner(F+'w-again',2.0,.4,'TRY AGAIN',INK.pink),-2.4,2.05,{layer:3,s:0,tab:false});
   return (b:Beat)=>{const t=b.t,act=b.action,N=b.narrated;
    ban.scale=pop(t,.3,1);ban.visible=ban.scale>.02;
    // 2000, aged 23.
    hero.body.s=pop(t,2.9)*(1-beat(t,11,11.6));age.s=pop(t,3.6);
    // Brazil reached the final but lost to Spain, 4–3.
-   b00.s=pop(t,7.8);f00.flip=-2.9*beat(t,10.2,11);heroS.body.s=beat(t,11.2,11.9);
+   b00.s=pop(t,7.8);f00.flip=-2.9*beat(t,10.2,11);f00.visible=beat(t,10.2,11)<.999;heroS.body.s=beat(t,11.2,11.9);
    // 2004: best player of the tournament, yet Brazil finished third.
-   b04.s=pop(t,12.4);pl.s=pop(t,13.2);gb04.dy=-.5+.5*beat(t,13.6,14.5);gb04.visible=t>13.5;f04.flip=-2.9*beat(t,16.2,17);
+   b04.s=pop(t,12.4);pl.s=pop(t,13.2);gb04.dy=-.5+.5*beat(t,13.6,14.5);gb04.visible=t>13.5;f04.flip=-2.9*beat(t,16.2,17);f04.visible=beat(t,16.2,17)<.999;
    // The wait went on.
    glass.s=pop(t,19);glass.rot=Math.PI*beat(t,19.6,21);
    // 2008 at home, and the pressure he spoke about.
    host.scale=pop(t,21.7,1);host.visible=host.scale>.02;const A=act>0?1:0;board.s=Math.max(pop(t,22.1),A);heroR.body.s=Math.max(pop(t,22.7),A);
    shirt.s=pop(t,25.9);shirt.dy=.05*wave(t,26.5,31,1.2);worry.visible=t>26.4&&t<31.4;worry.dy=-.5+.5*beat(t,26.4,27);
    // Flip the scoreboard: champions at home.
-   const lift=Math.max(N?beat(t,31.6,32.6):0,act);flap.flip=-2.75*lift;
+   const lift=Math.max(N?beat(t,31.6,32.6):0,act);flap.flip=-2.75*lift;flap.visible=lift<.999;
    conf.visible=conf2.visible=lift>.3;conf.dy=conf2.dy=-1+1.1*clamp01(lift*1.4-.3);
    const up=Math.max(N?beat(t,33.4,34.1):0,clamp01(act*2-.8));
    team.forEach((p,i)=>{p.body.s=Math.max(N?beat(t,32.8+i*.25,33.5+i*.25):0,clamp01(act*2.4-.6-i*.1));p.armL.rot=-.12-2.3*up;p.armR.rot=.12+2.3*up;});
@@ -417,12 +417,12 @@ const recordSpread:SpreadDef={id:'record',rest:30.6,
   const wrap=hero.body.add(bandage('r-wrap',.2,.1),-.1,.24,{z:.02});
   const stress=hero.body.add(S.cloud(F+'r-stress',.72,.32),0,1.75,{z:-.02}),sdrops=hero.body.add(S.drops(F+'r-sdrops',.5,.3),0,1.48,{z:-.024});
   const calf=B.stand(twoLine('r-calf',1.05,.46,'LEFT CALF','HURT',INK.pink),-1.2,1.8,{layer:3,s:0});
-  const squad=B.stand(kidBoard('r-squad',1.4,1.45,'THE SQUAD'),-3.8,-1.2,{layer:1,s:0});
+  const squad=B.stand(kidBoard('r-squad',1.4,1.45,'THE SQUAD'),-3.6,-1.25,{layer:1,s:0});
   squad.add(S.flipCard(F+'r-sq0',1.2,.26,'· · · · ·',INK.blue),0,.38,{z:.01});
   const card12=squad.flap(S.flipCard(F+'r-sq12',1.2,.3,'12 · FALCÃO',INK.yellow,INK.navy),0,1.02,{z:.02});
-  const treat=B.stand(twoLine('r-treat',1.25,.5,'INTENSIVE','TREATMENT',INK.teal),-1.45,-1.85,{layer:1,s:0});
-  const c1=P('r-c1',-4.0,.25,1.45,{shirt:'coach',hair:'short',skin:'#f1b88f',adult:true,face:'smile',layer:2}),c2=P('r-c2',-1.35,-.55,1.45,{shirt:'coach',hair:'cap',skin:'#7f5138',adult:true,face:'smile',layer:2});
-  const care=c1.body.add(S.bubble(F+'r-care',.6,.5,'heart'),.55,1.85,{z:-.02});
+  const treat=B.stand(twoLine('r-treat',1.25,.5,'INTENSIVE','TREATMENT',INK.teal),-1.85,-1.85,{layer:1,s:0});
+  const c1=P('r-c1',-4.45,.8,1.45,{shirt:'coach',hair:'short',skin:'#f1b88f',adult:true,face:'smile',layer:2}),c2=P('r-c2',-.75,-.55,1.45,{shirt:'coach',hair:'cap',skin:'#7f5138',adult:true,face:'smile',layer:2});
+  const care=c1.body.add(S.bubble(F+'r-care',.6,.5,'heart'),-.2,1.85,{z:-.02});
   // Right page: the final.
   const watch=B.stand(stopwatch('r-watch',.3,'37 MIN'),.95,1.95,{layer:3,s:0});const needle=watch.arm(hand('r-needle',.05,.22),0,.39,{z:.012});
   const board=B.stand(S.scoreboard(F+'r-board',1.9,1.5,'FINAL · BRAZIL v SPAIN'),1.45,-2.1,{layer:1,s:0});
@@ -458,7 +458,7 @@ const recordSpread:SpreadDef={id:'record',rest:30.6,
    cards[0].flip=-2.9*clamp01(eq*1.6-.6);cards[1].flip=N?-2.9*beat(t,33.2,33.8):0;
    // Then Neto wins it in extra time, 3–2.
    s2.s=N?pop(t,33.6,.5):0;const w2=N?beat(t,34.9,35.7):0;s2.x=2.62+1.33*w2;s2.z=1.5-1.6*w2;s2.rot=-w2*8;neto.leg!.rot=-1.1*(N?pulse(t,34.4,35.2):0);
-   cards[2].flip=N?-2.9*beat(t,36,36.6):0;netoTag.visible=N&&t>34;
+   cards[2].flip=N?-2.9*beat(t,36,36.6):0;cards.forEach(c=>{c.visible=c.flip>-2.89;});netoTag.visible=N&&t>34;
    const cheer=Math.max(clamp01(eq*2-1)*(N&&t>32.9&&t<36.6?0:1),N?beat(t,36.6,37.3):0);
    heroF.armL.rot=-.12-2.3*cheer;heroF.armR.rot=.12+2.3*cheer;neto.armL.rot=-.12-2.3*(N?beat(t,36,36.7):0);neto.armR.rot=.12+2.3*(N?beat(t,36,36.7):0);
    conf.visible=cheer>.2;conf.dy=-1+1.1*cheer;
@@ -493,16 +493,16 @@ const playSpread:SpreadDef={id:'play',rest:29.6,
   // Right page: Brazil v Iran, the shootout, and the lift.
   const board=B.stand(S.scoreboard(F+'p-board',1.8,1.4,'BRAZIL v IRAN'),1.35,-2.0,{layer:1,s:0});
   board.add(twoLine('p-out',1.5,.64,'KNOCKED','OUT',INK.blue),0,.3,{z:.01});const bflap=board.flap(twoLine('p-draw',1.5,.64,'4 – 4','',INK.pink),0,.94,{z:.02});
-  const pen=B.stand(S.icon(F+'p-pen',.3,'tick'),3.3,-1.35,{layer:1,s:0,tab:false}),penX=B.stand(S.icon(F+'p-penX',.3,'cross'),3.75,-1.35,{layer:1,s:0,tab:false});
-  const three=B.stand(twoLine('p-three',.95,.44,'3 GOALS','+ HIS PENALTY',INK.yellow,INK.navy),4.2,-.55,{layer:2,s:0});
+  const pen=B.stand(S.icon(F+'p-pen',.3,'tick'),3.85,-1.35,{layer:1,s:0,tab:false}),penX=B.stand(S.icon(F+'p-penX',.3,'cross'),4.25,-1.35,{layer:1,s:0,tab:false});
+  const three=B.stand(twoLine('p-three',.95,.44,'3 GOALS','+ HIS PENALTY',INK.yellow,INK.navy),4.45,-.55,{layer:2,s:0});
   const heroR=P('p-heroR',2.6,.6,1.3,{shirt:'bib',hair:'bald',skin:HERO_SKIN,face:'sad',layer:3});
   const tears=heroR.body.add(S.drops(F+'p-tears',.26,.26),.05,.98,{z:.02});
-  const iran=[P('p-i1',1.55,.35,1.16,{shirt:'ger',hair:'short',skin:'#d99a6c',face:'grin',layer:3}),P('p-i2',3.7,.4,1.16,{shirt:'ger',hair:'curly',skin:'#b27650',face:'grin',layer:3}),
+  const iran=[P('p-i1',1.55,.35,1.16,{shirt:'ger',hair:'short',skin:'#d99a6c',face:'grin',layer:3}),P('p-i2',3.55,.4,1.16,{shirt:'ger',hair:'curly',skin:'#b27650',face:'grin',layer:3}),
    P('p-i3',2.65,-.55,1.14,{shirt:'ger',hair:'short',skin:'#f1b88f',face:'grin',layer:2})];
   return (b:Beat)=>{const t=b.t,act=b.action,N=b.narrated;
    ban.scale=pop(t,.2,1);ban.visible=ban.scale>.02;
    // He said 2012 was his last, then changed his mind.
-   last.s=pop(t,2.4)*(1-beat(t,11.8,12.5));lastF.flip=-2.9*beat(t,6.6,7.4);
+   last.s=pop(t,2.4)*(1-beat(t,11.8,12.5));lastF.flip=-2.9*beat(t,6.6,7.4);lastF.visible=beat(t,6.6,7.4)<.999;
    // At 39, he prepared all year.
    age.s=pop(t,9.0);
    // Ten goals and the all-time record of 48.
@@ -515,11 +515,11 @@ const playSpread:SpreadDef={id:'play',rest:29.6,
    // Brazil v Iran, four goals each.
    const A=act>0?1:0;board.s=Math.max(pop(t,19.5),A);heroR.body.s=Math.max(pop(t,19.9),A);iran.forEach((p,i)=>{p.body.s=Math.max(pop(t,20.3+i*.3),A);});
    // Three goals and his penalty; then the shootout is lost.
-   three.s=pop(t,23.6);pen.s=pop(t,25.2);penX.s=pop(t,27.2);bflap.flip=-2.9*beat(t,27.7,28.4);
+   three.s=pop(t,23.6);pen.s=pop(t,25.2);penX.s=pop(t,27.2);bflap.flip=-2.9*beat(t,27.7,28.4);bflap.visible=beat(t,27.7,28.4)<.999;
    const iCheer=beat(t,28,28.6)*(1-beat(t,29.3,29.9));
    // Lift the paper players: the Iran team raise him to honour him.
    const lift=Math.max(N?beat(t,30.3,31.8):0,act);
-   const gather=Math.max(lift,N?beat(t,29.6,30.4):0);iran[0].body.x=1.55+.6*gather;iran[1].body.x=3.7-.62*gather;iran[2].body.z=-.55+.55*gather;
+   const gather=Math.max(lift,N?beat(t,29.6,30.4):0);iran[0].body.x=1.55+.6*gather;iran[1].body.x=3.55-.47*gather;iran[2].body.z=-.55+.55*gather;
    iran.forEach(p=>{const a=Math.max(iCheer,lift);p.armL.rot=-.12-2.35*a;p.armR.rot=.12+2.35*a;p.body.dy=.03*Math.abs(Math.sin(t*5))*iCheer;});
    heroR.body.dy=.55*lift+.05*wave(t,33,37,1.3)*lift;heroR.armL.rot=-.12-.5*lift;heroR.armR.rot=.12+.5*lift;
    // And he cried.

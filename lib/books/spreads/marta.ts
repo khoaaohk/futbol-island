@@ -259,7 +259,7 @@ const village:SpreadDef={id:'village',rest:24,
   const bunt=bd.add(S.bunting('marta-v-bunting',3.8,.45,[INK.yellow,INK.green,INK.blue,INK.pink]),'R',.3,2.3,{out:.02});
   // Left page: the town where she was born, the family, and an empty chair.
   B.stand(church('marta-v-church',1.25,1.95),-3.95,-1.3,{layer:1});
-  const houses=B.stand(rowHouses('marta-v-houses',2.3,1.35,[PASTEL[0],PASTEL[2],PASTEL[1]],1),-2.05,-1.95,{layer:1});
+  const houses=B.stand(rowHouses('marta-v-houses',2.3,1.35,[PASTEL[0],PASTEL[2],PASTEL[1]],1),-2.05,-1.7,{layer:1});
   const door=houses.flap(S.door('marta-v-door',.2,.56),-.1,0,{anchor:'bl',axis:'y',z:.012});
   B.stand(S.tree('marta-v-tree',1.0,1.5,'olive','#7f9f55'),-.62,-2.05,{layer:1});
   const chairP=B.stand(chair('marta-v-chair',.5,.72),-3.2,-.7,{layer:1});
@@ -267,8 +267,8 @@ const village:SpreadDef={id:'village',rest:24,
   const mum=B.person('marta-v-mum',-2.6,.05,1.78,{shirt:'casual',hair:'long',hairColor:MHAIR,adult:true,skin:MSKIN,face:'smile',layer:2});
   const babyP=mum.body.add(baby('marta-v-baby'),.02,1.06,{z:.03,anchor:'center'});
   const post=B.stand(signpost('marta-v-sign',1.3,1.5,'DOIS RIACHOS'),-1.05,-.45,{layer:2});
-  post.add(S.flipCard('marta-v-1986',.9,.44,'1986',INK.pink),0,.56,{z:.012});
-  const born=post.flap(S.flipCard('marta-v-born',.9,.44,'BORN',INK.blue),0,1.0,{z:.024});
+  post.add(S.flipCard('marta-v-1986',.9,.44,'1986',INK.pink),0,.1,{z:.012});
+  const born=post.flap(S.flipCard('marta-v-born',.9,.44,'BORN',INK.blue),0,.54,{z:.024});
   const sibs=[B.person('marta-v-sib1',-3.55,.75,1.12,{shirt:'navy',hair:'short',skin:MSKIN,face:'smile',layer:3}),B.person('marta-v-sib2',-4.25,1.1,1.02,{shirt:'casual',hair:'curly',skin:MSKIN,face:'grin',layer:3}),B.person('marta-v-sib3',-1.75,.85,1.0,{shirt:'fan',hair:'long',hairColor:MHAIR,skin:MSKIN,face:'smile',layer:3})];
   const fam=B.stand(S.banner('marta-v-family',2.9,.34,'TEREZA · JOSÉ · VALDIR · ANGELA',INK.teal),-2.55,1.75,{layer:3,tab:false,s:0});
   const henP=B.stand(hen('marta-v-hen',.32),-.7,1.3,{layer:3});
@@ -349,18 +349,18 @@ const bus:SpreadDef={id:'bus',rest:16.4,
   const sunP=bd.add(S.sun('marta-b-sun',.34),'L',3.3,1.1,{out:.015}),moonP=bd.add(moon('marta-b-moon',.24),'R',.9,1.7,{out:.015}),starsP=bd.add(S.stars('marta-b-stars',2.2,.5,8),'L',.6,2.9,{out:.02});
   const cloud=bd.add(S.cloud('marta-b-cloud',1.0,.44),'R',3.0,2.6);
   // Left page: a coach spots her, goodbye at the bus stop, the route on a paper map.
-  B.stand(rowHouses('marta-b-houses',1.9,1.1,[PASTEL[3],PASTEL[4],PASTEL[0]]),-3.35,-1.55,{layer:1});
+  B.stand(rowHouses('marta-b-houses',1.9,1.1,[PASTEL[3],PASTEL[4],PASTEL[0]]),-3.35,-1.3,{layer:1});
   B.stand(S.tree('marta-b-tree',.9,1.35,'olive','#7f9f55'),-4.6,-.85,{layer:1});
   B.stand(cactus('marta-b-cactus',.6,.95),-.5,-2.0,{layer:1});
   const board=B.stand(S.sign('marta-b-board',1.45,1.75,'THE ROUTE',INK.yellow),-1.75,-.75,{layer:1});
-  const map=board.add(mapCard('marta-b-map',1.35,.95),0,1.24,{z:.03,anchor:'center'});
+  const map=board.add(mapCard('marta-b-map',1.35,.85),0,.77,{z:.03,anchor:'center'});
   const town1=B.stand(town('marta-b-town1',1.2,.85,1),-2.95,-.25,{layer:1,s:0});
   B.stand(signpost('marta-b-stop',.9,1.3,'BUS STOP',INK.white),-4.55,.25,{layer:2});
   const mum=B.person('marta-b-mum',-4.0,-.05,1.78,{shirt:'casual',hair:'long',hairColor:MHAIR,adult:true,skin:MSKIN,face:'smile',layer:2});
   const bro=B.person('marta-b-bro',-3.2,.15,1.0,{shirt:'navy',hair:'short',skin:MSKIN,face:'smile',layer:2});
   const scout=B.person('marta-b-scout',-.5,-.25,1.7,{shirt:'coach',hair:'bun',adult:true,skin:'#d99a6c',face:'smile',layer:2});
   const spot=scout.body.add(S.bubble('marta-b-spot',.5,.42,'star'),.5,1.55,{z:-.02});
-  const hName=scout.body.add(S.flipCard('marta-b-hname',1.25,.28,'HELENA PACHECO',INK.teal),0,1.72,{z:.03,anchor:'center'});
+  const hName=scout.body.add(S.flipCard('marta-b-hname',1.25,.28,'HELENA PACHECO',INK.teal),0,2.3,{z:.03,anchor:'center'});
   const kid=B.person('marta-b-kid',-2.2,1.55,1.22,{shirt:'bib',hair:'long',hairColor:MHAIR,skin:MSKIN,face:'smile',holdR:'suitcase',layer:3});B.slot(-2.2,1.7,-3.1,1.5);
   const jug=B.stand(S.ball('marta-b-jug',.1),-1.75,1.62,{layer:3,tab:false});
   const day1=B.stand(S.flipCard('marta-b-day1',.7,.36,'DAY 1',INK.orange),-2.1,1.7,{layer:3,s:0});
@@ -375,7 +375,7 @@ const bus:SpreadDef={id:'bus',rest:16.4,
   const days=[B.stand(S.flipCard('marta-b-day2',.7,.36,'DAY 2',INK.teal),1.55,1.7,{layer:3,s:0}),B.stand(S.flipCard('marta-b-day3',.7,.36,'DAY 3',INK.pink),2.45,1.7,{layer:3,s:0})];
   const town2=B.stand(town('marta-b-town2',1.0,.75,2),1.0,-1.2,{layer:1,s:0});
   // Right page: Rio and the try-out pitch; many feelings at once, and the people she loves in her heart.
-  B.stand(S.goal('marta-b-goal',1.3,.7),3.45,-1.55,{layer:1});
+  B.stand(S.goal('marta-b-goal',1.3,.7),3.45,-1.3,{layer:1});
   B.stand(S.tree('marta-b-palm',1.0,1.8,'palm'),4.55,-.8,{layer:1});
   B.stand(signpost('marta-b-club',1.3,1.15,'VASCO DA GAMA',INK.white),2.05,-1.4,{layer:1});
   const coach=B.person('marta-b-coach',2.8,-.8,1.72,{shirt:'coach',hair:'short',adult:true,skin:'#7f5138',face:'smile',layer:2});
@@ -452,8 +452,8 @@ const best:SpreadDef={id:'best',rest:33.2,
   const folded=vasco.add(S.flipCard('marta-s-folded',1.3,.32,'THE TEAM FOLDED',INK.red),0,1.52,{z:.03,anchor:'center'});
   B.stand(S.tree('marta-s-palm',.9,1.6,'palm'),-4.6,-.6,{layer:1});
   const yp=B.stand(signpost('marta-s-years',.9,1.3,'YEARS',INK.white),-2.0,-.75,{layer:1});
-  yp.add(S.flipCard('marta-s-2002',.8,.4,'2002',INK.red),0,.5,{z:.012});
-  const y2000=yp.flap(S.flipCard('marta-s-2000',.8,.4,'2000',INK.blue),0,.9,{z:.024});
+  yp.add(S.flipCard('marta-s-2002',.8,.4,'2002',INK.red),0,.08,{z:.012});
+  const y2000=yp.flap(S.flipCard('marta-s-2000',.8,.4,'2000',INK.blue),0,.48,{z:.024});
   const santa=B.stand(building('marta-s-santa',1.15,1.2,'SANTA CRUZ',PASTEL[1]),-1.1,-1.75,{layer:1,s:0});
   const seasons=santa.add(S.flipCard('marta-s-seasons',1.05,.3,'TWO SEASONS',INK.teal),0,1.22,{z:.03,anchor:'center'});
   const young=B.person('marta-s-young',-3.4,.25,1.2,{shirt:'bib',hair:'long',hairColor:MHAIR,skin:MSKIN,face:'sad',layer:2});
@@ -468,7 +468,7 @@ const best:SpreadDef={id:'best',rest:33.2,
   B.stand(S.tree('marta-s-pine2',.7,1.25,'pine'),.55,-1.5,{layer:1});
   const frame=B.stand(doorFrame('marta-s-frame',1.5,1.95),2.7,-.75,{layer:1});
   const bigDoor=frame.flap(swedenDoor('marta-s-door',1.1,1.56),-.555,0,{anchor:'bl',axis:'y',z:.014});
-  const np=B.stand(pole('marta-s-pole2',.1,1.7),1.05,.2,{layer:2});
+  const np=B.stand(pole('marta-s-pole2',.1,1.7),1.3,.2,{layer:2});
   const newCards=[['NEW COUNTRY',INK.blue],['NEW LANGUAGE',INK.pink],['NEW HOME',INK.teal]].map(([l,c],i)=>np.add(S.flipCard(`marta-s-new${i}`,1.1,.3,l,c),0,1.5-i*.38,{z:.014,anchor:'center'}));
   const cup=B.stand(S.trophy('marta-s-cup',.62,.9),4.25,.35,{layer:2,s:0});
   const cupBanner=B.stand(S.banner('marta-s-cupbanner',1.6,.34,'UEFA WOMEN’S CUP · 2004',INK.blue),4.0,.95,{layer:3,tab:false,s:0});
@@ -486,7 +486,7 @@ const best:SpreadDef={id:'best',rest:33.2,
    young.armL.rot=-.12+.2*beat(t,6,7);
    // She kept going: to Santa Cruz for two seasons, then the arrow swings to Sweden.
    const toSanta=N?beat(t,11.8,14.6):1;santa.s=N?beat(t,11.6,12.6):1;const ss=N?beat(t,14.4,15.2):1;seasons.scale=ss;seasons.visible=ss>.02;
-   const toPole=N?beat(t,18.4,20.6):0;young.body.x=lerp(-3.4,-1.95,toSanta)+.95*toPole;young.body.z=lerp(.25,.55,toSanta)+.35*toPole;young.body.dy=.04*Math.abs(Math.sin((toSanta+toPole)*12))*((toSanta>0&&toSanta<1)||(toPole>0&&toPole<1)?1:0);
+   const toPole=N?beat(t,18.4,20.6):0;young.body.x=lerp(-3.4,-1.25,toSanta)+.3*toPole;young.body.z=lerp(.25,.55,toSanta)+.35*toPole;young.body.dy=.04*Math.abs(Math.sin((toSanta+toPole)*12))*((toSanta>0&&toSanta<1)||(toPole>0&&toPole<1)?1:0);
    young.armR.rot=.12+1.9*(N?beat(t,9.8,10.4)-beat(t,11.4,12):0);
    arrow.flip=-1.5*(1-(N?beat(t,16.8,17.8):1));const c4=N?beat(t,17.6,18.4):1;card04.scale=c4;
    cases.s=N?beat(t,18.2,19):1;young.body.s=N?1-beat(t,20.8,21.4):0;
@@ -524,19 +524,19 @@ const goals:SpreadDef={id:'goals',rest:29,
   const conf=bd.add(S.confetti('marta-g-conf',2.4,1.1,2),'L',1.6,1.5,{out:.04});
   // Left page: the SO CLOSE board with three medals; the big silver medal lifts to show what else happened.
   B.stand(S.floodlight('marta-g-floodL',.5,1.9),-4.6,-1.15,{layer:1});
-  const board=B.stand(medalBoard('marta-g-board',2.6,1.6),-2.4,-1.1,{layer:1});
+  const board=B.stand(medalBoard('marta-g-board',2.6,1.6),-2.7,-1.1,{layer:1});
   const medals=[['2004','OLYMPICS'],['2007','WORLD CUP'],['2008','OLYMPICS']].map(([y,l],i)=>board.add(silverCard(`marta-g-m${y}`,y,l),-.78+i*.78,.28,{z:.015}));
-  const fans=[B.person('marta-g-fan1',-.7,.3,1.08,{shirt:'fan',hair:'long',skin:'#d99a6c',face:'sad',layer:2}),B.person('marta-g-fan2',-4.35,.4,1.02,{shirt:'casual',hair:'short',skin:'#7f5138',face:'sad',layer:2})];
-  const holder=B.stand(medalHolder('marta-g-holder',1.5,1.05),-2.45,1.05,{layer:3});
+  const fans=[B.person('marta-g-fan1',-.4,-.3,1.08,{shirt:'fan',hair:'long',skin:'#d99a6c',face:'sad',layer:2}),B.person('marta-g-fan2',-4.4,-.25,1.02,{shirt:'casual',hair:'short',skin:'#7f5138',face:'sad',layer:2})];
+  const holder=B.stand(medalHolder('marta-g-holder',1.5,1.05),-.8,1.2,{layer:3});
   const gb=holder.add(S.goldenBall('marta-g-gb',.2),-.36,.3,{z:.012}),boot=holder.add(bootPlate('marta-g-boot',.32),.34,.34,{z:.012});
   const lid=holder.flap(silverFlap('marta-g-lid',.5),0,1.07,{anchor:'top',z:.03});
-  const post=B.stand(pole('marta-g-post',.1,1.5),-.9,1.0,{layer:3});
+  const post=B.stand(pole('marta-g-post',.1,1.5),-4.3,1.3,{layer:3});
   const same=[['BEST PLAYER',INK.pink],['TOP SCORER',INK.blue]].map(([l,c],i)=>post.add(S.flipCard(`marta-g-same${i}`,.95,.3,l,c),0,1.3-i*.38,{z:.014,anchor:'center'}));
   // Right page: the 2007 final. The score, the saved penalty, and a teammate who comes to her.
   B.stand(S.floodlight('marta-g-floodR',.5,1.9),4.65,-.95,{layer:1});
   B.stand(S.goal('marta-g-goal',1.8,.9),3.95,-1.4,{layer:1});
-  const sb=B.stand(S.scoreboard('marta-g-sb',1.5,1.15,'FINAL · 2007'),1.2,-1.35,{layer:1,s:0});
-  const score=sb.flap(S.scoreFlap('marta-g-score',1.3,.62,'BRAZIL','0–2','GERMANY'),0,.95,{z:.014});
+  const sb=B.stand(S.scoreboard('marta-g-sb',1.6,1.15,'FINAL · 2007'),1.2,-1.35,{layer:1,s:0});
+  const score=sb.flap(S.scoreFlap('marta-g-score',1.42,.56,'BRAZIL','0–2','GERMANY'),0,.88,{z:.014});
   const keeper=B.person('marta-g-keeper',3.95,-1.15,1.22,{shirt:'keeper',hair:'long',skin:'#f1b88f',face:'open',layer:2,holdL:'glove',holdR:'glove'});
   const hero=B.person('marta-g-hero',3.3,.35,1.3,{shirt:'bib',hair:'bun',hairColor:MHAIR,skin:MSKIN,face:'sad',legs:'kick',layer:2});
   const ball=B.stand(S.ball('marta-g-ball',.13),3.15,-.35,{layer:2,tab:false});
@@ -588,10 +588,10 @@ const space:SpreadDef={id:'space',rest:31.4,
   const sunP=bd.add(S.sun('marta-p-sun',.34),'L',1.2,1.5,{out:.015}),moonP=bd.add(moon('marta-p-moon',.22),'L',3.6,1.6,{out:.015});
   const conf=bd.add(S.confetti('marta-p-conf',2.4,1.2,3),'R',1.6,1.3,{out:.04});
   // Left page: Orlando, March 2022. The knee, the operation, the many months of patience.
-  B.stand(S.tree('marta-p-tree',1.0,1.5,'palm'),-4.6,-1.05,{layer:1});B.stand(S.bench('marta-p-bench',1.1,.45),-3.6,-1.6,{layer:1});
+  B.stand(S.tree('marta-p-tree',1.0,1.5,'palm'),-4.6,-1.05,{layer:1});B.stand(S.bench('marta-p-bench',1.1,.45),-3.6,-1.35,{layer:1});
   const cal=B.stand(calendar('marta-p-cal',1.7,1.35),-2.1,-1.25,{layer:1});
   const ticks=Array.from({length:12},(_,i)=>cal.add(tickMark(`marta-p-tick${i}`),-.66+(i%6)*.252,1.02-Math.floor(i/6)*.24,{z:.012,anchor:'center'}));
-  const march=cal.flap(S.flipCard('marta-p-march',1.5,.5,'MARCH 2022',INK.red),0,.93,{z:.024});
+  const march=cal.flap(S.flipCard('marta-p-march',1.5,.5,'MARCH 2022',INK.red),-.75,.43,{anchor:'bl',axis:'y',z:.024});
   const cp=B.stand(pole('marta-p-pole',.1,1.55),-.55,-.55,{layer:2});
   const cards=[['LEFT KNEE',INK.pink],['OPERATION',INK.blue],['SEASON OVER',INK.navy]].map(([l,c],i)=>cp.add(S.flipCard(`marta-p-card${i}`,1.05,.3,l,c),0,1.35-i*.38,{z:.014,anchor:'center'}));
   const hero=B.person('marta-p-hero',-3.3,.55,1.3,{shirt:'fan',hair:'long',hairColor:MHAIR,skin:MSKIN,face:'sad',layer:2});
@@ -603,10 +603,10 @@ const space:SpreadDef={id:'space',rest:31.4,
   const walkL=B.person('marta-p-walkL',-2.6,1.2,1.2,{shirt:'arg',hair:'bun',hairColor:MHAIR,skin:MSKIN,face:'smile',layer:3,holdR:'ball'});
   // Right page: back to play in 2023, champions in 2024.
   B.stand(S.floodlight('marta-p-flood',.5,1.9),4.65,-1.05,{layer:1});
-  B.stand(S.goal('marta-p-goal',1.7,.85),3.8,-1.6,{layer:1});
+  B.stand(S.goal('marta-p-goal',1.7,.85),3.8,-1.2,{layer:1});
   const sb=B.stand(S.scoreboard('marta-p-sb',1.5,1.15,'ORLANDO PRIDE'),1.7,-1.3,{layer:1});
   sb.add(S.flipCard('marta-p-games',1.2,.56,'18 GAMES',INK.yellow,INK.navy),0,.3,{z:.012});
-  const y23=sb.flap(S.flipCard('marta-p-2023',1.2,.56,'2023',INK.teal),0,.86,{z:.02});
+  const y23=sb.flap(S.flipCard('marta-p-2023',1.2,.56,'2023',INK.teal),-.6,.3,{anchor:'bl',axis:'y',z:.02});
   const cup=B.stand(S.trophy('marta-p-cup',.6,.88),3.2,-.45,{layer:2,s:0});
   const champs=B.stand(S.banner('marta-p-champs',2.3,.36,'NWSL CHAMPIONS · 2024',INK.pink),3.2,.35,{layer:2,tab:false,s:0});
   const mates=[B.person('marta-p-mate1',2.35,-.25,1.24,{shirt:'arg',hair:'curly',skin:'#7f5138',face:'grin',layer:2}),B.person('marta-p-mate2',4.2,-.15,1.24,{shirt:'arg',hair:'long',skin:'#f1b88f',face:'grin',layer:2})];
@@ -619,11 +619,11 @@ const space:SpreadDef={id:'space',rest:31.4,
    const pa=N?beat(t,7,7.6):1;patch.scale=pa;
    carer.body.s=N?beat(t,10.2,11):1;carer.armR.rot=.12+1.2*(N?beat(t,11.2,12)-beat(t,15,15.8):0);
    // Healing takes many months of patience: the calendar fills, the sun and moon take turns.
-   march.flip=-2.9*(N?beat(t,14.2,15):1);ticks.forEach((k,i)=>{const s=N?beat(t,15+i*.18,15.3+i*.18):1;k.scale=s;k.visible=s>.02;});
+   march.flip=-1.5*(N?beat(t,14.2,15):1);ticks.forEach((k,i)=>{const s=N?beat(t,15+i*.18,15.3+i*.18):1;k.scale=s;k.visible=s>.02;});
    const cyc=N?Math.sin(clamp01((t-14)/3.4)*Math.PI*2):0;sunP.dy=-.4*beat(t,0,2)+.7*Math.max(0,cyc);moonP.dy=-.8*Math.max(0,cyc);moonP.visible=cyc>.05;
    breath.visible=N&&t>14.4&&t<17.2;breath.dy=-.25+.25*beat(t,14.4,14.8);
    // 2023: she comes back and plays 18 games.
-   y23.flip=-2.9*(N?beat(t,19.6,20.4):1);
+   y23.flip=-1.5*(N?beat(t,19.6,20.4):1);
    // 2024: Orlando Pride win the NWSL Championship.
    cup.s=N?beat(t,23,23.8):1;champs.s=N?beat(t,24,24.8):1;cup.rot=.05*wave(t,25,31,1.2);
    mates.forEach((m,i)=>{m.body.s=N?beat(t,22.6+i*.4,23.4+i*.4):1;m.armR.rot=.12+2.2*Math.max(N?beat(t,26+i*.3,26.6+i*.3):0,beat(A,.95,1));m.armL.rot=-.12-2.2*Math.max(N?beat(t,26.2+i*.3,26.8+i*.3):0,beat(A,.95,1));});
@@ -663,10 +663,10 @@ const girls:SpreadDef={id:'girls',rest:33.6,
   B.stand(podium('marta-e-podium',1.0,.5),-3.8,1.25,{layer:3});
   const star=B.person('marta-e-star',-3.8,1.15,1.3,{shirt:'bib',hair:'bun',hairColor:MHAIR,skin:MSKIN,face:'grin',layer:3});star.body.dy=.48;
   const card=star.body.add(S.flipCard('marta-e-17',.5,.36,'17',INK.pink),0,.9,{z:.03});
-  const fans=[B.person('marta-e-fan1',-1.1,1.25,1.05,{shirt:'fan',hair:'long',skin:'#d99a6c',face:'grin',layer:3}),B.person('marta-e-fan2',-.45,.7,1.0,{shirt:'casual',hair:'curly',skin:'#7f5138',face:'grin',layer:2})];
+  const fans=[B.person('marta-e-fan1',-.5,1.25,1.05,{shirt:'fan',hair:'long',skin:'#d99a6c',face:'grin',layer:3}),B.person('marta-e-fan2',-1.0,.1,1.0,{shirt:'casual',hair:'curly',skin:'#7f5138',face:'grin',layer:2})];
   // Right page: she speaks to the cameras, and passes the ball to the next girl in line.
   const cam=B.stand(tvCamera('marta-e-cam',1.0,1.2),1.05,-.9,{layer:1});
-  const un=B.stand(S.sign('marta-e-un',1.5,.95,'UNITED NATIONS · 2018',INK.sky),4.3,-1.55,{layer:1,s:0});
+  const un=B.stand(S.sign('marta-e-un',1.5,.95,'UNITED NATIONS · 2018',INK.sky),3.75,-1.3,{layer:1,s:0});
   const unCard=un.add(S.flipCard('marta-e-amb',1.35,.26,'WOMEN IN SPORT',INK.pink),0,.42,{z:.012,anchor:'center'});
   const marta=B.person('marta-e-marta',2.3,-.2,1.32,{shirt:'bib',hair:'bun',hairColor:MHAIR,skin:MSKIN,face:'open',holdL:'none',layer:2});
   const mic=marta.body.add(microphone('marta-e-mic'),-.42,.8,{z:.02});

@@ -63,7 +63,8 @@ function environment(){
  // ---- Each job completes (pure rules, walking to every goal) ----
  const C=env.load('lib/town/jobs/jobCatalog.ts'),R=env.load('lib/town/jobs/jobRules.ts'),V=env.load('lib/town/venues.ts');
  assert.equal(C.JOBS.length,JOB_IDS.length);same([...C.JOBS.map(j=>j.id)].sort(),[...JOB_IDS].sort(),'each job has exactly one definition');
- assert(C.JOBS.length>=10,'the Sep 27 jobs (kit room, offside flag, ball pump, goal anchors) are in the catalog');
+ assert(C.JOBS.length>=9,'the Sep 27 jobs (offside flag, ball pump, goal anchors) are in the catalog');
+ assert(!C.JOBS.some(j=>j.id==='kit-room'),'the kit room job was removed (user, Sep 29 2026)');
  // Signs never crowd each other, the vending machines, the fishing posts or the Clubhouse doorway.
  const vend=[[89.5,-49],[11,-48],[132.8,-69.8],[96,115],[175.26,9]],fish=[[217,212.6],[63,212.6],[237.2,66],[60,-238],[-95.5,24]];
  for(const a of C.JOBS){for(const b of C.JOBS)if(a!==b)assert(Math.hypot(a.board.x-b.board.x,a.board.z-b.board.z)>2*C.BOARD_RANGE,`${a.id} and ${b.id} signs are apart`);
@@ -131,7 +132,7 @@ function environment(){
   assert(done,`${job.id} completes`);assert(events.some(e=>e.type==='done'));assert.equal(R.runProgress(run).value,R.runProgress(run).total);
   if(job.deliver&&job.kind==='collect')assert(events.some(e=>e.type==='deliver'),`${job.id} ends at the ${job.deliver.label}`);
   if(job.kind!=="rebound")assert(run.seconds>0);
-  if(['kit-room','offside-flag','ball-pump','goal-anchor'].includes(job.id))assert(/^https:\/\//.test(job.lessonSource),`${job.id} records its lesson source (docs only, not shown as a link)`);
+  if(['offside-flag','ball-pump','goal-anchor'].includes(job.id))assert(/^https:\/\//.test(job.lessonSource),`${job.id} records its lesson source (docs only, not shown as a link)`);
  }
 
  // ---- Community Garden ----
@@ -159,6 +160,5 @@ function environment(){
  // The former Clubhouse is a cage court; the outdoor kit job remains without an interior.
  const town=fs.readFileSync(path.join(base,'components/Town.tsx'),'utf8'),world=fs.readFileSync(path.join(base,'lib/town/world.ts'),'utf8');
  assert.doesNotMatch(town,/BootRoom|bootRoom|boot-room/);assert.doesNotMatch(world,/house\([^\n]*'CLUBHOUSE'/);assert.match(world,/Pocket futsal court/);
- assert.equal(C.jobById('kit-room').place,'Cage court, Island Square');
  console.log('island jobs: economy, wallet, all catalog jobs, garden, market and cage-court checks passed');
 })().catch(e=>{console.error(e);process.exit(1);});

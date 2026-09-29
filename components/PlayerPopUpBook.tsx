@@ -7,6 +7,7 @@ import type {PlayerBookId} from '@/lib/books/catalog';
 import {holdVideoPlayback} from '@/lib/videoPlayback';
 import StoryPlaybackBar from './StoryPlaybackBar';
 import {BackButton} from './BackButton';
+import {Icon} from './Icon';
 import {getSoundVolume,isSoundEnabled} from '@/lib/games/sound';
 import {createBookAudio} from '@/lib/books/bookAudio';
 import {useBookNarration} from '@/lib/books/useBookNarration';
@@ -62,12 +63,12 @@ export default function PlayerPopUpBook({bookId,onClose}:{bookId:PlayerBookId;on
    </div>}
   </main>
   <nav className={styles.navigation} aria-label="Book pages">
-   <button type="button" data-page-nav="prev" disabled={page===0||turning} onClick={()=>{turn(page-1);}} aria-label="Previous page"><em>Previous</em></button>
+   <button type="button" data-page-nav="prev" disabled={page===0||turning} onClick={()=>{turn(page-1);}} aria-label="Previous page"><Icon name="back" size={22}/></button>
    <div className={styles.activity}>
     <button type="button" data-book-action disabled={turning} onClick={interact}>{amount>=target?'Try the page again':current.prompt}{target>1&&amount<target?` · ${amount}/${target}`:''}<span aria-hidden="true">↗</span></button>
     <p className={styles.srOnly} role="status">{turning?'The paper world is unfolding…':amount>=target?current.response:''}</p>
    </div>
-   <button type="button" data-page-nav="next" disabled={turning} onClick={()=>{if(page===story.pages.length-1){turn(0);}else turn(page+1);}} aria-label={page===story.pages.length-1?'Read again':'Next page'}><em>{page===story.pages.length-1?'Read again':'Next'}</em></button>
+   <button type="button" data-page-nav="next" disabled={turning} onClick={()=>{if(page===story.pages.length-1){turn(0);}else turn(page+1);}} aria-label={page===story.pages.length-1?'Read again':'Next page'}><Icon name={page===story.pages.length-1?'reset':'arrow'} size={22}/></button>
   </nav>
   <StoryPlaybackBar className={styles.playback} title={`${story.title} · ${current.title}`} playing={narration.playing} started={narration.started} completed={narration.completed} muted={narration.muted} time={narration.time} duration={narration.duration} caption={narration.caption||'Press Play to hear Coach Bella tell this chapter, or Read to explore the story.'} captionStart={narration.captionStart} captionDuration={narration.captionDuration} captionId={current.id} transcript={[{label:current.title,narration:current.text},{label:'Take it to your game',narration:current.lesson}]} onToggle={narration.onToggle} onReplay={narration.onReplay} onPause={narration.onPause} onMute={()=>{const muted=!narration.muted;narration.onMute();setMusicMuted(muted);audio.current?.setMuted(muted||narration.playing);}} onSeekTime={narration.onSeekTime} error={narration.error}/>
  </section>;

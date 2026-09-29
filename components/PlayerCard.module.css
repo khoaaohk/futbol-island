@@ -348,3 +348,8 @@
    is turned away explicitly, swapping at edge-on (--edge-out = time to 90°), so the right face shows in every engine. */
 .face{transition:visibility 0s linear var(--edge-out,95ms)}
 .card:not([data-flipped]) .back,.card[data-flipped] .front{visibility:hidden}
+/* Heat pass (Sep 29 2026): a playing film covers the whole picture window with opaque paper, so once its 0.3 s fade-in has finished the
+   layered art beneath (multiply-blended planes) leaves compositing, and so does the colour-dodge foil over the card, instead of being
+   blended again under every film frame. Both return at once when the film fades out (filmFading) or ends. */
+.window:has(>canvas.filmCanvas:not(.filmFading))>:not(canvas){visibility:hidden;transition:visibility 0s linear .35s}
+.card[data-playing]:has(canvas.filmCanvas:not(.filmFading)) .foil{visibility:hidden;transition:visibility 0s linear .35s}

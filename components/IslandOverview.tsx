@@ -54,10 +54,12 @@ function IslandOverview({roads,buildings,position,markerPosition,onSelect,active
    <rect className="map-place-label" x={point.x+dx-width/2} y={point.z+dy-(localMap?7:11)} width={width} height={localMap?14:22} rx="5" fill="#fff8e5" stroke="#73886b" strokeWidth="1"/>
    <text x={point.x+dx} y={point.z+dy+(localMap?3:4)} textAnchor="middle" fill="#294f43" fontSize={localMap?8:12} fontWeight="700">{label}</text>
   </g>)}
-  <g className="map-vending-markers" pointerEvents="none">{VENDING_MARKERS.map(m=><g key={m.id} aria-label={`${m.name} vending machine`} data-vending-marker={m.id}>
+  {/* The travel map's "Vending machine" trip lands at the Island Square machine (STORE_DOOR), so that marker is the tappable destination. */}
+  <g className="map-vending-markers" pointerEvents="none">{VENDING_MARKERS.map(m=>{const trip=onSelect&&m.id==='plaza';return <g key={m.id} {...(trip?{...destination('store',`${m.name} vending machine in Island Square`),pointerEvents:'auto'}:{'aria-label':`${m.name} vending machine`})} data-vending-marker={m.id}>
+   {trip&&<circle cx={m.x} cy={m.z} r="15" fill="transparent"/>}
    <circle cx={m.x} cy={m.z} r={localMap?5.4:9.5} fill="#fff8e5" stroke="#294f43" strokeWidth={localMap?1.3:1.8}/>
    <text x={m.x} y={m.z+(localMap?2.7:4.6)} textAnchor="middle" fill="#294f43" fontSize={localMap?7.6:13} fontWeight="900" style={{stroke:'none'}}>V</text>
-  </g>)}</g>
+  </g>;})}</g>
   <g className="map-fishing-markers" pointerEvents="none">{FISH_SPOTS.map(spot=><g key={spot.id} aria-label={`${spot.name} fishing spot`} data-fishing-marker={spot.id}>
    <title>{`${spot.name} · Fishing`}</title>
    <circle cx={spot.x} cy={spot.z} r={localMap?5.4:9.5} fill="#b9e1df" stroke="#294f43" strokeWidth={localMap?1.3:1.8}/>

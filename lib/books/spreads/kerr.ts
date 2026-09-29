@@ -92,7 +92,7 @@ const footy:SpreadDef={id:'footy',rest:17.3,
   const noGirls=rules.add(S.icon(K+'f-x',.3,'cross'),0,1.22,{z:.02});noGirls.scale=0;
   const ped=B.stand(S.post(K+'f-ped',.5,.55,INK.white),1.0,.25,{layer:2});
   const round=ped.add(S.ball(K+'f-round',.2),0,.55,{z:.012});const cover=ped.flap(footyBall('f-cover',.5,.34),0,.95,{z:.03});
-  B.stand(S.goal(K+'f-goal',1.5,.8),3.9,-1.8,{layer:1});
+  B.stand(S.goal(K+'f-goal',1.5,.8),3.9,-1.3,{layer:1});
   const SR=B.person(K+'f-samR',1.9,.85,1.1,{shirt:'fan',...SAM,legs:'kick',face:'grin',layer:3});
   const team=[[2.8,-.6,'long'],[3.7,.1,'curly'],[4.4,-.9,'short']].map(([x,z,h],i)=>B.person(K+`f-t${i}`,x as number,z as number,1.2,{shirt:'fan',hair:h as 'long',skin:SKINS[(i+1)%4],face:'grin',layer:i===2?1:2}));
   const cards=['NEW BALL','NEW TEAM','NEW SKILLS'].map((l,i)=>B.stand(S.flipCard(K+`f-c${i}`,.95,.32,l,[INK.yellow,INK.sky,INK.pink][i],INK.navy),.9+i*1.3,1.7,{layer:3,s:0,tab:false}));
@@ -127,18 +127,18 @@ const knights:SpreadDef={id:'knights',rest:18.6,
    {key:K+'k-bdR',w:4.5,h:3,paint:k=>{nightSky(k,4.5,3,'#3b2a5e',INK.pink);crowd(k,4.5,1.3,2.5,['#8a5bb8',INK.orange,INK.white,'#8a5bb8'],2);lightRig(k,.9,.3);lightRig(k,3.8,.35);k.fill(rect(0,2.5,4.5,.5),'#3f7f5a');}},-3.05,1.22);
   const sun=bd.add(S.sun(K+'k-sun',.32),'L',3.6,2.2,{out:.012});
   const fw=[bd.add(S.firework(K+'k-fw1',.4,INK.orange),'R',1.4,1.9,{out:.03}),bd.add(S.firework(K+'k-fw2',.36,INK.pink),'R',3.2,2.0,{out:.03})];
-  B.stand(S.goal(K+'k-goalL',1.4,.75),-2.4,-1.95,{layer:1});
-  for(const [x,z] of [[-3.8,.2],[-3.0,.5],[-2.2,.2],[-1.4,.5]])B.stand(S.cone(K+`k-cone${x}`,.3),x,z,{layer:2});
+  B.stand(S.goal(K+'k-goalL',1.4,.75),-2.4,-1.75,{layer:1});
+  for(const [x,z] of [[-3.8,.2],[-3.0,.5],[-2.3,.2],[-1.65,.5]])B.stand(S.cone(K+`k-cone${x}`,.3),x,z,{layer:2});
   const yrs=['2006','2007','2008'].map((y,i)=>B.stand(S.flipCard(K+`k-y${y}`,.6,.3,y,[INK.pink,INK.orange,INK.blue][i]),-4.4+i*.72,-1.1,{layer:2,s:0}));
   const S1=B.person(K+'k-sam',-4.2,.95,1.12,{shirt:'fan',...SAM,legs:'kick',face:'open',layer:3});
   const worry=S1.body.add(faceCard('k-worry',.34,'worried',INK.orange),.34,S1.h*1.02,{z:-.02,anchor:'center'});
-  const mates=[[-1.2,-.7,'long'],[-3.4,-.6,'curly']].map(([x,z,h],i)=>B.person(K+`k-m${i}`,x as number,z as number,1.16,{shirt:'fan',hair:h as 'long',skin:SKINS[i*2],face:'grin',layer:2}));
-  const board=B.stand(lineCard('k-noticed',1.3,.8,['A PERTH GLORY','STRIKER'],INK.yellow),-.9,1.55,{layer:3});
+  const mates=[[-1.2,-.7,'long'],[-2.1,-.75,'curly']].map(([x,z,h],i)=>B.person(K+`k-m${i}`,x as number,z as number,1.16,{shirt:'fan',hair:h as 'long',skin:SKINS[i*2],face:'grin',layer:2}));
+  const board=B.stand(lineCard('k-noticed',1.3,.8,['A PERTH GLORY','STRIKER'],INK.yellow),-.72,2.0,{layer:3});
   const cover=board.flap(lineCard('k-who',1.3,.8,['WHO','NOTICED?'],INK.pink,INK.white),0,.8,{z:.02});
   const scout=B.person(K+'k-scout',1.1,1.1,1.6,{shirt:'navy',hair:'short',adult:true,skin:'#f1c6a0',face:'smile',layer:3});
   const star=scout.body.add(S.bubble(K+'k-star',.5,.42,'star'),.5,scout.h*.95,{z:-.02});
   const exc=B.stand(S.flipCard(K+'k-exc',1.2,.34,'EXCEPTIONAL',INK.yellow,INK.navy),-3.3,2.2,{layer:3,s:0,tab:false});
-  B.stand(S.goal(K+'k-goal',1.6,.85),3.9,-1.8,{layer:1});B.stand(S.bench(K+'k-bench',1.3,.5),2.4,-1.4,{layer:1});
+  B.stand(S.goal(K+'k-goal',1.6,.85),3.9,-1.3,{layer:1});B.stand(S.bench(K+'k-bench',1.3,.5),2.4,-1.4,{layer:1});
   const gSign=B.stand(S.sign(K+'k-gsign',1.3,1.2,'PERTH GLORY',INK.orange),1.1,-1.3,{layer:1,s:0});
   const SR=B.person(K+'k-samR',1.6,.6,1.3,{shirt:'casual',...SAM,legs:'kick',face:'grin',layer:3});
   const glory=[[2.7,-.5,'bun'],[3.6,.3,'short'],[4.4,-.9,'curly']].map(([x,z,h],i)=>B.person(K+`k-g${i}`,x as number,z as number,1.28,{shirt:'casual',hair:h as 'bun',skin:SKINS[(i+1)%4],face:'grin',layer:i===2?1:2}));
@@ -149,7 +149,7 @@ const knights:SpreadDef={id:'knights',rest:18.6,
   return (b:Beat)=>{const act=b.action,manual=act>0,t=manual?Math.max(b.t,18.6):b.t;
    sun.dy=.3*beat(t,0,2);S1.body.s=beat(t,2,2.8);mates.forEach((p,i)=>{p.body.s=beat(t,3+i*.4,3.8+i*.4);});
    // Struggles: the ball runs away from her between the cones, then she gets it back.
-   const drib=beat(t,3.4,14.6);S1.body.x=-4.2+2.9*drib;
+   const drib=beat(t,3.4,14.6);S1.body.x=-4.2+2.1*drib;
    let [bx,bz]=[S1.body.x+.35,1.05];if(t>7.6&&t<11.4){[bx,bz]=track(t,[[7.6,S1.body.x+.35,1.05],[8.6,-1.8,1.9],[11,-1.8,1.9],[11.4,S1.body.x+.35,1.05]]);}
    ball(bx,bz,0,t>2.2&&t<31.6);S1.leg!.rot=-.8*Math.abs(Math.sin(t*4))*(t>3.4&&t<14.6?1:0);
    const w=beat(t,7.8,8.4)*(1-beat(t,14.6,15.2));worry.scale=w;worry.visible=w>.02;S1.body.yaw=-.4*pulse(t,8.4,11);
@@ -187,7 +187,7 @@ const surgery:SpreadDef={id:'surgery',rest:11.2,
   const plane=bd.add(S.plane(K+'s-plane',.7,.35),'L',2.4,2.3,{out:.03});
   const board=B.stand(S.scoreboard(K+'s-board',1.7,1.3,'AUSTRALIA'),1.35,-1.85,{layer:1,s:0});
   board.add(S.flipCard(K+'s-bra',1.3,.58,'1–0 BRA',INK.pink),0,.36,{z:.012});const fNga=board.flap(S.flipCard(K+'s-nga',1.3,.58,'2–0 NGA','#3d5da0'),0,.94,{z:.024});
-  B.stand(S.goal(K+'s-goal',1.6,.85),3.9,-1.8,{layer:1});
+  B.stand(S.goal(K+'s-goal',1.6,.85),3.9,-1.3,{layer:1});
   const SR=B.person(K+'s-samR',1.6,.7,1.3,{shirt:'bib',...SAM,legs:'kick',face:'grin',layer:3});
   const team=[[2.7,-.3,'long'],[3.6,.5,'short'],[4.4,-.7,'curly']].map(([x,z,h],i)=>B.person(K+`s-t${i}`,x as number,z as number,1.26,{shirt:'bib',hair:h as 'long',skin:SKINS[(i+1)%4],face:'grin',layer:i===2?1:2}));
   const qf=B.stand(S.flipCard(K+'s-qf',1.3,.32,'QUARTER-FINALS',INK.yellow,INK.navy),3.4,1.8,{layer:3,s:0,tab:false});
@@ -202,7 +202,7 @@ const surgery:SpreadDef={id:'surgery',rest:11.2,
    const ex=t>14.4&&t<17.8;Sfit.armL.rot=-.12-2.1*(ex?Math.abs(Math.sin(t*3)):0);Sfit.armR.rot=.12+2.1*(ex?Math.abs(Math.sin(t*3)):0);coach.armR.rot=.12+1.2*beat(t,14.4,15);
    SR.body.s=Math.max(beat(t,18.4,19.2),manual?beat(act,.8,1):0);team.forEach((p,i)=>{p.body.s=beat(t,18.8+i*.3,19.6+i*.3);});start.s=beat(t,20,20.8);
    const shots=[24.8,28.4];SR.leg!.rot=-1.1*maxOf(shots.map(a=>pulse(t,a-.3,a+.3)));
-   let bx=1.95,bz=.75;for(const a of shots)if(t>a&&t<a+2.4)[bx,bz]=track(t,[[a,1.95,.75],[a+.9,3.9,-1.55],[a+2.4,3.9,-1.55]]);ball(bx,bz,0,t>18.8);
+   let bx=1.95,bz=.75;for(const a of shots)if(t>a&&t<a+2.4)[bx,bz]=track(t,[[a,1.95,.75],[a+.9,3.9,-1.05],[a+2.4,3.9,-1.05]]);ball(bx,bz,0,t>18.8);
    fNga.flip=-3.2*beat(t,29.2,30);board.s=beat(t,24.4,25.2);qf.s=beat(t,29.8,30.6);
    team.forEach((p,i)=>cheer(p,beat(t,25.8+i*.2,26.4+i*.2)*(1-beat(t,27.6,28.2))+beat(t,30+i*.2,30.6+i*.2)));cheer(SR,beat(t,25.6,26.2)*(1-beat(t,27.6,28.2))+beat(t,30,30.6));
    sun.dy=.3*beat(t,31.8,33);
@@ -222,8 +222,8 @@ const ankle:SpreadDef={id:'ankle',rest:17.4,
   const sunA=bd.add(sunArm('a-sunarm',1.4,.34),'L',1.6,.6,{out:.012});bd.add(hillCard('a-hill',3.2,.75),'L',1.6,.5,{out:.03});
   const rain=bd.add(rainCloud('a-rain',1.2,.65),'L',3.0,2.1,{out:.03});
   const ban=bd.add(S.banner(K+'a-ban',2.2,.4,'GRAND FINAL',INK.orange),'R',1.0,2.5,{out:.02});
-  B.stand(S.goal(K+'a-goalL',1.6,.85),-2.5,-1.9,{layer:1});
-  const keeper=B.person(K+'a-keeper',-2.5,-1.55,1.26,{shirt:'keeper',hair:'long',skin:SKINS[0],face:'open',layer:1,holdL:'glove',holdR:'glove'});
+  B.stand(S.goal(K+'a-goalL',1.6,.85),-2.5,-1.65,{layer:1});
+  const keeper=B.person(K+'a-keeper',-2.5,-1.35,1.26,{shirt:'keeper',hair:'long',skin:SKINS[0],face:'open',layer:1,holdL:'glove',holdR:'glove'});
   const goalCard=B.stand(S.flipCard(K+'a-win',1.1,.32,'WINNING GOAL',INK.yellow,INK.navy),-4.1,-.6,{layer:2,s:0});
   const only=B.stand(S.flipCard(K+'a-only',1.1,.32,'1 GOAL',INK.pink),-4.1,-.1,{layer:2,s:0});
   const S1=B.person(K+'a-sam',-2.2,.7,1.3,{shirt:'casual',...SAM,legs:'kick',face:'grin',layer:3});
@@ -234,7 +234,7 @@ const ankle:SpreadDef={id:'ankle',rest:17.4,
   const counter=B.stand(S.scoreboard(K+'a-count',1.3,1.25,'GOALS'),1.3,-1.8,{layer:1});
   counter.add(S.flipCard(K+'a-c10',.9,.52,'10',INK.pink),0,.34,{z:.012});
   const cnt=['1','2','3','4','5','6','7','8','9'].map((l,i)=>counter.flap(S.flipCard(K+`a-c${l}`,.9,.52,l,i%2?INK.blue:'#3d5da0'),0,.86,{z:.04-i*.003}));
-  B.stand(S.goal(K+'a-goal',1.6,.85),3.9,-1.8,{layer:1});
+  B.stand(S.goal(K+'a-goal',1.6,.85),3.9,-1.3,{layer:1});
   const SR=B.person(K+'a-samR',2.0,.7,1.3,{shirt:'casual',...SAM,legs:'kick',face:'grin',layer:3});
   const team=[[3.0,-.3,'long'],[4.3,.4,'short']].map(([x,z,h],i)=>B.person(K+`a-t${i}`,x as number,z as number,1.26,{shirt:'casual',hair:h as 'long',skin:SKINS[i+1],face:'grin',layer:2}));
   const med=B.stand(medal('a-medal',.5),3.4,1.55,{layer:3,s:0,tab:false});
@@ -243,7 +243,7 @@ const ankle:SpreadDef={id:'ankle',rest:17.4,
   return (b:Beat)=>{const act=b.action,manual=act>0,t=manual?Math.max(b.t,17.4):b.t;
    const set=beat(t,11.4,14);const rise=manual?beat(act,0,.8):beat(t,17.8,19.4);sunA.rot=1.5*set*(1-rise);
    S1.body.s=beat(t,1.9,2.8)*(1-beat(t,11,11.6));mate.body.s=beat(t,2.4,3.2);keeper.body.s=beat(t,2.2,3);
-   let [bx,bz,by]=[-1.85,.8,0];if(t>4.6)[bx,bz,by]=track(t,[[4.6,-1.85,.8,0],[5.5,-2.4,-1.5,.3],[7,-2.4,-1.5,0]]);ball(bx,bz,by,t>2.2&&t<11);
+   let [bx,bz,by]=[-1.85,.8,0];if(t>4.6)[bx,bz,by]=track(t,[[4.6,-1.85,.8,0],[5.5,-2.4,-1.3,.3],[7,-2.4,-1.3,0]]);ball(bx,bz,by,t>2.2&&t<11);
    S1.leg!.rot=-1.1*pulse(t,4.3,4.9);keeper.body.rot=-.7*pulse(t,5,6.4);cheer(S1,beat(t,5.6,6.2)*(1-beat(t,9.6,10.2)));cheer(mate,beat(t,5.8,6.4)*(1-beat(t,9.6,10.2)));
    goalCard.s=beat(t,6,6.8);only.s=beat(t,8,8.8);
    Ss.body.s=beat(t,11,11.6)*(1-beat(t,19.8,20.4));wrap.scale=beat(t,11.8,12.4);wrap.visible=wrap.scale>.02;Ss.body.x=-2.0+.9*beat(t,14,16.4);Ss.body.z=.7+.7*beat(t,14,16.4);
@@ -277,8 +277,8 @@ const homecup:SpreadDef={id:'homecup',rest:15.9,
   const physio=B.person(K+'h-physio',-3.6,1.5,1.66,{shirt:'coach',hair:'bun',adult:true,skin:SKINS[1],face:'smile',layer:3});
   const gate=B.stand(gatePosts('h-gate',1.5,1.0),-.95,-1.3,{layer:1});
   const gL=gate.flap(gateLeaf('h-gl',.64,.78),-.64,.02,{anchor:'bl',axis:'y',z:.02}),gR=gate.flap(gateLeaf('h-gr',.64,.78),.64,.02,{anchor:'br',axis:'y',z:.02});
-  B.stand(S.goal(K+'h-goal',1.8,.9),3.3,-1.85,{layer:1});
-  const keeper=B.person(K+'h-keeper',3.3,-1.5,1.28,{shirt:'keeper',hair:'short',skin:SKINS[0],face:'open',layer:1,holdL:'glove',holdR:'glove'});
+  B.stand(S.goal(K+'h-goal',1.8,.9),3.3,-1.3,{layer:1});
+  const keeper=B.person(K+'h-keeper',3.3,-1.05,1.28,{shirt:'keeper',hair:'short',skin:SKINS[0],face:'open',layer:1,holdL:'glove',holdR:'glove'});
   const team=[[1.6,-.3,'long'],[2.4,.6,'short'],[4.4,.2,'curly']].map(([x,z,h],i)=>B.person(K+`h-t${i}`,x as number,z as number,1.26,{shirt:'bib',hair:h as 'long',skin:SKINS[(i+1)%4],face:'grin',layer:2}));
   const SR=B.person(K+'h-samR',.9,.9,1.3,{shirt:'bib',...SAM,legs:'kick',face:'grin',layer:3});
   const bandR=SR.body.add(armband('h-bandR',.15),.17,SR.h*.62,{z:.02,anchor:'center'});void bandR;
@@ -294,7 +294,7 @@ const homecup:SpreadDef={id:'homecup',rest:15.9,
    SR.body.s=Math.max(beat(t,17.4,18.2),manual?beat(act,.4,.9):0);SL.body.s=beat(t,2.2,3)*(1-Math.max(beat(t,17.2,17.8),manual?beat(act,.3,.6):0));
    cards.forEach((c,i)=>{c.s=beat(t,[18.4,21.2,25][i],[19.2,22,25.8][i]);});keeper.body.s=beat(t,17,17.8);
    const shots=[21.8,26.4];SR.leg!.rot=-1.1*maxOf(shots.map(a=>pulse(t,a-.3,a+.3)));
-   let bx=1.25,bz=1.0,by=0;for(const a of shots)if(t>a&&t<a+2.4)[bx,bz,by]=track(t,[[a,1.25,1.0,0],[a+.7,2.4,-.3,.45],[a+1.3,3.5,-1.6,.3],[a+2.4,3.5,-1.6,0]]);ball(bx,bz,by,t>17.6);
+   let bx=1.25,bz=1.0,by=0;for(const a of shots)if(t>a&&t<a+2.4)[bx,bz,by]=track(t,[[a,1.25,1.0,0],[a+.7,2.4,-.3,.45],[a+1.3,3.5,-1.15,.3],[a+2.4,3.5,-1.15,0]]);ball(bx,bz,by,t>17.6);
    const dive=maxOf(shots.map(a=>pulse(t,a+.6,a+2)));keeper.body.rot=-.8*dive;keeper.body.dx=.25*dive;
    starsP.scale=beat(t,27.4,28.4);starsP.visible=starsP.scale>.02;cheer(SR,beat(t,27.4,28)*(1-beat(t,30.6,31.2)));
    team.forEach((p,i)=>{p.body.x=[1.6,2.4,4.4][i]-(i===2?1.6:0)*beat(t,36.6,37.8);cheer(p,beat(t,37+i*.3,37.6+i*.3));});cheer(SR,Math.max(beat(t,37.4,38),manual?beat(act,.9,1):0)+beat(t,27.4,28)*(1-beat(t,30.6,31.2)));
@@ -315,7 +315,7 @@ const acl:SpreadDef={id:'acl',rest:18.7,
   const ban=bd.add(S.banner(K+'c-ban',2.2,.4,'100 GOALS',INK.blue),'R',1.2,2.5,{out:.02});
   const fw=[bd.add(S.firework(K+'c-fw1',.42,INK.yellow),'R',1.0,1.9,{out:.03}),bd.add(S.firework(K+'c-fw2',.38,INK.sky),'R',3.4,2.0,{out:.03})];
   B.stand(palm('c-palm1',.9,1.8),-4.5,-1.4,{layer:1});B.stand(palm('c-palm2',.8,1.6),-.7,-1.9,{layer:1});
-  for(const [x,z] of [[-3.6,.9],[-2.8,1.1],[-2.0,.9]])B.stand(S.cone(K+`c-cone${x}`,.3),x,z,{layer:3});
+  for(const [x,z] of [[-4.4,.4],[-4.1,1.05],[-.9,.9]])B.stand(S.cone(K+`c-cone${x}`,.3),x,z,{layer:3});
   const S1=B.person(K+'c-sam',-2.8,.2,1.3,{shirt:'navy',...SAM,legs:'kick',face:'grin',layer:2});
   const Ss=B.person(K+'c-samSad',-2.6,.2,1.3,{shirt:'navy',...SAM,face:'sad',layer:2});
   const wrap=Ss.body.add(bandage('c-wrap',.2,.16),-.09,Ss.h*.2,{z:.02,anchor:'center'});
@@ -324,8 +324,8 @@ const acl:SpreadDef={id:'acl',rest:18.7,
   const segs=['REHAB','TRAINING','MATCH DAY'].map((l,i)=>{const q=bar.add(segment(`c-seg${i}`,.72,.36,l,[INK.pink,INK.yellow,INK.grass][i]),-.76+i*.76,1.0*.25,{z:.02});q.scale=0;return q;});
   const months=B.stand(S.flipCard(K+'c-20',1.2,.34,'20 MONTHS',INK.sky,INK.navy),-4.2,-.6,{layer:2,s:0});
   const sub=B.stand(subBoard('c-sub',.8,1.1),.7,-.9,{layer:2,s:0});const min75=sub.add(S.flipCard(K+'c-75',.6,.26,'75',INK.yellow,INK.navy),0,1.12,{z:.02});min75.scale=0;
-  B.stand(S.goal(K+'c-goal',1.8,.9),3.3,-1.85,{layer:1});
-  const keeper=B.person(K+'c-keeper',3.3,-1.5,1.28,{shirt:'keeper',hair:'bun',skin:SKINS[0],face:'open',layer:1,holdL:'glove',holdR:'glove'});
+  B.stand(S.goal(K+'c-goal',1.8,.9),3.3,-1.3,{layer:1});
+  const keeper=B.person(K+'c-keeper',3.3,-1.05,1.28,{shirt:'keeper',hair:'bun',skin:SKINS[0],face:'open',layer:1,holdL:'glove',holdR:'glove'});
   const SR=B.person(K+'c-samR',1.3,.8,1.32,{shirt:'navy',...SAM,legs:'kick',face:'grin',layer:3});
   const team=[[2.4,.3,'long'],[4.4,.7,'short']].map(([x,z,h],i)=>B.person(K+`c-t${i}`,x as number,z as number,1.26,{shirt:'navy',hair:h as 'long',skin:SKINS[i*2+1],face:'grin',layer:2}));
   const m93=B.stand(S.flipCard(K+'c-93',1.2,.32,'MINUTE 93',INK.pink),3.5,1.8,{layer:3,s:0,tab:false});
@@ -341,7 +341,7 @@ const acl:SpreadDef={id:'acl',rest:18.7,
    sub.s=beat(t,21.4,22.2);min75.scale=beat(t,26.8,27.4);min75.visible=min75.scale>.02;
    SR.body.s=Math.max(beat(t,22.4,23.2),manual?beat(act,.7,1):0);team.forEach((p,i)=>{p.body.s=beat(t,22.8+i*.4,23.6+i*.4);});keeper.body.s=beat(t,22.6,23.4);
    const shot=29.6;SR.leg!.rot=-1.1*pulse(t,shot-.3,shot+.3);
-   let [bx,bz,by]=t<shot?[1.65,.85,0]:track(t,[[shot,1.65,.85,0],[shot+.8,3.0,-1.5,.35],[shot+2,3.0,-1.5,0]]);if(t<21.8){bx=bx0;bz=bz0;by=0;}
+   let [bx,bz,by]=t<shot?[1.65,.85,0]:track(t,[[shot,1.65,.85,0],[shot+.8,3.0,-1.05,.35],[shot+2,3.0,-1.05,0]]);if(t<21.8){bx=bx0;bz=bz0;by=0;}
    ball(bx,bz,by,(t>2.4&&t<5.4)||t>23);const dive=pulse(t,shot+.5,shot+1.9);keeper.body.rot=.8*dive;keeper.body.dx=-.25*dive;
    m93.s=beat(t,30.4,31.2);ban.scale=beat(t,31,32);ban.visible=ban.scale>.02;fw.forEach((q,i)=>{q.scale=beat(t,30.8+i*.4,31.8+i*.4);q.visible=q.scale>.02;q.rot=t*.2;});
    cheer(SR,Math.max(beat(t,30.6,31.2),manual?beat(act,.95,1):0));team.forEach((p,i)=>cheer(p,beat(t,31+i*.3,31.6+i*.3)));

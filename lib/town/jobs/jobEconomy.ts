@@ -3,8 +3,8 @@
  * In-game coins only. No streaks, no timers that cost coins, no lost progress: a daily soft cap lowers pay gently
  * and resets at local midnight; a job can always be played again.
  */
-export type JobId='leaf-rake'|'wall-rebounds'|'ball-kid'|'cone-setup'|'line-painter'|'court-cleanup'|'kit-room'|'offside-flag'|'ball-pump'|'goal-anchor';
-export const JOB_IDS:readonly JobId[]=['leaf-rake','wall-rebounds','ball-kid','cone-setup','line-painter','court-cleanup','kit-room','offside-flag','ball-pump','goal-anchor'];
+export type JobId='leaf-rake'|'wall-rebounds'|'ball-kid'|'cone-setup'|'line-painter'|'court-cleanup'|'offside-flag'|'ball-pump'|'goal-anchor';
+export const JOB_IDS:readonly JobId[]=['leaf-rake','wall-rebounds','ball-kid','cone-setup','line-painter','court-cleanup','offside-flag','ball-pump','goal-anchor'];
 /** One-time welcome coins: exactly one 40-coin card pack, or a few arcade plays or a small vending item (user, Sep 27 2026;
  *  raised 30 → 40 with pack prices in the economy pass, docs/economy/ECONOMY_PROPOSAL.md, 28 Sep 2026). */
 export const STARTER_COINS=40;
@@ -12,7 +12,7 @@ export const STARTER_COINS=40;
 export const FULL_PAY_PER_DAY=2,HALF_PAY_PER_DAY=2,TIP_COINS=1;
 /** Extra coins the very first time a player finishes each job (mirrors the arcade's first puzzle solve bonus). */
 export const FIRST_JOB_BONUS=4;
-export const JOB_BASE_PAY:Record<JobId,number>={'leaf-rake':8,'wall-rebounds':8,'ball-kid':10,'cone-setup':7,'line-painter':8,'court-cleanup':7,'kit-room':8,'offside-flag':9,'ball-pump':7,'goal-anchor':8};
+export const JOB_BASE_PAY:Record<JobId,number>={'leaf-rake':8,'wall-rebounds':8,'ball-kid':10,'cone-setup':7,'line-painter':8,'court-cleanup':7,'offside-flag':9,'ball-pump':7,'goal-anchor':8};
 export const JOBS_STORAGE_KEY='fi2-island-jobs-v1';
 export type PayTier='full'|'half'|'tip';
 export type JobLedger={version:1;day:string;today:Partial<Record<JobId,number>>;lifetime:Partial<Record<JobId,number>>;earned:number;best:Partial<Record<JobId,number>>;starter:boolean};
@@ -35,7 +35,7 @@ export function jobPayout(id:JobId,ledger:JobLedger):{coins:number;tier:PayTier;
 }
 /** The friendly line under the payout. Never guilt, never a countdown. */
 export function payMessage(id:JobId,ledger:JobLedger):string{
- const next=payTier(ledger.today[id]??0),done:Record<JobId,string>={'leaf-rake':'The pitch is spotless!','wall-rebounds':'The wall needs a rest!','ball-kid':'Every ball is back in play!','cone-setup':'The coach has every drill ready!','line-painter':'The lines are bright and fresh!','court-cleanup':'The court is sparkling!','kit-room':'Every shirt is on its peg!','offside-flag':'The linesman needs a rest!','ball-pump':'Every ball is match-ready!','goal-anchor':'Both goals are safe and steady!'};
+ const next=payTier(ledger.today[id]??0),done:Record<JobId,string>={'leaf-rake':'The pitch is spotless!','wall-rebounds':'The wall needs a rest!','ball-kid':'Every ball is back in play!','cone-setup':'The coach has every drill ready!','line-painter':'The lines are bright and fresh!','court-cleanup':'The court is sparkling!','offside-flag':'The linesman needs a rest!','ball-pump':'Every ball is match-ready!','goal-anchor':'Both goals are safe and steady!'};
  if(next==='full')return 'Full pay for the next shift too.';
  if(next==='half')return `${done[id]} The next shifts today pay half — try a different job for full pay.`;
  return `${done[id]} Come back tomorrow for full pay. You can still help for a 1-coin thank-you tip.`;

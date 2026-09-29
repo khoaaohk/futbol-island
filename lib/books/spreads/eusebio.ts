@@ -199,10 +199,10 @@ const doors:SpreadDef={id:'doors',rest:21.2,
   const sun=bd.add(S.sun(K+'d-sun',.34),'R',3.8,2.2,{out:.012}),storm=bd.add(stormCloud('d-storm',1.5,.75),'L',2.4,2.2,{out:.03});
   const g1=B.stand(gatePost('d-g1',1.35,1.45,'DESPORTIVO'),-3.75,-1.18,{layer:1,s:0}),g2=B.stand(gatePost('d-g2',1.35,1.45,'FERROVIÁRIO','#3d5da0'),-1.4,-1.4,{layer:1,s:0});
   for(const g of [g1,g2]){g.add(gateLeaf(g===g1?'d-l1':'d-l2',.52,1.0,INK.navy),-.28,0,{z:.01});g.add(gateLeaf(g===g1?'d-r1':'d-r2',.52,1.0,INK.navy),.28,0,{z:.01});}
-  const no1=B.stand(stamp('d-no1',.7,.34,'NO'),-3.75,-.3,{layer:2,s:0}),no2=B.stand(stamp('d-no2',.7,.34,'NO'),-1.4,-.5,{layer:2,s:0});
+  const no1=B.stand(stamp('d-no1',.7,.34,'NO'),-3.75,-.3,{layer:2,s:0}),no2=B.stand(stamp('d-no2',.7,.34,'NO'),-1.4,-.85,{layer:2,s:0});
   const unfair=B.stand(stamp('d-unfair',1.3,.4,'NOT FAIR'),-2.6,1.95,{layer:3,s:0});
   const group=[[-3.4,.3,'#7f5138','short','casual'],[-4.1,.75,'#b27650','curly','bib'],[-2.8,.95,'#d99a6c','short','fan']].map(([x,z,sk,hr,sh],i)=>B.person(K+`d-kid${i}`,x as number,z as number,1.0,{shirt:sh as 'bib',skin:sk as string,hair:hr as 'short',hairColor:'#1d1a1f',face:i===0?'smile':'smile',layer:2}));
-  const sadGroup=[0,1,2].map(i=>B.person(K+`d-sg${i}`,-1.3+i*.55-.6,.5+(i%2)*.45,1.0,{shirt:(['casual','bib','fan'] as const)[i],skin:['#7f5138','#b27650','#d99a6c'][i],hair:(['short','curly','short'] as const)[i],hairColor:'#1d1a1f',face:'sad',layer:2}));
+  const sadGroup=[0,1,2].map(i=>B.person(K+`d-sg${i}`,-1.3+i*.55-.6,.8+(i%2)*.45,1.0,{shirt:(['casual','bib','fan'] as const)[i],skin:['#7f5138','#b27650','#d99a6c'][i],hair:(['short','curly','short'] as const)[i],hairColor:'#1d1a1f',face:'sad',layer:2}));
   const g3=B.stand(gatePost('d-g3',1.55,1.6,'SPORTING L.M.',INK.green),1.4,-.85,{layer:2,s:0});
   const gl=g3.flap(gateLeaf('d-gL',.6,1.12,INK.gold),-1.55/2+.16,0,{anchor:'bl',axis:'y',z:.012}),gr=g3.flap(gateLeaf('d-gR',.6,1.12,INK.gold),1.55/2-.16,0,{anchor:'br',axis:'y',z:.012});
   const yes=g3.add(S.flipCard(K+'d-yes',.9,.34,'YES!',INK.green),0,1.64,{z:.02});
@@ -300,10 +300,10 @@ const tears:SpreadDef={id:'tears',rest:27.4,
   const never=B.stand(S.flipCard(K+'t-never',1.2,.34,'DON’T GIVE UP',INK.yellow,INK.navy),-4.0,1.3,{layer:3,s:0});
   const pows=[0,1,2,3].map(i=>B.stand(pow(`t-pow${i}`,.2),-2.9+i*.45,-1.25,{layer:2,s:0,tab:false}));
   const goalR=B.stand(S.goal(K+'t-goalR',1.6,.8),2.5,-1.6,{layer:1});void goalR;
-  const semi=B.stand(lineCard('t-semi',1.3,.56,['SEMI-FINAL','LOST 2–1'],INK.white),4.3,-1.0,{layer:1,s:0});
+  const semi=B.stand(lineCard('t-semi',1.1,.5,['SEMI-FINAL','LOST 2–1'],INK.white),4.4,-1.0,{layer:1,s:0});
   const eus2=B.person(K+'t-eus2',2.5,.3,1.3,{...EUS,shirt:'casual',face:'sad',layer:2});
   const drops=[0,1].map(i=>eus2.body.add(tear(`t-tear${i}`,.12),(i?.07:-.11),1.3*1.22*.72,{z:.02}));
-  const mates=[B.person(K+'t-mate',1.0,.9,1.3,{shirt:'casual',skin:'#f1b88f',hair:'short',face:'smile',layer:3}),B.person(K+'t-opp',4.0,.9,1.3,{shirt:'ger',skin:'#f1b88f',hair:'curly',hairColor:'#c9a46a',face:'smile',layer:3})];
+  const mates=[B.person(K+'t-mate',1.0,.9,1.3,{shirt:'casual',skin:'#f1b88f',hair:'short',face:'smile',layer:3}),B.person(K+'t-opp',3.8,.9,1.3,{shirt:'ger',skin:'#f1b88f',hair:'curly',hairColor:'#c9a46a',face:'smile',layer:3})];
   const heartP=eus2.body.add(heart('t-heart',.34),0,1.3*1.22+.05,{z:.02});
   const name=B.stand(S.banner(K+'t-name',2.2,.44,'GAME OF TEARS',INK.pink),2.5,1.95,{layer:3,s:0});
   const boot=B.stand(goldenBoot('t-boot',.6,.5),-.8,1.2,{layer:3,s:0});const nine=B.stand(S.flipCard(K+'t-nine',1.1,.32,'TOP SCORER · 9',INK.gold,INK.navy),-1.0,1.9,{layer:3,s:0});
@@ -315,7 +315,7 @@ const tears:SpreadDef={id:'tears',rest:27.4,
    const kicks=[11.2,11.9,12.6,13.3];let bx=-2.0,bz=.75,dy=0,vis=t>2.6&&t<15.2;
    for(const k0 of kicks){if(t>=k0&&t<k0+.7){const u=(t-k0)/.7;bx=-2.0-.2*u;bz=.75-2.3*u;dy=.35*Math.sin(u*Math.PI);}}
    eus.leg!.rot=-1.1*Math.max(...kicks.map(k0=>pulse(t,k0-.25,k0+.35)));
-   scores.forEach((s,i)=>{s.flip=i===0?-3.2*beat(t,14.4,14.9):-3.2*beat(t,kicks[4-i]+.5,kicks[4-i]+.8);});
+   scores.forEach((s,i)=>{const f=i===0?beat(t,14.4,14.9):beat(t,kicks[4-i]+.5,kicks[4-i]+.8);s.flip=-3.2*f;s.visible=f<.999;});
    pows.forEach((p,i)=>{p.s=pulse(t,kicks[i]+.55,kicks[i]+1.3);});
    // Semi-final: a penalty scored, then the loss.
    eus2.body.s=beat(t,15.6,16.4);semi.s=beat(t,19.8,20.6);
@@ -325,7 +325,7 @@ const tears:SpreadDef={id:'tears',rest:27.4,
    eus2.body.x=2.5+.0*cry;rain.scale=beat(t,21,22.4)*(1-Math.max(beat(t,35,37),manual?beat(act,.4,1):0));rain.visible=rain.scale>.02;rain.dx=.15*wave(t,22,35,.3);
    // Both teams come in close, then (the page action) wrap him in a hug.
    const near=beat(t,23.8,26.4),hug=Math.max(manual?beat(act,0,.7):0,beat(t,27.6,29));
-   mates[0].body.s=beat(t,23,23.8);mates[1].body.s=beat(t,23.4,24.2);mates[0].body.x=1.0+.5*near+.35*hug;mates[1].body.x=4.0-.5*near-.35*hug;
+   mates[0].body.s=beat(t,23,23.8);mates[1].body.s=beat(t,23.4,24.2);mates[0].body.x=1.0+.5*near+.35*hug;mates[1].body.x=3.8-.5*near-.35*hug;
    mates[0].armR.rot=.12+1.9*hug;mates[1].armL.rot=-.12-1.9*hug;eus2.armL.rot=-.12-.6*hug;eus2.armR.rot=.12+.6*hug;
    heartP.scale=Math.max(.001,manual?beat(act,.6,.9):0,beat(t,28.6,29.4));heartP.visible=heartP.scale>.02;
    name.s=beat(t,29.6,30.4);boot.s=beat(t,33.4,34.2);nine.s=beat(t,34,34.8);

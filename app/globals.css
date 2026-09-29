@@ -575,6 +575,10 @@ button:is([aria-label^="Close" i],[aria-label^="Dismiss" i],[aria-label="Collaps
  --btn-shadow-gold:0 var(--btn-lift) 0 var(--btn-gold-edge),var(--btn-halo);
  --btn-shadow-gold-pressed:0 2px 0 var(--btn-gold-edge),var(--btn-halo);
 }
+/* Island top HUD row (Paths · coins wallet · Settings): one 44px row, 20px down on desktop, 16px on phones, below the notch.
+   The wallet (IslandJobs.module.css) sits in it; ride prompts (Hop off / Land on truck) hang a clear gap below it. */
+:root{--island-hud-row-top:calc(20px + env(safe-area-inset-top,0px));--island-hud-row-height:var(--btn-height);--island-hud-row-gap:14px}
+@media(max-width:600px),(pointer:coarse){:root{--island-hud-row-top:calc(16px + env(safe-area-inset-top,0px))}}
 /* Tactile gold controls shared by island and pitch HUDs. */
 :root{--island-control-face:var(--btn-gold) var(--btn-grain);--island-control-shadow:var(--btn-shadow-gold)}
 :is(.town-app,[data-arcade-room]) :is(.travel-mode,.minimap-toggle,.touch-shoot,.touch-juggle,button[aria-label*="radar" i]){background:var(--island-control-face)!important;background-blend-mode:soft-light;color:#244d40!important;border:3px solid #fff2cd!important;border-radius:50%;box-shadow:var(--island-control-shadow)!important;transition:translate .16s,box-shadow .16s}
@@ -621,8 +625,10 @@ button:is([aria-label^="Close" i],[aria-label^="Dismiss" i],[aria-label="Collaps
 .island-revealing .town-scene{animation:islandArrival .48s ease-out both}
 @keyframes islandArrival{from{opacity:.65;filter:blur(4px);transform:scale(1.015)}to{opacity:1;filter:blur(0);transform:scale(1)}}
 @media(prefers-reduced-motion:reduce){.island-revealing .town-scene{animation:none}}
-/* Desktop landing stays below the field action instead of replacing it. */
-@media(min-width:601px) and (pointer:fine){.store-enter-prompt[data-truck-land]{transform:translate(-50%,0)}}
+/* Ride prompts (Town.tsx places them at y 0): their top edge hangs a clear gap below the top HUD row (coins wallet), notch included. */
+.store-enter-prompt:is([data-truck-exit],[data-truck-land]){transform:translate(-50%,calc(var(--island-hud-row-top) + var(--island-hud-row-height) + var(--island-hud-row-gap)))}
+/* Desktop landing stays below the field action instead of replacing it (never above the HUD-row gap). */
+@media(min-width:601px) and (pointer:fine){.store-enter-prompt[data-truck-land]{transform:translate(-50%,max(82px,calc(var(--island-hud-row-top) + var(--island-hud-row-height) + var(--island-hud-row-gap))))}}
 
 /* The covered field invitation sleeps while a story owns the screen. */
 body:has([data-riso-story]) .field-learn-card:not([hidden]){animation-play-state:paused}
@@ -647,3 +653,6 @@ body:has([data-hud-triggers][data-scenery=rest]) .field-learn-card:not([hidden])
 .town-app .field-learn-card:not([hidden]){top:calc(80px + env(safe-area-inset-top,0px));left:50%;right:auto;transform:translateX(-50%);width:min(360px,calc(100% - 36px))}
 @media(max-width:600px),(pointer:coarse){.town-app .field-learn-card:not([hidden]){top:calc(76px + env(safe-area-inset-top,0px))}}
 .town-app:has(.field-learn-card:not([hidden])) .npc-talk-prompt{top:calc(164px + env(safe-area-inset-top,0px))}
+/* Heat pass (Sep 29 2026): the pop-up book reader is an opaque full-screen layer, so the asleep island canvas under it is taken out of
+ * compositing while it reads; it shows again as the reader fades out (data-fading) and the island wakes on unmount. */
+body:has([data-player-book]:not([data-fading])) .town-scene canvas{visibility:hidden}

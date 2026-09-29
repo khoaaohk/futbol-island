@@ -1007,8 +1007,8 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
       const entries=[['arcade',nearArcade,103,11,-53,world.arcadeBounds],['coaches',nearCoaches,161,11.8,-37,world.coachesBounds],['museum',nearMuseum,168,9.5,186,world.museumBounds]] as const;
       const truckCandidate=canEnter&&rideRef.current==='jetpack'&&truckLanding===null&&!pendingRide.current?streetTraffic.landingTruckAt(location.x,location.z):undefined;
       nearbyTruck.current=truckCandidate?.index??null;
-      const exitPrompt=uiElement<HTMLButtonElement>('[data-truck-exit]');if(exitPrompt){setUIHidden(exitPrompt,!(canEnter&&streetTraffic.rider.index>=0));if(!exitPrompt.hidden)placeUI(exitPrompt,fullWidth/2,82);}
-      const truckPrompt=uiElement<HTMLButtonElement>('[data-truck-land]');if(truckPrompt){setUIHidden(truckPrompt,!truckCandidate);if(truckCandidate)placeUI(truckPrompt,fullWidth/2,82);}
+      const exitPrompt=uiElement<HTMLButtonElement>('[data-truck-exit]');if(exitPrompt){setUIHidden(exitPrompt,!(canEnter&&streetTraffic.rider.index>=0));if(!exitPrompt.hidden)placeUI(exitPrompt,fullWidth/2,0);}// y: globals.css hangs ride prompts below the coins wallet row
+      const truckPrompt=uiElement<HTMLButtonElement>('[data-truck-land]');if(truckPrompt){setUIHidden(truckPrompt,!truckCandidate);if(truckCandidate)placeUI(truckPrompt,fullWidth/2,0);}
       let closestEntry:typeof entries[number][0]|undefined,closestEntryDistance=Infinity;
       // One contextual action on desktop and touch. Explicit hover wins over proximity.
       if(!truckCandidate&&streetTraffic.rider.index<0)for(const [kind,near,x,,z,bounds] of entries){

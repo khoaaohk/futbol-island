@@ -96,7 +96,10 @@ export default function CardFilmPlayer({story,audio,running,className,onEnd,onCa
    const next=starts[chapter]+seconds(chapter);
    if(time>=next){if(!audioFailed&&srcFor(chapter)&&!media.ended)time=next;else if(chapter===lastChapter){finish();return false;}else{chapter++;time=starts[chapter];load(chapter);}}
    return true;};
-  const schedule=()=>{if(disposed)return;if(reduced)timer=setTimeout(()=>step(performance.now()),STILL_POLL_MS);else raf=requestAnimationFrame(step);};
+  // Between drawn frames the loop sleeps on a timer and asks for a display frame only when the next one is due: a bare rAF
+  // chain woke the page at display rate (60–120/s) to draw 24 (heat pass, Sep 29 2026).
+  const schedule=()=>{if(disposed)return;if(reduced){timer=setTimeout(()=>step(performance.now()),STILL_POLL_MS);return;}
+   const wait=lastDraw+FRAME_MS-performance.now()-6;if(wait>4)timer=setTimeout(()=>{timer=undefined;if(!disposed)raf=requestAnimationFrame(step);},wait);else raf=requestAnimationFrame(step);};
   const step=(now:number)=>{raf=0;timer=undefined;if(disposed)return;const dt=last?Math.min(.15,(now-last)/1000):0;last=now;
    if(!advance(dt))return;
    if(reduced){caption();if(resolveFrame(story,time,track?undefined:chapter).chapter!==drawnChapter)draw();}

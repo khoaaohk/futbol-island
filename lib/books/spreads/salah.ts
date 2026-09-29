@@ -105,8 +105,8 @@ const village:SpreadDef={id:'village',rest:21.1,
    {key:K+'v-bdR',w:4.5,h:3,paint:k=>{wash(k,4.5,3,'#ffe2a6',INK.sky,y=>.5-y/3*.5);const fld=rect(0,1.5,4.5,.6);k.fill(fld,INK.leaf);for(let i=0;i<9;i++)k.key(`M${i*.5} 1.5 L${i*.5+.3} 2.1`,.01,INK.green);const canal=rect(0,2.1,4.5,.16);k.fill(canal,INK.blue);k.dots(canal,INK.navy,.04,.3);
     for(let i=0;i<5;i++){const x=.4+i*.9;k.key(`M${x} 1.5 L${x} 1.0`,.03,INK.wood);k.fill(ell(x,.95,.22,.12),INK.green);}k.fill(rect(0,2.26,4.5,.74),'#e8cf96');}},-3.05,1.22);
   const sun=bd.add(S.sun(K+'v-sun',.4),'R',3.5,1.6,{out:.012}),birds=bd.add(S.birds(K+'v-birds',.9,.35),'L',1.8,2.5,{out:.02});
-  const houses=B.stand(houseStand('v-houses',2.2,1.5,0),-3.7,-1.6,{layer:1});
-  B.stand(S.tree(K+'v-palm1',.9,1.9,'palm'),-1.35,-1.9,{layer:1});B.stand(S.tree(K+'v-palm2',.8,1.6,'palm'),4.6,-1.5,{layer:1});
+  const houses=B.stand(houseStand('v-houses',2.2,1.5,0),-3.6,-1.38,{layer:1});
+  B.stand(S.tree(K+'v-palm1',.9,1.9,'palm'),-1.35,-1.9,{layer:1});B.stand(S.tree(K+'v-palm2',.8,1.6,'palm'),4.6,-1.3,{layer:1});
   const mum=B.person(K+'v-mum',-3.9,-.4,1.62,{shirt:'coach',hair:'long',adult:true,skin:SKIN_M,hairColor:HAIR_M,face:'smile',layer:2});
   const dad=B.person(K+'v-dad',-3.1,-.3,1.74,{shirt:'casual',hair:'short',adult:true,skin:SKIN_M,hairColor:HAIR_M,face:'smile',layer:2});
   const hosp=B.stand(S.flipCard(K+'v-hosp',1.1,.34,'HOSPITAL OFFICE',INK.teal,INK.white),-2.0,-.9,{layer:2,s:0});
@@ -118,7 +118,7 @@ const village:SpreadDef={id:'village',rest:21.1,
   sign.add(lineCard('v-tanta',1.0,.42,['TANTA'],INK.yellow),0,.25,{z:.012});const basy=sign.flap(lineCard('v-basy',1.0,.42,['ITTIHAD BASYOUN'],INK.teal,INK.white),0,.67,{z:.028});
   const MT=B.person(K+'v-team',2.2,.6,1.2,{shirt:'bib',hair:'curly',hairColor:HAIR_M,skin:SKIN_M,number:'11',legs:'kick',face:'smile',layer:3});
   const team=[[3.3,-.2,'short','#d99a6c'],[4.1,.7,'curly','#7f5138']].map(([x,z,h,s],i)=>B.person(K+`v-t${i}`,x as number,z as number,1.24,{shirt:'bib',hair:h as 'short',skin:s as string,face:'smile',layer:2}));
-  B.stand(S.goal(K+'v-goal',1.3,.7),3.0,-1.75,{layer:1});
+  B.stand(S.goal(K+'v-goal',1.3,.7),3.0,-1.55,{layer:1});
   const ball=ballPair(B,'v-ball');
   return (b:Beat)=>{const act=b.action,manual=act>0,t=manual?Math.max(b.t,21.1):b.t;
    sun.dy=.4*beat(t,0,2.2);birds.dx=1.2*beat(t,2,20);birds.dy=.06*wave(t,2,20,.8);
@@ -163,10 +163,10 @@ const journey:SpreadDef={id:'journey',rest:19.6,
    {key:K+'j-bdR',w:4.5,h:3,paint:k=>{wash(k,4.5,3,'#ffe2a6',INK.sky,y=>.5-y/3*.5);skyline(k,4.5,2.0);const nile=rect(0,2.0,4.5,.18);k.fill(nile,INK.blue);k.dots(nile,INK.navy,.04,.3);k.fill(rect(0,2.18,4.5,.82),'#ddd3c0');}},-3.05,1.22);
   const sun=bd.add(S.sun(K+'j-sun',.36),'L',3.4,1.1,{out:.012}),moon=bd.add(sp('j-moon',.4,.4,k=>{k.fill(`M.28 .02 A.19 .19 0 1 0 .38 .3 A.15 .15 0 1 1 .28 .02 Z`,INK.yellow);k.key(`M.28 .02 A.19 .19 0 1 0 .38 .3 A.15 .15 0 1 1 .28 .02 Z`,.012);},{rim:.02}),'L',2.4,1.9,{out:.015});
   const night=bd.add(S.stars(K+'j-stars',2.6,.8,10),'L',.9,2.2,{out:.03});
-  const home=B.stand(houseStand('j-home',1.6,1.2,2),-4.1,-1.5,{layer:1});
+  const home=B.stand(houseStand('j-home',1.6,1.2,2),-4.1,-1.4,{layer:1});
   const school=B.stand(S.sign(K+'j-school',1.1,1.2,'SCHOOL'),-1.7,-1.6,{layer:1});const miss=school.flap(S.flipCard(K+'j-miss',.8,.34,'MISSED',INK.pink),0,.58,{z:.02});miss.scale=0;
   const clk=B.stand(clock('j-clock',.8),-.85,-.2,{layer:2,s:0});const hnd=clk.arm(hand('j-hand',.3),0,.8*1.25-.4,{z:.02});
-  const stones=['50 KM','100 KM','150 KM'].map((l,i)=>B.stand(milestone(`j-ms${i}`,l),[-2.1,.55,2.35][i],[.45,.45,.0][i],{layer:2,s:0}));
+  const stones=['50 KM','100 KM','150 KM'].map((l,i)=>B.stand(milestone(`j-ms${i}`,l),[-2.1,.55,3.0][i],[.45,.45,-.5][i],{layer:2,s:0}));
   const gate=B.stand(gateArch('j-gate',1.9,1.5,'AL MOKAWLOON',INK.yellow),3.6,-1.2,{layer:1,s:0});
   const scout=B.person(K+'j-scout',1.5,-.9,1.7,{shirt:'coach',hair:'cap',adult:true,skin:SKIN_M,face:'open',layer:1});
   const star=scout.body.add(S.bubble(K+'j-star',.55,.46,'star'),.5,scout.h*.95,{z:-.02});
@@ -209,9 +209,9 @@ const tears:SpreadDef={id:'tears',rest:32.6,
    {key:K+'t-bdL',w:4.5,h:3,paint:k=>{wash(k,4.5,3,'#e3ece8',INK.teal,y=>.18);for(let i=0;i<8;i++){k.keyFill(rect(.3+i*.52,.9,.04,.1),INK.grey);const s=poly([[.2+i*.52,1.0],[.44+i*.52,1.0],[.48+i*.52,1.12],[.42+i*.52,1.1],[.42+i*.52,1.45],[.22+i*.52,1.45],[.22+i*.52,1.1],[.16+i*.52,1.12]]);k.fill(s,i%2?INK.yellow:INK.white);k.key(s,.008);}
     k.fill(rect(0,2.0,4.5,1.0),'#b7cfcc');k.key('M0 2 L4.5 2',.014);}},
    {key:K+'t-bdR',w:4.5,h:3,paint:k=>{wash(k,4.5,3,INK.sky2,INK.sky,y=>.7-y/3*.7);crowd(k,4.5,1.3,2.3,[INK.yellow,INK.white,INK.red,INK.yellow,INK.sky],2);lightRig(k,.8,.5);lightRig(k,3.7,.5);k.fill(rect(0,2.3,4.5,.7),INK.grass);}},-3.05,1.22);
-  const ban=bd.add(S.banner(K+'t-ban',2.6,.38,'EGYPTIAN PREMIER LEAGUE',INK.red),'R',.4,2.8,{out:.02});
+  const ban=bd.add(S.banner(K+'t-ban',2.6,.38,'EGYPTIAN PREMIER LEAGUE',INK.red),'R',1.55,2.8,{out:.02});
   const sun=bd.add(S.sun(K+'t-sun',.36),'L',3.4,2.4,{out:.012});
-  B.stand(lockers('t-lockers',2.2,1.3),-3.5,-1.7,{layer:1});
+  B.stand(lockers('t-lockers',2.2,1.3),-3.5,-1.36,{layer:1});
   B.stand(S.bench(K+'t-bench',1.4,.45),-2.2,-.7,{layer:2});
   const coach=B.person(K+'t-coach',-4.2,-.1,1.72,{shirt:'coach',hair:'short',adult:true,skin:SKIN_M,hairColor:HAIR_M,face:'smile',layer:2});
   const M=B.person(K+'t-mo',-2.3,.9,1.25,{shirt:'bib',hair:'curly',hairColor:HAIR_M,skin:SKIN_M,number:'11',face:'sad',layer:3});
@@ -220,8 +220,8 @@ const tears:SpreadDef={id:'tears',rest:32.6,
   const tearsP=M.body.add(sp('t-tears',.2,.14,k=>{for(const x of [.04,.16])k.fill(`M${x} 0 Q${x+.03} .07 ${x} .1 Q${x-.03} .07 ${x} 0 Z`,INK.sky);},{rim:.008}),0,M.h*.72,{anchor:'center',z:.02});
   const MR=B.person(K+'t-mr',1.6,.7,1.3,{shirt:'bib',hair:'curly',hairColor:HAIR_M,skin:SKIN_M,number:'11',legs:'kick',face:'smile',layer:3});
   const mates=[[2.7,-.2,'short','#d99a6c'],[.9,-.9,'long','#7f5138']].map(([x,z,h,s],i)=>B.person(K+`t-m${i}`,x as number,z as number,1.28,{shirt:'bib',hair:h as 'short',skin:s as string,face:'smile',layer:2}));
-  const keeper=B.person(K+'t-keep',4.2,-1.3,1.3,{shirt:'keeper',hair:'short',skin:'#d99a6c',face:'open',layer:1,holdL:'glove',holdR:'glove'});
-  B.stand(S.goal(K+'t-goal',1.6,.85),4.2,-1.65,{layer:1});
+  const keeper=B.person(K+'t-keep',4.2,-1.08,1.3,{shirt:'keeper',hair:'short',skin:'#d99a6c',face:'open',layer:1,holdL:'glove',holdR:'glove'});
+  B.stand(S.goal(K+'t-goal',1.6,.85),4.2,-1.34,{layer:1});
   const goalCard=B.stand(S.flipCard(K+'t-goalcard',1.2,.38,'FIRST GOAL!',INK.pink),3.3,1.5,{layer:3,s:0});
   const miss=[0,1,2].map(i=>B.stand(S.icon(K+`t-x${i}`,.26,'cross'),2.2+i*.34,1.9,{layer:3,s:0,tab:false}));
   const ball=B.stand(S.ball(K+'t-ball',.12),2.0,.8,{layer:3,tab:false});
@@ -239,7 +239,7 @@ const tears:SpreadDef={id:'tears',rest:32.6,
    showPart(tearsP,beat(t,25,25.6)*(1-beat(t,29.4,30)));
    coach.body.x=-4.2+1.2*beat(t,28.9,30.4);coach.armR.rot+=1.3*beat(t,30.4,31)*(1-lift);
    showPart(sun,Math.max(lift,0));sun.dy=-.9+.9*lift;
-   const g=manual?beat(act,.5,.8):beat(t,34.4,35.2);if(g>0){bx=2.0+2.2*g;bz=.8-2.3*g;}
+   const g=manual?beat(act,.5,.8):beat(t,34.4,35.2);if(g>0){bx=2.0+1.55*g;bz=.8-2.05*g;}
    ball.x=bx;ball.z=bz;ball.rot=-bx*5;ball.visible=t>15.2;
    MR.leg!.rot=-1*Math.max(maxOf([...shots,34.4].map(a=>pulse(t,a-.3,a+.3))),manual?pulse(act,.4,.6):0);
    keeper.body.rot=.7*Math.max(maxOf([22.4,23.1,23.8].map(a=>pulse(t,a,a+.6))),pulse(t,34.8,36),manual?pulse(act,.7,1):0);
@@ -271,7 +271,7 @@ const basel:SpreadDef={id:'basel',rest:17.5,
   const q=MB.body.add(speech('b-q',.45,.4,'?'),.42,MB.h*.98,{z:-.02});
   const mates=[[3.1,.0,'short','#f1b88f'],[4.2,.8,'long','#d99a6c']].map(([x,z,h,s],i)=>B.person(K+`b-m${i}`,x as number,z as number,1.32,{shirt:'navy',hair:h as 'short',skin:s as string,face:'smile',layer:2}));
   const talk=mates.map((m,i)=>m.body.add(speech(`b-talk${i}`,.62,.46,'. . .'),-.4,m.h*.98,{z:-.02}));
-  const star=B.stand(sp('b-star',.9,1.1,k=>{const b=rect(0,0,.9,1.1);k.fill(b,INK.white);k.key(b,.013);const st=poly(Array.from({length:10},(_,j)=>[.45+Math.cos(j*.628-1.57)*(j%2?.12:.3),.45+Math.sin(j*.628-1.57)*(j%2?.12:.3)]));k.fill(st,INK.yellow);k.key(st,.01);}),3.7,-1.6,{layer:1,s:0});
+  const star=B.stand(sp('b-star',.9,1.1,k=>{const b=rect(0,0,.9,1.1);k.fill(b,INK.white);k.key(b,.013);const st=poly(Array.from({length:10},(_,j)=>[.45+Math.cos(j*.628-1.57)*(j%2?.12:.3),.45+Math.sin(j*.628-1.57)*(j%2?.12:.3)]));k.fill(st,INK.yellow);k.key(st,.01);}),3.7,-1.38,{layer:1,s:0});
   const cup=B.stand(S.trophy(K+'b-cup',.55,.95),2.5,-1.5,{layer:1,s:0});const champ=B.stand(S.flipCard(K+'b-champ',1.3,.38,'CHAMPIONS',INK.yellow,INK.navy),3.4,1.9,{layer:3,s:0});
   return (b:Beat)=>{const act=b.action,manual=act>0,t=manual?Math.max(b.t,17.5):b.t;
    // Port Said: a closed gate, flowers and candles to remember (1.9–15.2), handled gently.
@@ -310,22 +310,22 @@ const bench:SpreadDef={id:'bench',rest:19.4,
   const sun=bd.add(S.sun(K+'n-sun',.36),'R',2.2,2.4,{out:.012});
   const dug=B.stand(bench2('n-dug',1.8,1.0),-2.6,-1.5,{layer:1});
   const M=B.person(K+'n-mo',-2.6,-1.25,1.28,{shirt:'navy',hair:'curly',hairColor:HAIR_M,skin:SKIN_M,number:'17',face:'sad',layer:1});
-  const P=[[-3.9,.6,'short','#f1b88f'],[-1.3,1.1,'long','#d99a6c'],[-.8,-.3,'curly','#7f5138']].map(([x,z,h,s],i)=>B.person(K+`n-p${i}`,x as number,z as number,1.3,{shirt:'navy',hair:h as 'short',skin:s as string,legs:'kick',face:'smile',layer:i===2?2:3}));
+  const P=[[-3.9,.6,'short','#f1b88f'],[-1.3,1.1,'long','#d99a6c'],[-.45,-.15,'curly','#7f5138']].map(([x,z,h,s],i)=>B.person(K+`n-p${i}`,x as number,z as number,1.3,{shirt:'navy',hair:h as 'short',skin:s as string,legs:'kick',face:'smile',layer:i===2?2:3}));
   const boss=B.person(K+'n-boss',-4.3,-.9,1.72,{shirt:'coach',hair:'short',adult:true,skin:'#e9b08a',face:'open',layer:2});
   const crit=boss.body.add(sp('n-crit',.62,.48,k=>{const w=.62,h=.48;const p=`M${w*.1} 0 L${w*.9} 0 Q${w} 0 ${w} ${h*.15} L${w} ${h*.62} Q${w} ${h*.76} ${w*.9} ${h*.76} L${w*.36} ${h*.76} L${w*.18} ${h} L${w*.22} ${h*.76} L${w*.1} ${h*.76} Q0 ${h*.76} 0 ${h*.62} L0 ${h*.15} Q0 0 ${w*.1} 0 Z`;k.fill(p,'#d9d5e6');k.key(p,.012);k.key(`M${w*.3} ${h*.2} L${w*.5} ${h*.55} M${w*.5} ${h*.2} L${w*.3} ${h*.55}`,.03,INK.red);k.key(`M${w*.62} ${h*.2} L${w*.62} ${h*.44} M${w*.62} ${h*.52} L${w*.62} ${h*.56}`,.03,INK.red);},{rim:.016}),.5,boss.h*.95,{z:-.02});
-  const count=B.stand(S.scoreboard(K+'n-count',1.0,.9,'GAMES'),-.9,-1.7,{layer:1,s:0});const games=counter(count,'n-g',.72,.36,.24,['1','2'],'3');
+  const count=B.stand(S.scoreboard(K+'n-count',1.0,.9,'GAMES'),-1.25,-1.85,{layer:1,s:0});const games=counter(count,'n-g',.72,.36,.24,['1','2'],'3');
   const shirtRail=B.stand(rail('n-rail',1.3,1.7),1.25,-1.2,{layer:1,s:0});
   shirtRail.add(shirtCard('n-74',.9,.95,'74',PURPLE),0,.55,{z:.012});const flapShirt=shirtRail.flap(shirtCard('n-blank',.9,.95,'',PURPLE),0,1.5,{z:.028});
   const flw=B.stand(flowers('n-flw',.8,.4),1.3,-.3,{layer:2,s:0});
   const MR=B.person(K+'n-mr',2.6,.8,1.34,{shirt:'casual',hair:'curly',hairColor:HAIR_M,skin:SKIN_M,number:'11',legs:'kick',face:'smile',layer:3});
-  const goals=B.stand(S.scoreboard(K+'n-goals',1.1,.95,'ROMA GOALS'),3.9,-1.6,{layer:1,s:0});const gl=counter(goals,'n-gl',.8,.38,.26,['0','5','10'],'15');
+  const goals=B.stand(S.scoreboard(K+'n-goals',1.1,.95,'ROMA GOALS'),3.85,-1.36,{layer:1,s:0});const gl=counter(goals,'n-gl',.8,.38,.26,['0','5','10'],'15');
   const pos=B.stand(lineCard('n-pos',1.5,.5,['PLAYER OF','THE SEASON'],INK.yellow),3.8,1.7,{layer:3,s:0});
   const mate=B.person(K+'n-rm',4.3,.4,1.3,{shirt:'casual',hair:'short',skin:'#f1b88f',face:'smile',layer:2});
   const ball=ballPair(B,'n-ball');
   return (b:Beat)=>{const act=b.action,manual=act>0,t=manual?Math.max(b.t,19.4):b.t;
    // Chelsea: first Egyptian (2), rarely picked (8.2), three games, public criticism (11.9).
    P.forEach((p,i)=>{p.body.s=beat(t,2.4+i*.4,3.2+i*.4);});M.body.s=beat(t,3.4,4.2)*(1-Math.max(beat(t,19.8,20.4),manual?beat(act,.2,.5):0));dug.s=beat(t,2.8,3.6)*.999+.001;
-   const [bx,bz]=track(t,[[0,-3.5,.7],[4.4,-3.5,.7],[5.4,-1.0,1.0],[6.2,-1.0,1.0],[7.2,-.6,-.2],[8,-.6,-.2],[9,-3.5,.7],[10.4,-3.5,.7],[11.4,-1.0,1.0]]);
+   const [bx,bz]=track(t,[[0,-3.5,.7],[4.4,-3.5,.7],[5.4,-1.0,1.0],[6.2,-1.0,1.0],[7.2,-.45,-.05],[8,-.45,-.05],[9,-3.5,.7],[10.4,-3.5,.7],[11.4,-1.0,1.0]]);
    ball(bx,bz,0,t>3&&t<19.6);P[0].leg!.rot=-1*maxOf([4.4,10.4].map(a=>pulse(t,a-.3,a+.3)));P[1].leg!.rot=-1*pulse(t,5.9,6.5);P[2].leg!.rot=-1*pulse(t,7.7,8.3);
    const rainA=beat(t,8.4,9.4)*(1-Math.max(beat(t,19.8,21),manual?beat(act,.3,.8):0));showPart(rain,rainA);showPart(drops,rainA);drops.dy=-.08*((t*1.5)%1)*rainA;
    count.s=beat(t,12,12.8);games.forEach((f,i)=>{f.flip=-3.2*beat(t,13+i*.9,13.5+i*.9);});
@@ -354,8 +354,8 @@ const liverpool:SpreadDef={id:'liverpool',rest:20.5,
     for(let i=0;i<3;i++){const x=1.5+i*1.2;k.key(`M${x} 2.1 L${x} 1.5`,.03,INK.wood);k.fill(ell(x,1.45,.22,.12),INK.green);}k.fill(rect(0,2.1,4.5,.9),INK.sand);k.dots(rect(0,2.1,4.5,.9),INK.orange,.05,.15);}},-3.05,1.22);
   const fw=[bd.add(S.firework(K+'l-fw1',.4,INK.red),'L',1.2,1.8,{out:.03}),bd.add(S.firework(K+'l-fw2',.36,INK.yellow),'L',3.4,1.7,{out:.03})];
   const sun=bd.add(S.sun(K+'l-sun',.38),'R',3.8,.9,{out:.012}),birds=bd.add(S.birds(K+'l-birds',.9,.35),'R',2.0,2.5,{out:.02});
-  B.stand(S.goal(K+'l-goal',1.6,.85),-4.0,-1.6,{layer:1});
-  const keeper=B.person(K+'l-keep',-4.0,-1.25,1.3,{shirt:'keeper',hair:'short',skin:'#f1b88f',face:'open',layer:1,holdL:'glove',holdR:'glove'});
+  B.stand(S.goal(K+'l-goal',1.6,.85),-4.0,-1.36,{layer:1});
+  const keeper=B.person(K+'l-keep',-4.0,-1.08,1.3,{shirt:'keeper',hair:'short',skin:'#f1b88f',face:'open',layer:1,holdL:'glove',holdR:'glove'});
   const M=B.person(K+'l-mo',-1.6,.7,1.4,{shirt:'casual',hair:'curly',hairColor:HAIR_M,skin:SKIN_M,number:'11',legs:'kick',face:'smile',beard:true,layer:3});
   const board=B.stand(S.scoreboard(K+'l-board',1.2,1.0,'LEAGUE GOALS'),-2.3,-1.7,{layer:1,s:0});const gl=counter(board,'l-g',.9,.44,.26,['0','10','20'],'32');
   const cups=[['EUROPE',-3.9],['ENGLAND',-3.0]].map(([l,x],i)=>({cup:B.stand(S.trophy(K+`l-cup${i}`,.5,.9),x as number,.6+i*.35,{layer:2,s:0}),card:B.stand(S.flipCard(K+`l-cc${i}`,.9,.3,l as string,i?INK.blue:INK.red),x as number,1.3+i*.35,{layer:3,s:0})}));
@@ -370,7 +370,7 @@ const liverpool:SpreadDef={id:'liverpool',rest:20.5,
   return (b:Beat)=>{const act=b.action,manual=act>0,t=manual?Math.max(b.t,20.5):b.t;
    // Liverpool: 32 goals (5.8), champions of Europe and England (13.1).
    M.body.s=beat(t,2,2.8);board.s=beat(t,6,6.8);gl.forEach((f,i)=>{f.flip=-3.2*beat(t,7.2+i*1.2,7.8+i*1.2);});
-   const kicks=[7.2,8.4,9.6,10.8];let bx=-1.2,bz=.75;for(const a of kicks)if(t>=a&&t<a+1){const u=clamp01((t-a)/.6);bx=-1.2-2.7*smooth(u);bz=.75-2.2*smooth(u);}
+   const kicks=[7.2,8.4,9.6,10.8];let bx=-1.2,bz=.75;for(const a of kicks)if(t>=a&&t<a+1){const u=clamp01((t-a)/.6);bx=-1.2-2.2*smooth(u);bz=.75-1.98*smooth(u);}
    ball.x=bx;ball.z=bz;ball.rot=-bx*5;ball.visible=t>2.4&&t<19;M.leg!.rot=-1*maxOf(kicks.map(a=>pulse(t,a-.3,a+.2)));keeper.body.rot=-.7*maxOf(kicks.map(a=>pulse(t,a+.2,a+.9)));
    cups.forEach((c,i)=>{c.cup.s=beat(t,13.6+i*1.8,14.4+i*1.8);c.card.s=beat(t,13.9+i*1.8,14.6+i*1.8);});
    fw.forEach((f,i)=>{showPart(f,beat(t,14+i*1.6,14.8+i*1.6)*(1-beat(t,19,19.6)));f.rot=t*.2;});cheer(M,beat(t,14.2,15)*(1-beat(t,19,19.6)),.2*wave(t,15,19,1.3));

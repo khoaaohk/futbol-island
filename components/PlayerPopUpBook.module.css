@@ -12,11 +12,11 @@
 .picture:focus-visible{outline:3px solid #ffd66c;outline-offset:-6px;border-radius:24px}
 .scene3d{width:100%;height:100%;contain:layout paint}.scene3d canvas{display:block;width:100%;height:100%;pointer-events:none}
 .sceneFallback{padding:60px 24px;color:#fff2d7;text-align:center;line-height:1.5}
-/* Page controls: previous · the page's paper action · next, just above the shared story tray. */
-.navigation{position:absolute;z-index:5;left:50%;transform:translateX(-50%);bottom:calc(150px + env(safe-area-inset-bottom,0px));width:min(760px,calc(100% - 32px));display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px}
+/* Page controls: previous arrow · the page's paper action · next arrow, just above the shared story tray. The two side
+   columns are the same icon width, so the action's column (and the action) is centred on the screen. */
+.navigation{position:absolute;z-index:5;left:50%;transform:translateX(-50%);bottom:calc(150px + env(safe-area-inset-bottom,0px));width:min(760px,calc(100% - 32px));display:grid;grid-template-columns:var(--btn-icon) minmax(0,1fr) var(--btn-icon);align-items:center;gap:12px}
 .reader button{min-height:44px;font:inherit;font-weight:800;cursor:pointer;touch-action:manipulation}
-.navigation>button{display:inline-flex;align-items:center;gap:8px;min-height:var(--btn-height);padding:10px 16px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius);background:var(--btn-gold-bright) var(--btn-grain) center/128px 128px;color:var(--btn-ink);box-shadow:0 4px 0 var(--btn-gold-bright-edge);transition:translate .15s,box-shadow .15s}
-.navigation>button em{font-style:normal;font-size:14px}.navigation>button span{font-size:18px;line-height:1}
+.navigation>button{display:grid;place-items:center;box-sizing:border-box;width:var(--btn-icon);height:var(--btn-icon);min-height:var(--btn-icon);padding:0;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:50%;background:var(--btn-gold-bright) var(--btn-grain) center/128px 128px;color:var(--btn-ink);box-shadow:0 4px 0 var(--btn-gold-bright-edge);transition:translate .15s,box-shadow .15s}
 .navigation>button:active{translate:0 var(--btn-press);box-shadow:0 1px 0 var(--btn-gold-bright-edge)}.navigation>button:disabled{opacity:.45;cursor:default;translate:none}
 .activity{min-width:0;display:flex;justify-content:center}
 .activity button{display:inline-flex;align-items:center;justify-content:center;gap:10px;max-width:100%;min-height:var(--btn-height);padding:10px 20px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius);background:var(--btn-pink) var(--btn-grain) center/128px 128px;color:var(--btn-ink);box-shadow:0 4px 0 var(--btn-pink-edge);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:translate .15s,box-shadow .15s}
@@ -28,10 +28,10 @@
  .header{top:calc(16px + env(safe-area-inset-top,0px));left:calc(18px + env(safe-area-inset-left,0px))}
  .chapterLine{left:104px;right:18px;top:calc(14px + env(safe-area-inset-top,0px));text-align:right}
  .chapterLine h2{font-size:25px}.year{font-size:10px}
- .navigation{gap:8px;bottom:calc(148px + env(safe-area-inset-bottom,0px))}.navigation>button{padding:10px 14px}.navigation>button em{display:none}
- .activity button{padding:10px 14px;font-size:14px}
+ .navigation{gap:8px;bottom:calc(148px + env(safe-area-inset-bottom,0px))}
+ .activity button{padding:6px 14px;font-size:14px;line-height:1.15;white-space:normal;text-wrap:balance;text-align:center}
 }
-@media(max-height:520px) and (min-width:560px){.reader{--top:calc(62px + env(safe-area-inset-top,0px));--bottom:calc(136px + env(safe-area-inset-bottom,0px))}.chapterLine{left:118px;right:min(440px,52%);text-align:left;top:calc(14px + env(safe-area-inset-top,0px))}.chapterLine h2{font-size:21px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.year{font-size:9px}.navigation{bottom:auto;top:calc(10px + env(safe-area-inset-top,0px));left:auto;right:16px;transform:none;width:auto;grid-template-columns:auto auto auto}.navigation>button em{display:none}.playback.playback{max-height:120px}}
+@media(max-height:520px) and (min-width:560px){.reader{--top:calc(62px + env(safe-area-inset-top,0px));--bottom:calc(136px + env(safe-area-inset-bottom,0px))}.chapterLine{left:118px;right:min(440px,52%);text-align:left;top:calc(14px + env(safe-area-inset-top,0px))}.chapterLine h2{font-size:21px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.year{font-size:9px}.playback.playback{max-height:120px}}
 @media(prefers-reduced-motion:reduce){.navigation>button,.activity button{transition:none}}
 
 /* Desktop (Sep 28): the book gets the room. Page arrows move to the screen edges beside the book, the page action sits
@@ -50,9 +50,20 @@
 /* Sep 28: exit — the book folds shut, then the reader fades out smoothly instead of vanishing. */
 .reader{transition:opacity .26s ease-in}.reader[data-fading]{opacity:0;pointer-events:none}
 @media(prefers-reduced-motion:reduce){.reader{transition:none}}
-/* Sep 28 (pm): plain "Previous" / "Next" words (no arrows), and the pair sits lower: level with the story tray's bottom on
-   desktop, and the words stay visible on phones too. */
-.navigation>button{justify-content:center}
-@media(max-width:700px){.navigation>button em{display:inline}.navigation>button{padding:10px 12px}}
-@media(max-height:520px) and (min-width:560px){.navigation>button em{display:inline}}
-@media(min-width:701px) and (min-height:521px){.navigation>button{bottom:calc(18px + env(safe-area-inset-bottom,0px));min-width:112px}}
+/* Sep 28 (pm), updated Sep 29: Previous / Next are equal round gold arrow buttons (icon only; the last page's Next becomes a
+   replay arrow, "Read again"), so both sides weigh the same and the page action sits dead centre. The pair sits lower:
+   level with the story tray's bottom on desktop and landscape phones, and either side of the centred action on portrait
+   phones. Accessible names stay "Previous page" / "Next page" / "Read again". */
+@media(min-width:701px) and (min-height:521px){.navigation>button{bottom:calc(18px + env(safe-area-inset-bottom,0px))}}
+/* Landscape phones: the action is centred in the top bar, the chapter line moves right of it, and the arrows sit at the
+   screen edges level with the story tray (narrowed to leave them room) so the book keeps all of its height. */
+@media(max-height:520px) and (min-width:560px){
+ .navigation{position:static;transform:none;width:auto;display:contents}
+ .navigation>button{position:absolute;z-index:5;bottom:calc(18px + env(safe-area-inset-bottom,0px))}
+ .navigation>button[data-page-nav=prev]{left:calc(16px + env(safe-area-inset-left,0px))}
+ .navigation>button[data-page-nav=next]{right:calc(16px + env(safe-area-inset-right,0px))}
+ .activity{position:absolute;z-index:5;left:50%;transform:translateX(-50%);top:calc(10px + env(safe-area-inset-top,0px));width:max-content;max-width:260px}
+ .activity button{padding:6px 16px;line-height:1.15;white-space:normal;text-wrap:balance;text-align:center}
+ .chapterLine{left:calc(50% + 142px);right:calc(16px + env(safe-area-inset-right,0px));text-align:right}
+ .playback.playback{width:min(760px,calc(100% - 2 * (16px + var(--btn-icon) + 12px)))}
+}

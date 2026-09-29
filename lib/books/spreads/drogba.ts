@@ -132,7 +132,7 @@ const homesick:SpreadDef={id:'homesick',rest:19.6,
   const bd=B.vfold({key:K+'h-bdL',w:4.5,h:3,paint:k=>{wash(k,4.5,3,'#c3c9d9',INK.navy,y=>.3-y*.06);roofs(k,.1,12,1.9,2);roofs(k,.3,11,2.4,4);k.fill(rect(0,2.4,4.5,.6),'#e2d6bc');}},
    {key:K+'h-bdR',w:4.5,h:3,paint:k=>{wash(k,4.5,3,INK.sky2,INK.sky,y=>.7-y/3*.7);sea(k,4.5,1.8,.4);roofs(k,.3,10,2.3,3);palms(k,[.5,3.8,4.3],2.2);k.fill(rect(0,2.3,4.5,.7),'#8e8f98');}},-3.05,1.22);
   const rain=bd.add(stormCloud('h-rain',1.3,.66),'L',2.2,2.3,{out:.03}),sun=bd.add(S.sun(K+'h-sun',.34),'R',3.2,2.0,{out:.012});
-  const sign=B.stand(signBoard('h-sign',1.3,1.15,'ABIDJAN'),3.8,-1.2,{layer:1,s:0});const c78=sign.flap(S.flipCard(K+'h-1978',1.2,.44,'1978',INK.pink),0,1.15*.56,{z:.03});
+  const sign=B.stand(signBoard('h-sign',1.3,1.15,'ABIDJAN'),1.6,-1.4,{layer:1,s:0});const c78=sign.flap(S.flipCard(K+'h-1978',1.2,.44,'1978',INK.pink),0,1.15*.56,{z:.03});
   const mum=B.person(K+'h-mum',2.6,-.4,1.6,{skin:'#7f5138',hair:'long',hairColor:'#1d1a1f',shirt:'coach',adult:true,face:'smile',layer:2});
   const dad=B.person(K+'h-dad',3.4,-.6,1.72,{...DID,shirt:'navy',adult:true,face:'smile',layer:2});
   const boyR=B.person(K+'h-boyR',1.6,.3,.85,{...DID,shirt:'casual',face:'shy',layer:3,holdR:'suitcase'});
@@ -190,7 +190,7 @@ const together:SpreadDef={id:'together',rest:16.0,
   B.slot(.3,1.5,2.2,1.5);
   const teen=B.person(K+'t-teen',3.0,1.3,1.15,{...DID,shirt:'casual',face:'grin',layer:3});
   const sibs=[[3.8,1.6,.95,'bun'],[4.4,1.0,.85,'short'],[3.5,2.1,.8,'curly']].map(([x,z,h,hr],i)=>B.person(K+`t-sib${i}`,x as number,z as number,h as number,{skin:'#7f5138',hair:hr as 'short',hairColor:'#1d1a1f',shirt:(['bib','fan','keeper'] as const)[i],face:'grin',layer:3}));
-  const fifteen=B.stand(S.flipCard(K+'t-15',.9,.3,'AGE 15',INK.yellow,INK.navy),4.4,-.6,{layer:2,s:0});
+  const fifteen=B.stand(S.flipCard(K+'t-15',.9,.3,'AGE 15',INK.yellow,INK.navy),4.55,-.6,{layer:2,s:0});
   const home=B.stand(S.house(K+'t-house',1.3,1.2),4.2,-1.1,{layer:1,s:0});
   const hearts=[0,1,2].map(i=>B.stand(heart(`t-heart${i}`,.26),1.6+i*.6,.6,{layer:2,s:0,tab:false}));
   return (b:Beat)=>{const act=b.action,manual=act>0,t=manual?Math.max(b.t,16):b.t;
@@ -272,7 +272,7 @@ const patience:SpreadDef={id:'patience',rest:31.5,
   const did=B.person(K+'p-did',-2.7,.2,1.3,{...DID,shirt:'bib',face:'smile',layer:2});
   const contract=B.stand(lineCard('p-contract',1.3,.5,['FIRST','CONTRACT'],INK.yellow),-1.2,-1.1,{layer:1,s:0});
   const prm=B.stand(pram('p-pram',.7,.55),-1.6,.8,{layer:3,s:0});const isaac=B.stand(S.flipCard(K+'p-isaac',.8,.3,'ISAAC',INK.sky,INK.navy),-1.6,1.45,{layer:3,s:0});
-  const post=B.stand(postP('p-post',.3,1.4),-3.9,.4,{layer:2,s:0,tab:false});const arrowA=post.arm(arrowArm('p-arrow',.6,.9),0,1.36,{z:.02});
+  const post=B.stand(postP('p-post',.3,1.4),-3.9,1.0,{layer:2,s:0,tab:false});const arrowA=post.arm(arrowArm('p-arrow',.6,.9),0,1.36,{z:.02});
   const stamps=['INJURED','LOST HIS PLACE','NO GOALS'].map((l,i)=>B.stand(stamp(`p-st${i}`,1.3,.36,l),-4.0+i*.9,1.3+(i%2)*.55,{layer:3,s:0}));
   const coaches=[B.person(K+'p-c1',.8,-.6,1.7,{skin:'#f1b88f',hair:'short',hairColor:'#6b5a48',shirt:'coach',adult:true,face:'shy',layer:2}),B.person(K+'p-c2',.65,.3,1.65,{skin:'#d99a6c',hair:'bald',shirt:'coach',adult:true,face:'shy',layer:2})];
   const qb=B.stand(S.bubble(K+'p-q',.5,.46,'dots'),1.3,-1.5,{layer:1,s:0});
@@ -281,7 +281,7 @@ const patience:SpreadDef={id:'patience',rest:31.5,
   const did2=B.person(K+'p-did2',2.3,.8,1.3,{...DID,shirt:'casual',face:'grin',legs:'kick',layer:3});
   const mal=B.person(K+'p-mal',4.2,1.3,1.25,{skin:'#7f5138',hair:'bald',shirt:'casual',face:'grin',legs:'kick',layer:3});
   const tagM=B.stand(S.flipCard(K+'p-tagM',1.1,.3,'FLORENT MALOUDA',INK.white,INK.navy),4.1,2.0,{layer:3,s:0});
-  const board=B.stand(S.scoreboard(K+'p-board',1.3,1.1,'NEXT SEASON'),4.3,-.9,{layer:2,s:0});board.add(S.flipCard(K+'p-17',1.0,.44,'17 GOALS',INK.yellow,INK.navy),0,.3,{z:.012});const bq=board.flap(S.flipCard(K+'p-bq',1.0,.44,'?',INK.blue),0,.74,{z:.03});
+  const board=B.stand(S.scoreboard(K+'p-board',1.3,1.5,'NEXT SEASON'),4.3,-.9,{layer:2,s:0});board.add(S.flipCard(K+'p-17',1.0,.44,'17 GOALS',INK.yellow,INK.navy),0,.3,{z:.012});const bq=board.flap(S.flipCard(K+'p-bq',1.0,.44,'?',INK.blue),0,.74,{z:.03});
   const heartP=B.stand(heart('p-heart',.3),3.3,1.4,{layer:3,s:0,tab:false});
   const ball=B.stand(S.ball(K+'p-ball',.1),3.9,1.35,{layer:3,tab:false,s:0});
   return (b:Beat)=>{const act=b.action,manual=act>0,t=manual?Math.max(b.t,31.5):b.t;
@@ -357,7 +357,7 @@ const hospital:SpreadDef={id:'hospital',rest:31.7,
   const sun=bd.add(S.sun(K+'k-sun',.36),'R',2.2,1.9,{out:.012});const smallH=[bd.add(hSign('k-h1',.3),'R',.6,1.6,{out:.03}),bd.add(hSign('k-h2',.3),'R',3.6,1.5,{out:.03})];
   const bunt=bd.add(S.bunting(K+'k-bunt',2.6,.4,[INK.orange,INK.white,INK.green]),'R',.8,2.6,{out:.03});
   const did=B.person(K+'k-did',-2.6,.3,1.35,{...DID,shirt:'casual',adult:true,face:'smile',layer:2});
-  const amb=B.stand(lineCard('k-amb',1.9,.56,['GOODWILL AMBASSADOR','UNITED NATIONS · 2007'],INK.sky),-3.2,-1.28,{layer:1,s:0});
+  const amb=B.stand(lineCard('k-amb',1.9,.56,['GOODWILL AMBASSADOR','UNITED NATIONS · 2007'],INK.sky),-3.75,-1.28,{layer:1,s:0});
   const mag=B.stand(magazine('k-mag',.8,1.1),-1.1,-1.3,{layer:1,s:0});const magC=B.stand(S.flipCard(K+'k-2010',.8,.3,'2010',INK.red),-1.1,-.3,{layer:2,s:0});
   const doveP=B.stand(dove('k-dove',.5,.36),-4.2,.2,{layer:2,s:0,tab:false});
   const jar=B.stand(coinJar('k-jar',.5,.62),-1.3,1.3,{layer:3,s:0});const coins=[0,1,2].map(i=>jar.add(coin(`k-coin${i}`,.07),.25,1.1,{anchor:'center',z:.02}));

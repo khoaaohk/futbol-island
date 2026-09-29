@@ -64,8 +64,7 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
  // ---- Static signs, bins, rebound-wall paint: one merged mesh. ----
  const parts:{geometry:T.BufferGeometry;matrix:T.Matrix4;color:string}[]=[];
  for(const job of JOBS){const {x,z,yaw}=job.board,y=floor(x,z),s=Math.sin(yaw),c=Math.cos(yaw);
-  // The Kit Room keeps its activity, but no freestanding sign in the square.
-  if(job.id!=='kit-room'){
+  {
   for(const side of [-1,1])parts.push({geometry:box,matrix:m4(x+c*side*1.25,y+1.1,z-s*side*1.25,yaw,.12,2.2,.12),color:'#6e5540'});
   parts.push({geometry:box,matrix:m4(x,y+1.72,z,yaw,2.7,.72,.1),color:'#6e5540'});
   parts.push({geometry:box,matrix:m4(x,y+2.14,z,yaw,2.9,.1,.3),color:job.color});
@@ -86,7 +85,7 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
  // Label atlas: one quad on each face of every sign.
  const atlas=labelAtlas();
  if(atlas){keep(atlas);const pos:number[]=[],uv:number[]=[],idx:number[]=[];
-  JOBS.forEach((job,i)=>{if(job.id==='kit-room')return;const {x,z,yaw}=job.board,y=floor(x,z)+1.72,u0=(i%2)/2,v1=1-Math.floor(i/2)/ATLAS_ROWS,v0=v1-1/ATLAS_ROWS,c=Math.cos(yaw),s=Math.sin(yaw);
+  JOBS.forEach((job,i)=>{const {x,z,yaw}=job.board,y=floor(x,z)+1.72,u0=(i%2)/2,v1=1-Math.floor(i/2)/ATLAS_ROWS,v0=v1-1/ATLAS_ROWS,c=Math.cos(yaw),s=Math.sin(yaw);
    for(const face of [1,-1]){const nx=s*face*.056,nz=c*face*.056,rx=c*1.3*face,rz=-s*1.3*face,base=pos.length/3;
     for(const [k,j] of [[-1,-1],[1,-1],[1,1],[-1,1]])pos.push(x+nx+rx*k,y+j*.33,z+nz+rz*k);
     uv.push(u0,v0,u0+.5,v0,u0+.5,v1,u0,v1);idx.push(base,base+1,base+2,base,base+2,base+3);}});

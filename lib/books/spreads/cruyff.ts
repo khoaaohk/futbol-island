@@ -430,9 +430,9 @@ const turnPage:SpreadDef={id:'turn',rest:23.5,
   cal.add(card('h4-cal4',.94,.66,'30 OCT','#fbf5e6',INK.navy,'1970 · BACK!'),0,.4,{z:.01});
   const pages=['WEEK 3','WEEK 2','WEEK 1','INJURED'].map((l,i)=>cal.flap(card(`h4-cal${i}`,.94,.66,l,i===3?INK.red:'#fbf5e6',i===3?INK.white:INK.navy,i===3?'1970–71':'REST'),0,1.08,{z:.02+i*.006}));
   // Right: back against PSV; a teammate has number 9; the shirt board and its lever.
-  const sign=B.stand(card('h4-psv',1.3,.42,'AJAX · PSV',C.white,C.ajax,'30 OCTOBER 1970'),4.1,-1.55,{layer:1,tab:false});
-  const nine=player(B,'h4-nine',4.1,-.8,1.2,{kit:'ajax',hair:'short',hairColor:'#c9a063',face:'smile',number:'9',layer:1,yaw:0});
-  const back=player(B,'h4-back',2.7,-.35,1.3,{kit:'ajax',hair:'messi',hairColor:BROWN,face:'grin',layer:2});
+  const sign=B.stand(card('h4-psv',1.3,.42,'AJAX · PSV',C.white,C.ajax,'30 OCTOBER 1970'),3.45,-1.4,{layer:1,tab:false});
+  const nine=player(B,'h4-nine',4.35,-.7,1.2,{kit:'ajax',hair:'short',hairColor:'#c9a063',face:'smile',number:'9',layer:1,yaw:0});
+  const back=player(B,'h4-back',2.5,-.35,1.3,{kit:'ajax',hair:'messi',hairColor:BROWN,face:'grin',layer:2});
   const chest=back.body.add(card('h4-chest',.26,.2,'14',C.ajax,C.white),0,.78,{z:.01});
   const frame=B.stand(spec('h4-frame',1.3,1.5,k=>{const b=rect(0,0,1.3,1.2);k.fill(b,INK.navy);k.dots(b,INK.blue,.04,.3);k.key(b,.02,C.wood);k.keyFill(rect(.2,1.2,.08,.3),C.wood);k.keyFill(rect(1.02,1.2,.08,.3),C.wood);}),1.15,1.95,{layer:3});
   frame.add(shirtSpec('h4-s14',.95,.9,'14',C.white,C.ajax,INK.navy),0,.48,{z:.01});
@@ -551,12 +551,12 @@ const courtsPage:SpreadDef={id:'courts',rest:25,
   const sunP=bd.add(S.sun(K('co-sun'),.36),'R',3.3,1.9,{out:.015}),cloud=bd.add(S.cloud(K('co-cloud'),1.0,.45),'R',1.3,2.2);
   const starP=bd.add(bigStar('h6-star',.34),'R',2.0,1.75,{out:.03});
   // Left: the coach, the hospital, giving up smoking, the foundation's children.
-  const hosp=B.stand(hospital('h6-hosp',1.7,1.7),-3.7,-1.35,{layer:1});
-  const cal=B.stand(card('h6-feb',1.3,.46,'FEBRUARY 1991',INK.navy,INK.white),-2.1,-1.35,{layer:1,tab:false});
-  const coach=player(B,'h6-coach',-2.2,.35,1.66,{kit:'suit',hair:'short',hairColor:'#7a6a5a',adult:true,face:'smile',layer:2});
-  const pack=B.stand(cigPack('h6-pack',.26,.36),-1.6,.75,{layer:3,tab:false});B.slot(-1.6,.8,-.75,.8);
+  const hosp=B.stand(hospital('h6-hosp',1.7,1.7),-3.95,-1.35,{layer:1});
+  const cal=B.stand(card('h6-feb',1.3,.46,'FEBRUARY 1991',INK.navy,INK.white),-2.75,-1.05,{layer:1,tab:false});
+  const coach=player(B,'h6-coach',-1.65,.35,1.66,{kit:'suit',hair:'short',hairColor:'#7a6a5a',adult:true,face:'smile',layer:2});
+  const pack=B.stand(cigPack('h6-pack',.26,.36),-1.1,.75,{layer:3,tab:false});B.slot(-1.1,.8,-.75,.8);
   const binP=B.stand(bin('h6-bin',.4,.5),-.6,.75,{layer:3});
-  const noSmoke=B.stand(poster('h6-poster',1.1,1.1,'NO SMOKING','a healthy heart',INK.blue),-.75,-.45,{layer:2});
+  const noSmoke=B.stand(poster('h6-poster',1.1,1.1,'NO SMOKING','a healthy heart',INK.blue),-.6,-.45,{layer:2});
   const kidsL=[player(B,'h6-k4',-4.2,1.2,1.0,{kit:'plain',shirt:'bib',hair:'curly',skin:'#7f5138',face:'smile'}),player(B,'h6-k5',-3.35,1.55,.98,{kit:'plain',shirt:'fan',hair:'bun',skin:'#f1b88f',face:'smile'}),player(B,'h6-k6',-2.5,1.7,1.0,{kit:'plain',shirt:'casual',hair:'short',skin:'#d99a6c',face:'smile'})];
   const hearts=kidsL.map((c,i)=>c.body.add(S.bubble(K(`h6-kh${i}`),.44,.38,'heart'),.35,1.2,{z:-.02}));
   // Right: a neighbourhood, and the court that unfolds between the houses.
@@ -581,7 +581,7 @@ const courtsPage:SpreadDef={id:'courts',rest:25,
    // February 1991: a heart attack and heart surgery.
    cal.s=beat(T,6,6.8);hosp.s=beat(T,6.6,7.6);heartBig.scale=beat(T,7.4,8.2)*(1+.08*wave(T,8.2,11.6,1.2));
    // He gives up smoking: the packet slides into the bin; a health poster.
-   binP.s=beat(T,11.4,12);const toss=beat(T,12.4,13.6);pack.x=lerp(-1.6,-.62,toss);pack.dy=.4*Math.sin(toss*Math.PI);pack.s=beat(T,3,3.6)*(1-beat(T,13.5,13.9));
+   binP.s=beat(T,11.4,12);const toss=beat(T,12.4,13.6);pack.x=lerp(-1.1,-.62,toss);pack.dy=.4*Math.sin(toss*Math.PI);pack.s=beat(T,3,3.6)*(1-beat(T,13.5,13.9));
    coach.armR.rot=.12+1.4*pulse(T,12.2,13.6)+1.6*beat(T,14.4,15)-1.6*beat(T,16.4,17);noSmoke.s=beat(T,13.8,14.7);
    // 1997: the Johan Cruyff Foundation, for children.
    fBan.scale=beat(T,16.4,17.2);kidsL.forEach((c,i)=>{c.body.s=beat(T,18.4+i*.4,19.3+i*.4);const up=beat(T,21.2+i*.3,21.8+i*.3);c.armL.rot=-.12-2.2*up;c.armR.rot=.12+.3*wave(T,21.8,24.6,1.5+i*.2);});

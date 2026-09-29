@@ -53,18 +53,7 @@ export const JOBS:JobDef[]=[
   intro:'After tonight\'s futsal match, bottles are left on the rooftop court. Pick up every bottle, then drop the bag in the recycling bin by this sign.',howTo:'Pick up every bottle, then recycle them.',unit:'Bottles picked up',
   lesson:'Respect is part of football. After beating Germany at the 2022 World Cup, Japan\'s players left their dressing room spotless with a thank-you note, and Japan fans stayed to tidy the stands.',lessonSource:'https://www.cbsnews.com/news/japan-upset-win-over-germany-japanese-players-leave-dressing-room-spotless/'},
 
- // ---- Added 27 Sep 2026 (docs/island-jobs.md §3b): Clubhouse kit room, assistant referee, ball pump, goal anchors. ----
- {id:'kit-room',title:'Kit room',role:'Kit assistant',place:'Cage court, Island Square',board:{x:80,z:-40,yaw:0},color:'#b3262d',kind:'sort',prop:'shirt',
-  // A mini team laid out on the square, attacking toward the Clubhouse (−z): keeper at the back, striker at the front.
-  targets:[{x:68,z:-34},{x:63.5,z:-38.5},{x:75,z:-42.5},{x:68,z:-39.5},{x:68,z:-44.5}],deliver:{x:78,z:-36.5,label:'kit hamper'},radius:1.4,
-  intro:'The coaches need the shirts ready before kick-off. Take one shirt at a time from the kit hamper and hang it on the peg where that number traditionally plays.',howTo:'Take a shirt from the hamper, then hang it on the right position peg.',unit:'Shirts hung',
-  lesson:'Shirt numbers started as positions. When Arsenal and Chelsea first wore numbers in league games (25 August 1928), 1 was the goalkeeper, 2 and 3 the full-backs, 7 and 11 the wingers and 9 the centre-forward. Today players can pick numbers, but people still call a striker "a number 9" and a playmaker "a number 10".',lessonSource:'https://en.wikipedia.org/wiki/Squad_number_(association_football)',
-  task:{type:'sort',slots:['GOALKEEPER','LEFT BACK','RIGHT WING','PLAYMAKER','STRIKER'],items:[
-   {number:9,slot:4,clue:'Number 9 is the classic centre-forward, who leads the attack. Hang it at the very front.'},
-   {number:1,slot:0,clue:'Number 1 is the goalkeeper, the last player at the back.'},
-   {number:7,slot:2,clue:'Number 7 was the outside-right: the right winger, out wide by the touchline.'},
-   {number:3,slot:1,clue:'Number 3 was the left full-back: a defender on the left side.'},
-   {number:10,slot:3,clue:'Number 10 was the inside-left, and it became the playmaker\'s shirt, just behind the striker.'}]}},
+ // ---- Added 27 Sep 2026 (docs/island-jobs.md §3b): assistant referee, ball pump, goal anchors. ----
  {id:'offside-flag',title:'Flag the offside',role:'Assistant referee',place:'Referee practice strip, Coaches Centre',board:{x:152.5,z:7,yaw:Math.PI},color:'#e0b422',kind:'offside',prop:'flag',
   targets:[{x:150,z:4.2}],radius:1.6,
   intro:'Be the assistant referee! Stand on your touchline spot and watch five short replays. When each pass is played, decide: raise the flag for offside, or keep it down.',howTo:'Stand on the touchline spot, watch the pass, then make your call.',unit:'Right calls',

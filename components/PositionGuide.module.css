@@ -61,3 +61,7 @@
    They keep the shared pill label (14px, deep green) like every other modal. */
 .panel header [data-navigation] span{font-size:inherit;color:inherit}
 /* Player card view: the card reveal's layout (CardOffer .reveal on the binder viewer's .viewer), styled there, over the player's backdrop. */
+/* Heat pass (Sep 29 2026): behind an open player card the backdrop is a plain tint, not a live blur. A full-screen backdrop-filter is
+   re-sampled on every composited frame under it (each 24 fps card-film frame and every frame of a card flip); the island behind is
+   asleep, so the blur bought nothing but GPU work. */
+.dialog[data-card-view]::backdrop{backdrop-filter:none;-webkit-backdrop-filter:none;background:#183c42b3}

@@ -138,3 +138,5 @@ Placement checks (`tests/island-jobs.cjs`): every sign is more than 10 m from ev
 ## 8. Clubhouse exterior (September 27 update)
 
 The former Boot Room feature was removed. The building remains in Island Square, labelled CLUBHOUSE. Its former interior, coach story, Enter prompt, camera hooks and runtime are removed. The outdoor kit-assistant job keeps its existing progress and rewards, now identified as Clubhouse, Island Square. It is started from its job sign. The shared shot-camera utility remains for the assistant-referee activity. No new render loop, geometry or interior is added.
+
+> **Sep 29 2026:** the Kit room job (kit assistant, Island Square cage court) was removed at the user's request. The generic `sort` task engine stays in jobRules/jobScene for future jobs.

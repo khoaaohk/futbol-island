@@ -202,8 +202,8 @@ const five:SpreadDef={id:'five',rest:8.0,
   const debut=B.stand(S.flipCard(K+'f-2009',1.3,.36,'2009 · FIRST TEAM',INK.blue),-3.4,1.2,{layer:3,s:0,tab:false});
   const cup=B.stand(S.trophy(K+'f-cup',.55,.9),-1.4,1.1,{layer:3,s:0});
   const mates=[0,1].map(i=>B.person(K+`f-m${i}`,-3.2+i*1.3,.2+i*.3,1.3,{shirt:'navy',hair:(['curly','short'] as const)[i],skin:['#7f5138','#f1b88f'][i],face:'grin',layer:2}));
-  B.stand(S.goal(K+'f-goal',2.0,1.0),3.7,-1.5,{layer:1});
-  const gk=B.person(K+'f-gk',3.7,-1.2,1.3,{shirt:'keeper',hair:'short',skin:'#f1b88f',face:'open',layer:2,holdL:'glove',holdR:'glove'});
+  B.stand(S.goal(K+'f-goal',2.0,1.0),3.5,-1.33,{layer:1});
+  const gk=B.person(K+'f-gk',3.5,-1.08,1.3,{shirt:'keeper',hair:'short',skin:'#f1b88f',face:'open',layer:2,holdL:'glove',holdR:'glove'});
   const H=B.person(K+'f-hero',1.3,.9,1.36,ginger({shirt:'navy',hair:'short',skin:'#f1b88f',number:'7',legs:'kick',face:'smile',layer:3}) as never);
   const cones=[0,1,2].map(i=>B.stand(S.cone(K+`f-cone${i}`,.3),.5+i*.6,1.8,{layer:3,s:0,tab:false}));
   const ball=B.stand(S.ball(K+'f-ball',.13),1.75,1.0,{layer:3,tab:false});
@@ -326,9 +326,9 @@ const city:SpreadDef={id:'city',rest:18.4,
   const ban=bd.add(S.banner(K+'y-ban',2.4,.4,'NOT FINISHED',INK.pink),'R',.4,2.8,{out:.02});
   const fw=[bd.add(S.firework(K+'y-fw1',.4,INK.sky),'R',1.2,2.2,{out:.03}),bd.add(S.firework(K+'y-fw2',.36,INK.pink),'R',3.3,2.3,{out:.03})];
   const sun=bd.add(S.sun(K+'y-sun',.34),'L',3.6,2.0,{out:.015});
-  const fee=B.stand(lineCard('y-fee',1.5,.66,['2015','CLUB RECORD'],INK.sky),-3.8,-1.3,{layer:1,s:0});
+  const fee=B.stand(lineCard('y-fee',1.5,.66,['2015','CLUB RECORD'],INK.sky),-3.45,-1.3,{layer:1,s:0});
   const ten=B.stand(S.flipCard(K+'y-10',1.3,.36,'TEN SEASONS',INK.blue),-2.1,-1.5,{layer:1,s:0});
-  const big=B.stand(S.trophy(K+'y-cl',.8,1.3),-3.9,.3,{layer:2,s:0});
+  const big=B.stand(S.trophy(K+'y-cl',.8,1.3),-4.35,.5,{layer:2,s:0});
   const pl=Array.from({length:6},(_,i)=>B.stand(S.trophy(K+`y-pl${i}`,.3,.5),-2.8+i*.42,.5,{layer:2,s:0}));
   const pts=B.stand(S.scoreboard(K+'y-pts',1.3,1.1,'POINTS'),-.9,-1.2,{layer:1,s:0});pts.add(S.flipCard(K+'y-100',1.0,.5,'100',INK.pink),0,.27,{z:.012});
   const cups=[['5 LEAGUE CUPS',-3.4],['2 FA CUPS',-1.6]].map(([l,x],i)=>B.stand(S.flipCard(K+`y-lc${i}`,1.5,.36,l as string,i?INK.orange:INK.teal),x as number,1.9,{layer:3,s:0,tab:false}));

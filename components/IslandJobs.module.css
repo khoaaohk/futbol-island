@@ -68,10 +68,10 @@
 :global(.in-lesson) .wallet,:global(.in-lesson) .offer,:global(.in-lesson) .hud{display:none}
 
 /* Island-only wallet: centered in the same 44px row as Paths and Settings. */
-.wallet[data-job-wallet]{left:50%;right:auto;top:calc(20px + env(safe-area-inset-top,0px));transform:translateX(-50%);height:44px;min-height:44px;max-width:calc(100% - 156px);padding:4px 10px;gap:5px;white-space:nowrap;box-sizing:border-box}
+.wallet[data-job-wallet]{left:50%;right:auto;top:var(--island-hud-row-top,calc(20px + env(safe-area-inset-top,0px)));transform:translateX(-50%);height:var(--island-hud-row-height,44px);min-height:var(--island-hud-row-height,44px);max-width:calc(100% - 156px);padding:4px 10px;gap:5px;white-space:nowrap;box-sizing:border-box}
 .wallet .basketCount{display:flex;align-items:center;gap:3px;margin:0;padding:3px 4px;font-size:12px;line-height:1}
 .basketCount svg{flex:none}
-@media(max-width:600px),(pointer:coarse){.wallet[data-job-wallet]{top:calc(16px + env(safe-area-inset-top,0px))}}
+@media(max-width:600px),(pointer:coarse){.wallet[data-job-wallet]{top:var(--island-hud-row-top,calc(16px + env(safe-area-inset-top,0px)))}}
 @media(max-width:380px){.wallet[data-job-wallet]{gap:3px;padding:4px 6px}.wallet[data-job-wallet] small{display:none}}
 
 /* UI audit (Sep 27): while fishing, the 76px Back pill sits top-left, so the centred wallet leaves room for it on both sides. */

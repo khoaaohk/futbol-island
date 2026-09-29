@@ -158,8 +158,8 @@ const cloud:SpreadDef={id:'cloud',rest:19.2,
   const arrowC=bd.add(S.arrow(K+'c-arr',.36,.22,INK.yellow),'L',3.35,1.3,{out:.025});
   const mind=B.stand(mindCard('c-mind'),-1.2,-1.5,{layer:1,s:0});
   B.stand(S.tree(K+'c-tree',.8,1.2,'round','#7d8f86'),-4.5,1.7,{layer:3});
-  B.stand(S.goal(K+'c-goal',1.8,.9),3.9,-1.55,{layer:1});
-  const bigStar=B.stand(starCard('c-bigstar',.32),3.9,-1.45,{layer:1,s:0,tab:false});bigStar.dy=.55;
+  B.stand(S.goal(K+'c-goal',1.8,.9),3.9,-1.38,{layer:1});
+  const bigStar=B.stand(starCard('c-bigstar',.32),3.9,-1.28,{layer:1,s:0,tab:false});bigStar.dy=.55;
   const H=B.person(K+'c-hero',-2.4,1.1,1.65,{shirt:'keeper',hair:'short',skin:'#f1b88f',number:'1',face:'sad',layer:3,holdL:'glove',holdR:'glove'});
   const bw=H.h*320/512,mask=H.body.flap(smileHead('c-mask',H.h,'#f1b88f'),(150/320-.5)*bw,H.h*(1-30/512),{anchor:'top',z:.016});
   const inner=H.body.add(stormCloud('c-inner',.6,.34),0,H.h*1.02,{z:-.02});
@@ -259,18 +259,18 @@ const sunrise:SpreadDef={id:'sunrise',rest:14.8,
   const conf=bd.add(S.confetti(K+'s-cf',2.4,1.1,2),'R',.5,1.4,{out:.04});
   const H=B.person(K+'s-hero',-2.3,.8,1.4,{shirt:'keeper',hair:'short',skin:'#f1b88f',number:'1',face:'smile',layer:3,holdL:'glove',holdR:'glove'});
   const cloudHead=H.body.add(stormCloud('s-mini',.6,.34),0,H.h*1.02,{z:-.02});
-  const ticks=[0,1,2].map(i=>B.stand(S.icon(K+`s-tick${i}`,.3,'tick'),-4.3+i*.45,-.9,{layer:2,s:0,tab:false}));
+  const ticks=[0,1,2].map(i=>B.stand(S.icon(K+`s-tick${i}`,.3,'tick'),-4.55+i*.4,-.9,{layer:2,s:0,tab:false}));
   B.stand(S.tree(K+'s-tree',1.0,1.5,'round'),-4.5,-1.8,{layer:1});
   const board=B.stand(S.scoreboard(K+'s-board',2.0,1.5,'WORLD CUP 2006'),2.0,-1.6,{layer:1,s:0});
   board.add(lineCard('s-two',1.55,.7,['2 GOALS IN','7 MATCHES'],INK.white),0,.4,{z:.012});
   const glovesRow=Array.from({length:5},(_,i)=>B.stand(S.icon(K+`s-cs${i}`,.3,'glove'),2.85+i*.38,2.05,{layer:3,s:0,tab:false}));
   const cs=B.stand(S.flipCard(K+'s-csl',1.6,.34,'FIVE CLEAN SHEETS',INK.blue),1.55,2.05,{layer:3,s:0,tab:false});
-  B.stand(S.goal(K+'s-goal',1.5,.8),4.3,-1.85,{layer:1});
+  B.stand(S.goal(K+'s-goal',1.5,.8),4.0,-1.35,{layer:1});
   const cup=B.stand(S.trophy(K+'s-cup',.6,1.0),.8,.1,{layer:2,s:0});
   const best=B.stand(S.flipCard(K+'s-best',1.5,.36,'BEST GOALKEEPER',INK.pink),.95,1.1,{layer:3,s:0,tab:false});
   const mates=[0,1,2].map(i=>B.person(K+`s-m${i}`,2.2+i*1.05,.9+(i%2)*.55,1.28,{shirt:'navy',hair:(['curly','short','long'] as const)[i],skin:['#d99a6c','#f1b88f','#b27650'][i],face:'grin',layer:3}));
   const ball=B.stand(S.ball(K+'s-ball',.13),-1.2,.9,{layer:3,tab:false});
-  const euro=[0,1].map(i=>B.person(K+`s-e${i}`,-3.9+i*2.6,-.5+i*.2,1.26,{shirt:'navy',hair:(['short','curly'] as const)[i],skin:['#d99a6c','#f1b88f'][i],face:'smile',layer:2}));
+  const euro=[0,1].map(i=>B.person(K+`s-e${i}`,-3.05+i*1.75,-.5+i*.2,1.26,{shirt:'navy',hair:(['short','curly'] as const)[i],skin:['#d99a6c','#f1b88f'][i],face:'smile',layer:2}));
   return (b:Beat)=>{const act=b.action,manual=act>0,t=manual?Math.max(b.t,14.8):b.t;
    H.body.s=beat(t,.3,1.2);
    // Overcoming depression: the grey cloud shrinks and drifts away.
@@ -292,7 +292,7 @@ const sunrise:SpreadDef={id:'sunrise',rest:14.8,
  }};
 
 /* ───────────── 5 · Staying with his team (serieb, 2006–2007) ───────────── */
-const LAD_H=2.6,LAD_LO=.3,LAD_HI=2.1;
+const LAD_H=2.6,LAD_LO=.3,LAD_HI=1.72;
 const serieb:SpreadDef={id:'serieb',rest:18.4,
  left:k=>{pitch(k,-5,0,'#9fbf86','#6f9a66',.8);chalk(k,`M-5 ${Z(-2.1)} L0 ${Z(-2.1)}`);chalk(k,ell(0,Z(-.4),1.0,1.0));
   k.text('2006',-2.4,Z(2.62),.52,INK.navy,{max:2.4});k.text('SENT DOWN TO SERIE B',-2.4,Z(2.9),.16,INK.navy,{weight:800});},

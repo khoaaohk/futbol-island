@@ -19,8 +19,10 @@ import {OPEN_CARDS_EVENT} from '@/lib/town/cardRewardStore';
 const IslandHome=dynamicImport(()=>import('./IslandHome'),{ssr:false});
 const CardCollection=dynamicImport(()=>import('./CardCollection'),{ssr:false});
 /** Ms until the Paths button's 3 s cycle is between swaps and shakes (250–2350 ms: one icon fully shown, button still), so a rest never
- * freezes a half-blurred icon or a tilted button. The icons' 3 s / 6 s delays keep them on the button's cycle. */
-function hudSettle(nav:HTMLElement){const a=nav.querySelector('[data-tour=quests]')?.getAnimations()[0];const t=Number(a?.currentTime);if(!a||!Number.isFinite(t))return 0;const phase=t%3000;return phase>=250&&phase<=2350?0:(3250-phase)%3000;}
+ * freezes a half-blurred icon or a tilted button. The icons' 3 s / 6 s delays keep them on the button's cycle.
+ * A cycle that is not running (paused under a card film or a dialog) never reaches a clean frame: rest now. Waiting on it
+ * re-armed a 216 ms timer forever behind every open card (heat pass, Sep 29 2026). */
+function hudSettle(nav:HTMLElement){const a=nav.querySelector('[data-tour=quests]')?.getAnimations()[0];const t=Number(a?.currentTime);if(!a||a.playState!=='running'||!Number.isFinite(t))return 0;const phase=t%3000;return phase>=250&&phase<=2350?0:(3250-phase)%3000;}
 /** Steady gameplay input (heat pass 3): the joystick, ride/kick buttons and movement keys. While held, the Paths loops rest, so the
  * compositor follows the 30 fps island instead of running at display rate. Letting go leaves them resting (heat pass 4). Exported for tests. */
 export const HUD_HOLD_KEYS=new Set(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright',' ','j','shift']);

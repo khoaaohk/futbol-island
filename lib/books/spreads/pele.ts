@@ -410,11 +410,11 @@ const fiftyeight:SpreadDef={id:'fiftyeight',rest:23.4,
   const conf=bd.add(S.confetti('pele-f-conf',2.6,1.4,2),'L',1.5,1.0,{out:.03});
   // Scoreboard: lift FINAL to see the score.
   const board=B.stand(S.scoreboard('pele-f-board',2.3,1.7,'FINAL · 1958'),-2.1,-1.55,{layer:1});
-  board.add(S.scoreFlap('pele-f-score',1.9,1.02,'BRAZIL','5 – 2','SWEDEN'),0,.3,{z:.012});
-  const cover=board.flap(poster('pele-f-cover',2.0,1.08,'FINAL'),0,1.34,{z:.024});
+  board.add(S.scoreFlap('pele-f-score',2.1,.9,'BRAZIL','5 – 2','SWEDEN'),0,.3,{z:.012});
+  const cover=board.flap(poster('pele-f-cover',2.14,1.08,'FINAL'),-1.07,.26,{anchor:'bl',axis:'y',z:.024});
   B.stand(S.floodlight('pele-f-flood',.5,1.9),-4.6,-1.2,{layer:1});
   const mate1=person(B,'pele-f-m1',-4.1,.15,1.34,{kit:'brazil58',shirt:'bib',hair:'curly',skin:'#b27650',number:'7',face:'grin',layer:2});
-  const mate2=person(B,'pele-f-m2',-.75,.35,1.34,{kit:'brazil58',shirt:'bib',hair:'short',skin:'#d99a6c',number:'8',face:'smile',layer:2});
+  const mate2=person(B,'pele-f-m2',-.55,-.8,1.34,{kit:'brazil58',shirt:'bib',hair:'short',skin:'#d99a6c',number:'8',face:'smile',layer:2});
   // The doubter and the coach.
   const psy=B.person('pele-f-psy',-2.95,.75,1.75,{shirt:'casual',hair:'short',adult:true,skin:'#f1b88f',face:'open',layer:2});
   const talk=psy.body.add(S.bubble('pele-f-talk',.55,.46,'dots'),-.5,1.95,{z:-.02});
@@ -462,7 +462,7 @@ const fiftyeight:SpreadDef={id:'fiftyeight',rest:23.4,
    ball.s=pele.body.s;keeper.body.rot=-.9*sgn*dive;keeper.body.dx=.25*sgn*dive;keeper.armL.rot=-.12-2.3*dive;keeper.armR.rot=.12+2.3*dive;
    stages.forEach((c,i)=>{c.s=beat(t,[27.2,29.1,31][i],[27.9,29.8,31.7][i]);});
    tick.scale=Math.max(.001,n?pulse(t,27.4,28.4)+pulse(t,29.3,30.3)+pulse(t,31.3,32.3)+pulse(t,33.1,34.1):0);
-   cover.flip=-2.7*beat(t,31.2,32.2);def.armL.rot=-.12-.6*pulse(t,26.8,28.4);
+   cover.flip=-1.5*beat(t,31.2,32.2);def.armL.rot=-.12-.6*pulse(t,26.8,28.4);
    // He cried as his teammates congratulated him: everyone's arms go up.
    const cheer=Math.max(n?beat(t,34.1,34.8):0,act>0?beat(act,.85,1):0);pele.armL.rot=-.12-2.3*cheer;pele.armR.rot=.12+2.3*cheer;
    mate1.armL.rot=-.12-2.3*(n?beat(t,34.3,35):0);mate2.armR.rot=.12+2.3*(n?beat(t,34.5,35.2):0);coach.armR.rot=.12+2.2*(n?beat(t,34.6,35.3):0);
@@ -497,9 +497,9 @@ const thousand:SpreadDef={id:'thousand',rest:20.0,
   post.add(rosette('pele-k-2007',.2,'2007',INK.gold),0,.8,{z:.014});
   const later=post.flap(S.flipCard('pele-k-1962',1.1,.56,'1962',INK.pink),0,1.38,{z:.026});
   // Right: the pitch, the goal, and teammates who play on.
-  const goal=B.stand(S.goal('pele-k-goal',1.75,.9),3.75,-1.5,{layer:1});void goal;
+  const goal=B.stand(S.goal('pele-k-goal',1.75,.9),3.75,-1.2,{layer:1});void goal;
   B.stand(S.floodlight('pele-k-fl2',.5,1.9),4.75,-.9,{layer:1});
-  const keeper=B.person('pele-k-keeper',3.75,-1.2,1.28,{shirt:'keeper',hair:'short',skin:'#d99a6c',face:'open',layer:2,holdL:'glove',holdR:'glove'});
+  const keeper=B.person('pele-k-keeper',3.75,-.95,1.28,{shirt:'keeper',hair:'short',skin:'#d99a6c',face:'open',layer:2,holdL:'glove',holdR:'glove'});
   const pele=person(B,'pele-k-pele',1.9,.9,1.4,{kit:'brazil',shirt:'bib',...PELE,number:'10',legs:'kick',face:'smile',layer:3});B.slot(1.4,1.05,2.3,1.05);
   const best=pele.body.add(S.bubble('pele-k-best',.55,.46,'star'),.55,1.55,{z:-.02});
   const ball=B.stand(S.ball('pele-k-ball',.12),2.3,1.05,{layer:3,tab:false});
@@ -516,8 +516,8 @@ const thousand:SpreadDef={id:'thousand',rest:20.0,
    const back=beat(t,11.6,12.6),w2=.7*beat(t,13,13.4)-1.9*beat(t,13.4,13.6)+1.2*beat(t,14,14.6),g2=beat(t,13.5,14.5);
    pele.body.x=1.9-.5*back;pele.leg!.rot=w1+w2;pele.body.rot=.12*beat(t,14.4,15.2);pele.armR.rot=.12+.5*beat(t,14.6,15.4);
    const dive=pulse(t,9.3,10.6);keeper.body.rot=-.9*dive;keeper.body.dx=.25*dive;keeper.armL.rot=-.12-2.3*Math.max(dive,pulse(t,13.8,15));keeper.armR.rot=.12+2.3*Math.max(dive,pulse(t,13.8,15));
-   if(t<11){ball.x=lerp(2.3,3.3,g1);ball.z=lerp(1.05,-1.3,g1);ball.dy=.3*Math.sin(g1*Math.PI)+.1*g1;ball.rot=-g1*9;ball.s=1-beat(t,10.4,10.9);}
-   else{ball.x=lerp(1.8,3.9,g2);ball.z=lerp(1.05,-1.9,g2);ball.dy=1.1*Math.sin(g2*Math.PI*.8);ball.rot=-g2*10;ball.s=beat(t,11,11.5)*(1-beat(t,14.6,15.2));}
+   if(t<11){ball.x=lerp(2.3,3.3,g1);ball.z=lerp(1.05,-1.0,g1);ball.dy=.3*Math.sin(g1*Math.PI)+.1*g1;ball.rot=-g1*9;ball.s=1-beat(t,10.4,10.9);}
+   else{ball.x=lerp(1.8,3.9,g2);ball.z=lerp(1.05,-1.3,g2);ball.dy=1.1*Math.sin(g2*Math.PI*.8);ball.rot=-g2*10;ball.s=beat(t,11,11.5)*(1-beat(t,14.6,15.2));}
    // He could not play again in that World Cup: he leaves the pitch and sits by the bench, knee wrapped.
    pele.body.s=n?1-beat(t,17.3,18):0;bp.body.s=Math.max(beat(t,17.8,18.6),n?0:1);wrap.scale=Math.max(.001,beat(t,18.6,19.2));
    // Tap three times to cheer his teammates on (narrated at 20.6, 21.6 and, as they win the final, 23.4).
@@ -558,7 +558,7 @@ const seventy:SpreadDef={id:'seventy',rest:32.6,
   const door=arch.flap(S.door('pele-v-door',.75,.9),-.375,0,{anchor:'bl',axis:'y',z:.012});
   const board=B.stand(S.scoreboard('pele-v-board',2.2,1.6,'FINAL · 1970'),-1.85,-1.55,{layer:1});
   board.add(S.scoreFlap('pele-v-score',1.8,.98,'BRAZIL','4 – 1','ITALY'),0,.28,{z:.012});
-  const cover=board.flap(poster('pele-v-cover',1.9,1.02,'FINAL'),0,1.28,{z:.024});
+  const cover=board.flap(poster('pele-v-cover',1.9,1.02,'FINAL'),-.95,.26,{anchor:'bl',axis:'y',z:.024});
   const bul=B.person('pele-v-bul',-3.55,.75,1.34,{shirt:'ger',hair:'short',skin:'#f1b88f',legs:'kick',face:'open',layer:2});
   const por=B.person('pele-v-por',-3.5,.8,1.34,{shirt:'casual',hair:'curly',skin:'#d99a6c',legs:'kick',face:'open',layer:2});
   const p66=person(B,'pele-v-p66',-2.65,1.0,1.36,{kit:'brazil',shirt:'bib',...PELE,number:'10',face:'shy',layer:3});B.slot(-2.75,1.08,-1.85,1.08);
@@ -597,7 +597,7 @@ const seventy:SpreadDef={id:'seventy',rest:32.6,
    sunP.dy=-.35*beat(t,22.6,23.8);sunP.scale=Math.max(.001,beat(t,22.5,23.3));
    // The 1970 final in Mexico: a header, and Brazil beat Italy 4–1.
    bigBall.scale=Math.max(.001,beat(t,25.6,26.4));bigBall.rot=.4*(t-25.6)*(t>25.6?1:0);
-   crosser.body.s=Math.max(beat(t,25.8,26.6),n?0:1,act>0?1:0);pele.body.s=Math.max(beat(t,24.6,25.4),n?0:1,act>0?1:0);cover.flip=-2.7*beat(t,31,32);
+   crosser.body.s=Math.max(beat(t,25.8,26.6),n?0:1,act>0?1:0);pele.body.s=Math.max(beat(t,24.6,25.4),n?0:1,act>0?1:0);cover.flip=-1.5*beat(t,31,32);
    const run=(a:number,d:number)=>({k:beat(t,a,a+.35*d),s:beat(t,a+.3*d,a+1.7*d),j:pulse(t,a+1.2*d,a+2.1*d),h:beat(t,a+1.65*d,a+2.3*d),end:a+2.3*d});
    let K=0,sw=0,J=0,H=0,hide=1;
    if(n){const r=t<32.6?run(28.3,1):run(33,1);K=r.k;sw=r.s;J=r.j;H=r.h;hide=1-beat(t,r.end+.9,r.end+1.3);if(t>r.end+1.3)sw=0;}
@@ -634,7 +634,7 @@ const king:SpreadDef={id:'king',rest:33.2,
   const lesson=bd.add(S.banner('pele-r-help',3.0,.42,'USE IT TO HELP OTHERS',INK.pink),'R',1.9,2.35,{out:.03});
   // Left: the mural, the boy who became a man who spoke up, his foundation.
   B.stand(mural('pele-r-mural',2.2,1.7),-2.75,-1.3,{layer:1});
-  const blooms=B.stand(flowers('pele-r-flowers',2.2,.36),-2.75,-.95,{layer:2,s:0,tab:false});
+  const blooms=B.stand(flowers('pele-r-flowers',2.2,.36),-2.75,-.6,{layer:2,s:0,tab:false});
   const found=B.stand(station('pele-r-found',1.45,1.15,'PELÉ FOUNDATION',WHITE),-.85,-.95,{layer:1,s:0});
   const y2018=found.add(S.flipCard('pele-r-2018',.62,.3,'2018',INK.yellow,INK.navy),0,1.18,{z:.02});
   B.stand(S.lamp('pele-r-lamp',.4,1.9),.75,-1.2,{layer:1});

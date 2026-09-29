@@ -6,12 +6,18 @@ import {paintSheet,INK} from '@/lib/books/popupPlates';
 import type {BookData} from '@/lib/books/types';
 import {bookTracks} from '@/lib/books/useBookNarration';
 import {genericSpread} from '@/lib/books/genericSpread';
+import {filmDprCap} from '@/lib/graphics/heatTier';
 import type {SpreadDef} from '@/lib/books/popupEngine';
 import styles from './PlayerPopUpBook.module.css';
 
 export type BookClock=()=>{time:number;duration:number;playing:boolean;cueIndex:number;cueCount:number};
 type Props={book:BookData;bookId:string;spreads:Record<string,SpreadDef>;pageIndex:number;progress:number;onTurning?:(busy:boolean)=>void;clock:BookClock;narrationTime:number;narrationStarted:boolean;narrationPlaying:boolean;closing?:boolean;onClosed?:()=>void;label:string};
 const OPEN_MS=2100,TURN_MS=3000,CLOSE_MS=600,ACTION_MS=900;
+/** Paper moving (open/turn/close/action) draws at display rate up to 60 fps; Coach Bella's narration poses draw at 24 fps, the card
+ * films' rate. Between narrated frames the loop sleeps on a timer instead of a display-rate rAF chain (heat pass, Sep 29 2026). */
+const MOVING_FPS=60,NARRATING_FPS=24;
+/** Canvas DPR: phones 1.5 (the cap approved for card films), desktop 1.75; a warm heat tier or Battery saver caps it like the films. */
+const PHONE_DPR=1.5,DESKTOP_DPR=1.75;
 /** easeTurn value from which the leaf is treated as landed (within ~3.6° of the page). */
 const LANDING=.98;
 type Transition={kind:'open'|'close'|'turn';start:number;dur:number;from?:number;to?:number;forward?:boolean;focusFrom?:number;done?:()=>void};
@@ -37,7 +43,7 @@ export default function PlayerBookScene(props:Props){
   const el=host.current;if(!el)return;let renderer:THREE.WebGLRenderer;
   try{renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,powerPreference:'low-power'});}catch{setFailed(true);return;}
   const phone=Math.min(innerWidth,innerHeight)<600;
-  renderer.setPixelRatio(Math.min(devicePixelRatio||1,phone?2:1.75));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.NoToneMapping;
+  renderer.setPixelRatio(Math.min(devicePixelRatio||1,phone||matchMedia('(pointer: coarse)').matches?PHONE_DPR:DESKTOP_DPR,filmDprCap()));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.NoToneMapping;
   renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.shadowMap.autoUpdate=true;
   renderer.setClearColor(0x000000,0);el.appendChild(renderer.domElement);renderer.domElement.setAttribute('aria-hidden','true');
   const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(30,1,.5,80);
@@ -81,7 +87,7 @@ export default function PlayerBookScene(props:Props){
   const spreads=new Map<number,Spread>();
   const ensure=(i:number)=>{let s=spreads.get(i);if(!s){const id=live.current.book.pages[i].id;const page=live.current.book.pages[i],t0=performance.now();s=buildSpread(live.current.spreads[id]??genericSpread(live.current.bookId,page,i),cache);el.dataset.buildMs=String(Math.round(performance.now()-t0));spreads.set(i,s);scene.add(s.group);}return s;};
   const trim=(keep:number[])=>{for(const [i,s] of spreads)if(!keep.includes(i)){s.dispose();spreads.delete(i);}};
-  let shown=live.current.pageIndex,heading=1,renderCount=0,raf=0,last=0,disposed=false,transition:Transition|null=null,prefetch=0,closed=false;
+  let shown=live.current.pageIndex,heading=1,renderCount=0,raf=0,sleep:ReturnType<typeof setTimeout>|undefined,last=0,disposed=false,transition:Transition|null=null,prefetch=0,closed=false;
   const lastBeat=new Map<number,Beat>(),rest=(s?:Spread):Beat=>({t:s?.rest??0,duration:0,action:0,playing:false,narrated:false});
   let action=live.current.progress,actionFrom=action,actionTo=action,actionStart=0;
   // Set when the reader taps the page action while Coach Bella isn't speaking (e.g. after the story has finished). The pose
@@ -173,11 +179,14 @@ export default function PlayerBookScene(props:Props){
   };
   const busy=()=>!!transition||!!actionStart||(live.current.narrationPlaying&&!reduced());
   const tick=(now:number)=>{raf=0;if(disposed||document.hidden)return;
-   const fps=transition||actionStart?60:30;if(last&&now-last<1000/fps-3){raf=requestAnimationFrame(tick);return;}last=now;
+   const moving=!!transition||!!actionStart,gap=1000/(moving?MOVING_FPS:NARRATING_FPS);
+   if(last&&now-last<gap-3){const wait=last+gap-now-6;if(!moving&&wait>4)sleep=setTimeout(()=>{sleep=undefined;if(!disposed&&!document.hidden)raf=requestAnimationFrame(tick);},wait);else raf=requestAnimationFrame(tick);return;}last=now;
    compose(now);
    if(transition&&now-transition.start>=transition.dur){const done=transition.done;transition=null;el.dataset.transition='idle';compose(now);done?.();live.current.onTurning?.(false);schedulePrefetch();}
-   draw();if(busy())raf=requestAnimationFrame(tick);else last=0;};
-  const wake=()=>{if(!raf&&!disposed&&!document.hidden)raf=requestAnimationFrame(tick);};
+   draw();if(!busy()){last=0;return;}
+   // Narrating: sleep until the next 24 fps frame is due instead of asking for the very next display frame.
+   if(transition||actionStart)raf=requestAnimationFrame(tick);else sleep=setTimeout(()=>{sleep=undefined;if(!disposed&&!document.hidden)raf=requestAnimationFrame(tick);},Math.max(0,1000/NARRATING_FPS-10));};
+  const wake=()=>{if(sleep){clearTimeout(sleep);sleep=undefined;}if(!raf&&!disposed&&!document.hidden)raf=requestAnimationFrame(tick);};
   const begin=(t:Transition)=>{if(transition){const done=transition.done;transition=null;done?.();}
    if(reduced()){t.done?.();compose(performance.now());draw();live.current.onTurning?.(false);schedulePrefetch();return;}
    transition=t;t.start=performance.now();el.dataset.transition='moving';live.current.onTurning?.(true);wake();};
@@ -197,9 +206,9 @@ export default function PlayerBookScene(props:Props){
    close:done=>{cancelPrefetch();closed=true;begin({kind:'close',start:0,dur:CLOSE_MS,done});},
   };
   const observer=new ResizeObserver(fit);observer.observe(el);
-  const visibility=()=>{if(document.hidden){cancelAnimationFrame(raf);raf=0;}else wake();};document.addEventListener('visibilitychange',visibility);
+  const visibility=()=>{if(document.hidden){cancelAnimationFrame(raf);raf=0;clearTimeout(sleep);sleep=undefined;}else wake();};document.addEventListener('visibilitychange',visibility);
   fit();ensure(shown);begin({kind:'open',start:0,dur:OPEN_MS});
-  return()=>{disposed=true;cancelAnimationFrame(raf);cancelPrefetch();observer.disconnect();document.removeEventListener('visibilitychange',visibility);api.current=null;
+  return()=>{disposed=true;cancelAnimationFrame(raf);clearTimeout(sleep);cancelPrefetch();observer.disconnect();document.removeEventListener('visibilitychange',visibility);api.current=null;
    for(const s of spreads.values())s.dispose();spreads.clear();cache.dispose();disposables.forEach(d=>d.dispose());sun.shadow.map?.dispose();
    renderer.dispose();renderer.forceContextLoss();renderer.domElement.remove();live.current.onTurning?.(false);};
  },[]);

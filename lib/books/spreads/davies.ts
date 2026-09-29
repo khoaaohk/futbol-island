@@ -101,7 +101,7 @@ const camp:SpreadDef={id:'camp',rest:32.6,
   const moon=bd.add(S.sun(K+'c-moon',.26,INK.white),'R',3.8,2.2,{out:.012});const stars=bd.add(S.stars(K+'c-stars',2.4,.8,9),'R',1.4,2.5,{out:.02});
   const plane=bd.add(S.plane(K+'c-plane',.8,.36),'R',.3,2.3,{out:.035});
   // Left page: Monrovia, the parents, the war clouds, the long walk.
-  const city=B.stand(cityBlock('c-city',1.8,1.4),-3.6,-1.6,{layer:1});
+  const city=B.stand(cityBlock('c-city',1.8,1.4),-3.6,-1.35,{layer:1});
   const mon=B.stand(S.flipCard(K+'c-mon',1.2,.34,'MONROVIA',INK.blue),-1.4,-1.5,{layer:1,s:0});
   const dad=B.person(K+'c-dad',-2.6,-.3,1.72,{shirt:'navy',hair:'short',hairColor:'#1d1512',adult:true,skin:'#7f5138',face:'smile',layer:2,holdL:'suitcase'});
   const mum=B.person(K+'c-mum',-3.4,-.1,1.6,{shirt:'coach',hair:'bun',hairColor:'#1d1512',adult:true,skin:'#7f5138',face:'smile',layer:2,holdR:'suitcase'});
@@ -155,16 +155,16 @@ const canada:SpreadDef={id:'canada',rest:28.2,
    {key:K+'n-bdR',w:4.5,h:3,paint:k=>{wash(k,4.5,3,INK.sky2,INK.yellow,y=>.5-y/3*.5);pines(k,4.5,2.3);k.fill(rect(0,2.3,4.5,.7),'#b9c3cf');}},-3.05,1.22);
   const plane=bd.add(S.plane(K+'n-plane',.9,.4),'L',.2,2.4,{out:.035});const sun=bd.add(S.sun(K+'n-sun',.32),'R',3.9,1.8,{out:.012});
   const sign=B.stand(S.sign(K+'n-sign',1.3,1.2,'EDMONTON'),-1.0,-1.7,{layer:1,s:0});
-  const card05=B.stand(S.flipCard(K+'n-2005',.9,.34,'2005',INK.pink),-3.9,-1.3,{layer:1,s:0});
+  const card05=B.stand(S.flipCard(K+'n-2005',.9,.34,'2005',INK.pink),-2.4,-1.3,{layer:1,s:0});
   const fam=[B.person(K+'n-dad',-3.6,-.2,1.72,{shirt:'navy',hair:'short',hairColor:'#1d1512',adult:true,skin:'#7f5138',face:'smile',layer:2,holdL:'suitcase'}),B.person(K+'n-mum',-4.4,.1,1.6,{shirt:'coach',hair:'bun',hairColor:'#1d1512',adult:true,skin:'#7f5138',face:'smile',layer:2,holdR:'suitcase'})];
   const A=B.person(K+'n-a',-2.7,.6,.85,{shirt:'bib',...PHONZIE,face:'open',layer:3});
   const sibs=[[-3.5,1.2,'bun'],[-2.0,1.3,'curly']].map(([x,z,hr],i)=>B.person(K+`n-sib${i}`,x as number,z as number,.9+i*.1,{shirt:i?'fan':'casual',hair:hr as 'short',hairColor:'#1d1512',skin:'#7f5138',face:'smile',layer:3}));
   const qs=[0,1,2].map(i=>B.stand(bubble(`n-q${i}`,.42,.46,'?',[INK.white,INK.yellow,INK.sky2][i]),-2.9+i*.55,1.95,{layer:3,s:0,tab:false}));
   // Right page: the school, the words, the classmates, the door.
-  const sch=B.stand(school('n-school',2.2,1.7),2.6,-1.7,{layer:1});
+  const sch=B.stand(school('n-school',2.2,1.7),2.6,-1.45,{layer:1});
   const dL=sch.flap(schoolDoor('n-dL',.4,.82),-.4,0,{anchor:'bl',axis:'y',z:.014}),dR=sch.flap(schoolDoor('n-dR',.4,.82),.4,0,{anchor:'br',axis:'y',z:.014});
   const A2=B.person(K+'n-a2',1.4,.4,1.0,{shirt:'bib',...PHONZIE,face:'shy',layer:2});
-  const words=[['ABC',INK.white],['HELLO?',INK.yellow],['…',INK.sky2]].map(([w,c],i)=>B.stand(bubble(`n-w${i}`,.8,.5,w as string,c as string),.8+i*.75,-.5+(i%2)*.25,{layer:2,s:0,tab:false}));
+  const words=[['ABC',INK.white],['HELLO?',INK.yellow],['…',INK.sky2]].map(([w,c],i)=>B.stand(bubble(`n-w${i}`,.8,.5,w as string,c as string),[.55,2.15,2.9][i],[-.5,-.25,-.7][i],{layer:2,s:0,tab:false}));
   const mates=[[3.1,.7,'#7f5138','curly'],[3.9,1.1,'#5b3a28','bun']].map(([x,z,sk,hr],i)=>B.person(K+`n-m${i}`,x as number,z as number,1.0,{shirt:i?'fan':'casual',hair:hr as 'short',hairColor:'#1d1512',skin:sk as string,face:'grin',layer:2}));
   const lib=B.stand(S.flipCard(K+'n-lib',1.4,.3,'ALSO FROM LIBERIA',INK.white,INK.navy),3.6,1.8,{layer:3,s:0});
   const soccer=B.stand(bubble('n-soccer',1.0,.55,'SOCCER!',INK.green),1.2,1.55,{layer:3,s:0,tab:false});
@@ -201,8 +201,8 @@ const freefootie:SpreadDef={id:'freefootie',rest:16.1,
   const bd=B.vfold({key:K+'f-bdL',w:4.5,h:3,paint:k=>{wash(k,4.5,3,INK.sky2,INK.sky,y=>.6-y/3*.6);skyline(k,4.5,2.3);pines(k,4.5,2.45);k.fill(rect(0,2.45,4.5,.55),'#9fcb7a');}},
    {key:K+'f-bdR',w:4.5,h:3,paint:k=>{wash(k,4.5,3,INK.sky2,INK.yellow,y=>.5-y/3*.5);crowd(k,4.5,1.4,2.45,[INK.white,INK.sky,INK.yellow,INK.pink],3);lightRig(k,1.0,.5);lightRig(k,3.6,.45);k.fill(rect(0,2.45,4.5,.55),INK.grass);}},-3.05,1.22);
   const sun=bd.add(S.sun(K+'f-sun',.32),'L',3.9,1.8,{out:.012}),bunt=bd.add(S.bunting(K+'f-bunt',2.6,.4,[INK.pink,INK.yellow,INK.sky,INK.white]),'L',.8,2.6,{out:.03});
-  const board=B.stand(helpBoard('f-board',2.2,1.5,'WHAT FREE FOOTIE GAVE'),2.5,-1.2,{layer:1,s:0});
-  const gifts=([['fees','NO FEES'],['kit','KIT'],['ride','A RIDE']] as const).map(([w,l],i)=>{const x=-2.2/2+.38+i*.72;board.add(giftCard(`f-g${i}`,.62,.78,w,l),x,.3,{z:.012});return board.flap(qCover(`f-q${i}`,.64,.8,[INK.pink,INK.orange,INK.blue][i],['FEES?','KIT?','RIDE?'][i]),x,1.1,{z:.024});});
+  const board=B.stand(helpBoard('f-board',2.2,2.4,'WHAT FREE FOOTIE GAVE'),2.5,-1.2,{layer:1,s:0});
+  const gifts=([['fees','NO FEES'],['kit','KIT'],['ride','A RIDE']] as const).map(([w,l],i)=>{const x=-2.2/2+.38+i*.72;board.add(giftCard(`f-g${i}`,.62,.78,w,l),x,.46,{z:.012});return board.flap(qCover(`f-q${i}`,.64,.8,[INK.pink,INK.orange,INK.blue][i],['FEES?','KIT?','RIDE?'][i]),x,1.26,{z:.024});});
   const A=B.person(K+'f-a',-2.5,.6,1.0,{shirt:'bib',...PHONZIE,legs:'kick',face:'grin',layer:2});
   const kids=[[-4.1,.9,'#f1b88f','bun'],[-1.2,1.1,'#d99a6c','curly'],[-3.4,1.7,'#b27650','short']].map(([x,z,sk,hr],i)=>B.person(K+`f-k${i}`,x as number,z as number,.95,{shirt:'bib',hair:hr as 'short',skin:sk as string,face:'grin',layer:3}));
   const cones=[[-4.4,-.2],[-.7,-.1]].map(([x,z],i)=>B.stand(S.cone(K+`f-cone${i}`,.3),x,z,{layer:2}));void cones;
@@ -247,7 +247,7 @@ const vancouver:SpreadDef={id:'vancouver',rest:17.1,
   const bd=B.vfold({key:K+'v-bdL',w:4.5,h:3,paint:k=>{wash(k,4.5,3,INK.sky2,INK.sky,y=>.6-y/3*.6);skyline(k,4.5,2.3);pines(k,4.5,2.45);k.fill(rect(0,2.45,4.5,.55),'#9a9aa2');}},
    {key:K+'v-bdR',w:4.5,h:3,paint:k=>{wash(k,4.5,3,INK.sky2,INK.sky,y=>.6-y/3*.6);peaks(k,4.5,1.4,'#8f9fbd',true,3);sea(k,4.5,1.75,.35);crowd(k,4.5,1.9,2.45,[INK.white,INK.blue,INK.sky],2);k.fill(rect(0,2.45,4.5,.55),INK.grass);}},-3.05,1.22);
   const sun=bd.add(S.sun(K+'v-sun',.32),'R',3.9,1.6,{out:.012}),cloud=bd.add(S.cloud(K+'v-cloud',1.0,.45),'L',1.6,2.6);
-  const home=B.stand(S.house(K+'v-house',1.4,1.3),-3.8,-1.6,{layer:1});void home;
+  const home=B.stand(S.house(K+'v-house',1.4,1.3),-3.8,-1.35,{layer:1});void home;
   const fam=[B.person(K+'v-mum',-4.3,-.3,1.6,{shirt:'coach',hair:'bun',hairColor:'#1d1512',adult:true,skin:'#7f5138',face:'smile',layer:2}),B.person(K+'v-dad',-3.5,-.5,1.72,{shirt:'navy',hair:'short',hairColor:'#1d1512',adult:true,skin:'#7f5138',face:'smile',layer:2})];
   const A=B.person(K+'v-a',-2.4,.3,1.15,{shirt:'casual',...PHONZIE,face:'smile',layer:2});
   const age=B.stand(S.flipCard(K+'v-14',.9,.32,'AGE 14',INK.pink),-1.2,-1.3,{layer:1,s:0});
@@ -258,11 +258,11 @@ const vancouver:SpreadDef={id:'vancouver',rest:17.1,
   B.slot(.3,1.35,2.4,1.35);const bagR=B.stand(suitcase('v-bagR',.5,.44,INK.red),.4,1.35,{layer:3,tab:false,s:0});
   const res=B.stand(S.sign(K+'v-res',1.5,1.2,'RESIDENCY',INK.white),1.1,-1.7,{layer:1,s:0});
   const A2=B.person(K+'v-a2',1.9,.3,1.2,{shirt:'ger',...PHONZIE,legs:'kick',face:'grin',layer:2});
-  const paper=B.stand(contract('v-contract',.7,.9),3.2,-1.5,{layer:1,s:0});const fifteen=B.stand(S.flipCard(K+'v-15',.9,.3,'AGE 15',INK.pink),3.2,-.8,{layer:1,s:0});
-  const goal=B.stand(S.goal(K+'v-goal',1.5,.8),2.5,-1.9,{layer:1,s:0});void goal;
+  const paper=B.stand(contract('v-contract',.7,.9),3.2,-1.5,{layer:1,s:0});const fifteen=B.stand(S.flipCard(K+'v-15',.9,.3,'AGE 15',INK.pink),2.6,-.85,{layer:1,s:0});
+  const goal=B.stand(S.goal(K+'v-goal',1.5,.8),2.5,-1.68,{layer:1,s:0});void goal;
   const july=B.stand(S.flipCard(K+'v-july',1.3,.32,'JULY 2016 · MLS',INK.blue),4.2,.2,{layer:2,s:0});
   const first=B.stand(lineCard('v-first',1.8,.56,['FIRST PLAYER BORN','IN THE 2000s'],INK.gold),3.6,1.75,{layer:3,s:0});
-  const mates=[[3.2,.7,'#f1b88f'],[4.4,-.4,'#d99a6c']].map(([x,z,sk],i)=>B.person(K+`v-m${i}`,x as number,z as number,1.25,{shirt:'ger',hair:i?'curly':'bald',skin:sk as string,face:'grin',layer:2}));
+  const mates=[[3.5,.75,'#f1b88f'],[4.4,-.4,'#d99a6c']].map(([x,z,sk],i)=>B.person(K+`v-m${i}`,x as number,z as number,1.25,{shirt:'ger',hair:i?'curly':'bald',skin:sk as string,face:'grin',layer:2}));
   const phoneR=B.stand(phone('v-phoneR',.34,.56),1.0,1.95,{layer:3,s:0,tab:false});
   const hearts=[B.stand(heart('v-hL',.26),-3.6,2.1,{layer:3,s:0,tab:false}),B.stand(heart('v-hR',.26),1.6,2.15,{layer:3,s:0,tab:false})];
   const ball=B.stand(S.ball(K+'v-ball',.1),2.3,.4,{layer:3,tab:false,s:0});
@@ -312,7 +312,7 @@ const citizen:SpreadDef={id:'citizen',rest:21.8,
   // Right page: the youngest ever, the Gold Cup goals.
   const A2=B.person(K+'z-a2',1.5,.4,1.25,{shirt:'casual',...PHONZIE,legs:'kick',face:'grin',layer:2});
   const young=B.stand(S.flipCard(K+'z-young',1.4,.32,'AGE 16 · YOUNGEST',INK.yellow,INK.navy),1.3,1.4,{layer:3,s:0});
-  const goal=B.stand(S.goal(K+'z-goal',1.6,.8),2.5,-1.85,{layer:1});void goal;
+  const goal=B.stand(S.goal(K+'z-goal',1.6,.8),2.5,-1.62,{layer:1});void goal;
   const keeper=B.person(K+'z-keeper',2.5,-1.4,1.25,{shirt:'keeper',hair:'short',skin:'#b27650',face:'open',layer:2,holdL:'glove',holdR:'glove'});
   const board=B.stand(S.scoreboard(K+'z-board',1.3,1.1,'GOLD CUP'),4.3,-1.5,{layer:1,s:0});board.add(lineCard('z-2g',1.05,.46,['2 GOALS'],INK.yellow),0,.3,{z:.012});
   const top=B.stand(lineCard('z-top',1.3,.5,['TOP SCORER'],INK.gold),3.9,.9,{layer:3,s:0});const boot=B.stand(S.icon(K+'z-boot',.4,'boot'),4.4,1.6,{layer:3,s:0,tab:false});
@@ -353,7 +353,7 @@ const worldcup:SpreadDef={id:'worldcup',rest:24.8,
   const fw=[bd.add(S.firework(K+'w-fw1',.4,INK.red),'R',1.2,1.0,{out:.03}),bd.add(S.firework(K+'w-fw2',.36,INK.white),'R',3.4,.8,{out:.03}),bd.add(S.firework(K+'w-fw3',.38,INK.yellow),'L',3.2,.9,{out:.03})];
   const conf=bd.add(S.confetti(K+'w-conf',2.2,1.1,4),'R',1.0,1.3,{out:.04});
   const since=B.stand(lineCard('w-since',1.6,.6,['FIRST WORLD CUP','SINCE 1986'],INK.red,INK.white),-4.2,-1.2,{layer:1,s:0});
-  const goalL=B.stand(S.goal(K+'w-goalL',1.6,.85),-2.65,-1.8,{layer:1});void goalL;
+  const goalL=B.stand(S.goal(K+'w-goalL',1.6,.85),-2.65,-1.58,{layer:1});void goalL;
   const keeperL=B.person(K+'w-kL',-2.65,-1.35,1.3,{shirt:'keeper',hair:'short',skin:'#f1b88f',face:'open',layer:2,holdL:'glove',holdR:'glove'});
   const A=B.person(K+'w-a',-2.1,.55,1.3,{shirt:'casual',...PHONZIE,legs:'kick',face:'smile',layer:2});
   const saved=B.stand(S.flipCard(K+'w-saved',.9,.3,'SAVED',INK.blue),-4.2,.6,{layer:2,s:0});

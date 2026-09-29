@@ -308,7 +308,7 @@ const u17:SpreadDef={id:'u17',rest:29.6,
   const kid=B.person('rdh-u-kid',-1.85,-1.05,.9,{shirt:'bib',...RON,legs:'kick',layer:2});B.slot(-1.85,-.9,-2.1,.7);
   const bloom=B.stand(flower('rdh-u-bloom',.4,.7),-1.25,-1.45,{layer:1,s:0});
   const board=B.stand(S.scoreboard('rdh-u-board',1.6,1.3,'AGE 13'),-.95,-2.15,{layer:1,s:0});
-  board.add(S.flipCard('rdh-u-230',1.25,.56,'23 – 0',INK.yellow,INK.navy),0,.26,{z:.012});const b00=board.flap(S.flipCard('rdh-u-00',1.25,.56,'0 – 0',INK.blue),0,.82,{z:.022});
+  board.add(S.flipCard('rdh-u-230',1.25,.56,'23 – 0',INK.yellow,INK.navy),0,.26,{z:.012});const b00=board.flap(S.flipCard('rdh-u-00',1.25,.56,'0 – 0',INK.blue),0,.82-.56,{anchor:'bottom',z:.022});
   const namePost=B.stand(S.post('rdh-u-namepost',.08,1.0),-.85,.7,{layer:2,s:0});
   namePost.add(S.flipCard('rdh-u-inho',1.35,.46,'RONALDINHO',INK.pink),0,.48,{z:.012});const nameFlap=namePost.flap(S.flipCard('rdh-u-ronaldo',1.35,.46,'RONALDO',INK.blue),0,.94,{z:.022});
   const inho=B.stand(plateCard('rdh-u-small',1.3,.62,['“INHO”','MEANS SMALL'],INK.yellow),-3.95,.55,{layer:2,s:0});
@@ -317,12 +317,12 @@ const u17:SpreadDef={id:'u17',rest:29.6,
   const ball=B.stand(S.ball('rdh-u-ball',.1),-1.55,-.95,{layer:3,tab:false});
   const star=kid.body.add(S.bubble('rdh-u-star',.55,.46,'star'),-.5,1.3,{z:-.02});
   // Right: Egypt 1997. Paper pyramids lie flat until they are raised.
-  const pyr=[B.stand(pyramid('rdh-u-pyrL',1.9,1.3),1.7,-1.55,{layer:1,s:0}),B.stand(pyramid('rdh-u-pyrR',2.2,1.5),3.25,-1.85,{layer:1,s:0}),B.stand(pyramid('rdh-u-pyrS',1.3,.9),4.25,-1.0,{layer:1,s:0})];
+  const pyr=[B.stand(pyramid('rdh-u-pyrL',1.9,1.3),1.7,-1.55,{layer:1,s:0}),B.stand(pyramid('rdh-u-pyrR',2.2,1.5),3.25,-1.3,{layer:1,s:0}),B.stand(pyramid('rdh-u-pyrS',1.3,.9),4.25,-1.0,{layer:1,s:0})];
   B.stand(dune('rdh-u-dune',1.6,.45),.9,-2.1,{layer:1,tab:false});B.stand(S.tree('rdh-u-palm',1.0,1.8,'palm'),4.5,-.6,{layer:1});
   const camel=B.stand(camelPlate('rdh-u-camel',1.0,.8),4.05,.75,{layer:2});
   const yr=B.stand(S.post('rdh-u-yrpost',.08,.9),.55,.1,{layer:2,s:0});yr.add(S.flipCard('rdh-u-1997',.9,.46,'1997',INK.orange),0,.42,{z:.012});
   const team=[B.person('rdh-u-m1',1.4,.55,1.2,{shirt:'bib',hair:'short',skin:'#d99a6c',face:'smile',layer:2}),B.person('rdh-u-hero',2.2,.95,1.08,{shirt:'bib',...RON,layer:3}),B.person('rdh-u-m2',3.0,.45,1.22,{shirt:'bib',hair:'bald',skin:'#b27650',face:'smile',layer:2})];
-  const flag=bd.add(S.banner('rdh-u-brazil',2.0,.38,'BRAZIL',INK.yellow,INK.leaf),'R',1.5,.35,{out:.03});
+  const flag=bd.add(S.banner('rdh-u-brazil',2.0,.38,'BRAZIL',INK.yellow,INK.leaf),'R',1.5,1.55,{out:.03});
   const post=B.stand(S.post('rdh-u-ppost',.12,1.1),.3,2.0,{layer:3,s:0});
   const arm=post.arm(S.strip('rdh-u-strip',.09,2.3),0,1.08,{z:.02});const planeP=post.add(S.plane('rdh-u-plane',.6,.3),0,0,{z:.035,anchor:'center'});
   return (b:Beat)=>{const t=b.t,act=b.action,N=b.narrated;
@@ -340,7 +340,7 @@ const u17:SpreadDef={id:'u17',rest:29.6,
    cards.forEach((c,i)=>{c.s=beat(t,19.4+i*.9,20.2+i*.9);c.rot=.06*wave(t,22+i*.3,24.2,1.2);});
    const jug=t>20.6&&t<24.2?Math.abs(Math.sin((t-20.6)*Math.PI*1.3)):0;ball.x=kid.body.x+.3;ball.z=kid.body.z+.1;ball.dy=.42*jug;kid.leg!.rot=.8*Math.max(0,1-jug*3)*(t>20.6&&t<24.2?1:0);
    // At 13, all 23 goals in a 23–0 win.
-   board.s=beat(t,24.2,25);b00.flip=-2.85*beat(t,26.4,27.2);
+   board.s=beat(t,24.2,25);b00.flip=1.75*beat(t,26.4,27.2);
    if(t>25.6&&t<28.6){const sh=beat(t,25.6,26.4);ball.x=lerp(kid.body.x+.3,-.9,sh);ball.z=lerp(kid.body.z+.1,-1.5,sh);ball.dy=.5*Math.sin(sh*Math.PI);kid.leg!.rot=1.1*pulse(t,25.4,26);}
    const cheer=beat(t,27.3,27.9)-beat(t,28.8,29.4)+(t>35.9?beat(t,36,36.6):0);kid.armL.rot=-.12-2.3*cheer-.25*wave(t,27.9,28.8,1.6);kid.armR.rot=.12+2.3*cheer+.25*wave(t,27.9,28.8,1.5);
    conf.visible=t>27.2&&t<31||t>36;conf.dy=-1+1.1*beat(t,27.3,28.6);
@@ -348,7 +348,7 @@ const u17:SpreadDef={id:'u17',rest:29.6,
    yr.s=Math.max(beat(t,29.1,29.8),smooth(clamp01(act*2.5)));
    const raise=Math.max(N?beat(t,30,32):0,act);pyr.forEach((p,i)=>{p.s=smooth(clamp01((raise-i*.16)/.68));});
    team.forEach((p,i)=>{p.body.s=Math.max(beat(t,31.4+i*.5,32.2+i*.5),N?0:smooth(clamp01((act-.3)/.5)));});
-   flag.dy=-.8+.8*Math.max(beat(t,32,32.8),N?0:act);camel.dx=-.15*beat(t,30,36);camel.rot=.03*wave(t,30,36,.8);
+   flag.dy=-2.0+2.0*Math.max(beat(t,32,32.8),N?0:act);camel.dx=-.15*beat(t,30,36);camel.rot=.03*wave(t,30,36,.8);
    post.s=beat(t,32.2,32.8)-beat(t,35.4,35.9);const th=-.85+1.7*beat(t,32.6,35.2);arm.rot=Math.PI-th;planeP.dx=Math.sin(th)*2.2;planeP.dy=1.08+Math.cos(th)*2.2;planeP.rot=-th*.7;
    const up=(N?beat(t,33.4,34):smooth(clamp01((act-.8)/.2)));team.forEach(p=>{p.armL.rot=-.12-2.3*up-.25*wave(t,34,40.8,1.5);p.armR.rot=.12+2.3*up+.25*wave(t,34,40.8,1.6);});
    // Being small can be a strength.
@@ -439,9 +439,9 @@ const applause:SpreadDef={id:'applause',rest:10.2,
   const sunP=bd.add(S.sun('rdh-l-sun',.4),'R',3.6,1.9,{out:.015});const shine=bd.add(S.stars('rdh-l-stars',2.2,.5,7),'R',2.4,1.4,{out:.03});
   // Left: the 2004 squad behind a fence, and a closed gate.
   const board=B.stand(S.scoreboard('rdh-l-board',1.8,1.4,'COPA AMÉRICA'),-1.0,-2.05,{layer:1,s:0});board.add(S.flipCard('rdh-l-2004',1.4,.6,'2004',INK.yellow,INK.navy),0,.27,{z:.012});
-  const squad=[-4.2,-3.45,-2.7].map((x,i)=>B.person(`rdh-l-sq${i}`,x,-1.15-(i%2)*.2,1.24,{shirt:'bib',hair:(['short','bald','long'] as const)[i],skin:['#d99a6c','#b27650','#f1b88f'][i],face:'smile',layer:1}));
-  const coach=B.person('rdh-l-coach',-1.9,-1.2,1.5,{shirt:'coach',hair:'short',skin:'#f1b88f',face:'open',adult:true,layer:1});
-  const rest=coach.body.add(plateCard('rdh-l-rest',1.1,.36,['STARS RESTED'],INK.white),.7,1.3,{z:.02});
+  const squad=[-4.3,-3.6,-2.9].map((x,i)=>B.person(`rdh-l-sq${i}`,x,-1.15-(i%2)*.2,1.24,{shirt:'bib',hair:(['short','bald','long'] as const)[i],skin:['#d99a6c','#b27650','#f1b88f'][i],face:'smile',layer:1}));
+  const coach=B.person('rdh-l-coach',-2.05,-1.2,1.5,{shirt:'coach',hair:'short',skin:'#f1b88f',face:'open',adult:true,layer:1});
+  const rest=coach.body.add(plateCard('rdh-l-rest',1.1,.36,['STARS RESTED'],INK.white),-.85,1.62,{z:.02});
   B.stand(S.fenceStrip('rdh-l-fenceL',2.7,.62),-3.5,-.3,{layer:2});B.stand(S.fenceStrip('rdh-l-fenceR',.75,.62),-.55,-.3,{layer:2});
   const gate=B.stand(gateFrame('rdh-l-gate',1.24,.95,'SQUAD'),-1.5,-.3,{layer:2});
   const leafL=gate.flap(gateLeaf('rdh-l-leafL',.52,.58),-.52,.02,{anchor:'bl',axis:'y',z:.012}),leafR=gate.flap(gateLeaf('rdh-l-leafR',.52,.58),.52,.02,{anchor:'br',axis:'y',z:.012});
@@ -462,7 +462,7 @@ const applause:SpreadDef={id:'applause',rest:10.2,
   const over=B.stand(S.sign('rdh-l-over',1.1,.95,'SEASON OVER',INK.white),4.2,1.1,{layer:3,s:0});
   const milanSign=B.stand(S.sign('rdh-l-milan',1.1,.95,'AC MILAN',INK.red),4.2,1.1,{layer:3,s:0});
   const suitcase=B.stand(bag('rdh-l-bag',.5,.55),1.35,1.55,{layer:3,s:0});
-  B.stand(S.goal('rdh-l-goal',1.3,.75),3.9,-1.85,{layer:1});
+  B.stand(S.goal('rdh-l-goal',1.3,.75),3.9,-1.3,{layer:1});
   const ball=B.stand(S.ball('rdh-l-ball',.11),2.45,.8,{layer:3,tab:false});
   const tips=['REST','ASK FOR HELP','TRY AGAIN'].map((l,i)=>B.stand(S.flipCard(`rdh-l-tip${i}`,1.1,.4,l,[INK.sky,INK.yellow,INK.pink][i],i===1?INK.navy:INK.white),.9+i*1.45,2.2,{layer:3,s:0}));
   return (b:Beat)=>{const t=b.t,act=b.action,N=b.narrated;
@@ -490,7 +490,7 @@ const applause:SpreadDef={id:'applause',rest:10.2,
    suitcase.s=beat(t,30,30.8)*(1-beat(t,33.4,34));milanSign.s=beat(t,31,31.8);
    const toMilan=t>31.4;barca.visible=!toMilan;milan.visible=toMilan;milan.scale=toMilan?beat(t,31.4,32):1;
    // His second season: best form again. The sun, a shot into the goal, stars.
-   const sh=beat(t,34.4,35.6);ball.x=lerp(2.45,3.9,sh);ball.z=lerp(.8,-1.7,sh);ball.dy=.5*Math.sin(sh*Math.PI);ball.rot=-ball.x*6;h2.leg!.rot=.9*pulse(t,34,34.7);
+   const sh=beat(t,34.4,35.6);ball.x=lerp(2.45,3.9,sh);ball.z=lerp(.8,-1.15,sh);ball.dy=.5*Math.sin(sh*Math.PI);ball.rot=-ball.x*6;h2.leg!.rot=.9*pulse(t,34,34.7);
    shine.visible=t>35.4;shine.dy=-.6+.6*beat(t,35.5,36.3);
    const up=beat(t,35.8,36.4);if(t>35.8){h2.armL.rot=-.12-2.3*up-.25*wave(t,36.4,42.9,1.5);h2.armR.rot=.12+2.3*up+.25*wave(t,36.4,42.9,1.6);}
    // Rest, ask for help, try again.
@@ -527,7 +527,7 @@ const joy:SpreadDef={id:'joy',rest:21.9,
   const flagL=B.stand(cornerFlag('rdh-j-flagL',.35,.8),-4.65,2.0,{layer:3});
   const bro=B.person('rdh-j-bro',-3.55,1.55,1.44,{shirt:'fan',hair:'short',skin:FAM,face:'smile',adult:true,layer:3}),sis=B.person('rdh-j-sis',-4.45,1.35,1.36,{shirt:'coach',hair:'long',skin:FAM,face:'smile',adult:true,layer:3});
   // Right: away at América, April 2015. The paper crowd rises to its feet.
-  const rows=[B.stand(crowdStrip('rdh-j-crowdA',3.3,1.05,AME,1),2.4,-1.6,{layer:1,tab:false,s:0}),B.stand(crowdStrip('rdh-j-crowdB',2.2,.9,AME,4),1.4,-1.05,{layer:1,tab:false,s:0}),B.stand(crowdStrip('rdh-j-crowdC',1.6,.9,AME,2),3.9,-1.0,{layer:1,tab:false,s:0})];
+  const rows=[B.stand(crowdStrip('rdh-j-crowdA',3.3,1.05,AME,1),2.4,-1.4,{layer:1,tab:false,s:0}),B.stand(crowdStrip('rdh-j-crowdB',2.2,.9,AME,4),1.4,-1.05,{layer:1,tab:false,s:0}),B.stand(crowdStrip('rdh-j-crowdC',1.6,.9,AME,2),3.9,-1.0,{layer:1,tab:false,s:0})];
   const scarves=[rows[0].arm(scarf('rdh-j-sc1',.1,.5,INK.yellow,INK.navy),-.9,.85,{z:-.01}),rows[0].arm(scarf('rdh-j-sc2',.1,.5,INK.yellow,INK.navy),1.0,.85,{z:-.01}),rows[1].arm(scarf('rdh-j-sc3',.1,.5,INK.navy,INK.yellow),.5,.75,{z:-.01})];
   B.stand(S.goal('rdh-j-goal',1.5,.8),4.1,-.3,{layer:2});
   const gk=B.person('rdh-j-gk',4.1,-.05,1.2,{shirt:'keeper',hair:'short',skin:'#d99a6c',face:'open',layer:2,holdL:'glove',holdR:'glove'});

@@ -183,7 +183,7 @@ const growing:SpreadDef={id:'growing',rest:25.7,
   const HS=B.person(K+'g-hs',1.3,1.1,1.05,{shirt:'ger',hair:'short',hairColor:HAIR_H,skin:SKIN_H,number:'18',legs:'kick',face:'open',layer:3});
   const HT=B.person(K+'g-ht',1.3,1.1,1.45,{shirt:'ger',hair:'short',hairColor:HAIR_H,skin:SKIN_H,number:'18',legs:'kick',face:'smile',layer:3});
   const chart=B.stand(heightChart('g-chart',.3,1.8),.6,.6,{layer:2,s:0});
-  const cal=B.stand(S.scoreboard(K+'g-cal',1.0,.9,'BIRTHDAY'),4.1,-1.6,{layer:1,s:0});const julyF=counter(cal,'g-m',.74,.36,.24,[],'JULY',INK.orange);
+  const cal=B.stand(S.scoreboard(K+'g-cal',1.0,.9,'BIRTHDAY'),4.45,-1.3,{layer:1,s:0});const julyF=counter(cal,'g-m',.74,.36,.24,[],'JULY',INK.orange);
   const ticks=[0,1,2,3].map(i=>B.stand(S.icon(K+`g-tick${i}`,.26,'tick'),2.2+i*.34,2.0,{layer:3,s:0,tab:false}));
   const coach=B.person(K+'g-coach',2.0,-1.35,1.7,{shirt:'coach',hair:'short',adult:true,skin:'#d99a6c',face:'smile',layer:1});
   const tab=B.stand(sp('g-tab',.66,.32,k=>{const p=poly([[0,.05],[.48,.05],[.66,.16],[.48,.27],[0,.27]]);k.fill(p,INK.pink);k.key(p,.012);k.text('PULL',.26,.22,.12,INK.white,{weight:900});},{rim:.016}),.3,2.05,{layer:3,tab:false});B.slot(.25,2.15,1.1,2.15);
@@ -230,7 +230,7 @@ const loans:SpreadDef={id:'loans',rest:12.3,
   const HL=B.person(K+'l-hl',-3.0,1.1,1.36,{shirt:'ger',hair:'short',hairColor:HAIR_H,skin:SKIN_H,face:'smile',holdR:'suitcase',layer:3});
   const HR=B.person(K+'l-hr',1.5,.55,1.36,{shirt:'ger',hair:'short',hairColor:HAIR_H,skin:SKIN_H,face:'smile',holdR:'suitcase',layer:3});
   const orient=B.stand(facade('l-orient',1.5,1.4,'LEYTON ORIENT','#f3dcd6',INK.red),1.4,-1.5,{layer:1,s:0});
-  const mill=B.stand(facade('l-mill',1.5,1.4,'MILLWALL','#dbe3f0',INK.blue),3.6,-1.5,{layer:1,s:0});
+  const mill=B.stand(facade('l-mill',1.5,1.4,'MILLWALL','#dbe3f0',INK.blue),3.6,-1.25,{layer:1,s:0});
   const HO=B.person(K+'l-ho',1.5,-.6,1.3,{shirt:'casual',hair:'short',hairColor:HAIR_H,skin:SKIN_H,number:'19',face:'smile',layer:2});
   const HM=B.person(K+'l-hm',3.6,.9,1.36,{shirt:'navy',hair:'short',hairColor:HAIR_H,skin:SKIN_H,number:'10',legs:'kick',face:'smile',layer:3});
   const goals=B.stand(S.scoreboard(K+'l-goals',1.05,.9,'LAST 14 GAMES'),4.5,-.4,{layer:2,s:0});const gl=counter(goals,'l-g',.78,.36,.24,['0','3','5'],'7');
@@ -310,8 +310,8 @@ const chance:SpreadDef={id:'chance',rest:19.5,
    {key:K+'c-bdL',w:4.5,h:3,paint:k=>{wash(k,4.5,3,INK.sky2,INK.sky,y=>.7-y/3*.7);crowd(k,4.5,1.2,2.3,SPURS,1);lightRig(k,.8,.4);lightRig(k,3.7,.4);k.fill(rect(0,2.3,4.5,.7),INK.grass);}},
    {key:K+'c-bdR',w:4.5,h:3,paint:k=>{nightSky(k,4.5,3);crowd(k,4.5,1.2,2.3,[INK.white,INK.red,INK.white,INK.navy],2);lightRig(k,1.0,.3);lightRig(k,3.6,.3);k.fill(rect(0,2.3,4.5,.7),INK.grass);}},-3.05,1.22);
   const rain=bd.add(stormCloud('c-rain',1.2,.6),'R',3.0,2.2,{out:.03});const fw=[bd.add(S.firework(K+'c-fw1',.38,INK.red),'R',1.2,1.9,{out:.03}),bd.add(S.firework(K+'c-fw2',.34,INK.white),'R',3.4,1.8,{out:.03})];
-  const dug=B.stand(bench2('c-dug',1.7,.95),-3.8,-1.55,{layer:1});
-  const H=B.person(K+'c-h',-3.8,-1.3,1.36,{shirt:'ger',hair:'short',hairColor:HAIR_H,skin:SKIN_H,number:'18',legs:'kick',face:'smile',layer:1});
+  const dug=B.stand(bench2('c-dug',1.7,.95),-3.8,-1.3,{layer:1});
+  const H=B.person(K+'c-h',-3.8,-1.05,1.36,{shirt:'ger',hair:'short',hairColor:HAIR_H,skin:SKIN_H,number:'18',legs:'kick',face:'smile',layer:1});
   const poch=B.person(K+'c-poch',-2.6,-.9,1.72,{shirt:'coach',hair:'short',adult:true,skin:'#e9b08a',hairColor:'#c9c3b8',face:'smile',layer:2});
   const sheet=B.stand(teamSheet('c-sheet',1.4,1.6),-1.1,-1.3,{layer:1});
   sheet.add(gFlip('c-in',1.1,.5,['STARTING:','KANE'],INK.yellow),0,.62,{z:.012});const benchCard=sheet.flap(gFlip('c-sub',1.1,.5,['SUBSTITUTE'],INK.grey),0,1.12,{z:.028});
@@ -358,13 +358,13 @@ const penalty:SpreadDef={id:'penalty',rest:23.2,
   const fw=[bd.add(S.firework(K+'p-fw1',.42,INK.red),'R',1.3,1.8,{out:.03}),bd.add(S.firework(K+'p-fw2',.38,INK.white),'R',3.3,1.7,{out:.03})];
   const conf=bd.add(S.confetti(K+'p-cf',2.2,1.1,2),'R',.5,1.3,{out:.04});
   const boot=B.stand(goldenBoot('p-boot',.6),-1.0,-1.5,{layer:1,s:0});const bootCard=B.stand(gFlip('p-bootcard',1.3,.38,['2018 TOP SCORER'],INK.yellow),-1.0,-.8,{layer:2,s:0});
-  B.stand(S.goal(K+'p-goalL',1.7,.9),-3.6,-1.7,{layer:1});
-  const kL=B.person(K+'p-kl',-3.6,-1.35,1.32,{shirt:'keeper',hair:'short',skin:'#b27650',face:'open',layer:1,holdL:'glove',holdR:'glove'});
+  B.stand(S.goal(K+'p-goalL',1.7,.9),-3.6,-1.35,{layer:1});
+  const kL=B.person(K+'p-kl',-3.6,-1.0,1.32,{shirt:'keeper',hair:'short',skin:'#b27650',face:'open',layer:1,holdL:'glove',holdR:'glove'});
   const HL=B.person(K+'p-hl',-2.8,.9,1.38,{shirt:'ger',hair:'short',hairColor:HAIR_H,skin:SKIN_H,number:'9',legs:'kick',face:'open',beard:true,layer:3});
   const board=B.stand(S.scoreboard(K+'p-board',1.3,1.0,'QUARTER-FINAL'),-4.3,.4,{layer:2,s:0});board.add(gFlip('p-21',1.0,.44,['FRA 2–1 ENG'],INK.white),0,.28,{z:.012});
   const mates=[[-1.4,.2,'curly','#7f5138'],[-.8,1.2,'short','#d99a6c']].map(([x,z,h,s],i)=>B.person(K+`p-m${i}`,x as number,z as number,1.34,{shirt:'ger',hair:h as 'short',skin:s as string,face:'smile',layer:i?3:2}));
-  B.stand(S.goal(K+'p-goalR',1.7,.9),3.6,-1.7,{layer:1});
-  const kR=B.person(K+'p-kr',3.6,-1.35,1.32,{shirt:'keeper',hair:'short',skin:'#f1b88f',face:'open',layer:1,holdL:'glove',holdR:'glove'});
+  B.stand(S.goal(K+'p-goalR',1.7,.9),3.6,-1.35,{layer:1});
+  const kR=B.person(K+'p-kr',3.6,-1.0,1.32,{shirt:'keeper',hair:'short',skin:'#f1b88f',face:'open',layer:1,holdL:'glove',holdR:'glove'});
   const HR=B.person(K+'p-hr',2.6,.9,1.38,{shirt:'ger',hair:'short',hairColor:HAIR_H,skin:SKIN_H,number:'9',legs:'kick',face:'smile',beard:true,layer:3});
   const count=B.stand(S.scoreboard(K+'p-count',1.2,1.0,'ENGLAND GOALS'),1.0,-1.5,{layer:1,s:0});const cnt=counter(count,'p-c',.9,.42,.26,['52','53'],'54');
   const record=B.stand(gFlip('p-rec',1.5,.46,['ALL-TIME','TOP SCORER'],INK.pink,INK.white),4.2,1.8,{layer:3,s:0});
@@ -374,7 +374,7 @@ const penalty:SpreadDef={id:'penalty',rest:23.2,
    boot.s=beat(t,5,5.8)*(1-beat(t,8.6,9.4));bootCard.s=beat(t,5.4,6.2)*(1-beat(t,8.6,9.4));
    // 2022 quarter-final: the penalty goes over the bar; France win 2–1.
    HL.body.s=beat(t,2.4,3.2);kL.body.s=beat(t,8.8,9.6);
-   const shotL=beat(t,12.6,13.6);bl.x=-3.2-.5*shotL;bl.z=.62-2.3*shotL;bl.dy=1.35*shotL;bl.visible=t<14.2;bl.rot=-shotL*6;
+   const shotL=beat(t,12.6,13.6);bl.x=-3.2-.5*shotL;bl.z=.62-1.95*shotL;bl.dy=1.35*shotL;bl.visible=t<14.2;bl.rot=-shotL*6;
    HL.leg!.rot=-1.1*pulse(t,12.3,12.9);kL.body.rot=.6*pulse(t,12.8,14);
    board.s=beat(t,14.6,15.4);
    // Feeling sad; teammates close by (16.8).
@@ -382,7 +382,7 @@ const penalty:SpreadDef={id:'penalty',rest:23.2,
    mates.forEach((m,i)=>{m.body.s=beat(t,17+i*.5,17.8+i*.5);m.armL.rot=-.12-1.2*beat(t,18.4+i*.4,19+i*.4)*(1-beat(t,21.6,22.2));});
    // Take the next penalty: 2023, against Italy: goal number 54.
    HR.body.s=Math.max(beat(t,21.4,22.2),manual?1:0);kR.body.s=Math.max(beat(t,21.8,22.6),manual?1:0);
-   const shotR=manual?beat(act,.1,.5):beat(t,26.4,27.2);br.x=3.6+.45*shotR;br.z=.62-2.2*shotR;br.dy=.25*Math.sin(shotR*Math.PI);br.rot=-shotR*6;
+   const shotR=manual?beat(act,.1,.5):beat(t,26.4,27.2);br.x=3.6+.45*shotR;br.z=.62-1.85*shotR;br.dy=.25*Math.sin(shotR*Math.PI);br.rot=-shotR*6;
    HR.leg!.rot=-1.1*Math.max(pulse(t,26.1,26.7),manual?pulse(act,0,.2):0);kR.body.rot=-.8*Math.max(pulse(t,26.6,28),manual?beat(act,.3,.6):0);kR.body.dx=-.3*Math.max(pulse(t,26.6,28),manual?beat(act,.3,.6):0);
    count.s=Math.max(beat(t,30.8,31.6),manual?beat(act,.4,.6):0);cnt.forEach((f,i)=>{f.flip=-3.2*Math.max(beat(t,31.8+i*.8,32.3+i*.8),manual?beat(act,.55+i*.12,.65+i*.12):0);});
    record.s=Math.max(beat(t,33.6,34.4),manual?beat(act,.8,1):0);

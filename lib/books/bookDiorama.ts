@@ -82,7 +82,7 @@ const journey:SpreadDef={id:'journey',rest:33.2,
   const door=home.flap(S.door('j-door',.3,.48),-.12,.02,{anchor:'bl',axis:'y',z:.012});
   B.stand(S.tree('j-tree1',1.0,1.6,'round'),-4.6,-.25,{layer:2});B.stand(S.tree('j-palm',1.0,1.8,'palm'),-.55,-2.2,{layer:1});
   B.stand(S.goal('j-goalL',1.2,.66),-1.45,-2.05,{layer:1});
-  for(const [x,z] of [[-2.2,-1.0],[-.8,-.9]] as const)B.stand(S.cone(`j-cone${x}`,.3),x,z,{layer:1});
+  for(const [x,z] of [[-2.65,-1.05],[-.8,-.9]] as const)B.stand(S.cone(`j-cone${x}`,.3),x,z,{layer:1});
   const chart=B.stand(heightChart('j-chart'),-3.5,.3,{layer:2,s:0});
   const mark=chart.add(S.arrow('j-mark',.32,.16,INK.pink),.22,.62,{z:.02,anchor:'center'});
   const frame=B.stand(photoFrame('j-frame'),-2.15,.35,{layer:2,s:0});
@@ -155,7 +155,7 @@ const touch:SpreadDef={id:'touch',rest:33.4,
   const arm=post.arm(S.strip('t-strip',.09,2.55),0,1.22,{z:.02});
   const planeP=post.add(S.plane('t-plane',.62,.32),0,0,{z:.035,anchor:'center'});
   // Right page: the academy pitch.
-  B.stand(S.goal('t-goal',1.5,.8),3.9,-1.6,{layer:1});
+  B.stand(S.goal('t-goal',1.5,.8),3.9,-1.3,{layer:1});
   B.stand(S.bench('t-bench',1.2,.48),1.5,-1.1,{layer:1});
   const kidB=B.person('t-kidB',1.45,-.5,1.05,{shirt:'navy',hair:'messi',face:'shy',layer:2});
   const t1=B.person('t-t1',3.0,.05,1.2,{shirt:'navy',hair:'curly',skin:'#b27650',face:'open',layer:2});
@@ -223,12 +223,12 @@ const setback:SpreadDef={id:'setback',rest:28.5,
   const friend=B.person('s-friend',-1.05,1.45,1.8,{shirt:'casual',hair:'short',adult:true,skin:'#b27650',face:'smile',layer:3});
   const breath=friend.body.add(S.bubble('s-breath',.62,.52,'breath'),-.55,1.75,{z:-.02}),heart=friend.body.add(S.bubble('s-heart',.62,.52,'heart'),.2,1.85,{z:-.025});
   const rest=B.stand(S.bench('s-bench',1.0,.42),-4.1,2.3,{layer:3,s:0});
-  const board=B.stand(S.scoreboard('s-board',2.6,1.9,'2014 FINAL'),2.3,-1.0,{layer:1,s:0});
+  const board=B.stand(S.scoreboard('s-board',2.6,2.1,'2014 FINAL'),2.3,-1.0,{layer:1,s:0});
   const note=board.add(S.noteCard('s-note',2.0,1.1,['YOU ARE MORE','THAN ONE RESULT']),0,.43,{z:.012});
   const flap=board.flap(S.scoreFlap('s-flap',2.2,1.25,'ARG','0 : 1','GER'),0,1.66,{z:.024});
   const trophyP=B.stand(S.trophy('s-trophy',.55,.95),4.35,-.35,{layer:2,s:0});
-  const ger1=B.person('s-ger1',3.55,-1.75,1.05,{shirt:'ger',hair:'short',face:'grin',layer:1});
-  const ger2=B.person('s-ger2',4.35,-1.55,1.05,{shirt:'ger',hair:'bald',face:'grin',skin:'#f1b88f',layer:1});
+  const ger1=B.person('s-ger1',4.0,-1.2,1.05,{shirt:'ger',hair:'short',face:'grin',layer:1});
+  const ger2=B.person('s-ger2',4.55,-1.4,1.05,{shirt:'ger',hair:'bald',face:'grin',skin:'#f1b88f',layer:1});
   const ball=B.stand(S.ball('s-ball',.12),.9,.9,{layer:3,tab:false});B.slot(.6,.95,3.9,.6);
   return (b:Beat)=>{const t=b.t,act=b.action;
    beamL.s=beat(t,.3,1.6);flags.dy=.05*wave(t,1.8,10,1.2);
@@ -313,15 +313,15 @@ const together:SpreadDef={id:'together',rest:25.2,
  build:B=>{
   const bd=B.vfold({key:'g-bdL',w:4.5,h:3.0,paint:k=>{nightSky(k,4.5,3);crowd(k,4.5,1.1,2.6,FLAGS,2);lightRig(k,1,.3);lightRig(k,3.5,.35);k.fill(rect(0,2.6,4.5,.4),'#3f7f5a');}},
    {key:'g-bdR',w:4.5,h:3.0,paint:k=>{nightSky(k,4.5,3);crowd(k,4.5,1.1,2.6,FLAGS,5);lightRig(k,1.5,.3);lightRig(k,4,.35);k.fill(rect(0,2.6,4.5,.4),'#3f7f5a');}},-3.05,1.22);
-  const ban=bd.add(S.banner('g-banner',2.8,.42,'COPA AMÉRICA 2021',INK.blue),'L',.6,1.05,{out:.02});
+  const ban=bd.add(S.banner('g-banner',2.8,.42,'COPA AMÉRICA 2021',INK.blue),'L',1.65,1.55,{out:.02});
   const conf=bd.add(S.confetti('g-conf',2.6,1.4,3),'R',.6,1.0,{out:.03});
   const years=bd.add(S.flipCard('g-28',1.3,.5,'28 YEARS',INK.yellow,INK.navy),'R',3.1,1.25,{out:.03});
   B.stand(S.goal('g-goalL',1.9,.95),-3.7,-1.35,{layer:1});
   const keeper=B.person('g-keeper',-3.7,-1.0,1.35,{shirt:'keeper',hair:'short',skin:'#f1b88f',number:'23',face:'open',layer:2,holdL:'glove',holdR:'glove'});
   const shot=B.stand(S.ball('g-shot',.12),-3.3,1.5,{layer:3,tab:false});B.slot(-3.3,1.5,-3.6,-.7);
   const gloves=[0,1,2].map(i=>B.stand(S.icon(`g-glove${i}`,.3,'glove'),-4.5+i*.38,2.5,{layer:3,s:0}));
-  const board=B.stand(S.scoreboard('g-board',1.5,1.15,'FINAL'),-1.35,-1.75,{layer:1});
-  const sFlap=board.flap(S.flipCard('g-semi',1.2,.62,'SEMI',INK.blue),0,.86,{z:.024});board.add(S.flipCard('g-final',1.2,.62,'1 – 0',INK.pink),0,.24,{z:.012});
+  const board=B.stand(S.scoreboard('g-board',1.5,1.7,'FINAL'),-1.35,-1.75,{layer:1});
+  const sFlap=board.flap(S.flipCard('g-semi',1.2,.5,'SEMI',INK.blue),0,.86,{z:.024});board.add(S.flipCard('g-final',1.2,.5,'1 – 0',INK.pink),0,.36,{z:.012});
   B.stand(S.goal('g-goalR',1.7,.9),4.0,-1.4,{layer:1});
   const scorer=B.person('g-scorer',2.7,-.5,1.3,{shirt:'arg',hair:'curly',skin:'#d99a6c',number:'11',legs:'kick',face:'grin',layer:2});
   const chip=B.stand(S.ball('g-chip',.12),3.05,-.35,{layer:2,tab:false});B.slot(3.05,-.35,3.95,-1.25);
@@ -362,9 +362,9 @@ const champions:SpreadDef={id:'champions',rest:16.9,
    {key:'c-bdR',w:4.5,h:3.0,paint:k=>{nightSky(k,4.5,3);crowd(k,4.5,1.2,2.6,FLAGS,6);lightRig(k,1.2,.3);lightRig(k,3.8,.35);k.fill(rect(0,2.6,4.5,.4),'#3f7f5a');}},-3.05,1.22);
   const fw=[bd.add(S.firework('c-fw1',.45,INK.pink),'R',1.2,1.6,{out:.03}),bd.add(S.firework('c-fw2',.4,INK.yellow),'R',3.1,1.4,{out:.03}),bd.add(S.firework('c-fw3',.42,'#6fb6e2'),'L',2.2,1.5,{out:.03})];
   const conf=[bd.add(S.confetti('c-cf1',2.2,1.2,1),'R',.4,1.2,{out:.04}),bd.add(S.confetti('c-cf2',2.2,1.2,2),'L',.6,1.2,{out:.04})];
-  const board=B.stand(S.scoreboard('c-board',2.0,1.5,'FINAL 2022'),-1.9,-1.6,{layer:1});
-  const labels=['1 – 0','2 – 0','2 – 1','2 – 2','3 – 2','3 – 3'];board.add(S.flipCard('c-pens',1.6,.8,'PENS 4 – 2',INK.yellow,INK.navy),0,.35,{z:.01});
-  const cards=labels.map((l,i)=>board.flap(S.flipCard(`c-card${i}`,1.6,.8,l,i%2?INK.blue:INK.pink),0,1.15,{z:.012+(labels.length-i)*.004}));
+  const board=B.stand(S.scoreboard('c-board',2.0,2.1,'FINAL 2022'),-1.9,-1.6,{layer:1});
+  const labels=['1 – 0','2 – 0','2 – 1','2 – 2','3 – 2','3 – 3'];board.add(S.flipCard('c-pens',1.6,.6,'PENS 4 – 2',INK.yellow,INK.navy),0,.5,{z:.01});
+  const cards=labels.map((l,i)=>board.flap(S.flipCard(`c-card${i}`,1.6,.6,l,i%2?INK.blue:INK.pink),0,1.1,{z:.012+(labels.length-i)*.004}));
   const goals=[0,1].map(i=>B.stand(S.icon(`c-goal${i}`,.3,'ball'),-.6+i*.36,-.75,{layer:2,s:0}));
   B.stand(S.goal('c-goal',1.8,.9),-3.8,-1.1,{layer:1});
   const keeper=B.person('c-keeper',-3.8,-.8,1.3,{shirt:'keeper',hair:'short',skin:'#d99a6c',face:'open',layer:2,holdL:'glove',holdR:'glove'});
