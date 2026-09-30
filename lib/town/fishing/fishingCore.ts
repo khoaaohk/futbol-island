@@ -12,11 +12,14 @@
  */
 import {FISH,FISH_SPOTS,SHADOW_LENGTH,fishById,type FishId,type FishSpot,type FishRarity,type FishSpecies} from './fishCatalog';
 import {distanceToShore,onIsland} from '../shoreline';
+import {BOAT_AFLOAT,onBoatHull} from './deepSeaBoatData';
+import {underEastPier} from '../eastPier';
 
-/** Where the float lands: out past the shoreline in the spot's casting direction (the pier spots cast over the sand). */
+/** Where the float lands: out past the shoreline in the spot's casting direction (the pier spots cast over the sand; the
+ *  Deep Sea Boat casts over its own rail). */
 export function castPoint(spot:FishSpot,from:{x:number;z:number}){
  const dx=spot.buoy.x-spot.x,dz=spot.buoy.z-spot.z,l=Math.hypot(dx,dz)||1,ux=dx/l,uz=dz/l;
- let d=1;while(d<30&&onIsland(from.x+ux*d,from.z+uz*d))d+=.5;
+ let d=1;while(d<30&&(onIsland(from.x+ux*d,from.z+uz*d)||onBoatHull(from.x+ux*d,from.z+uz*d)||underEastPier(from.x+ux*d,from.z+uz*d)))d+=.5;
  const reach=Math.min(d+3.2,30);return {x:from.x+ux*reach,z:from.z+uz*reach,dir:{x:ux,z:uz},distance:reach};
 }
 /**
@@ -24,9 +27,11 @@ export function castPoint(spot:FishSpot,from:{x:number;z:number}){
  * and the rock spots) and at least WATER_MARGIN metres from the shoreline, so a shadow never swims over sand or rocks.
  */
 export const WATER_MARGIN=.8;
-/** Things that float in open water outside the island outline (the moored matchday ferry, lib/town/world.ts), plus a margin. */
-const AFLOAT=[{x0:240.5,x1:251.5,z0:189,z1:209}];
-export const inOpenWater=(x:number,z:number)=>!onIsland(x,z)&&!AFLOAT.some(b=>x>b.x0&&x<b.x1&&z>b.z0&&z<b.z1)&&distanceToShore(x,z)>=WATER_MARGIN;
+/** The East Pier's planks (eastPier.ts) are skipped like the island: floats clear them and shadows never swim under them.
+ *  Things that float in open water outside the island outline (the moored matchday ferry, lib/town/world.ts, and the Deep Sea
+ *  Boat, ./deepSeaBoatData.ts), plus a margin. */
+const AFLOAT=[{x0:240.5,x1:251.5,z0:189,z1:209},BOAT_AFLOAT];
+export const inOpenWater=(x:number,z:number)=>!onIsland(x,z)&&!underEastPier(x,z)&&!AFLOAT.some(b=>x>b.x0&&x<b.x1&&z>b.z0&&z<b.z1)&&distanceToShore(x,z)>=WATER_MARGIN;
 /** Legacy single start point (kept as the last-resort fallback of planApproach): along the shore, in open water. */
 export function shadowSpawn(cast:{x:number;z:number;dir:{x:number;z:number}},rand:()=>number,inWater:(x:number,z:number)=>boolean=inOpenWater){
  const sx=cast.dir.z,sz=-cast.dir.x;

@@ -97,19 +97,19 @@ console.log('PASS relocated futsal round targets: high shots clear garage wall, 
 console.log('PASS ten high spacing targets: long charged shots required, no landing shortcut, grounded pickup');
 
 {
- const f=fixture(),east=f.q.COIN_QUEST.filter(s=>s.wall?.facing==='east');assert.equal(east.length,8);
+ const f=fixture(),east=f.q.COIN_QUEST.filter(s=>s.wall?.facing==='east');assert.equal(east.length,9);
  for(const s of east){const w=s.wall;assert(!f.hunt.hit(w.x+.1,w.y,w.z,8,0),'Wrong direction cannot open '+s.id);assert(f.hunt.hit(w.x+.1,w.y,w.z,-8,0),'East approach opens '+s.id);assert(!f.hunt.hit(w.x+.1,w.y,w.z,-8,0),'No duplicate reveal');f.hunt.update(.7,{x:s.x,y:s.y,z:s.z},true,true);assert(f.p.readCoinProgress().collected.includes(s.id),'Ground ball collectible east of wall');}
- f.hunt.dispose();console.log('PASS eight east targets: direction, reveal deduplication and ground collection');
+ f.hunt.dispose();console.log('PASS nine east targets (incl. the Coral Cay welcome arch): direction, reveal deduplication and ground collection');
 }
-const aerialFixture=fixture(),aerialSpots=aerialFixture.q.COIN_QUEST.filter(s=>s.parachute);aerialFixture.hunt.dispose();assert.equal(aerialSpots.length,5);
+const aerialFixture=fixture(),aerialSpots=aerialFixture.q.COIN_QUEST.filter(s=>s.parachute);aerialFixture.hunt.dispose();assert.equal(aerialSpots.length,7);
 for(const s of aerialSpots){
  const f=fixture(),p={x:s.x+2,y:s.y+1,z:s.z};
  assert(!f.props.some(c=>c.x===s.x&&c.z===s.z),'floating balls have no solid box');
  f.hunt.update(.1,p,true,false,null,false);assert(!f.collected.includes(s.id),'flight cannot collect parachute ball');
- f.hunt.update(.1,{...p,y:0},true,false,null,true);assert(!f.collected.includes(s.id),'parachute must be at ball height');
+ f.hunt.update(.1,{...p,y:s.buoy?s.y+9:0},true,false,null,true);assert(!f.collected.includes(s.id),'parachute must be at ball height');
  f.hunt.update(.1,p,true,false,null,true);assert(f.collected.includes(s.id),'open parachute collects with generous clearance');
  f.hunt.update(.1,p,true,false,null,true);assert.equal(f.collected.filter(id=>id===s.id).length,1);f.hunt.dispose();
 }
-console.log('PASS five parachute-only balls: altitude, flight exclusion, generous pickup and no solid props');
+console.log('PASS seven parachute-only balls (incl. the Coral Cay sky and buoy): altitude, flight exclusion, generous pickup and no solid props');
 
 {const f=fixture(),s=f.q.COIN_QUEST.find(s=>s.parachute),p={x:s.x+10,y:s.y+10,z:s.z},g=f.hunt.root.getObjectByName("coin-spot-"+s.id),ring=g.getObjectByName("parachute-ball-highlight");f.hunt.update(.1,p,true,false,null,false);assert(!ring.visible);f.hunt.update(.1,p,true,false,null,true);assert(ring.visible);f.hunt.update(.1,{x:1000,y:s.y,z:1000},true,false,null,true);assert(!ring.visible);f.hunt.dispose();console.log("PASS parachute highlights activate only during nearby descent");}

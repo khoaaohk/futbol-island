@@ -2,6 +2,8 @@
 import {createDailyPlay} from '@/lib/town/dailyPlay';
 import {grantDailyPlayCoins} from '@/lib/arcade/arcadeWallet';
 import { readIslandReturnPosition, saveIslandReturnPosition } from '@/lib/arcade/islandReturnPosition';
+import {KONBINI_DOORS,KONBINI_BUILDINGS,konbiniDoorNear,saveKonbiniDeparture,konbiniUrl,type KonbiniDoor} from '@/lib/konbini/konbiniDoors';
+import KonbiniDoorSlide from './KonbiniDoorSlide';
 import {createGroundBallRoll} from '../lib/graphics/groundBallRoll';
 import {FORMAT_PATH_LAUNCH,validPathLaunch,type FormatPathLaunch} from '@/lib/paths/formatPaths';
 import {createTruckReactions} from '@/lib/graphics/truckReactions';
@@ -40,7 +42,10 @@ import IslandLoading from './IslandLoading';
 import IslandReturnLoading from './IslandReturnLoading';
 import CharacterCustomizer from './CharacterCustomizer';
 import VendingMachine from './VendingMachine';
+import {isDrinkMachine} from '@/lib/town/drinkMachines';
 import {createVendingMachines,type VendingMachines} from '@/lib/graphics/vendingMachines';
+import {readArcadeWallet} from '@/lib/arcade/arcadeWallet';
+import {createVendingKick} from '@/lib/graphics/vendingKick';
 import {nearestVendingMachine,vendingMachine,vendingItemFor,type VendingMachineId} from '@/lib/town/vendingCatalog';
 import {isVendingPreview} from '@/lib/town/vendingPreview';
 import {grantTestingCoins} from '@/lib/arcade/arcadeWallet';
@@ -59,7 +64,7 @@ import {createIslandNpcs} from '@/lib/graphics/islandNpcs';
 import type {NpcDefinition} from '@/lib/town/npcDialogues';
 import {useQuizProgress,getQuizProgress} from '@/lib/town/quizProgress';
 import {equippedActions} from '@/lib/town/equipmentActions';
-import {createBallAppearance} from '@/lib/graphics/ballAppearance';
+import {addBallPatches,createBallAppearance} from '@/lib/graphics/ballAppearance';
 import {DEFAULT_CUSTOMIZATION,loadCustomization,saveCustomization,sanitizeCustomization,BALL_COLORS,beanLookFor,playerOutfit,type CharacterCustomization} from '@/lib/town/customization';
 import {enforceRideUnlocks} from '@/lib/town/rideUnlocks';
 import {COACH_VOICES,primeLessonVoice,lessonVoiceSpeaking} from '@/lib/town/useLessonVoice';
@@ -82,7 +87,7 @@ import {createRooftopTravel,ROOF_RECOVERY_TIME} from '@/lib/town/rooftopTravel';
 import {roofJumpMotion,applyRoofJumpPose} from '@/lib/town/rooftopJump';
 import FieldLearning from './FieldLearning';
 import {type MapFootprint} from './IslandOverview';
-import {VENUES,ISLAND_SQUARE,ARCADE_DOOR,COACHES_DOOR,STORE_DOOR,venueById,venueEntrance,nearestVenue,fieldSurfaceHeight,type Format} from '@/lib/town/venues';
+import {VENUES,ISLAND_SQUARE,ARCADE_DOOR,COACHES_DOOR,STORE_DOOR,venueById,venueEntrance,nearestVenue,fieldSurfaceHeight,liveHalfX,liveHalfZ,liveWorldX,liveWorldZ,liveFieldPoint,type Format} from '@/lib/town/venues';
 import {buildFormatFields} from '@/lib/town/fields';
 import {createFieldRuntime,teachingPoseAdvances} from '@/lib/town/fieldRuntime';
 import {createFieldCollision} from '@/lib/town/fieldCollision';
@@ -105,7 +110,7 @@ import {createStreetTraffic} from '@/lib/graphics/streetTraffic';
 import {createFlightTrail,FLIGHT_TRAIL_COLORS} from '@/lib/graphics/flightTrail';
 import { createRideTrail } from '@/lib/graphics/rideTrail';
 import { TRAVEL_MODES, type TravelMode } from '@/lib/town/travelModes';
-import {createJetpackActions} from '@/lib/town/jetpackActions';
+import {createJetpackActions,PARACHUTE_REAIM_METRES,PARACHUTE_REAIM_SECONDS} from '@/lib/town/jetpackActions';
 import {createBallReactions,type BallHitTarget} from '@/lib/graphics/ballReactions';
 import {createRideChange} from '@/lib/graphics/rideChange';
 import {createJetpackBreakup} from '@/lib/graphics/jetpackBreakup';
@@ -128,7 +133,10 @@ import { sideGameDress, mainPlayerDress } from '@/lib/town/beanLooks';
 import { DEFAULT_PLAYER_NUMBER } from '@/lib/graphics/shirtNumbers';
 import { graphicsQuality, FrameBudget, MotionResolution, dynamicResolutionEnabled } from '@/lib/graphics/quality';
 import { buildTown } from '@/lib/town/world';
-import { District, DISTRICTS, districtAt, stepPlayer, blocked, flightBlocked, ISLAND_BOUNDS } from '@/lib/town/simulation';
+import { District, DISTRICTS, districtAt, stepPlayer, blocked, flightBlocked, ISLAND_BOUNDS, insideObstacle } from '@/lib/town/simulation';
+import {ballGround,OUT_OF_PLAY_NOTE} from '@/lib/town/ballSea';
+import {createPierTarget} from '@/lib/town/eastPierChallenge';
+import {CORAL_CAY_ARRIVAL} from '@/lib/town/coralCay';
 
 const BallHuntLesson=dynamic(()=>import('./BallHuntLesson'),{ssr:false});
 import CardOfferHost from './CardOfferHost';
@@ -137,6 +145,8 @@ import RideUnlockToast from './RideUnlockToast';
 import {earnForBall} from '@/lib/town/cardRewardTriggers';
 /** The position guide (PlayerCard, PlayerArt, photo manifests, film registry and player) loads on the first live-player tap, not with the island. */
 const PositionGuide=dynamic(()=>import('./PositionGuide'),{ssr:false});
+// The two outdoor drink machines (lib/town/drinkMachines.ts): same in-world machine, drink stock and the Konbini consumable flow.
+const DrinkMachine=dynamic(()=>import('./DrinkMachine'),{ssr:false});
 const INITIAL_SPAWN={x:103,z:-8};
 const INITIAL_FLIGHT_HEIGHT=28;
 type Input = {charging?:boolean;shotPower?:number;x:number;z:number;sprint:boolean;kick:boolean;juggle:boolean};
@@ -150,6 +160,9 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
   const onboardingNpcStep=useRef(false),onboardingNpcTarget=useRef<OnboardingNpcTarget|null>(null);
   const [onboardingOpen,setOnboardingOpen]=useState(false),onboardingRef=useRef(false);onboardingRef.current=onboardingOpen;
   const [arcadeOpen,setArcadeOpen]=useState(false);
+  // Konbini (Sep 29 2026): like the Arcade, a document boundary that unloads the island; the departure is that store's door.
+  const [konbiniDoor,setKonbiniDoor]=useState<KonbiniDoor|null>(null);
+  useEffect(()=>{if(!konbiniDoor)return;saveKonbiniDeparture(konbiniDoor,rideRef.current);musicRef.current?.setSceneActive(false);stopIslandNarration();soundRef.current?.dispose();const timer=setTimeout(()=>window.location.assign(konbiniUrl(konbiniDoor)),matchMedia('(prefers-reduced-motion:reduce)').matches?60:380);return()=>clearTimeout(timer);},[konbiniDoor]);
   const saveArcadeDeparture=useRef<()=>void>(()=>{});
   // A document boundary aborts island loading and releases its complete runtime.
   useEffect(()=>{if(!arcadeOpen)return;saveArcadeDeparture.current();musicRef.current?.setSceneActive(false);stopIslandNarration();soundRef.current?.dispose();const timer=setTimeout(()=>window.location.assign('/arcade'),matchMedia('(prefers-reduced-motion:reduce)').matches?60:380);return()=>clearTimeout(timer);},[arcadeOpen]);
@@ -163,7 +176,7 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
   const [coachesOpen,setCoachesOpen]=useState(false);
   const [ferryOpen,setFerryOpen]=useState(false);
   const [museumOpen,setMuseumOpen]=useState(false);
-  const [ballLessons,setBallLessons]=useState<string[]>([]),[coinNear,setCoinNear]=useState('');
+  const [ballLessons,setBallLessons]=useState<string[]>([]),[coinNear,setCoinNear]=useState(''),[seaNote,setSeaNote]=useState('');
   // Card rewards: the "choose a card" offer is open (the island sleeps behind it like any other dialog).
   const [cardOfferOpen,setCardOfferOpen]=useState(false);
   useEffect(()=>{const show=()=>{setStoreOpen(false);setSettingsOpen(true);window.dispatchEvent(new Event('fi2-open-coin-panel'));};const hide=()=>setSettingsOpen(false);window.addEventListener('fi2-coin-quest-open',show);window.addEventListener('fi2-coin-hint',hide);return()=>{window.removeEventListener('fi2-coin-quest-open',show);window.removeEventListener('fi2-coin-hint',hide);};},[]);
@@ -191,7 +204,7 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
   const wakeLoopRef=useRef<()=>void>(()=>{});useEffect(()=>{wakeLoopRef.current();});
   const [fishingOpen,setFishingOpen]=useState(false),[fishingDialog,setFishingDialog]=useState(false);// fishingOpen: live fishing or its dialogs (card offers wait); fishingDialog: Fishbook / market stand open (the island rests)
   const [balancesOpen,setBalancesOpen]=useState(false);
-  const [settingsOpen,setSettingsOpen]=useState(false),settingsRef=useRef(false);settingsRef.current=balancesOpen||settingsOpen||customizerOpen||conversationOpen||storeOpen||onboardingOpen||arcadeOpen||coachesOpen||museumOpen||ferryOpen||!!positionSelection||ballLessons.length>0||cardOfferOpen||fishingDialog;
+  const [settingsOpen,setSettingsOpen]=useState(false),settingsRef=useRef(false);settingsRef.current=!!konbiniDoor||balancesOpen||settingsOpen||customizerOpen||conversationOpen||storeOpen||onboardingOpen||arcadeOpen||coachesOpen||museumOpen||ferryOpen||!!positionSelection||ballLessons.length>0||cardOfferOpen||fishingDialog;
   const [voiceEnabled,setVoiceEnabled]=useState(true),[coachVoice,setCoachVoice]=useState('kokoro_af_bella'),[controlsFlipped,setControlsFlipped]=useState(false);
   useEffect(()=>{try{setVoiceEnabled(localStorage.getItem('fi2-voice-enabled')!=='false');const coach=localStorage.getItem('fi2-coach-voice');if(COACH_VOICES.some(([id])=>id===coach))setCoachVoice(coach!);setControlsFlipped(localStorage.getItem('fi2-controls-flipped')==='true');}catch{}},[]);
   const savePreference=(key:string,value:string)=>{try{localStorage.setItem(key,value);}catch{}};
@@ -248,7 +261,7 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
     canvasHost.addEventListener('gesturechange',gesture,{passive:false});
     return()=>{canvasHost.removeEventListener('wheel',pinch);canvasHost.removeEventListener('gesturestart',gesture);canvasHost.removeEventListener('gesturechange',gesture);};
   },[]);
-  const travel=useRef<District|'square'|'coaches'|'store'|null>(null),mapRef=useRef(false);
+  const travel=useRef<District|'square'|'coaches'|'store'|'cay'|null>(null),mapRef=useRef(false);
   const [district,setDistrict]=useState<District>('coast'),[sceneReady,setSceneReady]=useState(false),[failed,setFailed]=useState(false);
   const [minimumLoadElapsed,setMinimumLoadElapsed]=useState(returningFromArcade);
   const loadingComplete=sceneReady&&minimumLoadElapsed;
@@ -283,7 +296,7 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
   const [mapMounted,setMapMounted]=useState(false);
   useEffect(()=>{if(map){setMapMounted(true);return;}const timer=setTimeout(()=>setMapMounted(false),window.matchMedia('(prefers-reduced-motion: reduce)').matches?0:380);return()=>clearTimeout(timer);},[map]);
   mapRef.current=map||mapMounted;
-  const go=(to:District|'square'|'coaches'|'store')=>{if(to==='coast'||to==='oldtown'){goField(to==='coast'?'futsal':'7v7');return;}fieldSession.current=null;setFieldCatalog(null);if(lessonRef.current)lessonCommand.current='exit';travel.current=to;setMap(false);setHint(false);};
+  const go=(to:District|'square'|'coaches'|'store'|'cay')=>{if(to==='coast'||to==='oldtown'){goField(to==='coast'?'futsal':'7v7');return;}fieldSession.current=null;setFieldCatalog(null);if(lessonRef.current)lessonCommand.current='exit';travel.current=to;setMap(false);setHint(false);};
   useEffect(()=>{
     const parent=host.current;if(!parent)return;
     const departure=returningFromArcade?readIslandReturnPosition():null;
@@ -307,7 +320,8 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
     renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.0;parent.appendChild(renderer.domElement);
     const scene=new T.Scene();scene.background=new T.Color('#e8b98b');scene.fog=null;
     // A ball-hunt hint (e.g. "Land inside the ring…") owns the top prompt slot: the Learn-plays card steps aside while it shows.
-    let coinHintShown=false;const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHintShown=!!text;setCoinNear(text);},c=>{earnForBall(c);setBallLessons(queue=>queue.includes(c.id)?queue:[...queue,c.id]);});
+    let coinHintShown=false,seaNoteShown=false,pierNoteTimer:ReturnType<typeof setTimeout>|undefined;const pierTarget=createPierTarget(scene);// East Pier shooting ring (eastPierChallenge.ts): static, moved only on a hit.
+const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHintShown=!!text;setCoinNear(text);},c=>{earnForBall(c);setBallLessons(queue=>queue.includes(c.id)?queue:[...queue,c.id]);});
     const jobs=createJobScene(scene);// island jobs + Community Garden (docs/island-jobs.md)
     let suppressInitialArrival=returningFromArcade;const characterArrival=createCharacterArrival(scene);arrivalRestartRef.current=()=>{suppressInitialArrival=false;characterArrival.restart();wakeLoopRef.current();};
     const camera=new T.PerspectiveCamera(40,1,1,500);if(returningFromArcade)camera.position.set(initialSpawn.x+18,23+fieldSurfaceHeight(initialSpawn.x,initialSpawn.z),initialSpawn.z+30);
@@ -319,7 +333,7 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
     const learningView=createLearningView();let wasLearning=false;
     const quizView=createQuizViewControls(renderer.domElement,camera,()=>Boolean(learningFormat.current));resetQuizView.current=quizView.reset;
     const LEARNING_HIDE=['vending-machines','fishing-spots','fishing-spot-selection','market-stand-selection','fishing-live','fishing-shore-foam'];let learningHidden:[T.Object3D,boolean][]|null=null;
-    const world=buildTown(scene),vending=createVendingMachines(scene);world.obstacles.push(...vending.obstacles);vendingRef.current=vending;
+    const world=buildTown(scene),vending=createVendingMachines(scene,{coins:()=>readArcadeWallet().balance});world.obstacles.push(...vending.obstacles);vendingRef.current=vending;
     const fields=buildFormatFields(scene),ballReactions=createBallReactions(scene),games=createFieldRuntime(scene,ballReactions);gamesRef.current=games;const fieldBump=createFieldCollision();
     const shadowBatches=createStaticShadowBatches(renderer,scene,window.matchMedia("(pointer: coarse)").matches);
     const shadowVisibility=createShadowVisibility(renderer,scene,sun);
@@ -354,11 +368,16 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
     const clearCharacterHover=(event?:PointerEvent)=>{if(event?.relatedTarget instanceof Element&&event.relatedTarget.closest('.store-enter-prompt'))return;hoverPoint=null;renderer.domElement.style.cursor='';};
     renderer.domElement.addEventListener('pointermove',trackCharacterHover);renderer.domElement.addEventListener('pointerleave',clearCharacterHover);
     const arcadeHit=new T.Vector3();
+    // Konbinis (Sep 29 2026): enterable like the Arcade, with the same building highlight, hover and from-the-air Enter.
+    const konbiniBox=(d:KonbiniDoor)=>{const b=KONBINI_BUILDINGS[d];return new T.Box3(new T.Vector3(b.x-b.w/2,0,b.z-b.d/2),new T.Vector3(b.x+b.w/2,b.h,b.z+b.d/2));};
+    const konbiniBounds={main:konbiniBox('main'),cay:konbiniBox('cay')},pointsAtKonbini=(d:KonbiniDoor)=>characterRay.ray.intersectBox(konbiniBounds[d],arcadeHit)!==null;
     const pointsAtArcade=()=>characterRay.ray.intersectBox(world.arcadeBounds,arcadeHit)!==null;
     const buildingEffects=([
       {name:'arcade',bounds:world.arcadeBounds,z:-59,w:14,d:12,h:6.2},
       {name:'coaches',bounds:world.coachesBounds,z:-43,w:22,d:12,h:7.5},
-      {name:'museum',bounds:world.museumBounds,z:181,w:30,d:9,h:5}
+      {name:'museum',bounds:world.museumBounds,z:181,w:30,d:9,h:5},
+      {name:'konbini',bounds:konbiniBounds.main,z:KONBINI_BUILDINGS.main.z,w:KONBINI_BUILDINGS.main.w,d:KONBINI_BUILDINGS.main.d,h:KONBINI_BUILDINGS.main.h},
+      {name:'konbini',bounds:konbiniBounds.cay,z:KONBINI_BUILDINGS.cay.z,w:KONBINI_BUILDINGS.cay.w,d:KONBINI_BUILDINGS.cay.d,h:KONBINI_BUILDINGS.cay.h}
     ] as const).map(({name,bounds,z,w,d,h})=>{const center=bounds.getCenter(new T.Vector3()),root=new T.Group();root.name=name+'-selection';root.position.set(center.x,0,z);scene.add(root);const glow=createBuildingGlow(root,w,d,h,name);return{glow,dispose(){glow.dispose();root.removeFromParent();}};});
     const fishing=createFishingWorld(scene,player.root,fishingSession);// fishing posts + market stand prompts (docs/fishing.md)
     let nearMuseum=false,museumHovered=false;let buildingHoverKind='',buildingHoverUntil=0;
@@ -370,7 +389,7 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
     const inspectLivePlayer=(event:PointerEvent)=>{if(fieldSession.current||lessonRef.current||mapRef.current||settingsRef.current||quizView.blocksSelection())return false;const r=renderer.domElement.getBoundingClientRect(),point=new T.Vector2((event.clientX-r.left)/r.width*2-1,1-(event.clientY-r.top)/r.height*2),hit=games.pickPlayer(point,camera,r.width,r.height,learningFormat.current,event.pointerType==='touch');if(!hit)return false;games.setHoverPaused(hit.format);setPositionSelection(hit);sound.ui('click');return true;};
     let pointerStart:{x:number;y:number}|null=null;
     const beginCharacterTap=(event:PointerEvent)=>{pointerStart={x:event.clientX,y:event.clientY};};
-    const pickCharacter=(event:PointerEvent)=>{const start=pointerStart;pointerStart=null;if(!start||Math.hypot(event.clientX-start.x,event.clientY-start.y)>10||lessonRef.current||mapRef.current||settingsRef.current)return;if(inspectLivePlayer(event))return;if(fieldMenu.current)return;const rect=renderer.domElement.getBoundingClientRect();characterTapPoint.set((event.clientX-rect.left)/rect.width*2-1,1-(event.clientY-rect.top)/rect.height*2);characterRay.setFromCamera(characterTapPoint,camera);if(characterRay.intersectObject(player.root,true).length||nearCharacter(characterTapPoint,event.pointerType==='touch')){tapHaptic();sound.ui('click');setCustomizerOpen(true);setHint(false);return;}const npc=islandNpcs.pick(characterRay)??coachPractice.pick(characterRay)??volleyballGame.pick(characterRay);if(npc){tapHaptic();sound.ui('click');openConversation(npc);setHint(false);return;}const machine=vending.pick(characterRay);if(machine){tapHaptic();sound.ui('click');openVendingRef.current(machine);return;}if(pointsAtFerry()){tapHaptic();sound.ui('click');setFerryOpen(true);return;}if(pointsAtMuseum()){tapHaptic();sound.ui('click');setMuseumOpen(true);return;}if(pointsAtArcade()){tapHaptic();sound.ui('click');setArcadeOpen(true);return;}if(pointsAtCoaches()){tapHaptic();sound.ui('click');setCoachesOpen(true);}};
+    const pickCharacter=(event:PointerEvent)=>{const start=pointerStart;pointerStart=null;if(!start||Math.hypot(event.clientX-start.x,event.clientY-start.y)>10||lessonRef.current||mapRef.current||settingsRef.current)return;if(inspectLivePlayer(event))return;if(fieldMenu.current)return;const rect=renderer.domElement.getBoundingClientRect();characterTapPoint.set((event.clientX-rect.left)/rect.width*2-1,1-(event.clientY-rect.top)/rect.height*2);characterRay.setFromCamera(characterTapPoint,camera);if(characterRay.intersectObject(player.root,true).length||nearCharacter(characterTapPoint,event.pointerType==='touch')){tapHaptic();sound.ui('click');setCustomizerOpen(true);setHint(false);return;}const npc=islandNpcs.pick(characterRay)??coachPractice.pick(characterRay)??volleyballGame.pick(characterRay);if(npc){tapHaptic();sound.ui('click');openConversation(npc);setHint(false);return;}const machine=vending.pick(characterRay);if(machine){tapHaptic();sound.ui('click');openVendingRef.current(machine);return;}if(pointsAtFerry()){tapHaptic();sound.ui('click');setFerryOpen(true);return;}if(pointsAtMuseum()){tapHaptic();sound.ui('click');setMuseumOpen(true);return;}if(pointsAtArcade()){tapHaptic();sound.ui('click');setArcadeOpen(true);return;}if(pointsAtKonbini('main')||pointsAtKonbini('cay')){tapHaptic();sound.ui('click');setKonbiniDoor(pointsAtKonbini('main')?'main':'cay');return;}if(pointsAtCoaches()){tapHaptic();sound.ui('click');setCoachesOpen(true);}};
     renderer.domElement.addEventListener('pointerdown',beginCharacterTap);renderer.domElement.addEventListener('pointerup',pickCharacter);
     const flightMotion=createFlightMotion(),boundaryFeedback=createBoundaryFeedback();scene.add(boundaryFeedback.root);
     const jetExhaust=createJetExhaust();scene.add(jetExhaust.root);
@@ -387,8 +406,7 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
     const vehicle=createVehicle();scene.add(vehicle.root);const knockFace=createKnockdownFace(e=>player.setExpression(e));vehicle.root.scale.setScalar(1.12);let appliedCustomization:CharacterCustomization|null=null;let appliedTeamLook=false;let previousRide:TravelMode=rideRef.current;let arrivalFacing:number|undefined=departure?.yaw??(returningFromArcade?0:Math.atan2(16,33));
     const npcs=Array.from({length:2},(_,i)=>{const rig=createPlayer('local'+i,i%2?'away':'home');rig.setShirtNumber(i?4:8);const dress=sideGameDress('local'+i,i%2?'away':'home',i?4:8);rig.setBeanLook(dress.look,dress.outfit);scene.add(rig.root);return rig;});
     const ballMaterial=new T.MeshStandardMaterial({color:'#f4edd3',roughness:.7});const ballAppearance=createBallAppearance(ballMaterial);const ball=new T.Mesh(new T.SphereGeometry(.19,20,16),ballMaterial);ball.castShadow=true;ball.name='player-ball';scene.add(ball);
-    const patchMaterial=new T.MeshStandardMaterial({color:'#344c43',roughness:.8});
-    for(const direction of [[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]]){const v=new T.Vector3(...direction as [number,number,number]);const patch=new T.Mesh(new T.CircleGeometry(.078,5),patchMaterial);patch.position.copy(v.clone().multiplyScalar(.187));patch.quaternion.setFromUnitVectors(new T.Vector3(0,0,1),v);ball.add(patch);}
+    addBallPatches(ball,.19);// six dark pentagons; the shop snapshots (StorePreviews) add the same ones
     const ring=new T.Mesh(new T.RingGeometry(.48,.54,48),new T.MeshBasicMaterial({color:'#fff0b7',transparent:true,opacity:.8,side:T.DoubleSide}));ring.name='player-foot-ring';ring.rotation.x=-Math.PI/2;scene.add(ring);
     const rideChange=createRideChange();scene.add(rideChange.root);
     const guideMaterial=new T.LineDashedMaterial({color:'#e79e6b',dashSize:.35,gapSize:.22,depthTest:false});
@@ -454,17 +472,19 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
     const rollWalkingBall=createGroundBallRoll();
     const airBallFrom=new T.Vector3(),airBallTo=new T.Vector3(),dribblePlayer={x:0,y:0,z:0,yaw:0};
     const walkBall=createWalkBall(),ballEffects=createBallEffects(),rideTricks=createRideTricks(),jetActions=createJetpackActions(),parachute=createParachute(),sonicBurst=createSonicBurst(),parachuteTrail=createParachuteTrail(),craterEffect=createCraterEffect();scene.add(ballEffects.root,parachute.root,sonicBurst.root,parachuteTrail.root,craterEffect.root);
+    // Kicked vending machines shake and vibrate with a thunk (lib/graphics/vendingKick.ts); idle = no work.
+    const vendingKick=createVendingKick({scene,entries:vending.entries,material:vending.material,size:vending.size,host:parent.parentElement});
     const walkingFrameHit:FrameHit={x:0,y:0,z:0,t:0,nx:0,ny:0,nz:0,part:'post'};
     const landingMarker=createLandingMarker();scene.add(landingMarker.root);
     let landingPreview:{x:number;z:number}|null=null,previewX=Infinity,previewZ=Infinity,previewAge=1;
     const flight={cruiseHeight:departure?.ride==='jetpack'?departure.flightHeight:INITIAL_FLIGHT_HEIGHT,height:departure?.flightHeight??(returningFromArcade?fieldSurfaceHeight(location.x,location.z):INITIAL_FLIGHT_HEIGHT),takeoffTime:1.05,startHeight:fieldSurfaceHeight(location.x,location.z),landTime:-1,landHeight:0,landing:null as {x:number;z:number}|null};
     saveArcadeDeparture.current=()=>saveIslandReturnPosition({version:1,x:location.x,z:location.z,yaw:player.root.rotation.y,ride:rideRef.current,flightHeight:flight.height,camera:{x:camera.position.x,y:camera.position.y,z:camera.position.z}});
-    (window as unknown as {__fi2?:unknown}).__fi2={get hudRenders(){return hudRenders.current;},get lessonPass(){return {phase:lessonRef.current,time:lessonTime,sleeping:loopSleeping,prediction:aimPrediction,record:lessonPass,defender:{...lessonDefender},threatVisible:threatRing.visible,aimVisible:aimLine.visible,camera,canvas:renderer.domElement};},positionStore,get hiddenTransforms(){return hiddenTransforms;},get renderStats(){return renderStats;},shadowCache,shadowVisibility,shadowBatches,liveKnockout,player,characterArrival,coinHunt,treeDebris,rideRamps,rampMotion,streetTraffic,volleyballGame,music:music.getState,sound:sound.debug,scene,renderer,camera,games,world,coachPractice,islandNpcs,truckReactions,walkBall,rideTricks,jetActions,ballReactions,fieldSession,fieldTravel,location,velocity,rideRef,vehicle,flight,flightPoses:flightMotion.poses,rooftop,pendingRide,vending,bounds:ISLAND_BOUNDS};
+    (window as unknown as {__fi2?:unknown}).__fi2={get hudRenders(){return hudRenders.current;},get lessonPass(){return {phase:lessonRef.current,time:lessonTime,sleeping:loopSleeping,prediction:aimPrediction,record:lessonPass,defender:{...lessonDefender},threatVisible:threatRing.visible,aimVisible:aimLine.visible,camera,canvas:renderer.domElement};},positionStore,get hiddenTransforms(){return hiddenTransforms;},get renderStats(){return renderStats;},shadowCache,shadowVisibility,shadowBatches,liveKnockout,player,characterArrival,coinHunt,treeDebris,rideRamps,rampMotion,streetTraffic,volleyballGame,music:music.getState,sound:sound.debug,scene,renderer,camera,games,world,coachPractice,islandNpcs,truckReactions,walkBall,rideTricks,jetActions,ballReactions,fieldSession,fieldTravel,location,velocity,rideRef,vehicle,flight,flightPoses:flightMotion.poses,rooftop,pendingRide,vending,vendingKick,pierTarget,bounds:ISLAND_BOUNDS};
     (window as unknown as {__fi2:Record<string,unknown>}).__fi2.motionResolution=motionResolution;
     // Heat pass 4: thermal fallback tiers + Battery saver (lib/graphics/heatTier). Tier 0 (default) changes nothing.
     const heat=createIslandHeat({renderer,sun,resolution:motionResolution,npcs:islandNpcs,traffic:streetTraffic,governed:quality.phone});(window as unknown as {__fi2:Record<string,unknown>}).__fi2.heat=heat;if(quality.phone&&heatOptions().lambertScenery)applyLambertScenery(scene);// visible option, off by default
     sharpenSceneTextures(scene,renderer.capabilities.getMaxAnisotropy());// quality pass: crisp textures at grazing angles
-    const targetMovement=(target:BallHitTarget):{canMove:(nx:number,nz:number)=>boolean;move:(nx:number,nz:number)=>void}=>( {canMove:(nx,nz)=>rooftop.canLand(nx,nz)&&Math.abs(rooftop.surface(nx,nz)-target.y)<.3,move:(nx,nz)=>{const npc=islandNpcs.entries.find(e=>'npc:'+e.id===target.id);if(npc){npc.position.x=nx;npc.position.z=nz;return;}const volleyball=volleyballGame.entries.find(e=>'npc:'+e.id===target.id);if(volleyball){volleyball.position.x=nx;volleyball.position.z=nz;return;}const coach=coachPractice.entries.find(e=>'npc:'+e.id===target.id);if(coach){coach.offset.x+=nx-coach.position.x;coach.offset.z+=nz-coach.position.z;coach.position.x=nx;coach.position.z=nz;return;}for(const field of games.entries){const prefix='field:'+field.venue.id+':';if(target.id.startsWith(prefix)){const actor=field.sim.players[target.id.slice(prefix.length)];if(actor){actor.x=135+(nx-field.venue.x)/field.venue.width*250;actor.y=200+(nz-field.venue.z)/field.venue.length*380;actor.vx=actor.vy=0;}break;}}}} );
+    const targetMovement=(target:BallHitTarget):{canMove:(nx:number,nz:number)=>boolean;move:(nx:number,nz:number)=>void}=>( {canMove:(nx,nz)=>rooftop.canLand(nx,nz)&&Math.abs(rooftop.surface(nx,nz)-target.y)<.3,move:(nx,nz)=>{const npc=islandNpcs.entries.find(e=>'npc:'+e.id===target.id);if(npc){npc.position.x=nx;npc.position.z=nz;return;}const volleyball=volleyballGame.entries.find(e=>'npc:'+e.id===target.id);if(volleyball){volleyball.position.x=nx;volleyball.position.z=nz;return;}const coach=coachPractice.entries.find(e=>'npc:'+e.id===target.id);if(coach){coach.offset.x+=nx-coach.position.x;coach.offset.z+=nz-coach.position.z;coach.position.x=nx;coach.position.z=nz;return;}for(const field of games.entries){const prefix='field:'+field.venue.id+':';if(target.id.startsWith(prefix)){const actor=field.sim.players[target.id.slice(prefix.length)];if(actor){const f=liveFieldPoint(field.venue,nx,nz);actor.x=f.x;actor.y=f.y;actor.vx=actor.vy=0;}break;}}}} );
     let truckHitAge=0,lastHitTruck=-1;const lastTruckHitPosition={x:0,z:0},lightRidePosition=new T.Vector3();
     const previousLocation={...location},visualLocation={...location};
     const keys=new Set<string>(),camTarget=new T.Vector3(),lookAt=new T.Vector3();
@@ -669,7 +689,7 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
       if(input.current.kick&&ballAway&&(input.current.shotPower??0)===0){walkBall.reset(ballPlayer);}
       if(input.current.kick&&!rooftop.state.falling){
         const obstacles=world.obstacles.filter(o=>!ballAboveBuilding(o,ballPlayer.y+.5));
-        const yaw=coinHunt.aim(ballPlayer,ballPlayer.yaw,(x,z)=>!blocked(x,z,obstacles,.2)&&rooftop.surface(x,z)<=ballPlayer.y+.6)??assistedShotYaw(ballPlayer,ballPlayer.yaw,targets.filter(t=>!ballReactions.get(t.id)),(x,z)=>!blocked(x,z,obstacles,.2)&&rooftop.surface(x,z)<=ballPlayer.y+.6);const power=input.current.shotPower??0,finish=goalFinish(ballPlayer,power,VENUES);walkBall.shoot(ballPlayer,power>0?ballPlayer.yaw:yaw,power,finish);input.current.shotPower=0;
+        const yaw=coinHunt.aim(ballPlayer,ballPlayer.yaw,(x,z)=>!blocked(x,z,obstacles,.2)&&rooftop.surface(x,z)<=ballPlayer.y+.6)??pierTarget.aim(ballPlayer,ballPlayer.yaw)??assistedShotYaw(ballPlayer,ballPlayer.yaw,targets.filter(t=>!ballReactions.get(t.id)),(x,z)=>!blocked(x,z,obstacles,.2)&&rooftop.surface(x,z)<=ballPlayer.y+.6);const power=input.current.shotPower??0,finish=goalFinish(ballPlayer,power,VENUES);walkBall.shoot(ballPlayer,power>0?ballPlayer.yaw:yaw,power,finish);input.current.shotPower=0;
       }
       input.current.kick=input.current.juggle=false;
       const previousBall={x:walkBall.state.x,z:walkBall.state.z};
@@ -680,7 +700,9 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
         moving:Math.hypot(velocity.x,velocity.z)>.15||Math.hypot(input.current.x,input.current.z)>.1,
         ballStyle:customizationRef.current.ball,
         floor:rooftop.surface,
-        blocked:(x,z,y)=>{if((walkBall.state.mode==='shot'||walkBall.state.mode==='wall-juggle')&&coinHunt.hit(x,y,z,walkBall.state.vx,walkBall.state.vz))return false;const collision=blocked(x,z,ballObstacleGrid.query(x,z,.19).filter(o=>!ballAboveBuilding(o,y+.05)),.19)||ballRoofGrid.query(x,z,.19).some(o=>y>o.floor&&y<o.top+.2&&Math.abs(x-o.x)<o.w/2+.19&&Math.abs(z-o.z)<o.d/2+.19);if(collision&&(walkBall.state.mode==='shot'||walkBall.state.mode==='wall-juggle')){jobs.ballContact(x,y,z,walkBall.state.mode);treeDebris.hit(x,y,z,Math.hypot(walkBall.state.vx,walkBall.state.vz),reduced);world.umbrellaReaction.hit(x,y,z,Math.hypot(walkBall.state.vx,walkBall.state.vz),reduced);}return collision;},
+        // Out to sea (ballSea.ts): open water no longer stops the ball; only real solids over it (the buoy, any obstacle) do.
+        sea:ballGround,splash:(x,y,z)=>{ballEffects.splash(x,y,z);document.dispatchEvent(new CustomEvent('fi2-path-cue',{detail:'undock'}));const pierNote=pierTarget.splash(x,z,ballPlayer);if(pierNote){seaNoteShown=true;setSeaNote(pierNote);clearTimeout(pierNoteTimer);pierNoteTimer=setTimeout(()=>setSeaNote(''),6500);return;}if(!seaNoteShown){seaNoteShown=true;setSeaNote(OUT_OF_PLAY_NOTE);clearTimeout(pierNoteTimer);pierNoteTimer=setTimeout(()=>setSeaNote(''),5000);}},// one tracked timer for both notes (code review finding 10)
+        blocked:(x,z,y)=>{if((walkBall.state.mode==='shot'||walkBall.state.mode==='wall-juggle')&&coinHunt.hit(x,y,z,walkBall.state.vx,walkBall.state.vz))return false;const react=()=>{if(walkBall.state.mode!=='shot'&&walkBall.state.mode!=='wall-juggle')return;const sp=Math.hypot(walkBall.state.vx,walkBall.state.vz);jobs.ballContact(x,y,z,walkBall.state.mode);treeDebris.hit(x,y,z,sp,reduced);world.umbrellaReaction.hit(x,y,z,sp,reduced);if(vendingKick.kick(vendingKick.hitAt(x,y,z),sp)){document.dispatchEvent(new CustomEvent('fi2-vending-cue',{detail:'thunk'}));if(!reduced)navigator.vibrate?.(14);}};if(walkBall.state.mode==='shot'&&ballGround(x,z)!=='land'){const hitSolid=coinHunt.buoySolid(x,y,z)||ballObstacleGrid.query(x,z,.19).some(o=>insideObstacle(x,z,o,.19));if(hitSolid)react();return hitSolid;}const collision=blocked(x,z,ballObstacleGrid.query(x,z,.19).filter(o=>!ballAboveBuilding(o,y+.05)),.19)||ballRoofGrid.query(x,z,.19).some(o=>y>o.floor&&y<o.top+.2&&Math.abs(x-o.x)<o.w/2+.19&&Math.abs(z-o.z)<o.d/2+.19);if(collision)react();return collision;},
         hit:(x,y,z,vx,vz)=>{if(world.umbrellaReaction.hit(x,y,z,Math.hypot(vx,vz),reduced))return true;if(coinHunt.hit(x,y,z,vx,vz))return true;const target=targets.find(t=>!ballReactions.get(t.id)&&y>=t.y-.1&&y<=t.y+1.9&&Math.hypot(x-t.x,z-t.z)<.9);if(!target)return false;return recordExploreKnockover(ballReactions.hit(target,vx,vz,customizationRef.current.ball,targetMovement(target)));},
         impact:(x,y,z)=>{ballEffects.impact(x,y,z);sound.ball('bounce');},strike:()=>{sound.ball('kick');if(walkBall.state.mode==='shot')ballEffects.launch(walkBall.state.x,walkBall.state.y,walkBall.state.z,walkBall.state.charge);},receive:()=>sound.ball('receive')
       });
@@ -746,7 +768,7 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
           for(const e of volleyballGame.entries)if(volleyballGame.root.visible)strike({id:'npc:'+e.id,...e.position});
           for(const e of coachPractice.entries)strike({id:'npc:'+e.id,...e.position});
           // Live-field players only get the soft fieldCollision bump from the character's own rides; a truck still knocks them.
-          for(const e of games.entries)if(hitTruck&&Math.abs((e.venue.elevation??0)-position.y)<1&&Math.abs(e.venue.x-position.x)<e.venue.width/2+8&&Math.abs(e.venue.z-position.z)<e.venue.length/2+8)for(const token of e.liveFrame.tokens){const p=e.sim.players[token.id];strike({id:'field:'+e.venue.id+':'+token.id,x:e.venue.x+(p.x-135)/250*e.venue.width,y:(e.venue.elevation??0)+.105,z:e.venue.z+(p.y-200)/380*e.venue.length});}
+          for(const e of games.entries)if(hitTruck&&Math.abs((e.venue.elevation??0)-position.y)<1&&Math.abs(e.venue.x-position.x)<liveHalfX(e.venue)+8&&Math.abs(e.venue.z-position.z)<liveHalfZ(e.venue)+8)for(const token of e.liveFrame.tokens){const p=e.sim.players[token.id];strike({id:'field:'+e.venue.id+':'+token.id,x:liveWorldX(e.venue,p.x,p.y),y:(e.venue.elevation??0)+.105,z:liveWorldZ(e.venue,p.x,p.y)});}
           if(collision){
             const witnesses:{root:T.Object3D;id?:string}[]=[];
             const add=(root:T.Object3D,id?:string)=>{if(!root.visible||Math.hypot(root.position.x-position.x,root.position.z-position.z)>19||Math.abs(root.position.y-position.y)>2||witnesses.some(w=>w.root.position.distanceTo(root.position)<5))return;witnesses.push({root,id});};
@@ -768,7 +790,7 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
         if(command==='exit'){setPhase(null);location.x=-7;location.z=14;orb.x=-6.3;orb.z=14;}else{setPhase(command);location.x=11;location.z=9;orb.x=PASSER.x;orb.z=PASSER.z;setCoachFeedback('');}
       }
       if(fieldTravel.current){suppressInitialArrival=false;streetTraffic.rider.index=-1;rampMotion.reset();arrivalFacing=Math.atan2(16,33);player.root.rotation.y=arrivalFacing;characterArrival.restart();const v=venueById(fieldTravel.current),p=venueEntrance(v);location.x=p.x;location.z=p.z;velocity.x=velocity.z=0;orb.x=p.x+.7;orb.z=p.z;orb.vx=orb.vz=0;fieldTravel.current=null;rooftop.reset(p.x,p.z);camera.position.set(p.x+18,23+fieldSurfaceHeight(p.x,p.z),p.z+30);resetInputs();}
-      if(travel.current){suppressInitialArrival=false;streetTraffic.rider.index=-1;rampMotion.reset();arrivalFacing=Math.atan2(16,33);player.root.rotation.y=arrivalFacing;characterArrival.restart();const target=travel.current==='square'?ARCADE_DOOR:travel.current==='coaches'?COACHES_DOOR:travel.current==='store'?STORE_DOOR:DISTRICTS[travel.current];location.x=target.x;location.z=target.z;velocity.x=velocity.z=0;orb.x=target.x+.7;orb.z=target.z;orb.vx=orb.vz=0;travel.current=null;rooftop.reset(target.x,target.z);camera.position.set(target.x+18,23+fieldSurfaceHeight(target.x,target.z),target.z+30);resetInputs();}
+      if(travel.current){suppressInitialArrival=false;streetTraffic.rider.index=-1;rampMotion.reset();arrivalFacing=Math.atan2(16,33);player.root.rotation.y=arrivalFacing;characterArrival.restart();const target=travel.current==='square'?ARCADE_DOOR:travel.current==='coaches'?COACHES_DOOR:travel.current==='store'?STORE_DOOR:travel.current==='cay'?CORAL_CAY_ARRIVAL:DISTRICTS[travel.current];location.x=target.x;location.z=target.z;velocity.x=velocity.z=0;orb.x=target.x+.7;orb.z=target.z;orb.vx=orb.vz=0;travel.current=null;rooftop.reset(target.x,target.z);camera.position.set(target.x+18,23+fieldSurfaceHeight(target.x,target.z),target.z+30);resetInputs();}
       if(previousRide!==rideRef.current){rampMotion.reset();rideChange.trigger(({walk:1,scooter:1.65,bike:2.15,moped:2.3,jetpack:1.4} as const)[rideRef.current]*.54);jetActions.reset();sound.ride(rideRef.current);if(rideRef.current==='jetpack'){flightMotion.reset();flight.cruiseHeight=INITIAL_FLIGHT_HEIGHT;flight.height=rooftop.state.height;flight.startHeight=flight.height;flight.takeoffTime=0;flight.landTime=-1;flight.landing=null;}velocity.x=velocity.z=0;walkBall.reset({...location,y:rooftop.state.height,yaw:player.root.rotation.y});resetInputs(true);previousRide=rideRef.current;}
       if(Math.hypot(location.x-visualLocation.x,location.z-visualLocation.z)>3){previousLocation.x=location.x;previousLocation.z=location.z;accumulator=0;}
       if(fieldMenu.current){if(!wasLearning)resetInputs();velocity.x=velocity.z=0;accumulator=0;previousLocation.x=location.x;previousLocation.z=location.z;}
@@ -816,13 +838,14 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
       const nearEntrance=(x:number,z:number,width:number)=>canEnter&&rideRef.current!=='jetpack'&&!rooftop.state.falling&&Math.abs(groundY)<1&&location.z>z-3&&location.z<z+8&&Math.abs(location.x-x)<width;
       nearMuseum=nearEntrance(168,188,16);
       nearStore=false;nearArcade=nearEntrance(103,-50,8);nearCoaches=nearEntrance(161,-34,11);
+      const konbiniNear=(door:KonbiniDoor)=>canEnter&&rideRef.current!=='jetpack'&&!rooftop.state.falling&&Math.abs(groundY)<1&&konbiniDoorNear(door,location.x,location.z),nearKonbiniMain=konbiniNear('main'),nearKonbiniCay=konbiniNear('cay');
       const flightNear=(bounds:T.Box3)=>canEnter&&rideRef.current==='jetpack'&&flight.height<bounds.max.y+40&&Math.hypot(Math.max(bounds.min.x-location.x,0,location.x-bounds.max.x),Math.max(bounds.min.z-location.z,0,location.z-bounds.max.z))<12;
       const overMuseum=!!(hoverPoint&&canEnter&&pointsAtMuseum());
       if(overMuseum&&!museumHovered)sound.sceneHover(rideRef.current==='jetpack');museumHovered=overMuseum;
-      const overStore=false,overArcade=!!(hoverPoint&&canEnter&&pointsAtArcade()),overCoaches=!!(hoverPoint&&canEnter&&pointsAtCoaches());
+      const overStore=false,overArcade=!!(hoverPoint&&canEnter&&pointsAtArcade()),overCoaches=!!(hoverPoint&&canEnter&&pointsAtCoaches()),overKonbiniMain=!!(hoverPoint&&canEnter&&pointsAtKonbini('main')),overKonbiniCay=!!(hoverPoint&&canEnter&&pointsAtKonbini('cay'));
       if(overStore&&!storeHovered||overArcade&&!arcadeHovered||overCoaches&&!coachesHovered)sound.sceneHover(rideRef.current==='jetpack');storeHovered=overStore;arcadeHovered=overArcade;coachesHovered=overCoaches;
-      const hoveredBuilding=overStore?'store':overArcade?'arcade':overCoaches?'coaches':overMuseum?'museum':'';if(hoveredBuilding){buildingHoverKind=hoveredBuilding;buildingHoverUntil=now+450;}
-      const buildingTargets=[{index:0,kind:'arcade',x:103,z:-53,active:overArcade||nearArcade||flightNear(world.arcadeBounds)},{index:1,kind:'coaches',x:161,z:-37,active:overCoaches||nearCoaches||flightNear(world.coachesBounds)},{index:2,kind:'museum',x:168,z:186,active:overMuseum||nearMuseum||flightNear(world.museumBounds)}];
+      const hoveredBuilding=overStore?'store':overArcade?'arcade':overCoaches?'coaches':overMuseum?'museum':overKonbiniMain?'konbini':overKonbiniCay?'caykonbini':'';if(hoveredBuilding){buildingHoverKind=hoveredBuilding;buildingHoverUntil=now+450;}
+      const buildingTargets=[{index:0,kind:'arcade',x:103,z:-53,active:overArcade||nearArcade||flightNear(world.arcadeBounds)},{index:1,kind:'coaches',x:161,z:-37,active:overCoaches||nearCoaches||flightNear(world.coachesBounds)},{index:2,kind:'museum',x:168,z:186,active:overMuseum||nearMuseum||flightNear(world.museumBounds)},{index:3,kind:'konbini',x:KONBINI_BUILDINGS.main.x,z:KONBINI_BUILDINGS.main.z,active:overKonbiniMain||nearKonbiniMain||flightNear(konbiniBounds.main)},{index:4,kind:'caykonbini',x:KONBINI_BUILDINGS.cay.x,z:KONBINI_BUILDINGS.cay.z,active:overKonbiniCay||nearKonbiniCay||flightNear(konbiniBounds.cay)}];
       const singleBuilding=coarse||viewportW<=600;
       const highlightedBuilding=singleBuilding?buildingTargets.filter(b=>b.active).sort((a,b)=>Math.hypot(location.x-a.x,location.z-a.z)-Math.hypot(location.x-b.x,location.z-b.z))[0]?.kind:undefined;
       for(const b of buildingTargets)buildingEffects[b.index].glow.update(b.active&&(!singleBuilding||b.kind===highlightedBuilding),dt,reduced||singleBuilding&&b.kind!==highlightedBuilding);
@@ -832,7 +855,7 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
       const hoveredEntry=hoveredNpc?(islandNpcs.entries.find(e=>e.id===hoveredNpc.id)??coachPractice.entries.find(e=>e.id===hoveredNpc.id)??volleyballGame.entries.find(e=>e.id===hoveredNpc.id)):undefined;
       if(hoveredNpc&&hoveredNpc.id!==hoveredNpcId)sound.sceneHover(rideRef.current==='jetpack');hoveredNpcId=hoveredNpc?.id??null;
       npcHover.update(hoveredEntry?{id:hoveredEntry.id,...hoveredEntry.position}:null,dt,reduced);
-      renderer.domElement.style.cursor=hovering||hoveredNpc||overStore||overArcade||overCoaches||overMuseum?'pointer':'';
+      renderer.domElement.style.cursor=hovering||hoveredNpc||overStore||overArcade||overCoaches||overMuseum||overKonbiniMain||overKonbiniCay?'pointer':'';
       characterGlow.update(hovering,dt,reduced);
       player.root.scale.set(1+squash*.65,1-squash*.82,1+squash*.65);vehicle.root.scale.setScalar(1.12);player.root.rotation.z=streetTraffic.rider.index>=0?streetTraffic.cars[streetTraffic.rider.index].group.rotation.z:0;
       if(crash>0&&!reduced){player.root.rotation.z=Math.sin(elapsed*5)*.15*(1-squash);player.root.rotation.x+=Math.cos(elapsed*4)*.1*(1-squash);}
@@ -865,7 +888,8 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
         if(jetActions.state.phase==='parachute'&&jetActions.state.target)landingPreview=jetActions.state.target;
         else if(flight.landing)landingPreview=flight.landing;
         else if(rooftop.canLand(location.x,location.z)){landingPreview={x:location.x,z:location.z};previewX=location.x;previewZ=location.z;}
-        else if(previewAge>=.12&&(Math.hypot(location.x-previewX,location.z-previewZ)>.3||!landingPreview)){landingPreview=rooftop.findLanding(location.x,location.z);previewX=location.x;previewZ=location.z;previewAge=0;}
+        else if(previewAge>=.12&&(!landingPreview||Math.hypot(location.x-previewX,location.z-previewZ)>PARACHUTE_REAIM_METRES||previewAge>=PARACHUTE_REAIM_SECONDS&&Math.hypot(location.x-previewX,location.z-previewZ)>.3)){// same re-aim budget as the parachute (findLanding scans far rings over open sea)
+          landingPreview=rooftop.findLanding(location.x,location.z);previewX=location.x;previewZ=location.z;previewAge=0;}
         const cover=coinHunt.manholeTarget();if(cover)landingPreview=cover;// right over an unopened manhole: target its cover
       }
       landingMarker.update(landingPreview,flight.height,rooftop.surface,showLanding&&!overPickup,elapsed,reduced,showLanding&&!overPickup&&coinHunt.manholeTarget()?3.2:1);// the same ring, sized to sit around a manhole's rim
@@ -911,7 +935,7 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
       ball.position.set(orb.x,walkingBall?walkBall.state.y:.25+fieldSurfaceHeight(orb.x,orb.z),orb.z);
       if(airJuggling){player.ballContact(airJuggleSide,airBallFrom);player.ballContact(airJuggleSide===1?-1:1,airBallTo);ball.position.lerpVectors(airBallFrom,airBallTo,airJugglePhase);ball.position.y+=.19+4*airJugglePhase*(1-airJugglePhase)*(reduced?.3:.7);ball.rotation.x+=active?dt*4:0;}
       const ballSquash=walkingBall&&!reduced?Math.sin(walkBall.state.bounce/.16*Math.PI)*.22:0;ball.scale.set((1+ballSquash)*1.0125,(1-ballSquash)*1.0125,(1+ballSquash)*1.0125);
-      ballEffects.root.visible=walkingBall&&!fieldMenu.current;ballEffects.update(active?dt:0,ball.position,walkingBall&&(walkBall.state.mode==='shot'||walkBall.state.mode==='wall-juggle'||walkBall.state.mode==='juggle'),reduced,camera,walkBall.state.mode==='shot'?walkBall.state.charge:0,walkBall.state.mode==='charging'?walkBall.state.charge:-1,BALL_COLORS[customizationRef.current.ball],customizationRef.current.ball);
+      ballEffects.root.visible=walkingBall&&!fieldMenu.current;ballEffects.update(active?dt:0,ball.position,walkingBall&&(walkBall.state.mode==='shot'&&!walkBall.state.floating||walkBall.state.mode==='wall-juggle'||walkBall.state.mode==='juggle'),reduced,camera,walkBall.state.mode==='shot'&&!walkBall.state.floating?walkBall.state.charge:0,walkBall.state.mode==='charging'?walkBall.state.charge:-1,BALL_COLORS[customizationRef.current.ball],customizationRef.current.ball);
       liveKnockout.update(active?dt:0,location,groundY,rideRef.current==='walk',camera,!fieldMenu.current&&!lessonRef.current,reduced,player.root.rotation.y);
       liveKnockout.posePlayer(player.root);if(liveKnockout.joined)ball.visible=false;
       const arenaStatus=uiElement<HTMLElement>('[data-knockout-status]');if(arenaStatus){setUIHidden(arenaStatus,!liveKnockout.joined||Boolean(liveKnockout.countdown));const message=liveKnockout.countdown|| (liveKnockout.state.phase!=='playing'?'Round over · next round starting…':liveKnockout.waiting?'Knocked out · wait in the corner line':('Rooftop free-for-all · '+liveKnockout.state.remaining+' left · '+(3-liveKnockout.state.players[0].hits)+' hits left · '+(liveKnockout.state.players[0].shield>0?'Shield active':liveKnockout.hasBall?'Ball collected · Aim and Kick':'Find a ball, then Kick')));if(arenaStatus.textContent!==message)arenaStatus.textContent=message;}
@@ -1001,10 +1025,11 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
       world.updateArcade(elapsed,reduced);
       world.updateWater(active&&!learning?dt:0,reduced||heat.staticAmbience);
       world.updateFerry(active&&!learning?dt:0,reduced||heat.staticAmbience);
+      world.updateSharks(active&&!learning?dt:0,reduced||heat.staticAmbience,camera,location);// Coral Cay sharks: sleep when far/off screen
       if(active&&!learning&&!reduced&&!heat.staticAmbience)world.waves.forEach((wave,i)=>{wave.position.x+=Math.sin(elapsed*.6+i)*dt*.065;});
       if(now-lastHud>150){if(active&&!fieldMenu.current&&!lessonRef.current&&rideRef.current!=='jetpack'&&!rooftop.state.falling&&Math.abs(player.root.position.y-fieldSurfaceHeight(location.x,location.z))<1){const visited=nearestVenue(location.x,location.z);if(visited)recordQuestVisit(visited.id);}const nextJuggling=rideRef.current==='walk'&&(walkBall.state.mode==='juggle'||walkBall.state.mode==='wall-juggle');if(hudJuggling!==nextJuggling){hudJuggling=nextJuggling;setJuggling(nextJuggling);}if(hudX!==location.x||hudZ!==location.z){hudX=location.x;hudZ=location.z;positionStore.publish({x:hudX,z:hudZ});const zone=zoneAt(hudX,hudZ);if(zone!==zoneRef.current){zoneRef.current=zone;setLocationZone(zone);}}lastHud=now;}
       const mobileEntry=coarse||fullWidth<=600;
-      const entries=[['arcade',nearArcade,103,11,-53,world.arcadeBounds],['coaches',nearCoaches,161,11.8,-37,world.coachesBounds],['museum',nearMuseum,168,9.5,186,world.museumBounds]] as const;
+      const entries=[['arcade',nearArcade,103,11,-53,world.arcadeBounds],['coaches',nearCoaches,161,11.8,-37,world.coachesBounds],['museum',nearMuseum,168,9.5,186,world.museumBounds],['konbini',nearKonbiniMain,KONBINI_DOORS.main.x,3.2,KONBINI_DOORS.main.front,konbiniBounds.main],['caykonbini',nearKonbiniCay,KONBINI_DOORS.cay.x,3.1,KONBINI_DOORS.cay.front,konbiniBounds.cay]] as const;
       const truckCandidate=canEnter&&rideRef.current==='jetpack'&&truckLanding===null&&!pendingRide.current?streetTraffic.landingTruckAt(location.x,location.z):undefined;
       nearbyTruck.current=truckCandidate?.index??null;
       const exitPrompt=uiElement<HTMLButtonElement>('[data-truck-exit]');if(exitPrompt){setUIHidden(exitPrompt,!(canEnter&&streetTraffic.rider.index>=0));if(!exitPrompt.hidden)placeUI(exitPrompt,fullWidth/2,0);}// y: globals.css hangs ride prompts below the coins wallet row
@@ -1023,6 +1048,7 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
       const vendingPrompt=uiElement<HTMLButtonElement>('[data-vending-go]');
       vending.update({now,dt,reduced,hoverRay:hoverPoint&&canEnter?(characterRay.setFromCamera(hoverPoint,camera),characterRay):null,canEnter,flying:rideRef.current==='jetpack',flightHeight:flight.height,location,groundY:player.root.position.y,camera,width:fullWidth,height:fullHeight,hidePrompt:!!truckCandidate||shownEntry||streetTraffic.rider.index>=0,prompt:vendingPrompt??null,placeUI,setUIHidden,onHoverStart:()=>sound.sceneHover(rideRef.current==='jetpack')});
       if(vending.hovered)renderer.domElement.style.cursor='pointer';
+      vendingKick.update(active&&!fieldMenu.current?dt:0,camera,reduced,fullWidth,fullHeight,active&&!fieldMenu.current&&!learning);
       const fishingHover=fishing.update({x:location.x,z:location.z,onFoot:rideRef.current!=='jetpack'&&!rooftop.state.falling&&streetTraffic.rider.index<0&&player.root.position.y<1.2,canEnter,ray:hoverPoint&&canEnter?characterRay:null,now,dt,elapsed,reduced,camera,width:fullWidth,height:fullHeight,mobile:mobileEntry,blocked:shownEntry||!!truckCandidate||!!vendingPrompt&&!vendingPrompt.hidden||streetTraffic.rider.index>=0,ui:uiElement,place:placeUI,hide:setUIHidden});
       if(fishingHover.hoverStarted)sound.sceneHover(false);if(fishingHover.hovered)renderer.domElement.style.cursor='pointer';
       const fishPrompt=uiElement<HTMLElement>('[data-fish-enter]'),marketPrompt=uiElement<HTMLElement>('[data-market-enter]');
@@ -1049,7 +1075,7 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
       if(playing)resetInputs();else if(!disposed)frame=requestAnimationFrame(animate);
     });
     camera.position.set(sceneSpawn.x+(initialFlying?16:18),23+initialHeight,sceneSpawn.z+(initialFlying?33:30));if(departure?.camera)camera.position.set(departure.camera.x,departure.camera.y,departure.camera.z);camera.lookAt(camera.position.x-16,initialHeight,camera.position.z-33);cancelAnimationFrame(frame);if(!isVideoPlaying())frame=requestAnimationFrame(animate);
-    return()=>{saveArcadeDeparture.current=()=>{};fishing.dispose();heat.dispose();liveKnockout.dispose();hiddenTransforms.dispose();shadowCache.dispose();shadowVisibility.dispose();shadowBatches.dispose();characterArrival.dispose();coinHunt.dispose();jobs.dispose();treeDebris.dispose();rampVisuals.dispose();livePlayerGlow.dispose();npcHover.dispose();onboardingNpcFocus.dispose();buildingEffects.forEach(effect=>effect.dispose());vending.dispose();vendingRef.current=null;ferryGlow.dispose();jetpackBreakup.dispose();quizView.dispose();resetQuizView.current=()=>{};rideChange.dispose();craterEffect.dispose();parachuteTrail.dispose();ballReactions.dispose();sonicBurst.dispose();characterGlow.dispose();parachute.dispose();ballAppearance.dispose();ballEffects.dispose();islandNpcs.dispose();landingMarker.dispose();stopVideoSubscription();music.dispose();musicRef.current=null;sound.dispose();soundRef.current=null;disposed=true;cancelAnimationFrame(frame);observer.disconnect();window.removeEventListener('resize',resize);window.visualViewport?.removeEventListener('resize',resize);window.removeEventListener('pointerup',finishJoystick,true);window.removeEventListener('pointercancel',finishJoystick,true);window.removeEventListener('touchend',finishTouches);window.removeEventListener('touchcancel',finishTouches);window.removeEventListener('pagehide',blur);window.removeEventListener('keydown',keydown);window.removeEventListener('keyup',keyup);window.removeEventListener('blur',blur);document.removeEventListener('visibilitychange',visibility);boundaryFeedback.dispose();starGeometry.dispose();starMaterial.dispose();dizzyStars.removeFromParent();splat.geometry.dispose();splatMaterial.dispose();splat.removeFromParent();jetExhaust.dispose();rideTrail.dispose();flightTrail.dispose();truckReactions.dispose();streetTraffic.dispose();volleyballGame.dispose();vehicle.dispose();player.dispose();npcs.forEach(r=>r.dispose());coachPractice.dispose();renderer.domElement.removeEventListener('pointermove',trackCharacterHover);renderer.domElement.removeEventListener('pointerleave',clearCharacterHover);renderer.domElement.removeEventListener('pointerdown',beginCharacterTap);renderer.domElement.removeEventListener('pointerup',pickCharacter);renderer.domElement.removeEventListener('pointerup',chooseFieldTarget);for(const name of ['pointerdown','pointermove','wheel','touchstart','touchmove'] as const)renderer.domElement.removeEventListener(name,wakeQuizInput);games.dispose();fields.dispose();world.dispose();delete (window as unknown as {__fi2?:unknown}).__fi2;guide.geometry.dispose();aimGeometry.dispose();aimMaterial.dispose();lessonAim.current=null;renderer.domElement.removeEventListener('pointerdown',aimDown);renderer.domElement.removeEventListener('pointermove',aimMove);renderer.domElement.removeEventListener('pointerup',aimUp);renderer.domElement.removeEventListener('pointercancel',aimUp);guideMaterial.dispose();scene.traverse(object=>{if(object instanceof T.Mesh){object.geometry.dispose();const mats=Array.isArray(object.material)?object.material:[object.material];mats.forEach(m=>m.dispose());}});renderer.dispose();renderer.domElement.remove();};
+    return()=>{saveArcadeDeparture.current=()=>{};clearTimeout(pierNoteTimer);pierTarget.dispose();fishing.dispose();heat.dispose();liveKnockout.dispose();hiddenTransforms.dispose();shadowCache.dispose();shadowVisibility.dispose();shadowBatches.dispose();characterArrival.dispose();coinHunt.dispose();jobs.dispose();treeDebris.dispose();rampVisuals.dispose();livePlayerGlow.dispose();npcHover.dispose();onboardingNpcFocus.dispose();buildingEffects.forEach(effect=>effect.dispose());vendingKick.dispose();vending.dispose();vendingRef.current=null;ferryGlow.dispose();jetpackBreakup.dispose();quizView.dispose();resetQuizView.current=()=>{};rideChange.dispose();craterEffect.dispose();parachuteTrail.dispose();ballReactions.dispose();sonicBurst.dispose();characterGlow.dispose();parachute.dispose();ballAppearance.dispose();ballEffects.dispose();islandNpcs.dispose();landingMarker.dispose();stopVideoSubscription();music.dispose();musicRef.current=null;sound.dispose();soundRef.current=null;disposed=true;cancelAnimationFrame(frame);observer.disconnect();window.removeEventListener('resize',resize);window.visualViewport?.removeEventListener('resize',resize);window.removeEventListener('pointerup',finishJoystick,true);window.removeEventListener('pointercancel',finishJoystick,true);window.removeEventListener('touchend',finishTouches);window.removeEventListener('touchcancel',finishTouches);window.removeEventListener('pagehide',blur);window.removeEventListener('keydown',keydown);window.removeEventListener('keyup',keyup);window.removeEventListener('blur',blur);document.removeEventListener('visibilitychange',visibility);boundaryFeedback.dispose();starGeometry.dispose();starMaterial.dispose();dizzyStars.removeFromParent();splat.geometry.dispose();splatMaterial.dispose();splat.removeFromParent();jetExhaust.dispose();rideTrail.dispose();flightTrail.dispose();truckReactions.dispose();streetTraffic.dispose();volleyballGame.dispose();vehicle.dispose();player.dispose();npcs.forEach(r=>r.dispose());coachPractice.dispose();renderer.domElement.removeEventListener('pointermove',trackCharacterHover);renderer.domElement.removeEventListener('pointerleave',clearCharacterHover);renderer.domElement.removeEventListener('pointerdown',beginCharacterTap);renderer.domElement.removeEventListener('pointerup',pickCharacter);renderer.domElement.removeEventListener('pointerup',chooseFieldTarget);for(const name of ['pointerdown','pointermove','wheel','touchstart','touchmove'] as const)renderer.domElement.removeEventListener(name,wakeQuizInput);games.dispose();fields.dispose();world.dispose();delete (window as unknown as {__fi2?:unknown}).__fi2;guide.geometry.dispose();aimGeometry.dispose();aimMaterial.dispose();lessonAim.current=null;renderer.domElement.removeEventListener('pointerdown',aimDown);renderer.domElement.removeEventListener('pointermove',aimMove);renderer.domElement.removeEventListener('pointerup',aimUp);renderer.domElement.removeEventListener('pointercancel',aimUp);guideMaterial.dispose();scene.traverse(object=>{if(object instanceof T.Mesh){object.geometry.dispose();const mats=Array.isArray(object.material)?object.material:[object.material];mats.forEach(m=>m.dispose());}});renderer.dispose();renderer.domElement.remove();};
   },[]);
   useEffect(()=>{musicRef.current?.setDucked(Boolean(fieldCatalog||lesson));},[fieldCatalog,lesson]);
   // The card code (PlayerCard, PlayerArt, photo manifests, film registry) is no longer in the island bundle: warm it while
@@ -1071,14 +1097,15 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
     {ready&&!failed&&<NpcConversation npc={talkingNpc} open={conversationOpen} onOpenChange={setConversationOpen}/>}
     {ready&&!failed&&nearbyNpc&&!conversationOpen&&!customizerOpen&&!storeOpen&&!settingsOpen&&!map&&!fieldCatalog&&!lesson&&<button className="npc-talk-prompt" data-tour="npcs" aria-keyshortcuts="E" onClick={()=>openConversation(nearbyNpc)}>Talk to {nearbyNpc.name}</button>}
     {ready&&!failed&&<IslandOnboarding npcTarget={onboardingNpcTarget} onNpcStepChange={active=>{onboardingNpcStep.current=active;if(active)wakeLoopRef.current();}} open={onboardingOpen} onClose={()=>setOnboardingOpen(false)} value={customization} onChange={changeCustomization}/>}
-    {ready&&!failed&&!settingsRef.current&&!map&&!fieldCatalog&&!lesson&&<CoinHuntHud near={coinNear}/>}
+    {ready&&!failed&&!settingsRef.current&&!map&&!fieldCatalog&&!lesson&&<CoinHuntHud near={coinNear||seaNote}/>}
     {balancesOpen&&<IslandBalanceDrawer onClose={()=>setBalancesOpen(false)}/>}
     {ready&&!failed&&<FishingHost paused={balancesOpen} onOpenChange={setFishingOpen} onDialogChange={setFishingDialog}/>}
     {ready&&!failed&&<IslandJobs onOpenBalances={()=>setBalancesOpen(true)} blocked={settingsRef.current||map||!!fieldCatalog||!!lesson} onRequestWalk={()=>{if(rideRef.current!=='walk')selectRide('walk');}}/>}
     {ready&&!failed&&<FerryPreview open={ferryOpen} onOpenChange={setFerryOpen}/>}
     {ready&&!failed&&<Museum open={museumOpen} onOpenChange={setMuseumOpen}/>}
     {ready&&!failed&&<CoachesCentre open={coachesOpen} onOpenChange={setCoachesOpen}/>}
-    {ready&&!failed&&<VendingMachine machineId={vendingId} itemRequest={storeItemRequest} open={storeOpen} onOpenChange={open=>{setStoreOpen(open);if(!open){setVendingLeaving(true);vendingRef.current?.release(()=>setVendingLeaving(false));}}} value={customization} onChange={changeCustomization} onEquipRide={selectRide} machines={getVendingMachines}/>}
+    {ready&&!failed&&isDrinkMachine(vendingId)&&<DrinkMachine machineId={vendingId} open={storeOpen} onOpenChange={open=>{setStoreOpen(open);if(!open){setVendingLeaving(true);vendingRef.current?.release(()=>setVendingLeaving(false));}}} machines={getVendingMachines}/>}
+    {ready&&!failed&&<VendingMachine machineId={vendingId} itemRequest={storeItemRequest} open={storeOpen&&!isDrinkMachine(vendingId)} onOpenChange={open=>{setStoreOpen(open);if(!open){setVendingLeaving(true);vendingRef.current?.release(()=>setVendingLeaving(false));}}} value={customization} onChange={changeCustomization} onEquipRide={selectRide} machines={getVendingMachines}/>}
     {ready&&!failed&&<CharacterCustomizer open={customizerOpen} onOpenChange={setCustomizerOpen} value={customization} onChange={changeCustomization} completedQuizCount={quizProgress.completed} totalQuizCount={quizProgress.total} onEquipRide={selectRide}/>}
     {ready&&!failed&&!fieldCatalog&&!lesson&&<IslandSettings pathsRequest={pathsRequest} onRestartOnboarding={()=>setOnboardingOpen(true)} onOpenStore={openStore} onStartLearning={()=>{setFieldCatalog(nearestVenue(positionStore.getSnapshot().x,positionStore.getSnapshot().z)?.id??'futsal');setHint(false);}} voiceEnabled={voiceEnabled} onVoiceChange={value=>{setVoiceEnabled(value);savePreference('fi2-voice-enabled',String(value));}} coachVoice={coachVoice} onCoachVoiceChange={value=>{setCoachVoice(value);savePreference('fi2-coach-voice',value);}} controlsFlipped={controlsFlipped} onControlsFlippedChange={value=>{releaseStick();setControlsFlipped(value);savePreference('fi2-controls-flipped',String(value));}} onOpenMap={()=>setMap(true)} open={settingsOpen} onOpenChange={value=>{setSettingsOpen(value);if(value)setMap(false);}} musicEnabled={musicEnabled} musicVolume={musicVolume} soundVolume={soundVolume} onMusicVolumeChange={value=>{setMusicVolume(value);musicRef.current?.setVolume(value);savePreference('fi2-music-volume',String(value));}} onSoundVolumeChange={value=>{setSoundVolume(value);soundRef.current?.setVolume(value);savePreference('fi2-sound-volume',String(value));}} onMusicChange={value=>{setMusicEnabled(value);musicRef.current?.setEnabled(value);try{localStorage.setItem('fi2-music-enabled',String(value));}catch{}}} soundMuted={soundMuted} onSoundMutedChange={value=>{setSoundMuted(value);soundRef.current?.setMuted(value);try{localStorage.setItem('fi2-sound-muted',String(value));}catch{}}} timeOfDay={timeOfDay} onTimeOfDayChange={changeTime}/>}
     <button type="button" className="store-enter-prompt" data-truck-exit hidden onPointerDown={e=>travelControlDown(e,()=>{truckExitRequested.current=true;})} onClick={e=>travelControlClick(e,()=>{truckExitRequested.current=true;})}>Hop off</button>
@@ -1086,6 +1113,9 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
     <button type="button" className="store-enter-prompt" data-vending-go aria-label="Go to the vending machine" hidden onClick={e=>{const id=e.currentTarget.dataset.vending as VendingMachineId|undefined;if(id)openVending(id);}}>Go</button>
     <button type="button" className="store-enter-prompt" data-arcade-enter aria-label="Enter Arcade" hidden onClick={()=>setArcadeOpen(true)}>Enter</button>
     {arcadeOpen&&<div className="arcade-departure-fade" data-arcade-departure aria-hidden="true"/>}
+    <button type="button" className="store-enter-prompt" data-konbini-enter aria-label="Enter the Konbini" hidden onClick={()=>setKonbiniDoor('main')}>Enter</button>
+    <button type="button" className="store-enter-prompt" data-caykonbini-enter aria-label="Enter the Coral Cay Konbini" hidden onClick={()=>setKonbiniDoor('cay')}>Enter</button>
+    {konbiniDoor&&<KonbiniDoorSlide mode="enter"/>}
     <div data-knockout-status className="knockout-status" role="status" hidden/>
     <button type="button" className="store-enter-prompt" data-museum-enter aria-label="Enter History Museum" hidden onClick={()=>setMuseumOpen(true)}>Enter</button>
     <button type="button" className="store-enter-prompt" data-coaches-enter aria-label="Enter Coaches" hidden onClick={()=>setCoachesOpen(true)}>Enter</button>
@@ -1108,6 +1138,6 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
     {failed&&<div className="town-loading"><h2>The island needs WebGL.</h2><p>Enable hardware acceleration in your browser, then reload.</p><button className="pixel-button" onClick={()=>window.location.reload()}>TRY AGAIN</button></div>}
     {guideMounted.current&&<PositionGuide selection={positionSelection} onClose={()=>{setPositionSelection(null);gamesRef.current?.setHoverPaused(null);}}/>}
     <div data-position-tip className="live-position-tip" role="status" hidden/>
-    <MovingIslandTravelMap store={positionStore} open={map} onOpenChange={setMap} {...mapFootprints} onSelect={destination=>{if(destination==='store'||destination==='square'||destination==='coaches')go(destination);else goField(destination);}}/>
+    <MovingIslandTravelMap store={positionStore} open={map} onOpenChange={setMap} {...mapFootprints} onSelect={destination=>{if(destination==='store'||destination==='square'||destination==='coaches'||destination==='cay')go(destination);else goField(destination);}}/>
   </main>;
 }

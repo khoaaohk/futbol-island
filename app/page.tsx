@@ -1,2 +1,3 @@
 import Town from '@/components/Town';
-export default function Page({searchParams}:{searchParams?:{from?:string|string[];store?:string|string[]}}) { return <Town returningFromArcade={searchParams?.from==='arcade'} openArcadePacks={searchParams?.store==='packs'}/>; }
+import DevUnlock from '@/components/DevUnlock';
+export default function Page({searchParams}:{searchParams?:{from?:string|string[];store?:string|string[]}}) { return <><Town returningFromArcade={searchParams?.from==='arcade'||searchParams?.from==='konbini'} openArcadePacks={searchParams?.store==='packs'}/><DevUnlock/></>; }

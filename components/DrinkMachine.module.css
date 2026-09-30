@@ -1,0 +1,10 @@
+/* Drink machine (components/DrinkMachine.tsx): the drink pictures with their つめた～い / あったか～い strips and a cool blue header on
+   the shared VendingFace. The layered reveal is the Konbini's (KonbiniReveal). No animations of its own. */
+.root [data-vending-flip]{opacity:.3;pointer-events:none}
+.root [data-vending-face] [data-vending-row]{background:linear-gradient(90deg,#1d5fb8,#3f8ee6,#1d5fb8)!important;color:#fff!important}
+
+.pic{position:relative;display:block;width:100%;height:100%}
+.pic canvas{display:block}
+.temp{position:absolute;left:0;top:2%;padding:1px 5px;border-radius:4px;background:#2a74d1;color:#fff;font-style:normal;font-weight:900;
+ font-size:max(9px,calc(var(--fs,14px) * .56));line-height:1.3;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:0 1px 0 #0b2a5266}
+.pic[data-temp=hot] .temp{background:#d8342c}

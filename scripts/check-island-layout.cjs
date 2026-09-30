@@ -1,8 +1,10 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),ts=require('typescript');
-const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'/Users/khoado/.npm/_npx/e41f203b7505f1fb/node_modules/playwright');
-const mod={exports:{}};vm.runInNewContext(ts.transpileModule(fs.readFileSync('lib/town/shoreline.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{exports:mod.exports,module:mod,Math});const {onIsland}=mod.exports;
+const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
+const path=require('node:path');function load(file){const mod={exports:{}};vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{exports:mod.exports,module:mod,Math,require:id=>load(path.resolve(path.dirname(file),id+'.ts'))});return mod.exports;}
+// Walkable land includes Coral Cay, its causeway and sandbars (lib/town/landmass.ts); the flood fill covers them too.
+const {onLand:onIsland}=load('lib/town/landmass.ts'),{CAY_FLIGHT_BOUNDS}=load('lib/town/coralCay.ts');
 (async()=>{
- const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||'/Users/khoado/Library/Caches/ms-playwright/chromium_headless_shell-1217/chrome-headless-shell-mac-arm64/chrome-headless-shell',args:['--use-angle=metal','--enable-gpu','--ignore-gpu-blocklist']});
+ const browser=await chromium.launch({headless:true,...(process.env.CHROMIUM_PATH?{executablePath:process.env.CHROMIUM_PATH}:{}),args:['--use-angle=metal','--enable-gpu','--ignore-gpu-blocklist']});
  try{
   const page=await browser.newPage({viewport:{width:1100,height:850}}),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto(process.env.FUTBOL_BASE_URL||'http://localhost:8092');await page.waitForFunction(()=>window.__fi2?.world);
   const d=await page.evaluate(()=>{const d=window.__fi2;return {buildings:d.world.buildings,roads:d.world.roads,roadJunctions:d.world.roadJunctions||[],assets:d.world.assets||[],surfaceAreas:d.world.surfaceAreas||[],obstacles:d.world.obstacles,destinations:d.world.destinations||[],venues:d.games.entries.map(e=>e.venue),bounds:d.bounds,drawCalls:d.renderer.info.render.calls};});
@@ -50,7 +52,7 @@ const mod={exports:{}};vm.runInNewContext(ts.transpileModule(fs.readFileSync('li
   lanes.forEach((r,i)=>{if(!reached.has(i))issues.push(`Disconnected road ${i}: ${r.x},${r.z}`);});
   for(const v of d.venues){const runoff={x:v.x,z:v.z,w:v.width+6,d:v.length+6};for(const o of d.obstacles)if(overlap(runoff,o))issues.push(`Blocked ${v.id} runoff at ${o.x},${o.z}`);}
   // Sample walkable land at one-metre intervals; use actual rounded shoreline.
-  const {minX,maxX,minZ,maxZ}=d.bounds,w=maxX-minX+1,h=maxZ-minZ+1,cells=new Uint8Array(w*h),queue=new Int32Array(w*h);
+  const minX=d.bounds.minX,maxX=Math.max(d.bounds.maxX,CAY_FLIGHT_BOUNDS.maxX),minZ=Math.min(d.bounds.minZ,CAY_FLIGHT_BOUNDS.minZ),maxZ=d.bounds.maxZ,w=maxX-minX+1,h=maxZ-minZ+1,cells=new Uint8Array(w*h),queue=new Int32Array(w*h);
   for(let z=minZ;z<=maxZ;z++)for(let x=minX;x<=maxX;x++){const i=(z-minZ)*w+x-minX;if(!onIsland(x,z)||d.obstacles.some(o=>Math.abs(x-o.x)<o.w/2+.4&&Math.abs(z-o.z)<o.d/2+.4))cells[i]=1;}
   const start=(-48-minZ)*w+103-minX;let head=0,tail=0;if(!cells[start]){cells[start]=2;queue[tail++]=start;}
   while(head<tail){const i=queue[head++],x=i%w;for(const n of [x>0?i-1:-1,x<w-1?i+1:-1,i-w,i+w])if(n>=0&&n<cells.length&&cells[n]===0){cells[n]=2;queue[tail++]=n;}}

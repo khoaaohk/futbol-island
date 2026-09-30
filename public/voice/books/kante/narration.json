@@ -1,0 +1,294 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "suresnes": {
+      "src": "/voice/books/kante/suresnes.m4a?v=coach-bella-1",
+      "duration": 36.8,
+      "scriptSha256": "c82280e2176fd609e29538f48fa9a6705c418478e83b9c174ea88997a17f2e4a",
+      "cues": [
+        {
+          "text": "A small club near Paris",
+          "start": 0.0,
+          "duration": 2.3
+        },
+        {
+          "text": "N\u2019Golo Kant\u00e9 was born in Paris in 1991.",
+          "start": 2.3,
+          "duration": 4.425
+        },
+        {
+          "text": "His parents had moved to France from Mali.",
+          "start": 6.725,
+          "duration": 3.1
+        },
+        {
+          "text": "When he was eight, he started playing for JS Suresnes, a small club near Paris.",
+          "start": 9.825,
+          "duration": 5.55
+        },
+        {
+          "text": "When N\u2019Golo was eleven, his father died.",
+          "start": 15.375,
+          "duration": 3.35
+        },
+        {
+          "text": "It was a very sad time, and his family had to be strong together.",
+          "start": 18.725,
+          "duration": 4.825
+        },
+        {
+          "text": "Pull on the club shirt.",
+          "start": 23.55,
+          "duration": 2.025
+        },
+        {
+          "text": "N\u2019Golo kept going to training, and he stayed at Suresnes for about ten years.",
+          "start": 25.575,
+          "duration": 5.3
+        },
+        {
+          "text": "Your club can be a second family. Turn up, work hard and look after your teammates.",
+          "start": 30.875,
+          "duration": 5.9
+        }
+      ]
+    },
+    "trials": {
+      "src": "/voice/books/kante/trials.m4a?v=coach-bella-1",
+      "duration": 38.7,
+      "scriptSha256": "7a0ee6ef65b124f460056301377b8435a9deb7f7e20f4f8040dcc567772b5c65",
+      "cues": [
+        {
+          "text": "The answer was always no",
+          "start": 0.0,
+          "duration": 2.325
+        },
+        {
+          "text": "At twelve, fourteen and sixteen, N\u2019Golo went to trials at the academies of professional clubs.",
+          "start": 2.325,
+          "duration": 7.1
+        },
+        {
+          "text": "The answer was always the same: no.",
+          "start": 9.425,
+          "duration": 3.25
+        },
+        {
+          "text": "They said they already had players like him, or better.",
+          "start": 12.675,
+          "duration": 3.875
+        },
+        {
+          "text": "His coach at Suresnes said big clubs did not notice him because he was small and never showed off.",
+          "start": 16.55,
+          "duration": 6.875
+        },
+        {
+          "text": "Turn over the three cards.",
+          "start": 23.425,
+          "duration": 2.225
+        },
+        {
+          "text": "N\u2019Golo was honest with himself.",
+          "start": 25.65,
+          "duration": 2.775
+        },
+        {
+          "text": "He told himself to keep working, because maybe next time would be the right time.",
+          "start": 28.425,
+          "duration": 5.375
+        },
+        {
+          "text": "When you hear no, ask what you can improve, then keep working on it.",
+          "start": 33.8,
+          "duration": 4.825
+        }
+      ]
+    },
+    "boulogne": {
+      "src": "/voice/books/kante/boulogne.m4a?v=coach-bella-1",
+      "duration": 39.1,
+      "scriptSha256": "bab3f3eb7739ad896a2fffb5b15030853e02f1dfa2cdb89ae2b779b3667988b6",
+      "cues": [
+        {
+          "text": "Six divisions from the top",
+          "start": 0.0,
+          "duration": 2.325
+        },
+        {
+          "text": "At nineteen, N\u2019Golo finally got his chance at Boulogne.",
+          "start": 2.325,
+          "duration": 4.275
+        },
+        {
+          "text": "He played in the second team, six divisions below the top of French football.",
+          "start": 6.6,
+          "duration": 5.4
+        },
+        {
+          "text": "At the same time he studied accountancy, in case football did not work out.",
+          "start": 12.0,
+          "duration": 5.2
+        },
+        {
+          "text": "Slide him up the ladder.",
+          "start": 17.2,
+          "duration": 2.1
+        },
+        {
+          "text": "At twenty-one he began training with the first team, and he watched how the professionals worked.",
+          "start": 19.3,
+          "duration": 6.4
+        },
+        {
+          "text": "In May 2012 he played his first professional game: the last eleven minutes of the last game of the season.",
+          "start": 25.7,
+          "duration": 7.75
+        },
+        {
+          "text": "Take it one step at a time. Learn from better players by watching how they train.",
+          "start": 33.45,
+          "duration": 5.65
+        }
+      ]
+    },
+    "caen": {
+      "src": "/voice/books/kante/caen.m4a?v=coach-bella-1",
+      "duration": 33.4,
+      "scriptSha256": "e8e903a5afa20243637c155e9c727dcac84217d57b2bfc0ae5035ac68fe16242",
+      "cues": [
+        {
+          "text": "Winning the ball back",
+          "start": 0.0,
+          "duration": 1.9
+        },
+        {
+          "text": "In 2013 N\u2019Golo joined Caen.",
+          "start": 1.9,
+          "duration": 3.4
+        },
+        {
+          "text": "He played all 38 league games in his first season, and the team won promotion to the top division.",
+          "start": 5.3,
+          "duration": 6.95
+        },
+        {
+          "text": "The next season, he won the ball back more times than any other player in Europe.",
+          "start": 12.25,
+          "duration": 5.225
+        },
+        {
+          "text": "He read the game early and stepped in to steal the pass.",
+          "start": 17.475,
+          "duration": 3.925
+        },
+        {
+          "text": "Win the ball back.",
+          "start": 21.4,
+          "duration": 1.875
+        },
+        {
+          "text": "Small, quick and clever, he was always in the right place.",
+          "start": 23.275,
+          "duration": 4.1
+        },
+        {
+          "text": "To win the ball, watch the passer\u2019s eyes and hips, get on your toes, and step in early.",
+          "start": 27.375,
+          "duration": 5.975
+        }
+      ]
+    },
+    "leicester": {
+      "src": "/voice/books/kante/leicester.m4a?v=coach-bella-1",
+      "duration": 36.7,
+      "scriptSha256": "0a06ffa6fd90a79ac9bd31a732e71e308bb56177a9f1bcc62d63fd9df1a9a277",
+      "cues": [
+        {
+          "text": "Champions, and champions again",
+          "start": 0.0,
+          "duration": 3.05
+        },
+        {
+          "text": "In 2015 N\u2019Golo moved to Leicester City in England.",
+          "start": 3.05,
+          "duration": 4.825
+        },
+        {
+          "text": "Few people expected Leicester to win anything, but in 2016 they became Premier League champions!",
+          "start": 7.875,
+          "duration": 6.95
+        },
+        {
+          "text": "N\u2019Golo made more tackles and interceptions than anyone in the league.",
+          "start": 14.825,
+          "duration": 5.3
+        },
+        {
+          "text": "Then he joined Chelsea, and in 2017 he won the league again.",
+          "start": 20.125,
+          "duration": 4.85
+        },
+        {
+          "text": "Lift the title flag.",
+          "start": 24.975,
+          "duration": 2.2
+        },
+        {
+          "text": "That year the players voted him the best player in England.",
+          "start": 27.175,
+          "duration": 3.975
+        },
+        {
+          "text": "Hard work helps the whole team. When you win the ball, give it quickly to a teammate.",
+          "start": 31.15,
+          "duration": 5.475
+        }
+      ]
+    },
+    "worldcup": {
+      "src": "/voice/books/kante/worldcup.m4a?v=coach-bella-1",
+      "duration": 33.6,
+      "scriptSha256": "6d88a26abb6b751b688dfa866e31012fa028f433b5cdb4850007105092512652",
+      "cues": [
+        {
+          "text": "World champion",
+          "start": 0.0,
+          "duration": 1.975
+        },
+        {
+          "text": "In 2018 N\u2019Golo played for France at the World Cup.",
+          "start": 1.975,
+          "duration": 4.6
+        },
+        {
+          "text": "He played in all seven matches, and in the final France beat Croatia 4\u20132.",
+          "start": 6.575,
+          "duration": 5.825
+        },
+        {
+          "text": "Raise the trophy.",
+          "start": 12.4,
+          "duration": 1.95
+        },
+        {
+          "text": "The small boy that academies turned down was now a world champion.",
+          "start": 14.35,
+          "duration": 4.95
+        },
+        {
+          "text": "N\u2019Golo says success in football is something you share, and that doing your best for your team is the best thing in football.",
+          "start": 19.3,
+          "duration": 8.175
+        },
+        {
+          "text": "Play for your team, not for yourself. Winning together is the best feeling in football.",
+          "start": 27.475,
+          "duration": 6.075
+        }
+      ]
+    }
+  }
+}

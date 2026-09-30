@@ -1,16 +1,21 @@
 import {vendingItem} from '../town/vendingCatalog';
 import {BALL_COLORS} from '../town/customization';
+/** Balls with a baked picture at public/vending/products/ball-<style>.png: the real in-game ball (skin + patches) rendered by
+ * the shop snapshot renderer and trimmed (scripts/capture-vending-products.cjs; re-run it after changing a ball skin). Keyed by
+ * ball, so every machine selling a ball shows the same picture. A ball missing here falls back to drawVendingProduct (no 404). */
+export const BAKED_BALL_PICTURES:readonly string[]=['classic','sunset','neon','frost','solar','cosmic','telstar','futsal','grassroots','hivis','eleven','beach','retro','panna'];
+export function vendingBallPicture(id:string):string|null{const style=id.startsWith('ball:')?id.slice(5):'';return BAKED_BALL_PICTURES.includes(style)?`/vending/products/ball-${style}.png`:null;}
 /** Original product miniatures, shared by the world atlas and the interactive face. */
 export function drawVendingProduct(c:CanvasRenderingContext2D,id:string,kind:string,x:number,y:number,s:number,shadow=true){
  c.save();c.translate(x,y);
  if(shadow){c.fillStyle='#173a3924';c.beginPath();c.ellipse(0,s*.95,s*.8,s*.14,0,0,Math.PI*2);c.fill();}
  if(kind==='display'){
   const d=vendingItem(id)?.display;if(!d){c.restore();return;}
-  c.fillStyle='#233b48';c.fillRect(-s*.6,s*.72,s*1.2,s*.14);
+  if(d.shape!=='book'){c.fillStyle='#233b48';c.fillRect(-s*.6,s*.72,s*1.2,s*.14);}
   if(d.shape==='book'){
-   // A hardback standing straight on the shelf, front-on: page block showing on the right, cloth spine on the left.
+   // A hardback standing on the shelf, drawn FLAT front-on (Sep 30 2026: no painted page block; real depth comes from the 3D
+   // shelf bay and the CSS-3D face): cloth spine band on the left, framed title, a star badge.
    const L=-s*.62,R=s*.56,T=-s*.98,B=s*.72;
-   c.fillStyle='#e9dcc0';c.fillRect(R-s*.02,T+s*.05,s*.1,B-T-s*.08);c.strokeStyle='#c7b48e';c.lineWidth=Math.max(1,s*.012);for(let i=1;i<5;i++){c.beginPath();c.moveTo(R+s*.015*i,T+s*.07);c.lineTo(R+s*.015*i,B-s*.05);c.stroke();}
    c.fillStyle=d.color;c.fillRect(L,T,R-L,B-T);c.fillStyle='#0000002e';c.fillRect(L,T,s*.13,B-T);c.fillStyle='#ffffff26';c.fillRect(L+s*.13,T,s*.03,B-T);
    c.strokeStyle='#fff4d5aa';c.lineWidth=Math.max(1,s*.025);c.strokeRect(L+s*.22,T+s*.1,R-L-s*.32,B-T-s*.2);
    const cx=(L+s*.16+R)/2;c.fillStyle='#fff4d5';c.textAlign='center';c.font=`900 ${s*.27}px sans-serif`;c.fillText(d.title.toUpperCase(),cx,-s*.42,R-L-s*.36);c.font=`700 ${s*.12}px sans-serif`;c.fillText('POP-UP STORY',cx,-s*.2,R-L-s*.4);

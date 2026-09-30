@@ -1,4 +1,6 @@
 import {COURT_FREESTYLERS} from './courtFreestylers';
+import {CORAL_CAY_NPCS} from './coralCayNpcs';
+import {EAST_PIER_NPCS} from './eastPierNpcs';
 import {VIDEO_NEIGHBORS} from './videoNeighbors';
 import {npcEncounter} from './npcInterests';
 import {NEWS_LEAGUES,type NewsLeague} from './newsLeagues';
@@ -170,3 +172,9 @@ for(const [id,name,mentor,x,z] of [['cafe-bela','Bela','priya',199.35,168.5],['c
 }
 
 NPC_DIALOGUES.push(...COURT_FREESTYLERS);
+
+// Coral Cay and its sandbar stops: beach soccer rules and culture (sources in coralCayNpcs.ts).
+NPC_DIALOGUES.push(...CORAL_CAY_NPCS);
+
+// East Pier: a fisher (keeper patience, the shooting challenge) and a keep-ups kid (touch, Laws 9 and 15). Sources in eastPierNpcs.ts.
+NPC_DIALOGUES.push(...EAST_PIER_NPCS);

@@ -6,6 +6,8 @@ import {CARD_ADDED} from './cardRewardStore';
 import {CARD_REMOVED} from './market/cardSellingStore';
 import {readVending,useVending} from './vendingWallet';
 import {isVendingPreview} from './vendingPreview';
+import {readKonbini,readKonbiniCollection,konbiniRaw,subscribeKonbini} from '../konbini/foodStore';
+import {pouch} from '../konbini/food';
 import {buildBackpack,markSeen,planStarterKit,sanitizeBackpack,type BackpackGroup,type BackpackSources,type BackpackState} from './backpack';
 
 /**
@@ -25,7 +27,7 @@ const rawCards=()=>{try{return storage()?.getItem(CARD_STORAGE_KEY)??'[]';}catch
 
 function currentSources(state=readState()):BackpackSources{
  const v=readVending(),w=readArcadeWallet();
- return {owned:v.owned,history:v.history,cards:readCollection(),packs:w.packs,starter:state.starter};
+ return {owned:v.owned,history:v.history,cards:readCollection(),packs:w.packs,starter:state.starter,...konbiniSources()};
 }
 /**
  * Grants the starter kit once per save: the island intro book, three player cards (into the real card collection) and the base
@@ -45,6 +47,7 @@ export function ensureStarterKit(now=Date.now()):boolean{
 export function markBackpackSeen(ids:Iterable<string>){const state=readState(),next=markSeen(state,ids);if(next!==state)writeState(next);}
 
 const EVENTS=[CARD_ADDED,CARD_REMOVED,BACKPACK_CHANGED];
+const konbiniSources=()=>({snacks:pouch(readKonbini()),konbini:readKonbiniCollection()});
 function subscribeLocal(fn:()=>void){
  const onStorage=(e:StorageEvent)=>{if(e.key===null||e.key===BACKPACK_KEY||e.key===CARD_STORAGE_KEY)fn();};
  for(const e of EVENTS)window.addEventListener(e,fn);window.addEventListener('storage',onStorage);
@@ -56,10 +59,11 @@ export function useBackpack():{ready:boolean;groups:BackpackGroup[];seen:Readonl
  // Raw strings are stable snapshots: they only change when the stored value does.
  const cards=useSyncExternalStore(subscribeLocal,rawCards,()=>'[]');
  const raw=useSyncExternalStore(subscribeLocal,()=>rawState()??'',()=>'');
+ const konbini=useSyncExternalStore(subscribeKonbini,konbiniRaw,()=>'');
  return useMemo(()=>{
   const state=readState();
-  const sources:BackpackSources={owned:vending.owned,history:vending.history,cards:readCollection(),packs:wallet.packs,starter:state.starter};
+  const sources:BackpackSources={owned:vending.owned,history:vending.history,cards:readCollection(),packs:wallet.packs,starter:state.starter,...konbiniSources()};
   return {ready:vending.ready,groups:buildBackpack(sources),seen:new Set(state.seen)};
  // eslint-disable-next-line react-hooks/exhaustive-deps
- },[vending.owned,vending.history,vending.ready,wallet.packs,cards,raw]);
+ },[vending.owned,vending.history,vending.ready,wallet.packs,cards,raw,konbini]);
 }

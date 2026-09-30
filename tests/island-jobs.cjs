@@ -55,7 +55,12 @@ function environment(){
  assert.equal(paid.coins,JOB_BASE_PAY['leaf-rake']+FIRST_JOB_BONUS);assert.equal(paid.credited,paid.coins);assert.equal(paid.balance,STARTER_COINS+paid.coins);
  const history=arcade.load().history.map(h=>h.reason);assert(history.some(r=>/Island job · Rake the leaves/.test(r)));assert(history.some(r=>/Welcome coins/.test(r)));
  // Deterministic run ids: replaying the same shift credit is a no-op in the wallet.
- assert.equal(await wallet.credit(`island-job:leaf-rake:${E.localDay(clock)}:1`,paid.coins,'replay'),0);
+ assert.equal(await wallet.credit(`island-job:leaf-rake:${E.localDay(clock)}:1`,paid.coins-paid.bonus,'replay'),0);
+ // First-time bonus is its own idempotent run: replaying it pays nothing, and it shows as its own history row.
+ assert.equal(await wallet.credit('island-job-first:leaf-rake',paid.bonus,'replay'),0,'the first-shift bonus pays once');
+ assert(arcade.load().history.some(h=>/First shift bonus · Rake the leaves/.test(h.reason)),'bonus row in the wallet history');
+ // A job finished under the old scheme (lifetime > 0 in the ledger) never pays the bonus again.
+ {const old=E.recordCompletion(E.emptyJobLedger(day),'ball-kid',14,30);assert.equal(E.jobPayout('ball-kid',old).bonus,0,'no second bonus after an old-scheme first shift');}
  // Job coins are spendable on the arcade's 40-coin card pack.
  const pack=await arcade.purchaseMysteryPack(3,['A','B'],['C','D','E','F']);assert.equal(pack.ok,true);assert.equal(arcade.load().balance,STARTER_COINS+paid.coins-40);
  clock+=86400e3;const nextDay=await wallet.payJob('leaf-rake','Rake the leaves',30);assert.equal(nextDay.coins,JOB_BASE_PAY['leaf-rake']);
@@ -65,8 +70,14 @@ function environment(){
  assert.equal(C.JOBS.length,JOB_IDS.length);same([...C.JOBS.map(j=>j.id)].sort(),[...JOB_IDS].sort(),'each job has exactly one definition');
  assert(C.JOBS.length>=9,'the Sep 27 jobs (offside flag, ball pump, goal anchors) are in the catalog');
  assert(!C.JOBS.some(j=>j.id==='kit-room'),'the kit room job was removed (user, Sep 29 2026)');
+ // The Coral Cay Farm job (Sep 29 2026): 10 jobs in the catalog, a nutrition lesson with its source, pay in the 7–10 band.
+ assert.equal(C.JOBS.length,11,'nine island jobs + Harvest day + Match-day snacks on Coral Cay');
+ {const snacks=C.jobById('match-day-snacks');assert(snacks&&snacks.kind==='sort'&&snacks.task.style==='crates'&&snacks.targets.length===3&&snacks.place==='The Farm, Coral Cay','Match-day snacks: sort six snacks into three crates');assert.match(snacks.lessonSource,/sportsdietitians/);assert.equal(JOB_BASE_PAY['match-day-snacks'],8);}
+ {const farm=C.jobById('farm-harvest');assert(farm&&farm.kind==='collect'&&farm.prop==='produce'&&farm.targets.length===10&&farm.deliver&&farm.deliver.label==='farm stand','Harvest day: pick 10 ripe crops, deliver to the farm stand');
+  assert.equal(farm.place,'The Farm, Coral Cay');assert.match(farm.lessonSource,/fifa\.com/);assert.match(farm.lesson,/carbohydrate/i);assert.match(farm.lesson,/water/i);assert.equal(JOB_BASE_PAY['farm-harvest'],8);
+  assert.match(E.payMessage('farm-harvest',E.recordCompletion(E.recordCompletion(E.emptyJobLedger(day),'farm-harvest',8,30),'farm-harvest',8,30)),/The harvest is in/);}
  // Signs never crowd each other, the vending machines, the fishing posts or the Clubhouse doorway.
- const vend=[[89.5,-49],[11,-48],[132.8,-69.8],[96,115],[175.26,9]],fish=[[217,212.6],[63,212.6],[237.2,66],[60,-238],[-95.5,24]];
+ const vend=[[89.5,-49],[11,-48],[132.8,-69.8],[96,115],[175.26,9],[73.8,-198.5],[434.41,-141.28],[549.5,-169],[665.62,-211.77],[526.1,-177.16],[73.1,-52.16],[74.91,-52.16],[527.91,-177.16]],fish=[[217,212.6],[63,212.6],[237.2,66],[60,-238],[-95.5,24]];
  for(const a of C.JOBS){for(const b of C.JOBS)if(a!==b)assert(Math.hypot(a.board.x-b.board.x,a.board.z-b.board.z)>2*C.BOARD_RANGE,`${a.id} and ${b.id} signs are apart`);
   for(const [x,z] of [...vend,...fish,[81.36,-52.8]])assert(Math.hypot(a.board.x-x,a.board.z-z)>C.BOARD_RANGE+3,`${a.id} sign is clear of (${x},${z})`);}
  for(const job of C.JOBS){
@@ -74,14 +85,17 @@ function environment(){
   const run=R.startRun(job),floor=(x,z)=>V.fieldSurfaceHeight(x,z);let guard=0,done=false,events=[];
   if(job.kind==='sort'){
    const walk=q=>R.stepRun(run,{x:q.x,y:floor(q.x,q.z),z:q.z},.5,floor);
-   assert.equal(R.runHint(run),'Go to the kit hamper and take the first shirt.');
+   const crates=job.task.style==='crates';
+   assert.equal(R.runHint(run),crates?'Go to the harvest basket and take the first snack.':'Go to the kit hamper and take the first shirt.');
    for(let i=0;i<job.task.items.length;i++){const item=job.task.items[i];
     same(R.runGoals(run),[job.deliver],'shirts come from the hamper');events.push(...walk(job.deliver));assert.equal(run.carrying,i);
-    assert.equal(R.runGoals(run).length,0,'no arrow while carrying: read the clue first');assert.match(R.runHint(run),new RegExp(`Number ${item.number}`));
+    assert.equal(R.runGoals(run).length,0,'no arrow while carrying: read the clue first');assert.match(R.runHint(run),crates?new RegExp(item.label):new RegExp(`Number ${item.number}`));
     if(i===0){const wrongSlot=(item.slot+1)%job.targets.length,ev=walk(job.targets[wrongSlot]);assert(ev.some(e=>e.type==='wrong'),'a wrong peg explains');assert.equal(run.carrying,0,'the shirt stays in your hands');same(R.runGoals(run),[job.targets[item.slot]],'after one wrong try the arrow shows the right peg');}
     events.push(...walk(job.targets[item.slot]));assert.equal(run.step,i+1);}
    done=run.phase==='done';
-   same(job.task.items.map(it=>[it.number,job.task.slots[it.slot]]),[[9,'STRIKER'],[1,'GOALKEEPER'],[7,'RIGHT WING'],[3,'LEFT BACK'],[10,'PLAYMAKER']],'traditional 2–3–5 numbers (1928)');
+   if(crates){same(job.task.items.map(it=>[it.label,job.task.slots[it.slot]]),[['Rice bowl','PRE-MATCH MEAL'],['Orange slices','HALF-TIME'],['Yoghurt and fruit','RECOVERY'],['Banana','PRE-MATCH MEAL'],['Water bottle','HALF-TIME'],['Watermelon','RECOVERY']],'snacks sorted by when they fuel a match');
+    assert(job.task.items.every(it=>it.clue.startsWith(it.label)&&it.clue.length>50),'each snack has a clue');assert.match(run.note,/goes in the recovery crate!/);}
+   else same(job.task.items.map(it=>[it.number,job.task.slots[it.slot]]),[[9,'STRIKER'],[1,'GOALKEEPER'],[7,'RIGHT WING'],[3,'LEFT BACK'],[10,'PLAYMAKER']],'traditional 2–3–5 numbers (1928)');
   }else if(job.kind==='offside'){
    const O=env.load('lib/town/jobs/offsideClips.ts');
    // Every clip's answer matches Law 11 computed from the positions at the moment of the pass.

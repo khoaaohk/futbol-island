@@ -5,29 +5,34 @@ import {COIN_REWARD_ID,COSTUME_UNLOCK_ORDER} from './coinQuest';
 import {CARD_ENTRIES} from './cardCollection';
 import {LEGEND_PACK_CANDIDATES,legendFor,MYSTERY_PACK_OPTIONS} from '../arcade/legendPacks';
 import {SPECIAL_BALL_IDS,type VendingSpecialBall} from './specialBalls';
+import {cayVendingSpots,konbiniMachineSpot,ISLAND_SQUARE_KONBINI} from './vendingPlaces';
+import {DRINK_MACHINE_IDS,DRINK_MACHINE_INFO,drinkSpotBeside,type DrinkMachineId} from './drinkMachines';
 
 /**
- * Island vending machines (user, Sep 27 2026): the Store is gone; eight Japanese-style vending machines around the island sell
- * everything for arcade coins. Every machine stocks the full regular catalogue in rows (card packs, balls, rides, island
+ * Island vending machines (user, Sep 27 2026): the Store is gone; Japanese-style vending machines around the island sell
+ * everything for arcade coins. Eight on the main island, then (Sep 29 2026) four more: North Beach, the causeway and two on
+ * Coral Cay, each selling one new hardship pop-up book (placed from Coral Cay's anchors in lib/town/vendingPlaces.ts). Every machine stocks the full regular catalogue in rows (card packs, balls, rides, island
  * animals) plus a Specials row that only that machine sells. docs/vending-machines.md documents prices and decisions.
  */
-export type VendingMachineId='plaza'|'rooftop'|'oldtown'|'clubgrounds'|'eleven'|'beach'|'pier'|'market';
+export type VendingMachineId='plaza'|'rooftop'|'oldtown'|'clubgrounds'|'eleven'|'beach'|'pier'|'market'|'northbeach'|'causeway'|'cayplaza'|'sharks'|'caykonbini'|DrinkMachineId;
 export type VendingMachine={id:VendingMachineId;name:string;place:string;x:number;z:number;y:number;yaw:number;
  /** Cabinet colour, lighter sign colour and a readable ink for the UI. */
- color:string;light:string;ink:string;specials:string[];lesson:string};
+ color:string;light:string;ink:string;specials:string[];lesson:string;
+ /** Sep 29 2026: one of the two outdoor drink machines (lib/town/drinkMachines.ts): sells drinks, not the vending catalogue. */
+ drinks?:true};
 /** Default facing: toward the island camera (which looks along -16,-23,-33), so the glass front reads from the default view.
  * Machines set against a wall or tucked into a corner face their walk-up side instead (their own `yaw`). */
 import {PLAYER_BOOKS,BOOK_PRICE,booksForMachine,type PlayerBookId} from '../books/catalog';
 import {READY_BOOKS} from '../books/registry.ids.generated';
 /** Shelf blurb for a pop-up book: every player book is a true story of a hardship and how they kept going. */
 /** Name on the cover / shelf label. */
-const bookShortName=(id:PlayerBookId)=>({cristiano:'Cristiano',ronaldo:'Ronaldo',debruyne:'De Bruyne',pele:'Pelé'} as Partial<Record<PlayerBookId,string>>)[id]??PLAYER_BOOKS[id].player.split(' ').slice(-1)[0];
+const bookShortName=(id:PlayerBookId)=>({cristiano:'Cristiano',ronaldo:'Ronaldo',debruyne:'De Bruyne',pele:'Pelé',kante:'Kanté'} as Partial<Record<PlayerBookId,string>>)[id]??PLAYER_BOOKS[id].player.split(' ').slice(-1)[0];
 const bookBlurb=(id:PlayerBookId)=>id==='island'?'Futbol Island: an introduction to everything you can do on the island.':`${PLAYER_BOOKS[id].title}. A riso pop-up book: the true story of a hardship ${PLAYER_BOOKS[id].player} faced, and what helped.`;
 
 export const VENDING_YAW=Math.atan2(16,33);
 export const VENDING_SIZE={w:1.3,d:.86,h:2.12} as const;
 export const VENDING_MACHINES:VendingMachine[]=[
- {id:'plaza',name:'Konbini',place:'under the convenience-store canopy beside the sliding doors',x:74.2,z:-51.9,y:0,yaw:0,color:'#d8342c',light:'#ffd9c9',ink:'#5a0f0b',specials:['ball:telstar','pack:legends'],lesson:'Football history lives here: the 1970 TV ball and all-time legends.'},
+ {id:'plaza',name:'Konbini',place:'under the convenience-store canopy beside the sliding doors',...konbiniMachineSpot(ISLAND_SQUARE_KONBINI),y:0,color:'#d8342c',light:'#ffd9c9',ink:'#5a0f0b',specials:['ball:telstar','pack:legends'],lesson:'Football history lives here: the 1970 TV ball and all-time legends.'},
  {id:'rooftop',name:'Palm Coast Rooftop',place:'on the rooftop futsal court',x:11,z:-7.8,y:6,yaw:VENDING_YAW,color:'#1f9aa6',light:'#c9f5f2',ink:'#073c42',specials:['ball:futsal','pack:futsal'],lesson:'Futsal is 5-a-side on a hard court with a smaller, low-bounce ball.'},
  {id:'oldtown',name:'Old Town Ground',place:'beside the 7v7 pitch',x:11,z:-48,y:0,yaw:VENDING_YAW,color:'#3d8f4f',light:'#d7f5c9',ink:'#12391a',specials:['ball:grassroots','pack:wingers'],lesson:'7v7 plays a 2–3–1: fewer players means more touches for everyone.'},
  {id:'clubgrounds',name:'Club Grounds',place:'on the street corner by the 9v9 pitch',x:132.8,z:-69.8,y:0,yaw:-Math.PI/4,color:'#ee7d22',light:'#ffe4c2',ink:'#5a2a04',specials:['ball:hivis','pack:defenders'],lesson:'9v9 often plays a 3–2–3 with a back three that defends together.'},
@@ -35,11 +40,24 @@ export const VENDING_MACHINES:VendingMachine[]=[
  {id:'beach',name:'Beach Kitchen',place:'by the surf shop on the west beach',x:-60,z:92,y:0,yaw:VENDING_YAW,color:'#f06a9a',light:'#ffe0ec',ink:'#5a0f2c',specials:['ball:beach','pack:strikers'],lesson:'Beach soccer is 5-a-side, barefoot, on soft sand.'},
  {id:'pier',name:'Pier Cafés',place:'between the pier bakery and the coast café',x:108.5,z:183.6,y:0,yaw:0,color:'#f2f0ea',light:'#d9f3ff',ink:'#153a52',specials:['ball:retro','pack:keepers'],lesson:'Before the 1960s, footballs were laced leather that got heavy in the rain.'},
  {id:'market',name:'High School Rooftop',place:'on the highest school roof, reached by the east-side stairs',x:135,z:8,y:17.23,yaw:0,color:'#7a4cc2',light:'#eadcff',ink:'#2a1350',specials:['ball:panna','pack:eras'],lesson:'Street football like panna teaches close control in tight spaces.'},
+ // Sep 29 2026: four book machines. Each sells the regular rows plus its one pop-up book (no exclusive ball or pack: all eight
+ // special balls already have a home). North Beach is on the main island; the other three follow Coral Cay's anchors.
+ {id:'northbeach',name:'North Beach',place:'on the sand beside the North Beach path, just before the North Beach sign',x:73.8,z:-198.5,y:0,yaw:VENDING_YAW,color:'#e9b82a',light:'#fff1c2',ink:'#4a3503',specials:[],lesson:'Full-backs like Cafu overlap: they sprint outside their winger to give an extra pass.'},
+ {id:'causeway',name:'Causeway Stop',place:'on the beach bank at the bend before the Turtle Sandbar stop',...cayVendingSpots.causeway(),y:0,color:'#5f7897',light:'#dbe7f5',ink:'#172638',specials:[],lesson:'A penalty routine: pick your spot early, take one slow breath, and don’t change your mind.'},
+ {id:'cayplaza',name:'Coconut Café',place:'outside the Coconut Café on the Coral Cay boulevard',...cayVendingSpots.cafe(),y:0,color:'#7fb13c',light:'#e5f5cf',ink:'#233a0c',specials:[],lesson:'Win the ball back: watch the passer’s eyes and hips, get on your toes and step in early.'},
+ // Sep 29 2026: the second Konbini's machine, on Coral Cay (regular rows only; the Telstar ball and Legends pack stay at
+ // Island Square's Konbini).
+ {id:'caykonbini',name:'Konbini · Coral Cay',place:'under the Coral Cay Konbini canopy beside the sliding doors, by the roundabout',...cayVendingSpots.konbini(),y:0,color:'#3f8f6c',light:'#d9f3e6',ink:'#0f3324',specials:[],lesson:'Refuel like a pro: water first, then a carb snack like a banana or rice ball after you play.'},
+ {id:'sharks',name:'Sharks Beach',place:'on the sand at Sharks Beach, by the Sharks Beach court',...cayVendingSpots.sharks(),y:0,color:'#2f86d6',light:'#d3ebff',ink:'#0a2b4d',specials:[],lesson:'Strikers time their runs so they meet the ball at speed.'},
 ];
+// Sep 29 2026: exactly two drink machines, each side by side with its Konbini's machine (placed from that machine's spot).
+for(const id of DRINK_MACHINE_IDS){const info=DRINK_MACHINE_INFO[id],next=VENDING_MACHINES.find(m=>m.id===info.beside)!;
+ VENDING_MACHINES.push({id,name:info.name,place:info.place,...drinkSpotBeside(next),y:next.y,color:info.color,light:info.light,ink:info.ink,specials:[],lesson:info.lesson,drinks:true});}
 const displayThemes:Record<VendingMachineId,[string,string,string]>={
  plaza:['Messi','Close control','#76bad4'],rooftop:['Falcão','Quick feet','#30a7ad'],oldtown:['Marta','Find space','#64a355'],
  clubgrounds:['Maldini','Defend together','#d48c45'],eleven:['Zidane','Scan and pass','#5c7fc3'],beach:['Ronaldinho','Creative play','#db81a5'],
  pier:['Pelé','Finishing','#b7a477'],market:['Cruyff','Move into space','#9a77bf'],
+ northbeach:['Cafu','Overlap','#e0b33f'],causeway:['Nadim','Penalties','#7c93b3'],cayplaza:['Kanté','Win it back','#8dba55'],sharks:['Oshoala','Time your run','#4f98d8'],caykonbini:['Konbini','Fuel up','#5fa98a'],drinksplaza:['Drinks','Hydrate','#5d93d6'],drinkscay:['Drinks','Hydrate','#4fb0dc'],
 };
 /** Four pop-up books join each machine's exclusive ball and pack: six specials total. A book that isn't written yet
  * shows as a "coming soon" preview (no storyId, so it can't be bought or opened). */
@@ -52,13 +70,29 @@ const homeDisplays=VENDING_MACHINES.flatMap(m=>{
    ...(ready?{storyId:book}:{}),display:{shape:'book' as const,color:covers[i%covers.length],title:short}};});
 });
 for(const m of VENDING_MACHINES)m.specials.push(...homeDisplays.filter(i=>i.machine===m.id).map(i=>i.id));
+/**
+ * Pop-up books on sale (user, Sep 30 2026: "each machine should have 4 books"). Every shop machine sells exactly four, its own
+ * ("home") books first; the four Coral Cay-side book machines add three themed books to their one, and the Coral Cay Konbini sells
+ * a mix. All 36 sellable books appear at least once (the Futbol Island starter book is free for everyone). A book is ONE item
+ * (its PLAYER_BOOKS itemId) wherever it is sold, so ownership, price and "Read" are per book: buying it at one machine owns it at
+ * every machine, and existing saves keep their books unchanged (no migration needed: the ids did not change).
+ */
+export const MACHINE_BOOKS:Partial<Record<VendingMachineId,readonly PlayerBookId[]>>={
+ ...Object.fromEntries(VENDING_MACHINES.filter(m=>!m.drinks&&booksForMachine(m.id).length===4).map(m=>[m.id,booksForMachine(m.id)])),
+ northbeach:['cafu','bronze','davies','maldini'],          // full-backs and defenders: overlap, cover, defend together
+ causeway:['nadim','modric','salah','eusebio'],            // long roads to a new home
+ cayplaza:['kante','vardy','debruyne','kane'],             // told no, kept working
+ sharks:['oshoala','hegerberg','kerr','drogba'],           // strikers who time their runs and keep believing
+ caykonbini:['messi','marta','ronaldinho','putellas'],     // a Konbini mix of island favourites
+};
 export const vendingMachine=(id:string)=>VENDING_MACHINES.find(m=>m.id===id);
 export function nearestVendingMachine(x:number,z:number):VendingMachine{
- return VENDING_MACHINES.reduce((best,m)=>Math.hypot(m.x-x,m.z-z)<Math.hypot(best.x-x,best.z-z)?m:best,VENDING_MACHINES[0]);
+ // Old Store entry points open the nearest SHOP machine; drink machines are only opened in person.
+ return VENDING_MACHINES.filter(m=>!m.drinks).reduce((best,m)=>Math.hypot(m.x-x,m.z-z)<Math.hypot(best.x-x,best.z-z)?m:best,VENDING_MACHINES[0]);
 }
 
 // ---- Rows and prices ------------------------------------------------------------------------------------------------------
-export type VendingRowId='special'|'packs'|StoreCategory|'costume';
+export type VendingRowId='special'|'books'|'packs'|StoreCategory|'costume';
 export const VENDING_ROWS:{id:Exclude<VendingRowId,'special'>;label:string}[]=[
  {id:'packs',label:'Card packs'},{id:'ball',label:'Balls'},{id:'scooter',label:'Scooters'},{id:'bike',label:'Bikes'},
  {id:'moped',label:'Mopeds'},{id:'jetpack',label:'Flight'},{id:'costume',label:'Island animals'},
@@ -131,9 +165,11 @@ export const VENDING_SPECIALS:VendingItem[]=VENDING_MACHINES.flatMap(m=>m.specia
  return {id,row:'special' as const,kind:'pack' as const,price:MYSTERY_PACK_OPTIONS.find(o=>o.size===p.spec.size)!.price,label:p.label,blurb:p.blurb,pack:p.spec,machine:m.id};
 }));
 export const vendingItem=(id:string)=>VENDING_ITEMS.find(i=>i.id===id)??VENDING_SPECIALS.find(i=>i.id===id);
-/** What one machine sells: its specials first, then the regular rows. */
+/** What one machine sells: its specials first, then its four pop-up books, then the regular rows. */
 export function machineStock(id:VendingMachineId):{row:VendingRowId;label:string;items:VendingItem[]}[]{
- return [{row:'special',label:'Specials · only here',items:VENDING_SPECIALS.filter(i=>i.machine===id)},...VENDING_ROWS.map(r=>({row:r.id,label:r.label,items:VENDING_ITEMS.filter(i=>i.row===r.id)}))];
+ const books=(MACHINE_BOOKS[id]??[]).map(b=>VENDING_SPECIALS.find(i=>i.id===PLAYER_BOOKS[b].itemId)!).filter(Boolean);
+ return [{row:'special',label:'Specials · only here',items:VENDING_SPECIALS.filter(i=>i.machine===id&&i.kind!=='display')},{row:'books',label:'Pop-up books',items:books},
+  ...VENDING_ROWS.map(r=>({row:r.id,label:r.label,items:VENDING_ITEMS.filter(i=>i.row===r.id)}))];
 }
 /** A store-era item id (`ball:frost`, `costume:x`, `packs:legend`) → the vending item id. */
 export function vendingItemFor(storeId:string|undefined):string|undefined{

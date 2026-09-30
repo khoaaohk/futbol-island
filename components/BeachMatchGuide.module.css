@@ -1,0 +1,19 @@
+/* Beach soccer guide: the live transcript's glass panel (FieldTranscript.module.css) with two tabs and a rules quiz.
+   Colours come from that panel (cream #fff0cc text, gold #f2c942 highlight, white-alpha surfaces). */
+.panel{height:min(440px,calc(100dvh - 130px))}
+.tabs{display:flex;gap:6px;padding:8px 12px;border-bottom:1px solid #ffffff17}
+.tabs button{flex:1;min-height:44px;border:1px solid #ffffff24;border-radius:10px;background:#ffffff0f;color:#e5decb;font-size:12px;font-weight:700}
+.tabs button[aria-pressed=true]{background:#f2c94229;border-color:#f2c94252;color:#fff0cc}
+.watch{margin:0;padding:0 0 0 16px;display:grid;gap:6px;font-size:12px;line-height:1.45;color:#e5decb}
+.watch strong{color:#fff0cc}
+.count{font-size:11px;color:#e5decb}
+.question{margin:0;font-size:15px;font-weight:700;line-height:1.4}
+.options{display:grid;gap:8px}
+.options button{display:flex;gap:10px;align-items:center;min-height:44px;text-align:left;padding:10px 12px;border:1px solid #ffffff24;border-radius:12px;background:#ffffff0f;color:#fff0cc;font-size:13px;line-height:1.35}
+.options button span{flex:0 0 22px;height:22px;display:grid;place-items:center;border-radius:50%;background:#ffffff1a;font-size:11px;font-weight:800}
+.options button:not(:disabled):hover{background:#ffffff1f}
+.options button[data-result=correct]{background:#6fbf7333;border-color:#8fd79466}
+.options button[data-result=wrong]{background:#e0705a2e;border-color:#e0705a5c}
+.options button:disabled{cursor:default}
+.result{margin:0;font-size:13px;line-height:1.5;background:#ffffff0f;padding:10px 12px;border-radius:12px}
+.next{align-self:flex-start;min-height:44px;padding:10px 16px;border:1px solid #f2c94266;border-radius:12px;background:#f2c94229;color:#fff0cc;font-weight:700}

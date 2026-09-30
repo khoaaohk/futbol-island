@@ -1,5 +1,5 @@
 import {sevenBuildOutY,behindBuildOut,retreatBuildOutY} from "../buildOut";
-import {venueById,type Venue} from '../venues';
+import {liveVenueById,type LiveVenue,type LiveFormat} from '../venues';
 import {sweepGoalFrame,type FrameHit} from '../goalCollisions';
 import {shotProgress,shotHeightAt,shotOffsetAt} from '../shotPlacement';
 import {firstTouchDirection} from "./firstTouch";
@@ -49,7 +49,17 @@ export interface SimPlayer {
 // The composure beat absorbs the wind-up of a typical kick (a 60° turn): square-on kicks leave
 // the foot a touch sooner than before the wind-up existed, big turns a touch later.
 const WINDUP_LEAD_TURN = Math.PI / 3;
-const WINDUP_FINISH: Record<string, number> = { futsal: 1.75, "7v7": 1.3, "9v9": 1.45, "11v11": 1.15 };
+const WINDUP_FINISH: Record<string, number> = { futsal: 1.75, "7v7": 1.3, "9v9": 1.45, "11v11": 1.15, beach: 1 };
+// ---- beach soccer (FIFA Beach Soccer Laws 2024-25; the Coral Cay live match) ----
+// Attract-mode clock: three 60 s periods (the real game: 3 × 12 min), a 15 s extra time when level (3 min), then a
+// penalty shoot-out (5 kicks each, then sudden death); a short full-time beat, then a fresh game kicks off.
+export const BEACH_PERIOD = 60, BEACH_EXTRA = 15, BEACH_FULL_TIME = 3;
+/** Sand: a rolling ball dies ~30 % quicker (air drag is unchanged, so lifted passes and throws keep their flight). */
+const BEACH_GROUND_FRICTION = 2.2 * 1.3;
+/** Sand legs: every player runs a little slower (running on sand costs ~1.6× the energy of firm ground). */
+const BEACH_LEGS = 0.93;
+/** Beach shot quality by game state: [two or more up, one up, behind]. */
+export const BEACH_LEAD_XG = [0.7, 0.9, 1.1];
 const GY_TOP = 8;
 const GY_BOT = 392;
 const GHALF = 19; // goal half-width in field units (~6.4m of a 45.7m pitch)
@@ -143,6 +153,14 @@ const GOLD_HOME_5: [string, number, number, Role][] = [
 const BLUE_HOME_5: [string, number, number, Role][] = [
   ["dgk", 135, 28, "gk"], ["dcb", 135, 100, "def"], ["dlm", 62, 160, "mid"], ["drm", 208, 160, "mid"], ["dst", 135, 232, "fwd"],
 ];
+// Beach 5-a-side diamond (keeper, defender, two wingers, pivot): the same slot ids as futsal, a touch wider and
+// higher (the sand court is almost as wide as it is long, and there is no offside to hold the pivot back).
+const GOLD_HOME_BEACH: [string, number, number, Role][] = [
+  ["gk", 135, 374, "gk"], ["cb", 135, 296, "def"], ["lm", 56, 236, "mid"], ["rm", 214, 236, "mid"], ["st", 135, 160, "fwd"],
+];
+const BLUE_HOME_BEACH: [string, number, number, Role][] = [
+  ["dgk", 135, 26, "gk"], ["dcb", 135, 104, "def"], ["dlm", 56, 164, "mid"], ["drm", 214, 164, "mid"], ["dst", 135, 240, "fwd"],
+];
 
 // ---- team philosophies ----
 // Each match deals TWO DISTINCT tactical identities (Football-Manager-style mentality
@@ -222,8 +240,9 @@ export class MatchSim {
   kicks = 0;
   lastKick = { height: 0, loft: 0, dur: 0, shotHeight: 0, fromY: 0, goalY: 0, aimX: 135 };
   frameContact={serial:0,height:0,vy:0,x:0,y:0,z:0,part:'post' as 'post'|'crossbar'};
-  private goalVenue:Venue;
-  private frameVenues:Venue[];
+  private goalVenue:LiveVenue;
+  /** The goal frames the shot sweep tests, in the venue's own (unturned) frame round its centre. */
+  private frameVenues:LiveVenue[];
   private frameFrom={x:0,y:0,z:0};
   private frameTo={x:0,y:0,z:0};
   private frameHit:FrameHit={x:0,y:0,z:0,t:0,nx:0,ny:0,nz:0,part:'post'};
@@ -286,6 +305,29 @@ export class MatchSim {
   private loftDur = 0; // remaining flight time of a lofted ball (drives the height arc)
   private loftT = 0;
   private loftPeak = 0;
+  // ---- beach soccer (format 'beach' only; every other format keeps these at their neutral values) ----
+  private beach = false;
+  /** Rolling-ball friction (sand slows a ground ball more; airborne drag stays P.friction × .35). */
+  groundFriction = P.friction;
+  private legs = 1; // top-speed multiplier on sand
+  /** The next launch by this player may not score directly (a keeper's throw, a kick-in or a kick-off: Laws 8, 12, 15). */
+  private noDirect: string | null = null;
+  private directBan = false; // the ball in flight came straight from such a restart / the keeper's hands
+  private nextNote: Record<string, number> = {};
+  /** Beach match clock: period 1–3, 4 = extra time, 5 = penalties / full time. */
+  period = 1;
+  private periodEnd = BEACH_PERIOD;
+  private fullTime = 0; // > 0: the full-time beat before the next game
+  private gameStart = 0;
+  /** Teaching commentary from the sim itself (beach rules, periods): matchEffects announces each new serial. */
+  note = { serial: 0, text: "", reason: "" };
+  /** Games finished on this court and how the last one ended (read by tests and the live panel). */
+  results: { gold: number; blue: number; pens?: { gold: number; blue: number }; extra: boolean }[] = [];
+  teach(text: string, reason = "", key = "", cooldown = 0) {
+    if (key) { if (this.stats.time < (this.nextNote[key] ?? -Infinity)) return; this.nextNote[key] = this.stats.time + cooldown; }
+    this.note.serial++; this.note.text = text; this.note.reason = reason;
+  }
+  get isBeach() { return this.beach; }
 
   // ---- phases & momentum ----
   private counterT = 0; // seconds left in the counter-attack window after winning the ball
@@ -378,7 +420,7 @@ export class MatchSim {
   private mom: Record<string, { floor: number; cool: number; back: boolean; backT: number }> = {};
 
   // stats (for testing) — carries counts SUSTAINED drives (a carry episode >= 15 units)
-  stats = { passes: 0, turnovers: 0, shots: 0, shotsGold: 0, shotsBlue: 0, interceptions: 0, possGold: 0, possBlue: 0, time: 0, recvOwn: 0, looseOwn: 0, looseOpp: 0, carries: 0, carryDist: 0, decided: 0, xgSum: 0, combinations: 0, combinationReturns: 0, crosses:0, switches:0, firstTime:0 };
+  stats = { passes: 0, turnovers: 0, shots: 0, shotsGold: 0, shotsBlue: 0, interceptions: 0, possGold: 0, possBlue: 0, time: 0, recvOwn: 0, looseOwn: 0, looseOpp: 0, carries: 0, carryDist: 0, decided: 0, xgSum: 0, combinations: 0, combinationReturns: 0, crosses:0, switches:0, firstTime:0, beachOnside:0, offsideCalls:0 };
   private nextAerial=0;
   private aerialKind:'cross'|'switch'='switch';
   private carryAcc = 0; // distance covered in the current carry episode
@@ -391,7 +433,7 @@ export class MatchSim {
   get shotActive(): boolean { return this.ballIsShot && this.ball.owner === null; }
   // ---- keeper dive / aerial reads (additive — consumed by choreo.ts, lane B of docs/bean-characters) ----
   /** The venue this match is played on (field → world scale, goal size). */
-  get venue(): Readonly<Venue> { return this.goalVenue; }
+  get venue(): Readonly<LiveVenue> { return this.goalVenue; }
   /** A lofted ball in flight: its clock, flight time, peak height (m) and whether its target may head it. */
   get aerial(): { t: number; dur: number; peak: number; header: boolean } | null {
     if (this.loftDur <= 0 || !this.ball.lofted) return null;
@@ -482,18 +524,18 @@ export class MatchSim {
     return true;
   }
 
-  constructor(seed = 1, format: "9v9" | "11v11" | "futsal" | "7v7" = "9v9", squads?: { gold: [string, number, number, Role][]; blue: [string, number, number, Role][] }) {
-    this.goalVenue=venueById(format);this.frameVenues=[this.goalVenue];
+  constructor(seed = 1, format: LiveFormat = "9v9", squads?: { gold: [string, number, number, Role][]; blue: [string, number, number, Role][] }) {
+    this.goalVenue=liveVenueById(format);this.frameVenues=[this.goalVenue.yaw?{...this.goalVenue,yaw:0}:this.goalVenue];
     // deterministic PRNG so tests are reproducible
     let s = seed >>> 0;
     this.rng = () => {
       s = (s * 1664525 + 1013904223) >>> 0;
       return s / 4294967296;
     };
-    const gold = squads?.gold ?? (format === "11v11" ? GOLD_HOME_11 : format === "futsal" ? GOLD_HOME_5 : format === "7v7" ? GOLD_HOME_7 : GOLD_HOME);
-    const blue = squads?.blue ?? (format === "11v11" ? BLUE_HOME_11 : format === "futsal" ? BLUE_HOME_5 : format === "7v7" ? BLUE_HOME_7 : BLUE_HOME);
+    const gold = squads?.gold ?? (format === "11v11" ? GOLD_HOME_11 : format === "futsal" ? GOLD_HOME_5 : format === "beach" ? GOLD_HOME_BEACH : format === "7v7" ? GOLD_HOME_7 : GOLD_HOME);
+    const blue = squads?.blue ?? (format === "11v11" ? BLUE_HOME_11 : format === "futsal" ? BLUE_HOME_5 : format === "beach" ? BLUE_HOME_BEACH : format === "7v7" ? BLUE_HOME_7 : BLUE_HOME);
     if (format === "futsal") this.passMul = 1.22; // zippier passing for the quick small-sided game
-    this.windupScale = format === "futsal" ? 0.48 : 0.32; // = liveGameSpeed(format) in fieldRuntime, which sets it too
+    this.windupScale = format === "futsal" || format === "beach" ? 0.48 : 0.32; // = liveGameSpeed(format) in fieldRuntime, which sets it too
     if (format === "11v11") this.allowLoft = true; // big field → balls over the top / crosses
     // finish (xG multiplier) is tuned so a full 180-sim-second game averages ~1.2–1.5 goals
     // in EVERY format — enough that a typical 2–3 minute viewing window contains a goal (and
@@ -508,6 +550,10 @@ export class MatchSim {
     if (format === "futsal") this.T = { press: 1.7, lane: 1.9, misplace: 2.0, shoot: 1.8, openReq: 8, laneReq: 6, loftP: 0, switchAt: 3, carryP: 0.52, fwdAdv: 145, shotRange: 155, finish: 1.22, lineUp: 50, lineDn: 88 };
     else if (format === "7v7") this.T = { press: 1.5, lane: 1.7, misplace: 1.8, shoot: 1.6, openReq: 9, laneReq: 6.5, loftP: 0, switchAt: 3, carryP: 0.45, fwdAdv: 135, shotRange: 135, finish: 1.2, lineUp: 46, lineDn: 82 };
     else if (format === "11v11") this.T = { press: 1.15, lane: 1.15, misplace: 1.1, shoot: 0.85, openReq: 11, laneReq: 8, loftP: 0.03, switchAt: 4, carryP: 0.28, fwdAdv: 120, shotRange: 110, finish: 0.73, lineUp: 30, lineDn: 62 };
+    // Beach: five a side on sand. Small-sided structure like futsal (passMul > 1), but the ball goes up: lifted
+    // passes, throws, crosses and balls over the top (allowLoft), volleys and overhead kicks; no offside.
+    else if (format === "beach") this.T = { press: 1.6, lane: 1.8, misplace: 1.9, shoot: 1.8, openReq: 8, laneReq: 6, loftP: 0.14, switchAt: 3, carryP: 0.3, fwdAdv: 145, shotRange: 160, finish: 1.5, lineUp: 50, lineDn: 88 };
+    if (format === "beach") { this.beach = true; this.passMul = 1.15; this.allowLoft = true; this.groundFriction = BEACH_GROUND_FRICTION; this.legs = BEACH_LEGS; }
     // Kick wind-up compensation: the wind-up gives keepers and lane defenders a beat to set
     // (fewer keeper-out-of-position goals, more read passes), so finishing is eased to hold
     // goals/game on the 96-seed balance sample (docs/pass-puzzle/CONTRACT.md, lane B status).
@@ -583,7 +629,7 @@ export class MatchSim {
     this.ball.owner = bestId; this.ball.target = null; this.ball.intBy = null;
     this.possession = def; this.protect = 0.6; this.passCd = 0.5; this.hold = 0.3;
     this.loftDur = 0; this.ball.height = 0; this.endTrap(); // whistle placement, no touch
-    this.msg = "Offside!"; this.msgT = 1.8; this.stats.turnovers++;
+    this.msg = "Offside!"; this.msgT = 1.8; this.stats.turnovers++; this.stats.offsideCalls++;
   }
 
   // ---- phases of play ----
@@ -754,6 +800,59 @@ export class MatchSim {
   // the centre spot, both teams JOG back into shape, the conceding side's taker walks
   // over, and after the setup beat the kick-off is taken. (resetMatch/ctor still use the
   // instant kickOff, which is correct for a cold start.)
+  /** Beach match clock (periods, extra time, penalties, the full-time beat). Returns true when it owned this step. */
+  private beachClock(dt: number): boolean {
+    if (this.fullTime > 0) {
+      this.fullTime -= dt; this.msgT -= dt;
+      this.ball.vx = 0; this.ball.vy = 0; this.ball.height = Math.max(0, this.ball.height - dt * 2);
+      this.ball.owner = null; this.ball.target = null; this.ball.intBy = null; this.ballIsShot = false; this.shotIsGoal = false; this.windup = null;
+      for (const id of this.ids) { const p = this.players[id]; if (p.kick > 0) p.kick = Math.max(0, p.kick - dt / 0.45); this.targets[id] = { x: p.hx, y: p.team === "gold" ? Math.max(214, p.hy) : Math.min(186, p.hy) }; }
+      this.presserId = null; this.chaserIds.clear();
+      this.integrate(dt);
+      if (this.fullTime <= 0) {
+        this.score.gold = 0; this.score.blue = 0; this.period = 1; this.gameStart = this.stats.time; this.periodEnd = this.stats.time + BEACH_PERIOD;
+        this.stageKickoff(this.results.length % 2 ? "blue" : "gold");
+        this.teach("New game on Sharks Beach", "Five a side including the keeper, all barefoot on the sand");
+      }
+      return true;
+    }
+    // The whistle waits for a goal celebration and for a shot already on its way (the referee lets it finish).
+    if (this.goalHold > 0 || this.stats.time < this.periodEnd || this.shotActive) return false;
+    const level = this.score.gold === this.score.blue;
+    if (this.period < 3) {
+      this.period++; this.periodEnd += BEACH_PERIOD;
+      this.teach(`End of period ${this.period - 1} of 3`, "A beach match has three periods of 12 minutes, with short breaks to drink water and hear the coach");
+      this.stageKickoff(this.period === 2 ? "blue" : "gold");
+      return false;
+    }
+    if (this.period === 3 && level) {
+      this.period = 4; this.periodEnd += BEACH_EXTRA;
+      this.teach("Level after three periods: extra time!", "FIFA beach matches can't end in a draw: 3 minutes of extra time, and no golden goal");
+      this.stageKickoff("blue");
+      return false;
+    }
+    const result: { gold: number; blue: number; pens?: { gold: number; blue: number }; extra: boolean } = { gold: this.score.gold, blue: this.score.blue, extra: this.period === 4 };
+    if (level) {
+      // Shoot-out: five kicks each, then sudden death (decided here; the feed tells it kick by kick in one line).
+      const pens = { gold: 0, blue: 0 };
+      for (let round = 0; round < 25; round++) {
+        if (this.rng() < 0.72) pens.gold++;
+        if (this.rng() < 0.72) pens.blue++;
+        if (round >= 4 && pens.gold !== pens.blue) break;
+        if (round < 4) { const left = 4 - round; if (pens.gold > pens.blue + left || pens.blue > pens.gold + left) break; }
+      }
+      if (pens.gold === pens.blue) pens.gold++;
+      result.pens = pens;
+      const winner = pens.gold > pens.blue ? "Gold" : "Blue";
+      this.teach(`Penalties! ${winner} win the shoot-out ${Math.max(pens.gold, pens.blue)}–${Math.min(pens.gold, pens.blue)}`, "Still level after extra time: five penalties each, then sudden death. Beach soccer always has a winner");
+    } else {
+      const winner = this.score.gold > this.score.blue ? "Gold" : "Blue";
+      this.teach(`Full time: ${winner} win ${Math.max(this.score.gold, this.score.blue)}–${Math.min(this.score.gold, this.score.blue)}`, result.extra ? "Decided in extra time" : "Three periods played, shake hands with the other team");
+    }
+    this.results.push(result);
+    this.period = 5; this.fullTime = BEACH_FULL_TIME; this.restart = null; this.msg = "Full time"; this.msgT = BEACH_FULL_TIME;
+    return true;
+  }
   private stageKickoff(conceding: Team) {
     // the ball STAYS where it lies (in the net) — the taker fetches it and carries it to
     // the centre spot, so the reset visibly travels instead of teleporting (see restartLogic)
@@ -807,6 +906,8 @@ export class MatchSim {
     if (ready && ((r.t <= 0 && near) || (r.kind!=='kickoff'&&r.t < -4))) {
       this.ball.owner = r.taker;
       this.possession = tk.team;
+      // Beach: the first kick of a kick-in or kick-off may not score directly (Laws 8 and 15).
+      if (this.beach && (r.kind === "kickin" || r.kind === "kickoff")) this.noDirect = r.taker;
       this.endTrap(); // restart take is its own choreography — no trap (dribbleBall still eases the pickup)
       this.protect = 0.5; this.passCd = 0.35; this.lastFrom = null; this.hold = 0;
       this.counterT = 0; this.counterTeam = null; // a restart is never a counter
@@ -988,6 +1089,9 @@ export class MatchSim {
     this.ball.intBy = null;
     this.ballIsShot = false; this.shotIsGoal = false;
     this.lastFrom = fromId;
+    // Beach: a keeper's throw (all his distribution is from the hands) and the first kick of a kick-in or kick-off can
+    // never score directly — if it goes straight in, it is a goal clearance for the other side.
+    if (this.beach) { this.directBan = from.isGK || this.noDirect === fromId; this.noDirect = null; }
     this.ballFlight = 0.16; // in flight — the passer can't instantly re-collect it
     // lofted ball: arc its height over the flight (see step) so it clears the defenders
     this.ball.lofted = loft > 0;
@@ -1009,11 +1113,16 @@ export class MatchSim {
     const ty = clamp(t.y+(kind==='through'?dir*14:t.vy*.18),16,384);
     const D = dist(from.x, from.y, tx, ty);
     const speed = clamp(D * 1.5 + 165, 250, 430);
-    const peak=kind==='cross'?3.2:kind==='switch'?Math.min(5,3+D*.006):4.4;
+    // (beach: a small court and a light ball — flatter lifts, still over a defender's head)
+    const peak=this.beach?(kind==='cross'?2.5:kind==='switch'?Math.min(3.2,2.2+D*.004):2.9):kind==='cross'?3.2:kind==='switch'?Math.min(5,3+D*.006):4.4;
     this.launch(fromId, tx, ty, speed, 0, toId, peak);
     this.passIntended = toId; this.headerBall = kind === "cross";
     // In range of goal a cross or ball over the top is sometimes met first time (acrobatic finish).
-    if (kind !== 'switch' && dist(t.x, t.y, 135, this.atkGoalY(from.team)) < 75 && this.rng() < 0.28) this.acro = { to: toId };
+    // Beach: much more often (volleys and overhead kicks are the sand game's signature finishes), and a ball over the
+    // top may be met in the air too, so an overhead kick can meet it above head height.
+    const nearGoal = kind !== 'switch' && dist(t.x, t.y, 135, this.atkGoalY(from.team)) < 75;
+    if (nearGoal && this.rng() < (this.beach ? 0.55 : 0.28)) this.acro = { to: toId };
+    if (this.beach && nearGoal && this.acro) this.headerBall = true;
     if(kind!=='through'){
       // Integrate the same air drag as ballLogic so the ball lands at its receiving lane.
       const drag=P.friction*.35;this.loftDur=-Math.log(Math.max(.05,1-drag*D/speed))/drag;this.lastKick.dur=this.loftDur;
@@ -1072,14 +1181,24 @@ export class MatchSim {
     }
     let intercepted = false;
     const laneW = 4 * this.T.lane; // how far off the lane a defender can still read it (format feel)
+    // Beach: sand stops a ground ball, so anything but a short pass (≈5 m) is lifted — chipped over the lane and
+    // controlled on the thigh or chest. A lifted ball is harder (not impossible) to cut out.
+    const lift = this.beach && !from.isGK ? (D > 55 || (laneDef !== null && laneD < laneW && D > 30)) : false;
     if (laneDef && laneD < laneW) {
       // a defender who's read the lane can cut it out; a driven/risky ball (firm > 1) is
       // easier to read than a gentle recycle — most passes still complete
       const risk = clamp(0.22 + (firm - 1) * 0.18, 0.1, 0.38);
       const pInter = clamp(risk - (laneD / laneW) * risk, 0, risk);
-      if (this.rng() < pInter) intercepted = true;
+      if (this.rng() < pInter * (lift ? 0.6 : 1)) intercepted = true;
     }
-    if (intercepted && laneDef) {
+    if (lift || (this.beach && from.isGK && D > 55)) {
+      // Lifted pass / keeper's throw: the same pace and air drag as a loft, flight timed to land at the target.
+      const to = intercepted && laneDef ? laneDef : null, lx = to ? to.x : tx, ly = to ? to.y : ty, LD = dist(from.x, from.y, lx, ly);
+      const pace = clamp(LD * 1.35 + 125, 185, 330) * (from.isGK ? 1.1 : 1), drag = P.friction * 0.35;
+      this.launch(fromId, lx, ly, pace, 0, to ? null : toId, clamp(0.75 + LD * 0.009, 0.9, from.isGK ? 2.4 : 1.9));
+      this.loftDur = -Math.log(Math.max(0.05, 1 - drag * LD / pace)) / drag; this.lastKick.dur = this.loftDur;
+      if (to) this.ball.intBy = to.id;
+    } else if (intercepted && laneDef) {
       // ball is played into the defender who reads it — visibly travels to them
       this.launch(fromId, laneDef.x, laneDef.y, speed * 0.92, height, null);
       this.ball.intBy = laneDef.id;
@@ -1115,7 +1234,10 @@ export class MatchSim {
     // enough for a set keeper, a miss rolls just wide and restarts with the other team.
     const distGoal = dist(from.x, from.y, 135, gy);
     const angle = Math.abs(from.x - 135);
-    const xg = clamp(0.34 - (distGoal - 28) * 0.0035, 0.05, 0.34) * clamp(1.15 - angle / 60, 0.35, 1) * this.T.finish * xgMul; // [combos] xgMul
+    let xg = clamp(0.34 - (distGoal - 28) * 0.0035, 0.05, 0.34) * clamp(1.15 - angle / 60, 0.35, 1) * this.T.finish * xgMul; // [combos] xgMul
+    // Beach: game state — a side two up protects its lead (fewer bodies forward, a worse chance), a side behind throws
+    // everyone forward (the keeper included). Keeps the high-scoring sand game a contest instead of a runaway.
+    if (this.beach) { const lead = from.team === "gold" ? this.score.gold - this.score.blue : this.score.blue - this.score.gold; xg *= lead >= 2 ? BEACH_LEAD_XG[0] : lead === 1 ? BEACH_LEAD_XG[1] : lead <= -1 ? BEACH_LEAD_XG[2] : 1; }
     const roll = this.rng();
     const side = this.rng() < 0.5 ? -1 : 1;
     let aimx: number;
@@ -1143,9 +1265,10 @@ export class MatchSim {
     // a DECIDED goal must physically reach the net: guarantee enough pace that friction
     // (linear in distance) still leaves ~75 u/s at the line — else long-range "goals"
     // died 2 units short and were quietly demoted to loose balls (the goal leak)
-    if (this.shotIsGoal) spd = Math.max(spd, dist(from.x, from.y, aimx, gy) * P.friction + 75);
+    if (this.shotIsGoal) spd = Math.max(spd, dist(from.x, from.y, aimx, gy) * this.groundFriction + 75);
     // Compact-court strikes should snap toward goal rather than read like a pass.
     if (this.goalVenue.id === 'futsal') spd *= 1.3;
+    else if (this.beach) spd *= 1.2;
     this.launch(fromId, aimx, gy, spd, 1.0, null);
     this.saveRoll = this.rng();
     // Placement is presentation metadata: preserve the existing outcome and random sequence.
@@ -1183,6 +1306,18 @@ export class MatchSim {
     if (from.team === "gold") this.stats.shotsGold++; else this.stats.shotsBlue++;
     this.msg = "Shot!"; this.msgT = 1.0;
   }
+  /** Beach keeper on the ball: everything leaves his hands within 4 seconds (Law 12) — a roll-out to a free
+   *  team-mate close by, or a long throw to start the attack; never a punt (no kicking the ball out of the hands). */
+  private beachKeeper(id: string, o: SimPlayer, pressured: boolean) {
+    this.carrying = false;
+    const fwd = this.bestPass(id), keep = this.safePass(id);
+    if (fwd && (pressured || this.rng() < 0.6)) this.doPass(id, fwd, 1.15);
+    else if (keep) this.doPass(id, keep, 0.95);
+    else if (fwd) this.doPass(id, fwd, 1.15);
+    else this.doClear(id);
+    if (this.windup?.id === id || this.ball.owner !== id) this.teach("Keeper's throw", "Beach keepers start attacks with their hands: 4 seconds to release it, and no kicking it out of the hands", "gkthrow", 45);
+    void o;
+  }
   private doClear(fromId: string) {
     if (this.defer(fromId, "clear", null)) return;
     const from = this.players[fromId];
@@ -1200,6 +1335,7 @@ export class MatchSim {
   }
   private stepOnce(dt: number) {
     this.stats.time += dt;
+    if (this.beach && this.beachClock(dt)) return;
     if (this.windup && (this.restart || this.goalHold > 0)) this.windup = null;
     const combination=this.combination;
     if(combination&&(this.stats.time>combination.expires||this.possession!==combination.team||this.restart||this.goalHold>0))this.combination=null;
@@ -1256,7 +1392,8 @@ export class MatchSim {
     // mark, and — when the score is close — an urgent finale; then the cycle renews.
     // legsMul only nudges AI top speed a few percent, and tired legs also bias the
     // decision-making toward safer passes (see ballLogic).
-    const mt = this.stats.time % 240;
+    // (beach: the 180 s game — three periods — is stretched over the same 240 s arc)
+    const mt = this.beach ? Math.min(239, (this.stats.time - this.gameStart) * 4 / 3) : this.stats.time % 240;
     this.fatigue = mt / 240;
     const closeGame = Math.abs(this.score.gold - this.score.blue) <= 1;
     let arc = 1;
@@ -1516,6 +1653,7 @@ export class MatchSim {
   }
   private ballLogicStep(dt: number) {
     let owner = this.ball.owner;
+    if (this.noDirect && owner !== null && owner !== this.noDirect) this.noDirect = null; // the restart taker lost it first
 
     // ---- HUMAN manual tackle (space while an opponent has the ball) ----
     // A lunge: if the controlled player is right on the carrier, a good chance to win it.
@@ -1634,6 +1772,7 @@ export class MatchSim {
       // driven kick up the pitch. The keeper never dribbles upfield or shoots.
       if (o.isGK) {
         if(this.useBuildOut&&!this.buildOutReady(o.team))return;
+        if (this.beach) { if (canAct || this.hold > 3.2) this.beachKeeper(owner, o, pressured); return; }
         if (canAct) {
           this.carrying = false;
           // distribution is a philosophy read: a DIRECT side's keeper often skips the
@@ -1843,7 +1982,7 @@ export class MatchSim {
       // Sweep the actual round goal frame before scoring. Use the same placement
       // curve as presentation, so a visible post/bar hit is a real loose-ball rebound.
       if(this.ballIsShot&&this.lastKick.shotHeight>0){
-        const venue=this.goalVenue,k=this.lastKick,a=this.frameFrom,b=this.frameTo;
+        const venue=this.frameVenues[0],k=this.lastKick,a=this.frameFrom,b=this.frameTo;
         const p0=shotProgress(k,prevBY),p1=shotProgress(k,this.ball.y),base=(venue.elevation??0)+.295;
         a.x=venue.x+(prevBX-135)*venue.width/250+shotOffsetAt(k,p0,venue.goalWidth,venue.width);
         a.y=base+shotHeightAt(k,p0,venue.goalHeight);a.z=venue.z+(prevBY-200)*venue.length/380;
@@ -1856,12 +1995,14 @@ export class MatchSim {
           this.ball.height=Math.max(0,hit.y-base);this.frameContact.serial++;this.frameContact.height=this.ball.height;this.frameContact.vy=vy-1.72*dot*hit.ny;this.frameContact.part=hit.part;
           // Surface contact stays anchored to the frame after the ball rebounds.
           this.frameContact.x=hit.x-hit.nx*.19;this.frameContact.y=hit.y-hit.ny*.19;this.frameContact.z=hit.z-hit.nz*.19;
+          // A turned court (the beach court runs east–west): the sweep ran in its own frame; the contact is reported in world space.
+          const yaw=this.goalVenue.yaw;if(yaw){const ox=this.frameContact.x-venue.x,oz=this.frameContact.z-venue.z,c=Math.cos(yaw),s=Math.sin(yaw);this.frameContact.x=venue.x+ox*c+oz*s;this.frameContact.z=venue.z-ox*s+oz*c;}
           this.ballIsShot=false;this.shotIsGoal=false;this.ball.lofted=false;this.loftDur=0;this.ball.target=null;this.ball.intBy=null;this.ballFlight=.12;
           this.msg=hit.part==='post'?'Off the post!':'Off the crossbar!';this.msgT=1.2;return;
         }
       }
       // a lofted ball keeps its pace (less friction while airborne), and arcs up then down
-      const fr = Math.max(0, 1 - (this.loftDur > 0 ? P.friction * 0.35 : P.friction) * dt);
+      const fr = Math.max(0, 1 - (this.loftDur > 0 ? P.friction * 0.35 : this.groundFriction) * dt);
       this.ball.vx *= fr; this.ball.vy *= fr;
       if (this.loftDur > 0) {
         this.loftT += dt;
@@ -1896,7 +2037,10 @@ export class MatchSim {
         const xc = prevBX + (this.ball.x - prevBX) * f; // x where it actually crossed the line
         const shotHeight=this.ballIsShot&&this.lastKick.shotHeight>0?shotHeightAt(this.lastKick,shotProgress(this.lastKick,lineY),this.goalVenue.goalHeight):0;
         const crossHeight=this.ballIsShot?shotHeight:Math.max(shotHeight,this.ball.height);
-        if (Math.abs(xc - 135) < GHALF&&crossHeight+.295+.19<this.goalVenue.goalHeight+.105) {
+        if (Math.abs(xc - 135) < GHALF&&crossHeight+.295+.19<this.goalVenue.goalHeight+.105&&this.directBan) {
+          // Beach: straight in from the keeper's hands, a kick-in or a kick-off does not count — a goal clearance.
+          this.teach("No goal: it went straight in", "In beach soccer a keeper's throw, a kick-in or a kick-off can't score directly; it's a goal clearance");
+        } else if (Math.abs(xc - 135) < GHALF&&crossHeight+.295+.19<this.goalVenue.goalHeight+.105) {
           if (crossedTop) { this.score.gold++; this.msg = "GOAL — Gold!"; this.goalNet = "top"; }
           else { this.score.blue++; this.msg = "GOAL — Blue!"; this.goalNet = "bottom"; }
           this.msgT = 2.4;
@@ -1939,7 +2083,8 @@ export class MatchSim {
         this.ball.lofted = false; this.loftDur = 0;
         this.counterT = 0; this.counterTeam = null; this.lastFrom = null; this.carrying = false;
         this.restart = { kind, t: 1.0 + this.rng() * 0.8, x: sx, y: sy, taker };
-        this.msg = kind === "corner" ? "Corner!" : kind === "goalkick" ? "Goal kick" : "Kick-in";
+        this.msg = kind === "corner" ? "Corner!" : kind === "goalkick" ? (this.beach ? "Goal clearance" : "Goal kick") : "Kick-in";
+        if (this.beach && kind === "kickin") this.teach(`Kick-in for ${team === "gold" ? "Gold" : "Blue"}`, "On sand the taker chooses: kick it in or throw it in, within 4 seconds. It can't go straight in for a goal", "kickin", 35);
         this.msgT = this.restart.t + 0.6; // the feed line covers the WHOLE dead-ball beat — the restart is legible
         return;
       }
@@ -2060,6 +2205,14 @@ export class MatchSim {
           }
         }
         const kept = this.players[claimer].team === this.possession;
+        // Beach: a receiver beyond the last defender who would be offside on grass — the rule that isn't there.
+        if (this.beach && claimVia === "recv" && !cp.isGK && this.passRelease && this.passRelease.target === claimer) {
+          const rd = this.depth(cp.team, cp.y);
+          if (rd >= 230 && rd > this.offsideLine(cp.team) + 6 && rd > this.depth(cp.team, this.passRelease.y) + 6) {
+            this.stats.beachOnside++;
+            this.teach("No offside on sand", "He waited behind the last defender and it's allowed: beach soccer has no offside, so defenders must keep talking", "offside", 40);
+          }
+        }
         if (claimVia === "recv") this.stats.recvOwn++;
         else if (claimVia === "loose") { if (kept) this.stats.looseOwn++; else this.stats.looseOpp++; }
         this.ball.owner = claimer;
@@ -2400,6 +2553,9 @@ export class MatchSim {
             const off = clamp((gkSet ? 19 : 16) - danger * 0.05, 3, gkSet ? 14 : 11);
             tx = clamp(135 + (dxb / L) * off + clamp(dxb * 0.06, -7, 7), 108, 162);
             ty = ogy + (dyb / L) * off;
+            // Beach: with his team on the ball in the other half the keeper steps up as an extra outfield option
+            // (beach keepers start attacks and support them), never further than ~6 m off his line.
+            if (this.beach && p.team === poss && !rst) { const adv = clamp((this.depth(p.team, this.ball.y) - 170) * 0.45, 0, 64); ty += Math.sign(200 - ogy) * adv; tx = 135 + (tx - 135) * 0.6; }
           }
         }
       } else if (p.team === poss) {
@@ -2622,6 +2778,7 @@ export class MatchSim {
       // burst: the keeper springs at a loose ball within reach (claims, smothers, spills)
       if (rm.burst > 1 && liveBall && dist(p.x, p.y, this.ball.x, this.ball.y) < M.keeperBurst) maxV *= rm.burst;
       if (!isUser) maxV *= this.legsMul; // match-arc legs (AI only — never the human)
+      maxV *= this.legs; // sand (beach) — 1 on every other surface
       let jockeying = false;
       if (isUser) {
         jockeying = !!(this.userJockey && carrier && carrier.team !== this.userTeam);

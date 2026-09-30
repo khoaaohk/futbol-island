@@ -11,7 +11,10 @@ const assert=require('node:assert/strict');
   await page.evaluate(()=>{const f=window.__fi2;f.rideRef.current='walk';f.flight.height=0;f.location.x=86;f.location.z=-54.5;});
   await page.waitForTimeout(1800);
   const snapshot=()=>page.evaluate(()=>window.__fi2.islandNpcs.entries.filter(e=>e.freestyle).map(e=>({id:e.id,x:e.position.x,z:e.position.z,ball:e.freestyle.ball.position.toArray(),phase:e.freestyle.motion.juggle})));
-  const a=await snapshot();assert.equal(a.length,4);assert(a.every(e=>e.x>78&&e.x<94&&e.z>-65&&e.z<-53));await page.waitForTimeout(400);const b=await snapshot();assert(b.some((e,i)=>e.ball.some((v,j)=>Math.abs(v-a[i].ball[j])>.05)));
+  // Freestylers island-wide (Sep 29 2026): the court's four (courtFreestylers.ts) plus Lua and Tavi on Coral Cay's beach
+  // (coralCayNpcs.ts) and Ollie on the East Pier (eastPierNpcs.ts). The court checks below use the court's four only.
+  const all=await snapshot();assert.deepEqual(all.map(e=>e.id).sort(),['cay-lua','cay-tavi','court-iza','court-kei','court-nico','court-zuri','pier-ollie']);
+  const a=all.filter(e=>e.id.startsWith('court-'));assert.equal(a.length,4);assert(a.every(e=>e.x>78&&e.x<94&&e.z>-65&&e.z<-53));await page.waitForTimeout(400);const b=(await snapshot()).filter(e=>e.id.startsWith('court-'));assert(b.some((e,i)=>e.ball.some((v,j)=>Math.abs(v-a[i].ball[j])>.05)));
   await page.screenshot({path:`/tmp/court-${mobile?'phone':'desktop'}-day.png`});
   await page.evaluate(()=>window.__fi2.world.updateTrafficSignals('night'));await page.waitForTimeout(50);
   assert(await page.evaluate(()=>window.__fi2.scene.getObjectByName('night-light-pools').visible));

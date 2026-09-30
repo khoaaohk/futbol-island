@@ -1,0 +1,314 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "herat": {
+      "src": "/voice/books/nadim/herat.m4a?v=coach-bella-1",
+      "duration": 38.2,
+      "scriptSha256": "c43bedcbe71cba20609c90f6ed153859270117d859ea82ee64e05e327778cc38",
+      "cues": [
+        {
+          "text": "A girl from Herat",
+          "start": 0.0,
+          "duration": 1.975
+        },
+        {
+          "text": "Nadia Nadim was born in 1988 in Herat, a city in Afghanistan.",
+          "start": 1.975,
+          "duration": 5.85
+        },
+        {
+          "text": "When she was a young girl, her country was at war.",
+          "start": 7.825,
+          "duration": 3.65
+        },
+        {
+          "text": "Her father was an army general, and he was killed in the war.",
+          "start": 11.475,
+          "duration": 4.3
+        },
+        {
+          "text": "Her mother, Hamida, decided the family had to leave to stay safe.",
+          "start": 15.775,
+          "duration": 4.925
+        },
+        {
+          "text": "Nadia, her mother and her four sisters could only take what they could carry.",
+          "start": 20.7,
+          "duration": 5.15
+        },
+        {
+          "text": "Pack the suitcase.",
+          "start": 25.85,
+          "duration": 2.025
+        },
+        {
+          "text": "A very long journey was about to begin.",
+          "start": 27.875,
+          "duration": 3.2
+        },
+        {
+          "text": "When things are scary, stay close to the people who look after you. On the pitch, stay close to your team too.",
+          "start": 31.075,
+          "duration": 7.125
+        }
+      ]
+    },
+    "journey": {
+      "src": "/voice/books/nadim/journey.m4a?v=coach-bella-1",
+      "duration": 36.6,
+      "scriptSha256": "f6145d5f6c067972199ea2cd8587340fa9f96012bdcdd5d049267b37bdb6dc33",
+      "cues": [
+        {
+          "text": "The long journey",
+          "start": 0.0,
+          "duration": 1.85
+        },
+        {
+          "text": "First the family travelled to Pakistan.",
+          "start": 1.85,
+          "duration": 3.275
+        },
+        {
+          "text": "From there they flew to Italy.",
+          "start": 5.125,
+          "duration": 2.45
+        },
+        {
+          "text": "Then they hid in the back of a truck for a long, dark ride north.",
+          "start": 7.575,
+          "duration": 4.55
+        },
+        {
+          "text": "They hoped to reach the United Kingdom, where they had family.",
+          "start": 12.125,
+          "duration": 4.15
+        },
+        {
+          "text": "But the truck took them to Denmark instead!",
+          "start": 16.275,
+          "duration": 3.05
+        },
+        {
+          "text": "Drive the truck along the road.",
+          "start": 19.325,
+          "duration": 2.45
+        },
+        {
+          "text": "Nadia was about eleven, in a country where she did not know the language.",
+          "start": 21.775,
+          "duration": 4.975
+        },
+        {
+          "text": "Denmark took the family in as refugees.",
+          "start": 26.75,
+          "duration": 3.5
+        },
+        {
+          "text": "Plans change. Good players adapt to the game in front of them, not the game they expected.",
+          "start": 30.25,
+          "duration": 6.3
+        }
+      ]
+    },
+    "nextdoor": {
+      "src": "/voice/books/nadim/nextdoor.m4a?v=coach-bella-1",
+      "duration": 37.2,
+      "scriptSha256": "3044b14b36fed26833adb820e4bbd105826ab7ed918b4fc1369f8905b49e8f3e",
+      "cues": [
+        {
+          "text": "The pitch next door",
+          "start": 0.0,
+          "duration": 1.975
+        },
+        {
+          "text": "The family was moved to a refugee centre near the city of Aalborg.",
+          "start": 1.975,
+          "duration": 5.075
+        },
+        {
+          "text": "Right next to it was a football club, and there Nadia saw girls playing football on the fields.",
+          "start": 7.05,
+          "duration": 6.15
+        },
+        {
+          "text": "She wanted to play too.",
+          "start": 13.2,
+          "duration": 2.025
+        },
+        {
+          "text": "She started kicking a ball every day, and she got training at the centre.",
+          "start": 15.225,
+          "duration": 4.925
+        },
+        {
+          "text": "Tap the ball three times.",
+          "start": 20.15,
+          "duration": 2.275
+        },
+        {
+          "text": "At twelve she joined a small local club in Aalborg.",
+          "start": 22.425,
+          "duration": 4.125
+        },
+        {
+          "text": "Her football story in Denmark had begun.",
+          "start": 26.55,
+          "duration": 3.2
+        },
+        {
+          "text": "Watch good players closely, then practise what you saw. Every touch you practise makes the next one easier.",
+          "start": 29.75,
+          "duration": 7.375
+        }
+      ]
+    },
+    "wait": {
+      "src": "/voice/books/nadim/wait.m4a?v=coach-bella-1",
+      "duration": 42.3,
+      "scriptSha256": "141b021940b21a1f3bc27683d683c06782589684e110698e2d2c8822039e92d6",
+      "cues": [
+        {
+          "text": "Waiting to play for Denmark",
+          "start": 0.0,
+          "duration": 2.4
+        },
+        {
+          "text": "Nadia became a Danish citizen in 2008.",
+          "start": 2.4,
+          "duration": 3.95
+        },
+        {
+          "text": "But a FIFA rule said she still had to wait before she could play for the national team.",
+          "start": 6.35,
+          "duration": 5.675
+        },
+        {
+          "text": "The Danish football association asked FIFA to look at her case again.",
+          "start": 12.025,
+          "duration": 5.0
+        },
+        {
+          "text": "FIFA made an exception, and in 2009 she played her first game for Denmark, at the Algarve Cup.",
+          "start": 17.025,
+          "duration": 7.25
+        },
+        {
+          "text": "Stamp the team sheet.",
+          "start": 24.275,
+          "duration": 2.075
+        },
+        {
+          "text": "She was the first naturalised Dane to play for a Denmark senior national team.",
+          "start": 26.35,
+          "duration": 5.725
+        },
+        {
+          "text": "Later, she played more than one hundred games for her new country.",
+          "start": 32.075,
+          "duration": 4.525
+        },
+        {
+          "text": "Waiting is hard. Keep training while you wait, so you are ready when your chance comes.",
+          "start": 36.6,
+          "duration": 5.625
+        }
+      ]
+    },
+    "final": {
+      "src": "/voice/books/nadim/final.m4a?v=coach-bella-1",
+      "duration": 38.6,
+      "scriptSha256": "c0a91a05c1b7509b823a7f88238f7355994551569173f1213ce785b9ae8c352b",
+      "cues": [
+        {
+          "text": "The penalty in the final",
+          "start": 0.0,
+          "duration": 2.15
+        },
+        {
+          "text": "At the European Championship in 2017, Nadia helped Denmark on a brilliant run.",
+          "start": 2.15,
+          "duration": 6.5
+        },
+        {
+          "text": "In the quarter-final she scored the equaliser against Germany, the favourites, and Denmark won 2\u20131.",
+          "start": 8.65,
+          "duration": 7.075
+        },
+        {
+          "text": "In the final against the Netherlands, Denmark were given a penalty.",
+          "start": 15.725,
+          "duration": 4.675
+        },
+        {
+          "text": "Nadia stepped up and scored it.",
+          "start": 20.4,
+          "duration": 2.475
+        },
+        {
+          "text": "Kick the penalty.",
+          "start": 22.875,
+          "duration": 1.95
+        },
+        {
+          "text": "Denmark lost the final 4\u20132, but the team had reached the final together, and Nadia had been brave from the spot.",
+          "start": 24.825,
+          "duration": 7.85
+        },
+        {
+          "text": "Before a penalty, pick your spot early, take one slow breath, and don\u2019t change your mind.",
+          "start": 32.675,
+          "duration": 5.85
+        }
+      ]
+    },
+    "doctor": {
+      "src": "/voice/books/nadim/doctor.m4a?v=coach-bella-1",
+      "duration": 38.0,
+      "scriptSha256": "82b98515917604bd93be79f2a99cd7a71b8f1bcabee21d7739bf3982a59bac11",
+      "cues": [
+        {
+          "text": "Doctor Nadia",
+          "start": 0.0,
+          "duration": 1.875
+        },
+        {
+          "text": "While she was still a professional footballer, Nadia studied medicine at Aarhus University.",
+          "start": 1.875,
+          "duration": 6.15
+        },
+        {
+          "text": "She kept studying during the football season, even when she was playing far from Denmark.",
+          "start": 8.025,
+          "duration": 5.675
+        },
+        {
+          "text": "In January 2022 she qualified as a doctor.",
+          "start": 13.7,
+          "duration": 4.55
+        },
+        {
+          "text": "Open the doctor\u2019s bag.",
+          "start": 18.25,
+          "duration": 2.25
+        },
+        {
+          "text": "She speaks many languages, and in 2019 UNESCO named her a champion for girls\u2019 and women\u2019s education.",
+          "start": 20.5,
+          "duration": 7.55
+        },
+        {
+          "text": "She says that all women should have the same chances.",
+          "start": 28.05,
+          "duration": 3.7
+        },
+        {
+          "text": "You can be more than one thing. Work hard at school and at football: both make you stronger.",
+          "start": 31.75,
+          "duration": 6.25
+        }
+      ]
+    }
+  }
+}

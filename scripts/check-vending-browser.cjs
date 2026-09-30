@@ -14,7 +14,8 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
   const overlap=(a,b,m=0)=>Math.abs(a.x-b.x)<(a.w+b.w)/2+m&&Math.abs(a.z-b.z)<(a.d+b.d)/2+m;
   const issues=[];
   // Machines set with their back against a building wall (0.2 m gap, no z-fighting) keep a tighter clearance.
-  const WALL_BACKED=new Set(['market']);
+  // Sep 29 2026: both Konbini machines and their drink machines stand flush against the shopfront (user request).
+  const WALL_BACKED=new Set(['market','plaza','caykonbini','drinksplaza','drinkscay']);
   for(const [i,m] of d.machines.entries()){
    const fp=d.own[i],stand={x:m.x+Math.sin(m.yaw)*2.2,z:m.z+Math.cos(m.yaw)*2.2,w:1.8,d:1.8};
    for(const r of d.roads){if(overlap(fp,r,.3))issues.push(`${m.id} on a road`);if(overlap(stand,r))issues.push(`${m.id} stand zone on a road`);}
@@ -30,7 +31,9 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
   const cell=(x,z)=>Math.round((z-minZ)/S)*W+Math.round((x-minX)/S),seen=new Uint8Array(W*H),queue=[cell(95,-35)];seen[queue[0]]=1;
   for(let q=0;q<queue.length;q++){const c=queue[q],x=c%W,z=(c-x)/W;for(const [dx,dz] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,nz=z+dz;if(nx<0||nz<0||nx>=W||nz>=H)continue;const n=nz*W+nx;if(!seen[n]&&!blocked[n]){seen[n]=1;queue.push(n);}}}
   if(process.env.DEBUG)console.log('start',blocked[queue[0]],'reached',queue.length,'bad',[...d.obstacles,...d.walls].filter(o=>!Number.isFinite(o.x+o.z+o.w+o.d)).length);
-  const reach={};for(const m of d.machines){if(m.y>0){reach[m.id]='rooftop (ramp)';continue;}const c=cell(m.x+Math.sin(m.yaw)*2.4,m.z+Math.cos(m.yaw)*2.4);reach[m.id]=!!seen[c];if(!seen[c])issues.push(`${m.id} front not reachable on foot`);}
+  const reach={};for(const m of d.machines){if(m.y>0){reach[m.id]='rooftop (ramp)';continue;}
+   // Coral Cay machines (Sep 29 2026) are beyond this main-island grid; tests/vending-machines.cjs checks them on isOnCayLand.
+   if(m.x>=228){reach[m.id]='coral cay';continue;}const c=cell(m.x+Math.sin(m.yaw)*2.4,m.z+Math.cos(m.yaw)*2.4);reach[m.id]=!!seen[c];if(!seen[c])issues.push(`${m.id} front not reachable on foot`);}
   // Draw calls at the Island Square machine, with and without the machines, and the idle controller cost.
   const perf=await page.evaluate(()=>{const f=window.__fi2,T=f.camera.position.constructor;const x=89.5,z=-49;f.location.x=x+1;f.location.z=z+3;f.camera.position.set(x+18,23,z+30);f.camera.lookAt(x,1,z);f.camera.updateMatrixWorld();
    const root=f.scene.getObjectByName('vending-machines');const calls=()=>{f.renderer.render(f.scene,f.camera);return f.renderer.info.render.calls;};

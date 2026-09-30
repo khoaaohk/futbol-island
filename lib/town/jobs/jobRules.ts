@@ -52,8 +52,9 @@ export function stepRun(r:JobRun,p:Vec,dt:number,floor:(x:number,z:number)=>numb
   const item=d.task.items[r.step];if(!item)return ev;
   if(r.carrying<0){if(d.deliver&&reach(d.deliver,1.8)){r.carrying=r.step;r.wrong=-1;r.note=item.clue;ev.push({type:'pickup',index:r.step});}}
   else d.targets.forEach((t,i)=>{if(r.carrying<0||!reach(t))return;
-   if(i===item.slot){r.got[i]=true;r.carrying=-1;r.wrong=-1;r.note=`Shirt ${item.number} is on the ${d.task!.type==='sort'?d.task!.slots[i].toLowerCase():''} peg!`;ev.push({type:'return',index:i});r.step++;if(r.step>=taskTotal(d)){r.phase='done';ev.push({type:'done'});}}
-   else if(r.wrong!==i){r.wrong=i;r.note=`That's the ${(d.task as {slots:string[]}).slots[i].toLowerCase()} peg. ${item.clue} Follow the arrow.`;ev.push({type:'wrong',index:i});}});
+   const task=d.task as {slots:string[];slotNoun?:string};
+   if(i===item.slot){r.got[i]=true;r.carrying=-1;r.wrong=-1;r.note=item.label?`${item.label} goes in the ${task.slots[i].toLowerCase()} ${task.slotNoun??'crate'}!`:`Shirt ${item.number} is on the ${task.slots[i].toLowerCase()} peg!`;ev.push({type:'return',index:i});r.step++;if(r.step>=taskTotal(d)){r.phase='done';ev.push({type:'done'});}}
+   else if(r.wrong!==i){r.wrong=i;r.note=`That's the ${task.slots[i].toLowerCase()} ${task.slotNoun??'peg'}. ${item.clue} Follow the arrow.`;ev.push({type:'wrong',index:i});}});
  }
  else if(d.kind==='offside'){
   if(r.phase==='work'){if(reach(d.targets[0])){r.phase='watch';r.clock=0;r.note='';ev.push({type:'phase'});}}
@@ -109,7 +110,8 @@ export function runAction(r:JobRun,id:string):JobEvent[]{
 /** The HUD instruction line for task jobs ('' = use the job's howTo). */
 export function runHint(r:JobRun):string{
  const d=r.def;
- if(d.task?.type==='sort'){const item=d.task.items[r.step];if(!item)return '';return r.note&&(r.carrying>=0||r.wrong>=0)?r.note:r.carrying>=0?item.clue:r.step===0?'Go to the kit hamper and take the first shirt.':`${r.note} Take the next shirt from the hamper.`;}
+ if(d.task?.type==='sort'){const item=d.task.items[r.step];if(!item)return '';const t=d.task,source=t.source,noun=t.itemNoun??'shirt';
+  return r.note&&(r.carrying>=0||r.wrong>=0)?r.note:r.carrying>=0?item.clue:r.step===0?`Go to the ${source??'kit hamper'} and take the first ${noun}.`:`${r.note} Take the next ${noun} from the ${source??'hamper'}.`;}
  if(d.kind==='offside'){if(r.phase==='work')return 'Walk to your touchline spot (follow the arrow).';const clip=offsideClip(r);
   if(r.phase==='watch')return `${clip.title}: watch the attacker with the white ring when the pass is played…`;if(r.phase==='call')return `${clip.title}: offside or not when the pass was played?`;return r.note;}
  if(d.kind==='pump'){if(r.phase==='work')return 'Walk to the pump station (follow the arrow).';return r.note||`Ball ${r.step+1}: ${r.pressure.toFixed(2)} atm. Pump it into the green zone (0.6–1.1).`;}

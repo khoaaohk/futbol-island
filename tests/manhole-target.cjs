@@ -5,7 +5,9 @@
 // Only the start position is set by script (22 m out); every approach is flown with input. usage: node tests/manhole-target.cjs [outDir]
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),ts=require('typescript');
 let chromium;try{({chromium}=require('playwright'));}catch{({chromium}=require('/Users/khoado/.npm/_npx/e41f203b7505f1fb/node_modules/playwright'));}
-const m={exports:{}};new Function('exports','module','require',ts.transpileModule(fs.readFileSync('lib/town/coinQuest.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText)(m.exports,m,()=>({}));
+// coinQuest.ts imports coralCayBalls.ts → coralCay.ts (Sep 29 2026), so resolve relative imports; anything else is a stub.
+const loaded=new Map();function load(file){file=path.resolve(file);if(loaded.has(file))return loaded.get(file);const mod={exports:{}};loaded.set(file,mod);new Function('exports','module','require',ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText)(mod.exports,mod,id=>id.startsWith('.')?load(path.resolve(path.dirname(file),id+'.ts')).exports:({}));return mod;}
+const m=load('lib/town/coinQuest.ts');
 const COVERS=m.exports.COIN_QUEST.filter(s=>s.manhole),out=process.argv[2]||path.join(require('node:os').tmpdir(),'manhole-target');fs.mkdirSync(out,{recursive:true});
 const ANGLES=[0,Math.PI/2,Math.PI,Math.PI*1.5];
 // Screen up on the island is world (-16,-33); screen right is (33,-16) (the fixed follow camera).

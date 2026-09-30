@@ -42,8 +42,13 @@ async function economyPass(){
  // Learning coins: once ever, a later perfect run cannot top a lesson up; the path reward fits one run (cap 75).
  {const {w}=make();const notes=[];const learn=createLearnCoins({creditOnce:w.creditOnce,notify:d=>notes.push(d)});
   assert.equal(await learn.pay('quiz','7v7:scan','You passed ‘Scanning’'),12);assert.equal(await learn.pay('quiz','7v7:scan','You passed ‘Scanning’',true),0,'first completion decides');
-  assert.equal(await learn.pay('path','7v7','You finished the 7v7 path'),75);assert.equal(await learn.pay('ball','b1','You found a hidden ball'),5);assert.equal(await learn.pay('story','s1','x'),10);assert.equal(await learn.pay('journey','j:0','x'),8);assert.equal(await learn.pay('explore','e','x'),5);
-  assert.equal(notes.length,6);assert.equal(notes[0].amount,12);assert.equal(w.load().byGame.learn,115);}
+  assert.equal(await learn.pay('path','7v7','You finished the 7v7 path'),75);assert.equal(await learn.pay('ball','b1','You found a hidden ball'),10,'hidden ball 5 → 10 (economy update 29 Sep 2026)');assert.equal(await learn.pay('story','s1','x'),10);assert.equal(await learn.pay('journey','j:0','x'),8);assert.equal(await learn.pay('explore','e','x'),5);
+  assert.equal(notes.length,6);assert.equal(notes[0].amount,12);assert.equal(w.load().byGame.learn,120);}
+ // 29 Sep 2026: the ball raise is forward-only. A ball paid 5 under the old value keeps its 5 and is never topped up or cut.
+ {const old={version:1,spends:{},runs:{'learn:ball:b0':{game:'learn',paid:5,reason:'Learning · old ball',at:1}},best:{},attempts:{},visits:{},packs:[]};
+  const {w}=make(undefined,old);const learn=createLearnCoins({creditOnce:w.creditOnce,notify:()=>{}});assert.equal(w.load().balance,5,'old ball coins kept');
+  assert.equal(await learn.pay('ball','b0','x'),0,'an already-paid ball never pays again');assert.equal(w.load().balance,5);
+  assert.equal(await learn.pay('ball','b1','x'),10,'a newly found ball pays the new 10');assert.equal(w.load().balance,15);}
  // Pass Puzzles: first solve 5 + stars, new stars only after that, repeats pay 0.
  {const {w}=make();assert.equal(ARCADE_COIN_CAPS.puzzle,8);assert.equal(await w.recordPuzzleBest('p1',3,'a1','v1'),8);assert.equal(await w.recordPuzzleBest('p2',1,'a2','v1'),6);assert.equal(await w.recordPuzzleBest('p2',2,'a3','v1'),1);
   for(let i=0;i<4;i++)assert.equal(await w.recordPuzzleBest('p1',3,'r'+i,'v1'),0,'a repeat pays 0');}

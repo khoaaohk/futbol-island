@@ -1,0 +1,105 @@
+@font-face{font-family:KonbiniBrush;src:url('/stories/films/assets/IslandBrush-Regular.ttf') format('truetype');font-display:swap}
+/* Konbini interior UI. Follows the island design system: gold pill buttons (--btn-* tokens), the store-enter-prompt pill,
+ * IslandBrush headings, and (Sep 30 2026, user: "match more with the rest of the app style: colorful texture background") the
+ * app's textured card look for the product card and the panels: a colourful coast frame (the NpcConversation / Fishbook
+ * conversation-coast art under the entry grain) around cream grain paper (the Backpack / CharacterCustomizer cards), one
+ * palette per store. Pure CSS backgrounds (border-box / padding-box), no blur, no animation loops. */
+.root{--k-coast:url('/stories/paths/conversation-coast.svg');--k-coast-base:#2e806d;--k-paper:#fff4dc;--k-ink:#244d40;--k-soft:#3f6559;--k-accent:#9a6b1f;--k-teal:#1f7f78}
+.root[data-shop=cay]{--k-coast:url('/stories/paths/playbook-coast.svg');--k-coast-base:#70ceb0;--k-paper:#fff6e6;--k-accent:#a4551f;--k-teal:#18798a}
+.root{--control-bottom:calc(28px + env(safe-area-inset-bottom,0px));position:fixed;inset:0;background:#e8f3f0;color:#1f3d3a;font-family:var(--font-body,Arial,sans-serif);overflow:hidden}
+.root[data-shop=cay]{background:#fbefd9}
+.canvas{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-user-drag:none;width:100%;height:100%;display:block;touch-action:none;outline:none}
+.header{position:absolute;z-index:3;left:0;right:0;top:0;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:calc(20px + env(safe-area-inset-top,0px)) calc(24px + env(safe-area-inset-right,0px)) 12px calc(24px + env(safe-area-inset-left,0px));pointer-events:none}
+.header>*{pointer-events:auto}
+@media(max-width:600px),(pointer:coarse){.header{padding:calc(16px + env(safe-area-inset-top,0px)) calc(18px + env(safe-area-inset-right,0px)) 10px calc(18px + env(safe-area-inset-left,0px))}}
+.headerActions{display:flex;gap:8px;align-items:center}
+/* Coin balance (user, Sep 30 2026: "change this to not look like a button"): the island HUD's cream coin card (IslandJobs
+ * .wallet + .coin, as on the vending/drink machine faces), placed in the header row; read-only: no press edge, no pointer. */
+.hudWallet.hudWallet{position:static;min-height:var(--btn-height,44px);box-sizing:border-box;cursor:default;user-select:none;box-shadow:0 2px 0 #193f3726,0 6px 14px #0f2a2f26}
+.prompt{z-index:4;visibility:hidden}
+.error{position:absolute;inset:32% 12%;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;border-radius:20px;background:#15252fe6;color:#fff1d3}
+.error button,.secondary,.buy,.tabs button,.check button{min-height:var(--btn-height,44px);padding:8px 16px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:var(--btn-radius,999px);background:var(--btn-gold-bright,#f5c45e) var(--btn-grain) center/128px 128px;color:var(--btn-ink,#244d40);box-shadow:0 4px 0 var(--btn-gold-bright-edge,#bf954a);font:inherit;font-weight:800;font-size:14px;cursor:pointer;white-space:nowrap}
+.error button:active,.secondary:active,.buy:active,.tabs button:active,.check button:active{translate:0 var(--btn-press,2px);box-shadow:0 1px 0 var(--btn-gold-bright-edge,#bf954a)}
+.buy:disabled,.check button:disabled{opacity:1;cursor:default;background:#e6dcc3 var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;color:#5a665d;box-shadow:0 3px 0 #c4b58f}
+.panelWrap{position:fixed;inset:0;z-index:10;display:grid;place-items:center;background:#102a2b66;padding:calc(76px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px))}
+.panel{position:relative;width:min(520px,100%);max-height:100%;overflow:auto;overscroll-behavior:contain;box-sizing:border-box;border:12px solid transparent;border-radius:30px;padding:18px 18px 18px;color:var(--k-ink);
+ background:var(--btn-grain) center/160px padding-box,linear-gradient(var(--k-paper),var(--k-paper)) padding-box,var(--btn-grain) center/160px border-box,var(--k-coast) center/100% 100% border-box,var(--k-coast-base) border-box;box-shadow:0 0 0 3px var(--btn-rim,#fff2cd),0 9px 0 #193f3733,0 18px 50px #0c1f2244;background-blend-mode:soft-light,normal,soft-light,normal,normal}
+.panel h2{font:normal 30px/1.05 KonbiniBrush,IslandBrush,Georgia,serif;margin:0 90px 8px 0;color:var(--k-ink)}
+.panel h3{margin:16px 0 6px;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--k-accent)}
+.close{position:absolute!important;top:14px;right:14px}
+.lesson{font-size:15px;line-height:1.45;margin:6px 0}
+.small{font-size:12px;color:var(--k-soft);margin:10px 0 0;font-weight:700}
+.list{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.item{display:flex;align-items:center;gap:10px;background:#ead6a6 var(--btn-grain) center/160px;background-blend-mode:soft-light;border:2px solid #fff2cd;border-radius:16px;padding:8px 10px}
+.item>div{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.item b{font-size:14px}.item small{font-weight:700;color:var(--k-accent);margin-left:4px}.item span{font-size:12px;color:var(--k-soft)}.item em{font-size:11px;font-style:normal;font-weight:800;color:var(--k-teal)}
+.gearArt{width:52px;height:52px;display:grid;place-items:center;flex:none}.packArt{width:34px}
+.sources{margin:6px 0;font-size:12px;color:var(--k-soft)}.sources summary{cursor:pointer;color:var(--k-accent);font-weight:800}.sources a{color:var(--k-teal)}
+.covers{list-style:none;margin:10px 0 0;padding:0;display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.covers button{width:100%;min-height:128px;border:3px solid #fff1d3;border-radius:12px;padding:10px;text-align:left;display:flex;flex-direction:column;gap:4px;cursor:pointer;font:inherit;box-shadow:0 4px 0 #0c1f22}
+.covers small{font-size:10px;font-weight:900;letter-spacing:.1em}.covers b{font:normal 20px/1.05 KonbiniBrush,IslandBrush,Georgia,serif}.covers span{font-size:11px;opacity:.85;margin-top:auto}.covers em{font-style:normal;font-size:11px;font-weight:900}
+.magazine header{border-radius:14px;padding:12px 14px;margin-right:88px}.magazine header small{font-size:11px;font-weight:900;letter-spacing:.08em}.magazine header h2{margin:4px 0 0;color:inherit}
+.magazine ol{font-size:15px;line-height:1.5;padding-left:20px}
+.check{background:#ead6a6 var(--btn-grain) center/160px;background-blend-mode:soft-light;border:2px solid #fff2cd;border-radius:16px;padding:12px;margin:8px 0}
+.check button{white-space:normal;text-align:left;max-width:100%}.check>div{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.check button[data-state=right]{background:#9fe0d6;opacity:1}.check button[data-state=wrong]{background:#f6a98f;opacity:1}.check p{margin:8px 0 0;font-weight:700}
+.clerk{display:flex;gap:8px;align-items:baseline}.clerk b{font:normal 28px KonbiniBrush,IslandBrush,Georgia,serif}.clerk span{font-size:12px;color:var(--k-accent)}
+.speech{position:relative;background:#fff1d3;color:#1f3d3a;border-radius:16px;padding:12px 14px;font-size:15px;line-height:1.4;margin:8px 0}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}.tabs button{min-height:38px;padding:6px 12px;font-size:13px;background:var(--btn-cream,#fff1d3);color:var(--k-ink);box-shadow:0 3px 0 #193f3733}
+.tabs button[aria-selected=true]{background:var(--btn-gold-bright,#f5c45e);color:var(--btn-ink,#244d40)}
+.stamps{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.stamps span{aspect-ratio:1;display:grid;place-items:center;border:2px dashed #244d4066;border-radius:50%;font-size:11px;font-weight:900;color:#244d40a0;background:#ead6a6aa}
+.stamps span[data-on]{border-style:solid;background:#f07a5f;color:#fff1d3;font-size:22px}.stamps p{grid-column:1/-1}
+.message{margin:12px 0 0;padding:10px 12px;border-radius:12px;background:#f3da98;color:#1f3d3a;font-weight:800}
+.receipt{position:fixed;z-index:14;right:calc(16px + env(safe-area-inset-right,0px));top:calc(78px + env(safe-area-inset-top,0px));width:190px;display:flex;flex-direction:column;gap:3px;padding:12px 14px 16px;background:#fffdf5;color:#1f3d3a;font:12px/1.3 monospace;border-radius:4px 4px 0 0;box-shadow:0 6px 18px #0006;animation:print .8s steps(8,end) both;clip-path:polygon(0 0,100% 0,100% 94%,90% 100%,80% 94%,70% 100%,60% 94%,50% 100%,40% 94%,30% 100%,20% 94%,10% 100%,0 94%)}
+.receipt b{font-size:14px;text-align:center}.receipt i{font-style:normal;text-align:center;margin-top:4px}
+@keyframes print{from{transform:translateY(60%);opacity:.2}to{transform:none;opacity:1}}
+.toast{position:fixed;z-index:13;left:50%;top:calc(84px + env(safe-area-inset-top,0px));transform:translateX(-50%);max-width:min(420px,calc(100% - 32px));margin:0;padding:10px 16px;border-radius:16px;background:#102a2bea;color:#fff1d3;font-weight:700;font-size:14px;text-align:center;box-shadow:0 8px 24px #0c1f2244}
+@media(max-width:600px){.panel h2{font-size:26px}.covers b{font-size:17px}.panelWrap{padding-top:calc(70px + env(safe-area-inset-top,0px))}}
+@media(prefers-reduced-motion:reduce){.receipt{animation:none}}
+
+/* ---- In-world shelf zoom (the vending pattern): section pill, ≥44 px product targets over the real 3D shelf, arrows, tag card ---- */
+.section{flex:0 1 auto;min-width:0;text-align:center;align-self:center;margin:0 auto;padding:8px 14px;border-radius:999px;background:#102a2bd9;color:#fff1d3;font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+.slots{position:absolute;inset:0;z-index:2;pointer-events:none}
+.slot{position:absolute;pointer-events:auto;border:0;border-radius:14px;background:transparent;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.slot:hover,.slot:focus-visible{outline:3px solid #ffd35ccc;outline-offset:-2px;background:#ffffff1f}
+.slot[data-selected]{outline:3px solid #ffd35c;outline-offset:-2px;background:#ffd35c26;box-shadow:0 0 0 6px #ffd35c33}
+.arrow{position:absolute;z-index:3;top:42%;width:48px;height:48px;display:grid;place-items:center;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:999px;background:var(--btn-gold-bright,#f5c45e);color:var(--btn-ink,#244d40);box-shadow:0 4px 0 var(--btn-gold-bright-edge,#bf954a);cursor:pointer}
+.arrow:disabled{opacity:.35;cursor:default}.prev{left:calc(24px + env(safe-area-inset-left,0px))}.next{right:calc(24px + env(safe-area-inset-right,0px))}
+.next svg{transform:none}
+.card{position:absolute;z-index:4;left:50%;translate:-50% 0;bottom:calc(16px + env(safe-area-inset-bottom,0px));width:min(560px,calc(100% - 32px));max-height:40%;overflow:auto;overscroll-behavior:contain}
+.tag{box-sizing:border-box;border:9px solid transparent;border-radius:26px;color:var(--k-ink);padding:12px 14px;animation:tagFlip .28s ease-out both;
+ background:var(--btn-grain) center/160px padding-box,linear-gradient(var(--k-paper),var(--k-paper)) padding-box,var(--btn-grain) center/160px border-box,var(--k-coast) center/100% 100% border-box,var(--k-coast-base) border-box;box-shadow:0 0 0 3px var(--btn-rim,#fff2cd),0 7px 0 #193f3733,0 12px 30px #0c1f2233;background-blend-mode:soft-light,normal,soft-light,normal,normal}
+@keyframes tagFlip{from{transform:perspective(600px) rotateX(-70deg);opacity:0}to{transform:none;opacity:1}}
+.tag p{margin:6px 0 0;font-size:14px;line-height:1.4}.tag em{font-style:normal;font-weight:800;color:var(--k-teal)}
+.tagHead{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px}.tagHead b{font:normal 24px/1.1 KonbiniBrush,IslandBrush,Georgia,serif;color:var(--k-ink)}.tagHead small{color:var(--k-accent);font-weight:800}
+.price,.look{margin-left:auto;padding:3px 11px;border:2px solid var(--btn-rim,#fff2cd);border-radius:999px;background:var(--btn-gold-bright,#f9d665) var(--btn-grain) center/128px 128px;color:var(--k-ink);font-weight:900;font-size:14px;box-shadow:0 2px 0 var(--btn-gold-bright-edge,#aa8b3e)}
+.look{background:var(--btn-mint,#beded1) var(--btn-grain) center/128px 128px;box-shadow:0 2px 0 var(--btn-mint-edge,#8bac9d);font-size:12px}
+.note{color:var(--k-soft)}
+.tagActions{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:10px}.tagActions .small{margin:0}
+@media(max-width:600px){.section{font-size:12px;padding:7px 10px}.card{max-height:44%}.tagHead b{font-size:21px}.arrow{top:36%}}
+@media(max-height:520px) and (orientation:landscape){.card{left:auto;right:16px;translate:none;width:min(360px,45%);max-height:70%;bottom:12px}.arrow{top:40%}}
+@media(prefers-reduced-motion:reduce){.tag{animation:none}}
+
+/* Review B2: the joystick's bottom anchor (the Arcade room defines the same). */
+@media(orientation:landscape){.root{--control-bottom:calc(16px + env(safe-area-inset-bottom,0px))}}
+/* Review items 1–2, 9–10, 28: greeting bubble, flying coins, wallet count-down, stamp pop. DOM/compositor only. */
+.greeting{position:fixed;z-index:6;top:calc(84px + env(safe-area-inset-top,0px));left:50%;translate:-50% 0;max-width:calc(100% - 32px);margin:0;padding:10px 16px;border-radius:18px;background:#fff1d3;color:#1f3d3a;font-weight:700;font-size:15px;box-shadow:0 6px 18px #0c1f2233;animation:bubble 3.2s ease both;pointer-events:none;white-space:nowrap}
+.greeting span{margin-left:8px;color:#2f8f8a;font-weight:900}
+@keyframes bubble{0%{opacity:0;transform:translateY(-8px) scale(.9)}10%{opacity:1;transform:none}85%{opacity:1}100%{opacity:0}}
+.coins{position:fixed;inset:0;z-index:15;pointer-events:none}
+.coins i{position:absolute;right:calc(70px + env(safe-area-inset-right,0px));top:calc(40px + env(safe-area-inset-top,0px));width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff3b0,#f5c45e 55%,#bf954a);box-shadow:0 1px 0 #8a6a2a;animation:coinFly .7s cubic-bezier(.4,0,.6,1) both}
+@keyframes coinFly{0%{transform:translate(0,0) scale(1);opacity:1}60%{opacity:1}100%{transform:translate(calc(-50vw + 80px),42vh) scale(.5);opacity:0}}
+.hudWallet[data-paying]{animation:walletPulse .6s ease}
+@keyframes walletPulse{30%{transform:scale(1.08)}}
+.stampPop{display:inline-block;color:#d8342c;font-weight:900;animation:stampPop .35s cubic-bezier(.2,1.6,.4,1) .42s both}
+@keyframes stampPop{from{transform:scale(2) rotate(-12deg);opacity:0}to{transform:rotate(-6deg);opacity:1}}
+@media(prefers-reduced-motion:reduce){.greeting,.coins i,.hudWallet[data-paying],.stampPop{animation:none}.coins{display:none}}
+
+/* Section arrows share the header's side insets (Back left, coins right): 24 px desktop, 18 px phone (Sep 30 2026). */
+@media(max-width:600px),(pointer:coarse){.prev{left:calc(18px + env(safe-area-inset-left,0px))}.next{right:calc(18px + env(safe-area-inset-right,0px))}}
+
+/* Sep 30 2026: the card's actions are centred at its foot, with the snack/pouch note on its own centred line below. */
+.tagActions{justify-content:center}
+.tagActions>.small{flex-basis:100%;text-align:center}
+/* The section pill is centred on the screen, not between Back and the (wider) coin display. */
+.header>.section{position:absolute;left:50%;transform:translateX(-50%);max-width:min(46vw,320px);overflow:hidden;text-overflow:ellipsis}

@@ -2,7 +2,7 @@ import * as T from 'three';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 /** Architectural edges and a soft upward wash, updated by the island's existing loop. */
-export function createBuildingGlow(root:T.Group,width:number,depth:number,height:number,kind:'store'|'arcade'|'coaches'|'museum'|'arena'|'ferry'|'cabinet'|'vending'){
+export function createBuildingGlow(root:T.Group,width:number,depth:number,height:number,kind:'store'|'arcade'|'coaches'|'museum'|'arena'|'ferry'|'cabinet'|'vending'|'konbini'){
  const arcade=kind==='arcade',coaches=kind==='coaches',vending=kind==='vending',cabinet=kind==='cabinet'||vending;
  const effect=new T.Group();effect.name='building-outline-glow';effect.visible=false;root.add(effect);
  const uniforms={strength:{value:0},rise:{value:-2},tint:{value:new T.Color('#35ed8b')},moving:{value:1}};
@@ -11,6 +11,10 @@ export function createBuildingGlow(root:T.Group,width:number,depth:number,height
  const materials=[material(false),material(true)];
  const shapes=vending?[
   {w:width+.1,d:depth+.1,h:height+.06,x:0,y:(height+.06)/2,z:0}
+ ]:kind==='konbini'?[
+  // Konbini (Sep 29 2026): exactly the store's own box (facade to back wall, ground to parapet) plus its flat roof rim.
+  {w:width+.22,d:depth+.24,h:height+.2,x:0,y:(height+.2)/2,z:0},
+  {w:width+.56,d:depth+.6,h:.23,x:0,y:height+.08,z:0}
  ]:cabinet?[
   {w:width+.12,d:depth+.12,h:1.4,x:0,y:.65,z:.05},
   {w:width+.12,d:1.08,h:1.6,x:0,y:2,z:-.13},
@@ -36,7 +40,7 @@ export function createBuildingGlow(root:T.Group,width:number,depth:number,height
   const geometry=mergeGeometries(parts)!;parts.forEach(part=>part.dispose());geometries.push(geometry);
   const mesh=new T.Mesh(geometry,materials[layer]);mesh.name=layer?'building-edge-halo':'building-edge-outline';mesh.raycast=()=>{};effect.add(mesh);
  }
- const wallGeometry=kind==='ferry'||cabinet?(()=>{const parts=shapes.map(s=>new T.BoxGeometry(s.w,s.h,s.d).translate(s.x,s.y,s.z));const merged=mergeGeometries(parts)!;parts.forEach(g=>g.dispose());return merged;})():new T.BoxGeometry(width+.16,height,depth+.18).translate(0,height/2,0);geometries.push(wallGeometry);
+ const wallGeometry=kind==='ferry'||cabinet?(()=>{const parts=shapes.map(s=>new T.BoxGeometry(s.w,s.h,s.d).translate(s.x,s.y,s.z));const merged=mergeGeometries(parts)!;parts.forEach(g=>g.dispose());return merged;})():new T.BoxGeometry(width+.16,height-.04,depth+.18).translate(0,(height-.04)/2,0);// top face 4 cm under the roof: coplanar with it, the additive glow z-fought (striped flicker on the Konbini roof, Sep 29 2026)geometries.push(wallGeometry);
  const wallMaterial=new T.ShaderMaterial({uniforms,vertexShader,fragmentShader:'varying vec3 localPoint; uniform float strength; uniform float rise; uniform float moving; uniform vec3 tint; void main(){float band=exp(-pow((localPoint.y-rise)/0.8,2.0));float trail=exp(-pow((localPoint.y-rise+0.9)/1.5,2.0));float alpha=strength*moving*(band*0.17+trail*0.035);gl_FragColor=vec4(tint,alpha);}',transparent:true,depthWrite:false,side:T.FrontSide,blending:T.AdditiveBlending,toneMapped:false});
  const walls=new T.Mesh(wallGeometry,wallMaterial);walls.name='building-rising-glow';walls.raycast=()=>{};effect.add(walls);
  let amount=0,phase=0,wasHovered=false;

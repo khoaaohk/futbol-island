@@ -9,6 +9,10 @@ const presets={
  // Reusing these lights brightens shadowed scenery without extra light passes.
  night:{sky:'#0d1830',upper:'#d4c6af',lower:'#706653',sun:'#c8d0e4',hemi:1.15,direct:1.05,exposure:.98},
 };
+/** The island's light presets, shared with the shop snapshots (components/StorePreviews.tsx) so a ball picture is lit like the island. */
+export const ISLAND_LIGHT_PRESETS=presets;
+/** The island sun's fixed direction (components/Town.tsx `sun.position`). */
+export const ISLAND_SUN_POSITION=[-288,252,198] as const;
 /** Reuses the scene's existing lights and fixed shadow direction. */
 export function createIslandLighting(scene:Scene,hemi:HemisphereLight,sun:DirectionalLight,renderer:WebGLRenderer){
  const colors=Object.fromEntries(Object.entries(presets).map(([key,p])=>[key,{sky:new Color(p.sky),upper:new Color(p.upper),lower:new Color(p.lower),sun:new Color(p.sun)}])) as Record<TimeOfDay,{sky:Color;upper:Color;lower:Color;sun:Color}>;

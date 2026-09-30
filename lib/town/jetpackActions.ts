@@ -4,6 +4,9 @@ type Point={x:number;z:number};
 // the landing spot, steering is released and the final approach ignores props (latched until touchdown, so it always
 // closes in); only if even that makes no progress for PARACHUTE_SETTLE_LIMIT s does it touch down on the (already
 // validated) landing spot. PARACHUTE_MAX_AGE caps any glide (a full 180 m blast descends in ~20 s).
+// Heat (code review Sep 29 2026, finding 2): the glide re-aims its landing spot only after moving PARACHUTE_REAIM_METRES or
+// every PARACHUTE_REAIM_SECONDS, not every frame (findLanding can scan far rings over open sea).
+export const PARACHUTE_REAIM_METRES=2,PARACHUTE_REAIM_SECONDS=.25;
 export const PARACHUTE_SETTLE_ASSIST=1,PARACHUTE_SETTLE_LIMIT=2.5,PARACHUTE_MAX_AGE=60;
 // A canopy may not glide into a surface taller than the rider (less 1 m of clearance), but moving onto ground no higher
 // than the ground already under the rider is always allowed. Before this, the rule compared against the rider's height
@@ -11,12 +14,12 @@ export const PARACHUTE_SETTLE_ASSIST=1,PARACHUTE_SETTLE_LIMIT=2.5,PARACHUTE_MAX_
 export function parachuteTooTall(floor:(x:number,z:number)=>number,from:Point,x:number,z:number,height:number){const next=floor(x,z);return next>height-1&&next>floor(from.x,from.z)+.35;}
 export function createJetpackActions(){
  const state={phase:'idle' as 'idle'|'dash'|'charge'|'blast'|'parachute'|'fall',age:0,scanAge:-1,scanYaw:0,scanSpeed:0,scanRadius:0,scanIntensity:0,juggleAge:-1,startHeight:0,yaw:0,target:null as Point|null};
- let fallSpeed=0,glideVX=0,glideVZ=0,spiralX=0,spiralZ=0,spiralRadius=0,settleAge=0,bestD=Infinity,bestH=Infinity,assistAge=-1;
+ let aimX=NaN,aimZ=NaN,aimAge=0,fallSpeed=0,glideVX=0,glideVZ=0,spiralX=0,spiralZ=0,spiralRadius=0,settleAge=0,bestD=Infinity,bestH=Infinity,assistAge=-1;
  const clearTricks=()=>{state.scanAge=-1;state.scanSpeed=0;state.scanRadius=0;state.scanIntensity=0;spiralX=spiralZ=spiralRadius=0;state.juggleAge=-1;};
  const parachuteAction=(action:number,yaw:number)=>{if(state.phase!=='parachute')return false;if(action===0){if(state.scanAge<0){state.scanAge=0;state.scanYaw=yaw;state.scanSpeed=.7;}}else{state.juggleAge=state.juggleAge<0?0:-1;}return true;};
  const cut=()=>{if(state.phase==='parachute'){clearTricks();state.phase='fall';state.age=0;fallSpeed=0;}};
  const crash=()=>{clearTricks();state.phase='fall';state.age=0;state.target=null;fallSpeed=0;glideVX=glideVZ=0;};
- const reset=()=>{clearTricks();settleAge=0;bestD=bestH=Infinity;assistAge=-1;state.phase='idle';state.age=0;state.target=null;glideVX=glideVZ=0;};
+ const reset=()=>{clearTricks();aimX=aimZ=NaN;aimAge=0;settleAge=0;bestD=bestH=Infinity;assistAge=-1;state.phase='idle';state.age=0;state.target=null;glideVX=glideVZ=0;};
  function start(action:number,height:number,yaw:number,target:Point|null){if(state.phase!=='idle'||action===1&&!target)return;state.phase=action===0?'dash':'charge';state.age=0;state.startHeight=height;state.yaw=yaw;state.target=target;}
  function update(dt:number,p:Point,height:number,env:{blocked:(x:number,z:number)=>boolean;floor:(x:number,z:number)=>number;steer?:Point;scanHeld?:boolean;reducedMotion?:boolean;findLanding?:(x:number,z:number)=>Point|null}){
   if(state.phase==='idle')return {height,landed:false};state.age+=dt;if(state.scanAge>=0){state.scanAge+=dt;state.scanSpeed=env.scanHeld?Math.min(4.5,state.scanSpeed+dt*2.2):state.scanSpeed*Math.exp(-dt*7);state.scanYaw+=state.scanSpeed*dt;if(!env.scanHeld&&state.scanSpeed<.02){state.scanAge=-1;state.scanSpeed=0;}}if(state.juggleAge>=0)state.juggleAge+=dt;
@@ -50,7 +53,7 @@ export function createJetpackActions(){
    if(state.scanAge<0&&spiralRadius<.001){state.scanRadius=spiralRadius=0;spiralX=spiralZ=0;}
 
    // Never retarget to a roof above the canopy: that used to snap the rider upward and could oscillate at roof edges.
-   if(env.findLanding){const next=env.findLanding(p.x,p.z);if(next&&env.floor(next.x,next.z)<=height)state.target=next;}
+   aimAge+=dt;if(env.findLanding&&(aimAge>=PARACHUTE_REAIM_SECONDS||!(Math.hypot(p.x-aimX,p.z-aimZ)<PARACHUTE_REAIM_METRES))){aimX=p.x;aimZ=p.z;aimAge=0;const next=env.findLanding(p.x,p.z);if(next&&env.floor(next.x,next.z)<=height)state.target=next;}
    let dx=state.target.x-p.x,dz=state.target.z-p.z,d=Math.hypot(dx,dz);const floor=env.floor(state.target.x,state.target.z);
    // The approach starts within 8 m of the landing spot's floor or of whatever the canopy is crossing (a roof it must
    // leave to reach a lower spot), so holding height over a roof can never hold the approach off.

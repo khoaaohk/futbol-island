@@ -7,8 +7,11 @@
  */
 export type LearnKind='quiz'|'ball'|'story'|'journey'|'explore'|'path';
 /** Coins per learning moment. A quiz pays LEARN_COINS.quiz on its first completion, plus quizPerfect when that first run is
- *  perfect on the first try (the same run that earns the quiz card). */
-export const LEARN_COINS={quiz:12,quizPerfect:6,ball:5,story:10,journey:8,explore:5,path:75} as const;
+ *  perfect on the first try (the same run that earns the quiz card).
+ *  ball 5 → 10 (29 Sep 2026, docs/economy/ECONOMY_UPDATE_2026-09-29.md): the hunt grew to 100 balls with the 20 far Coral Cay
+ *  balls, and 5 coins per ball (~86/h) was the weakest learning pay, below the arcade. 10 (~170/h) stays below a lesson quiz
+ *  (~240/h) and pays for the 4 new books. Forward-only: balls already paid keep their saved 5 (creditOnce never pays an id twice). */
+export const LEARN_COINS={quiz:12,quizPerfect:6,ball:10,story:10,journey:8,explore:5,path:75} as const;
 /** Window event the island HUD listens for to show the coin toast. Detail: LearnCoinsEarned. */
 export const LEARN_COINS_EARNED='fi2-learn-coins-earned';
 export type LearnCoinsEarned={kind:LearnKind;amount:number;reason:string};

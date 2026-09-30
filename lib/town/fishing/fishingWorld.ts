@@ -6,6 +6,8 @@ import {createFishingVisuals,type FishingVisuals} from './fishingVisuals';
 import {createFishingCamera} from './fishingCamera';
 import {CAST_TIME,castPoint,planApproach,stepSession,type SessionEvent} from './fishingCore';
 import {fishById} from './fishCatalog';
+import {createDeepSeaBoat} from './deepSeaBoat';
+import {BOAT_AFLOAT} from './deepSeaBoatData';
 import type {FishingSessionApi} from './fishingSession';
 
 /**
@@ -14,7 +16,8 @@ import type {FishingSessionApi} from './fishingSession';
  * Heat budget: all five fishing posts are ONE merged static mesh (one draw, one shadow draw), the floats are one
  * InstancedMesh (one draw), and the shared glow + ripple are hidden unless the player is at a spot. Per frame, when the
  * player is not near the water, update() is a distance check over five points and nothing else: no matrix writes, no
- * material changes, no wake-ups of the sleeping island loop (it never requests frames itself).
+ * material changes, no wake-ups of the sleeping island loop (it never requests frames itself). The Deep Sea Boat
+ * (./deepSeaBoat.ts) adds one more distance check; its single merged mesh exists only within 260 m of the mooring.
  */
 export type FishingUpdate={
  x:number;z:number;
@@ -124,10 +127,11 @@ export function createFishingWorld(scene:T.Scene,player?:T.Object3D,session?:Fis
  }:null;
  const root=new T.Group();root.name='fishing-spots';scene.add(root);
  const geometries:T.BufferGeometry[]=[],materials:T.Material[]=[],textures:T.Texture[]=[];
- const kioskAt=(s:FishSpot)=>{const dx=s.buoy.x-s.x,dz=s.buoy.z-s.z,l=Math.hypot(dx,dz)||1;return {x:s.x+(-dz/l)*KIOSK_OFFSET,z:s.z+(dx/l)*KIOSK_OFFSET};};
+ // The Deep Sea Boat has no post: its prompt floats over the rod holders (./deepSeaBoatData.ts).
+ const kioskAt=(s:FishSpot)=>{if(s.boat)return {x:s.boat.prompt.x,z:s.boat.prompt.z};const dx=s.buoy.x-s.x,dz=s.buoy.z-s.z,l=Math.hypot(dx,dz)||1;return {x:s.x+(-dz/l)*KIOSK_OFFSET,z:s.z+(dx/l)*KIOSK_OFFSET};};
  // One merged, vertex-coloured mesh for every fishing post.
  const all:T.BufferGeometry[]=[];
- for(const s of FISH_SPOTS){const k=kioskAt(s);for(const part of kioskParts(s.id==='north-rocks'||s.id==='west-cove')){const g=paint(part);g.applyMatrix4(new T.Matrix4().makeRotationY(Math.PI/4));g.translate(k.x,0,k.z);all.push(g);}}
+ for(const s of FISH_SPOTS){if(s.boat)continue;const k=kioskAt(s);for(const part of kioskParts(s.id==='north-rocks'||s.id==='west-cove')){const g=paint(part);g.applyMatrix4(new T.Matrix4().makeRotationY(Math.PI/4));g.translate(k.x,0,k.z);all.push(g);}}
  const merged=mergeGeometries(all)!;all.forEach(g=>g.dispose());geometries.push(merged);
  const kioskMaterial=new T.MeshStandardMaterial({vertexColors:true,roughness:.85});materials.push(kioskMaterial);
  const kiosks=new T.Mesh(merged,kioskMaterial);kiosks.name='fishing-posts';kiosks.castShadow=true;kiosks.receiveShadow=true;kiosks.matrixAutoUpdate=false;kiosks.updateMatrix();root.add(kiosks);
@@ -161,16 +165,19 @@ export function createFishingWorld(scene:T.Scene,player?:T.Object3D,session?:Fis
  const spotGlow=createBuildingGlow(spotGlowRoot,1.2,.7,2.9,'cabinet');
  const standGlowRoot=new T.Group();standGlowRoot.name='market-stand-selection';standGlowRoot.position.set(MARKET_STAND.x,0,MARKET_STAND.z);standGlowRoot.scale.set(7.8/8.4,4/4.74,9.2/17.4);scene.add(standGlowRoot);
  const standGlow=createBuildingGlow(standGlowRoot,8.4,17.4,4.7,'ferry');
- const kioskBoxes=FISH_SPOTS.map(s=>{const k=kioskAt(s);return new T.Box3(new T.Vector3(k.x-1.2,0,k.z-1.2),new T.Vector3(k.x+1.2,3.3,k.z+1.2));});
+ const kioskBoxes=FISH_SPOTS.map(s=>{if(s.boat)return new T.Box3(new T.Vector3(BOAT_AFLOAT.x0,-.4,BOAT_AFLOAT.z0),new T.Vector3(BOAT_AFLOAT.x1,3,BOAT_AFLOAT.z1));const k=kioskAt(s);return new T.Box3(new T.Vector3(k.x-1.2,0,k.z-1.2),new T.Vector3(k.x+1.2,3.3,k.z+1.2));});
  const standBox=new T.Box3(new T.Vector3(MARKET_STAND.x-3.8,0,MARKET_STAND.z-4.6),new T.Vector3(MARKET_STAND.x+3.8,5.1,MARKET_STAND.z+4.6));
  const hit=new T.Vector3(),anchor=new T.Vector3();
  let glowSpot=-1,hoverKind='',hoverSpot=-1,hoverUntil=0,bobbing=false,lastHover=-1;
  const rippleAge={t:0};
+ // The moored Deep Sea Boat: built only near it, one merged mesh, registers its aft deck as a landable floor.
+ const boat=createDeepSeaBoat(scene);
 
  function update(c:FishingUpdate){
+  boat.update(c);
   // Nearest spot within reach (on foot) — the only work when the player is away from the water.
   let near=-1,nearD=SPOT_REACH,closestFloat=Infinity;
-  for(let i=0;i<FISH_SPOTS.length;i++){const s=FISH_SPOTS[i],d=Math.hypot(c.x-s.x,c.z-s.z);if(d<nearD){near=i;nearD=d;}closestFloat=Math.min(closestFloat,Math.hypot(c.x-s.buoy.x,c.z-s.buoy.z));}
+  for(let i=0;i<FISH_SPOTS.length;i++){const s=FISH_SPOTS[i],d=Math.hypot(c.x-s.x,c.z-s.z);if(d<nearD&&(!s.boat||boat.deck)){near=i;nearD=d;}closestFloat=Math.min(closestFloat,Math.hypot(c.x-s.buoy.x,c.z-s.buoy.z));}
   if(!c.onFoot||!c.canEnter)near=-1;
   // ---- Live fishing session ----
   // ---- Live fishing: the state machine drives the camera and the (swappable) visuals ----
@@ -199,12 +206,12 @@ export function createFishingWorld(scene:T.Scene,player?:T.Object3D,session?:Fis
    const s=FISH_SPOTS[activeSpot];
    if(s&&fishPrompt.dataset.spot!==s.id){fishPrompt.dataset.spot=s.id;fishPrompt.setAttribute('aria-label',`Fish at ${s.name}`);}
    // The Fish prompt needs you at the water's edge (hovering from afar only highlights the post).
-   const k=s?kioskAt(s):null;show(fishPrompt,!!s&&activeSpot===near,k?.x??0,3.6,k?.z??0);
+   const k=s?kioskAt(s):null;show(fishPrompt,!!s&&activeSpot===near,k?.x??0,s?.boat?.prompt.y??3.6,k?.z??0);
   }
   show(standPrompt,activeStand,MARKET_STAND.x-1,4.8,MARKET_STAND.z+3);
   // Glows (hidden draws when inactive).
   if(activeSpot>=0&&activeSpot!==glowSpot){const k=kioskAt(FISH_SPOTS[activeSpot]);spotGlowRoot.position.set(k.x,0,k.z);glowSpot=activeSpot;}
-  spotGlow.update(activeSpot>=0,c.dt,c.reduced);standGlow.update(activeStand,c.dt,c.reduced);
+  spotGlow.update(activeSpot>=0&&!FISH_SPOTS[activeSpot].boat,c.dt,c.reduced);standGlow.update(activeStand,c.dt,c.reduced);
   // Floats bob only while the player is close enough to see them; reset once on leaving.
   const bob=!c.reduced&&closestFloat<BOB_RANGE;
   if(bob){for(let i=0;i<FISH_SPOTS.length;i++){const b=FISH_SPOTS[i].buoy;if(i!==liveSpot&&Math.hypot(c.x-b.x,c.z-b.z)<BOB_RANGE)setFloat(i,Math.sin(c.elapsed*1.8+i*1.7)*.05,Math.sin(c.elapsed*1.3+i)*.08);}floats.instanceMatrix.needsUpdate=true;}
@@ -219,5 +226,5 @@ export function createFishingWorld(scene:T.Scene,player?:T.Object3D,session?:Fis
  return {update,spots:FISH_SPOTS,
   /** Call right after the follow camera is placed (like vending.applyCamera): eases to the low shoreline shot while fishing. */
   applyCamera:(camera:T.PerspectiveCamera,dt:number,reduced:boolean)=>cam.apply(camera,dt,reduced),
-  dispose(){visuals?.dispose();visuals=null;spotGlow.dispose();standGlow.dispose();spotGlowRoot.removeFromParent();standGlowRoot.removeFromParent();root.removeFromParent();geometries.forEach(g=>g.dispose());materials.forEach(mat=>mat.dispose());textures.forEach(t=>t.dispose());floats.dispose();}};
+  dispose(){boat.dispose();visuals?.dispose();visuals=null;spotGlow.dispose();standGlow.dispose();spotGlowRoot.removeFromParent();standGlowRoot.removeFromParent();root.removeFromParent();geometries.forEach(g=>g.dispose());materials.forEach(mat=>mat.dispose());textures.forEach(t=>t.dispose());floats.dispose();}};
 }

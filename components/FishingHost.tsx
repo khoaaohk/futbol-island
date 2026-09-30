@@ -9,7 +9,7 @@
 import dynamic from 'next/dynamic';
 import {useEffect,useRef,useState,useSyncExternalStore} from 'react';
 import {fishingSession} from '@/lib/town/fishing/fishingStore';
-import {RARITY_LABEL,fishById} from '@/lib/town/fishing/fishCatalog';
+import {RARITY_LABEL,fishById,spotById} from '@/lib/town/fishing/fishCatalog';
 import styles from './FishingHost.module.css';
 import {BackButton} from './BackButton';
 import {Icon} from './Icon';
@@ -50,6 +50,8 @@ export default function FishingHost({onOpenChange,onDialogChange,paused=false}:{
   return()=>{window.removeEventListener('pointercancel',cancel,true);window.removeEventListener('keydown',key,true);window.removeEventListener('keyup',key,true);window.removeEventListener('pointerdown',pdown,true);window.removeEventListener('pointerup',pup,true);};
  },[view.active,book,stand]);
  const fish=view.caught?fishById(view.caught.id):undefined;
+ // Catches from the moored boat say where they came from (docs/fishing.md "Deep Sea Boat").
+ const fromBoat=!!(view.spotId&&spotById(view.spotId)?.boat);
  // The catch card can be dismissed; a new catch (different fish or size) shows it again.
  const catchKey=view.caught?`${view.caught.id}-${view.caught.size}`:'';const [dismissed,setDismissed]=useState('');
  const waiting=view.phase==='scared'||view.phase==='escaped'||view.phase==='casting';
@@ -59,7 +61,7 @@ export default function FishingHost({onOpenChange,onDialogChange,paused=false}:{
   {/* In-world catch label: positioned above the held-up fish by fishingWorld.ts. */}
   <div className={styles.catch} data-fish-catch hidden aria-live="polite" data-dismissed={dismissed===catchKey&&catchKey?'':undefined}>{fish&&view.caught&&<>
    <button type="button" className={styles.catchClose} aria-label="Dismiss" onClick={()=>setDismissed(catchKey)}><span aria-hidden="true">×</span></button>
-   <p className={styles.catchTop}><b>{fish.name}</b>{view.caught.isNew&&<em>New!</em>}{view.caught.isBiggest&&<em>Biggest!</em>}</p>
+   <p className={styles.catchTop}><b>{fish.name}</b>{view.caught.isNew&&<em>New!</em>}{view.caught.isBiggest&&<em>Biggest!</em>}{fromBoat&&<em className={styles.catchWhere} data-fish-where>Deep sea boat</em>}</p>
    <p className={styles.catchMeta}>{RARITY_LABEL[fish.rarity]} · {view.caught.size} cm · {fish.price} coins{view.caught.inBasket?'':' · basket full'}</p>
    <p className={styles.catchClub}><span>Real football fact</span>{fish.club.name}{fish.club.nickname?` · “${fish.club.nickname}”`:''}</p>
    <p className={styles.catchFact}>{fish.club.fact}</p>

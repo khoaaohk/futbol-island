@@ -3,6 +3,15 @@ import {BALL_COLORS,type CharacterCustomization} from '../town/customization';
 import {SPECIAL_BALL_IDS} from '../town/specialBalls';
 import {drawSpecialBallSkin} from './specialBallSkins';
 type BallStyle=CharacterCustomization['ball'];
+/** The walking ball's six dark pentagon patches (components/Town.tsx 'player-ball'), shared with the shop snapshots
+ * (components/StorePreviews.tsx) so the vending/backpack pictures show the same ball you dribble. Sized for a
+ * SphereGeometry(radius,20,16): the patches sit just inside the true sphere and show through its flat facets. */
+export function addBallPatches(ball:T.Object3D,radius:number){
+ const k=radius/.19,material=new T.MeshStandardMaterial({color:'#344c43',roughness:.8,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1}),geometry=new T.CircleGeometry(.078*k,5);
+ for(const direction of [[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]]){const v=new T.Vector3(...direction as [number,number,number]);const patch=new T.Mesh(geometry,material);patch.position.copy(v.clone().multiplyScalar(.1915*k));// just outside the low-poly sphere's vertices (radius .19): at .187 the facets poked through each patch as a hollow diamond (Sep 30 2026)
+patch.quaternion.setFromUnitVectors(new T.Vector3(0,0,1),v);ball.add(patch);}
+ return {dispose(){geometry.dispose();material.dispose();}};
+}
 /** Tiny, locally drawn skins shared by the store and equipped ball. Textures are
  * created only when selected, reused for that renderer, and disposed with it. */
 export function createBallAppearance(material:T.MeshStandardMaterial){

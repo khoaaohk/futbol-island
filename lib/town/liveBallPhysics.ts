@@ -11,7 +11,8 @@ export const BALL_GRAVITY=13,BALL_RESTITUTION=.53,BALL_SETTLE=.8,BALL_RADIUS=.19
  * gravity arc with bounces, integrated in sim time so a loft still lands exactly when the sim says.
  * `timeScale` is the live playback speed (sim seconds per real second).
  */
-export function createLiveBallPhysics(timeScale:number,goal?:{goalHeight:number;goalWidth:number;width:number}){
+/** `restitution`: bounce kept per landing (grass .53; the beach court's soft sand much less, fieldRuntime SAND_RESTITUTION). */
+export function createLiveBallPhysics(timeScale:number,goal?:{goalHeight:number;goalWidth:number;width:number},restitution=BALL_RESTITUTION){
  const G=BALL_GRAVITY/(timeScale*timeScale),settle=BALL_SETTLE/timeScale;
  let h=0,v=0,g=G,kicks=-1,simHeight=0,landing=0,shotOffset=0,wasPlacedShot=false,frameSerial=0;
  const axis=new T.Vector3(1,0,0),turn=new T.Quaternion();let spin=0,lastX=NaN,lastZ=NaN;
@@ -51,7 +52,7 @@ export function createLiveBallPhysics(timeScale:number,goal?:{goalHeight:number;
   if(dt>0&&(h>0||v>0)){
    // Exact constant-gravity kinematics (no integration drift, so a loft lands on the sim's schedule).
    const h0=h,v0=v;h+=v*dt-.5*g*dt*dt;v-=g*dt;
-   if(h<=0){v=-Math.sqrt(Math.max(0,v0*v0+2*g*h0));h=0;if(v<-settle){landing=-v*timeScale;v=-v*BALL_RESTITUTION;g=G;}else v=0;}
+   if(h<=0){v=-Math.sqrt(Math.max(0,v0*v0+2*g*h0));h=0;if(v<-settle){landing=-v*timeScale;v=-v*restitution;g=G;}else v=0;}
   }
   return h;
  }

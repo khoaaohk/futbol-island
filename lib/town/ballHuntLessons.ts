@@ -5,11 +5,12 @@
 import {SCENES,LANDSCAPE,ballLessonFrame,ballLessonFrames,diagramLayout,motionPoint,pitchMap,type DiagramKind,type DiagramFrame,type DiagramLayout,type DiagramNode} from './ballLessonScenes';
 export {SCENES,LANDSCAPE,ballLessonFrame,ballLessonFrames,diagramLayout,motionPoint,pitchMap};
 export type {DiagramKind,DiagramFrame,DiagramLayout,DiagramNode};
-export type LessonFamily='Creating space'|'Timing'|'Team shape'|'Breaking lines'|'Zones and thirds'|'Final third'|'Transitions'|'Defending space'|'On the ball'|'Set pieces'|'Goalkeeping';
+export type LessonFamily='Creating space'|'Timing'|'Team shape'|'Breaking lines'|'Zones and thirds'|'Final third'|'Transitions'|'Defending space'|'On the ball'|'Set pieces'|'Goalkeeping'|'Rules of the game'|'Player health'|'Beach soccer';
 export type BallLesson={kind:DiagramKind;family:LessonFamily;level:1|2|3;steps:[string,string,string];actions:[string,string]};
 const L=(level:1|2|3,family:LessonFamily)=>(kind:DiagramKind,a:string,b:string,c:string,x:string,y:string):BallLesson=>({kind,family,level,steps:[a,b,c],actions:[x,y]});
 const space1=L(1,'Creating space'),time1=L(1,'Timing'),shape1=L(1,'Team shape'),ball1=L(1,'On the ball'),final1=L(1,'Final third'),trans1=L(1,'Transitions'),def1=L(1,'Defending space');
 const space2=L(2,'Creating space'),time2=L(2,'Timing'),shape2=L(2,'Team shape'),lines2=L(2,'Breaking lines'),zones2=L(2,'Zones and thirds'),final2=L(2,'Final third'),trans2=L(2,'Transitions'),def2=L(2,'Defending space'),ball2=L(2,'On the ball'),set2=L(2,'Set pieces'),keep2=L(2,'Goalkeeping');
+const rules1=L(1,'Rules of the game'),health1=L(1,'Player health'),beach1=L(1,'Beach soccer'),keep1=L(1,'Goalkeeping'),rules2=L(2,'Rules of the game'),beach2=L(2,'Beach soccer'),ball3=L(3,'On the ball'),set3=L(3,'Set pieces');
 const space3=L(3,'Creating space'),shape3=L(3,'Team shape'),lines3=L(3,'Breaking lines'),zones3=L(3,'Zones and thirds'),final3=L(3,'Final third'),trans3=L(3,'Transitions'),def3=L(3,'Defending space'),keep3=L(3,'Goalkeeping');
 
 export const BALL_HUNT_LESSONS:Record<string,BallLesson>={
@@ -100,6 +101,27 @@ export const BALL_HUNT_LESSONS:Record<string,BallLesson>={
  "high-apartments":def3('curved-press','Two opponents pass the ball between them. You want to press.','A straight run at the ball leaves the pass to the other opponent wide open.','Curve your run so your body blocks that pass. The carrier has fewer choices.','See the open pass','Curve your press'),
  "high-clubgrounds":def3('track-runner','The ball is out wide. You watch it, and your attacker sneaks behind you.','Turn your head, see the run and go with the runner.','The cross comes in, but you are there first to clear it.','Check your runner','Go with them'),
  "high-promenade":def3('squeeze-up','Your defenders stand in a straight line near your goal.','The opponents pass backward. Their attack moves away from your goal.','Step up together and keep the line straight. The attackers have less space.','Watch the back pass','Step up together'),
+ // Coral Cay (Sep 29 2026): twenty new ideas for the causeway, the sandbars and the cay (docs/ball-hunt-coral-cay-2026-09-29.md).
+ "cay-warmup":health1('warm-up','Your team runs straight into hard sprints. Cold legs feel stiff and slow.','Warm up first: jog, skip, balance and jump for about fifteen minutes.','Now your legs are warm and ready, and you are less likely to get hurt.','Jog and skip','Play warm'),
+ "cay-line":rules1('whole-ball-line','The ball rolls onto the touchline. Is it out?','Not yet! Part of the ball is still over the line, so play on.','Only when the whole ball crosses the line is it out. Keep playing until then.','Check the whole ball','Play to the whistle'),
+ "cay-bank-pad":ball1('both-feet','You only use your right foot. The defender blocks that side.','The defender leaves your left side open. Push the ball there.','Use your other foot and go past. Two good feet give you two ways.','Spot the open side','Use the other foot'),
+ "cay-bank-kick":keep1('keeper-throw','Your keeper has the ball. Two teammates are free: one near, one far.','The near teammate gets marked. Rolling it to them is blocked now.','Throw overarm to the far teammate. A roll is accurate, a throw goes further.','Check who is free','Pick the right throw'),
+ "manhole-causeway":rules2('advantage','A defender fouls you from behind, but you keep the ball and stay standing.','The referee sees your pass is still on and waves play on: advantage.','You pass forward and the chance stays alive. Stopping play would have helped the other team.','Keep playing','Use the advantage'),
+ "cay-arch":zones2('lead-manage','You lead 1–0. A long hopeful ball just gives the ball back.','Keep the ball instead with short, safe passes between teammates.','Move it into their half. They can’t attack you while you keep it there.','Keep possession','Play in their half'),
+ "sky-causeway":ball3('wind','The wind blows in your face. Your high pass hangs in the air and falls short.','Keep the pass low along the ground, where the wind can hardly push it.','Now the wind is behind you. A long ball runs further, so hit it a little softer.','Keep it low','Use the wind'),
+ "cay-buoy":set3('zonal-corner','The other team has a corner. Their runners are coming into your box.','Zonal defenders stand in the spaces near goal, like buoys marking the sea.','Markers follow the dangerous runners. Spaces and runners are both covered, so the cross is cleared.','Guard the spaces','Follow the runners'),
+ "cay-barefoot":beach1('barefoot','On sand you play barefoot. Kicking with your toes hurts and goes wrong.','Point your toes, bend your knees and keep your arms out for balance.','Strike with the top of your foot. The pass flies clean to your teammate.','Point your toes','Strike with the laces'),
+ "cay-no-offside":beach1('no-offside','Beach soccer has no offside rule. You wait right by their goal.','Nobody is marking you, so your teammate passes straight to you.','Now the defenders learn: always watch the attacker waiting by the goal.','Wait near the goal','Always watch attackers'),
+ "cay-kick-in":beach1('kick-in','The ball goes out over the touchline. It’s your restart to take.','Your close teammate gets marked, so a throw to them is blocked.','Kick it in long instead, to the teammate who is free far away.','Look at both mates','Kick to the free mate'),
+ "cay-surfaces":ball1('surfaces','The same pass can act very differently on sand, grass or a court.','On soft sand the ball slows down quickly and stops short.','On a hard court the ball runs on further. Test the pitch early.','Feel the surface','Change your pass'),
+ "cay-court":beach1('sand-lift','A rolling pass bumps and stops on the sand before it arrives.','Flick the ball up off the sand with your foot first.','Pass it through the air over the defender to land at your mate’s feet.','Flick it up','Pass in the air'),
+ "cay-overhead":beach1('overhead-kick','A high ball comes in behind you. You face away from the goal.','Check first: nobody is close, so a bicycle kick is safe.','Kick it over your head at goal and land on your hands and back.','Check for space','Kick over your head'),
+ "cay-club":beach2('keeper-joins','Four against four on the sand. Every one of your teammates is marked.','Your keeper steps out to help build the attack. Now you have an extra player.','Pass quickly to the free player before they recover. Their goal is empty behind them.','Keeper steps up','Move it quickly'),
+ "cay-surf-roof":shape2('island-team','A small island team plays a big football nation.','Nobody plays alone: everyone moves to help the teammate with the ball.','Short passes and trust carry the ball through. Teamwork beats size.','Help each other','Trust your team'),
+ "cay-fuel":health1('fuel','You skip your meal and feel slow when the game gets late.','Eat a normal meal a few hours before and a small snack nearer the time.','Late in the game you still have the energy to win the race.','Eat before','Win the late race'),
+ "cay-rest":health1('rest-sleep','You play every day and stay up late. Tired legs lose the chase.','Sleep well at night and take a day or two off each week.','Rested legs are fresh again. You win the chase to the ball.','Sleep and rest','Play fresh'),
+ "cay-water":health1('drink-heat','A hot, sunny match. Everyone is getting thirsty and slow.','At the drinks break everyone walks to the touchline and drinks water.','Back on the pitch, refreshed. Keep sipping water before, during and after.','Drink a little','Stay cool'),
+ "cay-heading":health1('heading-safe','A high ball drops toward your head. In practice, young players don’t head it.','Let it drop and cushion it with your chest or foot instead.','The ball is on the ground and under control. Pass it with your feet.','Let it drop','Play it on the ground'),
 };
 
 /** Prediction prompts are loaded only with the lesson modal, never by the island. */
@@ -184,4 +206,24 @@ export const BALL_HUNT_PRACTICE:Record<string,string>={
  'high-apartments':'Which way should you curve your press to block the pass to the other opponent?',
  'high-clubgrounds':'The ball is wide. Where is the runner you are marking going?',
  'high-promenade':'They just passed backward. What should your whole defensive line do?',
+ 'cay-warmup':'Before a game, which moves would you do to warm up your legs?',
+ 'cay-line':'The ball is on the line. Is it still in play, or out?',
+ 'cay-bank-pad':'The defender blocks your strong foot. Which side is open?',
+ 'cay-bank-kick':'Near or far teammate: which one needs a roll and which a throw?',
+ 'cay-buoy':'At a corner, who guards the spaces and who follows the runners?',
+ 'manhole-causeway':'You were fouled but still have a good pass. Should play stop?',
+ 'cay-arch':'Your team is winning. Where on the pitch should you keep the ball?',
+ 'sky-causeway':'The wind is in your face. Should your pass go high or low?',
+ 'cay-barefoot':'Barefoot on sand: which part of your foot should strike the ball?',
+ 'cay-no-offside':'With no offside rule, where can an attacker wait, and who must watch them?',
+ 'cay-kick-in':'One teammate is marked close, one is free far away. Throw or kick?',
+ 'cay-surfaces':'Sand, grass or a court: where will the same pass run furthest?',
+ 'cay-court':'The sand is bumpy. How can you get the pass to your teammate cleanly?',
+ 'cay-overhead':'Before an overhead kick, what must you check around you?',
+ 'cay-club':'Your keeper steps out. Who is the extra free player now?',
+ 'cay-surf-roof':'A smaller team plays a bigger one. What helps them most?',
+ 'cay-fuel':'When should you eat your meal, and what makes a good small snack?',
+ 'cay-rest':'How much sleep do you need, and how many rest days a week?',
+ 'cay-water':'On a hot day, when should you drink water?',
+ 'cay-heading':'A high ball drops at a young player. What should they do instead of heading it?',
 };

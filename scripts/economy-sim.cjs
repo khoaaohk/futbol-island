@@ -5,6 +5,12 @@
  *   node scripts/economy-sim.cjs            # current vs proposed, all archetypes, 90 days
  *   node scripts/economy-sim.cjs --days 60  # other horizon
  *   node scripts/economy-sim.cjs --json     # machine-readable results
+ *   node scripts/economy-sim.cjs --days 180 # long horizon (casual players)
+ *
+ * 29 Sep 2026 (docs/economy/ECONOMY_UPDATE_2026-09-29.md): configs are now BEFORE (the game on 28 Sep: 9 jobs, 80 balls, 32 books,
+ * shore fishing only), CURRENT (read live: Coral Cay's Harvest day job, 100 balls, 36 books, the Deep Sea Boat), AFTER_FULL
+ * (CURRENT + the Match-day snacks job that is still being added) and PROPOSED (the 29 Sep recommendation). New archetypes
+ * casual15 (15 min daily) and the "engaged" label on keen (45 min daily), plus a daily-ceiling table for the job count.
  *
  * Deterministic (seeded RNG). Loads the REAL constants from the game code with the same ts.transpileModule pattern the tests
  * use (lib/town/jobs/jobEconomy.ts, lib/arcade/arcadeWalletCore.ts, lib/town/market/*, lib/town/fishing/fishCatalog.ts,
@@ -59,6 +65,10 @@ const learnCoins=req('lib/town/learnCoins.ts');
 const stories=req('lib/paths/stories.ts'),upcoming=req('lib/paths/upcomingStories.ts');
 const FORMAT_PATHS=req('lib/paths/formatPaths.json');
 const QUIZZES=req('lib/town/quizManifest.json');
+/** Coral Cay additions (29 Sep 2026) removed again to rebuild the 28 Sep game for the BEFORE config. */
+const SEP29={jobs:['farm-harvest','match-day-snacks'],books:['cafu','nadim','kante','oshoala'],ballsBefore:quest.PRE_CORAL_CAY_IDS.length,
+ /** Match-day snacks is being added to lib/town/jobs/* by the Coral Cay agent; until it lands the sim assumes the median pay 8. */
+ snacksPay:jobs.JOB_BASE_PAY['match-day-snacks']??8};
 
 const CARD_LIST=cards.ALL_PLAYERS.map(name=>({name,tier:tiers.cardTier(name)}));
 const TIER_OF=new Map(CARD_LIST.map(c=>[c.name,c.tier]));
@@ -91,9 +101,10 @@ const ASSUME={
 };
 // How each archetype splits a session (share of minutes). Exhausted activities hand their time to the others.
 const ARCHETYPES={
+ casual15:{label:'Casual · 15 min daily',minutes:15,plays:()=>true,mix:{balls:25,lessons:15,npc:10,story:3,jobs:15,arcade:17,fish:8,garden:7}},
  casual:{label:'Casual · 10 min, 4 days/week',minutes:10,plays:d=>[0,2,4,5].includes(d%7),mix:{balls:25,lessons:15,npc:10,story:3,jobs:15,arcade:17,fish:8,garden:7}},
  regular:{label:'Regular · 20 min daily',minutes:20,plays:()=>true,mix:{balls:20,lessons:20,npc:10,story:5,jobs:15,arcade:14,fish:8,garden:8}},
- keen:{label:'Keen · 45 min daily',minutes:45,plays:()=>true,mix:{balls:15,lessons:20,npc:7,story:5,jobs:18,arcade:17,fish:9,garden:9}},
+ keen:{label:'Engaged (keen) · 45 min daily',minutes:45,plays:()=>true,mix:{balls:15,lessons:20,npc:7,story:5,jobs:18,arcade:17,fish:9,garden:9}},
 };
 const REPEATABLE=['jobs','arcade','fish','garden'];
 
@@ -114,25 +125,44 @@ const CURRENT={
   scooter:vending.VENDING_PRICES.scooter,bike:vending.VENDING_PRICES.bike,moped:vending.VENDING_PRICES.moped,jetpack:vending.VENDING_PRICES.jetpack,
   costume:vending.VENDING_PRICES.costume,book:books.BOOK_PRICE},
  packsPerDay:packs.PACKS_PER_DAY,packRule:'relaxed', // pack top-ups (vendingLedger.packFreshness) + 3 a day
+ jobIds:jobs.JOB_IDS,balls:CONTENT.balls,excludeBooks:[],fishSpots:fish.FISH_SPOTS,costumeBalls:quest.costumeUnlockBalls,
+};
+/** The game on 28 Sep 2026, before Coral Cay: 9 jobs, 80 hidden balls (fox at 80), 32 books, shore fishing only. */
+const BEFORE={
+ ...CURRENT,name:'before',learn:{...CURRENT.learn,ball:5},
+ jobIds:jobs.JOB_IDS.filter(id=>!SEP29.jobs.includes(id)),balls:SEP29.ballsBefore,excludeBooks:SEP29.books,fishSpots:fish.SHORE_SPOTS,
+ costumeBalls:id=>{if(id===quest.COIN_REWARD_ID)return SEP29.ballsBefore;const i=quest.COSTUME_UNLOCK_ORDER.indexOf(id);return i<0?SEP29.ballsBefore:Math.min(SEP29.ballsBefore,(Math.floor(i/3)+1)*10);},
+};
+/** CURRENT plus the second Coral Cay farm job (Match-day snacks), which is still being added: the full 29 Sep game. */
+const AFTER_FULL={
+ ...CURRENT,name:'after+snacks',
+ jobIds:[...new Set([...CURRENT.jobIds,'match-day-snacks'])],jobBase:{...CURRENT.jobBase,'match-day-snacks':SEP29.snacksPay},
 };
 /** The original recommendation (docs/economy/ECONOMY_PROPOSAL.md §5) as a what-if overlay: it differs from CURRENT only in the
  *  two parts the user declined (the Matchday calendar and 120-coin books). */
-const PROPOSED={
- ...CURRENT,name:'proposed',
+const SEP28_PROPOSAL={
+ ...CURRENT,name:'sep28-proposal',
  calendar:{every:5,reward:'pack3'},               // Matchday calendar: every 5th play day (not consecutive) → free 3-card pack
  prices:{...CURRENT.prices,book:120},
 };
-const withAllBooks=cfg=>({...cfg,name:cfg.name+'+32books',allBooks:true});
+const withAllBooks=cfg=>({...cfg,name:cfg.name+'+allbooks',allBooks:true});
+/** The 29 Sep recommendation (ECONOMY_UPDATE_2026-09-29.md: hidden ball 5 → 10 learning coins) is applied in lib/town/learnCoins.ts,
+ *  so CURRENT/AFTER_FULL read it live. AFTER_UNCHANGED is the full 29 Sep game WITHOUT it (ball 5), for comparison. */
+const AFTER_UNCHANGED={...AFTER_FULL,name:'after,no-change',learn:{...AFTER_FULL.learn,ball:5}};
+const PROPOSED=AFTER_FULL;
 
 // ---- Helpers -------------------------------------------------------------------------------------------------------------
 function rng(seed){let a=seed>>>0;return()=>{a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
-const FISH_EV=(()=>{const spotEV=fish.FISH_SPOTS.map(s=>{const w=Object.entries(s.weights),tot=w.reduce((n,[,x])=>n+x,0);return w.reduce((n,[id,x])=>n+x/tot*fish.fishById(id).price,0);});return spotEV.reduce((a,b)=>a+b,0)/spotEV.length;})();
+const fishEV=spots=>{const spotEV=spots.map(s=>{const w=Object.entries(s.weights),tot=w.reduce((n,[,x])=>n+x,0);return w.reduce((n,[id,x])=>n+x/tot*fish.fishById(id).price,0);});return spotEV.reduce((a,b)=>a+b,0)/spotEV.length;};
+const FISH_EV=fishEV(fish.FISH_SPOTS);
 const GARDEN_VALUE=garden.GARDEN_SPOTS.map(s=>goods.goodById(s.good).price);
+/** The book id behind a vending display item (`display:<machine>:book…`). */
+const bookOf=it=>it.storyId??Object.entries(books.PLAYER_BOOKS).find(([,b])=>b.itemId===it.id)?.[0];
 const pickWeighted=(pool,weight,r)=>{const tot=pool.reduce((n,x)=>n+weight(x),0);if(!tot)return null;let v=r()*tot;for(const x of pool){v-=weight(x);if(v<=0)return x;}return pool[pool.length-1];};
 
 // ---- One player ------------------------------------------------------------------------------------------------------------
 function simulate(cfg,archName,days,seed=7){
- const A=ARCHETYPES[archName],r=rng(seed+archName.length*101);
+ const A=ARCHETYPES[archName],r=rng(seed+archName.length*101),EV=fishEV(cfg.fishSpots),JOBS=cfg.jobIds;
  const s={balance:0,earned:0,spent:0,owned:new Set(),cards:new Set(),balls:0,lessonsDone:0,core:FORMAT_PATHS.map(()=>0),pathOrder:[1,2,0,3],
   finishedPaths:0,cardSrc:{},stories:0,journeys:0,explores:0,jobLife:{},puzzles:0,playDays:0,packsBought:0,firsts:{},log:[]};
  const P=cfg.prices;
@@ -141,11 +171,11 @@ function simulate(cfg,archName,days,seed=7){
  for(const it of vending.VENDING_ITEMS){
   if(it.kind==='gear'){const cat=it.storeItem.category,id=it.storeItem.option.id;if(`${cat}:${id}`===`${cat}:classic`)continue;
    if(cat==='ball')catalog.push({id:it.id,cat:'ball',price:P.ball});else catalog.push({id:it.id,cat:'ride',price:P[cat],gate:()=>rides.pathsNeeded(cat,id,CONTENT.paths)<=s.finishedPaths});}
-  if(it.kind==='costume')catalog.push({id:it.id,cat:'costume',price:P.costume,gate:()=>s.balls>=quest.costumeUnlockBalls(it.costume)});
+  if(it.kind==='costume')catalog.push({id:it.id,cat:'costume',price:P.costume,gate:()=>s.balls>=cfg.costumeBalls(it.costume)});
  }
  for(const it of vending.VENDING_SPECIALS){
   if(it.kind==='gear')catalog.push({id:it.id,cat:'specialBall',price:P.specialBall});
-  if(it.kind==='display')catalog.push({id:it.id,cat:'book',price:P.book,gate:()=>!!it.storyId||!!cfg.allBooks,future:!it.storyId&&!cfg.allBooks});
+  if(it.kind==='display'&&!cfg.excludeBooks.includes(bookOf(it)))catalog.push({id:it.id,cat:'book',price:P.book,gate:()=>!!it.storyId||!!cfg.allBooks,future:!it.storyId&&!cfg.allBooks});
  }
  // Pack availability = vendingLedger.packFreshness (≥2 fresh legends and ≥size−1 fresh regulars). The proposed 'relaxed' rule keeps
  // a pack on sale while ANY card it can give is still missing and tops up the other slots with other missing cards, so the binder
@@ -190,7 +220,7 @@ function simulate(cfg,archName,days,seed=7){
   const jobsToday={};let basket=0,gardenLeft=[...GARDEN_VALUE],arcadeGame=0;
   const nextLesson=()=>{const p=s.pathOrder.find(i=>s.core[i]<CONTENT.coreLessons[i]);return p!==undefined?{core:p}:s.lessonsDone<CONTENT.lessons?{extra:true}:null;};
   const can={
-   balls:()=>s.balls<CONTENT.balls,lessons:()=>!!nextLesson(),npc:()=>npcToday<cfg.npcPicks,
+   balls:()=>s.balls<cfg.balls,lessons:()=>!!nextLesson(),npc:()=>npcToday<cfg.npcPicks,
    story:()=>s.stories<CONTENT.stories||s.journeys<CONTENT.journeyStages||s.explores<CONTENT.exploreCards,
    jobs:()=>true,arcade:()=>true,fish:()=>true,garden:()=>gardenLeft.length>0,
   };
@@ -205,12 +235,12 @@ function simulate(cfg,archName,days,seed=7){
     else if(s.journeys<CONTENT.journeyStages&&(s.journeys<=s.stories*1.5||s.stories>=CONTENT.stories)){minutes-=ASSUME.min.journey;s.journeys++;credit(cfg.learn.journey,'learn');rec.cards+=earnCard('journey');}
     else{minutes-=ASSUME.min.story;s.stories++;credit(cfg.learn.story,'learn');rec.cards+=earnCard('story');}},
    jobs:()=>{minutes-=ASSUME.min.job;const pay=id=>{const done=jobsToday[id]||0,base=cfg.jobBase[id];return (done<cfg.fullPay?base:done<cfg.fullPay+cfg.halfPay?Math.ceil(base/2):cfg.tip)+(s.jobLife[id]?0:cfg.firstJob);};
-    const id=jobs.JOB_IDS.reduce((b,x)=>pay(x)>pay(b)?x:b,jobs.JOB_IDS[Math.floor(r()*jobs.JOB_IDS.length)]);credit(pay(id),'repeat');jobsToday[id]=(jobsToday[id]||0)+1;s.jobLife[id]=(s.jobLife[id]||0)+1;},
+    const id=JOBS.reduce((b,x)=>pay(x)>pay(b)?x:b,JOBS[Math.floor(r()*JOBS.length)]);credit(pay(id),'repeat');jobsToday[id]=(jobsToday[id]||0)+1;s.jobLife[id]=(s.jobLife[id]||0)+1;},
    arcade:()=>{const games=['runner','pinball','tennis','live','puzzle'],g=games[arcadeGame++%games.length];
     if(g==='puzzle'){minutes-=ASSUME.min.puzzle;s.balance-=cfg.puzzleCost;s.spent+=cfg.puzzleCost;if(s.puzzles<CONTENT.puzzles){s.puzzles++;credit(cfg.puzzleFirst+Math.round(ASSUME.puzzleStars),'repeat');}else credit(cfg.puzzleRepeat,'repeat');return;}
     if(s.balance<cfg.arcadeCost){minutes-=.2;return;}
     minutes-=g==='live'?ASSUME.min.liveRound:ASSUME.min.arcadeRound;s.balance-=cfg.arcadeCost;s.spent+=cfg.arcadeCost;credit(Math.round(cfg.arcadeCaps[g]*ASSUME.arcadeSkill[archName]*(.8+.4*r())),'repeat');},
-   fish:()=>{minutes-=ASSUME.min.fishCast;if(r()<ASSUME.fishSuccess)addGood(Math.round(FISH_EV*(.6+.8*r())));},
+   fish:()=>{minutes-=ASSUME.min.fishCast;if(r()<ASSUME.fishSuccess)addGood(Math.round(EV*(.6+.8*r())));},
    garden:()=>{minutes-=ASSUME.min.gardenPick;addGood(gardenLeft.pop());},
   };
   let guard=0;
@@ -265,35 +295,67 @@ function summarize(cfg,arch,days){
   emptySessions:res.empty,emptyBeforeDone:res.emptyPre,floodedBeforeAllBought:res.floodedPre,sessions:res.sessions,longestDry:res.longestDry,floodedSessions:res.flooded,peakIdle:res.idleCoins,
   earned:res.state.earned,spent:res.state.spent,endBalance:res.state.balance,cardSources:res.state.cardSrc};
 }
+/** Mean of the headline numbers over several seeds (a single seed moves "all bought" by a few days either way). */
+function averaged(cfg,arch,days,seeds=20){
+ const acc={coinsPerDay:0,coinsPerWeek:0,learnPct:0,firstBook:0,saveDaysPerBook:0,allCards:0,allBought:0,emptyBeforeDone:0};
+ for(let seed=1;seed<=seeds;seed++){const r=simulate(cfg,arch,days,seed),f=r.state.firsts,p=r.days.filter(d=>d.played&&d.day>=8&&d.day<=30),w=r.days.filter(d=>d.day>=8&&d.day<=28);
+  const perDay=p.reduce((n,d)=>n+d.earned,0)/p.length,learn=p.reduce((n,d)=>n+d.learnCoins,0)/Math.max(1,p.reduce((n,d)=>n+d.earned,0));
+  acc.coinsPerDay+=perDay;acc.coinsPerWeek+=w.reduce((n,d)=>n+d.earned,0)/3;acc.learnPct+=100*learn;acc.firstBook+=f.book??days;acc.saveDaysPerBook+=cfg.prices.book/perDay;
+  acc.allCards+=f.allCards??days;acc.allBought+=f.allBought??days;acc.emptyBeforeDone+=r.emptyPre;}
+ return Object.fromEntries(Object.entries(acc).map(([k,v])=>[k,+(v/seeds).toFixed(k==='saveDaysPerBook'?1:0)]));
+}
 function sinkTable(cfg){
  const P=cfg.prices,n=(cat)=>{let c=0;for(const it of vending.VENDING_ITEMS){if(it.kind==='gear'&&it.storeItem.option.id!=='classic'&&(cat==='ball'?it.storeItem.category==='ball':it.storeItem.category===cat))c++;if(cat==='costume'&&it.kind==='costume')c++;}return c;};
- const rows=[['Balls',n('ball'),P.ball],['Special balls',8,P.specialBall],['Scooters',n('scooter'),P.scooter],['Bikes',n('bike'),P.bike],['Mopeds',n('moped'),P.moped],['Flight',n('jetpack'),P.jetpack],['Island animals',n('costume'),P.costume],['Books (ready now)',CONTENT.readyBooks,P.book],['Books (all 32)',CONTENT.books,P.book]];
+ const specials=vending.VENDING_SPECIALS.filter(i=>i.kind==='gear').length;
+ const bookCount=vending.VENDING_SPECIALS.filter(i=>i.kind==='display'&&(i.storyId||cfg.allBooks)&&!cfg.excludeBooks.includes(bookOf(i))).length;
+ const rows=[['Balls',n('ball'),P.ball],['Special balls',specials,P.specialBall],['Scooters',n('scooter'),P.scooter],['Bikes',n('bike'),P.bike],['Mopeds',n('moped'),P.moped],['Flight',n('jetpack'),P.jetpack],['Island animals',n('costume'),P.costume],['Books',bookCount,P.book]];
  return rows.map(([k,c,p])=>({item:k,count:c,price:p,total:c*p}));
 }
+const sinkTotal=cfg=>sinkTable(cfg).reduce((n,x)=>n+x.total,0);
+/** Coins one full learning run pays (every lesson, ball, story, stage, explore item and path once), at the assumed perfect rate. */
+function learnPool(cfg){const L=cfg.learn;return Math.round(CONTENT.lessons*(L.lesson+L.perfect*ASSUME.perfectFirstTry)+cfg.balls*L.ball+CONTENT.stories*L.story+CONTENT.journeyStages*L.journey+CONTENT.exploreCards*L.explore+CONTENT.paths*L.path);}
+/**
+ * The most a player can earn from island jobs in one day (the "daily ceiling" question: does every new job add 2 more full-pay
+ * shifts?). Raw = every job's 2 full + 2 half shifts, no Training meter; metered = the same shifts through dailyMeter.trainingPay
+ * (the one daily budget shared by jobs, arcade payouts, market sales and trade-ins). First-job bonuses excluded (one-off).
+ */
+function jobCeiling(cfg){
+ const shifts=[];for(const id of cfg.jobIds){const b=cfg.jobBase[id]??8;for(let k=0;k<cfg.fullPay;k++)shifts.push(b);for(let k=0;k<cfg.halfPay;k++)shifts.push(Math.ceil(b/2));}
+ shifts.sort((a,b)=>b-a);const raw=shifts.reduce((a,b)=>a+b,0);let paid=0;for(const c of shifts)paid+=meter.trainingPay(paid,c);
+ return {jobs:cfg.jobIds.length,rawJobCeiling:raw,meteredJobCeiling:paid,trainingBudget:`${cfg.softCap.full} full, then half pay until ${cfg.softCap.half} paid, then 1-coin tips`,
+  firstJobBonuses:cfg.jobIds.length*cfg.firstJob,totalShifts:shifts.length,
+  shiftsToFillMeter:(()=>{let p=0,k=0;while(meter.trainingTier(p)!=='tip'&&k<shifts.length)p+=meter.trainingPay(p,shifts[k++]);return k;})()};
+}
 function sourceTable(cfg){
- const jobAvg=Object.values(cfg.jobBase).reduce((a,b)=>a+b,0)/CONTENT.jobs,m=ASSUME.min;
+ const ids=cfg.jobIds,jobAvg=ids.reduce((a,id)=>a+(cfg.jobBase[id]??8),0)/ids.length,m=ASSUME.min,pays=ids.map(id=>cfg.jobBase[id]??8),EV=fishEV(cfg.fishSpots);
  const rows=[
-  ['Island job (full pay)',`${Math.min(...Object.values(cfg.jobBase))}–${Math.max(...Object.values(cfg.jobBase))} (avg ${jobAvg.toFixed(1)})`,m.job,jobAvg/m.job*60,`${cfg.fullPay} full + ${cfg.halfPay} half per job, then ${cfg.tip}; +${cfg.firstJob} first time`],
-  ['Fishing (per cast)',`${FISH_EV.toFixed(1)} avg/fish`,m.fishCast,FISH_EV*ASSUME.fishSuccess/m.fishCast*60,`market: full price to ${cfg.marketFull}/day, then half`],
+  ['Island job (full pay)',`${Math.min(...pays)}–${Math.max(...pays)} (avg ${jobAvg.toFixed(1)}), ${ids.length} jobs`,m.job,jobAvg/m.job*60,`${cfg.fullPay} full + ${cfg.halfPay} half per job, then ${cfg.tip}; +${cfg.firstJob} first time; Training meter`],
+  ['Fishing (per cast)',`${EV.toFixed(1)} avg/fish (${cfg.fishSpots.length} spots)`,m.fishCast,EV*ASSUME.fishSuccess/m.fishCast*60,`market: full price to ${cfg.marketFull}/day, then half; Training meter`],
   ['Garden (per pick)',`${(GARDEN_VALUE.reduce((a,b)=>a+b,0)/GARDEN_VALUE.length).toFixed(1)} avg`,m.gardenPick,GARDEN_VALUE.reduce((a,b)=>a+b,0)/GARDEN_VALUE.length/m.gardenPick*60,`${GARDEN_VALUE.length} spots, regrow 3–4 min; shares market cap`],
-  ...['runner','pinball','tennis','live'].map(g=>[`Arcade ${g} (net of ${cfg.arcadeCost})`,`cap ${cfg.arcadeCaps[g]}`,g==='live'?m.liveRound:m.arcadeRound,(cfg.arcadeCaps[g]*.55-cfg.arcadeCost)/(g==='live'?m.liveRound:m.arcadeRound)*60,'no daily cap'+(cfg.softCap?' (proposed: global soft cap)':'')]),
+  ...['runner','pinball','tennis','live'].map(g=>[`Arcade ${g} (net of ${cfg.arcadeCost})`,`cap ${cfg.arcadeCaps[g]}`,g==='live'?m.liveRound:m.arcadeRound,(cfg.arcadeCaps[g]*.55-cfg.arcadeCost)/(g==='live'?m.liveRound:m.arcadeRound)*60,'Training meter']),
   ['Pass puzzle first solve',`${cfg.puzzleFirst}+stars (entry ${cfg.puzzleCost})`,m.puzzle,(cfg.puzzleFirst+ASSUME.puzzleStars-cfg.puzzleCost)/m.puzzle*60,`${CONTENT.puzzles} puzzles once; repeat pays ${cfg.puzzleRepeat}`],
   ['Daily play',`${cfg.dailyPlay}`,m.dailyPlay,null,'once a day after 30 s walking'],
   ['Lesson quiz',`${cfg.learn.lesson}+${cfg.learn.perfect} perfect`,m.lesson,(cfg.learn.lesson+cfg.learn.perfect*ASSUME.perfectFirstTry)/m.lesson*60,`${CONTENT.lessons} lessons once each (+card if perfect)`],
-  ['Hidden ball',`${cfg.learn.ball}`,3.5,cfg.learn.ball/3.5*60,`${CONTENT.balls} once each (+card)`],
+  ['Hidden ball',`${cfg.learn.ball}`,3.5,cfg.learn.ball/3.5*60,`${cfg.balls} once each (+card)`],
  ];
  return rows.map(([k,v,min,ph,cap])=>({source:k,coins:v,minutes:min,perHour:ph==null?'—':Math.round(ph),cap}));
 }
 
 if(require.main===module){
  const argv=process.argv.slice(2),days=Number(argv[argv.indexOf('--days')+1])||90,json=argv.includes('--json');
- const results=[];for(const cfg of [CURRENT,PROPOSED,withAllBooks(CURRENT),withAllBooks(PROPOSED)])for(const a of Object.keys(ARCHETYPES))results.push(summarize(cfg,a,days));
- if(json){console.log(JSON.stringify({content:CONTENT,assume:{...ASSUME,ballMinutes:'2+3*i/80'},results,sinks:{current:sinkTable(CURRENT),proposed:sinkTable(PROPOSED)},sources:{current:sourceTable(CURRENT),proposed:sourceTable(PROPOSED)}},null,1));process.exit(0);}
+ const CONFIGS=[BEFORE,AFTER_UNCHANGED,CURRENT,AFTER_FULL],WHO=['casual15','keen','casual','regular'];
+ const seeds=Number(argv[argv.indexOf('--seeds')+1])||20;
+ const results=[];for(const cfg of CONFIGS)for(const a of WHO)results.push(summarize(cfg,a,days));
+ const budget=CONFIGS.map(c=>({config:c.name,ownEverything:sinkTotal(c),learnPool:learnPool(c),...jobCeiling(c),fishEV:+fishEV(c.fishSpots).toFixed(2)}));
+ if(json){console.log(JSON.stringify({content:CONTENT,assume:{...ASSUME,ballMinutes:'2+3*i/80'},results,budget,sinks:Object.fromEntries(CONFIGS.map(c=>[c.name,sinkTable(c)])),sources:Object.fromEntries(CONFIGS.map(c=>[c.name,sourceTable(c)]))},null,1));process.exit(0);}
  console.log('CONTENT',JSON.stringify(CONTENT));
- console.log(`\nFish EV per catch ${FISH_EV.toFixed(2)} · garden full harvest ${GARDEN_VALUE.reduce((a,b)=>a+b,0)} coins · card trade-in ${trade.CARD_TRADE_COINS}×${trade.CARD_TRADES_PER_DAY}/day`);
- for(const cfg of [CURRENT,PROPOSED]){console.log(`\n== SOURCES (${cfg.name})`);console.table(sourceTable(cfg));console.log(`== SINKS (${cfg.name})`);const t=sinkTable(cfg);console.table(t);console.log('non-pack total (ready books):',t.filter(x=>x.item!=='Books (all 32)').reduce((n,x)=>n+x.total,0),' (all 32 books):',t.filter(x=>x.item!=='Books (ready now)').reduce((n,x)=>n+x.total,0));}
- console.log(`\n== SIMULATION (${days} days)`);
- console.table(results.map(r=>({cfg:r.config,who:r.archetype,'c/sess d1':r.coinsPerSession.day1,'wk1':r.coinsPerSession.wk1,'d8-30':r.coinsPerSession.d8_30,'d31-90':r.coinsPerSession.d31_90,'learn% d1-30':r.learnShare30,pack:r.firstPack,book:r.firstBook,ride:r.firstRide,animal:r.firstCostume,'cards d7%':r.cardsPct.d7,'d30%':r.cardsPct.d30,'d60%':r.cardsPct.d60,'d90%':r.cardsPct.d90,'items d30%':r.itemsPct.d30,'d60%i':r.itemsPct.d60,'d90%i':r.itemsPct.d90,allCards:r.allCards??'-',allBought:r.allBought??'-'})));
- console.table(results.map(r=>({cfg:r.config,who:r.archetype,sessions:r.sessions,empty:r.emptySessions,'empty<done':r.emptyBeforeDone,longestDry:r.longestDry,flooded:r.floodedSessions,'flood<allBought':r.floodedBeforeAllBought,peakIdle:r.peakIdle,paths:r.paths,balls:r.balls,packs:r.packs,earned:r.earned,spent:r.spent,end:r.endBalance})));
+ console.log(`\nFish EV per catch: shore ${fishEV(fish.SHORE_SPOTS).toFixed(2)}, deep-sea boat ${fishEV(fish.FISH_SPOTS.filter(s=>s.boat)).toFixed(2)}, all spots ${FISH_EV.toFixed(2)} · garden full harvest ${GARDEN_VALUE.reduce((a,b)=>a+b,0)} coins · card trade-in ${trade.CARD_TRADE_COINS}×${trade.CARD_TRADES_PER_DAY}/day`);
+ for(const cfg of [BEFORE,AFTER_FULL]){console.log(`\n== SOURCES (${cfg.name})`);console.table(sourceTable(cfg));console.log(`== SINKS (${cfg.name})`);console.table(sinkTable(cfg));console.log('own-everything total (excl. packs):',sinkTotal(cfg));}
+ console.log('\n== BUDGET: own-everything cost, one-off learning pool, daily job ceiling (raw vs Training meter)');console.table(budget);
+ console.log(`\n== ${seeds}-SEED AVERAGES (${Math.max(days,200)} days; single runs vary by ±3 days)`);
+ console.table(CONFIGS.flatMap(c=>['casual15','regular','keen'].map(a=>({cfg:c.name,who:a,...averaged(c,a,Math.max(days,200),seeds)}))));
+ console.log(`\n== SIMULATION (${days} days, seed 7)`);
+ console.table(results.map(r=>({cfg:r.config,who:r.archetype,'c/sess d1':r.coinsPerSession.day1,'wk1':r.coinsPerSession.wk1,'d8-30':r.coinsPerSession.d8_30,'d31-90':r.coinsPerSession.d31_90,'learn% d1-30':r.learnShare30,pack:r.firstPack,book:r.firstBook,ride:r.firstRide,animal:r.firstCostume,'cards d30%':r.cardsPct.d30,'d90%':r.cardsPct.d90,'items d30%':r.itemsPct.d30,'d90%i':r.itemsPct.d90,allCards:r.allCards??'-',allBought:r.allBought??'-'})));
+ console.table(results.map(r=>({cfg:r.config,who:r.archetype,sessions:r.sessions,'empty<done':r.emptyBeforeDone,longestDry:r.longestDry,'flood<allBought':r.floodedBeforeAllBought,peakIdle:r.peakIdle,paths:r.paths,balls:r.balls,packs:r.packs,earned:r.earned,spent:r.spent,end:r.endBalance})));
 }
-module.exports={simulate,summarize,withAllBooks,CURRENT,PROPOSED,CONTENT,ASSUME,ARCHETYPES,CARD_LIST,PACK_ITEMS};
+module.exports={simulate,summarize,averaged,withAllBooks,AFTER_UNCHANGED,sinkTable,sinkTotal,sourceTable,jobCeiling,learnPool,fishEV,BEFORE,CURRENT,AFTER_FULL,PROPOSED,SEP28_PROPOSAL,SEP29,CONTENT,ASSUME,ARCHETYPES,CARD_LIST,PACK_ITEMS};

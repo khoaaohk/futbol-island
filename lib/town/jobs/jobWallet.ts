@@ -18,7 +18,10 @@ export function createJobWallet(ports:JobWalletPorts){
  async function payJob(id:JobId,title:string,seconds:number):Promise<JobPayResult>{
   const t=now(),before=read(t),{coins,tier,bonus}=jobPayout(id,before),shift=(before.today[id]??0)+1;
   const after=write(l=>recordCompletion(l,id,coins,seconds),t);
-  const credited=await credit(`island-job:${id}:${localDay(t)}:${shift}`,coins,`Island job · ${title}`);
+  // The first-time bonus is its own run (economy fix, Sep 29 2026): outside the daily Training-meter cap, paid once per job
+  // (fixed run id; the ledger's lifetime count also stops it for jobs finished before this change).
+  const credited=await credit(`island-job:${id}:${localDay(t)}:${shift}`,coins-bonus,`Island job · ${title}`)
+   +(bonus?await credit(`island-job-first:${id}`,bonus,`First shift bonus · ${title}`):0);
   return {coins,credited,tier,bonus,message:payMessage(id,after),balance:ports.balance()};
  }
  /** One-time welcome coins for a player whose wallet is empty. Idempotent via the ledger flag and a fixed wallet run id. */

@@ -140,3 +140,33 @@ Placement checks (`tests/island-jobs.cjs`): every sign is more than 10 m from ev
 The former Boot Room feature was removed. The building remains in Island Square, labelled CLUBHOUSE. Its former interior, coach story, Enter prompt, camera hooks and runtime are removed. The outdoor kit-assistant job keeps its existing progress and rewards, now identified as Clubhouse, Island Square. It is started from its job sign. The shared shot-camera utility remains for the assistant-referee activity. No new render loop, geometry or interior is added.
 
 > **Sep 29 2026:** the Kit room job (kit assistant, Island Square cage court) was removed at the user's request. The generic `sort` task engine stays in jobRules/jobScene for future jobs.
+
+## 6. Coral Cay Farm: Harvest day (29 Sep 2026, local, not deployed)
+
+**Why it exists:** the user asked for a farm job ("that's why we are building this"). The farm is on Coral Cay, south of the beach-soccer court (`lib/town/coralCay.ts` `FARM`; built in `coralCayWorld.ts`).
+
+| Job | Where | Pay | Mini-task | Lesson on the payday card | Source (docs only) |
+|---|---|---|---|---|---|
+| Harvest day (farm hand) | The Farm, Coral Cay. Sign inside the west gate (602.5, −115.5), facing the dirt track. | 8 (+4 first time) | Walk to the 10 glowing ripe crops, one of each kind: maize, greens, tomatoes, sweet potatoes, peppers, pineapples, melons, mango, orange, banana. Then bring the basket to the farm stand (611, −98). Uses the existing `collect` + deliver engine and a new `produce` prop (instanced, coloured per crop). | Food is fuel. Carbohydrate foods (maize, sweet potatoes, rice, bananas) are the main energy for running. Fruit and vegetables bring vitamins for recovery. Eat a proper meal a few hours before you play, and drink water, especially on a hot beach. | [FIFA, Nutrition for Football](https://digitalhub.fifa.com/m/16e433eb11621446/original/ukbqfkkxw2o8s1gyjria-pdf.pdf); also used by the farmers: Better Health Channel "Sporting performance and food" and Sports Dietitians Australia "What to eat before, during and post exercise". |
+
+- **Economy:** unchanged rules. The job was added to `JobId`/`JOB_IDS` with `JOB_BASE_PAY` 8, and its done-line is "The harvest is in and the stand is full!".
+- **Placement:** checked by `tests/island-jobs.cjs`.
+  - The sign is more than 10 m from every other job sign.
+  - It is more than 8 m from every vending machine (including the four new ones: north beach, causeway bend, Coconut Café, Sharks Beach), every fishing post and the Clubhouse doorway.
+  - All targets are on open farm ground between the rows and trees, reachable through the fence gates (`tests/coral-cay.cjs` flood-fills them).
+- **Heat:** the sign joins the merged job-sign mesh and the label atlas (5 rows for 10 jobs). The crop markers and basket exist only while the job runs.
+- **Browser check:** desktop and 390×844. Offer at the sign → intro → start → 10/10 picked → stand → payday +12 (8 + 4 first-time bonus, lesson shown) → "Work again" → +8, with the done-line.
+- **Since built:** the "Match-day snacks" sort job (§7).
+
+## 7. Coral Cay Farm: Match-day snacks (29 Sep 2026, local, not deployed)
+
+| Job | Where | Pay | Mini-task | Lesson | Source (docs only) |
+|---|---|---|---|---|---|
+| Match-day snacks (farm stand) | The Farm, Coral Cay: board at (618.2, −106.8), basket at (603, −104.8), crates at x 604 / 608.5 / 613, z −108.2 | 8 (+4 first time) | Sort 6 farm foods into 3 crates: PRE-MATCH MEAL, HALF-TIME, RECOVERY | Eat a proper meal 2–3 hours before, a quick carb snack at half-time, and protein plus carbs after | Sports Dietitians Australia fact sheets (URL in `jobCatalog.ts` `lessonSource`) |
+
+- **Sort engine generalised.** `SortItem` gained `label` and `color`, and the sort task gained `style`, `source`, `itemNoun` and `slotNoun`. `jobScene.ts` gained a `produce` prop and `buildCrates`. As a result, the kit-room shirt job and the snacks job share one engine, and `jobRules.ts` wording is neutral.
+- **Economy.** `JOB_BASE_PAY['match-day-snacks']` is 8. The done-line is "Every snack is in the right crate!".
+  - The first-time bonus is now its own wallet run, `island-job-first:<id>` (`jobWallet.ts`), outside the daily training cap.
+  - `tests/economy.cjs` and `tests/island-jobs.cjs` cover it.
+- **Heat.** Same as Harvest day: the board joins the merged sign mesh and label atlas, and the crates and produce exist only while the job runs.
+- **Browser check.** Desktop and 390×844: offer → intro → a wrong crate is rejected with a hint → 6/6 packed → payday. Screenshots are in `scratchpad/new-island/v3/{desktop,mobile}-snacks-*.png`.

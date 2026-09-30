@@ -5,11 +5,10 @@ import {isVendingPreview} from '@/lib/town/vendingPreview';
 import {HOME_DECOR_ENABLED} from '@/lib/town/homeFeature';
 import {useEffect,useLayoutEffect,useMemo,useRef,useState,type CSSProperties} from 'react';
 import {BackButton} from './BackButton';
-import {CardBack} from './MiniCard';
 import VendingCardReveal from './VendingCardReveal';
 import CostumeCollection from './CostumeCollection';
 import VendingProductArt from './VendingProductArt';
-import {StorePreview,useStorePreviews} from './StorePreviews';
+import {BallPicture,StorePreview,useStorePreviews} from './StorePreviews';
 import {useCostumePreviews} from './CostumePreviews';
 import {VendingFace,type VendingFaceView,type VendingPhase,type VendingSlotState} from './VendingFace';
 import {recordExploreActivity} from '@/lib/town/exploreActivity';
@@ -51,7 +50,7 @@ type Status={kind:VendingSlotState;note:string};
 type Point={x:number;y:number};
 /** Gear miniatures are the island's own vehicle and ball meshes, rendered once per visit by StorePreviews and kept for the session. */
 let gearCache:Record<string,string>|null=null;
-const ROW_SHORT:Record<string,string>={special:'Specials',packs:'Packs',ball:'Balls',scooter:'Scooters',bike:'Bikes',moped:'Mopeds',jetpack:'Flight',costume:'Animals'};
+const ROW_SHORT:Record<string,string>={special:'Specials',books:'Books',packs:'Packs',ball:'Balls',scooter:'Scooters',bike:'Bikes',moped:'Mopeds',jetpack:'Flight',costume:'Animals'};
 const cue=(name:'select'|'previous'|'next'|'category'|'insert'|'confirm'|'equip'|'coin'|'thunk'|'pop'|'buzz')=>{try{document.dispatchEvent(new CustomEvent('fi2-vending-cue',{detail:name}));}catch{}};
 const reducedMotion=()=>typeof matchMedia==='function'&&matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -63,12 +62,19 @@ export function quadMatrix(w:number,h:number,[a,b,c,d]:Point[]){
  return `matrix3d(${m.map(v=>+v.toFixed(6)).join(',')})`;
 }
 
+/** The face's true CSS 3D placement from the zoom camera (products stand in the real bay behind the glass), or null. */
+export function faceDepthMatrix(machines:(()=>VendingMachines|null)|undefined,w:number,h:number){
+ const host=typeof document==='undefined'?null:document.querySelector('.town-scene')?.getBoundingClientRect(),r=host&&host.width>0?host:{left:0,top:0,width:innerWidth,height:innerHeight};
+ return machines?.()?.faceCssMatrix?.(w,h,r)??null;
+}
 export default function VendingMachine({open,machineId,onOpenChange,value,onChange,onEquipRide,itemRequest,machines}:VendingMachineProps){
  const preview=isVendingPreview();
  const machine=vendingMachine(machineId)??VENDING_MACHINES[0];
  const vending=useVending(),wallet=useArcadeWallet(),rides=useRideUnlocks(),coins=useCoinProgress();
  const stock=useMemo(()=>machineStock(machine.id),[machine.id]);
  const all=useMemo(()=>stock.flatMap(r=>r.items),[stock]);
+ /** The stock row each item is shown in here (a book's own row is 'special' at its home machine, but it sits in Books). */
+ const rowOf=useMemo(()=>new Map(stock.flatMap(r=>r.items.map(i=>[i.id,r.row] as const))),[stock]);
  /** Specials first, then the regular rows, six slots per page (VENDING_FACE_LAYOUT.slots). */
  const pages=useMemo(()=>{const out:VendingItem[][]=[];for(let i=0;i<all.length;i+=VENDING_SLOTS_PER_PAGE)out.push(all.slice(i,i+VENDING_SLOTS_PER_PAGE));return out;},[all]);
  const [book,setBook]=useState<PlayerBookId|null>(null),[faceEntrance,setFaceEntrance]=useState(true);
@@ -103,7 +109,9 @@ export default function VendingMachine({open,machineId,onOpenChange,value,onChan
  },[open,machines]);
  // The face box keeps the real front panel's proportions (FACE_SIZE); the matrix then adds only perspective. Sizing the box
  // from the projected (foreshortened) top edge made every shelf item look stretched sideways (egg-shaped balls, wide books).
- const placement=useMemo(()=>{if(!quad)return null;const [a,,,d]=quad,h=Math.max(200,Math.round(Math.hypot(d.x-a.x,d.y-a.y))),w=Math.max(160,Math.round(h*FACE_SIZE.w/FACE_SIZE.h));return {w,h,transform:quadMatrix(w,h,quad)};},[quad]);
+ // `widen`: how much the angled close-up foreshortens the face's width; round balls are widened back so they stay round (user,
+ // Sep 30 2026: "fix the perspective of the balls").
+ const placement=useMemo(()=>{if(!quad)return null;const [a,b,c,d]=quad,h=Math.max(200,Math.round(Math.hypot(d.x-a.x,d.y-a.y))),w=Math.max(160,Math.round(h*FACE_SIZE.w/FACE_SIZE.h)),across=(Math.hypot(b.x-a.x,b.y-a.y)+Math.hypot(c.x-d.x,c.y-d.y))/2,down=(Math.hypot(d.x-a.x,d.y-a.y)+Math.hypot(c.x-b.x,c.y-b.y))/2;const depth=faceDepthMatrix(machines,w,h);return {w,h,transform:depth??quadMatrix(w,h,quad),depth:Boolean(depth),widen:Math.min(1.25,Math.max(1,down*FACE_SIZE.w/FACE_SIZE.h/Math.max(1,across)))};},[quad,machines]);
 
  // ---- Open / close ----
  useEffect(()=>{
@@ -143,8 +151,10 @@ export default function VendingMachine({open,machineId,onOpenChange,value,onChan
  }
  function picture(item:VendingItem,big=false){
   if(item.kind==='display')return <VendingProductArt id={item.id} kind={item.kind}/>;
-  if(item.kind==='pack')return <span className={styles.pack}><CardBack mystery className={big?styles.packCardBig:styles.packCard}/></span>;
+  // A real card pack (the foil pack art the machine front shows), standing on the shelf (Sep 30 2026: not a flat card back).
+  if(item.kind==='pack')return <VendingProductArt id={item.id} kind="pack"/>;
   if(item.kind==='costume'){const src=costumes[item.costume!];const island=getIslandCostume(item.costume!);return src?<img src={src} alt="" width={320} height={280} draggable={false}/>:<span className={styles.placeholder} style={{color:`#${island.kitColor.toString(16).padStart(6,'0')}`}}>{island.animalLabel}</span>;}
+  if(item.storeItem?.category==='ball')return <BallPicture item={item.storeItem} src={gear[item.id]}/>;
   return <StorePreview item={item.storeItem!} src={gear[item.id]}/>;
  }
  const kindOf=(item:VendingItem)=>item.storeItem?.category??item.kind;
@@ -199,7 +209,7 @@ export default function VendingMachine({open,machineId,onOpenChange,value,onChan
  const goPage=(next:number,index=0)=>{setPageIndex(next);setCursor(index);setArmedId(null);setLed(null);focusSlot(index);};
  const flip=(dir:1|-1)=>{cue(dir===1?'next':'previous');goPage((Math.min(pageIndex,pages.length-1)+dir+pages.length)%pages.length);};
  /** Row label: jump to the page where the next row (category) starts. */
- const nextRow=()=>{cue('category');const at=page[page.length-1]?.row;const start=all.findIndex(i=>i.row!==at&&all.indexOf(i)>all.indexOf(page[page.length-1]));const target=start<0?all[0]:all[start];const p=pageOf(target.id);goPage(p,pages[p].indexOf(target));};
+ const nextRow=()=>{cue('category');const at=rowOf.get(page[page.length-1]?.id);const start=all.findIndex(i=>rowOf.get(i.id)!==at&&all.indexOf(i)>all.indexOf(page[page.length-1]));const target=start<0?all[0]:all[start];const p=pageOf(target.id);goPage(p,pages[p].indexOf(target));};
  const leave=()=>{if(book){setBook(null);return;}if(story){setStory(null);return;}exitButton.current?.click();};
 
  // ---- Keyboard ----
@@ -231,12 +241,12 @@ export default function VendingMachine({open,machineId,onOpenChange,value,onChan
  const ledView=led??(armed&&armedStatus?{msg:armedStatus.kind==='buy'?`${armed.label} · ${armed.price} coins`:armedStatus.kind==='short'?armedStatus.note:`${armed.label}: ${armedStatus.note}`,
   sub:armedStatus.kind==='buy'?'Press again, or tap the coin slot':armed.blurb,tone:armedStatus.kind==='short'||armedStatus.kind==='locked'||armedStatus.kind==='soldout'?'warn' as const:armedStatus.kind==='buy'?undefined:'ok' as const}
   :{msg:'いらっしゃいませ! Pick an item',sub:machine.lesson});
- const rowsOnPage=[...new Set(page.map(i=>i.row))];
+ const rowsOnPage=[...new Set(page.map(i=>rowOf.get(i.id)??i.row))];
  const fontSize=placement?Math.max(14,Math.min(18,Math.round(placement.w/29))):12;
  const view:VendingFaceView|null=placement&&{placement,fontSize,compact:placement.h<430,
   machine:{id:machine.id,name:machine.name,color:machine.color,light:machine.light,ink:machine.ink},
   header:{label:rowsOnPage.map(r=>ROW_SHORT[r]??r).join(' · '),page:Math.min(pageIndex,pages.length-1)+1,pages:pages.length,special:rowsOnPage.includes('special')},
-  slots:page.map((item,index)=>{const s=status(item);return {id:item.id,label:item.label,price:item.price,state:s.kind,special:Boolean(item.machine),lit:item.id===armedId,vending:vendingSlot===item.id,kind:kindOf(item),picture:picture(item),
+  slots:page.map((item,index)=>{const s=status(item);return {id:item.id,label:item.label,price:item.price,state:s.kind,special:rowOf.get(item.id)==='special',lit:item.id===armedId,vending:vendingSlot===item.id,kind:kindOf(item),picture:picture(item),
    ariaLabel:`${index+1}. ${item.label}. ${s.kind==='buy'||s.kind==='short'?`${item.price} coins`:s.note}${item.machine?'. Only here':''}`};}),
   cursor,led:ledView,balance:vending.balance,found:{short:`${found}/${VENDING_MACHINES.length} found`,label:`${found}/${VENDING_MACHINES.length} machines found`},phase,coinDrop,
   tray:dispense?{key:dispense.key,id:dispense.item.id,label:dispense.item.label,kind:kindOf(dispense.item),picture:picture(dispense.item)}:null};

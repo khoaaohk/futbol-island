@@ -1,4 +1,4 @@
-// Ball Hunt lessons (Sep 28 2026 curriculum): 80 different key football ideas, each with its own three-step scene.
+// Ball Hunt lessons (Sep 28 2026 curriculum, 100 since the Sep 29 2026 Coral Cay balls): 100 different key football ideas, each with its own three-step scene.
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),ts=require('typescript');
 const root=path.resolve(__dirname,'..'),cache=new Map();
 function load(file){const abs=path.resolve(root,file.endsWith('.ts')?file:file+'.ts');if(cache.has(abs))return cache.get(abs).exports;const mod={exports:{}};cache.set(abs,mod);
@@ -8,15 +8,15 @@ const {COIN_QUEST}=load('lib/town/coinQuest.ts'),{BALL_HUNT_LESSONS,BALL_HUNT_PR
 const words=s=>s.trim().split(/\s+/).length,title=s=>s.teaching.slice(0,s.teaching.indexOf('.'));
 
 // 1. Coverage and distinct concepts: one lesson per ball, one concept (scene kind) per lesson, every scene used once.
-assert.equal(Object.keys(BALL_HUNT_LESSONS).length,COIN_QUEST.length);assert.equal(COIN_QUEST.length,80);
+assert.equal(Object.keys(BALL_HUNT_LESSONS).length,COIN_QUEST.length);assert.equal(COIN_QUEST.length,100);
 const kinds=COIN_QUEST.map(s=>BALL_HUNT_LESSONS[s.id]?.kind);
 assert(kinds.every(Boolean),'every ball has a lesson');
-assert.equal(new Set(kinds).size,80,'no two balls teach the same concept');
+assert.equal(new Set(kinds).size,100,'no two balls teach the same concept');
 assert.deepEqual([...kinds].sort(),Object.keys(SCENES).sort(),'every scene is used by exactly one ball');
-assert.equal(new Set(COIN_QUEST.map(title)).size,80,'every card title is different');
-const allSteps=Object.values(BALL_HUNT_LESSONS).flatMap(l=>l.steps);assert.equal(new Set(allSteps).size,240,'no step text is reused');
-assert.equal(new Set(Object.values(BALL_HUNT_LESSONS).map(l=>l.kind+'|'+l.steps.join('|'))).size,80);
-console.log('PASS 80 balls → 80 different concepts, 80 scenes, 80 titles, 240 different steps');
+assert.equal(new Set(COIN_QUEST.map(title)).size,100,'every card title is different');
+const allSteps=Object.values(BALL_HUNT_LESSONS).flatMap(l=>l.steps);assert.equal(new Set(allSteps).size,300,'no step text is reused');
+assert.equal(new Set(Object.values(BALL_HUNT_LESSONS).map(l=>l.kind+'|'+l.steps.join('|'))).size,100);
+console.log('PASS 100 balls → 100 different concepts, 100 scenes, 100 titles, 300 different steps');
 
 // 2. Levels follow how hard the ball is to find; words follow the age table (docs/quiz-design.md §5: 7v7 → 9v9 → 11v11).
 const expectedLevel=s=>s.parachute||s.ramp||s.id.startsWith('high-')||s.id==='wall-community'?3:(s.y===0&&!s.wall?.high&&!s.manhole&&!s.grass&&s.truck===undefined?1:2);
@@ -29,14 +29,14 @@ for(const s of COIN_QUEST){const l=BALL_HUNT_LESSONS[s.id];count[l.level]++;
  assert(s.teaching.length>=90&&title(s).length>=8&&title(s).length<=48,`${s.id} teaching title + explanation`);
  assert(typeof BALL_HUNT_PRACTICE[s.id]==='string'&&BALL_HUNT_PRACTICE[s.id].length>30,`${s.id} practice prompt`);
  if(l.level===1)assert(!/half-space|overload|goal-side|transition|compact/i.test(l.steps.join(' ')),`${s.id} level-1 words stay everyday`);}
-assert.deepEqual(count,{1:18,2:45,3:17});
-assert.equal(new Set(Object.values(BALL_HUNT_PRACTICE)).size,80,'80 different practice prompts');
-console.log('PASS levels: 18 easy (7v7 words ≤16), 45 medium (≤18), 17 hardest (≤22); short actions; 80 practice prompts');
+assert.deepEqual(count,{1:32,2:49,3:19});
+assert.equal(new Set(Object.values(BALL_HUNT_PRACTICE)).size,100,'100 different practice prompts');
+console.log('PASS levels: 32 easy (7v7 words ≤16), 49 medium (≤18), 19 hardest (≤22); short actions; 100 practice prompts');
 
 // 3. Space-and-time core: most balls are about creating space, timing or shape; other key families all present.
 const fam={};for(const l of Object.values(BALL_HUNT_LESSONS))fam[l.family]=(fam[l.family]||0)+1;
 assert((fam['Creating space']||0)+(fam['Timing']||0)+(fam['Team shape']||0)>=28,'space and time is the core');
-for(const f of ['Creating space','Timing','Team shape','Breaking lines','Zones and thirds','Final third','Transitions','Defending space','On the ball','Set pieces','Goalkeeping'])assert(fam[f]>=2,`family ${f} is taught`);
+for(const f of ['Creating space','Timing','Team shape','Breaking lines','Zones and thirds','Final third','Transitions','Defending space','On the ball','Set pieces','Goalkeeping','Rules of the game','Player health','Beach soccer'])assert(fam[f]>=2,`family ${f} is taught`);
 console.log('PASS families',JSON.stringify(fam));
 
 // 4. Every scene renders three bounded, different steps: problem → movement → payoff, animated only on a step change.
@@ -75,7 +75,7 @@ for(const [kind,scene] of Object.entries(SCENES)){
  assert(frames.some(f=>f.zones.length||f.lanes.length||f.lines.length||f.shadows.length||f.views.length||f.clock||f.pulse||f.tags.length||f.links.length||f.cone),`${kind} has teaching marks`);
 }
 }
-console.log(`PASS 80 scenes × 3 steps × ${LAYOUTS.length} layouts: on screen, plain SVG, static start, animation on every step change, open/blocked lanes geometrically true`);
+console.log(`PASS ${Object.keys(SCENES).length} scenes × 3 steps × ${LAYOUTS.length} layouts: on screen, plain SVG, static start, animation on every step change, open/blocked lanes geometrically true`);
 
 // 5. No two scenes look alike: compare layouts and movements (labels ignored) for every pair.
 for(const layout of LAYOUTS){
@@ -88,7 +88,7 @@ for(let i=0;i<keys.length;i++)for(let j=i+1;j<keys.length;j++){const A=shapes.ge
  assert(!same,`${keys[i]} and ${keys[j]} are near-identical scenes (layout ${layout.map(c=>c.toFixed(1))})`);}
 {const A=shapes.get('go-wide'),B=A.map(s=>({...s,pts:s.pts.map(([x,y,r])=>[x+9,y-7,r])}));assert([0,1,2].every(s=>matchCost(A[s].pts,B[s].pts)<24),'the detector catches a shifted copy of a scene');}
 }
-console.log(`PASS ${80*79/2} scene pairs × ${LAYOUTS.length} layouts checked: no near-identical layout + movement`);
+console.log(`PASS ${100*99/2} scene pairs × ${LAYOUTS.length} layouts checked: no near-identical layout + movement`);
 
 // 6. Semantics of key ideas.
 for(const layout of LAYOUTS){const M=pitchMap(layout).map,GOAL=M([165,234]),s1=Math.min(1,pitchMap(layout).sx);
@@ -107,8 +107,14 @@ const F=(k,s)=>ballLessonFrame(k,s,layout),N=(k,s,id)=>F(k,s).nodes.find(n=>n.id
 {assert(F('arrive-late',2).motions.find(m=>m.id==='ball').delay===0&&F('arrive-late',2).pulse,'arrive with the ball: run and pass together, "now" cue');}
 {const c0=F('time-or-pressure',0).clock.t,c2=F('time-or-pressure',2).clock.t;assert(c0>c2,'time on the ball shrinks when a defender is close');assert(F('scan-shoulder',2).clock.t>F('scan-shoulder',0).clock.t,'scanning early buys time');}
 {const w=F('go-wide',1);assert(w.zones.some(z=>z.label==='Gap'),'width opens a central gap');assert(w.lanes.some(l=>l.open));}
+// Coral Cay ideas (Sep 29 2026).
+{const f=F('keeper-throw',1);assert(f.lanes.some(l=>!l.open)&&f.lanes.some(l=>l.open),'near roll blocked, far throw open');const c=N('keeper-throw',2,'c'),b=N('keeper-throw',2,'ball');assert(dist([c.x,c.y],[b.x,b.y])<20,'the throw goes to the far teammate');}
+{const a=N('no-offside',1,'a'),x1=N('no-offside',1,'x1');assert(a.y<x1.y&&dist([a.x,a.y],[N('no-offside',1,'ball').x,N('no-offside',1,'ball').y])<20,'an attacker beyond the last defender receives: no offside on sand');}
+{const px=M([300,0])[0];assert(['a','b','c'].every(id=>N('drink-heat',1,id).x>px-30),'the drinks break happens at the touchline');}
+{assert(N('keeper-joins',1,'k').y<N('keeper-joins',0,'k').y-30,'the beach keeper steps out to join the attack');}
+{const b0=N('whole-ball-line',0,'ball'),line=M([316,0])[0];assert(b0.x<line&&b0.x>line-12*s1-2,'the ball sits on the line and is still in play');}
 }
-console.log('PASS semantics (every layout): recovery line, keeper angle, lane block, third-man timing, lead pass, burst, check away, decoy drag, onside curve, squeeze, keeper outlet, arrive-with-ball, time clocks, width gap');
+console.log('PASS semantics (every layout): recovery line, keeper angle, lane block, third-man timing, lead pass, burst, check away, decoy drag, onside curve, squeeze, keeper outlet, arrive-with-ball, time clocks, width gap; Coral Cay throw choice, no offside, drinks break, keeper joins, ball on the line');
 
 // 7. Mobile heat: the renderer animates only on a step change and never loops.
 const comp=fs.readFileSync(path.join(root,'components/BallLessonDiagram.tsx'),'utf8'),css=fs.readFileSync(path.join(root,'components/BallHuntLesson.module.css'),'utf8');

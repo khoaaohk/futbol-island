@@ -1,6 +1,10 @@
 import type {LearningId} from './learningJourneys';
+import {CORAL_CAY_SPOTS} from './coralCayBalls';
 export const COIN_REWARD_ID='matchday-fox',COIN_STORAGE_KEY='fi2-matchday-coins-v1';
-export type CoinSpot={id:string;name:string;x:number;y:number;z:number;kind:'hidden'|'kick'|'landing';parachute?:boolean;grass?:boolean;truck?:number;ramp?:string;wall?:{x:number;y:number;z:number;high?:boolean;round?:boolean;facing?:'south'|'east'};clue:string;detail:string;teaching:string;lesson:LearningId;manhole?:boolean};
+export type CoinSpot={id:string;name:string;x:number;y:number;z:number;kind:'hidden'|'kick'|'landing';parachute?:boolean;grass?:boolean;truck?:number;ramp?:string;wall?:{x:number;y:number;z:number;high?:boolean;round?:boolean;facing?:'south'|'east'};clue:string;detail:string;teaching:string;lesson:LearningId;manhole?:boolean;
+ /** A ball resting on a floating buoy in the sea (Coral Cay): kick it from `kickFrom` on the deck (a shot heading at the buoy
+  *  collects it), or glide to it with the parachute. The buoy and the chalk mark are drawn in its packed parcel. */
+ buoy?:boolean;kickFrom?:{x:number;z:number}};
 /** Landing radius around a manhole centre. The drawn cover is 1 m wide with a 1.22 m rim. */
 export const MANHOLE_RADIUS=1.5;
 const manhole=(slug:string,x:number,z:number,near:string,place:'crossroads'|'junction'|'corner',lesson:LearningId,teaching:string):CoinSpot=>({id:'manhole-'+slug,name:`Manhole · ${near} ${place}`,x,y:0,z,kind:'landing',manhole:true,clue:`Look down on the ${place} by ${near}. A football pattern marks the cover in the middle of the road.`,detail:`Fly above the middle of the ${place} by ${near}, right over the manhole cover. Then choose Walk to drop straight down onto it. Walking or driving over the cover will not open it.`,teaching,lesson});
@@ -92,21 +96,27 @@ export const COIN_QUEST:CoinSpot[]=[
  {"id": "sky-east", "name": "Garden sky", "x": 219, "y": 100, "z": 22, "kind": "hidden", "parachute": true, "clue": "Look above garden. A ball floats away from the rooftops.", "detail": "Use your flight launch to rise above this high floating ball, then steer down through it with your parachute open. Only an open parachute can collect it; you have room around it to line up your descent.", "teaching": "Crowd one side, attack the other. Put lots of players near the ball on one side and the defenders move over to help. Then switch fast to your winger on the far side, who is now one-on-one.", "lesson": "movement"},
  {"id": "sky-pier", "name": "Pier sky", "x": 119, "y": 140, "z": 195, "kind": "hidden", "parachute": true, "clue": "Look above pier. A ball floats away from the rooftops.", "detail": "Use your flight launch to rise above this high floating ball, then steer down through it with your parachute open. Only an open parachute can collect it; you have room around it to line up your descent.", "teaching": "The pocket at the top of the box. The space just outside the penalty area, in the middle, is where many goals are made. A player who receives there facing goal can shoot, slip a pass through or play wide.", "lesson": "movement"},
  ...MANHOLE_SPOTS,
+ // Sep 29 2026: twenty Coral Cay balls take the hunt to 100 (coralCayBalls.ts). Always appended, so saved IDs keep their order.
+ ...CORAL_CAY_SPOTS,
 ];
-export type CoinProgress={version:4;allCostumesUnlocked?:boolean;rewardUnlocked:boolean;revealed:string[];collected:string[];hint:string|null;celebrated:boolean};
-export const emptyCoinProgress=():CoinProgress=>({version:4,rewardUnlocked:false,revealed:[],collected:[],hint:null,celebrated:false});
+const CORAL_CAY_IDS=new Set(CORAL_CAY_SPOTS.map(spot=>spot.id));
+export type CoinProgress={version:5;allCostumesUnlocked?:boolean;rewardUnlocked:boolean;revealed:string[];collected:string[];hint:string|null;celebrated:boolean};
+export const emptyCoinProgress=():CoinProgress=>({version:5,rewardUnlocked:false,revealed:[],collected:[],hint:null,celebrated:false});
 const ids=new Set(COIN_QUEST.map(c=>c.id));
 // The original forty IDs stay in their original order. Old completed saves keep their earned outfit.
 const originalRewardIds=COIN_QUEST.slice(0,40).map(spot=>spot.id);
 // The fifty-five balls from before the manhole covers. A pre-version-4 save with all of them keeps its fox and costumes.
-const preManholeIds=COIN_QUEST.filter(spot=>!spot.manhole).map(spot=>spot.id);
+const preManholeIds=COIN_QUEST.filter(spot=>!spot.manhole&&!CORAL_CAY_IDS.has(spot.id)).map(spot=>spot.id);
+// The eighty balls from before Coral Cay (Sep 29 2026). A pre-version-5 save that found all eighty keeps the Matchday Fox and
+// every costume it had, even though "every ball" now means 100; its 80-ball finale stays unseen until the new 100-ball one.
+export const PRE_CORAL_CAY_IDS=COIN_QUEST.filter(spot=>!CORAL_CAY_IDS.has(spot.id)).map(spot=>spot.id);
 export function sanitizeCoinProgress(raw:unknown):CoinProgress{
  const r=raw as (Omit<Partial<CoinProgress>,'version'>&{version?:number})|null;if(!r||typeof r!=='object')return emptyCoinProgress();
  const clean=(v:unknown)=>Array.isArray(v)?[...new Set(v.filter((id):id is string=>typeof id==='string'&&ids.has(id)))]:[];
- const collected=clean(r.collected),legacyReward=(r.version??1)<2&&originalRewardIds.every(id=>collected.includes(id)),legacyFiftyFive=(r.version??1)<4&&preManholeIds.every(id=>collected.includes(id));
- const rewardUnlocked=r.rewardUnlocked===true||legacyReward||legacyFiftyFive||collected.length===COIN_QUEST.length;
- const allCostumesUnlocked=r.allCostumesUnlocked===true||((r.version??1)<3&&COIN_QUEST.slice(0,50).every(s=>collected.includes(s.id)))||legacyFiftyFive||collected.length===COIN_QUEST.length;
- return{version:4,allCostumesUnlocked,rewardUnlocked,revealed:[...new Set([...clean(r.revealed),...collected])],collected,hint:typeof r.hint==='string'&&ids.has(r.hint)?r.hint:null,celebrated:r.celebrated===true&&collected.length===COIN_QUEST.length};
+ const version=r.version??1,collected=clean(r.collected),legacyReward=version<2&&originalRewardIds.every(id=>collected.includes(id)),legacyFiftyFive=version<4&&preManholeIds.every(id=>collected.includes(id)),legacyEighty=version<5&&PRE_CORAL_CAY_IDS.every(id=>collected.includes(id));
+ const rewardUnlocked=r.rewardUnlocked===true||legacyReward||legacyFiftyFive||legacyEighty||collected.length===COIN_QUEST.length;
+ const allCostumesUnlocked=r.allCostumesUnlocked===true||(version<3&&COIN_QUEST.slice(0,50).every(s=>collected.includes(s.id)))||legacyFiftyFive||legacyEighty||collected.length===COIN_QUEST.length;
+ return{version:5,allCostumesUnlocked,rewardUnlocked,revealed:[...new Set([...clean(r.revealed),...collected])],collected,hint:typeof r.hint==='string'&&ids.has(r.hint)?r.hint:null,celebrated:r.celebrated===true&&collected.length===COIN_QUEST.length};
 }
 export const coinRewardEarned=(s:CoinProgress)=>s.rewardUnlocked===true||s.collected.length===COIN_QUEST.length;
 export function applyCoinEvent(s:CoinProgress,id:string,kind:'reveal'|'collect'):CoinProgress{if(!ids.has(id))return s;const spot=COIN_QUEST.find(c=>c.id===id)!;if(kind==='collect'&&spot.kind!=='hidden'&&!s.revealed.includes(id))return s;if(s[kind==='collect'?'collected':'revealed'].includes(id))return s;return{...s,revealed:[...new Set([...s.revealed,id])],collected:kind==='collect'?[...s.collected,id]:s.collected,hint:kind==='collect'&&s.hint===id?null:s.hint};}
@@ -134,8 +144,11 @@ export function costumeUnlockBalls(id:string){if(id===COIN_REWARD_ID)return COIN
 export function costumeEarned(s:CoinProgress,id:string){
  if(id===COIN_REWARD_ID)return coinRewardEarned(s);
  return s.allCostumesUnlocked===true||s.collected.length>=costumeUnlockBalls(id);}
+/** Every ball count that unlocks something (Sep 29 2026, 100 balls: three club costumes at 10 … 70, the last two at 80 and the
+ *  Matchday Fox at every ball, 100). 90 unlocks nothing, so it is never announced or promised as "next". */
+export const costumeMilestones=()=>[...new Set(COSTUME_UNLOCK_ORDER.map(costumeUnlockBalls))].sort((a,b)=>a-b);
 /** The highest milestone reached (0 before the first), and the next one (null once every costume is unlocked). */
-export const costumeMilestoneReached=(balls:number)=>Math.min(Math.floor(balls/BALLS_PER_COSTUME_MILESTONE)*BALLS_PER_COSTUME_MILESTONE,Math.ceil(COSTUME_UNLOCK_ORDER.length/COSTUMES_PER_MILESTONE)*BALLS_PER_COSTUME_MILESTONE);
-export function nextCostumeMilestone(balls:number){const next=(Math.floor(balls/BALLS_PER_COSTUME_MILESTONE)+1)*BALLS_PER_COSTUME_MILESTONE;return next>Math.max(...COSTUME_UNLOCK_ORDER.map(costumeUnlockBalls))?null:next;}
+export const costumeMilestoneReached=(balls:number)=>costumeMilestones().filter(m=>m<=balls).pop()??0;
+export function nextCostumeMilestone(balls:number){return costumeMilestones().find(m=>m>balls)??null;}
 /** How many costumes unlock at a milestone. */
 export const costumesAtMilestone=(balls:number)=>COSTUME_UNLOCK_ORDER.filter(id=>costumeUnlockBalls(id)===balls).length;

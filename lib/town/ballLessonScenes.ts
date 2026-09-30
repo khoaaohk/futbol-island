@@ -77,7 +77,7 @@ export type DiagramFrame={
  settle:number;
 };
 
-/* ─────────────────────────────── The 80 scenes ─────────────────────────────── */
+/* ─────────────────────────────── The 100 scenes ─────────────────────────────── */
 export const SCENES={
  /* Level 1: the simplest space and time ideas (7v7 words). */
  'scan-shoulder':{cast:{p:[80,200,'Passer'],a:[165,135,'You'],x:[114,90,'?']},ball:'p',steps:[
@@ -406,6 +406,88 @@ export const SCENES={
   {note:'A straight line near your goal',rows:[['t1','t2','t3']]},
   {note:'They pass backward',ball:'xm',rows:[['t1','t2','t3']]},
   {note:'Step up together · less space',at:{t1:[70,128],t2:[165,128],t3:[260,128],x:[118,100]},rows:[['t1','t2','t3']],tags:[['t2','Squeeze!']]}]},
+
+ /* Coral Cay (Sep 29 2026): rules, player health, beach soccer and a few new tactical ideas. */
+ 'warm-up':{cast:{a:[112,178,'You'],b:[218,184,'Mate'],x:[165,96]},ball:[165,132],steps:[
+  {note:'Cold legs · straight into sprints',tags:[['a','Stiff'],['b','Stiff']],clock:['a',.2,'Cold']},
+  {note:'Jog, skip, balance and jump first',at:{a:[62,128],b:[268,128]},bend:{a:-34,b:34},zones:[[40,104,250,52,'Warm-up']]},
+  {note:'Warm and ready · first to the ball',at:{a:[156,138],x:[176,112]},clock:['a',.9,'Ready'],pulse:['a','Go!']}]},
+ 'whole-ball-line':{cast:{a:[236,150,'You'],x:[204,108]},ball:[309,146],steps:[
+  {note:'On the line · in or out?',hint:['M316 40V224'],tags:[[[284,128],'On the line']]},
+  {note:'Part of it is still on · play on',at:{a:[292,150],x:[240,120]},hint:['M316 40V224'],tags:[['x','Out?']]},
+  {note:'Only the whole ball over is out',at:{a:[250,104]},ball:'a',dribble:true,hint:['M316 40V224'],pulse:['a','Play on!']}]},
+ 'both-feet':{cast:{a:[165,156,'You'],x:[196,112]},ball:'a',steps:[
+  {note:'Right foot only · they block that side',tags:[['x','Knows']],zones:[[196,58,84,50,'Blocked','danger']]},
+  {note:'The left side is open',at:{a:[128,120]},zones:[[64,56,88,50,'Open side']]},
+  {note:'Other foot · past them',at:{a:[112,62]},dim:['x'],tags:[['x','Beaten']],pulse:['a','Past!']}]},
+ 'keeper-throw':{pitch:'defend',cast:{k:[165,212,'Keeper'],b:[104,172,'Near'],c:[262,120,'Far'],x:[150,120]},ball:'k',steps:[
+  {note:'Two mates free · near and far',lanes:[['k','b',1],['k','c',1]]},
+  {note:'The near mate gets marked',at:{x:[124,184]},lanes:[['k','b',0],['k','c',1]]},
+  {note:'Overarm throw to the far mate',ball:'c',bend:{ball:-24},tags:[['c','Far throw']]}]},
+ 'advantage':{cast:{a:[140,160,'You'],b:[236,82,'Mate'],x:[146,184]},ball:'a',steps:[
+  {note:'Fouled from behind · still on the ball',tags:[['x','Foul!']]},
+  {note:'The referee waves: play on',at:{a:[152,128]},lanes:[['a','b',1]],pulse:['a','Play on!']},
+  {note:'The pass is on · the chance lives',at:{b:[246,60]},ball:'b',order:'together',zones:[[216,34,74,52,'Chance']]}]},
+ 'lead-manage':{overlay:'thirds',cast:{a:[112,150,'You'],b:[216,140,'Mate'],c:[168,98,'Mate'],x1:[152,120],x2:[228,100],x3:[118,72]},ball:'a',steps:[
+  {note:'1–0 up · a long, hopeful ball?',hint:['M112 150L178 36'],tags:[[[196,44],'Given away']]},
+  {note:'Keep it: short, safe passes',ball:'b',lanes:[['a','b',1]]},
+  {note:'Keep the ball in their half',at:{a:[140,70],c:[196,48],b:[262,66],x2:[236,80]},ball:'c',order:'together',zones:[[14,22,302,70,'','band']]}]},
+ 'wind':{cast:{a:[78,196,'You'],b:[246,74,'Mate'],x:[128,108],r:[276,52,'Runner']},ball:'a',steps:[
+  {note:'Wind in your face · high ball falls short',hint:['M78 196Q140 70 184 132'],tags:[[[186,114],'Short'],[[292,196],'Wind']]},
+  {note:'Keep it low under the wind',ball:'b',lanes:[['a','b',1]]},
+  {note:'Wind behind: a soft long ball',at:{r:[284,34]},ball:'r',bend:{ball:-20},pulse:['r','Soft!']}]},
+ 'zonal-corner':{pitch:'defend',cast:{xk:[294,208,'Corner'],t1:[132,206],t2:[198,206],t3:[165,184],m:[104,150,'Marker'],x1:[94,136],x2:[226,146]},ball:'xk',steps:[
+  {note:'A corner · who guards what?',tags:[['x1','Runner']]},
+  {note:'Zones: stand in the spaces near goal',at:{t1:[136,210],t2:[194,210],t3:[165,188]},rows:[['t1','t3','t2']],zones:[[116,176,98,44,'Zones']]},
+  {note:'Markers follow the runners',at:{x1:[146,176],m:[140,190]},ball:[160,192],bend:{ball:-30},tags:[['m','Marked']],pulse:[[160,192],'Cleared!']}]},
+ 'barefoot':{cast:{a:[150,178,'You'],b:[246,96,'Mate'],x:[104,96]},ball:'a',steps:[
+  {note:'Barefoot · toe-pokes hurt and miss',tags:[['a','Ouch!']]},
+  {note:'Toes pointed · knees bent',at:{a:[160,168]},face:{a:45},tags:[['a','Balanced']]},
+  {note:'Strike with the top of your foot',ball:'b',lanes:[['a','b',1]],pulse:['b','Clean!']}]},
+ 'no-offside':{pitch:'attack',cast:{xk:[165,36],x1:[120,112],x2:[214,112],a:[196,62,'You'],p:[140,196,'Mate']},ball:'p',steps:[
+  {note:'No offside line on the sand',lines:[['x1','x2']],tags:[['a','Allowed']]},
+  {note:'Nobody marks you · the pass comes',ball:'a',pulse:['a','Free!']},
+  {note:'Defenders must watch you always',at:{x2:[204,76]},tags:[['x2','Watching']]}]},
+ 'kick-in':{cast:{t:[298,132,'You'],b:[252,98,'Mate'],c:[110,152,'Mate'],x1:[236,122],x2:[150,76]},ball:'t',steps:[
+  {note:'Out of play · your restart',tags:[['t','Kick or throw?']]},
+  {note:'The close mate gets marked',at:{x1:[256,112]},lanes:[['t','b',0]]},
+  {note:'Kick it in long to the free mate',ball:'c',lanes:[['t','c',1]],pulse:['c','Free!']}]},
+ 'surfaces':{cast:{a:[88,196,'You'],b:[252,98,'Mate'],x:[132,62]},ball:'a',steps:[
+  {note:'Same pass · sand, grass or court?',zones:[[30,118,270,34,'Surface','band']]},
+  {note:'On sand the ball stops short',ball:[168,150],tags:[[[168,134],'Stops']]},
+  {note:'On a court it runs on',at:{b:[262,86]},ball:'b',tags:[['b','Runs on']]}]},
+ 'sand-lift':{cast:{a:[100,192,'You'],b:[244,108,'Mate'],x:[172,150]},ball:'a',steps:[
+  {note:'Rolling passes bump on sand',hint:['M100 192L172 152'],tags:[[[150,178],'Bumpy']]},
+  {note:'Flick it up first',at:{a:[106,184]},ball:[114,170],dribble:true,pulse:[[114,170],'Up!']},
+  {note:'Through the air to their feet',ball:'b',bend:{ball:-44},tags:[['x','Over']]}]},
+ 'overhead-kick':{pitch:'attack',cast:{a:[160,96,'You'],x:[248,120],xk:[168,36],c:[282,150,'Mate']},ball:'c',steps:[
+  {note:'High ball · your back to goal',face:{a:180},tags:[['a','Back to goal']]},
+  {note:'Check: nobody close to you',ball:[162,86],bend:{ball:-30},zones:[[120,70,84,48,'Clear']]},
+  {note:'Overhead kick · land on hands and back',ball:[152,28],pulse:[[152,30],'Goal!']}]},
+ 'keeper-joins':{cast:{k:[165,214,'Keeper'],b:[96,166],c:[236,166],f:[165,94],x1:[108,146],x2:[224,146],x3:[165,114]},ball:'k',steps:[
+  {note:'Four v four · every mate marked',tags:[['x3','Marked']]},
+  {note:'The keeper steps out: five v four',at:{k:[165,168]},tags:[['k','Extra']],zones:[[128,196,74,32,'Empty goal','danger']]},
+  {note:'Quick passes find the free player',at:{x2:[190,160]},ball:'c',order:'react',pulse:['c','Free!']}]},
+ 'island-team':{cast:{a:[90,190,'You'],b:[168,176],c:[236,150],d:[176,86],x1:[130,140],x2:[204,122],x3:[120,78],x4:[240,70]},ball:'a',steps:[
+  {note:'A small team · a big opponent',tags:[['x4','Favourites']]},
+  {note:'Everyone moves to help',at:{b:[140,168],c:[200,176],d:[160,120]},links:[['a','b','d','c']]},
+  {note:'Pass, move, trust · through!',ball:'d',via:['b'],at:{d:[168,110]},links:[['a','b','d','c']],pulse:['d','Together!']}]},
+ 'fuel':{cast:{a:[80,150,'You'],x:[150,160],b:[258,62,'Mate']},ball:[196,64],steps:[
+  {note:'No meal · slow when the game is late',clock:['a',.15,'Empty']},
+  {note:'A meal hours before · fruit snack later',at:{a:[88,138]},clock:['a',.8,'Full'],tags:[[[100,108],'Energy']]},
+  {note:'Late race · you get there first',at:{a:[190,70],x:[168,98]},pulse:['a','First!']}]},
+ 'rest-sleep':{cast:{a:[250,190,'You'],x:[210,176],c:[92,70,'Mate']},ball:[160,100],steps:[
+  {note:'No rest days · tired legs lose',tags:[['a','Tired']],clock:['a',.1,'Tired']},
+  {note:'Sleep well · a day or two off',reset:true,clock:['a',.9,'Fresh'],tags:[['a','Rested']]},
+  {note:'Fresh legs win the chase',at:{a:[166,110],x:[190,140]},pulse:['a','Mine!']}]},
+ 'drink-heat':{cast:{a:[140,120,'You'],b:[200,110],c:[170,168],x:[110,70]},ball:'b',steps:[
+  {note:'Hot sun · everyone slows down',zones:[[60,60,210,130,'Hot','danger']]},
+  {note:'Drinks break at the touchline',at:{a:[292,110],b:[292,140],c:[292,170]},zones:[[276,92,34,96,'Water']]},
+  {note:'Back on, refreshed',at:{a:[150,110],b:[214,96],c:[178,160]},ball:'a',pulse:['a','Fresh!']}]},
+ 'heading-safe':{cast:{a:[165,150,'You'],m:[88,196,'Mate'],x:[236,90]},ball:[165,60],steps:[
+  {note:'A high ball drops at your head',tags:[['a','Head it?']],hint:['M165 60L165 132']},
+  {note:'Let it drop · cushion it',ball:'a',dribble:true,tags:[['a','Chest']]},
+  {note:'On the ground · pass with your feet',ball:'m',lanes:[['a','m',1]]}]},
 } satisfies Record<string,Scene>;
 export type DiagramKind=keyof typeof SCENES;
 

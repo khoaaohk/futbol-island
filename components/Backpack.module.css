@@ -66,3 +66,5 @@
 /* Sep 28: calmer tiles — no paper grain behind cards and art (cards carry their own print), flat cream tile. */
 .tile{background:var(--btn-cream)!important}.art{background:#efe2c2}
 .art img{width:100%;height:100%;object-fit:contain;object-position:center bottom}
+/* A ball's baked shelf picture (BallPicture) is cropped to the ball: keep it ball-sized in the tile. */
+.art img[data-ball-picture]{width:auto;max-width:62%;height:80%;margin:auto}

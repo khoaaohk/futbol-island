@@ -1,0 +1,309 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "jardim": {
+      "src": "/voice/books/cafu/jardim.m4a?v=coach-bella-1",
+      "duration": 40.0,
+      "scriptSha256": "e3c40f948434a513444572f979b3dcab230508a51ab56a76e346659ae2e0252b",
+      "cues": [
+        {
+          "text": "Football in Jardim Irene",
+          "start": 0.0,
+          "duration": 2.4
+        },
+        {
+          "text": "Cafu was born in 1970 in S\u00e3o Paulo, Brazil.",
+          "start": 2.4,
+          "duration": 4.6
+        },
+        {
+          "text": "He was one of six children, and he grew up in Jardim Irene, a poor part of the city.",
+          "start": 7.0,
+          "duration": 6.025
+        },
+        {
+          "text": "There he played football in the streets.",
+          "start": 13.025,
+          "duration": 2.6
+        },
+        {
+          "text": "His real name is Marcos, but friends called him Cafu, after a Brazilian winger called Cafuringa.",
+          "start": 15.625,
+          "duration": 7.225
+        },
+        {
+          "text": "At seven he went to a football school, and he also played futsal.",
+          "start": 22.85,
+          "duration": 4.75
+        },
+        {
+          "text": "Kick the ball along the street.",
+          "start": 27.6,
+          "duration": 2.35
+        },
+        {
+          "text": "One day, he would be famous for running up and down the wing.",
+          "start": 29.95,
+          "duration": 4.175
+        },
+        {
+          "text": "Street games and futsal teach quick feet. Play wherever you can, with whoever you can.",
+          "start": 34.125,
+          "duration": 5.85
+        }
+      ]
+    },
+    "trials": {
+      "src": "/voice/books/cafu/trials.m4a?v=coach-bella-1",
+      "duration": 33.3,
+      "scriptSha256": "a6862d4ff52c0057d2326047505b2aae91ac43223f25d3190717186188e2a9d6",
+      "cues": [
+        {
+          "text": "No, no, no, no, no",
+          "start": 0.0,
+          "duration": 2.175
+        },
+        {
+          "text": "As a boy, Cafu went to trials at some of Brazil\u2019s biggest clubs.",
+          "start": 2.175,
+          "duration": 4.85
+        },
+        {
+          "text": "Corinthians said no.",
+          "start": 7.025,
+          "duration": 2.175
+        },
+        {
+          "text": "Palmeiras said no.",
+          "start": 9.2,
+          "duration": 2.075
+        },
+        {
+          "text": "Santos said no.",
+          "start": 11.275,
+          "duration": 2.1
+        },
+        {
+          "text": "Atl\u00e9tico Mineiro and Portuguesa said no too.",
+          "start": 13.375,
+          "duration": 3.7
+        },
+        {
+          "text": "That is a lot of no.",
+          "start": 17.075,
+          "duration": 2.0
+        },
+        {
+          "text": "Flip the five cards.",
+          "start": 19.075,
+          "duration": 2.1
+        },
+        {
+          "text": "Cafu could have given up.",
+          "start": 21.175,
+          "duration": 2.2
+        },
+        {
+          "text": "Instead, he kept training, and he kept trying.",
+          "start": 23.375,
+          "duration": 3.45
+        },
+        {
+          "text": "One coach\u2019s no is not the end of your story. Keep practising and keep asking for chances.",
+          "start": 26.825,
+          "duration": 6.45
+        }
+      ]
+    },
+    "yes": {
+      "src": "/voice/books/cafu/yes.m4a?v=coach-bella-1",
+      "duration": 27.0,
+      "scriptSha256": "f2d68642265f42e3eabfeb6345fb39c18061206d967cba3d89a775eea0cba080",
+      "cues": [
+        {
+          "text": "At last, a yes",
+          "start": 0.0,
+          "duration": 2.075
+        },
+        {
+          "text": "In 1988 his hometown club, S\u00e3o Paulo, said yes.",
+          "start": 2.075,
+          "duration": 4.575
+        },
+        {
+          "text": "Cafu joined their youth team, and that same year the team won the Copa S\u00e3o Paulo, a famous youth tournament.",
+          "start": 6.65,
+          "duration": 7.5
+        },
+        {
+          "text": "Open the club gate.",
+          "start": 14.15,
+          "duration": 1.975
+        },
+        {
+          "text": "After all those trials, the answer was finally yes, and he had a place to grow.",
+          "start": 16.125,
+          "duration": 5.775
+        },
+        {
+          "text": "When you get your chance, keep working just as hard as when you were waiting for it.",
+          "start": 21.9,
+          "duration": 5.075
+        }
+      ]
+    },
+    "rightback": {
+      "src": "/voice/books/cafu/rightback.m4a?v=coach-bella-1",
+      "duration": 40.3,
+      "scriptSha256": "fdd7cfcf7144c756188e5de7745d91cd59ba7d77f0c228c88839d5acb9db07b6",
+      "cues": [
+        {
+          "text": "A brand-new position",
+          "start": 0.0,
+          "duration": 2.1
+        },
+        {
+          "text": "Cafu was a right-sided midfielder.",
+          "start": 2.1,
+          "duration": 2.975
+        },
+        {
+          "text": "His coach, Tel\u00ea Santana, had an idea: move him back to right-back.",
+          "start": 5.075,
+          "duration": 5.05
+        },
+        {
+          "text": "Cafu had never played there before, but he tried it.",
+          "start": 10.125,
+          "duration": 3.75
+        },
+        {
+          "text": "It suited him perfectly!",
+          "start": 13.875,
+          "duration": 2.325
+        },
+        {
+          "text": "He defended, then sprinted forward on the overlap to attack.",
+          "start": 16.2,
+          "duration": 4.575
+        },
+        {
+          "text": "Run the overlap.",
+          "start": 20.775,
+          "duration": 1.875
+        },
+        {
+          "text": "With Cafu at right-back, S\u00e3o Paulo won South America\u2019s biggest club competition, the Copa Libertadores, in 1992 and 1993.",
+          "start": 22.65,
+          "duration": 10.825
+        },
+        {
+          "text": "Try new positions when a coach asks. On the overlap, run outside your winger to give them a pass.",
+          "start": 33.475,
+          "duration": 6.8
+        }
+      ]
+    },
+    "finals": {
+      "src": "/voice/books/cafu/finals.m4a?v=coach-bella-1",
+      "duration": 35.6,
+      "scriptSha256": "8bcfc97057ca14054e89b54a929341f4ca30d66d20e69857a0d7b4605665566a",
+      "cues": [
+        {
+          "text": "Three finals in a row",
+          "start": 0.0,
+          "duration": 2.175
+        },
+        {
+          "text": "At the 1994 World Cup, Cafu started on the bench.",
+          "start": 2.175,
+          "duration": 4.65
+        },
+        {
+          "text": "In the final against Italy, a teammate got hurt early.",
+          "start": 6.825,
+          "duration": 4.175
+        },
+        {
+          "text": "Swap the players.",
+          "start": 11.0,
+          "duration": 2.025
+        },
+        {
+          "text": "On came Cafu, and Brazil won the World Cup!",
+          "start": 13.025,
+          "duration": 3.7
+        },
+        {
+          "text": "In 1998 he played in the final again, but this time Brazil lost to France.",
+          "start": 16.725,
+          "duration": 6.3
+        },
+        {
+          "text": "Four years later, he would play in a third final in a row.",
+          "start": 23.025,
+          "duration": 4.1
+        },
+        {
+          "text": "No other player has ever done that.",
+          "start": 27.125,
+          "duration": 2.7
+        },
+        {
+          "text": "Substitutes matter. Be ready from the bench, because your chance can come at any moment.",
+          "start": 29.825,
+          "duration": 5.75
+        }
+      ]
+    },
+    "captain": {
+      "src": "/voice/books/cafu/captain.m4a?v=coach-bella-1",
+      "duration": 33.3,
+      "scriptSha256": "ba2d29672092d6f9344fd26976410141ae98d61785ab976157cc889ad92f7d14",
+      "cues": [
+        {
+          "text": "Captain of Brazil",
+          "start": 0.0,
+          "duration": 1.975
+        },
+        {
+          "text": "In 2002 Cafu was Brazil\u2019s captain.",
+          "start": 1.975,
+          "duration": 3.9
+        },
+        {
+          "text": "In the World Cup final, Brazil beat Germany 2\u20130.",
+          "start": 5.875,
+          "duration": 4.175
+        },
+        {
+          "text": "When Cafu lifted the trophy, his shirt said 100% Jardim Irene, for the place where he grew up.",
+          "start": 10.05,
+          "duration": 7.15
+        },
+        {
+          "text": "Raise the trophy.",
+          "start": 17.2,
+          "duration": 1.95
+        },
+        {
+          "text": "Later he started a foundation in Jardim Irene to help children there.",
+          "start": 19.15,
+          "duration": 5.3
+        },
+        {
+          "text": "He says everything he has, he owes to Jardim Irene.",
+          "start": 24.45,
+          "duration": 4.25
+        },
+        {
+          "text": "Remember where you started, and help the players coming after you.",
+          "start": 28.7,
+          "duration": 4.55
+        }
+      ]
+    }
+  }
+}

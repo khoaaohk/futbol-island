@@ -2,81 +2,237 @@ import * as T from 'three';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {createBuildingGlow} from './buildingGlow';
 import {machineStock,VENDING_MACHINES,VENDING_SIZE,type VendingMachine,type VendingMachineId} from '../town/vendingCatalog';
-import {drawVendingProduct} from './vendingProductArt';
-import {FACE_SIZE,VENDING_FACE_LAYOUT} from './vendingFaceLayout';
+import {drawVendingProduct,vendingBallPicture} from './vendingProductArt';
+import {FACE_SIZE,VENDING_BAY,VENDING_FACE_LAYOUT} from './vendingFaceLayout';
+import {drawDrink,drawDrinkTile} from './drinkArt';
+import {DRINK_MACHINE_IDS,drinksAt,type Drink,type DrinkMachineId} from '../town/drinkMachines';
 
 /**
- * Eight Japanese-style vending machines (lib/town/vendingCatalog.ts, docs/vending-machines.md).
+ * Twelve Japanese-style vending machines (lib/town/vendingCatalog.ts, docs/vending-machines.md; eight until Sep 29 2026).
  *
- * Cost: one merged mesh (one draw call, one shadow draw) per machine, frustum-culled; all eight share ONE material with one
- * 1024×1024 canvas atlas used as both colour and emissive map (the lit sign, glass, LED and tray glow without a light; eight compact glass tiles carry each cabinet’s own specials). The front
+ * Cost: one merged mesh (one draw call, one shadow draw) per machine, frustum-culled; all share ONE material with one
+ * 1024×1024 canvas atlas (colour map only since Sep 30 2026; printed texels are shown unlit by a shader patch, so the lit sign, glass, LED and tray need no light). The front
  * panels are placed from VENDING_FACE_LAYOUT, the same rects the in-use HTML face uses, so far and close-up are one machine. Cabinet colours are vertex colours. One hover glow (buildingGlow 'vending') is shared and moved to whichever machine is
  * targeted. Per frame, idle: eight distance checks and (desktop hover only) eight ray/box tests; glow, prompt and camera work
  * run only while a machine is targeted, fading, or the camera is zooming. In use, the camera frames the face straight on and
- * the HTML machine face (components/VendingMachine.tsx) is pinned onto VENDING_FACE: no extra meshes or textures at all.
+ * the HTML machine face (components/VendingMachine.tsx) is pinned onto VENDING_FACE. While zoomed, one temporary high-res face
+ * texture covers the machine and its side-by-side neighbour (buildHiRes); it is disposed when the zoom-out ends.
  */
+/** Glass tiles: machines 0–7 in two rows above the LED/coin/tray panels (y 8–432), machines 8–11 (Sep 29 2026) in a third row
+ * below them (y 660–872), so twelve machines still share the one 1024² atlas and material. */
 const ATLAS_W=1024,ATLAS_H=1024;
 /** Drawn a little larger than life so the machine reads from the island camera (a 2.1 m cabinet would look child-height). */
 export const VENDING_SCALE=1.3;
 /** The interactive machine face (machine-local metres before VENDING_SCALE): including the top category panel, just proud of the
  * front. While a machine is in use, components/VendingFace.tsx pins its HTML face exactly onto this rectangle. Its panels are laid
  * out by VENDING_FACE_LAYOUT (lib/graphics/vendingFaceLayout.ts), the same rects the HTML face uses. */
-export const VENDING_FACE={x0:-FACE_SIZE.w/2,x1:FACE_SIZE.w/2,y0:.16,y1:.16+FACE_SIZE.h,z:VENDING_SIZE.d/2+.02} as const;
+export const VENDING_FACE={x0:-FACE_SIZE.w/2,x1:FACE_SIZE.w/2,y0:.16,y1:.16+FACE_SIZE.h,z:VENDING_SIZE.d/2+VENDING_BAY.proud} as const;
 /** Screen margin around the face in the close-up (fraction of the viewport per side). */
 const FACE_MARGIN_X=.03,FACE_MARGIN_Y=.04;
 const L=VENDING_FACE_LAYOUT;
 /** Atlas rectangles (px). Face panels keep the aspect of their layout rect so nothing is stretched. */
 const R={
- white:[2,2,6,6],glass:(i:number)=>[i%4*256,8+Math.floor(i/4)*212,256,211.5],led:[0,440,368,101],coin:[376,440,112,101],tray:[0,550,356,100],sticker:[364,550,148,89],
+ // Machines 12–13 (Sep 29 2026: the Coral Cay Konbini) use the free block right of the LED/coin/tray panels (x 512–1024, y 440–651).
+ // The two drink machines (Sep 29 2026, lib/town/drinkMachines.ts) use the free strip under the third glass row (y 872–1024):
+ // 256×152 each, no atlas growth. Their close-up is the HTML face, so the lower vertical resolution only shows from afar.
+ drinkGlass:(k:number)=>[k*256,872,256,152],
+ white:[2,2,6,6],glass:(i:number)=>i>=12?[512+(i-12)*256,440,256,211.5]:[i%4*256,i<8?8+Math.floor(i/4)*212:660+Math.floor((i-8)/4)*212,256,211.5],led:[0,440,368,101],coin:[376,440,112,101],tray:[0,550,356,100],sticker:[364,550,148,89],
 };
-/** Page one of every machine, painted on the glass so the far machine already shows what the close-up shows. */
-function roundRect(c:CanvasRenderingContext2D,x:number,y:number,w:number,h:number,r:number){c.beginPath();if(c.roundRect)c.roundRect(x,y,w,h,r);else c.rect(x,y,w,h);}
-/** Original machine-front art (docs/vending-visuals-HANDOFF.md: Astra's to replace). Mirrors components/VendingFace.module.css. */
-function drawAtlas(machines:VendingMachine[]){
- const pending:{src:string;x:number;y:number;w:number;h:number}[]=[];
+type Ctx=CanvasRenderingContext2D;
+function roundRect(c:Ctx,x:number,y:number,w:number,h:number,r:number){c.beginPath();if(c.roundRect)c.roundRect(x,y,w,h,r);else c.rect(x,y,w,h);}
+/**
+ * Product pictures (ball-<style>.png, pack.png), one Image per URL for this set of machines, shared by the atlas and the
+ * high-res close-up face. `draw` paints with the canvas transform in force at the call, now if the picture has loaded or once it
+ * does (then `changed` runs so the texture re-uploads). Nothing runs per frame.
+ */
+function createPictures(){
+ const images=new Map<string,HTMLImageElement>(),waiting=new Map<HTMLImageElement,(()=>void)[]>();let disposed=false;
+ return {
+  draw(c:Ctx,src:string,paintIt:(img:HTMLImageElement)=>void,changed:()=>void){
+   if(typeof Image==='undefined')return;let img=images.get(src);
+   if(!img){const next=new Image();img=next;images.set(src,next);waiting.set(next,[]);next.onload=()=>{const list=waiting.get(next)??[];waiting.delete(next);if(!disposed)for(const fn of list)fn();};next.src=src;}
+   if(!waiting.has(img)&&img.complete&&img.naturalWidth){paintIt(img);return;}
+   const m=c.getTransform?.(),loaded=img;waiting.get(img)?.push(()=>{c.save();if(m)c.setTransform(m);paintIt(loaded);c.restore();changed();});
+  },
+  dispose(){disposed=true;for(const img of images.values())img.onload=null;waiting.clear();},
+ };
+}
+type Pictures=ReturnType<typeof createPictures>;
+/** The 512×423 glass art is stretched onto the taller glass panel; widen round things by this ratio to keep them round. */
+const GLASS_ROUND=(FACE_SIZE.h*L.glass.h/423)/(FACE_SIZE.w*L.glass.w/512);
+/** One shop machine's glass (page one of its stock) in the 512×423 logical space; the caller scales it into place. */
+/** `ballWiden` widens the balls for a known angled view (the close-up), so they read round there. */
+function paintShopGlass(c:Ctx,machine:VendingMachine,pics:Pictures,changed:()=>void,ballWiden=1){
+ const PAGE_ONE=machineStock(machine.id).flatMap(row=>row.items).slice(0,6).map(item=>({...item,kind:item.kind==='gear'?item.storeItem!.category:item.kind,special:item.row==='special'}));const [X,Y,W,H]=[0,0,512,423],G=L.glass,px=(r:{x:number;y:number;w:number;h:number})=>[X+(r.x-G.x)/G.w*W,Y+(r.y-G.y)/G.h*H,r.w/G.w*W,r.h/G.h*H];
+ c.save();c.textAlign='center';c.textBaseline='middle';
+ c.fillStyle='#23272e';c.fillRect(X,Y,W,H);const b=8,g=c.createLinearGradient(0,Y,0,Y+H);g.addColorStop(0,'#81a6a5');g.addColorStop(1,'#8aafab');c.fillStyle=g;c.fillRect(X+b,Y+b,W-2*b,H-2*b);
+ for(const r of [L.prev,L.next]){const [x,y,w,h]=px(r);c.fillStyle='#23272e';roundRect(c,x,y,w,h,8);c.fill();c.fillStyle='#fff1d3';c.beginPath();const cx=x+w/2,cy=y+h/2,d=r===L.prev?-1:1;c.moveTo(cx+d*9,cy);c.lineTo(cx-d*7,cy-10);c.lineTo(cx-d*7,cy+10);c.fill();}
+ {const [x,y,w,h]=px(L.label),gg=c.createLinearGradient(x,0,x+w,0);gg.addColorStop(0,'#ffb800');gg.addColorStop(.5,'#ffe27a');gg.addColorStop(1,'#ffb800');c.fillStyle=gg;roundRect(c,x,y,w,h,8);c.fill();
+  const hd=pageOne(machine).header;if(!hd.special){c.fillStyle='#2e333b';roundRect(c,x,y,w,h,8);c.fill();}c.fillStyle=hd.special?'#5a2a00':'#fff1d3';c.font='900 21px system-ui,sans-serif';c.fillText(`${hd.label}  1/${hd.pages}`,x+w/2,y+h/2+1,w-12);}
+ for(let row=0;row<2;row++){
+  const r=L.slots[row*L.cols],[x,y,w,h]=px({x:r.x,y:r.y+r.h*.53,w:.91,h:r.h*.46});
+  // A flat printed rail (Sep 30 2026: no painted bevels or side returns; the real cabinet gives the machine its depth).
+  c.fillStyle='#466574';c.fillRect(x,y,w,h);c.fillStyle='#b8cbcc';c.fillRect(x,y,w,3);
+ }
+ L.slots.forEach((r,i)=>{const [x,y,w,h]=px(r),item=PAGE_ONE[i];if(!item)return;
+  const pushY=y+h*L.slotPush.y,pushH=h*L.slotPush.h,nameY=y+h*.59,winH=h*.53-6,shelfY=y+h*.53;
+  const cx=x+w/2,size=Math.min((w-10)/1.7,winH/1.86),ballSrc=item.kind==='ball'?vendingBallPicture(item.id):null;
+  // Contact shadow anchors the miniature to the continuous shelf below it (a ball picture carries its own).
+  if(!ballSrc){const shadow=c.createRadialGradient(cx,y+winH-1,1,cx,y+winH-1,w*.36);shadow.addColorStop(0,'#1d354b55');shadow.addColorStop(1,'#1d354b00');c.save();c.translate(0,(y+winH)*.8);c.scale(1,.2);c.fillStyle=shadow;c.fillRect(x,y-80,w,160);c.restore();}
+  // Balls: the baked picture of that ball (ball-<style>.png: the real in-game ball, the same on every machine), resting ON the
+  // shelf line (just above it: the shelf's metal lip stands proud of the glass and would hide the bottom). Its framing (scripts/capture-vending-products.cjs): width = diameter + 4, the contact shadow below.
+  // A ball without one (none today) draws its miniature instead, so there is never a 404.
+  if(ballSrc){const d=size*1.56,base=shelfY-h*.025;pics.draw(c,ballSrc,img=>{const k=d/(img.width-4),dw=img.width*k*GLASS_ROUND*ballWiden,dh=img.height*k;c.drawImage(img,cx-dw/2,base-d-2*k,dw,dh);},changed);}
+  else if(item.kind==='pack'){const ps=winH*.4;c.save();c.translate(cx,0);c.scale(GLASS_ROUND,1);drawVendingProduct(c,item.id,item.kind,0,shelfY-ps-2,ps,false);c.restore();}
+  else drawVendingProduct(c,item.id,item.kind,cx,y+4+winH-size*.86,size,false);
+  c.fillStyle='#fff1d3';c.font='800 19px system-ui,sans-serif';const words=item.label.split(' '),lines:string[]=[''];for(const word of words){const i=lines.length-1,trial=lines[i]?lines[i]+' '+word:word;if((c.measureText(trial)?.width??trial.length*10)>w-8&&lines[i])lines.push(word);else lines[i]=trial;}lines.slice(0,2).forEach((label,j)=>c.fillText(label,cx,nameY+12+j*21,w-8));
+  c.fillStyle='#1c1f25';roundRect(c,x+6,pushY,w-12,pushH,pushH/2);c.fill();c.fillStyle='#56606b';c.beginPath();c.arc(x+6+pushH*.7,pushY+pushH/2,pushH*.18,0,Math.PI*2);c.fill();
+  c.fillStyle='#f2b62c';c.beginPath();c.arc(cx-12,pushY+pushH/2,pushH*.24,0,Math.PI*2);c.fill();c.fillStyle='#7cf29a';c.font='800 19px ui-monospace,Menlo,monospace';c.fillText(String(item.price),cx+10,pushY+pushH/2+1);});
+ c.fillStyle='rgba(255,255,255,.3)';c.beginPath();c.moveTo(X+W*.28,Y);c.lineTo(X+W*.4,Y);c.lineTo(X+W*.22,Y+H);c.lineTo(X+W*.1,Y+H);c.fill();c.restore();
+}
+/** Any machine's glass, in the 512×423 logical space. */
+function paintGlass(c:Ctx,machine:VendingMachine,pics:Pictures,changed:()=>void,ballWiden=1){
+ if(machine.drinks){c.save();drawDrinkTile(c,drinksAt(machine.id as DrinkMachineId),L,'DRINKS');c.restore();}else paintShopGlass(c,machine,pics,changed,ballWiden);
+}
+/**
+ * Shared hardware (user, Sep 30 2026: "the coins on the left are cut off, the PUSH on the right is different"): the LED, coin
+ * panel and pickup tray are ONE design on every machine type, drawn in the panel's true proportions (w × h px) and matching the
+ * in-use HTML face (components/VendingFace.module.css .led / .coinSlot / .tray). The coin digits sit below the glass bezel's
+ * lower lip, which overhangs the top of the LED/coin strip, so nothing is clipped.
+ */
+function paintLed(c:Ctx,w:number,h:number,msg:string,sub:string){
+ c.save();c.fillStyle='#0a0f0b';roundRect(c,0,0,w,h,h*.06);c.fill();c.fillStyle='#152018';c.fillRect(h*.05,h*.05,w-h*.1,h*.9);
+ c.fillStyle='#00000014';for(let y=h*.06;y<h*.94;y+=Math.max(2,h*.03))c.fillRect(h*.05,y,w-h*.1,Math.max(1,h*.01));
+ c.textAlign='left';c.textBaseline='middle';c.shadowColor='#7cf29a88';c.shadowBlur=h*.06;c.fillStyle='#7cf29a';c.font=`800 ${h*.25}px ui-monospace,Menlo,monospace`;c.fillText(msg,h*.18,h*.45,w-h*.3);
+ c.shadowBlur=0;c.fillStyle='#b6f5c6';c.font=`600 ${h*.17}px system-ui,sans-serif`;c.fillText(sub,h*.18,h*.74,w-h*.3);c.restore();
+}
+function paintCoin(c:Ctx,w:number,h:number,coins:number|null){
+ c.save();c.textAlign='center';c.textBaseline='middle';const g=c.createLinearGradient(0,0,w,0);g.addColorStop(0,'#b9bfc8');g.addColorStop(.35,'#e1e4e9');g.addColorStop(1,'#c3c8d0');c.fillStyle=g;roundRect(c,0,0,w,h,h*.05);c.fill();
+ c.strokeStyle='#6e828d';c.lineWidth=Math.max(1,h*.02);c.strokeRect(h*.01,h*.01,w-h*.02,h*.98);
+ const text=coins===null?'- - -':String(Math.max(0,Math.round(coins))).padStart(3,'0');c.font=`900 ${h*.17}px ui-monospace,Menlo,monospace`;
+ const tw=Math.min(w*.86,(c.measureText(text)?.width??text.length*h*.1)+h*.16),ty=h*.19,th=h*.24;c.fillStyle='#152018';roundRect(c,(w-tw)/2,ty,tw,th,h*.04);c.fill();c.fillStyle='#7cf29a';c.fillText(text,w/2,ty+th/2+h*.01,tw-h*.08);
+ const mw=h*.14,my=h*.49,mh=h*.3;c.fillStyle='#50565f';roundRect(c,w/2-mw/2-h*.035,my-h*.035,mw+h*.07,mh+h*.07,mw);c.fill();c.fillStyle='#1b1d21';roundRect(c,w/2-mw/2,my,mw,mh,mw/2);c.fill();
+ c.fillStyle='#2b3440';c.font=`900 ${h*.12}px system-ui,sans-serif`;c.fillText('COINS',w/2,h*.9);c.restore();
+}
+function paintTray(c:Ctx,w:number,h:number){
+ c.save();const e=h*.055,g=c.createLinearGradient(0,0,0,h);g.addColorStop(0,'#090e14');g.addColorStop(.58,'#090e14');g.addColorStop(.59,'#202b34');g.addColorStop(1,'#11191f');c.fillStyle=g;c.fillRect(0,0,w,h);
+ c.strokeStyle='#2b2f36';c.lineWidth=e*2;c.strokeRect(0,0,w,h);c.fillStyle='#89959c';c.fillRect(e,h-e*2,w-e*2,e);
+ const flap=c.createLinearGradient(0,e,0,e+h*.25);flap.addColorStop(0,'#56616c');flap.addColorStop(1,'#303b46');c.fillStyle='#0007';c.fillRect(e,e+h*.25,w-e*2,h*.04);c.fillStyle=flap;c.fillRect(e,e,w-e*2,h*.25);c.fillStyle='#85919b';c.fillRect(e,e+h*.25-h*.022,w-e*2,h*.022);
+ c.textAlign='right';c.textBaseline='alphabetic';c.font=`900 ${h*.14}px ui-monospace,Menlo,monospace`;(c as Ctx&{letterSpacing?:string}).letterSpacing=`${h*.011}px`;c.fillStyle='#000';c.fillText('PUSH',w-h*.14,h*.74+1);c.fillStyle='#9aa3ad';c.fillText('PUSH',w-h*.14,h*.74);c.restore();
+}
+/** A panel's true proportions (width ÷ height) on the machine. */
+const aspect=(r:{w:number;h:number})=>r.w*FACE_SIZE.w/(r.h*FACE_SIZE.h);
+/** Paint `fn(w,h)` in true proportions into an atlas rect (non-uniformly scaled, as the atlas texel is stretched back onto the panel). */
+function intoRect(c:Ctx,[x,y,w,h]:number[],ratio:number,fn:(w:number,h:number)=>void){c.save();c.translate(x,y);c.scale(w/(100*ratio),h/100);fn(100*ratio,100);c.restore();}
+const GREETING={shop:['いらっしゃいませ!','Pick an item'],drinks:['いらっしゃいませ!','Pick a drink']} as const;
+/** Original machine-front art (docs/vending-visuals-HANDOFF.md). Mirrors components/VendingFace.module.css. */
+function drawAtlas(machines:VendingMachine[],coins:()=>number|null){
  const canvas=document.createElement('canvas');canvas.width=ATLAS_W;canvas.height=ATLAS_H;const c=canvas.getContext('2d')!;
  c.fillStyle='#1a1d24';c.fillRect(0,0,ATLAS_W,ATLAS_H);c.fillStyle='#ffffff';c.fillRect(0,0,10,10);
  c.textAlign='center';c.textBaseline='middle';
+ const pics=createPictures();let map:T.CanvasTexture|null=null;const changed=()=>{if(map)map.needsUpdate=true;};
  // Glass: dark frame, light shelves, shelf header (prev · row label · next) and six product slots with lit push buttons.
- machines.forEach((machine,index)=>{const tile=R.glass(index);c.save();c.translate(tile[0],tile[1]);c.scale(.5,.5);const PAGE_ONE=machineStock(machine.id).flatMap(row=>row.items).slice(0,6).map(item=>({...item,kind:item.kind==='gear'?item.storeItem!.category:item.kind,special:item.row==='special'}));const [X,Y,W,H]=[0,0,512,423],G=L.glass,px=(r:{x:number;y:number;w:number;h:number})=>[X+(r.x-G.x)/G.w*W,Y+(r.y-G.y)/G.h*H,r.w/G.w*W,r.h/G.h*H];
-  c.fillStyle='#23272e';c.fillRect(X,Y,W,H);const b=8,g=c.createLinearGradient(0,Y,0,Y+H);g.addColorStop(0,'#81a6a5');g.addColorStop(1,'#8aafab');c.fillStyle=g;c.fillRect(X+b,Y+b,W-2*b,H-2*b);
-  c.fillStyle='#3a6470';c.beginPath();c.moveTo(X+b,Y+b);c.lineTo(X+W*.075,Y+H*.04);c.lineTo(X+W*.075,Y+H*.96);c.lineTo(X+b,Y+H-b);c.closePath();c.fill();
-  c.fillStyle='#adc9bd';c.beginPath();c.moveTo(X+W-b,Y+b);c.lineTo(X+W*.925,Y+H*.04);c.lineTo(X+W*.925,Y+H*.96);c.lineTo(X+W-b,Y+H-b);c.closePath();c.fill();
-  for(const r of [L.prev,L.next]){const [x,y,w,h]=px(r);c.fillStyle='#23272e';roundRect(c,x,y,w,h,8);c.fill();c.fillStyle='#fff1d3';c.beginPath();const cx=x+w/2,cy=y+h/2,d=r===L.prev?-1:1;c.moveTo(cx+d*9,cy);c.lineTo(cx-d*7,cy-10);c.lineTo(cx-d*7,cy+10);c.fill();}
-  {const [x,y,w,h]=px(L.label),gg=c.createLinearGradient(x,0,x+w,0);gg.addColorStop(0,'#ffb800');gg.addColorStop(.5,'#ffe27a');gg.addColorStop(1,'#ffb800');c.fillStyle=gg;roundRect(c,x,y,w,h,8);c.fill();
-   c.fillStyle='#5a2a00';c.font='900 21px system-ui,sans-serif';c.fillText(`SPECIALS  1/${Math.ceil(machineStock(machine.id).flatMap(row=>row.items).length/6)}`,x+w/2,y+h/2+1);}
-  for(let row=0;row<2;row++){
-   const r=L.slots[row*L.cols],[x,y,w,h]=px({x:r.x,y:r.y+r.h*.53,w:.91,h:r.h*.46});
-   const shelf=c.createLinearGradient(0,y,0,y+h);shelf.addColorStop(0,'#b5cfcc');shelf.addColorStop(.03,'#b5cfcc');shelf.addColorStop(.04,'#557986');shelf.addColorStop(.96,'#466574');shelf.addColorStop(1,'#263e50');c.fillStyle=shelf;
-   c.fillRect(x,y,w,h);
-  }
-  L.slots.forEach((r,i)=>{const [x,y,w,h]=px(r),item=PAGE_ONE[i];if(!item)return;
-   const pushY=y+h*L.slotPush.y,pushH=h*L.slotPush.h,nameY=y+h*.59,winH=h*.53-6;
-   // Contact shadow anchors the miniature to the continuous shelf below it.
-   const shadow=c.createRadialGradient(x+w/2,y+winH-1,1,x+w/2,y+winH-1,w*.36);shadow.addColorStop(0,'#1d354b55');shadow.addColorStop(1,'#1d354b00');c.save();c.translate(0,(y+winH)*.8);c.scale(1,.2);c.fillStyle=shadow;c.fillRect(x,y-80,w,160);c.restore();
-   const cx=x+w/2,cy=y+4+winH/2,s=Math.min(w,winH)*.3;
-   if(item.kind==='ball'||item.kind==='pack'){pending.push({src:`/vending/products/${item.kind==='ball'?machine.id+'-ball':'pack'}.png`,x:tile[0]+(x+4)*.5,y:tile[1]+(y+4)*.5,w:(w-8)*.5,h:winH*.5});}else {const size=Math.min((w-10)/1.7,winH/1.86);drawVendingProduct(c,item.id,item.kind,cx,y+4+winH-size*.86,size,false);}
-   c.fillStyle='#fff1d3';c.font='800 19px system-ui,sans-serif';const words=item.label.split(' '),lines:string[]=[''];for(const word of words){const i=lines.length-1,trial=lines[i]?lines[i]+' '+word:word;if((c.measureText(trial)?.width??trial.length*10)>w-8&&lines[i])lines.push(word);else lines[i]=trial;}lines.slice(0,2).forEach((label,j)=>c.fillText(label,cx,nameY+12+j*21,w-8));
-   c.fillStyle='#1c1f25';roundRect(c,x+6,pushY,w-12,pushH,pushH/2);c.fill();c.fillStyle='#56606b';c.beginPath();c.arc(x+6+pushH*.7,pushY+pushH/2,pushH*.18,0,Math.PI*2);c.fill();
-   c.fillStyle='#f2b62c';c.beginPath();c.arc(cx-12,pushY+pushH/2,pushH*.24,0,Math.PI*2);c.fill();c.fillStyle='#7cf29a';c.font='800 19px ui-monospace,Menlo,monospace';c.fillText(String(item.price),cx+10,pushY+pushH/2+1);});
-  c.fillStyle='rgba(255,255,255,.3)';c.beginPath();c.moveTo(X+W*.28,Y);c.lineTo(X+W*.4,Y);c.lineTo(X+W*.22,Y+H);c.lineTo(X+W*.1,Y+H);c.fill();c.restore();});
- // LED display: the greeting the close-up opens with.
- {const [x,y,w,h]=R.led;c.fillStyle='#0a0f0b';c.fillRect(x,y,w,h);c.fillStyle='#152018';c.fillRect(x+5,y+5,w-10,h-10);c.textAlign='left';c.fillStyle='#7cf29a';c.font='800 24px ui-monospace,Menlo,monospace';c.fillText('いらっしゃいませ!',x+18,y+h*.36);
-  c.fillStyle='#b6f5c6';c.font='600 17px system-ui,sans-serif';c.fillText('Pick an item',x+18,y+h*.7);c.textAlign='center';}
- // Coin panel: balance digits, coin slot mouth, label.
- {const [x,y,w,h]=R.coin,g=c.createLinearGradient(x,0,x+w,0);g.addColorStop(0,'#b9bfc8');g.addColorStop(.35,'#e1e4e9');g.addColorStop(1,'#c3c8d0');c.fillStyle=g;c.fillRect(x,y,w,h);
-  c.fillStyle='#152018';roundRect(c,x+18,y+8,w-36,22,4);c.fill();c.fillStyle='#7cf29a';c.font='900 16px ui-monospace,Menlo,monospace';c.fillText('- - -',x+w/2,y+20);
-  c.fillStyle='#50565f';roundRect(c,x+w/2-9,y+36,18,40,8);c.fill();c.fillStyle='#1b1d21';roundRect(c,x+w/2-5,y+40,10,32,5);c.fill();c.fillStyle='#2b3440';c.font='900 13px system-ui,sans-serif';c.fillText('COINS',x+w/2,y+h-12);}
- // Pickup tray: dark opening with its flap.
- {const [x,y,w,h]=R.tray;c.fillStyle='#2b2f36';c.fillRect(x,y,w,h);c.fillStyle='#0c0d10';c.fillRect(x+8,y+8,w-16,h-16);const floor=c.createLinearGradient(0,y+h*.58,0,y+h);floor.addColorStop(0,'#202b34');floor.addColorStop(1,'#11191f');c.fillStyle=floor;c.fillRect(x+8,y+h*.58,w-16,h*.34);c.fillStyle='#56616c';c.fillRect(x+8,y+8,w-16,20);c.fillStyle='#85919b';c.fillRect(x+8,y+26,w-16,2);c.fillStyle='#89959c';c.fillRect(x+8,y+h-8,w-16,3);c.fillStyle='#9aa3ad';c.font='900 18px ui-monospace,Menlo,monospace';c.textAlign='right';c.fillText('PUSH',x+w-14,y+h-18);c.textAlign='center';}
+ machines.forEach((machine,index)=>{const t=machine.drinks?R.drinkGlass(DRINK_MACHINE_IDS.indexOf(machine.id as DrinkMachineId)):R.glass(index);c.save();c.translate(t[0],t[1]);c.scale(t[2]/512,t[3]/423);paintGlass(c,machine,pics,changed);c.restore();});
+ // LED display (the greeting the close-up opens with), coin panel (the player's coins) and pickup tray: shared by every machine.
+ intoRect(c,R.led,aspect(L.led),(w,h)=>paintLed(c,w,h,...GREETING.shop));
+ let shown=coins();intoRect(c,R.coin,aspect(L.coin),(w,h)=>paintCoin(c,w,h,shown));
+ intoRect(c,R.tray,aspect(L.tray),(w,h)=>paintTray(c,w,h));
  // Sticker.
  {const [x,y,w,h]=R.sticker;c.fillStyle='#fffdf6';roundRect(c,x+2,y+2,w-4,h-4,8);c.fill();c.fillStyle='#3a3f47';c.font='800 15px system-ui,sans-serif';c.fillText('Island Shop',x+w/2,y+h*.36);c.fillText('No real money',x+w/2,y+h*.66);}
- const map=new T.CanvasTexture(canvas);map.colorSpace=T.SRGBColorSpace;map.anisotropy=2;map.name='vending-atlas';
- const glow=document.createElement('canvas');glow.width=ATLAS_W;glow.height=ATLAS_H;const e=glow.getContext('2d')!;e.drawImage(canvas,0,0);e.fillStyle='#000000';e.fillRect(0,0,12,12);e.globalAlpha=.55;e.fillRect(R.coin[0],R.coin[1],R.coin[2],R.coin[3]);e.fillRect(R.sticker[0],R.sticker[1],R.sticker[2],R.sticker[3]);e.globalAlpha=1;
- const emissiveMap=new T.CanvasTexture(glow);emissiveMap.colorSpace=T.SRGBColorSpace;emissiveMap.name='vending-atlas-glow';
- let disposed=false;const images:HTMLImageElement[]=[];
- if(typeof Image!=='undefined')for(const p of pending){const img=new Image();images.push(img);img.onload=()=>{if(disposed)return;const ball=p.src.includes('-ball'),scale=Math.min(p.w/img.width,p.h/img.height)*(ball?1.35:1),w=img.width*scale,h=img.height*scale;c.save();c.beginPath();c.rect(p.x,p.y,p.w,p.h);c.clip();c.drawImage(img,p.x+(p.w-w)/2,p.y+(p.h-h)/2,w,h);c.restore();map.needsUpdate=true;};img.src=p.src;}
- return {map,emissiveMap,dispose(){disposed=true;for(const img of images)img.onload=null;map.dispose();emissiveMap.dispose();}};
+ map=new T.CanvasTexture(canvas);map.colorSpace=T.SRGBColorSpace;map.anisotropy=4;map.name='vending-atlas';
+ return {map,pics,
+  /** Repaint the shared coin display when the balance changed (one atlas re-upload; called on zoom in/out only). */
+  refreshCoins(){const next=coins();if(next===shown)return;shown=next;intoRect(c,R.coin,aspect(L.coin),(w,h)=>paintCoin(c,w,h,shown));changed();},
+  get coins(){return shown;},
+  dispose(){pics.dispose();map!.dispose();}};
+}
+/**
+ * Close-up with REAL depth (user, Sep 30 2026: "the perspective of the shelves and books doesn't match that of the machines"; and
+ * earlier "blurry when zooming in"). While the camera zooms onto a machine, that machine and the one standing beside it (the
+ * Konbini + drink pairs) get, for the length of the zoom only:
+ * - the cabinet's front face and the flat printed glass are cut away (their vertices collapsed, restored afterwards);
+ * - a real recessed bay behind the glass in the shared machine material (lit like the cabinet): back wall, side walls, a header
+ *   block and two shelf slabs whose tops the products stand on (VENDING_BAY: shared with the CSS-3D HTML face);
+ * - one high-res canvas (about the on-screen face size × min(devicePixelRatio, 2), longest side ≤ 2048), painted ONCE: the header,
+ *   the two price rails (names, pills, COLD/HOT tags), LED, coin panel, tray, and the page-one products as cut-out sprites standing
+ *   on the slabs VENDING_BAY.product behind the glass (balls and drinks turned to face the close-up camera, books and packs on thin
+ *   real boxes);
+ * - a faint glass pane with a sheen in front.
+ * Four draw calls per machine while zoomed (bay, printed panels, products, glass pane), none at rest. The focused machine's
+ * products are hidden when the camera arrives: the in-use HTML face (same depths, CSS 3D) then shows the live stock. Everything is
+ * disposed when the zoom-out ends; at most one close-up is alive; nothing is redrawn per frame.
+ */
+const HIRES_MAX=2048;
+const ROW_SHORT:Record<string,string>={special:'Specials',books:'Books',packs:'Packs',ball:'Balls',scooter:'Scooters',bike:'Bikes',moped:'Mopeds',jetpack:'Flight',costume:'Animals'};
+type ShelfItem={id:string;label:string;price:number;kind:string;drink?:Drink};
+/** Page one of a machine as the in-use face shows it: its six items and the header (rows on the page, page count). */
+function pageOne(machine:VendingMachine):{items:ShelfItem[];header:{label:string;special:boolean;pages:number}}{
+ if(machine.drinks){const d=drinksAt(machine.id as DrinkMachineId);return {items:d.slice(0,6).map(x=>({id:x.id,label:x.label,price:x.price,kind:'drink',drink:x})),header:{label:'のみもの DRINKS',special:false,pages:1}};}
+ const all=machineStock(machine.id).flatMap(r=>r.items.map(i=>({i,row:r.row}))),first=all.slice(0,6),rows=[...new Set(first.map(x=>x.row))];
+ return {items:first.map(({i})=>({id:i.id,label:i.label,price:i.price,kind:i.kind==='gear'?i.storeItem!.category:i.kind})),header:{label:rows.map(r=>ROW_SHORT[r]??r).join(' · ').toUpperCase(),special:rows.includes('special'),pages:Math.ceil(all.length/6)}};
+}
+type Rect={x:number;y:number;w:number;h:number};
+const shelfLine=(r:Rect)=>r.y+r.h*VENDING_BAY.shelf;
+/** Header strip: ◀ · row label · ▶ (drinks: one blue のみもの banner), flat. */
+function paintHeader(c:Ctx,at:(r:Rect)=>number[],machine:VendingMachine,header:{label:string;special:boolean;pages:number}){
+ const [gx,gy,gw]=at(L.glass),[,ly,,lh]=at(L.label);c.save();c.fillStyle='#23272e';c.fillRect(gx,gy,gw,ly+lh-gy+2);c.textAlign='center';c.textBaseline='middle';
+ if(machine.drinks){const [x,y]=at(L.prev),[x2,,w2]=at(L.next),bw=x2+w2-x,g=c.createLinearGradient(x,0,x+bw,0);g.addColorStop(0,'#1d5fb8');g.addColorStop(.5,'#3f8ee6');g.addColorStop(1,'#1d5fb8');c.fillStyle=g;roundRect(c,x,y,bw,lh,lh*.16);c.fill();
+  c.fillStyle='#ffffff';c.font=`900 ${lh*.42}px system-ui,sans-serif`;c.fillText(header.label,x+bw/2,y+lh/2,bw*.9);c.restore();return;}
+ for(const r of [L.prev,L.next]){const [x,y,w,h]=at(r);c.fillStyle='#2e333b';roundRect(c,x,y,w,h,h*.14);c.fill();c.fillStyle='#fff1d3';c.beginPath();const cx=x+w/2,cy=y+h/2,d=r===L.prev?-1:1,a=h*.2;c.moveTo(cx+d*a,cy);c.lineTo(cx-d*a*.8,cy-a);c.lineTo(cx-d*a*.8,cy+a);c.fill();}
+ const [x,y,w,h]=at(L.label);if(header.special){const g=c.createLinearGradient(x,0,x+w,0);g.addColorStop(0,'#ffb800');g.addColorStop(.5,'#ffe27a');g.addColorStop(1,'#ffb800');c.fillStyle=g;}else c.fillStyle='#2e333b';roundRect(c,x,y,w,h,h*.14);c.fill();
+ c.fillStyle=header.special?'#5a2a00':'#fff1d3';c.font=`900 ${h*.34}px system-ui,sans-serif`;c.fillText(`${header.label}  1/${header.pages}`,x+w/2,y+h/2+1,w*.92);c.restore();
+}
+/** A price rail (the flat front of a shelf slab): name, COLD/HOT tag for drinks, and the lit-button pill with the price. */
+function paintRail(c:Ctx,at:(r:Rect)=>number[],row:number,items:ShelfItem[]){
+ const r0=L.slots[row*L.cols],[,top]=at({...r0,y:shelfLine(r0)}),[,sy,,sh]=at(r0),bottom=sy+sh,[gx,,gw]=at(L.glass);
+ c.save();c.fillStyle='#466574';c.fillRect(gx,top,gw,bottom-top);c.fillStyle='#b8cbcc';c.fillRect(gx,top,gw,Math.max(1,sh*.012));c.textAlign='center';c.textBaseline='middle';
+ for(let col=0;col<L.cols;col++){const i=row*L.cols+col,item=items[i];if(!item)continue;const [x,y,w,h]=at(L.slots[i]),cx=x+w/2,fs=h*.075;
+  c.fillStyle='#fff1d3';c.font=`800 ${fs}px system-ui,sans-serif`;const words=item.label.split(' '),lines:string[]=[''];for(const word of words){const k=lines.length-1,trial=lines[k]?lines[k]+' '+word:word;if((c.measureText(trial)?.width??trial.length*fs*.55)>w*.92&&lines[k])lines.push(word);else lines[k]=trial;}
+  const nameTop=y+h*(VENDING_BAY.shelf+.08);lines.slice(0,2).forEach((t,j)=>c.fillText(t,cx,nameTop+j*fs*1.12,w*.92));
+  if(item.drink){const hot=item.drink.temp==='hot',ty=y+h*.76,th=h*.075;c.fillStyle=hot?'#d8342c':'#2a74d1';roundRect(c,x+w*.14,ty-th/2,w*.72,th,th*.3);c.fill();c.fillStyle='#fff';c.font=`900 ${th*.62}px system-ui,sans-serif`;c.fillText(hot?'あったか～い HOT':'つめた～い COLD',cx,ty+1,w*.68);}
+  const py=y+h*L.slotPush.y,ph=h*L.slotPush.h;c.fillStyle='#1c1f25';roundRect(c,x+w*.06,py,w*.88,ph,ph/2);c.fill();c.fillStyle='#56606b';c.beginPath();c.arc(x+w*.06+ph*.7,py+ph/2,ph*.18,0,Math.PI*2);c.fill();
+  c.fillStyle='#f2b62c';c.beginPath();c.arc(cx-ph*.45,py+ph/2,ph*.24,0,Math.PI*2);c.fill();c.fillStyle='#7cf29a';c.font=`800 ${ph*.6}px ui-monospace,Menlo,monospace`;c.fillText(String(item.price),cx+ph*.35,py+ph/2+1);}
+ c.restore();
+}
+/** Product art cell: the slot above its shelf line (transparent background; the product stands on the cell's bottom edge). */
+const productCell=(i:number):Rect=>{const r=L.slots[i],top=i<L.cols?L.label.y+L.label.h+.006:r.y;return {x:r.x,y:top,w:r.w,h:shelfLine(r)-top};};
+/** How big each kind stands in its cell (fractions of the cell height), and its thin real box behind the art, if any. */
+const PRODUCT_FIT:Record<string,{h:number;w:number;box?:{depth:number;color:string}}>={
+ ball:{h:.62,w:.62},drink:{h:.86,w:.5},display:{h:.8,w:.56,box:{depth:.04,color:'#efe3c6'}},pack:{h:.8,w:.5,box:{depth:.012,color:'#2b4f60'}},
+};
+const fitOf=(kind:string)=>PRODUCT_FIT[kind]??{h:.72,w:.8};
+function paintProduct(c:Ctx,cell:number[],item:ShelfItem,pics:Pictures,changed:()=>void){
+ const [x,y,w,h]=cell,f=fitOf(item.kind),ph=h*f.h,pw=Math.min(w*.9,ph*f.w/f.h*(item.kind==='ball'?1:1)),cx=x+w/2,base=y+h;
+ if(item.kind==='ball'){const src=vendingBallPicture(item.id);if(src){pics.draw(c,src,img=>{const k=Math.min(pw,ph)/(img.width-4),dw=img.width*k,dh=img.height*k;c.drawImage(img,cx-dw/2,base-dh+dh*.06,dw,dh);},changed);return;}}
+ if(item.drink){drawDrink(c,item.drink.art,cx,base-h*.02,ph,undefined,'front');return;}
+ // Books and packs: the flat front art (drawVendingProduct centres them on s; a book is 1.7 s tall, a pack 2 s).
+ const s=item.kind==='display'?ph/1.7:ph/2,cy=item.kind==='display'?base-s*.72:base-s;drawVendingProduct(c,item.id,item.kind,cx,cy,s,false);
+}
+/** A face-plane quad in machine-local metres from a face rect, UV-mapped to a canvas rect. */
+function faceQuad(r:Rect,z:number,uv:number[],W:number,H:number){
+ const F=VENDING_FACE,g=new T.PlaneGeometry(r.w*FACE_SIZE.w,r.h*FACE_SIZE.h).translate(F.x0+(r.x+r.w/2)*FACE_SIZE.w,F.y1-(r.y+r.h/2)*FACE_SIZE.h,z);
+ const [ux,uy,uw,uh]=uv,a=g.getAttribute('uv') as T.BufferAttribute;for(let i=0;i<a.count;i++)a.setXY(i,(ux+a.getX(i)*uw)/W,1-(uy+(1-a.getY(i))*uh)/H);const n=g.toNonIndexed();g.dispose();return n;
+}
+function merge(parts:T.BufferGeometry[]){const m=mergeGeometries(parts)!;parts.forEach(g=>g.dispose());m.computeBoundingSphere();return m;}
+/** The recessed bay behind the glass, in the shared machine material (lit like the cabinet): a cabinet-coloured frame around the
+ * hole (replacing the cut cabinet front), back wall, side walls, the header block and two shelf slabs, plus `extra` boxes. */
+function bayGeometry(m:VendingMachine,extra:T.BufferGeometry[]){
+ const F=VENDING_FACE,front=VENDING_SIZE.d/2,D=VENDING_BAY.depth,{w,h}=VENDING_SIZE,X=(u:number)=>F.x0+u*FACE_SIZE.w,Y=(v:number)=>F.y1-v*FACE_SIZE.h,G=L.glass;
+ const x0=X(G.x),x1=X(G.x+G.w),yTop=Y(G.y),yBot=Y(G.y+G.h),cx=(x0+x1)/2,bw=x1-x0,cabBottom=.08,cabTop=h-.08,parts:T.BufferGeometry[]=[...extra];
+ const lit=(g:T.BufferGeometry,color:string)=>{const u=atlasUV(g,R.white),n=u.toNonIndexed();u.dispose();parts.push(paint(n,color));};
+ lit(new T.PlaneGeometry(x0+w/2,cabTop-cabBottom).translate((x0-w/2)/2,(cabTop+cabBottom)/2,front),m.color);
+ lit(new T.PlaneGeometry(w/2-x1,cabTop-cabBottom).translate((x1+w/2)/2,(cabTop+cabBottom)/2,front),m.color);
+ lit(new T.PlaneGeometry(bw,cabTop-yTop).translate(cx,(cabTop+yTop)/2,front),m.color);
+ lit(new T.PlaneGeometry(bw,yBot-cabBottom).translate(cx,(yBot+cabBottom)/2,front),m.color);
+ const drinks=Boolean(m.drinks),wall=drinks?'#cfe6f4':'#8aafab';
+ lit(new T.PlaneGeometry(bw,yTop-yBot).translate(cx,(yTop+yBot)/2,front-D),wall);
+ lit(new T.PlaneGeometry(D,yTop-yBot).rotateY(Math.PI/2).translate(x0,(yTop+yBot)/2,front-D/2),drinks?'#b7d3e6':'#6f9696');
+ lit(new T.PlaneGeometry(D,yTop-yBot).rotateY(-Math.PI/2).translate(x1,(yTop+yBot)/2,front-D/2),drinks?'#e0eef7':'#a4c3bb');
+ const block=(top:number,bottom:number,color:string)=>lit(new T.BoxGeometry(bw,top-bottom,D-.004).translate(cx,(top+bottom)/2,front-D/2-.002),color);
+ block(yTop,Y(productCell(0).y),'#23272e');
+ block(Y(shelfLine(L.slots[0])),Y(L.slots[L.cols].y),drinks?'#9fbfd3':'#a9c3c1');
+ block(Y(shelfLine(L.slots[L.cols])),yBot,drinks?'#9fbfd3':'#a9c3c1');
+ return merge(parts);
 }
 /** Remap a geometry's UVs into an atlas rectangle (or a single texel for plain painted parts). */
 function atlasUV(geometry:T.BufferGeometry,[x,y,w,h]:number[]){const uv=geometry.getAttribute('uv') as T.BufferAttribute;for(let i=0;i<uv.count;i++)uv.setXY(i,(x+uv.getX(i)*w)/ATLAS_W,1-(y+(1-uv.getY(i))*h)/ATLAS_H);uv.needsUpdate=true;return geometry;}
@@ -113,17 +269,25 @@ function buildMachineGeometry(m:VendingMachine,index:number){
  for(let row=0;row<2;row++){const r=L.slots[row*L.cols];
   box(.91*FACE_SIZE.w,.022,.052,0,VENDING_FACE.y1-(r.y+r.h*.55)*FACE_SIZE.h,front+.032,'#b8cbcc');
  }
- facePanel(L.glass,R.glass(index),front+.01);                         // glass: header + six product slots
+ const glassPart=parts.length;
+ facePanel(L.glass,m.drinks?R.drinkGlass(DRINK_MACHINE_IDS.indexOf(m.id as DrinkMachineId)):R.glass(index),front+.01);                         // glass: header + six product slots
  facePanel(L.led,R.led);facePanel(L.coin,R.coin);facePanel(L.tray,R.tray);
- const merged=mergeGeometries(parts.map(g=>g.toNonIndexed()))!;parts.forEach(g=>g.dispose());merged.computeBoundingSphere();merged.computeBoundingBox();return merged;
+ const flat=parts.map(g=>g.toNonIndexed()),start=(i:number)=>flat.slice(0,i).reduce((n,g)=>n+g.getAttribute('position').count,0);
+ const merged=mergeGeometries(flat)!;parts.forEach(g=>g.dispose());flat.forEach(g=>g.dispose());merged.computeBoundingSphere();merged.computeBoundingBox();
+ // The close-up cuts these away (collapses them) to open the real bay: the cabinet box's front face (+z, vertices 24–29 of the
+ // first part) and the printed glass panel.
+ merged.userData.cut=[[24,6],[start(glassPart),6]];return merged;
 }
 
 export type VendingUpdate={now:number;dt:number;reduced:boolean;hoverRay:T.Raycaster|null;canEnter:boolean;flying:boolean;flightHeight:number;
  location:{x:number;z:number};groundY:number;camera:T.Camera;width:number;height:number;hidePrompt:boolean;
  prompt:HTMLButtonElement|null;placeUI:(el:HTMLElement,x:number,y:number)=>void;setUIHidden:(el:HTMLElement,hidden:boolean)=>void;onHoverStart:()=>void};
-export function createVendingMachines(scene:T.Scene){
- const atlas=drawAtlas(VENDING_MACHINES);
- const material=new T.MeshStandardMaterial({map:atlas.map,emissiveMap:atlas.emissiveMap,emissive:'#ffffff',emissiveIntensity:.8,vertexColors:true,roughness:.5,metalness:.08});
+/** `coins`: the player's coin balance for the coin displays (read on build and on each zoom in/out, never per frame). */
+export function createVendingMachines(scene:T.Scene,opts:{coins?:()=>number|null;viewport?:()=>{width:number;height:number;dpr:number}}={}){
+ const atlas=drawAtlas(VENDING_MACHINES,opts.coins??(()=>null));
+ // No emissive map (Sep 30 2026): the printed face texels are shown unlit by the shader patch below and the cabinet texel has no
+ // glow, so the old full-size glow copy of the atlas (4 MB + mipmaps) changed nothing on screen.
+ const material=new T.MeshStandardMaterial({map:atlas.map,emissive:'#000000',vertexColors:true,roughness:.5,metalness:.08});
  material.name='vending-machine';
  // Printed/lit face panels keep their authored colours as the HTML controls fade in.
  // Only the plain cabinet texel receives scene lighting; no extra mesh or render pass.
@@ -153,6 +317,64 @@ export function createVendingMachines(scene:T.Scene){
  let lastCamera:T.PerspectiveCamera|null=null,faceListener:((corners:{x:number;y:number}[])=>void)|null=null;
  const faceCorner=new T.Vector3();
  type Entry=(typeof entries)[number];
+ // ---- Close-up with real depth (see pageOne/paintRail above): built on focus, dropped when the zoom-out ends. ----
+ type CloseUpPart={entry:Entry;meshes:T.Mesh[];products:T.Mesh;targets:{index:number;id:string;u:number;v:number;depth:number}[]};
+ let closeUp:{id:VendingMachineId;parts:CloseUpPart[];canvas:HTMLCanvasElement;texture:T.CanvasTexture;printed:T.MeshBasicMaterial;glass:T.MeshBasicMaterial;glassMap:T.CanvasTexture;state:{alive:boolean}}|null=null;
+ let closeUpStats={ms:0,width:0,height:0,bytes:0,drawCalls:0};
+ /** Cut the flat front (cabinet front face + printed glass) of one machine away, or put it back. */
+ const cutFront=(e:Entry,cut:boolean)=>{const pos=e.geometry.getAttribute('position') as T.BufferAttribute,arr=pos.array as Float32Array,ud=e.geometry.userData as {cut:[number,number][];saved?:Float32Array[]};
+  ud.saved??=ud.cut.map(([s,n])=>arr.slice(s*3,(s+n)*3));
+  ud.cut.forEach(([s,n],k)=>{if(cut)for(let i=1;i<n;i++)for(let j=0;j<3;j++)arr[(s+i)*3+j]=arr[s*3+j];else arr.set(ud.saved![k],s*3);});pos.needsUpdate=true;};
+ function dropCloseUp(){if(!closeUp)return;const u=closeUp;closeUp=null;u.state.alive=false;
+  for(const p of u.parts){for(const m of p.meshes){m.removeFromParent();m.geometry.dispose();}cutFront(p.entry,false);}
+  u.printed.dispose();u.glass.dispose();u.glassMap.dispose();u.texture.dispose();u.canvas.width=u.canvas.height=1;}
+ function buildCloseUp(id:VendingMachineId){
+  const view=opts.viewport?.()??(typeof window!=='undefined'?{width:window.innerWidth,height:window.innerHeight,dpr:window.devicePixelRatio||1}:null);
+  if(!view||typeof document==='undefined')return;
+  const e=entries.find(x=>x.machine.id===id);if(!e)return;
+  // The machine and the one standing beside it (same facing, within a cabinet width or two): both fill the close-up.
+  const group=[e,...entries.filter(o=>o!==e&&Math.hypot(o.machine.x-e.machine.x,o.machine.z-e.machine.z)<3.2&&Math.abs(o.machine.yaw-e.machine.yaw)<.2&&Math.abs(o.machine.y-e.machine.y)<.5)].slice(0,2);
+  const dpr=Math.min(2,view.dpr||1);let fh=Math.min(view.height*.92,view.width*.94*FACE_SIZE.h/FACE_SIZE.w)*dpr,fw=fh*FACE_SIZE.w/FACE_SIZE.h;
+  const k=Math.min(1,HIRES_MAX/Math.max(group.length*fw,fh));fw=Math.floor(fw*k);fh=Math.floor(fh*k);const W=group.length*fw,H=fh;if(W<16||H<16)return;
+  const t0=typeof performance!=='undefined'?performance.now():0;
+  const canvas=document.createElement('canvas');canvas.width=W;canvas.height=H;const c=canvas.getContext('2d');if(!c)return;
+  const texture=new T.CanvasTexture(canvas);texture.colorSpace=T.SRGBColorSpace;texture.generateMipmaps=false;texture.minFilter=T.LinearFilter;texture.name='vending-closeup';
+  const state={alive:true},changed=()=>{if(state.alive)texture.needsUpdate=true;};
+  const printed=new T.MeshBasicMaterial({map:texture,toneMapped:false,alphaTest:.5});printed.name='vending-closeup';
+  const glassCanvas=document.createElement('canvas');glassCanvas.width=glassCanvas.height=64;{const g=glassCanvas.getContext('2d');if(g){g.fillStyle='rgba(225,250,255,.05)';g.fillRect(0,0,64,64);g.fillStyle='rgba(255,255,255,.14)';g.beginPath();g.moveTo(18,0);g.lineTo(26,0);g.lineTo(12,64);g.lineTo(4,64);g.fill();g.fillStyle='rgba(255,255,255,.08)';g.beginPath();g.moveTo(29,0);g.lineTo(31,0);g.lineTo(17,64);g.lineTo(15,64);g.fill();}}
+  const glassMap=new T.CanvasTexture(glassCanvas);glassMap.colorSpace=T.SRGBColorSpace;const glass=new T.MeshBasicMaterial({map:glassMap,transparent:true,depthWrite:false,toneMapped:false});glass.name='vending-closeup-glass';
+  // The close-up camera, so round products (balls, bottles) can turn to face it.
+  const cam=new T.PerspectiveCamera(40,view.width/view.height,1,500),camPos=new T.Vector3(),camLook=new T.Vector3();faceView(e,cam,camPos,camLook,view.height);
+  const front=VENDING_SIZE.d/2,P=VENDING_BAY.product;
+  const parts:CloseUpPart[]=group.map((g,gi)=>{
+   const ox=gi*fw,at=(r:Rect)=>[ox+r.x*fw,r.y*fh,r.w*fw,r.h*fh],{items,header}=pageOne(g.machine);
+   paintHeader(c,at,g.machine,header);paintRail(c,at,0,items);paintRail(c,at,1,items);
+   const panel=(r:Rect,fn:(w:number,h:number)=>void)=>{const [x,y,w,h]=at(r);c.save();c.translate(x,y);fn(w,h);c.restore();};
+   const [msg,sub]=g.machine.drinks?GREETING.drinks:GREETING.shop;panel(L.led,(w,h)=>paintLed(c,w,h,msg,sub));panel(L.coin,(w,h)=>paintCoin(c,w,h,atlas.coins));panel(L.tray,(w,h)=>paintTray(c,w,h));
+   items.forEach((item,i)=>paintProduct(c,at(productCell(i)),item,atlas.pics,changed));
+   // Printed panels at the front: header, the two rails (the slab fronts), LED, coin, tray.
+   const G=L.glass,headerRect={x:G.x,y:G.y,w:G.w,h:productCell(0).y-G.y},rail=(row:number):Rect=>{const r=L.slots[row*L.cols],top=shelfLine(r),bottom=row===0?L.slots[L.cols].y:G.y+G.h;return {x:G.x,y:top,w:G.w,h:bottom-top};};
+   const flat=[faceQuad(headerRect,front+.002,at(headerRect),W,H),faceQuad(rail(0),front+.002,at(rail(0)),W,H),faceQuad(rail(1),front+.002,at(rail(1)),W,H),...[L.led,L.coin,L.tray].map(r=>faceQuad(r,front+.008,at(r),W,H))];
+   // Products: cut-out sprites standing on the slabs, P behind the glass; boxes behind books and packs.
+   const local=g.mesh.worldToLocal(camPos.clone()),boxes:T.BufferGeometry[]=[],sprites:T.BufferGeometry[]=[],targets:CloseUpPart['targets']=[];
+   items.forEach((item,i)=>{const r=productCell(i),F=VENDING_FACE,cw=r.w*FACE_SIZE.w,ch=r.h*FACE_SIZE.h,cx=F.x0+(r.x+r.w/2)*FACE_SIZE.w,cy=F.y1-(r.y+r.h/2)*FACE_SIZE.h,z=front-P,[ux,uy,uw,uh]=at(r);
+    const q=new T.PlaneGeometry(cw,ch),a=q.getAttribute('uv') as T.BufferAttribute;for(let j=0;j<a.count;j++)a.setXY(j,(ux+a.getX(j)*uw)/W,1-(uy+(1-a.getY(j))*uh)/H);
+    if(item.kind==='ball'||item.kind==='drink')q.rotateY(Math.atan2(local.x-cx,local.z-z));q.translate(cx,cy,z);sprites.push(paint(q.toNonIndexed(),'#ffffff'));q.dispose();
+    const fit=fitOf(item.kind);if(fit.box){const ph=ch*fit.h*.97,pw=ph*(item.kind==='display'?.694:.7)*.97,b=new T.BoxGeometry(pw,ph,fit.box.depth).translate(cx-(item.kind==='display'?ph/1.7*.03:0),cy-ch/2+ph/2+.002,z-fit.box.depth/2-.001);
+     const u=atlasUV(b,R.white),n=u.toNonIndexed();u.dispose();boxes.push(paint(n,fit.box.color));}
+    targets.push({index:i,id:item.id,u:r.x+r.w/2,v:shelfLine(L.slots[i]),depth:P});});
+   // Products = the sprites (printed, cut-out) + the thin real boxes behind books and packs (lit), one mesh with two groups so
+   // they hide together when the in-use face takes over.
+   const productGeometry=sprites.length?(boxes.length?(()=>{const a=merge(sprites),b=merge(boxes),m=mergeGeometries([a,b],true)!;a.dispose();b.dispose();return m;})():merge(sprites)):new T.BufferGeometry();
+   const bay=bayGeometry(g.machine,[]),printedMesh=new T.Mesh(merge(flat),printed),productMesh=new T.Mesh(productGeometry,boxes.length?[printed,material]:printed),bayMesh=new T.Mesh(bay,material);
+   const pane=new T.Mesh(faceQuad(G,front+.066,[0,0,64,64],64,64),glass);pane.renderOrder=2;
+   const meshes=[bayMesh,printedMesh,productMesh,pane];meshes.forEach(m=>{m.name='vending-closeup';g.mesh.add(m);m.updateMatrixWorld(true);m.matrixAutoUpdate=false;});
+   bayMesh.receiveShadow=true;cutFront(g,true);
+   return {entry:g,meshes,products:productMesh,targets};
+  });
+  closeUp={id,parts,canvas,texture,printed,glass,glassMap,state};
+  closeUpStats={ms:+((typeof performance!=='undefined'?performance.now():0)-t0).toFixed(1),width:W,height:H,bytes:W*H*4,drawCalls:parts.length*4};
+ }
  /** A level three-quarter camera fits the face and a sliver of the cabinet side. */
  const faceView=(e:Entry,camera:T.PerspectiveCamera,position:T.Vector3,look:T.Vector3,viewportHeight=typeof window==='undefined'?800:window.innerHeight)=>{
   const F=VENDING_FACE,tanV=Math.tan(T.MathUtils.degToRad(camera.fov)/2),aspect=camera.aspect||1;
@@ -172,6 +394,8 @@ export function createVendingMachines(scene:T.Scene){
  };
  return {
   root,obstacles,entries,pick:(ray:T.Raycaster)=>pick(ray),
+  /** Shared machine material and scaled cabinet size, for the kick reaction (lib/graphics/vendingKick.ts). */
+  material,size:{w,d,h},
   get target(){return target;},
   get hovered(){return hovered;},
   /** The close-up would look through the player: hide them (and their ride) once the zoom is under way. */
@@ -196,10 +420,19 @@ export function createVendingMachines(scene:T.Scene){
    return target;
   },
   /** Start the zoom in; `onArrive` runs once the camera reaches the glass (immediately with reduced motion). */
-  focus(id:VendingMachineId,onArrive:()=>void){zoom={id,t:zoom?.id===id?zoom.t:0,dir:1,onArrive};},
+  focus(id:VendingMachineId,onArrive:()=>void){zoom={id,t:zoom?.id===id?zoom.t:0,dir:1,onArrive};atlas.refreshCoins();if(closeUp?.id!==id){dropCloseUp();buildCloseUp(id);}else closeUp.parts.forEach(p=>{p.products.visible=true;});},
   /** Zoom back out to the follow camera. */
-  release(onDone?:()=>void){if(!zoom){onDone?.();return;}zoom.dir=-1;zoom.onArrive=undefined;zoom.onDone=onDone;},
-  cancel(){zoom=null;},
+  release(onDone?:()=>void){atlas.refreshCoins();closeUp?.parts.forEach(p=>{p.products.visible=true;});if(!zoom){dropCloseUp();onDone?.();return;}zoom.dir=-1;zoom.onArrive=undefined;zoom.onDone=onDone;},
+  cancel(){zoom=null;dropCloseUp();},
+  /** The live high-res close-up face (null when none), and the cost of the last one built (ms to paint, texture size and bytes). */
+  get hiRes(){return closeUp?{id:closeUp.id,machines:closeUp.parts.map(p=>p.entry.machine.id),...closeUpStats}:null;},
+  get lastHiRes(){return closeUpStats;},
+  /** Where the close-up's products stand (face fractions u, shelf line v, depth in metres) per machine; empty when not zoomed. */
+  closeUpTargets(id:VendingMachineId){return closeUp?.parts.find(p=>p.entry.machine.id===id)?.targets??[];},
+  /** Whether a machine shows the real-depth close-up right now (else its flat printed front). */
+  hasCloseUp(id:VendingMachineId){return Boolean(closeUp?.parts.some(p=>p.entry.machine.id===id));},
+  /** Checks and screenshots: show (or hide) the close-up products again after the camera arrived. */
+  showCloseUpProducts(visible:boolean){closeUp?.parts.forEach(p=>{p.products.visible=visible;});},
   /** Call right after the follow camera is placed; blends toward the machine front. Returns true while it owns the camera. */
   applyCamera(camera:T.PerspectiveCamera,dt:number,reduced:boolean){
    if(!zoom)return false;const e=entries.find(x=>x.machine.id===zoom!.id)!;
@@ -208,10 +441,11 @@ export function createVendingMachines(scene:T.Scene){
    faceView(e,camera,zoomPos,zoomLook);
    followLook.copy(camera.position).addScaledVector(viewDir,40);
    camera.position.lerp(zoomPos,k);if(e.machine.id==='market')camera.position.y+=Math.sin(Math.PI*k)*7;mixLook.lerpVectors(followLook,zoomLook,k);camera.lookAt(mixLook);lastCamera=camera;
-   if(zoom.dir>0&&zoom.t>=1&&zoom.onArrive){const fn=zoom.onArrive;zoom.onArrive=undefined;fn();}
+   // Arrived: the in-use HTML face (same depths, CSS 3D) takes over the focused machine's live stock; hide its close-up products.
+   if(zoom.dir>0&&zoom.t>=1&&zoom.onArrive){const fn=zoom.onArrive;zoom.onArrive=undefined;closeUp?.parts.forEach(p=>{if(p.entry.machine.id===zoom!.id)p.products.visible=false;});fn();}
    // Arrived: tell the machine-face layer where the face sits on screen (only on awake frames; the paused island sleeps).
    if(zoom&&zoom.dir>0&&zoom.t>=1&&faceListener)faceListener(faceNDC(e,camera));
-   if(zoom.dir<0&&zoom.t<=0){const fn=zoom.onDone;zoom=null;fn?.();}
+   if(zoom.dir<0&&zoom.t<=0){const fn=zoom.onDone;zoom=null;dropCloseUp();fn?.();}
    return true;
   },
   /** Straight-on camera target that fits the machine face (VENDING_FACE) on this screen; used by the zoom and tests. */
@@ -219,9 +453,22 @@ export function createVendingMachines(scene:T.Scene){
   /** The machine face's four corners (top-left, top-right, bottom-right, bottom-left) in normalized device coordinates, from
    * the last zoom camera, or null when not zoomed. */
   faceNow():{x:number;y:number}[]|null{if(!zoom||!lastCamera)return null;const e=entries.find(x=>x.machine.id===zoom!.id)!;return faceNDC(e,lastCamera);},
+  /**
+   * The face's full CSS 3D placement (Sep 30 2026): a matrix3d mapping face pixels (x right, y down, z toward the viewer, `w`×`h`
+   * px for the whole face) through the last zoom camera onto the page (`rect`: the canvas's client rect), so HTML children moved in
+   * z (translateZ) land where the real 3D bay puts them. Null when not zoomed.
+   */
+  faceCssMatrix(w:number,h:number,rect:{left:number;top:number;width:number;height:number}):string|null{
+   if(!zoom||!lastCamera||w<=0||h<=0)return null;const e=entries.find(x=>x.machine.id===zoom!.id)!,F=VENDING_FACE,k=FACE_SIZE.w/w;
+   lastCamera.updateMatrixWorld();e.mesh.updateMatrixWorld();
+   const A=new T.Matrix4().set(k,0,0,F.x0,0,-FACE_SIZE.h/h,0,F.y1,0,0,k,F.z,0,0,0,1);
+   const S=new T.Matrix4().set(rect.width/2,0,0,rect.left+rect.width/2,0,-rect.height/2,0,rect.top+rect.height/2,0,0,-1,0,0,0,0,1);
+   const M=S.multiply(lastCamera.projectionMatrix).multiply(lastCamera.matrixWorldInverse).multiply(e.mesh.matrixWorld).multiply(A);
+   return `matrix3d(${M.elements.map(v=>+v.toPrecision(9)).join(',')})`;
+  },
   /** Called with the face corners on every awake frame while zoomed in; returns an unsubscribe. */
   watchFace(fn:(corners:{x:number;y:number}[])=>void){faceListener=fn;return()=>{if(faceListener===fn)faceListener=null;};},
-  dispose(){glow.dispose();glowRoot.removeFromParent();root.removeFromParent();entries.forEach(e=>e.geometry.dispose());material.dispose();atlas.dispose();},
+  dispose(){dropCloseUp();glow.dispose();glowRoot.removeFromParent();root.removeFromParent();entries.forEach(e=>e.geometry.dispose());material.dispose();atlas.dispose();},
  };
 }
 export type VendingMachines=ReturnType<typeof createVendingMachines>;

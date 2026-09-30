@@ -1,7 +1,7 @@
 import * as T from 'three';
 import {LUMBAR_HEIGHT,CHEST_HEIGHT,SPINE_LIMIT} from './spineSurface';
 import {DIGIT_GLYPHS,DIGIT_HEIGHT} from './shirtDigits';
-import type {Format} from '../town/venues';
+import type {LiveFormat} from '../town/venues';
 
 /*
  * Back numbers for the procedural rig, drawn in Barlow Condensed Bold (SIL OFL, outlines in
@@ -62,7 +62,7 @@ export function shirtNumberLayout(n:number){
 }
 
 // ---------------------------------------------------------------- classic numbers by slot
-const CLASSIC:Record<Format,Record<string,number>>={
+const CLASSIC:Record<LiveFormat,Record<string,number>>={
  // 4-3-3: 1 keeper, 2/3 full-backs, 4/5 centre-backs, 6 holding, 8 box-to-box, 10 playmaker, 7/11 wingers, 9 striker.
  '11v11':{gk:1,rb:2,lb:3,rcb:4,lcb:5,cm:6,rcm:8,lcm:10,rw:7,st:9,lw:11},
  // 3-2-3: a back three (2 5 3), a holding 6 beside the playmaking 10, wingers 7/11, striker 9.
@@ -71,9 +71,11 @@ const CLASSIC:Record<Format,Record<string,number>>={
  '7v7':{gk:1,rcb:4,lcb:5,rm:7,cm:10,lm:11,st:9},
  // Futsal: goleiro 1, fixo 4, alas 7/11, pivô 9.
  futsal:{gk:1,cb:4,rm:7,lm:11,st:9},
+ // Beach soccer diamond: keeper 1, defender 4, wingers 7/11, pivot 9.
+ beach:{gk:1,cb:4,rm:7,lm:11,st:9},
 };
 /** Position-appropriate classic number for a live-match slot id (away ids carry a leading "d"). */
-export function classicShirtNumber(format:Format,slotId:string):number|null{
+export function classicShirtNumber(format:LiveFormat,slotId:string):number|null{
  const table=CLASSIC[format],id=slotId.toLowerCase();
  return table?.[id]??(id.startsWith('d')?table?.[id.slice(1)]:undefined)??null;
 }

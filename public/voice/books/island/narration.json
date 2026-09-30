@@ -56,9 +56,9 @@
       ]
     },
     "explore": {
-      "src": "/voice/books/island/explore.m4a?v=coach-bella-1",
-      "duration": 36.4,
-      "scriptSha256": "a714fd02279251993eefc06f3f1808b067eff906de2abfcc244f689e7528e385",
+      "src": "/voice/books/island/explore.m4a?v=coach-bella-2",
+      "duration": 36.5,
+      "scriptSha256": "7359e5f297f3a18e34b139216278785d6e7b7d3d7c282c4ecccef28ba269968f",
       "cues": [
         {
           "text": "Ride around the town",
@@ -76,28 +76,28 @@
           "duration": 3.075
         },
         {
-          "text": "Ball Hunt gives you clues to find eighty hidden matchday balls, and each one teaches you a football tip.",
+          "text": "Ball Hunt gives you clues to find a hundred hidden matchday balls, and each one teaches you a football tip.",
           "start": 10.9,
-          "duration": 6.925
+          "duration": 7.075
         },
         {
           "text": "Tap three times to ride the scooter, the bike and the moped down our paper street.",
-          "start": 17.825,
+          "start": 17.975,
           "duration": 5.375
         },
         {
           "text": "Exploring is a lot like finding space on the pitch.",
-          "start": 23.2,
+          "start": 23.35,
           "duration": 3.8
         },
         {
           "text": "Keep your eyes open, and you will spot the gaps that other people miss.",
-          "start": 27.0,
+          "start": 27.15,
           "duration": 4.725
         },
         {
           "text": "Keep exploring. The best players are always looking for space.",
-          "start": 31.725,
+          "start": 31.875,
           "duration": 4.6
         }
       ]

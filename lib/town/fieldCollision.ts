@@ -12,7 +12,7 @@
  * Cost: one AABB test per venue per tick; players are only visited while the character is on (or within
  * 1.5 m of) a pitch at the pitch's height, with a cheap squared-distance reject before any sqrt.
  */
-export type FieldCollisionVenue={x:number;z:number;width:number;length:number;elevation?:number};
+export type FieldCollisionVenue={x:number;z:number;width:number;length:number;elevation?:number;/** A quarter-turned court (the beach court) swaps its x/z extents. */yaw?:number};
 export type FieldCollisionRig={root:{visible:boolean;position:{x:number;z:number};scale:{x:number};rotation?:{y:number};userData:Record<string,unknown>}};
 export type FieldCollisionEntry={venue:FieldCollisionVenue;root:{visible:boolean};rigs:Map<string,FieldCollisionRig>};
 export type FieldNudge={x:number;z:number;lean:number};
@@ -51,7 +51,8 @@ export function fieldBodyRadius(userData:Record<string,unknown>|undefined,scale=
 
 /** Is the character on or next to this venue, at its height? */
 export function nearVenue(v:FieldCollisionVenue,x:number,z:number,height:number,margin=MARGIN){
- return Math.abs(height-(v.elevation??0))<HEIGHT_TOLERANCE&&Math.abs(x-v.x)<v.width/2+margin&&Math.abs(z-v.z)<v.length/2+margin;
+ const turned=Math.abs(Math.sin(v.yaw??0))>.5,hx=turned?v.length/2:v.width/2,hz=turned?v.width/2:v.length/2;
+ return Math.abs(height-(v.elevation??0))<HEIGHT_TOLERANCE&&Math.abs(x-v.x)<hx+margin&&Math.abs(z-v.z)<hz+margin;
 }
 
 /**

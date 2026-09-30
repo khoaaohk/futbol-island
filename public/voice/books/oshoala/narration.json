@@ -1,0 +1,314 @@
+{
+  "voice": "kokoro_af_bella",
+  "engine": "Kokoro-82M",
+  "speed": 1.0,
+  "pages": {
+    "street": {
+      "src": "/voice/books/oshoala/street.m4a?v=coach-bella-1",
+      "duration": 40.0,
+      "scriptSha256": "623cf8b30d099463f14e77be8e3d379e598fe989e67ea9a6f849907b90752b95",
+      "cues": [
+        {
+          "text": "A girl who loved football",
+          "start": 0.0,
+          "duration": 2.275
+        },
+        {
+          "text": "Asisat Oshoala was born in 1994 in Ikorodu, in Lagos State, Nigeria.",
+          "start": 2.275,
+          "duration": 6.725
+        },
+        {
+          "text": "She grew up in a big family, with lots of brothers and sisters.",
+          "start": 9.0,
+          "duration": 4.575
+        },
+        {
+          "text": "Where she grew up, many people thought football was not for girls.",
+          "start": 13.575,
+          "duration": 4.425
+        },
+        {
+          "text": "Asisat loved it anyway.",
+          "start": 18.0,
+          "duration": 2.425
+        },
+        {
+          "text": "Her parents did not want her to play.",
+          "start": 20.425,
+          "duration": 2.825
+        },
+        {
+          "text": "She sometimes hid where she was going, just to play football.",
+          "start": 23.25,
+          "duration": 4.35
+        },
+        {
+          "text": "Roll the ball down the street.",
+          "start": 27.6,
+          "duration": 2.375
+        },
+        {
+          "text": "Growing up, she never wore a shirt with a woman player\u2019s name on the back.",
+          "start": 29.975,
+          "duration": 4.85
+        },
+        {
+          "text": "Everyone deserves a game. Make room for any player who wants to join in.",
+          "start": 34.825,
+          "duration": 5.15
+        }
+      ]
+    },
+    "grandma": {
+      "src": "/voice/books/oshoala/grandma.m4a?v=coach-bella-1",
+      "duration": 37.4,
+      "scriptSha256": "b28c21462ab06f4aa63e3f2af2e4157e901ad512ca5f8d15635aea1f7bf8f225",
+      "cues": [
+        {
+          "text": "A grandmother who believed",
+          "start": 0.0,
+          "duration": 2.175
+        },
+        {
+          "text": "Some days Asisat got into trouble at home for playing football.",
+          "start": 2.175,
+          "duration": 4.925
+        },
+        {
+          "text": "So who believed in her?",
+          "start": 7.1,
+          "duration": 2.15
+        },
+        {
+          "text": "Her grandmother.",
+          "start": 9.25,
+          "duration": 1.825
+        },
+        {
+          "text": "When others doubted her, her grandmother calmly told her to be a good and nice person, to be respectful and to be disciplined.",
+          "start": 11.075,
+          "duration": 8.225
+        },
+        {
+          "text": "Asisat says she still remembers those words every time she walks onto the pitch.",
+          "start": 19.3,
+          "duration": 5.75
+        },
+        {
+          "text": "Open the three flaps.",
+          "start": 25.05,
+          "duration": 2.075
+        },
+        {
+          "text": "Good.",
+          "start": 27.125,
+          "duration": 1.4
+        },
+        {
+          "text": "Respectful.",
+          "start": 28.525,
+          "duration": 1.75
+        },
+        {
+          "text": "Disciplined.",
+          "start": 30.275,
+          "duration": 1.675
+        },
+        {
+          "text": "Talent helps, but respect and discipline make you a player every coach wants.",
+          "start": 31.95,
+          "duration": 5.4
+        }
+      ]
+    },
+    "u20": {
+      "src": "/voice/books/oshoala/u20.m4a?v=coach-bella-1",
+      "duration": 37.0,
+      "scriptSha256": "6073787ee2d187e45f81751ef86b68f351abf42efb0da8969da41f38780ded68",
+      "cues": [
+        {
+          "text": "The best player in Canada",
+          "start": 0.0,
+          "duration": 2.3
+        },
+        {
+          "text": "Asisat played for clubs in Nigeria, including FC Robo and Rivers Angels.",
+          "start": 2.3,
+          "duration": 5.825
+        },
+        {
+          "text": "In 2014 she went to the FIFA Under-20 Women\u2019s World Cup in Canada with Nigeria.",
+          "start": 8.125,
+          "duration": 6.525
+        },
+        {
+          "text": "She scored seven goals, more than anyone else, and she was named the best player of the tournament.",
+          "start": 14.65,
+          "duration": 6.3
+        },
+        {
+          "text": "Nigeria finished second.",
+          "start": 20.95,
+          "duration": 2.375
+        },
+        {
+          "text": "Shoot at goal.",
+          "start": 23.325,
+          "duration": 1.725
+        },
+        {
+          "text": "Months later she won the African championship with Nigeria\u2019s senior team too.",
+          "start": 25.05,
+          "duration": 5.75
+        },
+        {
+          "text": "Strikers score by arriving at the right moment. Time your run so you meet the ball at speed.",
+          "start": 30.8,
+          "duration": 6.15
+        }
+      ]
+    },
+    "believers": {
+      "src": "/voice/books/oshoala/believers.m4a?v=coach-bella-1",
+      "duration": 35.4,
+      "scriptSha256": "7035e5ede70577cdef395cba1d148504c9c4e4633cc784feb58e060517036e20",
+      "cues": [
+        {
+          "text": "Her parents became believers",
+          "start": 0.0,
+          "duration": 2.525
+        },
+        {
+          "text": "After that amazing year, Asisat had a big talk with her parents.",
+          "start": 2.525,
+          "duration": 4.65
+        },
+        {
+          "text": "She told them that when young people follow their dreams, something good can come from it.",
+          "start": 7.175,
+          "duration": 5.9
+        },
+        {
+          "text": "Her parents listened.",
+          "start": 13.075,
+          "duration": 2.0
+        },
+        {
+          "text": "Today they believe in her.",
+          "start": 15.075,
+          "duration": 2.225
+        },
+        {
+          "text": "She says they call her, and they know her game even before she tells them!",
+          "start": 17.3,
+          "duration": 4.85
+        },
+        {
+          "text": "Pass the phone to her parents.",
+          "start": 22.15,
+          "duration": 2.35
+        },
+        {
+          "text": "Sometimes the people you love just need time to understand.",
+          "start": 24.5,
+          "duration": 4.35
+        },
+        {
+          "text": "Talk to the people who worry about you. Explain what football means to you, calmly and kindly.",
+          "start": 28.85,
+          "duration": 6.525
+        }
+      ]
+    },
+    "europe": {
+      "src": "/voice/books/oshoala/europe.m4a?v=coach-bella-1",
+      "duration": 41.2,
+      "scriptSha256": "4dcd633c9bd26f1b4190613c01a721ec220a9be3e957422143c51ac3a1655d80",
+      "cues": [
+        {
+          "text": "A long way from home",
+          "start": 0.0,
+          "duration": 2.1
+        },
+        {
+          "text": "In 2015 Asisat joined Liverpool, and she became the first African player in England\u2019s Women\u2019s Super League.",
+          "start": 2.1,
+          "duration": 8.225
+        },
+        {
+          "text": "She hurt her knee and missed two months, but she came back and kept scoring.",
+          "start": 10.325,
+          "duration": 4.825
+        },
+        {
+          "text": "In 2019 she joined Barcelona.",
+          "start": 15.15,
+          "duration": 3.425
+        },
+        {
+          "text": "In that year\u2019s Champions League final she scored, the first African player to score in a Women\u2019s Champions League final.",
+          "start": 18.575,
+          "duration": 8.2
+        },
+        {
+          "text": "Slide the ball past the keeper.",
+          "start": 26.775,
+          "duration": 2.6
+        },
+        {
+          "text": "In 2021 she won the Champions League, the first African woman to do it.",
+          "start": 29.375,
+          "duration": 6.325
+        },
+        {
+          "text": "Injuries happen. Rest, do your rehab, and come back one step at a time.",
+          "start": 35.7,
+          "duration": 5.425
+        }
+      ]
+    },
+    "foundation": {
+      "src": "/voice/books/oshoala/foundation.m4a?v=coach-bella-1",
+      "duration": 36.9,
+      "scriptSha256": "deef90a8d75f17171802b64a566c2831472784397c3c9d9e5d1584704648554d",
+      "cues": [
+        {
+          "text": "Helping the next girls",
+          "start": 0.0,
+          "duration": 2.175
+        },
+        {
+          "text": "Asisat has won African Women\u2019s Footballer of the Year six times, more than anyone else.",
+          "start": 2.175,
+          "duration": 6.275
+        },
+        {
+          "text": "Now, when she goes home to Nigeria, lots of people have a Barcelona shirt with her name on the back.",
+          "start": 8.45,
+          "duration": 6.625
+        },
+        {
+          "text": "In 2019 she started a foundation to help girls in Africa play football, with a tournament for girls in Lagos.",
+          "start": 15.075,
+          "duration": 8.575
+        },
+        {
+          "text": "Hand out the new shirts.",
+          "start": 23.65,
+          "duration": 2.15
+        },
+        {
+          "text": "She says that however far you go, you should always remember where you come from.",
+          "start": 25.8,
+          "duration": 5.4
+        },
+        {
+          "text": "When you get better, help others get better too. Great teams lift everyone up.",
+          "start": 31.2,
+          "duration": 5.65
+        }
+      ]
+    }
+  }
+}

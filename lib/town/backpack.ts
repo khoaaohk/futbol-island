@@ -5,6 +5,7 @@ import {getIslandCostume} from './islandCostumes';
 import {STORE_ITEMS,type StoreCategory} from './store';
 import {VENDING_SPECIALS} from './vendingCatalog';
 import {VENDING_STARTERS} from './vendingLedger';
+import {consumable} from '../konbini/food';
 
 /**
  * Backpack (user, Sep 28 2026: "Make it yours → Backpack shows everything you own"). Pure model; browser wiring in
@@ -43,6 +44,8 @@ export type BackpackSources={
  /** Card packs opened (arcade wallet). */
  packs:readonly {cards?:string[];player:string;at:number}[];
  starter:StarterReceipt|null;
+ /** Konbini (Sep 29 2026): snacks saved in the Snacks pouch, and the Konbini Collection (lib/konbini/foodStore.ts). */
+ snacks?:readonly {id:string;item:string;at:number}[];konbini?:{items:Readonly<Record<string,number>>};
 };
 export type BackpackCategory={kind:BackpackKind;label:string;order:number;
  /** Where to get more (shown when the category is empty, and under its heading). */
@@ -152,6 +155,16 @@ registerBackpackCategory({kind:'costume',label:'Island animals',order:50,
  emptyHint:'Find hidden balls to unlock island animals, then buy them at a vending machine.',
  collect:s=>{const at=boughtAt(s);return s.owned.filter(id=>id.startsWith('costume:')&&id!=='costume:none').map(id=>{const c=id.slice(8),island=getIslandCostume(c),club=getCostume(c);
   return {id,kind:'costume',ref:c,label:island.name,detail:club?club.club:island.animalLabel,source:at.has(id)?'bought' as const:'reward' as const,acquiredAt:at.get(id)??0};}).sort(newestFirst);}});
+// Konbini (Sep 29 2026): the Snacks pouch (up to 3 bought snacks, eaten from here) and the permanent Konbini Collection. The
+// collection section renders its own page (components/KonbiniCollection.tsx: groups by store, silhouettes, replayable reveals).
+registerBackpackCategory({kind:'snack',label:'Snacks',order:60,
+ lesson:'Food is fuel: a rice snack an hour or two before training gives your legs energy. Tap a snack to eat it.',
+ emptyHint:'Buy a snack at a Konbini and save it to your Snacks pouch (it holds 3).',
+ collect:s=>(s.snacks??[]).map(p=>({id:`snack:${p.id}`,kind:'snack',ref:`${p.id}|${p.item}`,label:consumable(p.item)?.label??p.item,detail:/^drink-/.test(p.item)?'Tap to drink':'Tap to eat',source:'bought' as const,acquiredAt:p.at}))});
+registerBackpackCategory({kind:'konbini',label:'Konbini Collection',order:70,
+ lesson:'Every Konbini sells its own snacks. Try them all: each one teaches how food fuels football.',
+ emptyHint:'Buy something at a Konbini to start your collection. Each store has its own menu.',
+ collect:s=>Object.entries(s.konbini?.items??{}).map(([id,at])=>({id:`konbini:${id}`,kind:'konbini',ref:id,label:consumable(id)?.label??id,detail:consumable(id)?.jp,source:'bought' as const,acquiredAt:at})).sort(newestFirst)});
 // Home items (prints, lamps, trophies) are no longer sold, so there is no Home items category; vending displays are books.
 
 

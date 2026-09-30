@@ -1,5 +1,303 @@
 # Performance reference for future Futbol Island updates
 
+## Travel-map interrupted drags — September 30, 2026 (local, not deployed by this pass)
+
+`IslandTravelMap` keeps the last painted pan position when a pointer is cancelled or loses capture. Previously a coordinate-free cancellation jumped the map 460 CSS pixels in the desktop reproduction. Only the primary pointer can start a drag, and an additional contact cannot replace it. Closing clears drag state and capture. The trailing drag click is suppressed until consumed or the next pointer press, while keyboard activation remains available; this removes the previous zero-delay click-reset timer.
+
+This preserves reliable access to the map's football destinations. Runtime cost is one last-position reference per active drag and event-driven cleanup; no animation loop, polling, rendering-quality change or idle timer is added. `tests/e2e/travel-map.spec.ts` starts drags through browser mouse/CDP touch input, injects a coordinate-free cancellation and secondary pointer, explicitly releases capture, and checks stable placement, retry and Escape. The final regression passes in desktop Chromium, Pixel 7 Chromium and iPhone 15 WebKit; TypeScript passes. Chromium's Pixel profile uses touch movement; the iPhone WebKit profile uses mouse movement at phone dimensions. These checks do not establish physical-iPhone gesture or thermal behavior.
+
+## Walk-in Konbini (Island Square + Coral Cay) — September 29, 2026 (local, not deployed)
+
+Both Konbinis are enterable through their sliding doors (`/konbini?door=main|cay`, `components/KonbiniRoom.tsx`,
+`lib/konbini/*`). Like the Arcade it is a **document boundary**: entering saves the door's departure
+(`lib/konbini/konbiniDoors.ts`, the Arcade's `islandReturnPosition` record) and navigates, so the island is fully unloaded
+while you shop. The scene module is dynamically imported when the page mounts.
+
+**How the cost is kept down.**
+- **Island: zero frames inside.** Measured: `window.__fi2` is undefined inside (no island runtime at all) in every browser run.
+- **One engine, two data-driven interiors** (`konbiniVariants.ts`): the same atlas and meshes with different placements and colours.
+- **Static geometry:**
+  - every box is ONE merged vertex-coloured Lambert mesh;
+  - every printed thing (magazines, posters, signs, beach decor) is ONE merged unlit mesh on one canvas atlas (`konbiniAtlas.ts`);
+  - **shelf products are low-poly 3D** (Sep 29 2026, `lib/konbini/productMeshes.ts`; user: "the items on the shelf need to be isometric too"): every food, drink and shelf-stock item is a flat-shaded vertex-coloured mesh (built once per key per visit, avg ≈ 44 triangles, back/bottom faces never built) cloned into the SAME merged static Lambert mesh, so they add **no draw calls**. ~500–530 products per store (fridge 3 deep, rice case 2, gondola aisle side 2, back side 1, seeded jitter). A tapped product lifts as ONE reusable mesh (one extra draw only while highlighted); magazines and the eat animation keep the atlas sprite. Floor tiles became 2-triangle quads (−1.9k tris) to pay for part of it. Measured (phone, 4× CPU): 11 calls before and after; triangles 11.6k → 32.7k (Island Square), 11.9k → 33.7k (Coral Cay); one throttled render 0.29 → 0.39 ms / 0.26 → 0.34 ms; still 30 fps capped while walking and 0 idle rAF. Desktop idle: 16 calls / 17.4k → 16 / 38.6k (main), 15 / 17.2k → 15 / 38.8k (cay); zoomed shelf 4 calls / 5.7k → 4 / ≈ 32.7k (the merged mesh is drawn whole). Budget test: `tests/konbini-shelf.cjs`. Tradeoff: more vertices per frame in one draw; not validated on a real iPhone;
+  - **iso item art** (Sep 29 2026, `lib/konbini/isoArt.ts` + `foodArt.ts`, drinks in `lib/graphics/drinkArt.ts`): every food and drink is original isometric Canvas 2D art, seeded (deterministic) and painted once per use: the atlas stays 1024×512 RGBA (2 MiB, unchanged; ~85 ms to paint once per visit in desktop Chrome), collection/pouch tiles blit a bitmap from a 48-entry LRU (`foodBitmap`, ≤ ~7 MB worst case at 96 px × DPR 2), and the reveal keeps its bounded one-shot rAF (no new loops). Tests: `tests/konbini.cjs` §2b (cell bounds, determinism, shadows, layer sequences, cache/atlas bounds).
+  - the fridge glass is one mesh; the sliding doors are one 2-instance mesh.
+- **Lighting:** two lights and no shadow maps (fake contact discs).
+- **Ball:** the player's own ball, with its 6 patches merged into 1 mesh.
+- **Sleeping:** the loop runs only while something moves (walking, ball rolling, doors, greeting, eating, zoom tween or camera settle), then sleeps with no rAF.
+- **Caps:** phones are capped at 30 fps (`frameCap`), with the heat tier's pixel ratio (≤ 1.5 on phones) and frame caps.
+- **Shelf zoom** (the vending pattern): an eased ~1 s orthographic camera move onto the real shelf.
+  - Near-plane clipping hides the aisles in front: no extra geometry and no second render.
+  - Tap targets are DOM buttons over the projected products.
+  - Idle zoomed views sleep.
+- **Overlays:** the reveal, coins, receipt, stamp, greeting bubble and brush wipe are DOM/CSS or one 2D canvas that animates only while the build plays (≈ 0.36 s per layer + 0.6 s finish), then goes static.
+- **Audio:**
+  - One AudioContext.
+  - The in-store music is an original loop rendered once into a buffer: no sequencer timers. It fades out and suspends when hidden or after 30 s idle.
+  - Effects are one-shot oscillators or noise bursts.
+  - Everything is closed on exit (`typeof window.__konbiniMusic` is undefined back on the island).
+
+**Measured** (`scripts/check-konbini-perf.cjs`; headless Chromium; phone = 390×844 touch, DPR 3, CPU throttled 4×; walking 5 s):
+
+| Scene | Draw calls | Triangles | One render (throttled) | Rendered fps while walking | Idle rAF |
+|---|---|---|---|---|---|
+| Island Square (phone) | 145 | 113k | 14.9 ms | 29.2 (30 cap) | — |
+| Arcade room (phone) | 48 | 134k | — | — | — |
+| **Konbini, Island Square (phone)** | **11** | **11.6k** | **0.29 ms** | 30.2 (30 cap) | **0 in 3 s** |
+| **Konbini, Coral Cay (phone)** | **11** | **11.9k** | **0.26 ms** | 30.2 (30 cap) | **0 in 3 s** |
+| Konbini zoomed on a shelf (phone) | 4 | 5.7k | 0.17 ms | 30 tween frames, then 0 | 0 in 2 s |
+| Island Square (desktop 1280×800) | 311 | 261k | 12.4 ms | 29.8 | — |
+| Arcade room (desktop) | 82 | 155k | — | — | — |
+| Konbini, main / cay (desktop) | 16 / 15 | 17.4k / 17.2k | 0.23 / 0.26 ms | 60 (uncapped desktop) | 0 |
+
+Arcade frame rate was not captured: its draw counter did not advance under the sideways-walk probe. Its calls and triangles come
+from `__arcadeRoom.state.render`.
+
+**Other checks:**
+- `scripts/check-konbini-browser.cjs` passes at 390×844 touch and 1280×800 for both stores (and `--flight`). It asserts that the idle store schedules no frames, that the island is absent inside and renders again outside, and that no store music remains outside.
+- The building highlight for both Konbinis reuses `createBuildingGlow` (a new single-box `konbini` kind) and only runs when near, as for the Arcade.
+
+Emulation only; nothing here was measured on an iPhone, and no cooling claim is made.
+
+## Vending: real depth behind the glass, four books per machine — September 30, 2026, later (local, not deployed)
+
+The user reported "the perspective of the shelves and books doesn't match that of the machines" and asked "shouldn't each vending machine have multiple books?" / "each machine should have 4 books".
+
+- **Real bay while zoomed** (`buildCloseUp` in `lib/graphics/vendingMachines.ts`, all 15 machines including both drink machines). On `focus()` the zoomed machine and its side-by-side neighbour change for the length of the zoom. Their cabinet front face and printed glass are cut away: 12 vertices are collapsed and later restored exactly. A recessed bay is added in the shared machine material, lit like the cabinet: back wall, side walls, header block and two shelf slabs. The printed panels (header, rails, LED, coin, tray) are painted once into one canvas, as before. The page-one products stand as cut-out sprites on the slabs, `VENDING_BAY.product` (0.15 m) behind the glass. Balls and bottles turn to face the close-up camera, and books and packs have thin real boxes. A faint glass pane sits in front. Nothing changes at rest: one draw call per machine, and `check-vending-browser` measured +2 draws at Island Square and a 0.72 µs idle update.
+- **Zoomed cost** (desktop Chromium): +4 draw calls per machine while zoomed (+8 for a Konbini + drink pair). Painting the close-up takes 1–27 ms once, on the first frame of the zoom; the highest figure is the first plaza zoom of a session. The texture is 3.1–11.9 MB (single machine or pair, at 390×844@3 to 1280×800@2) and is freed when the zoom-out ends. There is no per-frame canvas work.
+- **In-use face with the same depth.** `faceCssMatrix` gives the HTML face the zoom camera's true CSS 3D placement (`matrix3d` with perspective). `.face[data-depth]` then uses `preserve-3d`, the product windows use `translateZ(-(product + proud))`, the painted glass and fake side returns are gone, and the face no longer fades in, because opacity would flatten the 3D. Products, shelves and tap areas therefore line up with the real bay from any angle. The close-up's own products hide the moment the camera arrives, and the HTML face then shows the live stock.
+- **Flat distant front.** The atlas glass no longer paints side returns or bevelled shelves. Packs are drawn as real foil card packs, and books as flat covers with no painted page block.
+- **Books.** `MACHINE_BOOKS` in `lib/town/vendingCatalog.ts` gives every shop machine exactly four books, its home books first. All 36 sellable books are covered; the starter book stays free. Each book is ONE item wherever it is sold, so ownership, "Read" and the own-everything total are unchanged, and no save migration is needed.
+- Checks: `tests/vending-machines.cjs` covers the books, per-book ownership across machines and the all-machine close-up/tap mapping. The full `npm test`, `tsc`, `check-vending-browser` and `check-book-machines-browser` (desktop and phone) passed. Not measured on an iPhone.
+
+## Vending close-up: sharp faces, true ball pictures, one hardware design — September 30, 2026 (local, not deployed)
+
+The user reported the balls "seen from above like a coconut", that "the balls need to be the same as the real balls", that the faces go blurry when zooming in, and that the coin display and PUSH flap differ between machines.
+
+- **Ball pictures.** `components/StorePreviews.tsx` now renders a ball as the walking ball is lit. It uses the island's daytime hemisphere and sun (`ISLAND_LIGHT_PRESETS`/`ISLAND_SUN_POSITION`, exported from `lib/graphics/islandLighting.ts`), ACES tone mapping and sRGB output. The camera looks from 12° up, from the island camera's side. The ball is turned (`BALL_VIEW`, a per-style override for the laced ball) so one of the six `addBallPatches` patches faces front and none sits on the pole. A soft contact shadow is added underneath. `scripts/capture-vending-products.cjs` bakes `ball-<style>.png` at 91×103 px and 13–19 KB: the ball plus its shadow strip. The vending face, its tray and the backpack now show that same PNG (`BallPicture`), standing on the shelf line. A CSS `--ball-widen` undoes the close-up's width foreshortening. An in-game side-by-side for all 14 styles matched in pattern, colour and markings.
+- **High-res close-up face** (`buildHiRes` in `lib/graphics/vendingMachines.ts`). On `focus()`, the zoomed machine and its side-by-side neighbour (the Konbini and drink pairs) are painted ONCE into one canvas with the same painters as the atlas. The canvas is sized to the on-screen face × min(DPR, 2), capped at 2048 px, and shown by one thin overlay mesh per machine (+1–2 draw calls, only while zoomed). It is disposed when the zoom-out ends, on `cancel()` and on `dispose()`, so at most one such texture is alive. Nothing is redrawn per frame. Measured in desktop Chromium: 1–8 ms to paint. The texture is 1466×1064 (6.2 MB) for a pair at 390×844@3 and 2026×1472 (11.9 MB) at 1280×800@2, or half that for a single machine.
+- **Atlas memory.** The full-size emissive copy of the atlas is gone: it changed nothing on screen because printed texels are unlit through the shader patch. That saves 4 MB plus mipmaps (~5.6 MB GPU) and a 4 MB canvas. The atlas keeps its mipmaps, and its anisotropy is now 4 (was 2). Resting total is ~5.6 MB GPU, down from ~11.2 MB.
+- **One hardware design.** The LED, coin panel and tray are painted in their true proportions (`paintLed`/`paintCoin`/`paintTray`) to match the HTML face. The coin digits sit below the glass bezel's lower lip, which clipped them before, and show the player's real balance (`createVendingMachines(scene,{coins})` in Town). The balance is read at build and on each zoom in and out only; a change re-uploads the atlas once. The HTML face now shows the COINS label as well.
+- Checks: `tests/vending-machines.cjs`, `tests/drink-machines.cjs`, `tests/vending-kick.cjs`, the full `npm test`, `tsc` and `scripts/check-vending-browser.cjs` passed (+2 draw calls at Island Square at rest, idle update 0.21 µs). Not measured on an iPhone.
+
+## Vending ball pictures match the real balls — September 29, 2026 (local, not deployed)
+
+The glass fronts now show each ball's own baked picture, `public/vending/products/ball-<style>.png`, one for each of the 14 balls. The pictures are keyed by ball, so a ball looks the same on every machine. Before this change, each machine had one per-machine photo (`<machine>-ball.png`), and plaza's Telstar photo was out of date. Machines without one drew a generic tinted football. `scripts/capture-vending-products.cjs` bakes the pictures from the vending face's own shop snapshots (`components/StorePreviews.tsx`), trimmed to the ball: 93×93 px, 9–14 KB each. Re-run it after a ball skin changes. The shop snapshots and the walking ball now share `addBallPatches` (`lib/graphics/ballAppearance.ts`), so the face, backpack and glass all show the six dark patches of the ball you dribble.
+
+**Added runtime cost:** none per frame. The atlas build requests at most one small PNG per ball on a machine's first page (browser-cached and shared between machines), draws it once into the existing 1024² atlas and re-uploads that one texture, as the old photos did. There is no new texture, material, draw call or renderer. A ball missing from `BAKED_BALL_PICTURES` falls back to the canvas miniature, so no picture ever 404s. `tests/vending-machines.cjs` checks every ball's picture and the per-machine requests. Checked in desktop Chromium at 1280×800 and 390×844, with no 4xx responses. Not measured on an iPhone.
+
+## Kicking a vending machine — September 29, 2026 (local, not deployed)
+
+A shot that hits a vending machine's body makes it shake, buzz and flicker, then fires a signal flare that bursts into a low-poly football and a star. The machine's display then shows the shot power and one rotating shooting tip, with a "save it for the goal" nudge. The code is in `lib/graphics/vendingKick.ts`, wired from the walking ball's `blocked` callback in `components/Town.tsx`.
+
+**Trigger.**
+- The ball must be in `shot` or `wall-juggle` mode and collide with a machine's footprint below its top. Its horizontal speed must be at least 9 m/s; shots leave the foot at 38–60 m/s.
+- Each machine has a 3.5 s cooldown, timed on the effect clock, which only runs on awake frames that are not paused.
+- A dribbled or attached ball never collides, so walking up to buy can't set it off. The browser check walked the ball into the plaza Konbini for 3 s: 0 triggers.
+
+**Added runtime cost.**
+- **Idle:** one flag check per frame, measured at 0.36–0.60 µs per `update` in a tight loop. It makes no transform writes and has a hidden signal group. When the island sleeps, nothing runs.
+- **Shake:** writes the transform of the one machine mesh only while it shakes (0.8 s), then restores it exactly.
+- **Flicker:** swaps the machine to one pre-built material twin for 0.36 s. The twin uses the same shader hook and cache key, so it needs no new program.
+- **Signal:** one pooled five-mesh group, built once. It uses unlit basic materials, casts no shadows, adds no lights and ignores fog, and it is visible only for about 2.1 s.
+  - Draw calls: +5 in the same frame (measured with the signal on vs off). The two double-sided billboards use `forceSinglePass`, which avoids three.js's second pass for them.
+  - Size and placement: the apex is fitted once per kick with at most 16 projections (≤45 m high, burst below the top HUD). The size scales with camera distance.
+- **Display bubble:** one DOM element, created on the first kick. It is placed once at the burst and faded by a single Web Animation (compositor opacity/transform), so it adds no per-frame JS.
+- **Allocation:** a kick allocates no geometry, material, texture or mesh.
+- **Sound:** reuses existing cues: the vending `thunk`, `boost('up')` for the rising whoosh, and the existing ball `bounce`.
+- **Timing:** all JS and GPU work is idle again 2.2–2.5 s after the hit. Only the text's compositor fade runs on, to about 3.9 s, so kids can read it.
+
+**Measured** with `scripts/check-vending-kick-browser.cjs` at the plaza Konbini (headless Chromium, vsync-bound, so frame time is not a discriminating measure):
+
+| View | Idle draws | Same shot, reaction off | Shot with reaction | Kick `update` mean (active) | Idle again after |
+| --- | --- | --- | --- | --- | --- |
+| Desktop 1280×800, sunset | 221 | 272 | 269 | 29 µs/frame | 2.23 s |
+| Desktop 1280×800, night | 231 | 286 | 287 | 40 µs/frame | 2.22 s |
+| Phone 390×844 touch emulation, sunset | 119 | 154 | 169 | 68 µs/frame | 2.30 s |
+| Phone 390×844 touch emulation, night | 123 | 158 | 176 | 34 µs/frame | 2.25 s |
+
+- **Draw calls:** the extra draws during a shot come from the existing ball trail and ghost effects. The kick adds +5 (same-frame delta).
+- **Frame time:** the median frame time was 16.7 ms in every state.
+- **After the effect:** once idle again, there were 0 active kick updates.
+
+Emulation only; not measured on an iPhone.
+
+## Coral Cay, its causeway, sandbars, farm and hostel — September 29, 2026 (local, not deployed)
+
+A tropical island (Coral Cay) east of the Community Hall, reached by a winding, beach-lined causeway with two sandbar stops.
+
+**Code.**
+- Shapes: `lib/town/coralCay.ts` (pure data).
+- Build: `lib/town/coralCayWorld.ts`.
+- Sharks: `lib/graphics/caySharks.ts`.
+- Shallows: `lib/town/shallows.ts`.
+- Walkable-land union: `lib/town/landmass.ts`.
+- Floating-deck hook: `lib/town/landableDecks.ts`.
+- Map flight outline: `lib/town/flightOutline.ts` plus the generated `flightOutline.data.ts`.
+
+**What was built.**
+- **Coral Cay:**
+  - an irregular coast: 25.0% of the main island's area, with an uneven beach all round;
+  - a boulevard, plaza, café, surf shop and guesthouse (the Beach Soccer Club building was later removed at the user's request, replaced by a court scoreboard);
+  - a FIFA Law 1 beach-soccer court at "Sharks Beach";
+  - a large tropical farm (crop rows, orchard, pineapples, melons, a thatched farmhouse and stand) with the **Harvest day** job (see `docs/island-jobs.md` §6);
+  - the Coral Cay Hostel with six homes;
+  - 17 islanders, plus the 3 farmers.
+- **Causeway:**
+  - 308 m over water (1.86× the first version) in S-curves;
+  - sand banks in tapered stretches, sloped stone skirts, and foam plus fading shallows;
+  - rails with capped ends, and 13 lamps.
+- **Six friendly sharks** patrol both sides of the causeway.
+- **Flight:**
+  - The main island's water margin is now 50 m (was 35).
+  - The corridor is a broad band: north edge 40 m beyond the road's northmost point within ±40 m, smoothed. South edge: the user's red line (z −55, with a rounded corner into the main margin).
+  - The sandbar halos are clipped to that line.
+  - The maps draw one outline traced from `flightBlocked` itself.
+
+**How the cost is kept down.**
+- **Static scenery.** Everything is built with the island's own helpers inside `buildTown`, so it joins the 50 m spatial paint batches. That includes the causeway strips (≤24 m pieces), the cay, the farm (crops and vegetation are low-poly icosahedra, cones and boxes), the hostel and homes, lamps and signs.
+  - The cay's foundation, sand ring, lawn and shore rings are built relative to its centre, so they never widen a main-island batch.
+- **Coral Cay region gate.** One frustum-box test per frame hides the ~200 static batches east of x 250 whenever that whole region is out of view.
+  - This saved about 0.15 ms of throttled render time at Palm Coast (A/B in one page).
+  - `world.setVisible` isolation still wins.
+- **Shallows.** One shared lit material with RGBA vertex colours (alpha 0.85 → 0.4 → 0), `depthWrite` off, sitting 1.4 cm above the sea.
+  - It replaced two opaque bands, and runs round the main coast, the causeway, the sandbars and the cay.
+  - The pieces batch per chunk.
+  - Overdraw is one blended strip about 5 m wide at each shore, instead of two opaque strips of about 4.3 m. Blending costs slightly more per fragment on a similar area. A/B at Palm Coast: about 0.05 ms throttled.
+- **Sharks.**
+  - One instanced fin mesh and one instanced body mesh, shared geometry and materials, no shadows. The fin and tail only; the wake and bow pieces were removed at the user's request.
+  - They move only inside the island's frame update, and only when the causeway region is within 140 m and on screen. Beyond 220 m they are hidden entirely.
+  - Measured: 6 updates per sample when flying the causeway, 0 elsewhere.
+- **Islanders.** The 20 cay islanders use the existing sleep rules: no routine beyond 88/112 m, no draw beyond 72/96 m, and off-screen islanders step at 10 Hz. From the main island, 0 are drawn.
+- **No new loops, timers or audio.** The heat probe found identical timer and rAF sources to HEAD (only the island loop's rAF).
+- **Movement and flight** add a few comparisons per query:
+  - `blocked` rejects cay land with a single x test on the main island.
+  - The causeway lookup is a binary search on its monotonic x plus a ±30-sample window.
+  - The corridor is a 1 m lookup table.
+  - Edge sliding (QA fixes, Sep 29 2026): a jetpack step that `flightBlocked` rejects estimates the edge normal from 8 `flightBlocked` samples on a 2 m ring (reused within 0.75 m, so a long slide re-samples every few frames) and moves along the tangent. Free flight is unchanged; the cost exists only while pushing into an edge (node: ~0.5 ms/frame worst case at the cay's east margin, where each `flightBlocked` call is the most expensive). `tests/flight-slide.cjs`.
+- **Beach match off screen** (QA fixes, Sep 29 2026). The court's live match (`fieldRuntime`) is dormant whenever it is out of the frustum + 240 m test, at any distance (the main-island pitches keep the radius + 60 m rule). From the cay plaza, looking away, its clock used to run (3.9 s per 8 s); now it is 0, and the idle phone sample there dropped from about 1.5 to 1.0 s CPU per 8 s (headless, not a thermal claim). It wakes the frame the court is in view, exactly where it stopped (`tests/beach-match.cjs` §7, `scripts/check-beach-match-browser.cjs`).
+- **Farm job.** Its props join the existing job scene (the label atlas grows to 5 rows for 10 jobs). Nothing runs while the job isn't active.
+
+**Heat audit** (headless Chromium, 390×844 @2x, **CPU throttled 4×**, 6 s samples while steering). HEAD 06d33ac ran from a temporary worktree on :8093 (removed afterwards).
+
+Main island against HEAD (clean run, low machine load):
+
+| View | Draws HEAD → now | Triangles HEAD → now | Render p50 ms HEAD → now | Script ms/6 s HEAD → now |
+| --- | --- | --- | --- | --- |
+| Island Square | 146 → 148 | 132,424 → 132,504 | 5.2 → 5.0 | 1,725 → 1,581 |
+| Community Hall junction (causeway start in view) | 57 → 62 | 30,007 → 31,111 | 2.5 → 2.9 | 818 → 883 |
+| Idle, Palm Coast (far from the cay) | 87 → 89 | 144,849 → 144,929 | 3.1 → 3.2 | 1,143 → 1,181 |
+
+New views, measured at the end of the day. Load averaged about 2.6 because another agent's browser was running, so timings read high: the same build's Island Square read 6.8 ms p50 in this run.
+
+| View | Draws | Triangles | Render p50 / p95 ms | fps (30 cap) | Shark updates | Cay NPCs drawn |
+| --- | --- | --- | --- | --- | --- | --- |
+| Flying the causeway (from the Community Hall) | 76 | 36,044 | 5.2 / 6.3 | 30.7 | 6 | 1 |
+| Starfish Sandbar | 55 | 32,964 | 4.2 / 5.2 | 30.5 | 6 | 1 |
+| Turtle Sandbar | 74 | 36,670 | 5.2 / 6.1 | 30.5 | 6 | 1 |
+| Sharks Beach court | 38 | 54,364 | 4.2 / 5.4 | 30.5 | 0 (bay behind the camera) | 6 |
+| Farm | 93 | 141,952 | 5.2 / 6.7 | 30.5 | 0 | 5 |
+| Farm job active | 87 | 128,594 | 5.2 / 6.2 | 30.5 | 0 | 7 |
+| Hostel neighbourhood | 99 | 119,030 | 5.1 / 7.1 | 30.5 | 0 | 4 |
+| Island Square (same run) | 148 | 133,072 | 6.8 / 8.2 | 30.2 | 0 | 0 |
+
+- **Main island.** Draw calls and triangles are unchanged within a few draws. Timings match HEAD in the clean run.
+- **On the cay.** Every cay view costs less than Island Square.
+- **Frame rate.** Frame interval p95 stayed at about 35 ms (the 30 fps cap) in every view.
+- **Remaining costs.**
+  - The farm is the cay's heaviest view in triangles (about 142k, comparable to Palm Coast's 145k). Its crops and vegetation are low-poly; phones could trim decorative density through the heat tier if a real iPhone shows it matters.
+  - 14 cay signs keep their own canvas materials (one draw each when in view).
+
+**Validation.**
+- **Coral Cay test.** `node tests/coral-cay.cjs`, part of `npm test`, covers:
+  - area and irregular shape;
+  - walk/scooter/bike/moped along the curve and onto both sandbars, banks and deck edges;
+  - corridor flight, the red line, and off-corridor blocked;
+  - the traced outline matching `flightBlocked`;
+  - corridor landings and the landable-deck hook;
+  - sharks in open water and the shark model;
+  - farm access through its gates;
+  - hostel placement;
+  - the stable anchors;
+  - Law 1 court dimensions.
+- **Updated tests:**
+  - `tests/night-atmosphere.cjs`: `cay-lamp` sites and cay window batches, main island still 37;
+  - `tests/island-jobs.cjs`: the farm job, the 10-job catalog and the new vending positions;
+  - `tests/town.cjs`: module loaders.
+- `npm test` and `npx tsc --noEmit` pass.
+- **Browser checks** (desktop 1280×800 and mobile 390×844):
+  - walk and moped the curved causeway, and onto both sandbars and a bank;
+  - fly the corridor from the old boundary corner;
+  - the south edge stops the jetpack about 70 m from the Turtle bend;
+  - the main margin still holds at 50 m;
+  - the minimap draws one continuous outline;
+  - travel to Coral Cay works;
+  - talk to Nia and Coach Marina;
+  - the Harvest day job runs end to end and pays out.
+
+These are emulation work counts, not iPhone temperature measurements.
+
+### Coral Cay v3 additions (same day)
+
+This round added:
+- causeway street traffic with a one-way roundabout on the cay; its arms flare into the ring as one asphalt surface;
+- two extra cars, only when the cay extension exists (11 in total);
+- a second Konbini with a varied exterior;
+- the Match-day snacks job;
+- farm decor thinning on warm heat tiers;
+- the beach court moved east onto a continuous beach; the club building was replaced by a scoreboard wall;
+- a farm gateway;
+- causeway seam fixes: a landfall beach at the cay and tapered shallows ends;
+- the south-east sea flight fill (the user's second red line).
+
+**Cost.** Everything is static palette geometry in the existing 50 m batches. The only additions to the draw-call count are:
+- 4 instanced farm-decor meshes;
+- the 2 extra car meshes;
+- the shared shallows material (one more band draw per chunk it touches).
+
+`findLanding` searches up to 360 m, starting at the distance to the nearest land. **Correction (code review, Sep 29 2026):** it does *not* only run on a landing. The parachute called it every frame to re-aim, and the landing preview about every 0.12 s while flying over water. With full rings ≤3 m apart (~630 checks per ring at 300 m) that was about 2.3 ms per parachute frame over open sea on a desktop (worst frame 12.5 ms), several times that on a phone. Fixed the same day:
+- the parachute re-aims only after moving 2 m or every 0.25 s (`PARACHUTE_REAIM_METRES` / `PARACHUTE_REAIM_SECONDS` in `jetpackActions.ts`), and the landing preview in `Town.tsx` uses the same budget;
+- far from land (>48 m) the search first scans an arc ±48 m wide aimed at the nearest land (minus the gradient of `distanceToLand`, 4 calls), centre first, for 40 rings. If the direction is ambiguous (about equally far from two shores) or nothing there is landable, it falls back to whole rings;
+- no ring does more than 64 `canLand` checks (`LANDING_RING_CAP`), so rings are 3 m apart up to r ≈ 30 m and sparser beyond.
+
+Measured in Node (empty obstacle grids, M-series desktop, not a phone; `scratchpad/fix/landing-bench.cjs` from the review fix):
+
+| | before | after |
+|---|---|---|
+| parachute over open sea at (610, 250), mean per frame | 2.33 ms | 0.027 ms |
+| same, worst frame in 20 s | 12.5 ms | 1.07 ms |
+| one `findLanding`, 2,124 flyable-water points: mean / p95 / max | 0.55 / 1.45 / 4.1 ms | 0.29 / 0.51 / 2.3 ms |
+| landing distance beyond the true nearest landable point (worst) | 2.4 m | 2.6 m |
+
+Landing still finds the East Pier decks, the deep-sea boat deck and the farthest flyable water (~300 m out on an 8 m grid); `tests/east-pier.cjs` covers the far water and the re-aim budget. This is reduced CPU work, not an iPhone temperature result.
+
+Other heat fixes from the same review (reduced work only, validated by node tests and the Konbini browser check, no device measurement):
+- **Landable decks:** each deck check does a box reject ((w+d)/2 around the centre) before the trig, since the East Pier decks are always registered.
+- **Coral Cay sharks:** a near, on-screen region no longer re-uploads its two instance matrices while frozen (dt 0: map open, lessons) or with static ambience; it re-places once when the reduced setting changes.
+- **Coral Cay region gate:** the gate box starts at x 220 (was 230) because chunk `island-chunk-5:-4` reaches x ≈ 226.
+- **Konbini tap-to-walk:** an unreachable tap (behind the counter) walks to the closest reachable cell, and a target that stops getting 5 cm closer for 0.5 s is dropped, so the room's loop idles again (`lib/konbini/konbiniPath.ts`). The A* now uses a binary heap and a closed set: a whole-floor search is about 3–16 ms in Node instead of ~60 ms.
+- **Konbini music:** a tab hidden and shown while the music is idle stays suspended until the next input; otherwise the idle timer is re-armed.
+
+**Heat audit.** Same method as above: 390×844, CPU throttled 4×, 6 s per view. Other agents' browsers were running at the same time, so treat timings as noisy and compare draw calls.
+
+| View | fps | render p50 / p95 ms | draw calls (before) | triangles |
+|---|---|---|---|---|
+| Island Square | 23.7 | 21.1 / 26.0 | 147 (148) | 133k |
+| Community Hall junction | 29.3 | 12.2 / 16.1 | 64 (64) | 33k |
+| Causeway, traffic, mid-route (new) | 30.7 | 11.8 / 15.1 | 65 | 30k |
+| Roundabout + Konbini (new) | 29.7 | 16.1 / 22.0 | 56 | 71k |
+| Beach court on the east beach, live match playing (new) | 27.5 | 16.9 / 20.5 | 70 | 161k |
+| Farm (tier 0, all 106 decor plants) | 29.3 | 13.7 / 16.2 | 90 (93) | 146k |
+| Farm job active | 26.7 | 19.3 / 27.2 | 96 (87) | 142k |
+| Hostel neighbourhood | 29.0 | 17.2 / 21.1 | 105 (99) | 119k |
+| Palm Coast, idle, far from the cay | 30.7 | 12.7 / 15.4 | 90 (89) | 146k |
+
+**Reading the numbers:**
+- Main-island draw calls are unchanged: the cay region gate still hides every cay chunk away from the cay.
+- The Island Square render-time jump is machine load: its calls and triangles are unchanged.
+- Farm decor thinning cuts plants 40 → 20 → 12 per decor mesh by heat tier. It changes the instance count only, with no rebuild.
+- The beach-court triangles include the live 5-a-side match (another feature).
+
 ## Fishing spots and market stand — September 27, 2026 (local, not deployed; reworked the same day into live in-world fishing)
 
 Five fishing posts, live fishing in the island view, and Rosa's market stand ([details](fishing.md), [visuals hand-off](fishing-visuals-HANDOFF.md)).
@@ -40,6 +338,28 @@ Five fishing posts, live fishing in the island view, and Rosa's market stand ([d
 - Idle away from the water: unchanged (no new per-frame work when not fishing). The Fishbook adds 46 small inline SVGs, rendered only while it is open.
 
 These are reductions in work seen in emulation, not a measured iPhone temperature.
+
+## Four book machines and four new pop-up books — September 29, 2026 (local, not deployed)
+
+Four more vending machines (North Beach; the causeway bend before Turtle Sandbar; the Coconut Café and Sharks Beach on Coral
+Cay), each selling one new hardship pop-up book: Cafu, Nadia Nadim, N'Golo Kanté and Asisat Oshoala
+([details and sources](books-2026-09-29.md)). **Added runtime cost:**
+- **Machines:** four more merged meshes in the existing `vending-machines` group (one colour draw and one shadow caster each,
+  frustum-culled, <800 vertices), on the same shared `MeshStandardMaterial` and the same 1024² atlas (their glass tiles use the
+  atlas's free third row), the same shared hover glow and Go prompt. No new material, texture, light, loop or timer. Idle frames
+  do 12 distance checks instead of 8. Coral Cay positions are computed once at module load from Coral Cay's anchors
+  (`lib/town/vendingPlaces.ts`).
+- **Measured** (`scripts/check-vending-browser.cjs`, desktop Chrome): +1 draw call at Island Square (226 vs 225), idle
+  `update` 0.54 µs, idle `applyCamera` 0.04 µs. At each new machine (`scripts/check-book-machines-browser.cjs`): the island with
+  vs without the machines is +1 draw call everywhere (desktop 65/90/80/51, phone 77/48/56/39 at North Beach / causeway /
+  café / Sharks Beach).
+- **Books:** spreads load lazily per book (`library.loadSpreads`, one chunk each), same plate density (150/112 px per unit),
+  12–28 pieces per spread. In the reader while Coach Bella narrates page 2: 31–34 draw calls, 100–106 triangles, 81–90 live
+  textures (current spread plus the prefetched neighbour), against 31–32 draw calls and 76–110 textures for the existing Davies
+  and Weah books measured the same way. Paper frames stop when narration is paused and the island stays asleep (0 island frames),
+  checked in both viewports.
+
+Emulation only (desktop Chromium and 390×844 touch emulation); not measured on an iPhone.
 
 ## Island vending machines — September 27, 2026 (local, not deployed)
 
@@ -2752,3 +3072,132 @@ Validation: tsc; `tests/iconic-play-ui.cjs` green (film fits the window, caption
 ## Travel map: map-only, pannable — September 29, 2026 (local, not deployed)
 
 `IslandTravelMap` is now only the map (destination list and intro sentence removed; the Island Square vending machine is the map's tappable "Vending machine" trip). The map covers the frame and pans with four edge arrows, arrow keys or a drag. **Added runtime cost:** none while closed; while open, one `ResizeObserver` on the frame (disconnected on close), one CSS `transform` transition (0.38 s) per arrow/key press, and one direct transform write per pointer move while dragging. No rAF loop, no timers while idle; the island still sleeps under the map. The stage is `will-change:transform` so pans only composite (layer ≈ map size × DPR, e.g. ~580×750 CSS px on a 390-wide phone). Validation: Playwright at 390×844 (touch), 844×390 and 1440×900 — map fills the frame, arrows clamp and disable at the edges, hidden on axes that fit, keys and drag pan, tapping a place travels. Not measured on an iPhone.
+
+## Deep Sea Boat — September 29, 2026 (local, not deployed)
+
+A moored fishing boat at (282.5, −93.5), about 38 m off the main island's east beach (the user's circled spot; earlier the same day at (370, −68), then (310, −72)), with its own deep-sea fishing spot ([details](fishing.md#deep-sea-boat-29-sep-2026)).
+
+**Implementation.**
+- One merged, vertex-coloured `MeshStandardMaterial` mesh for the whole boat (hull bands, deck, bulwarks, wheelhouse, rods, cooler, life ring, flag): **one draw**. It receives the player's shadow but `castShadow=false`, so it adds no shadow-map draw.
+- Lazy: nothing exists until the player is within 260 m of the mooring; everything (geometry, material, the landable deck) is disposed beyond 340 m. At West Cove, the scene has no `deep-sea-boat` object.
+- Bob: one group transform (±3.5 cm heave, <1° roll/pitch) written only while the player is within 150 m, the boat's bounding sphere is inside the camera frustum and reduced motion is off; otherwise nothing is written (a reset once when it stops). The deck floor height follows the heave, so a player on deck rides it. No timers, no loop of its own: `fishingWorld.update` calls it from the existing island loop.
+- The deck uses the Coral Cay agent's `registerLandableDeck` hook (one rectangle test in `blocked`/`onLand`/`surface` while registered).
+- Fishing on the boat reuses the existing live-fishing visuals, camera and HUD (no new art modules); the new fish are data plus inline Fishbook SVG shapes.
+
+**Measured** (headless Chromium, Metal ANGLE, `window.__fi2.renderer.info.render.calls`, median of 20 frames; "without" = the boat group hidden in the same frame state, i.e. the pre-boat scene):
+
+| View | 1280×800 with / without boat | 390×844 with / without boat |
+| --- | --- | --- |
+| Flying over the boat | 113 / 112 (+1) | 76 / 75 (+1) |
+| Fishing on the deck | 84 | 61 |
+| Main island east coast (205, −140), boat built ~190 m away (measured at the first position) | 122 / 123 (0, culled or noise) | 71 / 71 (0) |
+| West Cove (boat not built) | 65 | 43 |
+
+**Validation.** `tests/fishing.cjs` asserts the single merged mesh, no shadow casting, no timers or frame loops, the build/drop/bob ranges and the frustum gate. Browser checks at both sizes: fly, land on the deck, walk, fish, two catches, Fishbook, no errors. Reduced work only: no physical-iPhone temperature was measured.
+
+## Ball hunt at 100: Coral Cay balls (Sep 29, 2026)
+
+The 20 Coral Cay balls (`lib/town/coralCayBalls.ts`, [doc](ball-hunt-coral-cay-2026-09-29.md)) join the existing `createCoinHunt` entries, and each parcel is still one packed draw. The buoy is baked into its parcel, the causeway manhole uses the existing instanced covers (count 26), and there are no new loops, timers or animations. The Coral Cay parcels do not cast shadows, which keeps the hunt's casters at 23 instead of 38. Measured in dev Chromium over the first causeway bend: 98 → 99 draw calls at 1280×800 and 72 → 72 at 390×844. This is reduced, bounded work, not an iPhone temperature result.
+
+## Live beach soccer at Coral Cay — September 29, 2026 (local, not deployed)
+
+**What runs.** A fifth live match (`LIVE_VENUES` in `lib/town/venues.ts`: the four island pitches plus `BEACH_VENUE`, derived from `BEACH_COURT` in `coralCay.ts`) plays the new `'beach'` format of `lib/town/match/matchSim.ts` on the Sharks Beach court: 5 a side including the keepers, barefoot, no offside, sand friction (×1.3 on a rolling ball, air drag unchanged), lifted passes, keeper throws/rolls within 4 s (never a punt, and never a direct goal from the hands, a kick-in or a kick-off), keepers stepping up, chipped kick-ins, more volleys/overhead kicks, 3 × 60 s periods, 15 s extra time when level, then a 5-kick shoot-out and a fresh game. The court runs east–west, so the runtime maps sim space through `liveWorldX/Z/Yaw` (bit-identical expressions for the unturned pitches); choreo and the combo view take the venue yaw.
+
+**Heat.** Nothing new runs per frame: the beach entry is one more item in `fieldRuntime`'s existing loop, with the same pooled rigs (created only the first time the court is seen), the instanced bean-skin batch, the shared ball geometry/material, and heat pass 5's dormant rule. From the main island the court (~500 m away) is dormant: no clock, sim, bookkeeping, effects or posing, and its sim clock is frozen exactly. No new render loops, timers, audio or DOM. The "Learn Beach Soccer" card was removed at the user's request (no prompt is registered or rendered for the beach venue). Live matches have no sounds on any venue, so the beach has none either.
+
+**Measured** (headless Chrome, 390×844 DPR 3, touch, 4× CDP CPU throttle, 6 s windows after 3.5 s settle, machine load 16–22; draw calls counted per `render()` with colour + shadow passes; emulation, not iPhone temperature):
+
+| Scene | Renders/s | Draw calls median (p95) | `render()` CPU median | Frame interval median / p95 | Task ms/s | Beach match |
+|---|---|---|---|---|---|---|
+| Main island, beach registered | 30.3 | 264 (269) | 13.6 ms | 16.7 / 16.8 ms | 677 | dormant, +0.00 s sim |
+| Main island, beach entry removed (A/B) | 30.2 | 272 (281) | 15.2 ms | 16.7 / 16.7 ms | 708 | — |
+| Main island, entry restored | 30.2 | 276 (281) | 14.3 ms | 16.7 / 16.8 ms | 665 | dormant, +0.00 s |
+| Coral Cay court, match running | 30.2 | 118 (137) | 11.2 ms | 16.7 / 16.7 ms | 611 | 10 rigs, 9 drawn, +2.9 s sim |
+| Back on the main island | 30.5 | 266 (274) | 15.2 ms | 16.7 / 16.8 ms | 767 | dormant, clock frozen |
+
+The main-island rows differ only by noise (camera settle, townsfolk, load); the beach entry costs nothing there. Script: session scratchpad `beach-match/heat.cjs`.
+
+**Balance** (480 seeds, 3 sim minutes): beach 3.13 goals/game, 15.24 switches/min, 54/480 one-sided (≥3), mean margin 1.21, 27.3 shots, 1.0 first-time finishes, 66 % of kicks lifted, 0 offside calls. The four island formats are byte-identical to the pre-beach sim (`tests/beach-match.cjs` snapshot; 480-seed `combo-balance` before = after).
+
+**Validation.** `tests/beach-match.cjs` (in `npm test`), `scripts/check-beach-match-browser.cjs` (map travel to the cay, live match inside the court lines, position guide + player card from a live player, dormant again on the main island; 1280×800 and 390×844).
+
+## East Pier — September 29, 2026 (local, not deployed)
+
+A ~108 m timber pier from the east-coast seawall in front of the Farmers Market (on the market banner's axis, z 98) out to a 16.6 × 23 m T-head at x 346, with a fishing spot, a floating shooting-challenge ring and two islanders (`lib/town/eastPier.ts`, `eastPierWorld.ts`, `eastPierChallenge.ts`, `eastPierNpcs.ts`).
+
+**Implementation.**
+- **Scenery** is built inside `buildTown` with the shared helpers before the batching pass, so every piece joins the existing 50 m spatial paint batches (vertex colours, one shared material per chunk). Deck and seam boxes are 0.3 m thick on purpose: thin flat boxes keep their own material in `put()`, thick ones merge into the paint batch. The only new materials are four sign canvases (arch both ways, challenge board). No per-frame work, no animation.
+- **Lamps** reuse the street-lamp pieces: the `#ffe8ae` lens is the shared emissive lamp lens and each of the 9 lamps adds a site (`region:'east-pier'`) to the existing instanced night-pool chunks. No real lights.
+- **Coral Cay region gate:** the pier's chunks (x 250–350, z 50–150) are excluded from `cayChunks`, so the gate's single box test never hides the pier; they keep ordinary frustum culling. The cay chunk set is otherwise unchanged.
+- **Floors:** two static `registerLandableDeck` rectangles (walkway, head) at y 0, registered once at import. `blocked`/`onLand`/`surface` pay one rectangle test each while on or near them; nothing runs per frame.
+- **Shooting ring:** one merged, vertex-coloured mesh, `castShadow=false`, `matrixAutoUpdate=false`, never animated; it is moved only from the ball's existing splash callback when a shot lands in it. No loop, timer or state polling.
+- **Islanders** (Nell the fisher, Ollie doing keep-ups) are ordinary entries in the townsfolk runtime: drawn/posed only within its draw distance, stepped at 10 Hz off screen (heat pass 5).
+- **Fishing** reuses the existing post, float instance and live-fishing flow (one more instance in the merged posts / floats).
+
+**Measured** (dev server, headless Chrome with Metal ANGLE, explicit `renderer.render` of the current frame, median of 15; colour + shadow passes; "without" = the pier's merged chunk meshes and ring hidden in the same frame):
+
+| View | 390×844 touch DPR 3: before → after (without pier scenery) | 1280×800: before → after (without) |
+| --- | --- | --- |
+| Island Square (95, −35) | 147 → 147 (147) | 292 → 290–303 (292; townsfolk noise) |
+| Promenade at the market (226, 98), facing the pier | 125 → 128 (122) | 188 → 195 (186) |
+| Mid-pier (290, 98) | 57 → 70 (61) | 104 → 120 (106) |
+| Pier head (340, 98) | 39 → 58 (49) | 69 → 92 (77) |
+
+"Before" was the same positions over open water before the scenery existed. Near the pier the scenery costs +6 to +15 draw calls (paint batches, lamp lens batch and signs for 2–3 chunks, colour and shadow passes); the rest of the rise at the head is the fishing post, the two islanders and simply having something in view. Island Square is unchanged. Script: session scratchpad `east-pier/perf.cjs`, `perf2.cjs`.
+
+**Validation.** `tests/east-pier.cjs` (in `npm test`) checks the static-only scenery, the ring's single shadowless mesh without loops, lamps in the pool batches and the gate exclusion. Browser walk-through (`east-pier/e2e.cjs`, 1280×800 and 390×844 touch): walk the market → pier → head with the rails holding, talk to Nell, kick into the ring (+5 learning coins once), scooter the full length, jetpack landing on the deck, fishing one catch at the new spot (`scripts/check-fishing-browser.cjs mobile east-pier`); no page errors. Reduced, bounded work only: no physical-iPhone temperature was measured.
+
+### East Jetty rework — September 30, 2026 (local, not deployed)
+
+The user asked for "more of a jetty" with a spiral end. The timber pier is replaced by a stone jetty: a 62 m straight walkway from the same seawall gap (z 98), then a nautilus spiral of 1.25 turns centred on (300, 76), winding inward from a 22 m to a 6 m radius into a round plaza (walkable radius 4.9 m) with a navigation beacon. The walkway is 4.8 m walkable (kerbs at 2.55–2.95 m from the centre line), 174 m long along its centre line; the far east curve reaches x ≈ 323.
+
+**Implementation.**
+- **Collision/floor:** ONE landable deck (a bounding rectangle, then `contains` = `onEastPier`). `jettyOffset` is a closed-form polar test: one or two coil angles per point, with the radial gap corrected for the pitch angle, plus the straight part and the plaza. No sample loops at runtime. `landableDecks.ts` gained the optional `contains` field; the rectangle test still runs first.
+- **Scenery** (`eastPierWorld.ts`): the stone walkway, kerb tops and faces, the sloping rock armour and the foam line are ribbon strips over the shared centre-line samples, cut into ≤ 24 m pieces so each joins its own 50 m paint batch. About 170 riprap boulders are individual icosahedra that merge into the same paint batches, so they add no draws of their own. Shallows bands (the causeway's `fadeBand` and shared material) fade out from both flanks, including inside the coils. The beacon lantern uses the shared emissive lamp lens. There are 8 kerb lamps plus the beacon in the night-pool batch, and no new materials beyond the sign canvases.
+- **Unchanged:** the ring (one static mesh, moved only on a hit), the islanders (townsfolk runtime), the fishing post and float instances, and the Coral Cay gate exclusion for the x 250–350, z 50–150 chunks.
+
+**Measured** (same method as above, 390×844 touch DPR 3 / 1280×800; "without" = the jetty's merged chunk meshes and ring hidden in the same frame):
+
+| View | Timber pier (29 Sep) | Jetty (30 Sep) | Jetty without its scenery |
+| --- | --- | --- | --- |
+| Island Square | 147 / 290–303 | 147 / 290 | 147 / 290 |
+| Promenade at the market (226, 98) | 128 / 195 | 126 / 194 | 122 / 186 |
+| On the straight (290, 98) | 70 / 120 | 72 / 127 | 62 / 111 |
+| End: pier head (340, 98) → spiral centre (302.5, 76) | 58 / 92 | 66 / 117 | 55 / 103 |
+| Spiral outer east curve (320, 76.4) | — | 63 / 107 | 54 / 95 |
+
+The jetty's own scenery costs +4 to +16 draw calls near it (paint, shallows and lens batches over three chunks, colour and shadow passes). That is about the same as the timber pier on the straight; it is higher at the end because the spiral centre looks back over the whole spiral, the straight and the market. Island Square is unchanged. Script: session scratchpad `east-pier/jetty/perf-jetty.cjs`. This is reduced, bounded work only; no physical-iPhone temperature was measured.
+
+**Validation.**
+- `tests/east-pier.cjs` (rewritten for the spiral, in `npm test`): shape, smooth curvature, open water between the coils, walkable ±walkHalf everywhere, walk, scooter, bike and moped steering along the centre line to the spiral centre, both edges holding at five points round the curve for every mode, landing, flight zone and boat clearance.
+- Browser (`east-pier/jetty/e2e.cjs`, 1280×800 and 390×844 touch):
+  - walk and scooter from the market round the spiral to the centre (max offset 1.8–2.2 m of 2.4);
+  - talk to Nell;
+  - kick into the ring (+5 learning coins once);
+  - jetpack landing on the west coil;
+  - fishing one catch at the new spot at both sizes (`scripts/check-fishing-browser.cjs … east-pier`);
+  - no page errors.
+
+### Longer jetty and lighthouse — September 30, 2026 (local, not deployed)
+
+The user asked to "make the spiral jetty longer and the lighthouse larger as well".
+- **Jetty:** the straight section is now 105 m (x 237.75 → 343, still z 98). The spiral now has 1.75 turns, centred on (343, 68), winding from a 30 m to a 9 m radius; the coils are 12 m apart, leaving about 2.8 m of open sea between the rock flanks. The walkway is 322 m along its centre line and still 4.8 m walkable.
+- **Plaza and lighthouse:** the plaza grew to a 7.5 m walkable radius. The small beacon is replaced by a 16.6 m lighthouse: a stone plinth, a tapered white tower in five frusta with two red bands, a gallery deck with 16 railing posts and a ring rail, a glazed lantern in the shared lamp-lens colour (so it glows at night through the existing emissive lens and has a 10 m pool in the night-pool batch), and a red cap with a finial. A keeper's hut stands on the east side, away from the walkway entrance.
+- **Footprint:** the far edges are x 374.5 on the east and z 39.5 on the north, and it stays about 144 m clear of the Deep Sea Boat. It all lies inside the existing flyable zone (the south-east sea block), so the flight outline did not change.
+- **Moved features:** the fishing spot is now at (371.6, 68) on the outer east curve. The kick spot is at (343, 42.7) on the outer north curve, and the rings are at (343, 19.2), (333, 21.2) and (353, 21.2).
+- **Heat:** the lighthouse and hut are plain palette geometry, so they merge into their chunk's existing paint batch: no new material and no new shadow caster beyond that batch. The Coral Cay gate exclusion now covers chunk columns 4–7 and rows 0–2. There is no rotating beam; I left the light static because even a shader-driven cone would add a transparent draw and per-frame uniform writes.
+
+| View (390×844 / 1280×800) | Jetty v1 (30 Sep) | Longer jetty | Without its scenery |
+| --- | --- | --- | --- |
+| Island Square | 147 / 290 | 147 / 290 | 147 / 290 |
+| Promenade (226, 98) | 126 / 194 | 126 / 194 | 120 / 184 |
+| On the straight (290, 98) | 72 / 127 | 70 / 121 | 59 / 104 |
+| Spiral centre (v1 302.5, 76 → 338.5, 68) | 66 / 117 | 49 / 91 | 39 / 72 |
+| Spiral outer east curve (v1 320, 76.4 → 371.2, 68.4) | 63 / 107 | 56 / 86 | 45 / 71 |
+
+The jetty costs +6 to +19 draw calls near it; Island Square is unchanged. The ends are cheaper than v1 because the spiral sits further from the market, so less of the town is in view. The "without" column hides chunk meshes in columns 4–7 whose bounds reach past x 240.5, so it may slightly over-count the jetty's share. Script: session scratchpad `east-pier/jetty-v2/perf-v2.cjs`. This is reduced, bounded work only; no physical-iPhone temperature was measured.
+
+**Validation.**
+- `tests/east-pier.cjs` checks: 105 m straight, 1.75 turns, 30 m outer radius, a 14–18 m lighthouse with room around it, walk/scooter/bike/moped end to end, edges at five points round the curve, landing, flight zone, boat clearance, and fishing, ring and NPC reachability.
+- `tests/night-atmosphere.cjs` passes: the lighthouse pool counts as a lamp site and stays inside the pool-size bound.
+- Browser, both sizes: walk and scooter to the lighthouse, talk to Nell, a ring hit, a jetpack landing and a catch at the new spot; no page errors.

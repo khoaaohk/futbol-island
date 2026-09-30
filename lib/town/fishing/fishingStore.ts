@@ -29,7 +29,18 @@ export function landFish(id:FishId,size:number,now=Date.now()):LandResult{
 // ---- The live session singleton (HUD <-> island loop). Sounds reuse the island sound system's document cues. ----
 import {createFishingSession} from './fishingSession';
 const CUES={tick:['fi2-path-cue','path-pop'],splash:['fi2-path-cue','undock'],plunge:['fi2-path-cue','swipe-left'],cast:['fi2-path-cue','swipe-right'],fanfare:['fi2-story-cue','finish']} as const;
-export const fishingSession=createFishingSession(
- (id,size)=>{const r=landFish(id,size);return {isNew:r.isNew,isBiggest:r.isBiggest,inBasket:r.inBasket};},
- kind=>{try{const [name,detail]=CUES[kind];document.dispatchEvent(new CustomEvent(name,{detail}));}catch{}},
+/**
+ * ONE session per page, kept on globalThis so it survives hot updates (Sep 29 2026 fix, "the fishing for the boat doesn't
+ * work"). A hot update of any module under this one (catalogue, boat data …) re-ran this file and made a SECOND session:
+ * the HUD's Fish button then started the new one while the island loop (created once by Town's mount effect) kept stepping
+ * the old one, so the prompt showed but fishing never began until a full reload. The land/cue callbacks go through
+ * `hot` so the shared session always uses the newest module code.
+ */
+type HotFishing={session?:ReturnType<typeof createFishingSession>;land?:typeof landFish;cue?:(kind:keyof typeof CUES)=>void};
+const hot:HotFishing=typeof globalThis==='undefined'?{}:((globalThis as {__fi2Fishing?:HotFishing}).__fi2Fishing??={});
+hot.land=landFish;
+hot.cue=kind=>{try{const [name,detail]=CUES[kind];document.dispatchEvent(new CustomEvent(name,{detail}));}catch{}};
+export const fishingSession=hot.session??=createFishingSession(
+ (id,size)=>{const r=hot.land!(id,size);return {isNew:r.isNew,isBiggest:r.isBiggest,inBasket:r.inBasket};},
+ kind=>hot.cue!(kind),
 );

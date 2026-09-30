@@ -2,10 +2,14 @@ import {recordExploreActivity} from './exploreActivity';
 import {createObstacleGrid} from './obstacleGrid';
 import {fieldSurfaceHeight} from './venues';
 import {goalBarriersAt} from './goalCollisions';
-import {onIsland,distanceToShore} from './shoreline';
+import {distanceToLand} from './landmass';
+import {landableDeckHeight} from './landableDecks';
 import {insideObstacle,blocked,stepPlayer,FLIGHT_WATER_MARGIN,type Obstacle} from './simulation';
 import {TRAVEL_MODES,type TravelMode} from './travelModes';
 import {createRoofJump,planRoofJump,planRoofLaunch} from './rooftopJump';
+/** Landing search bounds (findLanding): the arc aimed at the nearest land is ±LANDING_ARC m wide and LANDING_AIM_DEPTH rings
+ *  deep; no ring ever does more than LANDING_RING_CAP canLand checks. */
+export const LANDING_ARC=48,LANDING_AIM_DEPTH=40,LANDING_RING_CAP=64;
 export const ROOF_HANG_TIME=1, ROOF_RECOVERY_TIME=4.2;
 export type Roof=Obstacle&{height:number};
 export function createRooftopTravel(roofs:Roof[],obstacles:Obstacle[],start:{x:number;z:number},roofProps:(Obstacle&{floor:number;top:number;noLanding?:boolean})[]=[],extraSurface:(x:number,z:number)=>number=()=>0,landingExclusions:Obstacle[]=[]){
@@ -23,7 +27,8 @@ export function createRooftopTravel(roofs:Roof[],obstacles:Obstacle[],start:{x:n
  const footprint=(o:Obstacle)=>[o.x,o.z,o.w,o.d].join(':');const buildingByFootprint=new Map(roofs.map(r=>[footprint(r),r]));
  const buildingFor=(o:Obstacle)=>buildingByFootprint.get(footprint(o));
  const roofAt=(x:number,z:number)=>{let highest:Roof|undefined;for(const r of surfaceGrid.query(x,z,0))if(insideObstacle(x,z,r,r.stepAccess?1e-6:0)&&(!highest||r.height>highest.height))highest=r;return highest;};
- const surface=(x:number,z:number)=>Math.max(fieldSurfaceHeight(x,z),roofAt(x,z)?.height??0,extraSurface(x,z));
+ // Registered floating decks (landableDecks.ts, e.g. a moored boat) are floors too; 0 when none are registered.
+ const surface=(x:number,z:number)=>Math.max(fieldSurfaceHeight(x,z),roofAt(x,z)?.height??0,extraSurface(x,z),landableDeckHeight(x,z));
  function reset(x:number,z:number,height=surface(x,z)){collisionRadius=.32;jump.reset();Object.assign(state,{height,verticalSpeed:0,falling:false,hangTime:0,dropStart:height,recovery:0,impact:false});}
  function canLand(x:number,z:number){
   // Glazed interiors remain walkable through doors, but are never aerial destinations.
@@ -80,12 +85,29 @@ export function createRooftopTravel(roofs:Roof[],obstacles:Obstacle[],start:{x:n
   fallIgnore=new Set(groundGrid.query(p.x,p.z,1.2).filter(o=>buildingFor(o)&&insideObstacle(p.x,p.z,o,1.2)));
   state.falling=true;state.hangTime=ROOF_HANG_TIME;state.dropStart=state.height;state.verticalSpeed=0;const speed=Math.hypot(v.x,v.z);driftX=speed?v.x/speed*3:0;driftZ=speed?v.z/speed*3:0;v.x=v.z=0;
  }
+ /** Bearing from (x, z) toward the nearest land: minus the gradient of the distance field (4 distanceToLand calls, ~30 µs
+  *  each on a desktop: the cay's shore test dominates). null where the gradient is ambiguous (about equally far from two
+  *  shores), and the caller searches whole rings instead. */
+ function nearestLandBearing(x:number,z:number){
+  const gx=distanceToLand(x+1,z)-distanceToLand(x-1,z),gz=distanceToLand(x,z+1)-distanceToLand(x,z-1);
+  return Math.hypot(gx,gz)<1.9?null:Math.atan2(-gz,-gx);
+ }
  function findLanding(x:number,z:number){
   // A landable point is its own landing. Off-island decks and piers skip the inner rings below (they start near the
   // shore distance), which made a parachute over a pier retarget in a loop instead of settling where it already was.
   if(canLand(x,z))return {x,z};
-  const startRadius=onIsland(x,z)?0:Math.max(0,Math.floor(distanceToShore(x,z))-1);
-  for(let r=startRadius;r<=Math.max(50,FLIGHT_WATER_MARGIN+20);r++)for(let i=0;i<(r?32:1);i++){const a=i/32*Math.PI*2,nx=x+Math.cos(a)*r,nz=z+Math.sin(a)*r;if(canLand(nx,nz))return {x:nx,z:nz};}
+  // distanceToLand covers both islands, the causeway, the sandbars and the registered decks (0 on land).
+  const d=distanceToLand(x,z),startRadius=Math.max(0,Math.floor(d)-1),maxRadius=Math.max(360,FLIGHT_WATER_MARGIN+20);
+  // Heat (code review Sep 29 2026, finding 2): full rings ≤3 m apart cost ~630 canLand checks per ring at 300 m. Far from land,
+  // first search an arc aimed at the nearest land (±LANDING_ARC m wide, centre first, for LANDING_AIM_DEPTH rings); that is
+  // where the nearest landable point almost always is (a small deck or the far water ~336 m out included).
+  const aim=d>LANDING_ARC?nearestLandBearing(x,z):null;
+  if(aim!==null){
+   for(let r=Math.max(1,startRadius);r<=Math.min(maxRadius,startRadius+LANDING_AIM_DEPTH);r++){const half=Math.min(Math.PI,LANDING_ARC/r),n=Math.min(LANDING_RING_CAP,Math.max(8,Math.ceil(2*half*r/1.5)));
+    for(let i=0;i<=n;i++){const k=i&1?(i+1)/2:-i/2,a=aim+k*2*half/n,nx=x+Math.cos(a)*r,nz=z+Math.sin(a)*r;if(canLand(nx,nz))return {x:nx,z:nz};}}}
+  // Otherwise (near land, or the nearest land has no landable spot): whole rings, capped at LANDING_RING_CAP checks each
+  // (3 m apart up to r ≈ 30 m, sparser beyond).
+  for(let r=startRadius;r<=maxRadius;r++){const n=r?Math.min(LANDING_RING_CAP,Math.max(32,Math.ceil(r*2*Math.PI/3))):1;for(let i=0;i<n;i++){const a=i/n*Math.PI*2,nx=x+Math.cos(a)*r,nz=z+Math.sin(a)*r;if(canLand(nx,nz))return {x:nx,z:nz};}}
   return null;
  }
  return {state,jump:jump.state,spatialStats:groundGrid.stats,surface,canLand,findLanding,reset,update};

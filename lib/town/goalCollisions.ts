@@ -1,7 +1,7 @@
-import {VENUES,FIELD_SURFACE_Y,type Format,type Venue} from './venues';
+import {VENUES,FIELD_SURFACE_Y,type Venue} from './venues';
 import type {Obstacle} from './simulation';
 export const GOAL_DEPTH=1.4;
-export const goalPostRadius=(format:Format)=>format==='futsal'?.055:.065;
+export const goalPostRadius=(format:string)=>format==='futsal'?.055:.065;
 export type GoalBarrier=Obstacle&{floor:number;top:number};
 /** Open front, solid side/rear netting and posts; elevation keeps rooftop goals off the street. */
 export const GOAL_BARRIERS:GoalBarrier[]=VENUES.flatMap(v=>[-1,1].flatMap(side=>{
@@ -17,7 +17,7 @@ export type FramePoint={x:number;y:number;z:number};
 export type FrameHit=FramePoint&{t:number;nx:number;ny:number;nz:number;part:'post'|'crossbar'};
 const FRAME_ENDS=[-1,1] as const;
 /** Swept sphere against the three round tubes. End caps include the post/bar joins. */
-export function sweepGoalFrame(from:FramePoint,to:FramePoint,radius:number,out:FrameHit,venues:readonly Venue[]=VENUES){
+export function sweepGoalFrame(from:FramePoint,to:FramePoint,radius:number,out:FrameHit,venues:readonly (Omit<Venue,'id'>&{id:string})[]=VENUES){
  out.t=Infinity;
  for(const venue of venues)for(const side of FRAME_ENDS){
   const z=venue.z+side*venue.length/2,r=radius+goalPostRadius(venue.id);

@@ -42,6 +42,17 @@ export const VENDING_FACE_LAYOUT={
  overlay:{x:.02,y:.015,w:.96,h:.823},
 } as const;
 export type VendingFaceLayout=typeof VENDING_FACE_LAYOUT;
+/**
+ * Real depth behind the glass (user, Sep 30 2026: "the perspective of the shelves and books doesn't match that of the machines").
+ * Machine-local metres (before VENDING_SCALE) and fractions: the zoomed machine's 3D bay (lib/graphics/vendingMachines.ts) and the
+ * in-use HTML face (CSS 3D, components/VendingFace.tsx) share these, so products, shelves and tap areas line up.
+ *   depth:   how far the back wall sits behind the glass;
+ *   product: how far behind the glass the products stand on the shelf slabs;
+ *   shelf:   the shelf line inside a slot (fraction of the slot height from its top): products above, the price rail below.
+ */
+export const VENDING_BAY={depth:.34,product:.15,shelf:.53,
+ /** The in-use HTML face's plane stands this far in front of the cabinet front (VENDING_FACE.z). */
+ proud:.02} as const;
 export const VENDING_SLOTS_PER_PAGE=COLS*ROWS;
 
 /**

@@ -406,5 +406,59 @@
         "Link play"
       ]
     }
+  },
+  "beach": {
+    "GK": {
+      "name": "Beach goalkeeper",
+      "role": "goalkeeper",
+      "note": "Beach soccer is five a side, and one of the five is the keeper. The keeper plays barefoot like everyone else and may wear gloves and long trousers.",
+      "attack": "Start attacks with the hands: a quick roll or a long throw to a free teammate. The keeper has 4 seconds to release the ball, and a throw cannot go straight into the other goal. Keepers often step up to join the attack.",
+      "defense": "Stop shots and volleys that dip and bounce off the sand. The goal is 5.5 m wide and 2.2 m high, smaller than an 11-a-side goal (7.32 m by 2.44 m).",
+      "keySkills": [
+        "Throwing",
+        "Reflexes",
+        "Footwork on sand",
+        "Starting counters"
+      ]
+    },
+    "DEF": {
+      "name": "Beach defender",
+      "role": "centerback",
+      "note": "Beach soccer has no offside, so attackers can wait anywhere. The defender at the back of the diamond keeps talking to teammates about who is free.",
+      "attack": "Lift short passes over the sand to the wingers and join attacks when it is safe.",
+      "defense": "Stay between the pivot and your goal, block volleys and overhead kicks without fouling, and cover the space behind teammates.",
+      "keySkills": [
+        "Talking to teammates",
+        "Positioning",
+        "Blocking",
+        "Lifted passes"
+      ]
+    },
+    "WING": {
+      "name": "Beach winger",
+      "role": "winger",
+      "note": "The two wingers play on the left and right of the diamond. On sand they run in short bursts, and rolling substitutions keep their legs fresh.",
+      "attack": "Flick the ball up, chip passes and crosses into the box, and arrive to volley.",
+      "defense": "Sprint back to help the defender and press the other team's throws and kick-ins.",
+      "keySkills": [
+        "Flick-ups",
+        "Crossing",
+        "Stamina",
+        "Volleys"
+      ]
+    },
+    "PIVOT": {
+      "name": "Beach pivot",
+      "role": "striker",
+      "note": "The pivot plays furthest forward. With no offside, the pivot can wait near goal for a lifted pass, a cross or a chipped kick-in.",
+      "attack": "Control the ball in the air, set it up with a knee or chest touch, and finish with a volley or an overhead kick.",
+      "defense": "Press the keeper's throw and the defender so the other team cannot build calmly.",
+      "keySkills": [
+        "Aerial control",
+        "Overhead kicks",
+        "Volleys",
+        "Finishing"
+      ]
+    }
   }
 }

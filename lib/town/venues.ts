@@ -1,3 +1,4 @@
+import {BEACH_COURT} from './coralCay';
 export type Format='futsal'|'7v7'|'9v9'|'11v11';
 export type Venue={id:Format;name:string;x:number;z:number;width:number;length:number;players:number;goalWidth:number;goalHeight:number;surface:string;shape:string;elevation?:number};
 export const VENUES:Venue[]=[
@@ -7,6 +8,42 @@ export const VENUES:Venue[]=[
  {id:'11v11',name:'Eleven Park',x:135,z:100,width:68*250/270,length:105*380/400,players:11,goalWidth:7.32,goalHeight:2.44,surface:'#6e9678',shape:'4–3–3'},
 ];
 export const venueById=(id:Format)=>VENUES.find(v=>v.id===id)!;
+
+// ---------------------------------------------------------------------------------------------------------------
+// Live-match venues (Sep 29 2026): the four island pitches plus Coral Cay's beach-soccer court. The beach court is not
+// one of VENUES (its sand, lines, goals, benches and walking obstacles are built by coralCayWorld.ts), so it has no
+// island pitch mesh, goal barriers, lessons or quests; it only hosts a live 5-a-side match (fieldRuntime).
+/** 'beach' = FIFA Beach Soccer, 5 a side including the keeper (lib/town/match/matchSim.ts). */
+export type LiveFormat=Format|'beach';
+/** `yaw` turns the pitch's long axis (sim y, goal to goal) from world +z; the island pitches all run north–south (0). */
+export type LiveVenue=Omit<Venue,'id'>&{id:LiveFormat;yaw?:number;sand?:boolean};
+/** Sharks Beach court at Coral Cay (BEACH_COURT, coralCay.ts): 36 × 27 m, 5.5 × 2.2 m goals, long axis east–west.
+ *  Width/length are the drawn court (the sim's goal lines sit at ±length/2, as on the island pitches). */
+export const BEACH_VENUE:LiveVenue={id:'beach',name:'Sharks Beach Court',x:BEACH_COURT.x,z:BEACH_COURT.z,width:BEACH_COURT.width,length:BEACH_COURT.length,players:5,goalWidth:BEACH_COURT.goalWidth,goalHeight:BEACH_COURT.goalHeight,surface:'#e8d5a3',shape:'1-2-1',yaw:Math.PI/2,sand:true};
+export const LIVE_VENUES:readonly LiveVenue[]=[...VENUES,BEACH_VENUE];
+export const liveVenueById=(id:LiveFormat):LiveVenue=>LIVE_VENUES.find(v=>v.id===id)!;
+/** Sim field point (270 × 400, centre 135/200) → world x/z on a live venue, turned by its yaw. Unturned venues use the
+ *  exact expressions fieldRuntime always used, so their numbers are unchanged. */
+export function liveWorldX(v:Pick<LiveVenue,'x'|'width'|'length'|'yaw'>,x:number,y:number){
+ if(!v.yaw)return v.x+(x-135)/250*v.width;
+ return v.x+(x-135)/250*v.width*Math.cos(v.yaw)+(y-200)/380*v.length*Math.sin(v.yaw);
+}
+export function liveWorldZ(v:Pick<LiveVenue,'z'|'width'|'length'|'yaw'>,x:number,y:number){
+ if(!v.yaw)return v.z+(y-200)/380*v.length;
+ return v.z-(x-135)/250*v.width*Math.sin(v.yaw)+(y-200)/380*v.length*Math.cos(v.yaw);
+}
+/** Inverse of liveWorldX/liveWorldZ: world x/z → sim field point on a live venue (turned courts included; for yaw 0 it is the
+ *  plain north–south mapping). Used where a world move is written back into the sim (a knocked-over player, code review
+ *  finding 3). */
+export function liveFieldPoint(v:Pick<LiveVenue,'x'|'z'|'width'|'length'|'yaw'>,x:number,z:number){
+ const ox=x-v.x,oz=z-v.z,c=Math.cos(v.yaw??0),s=Math.sin(v.yaw??0);
+ return {x:135+(ox*c-oz*s)/v.width*250,y:200+(ox*s+oz*c)/v.length*380};
+}
+/** World yaw (three.js rotation.y) of a sim-space direction (dx, dy) on a live venue. */
+export function liveWorldYaw(v:Pick<LiveVenue,'width'|'length'|'yaw'>,dx:number,dy:number){return Math.atan2(dx*v.width/250,dy*v.length/380)+(v.yaw??0);}
+/** World half-extents of a live venue on the x and z axes (a quarter-turned court swaps them). */
+export const liveHalfX=(v:Pick<LiveVenue,'width'|'length'|'yaw'>)=>Math.abs(Math.sin(v.yaw??0))>.5?v.length/2:v.width/2;
+export const liveHalfZ=(v:Pick<LiveVenue,'width'|'length'|'yaw'>)=>Math.abs(Math.sin(v.yaw??0))>.5?v.width/2:v.length/2;
 export const venueEntrance=(v:Venue)=>({x:v.x,z:v.z+v.length/2+6});
 export const fieldPoint=(v:Venue,p:{x:number;y:number})=>({x:v.x+(p.x-135)/250*v.width,z:v.z+(p.y-200)/380*v.length});
 export function nearestVenue(x:number,z:number){return VENUES.reduce<Venue|null>((best,v)=>{const d=Math.hypot(Math.max(0,Math.abs(x-v.x)-v.width/2),Math.max(0,Math.abs(z-v.z)-v.length/2));if(d>16)return best;return !best||Math.hypot(x-v.x,z-v.z)<Math.hypot(x-best.x,z-best.z)?v:best;},null);}

@@ -10,21 +10,26 @@
  * word ("Common catch" … "Legendary catch"); the weights below are internal and never displayed.
  */
 import {SPECIAL_FISH} from './fishSpecials';
+import {DEEP_SEA_FISH} from './deepSeaFish';
+import {BOAT_BUOY,BOAT_DECK_Y,BOAT_PROMPT,BOAT_SPOT_ID,BOAT_STAND} from './deepSeaBoatData';
+import {EAST_PIER_FISHING} from '../eastPier';
 export type FishId=string;
 export type FishRarity='common'|'uncommon'|'rare'|'legendary';
 export type ShadowSize='small'|'medium'|'large'|'huge'|'giant';
 /** Shadow length in metres for each size. */
 export const SHADOW_LENGTH:Record<ShadowSize,number>={small:.45,medium:.7,large:1,huge:1.45,giant:1.9};
 export const SHADOW_LABEL:Record<ShadowSize,string>={small:'Small shadow',medium:'Medium shadow',large:'Large shadow',huge:'Huge shadow',giant:'Giant shadow'};
-export type SpotId='south-pier'|'west-pier'|'harbour-wall'|'north-rocks'|'west-cove';
+export type SpotId='south-pier'|'west-pier'|'harbour-wall'|'north-rocks'|'west-cove'|'deep-sea-boat'|'east-pier';
 /** What kind of sea animal it is (sharks reel like legendary animals: 10-14 taps). */
 /** Fish (incl. sharks, rays, eels, seahorses) plus a few crustaceans, shellfish and the octopus. NO marine mammals or reptiles (user decision, Sep 28 2026; tests/fishing.cjs keeps a denylist). */
-export type AnimalGroup='fish'|'shark'|'ray'|'eel'|'crab'|'lobster'|'shellfish'|'octopus'|'seahorse';
-export type FishShape='shrimp'|'slim'|'round'|'long'|'shark'|'octopus'|'crab'|'lobster'|'ray'|'eel'|'squid'|'seahorse'|'shell'|'hammerhead';
+export type AnimalGroup='fish'|'shark'|'ray'|'eel'|'crab'|'lobster'|'shellfish'|'octopus'|'squid'|'seahorse';
+export type FishShape='shrimp'|'slim'|'round'|'long'|'shark'|'octopus'|'crab'|'lobster'|'ray'|'eel'|'squid'|'seahorse'|'shell'|'hammerhead'|'billfish'|'angler'|'mola';
 export type ClubLinkKind='Nickname'|'Port city'|'Fan culture'|'Football culture'|'Crest'|'Mascot'|'Club name';
 export type FishSpecies={
  id:FishId;name:string;plural:string;rarity:FishRarity;
  group:AnimalGroup;
+ /** A deep-sea / offshore creature: the Deep Sea Boat's catch table favours these (docs/fishing.md). */
+ deepSea?:boolean;
  /** Where it can be caught. One spot = a spot-exclusive special (docs/fishing.md). Which animal lives where is island fiction. */
  spots:SpotId[];
  /** Optional internal catch weight (overrides RARITY_WEIGHT; never shown). */
@@ -49,35 +54,35 @@ export type FishSpecies={
 export const RARITY_LABEL:Record<FishRarity,string>={common:'Common catch',uncommon:'Good catch',rare:'Rare catch',legendary:'Legendary catch'};
 
 export const FISH:FishSpecies[]=[
- {id:'shrimp',name:'Brown Shrimp',plural:'Brown Shrimp',rarity:'common',group:'shellfish',spots:['south-pier','west-pier','harbour-wall','north-rocks','west-cove'],price:3,size:[5,9],color:'#d99a74',belly:'#f3c9a5',shape:'shrimp',shadow:'small',
+ {id:'shrimp',name:'Brown Shrimp',plural:'Brown Shrimp',rarity:'common',group:'shellfish',spots:['south-pier','west-pier','harbour-wall','north-rocks','west-cove','east-pier'],price:3,size:[5,9],color:'#d99a74',belly:'#f3c9a5',shape:'shrimp',shadow:'small',
   club:{name:'Southend United',country:'England',link:'Nickname',nickname:'The Shrimpers',
    fact:'Southend United are "The Shrimpers" because nearby Leigh-on-Sea had lots of shrimp-fishing boats, and a shrimp is on the club badge.',
    source:'https://en.wikipedia.org/wiki/Southend_United_F.C.'}},
- {id:'sardine',name:'Sardine',plural:'Sardines',rarity:'common',group:'fish',spots:['south-pier','west-pier','harbour-wall','north-rocks','west-cove'],price:3,size:[12,22],color:'#6f8fa6',belly:'#dfe7ea',shape:'slim',shadow:'small',
+ {id:'sardine',name:'Sardine',plural:'Sardines',rarity:'common',group:'fish',spots:['south-pier','west-pier','harbour-wall','north-rocks','west-cove','deep-sea-boat','east-pier'],price:3,size:[12,22],color:'#6f8fa6',belly:'#dfe7ea',shape:'slim',shadow:'small',
   club:{name:'Santos FC',country:'Brazil',link:'Nickname',nickname:'Peixe (Fish)',
    fact:'In 1933 rival fans teased port-city Santos as "fishmongers", so Santos fans proudly took the nickname "Peixe" (Fish). Pelé played there from 1956 to 1974.',
    source:'https://en.wikipedia.org/wiki/Santos_FC'}},
- {id:'mackerel',name:'Mackerel',plural:'Mackerel',rarity:'common',group:'fish',spots:['south-pier','west-pier','harbour-wall','north-rocks','west-cove'],price:4,size:[25,40],color:'#3f7a78',belly:'#e4ecd9',shape:'slim',shadow:'medium',
+ {id:'mackerel',name:'Mackerel',plural:'Mackerel',rarity:'common',group:'fish',spots:['south-pier','west-pier','harbour-wall','north-rocks','west-cove','deep-sea-boat','east-pier'],price:4,size:[25,40],color:'#3f7a78',belly:'#e4ecd9',shape:'slim',shadow:'medium',
   club:{name:'Celta Vigo',country:'Spain',link:'Port city',
    fact:'Celta Vigo\'s home city, Vigo, has Europe\'s biggest fishing port: almost a million tonnes of fish arrive there every year.',
    source:'https://www.fao.org/newsroom/story/Not-business-as-usual-in-Europe-s-largest-fishing-port/en'}},
- {id:'sea-bass',name:'Sea Bass',plural:'Sea Bass',rarity:'common',group:'fish',spots:['south-pier','west-pier','harbour-wall','north-rocks','west-cove'],price:4,size:[30,60],color:'#8a9aa0',belly:'#eef0e6',shape:'round',shadow:'medium',
+ {id:'sea-bass',name:'Sea Bass',plural:'Sea Bass',rarity:'common',group:'fish',spots:['south-pier','west-pier','harbour-wall','north-rocks','west-cove','east-pier'],price:4,size:[30,60],color:'#8a9aa0',belly:'#eef0e6',shape:'round',shadow:'medium',
   club:{name:'Olympique de Marseille',country:'France',link:'Nickname',nickname:'Les Phocéens',
    fact:'Marseille are "Les Phocéens", after the Greek sailors from Phocaea who founded the port about 600 BC. In 1993 OM became the first French club to win the Champions League.',
    source:'https://en.wikipedia.org/wiki/Olympique_de_Marseille'}},
- {id:'herring',name:'Herring',plural:'Herring',rarity:'uncommon',group:'fish',spots:['west-pier','harbour-wall'],price:5,size:[20,35],color:'#5d7f99',belly:'#e8eef0',shape:'slim',shadow:'small',
+ {id:'herring',name:'Herring',plural:'Herring',rarity:'uncommon',group:'fish',spots:['west-pier','harbour-wall','east-pier'],price:5,size:[20,35],color:'#5d7f99',belly:'#e8eef0',shape:'slim',shadow:'small',
   club:{name:'FC St. Pauli',country:'Germany',link:'Fan culture',
    fact:'FC St. Pauli come from Hamburg\'s harbour district. Fans started waving a skull-and-crossbones pirate flag in the 1980s, and the club now uses it as a logo.',
    source:'https://en.wikipedia.org/wiki/Skull_and_crossbones_(fraternities_and_sports)'}},
- {id:'cod',name:'Cod',plural:'Cod',rarity:'uncommon',group:'fish',spots:['harbour-wall','west-cove'],price:6,size:[40,90],color:'#9b8a5e',belly:'#efe6c8',shape:'round',shadow:'large',
+ {id:'cod',name:'Cod',plural:'Cod',rarity:'uncommon',group:'fish',spots:['harbour-wall','west-cove','east-pier'],price:6,size:[40,90],color:'#9b8a5e',belly:'#efe6c8',shape:'round',shadow:'large',
   club:{name:'Fleetwood Town',country:'England',link:'Fan culture',nickname:'The Cod Army',
    fact:'Fleetwood Town\'s fans are the "Cod Army" because Fleetwood grew up as a big deep-sea fishing port.',
    source:'https://en.wikipedia.org/wiki/Fleetwood_Town_F.C.'}},
- {id:'haddock',name:'Haddock',plural:'Haddock',rarity:'uncommon',group:'fish',spots:['harbour-wall','west-cove'],price:6,size:[35,70],color:'#6d6f73',belly:'#e9e7df',shape:'round',shadow:'medium',
+ {id:'haddock',name:'Haddock',plural:'Haddock',rarity:'uncommon',group:'fish',spots:['harbour-wall','west-cove','east-pier'],price:6,size:[35,70],color:'#6d6f73',belly:'#e9e7df',shape:'round',shadow:'medium',
   club:{name:'Grimsby Town',country:'England',link:'Fan culture',nickname:'The Mariners',
    fact:'Grimsby Town, "The Mariners", have fans who wave inflatable fish called "Harry Haddock", a tradition that began at FA Cup matches in 1989.',
    source:'https://gtfc.co.uk/the-return-of-harry-haddock/'}},
- {id:'tuna',name:'Bluefin Tuna',plural:'Bluefin Tuna',rarity:'rare',group:'fish',spots:['south-pier','harbour-wall','west-cove'],price:9,size:[80,160],color:'#2f4f78',belly:'#d9e2e6',shape:'long',shadow:'huge',
+ {id:'tuna',name:'Bluefin Tuna',plural:'Bluefin Tuna',rarity:'rare',group:'fish',deepSea:true,spots:['south-pier','harbour-wall','west-cove','deep-sea-boat','east-pier'],price:9,size:[80,160],color:'#2f4f78',belly:'#d9e2e6',shape:'long',shadow:'huge',
   club:{name:'Yokohama F. Marinos',country:'Japan',link:'Port city',nickname:'Marinos',
    fact:'"Marinos" means sailors in Spanish, chosen because Yokohama is a big international port. The club mascot is a seagull called Marinos-kun.',
    source:'https://www.f-marinos.com/en/club'}},
@@ -85,13 +90,15 @@ export const FISH:FishSpecies[]=[
   club:{name:'Junior de Barranquilla',country:'Colombia',link:'Nickname',nickname:'Los Tiburones',
    fact:'Junior, from Barranquilla on Colombia\'s Caribbean coast, are nicknamed "Los Tiburones": The Sharks.',
    source:'https://en.wikipedia.org/wiki/Atl%C3%A9tico_Junior'}},
- {id:'octopus',name:'Octopus',plural:'Octopuses',rarity:'legendary',group:'octopus',spots:['south-pier','west-pier','north-rocks'],price:12,size:[40,100],color:'#c9655a',belly:'#f1b39b',shape:'octopus',shadow:'large',
+ {id:'octopus',name:'Octopus',plural:'Octopuses',rarity:'legendary',group:'octopus',deepSea:true,spots:['south-pier','west-pier','north-rocks','deep-sea-boat','east-pier'],price:12,size:[40,100],color:'#c9655a',belly:'#f1b39b',shape:'octopus',shadow:'large',
   club:{name:'Paul the Octopus',country:'Germany',link:'Football culture',
    fact:'At the 2010 World Cup, Paul the Octopus from Sea Life Oberhausen picked the winner of all seven Germany matches and the final: 8 out of 8!',
    source:'https://en.wikipedia.org/wiki/Paul_the_Octopus'}},
 ];
 // The 50 spot-exclusive specials (10 per spot) with their verified football stories: ./fishSpecials.ts.
 FISH.push(...SPECIAL_FISH);
+// The Deep Sea Boat's own deep-sea specials (squid, lanternfish, grouper, sailfish, anglerfish, swordfish, marlin, sunfish): ./deepSeaFish.ts.
+FISH.push(...DEEP_SEA_FISH);
 const BY_ID=new Map(FISH.map(f=>[f.id,f]));
 export const fishById=(id:string)=>BY_ID.get(id);
 export const isFishId=(id:unknown):id is FishId=>typeof id==='string'&&BY_ID.has(id);
@@ -118,6 +125,10 @@ export type FishSpot={
  story:string;
  /** Optional camera nudge for the low fishing shot (metres): e.g. lift over a harbour wall. */
  camera?:{lift?:number;out?:number;look?:number};
+ /** A spot on a moored boat (no fishing post): its floor height and where the Fish prompt floats. */
+ boat?:{floor:number;prompt:{x:number;y:number;z:number}};
+ /** Internal multiplier (never shown) for species that are NOT deep-sea creatures at this spot: the boat keeps a few bait fish. */
+ shallowFactor?:number;
 };
 export const FISH_SPOTS:(FishSpot&{id:SpotId})[]=[
  {id:'south-pier',name:'South Pier Fishing Station',x:217,z:212.6,buoy:{x:217,z:226},
@@ -130,13 +141,25 @@ export const FISH_SPOTS:(FishSpot&{id:SpotId})[]=[
   weights:{},story:'Tide-pool rocks at the quiet end of North Beach. Octopuses hide in the cracks.'},
  {id:'west-cove',name:'West Cove',x:-95.5,z:24,buoy:{x:-108,z:24},
   weights:{},story:'A windy cove on the west coast where a little stream meets the sea, so river fish swim in beside the rays and sharks.'},
+ // Deep Sea Boat (Sep 29 2026): moored off the main island's east coast, south of the Coral Cay causeway; reached by jetpack
+ // only. Stand on the aft deck and cast off the starboard (east, seaward) side. About three casts in four bring a deep-sea creature (internal).
+ {id:BOAT_SPOT_ID,name:'Deep Sea Boat',x:BOAT_STAND.x,z:BOAT_STAND.z,buoy:{x:BOAT_BUOY.x,z:BOAT_BUOY.z},
+  weights:{},story:'A little fishing boat moored far out in deep blue water. Squid, marlin and stranger things swim far below.',
+  camera:{lift:1.6,out:4,look:.5},boat:{floor:BOAT_DECK_Y,prompt:BOAT_PROMPT},shallowFactor:.5},
+ // East Jetty (Sep 29 2026 as the East Pier; spiral jetty Sep 30, lib/town/eastPier.ts): the outer east curve of the spiral off the farmers market. No specials of its
+ // own: a table between the shore and the deep sea, built from species already in the game (the four shared commons, herring,
+ // cod and haddock, plus the odd tuna or octopus that swims in from deeper water). Mean catch ≈ 4.05 coins (shore ≈ 4.0).
+ {id:'east-pier',name:'East Jetty Spiral',x:EAST_PIER_FISHING.x,z:EAST_PIER_FISHING.z,buoy:{...EAST_PIER_FISHING.buoy},
+  weights:{},story:'The outer curve of the spiral at the end of the East Jetty, out past the farmers market. Deeper water than the shore, so a tuna or an octopus sometimes swims by.'},
 ];
 /**
  * Internal catch weights by rarity (code + docs only, NEVER shown to kids): commons are easy, each rarer tier is
  * progressively harder to meet. A species may override its weight with `weight`.
  */
 export const RARITY_WEIGHT:Record<FishRarity,number>={common:40,uncommon:12,rare:4,legendary:1.2};
-for(const spot of FISH_SPOTS)for(const f of FISH)if(f.spots.includes(spot.id))spot.weights[f.id]=f.weight??RARITY_WEIGHT[f.rarity];
+for(const spot of FISH_SPOTS)for(const f of FISH)if(f.spots.includes(spot.id))spot.weights[f.id]=(f.weight??RARITY_WEIGHT[f.rarity])*(spot.shallowFactor&&!f.deepSea?spot.shallowFactor:1);
+/** The shore spots (fishing posts), without the boat. */
+export const SHORE_SPOTS=FISH_SPOTS.filter(s=>!s.boat);
 export const spotById=(id:string)=>FISH_SPOTS.find(s=>s.id===id);
 /** Species that live only at one spot (the spot's specials). */
 export const isExclusive=(f:FishSpecies)=>f.spots.length===1;

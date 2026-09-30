@@ -1,6 +1,6 @@
 'use client';
 import {useRef,forwardRef,type CSSProperties,type ReactNode} from 'react';
-import {VENDING_FACE_LAYOUT as L,type FaceRect} from '@/lib/graphics/vendingFaceLayout';
+import {FACE_SIZE,VENDING_BAY,VENDING_FACE_LAYOUT as L,type FaceRect} from '@/lib/graphics/vendingFaceLayout';
 import styles from './VendingFace.module.css';
 
 /**
@@ -25,7 +25,11 @@ export type VendingSlotView={id:string;label:string;price:number;state:VendingSl
  kind:string;picture:ReactNode;ariaLabel:string};
 export type VendingPhase='idle'|'coins'|'drop'|'tray'|'reward';
 export type VendingFaceView={
- placement:{w:number;h:number;transform:string};
+ placement:{w:number;h:number;transform:string;
+  /** Width foreshortening of the angled close-up (≥1): round product art (balls) is widened back by it. */
+  widen?:number;
+  /** `transform` is the true CSS 3D camera placement: products stand VENDING_BAY.product behind the glass in the real bay. */
+  depth?:boolean};
  /** Face font size (px, ≥12) chosen by the controller from the on-screen face width. */
  fontSize:number;compact:boolean;
  machine:{id:string;name:string;color:string;light:string;ink:string};
@@ -48,9 +52,9 @@ export const VendingFace=forwardRef<HTMLDivElement,{view:VendingFaceView;events:
  /** Reward moment / club story, drawn over the glass (L.overlay). */
  overlay?:ReactNode;entrance?:boolean;inactive?:boolean}>(function VendingFace({view,events,overlay,entrance=true,inactive=false},ref){
  const v=view;const trayPointer=useRef<{x:number;y:number}|null>(null);
- const style={width:v.placement.w,height:v.placement.h,transform:v.placement.transform,'--fs':`${v.fontSize}px`,'--vm':v.machine.color,'--vm-light':v.machine.light,'--vm-ink':v.machine.ink,
+ const style={width:v.placement.w,height:v.placement.h,transform:v.placement.transform,'--fs':`${v.fontSize}px`,'--vm':v.machine.color,'--vm-light':v.machine.light,'--vm-ink':v.machine.ink,'--ball-widen':String(v.placement.widen??1),'--bay-product':`${((VENDING_BAY.product+VENDING_BAY.proud)/FACE_SIZE.w*v.placement.w).toFixed(2)}px`,
   '--push-y':`${L.slotPush.y*100}%`,'--header-clearance':`max(0px, ${50-v.placement.h*.094}px)`} as CSSProperties;
- return <div {...(inactive?{inert:''}:{}) as Record<string,string>} ref={ref} className={styles.face} style={style} data-vending-face={`${v.placement.w}x${v.placement.h}`} data-compact={v.compact||undefined} data-phase={v.phase} data-entry={entrance||undefined}
+ return <div {...(inactive?{inert:''}:{}) as Record<string,string>} ref={ref} className={styles.face} style={style} data-vending-face={`${v.placement.w}x${v.placement.h}`} data-compact={v.compact||undefined} data-depth={v.placement.depth||undefined} data-phase={v.phase} data-entry={entrance||undefined}
   role="group" aria-label={`${v.machine.name} vending machine. Arrow keys or 1 to 6 pick, Enter buys, Escape leaves.`}>
   <div className={styles.glass} style={place(L.glass)} aria-hidden="true"><span className={styles.glare}/></div>
   {[0,1].map(row=>{const r=L.slots[row*L.cols];return <span key={row} className={styles.shelf} aria-hidden="true" style={{left:`${r.x*100}%`,width:`${(1-2*r.x)*100}%`,top:`calc(${(r.y+r.h*.53)*100}% + ${row===0?'var(--header-clearance) / 2':'0px'})`,height:`${r.h*46}%`}}/>;})}

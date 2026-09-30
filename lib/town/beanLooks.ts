@@ -77,6 +77,23 @@ export function matchKits(homeId=DEFAULT_HOME_PALETTE,awayId=DEFAULT_AWAY_PALETT
   return {home,away,homeKeeper,awayKeeper};
 }
 export const DEFAULT_MATCH_KITS:MatchKits=matchKits();
+/**
+ * Beach soccer kits for the live match on Coral Cay's court (FIFA Beach Soccer Laws 2024-25, Law 4: footwear is not
+ * allowed). Sunshine Gold vs Ocean Blue, so the feed's "Gold" and "Blue" still read true. Barefoot: the socks and boots
+ * take the team body colour (the bean's legs), so the shins and feet read bare, with only the pale sole showing; every
+ * player of a team still wears the identical kit. Keepers keep their own colours (Law 4), barefoot as well.
+ */
+const barefoot=(kit:KitColours):KitColours=>{const body=teamBodyColour(kit);return {...kit,socks:body,socks2:body,boots:body};};
+export const BEACH_KITS={
+  home:{shirt:'#f29a1c',shirt2:'#fff3cf',shorts:'#1d4f73'} as Pick<KitColours,'shirt'|'shirt2'|'shorts'>,
+  away:{shirt:'#1f7fc4',shirt2:'#e9f7ff',shorts:'#f6f0dc'} as Pick<KitColours,'shirt'|'shirt2'|'shorts'>,
+};
+export const BEACH_MATCH_KITS:MatchKits=(()=>{
+  const home=barefoot({...BEACH_KITS.home,socks:'',socks2:'',boots:''}),away=barefoot({...BEACH_KITS.away,socks:'',socks2:'',boots:''});
+  const pickKeeper=(avoid:KitColours[])=>(KEEPER_PALETTES.find(p=>avoid.every(k=>!kitsClash(k,p.kit)))??KEEPER_PALETTES[0]).kit;
+  const homeKeeper=barefoot(pickKeeper([home,away])),awayKeeper=barefoot(pickKeeper([home,away,homeKeeper]));
+  return {home,away,homeKeeper,awayKeeper};
+})();
 
 // ---------------------------------------------------------------- deterministic picks
 function hashOf(id:string){let h=2166136261;for(let i=0;i<id.length;i++)h=Math.imul(h^id.charCodeAt(i),16777619)>>>0;return h;}

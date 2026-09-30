@@ -6,7 +6,7 @@ function load(file,globals={}){const m={exports:{}};vm.runInNewContext(ts.transp
 
 // 1. Far, off-screen live fields are dormant (no clock, sim, bookkeeping or effects) with hysteresis, and wake before they can be seen.
 {const rt=read('lib/town/fieldRuntime.ts');
- assert.match(rt,/const dormant=!visible&&viewingFormat!==v\.id&&!teaching&&\(e\.dormant\?camDistance>sphere\.radius\+50:camDistance>sphere\.radius\+60\);/);
+ assert.match(rt,/const dormant=!visible&&viewingFormat!==v\.id&&!teaching&&\(v\.id==='beach'\|\|\(e\.dormant\?camDistance>sphere\.radius\+50:camDistance>sphere\.radius\+60\)\);/);// the cay's beach court also sleeps off screen at any distance (tests/beach-match.cjs)
  const i=rt.indexOf('if(dormant){stats.dormant++;continue;}'),clock=rt.indexOf('const matchDt=e.clock.take(');assert(i>0&&i<clock,'dormant fields leave before the clock, sim and bookkeeping');
  assert(rt.indexOf('const visible=')<i,'visibility (frustum + 240 m) is decided first: a field in view is never dormant');
  assert.match(rt,/if\(matchDt>0\|\|!e\.synced\)\{e\.liveFrame\.sync\(e\.sim\.players\);e\.synced=true;\}/,'audit F23');}

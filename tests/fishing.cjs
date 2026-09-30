@@ -11,7 +11,9 @@ function environment(){
   const code=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText;
   vm.runInContext('(function(exports,module,require){'+code+'\n})',context)(mod.exports,mod,id=>id==='react'?{useSyncExternalStore:(_s,get)=>get()}:id.startsWith('.')?load(path.resolve(path.dirname(file),id+'.ts')):require(id));
   cache.set(file,mod.exports);return mod.exports;}
- return {load,data,override:(name,value)=>overrides.set(path.resolve(ROOT,name),value)};
+ return {load,data,override:(name,value)=>overrides.set(path.resolve(ROOT,name),value),
+  /** Re-evaluate one module (its imports stay cached), like a hot update of that file. */
+  fresh:name=>{cache.delete(path.resolve(ROOT,name));return load(name);}};
 }
 const lcg=seed=>()=>{seed=(seed*1664525+1013904223)>>>0;return seed/2**32;};
 
@@ -23,7 +25,7 @@ const straight=(r,f)=>{const pts=[];for(let i=0;i<=8;i++)pts.push({x:3-(3-cat.SH
 const spawn={approach:straight,out:{x:1,z:0}};
 
 // ---- Catalogue + football facts ----
-assert(FISH.length>=10&&FISH.length<=60,'10 shared species + up to 50 spot specials');assert(FISH.every(f=>f.group!=='shark'||(core.reelRange(f)[0]===10&&core.reelRange(f)[1]===14)),'every shark, whatever its rarity, needs 10-14 taps');
+assert(FISH.length>=10&&FISH.length<=72,'10 shared species + spot specials + the Deep Sea Boat creatures');assert(FISH.every(f=>f.group!=='shark'||(core.reelRange(f)[0]===10&&core.reelRange(f)[1]===14)),'every shark, whatever its rarity, needs 10-14 taps');
 assert.equal(new Set(FISH.map(f=>f.id)).size,FISH.length,'unique ids');
 const SPOT_IDS=FISH_SPOTS.map(s=>s.id),PRICE={common:[2,4],uncommon:[4,7],rare:[8,11],legendary:[12,20]};
 for(const f of FISH){
@@ -41,7 +43,11 @@ for(const f of FISH){
 }
 // Spot-exclusive specials: at most 10 per spot, each only at its own spot, and every spot has its own.
 const exclusives=FISH.filter(cat.isExclusive);
-for(const s of FISH_SPOTS){const own=exclusives.filter(f=>f.spots[0]===s.id);assert(own.length>=1&&own.length<=10,`${s.id}: 1-10 specials (${own.length})`);}
+// The East Pier (Sep 29 2026) has no specials by design: its table reuses shared species (shore commons + a few visitors).
+for(const s of FISH_SPOTS){const own=exclusives.filter(f=>f.spots[0]===s.id);if(s.id==='east-pier'){assert.equal(own.length,0,'east-pier: no specials of its own');continue;}assert(own.length>=1&&own.length<=10,`${s.id}: 1-10 specials (${own.length})`);}
+{const pier=cat.spotById('east-pier'),w=Object.entries(pier.weights),tot=w.reduce((n,[,x])=>n+x,0),ev=w.reduce((n,[id,x])=>n+x/tot*fishById(id).price,0);
+ assert(['shrimp','sardine','mackerel','sea-bass','herring','cod','haddock','tuna','octopus'].every(id=>id in pier.weights)&&w.length===9,'east-pier: shore commons, three good catches, a rare tuna and a legendary octopus');
+ assert(ev>3.8&&ev<4.3,`east-pier mean catch ${ev.toFixed(2)} ≈ the shore's 4.0 (economy unchanged)`);}
 assert(new Set(FISH.map(f=>f.club.name+'|'+f.name)).size===FISH.length,'no duplicate stories');
 assert.equal(FISH.filter(f=>/Paul the Octopus/.test(f.club.name)).length,1,'Paul the Octopus appears once');
 assert(FISH.filter(f=>f.group==='shark').length>=4,'sharks are included');
@@ -52,12 +58,12 @@ for(const f of FISH){
  assert(!DENIED_KINDS.includes(f.group)&&!DENIED_KINDS.includes(f.shape),`${f.id}: not a mammal or reptile (group ${f.group}, shape ${f.shape})`);
  assert(!DENIED_NAMES.test(f.name)&&!DENIED_NAMES.test(f.id.replace(/-/g,' ')),`${f.id}: name is not a mammal or reptile`);
 }
-assert(['fish','shark','ray','eel','seahorse','crab','lobster','shellfish','octopus'].every(Boolean)&&FISH.every(f=>['fish','shark','ray','eel','seahorse','crab','lobster','shellfish','octopus'].includes(f.group)),'only fish and a few crustaceans, shellfish and the octopus');
+assert(FISH.every(f=>['fish','shark','ray','eel','seahorse','crab','lobster','shellfish','octopus','squid'].includes(f.group)),'only fish and a few crustaceans, shellfish, the octopus and the squid');
 {const fishArt=fs.readFileSync(path.join(ROOT,'components/FishArt.tsx'),'utf8');for(const k of ['dolphin','whale','turtle','seal','dugong'])assert(!new RegExp(`case '${k}'`).test(fishArt),`FishArt has no ${k} art`);}
 // Big animals pay more, but the economy stays sane (docs/island-jobs.md: welcome 40, packs 40/60, books 100).
 assert(Math.max(...FISH.map(f=>f.price))<=20,'no catch pays more than 20 coins');
 for(const s of FISH_SPOTS){assert(Object.keys(s.weights).every(id=>fishById(id)),`${s.id}: valid species`);assert(s.story,'island story text');}
-assert(FISH_SPOTS.length>=4&&FISH_SPOTS.length<=6,'4-6 fishing spots');
+assert(FISH_SPOTS.length>=4&&FISH_SPOTS.length<=7,'4-7 fishing spots (the East Pier is the 7th)');
 // Kid safety: no odds or percentages anywhere the player reads.
 const sessionMod=e.load('lib/town/fishing/fishingSession.ts');
 const shown=[...Object.values(RARITY_LABEL),...Object.values(cat.SHADOW_LABEL),...FISH.flatMap(f=>[f.name,f.plural,f.club.fact,f.club.name,f.club.nickname??'',f.club.credit??'']),...Object.values(KEEPER_LESSONS).flatMap(l=>[l.title,l.text]),...FISH_SPOTS.flatMap(s=>[s.story,s.name]),sessionMod.PULL_HINT];
@@ -231,11 +237,65 @@ store.set(market.MARKET_STORAGE_KEY,JSON.stringify({version:1,day,basket:{shrimp
 const full=fishingStore.landFish('herring',30,9100);assert(!full.inBasket&&full.isBiggest,'full basket: logged, swims free');
 assert.equal(JSON.parse(store.get(core.FISHBOOK_STORAGE_KEY)).species.herring.count,2);
 
+
+// ---- Deep Sea Boat (user, Sep 29 2026): a moored boat south of the Coral Cay causeway; its catches are mostly deep-sea ----
+{const cay=e.load('lib/town/coralCay.ts'),data=e.load('lib/town/fishing/deepSeaBoatData.ts'),decks=e.load('lib/town/landableDecks.ts'),land=e.load('lib/town/landmass.ts'),sim=e.load('lib/town/simulation.ts');
+ const boat=cat.spotById('deep-sea-boat'),m=data.BOAT_MOORING;
+ assert(boat&&boat.boat,'the boat spot exists');
+ // The boat's own mooring (the user's circled spot, Sep 29 2026), checked against the live Coral Cay and flight rules:
+ // the hull plus a 12 m ring of fishing water is flyable open sea (never land); outside the shallow band; at least 12 m
+ // (plus the boat's half-length) from the causeway deck and banks and from every shark patrol point.
+ for(let a=0;a<32;a++)for(const r of [0,3,6,9,12]){const x=m.x+Math.cos(a/32*Math.PI*2)*r,z=m.z+Math.sin(a/32*Math.PI*2)*r;
+  assert(!sim.flightBlocked(x,z)&&!land.onLand(x,z),`boat water ${x.toFixed(1)},${z.toFixed(1)} is open, flyable sea`);}
+ const offShore=shore.distanceToShore(m.x,m.z);assert(offShore>=25&&offShore<=70,`off the main island's east beach, outside the shallow band (${offShore.toFixed(1)} m)`);
+ const halfLength=Math.max(-data.BOAT_HULL.x0,data.BOAT_HULL.x1);
+ assert(cay.distanceToCayLand(m.x,m.z)>=12+halfLength,'clear of the causeway deck, its banks and the sandbars');
+ assert(cay.SHARK_LOOPS.every(l=>l.points.every(p=>Math.hypot(p.x-m.x,p.z-m.z)>=12+halfLength)),'clear of the causeway shark patrols');
+ // Bow along the coast (north), casting side (starboard) out to sea (east).
+ const bow=data.boatToWorld(1,0),star=data.boatToWorld(0,1);assert(bow.z<m.z-.99&&star.x>m.x+.99,'bow points north along the coast; you cast east, out to sea');
+ assert(Math.hypot(boat.x-m.x,boat.z-m.z)<4,'the spot is on the boat');
+ assert(!shore.onIsland(boat.x,boat.z)&&!cay.isOnCayLand(boat.x,boat.z),'the boat floats in open water, far from both coasts');
+ // The aft deck: a real floor while registered (walkable, landable), water again once removed. Height stays "on foot".
+ const deck=data.BOAT_DECK;assert(deck.height<1.2&&deck.height>.4,'deck floor height counts as on foot');
+ for(const [u,v] of [[-1,-1],[-1,1],[1,-1],[1,1]]){const c=data.boatToWorld(-2.4+u*deck.w/2,v*deck.d/2);assert(data.onBoatHull(c.x,c.z),'deck lies inside the hull');}
+ {const sl=data.worldToBoat(boat.x,boat.z);assert(Math.abs(sl.x+2.4)<=deck.w/2&&Math.abs(sl.z)<=deck.d/2,'the fishing stand is on the deck');}
+ assert(!land.onLand(boat.x,boat.z),'no floor before the boat is built');
+ const off=decks.registerLandableDeck({...deck});assert(land.onLand(boat.x,boat.z)&&decks.landableDeckHeight(boat.x,boat.z)===deck.height,'registered deck is land at deck height');off();
+ // Float and shadows stay off the hull; the cast clears the rail.
+ const c=core.castPoint(boat,boat);assert(core.inOpenWater(c.x,c.z)&&!data.onBoatHull(c.x,c.z)&&c.distance>3,'boat cast lands in open water past the rail');
+ assert(!core.inOpenWater(m.x,m.z),'the hull is not open water');
+ // Catch table: 70-80% deep-sea creatures (internal weights, never shown), plus a few bait fish.
+ const w=Object.entries(boat.weights),tot=w.reduce((a,[,v])=>a+v,0),deep=w.filter(([id])=>fishById(id).deepSea).reduce((a,[,v])=>a+v,0);
+ assert(deep/tot>=.7&&deep/tot<=.8,`deep-sea share of the boat table ${(deep/tot).toFixed(3)}`);
+ const rand=lcg(99);let hits=0;for(let i=0;i<10000;i++)if(fishById(core.rollCatch(boat,rand())).deepSea)hits++;assert(hits>=6800&&hits<=8200,`simulated deep-sea catches ${hits}/10000`);
+ const own=FISH.filter(f=>cat.isExclusive(f)&&f.spots[0]==='deep-sea-boat');
+ assert(own.length>=6&&own.every(f=>f.deepSea),'the boat has its own deep-sea specials');
+ assert(fishById('ocean-sunfish').weight<cat.RARITY_WEIGHT.legendary,'the ocean sunfish is the rarest');
+ // Old shore spots unchanged (snapshot taken before the boat was added: species count and total internal weight).
+ const SNAP={'south-pier':[14,304.8],'west-pier':[16,281.2],'harbour-wall':[18,369.2],'north-rocks':[15,358.4],'west-cove':[18,269.2]};
+ for(const [id,[n,sum]] of Object.entries(SNAP)){const s=cat.spotById(id),v=Object.values(s.weights);assert.equal(v.length,n,`${id}: same species`);assert(Math.abs(v.reduce((a,b)=>a+b,0)-sum)<1e-6,`${id}: same weights`);assert(!Object.keys(s.weights).some(k=>own.some(f=>f.id===k)),`${id}: no boat specials`);}
+ // Each new species: complete content, a cited source, Fishbook art for its shape.
+ const art=fs.readFileSync(path.join(ROOT,'components/FishArt.tsx'),'utf8');
+ for(const f of own){assert(f.name&&f.plural&&f.club.name&&f.club.fact.length>40&&/^https:\/\/en\.wikipedia\.org\/wiki\//.test(f.club.source),`${f.id}: content and a Wikipedia source`);
+  assert(['slim','round','squid'].includes(f.shape)||new RegExp(`case '${f.shape}'`).test(art),`${f.id}: has Fishbook art`);}
+ // The catch card names the boat; the Fishbook separates shore spots from the boat.
+ assert(/data-fish-where>Deep sea boat</.test(fs.readFileSync(path.join(ROOT,'components/FishingHost.tsx'),'utf8')),'catch card says "Deep sea boat"');
+ // Heat: one merged boat mesh, no shadow casting, no timers or frame loops, built/dropped by distance, bob gated.
+ const src=fs.readFileSync(path.join(ROOT,'lib/town/fishing/deepSeaBoat.ts'),'utf8');
+ assert(/mergeGeometries\(parts\)/.test(src)&&(src.match(/new T\.Mesh\(/g)||[]).length===1,'the boat is one merged mesh');
+ assert(/castShadow=false/.test(src)&&!/requestAnimationFrame|setInterval|setTimeout/.test(src),'no shadow draw, no timers');
+ assert(/BUILD_RANGE=\d+,DROP_RANGE=\d+,BOB_RANGE=\d+/.test(src)&&/frustum\.intersectsSphere/.test(src),'lazy build, bob only near and on screen');}
+
+// One fishing session per page, surviving hot updates (Sep 29 2026 root cause of "the fishing for the boat doesn't work":
+// a re-run fishingStore made a second session, so the Fish button started one the island loop never stepped).
+{const src=fs.readFileSync(path.join(ROOT,'lib/town/fishing/fishingStore.ts'),'utf8');
+ assert(/__fi2Fishing/.test(src)&&/hot\.session\?\?=createFishingSession/.test(src),'the session singleton lives on globalThis');
+ assert(e.fresh('lib/town/fishing/fishingStore.ts').fishingSession===fishingStore.fishingSession,'a hot-updated fishingStore reuses the same session');}
 // ---- Portrait framing: head and float both clear the top HUD and bottom controls ----
 {const T=require('three'),{createFishingCamera}=e.load('lib/town/fishing/fishingCamera.ts');
  for(const spot of FISH_SPOTS)for(const [width,height] of [[390,844],[375,667]]){
-  const stand={x:spot.x,z:spot.z},cast=core.castPoint(spot,stand),camera=new T.PerspectiveCamera(40,width/height,.1,1000),rig=createFishingCamera();rig.begin(stand,cast.dir,cast.distance,undefined,spot.camera);rig.apply(camera,.05,true);camera.updateMatrixWorld();
-  const float=new T.Vector3(cast.x,-.35,cast.z).project(camera),head=new T.Vector3(stand.x,1.6,stand.z).project(camera);
+  const stand={x:spot.x,z:spot.z},floor=spot.boat?.floor??0,cast=core.castPoint(spot,stand),camera=new T.PerspectiveCamera(40,width/height,.1,1000),rig=createFishingCamera();rig.begin(stand,cast.dir,cast.distance,undefined,spot.camera);rig.apply(camera,.05,true);camera.updateMatrixWorld();
+  const float=new T.Vector3(cast.x,-.35,cast.z).project(camera),head=new T.Vector3(stand.x,floor+1.6,stand.z).project(camera);
   assert(float.y>-.6&&float.y<.6,`${spot.id} float stays between HUD and controls at ${width}x${height}`);assert(Math.abs(float.x)<.8&&head.y<.65&&head.y>-.1,'angler and float are framed');
  }}
 

@@ -1,6 +1,6 @@
 # Fishing and Rosa's market stand
 
-Written 27 Sep 2026; expanded 28 Sep 2026 (56 species, spot specials, rarity reeling, varied approaches; marine mammals and reptiles removed the same day by user decision). Local only: nothing has been committed or deployed.
+Written 27 Sep 2026; expanded 28 Sep 2026 (56 species, spot specials, rarity reeling, varied approaches; marine mammals and reptiles removed the same day by user decision); 29 Sep 2026: the **Deep Sea Boat** and 8 deep-sea creatures (64 species, 6 spots; see [Deep Sea Boat](#deep-sea-boat-29-sep-2026)). Local only: nothing has been committed or deployed.
 
 User request: "Add fishing-related elements along the island to catch fish to sell at the farmers market for money."
 
@@ -120,6 +120,8 @@ All spots are in `lib/town/fishing/fishCatalog.ts` (`FISH_SPOTS`). Brown Shrimp,
 | Harbour Wall (`harbour-wall`) | (237.2, 66), behind the market | Deep harbour: sharks and big fish | anchovy, short mackerel, hake, red snapper, yellowfin tuna, barracuda, blue shark, hammerhead, saw shark, great white (10) |
 | North Beach Rocks (`north-rocks`) | (60, −238) | Tide-pool rocks: crabs, a lobster, mussels, an eel | edible, swimming and blue crabs, blue mussel, eel, spiny lobster, coconut crab, nurse shark, sand tiger shark (9) |
 | West Cove (`west-cove`) | (−95.5, 24) | Beach cove where a stream meets the sea | cownose ray, tope shark, wobbegong, arowana, piranha, sandbar, lemon, reef and dusky sharks, coelacanth (10) |
+| Deep Sea Boat (`deep-sea-boat`) | aft deck of the boat moored at (282.5, −93.5) | Open deep water off the east coast, south of the Coral Cay causeway | squid, lanternfish, grouper, sailfish, anglerfish, swordfish, blue marlin, ocean sunfish (8) |
+| East Jetty Spiral (`east-pier`, 29 Sep 2026; moved 30 Sep) | (371.6, 68), the outermost east curve of the East Jetty's spiral; casts east | Deeper water at the end of a long pier | none: a table between shore and deep sea built from existing species (4 shared commons, herring, cod, haddock, bluefin tuna, octopus); mean catch ≈ 4.05 coins |
 
 The original fish keep their earlier spots: herring, cod, haddock, tuna, Little Shark and Octopus.
 
@@ -218,6 +220,57 @@ This section fits the jobs economy in `lib/town/jobs/jobEconomy.ts` and `docs/is
 - **How Sell 1 works.** It lives in `lib/town/market/marketStand.ts` and reuses `quoteSale` from `market.ts`, so one item and "sell all" follow the same prices and cap.
 - **Opening the stand from other features:** `window.dispatchEvent(new CustomEvent('fi2-open-market-stand',{detail:{tab:'produce'}}))`.
 
+## Deep Sea Boat (29 Sep 2026)
+
+User request: "Add a boat in this area that you can land on and start fishing. In this area when you fish, catch more of the deep sea creatures." The area is the big open-water block south of the Coral Cay causeway (inside the flight zone).
+
+**Where and how you get there.**
+- The boat is moored at **(282.5, −93.5)**, the spot the user circled on a jetpack screenshot ("move the boat here", 29 Sep 2026). To find it, the user's view was reproduced (2000×1185 viewport; jetpack 34 m up over (321.5, −54.3), fitted so that the boat and its red float fall on their screenshot pixels) and the centre of the red circle was unprojected onto the sea plane. Earlier the same day it was at Coral Cay's `CAY_LANDMARKS.deepSeaMooring` (370, −68), then at (310, −72). The position lives in `deepSeaBoatData.ts` (`BOAT_MOORING`, `BOAT_YAW`), and Coral Cay's `deepSeaMooring` is no longer used by the boat.
+- Rules (`tests/fishing.cjs`, against the live Coral Cay and flight code): the hull plus a 12 m ring of fishing water is flyable open sea (`flightBlocked` false, never land). It is 37.7 m off the main island's east beach, so well outside the 5 m shallow band. It is at least 12 m plus the boat's half-length from the causeway deck, its banks and the sandbars (61.8 m in fact), and from every causeway shark patrol point (38.3 m). It lies west of `isInSouthSeaBlock` (x ≥ 300); the user's placement overrides that earlier rule.
+- The bow points north, along the coast; you cast off the starboard side, east, out to sea.
+- Flight only. Fly over it and switch the travel mode to walking (the Travel mode button, or R on a keyboard): the normal landing search finds the deck. A parachute drop lands the same way.
+- The open aft deck (5.2 × 2.9 m, floor at y 0.76) is registered with the Coral Cay agent's generic hook `registerLandableDeck` (`lib/town/landableDecks.ts`) while the boat exists. That makes it walkable ground (`simulation.blocked`), landable (`landmass.onLand`, `findLanding`) and a floor at its height (`rooftopTravel.surface`). The wheelhouse and bow are not floor, so the existing water rule stops you at the deck's edge. Jetpack off to leave.
+
+**Fishing on the boat.** Standing on the deck shows the same **Fish** prompt over the starboard rod holders, and the whole existing flow runs unchanged: cast off the starboard (seaward) side, shadow, nibbles, bite, reel, catch label, Fishbook, basket and Rosa's stand. The catch label adds a **Deep sea boat** badge (`data-fish-where`). The Fishbook gets a **Deep Sea Boat specials** section, and the shared fish say "Found at: every shore fishing spot and the Deep Sea Boat".
+
+**Catch table (internal; never shown).** Species flagged `deepSea` keep their normal rarity weight; the boat's `shallowFactor` (0.5) halves everything else. Result: 74.8 % deep-sea (10,000 simulated casts in the test land between 68 and 82 %).
+
+| At the boat | Rarity | Weight | Deep-sea |
+| --- | --- | --- | --- |
+| Squid, Lanternfish | Common | 40 each | yes |
+| Mackerel, Sardine (bait fish, shared) | Common | 20 each (40 × 0.5) | no |
+| Grouper, Sailfish | Good | 12 each | yes |
+| Bluefin Tuna (shared), Anglerfish, Swordfish | Rare | 4 each | yes |
+| Octopus (shared), Blue Marlin | Legendary | 1.2 each | yes |
+| Ocean Sunfish | Legendary | 0.5 (very rare) | yes |
+
+The five shore spots' tables are unchanged (the test keeps a snapshot of each spot's species count and total weight). The mean catch at the boat is about 3.9 coins, so the economy is unchanged. Mahi-mahi is already in the game as the Dorado (South Pier), and yellowfin/bluefin tuna and the octopus already existed, so none were duplicated.
+
+**The new species and what they teach.** Research (29 Sep 2026, polite fetches: one at a time, 5 s apart): searches found **no** football club nicknamed after the swordfish, sailfish, squid, grouper, sunfish, anglerfish or lanternfish, and no Italian "tuna" club (US Vibonese, from a tuna-fishing coast, are "I Leoni"). One real nickname was found: two clubs are called the "Marlins" (St. John's SC, Grenada, and CD Barbosa, Puerto Rico); the Grenadian club is used. The other seven follow the Paul the Octopus pattern (`link: 'Football culture'`): a real, sourced football fact, with the sea animal as the teaching hook. Which animal is paired with which story is a teaching choice; the facts never claim the animal.
+
+| Animal | Rarity | Coins | Shadow | Football story (real) | Source |
+| --- | --- | --- | --- | --- | --- |
+| Squid | Common | 3 | medium | **Vanishing spray**: ink ↔ the referee's spray marking the wall 9.15 m away; invented in Brazil, first used at a World Cup in 2014. | https://en.wikipedia.org/wiki/Vanishing_spray |
+| Lanternfish | Common | 2 | small | **Bramall Lane**: they make their own light; the world's first floodlit match, Sheffield, 14 October 1878, over 20,000 people. | https://en.wikipedia.org/wiki/Bramall_Lane, https://en.wikipedia.org/wiki/Lanternfish |
+| Grouper | Good | 5 | large | **Catenaccio** ("door-bolt"): some groupers lie in wait, then strike; Herrera's Inter locked up at the back, countered fast and won two European Cups. | https://en.wikipedia.org/wiki/Catenaccio, https://en.wikipedia.org/wiki/Grouper |
+| Sailfish | Good | 6 | huge | **Hakan Şükür**: many scientists call it the fastest fish; the fastest World Cup goal, 10.8 s, Turkey v South Korea, 2002. | https://en.wikipedia.org/wiki/Hakan_%C5%9E%C3%BCk%C3%BCr, https://en.wikipedia.org/wiki/Sailfish |
+| Anglerfish | Rare | 9 | medium | **The Cruyff turn**: a lure that tricks prey ↔ Cruyff's fake pass and drag-back past Sweden's Jan Olsson at the 1974 World Cup. | https://en.wikipedia.org/wiki/Cruyff_turn, https://en.wikipedia.org/wiki/Anglerfish |
+| Swordfish | Rare | 10 | huge | **Sheffield United, "The Blades"** (cutlery city); the crest shows two white crossed swords. | https://en.wikipedia.org/wiki/Sheffield_United_F.C. |
+| Blue Marlin | Legendary | 16 | giant | **St. John's SC, "Marlins"**, from Gouyave, once the centre of Grenada's fishing industry, which holds a weekly "Fish Friday". | https://en.wikipedia.org/wiki/St._John%27s_SC, https://en.wikipedia.org/wiki/Gouyave |
+| Ocean Sunfish | Legendary (very rare) | 18 | giant | **The Maracanã, 1950**: 173,850 paying fans watched Uruguay beat Brazil 2-1, the biggest paid crowd ever. | https://en.wikipedia.org/wiki/Uruguay_v_Brazil_(1950_FIFA_World_Cup) |
+
+Wording kept precise: the ocean sunfish is *not* called the heaviest bony fish (Wikipedia: that is the related *Mola alexandrini*); the Maracanã figure is the official paid attendance. The Grouper's "two European Cups" is Herrera's Inter (Catenaccio article).
+
+**Art.** The boat is original low-poly art in the island palette (white hull, red boot stripe, teal gunwale, wooden deck, clay-red wheelhouse roof, five rods in holders, a cooler, a tackle box, a red-and-white life ring, fenders and a teal flag with a football). Fishbook art (`FishArt.tsx`) gained `billfish` (sailfish with its sail, swordfish, marlin), `angler` (glowing lure) and `mola` shapes, and glow dots for the lanternfish; the squid uses the existing `squid` shape. The in-world held fish is the shared placeholder (visuals hand-off unchanged).
+
+**Files.** `lib/town/fishing/deepSeaFish.ts` (species and sources), `deepSeaBoatData.ts` (pure data: mooring, deck, hull), `deepSeaBoat.ts` (the mesh, deck registration and bob), plus small changes in `fishCatalog.ts` (spot, `deepSea` flag, `shallowFactor`), `fishingCore.ts` (hull is not open water; casts clear the rail), `fishingWorld.ts` (no post for the boat; prompt anchor; boat lifecycle), `FishingHost.tsx` (+ css: the badge), `Fishbook.tsx` ("Found at") and `FishArt.tsx`.
+
+**Checks.** `tests/fishing.cjs` covers the spot at the mooring, the deck (walkable only while registered, floor height on foot), the cast and hull, the 70–80 % table, the unchanged shore snapshot, complete content and sources, the catch badge and the heat rules. Browser (Playwright, 1280×800 and 390×844): fly in, land on the deck, walk, Fish, two catches with the badge, the Fishbook section, no errors. Heat: see `docs/performance-guide.md` ("Deep Sea Boat").
+
+**Bug fix: "the fishing for the boat doesn't work" (29 Sep 2026).** Root cause: the live-fishing session is a module singleton (`fishingStore.ts`). When any module under it was hot-updated on the dev server (the catalogue, the boat data, the new fish …), that file re-ran and made a *second* session. The HUD's Fish button then started the new session while the island loop, created once when Town mounted, kept stepping the old one: the prompt showed, the tap did nothing, and only a full reload fixed it. The boat was simply the newest thing being tried while its files were changing. Fix: the session is kept on `globalThis.__fi2Fishing` (one per page, surviving hot updates) and its land/cue callbacks always use the newest module code. `tests/fishing.cjs` re-evaluates `fishingStore.ts` and asserts the same session comes back. Verified in the browser: after a hot update of `deepSeaFish.ts` / `deepSeaBoatData.ts`, tapping Fish still casts and a fish approaches (it failed before the fix). In a clean load the boat flow worked at both sizes; other failures seen during testing were full page reloads caused by other agents' in-progress edits.
+
+**Open points for the user.** (1) The pairings of animal and story above are teaching choices. (2) Rosa's empty-basket hint in `MarketStand.tsx` lists every spot name, so it now also names the Deep Sea Boat after "fishing posts" (market file not edited). (3) The overview map draws a fishing marker for every spot, so the boat gets an F badge at the mooring (map owned by the Coral Cay agent).
+
 ## Files
 
 - `lib/town/fishing/fishCatalog.ts`: the shared species, rarity weights, spots, keeper lessons and the stand location.
@@ -231,6 +284,7 @@ This section fits the jobs economy in `lib/town/jobs/jobEconomy.ts` and `docs/is
 - `lib/town/market/marketStand.ts`: Sell 1, unit price and the allowance meter.
 - The fish section of `lib/town/market/goods.ts`, generated from the catalogue.
 - Components: `FishingHost.tsx` (+ css) for the HUD and prompts, `Fishbook.tsx` (+ css), `MarketStand.tsx` (+ css), `FishArt.tsx`.
+- Deep Sea Boat: `lib/town/fishing/deepSeaFish.ts`, `deepSeaBoatData.ts`, `deepSeaBoat.ts` (see above).
 - Tests: `tests/fishing.cjs` (in `npm test`).
 
 ## Heat
@@ -245,3 +299,7 @@ See `docs/performance-guide.md` ("Fishing spots and market stand").
 4. **Bite window.** The window is 0.7–1.0 s, plus 0.35 s with reduced motion. Say if young players need it wider.
 5. **The species pairings for general nicknames** (for example Chonburi "The Sharks" shown as a blacktip reef shark) are teaching choices. The club facts do not claim the species.
 6. **Reeling difficulty.** Every shark, of any rarity, takes 10–14 taps (user decision, 28 Sep 2026: sharks must be hard). Other animals use their rarity's range. Mackerel and sea bass stay at 4 coins.
+
+## East Jetty Spiral (29 Sep 2026; jetty rework 30 Sep)
+
+The seventh spot stands on the outer east curve of the East Jetty's spiral (it was on the head of the timber East Pier until the 30 Sep rework) (`lib/town/eastPier.ts`, docs/performance-guide.md "East Pier"). It adds no new species and no specials: the four shared commons, herring, cod and haddock (Good), bluefin tuna (Rare) and the octopus (Legendary) were given `'east-pier'` in their `spots`, so the table sits between the shore and the deep sea. Internal weights come from `RARITY_WEIGHT` as everywhere else; the mean catch is about 4.05 coins (shore 4.0, boat 3.9), so the economy is unchanged and every fish still sells through Rosa's capped market. The five older shore tables are byte-identical (the `tests/fishing.cjs` snapshot). `fishingCore.ts` now also treats the pier's planks as "not open water": the float is cast past the rock armour and shadows never swim over the stone. `tests/fishing.cjs` allows 4–7 spots and a spot with no specials only for `east-pier`, and checks its table and mean. Browser: `node scripts/check-fishing-browser.cjs mobile east-pier` (a Haddock, 6 coins, no errors).

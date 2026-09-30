@@ -57,7 +57,7 @@ interface Host{
  windup:KickWindup|null;windupScale:number;frameContact:MatchSim['frameContact'];combination:{runner:string;wall:string;team:Team;x:number;y:number;expires:number}|null;
  tacticalReason:string;msg:string;msgT:number;fatigue:number;userId:string|null;
  trapT:number;trapDur:number;trapVX:number;trapVY:number;touchX:number;touchY:number;recv:MatchSim['recv'];
- T:{shotRange:number;finish:number;laneReq:number};goalVenue:{id:string};passMul:number;useOffside:boolean;
+ T:{shotRange:number;finish:number;laneReq:number};goalVenue:{id:string};passMul:number;useOffside:boolean;groundFriction:number;
  persona:Record<Team,{carry:number;width:number}>;
  isOffside(t:Team,y:number):boolean;offsideLine(t:Team):number;nearestFoe(id:string,x:number,y:number):{p:SimPlayer;d:number}|null;
  atkGoalY(t:Team):number;ownGoalY(t:Team):number;dirY(t:Team):number;mates(t:Team):string[];foes(t:Team):string[];depth(t:Team,y:number):number;lastManRisk(id:string):boolean;
@@ -90,7 +90,9 @@ function segDist(px:number,py:number,ax:number,ay:number,bx:number,by:number){
 /** state = [trailing by 1, trailing by 2+, leading by 1, leading by 2+] combination-rate factors. Outdoors a side
  * ahead sits deeper and one behind takes risks; in futsal, where combinations don't decide who wins (1,728-game
  * attribution), only the finish quality follows the score. Per-format rates, balance-tuned on 96 seeds (7v7 shoots and parries most, so it needs the fewest extras). */
-const TUNE:Record<string,{danger:number;thru:number;box:number;fin:number;state:[number,number,number,number]}>={futsal:{danger:.4,thru:.16,box:0,fin:1,state:[1,1,1,1]},'7v7':{danger:.26,thru:.1,box:.5,fin:1,state:[1.25,1.5,.5,0]},'9v9':{danger:.3,thru:.1,box:.35,fin:.85,state:[1.25,1.5,.5,0]},'11v11':{danger:.5,thru:.24,box:.5,fin:1,state:[1.25,1.5,.5,0]}};
+const TUNE:Record<string,{danger:number;thru:number;box:number;fin:number;state:[number,number,number,number]}>={futsal:{danger:.4,thru:.16,box:0,fin:1,state:[1,1,1,1]},'7v7':{danger:.26,thru:.1,box:.5,fin:1,state:[1.25,1.5,.5,0]},'9v9':{danger:.3,thru:.1,box:.35,fin:.85,state:[1.25,1.5,.5,0]},'11v11':{danger:.5,thru:.24,box:.5,fin:1,state:[1.25,1.5,.5,0]},
+ // Beach (sand, 5 a side, no offside): parries drop into the box on a soft court, balls over the top are common.
+ beach:{danger:.4,thru:.2,box:.45,fin:1,state:[1.25,1.5,.5,0]}};
 /** Futsal take-ons per decision beat with a close defender (balance-tuned, see the contract). */
 const TAKE_ON_RATE=.3;
 const TAKE_ON_TEXT:Partial<Record<SkillKind,[string,string]>>={stepover:['Stepover','Sell one way with your foot round the ball: the defender has to guess'],croqueta:['La Croqueta','Inside of one foot to the other: in tight futsal spaces the ball moves faster than the defender'],
@@ -133,6 +135,8 @@ export class Combos{
  }
  private get now(){return this.h.stats.time;}
  private futsal(){return this.h.goalVenue.id==='futsal';}
+ /** Beach soccer: the ball is played in the air (flick-ups, flick volleys, chipped kick-ins). */
+ private sand(){return this.h.goalVenue.id==='beach';}
  private get tune(){return TUNE[this.h.goalVenue.id]??TUNE['11v11'];}
  /** A render-only teaching line from the view (how a shot was struck, a keeper's throw): the feed only, never the sim's own message. */
  announce(text:string,reason=''){this.feed.serial++;this.feed.text=text;this.feed.reason=reason;}
@@ -299,14 +303,14 @@ export class Combos{
  /** Futsal flick-up / rainbow over a close defender with space behind him, and the sole roll to shield. */
  private trySkill(o:SimPlayer,foeId:string|null,foeD:number){
   const h=this.h;if(!foeId||!this.ready('skill:'+o.team))return false;
-  const f=h.players[foeId],fut=this.futsal(),dir=h.dirY(o.team),speed=Math.hypot(o.vx,o.vy);
+  const f=h.players[foeId],fut=this.futsal(),sand=this.sand(),dir=h.dirY(o.team),speed=Math.hypot(o.vx,o.vy);
   if(h.depth(o.team,o.y)<(fut?120:170)||h.lastManRisk(o.id))return false;
   const ux=(f.x-o.x)/(foeD||1),uy=(f.y-o.y)/(foeD||1),ahead=uy*dir;
   // Beat him in the air: he is square in front and close, and nobody covers the space behind him.
   if(foeD>3&&foeD<9&&ahead>.6){
    const land={x:clamp(f.x+ux*2,20,250),y:clamp(f.y+dir*10,16,384)};
    let covered=false;for(const fid of h.foes(o.team)){if(fid===foeId)continue;const q=h.players[fid];if(dist(q.x,q.y,land.x,land.y)<(q.isGK?9:12)){covered=true;break;}}
-   if(!covered&&this.rng()<(fut?.17:.012)*this.urgency(o.team)){
+   if(!covered&&this.rng()<(fut?.17:sand?.15:.012)*this.urgency(o.team)){
     // The rainbow only works on a flat-footed defender (skillMoves: "a defender who is standing still"); a lunging one gets the flick-up.
     const closing=((o.x-f.x)*f.vx+(o.y-f.y)*f.vy)/(foeD||1),flat=closing<14,rainbow=flat&&speed>24&&this.rng()<(fut?(comboSettings.futsalCreative?.45:.3):.25);
     this.startLob(o,f,rainbow?'rainbow':'flickUp',land);return true;
@@ -371,7 +375,7 @@ export class Combos{
   if(!won)h.ball.intBy=f.id;
   this.counts[ps.kind]++;if(won)this.counts.skillBeaten++;
   // Futsal: a flick won in shooting range is volleyed before it lands (lane B's volley via the acrobatic finish).
-  if(won&&ps.kind==='flickUp'&&this.futsal()&&comboSettings.futsalCreative&&!comboSettings.off.flickVolley&&this.volleyRange(o)){
+  if(won&&ps.kind==='flickUp'&&(this.futsal()&&comboSettings.futsalCreative||this.sand())&&!comboSettings.off.flickVolley&&this.volleyRange(o)){
    h.acro={to:o.id};this.finish={to:o.id,kind:'flickVolley',mult:this.finishMult(o,1,.34),until:this.now+ps.dur+.6};
    this.say('Flick and volley!','Flick it over the defender and hit it before it bounces: the keeper has no time to set');return;}
   if(ps.kind==='rainbow')this.say(won?'Rainbow flick!':'Rainbow flick — read and blocked',won?'A showpiece: roll it up the back of the leg and flick it over the defender, then run round him':'Showboating costs the ball when the defender stays on his feet');
@@ -521,7 +525,7 @@ export class Combos{
 
  /** Futsal kick-in in the attacking half: a rehearsed blind-side run for a first-time shot. */
  private planKickIn(){
-  const h=this.h,r=h.restart;if(!r||r.kind!=='kickin'||!this.futsal()||comboSettings.off.kickIn)return;
+  const h=this.h,r=h.restart;if(!r||r.kind!=='kickin'||!(this.futsal()||this.sand())||comboSettings.off.kickIn)return;
   const tk=h.players[r.taker],t=tk.team;if(h.depth(t,r.y)<230||this.rng()>.5)return;
   let best:string|null=null,bd=Infinity;const spot=this.goalPt(t,135-Math.sign(r.x-135)*8,34);
   for(const id of h.mates(t)){const q=h.players[id];if(q.isGK||id===r.taker)continue;const d=dist(q.x,q.y,spot.x,spot.y);if(d<bd){bd=d;best=id;}}
@@ -531,6 +535,12 @@ export class Combos{
  private kickInPass(pl:KickInPlan){
   const h=this.h,r=h.players[pl.runner],o=h.players[pl.taker];
   this.plan=null;this.runs.clear();
+  if(this.sand()){
+   // Beach kick-in: lifted over the defenders to the runner, who meets it first time (volley or overhead kick).
+   if(this.open(pl.runner)<5)return false;
+   this.expect={from:pl.taker,to:pl.runner,until:this.now+1,peak:1.7,header:true,acro:true,finish:{kind:'kickIn',mult:this.finishMult(r,1.05,.38)},count:'kickIn',msg:'Kick-in chipped into the box',reason:'On sand you choose how to restart: this kick-in is lifted over the defenders for a first-time volley'};
+   h.doLoft(pl.taker,pl.runner,'cross');return true;
+  }
   if(!this.laneClear(o,r,pl.team,5)||this.open(pl.runner)<6)return false;
   this.expect={from:pl.taker,to:pl.runner,until:this.now+1,finish:{kind:'kickIn',mult:this.finishMult(r,1.1,.4)},count:'kickIn',msg:'Kick-in routine',reason:'A rehearsed futsal kick-in: the runner leaves his marker and arrives to shoot first time'};
   h.doPass(pl.taker,pl.runner,1.05);return true;
@@ -607,7 +617,7 @@ export class Combos{
   const k=this.rng(),kind:FinishKind=k<.5?'rebound':k<.78?'reboundVolley':'reboundHeader';
   const peak=kind==='rebound'?0:kind==='reboundVolley'?1:2.1;
   const Tf=clamp(Number.isFinite(winT)?winT:.45,.28,.6),d=dist(h.ball.x,h.ball.y,land.x,land.y);
-  const pace=paceFor(d,Tf,peak>0?DRAG_AIR:DRAG_GROUND);
+  const pace=paceFor(d,Tf,peak>0?DRAG_AIR:(h.groundFriction??DRAG_GROUND));
   h.ball.vx=(land.x-h.ball.x)/(d||1)*pace;h.ball.vy=(land.y-h.ball.y)/(d||1)*pace;
   h.ball.target=winner;h.ball.intBy=null;h.passIntended=null;h.acro=null;h.headerBall=false;
   if(peak>0){h.ball.lofted=true;h.loftPeak=peak;h.loftT=0;h.loftDur=Tf;h.headerBall=kind==='reboundHeader';if(kind==='reboundVolley'&&winner===bestA)h.acro={to:winner!};}
@@ -733,7 +743,7 @@ export function keeperStyle(kind:'pass'|'loft'|'shot'|'clear',distance:number,fo
  return distance<(format==='futsal'?55:70)?'keeperRoll':'keeperThrow';
 }
 /** Per live match: turns the sim's combo skill events into timed rig poses (call `apply` after choreo.apply). */
-export function createComboView(){
+export function createComboView(/** The venue's turn (see createChoreo): the skill yaws below are computed in the pitch's own frame. */venueYaw=0){
  let clock=0,seen=0,touchSeen=-1,lastWindup:object|null=null,lastOwner:string|null=null,styleKick=-1,styleType:ViewMove|null=null,sayNext=0,keeperSayNext=0;
  const active=new Map<string,Active>(),passFrom=new Map<string,{from:string;time:number}>();
  const counts=Object.fromEntries(VIEW_MOVES.map(k=>[k,0])) as Record<ViewMove,number>;
@@ -769,7 +779,7 @@ export function createComboView(){
    if(w&&w!==lastWindup){
     lastWindup=w;const o=P[w.id],cur=active.get(w.id);
     if(o&&(!cur||progressOf(cur)>=cur.end)){
-     const lead=w.t/rate,yaw=Math.atan2((w.tx-o.x)*sx,(w.ty-o.y)*sz);
+     const lead=w.t/rate,yaw=Math.atan2((w.tx-o.x)*sx,(w.ty-o.y)*sz)+venueYaw;
      if(o.isGK){
       const type=keeperStyle(w.kind,Math.hypot(w.tx-o.x,w.ty-o.y),v.id);
       timed(w.id,type,hash(w.id,sim.kicks)<.5?1:-1,lead,KEEPER_RELEASE[type],{yaw,windup:w});
@@ -777,7 +787,7 @@ export function createComboView(){
      }else if(futsal&&comboSettings.futsalCreative&&w.kind==='pass'&&w.to&&P[w.to]&&c?.skill.id===w.id&&c.skill.kind==='shield'&&(P[w.to].y-o.y)*(attackY(o.team)-o.y)<0){
       // The pivô's lay-off to a team-mate behind him after holding it up: a back heel (lane B), its flick on the release.
       const q=P[w.to],dx=(q.x-o.x)*sx,dz=(q.y-o.y)*sz,face=Math.atan2(-dx,-dz),lat=dx*Math.cos(face)-dz*Math.sin(face);
-      const a=make('dragBack',lat>=0?1:-1,clock,MOVE_SECONDS.backHeel,1,{rig:'backHeel',tc:clock+Math.max(.05,lead),p0:0,pc:MOVE_CONTACT.backHeel,yaw:face,noBall:true,windup:w});a.move.kind='backHeel';active.set(w.id,a);counts.backHeel++;
+      const a=make('dragBack',lat>=0?1:-1,clock,MOVE_SECONDS.backHeel,1,{rig:'backHeel',tc:clock+Math.max(.05,lead),p0:0,pc:MOVE_CONTACT.backHeel,yaw:face+venueYaw,noBall:true,windup:w});a.move.kind='backHeel';active.set(w.id,a);counts.backHeel++;
       if(clock>=sayNext){c.announce('Back heel lay-off','The pivô holds it with his back to goal and flicks it behind him to the runner');sayNext=clock+6;}
      }else if(w.kind==='shot'){
       const goalY=attackY(o.team),g=keeperOf(o.team==='gold'?'blue':'gold');
@@ -801,13 +811,13 @@ export function createComboView(){
     if(ev.kind==='tackle'&&!p.isGK&&ev.speed<25&&ev.other&&P[ev.other]){
      const q=P[ev.other],dx=q.x-p.x,dy=q.y-p.y,qs=Math.hypot(q.vx,q.vy)||1,front=-(dx*q.vx+dy*q.vy)/((Math.hypot(dx,dy)||1)*qs);
      const type:SkillMove=front>.3?'blockTackle':'pokeTackle',spec=SKILL_MOVES[type],pc=spec.contacts[0].p;
-     const yaw=Math.atan2(dx*sx,dy*sz);
+     const yaw=Math.atan2(dx*sx,dy*sz)+venueYaw;
      timed(ev.id,type,hash(ev.id,serial)<.5?1:-1,.1,pc,{yaw,noBall:true,p0:pc*.5});
     }else if(ev.kind==='goal'){
      const pf=passFrom.get(ev.id),mate=pf&&clock-pf.time<8&&P[pf.from]?P[pf.from]:null,r=hash(ev.id,sim.score.gold*31+sim.score.blue);
      const type:SkillMove=mate?'thankPasser':r<.6?'airplane':'kneeSlide',spec=SKILL_MOVES[type];
      const a=make(type,1,clock+.15,spec.seconds,1,{noBall:true,faceTravel:type!=='thankPasser'});
-     if(type==='thankPasser'&&mate)a.yaw=Math.atan2((mate.x-p.x)*sx,(mate.y-p.y)*sz)-skillFrame(type,1,1,tmpFrame).heading;
+     if(type==='thankPasser'&&mate)a.yaw=Math.atan2((mate.x-p.x)*sx,(mate.y-p.y)*sz)+venueYaw-skillFrame(type,1,1,tmpFrame).heading;
      active.set(ev.id,a);counts[type as ViewMove]++;
     }
    }

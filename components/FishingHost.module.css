@@ -55,6 +55,7 @@
 .catchTop{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .catchTop b{font-family:IslandBrush,sans-serif;font-weight:400;font-size:24px;line-height:1.1}
 .catchTop em{font-style:normal;font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:999px;background:var(--btn-pink)}
+.catchTop em.catchWhere{background:#bfe3ec;color:#1f4e6a}
 .catchMeta{font-size:11.5px;font-weight:700;color:#61705b;margin-top:2px!important}
 .catchClub{margin-top:6px!important;font-size:13px;font-weight:800}
 .catchClub span{display:block;font-size:9.5px;letter-spacing:.07em;text-transform:uppercase;color:#61705b}

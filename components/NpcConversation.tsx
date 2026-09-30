@@ -18,8 +18,10 @@ const NpcRanking=dynamic(()=>import('./NpcRanking'),{ssr:false});
 const CourtFreestyleClips=dynamic(()=>import('./CourtFreestyleClips'),{ssr:false});
 const NpcClips=dynamic(()=>import('./NpcClips'),{ssr:false});
 type Exchange={id:string;question:string;answer?:string;news?:'scores'|'transfers'};
-type Props={npc:NpcDefinition|null;open:boolean;onOpenChange:(open:boolean)=>void};
-export default function NpcConversation({npc,open,onOpenChange}:Props){
+type Props={npc:NpcDefinition|null;open:boolean;onOpenChange:(open:boolean)=>void;
+ /** Extra reply buttons (e.g. the Konbini cashier's "Browse the counter"); `practice:false` hides the island-only Practise reply. */
+ actions?:{label:string;onClick:()=>void}[];practice?:boolean};
+export default function NpcConversation({npc,open,onOpenChange,actions,practice=true}:Props){
  const dialog=useRef<HTMLDialogElement>(null),close=useRef<HTMLButtonElement>(null),restore=useRef<HTMLElement|null>(null);
  const [exchanges,setExchanges]=useState<Exchange[]>([]),[thinkingId,setThinkingId]=useState<string|null>(null);
  const latest=useRef<HTMLDivElement>(null),suggestions=useRef<HTMLDivElement>(null),body=useRef<HTMLDivElement>(null);
@@ -65,7 +67,8 @@ export default function NpcConversation({npc,open,onOpenChange}:Props){
      {npc?.topics.filter(item=>asked.has(item.id)&&!asked.has(`${item.id}:follow-up`)).map(item=><button type="button" key={`${item.id}:follow-up`} onClick={()=>send({id:`${item.id}:follow-up`,question:item.followUp.question,answer:item.followUp.answer})}>{item.followUp.question}<Icon name="arrow"/></button>)}
      {npc?.topics.filter(item=>!asked.has(item.id)).map(item=><button type="button" key={item.id} onClick={()=>send({id:item.id,question:item.question,answer:item.answer})}>{item.question}<Icon name="arrow"/></button>)}
 
-     <button type="button" onClick={()=>{onOpenChange(false);launchLearning(readLearning().active??'support',`npc:${npc?.id??'island'}`);}}>{npc?.ranking?'Learn the game behind the rankings':`Practise with ${npc?.name??'a teammate'}`} <Icon name="arrow"/></button>
+     {actions?.map(a=><button type="button" key={a.label} data-npc-action={a.label} onClick={a.onClick}>{a.label} <Icon name="arrow"/></button>)}
+     {practice&&<button type="button" onClick={()=>{onOpenChange(false);launchLearning(readLearning().active??'support',`npc:${npc?.id??'island'}`);}}>{npc?.ranking?'Learn the game behind the rankings':`Practise with ${npc?.name??'a teammate'}`} <Icon name="arrow"/></button>}
      <button type="button" className={styles.goodbye} onClick={()=>onOpenChange(false)}>Thanks, see you around.</button>
     </div>}
    </div>

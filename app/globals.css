@@ -653,6 +653,10 @@ body:has([data-hud-triggers][data-scenery=rest]) .field-learn-card:not([hidden])
 .town-app .field-learn-card:not([hidden]){top:calc(80px + env(safe-area-inset-top,0px));left:50%;right:auto;transform:translateX(-50%);width:min(360px,calc(100% - 36px))}
 @media(max-width:600px),(pointer:coarse){.town-app .field-learn-card:not([hidden]){top:calc(76px + env(safe-area-inset-top,0px))}}
 .town-app:has(.field-learn-card:not([hidden])) .npc-talk-prompt{top:calc(164px + env(safe-area-inset-top,0px))}
+/* A talk prompt outranks the ball-hunt hint (QA Sep 29 2026: the hostel hint hid "Talk to Ari"): the prompt keeps its
+ * place in the stack and the hint drops in below it (prompt top + 44px pill + 10px gap). */
+.town-app:has(.npc-talk-prompt) [data-coin-hint]{top:calc(154px + env(safe-area-inset-top,0px))}
+.town-app:has(.field-learn-card:not([hidden])):has(.npc-talk-prompt) [data-coin-hint]{top:calc(218px + env(safe-area-inset-top,0px))}
 /* Heat pass (Sep 29 2026): the pop-up book reader is an opaque full-screen layer, so the asleep island canvas under it is taken out of
  * compositing while it reads; it shows again as the reader fades out (data-fading) and the island wakes on unmount. */
 body:has([data-player-book]:not([data-fading])) .town-scene canvas{visibility:hidden}

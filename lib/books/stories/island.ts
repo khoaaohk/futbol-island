@@ -11,7 +11,7 @@ export const ISLAND_BOOK:BookData={
    lesson:'Look up and see the whole picture, on the island and on the pitch.',
    prompt:'Fly the jetpack',response:'Up, up and away! Look at all those pitches!',source:null},
   {id:'explore',year:'Explore',title:'Ride around the town',
-   text:'Back on the ground, hop on a scooter, a bike or a moped and ride through the neighbourhoods. Footballs are hidden all over the island. Ball Hunt gives you clues to find eighty hidden matchday balls, and each one teaches you a football tip.\n\nTap three times to ride the scooter, the bike and the moped down our paper street. Exploring is a lot like finding space on the pitch. Keep your eyes open, and you will spot the gaps that other people miss.',
+   text:'Back on the ground, hop on a scooter, a bike or a moped and ride through the neighbourhoods. Footballs are hidden all over the island. Ball Hunt gives you clues to find a hundred hidden matchday balls, and each one teaches you a football tip.\n\nTap three times to ride the scooter, the bike and the moped down our paper street. Exploring is a lot like finding space on the pitch. Keep your eyes open, and you will spot the gaps that other people miss.',
    lesson:'Keep exploring. The best players are always looking for space.',
    prompt:'Ride, ride, ride',response:'You found a hidden ball!',steps:3,source:null},
   {id:'harvest',year:'Island jobs',title:'Fish, fruit and coins',

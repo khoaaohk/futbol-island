@@ -44,7 +44,12 @@ export function sanitizeVending(value:unknown):State|null{
 }
 export function createVendingLedger(ports:Ports){
  let state:State|null=null,snapshot=EMPTY_VENDING;const listeners=new Set<()=>void>();
- const refresh=(next:State)=>{state=next;snapshot={ready:true,owned:next.owned,spent:next.spend.reduce((n,s)=>n+s.cost,0),found:next.found,history:next.spend};listeners.forEach(fn=>fn());};
+ /** Reads (read/isOwned, often called while React renders) may load or repair the state; they pass defer so subscribers
+  *  hear about it after the render instead of a setState in the middle of it (QA Sep 29 2026: IslandJobs warning). */
+ let notifyQueued=false;
+ const notify=()=>listeners.forEach(fn=>fn());
+ const refresh=(next:State,defer=false)=>{state=next;snapshot={ready:true,owned:next.owned,spent:next.spend.reduce((n,s)=>n+s.cost,0),found:next.found,history:next.spend};
+  if(!defer){notify();return;}if(notifyQueued)return;notifyQueued=true;queueMicrotask(()=>{notifyQueued=false;notify();});};
  /** First run: remember what the player already has (never re-lock). */
  function migrate():State{
   const owned=new Set<string>(),look=ports.readSavedLook() as Record<string,unknown>|null;
@@ -57,11 +62,11 @@ export function createVendingLedger(ports:Ports){
  function load(){
   let saved:State|null=null;try{saved=sanitizeVending(ports.read());}catch{saved=null;}
   if(!saved){saved=migrate();try{ports.write(saved);}catch{/* this visit still knows */}}
-  refresh(saved);return saved;
+  refresh(saved,true);return saved;
  }
  const current=()=>state??load();
  function recover(){const s=current(),receipts=ports.receipts?.()??[];const missing=receipts.filter(r=>!s.owned.includes(r.id)||!s.spend.some(d=>d.debitId===r.debitId||(!d.debitId&&d.id===r.id&&d.cost===r.cost&&d.at===r.at)));if(!missing.length)return;
-  const next={...s,owned:[...new Set([...s.owned,...missing.map(r=>r.id)])],spend:[...s.spend,...missing.filter(r=>!s.spend.some(d=>d.debitId===r.debitId))]};try{ports.write(next);}catch{/* Core receipt is the durable ownership record; repair can retry later. */}refresh(next);
+  const next={...s,owned:[...new Set([...s.owned,...missing.map(r=>r.id)])],spend:[...s.spend,...missing.filter(r=>!s.spend.some(d=>d.debitId===r.debitId))]};try{ports.write(next);}catch{/* Core receipt is the durable ownership record; repair can retry later. */}refresh(next,true);
  }
  const spendable=()=>ports.arcadeBalance()-(ports.payItem?0:current().spend.reduce((n,s)=>n+s.cost,0));
  const save=(next:State)=>{try{ports.write(next);}catch{return false;}refresh(next);return true;};

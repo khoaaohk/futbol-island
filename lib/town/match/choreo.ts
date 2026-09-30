@@ -104,14 +104,16 @@ type Move={start:number;kind:SignatureMove;facing?:number;motion:{kind:Signature
 type Jump={start:number;motion:{progress:number;height:number}};
 type State={reaction?:Reaction;start:number;dur:number;squash:number;serial:number;pending:number;pendingAt:number;touchHeight:number;touchAt:number;dive?:Dive;jump?:Jump;move?:Move;cool?:number};
 
-/** One per live match. `consume` once per frame after the sim steps; `apply` per posed player. */
-export function createChoreo(){
+/** One per live match. `consume` once per frame after the sim steps; `apply` per posed player.
+ *  `yaw` is the venue's turn (a pitch whose long axis is not world z, e.g. the east–west beach court): every facing this
+ *  layer computes in the pitch's own frame is turned by it before it reaches the rig. */
+export function createChoreo(yaw=0){
  const states=new Map<string,State>(),actions:TouchAction[]=[];
  let clock=0,seen=0,caller:string|null=null,marker:string|null=null,callWeight=0,markerWeight=0;
  const state=(id:string)=>{let s=states.get(id);if(!s){s={start:0,dur:0,squash:0,serial:0,pending:0,pendingAt:-1,touchHeight:0,touchAt:-1};states.set(id,s);}return s;};
  const airborne=(a:{start:number}|undefined,dur:number)=>!!a&&clock-a.start<dur;
  function startDive(id:string,contactIn:number,dir:-1|1,height:number,facing:number,kind:DiveKind='side',outcome:SaveOutcome='catch'){
-  const s=state(id),lead=DIVE_KIND_CONTACT[kind]*DIVE_SECONDS;
+  const s=state(id),lead=DIVE_KIND_CONTACT[kind]*DIVE_SECONDS;facing+=yaw;
   // Still in the set (before the push-off): re-time and re-aim on the fresh read (the shot slows, the keeper moves).
   if(s.dive&&(clock-s.dive.start)/DIVE_SECONDS<.06){const m=s.dive.motion;s.dive.start=clock+contactIn-lead;s.dive.dir=m.dir=dir;s.dive.height=m.height=height;s.dive.facing=facing;s.dive.kind=m.kind=kind;m.outcome=outcome;return;}
   // A new shot (a rebound) may interrupt a dive once the keeper is getting up.
@@ -120,7 +122,7 @@ export function createChoreo(){
   if(s.reaction&&s.reaction!=='dejected')s.reaction=undefined;
  }
  function startMove(id:string,kind:SignatureMove,contactIn:number,side:-1|1,height:number,facing?:number){
-  const s=state(id),start=clock+contactIn-MOVE_CONTACT[kind]*MOVE_SECONDS[kind];
+  const s=state(id),start=clock+contactIn-MOVE_CONTACT[kind]*MOVE_SECONDS[kind];if(facing!==undefined)facing+=yaw;
   if(s.move&&s.move.kind===kind&&(clock-s.move.start)/MOVE_SECONDS[kind]<.08){s.move.start=start;s.move.facing=facing;s.move.motion.side=side;s.move.motion.height=height;return;}
   if(s.move&&clock-s.move.start<MOVE_SECONDS[s.move.kind])return;
   s.move={start,kind,facing,motion:{kind,progress:0,side,height}};
@@ -222,6 +224,9 @@ export function createChoreo(){
      const pick=acrobaticMove(hC,back,a.header);
      if(pick){kind=pick.kind;height=pick.height;if(kind==='bicycle')facing=toBall;else if(kind==='divingHeader'){const bx=Math.sin(toGoal)+Math.sin(toBall),bz=Math.cos(toGoal)+Math.cos(toBall);facing=Math.atan2(bx,bz);}}
      if(kind)startMove(ac.to,kind,contactIn,sideOf(facing),height,facing);
+     // Beach soccer's signature finish, taught when it happens (FIFA Beach Soccer Laws 2024-25, Law 12).
+     if(sim.isBeach&&(kind==='bicycle'||kind==='scissor'))sim.teach(kind==='bicycle'?'Overhead kick!':'Scissor kick!','Beach laws protect a player trying an overhead or scissor kick: opponents may not unfairly stop it','overhead',25);
+     else if(sim.isBeach&&kind==='volley')sim.teach('Volley!','On sand the ball rarely rolls true, so beach players strike it out of the air before it lands','volley',40);
     }
    }
   }

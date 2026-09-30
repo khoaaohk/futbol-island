@@ -17,9 +17,14 @@ const WALL_HEIGHT_RATIOS=[.45,.72,.9,.6,.95];
 export type WallJuggleTarget={x:number;z:number;top?:number};
 type Player={x:number;z:number;y:number;yaw:number};
 export type JuggleHead={bottom:number;top:number;front:number;width:number};
-type Environment={juggleHead?:JuggleHead;headTop?:number;moving?:boolean;ballStyle?:CharacterCustomization['ball'];floor:(x:number,z:number)=>number;blocked:(x:number,z:number,y:number)=>boolean;impact:(x:number,y:number,z:number)=>void;strike:()=>void;receive?:()=>void;hit?:(x:number,y:number,z:number,vx:number,vz:number)=>boolean;frame?:(from:FramePoint,to:FramePoint)=>FrameHit|null};
+/** Sea (Sep 29 2026, lib/town/ballSea.ts): `sea` classifies a point; `splash` fires once when a shot lands in open water. */
+export const BALL_SEA_LEVEL=-.43,BALL_FLOAT_TIME=2.1;
+type Environment={sea?:(x:number,z:number)=>'land'|'sea'|'edge';splash?:(x:number,y:number,z:number)=>void;juggleHead?:JuggleHead;headTop?:number;moving?:boolean;ballStyle?:CharacterCustomization['ball'];floor:(x:number,z:number)=>number;blocked:(x:number,z:number,y:number)=>boolean;impact:(x:number,y:number,z:number)=>void;strike:()=>void;receive?:()=>void;hit?:(x:number,y:number,z:number,vx:number,vz:number)=>boolean;frame?:(from:FramePoint,to:FramePoint)=>FrameHit|null};
 export function createWalkBall(){
- const state={x:0,y:.2,z:0,vx:0,vy:0,vz:0,charge:0,mode:'attached' as 'attached'|'charging'|'windup'|'shot'|'return'|'juggle'|'wall-juggle',age:0,kick:0,yaw:0,jugglePhase:0,juggleTouch:'foot' as JuggleTouch,juggleSide:1 as -1|1,bounce:0,wallTarget:null as WallJuggleTarget|null,wallPhase:'kick' as 'kick'|'outbound'|'returning'|'receive',wallAge:0};
+ const state={x:0,y:.2,z:0,vx:0,vy:0,vz:0,charge:0,mode:'attached' as 'attached'|'charging'|'windup'|'shot'|'return'|'juggle'|'wall-juggle',age:0,kick:0,yaw:0,jugglePhase:0,juggleTouch:'foot' as JuggleTouch,juggleSide:1 as -1|1,bounce:0,wallTarget:null as WallJuggleTarget|null,wallPhase:'kick' as 'kick'|'outbound'|'returning'|'receive',wallAge:0,
+  /** Seconds a shot has been floating in the sea (0 = not in the water). The ball stays in 'shot' mode while it floats. */
+  floating:0};
+ let floatFrom=0;
  let shotAge=0,impactCooldown=0,wallDirection={x:0,z:1},wallLegTime=.4,contactHeight=.85,returnAge=0,receiveHeight=.85,normalTouchCycle=-1,blendAge=1,wallKickCount=0;
  let movingJuggle=false;
  let finishTarget:{x:number;y:number;z:number}|undefined;
@@ -41,7 +46,7 @@ export function createWalkBall(){
   }
   state.y=support+.2;state.vx=state.vy=state.vz=0;
  };
- const reset=(p:Player)=>{state.mode='attached';state.charge=0;state.wallTarget=null;nextWall=undefined;finishTarget=undefined;state.wallAge=state.age=state.kick=state.jugglePhase=0;blendAge=1;normalTouchCycle=-1;wallKickCount=0;attach(p);};
+ const reset=(p:Player)=>{state.floating=0;state.mode='attached';state.charge=0;state.wallTarget=null;nextWall=undefined;finishTarget=undefined;state.wallAge=state.age=state.kick=state.jugglePhase=0;blendAge=1;normalTouchCycle=-1;wallKickCount=0;attach(p);};
  const shoot=(p:Player,yaw:number,charge=0,finish?:{x:number;y:number;z:number})=>{if((state.mode==='windup'||state.mode==='shot')&&charge<=0)return;state.mode='windup';state.charge=Math.max(0,Math.min(1,charge));state.wallTarget=null;nextWall=undefined;finishTarget=finish;state.age=0;state.kick=0;state.yaw=finish?Math.atan2(finish.x-p.x,finish.z-p.z):yaw;attach({...p,yaw:state.yaw});};
  const beginCharge=(p:Player,yaw:number)=>{if(state.mode==='shot'||state.mode==='windup')return;reset(p);state.mode='charging';state.yaw=yaw;};
  const validWall=(p:Player,target?:WallJuggleTarget)=>{if(!target)return false;const distance=Math.hypot(target.x-p.x,target.z-p.z),facing=distance?((target.x-p.x)*Math.sin(p.yaw)+(target.z-p.z)*Math.cos(p.yaw))/distance:0;return Number.isFinite(distance)&&distance>=.8&&distance<=WALL_JUGGLE_DISTANCE&&facing>=-.1&&(target.top===undefined||Number.isFinite(target.top)&&target.top>p.y+.75);};
@@ -53,7 +58,7 @@ export function createWalkBall(){
   if(state.mode==='juggle'&&blendAge>=.35&&(state.jugglePhase<.12||state.jugglePhase>.9)){state.mode='wall-juggle';state.wallTarget={...nextWall};state.wallPhase='kick';state.wallAge=0;state.juggleSide=1;}
  };
  const juggle=(p:Player,target?:WallJuggleTarget)=>{if(state.mode==='juggle'||state.mode==='wall-juggle'){reset(p);return;}reset(p);state.mode='juggle';state.y=p.y+JUGGLE_CONTACT;updateWallTarget(p,target);};
- const recall=()=>{if(state.mode==='shot'){state.mode='return';state.age=0;}};
+ const recall=()=>{if(state.mode==='shot'){state.mode='return';state.age=0;state.floating=0;}};
  function update(dt:number,p:Player,env:Environment){
   state.age+=dt;state.bounce=Math.max(0,state.bounce-dt);impactCooldown=Math.max(0,impactCooldown-dt);
   const impact=()=>{state.bounce=.16;if(impactCooldown<=0){impactCooldown=.09;env.impact(state.x,state.y,state.z);}};
@@ -119,6 +124,11 @@ export function createWalkBall(){
    }
    env.strike();}
   if(state.mode==='return'){const blend=1-Math.exp(-dt*12);state.x+=(p.x+Math.sin(p.yaw)*.65-state.x)*blend;state.z+=(p.z+Math.cos(p.yaw)*.65-state.z)*blend;state.y+=(p.y+.2-state.y)*blend;state.kick=0;if(state.age>.55)reset(p);return;}
+  // Floating in the sea: a slow drift and a small bob, then back to the player (sooner if they walk away). Runs only while wet.
+  if(state.floating>0){state.floating+=dt;const damp=Math.exp(-1.6*dt);state.vx*=damp;state.vz*=damp;state.kick=0;
+   const x=state.x+state.vx*dt,z=state.z+state.vz*dt;if(env.sea?.(x,z)==='sea'){state.x=x;state.z=z;}else state.vx=state.vz=0;
+   state.y=BALL_SEA_LEVEL+.1+Math.sin(state.floating*3.4)*.05;
+   if(state.floating>BALL_FLOAT_TIME||Math.hypot(state.x-p.x,state.z-p.z)>floatFrom+4)recall();return;}
   shotAge+=dt;state.kick=shotAge<.6?.36+shotAge/.6*.64:0;
   const steps=Math.max(1,Math.ceil(Math.hypot(state.vx,state.vz)*dt/.12)),step=dt/steps;
   for(let i=0;i<steps;i++){
@@ -134,7 +144,9 @@ export function createWalkBall(){
    const x=state.x+state.vx*step;if(env.blocked(x,state.z,state.y)){state.vx*=-.78;impact();}else state.x=x;
    const z=state.z+state.vz*step;if(env.blocked(state.x,z,state.y)){state.vz*=-.78;impact();}else state.z=z;
    if(env.hit?.(state.x,state.y,state.z,state.vx,state.vz)){state.vx*=-.42;state.vz*=-.42;state.vy=2;impact();}
-   state.vy-=13*step;state.y+=state.vy*step;const floor=env.floor(state.x,state.z)+.2;
+   state.vy-=13*step;state.y+=state.vy*step;let floor=env.floor(state.x,state.z)+.2;
+   const ground=env.sea?.(state.x,state.z)??'land';if(ground==='edge'){recall();return;}
+   if(ground==='sea'&&floor<=.25){floor=BALL_SEA_LEVEL+.1;if(state.y<floor){state.y=floor;state.vx*=.12;state.vz*=.12;state.vy=0;state.floating=1e-3;floatFrom=Math.hypot(state.x-p.x,state.z-p.z);finishTarget=undefined;env.splash?.(state.x,BALL_SEA_LEVEL,state.z);return;}continue;}
    if(state.y<floor){state.y=floor;if(state.vy<-.8){state.vy=-state.vy*.53;impact();}else state.vy=0;}
   }
   const drag=Math.exp(-(finishTarget||state.charge>0&&state.y>env.floor(state.x,state.z)+.3?.1:.33)*dt);state.vx*=drag;state.vz*=drag;

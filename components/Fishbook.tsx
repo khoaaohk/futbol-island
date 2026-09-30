@@ -8,7 +8,7 @@ import {DoneButton} from './DoneButton';
 import FishArt from './FishArt';
 import shell from './ModalShell.module.css';
 import styles from './Fishbook.module.css';
-import {FISH,FISH_SPOTS,KEEPER_LESSONS,RARITY_LABEL,SHADOW_LABEL,isExclusive,type FishSpecies} from '@/lib/town/fishing/fishCatalog';
+import {FISH,FISH_SPOTS,KEEPER_LESSONS,RARITY_LABEL,SHADOW_LABEL,SHORE_SPOTS,isExclusive,type FishSpecies} from '@/lib/town/fishing/fishCatalog';
 import {speciesCaught} from '@/lib/town/fishing/fishingCore';
 import {useFishbook} from '@/lib/town/fishing/fishingStore';
 /** Plain credit name for a source URL. Kids see no clickable external links (user, Sep 27 2026); the URLs stay in the data and docs. */
@@ -17,7 +17,7 @@ const host=(url:string)=>{try{const h=new URL(url).hostname.replace(/^www\./,'')
 const credit=(f:FishSpecies)=>f.club.credit??host(f.club.source);
 /** Shared species first, then each spot's own specials (the Fishbook shows where every species lives, never how often it bites). */
 const SECTIONS=[{id:'shared',title:'Found at several spots',fish:FISH.filter(f=>!isExclusive(f))},...FISH_SPOTS.map(s=>({id:s.id,title:`${s.name} specials`,fish:FISH.filter(f=>isExclusive(f)&&f.spots[0]===s.id)}))].filter(s=>s.fish.length);
-const foundAt=(f:FishSpecies)=>f.spots.length>=FISH_SPOTS.length?'every fishing spot':FISH_SPOTS.filter(s=>f.spots.includes(s.id)).map(s=>s.name).join(', ');
+const foundAt=(f:FishSpecies)=>SHORE_SPOTS.every(s=>f.spots.includes(s.id))?`every shore fishing spot${FISH_SPOTS.some(s=>s.boat&&f.spots.includes(s.id))?' and the Deep Sea Boat':''}`:FISH_SPOTS.filter(s=>f.spots.includes(s.id)).map(s=>s.name).join(', ');
 
 export default function Fishbook({open,onClose}:{open:boolean;onClose:()=>void}){
  const dialog=useRef<HTMLDialogElement>(null),close=useRef<HTMLButtonElement>(null),restore=useRef<HTMLElement|null>(null);

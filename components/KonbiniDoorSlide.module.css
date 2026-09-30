@@ -1,0 +1,23 @@
+.slide{position:fixed;inset:0;z-index:100000;pointer-events:auto;overflow:hidden}
+.slide[data-mode=arrive]{pointer-events:none}
+.light{position:absolute;inset:0;background:radial-gradient(circle at 50% 45%,#ffffff 0,#fffbef 45%,#e8f6f3 100%)}
+.door{position:absolute;top:0;bottom:0;width:50.5%;background:linear-gradient(100deg,#cfeef5cc,#e6f7fbe6 40%,#bfe3ebcc);border:6px solid #c9d2d0;box-sizing:border-box}
+.door b{position:absolute;top:44%;width:8px;height:18%;border-radius:4px;background:#9aa7a1}
+.left{left:0}.left b{right:14px}.right{right:0}.right b{left:14px}
+/* enter: doors part, light floods in */
+.slide[data-mode=enter] .light{animation:lightIn .38s ease-out both}
+.slide[data-mode=enter] .left{animation:openLeft .38s cubic-bezier(.5,0,.3,1) both}
+.slide[data-mode=enter] .right{animation:openRight .38s cubic-bezier(.5,0,.3,1) both}
+/* arrive: doors already open, the light fades away */
+.slide[data-mode=arrive] .door{display:none}
+.slide[data-mode=arrive] .light{animation:lightOut .55s ease-out .05s both}
+.slide[data-mode=arrive][data-ready=false] .light{animation:none;opacity:1}
+/* leave: the doors slide shut */
+.slide[data-mode=leave] .light{background:#15252f;animation:lightIn .35s ease-in .15s both}
+.slide[data-mode=leave] .left{animation:openLeft .36s cubic-bezier(.5,0,.3,1) reverse both}
+.slide[data-mode=leave] .right{animation:openRight .36s cubic-bezier(.5,0,.3,1) reverse both}
+@keyframes openLeft{from{transform:translateX(0)}to{transform:translateX(-100%)}}
+@keyframes openRight{from{transform:translateX(0)}to{transform:translateX(100%)}}
+@keyframes lightIn{from{opacity:0}to{opacity:1}}
+@keyframes lightOut{from{opacity:1}to{opacity:0;visibility:hidden}}
+@media(prefers-reduced-motion:reduce){.slide *{animation:none!important}.slide[data-mode=arrive]{display:none}.slide[data-mode=enter] .door,.slide[data-mode=leave] .door{display:none}}

@@ -1,6 +1,7 @@
 # Futbol Island coin economy: audit and proposal (28 Sep 2026)
 
 **Applied 28 Sep 2026 with user decisions: books 100, no calendar, trade-ins kept, light Icon gate.** Everything else in §5 and §8 is in the code: welcome 40, daily play 30 (old 40-coin receipts kept), learning coins, the Training meter (trade-ins count toward it), free Pass Puzzles, 3 NPC picks a day, the new pack and vending prices, 3 packs a day and the pack dead-end fix. `node scripts/economy-sim.cjs` now reads all of it from the code as `current`; `proposed` is the original overlay (calendar + 120-coin books) for comparison. The sections below are the original audit and proposal, unchanged except the new §6a results.
+**Update 29 Sep 2026 (Coral Cay):** hidden ball learning coins 5 → 10; everything else unchanged. See [ECONOMY_UPDATE_2026-09-29.md](ECONOMY_UPDATE_2026-09-29.md). The sim's configs are now `before` / `after,no-change` / `current` / `after+snacks` (the old overlay is `SEP28_PROPOSAL`).
 Simulation: `node scripts/economy-sim.cjs` (add `--days 60` or `--json` if needed). It loads the real constants from the game code, so it stays in step when prices change.
 
 ---

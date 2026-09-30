@@ -36,13 +36,18 @@ export const PLAYER_BOOKS = {
  mane: { itemId: 'display:market:book:mane', title: 'Mané: Leaving the village', player: 'Sadio Mané', machine: 'market' },
  saka: { itemId: 'display:market:book:saka', title: 'Saka: After the penalty', player: 'Bukayo Saka', machine: 'market' },
  hegerberg: { itemId: 'display:market:book:hegerberg', title: 'Hegerberg: Standing up for fairness', player: 'Ada Hegerberg', machine: 'market' },
+ // Sep 29 2026: four more hardship stories, one per new machine (North Beach, the causeway and two on Coral Cay).
+ cafu: { itemId: 'display:northbeach:book', title: 'Cafu: Told no, again and again', player: 'Cafu', machine: 'northbeach' },
+ nadim: { itemId: 'display:causeway:book', title: 'Nadim: A long road to a new home', player: 'Nadia Nadim', machine: 'causeway' },
+ kante: { itemId: 'display:cayplaza:book', title: 'Kanté: Told no, and still working', player: 'N’Golo Kanté', machine: 'cayplaza' },
+ oshoala: { itemId: 'display:sharks:book', title: 'Oshoala: Playing when few believed', player: 'Asisat Oshoala', machine: 'sharks' },
 } as const;
 export type PlayerBookId = keyof typeof PLAYER_BOOKS;
 /** Books every player owns from the start (their Backpack lists them; nothing is bought). */
 export const STARTER_BOOKS = ['island'] as const satisfies readonly PlayerBookId[];
 /** The first (original) book sold by a machine, if any. */
 export function bookForMachine(machine:string):PlayerBookId|undefined{return booksForMachine(machine)[0];}
-/** Every book a machine sells, in shelf order (four per machine). */
+/** Every book a machine sells, in shelf order (four per original machine, one per Sep 29 book machine). */
 export function booksForMachine(machine:string):PlayerBookId[]{return (Object.keys(PLAYER_BOOKS) as PlayerBookId[]).filter(id=>PLAYER_BOOKS[id].machine!==null&&PLAYER_BOOKS[id].machine===machine);}
 /** Every pop-up book costs the same. */
 export const BOOK_PRICE=100;

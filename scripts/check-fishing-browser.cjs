@@ -4,7 +4,7 @@ const [,,mode='desktop',spot='west-cove']=process.argv;
 // FISHING_RARE=1 biases Math.random for the second fish only, so the rarer end of the spot's catch list bites (for a rare-catch screenshot).
 const RARE=process.env.FISHING_RARE==='1';
 const VP={desktop:{width:1280,height:800},mobile:{width:390,height:844},landscape:{width:844,height:390}}[mode];const touch=mode!=='desktop';
-const spots={'south-pier':[217,211.4],'harbour-wall':[236,66],'north-rocks':[60,-237],'west-pier':[63,211.4],'west-cove':[-94.5,24]};
+const spots={'south-pier':[217,211.4],'harbour-wall':[236,66],'north-rocks':[60,-237],'west-pier':[63,211.4],'west-cove':[-94.5,24],'east-pier':[371.2,68.4]};
 (async()=>{
  const browser=await chromium.launch({headless:true,executablePath:'/Users/khoado/Library/Caches/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-mac-arm64/chrome-headless-shell',args:['--use-angle=metal','--enable-gpu','--ignore-gpu-blocklist']});
  const ctx=await browser.newContext({viewport:VP,isMobile:touch,hasTouch:touch,deviceScaleFactor:touch?2:1});

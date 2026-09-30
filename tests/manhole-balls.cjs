@@ -20,18 +20,21 @@ function hunt(initial){
 const world=fixture().load('lib/town/world.ts').buildTown(new T.Scene());
 const {COIN_QUEST,MANHOLE_RADIUS,COIN_STORAGE_KEY,sanitizeCoinProgress,allCostumesEarned,coinRewardEarned}=fixture().load('lib/town/coinQuest.ts');
 const manholes=COIN_QUEST.filter(s=>s.manhole),others=COIN_QUEST.filter(s=>!s.manhole);
+// Sep 29 2026: one more cover lies in the middle of the Coral Cay causeway road (not a town junction; tests/coral-cay-balls.cjs).
+const cayRoad=fixture().load('lib/town/coralCay.ts'),causewayCovers=manholes.filter(s=>cayRoad.onCauseway(s.x,s.z)),townCovers=manholes.filter(s=>!causewayCovers.includes(s));
+assert.equal(causewayCovers.length,1,'one cover on the causeway road');assert(cayRoad.causewayFrame(causewayCovers[0].x,causewayCovers[0].z).dist<.5,'it sits on the causeway centre line');
 assert(world.roadJunctions.length>=20,'town has its junctions');
-assert.equal(manholes.length,world.roadJunctions.length,'one manhole per junction');
+assert.equal(townCovers.length,world.roadJunctions.length,'one manhole per junction');
 for(const j of world.roadJunctions){const here=manholes.filter(s=>Math.abs(s.x-j.x)<.01&&Math.abs(s.z-j.z)<.01);assert.equal(here.length,1,`junction ${j.x},${j.z} has one cover`);}
 for(const s of manholes){
  assert.equal(s.kind,'landing');assert.equal(s.y,0);assert(!s.wall&&!s.grass&&!s.parachute&&!s.ramp&&s.truck===undefined);
  assert(/fly/i.test(s.detail)&&/drop/i.test(s.detail),'clue explains fly-over and drop');
  for(const o of others.filter(o=>o.truck===undefined))assert(Math.hypot(o.x-s.x,o.z-s.z)>3,`${s.id} stays clear of ${o.id}`);
- const clear=world.roads.some(r=>Math.abs(s.x-r.x)<=r.w/2&&Math.abs(s.z-r.z)<=r.d/2);assert(clear,`${s.id} sits on the road`);
+ const clear=world.roads.some(r=>Math.abs(s.x-r.x)<=r.w/2&&Math.abs(s.z-r.z)<=r.d/2)||causewayCovers.includes(s);assert(clear,`${s.id} sits on the road`);
 }
-assert.equal(others.length,55,'the original fifty-five stay in place');assert.equal(COIN_QUEST.length,55+world.roadJunctions.length);
+assert.equal(others.length,55+19,'the original fifty-five stay in place, plus nineteen Coral Cay balls');assert.equal(COIN_QUEST.length,55+world.roadJunctions.length+20);
 assert(COIN_QUEST.slice(0,55).every(s=>!s.manhole),'new balls are appended after the originals');
-console.log(`PASS ${manholes.length} manhole balls, one at the centre of each road junction; total ${COIN_QUEST.length}`);
+console.log(`PASS ${manholes.length} manhole balls: one at the centre of each of ${townCovers.length} road junctions plus the causeway road cover; total ${COIN_QUEST.length}`);
 
 // 2. One instanced mesh per layer, shared material, receive-only shadows, no collision props.
 {
@@ -125,10 +128,10 @@ console.log('PASS collected manholes: plain cover back in its rim, reduced-motio
  const t=hunt(),s=manholes[2];t.h.update(.05,{x:s.x,y:20,z:s.z},true,true,null,false,true);t.h.land({x:s.x,y:0,z:s.z},true);
  const saved=Object.fromEntries(t.storage);t.h.dispose();
  const again=hunt(saved);assert(again.h.covers.isOpen(manholes.indexOf(s)),'opened cover stays open after reload');assert(!again.h.covers.isOpen(manholes.indexOf(manholes[1])));
- assert.equal(JSON.parse(saved[COIN_STORAGE_KEY]).version,4);again.h.dispose();
+ assert.equal(JSON.parse(saved[COIN_STORAGE_KEY]).version,5);again.h.dispose();
  const ids=COIN_QUEST.map(s=>s.id),first55=ids.slice(0,55);
  const oldComplete=sanitizeCoinProgress({version:3,revealed:first55,collected:first55,hint:null,celebrated:true,rewardUnlocked:false});
- assert.equal(oldComplete.version,4);assert.equal(oldComplete.collected.length,55);assert(coinRewardEarned(oldComplete)&&allCostumesEarned(oldComplete),'finished 55-ball saves keep fox and costumes');assert(!oldComplete.celebrated,'the new 80-ball finale is still ahead');
+ assert.equal(oldComplete.version,5);assert.equal(oldComplete.collected.length,55);assert(coinRewardEarned(oldComplete)&&allCostumesEarned(oldComplete),'finished 55-ball saves keep fox and costumes');assert(!oldComplete.celebrated,'the new 100-ball finale is still ahead');
  const oldPartial=sanitizeCoinProgress({version:3,collected:first55.slice(0,54)});assert.equal(oldPartial.collected.length,54);assert(!allCostumesEarned(oldPartial)&&!coinRewardEarned(oldPartial),'unfinished old saves keep their progress only');
  assert(!allCostumesEarned(sanitizeCoinProgress({version:4,collected:first55})),'new saves need every ball, manholes included');
  assert(allCostumesEarned(sanitizeCoinProgress({version:4,collected:ids})));

@@ -231,3 +231,26 @@
 /* Bug fix (Sep 27): product art may overflow its window (overflow:visible) and used to cover the ▶ page arrow,
    swallowing taps. Artwork is decorative; the slot button underneath handles the tap. */
 .slot .window>*{pointer-events:none}
+/* Sep 30 2026 ("the coins on the left are cut off, the PUSH on the right is different"): one coin panel on every machine type,
+   matching the 3D front (lib/graphics/vendingMachines.ts paintCoin): the green balance digits, the slot and the COINS label. */
+.coinSlot{grid-template-rows:auto 1fr auto}.coinSlot small{display:block;line-height:1}
+.face[data-compact] .coinSlot{grid-template-rows:auto 1fr}.face[data-compact] .coinSlot small{display:none}
+/* Balls show their baked shelf picture (BallPicture, the same image as the machine's glass): no snapshot-margin compensation;
+   it stands on the window's bottom edge, which is the shelf line, with its contact shadow under it. */
+.window[data-kind=ball] img[data-ball-picture]{transform:none;width:auto;height:78%;max-width:72%;object-fit:contain;align-self:end;justify-self:center}
+.drop[data-kind=ball] img[data-ball-picture]{transform:none;width:auto;height:80%;max-width:80%;object-fit:contain}
+/* A short phone face: keep the digits, slot and COINS label inside the coin panel. */
+.coinSlot{padding:2px 4px;gap:1px}.coinCount{padding:1px 5px}.mouth{min-height:8px;height:70%}.coinSlot small{line-height:12px}
+.window[data-kind=ball] img[data-ball-picture],.drop[data-kind=ball] img[data-ball-picture]{transform:scaleX(var(--ball-widen,1));transform-origin:50% 100%}
+/* Real depth (Sep 30 2026: "the perspective of the shelves and books doesn't match that of the machines"). With data-depth the face
+   carries the true camera placement (lib/graphics/vendingMachines.ts faceCssMatrix), the machine shows its real 3D bay behind the
+   glass, and the products stand --bay-product behind the glass on its shelf slabs (VENDING_BAY). So: no painted glass, no fake side
+   returns or bevelled shelves, and no whole-face fade (opacity would flatten the 3D). The rails stay flat at the glass. */
+.face[data-depth]{transform-style:preserve-3d}
+.face[data-depth][data-entry]{animation:none}
+.face[data-depth] .slot{transform-style:preserve-3d}
+.face[data-depth] .slot .window{top:0;height:calc(100% * .53);transform:translateZ(calc(var(--bay-product) * -1));overflow:visible}
+.face[data-depth] .glass{background:none;border-color:transparent;box-shadow:none}
+.face[data-depth] .glass::before,.face[data-depth] .glass::after,.face[data-depth] .arrival{display:none}
+.face[data-depth] .shelf{clip-path:none;background:#466574;box-shadow:inset 0 3px 0 #b8cbcc;animation:none}
+.face[data-depth] .window[data-kind=pack]>canvas,.face[data-depth] .window[data-kind=display]>canvas{align-self:end}

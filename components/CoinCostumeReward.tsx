@@ -14,7 +14,7 @@ export default function CoinCostumeReward({value,preview,onEquip}:Props){
    <div className={styles.progress}><strong>{count} / {total} matchday soccer balls</strong><span>{earned?'Ready to wear':'Find the hidden soccer balls around the island'}</span></div><progress value={count} max={total} aria-label="Matchday soccer balls collected"/>
    <button type="button" disabled={!earned||equipped} onClick={()=>{if(coinRewardEarned(readCoinProgress()))onEquip();}}>{equipped?'Equipped ✓':earned?'Equip Matchday Fox':`Find all ${total} soccer balls to unlock`}</button>
    <button type="button" className={styles.secondary} onClick={()=>window.dispatchEvent(new CustomEvent('fi2-coin-quest-open'))}>{earned?'View collected soccer balls':'Follow the ball clues'}</button>
-   <p className={styles.note}>{earned?'Your soccer balls stay collected when you equip. Your character stays underneath the costume.':'Open Paths to follow the ball clues. Find all 55 balls to unlock all costumes.'}</p>
+   <p className={styles.note}>{earned?'Your soccer balls stay collected when you equip. Your character stays underneath the costume.':`Open Paths to follow the ball clues. Every 10 balls unlocks club costumes; find all ${total} for the Matchday Fox.`}</p>
   </div>
  </article>;
 }

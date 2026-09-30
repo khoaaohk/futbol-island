@@ -1,0 +1,5 @@
+.collection{display:flex;flex-direction:column;gap:10px}
+.progress{margin:0;font-size:14px;font-weight:700;color:var(--btn-ink)}.progress b{font-size:16px}
+.groupTitle{margin:6px 0 4px;font:400 17px/1.2 IslandBrush,sans-serif;color:var(--btn-ink)}
+.silhouette{filter:brightness(0) opacity(.22)}
+.collection button:disabled{cursor:default}

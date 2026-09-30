@@ -181,3 +181,98 @@ Rules:
   both.
 - `scripts/check-arcade-isolation-browser.cjs` expects a dialog named "The Store" after "Visit store"; there is no dialog now:
   the arcade's "Visit store" lands on the Island Square machine in the world (camera zooms in, 3-card pack selected).
+
+## Four book machines (Sep 29 2026)
+
+North Beach (`northbeach`, Cafu), Causeway Stop (`causeway`, Nadim), Coconut Café (`cayplaza`, Kanté) and Sharks Beach (`sharks`, Oshoala) sell the regular rows plus one pop-up book each (100 coins, item ids `display:<machine>:book`). They have no exclusive ball or pack: all eight special balls already have a machine. The three Coral Cay spots are computed from Coral Cay's anchors in `lib/town/vendingPlaces.ts`; see `docs/books-2026-09-29.md`.
+
+## Drink machines (Sep 29 2026)
+
+User: "Outside, add a vending machine next to the stores for different types of drinks. The drinks will show how hydration helps
+the body. The drinks machine will be next to the other machines. There should only be two drink vending machines."
+
+**Exactly two**, each standing side by side with its Konbini's vending machine: same facing, a 12 cm gap, on the side away from
+the sliding doors. Placed from the neighbour's spot (`drinkSpotBeside` in `lib/town/drinkMachines.ts`), never hard-coded.
+
+| Machine | Beside | Spot (x, z, yaw) |
+|---|---|---|
+| `drinksplaza` · Drinks · Island Square | `plaza` (Island Square Konbini) | 74.91, −52.16, 0 |
+| `drinkscay` · Drinks · Coral Cay | `caykonbini` (from `CAY_KONBINI` via `cayVendingSpots.konbini()`) | 527.91, −177.16, 0 |
+
+Both Konbini pairs stand **flush against the shopfront** (user, Sep 29 2026): `konbiniMachineSpot(store)` in
+`lib/town/vendingPlaces.ts` puts each Konbini machine 3.2 m east of the store centre with its back 0.03 m in front of the window
+ledges and pillars (0.25 m proud of the glass line), for Island Square (`ISLAND_SQUARE_KONBINI`, x 71, front −53: `plaza` now
+73.1, −52.16) and Coral Cay (`CAY_KONBINI`: `caykonbini` now 526.1, −177.16). The drink machines follow their neighbour.
+
+Look: a cool blue/white Japanese drink machine on the shared mesh and material (one draw call each). Its glass is a new atlas
+panel (`drawDrinkTile`, `lib/graphics/drinkArt.ts`): icy glass, rows of bottles and cans, a lit price button under each, and the
+blue つめた～い COLD / red あったか～い HOT strip (red on the warm can). The two panels use the free 256×152 strip under the third
+glass row (y 872–1024), so the 1024² atlas did not grow. The close-up is the shared `VendingFace` with a drink controller
+(`components/DrinkMachine.tsx`).
+
+### Drinks and what each one teaches
+
+Every drink is a Konbini **consumable** (the Konbini agent's STABLE API in `lib/konbini/food.ts`): repeat-purchasable, one
+idempotent wallet spend per purchase id (`konbini:food:<item>:<purchase id>`), **3 machine drinks a day** in their own bucket
+(`drinks`, separate from the food "tummy full" limit), the Snacks pouch, and a **"Drink machines"** group on the backpack's
+Konbini Collection (first purchase of each). Buying opens the Konbini's layered reveal (`KonbiniReveal`) built bottle → label
+wrap → cap → condensation sparkle, with the drink's hydration line and its sources.
+
+| Machine | Drink | Japanese | Coins | Hydration line | Sources |
+|---|---|---|---|---|---|
+| Island Square | Water | 水 (みず) | 3 | Water keeps your blood flowing and your body cool. Drink before, during and after you play. | SDA, AAP |
+| | Green tea | 緑茶 (りょくちゃ) | 3 | Sip before you feel thirsty. Pack a full bottle in your kit bag and top it up at every break. | AAP, SDA |
+| | Barley tea | 麦茶 (むぎちゃ) | 3 | When you don't drink enough, running feels harder and it gets tough to concentrate. Keep sipping. | SDA, NHS (dehydration) |
+| | Milk | 牛乳 (ぎゅうにゅう) | 4 | Water and milk are the best drinks for kids. After a game, milk gives you fluid plus protein for your muscles. | NHS, AAP, FIFA |
+| | Sports drink | スポーツドリンク | 5 | Sports drinks are for long, hot, hard sessions over an hour. For everyday training, water is all you need. | AAP, SDA |
+| | Hot cocoa (warm row) | ホットココア | 5 | Cocoa is milk with added sugar: a warm treat on a cold day. Plain milk and water are the everyday drinks. | AAP, NHS |
+| Coral Cay | Coconut water | ココナッツウォーター | 5 | Coconut water has potassium, a mineral your body uses. Still, plain water is the best way to hydrate every day. | Cleveland Clinic, AAP |
+| | Water | 水 (みず) | 3 | Check your pee: pale yellow means you're well hydrated. Dark yellow means drink some water. | NHS, AAP |
+| | Sports drink | スポーツドリンク | 5 | Sweat takes water and a little salt out of your body. On a hot day of play over an hour, a sports drink plus water can help. | AAP, SDA |
+| | Pineapple juice | パイナップルジュース | 4 | Juice is sweet and sugary. Keep it to one small glass a day with a meal, and make water your main drink. | NHS, AAP |
+| | Lemon water | レモン水 (れもんすい) | 4 | Sweating cools you down, so drink to replace that water. A slice of lemon adds flavour without sugar. | SDA, NHS, AAP |
+| | Yoghurt soda | ヨーグルトソーダ | 6 | Fizzy sweet drinks are a sometimes treat: the sugar is hard on your teeth. Water is what refills you after play. | NHS, SDA |
+
+Sources (checked 29 Sep 2026; wording kept to what they say, no medical or weight claims, generic names and art only):
+
+- NHS, Water, drinks and hydration: https://www.nhs.uk/live-well/eat-well/food-guidelines-and-food-labels/water-drinks-nutrition/
+  (pee a clear pale yellow; best drinks for children are water and milk; juice max one small 150 ml glass a day with a meal;
+  water is the best way to replace fluid lost to sweat; add a slice of lemon or lime; sugary drinks can damage teeth).
+- NHS, Dehydration: https://www.nhs.uk/conditions/dehydration/ (dark yellow pee, feeling tired).
+- American Academy of Pediatrics, HealthyChildren.org, Choose Water for Healthy Hydration:
+  https://www.healthychildren.org/English/healthy-living/nutrition/Pages/Choose-Water-for-Healthy-Hydration.aspx (water and milk
+  are all the drinks kids need; drink water before, during and after practices or games; drink before thirsty; limit sports
+  drinks, juice and flavoured milk with added sugar; urine very light yellow; infuse water with lemon).
+- Sports Dietitians Australia, Hydration in Junior Sport: https://www.sportsdietitians.com.au/factsheets/children/hydration-junior-sport/
+  (water maintains blood volume and regulates body temperature; dehydration makes activity feel harder and brings mental fatigue
+  that affects concentration; water keeps the body cool and replaces sweat; sports drinks aren't a healthy everyday choice for
+  kids; sweat loses fluid and salt; pack a water bottle). The live SDA site now redirects old factsheet URLs; the text was read
+  from the Internet Archive copy.
+- FIFA, Nutrition for Football: https://digitalhub.fifa.com/m/16e433eb11621446/original/ukbqfkkxw2o8s1gyjria-pdf.pdf (milk as
+  an everyday protein food; dark urine as a sign to drink more).
+- Cleveland Clinic, The health benefits of coconut water:
+  https://health.clevelandclinic.org/the-health-benefits-of-coconut-water (potassium and other electrolytes; "Water is still the
+  best way to hydrate").
+
+The Australian Institute of Sport hydration page (Performance Nutrition HQ) is a JavaScript app that could not be read from here,
+so it is not cited.
+
+### Economy and heat
+
+Prices 3–6 coins; 50 coins buys all twelve (23 at Island Square, 27 at Coral Cay), less than one casual day's income (~81). The
+3-a-day limit makes the full "Drink machines" set take at least 4 play days, and about 1–2 weeks for a casual player who doesn't
+reach Coral Cay every day. No collection reward (no new coin source). See
+`docs/economy/ECONOMY_UPDATE_2026-09-29.md` §"Drink machines" and `tests/economy.cjs` §6.
+
+Heat: two more merged meshes on the shared material (one draw call each, measured +2 draws in view at Island Square), no new
+texture, loop or light. The idle controller update is the same distance check per machine (15 now). The drink face is mounted only
+while the machine is in use (the island sleeps). The reveal's rAF runs only while the four layers build (~1.5 s), then stops.
+
+Files: `lib/town/drinkMachines.ts` (data, placement, Konbini registration), `lib/town/drinkShop.ts` (browser adapter to
+`lib/konbini/foodStore.ts`), `lib/graphics/drinkArt.ts`, `components/DrinkMachine.tsx` + `.module.css`, `components/DrinkArt.tsx`;
+small edits to `lib/town/vendingCatalog.ts` (id type, the two machines appended, `nearestVendingMachine` skips drink machines),
+`lib/graphics/vendingMachines.ts` (drink glass panel) and `components/Town.tsx` (opens `DrinkMachine` for drink ids). Tests:
+`tests/drink-machines.cjs`, `tests/vending-machines.cjs` (15 machines, 2b placement).
+
+
+> **Sep 29 2026 (later):** both Konbini pairs shifted 1.1 m west (`KONBINI_MACHINE_EAST` 3.2 → 2.1) so the snack and drinks machines sit inside the 10 m shopfront, flush against the glass, instead of the drinks machine overhanging the east corner.

@@ -69,7 +69,7 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   parts.push({geometry:box,matrix:m4(x,y+1.72,z,yaw,2.7,.72,.1),color:'#6e5540'});
   parts.push({geometry:box,matrix:m4(x,y+2.14,z,yaw,2.9,.1,.3),color:job.color});
   }
-  if(job.deliver){const d=job.deliver,dy=floor(d.x,d.z),bin=job.id==='court-cleanup'?'#3d7f56':job.id==='leaf-rake'?'#7a5a3a':'#2f5c8a';
+  if(job.deliver){const d=job.deliver,dy=floor(d.x,d.z),bin=job.id==='court-cleanup'?'#3d7f56':job.id==='leaf-rake'?'#7a5a3a':job.id==='farm-harvest'?'#a67d55':'#2f5c8a';
    if(job.kind==='sort'){parts.push({geometry:box,matrix:m4(d.x,dy+.4,d.z,.3,1.1,.8,.75),color:'#a67d55'});parts.push({geometry:box,matrix:m4(d.x,dy+.83,d.z,.3,1,.08,.65),color:'#f5eed5'});parts.push({geometry:box,matrix:m4(d.x,dy+.5,d.z,.3,1.14,.08,.79),color:'#7a5a3e'});}
    else if(job.kind==='carry'){parts.push({geometry:cyl,matrix:m4(d.x,dy+.02,d.z,0,.9,.03,.9),color:'#f5eed5'});parts.push({geometry:box,matrix:m4(d.x+1,dy+.25,d.z,0,.45,.5,.45),color:'#2f5c8a'});}
    else{parts.push({geometry:cyl,matrix:m4(d.x,dy+.45,d.z,0,.42,.9,.42),color:bin});parts.push({geometry:cyl,matrix:m4(d.x,dy+.92,d.z,0,.46,.06,.46),color:'#e9dfc0'});}}
@@ -108,6 +108,7 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
    case 'peg':return {g:own(new T.RingGeometry(.32,.48,20)),color:'#ffd36c',scale:[1,1,1] as const,lift:.03,flat:true};
    case 'ball':return {g:own(new T.IcosahedronGeometry(.22,1)),color:'#f7f3e6',scale:[1,1,1] as const,lift:.22};
    case 'bottle':return {g:own(new T.CylinderGeometry(.09,.09,.36,8)),color:'#5aa7c8',scale:[1,1,1] as const,lift:.18};
+   case 'produce':return {g:own(new T.IcosahedronGeometry(.34,0)),color:'#e8be71',scale:[1,.9,1] as const,lift:.45};
    default:return {g:own(new T.BoxGeometry(1.2,.02,.22)),color:'#ffffff',scale:[1,1,1] as const,lift:.02};}}
  /** Task-job props (kit room, offside strip, pump station): built on start, all disposed by clearProps. */
  let task:{shirts?:T.Mesh[];actors?:T.InstancedMesh;ball?:T.Mesh;ring?:T.Mesh;offLine?:T.Mesh;flag?:T.Group;pumpBall?:T.Mesh;rack?:T.InstancedMesh;key?:string}={};
@@ -123,6 +124,7 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   const mesh=new T.Mesh(own(mergeColoured(parts)),own(new T.MeshStandardMaterial({vertexColors:true,roughness:.85})));mesh.matrixAutoUpdate=false;group.add(mesh);return mesh;}
  function buildSort(def:JobDef,group:T.Group){
   if(def.task?.type!=='sort')return;const t=def.task,items=t.items;
+  if(t.style==='crates'){buildCrates(def,t,group);return;}
   // Chalk outline of a small pitch around the pegs, with the goal end by the keeper's peg.
   const xs=def.targets.map(p=>p.x),zs=def.targets.map(p=>p.z),x0=Math.min(...xs)-3,x1=Math.max(...xs)+3,z0=Math.min(...zs)-2.5,z1=Math.max(...zs)+2.5,cx=(x0+x1)/2;
   const chalk='#5f8a6a';// pitch-green chalk reads on the cream paving
@@ -142,6 +144,25 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   task.shirts=items.map((_,i)=>{const g=own(new T.PlaneGeometry(1.15,1.15));const u=g.getAttribute('uv');for(let v=0;v<u.count;v++)u.setXY(v,(i*204+(u.getX(v)?204:0))/1024,u.getY(v)?1-72/256:1-256/256);
    const m=new T.Mesh(g,labelMat);m.visible=false;m.name='kit-shirt-'+items[i].number;group.add(m);return m;});
  }
+ /** Match-day snacks (Sep 29 2026): three labelled crates and one food card per item, all cells of one small canvas atlas.
+  *  Built on start, disposed with the other job props; the carried card follows the player, like the kit room's shirts. */
+ function buildCrates(def:JobDef,t:{slots:string[];items:{label?:string;color?:string;number:number}[]},group:T.Group){
+  const n=Math.max(t.slots.length,t.items.length),cw=Math.floor(1024/n);
+  paintLines(group,def.targets.flatMap(p=>[{x:p.x,z:p.z,w:1.3,d:.9,h:.6,color:'#a67d55'},{x:p.x,z:p.z,w:1.36,d:.96,h:.08,y:.6,color:'#7a5a3e'},{x:p.x,z:p.z,w:1.1,d:.7,h:.02,y:.61,color:'#5b4630'}]));
+  const tex=canvasTexture(1024,256,g=>{g.textAlign='center';g.textBaseline='middle';
+   t.slots.forEach((name,i)=>{const x=i*cw;g.fillStyle='#244d40';g.fillRect(x+2,2,cw-4,60);g.fillStyle='#fff1d3';g.font='800 24px Arial, sans-serif';g.fillText(name,x+cw/2,33,cw-12);});
+   t.items.forEach((it,i)=>{const x=i*cw,y=72;g.fillStyle='#fff8e5';roundedRect(g,x+6,y,cw-12,176,18);g.fill();g.fillStyle=it.color??'#e8be71';g.beginPath();g.arc(x+cw/2,y+62,44,0,Math.PI*2);g.fill();
+    g.strokeStyle='#294f43';g.lineWidth=4;g.stroke();g.fillStyle='#294f43';g.font='800 22px Arial, sans-serif';g.fillText((it.label??'').toUpperCase(),x+cw/2,y+142,cw-18);});});
+  if(!tex)return;
+  const labelMat=own(new T.MeshBasicMaterial({map:tex,side:T.DoubleSide}));const pos:number[]=[],uv:number[]=[],idx:number[]=[];
+  def.targets.forEach((p,i)=>{const y=floor(p.x,p.z)+1.25,base=pos.length/3,u0=i*cw/1024,u1=(i*cw+cw)/1024;
+   for(const [k,j] of [[-1,-1],[1,-1],[1,1],[-1,1]])pos.push(p.x+k*.95,y+j*.28,p.z+.5);uv.push(u0,1-62/256,u1,1-62/256,u1,1,u0,1);idx.push(base,base+1,base+2,base,base+2,base+3);});
+  const lg=own(new T.BufferGeometry());lg.setAttribute('position',new T.Float32BufferAttribute(pos,3));lg.setAttribute('uv',new T.Float32BufferAttribute(uv,2));lg.setIndex(idx);lg.computeBoundingSphere();
+  const labels=new T.Mesh(lg,labelMat);labels.name='snack-crate-labels';group.add(labels);
+  task.shirts=t.items.map((it,i)=>{const g=own(new T.PlaneGeometry(.9,.9));const u=g.getAttribute('uv');for(let v=0;v<u.count;v++)u.setXY(v,(i*cw+(u.getX(v)?cw:0))/1024,u.getY(v)?1-72/256:1-248/256);
+   const m=new T.Mesh(g,labelMat);m.visible=false;m.name='snack-card-'+it.number;group.add(m);return m;});
+ }
+ function roundedRect(g:CanvasRenderingContext2D,x:number,y:number,w:number,h:number,r:number){g.beginPath();if(g.roundRect)g.roundRect(x,y,w,h,r);else g.rect(x,y,w,h);}
  function buildOffside(group:T.Group){
   const P=OFFSIDE_PITCH,far=P.touchZ-P.width,midZ=P.touchZ-P.width/2,xa=P.halfX+P.ownA,xb=P.halfX+P.goalA;
   // Practice strip: touchlines, halfway line, goal line, a small goal (posts + bar) and the assistant referee's flag spot.
@@ -179,7 +200,7 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
    targetsMesh=new T.InstancedMesh(pg.g,mat,def.targets.length);targetsMesh.frustumCulled=false;const color=new T.Color();
    def.targets.forEach((t,i)=>{const yaw=def.prop==='chalk'?Math.atan2(-(t.z-100),t.x-135)+Math.PI/2:(i*1.7)%6.28;
     targetsMesh!.setMatrixAt(i,m4(t.x,floor(t.x,t.z)+pg.lift,t.z,yaw,...pg.scale,'flat' in pg?-Math.PI/2:0));
-    color.set(def.prop==='leaf'?['#c26a2e','#d9912f','#9b4b22','#b8752e'][i%4]:def.prop==='chalk'?'#8f9c86':pg.color);targetsMesh!.setColorAt(i,color);});
+    color.set(def.prop==='leaf'?['#c26a2e','#d9912f','#9b4b22','#b8752e'][i%4]:def.prop==='produce'?['#f2c14e','#8fcf5a','#e2533f','#b9774a','#f08a3c','#e8b23a','#4f9a4f','#f0a23a','#f7a531','#f5d94a'][i%10]:def.prop==='chalk'?'#8f9c86':pg.color);targetsMesh!.setColorAt(i,color);});
    props.add(targetsMesh);
    if(def.placed||def.prop==='cone'){const peg=def.prop==='peg',g=peg?new T.CylinderGeometry(.09,.05,.34,8):new T.ConeGeometry(.22,.5,10),m=new T.MeshStandardMaterial({color:peg?'#5b4a36':'#e8742c',roughness:.6});propDisposables.push(g,m);placedMesh=new T.InstancedMesh(g,m,def.targets.length);placedMesh.frustumCulled=false;for(let i=0;i<def.targets.length;i++)placedMesh.setMatrixAt(i,hidden);props.add(placedMesh);}
    if(def.kind==='carry'){carried=new T.Mesh(pg.g,new T.MeshStandardMaterial({color:'#f7f3e6',roughness:.6}));propDisposables.push(carried.material as T.Material);carried.visible=false;props.add(carried);}
@@ -213,7 +234,7 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   if(!run||!ev.length)return;const def=run.def;
   for(const e of ev){
    if(def.kind==='sort'){
-    if(e.type==='return'&&e.index!==undefined&&task.shirts){const shirt=task.shirts[run.step-1],t=def.targets[e.index];if(shirt){shirt.visible=true;shirt.position.set(t.x,floor(t.x,t.z)+1.45,t.z+.06);shirt.rotation.set(0,0,0);}}
+    if(e.type==='return'&&e.index!==undefined&&task.shirts){const shirt=task.shirts[run.step-1],t=def.targets[e.index];if(shirt){shirt.visible=true;const crates=def.task?.type==='sort'&&def.task.style==='crates';shirt.position.set(t.x+(crates?(run.step-1)%2*.25-.12:0),floor(t.x,t.z)+(crates?.95:1.45),t.z+(crates?.1:.06));shirt.rotation.set(crates?-.5:0,0,0);}}
     if(e.type==='pickup'||e.type==='return'||e.type==='wrong')cue('fi2-path-cue','path-pop');continue;
    }
    if((e.type==='collect'||e.type==='pickup')&&targetsMesh&&e.index!==undefined){
