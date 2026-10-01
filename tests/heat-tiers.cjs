@@ -48,7 +48,7 @@ const throttled=()=>({interval:50,work:31});
 // 9. The ladder (quality pass, user decision Sep 26 2026): tier 0 = the device default (phones 1.75), 1 = 1.5, 2 = 1.25 + film 1.5,
 // 3 = still water, 4 = 24 fps. NO tier changes what is drawn per frame (flashing hotfix): shadows every frame, no distance hiding, ≥ 1.25.
 assert.deepEqual({...TIERS[0]},{cap30Everywhere:false,maxPixelRatio:Infinity,shadowEvery:1,shadowSize:2048,npcDrawDistance:null,trafficDrawDistance:null,staticAmbience:false,filmDpr:2,frameMs:1000/30});
-assert.equal(TIERS[1].maxPixelRatio,1.5);for(const t of [1,2,3,4])assert.equal(TIERS[t].shadowSize,1024,`tier ${t}: the phone's 1536² shadow map drops to 1024²`);assert.equal(TIERS[1].filmDpr,2);assert.equal(TIERS[2].maxPixelRatio,1.25);assert.equal(TIERS[2].filmDpr,1.5);
+assert.equal(TIERS[1].maxPixelRatio,1.5);for(const t of [1,2,3,4])assert.equal(TIERS[t].shadowSize,1024,`tier ${t}: the phone's 1536² shadow map drops to 1024²`);assert.equal(TIERS[1].filmDpr,2);assert.equal(TIERS[2].maxPixelRatio,1.25);for(const t of [2,3,4])assert.equal(TIERS[t].filmDpr,1.25);assert.equal(TIERS[1].filmDpr,2);
 for(const t of [0,1,2,3,4]){const x=TIERS[t];assert.equal(x.shadowEvery,1,`tier ${t}: shadows every frame`);assert.equal(x.npcDrawDistance,null);assert.equal(x.trafficDrawDistance,null);assert(x.maxPixelRatio>=1.25,`tier ${t}: pixel ratio ≥ 1.25 (thin limbs)`);}
 for(const t of [1,2,3,4])assert(TIERS[t].cap30Everywhere);assert(TIERS[3].staticAmbience&&TIERS[4].staticAmbience&&!TIERS[2].staticAmbience);
 assert.equal(TIERS[4].frameMs,1000/24);assert.equal(TIERS[3].frameMs,1000/30);assert.equal(H.LOWEST_TIER,4);
@@ -58,7 +58,7 @@ assert.equal(TIERS[4].frameMs,1000/24);assert.equal(TIERS[3].frameMs,1000/30);as
  H.setBatterySaver(true);assert.equal(H.effectiveTier(),4);assert.equal(store.get('fi2-battery-saver'),'on');assert.equal(H.batterySaverOn(),true);
  H.setGovernorTier(0);assert.equal(H.effectiveTier(),4,'the governor cannot lift Battery saver');
  H.setBatterySaver(false);assert.equal(H.effectiveTier(),0);assert(!store.has('fi2-battery-saver'));
- H.forceHeatTier(2);assert.equal(H.effectiveTier(),2);assert.equal(H.filmDprCap(),1.5);H.forceHeatTier(null);assert.equal(H.filmDprCap(),2);
+ H.forceHeatTier(2);assert.equal(H.effectiveTier(),2);assert.equal(H.filmDprCap(),1.25,'hot phones print films at 1.25 (Oct 1 2026, item E)');H.forceHeatTier(null);assert.equal(H.filmDprCap(),2);
  off();assert.deepEqual(seen,[1,4,4,0,2,0]);}
 // 10. MotionResolution limit: phones cap the moving and sharp ratios; desktop (never switching) follows the limit and returns to sharp.
 {const {MotionResolution}=load('lib/graphics/quality.ts');
@@ -76,7 +76,7 @@ assert.equal(TIERS[4].frameMs,1000/24);assert.equal(TIERS[3].frameMs,1000/30);as
 // 12. Wiring (source checks).
 {const town=read('components/Town.tsx'),film=read('components/CardFilmPlayer.tsx'),settings=read('components/IslandSettings.tsx'),npcs=read('lib/graphics/islandNpcs.ts');
  assert.match(town,/const heat=createIslandHeat\(\{renderer,sun,resolution:motionResolution,npcs:islandNpcs,traffic:streetTraffic,governed:quality\.phone\}\);\(window as unknown as \{__fi2:Record<string,unknown>\}\)\.__fi2\.heat=heat;/);
- assert.match(town,/if\(coarse\|\|heat\.cap30\)\{const slot=frameCapSlot/);
+ assert.match(town,/if\(idleFrame\|\|coarse\|\|heat\.cap30\)\{const slot=frameCapSlot\(now,lastRendered,Math\.max\(idleFrame,heat\.frameMs\)\)/);
  assert.match(town,/heat\.beforeRender\(location[^;]*\);renderer\.render\(scene,camera\);renderStats\.rendered\+\+;heat\.afterRender\(now,ms,performance\.now\(\)-now,renderer\.info\.render\.calls,learning\?\?''\);/);
  assert.match(town,/world\.updateWater\(active&&!learning\?dt:0,reduced\|\|heat\.staticAmbience\)/);assert.match(town,/return\(\)=>\{[^\n]{0,120}heat\.dispose\(\);/,'heat control disposed with the island');
  assert.match(film,/let cap=Math\.min\([^;]*filmDprCap\(\)\)/,'card film cap follows the heat tier');

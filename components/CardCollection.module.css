@@ -175,13 +175,15 @@
 /* PlayerCard's own Flip is driven from the header here; its Play pill stays centred under the card. */
 .viewer .cardHost>div>div:last-child>button[aria-pressed]{display:none}
 .viewer>*{position:relative;z-index:1}
-.viewer>.viewerBackdrop{position:fixed;inset:0;z-index:0;background:#12302ae0}
+.viewer>.viewerBackdrop{position:fixed;inset:0;z-index:0;background:#12302af2}
 /* Heavy blur behind the viewer (user, Sep 25 2026), but static, not a backdrop-filter (phone heat): a full-screen backdrop
    blur was re-run on every frame the lifted card's live scenery and films redraw above it. Instead the binder layer and
    the dock (and the dialog's own header panel under them) take a plain filter while the card is up (flying in or open). Nothing in them animates then (they
    are inert, no page turn runs), so the blur is painted once and reused. It eases off as the card flies back. */
 .layer,.layerArt,.dock{transition:opacity .2s ease-in,filter .3s ease-out}
-:global(dialog):has(>.viewer:not([data-phase=out]):is([data-flying],[data-phase=open]))>:is(section,.layer,.layerArt,.dock){filter:blur(18px)}
+/* Oct 1 2026 heat pass (user approved, item A): the blur(18px) above is gone. Even static, the browser re-applied the filter on every
+   compositor frame the card's film or scenery drew (Chromium phone emulation: compositor 164 → 101 ms/s during a film). The backdrop
+   is a darker tint (#12302af2) instead, so the binder behind the card is dimmed, not frosted. */
 @media(prefers-reduced-motion:reduce){.layer,.layerArt,.dock{transition:opacity .2s ease-in}}
 /* The card as large as fits: height between the close button and the card's own controls, capped at 520 px (92vw on phones).
    Set on PlayerCard's stage (its --card-w drives the card and its controls) only inside this viewer. */

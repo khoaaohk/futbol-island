@@ -114,8 +114,8 @@ type Turn={id:number;from:number;to:number;dir:1|-1;under:{side:'left'|'right'|'
  *
  * Phone heat: only the open page(s) render, plus one turn's sheet slices and uncovered page: prebuilt once at rest (idle
  * time, or when a pointer reaches an arrow or a page) all but transparent, then revealed on the turn's first frame; mini
- * cards are static; the turn runs on requestAnimationFrame only while a page moves (transform and opacity only). No loop
- * runs at rest.
+ * cards are static; a planned turn is compositor keyframes and only a drag runs requestAnimationFrame, only while a page moves
+ * (transform and opacity only). No loop runs at rest.
  */
 export default function CardCollection(){
  const [owned,setOwned]=useState<string[]>([]),[field,setField]=useState<Field>('football'),[page,setPage]=useState(0),[turn,setTurn]=useState<Turn|null>(null);
@@ -178,7 +178,7 @@ export default function CardCollection(){
  const away=!spread&&(W-g.binderW-g.tab)/2+g.cover<=8?.65:undefined;
  useEffect(()=>{setPage(current=>Math.min(viewStart(current,spread),viewStart(pages.length-1,spread)));},[spread,pages.length]);
 
- // ── Page turns. planTurn lays out the sheets; run() animates them on requestAnimationFrame; finish() hands over to the
+ // ── Page turns. planTurn lays out the sheets; play() hands them to the compositor (a drag poses them per frame); finish() hands over to the
  // resting pages while the sheets still lie on their last frame (both stay mounted for two frames: no reflow, no snap).
  const planTurn=(from:number,to:number,drag:boolean):Turn=>{
   const dir:1|-1=to>from?1:-1,span=Math.abs(to-from)/step,inner=Math.max(0,Math.min(2,span-1));
@@ -194,12 +194,15 @@ export default function CardCollection(){
   const under:Turn['under']=spread?(dir===1?{side:'right',index:to+1}:{side:'left',index:to}):dir===1?{side:'single',index:to}:null;
   return {id:++turnIds.current,from,to,dir,under,leaves:plan,drag,settling:false};
  };
- const castShadows=(p:number,t:Turn)=>{const c=Math.min(1,Math.max(0,p)),lifted=Math.sin(Math.PI*c);
-  const near=castNear.current,far=castFar.current,reveal=t.leaves[0]?.reverse?c:1-c;
-  if(near){near.style.opacity=(.55*lifted*Math.pow(reveal,.35)).toFixed(3);near.style.transform=`scaleX(${Math.max(.05,Math.abs(Math.cos(Math.PI*c))).toFixed(3)})`;}
-  if(far)far.style.opacity=(.4*lifted*(1-reveal)).toFixed(3);};
+ /** The page-turn shadows at the main sheet's pose p: the near one's opacity and squash, the far one's opacity. */
+ const shadowAt=(p:number,t:Turn)=>{const c=Math.min(1,Math.max(0,p)),lifted=Math.sin(Math.PI*c),reveal=t.leaves[0]?.reverse?c:1-c;
+  return {near:(.55*lifted*Math.pow(reveal,.35)).toFixed(3),squash:`scaleX(${Math.max(.05,Math.abs(Math.cos(Math.PI*c))).toFixed(3)})`,far:(.4*lifted*(1-reveal)).toFixed(3)};};
+ const castShadows=(p:number,t:Turn)=>{const s=shadowAt(p,t),near=castNear.current,far=castFar.current;
+  if(near){near.style.opacity=s.near;near.style.transform=s.squash;}if(far)far.style.opacity=s.far;};
+ /** Sheet j's pose at q (0–1 through its own duration): each turn's easing, reversed for a phone's back turn. */
+ const leafPose=(t:Turn,j:number,q:number)=>{const leaf=t.leaves[j],e=q>=1?1:(!spread&&!leaf.reverse?inOut(q):spread&&j===t.leaves.length-1?spreadTurn(q):settle(q));return leaf.reverse?1-e:e;};
  const poseAll=(t:Turn,elapsed:number)=>{let done=true,mainP=0;
-  t.leaves.forEach((leaf,j)=>{const q=Math.min(1,Math.max(0,(elapsed-leaf.delay)/leaf.duration));if(q<1)done=false;const e=q>=1?1:(!spread&&!leaf.reverse?inOut(q):spread&&j===t.leaves.length-1?spreadTurn(q):settle(q)),p=leaf.reverse?1-e:e;leaves.current[j]?.pose(p);if(j===t.leaves.length-1)mainP=p;});
+  t.leaves.forEach((leaf,j)=>{const q=Math.min(1,Math.max(0,(elapsed-leaf.delay)/leaf.duration));if(q<1)done=false;const p=leafPose(t,j,q);leaves.current[j]?.pose(p);if(j===t.leaves.length-1)mainP=p;});
   castShadows(mainP,t);return done;};
  const finish=(commit:boolean)=>{const t=turnRef.current;if(!t)return;
   const hold=window as HoldWindow;if(hold.__fiBinderHold){hold.__fiBinderRelease=()=>{hold.__fiBinderRelease=undefined;finish(commit);};return;}
@@ -208,6 +211,24 @@ export default function CardCollection(){
  // The clock starts on the first animation frame (not when the sheets mount), so the costly mount frame never eats into the
  // turn and the sheet moves from its very first frame instead of jumping ahead.
  const run=(t:Turn)=>{let t0=-1;const frame=(now:number)=>{if(turnRef.current?.id!==t.id)return;if(t0<0)t0=now;if(poseAll(t,now-t0)){raf.current=undefined;finish(true);return;}raf.current=requestAnimationFrame(frame);};raf.current=requestAnimationFrame(frame);};
+ // Planned turns (arrows, keys, corners, tabs, riffles) play on the compositor instead (phone heat, Oct 1 2026): each sheet's
+ // poses and the shadows are sampled from the same curves a 60 Hz frame apart and handed over as linear Web Animations
+ // keyframes (as the card flight does), so no script, style recalc, layerize or paint runs per frame. Their clock starts when
+ // the first frame is shown, like run()'s. A drag keeps the per-frame loop (it follows the pointer).
+ const turnAnims=useRef<Animation[]>([]);
+ const stopAnims=()=>{for(const a of turnAnims.current)a.cancel();turnAnims.current=[];};
+ useEffect(()=>stopAnims,[]);
+ const samples=(ms:number,at:(q:number)=>number)=>{const k=Math.max(2,Math.ceil(ms/(1000/60))+1);return Array.from({length:k},(_,i)=>at(i/(k-1)));};
+ const play=(t:Turn)=>{
+  if(typeof Element==='undefined'||!Element.prototype.animate||t.leaves.some((_,j)=>!leaves.current[j])){run(t);return;}
+  stopAnims();const anims:Animation[]=[],m=t.leaves.length-1,main=t.leaves[m],total=main.delay+main.duration;
+  t.leaves.forEach((leaf,j)=>anims.push(...leaves.current[j]!.play(samples(leaf.duration,q=>leafPose(t,j,q)),{duration:leaf.duration,delay:leaf.delay})));
+  // The shadows follow the main (last, longest) sheet from the turn's start, holding still through its riffle delay.
+  const shade=samples(total,q=>leafPose(t,m,Math.min(1,Math.max(0,(q*total-main.delay)/main.duration)))).map(p=>shadowAt(p,t)),opts:KeyframeAnimationOptions={duration:total,easing:'linear',fill:'both'};
+  if(castNear.current)anims.push(castNear.current.animate(shade.map(s=>({opacity:s.near,transform:s.squash})),opts));
+  if(castFar.current)anims.push(castFar.current.animate(shade.map(s=>({opacity:s.far})),opts));
+  turnAnims.current=anims;
+  Promise.all(anims.map(a=>a.finished)).then(()=>{if(turnRef.current?.id===t.id)finish(true);},()=>{});};
  // Prebuilding: at most one turn, planned when the binder rests (idle time after a turn lands or the binder opens), when a
  // pointer or focus reaches a page arrow, and when a finger lands on a page. Nothing runs at rest once it is built.
  const prepKey=`${field}|${spread?1:0}|${g.pageW}x${g.pageH}|${start}`;
@@ -240,13 +261,14 @@ export default function CardCollection(){
   // eslint-disable-next-line react-hooks/exhaustive-deps
  },[turn]);
  // A planned (not dragged) turn starts once its sheets are mounted, from their first frame.
- useLayoutEffect(()=>{if(!turn||turn.settling)return;lastDir.current=turn.dir;leaves.current.forEach(leaf=>leaf?.reveal());const u=underRef.current;if(u?.hasAttribute('data-prep')){u.style.opacity='';u.removeAttribute('data-prep');}
+ // The last turn's keyframes are dropped first (its sheets are gone; the shadows may be reused), so inline poses apply again.
+ useLayoutEffect(()=>{if(!turn||turn.settling)return;stopAnims();lastDir.current=turn.dir;leaves.current.forEach(leaf=>leaf?.reveal());const u=underRef.current;if(u?.hasAttribute('data-prep')){u.style.opacity='';u.removeAttribute('data-prep');}
   if(turn.drag){const d=dragging.current;const leaf=turn.leaves[0];leaves.current[0]?.pose(leaf.reverse?1-(d?.p??0):(d?.p??0));castShadows(leaf.reverse?1-(d?.p??0):(d?.p??0),turn);return;}
-  poseAll(turn,0);run(turn);
+  poseAll(turn,0);play(turn);
   // eslint-disable-next-line react-hooks/exhaustive-deps
  },[turn?.id]);
  // A prebuilt turn's sheets rest where its first frame will put them (nothing is written again when it starts).
- useLayoutEffect(()=>{const t=prepRef.current;if(!t||turnRef.current)return;t.leaves.forEach((leaf,j)=>leaves.current[j]?.pose(leaf.reverse?1:0));
+ useLayoutEffect(()=>{const t=prepRef.current;if(!t||turnRef.current)return;stopAnims();t.leaves.forEach((leaf,j)=>leaves.current[j]?.pose(leaf.reverse?1:0));
   for(const el of [castNear.current,castFar.current])if(el){el.style.opacity='0';el.style.transform='';}},[prep?.id]);
 
  // Drag a page: it follows the pointer, curling from where it was grabbed; release past halfway (or flick) to turn.

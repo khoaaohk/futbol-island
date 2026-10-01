@@ -26,7 +26,7 @@ assert.match(settings,/phase>=250&&phase<=2350\?0/,'HUD rests between icon swaps
 assert.match(hud,/\.hudRest \.questsTrigger::before,\.hudRest \.questsTrigger::after\{animation-play-state:paused;filter:opacity\(0\)\}/,'resting sparkle dots fade out');
 assert.match(globals,/body:has\(\[data-hud-triggers\]\[data-scenery=rest\]\) \.field-learn-card:not\(\[hidden\]\)\{animation-play-state:running,paused\}/,'field prompt pulse rests with the HUD');
 assert.ok(!/\.field-learn-card[^{]*\{[^}]*backdrop-filter:blur/.test(globals),'no backdrop blur on the field prompt');
-assert.match(offer,/useSceneryRest\(ref,styles\.sparklesRest\)/,'offer stars rest');
+assert.match(offer,/setTimeout\(\(\)=>\{el\.classList\.add\(styles\.sparklesRest\);el\.dataset\.scenery='rest';\},SCENERY_AWAKE_MS\)/,'offer stars rest after 6 s');assert.doesNotMatch(offer,/useSceneryRest|key=\{`spark-/,'offer stars twinkle once: no input or deck swipe wakes them (Oct 1 2026, items C/G)');
 assert.match(offerCss,/\.sparklesRest span\{animation-play-state:paused\}/,'resting stars freeze');
 assert.match(read('components/FieldLearning.tsx'),/<FieldVisualBeat session=\{session\} hidden=\{!chosen\|\|/,'no lesson-beat timer without a lesson');
 console.log('HEAT_IDLE_PASS bottle grain layer, zero-size/closed-dialog wave stop, modal-layer scenery rest, HUD pause under Strikers, HUD/pulse/star rest, no field-card blur, no idle beat timer');

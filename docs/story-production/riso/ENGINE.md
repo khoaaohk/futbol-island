@@ -50,7 +50,7 @@ Rules that keep the seams pixel-exact: a scene reads only `t` and `c` (never `c.
 | `tone(ink,path,density,box?,rule?)` | number → one halftone level; function `(x,y)=>0..1` → a dot-size ramp quantized into bands (cost: a grid over `box`; keep boxes small) |
 | `knockout(path,cov?,rule?)` | paper on every plate (highlights, chalk, gaps); cov<1 = dotted paper |
 | `field(ink,cov?,mottle?)` | whole-sheet ink with low-frequency mottling |
-| `press(seed)` | **player only** — paper, speckle inside every ink, plates multiplied with registration offsets, final grain |
+| `press(seed)` | **player only** — paper, plates multiplied with registration offsets, speckle (paper-coloured flecks laid once over the pressed ink, not per plate, since Oct 1 2026), final grain |
 
 Print order = `spec.order` (lightest first, navy last). Screens rotate per plate index (14°, 76°, 0°, 45°). Overprints in this engine (alpha .9 on cream): blue×yellow ≈ #18721a green, pink×blue ≈ #182c7e purple, pink×yellow ≈ #f04c10 orange, pink×green = muddy (avoid: knock out beneath). Check a pair with `overprint(a,b)`.
 

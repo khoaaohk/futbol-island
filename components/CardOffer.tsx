@@ -11,7 +11,7 @@ import {CARD_ENTRIES,readCollection} from '@/lib/town/cardCollection';
 import {OPEN_CARDS_EVENT,chooseOfferCard,liveOffer} from '@/lib/town/cardRewardStore';
 import {offerReason,type CardOffer as Offer} from '@/lib/town/cardRewards';
 import styles from './CardOffer.module.css';
-import {useSceneryRest} from '@/lib/sceneryRest';
+import {SCENERY_AWAKE_MS} from '@/lib/sceneryRest';
 
 const ENTRY=new Map(CARD_ENTRIES.map(entry=>[entry.name,entry]));
 const PROFILES=profiles as Record<string,{blurb:string;strengths:string[]}>;
@@ -224,7 +224,7 @@ export default function CardOffer({offerId,complete=false,onClose}:{offerId:stri
      </div>
      {/* Sparkling stars around the front card (user, Sep 25 2026: keep twinkling while the card is in view; many sizes).
          Compositor-only, only while the offer is open and before choosing; none with reduced motion. */}
-     {!chosen&&<Sparkles key={`spark-${active}`} className={styles.sparkles}/>}
+     {!chosen&&<Sparkles className={styles.sparkles}/>}
      {/* Above the card: which card (never who); Open 52px below it. */}
      {n>0&&<div className={styles.caption} aria-hidden="true">
       <span className={styles.where}>{n>1?`${active+1} of ${n}`:'1 card'}</span>
@@ -246,9 +246,11 @@ export default function CardOffer({offerId,complete=false,onClose}:{offerId:stri
 
 /** The binder dock's page arrow (CardCollection), same path and stroke. */
 /** Star spots around the front card: x, y as fractions of the card (outside its edge), delay, size. */
-/** The twinkling stars. They rest (freeze on their current frame, compositor idle) 6 s after the card appears or the last input,
- * and twinkle again on any tap, key or pointer move (heat audit 2026-09-25). */
-function Sparkles({className}:{className:string}){const ref=useRef<HTMLDivElement>(null);useSceneryRest(ref,styles.sparklesRest);
+/** The twinkling stars. They twinkle for SCENERY_AWAKE_MS (6 s) when they appear, then rest for good (frozen on their current
+ * frame, compositor idle). Oct 1 2026 heat pass (user approved, items C and G): taps, tilts and swipes no longer wake them. Touch-
+ * tilting the reveal kept them at 60 fps nonstop, and each deck swipe remounted them for another 6 s. */
+function Sparkles({className}:{className:string}){const ref=useRef<HTMLDivElement>(null);
+ useEffect(()=>{const el=ref.current;if(!el)return;el.dataset.scenery='live';const t=setTimeout(()=>{el.classList.add(styles.sparklesRest);el.dataset.scenery='rest';},SCENERY_AWAKE_MS);return ()=>clearTimeout(t);},[]);
  return <div ref={ref} className={className} data-sparkles aria-hidden="true">{SPARKS.map(([x,y,d,z],i)=><span key={i} style={{'--x':x,'--y':y,'--d':`${d}s`,'--z':z} as React.CSSProperties}>✦</span>)}</div>;}
 const SPARKS:[number,number,number,number][]=[[-0.08,0.11,1.6,0.52],[1.09,0.15,0.1,0.96],[0.06,-0.06,0.2,0.54],[0.13,1.07,0.3,0.67],[-0.13,0.34,1.4,0.85],[1.07,0.41,2.1,0.74],[0.26,-0.04,0.7,1.27],[0.26,1.06,1.5,0.82],[-0.07,0.51,0.1,0.66],[1.10,0.53,0.8,1.04],[0.49,-0.05,1.9,1.15],[0.45,1.06,1.3,1.33],[-0.09,0.72,2.4,0.57],[1.12,0.67,0.4,0.94],[0.60,-0.07,1.8,1.02],[0.75,1.05,1.7,1.04],[-0.10,0.87,2.0,1.39],[1.11,0.86,0.1,1.15]];
 function Arrow({dir}:{dir:1|-1}){return <svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true"><path d={dir===1?'M7 3.5 14 10l-7 6.5':'M13 3.5 6 10l7 6.5'} fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"/></svg>;}

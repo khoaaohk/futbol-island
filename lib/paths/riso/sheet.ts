@@ -1,7 +1,7 @@
 /** Riso engine — the sheet: one offscreen plate canvas per ink, halftone
- * pattern tiles in sheet space, speckle grain inside the ink, and press()
- * which lays paper, multiplies the plates with a stable registration offset
- * and lets paper show through. Everything is cached per canvas and size. */
+ * pattern tiles in sheet space, and press() which lays paper, multiplies the
+ * plates with a stable registration offset, speckles the ink so paper shows
+ * through it and lays paper grain. Everything is cached per canvas and size. */
 import {hash,rng,TAU,clamp,lerp,easeIO,pathExtent,type Pt} from './motion';
 
 export type InkSet=Record<string,string>;
@@ -43,16 +43,16 @@ export type Sheet={
 export type DotMode='riso'|'off'|'action'|'fine';
 const dotModes=new WeakMap<CanvasRenderingContext2D,DotMode>();
 export function setSheetDots(ctx:CanvasRenderingContext2D,mode:DotMode){dotModes.set(ctx,mode);}
-/** Per mode: speckle (paper holes in the ink), paper grain and registration offset, as multiples of the spec's values. */
+/** Per mode: speckle (paper flecks in the ink), paper grain and registration offset, as multiples of the spec's values. */
 const MODE_TEXTURE:Record<DotMode,{speckle:number;grain:number;reg:number}>={riso:{speckle:1,grain:1,reg:1},off:{speckle:.35,grain:.7,reg:.7},action:{speckle:.55,grain:.8,reg:.7},fine:{speckle:.55,grain:.8,reg:.7}};
 export type PassageState={pending?:{points:Pt[];progress:number};screen?:Pt[];blend?:{p:number}};
 export const LEVELS=[.1,.2,.32,.45,.6,.75,.88] as const;
 /** Screen lattices per plate order index: (4,1)≈14°, (1,4)≈76°, (1,0)=0°, (1,1)=45° — overprints do not moiré. */
 const LATTICE:[number,number][]=[[4,1],[1,4],[1,0],[1,1]];
-/** `inked`: something has printed on this plate since the frame's clear. A knockout, the speckle punch or the multiply of a plate that is
+/** `inked`: something has printed on this plate since the frame's clear. A knockout or the multiply of a plate that is
  * still empty changes no pixel, so press() and knockout() skip it (performance, Sep 26 2026: most knockouts hit four plates). */
 type Plate={name:string;hex:string;canvas:HTMLCanvasElement;ctx:CanvasRenderingContext2D;index:number;inked:boolean};
-type Cache={width:number;height:number;dpr:number;inkKey:string;plates:Plate[];byName:Map<string,Plate>;patterns:Map<string,CanvasPattern>;speckle?:CanvasPattern;grain?:CanvasPattern;mottle?:CanvasPattern;cell:number};
+type Cache={width:number;height:number;dpr:number;inkKey:string;plates:Plate[];byName:Map<string,Plate>;patterns:Map<string,CanvasPattern>;grain?:CanvasPattern;mottle?:CanvasPattern;cell:number};
 const caches=new WeakMap<CanvasRenderingContext2D,Cache>();
 const make=(w:number,h:number)=>{const c=document.createElement('canvas');c.width=Math.max(1,w);c.height=Math.max(1,h);return c;};
 /** A plate's 2D context; iOS returns null once its canvas memory budget is spent, which must fail loudly (the player then steps down). */
@@ -88,8 +88,9 @@ function makeFineTile(ctx:CanvasRenderingContext2D,hex:string,level:number,latti
  g.fillStyle=hex;g.globalAlpha=base;g.fillRect(0,0,T,T);g.globalAlpha=1;const rad=cellPx*Math.sqrt(f/Math.PI),range=Math.ceil((T+cellPx*2)/s)+2;g.beginPath();
  for(let m=-range;m<=range;m++)for(let n=-range;n<=range;n++){const x=(m*a-n*b)*s,y=(m*b+n*a)*s;if(x<-cellPx||y<-cellPx||x>T+cellPx||y>T+cellPx)continue;g.moveTo(x+rad,y);g.arc(x,y,rad,0,TAU);}
  g.fill();return t;}),'repeat')!;}
-/** Speckle: fine stochastic holes punched in the ink so paper shows as light speckle (the reference frames' grain). */
-function makeSpeckle(ctx:CanvasRenderingContext2D,dpr:number){return ctx.createPattern(tile(`speckle|${dpr}`,()=>{const T=128,tile=make(T,T),g=tile.getContext('2d')!,r=rng(77);g.fillStyle='#000';
+/** Speckle: fine stochastic flecks of paper colour that press() lays once over the pressed plates, so paper shows through the ink as
+ * light speckle (the reference frames' grain). Same flecks (seed, count, sizes, alphas) as the holes it used to punch in every plate. */
+function makeSpeckle(ctx:CanvasRenderingContext2D,dpr:number,paper:string){return ctx.createPattern(tile(`speckle|${dpr}|${paper}`,()=>{const T=128,tile=make(T,T),g=tile.getContext('2d')!,r=rng(77);g.fillStyle=paper;
  for(let i=0;i<1500;i++){const x=r()*T,y=r()*T,s=(.5+r()*1.1)*dpr,al=.35+r()*.65;g.globalAlpha=al;g.fillRect(x,y,s,s);}return tile;}),'repeat')!;}
 /** Paper grain: darker fibres and flecks, multiplied last so paper texture sits on solids too. */
 function makeGrain(ctx:CanvasRenderingContext2D,dpr:number){return ctx.createPattern(tile(`grain|${dpr}`,()=>{const T=160,tile=make(T,T),g=tile.getContext('2d')!,r=rng(91);g.fillStyle='#fff';g.fillRect(0,0,T,T);
@@ -201,7 +202,7 @@ export function acquireSheet(ctx:CanvasRenderingContext2D,width:number,height:nu
    g.setTransform(m);g.restore();tv++;sheet._ops+=2;},
   press(seed){
    const reg=(spec.registration??1.8)*dpr*tex.reg,alpha=spec.alpha??.9,grain=(spec.grain??.6)*tex.speckle;
-   c.speckle??=makeSpeckle(ctx,dpr);c.grain??=makeGrain(ctx,dpr);
+   c.grain??=makeGrain(ctx,dpr);let inked=false;
    ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;
    ctx.fillStyle=spec.paper;ctx.fillRect(0,0,pw,ph);
    // faint stock bands: light falling across the sheet at 45°
@@ -210,12 +211,18 @@ export function acquireSheet(ctx:CanvasRenderingContext2D,width:number,height:nu
    const blend=sheet._passage.blend,u=blend?(blend.p>=1?1:easeIO(blend.p)):0;
    for(const p of c.plates){
     if(!p.inked)continue;// an empty plate multiplies to nothing
-    // speckle inside the ink: fine holes so paper shows through every field
-    if(grain>0){const g=p.ctx;g.save();g.setTransform(1,0,0,1,0,0);g.globalCompositeOperation='destination-out';g.globalAlpha=grain*.55;g.fillStyle=c.speckle;g.fillRect(0,0,pw,ph);g.restore();}
+    inked=true;
     const o=offset(seed,p.index),o2=blend?offset(seed+1,p.index):o,ox=u>=1?o2[0]:lerp(o[0],o2[0],u),oy=u>=1?o2[1]:lerp(o[1],o2[1],u);
     ctx.globalCompositeOperation='multiply';ctx.globalAlpha=alpha;// card modes: whole device pixels (a half-pixel offset resamples, i.e. softens, every plate); classic riso keeps its half-pixel steps
     if(mode==='riso')ctx.drawImage(p.canvas,Math.round(ox*2)/2,Math.round(oy*2)/2);else ctx.drawImage(p.canvas,Math.round(ox),Math.round(oy));
    }
+   // speckle inside the ink: paper-coloured flecks laid once over the pressed plates (heat pass, Oct 1 2026, item D). Until then every
+   // inked plate had the same flecks punched out (destination-out) before its multiply: one full-plate pass per plate. Under one ink the
+   // result is the same (a fleck pulls the ink toward paper by the same fraction); in overprints a fleck now shows paper where it used to
+   // show the other ink, offset by registration; on paper it changes nothing (on the faint stock bands < 2 levels). Plain source-over:
+   // no blend mode that would read the destination back. Mottle stays per field: on the pressed image it would blotch figures too.
+   if(grain>0&&inked){const k=`speckle|${spec.paper}`;let pat=c.patterns.get(k);if(!pat){pat=makeSpeckle(ctx,dpr,spec.paper);c.patterns.set(k,pat);}
+    ctx.globalCompositeOperation='source-over';ctx.globalAlpha=grain*.55;ctx.fillStyle=pat;ctx.fillRect(0,0,pw,ph);}
    ctx.globalCompositeOperation='multiply';ctx.globalAlpha=.55*tex.grain;ctx.fillStyle=c.grain;ctx.fillRect(0,0,pw,ph);
    ctx.restore();sheet._ops+=4+c.plates.length;
   },

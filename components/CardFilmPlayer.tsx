@@ -14,6 +14,9 @@ export type CardCaption={chapter:number;sentence:string;words:string};
  *  (Sep 26 2026, Web Inspector timeline of deploy 3), and the user approved a 1.5 cap on phones. Sharpness on phones comes from the
  *  'action' dot mode. Either way, if drawing cannot hold ~17 fps over a 2 s window, the canvas steps down once to 1.5. */
 const FRAME_MS=1000/24,MAX_DPR=2,PHONE_DPR=1.5,FALLBACK_DPR=1.5,HOLD_FPS=17;
+/** Oct 1 2026 heat pass (user approved, item B): phones and tablets draw card films at 15 fps ("on twos"), ~25% less film work at
+ *  60 Hz and ~37% at 120 Hz in phone emulation. The slow-drawing check scales with it (17 of 24 → 10.6 of 15 paints a second). */
+const PHONE_FRAME_MS=1000/15;
 /** How the card films print tints (lib/paths/riso/sheet.ts DotMode). Default 'action' (user's choice, Sep 26 2026): no screen on the play (figures, ball, lines),
  *  a fine screen on fields and crowds. `?dots=riso|off|action|fine` (remembered in this browser) switches it for comparison. */
 function cardDots():DotMode{const ok=(v:string|null):v is DotMode=>v==='riso'||v==='off'||v==='action'||v==='fine';
@@ -57,7 +60,8 @@ export default function CardFilmPlayer({story,audio,running,className,onEnd,onCa
  useEffect(()=>{
   const el=ref.current,ctx=el?.getContext('2d');if(!el||!ctx||!running)return;
   const media=audio,releaseNarration=registerIslandNarration(media),release=holdVideoPlayback(),reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;setSheetDots(ctx,cardDots());
-  let cap=Math.min(matchMedia('(pointer: coarse)').matches?PHONE_DPR:MAX_DPR,filmDprCap()),windowStart=0,windowPaints=0,failures=0;// heat pass 4: a hot phone / Battery saver starts at 1.5
+  const coarse=matchMedia('(pointer: coarse)').matches,frameMs=coarse?PHONE_FRAME_MS:FRAME_MS,holdFps=HOLD_FPS*FRAME_MS/frameMs;
+  let cap=Math.min(coarse?PHONE_DPR:MAX_DPR,filmDprCap()),windowStart=0,windowPaints=0,failures=0;// heat pass 4: a hot phone / Battery saver starts at 1.5
   const track=story.audio.mode==='track',starts=chapterStarts(story),duration=storyDuration(story),lastChapter=story.chapters.length-1;
   const seconds=(i:number)=>chapterSeconds(story,i);
   const srcFor=(i:number)=>story.audio.mode==='track'?story.audio.src:story.chapters[i]?.audio;
@@ -99,17 +103,19 @@ export default function CardFilmPlayer({story,audio,running,className,onEnd,onCa
   // Between drawn frames the loop sleeps on a timer and asks for a display frame only when the next one is due: a bare rAF
   // chain woke the page at display rate (60–120/s) to draw 24 (heat pass, Sep 29 2026).
   const schedule=()=>{if(disposed)return;if(reduced){timer=setTimeout(()=>step(performance.now()),STILL_POLL_MS);return;}
-   const wait=lastDraw+FRAME_MS-performance.now()-6;if(wait>4)timer=setTimeout(()=>{timer=undefined;if(!disposed)raf=requestAnimationFrame(step);},wait);else raf=requestAnimationFrame(step);};
+   const wait=lastDraw+frameMs-performance.now()-6;if(wait>4)timer=setTimeout(()=>{timer=undefined;if(!disposed)raf=requestAnimationFrame(step);},wait);else raf=requestAnimationFrame(step);};
   const step=(now:number)=>{raf=0;timer=undefined;if(disposed)return;const dt=last?Math.min(.15,(now-last)/1000):0;last=now;
    if(!advance(dt))return;
    if(reduced){caption();if(resolveFrame(story,time,track?undefined:chapter).chapter!==drawnChapter)draw();}
    // A clock that has not moved (narration buffering) redraws nothing. The caption follows the drawn frames (≤ 1/20 s behind the
    // voice), not every display refresh in between.
-   else if(now-lastDraw>=FRAME_MS-2&&time!==painted){const gap=now-lastDraw;draw();caption();lastDraw=now;
+   // Item F (Oct 1 2026): accept a display frame up to 10 ms early, so each timer wake draws instead of asking for another rAF
+   // (under load the strict 2 ms check gave 34–40 rAF/s for 20 draws/s).
+   else if(now-lastDraw>=frameMs-10&&time!==painted){const gap=now-lastDraw;draw();caption();lastDraw=now;
     // adaptive sharpness: over each 2 s of drawing, fewer than HOLD_FPS paints a second drops the canvas to the fallback DPR once
     // (a pause in drawing, e.g. narration buffering, restarts the window instead of counting as slowness)
     if(!windowStart||gap>400){windowStart=now;windowPaints=0;}windowPaints++;
-    if(now-windowStart>=2000){if(cap>FALLBACK_DPR&&dpr>FALLBACK_DPR&&windowPaints*1000/(now-windowStart)<HOLD_FPS){cap=FALLBACK_DPR;if(measure())draw();el.dataset.dpr=String(dpr);}windowStart=now;windowPaints=0;}}
+    if(now-windowStart>=2000){if(cap>FALLBACK_DPR&&dpr>FALLBACK_DPR&&windowPaints*1000/(now-windowStart)<holdFps){cap=FALLBACK_DPR;if(measure())draw();el.dataset.dpr=String(dpr);}windowStart=now;windowPaints=0;}}
    schedule();};
   // Layout size (clientWidth, not the tilted/flipping bounding box). Resizing clears the bitmap: redraw the frame on show.
   const resize=typeof ResizeObserver==='undefined'?null:new ResizeObserver(()=>{if(measure())draw();});resize?.observe(el);

@@ -1,5 +1,112 @@
 # Performance reference for future Futbol Island updates
 
+## Idle rides and flights at 20 fps — October 1, 2026 (local, not deployed)
+
+User: "when flying or riding idle should not waste energy." This supersedes the September "20 fps idle ambience: skipped" entry below. That pass rejected it because the hover bob, exhaust and townsfolk always move. The user has now chosen the energy saving over full smoothness while sitting still on a ride.
+
+- **Rule** (`lib/town/idleRide.ts`, wired in `components/Town.tsx` next to the frame cap):
+  - Applies on a ride or the jetpack, never while walking.
+  - Triggers after 4 s with no pointer, key or wheel input and no travel. Travel means the player or camera moving faster than 0.35 m/s horizontally or 1.5 m/s vertically. The jetpack hover bob stays under those limits; a parachute descent, a landing, a camera pan or a carried truck ride do not.
+  - While idle, the island renders at 20 fps on every device (`frameCapSlot` with 50 ms slots, never faster than the heat tier's own cap). Any input or travel restores 30 fps (phones) or the display rate (desktop) on the next frame.
+  - The simulation's dt clamp (0.05 s) equals one 20 fps frame, so nothing moves slower, only less often.
+- **Measured** (Chromium with the Mac's GPU, 390×844):
+  - Jetpack hover with no input: 20.0 fps, against 30 with input.
+  - After a pointer move: 30.0 fps at once, and back to 20 fps after 4 s.
+  - Idle on the bike: 20 fps.
+  - That is ~33% fewer island frames while idle on a ride.
+  - `renderStats.idleRide` (in `__fi2`) shows the current cap (0 or 50).
+- **Tradeoff:** the hover bob, exhaust, townsfolk, traffic and water animate at 20 fps while you sit still on a ride.
+- **Tests:** `tests/idle-ride.cjs` covers a still hover going idle after 4 s; input, drift, parachute descent and camera pan restoring the rate; walking never being capped; a long pause restarting the wait; exactly 20 fps on 120 Hz timestamps; and the wiring.
+- **Caveat:** this is fewer frames in emulation, not a measured iPhone temperature drop.
+
+## Heat pass, card films and binder, items A, B, C, E, F, G — October 1, 2026 (local, not deployed)
+
+User report: the phone still warms while playing card stories, in the binder and in the card pick after a ball. Two emulation audits (Chromium, 390×844 DPR 3, touch, 4× CDP CPU) found these screens already put the island to sleep (0 frames), and the binder, the quick-play diagrams and the resting viewer idle at ~0 work. The remaining cost was the card film itself (65–100% of a throttled core), the blur behind the viewer, binder turns (item H, below) and the card-offer stars. The user approved all eight items, A–H; D and H have their own sections below.
+
+- **A. No blur behind the card viewer** (`CardCollection.module.css`). The static `filter:blur(18px)` on the binder, dock and header was re-applied on every compositor frame the film or scenery drew: compositor 164 → 101 ms/s during a film, 480 → 310 while scenery was awake (a 6 px blur only reached −5%). The backdrop tint went from `#12302ae0` to `#12302af2`, so the binder is dimmed rather than frosted. `tests/card-collection.cjs` now pins "no filter" and the tint.
+- **B. Card films at 15 fps on phones and tablets** (`CardFilmPlayer.tsx` `PHONE_FRAME_MS`; desktop stays 24). The slow-drawing DPR step-down scales with it (17 × 15/24 ≈ 10.6 paints/s). The look is "on twos"; narration timing is unchanged.
+- **F. One wake per drawn frame.** The draw check accepts a display frame up to 10 ms early (was 2), so the timer-woken rAF draws instead of asking again.
+- **Measured B+F (+D) in the app,** Messi film, phone profile: 15.0 draws/s, 16 compositor swaps/s (was ~40–55 commits/s), script 438 ms/s (was 525–640), layout/style ~5 ms/s.
+- **C + G. Card-offer stars twinkle once** (`CardOffer.tsx` `Sparkles`). They twinkle for `SCENERY_AWAKE_MS` (6 s) on mount and then rest for good: no `useSceneryRest`, so input no longer wakes them. Touch-tilting the reveal had kept them at 60 swaps/s; with them at rest the reveal is 0 swaps, ~0.5 ms/s task, and the flip ~45% cheaper on the main thread. The deck's `key=spark-${active}` was dropped, so a swipe no longer remounts them. Pinned in `tests/heat-idle.cjs`.
+- **E. Hot phones print films at DPR 1.25** (`heatTier.ts` tiers 2–4 `filmDpr` 1.5 → 1.25; tier 0/1 unchanged). Emulation: −14 to −17% film script. Only when the heat ladder has already stepped down, because of the earlier blur complaint. Pinned in `tests/heat-tiers.cjs`.
+- **Validation:** `npx tsc`, `npm test`, `tests/card-collection.cjs` (1440 and 390) and `tests/iconic-play-ui.cjs` pass. Screenshot of the playing viewer checked (dimmed binder, sharp card).
+- **Caveat:** all of this is reduced work in Chromium emulation. It is not evidence of a cooler iPhone; a Safari Web Inspector timeline on a device during film playback and reveal tilt would confirm it.
+
+## Heat pass, card films and binder, item D: riso speckle laid once per frame, not once per plate — October 1, 2026 (local, not deployed)
+
+The user approved this item. A profile of the riso engine (Chromium, phone profile 390×844 at DPR 3, 4× CPU throttle) found that `press()` in `lib/paths/riso/sheet.ts` punched the speckle holes into every inked plate before multiplying it: one full-plate `destination-out` pattern pass per ink (3–5 per frame). Both card films (`CardFilmPlayer`) and path stories (`StoryFilmPlayer`) use this engine.
+
+**Implementation (`lib/paths/riso/sheet.ts`, `press()` and `makeSpeckle()`).**
+- The speckle tile has the same seed, count, sizes and alphas as before, but it is drawn in the paper colour. It is cached per dpr and paper colour in the shared tile map, and per canvas in `c.patterns` under `speckle|<paper>`.
+- After the plates are multiplied, `press()` lays the tile once over the whole frame with plain `source-over` at the same alpha (`grain*.55`), but only if at least one plate was inked. The final paper grain multiply follows as before. The engine contract and `_ops` count are unchanged.
+- I tested `source-over` against `lighten`. Both were measurably faster than the old per-plate pass, and `source-over` came out marginally closer to the old frames. It also needs no blend mode that reads the destination back.
+
+**Why the look holds.** Under a single ink, a speckle fleck pulls the pixel toward paper by the same fraction as the old hole did, so the result is mathematically the same. Three things differ:
+- Flecks no longer shift with each plate's registration offset.
+- In overprints a fleck now shows paper where it used to show the other ink.
+- On the faint 45° stock bands a fleck reads as paper, at most about 2 levels darker than the band.
+
+**Mottle stays per field.** I also prototyped mottle as a single pass on the pressed image and rejected it. `field()` mottles only the field it lays, but a pass on the pressed image also blotches every figure, line and ink drawn over the field. In the frames this showed as visible pale blotches on the players, and the mean brightness of Güler, Bale, chalk-line and harbour-night rose by about 5–7 levels.
+
+**Visual validation.** I rendered 7 films at 4 fixed timestamps each, before and after: the card films guler-signature (field-heavy), banks-save-1970, messi-getafe-2007 and bale-overhead-2018 at 284×300 css in action dots, and the stories chalk-line, harbour-night and loss at 390×850 in riso dots, all at DPR 1.5. The mean absolute difference per channel was 2.4–4.3 on the card films and 4.5–8.5 on the stories (the stories have full-sheet overprints), 4.8 overall, with a maximum of 79 on isolated fleck pixels. The mean brightness shift was +0.03 to +1.7. Side by side, at full size and at 2× crops, I could not tell the frames apart by eye. `scripts/review-riso-story.mjs` still shows 0 seam diffs in all 22 stories, and `scripts/check-path-films-browser.mjs` passes 44 views.
+
+**Measurement (emulation, not iPhone temperature evidence).** This is an isolated per-draw benchmark: `story.draw` + `press` on 60 frames per round, with the variants interleaved for 9 rounds. It ran in the phone context with 4× CDP throttle, on a canvas the size of the card window (284×300 css at the phone film DPR 1.5) and of a full story (390×844 at 1.5).
+
+| film | before (min / median ms per draw) | after | change |
+|---|---|---|---|
+| messi-getafe-2007 | 32.5 / 45.4 | 27.1 / 37.4 | −16 % / −18 % |
+| guler-signature | 52.2 / 67.6 | 42.8 / 58.8 | −18 % / −13 % |
+| banks-save-1970 | 37.8 / 40.8 | 32.9 / 33.8 | −13 % / −17 % |
+| chalk-line (story) | 84.2 / 104.6 | 68.1 / 84.5 | −19 % / −19 % |
+| harbour-night (story) | 158.4 / 212.1 | 135.0 / 202.0 | −15 % / −5 % |
+
+In-app binder runs with `filmab.cjs` were too noisy on the shared machine (±20 ms between identical runs) to give separate numbers, though Messi moved from 37–41 to 32–35 ms per draw. This is reduced work in desktop Chromium emulation. It is not a measured iPhone temperature change.
+
+## Heat pass, card films and binder, item H: binder page turns on the compositor — October 1, 2026 (local, not deployed)
+
+The user approved this item. Before the change, the arrow, key, corner, tab and riffle turns ran a rAF loop that wrote the inline transform and opacity of every strip, shade, gloss and shadow on each frame. That cost about 43 main-thread frames a second while a page turned.
+
+**Implementation (`components/BinderLeaf.tsx`, `components/CardCollection.tsx`).**
+- `BinderLeaf` now has one `frame(p)` pose function that both `pose()` and a new `play(ps, {duration, delay})` use.
+- `play()` turns the sampled poses into linear Web Animations keyframes, one sample per 60 Hz frame: the strip `transform`, and the shade, back-shade and gloss `opacity`. It uses `fill: 'both'`, the same pattern as the card flight's sampled `flight()` keyframes. The compositor plays them.
+- `CardCollection.play()` samples each sheet's own easing (`leafPose`: `inOut`, `spreadTurn` or `settle`, reversed for a phone's back turn) and the shadow curve (`shadowAt`, following the main sheet through its riffle delay).
+- `finish(true)` runs when all the animations' `finished` promises resolve. The end-of-turn handover is unchanged: the last pose is held by fill until the sheets unmount.
+- A drag still poses the sheet per frame, and so does its release. Reduced motion, queued taps (riffles), the prebuilt turn, `__fiBinderHold` and the sounds are unchanged. There is a rAF fallback where `Element.animate` is missing.
+- The phone's `away` hide is a one-off timer on the turn's own clock that sets the leaf's opacity, as `pose()` did. Two other approaches were tried and rejected:
+  - Animating the leaf's opacity flattened its `preserve-3d`, because opacity is a grouping property. The sheet then turned with no perspective or lift.
+  - Animating each face's opacity kept the 3D, but it gave every face its own layer. Raster tasks went from about 38 to about 128 a second.
+
+**Measurements.** Headless Chromium, 390×844 at DPR 3, touch, 4× CPU throttle, dev server. Each window is 5 s with 4 dock-arrow turns. The figures are medians per second, with 8 windows before and 16 after, run interleaved. The script is `scratchpad/binder-waapi/measure.cjs`.
+
+| | Before (rAF) | After (WAAPI) |
+|---|---|---|
+| Task | 279 ms (222–382) | 139 ms (108–213) |
+| Script / style / layout | 44 / 39 / 8.1 ms | 35 / 28 / 7.1 ms |
+| rAF callbacks | 43 | 1.6 |
+| Layerize | 44.6 (83 ms) | 13.6 (12 ms) |
+| Commit | 89 (15 ms) | 22 (4.5 ms) |
+| Raster | 79 ms | 71 ms (unchanged, off-thread) |
+| Compositor draws | 43 | 40 |
+
+The remaining main-thread work is at each turn's start and landing: the page swap and the idle prebuild of the next turn. The sheet itself costs nothing on the main thread while it moves.
+
+**Look.** `scratchpad/binder-waapi/visual.cjs` freezes a turn at a fixed time from its first frame. For the rAF build it clamps rAF timestamps; for the WAAPI build it pauses the animations. Compared with before, frames differ in 0–0.36 % of pixels, at sub-pixel edges only. The comparison covered:
+- Phone next turn at 120, 300 and 480 ms, and back turn at 200 and 450 ms.
+- Tab riffle at 150, 350 and 600 ms.
+- Desktop spread next turn at 250 and 500 ms, back turn at 300 ms, and tab turn at 300 ms.
+- Rest frames, a mid-drag frame and reduced motion, all identical.
+
+**Not adopted (part 2, thumb faces inside the turning sheets).** Thumb faces cut the prebuilt sheet from 518 to 392 elements and from 36 to 18 masks and blend layers. In an interleaved A/B (12 against 16 windows) the cost was unchanged: task 139.5 against 139 ms/s, and raster 70 against 71 ms/s. Once the turn is keyframed, the sheet is rasterised once during the idle prebuild and is not repainted while it moves. The change would also have been visible: every card's backdrop and halftone tone change at the first frame and again at landing. It would also break the spread's end-of-turn snap check in `tests/card-collection.cjs`.
+
+**Validation.**
+- `npx tsc --noEmit -p .` and `npm test` pass.
+- `tests/card-collection.cjs` passes at 1440 and 390, including end-of-turn snaps of 0.08 % and 0.125 %. One exception: its "heavily blurred behind the card" assertion fails because item A removed that blur, which is that item's test to update.
+- `tests/e2e/cards.spec.ts` passes on iphone-15 (WebKit) and pixel-7.
+- Quick taps still queue into a riffle, Home and End work, and no binder animation is left at rest.
+- Playwright's headless WebKit draws the 3D sheet flat both before and after this change, so it can't judge the curl.
+
+**Caveat.** This is desktop Chromium emulation, not an iPhone. It shows reduced main-thread work, not a measured drop in phone temperature.
+
 ## Splash cast arrives with the splash — October 1, 2026 (local, not deployed)
 
 User report: "the characters load in way slower than the rest of the page."

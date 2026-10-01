@@ -183,7 +183,9 @@ async function open(browser,[w,h],{faceDown=false}={}){
     assert.equal(await count(page,'dialog[open] [role=dialog][aria-label="Kylian Mbappé card"]'),1,'the full card opens');
     // The backdrop is a flat scrim (no backdrop-filter, for phone heat); the binder and dock behind take a static blur.
     assert.ok(await page.evaluate(()=>{const c=getComputedStyle(document.querySelector('dialog[open] [class*=viewerBackdrop]')).backgroundColor;const a=c.match(/[\d.]+(?=\))/);return /rgba?\(/.test(c)&&(!/rgba/.test(c)||+a[0]>=.5);}),'the binder is dimmed behind');
-    assert.ok(await page.evaluate(()=>['[class*=CardCollection_layer]','nav[aria-label=Binder]'].every(sel=>/blur\((1[4-9]|2\d)px\)/.test(getComputedStyle(document.querySelector(`dialog[open] ${sel}`)).filter))),'the binder and dock are heavily blurred behind the card');
+    // Oct 1 2026 heat pass (item A): no blur behind the card (it was re-applied on every compositor frame); a darker tint instead.
+    assert.ok(await page.evaluate(()=>['[class*=CardCollection_layer]','nav[aria-label=Binder]'].every(sel=>getComputedStyle(document.querySelector(`dialog[open] ${sel}`)).filter==='none')),'no filter on the binder and dock behind the card');
+    assert.equal(await page.evaluate(()=>getComputedStyle(document.querySelector('dialog[open] [class*=viewerBackdrop]')).backgroundColor),'rgba(18, 48, 42, 0.95)','the darker tint covers the binder');
     const cardW=await page.evaluate(()=>document.querySelector('dialog[open] [class*=cardHost]>div>div:first-child').getBoundingClientRect().width);
     // Phone card is 82vw and matches the binder page band (user request), so a 390 phone gives ~320px.
     assert.ok(cardW>=(spread?450:300),`the card is large (${cardW}px)`);
