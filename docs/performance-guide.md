@@ -1,6 +1,6 @@
 # Performance reference for future Futbol Island updates
 
-## Idle rides and flights at 20 fps — October 1, 2026 (local, not deployed)
+## Idle rides and flights at 20 fps — October 1, 2026 (deployed in Deploy 15)
 
 User: "when flying or riding idle should not waste energy." This supersedes the September "20 fps idle ambience: skipped" entry below. That pass rejected it because the hover bob, exhaust and townsfolk always move. The user has now chosen the energy saving over full smoothness while sitting still on a ride.
 
@@ -19,7 +19,7 @@ User: "when flying or riding idle should not waste energy." This supersedes the 
 - **Tests:** `tests/idle-ride.cjs` covers a still hover going idle after 4 s; input, drift, parachute descent and camera pan restoring the rate; walking never being capped; a long pause restarting the wait; exactly 20 fps on 120 Hz timestamps; and the wiring.
 - **Caveat:** this is fewer frames in emulation, not a measured iPhone temperature drop.
 
-## Heat pass, card films and binder, items A, B, C, E, F, G — October 1, 2026 (local, not deployed)
+## Heat pass, card films and binder, items A, B, C, E, F, G — October 1, 2026 (deployed in Deploy 15)
 
 User report: the phone still warms while playing card stories, in the binder and in the card pick after a ball. Two emulation audits (Chromium, 390×844 DPR 3, touch, 4× CDP CPU) found these screens already put the island to sleep (0 frames), and the binder, the quick-play diagrams and the resting viewer idle at ~0 work. The remaining cost was the card film itself (65–100% of a throttled core), the blur behind the viewer, binder turns (item H, below) and the card-offer stars. The user approved all eight items, A–H; D and H have their own sections below.
 
@@ -32,7 +32,7 @@ User report: the phone still warms while playing card stories, in the binder and
 - **Validation:** `npx tsc`, `npm test`, `tests/card-collection.cjs` (1440 and 390) and `tests/iconic-play-ui.cjs` pass. Screenshot of the playing viewer checked (dimmed binder, sharp card).
 - **Caveat:** all of this is reduced work in Chromium emulation. It is not evidence of a cooler iPhone; a Safari Web Inspector timeline on a device during film playback and reveal tilt would confirm it.
 
-## Heat pass, card films and binder, item D: riso speckle laid once per frame, not once per plate — October 1, 2026 (local, not deployed)
+## Heat pass, card films and binder, item D: riso speckle laid once per frame, not once per plate — October 1, 2026 (deployed in Deploy 15)
 
 The user approved this item. A profile of the riso engine (Chromium, phone profile 390×844 at DPR 3, 4× CPU throttle) found that `press()` in `lib/paths/riso/sheet.ts` punched the speckle holes into every inked plate before multiplying it: one full-plate `destination-out` pattern pass per ink (3–5 per frame). Both card films (`CardFilmPlayer`) and path stories (`StoryFilmPlayer`) use this engine.
 
@@ -62,7 +62,7 @@ The user approved this item. A profile of the riso engine (Chromium, phone profi
 
 In-app binder runs with `filmab.cjs` were too noisy on the shared machine (±20 ms between identical runs) to give separate numbers, though Messi moved from 37–41 to 32–35 ms per draw. This is reduced work in desktop Chromium emulation. It is not a measured iPhone temperature change.
 
-## Heat pass, card films and binder, item H: binder page turns on the compositor — October 1, 2026 (local, not deployed)
+## Heat pass, card films and binder, item H: binder page turns on the compositor — October 1, 2026 (deployed in Deploy 15)
 
 The user approved this item. Before the change, the arrow, key, corner, tab and riffle turns ran a rAF loop that wrote the inline transform and opacity of every strip, shade, gloss and shadow on each frame. That cost about 43 main-thread frames a second while a page turned.
 
