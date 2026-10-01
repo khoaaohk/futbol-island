@@ -20,7 +20,7 @@ Local only. Nothing here is committed or deployed. This closes audit gap **G-07*
   - A warm-up holds at most 3 lessons. Missed lessons come first, then the most overdue.
   - The first answer counts. Retries are practice: the child sees the per-choice "why", then tries again.
   - There are no streaks and no penalty for missed days. An overdue lesson just waits.
-- **Where it opens:** the **Review** card in Paths, under the landing card ("Warm up", shown when lessons are due). Until 1 Oct
+- **Where it opens: nowhere right now.** Oct 1 2026 (user): the Paths **Review** card ("N lessons to warm up" / "Warm up") was removed, and it was the only entry. The drawer, `LEARNING_REVIEW_OPEN` and the saved review data stay, so a new entry can bring it back. Note: the card also ran `syncReviews()` on each Paths open; enrollment now happens only when the drawer opens. ~~**Where it opens:** the **Review** card in Paths, under the landing card ("Warm up", shown when lessons are due). Until 1 Oct~~
   2026 it also opened from the welcome-back card and the mastery tab, both removed.
 - *(Removed 1 Oct 2026: the mastery screen, with per-format stage bars, a lesson list with stage chips and the pilot journeys.)*
 
@@ -47,7 +47,6 @@ Local only. Nothing here is committed or deployed. This closes audit gap **G-07*
 | `lib/learning/reviewStore.ts` | Browser singleton: localStorage `fi2-lesson-review-v1`, React hooks, the **public API** below |
 | `components/LearningReview.tsx` | The Warm-up drawer (Fishbook-style coastal side drawer, `--btn-*` buttons) |
 | `components/LearningHost.tsx` | Mounted once in `Town.tsx`. Opens the drawer on `fi2-learning-review-open` and shows the Spot-it card |
-| `components/PathReviewEntry.tsx` | The Paths "Review" card (its "Warm up" button opens the drawer) |
 
 **Public API** (`lib/learning/reviewStore.ts`):
 - `getDueReviews()` returns `{count, items:[{key, format, lessonId, name, concept}]}`, at most 3 items, and syncs enrollment first;

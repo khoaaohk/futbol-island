@@ -41,18 +41,18 @@ require.extensions['.ts']=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f
  assert.deepEqual(hits,[],'"My football" appears nowhere in components/, app/ or lib/');
  const src=files.map(read).join('\n');
  for(const gone of [/openLearningReview\('mastery'\)/,/LearningReviewView/,/data-backpack-mastery/,/data-mastery=/,/STAGE_LABEL\b/,/dueLabel\(/])assert.doesNotMatch(src,gone,`${gone} is gone`);
- // The Warm-up stays: its drawer is titled "Warm-up", has no tabs, and Paths' Review card opens it when lessons are due.
- const drawer=read('components/LearningReview.tsx'),entry=read('components/PathReviewEntry.tsx'),host=read('components/LearningHost.tsx');
+ // The Warm-up drawer code stays (titled "Warm-up", no tabs), but Oct 1 2026 (user) removed Paths' Review card, its only entry.
+ const drawer=read('components/LearningReview.tsx'),host=read('components/LearningHost.tsx');
  assert.match(drawer,/<h2 id="learning-review-title">Warm-up<\/h2>/);assert.doesNotMatch(drawer,/aria-pressed|function Mastery|LearningJourneys/,'one view, no tabs');
- assert.match(entry,/\{due>0&&<div className=\{styles\.buttons\}><button type="button" className=\{styles\.primary\} data-path-warmup onClick=\{\(\)=>openLearningReview\(\)\}>Warm up<\/button><\/div>\}/,'Paths: Warm up when lessons are due');
- assert.equal((entry.match(/<button\b/g)||[]).length,1,'Paths Review card: one button');
- assert.match(host,/window\.addEventListener\(LEARNING_REVIEW_OPEN,show\)/,'the host still opens the warm-up');
+ assert(!fs.existsSync(path.join(ROOT,'components/PathReviewEntry.tsx')),'the Paths Review card is gone');
+ assert.doesNotMatch(read('components/QuestLearningPath.tsx'),/PathReviewEntry|data-path-warmup/,'Paths shows no Review / Warm up card');
+ assert.match(host,/window\.addEventListener\(LEARNING_REVIEW_OPEN,show\)/,'the host can still open the warm-up');
  // Evidence hooks other features use still work: ticks feed For grown-ups' stages, so creditConceptTick stays live.
  assert.match(read('lib/grownups/progress.ts'),/stageOf\(lessonEvidence/);assert.match(read('lib/learning/reviewStore.ts'),/export function creditConceptTick\(/);
  for(const f of ['components/IslandJobs.tsx','components/FishingHost.tsx','components/BallHuntLesson.tsx'])assert.match(read(f),/creditConceptTick/,`${f} still credits ticks`);
  // Old saves keep working: the review key is unchanged and is never cleared.
  assert.match(read('lib/learning/reviewStore.ts'),/export const REVIEW_KEY='fi2-lesson-review-v1';/);assert.doesNotMatch(src,/removeItem\(REVIEW_KEY\)|removeItem\('fi2-lesson-review-v1'\)/);
- console.log(`NO_MY_FOOTBALL_PASS ${files.length} files clean; Warm-up kept (Paths → Warm up), evidence hooks live`);}
+ console.log(`NO_MY_FOOTBALL_PASS ${files.length} files clean; Paths Review card removed, evidence hooks live`);}
 
 // ---- 3. One name tag: the closest townsperson, with hysteresis -------------------------------------------------------------
 {const {pickTagFocus,NPC_TAG_MARGIN}=require('../lib/graphics/npcTagFocus.ts');

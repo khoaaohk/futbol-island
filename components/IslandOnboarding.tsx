@@ -13,7 +13,7 @@ import {goodById} from '@/lib/town/market/goods';
 import CharacterPreview from './CharacterPreview';
 import FishArt from './FishArt';
 import VendingProductArt from './VendingProductArt';
-import {FruitArt,JobsArt} from './PocketArt';
+import {CostumeHoodArt,FruitArt,HuntBallArt,JobsArt,TipBookArt} from './PocketArt';
 import {StorePreview,useStorePreviews} from './StorePreviews';
 import {STORE_ITEMS} from '@/lib/town/store';
 import {Icon} from './Icon';
@@ -82,11 +82,11 @@ export default function IslandOnboarding({open,onClose,value,onChange}:Props){
  {current.id==='welcome'&&<><div className={styles.preview}><CharacterPreview open={open&&step===0} value={value}/></div><div className={styles.choicesLayout}><CharacterToggle value={value.character} onChange={character=>onChange(selectCharacter(value,character))} label="Choose your starter character" options={[{value:'male',label:'Male'},{value:'female',label:'Female'}]}/></div><p className={styles.saved}>Your character saves automatically. Change your look anytime.</p></>}
  {current.id==='paths'&&<div className={styles.showcase} aria-hidden="true">{PATH_STOPS.map((stop,i)=><span key={stop.label} className={styles.pathStop}>{i>0&&<span className={styles.pathLink}/>}<span className={styles.item}><span className={styles.stop} style={{background:stop.ink,boxShadow:`0 4px 0 ${stop.edge}`}}><StopGlyph i={i}/></span><small>{stop.label}</small></span></span>)}</div>}
  {current.id==='balls'&&<div className={styles.showcase} aria-hidden="true">
-  <span className={styles.item}><span className={styles.art}><Icon name="ball" size={48}/></span><small>Find</small></span>
+  <span className={styles.item}><span className={styles.art}><HuntBallArt size={52}/></span><small>Find</small></span>
   <span className={styles.arrow}><Icon name="arrow" size={24}/></span>
-  <span className={styles.item}><span className={styles.art}><Icon name="book" size={44}/></span><small>Learn a tip</small></span>
+  <span className={styles.item}><span className={styles.art}><TipBookArt size={54}/></span><small>Learn a tip</small></span>
   <span className={styles.arrow}><Icon name="arrow" size={24}/></span>
-  <span className={styles.item}><span className={styles.art}><Icon name="star" size={44}/></span><small>Costumes</small></span>
+  <span className={styles.item}><span className={styles.art}><CostumeHoodArt size={52}/></span><small>Costumes</small></span>
  </div>}
  {current.id==='earn'&&<div className={styles.showcase} aria-hidden="true">
   <span className={styles.item}><span className={styles.art}><FishArt fish={sardine} size={64}/></span><small>Fish</small></span>

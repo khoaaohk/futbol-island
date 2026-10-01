@@ -151,11 +151,11 @@ const read=rel=>fs.readFileSync(path.join(root,rel),'utf8');
   const calm=town.match(/const calmBlocked=([^;]*);/)[1];for(const f of ['!!fieldCatalog','!!lesson','!!konbiniDoor','customizerOpen','cardOfferOpen'])assert(calm.includes(f),`calm moment waits for ${f}`);
   assert(/const toastBlocked=calmBlocked\|\|graduationOpen\|\|settingsOpen;/.test(town));assert(/<GraduationHost blocked=\{calmBlocked\}/.test(town));
   for(const c of ['CostumeMilestoneToast','RideUnlockToast','WelcomeBack'])assert(new RegExp(`<${c} blocked=\\{toastBlocked[}|]`).test(town),`${c} waits for the ceremony, a lesson or another modal`);}
- // QA11: both launch paths show the "You'll learn" card over a PAUSED lesson, so "Let's go" (which plays a paused lesson) starts it.
+ // Oct 1 2026 (user): no "You'll learn" opener; both launch paths go straight into the play and start it.
  const sel=learning.match(/const select=\(lesson:FieldLesson\)=>\{[^\n]*/)[0];
- assert(/setIntro\(lesson\.id\)/.test(sel)&&/setPlaying\(false\)/.test(sel)&&/playing:false/.test(sel)&&!/playing:true|setPlaying\(true\)/.test(sel),'a lesson picked from the list starts paused behind the opener');
- assert(/if\(!isQuiz\)setIntro\(lesson\.id\);\s*setChosen\(lesson\);[^\n]*setPlaying\(false\);/.test(learning),'the Paths launch starts paused behind the opener');
- assert(/data-lesson-opener-go onClick=\{\(\)=>\{setIntro\(null\);const s=session\.current;if\(s&&!s\.playing\)togglePlayback\(\);\}\}/.test(learning),"Let's go plays the paused lesson");
+ assert(!/setIntro|data-lesson-opener/.test(learning),'the lesson opener card is gone');
+ assert(/setPlaying\(true\)/.test(sel)&&/playing:true/.test(sel)&&!/playing:false/.test(sel),'a lesson picked from the list plays straight away');
+ assert(/setPlaying\(!isQuiz\);\s*session\.current=\{[^}]*playing:!isQuiz,/.test(learning),'the Paths launch plays straight away (a resumed quiz stays on its question)');
  // A 5-question quiz: two right first time, a reload, three more right first time → the card answers survive.
  const store=memoryStorage(),N=5;
  let run=R.loadQuizRun('futsal','learnf_roles31',store);assert.equal(run.tried.size,0);

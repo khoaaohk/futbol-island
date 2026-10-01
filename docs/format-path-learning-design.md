@@ -8,7 +8,7 @@ September 16, 2026. Research and curriculum proposal; no application behavior or
 > - Futsal is its own game, with the fixo / ala / pivot vocabulary, so it stays open but is never the default. A player's saved tab is kept.
 > - **Continue** always targets a required starter lesson: the one in progress, else the first unfinished one. It never goes to an optional story or a "Go deeper" lesson. The opening story sits beside it as an "Optional story" chip. A finished path offers the next path.
 > - The rule lives in `lib/paths/pathContinue.ts`.
-> - **Lesson opener:** each lesson opens with its title and "You'll learn: …" (`lib/paths/lessonGoals.ts`). The 12 7v7 starter lessons have kid-simple goals, and lesson 1 explains "outfield players", "2-3-1" and "passing angle". Other lessons use their catalog concept line.
+> - **Lesson opener: removed (Oct 1 2026, user).** Lessons no longer stop on a "You'll learn: …" card; picking one from Paths or the lesson list goes straight into the play and starts it (a resumed quiz still opens on its question). The kid-simple goals and lesson 1's "Words to know" stay in `lib/paths/lessonGoals.ts` (still tested) but are not shown anywhere now.
 > - The futsal-first suggestion below is kept as the original proposal.
 
 ## Recommendation

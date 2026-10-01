@@ -147,3 +147,6 @@
 .footer .next{flex:1 1 auto;--navigation-width:100%}
 /* Oct 1 2026 (user): the main button fills the space beside the arrow and stops at the footer's right padding (it overflowed). */
 .footer .next{flex:1 1 0;min-width:0;--navigation-width:auto;width:auto;max-width:100%}
+/* The shared pill (DoneButton.module.css) forces flex:0 0 auto !important, so with width:auto and an absolutely placed label the
+   button above collapsed to its border (an empty sliver right of the arrow). Out-rank it so it grows into the row. */
+.footer.footer button.next.next{flex:1 1 0!important}

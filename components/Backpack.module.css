@@ -7,6 +7,10 @@
 
 /* Category chips: bright gold, pink when chosen; one swipeable rail on phones. */
 .filters{display:flex;flex-wrap:wrap;gap:10px 8px}
+/* Oct 1 2026 (user): the category chips lock to the top of Make it yours while the items scroll under them; no bar or backdrop behind the chips. */
+.filters{position:sticky;top:0;z-index:3;background:none}
+/* Each group is its own layer, so card internals (MiniCard's z-indexed picture window) can't paint over the locked chips. */
+.group{isolation:isolate}
 .chip{display:inline-flex;align-items:center;gap:6px;min-height:var(--btn-height);padding:6px 14px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius);background:var(--btn-gold-bright);box-shadow:0 4px 0 var(--btn-gold-bright-edge);color:var(--btn-ink);font:700 14px/1.2 var(--btn-font);cursor:pointer;white-space:nowrap;transition:filter .15s,translate .15s,box-shadow .15s}
 .chip span{min-width:22px;padding:1px 6px;border-radius:999px;background:#fff8df;font-size:12px;text-align:center}
 .chip:hover{filter:brightness(1.04)}.chip:active{translate:0 var(--btn-press);box-shadow:0 1px 0 var(--btn-gold-bright-edge)}

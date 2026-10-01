@@ -2,7 +2,6 @@
 import dynamic from 'next/dynamic';
 import {UPCOMING_STORIES,type UpcomingStory as UpcomingStoryData} from '@/lib/paths/upcomingStories';
 import UpcomingStory from './UpcomingStory';
-import PathReviewEntry from './PathReviewEntry';
 import {useEffect,useLayoutEffect,useState,useRef,type CSSProperties} from 'react';
 import {createPortal} from 'react-dom';
 import {FORMAT_PATHS,FORMAT_PATH_LAUNCH,lessonEvidence,pathLessonLocked,type PathLesson} from '@/lib/paths/formatPaths';
@@ -110,6 +109,7 @@ export default function QuestLearningPath(){
  const target=pathContinue(path,steps,answers,lastOpened[path.format]),resumeLesson=target.kind==='lesson'?target.lesson:undefined;
  const untouched=target.kind==='lesson'&&target.label==='Start here';
  const openingTitle=opening?(opening==='grit'?'Grit':STORY_CARDS.find(card=>card.id===opening)?.skill??'Story'):null;
+ const openingStoryTitle=opening?STORY_CARDS.find(card=>card.id===opening)?.title.replace(/\.$/,'')??openingTitle:null;
  const nextTitle=target.kind==='complete'&&target.next?FORMAT_PATHS.find(p=>p.format===target.next)?.title??target.next:null;
  // Optional stories sit after these lesson indexes: three stories at 3/7/11, four spread evenly across the twelve stops.
  const slots=(UPCOMING_STORIES[format]?.length??0)>=4?[2,5,8,11]:[3,7,11];
@@ -124,10 +124,12 @@ export default function QuestLearningPath(){
  <div className={journey.landingHead}><span className={journey.eyebrow}>{untouched?'YOUR FIRST LANDING':'WHERE YOU LEFT OFF'}</span><h3>{path.title} Pitch</h3></div>
  <div className={journey.landingNext}>
   <div className={journey.landingProgress}><strong>{completed} / {core.length} starter lessons complete</strong><progress value={completed} max={core.length} aria-label={`${path.title} starter progress`}/></div>
-  {resumeLesson&&target.kind==='lesson'?<button type="button" data-path-continue onClick={()=>launch(resumeLesson)}><span className={journey.continueLabel}>{target.label}</span><span className={journey.continueTitle}>{target.index+1}. {resumeLesson.name}</span></button>:nextTitle?<button type="button" data-path-continue onClick={()=>{const n=target.kind==='complete'?target.next:null;if(n)chooseFormat(n);}}><span className={journey.continueLabel}>Path complete! Next path</span><span className={journey.continueTitle}>Try {nextTitle}</span></button>:<p role="status">Every starter path is complete! Go deeper below or replay any stop.</p>}
-  {opening&&openingTitle&&<button type="button" className={journey.optionalStory} data-path-optional-story onClick={event=>openStory(opening,event.currentTarget)}><span className={journey.continueLabel}>Optional story</span><span className={journey.continueTitle}>{openingTitle}</span></button>}
+  {/* Oct 1 2026 (user): the card shows ONE step. A brand-new player starts with the path's opening story (7v7: "When the game
+      feels unfair"), then lesson 1; everyone else sees only where they left off (no optional story beside it). */}
+  {untouched&&opening&&openingStoryTitle?<button type="button" data-path-continue data-path-opening-story onClick={event=>openStory(opening,event.currentTarget)}><span className={journey.continueLabel}>Start here</span><span className={journey.continueTitle}>{openingStoryTitle}</span></button>
+  :resumeLesson&&target.kind==='lesson'?<button type="button" data-path-continue onClick={()=>launch(resumeLesson)}><span className={journey.continueLabel}>{target.label}</span><span className={journey.continueTitle}>{target.index+1}. {resumeLesson.name}</span></button>:nextTitle?<button type="button" data-path-continue onClick={()=>{const n=target.kind==='complete'?target.next:null;if(n)chooseFormat(n);}}><span className={journey.continueLabel}>Path complete! Next path</span><span className={journey.continueTitle}>Try {nextTitle}</span></button>:<p role="status">Every starter path is complete! Go deeper below or replay any stop.</p>}
  </div></div>
- <PathReviewEntry/>
+ {/* Oct 1 2026 (user): the Review / Warm up card is removed from Paths. */}
  <div className={journey.sectionLabel}><span>02 / CHOOSE YOUR PATH</span><p>Four paths. One island.</p></div>
  <div ref={sentinel} className={journey.dockSentinel} aria-hidden="true"/>
  <div ref={dock} className={journey.pathDock}><div className={`${ui.tabs} ${journey.coasts}`} style={{'--format-index':PATHS_IN_ORDER.findIndex(p=>p.format===format)} as CSSProperties} role="group" aria-label="Choose a format"><span className={ui.tabHighlight} aria-hidden="true"/>{PATHS_IN_ORDER.map((p,i)=><button key={p.format} type="button" aria-pressed={format===p.format} onClick={()=>chooseFormat(p.format)}><span className={journey.coastArt} aria-hidden="true"><i/><b>{String(i+1).padStart(2,'0')}</b></span><strong>{p.title}</strong></button>)}</div></div>
