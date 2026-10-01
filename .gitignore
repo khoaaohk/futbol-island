@@ -3,6 +3,7 @@ node_modules/
 .next-dev/
 *.tsbuildinfo
 .env*
+!.env.example
 .vercel
 
 # Local machine state and generated authoring outputs

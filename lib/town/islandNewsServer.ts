@@ -1,6 +1,7 @@
 import {NEWS_LEAGUES,type NewsLeague} from './newsLeagues';
 import type {IslandNewsFeed,IslandNewsItem,IslandNewsKind} from './islandNews';
 import {isVerifiedResult,latestMatchStories} from './matchStory';
+import {FOOTBALL_DATA_ATTRIBUTION,FOOTBALL_DATA_CODES,FOOTBALL_DATA_SOURCE,footballDataCode,footballDataFinishedPath,footballDataGet,footballDataScheduledPath,footballDataToken,footballDataWeekPath,parseFootballDataMatches} from './footballDataServer';
 const TTL=5*60*1000;
 const cache=new Map<string,{expires:number;feed:IslandNewsFeed}>();
 const pending=new Map<string,Promise<IslandNewsFeed>>();
@@ -34,24 +35,44 @@ export function parseTransferRss(xml:string,source:'BBC Sport'|'The Guardian',no
   return [{id:url,title,url,source,publishedAt:new Date(published).toISOString(),detail:'Transfer report · may include speculation'}];
  });
 }
+const leagueForCode=(code:string)=>(Object.keys(FOOTBALL_DATA_CODES) as NewsLeague[]).find(league=>FOOTBALL_DATA_CODES[league]===code);
+/** ESPN week scoreboard for one league (9 daily requests, at most three in flight) or every league (one default scoreboard each). */
+async function espnWeek(selected:NewsLeague[]|NewsLeague,now:number){
+ const day=(time:number)=>new Date(time).toISOString().slice(0,10).replace(/-/g,'');
+ // Soccer scoreboards accept individual days, not date ranges.
+ const jobs=typeof selected==='string'?Array.from({length:9},(_,i)=>({league:selected,date:day(now+(i-7)*86400000)})):selected.map(league=>({league,date:''}));
+ const results:PromiseSettledResult<IslandNewsItem[]>[]=[];
+ for(let i=0;i<jobs.length;i+=3){const batch=await Promise.allSettled(jobs.slice(i,i+3).map(async({league,date})=>parseScoreboard(await(await fetchSource(`https://site.api.espn.com/apis/site/v2/sports/soccer/${league}/scoreboard${date?`?dates=${date}&limit=100`:''}`)).json(),league,now)));results.push(...batch);}
+ return results;
+}
+/** Scores: football-data.org first for the free-tier competitions (needs FOOTBALL_DATA_TOKEN), ESPN for the rest and as the
+ * secondary source when football-data.org fails. Each league counts as one source for `unavailable` / `partial`. */
+async function scoreResults(selectedLeague:NewsLeague|undefined,now:number):Promise<PromiseSettledResult<IslandNewsItem[]>[]>{
+ const token=footballDataToken(),wanted=selectedLeague?[selectedLeague]:leagues as NewsLeague[];
+ const viaFd=token?wanted.filter(league=>footballDataCode(league)):[],rest=wanted.filter(league=>!viaFd.includes(league));
+ let fd:PromiseSettledResult<IslandNewsItem[]>[]=[];
+ if(viaFd.length){try{const items=parseFootballDataMatches(await footballDataGet(footballDataWeekPath(viaFd.map(league=>footballDataCode(league)!),now),token!),leagueForCode,now);fd=[{status:'fulfilled',value:items}];}
+  catch{rest.unshift(...viaFd);}}
+ const espn=rest.length?selectedLeague?await espnWeek(selectedLeague,now):await espnWeek(rest,now):[];
+ // A single-league ESPN week is nine day requests but one source: it is available when any day answered.
+ if(selectedLeague&&espn.length){const ok=espn.filter((r):r is PromiseFulfilledResult<IslandNewsItem[]>=>r.status==='fulfilled');return ok.length?[{status:'fulfilled',value:ok.flatMap(r=>r.value)},...(ok.length<espn.length?[{status:'rejected',reason:'partial'} as PromiseRejectedResult]:[])]:espn;}
+ return [...fd,...espn];
+}
 async function load(kind:IslandNewsKind,selectedLeague?:NewsLeague):Promise<IslandNewsFeed>{
  const now=Date.now();let results:PromiseSettledResult<IslandNewsItem[]>[];
- if(kind==='scores'){
-  const day=(time:number)=>new Date(time).toISOString().slice(0,10).replace(/-/g,'');
-  // Soccer scoreboards accept individual days, not date ranges. Fetch only the
-  // chosen league, with at most three server requests in flight, then cache it.
-  const jobs=selectedLeague?Array.from({length:9},(_,i)=>({league:selectedLeague,date:day(now+(i-7)*86400000)})):leagues.map(league=>({league,date:''}));
-  results=[];
-  for(let i=0;i<jobs.length;i+=3){const batch=await Promise.allSettled(jobs.slice(i,i+3).map(async({league,date})=>parseScoreboard(await(await fetchSource(`https://site.api.espn.com/apis/site/v2/sports/soccer/${league}/scoreboard${date?`?dates=${date}&limit=100`:''}`)).json(),league,now)));results.push(...batch);} 
- }else results=await Promise.allSettled([['https://feeds.bbci.co.uk/sport/football/rss.xml','BBC Sport'],['https://www.theguardian.com/football/transfer-window/rss','The Guardian']].map(async([url,source])=>parseTransferRss(await(await fetchSource(url)).text(),source as 'BBC Sport'|'The Guardian',now)));
+ if(kind==='scores')results=await scoreResults(selectedLeague,now);
+ else results=await Promise.allSettled([['https://feeds.bbci.co.uk/sport/football/rss.xml','BBC Sport'],['https://www.theguardian.com/football/transfer-window/rss','The Guardian']].map(async([url,source])=>parseTransferRss(await(await fetchSource(url)).text(),source as 'BBC Sport'|'The Guardian',now)));
  const successes=results.filter((result):result is PromiseFulfilledResult<IslandNewsItem[]>=>result.status==='fulfilled');
  const items=successes.flatMap(result=>result.value);const unique=Array.from(new Map(items.map(item=>[item.id,item])).values());
  if(kind==='scores')unique.sort((a,b)=>{const rank=(item:IslandNewsItem)=>/\d['’]|half|HT|LIVE/i.test(item.detail)?0:Date.parse(item.publishedAt)<=now?1:2;return rank(a)-rank(b)||Math.abs(now-Date.parse(a.publishedAt))-Math.abs(now-Date.parse(b.publishedAt));});else unique.sort((a,b)=>Date.parse(b.publishedAt)-Date.parse(a.publishedAt));
  const feed:IslandNewsFeed={kind,fetchedAt:new Date(now).toISOString(),items:unique.slice(0,kind==='scores'?48:8),unavailable:successes.length===0,partial:successes.length<results.length};
+ if(kind==='scores'&&unique.some(item=>item.source===FOOTBALL_DATA_SOURCE))feed.attribution=FOOTBALL_DATA_ATTRIBUTION;
  // No verified completed match this week: add the league's most recent one (dated), or say it is between seasons.
  if(kind==='scores'&&selectedLeague&&!feed.unavailable&&!unique.some(item=>isVerifiedResult(item,now))){
   const latest=await getLatestResults(selectedLeague,now);
-  if(latest.items.length)feed.lastResults=latest.items;else if(latest.complete)feed.season={between:true,...(latest.nextMatchAt?{nextMatchAt:latest.nextMatchAt}:{})};
+  if(latest.items.length){feed.lastResults=latest.items;if(latest.items.some(item=>item.source===FOOTBALL_DATA_SOURCE))feed.attribution=FOOTBALL_DATA_ATTRIBUTION;}
+  else if(latest.complete)feed.season={between:true,...(latest.nextMatchAt?{nextMatchAt:latest.nextMatchAt}:{})};
+  else feed.lastUnavailable=true;
  }
  return feed;
 }
@@ -59,19 +80,44 @@ async function load(kind:IslandNewsKind,selectedLeague?:NewsLeague):Promise<Isla
 export const LOOKBACK_MONTHS=4;
 type LatestResults={items:IslandNewsItem[];complete:boolean;nextMatchAt?:string};
 const latestCache=new Map<string,{expires:number;value:LatestResults}>(),latestPending=new Map<string,Promise<LatestResults>>();
-/** One month-scoreboard request at a time (`dates=YYYYMM`; ESPN rejects day ranges), newest month first, stopping at the first
- * month holding a verified result. Only if every month is empty: one default scoreboard request for the next scheduled match.
- * Cached 30 minutes (one minute after a source failure) so the extra lookup never runs per visitor. */
+/** The league's most recent verified round when its past week has none: football-data.org first (free-tier leagues with a
+ * token), then ESPN. Cached 30 minutes (one minute after a source failure) so the extra lookup never runs per visitor. */
 export async function getLatestResults(league:NewsLeague,now=Date.now()):Promise<LatestResults>{
  const saved=latestCache.get(league);if(saved&&saved.expires>Date.now())return saved.value;const active=latestPending.get(league);if(active)return active;
  const task=(async():Promise<LatestResults>=>{
+  const token=footballDataToken(),code=footballDataCode(league);
+  if(token&&code){const fd=await footballDataLatest(league,code,token,now);if(fd.complete)return fd;}
+  return espnLatest(league,now);
+ })().then(value=>{latestCache.set(league,{value,expires:Date.now()+(value.complete?30*60000:60000)});return value;}).finally(()=>latestPending.delete(league));
+ latestPending.set(league,task);return task;
+}
+/** Newest verified round: games within three days of the latest, at most ten. */
+const newestRound=(verified:IslandNewsItem[])=>{const newest=Date.parse(verified[0].publishedAt);return verified.filter(item=>Date.parse(item.publishedAt)>=newest-3*86400000).slice(0,10);};
+/** football-data.org, at most three requests: this season's finished matches; if the season has none yet (a new season
+ * before its first game), last season's; only if neither has one inside the lookback, the scheduled ones (next match date).
+ * Returns complete:false on a source failure so ESPN is tried next. */
+async function footballDataLatest(league:NewsLeague,code:string,token:string,now:number):Promise<LatestResults>{
+ const leagueFor=()=>league,maxAge=(LOOKBACK_MONTHS+1)*31,verify=(data:any)=>latestMatchStories(parseFootballDataMatches(data,leagueFor,now,maxAge),now);
+ try{const data=await footballDataGet(footballDataFinishedPath(code),token);let verified=verify(data);
+  const season=Number(String(data?.filters?.season??data?.matches?.[0]?.season?.startDate??'').slice(0,4));
+  if(!verified.length&&!(data?.matches?.length)&&Number.isFinite(season)&&season>2000)verified=verify(await footballDataGet(footballDataFinishedPath(code)+`&season=${season-1}`,token));
+  if(verified.length)return {items:newestRound(verified),complete:true};}catch{return {items:[],complete:false};}
+ try{const data=await footballDataGet(footballDataScheduledPath(code),token);
+  const next=(Array.isArray(data?.matches)?data.matches:[]).map((m:any)=>Date.parse(m?.utcDate)).filter((date:number)=>Number.isFinite(date)&&date>now).sort((a:number,b:number)=>a-b)[0];
+  return {items:[],complete:true,...(next?{nextMatchAt:new Date(next).toISOString()}:{})};
+ }catch{return {items:[],complete:true};}
+}
+/** ESPN: one month-scoreboard request at a time (`dates=YYYYMM`; ESPN rejects day ranges), newest month first, stopping at the
+ * first month holding a verified result. Only if every month is empty: one default scoreboard request for the next match. */
+async function espnLatest(league:NewsLeague,now:number):Promise<LatestResults>{
+ {
   const base=`https://site.api.espn.com/apis/site/v2/sports/soccer/${league}/scoreboard`,start=new Date(now);
   for(let back=0;back<LOOKBACK_MONTHS;back++){
    const month=new Date(Date.UTC(start.getUTCFullYear(),start.getUTCMonth()-back,1)),key=`${month.getUTCFullYear()}${String(month.getUTCMonth()+1).padStart(2,'0')}`;
    let items:IslandNewsItem[];try{items=parseScoreboard(await(await fetchSource(`${base}?dates=${key}&limit=200`)).json(),league,now,(LOOKBACK_MONTHS+1)*31);}catch{return {items:[],complete:false};}
    const verified=latestMatchStories(items,now);
    // Keep the newest match round (games within three days of the latest), at most ten.
-   if(verified.length){const newest=Date.parse(verified[0].publishedAt);return {items:verified.filter(item=>Date.parse(item.publishedAt)>=newest-3*86400000).slice(0,10),complete:true};}
+   if(verified.length)return {items:newestRound(verified),complete:true};
   }
   try{const data=await(await fetchSource(base)).json();
    const fromEvents=(Array.isArray(data?.events)?data.events:[]).map((event:any)=>Date.parse(event?.date)).filter((date:number)=>Number.isFinite(date)&&date>now);
@@ -79,7 +125,6 @@ export async function getLatestResults(league:NewsLeague,now=Date.now()):Promise
    const next=[...fromEvents,...fromCalendar].sort((a,b)=>a-b)[0];
    return {items:[],complete:true,...(next?{nextMatchAt:new Date(next).toISOString()}:{})};
   }catch{return {items:[],complete:true};}
- })().then(value=>{latestCache.set(league,{value,expires:Date.now()+(value.complete?30*60000:60000)});return value;}).finally(()=>latestPending.delete(league));
- latestPending.set(league,task);return task;
+ }
 }
 export async function getIslandNews(kind:IslandNewsKind,league?:NewsLeague){const key=kind+':'+(kind==='scores'?league??'all':'all'),saved=cache.get(key);if(saved&&saved.expires>Date.now())return saved.feed;const active=pending.get(key);if(active)return active;const task=load(kind,league).then(feed=>{cache.set(key,{feed,expires:Date.now()+(feed.unavailable?30000:TTL)});return feed;}).finally(()=>pending.delete(key));pending.set(key,task);return task;}

@@ -25,3 +25,7 @@ export function matchStory(item:IslandNewsItem,now=new Date(),older=false){
 export function betweenSeasonsLine(leagueName:string,nextMatchAt?:string){
  return `I can’t find any finished ${leagueName} matches right now, so the league is between seasons.${nextMatchAt&&Number.isFinite(Date.parse(nextMatchAt))?` The next match is on ${matchDayLabel(nextMatchAt)}.`:''} Ask me about my other interests while we wait.`;
 }
+/** Copy when the past week has no result and the last-result lookup could not reach any score source. */
+export function lastResultsUnavailableLine(leagueName:string){
+ return `There were no ${leagueName} games in the past week, and I can’t check the last results right now. Here are some favourite ${leagueName} clips while we wait: watch how each team builds its attacks.`;
+}

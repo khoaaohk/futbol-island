@@ -1,6 +1,8 @@
 // Oct 1 2026: when a league has no verified completed match in the past week, the news desk returns its most recent one
 // (dated) instead of "I don't have…"; with none in the whole lookback it says the league is between seasons (with the next
 // match date when the source has one). The verified rule (final status, both scores) is kept. Source is mocked.
+// These cases cover the ESPN source (no FOOTBALL_DATA_TOKEN); football-data.org's are in tests/news-football-data.cjs.
+delete process.env.FOOTBALL_DATA_TOKEN;
 const fs=require('fs'),path=require('path'),ts=require('typescript'),assert=require('node:assert/strict');
 const NOW=Date.parse('2026-10-01T12:00:00Z');
 class FakeDate extends Date{constructor(...a){super(...(a.length?a:[NOW]));}static now(){return NOW;}}

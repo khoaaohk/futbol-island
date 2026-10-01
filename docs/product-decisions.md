@@ -54,3 +54,36 @@ Futbol Island is played by children, so visit counting uses Vercel Web Analytics
 - **One NPC name tag.** Only the townsperson closest to the player (the one "Talk to …" opens) shows a name tag, within the
   existing 12 m (phone) / 14 m (desktop) range, held with the HUD arbiter's 1.5 m hysteresis; none while flying, in the vending
   close-up, or for an off-screen townsperson (`lib/graphics/npcTagFocus.ts`).
+
+## NPC match scores: football-data.org instead of ESPN (Oct 1 2026; local, not committed or deployed)
+
+ESPN's `site.api.espn.com` answers **HTTP 403 to every request from Vercel** (production log: `[island-news] source HTTP 403
+site.api.espn.com`), so production showed no scores. User decision: use **football-data.org v4** (free tier), fetched only on
+the server, so players' devices never contact a sports site.
+
+- **Code:** `lib/town/footballDataServer.ts` (provider, limiter, parser) used by `lib/town/islandNewsServer.ts`; the response
+  shape the NPC components read (`items`, `lastResults`, `season`, `unavailable`, `partial`) is unchanged, plus `attribution`
+  and `lastUnavailable`. Tests: `tests/news-football-data.cjs`, `tests/news-request-budget.cjs`, `tests/news-last-match.cjs`.
+- **Coverage (league → provider):** eng.1→PL, esp.1→PD, ita.1→SA, ger.1→BL1, fra.1→FL1, uefa.champions→CL, bra.1→BSA come from
+  football-data.org (all in its free tier, football-data.org/coverage). eng.w.1 (WSL), usa.1 (MLS) and jpn.1 (J.League) are
+  paid-tier there, so they stay on **ESPN**, which may work from some regions or later. ESPN is also the secondary source when
+  football-data.org fails or no token is set. If every source fails, NPCs give the friendly "can't check the last results"
+  copy and still offer the league's curated clips.
+- **Requests:** past week + next 48 h = one request (`/v4/competitions/{code}/matches?dateFrom=&dateTo=`, under ten days; it
+  returns results, live games and fixtures together). Only when that week has no verified result: `status=FINISHED` for this
+  season (newest round within the four-month lookback; last season's list if the new one has not started), then
+  `status=SCHEDULED` for the next match date (between seasons). At most four requests per league per cache period. The
+  verified rule is unchanged: FINISHED with both full-time scores, kicked off already, not postponed/suspended/cancelled
+  (shoot-out goals are not added to the score). The free tier has **delayed scores and no scorers**, so stories say "some
+  scorer or minute details are unavailable"; there is no public match page, so rows have no outbound link.
+- **Rate limit:** free tier is 10 requests/minute. The server keeps the 5-minute feed cache and the 30-minute last-results
+  cache (30 s / 1 min after failures), shares in-flight requests (many NPCs asking at once = one request), and a FIFO budget
+  of **9 per rolling minute** (one spare); a request that would wait more than 12 s fails fast to ESPN instead of holding
+  the API route. On **429** (or `X-Requests-Available-Minute: 0`) it pauses for `X-RequestCounter-Reset` seconds (default 60).
+  The budget is per server instance; with several Vercel instances, the 429 backoff is the backstop.
+- **Config:** `FOOTBALL_DATA_TOKEN` (server only; never `NEXT_PUBLIC_`, never logged, sent only as `X-Auth-Token`). Missing
+  token: logged once per instance, ESPN used. Locally in `.env.local`; on Vercel:
+  `vercel env add FOOTBALL_DATA_TOKEN production --scope team_Xkp00QpGjUrfFY2uOFUrHoIS`, then redeploy. See `.env.example`.
+- **Attribution:** football-data.org's terms (section 7.1) require "Football data provided by the Football-Data.org API" in a
+  visible place. The scores list shows "Scores: Football data provided by the Football-Data.org API." and match stories end
+  with the same credit whenever its data is shown.
