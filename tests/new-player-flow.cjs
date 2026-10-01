@@ -69,6 +69,8 @@ const read=rel=>fs.readFileSync(path.join(root,rel),'utf8');
  for(const href of ['https://www.scottbuckley.com.au/library/wildflowers/','https://creativecommons.org/licenses/by/4.0/','https://www.instagram.com/fc_yap/','/coffee/checkout?amount=500&return=about','mailto:hi@example.com','http://futbolisland.app.evil.com/'])assert.equal(X.leavesSite(href,o),true,href+' leaves the site');
  for(const href of ['/','/?panel=about','/konbini?door=cay','/coffee','#top','javascript:void(0)','https://futbolisland.app/arcade'])assert.equal(X.leavesSite(href,o),false,href+' stays in the game');
  assert(/<ExternalLinkGate\/>/.test(read('app/layout.tsx')),'the gate is mounted once for every page');
+ // Analytics is production-only: in dev its third-party debug script sends nothing and 403'd in a WebKit e2e run (Sep 30 2026).
+ assert(/const ANALYTICS = process\.env\.NODE_ENV === 'production';/.test(read('app/layout.tsx'))&&/\{ANALYTICS && <Analytics\/>\}/.test(read('app/layout.tsx')),'Vercel Analytics renders in production only');
  const gate=read('components/ExternalLinkGate.tsx');assert(/addEventListener\('click',click,true\)/.test(gate)&&/parentGatePassed\(\)/.test(gate)&&/<ParentGate /.test(gate),'capture-phase check, shared ParentGate, remembered pass');
  assert(!/setInterval|requestAnimationFrame/.test(gate),'event-driven, no loop');
 }
@@ -140,7 +142,7 @@ const read=rel=>fs.readFileSync(path.join(root,rel),'utf8');
  const learning=read('components/FieldLearning.tsx');
  assert(!/\.split\(\/\(\?<=\[\.!\?\]\)\\s\/\)\[0\]/.test(learning),'no first-sentence cut in FieldLearning');
  assert(/quizFeedbackText\(/.test(learning),'FieldLearning uses quizFeedbackText');
- // QA11: every lesson launch (Paths, book check, My football, Spot it, welcome back) goes through ONE close-overlays path that
+ // QA11: every lesson launch (Paths, book check, Spot it, IDP homework, the ball hunt) goes through ONE close-overlays path that
  // shuts Make it yours and the coin drawer too, so the lesson is never behind a modal with the island asleep.
  {const town=read('components/Town.tsx'),close=town.match(/const closeForLesson=\(\)=>\{([^}]*)\};/);
   assert(close,'Town has one shared lesson-launch close');for(const set of ['setSettingsOpen','setStoreOpen','setConversationOpen','setCustomizerOpen','setBalancesOpen','setMap'])assert(close[1].includes(set+'(false)'),`a lesson launch calls ${set}(false)`);
@@ -148,7 +150,7 @@ const read=rel=>fs.readFileSync(path.join(root,rel),'utf8');
   // The welcome-back card and costume/ride toasts wait for the calm moment (GraduationHost's rule) and the ceremony itself.
   const calm=town.match(/const calmBlocked=([^;]*);/)[1];for(const f of ['!!fieldCatalog','!!lesson','!!konbiniDoor','customizerOpen','cardOfferOpen'])assert(calm.includes(f),`calm moment waits for ${f}`);
   assert(/const toastBlocked=calmBlocked\|\|graduationOpen\|\|settingsOpen;/.test(town));assert(/<GraduationHost blocked=\{calmBlocked\}/.test(town));
-  for(const c of ['CostumeMilestoneToast','RideUnlockToast','WelcomeBack'])assert(new RegExp(`<${c} blocked=\\{toastBlocked\\}`).test(town),`${c} waits for the ceremony, a lesson or another modal`);}
+  for(const c of ['CostumeMilestoneToast','RideUnlockToast','WelcomeBack'])assert(new RegExp(`<${c} blocked=\\{toastBlocked[}|]`).test(town),`${c} waits for the ceremony, a lesson or another modal`);}
  // QA11: both launch paths show the "You'll learn" card over a PAUSED lesson, so "Let's go" (which plays a paused lesson) starts it.
  const sel=learning.match(/const select=\(lesson:FieldLesson\)=>\{[^\n]*/)[0];
  assert(/setIntro\(lesson\.id\)/.test(sel)&&/setPlaying\(false\)/.test(sel)&&/playing:false/.test(sel)&&!/playing:true|setPlaying\(true\)/.test(sel),'a lesson picked from the list starts paused behind the opener');
@@ -205,9 +207,21 @@ const read=rel=>fs.readFileSync(path.join(root,rel),'utf8');
  assert.equal(B.checkWelcomeBack(s,day(29)),false,'a first-ever visit is onboarding, not welcome back');
  assert.equal(B.checkWelcomeBack(s,day(29,18)),false,'same day: nothing');
  assert.equal(B.checkWelcomeBack(s,day(30)),true,'a new day: welcome back');
- assert.equal(B.checkWelcomeBack(s,day(30,20)),false,'only once that day');
+ // Bug audit B14: a due card that stayed blocked all session is not "seen"; showing it records the day.
+ assert.equal(B.checkWelcomeBack(s,day(30,12)),true,'blocked all morning: still due after a reload');
+ B.markWelcomeBackSeen(s,day(30,13));
+ assert.equal(B.checkWelcomeBack(s,day(30,20)),false,'only once that day, after it showed');
  assert.equal(B.checkWelcomeBack(s,new Date(2026,9,9,9).getTime()),true,'after a long break: the same friendly card, no streak talk');
  assert.equal(B.checkWelcomeBack(null,day(30)),false);
+ // Bug audit B14: pre-Deploy-11 saves have no last-visit day; existing progress means a returning player.
+ for(const [k,v] of [['quest',JSON.stringify({visits:['plaza'],steps:[],equipment:false})],['quest',JSON.stringify({visits:[],steps:['7v7:a'],equipment:false})],['quiz',JSON.stringify(['q1'])]]){
+  const old=memoryStorage();old.setItem(B.WELCOME_PROGRESS_KEYS[k],v);
+  assert.equal(B.checkWelcomeBack(old,day(30)),true,k+' progress without a last-visit day: welcome back');
+  assert.equal(old.getItem(B.LAST_VISIT_KEY),null,'not recorded until shown');}
+ {const empty=memoryStorage();empty.setItem(B.WELCOME_PROGRESS_KEYS.quiz,'[]');assert.equal(B.checkWelcomeBack(empty,day(30)),false,'empty progress is still a first visit');assert.equal(empty.getItem(B.LAST_VISIT_KEY),'2026-09-30');}
+ assert(read('lib/town/questProgress.ts').includes(`QUEST_STORAGE_KEY='${B.WELCOME_PROGRESS_KEYS.quest}'`),'quest key matches');
+ assert(read('lib/town/quizProgress.ts').includes(`QUIZ_STORAGE_KEY='${B.WELCOME_PROGRESS_KEYS.quiz}'`),'quiz key matches');
+ assert(/markWelcomeBackSeen\(storage\);setOpen\(true\)/.test(read('components/WelcomeBack.tsx')),'the day is recorded when the card shows');
  const card=read('components/WelcomeBack.tsx');
  assert(!/\bstreak|\bmissed\b|\blose\b|don.t break/i.test(card),'no streak pressure or guilt copy');
  assert(/suggestedNextStep\(/.test(card),'one suggested step from the Continue rule');

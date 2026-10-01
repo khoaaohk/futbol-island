@@ -52,6 +52,11 @@ export function rideProgressLine(finished:number,total=PATH_COUNT):string{
  if(done>=total)return `${total}/${total} paths finished · every ride unlocked`;
  return `${done}/${total} paths finished · ${done===total-1?'final rides unlock with your last path':'next ride unlocks with your next path'}`;
 }
+/** Vending LED unlock hint (Sep 30 2026): how many more paths open this ride (any path counts). `need` sorts a page's hints. */
+export function rideUnlockHint(category:RideCategory,id:string,finished:number,total=PATH_COUNT):{text:string;short:string;need:number}{
+ const need=Math.max(1,pathsNeeded(category,id,total)-finished),short=`Finish ${need} more path${need===1?'':'s'}`;
+ return {text:`${short} to unlock`,short,need};
+}
 /** Locked-ride button copy. */
 export const rideLockedLabel=(category:string,id:string)=>{const order=isRideCategory(category)?RIDE_ORDER[category]:[];return order.length>1&&order.indexOf(id)===order.length-1?'Finish every path to unlock':'Finish a path to unlock';};
 

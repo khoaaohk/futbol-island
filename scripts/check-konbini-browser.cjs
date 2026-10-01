@@ -1,6 +1,6 @@
 // Walk-in Konbini browser check (Sep 29 2026). For each store door (Island Square, Coral Cay):
 //  island: walk up to the sliding doors, Enter (door slide) → /konbini;
-//  inside: island unloaded, idle scene asleep, music playing on its own context, dribble the ball down an aisle (frame strip),
+//  inside: island unloaded, idle scene asleep, music respects the muted settings (scripts never play sound), dribble the ball down an aisle (frame strip),
 //          a kick key only nudges, zoom into every section type (in-world shelf zoom, ← →), open a magazine from the zoomed
 //          table, buy three musubi from the zoomed rice case (receipt, layered reveal frame strip, save one, eat one), hit the
 //          daily limit, buy a ball on the gear shelf, talk to the cashier in the NPC slide-out;
@@ -16,14 +16,16 @@ const doors=(process.argv.find(a=>a.startsWith('--door='))?.slice(7)??'main,cay'
 const DOORS={main:{x:70.45,front:-53,bx:71,bz:-58},cay:{x:523.45,front:-178,bx:524,bz:-182.5}};
 for(const d of ['','food','reveal','zoom','dribble','highlight'])fs.mkdirSync(`${OUT}/${d}`,{recursive:true});
 const wait=ms=>new Promise(r=>setTimeout(r,ms));let lastPage=null;
-(async()=>{const browser=await chromium.launch({headless:true,executablePath:'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',args:['--autoplay-policy=no-user-gesture-required']});const summary=[];
+(async()=>{const browser=await chromium.launch({headless:true,executablePath:'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',args:['--mute-audio','--autoplay-policy=no-user-gesture-required']});const summary=[];
  try{for(const door of doors){
   const ctx=await browser.newContext({viewport:mobile?{width:390,height:844}:{width:1280,height:800},isMobile:mobile,hasTouch:mobile,deviceScaleFactor:mobile?3:1});
   const page=await ctx.newPage(),errors=[];lastPage=page;page.on('pageerror',e=>{if(!/ChunkLoadError|Loading chunk|missing: http|error while hydrating/.test(e.message))errors.push(e.message);});// dev-server HMR noise from other agents' live edits is not a page error
   const D=DOORS[door];
   await page.addInitScript(({D,flight})=>{
    if(sessionStorage.getItem('konbini-test-seeded'))return;sessionStorage.setItem('konbini-test-seeded','1');
-   localStorage.setItem('fi2-welcome-v1','completed');localStorage.setItem('fi2-sound-muted','false');
+   localStorage.setItem('fi2-welcome-v1','completed');
+   // Never sound on the user's speakers (bug audit hygiene): audio stays muted and the browser runs with --mute-audio.
+   for(const [k,v] of Object.entries({'fi2-audio-mix':'4-50-v1','fi2-sound-muted':'true','fi2-music-enabled':'false','fi2-voice-enabled':'false'}))localStorage.setItem(k,v);
    const runs={};for(let i=0;i<5;i++)runs['konbini-test-grant-'+i]={game:'island',paid:20,reason:'test grant',at:1};
    localStorage.setItem('fi2-arcade-wallet-v1',JSON.stringify({version:1,runs,spends:{},packs:[],best:{},attempts:{},visits:{}}));
    // On foot 3.3 m out on the line the Up key walks (the island camera looks along −16,−33); or flying above the store.
@@ -54,7 +56,7 @@ const wait=ms=>new Promise(r=>setTimeout(r,ms));let lastPage=null;
   assert.equal(inside.island,'undefined','the island is unloaded while inside (document boundary)');assert.equal(inside.state.shop,door);
   await page.waitForFunction(()=>window.__konbini.state.sleeping,null,{timeout:8000});const raf0=await page.evaluate(()=>window.__raf);await page.waitForTimeout(2000);const idleRaf=await page.evaluate(()=>window.__raf)-raf0;
   assert.equal(idleRaf,0,'idle Konbini schedules no frames (asleep)');
-  await page.mouse.click(5,400);const music=await page.evaluate(()=>window.__konbiniMusic.debug);assert(music.starts===1&&music.playing,'store music playing: '+JSON.stringify(music));
+  await page.mouse.click(5,400);const music=await page.evaluate(()=>window.__konbiniMusic.debug);assert(music.muted&&!music.playing&&music.starts===0,'store music respects the muted setting: '+JSON.stringify(music));
   await page.screenshot({path:`${OUT}/${door}-${tag}-3-inside.png`});
   // Dribble up the aisle with the ball at your feet (frame strip); a kick key only nudges.
   await page.keyboard.down('ArrowUp');for(let k=0;k<4;k++){await page.waitForTimeout(260);await page.screenshot({path:`${OUT}/dribble/${door}-${tag}-${k}.png`});}await page.keyboard.up('ArrowUp');

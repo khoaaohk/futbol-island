@@ -1,4 +1,5 @@
-import {FOOD_SOURCES,type Source,type KonbiniShop} from './food';
+import {FOOD_SOURCES,SHOP_NAMES,type Source,type KonbiniShop} from './food';
+import {LEARN_COINS} from '../town/learnCoins';
 /**
  * What the Konbini teaches (AGENTS.md: everything teaches football). Every magazine and cashier fact carries its sources.
  * Laws facts follow the IFAB Laws of the Game; history facts are long-settled tournament results. Written Sep 29 2026 from
@@ -43,6 +44,16 @@ export const magazine=(id:string)=>MAGAZINES.find(m=>m.id===id);
 export const shopMagazines=(shop:KonbiniShop)=>MAGAZINES.filter(m=>m.shop===shop);
 /** The stamp card spans both stores: every magazine read = a full card. */
 export const STAMP_CARD_SIZE=MAGAZINES.length;
+/** How to earn a stamp, in the stamp card slide-out (components/KonbiniStampCard.tsx, Oct 1 2026). The real rule: KonbiniRoom's
+ *  magazine dialog stamps a magazine on its FIRST answer to the check question, right or wrong (foodStore.stampMagazine). */
+export const STAMP_STEPS=(here:KonbiniShop)=>[
+ `Walk to the magazine table by the front window (you’re in the ${SHOP_NAMES[here]} now).`,
+ 'Tap a magazine and read its football tips.',
+ 'Answer the question at the bottom. Your first answer earns the stamp, right or wrong!',
+ `Island Square has ${shopMagazines('main').length} magazines and Coral Cay has ${shopMagazines('cay').length}: read them at both shops to fill all ${STAMP_CARD_SIZE}.`,
+];
+export const stampReward=(paid:boolean)=>paid?`Card complete! You got your ${LEARN_COINS.explore} learning coins.`:`Fill all ${STAMP_CARD_SIZE} stamps for ${LEARN_COINS.explore} learning coins (once).`;
+
 
 /** Cashier small talk per store: a greeting, then football tips and club facts, one per tap. */
 export type Tip={text:string;kind:'tip'|'fact'|'culture';sources?:Source[]};

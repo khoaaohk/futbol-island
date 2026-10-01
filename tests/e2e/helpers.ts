@@ -3,7 +3,7 @@ import { expect, type Locator, type Page, type TestInfo } from '@playwright/test
 /* Shared helpers for the device suite (docs/testing-devices.md). */
 
 type Box = { x: number; y: number; width: number; height: number };
-export type Issues = { errors: string[]; known: string[] };
+export type Issues = { errors: string[]; known: string[]; http: string[] };
 
 /**
  * Console errors that are real but already reported, so every test does not fail on them. Each entry needs a reason;
@@ -24,7 +24,7 @@ async function freezeHmr(page: Page) {
  * `query` is appended to the URL (e.g. '?cards=earn'); `storage` seeds localStorage before any app code runs.
  */
 export async function openIsland(page: Page, { query = '', storage = {} as Record<string, string> } = {}): Promise<Issues> {
-  const issues: Issues = { errors: [], known: [] };
+  const issues: Issues = { errors: [], known: [], http: [] };
   const add = (text: string) => {
     const known = KNOWN_CONSOLE.find(k => k.pattern.test(text));
     const short = text.replace(/[-\d., ]{80,}/g, '<numbers>').slice(0, 600);
@@ -32,6 +32,9 @@ export async function openIsland(page: Page, { query = '', storage = {} as Recor
   };
   page.on('pageerror', e => add(`pageerror: ${e.message}`));
   page.on('console', m => { if (m.type() === 'error') add(`console.error: ${m.text()}`); });
+  // WebKit's "Failed to load resource: … status of 403 ()" has no URL; keep every ≥ 400 response so a failure names it.
+  page.on('response', r => { if (r.status() >= 400) issues.http.push(`${r.status()} ${r.request().method()} ${r.url().slice(0, 200)}`); });
+  page.on('requestfailed', r => issues.http.push(`failed (${r.failure()?.errorText ?? '?'}) ${r.url().slice(0, 200)}`));
   await freezeHmr(page);
   await page.addInitScript(seed => {
     localStorage.setItem('fi2-welcome-v1', 'completed');
@@ -52,7 +55,7 @@ export async function openIsland(page: Page, { query = '', storage = {} as Recor
   // The shared dev server recompiles while other work edits files; a boot can hit a transient ChunkLoadError or stall.
   // Retry the boot (not the test) up to 3 times, and only keep errors from the successful boot.
   for (let attempt = 1; ; attempt++) {
-    issues.errors.length = 0; issues.known.length = 0;
+    issues.errors.length = 0; issues.known.length = 0; issues.http.length = 0;
     try {
       await page.goto(`/${query}`, { waitUntil: 'domcontentloaded' });
       await page.waitForFunction(() => {
@@ -74,7 +77,8 @@ export async function openIsland(page: Page, { query = '', storage = {} as Recor
 /** Fails on unknown errors; known ones become annotations on the test report. */
 export function expectNoErrors(issues: Issues, info: TestInfo) {
   for (const k of [...new Set(issues.known)]) info.annotations.push({ type: 'known issue', description: k });
-  expect(issues.errors, 'console/page errors').toEqual([]);
+  if (issues.http.length) info.annotations.push({ type: 'http ≥ 400 / failed', description: [...new Set(issues.http)].join('\n') });
+  expect(issues.errors, `console/page errors${issues.http.length ? ` (responses ≥ 400 / failed: ${[...new Set(issues.http)].join(' | ')})` : ''}`).toEqual([]);
 }
 
 export const isTouch = (info: TestInfo) => !!info.project.use.hasTouch;

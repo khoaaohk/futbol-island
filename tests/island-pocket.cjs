@@ -91,6 +91,18 @@ const capped=P.pocketView({...market.read(),soldToday:M.MARKET_FULL_PRICE_COINS}
 assert(capped.fish.rows.every(r=>r.each===Math.max(1,Math.floor(r.good.price/2))),'half price after the allowance');
 assert.equal(capped.value,M.quoteSale({...market.read(),soldToday:M.MARKET_FULL_PRICE_COINS}).coins,'pocket total = stand "sell all"');
 
+// ---- Bug A15 (Deploy 11 audit): row values add up to the card's "Worth N coins today" across the daily full-price cap ----
+{const fruitG=G.PRODUCE_GOODS.filter(g=>P.pocketCategory(g)==='fruit').slice(0,2),vegG=G.PRODUCE_GOODS.find(g=>P.pocketCategory(g)==='veg'&&g.id!=='sweet-potato')??G.PRODUCE_GOODS.find(g=>P.pocketCategory(g)==='veg');
+ const fishG=G.FISH_GOODS.slice(0,2),basket={};for(const g of [...fruitG,vegG,...fishG])basket[g.id]=3;
+ for(const sold of [0,M.MARKET_FULL_PRICE_COINS-12,M.MARKET_FULL_PRICE_COINS-3,M.MARKET_FULL_PRICE_COINS]){const st={...market.read(),basket,soldToday:sold},v=P.pocketView(st),sum=rows=>rows.reduce((n,r)=>n+r.value,0);
+  assert.equal(sum(v.fish.rows),v.fish.value,`fish rows add up to the fish card at soldToday ${sold}`);
+  assert.equal(sum(v.fruit.rows)+sum(v.veg.rows),v.fruit.value+v.veg.value,`fruit + veg rows add up to the produce card at soldToday ${sold}`);
+  assert.equal(v.fruit.value+v.veg.value,M.quoteSale(st,'produce').coins,'the produce card = the stand\'s "sell all produce" quote');
+  assert.equal(v.fish.value,M.quoteSale(st,'fish').coins,'the fish card = the stand\'s "sell all fish" quote');}
+ // Near the cap a lone-priced row would claim the whole full-price allowance: the shares must be lower than that.
+ const near={...market.read(),basket,soldToday:M.MARKET_FULL_PRICE_COINS-3},v=P.pocketView(near),alone=r=>M.quoteSale({...near,basket:{[r.id]:r.count}}).coins;
+ assert(v.fish.rows.slice(1).some(r=>r.value<alone(r))||v.fish.rows.length<2,'later rows are priced after the earlier ones used the allowance');}
+
 // ---- New goods from goods.ts appear automatically (registry-driven, no pocket edit) ----
 G.GOODS.push({id:'test-pineapple',kind:'produce',name:'Pineapple',plural:'Pineapples',price:3,color:'#e8b83a',lesson:'x'},
  {id:'test-kale',kind:'produce',name:'Kale',plural:'Kale',price:2,color:'#4f8a3f',lesson:'x',category:'veg'},

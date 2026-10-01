@@ -1,13 +1,18 @@
-import {SHOT_WINDUP,juggleContact} from '../town/walkBall';
+import {SHOT_WINDUP,ISLAND_SHOT,juggleContact} from '../town/walkBall';
 /**
  * The Konbini's two ball actions (user, Sep 30 2026: "in the Konbini, add two actions. One is to shoot the ball, and add another
  * action."), pure (no three.js) so tests/konbini.cjs can run them in Node. lib/konbini/konbiniScene.ts steps it only while the ball
  * is off the feet, so an idle store still sleeps.
  *
  * SHOOT: the island's press-and-hold charge (same 0.18 s dead zone + 1.8 s ramp as Town.tsx finishShotHold and the Arcade room)
- * and the walkBall wind-up, but indoors the power is CAPPED: 2.6–6 m/s (the island's shot is 38–60 m/s) and a low lift, so the
- * ball rolls or skips, rebounds off the store's real collision boxes (walls, shelves, counter, fridge) and then comes back to the
- * feet with the island's recall (walkBall `recall`: a 12/s blend to the feet for 0.55 s). Nothing is charged, bought or saved.
+ * and the walkBall wind-up. Since Oct 1 2026 (user: "kicking inside the store isn't the same as outside. It should be just as
+ * fast, with the same bouncing-around physics") the flight IS the island's: walkBall's ISLAND_SHOT constants (38–60 m/s, lift,
+ * gravity 13, wall restitution .78, floor bounce .53, drag .33/.1, ≤ 12 cm substeps, the same recall rule) integrated in the
+ * same order as walkBall's 'shot' step, so a tap shot traces the island's path exactly (tests/konbini.cjs §13 runs both side by
+ * side). Indoors it rebounds off the store's real collision boxes (walls, front glass, shelves, counter, fridge) and a ceiling
+ * at INDOOR_SHOT.ceiling with the same wall restitution; the shelves only wobble (konbiniScene), nothing moves or breaks.
+ * Bounded: ≤ INDOOR_SHOT.maxSteps substeps a frame, no allocation per frame, stepped only while the ball is off the feet, and
+ * recalled after the island's tapAge / chargedAge at the latest. Nothing is charged, bought or saved.
  *
  * KEEP-UPS: tap to touch the ball back up. walkBall's own juggle is an automatic looping routine with no way to miss, so a
  * streak needs its own timing: each touch lifts the ball ~0.65 m above the foot contact (walkBall `juggleContact('foot')`, the
@@ -17,16 +22,18 @@ import {SHOT_WINDUP,juggleContact} from '../town/walkBall';
 export type BallBox={minX:number;maxX:number;minZ:number;maxZ:number;/** The fixture index (shelf / counter / fridge), −1 for walls. */fi:number};
 export type BallPlayer={x:number;z:number;yaw:number};
 export type BallMode='feet'|'charging'|'windup'|'shot'|'return'|'keepup'|'drop';
-export type BallEvent={type:'strike';speed:number}|{type:'hit';fi:number;speed:number;x:number;y:number;z:number}|{type:'returned'}
+export type BallEvent={type:'strike';speed:number}|{type:'hit';fi:number;speed:number;x:number;y:number;z:number}|{type:'bounce';speed:number}|{type:'returned'}
  |{type:'touch';streak:number}|{type:'early'}|{type:'drop';streak:number;reason:'missed'|'shelf'|'stopped'};
 /** The store's walls: the room shell and the front sill (the glass doors count as a wall for the ball). */
 export const BALL_ROOM={minX:-7.7,maxX:7.7,minZ:-5.9,maxZ:5.55};
-export const INDOOR_SHOT={radius:.19,minSpeed:2.6,maxSpeed:6,minLift:.4,maxLift:2.4,gravity:13,wallBounce:.62,floorBounce:.42,rollDrag:1.15,airDrag:.35,maxAge:3.5,restSpeed:.45,returnTime:.55,windup:SHOT_WINDUP};
+/** The island shot (walkBall ISLAND_SHOT) plus the indoor-only bounds: the ball's own radius, the ceiling (walls are 3.6 m) and a
+ *  substep cap (a 60 m/s ball at the 0.05 s frame clamp needs 25). */
+export const INDOOR_SHOT={...ISLAND_SHOT,radius:.19,ceiling:3.4,maxSteps:96,windup:SHOT_WINDUP} as const;
 export const KEEPUP={gravity:7.5,contact:.48,rise:.65,window:1.05,floor:.19};
 /** Hold → power, exactly the island's curve (Town.tsx finishShotHold / arcadeRoomScene endShot). */
 export const holdPower=(heldMs:number)=>Math.max(0,Math.min(1,(heldMs-180)/1800));
-/** The capped indoor launch for a charge 0..1: a soft pass at 0, a firm (still soft) drive at 1. */
-export function indoorLaunch(charge:number){const c=Math.max(0,Math.min(1,charge));return {speed:INDOOR_SHOT.minSpeed+(INDOOR_SHOT.maxSpeed-INDOOR_SHOT.minSpeed)*c,lift:INDOOR_SHOT.minLift+(INDOOR_SHOT.maxLift-INDOOR_SHOT.minLift)*c};}
+/** The island's launch for a charge 0..1 (walkBall 'windup' → 'shot'): 38 m/s and a 3.2 m/s hop for a tap, 60 m/s and 55 m/s up at full. */
+export function indoorLaunch(charge:number){const c=Math.max(0,Math.min(1,charge));return {speed:ISLAND_SHOT.speed+ISLAND_SHOT.chargeSpeed*c,lift:ISLAND_SHOT.lift+ISLAND_SHOT.chargeLift*c};}
 const touchSpeed=()=>Math.sqrt(2*KEEPUP.gravity*KEEPUP.rise);
 
 export function createKonbiniBall(boxes:readonly BallBox[],emit:(e:BallEvent)=>void=()=>{}){
@@ -38,29 +45,37 @@ export function createKonbiniBall(boxes:readonly BallBox[],emit:(e:BallEvent)=>v
   if(x<BALL_ROOM.minX+r||x>BALL_ROOM.maxX-r||z<BALL_ROOM.minZ+r||z>BALL_ROOM.maxZ-r)return WALL;
   for(const o of boxes)if(x>o.minX-r&&x<o.maxX+r&&z>o.minZ-r&&z<o.maxZ+r)return o;return null;}
  /** The dribble point ahead of the feet, pulled in when a shelf is right there (the ball never starts inside a box). */
- const feetPoint=(p:BallPlayer)=>{for(let d=.56;d>0;d-=.08){const x=p.x+Math.sin(p.yaw)*d,z=p.z+Math.cos(p.yaw)*d;if(!blockedAt(x,z))return {x,z};}return {x:p.x,z:p.z};};
+ const feetPoint=(p:BallPlayer,lead=.56)=>{for(let d=lead;d>0;d-=.08){const x=p.x+Math.sin(p.yaw)*d,z=p.z+Math.cos(p.yaw)*d;if(!blockedAt(x,z))return {x,z};}return {x:p.x,z:p.z};};
  function footContact(p:BallPlayer){const c=juggleContact('foot',s.side);return {x:p.x+Math.cos(p.yaw)*c.x+Math.sin(p.yaw)*c.z,z:p.z-Math.sin(p.yaw)*c.x+Math.cos(p.yaw)*c.z};}
  function toFeet(){s.mode='feet';s.vx=s.vy=s.vz=0;s.age=0;s.kick=0;s.charge=0;}
  function recall(){if(s.mode==='shot'||s.mode==='drop'){s.mode='return';s.age=0;}}
  function drop(reason:'missed'|'shelf'|'stopped'){const n=s.streak;s.mode='drop';s.age=0;s.vx*=.3;s.vz*=.3;s.streak=0;emit({type:'drop',streak:n,reason});}
- /** Physics step shared by the shot and a dropped keep-up: substeps ≤ 4 cm, axis-separated rebounds off walls and fixtures. */
+ /**
+  * Physics step shared by the shot and a dropped keep-up: walkBall's 'shot' step line for line (substeps ≤ ISLAND_SHOT.substep,
+  * x then z axis-separated rebounds × wallBounce, gravity, a floor bounce × floorBounce above bounceMinVy, then the frame's drag),
+  * against the store's boxes instead of the island's buildings, plus the ceiling. Returns true once it is at rest (the island's rule).
+  */
  function roll(dt:number){
-  const steps=Math.max(1,Math.ceil(Math.hypot(s.vx,s.vz)*dt/.04)),h=dt/steps;
+  const S=INDOOR_SHOT,steps=Math.min(S.maxSteps,Math.max(1,Math.ceil(Math.hypot(s.vx,s.vz)*dt/S.substep))),h=dt/steps;
   for(let i=0;i<steps;i++){
-   const nx=s.x+s.vx*h,bx=blockedAt(nx,s.z);if(bx){hit(bx,Math.abs(s.vx));s.vx*=-INDOOR_SHOT.wallBounce;}else s.x=nx;
-   const nz=s.z+s.vz*h,bz=blockedAt(s.x,nz);if(bz){hit(bz,Math.abs(s.vz));s.vz*=-INDOOR_SHOT.wallBounce;}else s.z=nz;
-   s.vy-=INDOOR_SHOT.gravity*h;s.y+=s.vy*h;if(s.y<r){s.y=r;s.vy=s.vy<-.8?-s.vy*INDOOR_SHOT.floorBounce:0;}
+   const nx=s.x+s.vx*h,bx=blockedAt(nx,s.z);if(bx){hit(bx,Math.abs(s.vx));s.vx*=-S.wallBounce;}else s.x=nx;
+   const nz=s.z+s.vz*h,bz=blockedAt(s.x,nz);if(bz){hit(bz,Math.abs(s.vz));s.vz*=-S.wallBounce;}else s.z=nz;
+   s.vy-=S.gravity*h;s.y+=s.vy*h;
+   if(s.y>S.ceiling-r){s.y=S.ceiling-r;if(s.vy>0){bounce(s.vy);s.vy=-s.vy*S.wallBounce;}}
+   if(s.y<r){s.y=r;if(s.vy<-S.bounceMinVy){bounce(-s.vy);s.vy=-s.vy*S.floorBounce;}else s.vy=0;}
   }
-  const onFloor=s.y<=r+.01,drag=Math.exp(-(onFloor?INDOOR_SHOT.rollDrag:INDOOR_SHOT.airDrag)*dt);s.vx*=drag;s.vz*=drag;
-  return onFloor&&Math.hypot(s.vx,s.vz)<INDOOR_SHOT.restSpeed;
+  const drag=Math.exp(-(s.charge>0&&s.y>r+S.loftHeight?S.loftDrag:S.rollDrag)*dt);s.vx*=drag;s.vz*=drag;
+  return Math.hypot(s.vx,s.vz)<S.restSpeed&&s.y<=r+S.restHeight;
  }
  function hit(b:BallBox,speed:number){if(hitCooldown>0||speed<.25)return;hitCooldown=.09;s.hits++;emit({type:'hit',fi:b.fi,speed,x:s.x,y:s.y,z:s.z});}
+ /** A floor or ceiling bounce (the island's `impact` on landing): sound only, rate-limited like the wall hits. */
+ function bounce(speed:number){if(hitCooldown>0||speed<1.2)return;hitCooldown=.09;emit({type:'bounce',speed});}
  return {
   state:s,blockedAt,
   /** Press: start charging (only from the feet; a ball in flight ignores it). */
-  beginCharge(p:BallPlayer){if(s.mode!=='feet')return false;s.mode='charging';s.age=0;s.charge=0;s.yaw=p.yaw;const f=feetPoint(p);s.x=f.x;s.z=f.z;s.y=r;return true;},
+  beginCharge(p:BallPlayer){if(s.mode!=='feet')return false;s.mode='charging';s.age=0;s.charge=0;s.yaw=p.yaw;const f=feetPoint(p,INDOOR_SHOT.lead);s.x=f.x;s.z=f.z;s.y=r;return true;},
   /** Release: the capped power from the island's hold curve; a tap (under 0.18 s) is a soft pass. */
-  release(p:BallPlayer,heldMs:number){if(s.mode!=='charging'&&s.mode!=='feet')return false;s.charge=holdPower(heldMs);s.mode='windup';s.age=0;s.yaw=p.yaw;const f=feetPoint(p);s.x=f.x;s.z=f.z;s.y=r;return true;},
+  release(p:BallPlayer,heldMs:number){if(s.mode!=='charging'&&s.mode!=='feet')return false;s.charge=holdPower(heldMs);s.mode='windup';s.age=0;s.yaw=p.yaw;const f=feetPoint(p,INDOOR_SHOT.lead);s.x=f.x;s.z=f.z;s.y=r;return true;},
   cancelCharge(){if(s.mode==='charging')toFeet();},
   /** Keep-ups: tap to touch. From the feet it starts a streak; in the air it counts if the ball is dropping through the window. */
   tap(p:BallPlayer){
@@ -74,13 +89,15 @@ export function createKonbiniBall(boxes:readonly BallBox[],emit:(e:BallEvent)=>v
    s.age+=dt;hitCooldown=Math.max(0,hitCooldown-dt);
    switch(s.mode){
     case 'feet':return;
-    case 'charging':{s.charge=Math.max(0,Math.min(1,(s.age-.18)/1.8));s.yaw=p.yaw;s.kick=0;const f=feetPoint(p),k=1-Math.exp(-dt*18);s.x+=(f.x-s.x)*k;s.z+=(f.z-s.z)*k;s.y=r;return;}// the ball stays at the feet while you wind up
+    case 'charging':{s.charge=Math.max(0,Math.min(1,(s.age-.18)/1.8));s.yaw=p.yaw;s.kick=0;const f=feetPoint(p,INDOOR_SHOT.lead),k=1-Math.exp(-dt*18);s.x+=(f.x-s.x)*k;s.z+=(f.z-s.z)*k;s.y=r;return;}// the ball stays at the feet while you wind up
     case 'windup':{s.kick=Math.min(.36,s.age/INDOOR_SHOT.windup*.36);if(s.age<INDOOR_SHOT.windup)return;
-     const l=indoorLaunch(s.charge);s.mode='shot';s.age=0;s.vx=Math.sin(s.yaw)*l.speed;s.vz=Math.cos(s.yaw)*l.speed;s.vy=l.lift;s.shots++;emit({type:'strike',speed:l.speed});return;}
-    case 'shot':{s.kick=s.age<.6?.36+s.age/.6*.64:0;const rest=roll(dt);if(rest&&s.age>.3||s.age>INDOOR_SHOT.maxAge)recall();return;}
+     // Like walkBall, the strike frame already flies: the launch falls through into this frame's shot step (age = dt).
+     const l=indoorLaunch(s.charge);s.mode='shot';s.age=dt;s.vx=Math.sin(s.yaw)*l.speed;s.vz=Math.cos(s.yaw)*l.speed;s.vy=l.lift;s.shots++;emit({type:'strike',speed:l.speed});}
+    // falls through
+    case 'shot':{s.kick=s.age<.6?.36+s.age/.6*.64:0;const rest=roll(dt);if(rest||s.age>(s.charge>0?INDOOR_SHOT.chargedAge:INDOOR_SHOT.tapAge))recall();return;}
     case 'drop':{s.kick=0;const rest=roll(dt);if(rest||s.age>1.2)recall();return;}
-    case 'return':{// The island's recall (walkBall 'return'): a 12/s blend to the feet for 0.55 s.
-     const f=feetPoint(p),b=1-Math.exp(-dt*12);s.x+=(f.x-s.x)*b;s.z+=(f.z-s.z)*b;s.y+=(r-s.y)*b;s.kick=0;if(s.age>INDOOR_SHOT.returnTime){toFeet();s.x=f.x;s.z=f.z;s.y=r;emit({type:'returned'});}return;}
+    case 'return':{// The island's recall (walkBall 'return'): a returnRate/s blend to the feet for returnTime s.
+     const f=feetPoint(p),b=1-Math.exp(-dt*INDOOR_SHOT.returnRate);s.x+=(f.x-s.x)*b;s.z+=(f.z-s.z)*b;s.y+=(r-s.y)*b;s.kick=0;if(s.age>INDOOR_SHOT.returnTime){toFeet();s.x=f.x;s.z=f.z;s.y=r;emit({type:'returned'});}return;}
     case 'keepup':{
      s.sinceTouch+=dt;const c=footContact(p);
      // The ball stays in the aisle: a touch point inside a shelf (walking into it) drops the ball.

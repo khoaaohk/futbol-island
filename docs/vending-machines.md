@@ -102,8 +102,12 @@ or three.
 Rules:
 
 - **Free starters**: the classic ball, the first ride in each category and "no costume".
-- **Locked items** show their unlock requirement ("Finish a path to unlock", "Find 20 hidden balls to unlock") and can't be
-  bought. Once unlocked they cost coins.
+- **Locked items** show their unlock requirement, counted from the player's progress ("Finish 2 more paths to unlock", "Find 4
+  more hidden balls to unlock": `rideUnlockHint` / `costumeUnlockHint`) and can't be bought. Once unlocked they cost coins.
+- **Locked hint on the LED** (Sep 30 2026, E2E audit: a page of LOCKED items gave no hint): arming a locked item, or paging to a
+  page with locked items and nothing to buy, puts the nearest unlock on the LED, e.g. "Locked: finish 1 more path" / "Nothing to
+  buy yet. Any path counts: tap Paths." (`vendingLockLed`, `lib/town/vendingCatalog.ts`; no new UI, the existing LED line).
+  NPC name tags hide while the camera is on a machine (a nearby "LET'S TALK" tag sat huge and clipped beside the face).
 - **No re-locking**: the first time the ledger loads it records everything the player already has: every ride they had
   unlocked, every costume they had earned, and whatever ball, rides and costume they had equipped. Those stay theirs for free.
   The ride-grant memory in `rideUnlocks.ts` is untouched.

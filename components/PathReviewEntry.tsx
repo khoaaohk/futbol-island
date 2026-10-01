@@ -1,5 +1,5 @@
 'use client';
-/** Paths → "Review" entry (docs/learning/spaced-review.md): how many lessons are ready for the Daily warm-up, plus My football. */
+/** Paths → "Review" entry (docs/learning/spaced-review.md): how many lessons are ready for the Daily warm-up, and its Warm up button. */
 import {useEffect} from 'react';
 import {openLearningReview,syncReviews,useDueReviewCount,useReviewState} from '@/lib/learning/reviewStore';
 import styles from './PathReviewEntry.module.css';
@@ -12,9 +12,6 @@ export default function PathReviewEntry(){
   <div><span className={styles.eyebrow}>{due?'Review · ready now':'Review'}</span>
    <strong>{due?`${due} ${due===1?'lesson':'lessons'} to warm up`:enrolled?'All caught up':'Lessons come back to review'}</strong>
    <small>{due?'One quick question each. Remembering later makes ideas stick.':enrolled?'Your next warm-up opens on a later day.':'Pass a quiz and it comes back tomorrow for one quick question.'}</small></div>
-  <div className={styles.buttons}>
-   {due>0&&<button type="button" className={styles.primary} onClick={()=>openLearningReview('review')}>Warm up</button>}
-   <button type="button" className={styles.secondary} onClick={()=>openLearningReview('mastery')}>My football</button>
-  </div>
+  {due>0&&<div className={styles.buttons}><button type="button" className={styles.primary} data-path-warmup onClick={()=>openLearningReview()}>Warm up</button></div>}
  </section>;
 }

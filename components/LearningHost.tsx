@@ -1,13 +1,13 @@
 'use client';
 /**
  * Island host for the learning loop (docs/learning/spaced-review.md, apply-in-play.md). Mounted once by Town.
- *  - Opens the Daily warm-up / My football drawer on LEARNING_REVIEW_OPEN (the welcome-back card, the Paths entry, the backpack).
+ *  - Opens the Daily warm-up drawer on LEARNING_REVIEW_OPEN (the Paths Review card's "Warm up").
  *  - Shows the live-match "Spot it!" card: lib/learning/spotIt.ts decides (event-driven, throttled); this only renders it and
  *    hides it with one timeout. No loops, no polling. The drawer's code loads on first open.
  */
 import dynamic from 'next/dynamic';
 import {useEffect,useState} from 'react';
-import {LEARNING_REVIEW_OPEN,learnedLessonFor,openPathLesson,creditConceptTick,type LearningReviewView} from '@/lib/learning/reviewStore';
+import {LEARNING_REVIEW_OPEN,learnedLessonFor,openPathLesson,creditConceptTick} from '@/lib/learning/reviewStore';
 import {connectSpotIt,SPOT_IT_SHOW_MS,type SpotItOffer} from '@/lib/learning/spotIt';
 import {FORMAT_PATH_LAUNCH} from '@/lib/paths/formatPaths';
 import {LEARNING_LAUNCH} from '@/lib/town/learningProgress';
@@ -18,11 +18,11 @@ const LearningReview=dynamic(()=>import('./LearningReview'),{ssr:false});
 /** Spot it sits in the HUD stack's focus slot (docs/ui/HUD_STACK.md): `onSpotChange` tells Town's arbiter an offer is waiting and
  *  `spotAllowed` says it holds the focus (a nearer Talk / Enter wins; Spot it outranks the hint and the ambient Learn card). */
 export default function LearningHost({blocked=false,spotAllowed=true,onSpotChange,onOpenChange}:{blocked?:boolean;spotAllowed?:boolean;onSpotChange?:(waiting:boolean)=>void;onOpenChange?:(open:boolean)=>void}){
- const [view,setView]=useState<LearningReviewView>('review'),[open,setOpen]=useState(false),[loaded,setLoaded]=useState(false);
+ const [open,setOpen]=useState(false),[loaded,setLoaded]=useState(false);
  const [spot,setSpot]=useState<SpotItOffer|null>(null);
  useEffect(()=>{
-  const show=(e:Event)=>{const v=(e as CustomEvent<{view?:LearningReviewView}>).detail?.view;setView(v==='mastery'?'mastery':'review');setLoaded(true);setOpen(true);setSpot(null);};
-  // Opening a lesson from the drawer (Watch again) or a journey closes it so the pitch is visible.
+  const show=()=>{setLoaded(true);setOpen(true);setSpot(null);};
+  // A lesson or journey launch closes the drawer so the pitch is visible.
   const launched=()=>{setOpen(false);setSpot(null);};
   window.addEventListener(LEARNING_REVIEW_OPEN,show);window.addEventListener(FORMAT_PATH_LAUNCH,launched);window.addEventListener(LEARNING_LAUNCH,launched);
   const off=connectSpotIt((concept,format)=>learnedLessonFor(concept,format),offer=>setSpot(offer));
@@ -40,6 +40,6 @@ export default function LearningHost({blocked=false,spotAllowed=true,onSpotChang
    <button type="button" className={styles.primary} onClick={()=>{creditConceptTick(spot.concept,`match:${spot.concept}`,spot.format);openPathLesson(spot.lesson);setSpot(null);}}>See the lesson</button>
    <button type="button" className={styles.dismiss} aria-label="Dismiss" onClick={()=>setSpot(null)}>×</button>
   </div></HudSlot>}
-  {loaded&&<LearningReview open={open} view={view} onView={setView} onClose={()=>setOpen(false)}/>}
+  {loaded&&<LearningReview open={open} onClose={()=>setOpen(false)}/>}
  </>;
 }

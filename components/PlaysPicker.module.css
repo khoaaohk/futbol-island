@@ -12,16 +12,16 @@
 @media(max-width:700px),(pointer:coarse){.categories.categories>div{max-height:154px;overflow:auto;padding:3px;overscroll-behavior:contain}}
 
 .mobileCategory{display:none}
-@media(max-width:700px),(pointer:coarse){.categories.categories{display:none}.mobileCategory{display:flex;flex-direction:column;gap:8px;font-size:14px;font-weight:700}.mobileCategory select{width:100%;min-height:48px;padding:12px;border:1px solid #8c9a7a;border-radius:12px;background:#e7ddbb;color:#294f43;font:inherit;font-size:16px}.mobileCategory select:focus-visible{outline:3px solid #c47b33;outline-offset:3px}}
+@media(max-width:700px),(pointer:coarse){.categories.categories{display:none}.mobileCategory{display:flex;flex-direction:column;gap:8px;font-size:14px;font-weight:700}.mobileCategory select{width:100%;min-height:48px;padding:12px;border:1px solid #8c9a7a;border-radius:12px;background:#e7ddbb;color:#294f43;font:inherit;font-size:16px}.mobileCategory select:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}}
 .mobileCategory select{appearance:none;-webkit-appearance:none;padding-right:44px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23294f43' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;background-size:18px 18px}
 
 .panel.panel{background:#f7f0db url('/stories/films/assets/entry-grain.png')!important;background-blend-mode:soft-light}
 .panel>.header,.panel>.body{background:transparent!important}
 /* Full-screen playbook, with bounded reading columns inside one scroller. */
 .dialog.dialog[open]{position:fixed;inset:0;margin:0;width:100vw;max-width:none;height:100dvh;max-height:100dvh;padding:0;border:0;border-radius:0;display:flex;align-items:stretch;justify-content:stretch}
-.dialog .panel.panel.panel{width:100%;max-width:none;height:100dvh;max-height:100dvh!important;border:0;border-radius:0;box-shadow:none;animation:playbookFade .24s ease-out both}
+.dialog .panel.panel.panel{width:100%;max-width:none;height:100dvh;max-height:100dvh!important;border:0;border-radius:0;box-shadow:none;animation:playbookFade .26s ease-out both}
 .dialog .panel>.header{background:transparent!important;border:0}
-.dialog .header h2{font:400 clamp(24px,3vw,34px)/1.2 IslandBrush,sans-serif}
+.dialog .header h2{font:400 clamp(24px,3vw,38px)/1.2 IslandBrush,sans-serif}
 .dialog .body{flex:1;width:100%;padding:24px max(24px,calc((100vw - 1100px)/2)) 36px}
 @keyframes playbookFade{from{opacity:0}to{opacity:1}}
 @media(max-width:700px),(pointer:coarse){.dialog .body{padding:18px 18px calc(28px + env(safe-area-inset-bottom,0px))}}
@@ -32,7 +32,7 @@
 .dialog .body>section{background:#f7edcf url('/stories/films/assets/entry-grain.png') center/160px;border-radius:24px;padding:20px}
 .dialog .intro{background-color:#f5dfaa}
 .dialog .play{background:#fff2d3 url('/stories/films/assets/entry-grain.png') center/160px;border:2px solid #fff6df;box-shadow:0 5px 0 #ac965940;transition:translate .16s,box-shadow .16s}
-.dialog .play:active{translate:0 3px;box-shadow:0 2px 0 #ac965940}
+.dialog .play:active{translate:0 var(--btn-press);box-shadow:0 2px 0 #ac965940}
 @media(hover:hover){.dialog .play:hover{translate:0 -2px}}
 @media(prefers-reduced-motion:reduce){.dialog .play{transition:none}}
 @media(max-width:700px){.dialog .body>section,.dialog .intro{padding:16px}.dialog .mobileCategory{color:#fff2cd}}
@@ -51,11 +51,17 @@
 .dialog .watch{flex-shrink:0;min-height:40px;padding:8px 14px;box-sizing:border-box;border:3px solid #fff2cd;border-radius:999px;background:#e9c16b;color:#244d40;box-shadow:0 4px 0 #aa8b3e;font-weight:700}
 .dialog .mobileCategory select{border:3px solid #fff2cd;border-radius:18px;background-color:#efd58c;color:#244d40;min-height:48px;box-shadow:0 4px 0 #aa8b3e}
 @media(hover:hover){.dialog .categories button:hover{translate:0 -2px;box-shadow:0 6px 0 var(--btn-gold-bright-edge)}.dialog .play:hover .watch{background:#f5d57e}}
-.dialog .categories button:active{translate:0 2px;box-shadow:0 2px 0 var(--btn-gold-bright-edge)}
+.dialog .categories button:active{translate:0 var(--btn-press);box-shadow:0 1px 0 var(--btn-gold-bright-edge)}
 @media(prefers-reduced-motion:reduce){.dialog .categories button{transition:none;translate:none}}
 
 .dialog .panel.panel.panel{background-blend-mode:normal!important}
 /* Mobile (user, Sep 30 2026): the Category bar is fixed under the title, outside the scrolling list, with no band behind it. */
 @media(max-width:700px),(pointer:coarse){.dialog .mobileCategory{flex:none;margin:0;padding:0 18px 12px}.dialog .body{padding-top:6px}}
 /* Back sits on the left (user, Sep 30 2026); the title stays centred on the screen, not in the space beside it. */
-.dialog .header.header{grid-template-columns:88px minmax(0,1fr) 88px}.dialog .header h2{white-space:nowrap}
+.dialog .header.header{grid-template-columns:var(--btn-nav-width) minmax(0,1fr) var(--btn-nav-width)}.dialog .header h2{white-space:nowrap}
+/* Heat (overnight audit F1, Sep 30 2026): the sheet is full-screen and opaque, so the tint under it is never seen through and the
+   island sleeps behind it (Town's paused-menu path). No blur under it at all, as IslandSettings' fullModal intends: the shared
+   entering animation (backdropIn) would otherwise hold blur(3px) for as long as the sheet is open. The tint keeps its fade. */
+.dialog.dialog.dialog::backdrop{backdrop-filter:none;-webkit-backdrop-filter:none}
+.dialog.dialog.dialog[open]::backdrop{animation-name:playsTintIn}
+@keyframes playsTintIn{from{background:#16352a00}to{background:#16352a70}}

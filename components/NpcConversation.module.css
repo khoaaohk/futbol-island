@@ -2,7 +2,7 @@
 .panel{box-sizing:border-box;width:min(480px,100%);height:100%;overflow:auto;overscroll-behavior:contain;background:#f2e7c5;padding:calc(26px + env(safe-area-inset-top,0px)) calc(24px + env(safe-area-inset-right,0px)) calc(28px + env(safe-area-inset-bottom,0px)) 24px;box-shadow:-10px 0 40px #142e2926}
 /* The panel slide lives in DrawerSlide.module.css (shared with the island pocket); only the backdrop blur is local. */
 .entering::backdrop{animation:blurIn .14s ease-out both}@keyframes blurIn{from{background:#16352a00;backdrop-filter:blur(0)}to{background:#16352a70;backdrop-filter:blur(3px)}}
-.header{display:flex;justify-content:space-between;gap:14px}.header p{font:700 10px/1.4 monospace;letter-spacing:1.7px;margin:0 0 12px}.header h2{font-size:29px;margin:0 0 8px;letter-spacing:-.6px}.header span{font-size:13px;color:#61705b}.close{flex:0 0 44px;height:44px;border-radius:50%;border:1px solid #96a182;background:#e4d8b3;color:#294a3e;font-size:28px;cursor:pointer}.panel button:focus-visible{outline:3px solid #c47b33;outline-offset:3px}
+.header{display:flex;justify-content:space-between;gap:14px}.header p{font:700 10px/1.4 monospace;letter-spacing:1.7px;margin:0 0 12px}.header h2{font-size:29px;margin:0 0 8px;letter-spacing:-.6px}.header>div>span{font-size:13px;color:#61705b}.close{flex:0 0 44px;height:44px;border-radius:50%;border:1px solid #96a182;background:#e4d8b3;color:#294a3e;font-size:28px;cursor:pointer}.panel button:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
 /* The fixed shell header stays above one scrolling conversation. */
 .body{display:flex;flex-direction:column;gap:20px}
 .body>*{flex-shrink:0;margin-top:0;margin-bottom:0}
@@ -22,7 +22,7 @@
 .suggestions>button:hover{border-color:#294f43;background:#e9dfbe}
 .suggestions>.goodbye{padding-left:0;border-color:transparent;background:transparent;text-decoration:underline;text-underline-offset:4px}
 @media(max-width:600px),(pointer:coarse){.panel{width:100%}}@media(max-width:350px){.panel{padding-left:18px;padding-right:18px}.header h2{font-size:26px}}@media(prefers-reduced-motion:reduce){.entering::backdrop{animation:none}}
-.news{padding:18px;margin-bottom:22px;background:#e1dfbf;border-radius:16px}.newsHeader{display:flex;align-items:center;justify-content:space-between;gap:12px}.newsHeader h3{font-size:17px;margin:0}.newsHeader button{min-height:44px;border:1px solid #93a183;border-radius:20px;padding:8px 12px;background:transparent;color:inherit;cursor:pointer}.newsHeader button:disabled{opacity:.55;cursor:default}.news .newsNote{font-size:11px;line-height:1.6;color:#52674f}.news ul{list-style:none;margin:0;padding:0}.news li{padding:16px 0;border-top:1px solid #a8b091}.news li:last-child{padding-bottom:0}.news a{color:#294f43;font-size:14px;font-weight:700;line-height:1.5;text-underline-offset:3px}.news a:focus-visible{outline:3px solid #c47b33;outline-offset:3px}.news small{display:block;font-size:10px;line-height:1.6;margin-top:6px;color:#52674f}
+.news{padding:18px;margin-bottom:22px;background:#e1dfbf;border-radius:16px}.newsHeader{display:flex;align-items:center;justify-content:space-between;gap:12px}.newsHeader h3{font-size:17px;margin:0;min-width:0}.newsHeader button{flex:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:44px;min-height:44px;white-space:nowrap;border:1px solid #93a183;border-radius:20px;padding:8px 12px;background:transparent;color:inherit;cursor:pointer}.newsHeader button:disabled{opacity:.55;cursor:default}.newsHeader button span{font-size:16px;line-height:1}.news .newsNote{font-size:11px;line-height:1.6;color:#52674f}.news ul{list-style:none;margin:0;padding:0}.news li{padding:16px 0;border-top:1px solid #a8b091}.news li:last-child{padding-bottom:0}.news a{color:#294f43;font-size:14px;font-weight:700;line-height:1.5;text-underline-offset:3px}.news a:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}.news small{display:block;font-size:10px;line-height:1.6;margin-top:6px;color:#52674f}
 
 /* Mounted exchanges animate once; stable keys keep the chat history still. */
 .entering .message{animation:bubbleIn .38s cubic-bezier(.2,.75,.25,1) both;transform-origin:bottom left}
@@ -47,7 +47,7 @@
 /* Conversation keeps one scroller and the familiar drawer, with island controls. */
 .dialog .panel{width:min(600px,100%);background:url('/stories/films/assets/entry-grain.png') center/160px repeat,#2e806d url('/stories/paths/conversation-coast.svg') center top/100% 1000px repeat-y!important}
 .dialog .header{background:transparent!important;border:0}
-.dialog .header h2{color:#fff2cd;font:400 clamp(24px,3vw,34px)/1.15 IslandBrush,sans-serif;letter-spacing:0}
+.dialog .header h2{color:#fff2cd;font:400 clamp(24px,3vw,38px)/1.15 IslandBrush,sans-serif;letter-spacing:0}
 .dialog .body{padding:12px 24px 32px;gap:24px}
 .dialog .body>p{color:#fff2cd;font-size:14px;font-weight:700;line-height:1.5}
 .dialog .message{padding:18px 20px;border-radius:26px 26px 26px 8px;background:#fff2d3;box-shadow:0 5px 0 #143e3440}
@@ -55,10 +55,10 @@
 .dialog .userMessage{background:#eeb0d5;color:#244d40;border-radius:26px 26px 8px 26px}
 .dialog .userMessage .speaker{color:#31574b}
 .dialog .suggestions{gap:14px}.dialog .replyLabel{color:#fff2cd;font-size:14px}
-.dialog .suggestions>button{width:100%;padding:14px 18px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:24px;background:var(--btn-gold-bright);color:var(--btn-ink);font-size:15px;font-weight:700;box-shadow:0 5px 0 var(--btn-gold-bright-edge);transition:transform .16s,background-color .16s,box-shadow .16s}
+.dialog .suggestions>button{width:100%;padding:14px 18px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius-tile);background:var(--btn-gold-bright);color:var(--btn-ink);font-size:15px;font-weight:700;box-shadow:0 4px 0 var(--btn-gold-bright-edge);transition:transform .16s,background-color .16s,box-shadow .16s}
 .dialog .suggestions>button:hover{background:#efabc9;transform:translateY(-2px)}
-.dialog .suggestions>button:active{transform:translateY(3px);box-shadow:0 2px 0 var(--btn-gold-bright-edge)}
-.dialog .suggestions>.goodbye{background:var(--btn-mint);text-decoration:none;border-color:var(--btn-rim);box-shadow:0 5px 0 var(--btn-mint-edge)}
+.dialog .suggestions>button:active{transform:translateY(var(--btn-press));box-shadow:0 2px 0 var(--btn-gold-bright-edge)}
+.dialog .suggestions>.goodbye{background:var(--btn-mint);text-decoration:none;border-color:var(--btn-rim);box-shadow:0 4px 0 var(--btn-mint-edge)}
 .dialog .news,.dialog .ranking,.dialog .clip{background:#fff2d3;border-radius:24px;padding:18px;color:#244d40}
 .dialog .newsHeader button,.dialog .matchStory button,.dialog .rankTabs button,.dialog .rankList button,.dialog .clip button{background:var(--btn-gold-bright);border:2px solid var(--btn-rim);border-radius:var(--btn-radius-tile);box-shadow:0 3px 0 var(--btn-gold-bright-edge);color:#244d40;cursor:pointer}
 .dialog .rankTabs button[aria-pressed=true]{background:var(--btn-pink)}.dialog .rankList li{background:#fff9e8;border-radius:18px}

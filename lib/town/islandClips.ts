@@ -1,6 +1,6 @@
 import type {NewsLeague} from './newsLeagues';
 export type IslandClip={id:string;title:string;publishedAt:string;source:string;views:number;durationSeconds?:number;league:NewsLeague};
-export type IslandClipFeed={items:IslandClip[];unavailable:boolean;fallback?:'channel'};
+export type IslandClipFeed={items:IslandClip[];unavailable:boolean;fallback?:'channel'|'curated'};
 
 /** Recheck cached metadata at response time; never serve clips older than two weeks.
  * `evergreen` (skill channels only, e.g. freestyle) skips just the age limit. */

@@ -5,16 +5,16 @@
 .srOnly{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 .header{position:absolute;z-index:6;top:calc(20px + env(safe-area-inset-top,0px));left:calc(24px + env(safe-area-inset-left,0px));display:flex}
 .chapterLine{position:absolute;z-index:4;top:calc(18px + env(safe-area-inset-top,0px));left:130px;right:130px;text-align:center;color:#fff3d2;pointer-events:none}
-.chapterLine h2{margin:2px 0 0;font:400 clamp(26px,3vw,38px)/1.05 IslandLoadingBrush,IslandBrush,sans-serif;text-shadow:2px 2px 0 #1f4f72,-1px -1px 0 #ff5fa266}
+.chapterLine h2{margin:2px 0 0;font:400 clamp(24px,3vw,38px)/1.05 IslandLoadingBrush,IslandBrush,sans-serif;text-shadow:2px 2px 0 #1f4f72,-1px -1px 0 #ff5fa266}
 .year{display:block;font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#ffe9a8}
 .stage{position:absolute;inset:0}
 .picture{position:absolute;left:0;right:0;top:0;bottom:var(--bottom);touch-action:pan-y;cursor:pointer;outline:none}
-.picture:focus-visible{outline:3px solid #ffd66c;outline-offset:-6px;border-radius:24px}
+.picture:focus-visible{outline:var(--btn-focus);outline-offset:-6px;border-radius:24px}
 .scene3d{width:100%;height:100%;contain:layout paint}.scene3d canvas{display:block;width:100%;height:100%;pointer-events:none}
 .sceneFallback{padding:60px 24px;color:#fff2d7;text-align:center;line-height:1.5}
 /* Page controls: previous arrow · the page's paper action · next arrow, just above the shared story tray. The two side
    columns are the same icon width, so the action's column (and the action) is centred on the screen. */
-.navigation{position:absolute;z-index:5;left:50%;transform:translateX(-50%);bottom:calc(164px + env(safe-area-inset-bottom,0px));width:min(760px,calc(100% - 32px));display:grid;grid-template-columns:var(--btn-icon) minmax(0,1fr) var(--btn-icon);align-items:center;gap:12px}
+.navigation{position:absolute;z-index:5;left:50%;transform:translateX(-50%);bottom:calc(164px + env(safe-area-inset-bottom,0px));width:min(760px,calc(100% - 2 * var(--phone-gutter)));display:grid;grid-template-columns:var(--btn-icon) minmax(0,1fr) var(--btn-icon);align-items:center;gap:12px}
 .reader button{min-height:44px;font:inherit;font-weight:800;cursor:pointer;touch-action:manipulation}
 .navigation>button{display:grid;place-items:center;box-sizing:border-box;width:var(--btn-icon);height:var(--btn-icon);min-height:var(--btn-icon);padding:0;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:50%;background:var(--btn-gold-bright) var(--btn-grain) center/128px 128px;color:var(--btn-ink);box-shadow:0 4px 0 var(--btn-gold-bright-edge);transition:translate .15s,box-shadow .15s}
 .navigation>button:active{translate:0 var(--btn-press);box-shadow:0 1px 0 var(--btn-gold-bright-edge)}.navigation>button:disabled{opacity:.45;cursor:default;translate:none}
@@ -22,18 +22,20 @@
 .activity button{display:inline-flex;align-items:center;justify-content:center;gap:10px;max-width:100%;min-height:var(--btn-height);padding:10px 20px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius);background:var(--btn-pink) var(--btn-grain) center/128px 128px;color:var(--btn-ink);box-shadow:0 4px 0 var(--btn-pink-edge);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:translate .15s,box-shadow .15s}
 .activity button:active{translate:0 var(--btn-press);box-shadow:0 1px 0 var(--btn-pink-edge)}.activity button:disabled{opacity:.55;cursor:default;translate:none}
 .reader button:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
-.playback.playback{bottom:calc(14px + env(safe-area-inset-bottom,0px));width:min(760px,calc(100% - 32px));max-height:128px}
+.playback.playback{bottom:calc(14px + env(safe-area-inset-bottom,0px));width:min(760px,calc(100% - 2 * var(--phone-gutter)));max-height:128px}
 @media(max-width:700px){
  .reader{--top:calc(84px + env(safe-area-inset-top,0px));--bottom:calc(228px + env(safe-area-inset-bottom,0px))}
- .header{top:calc(16px + env(safe-area-inset-top,0px));left:calc(18px + env(safe-area-inset-left,0px))}
  .chapterLine{left:104px;right:104px;top:calc(14px + env(safe-area-inset-top,0px));text-align:center}
  .chapterLine{left:100px;right:100px}
- .chapterLine h2{font-size:clamp(20px,5.8vw,25px);text-wrap:balance}.chapterLine .year{letter-spacing:.08em}.year{font-size:10px}
+ .chapterLine h2{font-size:clamp(24px,3vw,38px);text-wrap:balance}.chapterLine .year{letter-spacing:.08em}.year{font-size:10px}
  .navigation{gap:8px;bottom:calc(162px + env(safe-area-inset-bottom,0px))}
  .activity button{padding:6px 14px;font-size:14px;line-height:1.15;white-space:normal;text-wrap:balance;text-align:center}
 }
-@media(max-height:520px) and (min-width:560px){.reader{--top:calc(62px + env(safe-area-inset-top,0px));--bottom:calc(136px + env(safe-area-inset-bottom,0px))}.chapterLine{left:118px;right:min(440px,52%);text-align:left;top:calc(14px + env(safe-area-inset-top,0px))}.chapterLine h2{font-size:21px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.year{font-size:9px}.playback.playback{max-height:120px}}
+@media(max-height:520px) and (min-width:560px){.reader{--top:calc(62px + env(safe-area-inset-top,0px));--bottom:calc(136px + env(safe-area-inset-bottom,0px))}.chapterLine{left:118px;right:118px;text-align:center;top:calc(14px + env(safe-area-inset-top,0px))}.chapterLine h2{font-size:clamp(24px,3vw,38px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.year{font-size:9px}.playback.playback{max-height:120px}}
 @media(prefers-reduced-motion:reduce){.navigation>button,.activity button{transition:none}}
+/* Back sits on the phone anchors (16 top, --phone-gutter side) on every narrow or touch screen, landscape phones included
+   (docs/ui/UI_SPEC.md: one media query for the phone anchors). */
+@media(max-width:700px),(pointer:coarse){.header{top:calc(16px + env(safe-area-inset-top,0px));left:calc(var(--phone-gutter) + env(safe-area-inset-left,0px))}}
 
 /* Desktop (Sep 28): the book gets the room. Page arrows move to the screen edges beside the book, the page action sits
    just above the shared story tray, and the picture runs down to the action. Previous/Next sit beside the tray. */
@@ -61,10 +63,11 @@
 @media(max-height:520px) and (min-width:560px){
  .navigation{position:static;transform:none;width:auto;display:contents}
  .navigation>button{position:absolute;z-index:5;bottom:calc(18px + env(safe-area-inset-bottom,0px))}
- .navigation>button[data-page-nav=prev]{left:calc(16px + env(safe-area-inset-left,0px))}
- .navigation>button[data-page-nav=next]{right:calc(16px + env(safe-area-inset-right,0px))}
- .activity{position:absolute;z-index:5;left:50%;transform:translateX(-50%);top:calc(10px + env(safe-area-inset-top,0px));width:max-content;max-width:260px}
+ .navigation>button[data-page-nav=prev]{left:calc(var(--phone-gutter) + env(safe-area-inset-left,0px))}
+ .navigation>button[data-page-nav=next]{right:calc(var(--phone-gutter) + env(safe-area-inset-right,0px))}
+ /* UI fix (Sep 30 2026, docs/ui/UI_SPEC.md): the page action leaves the header row (title centred there) and stacks just above
+    Next, in the thumb zone beside the book, so the book keeps all of its height. */
+ .activity{position:absolute;z-index:5;right:calc(var(--phone-gutter) + env(safe-area-inset-right,0px));bottom:calc(142px + env(safe-area-inset-bottom,0px));width:max-content;max-width:200px}
  .activity button{padding:6px 16px;line-height:1.15;white-space:normal;text-wrap:balance;text-align:center}
- .chapterLine{left:calc(50% + 142px);right:calc(16px + env(safe-area-inset-right,0px));text-align:right}
- .playback.playback{width:min(760px,calc(100% - 2 * (16px + var(--btn-icon) + 12px)))}
+ .playback.playback{width:min(760px,calc(100% - 2 * (var(--phone-gutter) + var(--btn-icon) + 12px)))}
 }

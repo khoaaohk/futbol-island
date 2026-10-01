@@ -8,6 +8,11 @@ export function sampleBottleOcean(time:number,out:BottleOceanSample){
  for(let i=0;i<3;i++){const u=(t-OCEAN_STARTS[i])/OCEAN_LENGTHS[i];if(u>0&&u<1){const attack=Math.min(1,u/.2),recede=Math.max(0,1-(u-.2)/.8),envelope=attack*attack*(3-2*attack)*recede*recede;out.wash+=envelope;out.froth+=envelope*Math.sin(Math.PI*Math.min(1,u/.55))**2;}}
  return out;
 }
+/** The island effects bus level (× the effects volume). */
+export const ISLAND_SFX_MASTER=.64;
+/** The one UI "click" (Enter / Go / Done / any button): a short rising sine. Shared with the Konbini page (lib/konbini/konbiniSound.ts
+ *  konbiniSfx.click), which has no island runtime, so its buttons sound the same. `level` is before the bus (ISLAND_SFX_MASTER). */
+export const UI_CLICK={from:520,to:760,duration:.095,level:.1,attack:.009} as const;
 /** Quiet, self-contained game Foley. One gesture-unlocked context, no downloads. */
 export function createIslandSound(initialMuted=false,initialVolume=.5){
   let context:AudioContext|null=null,master:GainNode|null=null,noise:AudioBuffer|null=null;
@@ -44,7 +49,7 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
         try{const session=(navigator as Navigator&{audioSession?:{type:string}}).audioSession;if(session)session.type='playback';}catch{}
         const Audio=window.AudioContext||(window as unknown as {webkitAudioContext?:typeof AudioContext}).webkitAudioContext;
         if(!Audio)return null;
-        context=new Audio();master=context.createGain();master.gain.value=muted?0:.64*volume;master.connect(context.destination);
+        context=new Audio();master=context.createGain();master.gain.value=muted?0:ISLAND_SFX_MASTER*volume;master.connect(context.destination);
         noise=context.createBuffer(1,context.sampleRate,context.sampleRate);
         const samples=noise.getChannelData(0);for(let i=0;i<samples.length;i++)samples[i]=Math.random()*2-1;
         context.onstatechange=()=>{if(context)debug.contextState=context.state;};
@@ -63,7 +68,7 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
   /** Island idle (driven by islandMusic's one idle controller): fade the whole mix out over 1.5 s, stop the ride hums and suspend;
    * nothing is scheduled while idle, so waking replays nothing. Waking resumes with a short fade-in. */
   let idleFaded=false,idleFadeTimer:ReturnType<typeof setTimeout>|undefined;
-  const IDLE_FADE=1.5,WAKE_FADE=.25,level=()=>muted||idleFaded?0:.64*volume;
+  const IDLE_FADE=1.5,WAKE_FADE=.25,level=()=>muted||idleFaded?0:ISLAND_SFX_MASTER*volume;
   function setIdle(on:boolean){
     if(on===idleFaded||disposed)return;idleFaded=on;debug.idle=on;if(idleFadeTimer!==undefined)clearTimeout(idleFadeTimer);idleFadeTimer=undefined;
     const c=context,g=master;
@@ -126,7 +131,8 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
     if(kind==='dock'||kind==='undock'){tone(kind==='dock'?420:640,kind==='dock'?640:420,.11,.055,'triangle');return;}
     if(kind==='swipe-right'||kind==='swipe-left'){tone(kind==='swipe-right'?300:900,kind==='swipe-right'?900:300,.16,.047,'sine');return;}
     if(kind==='expand'||kind==='collapse'){tone(kind==='expand'?430:680,kind==='expand'?680:430,.15,.065,'sine');return;}
-    tone(kind==='hover'?750:520,kind==='hover'?920:760,kind==='hover'?.055:.095,kind==='hover'?.045:.1,'sine');
+    if(kind==='click'){tone(UI_CLICK.from,UI_CLICK.to,UI_CLICK.duration,UI_CLICK.level,'sine',0,UI_CLICK.attack);return;}
+    tone(750,920,.055,.045,'sine');
   }
   // Story cues reuse the island context and persisted effects mix; no extra audio loop.
   function storyCue(event:Event){

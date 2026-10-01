@@ -37,7 +37,9 @@ export default function GraduationHost({blocked,onOpenChange}:{blocked:boolean;o
   window.addEventListener(ENDGAME_OPEN,leave);return()=>window.removeEventListener(ENDGAME_OPEN,leave);
  // eslint-disable-next-line react-hooks/exhaustive-deps
  },[ceremony]);
- if(!showing)return null;
  const title=view?'Certificate':ceremony&&ceremony.length===1?`${GRAD_TITLES[ceremony[0]]} Graduation`:'Graduation';
- return <EndgameDialog open label="graduation" title={title} onClose={close}><GraduationCeremony record={record} formats={ceremony??[]} view={view}/></EndgameDialog>;
+ // Bug audit B12: the dialog stays mounted and closes through `open`, so EndgameDialog's close branch restores focus to the
+ // trigger (returning null unmounted it mid-open and dropped focus to <body>). Its children render only while open, so the
+ // ceremony code still loads only when there is something to show.
+ return <EndgameDialog open={showing} label="graduation" title={title} onClose={close}><GraduationCeremony record={record} formats={ceremony??[]} view={view}/></EndgameDialog>;
 }

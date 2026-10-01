@@ -1,7 +1,7 @@
 .dialog{position:fixed;inset:0;width:100%;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;background:transparent;color:#294a3e;overflow:clip}.dialog[open]{display:flex;justify-content:flex-end}.dialog::backdrop{background:#16352a70;backdrop-filter:blur(3px)}
 .panel{box-sizing:border-box;width:min(480px,100%);height:100%;overflow:auto;overscroll-behavior:contain;background:#f2e7c5;padding:calc(26px + env(safe-area-inset-top,0px)) calc(24px + env(safe-area-inset-right,0px)) calc(28px + env(safe-area-inset-bottom,0px)) 24px;box-shadow:-10px 0 40px #142e2926}
 .entering .panel{animation:slideIn .24s ease-in-out .14s both}.leaving .panel{animation:slideOut .24s ease-in-out both}.entering::backdrop{animation:blurIn .14s ease-out both}@keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}@keyframes slideOut{from{transform:translateX(0)}to{transform:translateX(100%)}}@keyframes blurIn{from{background:#16352a00;backdrop-filter:blur(0)}to{background:#16352a70;backdrop-filter:blur(3px)}}
-.header{display:flex;justify-content:space-between;gap:14px}.header p{font:700 10px/1.4 monospace;letter-spacing:1.7px;margin:0 0 12px}.header h2{font-size:29px;margin:0;letter-spacing:-.6px}.close{flex:0 0 44px;height:44px;border-radius:50%;border:1px solid #96a182;background:#e4d8b3;color:#294a3e;font-size:28px;cursor:pointer}.panel button:focus-visible{outline:3px solid #c47b33;outline-offset:3px}
+.header{display:flex;justify-content:space-between;gap:14px}.header p{font:700 10px/1.4 monospace;letter-spacing:1.7px;margin:0 0 12px}.header h2{font-size:29px;margin:0;letter-spacing:-.6px}.close{flex:0 0 44px;height:44px;border-radius:50%;border:1px solid #96a182;background:#e4d8b3;color:#294a3e;font-size:28px;cursor:pointer}.panel button:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
 .summary{display:flex;align-items:center;gap:16px;margin:24px 0}.summary strong{font-size:18px}.summary small{display:block;font-size:12px;margin-top:6px}
 .tabs{display:flex;background:#dcd8b6;border-radius:25px;padding:4px;gap:4px}.tabs button{flex:1;min-height:44px;border:0;border-radius:23px;background:transparent;color:inherit;font-size:14px;font-weight:700;cursor:pointer}.tabs button[aria-pressed=true]{background:#294f43;color:#fff0cc}.progress{margin:22px 0;padding:15px;border-radius:14px;background:#e6ddba}.progress strong{font-size:12px}.progress progress{display:block;width:100%;height:7px;margin:10px 0;accent-color:#426b52}.progress small{font-size:11px;line-height:1.5;display:block;color:#586b55}.section{margin-top:23px}.section h3{font-size:15px;margin:0 0 11px}.options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.option{display:flex;flex-direction:column;align-items:center;gap:7px;min-height:116px;padding:11px 5px;border:1px solid #a1a889;border-radius:14px;background:#e9dfbe;color:inherit;cursor:pointer}.option[aria-pressed=true]{border:2px solid #294f43;background:#d7ddba;padding:10px 4px}.option:disabled{opacity:.6;cursor:default}.option strong{font-size:11px;line-height:1.3}.option small{font-size:10px;line-height:1.35}.swatch{display:grid;place-items:center;width:37px;height:37px;border-radius:12px;color:#18372d;font-weight:900;border:1px solid #294a3e30}.ball{border-radius:50%;background-image:radial-gradient(#294a3e 2px,transparent 3px)!important;background-size:13px 13px!important}.note{font-size:11px;line-height:1.6;color:#586b55;margin:12px 0 0}
 @media(max-width:600px),(pointer:coarse){.panel{width:100%}}@media(max-width:350px){.panel{padding-left:18px;padding-right:18px}.options{gap:6px}.option strong{font-size:10px}}@media(prefers-reduced-motion:reduce){.entering .panel,.leaving .panel,.entering::backdrop{animation:none}}
@@ -9,7 +9,7 @@
 .preview{position:relative;height:240px;width:100%;margin:22px 0 0;border-radius:20px;overflow:hidden;background:#e8b98b}.preview canvas{display:block;width:100%;height:100%;touch-action:none}.previewFallback{padding:24px;font-size:13px;line-height:1.6}.summary{margin:12px 0 20px}.summary strong{font-size:16px}.summary small{margin-top:4px}
 @media(max-width:350px){.preview{height:220px}}@media(max-height:480px){.preview{height:210px}}
 
-.selectors{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 12px;margin-top:18px}.selection{display:flex;flex-direction:column;gap:8px;min-width:0;font-size:13px;font-weight:700}.selection select{width:100%;min-width:0;min-height:44px;border:1px solid #98a386;border-radius:12px;padding:10px 8px;background:#e7ddbb;color:#294a3e;font:inherit;font-size:16px;text-overflow:ellipsis}.selection select:focus-visible{outline:3px solid #c47b33;outline-offset:3px}.summary{margin:12px 0 16px}.progress{margin:16px 0;padding:12px}.preview{height:clamp(260px,38dvh,360px);margin-top:18px}
+.selectors{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 12px;margin-top:18px}.selection{display:flex;flex-direction:column;gap:8px;min-width:0;font-size:13px;font-weight:700}.selection select{width:100%;min-width:0;min-height:44px;border:1px solid #98a386;border-radius:12px;padding:10px 8px;background:#e7ddbb;color:#294a3e;font:inherit;font-size:16px;text-overflow:ellipsis}.selection select:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}.summary{margin:12px 0 16px}.progress{margin:16px 0;padding:12px}.preview{height:clamp(260px,38dvh,360px);margin-top:18px}
 /* A single selected-item view and compact thumbnails keep equipment visible without a card catalog. */
 .tabs{margin-top:18px}
 .equipmentPreview{display:grid;place-items:center;width:100%;height:clamp(145px,23dvh,190px);margin-top:16px;border-radius:20px;background:radial-gradient(ellipse at 50% 80%,#ddd6a9 0%,#e8b98b 75%);overflow:hidden}
@@ -32,7 +32,7 @@
 .dialog .panel{width:100%;max-height:100dvh;box-shadow:none;background:url('/stories/films/assets/entry-grain.png') center/160px repeat,#b96b95 url('/stories/paths/costume-coast.svg') center top/100% 1200px repeat-y!important}
 .dialog .panel>.body{background:none;padding:20px max(24px,calc((100% - 1080px)/2)) 40px;scrollbar-gutter:stable both-edges}
 .dialog .header h2{font-size:clamp(24px,3vw,38px)}
-.dialog .header{min-height:88px!important}
+/* Header height comes from ModalShell (76 phone / 84 desktop), like every sibling dialog. */
 .dialog .tabs{max-width:420px;margin:0 auto 24px;background:#fff2d3;border:3px solid #fff2cd;box-shadow:0 5px 0 #6a3b5e40}
 .dialog .tabs button{transition:background-color .18s,transform .18s;font-size:16px}
 .dialog .tabs button:hover{background:#f3cfe5}.dialog .tabs button:active{transform:scale(.97)}
@@ -69,10 +69,10 @@
 .chipDot{width:16px;height:16px;border-radius:50%;border:2px solid #fff8df;flex:none}
 .swatches{display:flex;flex-wrap:wrap;gap:10px}
 .colorSwatch{position:relative;width:40px;height:40px;padding:0;border:3px solid var(--btn-rim);border-radius:50%;box-shadow:0 3px 0 var(--btn-gold-bright-edge);cursor:pointer;transition:transform .15s}
-.colorSwatch:hover{transform:translateY(-2px)}.colorSwatch:active{transform:translateY(2px)}
+.colorSwatch:hover{transform:translateY(-2px)}.colorSwatch:active{transform:translateY(var(--btn-press))}
 .colorSwatch[aria-pressed=true]{box-shadow:0 0 0 3px var(--btn-ink),0 3px 0 3px var(--btn-ink)}
 .colorSwatch[aria-pressed=true]::after{content:'';position:absolute;inset:11px;border-radius:50%;background:#fff8df;box-shadow:0 0 0 2px #244d4055}
-.chip:focus-visible,.colorSwatch:focus-visible,.numberChip:focus-visible{outline:3px solid #c47b33;outline-offset:3px}
+.chip:focus-visible,.colorSwatch:focus-visible,.numberChip:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
 .numberLesson{display:flex;flex-direction:column;gap:10px;margin-top:6px;padding:14px;border-radius:20px;background:#f7edcf url('/stories/films/assets/entry-grain.png') center/160px}
 .numberLesson .groupTitle{font-size:clamp(18px,2vw,21px)}
 .numberRow{display:flex;flex-wrap:wrap;gap:6px}
@@ -194,21 +194,26 @@
 /* Open / close (user, Sep 26 2026: "fade in Make it yours, make the transition smoother"). Opacity + transform only:
    the backdrop and panel fade in (~300ms), then the preview card and the options card rise in one after the other;
    closing fades out inside the component's 240ms close timer. The 3D canvas fades in on its first frame (CharacterPreview). */
-.dialog.entering::backdrop{animation:fadeBackdrop .3s ease-out both}
+.dialog.entering::backdrop{animation:fadeBackdrop .26s ease-out both}
 /* Separate in/out keyframes: a `reverse` flip of the same keyframe doesn't restart it, so WebKit popped instead of fading. */
-.dialog.leaving::backdrop{animation:fadeBackdropOut .22s ease-in both}
+.dialog.leaving::backdrop{animation:fadeBackdropOut .2s ease-in both}
 @keyframes fadeBackdrop{from{opacity:0}to{opacity:1}}
 @keyframes fadeBackdropOut{from{opacity:1}to{opacity:0}}
-.dialog.entering .panel{animation:wardrobeIn .3s cubic-bezier(.2,.7,.3,1) both}
-.dialog.leaving .panel{animation:wardrobeOut .22s ease-in both}
+/* The shared full-screen fade (docs/ui/UI_SPEC.md): .26s ease-out in, .2s ease-in out. */
+.dialog.entering .panel{animation:wardrobeIn .26s ease-out both}
+.dialog.leaving .panel{animation:wardrobeOut .2s ease-in both}
 @keyframes wardrobeOut{from{opacity:1}to{opacity:0}}
 .dialog.entering .previewColumn,.dialog.entering .builder{animation:cardIn .36s cubic-bezier(.2,.7,.3,1) both}
 .dialog.entering .previewColumn{animation-delay:.05s}.dialog.entering .builder{animation-delay:.12s}
 @keyframes cardIn{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
-.dialog.leaving .layout{animation:cardOut .22s ease-in both}
+.dialog.leaving .layout{animation:cardOut .2s ease-in both}
 @keyframes cardOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(8px) scale(.99)}}
 @media(prefers-reduced-motion:reduce){
  .dialog.entering::backdrop,.dialog.entering .panel{animation:wardrobeIn .12s linear both}
  .dialog.leaving::backdrop,.dialog.leaving .panel{animation:wardrobeOut .12s linear both}
  .dialog.entering .previewColumn,.dialog.entering .builder,.dialog.leaving .layout{animation:none}
 }
+
+/* Heat (Sep 30 2026, UI pass): Make it yours is full-screen and opaque, so its backdrop is a plain tint (the opacity fade above),
+   never a live blur held for as long as it is open. */
+.dialog.dialog::backdrop{backdrop-filter:none;-webkit-backdrop-filter:none}

@@ -6,7 +6,8 @@
  * one box and brings it back tomorrow. The Daily warm-up asks ONE short question per due lesson, at most
  * REVIEW_SESSION_SIZE lessons at a time. No streaks, no penalty for missed days: an overdue lesson simply waits.
  *
- * Mastery stages (same names as the pilot journeys, lib/town/learningJourneys.ts):
+ * Mastery stages (same names as the pilot journeys, lib/town/learningJourneys.ts; shown in For grown-ups, lib/grownups/progress.ts,
+ * since the child-facing mastery screen was removed on Oct 1 2026):
  *   Introduced — watched some of it, answered some of it, or spotted it around the island;
  *   Practicing — passed the lesson quiz (retries are practice);
  *   Applied    — got it right in a new setting: a spaced review, or a book "Take it to your game" check;
@@ -30,14 +31,6 @@ export const REVIEW_PAID_PER_DAY=3;
 export const REMEMBERED_BOX=2;
 export type Stage='new'|'introduced'|'practicing'|'applied'|'remembered';
 export const STAGES:Stage[]=['new','introduced','practicing','applied','remembered'];
-export const STAGE_LABEL:Record<Stage,string>={new:'Not started',introduced:'Introduced',practicing:'Practicing',applied:'Applied',remembered:'Remembered'};
-export const STAGE_DETAIL:Record<Stage,string>={
- new:'Not tried yet.',
- introduced:'You have seen this idea.',
- practicing:'You passed the quiz. Retries count as practice.',
- applied:'You used the idea in a new place: a review or a book check.',
- remembered:'You still knew it days later. That is real learning!',
-};
 export type ReviewRecord={enrolled:number;box:number;due:number;right:number;wrong:number;last?:number;
  /** The last review was missed: the warm-up asks it first. */
  missed?:boolean;
@@ -114,9 +107,4 @@ export function stageOf(e:LessonEvidence,r?:ReviewRecord):Stage{
   return 'practicing';
  }
  return e.watched>0||e.correct>0||(r?.ticks??0)>0||(r?.applied??0)>0?'introduced':'new';
-}
-/** Human "next review" line for the mastery screen. */
-export function dueLabel(r:ReviewRecord|undefined,now:number):string|null{
- if(!isEnrolled(r))return null;const d=r!.due-now;
- if(d<=0)return 'Review due';const days=localDaysBetween(now,r!.due);return days<=1?'Review tomorrow':`Review in ${days} days`;
 }

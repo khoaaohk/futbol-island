@@ -9,13 +9,15 @@
 //   with stray label text).
 const {chromium}=require('playwright'),fs=require('fs'),path=require('path');
 const out=path.join(__dirname,'..','public/vending/products');
-(async()=>{const b=await chromium.launch({headless:true,args:['--use-angle=metal','--enable-gpu','--ignore-gpu-blocklist']});const p=await b.newPage({viewport:{width:1280,height:800},deviceScaleFactor:2});const packOnly=process.argv.includes('--pack-only');await p.addInitScript(()=>localStorage.setItem('fi2-welcome-v1','completed'));await p.goto(process.env.FUTBOL_BASE_URL||'http://localhost:8092/');await p.waitForFunction(()=>window.__fi2?.vending,null,{timeout:180000});await p.waitForTimeout(4000);fs.mkdirSync(out,{recursive:true});
+(async()=>{const b=await chromium.launch({headless:true,args:['--use-angle=metal','--enable-gpu','--ignore-gpu-blocklist']});const p=await b.newPage({viewport:{width:1280,height:800},deviceScaleFactor:2});const packOnly=process.argv.includes('--pack-only');await p.addInitScript(()=>{localStorage.setItem('fi2-welcome-v1','completed');/* the face skips baked balls unless baking (StorePreviews.tsx) */window.__fi2BakeBallPictures=true;});await p.goto(process.env.FUTBOL_BASE_URL||'http://localhost:8092/');await p.waitForFunction(()=>window.__fi2?.vending,null,{timeout:180000});await p.waitForTimeout(4000);fs.mkdirSync(out,{recursive:true});
  await p.evaluate(id=>{const f=window.__fi2,e=f.vending.entries.find(e=>e.machine.id===id);f.location.x=e.front.x+e.dir.x*1.5;f.location.z=e.front.z+e.dir.z*1.5;f.rideRef.current='walk';f.flight.height=e.machine.y;},'plaza');await p.waitForTimeout(1800);
  await p.evaluate(()=>{const g=document.querySelector('[data-vending-go]');g.dataset.vending='plaza';g.click();});await p.waitForSelector('[data-vending-face]');await p.locator('[data-vending-item]').first().locator('img').waitFor();
- // The face renders every store item once (useStorePreviews); read that snapshot map from VendingMachine's hook state.
+ // The face renders every store item once (useStorePreviews, over idle time after the zoom); read that snapshot map from
+ // VendingMachine's hook state once it is published.
  const balls=packOnly?{}:await p.evaluate(async()=>{
-  const el=document.querySelector('[data-vending-face]'),key=Object.keys(el).find(k=>k.startsWith('__reactFiber$'));let fiber=el[key],gear=null;
-  for(;fiber&&!gear;fiber=fiber.return)for(let h=fiber.memoizedState;h&&typeof h==='object'&&'next' in h;h=h.next){const s=h.memoizedState;if(s&&typeof s==='object'&&typeof s['ball:classic']==='string'){gear=s;break;}}
+  const find=()=>{const el=document.querySelector('[data-vending-face]'),key=Object.keys(el).find(k=>k.startsWith('__reactFiber$'));let fiber=el[key];
+   for(;fiber;fiber=fiber.return)for(let h=fiber.memoizedState;h&&typeof h==='object'&&'next' in h;h=h.next){const s=h.memoizedState;if(s&&typeof s==='object'&&typeof s['ball:classic']==='string')return s;}return null;};
+  let gear=find();for(let i=0;!gear&&i<100;i++){await new Promise(r=>setTimeout(r,200));gear=find();}
   if(!gear)throw new Error('store previews not found');
   const result={},src=document.createElement('canvas'),dst=document.createElement('canvas'),r=src.getContext('2d',{willReadFrequently:true}),d=dst.getContext('2d');
   for(const [id,url] of Object.entries(gear)){if(!id.startsWith('ball:'))continue;const img=new Image();img.src=url;await img.decode();

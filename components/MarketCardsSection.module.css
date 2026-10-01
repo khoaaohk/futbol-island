@@ -27,7 +27,7 @@
 .sell:hover:not(:disabled),.yes:hover:not(:disabled){background:var(--btn-green-hover,#193c32)}
 .sell:active:not(:disabled),.yes:active:not(:disabled),.keep:active{translate:0 var(--btn-press,3px);box-shadow:0 1px 0 var(--btn-green-edge,#17352b)}
 .sell:disabled,.yes:disabled{opacity:.45;cursor:default}
-.sell:focus-visible,.yes:focus-visible,.keep:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:var(--btn-focus-offset,3px)}
+.sell:focus-visible,.yes:focus-visible,.keep:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset,3px)}
 .empty{margin:0;padding:14px;border-radius:16px;background:#fff9e9;font-size:13px}
 .confirm{position:sticky;bottom:0;z-index:5;isolation:isolate;display:flex;gap:16px;align-items:center;background:var(--btn-cream,#fff1d3);border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:24px 36px 22px 24px;padding:16px;box-shadow:0 10px 36px #152b3d55}
 .confirm p{margin:0;font-size:13px;line-height:1.45}

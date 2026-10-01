@@ -9,6 +9,7 @@ export type JobKind='collect'|'trail'|'carry'|'rebound'|'sort'|'offside'|'pump'|
 export type JobProp='leaf'|'cone'|'ball'|'bottle'|'chalk'|'shirt'|'flag'|'peg'|'produce';
 /** Kit room: each shirt (by squad number) belongs on one position peg (a target index). */
 /** `label`/`color`: a named item (e.g. a snack) instead of a squad number. */
+export type PumpBall={start:number;step:number;min:number;max:number;leak:number};
 export type SortItem={number:number;slot:number;clue:string;label?:string;color?:string};
 /** Extra rules for the task-style jobs (sort, offside, pump). */
 export type JobTask=
@@ -16,7 +17,10 @@ export type JobTask=
    /** Wording and props (Sep 29 2026): kit room = shirts on pegs (default); crates = food cards into labelled crates. */
    style?:'kit'|'crates';source?:string;itemNoun?:string;slotNoun?:string}
  |{type:'offside';clips:number}
- |{type:'pump';start:number[];step:number;release:number;min:number;max:number}
+ /** Ball pump (Oct 1 2026, user: "make it harder"). `min`/`max`: the Law 2 range (0.6–1.1 atm). Each ball has its own start,
+  *  air per Pump tap, green zone (inside the Law 2 range, narrowing ball by ball) and leak (atm/s once you stop tapping for
+  *  `leakDelay` s; never below the ball's start, never above its zone). `release`: Let air out. */
+ |{type:'pump';balls:PumpBall[];release:number;leakDelay:number;min:number;max:number}
  |{type:'harvest';spots:HarvestSpot[];fruitGoal:number;vegGoal:number}
  /** Garden shift (Sep 30 2026): pick `goal` ripe items from the Community Garden spots (lib/town/jobs/garden.ts GARDEN_SPOTS, the
   *  job's targets in the same order), at least `fruitGoal` fruit and `vegGoal` veg, then drop them in the garden crate. */
@@ -27,7 +31,7 @@ export type JobTask=
  * Keyboard: the job button is focusable (Enter/Space; hold the key for a hold step).
  */
 export type WorkStep={id:string;label:string;mode:'tap'|'hold';count?:number;time?:number;busy?:string;hint:string};
-/** `target`: the steps at each target (in order). `deliver`: the one action at the drop-off (bin, ball-kid spot, snack basket). */
+/** `target`: the steps at each target (in order). `deliver`: the one action at the drop-off (bin, ball box, snack basket). */
 export type JobWork={target?:WorkStep[];deliver?:WorkStep};
 /** Harvest day (Sep 30 2026): shake fruit trees, pull root veg, twist-pick staked veg, snip greens. `ripe:false` = a decoy. */
 export type HarvestAction='shake'|'pull'|'twist'|'cut';
@@ -65,14 +69,25 @@ export const JOBS:JobDef[]=[
  {id:'wall-rebounds',title:'Wall rebounds',role:'Practice partner',place:'Rebound wall, Coaches Centre',board:{x:138.5,z:-26.5,yaw:0},color:'#3f7a8c',kind:'rebound',prop:'ball',targets:[{x:156,z:-25}],radius:1.6,
   intro:'The coaches want the rebound wall tested. Face the wall and press Juggle for 50 wall passes. Then Shoot 15 passes into the painted target square, each one from the glowing circle on the grass: it moves after every shot, so you move, open your body and re-aim.',howTo:'Face the wall: Juggle for 50 wall passes, then Shoot at the target from the glowing circle.',unit:'Wall passes',
   lesson:'A wall never gets tired: every rebound is a pass and a first touch. Your character alternates feet on each return, and using both feet makes you much harder to defend.'},
- {id:'ball-kid',title:'Ball kid',role:'Ball kid',place:'Eleven Park touchline (11v11)',board:{x:171,z:113,yaw:-Math.PI/2},color:'#c9a33a',kind:'carry',prop:'ball',targets:[{x:173.5,z:77},{x:172.5,z:127},{x:175,z:66},{x:150,z:153.5},{x:173,z:140}],deliver:{x:170,z:100,label:'ball-kid spot'},radius:1.5,
-  intro:'Balls keep going out of play. Run to each loose ball, pick it up, carry it to your ball-kid spot on the halfway line and throw it back so the game can restart quickly.',howTo:'Run to the ball, pick it up, then throw it back from your spot.',unit:'Balls returned',
-  work:{target:[{id:'pickup',label:'Pick up the ball',mode:'tap',hint:'Pick the ball up with both hands.'}],deliver:{id:'roll',label:'Throw it back',mode:'tap',hint:'Throw it back like a throw-in: both feet on the ground, two hands, ball from behind and over your head.'}},
+ // Oct 1 2026 (user): every loose ball lies AROUND the 11v11 pitch (x 103.5–166.5, z 50.1–149.9): over the east touchline and behind
+ // both goal lines, ≥ 3 m outside the lines, clear of the touchline trees/benches/stand and off the roads (tests/job-boards.cjs). One
+ // ball at a time: pick it up, carry it to the ball box beside the halfway line, put it in, and the next one lights up. (Before, the
+ // ball was thrown back from the halfway line and landed on the pitch where the match is played.)
+ {id:'ball-kid',title:'Ball kid',role:'Ball kid',place:'Eleven Park touchline (11v11)',board:{x:171,z:113,yaw:-Math.PI/2},color:'#c9a33a',kind:'carry',prop:'ball',
+  targets:[{x:169.5,z:124},{x:169.5,z:76},{x:169.5,z:146},{x:150,z:154},{x:144,z:46.5}],deliver:{x:169.5,z:103.5,label:'ball box'},radius:1.5,
+  intro:'Balls keep going out of play, over the touchline and behind the goals. Run to each loose ball, pick it up and put it in the ball box beside the halfway line, so a spare ball is always ready for a quick restart.',howTo:'Pick up the loose ball, then put it in the ball box.',unit:'Balls returned',
+  work:{target:[{id:'pickup',label:'Pick up the ball',mode:'tap',hint:'Pick the ball up with both hands.'}],deliver:{id:'box',label:'Put it in the ball box',mode:'tap',hint:'Put the ball in the ball box, ready for the next restart.'}},
   lesson:'Quick ball kids change matches. At Anfield on 7 May 2019, 14-year-old ball boy Oakley Cannonier returned a ball fast, Trent Alexander-Arnold took a quick corner and Divock Origi scored as Liverpool beat Barcelona 4–0.',lessonSource:'https://en.wikipedia.org/wiki/Oakley_Cannonier'},
- {id:'cone-setup',title:'Set out the cones',role:"Coach's assistant",place:'Club Grounds (9v9)',board:{x:167,z:-72,yaw:0},color:'#d9772f',kind:'collect',prop:'cone',targets:[{x:155,z:-93},{x:165,z:-93},{x:165,z:-83},{x:155,z:-83},{x:149,z:-100},{x:151.5,z:-100},{x:168.5,z:-100},{x:171,z:-100}].map(p=>p),radius:1.4,
-  intro:'Tonight\'s session needs a 10 m passing square and two dribbling gates. Carry the cone stack to each glowing mark and place a cone on it.',howTo:'Carry the cone stack to each mark and place a cone.',unit:'Cones placed',
+ // Oct 1 2026 (user): the marks used to sit inside the 9v9 pitch while a match was on it. The session is now laid out on the grass
+ // band east of the touchline (pitch x ≤ 181.2; the east road's sidewalk starts at x 190), between the touchline trees at
+ // (188, −82 / −104 / −125) and the lamp at (189, −85.5): a 10 × 5 m passing channel and two 2 m dribbling gates, every mark
+ // ≥ 1.6 m from them, ≥ 1 m outside the touchline and ≥ 2 m from the sidewalk (tests/job-boards.cjs checks it on the real town).
+ // The sign stands on the same grass at the north end of the session, facing the north road the players arrive from.
+ {id:'cone-setup',title:'Set out the cones',role:"Coach's assistant",place:'Club Grounds (9v9), beside the pitch',board:{x:185.5,z:-89,yaw:0},color:'#d9772f',kind:'collect',prop:'cone',
+  targets:[{x:183,z:-110},{x:188,z:-110},{x:188,z:-120},{x:183,z:-120},{x:184.5,z:-94},{x:186.5,z:-94},{x:184.5,z:-99.5},{x:186.5,z:-99.5}],radius:1.4,
+  intro:'Tonight\'s session needs a 10 m passing channel and two dribbling gates, set out on the grass beside the pitch, so the match can keep going. Carry the cone stack to each glowing mark and place a cone on it.',howTo:'Carry the cone stack to each mark beside the pitch and place a cone.',unit:'Cones placed',
   work:{target:[{id:'place',label:'Place cone',mode:'tap',hint:'Set the cone down exactly on the mark.'}]},
-  lesson:'Coaches set drills with care: a 10 m square gives passers good angles and time on the ball, and narrow gates reward close control. The right space makes practice feel like a real match.'},
+  lesson:'Coaches set drills with care: a 10 m channel gives passers time on the ball, and narrow gates reward close control. Set up beside the pitch, never on it while a game is being played. The right space makes practice feel like a real match.'},
  {id:'line-painter',title:'Paint the centre circle',role:'Groundskeeper',place:'Eleven Park centre circle (11v11)',board:{x:100.5,z:106,yaw:Math.PI/2},color:'#e9e2c8',kind:'trail',prop:'chalk',targets:CIRCLE,radius:1.5,
   intro:'The centre circle has faded. Push the line-marker around the circle: hold Paint and walk over each faded dash in order to repaint it.',howTo:'Hold Paint and walk along the faded dashes in order.',unit:'Dashes painted',
   work:{target:[{id:'paint',label:'Hold to paint',busy:'Painting… keep walking',mode:'hold',hint:'Hold Paint and walk over the next faded dash.'}]},
@@ -83,16 +98,26 @@ export const JOBS:JobDef[]=[
   lesson:'Respect is part of football. After beating Germany at the 2022 World Cup, Japan\'s players left their dressing room spotless with a thank-you note, and Japan fans stayed to tidy the stands.',lessonSource:'https://www.cbsnews.com/news/japan-upset-win-over-germany-japanese-players-leave-dressing-room-spotless/'},
 
  // ---- Added 27 Sep 2026 (docs/island-jobs.md §3b): assistant referee, ball pump, goal anchors. ----
- {id:'offside-flag',title:'Flag the offside',role:'Assistant referee',place:'Referee practice strip, Coaches Centre',board:{x:152.5,z:7,yaw:Math.PI},color:'#e0b422',kind:'offside',prop:'flag',
-  targets:[{x:150,z:4.2}],radius:1.6,
+ // Sign and flag spot moved 30 Sep 2026: both used to sit inside the High School east wing (x 147–159, z 3–23, roof 13.2 m), so on
+ // foot the walkable height there read 13–15 m and the sign never offered. The sign now stands on open lawn just north of the far
+ // touchline (west of the rebound-shot lawn), and the flag spot is on the near touchline, clear of the school wall (z 3).
+ {id:'offside-flag',title:'Flag the offside',role:'Assistant referee',place:'Referee practice strip, Coaches Centre',board:{x:138,z:-12.5,yaw:0},color:'#e0b422',kind:'offside',prop:'flag',
+  targets:[{x:150,z:2.2}],radius:1.6,
   intro:'Be the assistant referee! Stand on your touchline spot and watch five short replays. When each pass is played, decide: raise the flag for offside, or keep it down.',howTo:'Stand on the touchline spot, watch the pass, then make your call.',unit:'Right calls',
   lesson:'Offside (Law 11): when a team-mate passes, you are offside if you are in the other team\'s half and nearer their goal line than both the ball and the second-last defender. Level is onside, you can\'t be offside in your own half, and there is no offside from a throw-in, goal kick or corner.',lessonSource:'https://www.theifab.com/laws/latest/offside/',
   task:{type:'offside',clips:5}},
  {id:'ball-pump',title:'Pump the balls',role:'Kit assistant',place:'Eleven Park, behind the north goal',board:{x:158,z:43.5,yaw:0},color:'#2f7fb4',kind:'pump',prop:'ball',
   targets:[{x:150,z:44.5}],radius:1.8,
-  intro:'The match balls have gone soft. Stand at the pump station and pump each ball until the gauge is in the green match zone, then check it.',howTo:'Pump until the needle is in the green zone, then press Ball ready.',unit:'Balls ready',
+  intro:'The match balls have gone soft. Stand at the pump station and keep tapping Pump: every stroke pushes in a little air, and if you stop, a little seeps back out. Get each ball into the green zone, then press Ball ready. Every ball needs more strokes and a more exact pressure than the last.',howTo:'Keep tapping Pump until the needle is in the green zone, then press Ball ready.',unit:'Balls ready',
   lesson:'Law 2 says a match ball must be pumped to 0.6–1.1 atmospheres at sea level. Too soft and it dies on your foot and won\'t travel; too hard and it bounces away and is hard to control. Checking the pressure is part of getting ready.',lessonSource:'https://www.theifab.com/laws/latest/the-ball/',
-  task:{type:'pump',start:[.2,.35,.1,.45,.25],step:.15,release:.2,min:.6,max:1.1}},
+  // Oct 1 2026 (user): lots of taps, harder ball by ball. Strokes to reach the green (no leak): 8, 11, 16, 19, 24. The green zones
+  // stay inside the Law 2 range and narrow toward its middle (game rule: a careful kit assistant aims for the middle). No fail state.
+  task:{type:'pump',release:.15,leakDelay:.6,min:.6,max:1.1,balls:[
+   {start:.2,step:.05,min:.6,max:1.1,leak:.03},
+   {start:.2,step:.04,min:.64,max:1.06,leak:.04},
+   {start:.15,step:.035,min:.68,max:1.02,leak:.05},
+   {start:.15,step:.03,min:.71,max:.99,leak:.06},
+   {start:.1,step:.028,min:.75,max:.95,leak:.07}]}},
  {id:'goal-anchor',title:'Anchor the goals',role:'Groundskeeper',place:'Old Town Ground (7v7)',board:{x:22,z:-110.5,yaw:0},color:'#8a6a3c',kind:'collect',prop:'peg',placed:true,
   targets:[{x:8.55,z:-107.4},{x:11,z:-107.7},{x:13.45,z:-107.4},{x:13.45,z:-52.6},{x:11,z:-52.3},{x:8.55,z:-52.6}],radius:1.2,
   intro:'Before anyone plays, both goals must be pegged down. Stand at each glowing spot behind the goals and hammer a ground peg in with three hits.',howTo:'Stand at each peg and hammer it down: 3 hits.',unit:'Pegs hammered',

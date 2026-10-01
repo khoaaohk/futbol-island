@@ -12,16 +12,15 @@ import {createReviewStore,type DueReview} from './reviewStoreCore';
 import {conceptLessons,splitLessonKey,type ConceptId} from './conceptMap';
 /**
  * Browser review store (docs/learning/spaced-review.md). localStorage `fi2-lesson-review-v1`; nothing runs on a timer: the
- * schedule syncs when a surface asks (welcome-back card, Paths entry, the warm-up and mastery screens).
+ * schedule syncs when a surface asks (the Paths Review card, the warm-up).
  *
- * PUBLIC API (Lane 1's welcome-back card, the Paths entry, the backpack):
+ * PUBLIC API (the Paths Review card; the mastery screen was removed Oct 1 2026, docs/learning/spaced-review.md):
  *  - getDueReviews(): {count, items:[{key, format, lessonId, name, concept}]} — at most 3 items (one warm-up);
- *  - openLearningReview('review' | 'mastery'): opens the Daily warm-up or the My football screen (LearningHost listens);
+ *  - openLearningReview(): opens the Daily warm-up (LearningHost listens);
  *  - useDueReviewCount(): live count for a badge.
  */
 export const REVIEW_KEY='fi2-lesson-review-v1';
 export const LEARNING_REVIEW_OPEN='fi2-learning-review-open';
-export type LearningReviewView='review'|'mastery';
 const VALID=new Set(Object.entries(manifest as Record<string,Record<string,number>>).flatMap(([f,ls])=>Object.keys(ls).map(id=>`${f}:${id}`)));
 const NAMES=new Map<string,string>(FORMAT_PATHS.flatMap(p=>[...p.chapters.flatMap(c=>c.lessons),...p.depth].map(l=>[`${p.format}:${l.id}`,l.name] as const)));
 const listeners=new Set<()=>void>();
@@ -37,7 +36,7 @@ const store=createReviewStore({
  lessonName:key=>NAMES.get(key)??splitLessonKey(key).lessonId,
  notify:()=>{snapshot=store.read();listeners.forEach(fn=>fn());},
 });
-// The first subscriber (the welcome-back card, the Paths entry…) enrolls lessons passed since the last visit, once per page load.
+// The first subscriber (the Paths Review card…) enrolls lessons passed since the last visit, once per page load.
 let synced=false;
 function subscribe(fn:()=>void){listeners.add(fn);if(!synced){synced=true;queueMicrotask(()=>{try{store.sync();}catch{}});}const storage=(e:StorageEvent)=>{if(e.key===REVIEW_KEY||e.key===null){snapshot=store.sync();fn();}};window.addEventListener('storage',storage);return()=>{listeners.delete(fn);window.removeEventListener('storage',storage);};}
 const readSnapshot=()=>snapshot??=store.read();
@@ -51,7 +50,7 @@ export const recordBookCheck=(bookId:string,correct:boolean,firstTry:boolean)=>s
 /** Credit a "seen around the island" tick to every lesson of a concept (magazines, jobs, fishing, the ball hunt). */
 export function creditConceptTick(concept:ConceptId|null,source:string,format?:string){if(!concept||isLearningPreview())return [];try{return store.creditTick(concept,source,format);}catch{return [];}}
 export function useDueReviewCount(){useReviewState();const now=Date.now();return Object.values(readSnapshot().lessons).filter(r=>r.enrolled>0&&r.due<=now).length;}
-export function openLearningReview(view:LearningReviewView='review'){window.dispatchEvent(new CustomEvent(LEARNING_REVIEW_OPEN,{detail:{view}}));}
+export function openLearningReview(){window.dispatchEvent(new CustomEvent(LEARNING_REVIEW_OPEN));}
 /** Open a Paths lesson from anywhere (replay from the start); Town travels to the pitch and opens it. */
 export function openPathLesson(key:string){const {format,lessonId}=splitLessonKey(key);window.dispatchEvent(new CustomEvent(FORMAT_PATH_LAUNCH,{detail:{format,lessonId,step:0,quiz:false,question:0,nonce:Date.now()}}));}
 /** The lesson the player has passed for this concept (same format first), or null: the live-match "spot it" gate. */

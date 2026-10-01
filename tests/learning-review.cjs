@@ -26,8 +26,8 @@ const DAY=R.DAY,T0=new Date(2026,8,30,9).getTime(),at=(n,t=T0)=>R.localDayStart(
  // QA11 day-based scheduling: passed after school at 17:30 → due when tomorrow starts, so 16:45 tomorrow has it waiting.
  {const pm=new Date(2026,8,30,17,30).getTime(),next=new Date(2026,9,1,16,45).getTime();let d=R.enrollPassed(R.emptyReview(),['7v7:s_onetwo'],pm);
   assert.deepEqual(R.dueKeys(d,next),['7v7:s_onetwo'],'a 17:30 pass is due at 16:45 the next day');assert.deepEqual(R.dueKeys(d,new Date(2026,8,30,23,59).getTime()),[],'not due the same evening');
-  assert.equal(R.dueLabel(d.lessons['7v7:s_onetwo'],pm+60000),'Review tomorrow');
-  d=R.answerReview(d,'7v7:s_onetwo',true,new Date(2026,9,1,23,50).getTime());assert.equal(R.dueLabel(d.lessons['7v7:s_onetwo'],new Date(2026,9,1,23,55).getTime()),'Review in 3 days','counted in days, not 24 h blocks');
+  assert.equal(R.localDaysBetween(pm+60000,d.lessons['7v7:s_onetwo'].due),1,'next review tomorrow');
+  d=R.answerReview(d,'7v7:s_onetwo',true,new Date(2026,9,1,23,50).getTime());assert.equal(R.localDaysBetween(new Date(2026,9,1,23,55).getTime(),d.lessons['7v7:s_onetwo'].due),3,'counted in days, not 24 h blocks');
   d=R.answerReview(d,'7v7:s_onetwo',false,new Date(2026,9,4,7).getTime());assert.equal(d.lessons['7v7:s_onetwo'].due,new Date(2026,9,5).getTime(),'a missed review is back when tomorrow starts');}
  // Month ends and both DST changes (US: Mar 8 / Nov 1 2026, EU: Mar 29 / Oct 25 2026) land on local midnight of the right date, in any TZ.
  for(const [y,m,dd] of [[2026,2,7],[2026,2,8],[2026,2,28],[2026,2,29],[2026,9,24],[2026,9,25],[2026,9,31],[2026,10,1],[2026,11,31]]){
@@ -48,7 +48,7 @@ const DAY=R.DAY,T0=new Date(2026,8,30,9).getTime(),at=(n,t=T0)=>R.localDayStart(
  let b=R.enrollPassed(R.emptyReview(),['futsal:f_pivot'],T0);b=R.applyElsewhere(b,'futsal:f_pivot',T0+60000,'book:falcao');
  assert.equal(b.lessons['futsal:f_pivot'].box,0,'a book answer before due records Applied without skipping spacing');assert.equal(R.stageOf(passed,b.lessons['futsal:f_pivot']),'applied');
  b=R.applyElsewhere(b,'futsal:f_pivot',T0+DAY,'book:falcao');assert.equal(b.lessons['futsal:f_pivot'].box,1,'a book answer on a due lesson counts as its review');
- assert.equal(R.dueLabel(b.lessons['futsal:f_pivot'],T0+DAY),'Review in 3 days');
+ assert.equal(R.localDaysBetween(T0+DAY,b.lessons['futsal:f_pivot'].due),3,'next review in 3 days');
  // QA11: re-reading a book never duplicates its source; the card persists its first answer per book so reopening can't retake it.
  {let e=R.applyElsewhere(R.emptyReview(),'futsal:f_pivot',T0,'book:falcao');e=R.applyElsewhere(e,'futsal:f_pivot',T0+1,'book:falcao');assert.deepEqual(e.lessons['futsal:f_pivot'].sources,['book:falcao'],'sources are de-duplicated');
   const card=fs.readFileSync(path.join(__dirname,'../components/BookGameCheck.tsx'),'utf8');
@@ -56,7 +56,7 @@ const DAY=R.DAY,T0=new Date(2026,8,30,9).getTime(),at=(n,t=T0)=>R.localDayStart(
   assert.match(card,/const wasAnswered=\(bookId:string\)=>readList\(ANSWERED_KEY\)\.includes\(bookId\)\|\|readDone\(\)\.includes\(bookId\)/,'books already done count as answered');}
  console.log('STAGE_PASS introduced/practicing/applied/remembered from evidence; ticks never change the schedule');}
 
-// 3. Store: due reviews for the welcome-back card, the 3-a-day coin cap with unique wallet ids, book checks → right lesson.
+// 3. Store: due reviews for the warm-up, the 3-a-day coin cap with unique wallet ids, book checks → right lesson.
 (async()=>{
  let saved=null,now=T0,passed=['7v7:s_onetwo','9v9:learn9_wall','futsal:f_pared','11v11:e_switch'];const paid=[];const wallet=new Set();
  const ports={load:()=>saved,save:s=>{saved=JSON.parse(JSON.stringify(s));},now:()=>now,day:t=>new Date(t).toISOString().slice(0,10),passed:()=>passed,
@@ -80,7 +80,7 @@ const DAY=R.DAY,T0=new Date(2026,8,30,9).getTime(),at=(n,t=T0)=>R.localDayStart(
  assert.equal(store.read().lessons['7v7:next7_offsideboundary'].ticks,1);
  // A reload merges from storage.
  assert.equal(createReviewStore(ports).read().lessons['7v7:s_onetwo'].box,2);
- console.log('REVIEW_STORE_PASS due reviews for the welcome-back card, 3 paid answers/day, book checks → lesson, ticks, reload');
+ console.log('REVIEW_STORE_PASS due reviews for the warm-up, 3 paid answers/day, book checks → lesson, ticks, reload');
  finish();
 })().catch(e=>{console.error(e);process.exit(1);});
 

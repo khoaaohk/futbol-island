@@ -38,3 +38,19 @@ These are implementation choices from the audit's "do all". The user can reverse
 ## Analytics: Vercel Web Analytics instead of Google Analytics (Sep 30 2026)
 
 Futbol Island is played by children, so visit counting uses Vercel Web Analytics (`<Analytics/>` from `@vercel/analytics/next` in `app/layout.tsx`): no cookies, no personal identifiers, aggregate page views only. The Google tag (G-9NS6SZ3FEN, added Sep 29) was removed: GA sets cookies and identifiers, which for under-13 players raises COPPA and kids'-category store concerns. The parents' "About this game" copy says the same. Web Analytics must be enabled in the Vercel project (Analytics tab) for the counts to appear.
+
+## Oct 1 2026 UI requests (user decisions; local, not committed or deployed)
+
+- **"My football" removed completely.** The mastery screen (stage bars and lesson list per format) and every entry to it are gone:
+  its tab in the learning drawer, the buttons on the welcome-back card, the Paths Review card and the backpack header. The **daily
+  Warm-up stays** (spaced retrieval of passed quizzes, its own learning value and coins): the drawer now holds only the warm-up, is
+  titled "Warm-up" and opens from the Paths Review card when lessons are due. Saves are untouched (`fi2-lesson-review-v1` is still
+  used by the warm-up, book checks and island ticks; For grown-ups still shows the stages); earned coins are kept. Details in
+  `docs/learning/spaced-review.md`. Side effect: the three pilot journeys were only reachable from that tab and are unreachable
+  again until they get a new home.
+- **Welcome-back card is a note, not a menu.** No Go / My football / Later buttons; it hides on its own after 6 s on screen
+  (`WELCOME_BACK_SHOW_MS`; the dwell restarts if a menu or overlay covers the HUD) or on a tap. The next lesson stays one tap away
+  via Paths → Continue. The daily-play line wraps into two balanced lines. See `docs/ui/HUD_STACK.md`.
+- **One NPC name tag.** Only the townsperson closest to the player (the one "Talk to …" opens) shows a name tag, within the
+  existing 12 m (phone) / 14 m (desktop) range, held with the HUD arbiter's 1.5 m hysteresis; none while flying, in the vending
+  close-up, or for an off-screen townsperson (`lib/graphics/npcTagFocus.ts`).

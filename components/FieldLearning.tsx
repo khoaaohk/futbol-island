@@ -25,7 +25,7 @@ import {journeyById,stageVariant,type LearningId} from '@/lib/town/learningJourn
 import {isLearningPreview,learningPreviewToken,endLearningPreview,readLearning,saveLearningCursor,exposeLearning,answerLearning,completeLearningStage} from '@/lib/town/learningProgress';
 import {journeyLesson,journeyHint} from '@/lib/town/learningJourneyLessons';
 import {venueById,type Format} from '@/lib/town/venues';
-export default function FieldLearning({pathRequest,learningId,onResetQuizView,onResizeSound,onWake,onLivePause,readMatch,cameraAngle,format,session,onClose,voiceEnabled,coachVoice,narrationPaused}:{pathRequest?:FormatPathLaunch;learningId?:LearningId;onResetQuizView?:()=>void;onResizeSound?:()=>void;onWake?:()=>void;onLivePause?:(paused:boolean)=>void;readMatch?:()=>LiveMatchView|null;cameraAngle:MutableRefObject<LearningAngle>;voiceEnabled:boolean;coachVoice:string;narrationPaused:boolean;format:Format;session:MutableRefObject<FieldSession|null>;onClose:()=>void}){
+export default function FieldLearning({pathRequest,learningId,onResetQuizView,onResizeSound,onWake,onLivePause,onPickerChange,readMatch,cameraAngle,format,session,onClose,voiceEnabled,coachVoice,narrationPaused}:{pathRequest?:FormatPathLaunch;learningId?:LearningId;onResetQuizView?:()=>void;onResizeSound?:()=>void;onWake?:()=>void;onLivePause?:(paused:boolean)=>void;onPickerChange?:(open:boolean)=>void;readMatch?:()=>LiveMatchView|null;cameraAngle:MutableRefObject<LearningAngle>;voiceEnabled:boolean;coachVoice:string;narrationPaused:boolean;format:Format;session:MutableRefObject<FieldSession|null>;onClose:()=>void}){
  const savedJourney=useRef(learningId?readLearning().journeys[learningId]:undefined),stage=savedJourney.current?.cursor.stage??0;
  const preview=useRef(isLearningPreview()),previewToken=useRef(learningPreviewToken()),previewMount=useRef(0);
  useEffect(()=>{const mount=++previewMount.current;return()=>{if(preview.current)queueMicrotask(()=>{if(previewMount.current===mount)endLearningPreview(previewToken.current);});};},[]);
@@ -42,6 +42,11 @@ export default function FieldLearning({pathRequest,learningId,onResetQuizView,on
  useEffect(()=>{cameraAngle.current='default';},[cameraAngle]);
  const changeAngle=()=>{const angles:LearningAngle[]=['default','broadcast','top','side','goalkeeper'],next=angles[(angles.indexOf(angle)+1)%angles.length];cameraAngle.current=next;setAngle(next);};
  const [pickerOpen,setPickerOpen]=useState(false);
+ // Heat (overnight audit F1, Sep 30 2026): the Choose plays sheet is full-screen and opaque, so Town puts the island (and the
+ // watched live match) to sleep behind it like any other full-screen menu; closing it or picking a play wakes the loop.
+ const pickerCallback=useRef(onPickerChange);pickerCallback.current=onPickerChange;
+ useEffect(()=>{pickerCallback.current?.(pickerOpen);},[pickerOpen]);
+ useEffect(()=>()=>{pickerCallback.current?.(false);},[]);
  // Lesson opener (G-18): the title and a one-line goal show when a lesson opens, until the child starts the play or moves on.
  const [intro,setIntro]=useState<string|null>(null);
  const pickerTrigger=useRef<HTMLButtonElement>(null);

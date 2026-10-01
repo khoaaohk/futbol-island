@@ -17,11 +17,11 @@ import {recordQuestEvent} from '@/lib/town/questProgress';
 import {equipStoreItem} from '@/lib/town/store';
 import {getIslandCostume} from '@/lib/town/islandCostumes';
 import {getCostume} from '@/lib/town/costumes';
-import {COIN_QUEST,COIN_REWARD_ID,costumeEarned,costumeUnlockBalls} from '@/lib/town/coinQuest';
+import {costumeEarned,costumeUnlockBalls,costumeUnlockHint} from '@/lib/town/coinQuest';
 import {useCoinProgress} from '@/lib/town/coinProgress';
-import {isRideCategory,rideLockedLabel,useRideUnlocks} from '@/lib/town/rideUnlocks';
+import {isRideCategory,rideUnlockHint,useRideUnlocks} from '@/lib/town/rideUnlocks';
 import {useArcadeWallet} from '@/lib/arcade/arcadeWallet';
-import {VENDING_MACHINES,machineStock,vendingMachine,type VendingItem,type VendingMachineId} from '@/lib/town/vendingCatalog';
+import {VENDING_MACHINES,machineStock,vendingLockLed,vendingMachine,type VendingItem,type VendingMachineId} from '@/lib/town/vendingCatalog';
 import {buyVendingItem,markMachineFound,packFreshness,useVending} from '@/lib/town/vendingWallet';
 import {FACE_SIZE,VENDING_FACE_LAYOUT,VENDING_SLOTS_PER_PAGE,VENDING_TIMING} from '@/lib/graphics/vendingFaceLayout';
 import type {VendingMachines} from '@/lib/graphics/vendingMachines';
@@ -47,7 +47,7 @@ export type VendingMachineProps={open:boolean;machineId:VendingMachineId;onOpenC
  /** The 3D machines: the face follows their zoom camera. */
  machines?:()=>VendingMachines|null};
 const PlayerPopUpBook=dynamic(()=>import('./PlayerPopUpBook'),{ssr:false});
-type Status={kind:VendingSlotState;note:string};
+type Status={kind:VendingSlotState;note:string;short?:string;need?:number};
 type Point={x:number;y:number};
 /** Gear miniatures are the island's own vehicle and ball meshes, rendered once per visit by StorePreviews and kept for the session. */
 let gearCache:Record<string,string>|null=null;
@@ -68,6 +68,13 @@ export function faceDepthMatrix(machines:(()=>VendingMachines|null)|undefined,w:
  const host=typeof document==='undefined'?null:document.querySelector('.town-scene')?.getBoundingClientRect(),r=host&&host.width>0?host:{left:0,top:0,width:innerWidth,height:innerHeight};
  return machines?.()?.faceCssMatrix?.(w,h,r)??null;
 }
+/** Shared by the shop and drink machines (bug audit B1, Sep 30 2026): the face box keeps FACE_SIZE proportions, sits in true CSS
+ *  3D depth when the zoom camera is known, and carries the per-slot parallax `shifts` (VendingMachines.productShift) plus the
+ *  `widen` foreshortening correction, so every machine's products line up over their price rails. */
+export function facePlacement(quad:Point[]|null,machines:(()=>VendingMachines|null)|undefined,machineId:VendingMachineId){
+ if(!quad)return null;const [a,b,c,d]=quad,h=Math.max(200,Math.round(Math.hypot(d.x-a.x,d.y-a.y))),w=Math.max(160,Math.round(h*FACE_SIZE.w/FACE_SIZE.h)),across=(Math.hypot(b.x-a.x,b.y-a.y)+Math.hypot(c.x-d.x,c.y-d.y))/2,down=(Math.hypot(d.x-a.x,d.y-a.y)+Math.hypot(c.x-b.x,c.y-b.y))/2;const depth=faceDepthMatrix(machines,w,h);
+ return {w,h,transform:depth??quadMatrix(w,h,quad),depth:Boolean(depth),shifts:depth?machines?.()?.productShift?.(machineId)??[]:[],widen:Math.min(1.25,Math.max(1,down*FACE_SIZE.w/FACE_SIZE.h/Math.max(1,across)))};
+}
 export default function VendingMachine({open,machineId,onOpenChange,value,onChange,onEquipRide,itemRequest,machines}:VendingMachineProps){
  const preview=isVendingPreview();
  const machine=vendingMachine(machineId)??VENDING_MACHINES[0];
@@ -83,6 +90,10 @@ export default function VendingMachine({open,machineId,onOpenChange,value,onChan
  const [pickupOrigin,setPickupOrigin]=useState<{x:number;y:number}|null>(null);
  const [armedId,setArmedId]=useState<string|null>(null),[cursor,setCursor]=useState(0),[pageIndex,setPageIndex]=useState(0);
  const [phase,setPhase]=useState<VendingPhase>('idle'),[led,setLed]=useState<{msg:string;sub?:string;tone?:'warn'|'ok'}|null>(null),[story,setStory]=useState<string|null>(null);
+ // Tray how-to note (coin slot taps): shows in the tray, then fades after a few seconds.
+ const [trayNote,setTrayNote]=useState<{text:string;key:number}|null>(null),trayNoteTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
+ const showTrayNote=(text:string)=>{if(trayNoteTimer.current)clearTimeout(trayNoteTimer.current);setTrayNote({text,key:Date.now()});trayNoteTimer.current=setTimeout(()=>setTrayNote(null),3600);};
+ useEffect(()=>()=>{if(trayNoteTimer.current)clearTimeout(trayNoteTimer.current);},[]);
  const [dispense,setDispense]=useState<{item:VendingItem;key:number;packId?:string}|null>(null),[coinDrop,setCoinDrop]=useState<{n:number;key:number}|null>(null),[vendingSlot,setVendingSlot]=useState<string|null>(null);
  const exitButton=useRef<HTMLButtonElement>(null);
  const visit=useRef(0),busy=useRef(false),timers=useRef<ReturnType<typeof setTimeout>[]>([]),restore=useRef<HTMLElement|null>(null),faceEl=useRef<HTMLDivElement>(null);
@@ -112,7 +123,7 @@ export default function VendingMachine({open,machineId,onOpenChange,value,onChan
  // from the projected (foreshortened) top edge made every shelf item look stretched sideways (egg-shaped balls, wide books).
  // `widen`: how much the angled close-up foreshortens the face's width; round balls are widened back so they stay round (user,
  // Sep 30 2026: "fix the perspective of the balls").
- const placement=useMemo(()=>{if(!quad)return null;const [a,b,c,d]=quad,h=Math.max(200,Math.round(Math.hypot(d.x-a.x,d.y-a.y))),w=Math.max(160,Math.round(h*FACE_SIZE.w/FACE_SIZE.h)),across=(Math.hypot(b.x-a.x,b.y-a.y)+Math.hypot(c.x-d.x,c.y-d.y))/2,down=(Math.hypot(d.x-a.x,d.y-a.y)+Math.hypot(c.x-b.x,c.y-b.y))/2;const depth=faceDepthMatrix(machines,w,h);return {w,h,transform:depth??quadMatrix(w,h,quad),depth:Boolean(depth),shifts:depth?machines?.()?.productShift?.(machineId)??[]:[],widen:Math.min(1.25,Math.max(1,down*FACE_SIZE.w/FACE_SIZE.h/Math.max(1,across)))};},[quad,machines,machineId]);
+ const placement=useMemo(()=>facePlacement(quad,machines,machineId),[quad,machines,machineId]);
 
  // ---- Open / close ----
  useEffect(()=>{
@@ -145,9 +156,9 @@ export default function VendingMachine({open,machineId,onOpenChange,value,onChan
   if(item.kind==='pack'&&item.pack){const fresh=packFreshness(item.pack);if(!fresh.available)return {kind:'soldout',note:fresh.restock?'This machine restocks at midnight.':'You have every card in this pack'};return buyable();}
   if(item.kind==='costume'&&item.costume){const id=item.costume;
    if(value.costume===id&&isOwned(item.id))return {kind:'equipped',note:'Wearing it. Press again to take it off'};if(isOwned(item.id))return {kind:'owned',note:'Yours! Press again to wear it'};
-   if(!costumeEarned(coins,id))return {kind:'locked',note:`Find ${id===COIN_REWARD_ID?COIN_QUEST.length:costumeUnlockBalls(id)} hidden balls to unlock`};return buyable();}
+   if(!costumeEarned(coins,id)){const h=costumeUnlockHint(coins,id);return {kind:'locked',note:h.text,short:h.short,need:h.need};}return buyable();}
   const s=item.storeItem!;if(isOwned(item.id))return value[s.category]===s.option.id?{kind:'equipped',note:'Equipped'}:{kind:'owned',note:'Yours! Press again to use it'};
-  if(isRideCategory(s.category)&&!rides.isUnlocked(s.category,s.option.id))return {kind:'locked',note:rideLockedLabel(s.category,s.option.id)};
+  if(isRideCategory(s.category)&&!rides.isUnlocked(s.category,s.option.id)){const h=rideUnlockHint(s.category,s.option.id,rides.finished,rides.total);return {kind:'locked',note:h.text,short:h.short,need:h.need};}
   return buyable();
  }
  function picture(item:VendingItem,big=false){
@@ -175,14 +186,12 @@ export default function VendingMachine({open,machineId,onOpenChange,value,onChan
   const s=status(item);
   if(s.kind==='buy'){void purchase(item);return;}
   if(s.kind==='owned'||s.kind==='equipped'){if(s.kind==='equipped'&&item.kind!=='costume'){setLed({msg:`${item.label} is on`,sub:'Leave the machine to try it.',tone:'ok'});return;}equip(item);return;}
-  setLed({msg:s.note,tone:'warn'});cue('buzz');
+  setLed(vendingLockLed({label:item.label,status:s},[])??{msg:s.note,tone:'warn'});cue('buzz');
  }
+ // Coin slot (user, Oct 1 2026): it never buys. Only the button under an item does; the coins show how-to in the tray, which fades.
  function coinSlot(){
   if(phase==='coins'||phase==='drop')return;
-  if(phase==='tray'){setLed({msg:'Take your item from the tray first',tone:'warn'});cue('buzz');return;}
-  if(!armed){setLed({msg:'Pick an item first',sub:'Press the button under it.',tone:'warn'});cue('buzz');return;}
-  if(phase==='reward')dismissReward();
-  cue('insert');const s=status(armed);if(preview){act(armed);return;}if(s.kind==='buy'||s.kind==='short')act(armed);else setLed({msg:s.note,tone:s.kind==='owned'||s.kind==='equipped'?'ok':'warn'});
+  cue('insert');showTrayNote(phase==='tray'?'Tap the tray to take your item':'Tap the button under an item, then tap it again to buy');
  }
  async function purchase(item:VendingItem){
   if(preview){equip(item);return;}
@@ -239,12 +248,14 @@ export default function VendingMachine({open,machineId,onOpenChange,value,onChan
  const armedStatus=armed?status(armed):null;
  const club=armed?.kind==='costume'?getCostume(armed.costume):undefined;
  // LED: an explicit message wins, else the armed item's price or state, else the greeting with the machine's lesson.
- const ledView=led??(armed&&armedStatus?{msg:armedStatus.kind==='buy'?`${armed.label} · ${armed.price} coins`:armedStatus.kind==='short'?armedStatus.note:`${armed.label}: ${armedStatus.note}`,
-  sub:armedStatus.kind==='buy'?'Press again, or tap the coin slot':armed.blurb,tone:armedStatus.kind==='short'||armedStatus.kind==='locked'||armedStatus.kind==='soldout'?'warn' as const:armedStatus.kind==='buy'?undefined:'ok' as const}
+ // Locked (Sep 30 2026): the armed item's unlock hint, or, with nothing armed on an all-locked page, the nearest unlock.
+ const lockLed=vendingLockLed(armed&&armedStatus?{label:armed.label,status:armedStatus}:null,page.map(status));
+ const ledView=led??lockLed??(armed&&armedStatus?{msg:armedStatus.kind==='buy'?`${armed.label} · ${armed.price} coins`:armedStatus.kind==='short'?armedStatus.note:`${armed.label}: ${armedStatus.note}`,
+  sub:armedStatus.kind==='buy'?'Press the button again to buy':armed.blurb,tone:armedStatus.kind==='short'||armedStatus.kind==='locked'||armedStatus.kind==='soldout'?'warn' as const:armedStatus.kind==='buy'?undefined:'ok' as const}
   :{msg:'いらっしゃいませ!',sub:'Pick an item'});// greeting only: Japanese on top, the ask below (user, Sep 30 2026)
  const rowsOnPage=[...new Set(page.map(i=>rowOf.get(i.id)??i.row))];
  const fontSize=placement?Math.max(14,Math.min(18,Math.round(placement.w/29))):12;
- const view:VendingFaceView|null=placement&&{placement,fontSize,compact:placement.h<430,
+ const view:VendingFaceView|null=placement&&{trayNote,placement,fontSize,compact:placement.h<430,
   machine:{id:machine.id,name:machine.name,color:machine.color,light:machine.light,ink:machine.ink},
   header:{label:rowsOnPage.map(r=>ROW_SHORT[r]??r).join(' · '),page:Math.min(pageIndex,pages.length-1)+1,pages:pages.length,special:rowsOnPage.includes('special')},
   slots:page.map((item,index)=>{const s=status(item);return {id:item.id,label:item.label,price:item.price,state:s.kind,special:rowOf.get(item.id)==='special',lit:item.id===armedId,vending:vendingSlot===item.id,kind:kindOf(item),picture:picture(item),

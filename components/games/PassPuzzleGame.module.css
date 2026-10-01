@@ -12,13 +12,13 @@
 /* Format choice is the shared chip family (docs/ui/BUTTONS.md): bright-gold pill, pink when chosen. */
 .formats>.format.format{min-height:var(--btn-height);padding:8px 18px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius);background:var(--btn-gold-bright);color:var(--btn-ink);font:700 14px/1.2 var(--btn-font);box-shadow:0 4px 0 var(--btn-gold-bright-edge);transition:translate .16s,box-shadow .16s}
 .formats>.format.format[aria-pressed=true]{background:var(--btn-pink);box-shadow:0 4px 0 var(--btn-pink-edge)}
-.formats>.format.format:active{translate:0 2px;box-shadow:0 2px 0 var(--btn-gold-bright-edge)}
+.formats>.format.format:active{translate:0 var(--btn-press);box-shadow:0 2px 0 var(--btn-gold-bright-edge)}
 .pack{margin:0 0 16px}
 .pack h4{display:flex;justify-content:space-between;align-items:baseline;margin:0 0 8px;font:22px/1.2 IslandBrush,Arial,sans-serif}
 .pack h4 small{font:700 11px/1 var(--font-body),Arial,sans-serif;letter-spacing:.08em;color:#587265}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:10px}
 .level{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;gap:2px 10px;align-items:center;text-align:left;padding:10px 12px;min-height:64px;border:1px solid #244b4322;border-radius:12px;background:#fff9e9;color:#244b43;box-shadow:0 3px 0 #244b4322}
-.level:not(:disabled):active{transform:translateY(2px);box-shadow:0 1px 0 #244b4322}
+.level:not(:disabled):active{transform:translateY(var(--btn-press));box-shadow:0 1px 0 #244b4322}
 .level b{grid-row:span 2;display:grid;place-items:center;width:30px;height:30px;border-radius:8px;background:#efc776;font-size:14px}
 .level:disabled b{background:#dfd8c0}
 .level span{font-size:13px;line-height:1.25}
@@ -38,7 +38,7 @@
 .secondary{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px}
 /* Watch again / Replay level / Skip are the shared mint secondary pill (docs/ui/BUTTONS.md). */
 .row>.secondary.secondary,.skip.skip{min-height:var(--btn-height);padding:8px 18px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius);background:var(--btn-mint);color:var(--btn-ink);font:700 14px/1.2 var(--btn-font);box-shadow:0 4px 0 var(--btn-mint-edge);transition:translate .16s,box-shadow .16s}
-.row>.secondary.secondary:active,.skip.skip:active{translate:0 2px;box-shadow:0 2px 0 var(--btn-mint-edge)}
+.row>.secondary.secondary:active,.skip.skip:active{translate:0 var(--btn-press);box-shadow:0 2px 0 var(--btn-mint-edge)}
 
 /* Loft meter: follows the finger; fills while the stroke is held still at its end. */
 .loft{position:absolute;z-index:2;width:58px;height:58px;margin:-92px 0 0 -29px;pointer-events:none;opacity:0;transition:opacity .12s;display:grid;place-items:center}

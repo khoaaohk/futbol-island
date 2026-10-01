@@ -23,7 +23,7 @@ with `<HudSlot>` (`components/HudStack.tsx`). The decision of *which* action sho
 | Enter (Arcade, Coaches, Museum, Konbini, Coral Cay Konbini) | `Town.tsx` `[data-*-enter]` | near a door (flying near on phones) / hovering it | enter a building | action (world-anchored) | follows the door, floor `--entry-floor` via 3 `:has()` rules | 12 | walk away |
 | Vending "Go" | `Town.tsx` `[data-vending-go]`, `lib/graphics/vendingMachines.ts` | ≤ 3.2 m (≤ 12 m flying) / hover | open the machine | action (world-anchored) | follows the machine, `y ≥ 70px` (no floor) | 12 | walk away |
 | Fish / Sell | `FishingHost.tsx`, `lib/town/fishing/fishingWorld.ts` | at a fishing post / Rosa's stand | fish / sell | action (world-anchored) | follows the post, `y ≥ 90px` (no floor) | 12 | walk away |
-| Welcome-back card | `WelcomeBack.tsx` | first load of a new day | next lesson, warm-up, My football | guide (buttons) | `top:88px` | 9 | Go / Later |
+| Welcome-back card | `WelcomeBack.tsx` | first load of a new day | hello, next lesson, daily bonus (buttons removed Oct 1 2026) | guide (note) | `top:88px` | 9 | 6 s, tap (was Go / Later) |
 | Spot it! | `LearningHost.tsx` `[data-spot-it]` | a learned concept happens in a live match | link play → lesson | guide (button) | `row-top+row-height+14px` | 31 | 8 s, × |
 | Costume / ride unlock notes | `CostumeMilestoneToast.tsx`, `RideUnlockToast.tsx` | 10-ball milestone / finished path | feedback | info | `top:88px` | 9 | 6–7 s, tap |
 | Rooftop knockout status | `Town.tsx` `[data-knockout-status]` | in the knockout | match state | task info | `top:100px` | 9 | leaving the arena |
@@ -45,8 +45,7 @@ The column has four slots, top to bottom (CSS `order` on `data-hud-slot`):
    Land on truck, the knockout status.
 2. **focus** — exactly **one** contextual thing, chosen by the arbiter:
    - tier 0: Hop off, Land on truck, a job sign (the child chose to act here: a job ranks with the job panel);
-   - tier 1: proximity actions — Talk, Enter, Fish, Sell, vending Go, **Drink water** (a free water fountain, kind `drink`,
-     30 Sep 2026: `components/FountainPrompt.tsx` in the focus slot, the Talk pill's style) — **nearest wins**, desktop hover wins its tier;
+   - tier 1: proximity actions — Talk, Enter, Fish, Sell, vending Go (the Drink water fountains were removed on 30 Sep 2026) — **nearest wins**, desktop hover wins its tier;
    - tier 2: Spot it (short, has a button);
    - tier 3: the ball-hunt hint / pier note;
    - tier 4: Learn Plays — *ambient* (it shows whenever a pitch is in view), so anything the player actually stands at
@@ -64,8 +63,8 @@ The column has four slots, top to bottom (CSS `order` on `data-hud-slot`):
 | Context | Rule |
 |---|---|
 | In a truck | Hop off only; nothing else competes. |
-| Flying | No ground prompts (Talk, Fish, Sell, Drink water, job signs). Land on truck wins over a truck; doors and vending machines stay (they are fly-in destinations by design); Learn Plays and hints stay. |
-| In a job, or a job card open | The job owns the stack: panel / card in the task slot, no focus competitor (except ride controls); notes wait while a card is open. |
+| Flying | No ground prompts (Talk, Fish, Sell, job signs). Land on truck wins over a truck; doors and vending machines stay (they are fly-in destinations by design); Learn Plays and hints stay. |
+| In a job, or a job card open | The job owns the stack: panel / card in the task slot, no focus competitor (except ride controls); notes wait while a card is open; the welcome-back (guide) card waits until the shift ends (Town passes `jobRunning\|\|jobCardShown` into its `blocked`). |
 | In the Community Garden | The garden line (toast slot), never Learn Plays. |
 | On a pitch | Learn Plays, unless something nearer (an NPC, a door, a hint, Spot it). |
 | Near a door | Enter wins over the ball hint. |
@@ -104,3 +103,36 @@ visual order is CSS `order` (task → focus → toast → guide), and focus-taki
 primary button; every control keeps its ≥ 44 px height; the column sits under the safe-area-aware HUD row.
 
 Tests: `tests/hud-stack.cjs` (precedence, context, hysteresis, toast merge/queue, wiring), in `npm test`.
+
+## Gutter and timing (30 September 2026)
+
+The column is `width:min(420px, calc(100% - 2 * var(--phone-gutter)))`, so on phones its cards line up with the 18px HUD row and
+headers (it was 16px). Every piece enters with `hudStackIn` over `.3s ease`: the stack sets the duration and easing beside the
+name, so a piece's own module timing (the welcome card's `.35s` overshoot, for example) no longer leaks through. See
+[UI_SPEC.md](UI_SPEC.md).
+
+## Guide card on landscape phones (30 September 2026)
+
+On a landscape phone (`(orientation:landscape) and (max-height:500px)`, e.g. 844×390) the centred welcome-back card covered the
+player and, with a job running, the docked job panel and its Stop job. Two rules now: a running job (or an open job card) owns
+the stack, so the guide card waits and comes back when the shift ends (all orientations); and in landscape the card docks
+compactly at the top-left edge, the same anchor and query as the docked job panel (`WelcomeBack.module.css`): left-aligned,
+`min(248px, 50vw − 120px)` wide, the daily-play line clamped to two lines, and a `max-height` that stops
+above the stick (it scrolls rather than reaching it). Guarded by `tests/hud-stack.cjs` and the browser check
+`tests/e2e/gap-welcome-landscape.spec.ts` (card clear of the centre and the job offer; hidden while a job runs, Stop job
+uncovered; back after Stop job).
+
+## Welcome-back card is a note (1 October 2026)
+
+User decision: the card has **no buttons** (Go, My football and Later were removed; the next lesson stays in Paths → Continue).
+The whole card is one tap target that hides it (like the costume and ride notes), and it hides on its own after
+`WELCOME_BACK_SHOW_MS` (6 s, `lib/town/welcomeBack.ts`). The dwell is one timeout that runs only while the card is on screen:
+`blocked` (lesson, ceremony, modal, a running job) unmounts it, and `held` (Town passes `stackCovered`: menus, the Pocket, any
+overlay that hides the column) clears the timer; when it is back it gets a fresh dwell, the same rule as IslandJobs' notes. The
+daily-play line uses `text-wrap: balance` with a `30ch` measure, so it reads as two equal lines. The guide tier, the job rule
+and the landscape dock are unchanged. Guarded by `tests/oct1-ui.cjs`, `tests/hud-stack.cjs` and
+`tests/e2e/gap-welcome-landscape.spec.ts` (now also auto-dismiss and tap-dismiss).
+
+The Talk target and the NPC name tag now agree: `islandNpcs.nearest` returns the townsperson holding the one visible name tag
+(closest, 1.5 m hysteresis, `lib/graphics/npcTagFocus.ts`) while it is in Talk range, so "Talk to …" always names the tagged person.
+

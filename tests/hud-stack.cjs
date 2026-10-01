@@ -76,4 +76,18 @@ const pick=(a,c,ctx=walk,now=0)=>a.choose(c,ctx,now)?.kind??null;
  assert.match(town,/focusArbiter\.choose\(/);assert.match(town,/if\(hudTick\)\{const cands/,'the arbiter runs on the existing HUD tick');
  assert.match(town,/if\(next!==hudFocusNow\)\{hudFocusNow=next;setHudFocus\(next\);\}/,'React state changes only when the focus does');
  for(const c of ['IslandJobs','CoinHuntHud','WelcomeBack','LearningHost','CostumeMilestoneToast','RideUnlockToast'])assert.match(fs.readFileSync(path.resolve(__dirname,`../components/${c}.tsx`),'utf8'),/<HudSlot>/,`${c} renders into the stack`);}
+// Bug A5 (Deploy 11 audit): a coin note is on screen, then strawberry 1 (its lesson) and strawberry 2 arrive. The queued merge
+// keeps the first pick's lesson; it used to fall back to the generic "Sell produce to Rosa" line and the lesson was lost.
+{const berry=(detail)=>({title:'+1 Strawberry',detail,merge:'pick:strawberry',retitle:k=>`+${k} Strawberry`});
+ let q=pushToast([],{title:'+12 coins',detail:'Learning pays in full'});q=pushToast(q,berry('Strawberries: vitamin C for recovery.'));q=pushToast(q,berry('Sell produce to Rosa at the farmers market stand.'));
+ assert.equal(q.length,2);assert.equal(q[1].title,'+2 Strawberry');assert.equal(q[1].detail,'Strawberries: vitamin C for recovery.','the queued merge keeps the first pick\'s lesson');
+ q=pushToast(q,berry('Sell produce to Rosa at the farmers market stand.'));assert.equal(q[1].title,'+3 Strawberry');assert.match(q[1].detail,/vitamin C/);}
+// Guide tier on landscape phones (Sep 30 2026): a running job (or an open job card) owns the stack, so the welcome-back card waits;
+// in landscape it docks compactly at the top-left edge (same query and anchor as the docked job panel), never over the centre.
+{const town=fs.readFileSync(path.resolve(__dirname,'../components/Town.tsx'),'utf8'),css=fs.readFileSync(path.resolve(__dirname,'../components/WelcomeBack.module.css'),'utf8');
+ assert.match(town,/<WelcomeBack blocked=\{toastBlocked\|\|jobRunning\|\|jobCardShown\} held=\{stackCovered\}\/>/,'the guide card waits while a job owns the stack, and its dwell pauses while the stack is covered');
+ assert.match(town,/if\(jobActiveRef\.current!==!!a\)setJobRunning\(!!a\);jobActiveRef\.current=!!a;/,'Town re-renders only when a job starts or ends');assert.match(town,/jobCardOpen\.current=open;setJobCardShown\(open\);/);
+ const land=css.slice(css.indexOf('@media (orientation:landscape) and (max-height:500px)'));
+ assert(land.length>40,'landscape dock rule');assert.match(land,/\.card\[data-welcome-back\]\{position:absolute;top:0;left:calc\(50% - 50vw \+ 12px \+ env\(safe-area-inset-left,0px\)\)/,'docked at the left edge');
+ assert.match(land,/max-height:calc\(100dvh[^;]*- 150px\);overflow:auto/,'stops above the stick');}
 console.log('HUD_STACK_PASS');

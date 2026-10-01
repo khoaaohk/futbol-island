@@ -18,15 +18,19 @@ export const FIRST_JOB_BONUS=4;
  *  of all jobs. 26 puts it at the middle (median) of the other jobs' coins per minute (JOB_MINUTES below, tests/island-jobs.cjs).
  *  The tiers stay the same (half pay 13, then a 1-coin tip), and the Training meter still caps the day.
  *  Garden shift (30 Sep 2026, docs/island-jobs.md §13): 10 for a ~1-minute shift (8 picks + the crate) = 6.25 coins a minute, the
- *  middle (median) of the jobs per minute, like Wall rebounds. */
-export const JOB_BASE_PAY:Record<JobId,number>={'leaf-rake':8,'wall-rebounds':26,'ball-kid':10,'cone-setup':7,'line-painter':8,'court-cleanup':7,'offside-flag':9,'ball-pump':7,'goal-anchor':8,'farm-harvest':8,'match-day-snacks':8,'garden-shift':10};
+ *  middle (median) of the jobs per minute, like Wall rebounds.
+ *  Pump the balls (1 Oct 2026, user: "make it harder"): ~85 small Pump strokes over five balls (8 → 24 each) instead of ~15, so
+ *  its play time goes .45 → .85 min. Pay 7 → 10 keeps it in line per minute (6.67 → 6.90 coins a minute, inside the 7–10 band). */
+export const JOB_BASE_PAY:Record<JobId,number>={'leaf-rake':8,'wall-rebounds':26,'ball-kid':10,'cone-setup':7,'line-painter':8,'court-cleanup':7,'offside-flag':9,'ball-pump':10,'goal-anchor':8,'farm-harvest':8,'match-day-snacks':8,'garden-shift':10};
 /**
  * Estimated minutes of real play per shift (30 Sep 2026). Each estimate is the route length from the sign through the targets
  * and to the drop-off at walking pace (3.7 m/s), plus the actions (holds, taps, replays, shots). Wall rebounds: ~1 min of wall
  * passes + ~2.5 min of shots. Garden shift: ~95 m of paths between 8 spread-out picks and the crate (~26 s) plus 8 pick poses,
- * a not-ripe check and the crate (~25 s) + looking around for ripe ones (~10 s) ≈ 1 min. Used only for pay balance (per-minute parity) and the economy sim, never at runtime.
+ * a not-ripe check and the crate (~25 s) + looking around for ripe ones (~10 s) ≈ 1 min. Pump the balls (1 Oct 2026): the walk to
+ * the station (~3 s), ~78 strokes to reach five narrowing green zones plus a few top-ups after the slow leak or an over-pump (~85
+ * taps at ~3 a second ≈ 28 s), five gauge checks and Ball ready presses (~20 s) ≈ 0.85 min. Used only for pay balance (per-minute parity) and the economy sim, never at runtime.
  */
-export const JOB_MINUTES:Record<JobId,number>={'leaf-rake':1.2,'wall-rebounds':3.5,'ball-kid':1.8,'cone-setup':.45,'line-painter':.5,'court-cleanup':.85,'offside-flag':.8,'ball-pump':.45,'goal-anchor':.5,'farm-harvest':1.75,'match-day-snacks':.7,'garden-shift':1};
+export const JOB_MINUTES:Record<JobId,number>={'leaf-rake':1.2,'wall-rebounds':3.5,'ball-kid':1.8,'cone-setup':.45,'line-painter':.5,'court-cleanup':.85,'offside-flag':.8,'ball-pump':.85,'goal-anchor':.5,'farm-harvest':1.75,'match-day-snacks':.7,'garden-shift':1};
 /** Per shift, on top of the play: walk to the sign, the intro card and the payday card. With it, the short jobs average 1.5 min a
  *  shift, the economy sim's long-standing job assumption. */
 export const JOB_SHIFT_OVERHEAD_MINUTES=.6;
@@ -70,6 +74,7 @@ export function splitCredit(amount:number,cap:number){const out:number[]=[];let 
 // --- Ledger store (browser). Every write re-reads storage first so two tabs merge instead of overwriting. ---
 const listeners=new Set<()=>void>();let cached:JobLedger|null=null;
 function readRaw(day:string){try{return sanitizeJobLedger(JSON.parse(localStorage.getItem(JOBS_STORAGE_KEY)??'null'),day);}catch{return emptyJobLedger(day);}}
-export function readJobLedger(now=Date.now()):JobLedger{const day=localDay(now);if(!cached||cached.day!==day)cached=readRaw(day);return cached;}
+/** `fresh`: re-read storage instead of this tab's cache (payday and the intro card: another tab may have finished a shift; bug A7). */
+export function readJobLedger(now=Date.now(),fresh=false):JobLedger{const day=localDay(now);if(fresh||!cached||cached.day!==day)cached=readRaw(day);return cached;}
 export function writeJobLedger(update:(ledger:JobLedger)=>JobLedger,now=Date.now()){const day=localDay(now),fresh=readRaw(day);const next=update(fresh);cached=next;try{localStorage.setItem(JOBS_STORAGE_KEY,JSON.stringify(next));}catch{}listeners.forEach(fn=>fn());if(Object.values(next.lifetime).some(n=>(n??0)>0))signalExplore('job');return next;}
 export function subscribeJobLedger(fn:()=>void){listeners.add(fn);const storage=(e:StorageEvent)=>{if(e.key===JOBS_STORAGE_KEY||e.key===null){cached=null;fn();}};if(typeof window!=='undefined')window.addEventListener('storage',storage);return()=>{listeners.delete(fn);if(typeof window!=='undefined')window.removeEventListener('storage',storage);};}

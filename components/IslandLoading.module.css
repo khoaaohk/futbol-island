@@ -66,8 +66,11 @@
 .left{right:calc(70.6vw + 10px - min(27.8vw,44vh)*.108);width:min(27.8vw,44vh)}
 .right{left:calc(70.5vw + 10px);width:min(28vw,48vh)}
 .row{display:none}
-.castMember{position:absolute;width:auto;max-width:none;transform:translateX(-50%);transform-origin:50% 100%;animation:castPop .62s var(--d) cubic-bezier(.34,1.56,.64,1) both;user-select:none}
-@keyframes castPop{0%{opacity:0;transform:translateX(-50%) translateY(14%) scale(.72)}60%{opacity:1}100%{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
+/* Arrival: the cast lands WITH the splash (Oct 1 2026). It was a .15–.59 s stagger + .62 s pop from 72 % scale at opacity 0,
+   which left the characters 0.45–1.1 s behind the title. Now one short fade + small settle starting at the first frame
+   (--d ≤ .06 s); opacity is full by ~.13 s. The inline placeholder shows under the still until its bytes arrive. */
+.castMember{position:absolute;width:auto;max-width:none;transform:translateX(-50%);transform-origin:50% 100%;animation:castPop .42s var(--d) cubic-bezier(.3,1.35,.6,1) both;user-select:none}
+@keyframes castPop{0%{opacity:0;transform:translateX(-50%) translateY(4%) scale(.95)}30%{opacity:1}100%{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
 .art .foreground{display:none}
 @media(max-aspect-ratio:5/6){
  .left,.right{display:none}
@@ -81,9 +84,8 @@
  .art .foreground{display:inline}
 }
 /* Exit: the cast hops away (staggered) before the island dive (.8 s) begins. */
-.exiting .castMember{animation:castAway .4s both ease-in}
-.exiting .castMember:nth-child(1){animation-delay:.12s}.exiting .castMember:nth-child(2){animation-delay:.04s}
-.exiting .castMember:nth-child(3){animation-delay:.18s}.exiting .castMember:nth-child(4){animation-delay:0s}
+/* Hop order comes from --x (LoadingBeanCast EXIT_DELAY): each still sits alone in a <picture>, so :nth-child can't. */
+.exiting .castMember{animation:castAway .4s var(--x,0s) both ease-in}
 @keyframes castAway{0%{opacity:1;transform:translateX(-50%) scale(1)}35%{opacity:1;transform:translateX(-50%) translateY(-6%) scale(1.06)}100%{opacity:0;transform:translateX(-50%) translateY(4%) scale(.2)}}
 @media(prefers-reduced-motion:reduce){.castMember,.exiting .castMember{animation:none}.exiting .cast{opacity:0}}
 

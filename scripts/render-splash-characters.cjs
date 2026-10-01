@@ -7,13 +7,18 @@ const {requireDevServer}=require('./requireDevServer.cjs');
 //   node scripts/render-splash-characters.cjs            all characters
 //   node scripts/render-splash-characters.cjs hero-kick  one character (by id)
 //   SPLASH_PNG=1 …                                        also keep the raw PNGs in test-results/splash/ for review
+//   node scripts/render-splash-characters.cjs --encode   no browser: re-encode public/splash/*.avif from those raw PNGs
+//
+// The main splash also gets AVIF twins (avifenc, brew install libavif): q50 / alpha q75 measured ~27 % smaller than the
+// WebP with a HIGHER SSIM against the raw render for all five stills (Oct 1 2026, docs/performance-guide.md). The
+// component serves them through <picture> and preloads only the ones the layout shows; WebP stays as the fallback.
 //
 // Heights on the loading screen come from IslandLoading.module.css; keep each image's aspect when re-rendering (the
 // component's width/height attributes are read from public/splash/cast.json, written here).
 const fs=require('node:fs'),path=require('node:path'),{execFileSync}=require('node:child_process');
 let chromium;try{({chromium}=require('playwright'));}catch{({chromium}=require('@playwright/test'));}
 const BASE=process.env.FUTBOL_BASE_URL||'http://localhost:8092';
-const arcade=process.argv.includes('--arcade');
+const arcade=process.argv.includes('--arcade'),encodeOnly=process.argv.includes('--encode');
 const OUT=path.join(__dirname,'..','public',arcade?'arcade-loading':'splash'),RAW=path.join(__dirname,'..','test-results','splash');
 
 /** The cast. `at` = seconds into the preview move; `yaw` turns the stage; `azimuth` swings the camera. */
@@ -29,6 +34,22 @@ const CAST=[
  // Other team (Harbour Teal), rainbow flick.
  {id:'rival',spec:{match:{key:'splash-away',side:'away',number:11,look:{skin:'#fde6d2',eyes:'ticks',mouth:'smirk',hair:{style:'long',color:'#b04a2a'},build:'tall'}},move:'rainbow',at:1.0,yaw:-.6,expression:'happy'}},
 ];
+
+/** AVIF twins of the two WebP sizes (main splash only), from the lossless render. */
+function encodeAvif(png,id,h2){
+ const tmp=path.join(OUT,id+'.sm.tmp.png');
+ execFileSync('avifenc',['-q','50','--qalpha','75','-s','3','-j','4',png,path.join(OUT,id+'.avif')],{stdio:'ignore'});
+ // Half size: same Lanczos-style downscale cwebp does, via sips (macOS) to a temp PNG.
+ execFileSync('sips',['--resampleHeight',String(h2),png,'--out',tmp],{stdio:'ignore'});
+ execFileSync('avifenc',['-q','50','--qalpha','75','-s','3','-j','4',tmp,path.join(OUT,id+'-sm.avif')],{stdio:'ignore'});fs.unlinkSync(tmp);
+}
+if(encodeOnly){
+ const manifest=JSON.parse(fs.readFileSync(path.join(OUT,'cast.json'),'utf8'));
+ for(const c of CAST){const png=path.join(RAW,c.id+'.png');if(!fs.existsSync(png))throw new Error(`missing ${png}: render with SPLASH_PNG=1 first`);
+  encodeAvif(png,c.id,manifest[c.id].sm[1]);const kb=f=>(fs.statSync(path.join(OUT,f)).size/1024).toFixed(1);
+  console.log(`${c.id}: avif ${kb(c.id+'.avif')} KB / sm ${kb(c.id+'-sm.avif')} KB (webp ${kb(c.id+'.webp')} / ${kb(c.id+'-sm.webp')})`);}
+ process.exit(0);
+}
 
 (async()=>{await requireDevServer(BASE);
  if(arcade){const poses=[['thankPasser',1.45,.35],['walk',.75,-.5],['celebrate',.4,.3],['thankPasser',1.45,-.4],['airplane',1.1,-.7]];CAST.forEach((c,i)=>Object.assign(c.spec,{move:poses[i][0],at:poses[i][1],yaw:poses[i][2],ball:false,outfit:{shirt:['#ff45b5','#4fe5f2','#ad7dff','#4fe5f2','#ff62c6'][i],shirt2:'#e7fcff',shorts:'#191329',socks:['#4fe5f2','#ff45b5','#60e9f2','#ff62c6','#ad7dff'][i],socks2:'#191329',boots:'#191329'}}));CAST[3].spec.custom={character:'female',costume:'none',bodyColor:'lilac',eyes:'happy',mouth:'grin',hair:'puffs'};}
@@ -47,6 +68,7 @@ const CAST=[
    const h2=Math.round(r.height*.5);
    execFileSync('cwebp',['-quiet','-q','80','-alpha_q','85','-m','6','-sharp_yuv',png,'-o',path.join(OUT,c.id+'.webp')]);
    execFileSync('cwebp',['-quiet','-q','78','-alpha_q','85','-m','6','-sharp_yuv','-resize','0',String(h2),png,'-o',path.join(OUT,c.id+'-sm.webp')]);
+   if(!arcade)encodeAvif(png,c.id,h2);
    fs.unlinkSync(png);
    manifest[c.id]={width:r.width,height:r.height,sm:[Math.round(r.width*h2/r.height),h2]};
    const kb=f=>(fs.statSync(path.join(OUT,f)).size/1024).toFixed(1);

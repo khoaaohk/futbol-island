@@ -176,3 +176,21 @@ export function vendingItemFor(storeId:string|undefined):string|undefined{
  if(!storeId)return undefined;if(storeId==='packs:legend'||storeId.startsWith('packs'))return 'pack:3';
  return vendingItem(storeId)?.id;
 }
+
+/**
+ * Locked hint for the machine's LED (Sep 30 2026, E2E audit: a child could page to a screen where every item said LOCKED with no
+ * hint). Given the armed item's status and the statuses on the page, returns the LED message to show, or null when nothing needs
+ * a hint: the armed item when it is locked, else (nothing armed) the nearest unlock when the page has locked items and nothing to
+ * buy (the rest already yours). The hint comes from the unlock rules (rideUnlockHint / costumeUnlockHint): `short` fits the LED's
+ * one-line message ("Locked: finish 1 more path"), the sub-line says how; `need` is paths or balls still to go.
+ */
+export type VendingLockStatus={kind:string;note:string;short?:string;need?:number};
+export function vendingLockLed(armed:{label:string;status:VendingLockStatus}|null,page:VendingLockStatus[]):{msg:string;sub:string;tone:'warn'}|null{
+ const lower=(t:string)=>t.charAt(0).toLowerCase()+t.slice(1),line=(s:VendingLockStatus)=>`Locked: ${lower(s.short??s.note)}`;
+ const tip=(note:string)=>/path/i.test(note)?'Any path counts: tap Paths.':/ball/i.test(note)?'Hunt for hidden balls!':'';
+ if(armed){if(armed.status.kind!=='locked')return null;return {msg:line(armed.status),sub:`${armed.label}. ${tip(armed.status.note)}`.trim(),tone:'warn'};}
+ const locked=page.filter(s=>s.kind==='locked');
+ if(!locked.length||page.some(s=>s.kind==='buy'||s.kind==='short'))return null;
+ const next=[...locked].sort((a,b)=>(a.need??Infinity)-(b.need??Infinity))[0];
+ return {msg:line(next),sub:`Nothing to buy yet. ${tip(next.note)}`.trim(),tone:'warn'};
+}

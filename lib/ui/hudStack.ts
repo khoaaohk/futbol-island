@@ -79,7 +79,7 @@ export function pushToast(queue:readonly HudToast[],next:HudToast,max=3):HudToas
   return [{...next,count,title:next.retitle?next.retitle(count):next.title,detail:head.detail},...queue.slice(1)];}
  // A queued (not yet shown) note of the same kind merges too, so ten quick picks never become ten notes.
  const i=next.merge?queue.findIndex((t,k)=>k>0&&t.merge===next.merge):-1;
- if(i>0){const t=queue[i],count=(t.count??1)+(next.count??1),copy=queue.slice();copy[i]={...next,count,title:next.retitle?next.retitle(count):next.title};return copy;}
+ if(i>0){const t=queue[i],count=(t.count??1)+(next.count??1),copy=queue.slice();copy[i]={...next,count,title:next.retitle?next.retitle(count):next.title,detail:t.detail};return copy;}// keeps the first note's lesson too (bug A5)
  const out=[...queue,next];
  while(out.length>max)out.splice(1,1);// keep the one on screen, drop the oldest waiting
  return out;

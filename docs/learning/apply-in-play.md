@@ -47,7 +47,7 @@ Each concept has:
 
 ## Magazines, jobs, fishing, ball hunt
 
-These are "seen around the island" **ticks**: evidence only, once per source, ever. A tick makes an untouched lesson **Introduced** and shows "Seen on the island ×N". Ticks never change the review schedule.
+These are "seen around the island" **ticks**: evidence only, once per source, ever. A tick makes an untouched lesson **Introduced** (shown to grown-ups in For grown-ups' "Lessons by stage"). Ticks never change the review schedule. *(1 Oct 2026: the child-facing "Seen on the island ×N" line lived on the mastery screen, which the user removed; `creditConceptTick` stays live because For grown-ups still reads the ticks. See `spaced-review.md`.)*
 
 | Source | Hook | Concept → lessons |
 |---|---|---|

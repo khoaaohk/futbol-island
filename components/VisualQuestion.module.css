@@ -26,7 +26,7 @@
 .visual button.picture>span{display:flex;gap:6px;align-items:flex-start;padding:0 2px 2px}
 .visual button.picture b{flex:none}
 .visual button.choice:hover:not(:disabled),.visual button.picture:hover:not(:disabled){background:#fff6de;transform:translateY(-1px)}
-.visual button.choice:focus-visible,.visual button.picture:focus-visible{outline:3px solid #294f43;outline-offset:2px}
+.visual button.choice:focus-visible,.visual button.picture:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
 .visual button:disabled{cursor:default;opacity:.55}
 /* The quiz footer's transport rule (.bottom button:disabled: dark fill, .35) would hide a locked choice's text: keep the cream card. */
 .visual button.choice:disabled,.visual button.picture:disabled{background:#f7efd6;opacity:.55}
@@ -55,7 +55,7 @@
 .visual button.grip .badge{margin:0}
 .visual button.move{border:1px solid #99a580;background:#fff6de;color:#294f43;font-size:13px}
 .visual button.move:disabled{opacity:.35;background:#fff6de}
-.visual button.grip:focus-visible,.visual button.move:focus-visible,.visual button.check:focus-visible{outline:var(--btn-focus,3px solid #294f43);outline-offset:2px}
+.visual button.grip:focus-visible,.visual button.move:focus-visible,.visual button.check:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
 .visual button.check{align-self:flex-end;width:auto;height:auto;min-height:var(--btn-height,44px);padding:10px 20px;border:0;border-radius:12px;background:var(--btn-green,#294f43);color:var(--btn-ink-on-dark,#fff0cc);font:inherit;font-size:14px;font-weight:700;box-shadow:0 4px 0 var(--btn-green-edge,#17352b);cursor:pointer;transition:translate .15s,box-shadow .15s}
 .visual button.check:active:not(:disabled){translate:0 var(--btn-press,3px);box-shadow:0 1px 0 var(--btn-green-edge,#17352b)}
 .visual button.check:disabled{opacity:.55;background:var(--btn-green,#294f43)}

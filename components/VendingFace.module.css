@@ -15,7 +15,7 @@
 @media(prefers-reduced-motion:reduce){.face[data-entry]{animation:none}.arrival{display:none}}
 .face>*{position:absolute;box-sizing:border-box}
 :where(.face) :where(button){font:inherit;color:inherit;margin:0;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none}
-.face button:focus-visible{outline:3px solid #ffc35b;outline-offset:2px}
+.face button:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
 /* Shelf slots: no yellow focus box around the product (the machine focuses a slot when it opens). The LED names the selected item. */
 .face .slot:focus-visible{outline:none}
 
@@ -122,7 +122,7 @@
 @keyframes pickupReady{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
 .pageTitle{animation:pageSettle .22s ease-out both}
 @keyframes pageSettle{from{opacity:.3;transform:translateY(4px)}to{opacity:1;transform:none}}
-.slot:active .push{translate:0 2px;box-shadow:inset 0 2px 2px #0008}
+.slot:active .push{translate:0 var(--btn-press);box-shadow:inset 0 2px 2px #0008}
 .led::after{content:'';position:absolute;inset:4px;pointer-events:none;background:repeating-linear-gradient(0deg,#0000000a 0 1px,transparent 1px 3px)}
 @media(prefers-reduced-motion:reduce){.pageTitle,.face[data-phase=drop] .trayFlap,.face[data-phase=tray] .trayHint{animation:none}.face[data-phase=tray] .trayFlap{transform:none}}
 /* Replaced images must shrink inside the grid: their 340×220 intrinsic minimum
@@ -220,7 +220,7 @@
 .face[data-phase=drop] .reflection{animation:glassResonance .34s .12s ease-out}
 @keyframes glassResonance{0%,100%{translate:0 0}25%{translate:1px 0}55%{translate:-.6px 0}}
 .coinSlot:active .mouth{scale:.96;translate:0 1px}
-.flip:active,.label:active{translate:0 2px;box-shadow:0 1px 0 #14232e,inset 0 2px 3px #0005}
+.flip:active,.label:active{translate:0 var(--btn-press);box-shadow:0 1px 0 #14232e,inset 0 2px 3px #0005}
 .tray:not(:disabled):active .trayFlap{transform:rotateX(-65deg)}
 @media(prefers-reduced-motion:reduce){.slot .window>*,.face[data-entry] .reflection,.face[data-phase=drop] .shelf,.face[data-phase=drop] .reflection{animation:none}.flip:active,.label:active,.coinSlot:active .mouth{translate:none;scale:none}.tray:not(:disabled):active .trayFlap{transform:none}}
 @media(prefers-reduced-motion:no-preference){.trayFlap{transition:transform .18s ease-out}}
@@ -254,3 +254,17 @@
 .face[data-depth] .glass::before,.face[data-depth] .glass::after,.face[data-depth] .arrival{display:none}
 .face[data-depth] .shelf{clip-path:none;background:#466574;box-shadow:inset 0 3px 0 #b8cbcc;animation:none}
 .face[data-depth] .window[data-kind=pack]>canvas,.face[data-depth] .window[data-kind=display]>canvas{align-self:end}
+
+/* Bug audit B18 (phone, face width < ~420 px, data-narrow): no clipped shelf titles or LED messages. Type never goes below 12 px.
+   A long title ("Specials · Books") wraps onto two lines inside the 44 px+ label; a long LED message wraps to two lines and its
+   sub-line moves off screen but stays in the live region for screen readers. */
+.face[data-narrow] .label[data-long-title]{gap:4px;padding-inline:4px;letter-spacing:0}
+.face[data-narrow] .label[data-long-title] span{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;font-size:max(12px,calc(var(--fs) * .86));line-height:1.08;text-align:center;text-overflow:clip}
+.face[data-narrow] .ledMsg{-webkit-line-clamp:2;font-size:max(12px,calc(var(--fs) * .88));line-height:1.15}
+.face[data-narrow] .led[data-long]{padding-block:2px}
+.face[data-narrow] .led[data-long] .ledSub{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+/* Coin-slot how-to in the tray (Oct 1 2026): fades in, holds, fades out (the note unmounts at 3.6 s). */
+.trayNote{position:absolute;z-index:3;inset:4px 8px;display:grid;place-items:center;padding:0 8px;border-radius:4px;background:#0c0d10f2;color:#ffe27a;font:800 calc(var(--fs) * .78)/1.2 system-ui,sans-serif;text-align:center;text-wrap:balance;pointer-events:none;animation:trayNote 3.6s ease both}
+@keyframes trayNote{0%{opacity:0}8%{opacity:1}82%{opacity:1}100%{opacity:0}}
+@media(prefers-reduced-motion:reduce){.trayNote{animation:none}}
+.tray{position:relative}

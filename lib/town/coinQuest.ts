@@ -144,6 +144,11 @@ export function costumeUnlockBalls(id:string){if(id===COIN_REWARD_ID)return COIN
 export function costumeEarned(s:CoinProgress,id:string){
  if(id===COIN_REWARD_ID)return coinRewardEarned(s);
  return s.allCostumesUnlocked===true||s.collected.length>=costumeUnlockBalls(id);}
+/** Vending LED unlock hint (Sep 30 2026): how many more hidden balls open this costume. `need` sorts a page's hints. */
+export function costumeUnlockHint(s:CoinProgress,id:string):{text:string;short:string;need:number}{
+ const need=Math.max(1,costumeUnlockBalls(id)-s.collected.length);
+ return {text:`Find ${need} more hidden ball${need===1?'':'s'} to unlock`,short:`Find ${need} more ball${need===1?'':'s'}`,need};
+}
 /** Every ball count that unlocks something (Sep 29 2026, 100 balls: three club costumes at 10 … 70, the last two at 80 and the
  *  Matchday Fox at every ball, 100). 90 unlocks nothing, so it is never announced or promised as "next". */
 export const costumeMilestones=()=>[...new Set(COSTUME_UNLOCK_ORDER.map(costumeUnlockBalls))].sort((a,b)=>a-b);

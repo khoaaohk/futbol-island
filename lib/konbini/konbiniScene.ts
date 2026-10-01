@@ -264,6 +264,7 @@ export function createKonbiniScene(canvas:HTMLCanvasElement,shop:KonbiniShop,cal
  const kb=createKonbiniBall(obstacles,e=>{
   if(e.type==='strike')konbiniSfx.kick(e.speed);
   else if(e.type==='hit'){if(e.fi>=0&&bayProducts.has(e.fi)){konbiniSfx.thunk();if(startWobble(e.fi,kb.state.vx,kb.state.vz))wobbles++;try{navigator.vibrate?.(14);}catch{/* no haptics */}}else konbiniSfx.bounce(e.speed);}
+  else if(e.type==='bounce')konbiniSfx.bounce(e.speed);// the island's landing `impact`
   else if(e.type==='touch')konbiniSfx.touch(e.streak);
   else if(e.type==='drop'&&e.reason!=='stopped')konbiniSfx.bounce(1.5);
   callbacks.onBall?.(e);});
@@ -287,7 +288,7 @@ export function createKonbiniScene(canvas:HTMLCanvasElement,shop:KonbiniShop,cal
  let x=V.doorX,z=4.9,vx=0,vz=0,yaw=Math.PI,time=0,frame=0,last=0,slot=0,disposed=false,covered=false,leaving=false,settle=1,draws=0,frames=0,greet=reduced?0:1.6;
  let leaveStarted=0,firstFrameSent=false;
  const stuck=createStuckWatch(.5);
- let target:{x:number;z:number}|null=null,route:{x:number;z:number}[]=[],arrivePoi:KonbiniPoi|null=null,near:KonbiniPoi|null=null,promptVisible=false,eat:{age:number}|null=null;
+ let target:{x:number;z:number}|null=null,route:{x:number;z:number}[]=[],arrivePoi:KonbiniPoi|null=null,near:KonbiniPoi|null=null,promptVisible=false,eat:{age:number;sprite:boolean}|null=null;
  let cameraX=0,cameraZ=0,halfW=8,halfH=6,viewportW=1,viewportH=1,viewportLeft=0,viewportTop=0;
  const keys=new Set<string>(),stick={x:0,z:0},motion:PlayerMotion={travelMode:'walk'},sound=createKonbiniSound();
  const ray=new T.Raycaster(),pointer=new T.Vector2(),floor=new T.Plane(new T.Vector3(0,1,0),0),hit=new T.Vector3(),projected=new T.Vector3();
@@ -354,7 +355,7 @@ export function createKonbiniScene(canvas:HTMLCanvasElement,shop:KonbiniShop,cal
   if(prevDoor<.05&&doorOpen>=.05&&!leaving)sound.chime();
   motion.facing=yaw;motion.intentHeading=speed>.08?Math.atan2(vx,vz):undefined;motion.stopDistance=target?Math.hypot(target.x-x,target.z-z):undefined;
   // Bite: the food rises to the mouth, three bites, a few sparkles.
-  if(eat){eat.age+=dt;const a=eat.age,bite=a<.35?0:Math.min(3,Math.floor((a-.35)/.42)+1),rise=Math.min(1,a/.35);foodSprite.visible=a<1.7;
+  if(eat){eat.age+=dt;const a=eat.age,bite=a<.35?0:Math.min(3,Math.floor((a-.35)/.42)+1),rise=Math.min(1,a/.35);foodSprite.visible=eat.sprite&&a<1.7;
    const hx=x+Math.sin(yaw)*.25+Math.sin(V.camYaw)*.35,hz=z+Math.cos(yaw)*.25+Math.cos(V.camYaw)*.35;foodSprite.position.set(hx,1.05+rise*.45,hz+.02);foodSprite.scale.setScalar(Math.max(.05,1-bite*.3));
    const s=(a-.35)%.42,burst=bite>0&&s<.3;sparkles.visible=!reduced&&burst&&a<1.7;if(sparkles.visible){for(let i=0;i<8;i++){const ang=i/8*Math.PI*2;sparkle.position.set(hx+Math.cos(ang)*s*1.1,1.5+Math.sin(ang)*s*.9,hz+.05);sparkle.rotation.z=ang;sparkle.scale.setScalar(1-s/.3);sparkle.updateMatrix();sparkles.setMatrixAt(i,sparkle.matrix);}sparkles.instanceMatrix.needsUpdate=true;}
    player.setExpression(a<1.9?'happy':'neutral');motion.called=a<1.4?.35:0;if(a>2){eat=null;foodSprite.visible=false;sparkles.visible=false;motion.called=0;player.setExpression('neutral');}}
@@ -432,7 +433,9 @@ export function createKonbiniScene(canvas:HTMLCanvasElement,shop:KonbiniShop,cal
   /** Walk out through the sliding doors (the Exit button); onExit fires as you cross them. */
   leave(){if(leaving)return;settleBall();if(zoomIndex!==null){zoom=null;zoomIndex=null;arrived=false;setClip(false);callbacks.onZoom?.(null);}
    route=[...findPath(V.doorX,5.2),{x:V.doorX,z:6.3}];target=route.shift()??{x:V.doorX,z:6.3};arrivePoi=null;leaveStarted=performance.now();wake();},
-  eat(cellIndex:number){settleBall();highlight=null;liftMesh.visible=false;hideProduct(null);foodSprite.scale.setScalar(1);setSpriteCell(cellIndex);const cam=camera.position;foodSprite.lookAt(cam.x,cam.y,cam.z);eat={age:0};sound.bite();wake();},
+  /** The eat flourish. `cellIndex` shows the food sprite and three bites; null = the bites already played in the big view
+   *  (KonbiniReveal's eat sequence, Oct 1 2026), so only the happy face and sparkles play here. */
+  eat(cellIndex:number|null){settleBall();highlight=null;liftMesh.visible=false;hideProduct(null);foodSprite.scale.setScalar(1);if(cellIndex!==null){setSpriteCell(cellIndex);const cam=camera.position;foodSprite.lookAt(cam.x,cam.y,cam.z);sound.bite();}eat={age:0,sprite:cellIndex!==null};wake();},
   /** Zoom onto a section (the nearest bay of that shelf) / a section index; step to the neighbour; back to walking. */
   zoomToPoi(id:ShelfId){zoomToIndex(nearestTarget(targets,id,x,z));},
   zoomTo:(i:number)=>zoomToIndex(i),

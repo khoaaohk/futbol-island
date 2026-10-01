@@ -38,10 +38,10 @@ import {findWallJuggleTarget} from '@/lib/town/wallJuggleTarget';
 import {assistedShotYaw} from '@/lib/town/shotAssist';
 import {goalFinish} from '@/lib/town/goalFinish';
 import {sweepGoalFrame,type FrameHit} from '@/lib/town/goalCollisions';
-import IslandSettings from './IslandSettings';
+import IslandSettingsHost from './IslandSettings';
 import IslandLoading from './IslandLoading';
 import IslandReturnLoading from './IslandReturnLoading';
-import CharacterCustomizer from './CharacterCustomizer';
+import CharacterCustomizerHost from './CharacterCustomizer';
 import VendingMachine from './VendingMachine';
 import {isDrinkMachine} from '@/lib/town/drinkMachines';
 import {createVendingMachines,type VendingMachines} from '@/lib/graphics/vendingMachines';
@@ -54,10 +54,11 @@ const SQUARE_VENDING_ARRIVAL=(m=>m?{x:m.x+Math.sin(m.yaw)*2,z:m.z+Math.cos(m.yaw
 import {isVendingPreview,testCoinsRequested} from '@/lib/town/vendingPreview';
 import {grantTestingCoins} from '@/lib/arcade/arcadeWallet';
 import {enforceVendingOwnership} from '@/lib/town/vendingWallet';
-import CoachesCentre from './CoachesCentre';
+import CoachesCentreHost from './CoachesCentre';
 import {positionInfo,type PositionSelection} from '@/lib/town/playerPositions';
 import dynamic from 'next/dynamic';
-import IslandOnboarding from './IslandOnboarding';
+import {stableMemo} from '@/lib/ui/stableMemo';
+import IslandOnboardingHost from './IslandOnboarding';
 import WelcomeBack from './WelcomeBack';
 import {shouldShowIslandOnboarding} from '@/lib/town/onboarding';
 import {LEARNING_LAUNCH} from '@/lib/town/learningProgress';
@@ -65,7 +66,7 @@ import {journeyById,type LearningId} from '@/lib/town/learningJourneys';
 import {recordExploreActivity,recordExploreKnockover,exploreActivityNow} from '@/lib/town/exploreActivity';
 import {createExploreZones} from '@/lib/town/exploreZones';
 import {recordQuestVisit} from '@/lib/town/questProgress';
-import NpcConversation from './NpcConversation';
+import NpcConversationHost from './NpcConversation';
 import {createIslandNpcs} from '@/lib/graphics/islandNpcs';
 import type {NpcDefinition} from '@/lib/town/npcDialogues';
 import {useQuizProgress,getQuizProgress} from '@/lib/town/quizProgress';
@@ -91,8 +92,8 @@ import {HudStackContext} from './HudStack';
 import {fishingSession} from '@/lib/town/fishing/fishingStore';
 import {createJobScene,FARM_STAND_SELL} from '@/lib/town/jobs/jobScene';
 import {createJobMoves,heldPose,poseForEvent,rideAllowed,RIDE_WAIT_NOTE,KICK_CONTACT,UPPER_POSES,type JobButton,type JobFrame} from '@/lib/town/jobs/jobMoves';
-import Museum from './Museum';
-import FerryPreview from './FerryPreview';
+import MuseumHost from './Museum';
+import FerryPreviewHost from './FerryPreview';
 import {createLiveKnockout} from '@/lib/graphics/liveKnockout';
 import {createRooftopTravel,ROOF_RECOVERY_TIME} from '@/lib/town/rooftopTravel';
 import {roofJumpMotion,applyRoofJumpPose} from '@/lib/town/rooftopJump';
@@ -163,7 +164,10 @@ import {fuelTravel,fuelAllowsRide,fuelCanSprint} from '@/lib/town/fuelStore';
 import JobActionButton from './JobActionButton';
 import {earnForBall} from '@/lib/town/cardRewardTriggers';
 /** The position guide (PlayerCard, PlayerArt, photo manifests, film registry and player) loads on the first live-player tap, not with the island. */
-const PositionGuide=dynamic(()=>import('./PositionGuide'),{ssr:false});
+const PositionGuide=stableMemo(dynamic(()=>import('./PositionGuide'),{ssr:false}));
+// Heat (overnight audit F4): Town re-renders on its HUD tick; these dialog hosts (closed almost all the time) re-render only when a
+// data prop changes. Their inline callbacks reach them through stable wrappers (lib/ui/stableMemo.ts).
+const IslandSettings=stableMemo(IslandSettingsHost),CharacterCustomizer=stableMemo(CharacterCustomizerHost),CoachesCentre=stableMemo(CoachesCentreHost),IslandOnboarding=stableMemo(IslandOnboardingHost),NpcConversation=stableMemo(NpcConversationHost),Museum=stableMemo(MuseumHost),FerryPreview=stableMemo(FerryPreviewHost);
 // The two outdoor drink machines (lib/town/drinkMachines.ts): same in-world machine, drink stock and the Konbini consumable flow.
 const DrinkMachine=dynamic(()=>import('./DrinkMachine'),{ssr:false});
 const INITIAL_SPAWN={x:103,z:-8};
@@ -181,14 +185,17 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
   const [arcadeOpen,setArcadeOpen]=useState(false);
   // Konbini (Sep 29 2026): like the Arcade, a document boundary that unloads the island; the departure is that store's door.
   const [konbiniDoor,setKonbiniDoor]=useState<KonbiniDoor|null>(null);
-  useEffect(()=>{if(!konbiniDoor)return;saveKonbiniDeparture(konbiniDoor,rideRef.current);musicRef.current?.setSceneActive(false);stopIslandNarration();soundRef.current?.dispose();const timer=setTimeout(()=>window.location.assign(konbiniUrl(konbiniDoor)),matchMedia('(prefers-reduced-motion:reduce)').matches?60:380);return()=>clearTimeout(timer);},[konbiniDoor]);
+  // The Enter tap's click (onClickCapture → ui('click')) is still sounding when this runs: disposing the island sound here closed
+  // its context mid-click, so the Konbini/Arcade Enter was silent (user, Oct 1 2026). Stop the loops now; dispose as the page changes.
+  const leaveIslandSound=()=>{const s=soundRef.current;s?.truck(0,false);s?.move('walk',0,false);return ()=>s?.dispose();};
+  useEffect(()=>{if(!konbiniDoor)return;saveKonbiniDeparture(konbiniDoor,rideRef.current);musicRef.current?.setSceneActive(false);stopIslandNarration();const disposeSound=leaveIslandSound();const timer=setTimeout(()=>{disposeSound();window.location.assign(konbiniUrl(konbiniDoor));},matchMedia('(prefers-reduced-motion:reduce)').matches?120:380);return()=>clearTimeout(timer);},[konbiniDoor]);
   const saveArcadeDeparture=useRef<()=>void>(()=>{});
   // A document boundary aborts island loading and releases its complete runtime.
-  useEffect(()=>{if(!arcadeOpen)return;saveArcadeDeparture.current();musicRef.current?.setSceneActive(false);stopIslandNarration();soundRef.current?.dispose();const timer=setTimeout(()=>window.location.assign('/arcade'),matchMedia('(prefers-reduced-motion:reduce)').matches?60:380);return()=>clearTimeout(timer);},[arcadeOpen]);
+  useEffect(()=>{if(!arcadeOpen)return;saveArcadeDeparture.current();musicRef.current?.setSceneActive(false);stopIslandNarration();const disposeSound=leaveIslandSound();const timer=setTimeout(()=>{disposeSound();window.location.assign('/arcade');},matchMedia('(prefers-reduced-motion:reduce)').matches?120:380);return()=>clearTimeout(timer);},[arcadeOpen]);
   // The Store became eight vending machines (docs/vending-machines.md); storeOpen = a vending machine's dialog is open.
   const [storeOpen,setStoreOpen]=useState(false),[vendingId,setVendingId]=useState<VendingMachineId>('plaza'),vendingRef=useRef<VendingMachines|null>(null);
   const [formatPathRequest,setFormatPathRequest]=useState<FormatPathLaunch|null>(null);
-  // Shared lesson-launch path (QA11): a lesson can start from inside Make it yours (book check, My football, Spot it) or the
+  // Shared lesson-launch path (QA11): a lesson can start from inside Make it yours (book check, Spot it) or the
   // coin drawer, so close every overlay that would sit over the pitch or keep the island loop asleep (settingsRef).
   const closeForLesson=()=>{setSettingsOpen(false);setStoreOpen(false);setConversationOpen(false);setCustomizerOpen(false);setBalancesOpen(false);setMap(false);setHint(false);};
   useEffect(()=>{const launch=(event:Event)=>{const detail=(event as CustomEvent).detail;if(!validPathLaunch(detail))return;primeLessonVoice();setFormatPathRequest(detail);setLearningRequest(null);closeForLesson();setFieldCatalog(detail.format);};window.addEventListener(FORMAT_PATH_LAUNCH,launch);return()=>window.removeEventListener(FORMAT_PATH_LAUNCH,launch);},[]);
@@ -197,7 +204,7 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
   const [storeItemRequest,setStoreItemRequest]=useState<{id:string;nonce:number}|null>(null),[pathsRequest,setPathsRequest]=useState<{nonce:number}|null>(null);
   const [coachesOpen,setCoachesOpen]=useState(false);
   const [ferryOpen,setFerryOpen]=useState(false),[graduationOpen,setGraduationOpen]=useState(false);
-  // QA11 H-1 (heat): the My football / warm-up drawer and the For grown-ups sheet cover the island, so it sleeps behind them.
+  // QA11 H-1 (heat): the warm-up drawer and the For grown-ups sheet cover the island, so it sleeps behind them.
   const [learningOpen,setLearningOpen]=useState(false),[grownUpsOpen,setGrownUpsOpen]=useState(false);
   const [museumOpen,setMuseumOpen]=useState(false);
   const [ballLessons,setBallLessons]=useState<string[]>([]),[coinNear,setCoinNear]=useState(''),[seaNote,setSeaNote]=useState('');
@@ -232,14 +239,19 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
   // only when it changes). Spot it and job cards report in through refs so the arbiter can see them without extra renders.
   const [hudFocus,setHudFocus]=useState<HudFocus|null>(null),[hudStackEl,setHudStackEl]=useState<HTMLDivElement|null>(null);
   const spotWaiting=useRef(false),jobCardOpen=useRef(false);
+  // The job owns the stack (HUD_STACK.md): while a shift runs or a job card is open, the guide (welcome-back) card waits. React state
+  // flips only when a job starts/ends or a card opens/closes (set on change; same-value sets bail out).
+  const [jobRunning,setJobRunning]=useState(false),[jobCardShown,setJobCardShown]=useState(false);
   const onSpotChange=useRef((waiting:boolean)=>{spotWaiting.current=waiting;wakeLoopRef.current?.();}).current;
-  const onJobCardChange=useRef((open:boolean)=>{jobCardOpen.current=open;wakeLoopRef.current?.();}).current;
+  const onJobCardChange=useRef((open:boolean)=>{jobCardOpen.current=open;setJobCardShown(open);wakeLoopRef.current?.();}).current;
   // Door / post prompts never rise into the stack: its bottom edge is --hud-floor (globals.css). One ResizeObserver on the column
   // (it fires only when a piece appears, goes or rewraps), replacing the old per-toast observer and the :has() offset chains.
   useEffect(()=>{const el=hudStackEl,app=el?.closest<HTMLElement>('.town-app');if(!el||!app||typeof ResizeObserver==='undefined')return;
    const publish=()=>{if(el.hidden)return;const top=app.getBoundingClientRect().top,r=el.getBoundingClientRect();app.style.setProperty('--hud-floor',`${Math.round((r.height>0?r.bottom+10:r.top)-top)}px`);};
    const ro=new ResizeObserver(publish);ro.observe(el);return()=>{ro.disconnect();app.style.removeProperty('--hud-floor');};},[hudStackEl]);
-  const [settingsOpen,setSettingsOpen]=useState(false),settingsRef=useRef(false);settingsRef.current=graduationOpen||learningOpen||grownUpsOpen||!!konbiniDoor||balancesOpen||settingsOpen||customizerOpen||conversationOpen||storeOpen||onboardingOpen||arcadeOpen||coachesOpen||museumOpen||ferryOpen||!!positionSelection||ballLessons.length>0||cardOfferOpen||fishingDialog;
+  // Heat (overnight audit F1): the full-screen, opaque Choose plays sheet (FieldLearning → PlaysPicker) sleeps the island like a menu.
+  const [playsPickerOpen,setPlaysPickerOpen]=useState(false);
+  const [settingsOpen,setSettingsOpen]=useState(false),settingsRef=useRef(false);settingsRef.current=playsPickerOpen||graduationOpen||learningOpen||grownUpsOpen||!!konbiniDoor||balancesOpen||settingsOpen||customizerOpen||conversationOpen||storeOpen||onboardingOpen||arcadeOpen||coachesOpen||museumOpen||ferryOpen||!!positionSelection||ballLessons.length>0||cardOfferOpen||fishingDialog;
   const [voiceEnabled,setVoiceEnabled]=useState(true),[coachVoice,setCoachVoice]=useState('kokoro_af_bella'),[controlsFlipped,setControlsFlipped]=useState(false);
   useEffect(()=>{try{setVoiceEnabled(localStorage.getItem('fi2-voice-enabled')!=='false');const coach=localStorage.getItem('fi2-coach-voice');if(COACH_VOICES.some(([id])=>id===coach))setCoachVoice(coach!);setControlsFlipped(localStorage.getItem('fi2-controls-flipped')==='true');}catch{}},[]);
   const savePreference=(key:string,value:string)=>{try{localStorage.setItem(key,value);}catch{}};
@@ -555,6 +567,9 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     let hudX=NaN,hudZ=NaN,hudJuggling:boolean|undefined,signalMode='';
     let viewportW=1,viewportH=1;
     const setUIHidden=(el:HTMLElement,hidden:boolean)=>{if(el.hidden!==hidden)el.hidden=hidden;};
+    // Heat (overnight audit F2): a leaving field card used to rewrite disabled/tabindex on every frame of its 350 ms fade (each write is a
+    // mutation that can restyle the page's :has() rules). Write only on change, like setUIHidden.
+    const setCardInactive=(button:HTMLButtonElement)=>{if(!button.disabled)button.disabled=true;if(button.tabIndex!==-1)button.tabIndex=-1;};
     let firstFrame=true,lastRendered=0,shadowElevation=0,boostLean=0,flightHeading=player.root.rotation.y;
     const coarse=window.matchMedia("(pointer: coarse)").matches;
     const pitchVisibility=createPitchVisibility(),fieldCardExit=new Map<HTMLButtonElement,number>();
@@ -579,6 +594,8 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     // ---- Island job character moves (docs/island-jobs.md §10, lib/town/jobs/jobMoves.ts): poses, Kick the tree, the ball set aside.
     const jobMoves=createJobMoves(),NO_JOB_FRAME:JobFrame={pose:null,stand:null,ball:null,still:false,caught:false};let jobFrame=NO_JOB_FRAME,jobWas=false,jobStroke=9,jobKickLast=0;
     const jobHandL=new T.Vector3(),jobHandR=new T.Vector3();const jobSpotV=new T.Vector3();
+    /** Fuel (bug A6): false until the player first moves after the arrival; the opening hover is never charged. */
+    let fuelArmed=false;
     const jobFloor=(x:number,z:number)=>rooftop.surface(x,z),jobPlayer=()=>({x:location.x,z:location.z,y:rooftop.state.height,yaw:player.root.rotation.y});
     const jobBallNow=()=>({x:ball.position.x,y:ball.position.y,z:ball.position.z});
     const canStandJob=(x:number,z:number)=>rooftop.canLand(x,z)&&Math.abs(rooftop.surface(x,z)-rooftop.state.height)<.35;
@@ -591,7 +608,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       if(f.shotStep!==undefined)m.shotStep=f.shotStep;
       if(f.ball)m.dribbling=false;
       return m;};
-    const offJobView=jobs.subscribe(()=>{const a=jobs.getView().active,next=a?.buttons??null;jobActiveRef.current=!!a;
+    const offJobView=jobs.subscribe(()=>{const a=jobs.getView().active,next=a?.buttons??null;if(jobActiveRef.current!==!!a)setJobRunning(!!a);jobActiveRef.current=!!a;
       if(JSON.stringify(next)!==JSON.stringify(jobButtonsRef.current)){jobButtonsRef.current=next;setJobButtons(next);}});
     const offJobEvents=jobs.onEvent((e,def)=>{if(e.type==='pump')jobStroke=0;if(rideRef.current!=='walk')return;const p=poseForEvent(def,e);if(!p)return;
       const target=p.at==='spot'&&e.index!==undefined?jobs.spot(e.index):p.at==='item'&&e.x!==undefined&&e.z!==undefined?{x:e.x,z:e.z}:p.at==='deliver'?jobs.deliverPoint():null;
@@ -911,7 +928,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       if(flightPose){if(jetActions.state.phase==='charge'){flightPose.compression=.26*Math.min(1,jetActions.state.age/.65);flightPose.thrust=1.5;}if(jetActions.state.phase==='blast'){flightPose.thrust=2.6;flightPose.pitch=-.15;flightPose.compression=.07;}if(jetActions.state.phase==='dash')flightPose.thrust=2.2;boostLean=T.MathUtils.damp(boostLean,jetActions.state.phase==='dash'?(reduced?.6:1.25):0,jetActions.state.phase==='dash'?22:12,active?dt:0);flightPose.pitch=Math.max(flightPose.pitch,boostLean);}
       // Island job moves: start/end of a job resets the ball and the poses; per frame only while a job runs (or its ball rests).
       const jobRun=jobs.run;
-      if(!!jobRun!==jobWas){jobWas=!!jobRun;cancelShotHold();if(!jobRun)jobMoves.reset();jobFrame=NO_JOB_FRAME;walkBall.reset({...location,y:rooftop.state.height,yaw:player.root.rotation.y});}
+      if(!!jobRun!==jobWas){jobWas=!!jobRun;cancelShotHold();if(!jobRun)jobMoves.end();/* the last one-shot pose plays out (bug A9) */jobFrame=NO_JOB_FRAME;walkBall.reset({...location,y:rooftop.state.height,yaw:player.root.rotation.y});}
       if(active){jobStroke+=dt;jobFrame=(jobRun||jobMoves.parked||jobMoves.kicking||jobMoves.posing)&&rideRef.current==='walk'?jobMoves.update(dt,jobPlayer(),jobFloor,heldPose(jobRun,elapsed,jobStroke)):NO_JOB_FRAME;}
       if(jobFrame.caught){sound.ball('receive');walkBall.reset({...location,y:rooftop.state.height,yaw:player.root.rotation.y});}
       if(jobFrame.kick!==undefined){if(jobKickLast<KICK_CONTACT&&jobFrame.kick>=KICK_CONTACT)sound.ball('kick');jobKickLast=jobFrame.kick;}else jobKickLast=0;
@@ -985,7 +1002,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       // Kick the tree: two steps back from the set ball, then in to strike it (a visual offset, like the charged shot's step back).
       if(jobFrame.back&&rideRef.current==='walk'){const x=player.root.position.x-Math.sin(player.root.rotation.y)*jobFrame.back,z=player.root.position.z-Math.cos(player.root.rotation.y)*jobFrame.back;
         if(rooftop.canLand(x,z)&&Math.abs(rooftop.surface(x,z)-groundY)<.35){player.root.position.x=x;player.root.position.z=z;}}
-      if(jobRun&&rideRef.current==='walk'){player.handPositions(jobHandL,jobHandR);jobs.holdProps(jobHandL,jobHandR,player.root.rotation.y);}
+      if(jobs.holding&&rideRef.current==='walk'){player.handPositions(jobHandL,jobHandR);jobs.holdProps(jobHandL,jobHandR,player.root.rotation.y);}
       const showLanding=rideRef.current==='jetpack'&&!fieldMenu.current&&!lessonRef.current;
       const overPickup=streetTraffic.updateLandingIndicator(location.x,location.z,showLanding,elapsed,reduced,truckLanding);
       if(showLanding&&!overPickup){
@@ -1021,7 +1038,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       flightTrail.root.visible=!fieldMenu.current;flightTrail.update(visualLocation.x,groundY+bob,visualLocation.z,flightHeading,Math.hypot(velocity.x,velocity.z),active?dt:0,customizationRef.current.jetpack,vehicle.root.visible&&rideRef.current==='jetpack'&&customizationRef.current.jetpack!=='classic'&&active&&!['parachute','fall'].includes(jetActions.state.phase),['dash','blast'].includes(jetActions.state.phase),reduced,jetActions.state.phase==='blast');
       rideTrail.update(visualLocation.x,groundY,visualLocation.z,player.root.rotation.y,Math.hypot(velocity.x,velocity.z),active?dt:0,vehicle.root.visible&&rideRef.current!=='walk'&&rideRef.current!=='jetpack'&&active&&!fieldMenu.current&&rampMotion.state.phase!=='air',reduced,groundVariant,rideTricks.state.active||rampMotion.state.phase==='climb');
       islandNpcs.root.visible=!fieldMenu.current&&!lessonRef.current;
-      islandNpcs.update(active?dt:0,elapsed,reduced,{x:visualLocation.x,y:groundY,z:visualLocation.z},!active||!islandNpcs.root.visible,!coarse&&viewportW>600,hoveredNpcId,camera,rideRef.current==='jetpack'&&flight.height>1.2);fieldBump.applyNpcNudges();
+      islandNpcs.update(active?dt:0,elapsed,reduced,{x:visualLocation.x,y:groundY,z:visualLocation.z},!active||!islandNpcs.root.visible,!coarse&&viewportW>600,hoveredNpcId,camera,(rideRef.current==='jetpack'&&flight.height>1.2)||vending.focused!==null);fieldBump.applyNpcNudges();
       const hudTick=now-lastHud>150;
       if(hudTick){const visitor={x:visualLocation.x,y:groundY,z:visualLocation.z};const next=[islandNpcs.root.visible?islandNpcs.nearest(visitor):null,coachPractice.nearest(visitor),volleyballGame.nearest(visitor)].filter((npc):npc is NpcDefinition=>npc!==null).sort((a,b)=>Math.hypot(a.x-visitor.x,a.z-visitor.z)-Math.hypot(b.x-visitor.x,b.z-visitor.z))[0]??null;if(next?.id!==nearbyNpcRef.current?.id){nearbyNpcRef.current=next;setNearbyNpc(next);}}
       npcs.forEach((rig,i)=>{
@@ -1083,7 +1100,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       quizView.restore();
       renderer.setViewport(0,fullHeight-viewportHeight,viewportWidth,viewportHeight);
       if(Math.abs(camera.aspect-viewportWidth/viewportHeight)>.0001){camera.aspect=viewportWidth/viewportHeight;camera.updateProjectionMatrix();}
-      if(learning){learningView.update(camera,venueById(learning),fieldSession.current,dt,reduced,learningAngle.current,{width:viewportWidth,height:viewportHeight,mobile:fullWidth<=600||window.matchMedia('(pointer:coarse)').matches});quizView.apply([fieldSession.current?.lesson.id,fieldSession.current?.quiz,fieldSession.current?.question,learningAngle.current].join(':'),learningView.target,dt,reduced);}
+      if(learning){learningView.update(camera,venueById(learning),fieldSession.current,dt,reduced,learningAngle.current,{width:viewportWidth,height:viewportHeight,mobile:fullWidth<=600||coarse});quizView.apply([fieldSession.current?.lesson.id,fieldSession.current?.quiz,fieldSession.current?.question,learningAngle.current].join(':'),learningView.target,dt,reduced);}
       else if(wasLearning){camera.up.set(0,1,0);camera.zoom=1;camera.updateProjectionMatrix();learningView.reset();camera.position.set(location.x+18,23+groundY,location.z+30);camera.lookAt(location.x+2,groundY,location.z-3);}
       if(Boolean(learning)!==wasLearning){
         world.setVisible(!learning);coinHunt.setSceneryVisible(!learning);
@@ -1135,7 +1152,9 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       world.updateSharks(active&&!learning?dt:0,reduced||heat.staticAmbience,camera,location);// Coral Cay sharks: sleep when far/off screen
       if(active&&!learning&&!reduced&&!heat.staticAmbience)world.waves.forEach((wave,i)=>{wave.position.x+=Math.sin(elapsed*.6+i)*dt*.065;});
       // Fuel (docs/economy/FUEL_2026-09-30.md): charge this tick's movement; out of fuel on a ride/jetpack → land and walk.
-      if(hudTick&&fuelTravel(now,rideRef.current,location.x,location.z,input.current.sprint||keys.has('shift'),!active||!!learning||!!lessonRef.current||fieldMenu.current||streetTraffic.rider.index>=0,rideRef.current==='jetpack'&&flight.height>.5)&&rideRef.current!=='walk'&&pendingRide.current!=='walk'){if(rideRef.current==='jetpack')pendingRide.current='walk';else{rideRef.current='walk';setRideMode('walk');}}
+      // Bug A6: the arrival burst and the opening jetpack hover are scripted, not the player's travel: free until the first move.
+      if(!fuelArmed&&(Math.hypot(input.current.x,input.current.z)>.1||keys.size>0||Math.hypot(velocity.x,velocity.z)>.5)&&characterArrival.getState().done)fuelArmed=true;
+      if(hudTick&&fuelTravel(now,rideRef.current,location.x,location.z,input.current.sprint||keys.has('shift'),!active||!!learning||!!lessonRef.current||fieldMenu.current||streetTraffic.rider.index>=0,rideRef.current==='jetpack'&&flight.height>.5,!fuelArmed)&&rideRef.current!=='walk'&&pendingRide.current!=='walk'){if(rideRef.current==='jetpack')pendingRide.current='walk';else{rideRef.current='walk';setRideMode('walk');}}
       if(hudTick){if(active&&!fieldMenu.current&&!lessonRef.current&&rideRef.current!=='jetpack'&&!rooftop.state.falling&&Math.abs(player.root.position.y-fieldSurfaceHeight(location.x,location.z))<1){const visited=nearestVenue(location.x,location.z);if(visited)recordQuestVisit(visited.id);}const nextJuggling=rideRef.current==='walk'&&(walkBall.state.mode==='juggle'||walkBall.state.mode==='wall-juggle');if(hudJuggling!==nextJuggling){hudJuggling=nextJuggling;setJuggling(nextJuggling);}if(hudX!==location.x||hudZ!==location.z){hudX=location.x;hudZ=location.z;positionStore.publish({x:hudX,z:hudZ});const zone=zoneAt(hudX,hudZ);if(zone!==zoneRef.current){zoneRef.current=zone;setLocationZone(zone);}}lastHud=now;}
       const mobileEntry=coarse||fullWidth<=600;
       const entries=[['arcade',nearArcade,103,11,-53,world.arcadeBounds],['coaches',nearCoaches,161,11.8,-37,world.coachesBounds],['museum',nearMuseum,168,9.5,186,world.museumBounds],['konbini',nearKonbiniMain,KONBINI_DOORS.main.x,3.2,KONBINI_DOORS.main.front,konbiniBounds.main],['caykonbini',nearKonbiniCay,KONBINI_DOORS.cay.x,3.1,KONBINI_DOORS.cay.front,konbiniBounds.cay]] as const;
@@ -1156,8 +1175,9 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       }
       let shownEntry=false;
       for(const [kind,,x,y,z] of entries){const prompt=uiElement<HTMLButtonElement>(`[data-${kind}-enter]`);if(prompt){let hidden=kind!==closestEntry||hudFocusNow!=='enter';if(!hidden){storePromptPoint.set(x,y,z).project(camera);hidden=storePromptPoint.z< -1||storePromptPoint.z>1;if(!hidden)placeEntryPrompt(prompt,T.MathUtils.clamp((storePromptPoint.x+1)*fullWidth/2,75,fullWidth-75),T.MathUtils.clamp((1-storePromptPoint.y)*fullHeight/2,90,fullHeight-160));}if(!hidden)shownEntry=true;setUIHidden(prompt,hidden);}}
-      // Wall rebounds: an edge arrow toward the shooting circle while it is off screen (HUD tick only, style written on change).
-      if(hudTick){const el=uiElement<HTMLElement>('[data-job-spot-arrow]');if(el){const r=jobs.run,spot=r&&r.def.kind==='rebound'&&r.phase==='shots'?r.spot:null;let show=false;
+      // Job edge arrow (Oct 1 2026: every job, not only Wall rebounds' circle): toward the beacon's goal (the loose ball, the ball
+      // box, the next mark, the pump station…) while it is off screen. HUD tick only, style written on change.
+      if(hudTick){const el=uiElement<HTMLElement>('[data-job-spot-arrow]');if(el){const spot=jobs.arrowGoal;let show=false;
         if(spot&&canEnter){jobSpotV.set(spot.x,rooftop.surface(spot.x,spot.z)+.2,spot.z).project(camera);let x=jobSpotV.x,y=jobSpotV.y;const behind=jobSpotV.z>1;
           if(behind||Math.abs(x)>.9||Math.abs(y)>.9){show=true;if(behind){x=-x;y=-y;}const m=Math.max(Math.abs(x),Math.abs(y))||1;x/=m;y/=m;
             const t=`translate(${Math.round((x*.84+1)/2*fullWidth)}px,${Math.round((1-y*.8)/2*fullHeight)}px) rotate(${Math.atan2(-y,x).toFixed(2)}rad)`;if(el.style.transform!==t)el.style.transform=t;}}
@@ -1187,9 +1207,9 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
         if(next!==hudFocusNow){hudFocusNow=next;setHudFocus(next);}
       }
       const contextOwnsAction=hudFocusNow!=='learn';
-      if(contextOwnsAction){for(const v of VENUES){const button=uiElement<HTMLButtonElement>(`[data-field="${v.id}"]`);if(button&&(!button.hidden||!button.disabled||fieldCardExit.has(button))){setUIHidden(button,true);button.disabled=true;button.tabIndex=-1;delete button.dataset.leaving;fieldCardExit.delete(button);}}}
+      if(contextOwnsAction){for(const v of VENUES){const button=uiElement<HTMLButtonElement>(`[data-field="${v.id}"]`);if(button&&(!button.hidden||!button.disabled||fieldCardExit.has(button))){setUIHidden(button,true);setCardInactive(button);delete button.dataset.leaving;fieldCardExit.delete(button);}}}
       else {
-      for(const v of VENUES){const button=uiElement<HTMLButtonElement>(`[data-field="${v.id}"]`);if(!button)continue;if(v.id===visibleVenue){if(button.hidden||button.disabled){button.hidden=false;button.disabled=false;button.tabIndex=0;delete button.dataset.leaving;fieldCardExit.delete(button);}}else if(!button.hidden){button.disabled=true;button.tabIndex=-1;if(!fieldCardExit.has(button)){fieldCardExit.set(button,now);button.dataset.leaving='true';}if(visibleVenue||reduced||now-fieldCardExit.get(button)!>=350){button.hidden=true;delete button.dataset.leaving;fieldCardExit.delete(button);}}}
+      for(const v of VENUES){const button=uiElement<HTMLButtonElement>(`[data-field="${v.id}"]`);if(!button)continue;if(v.id===visibleVenue){if(button.hidden||button.disabled){setUIHidden(button,false);if(button.disabled)button.disabled=false;if(button.tabIndex!==0)button.tabIndex=0;delete button.dataset.leaving;fieldCardExit.delete(button);}}else if(!button.hidden){setCardInactive(button);if(!fieldCardExit.has(button)){fieldCardExit.set(button,now);button.dataset.leaving='true';}if(visibleVenue||reduced||now-fieldCardExit.get(button)!>=350){button.hidden=true;delete button.dataset.leaving;fieldCardExit.delete(button);}}}
       }
 
       // Dynamic resolution switches at this frame boundary; the canvas CSS size is unchanged, only the drawing buffer.
@@ -1240,7 +1260,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     {ready&&!failed&&!settingsRef.current&&!map&&!fieldCatalog&&!lesson&&<CoinHuntHud near={hudFocus==='hint'?coinNear||seaNote:''}/>}
     {balancesOpen&&<IslandBalanceDrawer onClose={()=>setBalancesOpen(false)}/>}
     {ready&&!failed&&<FishingHost paused={balancesOpen} onOpenChange={setFishingOpen} onDialogChange={setFishingDialog}/>}
-    {ready&&!failed&&<LearningHost blocked={map||storeOpen||conversationOpen||customizerOpen||arcadeOpen||onboardingOpen} spotAllowed={hudFocus==='spot'} onSpotChange={onSpotChange} onOpenChange={setLearningOpen}/>/* Lane 3: warm-up, My football, live-match Spot it */}
+    {ready&&!failed&&<LearningHost blocked={map||storeOpen||conversationOpen||customizerOpen||arcadeOpen||onboardingOpen} spotAllowed={hudFocus==='spot'} onSpotChange={onSpotChange} onOpenChange={setLearningOpen}/>/* Lane 3: the daily warm-up and live-match Spot it */}
     {ready&&!failed&&<IslandJobs onOpenBalances={()=>setBalancesOpen(true)} blocked={settingsRef.current||map||!!fieldCatalog||!!lesson} holdToasts={stackCovered} offerAllowed={hudFocus==='job-offer'} onCardChange={onJobCardChange} onRequestWalk={()=>{if(rideRef.current!=='walk')selectRide('walk');}}/>}
     {ready&&!failed&&<FerryPreview open={ferryOpen} onOpenChange={setFerryOpen}/>}
     {ready&&!failed&&<Museum open={museumOpen} onOpenChange={setMuseumOpen}/>}
@@ -1279,9 +1299,9 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     {scored&&<div className="goal-toast" role="status">GOLAZO! <span>GO GET ANOTHER.</span></div>}</>}
     {ready&&!failed&&<GraduationHost blocked={calmBlocked} onOpenChange={setGraduationOpen}/>}
     {ready&&!failed&&<CardOfferHost blocked={graduationOpen||vendingLeaving||fishingOpen||ballLessons.length>0||conversationOpen||onboardingOpen||customizerOpen||storeOpen||arcadeOpen||coachesOpen||museumOpen||ferryOpen||map||!!positionSelection} onOpenChange={setCardOfferOpen}/>}
-    {ready&&!failed&&<CostumeMilestoneToast blocked={toastBlocked}/>}{ready&&!failed&&<RideUnlockToast blocked={toastBlocked}/>}{ready&&!failed&&<FuelToast blocked={toastBlocked}/>}{ready&&!failed&&<WelcomeBack blocked={toastBlocked}/>}
+    {ready&&!failed&&<CostumeMilestoneToast blocked={toastBlocked}/>}{ready&&!failed&&<RideUnlockToast blocked={toastBlocked}/>}{ready&&!failed&&<FuelToast blocked={stackCovered/* also waits under the island pocket (bug A3) */}/>}{ready&&!failed&&<WelcomeBack blocked={toastBlocked||jobRunning||jobCardShown} held={stackCovered}/>}
     {ballLessons.length>0&&<BallHuntLesson key={ballLessons[0]} spotId={ballLessons[0]} onDismiss={()=>setBallLessons(queue=>queue.slice(1))}/>}
-    {fieldCatalog&&<FieldLearning pathRequest={formatPathRequest??undefined} learningId={learningRequest?.id} onResetQuizView={()=>resetQuizView.current()} onResizeSound={()=>soundRef.current?.ui('hover')} onWake={()=>wakeLoopRef.current()} onLivePause={paused=>gamesRef.current?.setPaused(fieldCatalog,paused)} readMatch={()=>gamesRef.current?.getView(fieldCatalog)??null} cameraAngle={learningAngle} key={formatPathRequest?.nonce??learningRequest?.nonce??fieldCatalog} format={fieldCatalog} session={fieldSession} voiceEnabled={voiceEnabled} coachVoice={coachVoice} narrationPaused={arcadeOpen||settingsOpen||map||conversationOpen||videoPlaying} onClose={()=>{fieldSession.current=null;setFieldCatalog(null);if(learningRequest||formatPathRequest){setFormatPathRequest(null);setLearningRequest(null);setPathsRequest({nonce:Date.now()});setSettingsOpen(true);}}}/>}
+    {fieldCatalog&&<FieldLearning pathRequest={formatPathRequest??undefined} learningId={learningRequest?.id} onResetQuizView={()=>resetQuizView.current()} onResizeSound={()=>soundRef.current?.ui('hover')} onWake={()=>wakeLoopRef.current()} onLivePause={paused=>gamesRef.current?.setPaused(fieldCatalog,paused)} onPickerChange={setPlaysPickerOpen} readMatch={()=>gamesRef.current?.getView(fieldCatalog)??null} cameraAngle={learningAngle} key={formatPathRequest?.nonce??learningRequest?.nonce??fieldCatalog} format={fieldCatalog} session={fieldSession} voiceEnabled={voiceEnabled} coachVoice={coachVoice} narrationPaused={arcadeOpen||settingsOpen||map||conversationOpen||videoPlaying} onClose={()=>{fieldSession.current=null;setFieldCatalog(null);if(learningRequest||formatPathRequest){setFormatPathRequest(null);setLearningRequest(null);setPathsRequest({nonce:Date.now()});setSettingsOpen(true);}}}/>}
     {lesson&&<CoachLesson phase={lesson} open={laneOpen} feedback={coachFeedback} onWatch={()=>requestLesson('watch')} onPractice={()=>requestLesson('practice')} onPass={()=>{input.current.kick=true;}} onExit={()=>requestLesson('exit')} format={passFormat} onFormat={choosePassFormat} attempts={passAttempts} aimStatus={aimStatus} onStraight={()=>lessonAim.current?.straight()} onPlay={()=>lessonAim.current?.play()} onCancel={()=>lessonAim.current?.cancel()} onReplay={()=>lessonAim.current?.replay()}/>}
     {!ready&&!failed&&(returningFromArcade?<IslandReturnLoading exiting={loadingComplete}/>:<IslandLoading exiting={loadingComplete}/>)}
     {failed&&<div className="town-loading"><h2>The island needs WebGL.</h2><p>Enable hardware acceleration in your browser, then reload.</p><button className="pixel-button" onClick={()=>window.location.reload()}>TRY AGAIN</button></div>}

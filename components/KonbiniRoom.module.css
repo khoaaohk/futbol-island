@@ -47,8 +47,13 @@
 .speech{position:relative;background:#fff1d3;color:#1f3d3a;border-radius:16px;padding:12px 14px;font-size:15px;line-height:1.4;margin:8px 0}
 .tabs{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}.tabs button{min-height:38px;padding:6px 12px;font-size:13px;background:var(--btn-cream,#fff1d3);color:var(--k-ink);box-shadow:0 3px 0 #193f3733}
 .tabs button[aria-selected=true]{background:var(--btn-gold-bright,#f5c45e);color:var(--btn-ink,#244d40)}
-.stamps{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.stamps span{aspect-ratio:1;display:grid;place-items:center;border:2px dashed #244d4066;border-radius:50%;font-size:11px;font-weight:900;color:#244d40a0;background:#ead6a6aa}
-.stamps span[data-on]{border-style:solid;background:#f07a5f;color:#fff1d3;font-size:22px}.stamps p{grid-column:1/-1}
+/* The stamp card (components/KonbiniStampCard.tsx, in the NPC drawer): one row of circles per shop, each named by its magazine. */
+.stamps{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;list-style:none;margin:10px 0 0;padding:0}
+.stamps li{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:4px;box-sizing:border-box;border:2px dashed #244d4066;border-radius:50%;color:#244d40b0;background:#ead6a6aa;text-align:center}
+.stamps li b{font-size:22px;line-height:1}.stamps li b:empty{display:none}
+.stamps li small{font-size:9px;font-weight:900;line-height:1.15;letter-spacing:.02em;overflow-wrap:anywhere}
+.stamps li[data-on]{border-style:solid;background:#f07a5f;color:#fff1d3}
+.stampSteps{margin:8px 0 0;padding-left:22px;display:grid;gap:6px;font-size:15px;line-height:1.5}
 .message{margin:12px 0 0;padding:10px 12px;border-radius:12px;background:#f3da98;color:#1f3d3a;font-weight:800}
 .receipt{position:fixed;z-index:14;right:calc(16px + env(safe-area-inset-right,0px));top:calc(78px + env(safe-area-inset-top,0px));width:190px;display:flex;flex-direction:column;gap:3px;padding:12px 14px 16px;background:#fffdf5;color:#1f3d3a;font:12px/1.3 monospace;border-radius:4px 4px 0 0;box-shadow:0 6px 18px #0006;animation:print .8s steps(8,end) both;clip-path:polygon(0 0,100% 0,100% 94%,90% 100%,80% 94%,70% 100%,60% 94%,50% 100%,40% 94%,30% 100%,20% 94%,10% 100%,0 94%)}
 .receipt b{font-size:14px;text-align:center}.receipt i{font-style:normal;text-align:center;margin-top:4px}
@@ -61,7 +66,7 @@
 .section{flex:0 1 auto;min-width:0;text-align:center;align-self:center;margin:0 auto;padding:8px 14px;border-radius:999px;background:#102a2bd9;color:#fff1d3;font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
 .slots{position:absolute;inset:0;z-index:2;pointer-events:none}
 .slot{position:absolute;pointer-events:auto;border:0;border-radius:14px;background:transparent;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
-.slot:hover,.slot:focus-visible{outline:3px solid #ffd35ccc;outline-offset:-2px;background:#ffffff1f}
+.slot:hover,.slot:focus-visible{outline:var(--btn-focus);outline-offset:-2px;background:#ffffff1f}
 .slot[data-selected]{outline:3px solid #ffd35c;outline-offset:-2px;background:#ffd35c26;box-shadow:0 0 0 6px #ffd35c33}
 .arrow{position:absolute;z-index:3;top:42%;width:48px;height:48px;display:grid;place-items:center;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:999px;background:var(--btn-gold-bright,#f5c45e);color:var(--btn-ink,#244d40);box-shadow:0 4px 0 var(--btn-gold-bright-edge,#bf954a);cursor:pointer}
 .arrow:disabled{opacity:.35;cursor:default}.prev{left:calc(24px + env(safe-area-inset-left,0px))}.next{right:calc(24px + env(safe-area-inset-right,0px))}

@@ -24,7 +24,7 @@ const SLOT_KEYS=[['shoot','Space'],['juggle','J'],['ride','R']] as const;
 export const JOB_SLOTS:Record<string,SlotDef[]|null>={
  'farm-harvest':[{ids:['kick'],label:'Kick the tree',icon:'treekick'},{ids:['pull','twist','cut'],label:'Pull · twist · snip',icon:{pull:'pull',twist:'twist',cut:'snip'}},{ids:['pickup','unload'],label:'Pick up',icon:{pickup:'basket',unload:'basket'}}],
  'leaf-rake':[{ids:['rake'],label:'Hold to rake',icon:'rake'},{ids:['bag'],label:'Bag it',icon:'bag'},{ids:['empty'],label:'Empty the bag',icon:'bin'}],
- 'ball-kid':[{ids:['roll'],label:'Throw it back',icon:'throw'},{ids:['pickup'],label:'Pick up the ball',icon:'scoop'}],
+ 'ball-kid':[{ids:['box'],label:'Put it in the ball box',icon:'crate'},{ids:['pickup'],label:'Pick up the ball',icon:'scoop'}],
  'cone-setup':[{ids:['place'],label:'Place cone',icon:'cone'}],
  'line-painter':[{ids:['paint'],label:'Hold to paint',icon:'paint'}],
  'court-cleanup':[{ids:['pick'],label:'Pick up',icon:'scoop'},{ids:['toss'],label:'Toss in the bin',icon:'bin'}],
@@ -79,7 +79,7 @@ export function poseForEvent(def:JobDef,e:JobEvent):{kind:JobPoseKind;at?:'spot'
   if(t==='deliver')return {kind:'toss',at:'deliver'};return null;}
  switch(def.id){
   case 'leaf-rake':return t==='step'&&e.stage===1?{kind:'stuff',at:'spot'}:t==='deliver'?{kind:'toss',at:'deliver'}:null;
-  case 'ball-kid':return t==='pickup'?{kind:'scoop',at:'spot'}:t==='return'?{kind:'throwin'}:null;
+  case 'ball-kid':return t==='pickup'?{kind:'scoop',at:'spot'}:t==='return'?{kind:'drop',at:'deliver'}:null;
   case 'cone-setup':return t==='collect'?{kind:'place',at:'spot'}:null;
   case 'court-cleanup':return t==='collect'?{kind:'pick',at:'spot'}:t==='deliver'?{kind:'toss',at:'deliver'}:null;
   case 'goal-anchor':return t==='work'?{kind:'mallet',at:'spot'}:null;
@@ -194,7 +194,10 @@ export function createJobMoves(){
  }
  /** Job over (done, quit, left the area): drop every pose and give the ball back to the feet at once. */
  function reset(){const had=!!(pose||kick||park);pose=null;kick=null;park=null;return had;}
- return {start,startKick,update,reset,parkBall,
+ /** Job over (bug A9, Sep 30 2026): the ball goes back to the feet and a Kick the tree stops, but a one-shot pose already playing
+  *  (the last toss, basket tip, throw-in, cone, hammer blow or snack drop) plays to its end instead of being cut off. */
+ function end(){kick=null;park=null;if(pose&&POSE_TIME[pose.kind]===undefined)pose=null;}
+ return {start,startKick,update,reset,end,parkBall,
   get busy(){return !!kick||!!pose&&STILL_POSES.has(pose.kind);},get kicking(){return !!kick;},get parked(){return !!park;},get posing(){return pose?.kind??null;}};
 }
 export type JobMoves=ReturnType<typeof createJobMoves>;

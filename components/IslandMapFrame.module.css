@@ -16,3 +16,5 @@
 .control{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-user-drag:none}
 /* 44px tap target without changing the drawn size (tests/device-guards.cjs check 3). */
 .frame .control::before{content:'';position:absolute;inset:-4px}
+
+@media(prefers-reduced-motion:reduce){.frame .control{transition:none}}

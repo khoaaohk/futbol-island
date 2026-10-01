@@ -63,6 +63,10 @@ export function drain(s:FuelState,mode:FuelMode,seconds:number):FuelState{
 export function refill(s:FuelState,amount:number):FuelState{
  if(!(amount>0))return s;return {...s,fuel:clamp(s.fuel+amount)};
 }
+/** Fuel that eating something worth `amount` would really add to the stored (unrounded) tank. */
+export const eatGain=(fuel:number,amount:number)=>Math.max(0,Math.min(amount>0?amount:0,FUEL_MAX-clamp(fuel)));
+/** Worth eating now? Not when it would add less than 1 (bug A4: a 25-fuel orange was spent at 99.6 for "+0 fuel"). */
+export const worthEating=(fuel:number,amount:number)=>eatGain(fuel,amount)>=1;
 /** Can this travel mode be used now? Walking always can. */
 export const canUse=(mode:FuelMode,fuel:number)=>mode==='walk'||fuel>=FUEL_RIDE_MIN;
 export type FuelLevel='full'|'ok'|'low'|'empty';
@@ -92,7 +96,8 @@ export function produceFuel(id:string,kind:'produce'|'fish',category?:'fruit'|'v
 // ---- Travel sampling (pure; Town calls it from its existing 150 ms HUD tick) ---------------------------------------------------
 export type TravelSample={now:number;mode:FuelMode;x:number;z:number;
  /** a lesson, field menu, truck bed or anything not under the player's own steam: fuel does not change */paused:boolean;
- /** jetpack in the air: hovering and climbing burn fuel too, not only flying across (user, Sep 30 2026: "flying should also drain it") */airborne?:boolean};
+ /** jetpack in the air: hovering and climbing burn fuel too, not only flying across (user, Sep 30 2026: "flying should also drain it") */airborne?:boolean;
+ /** the scripted arrival (the burst and the opening jetpack hover until the player first moves): never charged (bug A6) */arrival?:boolean};
 /** Below this speed the player is standing (or nudging) and nothing drains. */
 export const MOVING_SPEED=.5;
 /** Returns the seconds of movement in `mode` since the previous sample (0 when paused, standing, or after a teleport). */
@@ -100,7 +105,7 @@ export function createTravelSampler(){
  let last:{now:number;x:number;z:number}|null=null;
  return function sample(s:TravelSample):number{
   const prev=last;last={now:s.now,x:s.x,z:s.z};
-  if(!prev||s.paused)return 0;
+  if(!prev||s.paused||s.arrival)return 0;
   const dt=(s.now-prev.now)/1000;if(!(dt>0))return 0;
   const d=Math.hypot(s.x-prev.x,s.z-prev.z),speed=d/dt;
   if(speed<MOVING_SPEED&&!(s.airborne&&s.mode==='jetpack'))return 0;
@@ -123,6 +128,9 @@ export const FUEL_COPY={
 
 // ---- Store core (ports, so the tests drive persistence and the clock; browser instance in fuelStore.ts) -----------------------
 export type FuelNotice={id:number;kind:'low'|'empty'|'blocked';title:string;detail:string};
+/** Is this note still true at `fuel`? A low note stops applying above FUEL_LOW (on the bar), an empty or ride-refused note once
+ *  the tank has at least FUEL_RIDE_MIN (bug A3: "Fuel running low" used to show after eating to a full tank). */
+export function noticeApplies(n:Pick<FuelNotice,'kind'>,fuel:number){return n.kind==='low'?fuelShown(fuel)<=FUEL_LOW:fuel<FUEL_RIDE_MIN;}
 export type FuelPorts={read:()=>unknown;write:(s:FuelState)=>void;now:()=>number;day:(now:number)=>string};
 export function createFuelStore(ports:FuelPorts){
  let state:FuelState|null=null,notice:FuelNotice|null=null,seq=0;const listeners=new Set<()=>void>();
@@ -131,9 +139,15 @@ export function createFuelStore(ports:FuelPorts){
  function current():FuelState{
   const day=ports.day(ports.now());
   if(!state){let raw:unknown=null;try{raw=ports.read();}catch{}state=sanitizeFuel(raw,day);}
-  const next=startDay(state,day);if(next!==state)save(next);
+  const next=startDay(state,day);
+  // A new day (breakfast) fills the tank: save, drop a note that is no longer true, and tell the bar (bug S2: the rollover used to
+  // save silently, so an idle screen kept yesterday's number). Deferred: read() may run inside a React snapshot read.
+  if(next!==state){save(next);dropStale();queueEmit();}
   return state;
  }
+ const dropStale=()=>{if(notice&&state&&!noticeApplies(notice,state.fuel))notice=null;};
+ let emitQueued=false;
+ const queueEmit=()=>{if(emitQueued)return;emitQueued=true;const run=()=>{emitQueued=false;emit();};if(typeof queueMicrotask==='function')queueMicrotask(run);else void Promise.resolve().then(run);};
  const note=(kind:FuelNotice['kind'],copy:{title:string;detail:string})=>{notice={id:++seq,kind,...copy};};
  return {
   read:current,
@@ -149,12 +163,12 @@ export function createFuelStore(ports:FuelPorts){
    return after;
   },
   /** Eat or drink something worth `amount` fuel; returns the fuel actually gained (0 at a full tank). */
-  eat(amount:number):number{const before=current(),after=refill(before,amount),gained=after.fuel-before.fuel;if(gained>0){save(after);emit();}return Math.round(gained);},
+  eat(amount:number):number{const before=current(),after=refill(before,amount),gained=after.fuel-before.fuel;if(gained>0){save(after);dropStale();emit();}return Math.round(gained);},
   /** A ride or the jetpack was refused for lack of fuel: one gentle note. */
   blocked(mode:FuelMode){note('blocked',FUEL_COPY.blocked(FUEL_LABEL[mode]));emit();},
   canUse:(mode:FuelMode)=>canUse(mode,current().fuel),
   /** Drop the cached state (a storage event from another tab). */
-  refresh(){state=null;emit();},
+  refresh(){state=null;current();dropStale();emit();},
   subscribe(fn:()=>void){listeners.add(fn);return()=>{listeners.delete(fn);};},
  };
 }

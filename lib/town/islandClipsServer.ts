@@ -2,6 +2,8 @@ import {APPROVED_ISLAND_CLIPS,type ApprovedIslandClip} from './approvedIslandCli
 import {NEWS_LEAGUES,type NewsLeague} from './newsLeagues';
 import type {IslandClip,IslandClipFeed} from './islandClips';
 import type {IslandNewsItem} from './islandNews';
+import {CURATED_LEAGUE_CLIPS,EMBED_BLOCKED_CHANNELS} from './curatedClips';
+import {recentIslandClips} from './islandClips';
 // Resolved from the official publisher channels, September 16, 2026.
 export const CLIP_CHANNELS:Record<NewsLeague,{id:string;name:string}>={
  'eng.1':{id:'UCG5qGWdu8nIRZqJ_GgDwQ-w',name:'Premier League'},'esp.1':{id:'UCTv-XvfzLX3i4IGWAm4sbmA',name:'LALIGA'},
@@ -18,7 +20,8 @@ export function parseClipFeed(xml:string,league:NewsLeague,now=Date.now(),publis
   const id=read('yt:videoId'),title=read('title'),publishedAt=read('published'),date=Date.parse(publishedAt);
   if(read('yt:channelId')!==source.id||!/^[-\w]{11}$/.test(id)||!title||!Number.isFinite(date)||date>now||(!publisher?.evergreen&&date<now-14*86400000))return [];
   // Do not present old-game retrospectives as fresh match highlights.
-  if(/\b(classic|throwback|archive|full match|live stream)\b/i.test(title))return [];
+  // Full-match streams ("LIVE: A v B", "AO VIVO") are not clips and their publishers block embedding (error 150).
+  if(/\b(classic|throwback|archive|full match|live stream|ao vivo|en vivo|en directo)\b|^\s*live\b|\blive:/i.test(title))return [];
   if(!publisher&&league==='uefa.champions'&&!/champions|\bucl\b/i.test(title))return [];
   if(!publisher&&league==='bra.1'&&!/brasileir|s[eé]rie a/i.test(title))return [];
   const views=Number(entry.match(/<media:statistics\s+views="(\d+)"/)?.[1]??0);
@@ -47,6 +50,14 @@ export function childReviewedClips(items:IslandClip[],now=Date.now(),approvals:r
 }
 const cached=new Map<NewsLeague,{until:number;feed:IslandClipFeed}>(),pending=new Map<NewsLeague,Promise<IslandClipFeed>>();
 export async function getIslandClips(league:NewsLeague):Promise<IslandClipFeed>{
- if(!(league in NEWS_LEAGUES))return {items:[],unavailable:true};const saved=cached.get(league);if(saved&&saved.until>Date.now())return saved.feed;const existing=pending.get(league);if(existing)return existing;
- const task=(async()=>{let feed:IslandClipFeed;try{const response=await fetch(`https://www.youtube.com/feeds/videos.xml?channel_id=${CLIP_CHANNELS[league].id}`,{cache:'no-store',signal:AbortSignal.timeout(7000)});if(!response.ok)throw Error('Unavailable');const xml=await response.text();if(xml.length>1500000)throw Error('Oversized feed');feed={items:parseClipFeed(xml,league).sort((a,b)=>Date.parse(b.publishedAt)-Date.parse(a.publishedAt)),unavailable:false};}catch{feed={items:[],unavailable:true};}cached.set(league,{until:Date.now()+(feed.unavailable?60000:600000),feed});return feed;})().finally(()=>pending.delete(league));pending.set(league,task);return task;
+ if(!(league in NEWS_LEAGUES))return {items:[],unavailable:true};
+ // The publisher blocks embedded playback: skip its feed and serve the embed-verified curated clips.
+ if(EMBED_BLOCKED_CHANNELS.has(CLIP_CHANNELS[league].id)&&CURATED_LEAGUE_CLIPS[league]?.length)return {items:CURATED_LEAGUE_CLIPS[league],unavailable:false,fallback:'curated'};
+ const saved=cached.get(league);if(saved&&saved.until>Date.now())return withCuratedFallback(league,saved.feed);const existing=pending.get(league);if(existing)return existing;
+ const task=(async()=>{let feed:IslandClipFeed;try{const response=await fetch(`https://www.youtube.com/feeds/videos.xml?channel_id=${CLIP_CHANNELS[league].id}`,{cache:'no-store',signal:AbortSignal.timeout(7000)});if(!response.ok)throw Error('Unavailable');const xml=await response.text();if(xml.length>1500000)throw Error('Oversized feed');feed={items:parseClipFeed(xml,league).sort((a,b)=>Date.parse(b.publishedAt)-Date.parse(a.publishedAt)),unavailable:false};}catch{feed={items:[],unavailable:true};}cached.set(league,{until:Date.now()+(feed.unavailable?60000:600000),feed});return withCuratedFallback(league,feed);})().finally(()=>pending.delete(league));pending.set(league,task);return task;
+}
+/** When the channel feed fails (cached for its one-minute backoff) or has no recent items, serve the verified curated list. */
+export function withCuratedFallback(league:NewsLeague,feed:IslandClipFeed,now=Date.now()):IslandClipFeed{
+ if(recentIslandClips(feed.items,now).length||!CURATED_LEAGUE_CLIPS[league]?.length)return feed;
+ return {items:CURATED_LEAGUE_CLIPS[league],unavailable:false,fallback:'curated'};
 }

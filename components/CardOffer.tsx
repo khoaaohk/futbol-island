@@ -125,7 +125,12 @@ export default function CardOffer({offerId,complete=false,onClose}:{offerId:stri
   const land=()=>{flight.current=[];setLanded(true);setFlying(false);requestAnimationFrame(()=>doneRef.current?.focus({preventScroll:true}));};
   if(!card||!flip||!stage||!mini||skipped.current){land();return;}
   // The back's rect includes its lift (a CSS scale on its deck slot), so its own moves are divided by that scale.
-  const a=mini.getBoundingClientRect(),b=card.getBoundingClientRect(),mh=mini.offsetHeight,ch=card.offsetHeight,lift=a.height/mh||1;
+  // Zero-size guard (Sep 30 2026: "Invalid keyframe … scale(NaN)/scale(Infinity)" in landscape): a card or mini that is hidden or not
+  // laid out yet measures 0, and every ratio below divides by it. No card size: no flight, it just lands. No mini: the card turns in
+  // place (it starts from its own rect) and the mini is left alone.
+  const sized=(v:number)=>Number.isFinite(v)&&v>0,b=card.getBoundingClientRect(),ch=card.offsetHeight;
+  if(!sized(ch)||!sized(b.height)){land();return;}
+  const ma=mini.getBoundingClientRect(),mh=mini.offsetHeight,hasMini=sized(ma.height)&&sized(ma.width)&&sized(mh),a=hasMini?ma:b,lift=hasMini?a.height/mh:1;
   const dx=a.left+a.width/2-(b.left+b.width/2),dy=a.top+a.height/2-(b.top+b.height/2),h=(p:number)=>a.height+(ch-a.height)*p;
   const at=(p:number)=>({translate:`${(dx*(1-p)).toFixed(2)}px ${(dy*(1-p)).toFixed(2)}px`,scale:(h(p)/ch).toFixed(4)});
   const miniAt=(p:number,deg:number)=>`translate(${(-dx*p/lift).toFixed(2)}px,${(-dy*p/lift).toFixed(2)}px) scale(${(h(p)/a.height).toFixed(4)}) perspective(${(LENS*mh/ch).toFixed(1)}px) rotateY(${deg}deg)`;
@@ -134,7 +139,7 @@ export default function CardOffer({offerId,complete=false,onClose}:{offerId:stri
    card.animate([{...at(0),offset:0,easing:TO_EDGE},{...at(SWAP),offset:EDGE,easing:FROM_EDGE},{translate:'0 -4px',scale:'1.03',offset:.84,easing:'ease-in-out'},{translate:'0 0',scale:'1',offset:1}],timing),
    flip.animate([{transform:'rotateY(90deg)',offset:0},{transform:'rotateY(90deg)',offset:EDGE,easing:TURN_IN},{transform:'rotateY(0deg)',offset:1}],timing),
    stage.animate([{opacity:0},{opacity:0,offset:EDGE},{opacity:1,offset:EDGE},{opacity:1}],timing),
-   mini.animate([{transform:miniAt(0,0),opacity:1,offset:0,easing:TO_EDGE},{transform:miniAt(SWAP,-90),opacity:1,offset:EDGE},{transform:miniAt(SWAP,-90),opacity:0,offset:EDGE},{transform:miniAt(SWAP,-90),opacity:0}],{...timing,fill:'forwards'})];
+   ...(hasMini?[mini.animate([{transform:miniAt(0,0),opacity:1,offset:0,easing:TO_EDGE},{transform:miniAt(SWAP,-90),opacity:1,offset:EDGE},{transform:miniAt(SWAP,-90),opacity:0,offset:EDGE},{transform:miniAt(SWAP,-90),opacity:0}],{...timing,fill:'forwards'})]:[])];
   for(const anim of anims)anim.pause();flight.current=anims;
   // The card's own turn light meets the edge-on moment (its sweep starts glintLead() ms after the burst).
   let glintTimer:ReturnType<typeof setTimeout>|undefined;

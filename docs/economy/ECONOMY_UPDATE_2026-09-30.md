@@ -15,7 +15,7 @@ Local only. This follows [the 29 Sep update](ECONOMY_UPDATE_2026-09-29.md) and k
 - Everything else in the learning loop pays nothing:
   - Spot-it callouts;
   - magazine, job, fishing and ball-hunt ticks;
-  - the mastery screen.
+  - the mastery screen (removed 1 Oct 2026).
 - Books stay 100 coins. A check returns 5% of the price. It gives reading a football payoff without turning books into an earning loop.
 
 ## Impact (`tests/economy.cjs` §7, 5-seed means, 200 days)

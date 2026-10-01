@@ -31,7 +31,7 @@ const FORMAT_NAMES:Record<Format,string>={'7v7':'7v7','9v9':'9v9','11v11':'11v11
  * "For grown-ups" (G-09): behind the shared ParentGate. Progress summary, what's next, practice at home, the coach plan (IDP),
  * a printable report, parent settings and "About this game for parents". Static DOM only, lazy-loaded by GrownUpsHost.
  */
-export default function GrownUps({open,view:initialView,onClose,onLaunch,settings}:{open:boolean;view?:'home'|'plan';onClose:()=>void;onLaunch:()=>void;settings?:GrownUpSettings}){
+export default function GrownUps({open,view:initialView,fromSettings=false,onClose,onLaunch,settings}:{open:boolean;view?:'home'|'plan';fromSettings?:boolean;onClose:()=>void;onLaunch:()=>void;settings?:GrownUpSettings}){
  const dialog=useRef<HTMLDialogElement>(null),nav=useRef<HTMLButtonElement>(null),restore=useRef<HTMLElement|null>(null),body=useRef<HTMLDivElement>(null);
  const [unlocked,setUnlocked]=useState(false),[view,setView]=useState<'home'|'plan'>(initialView??'home');
  useEffect(()=>{setView(initialView??'home');},[initialView,open]);
@@ -43,7 +43,8 @@ export default function GrownUps({open,view:initialView,onClose,onLaunch,setting
  const back=()=>{if(view==='plan'&&unlocked)setView('home');else onClose();};
  return <dialog ref={dialog} className={styles.dialog} data-grownups aria-labelledby="grownups-title" onCancel={e=>{e.preventDefault();back();}} onKeyDown={e=>e.stopPropagation()} onKeyUp={e=>e.stopPropagation()}>
   <section className={`${shell.shell} ${shell.drawer} ${styles.panel}`}>
-   <header className={shell.header}>{view==='plan'&&unlocked?<BackButton ref={nav} onBack={()=>setView('home')}/>:null}<div><h2 id="grownups-title">{view==='plan'&&unlocked?'Coach plan':'For grown-ups'}</h2></div>{view==='plan'&&unlocked?<span aria-hidden="true" style={{visibility:'hidden',width:44}}/>:<DoneButton ref={nav} onDone={onClose}/>}</header>
+   {/* Opened from Settings it is a Settings sub-page (like About): Back on the left returns there. Elsewhere Done closes it. */}
+   <header className={shell.header}>{view==='plan'&&unlocked?<BackButton ref={nav} onBack={()=>setView('home')}/>:fromSettings?<BackButton ref={nav} onBack={onClose}/>:null}<div><h2 id="grownups-title">{view==='plan'&&unlocked?'Coach plan':'For grown-ups'}</h2></div>{view==='plan'&&unlocked||fromSettings?<span aria-hidden="true" style={{visibility:'hidden',width:44}}/>:<DoneButton ref={nav} onDone={onClose}/>}</header>
    <div ref={body} className={shell.body}>
     {!unlocked?<ParentGate.Guard reason="Progress, the coach plan and settings for parents, carers and coaches." onCancel={onClose}><Unlock onUnlock={()=>setUnlocked(true)}/></ParentGate.Guard>
     :view==='plan'?<IdpPlan onLaunch={()=>{onClose();onLaunch();}}/>

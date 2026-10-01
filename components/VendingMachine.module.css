@@ -48,8 +48,8 @@
 .root[data-card-reveal]>[data-vending-face] *{animation:none!important;transition:none!important}
 .root[data-card-reveal]>.hudDone,.root[data-card-reveal]>.hudCoins{visibility:hidden}
 
-@media(max-width:600px){.hudDone{right:max(18px,env(safe-area-inset-right,0px));top:calc(16px + env(safe-area-inset-top,0px))}}
+@media(max-width:600px),(pointer:coarse){.hudDone{right:max(var(--phone-gutter),env(safe-area-inset-right,0px));top:calc(16px + env(safe-area-inset-top,0px))}}
 
 /* UI audit (Sep 27): the coins pill shares the Done row (Sep 30 2026: coins top-left, Done top-right) — 44px tall at desktop 24/20 and phone 18/16. */
 .hudCoins.hudCoins{top:calc(20px + env(safe-area-inset-top,0px))!important;right:auto!important;left:calc(24px + env(safe-area-inset-left,0px))!important;min-height:var(--btn-height,44px);box-sizing:border-box;display:inline-flex;align-items:center}
-@media(max-width:600px),(pointer:coarse){.hudCoins.hudCoins{top:calc(16px + env(safe-area-inset-top,0px))!important;right:auto!important;left:calc(18px + env(safe-area-inset-left,0px))!important}}
+@media(max-width:600px),(pointer:coarse){.hudCoins.hudCoins{top:calc(16px + env(safe-area-inset-top,0px))!important;right:auto!important;left:calc(var(--phone-gutter) + env(safe-area-inset-left,0px))!important}}

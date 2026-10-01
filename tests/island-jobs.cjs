@@ -3,8 +3,8 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
 const base=path.resolve(__dirname,'..');
 /** Values from the vm realm compare structurally. */
 const same=(a,b,m)=>assert.deepEqual(JSON.parse(JSON.stringify(a)),JSON.parse(JSON.stringify(b)),m);
-function environment(){
- const data=new Map(),cache=new Map();
+function environment(shared){
+ const data=shared??new Map(),cache=new Map();
  const localStorage={getItem:k=>data.get(k)??null,setItem:(k,v)=>data.set(k,String(v)),removeItem:k=>data.delete(k)};
  const context=vm.createContext({console,Set,Map,Date,Math,JSON,Promise,queueMicrotask,localStorage});
  function load(name){
@@ -81,6 +81,16 @@ function environment(){
  assert.equal(C.JOBS.length,JOB_IDS.length);same([...C.JOBS.map(j=>j.id)].sort(),[...JOB_IDS].sort(),'each job has exactly one definition');
  assert(C.JOBS.length>=9,'the Sep 27 jobs (offside flag, ball pump, goal anchors) are in the catalog');
  assert(!C.JOBS.some(j=>j.id==='kit-room'),'the kit room job was removed (user, Sep 29 2026)');
+ // Set out the cones (Oct 1 2026, user): the session is on the grass beside the 9v9 pitch, not on it (a match is played there):
+ // ≥ 1 m outside every pitch, off the east road and its sidewalk (x 190–202), ≥ 1.6 m from the touchline trees and lamp.
+ {const cones=C.jobById('cone-setup'),club=V.venueById('9v9');assert.equal(cones.targets.length,8);
+  for(const q of cones.targets){for(const v of V.VENUES)assert(Math.abs(q.x-v.x)>v.width/2+1||Math.abs(q.z-v.z)>v.length/2+1,`cone mark (${q.x}, ${q.z}) is ≥ 1 m outside the ${v.name} pitch`);
+   assert(q.x>club.x+club.width/2+1&&q.x<=190-2,'on the east grass band, ≥ 2 m from the sidewalk');assert(q.z>club.z-club.length/2&&q.z<club.z+club.length/2,'beside the pitch (alongside the touchline)');
+   for(const [x,z] of [[188,-82],[188,-104],[188,-125],[188,-145],[189,-85.5],[183.46,-72.93],[183.46,-147.07]])assert(Math.hypot(q.x-x,q.z-z)>=1.6+.3,`cone mark (${q.x}, ${q.z}) clears the obstacle at (${x}, ${z})`);}
+  const gap=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z),t=cones.targets;assert(Math.abs(gap(t[0],t[3])-10)<1e-9&&Math.abs(gap(t[0],t[1])-5)<1e-9,'a 10 × 5 m passing channel');
+  assert.equal(gap(t[4],t[5]),2);assert.equal(gap(t[6],t[7]),2,'two 2 m dribbling gates');
+  assert.match(cones.intro,/beside the pitch, so the match can keep going/);assert(Math.hypot(cones.board.x-t[4].x,cones.board.z-t[4].z)<8,'the sign stands by the session');
+  for(const q of t)assert(!R.outsideJobArea(cones,q.x,q.z),'every mark is inside the job area');}
  // The Coral Cay Farm job (Sep 29 2026): 10 jobs in the catalog, a nutrition lesson with its source, pay in the 7–10 band.
  assert.equal(C.JOBS.length,12,'nine island jobs + Harvest day + Match-day snacks on Coral Cay + the Garden shift');
  {const snacks=C.jobById('match-day-snacks');assert(snacks&&snacks.kind==='sort'&&snacks.task.style==='crates'&&snacks.targets.length===3&&snacks.place==='The Farm, Coral Cay','Match-day snacks: sort six snacks into three crates');assert.match(snacks.lessonSource,/sportsdietitians/);assert.equal(JOB_BASE_PAY['match-day-snacks'],8);}
@@ -149,13 +159,42 @@ function environment(){
    same(R.runProgress(run),{value:5,total:5},'end total = five right calls (the wrong call was retried, not counted)');
    done=run.phase==='done';
   }else if(job.kind==='pump'){
-   const t=job.task;same([t.min,t.max],[.6,1.1],'Law 2: 0.6–1.1 atmospheres');
-   events.push(...R.stepRun(run,{x:job.targets[0].x,y:floor(job.targets[0].x,job.targets[0].z),z:job.targets[0].z},.1,floor));assert.equal(run.phase,'pump');
+   // Oct 1 2026 (user): many small strokes, harder ball by ball, a gentle leak, Ready only in the green, no fail state.
+   const t=job.task,balls=t.balls,stand={x:job.targets[0].x,y:floor(job.targets[0].x,job.targets[0].z),z:job.targets[0].z};same([t.min,t.max],[.6,1.1],'Law 2: 0.6–1.1 atmospheres');
+   assert.equal(balls.length,5,'five balls');assert.match(job.lesson,/0\.6–1\.1 atmospheres at sea level/);assert.match(R.PUMP_TIP,/0\.6–1\.1 atm at sea level/);
+   const taps=balls.map(b=>Math.ceil((b.min-b.start)/b.step-1e-6)),width=balls.map(b=>b.max-b.min);
+   same(taps,[8,11,16,19,24],'strokes to the green per ball');assert(taps[0]>=8&&taps[0]<=10&&taps[4]>=20&&taps[4]<=25,'ball 1 ~8–10 strokes, ball 5 ~20–25');
+   for(let i=1;i<balls.length;i++){assert(taps[i]>taps[i-1],`ball ${i+1} needs more strokes than ball ${i}`);assert(width[i]<width[i-1]-1e-9,`ball ${i+1}'s green zone is narrower`);assert(balls[i].leak>=balls[i-1].leak,'the leak never gets gentler');}
+   for(const b of balls){assert(b.min>=t.min-1e-9&&b.max<=t.max+1e-9,'every green zone sits inside the Law 2 range');assert(b.start<b.min&&b.leak>0&&b.leak<=.1,'soft to start; a gentle leak');assert(b.max-b.min>=4*b.step,'the green is several strokes wide: no pixel-perfect tapping');}
+   same([balls[0].min,balls[0].max,balls[4].min,balls[4].max],[.6,1.1,.75,.95],'0.6–1.1 narrows to 0.75–0.95 by ball 5');
+   events.push(...R.stepRun(run,stand,.1,floor));assert.equal(run.phase,'pump');
+   same(env.load('lib/town/jobs/jobMoves.ts').jobButtons(run).map(b=>[b.id,b.enabled]),[['pump',true],['release',true],['ready',true]],'Pump · Air out · Ready');
    R.runAction(run,'ready');assert.equal(run.step,0,'a soft ball is not accepted');assert.match(run.note,/too soft/);
-   for(let b=0;b<t.start.length;b++){let g=0;while(run.pressure<t.min&&g++<20)events.push(...R.runAction(run,'pump'));
-    if(b===0){while(run.pressure<=t.max)R.runAction(run,'pump');R.runAction(run,'ready');assert.equal(run.step,0,'too hard is not accepted');assert.match(run.note,/too hard/);while(run.pressure>t.max)R.runAction(run,'release');if(run.pressure<t.min)R.runAction(run,'pump');}
-    assert(run.pressure>=t.min&&run.pressure<=t.max);events.push(...R.runAction(run,'ready'));assert.equal(run.step,b+1);}
-   done=run.phase==='done';
+   // One stroke adds only a little; the hint counts the strokes left and teaches Law 2.
+   const p0=run.pressure;events.push(...R.runAction(run,'pump'));assert(Math.abs(run.pressure-p0-balls[0].step)<1e-9,'a stroke adds one small step');
+   assert.equal(R.pumpTapsLeft(run),7);run.note='';assert.match(R.runHint(run),/Ball 1 of 5: keep tapping Pump, about 7 more strokes\. Law 2/);
+   // The leak: nothing while tapping (inside the delay), then a gentle seep, never below the ball's start.
+   const p1=run.pressure;R.stepRun(run,stand,t.leakDelay*.5,floor);assert.equal(run.pressure,p1,'no leak right after a stroke');
+   for(let k=0;k<6;k++)R.stepRun(run,stand,.1,floor);assert(run.pressure<p1&&run.pressure>p1-balls[0].leak*.6,'air seeps back slowly once you stop');
+   for(let k=0;k<200;k++)R.stepRun(run,stand,.1,floor);assert.equal(run.pressure,balls[0].start,'never below the start');
+   const pumpBall=()=>{let n=0;while(run.pressure<R.pumpBall(run).min&&n<200){events.push(...R.runAction(run,'pump'));R.stepRun(run,stand,.05,floor);n++;}return n;};
+   const used=[];
+   for(let b=0;b<balls.length;b++){const B=balls[b];assert.equal(run.step,b);assert.equal(run.pressure,B.start,`ball ${b+1} starts soft`);
+    const n=pumpBall();used.push(n);assert.equal(n,taps[b],`ball ${b+1}: ${taps[b]} quick strokes (no leak while tapping)`);
+    assert(run.pressure>=B.min&&run.pressure<=B.max);
+    if(b===0){// Over-pumping: past the zone it squeaks/hisses once (stage 1), Ready says too hard, the leak does not fix it: Let air out does.
+     let crossed=0;while(run.pressure<=B.max){crossed+=R.runAction(run,'pump').filter(e=>e.type==='pump'&&e.stage===1).length;}assert.equal(crossed,1,'one hiss on crossing into too hard');
+     R.runAction(run,'ready');assert.equal(run.step,0,'too hard is not accepted');assert.match(run.note,/too hard/);
+     const hi=run.pressure;for(let k=0;k<30;k++)R.stepRun(run,stand,.1,floor);assert.equal(run.pressure,hi,'an over-pumped ball does not leak down by itself');
+     while(run.pressure>B.max)R.runAction(run,'release');if(run.pressure<B.min)pumpBall();}
+    if(b===4){// In the green, then wait: it leaks out of the zone, Ready is refused, a few strokes bring it back.
+     for(let k=0;k<24;k++)R.stepRun(run,stand,.1,floor);assert(run.pressure>=B.min,'in the green it holds for 2.5 s: time to press Ready');
+     for(let k=0;k<80&&run.pressure>=B.min;k++)R.stepRun(run,stand,.1,floor);assert(run.pressure<B.min,'then the leak can drop it out of the green');assert.match(run.note,/seeping out/);
+     R.runAction(run,'ready');assert.equal(run.step,4,'Ready only counts inside the zone');pumpBall();}
+    assert.match(R.runHint(run),/green zone/);events.push(...R.runAction(run,'ready'));assert.equal(run.step,b+1);
+    if(b<4)assert.match(run.note,/narrower now/);}
+   assert(used[4]>=2*used[0],'the last ball takes far more strokes than the first');
+   done=run.phase==='done';same(R.runProgress(run),{value:5,total:5});
   }else if(job.kind==='rebound'){
    same(R.reboundEvent(run,'shot'),[],'shots only count after the wall passes');
    for(let i=0;i<C.REBOUND_WALL.passes;i++)events.push(...R.reboundEvent(run,'pass'));assert.equal(run.phase,'shots');
@@ -191,7 +230,6 @@ function environment(){
    while(run.phase!=='done'&&guard++<3000){
     if(job.kind==='offside'&&run.phase==='call'){events.push(...R.runAction(run,R.offsideClip(run).flag?'flag':'play-on'));continue;}
     if(job.kind==='offside'&&run.phase==='explain'){events.push(...R.runAction(run,'next'));continue;}
-    if(job.task?.type==='pump'&&run.phase==='pump'){events.push(...R.runAction(run,run.pressure<job.task.min?'pump':run.pressure>job.task.max?'release':'ready'));continue;}
     const g=R.runGoals(run)[0]??job.targets[0];assert(g,`${job.id} has an active target or action`);events.push(...R.stepRun(run,at(g),.1,floor));
     const a=R.runActions(run)[0];if(!a)continue;
     if(a.hold){events.push(...R.runAction(run,a.id));for(let k=0;k<30&&run.holding;k++)events.push(...R.stepRun(run,at(g),.1,floor));events.push(...R.runAction(run,a.id+':up'));}
@@ -202,7 +240,18 @@ function environment(){
    // Per-job action checks.
    if(job.id==='leaf-rake'){assert(events.filter(e=>e.type==='step'&&e.stage===0).length===job.targets.length,'every pile is raked (hold) before it is bagged (tap)');assert(events.some(e=>e.type==='hold')&&events.some(e=>e.type==='deliver'));}
    if(job.id==='goal-anchor')assert.equal(events.filter(e=>e.type==='work').length,job.targets.length*3,'three hammer hits per peg');
-   if(job.id==='ball-kid'){assert.equal(events.filter(e=>e.type==='pickup').length,job.targets.length);assert.equal(events.filter(e=>e.type==='return').length,job.targets.length,'each ball is rolled back');}
+   if(job.id==='ball-kid'){assert.equal(events.filter(e=>e.type==='pickup').length,job.targets.length);assert.equal(events.filter(e=>e.type==='return').length,job.targets.length,'each ball goes into the box once');
+    // Oct 1 2026 (user): find the ball → Pick up → carry → put it in the ball box → the next ball; never thrown onto the pitch.
+    const k=R.startRun(job),box=job.deliver,park=V.venueById('11v11'),seq=[],pos=q=>({x:q.x,y:floor(q.x,q.z),z:q.z});assert.equal(box.label,'ball box');
+    for(let i=0;i<job.targets.length;i++){same(R.runGoals(k),[job.targets[i]],`one loose ball at a time: ball ${i+1}`);seq.push(...R.runAction(k,'box'));
+     R.stepRun(k,pos(job.targets[(i+1)%job.targets.length]),.1,floor);if(i<job.targets.length-1)same(R.runActions(k),[],'another ball does not arm');
+     R.stepRun(k,pos(job.targets[i]),.1,floor);same(R.runActions(k).map(x=>x.id),['pickup']);seq.push(...R.runAction(k,'pickup'));same(R.runGoals(k),[box],'carrying: the arrow points at the box');
+     seq.push(...R.runAction(k,'pickup'));assert.equal(seq.filter(e=>e.type==='pickup').length,i+1,'no double pick-up');
+     R.stepRun(k,pos(box),.1,floor);same(R.runActions(k).map(x=>[x.id,x.label]),[['box','Put it in the ball box']]);seq.push(...R.runAction(k,'box'),...R.runAction(k,'box'));
+     assert.equal(seq.filter(e=>e.type==='return').length,i+1,'one return per ball, however fast you tap');assert.equal(k.carrying,-1);}
+    assert.equal(k.phase,'done');const JMk=env.load('lib/town/jobs/jobMoves.ts');same(JMk.poseForEvent(job,{type:'return',index:0}),{kind:'drop',at:'deliver'},'the ball is set in the box (no throw onto the pitch)');
+    same(JMk.JOB_SLOTS['ball-kid'].map(x=>x.ids[0]),['box','pickup']);assert.doesNotMatch(job.intro+job.howTo,/throw/i);
+    for(const q of [...job.targets,box])assert(Math.abs(q.x-park.x)>park.width/2+3||Math.abs(q.z-park.z)>park.length/2+3,`(${q.x}, ${q.z}) lies ≥ 3 m outside the 11v11 pitch`);}
    if(job.id==='court-cleanup'||job.id==='cone-setup')assert.equal(events.filter(e=>e.type==='collect').length,job.targets.length);
   }
   assert(done,`${job.id} completes`);assert(events.some(e=>e.type==='done'));assert.equal(R.runProgress(run).value,R.runProgress(run).total);
@@ -357,9 +406,14 @@ function environment(){
   // Town wiring: the ride request, the job-end restore and the cluster owning the ball.
   const townSrc=fs.readFileSync(path.join(base,'components/Town.tsx'),'utf8');
   assert.match(townSrc,/if\(!rideAllowed\(mode,jobActiveRef\.current\)\)\{jobNoteRef\.current\(RIDE_WAIT_NOTE\);return;\}/,'selectRide refuses rides during a job');
-  assert.match(townSrc,/if\(!jobRun\)jobMoves\.reset\(\);jobFrame=NO_JOB_FRAME;walkBall\.reset/,'job end (quit, done, left the area) restores the ball and poses');
+  assert.match(townSrc,/if\(!jobRun\)jobMoves\.end\(\);[^\n]*?jobFrame=NO_JOB_FRAME;walkBall\.reset/,'job end (quit, done, left the area) restores the ball; the last one-shot pose plays out (bug A9)');
+  assert.match(townSrc,/if\(jobs\.holding&&rideRef\.current==='walk'\)\{player\.handPositions\(jobHandL,jobHandR\);jobs\.holdProps\(/,'what is in the hands follows them through the wind-down');
   assert.match(townSrc,/if\(jobButtonsRef\.current\)\{input\.current\.kick=input\.current\.juggle=false/,'no kicks or juggles while the job buttons are up');
-  assert.match(fs.readFileSync(path.join(base,'components/IslandJobs.tsx'),'utf8'),/!view\.active\.buttons/,'no duplicate action buttons in the job panel');}
+  assert.match(fs.readFileSync(path.join(base,'components/IslandJobs.tsx'),'utf8'),/a\.actions\.length>0&&!a\.buttons/,'no duplicate action buttons in the job panel');
+  // Oct 1 2026 (user): a two-row panel that fades to a chip (title · count, tap to open, round Stop) and still announces progress.
+  {const src=fs.readFileSync(path.join(base,'components/IslandJobs.tsx'),'utf8');assert.match(src,/PANEL_DWELL_MS=3500/);assert.match(src,/aria-label="Stop job"/,'the chip keeps a Stop job control');
+   assert.match(src,/className=\{styles\.srOnly\} aria-live="polite"/,'progress is announced while the panel is a chip');assert.match(src,/holdOpen=[^;]*act0\.gauge/,'a meter keeps the panel open');assert.doesNotMatch(src,/<small>\{active\.role\}<\/small><b>\{active\.title\}/,'no role eyebrow repeating the title');
+   const css=fs.readFileSync(path.join(base,'components/IslandJobs.module.css'),'utf8');assert.match(css,/\.chipStop\{[^}]*width:var\(--btn-height,44px\);height:var\(--btn-height,44px\)/,'Stop is a 44px target');assert.match(css,/prefers-reduced-motion:reduce\)\{\.hud\[data-job-panel=fading\]\{transition:none\}/);}}
 
  // ---- JOB badges over every sign (Sep 30 2026): one instanced draw, billboarded, hidden while working, one look for every badge ----
  {const THREE=require('three'),B=env.load('lib/town/jobs/jobBadges.ts'),root=new THREE.Group(),spots=C.JOBS.map(j=>({id:j.id,x:j.board.x,y:3,z:j.board.z}));
@@ -487,5 +541,78 @@ function environment(){
  // The former Clubhouse is a cage court; the outdoor kit job remains without an interior.
  const town=fs.readFileSync(path.join(base,'components/Town.tsx'),'utf8'),world=fs.readFileSync(path.join(base,'lib/town/world.ts'),'utf8');
  assert.doesNotMatch(town,/BootRoom|bootRoom|boot-room/);assert.doesNotMatch(world,/house\([^\n]*'CLUBHOUSE'/);assert.match(world,/Pocket futsal court/);
+ await auditRegressions();
  console.log('island jobs: economy, wallet, all catalog jobs, garden, market and cage-court checks passed');
 })().catch(e=>{console.error(e);process.exit(1);});
+
+// ---- Deploy 11 audit regressions (Sep 30 2026, lane A): A2 one job at a time, A7 payday across tabs, A8 sign glow fade, A9 last
+// pose, A10 garden basket. The 3D scene (lib/town/jobs/jobScene.ts) runs headless here: three.js without a renderer or a DOM.
+function sceneEnvironment(shared){
+ const data=shared??new Map(),cache=new Map();
+ const localStorage={getItem:k=>data.get(k)??null,setItem:(k,v)=>data.set(k,String(v)),removeItem:k=>data.delete(k)};
+ const context=vm.createContext({console,Set,Map,WeakMap,Date,Math,JSON,Promise,queueMicrotask,localStorage,Float32Array,Uint16Array,Uint32Array,Int32Array,Uint8Array,Array,Object,Number,String,Error,Symbol});
+ const reactStub={useSyncExternalStore(){},useEffect(){},useState(){},useRef(){},createContext(){}};
+ function load(name){
+  let file=path.isAbsolute(name)?name:path.resolve(base,name);if(!fs.existsSync(file)||fs.statSync(file).isDirectory())for(const ext of ['.ts','.tsx','.js'])if(fs.existsSync(file+ext)){file+=ext;break;}
+  if(cache.has(file))return cache.get(file);const mod={exports:{}};cache.set(file,mod.exports);
+  const code=ts.transpileModule(fs.readFileSync(file,'utf8'),{fileName:file,compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,esModuleInterop:true,allowJs:true}}).outputText;
+  const req=spec=>{if(spec==='react')return reactStub;if(spec==='three')return require('three');if(spec.startsWith('three/'))return load(path.resolve(base,'node_modules',spec));if(spec.startsWith('@/'))return load(spec.slice(2));
+   if(spec.startsWith('.')){if(spec.endsWith('.json'))return JSON.parse(fs.readFileSync(path.resolve(path.dirname(file),spec),'utf8'));return load(path.resolve(path.dirname(file),spec));}throw Error('unexpected import '+spec+' in '+file);};
+  vm.runInContext(`(function(exports,require,module){${code}\n})`,context)(mod.exports,req,mod);cache.set(file,mod.exports);return mod.exports;}
+ return {load,data};
+}
+async function auditRegressions(){
+ const T=require('three'),env=sceneEnvironment(),S=env.load('lib/town/jobs/jobScene.ts'),C=env.load('lib/town/jobs/jobCatalog.ts'),R=env.load('lib/town/jobs/jobRules.ts'),V=env.load('lib/town/venues.ts'),JM=env.load('lib/town/jobs/jobMoves.ts');
+ const floor=(x,z)=>V.fieldSurfaceHeight(x,z),at=(q)=>({x:q.x,y:floor(q.x,q.z),z:q.z}),DT=1/60;
+ const make=()=>S.createJobScene(new T.Scene(),{storage:null,now:()=>Date.parse('2026-09-30T10:00:00')});
+ const frames=(api,p,seconds,hands)=>{for(let t=0;t<seconds-1e-9;t+=DT){api.update(DT,p,null,true,true,false);if(hands&&api.holding)api.holdProps(hands(),hands(),0);}};
+ // A2: a job runs, the player walks to another job's sign inside its area: no offer, `other` names it, start() refuses.
+ {const pairs=[];for(const a of C.JOBS)for(const b of C.JOBS)if(a!==b&&!R.outsideJobArea(a,b.board.x,b.board.z))pairs.push([a,b]);
+  assert(pairs.length>0,'some signs sit inside another job\'s area (Wall rebounds / Offside)');
+  for(const [a,b] of pairs){const api=make();frames(api,at(a.board),.5);assert.equal(api.getView().near,a.id,`${a.id}: the sign offers`);
+   assert.equal(api.start(a.id),true);frames(api,at(b.board),.6);const v=api.getView();
+   assert.equal(api.run?.def.id,a.id,`${a.id} still runs at the ${b.id} sign`);assert.equal(v.near,null,`no ${b.id} offer while ${a.id} runs`);assert.equal(v.other,b.id,'G there can explain');
+   assert.equal(api.start(b.id),false,`start(${b.id}) refuses while ${a.id} runs`);assert.equal(api.run?.def.id,a.id,'the running job is untouched');assert.equal(api.getView().active?.id,a.id);
+   api.quit();frames(api,at(b.board),.6);assert.equal(api.getView().near,b.id,'after Stop job the other sign offers again');assert.equal(api.start(b.id),true);api.dispose();}
+  const jobsSrc=fs.readFileSync(path.join(base,'components/IslandJobs.tsx'),'utf8');
+  assert.match(jobsSrc,/if\(view\.active\)\{if\(view\.other\)\{e\.preventDefault\(\);busyNote\(\);\}return;\}/,'G during a job shows the note instead of opening another job');
+  assert.match(jobsSrc,/if\(runtime&&!runtime\.start\(id\)\)\{busyNote\(\);/,'Start job that is refused shows the note');
+  assert.match(jobsSrc,/title:'Finish or stop your current job first'[^\n]*merge:'job-busy'/,'a gentle, merged note in the toast lane');}
+ // A8: the sign glow eases every frame (like the buildings): ~0.9 within 0.3 s of the offer, gone ~0.5 s after leaving.
+ {const api=make(),job=C.jobById('garden-shift'),glow=()=>{let m=null;api.root.getObjectByName('job-sign-selection').traverse(o=>{if(o.name==='building-edge-outline')m=o;});return m.material.uniforms.strength.value;};
+  let t=0;const p=at(job.board);while(api.getView().near!==job.id&&t<2){frames(api,p,DT);t+=DT;}assert.equal(api.getView().near,job.id);
+  frames(api,p,.3);assert(glow()>=.9,`glow ${glow().toFixed(2)} ≥ 0.9 within 0.3 s (it took ~4 s when eased only on the board tick)`);
+  const away={x:p.x+30,y:floor(p.x+30,p.z),z:p.z};t=0;while(api.getView().near!==null&&t<2){frames(api,away,DT);t+=DT;}
+  frames(api,away,.6);assert(glow()<.02,`faded out within 0.6 s (${glow().toFixed(3)})`);
+  const effect=api.root.getObjectByName('building-outline-glow');assert.equal(effect.visible,false,'nothing draws once faded');api.dispose();}
+ // A9: on job end the last one-shot pose plays to its end; only the Kick the tree and the parked ball are dropped.
+ {const m=JM.createJobMoves(),pl={x:0,z:0,y:0,yaw:0},fl=()=>0;m.start('toss',pl,{x:0,z:2},fl,false,{x:.5,y:.2,z:.5});m.update(.1,pl,fl,null);assert(m.parked);
+  m.end();assert.equal(m.posing,'toss','the toss keeps playing after the job ends');assert(!m.parked,'the ball is back at the feet');
+  let f,last=0,n=0;while(m.posing&&n++<100){f=m.update(.05,pl,fl,null);if(f.pose){assert.equal(f.pose.kind,'toss');last=f.pose.progress;}}assert.equal(last,1,'the pose reached its end (progress 1)');
+  for(const k of ['tipbasket','throwin','place','mallet','drop','flagup']){const q=JM.createJobMoves();q.start(k,pl,null,fl,false);q.end();assert.equal(q.posing,k,`${k} survives the job end`);}}
+ // A10: after "Drop in crate" the basket stays in the hand through the tip, then is set down (hidden), never left in mid-air.
+ {const api=make(),job=C.jobById('garden-shift');let hand={x:job.board.x,y:1,z:job.board.z};const hands=()=>hand;
+  frames(api,at(job.board),.5);assert.equal(api.start('garden-shift'),true);let guard=0;
+  while(api.run&&guard++<200){const r=api.run;const g=r.phase==='deliver'?job.deliver:api.goals()[0];assert(g,'always somewhere to go');const p=at(g);hand={x:p.x+.3,y:p.y+1,z:p.z};frames(api,p,.15,hands);
+   const a=api.getView().active?.actions?.[0];if(a)api.act(a.id);frames(api,p,.05,hands);}
+  assert.equal(api.run,null,'the shift is done');const basket=api.root.getObjectByName('garden-basket');assert(basket,'the basket exists during the wind-down');
+  assert(api.holding,'winding down: Town keeps posing the hands');hand={x:hand.x+1,y:hand.y,z:hand.z+1};frames(api,{x:hand.x,y:0,z:hand.z},.05,hands);
+  assert(!basket.visible||Math.abs(basket.position.x-hand.x)<1e-6,'while visible, the basket is in the hand (it used to freeze where the hand was)');
+  frames(api,{x:hand.x,y:0,z:hand.z},1.3,()=>{hand={x:hand.x+.05,y:hand.y,z:hand.z};return hand;});
+  assert(!basket.visible||!basket.parent,'after the tip the basket is put away');assert(!api.holding,'props disposed after the wind-down');api.dispose();}
+ // A7: two tabs share one ledger. Tab A has cached it; tab B finishes Rake; tab A finishes Rake too: run …:2 pays, and the card's
+ // number (credited) is what the wallet paid.
+ {const shared=new Map(),A=environment(shared),B=environment(shared),runs=new Map(),clock=Date.parse('2026-09-30T11:00:00');
+  const creditRun=async(id,game,target)=>{const had=runs.get(id)??0;runs.set(id,Math.max(had,target));return Math.max(0,target-had);};
+  const EA=A.load('lib/town/jobs/jobEconomy.ts');EA.readJobLedger(clock);// tab A's cache (its payday intro card was open)
+  const wA=A.load('lib/town/jobs/jobWallet.ts').createJobWallet({creditRun,balance:()=>0,caps:{live:20},now:()=>clock}),wB=B.load('lib/town/jobs/jobWallet.ts').createJobWallet({creditRun,balance:()=>0,caps:{live:20},now:()=>clock});
+  const b=await wB.payJob('leaf-rake','Rake the leaves',30);assert(b.credited>0);const a=await wA.payJob('leaf-rake','Rake the leaves',31);
+  assert(runs.has(`island-job:leaf-rake:${EA.localDay(clock)}:2`),'tab A used shift 2 (fresh ledger), not a repeat of shift 1');
+  assert(a.credited>0&&a.credited===a.coins,`tab A was paid (${a.credited} of ${a.coins})`);assert.equal(JSON.parse(shared.get(EA.JOBS_STORAGE_KEY)).today['leaf-rake'],2,'both shifts recorded');
+  const card=fs.readFileSync(path.join(base,'components/IslandJobs.tsx'),'utf8');assert.match(card,/\+\{pay\?pay\.credited:'…'\}/,'the payday card shows the coins actually paid');assert.doesNotMatch(card,/pay\.credited\|\|pay\.coins/);}
+ console.log('island jobs: audit regressions A2 A7 A8 A9 A10 pass');
+}
+// Regression (Sep 30 2026 overnight e2e): setPayday was swallowed into a trailing // comment, so the "Job done" card never showed.
+{const fs=require('node:fs'),assert=require('node:assert/strict');const src=fs.readFileSync('components/IslandJobs.tsx','utf8');
+ assert(src.split('\n').some(l=>{const i=l.indexOf('setPayday({id:def.id');return i>=0&&!l.slice(0,i).includes('//');}),'payday card is set in live code, not inside a comment');
+ console.log('island jobs: payday card wired');}

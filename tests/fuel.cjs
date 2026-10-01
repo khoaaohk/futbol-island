@@ -34,7 +34,7 @@ const M=require('../lib/town/market/market.ts'),goods=require('../lib/town/marke
  assert.equal(sample({now:600+3600e3+150,mode:'walk',x:401.5,z:0,paused:false}),.15,'normal walking counts its 150 ms');
  const town=read('components/Town.tsx');
  assert(town.includes("!active||!!learning||!!lessonRef.current||fieldMenu.current||streetTraffic.rider.index>=0,"),'Town pauses fuel in lessons, field menus and truck beds');
- assert(town.includes("rideRef.current==='jetpack'&&flight.height>.5)"),'hovering on the jetpack is charged as flying');}
+ assert(town.includes("rideRef.current==='jetpack'&&flight.height>.5,!fuelArmed)"),'hovering on the jetpack is charged as flying (after the opening hover)');}
 
 // 4. Refills: every Konbini item and every machine drink refuels; carbs and meals most, treats least; sports drink > water.
 {for(const f of food.FOOD_MENU)assert(F.foodFuel(f)>0,f.id);for(const d of drinks.DRINKS)assert(F.foodFuel(d)>0,d.id);
@@ -84,7 +84,7 @@ function memStore(start){const data=new Map(),clock={t:start??Date.UTC(2026,8,30
 {const town=read('components/Town.tsx'),jobs=read('components/IslandJobs.tsx'),pocket=read('components/IslandBalanceDrawer.tsx'),toast=read('components/FuelToast.tsx'),store=read('lib/konbini/foodStore.ts');
  assert(/if\(hudTick&&fuelTravel\(/.test(town),'drain is sampled on the existing HUD tick, not a new loop');
  assert(/const selectRide=[^\n]*if\(!fuelAllowsRide\(mode\)\)return;/.test(town),'rides and the jetpack ask for fuel; walking never does');
- assert(/&&fuelCanSprint\(\)/.test(town),'sprint rests at 0 fuel');assert(/<FuelToast blocked=\{toastBlocked\}\/>/.test(town));
+ assert(/&&fuelCanSprint\(\)/.test(town),'sprint rests at 0 fuel');assert(/<FuelToast blocked=\{stackCovered/.test(town),'fuel notes wait under every overlay, the pocket included');
  assert(/<FuelCount className=\{styles\.basketCount\}\/>/.test(jobs),'fuel counter sits in the coins bar with the fish/fruit counter style');
  assert(/data-pocket-fuel-section/.test(pocket)&&/islandMarket\.take\(r\.id,1\)/.test(pocket)&&/eatFuel\(/.test(pocket),'pocket Fuel section eats from the basket');
  assert(/toastLane\.request\('fuel'\)/.test(toast)&&/<HudSlot>/.test(toast)&&/data-hud-slot="toast"/.test(toast),'fuel notes use the toast lane and slot');
@@ -96,6 +96,36 @@ function memStore(start){const data=new Map(),clock={t:start??Date.UTC(2026,8,30
  assert(reg.fuelSharePct<=12,`regular spends ${reg.fuelSharePct}% of income on fuel`);assert(reg.allBought>=60&&reg.allBought<=90,`regular owns everything by day ${reg.allBought}`);
  assert.equal(free.fuelShortDays,0,'a casual child with no coins to spare is never short of fuel');}
 
+// 10. Deploy 11 audit regressions (Sep 30 2026, lane A).
+(async()=>{
+ // A4: the pocket's full-tank guard uses the real (unrounded) tank; an item that would add < 1 is not spent.
+ assert.equal(F.fuelShown(99.6),99,'the bar reads 99 at 99.6');assert(!F.worthEating(99.6,25),'at 99.6 an orange is not worth eating (+0.4)');
+ assert(Math.abs(F.eatGain(99.6,25)-.4)<1e-9);assert(F.worthEating(98.5,25)&&F.eatGain(98.5,25)===1.5);assert(F.worthEating(0,25)&&F.eatGain(0,25)===25);assert(!F.worthEating(100,100));
+ const pocket=read('components/IslandBalanceDrawer.tsx');assert(/if\(!worthEating\(fuelStore\.read\(\)\.fuel,r\.fuel\)\)\{setAte\('Your tank is full/.test(pocket),'the Eat button checks the stored fuel before taking the item');
+ assert(pocket.indexOf('worthEating(fuelStore.read().fuel')<pocket.indexOf('islandMarket.take(r.id,1)'),'checked before the basket is touched');
+ // A3: a low / empty / ride-refused note stops being true once the tank is back above its line, and eating clears it.
+ {const m=memStore();for(let i=0;i<2600&&m.s.read().fuel>20;i++)m.s.travel('jetpack',.5);assert.equal(m.s.notice?.kind,'low');
+  m.s.eat(2);assert.equal(m.s.notice?.kind,'low','still low after a nibble: the note stays');m.s.eat(100);assert.equal(m.s.notice,null,'eaten to full: "Fuel running low" is gone');
+  for(let i=0;i<8000;i++)m.s.travel('jetpack',.5);assert.equal(m.s.notice?.kind,'empty');m.s.eat(25);assert.equal(m.s.notice,null,'eaten: "Out of fuel" is gone');
+  m.s.travel('jetpack',.5);for(let i=0;i<8000;i++)m.s.travel('jetpack',.5);m.s.blocked('bike');assert.equal(m.s.notice?.kind,'blocked');m.s.eat(30);assert.equal(m.s.notice,null,'eaten: the ride-refused note is gone');
+  assert(F.noticeApplies({kind:'low'},25.9)&&!F.noticeApplies({kind:'low'},26)&&F.noticeApplies({kind:'empty'},.5)&&!F.noticeApplies({kind:'empty'},1));}
+ // S2 + A3: a new day (breakfast) fills the tank, tells the bar (idle screen at midnight) and drops a stale low note.
+ {const m=memStore(Date.UTC(2026,8,30,23,59));for(let i=0;i<2600&&m.s.read().fuel>20;i++)m.s.travel('jetpack',.5);let heard=0;m.s.subscribe(()=>heard++);
+  m.clock.t+=2*60e3;assert.equal(m.s.read().fuel,100,'midnight: breakfast');assert.equal(m.s.notice,null,'the low note went with yesterday');
+  await Promise.resolve();await Promise.resolve();assert(heard>=1,'the rollover notifies the bar (it used to save silently)');}
+ // A6: the scripted arrival and opening hover are never charged and never force a landing.
+ {const smp=F.createTravelSampler();smp({now:0,mode:'jetpack',x:0,z:0,paused:false,airborne:true,arrival:true});
+  assert.equal(smp({now:300,mode:'jetpack',x:0,z:0,paused:false,airborne:true,arrival:true}),0,'the opening hover drains 0');
+  assert(smp({now:450,mode:'jetpack',x:0,z:0,paused:false,airborne:true})>0,'once the player has moved, hovering drains as before');
+  const town=read('components/Town.tsx'),fs_=read('lib/town/fuelStore.ts');
+  assert(/let fuelArmed=false;/.test(town)&&/if\(!fuelArmed&&\([^\n]*characterArrival\.getState\(\)\.done\)fuelArmed=true;/.test(town),'armed only by a first move after the arrival');
+  assert(/return !paused&&!arrival&&mode!=='walk'/.test(fs_),'the arrival can never trigger "Out of fuel" / a forced landing');}
+ // S1 + A3: FuelToast never replays a shown note on remount, its timer pauses while covered, a stale note is dropped.
+ {const toast=read('components/FuelToast.tsx');assert(/^let shownId=0;/m.test(toast),'the shown note id outlives a remount');
+  assert(/if\(!shown\|\|held\)return;const t=setTimeout/.test(toast),'no timer while held (the pocket or a dialog is open)');
+  assert(/noticeApplies\(notice,fuelStore\.read\(\)\.fuel\)/.test(toast)&&/noticeApplies\(shown,fuelStore\.read\(\)\.fuel\)/.test(toast),'a note that stopped being true is not shown');}
+ console.log('fuel: audit regressions A3 A4 A6 S1 S2 pass');
+})().catch(e=>{console.error(e);process.exit(1);});
 console.log('PASS fuel: fly > rides > walk, walking always works at 0, learning never costs fuel, free fruit refuels with 0 coins, saves only on change, no offline drain, gentle notes via the toast lane, economy guard');
 // Sep 30 2026 (user): rates halved; hovering/climbing on the jetpack burns fuel, standing on foot still does not.
 {const ts=require('typescript'),fs=require('node:fs'),vm=require('node:vm');const m={exports:{}};vm.runInNewContext(ts.transpileModule(fs.readFileSync('lib/town/fuel.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{exports:m.exports,module:m,require,Math,Number,Object,JSON});

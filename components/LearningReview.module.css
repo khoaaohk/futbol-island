@@ -1,13 +1,14 @@
-/* Daily warm-up + My football: the Fishbook's coastal-paper side drawer (ModalShell) and the shared --btn-* tokens. */
+/* Daily warm-up (the mastery view was removed Oct 1 2026): the Fishbook's coastal-paper side drawer (ModalShell) and the shared --btn-* tokens. */
 @font-face{font-family:IslandBrush;src:url('/stories/films/assets/IslandBrush-Regular.ttf') format('truetype');font-display:swap}
 .dialog{position:fixed;inset:0;margin:0;border:0;padding:0;width:100%;height:100dvh;max-width:none;max-height:none;border-radius:0;background:transparent;box-shadow:none;overflow:hidden;overscroll-behavior:contain;color:#244d40;font-family:inherit}
 .dialog[open]{display:flex;justify-content:flex-end}
 .dialog::backdrop{background:#163b426e}
 .panel{width:min(560px,100%);height:100%;max-height:100dvh;background:url('/stories/films/assets/entry-grain.png') center/160px repeat,#2e806d url('/stories/paths/conversation-coast.svg') center top/100% 1000px repeat-y!important;box-shadow:-12px 0 36px #16352a44}
 .dialog .header{background:transparent!important;border:0!important;color:#fff2cd}
-.dialog .header h2{color:#fff2cd;font-family:IslandBrush,sans-serif;font-weight:400;font-size:clamp(26px,4vw,34px);letter-spacing:0}
-.entering .panel{animation:reviewSlideIn .32s cubic-bezier(.2,.8,.3,1) both}
-.leaving .panel{animation:reviewSlideOut .24s ease-in both}
+.dialog .header h2{color:#fff2cd;font-family:IslandBrush,sans-serif;font-weight:400;font-size:clamp(24px,3vw,38px);letter-spacing:0}
+/* The shared drawer motion (DrawerSlide.module.css, docs/ui/UI_SPEC.md): .24s ease-in-out after the .14s backdrop beat; out .24s. */
+.entering .panel{animation:reviewSlideIn .24s ease-in-out .14s both}
+.leaving .panel{animation:reviewSlideOut .24s ease-in-out both}
 @keyframes reviewSlideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
 @keyframes reviewSlideOut{to{transform:translateX(100%)}}
 @media(prefers-reduced-motion:reduce){.entering .panel,.leaving .panel{animation:none}}
@@ -16,21 +17,16 @@
 :global(.town-app):has(.dialog[open]) :global(.touch-controls){visibility:hidden!important;pointer-events:none!important}
 
 .stack{display:flex;flex-direction:column;gap:14px}
-.tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 14px}
-.tabs button,.formats button{min-height:var(--btn-height,44px);border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:var(--btn-radius,999px);background:var(--btn-cream,#fff1d3);color:var(--btn-ink,#244d40);font-weight:800;font-size:15px;box-shadow:0 4px 0 var(--btn-cream-edge,#193f3733)}
-.tabs button[aria-pressed=true],.formats button[aria-pressed=true]{background:var(--btn-gold-bright,#f9d665) var(--btn-grain) center/128px;background-blend-mode:soft-light;box-shadow:0 4px 0 var(--btn-gold-bright-edge,#aa8b3e)}
-.tabs button:active,.formats button:active{translate:0 var(--btn-press,3px);box-shadow:0 1px 0 var(--btn-cream-edge,#193f3733)}
-.card,.quiz,.summary,.chapter,.journeys{padding:16px 18px;border-radius:20px 32px 20px 20px;background:#fff0cc url('/stories/films/assets/entry-grain.png') center/160px;box-shadow:0 5px 0 #143f4140;color:#244d40}
+.card,.quiz{padding:16px 18px;border-radius:20px 32px 20px 20px;background:#fff0cc url('/stories/films/assets/entry-grain.png') center/160px;box-shadow:0 5px 0 #143f4140;color:#244d40}
 .card h3,.quiz h3{margin:4px 0 6px;font-size:19px;line-height:1.3}
 .card p{margin:0 0 10px;font-size:14px;line-height:1.5}
 .eyebrow{display:block;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#61705b}
 .note{margin:0;font-size:13px;line-height:1.5;color:#fff2cd}
 .actions{display:flex;flex-wrap:wrap;gap:10px}
-.primary,.secondary,.link{min-height:var(--btn-height,44px);padding:0 20px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:var(--btn-radius,999px);font-weight:800;font-size:15px;color:var(--btn-ink,#244d40)}
+.primary,.secondary{min-height:var(--btn-height,44px);padding:0 20px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:var(--btn-radius,999px);font-weight:800;font-size:15px;color:var(--btn-ink,#244d40)}
 .primary{background:var(--btn-gold,#e9c16b) var(--btn-grain) center/128px;background-blend-mode:soft-light;box-shadow:var(--btn-shadow-gold,0 5px 0 #a8863d)}
 .secondary{background:var(--btn-mint,#beded1);box-shadow:0 5px 0 var(--btn-mint-edge,#8bac9d)}
-.primary:active,.secondary:active{translate:0 var(--btn-press,3px);box-shadow:0 2px 0 var(--btn-gold-edge,#a8863d)}
-.link{min-height:36px;padding:0 14px;border-width:2px;background:var(--btn-cream,#fff1d3);font-size:13px;box-shadow:0 3px 0 var(--btn-cream-edge,#193f3733)}
+.primary:active{translate:0 var(--btn-press);box-shadow:var(--btn-shadow-gold-pressed)}.secondary:active{translate:0 var(--btn-press);box-shadow:0 1px 0 var(--btn-mint-edge)}
 
 .meter{display:flex;gap:6px}
 .meter span{flex:1;height:8px;border-radius:6px;background:#fff2cd55}
@@ -42,30 +38,7 @@
 .feedback b{display:block;font-size:16px;margin-bottom:4px}
 .feedback p{margin:0 0 10px;font-size:14px;line-height:1.5}
 
-.formats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.formats button{display:grid;gap:0;padding:4px 6px;border-radius:var(--btn-radius-tile,18px);font-size:14px;line-height:1.2}
-.formats small{font-size:11px;font-weight:700;color:#4d5d49}
-.bar{display:flex;height:16px;border-radius:10px;overflow:hidden;background:#e6dcc0;border:2px solid #fff2cd}
-.bar span{display:block;min-width:6px}
-.stack [data-stage=remembered]{--stage:#3f9b6b}.stack [data-stage=applied]{--stage:#6fb6d6}.stack [data-stage=practicing]{--stage:#f2c14e}.stack [data-stage=introduced]{--stage:#f0a98c}.stack [data-stage=new]{--stage:#d9cfae}
-.bar span{background:var(--stage)}
-.legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin:10px 0 0;padding:0;list-style:none;font-size:12px}
-.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;background:var(--stage);vertical-align:-1px}
-.chapter h4{margin:0 0 8px;font-family:IslandBrush,sans-serif;font-weight:400;font-size:20px}
-.lessons{display:flex;flex-direction:column;gap:10px;margin:0;padding:0;list-style:none}
-.lesson{padding:10px 12px;border-radius:14px;background:#fff8e6;border-left:6px solid var(--stage)}
-.lessonHead{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
-.lessonHead strong{font-size:15px;line-height:1.3}
-.chip{flex-shrink:0;padding:3px 9px;border-radius:10px;background:var(--stage);color:#1f3a31;font-size:11px;font-weight:800;letter-spacing:.02em}
-.chip[data-stage=remembered]{color:#fff}
-.idea{display:block;margin-top:2px;font-size:12px;color:#61705b}
-.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:8px 0}
-.steps span{height:6px;border-radius:4px;background:#e6dcc0}
-.steps span[data-on=true]{background:var(--stage)}
-.lessonFoot{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:12px;color:#4d5d49}
-.lessonFoot b[data-due=true]{color:#b4532f}
-.journeys{padding:4px 6px}
-@media(max-width:600px),(pointer:coarse){.formats button{font-size:13px}.card h3,.quiz h3{font-size:17px}}
+@media(max-width:600px),(pointer:coarse){.card h3,.quiz h3{font-size:17px}}
 
 /* "Spot it!" callout (LearningHost): one small card under the top HUD row; tap to open the lesson. */
 .spot{position:absolute;z-index:31;left:50%;transform:translateX(-50%);display:grid;grid-template-columns:1fr auto;align-items:center;gap:4px 12px;width:max-content;max-width:min(420px,calc(100vw - 32px));padding:10px 12px 10px 16px;border:3px solid #fff2cd;border-radius:22px;background:#fff1d3;color:#244d40;box-shadow:0 5px 0 #a8863d,0 14px 30px #0f2a2f55;animation:spotIn .3s ease both}

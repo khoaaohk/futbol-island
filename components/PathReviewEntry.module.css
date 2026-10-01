@@ -5,8 +5,7 @@
 .entry strong{font-size:17px;line-height:1.25}
 .entry small{font-size:13px;line-height:1.4;color:#4d5d49}
 .buttons{display:flex;flex-direction:column;gap:8px;flex-shrink:0}
-.primary,.secondary{min-height:var(--btn-height,44px);padding:0 18px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:var(--btn-radius,999px);font-weight:800;font-size:14px;color:var(--btn-ink,#244d40);white-space:nowrap}
+.primary{min-height:var(--btn-height,44px);padding:0 18px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:var(--btn-radius,999px);font-weight:800;font-size:14px;color:var(--btn-ink,#244d40);white-space:nowrap}
 .primary{background:var(--btn-gold,#e9c16b) var(--btn-grain) center/128px;background-blend-mode:soft-light;box-shadow:var(--btn-shadow-gold,0 5px 0 #a8863d)}
-.secondary{background:var(--btn-mint,#beded1);box-shadow:0 5px 0 var(--btn-mint-edge,#8bac9d)}
-.primary:active,.secondary:active{translate:0 var(--btn-press,3px);box-shadow:0 2px 0 var(--btn-gold-edge,#a8863d)}
+.primary:active{translate:0 var(--btn-press,3px);box-shadow:0 2px 0 var(--btn-gold-edge,#a8863d)}
 @media(max-width:420px){.entry{flex-direction:column;align-items:stretch}.buttons{flex-direction:row}.buttons button{flex:1}}

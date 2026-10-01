@@ -270,12 +270,12 @@ const {BOOK_PRICE}=require('../lib/books/catalog.ts');
   m.input();assert(!m.debug.idle,'the next input wakes it');
   m.dispose();await new Promise(r=>setTimeout(r,5));assert(log.includes('stop')&&log.includes('close'),'stopped and closed on exit');assert.equal(ctx.state,'closed');
   settings={enabled:false,volume:.04};const log2=log.length;const muted=Mu.createKonbiniMusic('main',{...ports,context:()=>({...ctx,state:'running',close:async()=>{}})});muted.start();assert(!log.slice(log2).includes('start'),'muted: nothing plays');assert(muted.debug.muted);}
- // 9. Indoor dribble: the player's own ball follows the rig and stays out of shelves; the island's full-power shot never runs
- //    indoors (the Konbini's own capped shot and keep-ups are §13).
+ // 9. Indoor dribble: the player's own ball follows the rig and stays out of shelves; shots and keep-ups run through the
+ //    Konbini's own ball (§13), which uses the island's shot physics constants against the store's collision boxes.
  {const src=fs.readFileSync(require('node:path').join(__dirname,'../lib/konbini/konbiniScene.ts'),'utf8');
   assert(/player\.dribbleContact\(ballAim\)/.test(src),'ball follows the rig’s dribble contact');assert(/ballLook\.setStyle\(custom\.ball\)/.test(src),'customised ball style (same as outside)');
   assert(/for\(const o of obstacles\)\{const r=\.2;if\(ballAim/.test(src),'ball kept out of aisles, counter and fridge');
-  assert(!/createWalkBall/.test(src),'no island walkBall shot (38–60 m/s) indoors');assert(/createKonbiniBall\(obstacles,/.test(src),'the indoor ball uses the store’s own collision boxes');
+  assert(!/createWalkBall/.test(src),'no island walkBall runtime indoors (the Konbini ball shares its constants, §13)');assert(/createKonbiniBall\(obstacles,/.test(src),'the indoor ball uses the store’s own collision boxes');
   assert(!/onNudge|No kicking in the shop/.test(src+fs.readFileSync(require('node:path').join(__dirname,'../components/KonbiniRoom.tsx'),'utf8')),'the old "no kicking" nudge is gone');}
  // 10. Building highlight / from-the-air Enter: the footprints hold their doors.
  for(const door of ['main','cay']){const b=D.KONBINI_BUILDINGS[door],d=D.KONBINI_DOORS[door];assert(Math.abs(d.x-b.x)<b.w/2,'door on the facade');assert(Math.abs(b.z+b.d/2-d.front)<.01,door+' front face = door line');}
@@ -322,27 +322,47 @@ const {BOOK_PRICE}=require('../lib/books/catalog.ts');
   const scene=fs.readFileSync(require('node:path').join(__dirname,'../lib/konbini/konbiniScene.ts'),'utf8');
   assert(/findFloorPath\(\{x,z\}/.test(scene)&&/stuck\.step\(target,d,dt\)\)\{target=null;route=\[\];arrivePoi=null;/.test(scene),'the scene uses both');
   console.log('konbini path: unreachable goal search',ms.toFixed(1),'ms');}
- // 13. Ball actions (Sep 30 2026, lib/konbini/konbiniBall.ts): a capped soft shot that rebounds off the store's collision boxes and
- //     returns to the feet; tap-timed keep-ups with a saved best; no coins, purchases or other saves touched; buttons hidden when
+ // 13. Ball actions (Sep 30 2026, lib/konbini/konbiniBall.ts; island physics since Oct 1 2026, user: "kicking inside the store isn't
+ //     the same as outside. It should be just as fast, with the same bouncing-around physics"): the island's shot (walkBall
+ //     ISLAND_SHOT: speed, gravity, restitution, drag, substeps, recall) rebounding off the store's collision boxes and ceiling, then
+ //     back to the feet; tap-timed keep-ups with a saved best; no coins, purchases or other saves touched; buttons hidden when
  //     zoomed, in dialogs, the reveal/preview and the exit walk; the ball is only stepped while it's off the feet.
  {const B=require('../lib/konbini/konbiniBall.ts'),W=require('../lib/town/walkBall.ts'),path=require('node:path');
-  // Capped power: the island's hold curve, a fraction of the island's shot speed.
+  // The island's hold curve and the island's launch: shared constants, not copies.
   assert.equal(B.holdPower(0),0);assert.equal(B.holdPower(180),0,'0.18 s dead zone like the island');assert.equal(B.holdPower(10000),1);assert.equal(B.holdPower(1080),.5);
-  const lo=B.indoorLaunch(0),hi=B.indoorLaunch(1),over=B.indoorLaunch(5);assert(hi.speed<=6&&over.speed===hi.speed,'full charge capped at 6 m/s');assert(hi.speed*6<W.SHOT_SPEED,'well under the island shot ('+W.SHOT_SPEED+' m/s)');
-  assert(lo.speed>=2&&lo.speed<hi.speed,'a tap is a soft pass');assert(hi.lift<=2.5&&hi.lift*hi.lift/(2*B.INDOOR_SHOT.gravity)<.3,'a low skip (apex under 30 cm), never into the ceiling');
-  // A full-power shot at a shelf bay 2 m ahead: strike ≤ 6 m/s, hits fixture 3, rebounds, rolls to rest, then the island's recall.
+  for(const k of ['speed','chargeSpeed','lift','chargeLift','gravity','wallBounce','floorBounce','bounceMinVy','rollDrag','loftDrag','loftHeight','substep','restSpeed','restHeight','tapAge','chargedAge','returnRate','returnTime','lead'])
+   assert.equal(B.INDOOR_SHOT[k],W.ISLAND_SHOT[k],'indoor '+k+' = the island’s');
+  assert.equal(W.ISLAND_SHOT.speed,W.SHOT_SPEED);const lo=B.indoorLaunch(0),hi=B.indoorLaunch(1),over=B.indoorLaunch(5);
+  assert.deepEqual([lo.speed,lo.lift],[38,3.2],'a tap: the island’s 38 m/s');assert.deepEqual([hi.speed,hi.lift],[60,55.2],'full charge: the island’s 60 m/s');assert.deepEqual(over,hi);
+  const ballSrc0=fs.readFileSync(path.join(__dirname,'../lib/konbini/konbiniBall.ts'),'utf8'),walkSrc=fs.readFileSync(path.join(__dirname,'../lib/town/walkBall.ts'),'utf8');
+  assert(/import \{SHOT_WINDUP,ISLAND_SHOT,juggleContact\} from '\.\.\/town\/walkBall'/.test(ballSrc0)&&/INDOOR_SHOT=\{\.\.\.ISLAND_SHOT,/.test(ballSrc0),'the indoor ball imports the island constants');
+  assert(/state\.vx\*=-S\.wallBounce/.test(walkSrc)&&/state\.vy-=S\.gravity\*step/.test(walkSrc)&&/state\.vy=-state\.vy\*S\.floorBounce/.test(walkSrc)&&!/-\.78|\*\.53|13\*step/.test(walkSrc),'the island shot reads the same constants (no stray literals)');
+  // Side by side: the SAME tap shot from walkBall (the island) and the Konbini ball, in the same walled room, traces the same path.
+  {const shelfA={minX:-1,maxX:1,minZ:2,maxZ:2.8,fi:3},kb=B.createKonbiniBall([shelfA]),wb=W.createWalkBall(),p={x:0,z:0,y:0,yaw:.35};
+   const env={floor:()=>0,blocked:(x,z)=>!!kb.blockedAt(x,z),impact(){},strike(){}};
+   wb.shoot(p,p.yaw,0);kb.beginCharge(p);kb.release(p,0);let frames=0,maxErr=0,flew=0;
+   for(let i=0;i<120;i++){wb.update(1/30,p,env);kb.update(1/30,p);if(wb.state.mode!=='shot'||kb.state.mode!=='shot'){assert.equal(wb.state.mode==='shot',kb.state.mode==='shot','both recall on the same frame ('+i+')');if(flew)break;continue;}
+    flew++;maxErr=Math.max(maxErr,Math.hypot(wb.state.x-kb.state.x,wb.state.z-kb.state.z),Math.abs(Math.hypot(wb.state.vx,wb.state.vz)-Math.hypot(kb.state.vx,kb.state.vz)));frames=i;}
+   assert(flew>=50,'a tap flies for the island’s 2 s ('+flew+' frames)');assert(maxErr<1e-9,'same path and speed as the island shot (max error '+maxErr+')');}
+  // A full-power shot at a shelf bay 2 m ahead: the island's 60 m/s, it bounces round the store (walls, shelf, floor, ceiling),
+  // never enters a box or leaves the room or goes through the ceiling, and comes back within the island's charged recall.
   const shelf={minX:-1,maxX:1,minZ:2,maxZ:2.8,fi:3},ev=[],ball=B.createKonbiniBall([shelf],e=>ev.push(e)),p={x:0,z:0,yaw:0};
   assert(ball.beginCharge(p));assert(!ball.beginCharge(p),'no second charge while charging');for(let i=0;i<30;i++)ball.update(1/30,p);assert(ball.state.charge>0&&ball.state.charge<1);
-  assert(ball.release(p,5000));let t=0,maxSpeed=0,maxY=0,inside=0;
-  while(ball.state.mode!=='feet'&&t<8){ball.update(1/30,p);t+=1/30;maxSpeed=Math.max(maxSpeed,Math.hypot(ball.state.vx,ball.state.vz));maxY=Math.max(maxY,ball.state.y);
-   if(ball.state.x>shelf.minX&&ball.state.x<shelf.maxX&&ball.state.z>shelf.minZ&&ball.state.z<shelf.maxZ)inside++;}
-  const strike=ev.find(e=>e.type==='strike'),hit=ev.find(e=>e.type==='hit');
-  assert(strike&&strike.speed<=6,'strike capped');assert(maxSpeed<=6.01,'never faster than the cap');assert(maxY<.6,'stays low indoors');
-  assert(hit&&hit.fi===3,'the shot reports the shelf bay it hit');assert.equal(inside,0,'never passes into the shelf');
-  assert.equal(ev.at(-1).type,'returned','the ball comes back');assert.equal(ball.state.mode,'feet');assert(t<5,'back at the feet within 5 s ('+t.toFixed(2)+' s)');
+  assert(ball.release(p,5000));let t=0,maxSpeed=0,maxY=0,inside=0,outside=0;
+  while(ball.state.mode!=='feet'&&t<12){ball.update(1/20,p);t+=1/20;maxSpeed=Math.max(maxSpeed,Math.hypot(ball.state.vx,ball.state.vz));maxY=Math.max(maxY,ball.state.y);
+   if(ball.state.x>shelf.minX&&ball.state.x<shelf.maxX&&ball.state.z>shelf.minZ&&ball.state.z<shelf.maxZ)inside++;
+   if(ball.state.x<B.BALL_ROOM.minX||ball.state.x>B.BALL_ROOM.maxX||ball.state.z<B.BALL_ROOM.minZ||ball.state.z>B.BALL_ROOM.maxZ)outside++;}
+  const strike=ev.find(e=>e.type==='strike'),hits=ev.filter(e=>e.type==='hit');
+  assert(strike&&strike.speed===60,'strike at the island’s full 60 m/s');assert(maxSpeed>30,'really fast indoors ('+maxSpeed.toFixed(1)+' m/s)');
+  assert(hits.some(e=>e.fi===3)&&hits.some(e=>e.fi===-1)&&hits.length>=4,'bounces round: shelf and walls ('+hits.length+' hits)');assert(ev.some(e=>e.type==='bounce'),'floor/ceiling bounces sound like the island landing');
+  assert.equal(inside,0,'never passes into the shelf');assert.equal(outside,0,'never leaves the store');assert(maxY<=B.INDOOR_SHOT.ceiling-B.INDOOR_SHOT.radius+1e-9,'bounces off the ceiling, never through it');
+  assert.equal(ev.at(-1).type,'returned','the ball comes back');assert.equal(ball.state.mode,'feet');assert(t<=B.INDOOR_SHOT.chargedAge+B.INDOOR_SHOT.returnTime+.2,'bounded by the island’s charged recall ('+t.toFixed(2)+' s)');
   assert(Math.hypot(ball.state.x-p.x,ball.state.z-p.z)<.7,'at the player’s feet');
+  // Bounded work: the substep count is capped (no allocation per step: plain numbers), even at the 0.05 s frame clamp.
+  assert(Math.ceil(60*.05/B.INDOOR_SHOT.substep)<=B.INDOOR_SHOT.maxSteps,'60 m/s fits the substep cap');
+  assert(!/new |\[\]|\{\s*x:/.test(ballSrc0.slice(ballSrc0.indexOf(' function roll('),ballSrc0.indexOf(' function hit('))),'roll() allocates nothing per frame');
   // Walls: a shot into the back wall rebounds (fi −1) and still returns; the doors count as a wall (the ball never leaves the store).
-  {const e2=[],b2=B.createKonbiniBall([],e=>e2.push(e)),q={x:0,z:5,yaw:0};b2.beginCharge(q);b2.release(q,5000);let u=0,maxZ=0;while(b2.state.mode!=='feet'&&u<8){b2.update(1/30,q);u+=1/30;maxZ=Math.max(maxZ,b2.state.z);}
+  {const e2=[],b2=B.createKonbiniBall([],e=>e2.push(e)),q={x:0,z:5,yaw:0};b2.beginCharge(q);b2.release(q,5000);let u=0,maxZ=0;while(b2.state.mode!=='feet'&&u<12){b2.update(1/30,q);u+=1/30;maxZ=Math.max(maxZ,b2.state.z);}
    assert(e2.some(e=>e.type==='hit'&&e.fi===-1),'the front glass rebounds it');assert(maxZ<B.BALL_ROOM.maxZ,'stays inside');assert.equal(b2.state.mode,'feet');}
   // A shot started facing a shelf from close by never starts inside it.
   {const b3=B.createKonbiniBall([shelf]),q={x:0,z:1.5,yaw:0};b3.beginCharge(q);b3.release(q,0);assert(!b3.blockedAt(b3.state.x,b3.state.z),'release point pulled out of the shelf');}
@@ -383,6 +403,103 @@ const {BOOK_PRICE}=require('../lib/books/catalog.ts');
   assert(/if\(!bay\?\.length\|\|reduced\|\|hidden\)return false;/.test(scene),'reduced motion: no shelf wobble');
   assert(B.BALL_SOURCES.some(s=>/englandfootball\.com/.test(s.url))&&B.BALL_SOURCES.some(s=>/fifatrainingcentre\.com/.test(s.url)),'coaching points cite The FA and FIFA Training Centre');
   assert(/middle of the ball/.test(B.SHOT_TIP)&&/inside of your foot/.test(B.SHOT_TIP));
-  console.log('konbini ball: shot',t.toFixed(2),'s round trip, max',maxSpeed.toFixed(2),'m/s, apex',maxY.toFixed(2),'m; keep-ups streak 7 saved');}
+  console.log('konbini ball: island-speed shot',t.toFixed(2),'s round trip,',hits.length,'hits, max',maxSpeed.toFixed(2),'m/s, apex',maxY.toFixed(2),'m; keep-ups streak 7 saved');}
+ // 14. Sounds (Oct 1 2026, user: the island "Enter" for the Konbini, the Konbini "Done", the food "Preview" had no sound, and no
+ //     entry sound on arrival). Every store button plays the island's own click (islandSound UI_CLICK) from the page's click
+ //     capture, inside the tap; the island Enter's click is no longer cut by disposing the island sound; the door chime plays on
+ //     arrival when audio may run, else on the first tap (iOS), and never after ARRIVAL_CHIME_MS; muted = no context at all.
+ {const path=require('node:path'),S=require('../lib/konbini/konbiniSound.ts'),I=require('../lib/audio/islandSound.ts');
+  const prevLS=globalThis.localStorage,prevAC=globalThis.AudioContext,prevEl=globalThis.Element;
+  const mem=new Map([['fi2-sound-volume','.5']]);globalThis.localStorage={getItem:k=>mem.has(k)?mem.get(k):null,setItem(){},removeItem(){}};
+  let state='suspended',made=0;const log=[],resumes=[];
+  const param=n=>({value:0,setValueAtTime(v,t){log.push([n,'set',v,t]);},linearRampToValueAtTime(v,t){log.push([n,'lin',v,t]);},exponentialRampToValueAtTime(v,t){log.push([n,'exp',v,t]);},cancelScheduledValues(){}});
+  globalThis.AudioContext=class{constructor(){made++;this.currentTime=0;this.sampleRate=8000;this.destination={};}get state(){return state;}resume(){return new Promise(r=>resumes.push(r));}
+   createOscillator(){const o={type:'',frequency:param('freq'),connect(){},start(t){log.push(['start',o.type,t]);},stop(){}};return o;}createGain(){return {gain:param('gain'),connect(){}};}
+   createBiquadFilter(){return {type:'',frequency:param('filter'),Q:{value:0},connect(){}};}createBuffer(c,l){return {getChannelData:()=>new Float32Array(l)};}createBufferSource(){return {connect(){},start(){log.push(['noise']);},stop(){}};}};
+  const freqs=()=>log.filter(l=>l[0]==='freq'&&l[1]==='set').map(l=>Math.round(l[2]));const flush=async()=>{state='running';resumes.splice(0).forEach(r=>r());await new Promise(r=>setTimeout(r,0));};
+  try{
+   // The click = the island's click: same sweep, length and loudness (island: level × bus × volume).
+   S.konbiniSfx.click();const f=log.filter(l=>l[0]==='freq'),g=log.filter(l=>l[0]==='gain'&&l[1]==='lin');
+   assert.deepEqual([f[0][2],f[1][2],+f[1][3].toFixed(3)],[I.UI_CLICK.from,I.UI_CLICK.to,I.UI_CLICK.duration],'click sweeps like the island click');
+   assert(Math.abs(g[0][2]-I.UI_CLICK.level*I.ISLAND_SFX_MASTER*.5)<1e-9,'click as loud as the island click at the same volume');assert.equal(made,1,'one AudioContext for the page');
+   // Arrival while audio is locked (a phone): nothing yet, the chime waits for the first tap, then rings once.
+   log.length=0;S.konbiniArrivalChime();assert(S.konbiniChimePending(),'locked: the chime waits');assert(!freqs().includes(988),'not scheduled into a locked context');
+   S.unlockKonbiniAudio();await flush();assert(freqs().includes(988)&&freqs().includes(784),'first tap: ding-dong');assert(!S.konbiniChimePending());
+   log.length=0;S.unlockKonbiniAudio();await flush();assert(!freqs().includes(988),'only once');
+   // Already allowed (desktop): at once.
+   log.length=0;S.konbiniArrivalChime();assert(freqs().includes(988)&&!S.konbiniChimePending(),'running: rings at once');
+   // A first tap long after arriving: dropped, not a stray chime mid-shop.
+   state='suspended';log.length=0;S.konbiniArrivalChime();const realNow=performance.now.bind(performance);performance.now=()=>realNow()+S.ARRIVAL_CHIME_MS+500;
+   try{S.unlockKonbiniAudio();await flush();}finally{delete performance.now;}assert(!freqs().includes(988)&&!S.konbiniChimePending(),'late first tap: no chime');
+   // The satisfied "ahh": a voiced, synthesized vowel (sawtooth through formant filters), no samples.
+   log.length=0;S.konbiniSfx.ahh();assert(log.some(l=>l[0]==='start'&&l[1]==='sawtooth')&&log.filter(l=>l[0]==='filter').length===0,'ahh voice');
+   const snd=fs.readFileSync(path.join(__dirname,'../lib/konbini/konbiniSound.ts'),'utf8');assert(/ahh:\(\)=>vowel\(/.test(snd)&&/b\.type='bandpass'/.test(snd)&&!/\.mp3|\.wav|\.ogg|fetch\(/.test(snd),'synthesized ahh and chime, no assets');
+   // Muted: no context, no sound, no pending chime.
+   mem.set('fi2-sound-muted','true');const before=made;log.length=0;S.konbiniSfx.click();S.konbiniArrivalChime();S.konbiniSfx.ahh();assert.equal(log.length,0,'muted: silent');assert(!S.konbiniChimePending());assert.equal(made,before);mem.delete('fi2-sound-muted');
+   // Which buttons click: every button except those with their own cue (shot / keep-ups, shelf products, the bite toy).
+   globalThis.Element=class{constructor(a){this.a=a;}closest(){return this.a.button?this:null;}matches(sel){return sel.split(',').some(x=>this.a[x.slice(1,-1)]);}};
+   const el=a=>new globalThis.Element({button:true,...a});
+   assert(S.konbiniClickTarget(el({'data-konbini-done':1})),'Done clicks');assert(S.konbiniClickTarget(el({'data-konbini-preview':1})),'Preview clicks');assert(S.konbiniClickTarget(el({'data-konbini-prompt':1})),'Look/Talk prompt clicks');
+   assert(!S.konbiniClickTarget(el({'data-konbini-action':1}))&&!S.konbiniClickTarget(el({'data-konbini-slot':1}))&&!S.konbiniClickTarget(el({'data-konbini-bite':1})),'own-cue buttons keep their own sound');
+   assert(!S.konbiniClickTarget(new globalThis.Element({})),'not a button: no click');
+  }finally{globalThis.localStorage=prevLS;globalThis.AudioContext=prevAC;globalThis.Element=prevEl;}
+  const room=fs.readFileSync(path.join(__dirname,'../components/KonbiniRoom.tsx'),'utf8'),town=fs.readFileSync(path.join(__dirname,'../components/Town.tsx'),'utf8');
+  assert(/<main onClickCapture=\{e=>\{if\(konbiniClickTarget\(e\.target\)\)konbiniSfx\.click\(\);\}\}/.test(room),'the store plays the click in the click event (inside the tap)');
+  assert(/data-konbini-done/.test(room)&&/data-konbini-preview=\{f\.id\} onClick=\{\(\)=>previewFood\(f\.id\)\}/.test(room),'Done and Preview are plain buttons under that capture');
+  assert(['touchend','click','pointerup'].every(t=>S.KONBINI_UNLOCK_EVENTS.includes(t))&&/for\(const t of KONBINI_UNLOCK_EVENTS\)window\.addEventListener\(t,input/.test(room)&&/unlockKonbiniAudio\(\);m\.input\(\);/.test(room),'unlocked on the iOS gesture events');
+  assert(/room\.current\?\.sound\.arrive\(\);setGreeting\(true\)/.test(room),'arrival chime on the first frame (or the first tap)');
+  // The island Enter: the click capture plays ui('click'); the Konbini (and Arcade) door effect no longer disposes the sound at once.
+  assert(/data-konbini-enter aria-label="Enter the Konbini" hidden onClick=\{\(\)=>setKonbiniDoor\('main'\)\}/.test(town)&&/onClickCapture=\{e=>\{const button=soundButton\(e\.target\);[^\n]*soundRef\.current\?\.ui\(cue==='expand'\|\|cue==='collapse'\?cue:'click'\)/.test(town),'Enter clicks like every island button');
+  const doorFx=town.slice(town.indexOf('useEffect(()=>{if(!konbiniDoor)return;'),town.indexOf('[konbiniDoor]);'));
+  assert(doorFx.length>50&&!/soundRef\.current\?\.dispose\(\)/.test(doorFx)&&/setTimeout\(\(\)=>\{disposeSound\(\);window\.location\.assign\(konbiniUrl\(konbiniDoor\)\);\}/.test(doorFx),'the Enter click is not cut: the sound is disposed as the page changes');
+  console.log('konbini sounds: click = island click, chime waits for the first tap, muted silent');}
+ // 15. Eating (Oct 1 2026): "Eat now" bites the item away in the big view, a word per bite (Chomp!, Yum!, Ooh!…), then "ahh",
+ //     then the usual result. Timers only; Done/Escape skips to the result once.
+ {const Bt=require('../lib/konbini/biteToy.ts'),path=require('node:path');
+  const run=(kind)=>{const log=[],timers=[];const seq=Bt.createEatSequence({kind,bite:(n,g)=>log.push(['bite',n,g]),word:(t,n)=>log.push(['word',t,n]),satisfied:()=>log.push(['ahh']),done:()=>log.push(['done']),
+   setTimer:(fn,ms)=>{const t={fn,ms,live:true};timers.push(t);return t;},clearTimer:t=>{t.live=false;}});return {seq,log,timers,tick:()=>{const t=timers.find(x=>x.live);if(!t)return false;t.live=false;t.fn();return true;}};};
+  {const {seq,log,timers,tick}=run('bite');assert(seq.start());assert(!seq.start(),'one sequence');let guard=0;while(tick()&&guard++<20);
+   assert.deepEqual(log,[['bite',1,false],['word','Chomp!',1],['bite',2,false],['word','Yum!',2],['bite',3,false],['word','Ooh!',3],['bite',Bt.BITES,true],['word','Chomp!',4],['ahh'],['done']],'bite by bite, words rotate, then ahh, then the result');
+   assert.deepEqual(timers.map(t=>t.ms),[Bt.EAT_FIRST_MS,Bt.EAT_BITE_MS,Bt.EAT_BITE_MS,Bt.EAT_BITE_MS,Bt.EAT_AHH_MS,Bt.EAT_DONE_MS]);const total=timers.reduce((a,t)=>a+t.ms,0);assert(total>=2500&&total<=4000,'about 3 s ('+total+' ms)');}
+  {const {seq,log,tick}=run('bite');seq.start();tick();tick();seq.skip();seq.skip();while(tick());assert.deepEqual(log.filter(l=>l[0]==='done').length,1,'skip: the result once');assert(!log.some(l=>l[0]==='ahh'),'skip is silent');}
+  {const {seq,log,tick}=run('bite');seq.start();tick();seq.dispose();while(tick());assert(!log.some(l=>l[0]==='done'),'dispose (view gone): nothing more');}
+  {const {seq,log,tick}=run('sip');seq.start();while(tick());assert.deepEqual(log.filter(l=>l[0]==='word').map(l=>l[1]),['Sip!','Glug!','Refreshing!','Ahh!'],'drinks: Sip!, Glug!, Refreshing!, Ahh!');
+   assert.equal(log.filter(l=>l[0]==='bite').length,4,'four sips');assert.deepEqual(log.slice(-2),[['ahh'],['done']],'then ahh, then the result');}
+  // Drinks (Oct 1 2026): a short word set by type, from the drink id (Konbini and drink machines alike); the last sip is "Ahh!".
+  {assert.equal(Bt.drinkWordKind('drink-cocoa-plaza'),'hot');assert.equal(Bt.drinkWordKind('drink-sports'),'sports');assert.equal(Bt.drinkWordKind('drink-sports-cay'),'sports');
+   assert.equal(Bt.drinkWordKind('drink-water'),'water');assert.equal(Bt.drinkWordKind('drink-water-plaza'),'water');assert.equal(Bt.drinkWordKind('drink-coconut-cay'),'cold','coconut water is not plain water');assert.equal(Bt.drinkWordKind('drink-greentea'),'cold');
+   assert.deepEqual([...Bt.sipWords('drink-cocoa-plaza')],['Sip!','Warm!','Cosy!','Ahh!']);assert.deepEqual([...Bt.sipWords('drink-sports')],['Sip!','Glug!','Power up!','Ahh!']);assert.deepEqual([...Bt.sipWords('drink-water')],['Sip!','Glug!','Water first!','Ahh!']);
+   for(const w of Object.values(Bt.DRINK_WORDS))assert(w.length===Bt.BITES&&w.at(-1)==='Ahh!'&&w.every(x=>x.length<=13),'one short word per sip, ending Ahh!');
+   const D=require('../lib/town/drinkMachines.ts');for(const d of D.DRINKS)assert(Bt.drinkWordKind(d.id)===(d.temp==='hot'?'hot':Bt.drinkWordKind(d.id)),d.id+': hot machine drinks get the warm words');
+   const log=[],timers=[];const seq=Bt.createEatSequence({kind:'sip',words:Bt.sipWords('drink-cocoa-plaza'),bite:()=>{},word:t=>log.push(t),satisfied(){},done(){},setTimer:(fn)=>{timers.push(fn);return fn;},clearTimer(){}});seq.start();while(timers.length)timers.shift()();
+   assert.deepEqual(log,['Sip!','Warm!','Cosy!','Ahh!'],'the sequence uses the drink’s words');}
+  const rev=fs.readFileSync(path.join(__dirname,'../components/KonbiniReveal.tsx'),'utf8'),css=fs.readFileSync(path.join(__dirname,'../components/KonbiniReveal.module.css'),'utf8'),room=fs.readFileSync(path.join(__dirname,'../components/KonbiniRoom.tsx'),'utf8');
+  assert(/const seq=createEatSequence\(\{kind,/.test(rev)&&/satisfied:\(\)=>\{konbiniSfx\.ahh\(\);/.test(rev)&&/bite:\(n,gone\)=>\{paint\.current\(n,gone,!reduced\);konbiniSfx\[kind\]\(\);/.test(rev),'the big view bites with the bite sound and ends with ahh');
+  assert(/data-konbini-bite-word=\{w\.text\}/.test(rev)&&/onAnimationEnd=\{\(\)=>setPops/.test(rev),'word pops are DOM, removed when their CSS animation ends');
+  assert(/if\(!edible\|\|eating\)return;/.test(rev),'the tap toy steps aside while eating (no auto-rebuild)');
+  assert(/@keyframes biteWordPop\{/.test(css)&&/@media\(prefers-reduced-motion:reduce\)\{\.biteWord\{animation:none\}\.biteWord\[data-fade\]\{opacity:0;transition:opacity \.3s linear\}\}/.test(css),'CSS pop; reduced motion = a static fade');
+  assert(/if\(reduced\)\{fadeTimers\.push\(/.test(rev)&&/fadeTimers\.forEach\(id=>window\.clearTimeout\(id\)\)/.test(rev),'reduced: the word fades on timers (no animationend under the global rule), cleared with the view');
+  assert(/if\(fate==='eat'\)\{setReveal\(\{\.\.\.r,eating:\{note:res\.note\?\?''\}\}\);return;\}/.test(room)&&/onEaten=\{\(\)=>\{if\(reveal\.eating\)finishEat\(reveal,reveal\.eating\.note\);\}\}/.test(room),'Eat now: resolve, bite sequence, then the result');
+  assert(/function doneReveal\(\)\{const r=reveal;if\(r\?\.eating\)\{finishEat\(r,r\.eating\.note\);return;\}/.test(room)&&/setToast\(`Yum! \$\{note\}`\)/.test(room),'Done while eating skips to the same Yum! result');
+  assert(/const seq=createEatSequence\(\{kind,words:drink\?sipWords\(item\.id\):undefined,/.test(rev),'drinks drain in sips with their own words');
+  // The island drink machines: Drink now saves first (chooseDrinkFate), then the same drain + words + ahh, then the existing result.
+  const dm=fs.readFileSync(path.join(__dirname,'../components/DrinkMachine.tsx'),'utf8');
+  assert(/const r=chooseDrinkFate\(reveal\.purchaseId,fate\);[\s\S]*setReveal\(\{\.\.\.reveal,choice:fate,drinking:fate==='eat'\}\)/.test(dm),'machine: saved, then drinking');
+  assert(/eating=\{!!r\.drinking\} onEaten=\{\(\)=>setReveal\(v=>v&&\{\.\.\.v,drinking:false\}\)\}/.test(dm)&&/status=\{r\.drinking\?undefined:r\.choice==='eat'\?`Glug glug!/.test(dm),'machine: the result shows after the last sip; Done/Escape (dismissReveal) skips');
+  console.log('konbini eat: 4 bites, Chomp!/Yum!/Ooh!, ahh, result; drinks: 4 sips with drink words (Konbini + machines)');}
+ // 16. Stamp card slide-out (Oct 1 2026): the NPC drawer (same dialog, DrawerSlide motion, ModalShell header + Done), with the
+ //     real rule spelled out and each stamp named by shop and magazine.
+ {const path=require('node:path'),card=fs.readFileSync(path.join(__dirname,'../components/KonbiniStampCard.tsx'),'utf8'),room=fs.readFileSync(path.join(__dirname,'../components/KonbiniRoom.tsx'),'utf8');
+  assert(/className=\{`\$\{npcStyles\.dialog\} \$\{slide\.drawer\} \$\{open\?`\$\{npcStyles\.entering\} \$\{slide\.entering\}`:`\$\{npcStyles\.leaving\} \$\{slide\.leaving\}`\}`\}/.test(card)&&/className=\{`\$\{npcStyles\.panel\} \$\{slide\.panel\} \$\{shell\.shell\} \$\{shell\.drawer\}`\}/.test(card),'the NPC drawer classes');
+  assert(/showDrawer\(el,close\.current\)/.test(card)&&/DRAWER_SLIDE_OUT_MS/.test(card)&&/<DoneButton ref=\{close\}/.test(card),'same open/close and Done');
+  assert(!/kind:'stamps'/.test(room)&&/<KonbiniStampCard open=\{stampsOpen\}/.test(room)&&(room.match(/setStampsOpen\(true\)/g)||[]).length===2,'both stamp-card entries open the slide-out');
+  assert(/const covered=!!overlay\|\|!!reveal\|\|!!packReveal\|\|talking\|\|stampsOpen;/.test(room),'the store sleeps behind it');
+  assert(/if\(first\)void stampMagazine\(m\.id\);/.test(room),'the rule the steps describe: the first answer stamps');
+  const steps=K.STAMP_STEPS('cay').join(' ');assert(/magazine table by the front window/.test(steps)&&/Coral Cay Konbini/.test(steps)&&/Answer the question/.test(steps)&&/first answer earns the stamp, right or wrong/.test(steps),'clear steps: where, read, answer');
+  assert.equal(K.shopMagazines('main').length+K.shopMagazines('cay').length,K.STAMP_CARD_SIZE);assert(/Island Square has 4 magazines and Coral Cay has 4/.test(steps));
+  assert.equal(K.stampReward(false),`Fill all ${K.STAMP_CARD_SIZE} stamps for ${LEARN_COINS.explore} learning coins (once).`);
+  assert(/data-konbini-stamp-shop=\{s\}/.test(card)&&/\{SHOP_NAMES\[s\]\}/.test(card)&&/<small aria-hidden="true">\{m\.title\}<\/small>/.test(card)&&!/'SQ'|'CAY'/.test(card),'stamps grouped by shop name and labelled by magazine (no SQ/CAY)');
+  assert(/data-konbini-stamp-go onClick=\{onShowMagazines\}/.test(card)&&/zoomToPoi\('magazines'\)/.test(room),'a "show me the magazine table" hint that takes you there');
+  console.log('konbini stamp card: slide-out, steps, labelled stamps');}
  console.log('KONBINI_PASS',JSON.stringify({items:F.FOOD_MENU.length,main:F.shopMenu('main').length,cay:F.shopMenu('cay').length,total,days,maxDay,rewardsTotal,spends}));
 })().catch(e=>{console.error(e);process.exit(1);});

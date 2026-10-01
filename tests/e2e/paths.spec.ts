@@ -92,6 +92,10 @@ test('ball-hunt lesson card steps through to Got it', async ({ page }, info) => 
   // The last step is visible above the button: nothing important is pushed off-screen.
   const b = (await primary.boundingBox())!;
   expect(b.y + b.height, 'Got it is inside the viewport').toBeLessThanOrEqual(page.viewportSize()!.height + 1);
+  // Oct 1 2026 (user): Got it overflowed past the right edge. Its right inset now matches the arrow's left inset.
+  const arrow = (await page.locator('dialog[open] [data-lesson-previous]').boundingBox())!, vw = page.viewportSize()!.width;
+  expect(b.x + b.width, 'Got it stays inside the screen').toBeLessThanOrEqual(vw);
+  expect(Math.abs((vw - (b.x + b.width)) - arrow.x), 'right padding equals the arrow\'s left padding').toBeLessThanOrEqual(3);
   await press(primary, info);
   await expect(page.locator('dialog[open] [data-lesson-primary]')).toHaveCount(0, { timeout: 15_000 });
   info.annotations.push({ type: 'steps', description: labels.join(' → ') });

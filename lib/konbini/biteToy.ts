@@ -56,6 +56,55 @@ export function createBiteToy(ports:BitePorts):BiteToy{
  };
 }
 
+// ---- Eating it for real (Oct 1 2026) ---------------------------------------------------------------------------------------
+/**
+ * User: "Eating in the Konbini: show the food item … and have it bite away bite by bite like the preview. With each bite, pop a
+ * short word: 'Chomp!', 'Yum!', 'Ooh!' … At the end, play a satisfied 'ahh' sound, then the existing fuel/eat result."
+ * After "Eat now" (the purchase is already resolved as eaten), the big view takes BITES automatic bites EAT_BITE_MS apart, each
+ * with the bite (or sip) sound and the next word in the rotation, then "ahh" (EAT_AHH_MS after the last bite) and `done`
+ * EAT_DONE_MS later, which shows the store's usual result. Timers only: each bite is one canvas redraw plus the existing crumb
+ * puff; the word pop is CSS. `skip` (Done / Escape) finishes at once, silently, and never twice.
+ */
+export const BITE_WORDS=['Chomp!','Yum!','Ooh!'] as const;
+/** Drinks (user, Oct 1 2026: "for the drinks, also add the [eating] part and add text"): one word per sip, by drink type. The
+ *  last sip is always "Ahh!" (the satisfied ahh follows). Hot: cocoa / hot drinks; sports drink; water; everything else. */
+export const SIP_WORDS=['Sip!','Glug!','Refreshing!','Ahh!'] as const;
+export const DRINK_WORDS={hot:['Sip!','Warm!','Cosy!','Ahh!'],sports:['Sip!','Glug!','Power up!','Ahh!'],water:['Sip!','Glug!','Water first!','Ahh!'],cold:SIP_WORDS} as const;
+export type DrinkWordKind=keyof typeof DRINK_WORDS;
+/** Which word set a drink gets, from its id (Konbini `drink-water`, machine `drink-cocoa-plaza`…). */
+export function drinkWordKind(id:string):DrinkWordKind{return /cocoa|hot|coffee|soup/.test(id)?'hot':/sports/.test(id)?'sports':/(^|-)water(-|$)/.test(id)?'water':'cold';}
+export const sipWords=(id:string)=>DRINK_WORDS[drinkWordKind(id)];
+export const EAT_FIRST_MS=350,EAT_BITE_MS=560,EAT_AHH_MS=380,EAT_DONE_MS=900;
+/** The word for bite `n` (1-based): Chomp!, Yum!, Ooh!, Chomp!… Sips use `words` (sipWords(id)) or SIP_WORDS. */
+export const biteWord=(kind:BiteKind,n:number,words?:readonly string[])=>{const w=words??(kind==='sip'?SIP_WORDS:BITE_WORDS);return w[(Math.max(1,n)-1)%w.length];};
+export type EatPorts={kind:BiteKind;
+ /** The word rotation (drinks: sipWords(id)); default by kind. */
+ words?:readonly string[];
+ /** Draw bite `n` (gone = the last one) and play its sound. */
+ bite:(n:number,gone:boolean)=>void;
+ /** Pop the word for bite `n` near that bite. */
+ word:(text:string,n:number)=>void;
+ /** The satisfied "ahh". */
+ satisfied:()=>void;
+ /** The sequence is over (played through or skipped): show the eat result. */
+ done:()=>void;
+ setTimer:(fn:()=>void,ms:number)=>unknown;clearTimer:(id:unknown)=>void};
+export type EatSequence={start:()=>boolean;skip:()=>void;dispose:()=>void;state:()=>{bites:number;started:boolean;finished:boolean}};
+export function createEatSequence(ports:EatPorts):EatSequence{
+ let bites=0,started=false,finished=false,timer:unknown=null;
+ const clear=()=>{if(timer!==null){ports.clearTimer(timer);timer=null;}};
+ const finish=()=>{if(finished)return;finished=true;clear();ports.done();};
+ const next=()=>{timer=null;if(finished)return;bites++;const gone=bites>=BITES;ports.bite(bites,gone);ports.word(biteWord(ports.kind,bites,ports.words),bites);
+  if(!gone){timer=ports.setTimer(next,EAT_BITE_MS);return;}
+  timer=ports.setTimer(()=>{timer=null;if(finished)return;ports.satisfied();timer=ports.setTimer(()=>{timer=null;finish();},EAT_DONE_MS);},EAT_AHH_MS);};
+ return {
+  start(){if(started||finished)return false;started=true;timer=ports.setTimer(next,EAT_FIRST_MS);return true;},
+  skip:finish,
+  dispose(){finished=true;clear();},
+  state:()=>({bites,started,finished}),
+ };
+}
+
 // ---- Geometry (in the reveal's 300-unit art space) ------------------------------------------------------------------------
 export type ItemBounds={cx:number;cy:number;x0:number;y0:number;x1:number;y1:number;size:number};
 export type BiteSpot={x:number;y:number;r:number;rot:number};

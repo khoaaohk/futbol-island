@@ -16,8 +16,8 @@ import market from './MarketStand.module.css';
 import styles from './IslandBalanceDrawer.module.css';
 import slide from './DrawerSlide.module.css';
 import {DRAWER_SLIDE_OUT_MS,showDrawer} from './drawerSlide';
-import {useFuel,eatFuel} from '@/lib/town/fuelStore';
-import {FUEL_COPY,FUEL_MAX,FUEL_RATE,FUEL_LABEL,produceFuel,type FuelMode} from '@/lib/town/fuel';
+import {useFuel,eatFuel,fuelStore} from '@/lib/town/fuelStore';
+import {FUEL_COPY,FUEL_MAX,FUEL_RATE,FUEL_LABEL,produceFuel,worthEating,type FuelMode} from '@/lib/town/fuel';
 import {FuelIcon} from './FuelCount';
 const SERVER_MARKET=emptyMarket();
 function BalanceIcon({kind}:{kind:'coins'|'fish'|'fruit'}){
@@ -35,7 +35,8 @@ export default function IslandBalanceDrawer({onClose}:{onClose:()=>void}){
  // map) are the zero-coin ways to refuel.
  const fuel=useFuel(),[ate,setAte]=useState('');
  const edible=[...pocket.fruit.rows,...pocket.veg.rows].map(r=>({...r,fuel:produceFuel(r.id,'produce',r.category==='fish'?undefined:r.category)})).filter(r=>r.fuel>0);
- const eat=(r:typeof edible[number])=>{if(fuel.fuel>=FUEL_MAX){setAte('Your tank is full. Save it for later, or sell it at the stand.');return;}
+ // The real (unrounded) tank decides, not the bar's whole number (bug A4: at 99.6 the bar said 99 and an orange went for +0).
+ const eat=(r:typeof edible[number])=>{if(!worthEating(fuelStore.read().fuel,r.fuel)){setAte('Your tank is full. Save it for later, or sell it at the stand.');return;}
   if(!islandMarket.take(r.id,1))return;const got=eatFuel(r.fuel);setAte(`Yum, ${r.good.name.toLowerCase()}! +${got} fuel. ${r.good.lesson}`);};
  const levelText=fuel.level==='empty'?'Empty: walking still works':fuel.level==='low'?'Running low':fuel.level==='full'?'Full tank':'Good to go';
  const order:FuelMode[]=['jetpack','moped','bike','scooter','sprint','walk'];

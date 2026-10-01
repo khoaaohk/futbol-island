@@ -77,4 +77,47 @@ const load=(path,extra={})=>{const m={exports:{}};vm.runInNewContext(ts.transpil
   assert.match(read('lib/graphics/quality.ts'),/shadowSize:\s*2048/,'1024² shadows showed acne and soft edges in same-frame captures: keep 2048²');
   const cap=read('lib/town/frameCap.ts');assert.match(cap,/export const PHONE_FRAME_MS = 1000 \/ 30;/);assert(!/1000 \/ 20/.test(cap),'no 20 fps idle tier: every island view has visible motion (player idle/hover at minimum)');
 }
-console.log('PASS heat pass 3+4: HUD rests while steering and stays resting after gameplay taps, minimap/thumb on island frames, no blur over moving canvases, hidden matches skip rigs, menus sleep');
+// 7. Overnight heat audit (Sep 30 2026, docs/performance-guide.md).
+{
+  const town=read('components/Town.tsx'),field=read('components/FieldLearning.tsx'),pickerCss=read('components/PlaysPicker.module.css');
+  // F1: the full-screen, opaque Choose plays sheet sleeps the island like a menu, with no blur under it.
+  assert(/settingsRef\.current=[^;]*\bplaysPickerOpen\b/.test(town),'the Choose plays sheet pauses the island (settingsRef)');
+  assert.match(town,/<FieldLearning [^\n]*onPickerChange=\{setPlaysPickerOpen\}/,'Town hears the picker');
+  assert.match(field,/useEffect\(\(\)=>\{pickerCallback\.current\?\.\(pickerOpen\);\},\[pickerOpen\]\);/,'FieldLearning reports every open/close');
+  assert.match(field,/useEffect\(\(\)=>\(\)=>\{pickerCallback\.current\?\.\(false\);\},\[\]\);/,'…and clears it on unmount (a lesson launch or Done never leaves the island asleep)');
+  assert.match(pickerCss,/\.dialog\.dialog\.dialog::backdrop\{backdrop-filter:none;-webkit-backdrop-filter:none\}/,'no blur under the opaque sheet');
+  const tint=pickerCss.match(/@keyframes playsTintIn\{[^\n]*\}\}/);assert(tint&&!/backdrop-filter/.test(tint[0]),'its fade-in animates the tint only (the shared backdropIn would hold blur(3px) while open)');
+  assert.match(pickerCss,/\.dialog\.dialog\.dialog\[open\]::backdrop\{animation-name:playsTintIn\}/);
+  // F2: field cards write disabled/tabindex only on change.
+  assert.match(town,/const setCardInactive=\(button:HTMLButtonElement\)=>\{if\(!button\.disabled\)button\.disabled=true;if\(button\.tabIndex!==-1\)button\.tabIndex=-1;\};/);
+  assert(!/button\.disabled=true;button\.tabIndex=-1;/.test(town),'no unconditional per-frame disabled/tabindex writes');
+  // F10: no matchMedia per frame in the learning view.
+  assert(!/learningView\.update\([^\n]*matchMedia/.test(town),'the learning view uses the cached coarse flag');
+  // F3: the closed travel map keeps its last position and a stable onSelect, behind memo.
+  const moving=read('components/MovingIslandMap.tsx');
+  assert.match(moving,/const TravelMap=memo\(IslandTravelMap\);/);assert.match(moving,/const shown=useRef\(live\);if\(props\.open\)shown\.current=live;/);
+  assert.match(moving,/<TravelMap \{\.\.\.props\} onSelect=\{select\} position=\{shown\.current\}\/>/);
+  assert.match(read('components/IslandOverview.tsx'),/if\(!mounted\)return null;/,'IslandOverview keeps its client-only mounted gate');
+  // F4: closed dialog hosts are memoized with stable callbacks.
+  for(const host of ['IslandSettings','CharacterCustomizer','CoachesCentre','IslandOnboarding','NpcConversation','Museum','FerryPreview'])assert.match(town,new RegExp(`\\b${host}=stableMemo\\(${host}Host\\)`),`${host} is memoized`);
+  assert.match(town,/const PositionGuide=stableMemo\(dynamic\(/);
+  // stableMemo itself: data props pass through, callbacks become one stable wrapper per prop that calls the latest function.
+  {const refs=[];let i=0,memoArg=null;const fakeReact={memo:c=>{memoArg=c;return {memoOf:c};},useRef:v=>{const k=i++;return refs[k]??(refs[k]={current:v});},createElement:(type,props)=>({type,props})};
+   const {stableMemo}=load('lib/ui/stableMemo.ts',{react:fakeReact});const Host=()=>null,Wrapped=stableMemo(Host);assert.equal(memoArg,Host);
+   const calls=[];const render=props=>{i=0;return Wrapped(props);};
+   const a=render({open:false,value:1,onClose:()=>calls.push('a')}),b=render({open:false,value:1,onClose:()=>calls.push('b')});
+   assert.deepEqual(a.type,{memoOf:Host});assert.equal(a.props.onClose,b.props.onClose,'a new inline callback keeps the same wrapper (memo can bail out)');
+   assert.equal(a.props.open,b.props.open);assert.equal(a.props.value,b.props.value);
+   a.props.onClose();assert.deepEqual(calls,['b'],'the wrapper calls the latest callback');
+   const c=render({open:true,value:1,onClose:()=>calls.push('c')});assert.equal(c.props.open,true,'data changes reach the host');c.props.onClose();assert.deepEqual(calls,['b','c']);
+   const d=render({open:true,value:1});assert.equal(d.props.onClose,undefined,'an absent callback stays absent');}
+  // F6: store previews skip baked ball pictures and render over idle time, publishing one complete map.
+  const previews=read('components/StorePreviews.tsx');
+  assert.match(previews,/STORE_ITEMS\.filter\(item=>onlyItem\?item\.id===onlyItem:bake\|\|item\.category!=='ball'\|\|!vendingBallPicture\(item\.id\)\)/);
+  assert.match(previews,/requestIdleCallback\(deadline=>slice\(/);assert.match(previews,/first\?400:30\)/,'Safari fallback: 400 ms, then short slices');
+  assert.match(previews,/dispose\(\);setPreviews\(result\);/,'one complete map (VendingMachine/Backpack cache the first non-empty result)');
+  assert.match(read('scripts/capture-vending-products.cjs'),/window\.__fi2BakeBallPictures=true/,'the bake script still gets ball snapshots');
+  // Konbini door prompt: half-pixel rounding, written only on change.
+  assert.match(read('components/KonbiniRoom.tsx'),/if\(b\.style\.left!==l\)b\.style\.left=l;if\(b\.style\.top!==t\)b\.style\.top=t;if\(b\.style\.visibility!==v\)b\.style\.visibility=v;/);
+}
+console.log('PASS heat pass 3+4: HUD rests while steering and stays resting after gameplay taps, minimap/thumb on island frames, no blur over moving canvases, hidden matches skip rigs, menus sleep (incl. Choose plays), closed dialogs memoized');

@@ -50,7 +50,7 @@ export type JobRun={def:JobDef;got:boolean[];next:number;carrying:number;phase:J
  step:number;
  /** Kit room: the last wrong peg tried (−1 = none); after one wrong try the beacon shows the right peg. */
  wrong:number;
- /** Offside: replay clock (s). Pump: gauge pressure (atm). */
+ /** Offside: replay clock (s). Pump: seconds since the last stroke (the leak waits PumpTask.leakDelay); `pressure`: gauge (atm). */
  clock:number;pressure:number;
  /** Offside: was the last call right? */
  right:boolean|null;
@@ -91,12 +91,12 @@ export const harvestFruitCount=(spots:HarvestSpot[])=>spots.reduce((n,s)=>n+(s.a
 /** `gardenRipe`: Garden shift only, which spots are pickable this shift (default: all; the scene passes garden.ts shiftRipeness). */
 export function startRun(def:JobDef,seed=1,gardenRipe?:boolean[]):JobRun{
  const h=harvestTask(def),gt=gardenTask(def);
- return {def,got:def.targets.map(()=>false),next:0,carrying:-1,phase:'work',passes:0,shots:0,seconds:0,step:0,wrong:-1,clock:0,pressure:def.task?.type==='pump'?def.task.start[0]:0,right:null,note:'',
+ return {def,got:def.targets.map(()=>false),next:0,carrying:-1,phase:'work',passes:0,shots:0,seconds:0,step:0,wrong:-1,clock:0,pressure:def.task?.type==='pump'?def.task.balls[0].start:0,right:null,note:'',
   at:-1,stage:def.targets.map(()=>0),work:def.targets.map(()=>0),holding:false,px:0,pz:0,spot:null,shotArmed:false,spotSeed:(seed>>>0)||1,
   harvest:h?{near:-1,energy:0,left:h.spots.map(s=>s.action==='shake'?s.fruit??3:0),lastMiss:false,ground:[],pulling:-1,pull:0,snips:0,snipClock:0,fruit:0,veg:0,done:h.spots.map(()=>false),bag:[],seed:(seed>>>0)||1}:null,
   garden:gt?{ripe:def.targets.map((_,i)=>gardenRipe?.[i]??true),picked:def.targets.map(()=>false),near:-1,fruit:0,veg:0,bag:[],taught:[]}:null};
 }
-const taskTotal=(d:JobDef)=>d.task?.type==='sort'?d.task.items.length:d.task?.type==='offside'?d.task.clips:d.task?.type==='pump'?d.task.start.length:d.task?.type==='harvest'?d.task.fruitGoal+d.task.vegGoal:d.task?.type==='garden'?d.task.goal:d.targets.length;
+const taskTotal=(d:JobDef)=>d.task?.type==='sort'?d.task.items.length:d.task?.type==='offside'?d.task.clips:d.task?.type==='pump'?d.task.balls.length:d.task?.type==='harvest'?d.task.fruitGoal+d.task.vegGoal:d.task?.type==='garden'?d.task.goal:d.targets.length;
 export const offsideClip=(r:JobRun)=>OFFSIDE_CLIPS[Math.min(r.step,OFFSIDE_CLIPS.length-1)];
 /** Items done so far and the job's total, for the HUD. */
 export function runProgress(r:JobRun):{value:number;total:number}{
@@ -170,9 +170,11 @@ export function stepRun(r:JobRun,p:Vec,dt:number,floor:(x:number,z:number)=>numb
   if(r.phase==='work'){if(reach(d.targets[0])){r.phase='watch';r.clock=0;r.note='';ev.push({type:'phase'});}}
   else if(r.phase==='watch'){r.clock+=t;if(r.clock>=offsideClip(r).end){r.clock=offsideClip(r).end;r.phase='call';ev.push({type:'phase'});}}
  }
- else if(d.kind==='pump'){if(r.phase==='work'&&reach(d.targets[0])){r.phase='pump';r.note='';ev.push({type:'phase'});}}
+ else if(d.kind==='pump'){if(r.phase==='work'&&reach(d.targets[0])){r.phase='pump';r.note='';r.clock=0;ev.push({type:'phase'});}
+  else if(r.phase==='pump')pumpLeak(r,t);}
  else if(d.kind==='carry'){
-  if(steps)r.at=r.carrying<0?(d.targets[r.next]&&reach(d.targets[r.next])?r.next:-1):(d.deliver&&reach(d.deliver,1.8)?-2:-1);
+  // The ball box is 1.2 m wide: it arms from 2.2 m (Oct 1 2026, a nudge from a passing player no longer disarms it mid-tap).
+  if(steps)r.at=r.carrying<0?(d.targets[r.next]&&reach(d.targets[r.next])?r.next:-1):(d.deliver&&reach(d.deliver,2.2)?-2:-1);
   else if(r.carrying<0){const q=d.targets[r.next];if(q&&reach(q)){r.carrying=r.next;ev.push({type:'pickup',index:r.next});}}
   else if(d.deliver&&reach(d.deliver,1.8)){r.got[r.carrying]=true;ev.push({type:'return',index:r.carrying});r.carrying=-1;r.next++;if(r.next>=d.targets.length){r.phase='done';ev.push({type:'done'});}}
  }
@@ -301,6 +303,27 @@ function gardenHint(r:JobRun){
  return head+GARDEN_TIP;
 }
 
+// ---- Ball pump (Oct 1 2026, user: "make it harder": many small strokes, a slow leak, a narrower zone each ball) ----
+/** The gauge's top (atm): Pump stops adding air here. */
+export const PUMP_CAP=1.6;
+/** Seconds a ball in the green zone holds its air before the leak starts again (below the green: PumpTask.leakDelay). */
+export const PUMP_GREEN_HOLD=2.5;
+/** The tip line: why pressure matters (Law 2, the job's own lesson). */
+export const PUMP_TIP='Law 2: a match ball is 0.6–1.1 atm at sea level. Too soft and it dies on your foot; too hard and it bounces away.';
+/** The gauge reading (2 decimals, rounded down so 0.675 never reads as an in-the-green 0.68 when the zone starts at 0.68). */
+export const pumpShown=(p:number)=>Math.floor(p*100+1e-6)/100;
+/** The ball being pumped (null when not a pump job or finished). */
+export function pumpBall(r:JobRun){const t=r.def.task;return t?.type==='pump'?t.balls[Math.min(r.step,t.balls.length-1)]??null:null;}
+/** Pump strokes still needed to reach the green zone from the current pressure (0 when in or above it). */
+export function pumpTapsLeft(r:JobRun){const b=pumpBall(r);if(!b||r.pressure>=b.min)return 0;return Math.ceil((b.min-r.pressure)/b.step-1e-6);}
+/** Air seeps back once you stop pumping for `leakDelay` s: gently, never below the ball's start and never from an over-pumped
+ *  ball (that one needs Let air out). `r.clock` = seconds since the last stroke. No fail state: just more strokes. */
+function pumpLeak(r:JobRun,t:number){const task=r.def.task,b=pumpBall(r);if(task?.type!=='pump'||!b)return;r.clock+=t;
+ // In the green it holds longer (PUMP_GREEN_HOLD s), so there is always time to read the gauge and press Ball ready.
+ if(r.clock<(r.pressure>=b.min?PUMP_GREEN_HOLD:task.leakDelay)||r.pressure<=b.start||r.pressure>b.max)return;const was=r.pressure;
+ r.pressure=Math.max(b.start,r.pressure-b.leak*t);
+ if(was>=b.min&&r.pressure<b.min)r.note='Air is seeping out: keep pumping, then press Ball ready while it is in the green.';
+}
 /** How far outside a job's area the player may wander before the shift ends. */
 export const JOB_AREA_MARGIN=45;
 /** True when (x,z) is more than JOB_AREA_MARGIN outside the box around a job's sign, targets and drop-off (horizontal only). */
@@ -371,13 +394,17 @@ export function runAction(r:JobRun,id:string):JobEvent[]{
   else if(r.phase==='explain'&&id==='next'){if(r.right){r.step++;ev.push({type:'return',index:r.step-1});if(r.step>=taskTotal(d)){r.phase='done';r.note='';ev.push({type:'done'});return ev;}}
    r.phase='watch';r.clock=0;r.right=null;r.note='';ev.push({type:'phase'});}
  }
- if(d.task?.type==='pump'&&r.phase==='pump'){const t=d.task,shown=(p:number)=>p.toFixed(2);
-  if(id==='pump'){r.pressure=Math.min(1.6,Math.round((r.pressure+t.step)*100)/100);r.note=r.pressure>t.max?`${shown(r.pressure)} atm — too hard! Let a little air out.`:r.pressure>=t.min?`${shown(r.pressure)} atm — in the green zone. Press Ball ready.`:`${shown(r.pressure)} atm — still soft. Keep pumping.`;ev.push({type:'pump',value:r.pressure});}
-  else if(id==='release'){r.pressure=Math.max(0,Math.round((r.pressure-t.release)*100)/100);r.note=`${shown(r.pressure)} atm — some air let out.`;ev.push({type:'release',value:r.pressure});}
+ if(d.task?.type==='pump'&&r.phase==='pump'){const t=d.task,b=pumpBall(r)!,shown=(p:number)=>pumpShown(p).toFixed(2),zone=`${shown(b.min)}–${shown(b.max)}`;
+  if(id==='pump'){const was=r.pressure;r.pressure=Math.min(PUMP_CAP,Math.round((r.pressure+b.step)*1000)/1000);r.clock=0;
+   r.note=r.pressure>b.max?`${shown(r.pressure)} atm: too hard! Tap Let air out.`:r.pressure>=b.min?`${shown(r.pressure)} atm: in the green zone. Press Ball ready.`:'';
+   ev.push({type:'pump',value:r.pressure,...(was<=b.max&&r.pressure>b.max?{stage:1}:{})});}
+  else if(id==='release'){r.pressure=Math.max(0,Math.round((r.pressure-t.release)*1000)/1000);r.clock=0;
+   r.note=r.pressure>b.max?`${shown(r.pressure)} atm: still too hard. Let out a little more.`:r.pressure>=b.min?`${shown(r.pressure)} atm: in the green zone. Press Ball ready.`:`${shown(r.pressure)} atm: too soft now. Pump it back up.`;ev.push({type:'release',value:r.pressure});}
   else if(id==='ready'){
-   if(r.pressure>=t.min&&r.pressure<=t.max){r.note=`Ball ${r.step+1} is match-ready at ${shown(r.pressure)} atm!`;r.step++;ev.push({type:'return',index:r.step-1});
-    if(r.step>=t.start.length){r.phase='done';ev.push({type:'done'});}else r.pressure=t.start[r.step];}
-   else{r.note=r.pressure<t.min?`Squeeze test: too soft (${shown(r.pressure)} atm). The green zone is ${t.min}–${t.max}.`:`Squeeze test: too hard (${shown(r.pressure)} atm). Let some air out.`;ev.push({type:'wrong'});}
+   if(r.pressure>=b.min&&r.pressure<=b.max){r.step++;ev.push({type:'return',index:r.step-1});
+    if(r.step>=t.balls.length){r.note=`Ball ${r.step} is match-ready at ${shown(r.pressure)} atm!`;r.phase='done';ev.push({type:'done'});}
+    else{const n=t.balls[r.step];r.pressure=n.start;r.clock=0;r.note=`Ball ${r.step} is match-ready! Ball ${r.step+1}: the green zone is narrower now (${shown(n.min)}–${shown(n.max)}), still inside the Law 2 range.`;}}
+   else{r.note=r.pressure<b.min?`Squeeze test: too soft (${shown(r.pressure)} atm). Keep pumping into the green (${zone}).`:`Squeeze test: too hard (${shown(r.pressure)} atm). Let some air out.`;ev.push({type:'wrong'});}
   }
  }
  if(d.work)workAction(r,id,ev);
@@ -416,7 +443,8 @@ export function runHint(r:JobRun):string{
   return r.note&&(r.carrying>=0||r.wrong>=0)?r.note:r.carrying>=0?item.clue:r.step===0?`Go to the ${source??'kit hamper'} and take the first ${noun}.`:`${r.note} Take the next ${noun} from the ${source??'hamper'}.`;}
  if(d.kind==='offside'){if(r.phase==='work')return 'Walk to your touchline spot (follow the arrow).';const clip=offsideClip(r);
   if(r.phase==='watch')return `${clip.title}: watch the attacker with the white ring when the pass is played…`;if(r.phase==='call')return `${clip.title}: offside or not when the pass was played?`;return r.note;}
- if(d.kind==='pump'){if(r.phase==='work')return 'Walk to the pump station (follow the arrow).';return r.note||`Ball ${r.step+1}: ${r.pressure.toFixed(2)} atm. Pump it into the green zone (0.6–1.1).`;}
+ if(d.kind==='pump'){if(r.phase==='work')return 'Walk to the pump station (follow the arrow).';if(r.note)return r.note;const left=pumpTapsLeft(r),n=d.task?.type==='pump'?d.task.balls.length:5;
+  return `Ball ${r.step+1} of ${n}: keep tapping Pump, about ${left} more stroke${left===1?'':'s'}. ${PUMP_TIP}`;}
  if(d.work){const step=currentStep(r);
   if(d.kind==='trail'&&r.phase==='work')return r.note||(r.holding?'Keep walking over the faded dashes in order.':step?.hint??'');
   if(r.at===-2&&step)return step.hint;

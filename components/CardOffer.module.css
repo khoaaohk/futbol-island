@@ -3,7 +3,7 @@
    page arrows (.turn). Static at rest. */
 .dialog{position:fixed;inset:0;width:100%;height:auto;max-width:none;max-height:none;margin:0;padding:0;border:0;background:transparent;color:#fff1d3;font-family:inherit;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain}
 .dialog::backdrop{background:#183b34f0}
-.dialog[open]{animation:fadeIn .2s ease-out both}
+.dialog[open]{animation:fadeIn .26s ease-out both}
 /* One screen, no scrolling: the note and the actions take what they need and the deck (or the revealed card) gets the rest. */
 .stage{box-sizing:border-box;height:100%;display:flex;flex-direction:column;align-items:center;gap:clamp(10px,1.8dvh,18px);
  padding:calc(14px + env(safe-area-inset-top,0px)) calc(16px + env(safe-area-inset-right,0px)) calc(14px + env(safe-area-inset-bottom,0px)) calc(16px + env(safe-area-inset-left,0px))}
@@ -35,10 +35,10 @@
 .arrow svg{width:26px;height:26px}
 .prev{left:max(4px,calc(50% - var(--w) * .5 - 48px))}
 .next{right:max(4px,calc(50% - var(--w) * .5 - 48px))}
-.arrow:not(:disabled):active{translate:0 2px;box-shadow:0 1px 0 var(--btn-gold-bright-edge),0 0 0 3px #244d4055}
+.arrow:not(:disabled):active{translate:0 var(--btn-press);box-shadow:0 1px 0 var(--btn-gold-bright-edge),0 0 0 3px #244d4055}
 @media(hover:hover){.arrow:not(:disabled):hover{translate:0 -2px;box-shadow:0 5px 0 var(--btn-gold-bright-edge),0 0 0 3px #244d4055}}
 .arrow:disabled{opacity:0;pointer-events:none}
-.arrow:focus-visible{outline:3px solid #ffd451;outline-offset:3px}
+.arrow:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
 /* Under the front card: which card this is, its position and one strength. */
 .caption{flex:none;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:4px 8px;width:100%;max-width:440px;text-align:center}
 .where{font-size:13px;font-weight:800;color:#fff1d3cc;font-variant-numeric:tabular-nums}
@@ -100,9 +100,9 @@
 .primary,.secondary{min-height:48px;min-width:200px;padding:0 22px;border-radius:999px;font:inherit;font-size:16px;font-weight:800;cursor:pointer;touch-action:manipulation}
 .primary{border:3px solid #fff2cd;background:#e9c16b url('/stories/films/assets/entry-grain.png') center/128px 128px;color:#244d40;box-shadow:0 5px 0 #a8863d,0 0 0 4px #fff2cd40;background-blend-mode:soft-light}
 .secondary{border:0;background:#fff1d3;color:#244d40;box-shadow:0 3px 0 var(--btn-gold-bright-edge)}
-.primary:not(:disabled):active,.secondary:not(:disabled):active{transform:translateY(2px)}
+.primary:not(:disabled):active,.secondary:not(:disabled):active{transform:translateY(var(--btn-press))}
 .primary:disabled,.secondary:disabled{cursor:default}
-.primary:focus-visible,.secondary:focus-visible{outline:3px solid #ffd451;outline-offset:3px}
+.primary:focus-visible,.secondary:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
 .count{margin:0;font-size:13px;font-weight:700;color:#fff1d3cc;font-variant-numeric:tabular-nums}
 .srOnly{position:absolute;top:0;left:0;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 @media(min-width:601px){.note{padding:16px 24px}.note p:last-child{font-size:15px}}
@@ -114,7 +114,7 @@
 .dot{position:absolute;top:-2px;right:-2px;min-width:20px;height:20px;padding:0 5px;box-sizing:border-box;border-radius:999px;background:#ffd451;color:#244d40;border:2px solid #244d40;font-size:11px;font-weight:800;line-height:16px;text-align:center;pointer-events:none}
 .pill{position:absolute;left:50%;bottom:calc(100% + 10px);transform:translateX(-50%);display:flex;align-items:center;gap:8px;max-width:calc(100vw - 32px);box-sizing:border-box;min-height:44px;padding:5px 18px 5px 6px;border:0;border-radius:999px;background:#fff1d3;color:#244d40;font:inherit;font-size:15px;font-weight:800;white-space:nowrap;cursor:pointer;box-shadow:0 6px 0 #183b3440,0 12px 30px #0f2a2f44}
 .pill>span{display:grid;place-items:center;min-width:32px;height:32px;padding:0 6px;box-sizing:border-box;border-radius:999px;background:#ffd451;font-size:14px}
-.pill:focus-visible{outline:3px solid #ffd451;outline-offset:2px}
+.pill:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
 .npcNote{margin:0 0 8px;font-size:13px;line-height:1.45;color:#61705b}
 
 /* Sparkling stars around the front card (user, Sep 25 2026): 18 gold ✦ of varying sizes twinkling just outside its edge for as long as
@@ -131,3 +131,15 @@
 
 /* iOS long-press guard (tests/device-guards.cjs check 1): no "Save image / Copy / Share" callout or text selection on held controls. */
 .deck,.deck *{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-user-drag:none}
+/* Phone landscape (Sep 30 2026): stacking title, card and note left the card ~80px wide (its Star pill clipped). On a short
+   landscape screen the card takes the whole height under the top bar (76px), with "Added to your binder!" in the column to its left
+   and See it in my binder in the column to its right. --side is that column's width (the card is 1.52 × --card-w tall). */
+@media(orientation:landscape) and (max-height:500px){
+ .reveal{--head-room:0px;--sheet-room:0px;--side:min(300px,calc((100vw - (100dvh - 84px) / 1.52) / 2 - 3 * var(--phone-gutter)))}
+ .reveal.reveal{padding-top:calc(76px + env(safe-area-inset-top,0px));padding-bottom:calc(8px + env(safe-area-inset-bottom,0px))}
+ .reveal .host.host>div{--card-w:min(520px,92vw,calc((100dvh - 84px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px)) / 1.52))}
+ .reveal .added{position:fixed;z-index:2;top:50%;left:calc(var(--phone-gutter) + env(safe-area-inset-left,0px));width:var(--side);margin:0;translate:0 -50%;font-size:clamp(28px,4.4vw,40px);text-wrap:balance}
+ .revealSparkles.revealSparkles{height:100%}
+ .reveal>.below.below{position:fixed;top:50%;bottom:auto;left:auto;right:calc(var(--phone-gutter) + env(safe-area-inset-right,0px));width:var(--side);padding:0;translate:0 -50%}
+ .reveal>.below .primary{min-width:0;max-width:100%;padding:0 18px}
+}

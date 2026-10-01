@@ -5,7 +5,8 @@
  */
 import type {Format} from '../town/venues';
 export const GROWNUPS_OPEN='fi2-open-grownups';
-export type GrownUpsOpen={view?:'home'|'plan'};
+/** `from:'settings'`: opened as a Settings sub-page, so it leaves with Back (left) like About; elsewhere it closes with Done (right). */
+export type GrownUpsOpen={view?:'home'|'plan';from?:'settings'};
 export const openGrownUps=(detail:GrownUpsOpen={})=>window.dispatchEvent(new CustomEvent(GROWNUPS_OPEN,{detail}));
 export const GROWNUPS_FORMAT_KEY='fi2-grownups-format-v1';
 const FORMATS:Format[]=['7v7','9v9','11v11','futsal'];

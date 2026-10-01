@@ -15,7 +15,9 @@ export type JobWalletPorts={creditRun:Credit;balance:()=>number;caps:Record<stri
  *  a full basket cut it down. */
 export type JobPayResult={coins:number;credited:number;tier:PayTier;bonus:number;message:string;balance:number;goods:ShareLine[];offered:ShareLine[]};
 export function createJobWallet(ports:JobWalletPorts){
- const now=ports.now??(()=>Date.now()),read=ports.read??readJobLedger,write=ports.write??writeJobLedger;
+ // Reads go to storage every time (bug A7, Sep 30 2026): with a cached ledger, a shift finished in another tab left this tab's
+ // shift number stale, the wallet run id repeated (`…:1` again), it credited 0 and the payday card still showed the full pay.
+ const now=ports.now??(()=>Date.now()),read=ports.read??((t:number)=>readJobLedger(t,true)),write=ports.write??writeJobLedger;
  const source=()=>typeof ports.caps.island==='number'?'island':'live';
  const cap=()=>ports.caps[source()]??20;
  async function credit(base:string,amount:number,reason:string){let total=0;const parts=splitCredit(amount,cap());for(let i=0;i<parts.length;i++)total+=await ports.creditRun(parts.length>1?`${base}:${i}`:base,source(),parts[i],reason);return total;}

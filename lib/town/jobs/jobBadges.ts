@@ -36,21 +36,35 @@ export function createJobBadges(root:T.Object3D,spots:BadgeSpot[]){
   // Every badge looks the same neon pink (user, Sep 30 2026: a dimmed "done today" badge looked different); the offer card says
   // when a later shift pays less.
   spots.forEach((_p,i)=>mesh.setColorAt(i,c.set('#ffffff')));if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;}
- /** Per frame after the camera is placed. Returns how many badges were drawn (0 = idle: nothing animated). */
- function update(camera:T.PerspectiveCamera,dt:number,reduced:boolean,visible:boolean){
+ // Heat audit #9 (Sep 30 2026): wake against the PLAYER, not the camera (the follow camera sits ~37 m behind, so the camera test
+ // woke for signs behind it too); the frustum is rebuilt only when the camera moved; no per-frame closure; the instance matrices are
+ // uploaded only when a badge is shown and something changed (reduced motion + a still camera writes nothing). The show test, the
+ // size and the bob are unchanged, so the badges look the same. A sign shown by the camera rule (≤ RANGE+40 m from the camera,
+ // in view) is within RANGE+40 m of the player for the follow and flying cameras (tests/job-boards.cjs checks the shown sets match).
+ const lastView=new Float64Array(32);let viewSet=false;
+ const cameraMoved=(camera:T.PerspectiveCamera)=>{const a=camera.matrixWorldInverse.elements,b=camera.projectionMatrix.elements;let moved=!viewSet;
+  for(let i=0;i<16;i++){if(lastView[i]!==a[i]){lastView[i]=a[i];moved=true;}if(lastView[16+i]!==b[i]){lastView[16+i]=b[i];moved=true;}}viewSet=true;return moved;};
+ const arr=mesh.instanceMatrix.array as Float32Array;
+ /** Writes instance i; returns true when its 16 floats changed (compared at the buffer's float32 precision). */
+ const put=(i:number,mm:T.Matrix4)=>{const e=mm.elements,o=i*16;let changed=false;for(let k=0;k<16;k++)if(arr[o+k]!==Math.fround(e[k])){changed=true;break;}if(changed)mesh.setMatrixAt(i,mm);return changed;};
+ /** Per frame after the camera is placed. `player`: the character's position (the wake range is measured from it; the camera
+  *  is used when it is omitted). Returns how many badges were drawn (0 = idle: nothing animated). */
+ function update(camera:T.PerspectiveCamera,dt:number,reduced:boolean,visible:boolean,player?:{x:number;z:number}){
   if(!visible){if(mesh.visible)mesh.visible=false;return 0;}
-  const cx=camera.position.x,cz=camera.position.z;let any=false;
-  for(const p of spots)if(p.id!==active&&Math.hypot(p.x-cx,p.z-cz)<RANGE+40){any=true;break;}
+  const px=player?player.x:camera.position.x,pz=player?player.z:camera.position.z;let any=false;
+  for(let i=0;i<spots.length;i++){const p=spots[i];if(p.id!==active&&Math.hypot(p.x-px,p.z-pz)<RANGE+40){any=true;break;}}
   if(!any){if(mesh.visible)mesh.visible=false;return 0;}
-  time+=dt;pv.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse);frustum.setFromProjectionMatrix(pv);let shown=0;
-  const q=camera.quaternion,fov=Math.tan(camera.fov*Math.PI/360);
-  spots.forEach((p,i)=>{v.set(p.x,p.y,p.z);const d=camera.position.distanceTo(v);
-   if(p.id===active||d>RANGE+40||!frustum.containsPoint(v)){mesh.setMatrixAt(i,hidden);return;}
-   const bob=reduced?0:Math.sin(time*1.6+i*1.3)*.06,pulse=1;// no pulse: the badge stays quiet
+  time+=dt;if(cameraMoved(camera)){pv.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse);frustum.setFromProjectionMatrix(pv);}
+  let shown=0,changed=false;const q=camera.quaternion,fov=Math.tan(camera.fov*Math.PI/360);
+  for(let i=0;i<spots.length;i++){const p=spots[i];v.set(p.x,p.y,p.z);const d=camera.position.distanceTo(v);
+   if(p.id===active||d>RANGE+40||!frustum.containsPoint(v)){if(put(i,hidden))changed=true;continue;}
+   const bob=reduced?0:Math.sin(time*1.6+i*1.3)*.06;// no pulse: the badge stays quiet
    // At least ~5 % of the view height on screen, so a far sign still reads; never smaller than its base size.
-   const k=Math.max(1,d*fov*2*.045/BASE_H)*pulse;
-   v.y+=bob+(k-1)*BASE_H*.5;m.compose(v,q,s.set(k,k,k));mesh.setMatrixAt(i,m);shown++;});
-  mesh.visible=shown>0;mesh.instanceMatrix.needsUpdate=true;return shown;
+   const k=Math.max(1,d*fov*2*.045/BASE_H);
+   v.y+=bob+(k-1)*BASE_H*.5;m.compose(v,q,s.set(k,k,k));if(put(i,m))changed=true;shown++;}
+  mesh.visible=shown>0;
+  // Upload only what changed: with none shown the hidden matrices go up once (the frame the last badge leaves), then never again.
+  if(changed)mesh.instanceMatrix.needsUpdate=true;return shown;
  }
  return {mesh,update,setState,dispose(){mesh.removeFromParent();mesh.dispose();geo.dispose();mat.dispose();tex?.dispose();}};
 }

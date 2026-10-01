@@ -1,5 +1,231 @@
 # Performance reference for future Futbol Island updates
 
+## Splash cast arrives with the splash — October 1, 2026 (local, not deployed)
+
+User report: "the characters load in way slower than the rest of the page."
+
+**Root cause.** The bytes were not the problem: the stills were preloaded and finished before the CSS. There were two causes:
+- **The entrance animation.** `castPop` gave each character a 0.15–0.59 s delay, then a 0.62 s pop from 72 % scale at opacity 0. The last character reached half opacity about 0.45–0.65 s after the title and was fully in about 1.1 s after it.
+- **Wasted downloads on phones.** React's `preload()` in this build drops the `media` option, and React also auto-preloads eager `<img>`s. So a phone fetched all ten files (five large and five `-sm`, 117 KB) for a row that shows three. On Fast 3G those files competed with the CSS and the title font.
+
+**Fix.** The changes are in `components/LoadingBeanCast.tsx` and `components/IslandLoading.module.css`.
+- **Preloads.** There is one `<link rel=preload as=image fetchpriority=high>` per character the layout shows. React hoists these into `<head>`. Each link carries `media` set to that group's breakpoint (`(max-aspect-ratio:5/6)` or its negation) and `imagesizes` set to the on-screen width. A phone now fetches 3 stills and a desktop 5.
+- **Lazy `<img>`s.** The visible images take the preloaded bytes at once. The hidden group's images (display:none) never download, and React no longer auto-preloads them.
+- **AVIF twins.** The main splash now has AVIF versions served through `<picture>`, with the WebP kept as the fallback. The arcade cast is still WebP only. The AVIFs are encoded from the lossless renders in `test-results/splash/` with `avifenc -q 50 --qalpha 75`. They are about 27 % smaller than the WebP and have a higher SSIM against the raw render for every still (composited on the splash pink):
+
+  | Still | Size | SSIM (WebP → AVIF) |
+  |---|---|---|
+  | hero-kick | 15.4 → 11.3 KB | .9927 → .9965 |
+  | hero-cheer | 12.7 → 9.2 KB | .9928 → .9965 |
+  | keeper | 16.4 → 12.0 KB | .9922 → .9942 |
+  | cat | 15.4 → 10.8 KB | .9755 → .9824 |
+  | rival | 12.6 → 8.2 KB | .9907 → .9951 |
+
+  The `-sm` AVIFs also have a higher SSIM than their WebPs. To re-encode without a browser, run `node scripts/render-splash-characters.cjs --encode`. A normal render now writes the AVIFs too.
+- **Entrance.** One unstaggered 0.42 s fade and settle: `--d` is at most 0.06 s, and opacity is full at 30 %. It starts at the first frame, and the inline placeholder paints under each still from that same frame. The exit hop order moved from `:nth-child` to a `--x` variable, because each `<img>` now sits alone in its `<picture>`. The order itself is unchanged.
+
+**Measurements.** All numbers are cold cache in headless Chromium emulation (`--mute-audio`, localStorage seeded with audio off). They come from `scripts/check-splash-cast-timing-browser.cjs`.
+- **Profiles.** Phone is 390×844 at DPR 3 with 4× CPU, on DevTools Fast 3G or 4G. Desktop is 1440×900 at DPR 2.
+- **Columns.** All values are ms. *Visible* is when the last character is half faded in with its placeholder or still painted. *Sharp* is when the full still has also arrived.
+- **Server.** The production build ran on :8093 from a scratch copy and was stopped afterwards. The local server is HTTP/1.1, so some requests queue on Chrome's 6 connections.
+
+| Production build | FCP | Title | Last visible | Last sharp | Visible after FCP |
+|---|---|---|---|---|---|
+| Phone Fast 3G, before | 2956–3020 | 3640–3660 | 3483–3541 | same | +515 to +527 |
+| Phone Fast 3G, after | 2404–2420 | 2552 | 2519–2535 | 2752–2804 | +114 to +119 |
+| Phone 4G, before | 932–936 | 1004–1024 | 1451 | same | +515 to +519 |
+| Phone 4G, after | 668–680 | 668–680 | 779–785 | 779–785 | +105 to +115 |
+| Desktop, before | 848–852 | 864–868 | 1481–1497 | same | +633 to +645 |
+| Desktop, after | 660–668 | 660–668 | 760–766 | 832–836 | +97 to +106 |
+
+Dev server (:8092), visible after FCP, before → after: Fast 3G +517 → +118, 4G +520 → +116, desktop +643 → +102.
+
+What the numbers show:
+- The splash itself also paints sooner. On the phone, FCP moved about 250 ms earlier on 4G and about 580 ms earlier on Fast 3G, and the brush title about 330 ms and 1.1 s earlier. Fewer bytes now compete with the CSS and the font.
+- On Fast 3G the full-resolution stills still land 0.34–0.40 s after FCP, because the link's bandwidth is the limit. The inline placeholders cover that time; they are visible in the first painted frame in the filmstrips.
+
+**Tradeoffs and costs.**
+- The phone downloads 31 KB of stills instead of 117 KB, and the desktop 52 KB instead of 75 KB.
+- Browsers without AVIF get the WebP through the lazy `<img>`, without a preload.
+- There is no new JS, timer or loop. AVIF decodes once per still.
+- The inline placeholders (about 16.5 KB gzipped in the HTML) are unchanged. Shrinking them is an option if HTML weight matters later.
+- These are emulation results only. Nothing here was measured on an iPhone, and there is no thermal claim.
+
+**Gates.**
+- `tests/splash-cast-loading.cjs` (in `npm test`) checks:
+  - the preload, media and lazy wiring;
+  - AVIF dimensions against `cast.json`;
+  - size budgets: each still ≤ 13 KB, `-sm` ≤ 8 KB, the phone row ≤ 34 KB, all stills ≤ 56 KB, placeholders ≤ 23 000 characters;
+  - the entrance timing, the reduced-motion rule and the exit order.
+- `scripts/check-splash-cast-timing-browser.cjs` fails if a character becomes visible more than 150 ms after FCP or the title on either phone profile, or becomes sharp more than 150 ms late on phone 4G.
+
+## Island jobs: field-by-field view compare and quieter job badges — September 30, 2026 (local, not deployed)
+
+From the overnight heat audit (`HEAT_AUDIT.md` findings #8 and #9). Paths: `lib/town/jobs/jobScene.ts`, `lib/town/jobs/jobBadges.ts`. Test: `tests/job-boards.cjs` (in `npm test`).
+
+**What changed.**
+- **Job view store (#8).** `setView` compares the patched fields with `===` instead of `JSON.stringify` on the whole view twice. It runs at 4 Hz on the board tick, at 10 Hz in the garden and on every publish.
+  - `done` and `pick` are new objects only when they really change (a fresh nonce).
+  - `publishActive` compares the active panel's own JSON key. It runs only on a key change, an event or a note, never per frame. An unchanged panel keeps the same object.
+- **Per-frame panel key (#8).** While a job runs, the template-string key is gone. Its 15 inputs are compared one by one against the last frame's: no string, and no `harvestPickable` array (a counting loop replaces it). `viewKey=''` (a note, a new job) still forces a publish.
+- **Job badges (#9).**
+  - The wake range is measured from the player, not the camera. The follow camera sits about 37 m behind the player, so the old test also woke for signs behind it.
+  - The show test, the size rule and the bob are unchanged. `tests/job-boards.cjs` compares the old and new shown sets over 1,700+ player/camera poses (follow, high and far cameras, all round the island): they are identical.
+  - The frustum is rebuilt only when the camera's view or projection matrix changed.
+  - No per-frame closure.
+  - Each instance is compared at float32 precision before it is written. `instanceMatrix.needsUpdate` is set only when one actually changed. With none shown the hidden matrices go up once, then never again. Reduced motion with a still camera uploads nothing. Bobbing badges still upload every frame, so they still bob.
+- **Frustum reuse, not done.** The audit suggested reusing the sharks' or view gate's frustum. In `Town.tsx` the badges run in `jobs.applyCamera` before `world.updateSharks`, and the view gate builds its frustum inside `renderer.render`. So both are a frame late for the badges. Rebuild-on-camera-change is used instead; it needs no reordering of `Town.tsx`.
+
+**Measured** (emulation only, not an iPhone). Headless Chromium, `--mute-audio`, audio prefs off. Phone: 390×844, DPR 3, touch, CPU throttled 4×. Desktop: 1280×800. One 6 s window per scene, the audit's `run.cjs` (session scratchpad `overnight/heat/`, `results-jobs-before.json`, `results-jobs-after2.json`). `performance.now` is coarse, so single windows are noisy at this scale.
+
+| Scene | `jobs.update` ms/s, phone 4× (before → after) | Desktop (before → after) | `job badges` ms/s, phone (before → after) |
+|---|---|---|---|
+| Island Square, idle | 0.73 → 0.45 | 0.42 → 0.25 | 0.97 → 0.70 |
+| Spawn, idle | 0.50 → 0.45 | 0.22 → 0.18 | 1.02 → 0.33 |
+| Rake job | 3.72 → 1.51 | 1.58 → 1.08 | 0.94 → 0.41 |
+| Harvest day | 6.64 → 2.78 | 2.38 → 1.68 | 0.93 → 0.33 |
+| Garden shift | 3.63 → 3.68 | 1.91 → 2.34 | 0.45 → 1.39 |
+
+Badge uploads, headless micro-benchmark over 30,000 frames (`badgebench.cjs`): before, 1.00 upload a frame in every case.
+- Signs behind the camera: 0.00.
+- A badge on screen with reduced motion and a still camera: 0.00.
+- Walking past a sign while it bobs: 0.29–0.38. It uploads only on the frames a badge is shown.
+
+**Reading the numbers.**
+- The job-time saving shows in the rake and Harvest day windows. The Garden shift did not change measurably: its cost is the garden's own 10 Hz work, not the view compare.
+- The badge timing is within noise in single windows. The garden row's 1.39 is one noisy window.
+- The firm saving is the GPU buffer uploads that no longer happen. This is reduced work in emulation; no cooling claim is made.
+
+## Job sign reachability fix — September 30, 2026 (local, not deployed)
+
+"Flag the offside" stood inside the High School east wing. The wing covers x 147–159, z 3–23, with its roof at 13.2 m. So on foot the walkable height there read 13–15 m, and the sign never offered (`|p.y − floor(board)| < 2`). The flag spot (150, 4.2) was inside the wall too.
+- **Fix.** The sign moved to open lawn at (138, −12.5). That is north of the strip's far touchline and west of the rebound-shot lawn. The flag spot moved to (150, 2.2), on the near touchline 0.8 m clear of the school wall.
+- **No runtime cost.**
+- **Validation.**
+  - `tests/job-boards.cjs` builds the real town. For every sign, the walkable height under and around it, and at its task spots, is within 1.5 m of its floor.
+  - The same test walks up to each sign with the real on-foot collisions and the job scene's update, and checks that the job is offered.
+  - It also checks that the offside flag spot is reachable. With the old position the test fails at "walkable height 14.96 m".
+  - Browser, phone 390×844 and desktop: all 12 signs offer on walking up, and the offside job runs to its first replay from the new flag spot.
+
+## Vending zoom: cached occluder pass and close-up face — September 30, 2026 (local, not deployed)
+
+Heat audit findings #5 and #7 (overnight `HEAT_AUDIT.md`). Each vending tap ran the close-up occluder pass on the first zoom frame and painted the whole close-up canvas inside the tap handler, every time. Only `lib/graphics/vendingMachines.ts` changed; there are new checks in `tests/vending-machines.cjs` §3.
+
+**What changed.**
+- **The occluder pass is cached** (`clearView`). The result (props hidden, camera lift) is kept per machine + camera fov + viewport-aspect bucket (0.01) + short-landscape flag, for at most 8 keys. It is reused only while the candidate meshes near the wedge are exactly the same: same meshes, same order, same geometry and position version, same world matrix. Anything that is added, removed, moved, shown, hidden or made see-through triggers a recompute. A hit costs one bounding-sphere scene walk, with no triangles and no rays. Hidden props are restored on release and cancel as before.
+- **The miss path is cheaper and leaves no garbage.** One growable `Float64Array` holds the wedge triangles, at the same precision as the old `number[]`. Bounds are kept per mesh, so a ray that misses a mesh's wedge bounds skips its triangles. The scratch camera, vectors and `Set` are reused, and `faceView` no longer allocates a vector per call (it also runs per frame while zooming).
+- **Player fix.** The player's root is named `main-character`, which `passable` did not match. The player's own limbs (`bean-limbs`) were therefore "hidden as an occluder" on every zoom, and since they move between zooms they would also defeat the cache. They now count as passable, as the comment always intended. On screen nothing changes once the camera is under way: the player is hidden at t > 0.5 anyway. The first half of the zoom now shows the player with limbs instead of without them.
+- **The close-up face is cached** (`faceFor`). The painted close-up canvas (header, rails, LED greeting, coin panel, tray and page-one products, for the machine and its neighbour) is kept after the zoom-out. Its key is the machines in the order shown, the face size, the coin balance and page one (header, items, prices). A repeat zoom wraps the cached canvas in a new texture and paints nothing. A change of stock, page, coins or size is a new key, painted by the same painters in the same order onto a canvas of the same size.
+  - Rejected: per-machine layers composited into place. Canvas gradient dithering follows the device pixel, so the right-hand machine of a pair moved by up to 13 levels on up to 54k pixels. With a dither-phase pad, dozens of edge pixels still moved by 1–3 levels.
+- **Memory.** The LRU holds at most 3 machine faces (a Konbini + drink pair counts as 2): about 3.1 MB per machine at 390×844@3 and about 6 MB at 1280×800@2. A dropped canvas is shrunk to 1×1 at once. Before, nothing was kept at rest, so the worst case is now about 9 MB (phone) or 18 MB (desktop) of canvas memory after visiting several machines. The texture is still created per zoom and disposed when the zoom-out ends.
+
+**Measured.**
+- Setup: dev build, headless Chromium, `--mute-audio`, audio prefs off. Phone: 390×844, DPR 3, touch, CDP CPU 4×. Desktop: 1280×800.
+- Method: a fresh context per machine; walk to its front, tap Go, wait for arrival, Escape, then tap Go again (the repeat). "Paint" is `lastHiRes.ms` (the whole `buildCloseUp` in the tap). "Occluders" is `closeUpView().ms` (the first zoom frame). Long tasks come from a PerformanceObserver, tap through arrival + 1.5 s. GC comes from a trace (`MajorGC`/`MinorGC` on the renderer main thread).
+- Scripts, logs and images are in the session scratchpad `vendfix/` (`zoom.cjs`, `diff.cjs`, `before/`, `after/`).
+
+| Phone 4× (before → after), ms | First zoom: paint / occluders | Repeat zoom: paint / occluders | Repeat zoom long tasks | First zoom GC max / total |
+|---|---|---|---|---|
+| plaza (pair) | 262 → 159 / 69 → 29 | 59 → 7.6 / 39 → 2.6 | 69, 103, 125 → 50, 86 | 59 / 76 → 7.5 / 23 |
+| drinksplaza (pair) | 152 → 64 / 81 → 13 | 38 → 4.8 / 32 → 5.1 | 70, 62 → 75 | 18 / 24 → 3.9 / 6.5 |
+| causeway | 48 → 48 / 45 → 25 | 8.7 → 4.3 / 19 → 3.1 | 63 → 56 | 4.1 / 69 → 9.2 / 17 |
+
+| Desktop (before → after), ms | First zoom: paint / occluders | Repeat zoom: paint / occluders |
+|---|---|---|
+| plaza | 38 → 38 / 12 → 5.2 | 12 → 1.2 / 6.8 → 0.8 |
+| drinksplaza | 56 → 42 / 15 → 6.3 | 8.1 → 1.3 / 7.5 → 0.5 |
+| causeway | 13 → 12 / 11 → 3.5 | 6.1 → 0.8 / 6.0 → 0.6 |
+
+**Reading the numbers.**
+- **First zoom.** The paint code is unchanged on a first zoom, so its spread (262 vs 159) is run-to-run noise: fonts, the dev build, machine load.
+- **Occluder pass.** On a miss it is 2–6× faster from the bounds pruning. On a hit it costs 0.5–5 ms.
+- **Remaining repeat long tasks** are outside these two functions: the texture upload, the face mount and dev React.
+- **First-zoom long tasks** still include the first-open store previews (audit #6, not part of this pass).
+- **The audit's 741 ms GC** was seen under the sampling profiler. Unprofiled, the first plaza zoom's largest GC was 59 ms before and 7.5 ms after.
+
+**Pixel parity.**
+- **Close-up canvas.** The canvas the close-up texture shows was dumped for plaza, drinksplaza and causeway on both profiles. It is identical to the pre-change canvas in every case: 0 differing pixels on the first and on the repeat zoom (12 comparisons).
+- **Rendered close-up frames.** These are identical at plaza (phone and desktop). Elsewhere they differ only inside the regions that also differ between two zooms of the pre-change build (moving scene content), and by fewer pixels than that noise.
+- **Occluder results.** The camera lift matches before and after for every machine. The hidden list differs only by the player's limbs (above).
+
+**Tests.** `tests/vending-machines.cjs` checks:
+- occluder cache hits (same props hidden, nothing in the way, restored on release and cancel);
+- reuse inside an aspect bucket;
+- a recompute after a rotation to landscape, and both aspects staying cached;
+- invalidation by a moved prop and by removed meshes;
+- face-cache reuse, the 3-machine LRU, and repaint on a new coin balance or face size;
+- that dispose frees everything.
+
+`npx tsc --noEmit` and the full `npm test` pass.
+
+These are emulation work counts only. Nothing here was measured on an iPhone, and no cooling claim is made.
+
+## Overnight heat-audit fixes (F1–F4, F6, F10, Konbini prompt) — September 30, 2026 (local, not deployed)
+
+The fixes come from the overnight heat audit of deploy 11 (session scratchpad `overnight/HEAT_AUDIT.md`), whose verdict was "no regression". Not done here, scheduled separately: F5 (vending `clearView` cache, `lib/graphics/vendingMachines.ts`), F7 (close-up text cache) and F8/F9 (`lib/town/jobs/*`). Nothing in this pass changes what is drawn.
+
+**What changed.**
+- **F1: Choose plays sleeps the island.** The sheet is full-screen and opaque on every device. `FieldLearning` now reports `pickerOpen` to Town (`onPickerChange`, cleared on unmount). Town ORs `playsPickerOpen` into `settingsRef`, so the island takes the normal paused-menu path: one cleanup frame, then no rAF. Back, Escape or a picked play re-render Town, and `wakeLoop` resumes with the accumulator reset, so there is no catch-up burst. The watched live match freezes while the sheet is up, as dormant fields already do.
+  - The sheet's `::backdrop` no longer blurs (`PlaysPicker.module.css`), and its tint keeps its 0.14 s fade.
+  - Finding: IslandSettings' `fullModal:not(.entering)` rule does not remove the blur while a menu is open. The shared `backdropIn` animation (fill `both`) holds `blur(3px)` the whole time the dialog carries `.entering`: measured `blur(3px)` with Settings open. The island is asleep under Settings, so the blur is over a static canvas, but it is not the no-blur state the comment describes. IslandSettings was not touched here; the fix is the same as the picker's, if wanted.
+  - **Resolved later the same night (UI pass, `docs/ui/UI_SPEC.md` §4):** `.dialog.fullModal::backdrop{backdrop-filter:none}` plus a tint-only entrance (`fullTintIn`, keeps the 0.14 s fade) in `IslandSettings.module.css`, so Settings and Paths never hold a blur. The same `backdrop-filter:none` was added to the other full-screen opaque dialogs that still had a static blur: Make it yours (`CharacterCustomizer`), Coaches Centre and PositionGuide. Measured with headless Chrome at 390×844 after the open animation: `backdrop-filter: none` for Settings, Paths and Make it yours (it was `blur(3px)`); the tint still fades in, and the screenshots are unchanged because the sheets are opaque. This is reduced compositor work only, not a measured iPhone temperature change. Side drawers that leave the island visible (NPC conversation, Pocket) keep their blur. Guarded by `tests/ui-spec.cjs` check 8.
+- **F2: Field card attribute writes.** The "Learn plays" card no longer rewrites `disabled` and `tabindex` on every frame of its 350 ms fade. `setCardInactive` writes only on change, like `setUIHidden` (`Town.tsx`).
+- **F3: Closed travel map.** `MovingIslandTravelMap` wraps `IslandTravelMap` in `memo`. While the map is closed it passes the position it last showed and a stable `onSelect` (Town's inline arrow goes through a ref). The closed map, and its full SVG terrain in `IslandOverview`, now render only when the map opens, closes (the leave animation still gets `open=false`) or the player moves while it is open. `IslandOverview`'s client-only `mounted` gate is unchanged.
+- **F4: Closed dialog hosts (low-risk part only).** `lib/ui/stableMemo.ts` is `memo` plus one stable wrapper per callback prop; the wrapper always calls the latest function. Wrapped in `Town.tsx`: IslandSettings, CharacterCustomizer, CoachesCentre, IslandOnboarding, NpcConversation, Museum, FerryPreview and PositionGuide. They re-render only when a data prop changes. Town's HUD state is not restructured; the leaf-subscription idea (audit F4c) is still open.
+  - VendingMachine and DrinkMachine already return `null` while closed and were left alone.
+  - The rule for future hosts: callback props must be event handlers, not render functions.
+- **F6: Store previews (`useStorePreviews`).**
+  - Balls that have a baked picture (`BallPicture`, `public/vending/products`) are skipped, unless asked for by id (onboarding's gear ball) or by the bake script (`window.__fi2BakeBallPictures`, set by `scripts/capture-vending-products.cjs`).
+  - The rest render over idle time after the zoom has arrived: `requestIdleCallback` slices, each running at least one item. Where there is no `requestIdleCallback` (Safari), the first slice waits 400 ms and later slices run on short timers.
+  - The map is still published once and complete, because VendingMachine and Backpack cache the first non-empty result. Effect teardown cancels the pending slice and disposes the temporary renderer.
+- **F10: Small per-frame costs.** The learning view uses Town's cached `coarse` flag instead of calling `matchMedia` every frame. `coarse` is read once at mount, as the frame cap already does.
+  - The `uiElement` miss cache was **not added**. The audit's example, `[data-field="beach"]`, is not in `VENUES` (the beach court is in `LIVE_VENUES`).
+  - A `querySelector` probe found **0 misses per frame** at Island Square, flying and in the 11v11 watch view. Every selector Town and fishing look up is always rendered, so there is nothing to cache, and a miss cache would add a staleness risk for no saving.
+- **Konbini door prompt** (`KonbiniRoom.tsx`, one line). It wrote `left`, `top` and `visibility` unrounded on every store frame. It now rounds to half pixels and writes only on change, as the island's `placeEntryPrompt` does.
+
+**Measured.**
+- Method:
+  - The audit's own scripts and scenes, rerun unchanged (`run.cjs`, `prof.cjs`, `profwin.cjs`, `ATTR=1` React attribution). Copies, logs and results are in the session scratchpad `overnight/heatfix/`.
+  - Headless Chromium with `--mute-audio` and the audio prefs seeded off; one browser at a time.
+  - Phone: 390×844, DPR 3, touch, CPU throttled 4×. Desktop: 1280×800.
+  - Dev React build. The machine's load average was about 10 in both the before and after runs, so treat absolute ms/s as noisy; the frame, rAF, mutation and render counts are the reliable figures.
+- **Emulation work counts, not iPhone temperatures. No cooling claim.**
+
+| Scene | Before (phone 4× / desktop) | After (phone 4× / desktop) |
+|---|---|---|
+| Choose plays open (F1) | 30 fps, 60 rAF/s, task 580 ms/s / 60 fps, script 166 ms/s | **0 fps, 0 rAF/s, task 1.8 ms/s** / **0 fps, script 0.4 ms/s** |
+| Choose plays backdrop | `blur(3px)` | `none` |
+| Flying past pitches (F2): field-card `tabindex` + `disabled` writes/s | 2.7 + 2.5 / 2.0 + 1.8 | 0.7 + 0.7 / 1.0 + 1.0 (real show/hide flips only) |
+| Walking (F3, F4): component renders/s, phone, `ATTR` pass. Town still renders 2.65/s | Icon 22.6, NavigationButton 6.6, DoneButton 5.3, IslandSelect 3.3, IslandOverview 2.65, LegendMark 2.65, CharacterToggle 2.0, EndgameDialog 2.0 | Icon 4.6, IslandOverview 1.3 (minimap only), the rest 0 |
+| Walking: input `name`/`type` attribute mutations/s (closed Settings re-rendering) | 2.6 + 1.3 / 2.7 + 1.3 | 0 / 0 |
+| Walking, CPU profile (phone 4×), React scheduler work | 65 ms/s (`renderWithHooks` 35.5, commit 16.1, `IslandOverview` 13) | 13.2 ms/s (`renderWithHooks` 9.3, commit 2.3, `IslandOverview` 0.5) |
+| First vending open (F6, phone 4×, profiled) | one 1,179 ms task, of which `useStorePreviews` 920 ms (vehicles + 14 balls) | commit task 152 ms; previews 479 ms spread over 11 idle slices (largest 123 ms: setup + first shader compile), 24 rides, 0 balls |
+| Konbini walking: door-prompt style mutations/s, style ms/s | 37.5, 17.1 / 32.9, 3.8 | 20.6, 5.4 / 31.7, 3.0 |
+
+Notes on the table:
+- The walking "before" CPU-profile row is the audit's profile: same script, taken earlier the same evening. The other "before" rows were rerun in this pass just ahead of the fixes.
+- Konbini prompt: on desktop the store renders uncapped at 60 fps and the prompt really moves on most frames while walking, so most writes remain. At the phone's 30 fps cap with half-pixel rounding, repeated identical writes are skipped.
+- Not measured individually: F10's `matchMedia` saving (estimated at 0.1–0.3 ms/s by the audit).
+
+**Validation.**
+- New `scripts/check-plays-picker-sleep.cjs` (`--mobile`), run on both profiles. Watch view → Choose plays: **0 island frames and 0 rAF callbacks in 3 s**, backdrop `none`. Back wakes the island (60 / 121 frames in 2 s, phone / desktop), and so does picking a play.
+- `tests/heat-pass3.cjs` (in `npm test`), section 7:
+  - the picker sleep wiring and its unmount reset;
+  - no blur under the sheet;
+  - the field-card guard, and no `matchMedia` in the learning view;
+  - the closed-map memo, and `IslandOverview`'s `mounted` gate;
+  - the memoized hosts, plus a unit test of `stableMemo`: stable wrappers that call the latest callback, data changes pass through, an absent callback stays absent;
+  - the store-preview filter, idle slices and single publish, and the bake opt-in;
+  - the Konbini compare-before-write.
+- Browser smoke (phone):
+  - Settings opens, a time-of-day change reaches the memoized host, and it closes.
+  - The travel map's marker follows the player after moving while the map was closed (`translate(95 -35)` → `translate(40 60)`).
+  - The vending face receives all 24 ride previews and shows the baked ball pictures.
+  - No page errors.
+- `npx tsc --noEmit` and `npm test` pass.
+
+No commit, push or deploy. Still to do: a Safari Web Inspector timeline on an iPhone with Choose plays open, and the first vending open. Re-measure F3 and F4 on a production build, where the React numbers will be smaller in absolute terms.
+
 ## Manta rays round the smaller islands — September 30, 2026 (local, not deployed)
 
 User request: "Add manta rays swimming around the smaller islands." Paths: `lib/town/mantaLoops.ts` (pure data). Build: `lib/graphics/cayMantas.ts`. Wired in `lib/town/world.ts` next to the sharks. No `Town.tsx` edit was needed: the mantas run inside the existing `world.updateSharks` → `updateCoralCay` hook. Test: `tests/manta-rays.cjs`, part of `npm test`.
@@ -187,6 +413,30 @@ Two of the island's round action buttons inside both Konbinis (`components/Konbi
   and 0.29–0.40 ms on the throttled phone. The phone rendered 117 frames in 3.9 s (30 fps cap), desktop about 60 fps. After
   the ball returns: 0 frames in 2 s, scene asleep.
   Emulation only; no iPhone temperature claim.
+
+### Konbini sounds, eating, island-speed kick, stamp-card slide-out — October 1, 2026 (local, not deployed)
+
+- **Kick = the island's.** `lib/town/walkBall.ts` now exports `ISLAND_SHOT` (speed 38 + 22·charge, lift 3.2 + 52·charge, gravity 13,
+  wall restitution .78, floor bounce .53, drag .33/.1, ≤ 12 cm substeps, recall rule); the island shot reads it instead of literals,
+  and `lib/konbini/konbiniBall.ts` spreads it into `INDOOR_SHOT` (+ radius .19, ceiling 3.4 m, ≤ 96 substeps a frame). Its `roll()`
+  is walkBall's shot step against the store's boxes (`tests/konbini.cjs` §13 flies both side by side: same path to 1e-9). Heat:
+  still stepped only while the ball is off the feet, no allocation per step; a tap shot is recalled after 2 s, a charged one at ≤ 9 s
+  (the island's rule), so the store renders a little longer per kick (≈ 2.6 s tap / up to ≈ 9.6 s charged, 30 fps cap on phones),
+  then sleeps again (checked in the browser: same draw calls before and after, asleep afterwards).
+- **Sounds.** The store's buttons play the island click (`islandSound UI_CLICK`, same sweep and loudness) from one click capture on
+  the page; the page's AudioContext unlocks on pointerdown/pointerup/touchstart/touchend/click/keydown (iOS counts touchend and click
+  as gestures); the arrival door chime plays at once when audio may run, otherwise on the first tap within 8 s. The island Enter
+  (Konbini and Arcade) no longer disposes the island sound in the same tick as its click: loops stop at once, dispose happens as
+  the page changes (380 ms; 120 ms reduced motion). All sounds are synthesized one-shots (the "ahh" is a sawtooth through three
+  formant band-passes, 0.75 s); no assets, no loops.
+- **Eating.** "Eat now" bites the item away in the big view on timers (4 bites ≈ 3.3 s total, one canvas redraw + the existing crumb
+  puff each); the words are CSS pops (reduced motion: no animation, a timed opacity fade). No new frame loop.
+- **Drinking** (Konbini drinks and the island drink machines) uses the same sequence as 4 sips: the liquid level drops a notch with
+  the existing droplet puff, a word per sip by type (hot: Sip!/Warm!/Cosy!/Ahh!, sports drink: …Power up!…, water: …Water first!…,
+  others: Sip!/Glug!/Refreshing!/Ahh!), the sip gulp, then the "ahh". Checked by `scripts/check-konbini-drink-browser.cjs`.
+- **Stamp card** is the NPC drawer (same dialog and slide); the store is covered (asleep) while it is open.
+- Validation: `node tests/konbini.cjs` (§13–16), `npm test`, `scripts/check-konbini-sfx-browser.cjs` (muted, cue spies; phone
+  390×844 and desktop, plus `--reduced`). Emulation only; no iPhone temperature claim.
 
 ## Vending: real depth behind the glass, four books per machine — September 30, 2026, later (local, not deployed)
 
@@ -1551,6 +1801,7 @@ Comparison `/tmp/fi2-vehicle-parity.cjs` ran 1,080 frames across walking, all fl
 
 - `islandLighting.ts` skips all work after reaching a lighting preset. Mode changes wake the existing smooth transition; reduced-motion immediate changes still apply. Convergence snaps only below 1e-7 in linear color/intensity/exposure, far below displayed color precision. Initial day lighting now performs zero lerps during unchanged frames (2,400 color lerps avoided across a 600-frame fixture).
 - `islandNpcs.ts` delays canvas label repaint/texture upload when the label itself is hidden. The current status is painted when the label becomes visible. Movement/routine simulation is unchanged.
+  - *1 Oct 2026:* only one label is ever visible (the closest townsperson's, `lib/graphics/npcTagFocus.ts`, 1.5 m hysteresis, off-screen and vending close-up hidden). The selection is one allocation-free pass over the already measured `distance`s per frame; label `visible` is written only when the tagged townsperson changes, and only that label's status is checked for a repaint (fewer sprites drawn and fewer canvas repaints than one label per nearby townsperson).
 - `ballReactions.ts` stops particle transforms after the .7-second impact pulse expires while retaining knockback, stars, recovery and cleanup. Active particle loops no longer allocate sliced child arrays.
 
 `tests/lighting-idle.cjs` covers idle sleep, wake, transition and immediate modes. Ball-reaction tests cover expiry with particle transform methods guarded against writes, plus existing hit/recovery/cleanup; NPC behavior tests pass. TypeScript passes. These remove avoidable CPU and texture work; no physical-phone temperature measurement or deployment has been performed.
@@ -3055,6 +3306,8 @@ Distinct NPC actions (local): replaced shared social fallbacks with72 authored e
 
 `lib/town/jobs/jobScene.ts` (docs/island-jobs.md). Idle: six job signs, bins and rebound-wall paint are one merged vertex-colour mesh plus one label-atlas mesh (2 draws, static); a 0.25 s throttled distance check over 6 signs and a 0.1 s garden-range check. Running job: one targets `InstancedMesh` (+ placed cones), a 2-mesh beacon and a carried ball, built on start and disposed on finish; ≤16 distance checks per frame; beacon bob frozen under reduced motion. Garden: one 39-instance `InstancedMesh`, visible only within 55 m, repainted on entry, on a pick and every 5 s inside. Update is skipped while the island is paused. The HUD (`components/IslandJobs.tsx`) re-renders only on view changes. Desktop checks only; no phone thermal measurement.
 
+**30 Sep 2026 (Deploy 11 audit fixes, lane A).** The job-sign glow (`createBuildingGlow`, one shared instance) is now eased every frame while it is on or fading (≤ 0.8 s after leaving a sign), like the buildings and vending machines; it was eased only on the 0.25 s board tick, so it took ~4 s to appear and swept at ~3 fps. Idle cost is unchanged: once the fade ends, nothing runs (one boolean check per frame). The garden basket and other hand-held gear keep following the hands for the existing ≤ 1.2 s wind-down after a job ends (no new loop; it rides the existing job-props lifetime). Verified in headless desktop/phone emulation only (glow 0.95 at 0.3 s, 0.002 at 0.6 s after leaving); no phone thermal measurement.
+
 **27 Sep 2026 additions (docs/island-jobs.md §3b, §8).** Ten job signs now (still 2 static draws; atlas 1024×640). The kit room, offside and pump jobs build their props on start and dispose them at the end; the offside replay rewrites 5 capsule matrices only while a ~3 s clip plays and uses the shared `lib/town/shotCamera.ts` blend (idle: one early return). The **Boot Room visit** builds nothing until Enter: then one merged unlit vertex-colour mesh, one chalkboard texture and one still coach rig, disposed as soon as the camera is back outside; no lights added, no loop; the island rests while the story card is open. Idle cost: one door-distance check per frame (plus a desktop hover ray test). Desktop headless checks only; no phone thermal measurement.
 
 ### Fishing and vending art; arcade entry (2026-09-27)
@@ -3346,7 +3599,7 @@ The graduation ceremony, the Matchday Ferry final, the History Museum and the Co
 
 ## QA11 heat fixes (30 Sep 2026, local, not deployed)
 
-- **Learning drawer and For grown-ups sleep the island (H-1).** `LearningHost` (Daily warm-up / My football) and `GrownUpsHost` (For grown-ups, from Settings or the Coaches Centre) report their open state to Town the same way `GraduationHost` does (`onOpenChange`, added to Town's `settingsRef`), so the island stops requesting frames behind them and wakes on close. Headless Chromium (`renderer.info.render.frame` over 5 s): 150 → 0 frames on a 390×844 phone and 301 → 0 on a 1280×800 desktop while open; 90 (phone, 30 fps cap) and 180 (desktop) frames in 3 s after closing. Other new overlays already sleep it (ceremony, Ferry, Museum, Coaches, Paths, pop-up book) or are small cards (welcome back, Spot it, the link gate). The customizer's Backpack keeps the island drawing as before (it is not new in this round).
+- **Learning drawer and For grown-ups sleep the island (H-1).** `LearningHost` (the Daily warm-up; its mastery view was removed on 1 Oct 2026) and `GrownUpsHost` (For grown-ups, from Settings or the Coaches Centre) report their open state to Town the same way `GraduationHost` does (`onOpenChange`, added to Town's `settingsRef`), so the island stops requesting frames behind them and wakes on close. Headless Chromium (`renderer.info.render.frame` over 5 s): 150 → 0 frames on a 390×844 phone and 301 → 0 on a 1280×800 desktop while open; 90 (phone, 30 fps cap) and 180 (desktop) frames in 3 s after closing. Other new overlays already sleep it (ceremony, Ferry, Museum, Coaches, Paths, pop-up book) or are small cards (welcome back, Spot it, the link gate). The customizer's Backpack keeps the island drawing as before (it is not new in this round).
 - **Unseen live matches near the camera but far from the player sleep (D note).** `fieldRuntime.update` now takes the player's position (`focus`, passed by Town). For an off-screen field, "near" is measured from the player, the only thing that can touch an unseen match (the island ball's hit zone, radius + 45 m): it sleeps outside radius + 45 m and wakes inside radius + 40 m, or the frame it comes into view (the frustum + 240 m test still runs first). Without `focus` (unit tests) the old camera rule (sleep beyond radius + 60 m, wake inside + 50 m) is unchanged. At the spawn the camera sits ~35 m ahead of the player, so the unseen 11v11 read as 77 m "near" and simulated 22 players at full rate for nobody; it is now dormant with its clock frozen (phone and desktop, headless). `tests/heat-pass5.cjs` pins the rule. No thermal claim: this is reduced work measured in emulation.
 - **Costs added:** `ExternalLinkGate` adds one `MutationObserver` (childList + `href` attribute changes only, event-driven, no timers) that moves outside links' `href` to `data-gated-href`. The fishing catch card reads its height once per catch (not per frame) to clear the status card on wide screens.
 

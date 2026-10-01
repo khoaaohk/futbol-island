@@ -2,7 +2,7 @@
 import {useEffect,useLayoutEffect,useMemo,useRef,useState} from 'react';
 import {DoneButton} from './DoneButton';
 import DrinkArt from './DrinkArt';
-import {faceDepthMatrix,quadMatrix} from './VendingMachine';
+import {facePlacement} from './VendingMachine';
 import {VendingFace,type VendingFaceView,type VendingPhase,type VendingSlotState} from './VendingFace';
 import {recordExploreActivity} from '@/lib/town/exploreActivity';
 import {VENDING_MACHINES,vendingMachine,type VendingMachineId} from '@/lib/town/vendingCatalog';
@@ -31,7 +31,9 @@ import styles from './DrinkMachine.module.css';
  * Heat: mounted only while the machine is in use (the island sleeps: storeOpen is in Town's pause list); one-shot CSS only.
  */
 type Point={x:number;y:number};
-type Reveal={drink:Drink;purchaseId:string;firstTime:boolean;choice?:'eat'|'pouch'};
+type Reveal={drink:Drink;purchaseId:string;firstTime:boolean;choice?:'eat'|'pouch';
+ /** Drink now (Oct 1 2026): saved first, then the reveal drains it in 4 sips with words and the "ahh" (KonbiniReveal `eating`). */
+ drinking?:boolean};
 const cue=(name:'select'|'insert'|'confirm'|'coin'|'thunk'|'pop'|'buzz'|'equip')=>{try{document.dispatchEvent(new CustomEvent('fi2-vending-cue',{detail:name}));}catch{}};
 const reducedMotion=()=>typeof matchMedia==='function'&&matchMedia('(prefers-reduced-motion: reduce)').matches;
 const SOURCE_SHORT:Record<string,string>={'NHS':'NHS','American':'AAP (HealthyChildren.org)','Sports':'Sports Dietitians Australia','FIFA':'FIFA','Cleveland':'Cleveland Clinic'};
@@ -44,6 +46,10 @@ export default function DrinkMachine({open,machineId,onOpenChange,machines}:{ope
  const [quad,setQuad]=useState<Point[]|null>(null);
  const [armedId,setArmedId]=useState<string|null>(null),[cursor,setCursor]=useState(0),[phase,setPhase]=useState<VendingPhase>('idle');
  const [led,setLed]=useState<{msg:string;sub?:string;tone?:'warn'|'ok'}|null>(null),[coinDrop,setCoinDrop]=useState<{n:number;key:number}|null>(null);
+ // Tray how-to note (coin slot taps): shows in the tray, then fades after a few seconds.
+ const [trayNote,setTrayNote]=useState<{text:string;key:number}|null>(null),trayNoteTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
+ const showTrayNote=(text:string)=>{if(trayNoteTimer.current)clearTimeout(trayNoteTimer.current);setTrayNote({text,key:Date.now()});trayNoteTimer.current=setTimeout(()=>setTrayNote(null),3600);};
+ useEffect(()=>()=>{if(trayNoteTimer.current)clearTimeout(trayNoteTimer.current);},[]);
  const [dispense,setDispense]=useState<{drink:Drink;key:number}|null>(null),[reveal,setReveal]=useState<Reveal|null>(null),[vendingSlot,setVendingSlot]=useState<string|null>(null);
  const [faceEntrance,setFaceEntrance]=useState(true);
  const exitButton=useRef<HTMLButtonElement>(null),faceEl=useRef<HTMLDivElement>(null);
@@ -65,7 +71,8 @@ export default function DrinkMachine({open,machineId,onOpenChange,machines}:{ope
   return()=>{off?.();window.removeEventListener('resize',resize);};
  },[open,machines]);
  // Real depth (Sep 30 2026): the same CSS 3D camera placement as the shop machines, so drinks stand in the real bay.
- const placement=useMemo(()=>{if(!quad)return null;const [a,,,d]=quad,h=Math.max(200,Math.round(Math.hypot(d.x-a.x,d.y-a.y))),w=Math.max(160,Math.round(h*FACE_SIZE.w/FACE_SIZE.h)),depth=faceDepthMatrix(machines,w,h);return {w,h,transform:depth??quadMatrix(w,h,quad),depth:Boolean(depth)};},[quad,machines]);
+ // Includes the per-slot parallax shifts (bug audit B1): without them drinks sat left of their price rails on the angled view.
+ const placement=useMemo(()=>facePlacement(quad,machines,machine.id),[quad,machines,machine.id]);
 
  // ---- Open / close ----
  useEffect(()=>{
@@ -101,12 +108,10 @@ export default function DrinkMachine({open,machineId,onOpenChange,machines}:{ope
   if(s.kind==='short'){setLed({msg:s.note,tone:'warn'});cue('buzz');return;}
   void purchase(d);
  }
+ // Coin slot (user, Oct 1 2026): it never buys. Only the button under a drink does; the coins show how-to in the tray, which fades.
  function coinSlot(){
   if(phase==='coins'||phase==='drop')return;
-  if(phase==='tray'){setLed({msg:'Take your drink from the tray first',tone:'warn'});cue('buzz');return;}
-  if(!armed){setLed({msg:'Pick a drink first',sub:'Press the button under it.',tone:'warn'});cue('buzz');return;}
-  if(phase==='reward')dismissReveal();
-  cue('insert');act(armed);
+  cue('insert');showTrayNote(phase==='tray'?'Tap the tray to take your drink':'Tap the button under a drink, then tap it again to buy');
  }
  async function purchase(d:Drink){
   if(busy.current)return;const purchaseVisit=visit.current;busy.current=true;cue('confirm');const quick=reducedMotion(),t=VENDING_TIMING;
@@ -126,7 +131,7 @@ export default function DrinkMachine({open,machineId,onOpenChange,machines}:{ope
  function choose(fate:'eat'|'pouch'){
   if(!reveal||reveal.choice)return;const r=chooseDrinkFate(reveal.purchaseId,fate);
   if(!r.ok){setLed({msg:r.reason??'Try again',tone:'warn'});cue('buzz');return;}
-  inHand.current=null;cue('equip');setReveal({...reveal,choice:fate});
+  inHand.current=null;cue('equip');setReveal({...reveal,choice:fate,drinking:fate==='eat'});
   setLed(fate==='eat'?{msg:`Glug glug! ${reveal.drink.label} ✓`,sub:reveal.drink.lesson,tone:'ok'}:{msg:'Saved in your Snacks pouch',sub:'Open your Backpack → Snacks to drink it later.',tone:'ok'});
  }
 
@@ -154,10 +159,10 @@ export default function DrinkMachine({open,machineId,onOpenChange,machines}:{ope
  const picture=(d:Drink)=><span className={styles.pic} data-temp={d.temp}><DrinkArt art={d.art} base={.74} height={.66}/><i className={styles.temp} title={d.temp==='hot'?'あったか～い (hot)':'つめた～い (cold)'}>{d.temp==='hot'?'HOT':'COLD'}</i></span>;
  const armedStatus=armed?status(armed):null;
  const ledView=led??(armed&&armedStatus?{msg:full?'Plenty for today!':armedStatus.kind==='buy'?`${armed.label} ${armed.jp} · ${armed.price} coins`:armedStatus.note,
-  sub:full?DRINKS_FULL:armedStatus.kind==='buy'?'Press again, or tap the coin slot':armed.blurb,tone:full||armedStatus.kind==='short'?'warn' as const:undefined}
+  sub:full?DRINKS_FULL:armedStatus.kind==='buy'?'Press the button again to buy':armed.blurb,tone:full||armedStatus.kind==='short'?'warn' as const:undefined}
   :{msg:'いらっしゃいませ!',sub:`Pick a drink · ${Math.max(0,DRINKS_PER_DAY-today)} of ${DRINKS_PER_DAY} left today`});
  const fontSize=placement?Math.max(14,Math.min(18,Math.round(placement.w/29))):12;
- const view:VendingFaceView|null=placement&&{placement,fontSize,compact:placement.h<430,
+ const view:VendingFaceView|null=placement&&{trayNote,placement,fontSize,compact:placement.h<430,
   machine:{id:machine.id,name:machine.name,color:machine.color,light:machine.light,ink:machine.ink},
   header:{label:'Drinks',page:1,pages:1,special:false},
   slots:drinks.map((d,index)=>{const s=status(d);return {id:d.id,label:d.label,price:d.price,state:s.kind,special:false,lit:d.id===armedId,vending:vendingSlot===d.id,kind:'drink',picture:picture(d),
@@ -168,9 +173,9 @@ export default function DrinkMachine({open,machineId,onOpenChange,machines}:{ope
  return <div className={`${vendStyles.root} ${styles.root}`} data-vending-machine={machine.id} data-drink-machine={machine.id} data-vending-phase={phase} data-card-reveal={phase==='reward'&&Boolean(reveal)||undefined}>
   <div className={vendStyles.hudDone}><DoneButton ref={exitButton} onDone={()=>onOpenChange(false)}/></div>
   <div className={`${jobStyles.wallet} ${vendStyles.hudCoins}`} aria-live="polite" data-vending-coins={vending.balance}><span className={jobStyles.coin} aria-hidden="true"/><b>{vending.balance}</b><small>coins</small></div>
-  {phase==='reward'&&r&&revealItem&&<KonbiniReveal key={r.purchaseId} item={revealItem} firstTime={r.firstTime} onDone={dismissReveal}
+  {phase==='reward'&&r&&revealItem&&<KonbiniReveal key={r.purchaseId} item={revealItem} firstTime={r.firstTime} onDone={dismissReveal} eating={!!r.drinking} onEaten={()=>setReveal(v=>v&&{...v,drinking:false})}
    onEat={r.choice?undefined:()=>choose('eat')} onSave={r.choice?undefined:()=>choose('pouch')} saveDisabled={inPouch>=POUCH_SIZE}
-   status={r.choice==='eat'?`Glug glug! Nicely hydrated. ${sources}`:r.choice==='pouch'?`Saved in your Snacks pouch (Backpack → Snacks). ${sources}`:inPouch>=POUCH_SIZE?`Your Snacks pouch is full (${POUCH_SIZE}). ${sources}`:sources}/>}
+   status={r.drinking?undefined:r.choice==='eat'?`Glug glug! Nicely hydrated. ${sources}`:r.choice==='pouch'?`Saved in your Snacks pouch (Backpack → Snacks). ${sources}`:inPouch>=POUCH_SIZE?`Your Snacks pouch is full (${POUCH_SIZE}). ${sources}`:sources}/>}
   {view&&<VendingFace ref={faceEl} view={view} entrance={faceEntrance} inactive={phase==='reward'&&Boolean(r)}
    events={{onSlot:i=>{const d=drinks[i];if(d)press(d,i);},onSlotFocus:setCursor,onCoin:coinSlot,onTray:take,onFlip:()=>{},onNextRow:()=>{}}}/>}
  </div>;

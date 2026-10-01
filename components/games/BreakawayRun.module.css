@@ -342,7 +342,7 @@
 .goalGuide strong { font-size: 26px; color: #d4ff76; }
 .flash { top: 42%; font-size: clamp(24px, 5vw, 58px); padding: 0 20px; }
 .overlay { overflow-y: auto; padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom)); }
-.pixelBtn:focus-visible, .pauseButton:focus-visible, .textButton:focus-visible { outline: 3px solid white; outline-offset: 4px; }
+.pixelBtn:focus-visible, .pauseButton:focus-visible, .textButton:focus-visible { outline:var(--btn-focus); outline-offset:var(--btn-focus-offset); }
 @media (max-height: 700px) { .introPanel { gap: 9px; padding: 20px; } .introBall { display: none; } .instructions { gap: 9px; } }
 @media (max-height: 480px) { .overlay { justify-content: flex-start; } .goalGuide { top: 85px; } .runInfo { top: 90px; width: 220px; } }
 @media (prefers-reduced-motion: reduce) { .flash, .boostBtn.armed { animation: none; } }

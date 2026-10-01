@@ -2,6 +2,10 @@
 
 Audit date: 26 September 2026. It is local only: nothing was committed or deployed.
 
+**Update, 30 September 2026:** the canonical chrome (one phone gutter, one title size, one focus ring, one press depth, two modal
+motions, one toast timing, and the header anchor rules) is now [UI_SPEC.md](UI_SPEC.md), guarded by `tests/ui-spec.cjs`. Where this
+file and UI_SPEC.md differ, UI_SPEC.md wins: the mint secondary now always has the 3px rim, and a selected chip is always pink.
+
 The shared tokens are the `--btn-*` custom properties in `app/globals.css`, in the `:root` block just above "Tactile gold controls". `--island-control-face` and `--island-control-shadow` are now aliases of those tokens.
 
 When you write a new button, use a shared component or these tokens. Do not use raw hex values.

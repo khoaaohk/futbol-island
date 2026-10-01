@@ -76,7 +76,7 @@ function Exam({seed,mark,onDone}:{seed:number;mark:(key:string,ok:boolean)=>void
  if(error)return <div className={styles.card}><p role="alert">{error}</p><div className={styles.actions}><button type="button" className={styles.primary} onClick={()=>setAttempt(a=>a+1)}>Try again</button><button type="button" className={styles.secondary} onClick={onDone}>Skip to the passes</button></div></div>;
  if(!picks)return <div className={styles.card}><Progress done={done} total={TOTAL}/><p role="status">Your coach is picking a {GRAD_TITLES[format]} question…</p></div>;
  const current=picks[Math.min(index,picks.length-1)];
- const advance=()=>{if(index+1<picks.length){setIndex(index+1);setAnswer(null);}else if(round+1<GRADUATION_FORMATS.length){setRound(round+1);}else onDone();};
+ const advance=()=>{if(index+1<picks.length){setIndex(index+1);setAnswer(null);}else if(round+1<GRADUATION_FORMATS.length){setRound(round+1);setIndex(0);setAnswer(null);}else onDone();};// bug audit B13: reset the index with the round, so the loading card's dots are not one ahead
  const {lesson,q,pick}=current,key=`${format}:${pick.lessonId}:${pick.index}`,right=answer===q.correct;
  return <div className={styles.ceremony}>
   <div className={styles.card} data-exam={key}>

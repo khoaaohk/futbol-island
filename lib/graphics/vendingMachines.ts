@@ -165,7 +165,8 @@ function drawAtlas(machines:VendingMachine[],coins:()=>number|null){
  * - a faint glass pane with a sheen in front.
  * Four draw calls per machine while zoomed (bay, printed panels, products, glass pane), none at rest. The focused machine's
  * products are hidden when the camera arrives: the in-use HTML face (same depths, CSS 3D) then shows the live stock. Everything is
- * disposed when the zoom-out ends; at most one close-up is alive; nothing is redrawn per frame.
+ * disposed when the zoom-out ends, except the painted canvas, which stays in a small face cache (at most 3 machine faces, see `faceFor`)
+ * so a repeat zoom paints nothing; at most one close-up is alive; nothing is redrawn per frame.
  */
 const HIRES_MAX=2048;
 const ROW_SHORT:Record<string,string>={special:'Specials',books:'Books',packs:'Packs',ball:'Balls',scooter:'Scooters',bike:'Bikes',moped:'Mopeds',jetpack:'Flight',costume:'Animals'};
@@ -327,19 +328,48 @@ export function createVendingMachines(scene:T.Scene,opts:{coins?:()=>number|null
  const zoomPos=new T.Vector3(),zoomLook=new T.Vector3(),followLook=new T.Vector3(),mixLook=new T.Vector3(),viewDir=new T.Vector3(-16,-23,-33).normalize();
  const ease=(t:number)=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
  let lastCamera:T.PerspectiveCamera|null=null,faceListener:((corners:{x:number;y:number}[])=>void)|null=null;
- const faceCorner=new T.Vector3();
+ const faceCorner=new T.Vector3(),faceSide=new T.Vector3();
  type Entry=(typeof entries)[number];
  // ---- Close-up with real depth (see pageOne/paintRail above): built on focus, dropped when the zoom-out ends. ----
  type CloseUpPart={entry:Entry;meshes:T.Mesh[];products:T.Mesh;targets:{index:number;id:string;u:number;v:number;depth:number}[]};
- let closeUp:{id:VendingMachineId;parts:CloseUpPart[];canvas:HTMLCanvasElement;texture:T.CanvasTexture;printed:T.MeshBasicMaterial;glass:T.MeshBasicMaterial;glassMap:T.CanvasTexture;state:{alive:boolean}}|null=null;
- let closeUpStats={ms:0,width:0,height:0,bytes:0,drawCalls:0};
+ let closeUp:{id:VendingMachineId;parts:CloseUpPart[];canvas:HTMLCanvasElement;texture:T.CanvasTexture;printed:T.MeshBasicMaterial;glass:T.MeshBasicMaterial;glassMap:T.CanvasTexture;state:{alive:boolean};face:Face;refresh:()=>void}|null=null;
+ let closeUpStats={ms:0,width:0,height:0,bytes:0,drawCalls:0,cached:false,cachedMachines:0};
+ /**
+  * Close-up face cache (heat audit Sep 30 2026, #7: painting the close-up text took ~200 ms inside the tap at phone 4×). The painted
+  * close-up canvas (header, price rails, LED greeting, coin panel, tray and page-one products of the machine and its neighbour) is
+  * kept after the zoom-out, keyed by the machines in the order shown + face size + coin balance + page one (header, items, prices),
+  * and a repeat zoom just wraps it in a new texture: no painting at all. Any change of stock, page, coins or viewport size is a new key
+  * and is painted fresh, by the same painters in the same order onto a canvas of the same size, so the pixels are exactly those the
+  * old per-zoom paint produced (per-machine layers composited into place were tried and rejected: gradient dithering and edge
+  * coverage follow the device pixel, so pixels moved). Memory: at most FACES_MAX_MACHINES machine faces (a Konbini + drink pair counts 2), least
+  * recently used out first, ≈ 3.1 MB per machine at 390×844@3 and ≈ 6 MB at 1280×800@2; a dropped canvas is shrunk to 1×1 at once.
+  * A product picture that loads after its face was painted lands in the cached canvas and re-uploads the live texture.
+  */
+ type Face={key:string;canvas:HTMLCanvasElement;machines:number;alive:boolean;listeners:Set<()=>void>};
+ const FACES_MAX_MACHINES=3,faces:Face[]=[];
+ const dropFace=(f:Face)=>{f.alive=false;f.listeners.clear();f.canvas.width=f.canvas.height=1;};
+ const cachedMachines=()=>faces.reduce((n,f)=>n+f.machines,0);
+ const pageKey=(m:VendingMachine)=>{const {items,header}=pageOne(m);return JSON.stringify([header,items.map(i=>[i.id,i.label,i.price,i.kind,i.drink?.temp])]);};
+ function faceFor(group:Entry[],fw:number,fh:number):{face:Face;reused:boolean}|null{
+  const W=group.length*fw,H=fh,key=`${group.map(g=>g.machine.id).join('+')}|${fw}x${fh}|${atlas.coins}|${group.map(g=>pageKey(g.machine)).join('|')}`,at0=faces.findIndex(f=>f.key===key);
+  if(at0>=0){const f=faces[at0];faces.splice(at0,1);faces.push(f);return {face:f,reused:true};}
+  const canvas=document.createElement('canvas');canvas.width=W;canvas.height=H;const c=canvas.getContext('2d');if(!c)return null;
+  const face:Face={key,canvas,machines:group.length,alive:true,listeners:new Set()},changed=()=>{if(face.alive)face.listeners.forEach(fn=>fn());};
+  group.forEach((g,gi)=>{
+   const ox=gi*fw,at=(r:Rect)=>[ox+r.x*fw,r.y*fh,r.w*fw,r.h*fh],{items,header}=pageOne(g.machine);
+   paintHeader(c,at,g.machine,header);paintRail(c,at,0,items);paintRail(c,at,1,items);
+   const panel=(r:Rect,fn:(w:number,h:number)=>void)=>{const [x,y,w,h]=at(r);c.save();c.translate(x,y);fn(w,h);c.restore();};
+   const [msg,sub]=g.machine.drinks?GREETING.drinks:GREETING.shop;panel(L.led,(w,h)=>paintLed(c,w,h,msg,sub));panel(L.coin,(w,h)=>paintCoin(c,w,h,atlas.coins));panel(L.tray,(w,h)=>paintTray(c,w,h));
+   items.forEach((item,i)=>paintProduct(c,at(productCell(i)),item,atlas.pics,changed));});
+  let n=cachedMachines()+group.length;while(faces.length&&n>FACES_MAX_MACHINES){const f=faces.shift()!;n-=f.machines;dropFace(f);}
+  faces.push(face);return {face,reused:false};}
  /** Cut the flat front (cabinet front face + printed glass) of one machine away, or put it back. */
  const cutFront=(e:Entry,cut:boolean)=>{const pos=e.geometry.getAttribute('position') as T.BufferAttribute,arr=pos.array as Float32Array,ud=e.geometry.userData as {cut:[number,number][];saved?:Float32Array[]};
   ud.saved??=ud.cut.map(([s,n])=>arr.slice(s*3,(s+n)*3));
   ud.cut.forEach(([s,n],k)=>{if(cut)for(let i=1;i<n;i++)for(let j=0;j<3;j++)arr[(s+i)*3+j]=arr[s*3+j];else arr.set(ud.saved![k],s*3);});pos.needsUpdate=true;};
- function dropCloseUp(){if(!closeUp)return;const u=closeUp;closeUp=null;u.state.alive=false;
+ function dropCloseUp(){if(!closeUp)return;const u=closeUp;closeUp=null;u.state.alive=false;u.face.listeners.delete(u.refresh);
   for(const p of u.parts){for(const m of p.meshes){m.removeFromParent();m.geometry.dispose();}cutFront(p.entry,false);}
-  u.printed.dispose();u.glass.dispose();u.glassMap.dispose();u.texture.dispose();u.canvas.width=u.canvas.height=1;}
+  u.printed.dispose();u.glass.dispose();u.glassMap.dispose();u.texture.dispose();}// the canvas stays in the face cache
  function buildCloseUp(id:VendingMachineId){
   const view=opts.viewport?.()??(typeof window!=='undefined'?{width:window.innerWidth,height:window.innerHeight,dpr:window.devicePixelRatio||1}:null);
   if(!view||typeof document==='undefined')return;
@@ -349,9 +379,9 @@ export function createVendingMachines(scene:T.Scene,opts:{coins?:()=>number|null
   const dpr=Math.min(2,view.dpr||1);let fh=Math.min(view.height*.92,view.width*.94*FACE_SIZE.h/FACE_SIZE.w)*dpr,fw=fh*FACE_SIZE.w/FACE_SIZE.h;
   const k=Math.min(1,HIRES_MAX/Math.max(group.length*fw,fh));fw=Math.floor(fw*k);fh=Math.floor(fh*k);const W=group.length*fw,H=fh;if(W<16||H<16)return;
   const t0=typeof performance!=='undefined'?performance.now():0;
-  const canvas=document.createElement('canvas');canvas.width=W;canvas.height=H;const c=canvas.getContext('2d');if(!c)return;
+  const got=faceFor(group,fw,fh);if(!got)return;const canvas=got.face.canvas;
   const texture=new T.CanvasTexture(canvas);texture.colorSpace=T.SRGBColorSpace;texture.generateMipmaps=false;texture.minFilter=T.LinearFilter;texture.name='vending-closeup';
-  const state={alive:true},changed=()=>{if(state.alive)texture.needsUpdate=true;};
+  const state={alive:true},refresh=()=>{if(state.alive)texture.needsUpdate=true;};got.face.listeners.add(refresh);
   const printed=new T.MeshBasicMaterial({map:texture,toneMapped:false,alphaTest:.5});printed.name='vending-closeup';
   const glassCanvas=document.createElement('canvas');glassCanvas.width=glassCanvas.height=64;{const g=glassCanvas.getContext('2d');if(g){g.fillStyle='rgba(225,250,255,.05)';g.fillRect(0,0,64,64);g.fillStyle='rgba(255,255,255,.14)';g.beginPath();g.moveTo(18,0);g.lineTo(26,0);g.lineTo(12,64);g.lineTo(4,64);g.fill();g.fillStyle='rgba(255,255,255,.08)';g.beginPath();g.moveTo(29,0);g.lineTo(31,0);g.lineTo(17,64);g.lineTo(15,64);g.fill();}}
   const glassMap=new T.CanvasTexture(glassCanvas);glassMap.colorSpace=T.SRGBColorSpace;const glass=new T.MeshBasicMaterial({map:glassMap,transparent:true,depthWrite:false,toneMapped:false});glass.name='vending-closeup-glass';
@@ -359,11 +389,7 @@ export function createVendingMachines(scene:T.Scene,opts:{coins?:()=>number|null
   const cam=new T.PerspectiveCamera(40,view.width/view.height,1,500),camPos=new T.Vector3(),camLook=new T.Vector3();faceView(e,cam,camPos,camLook,view.height);
   const front=VENDING_SIZE.d/2,P=VENDING_BAY.product;
   const parts:CloseUpPart[]=group.map((g,gi)=>{
-   const ox=gi*fw,at=(r:Rect)=>[ox+r.x*fw,r.y*fh,r.w*fw,r.h*fh],{items,header}=pageOne(g.machine);
-   paintHeader(c,at,g.machine,header);paintRail(c,at,0,items);paintRail(c,at,1,items);
-   const panel=(r:Rect,fn:(w:number,h:number)=>void)=>{const [x,y,w,h]=at(r);c.save();c.translate(x,y);fn(w,h);c.restore();};
-   const [msg,sub]=g.machine.drinks?GREETING.drinks:GREETING.shop;panel(L.led,(w,h)=>paintLed(c,w,h,msg,sub));panel(L.coin,(w,h)=>paintCoin(c,w,h,atlas.coins));panel(L.tray,(w,h)=>paintTray(c,w,h));
-   items.forEach((item,i)=>paintProduct(c,at(productCell(i)),item,atlas.pics,changed));
+   const ox=gi*fw,at=(r:Rect)=>[ox+r.x*fw,r.y*fh,r.w*fw,r.h*fh],{items}=pageOne(g.machine);
    // Printed panels at the front: header, the two rails (the slab fronts), LED, coin, tray.
    const G=L.glass,headerRect={x:G.x,y:G.y,w:G.w,h:productCell(0).y-G.y},rail=(row:number):Rect=>{const r=L.slots[row*L.cols],top=shelfLine(r),bottom=row===0?L.slots[L.cols].y:G.y+G.h;return {x:G.x,y:top,w:G.w,h:bottom-top};};
    const fz=VENDING_FACE.z-.003,flat=[faceQuad(headerRect,fz,at(headerRect),W,H),faceQuad(rail(0),fz,at(rail(0)),W,H),faceQuad(rail(1),fz,at(rail(1)),W,H),...[L.led,L.coin,L.tray].map(r=>faceQuad(r,fz,at(r),W,H))];
@@ -387,8 +413,8 @@ export function createVendingMachines(scene:T.Scene,opts:{coins?:()=>number|null
    bayMesh.receiveShadow=true;cutFront(g,true);
    return {entry:g,meshes,products:productMesh,targets};
   });
-  closeUp={id,parts,canvas,texture,printed,glass,glassMap,state};
-  closeUpStats={ms:+((typeof performance!=='undefined'?performance.now():0)-t0).toFixed(1),width:W,height:H,bytes:W*H*4,drawCalls:parts.length*4};
+  closeUp={id,parts,canvas,texture,printed,glass,glassMap,state,face:got.face,refresh};
+  closeUpStats={ms:+((typeof performance!=='undefined'?performance.now():0)-t0).toFixed(1),width:W,height:H,bytes:W*H*4,drawCalls:parts.length*4,cached:got.reused,cachedMachines:cachedMachines()};
  }
  /** A level three-quarter camera fits the face and a sliver of the cabinet side. */
  const faceView=(e:Entry,camera:T.PerspectiveCamera,position:T.Vector3,look:T.Vector3,viewportHeight=typeof window==='undefined'?800:window.innerHeight,lift=0)=>{
@@ -399,7 +425,7 @@ export function createVendingMachines(scene:T.Scene,opts:{coins?:()=>number|null
   // A shallow three-quarter view reveals the cabinet's right side. Reserve room
   // for its depth and the nearer front edge instead of clipping the controls.
   const angle=viewportHeight<500?-.14:-.40,cs=Math.cos(angle),sn=Math.sin(angle),sideDepth=Math.abs(sn);
-  const side=new T.Vector3(e.dir.z,0,-e.dir.x);
+  const side=faceSide.set(e.dir.z,0,-e.dir.x);
   const angledDist=Math.max(fh/2/(1-2*FACE_MARGIN_Y)/tanV,(fw*cs+VENDING_SIZE.d*S*sideDepth)/2/(1-2*FACE_MARGIN_X)/(tanV*aspect))+fw*sideDepth/2;
   look.set(e.machine.x,e.machine.y+(F.y0+top)/2*S,e.machine.z).addScaledVector(e.dir,F.z*S).addScaledVector(side,-.15*S);
   position.copy(look).addScaledVector(e.dir,angledDist*cs).addScaledVector(side,angledDist*sn);position.y+=lift*S;
@@ -417,36 +443,73 @@ export function createVendingMachines(scene:T.Scene,opts:{coins?:()=>number|null
  /** Every visible, opaque mesh triangle (world space) inside the wedge between the close-up camera (lifted up to `maxLift`) and the
   *  face: gathered once per pass, so the ray tests below stay small (no per-mesh BVH needed). Machines, sprites, lines and points
   *  never count. */
- const wedgeTriangles=(e:Entry,camera:T.PerspectiveCamera,viewportHeight?:number,maxLift=0,ignore:(o:T.Object3D)=>boolean=passable)=>{
-  const cam=new T.PerspectiveCamera(camera.fov,camera.aspect,camera.near,camera.far),F=VENDING_FACE;
-  occluderBox.makeEmpty();for(const l of [0,maxLift]){faceView(e,cam,occluderPos,occluderLook,viewportHeight,l);occluderBox.expandByPoint(occluderPos);}
-  for(const [x,y] of [[F.x0,0],[F.x1,0],[F.x0,F.y1],[F.x1,F.y1]])occluderBox.expandByPoint(occluderPoint.set(x,y,F.z).applyMatrix4(e.mesh.matrixWorld));
-  const out:{mesh:T.Mesh;tris:number[]}[]=[];
-  const walk=(o:T.Object3D)=>{if(!o.visible||o===root||o===glowRoot)return;const m=o as T.Mesh,pos=m.isMesh?m.geometry?.getAttribute('position'):null;
-   if(pos&&!(m as unknown as T.InstancedMesh).isInstancedMesh&&!(m as unknown as T.SkinnedMesh).isSkinnedMesh){const g=m.geometry;if(!g.boundingSphere)g.computeBoundingSphere();
-    occluderSphere.copy(g.boundingSphere!).applyMatrix4(m.matrixWorld);
-    if(occluderBox.intersectsSphere(occluderSphere)&&!ignore(o)){const idx=g.index,n=(idx?idx.count:pos.count)/3|0,tris:number[]=[];
-     for(let t=0;t<n;t++){const a=idx?idx.getX(t*3):t*3,b=idx?idx.getX(t*3+1):t*3+1,c=idx?idx.getX(t*3+2):t*3+2;
-      triA.fromBufferAttribute(pos,a).applyMatrix4(m.matrixWorld);triB.fromBufferAttribute(pos,b).applyMatrix4(m.matrixWorld);triC.fromBufferAttribute(pos,c).applyMatrix4(m.matrixWorld);
-      if(triBox.makeEmpty().expandByPoint(triA).expandByPoint(triB).expandByPoint(triC).intersectsBox(occluderBox))tris.push(triA.x,triA.y,triA.z,triB.x,triB.y,triB.z,triC.x,triC.y,triC.z);}
-     if(tris.length)out.push({mesh:m,tris});}}
-   for(const c of o.children)walk(c);};
-  scene.children.forEach(walk);return out;};
- /** The meshes (from wedgeTriangles) hit by rays from the close-up camera (lifted by `lift`) to a 5×6 grid: the face (corners and edges included) and the plinth below it, short of the machine. */
- const blockersOf=(e:Entry,camera:T.PerspectiveCamera,wedge:{mesh:T.Mesh;tris:number[]}[],viewportHeight?:number,lift=0,skip?:Set<T.Object3D>)=>{
-  const cam=new T.PerspectiveCamera(camera.fov,camera.aspect,camera.near,camera.far),F=VENDING_FACE,found=new Set<T.Mesh>();faceView(e,cam,occluderPos,occluderLook,viewportHeight,lift);
+ /** Scratch for the occluder pass, shared and reused by every pass so a zoom leaves no garbage (heat audit Sep 30 2026, #5: the old
+  *  per-mesh `number[]` triangle lists and per-call cameras cost ~30 ms and fed a long GC at phone 4×): the candidate meshes (visible,
+  *  opaque, touching the wedge box), then their triangles inside the box in ONE growable Float64Array (world space, the same precision
+  *  as before), with each mesh's [start,end) range and the bounds of its triangles (a ray that misses those bounds skips the mesh). */
+ const occluderCam=new T.PerspectiveCamera(),candidates:T.Mesh[]=[];
+ const wedge={count:0,length:0,tris:new Float64Array(9*2048),meshes:[] as T.Mesh[],start:[] as number[],end:[] as number[],boxes:[] as T.Box3[]};
+ const poseCam=(camera:T.PerspectiveCamera)=>{occluderCam.fov=camera.fov;occluderCam.aspect=camera.aspect;return occluderCam;};
+ /** The wedge box: the close-up camera (level and lifted by `maxLift`) and the machine front down to the ground. */
+ const fitWedge=(e:Entry,camera:T.PerspectiveCamera,viewportHeight?:number,maxLift=0)=>{
+  const cam=poseCam(camera),F=VENDING_FACE;occluderBox.makeEmpty();
+  faceView(e,cam,occluderPos,occluderLook,viewportHeight,0);occluderBox.expandByPoint(occluderPos);faceView(e,cam,occluderPos,occluderLook,viewportHeight,maxLift);occluderBox.expandByPoint(occluderPos);
+  occluderBox.expandByPoint(occluderPoint.set(F.x0,0,F.z).applyMatrix4(e.mesh.matrixWorld));occluderBox.expandByPoint(occluderPoint.set(F.x1,0,F.z).applyMatrix4(e.mesh.matrixWorld));
+  occluderBox.expandByPoint(occluderPoint.set(F.x0,F.y1,F.z).applyMatrix4(e.mesh.matrixWorld));occluderBox.expandByPoint(occluderPoint.set(F.x1,F.y1,F.z).applyMatrix4(e.mesh.matrixWorld));};
+ /** Every visible, opaque mesh whose bounds touch the wedge box (scene walk order). Machines, glows, instanced/skinned meshes and
+  *  `ignore`d (passable) things never count. Allocation-free. */
+ let ignoreNow:(o:T.Object3D)=>boolean=()=>false;
+ const walkCandidates=(o:T.Object3D)=>{if(!o.visible||o===root||o===glowRoot)return;const m=o as T.Mesh,pos=m.isMesh?m.geometry?.getAttribute('position'):null;
+  if(pos&&!(m as unknown as T.InstancedMesh).isInstancedMesh&&!(m as unknown as T.SkinnedMesh).isSkinnedMesh){const g=m.geometry;if(!g.boundingSphere)g.computeBoundingSphere();
+   occluderSphere.copy(g.boundingSphere!).applyMatrix4(m.matrixWorld);if(occluderBox.intersectsSphere(occluderSphere)&&!ignoreNow(o))candidates.push(m);}
+  const kids=o.children;for(let i=0;i<kids.length;i++)walkCandidates(kids[i]);};
+ const gatherCandidates=(ignore:(o:T.Object3D)=>boolean)=>{candidates.length=0;ignoreNow=ignore;const kids=scene.children;for(let i=0;i<kids.length;i++)walkCandidates(kids[i]);};
+ /** The candidates' triangles inside the wedge box, into the shared scratch (see `wedge`). */
+ const extractWedge=()=>{wedge.count=0;wedge.length=0;
+  for(const m of candidates){const g=m.geometry,pos=g.getAttribute('position') as T.BufferAttribute,idx=g.index,n=(idx?idx.count:pos.count)/3|0,s=wedge.length,box=wedge.boxes[wedge.count]??=new T.Box3();box.makeEmpty();
+   for(let t=0;t<n;t++){const a=idx?idx.getX(t*3):t*3,b=idx?idx.getX(t*3+1):t*3+1,c=idx?idx.getX(t*3+2):t*3+2;
+    triA.fromBufferAttribute(pos,a).applyMatrix4(m.matrixWorld);triB.fromBufferAttribute(pos,b).applyMatrix4(m.matrixWorld);triC.fromBufferAttribute(pos,c).applyMatrix4(m.matrixWorld);
+    if(!triBox.makeEmpty().expandByPoint(triA).expandByPoint(triB).expandByPoint(triC).intersectsBox(occluderBox))continue;
+    if(wedge.length+9>wedge.tris.length){const grown=new Float64Array(wedge.tris.length*2);grown.set(wedge.tris);wedge.tris=grown;}
+    const k=wedge.length;triA.toArray(wedge.tris,k);triB.toArray(wedge.tris,k+3);triC.toArray(wedge.tris,k+6);wedge.length+=9;box.union(triBox);}
+   if(wedge.length>s){const w=wedge.count++;wedge.meshes[w]=m;wedge.start[w]=s;wedge.end[w]=wedge.length;box.expandByScalar(1e-4);}}
+  wedge.meshes.length=wedge.count;};// drop stale references to meshes from an earlier, larger pass
+ const wedgeTriangles=(e:Entry,camera:T.PerspectiveCamera,viewportHeight?:number,maxLift=0,ignore:(o:T.Object3D)=>boolean=passable)=>{fitWedge(e,camera,viewportHeight,maxLift);gatherCandidates(ignore);extractWedge();};
+ /** The meshes (from the last wedgeTriangles) hit by rays from the close-up camera (lifted by `lift`) to a 5×6 grid: the face (corners and edges included) and the plinth below it, short of the machine. */
+ const found=new Set<T.Mesh>();
+ const blockersOf=(e:Entry,camera:T.PerspectiveCamera,viewportHeight?:number,lift=0,skip?:Set<T.Object3D>)=>{
+  const F=VENDING_FACE,tris=wedge.tris;found.clear();faceView(e,poseCam(camera),occluderPos,occluderLook,viewportHeight,lift);
   // Rows: the plinth (cabinet front, just above the ground: the whole machine front, not only the face), then the face bottom to top.
   for(let i=0;i<=4;i++)for(let j=-1;j<=4;j++){
    occluderPoint.set(F.x0+i/4*FACE_SIZE.w,j<0?.14:F.y0+j/4*FACE_SIZE.h,j<0?VENDING_SIZE.d/2:F.z).applyMatrix4(e.mesh.matrixWorld);occluderDir.subVectors(occluderPoint,occluderPos);
    const far=occluderDir.length()-.05;occluderRay.set(occluderPos,occluderDir.normalize());
-   for(const {mesh,tris} of wedge){if(found.has(mesh)||skip?.has(mesh))continue;
-    for(let k=0;k<tris.length;k+=9){triA.fromArray(tris,k);triB.fromArray(tris,k+3);triC.fromArray(tris,k+6);
+   for(let w=0;w<wedge.count;w++){const mesh=wedge.meshes[w];if(found.has(mesh)||skip?.has(mesh))continue;
+    // Bounds first: a ray that misses the mesh's wedge triangles' bounds, or meets them only beyond the face, hits none of them.
+    if(!occluderRay.intersectBox(wedge.boxes[w],triHit)||triHit.distanceTo(occluderPos)>=far)continue;
+    for(let k=wedge.start[w];k<wedge.end[w];k+=9){triA.fromArray(tris,k);triB.fromArray(tris,k+3);triC.fromArray(tris,k+6);
      if(occluderRay.intersectTriangle(triA,triB,triC,false,triHit)&&triHit.distanceTo(occluderPos)<far){found.add(mesh);break;}}}}
   return [...found];};
- const occludersOf=(e:Entry,camera:T.PerspectiveCamera,viewportHeight?:number,lift=0)=>blockersOf(e,camera,wedgeTriangles(e,camera,viewportHeight,lift),viewportHeight,lift);
- /** See-through or transient things (effects, glows, the player and their ride, hidden while zoomed anyway) never block the face. */
+ const occludersOf=(e:Entry,camera:T.PerspectiveCamera,viewportHeight?:number,lift=0)=>{wedgeTriangles(e,camera,viewportHeight,lift);return blockersOf(e,camera,viewportHeight,lift);};
+ /** See-through or transient things (effects, glows, the player and their ride, hidden while zoomed anyway) never block the face.
+  *  (Sep 30 2026: the player's root is `main-character`, which the old name test missed, so the player's own limbs were "hidden as an
+  *  occluder" on every zoom and, moving between zooms, would defeat the occluder cache.) */
  const passable=(o:T.Object3D)=>{const m=(o as T.Mesh).material as T.Material|T.Material[];if((Array.isArray(m)?m:[m]).every(x=>x&&(x.transparent||!x.visible||x.colorWrite===false)))return true;
-  for(let p:T.Object3D|null=o;p&&p!==scene;p=p.parent)if(/^(player|character|ride|ball|vehicle)/.test(p.name))return true;return false;};
+  for(let p:T.Object3D|null=o;p&&p!==scene;p=p.parent)if(/^(player|character|main-character|ride|ball|vehicle)/.test(p.name))return true;return false;};
+ /**
+  * Occluder pass cache (heat audit Sep 30 2026, #5): the close-up camera pose depends only on the machine, the camera fov, the
+  * viewport aspect and the short-landscape switch, so a pass's result (props hidden, camera lift) is kept per machine + fov + aspect
+  * bucket (0.01) + landscape flag, at most OCCLUDER_CACHE_MAX keys. It is reused only while the candidate meshes near the wedge are
+  * exactly the same: same meshes in the same order, same geometry and position version, same world matrix; anything added, removed,
+  * moved, shown, hidden or made see-through recomputes. A hit costs one scene walk (bounding spheres only), no triangles, no rays.
+  */
+ type OccluderPass={key:string;meshes:T.Mesh[];sig:Float64Array;hidden:T.Object3D[];lift:number};
+ const OCCLUDER_CACHE_MAX=8,occluderCache:OccluderPass[]=[],SIG=18;
+ const occluderKey=(e:Entry,camera:T.PerspectiveCamera,viewportHeight?:number)=>`${e.machine.id}|${camera.fov}|${Math.round((camera.aspect||1)*100)}|${(viewportHeight??(typeof window==='undefined'?800:window.innerHeight))<500?1:0}`;
+ const signCandidates=(out:Float64Array)=>{candidates.forEach((m,i)=>{const o=i*SIG;out.set(m.matrixWorld.elements,o);out[o+16]=m.geometry.id;out[o+17]=(m.geometry.getAttribute('position') as T.BufferAttribute).version;});return out;};
+ const sameCandidates=(p:OccluderPass)=>{if(p.meshes.length!==candidates.length)return false;const s=p.sig;
+  for(let i=0;i<candidates.length;i++){const m=candidates[i],o=i*SIG,el=m.matrixWorld.elements;if(m!==p.meshes[i]||s[o+16]!==m.geometry.id||s[o+17]!==(m.geometry.getAttribute('position') as T.BufferAttribute).version)return false;
+   for(let k=0;k<16;k++)if(s[o+k]!==el[k])return false;}
+  return true;};
  /** A mesh small enough to simply hide while the close-up is up (a bench, a planter, a sign); larger ones are merged world chunks. */
  const compact=(o:T.Object3D)=>{const m=o as T.Mesh;if((m as unknown as T.InstancedMesh).isInstancedMesh||(m as unknown as T.SkinnedMesh).isSkinnedMesh)return false;
   const g=m.geometry;if(!g.boundingSphere)g.computeBoundingSphere();return (g.boundingSphere?.radius??Infinity)*m.matrixWorld.getMaxScaleOnAxis()<3;};
@@ -457,12 +520,20 @@ export function createVendingMachines(scene:T.Scene,opts:{coins?:()=>number|null
   * hidden until release; if a merged world chunk is in the way (a bench baked into the Island Square chunk), the close-up camera
   * rises in 0.1 m steps (up to 1.2 m, same look point) until it sees over it. Restored on release. No per-frame work.
   */
- let clearMs=0;
+ let clearMs=0,clearCached=false;
  function clearView(e:Entry,camera:T.PerspectiveCamera){if(!zoom)return;const t0=typeof performance!=='undefined'?performance.now():0;restoreOccluders();
-  const MAX_LIFT=1.2,wedge=wedgeTriangles(e,camera,undefined,MAX_LIFT),hide=new Set<T.Object3D>();
-  for(const o of blockersOf(e,camera,wedge))if(compact(o)){o.visible=false;hiddenOccluders.push(o);hide.add(o);}
-  let lift=0;for(let best=Infinity,l=0;l<=MAX_LIFT+1e-4;l+=.1){const n=blockersOf(e,camera,wedge,undefined,l,hide).length;if(n<best){best=n;lift=l;}if(n===0)break;}
-  zoom.lift=+lift.toFixed(2);clearMs=+((typeof performance!=='undefined'?performance.now():0)-t0).toFixed(1);}
+  const MAX_LIFT=1.2,key=occluderKey(e,camera);fitWedge(e,camera,undefined,MAX_LIFT);gatherCandidates(passable);
+  const at=occluderCache.findIndex(p=>p.key===key),cached=at>=0&&sameCandidates(occluderCache[at]);clearCached=cached;
+  if(cached){const pass=occluderCache[at];occluderCache.splice(at,1);occluderCache.push(pass);
+   for(const o of pass.hidden){o.visible=false;hiddenOccluders.push(o);}zoom.lift=pass.lift;}
+  else{extractWedge();const hide=new Set<T.Object3D>();
+   for(const o of blockersOf(e,camera))if(compact(o)){o.visible=false;hiddenOccluders.push(o);hide.add(o);}
+   let lift=0;for(let best=Infinity,l=0;l<=MAX_LIFT+1e-4;l+=.1){const n=blockersOf(e,camera,undefined,l,hide).length;if(n<best){best=n;lift=l;}if(n===0)break;}
+   zoom.lift=+lift.toFixed(2);
+   // Remember the pass (the candidates were gathered before anything was hidden, as they will be on the next zoom).
+   if(at>=0)occluderCache.splice(at,1);if(occluderCache.length>=OCCLUDER_CACHE_MAX)occluderCache.shift();
+   occluderCache.push({key,meshes:candidates.slice(),sig:signCandidates(new Float64Array(candidates.length*SIG)),hidden:[...hide],lift:zoom.lift});}
+  clearMs=+((typeof performance!=='undefined'?performance.now():0)-t0).toFixed(1);}
  let targetDistance=Infinity;
  return {
   root,obstacles,entries,pick:(ray:T.Raycaster)=>pick(ray),
@@ -536,7 +607,7 @@ export function createVendingMachines(scene:T.Scene,opts:{coins?:()=>number|null
   /** Checks: the live close-up's camera lift, the meshes hidden for it, and what (if anything) still stands between the camera and
    *  the face (should be none); null when not zoomed. Recomputed on call, never per frame. */
   closeUpView(){if(!zoom||!lastCamera)return null;const e=entries.find(x=>x.machine.id===zoom!.id)!;const name=(o:T.Object3D)=>o.name||o.type;
-   return {lift:zoom.lift??0,ms:clearMs,hidden:hiddenOccluders.map(name),blockers:occludersOf(e,lastCamera,undefined,zoom.lift??0).map(name)};},
+   return {lift:zoom.lift??0,ms:clearMs,cached:clearCached,hidden:hiddenOccluders.map(name),blockers:occludersOf(e,lastCamera,undefined,zoom.lift??0).map(name)};},
   faceNow():{x:number;y:number}[]|null{if(!zoom||!lastCamera)return null;const e=entries.find(x=>x.machine.id===zoom!.id)!;return faceNDC(e,lastCamera);},
   /**
    * The face's full CSS 3D placement (Sep 30 2026): a matrix3d mapping face pixels (x right, y down, z toward the viewer, `w`×`h`
@@ -553,7 +624,7 @@ export function createVendingMachines(scene:T.Scene,opts:{coins?:()=>number|null
   },
   /** Called with the face corners on every awake frame while zoomed in; returns an unsubscribe. */
   watchFace(fn:(corners:{x:number;y:number}[])=>void){faceListener=fn;return()=>{if(faceListener===fn)faceListener=null;};},
-  dispose(){dropCloseUp();glow.dispose();glowRoot.removeFromParent();root.removeFromParent();entries.forEach(e=>e.geometry.dispose());material.dispose();atlas.dispose();},
+  dispose(){dropCloseUp();faces.splice(0).forEach(dropFace);closeUpStats.cachedMachines=0;occluderCache.length=0;candidates.length=0;wedge.meshes.length=wedge.count=0;glow.dispose();glowRoot.removeFromParent();root.removeFromParent();entries.forEach(e=>e.geometry.dispose());material.dispose();atlas.dispose();},
  };
 }
 export type VendingMachines=ReturnType<typeof createVendingMachines>;

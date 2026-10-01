@@ -7,7 +7,7 @@ import {FOOD_LAYERS,drawFoodShadow,type FoodLayer} from '@/lib/konbini/foodArt';
 import {consumable,foodNote,foodItem,collectionGroups} from '@/lib/konbini/food';
 import {konbiniTick,konbiniSfx} from '@/lib/konbini/konbiniSound';
 import {useModalFocus} from '@/lib/konbini/useModalFocus';
-import {BITES,MASK,PUFF_MS,biteAnnouncement,biteLabel,biteSpots,createBiteToy,crumbsFor,drinkLevel,maskBounds,scallop,type BiteKind,type BiteSpot,type BiteToy,type ItemBounds} from '@/lib/konbini/biteToy';
+import {BITES,HAPTIC_MS,MASK,PUFF_MS,biteAnnouncement,biteLabel,biteSpots,createBiteToy,createEatSequence,sipWords,crumbsFor,drinkLevel,maskBounds,scallop,type BiteKind,type BiteSpot,type BiteToy,type ItemBounds} from '@/lib/konbini/biteToy';
 
 /**
  * The big layered reveal after a Konbini purchase (and when replaying a collected item). Same full-screen dark see-through
@@ -31,6 +31,8 @@ export function isDrinkItem(id:string){return foodItem(id)?.section==='drinks'||
 export function revealLabels(item:RevealItem){const drink=item.kind?item.kind==='drink':isDrinkItem(item.id);return {note:item.labels?.note??(drink?'Hydration':'Football fuel'),eat:item.labels?.eat??(drink?'Drink now':'Eat now')};}
 export function revealItemFor(id:string,eyebrow?:string):RevealItem|null{const c=consumable(id);const layers=FOOD_LAYERS[id];if(!c||!layers)return null;return {id,label:c.label,jp:c.jp,blurb:c.blurb,note:foodNote(id),layers,eyebrow};}
 const STEP=360,SIZE=300,PAUSE=220,FINISH=600;
+/** Reduced motion: a bite word stands still this long, then fades over REDUCED_WORD_FADE_MS (CSS opacity transition). */
+const REDUCED_WORD_HOLD_MS=420,REDUCED_WORD_FADE_MS=300;
 /** The art's placement on the canvas (300-unit space): the food fills more of the disc. */
 const ART_S=4.3,ART_X=SIZE/2,ART_Y=SIZE/2+2;
 /** Riso backdrop: a clean off-white disc (the iso art's card) with a warm halftone ring. */
@@ -89,30 +91,56 @@ function paintEaten(art:BiteArt,item:RevealItem,drink:boolean,geo:BiteGeo,bites:
 /** PREVIEW mode (user, Sep 30 2026: "allow options to preview before buying"): the same big view and layered build, labelled
  *  Preview, with Back and Buy. It never charges, collects, stamps NEW! or fills the pouch: the caller only buys on `onBuy`. */
 export type RevealPreview={price:number;onBuy:()=>void;onBack:()=>void;buyDisabled?:boolean;buyLabel?:string};
-export default function KonbiniReveal({item,onEat,onSave,onDone,saveDisabled,status,firstTime,collection,preview}:{item:RevealItem;onEat?:()=>void;onSave?:()=>void;onDone:()=>void;saveDisabled?:boolean;status?:string;firstTime?:boolean;preview?:RevealPreview;
+export default function KonbiniReveal({item,onEat,onSave,onDone,saveDisabled,status,firstTime,collection,preview,eating=false,onEaten}:{item:RevealItem;onEat?:()=>void;onSave?:()=>void;onDone:()=>void;saveDisabled?:boolean;status?:string;firstTime?:boolean;preview?:RevealPreview;
  /** First purchase: the collection count ticks from have−1 to have. */
- collection?:{have:number;total:number}}){
- const canvas=useRef<HTMLCanvasElement>(null),panel=useRef<HTMLElement>(null);
+ collection?:{have:number;total:number};
+ /** Eating it for real (Oct 1 2026, lib/konbini/biteToy.ts createEatSequence): once the item is built, it is bitten away bite by
+  *  bite with a word pop each ("Chomp!", "Yum!", "Ooh!"), then a satisfied "ahh", then `onEaten` (the caller's eat result). */
+ eating?:boolean;onEaten?:()=>void}){
+ const canvas=useRef<HTMLCanvasElement>(null),panel=useRef<HTMLElement>(null),stage=useRef<HTMLDivElement>(null);
+ const [pops,setPops]=useState<{n:number;text:string;x:number;y:number;fade?:boolean}[]>([]);
+ const eaten$=useRef(onEaten);eaten$.current=onEaten;
  const [step,setStep]=useState(0),[built,setBuilt]=useState(false),[everBuilt,setEverBuilt]=useState(false);
  // The bite toy (lib/konbini/biteToy.ts): `gen` restarts the build after the last bite; `eaten` mirrors the toy for the DOM.
  const [gen,setGen]=useState(0),[eaten,setEaten]=useState({bites:0,gone:false}),[said,setSaid]=useState('');
  const drink=isDrink(item),edible=item.edible??(drink||!!consumable(item.id)),kind:BiteKind=drink?'sip':'bite',descId=useId();
  const toy=useRef<BiteToy|null>(null),art=useRef<BiteArt|null>(null),puffFrame=useRef(0);
- useEffect(()=>{
-  if(!edible)return;
-  const t=createBiteToy({kind,label:item.label,reduced:()=>matchMedia('(prefers-reduced-motion:reduce)').matches,
-   render:(bites,gone,puff)=>{const a=art.current;setEaten({bites,gone});if(!a)return;cancelAnimationFrame(puffFrame.current);const geo=composeEaten(a,item,drink,bites,gone);
+ /** Draws the eaten state once (bites taken, gone) and, with `puff`, the ≤ PUFF_MS crumb puff: shared by the toy and the eat sequence. */
+ const paint=useRef<(bites:number,gone:boolean,puff:boolean)=>void>(()=>{});
+ paint.current=(bites,gone,puff)=>{const a=art.current;setEaten({bites,gone});if(!a)return;cancelAnimationFrame(puffFrame.current);const geo=composeEaten(a,item,drink,bites,gone);
     if(!puff){paintEaten(a,item,drink,geo,bites,gone,-1);return;}
     // The crumb puff: ≤ PUFF_MS of frames that only blit the composed layer, then static again.
     let start=0;const run=(now:number)=>{if(!start)start=now;const k=(now-start)/PUFF_MS;paintEaten(a,item,drink,geo,bites,gone,k>=1?-1:k);puffFrame.current=k>=1?0:requestAnimationFrame(run);};
-    puffFrame.current=requestAnimationFrame(run);},
+    puffFrame.current=requestAnimationFrame(run);};
+ useEffect(()=>{
+  // Eating for real: the toy steps aside (no tap bites, no auto-rebuild) and the eat sequence below draws the bites.
+  if(!edible||eating)return;
+  const t=createBiteToy({kind,label:item.label,reduced:()=>matchMedia('(prefers-reduced-motion:reduce)').matches,
+   render:(bites,gone,puff)=>paint.current(bites,gone,puff),
    sound:s=>konbiniSfx[s](),
    vibrate:ms=>{try{navigator.vibrate?.(ms);}catch{/* no haptics */}},
    announce:setSaid,
    rebuild:()=>{cancelAnimationFrame(puffFrame.current);setEaten({bites:0,gone:false});setGen(g=>g+1);},
    setTimer:(fn,ms)=>window.setTimeout(fn,ms),clearTimer:id=>window.clearTimeout(id as number)});
   toy.current=t;return()=>{t.dispose();cancelAnimationFrame(puffFrame.current);if(toy.current===t)toy.current=null;};
- },[item,edible,drink,kind]);
+ },[item,edible,drink,kind,eating]);
+ // The eat sequence: starts once the item is built; one redraw + sound + word per bite on timers (no frame loop of its own).
+ useEffect(()=>{
+  if(!eating||!built)return;const reduced=matchMedia('(prefers-reduced-motion:reduce)').matches,fadeTimers:number[]=[];
+  const seq=createEatSequence({kind,words:drink?sipWords(item.id):undefined,
+   bite:(n,gone)=>{paint.current(n,gone,!reduced);konbiniSfx[kind]();if(!reduced)try{navigator.vibrate?.(HAPTIC_MS);}catch{/* no haptics */}setSaid(biteAnnouncement(kind,n));},
+   word:(text,n)=>{const c=canvas.current?.getBoundingClientRect(),st=stage.current?.getBoundingClientRect(),geo=biteGeo.get(item.layers);if(!c||!st)return;
+    const b=geo?.bounds,sp=!geo||!b?{x:SIZE/2,y:SIZE*.35}:drink?{x:b.cx,y:b.y0+(b.y1-b.y0)*.15}:n<=geo.spots.length?geo.spots[n-1]:{x:b.cx,y:b.cy-b.size*.2};
+    setPops(w=>[...w.filter(o=>n-o.n<2),{n,text,x:Math.round(c.left-st.left+sp.x/SIZE*c.width),y:Math.round(c.top-st.top+sp.y/SIZE*c.height)}]);
+    // Reduced motion: the global rule cancels CSS animations (no animationend), so the word stands still, then fades out
+    // (an opacity transition) and is removed, on two timers.
+    if(reduced){fadeTimers.push(window.setTimeout(()=>setPops(w=>w.map(o=>o.n===n?{...o,fade:true}:o)),REDUCED_WORD_HOLD_MS),window.setTimeout(()=>setPops(w=>w.filter(o=>o.n!==n)),REDUCED_WORD_HOLD_MS+REDUCED_WORD_FADE_MS));}},
+   satisfied:()=>{konbiniSfx.ahh();setSaid(`All gone! Ahh… ${item.label} ${drink?'finished':'eaten'}.`);},
+   done:()=>eaten$.current?.(),
+   setTimer:(fn,ms)=>window.setTimeout(fn,ms),clearTimer:id=>window.clearTimeout(id as number)});
+  seq.start();return()=>{seq.dispose();fadeTimers.forEach(id=>window.clearTimeout(id));};
+ // eslint-disable-next-line react-hooks/exhaustive-deps -- one sequence per eat; item/kind are fixed while eating
+ },[eating,built]);
  // Focus in, Escape wherever focus is, a Tab trap for aria-modal, focus restored on close (code review finding 16).
  useModalFocus(panel,onDone);
  useEffect(()=>{
@@ -164,16 +192,17 @@ export default function KonbiniReveal({item,onEat,onSave,onDone,saveDisabled,sta
   >
   <div className={styles.shade} aria-hidden="true"/>
   <div className={styles.content}>
-   <header className={`${own.head} ${preview?own.headInline:''}`}><span>{preview?<b className={own.previewTag} data-konbini-preview-tag>Preview</b>:firstTime?'NEW! · COLLECTION':item.eyebrow??'KONBINI'}</span><h2>{built?(preview?'Take a look!':'Ready!'):`Building… ${current?.name??''}`}</h2><DoneButton className={styles.close} data-konbini-done data-konbini-preview-back={preview?true:undefined} onDone={preview?preview.onBack:onDone}/></header>
-   <div className={own.stage}>{!preview&&firstTime&&built&&<b className={own.hanko} aria-hidden="true">NEW!</b>}<canvas ref={canvas} className={`${own.canvas} ${preview&&built?own.rock:''} ${edible?own.toy:''}`} width={SIZE} height={SIZE}
+   <header className={`${own.head} ${preview?own.headInline:''}`}><span>{preview?<b className={own.previewTag} data-konbini-preview-tag>Preview</b>:firstTime?'NEW! · COLLECTION':item.eyebrow??'KONBINI'}</span><h2>{built?(preview?'Take a look!':eating?(drink?'Drink up!':'Munch time!'):'Ready!'):`Building… ${current?.name??''}`}</h2><DoneButton className={styles.close} data-konbini-done data-konbini-preview-back={preview?true:undefined} onDone={preview?preview.onBack:onDone}/></header>
+   <div ref={stage} className={own.stage} data-konbini-eating={eating||undefined}>{!preview&&firstTime&&built&&<b className={own.hanko} aria-hidden="true">NEW!</b>}<canvas ref={canvas} className={`${own.canvas} ${preview&&built?own.rock:''} ${edible?own.toy:''}`} width={SIZE} height={SIZE}
     {...edible?{role:'button',tabIndex:0,'aria-label':biteLabel(kind,item.label),'aria-describedby':descId,'aria-disabled':built?undefined:true,onClick:bite,onKeyDown:biteKey,
      'data-konbini-bite':kind,'data-bites':eaten.bites,'data-gone':eaten.gone||undefined,'data-rebuilds':gen}
      :{role:'img','aria-label':`${item.label}, built layer by layer: ${item.layers.filter(l=>l.kind!=='pour').map(l=>l.name).join(', ')}`}}/>
    {edible&&<span id={descId} className={own.sr}>{`${item.label}, built layer by layer: ${item.layers.filter(l=>l.kind!=='pour').map(l=>l.name).join(', ')}. Just for fun: it doesn't use up your ${drink?'drink':'food'}.`}</span>}
-   {edible&&<span className={own.sr} role="status" aria-live="polite" data-konbini-bite-said>{said}</span>}</div>
+   {edible&&<span className={own.sr} role="status" aria-live="polite" data-konbini-bite-said>{said}</span>}
+   {pops.map(w=><b key={w.n} className={own.biteWord} aria-hidden="true" data-konbini-bite-word={w.text} data-n={w.n} data-fade={w.fade||undefined} style={{left:w.x,top:w.y}} onAnimationEnd={()=>setPops(ws=>ws.filter(o=>o.n!==w.n))}>{w.text}</b>)}</div>
    <div className={styles.caption} aria-live="polite">{item.jp&&<span lang="ja" className={own.jp} data-built={everBuilt||undefined}>{item.jp}</span>}<strong className={own.en}>{item.label}</strong>{!preview&&firstTime&&collection&&<span className={own.count} data-konbini-count>Konbini Collection <b key={everBuilt?'after':'before'} data-tick={everBuilt||undefined}>{everBuilt?collection.have:collection.have-1}</b>/{collection.total}</span>}<p>{item.blurb}</p><p className={own.note}><b>{words.note}:</b> {item.note}</p>{status&&<p className={own.status} role="status">{status}</p>}</div>
    {preview&&<nav aria-label="Preview" className={own.actions}><button type="button" data-konbini-preview-buy disabled={preview.buyDisabled} onClick={preview.onBuy}>{preview.buyLabel??`Buy · ${preview.price} coins`}</button></nav>}
-   {!preview&&(onEat||onSave)&&<nav aria-label="What to do with it" className={own.actions}>{onEat&&<button type="button" data-konbini-eat onClick={onEat}>{words.eat}</button>}{onSave&&<button type="button" data-konbini-save disabled={saveDisabled} onClick={onSave}>Save to backpack</button>}</nav>}
+   {!preview&&!eating&&(onEat||onSave)&&<nav aria-label="What to do with it" className={own.actions}>{onEat&&<button type="button" data-konbini-eat onClick={onEat}>{words.eat}</button>}{onSave&&<button type="button" data-konbini-save disabled={saveDisabled} onClick={onSave}>Save to backpack</button>}</nav>}
   </div>
  </section>;
 }

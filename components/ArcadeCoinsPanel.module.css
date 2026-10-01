@@ -33,8 +33,8 @@
 .machine button:last-child{min-width:82px;border-color:#ceffbf;background:#91f58f;color:#113a2a;box-shadow:0 3px 0 #347a49,0 0 12px #78ff8b22}
 .machine button:hover{background:#293d4f;box-shadow:0 3px 0 #0c1220,0 0 12px #70f5ec24}
 .machine button:last-child:hover{background:#b1ffa5;box-shadow:0 3px 0 #347a49,0 0 16px #78ff8b44}
-.machine button:active{transform:translateY(2px) scale(.96);box-shadow:0 1px 0 #0c1220}
-.machine button:focus-visible{outline:3px solid #fff0b9;outline-offset:4px}
+.machine button:active{transform:translateY(var(--btn-press)) scale(.96);box-shadow:0 1px 0 #0c1220}
+.machine button:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
 .machine button:disabled{opacity:.4;cursor:default;transform:none}
 .history{list-style:none;margin:0 0 18px;padding:0}
 .history li{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #ab91cc30;font-size:13px}
@@ -52,5 +52,5 @@
 .pack .storeLink{min-height:var(--btn-height,44px);padding:8px 18px;border:var(--btn-rim-width,3px) solid #ff85d9;border-radius:var(--btn-radius,999px);background:#35213f;color:#ffeafa;font:inherit;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 0 #1b1027,0 0 14px #ff62c233;transition:translate .15s,box-shadow .15s}
 .pack .storeLink:hover{background:#4b2853;box-shadow:0 4px 0 #1b1027,0 0 20px #ff62c24d}
 .pack .storeLink:active{translate:0 var(--btn-press,3px);box-shadow:0 1px 0 #1b1027,0 0 18px #ff62c24d}
-.pack .storeLink:focus-visible{outline:3px solid #fff0b9;outline-offset:4px}
+.pack .storeLink:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
 @media(prefers-reduced-motion:reduce){.pack .storeLink{transition:none}}

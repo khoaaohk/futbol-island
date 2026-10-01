@@ -46,15 +46,18 @@ export default function PlayerPopUpBook({bookId,onClose}:{bookId:PlayerBookId;on
  useEffect(()=>{
   const release=holdVideoPlayback(),before=document.activeElement instanceof HTMLElement?document.activeElement:null;
   setReady(true);close.current?.focus({preventScroll:true});
-  const key=(e:KeyboardEvent)=>{if(e.key==='Escape'&&root.current?.querySelector('[aria-label="Story transcript"]')){e.preventDefault();e.stopPropagation();root.current.querySelector<HTMLButtonElement>('[data-transcript-back]')?.click();return;}if(e.key==='Escape'){e.preventDefault();e.stopPropagation();close.current?.click();return;}if(e.key==='Tab'){
-   const nodes=Array.from(root.current?.querySelectorAll<HTMLElement>('button:not([disabled]),a[href],summary,input:not([disabled]),[tabindex="0"]')??[]).filter(n=>n.getClientRects().length>0);
-   const first=nodes[0],last=nodes[nodes.length-1];if(e.shiftKey&&(document.activeElement===first||!root.current?.contains(document.activeElement))){e.preventDefault();last?.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus();}
+  const key=(e:KeyboardEvent)=>{if(e.key==='Escape'&&root.current?.querySelector('[aria-label="Story transcript"]')){e.preventDefault();e.stopPropagation();root.current.querySelector<HTMLButtonElement>('[data-transcript-back]')?.click();return;}// Bug audit B11: while the "Take it to your game" card is open, Escape closes only the card and Tab stays inside it.
+  const check=root.current?.querySelector<HTMLElement>('[data-book-check]')??null,trap=check??root.current;
+  if(e.key==='Escape'&&check){e.preventDefault();e.stopPropagation();check.querySelector<HTMLButtonElement>('[data-book-check-close]')?.click();return;}
+  if(e.key==='Escape'){e.preventDefault();e.stopPropagation();close.current?.click();return;}if(e.key==='Tab'){
+   const nodes=Array.from(trap?.querySelectorAll<HTMLElement>('button:not([disabled]),a[href],summary,input:not([disabled]),[tabindex="0"]')??[]).filter(n=>n.getClientRects().length>0);
+   const first=nodes[0],last=nodes[nodes.length-1];if(e.shiftKey&&(document.activeElement===first||!trap?.contains(document.activeElement))){e.preventDefault();last?.focus();}else if(!e.shiftKey&&(document.activeElement===last||!trap?.contains(document.activeElement))){e.preventDefault();first?.focus();}
   }};
   document.addEventListener('keydown',key,true);return()=>{release();document.removeEventListener('keydown',key,true);before?.focus({preventScroll:true});};
  },[bookId,story.pages.length]);
  const label=`${current.title}. A paper pop-up spread. ${amount>=target?current.response:current.prompt}.`;
  const swipe={onPointerDown:(e:React.PointerEvent)=>{swiped.current=false;if(e.isPrimary)gesture.current={x:e.clientX,y:e.clientY,id:e.pointerId};},onPointerCancel:()=>{gesture.current=null;},onPointerUp:(e:React.PointerEvent)=>{const g=gesture.current;gesture.current=null;if(!g||g.id!==e.pointerId)return;const dx=e.clientX-g.x,dy=e.clientY-g.y;if(Math.abs(dx)>65&&Math.abs(dx)>Math.abs(dy)*1.6){swiped.current=true;turn(page+(dx<0?1:-1));}}};
- return <section ref={root} className={styles.reader} data-fading={fading||undefined} role="dialog" aria-modal="true" aria-labelledby="player-book-title" data-player-book={bookId} data-page={page} onKeyDown={e=>{if(e.altKey||e.ctrlKey||e.metaKey||(e.target instanceof HTMLElement&&e.target.closest('input,textarea,select,[contenteditable=true],[data-story-playback-bar]')))return;if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();e.stopPropagation();turn(page+(e.key==='ArrowRight'?1:-1));}}}>
+ return <section ref={root} className={styles.reader} data-fading={fading||undefined} role="dialog" aria-modal="true" aria-labelledby="player-book-title" data-player-book={bookId} data-page={page} onKeyDown={e=>{if(e.altKey||e.ctrlKey||e.metaKey||(e.target instanceof HTMLElement&&e.target.closest('input,textarea,select,[contenteditable=true],[data-story-playback-bar],[data-book-check]')))return;if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();e.stopPropagation();turn(page+(e.key==='ArrowRight'?1:-1));}}}>
   <h1 id="player-book-title" className={styles.srOnly}>{story.title}: {story.subtitle}</h1>
   <header className={styles.header}><BackButton ref={close} onBack={()=>{narration.onPause();setClosing(true);}}/></header>
   <div className={styles.chapterLine} data-chapter-line><span className={styles.year}>{current.year}</span><h2>{current.title}</h2></div>

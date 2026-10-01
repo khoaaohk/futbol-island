@@ -214,8 +214,34 @@ const {CUSTOMIZATION_OPTIONS,BALL_COLORS}=load(path.join(root,'lib/town/customiz
   assert(view.lift>0&&view.lift<=.5,'the camera rises just enough to see over the low chunk: '+view.lift);same(view.blockers,[],'nothing between the close-up camera and the face');
   {const c=v.faceNow();const px=c.map(p=>({x:(p.x+1)/2*390,y:(1-p.y)/2*844}));assert(px[0].y>0&&px[3].y<844,'the lifted face still fits the screen');}
   v.release();assert.equal(prop.visible,true,'restored on release');for(let i=0;i<40&&v.focused;i++)v.applyCamera(camera,1/30,false);
-  scene.remove(prop,wall);}
+  // Heat (Sep 30 2026, audit #5): the occluder pass is cached per machine + viewport aspect bucket and reused while the meshes near
+  // the wedge are unchanged; a cache hit hides the same props and lifts the same, and is still undone on release and cancel.
+  const zoomIn=(aspect=390/844)=>{camera.aspect=aspect;camera.updateProjectionMatrix();let ok=0;v.focus('plaza',()=>{ok++;});for(let i=0;i<60&&!ok;i++){camera.position.set(plaza.machine.x+18,23,plaza.machine.z+30);v.applyCamera(camera,1/30,false);}assert.equal(ok,1);return v.closeUpView();};
+  const zoomOut=()=>{v.release();for(let i=0;i<40&&v.focused;i++)v.applyCamera(camera,1/30,false);assert.equal(v.focused,null);};
+  let a=zoomIn();assert.equal(a.cached,true,'same scene, same aspect: the earlier pass is reused');same(a.hidden,['test-prop']);assert.equal(prop.visible,false,'a cache hit hides the prop again');same(a.blockers,[],'nothing in the way on a cache hit');
+  zoomOut();assert.equal(prop.visible,true,'cache hit restored on release');
+  a=zoomIn(390/844+.002);assert.equal(a.cached,true,'a tiny resize inside the aspect bucket reuses the pass');v.cancel();assert.equal(prop.visible,true,'cache hit restored on cancel');
+  const land=zoomIn(844/390);assert.equal(land.cached,false,'a rotation/resize to another aspect recomputes');same(land.blockers,[],'landscape: nothing in the way');zoomOut();
+  a=zoomIn(844/390);assert.equal(a.cached,true,'the landscape pass is cached too');zoomOut();
+  a=zoomIn();assert.equal(a.cached,true,'both aspects stay cached');zoomOut();
+  // Invalidation: a prop that moves, or a mesh that leaves the scene, recomputes.
+  prop.position.y+=40;prop.updateMatrixWorld(true);a=zoomIn();assert.equal(a.cached,false,'a moved prop invalidates the pass');same(a.hidden,[],'the moved prop is no longer in the way');assert.equal(prop.visible,true);zoomOut();
+  scene.remove(prop,wall);a=zoomIn();assert.equal(a.cached,false,'removed meshes invalidate the pass');assert.equal(a.lift,0,'without the low chunk the camera stays level');zoomOut();
+  camera.aspect=390/844;camera.updateProjectionMatrix();}
  v.dispose();assert.equal(scene.children.length,0,'dispose removes everything');
+ // Heat (Sep 30 2026, audit #7): the painted close-up face is kept after the zoom-out (LRU of at most 3 machine faces; a pair counts
+ // 2) and reused by a repeat zoom without painting; stock/page, coins and the face size are part of its key.
+ {let view={width:390,height:844,dpr:3},coins=7;const w=load(path.join(root,'lib/graphics/vendingMachines.ts')).createVendingMachines(new T.Scene(),{viewport:()=>view,coins:()=>coins});
+  const zoom=id=>{w.focus(id,()=>{});const s={...w.lastHiRes};w.cancel();return s;};
+  let s=zoom('plaza');assert.equal(s.cached,false,'first zoom paints the pair');assert.equal(s.cachedMachines,2);
+  s=zoom('plaza');assert.equal(s.cached,true,'repeat zoom reuses the painted face');
+  s=zoom('drinksplaza');assert.equal(s.cached,false,'the pair in the other order is its own face');assert.equal(s.cachedMachines,2,'LRU: the older pair made room (at most 3 machine faces)');
+  s=zoom('causeway');assert.equal(s.cached,false);assert.equal(s.cachedMachines,3);
+  s=zoom('rooftop');assert.equal(s.cached,false);assert.equal(s.cachedMachines,2,'LRU: the oldest (the drink pair) was dropped');
+  s=zoom('causeway');assert.equal(s.cached,true,'a recent machine is still cached');
+  coins=8;s=zoom('causeway');assert.equal(s.cached,false,'a new coin balance repaints');s=zoom('causeway');assert.equal(s.cached,true);
+  view={width:844,height:390,dpr:3};s=zoom('causeway');assert.equal(s.cached,false,'a new face size repaints');
+  w.dispose();assert.equal(w.lastHiRes.cachedMachines,0,'dispose frees the cached faces');}
 }
 // 3b. Ball pictures (Sep 29 2026): every ball item, regular and special, shows a baked picture of the real in-game ball
 // (public/vending/products/ball-<style>.png, scripts/capture-vending-products.cjs), keyed by ball, not machine, so a ball looks
@@ -363,5 +389,45 @@ function sourceChecks(){
  assert(!/LegendPackStore/.test(ui),'packs use the wallet flow, not the arcade pack UI with its odds line');
  assert(!/data-machines-found=|>No real money</.test(ui),'requested footer labels removed');assert(!/className=\{styles.only\}/.test(face),'no badges over the product artwork');
  for(const f of ['components/RideUnlockToast.tsx','components/BallHuntLesson.tsx','components/CoinQuest.tsx','lib/town/npcDialogues.ts','lib/town/questModel.ts','lib/town/exploreChecklist.ts','components/IslandTravelMap.tsx'])assert(!/\bthe (Island )?Store\b|Visit the Store|in the Store/.test(read(f)),f+' no longer sends players to the Store');
+ lockHintChecks(controller);
  console.log('PASS vending machines: 15 placed machines (8 with exclusive specials, 4 book machines incl. 3 on Coral Cay anchors, the Coral Cay Konbini, 2 drink machines beside the Konbini machines), one draw call each, shared glow + Go, ~1 s angled zoom fitting the face (taps ≥44px portrait + landscape), in-world face (no modal, one shared layout, visuals-only module), idle frames free, coin ledger (locked, no re-locking, no duplicates), Store entry points redirected');
 }
+
+// 6. Locked hints on the LED (Sep 30 2026, E2E audit: a page where every item said LOCKED gave no hint). The copy comes from the
+// unlock rules (rideUnlockHint / costumeUnlockHint), and the LED shows it for a locked armed item or a page with nothing to buy.
+function lockHintChecks(controller){
+ const R=load(path.join(root,'lib/town/rideUnlocks.ts')),Q=load(path.join(root,'lib/town/coinQuest.ts'));
+ same(R.rideUnlockHint('jetpack','helicopter',0,4),{text:'Finish 1 more path to unlock',short:'Finish 1 more path',need:1},'second ride: one path');
+ same(R.rideUnlockHint('jetpack','mini-plane',1,4),{text:'Finish 2 more paths to unlock',short:'Finish 2 more paths',need:2},'counts the paths still to go');
+ assert.equal(R.rideUnlockHint('jetpack','ironman',1,4).need,3,'final ride needs every path');
+ const balls=n=>({version:5,rewardUnlocked:false,revealed:[],collected:Array.from({length:n},(_,i)=>'b'+i),hint:null,celebrated:false});
+ const first=Q.COSTUME_UNLOCK_ORDER[0],need=Q.costumeUnlockBalls(first);
+ same(Q.costumeUnlockHint(balls(need-1),first),{text:'Find 1 more hidden ball to unlock',short:'Find 1 more ball',need:1});
+ same(Q.costumeUnlockHint(balls(0),first),{text:`Find ${need} more hidden balls to unlock`,short:`Find ${need} more balls`,need});
+ const lock=h=>({kind:'locked',note:h.text,short:h.short,need:h.need});
+ const path1=lock(R.rideUnlockHint('jetpack','helicopter',0,4)),path3=lock(R.rideUnlockHint('jetpack','ironman',1,4)),ball4=lock(Q.costumeUnlockHint(balls(need-4),first));
+ // Armed + locked: "Locked: …" on the LED (one short line), the item and how to unlock below; armed + buyable: no lock message.
+ same(C.vendingLockLed({label:'Helicopter',status:path1},[]),{msg:'Locked: finish 1 more path',sub:'Helicopter. Any path counts: tap Paths.',tone:'warn'});
+ same(C.vendingLockLed({label:'Fox',status:ball4},[]),{msg:'Locked: find 4 more balls',sub:'Fox. Hunt for hidden balls!',tone:'warn'});
+ assert.equal(C.vendingLockLed({label:'Frost',status:{kind:'buy',note:'20 coins'}},[path1]),null,'a buyable armed item keeps its price line');
+ // Nothing armed: a page with locked items and nothing to buy (owned/equipped ones aside) names the nearest unlock.
+ const page=[path3,path1,ball4,{kind:'equipped',note:'Equipped'}];
+ same(C.vendingLockLed(null,page),{msg:'Locked: finish 1 more path',sub:'Nothing to buy yet. Any path counts: tap Paths.',tone:'warn'});
+ assert.equal(C.vendingLockLed(null,[...page,{kind:'buy',note:'20 coins'}]),null,'a page with something to buy keeps the greeting');
+ assert.equal(C.vendingLockLed(null,[...page,{kind:'short',note:'Need 5 more coins'}]),null,'… or something to save up for');
+ assert.equal(C.vendingLockLed(null,[{kind:'owned',note:'Yours'}]),null,'nothing locked, no hint');assert.equal(C.vendingLockLed(null,[]),null);
+ for(const h of [R.rideUnlockHint('jetpack','ironman',0,4),Q.costumeUnlockHint(balls(0),Q.COIN_REWARD_ID)]){const v=C.vendingLockLed(null,[lock(h)]);assert(v.msg.length<=28,'one LED line (≤ 28 characters): '+v.msg);assert(v.sub.length<=48,'one sub line on desktop (≤ 48): '+v.sub);}
+ // Wired: the controller's LED falls back to the lock hint, and a press on a locked item uses it too; notes come from the rules.
+ assert.match(controller,/const lockLed=vendingLockLed\(armed&&armedStatus\?\{label:armed\.label,status:armedStatus\}:null,page\.map\(status\)\);\s*const ledView=led\?\?lockLed\?\?/);
+ assert.match(controller,/setLed\(vendingLockLed\(\{label:item\.label,status:s\},\[\]\)/);
+ assert.match(controller,/rideUnlockHint\(s\.category,s\.option\.id,rides\.finished,rides\.total\)/);assert.match(controller,/costumeUnlockHint\(coins,id\)/);
+ // The camera on a machine hides NPC name tags (the clipped "…LK" tag of the E2E audit).
+ assert.match(read('components/Town.tsx'),/hoveredNpcId,camera,\(rideRef\.current==='jetpack'&&flight\.height>1\.2\)\|\|vending\.focused!==null\)/);
+ assert.match(read('lib/graphics/islandNpcs.ts'),/if\(show&&\(hideTags\|\|/);
+}
+// Oct 1 2026 (user): tapping the coin slot never buys; it shows a fading how-to in the tray. Only the item's button buys.
+{const fs=require('node:fs'),assert=require('node:assert/strict');
+ for(const f of ['components/VendingMachine.tsx','components/DrinkMachine.tsx']){const s=fs.readFileSync(f,'utf8'),i=s.indexOf(' function coinSlot(){'),body=s.slice(i,s.indexOf('\n }\n',i));
+  assert(i>0&&!/act\(|purchase\(/.test(body)&&/showTrayNote\(/.test(body),f+': the coin slot only shows the tray how-to');assert(!/tap the coin slot/.test(s),f+': no LED copy points at the coin slot');}
+ const face=fs.readFileSync('components/VendingFace.tsx','utf8');assert(/data-tray-note/.test(face),'the tray renders the how-to note');
+ console.log('vending: coin slot shows how-to, never buys');}

@@ -14,7 +14,7 @@ Each job is tied to one real football lesson. ✅ = built in phase 2.
 | ✅ Paint the centre circle (groundskeeper) | 11v11 centre circle | The circle is 9.15 m (10 yds) from the centre mark, and opponents stay outside it at kick-off (IFAB Laws 1 and 8). Lines count as part of the area they mark. |
 | ✅ Wall rebounds (practice partner) | Coaches Centre rebound wall | Every rebound is a pass and a first touch. Using both feet makes you harder to defend. |
 | ✅ Ball kid | 11v11 touchline | Quick restarts win matches. On 7 May 2019 at Anfield, ball boy Oakley Cannonier (14) returned a ball fast, Alexander-Arnold took a quick corner and Origi scored to finish Liverpool 4–0 Barcelona. |
-| ✅ Set out the cones (coach's assistant) | 9v9 Club Grounds | A 10 m square gives passers good angles and time. Narrow gates reward close control. The right space makes practice feel like a match. |
+| ✅ Set out the cones (coach's assistant) | 9v9 Club Grounds, on the grass beside the pitch (§14) | A 10 m channel gives passers time. Narrow gates reward close control. The right space makes practice feel like a match. |
 | ✅ Court clean-up (club volunteer / recycling) | Rooftop futsal court | Respect. After beating Germany at the 2022 World Cup, Japan's players left their dressing room spotless with a thank-you note and origami cranes, and Japanese fans tidied the stands. |
 | ✅ Community Garden picking → market | Community Garden, then Rosa's stand | Nutrition and club culture (see §4). |
 | Fix divots | Any pitch | Repairing divots keeps the ball rolling true, which is the same lesson as the leaves. Left as a variant. |
@@ -81,7 +81,7 @@ Each job has a sign with the job's colour and title. Walk within 5 m: a gold gro
 | Rake the leaves | Walk over 12 leaf piles spread across the 7v7 pitch, then empty the bag in the compost bin | 12 piles + bin |
 | Wall rebounds | Stand in the painted box, face the wall and **Juggle**: the real wall-juggle mechanic (alternating feet) counts 10 clean returns. Then **Shoot** 3 passes into the painted target square (a real ball contact with the wall, `jobs.ballContact`) | 10 passes + 3 target shots |
 | Ball kid | Run to each loose ball (behind the touchline and goal line), carry it back to the ball-kid spot on the halfway line, and repeat | 5 balls |
-| Set out the cones | Step onto 8 glowing spots to place cones for a 10 m square and two dribbling gates | 8 cones |
+| Set out the cones | Step onto 8 glowing spots beside the 9v9 pitch to place cones for a 10 m passing channel and two dribbling gates (§14) | 8 cones |
 | Paint the centre circle | Follow 16 faded dashes around the 9.15 m circle **in order**; each dash turns bright white | 16 dashes |
 | Court clean-up | Pick up 10 bottles on the rooftop futsal court, then drop the bag in the recycling bin | 10 bottles + bin |
 
@@ -92,8 +92,8 @@ Same engine (`lib/town/jobs/jobRules.ts`), economy, daily caps, first-time bonus
 | Job | Where | Pay | Mini-task (≈30–60 s) | Lesson on the payday card | Source (docs only) |
 |---|---|---|---|---|---|
 | Kit room (kit assistant) | Sign and kit hamper by the Clubhouse in Island Square (80, −40); a chalk mini-pitch with five position pegs laid out as a team attacking toward the Clubhouse | 8 | Take a shirt (9, 1, 7, 3, 10) from the hamper, read the clue ("Number 9 is the classic centre-forward…"), hang it on the right peg (GOALKEEPER, LEFT BACK, RIGHT WING, PLAYMAKER, STRIKER). No arrow while carrying; after one wrong peg the arrow shows the right one. Started from the sign or from the Clubhouse visit. | Numbers started as positions: Arsenal and Chelsea first wore numbers in league games on 25 Aug 1928; 1 goalkeeper, 2/3 full-backs, 7/11 wingers, 9 centre-forward; people still say "a number 9" and "a number 10". | [Squad number (Wikipedia)](https://en.wikipedia.org/wiki/Squad_number_(association_football)) — 2-3-5 numbering 1–11 and the 1928 first use |
-| Flag the offside (assistant referee) | Referee practice strip on the open lawn south of the Coaches Centre rebound area (sign 152.5, 7; flag spot 150, 4.2). A painted strip (touchlines, halfway, goal line, small goal) is used instead of a real pitch because every real pitch has a live match on it. | 9 | Stand on the touchline spot: the camera eases to an assistant-referee view across the strip. Five 3-second replays (red attackers, blue defenders, yellow keeper, white ring on the attacker to watch). After each pass: **Raise the flag** or **Keep flag down**. Then the replay freezes at the moment of the pass with the yellow offside line and the explanation; a wrong call offers **Watch again**. Clips: level (onside), through ball (offside), timed run after the pass (onside), own half (onside), one step past (offside). The test recomputes each answer from the clip positions with Law 11. | Offside position = in the other team's half and nearer their goal line than both the ball and the second-last defender, when a team-mate passes. Level is onside; never offside in your own half; no offside from a throw-in, goal kick or corner. | [IFAB Law 11](https://www.theifab.com/laws/latest/offside/) |
-| Pump the balls (kit assistant) | Eleven Park, behind the north goal (station 150, 44.5; sign 158, 43.5) | 7 | Five soft balls. **Pump** (+0.15 atm), **Let air out** (−0.2), **Ball ready**. The gauge shows the green zone 0.6–1.1; outside it a gentle "squeeze test" says too soft / too hard. | Law 2: a match ball must be 0.6–1.1 atmospheres at sea level; too soft dies on your foot, too hard bounces away. | [IFAB Law 2](https://www.theifab.com/laws/latest/the-ball/) |
+| Flag the offside (assistant referee) | Referee practice strip on the open lawn south of the Coaches Centre rebound area (sign 138, −12.5 on the lawn north of the strip; flag spot 150, 2.2 on the near touchline. Moved 30 Sep 2026: both were inside the High School east wing, so the sign never offered; `tests/job-boards.cjs`). A painted strip (touchlines, halfway, goal line, small goal) is used instead of a real pitch because every real pitch has a live match on it. | 9 | Stand on the touchline spot: the camera eases to an assistant-referee view across the strip. Five 3-second replays (red attackers, blue defenders, yellow keeper, white ring on the attacker to watch). After each pass: **Raise the flag** or **Keep flag down**. Then the replay freezes at the moment of the pass with the yellow offside line and the explanation; a wrong call offers **Watch again**. Clips: level (onside), through ball (offside), timed run after the pass (onside), own half (onside), one step past (offside). The test recomputes each answer from the clip positions with Law 11. | Offside position = in the other team's half and nearer their goal line than both the ball and the second-last defender, when a team-mate passes. Level is onside; never offside in your own half; no offside from a throw-in, goal kick or corner. | [IFAB Law 11](https://www.theifab.com/laws/latest/offside/) |
+| Pump the balls (kit assistant) | Eleven Park, behind the north goal (station 150, 44.5; sign 158, 43.5) | 10 (was 7, §14) | Five soft balls. Since 1 Oct 2026 (§14): many small **Pump** strokes (8 → 24 per ball), a slow leak when you stop, a green zone that narrows inside 0.6–1.1, **Let air out** (−0.15), **Ball ready** only in the zone. Outside it a gentle "squeeze test" says too soft / too hard. | Law 2: a match ball must be 0.6–1.1 atmospheres at sea level; too soft dies on your foot, too hard bounces away. | [IFAB Law 2](https://www.theifab.com/laws/latest/the-ball/) |
 | Anchor the goals (groundskeeper) | Old Town Ground (7v7), sign at the north end (22, −110.5); three peg spots behind each goal | 8 | Step on the six glowing spots to hammer in a ground peg (a peg appears; you walk the length of the pitch between goals). | Law 1: goals must be anchored securely to the ground, and portable goals may only be used if they are; never swing or climb on a crossbar. | [IFAB Law 1](https://www.theifab.com/laws/latest/the-field-of-play/) |
 
 Placement checks (`tests/island-jobs.cjs`): every sign is more than 10 m from every other sign and more than 8 m from the vending machines, the fishing posts and the Clubhouse door; the offside strip stays north of the buildings on its south side.
@@ -316,3 +316,58 @@ children are steered to a fresh full-pay job, but can still find it.
 - **Economy:** see `docs/economy/ECONOMY_UPDATE_2026-09-30.md` (Garden shift). 10 coins / 1.6-min shift = 6.25 coins a minute (median of the jobs); regular player owns everything on day 85 with or without the job.
 - **Tests:** `tests/island-jobs.cjs` (catalog, sign clear of beds/paths/glasshouse/benches/Hugo, crate, shift ripeness from an emptied garden, a full shift by hand incl. not-ripe / mix / lessons / crate, pay tiers + per-minute parity, the share once, auto-stop, rides, ball parked/restored, keyframes, scene wiring, badge from the catalog); `tests/economy.cjs` §10.
 - **Browser check** (desktop 1280×800 and phone 390×844, muted): sign offer (glow on) → intro (14 coins) → ride refused → bed crouch-pick, tree reach-up pluck, not-ripe head shake (frame strips) → 8/8 → Drop in crate → first-job card reward → payday +14 and a 2-item share → Work again → walking out past 15 m stops the shift and gives the buttons and ball back → free pick outside a shift with the pose. Screenshots: `scratchpad/garden-shift/`.
+
+## 14. Cones beside the pitch, a harder ball pump (1 Oct 2026, local, not deployed)
+
+**Why:** user, from phone screenshots: the cone marks sat inside the 9v9 pitch where the match is played, and the ball pump was
+over in three taps.
+
+**Set out the cones.** The session moved to the grass band east of the Club Grounds touchline (pitch x 138.9–181.1, z −144.8 to
+−75.2; the east road's sidewalk starts at x 190), between the touchline trees at (188, −82 / −104 / −125) and the lamp at
+(189, −85.5). Marks: a 10 × 5 m **passing channel** (183, −110), (188, −110), (188, −120), (183, −120) and two 2 m **dribbling
+gates** (184.5 / 186.5, −94) and (184.5 / 186.5, −99.5). Every mark is ≥ 1.8 m outside the touchline, ≥ 2 m from the sidewalk and
+≥ 1.6 m from every obstacle. The **sign** moved from (167, −72) (behind the north goal line) to **(185.5, −89)** on the same grass,
+facing north toward the road the players come from. The intro now says the cones go "on the grass beside the pitch, so the match
+can keep going", and the lesson adds "set up beside the pitch, never on it while a game is being played". The job area (45 m
+margin) still covers every mark. `tests/job-boards.cjs` checks each mark on the real town against every pitch rectangle,
+`world.obstacles` and `world.roads`; `tests/island-jobs.cjs` checks the catalog against the venue and the known obstacles.
+
+**Pump the balls.** Each **Pump** tap adds only a little air, and air seeps back slowly once you stop for 0.6 s (2.5 s once the
+needle is in the green, so there is always time to press Ball ready; never below the ball's start, never from an over-pumped ball). The green zone stays inside the Law 2 range and narrows toward its middle ball by
+ball (game rule, not a Law: a careful kit assistant aims for the middle). **Ball ready** counts only inside the zone. No fail state:
+stopping only costs more taps.
+
+| Ball | Start (atm) | Air per tap | Green zone | Taps to the green | Leak once you stop |
+|---|---|---|---|---|---|
+| 1 | 0.20 | 0.050 | 0.60–1.10 | 8 | 0.03 atm/s |
+| 2 | 0.20 | 0.040 | 0.64–1.06 | 11 | 0.04 atm/s |
+| 3 | 0.15 | 0.035 | 0.68–1.02 | 16 | 0.05 atm/s |
+| 4 | 0.15 | 0.030 | 0.71–0.99 | 19 | 0.06 atm/s |
+| 5 | 0.10 | 0.028 | 0.75–0.95 | 24 | 0.07 atm/s |
+
+Over-pumping past the zone squeaks and hisses once and needs **Let air out** (−0.15). The gauge (the existing meter) shows this
+ball's green zone and its label reads "Ball 3/5 · 0.52 atm · green 0.68–1.02 · ~5 to go"; the hint line counts the strokes
+left and teaches the Law 2 range (the job's own lesson: 0.6–1.1 atm at sea level, too soft dies on your foot, too hard bounces
+away). The Pump button is the job's action button: it acts on touch-down (no 300 ms delay, `touch-action: manipulation`) and keeps
+its press look. The kneel-and-pump pose leans in on every stroke (one bounded 0.28 s tug), and the pump handle now has at most one
+stroke tween: a new tap restarts it from the fixed rest height (before, fast taps stacked tweens and the handle crept down).
+**Heat:** no new loop. The leak is a few arithmetic ops in the job's existing per-frame step; the panel republishes only when the
+needle moves 0.02 atm (a few times a second while leaking, never while idle at the start).
+
+**Pay:** play time .45 → .85 min (walk ~3 s, ~85 taps at ~3 a second ≈ 28 s, five checks and Ready presses ≈ 20 s), pay 7 → 10:
+6.67 → 6.90 coins a minute, inside the 7–10 band; the short jobs still average 1.5 min a shift and every economy guard passes.
+
+
+**Ball kid (same day, from phone screenshots).** The loose balls lie *around* the 11v11 pitch, ≥ 3 m outside the lines: over the
+east touchline (169.5, 76), (169.5, 124), (169.5, 146) and behind both goal lines (150, 154), (144, 46.5), clear of the trees,
+benches, stand and roads (`tests/job-boards.cjs` on the real town). One ball at a time: Pick up → carry it → **Put it in the ball
+box** (an open blue box beside the halfway line at (169.5, 103.5), arms from 2.2 m) → the ball settles in the box and the next loose
+ball pops up with a ring. The old throw-back (which landed the ball on the pitch mid-match) is gone; the pose is a set-down.
+**Arrow:** the beacon arrow is 1.5× bigger, and the off-screen edge arrow (was Wall rebounds only) now points at every job's
+beacon goal: the loose ball, the box while carrying, the next cone mark, the pump station, a ripe crop.
+
+**Job panel (all jobs).** Two rows: title + count with Stop job, then one hint line (the role eyebrow and the unit line are gone;
+the unit is in the accessible name). After 3.5 s (longer for a long hint, up to 9 s) it fades (.3 s) to a chip "Ball kid 1/5" plus a
+round 44 px × Stop; tapping the chip opens it again, and any progress / phase / hint change shows it again. It stays open while a
+meter (pump gauge, pull meter) or its own buttons are in use, while an offside replay is explained and while a sorting clue is in
+the hands. A hidden live line keeps announcing progress. Reduced motion: no fade. Landscape docking keeps the chip top-left.

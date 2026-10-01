@@ -28,7 +28,19 @@ assert.ok(GATE_MAX_TRIES>=2&&GATE_COOLDOWN_MS>=10000,'retries are limited');
  assert.equal(gateLockedUntil(r.lockedUntil),0,'it ends after the cooldown');assert.equal(gateWrongTries(r.lockedUntil),0,'with a fresh count');
  recordGateWrong(1);passParentGate(2);assert.equal(gateWrongTries(3),0,'a pass clears the count');resetParentGate();}
 const libSrc=fs.readFileSync(path.join(ROOT,'lib/parentGate.ts'),'utf8');
-assert.doesNotMatch(libSrc,/localStorage|sessionStorage|document\.cookie|fetch\(/,'gate stores and sends nothing');
+assert.doesNotMatch(libSrc,/localStorage|document\.cookie|fetch\(/,'gate stores nothing lasting and sends nothing');
+assert.equal((libSrc.match(/\.setItem\(/g)||[]).length,1,'the only thing stored is the cooldown end (sessionStorage)');
+// Bug audit B17: the cooldown survives a reload in the same tab (sessionStorage), and is capped at one cooldown.
+{const store=new Map(),ss={getItem:k=>store.has(k)?store.get(k):null,setItem:(k,v)=>store.set(k,String(v)),removeItem:k=>store.delete(k)};
+ const fresh=()=>{const m={exports:{}};vm.runInNewContext(ts.transpileModule(libSrc,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{module:m,exports:m.exports,sessionStorage:ss,Date,Math,Number});return m.exports;};
+ const a=fresh();let r;for(let i=0;i<a.GATE_MAX_TRIES;i++)r=a.recordGateWrong(10000+i);
+ assert.equal(store.get(a.GATE_LOCK_KEY),String(r.lockedUntil),'the cooldown end is saved for this tab');
+ const b=fresh();assert.equal(b.gateLockedUntil(12000),r.lockedUntil,'a reload still waits out the cooldown');
+ assert.equal(b.gateWrongTries(12000),b.GATE_MAX_TRIES);assert.equal(b.parentGatePassed(12000),false,'a pass is never restored');
+ assert.equal(b.gateLockedUntil(r.lockedUntil),0,'it ends on time');assert.equal(store.has(a.GATE_LOCK_KEY),false,'and is cleared');
+ store.set(a.GATE_LOCK_KEY,String(10000+1e9));const c=fresh();assert.equal(c.gateLockedUntil(20000),20000+c.GATE_COOLDOWN_MS,'a bad value is capped to one cooldown');
+ store.set(a.GATE_LOCK_KEY,'junk');assert.equal(fresh().gateLockedUntil(20000),0,'junk is ignored');
+ const d=fresh();d.passParentGate(30000);assert.equal(store.has(a.GATE_LOCK_KEY),false,'a pass clears it');}
 
 // Component: passes only on a correct answer; Guard shows children only after a pass.
 const comp=fs.readFileSync(path.join(ROOT,'components/ParentGate.tsx'),'utf8');

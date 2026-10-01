@@ -31,8 +31,8 @@ export const POCKET_LABEL:Record<PocketCategory,string>={fish:'Fish',fruit:'Frui
 
 /** Coins one more item of `g` fetches right now (the stand's rule: full price, then half after today's allowance, at least 1). */
 const each=(s:MarketState,g:Good)=>s.soldToday>=MARKET_FULL_PRICE_COINS?Math.max(1,Math.floor(g.price/2)):g.price;
-/** What these goods would fetch if sold together now (same order and soft cap as the stand's "Sell all"). */
-const worth=(s:MarketState,ids:readonly string[])=>{const basket:Record<string,number>={};for(const id of ids)if(s.basket[id])basket[id]=s.basket[id];return quoteSale({...s,basket}).coins;};
+/** The stand's quote for just these goods sold together now (same order and soft cap as its "Sell all"). */
+const quoteFor=(s:MarketState,ids:readonly string[])=>{const basket:Record<string,number>={};for(const id of ids)if(s.basket[id])basket[id]=s.basket[id];return quoteSale({...s,basket});};
 
 export type PocketRow={id:string;good:Good;category:PocketCategory;count:number;name:string;each:number;value:number};
 export type PocketGroup={category:PocketCategory;label:string;rows:PocketRow[];count:number;value:number};
@@ -49,9 +49,14 @@ export function hudCount(s:MarketState,kind:GoodKind){return GOODS.reduce((n,g)=
 export function pocketView(s:MarketState):PocketView{
  const rows:PocketRow[]=[];
  for(const g of GOODS){const count=s.basket[g.id]??0;if(count<1)continue;
-  rows.push({id:g.id,good:g,category:pocketCategory(g),count,name:count===1?g.name:g.plural,each:each(s,g),value:worth(s,[g.id])});}
+  rows.push({id:g.id,good:g,category:pocketCategory(g),count,name:count===1?g.name:g.plural,each:each(s,g),value:0});}
+ // Row values (bug A15, Sep 30 2026): each row is its share of its card's quote (fish; fruit + veggies), in the stand's selling
+ // order across the daily full-price allowance, so the rows always add up to the card's "Worth N coins today". Priced alone,
+ // every row used to get the full-price allowance to itself (7 + 7 shown against a total of 10).
+ for(const card of [['fish'],['fruit','veg']] as PocketCategory[][]){const q=quoteFor(s,rows.filter(r=>card.includes(r.category)).map(r=>r.id));
+  for(const l of q.lines){const r=rows.find(x=>x.id===l.id);if(r)r.value=l.coins;}}
  const group=(category:PocketCategory):PocketGroup=>{const list=rows.filter(r=>r.category===category);
-  return {category,label:POCKET_LABEL[category],rows:list,count:list.reduce((n,r)=>n+r.count,0),value:worth(s,list.map(r=>r.id))};};
+  return {category,label:POCKET_LABEL[category],rows:list,count:list.reduce((n,r)=>n+r.count,0),value:list.reduce((n,r)=>n+r.value,0)};};
  const fish=group('fish'),fruit=group('fruit'),veg=group('veg'),total=basketCount(s);
  return {fish,fruit,veg,hud:{fish:hudCount(s,'fish'),produce:hudCount(s,'produce')},total,limit:BASKET_LIMIT,full:total>=BASKET_LIMIT,value:quoteSale(s).coins};
 }

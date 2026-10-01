@@ -30,7 +30,7 @@ export default function ParentGate({onPass,onCancel,title='For grown-ups',reason
  return <section className={styles.gate} data-parent-gate aria-labelledby={titleId}>
   <span className={styles.lock} aria-hidden="true"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg></span>
   <h3 id={titleId}>{title}</h3>
-  <p className={styles.reason}>{reason??'This part is for a parent, carer or coach.'} Kids, ask a grown-up to help.</p>
+  <p className={styles.reason}>{reason??'This part is for a parent, carer or coach.'}<br/>Kids, ask a grown-up to help.</p>
   <form className={styles.form} onSubmit={e=>{e.preventDefault();submit();}}>
    <label htmlFor={answerId} className={styles.question}>{waiting?'Too many tries. Please wait a moment.':q?.text??' '}</label>
    <div className={styles.row}>

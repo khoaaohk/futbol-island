@@ -30,7 +30,7 @@
 .bottleButton{position:relative;display:block;background:transparent;border:0;padding:0;margin:8px 0 16px;cursor:pointer;color:#244d40;animation:floatIn 1.4s 1s ease-out both,bottleDrift 8s 2.4s ease-in-out infinite}
 .ocean .bottleButton .bottle{display:block;width:clamp(150px,25vh,210px);height:clamp(220px,37vh,315px);margin:0;animation:none;filter:drop-shadow(0 8px 4px #173e3720)}
 .bottleLabel{position:absolute;left:32%;right:24%;top:60%;rotate:-8deg;font-size:clamp(12px,1.6vh,16px);font-weight:800;text-align:center}
-.bottleButton:focus-visible{outline:3px solid #fff2cd;outline-offset:8px;border-radius:40%}
+.bottleButton:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset);border-radius:40%}
 @keyframes bottleDrift{0%,100%{transform:translate(-12px,0) rotate(-8deg)}25%{transform:translate(10px,-14px) rotate(-3deg)}50%{transform:translate(22px,-2px) rotate(3deg)}75%{transform:translate(2px,12px) rotate(-4deg)}}
 @media(prefers-reduced-motion:reduce){.bottleButton{animation:none}}
 .note p{text-wrap:balance;max-width:24ch;margin-inline:auto}
@@ -81,7 +81,7 @@
 /* Water-driven translation/rotation is written by the existing capped wave loop. */
 .bottleButton{animation:floatIn 1.4s 1s ease-out both}
 .bottleButton.opening{animation:bottleUnseal .36s ease-in forwards}
-.note blockquote{margin:0}.note footer{display:flex;flex-direction:column;align-items:center;gap:6px}.note footer strong{font-size:16px}.note footer small{font-size:12px}.note footer a{color:#244d40;font-size:12px;text-underline-offset:3px;padding:8px}.note footer a:focus-visible{outline:2px solid #244d40;outline-offset:3px;border-radius:4px}
+.note blockquote{margin:0}.note footer{display:flex;flex-direction:column;align-items:center;gap:6px}.note footer strong{font-size:16px}.note footer small{font-size:12px}.note footer a{color:#244d40;font-size:12px;text-underline-offset:3px;padding:8px}.note footer a:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset);border-radius:4px}
 @media(prefers-reduced-motion:reduce){.bottleButton{animation:none;translate:none!important;rotate:none!important}}
 
 /* A bounded water area lets the bottle roam without covering the heading or Done. */

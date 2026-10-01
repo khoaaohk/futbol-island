@@ -66,5 +66,5 @@ const oldFull=sanitizeCoinProgress({version:2,collected:ids.slice(0,50)});assert
  // Migration: old saves keep what the all-balls rule gave them, and a save with N balls gets every group up to N at once.
  const oldAll=sanitizeCoinProgress({version:3,collected:ids.slice(0,55)});assert(COSTUME_UNLOCK_ORDER.every(id=>costumeEarned(oldAll,id)),'finished 55-ball saves keep every costume');
  assert.equal(COSTUME_UNLOCK_ORDER.filter(id=>costumeEarned(sanitizeCoinProgress({version:4,collected:ids.slice(0,43)}),id)).length,12,'43 balls: four groups at once');
- const store=require('fs').readFileSync('components/VendingMachine.tsx','utf8');assert(!/\b55\b/.test(store)&&/COIN_QUEST\.length/.test(store),'the vending machine (the Store is retired) uses the ball total constant');
+ const store=require('fs').readFileSync('components/VendingMachine.tsx','utf8');const cq=require('fs').readFileSync('lib/town/coinQuest.ts','utf8');assert(!/\b55\b/.test(store)&&/costumeUnlockHint/.test(store)&&/COIN_QUEST\.length|costumeUnlockBalls/.test(cq.slice(cq.indexOf('export function costumeUnlockHint'))),'the vending machine (the Store is retired) takes ball counts from the coin-quest constants (via costumeUnlockHint)');
  console.log('PASS costumes: 3 per 10 balls in a fixed order, fox last, no re-locking, vending total from the constant');}

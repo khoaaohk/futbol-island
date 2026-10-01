@@ -68,7 +68,8 @@ export default function IslandOnboarding({open,onClose,value,onChange}:Props){
  // The welcome keeps its tall preview card; tour steps size to their content (measured below), clamped to the viewport.
  const cardHeight=step===0?Math.min(660,viewportHeight-24):Math.min(measured||360,viewportHeight-24);
  const placed=step!==0&&highlights.length>0&&gap&&gap.end-gap.start>=cardHeight;
- const cardWidth=Math.min(440,viewportWidth-24);
+ // Side gutter = --phone-gutter (18px, app/globals.css; docs/ui/UI_SPEC.md).
+ const cardWidth=Math.min(440,viewportWidth-36);
  const cardTop=placed?gap.start+(gap.end-gap.start-cardHeight)/2:(viewportHeight-cardHeight)/2;
  const placement={'--tour-width':`${cardWidth}px`,'--tour-height':step===0?`${cardHeight}px`:'auto',position:'fixed' as const,left:(viewportWidth-cardWidth)/2,top:cardTop,width:cardWidth,height:step===0?cardHeight:'auto',maxHeight:viewportHeight-24,margin:0};
  // One read after each render; converges in one extra render because the height never depends on the card's top.

@@ -55,5 +55,15 @@
 /* The bite toy (lib/konbini/biteToy.ts, Sep 30 2026): tap / Enter / Space takes a bite or a sip; no double-tap zoom delay. */
 .toy{cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;border-radius:50%;outline:none}
 .toy[aria-disabled]{cursor:progress}
-.toy:focus-visible{outline:3px solid #f3da98;outline-offset:4px}
+.toy:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
 .sr{position:absolute!important;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+/* Eating for real (Oct 1 2026, biteToy createEatSequence): each bite pops a word ("Chomp!", "Yum!", "Ooh!") at the bite. One
+   CSS animation per word (removed on animationend); reduced motion = the word stands still, then fades (no movement). */
+.biteWord{position:absolute;z-index:3;pointer-events:none;white-space:nowrap;font:400 clamp(26px,7vw,40px)/1 KonbiniBrush,IslandBrush,sans-serif;color:#fff1d3;-webkit-text-stroke:5px #8a3b1c;paint-order:stroke fill;text-shadow:0 4px 0 #8a3b1c,0 8px 14px #0007;transform:translate(-50%,-110%) rotate(-7deg);animation:biteWordPop .78s cubic-bezier(.2,1.3,.4,1) both}
+.biteWord[data-n="2"],.biteWord[data-n="4"]{transform:translate(-50%,-110%) rotate(6deg);animation-name:biteWordPopR}
+@keyframes biteWordPop{0%{opacity:0;transform:translate(-50%,-70%) rotate(-7deg) scale(.35)}24%{opacity:1;transform:translate(-50%,-120%) rotate(-7deg) scale(1.18)}40%{transform:translate(-50%,-125%) rotate(-7deg) scale(1)}75%{opacity:1}100%{opacity:0;transform:translate(-50%,-165%) rotate(-7deg) scale(.96)}}
+@keyframes biteWordPopR{0%{opacity:0;transform:translate(-50%,-70%) rotate(6deg) scale(.35)}24%{opacity:1;transform:translate(-50%,-120%) rotate(6deg) scale(1.18)}40%{transform:translate(-50%,-125%) rotate(6deg) scale(1)}75%{opacity:1}100%{opacity:0;transform:translate(-50%,-165%) rotate(6deg) scale(.96)}}
+/* Reduced motion: no animation (the global rule cancels them); the word stands still, then KonbiniReveal sets data-fade and it
+   fades out over .3s before it is removed: a static fade, no movement. */
+@media(prefers-reduced-motion:reduce){.biteWord{animation:none}.biteWord[data-fade]{opacity:0;transition:opacity .3s linear}}

@@ -10,7 +10,7 @@ import BallLessonDiagram from './BallLessonDiagram';
 import navStyles from './DoneButton.module.css';
 import styles from './BallHuntLesson.module.css';
 import {ballLessonLink,splitLessonKey} from '@/lib/learning/conceptMap';
-import {creditConceptTick,lessonName,openPathLesson} from '@/lib/learning/reviewStore';
+import {creditConceptTick} from '@/lib/learning/reviewStore';
 
 /**
  * A found ball's lesson card. The child plays every diagram step with the bottom button before "Got it" replaces it,
@@ -68,7 +68,6 @@ export default function BallHuntLesson({spotId,onDismiss,replay=false,practice=f
      <BallLessonDiagram frame={frame} step={step} id={id} title={title} desc={pathText(caption)}/>
      <div className={styles.legend}>● Teammates <span>● Opponents</span> <b>▰ Open space</b> <i>- - run  — pass</i></div>
      <p className={styles.caption} aria-live="polite">{pathText(caption)}</p>
-     {finished&&link&&<p className={styles.pathLink} data-ball-path-link={link.lesson}>In Paths: <b>{lessonName(link.lesson)}</b> <button type="button" onClick={()=>{dismiss();openPathLesson(link.lesson);}}>Watch it</button></p>}
     </div>
     {complete&&finished&&<p className={styles.reward}><strong>All {COIN_QUEST.length} balls found!</strong> All costumes are unlocked. Find them in the vending machines and keep exploring.</p>}
    </div>

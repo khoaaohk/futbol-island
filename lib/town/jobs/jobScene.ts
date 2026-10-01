@@ -6,8 +6,8 @@
  */
 import * as T from 'three';
 import {JOBS,REBOUND_WALL,BOARD_RANGE,jobById,type JobDef} from './jobCatalog';
-import {outsideJobArea,reboundShotStart,reboundShotEnd,startRun,stepRun,reboundEvent,runProgress,runGoals,hitsReboundTarget,onReboundWall,runAction,runActions,runHint,offsideClip,trailOffset,harvestPickable,HARVEST,type JobRun,type JobPhase,type JobEvent,type JobAction} from './jobRules';
-import {createJobFx,wobble,ease} from './jobFx';
+import {outsideJobArea,reboundShotStart,reboundShotEnd,startRun,stepRun,reboundEvent,runProgress,runGoals,hitsReboundTarget,onReboundWall,runAction,runActions,runHint,offsideClip,trailOffset,HARVEST,pumpBall,pumpTapsLeft,pumpShown,type JobRun,type JobPhase,type JobEvent,type JobAction} from './jobRules';
+import {createJobFx,wobble,ease,type Tween} from './jobFx';
 import {createHarvestProps} from './harvestScene';
 import {jobButtons,type JobButton} from './jobMoves';
 import {createBuildingGlow} from '@/lib/graphics/buildingGlow';
@@ -23,6 +23,8 @@ import {islandMarket} from './islandWallet';
 
 export type JobView={
  near:string|null;
+ /** Another job's sign while a job runs (Sep 30 2026 bug A2): no offer there, G explains "finish or stop your job first". */
+ other:string|null;
  active:{id:string;value:number;total:number;phase:JobPhase;carrying:boolean;hint:string;actions:JobAction[];gauge:{value:number;min:number;max:number;label?:string}|null;right:boolean|null;
   /** The job's own action cluster (replaces the Kick / Juggle / Ride buttons, jobMoves.ts); null = keep the ball buttons. */
   buttons:JobButton[]|null}|null;
@@ -41,7 +43,7 @@ type Api=ReturnType<typeof createJobScene>;
 let current:Api|null=null;const registry=new Set<()=>void>();
 export const getJobRuntime=()=>current;
 export function subscribeJobRuntime(fn:()=>void){registry.add(fn);return()=>{registry.delete(fn);};}
-const EMPTY_VIEW:JobView={near:null,active:null,done:null,garden:'',pick:null,stand:false};
+const EMPTY_VIEW:JobView={near:null,other:null,active:null,done:null,garden:'',pick:null,stand:false};
 /** Where the farm stand's counter is served (the Harvest day drop-off, in front of FARM.stand in lib/town/coralCay.ts). */
 export const FARM_STAND_SELL={x:611,z:-98.6,reach:2.8};
 export const emptyJobView=()=>EMPTY_VIEW;
@@ -93,7 +95,10 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
     for(const y of [.16,.42])parts.push({geometry:box,matrix:m4(d.x,dy+y,d.z,.2,1.03,.05,.73),color:'#8a6a45'});
     for(const [dx,c] of [[-.25,'#e0413f'],[0,'#f08a2c'],[.25,'#ee9a3a']] as const)parts.push({geometry:box,matrix:m4(d.x+Math.cos(.2)*dx,dy+.62,d.z-Math.sin(.2)*dx,.2,.22,.12,.22),color:c});}
    else if(job.kind==='sort'){parts.push({geometry:box,matrix:m4(d.x,dy+.4,d.z,.3,1.1,.8,.75),color:'#a67d55'});parts.push({geometry:box,matrix:m4(d.x,dy+.83,d.z,.3,1,.08,.65),color:'#f5eed5'});parts.push({geometry:box,matrix:m4(d.x,dy+.5,d.z,.3,1.14,.08,.79),color:'#7a5a3e'});}
-   else if(job.kind==='carry'){parts.push({geometry:cyl,matrix:m4(d.x,dy+.02,d.z,0,.9,.03,.9),color:'#f5eed5'});parts.push({geometry:box,matrix:m4(d.x+1,dy+.25,d.z,0,.45,.5,.45),color:'#2f5c8a'});}
+   // Ball kid (Oct 1 2026): an open-topped ball box beside the halfway line (floor, four walls, a white rim); returned balls sit in it.
+   else if(job.kind==='carry'){parts.push({geometry:box,matrix:m4(d.x,dy+.04,d.z,0,1.2,.08,.8),color:'#244d40'});
+    for(const sz of [-1,1])parts.push({geometry:box,matrix:m4(d.x,dy+.26,d.z+sz*.37,0,1.2,.44,.06),color:'#2f5c8a'},{geometry:box,matrix:m4(d.x+sz*.57,dy+.26,d.z,0,.06,.44,.8),color:'#2f5c8a'});
+    for(const sz of [-1,1])parts.push({geometry:box,matrix:m4(d.x,dy+.5,d.z+sz*.37,0,1.24,.05,.08),color:'#f5eed5'},{geometry:box,matrix:m4(d.x+sz*.57,dy+.5,d.z,0,.08,.05,.84),color:'#f5eed5'});}
    else{parts.push({geometry:cyl,matrix:m4(d.x,dy+.45,d.z,0,.42,.9,.42),color:bin});parts.push({geometry:cyl,matrix:m4(d.x,dy+.92,d.z,0,.46,.06,.46),color:'#e9dfc0'});}}
  }
  // Painted target square on the practice wall and a standing box on the grass (static paint, no draw of its own).
@@ -126,7 +131,11 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
 
  // ---- View store ----
  let view:JobView=EMPTY_VIEW,doneNonce=0,pickNonce=0;const listeners=new Set<()=>void>();
- const setView=(patch:Partial<JobView>)=>{const next={...view,...patch};if(JSON.stringify(next)===JSON.stringify(view))return;view=next;listeners.forEach(f=>f());};
+ // Heat audit #8 (Sep 30 2026): a shallow compare of the patched fields (it was two JSON.stringify of the whole view, at 4 Hz on the
+ // board tick, 10 Hz in the garden and on every publish). `done` / `pick` are new objects only when they really change (fresh nonce),
+ // and `active` arrives as the same object when its content is unchanged (publishActive compares its own key).
+ const setView=(patch:Partial<JobView>)=>{let changed=false;for(const k in patch){const key=k as keyof JobView;if(patch[key]!==view[key]){changed=true;break;}}
+  if(!changed)return;view={...view,...patch};listeners.forEach(f=>f());};
 
  // ---- Active job props (built on start, disposed on finish) ----
  let run:JobRun|null=null,props:T.Group|null=null,propDisposables:{dispose:()=>void}[]=[],targetsMesh:T.InstancedMesh|null=null,placedMesh:T.InstancedMesh|null=null,carried:T.Mesh|null=null,beacon:T.Group|null=null,time=0;
@@ -212,15 +221,15 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   if(def.task?.type!=='pump')return;const s=def.targets[0],y=floor(s.x,s.z);
   // Stirrup pump (base, barrel, handle) and a low bench for the ball rack.
   paintLines(group,[{x:s.x,z:s.z-1,w:.7,d:.5,h:.08,color:'#2f5c8a'},{x:s.x,z:s.z-1,w:.16,d:.16,h:.66,color:'#2f5c8a'},{x:s.x+1.8,z:s.z-1,w:2.6,d:.5,h:.3,color:'#a67d55'}]);
-  const n=def.task.start.length,g=own(new T.IcosahedronGeometry(.22,1)),m=own(new T.MeshStandardMaterial({color:'#f7f3e6',roughness:.6}));
+  const n=def.task.balls.length,g=own(new T.IcosahedronGeometry(.22,1)),m=own(new T.MeshStandardMaterial({color:'#f7f3e6',roughness:.6}));
   const rack=new T.InstancedMesh(g,m,n);rack.frustumCulled=false;rack.name='pump-balls';group.add(rack);task.rack=rack;
   const ball=new T.Mesh(g,m);ball.name='pump-current-ball';ball.position.set(s.x-.7,y+.25,s.z-1);group.add(ball);task.pumpBall=ball;
   paintPump(def);
  }
- function paintPump(def:JobDef){if(!run||def.task?.type!=='pump'||!task.rack)return;const s=def.targets[0],y=floor(s.x,s.z),n=def.task.start.length;
+ function paintPump(def:JobDef){if(!run||def.task?.type!=='pump'||!task.rack)return;const s=def.targets[0],y=floor(s.x,s.z),n=def.task.balls.length;
   for(let i=0;i<n;i++){const done=i<run.step,cur=i===run.step&&run.phase==='pump';task.rack.setMatrixAt(i,cur?hidden:m4(s.x+.9+i*.45,y+.3+(done?.22:.12),s.z-1,0,1,done?1:.55,1));}
   task.rack.instanceMatrix.needsUpdate=true;
-  if(task.pumpBall){const t=def.task,f=T.MathUtils.clamp(run.pressure/t.max,0,1.3);task.pumpBall.visible=run.phase==='pump';task.pumpBall.scale.set(1,.5+.5*Math.min(1,f),1);task.pumpBall.position.y=y+.14+.11*Math.min(1,f);}}
+  if(task.pumpBall){const b=pumpBall(run)??def.task.balls[0],f=T.MathUtils.clamp(run.pressure/b.max,0,1.3);task.pumpBall.visible=run.phase==='pump';task.pumpBall.scale.set(1,.5+.5*Math.min(1,f),1);task.pumpBall.position.y=y+.14+.11*Math.min(1,f);}}
  const OFFSIDE_CLIPS_FIRST=()=>offsideClip(startRun(jobById('offside-flag')!));
  function buildProps(def:JobDef){
   props=new T.Group();props.name='job-props-'+def.id;root.add(props);propDisposables=[];task={};
@@ -232,14 +241,14 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
     color.set(def.prop==='leaf'?['#c26a2e','#d9912f','#9b4b22','#b8752e'][i%4]:def.prop==='chalk'?'#8f9c86':pg.color);targetsMesh!.setColorAt(i,color);});
    props.add(targetsMesh);
    if(def.placed||def.prop==='cone'){const peg=def.prop==='peg',g=peg?new T.CylinderGeometry(.09,.05,.34,8):new T.ConeGeometry(.22,.5,10),m=new T.MeshStandardMaterial({color:peg?'#5b4a36':'#e8742c',roughness:.6});propDisposables.push(g,m);placedMesh=new T.InstancedMesh(g,m,def.targets.length);placedMesh.frustumCulled=false;for(let i=0;i<def.targets.length;i++)placedMesh.setMatrixAt(i,hidden);props.add(placedMesh);}
-   if(def.kind==='carry'){carried=new T.Mesh(pg.g,new T.MeshStandardMaterial({color:'#f7f3e6',roughness:.6}));propDisposables.push(carried.material as T.Material);carried.visible=false;props.add(carried);}
+   if(def.kind==='carry'){carried=new T.Mesh(pg.g,new T.MeshStandardMaterial({color:'#f7f3e6',roughness:.6}));propDisposables.push(carried.material as T.Material);carried.visible=false;props.add(carried);if(run)paintBallKid(def,run);}
   }
   else if(def.kind==='sort')buildSort(def,props);
   else if(def.kind==='offside')buildOffside(props);
   else if(def.kind==='pump')buildPump(def,props);
   buildGear(def,props);
   beacon=new T.Group();const arrowG=new T.ConeGeometry(.32,.7,4),arrowM=new T.MeshBasicMaterial({color:'#ffd36c'}),ringG=new T.RingGeometry(.8,1,32),ringM=new T.MeshBasicMaterial({color:'#ffd36c',transparent:true,opacity:.7,depthWrite:false});propDisposables.push(arrowG,arrowM,ringG,ringM);
-  const arrow=new T.Mesh(arrowG,arrowM);arrow.rotation.x=Math.PI;arrow.position.y=2.2;arrow.name='arrow';const ring=new T.Mesh(ringG,ringM);ring.rotation.x=-Math.PI/2;ring.position.y=.04;ring.name='beacon-ring';beacon.add(arrow,ring);props.add(beacon);
+  const arrow=new T.Mesh(arrowG,arrowM);arrow.rotation.x=Math.PI;arrow.position.y=2.2;arrow.scale.setScalar(1.5);arrow.name='arrow';const ring=new T.Mesh(ringG,ringM);ring.rotation.x=-Math.PI/2;ring.position.y=.04;ring.name='beacon-ring';beacon.add(arrow,ring);props.add(beacon);
  }
  // ---- Action gear (Sep 30 2026, docs/island-jobs.md "Actions and animations"): what the player carries or swings for each job.
  // Built with the job props (a few small meshes), hidden until used, disposed at the end. Per-frame work only follows the player.
@@ -290,9 +299,12 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   if(reducedMotion){mat.opacity=.8;r.scale.setScalar(size*1.4);fx.tween(.5,()=>{},()=>{r.visible=false;});return;}
   fx.tween(.45,k=>{r.scale.setScalar(size*(.6+k*1.6));mat.opacity=.9*(1-k);},()=>{r.visible=false;});}
  let ending=0;
+ /** The run that just finished (bug A9/A10, Sep 30 2026): what is in the hands keeps following them through the last pose
+  *  (≤ 1.2 s wind-down), instead of freezing in mid-air where the hand was when the job ended. */
+ let endingRun:JobRun|null=null;
  /** The character side (Town.tsx + jobMoves.ts) hears each job event to play its pose. */
  const eventListeners=new Set<(e:JobEvent,def:JobDef)=>void>();
- function clearProps(){fx.clear();if(flyer)flyer.visible=false;ending=0;if(props){props.removeFromParent();for(const d of propDisposables)d.dispose();}props=null;targetsMesh=placedMesh=null;carried=null;beacon=null;propDisposables=[];task={};gear=noGear();}
+ function clearProps(){fx.clear();if(flyer)flyer.visible=false;ending=0;endingRun=null;if(props){props.removeFromParent();for(const d of propDisposables)d.dispose();}props=null;targetsMesh=placedMesh=null;carried=null;beacon=null;propDisposables=[];task={};gear=noGear();}
  // ---- Assistant-referee camera: from behind the far touchline (over the rebound-wall lawn, nothing in the way), looking across the
  // strip toward your touchline spot, so the offside line reads as a vertical line on screen and you can see yourself flagging. ----
  const refCam=createShotCamera(1,.8);
@@ -334,11 +346,20 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   fx.tween(.23,k=>{h.rotation.z=-1.1*(1-ease.inOut(k));},()=>{jobCue(value>=1?'clank':'tap');fx.burst(t.x,y+.05,t.z,'#8b6a4a',4,1,1.2,false,.7);
    fx.tween(.1,k=>pegAt(before+(value-before)*k),()=>fx.tween(.3,k=>{h.rotation.z=-.5*k;},()=>{if(value>=1)h.visible=false;}));});}
  /** Ball kid: roll/throw the ball back from your spot to a player on the pitch. */
- function throwBall(def:JobDef,i:number){const d=def.deliver,mesh=targetsMesh;if(!d||!mesh)return;const cx=135,cz=100,len=Math.hypot(cx-d.x,cz-d.z)||1,to={x:d.x+(cx-d.x)/len*10,y:floor(d.x,d.z)+.22,z:d.z+(cz-d.z)/len*10};
-  jobCue('throw');if(reducedMotion)return;
-  const set=(x:number,y:number,z:number,k:number)=>{mesh.setMatrixAt(i,m4(x,y,z,k*9));mesh.instanceMatrix.needsUpdate=true;};
-  fx.arc(set,handPos(),to,1.2,.7,()=>{jobCue('thud');const roll={x:to.x+(cx-d.x)/len*3,z:to.z+(cz-d.z)/len*3};
-   fx.tween(.5,k=>set(to.x+(roll.x-to.x)*ease.out(k),to.y,to.z+(roll.z-to.z)*ease.out(k),1+k),()=>{mesh.setMatrixAt(i,hidden);mesh.instanceMatrix.needsUpdate=true;});});}
+ /** Ball kid: where returned ball i rests in the ball box (two rows). */
+ function boxSlot(def:JobDef,i:number){const d=def.deliver!;return {x:d.x-.36+(i%3)*.36,y:floor(d.x,d.z)+.3+(i>=3?.12:0),z:d.z+(i>=3?.16:-.14)+(i>=3?(i-3)*.02:0)};}
+ /** Ball kid (Oct 1 2026): only the ball to fetch now lies out; balls already returned sit in the ball box. */
+ function paintBallKid(def:JobDef,jr:JobRun){const mesh=targetsMesh;if(!mesh||def.kind!=='carry')return;
+  def.targets.forEach((t,i)=>{if(jr.got[i]){const b=boxSlot(def,i);mesh.setMatrixAt(i,m4(b.x,b.y,b.z,i*1.3));}else mesh.setMatrixAt(i,i===jr.next&&jr.carrying<0?m4(t.x,floor(t.x,t.z)+.22,t.z):hidden);});
+  mesh.instanceMatrix.needsUpdate=true;}
+ /** The carried ball goes into the box (a short drop from the hands), then the next loose ball pops up where it lies. */
+ function boxBall(def:JobDef,i:number){const mesh=targetsMesh;if(!def.deliver||!mesh)return;const to=boxSlot(def,i),jr=run;jobCue('place');
+  const next=()=>{if(!run||run!==jr||run.next>=def.targets.length)return;const n=run.next,t=def.targets[n],y=floor(t.x,t.z)+.22;
+   if(reducedMotion){mesh.setMatrixAt(n,m4(t.x,y,t.z));mesh.instanceMatrix.needsUpdate=true;return;}
+   fx.tween(.35,k=>{const s=Math.max(.01,ease.out(k));mesh.setMatrixAt(n,m4(t.x,y,t.z,0,s,s,s));mesh.instanceMatrix.needsUpdate=true;});pulse(t.x,floor(t.x,t.z)+.05,t.z,'#ffd36c',false,1.4);};
+  if(reducedMotion){mesh.setMatrixAt(i,m4(to.x,to.y,to.z));mesh.instanceMatrix.needsUpdate=true;next();return;}
+  const set=(x:number,y:number,z:number,k:number)=>{mesh.setMatrixAt(i,m4(x,y,z,k*3));mesh.instanceMatrix.needsUpdate=true;};
+  fx.arc(set,handPos(),to,.35,.35,()=>{jobCue('thud');set(to.x,to.y,to.z,.4);next();});}
  /** The full bag is tossed into the bin / unloaded at the stand. */
  function unloadBag(def:JobDef){const d=def.deliver,bag=gear.bag;jobCue('bag');tapHaptic();if(!d||!bag)return;const to={x:d.x,y:floor(d.x,d.z)+.9,z:d.z};
   if(reducedMotion||!bag.visible){bag.visible=false;gear.bagCount=0;return;}
@@ -362,10 +383,12 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
  /** Drop in crate: the basket tips forward and the produce tumbles into the garden crate. */
  function tipIntoCrate(def:JobDef){const d=def.deliver,b=gear.basket;jobCue('bag');tapHaptic();if(!d)return;const to={x:d.x,y:floor(d.x,d.z)+.65,z:d.z};
   const col=goodById(gear.basketGoods[gear.basketGoods.length-1]??'')?.color??'#e0413f';
-  if(reducedMotion||!b||!b.visible){gear.basketGoods=[];paintBasket();jobCue('thud');return;}
+  if(reducedMotion||!b||!b.visible){gear.basketGoods=[];paintBasket();jobCue('thud');if(b&&!run)b.visible=false;return;}
   fx.tween(.6,k=>{gear.basketTilt=Math.sin(Math.min(1,k*1.4)*Math.PI)*1.1;},()=>{gear.basketTilt=0;});
   fx.tween(.25,()=>{},()=>{const from={x:b.position.x,y:b.position.y+.1,z:b.position.z};(flyer.material as T.MeshStandardMaterial).color.set(col);flyer.visible=true;gear.basketGoods=[];paintBasket();
-   fx.arc((x,y,z)=>flyer.position.set(x,y,z),from,to,.35,.3,()=>{flyer.visible=false;jobCue('thud');fx.burst(to.x,to.y,to.z,col,5,1,1.2,false,.8);});});}
+   fx.arc((x,y,z)=>flyer.position.set(x,y,z),from,to,.35,.3,()=>{flyer.visible=false;jobCue('thud');fx.burst(to.x,to.y,to.z,col,5,1,1.2,false,.8);
+    // The shift is over once the crate is filled: the empty basket is set down (hidden) rather than carried off.
+    if(!run&&gear.basket===b)b.visible=false;});});}
  function applyEvents(ev:JobEvent[]){
   if(!run||!ev.length)return;const def=run.def;
   if(eventListeners.size)for(const e of ev)eventListeners.forEach(f=>f(e,def));
@@ -405,7 +428,7 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
     if(placedMesh&&def.prop!=='cone'&&def.prop!=='peg'){const t=def.targets[i];placedMesh.setMatrixAt(i,m4(t.x,floor(t.x,t.z)+.25,t.z));placedMesh.instanceMatrix.needsUpdate=true;}
     cue('fi2-path-cue','path-pop');
    }
-   if(e.type==='return'&&def.kind==='carry'&&e.index!==undefined){throwBall(def,e.index);tapHaptic();}
+   if(e.type==='return'&&def.kind==='carry'&&e.index!==undefined){boxBall(def,e.index);tapHaptic();}
    if(e.type==='deliver')unloadBag(def);
    if(e.type==='pass'){const w=lastWallTarget??{x:REBOUND_WALL.target.x,z:REBOUND_WALL.z};pulse(w.x,1,REBOUND_WALL.face+.05,'#ffffff',true,.8);jobCue('thunk');}
    if(e.type==='shot'&&gear.flash){const f=gear.flash,mat=f.material as T.MeshBasicMaterial;f.visible=true;fx.tween(.55,k=>{mat.opacity=.85*(1-k);},()=>{f.visible=false;});pulse(REBOUND_WALL.target.x,(REBOUND_WALL.target.top+REBOUND_WALL.target.bottom)/2,REBOUND_WALL.face+.05,'#ffd36c',true,1.6);jobCue('ding');tapHaptic();}
@@ -413,7 +436,11 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
     if(flag&&flagUp&&!reducedMotion){fx.tween(.3,k=>{flag.rotation.z=1.2*(1-ease.out(k));});}
     if(flagUp)jobCue('whistle');pulse(spot.x,floor(spot.x,spot.z)+.05,spot.z,run.right?'#6fd08c':'#e0613f',false,1.3);jobCue(run.right?'ding':'nope');tapHaptic();}
    if(def.kind==='pump'&&def.task?.type==='pump'){const t=def.task,h=gear.handle;
-    if(e.type==='pump'){tapHaptic();jobCue((e.value??0)>t.max?'squeak':'pump');if(h&&!reducedMotion){const base=h.position.y;fx.tween(.26,k=>{h.position.y=base-Math.sin(k*Math.PI)*.22;},()=>{h.position.y=base;});}}
+    // Oct 1 2026: many rapid strokes. One handle tween at most (a new stroke restarts it from the fixed rest height, so fast taps
+    // never stack tweens or let the handle creep down); crossing into too-hard hisses once.
+    if(e.type==='pump'){const b=pumpBall(run);tapHaptic();jobCue(b&&(e.value??0)>b.max?'squeak':'pump');if(e.stage===1)jobCue('hiss');
+     if(h&&!reducedMotion){const rest=floor(def.targets[0].x,def.targets[0].z)+.72;if(handleStroke&&handleStroke.t<handleStroke.dur)handleStroke.t=0;
+      else handleStroke=fx.tween(.22,k=>{h.position.y=rest-Math.sin(k*Math.PI)*.22;},()=>{h.position.y=rest;handleStroke=null;});}}
     if(e.type==='release'){jobCue('hiss');const s=def.targets[0];if(!reducedMotion)fx.burst(s.x-.7,floor(s.x,s.z)+.35,s.z-1,'#e9f2f7',5,1.1,1.1,true,.6);}
     if(e.type==='wrong')jobCue('nope');
     if(e.type==='return'){const s=def.targets[0];pulse(s.x-.7,floor(s.x,s.z)+.05,s.z-1,'#6fd08c');jobCue('ding');}}
@@ -422,14 +449,20 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   }
   if(def.kind==='offside'&&run.phase!=='work'&&!refCam.active)refCam.begin(refShot);
   if(def.kind==='pump')paintPump(def);
-  if(ev.some(e=>e.type==='done')){const seconds=run.seconds,id=def.id,bag=run.harvest?[...run.harvest.bag]:run.garden?[...run.garden.bag]:undefined;run=null;refCam.end();if(def.kind==='garden'&&inGarden)paintGarden();
+  if(ev.some(e=>e.type==='done')){const seconds=run.seconds,id=def.id,bag=run.harvest?[...run.harvest.bag]:run.garden?[...run.garden.bag]:undefined;endingRun=run;run=null;refCam.end();if(carried)carried.visible=false;if(reducedMotion&&gear.basket)gear.basket.visible=false;if(def.kind==='garden'&&inGarden)paintGarden();
    // Let the last throw / toss / wobble finish (at most ~1.2 s), then dispose the props (update → clearProps).
    ending=1.2;if(beacon)beacon.visible=false;setView({active:null,done:{id,seconds:Math.round(seconds*10)/10,nonce:++doneNonce,...(bag?{bag}:{})}});return;}
   publishActive();
  }
+ let activeKey='',handleStroke:Tween|null=null;
+ /** The pump gauge: this ball's green zone, the pressure (2 decimals) and the strokes still to go. */
+ function pumpGauge(r:JobRun){const b=pumpBall(r)!,v=pumpShown(r.pressure),left=pumpTapsLeft(r),n=r.def.task?.type==='pump'?r.def.task.balls.length:5;
+  return {value:v,min:b.min,max:b.max,label:`Ball ${r.step+1}/${n} · ${v.toFixed(2)} atm · green ${b.min.toFixed(2)}–${b.max.toFixed(2)}${left?` · ~${left} to go`:v>b.max?' · too hard':''}`};}
  function publishActive(){if(!run){setView({active:null});return;}const p=runProgress(run),t=run.def.task,h=run.harvest;
-  setView({active:{id:run.def.id,value:p.value,total:p.total,phase:run.phase,carrying:run.carrying>=0,hint:banner||runHint(run),actions:runActions(run),
-   gauge:t?.type==='pump'&&run.phase==='pump'?{value:run.pressure,min:t.min,max:t.max}:h&&h.pulling>=0?{value:Math.round(h.pull*100)/100,min:HARVEST.green[0],max:HARVEST.green[1],label:'Pull strength · let go in the green'}:null,right:run.right,buttons:jobButtons(run)}});}
+  const next:JobView['active']={id:run.def.id,value:p.value,total:p.total,phase:run.phase,carrying:run.carrying>=0,hint:banner||runHint(run),actions:runActions(run),
+   gauge:t?.type==='pump'&&run.phase==='pump'?pumpGauge(run):h&&h.pulling>=0?{value:Math.round(h.pull*100)/100,min:HARVEST.green[0],max:HARVEST.green[1],label:'Pull strength · let go in the green'}:null,right:run.right,buttons:jobButtons(run)};
+  // Only here (on a frame-key change, an event or a note), never per frame: an unchanged panel keeps the same object.
+  const key=JSON.stringify(next);if(view.active&&key===activeKey)return;activeKey=key;setView({active:next});}
  /** A HUD button for task jobs and work steps (hold steps send `id` then `id:up`). */
  function act(id:string){if(!run)return;applyEvents(runAction(run,id));if(run?.def.kind==='offside')paintOffside();}
 
@@ -495,7 +528,7 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
    if(run&&beacon){const goal=runGoals(run).reduce<{x:number;z:number}|null>((best,g)=>!best||Math.hypot(g.x-p.x,g.z-p.z)<Math.hypot(best.x-p.x,best.z-p.z)?g:best,null);
     // Wall rebounds' shooting circle is the beacon's own ring, sized to the circle (one mesh, moved; the arrow hides once inside).
     const spotRing=run.def.kind==='rebound'&&run.phase==='shots',inside=!!goal&&Math.hypot(p.x-goal.x,p.z-goal.z)<(spotRing?REBOUND_WALL.spot.radius:2);
-    beacon.visible=!!goal&&(spotRing||!(run.def.kind==='rebound'&&inside));if(goal){time+=dt;beacon.position.set(goal.x,floor(goal.x,goal.z),goal.z);const arrow=beacon.getObjectByName('arrow')!;arrow.visible=!(spotRing&&inside);arrow.position.y=2.2+(reduced?0:Math.sin(time*3)*.18);
+    beacon.visible=!!goal&&(spotRing||!(run.def.kind==='rebound'&&inside));arrowOn=!!goal;if(goal){arrowGoal.x=goal.x;arrowGoal.z=goal.z;time+=dt;beacon.position.set(goal.x,floor(goal.x,goal.z),goal.z);const arrow=beacon.getObjectByName('arrow')!;arrow.visible=!(spotRing&&inside);arrow.position.y=2.2+(reduced?0:Math.sin(time*3)*.18);
      const ring=beacon.getObjectByName('beacon-ring');if(ring){const s=spotRing?REBOUND_WALL.spot.radius:1;if(ring.scale.x!==s)ring.scale.set(s,s,1);}}}
    if(run&&run.def.kind==='sort'&&task.shirts){const shirt=task.shirts[run.step];if(shirt&&run.carrying>=0){shirt.visible=true;const k=liftK(dt),f=gear.lift?.from;
     if(f&&k<1)shirt.position.set(f.x+(p.x-f.x)*k,f.y+(p.y+2.35-f.y)*ease.out(k),f.z+(p.z-f.z)*k);else shirt.position.set(p.x,p.y+2.35,p.z);}}
@@ -504,21 +537,39 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
     if(f&&k<1)carried.position.set(f.x+(p.x-f.x)*k,f.y+(p.y+1.35-f.y)*ease.out(k),f.z+(p.z-f.z)*k);else carried.position.set(p.x,p.y+1.35,p.z);}}
    if(run)updateGear(run,p,dt,reduced);
    if(banner){bannerAge+=dt;if(bannerAge>4){banner='';viewKey='';}}
-   if(run){const h=run.harvest,key=`${run.at}|${run.holding}|${run.note}|${run.def.kind==='collect'&&run.at>=0?Math.round(run.work[run.at]*20):''}|${h?`${h.near}|${h.pulling}|${Math.round(h.pull*40)}|${h.ground.length}|${harvestPickable(run).length}|${h.snips}`:''}|${run.garden?`${run.garden.near}|${run.garden.fruit+run.garden.veg}`:''}|${run.carrying}|${run.phase}`;if(key!==viewKey){viewKey=key;publishActive();}}
+   if(run&&frameKeyChanged(run))publishActive();
   }
+  // Sign glow (bug A8): eased every frame while on or fading, like the buildings and vending machines; the board tick only
+  // decides which sign. Idle cost: nothing once the fade is over.
+  if(glowOn||glowFade>0){signGlow.update(glowOn&&visible,dt,reduced);if(!glowOn)glowFade-=dt;}
   slow+=dt;if(slow<.1)return;const tick=slow;slow=0;
   updateGarden(p);
   boardTimer+=tick;if(boardTimer<.25)return;boardTimer=0;refreshBadges();
   let near:JobDef|null=null,best=BOARD_RANGE;
   for(const job of JOBS){const d=Math.hypot(p.x-job.board.x,p.z-job.board.z);if(d<best&&Math.abs(p.y-floor(job.board.x,job.board.z))<2){best=d;near=job;}}
-  const offered=near&&run?.def.id!==near.id?near:null;
+  // While a job runs no other sign offers (bug A2: G or Start job used to swap the running job away); `other` lets G explain.
+  const offered=!run&&near?near:null,other=run&&near&&near.id!==run.def.id?near.id:null;
   offerRing.visible=!!offered;if(offered){offerRing.position.set(offered.board.x,floor(offered.board.x,offered.board.z)+.03,offered.board.z);}
   if(offered){glowRoot.position.set(offered.board.x,floor(offered.board.x,offered.board.z),offered.board.z);glowRoot.rotation.y=offered.board.yaw;glowRoot.updateMatrixWorld(true);}
-  signGlow.update(!!offered&&visible,dt,reduced);
+  if(glowOn&&!offered)glowFade=GLOW_FADE;glowOn=!!offered;
   const stand=!run&&!offered&&Math.hypot(p.x-FARM_STAND_SELL.x,p.z-FARM_STAND_SELL.z)<FARM_STAND_SELL.reach&&Math.abs(p.y-floor(FARM_STAND_SELL.x,FARM_STAND_SELL.z))<1.2;
-  setView({near:offered?.id??null,stand});
+  setView({near:offered?.id??null,other,stand});
  }
+ let glowOn=false,glowFade=0;const GLOW_FADE=.8;
  let lastShooting=false,boardTimer=0,lastWallPhase='',shotCounted=false,lastContact:{x:number;y:number;z:number}|null=null,lastWallTarget:{x:number;z:number}|null=null,viewKey='';
+ // Heat audit #8: the per-frame panel key was a template string built every frame while a job ran. The same inputs are now compared
+ // one by one against the last frame's (no string, no array); `viewKey=''` (a note, a new job) still forces a publish.
+ const keyVals:(number|string|boolean|null|undefined)[]=new Array(16).fill(undefined);
+ function frameKeyChanged(r:JobRun){const h=r.harvest,g=r.garden;let changed=viewKey==='';viewKey='*';
+  const set=(i:number,v:number|string|boolean|null|undefined)=>{if(keyVals[i]!==v){keyVals[i]=v;changed=true;}};
+  set(0,r.at);set(1,r.holding);set(2,r.note);set(3,r.def.kind==='collect'&&r.at>=0?Math.round(r.work[r.at]*20):null);
+  if(h){set(4,h.near);set(5,h.pulling);set(6,Math.round(h.pull*40));set(7,h.ground.length);set(8,harvestPickableCount(r));set(9,h.snips);}
+  else for(let i=4;i<=9;i++)set(i,null);
+  set(10,g?g.near:null);set(11,g?g.fruit+g.veg:null);set(12,r.carrying);set(13,r.phase);set(14,r.def.id);
+  // Pump: the leak moves the needle between strokes (0.02 atm steps: a few panel updates a second at most, none while idle at the start).
+  set(15,r.phase==='pump'?Math.round(r.pressure*50):null);return changed;}
+ /** harvestPickable(run).length without the filtered array (same test as jobRules.harvestPickable). */
+ function harvestPickableCount(r:JobRun){const h=r.harvest;if(!h||r.phase!=='work')return 0;let n=0;for(const g of h.ground)if(g.age>=HARVEST.pickupDelay&&Math.hypot(r.px-g.x,r.pz-g.z)<=HARVEST.pickupButtonReach)n++;return n;}
  /** Lift progress (0–1) of a just-picked-up item (ball, snack card) rising into the player's hands. */
  function liftK(dt:number){const l=gear.lift;if(!l)return 1;l.t+=dt;const k=reducedMotion?1:Math.min(1,l.t/.3);if(k>=1)gear.lift=null;return k;}
  /** Per frame while a job runs: what the player carries follows them, and the held actions animate (rake swirl, line paint). */
@@ -544,7 +595,9 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   lastContact={x:Math.round(x*10)/10,y:Math.round(y*10)/10,z:Math.round(z*10)/10};
   if(hitsReboundTarget(x,y,z,0)){shotCounted=true;applyEvents(reboundEvent(run,'shot'));}
  }
- function start(id:string){const def=jobById(id);if(!def)return false;quit();banner='';if(props)clearProps();
+ function start(id:string){const def=jobById(id);if(!def)return false;
+  // One job at a time (bug A2): starting another never silently ends the running one. Finish it or tap Stop job first.
+  if(run)return false;quit();banner='';if(props)clearProps();
   // Garden shift: what is pickable this shift (ripe now, plus spots made ripe for the shift if too few are: never a dead end).
   let ripe:boolean[]|undefined;if(def.kind==='garden'){garden=readGarden();ripe=shiftRipeness(garden,now()).ripe;}
   run=startRun(def,1+Math.floor(now()%100000),ripe);if(def.kind==='garden'&&inGarden)paintGarden();viewKey='';lastShooting=false;lastWallPhase='';shotCounted=false;buildProps(def);refreshBadges();setView({done:null,near:null});offerRing.visible=false;publishActive();return true;}
@@ -553,18 +606,20 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
  /** After the character is posed (Town.tsx): what the job has you carry sits in your hands. `l`/`r` = world hand points. */
  const hv=new T.Vector3(),hq=new T.Quaternion(),UP=new T.Vector3(0,1,0),DOWN=new T.Vector3(0,-1,0),NEGX=new T.Vector3(-1,0,0);
  function holdProps(l:{x:number;y:number;z:number},r:{x:number;y:number;z:number},yaw:number){
-  if(!run||!props)return;const fx0=Math.sin(yaw),fz0=Math.cos(yaw),mx=(l.x+r.x)/2,my=(l.y+r.y)/2,mz=(l.z+r.z)/2,p=lastP,def=run.def;
+  const jr=run??(ending>0?endingRun:null);if(!jr||!props)return;const fx0=Math.sin(yaw),fz0=Math.cos(yaw),mx=(l.x+r.x)/2,my=(l.y+r.y)/2,mz=(l.z+r.z)/2,p=lastP,def=jr.def;
   const aim=(o:T.Object3D,from:T.Vector3,x:number,y:number,z:number)=>{hv.set(x-o.position.x,y-o.position.y,z-o.position.z);if(hv.lengthSq()<1e-6)return;o.quaternion.copy(hq.setFromUnitVectors(from,hv.normalize()));};
   if(carried&&carried.visible&&!gear.lift)carried.position.set(mx+fx0*.14,my+.04,mz+fz0*.14);
-  if(def.kind==='sort'&&task.shirts&&run.carrying>=0&&!gear.lift){const sh=task.shirts[run.step];if(sh){sh.position.set(mx+fx0*.2,my+.12,mz+fz0*.2);sh.rotation.set(0,yaw,0);}}
-  if(gear.stack){const left=def.targets.length-run.got.filter(Boolean).length;for(let i=0;i<def.targets.length;i++)gear.stack.setMatrixAt(i,i<left?m4(l.x+fx0*.06,l.y+.02+i*.07,l.z+fz0*.06):hidden);gear.stack.instanceMatrix.needsUpdate=true;}
-  if(gear.hammer&&def.prop==='peg'){const h=gear.hammer;h.visible=true;h.position.set(r.x,r.y,r.z);aim(h,NEGX,r.x+(r.x-p.x)*.3,r.y+(r.y-(p.y+1.35))*1.2,r.z+(r.z-p.z)*.3);}
-  if(gear.rake){const g=gear.rake;g.visible=run.phase==='work';g.position.set(mx,my,mz);aim(g,DOWN,p.x+fx0*1.25,floor(p.x,p.z)+.05,p.z+fz0*1.25);}
+  if(def.kind==='sort'&&task.shirts&&jr.carrying>=0&&!gear.lift){const sh=task.shirts[jr.step];if(sh){sh.position.set(mx+fx0*.2,my+.12,mz+fz0*.2);sh.rotation.set(0,yaw,0);}}
+  if(gear.stack){const left=def.targets.length-jr.got.filter(Boolean).length;for(let i=0;i<def.targets.length;i++)gear.stack.setMatrixAt(i,i<left?m4(l.x+fx0*.06,l.y+.02+i*.07,l.z+fz0*.06):hidden);gear.stack.instanceMatrix.needsUpdate=true;}
+  if(gear.hammer&&def.prop==='peg'&&(run||gear.hammer.visible)){const h=gear.hammer;h.visible=true;h.position.set(r.x,r.y,r.z);aim(h,NEGX,r.x+(r.x-p.x)*.3,r.y+(r.y-(p.y+1.35))*1.2,r.z+(r.z-p.z)*.3);}
+  if(gear.rake){const g=gear.rake;g.visible=jr.phase==='work';g.position.set(mx,my,mz);aim(g,DOWN,p.x+fx0*1.25,floor(p.x,p.z)+.05,p.z+fz0*1.25);}
   if(gear.handFlag){const g=gear.handFlag;g.visible=true;g.position.set(r.x,r.y,r.z);aim(g,UP,r.x+(r.x-p.x)*.4,r.y+(r.y-(p.y+1.3))*1.2,r.z+(r.z-p.z)*.4);}
-  if(gear.basket){const b=gear.basket;b.visible=true;b.position.set(l.x,l.y-.23,l.z);b.rotation.set(gear.basketTilt,yaw,0);}
+  if(gear.basket&&(run||gear.basket.visible)){const b=gear.basket;b.visible=true;b.position.set(l.x,l.y-.23,l.z);b.rotation.set(gear.basketTilt,yaw,0);}
   if(gear.marker&&gear.marker.visible){gear.marker.position.set(p.x+fx0*.8,floor(p.x+fx0*.8,p.z+fz0*.8),p.z+fz0*.8);gear.marker.rotation.set(0,yaw-Math.PI/2,0);}
  }
  let banner='',bannerAge=0;
+ /** Where the beacon points now (the nearest goal), for the off-screen edge arrow (Town.tsx); copied, no allocation per frame. */
+ const arrowGoal={x:0,z:0};let arrowOn=false;
  function note(text:string){if(!run)return;banner=text;bannerAge=0;viewKey='';publishActive();}
  const api={root,start,quit,update,ballContact,act,note,holdProps,
   onEvent:(fn:(e:JobEvent,def:JobDef)=>void)=>{eventListeners.add(fn);return()=>{eventListeners.delete(fn);};},
@@ -574,9 +629,13 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   /** Harvest day: the armed orchard tree (the Kick the tree target), or null. */
   armedTree:()=>{const h=run?.harvest,d=run?.def;if(!h||!d||d.task?.type!=='harvest'||run!.phase!=='work')return null;const s=d.task.spots[h.near];return s&&s.action==='shake'?{x:s.x,z:s.z,index:h.near}:null;},
   /** Call right after the follow camera is placed (like fishing.applyCamera): the assistant-referee view while flagging. */
-  applyCamera:(camera:T.PerspectiveCamera,dt:number,reduced:boolean)=>{const r=refCam.apply(camera,dt,reduced);badges.update(camera,dt,reduced,sceneryShown);return r;},badges,getView:()=>view,subscribe:(fn:()=>void)=>{listeners.add(fn);return()=>{listeners.delete(fn);};},dismissDone:()=>setView({done:null}),get run(){return run;},
+  applyCamera:(camera:T.PerspectiveCamera,dt:number,reduced:boolean)=>{const r=refCam.apply(camera,dt,reduced);badges.update(camera,dt,reduced,sceneryShown,lastP);return r;},badges,getView:()=>view,subscribe:(fn:()=>void)=>{listeners.add(fn);return()=>{listeners.delete(fn);};},dismissDone:()=>setView({done:null}),get run(){return run;},
+  /** A job runs, or the one that just ended is winding down (its last pose): Town keeps calling holdProps. */
+  get holding(){return !!run||ending>0&&!!props;},
   /** Where the current step wants the player (the beacon's targets); read-only, for play-tests. */
-  goals:()=>run?runGoals(run):[],get lastContact(){return lastContact;},catalog:JOBS,garden:GARDEN_SPOTS,
+  goals:()=>run?runGoals(run):[],
+  /** The beacon's goal (Oct 1 2026: every job's "follow the arrow" also gets an edge arrow when it is off screen), or null. */
+  get arrowGoal(){return run&&arrowOn&&beacon?.visible?arrowGoal:null;},get lastContact(){return lastContact;},catalog:JOBS,garden:GARDEN_SPOTS,
   dispose(){quit();badges.dispose();fx.dispose();root.removeFromParent();for(const d of disposables)d.dispose();fruit.dispose();if(current===api){current=null;registry.forEach(f=>f());}}};
  current=api;registry.forEach(f=>f());
  if(typeof window!=='undefined')(window as unknown as {__fi2Jobs?:unknown}).__fi2Jobs=api;

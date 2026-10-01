@@ -9,11 +9,11 @@ const base=process.env.FUTBOL_BASE_URL||'http://localhost:8092',OUT=process.env.
 const mobile=process.argv.includes('--mobile'),tag=mobile?'phone':'desktop';
 const doors=(process.argv.find(a=>a.startsWith('--door='))?.slice(7)??'main,cay').split(',');
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
-(async()=>{const b=await chromium.launch({headless:true,executablePath:'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'});const summary=[];let failed=0;
+(async()=>{const b=await chromium.launch({headless:true,executablePath:'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',args:['--mute-audio']});const summary=[];let failed=0;
  for(const door of doors){
   const ctx=await b.newContext({viewport:mobile?{width:390,height:844}:{width:1280,height:800},isMobile:mobile,hasTouch:mobile,deviceScaleFactor:mobile?2:1});const p=await ctx.newPage();
   p.on('pageerror',e=>{if(!/ChunkLoadError|Loading chunk|hydrat/.test(e.message))console.log('pageerror',e.message);});
-  await p.addInitScript(()=>{localStorage.setItem('fi2-welcome-v1','completed');localStorage.setItem('fi2-sound-muted','true');});
+  await p.addInitScript(()=>{localStorage.setItem('fi2-welcome-v1','completed');for(const [k,v] of Object.entries({'fi2-audio-mix':'4-50-v1','fi2-sound-muted':'true','fi2-music-enabled':'false','fi2-voice-enabled':'false'}))localStorage.setItem(k,v);});
   await p.goto(`${base}/konbini?door=${door}`);await p.waitForFunction(()=>window.__konbini,null,{timeout:120000});await p.waitForFunction(()=>window.__konbini.state.sleeping,null,{timeout:20000});
   const targets=await p.evaluate(()=>window.__konbini.targets);const res={door,viewport:tag,sections:targets.length,products:0,ok:0,fails:[],covered:new Set(),done:new Set(),all:new Set()};
   for(let i=0;i<targets.length;i++){

@@ -1,4 +1,15 @@
-# Spaced review and My football (30 Sep 2026, lane 3)
+# Spaced review: the daily Warm-up (30 Sep 2026, lane 3; mastery screen removed 1 Oct 2026)
+
+> **1 Oct 2026, user decision: the "My football" mastery screen was removed completely.** Its tab in the learning drawer, the
+> "My football" buttons on the welcome-back card, in the Paths Review card and in the backpack header are gone, with its view code,
+> CSS and the helpers only it used (`dueLabel`, `STAGE_LABEL`, `STAGE_DETAIL`, the `'mastery'` view of `openLearningReview`, the
+> `compact` mode of `LearningJourneys`). The **daily Warm-up stays**: it is its own learning feature (spaced retrieval of passed
+> quizzes, paid coins), so the drawer now holds only the warm-up and is titled **Warm-up**. It opens from the Paths Review card's
+> "Warm up" button when lessons are due (the welcome-back card no longer has buttons, by the same decision). Saved data is
+> untouched: `fi2-lesson-review-v1` is still read and written by the warm-up, the book checks and the island ticks, and the
+> stages still feed For grown-ups (`lib/grownups/progress.ts`). Coins already earned are kept. The three pilot journeys
+> (`LearningJourneys`) were only reachable from the mastery tab, so they are unreachable again (as before lane 3) until a new
+> home is chosen. Guarded by `tests/oct1-ui.cjs`.
 
 Local only. Nothing here is committed or deployed. This closes audit gap **G-07** ("the learning never comes back", `scratchpad/game-audit/AUDIT.md`).
 
@@ -9,20 +20,11 @@ Local only. Nothing here is committed or deployed. This closes audit gap **G-07*
   - A warm-up holds at most 3 lessons. Missed lessons come first, then the most overdue.
   - The first answer counts. Retries are practice: the child sees the per-choice "why", then tries again.
   - There are no streaks and no penalty for missed days. An overdue lesson just waits.
-- **Where it opens:**
-  - the welcome-back card (Lane 1, `components/WelcomeBack.tsx`);
-  - the new **Review** card in Paths, under the landing card;
-  - the My football tab.
-- **My football.** This is the mastery screen. It shows:
-  - the four formats, each with "n/12 passed";
-  - a stacked progress bar and legend (Remembered, Applied, Practicing, Introduced, Not started);
-  - every starter stop by chapter, with its stage chip, a 4-step stage meter and "Review due / tomorrow / in N days";
-  - "Seen on the island ×N" and a Start / Watch again button (`openPathLesson`);
-  - Go-deeper lessons, once touched.
-  - The three pilot "new situation" journeys (`LearningJourneys`), which were only reachable from the never-rendered `IslandPassport`. It now sits at the bottom of the tab.
-  - Opens from Paths (Review card), the backpack ("My football" button in the backpack header) and the welcome-back card.
+- **Where it opens:** the **Review** card in Paths, under the landing card ("Warm up", shown when lessons are due). Until 1 Oct
+  2026 it also opened from the welcome-back card and the mastery tab, both removed.
+- *(Removed 1 Oct 2026: the mastery screen, with per-format stage bars, a lesson list with stage chips and the pilot journeys.)*
 
-## Stages (`lib/learning/review.ts` `stageOf`)
+## Stages (`lib/learning/review.ts` `stageOf`; shown to grown-ups in For grown-ups)
 
 | Stage | Evidence |
 |---|---|
@@ -43,15 +45,15 @@ Local only. Nothing here is committed or deployed. This closes audit gap **G-07*
 | `lib/learning/review.ts` | Pure rules: boxes, due list, stages, the daily coin cap, sanitising |
 | `lib/learning/reviewStoreCore.ts` | Store logic with injected ports (tests use fakes) |
 | `lib/learning/reviewStore.ts` | Browser singleton: localStorage `fi2-lesson-review-v1`, React hooks, the **public API** below |
-| `components/LearningReview.tsx` | The drawer: Warm-up + My football (Fishbook-style coastal side drawer, `--btn-*` buttons) |
+| `components/LearningReview.tsx` | The Warm-up drawer (Fishbook-style coastal side drawer, `--btn-*` buttons) |
 | `components/LearningHost.tsx` | Mounted once in `Town.tsx`. Opens the drawer on `fi2-learning-review-open` and shows the Spot-it card |
-| `components/PathReviewEntry.tsx` | The Paths "Review" card |
+| `components/PathReviewEntry.tsx` | The Paths "Review" card (its "Warm up" button opens the drawer) |
 
 **Public API** (`lib/learning/reviewStore.ts`):
 - `getDueReviews()` returns `{count, items:[{key, format, lessonId, name, concept}]}`, at most 3 items, and syncs enrollment first;
 - `useDueReviewCount()` returns a live number for a badge;
 - `useReviewState()` returns the records (the grown-ups summary reads it);
-- `openLearningReview('review' | 'mastery')`;
+- `openLearningReview()` (opens the Warm-up);
 - `openPathLesson(key)`;
 - `syncReviews()`.
 
