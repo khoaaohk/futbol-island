@@ -42,6 +42,7 @@ const req=p=>require(path.join(ROOT,p));
 // ---- Real constants -----------------------------------------------------------------------------------------------------
 
 const jobs=req('lib/town/jobs/jobEconomy.ts');
+const harvestShare=req('lib/town/jobs/harvestShare.ts');
 const wallet=req('lib/arcade/arcadeWalletCore.ts');
 const daily=req('lib/town/dailyPlay.ts');
 const market=req('lib/town/market/market.ts');
@@ -62,6 +63,9 @@ const explore=req('lib/town/exploreChecklist.ts');
 const journeys=req('lib/town/learningJourneys.ts');
 const meter=req('lib/town/dailyMeter.ts');
 const learnCoins=req('lib/town/learnCoins.ts');
+// Water fountains were removed (user, Sep 30 2026); kept as a zero-sip stub so the free path reads: breakfast, then garden fruit.
+const fountains={FOUNTAIN_FUEL:25};// the water-drink value, unused while fountainSips is 0
+const fuel=req('lib/town/fuel.ts'),food=req('lib/konbini/food.ts'),drinkMachines=req('lib/town/drinkMachines.ts');
 const stories=req('lib/paths/stories.ts'),upcoming=req('lib/paths/upcomingStories.ts');
 const FORMAT_PATHS=req('lib/paths/formatPaths.json');
 const QUIZZES=req('lib/town/quizManifest.json');
@@ -69,6 +73,9 @@ const QUIZZES=req('lib/town/quizManifest.json');
 const SEP29={jobs:['farm-harvest','match-day-snacks'],books:['cafu','nadim','kante','oshoala'],ballsBefore:quest.PRE_CORAL_CAY_IDS.length,
  /** Match-day snacks is being added to lib/town/jobs/* by the Coral Cay agent; until it lands the sim assumes the median pay 8. */
  snacksPay:jobs.JOB_BASE_PAY['match-day-snacks']??8};
+/** The Garden shift (30 Sep 2026, docs/island-jobs.md §13): the Community Garden as a paid job. Its 8 picks come out of the same
+ *  beds as free picking (the session's garden pool), and its gardener's share (2/1/1 items) goes to the basket. */
+const SEP30_GARDEN={job:'garden-shift',picks:8};
 
 const CARD_LIST=cards.ALL_PLAYERS.map(name=>({name,tier:tiers.cardTier(name)}));
 const TIER_OF=new Map(CARD_LIST.map(c=>[c.name,c.tier]));
@@ -92,12 +99,18 @@ const CONTENT={
 
 // ---- Assumptions (not in code) ------------------------------------------------------------------------------------------
 const ASSUME={
- min:{lesson:4,npc:1.5,story:4,journey:3,explore:2,job:1.5,fishCast:.6,gardenPick:.15,sell:.5,arcadeRound:3,liveRound:3.8,puzzle:1.5,dailyPlay:.5,shop:.7},
+ min:{lesson:4,npc:1.5,story:4,journey:3,explore:2,job:1.5,fishCast:.6,gardenPick:.15,sell:.5,arcadeRound:3,liveRound:3.8,puzzle:1.5,dailyPlay:.5,shop:.7,fountainSip:.15},
  ballMinutes:i=>2+3*i/80,          // hidden balls get harder: 2 min for the first, 5 for the last
  fishSuccess:.8,                    // share of casts that land a fish (bite window 0.7–1.0 s)
  perfectFirstTry:.65,               // quizzes answered perfectly on the first run (earns the card)
  arcadeSkill:{casual:.45,regular:.55,keen:.7}, // share of each game's per-round cap actually earned
  puzzleStars:2.2,
+ /** Fuel (30 Sep 2026, docs/economy/FUEL_2026-09-30.md): share of session minutes spent MOVING in each mode (the rest is lessons,
+  *  jobs at a spot, fishing, talking, standing). Rides use the bike's rate as their middle. Estimates, not playtest data. */
+ travel:{jetpack:.18,bike:.14,sprint:.03,walk:.30},
+ /** Water fountains (30 Sep 2026): free sips a child takes in one session. Six fountains stand on the main routes (square, two
+  *  pitches, North Beach, Coral Cay court, East Jetty) and each rests 90 s, so a sip is a short stop on the way (min.fountainSip). */
+ fountainSips:0,// fountains removed (Sep 30 2026)
 };
 // How each archetype splits a session (share of minutes). Exhausted activities hand their time to the others.
 const ARCHETYPES={
@@ -107,6 +120,9 @@ const ARCHETYPES={
  keen:{label:'Engaged (keen) · 45 min daily',minutes:45,plays:()=>true,mix:{balls:15,lessons:20,npc:7,story:5,jobs:18,arcade:17,fish:9,garden:9}},
 };
 const REPEATABLE=['jobs','arcade','fish','garden'];
+/** Minutes one shift of a job takes (lib/town/jobs/jobEconomy.ts JOB_MINUTES + JOB_SHIFT_OVERHEAD_MINUTES; 30 Sep 2026). Jobs the
+ *  table does not know (a what-if config) take the old flat ASSUME.min.job. */
+const jobMin=id=>id in jobs.JOB_MINUTES?jobs.jobShiftMinutes(id):ASSUME.min.job;
 
 // ---- Configs --------------------------------------------------------------------------------------------------------------
 // CURRENT = the game as coded now. The economy pass was applied 28 Sep 2026 (user decisions: books stay 100, no Matchday
@@ -126,11 +142,13 @@ const CURRENT={
   costume:vending.VENDING_PRICES.costume,book:books.BOOK_PRICE},
  packsPerDay:packs.PACKS_PER_DAY,packRule:'relaxed', // pack top-ups (vendingLedger.packFreshness) + 3 a day
  jobIds:jobs.JOB_IDS,balls:CONTENT.balls,excludeBooks:[],fishSpots:fish.FISH_SPOTS,costumeBalls:quest.costumeUnlockBalls,
+ /** Harvest day's farmer's share (30 Sep 2026): produce into the basket, sold through the market cap + Training meter. */
+ jobShare:harvestShare.jobShare,
 };
 /** The game on 28 Sep 2026, before Coral Cay: 9 jobs, 80 hidden balls (fox at 80), 32 books, shore fishing only. */
 const BEFORE={
- ...CURRENT,name:'before',learn:{...CURRENT.learn,ball:5},
- jobIds:jobs.JOB_IDS.filter(id=>!SEP29.jobs.includes(id)),balls:SEP29.ballsBefore,excludeBooks:SEP29.books,fishSpots:fish.SHORE_SPOTS,
+ ...CURRENT,name:'before',jobShare:null,learn:{...CURRENT.learn,ball:5},
+ jobIds:jobs.JOB_IDS.filter(id=>!SEP29.jobs.includes(id)&&id!==SEP30_GARDEN.job),balls:SEP29.ballsBefore,excludeBooks:SEP29.books,fishSpots:fish.SHORE_SPOTS,
  costumeBalls:id=>{if(id===quest.COIN_REWARD_ID)return SEP29.ballsBefore;const i=quest.COSTUME_UNLOCK_ORDER.indexOf(id);return i<0?SEP29.ballsBefore:Math.min(SEP29.ballsBefore,(Math.floor(i/3)+1)*10);},
 };
 /** CURRENT plus the second Coral Cay farm job (Match-day snacks), which is still being added: the full 29 Sep game. */
@@ -149,7 +167,16 @@ const withAllBooks=cfg=>({...cfg,name:cfg.name+'+allbooks',allBooks:true});
 /** The 29 Sep recommendation (ECONOMY_UPDATE_2026-09-29.md: hidden ball 5 → 10 learning coins) is applied in lib/town/learnCoins.ts,
  *  so CURRENT/AFTER_FULL read it live. AFTER_UNCHANGED is the full 29 Sep game WITHOUT it (ball 5), for comparison. */
 const AFTER_UNCHANGED={...AFTER_FULL,name:'after,no-change',learn:{...AFTER_FULL.learn,ball:5}};
+/** The live game without Harvest day's farmer's share (30 Sep 2026), to measure what the share adds. */
+const NO_SHARE={...AFTER_FULL,name:'after,no-share',jobShare:null};
+/** The live game without the Garden shift (30 Sep 2026), to measure what the new job adds. */
+const NO_GARDEN_SHIFT={...AFTER_FULL,name:'after,no-garden-shift',jobIds:AFTER_FULL.jobIds.filter(id=>id!==SEP30_GARDEN.job)};
 const PROPOSED=AFTER_FULL;
+/** Fuel (30 Sep 2026): the live game plus fuel spending. policy 'buy' = every missing bit of fuel is bought at the Konbini and drink
+ *  machines (the coin worst case); 'mixed' = eat the day's garden picks first (each eaten fruit is a sale given up), then buy;
+ *  'free' = a child with no coins to spare: breakfast + garden fruit only, never buys. */
+const FUEL_CFG=policy=>({...AFTER_FULL,name:`fuel-${policy}`,fuel:{policy}});
+const FUEL_BUY=FUEL_CFG('buy'),FUEL_MIXED=FUEL_CFG('mixed'),FUEL_FREE=FUEL_CFG('free');
 
 // ---- Helpers -------------------------------------------------------------------------------------------------------------
 function rng(seed){let a=seed>>>0;return()=>{a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
@@ -160,11 +187,29 @@ const GARDEN_VALUE=garden.GARDEN_SPOTS.map(s=>goods.goodById(s.good).price);
 const bookOf=it=>it.storyId??Object.entries(books.PLAYER_BOOKS).find(([,b])=>b.itemId===it.id)?.[0];
 const pickWeighted=(pool,weight,r)=>{const tot=pool.reduce((n,x)=>n+weight(x),0);if(!tot)return null;let v=r()*tot;for(const x of pool){v-=weight(x);if(v<=0)return x;}return pool[pool.length-1];};
 
+/** Konbini food and machine drinks a child can buy for fuel, best fuel per coin first, with their daily-limit bucket. */
+const FUEL_SHOP=[...food.FOOD_MENU.filter(f=>f.shops.includes('main')),...drinkMachines.DRINKS.filter(d=>d.machine==='drinksplaza')]
+ .map(f=>({id:f.id,price:f.price,fuel:fuel.foodFuel(f),bucket:f.limit?.key??'food',per:f.limit?.perDay??food.FOOD_PER_DAY}))
+ .sort((a,b)=>b.fuel/b.price-a.fuel/a.price||a.price-b.price);
+/** Fuel one session uses: minutes × the travel mix × the per-second rates (lib/town/fuel.ts). Learning time drains nothing. */
+const fuelDrain=minutes=>Object.entries(ASSUME.travel).reduce((n,[mode,share])=>n+minutes*60*share*fuel.FUEL_RATE[mode],0);
+/** A heavy-flyer stress day for the zero-coin path (30 Sep 2026): `minutes` of play, `fly` of it on the jetpack, `walk` on foot.
+ *  Breakfast fills the tank, then free fountain sips, then garden fruit cover the rest. Analytic (no RNG); the archetypes above
+ *  never drain past breakfast at the current rates, so this is where the fountains show. */
+function fuelStress({minutes=90,fly=.5,walk=.3,sips=ASSUME.fountainSips}={}){
+ const drain=minutes*60*(fly*fuel.FUEL_RATE.jetpack+walk*fuel.FUEL_RATE.walk),need=Math.max(0,drain-fuel.FUEL_NEW_DAY);
+ const used=Math.min(sips,Math.ceil(need/fountains.FOUNTAIN_FUEL)),left=Math.max(0,need-used*fountains.FOUNTAIN_FUEL),picks=Math.ceil(left/FRUIT_FUEL),noFountainPicks=Math.ceil(need/FRUIT_FUEL);
+ const garden=n=>n?1+n*ASSUME.min.gardenPick:0;
+ return {minutes,flyShare:fly,drain:Math.round(drain),breakfast:fuel.FUEL_NEW_DAY,fountainSips:used,gardenPicks:picks,freeMinutes:+(used*ASSUME.min.fountainSip+garden(picks)).toFixed(2),
+  freeMinutesWithoutFountains:+garden(noFountainPicks).toFixed(2)};
+}
+const FRUIT_FUEL=Object.values(fuel.PRODUCE_FUEL).reduce((a,b)=>a+b,0)/Object.keys(fuel.PRODUCE_FUEL).length;
+
 // ---- One player ------------------------------------------------------------------------------------------------------------
 function simulate(cfg,archName,days,seed=7){
  const A=ARCHETYPES[archName],r=rng(seed+archName.length*101),EV=fishEV(cfg.fishSpots),JOBS=cfg.jobIds;
  const s={balance:0,earned:0,spent:0,owned:new Set(),cards:new Set(),balls:0,lessonsDone:0,core:FORMAT_PATHS.map(()=>0),pathOrder:[1,2,0,3],
-  finishedPaths:0,cardSrc:{},stories:0,journeys:0,explores:0,jobLife:{},puzzles:0,playDays:0,packsBought:0,firsts:{},log:[]};
+  finishedPaths:0,cardSrc:{},stories:0,journeys:0,explores:0,jobLife:{},puzzles:0,playDays:0,packsBought:0,firsts:{},log:[],fuel:fuel.FUEL_MAX,fuelCoins:0,fuelShort:0,fuelBought:0,fruitEaten:0};
  const P=cfg.prices;
  // Catalogue of buyable things (ids + category + price + gate).
  const catalog=[];
@@ -207,12 +252,19 @@ function simulate(cfg,archName,days,seed=7){
   if(!A.plays(day-1)){rec.balance=s.balance;out.days.push(rec);continue;}
   rec.played=true;s.playDays++;out.sessions++;
   const cardsBefore=s.cards.size,unlockBefore=s.finishedPaths*100+Math.floor(s.balls/10);
-  let repeatToday=0,marketSold=0,npcToday=0,packsToday=0;
+  let repeatToday=0,marketSold=0,npcToday=0,packsToday=0,picksToday=0;
   const credit=(n,kind)=>{if(n<=0)return 0;let pay=n;
    if(kind==='repeat'&&cfg.softCap){pay=0;for(let i=0;i<n;i++){const t=repeatToday+pay;pay+=t<cfg.softCap.full?1:t<cfg.softCap.half?.5:0;}pay=Math.floor(pay)||(n>0&&repeatToday>=cfg.softCap.half?1:0);}
    if(kind==='repeat')repeatToday+=pay;s.balance+=pay;s.earned+=pay;rec.earned+=pay;if(kind==='learn')rec.learnCoins+=pay;if(kind==='repeat')rec.repeatCoins+=pay;return pay;};
   if(day===1)credit(cfg.starter,'grant');
   let minutes=A.minutes;
+  // Fuel 'free' policy: a child with no coins to spare picks extra garden fruit to cover the day (walk there + picks), paid in
+  // minutes instead of coins (docs/economy/FUEL_2026-09-30.md, the zero-coin path).
+  // Water fountains first (30 Sep 2026, lib/town/waterFountains.ts): free sips at the fountains passed on the way (each rests
+  // between sips), then garden fruit for anything still missing.
+  if(cfg.fuel&&cfg.fuel.policy==='free'){let need=fuelDrain(A.minutes)-Math.max(s.fuel,fuel.FUEL_NEW_DAY);
+   if(need>0){const sips=Math.min(ASSUME.fountainSips,Math.ceil(need/fountains.FOUNTAIN_FUEL));s.fountainSips=(s.fountainSips||0)+sips;s.freeMinutes=(s.freeMinutes||0)+sips*ASSUME.min.fountainSip;minutes-=sips*ASSUME.min.fountainSip;s.fuel=Math.max(s.fuel,fuel.FUEL_NEW_DAY)+sips*fountains.FOUNTAIN_FUEL;need-=sips*fountains.FOUNTAIN_FUEL;}
+   if(need>0){const picks=Math.ceil(need/FRUIT_FUEL);s.freePicks=(s.freePicks||0)+picks;s.freeMinutes=(s.freeMinutes||0)+1+picks*ASSUME.min.gardenPick;minutes-=1+picks*ASSUME.min.gardenPick;s.fuel=Math.max(s.fuel,fuel.FUEL_NEW_DAY)+picks*FRUIT_FUEL;s.fruitEaten+=picks;}}
   credit(cfg.dailyPlay,'grant');minutes-=ASSUME.min.dailyPlay;
   if(cfg.calendar&&s.playDays%cfg.calendar.every===0){s.freePacks=(s.freePacks||0)+1;}
   minutes-=ASSUME.min.shop; // a vending visit per session
@@ -234,14 +286,20 @@ function simulate(cfg,archName,days,seed=7){
    story:()=>{if(s.explores<CONTENT.exploreCards){minutes-=ASSUME.min.explore;s.explores++;credit(cfg.learn.explore,'learn');rec.cards+=earnCard('explore');}
     else if(s.journeys<CONTENT.journeyStages&&(s.journeys<=s.stories*1.5||s.stories>=CONTENT.stories)){minutes-=ASSUME.min.journey;s.journeys++;credit(cfg.learn.journey,'learn');rec.cards+=earnCard('journey');}
     else{minutes-=ASSUME.min.story;s.stories++;credit(cfg.learn.story,'learn');rec.cards+=earnCard('story');}},
-   jobs:()=>{minutes-=ASSUME.min.job;const pay=id=>{const done=jobsToday[id]||0,base=cfg.jobBase[id];return (done<cfg.fullPay?base:done<cfg.fullPay+cfg.halfPay?Math.ceil(base/2):cfg.tip)+(s.jobLife[id]?0:cfg.firstJob);};
-    const id=JOBS.reduce((b,x)=>pay(x)>pay(b)?x:b,JOBS[Math.floor(r()*JOBS.length)]);credit(pay(id),'repeat');jobsToday[id]=(jobsToday[id]||0)+1;s.jobLife[id]=(s.jobLife[id]||0)+1;},
+   jobs:()=>{const pay=id=>{const done=jobsToday[id]||0,base=cfg.jobBase[id];return (done<cfg.fullPay?base:done<cfg.fullPay+cfg.halfPay?Math.ceil(base/2):cfg.tip)+(s.jobLife[id]?0:cfg.firstJob);};
+    // 30 Sep 2026: each job takes its own shift time (jobEconomy JOB_MINUTES + overhead; the short jobs still average 1.5 min).
+    // The child picks the best pay per minute among the jobs that fit the time left (a 4-min drill is not started at the bell).
+    const fit=JOBS.filter(x=>jobMin(x)<=minutes+.5),pool=fit.length?fit:JOBS;
+    const id=pool.reduce((b,x)=>pay(x)/jobMin(x)>pay(b)/jobMin(b)?x:b,pool[Math.floor(r()*pool.length)]);minutes-=jobMin(id);credit(pay(id),'repeat');
+    if(cfg.jobShare){const done=jobsToday[id]||0,tier=done<cfg.fullPay?'full':done<cfg.fullPay+cfg.halfPay?'half':'tip';for(const l of cfg.jobShare(id,tier,s.jobLife[id]||0,[]))for(let k=0;k<l.count;k++)addGood(goods.goodById(l.id).price);}
+    if(id===SEP30_GARDEN.job)gardenLeft.splice(0,SEP30_GARDEN.picks);// the shift's picks go to the crate, not the basket
+    jobsToday[id]=(jobsToday[id]||0)+1;s.jobLife[id]=(s.jobLife[id]||0)+1;},
    arcade:()=>{const games=['runner','pinball','tennis','live','puzzle'],g=games[arcadeGame++%games.length];
     if(g==='puzzle'){minutes-=ASSUME.min.puzzle;s.balance-=cfg.puzzleCost;s.spent+=cfg.puzzleCost;if(s.puzzles<CONTENT.puzzles){s.puzzles++;credit(cfg.puzzleFirst+Math.round(ASSUME.puzzleStars),'repeat');}else credit(cfg.puzzleRepeat,'repeat');return;}
     if(s.balance<cfg.arcadeCost){minutes-=.2;return;}
     minutes-=g==='live'?ASSUME.min.liveRound:ASSUME.min.arcadeRound;s.balance-=cfg.arcadeCost;s.spent+=cfg.arcadeCost;credit(Math.round(cfg.arcadeCaps[g]*ASSUME.arcadeSkill[archName]*(.8+.4*r())),'repeat');},
    fish:()=>{minutes-=ASSUME.min.fishCast;if(r()<ASSUME.fishSuccess)addGood(Math.round(EV*(.6+.8*r())));},
-   garden:()=>{minutes-=ASSUME.min.gardenPick;addGood(gardenLeft.pop());},
+   garden:()=>{minutes-=ASSUME.min.gardenPick;picksToday++;addGood(gardenLeft.pop());},
   };
   let guard=0;
   while(minutes>0.2&&guard++<500){
@@ -249,6 +307,14 @@ function simulate(cfg,archName,days,seed=7){
    const [k]=pickWeighted(open,([,w])=>w,r);step[k]();
   }
   sellBasket();
+  // Fuel (docs/economy/FUEL_2026-09-30.md): breakfast lifts the tank to FUEL_NEW_DAY, the session's travel drains it, and the
+  // child refuels by the config's policy before spending on goals. Walking always works, so a shortfall only means more walking.
+  if(cfg.fuel){let f=Math.max(s.fuel,fuel.FUEL_NEW_DAY);const drain=fuelDrain(A.minutes);let need=drain-f+fuel.FUEL_LOW*.4;// keep a little in the tank
+   if(need>0&&cfg.fuel.policy!=='buy'){const fruit=Math.min(picksToday,Math.ceil(need/FRUIT_FUEL));if(fruit>0){const lost=Math.round(fruit*GARDEN_VALUE.reduce((a,b)=>a+b,0)/GARDEN_VALUE.length);
+     s.balance-=Math.min(lost,s.balance);s.fruitEaten+=fruit;f+=fruit*FRUIT_FUEL;need-=fruit*FRUIT_FUEL;}}
+   if(need>0&&cfg.fuel.policy!=='free'){const used={};for(const it of FUEL_SHOP){while(need>0&&(used[it.bucket]||0)<it.per&&s.balance>=it.price){used[it.bucket]=(used[it.bucket]||0)+1;s.balance-=it.price;s.spent+=it.price;s.fuelCoins+=it.price;rec.fuelCoins=(rec.fuelCoins||0)+it.price;s.fuelBought++;f+=it.fuel;need-=it.fuel;}}}
+   if(f<drain)s.fuelShort++;
+   s.fuel=Math.max(0,Math.min(fuel.FUEL_MAX,f-drain));}
   // Spend: free calendar packs first, then the goal rotation below.
   const offers=()=>{const list=catalog.filter(c=>!s.owned.has(c.id)&&(!c.gate||c.gate())).map(c=>({...c}));
    if(packsToday<cfg.packsPerDay)for(const it of PACK_ITEMS){if(packFresh(it.pack).ok)list.push({id:it.id,cat:'pack',price:it.pack.size===5?P.pack5:P.pack3,pack:it.pack});}
@@ -297,12 +363,13 @@ function summarize(cfg,arch,days){
 }
 /** Mean of the headline numbers over several seeds (a single seed moves "all bought" by a few days either way). */
 function averaged(cfg,arch,days,seeds=20){
- const acc={coinsPerDay:0,coinsPerWeek:0,learnPct:0,firstBook:0,saveDaysPerBook:0,allCards:0,allBought:0,emptyBeforeDone:0};
+ const acc={coinsPerDay:0,coinsPerWeek:0,learnPct:0,firstBook:0,saveDaysPerBook:0,allCards:0,allBought:0,emptyBeforeDone:0,fuelCoinsPerDay:0,fuelSharePct:0,fuelShortDays:0,fruitPerDay:0,freeMinPerDay:0,fountainPerDay:0};
  for(let seed=1;seed<=seeds;seed++){const r=simulate(cfg,arch,days,seed),f=r.state.firsts,p=r.days.filter(d=>d.played&&d.day>=8&&d.day<=30),w=r.days.filter(d=>d.day>=8&&d.day<=28);
   const perDay=p.reduce((n,d)=>n+d.earned,0)/p.length,learn=p.reduce((n,d)=>n+d.learnCoins,0)/Math.max(1,p.reduce((n,d)=>n+d.earned,0));
   acc.coinsPerDay+=perDay;acc.coinsPerWeek+=w.reduce((n,d)=>n+d.earned,0)/3;acc.learnPct+=100*learn;acc.firstBook+=f.book??days;acc.saveDaysPerBook+=cfg.prices.book/perDay;
-  acc.allCards+=f.allCards??days;acc.allBought+=f.allBought??days;acc.emptyBeforeDone+=r.emptyPre;}
- return Object.fromEntries(Object.entries(acc).map(([k,v])=>[k,+(v/seeds).toFixed(k==='saveDaysPerBook'?1:0)]));
+  acc.allCards+=f.allCards??days;acc.allBought+=f.allBought??days;acc.emptyBeforeDone+=r.emptyPre;
+  const fc=p.reduce((n,d)=>n+(d.fuelCoins||0),0)/p.length;acc.fuelCoinsPerDay+=fc;acc.fuelSharePct+=100*fc/perDay;acc.fuelShortDays+=r.state.fuelShort;acc.fruitPerDay+=r.state.fruitEaten/Math.max(1,r.sessions);acc.freeMinPerDay+=(r.state.freeMinutes||0)/Math.max(1,r.sessions);acc.fountainPerDay+=(r.state.fountainSips||0)/Math.max(1,r.sessions);}
+ return Object.fromEntries(Object.entries(acc).map(([k,v])=>[k,+(v/seeds).toFixed(k==='saveDaysPerBook'||k==='fuelCoinsPerDay'||k==='fruitPerDay'||k==='freeMinPerDay'||k==='fountainPerDay'?1:0)]));
 }
 function sinkTable(cfg){
  const P=cfg.prices,n=(cat)=>{let c=0;for(const it of vending.VENDING_ITEMS){if(it.kind==='gear'&&it.storeItem.option.id!=='classic'&&(cat==='ball'?it.storeItem.category==='ball':it.storeItem.category===cat))c++;if(cat==='costume'&&it.kind==='costume')c++;}return c;};
@@ -327,9 +394,9 @@ function jobCeiling(cfg){
   shiftsToFillMeter:(()=>{let p=0,k=0;while(meter.trainingTier(p)!=='tip'&&k<shifts.length)p+=meter.trainingPay(p,shifts[k++]);return k;})()};
 }
 function sourceTable(cfg){
- const ids=cfg.jobIds,jobAvg=ids.reduce((a,id)=>a+(cfg.jobBase[id]??8),0)/ids.length,m=ASSUME.min,pays=ids.map(id=>cfg.jobBase[id]??8),EV=fishEV(cfg.fishSpots);
+ const ids=cfg.jobIds,jobAvg=ids.reduce((a,id)=>a+(cfg.jobBase[id]??8),0)/ids.length,jobMinAvg=ids.reduce((a,id)=>a+jobMin(id),0)/ids.length,m=ASSUME.min,pays=ids.map(id=>cfg.jobBase[id]??8),EV=fishEV(cfg.fishSpots);
  const rows=[
-  ['Island job (full pay)',`${Math.min(...pays)}–${Math.max(...pays)} (avg ${jobAvg.toFixed(1)}), ${ids.length} jobs`,m.job,jobAvg/m.job*60,`${cfg.fullPay} full + ${cfg.halfPay} half per job, then ${cfg.tip}; +${cfg.firstJob} first time; Training meter`],
+  ['Island job (full pay)',`${Math.min(...pays)}–${Math.max(...pays)} (avg ${jobAvg.toFixed(1)}), ${ids.length} jobs`,+jobMinAvg.toFixed(2),jobAvg/jobMinAvg*60,`${cfg.fullPay} full + ${cfg.halfPay} half per job, then ${cfg.tip}; +${cfg.firstJob} first time; Training meter`],
   ['Fishing (per cast)',`${EV.toFixed(1)} avg/fish (${cfg.fishSpots.length} spots)`,m.fishCast,EV*ASSUME.fishSuccess/m.fishCast*60,`market: full price to ${cfg.marketFull}/day, then half; Training meter`],
   ['Garden (per pick)',`${(GARDEN_VALUE.reduce((a,b)=>a+b,0)/GARDEN_VALUE.length).toFixed(1)} avg`,m.gardenPick,GARDEN_VALUE.reduce((a,b)=>a+b,0)/GARDEN_VALUE.length/m.gardenPick*60,`${GARDEN_VALUE.length} spots, regrow 3–4 min; shares market cap`],
   ...['runner','pinball','tennis','live'].map(g=>[`Arcade ${g} (net of ${cfg.arcadeCost})`,`cap ${cfg.arcadeCaps[g]}`,g==='live'?m.liveRound:m.arcadeRound,(cfg.arcadeCaps[g]*.55-cfg.arcadeCost)/(g==='live'?m.liveRound:m.arcadeRound)*60,'Training meter']),
@@ -343,7 +410,7 @@ function sourceTable(cfg){
 
 if(require.main===module){
  const argv=process.argv.slice(2),days=Number(argv[argv.indexOf('--days')+1])||90,json=argv.includes('--json');
- const CONFIGS=[BEFORE,AFTER_UNCHANGED,CURRENT,AFTER_FULL],WHO=['casual15','keen','casual','regular'];
+ const CONFIGS=[BEFORE,AFTER_UNCHANGED,CURRENT,NO_GARDEN_SHIFT,AFTER_FULL],WHO=['casual15','keen','casual','regular'];
  const seeds=Number(argv[argv.indexOf('--seeds')+1])||20;
  const results=[];for(const cfg of CONFIGS)for(const a of WHO)results.push(summarize(cfg,a,days));
  const budget=CONFIGS.map(c=>({config:c.name,ownEverything:sinkTotal(c),learnPool:learnPool(c),...jobCeiling(c),fishEV:+fishEV(c.fishSpots).toFixed(2)}));
@@ -351,11 +418,17 @@ if(require.main===module){
  console.log('CONTENT',JSON.stringify(CONTENT));
  console.log(`\nFish EV per catch: shore ${fishEV(fish.SHORE_SPOTS).toFixed(2)}, deep-sea boat ${fishEV(fish.FISH_SPOTS.filter(s=>s.boat)).toFixed(2)}, all spots ${FISH_EV.toFixed(2)} · garden full harvest ${GARDEN_VALUE.reduce((a,b)=>a+b,0)} coins · card trade-in ${trade.CARD_TRADE_COINS}×${trade.CARD_TRADES_PER_DAY}/day`);
  for(const cfg of [BEFORE,AFTER_FULL]){console.log(`\n== SOURCES (${cfg.name})`);console.table(sourceTable(cfg));console.log(`== SINKS (${cfg.name})`);console.table(sinkTable(cfg));console.log('own-everything total (excl. packs):',sinkTotal(cfg));}
+ console.log('\n== JOB PAY PER MINUTE (full pay ÷ shift minutes; 30 Sep 2026 wall-rebounds parity)');
+ console.table(jobs.JOB_IDS.map(id=>({job:id,pay:jobs.JOB_BASE_PAY[id],playMin:jobs.JOB_MINUTES[id],shiftMin:+jobMin(id).toFixed(2),coinsPerMin:+jobs.jobCoinsPerMinute(id).toFixed(2)})));
  console.log('\n== BUDGET: own-everything cost, one-off learning pool, daily job ceiling (raw vs Training meter)');console.table(budget);
  console.log(`\n== ${seeds}-SEED AVERAGES (${Math.max(days,200)} days; single runs vary by ±3 days)`);
  console.table(CONFIGS.flatMap(c=>['casual15','regular','keen'].map(a=>({cfg:c.name,who:a,...averaged(c,a,Math.max(days,200),seeds)}))));
+ console.log(`\n== FUEL (${seeds}-seed means, ${Math.max(days,200)} days): drain per session = ${['casual15','regular','keen'].map(a=>`${a} ${Math.round(fuelDrain(ARCHETYPES[a].minutes))}`).join(', ')} fuel; breakfast ${fuel.FUEL_NEW_DAY}`);
+ console.table([AFTER_FULL,FUEL_BUY,FUEL_MIXED,FUEL_FREE].flatMap(c=>['casual15','regular','keen'].map(a=>{const r=averaged(c,a,Math.max(days,200),seeds);return {cfg:c.name,who:a,coinsPerDay:r.coinsPerDay,fuelCoinsPerDay:r.fuelCoinsPerDay,'fuel % of income':r.fuelSharePct,fruitPerDay:r.fruitPerDay,fountainSipsPerDay:r.fountainPerDay,'free refuel min/day':r.freeMinPerDay,shortDays:r.fuelShortDays,allBought:r.allBought,emptyBeforeDone:r.emptyBeforeDone};})));
+ console.log('\n== ZERO-COIN PATH STRESS (heavy flyers; breakfast → water fountains → garden fruit)');
+ console.table([{minutes:45,fly:.5},{minutes:90,fly:.5},{minutes:120,fly:.6}].map(o=>fuelStress(o)));
  console.log(`\n== SIMULATION (${days} days, seed 7)`);
  console.table(results.map(r=>({cfg:r.config,who:r.archetype,'c/sess d1':r.coinsPerSession.day1,'wk1':r.coinsPerSession.wk1,'d8-30':r.coinsPerSession.d8_30,'d31-90':r.coinsPerSession.d31_90,'learn% d1-30':r.learnShare30,pack:r.firstPack,book:r.firstBook,ride:r.firstRide,animal:r.firstCostume,'cards d30%':r.cardsPct.d30,'d90%':r.cardsPct.d90,'items d30%':r.itemsPct.d30,'d90%i':r.itemsPct.d90,allCards:r.allCards??'-',allBought:r.allBought??'-'})));
  console.table(results.map(r=>({cfg:r.config,who:r.archetype,sessions:r.sessions,'empty<done':r.emptyBeforeDone,longestDry:r.longestDry,'flood<allBought':r.floodedBeforeAllBought,peakIdle:r.peakIdle,paths:r.paths,balls:r.balls,packs:r.packs,earned:r.earned,spent:r.spent,end:r.endBalance})));
 }
-module.exports={simulate,summarize,averaged,withAllBooks,AFTER_UNCHANGED,sinkTable,sinkTotal,sourceTable,jobCeiling,learnPool,fishEV,BEFORE,CURRENT,AFTER_FULL,PROPOSED,SEP28_PROPOSAL,SEP29,CONTENT,ASSUME,ARCHETYPES,CARD_LIST,PACK_ITEMS};
+module.exports={jobMin,fuelStress,NO_SHARE,NO_GARDEN_SHIFT,SEP30_GARDEN,FUEL_BUY,FUEL_MIXED,FUEL_FREE,FUEL_SHOP,fuelDrain,simulate,summarize,averaged,withAllBooks,AFTER_UNCHANGED,sinkTable,sinkTotal,sourceTable,jobCeiling,learnPool,fishEV,BEFORE,CURRENT,AFTER_FULL,PROPOSED,SEP28_PROPOSAL,SEP29,CONTENT,ASSUME,ARCHETYPES,CARD_LIST,PACK_ITEMS};

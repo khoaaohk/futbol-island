@@ -8,6 +8,7 @@ import {useSyncExternalStore} from 'react';
 import {FISHBOOK_STORAGE_KEY,emptyFishbook,mergeFishbooks,recordCatch,sanitizeFishbook,type Fishbook} from './fishingCore';
 import type {FishId} from './fishCatalog';
 import {islandMarket} from '../jobs/islandWallet';
+import {signalExplore} from '../exploreSignals';
 
 const server=emptyFishbook();let state=server,loaded=false;const listeners=new Set<()=>void>();
 const readSaved=()=>{try{return sanitizeFishbook(JSON.parse(localStorage.getItem(FISHBOOK_STORAGE_KEY)??'null'));}catch{return emptyFishbook();}};
@@ -21,7 +22,7 @@ export type LandResult={isNew:boolean;isBiggest:boolean;inBasket:boolean};
 /** Log the catch (merging with another tab's save) and put the fish in the market basket if there is room. */
 export function landFish(id:FishId,size:number,now=Date.now()):LandResult{
  const r=recordCatch(mergeFishbooks(readFishbook(),readSaved()),id,size,now);
- state=r.book;try{localStorage.setItem(FISHBOOK_STORAGE_KEY,JSON.stringify(r.book));}catch{}emit();
+ state=r.book;try{localStorage.setItem(FISHBOOK_STORAGE_KEY,JSON.stringify(r.book));}catch{}emit();signalExplore('fish');
  let added=0;try{added=islandMarket.gather(id,1);}catch{}
  return {isNew:r.isNew,isBiggest:r.isBiggest,inBasket:added>0};
 }

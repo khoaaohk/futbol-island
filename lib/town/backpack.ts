@@ -46,6 +46,8 @@ export type BackpackSources={
  starter:StarterReceipt|null;
  /** Konbini (Sep 29 2026): snacks saved in the Snacks pouch, and the Konbini Collection (lib/konbini/foodStore.ts). */
  snacks?:readonly {id:string;item:string;at:number}[];konbini?:{items:Readonly<Record<string,number>>};
+ /** Lane 2 (Sep 30 2026): graduation certificates for the Trophy shelf (lib/endgame/backpackTrophies.ts). */
+ trophies?:readonly {id:string;label:string;detail:string;at:number}[];
 };
 export type BackpackCategory={kind:BackpackKind;label:string;order:number;
  /** Where to get more (shown when the category is empty, and under its heading). */

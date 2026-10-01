@@ -17,7 +17,29 @@ export default function TravelIcon({kind}:{kind:string}){
  jump:'M12 21V4 M6 10l6-6 6 6',
  front:'M3 19h18 M6 15l12-9 M14 6h4v4',
  back:'M3 19h18 M18 15 6 6 M6 10V6h4',
- stand:'M12 3a2 2 0 1 0 0 .01 M5 9h14 M12 7v8 M8 21l4-6 4 6'
+ stand:'M12 3a2 2 0 1 0 0 .01 M5 9h14 M12 7v8 M8 21l4-6 4 6',
+ // Island job actions (Sep 30 2026, components/JobActionButton.tsx).
+ treekick:'M17 21V11 M12 9a5 5 0 1 1 10 0 5 5 0 0 1-10 0 M2 19a2 2 0 1 0 4 0 2 2 0 0 0-4 0 M7 19h7 M11 16l3 3-3 3',
+ pull:'M12 21v-9 M8 7l4-4 4 4 M9 12c-3-1-4-4-3-6 M15 12c3-1 4-4 3-6 M5 21h14',
+ twist:'M12 13a4 4 0 1 0 0 .01 M12 9V5 M10 5h4 M4 12a8 8 0 0 1 3-6 M7 3v3H4 M20 12a8 8 0 0 1-3 6 M17 21v-3h3',
+ snip:'M6 6a2.5 2.5 0 1 0 0 .01 M6 18a2.5 2.5 0 1 0 0 .01 M8 7.5 20 17 M8 16.5 20 7',
+ basket:'M3 10h18l-2 10H5z M8 10l3-6 M16 10l-3-6 M9 14v3 M15 14v3',
+ rake:'M4 20 16 8 M13 5l6 6 M14 4l1.5 1.5 M16 3.5l1.5 1.5 M18 5l1.5 1.5 M19.5 7l1.5 1.5',
+ bag:'M6 8h12l-1 13H7z M9 8a3 3 0 0 1 6 0 M10 13h4',
+ bin:'M5 7h14 M9 7V4h6v3 M7 7l1 14h8l1-14 M10 11v6 M14 11v6',
+ throw:'M12 2a2 2 0 1 0 0 .01 M8 9a4 4 0 1 1 8 0 M12 9v6 M9 22l3-7 3 7 M8 9l-2-3 M16 9l2-3',
+ scoop:'M12 12a3 3 0 1 0 0 .01 M4 16c2 4 14 4 16 0 M4 16l-1-3 M20 16l1-3',
+ cone:'M12 3 6 19h12z M8.5 12h7 M5 21h14',
+ paint:'M4 20h16 M6 16a2 2 0 1 0 4 0 2 2 0 0 0-4 0 M10 16h6l3-9 M15 4l4 3',
+ flag:'M6 21V3 M6 4h11l-3 4 3 4H6',
+ flagdown:'M6 3v18 M6 20h11l-3-4 3-4H6',
+ next:'M5 5l8 7-8 7 M15 5v14',
+ pump:'M12 3v12 M8 3h8 M9 15h6v5H9z M15 17h3a3 3 0 0 1 3 3',
+ air:'M3 9h11a3 3 0 1 0-3-3 M3 14h15a3 3 0 1 1-3 3 M3 19h6',
+ check:'M4 12l5 5L20 6',
+ hammer:'M13 7 4 20 M10 3l9 9 2-2-9-9z',
+ crate:'M3 10h18v10H3z M3 14h18 M8 10V7h8v3 M12 4v6 M9 7l3 3 3-3',
+ take:'M3 14h18v6H3z M12 11V3 M9 6l3-3 3 3 M8 17h8'
  };
  return <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={paths[kind]??paths.walk}/></svg>;
 }

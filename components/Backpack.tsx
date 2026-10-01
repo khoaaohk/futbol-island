@@ -14,6 +14,8 @@ import {BallPicture,StorePreview,useStorePreviews} from './StorePreviews';
 import {useCostumePreviews} from './CostumePreviews';
 import styles from './Backpack.module.css';
 import {KonbiniCollection,snackRenderer} from './KonbiniCollection';
+import {trophyRenderer} from './TrophyShelf';
+import {openLearningReview} from '@/lib/learning/reviewStore';
 
 /**
  * Make it yours → Backpack (user, Sep 28 2026): everything the player owns, grouped by category (lib/town/backpack.ts registry).
@@ -61,6 +63,8 @@ const RENDERERS:Record<string,Renderer>={
 /** Plug in art/actions for a new kind (the model side is registerBackpackCategory). */
 export function registerBackpackRenderer(kind:BackpackKind,renderer:Renderer){RENDERERS[kind]=renderer;}
 registerBackpackRenderer('snack',snackRenderer);
+// Lane 2 (Sep 30 2026): graduation certificates on the Trophy shelf.
+registerBackpackRenderer('trophy',trophyRenderer);
 const FALLBACK:Renderer={art:item=><span className={styles.fallback}>{item.label.slice(0,1)}</span>};
 
 const CARD_PREVIEW=12;
@@ -82,6 +86,8 @@ export default function Backpack({active,...ctx}:BackpackActions&{active:boolean
  return <section className={styles.backpack} aria-labelledby="backpack-title" data-backpack>
   <header className={styles.head}>
    <div><h3 id="backpack-title">Your backpack</h3><p>{total} {total===1?'item':'items'}. Everything you collect lands here: tap an item to use it.</p></div>
+   {/* Lane 3: the football you have learned lives next to the things you own (lib/learning/reviewStore.ts). */}
+   <button type="button" className={styles.secondary} data-backpack-mastery onClick={()=>openLearningReview('mastery')}>My football</button>
   </header>
   <div className={styles.filters} role="group" aria-label="Show a category">
    <button type="button" className={styles.chip} aria-pressed={filter==='all'} onClick={()=>setFilter('all')}>All <span>{total}</span></button>

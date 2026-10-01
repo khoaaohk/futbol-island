@@ -5,9 +5,9 @@
 .root>*{pointer-events:auto}
 /* While the machine is in use the rest of the island HUD steps aside (the old modal's backdrop used to cover it). */
 :global(.town-app):has(> .root)>:not(.root):not(:global(.town-scene)){visibility:hidden!important;pointer-events:none!important}
-.hudBack{position:fixed;z-index:3;left:max(24px,env(safe-area-inset-left,0px));top:calc(20px + env(safe-area-inset-top,0px))}
+.hudDone{position:fixed;z-index:3;right:max(24px,env(safe-area-inset-right,0px));top:calc(20px + env(safe-area-inset-top,0px))}
 .hudCoins small{font-size:12px}
-.hudCoins{position:fixed!important;z-index:3;top:calc(18px + env(safe-area-inset-top,0px))!important;right:calc(16px + env(safe-area-inset-right,0px))!important}
+.hudCoins{position:fixed!important;z-index:3;top:calc(18px + env(safe-area-inset-top,0px))!important;right:auto!important;left:calc(16px + env(safe-area-inset-left,0px))!important}
 
 .pack{display:grid!important;place-items:center}.packCard{--w:min(46px,66%)}.packCardBig{--w:70px}
 .placeholder{font-weight:900;font-size:var(--fs,12px)}
@@ -39,17 +39,17 @@
 /* Card-back microprint is decorative at shelf scale; the item name is outside the art. */
 .packCard [class*=downNo],.packCard [class*=downName]{display:none}
 
-.root[data-reading-book]>.hudBack,.root[data-reading-book]>.hudCoins{visibility:hidden;pointer-events:none}
+.root[data-reading-book]>.hudDone,.root[data-reading-book]>.hudCoins{visibility:hidden;pointer-events:none}
 
 /* Same cached-layer treatment as the collection viewer: storeOpen already sleeps
    the island. The foreground card animates independently of those cached layers. */
 :global(.town-app):has(>.root[data-card-reveal])>:global(.town-scene){filter:blur(7px)!important}
 .root[data-card-reveal]>[data-vending-face]{filter:blur(7px);pointer-events:none}
 .root[data-card-reveal]>[data-vending-face] *{animation:none!important;transition:none!important}
-.root[data-card-reveal]>.hudBack,.root[data-card-reveal]>.hudCoins{visibility:hidden}
+.root[data-card-reveal]>.hudDone,.root[data-card-reveal]>.hudCoins{visibility:hidden}
 
-@media(max-width:600px){.hudBack{left:max(18px,env(safe-area-inset-left,0px));top:calc(16px + env(safe-area-inset-top,0px))}}
+@media(max-width:600px){.hudDone{right:max(18px,env(safe-area-inset-right,0px));top:calc(16px + env(safe-area-inset-top,0px))}}
 
-/* UI audit (Sep 27): the coins pill shares the Back row — 44px tall at desktop 24/20 and phone 18/16. */
-.hudCoins.hudCoins{top:calc(20px + env(safe-area-inset-top,0px))!important;right:calc(24px + env(safe-area-inset-right,0px))!important;min-height:var(--btn-height,44px);box-sizing:border-box;display:inline-flex;align-items:center}
-@media(max-width:600px),(pointer:coarse){.hudCoins.hudCoins{top:calc(16px + env(safe-area-inset-top,0px))!important;right:calc(18px + env(safe-area-inset-right,0px))!important}}
+/* UI audit (Sep 27): the coins pill shares the Done row (Sep 30 2026: coins top-left, Done top-right) — 44px tall at desktop 24/20 and phone 18/16. */
+.hudCoins.hudCoins{top:calc(20px + env(safe-area-inset-top,0px))!important;right:auto!important;left:calc(24px + env(safe-area-inset-left,0px))!important;min-height:var(--btn-height,44px);box-sizing:border-box;display:inline-flex;align-items:center}
+@media(max-width:600px),(pointer:coarse){.hudCoins.hudCoins{top:calc(16px + env(safe-area-inset-top,0px))!important;right:auto!important;left:calc(18px + env(safe-area-inset-left,0px))!important}}

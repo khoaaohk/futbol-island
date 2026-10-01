@@ -5,10 +5,12 @@ import {COIN_QUEST} from '@/lib/town/coinQuest';
 import {dismissCoinCelebration,useCoinProgress} from '@/lib/town/coinProgress';
 import {BALL_HUNT_LESSONS,BALL_HUNT_PRACTICE,LANDSCAPE,ballLessonFrame,diagramLayout,type DiagramLayout} from '@/lib/town/ballHuntLessons';
 import {advanceLesson,canFinishLesson,canGoBack,forwardLessonStep,lessonPrimaryLabel,lessonStepKey,previousLessonStep,startLessonStepper} from '@/lib/town/ballLessonStepper';
-import {NavigationButton} from './DoneButton';
+import {Icon} from './Icon';
 import BallLessonDiagram from './BallLessonDiagram';
 import navStyles from './DoneButton.module.css';
 import styles from './BallHuntLesson.module.css';
+import {ballLessonLink,splitLessonKey} from '@/lib/learning/conceptMap';
+import {creditConceptTick,lessonName,openPathLesson} from '@/lib/learning/reviewStore';
 
 /**
  * A found ball's lesson card. The child plays every diagram step with the bottom button before "Got it" replaces it,
@@ -40,6 +42,9 @@ export default function BallHuntLesson({spotId,onDismiss,replay=false,practice=f
  useEffect(()=>{const el=illustration.current;if(!el||typeof window==='undefined')return;const upright=window.matchMedia?.('(max-width:600px) and (orientation:portrait)');
   const fit=()=>{const box=el.querySelector(`.${styles.field}`)?.getBoundingClientRect(),next=upright?.matches&&box?diagramLayout(box.width,box.height):LANDSCAPE;setLayout(prev=>prev.w===next.w&&prev.h===next.h?prev:next);};
   fit();window.addEventListener('resize',fit);upright?.addEventListener?.('change',fit);return ()=>{window.removeEventListener('resize',fit);upright?.removeEventListener?.('change',fit);};},[spotId]);
+ // Lane 3: the ball's idea links to its Paths lesson (lib/learning/conceptMap.ts); finishing the steps ticks that lesson once.
+ const link=lesson?ballLessonLink(lesson.kind,lesson.level):null,linked=useRef(false);
+ useEffect(()=>{if(link&&!linked.current&&stepper.count>0&&canFinishLesson(stepper)){linked.current=true;creditConceptTick(link.concept,`ball:${spotId}`,splitLessonKey(link.lesson).format);}},[link,stepper,spotId]);
  if(!spot||!lesson)return null;
  const step=Math.min(stepper.step,stepper.count-1),finished=canFinishLesson(stepper),frame=ballLessonFrame(lesson.kind,step,layout),caption=lesson.steps?.[step]??'';
  const title=spot.teaching.slice(0,spot.teaching.indexOf('.')),tip=spot.teaching.slice(spot.teaching.indexOf('.')+1).trim(),complete=!replay&&progress.collected.length===COIN_QUEST.length&&!progress.celebrated;
@@ -63,11 +68,12 @@ export default function BallHuntLesson({spotId,onDismiss,replay=false,practice=f
      <BallLessonDiagram frame={frame} step={step} id={id} title={title} desc={pathText(caption)}/>
      <div className={styles.legend}>● Teammates <span>● Opponents</span> <b>▰ Open space</b> <i>- - run  — pass</i></div>
      <p className={styles.caption} aria-live="polite">{pathText(caption)}</p>
+     {finished&&link&&<p className={styles.pathLink} data-ball-path-link={link.lesson}>In Paths: <b>{lessonName(link.lesson)}</b> <button type="button" onClick={()=>{dismiss();openPathLesson(link.lesson);}}>Watch it</button></p>}
     </div>
     {complete&&finished&&<p className={styles.reward}><strong>All {COIN_QUEST.length} balls found!</strong> All costumes are unlocked. Find them in the vending machines and keep exploring.</p>}
    </div>
    <footer ref={footer} className={styles.footer}>
-    {stepper.count>1&&<div className={styles.stepNav}><NavigationButton back immediate label="Previous step" className={styles.previous} disabled={!canGoBack(stepper)} onNavigate={previous}/></div>}
+    {stepper.count>1&&<div className={styles.stepNav}><button type="button" className={styles.previousArrow} aria-label="Previous step" data-lesson-previous disabled={!canGoBack(stepper)} onClick={previous}><Icon name="back" size={22}/></button></div>}
     <button ref={primary} type="button" className={`${styles.next} ${navStyles.button}`} data-navigation="done" data-lesson-primary={finished?'done':'step'} onClick={pressPrimary} autoFocus><span className={navStyles.label}>{lessonPrimaryLabel(stepper,lesson.actions)}</span></button>
    </footer>
   </section>

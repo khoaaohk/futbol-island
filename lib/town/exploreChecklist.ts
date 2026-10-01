@@ -23,6 +23,13 @@ export const EXPLORE_ITEMS=[
  {id:'roof-drop',title:'Drop off a building',detail:'Step off a roof and land below. Look ahead and judge the space.'},
  {id:'knock-characters',title:'Knock over 20 island characters',detail:'In island play, practice aiming your ball at moving targets. On a real pitch, play safely.'},
  {id:'win-knockout',title:'Win 5 knockout games',detail:'Use ball control, accurate shots, and movement into space to be the last player standing.'},
+ // G-13 (Sep 30 2026): the places and activities the checklist never pointed to. Short, football-framed.
+ {id:'catch-fish',title:'Catch a fish',detail:'Wait calmly, then react the moment it bites, just like a goalkeeper waiting for a shot.'},
+ {id:'island-job',title:'Finish an island job',detail:'Help the groundskeepers and coaches. Every job shows how a real club gets ready for a match.'},
+ {id:'sell-rosa',title:'Sell to Rosa',detail:'Take your catch or harvest to Rosa’s market. Fruit and fish are good fuel for training.'},
+ {id:'visit-cay',title:'Visit Coral Cay',detail:'Cross the causeway and find the beach soccer court. Twenty hidden balls wait there too.'},
+ {id:'walk-jetty',title:'Walk the East Jetty',detail:'Walk out to the end and try the target: pick your spot first, then strike.'},
+ {id:'enter-konbini',title:'Step into a Konbini',detail:'Look around the shelves and learn which snacks and drinks help before and after a match.'},
 ] as const;
 export type ExploreId=typeof EXPLORE_ITEMS[number]['id'];
 const quizzes=Object.entries(quizManifest).flatMap(([format,lessons])=>Object.entries(lessons).map(([id,count])=>({key:`${format}:${id}`,count})));
@@ -41,6 +48,8 @@ export function exploreProgress(evidence:QuestEvidence,quizKeys:ReadonlySet<stri
  'use-parachute':[Number(activity.parachute),1,''], 'roof-drop':[Number(activity.roofDrop),1,''],
  'knock-characters':[activity.knockovers??0,20,'knockovers'], 'win-knockout':[activity.knockoutWins??0,5,'wins'],
  'play-arcade':[Number(activity.arcade),1,''], 'ramp-trick':[Number(activity.ramp),1,''],
+ 'catch-fish':[Number(activity.fish),1,''], 'island-job':[Number(activity.job),1,''], 'sell-rosa':[Number(activity.sold),1,''],
+ 'visit-cay':[Number(activity.cay),1,''], 'walk-jetty':[Number(activity.jetty),1,''], 'enter-konbini':[Number(activity.konbini),1,''],
  };
  return EXPLORE_ITEMS.map(item=>{const [value,target,unit]=values[item.id];return{...item,value:Math.min(value,target),target,unit,complete:value>=target};});
 }

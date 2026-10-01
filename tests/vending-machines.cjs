@@ -170,9 +170,51 @@ const {CUSTOMIZATION_OPTIONS,BALL_COLORS}=load(path.join(root,'lib/town/customiz
   for(const p of hits)for(const q of hits)if(p!==q)assert(p.x+p.w<=q.x+1e-9||q.x+q.w<=p.x+1e-9||p.y+p.h<=q.y+1e-9||q.y+q.h<=p.y+1e-9,'hit areas do not overlap');}
  // watchFace: the face layer hears where the face is on awake zoomed frames only.
  {let calls=0;const off=v.watchFace(()=>{calls++;});v.applyCamera(camera,1/30,false);assert.equal(calls,1);off();v.applyCamera(camera,1/30,false);assert.equal(calls,1,'unsubscribed');}
+ // Face registration (user, Sep 30 2026: "the glass is on top on the left, but the right side is on the inside"). The in-use HTML
+ // face is drawn over the canvas, so it lines up with the 3D machine only if (a) its CSS matrix maps face pixels exactly where the
+ // zoom camera projects the face plane, and (b) no part of the cabinet stands in front of that plane or overlaps its panels (else
+ // the angled view shifts the frame over one edge and away from the other).
+ {const {VENDING_FACE:F}=load(path.join(root,'lib/graphics/vendingMachines.ts')),{VENDING_FACE_LAYOUT:L,FACE_SIZE,VENDING_BAY}=load(path.join(root,'lib/graphics/vendingFaceLayout.ts'));
+  const parse=s=>{const n=s.slice(9,-1).split(',').map(Number);assert.equal(n.length,16);return new T.Matrix4().fromArray(n);};
+  for(const [W,H,rect] of [[390,844,{left:0,top:0,width:390,height:844}],[844,390,{left:0,top:0,width:844,height:390}],[1280,800,{left:0,top:0,width:1280,height:800}],[1280,800,{left:40,top:30,width:1200,height:740}]]){
+   camera.aspect=rect.width/rect.height;camera.updateProjectionMatrix();v.applyCamera(camera,1/30,false);
+   const w=300,h=Math.round(w*FACE_SIZE.h/FACE_SIZE.w),M=parse(v.faceCssMatrix(w,h,rect));
+   const css=(px,py,pz=0)=>{const q=new T.Vector4(px,py,pz,1).applyMatrix4(M);return {x:q.x/q.w,y:q.y/q.w};};
+   const toPx=p=>({x:rect.left+(p.x+1)/2*rect.width,y:rect.top+(1-p.y)/2*rect.height});
+   const ndc=v.faceNow().map(toPx);[[0,0],[w,0],[w,h],[0,h]].forEach(([px,py],i)=>{const c=css(px,py);assert(Math.hypot(c.x-ndc[i].x,c.y-ndc[i].y)<1,`${W}x${H} face corner ${i} registers within 1px: ${JSON.stringify(c)} vs ${JSON.stringify(ndc[i])}`);});
+   // A product VENDING_BAY.product behind the cabinet front (translateZ in face px) lands where the camera sees that 3D point.
+   const k=FACE_SIZE.w/w,u=.3,vv=.4,z=-(VENDING_BAY.product+VENDING_BAY.proud)/k,c=css(u*w,vv*h,z);
+   const p=new T.Vector3(F.x0+u*FACE_SIZE.w,F.y1-vv*FACE_SIZE.h,F.z+z*k).applyMatrix4(plaza.mesh.matrixWorld).project(camera),q=toPx(p);
+   assert(Math.hypot(c.x-q.x,c.y-q.y)<1,`${W}x${H} depth (translateZ) registers within 1px`);}
+  camera.aspect=390/844;camera.updateProjectionMatrix();v.applyCamera(camera,1/30,false);
+  // Nothing of the cabinet stands in front of the face plane over the face, and the frame's inner edges clear every panel.
+  const inner=Math.min(...[L.glass,L.led,L.coin,L.tray].map(r=>Math.min(r.x,1-r.x-r.w)))*FACE_SIZE.w;
+  for(const e of v.entries){const pos=e.geometry.getAttribute('position');let front=0,over=0,flush=0;
+   for(let i=0;i<pos.count;i++){const x=pos.getX(i),y=pos.getY(i),zz=pos.getZ(i);if(y<=F.y0+1e-4||y>=F.y1-1e-4||Math.abs(x)>=F.x1-1e-4)continue;
+    if(zz>F.z+1e-5)front++;if(Math.abs(zz-F.z)<1e-5)flush++;}
+   // The side trims (the tall frame faces on the face plane) start at the panels' bezel outer edge (.0125 outside the panel edge),
+   // so they never reach over the glass, LED, coin panel or tray from the sides.
+   for(let i=0;i<pos.count;i+=3){const t=[0,1,2].map(j=>[pos.getX(i+j),pos.getY(i+j),pos.getZ(i+j)]);if(!t.every(p=>Math.abs(p[2]-F.z)<1e-5))continue;
+    const ys=t.map(p=>p[1]),xs=t.map(p=>Math.abs(p[0]));if(Math.max(...ys)-Math.min(...ys)<1)continue;
+    const outer=F.x1-inner+.0125;if(Math.max(...xs)>outer+.001&&Math.min(...xs)<outer-1e-4)over++;}
+   assert.equal(front,0,e.machine.id+': no cabinet part stands in front of the face plane');assert(flush>0,e.machine.id+': the frame (bezels, trims) is flush with the face plane');assert.equal(over,0,e.machine.id+': no frame part overlaps the panels');}}
  assert.equal(frame({at:{x:fx,z:fz},now:9000}),'plaza');assert.equal(prompt.hidden,true,'no Go prompt while zoomed');
  let done=0;v.release(()=>{done++;});for(let i=0;i<40&&!done;i++){camera.position.set(plaza.machine.x+18,23,plaza.machine.z+30);v.applyCamera(camera,1/30,false);}assert.equal(done,1);assert.equal(v.applyCamera(camera,1/30,false),false,'camera free again; idle frames return at once');
  v.focus('plaza',()=>{arrived++;});v.applyCamera(camera,1/30,true);assert.equal(arrived,2,'reduced motion: straight to the front');v.release();v.applyCamera(camera,1/30,true);assert.equal(v.focused,null);
+ // Occluders (Sep 30 2026: a bench baked into the Island Square chunk hid the plaza machine's lower cabinet while the HTML tray was
+ // drawn over it). One pass at zoom start: a small prop in the way is hidden until release; a big merged mesh low in front (a
+ // world chunk) makes the camera rise just enough to see over it; nothing is left between the camera and the face.
+ {const pos=new T.Vector3(),look=new T.Vector3(),cam=new T.PerspectiveCamera(40,390/844,1,500);v.faceView('plaza',cam,pos,look);
+  const prop=new T.Mesh(new T.BoxGeometry(.5,.5,.5),new T.MeshBasicMaterial());prop.name='test-prop';prop.position.lerpVectors(pos,look,.5);
+  const plinth=new T.Vector3(0,.14,.43).applyMatrix4(plaza.mesh.matrixWorld),f=.25,rayY=pos.y+f*(plinth.y-pos.y);
+  const wall=new T.Mesh(new T.BoxGeometry(9,1,.3),new T.MeshBasicMaterial());wall.name='test-chunk';wall.position.lerpVectors(pos,plinth,f);wall.position.y=rayY+.05-.5;wall.rotation.y=plaza.machine.yaw;
+  scene.add(prop,wall);prop.updateMatrixWorld(true);wall.updateMatrixWorld(true);
+  let got=0;v.focus('plaza',()=>{got++;});for(let i=0;i<60&&!got;i++){camera.position.set(plaza.machine.x+18,23,plaza.machine.z+30);v.applyCamera(camera,1/30,false);}
+  const view=v.closeUpView();same(view.hidden,['test-prop'],'the small prop in the way is hidden');assert.equal(prop.visible,false);assert.equal(wall.visible,true,'a merged chunk is never hidden');
+  assert(view.lift>0&&view.lift<=.5,'the camera rises just enough to see over the low chunk: '+view.lift);same(view.blockers,[],'nothing between the close-up camera and the face');
+  {const c=v.faceNow();const px=c.map(p=>({x:(p.x+1)/2*390,y:(1-p.y)/2*844}));assert(px[0].y>0&&px[3].y<844,'the lifted face still fits the screen');}
+  v.release();assert.equal(prop.visible,true,'restored on release');for(let i=0;i<40&&v.focused;i++)v.applyCamera(camera,1/30,false);
+  scene.remove(prop,wall);}
  v.dispose();assert.equal(scene.children.length,0,'dispose removes everything');
 }
 // 3b. Ball pictures (Sep 29 2026): every ball item, regular and special, shows a baked picture of the real in-game ball
@@ -198,7 +240,7 @@ const {CUSTOMIZATION_OPTIONS,BALL_COLORS}=load(path.join(root,'lib/town/customiz
  {const m=[];v.root.traverse(o=>{if(o.isMesh)m.push(o);});assert.equal(m[0].material.emissiveMap,null,'no full-size emissive copy of the atlas');assert.equal(v.hiRes,null,'no high-res face at rest');}
  v.dispose();
  const vm=read('lib/graphics/vendingMachines.ts');
- assert.match(vm,/HIRES_MAX=2048/,'close-up canvas capped at 2048 px');assert.match(vm,/zoom=null;dropCloseUp\(\)/,'close-up dropped when the zoom-out ends');assert.match(vm,/cancel\(\)\{zoom=null;dropCloseUp\(\);\}/);assert.match(vm,/dispose\(\)\{dropCloseUp\(\);/);
+ assert.match(vm,/HIRES_MAX=2048/,'close-up canvas capped at 2048 px');assert.match(vm,/zoom=null;dropCloseUp\(\)/,'close-up dropped when the zoom-out ends');assert.match(vm,/cancel\(\)\{zoom=null;restoreOccluders\(\);dropCloseUp\(\);\}/,'cancel drops the close-up and shows hidden occluders again');assert.match(vm,/dispose\(\)\{dropCloseUp\(\);/);
  // Sep 30 2026 (real depth, "apply all the angle perspective changes to all the vending machines"): EVERY machine gets the real 3D
  // bay on zoom (its flat front cut away, products standing on the slabs VENDING_BAY.product behind the glass inside their slots,
  // i.e. under the HTML tap areas), and goes back to the flat printed front at distance.
@@ -305,7 +347,7 @@ function sourceChecks(){
  // In-world machine, not a modal (user, Sep 27 2026): no dialog; the face is pinned onto the machine; minimal HUD; island asleep.
  assert(!/<dialog|showModal|role="dialog"/.test(ui),'no dialog or modal: buying happens on the machine face');
  assert.match(controller,/<VendingFace ref=\{faceEl\}/);assert.match(controller,/watchFace\(/);assert.match(controller,/quadMatrix\(w,h,quad\)/,'face pinned with a matrix3d from the projected corners');
- assert.match(controller,/label="Back"/);assert.match(controller,/data-vending-coins/,'coin pill');
+ assert.match(controller,/<DoneButton ref=\{exitButton\}/,'Done (top-right) leaves the machine');assert.doesNotMatch(controller,/label="Back"/);assert.match(controller,/data-vending-coins/,'coin pill');
  assert.match(town,/settingsRef\.current=[^;]*\bstoreOpen\b/,'the island sleeps while the machine is in use');
  assert.match(town,/<CardOfferHost blocked=\{[^}]*\bstoreOpen\b/,'no card offers while the machine is in use');
  assert.match(town,/v\.focus\(m\.id,\(\)=>setStoreOpen\(true\)\)/,'the face opens once the camera arrives');

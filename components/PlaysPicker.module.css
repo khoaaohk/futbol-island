@@ -55,3 +55,7 @@
 @media(prefers-reduced-motion:reduce){.dialog .categories button{transition:none;translate:none}}
 
 .dialog .panel.panel.panel{background-blend-mode:normal!important}
+/* Mobile (user, Sep 30 2026): the Category bar is fixed under the title, outside the scrolling list, with no band behind it. */
+@media(max-width:700px),(pointer:coarse){.dialog .mobileCategory{flex:none;margin:0;padding:0 18px 12px}.dialog .body{padding-top:6px}}
+/* Back sits on the left (user, Sep 30 2026); the title stays centred on the screen, not in the space beside it. */
+.dialog .header.header{grid-template-columns:88px minmax(0,1fr) 88px}.dialog .header h2{white-space:nowrap}

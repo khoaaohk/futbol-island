@@ -92,7 +92,7 @@ for(let k=0;k<50;k++){const {match}=R.drawThemedOffer(CARDS,new Set(),rng,{theme
 const read=f=>fs.readFileSync(path.join(__dirname,'..',f),'utf8');
 assert.match(read('components/Town.tsx'),/earnForBall\(c\)/,'ball collect hook');
 assert.match(read('components/NpcConversation.tsx'),/earnForNpc\(/,'NPC chat hook');
-assert.match(read('components/FieldLearning.tsx'),/n>=chosen\.questions\.length\)\{if\(!preview\.current&&!learningId\)earnForQuiz\(/,'quiz hook runs once, at the end of the quiz (a Journey stage quiz pays through its stage instead, never twice)');
+assert.match(read('components/FieldLearning.tsx'),/n>=chosen\.questions\.length\)\{if\(!preview\.current&&!learningId\)\{?earnForQuiz\(/,'quiz hook runs once, at the end of the quiz (a Journey stage quiz pays through its stage instead, never twice)');
 const triggers=read('lib/town/cardRewardTriggers.ts');
 assert.match(triggers,/if\(!quizEligibleForCard\(lesson\.questions\.length,allCorrect\)\)return 'off';/,'live quiz trigger uses the one rule');
 const store=read('lib/town/cardRewardStore.ts');

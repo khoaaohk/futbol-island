@@ -8,6 +8,15 @@
 .dialog .panel>header h2{font-family:IslandBrush,sans-serif;font-weight:400;font-size:clamp(24px,3vw,38px);letter-spacing:0;overflow-wrap:anywhere}
 .dialog .panel>header button{padding:0;transform:none!important}
 .dialog .panel>.body{display:flex;overflow:hidden;padding:0 24px 24px;background:transparent;scrollbar-gutter:auto}
+/* Map key (G-13): one row of the map's own marks above the frame; wraps on phones, never covers the map. */
+.dialog .panel>.body{flex-direction:column;gap:10px}
+.legend{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 14px;margin:0;padding:0;list-style:none;color:#fff1d3;font-size:13px;font-weight:700;line-height:1.2}
+.legend li{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.legend svg{flex:none}
+/* V / F / J key entries are buttons (tap = the tooltip); an invisible ::before grows the tap target to 44 px tall. */
+.legendTip{position:relative;display:flex;align-items:center;gap:6px;margin:0;padding:0;border:0;background:none;color:inherit;font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.legendTip::before{content:'';position:absolute;inset:-11px -5px}
+.legendTip:focus-visible{outline:var(--btn-focus);outline-offset:4px;border-radius:999px}
 
 .frame{position:relative;flex:1;min-width:0;min-height:0;display:flex;border:6px solid #fff1d3;border-radius:36px 55px 32px 40px;box-shadow:0 8px 0 #183b3438;background:#83b5ac;overflow:hidden}
 .map{position:relative;flex:1;min-width:0;min-height:0;overflow:hidden;overflow:clip;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
@@ -20,6 +29,15 @@
 .map :global(.map-destination){cursor:pointer;outline:none}
 .map :global(.map-destination:hover>rect),.map :global(.map-destination:focus-visible>rect),.map :global(.map-destination:hover>circle:not([fill=transparent])),.map :global(.map-destination:focus-visible>circle:not([fill=transparent])){stroke:#25483e;stroke-width:3;filter:brightness(1.08)}
 .map :global(.map-destination:focus-visible>rect:not(.map-place-label)){stroke:#ffd451}
+
+/* The key's V / F / J tooltip: the island's dark see-through bubble (toast / HUD pill look) with a down arrow at the mark. It
+   fades and rises 6 px in 160 ms, CSS only; the layout effect only sets --tip-shift (edge clamp) and data-below (flip). */
+.tip{position:absolute;z-index:30;top:var(--tip-top);box-sizing:border-box;width:max-content;max-width:min(260px,calc(100vw - 32px));padding:8px 12px 9px;border-radius:14px;background:#102a2bea;color:#fff1d3;box-shadow:0 8px 24px #0c1f2244;font:700 13px/1.3 Arial,Helvetica,sans-serif;text-align:center;pointer-events:none;transform:translate(calc(-50% + var(--tip-shift,0px)),calc(-100% - 10px));animation:tipIn .16s ease-out both}
+.tip strong{color:#ffd17b}
+.tip::after{content:'';position:absolute;top:100%;left:clamp(16px,calc(50% - var(--tip-shift,0px)),calc(100% - 16px));margin-left:-7px;border:7px solid transparent;border-top-color:#102a2bea}
+.tip[data-below]{top:var(--tip-bottom);transform:translate(calc(-50% + var(--tip-shift,0px)),10px)}
+.tip[data-below]::after{top:auto;bottom:100%;border-top-color:transparent;border-bottom-color:#102a2bea}
+@keyframes tipIn{from{opacity:0;translate:0 6px}to{opacity:1;translate:0 0}}
 
 /* Edge arrows: the shared round gold button. */
 .arrow{position:absolute;z-index:2;display:grid;place-items:center;box-sizing:border-box;width:var(--btn-icon);height:var(--btn-icon);min-width:44px;min-height:44px;padding:0;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:50%;background:var(--btn-gold) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;color:var(--btn-ink);box-shadow:var(--btn-shadow-gold);cursor:pointer;transition:translate .15s ease,box-shadow .15s ease,opacity .15s ease}
@@ -37,6 +55,9 @@
 @keyframes arrive{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes leave{to{opacity:0;transform:translateY(12px)}}
 
 @media(max-width:600px){
+ /* Phones: the side arrows moved from mid-height (they covered the futsal and COACHES labels) to the bottom corners, beside Down. */
+ .arrow[data-dir=left],.arrow[data-dir=right]{top:auto;bottom:16px;margin-top:0}
+ .legend{gap:4px 10px;font-size:12px}
  .dialog .panel>header{padding:12px 16px!important}
  .dialog .panel>.body{padding:0 10px calc(10px + env(safe-area-inset-bottom,0px))}
  .frame{border-width:4px;border-radius:26px 34px 24px 28px}
@@ -47,4 +68,4 @@
  .frame{border-width:4px;border-radius:24px 30px 22px 26px}
  .arrow[data-dir=up]{top:8px}.arrow[data-dir=down]{bottom:10px}
 }
-@media(prefers-reduced-motion:reduce){.entering,.leaving{animation:none}.stage[data-eased],.arrow{transition:none}}
+@media(prefers-reduced-motion:reduce){.entering,.leaving,.tip{animation:none}.stage[data-eased],.arrow{transition:none}}

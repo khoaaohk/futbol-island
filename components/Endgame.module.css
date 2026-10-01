@@ -1,0 +1,133 @@
+/* Endgame (Lane 2, Sep 30 2026): graduation ceremony, certificates, Matchday Ferry finale, museum hall and Coaches Board.
+   Same riso venue language as the Coaches Centre (CoachesCentre.module.css): cream paper cards #fff1d3, green ink #244d40,
+   yellow #f8d651 badges, IslandBrush titles, the pink/blue out-of-register echo. Motion is finite and off under reduced motion. */
+.dialog{position:fixed;inset:0;margin:0;width:100vw;height:100dvh;max-width:none;max-height:100dvh;border:0;padding:0;background:#286f55;color:#244d40;overflow:hidden;font-family:inherit}
+.dialog::backdrop{background:#183c42aa}
+.panel{height:100%;display:flex;flex-direction:column;background:#286f55 url('/stories/paths/coaches-coast.svg') center top/100% 100% no-repeat}
+/* ModalShell paints every shell cream with !important; the venue keeps its green riso art (as .dialog .panel.panel in CoachesCentre). */
+.dialog .panel.panel{background:#286f55 url('/stories/paths/coaches-coast.svg') center top/100% 100% no-repeat!important;max-height:100dvh!important;border-radius:0!important}
+.dialog .panel.panel>header{background:transparent!important;border:0!important;color:#fff1d3}
+.panel>header h2{font-family:IslandBrush,sans-serif;font-weight:400;font-size:clamp(24px,3vw,38px);letter-spacing:0}
+.panel>header button{background:#244d40;color:#fff1d3;border:1px solid #a8b78d;border-radius:50%}
+.panel>div{padding:clamp(14px,3vw,32px) max(16px,calc((100vw - 1040px)/2)) 36px;background:transparent}
+.dialog button{font:inherit;cursor:pointer}
+.dialog button:focus-visible,.dialog a:focus-visible{outline:3px solid #ffd451;outline-offset:3px}
+.card{background:#fff1d3;border-radius:28px 46px 26px 26px;box-shadow:0 8px 0 #183b3438;padding:clamp(18px,3vw,32px);margin:0 0 20px}
+.card h3{font-family:IslandBrush,sans-serif;font-weight:400;font-size:clamp(26px,3.4vw,38px);line-height:1.1;margin:8px 0 10px;text-wrap:balance}
+.card p{font-size:15px;line-height:1.6;color:#48604c;margin:8px 0 0;text-wrap:pretty}
+.eyebrow{display:block;font-size:11px;font-weight:800;letter-spacing:.14em;color:#71806b;text-transform:uppercase}
+.badge{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.06em;padding:6px 10px;border-radius:20px;background:#f8d651;color:#244d40}
+.badgeMuted{background:#e7e7d1;color:#596951}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.primary,.secondary{min-height:48px;padding:0 20px;border-radius:24px;font-weight:800;font-size:15px;border:0}
+.primary{background:#244d40;color:#fff1d3;box-shadow:0 4px 0 #0f2a22}
+.secondary{background:#e8dcb4;color:#244d40;box-shadow:0 4px 0 #c9b98a}
+.primary:disabled{opacity:.5;cursor:default}
+.primary:active,.secondary:active{transform:translateY(2px);box-shadow:none}
+.status{min-height:1.4em;font-size:14px;font-weight:700;color:#244d40;margin:10px 0 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px;list-style:none;padding:0;margin:0}
+
+/* ---- Certificate (DOM; the PNG is drawn only on Save/Share/Print) ---- */
+.cert{position:relative;background:#fff1d3;border-radius:10px;padding:clamp(18px,4vw,40px);text-align:center;color:var(--ink,#22366b);box-shadow:6px 7px 0 #ff48b066,-3px -3px 0 var(--ink,#22366b) inset;background-image:radial-gradient(var(--accent,#f7cb69) 1.6px,transparent 1.8px);background-size:14px 14px;background-position:0 0}
+.certInner{background:#fff1d3;border:4px solid var(--ink,#22366b);border-radius:6px;padding:clamp(16px,3.5vw,34px)}
+.certInner h3{font-family:IslandBrush,sans-serif;font-weight:400;font-size:clamp(34px,6vw,60px);line-height:1;margin:10px 0 8px;color:var(--ink,#22366b)}
+.certInner>p{margin:0 auto;max-width:44ch;color:#294f43;font-size:15px;line-height:1.5}
+.certList{list-style:none;padding:0;margin:18px 0 8px;display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px 18px;text-align:left}
+.certList li{display:flex;gap:10px;align-items:flex-start;font-size:14px;font-weight:600;line-height:1.35;color:#244d40}
+.certList li::before{content:'';flex:none;width:20px;height:20px;border-radius:50%;background:var(--ink,#22366b) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='m5 10 3.5 3.5L15 7' fill='none' stroke='%23fff1d3' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/100% no-repeat}
+.certDate{margin-top:14px;font-weight:700;color:#294f43;font-size:14px}
+.seal{width:72px;height:72px;margin:0 auto}
+
+/* ---- Ceremony ---- */
+.ceremony{max-width:760px;margin:0 auto}
+.stage{position:relative;text-align:center;color:#fff1d3;padding:4px 0 18px}
+.stage h3{font-family:IslandBrush,sans-serif;font-weight:400;font-size:clamp(34px,6vw,58px);margin:6px 0;color:#fff1d3;text-shadow:3px 3px 0 #ff48b099}
+.stage p{margin:0 auto;max-width:48ch;font-size:16px;line-height:1.55;color:#fff1d3}
+/* QA11 C-3: the backdrop's left band is light yellow, so cream text gets a dark green ink scrim (the header buttons' #244d40). */
+.stage h3,.stage p,.panel>header h2{background:#244d40e6;border-radius:20px;box-shadow:0 4px 0 #183b3438}
+.stage h3{display:inline-block;padding:2px 18px 8px;max-width:100%}
+.stage p{width:fit-content;padding:10px 16px}
+.panel>header h2{padding:2px 16px 4px}
+.confetti{position:absolute;inset:-10px 0 auto;height:0;pointer-events:none}
+.confetti i{position:absolute;left:var(--x);top:0;width:9px;height:14px;background:var(--c);border-radius:2px;animation:fall 1.6s var(--d) ease-in both;transform:rotate(var(--r))}
+@keyframes fall{from{opacity:1;transform:translateY(-10px) rotate(var(--r))}to{opacity:0;transform:translateY(220px) rotate(calc(var(--r) + 220deg))}}
+.pop{animation:pop .5s cubic-bezier(.2,1.4,.4,1) both}
+@keyframes pop{from{opacity:0;transform:scale(.8) rotate(-3deg)}to{opacity:1;transform:none}}
+.rewards{list-style:none;margin:16px 0 0;padding:0;display:grid;gap:10px}
+.rewards li{display:flex;gap:12px;align-items:center;background:#fff9e9;border-radius:16px;padding:12px 14px;font-size:14px;line-height:1.45;color:#244d40}
+.rewards b{display:block;font-size:15px}
+.swatch{flex:none;width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--c1) 55%,var(--c2) 55%);border:3px solid #fff1d3;box-shadow:0 0 0 2px #244d40}
+.nextUp{display:flex;align-items:center;gap:14px;background:#f8d651;border-radius:20px;padding:14px 16px;margin-top:14px}
+.nextUp p{margin:0!important;color:#244d40!important;font-weight:700}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:0 0 16px}
+.tabs button{border:0;border-radius:18px;padding:8px 14px;font-weight:800;background:#fff1d3cc;color:#244d40}
+.tabs button[aria-pressed=true]{background:#244d40;color:#fff1d3}
+
+/* ---- Ferry / finale ---- */
+.harbour{display:grid;gap:10px;margin:14px 0 0;padding:0;list-style:none}
+.harbour li{display:flex;align-items:center;gap:12px;background:#fff9e9;border-radius:14px;padding:10px 14px;font-weight:700;font-size:14px}
+.harbour li progress{flex:1;height:10px;accent-color:#477c6a}
+.tick{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:#e7e7d1;color:#596951;font-size:13px;font-weight:900}
+.tickDone{background:#477c6a;color:#fff1d3}
+.crossing{height:170px;border-radius:24px;overflow:hidden;position:relative;background:linear-gradient(#8fc3dc 0 58%,#2f8f8a 58%);margin:0 0 16px}
+.crossing svg{position:absolute;inset:0;width:100%;height:100%}
+.boat{animation:sail 3.2s ease-in-out both}
+@keyframes sail{from{transform:translateX(-40%)}to{transform:translateX(0)}}
+.progressRow{display:flex;gap:6px;margin:0 0 12px}
+/* QA11 C-1: the row sits on the cream card, so every state needs its own contrast: done = venue green (as .tickDone), now = the
+   yellow badge with a green ink rim, to-do = the muted badge track (as .badgeMuted) with a hairline so it reads on #fff1d3. */
+.progressRow i{flex:1;height:8px;border-radius:4px;background:#e7e7d1;box-shadow:inset 0 0 0 1px #c9b98a}
+.progressRow i[data-state=done]{background:#477c6a;box-shadow:none}
+.progressRow i[data-state=now]{background:#f8d651;box-shadow:inset 0 0 0 2px #244d40}
+.question{font-size:clamp(17px,2.2vw,20px);font-weight:800;line-height:1.35;color:#244d40;margin:6px 0 10px}
+.hint{font-size:14px;color:#69715d;margin:0 0 10px}
+.result{font-size:15px;line-height:1.55;margin:12px 0 0;color:#244d40}
+.result strong{color:#1f7a50}.result[data-ok=false] strong{color:#b8472b}
+.drawPitch{width:100%;max-width:640px;display:block;margin:0 auto;touch-action:none;user-select:none;border-radius:14px;background:#4f9a5e}
+.trophy{width:min(220px,50vw);margin:0 auto;display:block}
+.lift{animation:lift 1.1s cubic-bezier(.2,1.2,.4,1) both}
+@keyframes lift{from{transform:translateY(40px) scale(.85);opacity:0}to{transform:none;opacity:1}}
+.credits{max-height:min(60dvh,560px);overflow:auto;text-align:center;background:#22366b;color:#fff1d3;border-radius:24px;padding:28px 18px}
+.credits h4{font-family:IslandBrush,sans-serif;font-weight:400;font-size:28px;margin:26px 0 8px;color:#f8d651}
+.credits ul{list-style:none;padding:0;margin:0;display:grid;gap:4px;font-size:15px}
+.credits p{max-width:46ch;margin:10px auto;line-height:1.55}
+
+/* ---- Museum ---- */
+.hall{background:#fff1d3;border-radius:30px;padding:clamp(14px,3vw,26px);margin:0 0 22px}
+.hallHead{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 14px}
+.hallHead h3{font-family:IslandBrush,sans-serif;font-weight:400;font-size:clamp(24px,3vw,32px);margin:4px 0 0}
+.hallHead p{margin:4px 0 0;color:#48604c;font-size:14px}
+.case{display:flex;flex-direction:column;text-align:left;border:0;padding:0;border-radius:20px;background:#fff9e9;box-shadow:0 5px 0 #d8c89a;overflow:hidden;color:#244d40;min-height:100%}
+.case[data-open=false]{background:#efe8d2;box-shadow:0 5px 0 #d6cfb5}
+.caseArt{height:118px;display:grid;place-items:center;background:var(--g,#2f8f8a)}
+.caseArt svg{width:96px;height:96px}
+.case[data-open=false] .caseArt{filter:grayscale(1) opacity(.55)}
+.caseBody{padding:14px 16px 16px}
+.caseBody strong{display:block;font-size:17px;margin:4px 0}
+.caseBody small{font-size:13px;line-height:1.45;color:#69715d;display:block}
+.exhibit{max-width:760px;margin:0 auto}
+.exhibit ul{margin:12px 0 0;padding-left:20px;line-height:1.6;font-size:15px}
+.forGame{background:#f8d651;border-radius:16px;padding:12px 16px;margin:16px 0 0;font-weight:700;font-size:15px;line-height:1.5}
+.sources{margin:14px 0 0;font-size:12px;line-height:1.5;color:#69715d}
+.sources a{color:#244d40}
+.counts{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 0}
+.counts span{background:#fff9e9;border-radius:14px;padding:6px 12px;font-size:13px;font-weight:700}
+.shelf{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px}
+.shelfItem .seal{width:40px;height:40px;margin:0}
+.shelfItem{border:0;background:#fff9e9;border-radius:16px;padding:10px 12px;display:flex;gap:10px;align-items:center;font-weight:800;color:#244d40;box-shadow:0 4px 0 #d8c89a}
+
+/* ---- Coaches Board ---- */
+.board{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-top:12px}
+.formation{background:#477c6a;border-radius:18px;padding:12px;color:#fff1d3}
+.formation svg{width:100%;height:auto;display:block}
+.formation strong{display:block;font-size:15px;margin-top:8px}
+.formation small{display:block;font-size:12px;line-height:1.45;opacity:.9}
+.formation[data-open=false]{background:#8d9a86}
+.goals{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:10px}
+.goals li{display:flex;align-items:center;gap:12px;background:#fff9e9;border-radius:14px;padding:10px 14px;font-size:14px;line-height:1.4}
+.goals li b{display:block}
+
+@media(max-width:600px){.panel>div{padding:14px 16px 28px}.card{border-radius:24px}.certList{grid-template-columns:1fr}.crossing{height:130px}.caseArt{height:96px}.caseArt svg{width:76px;height:76px}}
+@media(prefers-reduced-motion:reduce){.confetti,.boat,.pop,.lift,.confetti i{animation:none!important}.confetti{display:none}}
+.drawPitch g[role=button]:focus{outline:none}
+.drawPitch g[role=button]:focus-visible circle:nth-child(2){stroke:#ffd451;stroke-width:1.4}

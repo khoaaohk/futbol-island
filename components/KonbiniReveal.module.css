@@ -47,3 +47,13 @@
    and the action buttons are centred at the foot of the reveal. */
 .stage{flex:0 1 auto!important;min-height:0!important}
 .actions{justify-content:center!important;gap:16px;margin-top:auto;flex-wrap:wrap}
+/* Sep 30 2026: the item and its text sit centred in the space between the header row and the buttons (they were pinned
+   right under the header on phones), with at least the header row's height (+ a gap) clear at the top. */
+.stage{margin-top:auto}
+.headInline~.stage{padding-top:64px}
+
+/* The bite toy (lib/konbini/biteToy.ts, Sep 30 2026): tap / Enter / Space takes a bite or a sip; no double-tap zoom delay. */
+.toy{cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;border-radius:50%;outline:none}
+.toy[aria-disabled]{cursor:progress}
+.toy:focus-visible{outline:3px solid #f3da98;outline-offset:4px}
+.sr{position:absolute!important;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}

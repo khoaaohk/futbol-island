@@ -338,3 +338,9 @@
  .settingsJourney .settingsEntries .desktopShortcuts{display:none}
  .settingsJourney .settingsEntries>button:first-child{grid-column:1/-1;min-height:84px}
 }
+/* About: Story music credits collapse by default (user, Sep 30 2026). */
+.musicCredits>summary{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:44px;cursor:pointer;list-style:none}.musicCredits>summary::-webkit-details-marker{display:none}.musicCredits>summary h3{margin:0}.musicCredits>summary::after{content:'';width:8px;height:8px;border:solid currentColor;border-width:0 2px 2px 0;rotate:45deg;translate:0 -2px;transition:rotate .15s}.musicCredits[open]>summary::after{rotate:225deg;translate:0 2px}
+@media(prefers-reduced-motion:reduce){.musicCredits>summary::after{transition:none}}
+.musicCredits{margin-top:20px;padding-top:8px;border-top:1px solid #a6ad8970}
+/* The About subtitle sits on the painted backdrop, not the cream card: cream text like the title (contrast on blue/green/yellow). */
+.aboutSubtitle{color:#fff2cd;font-weight:700;text-align:center;text-shadow:0 1px 2px #17352b99}

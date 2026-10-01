@@ -156,7 +156,16 @@ test('a play: step through, then answer the quiz', async ({ page }, info) => {
     const qLabel = (await page.getByText(/Question \d+ \/ \d/i).first().innerText().catch(() => '?')).trim();
     let how = 'tap';
     const section = page.locator('section[aria-label="Pitch quiz"]');
-    if (await section.evaluate(el => el.hasAttribute('data-visual')).catch(() => false)) {
+    const checkOrder = page.getByRole('button', { name: 'Check order' });
+    if (await checkOrder.isVisible().catch(() => false)) {
+      // Order question (QA11 gap audit): submit the steps as dealt; right or "try again", either way the feedback shows.
+      // The dealt order is never the answer, so the first check shows "try again"; then solve it through the session.
+      if (!tried.has(-1)) { how = 'check order'; tried.add(-1); await press(checkOrder, info); }
+      else {
+        how = 'order → session.onAnswer(correct)';
+        await page.evaluate(() => { type S = { question: number; lesson: { questions: { correct: number }[] }; onAnswer?: (a: number) => void }; const s = (window as unknown as { __fi2: { fieldSession: { current: S | null } } }).__fi2.fieldSession.current; s?.onAnswer?.(s.lesson.questions[s.question].correct); });
+      }
+    } else if (await section.evaluate(el => el.hasAttribute('data-visual')).catch(() => false)) {
       // Visual question: the choices are drawn in the card itself.
       how = 'card choice';
       const choices = section.getByRole('button').filter({ hasNotText: /read along|hide transcript/i }).and(section.locator(':not([aria-label^="Change camera"])'));

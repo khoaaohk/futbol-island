@@ -132,3 +132,16 @@
  .zone text{font-size:9.5px}
  .note{font-size:10.5px}
 }
+/* Lane 3: "In Paths: <lesson> · Watch it" under the finished diagram (lib/learning/conceptMap.ts ballLessonLink). */
+.pathLink{margin:8px 0 0;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-size:13px;line-height:1.4}
+.pathLink button{min-height:36px;padding:0 14px;border:2px solid var(--btn-rim,#fff2cd);border-radius:var(--btn-radius,999px);background:var(--btn-mint,#beded1);color:var(--btn-ink,#244d40);font-weight:800;font-size:13px;box-shadow:0 3px 0 var(--btn-mint-edge,#8bac9d)}
+
+/* Sep 30 2026: "Previous step" is a round arrow (the book reader's arrow style), so the step button on the right gets the rest
+   of the row and its label doesn't wrap. The footer is always one row: arrow left, main button filling the remaining width. */
+.previousArrow{display:grid;place-items:center;box-sizing:border-box;flex:none;width:var(--btn-icon,48px);height:var(--btn-icon,48px);min-height:44px;padding:0;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:50%;background:var(--btn-gold-bright) var(--btn-grain) center/128px 128px;color:var(--btn-ink);box-shadow:0 4px 0 var(--btn-gold-bright-edge);cursor:pointer;transition:translate .15s,box-shadow .15s}
+.previousArrow:active{translate:0 var(--btn-press);box-shadow:0 1px 0 var(--btn-gold-bright-edge)}
+.previousArrow:disabled{opacity:.45;cursor:default;translate:none}
+.previousArrow:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
+.footer.footer{flex-direction:row;align-items:center}
+.footer .stepNav{flex:none}
+.footer .next{flex:1 1 auto;--navigation-width:100%}

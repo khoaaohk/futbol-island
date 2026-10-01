@@ -68,6 +68,8 @@ for(const s of CORAL_CAY_SPOTS){
  assert(!buildings.some(o=>overlaps(fp,o)),`${s.id} box is not inside a building`);
  for(const [px,pz] of [[fp.x-fp.w/2,fp.z-fp.d/2],[fp.x+fp.w/2,fp.z-fp.d/2],[fp.x-fp.w/2,fp.z+fp.d/2],[fp.x+fp.w/2,fp.z+fp.d/2]])assert(cay.isOnCayLand(px,pz),`${s.id} box stands fully on the ground`);
  if(s.kind==='hidden')assert(!blocked(s.x,s.z-1.35,obstacles,.3)&&cay.isOnCayLand(s.x,s.z-1.35),`${s.id} ball pickup point is walkable`);
+ // QA11 D-1: the hostel ball's pickup (behind its bag) is reached by walking straight south off the verandah (no phantom rail).
+ if(s.id==='cay-rest')for(let z=cay.HOSTEL.z+cay.HOSTEL.d/2+.4;z<=s.z-1.35;z+=.1)assert(!blocked(s.x,z,obstacles,.3),`cay-rest: straight walk from the verandah is clear at z ${z.toFixed(1)}`);
  else{let open=0;for(let a=0;a<16;a++){const x=s.x+Math.sin(a*Math.PI/8)*2.6,z=s.z+Math.cos(a*Math.PI/8)*2.6;if(cay.isOnCayLand(x,z)&&!blocked(x,z,obstacles,.35))open++;}assert(open>=4,`${s.id} can be approached to kick (${open}/16 sides)`);}
 }
 // 4b. The buoy ball (Sep 29 2026 fix): the ball rests on the buoy, a shot from the chalk mark collects it, the parachute still works.

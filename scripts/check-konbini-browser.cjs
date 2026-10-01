@@ -110,7 +110,7 @@ const wait=ms=>new Promise(r=>setTimeout(r,ms));let lastPage=null;
   await tap(dlg.getByRole('button',{name:'Done'}).first());await page.waitForTimeout(500);
   // ---- Exit through the doors ----
   await page.evaluate(()=>{const k=window.__konbini;if(k.state.zoom)k.zoomOut();});await page.waitForFunction(()=>!window.__konbini.state.zoom,null,{timeout:8000});
-  await tap(page.getByRole('button',{name:'Exit'}));await page.waitForURL(/\/\?from=konbini/,{timeout:20000});
+  await tap(page.getByRole('button',{name:'Done'}));await page.waitForURL(/\/\?from=konbini/,{timeout:20000});
   await page.waitForFunction(()=>window.__fi2,null,{timeout:120000});await page.locator('[data-island-return-loading]').waitFor({state:'detached',timeout:60000});await page.waitForTimeout(600);
   const back=await page.evaluate(()=>{const f=window.__fi2,a=f.renderer.info.render.frame;return new Promise(r=>setTimeout(()=>r({x:f.location.x,z:f.location.z,yaw:f.player.root.rotation.y,ride:f.rideRef.current,framesAdvanced:f.renderer.info.render.frame-a,konbiniMusic:typeof window.__konbiniMusic}),800));});
   assert(Math.abs(back.x-D.x)<1.2&&back.z>D.front+1&&back.z<D.front+4,`${door}: back outside the same doors (${back.x.toFixed(2)},${back.z.toFixed(2)})`);

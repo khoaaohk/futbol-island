@@ -2,6 +2,8 @@ import {COIN_REWARD_ID,costumeEarned} from './coinQuest';
 import {readCoinProgress} from './coinProgress';
 import {getIslandCostume} from './islandCostumes';
 import {CLUB_COSTUMES} from './costumes';
+import {CAP_REWARDS,capEarned,capLockNote,type CapReward} from '../endgame/graduationModel';
+import {readGraduations} from '../endgame/graduationStore';
 /** Vending-machine specials (docs/vending-machines.md): each ball is sold at one machine only; see lib/town/vendingCatalog.ts. */
 import {SPECIAL_BALL_OPTIONS,SPECIAL_BALL_COLORS,type VendingSpecialBall} from './specialBalls';
 import {DEFAULT_HOME_KIT,DEFAULT_AWAY_KIT,type BeanLook,type Outfit,type BeanBuild,type BeanEyes,type BeanMouth,type BeanHairStyle,type BeanHeadwear} from '../graphics/beanLook';
@@ -14,7 +16,8 @@ export type CharacterCustomization = {
   bodyColor:string; skinTone:string; eyes:BeanEyes; mouth:BeanMouth; hair:BeanHairStyle; hairColor:string; build:BeanBuild; headwear:BeanHeadwear; headwearColor:string;
 };
 export type CustomizationKey=keyof CharacterCustomization;
-export type CustomizationOption={id:string;label:string;color:string;unlock?:number|'all';equipment?:boolean;coinReward?:boolean;color2?:string};
+/** `graduate` (Lane 2, Sep 30 2026): a graduation reward (lib/endgame/graduationModel.ts CAP_REWARDS), worn once that path graduates. */
+export type CustomizationOption={id:string;label:string;color:string;unlock?:number|'all';equipment?:boolean;coinReward?:boolean;color2?:string;graduate?:CapReward};
 /** The bean-builder keys, in the order the builder shows them. */
 export const BEAN_KEYS=['bodyColor','skinTone','eyes','mouth','hair','hairColor','build','headwear','headwearColor'] as const;
 export type BeanKey=typeof BEAN_KEYS[number];
@@ -37,7 +40,7 @@ export const CUSTOMIZATION_OPTIONS:Record<CustomizationKey,CustomizationOption[]
   hairColor:[{id:'black',label:'Black',color:'#1a1210'},{id:'dark',label:'Dark brown',color:'#3a2518'},{id:'brown',label:'Brown',color:'#5a3a22'},{id:'chestnut',label:'Chestnut',color:'#8a5a2b'},{id:'ginger',label:'Ginger',color:'#b04a2a'},{id:'golden',label:'Golden',color:'#c98a3a'},{id:'blonde',label:'Blonde',color:'#e3c07a'},{id:'blue',label:'Blue dye',color:'#3f6fd8'},{id:'pink',label:'Pink dye',color:'#ef7fb8'}],
   build:[{id:'regular',label:'Regular',color:'#819574'},{id:'tall',label:'Tall',color:'#819574'},{id:'short',label:'Short',color:'#819574'},{id:'wide',label:'Wide',color:'#819574'}],
   headwear:[{id:'none',label:'None',color:'#e8d8b0'},{id:'cap',label:'Cap',color:'#23315e'},{id:'beanie',label:'Beanie',color:'#ff7a3c'},{id:'headband',label:'Headband',color:'#ffffff'},{id:'bucket',label:'Bucket hat',color:'#ffffff'},{id:'visor',label:'Visor',color:'#ffc83d'},{id:'keeper',label:'Keeper cap',color:'#3d8f5a'}],
-  headwearColor:[{id:'navy',label:'Navy',color:'#23315e',color2:'#ffc83d'},{id:'red',label:'Red',color:'#e0453d',color2:'#ffffff'},{id:'orange',label:'Orange',color:'#ff7a3c',color2:'#ffffff'},{id:'gold',label:'Gold',color:'#ffc83d',color2:'#23315e'},{id:'white',label:'White',color:'#f7f3ea',color2:'#ff6b5e'},{id:'green',label:'Green',color:'#3d8f5a',color2:'#e8f04a'},{id:'pink',label:'Pink',color:'#ff5d8f',color2:'#ffffff'},{id:'teal',label:'Teal',color:'#2f9c9a',color2:'#fff4cd'}]
+  headwearColor:[{id:'navy',label:'Navy',color:'#23315e',color2:'#ffc83d'},{id:'red',label:'Red',color:'#e0453d',color2:'#ffffff'},{id:'orange',label:'Orange',color:'#ff7a3c',color2:'#ffffff'},{id:'gold',label:'Gold',color:'#ffc83d',color2:'#23315e'},{id:'white',label:'White',color:'#f7f3ea',color2:'#ff6b5e'},{id:'green',label:'Green',color:'#3d8f5a',color2:'#e8f04a'},{id:'pink',label:'Pink',color:'#ff5d8f',color2:'#ffffff'},{id:'teal',label:'Teal',color:'#2f9c9a',color2:'#fff4cd'},...CAP_REWARDS.map(c=>({id:c.id,label:c.label,color:c.color,color2:c.color2,graduate:c.graduate}))]
 };
 /** Balls are free; costumes follow the ball hunt. Rides unlock one per finished path: lib/town/rideUnlocks.ts (Town applies
  *  enforceRideUnlocks after sanitising), and ride options are listed here in that unlock order. */
@@ -124,7 +127,9 @@ export const SHIRT_NUMBER_ROLES:{number:number;position:string;title:string}[]=[
   {number:1,position:'GK',title:'Goalkeeper'},{number:2,position:'RB',title:'Right back'},{number:3,position:'LB',title:'Left back'},{number:4,position:'RCB',title:'Centre-back'},{number:5,position:'LCB',title:'Centre-back'},{number:6,position:'CM',title:'Holding midfielder'},{number:7,position:'RW',title:'Right winger'},{number:8,position:'RCM',title:'Box-to-box midfielder'},{number:9,position:'ST',title:'Striker'},{number:10,position:'LCM',title:'Playmaker'},{number:11,position:'LW',title:'Left winger'}
 ];
 export const BALL_COLORS={classic:'#eee4c4',sunset:'#e89154',neon:'#b9e18b',frost:'#91dfff',solar:'#ffd166',cosmic:'#bd8aff',...SPECIAL_BALL_COLORS} as Record<CharacterCustomization['ball'],string>;
-export function isCustomizationUnlocked(option:CustomizationOption,completed:number,total:number){return option.coinReward?costumeEarned(readCoinProgress(),option.id):true;}
+export function isCustomizationUnlocked(option:CustomizationOption,completed:number,total:number){return option.graduate?capEarned(readGraduations(),option.graduate):option.coinReward?costumeEarned(readCoinProgress(),option.id):true;}
+/** The locked note for a graduation reward (null for other options, which keep their own notes). */
+export const graduateLockNote=(option:CustomizationOption)=>option.graduate?capLockNote(option.graduate):null;
 const LEGACY_KEYS=['costume','character','face','body','clothing','ball','scooter','bike','moped','jetpack'] as const;
 export function sanitizeCustomization(value:unknown,completed=0,total=0):CharacterCustomization{
   const result={...DEFAULT_CUSTOMIZATION};

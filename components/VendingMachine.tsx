@@ -5,6 +5,7 @@ import {isVendingPreview} from '@/lib/town/vendingPreview';
 import {HOME_DECOR_ENABLED} from '@/lib/town/homeFeature';
 import {useEffect,useLayoutEffect,useMemo,useRef,useState,type CSSProperties} from 'react';
 import {BackButton} from './BackButton';
+import {DoneButton} from './DoneButton';
 import VendingCardReveal from './VendingCardReveal';
 import CostumeCollection from './CostumeCollection';
 import VendingProductArt from './VendingProductArt';
@@ -36,7 +37,7 @@ import styles from './VendingMachine.module.css';
  * Town zooms the camera straight onto the machine front (lib/graphics/vendingMachines.ts). This component pins the machine face
  * (components/VendingFace.tsx, the swappable visual module) onto that exact rectangle and runs the state machine:
  *   idle ─press slot→ armed (lit button, price on the LED) ─press again / coin slot→ coins → drop → tray ─tap tray→ reward → idle
- * with the wallet, ledger, specials and unlock rules deciding what a press does. Minimal HUD: Leave + the coin pill. Keyboard:
+ * with the wallet, ledger, specials and unlock rules deciding what a press does. Minimal HUD: the coin pill (top-left) + Done (top-right). Keyboard:
  * arrows / 1–6 select, Enter buys, PageUp/PageDown flip, Esc leaves (WASD walks away).
  * Heat: nothing is mounted until the machine is in use; the island sleeps meanwhile (`storeOpen` stays in Town's pause list, which
  * also blocks card offers); only one-shot CSS animations, no loops, no backdrop blur.
@@ -111,7 +112,7 @@ export default function VendingMachine({open,machineId,onOpenChange,value,onChan
  // from the projected (foreshortened) top edge made every shelf item look stretched sideways (egg-shaped balls, wide books).
  // `widen`: how much the angled close-up foreshortens the face's width; round balls are widened back so they stay round (user,
  // Sep 30 2026: "fix the perspective of the balls").
- const placement=useMemo(()=>{if(!quad)return null;const [a,b,c,d]=quad,h=Math.max(200,Math.round(Math.hypot(d.x-a.x,d.y-a.y))),w=Math.max(160,Math.round(h*FACE_SIZE.w/FACE_SIZE.h)),across=(Math.hypot(b.x-a.x,b.y-a.y)+Math.hypot(c.x-d.x,c.y-d.y))/2,down=(Math.hypot(d.x-a.x,d.y-a.y)+Math.hypot(c.x-b.x,c.y-b.y))/2;const depth=faceDepthMatrix(machines,w,h);return {w,h,transform:depth??quadMatrix(w,h,quad),depth:Boolean(depth),widen:Math.min(1.25,Math.max(1,down*FACE_SIZE.w/FACE_SIZE.h/Math.max(1,across)))};},[quad,machines]);
+ const placement=useMemo(()=>{if(!quad)return null;const [a,b,c,d]=quad,h=Math.max(200,Math.round(Math.hypot(d.x-a.x,d.y-a.y))),w=Math.max(160,Math.round(h*FACE_SIZE.w/FACE_SIZE.h)),across=(Math.hypot(b.x-a.x,b.y-a.y)+Math.hypot(c.x-d.x,c.y-d.y))/2,down=(Math.hypot(d.x-a.x,d.y-a.y)+Math.hypot(c.x-b.x,c.y-b.y))/2;const depth=faceDepthMatrix(machines,w,h);return {w,h,transform:depth??quadMatrix(w,h,quad),depth:Boolean(depth),shifts:depth?machines?.()?.productShift?.(machineId)??[]:[],widen:Math.min(1.25,Math.max(1,down*FACE_SIZE.w/FACE_SIZE.h/Math.max(1,across)))};},[quad,machines,machineId]);
 
  // ---- Open / close ----
  useEffect(()=>{
@@ -240,7 +241,7 @@ export default function VendingMachine({open,machineId,onOpenChange,value,onChan
  // LED: an explicit message wins, else the armed item's price or state, else the greeting with the machine's lesson.
  const ledView=led??(armed&&armedStatus?{msg:armedStatus.kind==='buy'?`${armed.label} · ${armed.price} coins`:armedStatus.kind==='short'?armedStatus.note:`${armed.label}: ${armedStatus.note}`,
   sub:armedStatus.kind==='buy'?'Press again, or tap the coin slot':armed.blurb,tone:armedStatus.kind==='short'||armedStatus.kind==='locked'||armedStatus.kind==='soldout'?'warn' as const:armedStatus.kind==='buy'?undefined:'ok' as const}
-  :{msg:'いらっしゃいませ! Pick an item',sub:machine.lesson});
+  :{msg:'いらっしゃいませ!',sub:'Pick an item'});// greeting only: Japanese on top, the ask below (user, Sep 30 2026)
  const rowsOnPage=[...new Set(page.map(i=>rowOf.get(i.id)??i.row))];
  const fontSize=placement?Math.max(14,Math.min(18,Math.round(placement.w/29))):12;
  const view:VendingFaceView|null=placement&&{placement,fontSize,compact:placement.h<430,
@@ -268,7 +269,7 @@ export default function VendingMachine({open,machineId,onOpenChange,value,onChan
   :club&&!preview?<button type="button" className={styles.storyChip} onClick={()=>setStory(armed!.costume!)}>Read the {club.club} club story</button>:null;
 
  return <div className={styles.root} data-preview={preview||undefined} data-reading-book={book||undefined} data-vending-machine={machine.id} data-vending-phase={phase} data-card-reveal={phase==='reward'&&Boolean(receipt)||undefined}>
-  <div className={styles.hudBack}><BackButton ref={exitButton} label="Back" onBack={()=>onOpenChange(false)}/></div>
+  <div className={styles.hudDone}><DoneButton ref={exitButton} onDone={()=>onOpenChange(false)}/></div>
   <div className={`${jobStyles.wallet} ${styles.hudCoins}`} aria-live="polite" data-vending-coins={vending.balance}><span className={jobStyles.coin} aria-hidden="true"/><b>{vending.balance}</b><small>{preview?'coins · Preview':'coins'}</small></div>
   {phase==='reward'&&receipt&&<VendingCardReveal key={dispense?.key} cards={receipt.cards??[receipt.player]} preview={preview} origin={pickupOrigin} onClose={dismissReward}/>}
   {book&&<PlayerPopUpBook bookId={book} onClose={()=>{setBook(null);focusSlot(cursor);}}/>}

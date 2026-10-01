@@ -8,6 +8,8 @@ import KonbiniReveal,{revealItemFor,type RevealItem} from './KonbiniReveal';
 import KonbiniDoorSlide from './KonbiniDoorSlide';
 import VendingCardReveal from './VendingCardReveal';
 import {Icon} from './Icon';
+import TravelIcon from './TravelIcon';
+import {readBallRecord,recordStreak,takeShotTip,keepUpTip,cashierShotLine,SHOT_TIP,type BallEvent} from '@/lib/konbini/konbiniBall';
 import styles from './KonbiniRoom.module.css';
 // The coin balance is a read-only HUD display: the island's cream coin card (IslandJobs), not a gold button.
 import jobStyles from './IslandJobs.module.css';
@@ -20,11 +22,14 @@ import {vendingItem,type VendingItem} from '@/lib/town/vendingCatalog';
 import {LEARN_COINS_EARNED,learnToastTitle,type LearnCoinsEarned} from '@/lib/town/learnCoins';
 // Side effect: the outdoor drink machines register their consumables (own daily limit) and collection group on this page too.
 import '@/lib/town/drinkMachines';
+import {recordExploreActivity} from '@/lib/town/exploreActivity';
 import {parseKonbiniDoor,refreshKonbiniDeparture,KONBINI_RETURN_URL,type KonbiniDoor} from '@/lib/konbini/konbiniDoors';
 import {FOOD_PER_DAY,POUCH_SIZE,FUELLED_UP,SHOP_NAMES,foodItem,foodNote,type FoodPurchase} from '@/lib/konbini/food';
 import {buyFood,resolveFood,newPurchaseId,useKonbini,useKonbiniCollection,stampMagazine,foodBoughtToday} from '@/lib/konbini/foodStore';
 import {SHELF_LESSONS,MAGAZINES,STAMP_CARD_SIZE,DECOR_INFO,cashierNpc,type Magazine,type ShelfId} from '@/lib/konbini/konbiniContent';
 import {createPurchaseGate} from '@/lib/konbini/purchaseGate';
+import {creditConceptTick} from '@/lib/learning/reviewStore';
+import {conceptForMagazine} from '@/lib/learning/conceptMap';
 import {createKonbiniMusic,type KonbiniMusic,type MusicContext} from '@/lib/konbini/konbiniMusic';
 import {konbiniAudioContext,konbiniSfx} from '@/lib/konbini/konbiniSound';
 import {collectionProgress} from '@/lib/konbini/food';
@@ -49,7 +54,7 @@ type Selected={slot:KonbiniSlotView}|null;
 const compactCoins=(n:number)=>n>=10000?`${Math.floor(n/1000)}k`:String(n);
 export default function KonbiniRoom(){
  const [door,setDoor]=useState<KonbiniDoor|null>(null);
- useEffect(()=>{setDoor(parseKonbiniDoor(location.search));},[]);
+ useEffect(()=>{setDoor(parseKonbiniDoor(location.search));recordExploreActivity('konbini');},[]);// Explore checklist: Step into a Konbini (G-13)
  return door?<KonbiniInterior door={door}/>:<main className={styles.root} aria-label="Konbini"><KonbiniDoorSlide mode="arrive" ready={false}/></main>;
 }
 
@@ -64,12 +69,19 @@ function KonbiniInterior({door}:{door:KonbiniDoor}){
  const canvas=useRef<HTMLCanvasElement>(null),room=useRef<KonbiniScene|null>(null),joy=useRef<HTMLDivElement>(null),pointer=useRef<number|null>(null),tap=useRef<{x:number;y:number}|null>(null),promptRef=useRef<HTMLButtonElement>(null),swipe=useRef<{x:number;y:number}|null>(null);
  const [firstFrame,setFirstFrame]=useState(false),[greeting,setGreeting]=useState(false),[coins,setCoins]=useState<{key:number;n:number}|null>(null),[shownBalance,setShownBalance]=useState<number|null>(null);
  const walletRef=useRef<HTMLSpanElement>(null);
- const [exitTry,setExitTry]=useState(0);
+ const [exitTry,setExitTry]=useState(0),[walkingOut,setWalkingOut]=useState(false);
+ // Ball actions (lib/konbini/konbiniBall.ts): the keep-up streak bubble, the per-player best, coach tips and the cashier's line.
+ const [streak,setStreak]=useState<{n:number;live:boolean;best?:boolean;key:number}|null>(null),[best,setBest]=useState(0),[coachTip,setCoachTip]=useState(''),[clerkLine,setClerkLine]=useState('');
+ const clerkSpoke=useRef(false),ballEvent=useRef<(e:BallEvent)=>void>(()=>{});
+ useEffect(()=>{setBest(readBallRecord().best);},[]);
+ useEffect(()=>{if(!coachTip)return;const t=setTimeout(()=>setCoachTip(''),5200);return()=>clearTimeout(t);},[coachTip]);
+ useEffect(()=>{if(!clerkLine)return;const t=setTimeout(()=>setClerkLine(''),4200);return()=>clearTimeout(t);},[clerkLine]);
+ useEffect(()=>{if(!streak||streak.live)return;const t=setTimeout(()=>setStreak(null),streak.best?2600:1800);return()=>clearTimeout(t);},[streak]);
  const [ready,setReady]=useState(false),[failed,setFailed]=useState(false),[near,setNear]=useState<KonbiniPoi|null>(null),[leaving,setLeaving]=useState(false);
  const [zoom,setZoom]=useState<KonbiniZoomView|null>(null),[slots,setSlots]=useState<KonbiniSlotView[]>([]),[selected,setSelected]=useState<Selected>(null);
  const [overlay,setOverlay]=useState<Overlay|null>(null),[talking,setTalking]=useState(false);
  const [reveal,setReveal]=useState<Reveal|null>(null),[packReveal,setPackReveal]=useState<string[]|null>(null),[receipt,setReceipt]=useState<{label:string;price:number;key:number}|null>(null);
- const [busy,setBusy]=useState<string|null>(null),[message,setMessage]=useState(''),[toast,setToast]=useState(''),[answer,setAnswer]=useState<number|null>(null);
+ const [busy,setBusy]=useState<string|null>(null),[message,setMessage]=useState(''),[toast,setToast]=useState(''),[answer,setAnswer]=useState<number|null>(null),[wrongPicks,setWrongPicks]=useState<number[]>([]);
  // A synchronous gate held from the Buy tap until the reveal closes (code review finding 1): each Buy makes a fresh purchase id,
  // so a double tap or a held Enter during the receipt must not start a second purchase, receipt or coin shower.
  const gate=useRef(createPurchaseGate()).current;
@@ -87,19 +99,29 @@ function KonbiniInterior({door}:{door:KonbiniDoor}){
  const wallet=useArcadeWallet(),vending=useVending(),konbini=useKonbini(),collection=useKonbiniCollection();
  const joyRect=useJoystickBounds(joy,ready&&!zoom&&!overlay&&!reveal);
  const covered=!!overlay||!!reveal||!!packReveal||talking;
+ // The Shoot / Keep-ups buttons: only while walking about (hidden zoomed, in the reveal/preview, dialogs and the exit walk).
  const today=foodBoughtToday(),stamps=konbini.stamps.length,inPouch=konbini.purchases.filter(p=>p.paid&&p.fate==='pouch').length;
  const fuelled=today>=FOOD_PER_DAY;
  const npc=useMemo(()=>cashierNpc(shop,fuelled),[shop,fuelled]);
  const npcName=useRef(npc.name);npcName.current=npc.name;
+ // The cashier reacts once per visit, to the first shot that reaches a shelf (or the first shot back at your feet).
+ const clerkReact=()=>{if(clerkSpoke.current)return;clerkSpoke.current=true;setClerkLine(cashierShotLine(shop));};
+ ballEvent.current=e=>{
+  if(e.type==='strike'){if(takeShotTip())setCoachTip(SHOT_TIP);}
+  else if(e.type==='hit'){if(e.fi>=0)clerkReact();}
+  else if(e.type==='returned')clerkReact();
+  else if(e.type==='touch'){setStreak({n:e.streak,live:true,key:0});const tip=keepUpTip(e.streak);if(tip)setCoachTip(tip);}
+  else if(e.type==='drop'){if(e.streak<=0){setStreak(null);return;}const r=recordStreak(e.streak);setBest(r.best);setStreak({n:e.streak,live:false,best:r.newBest&&e.streak>=2,key:Date.now()});}
+ };
 
- const leave=()=>{if(leavingRef.current)return;leavingRef.current=true;setTimeout(()=>music.current?.dispose(),420);setOverlay(null);room.current?.clearInput();refreshKonbiniDeparture(door);setLeaving(true);setTimeout(()=>window.location.assign(KONBINI_RETURN_URL),matchMedia('(prefers-reduced-motion:reduce)').matches?60:520);};
+ const leave=()=>{if(leavingRef.current)return;setWalkingOut(true);leavingRef.current=true;setTimeout(()=>music.current?.dispose(),420);setOverlay(null);room.current?.clearInput();refreshKonbiniDeparture(door);setLeaving(true);setTimeout(()=>window.location.assign(KONBINI_RETURN_URL),matchMedia('(prefers-reduced-motion:reduce)').matches?60:520);};
  /** Look at a shelf: zoom onto it. The ATM opens its read-out; the register also opens the cashier's slide-out. */
  const look=(p:KonbiniPoi|ShelfId)=>{const id=typeof p==='string'?p:p.id;setMessage('');setSelected(null);
   if(id==='atm'){setOverlay({kind:'atm'});return;}room.current?.zoomToPoi(id);if(id==='counter'){room.current?.greet();setTalking(true);}};
  useEffect(()=>{if(!canvas.current)return;let canceled=false;const node=canvas.current;
   import('@/lib/konbini/konbiniScene').then(({createKonbiniScene})=>{if(canceled)return;try{
    const scene=createKonbiniScene(node,shop,{onNear:setNear,onArrive:p=>look(p),onExit:()=>leave(),onZoom:v=>{setZoom(v);if(!v)setSelected(null);},onSlots:setSlots,onFirstFrame:()=>{setFirstFrame(true);},onZoomArrive:poi=>konbiniSfx.section(poi),onZoomStep:()=>konbiniSfx.whoosh(),
-    onNudge:()=>setToast(`${npcName.current}: Dribble nice and gently in here! No kicking in the shop.`),
+    onBall:e=>ballEvent.current(e),
     onPrompt:(x,y,visible)=>{const b=promptRef.current;if(b){const half=(b.offsetWidth||160)/2,vw=window.innerWidth;b.style.left=`${Math.max(half+8,Math.min(vw-half-8,x))}px`;b.style.top=`${y}px`;b.style.visibility=visible?'visible':'hidden';}}});
    room.current=scene;(window as unknown as {__konbini?:unknown}).__konbini=scene;setReady(true);}catch{setFailed(true);}}).catch(()=>!canceled&&setFailed(true));
   return()=>{canceled=true;room.current?.dispose();room.current=null;delete (window as unknown as {__konbini?:unknown}).__konbini;};
@@ -113,6 +135,8 @@ function KonbiniInterior({door}:{door:KonbiniDoor}){
  useEffect(()=>{if(!toast)return;const t=setTimeout(()=>setToast(''),3600);return()=>clearTimeout(t);},[toast]);
  // Keyboard: Enter/E looks at the prompted shelf; while zoomed Enter buys the selected item (arrows/Escape live in the scene).
  useEffect(()=>{if(overlay||reveal||talking)return;const key=(e:KeyboardEvent)=>{if(e.repeat||e.target instanceof HTMLButtonElement)return;
+  // Keys inside the big item view (Preview) never buy: Enter/Space there bites the item (KonbiniReveal's bite toy).
+  if(e.target instanceof Element&&e.target.closest('[data-konbini-reveal]'))return;
   if((e.code==='Enter'||e.code==='KeyE')&&!zoom&&near){e.preventDefault();look(near);}else if(e.code==='Enter'&&zoom&&selected){e.preventDefault();void buySelected();}};
   window.addEventListener('keydown',key);return()=>window.removeEventListener('keydown',key);
  // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -139,7 +163,7 @@ function KonbiniInterior({door}:{door:KonbiniDoor}){
  function previewGear(it:VendingItem){const d=DECOR_INFO[it.kind==='pack'?'pack':'ball'];
   setPreview({item:{id:it.id,label:it.label,jp:it.kind==='pack'?'カードパック':'サッカーボール',blurb:it.blurb,note:d?.blurb??'',layers:gearPreviewLayers(it.id,it.kind),kind:'food',labels:{note:'Football tip'}},price:it.price,gear:it});}
  function choose(slot:KonbiniSlotView){setMessage('');
-  if(slot.kind==='magazine'){setSelected({slot});room.current?.highlightSlot(slot.key,true,()=>{setAnswer(null);setOverlay({kind:'magazine',id:slot.ref});room.current?.highlightSlot(null);});return;}
+  if(slot.kind==='magazine'){setSelected({slot});room.current?.highlightSlot(slot.key,true,()=>{setAnswer(null);setWrongPicks([]);setOverlay({kind:'magazine',id:slot.ref});room.current?.highlightSlot(null);});return;}
   setSelected({slot});room.current?.highlightSlot(slot.key);konbiniSfx.flick();try{navigator.vibrate?.(10);}catch{/* no haptics */}}
  async function buySelected(){const s=selected?.slot;if(!s)return;if(s.kind==='food'){const f=foodItem(s.ref);if(f)await buy(f.id);}else if(s.kind==='gear'){const it=vendingItem(s.ref);if(it)await buyGear(it);}}
  /** Paying (review items 9–10): coins fly from the wallet to the counter while it counts down, then a ka-ching. DOM only. */
@@ -206,8 +230,11 @@ function KonbiniInterior({door}:{door:KonbiniDoor}){
   if(o.kind==='magazine'){const m=MAGAZINES.find(x=>x.id===o.id) as Magazine;return <article className={styles.magazine} data-konbini-lesson={m.id}>
    <header style={{background:m.cover,color:m.ink}}><small>{m.title} · {m.issue}</small><h2>{m.headline}</h2></header>
    <ol>{m.lesson.map(l=><li key={l}>{l}</li>)}</ol>
-   <div className={styles.check}><b>{m.check.question}</b><div>{m.check.options.map((opt,i)=><button key={opt} type="button" data-konbini-answer={i} data-state={answer===null?undefined:i===m.check.answer?'right':i===answer?'wrong':undefined} disabled={answer!==null} onClick={()=>{setAnswer(i);if(i===m.check.answer)konbiniSfx.correct();else konbiniSfx.wrong();setTimeout(()=>konbiniSfx.thunk(),420);void stampMagazine(m.id);}}>{opt}</button>)}</div>
-    {answer!==null&&<p role="status" data-correct={answer===m.check.answer||undefined}>{answer===m.check.answer?'Correct! ':'Not quite: '}{m.check.options[m.check.answer]}. <span className={styles.stampPop}>★ Stamp!</span></p>}</div>
+   {/* QA11 C-9: a wrong pick no longer locks the check until a reload. The stamp is unchanged (the FIRST answer, right or wrong,
+       stamps the card: reading counts); a wrong option greys out and the child tries again without being told the answer, and a
+       right answer (first try or a retry) gives the "seen on the island" concept tick (idempotent per magazine). */}
+   {(()=>{const solved=answer===m.check.answer,tried=answer!==null||wrongPicks.length>0;return <div className={styles.check}><b>{m.check.question}</b><div>{m.check.options.map((opt,i)=><button key={opt} type="button" data-konbini-answer={i} data-state={wrongPicks.includes(i)?'wrong':solved&&i===m.check.answer?'right':undefined} disabled={solved||wrongPicks.includes(i)} onClick={()=>{const first=!tried;setAnswer(i);if(i===m.check.answer){konbiniSfx.correct();creditConceptTick(conceptForMagazine(m.id),`magazine:${m.id}`);}else{konbiniSfx.wrong();setWrongPicks(w=>[...w,i]);}setTimeout(()=>konbiniSfx.thunk(),420);if(first)void stampMagazine(m.id);}}>{opt}</button>)}</div>
+    {tried&&<p role="status" data-correct={solved||undefined}>{solved?<>Correct! {m.check.options[m.check.answer]}.</>:'Not quite. Read the tips again and try another answer.'} <span className={styles.stampPop}>★ Stamp!</span></p>}</div>;})()}
    <Sources list={m.sources}/></article>;}
   if(o.kind==='stamps')return <><h2>Stamp card</h2><div className={styles.stamps}>{MAGAZINES.map(m=><span key={m.id} data-on={konbini.stamps.includes(m.id)||undefined} title={m.headline}>{konbini.stamps.includes(m.id)?'★':m.shop==='cay'?'CAY':'SQ'}</span>)}</div><p className={styles.small}>{stamps}/{STAMP_CARD_SIZE} stamps (Island Square and Coral Cay magazines). A full card pays 5 learning coins, once.</p></>;
   return <><h2>ATM & copier</h2><p className={styles.lesson}>Your coins: <b data-konbini-balance>{wallet.balance}</b>. Coins come from lessons, the ball hunt, island jobs and the arcade. Learning pays best!</p>
@@ -215,8 +242,12 @@ function KonbiniInterior({door}:{door:KonbiniDoor}){
    <p className={styles.small}>The copier prints your stamp card: {Array.from({length:STAMP_CARD_SIZE},(_,i)=>i<stamps?'★':'☆').join(' ')}</p></>;
  }
 
+ // Shoot / Keep-ups (the island's round action buttons, Space / J): shown only while walking about the store.
+ const actionsOn=ready&&!failed&&!zoom&&!overlay&&!reveal&&!preview&&!packReveal&&!talking&&!walkingOut&&!leaving;
+ const haptic=()=>{try{navigator.vibrate?.(8);}catch{/* no haptics */}};
+ const until=(b:HTMLElement,ms=700)=>{b.dataset.actionUntil=String(performance.now()+ms);},suppressed=(b:HTMLElement)=>performance.now()<Number(b.dataset.actionUntil??0);
  return <main aria-label={SHOP_NAMES[shop]} className={styles.root} data-konbini-room={shop} data-ready={ready} data-shop={shop} data-zoomed={!!zoom}>
-  <header className={styles.header}>{zoom?<NavigationButton back label="Back" data-konbini-back onNavigate={()=>{setSelected(null);room.current?.zoomOut();}} immediate/>:<NavigationButton back label="Exit" key={exitTry} onNavigate={()=>{if(room.current){room.current.leave();const n=exitTry;setTimeout(()=>{if(!leavingRef.current)setExitTry(n+1);},5000);}else leave();}}/>}
+  <header className={styles.header}>{zoom?<NavigationButton back label="Back" data-konbini-back onNavigate={()=>{setSelected(null);room.current?.zoomOut();}} immediate/>:<NavigationButton label="Done" data-konbini-done key={exitTry} onNavigate={()=>{if(room.current){setWalkingOut(true);room.current.leave();const n=exitTry;setTimeout(()=>{if(!leavingRef.current){setExitTry(n+1);setWalkingOut(false);}},5000);}else leave();}}/>}
    {zoom&&<span className={styles.section} data-konbini-section={zoom.poi} aria-live="polite">{zoom.label}</span>}
    <div className={styles.headerActions}><span ref={walletRef} className={`${jobStyles.wallet} ${styles.hudWallet}`} data-konbini-wallet data-paying={shownBalance!==null||undefined} aria-label={`${shownBalance??wallet.balance} coins`}><span className={jobStyles.coin} aria-hidden="true"/><b>{compactCoins(shownBalance??wallet.balance)}</b><small>coins</small></span></div></header>
   <canvas ref={canvas} tabIndex={0} className={styles.canvas} aria-label={`Walkable ${SHOP_NAMES[shop]}. Use WASD or arrow keys to walk, then Enter to look at a shelf. Tap a shelf to walk there.`}
@@ -253,6 +284,23 @@ function KonbiniInterior({door}:{door:KonbiniDoor}){
   {coins&&<div key={coins.key} className={styles.coins} aria-hidden="true" onAnimationEnd={e=>{if(e.currentTarget===e.target)setCoins(null);}}>{Array.from({length:coins.n},(_,i)=><i key={i} style={{animationDelay:`${i*60}ms`}}/>)}</div>}
   {!zoom&&<div className="touch-controls"><div className="joystick" data-edge="false" ref={joy} draggable={false} onDragStart={e=>e.preventDefault()} onContextMenu={e=>e.preventDefault()} role="group" aria-label="Move around the Konbini"
    onPointerDown={e=>{if(pointer.current!==null||!ready)return;e.preventDefault();pointer.current=e.pointerId;joyRect.current=null;e.currentTarget.setPointerCapture(e.pointerId);move(e);}} onPointerMove={move} onPointerUp={stop} onPointerCancel={stop} onLostPointerCapture={stop}><i className="joystick-contact" aria-hidden="true"><i className="joystick-contact-arc"/></i><span aria-hidden="true"/></div></div>}
+  {actionsOn&&<div className={`travel-actions ${styles.ballActions}`} data-konbini-actions><div className="touch-actions">
+   <button type="button" className="touch-juggle" data-konbini-action="keepups" aria-label={best?`Keep-ups (best ${best})`:'Keep-ups'} title="Keep-ups · J. Tap each time the ball drops back to your foot." onContextMenu={e=>e.preventDefault()}
+    onPointerDown={e=>{if(e.button!==0)return;e.preventDefault();until(e.currentTarget);room.current?.keepUp();haptic();}}
+    onClick={e=>{if(suppressed(e.currentTarget))return;room.current?.keepUp();}}><TravelIcon kind="juggle"/></button>
+   <button type="button" className="touch-shoot" data-konbini-action="shoot" aria-label="Shoot" title="Shoot · Space. Hold for a firmer (still gentle) shot." onContextMenu={e=>e.preventDefault()}
+    onPointerDown={e=>{if(e.button!==0)return;e.preventDefault();const b=e.currentTarget;until(b);if(room.current?.beginShot()){b.setPointerCapture(e.pointerId);b.dataset.charging='true';haptic();}}}
+    onPointerUp={e=>{const b=e.currentTarget;until(b);delete b.dataset.charging;room.current?.endShot();}}
+    onPointerCancel={e=>{delete e.currentTarget.dataset.charging;room.current?.endShot(true);}}
+    onLostPointerCapture={e=>{delete e.currentTarget.dataset.charging;room.current?.endShot(true);}}
+    onKeyDown={e=>{if(e.code!=='Space')return;e.preventDefault();e.stopPropagation();if(!e.repeat&&room.current?.beginShot())e.currentTarget.dataset.charging='true';}}
+    onKeyUp={e=>{if(e.code!=='Space')return;e.preventDefault();e.stopPropagation();const b=e.currentTarget;delete b.dataset.charging;until(b,300);room.current?.endShot();}}
+    onBlur={e=>{delete e.currentTarget.dataset.charging;room.current?.endShot(true);}}
+    onClick={e=>{if(suppressed(e.currentTarget))return;room.current?.kick();}}><TravelIcon kind="shoot"/></button>
+  </div></div>}
+  {streak&&actionsOn&&<p key={streak.key} className={styles.streak} data-konbini-streak={streak.n} data-live={streak.live||undefined} data-best={streak.best||undefined} role={streak.live?undefined:'status'}>Keep-ups: <b>{streak.n}</b>{streak.best?<span className={styles.newBest}>★ New best!</span>:best>0?<small>best {best}</small>:null}</p>}
+  {coachTip&&<p className={styles.coachTip} role="status" data-konbini-coach-tip><b>Coach tip</b>{coachTip}</p>}
+  {clerkLine&&<aside className={styles.clerkLine} role="status" data-konbini-clerk-line><span>{npc.name}</span><p>{clerkLine}</p></aside>}
   <KonbiniDoorSlide mode={leaving?'leave':'arrive'} key={leaving?'leave':'arrive'} ready={firstFrame||failed}/>
  </main>;
 }

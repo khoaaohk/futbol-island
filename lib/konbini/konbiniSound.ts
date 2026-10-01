@@ -12,6 +12,11 @@ function tone(freq:number,start:number,dur:number,gain=.12,type:OscillatorType='
  const c=context();if(!c)return;const t=c.currentTime+start,o=c.createOscillator(),g=c.createGain();o.type=type;o.frequency.setValueAtTime(freq,t);
  const peak=gain*getSoundVolume()*2;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(peak,t+.012);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+dur+.02);
 }
+/** A one-shot pitch sweep (the sip's gulp bubble). */
+function sweep(f0:number,f1:number,start:number,dur:number,gain=.06){
+ const c=context();if(!c)return;const t=c.currentTime+start,o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(f1,t+dur);
+ const peak=gain*getSoundVolume()*2;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(peak,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+dur+.02);
+}
 export const konbiniTick=(step=0)=>tone(880+step*70,0,.08,.06,'triangle');
 /** A short filtered-noise burst (steam hiss, page riffle, paper flick, whoosh). One-shot, stopped within its length. */
 function noise(start:number,dur:number,gain:number,freq:number,q=1,sweepTo?:number){
@@ -31,6 +36,17 @@ export const konbiniSfx={
  kaching:()=>{noise(0,.05,.05,2500,3);tone(2093,.04,.28,.06,'triangle');tone(2637,.1,.35,.05,'triangle');},
  coin:(i=0)=>tone(1760+i*90,i*.07,.07,.03,'square'),
  crumb:()=>noise(0,.05,.025,1800,1.5),
+ /** Ball actions (lib/konbini/konbiniBall.ts), original one-shots ≤ 0.2 s: a soft instep strike (louder with pace), a wall
+  *  bounce, and a light keep-up tap that rises a little with the streak. Shelf hits use `thunk`. */
+ kick:(speed=3)=>{const k=Math.min(1,speed/6);tone(150,0,.09,.06+.05*k,'sine');noise(0,.05,.04+.03*k,900,1.1);},
+ bounce:(speed=2)=>{const k=Math.min(1,speed/6);tone(210,0,.07,.025+.04*k,'sine');noise(0,.03,.02+.02*k,1200,1.4);},
+ touch:(streak=1)=>{tone(360+Math.min(12,streak)*14,0,.06,.045,'triangle');noise(0,.025,.025,1600,1.6);},
+ /** The bite toy (lib/konbini/biteToy.ts), original synth: a soft jaw thump, then two crunchy noise snaps (≈0.15 s). */
+ bite:()=>{tone(150,0,.07,.08,'sine');noise(.005,.05,.07,2600,1.4,1500);noise(.06,.07,.05,1900,1.2,1100);noise(.1,.04,.025,3200,2);},
+ /** A sip: a small rising "gulp" bubble (two sine sweeps) with a wet noise tick (≈0.2 s). */
+ sip:()=>{sweep(260,520,0,.1,.07);sweep(300,640,.1,.09,.05);noise(0,.04,.02,900,2);},
+ /** All gone: a happy little two-note pop. */
+ gone:()=>{tone(660,.14,.1,.05,'triangle');tone(990,.22,.16,.05,'triangle');},
  section:(poi:string)=>{switch(poi){
   case 'drinks':tone(70,0,.22,.1,'sine');noise(.02,.12,.03,500,1);tone(120,.1,.5,.015,'sine');break;// fridge door shunk + hum burst
   case 'hot':noise(0,.55,.04,5000,.6,3000);break;// steam hiss

@@ -38,7 +38,7 @@ assert.match(src,/const dismiss=\(\)=>\{if\(!finished\)return;/,'dismiss is guar
 assert.match(src,/onCancel=\{event=>\{event\.preventDefault\(\);/,'Escape (dialog cancel) never closes the card');
 assert.match(src,/lessonPrimaryLabel\(stepper,lesson\.actions\)/,'one bottom button switches from the step action to Got it');
 assert.match(src,/navStyles\.button/,'the bottom button reuses the DoneButton gold paper pill');
-assert.match(src,/<NavigationButton back immediate label="Previous step"/,'previous uses the NavigationButton back pill');
+assert.match(src,/className=\{styles\.previousArrow\} aria-label="Previous step"[^>]*disabled=\{!canGoBack\(stepper\)\}/,'previous is a round arrow button (Sep 30 2026), labelled "Previous step" and disabled on the first step');
 assert.doesNotMatch(src,/%3\)|\/ 3</,'no hard-coded three-step assumptions');
 assert.doesNotMatch(src,/Try it again/,'no wrap-around replay button that skips the finish');
 console.log('PASS ball hunt lesson steps: Got it only after the last step, next/previous/arrows, single-step lessons, no early dismiss');

@@ -11,7 +11,22 @@ export const dynamic = "force-dynamic";
 
 const TIERS = new Set([500, 1000, 1500, 2500]); // $5 / $10 / $15 / $25 (cents)
 
+/**
+ * QA11 (production gating): the grown-up check is client-side, so a typed or pasted /coffee/checkout URL (or one opened from
+ * outside the site) must not jump straight to Stripe. Only a navigation started by one of our own pages, i.e. the gated tier
+ * links after a pass (ExternalLinkGate opens them), goes on; anything else is sent to /coffee, which asks the grown-up question
+ * first. `Sec-Fetch-Site` is set by the browser (not by page script); browsers without it fall back to the same-origin Referer.
+ */
+function startedOnSite(req: Request, origin: string) {
+  const site = req.headers.get("sec-fetch-site");
+  if (site) return site === "same-origin";
+  const referer = req.headers.get("referer");
+  try { return !!referer && new URL(referer).origin === origin; } catch { return false; }
+}
+
 export async function GET(req: Request) {
+  const here = new URL(req.url);
+  if (!startedOnSite(req, here.origin)) return NextResponse.redirect(new URL("/coffee", here.origin), 303);
   const secret = process.env.STRIPE_SECRET_KEY;
   if (!secret) return NextResponse.json({ error: "Donations aren't configured yet." }, { status: 503 });
 

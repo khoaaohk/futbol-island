@@ -129,3 +129,6 @@
 .bottom .quizActions .quizSecondary{background:var(--btn-mint);color:var(--btn-ink);border:0;box-shadow:0 4px 0 var(--btn-mint-edge)}
 .bottom .quizActions .quizPrimary:active{translate:0 2px;box-shadow:0 2px 0 var(--btn-green-edge)}
 .bottom .quizActions .quizSecondary:active{translate:0 2px;box-shadow:0 2px 0 var(--btn-mint-edge)}
+/* Lesson opener (G-18, Sep 30 2026): title, "You'll learn" and, for the first lesson, a few kid-simple words. Reuses the quiz card. */
+.lessonWords{display:grid;gap:6px;margin:6px 0 0;font-size:13px;line-height:1.4}.lessonWords div{display:flex;flex-wrap:wrap;gap:0 5px}.lessonWords dt{font-weight:800}.lessonWords dt::after{content:':'}.lessonWords dd{margin:0}
+[data-lesson-opener] .endActions{display:flex;justify-content:flex-start;margin:0 0 10px}

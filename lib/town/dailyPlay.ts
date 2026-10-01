@@ -18,3 +18,13 @@ export function createDailyPlay(ports:{now:()=>number;claim:(day:string)=>Promis
  }
  return{step,inspect:()=>({day,seconds,done,pending})};
 }
+/**
+ * Which frames count toward the daily bonus (G-11, Sep 30 2026). Sessions start on the jetpack (the island's arrival), so the old
+ * walk-only rule meant a child who flew around all session never earned the bonus and was never told why. Now any movement the
+ * child STEERS counts: walking, dribbling, the jetpack, parachute and every ride (bike, scooter, skateboard...). Still excluded:
+ * idle time, hidden tabs, menus, lessons, and riding an automatic street truck (the truck drives itself). Both steering input and
+ * real displacement are still required, so holding a key against a wall or watching a match earns nothing.
+ */
+export function dailyPlayCounts(f:{active:boolean;menuOpen:boolean;inLesson:boolean;onTruck:boolean;steering:boolean;moved:boolean}):boolean{
+ return f.active&&!f.menuOpen&&!f.inLesson&&!f.onTruck&&f.steering&&f.moved;
+}

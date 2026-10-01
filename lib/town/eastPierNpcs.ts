@@ -24,7 +24,7 @@ export const EAST_PIER_NPCS:NpcDefinition[]=[
   {id:'ring',question:'What is the ring out in the water?',answer:'That is the Jetty Shooting Challenge. Stand on the painted spot on the spiral’s north curve, pick your spot, turn to face it and kick. Land the ball inside the ring and it moves somewhere new.',
    followUp:{question:'Why does the ring keep moving?',answer:'So you practise choosing a target every time. FIFA coaches say placing your shot either side of the goalkeeper gives you a better chance of scoring. Aim first, then strike.'}},
  ]},
- {id:'pier-ollie',name:'Ollie',role:'Keep-ups on the jetty',pursuit:'KEEP-UPS BY THE SEA',x:S.kid.x,z:S.kid.z,character:'male',face:'warm',clothing:'sunset',body:'slim',freestyle:1,workYaw:Math.PI/2,
+ {id:'pier-ollie',name:'Ollie',role:'Keep-ups on the jetty',pursuit:'KEEP-UPS BY THE SEA',x:S.kid.x,z:S.kid.z,character:'male',face:'warm',clothing:'sunset',body:'slim',freestyle:1,freestyleClip:'ItMt_tZh-Dk',workYaw:Math.PI/2,
   greeting:'Twenty-two, twenty-three… oops! I practise keep-ups out here every day. It is windy, so I have to keep the ball close. Want some tips?',topics:[
   {id:'start',question:'How do I start keep-ups?',answer:'Drop the ball, tap it up once with your laces and catch it. When that feels easy, try two touches before the catch. Keep your ankle firm and your toes pointing a little up.',
    followUp:{question:'How do keep-ups help in a match?',answer:'They practise soft touches and balance, so a bouncing pass is easier to control. In a game you usually take one or two touches, then pass or dribble.'}},

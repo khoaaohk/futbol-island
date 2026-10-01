@@ -64,7 +64,9 @@ const load=(path,extra={})=>{const m={exports:{}};vm.runInNewContext(ts.transpil
 {
   const runtime=read('lib/town/fieldRuntime.ts'),town=read('components/Town.tsx');
   const skip=runtime.indexOf('e.root.visible=visible;'),skipLine=runtime.slice(skip,runtime.indexOf('\n',skip));
-  assert(/if\(!visible\)continue;/.test(skipLine),'offscreen fields leave the loop before any rig is created or posed');
+  // QA11: strip a trailing // comment first, so a skip that got commented out does not count.
+  const skipCode=skipLine.replace(/\/\/.*$/,'');
+  assert(/if\(!visible\)continue;/.test(skipCode),'offscreen fields leave the loop before any rig is created or posed (the skip must be live code, not inside a // comment)');
   assert(skip<runtime.indexOf('createPlayer(token.id')&&skip<runtime.indexOf('rig.update(px,pz'),'rig creation/posing comes after the visibility skip');
   assert.match(runtime,/const matchDt=e\.clock\.take\(dt,immediate,/,'distant hidden matches step on the throttled match clock');
   for(const menu of ['customizerOpen','storeOpen','settingsOpen','cardOfferOpen','conversationOpen'])assert(new RegExp(`settingsRef\\.current=[^;]*\\b${menu}\\b`).test(town),`${menu} pauses the island`);

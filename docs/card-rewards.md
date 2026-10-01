@@ -234,6 +234,25 @@ Removed on Sep 24 2026 (user: "there are no users yet"). Past progress earns not
 
 **No per-session cap** (removed Sep 25 2026). The old `MAX_OFFERS_PER_SESSION = 6` silently skipped the 7th achievement in a visit, and a ball can only be found once, so the child lost a card they had earned (reported by the user). Every trigger is already one-time (balls, quizzes, Explore items, Journey stages, stories) or capped per day (NPC chats, 5), so there is nothing to spam.
 
+### Explore checklist: six more items (30 Sep 2026, game-audit G-13)
+
+The checklist grew from 16 to 22 items. The new ones and what counts:
+- **Catch a fish:** a Fishbook catch.
+- **Finish an island job:** any job in the jobs ledger.
+- **Sell to Rosa:** a market sale.
+- **Visit Coral Cay:** being on the cay, on any ride.
+- **Walk the East Jetty:** on the jetty, not flying over it.
+- **Step into a Konbini:** opening `/konbini`.
+
+How they are recorded:
+- The fishing, jobs and market stores fire `lib/town/exploreSignals.ts` (dependency-free).
+- The two places are checked by `lib/town/exploreZones.ts` from Town's existing frame callback. It checks at most twice a second and switches off once both are done.
+- Existing saves count from the stores' own keys (`evidenceFromSaves`). The watcher's first-run baseline means they are not paid retroactively.
+
+Rewards follow the existing rules:
+- Fish, job and Rosa take effort, so they pay 5 learning coins once plus a pick.
+- Coral Cay, the jetty and a Konbini are visits, so they tick off and pay nothing, like visiting a field (`NO_CARD_EXPLORE`).
+
 ## Kid-safety guardrails
 
 - **Blind, but nothing to lose.** Since 25 Sep 2026 the cards are face-down (user request). Every card offered is new to the child, so any pick is a good pick; no odds or rarity are shown before the pick, and Star and Legend appear as text labels only after the reveal.

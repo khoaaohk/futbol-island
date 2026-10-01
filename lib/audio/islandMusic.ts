@@ -71,7 +71,10 @@ export function createIslandMusic(initialEnabled=true,initialVolume=.04,sharedCo
     if(userGesture)start(true);
   }
   function unlock(){
-    if(!allowed())return;
+    // The first real gesture always unlocks, even while music isn't allowed yet (the arrival replay, a menu, a duck): the old
+    // early return threw those taps away, so music only started on a later tap that happened to land at an allowed moment
+    // (e.g. the Paths icon). Unlocked, it starts as soon as it is allowed, including on the first move (Sep 30 2026).
+    if(!enabled||disposed)return;
     try{
       if(!context){
         const AC=window.AudioContext||(window as unknown as {webkitAudioContext?:typeof AudioContext}).webkitAudioContext;
@@ -79,7 +82,11 @@ export function createIslandMusic(initialEnabled=true,initialVolume=.04,sharedCo
         context=sharedContext?sharedContext():new AC();if(!context)return;gain=context.createGain();gain.gain.value=0;
         source=context.createMediaElementSource(audio);source.connect(gain);gain.connect(context.destination);
       }
-      unlocked=true;play(true);
+      const first=!unlocked;unlocked=true;
+      if(allowed()){play(true);return;}
+      // Not allowed right now: prime the element inside this gesture (iOS only lets media start from a tap) at zero gain; the
+      // 'play' listener pauses it again at once, and a later play() without a gesture is then permitted.
+      if(first&&audio.paused){if(!audio.getAttribute('src'))audio.src=`/music/${TRACK}.mp3`;try{void audio.play().then(()=>{if(!allowed())audio.pause();}).catch(()=>{});}catch{}}
     }catch{/* Keep exploration working when audio is unavailable. */}
   }
   // Idle pause: one timer, re-armed only when it fires (inputs just stamp the time). Any pointer/key/wheel input resumes in the gesture.

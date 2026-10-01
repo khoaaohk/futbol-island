@@ -1,3 +1,5 @@
+// Needs `npm run dev` on :8092 (QA11): it relies on the /splash-lab page, which production builds switch off. Fails fast otherwise (scripts/requireDevServer.cjs).
+const {requireDevServer}=require('./requireDevServer.cjs');
 // Bakes the loading-screen cast (public/splash/*.webp) from the REAL bean rig: opens the dev page /splash-lab on the
 // running dev server (:8092), poses each character with the preview move driver, renders one transparent still per
 // character (cropped), then encodes two WebP sizes with cwebp (brew install webp).
@@ -28,10 +30,10 @@ const CAST=[
  {id:'rival',spec:{match:{key:'splash-away',side:'away',number:11,look:{skin:'#fde6d2',eyes:'ticks',mouth:'smirk',hair:{style:'long',color:'#b04a2a'},build:'tall'}},move:'rainbow',at:1.0,yaw:-.6,expression:'happy'}},
 ];
 
-(async()=>{
+(async()=>{await requireDevServer(BASE);
  if(arcade){const poses=[['thankPasser',1.45,.35],['walk',.75,-.5],['celebrate',.4,.3],['thankPasser',1.45,-.4],['airplane',1.1,-.7]];CAST.forEach((c,i)=>Object.assign(c.spec,{move:poses[i][0],at:poses[i][1],yaw:poses[i][2],ball:false,outfit:{shirt:['#ff45b5','#4fe5f2','#ad7dff','#4fe5f2','#ff62c6'][i],shirt2:'#e7fcff',shorts:'#191329',socks:['#4fe5f2','#ff45b5','#60e9f2','#ff62c6','#ad7dff'][i],socks2:'#191329',boots:'#191329'}}));CAST[3].spec.custom={character:'female',costume:'none',bodyColor:'lilac',eyes:'happy',mouth:'grin',hair:'puffs'};}
  const only=arcade?null:process.argv[2];fs.mkdirSync(OUT,{recursive:true});if(process.env.SPLASH_PNG)fs.mkdirSync(RAW,{recursive:true});
- const browser=await chromium.launch({headless:true,args:['--use-angle=metal','--enable-gpu','--ignore-gpu-blocklist']});
+ const browser=await chromium.launch({headless:true,args:['--mute-audio','--use-angle=metal','--enable-gpu','--ignore-gpu-blocklist']});
  const manifestPath=path.join(OUT,'cast.json');const manifest=fs.existsSync(manifestPath)?JSON.parse(fs.readFileSync(manifestPath,'utf8')):{};
  try{
   const page=await browser.newPage({viewport:{width:800,height:800}});const errors=[];page.on('pageerror',e=>errors.push(e.message));

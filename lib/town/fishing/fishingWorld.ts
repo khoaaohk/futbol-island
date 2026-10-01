@@ -39,6 +39,8 @@ export type FishingUpdate={
 };
 
 const SPOT_REACH=6.2,BOB_RANGE=45,KIOSK_OFFSET=2.1;
+/** Bottom of the fishing status card plus a gap on wide screens (FishingHost.module.css .message: top 88px, one line). */
+const CATCH_MESSAGE_BOTTOM=88+48+10;
 type Colored={geometry:T.BufferGeometry;color:string};
 function paint({geometry,color}:Colored){
  const g=geometry.index?geometry.toNonIndexed():geometry.clone();geometry.dispose();
@@ -49,6 +51,14 @@ function paint({geometry,color}:Colored){
 const place=(g:T.BufferGeometry,x:number,y:number,z:number,rx=0,ry=0,rz=0,s:[number,number,number]=[1,1,1])=>g.applyMatrix4(new T.Matrix4().compose(new T.Vector3(x,y,z),new T.Quaternion().setFromEuler(new T.Euler(rx,ry,rz)),new T.Vector3(...s)));
 
 /** A small "fishing post": tackle chest, notice board with a fish emblem, a little roof and two rods (matches the cabinet glow). */
+/** Where a fishing post's kiosk (the little bait/fish stall) stands: beside the standing spot, square to the cast. */
+function kioskAt(s:FishSpot){if(s.boat)return {x:s.boat.prompt.x,z:s.boat.prompt.z};const dx=s.buoy.x-s.x,dz=s.buoy.z-s.z,l=Math.hypot(dx,dz)||1;return {x:s.x+(-dz/l)*KIOSK_OFFSET,z:s.z+(dx/l)*KIOSK_OFFSET};}
+/** Solid footprints for every kiosk (Sep 30 2026: players walked straight through them). The cabinet is 1.2 × 0.7 m turned 45°,
+ *  so its axis-aligned box is ≈1.34 m square; the standing spot (2.1 m away) stays clear. Pushed into world.obstacles in Town.tsx
+ *  before the collision grids are built, so walking, rides and the ball all stop at the stall. */
+export function fishingKioskObstacles():{x:number;z:number;w:number;d:number}[]{
+ const c=Math.SQRT1_2,size=(1.2+.7)*c;return FISH_SPOTS.filter(s=>!s.boat).map(s=>{const k=kioskAt(s);return {x:k.x,z:k.z,w:size,d:size};});
+}
 function kioskParts(rocks:boolean):Colored[]{
  const parts:Colored[]=[
   {geometry:new T.BoxGeometry(1.2,1.25,.7).translate(0,.625,0),color:'#a67d55'},
@@ -82,6 +92,7 @@ function signTexture(){
 export function createFishingWorld(scene:T.Scene,player?:T.Object3D,session?:FishingSessionApi){
  const cam=createFishingCamera();let liveSpot=-1,visuals:FishingVisuals|null=null,fishing=false,stand={x:0,z:0},cast=castPoint(FISH_SPOTS[0],FISH_SPOTS[0]);const labelPoint=new T.Vector3();
  /** Near a spot (45 m) or fishing: the visuals exist; 80 m away and idle: they are disposed (docs/fishing-visuals-HANDOFF.md). */
+ let catchLabelHeight=0;
  const nearAnySpot=(x:number,z:number,r:number)=>FISH_SPOTS.some(s=>Math.abs(x-s.x)<r&&Math.abs(z-s.z)<r);
  const beat=(e:SessionEvent)=>{if(!visuals)return;if(e==='splash')visuals.splash('land');else if(e==='reel'||e==='pull')visuals.nibble();else if(e==='nibble')visuals.nibble();else if(e==='bite')visuals.splash('bite');else if(e==='hooked')visuals.splash('hook');else if(e==='scared'||e==='escaped')visuals.splash('small');};
  const stopFishing=(api:FishingSessionApi)=>{fishing=false;cam.end();visuals?.end();api.end();hideFloat(liveSpot,false);liveSpot=-1;};
@@ -121,14 +132,18 @@ export function createFishingWorld(scene:T.Scene,player?:T.Object3D,session?:Fis
    if(show){visuals!.labelAnchor(labelPoint).project(c.camera);const narrow=c.width<560,px=(labelPoint.x+1)*c.width/2,py=(1-labelPoint.y)*c.height/2;
     // Beside the angler (the held-up fish stays visible); on narrow phones, docked just above the Fishbook/Cast actions
     // (actions: 58px buttons at bottom 28px + safe area, see FishingHost.module.css) so it never covers the angler.
-    label.dataset.side=narrow?'dock':'right';c.place(label,narrow?c.width/2:T.MathUtils.clamp(px+46,16,c.width-330),narrow?c.height-100:T.MathUtils.clamp(py,150,c.height-150));}
+    // QA11 D-2: beside the angler the card is centred on the fish, so its top must clear the status card ("Lanternfish! Keep
+    // fishing or stop.", top 88px + one ~46px line, FishingHost.module.css): its height is read once per catch (not per frame).
+    if(!narrow&&!catchLabelHeight&&label.dataset.dismissed===undefined)catchLabelHeight=label.offsetHeight;
+    const minY=Math.max(150,CATCH_MESSAGE_BOTTOM+catchLabelHeight/2);
+    label.dataset.side=narrow?'dock':'right';c.place(label,narrow?c.width/2:T.MathUtils.clamp(px+46,16,c.width-330),narrow?c.height-100:Math.max(minY,Math.min(py,c.height-150)));}
+   else catchLabelHeight=0;
    c.hide(label,!show);}
   return fishing?-1:near;
  }:null;
  const root=new T.Group();root.name='fishing-spots';scene.add(root);
  const geometries:T.BufferGeometry[]=[],materials:T.Material[]=[],textures:T.Texture[]=[];
  // The Deep Sea Boat has no post: its prompt floats over the rod holders (./deepSeaBoatData.ts).
- const kioskAt=(s:FishSpot)=>{if(s.boat)return {x:s.boat.prompt.x,z:s.boat.prompt.z};const dx=s.buoy.x-s.x,dz=s.buoy.z-s.z,l=Math.hypot(dx,dz)||1;return {x:s.x+(-dz/l)*KIOSK_OFFSET,z:s.z+(dx/l)*KIOSK_OFFSET};};
  // One merged, vertex-coloured mesh for every fishing post.
  const all:T.BufferGeometry[]=[];
  for(const s of FISH_SPOTS){if(s.boat)continue;const k=kioskAt(s);for(const part of kioskParts(s.id==='north-rocks'||s.id==='west-cove')){const g=paint(part);g.applyMatrix4(new T.Matrix4().makeRotationY(Math.PI/4));g.translate(k.x,0,k.z);all.push(g);}}
@@ -195,6 +210,8 @@ export function createFishingWorld(scene:T.Scene,player?:T.Object3D,session?:Fis
   const lingerSpot=!c.mobile&&c.canEnter&&(hoverKind==='spot'&&c.now<hoverUntil||!!fishPrompt?.matches(':hover'))?hoverSpot:-1;
   const lingerStand=!c.mobile&&c.canEnter&&(hoverKind==='stand'&&c.now<hoverUntil||!!standPrompt?.matches(':hover'));
   let activeSpot=fishing?-1:near>=0?near:lingerSpot,activeStand=!fishing&&(nearStand||lingerStand);
+  // What would show if nothing else held the HUD focus (lib/ui/hudStack.ts arbitrates; `blocked` is its answer).
+  const wantsFish=activeSpot>=0&&activeSpot===near,wantsSell=!wantsFish&&activeStand,wantsDistance=wantsFish?nearD:wantsSell?(nearStand?Math.hypot(c.x-MARKET_STAND.front.x,c.z-MARKET_STAND.front.z):-1):Infinity;
   if(c.blocked){activeSpot=-1;activeStand=false;}else if(activeSpot>=0&&activeStand)activeStand=false;
   // Prompts.
   const show=(el:HTMLButtonElement|null|undefined,visible:boolean,x:number,y:number,z:number)=>{
@@ -221,7 +238,7 @@ export function createFishingWorld(scene:T.Scene,player?:T.Object3D,session?:Fis
   if(rip){const b=FISH_SPOTS[near].buoy;rippleAge.t=(rippleAge.t+Math.min(c.dt,.05)*.55)%1;ripple.position.set(b.x,-.4,b.z);ripple.scale.setScalar(.7+rippleAge.t*1.6);rippleMaterial.opacity=.5*(1-rippleAge.t);ripple.updateMatrix();}
   if(ripple.visible!==rip)ripple.visible=rip;
   const hoverKey=overSpot>=0?overSpot:overStand?99:-1,hoverStarted=hoverKey>=0&&hoverKey!==lastHover;lastHover=hoverKey;
-  return {hovered:hoverKey>=0,hoverStarted};
+  return {hovered:hoverKey>=0,hoverStarted,wants:(wantsFish?'fish':wantsSell?'sell':null) as 'fish'|'sell'|null,wantsDistance};
  }
  return {update,spots:FISH_SPOTS,
   /** Call right after the follow camera is placed (like vending.applyCamera): eases to the low shoreline shot while fishing. */

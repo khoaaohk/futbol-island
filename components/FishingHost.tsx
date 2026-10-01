@@ -4,16 +4,19 @@
  * Fishing plays LIVE in the 3D island (lib/town/fishing/fishingWorld.ts + fishingRig.ts): this component only renders the
  * world prompts, a minimal HUD (Reel + Back, a one-line hint, a small lesson toast, the in-world catch label that the
  * world positions each frame) and the lazily loaded Fishbook / market stand dialogs.
- * Other features can open the stand with `window.dispatchEvent(new CustomEvent(OPEN_MARKET_STAND))` (detail: {tab}).
+ * Other features can open the stand with `window.dispatchEvent(new CustomEvent(OPEN_MARKET_STAND))` (detail: {tab, place}; place 'farm' = the Coral Cay farm stand, produce only).
  */
 import dynamic from 'next/dynamic';
 import {useEffect,useRef,useState,useSyncExternalStore} from 'react';
 import {fishingSession} from '@/lib/town/fishing/fishingStore';
-import {RARITY_LABEL,fishById,spotById} from '@/lib/town/fishing/fishCatalog';
+import {RARITY_LABEL,KEEPER_LESSONS,fishById,spotById} from '@/lib/town/fishing/fishCatalog';
+import {creditConceptTick} from '@/lib/learning/reviewStore';
+import {conceptForFish} from '@/lib/learning/conceptMap';
 import styles from './FishingHost.module.css';
 import {BackButton} from './BackButton';
 import {Icon} from './Icon';
 const MarketStand=dynamic(()=>import('./MarketStand'),{ssr:false});
+type Place='rosa'|'farm';
 const Fishbook=dynamic(()=>import('./Fishbook'),{ssr:false});
 export const OPEN_MARKET_STAND='fi2-open-market-stand';
 type Tab='fish'|'produce'|'cards';
@@ -23,16 +26,16 @@ const REEL_LABEL={ready:'Cast',casting:'Cast',floating:'Reel',approach:'Reel',ni
 export default function FishingHost({onOpenChange,onDialogChange,paused=false}:{paused?:boolean;onOpenChange:(open:boolean)=>void;onDialogChange?:(open:boolean)=>void}){
  const view=useFishing();
  const back=useRef<HTMLButtonElement>(null);
- const [stand,setStand]=useState(false),[tab,setTab]=useState<Tab|undefined>(),[book,setBook]=useState(false),[loaded,setLoaded]=useState({stand:false,book:false});
+ const [stand,setStand]=useState(false),[tab,setTab]=useState<Tab|undefined>(),[place,setPlace]=useState<Place>('rosa'),[book,setBook]=useState(false),[loaded,setLoaded]=useState({stand:false,book:false});
  const [toast,setToast]=useState<{title:string;text:string;key:number}|null>(null),[expanded,setExpanded]=useState(false);
  // Card offers and other pop-ups wait while fishing, the Fishbook or the stand is open.
  useEffect(()=>{onOpenChange(view.active||stand||book);},[view.active,stand,book,onOpenChange]);
  // Only the dialogs pause the island; live fishing keeps the existing world loop running.
  useEffect(()=>{fishingSession.pause(stand||book||paused);onDialogChange?.(stand||book);return()=>fishingSession.pause(false);},[stand,book,paused,onDialogChange]);
- useEffect(()=>{const open=(e:Event)=>{setTab((e as CustomEvent<{tab?:Tab}>).detail?.tab);setLoaded(l=>({...l,stand:true}));setStand(true);};window.addEventListener(OPEN_MARKET_STAND,open);return()=>window.removeEventListener(OPEN_MARKET_STAND,open);},[]);
+ useEffect(()=>{const open=(e:Event)=>{const d=(e as CustomEvent<{tab?:Tab;place?:Place}>).detail;setPlace(d?.place==='farm'?'farm':'rosa');setTab(d?.tab);setLoaded(l=>({...l,stand:true}));setStand(true);};window.addEventListener(OPEN_MARKET_STAND,open);return()=>window.removeEventListener(OPEN_MARKET_STAND,open);},[]);
  // Lesson toast: one short line, gone after a few seconds (one timeout, no loop).
  // Lessons show only while waiting / nibbling / after a miss or the catch, never during the bite (the hint owns that moment).
- useEffect(()=>{if(!view.lesson)return;setToast(view.lesson);setExpanded(false);const t=setTimeout(()=>setToast(null),6500);return()=>clearTimeout(t);},[view.lesson]);
+ useEffect(()=>{if(!view.lesson)return;{const beat=Object.entries(KEEPER_LESSONS).find(([,l])=>l.title===view.lesson!.title)?.[0];if(beat)creditConceptTick(conceptForFish(beat),'fish:keeper');}/* Lane 3: keeper timing → the keeper lesson (once ever) */setToast(view.lesson);setExpanded(false);const t=setTimeout(()=>setToast(null),6500);return()=>clearTimeout(t);},[view.lesson]);
  useEffect(()=>{if(view.phase==='bite'||view.phase==='reeling'||view.phase==='casting')setToast(null);},[view.phase]);
  useEffect(()=>{if(!view.active)setToast(null);const app=document.querySelector('.town-app');if(!app)return;app.toggleAttribute('data-fishing',view.active);return()=>app.removeAttribute('data-fishing');},[view.active]);
  // Space / Enter = Reel, Escape = Back, a tap on the water = Reel. Captured first so Space doesn't also kick the ball.
@@ -57,7 +60,7 @@ export default function FishingHost({onOpenChange,onDialogChange,paused=false}:{
  const waiting=view.phase==='scared'||view.phase==='escaped'||view.phase==='casting';
  return <>
   <button type="button" className="store-enter-prompt" data-fish-enter aria-label="Fish" hidden onClick={e=>{const id=e.currentTarget.dataset.spot;if(id)fishingSession.start(id);}}>Fish</button>
-  <button type="button" className="store-enter-prompt" data-market-enter aria-label="Sell at the market stand" hidden onClick={()=>{setTab(undefined);setLoaded(l=>({...l,stand:true}));setStand(true);}}>Sell</button>
+  <button type="button" className="store-enter-prompt" data-market-enter aria-label="Sell at the market stand" hidden onClick={()=>{setTab(undefined);setPlace('rosa');setLoaded(l=>({...l,stand:true}));setStand(true);}}>Sell</button>
   {/* In-world catch label: positioned above the held-up fish by fishingWorld.ts. */}
   <div className={styles.catch} data-fish-catch hidden aria-live="polite" data-dismissed={dismissed===catchKey&&catchKey?'':undefined}>{fish&&view.caught&&<>
    <button type="button" className={styles.catchClose} aria-label="Dismiss" onClick={()=>setDismissed(catchKey)}><span aria-hidden="true">×</span></button>
@@ -78,6 +81,6 @@ export default function FishingHost({onOpenChange,onDialogChange,paused=false}:{
    </div>
   </div>}
   {loaded.book&&<Fishbook open={book} onClose={()=>setBook(false)}/>}
-  {loaded.stand&&<MarketStand open={stand} initialTab={tab} onOpenChange={setStand}/>}
+  {loaded.stand&&<MarketStand open={stand} initialTab={tab} place={place} onOpenChange={setStand}/>}
  </>;
 }

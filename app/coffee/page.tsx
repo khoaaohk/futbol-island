@@ -4,6 +4,7 @@ import {Icon} from '@/components/Icon';
 // creates the Stripe Checkout Session. Standalone page, styled to match the warm coastal palette.
 
 import Link from "next/link";
+import CoffeeGate from "./CoffeeGate";
 
 export const metadata = {
   title: "Support Futbol Island",
@@ -45,6 +46,7 @@ export default function CoffeePage() {
         <h1 style={{ fontSize: "26px", fontWeight: 800, letterSpacing: "0.5px", margin: "10px 0 6px" }}>
           Support Futbol Island
         </h1>
+        <CoffeeGate>
         <p style={{ fontFamily: '"IBM Plex Sans", system-ui, sans-serif', fontSize: "15px", lineHeight: 1.6, color: "#52634e", margin: "0 0 22px" }}>
           The app is free. Every tip goes straight to local youth-soccer non-profits — <a href="https://www.instagram.com/fc_yap/" target="_blank" rel="noopener noreferrer" style={{ color: "#8a582b", fontWeight: 800, textDecoration: "underline", textUnderlineOffset: "2px" }}>FC YAP</a>,{" "}
           <a href="https://www.instagram.com/streetsoccersd/" target="_blank" rel="noopener noreferrer" style={{ color: "#8a582b", fontWeight: 800, textDecoration: "underline", textUnderlineOffset: "2px" }}>Street Soccer San Diego</a> &amp; <a href="https://www.instagram.com/roninfutsal/" target="_blank" rel="noopener noreferrer" style={{ color: "#8a582b", fontWeight: 800, textDecoration: "underline", textUnderlineOffset: "2px" }}>Ronin Futsal</a>.
@@ -77,6 +79,7 @@ export default function CoffeePage() {
         <p style={{ fontFamily: '"IBM Plex Sans", system-ui, sans-serif', fontSize: "12.5px", color: "#52634e", margin: "18px 0 0" }}>
           Pick an amount — you can bump the quantity on the next screen. Secure by Stripe.
         </p>
+        </CoffeeGate>
       </div>
     </main>
   );

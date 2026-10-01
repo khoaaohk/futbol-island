@@ -13,3 +13,13 @@ The wallet stores `daily-play:YYYY-MM-DD` as a distinct Island earning with a 40
 A successful new grant dispatches one event into the existing IslandJobs toast. It updates the normal wallet and briefly shows '+40 daily play coins' without blocking play. Existing toast timeout is reused; no new animation or audio loop.
 
 Validation: `tests/daily-play.cjs` covers no-on-load payment, idle/hidden exclusion, suspended-frame delta cap,30-second qualification, local midnight reset, reload idempotency, two wallets/tabs under the shared lock, persistence failure/retry and reserved IDs/ordinary caps. Shared wallet and home-ledger suites passed; TypeScript and diff checks passed. `scripts/check-daily-play-browser.cjs` passed:31 seconds idle earned nothing; the normal R control landed the character, ordinary WASD movement earned40, and reload retained exactly one receipt. Initial flight-only movement also earned nothing as intended. Screenshot: `/tmp/daily-play-earned.png`. Native-phone heat is not measured.
+
+## Rides and flying count (30 Sep 2026, game-audit G-11)
+
+Every session starts on the jetpack, but the bonus only counted walking, so a child who flew all session never earned it and was never told why. Now any movement the child steers counts: walking, dribbling, the jetpack, the parachute and every ride. The rule is `dailyPlayCounts` in `lib/town/dailyPlay.ts`, and Town calls it from the same frame callback, so no new loop is added.
+
+- **Still excluded:** idle time, hidden tabs, menus, lessons and riding an automatic street truck (the truck drives itself).
+- **Still required:** steering input and real displacement.
+- **Copy:** the Pocket now says "Each day, walk, ride or fly around the island for 30 seconds for a daily 30-coin bonus". The welcome-back card repeats it.
+- **Tests:** `tests/new-player-flow.cjs` checks the truth table.
+- **Browser check (1280×800):** 36 s of WASD on the jetpack, never landing, wrote `daily-play:2026-09-30` (`scratchpad/game-fixes/lane1/desktop-17-daily-bonus-flying.png`).

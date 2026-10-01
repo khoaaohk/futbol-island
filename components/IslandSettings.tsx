@@ -5,6 +5,9 @@ import {BackButton} from './BackButton';
 import {DoneButton} from './DoneButton';
 import shell from './ModalShell.module.css';
 import {Icon} from './Icon';
+import DonationLinks from './DonationLinks';
+import GrownUpsHost from './GrownUpsHost';
+import {openGrownUps} from '@/lib/grownups/prefs';
 
 import {useEffect,useRef,useState,type KeyboardEvent} from 'react';
 import {useSceneryRest} from '@/lib/sceneryRest';
@@ -36,6 +39,8 @@ type Props={
   controlsFlipped:boolean;onControlsFlippedChange:(flipped:boolean)=>void;
   open:boolean;
   onOpenChange:(open:boolean)=>void;
+  /** The "For grown-ups" sheet's open state, so Town can sleep the island behind it (QA11 H-1). */
+  onGrownUpsOpenChange?:(open:boolean)=>void;
   onOpenMap:()=>void;onStartLearning:()=>void;onOpenStore?:(itemId?:string)=>void;pathsRequest?:{nonce:number}|null;onRestartOnboarding?:()=>void;
   musicEnabled:boolean;
   musicVolume:number; soundVolume:number; onMusicVolumeChange:(value:number)=>void; onSoundVolumeChange:(value:number)=>void;
@@ -52,7 +57,7 @@ function Symbol({kind}:{kind:'settings'|'about'|'close'}){
   </svg>;
 }
 
-export default function IslandSettings({voiceEnabled,onVoiceChange,coachVoice,onCoachVoiceChange,controlsFlipped,onControlsFlippedChange,open,onOpenChange,onOpenMap,onStartLearning,onOpenStore,pathsRequest,onRestartOnboarding,musicEnabled,musicVolume,soundVolume,onMusicVolumeChange,onSoundVolumeChange,onMusicChange,soundMuted,onSoundMutedChange,timeOfDay,onTimeOfDayChange}:Props){
+export default function IslandSettings({voiceEnabled,onVoiceChange,coachVoice,onCoachVoiceChange,controlsFlipped,onControlsFlippedChange,open,onOpenChange,onGrownUpsOpenChange,onOpenMap,onStartLearning,onOpenStore,pathsRequest,onRestartOnboarding,musicEnabled,musicVolume,soundVolume,onMusicVolumeChange,onSoundVolumeChange,onMusicChange,soundMuted,onSoundMutedChange,timeOfDay,onTimeOfDayChange}:Props){
   const storeItem=useRef<string|undefined>(undefined);
   const triggers=useRef<HTMLElement>(null);
   // The Paths button's loops (and, via globals.css, the field prompt's pulse) rest 6 s after the last input, on a clean frame (phone heat),
@@ -110,6 +115,7 @@ export default function IslandSettings({voiceEnabled,onVoiceChange,coachVoice,on
         {tab==='home'&&HOME_DECOR_ENABLED?<IslandHome onShop={()=>{storeAfterClose.current=true;onOpenChange(false);}}/>:(tab==='quests'||tab==='exploration')?<IslandQuests exploration={tab==='exploration'} onExplore={()=>{setBackward(false);setTab('exploration');}} onDiscover={()=>{setBackward(false);setTab('balls');}} onCards={()=>{setBackward(false);setTab('cards');}} onMap={()=>{mapAfterClose.current=true;onOpenChange(false);}} onStore={onOpenStore?()=>{storeAfterClose.current=true;onOpenChange(false);}:undefined} onLearn={()=>{learnAfterClose.current=true;onOpenChange(false);}}/>:tab==='cards'?<div className={styles.content}><CardCollection/></div>:tab==='balls'?<div className={styles.content}><CoinQuest onStore={()=>{storeItem.current='costume:matchday-fox';storeAfterClose.current=true;onOpenChange(false);}}/></div>:tab==='shortcuts'?<div className={styles.content}><dl id="desktop-keyboard-shortcuts" className={styles.shortcutList}>{[['WASD / ↑ ↓ ← →','Move'],['Space','Kick · hold for a stronger, higher shot'],['J','Juggle / stop juggling'],['R','Change ride'],['E','Talk to a nearby island character'],['M','Open / close map'],['Space / J','Use your ride’s two actions'],['Space / J in a truck','Speed up / honk'],['Esc','Close the map or current panel']].map(([key,action])=><div key={key}><dt><kbd>{key}</kbd></dt><dd>{action}</dd></div>)}</dl></div>:tab==='settings'?<div className={`${styles.content} ${styles.settingsJourney}`}>
           <p className={styles.settingsEyebrow}>YOUR ISLAND, YOUR WAY</p>
           <div className={styles.settingsEntries}><button className={`${styles.mapButton} ${styles.secondaryButton}`} onClick={()=>{setBackward(false);setTab('about');}}><span className={styles.entryCopy}><strong>About us</strong><small>Why we built Futbol Island.</small></span><span aria-hidden="true"><Icon name="arrow"/></span></button>
+          <button type="button" className={`${styles.mapButton} ${styles.secondaryButton}`} data-open-grownups onClick={()=>openGrownUps()}><span className={styles.entryCopy}><strong>For grown-ups</strong><small>Progress, coach plan and a printable report.</small></span><span aria-hidden="true"><Icon name="arrow"/></span></button>
           {HOME_DECOR_ENABLED&&<button type="button" className={`${styles.mapButton} ${styles.secondaryButton}`} onClick={()=>show('home')}>My home <span aria-hidden="true"><Icon name="arrow"/></span></button>}
           <button type="button" className={`${styles.mapButton} ${styles.secondaryButton}`} onClick={()=>{mapAfterClose.current=true;onOpenChange(false);}}>Open full map <span aria-hidden="true"><Icon name="external"/></span></button>
           {onRestartOnboarding&&<div className={styles.walkthrough}><button type="button" className={`${styles.mapButton} ${styles.secondaryButton}`} onClick={()=>{welcomeAfterClose.current=true;onOpenChange(false);}}>See walkthrough <span aria-hidden="true"><Icon name="arrow"/></span></button></div>}
@@ -131,13 +137,13 @@ export default function IslandSettings({voiceEnabled,onVoiceChange,coachVoice,on
           <p>Walk, ride or fly between futsal, 7v7, 9v9 and 11v11 pitches. Watch plays in 3D, learn the tactics, and test what you know.</p>
           <p><strong>Why it’s free.</strong> Learning the concepts of the game shouldn’t cost money. Club soccer already prices too many kids out, so Futbol Island is free, always.</p>
           <section className={styles.support} aria-labelledby="support-island-title"><h3 id="support-island-title">Support Futbol Island</h3><p className={styles.intro}>The app is free. Tips grow the game.</p>
-          <p>If it’s helped you and you’d like to chip in, feel free to buy us a coffee. Every dollar goes straight to non-profits growing the game in our community. We’re proud to support <a href="https://www.instagram.com/fc_yap/" target="_blank" rel="noopener noreferrer">FC YAP</a>, <a href="https://www.instagram.com/streetsoccersd/" target="_blank" rel="noopener noreferrer">Street Soccer San Diego</a>, and <a href="https://www.instagram.com/roninfutsal/" target="_blank" rel="noopener noreferrer">Ronin Futsal</a>.</p>
-          <div className={styles.donations}>{[5,10,15,25].map(amount=><a key={amount} href={`/coffee/checkout?amount=${amount*100}&return=about`} target="_blank" rel="noopener noreferrer" aria-label={`Donate $${amount} through Stripe`}>${amount}</a>)}</div>
-          <p className={styles.donationNote}>Choose an amount. You can increase the quantity at checkout. Secure by Stripe.</p></section>
-          <section aria-labelledby="story-music-credit"><h3 id="story-music-credit">Story music</h3><p>“Wildflowers” by <a href="https://www.scottbuckley.com.au/library/wildflowers/" target="_blank" rel="noopener noreferrer">Scott Buckley</a>, released under <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a>. Excerpted, faded and mixed beneath Grit’s narration.</p><p>“Ascension” by <a href="https://www.scottbuckley.com.au/library/ascension/" target="_blank" rel="noopener noreferrer">Scott Buckley</a>, released under <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a>. Excerpted, faded and mixed beneath Regulating Emotions’ narration.</p></section>
+          <DonationLinks/></section>
+          <details className={styles.musicCredits}><summary><h3 id="story-music-credit">Story music</h3></summary><p>“Wildflowers” by <a href="https://www.scottbuckley.com.au/library/wildflowers/" target="_blank" rel="noopener noreferrer">Scott Buckley</a>, released under <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a>. Excerpted, faded and mixed beneath Grit’s narration.</p><p>“Ascension” by <a href="https://www.scottbuckley.com.au/library/ascension/" target="_blank" rel="noopener noreferrer">Scott Buckley</a>, released under <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a>. Excerpted, faded and mixed beneath Regulating Emotions’ narration.</p></details>
         </div>}
         </div>
       </div></section>
     </dialog>
+    {/* Lane 4 (G-09): gated "For grown-ups" dialog, loaded on first open (Settings and the Coaches Centre open it). */}
+    <GrownUpsHost onOpenChange={onGrownUpsOpenChange} onLaunch={()=>onOpenChange(false)} settings={{musicEnabled,onMusicChange,soundMuted,onSoundMutedChange,voiceEnabled,onVoiceChange}}/>
   </>;
 }

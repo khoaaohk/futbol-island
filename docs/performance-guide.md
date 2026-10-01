@@ -1,5 +1,116 @@
 # Performance reference for future Futbol Island updates
 
+## Manta rays round the smaller islands — September 30, 2026 (local, not deployed)
+
+User request: "Add manta rays swimming around the smaller islands." Paths: `lib/town/mantaLoops.ts` (pure data). Build: `lib/graphics/cayMantas.ts`. Wired in `lib/town/world.ts` next to the sharks. No `Town.tsx` edit was needed: the mantas run inside the existing `world.updateSharks` → `updateCoralCay` hook. Test: `tests/manta-rays.cjs`, part of `npm test`.
+
+**What was built.**
+- **7 loops on desktop.** 3 round Coral Cay: the north shore, Sharks Beach and the south cove. The west side is skipped because the causeway lands there. 2 round each sandbar, on the seaward side away from the road.
+- **6 on phones.** The cay's north-shore loop is dropped; each sandbar keeps 2.
+- **Loops are smooth closed Catmull-Rom rings**, 11–33 m off the island's edge. Every point is:
+  - at least 10 m from any land;
+  - at least 30 m from the causeway;
+  - at least 12 m from every shark patrol;
+  - at least 30 m from the causeway buoy and at least 80 m from the Deep Sea Boat. The ferry and the East Jetty are far away.
+  - inside the flight zone.
+- **Look.** A low-poly manta (92 triangles): a dark top with pale shoulder patches, a pale belly, curled cephalic fins and a thin tail. The sea is opaque, so a gliding manta is drawn as a soft dark silhouette on the surface (the sharks' body trick).
+- **Wing flap.** A vertex-shader wave: one shared time uniform plus a per-instance phase. The CPU never touches vertices.
+- **Surfacing, rare and bounded.** Sometimes a wingtip breaks the water, or a manta makes a gentle breach (about 2 m high). The opaque 3D manta then shows in a separate 1-instance mesh, and the sea hides whatever is still under water.
+  - At most 1 per island at a time, lasting 2.4–3.2 s.
+  - 22–50 s apart, counting only the time the island is awake.
+- **Football link.** Nia, the Starfish Sandbar lifeguard, has a new topic. Facts: mantas are harmless, have no stinging barb, eat plankton and sometimes leap (NOAA Fisheries, "Giant Manta Ray"). Follow-up: small, gentle wing movements keep a manta smooth and in control, like a soft first touch keeps the ball close. That line is a coaching metaphor, not a biology claim.
+
+**How the cost is kept down.**
+- **Shared assets.** One shared geometry; the per-mesh geometries reuse the same vertex buffers and add only a phase attribute. Two shared materials. No shadows, cast or received.
+- **Draws per island.** One instanced silhouette mesh (1 draw), with a fixed bound so culling needs no per-frame bounds work. The 1-instance surfacing mesh is `visible=false` except during a surfacing.
+- **Same rules as the sharks.**
+  - Beyond 220 m an island's mantas are hidden: no draws, no work.
+  - They move only when a loop is within 140 m of the player and its sphere is in the frustum. The frustum is the one the sharks already built that frame.
+  - With dt 0 (map, lessons), reduced motion or static ambience (heat tiers 3–4) they upload nothing. They are placed once, statically: no flap and no surfacing.
+  - Behind overlays the island loop parks, so the mantas do nothing at all.
+- **Per-frame work.** At most 3 matrix composes per awake island, an advancing segment index (no search), and one uniform write. No allocations (the test scans the per-frame functions). No loop, timer or audio of its own.
+
+**Measured** in headless Chromium, `--mute-audio`, audio prefs off, flying the jetpack over a live manta. Phone: 390×844, DPR 3, touch, CPU throttled 4×. Desktop: 1280×800. Each window is 4 s, with the mantas' root shown, then hidden. Scripts and screenshots are in the session scratchpad `mantas/` (`browser.cjs`, `results.json`).
+
+| View | Draws with → without mantas (phone / desktop) | Triangles added | Manta update, ms per 4 s (phone 4× / desktop) | Mantas updated per frame |
+|---|---|---|---|---|
+| Turtle Sandbar | 82 → 80 / 134 → 135 | +368 | 3.9 / 3.0 | 2 |
+| Starfish Sandbar | 46 → 45 / 54 → 55 | +184 | 0.8 / 2.8 | 2 |
+| Coral Cay, Sharks Beach | 25 → 24 / 65 → 64 | +184 / +216 | 2.5 / 2.7 | 2 / 3 |
+| Coral Cay, south cove | 75 → 74 / 180 → 177 | +124 / +456 | 2.5 / 2.5 | 2 / 3 |
+| Surfacing (breach / wingtip) | +1 while it lasts | +92 | ≈1.5 per 1.5 s | 2 |
+| Near the sandbars, mantas off screen | — | — | 5.7 / 4.6 | 4 (loops' bounds still in view) |
+| Island Square (far) | 0 drawn | 0 | 0.6 / 0.3 (distance checks only) | 0 |
+| Map open | 0 frames rendered | — | 0 | 0 |
+
+**Reading the numbers.**
+- **Draw calls.** The cost is +1 draw for each island whose bound is in view (+1 more during a surfacing), plus 92–460 triangles. The ±1–3 swings in some desktop rows are other moving content (traffic, NPCs) between the two windows.
+- **Render time.** Render p50 did not change measurably: phone 2.5–3.4 ms in both columns, desktop 1.3–1.7 ms.
+- **Update time.** The manta update is 0.01–0.05 ms per frame, even at 4× throttle. `performance.now` is coarse here, so the 4 s totals are the figures to quote.
+- **Off screen but near.** The "near, off screen" row still updates because the frustum is tested against the whole loop's sphere, which is cheap but conservative. A per-manta sphere test would sleep more often but cost more tests; it was not worth it at ≤ 3 matrices per island.
+- **Reduced work only.** This is emulation, not an iPhone measurement, and no cooling claim is made.
+
+Validation: `node tests/manta-rays.cjs`; `npx tsc --noEmit` passes.
+
+## "Only what's in view": render-time view gate — September 30, 2026 (local, not deployed)
+
+User request: "Find where we can find additional heat savings. Only show what's in view." Measured in headless Chromium: phone profile 390×844, DPR 3, `isMobile` + touch, CDP CPU throttle 4×, plus desktop 1280×800. **Emulation work counts, not iPhone temperatures.** Scripts and raw results: session scratchpad `heat-audit/` (`audit.cjs` per-view census, `proto.cjs`/`ab.cjs` interleaved A/B with pixel parity, `matrices.cjs`, `prof.cjs`, `AUDIT.md`).
+
+**What the audit found.**
+- **The GPU side was already "in view".** Across 9 island views, only 2–9 colour draws per frame were off screen (almost all empty pooled effects with `frustumCulled=false`, 0–1.9k triangles). There were no stale instanced bounds that cause wrong culling. Casters whose shadow cannot reach the view were 0–24 depth draws (townsfolk inside the 2.5 m pose margin, plus the vending machines, which are not in the shadow culling). Big-bounds objects that are always "in view" but mostly off screen cost 3–29k vertex triangles per phone view: the manhole covers and rims (26 instances island-wide, ~4.8k triangles), fishing floats (`frustumCulled=false`), fishing posts, job signs and farm decor. See the recommendations.
+- **The CPU side was not.** `renderer.render` walks every visible node three times a frame, whatever the camera sees: the matrix refresh, the colour projection and the shadow traversal. The island has **979 static chunk meshes**, ~95 townsfolk units, 11 cars and ~100 ball-hunt spots. Flying over the sea with 22 colour draws still cost ~311 ms/s of `render()` at 4× (matrices 69, shadow pass 80). At Island Square the matrix refresh alone was 52–74 ms/s. `render()` was 50–75% of the island's main-thread time in every view.
+- The world's `town` group kept **170 empty, unnamed Groups** after the static batching pass (their meshes were merged into chunks). The renderer recomposed and walked them every frame.
+- Released townsfolk classic meshes (3,115 of them, empty shared geometry, never shown again) were still recomposed and multiplied every frame.
+- Overlays were already clean: under the map, a vending zoom, a card film and a pop-up book, the island renders 0 frames with 1 parked rAF. Inside a Konbini there is no island. There are no running CSS animations or `backdrop-filter`s over the island canvas in any view, and 12–17 composited layers. Standing still on the island renders 30 fps by design: ambient motion is on screen (pass 3).
+
+**Implemented (pixel-identical).**
+1. **View gate** (`lib/graphics/viewGate.ts`, wired in `Town.tsx` next to the dynamic shadow roots, `__fi2.viewGate`). For the length of one `renderer.render` of the island scene it hides:
+   - static chunk meshes, grouped by their 50 m chunk (108 chunk boxes), and
+   - units: each direct child of `islandNpcs.root`, `streetTraffic.root` and `coinHunt.root`, measured once around its origin with the same 2.5 m pose margin as `shadowVisibility`,
+   whose volume swept along the sunlight to y = −8 misses the camera frustum, and restores exactly what it hid in `finally`. This is the same test the shadow culling already uses, so a hidden object is neither on screen nor able to shadow anything on screen. Hidden unit groups are skipped by `hiddenTransformGate` in the matrix refresh and refreshed in full when they show again. It only reads app visibility (Coral Cay gate, watch-view isolation, draw distances, heat tiers) and never shows anything the app hid. Chunk sweeps are cached while the sun direction is unchanged (it is constant relative to its target). Per-frame cost: 108 box tests plus ~200 unit box tests.
+   - Stale matrices of a hidden unit cannot be tapped: a unit is hidden only when its padded, swept volume misses the view, so its last matrices are off screen. `islandNpcs.pick` also filters by visibility.
+2. **Empty groups pruned** after the batching pass (`lib/town/world.ts`, only unnamed groups whose whole subtree is empty; count in `town.userData.prunedEmptyGroups`, 170).
+3. **Released townsfolk meshes freeze their matrices** (`releaseHiddenClassic` in `lib/graphics/islandNpcs.ts`: `matrixAutoUpdate`/`matrixWorldAutoUpdate` false). They have no triangles and never show again.
+
+**Measured.** Same page, the gate toggled every 20 rendered frames for 12 s (medians over ~180 frames each; pruning and the frozen matrices are in both columns), phone profile at 4×. Same-frame parity: the frame rendered with and without the gate differs in **0 of 1,007,314 pixels** in all six views (and a re-render drifts 0 pixels).
+
+| View (phone, 4×) | Chunks / units hidden per frame | `render()` median off → on | Shadow pass | Matrix refresh |
+|---|---|---|---|---|
+| Spawn, idle | 461 / 95 | 6.1 → 5.3 ms (−13%) | 1.4 → 1.3 | 1.6 → 1.0 |
+| Island Square | 490 / 98 | 7.2 → 5.9 ms (−18%) | 1.8 → 1.6 | 2.0 → 1.4 |
+| Flying across the main island | 540 / 105 | 5.0 → 3.8 ms (−24%) | 1.1 → 0.9 | 1.0 → 0.7 |
+| Pitch-side, live 11v11 | 498 / 101 | 3.2 → 2.4 ms (−25%) | 0.7 → 0.5 | 0.8 → 0.5 |
+| Coral Cay plaza | 893 / 115 | 3.0 → 2.0 ms (−33%) | 0.6 → 0.4 | 0.9 → 0.6 |
+| East Jetty lighthouse | 901 / 112 | 2.5 → 1.4 ms (−44%) | 0.4 → 0.1 | 0.7 → 0.4 |
+
+Desktop 1280×800 (unthrottled), same method: `render()` −4% to −22% (spawn 2.5 → 2.3 ms, square 2.2 → 2.0, pitch-side 1.8 → 1.4, Coral Cay plaza 1.9 → 1.5), 0 of 1,024,000 pixels different. Draw calls and triangles are unchanged by construction (the hidden objects were already culled or out of reach). A concurrent session was editing the tree during these runs, so dev-server recompiles added noise. Separate full-page runs of the whole audit (before/after/gate-off, same settings) show larger drops, but they ran under different machine load, so the interleaved figures above are the ones to quote. The released-mesh freeze alone measured 0.72/0.56 → 0.49/0.47 ms per standalone matrix refresh at the square (4×, before the gate).
+
+**Tests.** New `tests/view-gate.cjs` (in `npm test`): off-view chunks and units hidden for the render, an off-view tower whose shadow reaches the view kept, app-hidden objects never shown, exact restoration (also after an exception), other scenes untouched, a unit walking into view and a camera turn shown the same frame, sun-direction changes, disable/dispose, Town wiring, the prune rule and the frozen released meshes. `tests/e2e/offscreen-work.spec.ts` ("nothing on screen is ever culled") passes on all six device projects. `heat-render`, `heat-pass3/4/5`, `heat-idle`, `heat-tiers`, `frame-cap`, `hidden-transform-gate`, `shadow-visibility`, `static-shadow-batches`, `shadow-coverage`, `quality-pass`, `npc-style-batches`, `tsc` and `npm test` pass.
+
+**Not done (recommendations, estimates from the census).**
+- Split the island-wide instanced/merged props by area so the frustum can cull them: manhole covers and rims, fishing floats (also drop `frustumCulled=false`), fishing posts, job signs, farm decor. About −3 to −6 colour draws, −1 to −3 depth draws and −5k to −12k vertex triangles per phone view; small (vertex work on a fill-bound phone), low risk, touches four feature files.
+- Add the vending machines, fishing spots and job props to the view gate or the shadow culling (1–4 depth draws in some views).
+- The player's own 132 hidden classic meshes still refresh every frame; they are kept because the character tap raycasts the whole rig.
+- Townsfolk still inside the pose margin (up to 24 depth draws at the square): tightening the margin risks clipped limb shadows; not proposed.
+- Unchanged big items from earlier passes: instanced townsfolk rigs, far-building LOD.
+
+No commit, push or deploy. Still to do: a Safari Web Inspector timeline on an iPhone at Island Square and flying, where the main thread per frame should drop; this pass does not claim a cooler phone.
+
+## Game-audit quick wins (lane 1) — September 30, 2026 (local, not deployed)
+
+This pass added no new render loop, timer loop or polling. Runtime costs:
+- **Explore zone check** (`lib/town/exploreZones.ts`): runs inside Town's existing frame callback. It does one Coral Cay polygon test and one jetty distance test at most every 0.5 s, and switches off permanently once both are done (or at startup when the save already has them).
+- **Daily bonus rule:** the same per-frame boolean as before, now counting rides. No new work.
+- **Quiz framing:** `quizCardInset` reads one `getBoundingClientRect` only when the learning camera's view key changes (question, answer, resize), never per frame.
+- **Map:** the job-board "J" markers are static SVG in the memoized full-map terrain, computed once at module load. The minimap doesn't draw them. The legend is static DOM. On phones the side pan arrows moved to the bottom corners, CSS only.
+- **Fast travel lands on foot:** it reuses the existing ride-change block.
+- **New UI:**
+  - The welcome-back card is a static pill with one entrance animation (the shared toast), shown once a day.
+  - The lesson opener reuses the quiz card.
+  - The external-link grown-up check is one capture-phase click listener (event-driven) and a dialog rendered only while a link is pending.
+
+Validation: `tests/new-player-flow.cjs` plus fresh-save Playwright runs at 390×844 and 1280×800 with `--mute-audio` (`scratchpad/game-fixes/lane1/`). No device thermal claim is made.
+
 ## Travel-map interrupted drags — September 30, 2026 (local, not deployed by this pass)
 
 `IslandTravelMap` keeps the last painted pan position when a pointer is cancelled or loses capture. Previously a coordinate-free cancellation jumped the map 460 CSS pixels in the desktop reproduction. Only the primary pointer can start a drag, and an additional contact cannot replace it. Closing clears drag state and capture. The trailing drag click is suppressed until consumed or the next pointer press, while keyboard activation remains available; this removes the previous zero-delay click-reset timer.
@@ -58,6 +169,24 @@ from `__arcadeRoom.state.render`.
 - The building highlight for both Konbinis reuses `createBuildingGlow` (a new single-box `konbini` kind) and only runs when near, as for the Arcade.
 
 Emulation only; nothing here was measured on an iPhone, and no cooling claim is made.
+
+### Konbini ball actions: Shoot + Keep-ups — September 30, 2026 (local, not deployed)
+
+Two of the island's round action buttons inside both Konbinis (`components/KonbiniRoom.tsx`, bottom right, Space / J), backed by
+`lib/konbini/konbiniBall.ts` (pure, tested in `tests/konbini.cjs` §13). The old "no kicking" nudge is gone.
+- **Shoot:** the island's hold curve, but the power is capped indoors (2.6–6 m/s, not 38–60; apex ≤ 0.41 m). The ball rebounds off the
+  scene's own collision boxes (walls, front glass, shelves, counter, fridge), comes to rest, then comes back with walkBall's recall
+  (a 12/s blend for 0.55 s). A shelf hit shears that bay's products in the merged static mesh for 0.45 s: one sub-range upload
+  per frame while it plays, restored exactly afterwards, and skipped under reduced motion.
+- **Keep-ups:** tap-timed touches from walkBall's `juggleContact('foot')` point, with a streak bubble. The best streak is kept in
+  `fi2-konbini-ball-v1` (versioned). Walking the ball into a shelf drops it.
+- **Heat:** no new loops. The ball is stepped only while it's off the feet (`if(kb.moving)`), and `busy` includes the ball and
+  the wobble, so the store sleeps again afterwards. No extra draw calls: the ball, shadow and products are existing meshes.
+  Measured (scratchpad `konbini/actions/check-actions.cjs`, headless Chrome, muted; phone = 390×844 touch, DPR 3, CPU 4×):
+  while shooting, 16/15 draw calls (main/cay) and 38.6k/39.0k triangles, the same as idle. One render took 0.05 ms on desktop
+  and 0.29–0.40 ms on the throttled phone. The phone rendered 117 frames in 3.9 s (30 fps cap), desktop about 60 fps. After
+  the ball returns: 0 frames in 2 s, scene asleep.
+  Emulation only; no iPhone temperature claim.
 
 ## Vending: real depth behind the glass, four books per machine — September 30, 2026, later (local, not deployed)
 
@@ -3201,3 +3330,40 @@ The jetty costs +6 to +19 draw calls near it; Island Square is unchanged. The en
 - `tests/east-pier.cjs` checks: 105 m straight, 1.75 turns, 30 m outer radius, a 14–18 m lighthouse with room around it, walk/scooter/bike/moped end to end, edges at five points round the curve, landing, flight zone, boat clearance, and fishing, ring and NPC reachability.
 - `tests/night-atmosphere.cjs` passes: the lighthouse pool counts as a lamp site and stays inside the pool-size bound.
 - Browser, both sizes: walk and scooter to the lighthouse, talk to Nell, a ring hit, a jetpack landing and a catch at the new spot; no page errors.
+
+## Endgame places (Lane 2, 30 Sep 2026)
+
+The graduation ceremony, the Matchday Ferry final, the History Museum and the Coaches Board are DOM/SVG dialogs over the sleeping island. They add 0 WebGL draw calls, and the island draws 0 frames while they're open. This was measured in headless Chromium emulation with `renderer.info.render.frame` flat over 2.5 s. It is not an iPhone measurement.
+
+**Loading:**
+- the ceremony and the final load with `next/dynamic` only when shown;
+- the final fetches one lesson file per round (the shared cached catalog);
+- the certificate PNG draws one canvas only on Save, Share or Print, then frees it.
+
+**Motion:** the confetti, boat and trophy are finite CSS and are removed under reduced motion. Nothing loops, and the credits don't auto-roll.
+
+**The one 3D change:** once all four paths graduate, the Ferry's lock and sparkles are hidden. Town writes visibility on the graduation-change event, and `world.ts updateFerry` keeps the sparkles hidden with the lock. Details are in `docs/endgame-2026-09-30.md`.
+
+## QA11 heat fixes (30 Sep 2026, local, not deployed)
+
+- **Learning drawer and For grown-ups sleep the island (H-1).** `LearningHost` (Daily warm-up / My football) and `GrownUpsHost` (For grown-ups, from Settings or the Coaches Centre) report their open state to Town the same way `GraduationHost` does (`onOpenChange`, added to Town's `settingsRef`), so the island stops requesting frames behind them and wakes on close. Headless Chromium (`renderer.info.render.frame` over 5 s): 150 → 0 frames on a 390×844 phone and 301 → 0 on a 1280×800 desktop while open; 90 (phone, 30 fps cap) and 180 (desktop) frames in 3 s after closing. Other new overlays already sleep it (ceremony, Ferry, Museum, Coaches, Paths, pop-up book) or are small cards (welcome back, Spot it, the link gate). The customizer's Backpack keeps the island drawing as before (it is not new in this round).
+- **Unseen live matches near the camera but far from the player sleep (D note).** `fieldRuntime.update` now takes the player's position (`focus`, passed by Town). For an off-screen field, "near" is measured from the player, the only thing that can touch an unseen match (the island ball's hit zone, radius + 45 m): it sleeps outside radius + 45 m and wakes inside radius + 40 m, or the frame it comes into view (the frustum + 240 m test still runs first). Without `focus` (unit tests) the old camera rule (sleep beyond radius + 60 m, wake inside + 50 m) is unchanged. At the spawn the camera sits ~35 m ahead of the player, so the unseen 11v11 read as 77 m "near" and simulated 22 players at full rate for nobody; it is now dormant with its clock frozen (phone and desktop, headless). `tests/heat-pass5.cjs` pins the rule. No thermal claim: this is reduced work measured in emulation.
+- **Costs added:** `ExternalLinkGate` adds one `MutationObserver` (childList + `href` attribute changes only, event-driven, no timers) that moves outside links' `href` to `data-gated-href`. The fishing catch card reads its height once per catch (not per frame) to clear the status card on wide screens.
+
+### Island job character moves and JOB badges (30 Sep 2026, local, not deployed; docs/island-jobs.md §10–12)
+- Job poses/Kick the tree (`jobMoves.ts`, `jobPoses.ts`): no new loop; work only while a job runs (one small update, one hand read,
+  ≤ 6 prop transforms), one-shot poses ≤ 0.9 s. Job button state reaches React only when the button key changes (not per frame).
+- JOB badges (`jobBadges.ts`): +1 draw call (instanced, shared texture) only while a badge is within range and on screen; idle =
+  a 12-item distance check per frame, mesh hidden. Rebound circle = the existing beacon ring; its off-screen arrow updates on the
+  150 ms HUD tick and writes style only on change. Validated in desktop/phone emulation only; no iPhone thermal claim.
+
+### Free water fountains (30 Sep 2026, local, not deployed; docs/economy/FUEL_2026-09-30.md §2.5)
+
+- **Added runtime cost:** one static merged, vertex-coloured mesh for all six fountains (one draw, one shadow draw,
+  `matrixAutoUpdate` off; 792 non-indexed vertices each, ~4.8k in all), built once at scene setup in `lib/graphics/waterFountains.ts`. The water arc is in the
+  same mesh. Nothing animates and there is no `update()`. Six 0.7 m footprints join `world.obstacles` before the collision grids are
+  built (no per-frame collision cost beyond the grid).
+- **HUD:** the `drink` candidate is six `hypot`s on Town's existing 150 ms HUD tick; React state changes only when the nearest
+  fountain changes. The prompt sets one timeout, and only while a resting fountain's prompt is on screen. Storage is written only on a sip.
+- **Validation:** `tests/water-fountains.cjs` (one mesh, no update, no timers or rAF in the prop); browser check on phone 390×844 and
+  desktop. No thermal claim: this adds work (one draw) rather than removing any.

@@ -1,0 +1,25 @@
+/* Book "Take it to your game" check: a gold pill on the final page and a cream question card (docs/ui/BUTTONS.md tokens). */
+.open{position:absolute;z-index:7;top:calc(20px + env(safe-area-inset-top,0px));right:calc(24px + env(safe-area-inset-right,0px));display:flex;align-items:center;gap:8px;min-height:var(--btn-height,44px);padding:0 16px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:var(--btn-radius,999px);background:var(--btn-gold,#e9c16b) var(--btn-grain) center/128px;background-blend-mode:soft-light;color:var(--btn-ink,#244d40);font-weight:800;font-size:14px;box-shadow:var(--btn-shadow-gold,0 5px 0 #a8863d);animation:checkIn .35s ease both}
+.open:active{translate:0 var(--btn-press,3px);box-shadow:var(--btn-shadow-gold-pressed,0 2px 0 #a8863d)}
+@keyframes checkIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.backdrop{position:absolute;inset:0;z-index:20;display:grid;place-items:center;padding:16px;background:#163b42a8}
+.card{position:relative;width:min(460px,100%);max-height:calc(100dvh - 32px);overflow:auto;padding:22px 20px 20px;border-radius:24px 34px 24px 24px;background:#fff0cc url('/stories/films/assets/entry-grain.png') center/160px;color:#244d40;box-shadow:0 6px 0 #143f4150,0 20px 50px #0f2a2f66}
+.eyebrow{display:block;padding-right:88px;min-height:24px;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#61705b}
+.card h3{margin:6px 0 14px;font-size:19px;line-height:1.3}
+.options{display:grid;gap:10px}
+.options button{display:flex;align-items:center;gap:10px;width:100%;min-height:48px;padding:10px 14px;text-align:left;border:3px solid #fff2cd;border-radius:var(--btn-radius-tile,18px);background:var(--btn-gold-bright,#f9d665);color:#244d40;font-weight:700;font-size:15px;box-shadow:0 4px 0 var(--btn-gold-bright-edge,#aa8b3e)}
+.options button b{display:grid;place-items:center;flex-shrink:0;width:28px;height:28px;border-radius:50%;background:#244d40;color:#fff2cd;font-size:13px}
+.options button[data-state=right]{background:#9fe0b5;box-shadow:0 4px 0 #4f9a6b}
+.options button[data-state=wrong]{background:#ffc2ad;box-shadow:0 4px 0 #c4745a}
+.options button:disabled:not([data-state]){opacity:.6}
+.feedback{margin-top:14px;padding:12px 14px;border-radius:14px;background:#ffe2d6;border:2px solid #ff8c66}
+.feedback[data-right=true]{background:#dff6e6;border-color:#66c98e}
+.feedback b{font-size:16px}.feedback p{margin:6px 0 0;font-size:14px;line-height:1.5}
+.link{color:#3a5a4c}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.primary,.secondary{min-height:var(--btn-height,44px);padding:0 18px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:var(--btn-radius,999px);font-weight:800;font-size:14px;color:var(--btn-ink,#244d40)}
+.primary{background:var(--btn-gold,#e9c16b) var(--btn-grain) center/128px;background-blend-mode:soft-light;box-shadow:var(--btn-shadow-gold,0 5px 0 #a8863d)}
+.secondary{background:var(--btn-mint,#beded1);box-shadow:0 5px 0 var(--btn-mint-edge,#8bac9d)}
+.close{position:absolute!important;top:10px;right:10px}
+@media(max-width:600px){.open{white-space:nowrap;top:auto;right:50%;transform:translateX(50%);bottom:calc(206px + env(safe-area-inset-bottom,0px));animation:none}.open:active{transform:translateX(50%)}}
+@media(prefers-reduced-motion:reduce){.open{animation:none}}

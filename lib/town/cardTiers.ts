@@ -4,6 +4,7 @@ import {sanitizeQuestEvidence} from './questModel';
 import {QUEST_STORAGE_KEY} from './questProgress';
 import {QUIZ_STORAGE_KEY} from './quizProgress';
 import {tierFromDemand,type CardTier} from './cardRewards';
+import {devUnlockHostAllowed} from '../dev/devUnlockGate';
 
 /**
  * Card value tiers and the path progress that unlocks them (docs/card-rewards.md "Value tiers"). The tier data (a fan-demand
@@ -31,7 +32,7 @@ export function pathProgressFrom(steps:ReadonlySet<string>,answers:ReadonlySet<s
  *  `?cardpath=off` goes back. Remembered in localStorage; always ignored in production builds. */
 export const CARD_DEV_PROGRESS_KEY='fi2-cards-dev-progress-v1';
 export function cardDevProgress():number|null{
- if(process.env.NODE_ENV==='production'||typeof window==='undefined')return null;
+ if(process.env.NODE_ENV==='production'||typeof window==='undefined'||!devUnlockHostAllowed({nodeEnv:process.env.NODE_ENV,hostname:window.location?.hostname??''}))return/* QA11: dev flags need localhost too (lib/dev/devUnlockGate.ts) */ null;
  try{
   const value=new URLSearchParams(location.search).get('cardpath');
   if(value==='off')localStorage.removeItem(CARD_DEV_PROGRESS_KEY);else if(value!==null&&Number.isFinite(Number(value)))localStorage.setItem(CARD_DEV_PROGRESS_KEY,String(Math.max(0,Math.min(100,Number(value)))));

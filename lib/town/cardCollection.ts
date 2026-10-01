@@ -1,6 +1,7 @@
 import players from './positionPlayers.json';
 import roster from './cardRoster.json';
 import {CARD_REWARDS_LAUNCH} from './cardRewards';
+import {devUnlockHostAllowed} from '../dev/devUnlockGate';
 
 /** Player-card collection: every player that can appear on a card, the card number, and what this device has collected. */
 export const CARD_STORAGE_KEY='fi2-player-cards-v1';
@@ -44,7 +45,7 @@ export const UNLOCK_ALL_CARDS=!CARD_REWARDS_LAUNCH;
 export const CARD_DEV_KEY='fi2-cards-dev-v1';
 let devEarn:boolean|null=null;
 export function cardDevEarn():boolean{
- if(process.env.NODE_ENV==='production'||typeof window==='undefined')return false;
+ if(process.env.NODE_ENV==='production'||typeof window==='undefined'||!devUnlockHostAllowed({nodeEnv:process.env.NODE_ENV,hostname:window.location?.hostname??''}))return/* QA11: dev flags need localhost too (lib/dev/devUnlockGate.ts) */ false;
  if(devEarn!==null)return devEarn;
  try{const mode=new URLSearchParams(location.search).get('cards');if(mode==='earn')localStorage.setItem(CARD_DEV_KEY,'earn');else if(mode==='all'||mode==='off')localStorage.removeItem(CARD_DEV_KEY);devEarn=localStorage.getItem(CARD_DEV_KEY)==='earn';}catch{devEarn=false;}
  return devEarn;

@@ -51,8 +51,10 @@ export type VendingFaceLayout=typeof VENDING_FACE_LAYOUT;
  *   shelf:   the shelf line inside a slot (fraction of the slot height from its top): products above, the price rail below.
  */
 export const VENDING_BAY={depth:.34,product:.15,shelf:.53,
- /** The in-use HTML face's plane stands this far in front of the cabinet front (VENDING_FACE.z). */
- proud:.02} as const;
+ /** The face plane (VENDING_FACE.z) stands this far in front of the cabinet front, and so does the machine's frame (glass and
+  *  tray bezels, side trims, sill): their fronts are flush with the in-use HTML face and nothing of the cabinet stands in front of
+  *  it or overlaps it, so the HTML face (drawn over the canvas) registers with the 3D frame from any camera angle. */
+ proud:.04} as const;
 export const VENDING_SLOTS_PER_PAGE=COLS*ROWS;
 
 /**

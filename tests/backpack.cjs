@@ -65,8 +65,8 @@ const sources=(over={})=>({owned:[],history:[],cards:[],packs:[],starter:null,..
  const state=B.sanitizeBackpack(JSON.parse(storage.get(S.BACKPACK_KEY)));
  assert(state.seen.includes('ball:frost')&&state.seen.includes('card:Lionel Messi'),'old items are marked seen');
  for(const id of B.STARTER_KIT_IDS)assert(!state.seen.includes(id),id+' shows as New');
- // Preview testing session never grants.
- storage.clear();window.location.search='?preview=all';assert.equal(S.ensureStarterKit(5000),false);assert(!storage.has(S.BACKPACK_KEY));window.location.search='';
+ // `?preview=all` is dev-only on localhost (G-16, Sep 30 2026): this production-build context ignores it, so the kit is granted as normal.
+ storage.clear();window.location.search='?preview=all';assert.equal(S.ensureStarterKit(5000),true,'production ignores ?preview=all');window.location.search='';
  vending.owned=[];vending.history=[];
 }
 // 3. Derived from the existing ownership sources, sorted into categories.

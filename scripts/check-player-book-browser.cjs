@@ -1,6 +1,6 @@
 const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os');
 const out=os.tmpdir()+'/futbol-player-book';fs.mkdirSync(out,{recursive:true});
-(async()=>{const browser=await chromium.launch({headless:true,args:['--use-angle=metal','--enable-gpu','--ignore-gpu-blocklist']});try{
+(async()=>{const browser=await chromium.launch({headless:true,args:['--mute-audio','--use-angle=metal','--enable-gpu','--ignore-gpu-blocklist']});try{
  for(const [name,width,height] of [['phone',390,844],['desktop',1280,800],['landscape',844,390]]){
  const ctx=await browser.newContext({viewport:{width,height},isMobile:name!=='desktop',hasTouch:name!=='desktop'}),p=await ctx.newPage(),errors=[];p.on('pageerror',e=>errors.push(e.message));
  await p.addInitScript(()=>{if(localStorage.getItem('book-test-seeded'))return;localStorage.setItem('book-test-seeded','1');localStorage.setItem('fi2-welcome-v1','completed');localStorage.setItem('fi2-island-jobs-v1',JSON.stringify({version:1,day:'',today:{},lifetime:{},earned:0,best:{},starter:true}));localStorage.setItem('fi2-arcade-wallet-v1',JSON.stringify({version:1,runs:Object.fromEntries(Array.from({length:30},(_,i)=>['book-fixture-'+i,{game:'island',paid:20,reason:'fixture',at:i}])),packs:[]}));});

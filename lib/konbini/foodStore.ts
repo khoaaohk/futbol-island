@@ -3,8 +3,10 @@ import {useSyncExternalStore} from 'react';
 import {spendArcadeCoins,creditOnce} from '../arcade/arcadeWallet';
 import {localPlayDay} from '../town/dailyPlay';
 import {createLearnCoins,LEARN_COINS_EARNED} from '../town/learnCoins';
-import {createKonbiniLedger,emptyKonbini,emptyCollection,pouch,boughtToday,collect,type KonbiniState,type CollectionState,type KonbiniShop} from './food';
+import {createKonbiniLedger,emptyKonbini,emptyCollection,pouch,boughtToday,collect,consumable,type KonbiniState,type CollectionState,type KonbiniShop} from './food';
 import {STAMP_CARD_SIZE} from './konbiniContent';
+import {foodFuel} from '../town/fuel';
+import {eatFuel} from '../town/fuelStore';
 
 /**
  * Browser wiring for the Konbini food ledger (pure rules: food.ts). Coins go through the arcade wallet (the sole balance) with
@@ -39,7 +41,17 @@ export const newPurchaseId=()=>globalThis.crypto?.randomUUID?.()??`${Date.now()}
 /** Buy one Konbini food (or a registered consumable) with a purchase id made once per deliberate Buy. */
 export const buyConsumable=(itemId:string,purchaseId:string,shop?:KonbiniShop)=>ledger.buy(itemId,purchaseId,shop);
 export const buyFood=buyConsumable;
-export const resolveFood=ledger.resolve,keepFood=ledger.keep,eatFromPouch=ledger.eatFromPouch;
+// Fuel (docs/economy/FUEL_2026-09-30.md): eating or drinking refuels by nutrition group (lib/town/fuel.ts foodFuel). Every path
+// that ends in "eaten" (eat now, a full pouch on dismiss, eat from the pouch; the drink machines use the same three) adds fuel
+// once, and the note gains "+25 fuel." so the child sees why food matters.
+const itemOf=(purchaseId:string)=>ledger.read().purchases.find(p=>p.id===purchaseId)?.item;
+const fuelFrom=(item?:string)=>{const c=item?consumable(item):undefined;return c?eatFuel(foodFuel(c)):0;};
+const withFuel=(note:string|undefined,gained:number)=>gained>0?`${note?note+' ':''}+${gained} fuel.`:note;
+export const resolveFood=(purchaseId:string,fate:'eat'|'pouch')=>{const item=itemOf(purchaseId),r=ledger.resolve(purchaseId,fate);
+ if(!r.ok||fate!=='eat')return r;const fuel=fuelFrom(item);return {...r,note:withFuel(r.note,fuel),fuel};};
+export const keepFood=(purchaseId:string)=>{const item=itemOf(purchaseId),r=ledger.keep(purchaseId);
+ if(!r.ok||r.fate!=='eaten')return r;const fuel=fuelFrom(item);return {...r,note:withFuel(r.note,fuel),fuel};};
+export const eatFromPouch=(purchaseId:string)=>{const r=ledger.eatFromPouch(purchaseId);if(!r.ok)return r;const fuel=fuelFrom(r.item);return {...r,note:withFuel(r.note,fuel),fuel};};
 export function readKonbini():KonbiniState{return snapshot??=ledger.read();}
 export function readKonbiniCollection():CollectionState{return collectionSnapshot??=ledger.readCollection();}
 export const foodBoughtToday=(key='food')=>boughtToday(readKonbini(),Date.now(),localPlayDay,key);

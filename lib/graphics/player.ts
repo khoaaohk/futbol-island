@@ -17,6 +17,8 @@ import {attachBeanSkin} from './beanSkin';
 import {attachBeanCostumes} from './beanCostumes';
 import type {BeanLook,Outfit,BeanExpression} from './beanLook';
 import {createSkillDriver,type SkillMotion} from './skillMoves';
+import {jobPoseTarget,type PoseTarget} from './jobPoses';
+import type {JobPose} from '../town/jobs/jobMoves';
 
 export const PLAYER_KICK_CONTACT = STRIKE_CONTACT;
 export type PlayerMotion = {
@@ -105,6 +107,8 @@ export type PlayerMotion = {
   /** Jump, progress 0→1 (see JUMP_PHASE): load, take-off, peak (header contact), landing squash on both
    *  feet. `height` is the peak lift of the body in metres (≈ .1 … .55). Combine with reaction 'header'. */
   jump?: {progress:number;height:number};
+  /** Island job action (lib/graphics/jobPoses.ts): pull, twist, rake, throw-in, mallet… bounded, host-driven, fades in and out. */
+  job?: JobPose;
 };
 /** Dive milestones on `dive.progress`: push-off, feet leave, hands meet the ball, land, start and end of the get-up. */
 export const DIVE_PHASE = {push:.1,lift:.18,contact:.3,land:.42,rise:.6,up:.92} as const;
@@ -459,6 +463,8 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
   // Rig-local metres per world metre (host root scale x profile height): world locks convert through it.
   let recoveryRemaining=0;
   let ws=1,pelvisY=.88,kickSupport=-1,sitBackBlend=0,gaitFwd=1,gaitSide=0,dutyState=.6;
+  // Island job pose (docs/island-jobs.md §10): blend weight and the last target (kept for the fade-out).
+  let jobW=0,jobHeld:PoseTarget|null=null;
   const anchorFoot=(index:number,px:number,pz:number,heading:number,lx:number,lz:number)=>{
     footLocked[index]=true;lockBlend[index]=0;lx*=ws;lz*=ws;
     supportFeet[index].set(px+lx*Math.cos(heading)+lz*Math.sin(heading),.075,pz-lx*Math.sin(heading)+lz*Math.cos(heading));
@@ -702,6 +708,28 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
     }
     if(lift>0)pelvis.position.y+=lift;
     return lift;
+  };
+  /** Job pose over the finished gait pose: pelvis height/offset, a two-bone leg solve (boots on the grass, or a knee down),
+   *  torso and head pitch, both arms. Fades in (~.1 s) and out (~.15 s); reduced motion snaps. */
+  const poseJob=(pose:PlayerMotion['job'],dt:number,time:number,reduced:boolean)=>{
+    if(pose){const t=jobPoseTarget(pose,time,reduced);jobHeld=jobHeld??{...t,fl:[0,0],fr:[0,0],al:[0,0,0,0],ar:[0,0,0,0]};
+      Object.assign(jobHeld,{py:t.py,pz:t.pz,tx:t.tx,ty:t.ty,hx:t.hx,hy:t.hy,toe:t.toe,upper:t.upper});for(let i=0;i<2;i++){jobHeld.fl[i]=t.fl[i];jobHeld.fr[i]=t.fr[i];}for(let i=0;i<4;i++){jobHeld.al[i]=t.al[i]??0;jobHeld.ar[i]=t.ar[i]??0;}
+      jobW=reduced?1:Math.min(1,jobW+dt/.1);}
+    else jobW=reduced?0:Math.max(0,jobW-dt/.15);
+    const t=jobHeld;if(!t||jobW<=0){if(jobW<=0)jobHeld=null;return;}
+    const w=jobW*jobW*(3-2*jobW),mix=(o:T.Euler|T.Vector3,k:'x'|'y'|'z',v:number)=>{o[k]+=(v-o[k])*w;};
+    const legOff=(P.legs-1)*.83,py=t.py+legOff;
+    if(!t.upper){
+      mix(pelvis.position,'y',py);mix(pelvis.position,'z',t.pz);mix(pelvis.position,'x',0);mix(pelvis.rotation,'x',0);mix(pelvis.rotation,'y',0);mix(pelvis.rotation,'z',0);
+      const L1=.43*P.legs,L2=.40*P.legs,clamp=(v:number)=>Math.max(-1,Math.min(1,v));
+      for(let i=0;i<2;i++){const f=i===0?t.fl:t.fr,leg=legs[i],dy=py-f[1],dz=f[0]-t.pz;
+        const d=Math.max(Math.abs(L1-L2)+.01,Math.min(L1+L2-.004,Math.hypot(dy,dz)));
+        const knee=Math.PI-Math.acos(clamp((L1*L1+L2*L2-d*d)/(2*L1*L2))),thigh=Math.atan2(dz,dy)+Math.acos(clamp((L1*L1+d*d-L2*L2)/(2*L1*d)));
+        mix(leg.hip.rotation,'x',-thigh);mix(leg.hip.rotation,'y',0);mix(leg.hip.rotation,'z',(i===0?-1:1)*.05);mix(leg.knee.rotation,'x',knee);mix(leg.ankle.rotation,'x',thigh-knee+t.toe);}
+    }
+    mix(torso.rotation,'x',t.tx);mix(torso.rotation,'y',t.ty);mix(torso.rotation,'z',0);mix(head.rotation,'x',t.hx);mix(head.rotation,'y',-t.ty*.5+t.hy);
+    for(let i=0;i<2;i++){const a=i===0?t.al:t.ar,arm=arms[i],side=i===0?-1:1;
+      mix(arm.shoulder.rotation,'x',a[0]);mix(arm.shoulder.rotation,'y',0);mix(arm.shoulder.rotation,'z',side*a[1]);mix(arm.elbow.rotation,'x',a[2]);mix(arm.elbow.rotation,'y',0);mix(arm.hand.rotation,'y',side*(a[3]??0));}
   };
   const update = (x: number, z: number, dt: number, time: number, reduced: boolean, motion?: PlayerMotion) => {
     // A seek/teleport must not look like a sprint. Cap integration after a suspended tab.
@@ -1555,6 +1583,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
         legs[i].knee.rotation.x=(.85*down+Math.cos(age*17+i)*flail*.25)*weight;legs[i].ankle.rotation.x=(-.18*down-flutter*.15)*weight;
       }
     }
+    if(motion?.job||jobW>0)poseJob(motion?.job,dt,time,reduced);
     if(motion?.wallSplat){pelvis.position.set(0,.94,0);pelvis.rotation.set(0,0,0);torso.rotation.set(0,0,0);head.rotation.set(0,0,0);for(let i=0;i<2;i++){const side=i===0?-1:1;arms[i].shoulder.rotation.set(0,0,side*2);arms[i].elbow.rotation.x=-.12;legs[i].hip.rotation.set(0,0,side*.5);legs[i].knee.rotation.x=.1;legs[i].ankle.rotation.x=0;}}
     // Gait-specific spine coupling. The carrier still owns balance/action lean;
     // the waist and ribcage articulate independently without disturbing leg IK.

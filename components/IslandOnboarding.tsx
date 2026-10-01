@@ -22,17 +22,19 @@ import {cardNumber} from '@/lib/town/cardCollection';
 import jobs from './IslandJobs.module.css';
 import styles from './IslandOnboarding.module.css';
 /**
- * First-run welcome (Sep 28 2026): four short steps — pick a character, then Paths (the main thing to do: watch plays and
- * take quizzes), gather to earn coins, and spend coins on things that teach football. The old NPC-talk step and its camera spotlight were removed; Town still
+ * First-run welcome (Sep 28 2026; reordered Sep 30 2026, G-32): pick a character, then Paths (the main thing to do: watch plays
+ * and take quizzes), then the Ball hunt (every hidden ball teaches a tip), and only then coins: gather to earn, and spend on things
+ * that teach football. Learning comes before money. The old NPC-talk step and its camera spotlight were removed; Town still
  * passes `npcTarget` / `onNpcStepChange` (shared file, kept unchanged), so they stay optional and are never activated here.
  * Completion still writes `fi2-welcome-v1` (lib/town/onboarding.ts), so existing players do not see this again.
  */
 type Props={npcTarget?:MutableRefObject<OnboardingNpcTarget|null>;onNpcStepChange?:(active:boolean)=>void;open:boolean;onClose:()=>void;value:CharacterCustomization;onChange:(value:CharacterCustomization)=>void};
-type Step={id:'welcome'|'paths'|'earn'|'learn';eyebrow:string;title:string;copy:string;note?:string;
+type Step={id:'welcome'|'paths'|'balls'|'earn'|'learn';eyebrow:string;title:string;copy:string;note?:string;
  /** HUD controls to ring while this step is shown (the card moves into the largest clear gap). */tour?:string};
 const steps:Step[]=[
  {id:'welcome',eyebrow:'PICK YOUR PLAYER',title:'Welcome to Futbol Island',copy:'Learn real football plays, one path at a time. Choose your character to begin.'},
  {id:'paths',eyebrow:'START HERE',title:'Follow your Path',copy:'Tap Paths to start learning. Watch each play through a player\'s eyes, then test yourself with a quick quiz.',note:'Paths start with 7v7 and grow into 9v9 and 11v11 as you learn.',tour:'[data-tour="quests"]'},
+ {id:'balls',eyebrow:'THE BALL HUNT',title:'Find hidden balls',copy:'100 balls are hidden around the island. Each one you find teaches you a football tip.',note:'Every 10 balls unlock new costumes, each with its club’s story. See your count in Paths → Ball hunt.'},
  {id:'earn',eyebrow:'YOUR ISLAND POCKET',title:'Earn coins',copy:'Walk or ride around the island to catch fish, pick fruit and help with island jobs.',note:'Sell your catch to Rosa at the market stand. Your coins show at the top of the screen.',tour:'[data-job-wallet]'},
  {id:'learn',eyebrow:'VENDING MACHINES',title:'Spend and learn',copy:'Spend coins on cards, pop-up books and gear. Everything goes in your Backpack: tap your character to open it.',note:'Cards teach positions and books tell true stories of great players. Start with the Futbol Island book in your Backpack!'},
 ];
@@ -78,6 +80,13 @@ export default function IslandOnboarding({open,onClose,value,onChange}:Props){
  <div key={step} className={styles.content}><p className={styles.eyebrow}>{current.eyebrow}</p><p id="island-welcome-copy" className={styles.copy}>{current.copy}</p>
  {current.id==='welcome'&&<><div className={styles.preview}><CharacterPreview open={open&&step===0} value={value}/></div><div className={styles.choicesLayout}><CharacterToggle value={value.character} onChange={character=>onChange(selectCharacter(value,character))} label="Choose your starter character" options={[{value:'male',label:'Male'},{value:'female',label:'Female'}]}/></div><p className={styles.saved}>Your character saves automatically. Change your look anytime.</p></>}
  {current.id==='paths'&&<div className={styles.showcase} aria-hidden="true">{PATH_STOPS.map((stop,i)=><span key={stop.label} className={styles.pathStop}>{i>0&&<span className={styles.pathLink}/>}<span className={styles.item}><span className={styles.stop} style={{background:stop.ink,boxShadow:`0 4px 0 ${stop.edge}`}}><StopGlyph i={i}/></span><small>{stop.label}</small></span></span>)}</div>}
+ {current.id==='balls'&&<div className={styles.showcase} aria-hidden="true">
+  <span className={styles.item}><span className={styles.art}><Icon name="ball" size={48}/></span><small>Find</small></span>
+  <span className={styles.arrow}><Icon name="arrow" size={24}/></span>
+  <span className={styles.item}><span className={styles.art}><Icon name="book" size={44}/></span><small>Learn a tip</small></span>
+  <span className={styles.arrow}><Icon name="arrow" size={24}/></span>
+  <span className={styles.item}><span className={styles.art}><Icon name="star" size={44}/></span><small>Costumes</small></span>
+ </div>}
  {current.id==='earn'&&<div className={styles.showcase} aria-hidden="true">
   <span className={styles.item}><span className={styles.art}><FishArt fish={sardine} size={64}/></span><small>Fish</small></span>
   <span className={styles.item}><span className={styles.art}><FruitArt size={48} color={orange?.color}/></span><small>Fruit</small></span>
@@ -91,7 +100,7 @@ export default function IslandOnboarding({open,onClose,value,onChange}:Props){
   <span className={styles.item}><span className={styles.art}><VendingProductArt id="pack:3" kind="pack"/></span><small>Packs</small></span>
   <span className={styles.item}><span className={`${styles.art} ${styles.ballArt}`}>{gearBall?<StorePreview item={gearBall} src={gear[GEAR_BALL]}/>:<VendingProductArt id={GEAR_BALL} kind="ball"/>}</span><small>Gear</small></span>
  </div>}
- {current.note&&<div className={styles.note}><Icon name={current.id==='learn'?'book':current.id==='paths'?'flag':'target'} size={28}/><span>{current.note}</span></div>}
+ {current.note&&<div className={styles.note}><Icon name={current.id==='learn'?'book':current.id==='paths'?'flag':current.id==='balls'?'star':'target'} size={28}/><span>{current.note}</span></div>}
  </div></div>
  <footer className={styles.footer}><NavigationButton label="Skip" onNavigate={dismiss}/><div className={styles.progress} role="status" aria-label={`Welcome step ${step+1} of ${steps.length}`}>{steps.map((s,i)=><span key={s.id} className={i===step?styles.current:undefined} aria-hidden="true"/>)}</div><NavigationButton key={step} label={last?'Done':'Next'} onNavigate={next}/></footer>
  </section>

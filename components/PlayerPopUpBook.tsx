@@ -12,6 +12,7 @@ import {getSoundVolume,isSoundEnabled} from '@/lib/games/sound';
 import {createBookAudio} from '@/lib/books/bookAudio';
 import {useBookNarration} from '@/lib/books/useBookNarration';
 import PlayerBookScene from './PlayerBookScene';
+import BookGameCheck from './BookGameCheck';
 import styles from './PlayerPopUpBook.module.css';
 
 function readProgress():Record<string,number>{try{const saved=JSON.parse(localStorage.getItem(BOOK_PROGRESS_KEY)||'null');return saved?.version===1&&typeof saved==='object'?saved:{};}catch{return {};}}
@@ -62,6 +63,8 @@ export default function PlayerPopUpBook({bookId,onClose}:{bookId:PlayerBookId;on
     <PlayerBookScene book={story} bookId={bookId} spreads={spreads} pageIndex={page} progress={Math.min(1,amount/target)} onTurning={setTurning} clock={narration.readClock} narrationTime={narration.time} narrationStarted={narration.started} narrationPlaying={narration.playing} closing={closing} onClosed={finishClose} label={label}/>
    </div>}
   </main>
+  {/* Lane 3: after the last page, one "Take it to your game" question tied to a Paths lesson (lib/learning/bookChecks.ts). */}
+  {ready&&page===story.pages.length-1&&<BookGameCheck bookId={bookId} onOpenLesson={onClose}/>}
   <nav className={styles.navigation} aria-label="Book pages">
    <button type="button" data-page-nav="prev" disabled={page===0||turning} onClick={()=>{turn(page-1);}} aria-label="Previous page"><Icon name="back" size={22}/></button>
    <div className={styles.activity}>

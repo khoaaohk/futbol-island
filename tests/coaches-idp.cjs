@@ -1,5 +1,5 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),ts=require('typescript');
-function load(file){const m={exports:{}};vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{module:m,exports:m.exports,require:id=>load(path.resolve(path.dirname(file),id+'.ts'))});return m.exports;}
+function load(file){const m={exports:{}};vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,esModuleInterop:true}}).outputText,{module:m,exports:m.exports,require:id=>id.endsWith('.json')?require(path.resolve(path.dirname(file),id)):load(path.resolve(path.dirname(file),id+'.ts'))});return m.exports;}
 const idp=load('lib/coaches/idp.ts'),paths=require('../lib/paths/formatPaths.json');
 const {IDP_GOALS,IDP_KEY,IDP_REVIEW_DAYS,IDP_NOTE_MAX,emptyIdp,sanitizeIdp,chooseGoal,addNote,removeNote,reviewPlan,endPlan,reviewDue,loadIdp,saveIdp,goalsFor}=idp;
 
@@ -41,4 +41,43 @@ saveIdp(s,storage);assert.equal(JSON.stringify(loadIdp(storage)),JSON.stringify(
 const blocked={getItem(){throw Error('denied')},setItem(){throw Error('denied')}};
 assert.equal(loadIdp(blocked).plan,null);saveIdp(s,blocked);
 assert.deepEqual([...values.keys()],[IDP_KEY],'IDP writes only its own key');
-console.log(`PASS ${IDP_GOALS.length} IDP goals link to real lessons; one focus, notes, review window, sanitising and denied storage`);
+
+// Lane 4 (Sep 30 2026): linked island homework tracks itself from the path saves (THE path complete rule).
+const {homeworkStatus,goalLessons,setStrength,cornerLabel,idpCopy,showsFourCorners,REFLECTION_TAGS}=idp;
+const plain=x=>JSON.parse(JSON.stringify(x));
+for(const g of IDP_GOALS)assert.equal(goalLessons(g).length,g.lessons.length,`${g.id} homework resolves`);
+const look=IDP_GOALS.find(g=>g.id==='7-look'),lesson=goalLessons(look)[0];
+let answers=new Set(),steps=new Set();
+assert.deepEqual(plain({done:homeworkStatus(look,steps,answers).done,total:homeworkStatus(look,steps,answers).total}),{done:0,total:1});
+for(let i=0;i<lesson.questions-1;i++)answers.add(`7v7:${lesson.id}:${i}`);
+assert.equal(homeworkStatus(look,steps,answers).done,0,'not done until every question is right');
+assert.equal(homeworkStatus(look,steps,answers).lessons[0].correct,lesson.questions-1);
+answers.add(`7v7:${lesson.id}:${lesson.questions-1}`);
+assert.equal(homeworkStatus(look,steps,answers).done,1,'completing the linked lesson ticks the homework');
+assert.equal(homeworkStatus(look,steps,new Set([...answers].map(k=>k.replace('7v7:','9v9:')))).done,0,'other formats do not count');
+// Strength (four corners), reflection tags, review log; strength survives a focus change; history keeps a homework snapshot.
+let t=chooseGoal(emptyIdp(),'11-turn',1000);
+t=setStrength(t,{corner:'social',text:'  I   talk a lot  '});assert.deepEqual(plain(t.plan.strength),{corner:'social',text:'I talk a lot'});
+assert.equal(setStrength(t,{corner:'nope',text:''}).plan.strength,undefined,'bad corner clears');
+t=addNote(t,'player','',2000,'no-chance');assert.equal(t.plan.notes[0].tag,'no-chance','a quick tag alone is a reflection');
+assert.equal(addNote(t,'coach','',2100,'tried'),t,'coach notes need words; tags are player-only');
+t=addNote(t,'coach','Scanned twice before the goal kick.',2200);
+assert.equal(t.plan.notes.filter(n=>n.kind==='player').length,1);assert.equal(t.plan.notes.filter(n=>n.kind==='coach').length,1);
+t=reviewPlan(t,5000);assert.deepEqual(plain(t.plan.reviews),[5000]);
+const moved=chooseGoal(t,'11-third',6000,{done:1,total:1});
+assert.equal(moved.plan.strength.corner,'social');assert.deepEqual(plain(moved.history.at(-1).homework),{done:1,total:1});
+const round=sanitizeIdp(JSON.parse(JSON.stringify(t)));assert.equal(JSON.stringify(round),JSON.stringify(t),'new fields persist');
+assert.equal(sanitizeIdp({plan:{goalId:'7-look',setAt:1,reviewAt:2,notes:[{id:'x',kind:'player',at:1,text:'',tag:'hack'}]}}).plan.notes.length,0,'unknown tags dropped');
+saveIdp(moved,storage);assert.equal(JSON.stringify(loadIdp(storage)),JSON.stringify(moved),'IDP persists with strength, reviews and homework history');
+// Language scales by format.
+assert.equal(cornerLabel('7v7','technical'),'Ball skills');assert.equal(cornerLabel('11v11','social'),'Psychological & social');assert.match(cornerLabel('9v9','tactical'),/Game smarts · Tactical/);
+assert.equal(showsFourCorners('7v7'),false);assert.equal(showsFourCorners('11v11'),true);
+assert.ok(idpCopy('7v7').lead.length<idpCopy('11v11').lead.length,'7v7 lead is the simplest');assert.match(idpCopy('11v11').lead,/four corners/);
+assert.equal(Object.keys(REFLECTION_TAGS).length,3);
+// Printable plan: player and coach notes under separate headings; no name unless typed; no scripts or links.
+const {idpPlanHtml}=load('lib/coaches/idpPrint.ts');
+const doc=idpPlanHtml(t,{printedAt:9e11,homework:[{name:lesson.name,done:true,detail:'done'}]});
+assert.match(doc,/My development plan/);assert.match(doc,/Player reflection[\s\S]*Didn’t get a chance[\s\S]*Coach’s observations[\s\S]*Scanned twice/);
+assert.match(doc,/Four corners/);assert.doesNotMatch(doc,/<script|https?:\/\//i);
+assert.match(idpPlanHtml(t,{firstName:'Sam',printedAt:9e11,homework:[]}),/Sam’s development plan/);
+console.log(`PASS ${IDP_GOALS.length} IDP goals link to real lessons; one focus, notes, review window, sanitising and denied storage; homework auto-tracks, strength/tags/reviews persist, format-scaled wording, printable plan`);

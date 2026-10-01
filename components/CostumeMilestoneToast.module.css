@@ -1,5 +1,5 @@
 /* Island notice pill (the binder's cream "Found" pill style): cream, deep green, soft drop. Enters once; nothing loops. */
-.toast{position:absolute;z-index:9;left:50%;top:calc(88px + env(safe-area-inset-top,0px));transform:translateX(-50%);display:grid;gap:2px;justify-items:center;
+.toast{position:absolute;z-index:9;left:50%;transform:translateX(-50%);display:grid;gap:2px;justify-items:center;
  width:max-content;max-width:min(380px,calc(100vw - 32px));box-sizing:border-box;min-height:44px;padding:10px 20px;border:3px solid #fff2cd;border-radius:22px 30px 22px 22px;
  background:#fff1d3;color:#244d40;font:inherit;text-align:center;cursor:pointer;box-shadow:0 5px 0 #a8863d,0 0 0 4px #fff2cd40,0 14px 30px #0f2a2f55;
  animation:toastIn .35s cubic-bezier(.2,.9,.3,1.2) both}

@@ -4,6 +4,7 @@ import {pathProgressFrom} from './cardTiers';
 import {sanitizeQuestEvidence} from './questModel';
 import {QUEST_STORAGE_KEY,useQuestEvidence} from './questProgress';
 import {QUIZ_STORAGE_KEY,useQuizCompletions} from './quizProgress';
+import {devUnlockHostAllowed} from '../dev/devUnlockGate';
 
 /**
  * Ride unlocks (user, Sep 25 2026): finishing a path unlocks the next ride in every ride category (scooters, bikes, mopeds,
@@ -62,7 +63,7 @@ const CUSTOMIZATION_KEY='futbol-island-customization-v1';
 export const RIDE_DEV_KEY='fi2-ride-dev-paths-v1';
 function store():Storage|null{try{return typeof localStorage==='undefined'?null:localStorage;}catch{return null;}}
 function devPaths():number|null{
- if(process.env.NODE_ENV==='production'||typeof window==='undefined')return null;
+ if(process.env.NODE_ENV==='production'||typeof window==='undefined'||!devUnlockHostAllowed({nodeEnv:process.env.NODE_ENV,hostname:window.location?.hostname??''}))return/* QA11: dev flags need localhost too (lib/dev/devUnlockGate.ts) */ null;
  const s=store();if(!s)return null;
  try{
   const value=new URLSearchParams(location.search).get('ridepaths');

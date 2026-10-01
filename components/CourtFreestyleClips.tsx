@@ -1,10 +1,10 @@
 'use client';
 import {useEffect,useState} from 'react';
 import OfficialClipPlayer from './OfficialClipPlayer';
-import {FREESTYLE_CLIPS} from '@/lib/town/courtFreestylers';
+import {FREESTYLE_CLIPS,freestyleClipStart} from '@/lib/town/courtFreestylers';
 import styles from './NpcConversation.module.css';
-export default function CourtFreestyleClips({variant}:{variant:number}){
- const [index,setIndex]=useState(variant%2),[playing,setPlaying]=useState(false),[unavailable,setUnavailable]=useState(false);
+export default function CourtFreestyleClips({clipId,variant}:{clipId?:string;variant:number}){
+ const [index,setIndex]=useState(()=>freestyleClipStart(clipId,variant)),[playing,setPlaying]=useState(false),[unavailable,setUnavailable]=useState(false);
  const clip=FREESTYLE_CLIPS[index];
  useEffect(()=>{const stop=()=>{if(document.hidden)setPlaying(false);};document.addEventListener('visibilitychange',stop);return()=>document.removeEventListener('visibilitychange',stop);},[]);
  return <section className={styles.clip} aria-label="Freestyle clips" data-freestyle-clips>

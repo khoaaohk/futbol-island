@@ -2,6 +2,15 @@
 
 September 16, 2026. Research and curriculum proposal; no application behavior or saved progress changed. Read alongside [the journey plan](island-paths-journey-plan.md) and [performance guide](performance-guide.md). This document proposes an explicit shorter starter curriculum in place of the journey plan's earlier default of requiring all 96 lessons. The proposed 48-lesson threshold is a product/design judgment, not a research-established graduation standard. It must be adopted explicitly in the implementation definition and player copy.
 
+> **Update, 30 Sep 2026 (game-audit G-02/G-12/G-18): one first path, 7v7.**
+> - Every surface now agrees: onboarding, the Old Town Ground field card at spawn, the Paths screen (tabs 01 7v7 · 02 9v9 · 03 11v11 · 04 Futsal) and the welcome-back card.
+> - Why 7v7: it is the simplest format. All its starter lessons are Beginner, with plain words, and it follows the youth ladder 7v7 → 9v9 → 11v11.
+> - Futsal is its own game, with the fixo / ala / pivot vocabulary, so it stays open but is never the default. A player's saved tab is kept.
+> - **Continue** always targets a required starter lesson: the one in progress, else the first unfinished one. It never goes to an optional story or a "Go deeper" lesson. The opening story sits beside it as an "Optional story" chip. A finished path offers the next path.
+> - The rule lives in `lib/paths/pathContinue.ts`.
+> - **Lesson opener:** each lesson opens with its title and "You'll learn: …" (`lib/paths/lessonGoals.ts`). The 12 7v7 starter lessons have kid-simple goals, and lesson 1 explains "outfield players", "2-3-1" and "passing angle". Other lessons use their catalog concept line.
+> - The futsal-first suggestion below is kept as the original proposal.
+
 ## Recommendation
 
 Give each format a **12-lesson Starter Path**, followed by optional **Go deeper** lessons. Keep every existing lesson accessible: 48 starter lessons and 48 depth lessons across the island. Suggest futsal → 7v7 → 9v9 → 11v11, but permit any starting format and preserve the returning player's choice. Use one Continue action, short chapters, existing field playback and quizzes, and optional stories between lessons. Ball Hunt and Explore remain sibling activities.

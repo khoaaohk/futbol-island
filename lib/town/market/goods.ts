@@ -19,17 +19,34 @@ export type Good={
 // --- Produce (island jobs agent: lib/town/jobs/*, community garden) ---
 export const PRODUCE_GOODS:Good[]=[
  {id:'orange',kind:'produce',name:'Orange',plural:'Oranges',price:3,color:'#f08a2c',
-  lesson:'Half-time oranges are a youth football tradition: they are mostly water, so they help you rehydrate, and their natural sugar gives quick energy for the second half.',
+  lesson:'Half-time oranges are mostly water, so they rehydrate you, plus quick natural sugar for energy.',
   source:'https://theconversation.com/how-and-why-did-half-time-oranges-in-junior-sports-become-a-tradition-234919'},
  {id:'cherry',kind:'produce',name:'Cherries',plural:'Cherries',price:3,color:'#b3263a',
-  lesson:'AFC Bournemouth are nicknamed "the Cherries": cherry orchards grew beside their Dean Court ground when the club moved there in 1910, and they have long worn cherry-red stripes.',
+  lesson:'Bournemouth are "the Cherries": cherry orchards grew beside their Dean Court ground.',
   source:'https://en.wikipedia.org/wiki/AFC_Bournemouth'},
  {id:'strawberry',kind:'produce',name:'Strawberry',plural:'Strawberries',price:2,color:'#e0413f',
-  lesson:'Fruit gives carbohydrates, the main fuel your muscles use for sprints, so a fruit snack before training helps you keep running.'},
+  lesson:'Fruit is carbohydrate, your muscles\' main sprint fuel. Snack on it before training.'},
  {id:'tomato',kind:'produce',name:'Tomato',plural:'Tomatoes',price:2,color:'#d9502e',
-  lesson:'Colourful vegetables give vitamins and minerals that help your body recover and grow between matches.'},
+  lesson:'Colourful veg gives vitamins and minerals that help you recover between matches.'},
  {id:'carrot',kind:'produce',name:'Carrot',plural:'Carrots',price:2,color:'#ee9a3a',
-  lesson:'Players recover best with a real meal after training: vegetables, some carbohydrate and protein, plus water.'},
+  lesson:'Recover after training with a real meal: veg, carbs, protein and water.'},
+ // Coral Cay Farm (Sep 30 2026): the Harvest day crops; the farmer's share of each harvest goes to the basket (lib/town/jobs/harvestShare.ts). Lessons ≤ 85 chars, from the
+ // FIFA nutrition guide the Harvest day job cites (carbohydrate = main fuel; fruit/veg = vitamins; drink water, more in the heat).
+ {id:'banana',kind:'produce',name:'Banana',plural:'Bananas',price:2,color:'#f5d94a',
+  lesson:'A banana is easy carbohydrate: a good small snack an hour or two before you play.',
+  source:'https://digitalhub.fifa.com/m/16e433eb11621446/original/ukbqfkkxw2o8s1gyjria-pdf.pdf'},
+ {id:'mango',kind:'produce',name:'Mango',plural:'Mangoes',price:3,color:'#f0a23a',
+  lesson:'Mango gives carbs for running and vitamin C, which helps keep you fit to play.',
+  source:'https://digitalhub.fifa.com/m/16e433eb11621446/original/ukbqfkkxw2o8s1gyjria-pdf.pdf'},
+ {id:'pepper',kind:'produce',name:'Pepper',plural:'Peppers',price:2,color:'#d9534a',
+  lesson:'Peppers are full of vitamin C, which helps keep your body healthy for training.',
+  source:'https://digitalhub.fifa.com/m/16e433eb11621446/original/ukbqfkkxw2o8s1gyjria-pdf.pdf'},
+ {id:'greens',kind:'produce',name:'Leafy greens',plural:'Leafy greens',price:2,color:'#6fae4f',
+  lesson:'Leafy greens give iron, which helps your blood carry oxygen to running muscles.',
+  source:'https://digitalhub.fifa.com/m/16e433eb11621446/original/ukbqfkkxw2o8s1gyjria-pdf.pdf'},
+ {id:'sweet-potato',kind:'produce',name:'Sweet potato',plural:'Sweet potatoes',price:2,color:'#b9774a',
+  lesson:'Sweet potatoes are starchy carbs: great in your pre-match meal 3–4 hours before.',
+  source:'https://digitalhub.fifa.com/m/16e433eb11621446/original/ukbqfkkxw2o8s1gyjria-pdf.pdf'},
 ];
 
 // --- Fish (fishing agent: lib/town/fishing/*) ---

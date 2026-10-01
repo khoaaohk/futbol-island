@@ -107,6 +107,60 @@ const {BOOK_PRICE}=require('../lib/books/catalog.ts');
  const m=V.KONBINI_VARIANTS.main,c=V.KONBINI_VARIANTS.cay;assert.equal(m.doorX,-c.doorX,'mirrored doors');assert(Math.sign(m.cashier.x)!==Math.sign(c.cashier.x),'counter on the other side');
  const fridge=v=>v.fixtures.find(f=>f.kind==='fridgeWall');assert(Math.sign(fridge(m).x)!==Math.sign(fridge(c).x),'fridge wall moved');assert(c.fixtures.some(f=>f.kind==='beachCorner')&&!m.fixtures.some(f=>f.kind==='beachCorner'));assert.notEqual(m.palette.floor,c.palette.floor);}
 
+// 3b. The bite toy on the big item view (lib/konbini/biteToy.ts, Sep 30 2026): tap → bite / sip, BITES then all gone, then a
+//     rebuild (tap or REBUILD_MS), forever; reduced motion skips the puff and haptic but still cuts; never touches saves.
+{const B=require('../lib/konbini/biteToy.ts');
+ const mk=(kind,reducedFlag=false)=>{const log=[],timers=[];let rebuilt=0;
+  const toy=B.createBiteToy({kind,label:kind==='sip'?'Water':'Melon pan',reduced:()=>reducedFlag,render:(b,g,p)=>log.push(['render',b,g,p]),sound:s=>log.push(['sound',s]),vibrate:ms=>log.push(['vibrate',ms]),
+   announce:t=>log.push(['say',t]),rebuild:()=>{rebuilt++;log.push(['rebuild']);},setTimer:(fn,ms)=>{const t={fn,ms,live:true};timers.push(t);return t;},clearTimer:t=>{t.live=false;}});
+  return {toy,log,timers,rebuilt:()=>rebuilt};};
+ // Food: taps before the build finishes do nothing; then 4 bites, the last is "all gone", the 5th tap rebuilds at once.
+ {const {toy,log,timers,rebuilt}=mk('bite');assert.equal(toy.tap(),false,'no bite while the item is still building');assert.equal(log.length,0);
+  toy.built();for(let i=1;i<=B.BITES;i++){assert(toy.tap());assert.equal(toy.state().bites,i);}
+  assert.equal(B.BITES,4);assert(toy.state().gone,'all gone after BITES bites');
+  const renders=log.filter(l=>l[0]==='render');assert.deepEqual(renders.map(r=>r.slice(1)),[[1,false,true],[2,false,true],[3,false,true],[4,true,true]],'one redraw (+ puff) per bite');
+  assert.deepEqual(log.filter(l=>l[0]==='say').map(l=>l[1]),['Bite 1 of 4','Bite 2 of 4','Bite 3 of 4','All gone! Making another…']);
+  assert.equal(log.filter(l=>l[0]==='sound'&&l[1]==='bite').length,4,'a bite sound every tap');assert(log.some(l=>l[0]==='sound'&&l[1]==='gone'));
+  assert(log.filter(l=>l[0]==='vibrate').every(l=>l[1]>=12&&l[1]<=20)&&log.filter(l=>l[0]==='vibrate').length===4,'a short 12–20 ms haptic per bite');
+  assert.equal(timers.length,1);assert.equal(timers[0].ms,B.REBUILD_MS);assert(B.REBUILD_MS>=400&&B.REBUILD_MS<=800,'a short beat');
+  assert(toy.tap(),'the next tap rebuilds');assert.equal(rebuilt(),1);assert(!timers[0].live,'the auto-rebuild timer is cancelled (no double rebuild)');
+  assert.equal(toy.tap(),false,'no bites while it rebuilds');toy.built();assert.deepEqual(toy.state(),{bites:0,gone:false,ready:true,rebuilds:1},'bites start again');
+  // …or the automatic beat rebuilds it.
+  for(let i=0;i<B.BITES;i++)toy.tap();timers.at(-1).fn();assert.equal(rebuilt(),2,'auto rebuild after the beat');toy.built();
+  for(let loop=0;loop<3;loop++){for(let i=0;i<B.BITES;i++)toy.tap();toy.tap();toy.built();}assert.equal(toy.state().rebuilds,5,'loops forever, like a toy');
+  toy.dispose();for(let i=0;i<B.BITES;i++)toy.tap();toy.dispose();assert(!timers.at(-1).live,'dispose cancels a pending rebuild');assert.equal(toy.tap(),false,'disposed with the view');}
+ // Drinks sip; the level drops a notch each sip and the last empties it.
+ {const {toy,log}=mk('sip');toy.built();toy.tap();toy.tap();assert.equal(log.filter(l=>l[0]==='sound')[0][1],'sip');assert.deepEqual(log.filter(l=>l[0]==='say').map(l=>l[1]),['Sip 1 of 4','Sip 2 of 4']);
+  assert.deepEqual([0,1,2,3,4,5].map(B.drinkLevel),[1,.75,.5,.25,0,0]);assert.equal(B.biteLabel('sip','Water'),'Take a sip of Water');assert.equal(B.biteLabel('bite','Melon pan'),'Take a bite of Melon pan');}
+ // Reduced motion: bites still cut (render), no puff animation, no haptic; the rebuild is instant (the reveal's reduced path).
+ {const {toy,log}=mk('bite',true);toy.built();toy.tap();assert.deepEqual(log.find(l=>l[0]==='render'),['render',1,false,false],'reduced: still cuts, no crumb puff');assert(!log.some(l=>l[0]==='vibrate'),'reduced: no haptic');
+  const rev=fs.readFileSync(require.resolve('../components/KonbiniReveal.tsx'),'utf8');
+  assert(/if\(reduced\)\{draw\(layers\.length\);setStep\(layers\.length\);setBuilt\(true\);ready\(\);return;\}/.test(rev),'reduced-motion rebuild: the finished item at once, bites ready');
+  assert(/if\(!puff\)\{paintEaten\(a,item,drink,geo,bites,gone,-1\);return;\}/.test(rev),'no puff: one static redraw');}
+ // Geometry: on a round item the bites land right edge → top-left → top, each cutting in from an edge; the cut is scalloped (teeth).
+ {const n=B.MASK,mask=new Uint8Array(n*n);for(let y=0;y<n;y++)for(let x=0;x<n;x++)mask[y*n+x]=Math.hypot(x-24,y-26)<14?1:0;
+  const b=B.maskBounds(mask,300),[s1,s2,s3]=B.biteSpots(mask,300);assert(Math.abs(b.cx-153)<4&&Math.abs(b.cy-165.6)<4,'centroid');
+  assert(s1.x>b.cx+b.size*.35,'bite 1 on the right edge');assert(s2.x<b.cx&&s2.y<b.cy,'bite 2 top-left');assert(s3.y<b.cy-b.size*.3&&s3.r>s1.r,'bite 3: a bigger one from the top');
+  for(const s of [s1,s2,s3]){const d=Math.hypot(s.x-b.cx,s.y-b.cy);assert(d-s.r<b.size/2&&d>b.size*.3,'overlaps the edge: takes a chunk, not air');}
+  const pts=B.scallop(s1),rad=pts.map(([x,y])=>Math.hypot(x-s1.x,y-s1.y));assert(Math.max(...rad)-Math.min(...rad)>s1.r*.12,'scalloped tooth marks');
+  assert.deepEqual(B.crumbsFor(0,s1,b),B.crumbsFor(0,s1,b),'crumbs are seeded (same picture each redraw)');
+  assert.equal(B.biteSpots(new Uint8Array(n*n),300).length,3,'an empty mask still gives spots (never throws)');}
+ // Never charges or changes saves: the toy has no imports (no ledger, wallet or storage) and its ports never reach them.
+ {const src=fs.readFileSync(require.resolve('../lib/konbini/biteToy.ts'),'utf8');assert(!/^import\s/m.test(src)&&!/localStorage|sessionStorage|spend|ledger|wallet\.|collect\(/.test(src.replace(/\/\*\*[\s\S]*?\*\//g,'').replace(/\/\/.*$/gm,'')),'biteToy is self-contained');
+  const rev=fs.readFileSync(require.resolve('../components/KonbiniReveal.tsx'),'utf8'),toyBlock=rev.slice(rev.indexOf('const t=createBiteToy('),rev.indexOf('toy.current=t;'));
+  assert(toyBlock.length>100&&!/onEat|onSave|onBuy|onDone|localStorage|spend/.test(toyBlock),'the bite ports never eat, save, buy or close');
+  assert(/const bite=\(\)=>\{toy\.current\?\.tap\(\);\};/.test(rev),'a tap only feeds the toy');
+  const store=new Map([['fi2-konbini-v1','{"version":1}'],['fi2-arcade-wallet-v1','{"runs":{}}']]),before=JSON.stringify([...store]);let writes=0;
+  const prevLS=globalThis.localStorage;globalThis.localStorage={getItem:k=>store.get(k)??null,setItem:()=>{writes++;},removeItem:()=>{writes++;}};
+  try{const {toy}=mk('bite');toy.built();for(let i=0;i<9;i++)toy.tap();}finally{globalThis.localStorage=prevLS;}
+  assert.equal(writes,0,'no save writes while biting');assert.equal(JSON.stringify([...store]),before);}
+ // Sound: original oscillator/noise one-shots, muted with the island's sound setting.
+ {let made=0;const prevLS=globalThis.localStorage,prevAC=globalThis.AudioContext;globalThis.localStorage={getItem:k=>k==='fi2-sound-muted'?'true':null,setItem(){},removeItem(){}};globalThis.AudioContext=function(){made++;throw new Error('no audio in node');};
+  try{const S=require('../lib/konbini/konbiniSound.ts');S.konbiniSfx.bite();S.konbiniSfx.sip();S.konbiniSfx.gone();assert.equal(made,0,'muted: no audio context at all');}finally{globalThis.localStorage=prevLS;globalThis.AudioContext=prevAC;}
+  const snd=fs.readFileSync(require.resolve('../lib/konbini/konbiniSound.ts'),'utf8');assert(/bite:\(\)=>\{tone\(/.test(snd)&&/sip:\(\)=>\{sweep\(/.test(snd)&&!/\.mp3|\.wav|\.ogg|fetch\(/.test(snd),'synthesized, no samples');}
+ // Heat: one static redraw per bite and a bounded puff; no loop left running.
+ assert(B.PUFF_MS<=300,'crumb puff ≤ 300 ms');}
+
 // 4. The food ledger through the real arcade wallet.
 (async()=>{
  let wallet={version:1,runs:{'island-starter-coins:0':{game:'live',paid:20,reason:'Welcome coins',at:1},'grant':{game:'island',paid:20,reason:'grant',at:1}},packs:[]},q=Promise.resolve(),clock=Date.UTC(2026,8,29,10);
@@ -194,7 +248,7 @@ const {BOOK_PRICE}=require('../lib/books/catalog.ts');
   assert.deepEqual(Z.stepZoom(st2,{type:'back'},phone.length),{mode:'walk'});assert.equal(Z.easeZoom(0),0);assert.equal(Z.easeZoom(1),1);assert(Z.ZOOM_IN_SECONDS>=.8&&Z.ZOOM_IN_SECONDS<=1.2);
   const src=fs.readFileSync(require('node:path').join(__dirname,'../lib/konbini/konbiniScene.ts'),'utf8');
   assert(/setClip\(true\)/.test(src)&&/near=zoomed\?ZD-/.test(src),'zoom clips shelves in front of the target (no extra geometry)');
-  assert(/const busy=ballMoving\|\|!!zoom/.test(src),'the camera tween is the only extra work, and idle zoomed views sleep');}
+  assert(/const busy=ballMoving\|\|kb\.moving\|\|!!wobble\|\|!!zoom/.test(src),'the camera tween is the only extra work (ball actions only while moving), and idle zoomed views sleep');}
  // 8. In-store music: original per-store loops; start, idle, hidden, mute, dispose.
  {const Mu=require('../lib/konbini/konbiniMusic.ts');const fakeCtx=()=>({createBuffer:(c,len,rate)=>{const d=new Float32Array(len);return {getChannelData:()=>d,length:len,sampleRate:rate};}});
   const a=Mu.renderKonbiniLoop(fakeCtx(),'main').getChannelData(0),b=Mu.renderKonbiniLoop(fakeCtx(),'cay').getChannelData(0);
@@ -216,11 +270,13 @@ const {BOOK_PRICE}=require('../lib/books/catalog.ts');
   m.input();assert(!m.debug.idle,'the next input wakes it');
   m.dispose();await new Promise(r=>setTimeout(r,5));assert(log.includes('stop')&&log.includes('close'),'stopped and closed on exit');assert.equal(ctx.state,'closed');
   settings={enabled:false,volume:.04};const log2=log.length;const muted=Mu.createKonbiniMusic('main',{...ports,context:()=>({...ctx,state:'running',close:async()=>{}})});muted.start();assert(!log.slice(log2).includes('start'),'muted: nothing plays');assert(muted.debug.muted);}
- // 9. Indoor dribble: the player's own ball follows the rig, stays out of shelves, and kicks are disabled indoors.
+ // 9. Indoor dribble: the player's own ball follows the rig and stays out of shelves; the island's full-power shot never runs
+ //    indoors (the Konbini's own capped shot and keep-ups are §13).
  {const src=fs.readFileSync(require('node:path').join(__dirname,'../lib/konbini/konbiniScene.ts'),'utf8');
   assert(/player\.dribbleContact\(ballAim\)/.test(src),'ball follows the rig’s dribble contact');assert(/ballLook\.setStyle\(custom\.ball\)/.test(src),'customised ball style (same as outside)');
-  assert(/for\(const o of obstacles\)\{const r=\.2;if\(ballAim/.test(src),'ball kept out of aisles, counter and fridge');assert(/kick\(\)\{nudged\+\+;callbacks\.onNudge\?\.\(\);return false;\}/.test(src),'kick disabled indoors');
-  assert(!/createWalkBall|shoot\(/.test(src),'no shots or juggling indoors');}
+  assert(/for\(const o of obstacles\)\{const r=\.2;if\(ballAim/.test(src),'ball kept out of aisles, counter and fridge');
+  assert(!/createWalkBall/.test(src),'no island walkBall shot (38–60 m/s) indoors');assert(/createKonbiniBall\(obstacles,/.test(src),'the indoor ball uses the store’s own collision boxes');
+  assert(!/onNudge|No kicking in the shop/.test(src+fs.readFileSync(require('node:path').join(__dirname,'../components/KonbiniRoom.tsx'),'utf8')),'the old "no kicking" nudge is gone');}
  // 10. Building highlight / from-the-air Enter: the footprints hold their doors.
  for(const door of ['main','cay']){const b=D.KONBINI_BUILDINGS[door],d=D.KONBINI_DOORS[door];assert(Math.abs(d.x-b.x)<b.w/2,'door on the facade');assert(Math.abs(b.z+b.d/2-d.front)<.01,door+' front face = door line');}
  {const town=fs.readFileSync(require('node:path').join(__dirname,'../components/Town.tsx'),'utf8');assert(/\{index:3,kind:'konbini'/.test(town)&&/\{index:4,kind:'caykonbini'/.test(town),'both Konbinis use the shared building highlight');
@@ -266,5 +322,67 @@ const {BOOK_PRICE}=require('../lib/books/catalog.ts');
   const scene=fs.readFileSync(require('node:path').join(__dirname,'../lib/konbini/konbiniScene.ts'),'utf8');
   assert(/findFloorPath\(\{x,z\}/.test(scene)&&/stuck\.step\(target,d,dt\)\)\{target=null;route=\[\];arrivePoi=null;/.test(scene),'the scene uses both');
   console.log('konbini path: unreachable goal search',ms.toFixed(1),'ms');}
+ // 13. Ball actions (Sep 30 2026, lib/konbini/konbiniBall.ts): a capped soft shot that rebounds off the store's collision boxes and
+ //     returns to the feet; tap-timed keep-ups with a saved best; no coins, purchases or other saves touched; buttons hidden when
+ //     zoomed, in dialogs, the reveal/preview and the exit walk; the ball is only stepped while it's off the feet.
+ {const B=require('../lib/konbini/konbiniBall.ts'),W=require('../lib/town/walkBall.ts'),path=require('node:path');
+  // Capped power: the island's hold curve, a fraction of the island's shot speed.
+  assert.equal(B.holdPower(0),0);assert.equal(B.holdPower(180),0,'0.18 s dead zone like the island');assert.equal(B.holdPower(10000),1);assert.equal(B.holdPower(1080),.5);
+  const lo=B.indoorLaunch(0),hi=B.indoorLaunch(1),over=B.indoorLaunch(5);assert(hi.speed<=6&&over.speed===hi.speed,'full charge capped at 6 m/s');assert(hi.speed*6<W.SHOT_SPEED,'well under the island shot ('+W.SHOT_SPEED+' m/s)');
+  assert(lo.speed>=2&&lo.speed<hi.speed,'a tap is a soft pass');assert(hi.lift<=2.5&&hi.lift*hi.lift/(2*B.INDOOR_SHOT.gravity)<.3,'a low skip (apex under 30 cm), never into the ceiling');
+  // A full-power shot at a shelf bay 2 m ahead: strike ≤ 6 m/s, hits fixture 3, rebounds, rolls to rest, then the island's recall.
+  const shelf={minX:-1,maxX:1,minZ:2,maxZ:2.8,fi:3},ev=[],ball=B.createKonbiniBall([shelf],e=>ev.push(e)),p={x:0,z:0,yaw:0};
+  assert(ball.beginCharge(p));assert(!ball.beginCharge(p),'no second charge while charging');for(let i=0;i<30;i++)ball.update(1/30,p);assert(ball.state.charge>0&&ball.state.charge<1);
+  assert(ball.release(p,5000));let t=0,maxSpeed=0,maxY=0,inside=0;
+  while(ball.state.mode!=='feet'&&t<8){ball.update(1/30,p);t+=1/30;maxSpeed=Math.max(maxSpeed,Math.hypot(ball.state.vx,ball.state.vz));maxY=Math.max(maxY,ball.state.y);
+   if(ball.state.x>shelf.minX&&ball.state.x<shelf.maxX&&ball.state.z>shelf.minZ&&ball.state.z<shelf.maxZ)inside++;}
+  const strike=ev.find(e=>e.type==='strike'),hit=ev.find(e=>e.type==='hit');
+  assert(strike&&strike.speed<=6,'strike capped');assert(maxSpeed<=6.01,'never faster than the cap');assert(maxY<.6,'stays low indoors');
+  assert(hit&&hit.fi===3,'the shot reports the shelf bay it hit');assert.equal(inside,0,'never passes into the shelf');
+  assert.equal(ev.at(-1).type,'returned','the ball comes back');assert.equal(ball.state.mode,'feet');assert(t<5,'back at the feet within 5 s ('+t.toFixed(2)+' s)');
+  assert(Math.hypot(ball.state.x-p.x,ball.state.z-p.z)<.7,'at the player’s feet');
+  // Walls: a shot into the back wall rebounds (fi −1) and still returns; the doors count as a wall (the ball never leaves the store).
+  {const e2=[],b2=B.createKonbiniBall([],e=>e2.push(e)),q={x:0,z:5,yaw:0};b2.beginCharge(q);b2.release(q,5000);let u=0,maxZ=0;while(b2.state.mode!=='feet'&&u<8){b2.update(1/30,q);u+=1/30;maxZ=Math.max(maxZ,b2.state.z);}
+   assert(e2.some(e=>e.type==='hit'&&e.fi===-1),'the front glass rebounds it');assert(maxZ<B.BALL_ROOM.maxZ,'stays inside');assert.equal(b2.state.mode,'feet');}
+  // A shot started facing a shelf from close by never starts inside it.
+  {const b3=B.createKonbiniBall([shelf]),q={x:0,z:1.5,yaw:0};b3.beginCharge(q);b3.release(q,0);assert(!b3.blockedAt(b3.state.x,b3.state.z),'release point pulled out of the shelf');}
+  // Keep-ups: tap from the feet starts the streak; taps count only while the ball drops through the touch window.
+  const kev=[],k=B.createKonbiniBall([],e=>kev.push(e)),me={x:0,z:0,yaw:0},step=()=>k.update(1/60,me);
+  assert(k.tap(me));assert.equal(k.state.streak,1);assert(!k.tap(me),'an early tap (ball rising) does not count');assert.equal(kev.at(-1).type,'early');
+  for(let n=2;n<=7;n++){let guard=0;while(!(k.state.vy<0&&k.state.y<=B.KEEPUP.window-.05)&&guard++<200)step();assert(k.tap(me),'touch '+n);assert.equal(k.state.streak,n);}
+  assert(kev.filter(e=>e.type==='touch').map(e=>e.streak).join()==='1,2,3,4,5,6,7');
+  let guard=0;while(k.state.mode==='keepup'&&guard++<400)step();const drop=kev.find(e=>e.type==='drop');assert(drop&&drop.streak===7&&drop.reason==='missed','a missed touch drops the ball and ends the streak at 7');
+  while(k.state.mode!=='feet'&&guard++<800)step();assert.equal(k.state.mode,'feet','the dropped ball comes back to the feet');
+  assert(B.keepUpTip(5)&&B.keepUpTip(10)&&B.keepUpTip(20)&&!B.keepUpTip(7),'milestone tips at 5, 10 and 20');assert(/laces/i.test(B.keepUpTip(5)));
+  // Walking into a shelf mid keep-ups drops the ball (it stays in the aisle).
+  {const e4=[],b4=B.createKonbiniBall([shelf],e=>e4.push(e)),q={x:0,z:.8,yaw:0};assert(b4.tap(q));q.z=1.6;b4.update(1/60,q);assert(e4.some(e=>e.type==='drop'&&e.reason==='shelf'),'walking into a shelf drops it');
+   const b5=B.createKonbiniBall([shelf]);assert(!b5.tap({x:0,z:1.4,yaw:0}),'no keep-ups nose-to-shelf');}
+  // The best streak persists per player (versioned localStorage record), and only that key is written.
+  const mem=new Map(),st={getItem:k=>mem.has(k)?mem.get(k):null,setItem:(k,v)=>mem.set(k,String(v))};
+  assert.deepEqual(B.readBallRecord(st),{v:1,best:0,shotTip:false});
+  assert.deepEqual(B.recordStreak(7,st),{best:7,newBest:true});assert.deepEqual(B.recordStreak(4,st),{best:7,newBest:false});assert.equal(B.readBallRecord(st).best,7,'persists');
+  assert.deepEqual(B.recordStreak(12,st),{best:12,newBest:true});assert(B.takeShotTip(st));assert(!B.takeShotTip(st),'the shot tip shows once');assert.equal(B.readBallRecord(st).best,12,'the tip flag keeps the best');
+  assert.deepEqual([...mem.keys()],[B.BALL_RECORD_KEY]);assert.equal(JSON.parse(mem.get(B.BALL_RECORD_KEY)).v,1);
+  mem.set(B.BALL_RECORD_KEY,'{bad');assert.equal(B.readBallRecord(st).best,0,'corrupt → fresh');mem.set(B.BALL_RECORD_KEY,'{"v":2,"best":99}');assert.equal(B.readBallRecord(st).best,0,'other version ignored');
+  assert.equal(B.readBallRecord(null).best,0,'no storage (private mode) still works');
+  // No charge or save changes: the module and the room's ball handler never touch coins, purchases, stamps or collections.
+  const ballSrc=fs.readFileSync(path.join(__dirname,'../lib/konbini/konbiniBall.ts'),'utf8'),room=fs.readFileSync(path.join(__dirname,'../components/KonbiniRoom.tsx'),'utf8');
+  assert(!/wallet|spend|ledger|buyFood|buyVending|stamp|collection|purchase/i.test(ballSrc.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm,'')),'konbiniBall has no economy access');
+  const handler=room.slice(room.indexOf('ballEvent.current=e=>'),room.indexOf('};',room.indexOf('ballEvent.current=e=>')));
+  assert(handler.length>50&&!/buy|pay|wallet|stamp|resolveFood|credit|recordExplore/i.test(handler),'the room’s ball handler only shows bubbles and saves the best');
+  // Controls: island keys (Space hold / J), buttons hidden when zoomed, covered, previewing, leaving; ≥ 44 px targets.
+  const scene=fs.readFileSync(path.join(__dirname,'../lib/konbini/konbiniScene.ts'),'utf8');
+  assert(/e\.code==='Space'\)\{if\(e\.type==='keydown'&&!e\.repeat\)beginShot\(\);else if\(e\.type==='keyup'\)endShot\(\);\}/.test(scene),'Space: hold to charge, release to shoot');assert(/e\.code==='KeyJ'/.test(scene),'J: keep-ups');
+  assert(/const actionsOn=ready&&!failed&&!zoom&&!overlay&&!reveal&&!preview&&!packReveal&&!talking&&!walkingOut&&!leaving;/.test(room),'buttons hidden zoomed, in dialogs, reveal/preview and the exit walk');
+  assert(/\{actionsOn&&<div className=\{`travel-actions \$\{styles\.ballActions\}`\}/.test(room)&&/className="touch-shoot"/.test(room)&&/className="touch-juggle"/.test(room),'the island’s round action buttons');
+  assert(/const ballFree=\(\)=>!leaving&&!leaveStarted&&!covered&&!disposed&&zoomIndex===null&&!zoom&&!eat;/.test(scene),'the scene refuses ball actions when zoomed/covered/leaving');
+  assert(/function zoomToIndex[^\n]*settleBall\(\)/.test(scene)&&/setCovered\(value:boolean\)\{covered=value;if\(value\)\{settleBall\(\)/.test(scene),'zoom and dialogs bring the ball home');
+  const css=fs.readFileSync(path.join(__dirname,'../components/KonbiniRoom.module.css'),'utf8');for(const m of css.matchAll(/--action-size:(\d+)px/g))assert(Number(m[1])>=44,'action buttons ≥ 44 px');
+  // Heat: stepped only while off the feet; the store's busy flag covers the ball and the wobble, so an idle store still sleeps.
+  assert(/if\(kb\.moving\)kb\.update\(dt,bp\(\)\);/.test(scene)&&/const busy=ballMoving\|\|kb\.moving\|\|!!wobble\|\|!!zoom/.test(scene),'ball physics only while moving');
+  assert(/if\(!bay\?\.length\|\|reduced\|\|hidden\)return false;/.test(scene),'reduced motion: no shelf wobble');
+  assert(B.BALL_SOURCES.some(s=>/englandfootball\.com/.test(s.url))&&B.BALL_SOURCES.some(s=>/fifatrainingcentre\.com/.test(s.url)),'coaching points cite The FA and FIFA Training Centre');
+  assert(/middle of the ball/.test(B.SHOT_TIP)&&/inside of your foot/.test(B.SHOT_TIP));
+  console.log('konbini ball: shot',t.toFixed(2),'s round trip, max',maxSpeed.toFixed(2),'m/s, apex',maxY.toFixed(2),'m; keep-ups streak 7 saved');}
  console.log('KONBINI_PASS',JSON.stringify({items:F.FOOD_MENU.length,main:F.shopMenu('main').length,cay:F.shopMenu('cay').length,total,days,maxDay,rewardsTotal,spends}));
 })().catch(e=>{console.error(e);process.exit(1);});

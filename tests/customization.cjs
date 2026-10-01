@@ -26,7 +26,7 @@ for(const item of STORE_ITEMS){const equipped=equipStoreItem(D,item.id);assert.o
 assert.equal(equipStoreItem(D,'fake:paid'),null);
 player.dispose();vehicle.dispose();console.log('Customization: characters independent of learning progress, every free store equip/persistence, invalid IDs, all flight subtype geometry and finite poses passed.');
 
-const {CUSTOMIZATION_OPTIONS,isCustomizationUnlocked}=load('lib/town/customization.ts');for(const list of Object.values(CUSTOMIZATION_OPTIONS))for(const option of list)if(!option.coinReward)assert(isCustomizationUnlocked(option,0,100),'No learning gate: '+option.id);console.log('PASS all non-costume options available without quiz or Path progress');
+const {CUSTOMIZATION_OPTIONS,isCustomizationUnlocked}=load('lib/town/customization.ts');for(const list of Object.values(CUSTOMIZATION_OPTIONS))for(const option of list)if(!option.coinReward&&!option.graduate)assert(isCustomizationUnlocked(option,0,100),'No learning gate: '+option.id);/* graduate caps (lib/endgame) are graduation rewards by design */console.log('PASS all non-costume options available without quiz or Path progress');
 
 // Bean character builder (lane D): migration, sanitising, presets and every option applying.
 {
@@ -65,7 +65,7 @@ const {CUSTOMIZATION_OPTIONS,isCustomizationUnlocked}=load('lib/town/customizati
  assert.equal(selectCharacter(f,'female'),f,'same preset is a no-op');
  // Every option is open to both presets and applies to the look.
  for(const character of ['male','female'])for(const key of BEAN_KEYS)for(const o of O[key]){
-  const next=applyCustomization(selectCharacter(DC,character),key,o.id);assert.equal(next[key],o.id);assert.equal(next.character,character);same(S(next),next,`${character} ${key}:${o.id} survives a save`);
+  const next=applyCustomization(selectCharacter(DC,character),key,o.id);assert.equal(next[key],o.id);assert.equal(next.character,character);same(S(next),o.graduate?{...next,[key]:S(selectCharacter(DC,character))[key]}:next,`${character} ${key}:${o.id} ${o.graduate?'is dropped until graduated':'survives a save'}`);
   const look=beanLookFor(next);
   if(key==='bodyColor')assert.equal(look.body,o.color);else if(key==='skinTone')assert.equal(look.skin,o.color);else if(key==='hairColor')assert.equal(look.hair.color,o.color);else if(key==='hair')assert.equal(look.hair.style,o.id);else if(key==='headwearColor'){assert.equal(look.headwearColor,o.color);assert.equal(look.headwearColor2,o.color2);}else assert.equal(look[key],o.id);
  }

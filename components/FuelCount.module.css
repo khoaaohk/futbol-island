@@ -1,0 +1,9 @@
+/* Fuel counter: the coins-bar counter pill (IslandJobs .basketCount) with fuel colours. Low and empty also change the icon and add
+   a word, so the state never relies on colour alone. */
+.fuel{background:#f6e7b8!important;color:#6b4a12!important}
+.fuel[data-fuel-level=low]{background:#ffd9a8!important;color:#8a3d0c!important;box-shadow:inset 0 0 0 2px #e08a3c}
+.fuel[data-fuel-level=empty]{background:#ffe1d6!important;color:#8f2a1a!important;box-shadow:inset 0 0 0 2px #d0644a}
+.word{font-size:10px!important;font-weight:800!important;letter-spacing:.04em;text-transform:uppercase;color:inherit!important;margin:0!important;display:inline!important}
+/* Phones: the coins bar sits between Paths and Settings (max-width 100% - 156px). With the fuel counter in it, the word "coins"
+   gives way (the coin icon and aria-label still say it), so "Low" / "Empty" always fit. */
+@media(max-width:600px),(pointer:coarse){:global([data-job-wallet]):has(.fuel)>small{display:none}.fuel{gap:2px!important}.word{font-size:9px!important;letter-spacing:0}}

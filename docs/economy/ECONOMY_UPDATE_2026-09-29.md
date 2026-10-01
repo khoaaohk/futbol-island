@@ -171,3 +171,44 @@ The East Pier, reworked into the spiral East Jetty on 30 Sep (`lib/town/eastPier
 | Islanders | card offers only (existing `earnForNpc`) | No coins |
 
 The one-off 5 coins are not in the sim's learning pool; they move completion by well under a day. `tests/economy.cjs` passes unchanged; `tests/east-pier.cjs` asserts the one-off reward and `tests/fishing.cjs` the pier's mean catch.
+
+## 9. Game-audit quick wins (30 Sep 2026)
+
+- **Quiz completion vs perfect runs.**
+  - Completion is already rewarded: 12 coins on the first pass of every lesson, and path progress.
+  - The perfect first-try run adds +6 coins and the card pick (the user's rule, kept).
+  - What changed is that a paused quiz keeps its first-try answers (`lib/town/quizRunStore.ts`). Children who pause on phones (the normal case) no longer silently lose the +6 and the pick, and no new coins were created.
+  - Expect the realised quiz card rate to rise towards the modelled ~60%, because resumes no longer read as 0 first-try.
+- **Three new paying Explore items** (catch a fish, finish a job, sell to Rosa): +15 learning coins once ever and three picks. This is negligible against the ~239/h lesson rate and keeps learning ahead of grinding.
+- **Three new visit items** (Coral Cay, the East Jetty, a Konbini) pay nothing (see `docs/card-rewards.md`).
+- **The daily bonus counts rides and flying** (`docs/daily-play.md`). It is still 30 coins once a day; more children will actually receive it, which was always the intent.
+- **The 50,000-coin testing grant** now works only on localhost dev builds (it was reachable on production with `?preview=all&testCoins=50000`).
+
+
+## Addendum, 30 Sep 2026: endgame rewards (Lane 2, `docs/endgame-2026-09-30.md`)
+
+- **No new coins.** Graduating a path keeps the existing path reward: 75 learning coins and an Icon card pick. The Matchday Ferry final pays no coins, so the late game gets no new inflation.
+- **New non-coin rewards:**
+  - five cap colourways (Headwear colour): one per graduated format, plus Matchday Champion after the final;
+  - graduate certificates and the Island Diploma on the backpack's Trophy shelf.
+- These rewards are free once earned and never sold. They are not a sink.
+- **Museum cases** open through collections the player already builds: balls, cards, books and graduations. This adds a football payoff to book purchases, the biggest coin sink, without changing any price.
+
+## 8. Harvest day's farmer's share (30 Sep 2026)
+
+Harvest day now also puts produce into the basket: **3 / 2 / 1 items** for a full / half / tip shift, a mix of the crops the player
+picked (at most **8 coins** at full price, usually 6–7), granted once per shift. **Job pay is unchanged** (8, +4 first time) and stays
+the main reward; the share is sold like any produce, through the market's 40-coin full-price allowance and the Training meter
+(`market:` runs are metered), at Rosa's stand or the new Coral Cay farm stand (same state, same caps). The farm stand adds no new
+source type and no sink.
+
+Sim (`scripts/economy-sim.cjs`: `CURRENT.jobShare`, new `NO_SHARE` config), 20-seed means over 200 days:
+
+| Player | Coins / week, no share → with share | Own everything (day) |
+|---|---|---|
+| Casual 15 min | 570 → 573 | 121 → 121 |
+| Regular 20 min | 782 → 785 | 85 → 85 |
+| Engaged 45 min | 1,339 → 1,340 | 49 → 49 |
+
+`tests/economy.cjs` §8 checks: pay unchanged, share ≤ job pay, 3/2/1 by tier, metered sales, completion no more than 2 days faster,
+regular still inside 60–90 days, learning share ≥ 40 %.

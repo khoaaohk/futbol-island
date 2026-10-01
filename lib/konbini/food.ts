@@ -15,6 +15,9 @@
  *   carbohydrate = energy before training, protein = recovery after, water first for hydration, sweets = an occasional treat.
  *   Positive, food as fuel; no diet rules and nothing about weight.
  * - No gameplay perk (decision): a paid stamina boost would be pay-to-win for coins, so eating is a lesson plus a bite animation.
+ *   Fuel (30 Sep 2026, docs/economy/FUEL_2026-09-30.md): eating now also refills the island fuel bar (foodFuel in lib/town/fuel.ts).
+ *   It is still no perk: fuel only restores the optional fast modes (rides, flying, sprint), walking always works, and free garden
+ *   fruit refills the same bar.
  */
 export type KonbiniShop='main'|'cay';
 export type FoodGroup='carb'|'protein'|'hydration'|'treat'|'balanced';

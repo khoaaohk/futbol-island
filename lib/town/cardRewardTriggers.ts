@@ -58,7 +58,10 @@ export function earnForQuiz(lesson:{id:string;name:string;fmt:string;questions:u
 /** Explore items that pay a pick. `knock-characters` is left out: RETENTION-RESEARCH.md rules out learning rewards for knocking
  *  people over. Simply visiting a field or opening the parachute is too easy for a card (user, Sep 27 2026): those items still
  *  tick off in the Explore checklist, but pay no pick. */
-const NO_CARD_EXPLORE=new Set(['knock-characters','visit-futsal','visit-7v7','visit-9v9','visit-11v11','use-parachute','visit-store','ride-truck','roof-drop','ramp-trick']);
+// G-13 (Sep 30 2026): the new "go somewhere" items (Coral Cay, the East Jetty, a Konbini) follow the same rule as visiting a field:
+// they tick off but pay nothing. Catching a fish, finishing a job and selling at Rosa's take effort, so they pay like the others
+// (5 learning coins once + a card pick). The watcher's first-run baseline means saves that already did them are not paid twice.
+const NO_CARD_EXPLORE=new Set(['knock-characters','visit-futsal','visit-7v7','visit-9v9','visit-11v11','use-parachute','visit-store','ride-truck','roof-drop','ramp-trick','visit-cay','walk-jetty','enter-konbini']);
 export const CARD_EXPLORE_ITEMS=EXPLORE_ITEMS.filter(item=>!NO_CARD_EXPLORE.has(item.id));
 function exploreRequest(id:string):EarnRequest|null{
  const item=CARD_EXPLORE_ITEMS.find(x=>x.id===id);if(!item)return null;

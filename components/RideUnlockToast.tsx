@@ -4,6 +4,8 @@ import {CUSTOMIZATION_OPTIONS} from '@/lib/town/customization';
 import {RIDE_CATEGORIES,ridesOpenedBy,useFinishedPaths,PATH_COUNT} from '@/lib/town/rideUnlocks';
 import {readCardOffers} from '@/lib/town/cardRewardStore';
 import styles from './CostumeMilestoneToast.module.css';
+import HudSlot from './HudStack';
+import {toastLane,useToastLaneBusy} from '@/lib/ui/toastLane';
 
 /** The finished-path count already announced (so old progress never replays a toast). */
 const KEY='fi2-ride-unlock-announced-v1';
@@ -22,17 +24,19 @@ function openedLabels(from:number,to:number){
  * Same pattern as CostumeMilestoneToast: it waits behind the path's card offer and any dialog (`blocked`, plus a pending offer),
  * then shows for a few seconds; a tap hides it. The first run only records paths already finished. No timers run at rest.
  */
-export default function RideUnlockToast({blocked}:{blocked:boolean}){
+export default function RideUnlockToast({blocked:held}:{blocked:boolean}){
+ // HUD stack toast lane (docs/ui/HUD_STACK.md): wait while another note is on screen, hold the lane while this one shows.
+ const busy=useToastLaneBusy('ride'),blocked=held||busy;
  const finished=useFinishedPaths();
  const [shown,setShown]=useState<{from:number;to:number}|null>(null),timer=useRef<ReturnType<typeof setTimeout>>();
  useEffect(()=>{const announced=readAnnounced();if(announced===null){saveAnnounced(finished);return;}
   if(finished<=announced||blocked||shown!==null)return;
-  timer.current=setTimeout(()=>{if(readCardOffers().length>0)return;saveAnnounced(finished);setShown({from:announced,to:finished});},700);
+  timer.current=setTimeout(()=>{if(readCardOffers().length>0||!toastLane.request('ride'))return;saveAnnounced(finished);setShown({from:announced,to:finished});},700);
   return ()=>clearTimeout(timer.current);},[finished,blocked,shown]);
- useEffect(()=>{if(shown===null)return;const t=setTimeout(()=>setShown(null),7000);return ()=>clearTimeout(t);},[shown]);
+ useEffect(()=>{if(shown===null)return;const t=setTimeout(()=>setShown(null),7000);return ()=>{clearTimeout(t);toastLane.release('ride');};},[shown]);
  if(shown===null)return null;
  const labels=openedLabels(shown.from,shown.to);
- return <button type="button" className={styles.toast} role="status" data-ride-toast="" onClick={()=>setShown(null)}>
+ return <HudSlot><button type="button" className={styles.toast} data-hud-slot="toast" role="status" data-ride-toast="" onClick={()=>setShown(null)}>
   <b>New rides unlocked!</b>{labels.length>0&&<span className={styles.list}>{labels.join(' · ')}</span>}<span>{Math.min(shown.to,PATH_COUNT)}/{PATH_COUNT} paths finished · find them in the vending machines</span>
- </button>;
+ </button></HudSlot>;
 }

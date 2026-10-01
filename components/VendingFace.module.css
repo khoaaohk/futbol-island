@@ -249,7 +249,7 @@
 .face[data-depth]{transform-style:preserve-3d}
 .face[data-depth][data-entry]{animation:none}
 .face[data-depth] .slot{transform-style:preserve-3d}
-.face[data-depth] .slot .window{top:0;height:calc(100% * .53);transform:translateZ(calc(var(--bay-product) * -1));overflow:visible}
+.face[data-depth] .slot .window{top:0;height:calc(100% * .53);transform:translateZ(calc(var(--bay-product) * -1)) translateX(var(--shift-x,0px));overflow:visible}
 .face[data-depth] .glass{background:none;border-color:transparent;box-shadow:none}
 .face[data-depth] .glass::before,.face[data-depth] .glass::after,.face[data-depth] .arrival{display:none}
 .face[data-depth] .shelf{clip-path:none;background:#466574;box-shadow:inset 0 3px 0 #b8cbcc;animation:none}

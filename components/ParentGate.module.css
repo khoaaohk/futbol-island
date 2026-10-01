@@ -1,0 +1,18 @@
+/* Grown-up check: the Coaches Centre cream card with the shared button families (docs/ui/BUTTONS.md). */
+.gate{display:grid;justify-items:center;gap:10px;max-width:460px;margin:0 auto;padding:26px 22px;text-align:center;color:var(--btn-ink,#244d40);background:var(--btn-cream,#fff1d3);border-radius:26px 40px 22px 24px;box-shadow:0 6px 0 #183b3438}
+.lock{display:grid;place-items:center;width:52px;height:52px;border-radius:50%;background:var(--btn-gold-bright,#f9d665);box-shadow:0 4px 0 var(--btn-gold-bright-edge,#aa8b3e)}
+.gate h3{margin:4px 0 0;font-family:IslandBrush,sans-serif;font-weight:400;font-size:clamp(24px,4vw,32px);line-height:1.1}
+.reason{margin:0;font-size:14px;line-height:1.5;color:#48604c}
+.form{display:grid;gap:8px;width:100%;margin-top:6px}
+.question{font-size:18px;font-weight:700;line-height:1.35}
+.row{display:flex;gap:10px;justify-content:center}
+.row input{width:96px;min-height:48px;border:2px solid #a8b78d;border-radius:14px;background:#fffaf0;color:var(--btn-ink,#244d40);font:inherit;font-size:22px;font-weight:700;text-align:center}
+.row input:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:2px}
+.status{margin:0;font-size:12px;color:#69715d;min-height:1.4em}
+.primary,.ghost{min-height:var(--btn-height,44px);padding:10px 20px;border-radius:var(--btn-radius,999px);font-family:var(--btn-font);font-size:15px;font-weight:700;cursor:pointer;transition:translate .16s,box-shadow .16s}
+.primary{background:var(--btn-green);color:var(--btn-ink-on-dark);border:1px solid var(--btn-green);box-shadow:0 4px 0 var(--btn-green-edge)}
+.primary:disabled{opacity:.45;cursor:default;box-shadow:none}
+.primary:not(:disabled):active{translate:0 var(--btn-press);box-shadow:0 1px 0 var(--btn-green-edge)}
+.ghost{background:var(--btn-mint);color:var(--btn-ink);border:0;box-shadow:0 4px 0 var(--btn-mint-edge)}
+.ghost:active{translate:0 var(--btn-press);box-shadow:0 1px 0 var(--btn-mint-edge)}
+@media(prefers-reduced-motion:reduce){.primary,.ghost{transition:none}}

@@ -63,7 +63,7 @@ Sources: [Oakley Cannonier (Wikipedia)](https://en.wikipedia.org/wiki/Oakley_Can
 | Setting | Value | Reasoning |
 |---|---|---|
 | Starting balance | **30 coins** (user decision, Sep 27 2026; buys exactly one 3-card pack), once, for new players and existing players whose spendable balance is 0 | Buys one small vending item (15–20), or two 5-coin arcade tries if the arcade ever charges. It is less than the 30-coin pack, so the first job (8–14 coins) immediately feels meaningful: "one job away from a pack". This mirrors Club Penguin's 1–2-item start. |
-| Job pay | 7–10 base (cones 7, clean-up 7, leaves 8, wall 8, line 8, ball kid 10) | A job takes 30–60 s of real play, roughly the arcade's per-minute rate. A 30-coin pack takes 3–4 jobs; the cheapest vending item takes 2. |
+| Job pay | 7–10 base (cones 7, clean-up 7, leaves 8, line 8, ball kid 10); wall rebounds 26 since 30 Sep 2026, because it became a ~3.5-min drill (§11) | A job takes 30–60 s of real play, roughly the arcade's per-minute rate. A 30-coin pack takes 3–4 jobs; the cheapest vending item takes 2. |
 | First-time bonus | +4 on each job's first completion | Encourages trying every job. It matches the arcade's +4 first puzzle solve. |
 | Daily soft cap (per job) | 2 full-pay shifts → 2 half-pay shifts → 1-coin thank-you tips | There are no walls: the job is always playable. A friendly note explains the change ("The pitch is spotless! Come back tomorrow for full pay"). It resets at local midnight. There is no streak. |
 | Daily ceiling | About 250 coins if a child does all ten jobs 4 times each (about 40 min; the test bounds it at 20–34 coins per job) | Casual play (each job once) earns about 80 coins plus bonuses: 2–3 packs a day. The per-job soft cap is unchanged; adding jobs adds variety, not a faster grind per job. |
@@ -170,3 +170,149 @@ The former Boot Room feature was removed. The building remains in Island Square,
   - `tests/economy.cjs` and `tests/island-jobs.cjs` cover it.
 - **Heat.** Same as Harvest day: the board joins the merged sign mesh and label atlas, and the crates and produce exist only while the job runs.
 - **Browser check.** Desktop and 390×844: offer → intro → a wrong crate is rejected with a hint → 6/6 packed → payday. Screenshots are in `scratchpad/new-island/v3/{desktop,mobile}-snacks-*.png`.
+
+## 9. Actions and animations for every job, and the physical Harvest day (30 Sep 2026, local, not deployed)
+
+**Why:** the user asked for each job to have "some type of action and animation", not "walk to the glowing spot", and for
+Harvest day picking to be harder and more physical, with the harvest showing up as fruit to sell.
+
+**Rules (pure, `lib/town/jobs/jobRules.ts`).** A job's `work` (in `jobCatalog.ts`) lists the steps at each target and the one
+action at the drop-off. Standing on a target only *arms* it; the HUD shows one action button. `tap` steps take `count` presses,
+`hold` steps fill while the button (or Enter/Space) is held and keep their progress if you let go. Mistakes only explain.
+
+| Job | Action (button) | Animation (`jobScene.ts`, `jobFx.ts`) |
+|---|---|---|
+| Rake the leaves | Hold to rake (1.1 s) → Bag it → Empty the bag at the bin | Pile swirls and tightens, leaves flutter; pile flies into a bag at your side that bulges; bag tossed into the bin |
+| Wall rebounds | Juggle / Shoot (unchanged ball play) | White ring pulse where the ball hits the wall; the target square flashes on a target pass |
+| Ball kid | Pick up the ball → Roll it back at your spot | Ball lifts into your hands; thrown in an arc to a player on the pitch, then rolls |
+| Set out the cones | Place cone | A cone stack rides at your side; each cone drops onto its mark and settles with a wobble |
+| Paint the centre circle | Hold to paint and walk | A line-marker trolley follows you; fresh white paint is laid under the wheel only while held and on the line (gaps otherwise, "Off the line!") |
+| Court clean-up | Pick up → Toss in the bin | Bottle flies into a recycling bag that fills; bag tossed into the bin |
+| Flag the offside | Raise the flag / Keep flag down (unchanged) | Flag arm raises with a whistle; green/red ring for a right/wrong call |
+| Pump the balls | Pump / Let air out / Ball ready (unchanged) | Pump handle strokes; hiss and a puff when letting air out; squeak when over-pumped; green ring when ready |
+| Anchor the goals | Hammer ×3 per peg | Hammer swings, the peg sinks a notch per hit, dust, a clank and a ring when anchored |
+| Match-day snacks | Take a snack (basket) → Drop it in (crate) | Card lifts from the basket; tossed into the crate; lid flips and wobbles; red ring and shake for the wrong crate |
+
+**Harvest day** (`kind:'harvest'`, `harvestScene.ts`): goal = **5 fruit + 5 veg** ("Fruit 2/5 · Veg 1/5" in the panel).
+- *Fruit*: ripe mangoes, oranges and bananas hang on five orchard trees (3 each). Tap **Shake the tree** fast (3 quick taps; the
+  energy drains if you stop). The tree sways (a slightly larger copy of its canopy tilts around the trunk top, because the real
+  trees are merged scenery), leaves flutter, and 1–2 fruit fall with an arc and bounce (20 % chance of none, but never two empty
+  shakes in a row). Walk over fallen fruit to pick it up (pickable after 0.8 s).
+- *Root veg* (sweet potatoes): **Hold to pull**; the leafy top stretches and wobbles while the meter fills. Let go in the green
+  (0.8–1.1) and it pops out with a soil puff and hops onto the ground to pick up; too early or too long and it springs back.
+- *Staked veg* (tomato, pepper): **Twist & pick** a red one; two green ones jiggle and say "not ready yet" (no beacon on them).
+- *Leafy greens*: **Snip** twice within 1.4 s; leaves fly up.
+- Then **Unload the basket** at the farm stand. Sounds: `fi2-job-cue` voices in `lib/audio/islandSound.ts` (rustle, thud, pop,
+  spring, twist, snip, cut …, rate-limited). Light haptic (`tapHaptic`) on each action. Reduced motion: no sway, arcs or
+  bursts; items appear at their end place, the mechanics are identical.
+
+**The farmer's share (harvest → sellable produce).** Delivering pays the job exactly as before (8, +4 the first time) **and** puts a
+share of what you picked into the market basket: 3 / 2 / 1 items for a full / half / tip shift (`harvestShare.ts`), a mix of
+different crops (≤ 8 coins at full price). New produce goods: banana, mango, pepper, leafy greens, sweet potato (verified
+nutrition lessons ≤ 85 chars, FIFA nutrition guide). The share is granted with the shift's run id as key
+(`market.ts grantGoods`, remembered in `granted`), so a replayed payday or a reload never adds it twice; a full basket takes what
+fits. The Job done card lists the share; the HUD produce counter and the Pocket show it.
+**Selling on Coral Cay:** at the farm stand (on foot, no job running) a "Coral Cay Farm Stand · Sell fruit & veg" button opens the
+market stand in `place='farm'` mode: produce only, same prices, same daily allowance and Training meter (one shared market state).
+Match-day snacks neither consumes nor gives produce (its snacks are the farm's, not the player's basket).
+
+**Heat.** Nothing runs without an active job. While one runs: the props are 3–7 small meshes (measured visible job meshes: harvest 6,
+snacks 6, rake 5, cones 5, hammer job 7, line painter 7, bottles 4, pump 4, offside 4, ball kid 3), plus one hidden particle pool.
+Per-frame work only follows the player (bag, cone stack, marker) and sways/pulls while active; arcs, hops, wobbles and bursts are
+bounded tweens (≤ 0.8 s) that end; props are disposed ≤ 1.2 s after the job ends. The HUD view is republished only when a small
+state key changes (armed target, hold, note, meter step), not every frame.
+
+**Tests.** `tests/island-jobs.cjs`: every job completes only through its actions (walking alone does nothing), 3 hammer hits per
+peg, rake before bag, balls rolled back; Harvest shake → drop → pick-up, drain, no double miss, pull too early / too long / green,
+unripe twist, snip timing, the 5 + 5 mix, 10 sellable crops, seeded determinism, < 2 min; farmer's share tiers, mix, value ≤ pay,
+idempotent grant (replay, reload, full basket, bounded memory), pay unchanged, snacks pays; farm produce sells under the shared
+allowance. Browser play-tests (desktop 1280×800 and phone 390×844, muted): every job except the aim-dependent rebound shots
+completed through the HUD with frame strips; Harvest end to end incl. sale at the farm stand; leave-the-area stops the job;
+keyboard hold (Space) and G/Enter work; reduced motion run passes.
+
+## 10. Jobs are on foot, with the job's own buttons and a character that does the work (30 Sep 2026, local, not deployed)
+
+**Why:** the user asked that farm work "only allow walking with the ball", with the three action buttons changed to farm actions,
+the animation back to default when leaving the farm, free hands, the main character in the pull, and the ball set aside for work.
+Follow-ups: Shake became **Kick the tree** (a football move), bigger farm reaches, then the same approach for every job.
+
+- **Walking only** (`lib/town/jobs/jobMoves.ts rideAllowed`, `Town.tsx selectRide`): while any job runs, a ride request (R key,
+  ride button, vending/customizer equip) is refused with a panel note ("Island jobs are on foot…", `jobScene.note`, 4 s).
+- **The job's own buttons** (`jobButtons`, `components/JobActionButton.tsx`): they take the Shoot / Juggle / Ride slots (same size,
+  colours, ≥ 58 px), with an icon (`TravelIcon`) and one word; keys Space / J / R; hold steps press on down, release on up; a
+  button that is not armed stays tappable (aria-disabled) for a hint. The job panel no longer repeats the action buttons.
+  Harvest day: **Kick the tree** (Space) · **Pull / Twist / Snip** (J, Pull = hold) · **Pick up / Unload** (R). Other jobs: Rake·Bag·Empty,
+  Throw it back·Pick up, Place cone, Paint (hold), Pick up·Toss, Raise the flag·Keep flag down·Next, Pump·Let air out·Ball ready,
+  Hammer, Drop it in·Take a snack; jobs with fewer than three show an "On foot" button in the ride slot. **Wall rebounds keeps
+  Juggle / Shoot** (it is a ball drill).
+- **The ball set aside** (`createJobMoves`): any hands pose sets the player's ball down beside the right foot; it rolls back to
+  the feet once they walk on (> 0.6 m). Kicks, juggles and charged shots are off while the job buttons are up.
+- **Restore**: when the job ends for any reason (Stop job, completion, walking out of the area — `outsideJobArea`, now in
+  `jobRules.ts`), `Town.tsx` resets the poses, puts the ball back at the feet and the default buttons return; rides work again.
+- **Kick the tree**: the player steps to a kicking spot 2.2 m from the trunk, sets the ball 1.6 m out, takes two steps back, steps
+  in and passes it into the trunk (the rig's kick; contact at 0.36). On impact the rules get `kick` = one full shake (same
+  20 % miss / never two misses), the tree sways, fruit falls; the ball rebounds to the feet with a first-touch pose. ~1.7 s, one at
+  a time. Tip line: "Kick the tree: pass it firmly into the trunk, then control the rebound." Reduced motion: no steps back, ~0.3 s.
+- **Poses** (`lib/graphics/jobPoses.ts`, `player.ts poseJob`): keyframes over a two-bone leg solve (boots on the grass, or a knee
+  down) and the arms; fade in 0.1 s, out 0.15 s. Harvest: pull (crouch, both hands on the leaves, leaning back with the meter,
+  tugs in rhythm), pop-back stumble (green), slip (early/late), twist & pick, "not ready" shake, snip, bend to pick up. Other jobs:
+  two-handed rake sweeps (held), stuff the bag, swing it into the bin, scoop the ball, carry it at the chest, **throw-in** (both feet
+  down, two hands, from behind the head; tip teaches the rule), cone stack on one arm and crouch to place, both hands on the
+  line-marker bar, bend for a bottle, overhead mallet per hit, take/drop a snack, flag held → raised straight up (flag) or a
+  "play on" signal, kneel and pump (lean in on each stroke), first-touch balance on each wall rebound. Held props sit in the hands
+  (`jobScene.holdProps`: rake, flag, mallet, carried ball/card, cone stack, marker in front).
+- **Farm reaches** (`HARVEST`): trees 2.5 → 4.5 m, veg 1.5 → 2.25 m, walk-over pick-up 1.15 → 1.8 m, Pick up button 3 m; the armed
+  spot switches only to one 0.6 m nearer (overlapping orchard trees never flicker).
+- **Heat:** no new loop. Per frame only while a job runs: one small `update` (a few ops), a hand-position read and ≤ 6 prop
+  transforms; poses are one-shots ≤ 0.9 s or run only while a button is held / a thing is carried; nothing outside a job.
+
+## 11. Wall rebounds: 50 passes, 15 target shots from a moving circle, new sign spot (30 Sep 2026)
+
+- The sign moved from (143.5, −11.5), where the building in front hid it, to open grass by the lamp post at **(138.5, −26.5)**.
+- Goals: **50 wall passes** (from anywhere near the wall, as before) then **15 target shots**. Each shot counts only when struck from
+  inside a glowing circle (r 1.4 m, the job beacon's ring resized: one mesh, moved; static in reduced motion). After every attempt
+  from the circle, hit or miss, it moves: 6–14 m from the target, ≤ 55° off square, on the lawn, ≥ 3 m from the last one, clear of
+  Andre and Sofia (`nextReboundSpot`, seeded). Shots from outside say "Step into the glowing circle…"; the tip after each attempt:
+  "New angle: open your body to the target before you strike." An edge arrow points to the circle when it is off screen (HUD tick).
+- **Pay (raised 30 Sep 2026, user-approved):** the job takes about 1 min of wall passes plus ~2.5 min of shots (~3.5 min, was ~30 s).
+  At 8 coins it paid ~2 coins a minute, the lowest of all jobs. `JOB_BASE_PAY['wall-rebounds']` is now **26**, which puts its coins
+  per minute at the middle (median) of the other jobs. The rules are unchanged: +4 the first time, then 26, 26, 13, 13 and 1-coin
+  tips, and the Training meter still caps the day.
+
+  | Job | Pay | Play (min) | Shift (min, + 0.6 overhead) | Coins / min |
+  |---|---|---|---|---|
+  | Wall rebounds | **26** (was 8) | 3.5 | 4.1 | **6.34** (was 1.95) |
+  | Median of the other ten | 7–10 | 0.45–1.8 | 1.05–2.4 | 6.29 (range 3.40–7.27) |
+
+  The play minutes are estimates (`JOB_MINUTES` in `jobEconomy.ts`): each route at walking pace plus its actions. The 0.6-min
+  overhead (walk to the sign, intro card, payday card) makes the short jobs average 1.5 min a shift, the sim's long-standing job
+  time. `tests/island-jobs.cjs` pins 26, the tiers, and parity within 10% of the median. The economy sim now times each job
+  separately (`jobMin`), and the child picks the best pay per minute among the jobs that fit the time left. Owning everything:
+  casual 121 → 123, **regular 85 → 85**, engaged 49 → 49 days, so per-minute parity leaves income where it was.
+
+## 12. "JOB" badges over every sign (30 Sep 2026)
+
+A gold pixel-pill "¢ JOB" with a glow halo floats over every job sign and the Community Garden (`jobBadges.ts`): one instanced quad
+mesh and one canvas texture (one draw), billboarded, a slow bob and pulse, a minimum on-screen size at distance. Only badges within
+115 m and inside the camera frustum are updated; with none in range the mesh is hidden and nothing animates. Reduced motion: no
+bob/pulse. **Decision:** hidden while that job runs; **dimmed (grey, smaller) once done today**, since later shifts pay less, so
+children are steered to a fresh full-pay job, but can still find it.
+
+## 13. Garden shift: the Community Garden as a paid job, with picking animations (30 Sep 2026, local, not deployed)
+
+**Why:** user decision: the Community Garden becomes a paid "Garden shift" job, and the character visibly picks.
+
+| Job | Where | Pay | Mini-task | Lesson on the payday card |
+|---|---|---|---|---|
+| Garden shift (gardener) | Community Garden. Sign on the grass just east of the COMMUNITY GARDEN gate sign at **(217.5, 5.5)**, facing south; the **garden crate** is inside the gate at (214, 2) | **10** (+4 first time) | Pick **8** ripe items with **at least 2 fruit and 2 veg** (fruit: strawberries, oranges, cherries; veg: tomatoes, carrots) with the **Pick** button, then **Drop in crate** | Only the garden's own produce lessons (`goods.ts`: strawberry, tomato, carrot, orange): fruit is sprint fuel, colourful veg helps you recover between matches, a real meal after training, half-time oranges rehydrate |
+
+- **Rules** (`jobRules.ts`, `kind:'garden'`): standing in reach only *arms* the nearest unpicked spot (a ripe one wins over a green one up to 1 m further; 0.4 m hysteresis). Pick on a green one = "Not ripe yet" (nothing lost, never on the arrow). The last basket places are kept for the missing kind ("Your basket needs 2 more veg…"; the arrow then points at veg only). The first pick of each crop shows its nutrition lesson; otherwise the panel shows the tip "Mix colours on your plate: fruit is your muscles' sprint fuel, and colourful veg gives vitamins and minerals that help you recover between matches."
+- **Never a dead end** (`garden.ts shiftRipeness`): the shift starts from the real garden's ripeness. If fewer than 12 items (5 fruit, 5 veg, 3 tree fruit) are ripe, the unripe spots closest to ripening are made ripe *for this shift only* until that holds; the rest stay green. Shift picks are saved to the garden (`markPicked`) and regrow on the normal 3 / 4-min timers.
+- **Free picking outside a shift: kept.** Walking up to ripe produce still puts it in your market basket (it is the zero-coin fuel path and the garden's free play). **No double pay:** during a shift free picking is off; shift picks go to the crate (not the basket) and regrow before they can be picked again; only the gardener's share reaches the basket. Free picks now take one item per pick pose (0.8 s apart).
+- **Gardener's share** (`harvestShare.ts`): 2 / 1 / 1 items (full / half / tip shift) from what you picked, a mix, ≤ 6 coins at full price; granted once per shift run id like the farmer's share. The payday card says "Gardener's share…".
+- **Like the other jobs:** on foot only (rides wait), **Pick** / **Drop in crate** replace the ball buttons (the ride slot shows On foot), the ball is set aside for each pick and comes back when you walk on, the sign glows, the JOB badge and the map J come from the catalog. **The floating Community Garden badge was removed** (the sign has its own). The shift **stops 15 m outside the garden** (`areaMargin`, not the usual 45 m, because the Coaches Centre lawn is close).
+- **Animations** (`jobPoses.ts`, `jobMoves.ts`; shift and free picking alike, one-shots ≤ 0.9 s, action-triggered, no loop): *bed crop* `gpick`: crouch and reach down, two small tugs, rise and bring it across to the basket in the left hand; *tree fruit* `reachpick`: up on tiptoe (new `toe` ankle pitch), eyes up, arm straight up, pluck, down into the basket; *not ripe* `headshake`: lean in and look, then a gentle head shake (new head-yaw `hy`); *crate* `tipbasket`: lean in and tip the basket. While walking the basket hangs from the left hand (`carrybasket`, upper body only). Free picks play the same poses with a balancing left arm and no basket. Reduced motion: shorter poses, a look without the shake, the picked item appears in the basket at once.
+- **Props / heat:** a basket (3 small meshes) with **1–3 fruit** (one 3-instance mesh on the garden's shared fruit geometry; 1, 2, 3 fruit after 1, 3, 6 picks), built on start and disposed at the end; one hidden "flying item" mesh (shared fruit geometry) for the pick arc; the crate is part of the static merged sign mesh. No new per-frame loop: the basket follows the hand in the existing `holdProps`; arcs/tips are bounded `jobFx` tweens. The label atlas grew to 6 rows (1024×768, still one draw).
+- **Economy:** see `docs/economy/ECONOMY_UPDATE_2026-09-30.md` (Garden shift). 10 coins / 1.6-min shift = 6.25 coins a minute (median of the jobs); regular player owns everything on day 85 with or without the job.
+- **Tests:** `tests/island-jobs.cjs` (catalog, sign clear of beds/paths/glasshouse/benches/Hugo, crate, shift ripeness from an emptied garden, a full shift by hand incl. not-ripe / mix / lessons / crate, pay tiers + per-minute parity, the share once, auto-stop, rides, ball parked/restored, keyframes, scene wiring, badge from the catalog); `tests/economy.cjs` §10.
+- **Browser check** (desktop 1280×800 and phone 390×844, muted): sign offer (glow on) → intro (14 coins) → ride refused → bed crouch-pick, tree reach-up pluck, not-ripe head shake (frame strips) → 8/8 → Drop in crate → first-job card reward → payday +14 and a 2-item share → Work again → walking out past 15 m stops the shift and gives the buttons and ball back → free pick outside a shift with the pose. Screenshots: `scratchpad/garden-shift/`.

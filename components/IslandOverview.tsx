@@ -1,4 +1,4 @@
-import {useEffect,useRef,useMemo,memo} from 'react';
+import {useEffect,useRef,useMemo,memo,useState} from 'react';
 import {ARCADE_DOOR,COACHES_DOOR,VENUES,type Format} from '@/lib/town/venues';
 import {ISLAND_SHORE,SHORE_SAND,INTERIOR_GRASS,INTERIOR_GRASS_COLOR,NORTH_BEACH_UMBRELLAS,NORTH_BEACH_PATHS,onIsland} from '@/lib/town/shoreline';
 import {FLIGHT_BOUNDS,FLIGHT_WATER_MARGIN} from '@/lib/town/simulation';
@@ -7,7 +7,9 @@ import {CAY_SHORE,CAY_SAND,CAY_LAWN,CAUSEWAY_PATH,CAUSEWAY_BEACHES,SANDBARS,FARM
 import {FLIGHT_OUTLINE_PATH} from '@/lib/town/flightOutline.data';
 import {VENDING_MACHINES} from '@/lib/town/vendingCatalog';
 import {FISH_SPOTS,MARKET_STAND} from '@/lib/town/fishing/fishCatalog';
+import {JOBS} from '@/lib/town/jobs/jobCatalog';
 import {EAST_PIER,JETTY_PATH,PIER_TARGET_SPOTS} from '@/lib/town/eastPier';
+import {placeJobMarkers} from '@/lib/town/mapMarkers';
 // East Jetty (eastPier.ts): the straight stone walkway from the market seawall curling into its spiral, drawn from the same
 // centre-line samples movement uses (every 3rd sample, fixed precision: static string built once).
 const PIER=EAST_PIER,JETTY_POINTS=JETTY_PATH.filter((p,i)=>p.x>=EAST_PIER.wallX&&(i%3===0||i===JETTY_PATH.length-1)).map(p=>`${Math.round(p.x*100)/100},${Math.round(p.z*100)/100}`).join(' ');
@@ -22,9 +24,15 @@ const CAY_POINTS=CAY_SHORE.map(svgPoint).join(' '),CAUSEWAY_POINTS=CAUSEWAY_PATH
 // "V"s never stack; the first machine listed (the Konbini's own) keeps the marker's id and the Island Square trip.
 const VENDING_MARKERS=VENDING_MACHINES.reduce<{id:string;x:number;z:number;names:string[];ids:string[]}[]>((list,m)=>{
  const near=list.find(o=>Math.hypot(o.x-m.x,o.z-m.z)<6);if(near){near.names.push(m.name);near.ids.push(m.id);}else list.push({id:m.id,x:m.x,z:m.z,names:[m.name],ids:[m.id]});return list;},[]);
+/** Job board markers ("J", full map only): one per board in JOBS (new jobs appear by themselves), nudged clear of the V/F
+ *  markers, field names and Rosa's label (lib/town/mapMarkers.ts). Static, computed once. */
+const JOB_MARKERS=placeJobMarkers(JOBS,[...VENDING_MARKERS,...FISH_SPOTS],VENUES,MARKET_STAND,[{x:ARCADE_DOOR.x,z:ARCADE_DOOR.z+30,w:64,h:20}]);// the full map's ARCADE label
 export type MapFootprint={x:number;z:number;w:number;d:number;cornerRadius?:number};
 export type MapDestination=Format|'square'|'store'|'coaches'|'cay';
 function IslandOverview({roads,buildings,position,markerPosition,onSelect,active=true,frames}:{roads:MapFootprint[];buildings:MapFootprint[];position?:{x:number;z:number};markerPosition?:{x:number;z:number};onSelect?:(destination:MapDestination)=>void;active?:boolean;frames?:(listener:(x:number,z:number)=>void)=>()=>void}){
+ // The map is drawn in the browser only (after hydration): its world-space coordinates come from trig, and WebKit and the
+ // server's V8 disagree in the last digit, which made React report a hydration mismatch on every Safari load (Sep 30 2026).
+ const [mounted,setMounted]=useState(false);useEffect(()=>setMounted(true),[]);
  const destination=(id:MapDestination,label:string)=>onSelect?{role:'button',tabIndex:0,'aria-label':`Travel to ${label}`,className:'map-destination',onClick:()=>onSelect(id),onKeyDown:(event:React.KeyboardEvent<SVGGElement>)=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();onSelect(id);}}}:{'aria-label':label};
  const b=FLIGHT_BOUNDS,w=b.maxX-b.minX,h=b.maxZ-b.minZ;
  const previous=useRef(position);
@@ -72,8 +80,8 @@ function IslandOverview({roads,buildings,position,markerPosition,onSelect,active
   <polyline points={CAUSEWAY_POINTS} fill="none" stroke="#8c927a" strokeWidth="12" strokeLinejoin="round" opacity={localMap?.5:1}/>
   <g aria-label="Coral Cay roundabout" data-coral-cay="roundabout"><circle cx={ROUNDABOUT.x} cy={ROUNDABOUT.z} r={(ROUNDABOUT.roadOuter+ROUNDABOUT.roadInner)/2} fill="none" stroke="#8c927a" strokeWidth={ROUNDABOUT.roadOuter-ROUNDABOUT.roadInner}/><circle cx={ROUNDABOUT.x} cy={ROUNDABOUT.z} r={ROUNDABOUT.island} fill={INTERIOR_GRASS_COLOR}/></g>
   <rect aria-label="Coral Cay plaza" x={CAY_PLAZA.x-CAY_PLAZA.w/2} y={CAY_PLAZA.z-CAY_PLAZA.d/2} width={CAY_PLAZA.w} height={CAY_PLAZA.d} fill="#eddfbb"/>
-  <g aria-label="Beach soccer court" data-coral-cay="court"><polygon points={COURT_BEACH.map(svgPoint).join(' ')} fill="#f1d6a1"/><rect x={BEACH_COURT.x-BEACH_COURT.length/2} y={BEACH_COURT.z-BEACH_COURT.width/2} width={BEACH_COURT.length} height={BEACH_COURT.width} fill="none" stroke="#4a8bb0" strokeWidth="1"/></g>
-  <g aria-label="Coral Cay Farm" data-coral-cay="farm"><polygon points={FARM.fence.map(svgPoint).join(' ')} fill="#a99466" stroke="#8b6a4a" strokeWidth="1"/>{Array.from({length:7},(_,i)=><rect key={'farm-row'+i} x={FARM.crops.x0} y={-126+i*4.8} width={FARM.crops.x1-FARM.crops.x0} height={1.6} fill="#739568"/>)}<text x={(FARM.fence[0].x+FARM.fence[1].x)/2} y={-104} textAnchor="middle" fill="#fff5d5" stroke="#294f43" strokeWidth="3" paintOrder="stroke" fontSize={localMap?9:11} fontWeight="700">FARM</text></g>
+  <g aria-label="Beach soccer court" data-coral-cay="court"><polygon points={COURT_BEACH.map(svgPoint).join(' ')} fill="#f1d6a1"/><rect x={BEACH_COURT.x-BEACH_COURT.length/2} y={BEACH_COURT.z-BEACH_COURT.width/2} width={BEACH_COURT.length} height={BEACH_COURT.width} fill="none" stroke="#4a8bb0" strokeWidth="1"/><text x={BEACH_COURT.x} y={BEACH_COURT.z-BEACH_COURT.width/2-(localMap?3:6)} textAnchor="middle" fill="#fff5d5" stroke="#294f43" strokeWidth="3" paintOrder="stroke" fontSize={localMap?9:11} fontWeight="700">BEACH SOCCER</text></g>
+  <g aria-label="Coral Cay Farm" data-coral-cay="farm"><polygon points={FARM.fence.map(svgPoint).join(' ')} fill="#a99466" stroke="#8b6a4a" strokeWidth="1"/>{Array.from({length:7},(_,i)=><rect key={'farm-row'+i} x={FARM.crops.x0} y={-126+i*4.8} width={FARM.crops.x1-FARM.crops.x0} height={1.6} fill="#739568"/>)}{/* Label sits east of centre so the farm's two job J marks (west gate boards) never cover it. */}<text x={(FARM.fence[0].x+FARM.fence[1].x)/2+12} y={-104} textAnchor="middle" fill="#fff5d5" stroke="#294f43" strokeWidth="3" paintOrder="stroke" fontSize={localMap?9:11} fontWeight="700">FARM</text></g>
   <g aria-label="Coral Cay Hostel and homes" data-coral-cay="hostel">{HOSTEL_PATHS.map(([x,z,w,d],i)=><rect key={'hp'+i} x={x-w/2} y={z-d/2} width={w} height={d} fill="#eddfbb"/>)}<rect x={HOSTEL.x-HOSTEL.w/2} y={HOSTEL.z-HOSTEL.d/2} width={HOSTEL.w} height={HOSTEL.d} rx="1" fill="#be8d65"/>{CAY_HOMES.map((h,i)=>h.style==='hut'?<circle key={'home'+i} cx={h.x} cy={h.z} r={2.2} fill="#be8d65"/>:<rect key={'home'+i} x={h.x-2.6} y={h.z-2.3} width={5.2} height={4.6} rx=".8" fill="#be8d65"/>)}<text x={HOSTEL.x} y={HOSTEL.z-HOSTEL.d/2-(localMap?3:6)} textAnchor="middle" fill="#fff5d5" stroke="#294f43" strokeWidth="3" paintOrder="stroke" fontSize={localMap?9:11} fontWeight="700">HOSTEL</text></g>
   {CAY_HUTS.map((h,i)=><circle key={'hut'+i} cx={h.x} cy={h.z} r={CAY_HUT_RADIUS} fill="#be8d65"/>)}
   {roads.map((r,i)=><rect key={'road'+i} x={r.x-r.w/2} y={r.z-r.d/2} width={r.w} height={r.d} fill="#8c927a"/>)}
@@ -86,17 +94,21 @@ function IslandOverview({roads,buildings,position,markerPosition,onSelect,active
    <rect className="map-place-label" x={point.x+dx-width/2} y={point.z+dy-(localMap?7:11)} width={width} height={localMap?14:22} rx="5" fill="#fff8e5" stroke="#73886b" strokeWidth="1"/>
    <text x={point.x+dx} y={point.z+dy+(localMap?3:4)} textAnchor="middle" fill="#294f43" fontSize={localMap?8:12} fontWeight="700">{label}</text>
   </g>)}
-  {/* The travel map's "Vending machine" trip lands at the Island Square machine (STORE_DOOR), so that marker is the tappable destination. */}
-  <g className="map-vending-markers" pointerEvents="none">{VENDING_MARKERS.map(m=>{const trip=onSelect&&m.id==='plaza';return <g key={m.id} {...(trip?{...destination('store',`${m.names.join(' and ')} vending machine${m.names.length>1?'s':''} in Island Square`),pointerEvents:'auto'}:{'aria-label':`${m.names.join(' and ')} vending machine${m.names.length>1?'s':''}`})} data-vending-marker={m.id} data-vending-machines={m.ids.join(' ')}>
-   {trip&&<circle cx={m.x} cy={m.z} r="15" fill="transparent"/>}
+  {/* V / F / J are plain marks, never buttons (Sep 30 2026, user: "the legend above is enough"): the map key explains them with
+      a tap tooltip (IslandTravelMap). The Island Square V used to be a "vending machines" trip; the ARCADE label goes there. */}
+  <g className="map-vending-markers" pointerEvents="none">{VENDING_MARKERS.map(m=><g key={m.id} aria-label={`${m.names.join(' and ')} vending machine${m.names.length>1?'s':''}`} data-vending-marker={m.id} data-vending-machines={m.ids.join(' ')}>
    <circle cx={m.x} cy={m.z} r={localMap?5.4:9.5} fill="#fff8e5" stroke="#294f43" strokeWidth={localMap?1.3:1.8}/>
    <text x={m.x} y={m.z+(localMap?2.7:4.6)} textAnchor="middle" fill="#294f43" fontSize={localMap?7.6:13} fontWeight="900" style={{stroke:'none'}}>V</text>
-  </g>;})}</g>
+  </g>)}</g>
   <g className="map-fishing-markers" pointerEvents="none">{FISH_SPOTS.map(spot=><g key={spot.id} aria-label={`${spot.name} fishing spot`} data-fishing-marker={spot.id}>
-   <title>{`${spot.name} · Fishing`}</title>
    <circle cx={spot.x} cy={spot.z} r={localMap?5.4:9.5} fill="#b9e1df" stroke="#294f43" strokeWidth={localMap?1.3:1.8}/>
    <text x={spot.x} y={spot.z+(localMap?2.7:4.6)} textAnchor="middle" fill="#294f43" fontSize={localMap?7.6:13} fontWeight="900" style={{stroke:'none'}}>F</text>
   </g>)}</g>
+  {/* Island job boards (G-13, Sep 30 2026): one "J" per JOBS board on the full travel map only (the minimap stays uncluttered). Static, in the memoized terrain. */}
+  {!localMap&&<g className="map-job-markers" pointerEvents="none">{JOB_MARKERS.map(job=><g key={job.id} aria-label={`${job.title} job`} data-job-marker={job.id}>
+   <circle cx={job.x} cy={job.z} r="9.5" fill="#f4cc7c" stroke="#294f43" strokeWidth="1.8"/>
+   <text x={job.x} y={job.z+4.6} textAnchor="middle" fill="#294f43" fontSize="13" fontWeight="900" style={{stroke:'none'}}>J</text>
+  </g>)}</g>}
   <g aria-label="Rosa’s Market · Sell fish, produce and cards" data-market-marker="rosa" pointerEvents="none">
    <title>Rosa’s Market · Sell fish, produce and cards</title>
    <path d={`M${MARKET_STAND.x} ${MARKET_STAND.z}h-${localMap?13:24}`} stroke="#294f43" strokeWidth="1.2"/>
@@ -104,8 +116,7 @@ function IslandOverview({roads,buildings,position,markerPosition,onSelect,active
    <rect x={MARKET_STAND.x-(localMap?87:126)} y={MARKET_STAND.z-(localMap?7:11)} width={localMap?74:102} height={localMap?14:22} rx="5" fill="#f4c2a4" stroke="#294f43" strokeWidth="1"/>
    <text x={MARKET_STAND.x-(localMap?50:75)} y={MARKET_STAND.z+(localMap?3:4)} textAnchor="middle" fill="#294f43" fontSize={localMap?8:11} fontWeight="800">ROSA’S MARKET</text>
   </g>
-  {!localMap&&markerPosition&&<g aria-label="Your position" transform={`translate(${markerPosition.x} ${markerPosition.z})`}><circle r="8" fill="#ffc45b" stroke="#294f43" strokeWidth="2"/><circle r="3" fill="#fff7db"/></g>}
-  {!localMap&&<text x={(b.minX+b.maxX)/2} y={b.maxZ+5} textAnchor="middle" fill="#25483e" fontSize="11">Light water · Flight area</text>}
+  {!localMap&&markerPosition&&<g aria-label="Your position" transform={`translate(${markerPosition.x} ${markerPosition.z})`}><circle r="14" fill="#7b4fd6" opacity=".28"/><circle r="9" fill="#7b4fd6" stroke="#fff7db" strokeWidth="2.5"/><circle r="3.2" fill="#fff7db"/></g>}
  </>,[roads,buildings,onSelect,markerPosition,localMap]);
  if(position)return <div className="island-overview local-overview" role="img" aria-label="Nearby streets and fields around your current position" style={{position:'relative',overflow:'hidden',background:'transparent'}}>
   <div ref={layer} className="minimap-layer" data-frame-driven={frames?'true':undefined} style={frames?{width:`${(w+16)/(radius*2)*100}%`,height:`${(h+16)/(radius*2)*100}%`,transition:'none'}:{width:`${(w+16)/(radius*2)*100}%`,height:`${(h+16)/(radius*2)*100}%`,transform:`translate(${(b.minX-8-position.x)/(w+16)*100}%, ${(b.minZ-8-position.z)/(h+16)*100}%)`,transitionDuration:jumped?'0ms':undefined}}>
@@ -113,6 +124,7 @@ function IslandOverview({roads,buildings,position,markerPosition,onSelect,active
   </div>
   <svg className="minimap-player" viewBox={view} aria-hidden="true"><g aria-label="Your position"><circle cx={0} cy={0} r="4.5" fill="#314f43"/><circle cx={0} cy={0} r="3" fill="#fff0cf" stroke="#fff0cf" strokeWidth="1"/></g></svg>
  </div>;
+ if(!mounted)return null;
  return <svg className="island-overview" viewBox={view} style={{background:'#83b5ac'}} role={onSelect?'group':'img'} aria-label="Island map with vending machines, fishing spots, Rosa’s Market, Arcade, Coaches Centre, football fields and Coral Cay">{terrain}</svg>;
 }
 

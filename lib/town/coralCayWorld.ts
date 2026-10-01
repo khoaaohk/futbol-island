@@ -489,7 +489,9 @@ export function buildCoralCay(t:CayTools){
   // Surfboards and bikes by the steps.
   ['#589aa0','#f4cc7c','#d9534a'].forEach((c,i)=>{const b=box(.6,2.2,.08,c,H.x+H.w/2-1.2-i*.8,1.1,vz+H.verandah.d/2+.5);b.rotation.x=-.2;});
   for(let i=0;i<2;i++){const bx=H.x-H.w/2+2+i*1.4,bz=vz+H.verandah.d/2+.8;for(const dx of [-.45,.45]){const w=put(new T.TorusGeometry(.32,.04,5,12),'#294f43',bx+dx,.36,bz);w.castShadow=false;}line(V(bx-.45,.36,bz),V(bx,.8,bz),.03,i?'#d9534a':'#4a8bb0');line(V(bx,.8,bz),V(bx+.45,.36,bz),.03,i?'#d9534a':'#4a8bb0');line(V(bx-.1,.95,bz),V(bx+.25,.95,bz),.03,'#294f43');}
-  obstacles.push({x:H.x,z:vz+H.verandah.d/2+.6,w:H.w-1,d:.8});
+  // QA11 D-1: collide only where the boards and bikes stand (the deck front has only posts). One 17 m rail across the whole front
+  // walled off the verandah and left the hostel ball's pickup (behind its training bag) reachable only by sliding in sideways.
+  obstacles.push({x:H.x+H.w/2-2,z:vz+H.verandah.d/2+.5,w:2.8,d:.8},{x:H.x-H.w/2+2.7,z:vz+H.verandah.d/2+.8,w:2.8,d:.9});
   // Team-kit washing line: visiting clubs' shirts drying in the sea breeze.
   {const x0=567,x1=575.5,z=-120.5;for(const x of [x0,x1]){cylinder(.06,2.1,'#9d805b',x,1.05,z);obstacles.push({x,z,w:.2,d:.2});}line(V(x0,1.95,z),V(x1,1.95,z),.012,'#eddfbb');
    ['#477c6a','#d9534a','#4a8bb0','#f4cc7c','#477c6a','#d9534a'].forEach((c,i)=>{const x=x0+.8+i*1.35;box(.62,.62,.05,c,x,1.62,z);box(.9,.2,.05,c,x,1.82,z);box(.22,.18,.06,'#fff0cf',x,1.62,z+.02);});}

@@ -2,15 +2,18 @@
 import dynamic from 'next/dynamic';
 import {UPCOMING_STORIES,type UpcomingStory as UpcomingStoryData} from '@/lib/paths/upcomingStories';
 import UpcomingStory from './UpcomingStory';
+import PathReviewEntry from './PathReviewEntry';
 import {useEffect,useLayoutEffect,useState,useRef,type CSSProperties} from 'react';
 import {createPortal} from 'react-dom';
 import {FORMAT_PATHS,FORMAT_PATH_LAUNCH,lessonEvidence,pathLessonLocked,type PathLesson} from '@/lib/paths/formatPaths';
+import {DEFAULT_PATH_FORMAT,PATHS_IN_ORDER,PATH_FORMAT_KEY,PATH_LAST_OPENED_KEY,pathContinue,inferredPathFormat} from '@/lib/paths/pathContinue';
 import {STORY_CARDS,STORY_KEY,readStoryProgress,type StoryId} from '@/lib/paths/stories';
 import {earnForStory} from '@/lib/town/cardRewardTriggers';
 import {loadOptionalStoryProgress,completeOptionalStory} from '@/lib/paths/optionalStoryProgress';
 import {placeBetweenStops} from '@/lib/paths/betweenStops';
 import {useQuestEvidence} from '@/lib/town/questProgress';
 import {useQuizCompletions} from '@/lib/town/quizProgress';
+import {ENDGAME_OPEN,openEndgame,type EndgameOpen} from '@/lib/endgame/graduationStore';
 import {launchLearning,endLearningPreview} from '@/lib/town/learningProgress';
 import {playDock,playUndock,playSwipe,playPathPop} from '@/lib/games/sound';
 import styles from './IslandSettings.module.css';
@@ -18,7 +21,7 @@ import ui from './FormatPaths.module.css';
 import journey from './IslandJourney.module.css';
 const StoryModal=dynamic(()=>import('./PathStoryModal'),{ssr:false});
 import pathArt from '@/lib/paths/pathArt.json';
-const LAST_OPENED_KEY='fi2-path-last-opened-v1';
+const LAST_OPENED_KEY=PATH_LAST_OPENED_KEY;
 // Chapter island inks: paper fill, a darker same-hue halftone, and a second ink printed slightly out of register.
 const ISLAND_INKS=[{fill:'#f4d57a',dots:'#c9a032',echo:'#ff48b0'},{fill:'#8ec6a1',dots:'#3f8f66',echo:'#0078bf'},{fill:'#f0b1cc',dots:'#d56d9c',echo:'#0078bf'},{fill:'#edb676',dots:'#c8813a',echo:'#22366b'}];
 function StopIcon({kind}:{kind:string}){return <svg viewBox="0 0 24 24" width="29" height="29" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{kind==='lock'?<><rect x="5" y="10" width="14" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 15v2"/></>:kind==='story'?<><path d="M3 4h7l2 2 2-2h7v15h-7l-2 2-2-2H3zM12 6v15"/><path d="M6 9h3m6 0h3M6 13h3m6 0h3"/></>:kind==='check'?<path d="m5 12 4 4L19 6"/>:kind==='play'?<path d="m9 5 10 7-10 7z" fill="currentColor"/>:kind==='support'?<><circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="m8 8 8 8m-5 0h5v-5"/></>:kind==='arrows'?<><path d="M4 18V6h6m-4-3 4 3-4 3M20 6v12h-6m4-3-4 3 4 3"/></>:kind==='ball'?<><circle cx="12" cy="12" r="9"/><path d="m12 7 5 4-2 6H9l-2-6zM12 3v4m9 5-4-1M7 11l-4 1m3 7 3-2m6 0 3 2"/></>:<path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.9z"/>}</svg>;}
@@ -28,7 +31,7 @@ export default function QuestLearningPath(){
  const root=useRef<HTMLElement>(null),[host,setHost]=useState<HTMLElement|null>(null);
  const storyOrigin=useRef<{x:number;y:number;size:number;height:number;radius:string;color:string}>();
  const evidence=useQuestEvidence(),answers=useQuizCompletions(),steps=new Set(evidence.steps);
- const [format,setFormat]=useState('futsal'),[story,setStory]=useState<StoryId|null>(null),[storyDone,setStoryDone]=useState<StoryId[]>([]);
+ const [format,setFormat]=useState<string>(DEFAULT_PATH_FORMAT),[story,setStory]=useState<StoryId|null>(null),[storyDone,setStoryDone]=useState<StoryId[]>([]);
  // The lesson last opened per format, so the landing card resumes where the player left off.
  const [lastOpened,setLastOpened]=useState<Record<string,string>>({});
  const [mapScale,setMapScale]=useState(1),mapRef=useRef<HTMLDivElement>(null);
@@ -64,21 +67,28 @@ export default function QuestLearningPath(){
   const check=()=>{const now=scrollRoot.scrollTop>boundary+(stuck?-2:2);if(now===stuck)return;const initialized=stuck!==null;stuck=now;bar.dataset.stuck=String(now);if(initialized&&!document.hidden)(now?playDock:playUndock)();};
   const measure=()=>{boundary=node.getBoundingClientRect().top-scrollRoot.getBoundingClientRect().top+scrollRoot.scrollTop-parseFloat(getComputedStyle(scrollRoot).paddingTop||'0')-parseFloat(getComputedStyle(bar).top||'0');check();};
   const observer=new ResizeObserver(measure);observer.observe(scrollRoot);if(root.current)observer.observe(root.current);measure();scrollRoot.addEventListener('scroll',check,{passive:true});return()=>{observer.disconnect();scrollRoot.removeEventListener('scroll',check);};},[]);
- useEffect(()=>{setHost(root.current?.closest<HTMLElement>('[data-paths-host]')??null);try{const saved=localStorage.getItem('fi2-path-format-v1');if(FORMAT_PATHS.some(p=>p.format===saved))setFormat(saved!);}catch{}const read=()=>{setOptionalDone(loadOptionalStoryProgress());try{setStoryDone(readStoryProgress(JSON.parse(localStorage.getItem(STORY_KEY)??'[]')));}catch{}try{const last=JSON.parse(localStorage.getItem(LAST_OPENED_KEY)??'{}');setLastOpened(last&&typeof last==='object'?last:{});}catch{}};read();window.addEventListener('storage',read);return()=>window.removeEventListener('storage',read);},[]);
+ useEffect(()=>{setHost(root.current?.closest<HTMLElement>('[data-paths-host]')??null);try{const saved=localStorage.getItem(PATH_FORMAT_KEY);if(FORMAT_PATHS.some(p=>p.format===saved))setFormat(saved!);}catch{}const read=()=>{setOptionalDone(loadOptionalStoryProgress());try{setStoryDone(readStoryProgress(JSON.parse(localStorage.getItem(STORY_KEY)??'[]')));}catch{}try{const last=JSON.parse(localStorage.getItem(LAST_OPENED_KEY)??'{}');setLastOpened(last&&typeof last==='object'?last:{});}catch{}};read();window.addEventListener('storage',read);return()=>window.removeEventListener('storage',read);},[]);
+ // QA11 one-time migration: no saved tab yet (legacy saves only saved a tab on a switch, when futsal was the default) → open
+ // the path that already has progress and save it, so Paths and the welcome-back card agree from now on. New players stay on 7v7.
+ useEffect(()=>{try{if(localStorage.getItem(PATH_FORMAT_KEY))return;const f=inferredPathFormat(localStorage,steps,answers);if(!f)return;localStorage.setItem(PATH_FORMAT_KEY,f);setFormat(f);}catch{}
+ },[evidence,answers]);
  const chooseFormat=(next:string)=>{if(story||upcoming)return;const token=++changeId.current;cancelWarm();stopPathMotion();if(next===format)return;
-  const direction=FORMAT_PATHS.findIndex(p=>p.format===next)>FORMAT_PATHS.findIndex(p=>p.format===format)?1:-1;playSwipe(direction);
+  const direction=PATHS_IN_ORDER.findIndex(p=>p.format===next)>PATHS_IN_ORDER.findIndex(p=>p.format===format)?1:-1;playSwipe(direction);
   const commit=()=>{if(token!==changeId.current)return;clearTimeout(artWait.current);artWait.current=undefined;warmImages.current=[];const map=mapRef.current;let scroller=map?.parentElement;while(scroller&&!/auto|scroll/.test(getComputedStyle(scroller).overflowY))scroller=scroller.parentElement;
    if(map&&scroller&&dock.current&&map.getBoundingClientRect().top<dock.current.getBoundingClientRect().bottom){const target=map.getBoundingClientRect().top-scroller.getBoundingClientRect().top+scroller.scrollTop-dock.current.offsetHeight-parseFloat(getComputedStyle(scroller).paddingTop||'0');scroller.scrollTop=Math.max(0,target);}
    const reduced=matchMedia('(prefers-reduced-motion:reduce)').matches;
-   revealNext.current=!reduced;setFormat(next);try{localStorage.setItem('fi2-path-format-v1',next);}catch{}};
+   revealNext.current=!reduced;setFormat(next);try{localStorage.setItem(PATH_FORMAT_KEY,next);}catch{}};
   if(!mapRef.current||matchMedia('(prefers-reduced-motion:reduce)').matches){commit();return;}
   // Decode first when possible, but a stalled image must not lock navigation.
   const variant=matchMedia('(max-width:600px)').matches?'mobile':'desktop',assets=(pathArt as Record<string,{mobile:string;desktop:string}[]>)[next]??[];
   const ready=Promise.all(assets.map(asset=>{const image=new Image();warmImages.current.push(image);image.src=asset[variant];return image.decode().catch(()=>{});}));
   void Promise.race([ready,new Promise<void>(resolve=>{artWait.current=setTimeout(resolve,900);})]).then(async()=>{if(token!==changeId.current)return;const foreground=mapRef.current?.querySelector<HTMLElement>('[data-path-foreground]');if(foreground){const motion=foreground.animate([{opacity:1},{opacity:0}],{duration:220,easing:'ease-in-out',fill:'forwards'});fade.current=motion;try{await motion.finished;}catch{return;}}commit();});
  };
+ useEffect(()=>{const go=(e:Event)=>{const d=(e as CustomEvent<EndgameOpen>).detail;if(d?.target==='paths'&&d.format&&FORMAT_PATHS.some(p=>p.format===d.format))chooseRef.current(d.format);};window.addEventListener(ENDGAME_OPEN,go);return()=>window.removeEventListener(ENDGAME_OPEN,go);},[]);
+ const chooseRef=useRef(chooseFormat);chooseRef.current=chooseFormat;
+
  const swipeStart=(e:React.TouchEvent)=>{if(story||upcoming||!root.current?.contains(e.target as Node)||e.touches.length!==1){swipe.current=null;return;}const t=e.touches[0];swipe.current={x:t.clientX,y:t.clientY};};
- const swipeEnd=(e:React.TouchEvent)=>{const start=swipe.current,t=e.changedTouches[0];swipe.current=null;if(!start||!t)return;const dx=t.clientX-start.x,dy=t.clientY-start.y;if(Math.abs(dx)<56||Math.abs(dy)>48||Math.abs(dx)<Math.abs(dy)*1.5)return;const index=FORMAT_PATHS.findIndex(p=>p.format===format),to=FORMAT_PATHS[index+(dx<0?1:-1)];if(to){suppressClickUntil.current=performance.now()+400;chooseFormat(to.format);}};
+ const swipeEnd=(e:React.TouchEvent)=>{const start=swipe.current,t=e.changedTouches[0];swipe.current=null;if(!start||!t)return;const dx=t.clientX-start.x,dy=t.clientY-start.y;if(Math.abs(dx)<56||Math.abs(dy)>48||Math.abs(dx)<Math.abs(dy)*1.5)return;const index=PATHS_IN_ORDER.findIndex(p=>p.format===format),to=PATHS_IN_ORDER[index+(dx<0?1:-1)];if(to){suppressClickUntil.current=performance.now()+400;chooseFormat(to.format);}};
  useEffect(()=>{
   if(!story||!host)return;
   const previous=document.activeElement as HTMLElement|null;
@@ -95,10 +105,12 @@ export default function QuestLearningPath(){
  const launch=(lesson:PathLesson,replay=false)=>{endLearningPreview();const s=status(lesson);const remembered={...lastOpened,[path.format]:lesson.id};setLastOpened(remembered);try{localStorage.setItem(LAST_OPENED_KEY,JSON.stringify(remembered));}catch{}window.dispatchEvent(new CustomEvent(FORMAT_PATH_LAUNCH,{detail:{format:path.format,lessonId:lesson.id,step:replay?0:s.step,quiz:!replay&&s.quiz,question:replay?0:s.question,nonce:Date.now()}}));};
  const openStory=(id:StoryId,node:HTMLButtonElement)=>{const rect=node.getBoundingClientRect();storyOrigin.current={x:rect.x+rect.width/2,y:rect.y+rect.height/2,size:rect.width,height:rect.height,radius:getComputedStyle(node).borderRadius,color:getComputedStyle(node).backgroundColor};setStory(id);};
  const opening=path.openingStory&&!storyDone.includes(path.openingStory)?path.openingStory:null;
- // Landing card: resume the lesson last opened if it is unfinished; otherwise the next unfinished stop; "start here" when nothing has begun.
- const lastLesson=[...core,...path.depth].find(l=>l.id===lastOpened[path.format]),resumeLesson=lastLesson&&!status(lastLesson).complete?lastLesson:next;
- const untouched=completed===0&&!lastLesson&&core.every(l=>{const s=status(l);return s.watched===0&&s.correct===0;});
- const landing=opening?{label:untouched?'Start here':'Continue',title:opening==='grit'?'Grit':STORY_CARDS.find(card=>card.id===opening)?.skill??'Story'}:resumeLesson?{label:untouched?'Start here':resumeLesson===lastLesson?'Continue where you left off':'Up next',title:resumeLesson.name}:null;
+ // Landing card (G-12, Sep 30 2026): Continue always targets a REQUIRED starter lesson (lib/paths/pathContinue.ts); an unwatched
+ // opening story is offered beside it as an optional chip, and a finished path points at the next path.
+ const target=pathContinue(path,steps,answers,lastOpened[path.format]),resumeLesson=target.kind==='lesson'?target.lesson:undefined;
+ const untouched=target.kind==='lesson'&&target.label==='Start here';
+ const openingTitle=opening?(opening==='grit'?'Grit':STORY_CARDS.find(card=>card.id===opening)?.skill??'Story'):null;
+ const nextTitle=target.kind==='complete'&&target.next?FORMAT_PATHS.find(p=>p.format===target.next)?.title??target.next:null;
  // Optional stories sit after these lesson indexes: three stories at 3/7/11, four spread evenly across the twelve stops.
  const slots=(UPCOMING_STORIES[format]?.length??0)>=4?[2,5,8,11]:[3,7,11];
  const nodes:{lesson:PathLesson;story?:StoryId;index:number;upcoming?:UpcomingStoryData}[]=[...(path.openingStory?[{lesson:core[0],story:path.openingStory,index:-1}]:[]),...core.flatMap((lesson,i)=>[{lesson,story:undefined as StoryId|undefined,index:i},...(lesson.story?[{lesson,story:lesson.story,index:i}]:[]),...(slots.includes(i)&&UPCOMING_STORIES[format]?.[slots.indexOf(i)]?[{lesson,index:i,upcoming:UPCOMING_STORIES[format][slots.indexOf(i)]}]:[])])];
@@ -112,11 +124,13 @@ export default function QuestLearningPath(){
  <div className={journey.landingHead}><span className={journey.eyebrow}>{untouched?'YOUR FIRST LANDING':'WHERE YOU LEFT OFF'}</span><h3>{path.title} Pitch</h3></div>
  <div className={journey.landingNext}>
   <div className={journey.landingProgress}><strong>{completed} / {core.length} starter lessons complete</strong><progress value={completed} max={core.length} aria-label={`${path.title} starter progress`}/></div>
-  {landing?<button type="button" onClick={event=>opening?openStory(opening,event.currentTarget):launch(resumeLesson!)}><span className={journey.continueLabel}>{landing.label}</span><span className={journey.continueTitle}>{landing.title}</span></button>:<p role="status">Starter path complete! Explore another format or go deeper below.</p>}
+  {resumeLesson&&target.kind==='lesson'?<button type="button" data-path-continue onClick={()=>launch(resumeLesson)}><span className={journey.continueLabel}>{target.label}</span><span className={journey.continueTitle}>{target.index+1}. {resumeLesson.name}</span></button>:nextTitle?<button type="button" data-path-continue onClick={()=>{const n=target.kind==='complete'?target.next:null;if(n)chooseFormat(n);}}><span className={journey.continueLabel}>Path complete! Next path</span><span className={journey.continueTitle}>Try {nextTitle}</span></button>:<p role="status">Every starter path is complete! Go deeper below or replay any stop.</p>}
+  {opening&&openingTitle&&<button type="button" className={journey.optionalStory} data-path-optional-story onClick={event=>openStory(opening,event.currentTarget)}><span className={journey.continueLabel}>Optional story</span><span className={journey.continueTitle}>{openingTitle}</span></button>}
  </div></div>
+ <PathReviewEntry/>
  <div className={journey.sectionLabel}><span>02 / CHOOSE YOUR PATH</span><p>Four paths. One island.</p></div>
  <div ref={sentinel} className={journey.dockSentinel} aria-hidden="true"/>
- <div ref={dock} className={journey.pathDock}><div className={`${ui.tabs} ${journey.coasts}`} style={{'--format-index':FORMAT_PATHS.findIndex(p=>p.format===format)} as CSSProperties} role="group" aria-label="Choose a format"><span className={ui.tabHighlight} aria-hidden="true"/>{FORMAT_PATHS.map(p=><button key={p.format} type="button" aria-pressed={format===p.format} onClick={()=>chooseFormat(p.format)}><span className={journey.coastArt} aria-hidden="true"><i/><b>{p.format==='futsal'?'01':p.format==='7v7'?'02':p.format==='9v9'?'03':'04'}</b></span><strong>{p.title}</strong></button>)}</div></div>
+ <div ref={dock} className={journey.pathDock}><div className={`${ui.tabs} ${journey.coasts}`} style={{'--format-index':PATHS_IN_ORDER.findIndex(p=>p.format===format)} as CSSProperties} role="group" aria-label="Choose a format"><span className={ui.tabHighlight} aria-hidden="true"/>{PATHS_IN_ORDER.map((p,i)=><button key={p.format} type="button" aria-pressed={format===p.format} onClick={()=>chooseFormat(p.format)}><span className={journey.coastArt} aria-hidden="true"><i/><b>{String(i+1).padStart(2,'0')}</b></span><strong>{p.title}</strong></button>)}</div></div>
  {upcoming&&host&&createPortal(<UpcomingStory key={upcoming.id} story={upcoming} onClose={completed=>{if(completed){setOptionalDone(completeOptionalStory(upcoming.id,optionalDone));earnForStory(upcoming.id);}setUpcoming(null);}}/>,host)}
  <div ref={mapRef} className={`${styles.questPath} ${journey.levelMap}`} style={{height}}>
  {/* Bounded SVGs preserve the print filters without a single multi-screen raster surface. */}
@@ -142,7 +156,8 @@ export default function QuestLearningPath(){
  </li>;})}</ol></div></div>
  <details className={ui.depth}><summary>Go deeper · {path.depth.length} optional lessons</summary><p>Extra practice. These lessons do not hold up your starter path.</p>{path.depth.map(l=><button type="button" key={l.id} onClick={()=>launch(l,status(l).complete)}><span>{l.name}</span><small>{status(l).complete?'Completed · Replay':'Watch & try'}</small></button>)}</details>
  {(format==='futsal'||format==='7v7')&&<details className={ui.depth}><summary>Practice in a different situation</summary><p>Try the existing guided and independent challenges. Return later to practice remembering.</p>{(format==='futsal'?['support','movement'] as const:['width'] as const).map(id=><button key={id} onClick={()=>launchLearning(id,'format-path')}>{id==='support'?'Support angles':id==='movement'?'Off ball movement':'Width and timing'}</button>)}</details>}
- <div className={`${ui.future} ${journey.harbour}`}><span className={journey.eyebrow}>NEXT HORIZON / THE ACADEMY</span><h3>Your next island awaits.</h3><div className={journey.ferry} aria-hidden="true">⚑</div><strong>{finishedPaths} / 4 starter paths complete</strong><p>Complete all four paths and collect every hidden ball to prepare for the academy island. The Matchday Ferry opens in a future update.</p><small>More challenges and islands are coming later.</small></div>
+ {/* Lane 2 (Sep 30 2026): the harbour card is live: locked it says how to unlock; at 4/4 it boards the Matchday final. */}
+ <div className={`${ui.future} ${journey.harbour}`} data-ferry-horizon={finishedPaths>=4?'open':'locked'}><span className={journey.eyebrow}>NEXT HORIZON / MATCHDAY FERRY</span><h3>{finishedPaths>=4?'The Matchday Ferry is boarding!':'Your Matchday final awaits.'}</h3><div className={journey.ferry} aria-hidden="true">⚑</div><strong>{finishedPaths} / 4 starter paths graduated</strong><p>{finishedPaths>=4?'You graduated on every pitch. Board the ferry for the coach’s exam, the trophy ceremony and your credits.':'Opening soon — finish your paths! Graduate all four starter paths (12 lessons each) and the Matchday Ferry takes you to your Matchday final.'}</p>{finishedPaths>=4?<button type="button" className={journey.harbourBoard} onClick={()=>openEndgame({target:'ferry'})}>Board the ferry</button>:<small>The Academy island comes later.</small>}</div>
  {story&&(host?createPortal(<StoryModal origin={storyOrigin.current} embedded key={story} storyId={story} onClose={()=>setStory(null)} onFinish={finishStory}/>,host):<StoryModal origin={storyOrigin.current} key={story} storyId={story} onClose={()=>setStory(null)} onFinish={finishStory}/>)}
  </section>;
 }

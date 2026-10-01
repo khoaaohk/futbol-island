@@ -55,6 +55,28 @@ The rule is used in two places:
 
 Lessons with fewer than 5 questions, such as Journey stage lessons, keep working as before but never pay a card.
 
+### Resumed quizzes and feedback (30 Sep 2026, game-audit G-04/G-05/G-06/G-21)
+
+- **The card rule is unchanged.** It is still the user's Sep 24 rule: 5+ questions, every one right first time, in one run.
+- **"One run" now survives a pause:**
+  - `lib/town/quizRunStore.ts` saves each lesson's first-try answers as they happen, in `fi2-quiz-runs-v1` (one small entry per unfinished quiz, at most 24).
+  - A resumed quiz (a reload, "Save and return to Paths") loads that run, so a clean 5/5 still earns its card.
+  - "Quiz yourself" (a fresh start) clears the run, and so does paying out at the end.
+  - A retry before the pause is remembered, so the run still doesn't count as first-try.
+  - Browser check: futsal "3-1: Meet the Court Roles", Q1 answered, page reloaded, resumed at Q2 → "5 of 5 right first time. Perfect!" and a card offer.
+- **Rewarding completion, considered.** Completion already pays: 12 learning coins on the first pass (+6 for a perfect first-try run), per `docs/economy/ECONOMY_UPDATE_2026-09-29.md`, plus progress on the path. The card stays the perfect-run reward, as the user decided, so the economy doc's card pacing (about 60% of quizzes earn a pick) is unchanged.
+- **The last line is positive:**
+  - "Quiz done: all 5 answered! 3 of 5 right first time. Replay it any time and get all 5 first time to earn a card."
+  - Or "… Perfect!" (`quizDoneLine`).
+- **Full explanations:**
+  - Route and space questions used to show only the first sentence, which cut the "why".
+  - `lib/town/quizFeedback.ts` shows the whole `explain` or `choiceExplanations` text. The quiz card already scrolls on short phones.
+  - It also strips a leading "Yes." / "Right," / "Correct!" so the prefix never doubles ("Correct. Right, it's false." → "Correct. It's false.").
+- **Framing on phones:**
+  - `lib/town/learningView.ts` reserves the quiz card's real height plus 40 px (`quizCardInset`), read only when the camera key changes, never per frame.
+  - The top reserve is the Back row (100 px).
+  - At 390×844 the futsal Q2 route "2" used to sit under the card. It is now above it (`scratchpad/game-fixes/lane1/mobile-06-quiz-q2-resumed-framing.png`).
+
 ## 3. Question types (engine: `components/VisualQuestion.tsx`, `lib/town/visualQuiz.ts`)
 
 Every type draws on a static SVG mini pitch, taken from the lesson's own positions at a step. Gold attacks up. Every type resolves to **one option index**, so `options`, `correct`, `choiceExplanations`, voice, progress keys and the transcript all work unchanged.

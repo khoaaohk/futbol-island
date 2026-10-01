@@ -3,7 +3,7 @@ const OUT='/tmp/vending-art-review';require('fs').mkdirSync(OUT,{recursive:true}
 const only=process.argv[2],machineArg=process.argv[3]||'plaza',flow=!process.argv.includes('--pair');
 const views=[['phone-portrait',{width:390,height:844},true],['phone-landscape',{width:844,height:390},true],['desktop',{width:1280,height:800},false]].filter(v=>!only||only==='all'||v[0]===only);
 (async()=>{
- const browser=await chromium.launch({headless:true,args:['--use-angle=metal','--enable-gpu','--ignore-gpu-blocklist']});
+ const browser=await chromium.launch({headless:true,args:['--mute-audio','--use-angle=metal','--enable-gpu','--ignore-gpu-blocklist']});
  for(const [name,viewport,mobile] of views){
   const ctx=await browser.newContext({viewport,isMobile:mobile,hasTouch:mobile,deviceScaleFactor:mobile?2:1});
   const page=await ctx.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
@@ -27,8 +27,10 @@ const views=[['phone-portrait',{width:390,height:844},true],['phone-landscape',{
    slots:[...document.querySelectorAll('[data-vending-item]')].map(b=>{const r=b.getBoundingClientRect();return b.dataset.vendingItem+' '+Math.round(r.width)+'x'+Math.round(r.height);}),
    small:[...document.querySelectorAll('[data-vending-machine] *')].filter(el=>[...el.childNodes].some(n=>n.nodeType===3&&n.textContent.trim())&&el.getClientRects().length&&getComputedStyle(el).visibility!=='hidden'&&parseFloat(getComputedStyle(el).fontSize)<12).map(el=>el.className+':'+el.textContent.slice(0,20)+':'+getComputedStyle(el).fontSize),
    smallButtons:[...document.querySelectorAll('[data-vending-machine] button')].filter(b=>b.getClientRects().length).map(b=>{const r=b.getBoundingClientRect();return [b.getAttribute('aria-label')||b.textContent.trim().slice(0,20),Math.round(r.width),Math.round(r.height)];}).filter(([,w,h])=>w<44||h<44)}));
-  const back=await page.getByRole('button',{name:'Back',exact:true}).boundingBox();
-  if(!back||Math.abs(back.x-(viewport.width<=600?18:24))>1||Math.abs(back.y-(viewport.width<=600?16:20))>1)throw Error('Back button does not match the shared screen anchor: '+JSON.stringify(back));
+  // Sep 30 2026: coins pill top-left, Done top-right (same 18/16 phone, 24/20 desktop anchors, mirrored).
+  const done=await page.getByRole('button',{name:'Done',exact:true}).boundingBox(),inset=viewport.width<=600?18:24;
+  if(!done||Math.abs(viewport.width-(done.x+done.width)-inset)>1||Math.abs(done.y-(viewport.width<=600?16:20))>1)throw Error('Done button does not match the shared screen anchor: '+JSON.stringify(done));
+  const pill=await page.locator('[data-vending-coins]').boundingBox();if(!pill||pill.x>inset+8||pill.x+pill.width>viewport.width/2)throw Error('coins pill is not top-left: '+JSON.stringify(pill));
   console.log(JSON.stringify(info));
   if(info.small.length||info.smallButtons.length)throw Error('Vending readability bounds failed');
   const overlap=await page.locator('[data-vending-item]').evaluateAll(slots=>slots.some(slot=>{const name=slot.children[1],push=slot.children[2];return name.offsetTop+name.offsetHeight>push.offsetTop+.5;}));
@@ -44,7 +46,7 @@ const views=[['phone-portrait',{width:390,height:844},true],['phone-landscape',{
    const pack=page.locator('[data-vending-item]').nth(1);
    await pack.click();await page.waitForTimeout(200);await pack.click();await page.waitForTimeout(300);await shot('7-not-enough');
    await page.keyboard.press('PageDown');await page.waitForTimeout(300);await page.keyboard.press('ArrowRight');await page.waitForTimeout(300);await shot('8-page2-keyboard');
-   await page.getByRole('button',{name:'Back'}).click();await page.waitForTimeout(350);await shot('9-leaving');
+   await page.getByRole('button',{name:'Done',exact:true}).click();await page.waitForTimeout(350);await shot('9-leaving');
    await page.waitForTimeout(1300);await shot('10-left');
    const counts=await page.evaluate(()=>window.__fi2.sound?.counts);console.log('sound',JSON.stringify(counts&&Object.fromEntries(Object.entries(counts).filter(([k])=>k.startsWith('vending')))));
   }

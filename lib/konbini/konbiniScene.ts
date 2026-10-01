@@ -14,6 +14,8 @@ import {CASHIERS,MAGAZINES,type ShelfId} from './konbiniContent';
 import {createKonbiniSound} from './konbiniSound';
 import {createProductCache,hasProduct,stockJitter,PRODUCT_NOMINAL,STOCK,fridgeDoors,riceFacings,gondolaFacings} from './productMeshes';
 import {findFloorPath,createStuckWatch} from './konbiniPath';
+import {createKonbiniBall,type BallEvent} from './konbiniBall';
+import {konbiniSfx} from './konbiniSound';
 import {zoomTargets,nearestTarget,easeZoom,ZOOM_IN_SECONDS,ZOOM_OUT_SECONDS,type ZoomSection,type ZoomTarget} from './konbiniZoom';
 
 /**
@@ -33,13 +35,16 @@ export type KonbiniSlotView={key:string;kind:KonbiniSlot['kind'];ref:string;x:nu
 export type KonbiniZoomView={index:number;count:number;label:string;poi:ShelfId;arrived:boolean};
 export type KonbiniPoi={id:ShelfId;label:string;a:{x:number;z:number};b:{x:number;z:number};face:{x:number;z:number};box:T.Box3;verb:string};
 type Rect={x:number;y:number;w:number;h:number};
-type Obstacle={minX:number;maxX:number;minZ:number;maxZ:number};
+/** A collision box; `fi` is the fixture it belongs to (−1 for the shell), so a shot knows which bay it hit. */
+type Obstacle={minX:number;maxX:number;minZ:number;maxZ:number;fi:number};
 const VERB:Record<ShelfId,string>={rice:'Look',drinks:'Look',snacks:'Look',hot:'Look',gear:'Look',beach:'Look',magazines:'Read',counter:'Talk',atm:'Check'};
 const LABEL:Record<ShelfId,string>={rice:'Rice case',drinks:'Drinks fridge',snacks:'Snack shelf',hot:'Hot counter',gear:'Toys & gear',beach:'Beach corner',magazines:'Magazines',counter:'Cashier',atm:'ATM & copier'};
 
 export function createKonbiniScene(canvas:HTMLCanvasElement,shop:KonbiniShop,callbacks:{
  onNear?:(poi:KonbiniPoi|null)=>void;onPrompt?:(x:number,y:number,visible:boolean)=>void;onArrive?:(poi:KonbiniPoi)=>void;onExit?:()=>void;
- onZoom?:(view:KonbiniZoomView|null)=>void;onSlots?:(slots:KonbiniSlotView[])=>void;onNudge?:()=>void;onFirstFrame?:()=>void;onZoomArrive?:(poi:ShelfId)=>void;onZoomStep?:()=>void;}={}){
+ onZoom?:(view:KonbiniZoomView|null)=>void;onSlots?:(slots:KonbiniSlotView[])=>void;onFirstFrame?:()=>void;onZoomArrive?:(poi:ShelfId)=>void;onZoomStep?:()=>void;
+ /** The ball actions (lib/konbini/konbiniBall.ts): strikes, shelf hits, keep-up touches, drops, the ball back at the feet. */
+ onBall?:(e:BallEvent)=>void;}={}){
  const mobile=matchMedia('(pointer:coarse)').matches,reduced=matchMedia('(prefers-reduced-motion:reduce)').matches;
  const V:KonbiniVariant=KONBINI_VARIANTS[shop],P=V.palette;
  const renderer=new T.WebGLRenderer({canvas,antialias:true,powerPreference:'low-power'});
@@ -70,6 +75,8 @@ export function createKonbiniScene(canvas:HTMLCanvasElement,shop:KonbiniShop,cal
  }
  const cell=(n:number)=>cellRect(n);
  // ---- 3D shelf products (lib/konbini/productMeshes.ts): low-poly, vertex-coloured, merged into the ONE static mesh ----------
+ /** Every 3D product's merged-mesh part and base height, per fixture: a shot that hits a bay wobbles that bay's products. */
+ const bayProducts=new Map<number,{bi:number;baseY:number}[]>();
  const products=createProductCache(),decorKey=new Map<number,string>(Object.entries(DECOR).map(([k,n])=>[n,k])),scaleV=new T.Vector3();let stockSeed=0;
  /** Every placed front product (tappable or not) with its visual centre: the test hook checks each visible one has a hit target. */
  const fronts:{fi:number;kind:KonbiniSlot['kind']|null;ref:string;pos:T.Vector3;yaw:number}[]=[];
@@ -77,7 +84,7 @@ export function createKonbiniScene(canvas:HTMLCanvasElement,shop:KonbiniShop,cal
  /** One product copy (seeded hand-stocked jitter), cloned into the merged static mesh. */
  function placeProduct(f:Frame,key:string,lx:number,base:number,lz:number,w:number,turn=0){
   const g=products.get(key).clone(),s=w/PRODUCT_NOMINAL,j=stockJitter(++stockSeed),yaw=f.yaw+turn+j.yaw,p=toWorld(f,lx+j.x,lz);
-  q.setFromAxisAngle(yAxis,yaw);m.compose(v.set(p.x,base,p.z),q,scaleV.set(s,s,s));g.applyMatrix4(m);boxes.push(g);return {base:new T.Vector3(p.x,base,p.z),yaw,scale:s,bi:boxes.length-1};
+  q.setFromAxisAngle(yAxis,yaw);m.compose(v.set(p.x,base,p.z),q,scaleV.set(s,s,s));g.applyMatrix4(m);boxes.push(g);const bi=boxes.length-1;let bay=bayProducts.get(fixtureIndex);if(!bay)bayProducts.set(fixtureIndex,bay=[]);bay.push({bi,baseY:base});return {base:new T.Vector3(p.x,base,p.z),yaw,scale:s,bi};
  }
  /** A product on a shelf: a chunky 3D item (fronts plus `depth` copies behind) or, for magazines, the atlas print. Tappable when
   *  `kind` is set; the slot sits at the item's visual centre so hit areas, the tag card and the lift map to it. */
@@ -94,7 +101,7 @@ export function createKonbiniScene(canvas:HTMLCanvasElement,shop:KonbiniShop,cal
  function section(poiId:ShelfId,label:string,f:Frame,len:number,height:number,cy:number,fz:number,lx=0,elev=.3){sections.push({poi:poiId,label,x:f.x,z:f.z,yaw:f.yaw,len,height,cy,fz,elev,fi:fixtureIndex,lx});}
  function block(f:Frame,halfLen:number,halfDepth:number,pad=.02,back=-halfDepth){
   const c=[toWorld(f,-halfLen,back),toWorld(f,halfLen,back),toWorld(f,-halfLen,halfDepth),toWorld(f,halfLen,halfDepth)];
-  obstacles.push({minX:Math.min(...c.map(p=>p.x))-pad,maxX:Math.max(...c.map(p=>p.x))+pad,minZ:Math.min(...c.map(p=>p.z))-pad,maxZ:Math.max(...c.map(p=>p.z))+pad});
+  obstacles.push({minX:Math.min(...c.map(p=>p.x))-pad,maxX:Math.max(...c.map(p=>p.x))+pad,minZ:Math.min(...c.map(p=>p.z))-pad,maxZ:Math.max(...c.map(p=>p.z))+pad,fi:fixtureIndex});
  }
  function poi(id:ShelfId,f:Frame,halfLen:number,out:number,height=2){
   const a=toWorld(f,-halfLen,out),b=toWorld(f,halfLen,out),c=[toWorld(f,-halfLen,-.6),toWorld(f,halfLen,-.6),toWorld(f,-halfLen,out-.3),toWorld(f,halfLen,out-.3)];
@@ -114,7 +121,7 @@ export function createKonbiniScene(canvas:HTMLCanvasElement,shop:KonbiniShop,cal
  // Front: low sill + posts either side of the sliding doors (the camera looks in through the glass front).
  const doorL=V.doorX-1.15,doorR=V.doorX+1.15;
  box(O,(-8.1+doorL)/2,.25,6.05,doorL+8.1,.5,.18,P.wall);box(O,(doorR+8.1)/2,.25,6.05,8.1-doorR,.5,.18,P.wall);
- obstacles.push({minX:-9,maxX:doorL,minZ:5.62,maxZ:7},{minX:doorR,maxX:9,minZ:5.62,maxZ:7});
+ obstacles.push({minX:-9,maxX:doorL,minZ:5.62,maxZ:7,fi:-1},{minX:doorR,maxX:9,minZ:5.62,maxZ:7,fi:-1});
  for(const px of [-8,-4,doorL,doorR,4.5,8])box(O,px,.55,6.05,.12,1.1,.14,'#c9d2d0');
  box(O,V.doorX,.02,6.05,2.3,.04,.3,'#9aa7a1');
  const doorGeo=new T.BoxGeometry(1.12,2.4,.05),doors=new T.InstancedMesh(doorGeo,glassMat,2);doors.frustumCulled=false;scene.add(doors);
@@ -220,6 +227,22 @@ export function createKonbiniScene(canvas:HTMLCanvasElement,shop:KonbiniShop,cal
   for(let i=from;i<from+n;i++){a[i*3]=saved[0];a[i*3+1]=saved[1];a[i*3+2]=saved[2];}
   staticPos.clearUpdateRanges();staticPos.addUpdateRange(from*3,n*3);staticPos.needsUpdate=true;hidden={from,saved};
  }
+ /**
+  * A shot into a shelf: that bay's products lean with the ball and wobble back, a shear on their own merged vertices (≤ ~5 cm at
+  * the top of a product, 0.45 s, one sub-range upload per frame only while it plays). Nothing leaves the shelf or breaks; reduced
+  * motion skips the wobble (the thunk still plays).
+  */
+ let wobble:{fi:number;age:number;dx:number;dz:number;from:number;saved:Float32Array;parts:{from:number;n:number;baseY:number}[]}|null=null;
+ const WOBBLE_TIME=.45;
+ function endWobble(){if(!wobble)return;const a=staticPos.array as Float32Array;a.set(wobble.saved,wobble.from*3);staticPos.clearUpdateRanges();staticPos.addUpdateRange(wobble.from*3,wobble.saved.length);staticPos.needsUpdate=true;wobble=null;}
+ function startWobble(fi:number,dx:number,dz:number){
+  const bay=bayProducts.get(fi);if(!bay?.length||reduced||hidden)return false;endWobble();
+  let from=Infinity,to=0;const parts=bay.map(b=>{const f=vStart[b.bi],n=vCount[b.bi];from=Math.min(from,f);to=Math.max(to,f+n);return {from:f,n,baseY:b.baseY};});
+  const d=Math.hypot(dx,dz)||1;wobble={fi,age:0,dx:dx/d,dz:dz/d,from,saved:(staticPos.array as Float32Array).slice(from*3,to*3),parts};return true;}
+ function stepWobble(dt:number){if(!wobble)return;const w=wobble;w.age+=dt;if(w.age>=WOBBLE_TIME){endWobble();return;}
+  const k=.14*Math.exp(-w.age*6)*Math.sin(w.age*34),a=staticPos.array as Float32Array,sv=w.saved,off=w.from*3;
+  for(const p of w.parts)for(let i=p.from;i<p.from+p.n;i++){const j=i*3,h=Math.max(0,sv[j-off+1]-p.baseY)*k;a[j]=sv[j-off]+w.dx*h;a[j+2]=sv[j-off+2]+w.dz*h;}
+  staticPos.clearUpdateRanges();staticPos.addUpdateRange(off,sv.length);staticPos.needsUpdate=true;}
  const glassMesh=new T.Mesh(mergeGeometries(glass.map(g=>{g.deleteAttribute('uv');return g;}),false)!,glassMat);glassMesh.renderOrder=2;scene.add(glassMesh);
  const printMesh=new T.Mesh(mergeGeometries(prints,false)!,printMat);printMesh.name='konbini-prints';scene.add(printMesh);
  for(const g of [...boxes,...glass,...prints])g.dispose();
@@ -230,13 +253,23 @@ export function createKonbiniScene(canvas:HTMLCanvasElement,shop:KonbiniShop,cal
  const disc=(sx:number)=>{const d=new T.Mesh(shadowGeo,shadowMat);d.rotation.x=-Math.PI/2;d.scale.set(sx,sx*.7,1);scene.add(d);return d;};
  const progress=getQuizProgress(),custom=loadCustomization(progress.completed,progress.total);
  const player=createPlayer('you','home',true,true);player.setAppearance(custom);player.setBeanLook(beanLookFor(custom),playerOutfit(custom));player.root.name='konbini-player';scene.add(player.root);const playerShadow=disc(.42);
- // The player's own ball (same mesh, patches and customised skin as outside, lib/graphics/ballAppearance.ts). Indoors it only
- // dribbles: no shots, juggling or kicks (a kick key plays a gentle nudge instead).
+ // The player's own ball (same mesh, patches and customised skin as outside, lib/graphics/ballAppearance.ts). Indoors it dribbles
+ // gently, and the two ball actions (a soft capped shot, keep-ups) run through lib/konbini/konbiniBall.ts.
  const ballMaterial=new T.MeshStandardMaterial({color:'#f4edd3',roughness:.7}),ballLook=createBallAppearance(ballMaterial);ballLook.setStyle(custom.ball);
  const ball=new T.Mesh(new T.SphereGeometry(.19,20,16),ballMaterial);ball.name='konbini-ball';const ballPatches=addBallPatches(ball,.19);scene.add(ball);
  {// Heat: the six patches become one mesh (one draw instead of six).
   const parts=ball.children.filter((o):o is T.Mesh=>o instanceof T.Mesh);if(parts.length){const merged=new T.Mesh(mergeGeometries(parts.map(o=>{o.updateMatrix();return o.geometry.clone().applyMatrix4(o.matrix);}),false)!,parts[0].material);parts.forEach(o=>ball.remove(o));ball.add(merged);}}const ballShadow=disc(.2);
- const ballAim=new T.Vector3(),rollAxis=new T.Vector3();let ballReady=false,ballMoving=false,nudged=0;
+ const ballAim=new T.Vector3(),rollAxis=new T.Vector3();let ballReady=false,ballMoving=false,shotHeldAt:number|null=null,wobbles=0;
+ // The ball actions, stepped only while the ball is off the feet (heat: an idle store still renders 0 frames).
+ const kb=createKonbiniBall(obstacles,e=>{
+  if(e.type==='strike')konbiniSfx.kick(e.speed);
+  else if(e.type==='hit'){if(e.fi>=0&&bayProducts.has(e.fi)){konbiniSfx.thunk();if(startWobble(e.fi,kb.state.vx,kb.state.vz))wobbles++;try{navigator.vibrate?.(14);}catch{/* no haptics */}}else konbiniSfx.bounce(e.speed);}
+  else if(e.type==='touch')konbiniSfx.touch(e.streak);
+  else if(e.type==='drop'&&e.reason!=='stopped')konbiniSfx.bounce(1.5);
+  callbacks.onBall?.(e);});
+ const ballPlayer={x:0,z:0,yaw:0},bp=()=>{ballPlayer.x=x;ballPlayer.z=z;ballPlayer.yaw=yaw;return ballPlayer;};
+ /** Stop any ball action on purpose (zoom, dialog, leaving, eating): the ball comes home and a shelf wobble settles at once. */
+ function settleBall(){shotHeldAt=null;if(kb.moving)kb.settle(bp());endWobble();}
  const clerk=CASHIERS[shop],cashier=createPlayer(clerk.id,'neutral',true,true);cashier.setProfile(profileFor('npc',shop==='cay'?51:37));
  {const d=npcDress({id:clerk.id,role:clerk.role,character:clerk.look.character,face:clerk.look.face,clothing:shop==='cay'?'sunset':'classic'});d.look.headwear=clerk.look.headwear;if(clerk.look.headwear!=='none'){d.look.headwearColor=clerk.look.shirt;d.look.headwearColor2=clerk.look.shirt2;}cashier.setBeanLook(d.look,{...d.outfit,shirt:clerk.look.shirt,shirt2:clerk.look.shirt2});}
  cashier.root.name='konbini-cashier';scene.add(cashier.root);const cashierShadow=disc(.42);cashierShadow.position.set(V.cashier.x,.03,V.cashier.z);
@@ -285,7 +318,7 @@ export function createKonbiniScene(canvas:HTMLCanvasElement,shop:KonbiniShop,cal
   if(zoomIndex===null||!arrived){callbacks.onSlots?.([]);return;}const t=targets[zoomIndex],ppm=viewportW/(camera.right-camera.left);
   callbacks.onSlots?.(slots.filter(sl=>inTarget(sl,t)).map(sl=>{projected.copy(sl.pos).project(camera);return {key:sl.key,kind:sl.kind,ref:sl.ref,x:(projected.x*.5+.5)*viewportW,y:(-projected.y*.5+.5)*viewportH,size:Math.max(44,sl.size*ppm*1.05)};}).filter(v=>v.x>-10&&v.x<viewportW+10&&v.y>-10&&v.y<viewportH+10));
  }
- function zoomToIndex(i:number,dur=ZOOM_IN_SECONDS){if(i<0||i>=targets.length||leaving)return;const from=snapshot();setClip(false);zoom={from,to:i,t:0,dur};zoomIndex=i;arrived=false;highlight=null;foodSprite.visible=false;liftMesh.visible=false;hideProduct(null);
+ function zoomToIndex(i:number,dur=ZOOM_IN_SECONDS){if(i<0||i>=targets.length||leaving)return;settleBall();const from=snapshot();setClip(false);zoom={from,to:i,t:0,dur};zoomIndex=i;arrived=false;highlight=null;foodSprite.visible=false;liftMesh.visible=false;hideProduct(null);
   keys.clear();stick.x=stick.z=0;target=null;route=[];arrivePoi=null;if(near){near=null;callbacks.onNear?.(null);}callbacks.onSlots?.([]);callbacks.onZoom?.(zoomView());wake();}
  function zoomOut(){if(zoomIndex===null)return;const from=snapshot();setClip(false);zoom={from,to:null,t:0,dur:ZOOM_OUT_SECONDS};arrived=false;highlight=null;foodSprite.visible=false;liftMesh.visible=false;hideProduct(null);callbacks.onSlots?.([]);wake();}
  function setSpriteCell(cellIndex:number){const r=cellRect(cellIndex),uv=(foodSprite.geometry.attributes.uv as T.BufferAttribute),u0=r.x/ATLAS_W,u1=(r.x+r.w)/ATLAS_W,v1=1-r.y/ATLAS_H,v0=1-(r.y+r.h)/ATLAS_H;uv.setXY(0,u0,v1);uv.setXY(1,u1,v1);uv.setXY(2,u0,v0);uv.setXY(3,u1,v0);uv.needsUpdate=true;}
@@ -304,16 +337,18 @@ export function createKonbiniScene(canvas:HTMLCanvasElement,shop:KonbiniShop,cal
   const dt=Math.max(.001,Math.min(.05,last?(now-last)/1000:1/60));last=now;time+=dt;frames++;
   const zoomed=zoomIndex!==null;
   let ix=zoomed?0:stick.x+Number(keys.has('KeyD')||keys.has('ArrowRight'))-Number(keys.has('KeyA')||keys.has('ArrowLeft')),iz=zoomed?0:stick.z+Number(keys.has('KeyS')||keys.has('ArrowDown'))-Number(keys.has('KeyW')||keys.has('ArrowUp'));
+  if(kb.state.mode==='windup'){ix=iz=0;}// plant for the strike
   if(ix||iz){target=null;route=[];arrivePoi=null;}
   else if(target){const dx=target.x-x,dz=target.z-z,d=Math.hypot(dx,dz);
    // No progress for 0.5 s (pushed against a fixture): give the target up so the room can go idle (code review finding 4).
    if(!leaving&&!leaveStarted&&stuck.step(target,d,dt)){target=null;route=[];arrivePoi=null;stuck.reset();}
    else if(d<.12){target=route.shift()??null;if(!target&&arrivePoi){const p=arrivePoi;arrivePoi=null;const f=p.face;yaw=Math.atan2(f.x-x,f.z-z);callbacks.onArrive?.(p);}}else{ix=dx/d*Math.min(1,d*2.2);iz=dz/d*Math.min(1,d*2.2);}}
-  const len=Math.max(1,Math.hypot(ix,iz)),resp=1-Math.exp(-dt*14);vx+=(ix/len*3.6-vx)*resp;vz+=(iz/len*3.6-vz)*resp;
+  const len=Math.max(1,Math.hypot(ix,iz)),resp=1-Math.exp(-dt*14),top=kb.state.mode==='keepup'?1.6:3.6;vx+=(ix/len*top-vx)*resp;vz+=(iz/len*top-vz)*resp;
   const ox=x,oz=z;x+=vx*dt;z+=vz*dt;collide();vx=(x-ox)/dt;vz=(z-oz)/dt;const speed=Math.hypot(vx,vz);
   if(!leaving&&leaveStarted&&performance.now()-leaveStarted>4000){x=V.doorX;z=6.1;vz=1;}
   if(!leaving&&z>5.95&&Math.abs(x-V.doorX)<1.05&&vz>.15){leaving=true;keys.clear();stick.x=stick.z=0;target=null;route=[];doorTarget=1;sound.chime();callbacks.onExit?.();}
   if(Math.hypot(ix,iz)>.08)yaw=Math.atan2(ix,iz);
+  const bm=kb.state.mode;if(bm==='windup'||bm==='shot'&&kb.state.kick>0)yaw=kb.state.yaw;
   // Sliding doors open for anyone near them.
   doorTarget=leaving||Math.hypot(x-V.doorX,z-6)<2.3?1:0;const prevDoor=doorOpen;doorOpen=reduced?doorTarget:T.MathUtils.damp(doorOpen,doorTarget,7,dt);if(Math.abs(doorOpen-doorTarget)<.003)doorOpen=doorTarget;if(doorOpen!==prevDoor)placeDoors();
   if(prevDoor<.05&&doorOpen>=.05&&!leaving)sound.chime();
@@ -323,10 +358,17 @@ export function createKonbiniScene(canvas:HTMLCanvasElement,shop:KonbiniShop,cal
    const hx=x+Math.sin(yaw)*.25+Math.sin(V.camYaw)*.35,hz=z+Math.cos(yaw)*.25+Math.cos(V.camYaw)*.35;foodSprite.position.set(hx,1.05+rise*.45,hz+.02);foodSprite.scale.setScalar(Math.max(.05,1-bite*.3));
    const s=(a-.35)%.42,burst=bite>0&&s<.3;sparkles.visible=!reduced&&burst&&a<1.7;if(sparkles.visible){for(let i=0;i<8;i++){const ang=i/8*Math.PI*2;sparkle.position.set(hx+Math.cos(ang)*s*1.1,1.5+Math.sin(ang)*s*.9,hz+.05);sparkle.rotation.z=ang;sparkle.scale.setScalar(1-s/.3);sparkle.updateMatrix();sparkles.setMatrixAt(i,sparkle.matrix);}sparkles.instanceMatrix.needsUpdate=true;}
    player.setExpression(a<1.9?'happy':'neutral');motion.called=a<1.4?.35:0;if(a>2){eat=null;foodSprite.visible=false;sparkles.visible=false;motion.called=0;player.setExpression('neutral');}}
-  motion.dribbling=!eat;player.update(x,z,dt,time,reduced,motion);playerShadow.position.set(x,.03,z);
+  // Ball actions: step the ball only while it's off the feet, then pose the rig like the island / Arcade room do.
+  if(kb.moving)kb.update(dt,bp());
+  const nm=kb.state.mode,shooting=nm==='charging'||nm==='windup'||nm==='shot'&&kb.state.kick>0;
+  motion.kick=shooting?kb.state.kick:undefined;motion.shotCharge=nm==='charging'?kb.state.charge:undefined;motion.shotPower=shooting?kb.state.charge:undefined;motion.powerKick=nm==='windup'||nm==='shot'&&kb.state.kick>0;motion.actionKind=shooting?'shot':undefined;
+  motion.juggle=kb.state.mode==='keepup'?kb.jugglePhase():undefined;motion.juggleTouch=kb.state.mode==='keepup'?'foot':undefined;motion.kickSide=shooting?1:kb.state.mode==='keepup'?kb.state.side:undefined;
+  stepWobble(dt);
+  motion.dribbling=!eat&&kb.state.mode==='feet';player.update(x,z,dt,time,reduced,motion);playerShadow.position.set(x,.03,z);
   // Dribble: the ball follows the rig's own dribble contact, stays out of shelves and rests at the feet when you stop.
-  player.dribbleContact(ballAim);ballAim.y=.19;for(const o of obstacles){const r=.2;if(ballAim.x>o.minX-r&&ballAim.x<o.maxX+r&&ballAim.z>o.minZ-r&&ballAim.z<o.maxZ+r){const dl=ballAim.x-(o.minX-r),dr=o.maxX+r-ballAim.x,db=ballAim.z-(o.minZ-r),df=o.maxZ+r-ballAim.z,mn=Math.min(dl,dr,db,df);if(mn===dl)ballAim.x=o.minX-r;else if(mn===dr)ballAim.x=o.maxX+r;else if(mn===db)ballAim.z=o.minZ-r;else ballAim.z=o.maxZ+r;}}
-  {const ox=ball.position.x,oz=ball.position.z;if(!ballReady){ball.position.copy(ballAim);ballReady=true;}else ball.position.lerp(ballAim,1-Math.exp(-dt*18));const bd=Math.hypot(ball.position.x-ox,ball.position.z-oz);ballMoving=bd>.0015||ball.position.distanceTo(ballAim)>.01;if(bd>.0001){rollAxis.set(ball.position.z-oz,0,-(ball.position.x-ox)).normalize();ball.rotateOnWorldAxis(rollAxis,bd/.19);}ballShadow.position.set(ball.position.x,.028,ball.position.z);}
+  if(kb.state.mode!=='feet'){const ox=ball.position.x,oz=ball.position.z;ball.position.set(kb.state.x,kb.state.y,kb.state.z);ballReady=true;const bd=Math.hypot(ball.position.x-ox,ball.position.z-oz);if(bd>.0001){rollAxis.set(ball.position.z-oz,0,-(ball.position.x-ox)).normalize();ball.rotateOnWorldAxis(rollAxis,bd/.19);}else if(kb.state.mode==='keepup'&&!reduced)ball.rotateX(dt*5);ballShadow.position.set(ball.position.x,.028,ball.position.z);ballMoving=true;}
+  else{player.dribbleContact(ballAim);ballAim.y=.19;for(const o of obstacles){const r=.2;if(ballAim.x>o.minX-r&&ballAim.x<o.maxX+r&&ballAim.z>o.minZ-r&&ballAim.z<o.maxZ+r){const dl=ballAim.x-(o.minX-r),dr=o.maxX+r-ballAim.x,db=ballAim.z-(o.minZ-r),df=o.maxZ+r-ballAim.z,mn=Math.min(dl,dr,db,df);if(mn===dl)ballAim.x=o.minX-r;else if(mn===dr)ballAim.x=o.maxX+r;else if(mn===db)ballAim.z=o.minZ-r;else ballAim.z=o.maxZ+r;}}
+  {const ox=ball.position.x,oz=ball.position.z;if(!ballReady){ball.position.copy(ballAim);ballReady=true;}else ball.position.lerp(ballAim,1-Math.exp(-dt*18));const bd=Math.hypot(ball.position.x-ox,ball.position.z-oz);ballMoving=bd>.0015||ball.position.distanceTo(ballAim)>.01;if(bd>.0001){rollAxis.set(ball.position.z-oz,0,-(ball.position.x-ox)).normalize();ball.rotateOnWorldAxis(rollAxis,bd/.19);}ballShadow.position.set(ball.position.x,.028,ball.position.z);}}
   // Cashier: faces you when you're close, a bow-and-wave greeting when you arrive.
   greet=Math.max(0,greet-dt);const cd=Math.hypot(x-V.cashier.x,z-V.cashier.z),wantFace=cd<4.5?Math.atan2(x-V.cashier.x,z-V.cashier.z):V.cashier.yaw;
   const cf=cashierMotion.facing??V.cashier.yaw;const turn=Math.atan2(Math.sin(wantFace-cf),Math.cos(wantFace-cf));cashierMotion.facing=Math.abs(turn)<.002?wantFace:cf+turn*(1-Math.exp(-dt*6));
@@ -350,7 +392,7 @@ export function createKonbiniScene(canvas:HTMLCanvasElement,shop:KonbiniShop,cal
    if(k>=1&&h.done){const d=h.done;h.done=undefined;d();}}
   if(near&&!zoomed){const c=segPoint(near,x,z);projected.set((c.x+near.face.x)/2,2.3,(c.z+near.face.z)/2).project(camera);const vis=Math.abs(projected.x)<.92&&projected.y<.85&&projected.y>-.8;callbacks.onPrompt?.((projected.x*.5+.5)*viewportW,(-projected.y*.5+.5)*viewportH,vis);promptVisible=vis;}else if(promptVisible){promptVisible=false;callbacks.onPrompt?.(0,0,false);}
   renderer.render(scene,camera);draws++;if(!firstFrameSent){firstFrameSent=true;callbacks.onFirstFrame?.();}
-  const busy=ballMoving||!!zoom||!!highlight&&highlight.age<.5||speed>.03||!!target||keys.size>0||Math.hypot(stick.x,stick.z)>.02||!!eat||greet>0||doorOpen!==doorTarget||Math.abs(cameraX-dxCam)>.005||Math.abs(cameraZ-dzCam)>.005||Math.abs(turn)>.01;
+  const busy=ballMoving||kb.moving||!!wobble||!!zoom||!!highlight&&highlight.age<.5||speed>.03||!!target||keys.size>0||Math.hypot(stick.x,stick.z)>.02||!!eat||greet>0||doorOpen!==doorTarget||Math.abs(cameraX-dxCam)>.005||Math.abs(cameraZ-dzCam)>.005||Math.abs(turn)>.01;
   if(busy)settle=.5;else settle-=dt;
   if(settle>0||leaving)frame=requestAnimationFrame(tick);else{last=0;slot=0;}
  }
@@ -362,11 +404,18 @@ export function createKonbiniScene(canvas:HTMLCanvasElement,shop:KonbiniShop,cal
   camera.left=-halfW;camera.right=halfW;camera.top=halfH;camera.bottom=-halfH;camera.updateProjectionMatrix();
   targets=zoomTargets(sections,a);if(zoomIndex!==null){zoomIndex=Math.min(zoomIndex,targets.length-1);if(arrived){const c=zoomCam(targets[zoomIndex]);applyCam(c.pos,c.look,c.hw,c.hh);emitSlots();callbacks.onZoom?.(zoomView());}}
   if(draws===0){cameraX=halfW>=8.4?0:T.MathUtils.clamp(x,-8.4+halfW,8.4-halfW);cameraZ=T.MathUtils.clamp(z,-2.2,halfW<halfH?-1.1:2);}wake();}
- function clearInput(){keys.clear();stick.x=stick.z=0;target=null;route=[];arrivePoi=null;vx=vz=0;wake();}
+ function clearInput(){if(shotHeldAt!==null){shotHeldAt=null;kb.cancelCharge();}keys.clear();stick.x=stick.z=0;target=null;route=[];arrivePoi=null;vx=vz=0;wake();}
+ /** Ball actions work while walking (not zoomed, covered, leaving or eating). */
+ const ballFree=()=>!leaving&&!leaveStarted&&!covered&&!disposed&&zoomIndex===null&&!zoom&&!eat;
+ function beginShot(){if(!ballFree()||shotHeldAt!==null)return false;sound.unlock();if(kb.state.mode==='keepup')kb.settle(bp());if(!kb.beginCharge(bp()))return false;shotHeldAt=performance.now();wake();return true;}
+ function endShot(cancel=false){if(shotHeldAt===null)return false;const held=performance.now()-shotHeldAt;shotHeldAt=null;if(cancel||!ballFree()){kb.cancelCharge();wake();return false;}const ok=kb.release(bp(),held);wake();return ok;}
+ function keepUp(){if(!ballFree()||shotHeldAt!==null)return false;sound.unlock();const ok=kb.tap(bp());wake();return ok;}
  function key(e:KeyboardEvent){if(leaving||covered)return;
-  if(/^(Space|KeyF|KeyQ|KeyC)$/.test(e.code)&&!(e.target instanceof HTMLElement&&e.target.closest('button,a,input,textarea'))){e.preventDefault();if(e.type==='keydown'&&!e.repeat){nudged++;callbacks.onNudge?.();}return;}
-  if(zoomIndex!==null){if(e.type==='keydown'&&!(e.target instanceof HTMLInputElement)){if(e.code==='ArrowLeft'||e.code==='ArrowRight'){e.preventDefault();if(!zoom)zoomToIndex(zoomIndex+(e.code==='ArrowLeft'?-1:1),.6);}else if(e.code==='Escape'){e.preventDefault();zoomOut();}}return;}if(!/^(Key[WASD]|Arrow(Up|Down|Left|Right))$/.test(e.code)||e.target instanceof HTMLInputElement||e.target instanceof HTMLTextAreaElement)return;e.preventDefault();if(e.type==='keydown'){sound.unlock();keys.add(e.code);}else keys.delete(e.code);wake();}
- function visibility(){if(document.hidden){keys.clear();stick.x=stick.z=0;cancelAnimationFrame(frame);frame=0;}else wake();}
+  if(zoomIndex!==null){if(e.type==='keydown'&&!(e.target instanceof HTMLInputElement)){if(e.code==='ArrowLeft'||e.code==='ArrowRight'){e.preventDefault();if(!zoom)zoomToIndex(zoomIndex+(e.code==='ArrowLeft'?-1:1),.6);}else if(e.code==='Escape'){e.preventDefault();zoomOut();}}return;}
+  // The island's keys: Space = shoot (hold to charge, release to shoot), J = keep-up touch. A focused button handles its own.
+  if((e.code==='Space'||e.code==='KeyJ')&&!(e.target instanceof HTMLElement&&e.target.closest('button,a,input,textarea'))){e.preventDefault();
+   if(e.code==='Space'){if(e.type==='keydown'&&!e.repeat)beginShot();else if(e.type==='keyup')endShot();}else if(e.type==='keydown'&&!e.repeat)keepUp();return;}if(!/^(Key[WASD]|Arrow(Up|Down|Left|Right))$/.test(e.code)||e.target instanceof HTMLInputElement||e.target instanceof HTMLTextAreaElement)return;e.preventDefault();if(e.type==='keydown'){sound.unlock();keys.add(e.code);}else keys.delete(e.code);wake();}
+ function visibility(){if(document.hidden){settleBall();keys.clear();stick.x=stick.z=0;cancelAnimationFrame(frame);frame=0;}else wake();}
  const observer=new ResizeObserver(resize);observer.observe(canvas);window.addEventListener('keydown',key);window.addEventListener('keyup',key);window.addEventListener('blur',clearInput);document.addEventListener('visibilitychange',visibility);
  player.update(x,z,0,0,reduced,{facing:yaw,resumePose:true,travelMode:'walk'});cashier.update(V.cashier.x,V.cashier.z,0,0,reduced,cashierMotion);resize();
  // Arrival: walk in a couple of steps from the door (the doors are already open from the transition).
@@ -381,9 +430,9 @@ export function createKonbiniScene(canvas:HTMLCanvasElement,shop:KonbiniShop,cal
    if(ray.ray.intersectPlane(floor,hit)){route=findPath(T.MathUtils.clamp(hit.x,-7.4,7.4),T.MathUtils.clamp(hit.z,-5.5,5.6));target=route.shift()??null;arrivePoi=null;wake();}return null;},
   walkTo(id:ShelfId){const p=pois.filter(p=>p.id===id).sort((a,b)=>Math.hypot(segPoint(a,x,z).x-x,segPoint(a,x,z).z-z)-Math.hypot(segPoint(b,x,z).x-x,segPoint(b,x,z).z-z))[0];if(p)walkToPoi(p);},
   /** Walk out through the sliding doors (the Exit button); onExit fires as you cross them. */
-  leave(){if(leaving)return;if(zoomIndex!==null){zoom=null;zoomIndex=null;arrived=false;setClip(false);callbacks.onZoom?.(null);}
+  leave(){if(leaving)return;settleBall();if(zoomIndex!==null){zoom=null;zoomIndex=null;arrived=false;setClip(false);callbacks.onZoom?.(null);}
    route=[...findPath(V.doorX,5.2),{x:V.doorX,z:6.3}];target=route.shift()??{x:V.doorX,z:6.3};arrivePoi=null;leaveStarted=performance.now();wake();},
-  eat(cellIndex:number){highlight=null;liftMesh.visible=false;hideProduct(null);foodSprite.scale.setScalar(1);setSpriteCell(cellIndex);const cam=camera.position;foodSprite.lookAt(cam.x,cam.y,cam.z);eat={age:0};sound.bite();wake();},
+  eat(cellIndex:number){settleBall();highlight=null;liftMesh.visible=false;hideProduct(null);foodSprite.scale.setScalar(1);setSpriteCell(cellIndex);const cam=camera.position;foodSprite.lookAt(cam.x,cam.y,cam.z);eat={age:0};sound.bite();wake();},
   /** Zoom onto a section (the nearest bay of that shelf) / a section index; step to the neighbour; back to walking. */
   zoomToPoi(id:ShelfId){zoomToIndex(nearestTarget(targets,id,x,z));},
   zoomTo:(i:number)=>zoomToIndex(i),
@@ -395,7 +444,7 @@ export function createKonbiniScene(canvas:HTMLCanvasElement,shop:KonbiniShop,cal
    // Swap in ONE copy in the same frame: hide the product's own triangles and show liftMesh at its spot (no first-frame double).
    if(sl.product){liftMesh.geometry=products.get(sl.product.key);hideProduct(sl.product.bi);placeLift(sl.product,0);}else if(sl.cell>=0)setSpriteCell(sl.cell);highlight={slot:sl,age:reduced?1:0,lift,done};wake();if(reduced&&done){highlight.done=undefined;done();}},
   greet(){greet=reduced?0:1.6;wake();},
-  setCovered(value:boolean){covered=value;if(value){keys.clear();stick.x=stick.z=0;cancelAnimationFrame(frame);frame=0;}else wake();},
+  setCovered(value:boolean){covered=value;if(value){settleBall();keys.clear();stick.x=stick.z=0;cancelAnimationFrame(frame);frame=0;}else wake();},
   clearInput,sound,
   /** Test hook (scripts/check-konbini-taps.cjs): every placed FRONT product of the zoomed fixture that faces the camera and is
    *  on screen, projected to CSS px, with whether it has a hit target. Independent of emitSlots, so drift shows up. */
@@ -407,9 +456,17 @@ export function createKonbiniScene(canvas:HTMLCanvasElement,shop:KonbiniShop,cal
    return {hidden:!!hidden&&hidden.from===vStart[pr.bi]&&collapsed,lift:liftMesh.visible,offset:liftMesh.position.distanceTo(pr.base),scale:liftMesh.scale.x/pr.scale};},
   /** Test/measurement hook (scripts/check-konbini-browser.cjs): time N renders of the current view. */
   measureRender(n=60){const t=performance.now();for(let i=0;i<n;i++)renderer.render(scene,camera);return (performance.now()-t)/n;},
-  /** A kick/shoot/juggle request: disabled indoors (a gentle nudge instead). */
-  kick(){nudged++;callbacks.onNudge?.();return false;},
-  get state(){return {shop,x,z,yaw,ball:{x:ball.position.x,y:ball.position.y,z:ball.position.z,visible:ball.visible,moving:ballMoving,style:custom.ball},nudged,zoom:zoomView(),zooming:!!zoom,slots:slots.length,highlight:highlight?.slot.key??null,near:near?.id??null,leaving,doorOpen,eating:!!eat,sleeping:frame===0,draws,frames,render:{calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures},pixelRatio:renderer.getPixelRatio(),frameMs:frameMs(),pois:pois.map(p=>p.id)};},
+  /** The ball actions (the Shoot / Keep-ups buttons and Space / J): press-and-hold shot and a keep-up touch. */
+  beginShot,endShot,keepUp,
+  /** A quick tap shot (a soft pass): press and release at once. */
+  kick(){return beginShot()&&endShot();},
+  /** Test hook: shoot now at a given charge 0..1 (the release uses the same capped launch). */
+  debugShot(charge:number){if(!ballFree())return false;if(kb.state.mode!=='feet')kb.settle(bp());kb.beginCharge(bp());const ok=kb.release(bp(),180+Math.max(0,Math.min(1,charge))*1800);wake();return ok;},
+  /** Test hooks (scratchpad browser checks): a free standing spot 0.9 m in front of each stocked bay, facing it; stand there. */
+  debugShotSpots(){const out:{fi:number;x:number;z:number;yaw:number}[]=[];for(const o of obstacles){if(o.fi<0||!bayProducts.get(o.fi)?.length)continue;const cx=(o.minX+o.maxX)/2,cz=(o.minZ+o.maxZ)/2;
+   for(const [px,pz] of [[cx,o.maxZ+.9],[cx,o.minZ-.9],[o.maxX+.9,cz],[o.minX-.9,cz]] as const)if(!blocked(px,pz,.35)){out.push({fi:o.fi,x:px,z:pz,yaw:Math.atan2(cx-px,cz-pz)});break;}}return out;},
+  debugPlace(px:number,pz:number,a:number){if(leaving)return;x=px;z=pz;yaw=a;vx=vz=0;target=null;route=[];arrivePoi=null;wake();},
+  get state(){return {shop,x,z,yaw,ball:{x:ball.position.x,y:ball.position.y,z:ball.position.z,visible:ball.visible,moving:ballMoving||kb.moving,style:custom.ball},action:{mode:kb.state.mode,charge:kb.state.charge,streak:kb.state.streak,shots:kb.state.shots,hits:kb.state.hits,vx:kb.state.vx,vz:kb.state.vz,vy:kb.state.vy,held:shotHeldAt!==null,free:ballFree()},wobble:wobble?.fi??null,wobbles,zoom:zoomView(),zooming:!!zoom,slots:slots.length,highlight:highlight?.slot.key??null,near:near?.id??null,leaving,doorOpen,eating:!!eat,sleeping:frame===0,draws,frames,render:{calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures},pixelRatio:renderer.getPixelRatio(),frameMs:frameMs(),pois:pois.map(p=>p.id)};},
   dispose(){disposed=true;cancelAnimationFrame(frame);frame=0;observer.disconnect();window.removeEventListener('keydown',key);window.removeEventListener('keyup',key);window.removeEventListener('blur',clearInput);document.removeEventListener('visibilitychange',visibility);
    sound.dispose();player.dispose();cashier.dispose();ballLook.dispose();ballPatches.dispose();const geos=new Set<T.BufferGeometry>(),mats=new Set<T.Material>();scene.traverse(o=>{if(o instanceof T.Mesh){geos.add(o.geometry);(Array.isArray(o.material)?o.material:[o.material]).forEach(mm=>mats.add(mm));}});geos.forEach(g=>g.dispose());mats.forEach(mm=>mm.dispose());products.dispose();atlas.dispose();renderer.dispose();renderer.forceContextLoss();},
  };

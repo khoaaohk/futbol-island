@@ -6,7 +6,7 @@ import {useCoinProgress} from '@/lib/town/coinProgress';
 import shell from './ModalShell.module.css';
 import {useEffect,useRef,useState} from 'react';
 import type {TravelMode} from '@/lib/town/travelModes';
-import {CUSTOMIZATION_OPTIONS,FACE_STYLES,LOOK_PRESETS,MAIN_PLAYER_NUMBER,SHIRT_NUMBER_ROLES,applyCustomization,applyFace,applyLook,matchingLook,isCustomizationUnlocked,type CharacterCustomization,type CustomizationKey} from '@/lib/town/customization';
+import {CUSTOMIZATION_OPTIONS,FACE_STYLES,LOOK_PRESETS,MAIN_PLAYER_NUMBER,SHIRT_NUMBER_ROLES,applyCustomization,applyFace,applyLook,matchingLook,isCustomizationUnlocked,graduateLockNote,type CharacterCustomization,type CustomizationKey} from '@/lib/town/customization';
 import {positionInfo} from '@/lib/town/playerPositions';
 import {isRideCategory,rideLockedLabel,rideProgressLine,useRideUnlocks} from '@/lib/town/rideUnlocks';
 import styles from './CharacterCustomizer.module.css';
@@ -68,7 +68,9 @@ export default function CharacterCustomizer({open,onOpenChange,value,onChange,co
  const previews=useStorePreviews(open&&tab==='rides');
  const previewItem=STORE_ITEMS.find(item=>item.category===previewCategory&&item.option.id===value[previewCategory])!;
  useEffect(()=>{const el=dialog.current;if(!el)return;let timer:ReturnType<typeof setTimeout>|undefined;
- if(open){if(!el.open){restore.current=document.activeElement instanceof HTMLElement?document.activeElement:null;el.showModal();el.scrollLeft=0;close.current?.focus({preventScroll:true});}}
+ if(open){if(!el.open){restore.current=document.activeElement instanceof HTMLElement?document.activeElement:null;el.showModal();el.scrollLeft=0;close.current?.focus({preventScroll:true});}
+  // Always open at the top (user, Sep 30 2026): reset every scrolled pane, after the Look view has re-rendered.
+  const top=()=>{el.scrollTop=0;el.querySelectorAll<HTMLElement>('*').forEach(n=>{if(n.scrollTop)n.scrollTop=0;});};top();requestAnimationFrame(top);}
  else if(el.open){const finish=()=>{el.close();restore.current?.focus({preventScroll:true});};if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)finish();else timer=setTimeout(finish,240);}
  return()=>{if(timer)clearTimeout(timer);};},[open]);
  const choose=(key:CustomizationKey,id:string)=>{if(['ball','scooter','bike','moped','jetpack'].includes(key))setPreviewCategory(key as StoreCategory);onChange(applyCustomization(value,key,id));if(['scooter','bike','moped','jetpack'].includes(key))onEquipRide?.(key as TravelMode);if(key==='ball')onEquipRide?.('walk');};
@@ -79,7 +81,7 @@ export default function CharacterCustomizer({open,onOpenChange,value,onChange,co
  /** A customization key as a dropdown; colour keys show dots, costumes keep their lock rule and unlock label. */
  const keyDropdown=(key:CustomizationKey,opts:{label?:string;disabled?:boolean;wide?:boolean}={})=>
   dropdown({id:key,label:opts.label??labels[key],current:value[key],disabled:opts.disabled,wide:opts.wide,onPick:id=>choose(key,id),
-   options:CUSTOMIZATION_OPTIONS[key].map(option=>{const earned=isCustomizationUnlocked(option,completedQuizCount,totalQuizCount),owned=key!=='costume'||isVendingOwned(`costume:${option.id}`),unlocked=earned&&owned;return {value:option.id,label:option.label,dot:DOT_KEYS.has(key)?option.color:undefined,disabled:!unlocked,note:unlocked?undefined:earned?'At the island vending machines':`Unlocks at ${costumeUnlockBalls(option.id)} matchday soccer balls`};})});
+   options:CUSTOMIZATION_OPTIONS[key].map(option=>{const earned=isCustomizationUnlocked(option,completedQuizCount,totalQuizCount),owned=key!=='costume'||isVendingOwned(`costume:${option.id}`),unlocked=earned&&owned;return {value:option.id,label:option.label,dot:DOT_KEYS.has(key)?option.color:undefined,disabled:!unlocked,note:unlocked?undefined:earned?'At the island vending machines':graduateLockNote(option)??`Unlocks at ${costumeUnlockBalls(option.id)} matchday soccer balls`};})});
  const preset=value.character==='female'?'female':'male';
  const costumed=value.costume!=='none';
  const matchedLook=matchingLook(value)?.id;

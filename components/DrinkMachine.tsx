@@ -1,6 +1,6 @@
 'use client';
 import {useEffect,useLayoutEffect,useMemo,useRef,useState} from 'react';
-import {BackButton} from './BackButton';
+import {DoneButton} from './DoneButton';
 import DrinkArt from './DrinkArt';
 import {faceDepthMatrix,quadMatrix} from './VendingMachine';
 import {VendingFace,type VendingFaceView,type VendingPhase,type VendingSlotState} from './VendingFace';
@@ -155,7 +155,7 @@ export default function DrinkMachine({open,machineId,onOpenChange,machines}:{ope
  const armedStatus=armed?status(armed):null;
  const ledView=led??(armed&&armedStatus?{msg:full?'Plenty for today!':armedStatus.kind==='buy'?`${armed.label} ${armed.jp} · ${armed.price} coins`:armedStatus.note,
   sub:full?DRINKS_FULL:armedStatus.kind==='buy'?'Press again, or tap the coin slot':armed.blurb,tone:full||armedStatus.kind==='short'?'warn' as const:undefined}
-  :{msg:'いらっしゃいませ! Pick a drink',sub:`${machine.lesson} (${Math.max(0,DRINKS_PER_DAY-today)} of ${DRINKS_PER_DAY} machine drinks left today)`});
+  :{msg:'いらっしゃいませ!',sub:`Pick a drink · ${Math.max(0,DRINKS_PER_DAY-today)} of ${DRINKS_PER_DAY} left today`});
  const fontSize=placement?Math.max(14,Math.min(18,Math.round(placement.w/29))):12;
  const view:VendingFaceView|null=placement&&{placement,fontSize,compact:placement.h<430,
   machine:{id:machine.id,name:machine.name,color:machine.color,light:machine.light,ink:machine.ink},
@@ -166,7 +166,7 @@ export default function DrinkMachine({open,machineId,onOpenChange,machines}:{ope
   tray:dispense?{key:dispense.key,id:dispense.drink.id,label:dispense.drink.label,kind:'drink',picture:<DrinkArt art={dispense.drink.art}/>}:null};
  const r=reveal,sources=r?`Checked with: ${drinkSources(r.drink).map(x=>shortSource(x.title)).join(' · ')}`:'';
  return <div className={`${vendStyles.root} ${styles.root}`} data-vending-machine={machine.id} data-drink-machine={machine.id} data-vending-phase={phase} data-card-reveal={phase==='reward'&&Boolean(reveal)||undefined}>
-  <div className={vendStyles.hudBack}><BackButton ref={exitButton} label="Back" onBack={()=>onOpenChange(false)}/></div>
+  <div className={vendStyles.hudDone}><DoneButton ref={exitButton} onDone={()=>onOpenChange(false)}/></div>
   <div className={`${jobStyles.wallet} ${vendStyles.hudCoins}`} aria-live="polite" data-vending-coins={vending.balance}><span className={jobStyles.coin} aria-hidden="true"/><b>{vending.balance}</b><small>coins</small></div>
   {phase==='reward'&&r&&revealItem&&<KonbiniReveal key={r.purchaseId} item={revealItem} firstTime={r.firstTime} onDone={dismissReveal}
    onEat={r.choice?undefined:()=>choose('eat')} onSave={r.choice?undefined:()=>choose('pouch')} saveDisabled={inPouch>=POUCH_SIZE}

@@ -1,7 +1,7 @@
 const {chromium}=require('playwright');
 const assert=require('node:assert/strict');
 (async()=>{
- const browser=await chromium.launch({headless:true,args:['--use-angle=metal','--enable-gpu','--ignore-gpu-blocklist']});
+ const browser=await chromium.launch({headless:true,args:['--mute-audio','--use-angle=metal','--enable-gpu','--ignore-gpu-blocklist']});
  for(const mobile of [false,true]){
   const context=await browser.newContext({viewport:mobile?{width:390,height:844}:{width:1280,height:800},isMobile:mobile,hasTouch:mobile});
   const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
@@ -24,8 +24,10 @@ const assert=require('node:assert/strict');
   await page.waitForSelector('[data-freestyle-clips]');assert.equal(await page.locator('[data-freestyle-clips] iframe').count(),0);
   const before=await snapshot();await page.waitForTimeout(400);assert.deepEqual(await snapshot(),before);
   await page.locator('[data-freestyle-clips]').scrollIntoViewIfNeeded();await page.screenshot({path:`/tmp/court-${mobile?'phone':'desktop'}-conversation.png`});
-  await page.getByRole('button',{name:'Another freestyle clip'}).click();assert(await page.getByRole('button',{name:'Watch Andrew Henderson · Freestyle control'}).isVisible());
-  await page.getByRole('button',{name:'Watch Andrew Henderson · Freestyle control'}).click();
+  // Kei opens on his own thigh-juggling clip (each freestyler has a unique first clip); "Another" moves to the next in the pool.
+  assert(await page.getByRole('button',{name:'Watch Juggling with thighs only · Tutorial'}).isVisible());
+  await page.getByRole('button',{name:'Another freestyle clip'}).click();assert(await page.getByRole('button',{name:'Watch How to juggle a football with your head'}).isVisible());
+  await page.getByRole('button',{name:'Watch How to juggle a football with your head'}).click();
   await page.waitForFunction(()=>document.querySelector('[data-freestyle-clips] iframe')||document.querySelector('[data-freestyle-clips] [role=status]'),{},{timeout:20000});
   console.log('Clip player state:',await page.locator('[data-freestyle-clips] iframe').count()?'embedded player mounted':'publisher fallback shown');
   await page.getByRole('button',{name:'Done',exact:true}).click();await page.waitForTimeout(500);

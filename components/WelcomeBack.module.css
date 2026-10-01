@@ -1,0 +1,10 @@
+/* Welcome-back card (G-10): the island notice pill (CostumeMilestoneToast.module.css .toast) with two small buttons.
+   It is a section, not a button, so it keeps the pill's look without its tap-to-dismiss cursor. */
+.card{cursor:default;gap:6px;padding:12px 20px 14px;max-width:min(360px,calc(100vw - 32px));width:calc(100vw - 32px)}
+.card .note{font-weight:600;font-size:12px}
+.actions{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:4px}
+.go,.later{min-height:44px;padding:8px 20px;border:var(--btn-rim-width,2px) solid var(--btn-rim,#e0b95f);border-radius:var(--btn-radius,999px);font:700 15px/1.2 var(--btn-font,inherit);cursor:pointer}
+.go{background:var(--btn-gold,#f4cc7c) var(--btn-grain,none) center/128px 128px;background-blend-mode:soft-light;color:var(--btn-ink,#294f43);box-shadow:var(--btn-shadow-gold,0 3px 0 #a8863d)}
+.go:active{translate:0 var(--btn-press,2px);box-shadow:var(--btn-shadow-gold-pressed,0 1px 0 #a8863d)}
+.later{background:transparent;color:#244d40;border-color:#244d40}
+.go:focus-visible,.later:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:2px}

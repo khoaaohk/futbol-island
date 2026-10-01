@@ -28,6 +28,8 @@ export type VendingFaceView={
  placement:{w:number;h:number;transform:string;
   /** Width foreshortening of the angled close-up (≥1): round product art (balls) is widened back by it. */
   widen?:number;
+  /** Per slot: sideways product nudge (face-width fractions) that cancels the angled view's parallax (VendingMachines.productShift). */
+  shifts?:number[];
   /** `transform` is the true CSS 3D camera placement: products stand VENDING_BAY.product behind the glass in the real bay. */
   depth?:boolean};
  /** Face font size (px, ≥12) chosen by the controller from the on-screen face width. */
@@ -64,7 +66,7 @@ export const VendingFace=forwardRef<HTMLDivElement,{view:VendingFaceView;events:
    aria-label={`${v.header.label}, page ${v.header.page} of ${v.header.pages}. Next row`}><span key={v.header.page} className={styles.pageTitle}>{v.header.label}</span><small>{v.header.page}/{v.header.pages}</small></button>
   <button type="button" className={styles.flip} style={place(L.next)} aria-label="Next page" onClick={()=>events.onFlip(1)} data-vending-flip="next">▶</button>
   {L.slots.map((r,index)=>{const s=v.slots[index];if(!s)return <span key={index} className={styles.empty} style={place(r)} aria-hidden="true"/>;
-   return <button type="button" key={s.id} className={styles.slot} style={(index<L.cols?{...place(r),'--shelf-delay':`${index*35}ms`,top:`calc(${r.y*100}% + var(--header-clearance))`,height:`calc(${r.h*100}% - var(--header-clearance))`}:{...place(r),'--shelf-delay':`${index*35}ms`}) as CSSProperties} data-slot-index={index} data-vending-item={s.id} data-state={s.state} data-special={s.special||undefined} data-vending-out={s.vending||undefined}
+   return <button type="button" key={s.id} className={styles.slot} style={(index<L.cols?{...place(r),'--shelf-delay':`${index*35}ms`,'--shift-x':`${((v.placement.shifts?.[index]??0)*v.placement.w).toFixed(1)}px`,top:`calc(${r.y*100}% + var(--header-clearance))`,height:`calc(${r.h*100}% - var(--header-clearance))`}:{...place(r),'--shelf-delay':`${index*35}ms`,'--shift-x':`${((v.placement.shifts?.[index]??0)*v.placement.w).toFixed(1)}px`}) as CSSProperties} data-slot-index={index} data-vending-item={s.id} data-state={s.state} data-special={s.special||undefined} data-vending-out={s.vending||undefined}
     aria-pressed={s.lit} tabIndex={index===v.cursor?0:-1} aria-keyshortcuts={String(index+1)} aria-label={s.ariaLabel} onClick={()=>events.onSlot(index)} onFocus={()=>events.onSlotFocus(index)}>
     <span className={styles.window} data-kind={s.kind}>{s.picture}</span>
     <span className={styles.name} title={s.label}>{s.label}</span>

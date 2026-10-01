@@ -138,6 +138,34 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
   document.addEventListener('fi2-story-cue',storyCue);
   const pathCue=(event:Event)=>{const kind=(event as CustomEvent).detail;if(kind==='dock'||kind==='undock'||kind==='swipe-right'||kind==='swipe-left'||kind==='path-pop')ui(kind);};
   document.addEventListener('fi2-path-cue',pathCue);
+  // Island job actions (Sep 30 2026, lib/town/jobs/jobScene.ts 'fi2-job-cue'): one short voice per action, from the same tone/noise kit.
+  const jobCue=(event:Event)=>{const kind=String((event as CustomEvent).detail);if(!ready('job:'+kind,kind==='rustle'||kind==='tap'?.07:.1))return;
+    switch(kind){
+      case 'rustle':hiss(2600,.18,.1);hiss(1400,.12,.05,.04);return;          // leaves shaking
+      case 'swish':hiss(1800,.22,.09);return;                                   // rake / broom sweep
+      case 'thud':tone(140,70,.12,.12);hiss(300,.06,.08);return;               // something lands on grass
+      case 'pop':tone(320,900,.08,.09);hiss(900,.08,.07,.02);return;           // root pops out of the soil
+      case 'spring':tone(500,180,.18,.06,'triangle');return;                   // root springs back
+      case 'tug':hiss(500,.14,.06);return;
+      case 'twist':tone(700,420,.1,.05,'triangle');tone(980,980,.05,.04,'sine',.09);return;
+      case 'snip':tone(2400,1800,.035,.05,'square');return;
+      case 'cut':tone(2400,1700,.035,.05,'square');hiss(3000,.12,.07,.03);return;
+      case 'pick':tone(660,990,.07,.045);return;
+      case 'bag':hiss(700,.14,.1);tone(180,120,.08,.06,'sine',.05);return;
+      case 'place':tone(420,300,.08,.07,'triangle');return;
+      case 'tap':tone(900,500,.05,.07,'square');return;                        // hammer on a peg
+      case 'clank':tone(1200,1150,.2,.07,'square');tone(1800,1750,.16,.04,'square',.02);return;
+      case 'paint':hiss(4000,.2,.05);return;
+      case 'throw':hiss(1200,.2,.07);return;
+      case 'thunk':tone(180,110,.08,.11);return;                               // ball off the rebound wall
+      case 'ding':tone(880,880,.09,.06);tone(1320,1320,.14,.05,'sine',.08);return;
+      case 'nope':tone(300,220,.14,.06,'triangle');return;
+      case 'whistle':tone(2600,2500,.28,.05,'square');tone(2750,2650,.28,.03,'square');return;
+      case 'pump':hiss(900,.1,.07);tone(240,300,.08,.04);return;
+      case 'squeak':tone(1500,2100,.12,.05,'triangle');return;
+      case 'hiss':hiss(5000,.35,.08);return;
+    }};
+  document.addEventListener('fi2-job-cue',jobCue);
   function ride(mode:TravelMode){
     if(!ready('ride:'+mode,.15))return;
     if(mode==='walk'){hiss(380,.1,.22);tone(150,90,.1,.12);}
@@ -218,6 +246,6 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
   function setVolume(value:number){if(!Number.isFinite(value))return;volume=Math.max(0,Math.min(1,value));debug.volume=volume;if(volume===0)silence();if(master&&context)master.gain.setTargetAtTime(level(),context.currentTime,.04);}
   function setMuted(value:boolean){muted=value;debug.muted=value;silence();if(master&&context)master.gain.setTargetAtTime(level(),context.currentTime,.04);if(!value)unlock();}
   function visibility(){hidden=document.hidden||mediaPaused;debug.hidden=hidden;silence(hidden);if(hidden){if(context?.state==='running')void context.suspend().catch(()=>{});}else if(debug.unlocked)unlock();}
-  function dispose(){if(idleFadeTimer!==undefined)clearTimeout(idleFadeTimer);if(idleTimer!==undefined&&typeof clearTimeout==='function')clearTimeout(idleTimer);for(const type of INPUT_EVENTS)document.removeEventListener(type,markInput,{capture:true});document.removeEventListener('fi2-path-cue',pathCue);document.removeEventListener('fi2-bottle-pop',bottlePop);document.removeEventListener('fi2-vending-cue',vendingCue);document.removeEventListener('fi2-story-cue',storyCue);disposed=true;debug.disposed=true;silence();if(context){context.onstatechange=null;void context.close().catch(()=>{});}debug.contextState='closed';}
+  function dispose(){if(idleFadeTimer!==undefined)clearTimeout(idleFadeTimer);if(idleTimer!==undefined&&typeof clearTimeout==='function')clearTimeout(idleTimer);for(const type of INPUT_EVENTS)document.removeEventListener(type,markInput,{capture:true});document.removeEventListener('fi2-path-cue',pathCue);document.removeEventListener('fi2-job-cue',jobCue);document.removeEventListener('fi2-bottle-pop',bottlePop);document.removeEventListener('fi2-vending-cue',vendingCue);document.removeEventListener('fi2-story-cue',storyCue);disposed=true;debug.disposed=true;silence();if(context){context.onstatechange=null;void context.close().catch(()=>{});}debug.contextState='closed';}
   return {setMediaPaused(value:boolean){mediaPaused=value;visibility();},debug,getContext,unlock,setMusicAudible,setIdle,ui,sceneHover,ride,move,stair,boundary,fall,impact,ball,boost,honk,truck,setVolume,setMuted,visibility,silence,dispose};
 }

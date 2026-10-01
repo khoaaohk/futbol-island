@@ -1,0 +1,6 @@
+/* The grown-up check for links that leave the site: the ParentGate card centred over a dim backdrop, above any open panel.
+   On phones globals.css pins every open dialog to the full viewport; the dialog stays transparent and centres the card. */
+.dialog{box-sizing:border-box;width:min(460px,calc(100vw - 32px));max-height:calc(100dvh - 32px);margin:auto;padding:0;border:0;background:transparent;overflow:auto;overscroll-behavior:contain}
+.dialog[open]{display:grid;place-items:center;background:transparent}
+.dialog::backdrop{background:#0f2a2fb3}
+.wrap{box-sizing:border-box;width:min(460px,100%);padding:16px}

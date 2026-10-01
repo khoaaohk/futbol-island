@@ -50,7 +50,7 @@ export default function NpcConversation({npc,open,onOpenChange,actions,practice=
     <div className={styles.transcript} role="log" aria-label={`Conversation with ${npc?.name??'an island neighbour'}`} aria-live="polite" aria-relevant="additions">
      <div className={styles.message}><span className={styles.speaker}>{npc?.name}</span><p>{npc?.greeting}</p></div>
      {open&&npc?.matchStory&&<NpcMatchStory key={npc.id} id={npc.id} name={npc.name} league={npc.newsLeague} slot={npc.newsSlot} focus={npc.newsFocus}/>}
-     {open&&npc?.freestyle!==undefined&&<CourtFreestyleClips key={npc.id} variant={npc.freestyle}/>}
+     {open&&npc?.freestyle!==undefined&&<CourtFreestyleClips key={npc.id} clipId={npc.freestyleClip} variant={npc.freestyle}/>}
      {open&&showRanking&&npc?.ranking&&<NpcRanking/>}
      {open&&showClips&&(npc?.newsLeague||npc?.videoTopic)&&<NpcClips league={npc.newsLeague} topic={npc.videoTopic} prompt={npc.videoPrompt} eager/>}
      {exchanges.map((exchange,index)=><div key={exchange.id} ref={index===exchanges.length-1?latest:undefined} className={styles.exchange}>

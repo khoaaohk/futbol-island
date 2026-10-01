@@ -43,7 +43,7 @@ const MACHINES=[['northbeach','cafu'],['causeway','nadim'],['cayplaza','kante'],
    report[`${vp}/${machine}`]={book,itemId,island:view,book3d,voice:src&&src.split('/voice/')[1]};
    // Back out of the book and the machine.
    await press(p.getByRole('button',{name:'Back',exact:true}));await p.waitForSelector('[data-vending-face]');await p.keyboard.press('Escape');await p.waitForTimeout(400);
-   if(await p.locator('[data-vending-face]').count())await press(p.getByRole('button',{name:'Back',exact:true}).first());
+   if(await p.locator('[data-vending-face]').count())await press(p.getByRole('button',{name:'Done',exact:true}).first());
    await p.waitForTimeout(1800);
   }
   const spends=await p.evaluate(()=>Object.values(JSON.parse(localStorage.getItem('fi2-arcade-wallet-v1')).spends||{}).map(s=>s.itemId));

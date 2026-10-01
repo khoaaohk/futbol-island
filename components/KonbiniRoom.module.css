@@ -88,7 +88,7 @@
 @keyframes bubble{0%{opacity:0;transform:translateY(-8px) scale(.9)}10%{opacity:1;transform:none}85%{opacity:1}100%{opacity:0}}
 .coins{position:fixed;inset:0;z-index:15;pointer-events:none}
 .coins i{position:absolute;right:calc(70px + env(safe-area-inset-right,0px));top:calc(40px + env(safe-area-inset-top,0px));width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff3b0,#f5c45e 55%,#bf954a);box-shadow:0 1px 0 #8a6a2a;animation:coinFly .7s cubic-bezier(.4,0,.6,1) both}
-@keyframes coinFly{0%{transform:translate(0,0) scale(1);opacity:1}60%{opacity:1}100%{transform:translate(calc(-50vw + 80px),42vh) scale(.5);opacity:0}}
+@keyframes coinFly{0%{transform:translate(0,0) scale(1);opacity:1}60%{opacity:1}100%{transform:translate(calc(50vw - 80px),42vh) scale(.5);opacity:0}}
 .hudWallet[data-paying]{animation:walletPulse .6s ease}
 @keyframes walletPulse{30%{transform:scale(1.08)}}
 .stampPop{display:inline-block;color:#d8342c;font-weight:900;animation:stampPop .35s cubic-bezier(.2,1.6,.4,1) .42s both}
@@ -103,3 +103,41 @@
 .tagActions>.small{flex-basis:100%;text-align:center}
 /* The section pill is centred on the screen, not between Back and the (wider) coin display. */
 .header>.section{position:absolute;left:50%;transform:translateX(-50%);max-width:min(46vw,320px);overflow:hidden;text-overflow:ellipsis}
+
+/* ---- Ball actions (Sep 30 2026): the island's round Shoot / Keep-ups buttons (global .travel-actions .touch-actions faces,
+ * textured by the [data-konbini-room] entries in globals.css), pinned bottom-right; the joystick keeps bottom-left. The
+ * repeated class outranks the island's grid layouts for its ride/map cluster, which the Konbini doesn't have. */
+.ballActions.ballActions.ballActions.ballActions{--action-size:64px;--action-gap:14px;position:absolute;z-index:5;display:flex;align-items:flex-end;gap:var(--action-gap);grid-template-columns:none;right:calc(24px + env(safe-area-inset-right,0px));bottom:calc(24px + env(safe-area-inset-bottom,0px));transition:none}
+.ballActions.ballActions.ballActions.ballActions :global(.touch-actions){display:flex;align-items:flex-end;gap:var(--action-gap);position:static;width:auto;height:auto}
+.ballActions.ballActions.ballActions.ballActions :global(.touch-actions) button{position:relative;inset:auto;width:var(--action-size);height:var(--action-size);min-width:var(--action-size);min-height:var(--action-size);touch-action:none;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none}
+.ballActions.ballActions.ballActions.ballActions :global(.touch-shoot){--action-size:72px}
+@media(max-width:600px),(pointer:coarse){.ballActions.ballActions.ballActions.ballActions{--action-size:58px;--action-gap:12px;right:calc(18px + env(safe-area-inset-right,0px));bottom:var(--control-bottom)}.ballActions.ballActions.ballActions.ballActions :global(.touch-shoot){--action-size:66px}}
+@media(max-width:350px){.ballActions.ballActions.ballActions.ballActions{--action-size:52px;--action-gap:8px;right:calc(10px + env(safe-area-inset-right,0px))}.ballActions.ballActions.ballActions.ballActions :global(.touch-shoot){--action-size:58px}}
+
+/* Keep-ups counter: a cream bubble above the buttons; a new best gets a one-shot star sparkle (static with reduced motion). */
+.streak{position:absolute;z-index:6;right:calc(24px + env(safe-area-inset-right,0px));bottom:calc(112px + env(safe-area-inset-bottom,0px));margin:0;display:flex;align-items:baseline;gap:6px;padding:8px 14px;border:3px solid var(--btn-rim,#fff2cd);border-radius:999px;background:var(--k-paper) var(--btn-grain) center/128px;background-blend-mode:soft-light;color:var(--k-ink);font-weight:800;font-size:15px;box-shadow:0 4px 0 #193f3733,0 8px 18px #0c1f2226;pointer-events:none;animation:streakIn .18s ease-out both}
+.streak b{font:normal 26px/1 KonbiniBrush,IslandBrush,Georgia,serif}.streak small{font-size:11px;color:var(--k-soft)}
+.streak[data-live]{animation:none}.streak:not([data-live]){opacity:.92}
+.newBest{position:relative;color:#d8342c;font-weight:900;font-size:13px}
+.streak[data-best]{border-color:#ffd35c;box-shadow:0 0 0 4px #ffd35c55,0 4px 0 #193f3733}
+.streak[data-best]::before,.streak[data-best]::after{content:'✦';position:absolute;color:#f5c45e;font-size:18px;animation:sparkle .9s ease-out both}
+.streak[data-best]::before{left:-10px;top:-12px}.streak[data-best]::after{right:-8px;top:-14px;animation-delay:.12s}
+@keyframes streakIn{from{transform:translateY(8px);opacity:0}to{transform:none;opacity:1}}
+@keyframes sparkle{0%{transform:scale(.2) rotate(0);opacity:0}40%{transform:scale(1.4) rotate(40deg);opacity:1}100%{transform:scale(1) rotate(90deg);opacity:.9}}
+@media(max-width:600px),(pointer:coarse){.streak{right:calc(18px + env(safe-area-inset-right,0px));bottom:calc(var(--control-bottom) + 84px)}}
+
+/* A coach tip (first shot ever; keep-up milestones 5/10/20): the greeting bubble's look, wrapping, under the header. */
+.coachTip{position:fixed;z-index:6;top:calc(84px + env(safe-area-inset-top,0px));left:50%;translate:-50% 0;width:max-content;max-width:min(440px,calc(100% - 32px));margin:0;padding:10px 16px;border-radius:18px;background:#fff1d3;color:#1f3d3a;font-weight:700;font-size:14px;line-height:1.4;box-shadow:0 6px 18px #0c1f2233;pointer-events:none;animation:streakIn .2s ease-out both}
+.coachTip b{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--k-teal)}
+
+/* The cashier's once-per-visit line: the NPC slide-out's speech look (NpcConversation .message) sliding in from the right edge,
+ * non-modal so play carries on. */
+.clerkLine{position:fixed;z-index:7;right:0;top:calc(140px + env(safe-area-inset-top,0px));width:min(300px,calc(100% - 48px));box-sizing:border-box;padding:14px 16px 14px 18px;border-radius:18px 0 0 18px;background:#f2e7c5;color:#294a3e;box-shadow:-8px 6px 28px #142e2933;pointer-events:none;animation:clerkIn .32s cubic-bezier(.2,.8,.2,1) both}
+.clerkLine span{display:block;font-size:11px;font-weight:700;letter-spacing:.3px;color:#52674f}
+.clerkLine p{margin:6px 0 0;padding:10px 12px;border-radius:14px 14px 14px 4px;background:#dce0c1;font-size:15px;line-height:1.5}
+@keyframes clerkIn{from{transform:translateX(105%)}to{transform:none}}
+@media(prefers-reduced-motion:reduce){.streak,.coachTip,.clerkLine,.streak[data-best]::before,.streak[data-best]::after{animation:none}}
+/* Narrow screens: the coach tip spans the width under the header, so the cashier's line slides in below it. */
+@media(max-width:760px){.clerkLine{top:calc(236px + env(safe-area-inset-top,0px))}}
+/* Coins on the left, Done / Back on the right (user, Sep 30 2026). */
+.headerActions{order:-1}.coins i{right:auto;left:calc(64px + env(safe-area-inset-left,0px))}

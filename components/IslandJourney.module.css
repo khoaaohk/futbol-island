@@ -141,3 +141,9 @@
    was shared between the rows (the art is centred in its row), so the art jumped when the guide grew. The spare space now goes to
    the guide's row only (its button sits at the bottom), and the heading and art rows never change. */
 @media(max-width:600px){.arrival.arrival{grid-template-rows:auto auto 1fr}.arrival .arrivalArt{align-self:start}.arrival .guide{align-self:end}}
+/* G-12 (Sep 30 2026): the opening story is optional, so it sits beside Continue as a lighter outlined pill (same shape). */
+.landing .landingNext .optionalStory{min-height:48px;padding:8px 18px;background:transparent;color:#244d40;box-shadow:inset 0 0 0 2px #244d40}
+.landing .landingNext .optionalStory .continueTitle{font-size:15px}
+
+/* Lane 2 (Sep 30 2026): the harbour card boards the Matchday Ferry once all four paths graduate. */
+.harbourBoard{position:relative;z-index:1;margin-top:14px;min-height:48px;padding:0 22px;border:0;border-radius:24px;background:#f8d651;color:#173f45;font:inherit;font-weight:800;cursor:pointer;box-shadow:0 4px 0 #b99a2a}.harbourBoard:active{transform:translateY(2px);box-shadow:none}.harbourBoard:focus-visible{outline:3px solid #fff0cc;outline-offset:3px}

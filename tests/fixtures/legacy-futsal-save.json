@@ -1,0 +1,8 @@
+{
+  "_note": "QA11: a save from before Sep 30 2026, when Paths opened on futsal and only saved fi2-path-format-v1 when the player switched tabs. This player only used the default futsal tab: futsal lesson 1 passed, lesson 2 opened and half watched, no saved tab.",
+  "storage": {
+    "fi2-path-last-opened-v1": "{\"futsal\":\"bld_f_passtofeet\"}"
+  },
+  "steps": ["futsal:learnf_roles31:0","futsal:learnf_roles31:1","futsal:learnf_roles31:2","futsal:bld_f_passtofeet:0","futsal:bld_f_passtofeet:1","futsal:bld_f_passtofeet:2"],
+  "answers": ["futsal:learnf_roles31:0","futsal:learnf_roles31:1","futsal:learnf_roles31:2","futsal:learnf_roles31:3","futsal:learnf_roles31:4"]
+}

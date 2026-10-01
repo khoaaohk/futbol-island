@@ -15,9 +15,11 @@ type Position={x:number;y:number;z:number};
 type Placement={isWalkable:(x:number,z:number)=>boolean;heightAt:(x:number,z:number)=>number};
 /** Heat pass 5: a townsperson's appearance is set once and never takes a costume, so the classic body meshes the bean skin hides
  * (userData.beanHidden) can never show again. Their geometry data (≈ 0.37 MB per townsperson, ≈ 25 MB for the 66) is released
- * for one shared empty geometry. Picking already ignores hidden meshes; joints (Groups) and the bean meshes are untouched. */
+ * for one shared empty geometry. Picking already ignores hidden meshes; joints (Groups) and the bean meshes are untouched.
+ * Heat audit Sep 30 2026: their matrices are frozen too, so the renderer's per-frame matrix refresh no longer recomposes and multiplies
+ * ~3,100 of them (it still visits them; they have no children). */
 const RELEASED=new T.BufferGeometry();
-function releaseHiddenClassic(root:T.Object3D){root.traverse(o=>{if(o instanceof T.Mesh&&o.userData.beanHidden&&o.geometry!==RELEASED){o.geometry.dispose();o.geometry=RELEASED;}});}
+function releaseHiddenClassic(root:T.Object3D){root.traverse(o=>{if(o instanceof T.Mesh&&o.userData.beanHidden&&o.geometry!==RELEASED){o.geometry.dispose();o.geometry=RELEASED;o.matrixAutoUpdate=false;o.matrixWorldAutoUpdate=false;}});}
 export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:BallReactions){
  const root=new T.Group();root.name='island-townsfolk';scene.add(root);
  const textures:T.Texture[]=[],materials:T.Material[]=[];

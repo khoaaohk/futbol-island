@@ -6,6 +6,8 @@
 .dialog .panel.panel{height:100%;max-height:100dvh!important;background:#286f55 url('/stories/paths/coaches-coast.svg') center top/100% 100% no-repeat!important}
 .dialog .panel>header{background:transparent!important;border:0;color:#fff1d3;padding:20px 24px!important}
 .dialog .panel>header h2{font-family:IslandBrush,sans-serif;font-weight:400;font-size:clamp(24px,3vw,38px);letter-spacing:0;overflow-wrap:anywhere}
+/* QA11 C-3: same dark green ink scrim as the endgame titles (Endgame.module.css), for the cream title on the light-yellow band. */
+.dialog .panel>header h2{background:#244d40e6;border-radius:20px;padding:2px 16px 4px;box-shadow:0 4px 0 #183b3438}
 .dialog .panel>header button{background:#244d40;color:#fff1d3;border:1px solid #a8b78d;border-radius:50%}
 .dialog .panel>div{padding:clamp(16px,3vw,36px) max(18px,calc((100vw - 1120px)/2)) 36px;background:transparent}
 .dialog button{transition:transform .18s ease,box-shadow .18s ease,background-color .18s ease}
@@ -26,3 +28,6 @@
 /* IDP card opens the plan view. */
 .cardButton{display:block;width:100%;padding:0;text-align:left;font:inherit;color:inherit;cursor:pointer}
 .titleWrap{flex:1;min-width:0}
+
+/* Lane 4: link into the gated "For grown-ups" area (shared mint pill). */
+.grownupsLink{display:inline-flex;align-items:center;min-height:44px;margin-top:10px;padding:8px 16px;border:0;border-radius:var(--btn-radius);background:var(--btn-mint);box-shadow:0 4px 0 var(--btn-mint-edge);color:var(--btn-ink);font-family:var(--btn-font);font-size:14px;font-weight:700;cursor:pointer}

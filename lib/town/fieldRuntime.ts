@@ -67,7 +67,7 @@ export function createFieldRuntime(scene:T.Scene,reactions?:BallReactions){
   ud.strikeX=T.MathUtils.clamp(lateral,-.25,.25);
   ud.strikeZ=T.MathUtils.clamp(bx*Math.sin(strikeYaw)+bz*Math.cos(strikeYaw),.55,.92);
  }
- function update(dt:number,time:number,camera:T.Camera,session:FieldSession|null,active:boolean,viewingFormat:LiveFormat|null=null,viewportHeight=window.innerHeight){
+ function update(dt:number,time:number,camera:T.Camera,session:FieldSession|null,active:boolean,viewingFormat:LiveFormat|null=null,viewportHeight=window.innerHeight,focus?:{x:number;z:number}){
  const question=session?.quiz?session.lesson.questions[session.question]:undefined;
  const outcomeStep=quizOutcomeStep(session);
  if(session){if(outcomeStep!==undefined&&outcomeStep!==null)session.outcomeProgress=Math.min(1,(session.outcomeProgress??0)+(active&&!session.outcomePaused?dt:0)/lessonStepSeconds(session.lesson.steps[outcomeStep]));else session.outcomeProgress=0;}
@@ -85,7 +85,11 @@ export function createFieldRuntime(scene:T.Scene,reactions?:BallReactions){
  // frustum + 240 m test runs before anything is drawn; the island ball-hit zone is radius + 45 m).
  // The Coral Cay beach court (QA Sep 29 2026) sleeps whenever it is off screen, at any distance: it stands alone on the cay's east
  // beach, so from the plaza (~80 m) it kept simulating unseen. It wakes the frame the frustum test sees it, exactly where it stopped.
- const dormant=!visible&&viewingFormat!==v.id&&!teaching&&(v.id==='beach'||(e.dormant?camDistance>sphere.radius+50:camDistance>sphere.radius+60));
+ // QA11 (D note): with the player's position (`focus`, from Town), "near" is measured from the player, the only thing that can
+ // touch an unseen match (the island ball's hit zone, radius + 45 m): sleep outside it, wake inside radius + 40 m. The camera sits
+ // ~35 m ahead of the player, so from the spawn the unseen 11v11 read as "near" (77 m) and simulated for nobody.
+ const near=focus?Math.hypot(focus.x-v.x,focus.z-v.z):camDistance,sleepAt=focus?45:60,wakeAt=focus?40:50;
+ const dormant=!visible&&viewingFormat!==v.id&&!teaching&&(v.id==='beach'||(e.dormant?near>sphere.radius+wakeAt:near>sphere.radius+sleepAt));
  if(dormant!==e.dormant){e.dormant=dormant;if(dormant){e.root.visible=false;e.effects.update(e.sim,0,false,reduced);}}
  if(dormant){stats.dormant++;continue;}
  const immediate=visible||viewingFormat===v.id||camDistance<sphere.radius+45;
@@ -101,7 +105,7 @@ export function createFieldRuntime(scene:T.Scene,reactions?:BallReactions){
  e.comboView.consume(e.sim,teaching?0:matchDt); // [combos] skill events → timed poses
  // Ball height: real gravity and bounces (render-only), stepped even offscreen so a kick is never replayed late.
  const ballHeight=e.ballPhysics.step(e.sim,matchDt*liveGameSpeed(e.venue.id),!e.sim.ball.owner,e.comboView.kickStyle(e.sim.kicks)); // [combos] chip / knuckleball render arcs
- e.root.visible=visible;e.effects.update(e.sim,active&&!isPaused(v.id)?dt:0,visible&&!teaching,reduced);if(!visible)continue;
+ e.root.visible=visible;e.effects.update(e.sim,active&&!isPaused(v.id)?dt:0,visible&&!teaching,reduced,visible&&!teaching&&active&&(viewingFormat===v.id||camDistance<sphere.radius+35));if(!visible)continue; // [spot it] watching = on screen + near (lib/learning/spotIt.ts)
  let teachingPose:ReturnType<typeof teachingMotion>|undefined;
  let emphasized=emptyIds,callouts=emptyIds;
  let poses=e.liveFrame.poses,ball:{x:number;y:number}=e.sim.ball,tokens=e.liveFrame.tokens;

@@ -2,6 +2,19 @@ import * as T from 'three';
 import {fieldPoint,type Venue} from './venues';
 import {quizOutcomeStep,lessonPositions,type FieldSession} from './formatLessons';
 
+/**
+ * Quiz framing on phones (G-06, Sep 30 2026). The quiz card sits at the bottom and can be ~200 px tall before an answer, but only
+ * 110 px was reserved, so a correct route ("2" in futsal 3-1) could sit under the card. The reserve now follows the card's real
+ * top edge (read once per camera change, never per frame: this block runs only when the view key changes). The top reserve is
+ * the Back button's row; the old 236 px top band (from when the prompt sat at the top) left empty sky above the pitch.
+ */
+export const QUIZ_TOP_INSET=100;
+/** Room between the card and the lowest answer point: a route's end ring and its number label stand ~30 px around the point. */
+export const QUIZ_CARD_GAP=40;
+export function quizCardInset(height:number,doc:Pick<Document,'querySelector'>|null=typeof document==='undefined'?null:document):number{
+ const card=doc?.querySelector<HTMLElement>('section[aria-label="Pitch quiz"]');if(!card)return 0;
+ const r=card.getBoundingClientRect();return r.height>0?Math.max(0,height-r.top+QUIZ_CARD_GAP):0;
+}
 export type LearningAngle='default'|'top'|'side'|'goalkeeper'|'broadcast';
 
 /** One shot per teaching step; quizzes and Broadcast never chase the ball. */
@@ -46,7 +59,7 @@ export function createLearningView(){
    if((mobile||session?.quiz)&&angle!=='goalkeeper'){
     // Fit the actual projected play, not every corner of a padded world-space box.
     // Reserve real pixel space for the navigation and bottom controls.
-    const height=viewport?.height??844,top=1-2*Math.min(session?.quiz?86+Math.min(height*.24,150):80,height*.4)/height,bottom=-1+2*Math.min(session?.quiz&&session.answer!==null?280:110,height*.38)/height;
+    const height=viewport?.height??844,top=1-2*Math.min(session?.quiz?QUIZ_TOP_INSET:80,height*.4)/height,bottom=-1+2*Math.min(Math.max(session?.quiz&&session.answer!==null?280:110,session?.quiz?quizCardInset(height):0),height*.5)/height;
     const tan=Math.tan(T.MathUtils.degToRad(camera.fov/2)),halfWidth=tan*camera.aspect;
     const fitPoints:T.Vector3[]=[];
     for(const point of points){fitPoints.push(point.clone().setY(floor));fitPoints.push(point.clone().setY(floor+2.5));}

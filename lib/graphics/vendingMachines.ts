@@ -27,6 +27,11 @@ export const VENDING_SCALE=1.3;
  * front. While a machine is in use, components/VendingFace.tsx pins its HTML face exactly onto this rectangle. Its panels are laid
  * out by VENDING_FACE_LAYOUT (lib/graphics/vendingFaceLayout.ts), the same rects the HTML face uses. */
 export const VENDING_FACE={x0:-FACE_SIZE.w/2,x1:FACE_SIZE.w/2,y0:.16,y1:.16+FACE_SIZE.h,z:VENDING_SIZE.d/2+VENDING_BAY.proud} as const;
+/** How far the machine's frame (glass and tray bezels, side trims, sill) stands in front of the cabinet front: exactly the face
+ * plane, so no part of the cabinet stands in front of the face (machine-local metres, before VENDING_SCALE). */
+const FRAME=VENDING_BAY.proud;
+/** The side trims' inner edge: the glass/tray bezel's outer edge (bezel bars are .025 wide, centred on the glass edge). */
+const FRAME_INNER=-(-FACE_SIZE.w/2+VENDING_FACE_LAYOUT.glass.x*FACE_SIZE.w)+.0125;
 /** Screen margin around the face in the close-up (fraction of the viewport per side). */
 const FACE_MARGIN_X=.03,FACE_MARGIN_Y=.04;
 const L=VENDING_FACE_LAYOUT;
@@ -188,7 +193,7 @@ function paintRail(c:Ctx,at:(r:Rect)=>number[],row:number,items:ShelfItem[]){
  c.save();c.fillStyle='#466574';c.fillRect(gx,top,gw,bottom-top);c.fillStyle='#b8cbcc';c.fillRect(gx,top,gw,Math.max(1,sh*.012));c.textAlign='center';c.textBaseline='middle';
  for(let col=0;col<L.cols;col++){const i=row*L.cols+col,item=items[i];if(!item)continue;const [x,y,w,h]=at(L.slots[i]),cx=x+w/2,fs=h*.075;
   c.fillStyle='#fff1d3';c.font=`800 ${fs}px system-ui,sans-serif`;const words=item.label.split(' '),lines:string[]=[''];for(const word of words){const k=lines.length-1,trial=lines[k]?lines[k]+' '+word:word;if((c.measureText(trial)?.width??trial.length*fs*.55)>w*.92&&lines[k])lines.push(word);else lines[k]=trial;}
-  const nameTop=y+h*(VENDING_BAY.shelf+.08);lines.slice(0,2).forEach((t,j)=>c.fillText(t,cx,nameTop+j*fs*1.12,w*.92));
+  const nameTop=y+h*(VENDING_BAY.shelf+.08)+(lines.length<2?fs*.56:0);lines.slice(0,2).forEach((t,j)=>c.fillText(t,cx,nameTop+j*fs*1.12,w*.92));
   if(item.drink){const hot=item.drink.temp==='hot',ty=y+h*.76,th=h*.075;c.fillStyle=hot?'#d8342c':'#2a74d1';roundRect(c,x+w*.14,ty-th/2,w*.72,th,th*.3);c.fill();c.fillStyle='#fff';c.font=`900 ${th*.62}px system-ui,sans-serif`;c.fillText(hot?'あったか～い HOT':'つめた～い COLD',cx,ty+1,w*.68);}
   const py=y+h*L.slotPush.y,ph=h*L.slotPush.h;c.fillStyle='#1c1f25';roundRect(c,x+w*.06,py,w*.88,ph,ph/2);c.fill();c.fillStyle='#56606b';c.beginPath();c.arc(x+w*.06+ph*.7,py+ph/2,ph*.18,0,Math.PI*2);c.fill();
   c.fillStyle='#f2b62c';c.beginPath();c.arc(cx-ph*.45,py+ph/2,ph*.24,0,Math.PI*2);c.fill();c.fillStyle='#7cf29a';c.font=`800 ${ph*.6}px ui-monospace,Menlo,monospace`;c.fillText(String(item.price),cx+ph*.35,py+ph/2+1);}
@@ -228,7 +233,8 @@ function bayGeometry(m:VendingMachine,extra:T.BufferGeometry[]){
  lit(new T.PlaneGeometry(bw,yTop-yBot).translate(cx,(yTop+yBot)/2,front-D),wall);
  lit(new T.PlaneGeometry(D,yTop-yBot).rotateY(Math.PI/2).translate(x0,(yTop+yBot)/2,front-D/2),drinks?'#b7d3e6':'#6f9696');
  lit(new T.PlaneGeometry(D,yTop-yBot).rotateY(-Math.PI/2).translate(x1,(yTop+yBot)/2,front-D/2),drinks?'#e0eef7':'#a4c3bb');
- const block=(top:number,bottom:number,color:string)=>lit(new T.BoxGeometry(bw,top-bottom,D-.004).translate(cx,(top+bottom)/2,front-D/2-.002),color);
+ // Header block and shelf slabs reach forward to just behind the printed rails on the face plane (no gap under the rails).
+ const zb=front-D+.002,zf=F.z-.004,block=(top:number,bottom:number,color:string)=>lit(new T.BoxGeometry(bw,top-bottom,zf-zb).translate(cx,(top+bottom)/2,(zb+zf)/2),color);
  block(yTop,Y(productCell(0).y),'#23272e');
  block(Y(shelfLine(L.slots[0])),Y(L.slots[L.cols].y),drinks?'#9fbfd3':'#a9c3c1');
  block(Y(shelfLine(L.slots[L.cols])),yBot,drinks?'#9fbfd3':'#a9c3c1');
@@ -245,14 +251,18 @@ function buildMachineGeometry(m:VendingMachine,index:number){
  const facePanel=(r:{x:number;y:number;w:number;h:number},rect:number[],z?:number)=>{const F=VENDING_FACE;panel(r.w*FACE_SIZE.w,r.h*FACE_SIZE.h,F.x0+(r.x+r.w/2)*FACE_SIZE.w,F.y1-(r.y+r.h/2)*FACE_SIZE.h,rect,z);};
  box(w,h-.16,d,0,.08+(h-.16)/2,0,m.color);                     // cabinet
  box(w+.04,.07,d+.04,0,h-.045,0,dark);                         // top cap
- // Recessed side trim, slim metal face rails and two stable rubber feet.
- box(.065,h-.34,.10,-w/2+.03,h/2,front+.045,m.light);
- box(.065,h-.34,.10,w/2-.03,h/2,front+.045,m.light);
+ // Side trim, slim metal face rails and two stable rubber feet. The trims stand OUTSIDE the face (from the glass bezel's outer
+ // edge outward) and their fronts are flush with the face plane (VENDING_FACE.z = FRAME): nothing of the cabinet stands in front of
+ // the face or overlaps it, so the in-use HTML face (always drawn over the canvas) registers with the frame from any angle
+ // (user, Sep 30 2026: "the glass is on top on the left, but the right side is on the inside").
+ const trimIn=FRAME_INNER,trimW=.05;
+ box(trimW,h-.34,FRAME+.005,-(trimIn+trimW/2),h/2,front+(FRAME-.005)/2,m.light);
+ box(trimW,h-.34,FRAME+.005,trimIn+trimW/2,h/2,front+(FRAME-.005)/2,m.light);
  box(.24,.07,d*.72,-w*.3,.02,0,'#182b2e');box(.24,.07,d*.72,w*.3,.02,0,'#182b2e');
  for(let i=0;i<2;i++)box(.26,.022,.009,w*.28,.26+i*.10,-d/2-.006,dark);
  box(w-.02,.08,d-.02,0,.04,0,'#2c3036');                       // plinth
  box(w+.012,.06,d+.012,0,.12,0,m.light);                       // accent band (under the face)
- // Stepped metal bezel projects beyond the printed glass; all details stay in
+ // Stepped metal bezel around the printed glass, its front flush with the face plane (FRAME); all details stay in
  // this same merged mesh/material, including the recessed service-panel surrounds.
  const surround=(r:{x:number;y:number;w:number;h:number},depth:number)=>{
   const pw=r.w*FACE_SIZE.w,ph=r.h*FACE_SIZE.h,cx=VENDING_FACE.x0+(r.x+r.w/2)*FACE_SIZE.w,cy=VENDING_FACE.y1-(r.y+r.h/2)*FACE_SIZE.h;
@@ -261,13 +271,13 @@ function buildMachineGeometry(m:VendingMachine,index:number){
   box(.025,ph,depth,cx-pw/2,cy,front+depth/2,'#9bafb1');
   box(.025,ph,depth,cx+pw/2,cy,front+depth/2,'#36434f');
  };
- surround(L.glass,.075);surround(L.tray,.085);
+ surround(L.glass,FRAME);surround(L.tray,FRAME);
  // Raised lower sill catches the light below the dark pickup recess.
- box(L.tray.w*FACE_SIZE.w,.028,.105,0,VENDING_FACE.y1-(L.tray.y+L.tray.h)*FACE_SIZE.h,front+.055,'#a7b7b9');
+ box(L.tray.w*FACE_SIZE.w,.028,FRAME,0,VENDING_FACE.y1-(L.tray.y+L.tray.h)*FACE_SIZE.h,front+FRAME/2,'#a7b7b9');
  // Shelf lips project slightly forward of the backing: the close view and
  // distant machine share the same pair of real, continuous metal shelves.
  for(let row=0;row<2;row++){const r=L.slots[row*L.cols];
-  box(.91*FACE_SIZE.w,.022,.052,0,VENDING_FACE.y1-(r.y+r.h*.55)*FACE_SIZE.h,front+.032,'#b8cbcc');
+  box(.91*FACE_SIZE.w,.022,FRAME-.012,0,VENDING_FACE.y1-(r.y+r.h*.55)*FACE_SIZE.h,front+.012+(FRAME-.012)/2,'#b8cbcc');
  }
  const glassPart=parts.length;
  facePanel(L.glass,m.drinks?R.drinkGlass(DRINK_MACHINE_IDS.indexOf(m.id as DrinkMachineId)):R.glass(index),front+.01);                         // glass: header + six product slots
@@ -311,7 +321,9 @@ export function createVendingMachines(scene:T.Scene,opts:{coins?:()=>number|null
  let target:VendingMachineId|null=null,glowUntil=0,hovered:VendingMachineId|null=null;const hit=new T.Vector3(),projected=new T.Vector3();
  const pick=(ray:T.Raycaster)=>{let best:VendingMachineId|null=null,bestD=Infinity;for(const e of entries)if(ray.ray.intersectBox(e.box,hit)){const dd=hit.distanceToSquared(ray.ray.origin);if(dd<bestD){bestD=dd;best=e.machine.id;}}return best;};
  // Camera zoom toward the glass front.
- let zoom:{id:VendingMachineId;t:number;dir:1|-1;onArrive?:()=>void;onDone?:()=>void}|null=null;
+ let zoom:{id:VendingMachineId;t:number;dir:1|-1;onArrive?:()=>void;onDone?:()=>void;
+  /** Camera lift (machine-local metres) that sees over a large occluder; undefined until the zoom's one-off occluder pass ran. */
+  lift?:number}|null=null;
  const zoomPos=new T.Vector3(),zoomLook=new T.Vector3(),followLook=new T.Vector3(),mixLook=new T.Vector3(),viewDir=new T.Vector3(-16,-23,-33).normalize();
  const ease=(t:number)=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
  let lastCamera:T.PerspectiveCamera|null=null,faceListener:((corners:{x:number;y:number}[])=>void)|null=null;
@@ -354,10 +366,13 @@ export function createVendingMachines(scene:T.Scene,opts:{coins?:()=>number|null
    items.forEach((item,i)=>paintProduct(c,at(productCell(i)),item,atlas.pics,changed));
    // Printed panels at the front: header, the two rails (the slab fronts), LED, coin, tray.
    const G=L.glass,headerRect={x:G.x,y:G.y,w:G.w,h:productCell(0).y-G.y},rail=(row:number):Rect=>{const r=L.slots[row*L.cols],top=shelfLine(r),bottom=row===0?L.slots[L.cols].y:G.y+G.h;return {x:G.x,y:top,w:G.w,h:bottom-top};};
-   const flat=[faceQuad(headerRect,front+.002,at(headerRect),W,H),faceQuad(rail(0),front+.002,at(rail(0)),W,H),faceQuad(rail(1),front+.002,at(rail(1)),W,H),...[L.led,L.coin,L.tray].map(r=>faceQuad(r,front+.008,at(r),W,H))];
+   const fz=VENDING_FACE.z-.003,flat=[faceQuad(headerRect,fz,at(headerRect),W,H),faceQuad(rail(0),fz,at(rail(0)),W,H),faceQuad(rail(1),fz,at(rail(1)),W,H),...[L.led,L.coin,L.tray].map(r=>faceQuad(r,fz,at(r),W,H))];
    // Products: cut-out sprites standing on the slabs, P behind the glass; boxes behind books and packs.
    const local=g.mesh.worldToLocal(camPos.clone()),boxes:T.BufferGeometry[]=[],sprites:T.BufferGeometry[]=[],targets:CloseUpPart['targets']=[];
-   items.forEach((item,i)=>{const r=productCell(i),F=VENDING_FACE,cw=r.w*FACE_SIZE.w,ch=r.h*FACE_SIZE.h,cx=F.x0+(r.x+r.w/2)*FACE_SIZE.w,cy=F.y1-(r.y+r.h/2)*FACE_SIZE.h,z=front-P,[ux,uy,uw,uh]=at(r);
+   items.forEach((item,i)=>{const r=productCell(i),F=VENDING_FACE,cw=r.w*FACE_SIZE.w,ch=r.h*FACE_SIZE.h,z=front-P,cy=F.y1-(r.y+r.h/2)*FACE_SIZE.h,[ux,uy,uw,uh]=at(r),
+     // The close-up is a three-quarter view, so a product set P behind the glass would drift sideways off its price rail: stand it where
+     // the camera's line through the slot centre (on the rail plane) meets the product plane, so it reads centred over its price.
+     sx=F.x0+(r.x+r.w/2)*FACE_SIZE.w,cx=Math.abs(local.z-F.z)>.01?local.x+(sx-local.x)*(local.z-z)/(local.z-F.z):sx;
     const q=new T.PlaneGeometry(cw,ch),a=q.getAttribute('uv') as T.BufferAttribute;for(let j=0;j<a.count;j++)a.setXY(j,(ux+a.getX(j)*uw)/W,1-(uy+(1-a.getY(j))*uh)/H);
     if(item.kind==='ball'||item.kind==='drink')q.rotateY(Math.atan2(local.x-cx,local.z-z));q.translate(cx,cy,z);sprites.push(paint(q.toNonIndexed(),'#ffffff'));q.dispose();
     const fit=fitOf(item.kind);if(fit.box){const ph=ch*fit.h*.97,pw=ph*(item.kind==='display'?.694:.7)*.97,b=new T.BoxGeometry(pw,ph,fit.box.depth).translate(cx-(item.kind==='display'?ph/1.7*.03:0),cy-ch/2+ph/2+.002,z-fit.box.depth/2-.001);
@@ -367,7 +382,7 @@ export function createVendingMachines(scene:T.Scene,opts:{coins?:()=>number|null
    // they hide together when the in-use face takes over.
    const productGeometry=sprites.length?(boxes.length?(()=>{const a=merge(sprites),b=merge(boxes),m=mergeGeometries([a,b],true)!;a.dispose();b.dispose();return m;})():merge(sprites)):new T.BufferGeometry();
    const bay=bayGeometry(g.machine,[]),printedMesh=new T.Mesh(merge(flat),printed),productMesh=new T.Mesh(productGeometry,boxes.length?[printed,material]:printed),bayMesh=new T.Mesh(bay,material);
-   const pane=new T.Mesh(faceQuad(G,front+.066,[0,0,64,64],64,64),glass);pane.renderOrder=2;
+   const pane=new T.Mesh(faceQuad(G,VENDING_FACE.z-.0015,[0,0,64,64],64,64),glass);pane.renderOrder=2;
    const meshes=[bayMesh,printedMesh,productMesh,pane];meshes.forEach(m=>{m.name='vending-closeup';g.mesh.add(m);m.updateMatrixWorld(true);m.matrixAutoUpdate=false;});
    bayMesh.receiveShadow=true;cutFront(g,true);
    return {entry:g,meshes,products:productMesh,targets};
@@ -376,7 +391,7 @@ export function createVendingMachines(scene:T.Scene,opts:{coins?:()=>number|null
   closeUpStats={ms:+((typeof performance!=='undefined'?performance.now():0)-t0).toFixed(1),width:W,height:H,bytes:W*H*4,drawCalls:parts.length*4};
  }
  /** A level three-quarter camera fits the face and a sliver of the cabinet side. */
- const faceView=(e:Entry,camera:T.PerspectiveCamera,position:T.Vector3,look:T.Vector3,viewportHeight=typeof window==='undefined'?800:window.innerHeight)=>{
+ const faceView=(e:Entry,camera:T.PerspectiveCamera,position:T.Vector3,look:T.Vector3,viewportHeight=typeof window==='undefined'?800:window.innerHeight,lift=0)=>{
   const F=VENDING_FACE,tanV=Math.tan(T.MathUtils.degToRad(camera.fov)/2),aspect=camera.aspect||1;
   // Category navigation now occupies the former sign area; fit the same complete
   // face on every viewport, including short landscape phones.
@@ -387,11 +402,68 @@ export function createVendingMachines(scene:T.Scene,opts:{coins?:()=>number|null
   const side=new T.Vector3(e.dir.z,0,-e.dir.x);
   const angledDist=Math.max(fh/2/(1-2*FACE_MARGIN_Y)/tanV,(fw*cs+VENDING_SIZE.d*S*sideDepth)/2/(1-2*FACE_MARGIN_X)/(tanV*aspect))+fw*sideDepth/2;
   look.set(e.machine.x,e.machine.y+(F.y0+top)/2*S,e.machine.z).addScaledVector(e.dir,F.z*S).addScaledVector(side,-.15*S);
-  position.copy(look).addScaledVector(e.dir,angledDist*cs).addScaledVector(side,angledDist*sn);
+  position.copy(look).addScaledVector(e.dir,angledDist*cs).addScaledVector(side,angledDist*sn);position.y+=lift*S;
  };
  const faceNDC=(e:Entry,camera:T.Camera)=>{camera.updateMatrixWorld();const F=VENDING_FACE;
   return [[F.x0,F.y1],[F.x1,F.y1],[F.x1,F.y0],[F.x0,F.y0]].map(([x,y])=>{faceCorner.set(x,y,F.z).applyMatrix4(e.mesh.matrixWorld).project(camera);return {x:faceCorner.x,y:faceCorner.y};});
  };
+ /**
+  * What stands between the close-up camera and the machine face (user, Sep 30 2026: a wall/ledge hid the lower cabinet while the
+  * HTML tray was drawn over it). Rays from the final close-up camera to a grid over the face (corners and edges included) and the plinth;
+  * every visible mesh hit short of the face, other than the machines themselves, is returned. One-off (zoom start), no per-frame work.
+  */
+ const occluderBox=new T.Box3(),occluderSphere=new T.Sphere(),occluderRay=new T.Ray(),occluderPos=new T.Vector3(),occluderLook=new T.Vector3(),occluderPoint=new T.Vector3(),occluderDir=new T.Vector3();
+ const triA=new T.Vector3(),triB=new T.Vector3(),triC=new T.Vector3(),triHit=new T.Vector3(),triBox=new T.Box3();
+ /** Every visible, opaque mesh triangle (world space) inside the wedge between the close-up camera (lifted up to `maxLift`) and the
+  *  face: gathered once per pass, so the ray tests below stay small (no per-mesh BVH needed). Machines, sprites, lines and points
+  *  never count. */
+ const wedgeTriangles=(e:Entry,camera:T.PerspectiveCamera,viewportHeight?:number,maxLift=0,ignore:(o:T.Object3D)=>boolean=passable)=>{
+  const cam=new T.PerspectiveCamera(camera.fov,camera.aspect,camera.near,camera.far),F=VENDING_FACE;
+  occluderBox.makeEmpty();for(const l of [0,maxLift]){faceView(e,cam,occluderPos,occluderLook,viewportHeight,l);occluderBox.expandByPoint(occluderPos);}
+  for(const [x,y] of [[F.x0,0],[F.x1,0],[F.x0,F.y1],[F.x1,F.y1]])occluderBox.expandByPoint(occluderPoint.set(x,y,F.z).applyMatrix4(e.mesh.matrixWorld));
+  const out:{mesh:T.Mesh;tris:number[]}[]=[];
+  const walk=(o:T.Object3D)=>{if(!o.visible||o===root||o===glowRoot)return;const m=o as T.Mesh,pos=m.isMesh?m.geometry?.getAttribute('position'):null;
+   if(pos&&!(m as unknown as T.InstancedMesh).isInstancedMesh&&!(m as unknown as T.SkinnedMesh).isSkinnedMesh){const g=m.geometry;if(!g.boundingSphere)g.computeBoundingSphere();
+    occluderSphere.copy(g.boundingSphere!).applyMatrix4(m.matrixWorld);
+    if(occluderBox.intersectsSphere(occluderSphere)&&!ignore(o)){const idx=g.index,n=(idx?idx.count:pos.count)/3|0,tris:number[]=[];
+     for(let t=0;t<n;t++){const a=idx?idx.getX(t*3):t*3,b=idx?idx.getX(t*3+1):t*3+1,c=idx?idx.getX(t*3+2):t*3+2;
+      triA.fromBufferAttribute(pos,a).applyMatrix4(m.matrixWorld);triB.fromBufferAttribute(pos,b).applyMatrix4(m.matrixWorld);triC.fromBufferAttribute(pos,c).applyMatrix4(m.matrixWorld);
+      if(triBox.makeEmpty().expandByPoint(triA).expandByPoint(triB).expandByPoint(triC).intersectsBox(occluderBox))tris.push(triA.x,triA.y,triA.z,triB.x,triB.y,triB.z,triC.x,triC.y,triC.z);}
+     if(tris.length)out.push({mesh:m,tris});}}
+   for(const c of o.children)walk(c);};
+  scene.children.forEach(walk);return out;};
+ /** The meshes (from wedgeTriangles) hit by rays from the close-up camera (lifted by `lift`) to a 5×6 grid: the face (corners and edges included) and the plinth below it, short of the machine. */
+ const blockersOf=(e:Entry,camera:T.PerspectiveCamera,wedge:{mesh:T.Mesh;tris:number[]}[],viewportHeight?:number,lift=0,skip?:Set<T.Object3D>)=>{
+  const cam=new T.PerspectiveCamera(camera.fov,camera.aspect,camera.near,camera.far),F=VENDING_FACE,found=new Set<T.Mesh>();faceView(e,cam,occluderPos,occluderLook,viewportHeight,lift);
+  // Rows: the plinth (cabinet front, just above the ground: the whole machine front, not only the face), then the face bottom to top.
+  for(let i=0;i<=4;i++)for(let j=-1;j<=4;j++){
+   occluderPoint.set(F.x0+i/4*FACE_SIZE.w,j<0?.14:F.y0+j/4*FACE_SIZE.h,j<0?VENDING_SIZE.d/2:F.z).applyMatrix4(e.mesh.matrixWorld);occluderDir.subVectors(occluderPoint,occluderPos);
+   const far=occluderDir.length()-.05;occluderRay.set(occluderPos,occluderDir.normalize());
+   for(const {mesh,tris} of wedge){if(found.has(mesh)||skip?.has(mesh))continue;
+    for(let k=0;k<tris.length;k+=9){triA.fromArray(tris,k);triB.fromArray(tris,k+3);triC.fromArray(tris,k+6);
+     if(occluderRay.intersectTriangle(triA,triB,triC,false,triHit)&&triHit.distanceTo(occluderPos)<far){found.add(mesh);break;}}}}
+  return [...found];};
+ const occludersOf=(e:Entry,camera:T.PerspectiveCamera,viewportHeight?:number,lift=0)=>blockersOf(e,camera,wedgeTriangles(e,camera,viewportHeight,lift),viewportHeight,lift);
+ /** See-through or transient things (effects, glows, the player and their ride, hidden while zoomed anyway) never block the face. */
+ const passable=(o:T.Object3D)=>{const m=(o as T.Mesh).material as T.Material|T.Material[];if((Array.isArray(m)?m:[m]).every(x=>x&&(x.transparent||!x.visible||x.colorWrite===false)))return true;
+  for(let p:T.Object3D|null=o;p&&p!==scene;p=p.parent)if(/^(player|character|ride|ball|vehicle)/.test(p.name))return true;return false;};
+ /** A mesh small enough to simply hide while the close-up is up (a bench, a planter, a sign); larger ones are merged world chunks. */
+ const compact=(o:T.Object3D)=>{const m=o as T.Mesh;if((m as unknown as T.InstancedMesh).isInstancedMesh||(m as unknown as T.SkinnedMesh).isSkinnedMesh)return false;
+  const g=m.geometry;if(!g.boundingSphere)g.computeBoundingSphere();return (g.boundingSphere?.radius??Infinity)*m.matrixWorld.getMaxScaleOnAxis()<3;};
+ let hiddenOccluders:T.Object3D[]=[];
+ function restoreOccluders(){for(const o of hiddenOccluders)o.visible=true;hiddenOccluders=[];}
+ /**
+  * One-off occluder pass at zoom start (Sep 30 2026: "nothing sits between the camera and the face"): small meshes in the way are
+  * hidden until release; if a merged world chunk is in the way (a bench baked into the Island Square chunk), the close-up camera
+  * rises in 0.1 m steps (up to 1.2 m, same look point) until it sees over it. Restored on release. No per-frame work.
+  */
+ let clearMs=0;
+ function clearView(e:Entry,camera:T.PerspectiveCamera){if(!zoom)return;const t0=typeof performance!=='undefined'?performance.now():0;restoreOccluders();
+  const MAX_LIFT=1.2,wedge=wedgeTriangles(e,camera,undefined,MAX_LIFT),hide=new Set<T.Object3D>();
+  for(const o of blockersOf(e,camera,wedge))if(compact(o)){o.visible=false;hiddenOccluders.push(o);hide.add(o);}
+  let lift=0;for(let best=Infinity,l=0;l<=MAX_LIFT+1e-4;l+=.1){const n=blockersOf(e,camera,wedge,undefined,l,hide).length;if(n<best){best=n;lift=l;}if(n===0)break;}
+  zoom.lift=+lift.toFixed(2);clearMs=+((typeof performance!=='undefined'?performance.now():0)-t0).toFixed(1);}
+ let targetDistance=Infinity;
  return {
   root,obstacles,entries,pick:(ray:T.Raycaster)=>pick(ray),
   /** Shared machine material and scaled cabinet size, for the kick reaction (lib/graphics/vendingKick.ts). */
@@ -402,6 +474,8 @@ export function createVendingMachines(scene:T.Scene,opts:{coins?:()=>number|null
   get hidesPlayer(){return zoom!==null&&zoom.t>.5;},
   get zooming(){return zoom!==null&&zoom.t<1&&zoom.dir===1||zoom!==null&&zoom.dir===-1;},
   get focused(){return zoom?.id??null;},
+  /** Metres to the targeted machine at the last update (-1 = hovered, explicit intent): the HUD stack arbiter's distance. */
+  get targetDistance(){return targetDistance;},
   /** Hover glow, nearby detection and the "Go" prompt. Returns the targeted machine. */
   update(o:VendingUpdate):VendingMachineId|null{
    const over=o.hoverRay&&o.canEnter?pick(o.hoverRay):null;if(over&&over!==hovered)o.onHoverStart();hovered=over;
@@ -410,7 +484,7 @@ export function createVendingMachines(scene:T.Scene,opts:{coins?:()=>number|null
     const dist=o.flying?Math.hypot(m.x-o.location.x,m.z-o.location.z):Math.hypot(e.front.x-o.location.x,e.front.z-o.location.z);
     const ok=o.flying?dist<12&&o.flightHeight<m.y+40:dist<3.2&&Math.abs(o.groundY-m.y)<1.2;
     if(ok&&dist<nearD){nearD=dist;near=m.id;}}
-   const next=zoom?zoom.id:(over??near);
+   const next=zoom?zoom.id:(over??near);targetDistance=zoom||over?-1:nearD;
    if(next&&next!==target){const e=entries.find(x=>x.machine.id===next)!;glowRoot.position.copy(e.mesh.position);glowRoot.rotation.y=e.machine.yaw;glowRoot.updateMatrixWorld(true);}
    target=next;if(target)glowUntil=o.now+1200;
    if(target||o.now<glowUntil)glow.update(Boolean(target)&&!zoom,o.dt,o.reduced);
@@ -422,13 +496,19 @@ export function createVendingMachines(scene:T.Scene,opts:{coins?:()=>number|null
   /** Start the zoom in; `onArrive` runs once the camera reaches the glass (immediately with reduced motion). */
   focus(id:VendingMachineId,onArrive:()=>void){zoom={id,t:zoom?.id===id?zoom.t:0,dir:1,onArrive};atlas.refreshCoins();if(closeUp?.id!==id){dropCloseUp();buildCloseUp(id);}else closeUp.parts.forEach(p=>{p.products.visible=true;});},
   /** Zoom back out to the follow camera. */
-  release(onDone?:()=>void){atlas.refreshCoins();closeUp?.parts.forEach(p=>{p.products.visible=true;});if(!zoom){dropCloseUp();onDone?.();return;}zoom.dir=-1;zoom.onArrive=undefined;zoom.onDone=onDone;},
-  cancel(){zoom=null;dropCloseUp();},
+  release(onDone?:()=>void){atlas.refreshCoins();restoreOccluders();closeUp?.parts.forEach(p=>{p.products.visible=true;});if(!zoom){dropCloseUp();onDone?.();return;}zoom.dir=-1;zoom.onArrive=undefined;zoom.onDone=onDone;},
+  cancel(){zoom=null;restoreOccluders();dropCloseUp();},
+  /** Checks: the meshes between the close-up camera for machine `id` (this camera's fov/aspect) and its face, by name path. */
+  occluders(id:VendingMachineId,camera:T.PerspectiveCamera,viewportHeight?:number,lift=0){const e=entries.find(x=>x.machine.id===id);if(!e)return [];return occludersOf(e,camera,viewportHeight,lift).map(o=>{const n:string[]=[];for(let p:T.Object3D|null=o;p&&p!==scene;p=p.parent)n.push(p.name||p.type);return n.join('<');});},
   /** The live high-res close-up face (null when none), and the cost of the last one built (ms to paint, texture size and bytes). */
   get hiRes(){return closeUp?{id:closeUp.id,machines:closeUp.parts.map(p=>p.entry.machine.id),...closeUpStats}:null;},
   get lastHiRes(){return closeUpStats;},
   /** Where the close-up's products stand (face fractions u, shelf line v, depth in metres) per machine; empty when not zoomed. */
   closeUpTargets(id:VendingMachineId){return closeUp?.parts.find(p=>p.entry.machine.id===id)?.targets??[];},
+  /** Per slot (reading order), how far (face-width fractions) the in-use HTML face must slide a product sideways so, standing
+   *  VENDING_BAY.product behind the glass, it reads centred over its price in the angled close-up; [] when not zoomed. */
+  productShift(id:VendingMachineId):number[]{const e=entries.find(x=>x.machine.id===id);if(!e||!lastCamera)return [];const F=VENDING_FACE,cam=e.mesh.worldToLocal(lastCamera.getWorldPosition(new T.Vector3())),zP=VENDING_SIZE.d/2-VENDING_BAY.product;
+   if(Math.abs(cam.z-F.z)<.01)return [];return L.slots.map(r=>{const sx=F.x0+(r.x+r.w/2)*FACE_SIZE.w;return (cam.x+(sx-cam.x)*(cam.z-zP)/(cam.z-F.z)-sx)/FACE_SIZE.w;});},
   /** Whether a machine shows the real-depth close-up right now (else its flat printed front). */
   hasCloseUp(id:VendingMachineId){return Boolean(closeUp?.parts.some(p=>p.entry.machine.id===id));},
   /** Checks and screenshots: show (or hide) the close-up products again after the camera arrived. */
@@ -438,7 +518,8 @@ export function createVendingMachines(scene:T.Scene,opts:{coins?:()=>number|null
    if(!zoom)return false;const e=entries.find(x=>x.machine.id===zoom!.id)!;
    zoom.t=reduced?(zoom.dir>0?1:0):T.MathUtils.clamp(zoom.t+zoom.dir*Math.min(dt,.05)/(zoom.dir>0?1:.8),0,1);
    const k=ease(zoom.t);
-   faceView(e,camera,zoomPos,zoomLook);
+   if(zoom.dir>0&&zoom.lift===undefined)clearView(e,camera);
+   faceView(e,camera,zoomPos,zoomLook,undefined,zoom.lift??0);
    followLook.copy(camera.position).addScaledVector(viewDir,40);
    camera.position.lerp(zoomPos,k);if(e.machine.id==='market')camera.position.y+=Math.sin(Math.PI*k)*7;mixLook.lerpVectors(followLook,zoomLook,k);camera.lookAt(mixLook);lastCamera=camera;
    // Arrived: the in-use HTML face (same depths, CSS 3D) takes over the focused machine's live stock; hide its close-up products.
@@ -452,6 +533,10 @@ export function createVendingMachines(scene:T.Scene,opts:{coins?:()=>number|null
   faceView(id:VendingMachineId,camera:T.PerspectiveCamera,position:T.Vector3,look:T.Vector3,viewportHeight?:number){const e=entries.find(x=>x.machine.id===id);if(e)faceView(e,camera,position,look,viewportHeight);},
   /** The machine face's four corners (top-left, top-right, bottom-right, bottom-left) in normalized device coordinates, from
    * the last zoom camera, or null when not zoomed. */
+  /** Checks: the live close-up's camera lift, the meshes hidden for it, and what (if anything) still stands between the camera and
+   *  the face (should be none); null when not zoomed. Recomputed on call, never per frame. */
+  closeUpView(){if(!zoom||!lastCamera)return null;const e=entries.find(x=>x.machine.id===zoom!.id)!;const name=(o:T.Object3D)=>o.name||o.type;
+   return {lift:zoom.lift??0,ms:clearMs,hidden:hiddenOccluders.map(name),blockers:occludersOf(e,lastCamera,undefined,zoom.lift??0).map(name)};},
   faceNow():{x:number;y:number}[]|null{if(!zoom||!lastCamera)return null;const e=entries.find(x=>x.machine.id===zoom!.id)!;return faceNDC(e,lastCamera);},
   /**
    * The face's full CSS 3D placement (Sep 30 2026): a matrix3d mapping face pixels (x right, y down, z toward the viewer, `w`×`h`

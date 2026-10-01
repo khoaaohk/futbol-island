@@ -12,6 +12,7 @@ import {readArcadeWallet} from '@/lib/arcade/arcadeWallet';
 import {islandJobWallet} from '../jobs/islandWallet';
 import {localMarketDay} from './market';
 import {CARD_TRADE_MODE,CARD_TRADE_STORAGE_KEY,createCardTrade,type CardTradeMode} from './cardSelling';
+import {devUnlockHostAllowed} from '../../dev/devUnlockGate';
 
 /** Fired after a card leaves the binder, so open card views can re-read the collection. */
 export const CARD_REMOVED='fi2-card-removed';
@@ -19,7 +20,7 @@ export const CARD_REMOVED='fi2-card-removed';
 export const CARD_TRADE_DEV_KEY='fi2-card-trade-dev-v1';
 let dev:boolean|null=null;
 function devTradeIn():boolean{
- if(process.env.NODE_ENV==='production'||typeof window==='undefined')return false;
+ if(process.env.NODE_ENV==='production'||typeof window==='undefined'||!devUnlockHostAllowed({nodeEnv:process.env.NODE_ENV,hostname:window.location?.hostname??''}))return false;// QA11: dev flags need localhost too (lib/dev/devUnlockGate.ts)
  if(dev!==null)return dev;
  try{const q=new URLSearchParams(location.search).get('cardtrade');if(q==='on')localStorage.setItem(CARD_TRADE_DEV_KEY,'on');else if(q==='off')localStorage.removeItem(CARD_TRADE_DEV_KEY);dev=localStorage.getItem(CARD_TRADE_DEV_KEY)==='on';}catch{dev=false;}
  return dev;

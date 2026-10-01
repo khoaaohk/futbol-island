@@ -1,5 +1,7 @@
 /* Make it yours → Backpack. The builder's cream card, the shared chip / mint / tile families (docs/ui/BUTTONS.md). */
 .backpack{display:flex;flex-direction:column;gap:16px;min-width:0;background:#fff2d3;padding:24px;border-radius:32px;box-shadow:0 7px 0 #6a3b5e40;color:var(--btn-ink)}
+/* Lane 3: title left, My football button right (wraps under on phones). */
+.head{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:10px 14px}.head>div{flex:1 1 220px;min-width:0}
 .head h3{margin:0;font:400 clamp(22px,2.6vw,28px)/1.15 IslandBrush,sans-serif;color:var(--btn-ink)}
 .head p{margin:6px 0 0;font-size:14px;line-height:1.45;color:#4d6456}
 

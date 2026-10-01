@@ -4,7 +4,7 @@
 .dialog .panel{width:min(560px,100%);height:100%;max-height:100dvh;background:url('/stories/films/assets/entry-grain.png') center/160px repeat,#2e806d url('/stories/paths/conversation-coast.svg') center top/100% 1000px repeat-y!important;box-shadow:-12px 0 36px #16352a44}
 .dialog .header{background:transparent!important;border:0;color:#fff2cd}.header h2{font:400 clamp(23px,4vw,32px)/1.12 IslandBrush,sans-serif}
 .body{display:flex;flex-direction:column;gap:20px}.card{padding:20px;border:2px solid #fff2cd80;border-radius:26px 34px 26px 26px;box-shadow:0 5px 0 #173e4545;background:#f3da90 url('/stories/films/assets/entry-grain.png') center/160px}
-.fish{background-color:#b8dfe3}.fruit{background-color:#f1c7b4}.cardTop{display:flex;align-items:center;gap:16px}.cardTop svg{flex:none}.cardTop h3{font-size:18px;margin:0 0 4px}.cardTop strong{display:inline-block;font:400 42px/1 IslandBrush,sans-serif;overflow-wrap:anywhere;max-width:100%;font-variant-numeric:tabular-nums}.cardTop span{display:block;font-size:13px;margin-top:4px}.cardTop>div{min-width:0}.card p{font-size:15px;line-height:1.5;margin:15px 0 0}.note{margin-top:14px;padding:14px;border-radius:16px;background:#fff2cda6;font-size:14px;line-height:1.5}.note p{margin:4px 0 0;font-size:14px}.empty{font-style:italic}.items{margin:14px 0 0;padding:0;list-style:none}.items li{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #244d4020;font-size:14px}.capacity{margin:0;padding:16px 18px;background:#fff2cd;border-radius:20px;font-size:15px;line-height:1.5}.capacity b{float:right}.capacity span{display:block;font-size:13px;margin-top:5px}
+.fish{background-color:#b8dfe3}.fruit{background-color:#f1c7b4}.cardTop{display:flex;align-items:center;gap:16px}.cardTop svg{flex:none}.cardTop h3{font-size:18px;margin:0 0 4px}.cardTop strong{display:inline-block;font:400 42px/1 IslandBrush,sans-serif;overflow-wrap:anywhere;max-width:100%;font-variant-numeric:tabular-nums}.cardTop span{display:block;font-size:13px;margin-top:4px}.cardTop>div{min-width:0}.card p{font-size:15px;line-height:1.5;margin:15px 0 0}.note{margin-top:14px;padding:14px;border-radius:16px;background:#fff2cda6;font-size:14px;line-height:1.5}.note p{margin:4px 0 0;font-size:14px}.empty{font-style:italic}.items{margin:14px 0 0;padding:0;list-style:none}.items li{display:flex;align-items:center;gap:12px;min-height:52px;padding:6px 0;border-bottom:1px solid #244d4020;font-size:14px}.capacity{margin:0;padding:16px 18px;background:#fff2cd;border-radius:20px;font-size:15px;line-height:1.5}.capacity b{float:right}.capacity span{display:block;font-size:13px;margin-top:5px}
 :global(.town-app):has(.dialog[open]) :global(.town-minimap),:global(.town-app):has(.dialog[open]) :global(.travel-actions),:global(.town-app):has(.dialog[open]) :global(.touch-controls),:global(.town-app):has(.dialog[open]) :global([data-fishing-hud]),:global(.town-app):has(.dialog[open]) :global([data-fish-catch]){visibility:hidden!important;pointer-events:none!important}
 /* Fish / fruit cards get a much fainter paper grain so the pattern doesn't compete with the numbers. */
 .card.fish,.card.fruit{background-blend-mode:soft-light;background-size:220px}
@@ -13,3 +13,21 @@
 .entering::backdrop{animation:pocketTint .14s ease-out both}
 @keyframes pocketTint{from{background:#163b4200}to{background:#163b426e}}
 @media(prefers-reduced-motion:reduce){.entering::backdrop{animation:none}}
+/* Sep 30 2026: pocket rows show what is in the basket (lib/town/market/pocket.ts): art · name + price each · count · value. */
+.itemArt{flex:none;display:grid;place-items:center;width:60px;height:44px;border-radius:12px;background:#fff2cd8c}
+.itemName{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.itemName b{font-size:15px;line-height:1.25;overflow-wrap:anywhere}.itemName small{font-size:12.5px;color:#244d40c4}
+.itemCount{flex:none;font:400 22px/1 IslandBrush,sans-serif;font-variant-numeric:tabular-nums;min-width:34px;text-align:right}
+.itemValue{flex:none;min-width:52px;text-align:right;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}.itemValue small{display:block;font-size:11.5px;font-weight:400}
+.sub{margin-top:14px}.sub h4{display:flex;align-items:center;gap:8px;margin:0;font-size:15px}.sub h4 span{min-width:24px;padding:1px 8px;border-radius:999px;background:#fff2cd;font-size:13px;text-align:center}.sub .items{margin-top:6px}
+.card p.worth{margin-top:12px;font-size:14px}
+@media(max-width:380px){.itemArt{width:48px}.itemValue{min-width:44px}}
+/* Fuel section (Sep 30 2026, docs/economy/FUEL_2026-09-30.md): same card, meter (MarketStand .meter) and Eat buttons (.one). */
+.fuelCard{background-color:#f6e2a4}.fuelCard[data-fuel-level=low]{background-color:#f8cf9f}.fuelCard[data-fuel-level=empty]{background-color:#f6c3b4}
+.fuelIcon{flex:none;display:grid;place-items:center;width:60px;height:60px}
+.cardTop strong small{font:700 15px/1 inherit;font-family:inherit}
+.fuelCard [data-fuel-meter]{margin-top:14px;height:14px}
+.fuelFill{background:#e9a92b!important}.fuelCard[data-fuel-level=low] .fuelFill{background:#e07a2c!important}
+.fuelCosts{margin:6px 0 0;padding:0;list-style:none}.fuelCosts li{display:flex;justify-content:space-between;gap:12px;padding:3px 0;font-size:14px}
+.fuelDots{letter-spacing:2px;color:#b06d12;font-size:12px}
+/* A low or empty tank brings the Fuel card to the top of the pocket (where to refuel matters most then). */
+.fuelCard[data-fuel-level=low],.fuelCard[data-fuel-level=empty]{order:-1}
