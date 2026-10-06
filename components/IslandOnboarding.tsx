@@ -4,7 +4,7 @@ import {BackButton} from './BackButton';
 import {NavigationButton} from './DoneButton';
 import shell from './ModalShell.module.css';
 import {selectCharacter} from '@/lib/town/customization';
-import {useEffect,useLayoutEffect,useRef,useState,type CSSProperties,type MutableRefObject} from 'react';
+import {useEffect,useLayoutEffect,useRef,useState,type MutableRefObject} from 'react';
 import type {OnboardingNpcTarget} from '@/lib/graphics/onboardingNpc';
 import type {CharacterCustomization} from '@/lib/town/customization';
 import {finishIslandOnboarding} from '@/lib/town/onboarding';
@@ -17,10 +17,6 @@ import {CostumeHoodArt,FruitArt,HuntBallArt,JobsArt,TipBookArt} from './PocketAr
 import {StorePreview,useStorePreviews} from './StorePreviews';
 import {STORE_ITEMS} from '@/lib/town/store';
 import {Icon} from './Icon';
-import {useQuestEvidence} from '@/lib/town/questProgress';
-import {useQuizCompletions} from '@/lib/town/quizProgress';
-import {continueAction,suggestedNextStep} from '@/lib/paths/pathContinue';
-import {launchPathLesson} from '@/lib/paths/pathLaunch';
 import MiniCard from './MiniCard';
 import {cardNumber} from '@/lib/town/cardCollection';
 import jobs from './IslandJobs.module.css';
@@ -54,11 +50,8 @@ export default function IslandOnboarding({open,onClose,value,onChange}:Props){
  // Same shelf snapshot the vending machine and Backpack show, rendered once when the Spend step opens (one short-lived renderer).
  const gear=useStorePreviews(open&&step===LEARN_STEP,GEAR_BALL);
  const dismiss=()=>{finishIslandOnboarding('dismissed');onClose();};
- // Clear path (Oct 4 2026, user): the last button starts the ONE first step (the saved path's Continue: lesson 1 on a fresh save),
- // the same lesson Paths' "Start here" and the HUD pitch card point at. Skip still just closes.
- const evidence=useQuestEvidence(),answers=useQuizCompletions();
- const first=open&&last?(()=>{try{return suggestedNextStep(localStorage,new Set(evidence.steps),answers);}catch{return null;}})():null,firstSay=first?continueAction(first):null;
- const next=()=>{if(last){finishIslandOnboarding('completed');onClose();if(first?.kind==='lesson')launchPathLesson(first.format,first.lesson,new Set(evidence.steps),answers);}else setStep(n=>n+1);};
+ // Oct 6 2026 (user): the last button is Explore and just drops the player into the island (no lesson launch).
+ const next=()=>{if(last){finishIslandOnboarding('completed');onClose();}else setStep(n=>n+1);};
  useEffect(()=>{const el=dialog.current;if(!el)return;if(open){setStep(0);restore.current=document.activeElement instanceof HTMLElement?document.activeElement:null;if(!el.open)el.showModal();heading.current?.focus({preventScroll:true});}else if(el.open){el.close();if(restore.current?.isConnected)restore.current.focus({preventScroll:true});}},[open]);
  useEffect(()=>{if(open)heading.current?.focus({preventScroll:true});},[open,step]);
  // Heat pass 4 (audit F10): measured on the step, after it settles and on resize — no layout poll (the island is paused behind the tour).
@@ -85,7 +78,7 @@ export default function IslandOnboarding({open,onClose,value,onChange}:Props){
  return <dialog ref={dialog} className={styles.dialog} data-onboarding-step={current.id} aria-labelledby="island-welcome-title" aria-describedby="island-welcome-copy" onCancel={e=>{e.preventDefault();dismiss();}} onKeyDown={e=>{e.stopPropagation();if(e.key==='Escape'){e.preventDefault();dismiss();}}} onKeyUp={e=>e.stopPropagation()} onPointerDown={e=>e.stopPropagation()} onPointerUp={e=>e.stopPropagation()}>
  {highlights.map((rect,i)=><div key={i} className={styles.highlight} style={rect} aria-hidden="true"/>)}
  <section ref={card} className={`${styles.card} ${shell.shell} ${step===0?styles.welcome:styles.tour}`} style={placement}>
- <header className={`${styles.header} ${shell.header}`}>{step>0&&<BackButton key={step} onBack={()=>setStep(n=>n-1)}/>}<h2 ref={heading} tabIndex={-1} id="island-welcome-title">{current.title}</h2></header><div className={`${shell.body} ${styles.body}`}>
+ <header className={`${styles.header} ${shell.header}`}><h2 ref={heading} tabIndex={-1} id="island-welcome-title">{current.title}</h2><NavigationButton className={styles.skip} label="Skip" onNavigate={dismiss}/></header><div className={`${shell.body} ${styles.body}`}>
  <div key={step} className={styles.content}><p className={styles.eyebrow}>{current.eyebrow}</p><p id="island-welcome-copy" className={styles.copy}>{current.copy}</p>
  {current.id==='welcome'&&<><div className={styles.preview}><CharacterPreview open={open&&step===0} value={value}/></div><div className={styles.choicesLayout}><CharacterToggle value={value.character} onChange={character=>onChange(selectCharacter(value,character))} label="Choose your starter character" options={[{value:'male',label:'Male'},{value:'female',label:'Female'}]}/></div><p className={styles.saved}>Your character saves automatically. Change your look anytime.</p></>}
  {current.id==='paths'&&<div className={styles.showcase} aria-hidden="true">{PATH_STOPS.map((stop,i)=><span key={stop.label} className={styles.pathStop}>{i>0&&<span className={styles.pathLink}/>}<span className={styles.item}><span className={styles.stop} style={{background:stop.ink,boxShadow:`0 4px 0 ${stop.edge}`}}><StopGlyph i={i}/></span><small>{stop.label}</small></span></span>)}</div>}
@@ -111,7 +104,7 @@ export default function IslandOnboarding({open,onClose,value,onChange}:Props){
  </div>}
  {current.note&&<div className={styles.note}><Icon name={current.id==='learn'?'book':current.id==='paths'?'flag':current.id==='balls'?'star':'target'} size={28}/><span>{current.note}</span></div>}
  </div></div>
- <footer className={styles.footer} data-first-step={last&&firstSay?'':undefined}><NavigationButton label="Skip" onNavigate={dismiss}/><div className={styles.progress} role="status" aria-label={`Welcome step ${step+1} of ${steps.length}`}>{steps.map((s,i)=><span key={s.id} className={i===step?styles.current:undefined} aria-hidden="true"/>)}</div><NavigationButton key={step} label={last?firstSay?.action??'Done':'Next'} style={last&&firstSay?{'--navigation-width':`${Math.max(76,firstSay.action.length*8+36)}px`} as CSSProperties:undefined} data-onboarding-first-step={last&&first?.kind==='lesson'?first.lesson.id:undefined} onNavigate={next}/></footer>
+ <footer className={styles.footer}>{step>0?<BackButton key={step} onBack={()=>setStep(n=>n-1)}/>:<span aria-hidden="true"/>}<div className={styles.progress} role="status" aria-label={`Welcome step ${step+1} of ${steps.length}`}>{steps.map((s,i)=><span key={s.id} className={i===step?styles.current:undefined} aria-hidden="true"/>)}</div><NavigationButton key={`next-${step}`} label={last?'Explore':'Next'} onNavigate={next}/></footer>
  </section>
  </dialog>;
 }

@@ -50,7 +50,7 @@ const none=new Set(),seven=coreOf('7v7');
  assert.doesNotMatch(qlp,/data-path-opening-story/,'Paths "Start here" is no longer the opening story');
  assert.match(qlp,/\{resumeLesson&&target\.kind==='lesson'\?<button type="button" data-path-continue onClick=\{\(\)=>launch\(resumeLesson\)\}>/,'Start here launches the Continue lesson');
  assert.match(qlp,/\.\.\.\(path\.openingStory\?\[\{lesson:core\[0\],story:path\.openingStory,index:-1\}\]:\[\]\)/,'the opening story stays on the map as an optional stop');
- assert.match(onb,/suggestedNextStep\(localStorage,/,'onboarding resolves the one first step');assert.match(onb,/launchPathLesson\(first\.format,first\.lesson,/,'onboarding\'s last button starts it');
+ assert.match(onb,/label=\{last\?'Explore':'Next'\}/,'onboarding ends on Explore (Oct 6 2026, user)');assert.doesNotMatch(onb,/launchPathLesson/,'Explore drops into the island, no lesson launch');
  assert.match(town,/\{VENUES\.map\(v=><FieldPathCard key=\{v\.id\} venue=\{v\}/,'Town renders the pitch cards from FieldPathCard');
  assert.match(card2,/pitchCardTarget\(venue\.id,/);assert.match(card2,/if\(target\)launchPathLesson\(venue\.id,target\.lesson,steps,answers\);else onPlays\(\);/,'the card launches the lesson, or the free viewer when the path is done');
  assert.match(quests,/<div ref=\{setLandingSlot\} className=\{journey\.landingSlot\}\/>\n <section ref=\{arrivalRef\}/,'the landing slot sits above the hero art');
@@ -106,4 +106,4 @@ const none=new Set(),seven=coreOf('7v7');
  const css=read('components/PathWarmUpRow.module.css');assert.doesNotMatch(css,/#(?:e0|f0|ff)[0-4][0-4][0-4][0-4]\b|\bred\b|animation/i,'no red alarms and no animation loop');
  assert.doesNotMatch(read('components/PathWarmUpRow.tsx'),/setInterval|setTimeout|requestAnimationFrame/,'no timers');
 }
-console.log('PASS clear path: one first step (onboarding = HUD card = Start here = lesson 1), Next lesson at the quiz end (graduate / next path / Ferry), Warm-up row states');
+console.log('PASS clear path: one first step (HUD card = Start here = lesson 1; onboarding ends on Explore), Next lesson at the quiz end (graduate / next path / Ferry), Warm-up row states');
