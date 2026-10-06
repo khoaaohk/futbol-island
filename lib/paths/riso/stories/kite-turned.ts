@@ -9,7 +9,7 @@
 import type {Sheet} from '../sheet';
 import {type RisoStory,type Scene,playChapters} from '../story';
 import {aperture,apertureDisc} from '../passage';
-import {twos,twosIndex,sm,key,anticipate,settle,clamp,lerp,rng,hash,noise1,blob,polyPath,ribbon,smoothPts,partial,rotPts,circlePath,arc,easeOut,easeIn,easeIO,easeOutBack,TAU,type Pt} from '../motion';
+import {twos,twosIndex,sm,key,anticipate,settle,clamp,lerp,rng,hash,noise1,blob,polyPath,ribbon,smoothPts,partial,rotPts,circlePath,arc,easeOut,easeIn,easeIO,easeOutBack,TAU,type Pt,creepHolds} from '../motion';
 import {dust,speedLines,handCut,ring,lattice,crescent,laneArrow} from '../shapes';
 
 const CH='/stories/narration/futsal/kite-turned/';
@@ -167,7 +167,7 @@ const ch1:Scene={
  draw(s,t){
   const tt=twos(t);
   const gustK=key(tt,[[1.6,0],[1.8,-.1,easeIn],[2.3,1,easeOut],[3.2,1],[4,0]]),shove=key(tt,[[1.6,0],[1.75,-.06,easeIn],[2.3,1,easeOut]]),snag=tt>=2.3,jam=sm(4.0,4.2,tt),shaking=tt>=4&&tt<4.35;
-  const v=key(t,[[0,40,-140,.95],[1.2,80,-180,1],[4,80,-180,1],[4.9,-20,-100,1.12],[7.68,-20,-100,1.12],[7.9,-20,-110,1.12],[9,-260,-360,1.12],[9.9,-260,-360,1.12]],easeIO,true);
+  const v=key(t,creepHolds([[0,40,-140,.95],[1.2,80,-180,1],[4,80,-180,1],[4.9,-20,-100,1.12],[7.68,-20,-100,1.12],[7.9,-20,-110,1.12],[9,-260,-360,1.12],[9.9,-260,-360,1.12]]),easeIO,true);
   s.camera(v[0]+20*gustK*(1-sm(3.2,4,t)),v[1],v[2],0);
   const gust=gustK*90;
   sky(s,{horizon:200,seed:11,tails:130+120*gustK,gust});
@@ -204,7 +204,7 @@ const ch2:Scene={
   const shove1=key(tt,[[3.0,0],[3.4,1,easeOut],[3.8,1],[4.6,0,easeIO]]),shove2=key(tt,[[5.2,0],[5.6,1,easeOut],[6.0,1],[6.8,0,easeIO]]);
   const rot1=key(tt,[[3.3,0],[3.45,-.1,easeIn],[3.8,.31,easeOut],[4.4,.05],[5,0]]),rot2=-.17*shove2;
   const turn=key(tt,[[6.52,0],[6.67,.09,easeIn],[7.27,-.45,easeOut],[7.55,-.38]]),climb=sm(7.2,8.0,tt,easeOut);
-  const v=key(t,[[0,0,0,.9,0],[1.2,40,-100,1,0],[2.9,40,-100,1,0],[3.2,40,-100,1,0],[4.1,160,-40,1,.07],[6.52,160,-40,1,.07],[7.5,-60,300,1,0],[8.6,40,-220,1.05,0],[10.3,40,-220,1.05,0]],easeIO,true);
+  const v=key(t,creepHolds([[0,0,0,.9,0],[1.2,40,-100,1,0],[2.9,40,-100,1,0],[3.2,40,-100,1,0],[4.1,160,-40,1,.07],[6.52,160,-40,1,.07],[7.5,-60,300,1,0],[8.6,40,-220,1.05,0],[10.3,40,-220,1.05,0]]),easeIO,true);
   s.camera(v[0],v[1]+20*pulse(t,5.5),v[2],v[3]);
   sky(s,{horizon:520,seed:21,gust:80*Math.max(g1,g2),gustY:60*g2,tails:60+160*Math.max(g1,g2)});
   ground(s,520,22,{lines:[560],lift:10*Math.max(g1,g2)});
@@ -231,7 +231,7 @@ const ch3:Scene={
  draw(s,t){
   const tt=twos(t);
   const press=sm(.2,.7,tt,easeIn),breath=sm(3.65,4.85,tt,easeOut),contract=sm(3.4,3.65,tt)*(1-sm(3.65,3.9,tt)),blow=sm(7.9,8.68,t,easeOut);
-  const v=key(t,[[0,-60,0,1,0],[1,0,0,1,0],[3.4,0,0,1,0],[3.65,0,0,.98,0],[4.85,0,-20,.88,0],[5.0,0,-20,.88,0],[5.4,20,20,.9,0],[6.24,20,20,.9,0],[6.44,20,20,.9,0],[7.14,-160,0,.92,-.06],[8.9,-160,0,.92,-.06]],easeIO,true);
+  const v=key(t,creepHolds([[0,-60,0,1,0],[1,0,0,1,0],[3.4,0,0,1,0],[3.65,0,0,.98,0],[4.85,0,-20,.88,0],[5.0,0,-20,.88,0],[5.4,20,20,.9,0],[6.24,20,20,.9,0],[6.44,20,20,.9,0],[7.14,-160,0,.92,-.06],[8.9,-160,0,.92,-.06]]),easeIO,true);
   s.camera(v[0],v[1],v[2],v[3]);
   // the fabric: a yellow halftone field with a diagonal weave; the gust of the seam blows the whole sheet to the right
   s.save();s.translate(420*blow,0);
@@ -276,7 +276,7 @@ const ch4:Scene={
   const tt=twos(t);
   const stepIn=key(tt,[[.2,1200],[.35,1240,easeIn],[.9,300,easeOut]])+10*settle(tt,.9,{amp:1,freq:6,decay:6}),closed=clamp((1200-stepIn)/900);
   const gust=-80*key(tt,[[6.58,0],[6.78,1,easeOut],[7.2,1],[7.8,0]]);
-  const v=key(t,[[0,0,-40,1],[1,40,-60,1.1],[3.4,40,-60,1.1],[4.3,-40,-20,1.15],[5,-40,-20,1.15],[5.2,-40,-10,1.15],[5.9,-280,-20,1.15],[6.58,-280,-20,1.15],[7.4,-400,-100,1.15],[10.5,-400,-100,1.15]],easeIO,true);
+  const v=key(t,creepHolds([[0,0,-40,1],[1,40,-60,1.1],[3.4,40,-60,1.1],[4.3,-40,-20,1.15],[5,-40,-20,1.15],[5.2,-40,-10,1.15],[5.9,-280,-20,1.15],[6.58,-280,-20,1.15],[7.4,-400,-100,1.15],[10.5,-400,-100,1.15]]),easeIO,true);
   s.camera(v[0]+20*sm(.5,.9,t)*(1-sm(1.5,2,t)),v[1],v[2],0);
   sky(s,{horizon:300,seed:41,gust,tails:110+120*Math.abs(gust)/80});
   skyGap(s,360,-420,300,160,.85*(1-closed));
@@ -322,7 +322,7 @@ const ch4:Scene={
 const ch5:Scene={
  draw(s,t){
   const tt=twos(t);
-  const v=key(t,[[0,-260,60,1,-.06],[1.1,-160,80,1,-.06],[4.1,-160,80,1,-.06],[5,-100,60,1.05,0],[5.54,-100,60,1.05,0],[6.44,-140,80,1.05,0],[7,-140,80,1.05,0],[8,220,-40,1.05,0],[9.8,220,-40,1.05,0]],easeIO,true);
+  const v=key(t,creepHolds([[0,-260,60,1,-.06],[1.1,-160,80,1,-.06],[4.1,-160,80,1,-.06],[5,-100,60,1.05,0],[5.54,-100,60,1.05,0],[6.44,-140,80,1.05,0],[7,-140,80,1.05,0],[8,220,-40,1.05,0],[9.8,220,-40,1.05,0]]),easeIO,true);
   s.camera(v[0]+15*sm(2.2,2.9,t)*(1-sm(3.5,4,t)),v[1],v[2],v[3]);
   sky(s,{horizon:300,seed:61,tails:120,gust:20*Math.sin(t*.7)});
   ground(s,300,62,{lines:[340,600],lift:6*pulse(tt,7.4)});
@@ -365,7 +365,7 @@ const ch5:Scene={
 const ch6:Scene={
  draw(s,t){
   const tt=twos(t);
-  const v=key(t,[[0,0,500,1,0],[1.4,0,-160,1,0],[5.12,0,-160,1,0],[5.57,-160,-300,1,-.07],[5.62,-160,-300,1,-.07],[6.02,-40,-220,1.05,0],[6.12,-40,-220,1.05,0],[6.52,20,-260,1.05,.05],[7.5,20,-260,1.05,.05],[8.3,-20,420,1.05,0],[9.14,-20,420,1.05,0],[10.04,40,-300,1.05,0],[11.6,40,-300,1.06,0]],easeIO,true);
+  const v=key(t,creepHolds([[0,0,500,1,0],[1.4,0,-160,1,0],[5.12,0,-160,1,0],[5.57,-160,-300,1,-.07],[5.62,-160,-300,1,-.07],[6.02,-40,-220,1.05,0],[6.12,-40,-220,1.05,0],[6.52,20,-260,1.05,.05],[7.5,20,-260,1.05,.05],[8.3,-20,420,1.05,0],[9.14,-20,420,1.05,0],[10.04,40,-300,1.05,0],[11.6,40,-300,1.06,0]]),easeIO,true);
   s.camera(v[0],v[1]+15*pulse(t,5.12)+15*pulse(t,9.14),v[2],v[3]);
   const band1=sm(5.12,6.2,tt,easeOut),band2=sm(9.14,10.0,tt,easeOut),open=sm(9.4,10.2,tt,easeOut);
   sky(s,{horizon:560,seed:81,count:4,pitch:330,h:190,tails:100+120*open,gust:10*Math.sin(t*.8)});

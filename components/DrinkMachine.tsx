@@ -156,7 +156,9 @@ export default function DrinkMachine({open,machineId,onOpenChange,machines}:{ope
   layers:drinkRevealLayers(reveal.drink.art),eyebrow:reveal.firstTime?undefined:'DRINK MACHINE'}:null,[revealKey]);// eslint-disable-line react-hooks/exhaustive-deps
  if(!open)return null;
  const found=vending.found.length;
- const picture=(d:Drink)=><span className={styles.pic} data-temp={d.temp}><DrinkArt art={d.art} base={.74} height={.66}/><i className={styles.temp} title={d.temp==='hot'?'あったか～い (hot)':'つめた～い (cold)'}>{d.temp==='hot'?'HOT':'COLD'}</i></span>;
+ // Each drink is painted from the zoom camera's viewpoint (its picture turns to face the camera, VendingFace.module.css), so its cap,
+ // shoulders, label and carton side match the bay's perspective. Angles snap to 2°: a resize repaints only on a meaningful change.
+ const snap=(a:number)=>Math.round(a/2)*2,picture=(d:Drink,index:number)=>{const cam=placement?.views?.[index];return <span className={styles.pic} data-temp={d.temp}>{cam?<DrinkArt art={d.art} size={192} base={.9} height={.77} yaw={snap(cam.yaw)} pitch={snap(cam.pitch)} stand/>:<DrinkArt art={d.art} base={.74} height={.66}/>}<i className={styles.temp} title={d.temp==='hot'?'あったか～い (hot)':'つめた～い (cold)'}>{d.temp==='hot'?'HOT':'COLD'}</i></span>;};
  const armedStatus=armed?status(armed):null;
  const ledView=led??(armed&&armedStatus?{msg:full?'Plenty for today!':armedStatus.kind==='buy'?`${armed.label} ${armed.jp} · ${armed.price} coins`:armedStatus.note,
   sub:full?DRINKS_FULL:armedStatus.kind==='buy'?'Press the button again to buy':armed.blurb,tone:full||armedStatus.kind==='short'?'warn' as const:undefined}
@@ -165,7 +167,7 @@ export default function DrinkMachine({open,machineId,onOpenChange,machines}:{ope
  const view:VendingFaceView|null=placement&&{trayNote,placement,fontSize,compact:placement.h<430,
   machine:{id:machine.id,name:machine.name,color:machine.color,light:machine.light,ink:machine.ink},
   header:{label:'Drinks',page:1,pages:1,special:false},
-  slots:drinks.map((d,index)=>{const s=status(d);return {id:d.id,label:d.label,price:d.price,state:s.kind,special:false,lit:d.id===armedId,vending:vendingSlot===d.id,kind:'drink',picture:picture(d),
+  slots:drinks.map((d,index)=>{const s=status(d);return {id:d.id,label:d.label,price:d.price,state:s.kind,special:false,lit:d.id===armedId,vending:vendingSlot===d.id,kind:'drink',picture:picture(d,index),
    ariaLabel:`${index+1}. ${d.label}, ${d.jp}, ${d.temp==='hot'?'hot':'cold'}. ${s.kind==='buy'?`${d.price} coins`:s.note}`};}),
   cursor,led:ledView,balance:vending.balance,found:{short:`${found}/${VENDING_MACHINES.length} found`,label:`${found}/${VENDING_MACHINES.length} machines found`},phase,coinDrop,
   tray:dispense?{key:dispense.key,id:dispense.drink.id,label:dispense.drink.label,kind:'drink',picture:<DrinkArt art={dispense.drink.art}/>}:null};

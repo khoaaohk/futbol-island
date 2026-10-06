@@ -45,6 +45,7 @@ import {TAU,twos,sm,clamp,lerp,keyPath,easeOut,easeOutBack,easeInOutSine,linear,
 import {dust,sparkBurst,footballPanels} from '../../paths/riso/shapes';
 import {drawAthlete,motionSmear,solve,blendPose,clampPose,runCycle,dribble,stand,strike,keeperSet,slideTackle,backpedal,lunge,keyPoses,STRIKE_CONTACT,
  type Pose,type Place,type AthleteStyle,type InkFill,type Projector} from './athlete';
+import {beats,shotAt,reframe,steady,near,type Keep,type Pin,type ShotParams,type Beats,type View as DView} from './director';
 
 // ---------------------------------------------------------------- narration + timing
 /** Narration, cue words and provisional (≈2.6 words/s plus pauses) timings: `at` = the onset of those exact words; `seconds` = the clip
@@ -79,7 +80,7 @@ const shape=(p:Pt[])=>polyPath(orient(p),true);
 
 // ---------------------------------------------------------------- camera: the whole frame
 /** Screen (x,y) → the centre of the canvas; ~1500 × 1030 units visible (the card window is 1.45:1 to square). Full sheet, never the safe box. */
-function frame(s:Sheet,x=0,y=0,z=1){const base=z*Math.min(s.W/1500,s.H/1030),a=Math.round(s.arrival*1e6)/1e6,k=base*a,q=(v:number)=>Math.round(v*1e4)/1e4;s.camera(q(x-(s.W/2-s.cx)/k),q(y-(s.H/2-s.cy)/k),base/s.fit,0);}
+function frame(s:Sheet,x=0,y=0,z=1){const base=z*Math.min(s.W/1500,s.H/1030);DV={w:s.W/base,h:s.H/base};const a=Math.round(s.arrival*1e6)/1e6,k=base*a,q=(v:number)=>Math.round(v*1e4)/1e4;s.camera(q(x-(s.W/2-s.cx)/k),q(y-(s.H/2-s.cy)/k),base/s.fit,0);}
 
 // ---------------------------------------------------------------- 3D: pitch metres → screen through a TV camera
 type V3=[number,number,number];
@@ -90,6 +91,20 @@ function toCam(v:V3,c:Cam):V3{const dx=v[0]-c.pos[0],dy=v[1]-c.pos[1],dz=v[2]-c.
 /** screen x, y and scale (units per metre); scale ≤ 0 means behind the camera */
 function P3(v:V3,c:Cam):[number,number,number]{const q=toCam(v,c);if(q[2]<.3)return[0,0,0];const k=c.F/q[2];return[q[0]*k,-q[1]*k,k];}
 const NEAR=.6;
+/** the window in camera units (set by frame(); read by the director's reframing, aperture() included) */
+let DV:DView={w:1500,h:1030};
+/** the director (lib/plays/riso/director.ts): move an authored camAt() camera toward a shot, then rebuild it with camAt */
+const HERO_H=2;// figures print 10 % over life size (FIG)
+const pinOf=(c:{pos:V3;target:V3;F:number}):Pin=>({eye:c.pos,target:c.target,F:c.F});
+const camOf=(p:Pin)=>camAt(p.eye,p.target,p.F);
+/** a player's feet and head as keep points (weight w: 1 = hard, must stay in frame) */
+const kp=(p:[number,number],w:number):Keep[]=>w>.01?[{P:[p[0],0,p[1]],w:Math.min(1,w)},{P:[p[0],HERO_H,p[1]],w:Math.min(1,w)}]:[];
+const OTHERS=(T:number,skip:string[]):V3[]=>TRACKS.filter(k=>!skip.includes(k.id)).map(k=>{const p=trackAt(k.keys,T);return[p[0],0,p[1]] as V3;});
+/** the directed camera at chapter time t (half: the steadiness window; 0 = no averaging) */
+function direct(t:number,B:Beats,authored:(t:number)=>{pos:V3;target:V3;F:number},subj:(t:number)=>{hero:V3;ball:V3;keep:Keep[];recenter?:number},half=.35):Cam{
+ const sh:ShotParams=shotAt(t,B);if(sh.k<=1e-4&&shotAt(t+half,B).k<=1e-4)return camOf(pinOf(authored(t)));
+ return camOf(steady(t,u=>{const S=subj(u);return reframe(pinOf(authored(u)),{hero:S.hero,ball:S.ball,keep:S.keep,height:HERO_H},shotAt(u,B),DV,{recenter:S.recenter??0});},half));
+}
 function projPoly(pts:V3[],c:Cam):Pt[]{const cs=pts.map(p=>toCam(p,c)),out:V3[]=[];
  for(let i=0;i<cs.length;i++){const a=cs[i],b=cs[(i+1)%cs.length],ia=a[2]>=NEAR,ib=b[2]>=NEAR;if(ia)out.push(a);if(ia!==ib){const u=(NEAR-a[2])/(b[2]-a[2]);out.push([a[0]+(b[0]-a[0])*u,a[1]+(b[1]-a[1])*u,NEAR]);}}
  return out.map(q=>[c.F*q[0]/q[2],-c.F*q[1]/q[2]]);}
@@ -319,10 +334,25 @@ function drawPlay(s:Sheet,T:number,c:Cam,o:{ballScale?:number;only?:string[];wid
 /** 1 · live: the high main camera on the west side, panning with the ball: Romário to Bebeto, Maldini across and waiting, cross, blocked. */
 const MAIN_CAM:V3=[46,27,-44];
 const t1=(t:number)=>{const q=Q(0),S=SECS(0);return warp(t,[[0,-4.6],[q[1],-1.3],[q[2],T_PASS],[q[3],T_RECV+.35],[q[4],2.3],[q[5],T_CROSS-.1],[q[6],T_BLOCK+.12],[S,T_REST-.1]]);};
-const cam1=(t:number)=>{const T=t1(t),b=ballAt(Math.max(-4.6,Math.min(T,T_OUT)-.3)),tx=clamp(b[0]-1,8,40),tz=lerp(30,21,sm(-1,2.5,T)),F=lerp(5000,7800,sm(-1,3,T,easeInOutSine));
- return camAt(MAIN_CAM,[tx,0,tz],F);};
+const cam1Authored=(t:number)=>{const T=t1(t),b=ballAt(Math.max(-4.6,Math.min(T,T_OUT)-.3)),tx=clamp(b[0]-1,8,40),tz=lerp(30,21,sm(-1,2.5,T)),F=lerp(5000,7800,sm(-1,3,T,easeInOutSine));
+ return{pos:MAIN_CAM,target:[tx,0,tz] as V3,F};};
+/** Director beats, chapter 1 (the live broadcast): a short establishing wide of the Rose Bowl, then follow Romário on the ball; pull out
+ * for his pass through so the passer AND Bebeto (the receiver) are both in the picture; follow Bebeto on the left of the box while the
+ * camera hands over to Maldini coming across; push in on Maldini staying close (Bebeto kept in frame — the gap he keeps); go tight and low
+ * for the cross and the block, the attacker still in shot; then ease back out a little as the ball flies off him for a corner. */
+const C1=(i:number)=>Q(0)[i];
+const B1=beats([[0,'wide'],[1,{from:'follow',az:20}],[C1(2)-.3,{from:'space',size:.24}],[C1(3)+.5,'follow'],[C1(4)-.35,{from:'follow',size:.42,low:.5,az:25}],
+ [C1(5)-.4,{from:'tight',az:25}],[C1(6)+.6,{from:'follow',size:.32,low:.5}]]);
+/** the subject: Romário on the ball → Bebeto (from the pass) → Maldini (before "Maldini stays close"), blended, never switched */
+function subj1(t:number){const T=t1(t),r=trackAt(ROM_KEYS,T),b=trackAt(BEB_KEYS,T),m=trackAt(MAL_KEYS,T),u=sm(T_PASS,T_RECV+.2,T,easeInOutSine),v=sm(1.7,2.3,T,easeInOutSine);
+ const hx=lerp(lerp(r[0],b[0],u),m[0],v),hz=lerp(lerp(r[1],b[1],u),m[1],v),hero:V3=[hx,0,hz],q=C1(2),q3=C1(3);
+ // Bebeto (the receiver, then the attacker being defended) from just before the pass to the end; Romário while he passes; Maldini while
+ // the camera is still on Bebeto; nearby players soft
+ const keep:Keep[]=[...kp(b,sm(q-1,q-.35,t)),...kp(r,sm(q-1,q-.35,t)*(1-sm(q+.6,q+1.3,t))),...kp(m,sm(q3-.2,q3+.5,t)*(1-v)),...near(hero,OTHERS(T,['maldini','bebeto','romario']),6,10,HERO_H)];
+ return{hero,ball:ballAt(T),keep,recenter:sm(q-1,q-.3,t)*(1-sm(q3+.3,q3+1,t))};}
+const cam1=(t:number)=>direct(t,B1,cam1Authored,subj1);
 const ch1:Scene={
- draw(s,t){frame(s);drawPlay(s,t1(twos(t)),cam1(t),{wide:true});frame(s);},
+ draw(s,t){frame(s);drawPlay(s,t1(twos(t)),cam1(t),{wide:shotAt(t,B1).k<.5});frame(s);},
  aperture(t){const p=P3(ballAt(t1(twos(t))),cam1(t));return apertureDisc(p[0],p[1],Math.max(6,.25*p[2]),12);},
  get still(){return Q(0)[6]+.4;},
 };
@@ -340,8 +370,19 @@ const ch2:Scene={
 /** 3 · the second replay, from the high camera behind Italy's goal: the ball flies off Maldini, up and behind the line; nobody down. */
 const BEHIND:V3=[-15,6.2,25];
 const t3=(t:number)=>{const q=Q(2),S=SECS(2);return warp(t,[[0,T_BLOCK-.3],[q[1],T_BLOCK+.42],[q[2],T_OUT+.5],[q[3],T_REST-.2],[S,T_REST+1.2]]);};
-const cam3=(t:number)=>{const T=t3(t),b=ballAt(T),follow=sm(T_BLOCK,T_OUT+.4,T,easeInOutSine),tx=lerp(BLOCK_XZ[0]-1,lerp(b[0],M_AT[0],.5),follow),tz=lerp(BLOCK_XZ[1]-.5,lerp(b[2],M_AT[1],.5),follow),F=lerp(2900,2200,sm(T_BLOCK,T_REST,T,easeInOutSine));
- return camAt(BEHIND,[tx,.8,tz],F);};
+const cam3Authored=(t:number)=>{const T=t3(t),b=ballAt(T),follow=sm(T_BLOCK,T_OUT+.4,T,easeInOutSine),tx=lerp(BLOCK_XZ[0]-1,lerp(b[0],M_AT[0],.5),follow),tz=lerp(BLOCK_XZ[1]-.5,lerp(b[2],M_AT[1],.5),follow),F=lerp(2900,2200,sm(T_BLOCK,T_REST,T,easeInOutSine));
+ return{pos:BEHIND,target:[tx,.8,tz] as V3,F};};
+/** Director beats, chapter 3 (the replay from behind the goal): start close and low on Maldini as the cross hits his leg (Bebeto, the
+ * crosser, kept in frame); pull out as the ball flies off him and over the line (it must be seen going out for a corner); then settle on
+ * Maldini, still standing — no foul, no fall. */
+const C3=(i:number)=>Q(2)[i];
+const B3=beats([[0,{from:'tight',size:.48}],[C3(1)-.3,{from:'space',size:.28}],[C3(2)-.2,{from:'reaction',size:.42}]]);
+function subj3(t:number){const T=t3(t),m=trackAt(MAL_KEYS,T),hero:V3=[m[0],0,m[1]],b=ballAt(T);
+ // once the ball has gone out and rests behind the line (right under this camera), the focus hands back to Maldini and the ball becomes a
+ // soft keep, so "No foul, no fall" is on him standing (eased over 1.2 s and steadied over ±.6 s, so the hand-over never jumps)
+ const f=sm(C3(2)-.4,C3(2)+.8,t,easeInOutSine),focus:V3=[lerp(b[0],m[0],f),lerp(b[1],1,f),lerp(b[2],m[1],f)];
+ return{hero,ball:focus,keep:[...(f>0?[{P:b,w:1-.8*f}]:[]),...kp(trackAt(BEB_KEYS,T),1-sm(C3(1)-.3,C3(1)+.4,t)),...near(hero,OTHERS(T,['maldini','bebeto']),6,10,HERO_H)]};}
+const cam3=(t:number)=>direct(t,B3,cam3Authored,subj3,.6);
 const ch3:Scene={
  draw(s,t){frame(s);drawPlay(s,t3(twos(t)),cam3(t),{ballScale:1.6});frame(s);},
  aperture(t){const p=P3(ballAt(t3(twos(t))),cam3(t));return apertureDisc(p[0],p[1],Math.max(8,.2*p[2]),12);},
@@ -353,7 +394,12 @@ const ch3:Scene={
 const LESSON_CAM:V3=[21,7.5,3];
 const t4=(t:number)=>{const q=Q(3),S=SECS(3);return warp(t,[[0,2.1],[q[1],2.1],[q[2]-.2,2.9],[q[3]-.3,T_CROSS-.2],[q[3]+.35,T_BLOCK],[S,T_BLOCK+.05]]);};
 const LESSON_MID:[number,number]=[(M_AT[0]+B_AT[0])/2,(M_AT[1]+B_AT[1])/2];
-const cam4=(t:number)=>camAt(LESSON_CAM,[LESSON_MID[0]-.2,.6,LESSON_MID[1]+.4],2700);
+/** Director, chapter 4 (the lesson): one 'lesson' framing, closer than the authored plate, with every teaching mark held in frame — Bebeto
+ * (the gap Maldini keeps), the block and the tick above it, and the crossed-out dive. */
+const B4=beats([[0,'lesson']]);
+const DIVE_X:V3=[M_AT[0]+M_H[0]*1.3,0,M_AT[1]+M_H[1]*1.3];
+const KEEP4:Keep[]=[[B_AT[0],0,B_AT[1]],[B_AT[0],HERO_H,B_AT[1]],[BLOCK[0],BLOCK[1]+1.6,BLOCK[2]],[DIVE_X[0],0,DIVE_X[2]],[DIVE_X[0],1.4,DIVE_X[2]]];
+const cam4=(t:number)=>{const T=t4(t);return camOf(reframe({eye:LESSON_CAM,target:[LESSON_MID[0]-.2,.6,LESSON_MID[1]+.4],F:2700},{hero:(()=>{const m=trackAt(MAL_KEYS,T);return[m[0],0,m[1]] as V3;})(),ball:ballAt(T),keep:KEEP4,height:HERO_H},shotAt(t,B4),DV));};
 /** a bold yellow teaching stroke (navy edge, paper knockout, yellow) */
 function mark(s:Sheet,p:Path2D){s.stroke(K,p,5,.9);s.knockout(p);s.fill(Y,p,.95);}
 /** a bold teaching arrow a → b (drawn to `u`), one path: shaft + head */

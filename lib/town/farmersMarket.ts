@@ -1,6 +1,7 @@
 import * as T from 'three';
 import {onIsland} from './shoreline';
 import type {Obstacle} from './simulation';
+import {untaggedProp,type PropTagger} from '../graphics/propReactions';
 
 type Footprint={x:number;z:number;w:number;d:number};
 type MarketTools={
@@ -10,17 +11,19 @@ type MarketTools={
  sign:(text:string,w:number,h:number,x:number,y:number,z:number,bg?:string,ink?:string,rotation?:number)=>T.Mesh;
  path:(x:number,z:number,w:number,d:number)=>void;
  obstacles:Obstacle[];buildings:Footprint[];roads:Footprint[];
+ prop?:PropTagger;
 };
 
 // Static stalls share the town's material palette and geometry batching.
-export function buildFarmersMarket({box,cylinder,put,sign,path,obstacles,buildings,roads}:MarketTools){
+export function buildFarmersMarket({box,cylinder,put,sign,path,obstacles,buildings,roads,prop=untaggedProp}:MarketTools){
  const overlap=(a:Footprint,b:Footprint,pad=0)=>Math.abs(a.x-b.x)<(a.w+b.w)/2+pad&&Math.abs(a.z-b.z)<(a.d+b.d)/2+pad;
  const labels=['GARDEN GREENS','CITRUS & FRUIT','FRESH BREAD','CUT FLOWERS','LOCAL HONEY','HERBS & SEEDS','ISLAND COFFEE','SEASONAL VEG','BERRY BASKETS','HANDMADE GOODS','FARM EGGS','SUNSET JUICE'];
  const colors=['#477c6a','#bd7657','#d6a15d','#739568'];
  // Promenade joins the garden entrance and the existing southern pier approach.
  path(221,100,5,190);path(217,4,13,4);path(219,196,12,4);
- sign('EAST COAST FARMERS MARKET',18,1.1,221,3.2,98,'#477c6a');
- for(const x of [212.5,229.5]){cylinder(.09,3.2,'#9d805b',x,1.6,98);obstacles.push({x,z:98,w:.2,d:.2});}
+ prop('sign',()=>{sign('EAST COAST FARMERS MARKET',18,1.1,221,3.2,98,'#477c6a');
+ for(const x of [212.5,229.5])cylinder(.09,3.2,'#9d805b',x,1.6,98);});
+ for(const x of [212.5,229.5])obstacles.push({x,z:98,w:.2,d:.2});
  for(let i=0;i<labels.length;i++){
   const rosa=i===1;
   const x=230,z=21+i*14,footprint={x,z,w:rosa?7.5:7,d:rosa?9:6};

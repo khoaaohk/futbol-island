@@ -9,7 +9,8 @@ const captureTag=process.argv.find(arg=>arg.startsWith('--capture='))?.slice(10)
  await page.waitForFunction(()=>window.__arcade3d?.phaseRef.current==='playing');
  const canvas=page.locator('[data-arcade-kind="tennis"] canvas');
  if(mobile){
-  for(const action of ['header','scissor','kick','lob','drop']){const box=await page.locator(`[data-tennis-action="${action}"]`).boundingBox();assert(box&&box.width>=44&&box.height>=44,`${action} touch target is at least 44px`);assert(box.x>=0&&box.y+box.height<=844,`${action} remains inside mobile viewport`);}
+  assert.equal(await page.locator('[data-tennis-action="header"]').count(),0,'court 1 hides the aerial buttons');
+  for(const action of ['kick','lob','drop']){const box=await page.locator(`[data-tennis-action="${action}"]`).boundingBox();assert(box&&box.width>=44&&box.height>=44,`${action} touch target is at least 44px`);assert(box.x>=0&&box.y+box.height<=844,`${action} remains inside mobile viewport`);}
   const stick=await page.getByRole('group',{name:'Movement joystick'}).boundingBox(),cdp=await page.context().newCDPSession(page);
   const touch={x:stick.x+stick.width*.82,y:stick.y+stick.height/2,id:1};
   await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[touch]});await page.waitForTimeout(250);
@@ -25,6 +26,25 @@ const captureTag=process.argv.find(arg=>arg.startsWith('--capture='))?.slice(10)
  const rally=await page.evaluate(()=>{const g=window.__arcade3d.runtime,s=g.state.tennis;return{phase:s.phase,kicks:s.kickCount,finite:Number.isFinite(s.ball.x+s.ball.y+s.ball.z),calls:g.stage.renderer.info.render.calls};});assert.equal(rally.phase,'rally');assert(rally.kicks>0&&rally.finite);
  await page.screenshot({path:`/tmp/fi-tennis-${mobile?'mobile':'desktop'}.png`});
  await page.getByRole('button',{name:'Pause game'}).click();await page.waitForTimeout(150);const frame=await canvas.getAttribute('data-frames');await page.waitForTimeout(300);assert.equal(await canvas.getAttribute('data-frames'),frame,'paused renderer sleeps');assert.deepEqual(errors,[]);
+ if(process.argv.includes('--feel')){
+  // First-touch grade call-out, hit-stop, point banner and the rival telegraph, then sleep again.
+  await page.getByRole('button',{name:'Resume',exact:true}).click();await canvas.focus();
+  await page.evaluate(()=>{const s=window.__arcade3d.runtime.state.tennis;s.phase='rally';s.rally=3;s.aiReaction=99;s.bounceAge=.1;Object.assign(s.you,{x:0,y:5.3,targetX:0,targetY:5.3,vx:0,vy:0,moveX:0,moveY:0,direct:false,kick:0});Object.assign(s.ball,{x:.15,y:5.0,z:.32,vx:0,vy:1,vz:1.5,last:'rival',crossed:true,bounces:1});});
+  if(mobile)await page.getByRole('button',{name:/^(Serve|Kick)$/}).tap();else await page.keyboard.press('Space');
+  await page.waitForFunction(()=>window.__arcade3d.runtime.state.tennis.touchGrade==='perfect');
+  const perfect=await page.evaluate(()=>{const g=window.__arcade3d.runtime,l=g.stage.scene.getObjectByName('tennis-touch-label');return{label:l.visible,calls:g.stage.renderer.info.render.calls};});
+  assert(perfect.label,'perfect touch shows its grade call-out');
+  await page.evaluate(()=>{const s=window.__arcade3d.runtime.state.tennis;s.score.you=1;s.score.rival=0;s.phase='rally';s.rally=4;s.aiReaction=0;s.rivalPlan=null;Object.assign(s.you,{x:2.5,y:6.4,targetX:2.5,targetY:6.4,vx:0,vy:0,direct:false,kick:0});Object.assign(s.rival,{x:0,y:-5,targetX:0,targetY:-5,vx:0,vy:0,kick:0});Object.assign(s.ball,{x:.2,y:-1.2,z:1.6,vx:0,vy:-4.2,vz:.5,wx:0,wy:0,wz:0,last:'you',crossed:true,bounces:0});});
+  await page.waitForFunction(()=>window.__arcade3d.runtime.stage.scene.getObjectByName('tennis-intent-label').visible,null,{timeout:3000});
+  await page.screenshot({path:`/tmp/fi-tennis-telegraph-${mobile?'mobile':'desktop'}.png`});
+  await page.waitForFunction(()=>window.__arcade3d.runtime.state.tennis.phase==='point',null,{timeout:8000});
+  await page.waitForFunction(()=>window.__arcade3d.runtime.stage.scene.getObjectByName('tennis-banner').visible,null,{timeout:2000});
+  await page.screenshot({path:`/tmp/fi-tennis-point-${mobile?'mobile':'desktop'}.png`});
+  await page.waitForFunction(()=>{const s=window.__arcade3d.runtime.state.tennis;return s.phase==='serve'&&s.server==='you';},null,{timeout:6000});
+  await page.waitForFunction(()=>!window.__arcade3d.runtime.needsFrames(),null,{timeout:4000});
+  const f=await canvas.getAttribute('data-frames');await page.waitForTimeout(300);assert.equal(await canvas.getAttribute('data-frames'),f,'feel layer lets the serve loop sleep');
+  assert.deepEqual(errors,[]);console.log('SOCCER_TENNIS_FEEL_PASS',JSON.stringify({mobile,perfect}));return;
+ }
  if(process.argv.includes('--volley')){
   await page.getByRole('button',{name:'Resume',exact:true}).click();await canvas.focus();
   await page.evaluate(()=>{const s=window.__arcade3d.runtime.state.tennis;s.phase='rally';s.aiReaction=99;s.queuedKick=0;Object.assign(s.you,{x:0,y:5.3,targetX:0,targetY:5.3,vx:0,vy:0,moveX:0,moveY:0,direct:false,kick:0});Object.assign(s.ball,{x:.35,y:5.1,z:1.6,vx:0,vy:0,vz:-.1,last:'rival',crossed:true,bounces:0});});

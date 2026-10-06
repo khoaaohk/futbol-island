@@ -8,14 +8,15 @@
 import type {Sheet} from '../sheet';
 import {type RisoStory,type Scene,playChapters} from '../story';
 import {apertureDisc} from '../passage';
-import {twos,twosIndex,sm,easeOut,easeIO,easeIn,easeOutBack,linear,key,settle,clamp,lerp,rng,noise1,blob,polyPath,ribbon,smoothPts,partial,wob,arc,TAU,type Pt,type Key} from '../motion';
+import {twos,twosIndex,sm,easeOut,easeIO,easeIn,easeOutBack,linear,key,settle,clamp,lerp,rng,noise1,blob,polyPath,ribbon,smoothPts,partial,wob,arc,TAU,type Pt,type Key,creepHolds} from '../motion';
 import {sparkBurst,speedLines,dust,handCut,footballPanels,goalFrame,glowDisc} from '../shapes';
 
 const CH='/stories/narration/11v11/loss/';
 const K='navy',O='orange',B='blue',Y='yellow';
 
 /** camera through [t,x,y,zoom,rot] keys, each segment eased (a key may carry its own ease as its last element). */
-function cam(s:Sheet,t:number,K:Key[],kick:Pt=[0,0],rot=0){const v=key(t,K,easeIO,true);s.camera(v[0]+kick[0],v[1]+kick[1],(v[2]??1)*view(s),(v[3]??0)+rot);return v;}
+// moving holds: a camera hold creeps toward the next key instead of parking (stutter audit, Oct 4 2026)
+function cam(s:Sheet,t:number,K:Key[],kick:Pt=[0,0],rot=0){const v=key(t,creepHolds(K),easeIO,true);s.camera(v[0]+kick[0],v[1]+kick[1],(v[2]??1)*view(s),(v[3]??0)+rot);return v;}
 /** viewport fit: the desktop art region shows 793 × 625 world units at zoom 1; phones show up to 1080 × 1055, so they get a closer view (≤ ×1.32). */
 const view=(s:Sheet)=>clamp((s.safe.w/s.fit)/800,1,1.32);
 

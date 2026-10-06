@@ -3,7 +3,9 @@ import {useEffect,useState,type MutableRefObject} from 'react';
 import {quizOutcomeStep,type FieldSession} from '@/lib/town/formatLessons';
 import styles from './FieldLearning.module.css';
 /** `onWake` restarts Town's 3D loop, which sleeps once a replay has ended or paused (Show me, Replay and Continue replay need it). */
-export default function QuizReplay({session,onRetry,onNext,nextLabel,onWake}:{session:MutableRefObject<FieldSession|null>;onRetry:()=>void;onNext:()=>void;nextLabel:string;onWake?:()=>void}){
+/** `onRewatch` (wrong answers only) replays the lesson moment the question comes from, then returns to the question. */
+/** `secondaryLabel`/`onSecondary` (right answers only): a quieter second exit beside `nextLabel`, e.g. "Back to Paths" next to "Next lesson". */
+export default function QuizReplay({session,onRetry,onNext,nextLabel,onWake,onRewatch,secondaryLabel,onSecondary}:{session:MutableRefObject<FieldSession|null>;onRetry:()=>void;onNext:()=>void;nextLabel:string;onWake?:()=>void;onRewatch?:()=>void;secondaryLabel?:string;onSecondary?:()=>void}){
  const [,refresh]=useState(0);
  const s=session.current,outcome=s?quizOutcomeStep(s):undefined,progress=s?.outcomeProgress??0,paused=s?.outcomePaused??false,playing=outcome!==undefined&&progress<1&&!paused;
  useEffect(()=>{if(!playing)return;const timer=setInterval(()=>refresh(n=>n+1),150);return()=>clearInterval(timer);},[playing]);
@@ -12,6 +14,8 @@ export default function QuizReplay({session,onRetry,onNext,nextLabel,onWake}:{se
  const toggle=()=>{if(playing)s.outcomePaused=true;else{if(outcome===undefined||progress>=1)s.outcomeProgress=0;s.outcomePreview=true;s.outcomePaused=false;}refresh(n=>n+1);onWake?.();};
  return <div className={styles.quizActions}>
  {q.outcomeStep!=null&&<button type="button" className={styles.quizSecondary} onClick={toggle}>{playing?'Pause':outcome===undefined?'Show me':progress>=1?'Replay':'Continue replay'}</button>}
- {s.answer===q.correct?<button type="button" className={styles.quizPrimary} onClick={onNext}>{nextLabel}</button>:<button type="button" className={styles.quizPrimary} onClick={onRetry}>Try again</button>}
+ {s.answer!==q.correct&&onRewatch&&<button type="button" className={styles.quizSecondary} onClick={onRewatch}>Watch that part</button>}
+ {s.answer===q.correct&&secondaryLabel&&onSecondary&&<button type="button" className={styles.quizSecondary} data-quiz-secondary onClick={onSecondary}>{secondaryLabel}</button>}
+ {s.answer===q.correct?<button type="button" className={styles.quizPrimary} data-quiz-next onClick={()=>onNext()}>{nextLabel}</button>:<button type="button" className={styles.quizPrimary} onClick={onRetry}>Try again</button>}
  </div>;
 }

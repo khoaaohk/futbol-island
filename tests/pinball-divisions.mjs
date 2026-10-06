@@ -1,6 +1,6 @@
 import '../scripts/register-local-ts.mjs';
 import assert from 'node:assert/strict';
-import {createPinballState,launchPinball,stepPinball,pinballDivision,pinballReadyFoot} from '../lib/games/soccerPinball.ts';
+const {createPinballState,launchPinball,stepPinball,pinballDivision,pinballReadyFoot}=await import('../lib/games/soccerPinball.ts');
 const idle={left:false,right:false};
 function advance(s,time,hz=120,input=idle){for(let n=0;n<Math.round(time*hz);n++)stepPinball(s,input,1/hz);}
 function goal(s,x=180){if(s.phase==='ready')launchPinball(s);Object.assign(s.ball,{x,y:49,vx:0,vy:-400});advance(s,.05);assert.equal(s.phase,'goal');}

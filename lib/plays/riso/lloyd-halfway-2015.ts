@@ -51,6 +51,7 @@ import {TAU,twos,sm,key,clamp,lerp,rng,hash,polyPath,ribbon,partial,easeOut,ease
 import {sparkBurst,footballPanels,speedLines} from '../../paths/riso/shapes';
 import {drawAthlete,motionSmear,makeCamera,solve,strike,runCycle,stand,keeperSet,keeperTip,backpedal,lunge,celebrate,posed,blendPose,STRIKE_CONTACT,
  type Pose,type Camera,type AthleteStyle,type Place,type InkFill,type V3,type Build} from './athlete';
+import {beats,shotAt,reframe,steady,focalOf,fovOf,near,type Beats,type Subject,type Keep,type Pin,type View as DView} from './director';
 
 // ---------------------------------------------------------------- narration + timing
 /** The narration (script.json mirrors it). Cue `words` are the match keys for the voice's word onsets; their `at` and each chapter's
@@ -90,8 +91,10 @@ const lerpAng=(a:number,b:number,u:number)=>a+wrap(b-a)*u;
 /** yaw (athlete.ts convention: 0 faces +x, + turns left) that faces from (x,z) toward (x2,z2) */
 const yawTo=(x:number,z:number,x2:number,z2:number)=>Math.atan2(-(z2-z),x2-x);
 let LENS=1;
+/** the window in camera screen units, for the director (frame() films: the sheet's W × H) */
+let DV:DView={w:1566,h:1080};
 /** Frame the FULL sheet: world (0,0) on the canvas centre at 1 unit per sheet unit (the passage arrival scale still multiplies in). */
-function frame(s:Sheet,dx=0,dy=0){const S=s.arrival;s.camera((s.cx-s.W/2)/S+dx,(s.cy-s.H/2)/S+dy,1/s.fit,0);LENS=Math.pow(Math.min(1,s.W/1620),.6);}
+function frame(s:Sheet,dx=0,dy=0){const S=s.arrival;s.camera((s.cx-s.W/2)/S+dx,(s.cy-s.H/2)/S+dy,1/s.fit,0);LENS=Math.pow(Math.min(1,s.W/1620),.6);DV={w:s.W,h:s.H};}
 const view=(s:Sheet)=>({hx:s.W/(2*.68)+120,hy:s.H/(2*.68)+120});
 
 // ---------------------------------------------------------------- 3D projection through an athlete.ts Camera (right-handed metres, y up)
@@ -391,7 +394,33 @@ function play(s:Sheet,c:Cam,tau:number,tp:number,tpPrev:number,e:Env){
 // ---------------------------------------------------------------- shot blending (camera plans keyed on cue times)
 type Shot={P:V3;T:V3;fov:number};
 const blendShot=(a:Shot,b:Shot,u:number):Shot=>u<=0?a:u>=1?b:{P:mix3(a.P,b.P,u),T:mix3(a.T,b.T,u),fov:Math.exp(lerp(Math.log(a.fov),Math.log(b.fov),u))};
-function plan(t:number,steps:[number,number,(t:number)=>Shot][]):Cam{let cur=steps[0][2](t);for(let i=1;i<steps.length;i++){const[a,d,f]=steps[i];const u=sm(a,a+Math.max(.01,d),t,easeInOutSine);if(u>0)cur=blendShot(cur,f(t),u);}return cam3(cur.P,cur.T,cur.fov);}
+function blendPlan(t:number,steps:[number,number,(t:number)=>Shot][]):Shot{let cur=steps[0][2](t);for(let i=1;i<steps.length;i++){const[a,d,f]=steps[i];const u=sm(a,a+Math.max(.01,d),t,easeInOutSine);if(u>0)cur=blendShot(cur,f(t),u);}return cur;}
+function plan(t:number,steps:[number,number,(t:number)=>Shot][]):Cam{const cur=blendPlan(t,steps);return cam3(cur.P,cur.T,cur.fov);}
+/** the authored shot through the shared director (reframed toward the beat's shot size about the subject), averaged over ±half seconds
+ * by steady() so the fit clamp never snaps (camera math only: n reframes a frame, no drawing) */
+function planD(t:number,shot:(u:number)=>Shot,B:Beats,subj:(u:number,sh:Shot)=>Subject,half=.4,n=3):Cam{
+ const size=1080*LENS,f=(u:number):Pin=>{const sh=shot(u);return reframe({eye:sh.P,target:sh.T,F:focalOf(sh.fov,size)},subj(u,sh),shotAt(u,B),DV);};
+ const p=steady(t,f,half,n);return cam3(p.eye,p.target,fovOf(p.F,size));}
+const ez=(a:number,b:number,t:number)=>sm(a,b,t,easeInOutSine);
+/** While a beat stands the director down (k ≈ .02) the framing is authored: the subject eases (weight w) to a point 40 m down the
+ * authored shot's axis and the keeps fade out, so the fit clamp has nothing to hold and never dollies the authored shot back. */
+function inert(sj:Subject,sh:Shot,w:number):Subject{
+ if(w<=.001)return sj;const fx=sh.T[0]-sh.P[0],fz=sh.T[2]-sh.P[2],l=Math.hypot(fx,fz)||1,H:V3=[sh.P[0]+fx/l*40,0,sh.P[2]+fz/l*40];
+ return{...sj,hero:mix3(sj.hero,H,w),keep:(sj.keep??[]).map(k=>Array.isArray(k)?{P:k as V3,w:1-w}:{...(k as {P:V3;w:number}),w:(k as {w:number}).w*(1-w)})};}
+const flat=(pl:Place):V3=>[pl.x??0,0,pl.z??0];
+/** the goal mouth (Japan's goal at x = 0): both posts, foot and crossbar */
+const GOAL_PTS:V3[]=[[0,0,-3.66],[0,2.44,-3.66],[0,0,3.66],[0,2.44,3.66]];
+const soft=(pts:V3[],w:number):Keep[]=>w>.01?pts.map(P=>({P,w})):[];
+/** an authored shot from eye P that just holds every point (aimed at the centre of their spread, the lens opened to fit with `pad`
+ * to spare): the reverse angle that keeps the dropping ball AND the keeper in one frame */
+function holdAll(P:V3,pts:V3[],pad=1.3,minFov=14):Shot{
+ const aim=(f:V3)=>{const l=Math.hypot(f[0],f[1],f[2]);f=[f[0]/l,f[1]/l,f[2]/l];const rr=Math.hypot(f[2],f[0]),r:V3=[-f[2]/rr,0,f[0]/rr],u:V3=[r[1]*f[2]-r[2]*f[1],r[2]*f[0]-r[0]*f[2],r[0]*f[1]-r[1]*f[0]];
+  let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;for(const q of pts){const d:V3=[q[0]-P[0],q[1]-P[1],q[2]-P[2]],z=Math.max(.5,dot3(d,f)),x=dot3(d,r)/z,y=dot3(d,u)/z;x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y);}
+  return{f,r,u,cx:(x0+x1)/2,cy:(y0+y1)/2,hx:(x1-x0)/2,hy:(y1-y0)/2};};
+ let m=aim(pts.reduce((a,q)=>add3(a,[q[0]-P[0],q[1]-P[1],q[2]-P[2]]),[0,0,0] as V3));
+ m=aim(add3(m.f,add3([m.r[0]*m.cx,m.r[1]*m.cx,m.r[2]*m.cx],[m.u[0]*m.cy,m.u[1]*m.cy,m.u[2]*m.cy])));
+ const th=pad*Math.max(Math.abs(m.cy)+m.hy,(Math.abs(m.cx)+m.hx)*DV.h/DV.w),size=1080*LENS;
+ return{P,T:add3(P,[m.f[0]*10,m.f[1]*10,m.f[2]*10]),fov:Math.max(minFov,2*Math.atan(th*size/DV.h)/D2R)};}
 const at3=(pl:Place,y=1):V3=>[pl.x??0,y,pl.z??0];
 /** the ball as a camera follows it: averaged over the last .4 s (an operator's lag), height eased so the frame never whips */
 const follow=(tau:number):V3=>{const a=ballAt(tau),b=ballAt(tau-.2),c=ballAt(tau-.4);return[(a[0]+b[0]+c[0])/3,Math.min(9,(a[1]+b[1]+c[1])/3*.8+.8),(a[2]+b[2]+c[2])/3];};
@@ -401,21 +430,57 @@ const follow=(tau:number):V3=>{const a=ballAt(tau),b=ballAt(tau-.2),c=ballAt(tau
 const tS1=()=>Math.min(CUE(0,'shoots')+.1,SECS(0)-T_NET-1.05);
 const tau1=(t:number)=>t-tS1();
 const P1:V3=[-54,22,64];
-function cam1(t:number):Cam{
+/** Director beats (live), every move eased (no cuts): a short establishing wide of BC Place; follow Lloyd as the voice names her; on
+ * "Japan's keeper" the followed player eases from Lloyd to Kaihori over 1.2 s (a smooth track down the pitch with the authored pan)
+ * and the camera swings a little behind her on "far off her line" so the keeper AND the goal mouth behind her share the frame (the gap).
+ * Then the lesson shot: on the turnover, as she lifts her head, the camera cranes down to the shooter's eye, raised behind her right
+ * shoulder: Lloyd big in the foreground, Kaihori and the goal small and far away down the pitch, the space she sees; it PUSHES IN low
+ * beside her right boot for the strike (the technique); then rises behind the ball to follow the lob with Lloyd whole on the right, and
+ * chases it down the pitch toward the goal. Those shooter's-eye shots are authored framings (director k ≈ .02). For the drop the director
+ * pushes in on Kaihori with the ball and the left post held, then her reaction. */
+const T_GK=CUE(0,"Japan's keeper")-.25,T_FAR=CUE(0,'far off her line')-.45,T_LW=CUE(0,'Lloyd wins')-1.15;
+const T_PUSH=tS1()-.8,T_RISE=tS1()+.3,T_CHASE=tS1()+1.7;
+const T_DROP=tS1()+FLY-.4,T_RE=CUE(0,'and in')+.3;
+const B1=beats([[0,'wide'],[.75,'follow'],[T_FAR,{from:'follow',size:.3,az:20}],[T_LW-.2,{from:'space',k:.02,size:.36}],
+ [T_CHASE+.6,{from:'space',size:.2}],[T_DROP+.35,{from:'space',size:.36}],[T_RE,'reaction']]);
+/** the followed player: Lloyd, then Kaihori from "Japan's keeper" on (eased over 1.2 s). Through the shooter's-eye shots the director
+ * is stood down (k ≈ .02, inert()) and the framing is authored; Kaihori is the subject again when she is pushed in on for the drop; while Kaihori is "far off her line" the aim point slides
+ * toward her goal line so the gap behind her is framed, not just the keeper. Every keep weight ramps (never appears within a frame). */
+function subj1(t:number,sh:Shot):Subject{
+ const tau=tau1(t),L=flat(lloydAt(tau).place),Kp=flat(keeperAt(tau,0).place),b=ballAt(tau);
+ const back=ez(T_LW,T_LW+1,t),uK=ez(T_GK-.5,T_GK+.7,t),gap=ez(T_FAR,T_FAR+.8,t)*(1-back);
+ const h=mix3(L,mix3(Kp,[0,0,Kp[2]*.5],.25*gap),uK),hb=Math.hypot(b[0]-L[0],b[2]-L[2]);
+ // the ball is kept once Lloyd has it (before the turnover Japan have it) and for the drop; the goal mouth while the keeper is "far off
+ // her line" and for the drop (the LEFT post, where it goes in, held hard; the far post loosely, let go for the reaction)
+ const wb=Math.max((1-uK)*sm(T_INT-.9,T_INT-.3,tau)*(1-clamp((hb-9)/7)),ez(T_CHASE,T_CHASE+.6,t));
+ const wFar=.85*ez(T_FAR-.2,T_FAR+.4,t)*(1-ez(T_LW-.2,T_LW+.4,t)),wDrop=ez(T_CHASE,T_CHASE+.6,t);
+ const sj:Subject={hero:h,ball:null,height:1.72,keep:[...soft([b],wb),...soft([[0,0,0],[0,2.44,0]],wFar),...soft(GOAL_PTS.slice(0,2),.9*wDrop),
+  ...soft(GOAL_PTS.slice(2),.6*wDrop*(1-ez(T_RE-.2,T_RE+.4,t))),
+  ...near(L,[flat(ACTORS[1].at(tau,0).place)],4,8).map(k=>({...(k as {P:V3;w:number}),w:(k as {w:number}).w*(1-uK)}))]};
+ return inert(sj,sh,ez(T_LW+.3,T_LW+.9,t)*(1-ez(T_CHASE+.3,T_CHASE+.9,t)));}
+/** Lloyd's ground point eased (the trailing shooter's-eye camera rides with her without stride jitter) */
+const lag1=(tau:number):V3=>mix3(flat(lloydAt(tau).place),flat(lloydAt(tau-.35).place),.5);
+function shot1(t:number):Shot{
  const tau=tau1(t);
- return plan(t,[
+ return blendPlan(t,[
   [0,0,()=>({P:P1,T:[-52,13,-14],fov:44})],
   [CUE(0,'World Cup final')-.2,1.6,()=>({P:P1,T:[-54,1.5,-6],fov:25})],
   [CUE(0,'Carli Lloyd')-.2,.9,()=>({P:P1,T:at3(lloydAt(tau).place,1),fov:6.5})],
-  [CUE(0,"Japan's keeper")-.25,1,()=>({P:P1,T:at3(keeperAt(tau,0).place,1),fov:6})],
+  [T_GK,1,()=>({P:P1,T:at3(keeperAt(tau,0).place,1),fov:4.5})],
   [CUE(0,'far off her line')-.1,1,()=>({P:P1,T:[-5.5,1,0],fov:14})],
-  [CUE(0,'Lloyd wins')-.7,.75,()=>({P:P1,T:mix3(follow(tau),at3(lloydAt(tau).place,1),.5),fov:11})],
-  [CUE(0,'looks up')-.1,1,()=>({P:P1,T:add3(mix3(follow(tau),at3(lloydAt(tau).place,1),.5),[5,0,-1]),fov:17})],
-  [tS1()-1,.8,()=>({P:P1,T:add3(mix3(follow(tau),at3(lloydAt(tau).place,1),.5),[1.5,0,0]),fov:10})],
-  [tS1()+.35,1.3,()=>({P:P1,T:add3(follow(tau),[3,0,0]),fov:24})],
-  [tS1()+FLY-.9,.8,()=>({P:P1,T:[-2.5,1.5,-2],fov:12})],
+  // the shooter's eye (a crane down from the main stand as she turns away from Utsugi): behind her right shoulder, raised; she fills the
+  // foreground, the keeper and the goal sit far down the pitch
+  [T_LW,1.4,()=>{const L=lag1(tau);return{P:add3(L,[-7,3.1,3.4]),T:add3(L,[14,-.35,-1.2]),fov:36};}],
+  // push in low beside her right boot for the strike (the technique)
+  [T_PUSH,.8,()=>({P:add3(B0,[-3.2,1.05,3.4]),T:add3(B0,[.4,.7,-.4]),fov:40})],
+  // rise behind the ball and follow the lob, the goal held in the frame
+  // (she stays whole on the right watching it; the arc climbs through the middle and drops onto the goal on the left)
+  [T_RISE,1.6,()=>({P:[-60,1.9,-2],T:mix3([-31.5,3.2,7.3],follow(tau),.12),fov:37})],
+  // chase the ball down the pitch toward the goal (the director then pushes in on Kaihori for the drop)
+  [T_CHASE,1.3,()=>({P:[-24,4.5,6],T:mix3(follow(tau),[-1,1.4,-2],.6),fov:30})],
  ]);
 }
+const cam1=(t:number):Cam=>planD(t,shot1,B1,subj1);
 const ch1:Scene={
  draw(s,t){
   frame(s);const c=cam1(t),tau=tau1(t),tt=twos(t),tp=tau1(tt),tpp=tau1(tt-1/12),tN=tS1()+T_NET;
@@ -435,18 +500,29 @@ const ch1:Scene={
 // ---------------------------------------------------------------- 2 · the slow-motion replay from a low camera by the Japan box
 const tau2=(t:number)=>key(t,mono([[0,-2.55],[CUE(1,'Watch again'),-2.4],[CUE(1,'slowly'),-1.5],[CUE(1,'sails over')-.2,.3],[CUE(1,'the keeper'),1.15],[CUE(1,'scrambles back'),1.9],[CUE(1,'touches it'),FLY-.02],[CUE(1,'clips the post'),T_POST+.01],[CUE(1,'goes in'),T_NET+.1],[CUE(1,'hat-trick'),T_NET+.8],[SECS(1),T_NET+2.1]]),linear);
 const E2:V3=[-13,1.7,17];
-function cam2(t:number):Cam{
- const tau=tau2(t),L=at3(lloydAt(tau).place,1.05);
- return plan(t,[
+/** the reverse angle for the drop: low beside the LEFT post, behind the goal line, looking up the pitch (the side net is not in the way) */
+const E2R:V3=[2.5,1.2,-7];
+/** Director beats (replay), every move eased (no cuts): close on Lloyd in slow motion, then knee-high and tight for the strike (the
+ * technique, right boot through the ball); with the director stood down (k ≈ .02) the camera cranes from the box side round to the
+ * reverse angle beside the left post as the lob climbs, Kaihori backpedalling toward us with the ball dropping out of the sky over her (the
+ * ball and the keeper share the frame, the lesson of the lob); tight on her for the fingertip, the post and the net (ball held in frame);
+ * her reaction on the hat-trick. */
+const T2_SAIL=CUE(1,'sails over')-.35,T2_TOUCH=CUE(1,'touches it')-.6;
+const B2=beats([[0,'follow'],[CUE(1,'slowly')+.25,'tight'],[T2_SAIL,{from:'space',k:.02,size:.3}],[T2_TOUCH,{from:'tight',az:15}],
+ [CUE(1,'hat-trick')-.1,{from:'reaction',az:-35}]]);
+function subj2(t:number,sh:Shot):Subject{
+ const tau=tau2(t),uK=ez(T2_SAIL+.75,T2_SAIL+1.55,t),L=flat(lloydAt(tau).place),h=mix3(L,flat(keeperAt(tau,0).place),uK),b=ballAt(tau);
+ // the ball is held until it leaves her boot (a hard keep on a lob would yank the tight strike shot back), then again for the touch
+ return inert({hero:h,ball:null,height:1.72,keep:[...soft([b],Math.max(1-sm(-.15,.45,tau,easeInOutSine),ez(T2_TOUCH-1,T2_TOUCH-.4,t))),...soft(GOAL_PTS.slice(0,2),.85*ez(T2_TOUCH-.6,T2_TOUCH,t))]},sh,ez(T2_SAIL+.5,T2_SAIL+1.1,t)*(1-ez(T2_TOUCH-.3,T2_TOUCH+.3,t)));}
+function shot2(t:number):Shot{
+ const tau=tau2(t),L=at3(lloydAt(tau).place,1.05),k=keeperAt(tau,0).place;
+ return blendPlan(t,[
   [0,0,()=>({P:E2,T:L,fov:7.5})],
-  [CUE(1,'sails over')-.35,1.3,()=>({P:E2,T:follow(tau),fov:24})],
-  [CUE(1,'the keeper')-.1,1,()=>({P:add3(E2,[2.5,-.2,-2]),T:mix3(follow(tau),at3(keeperAt(tau,0).place,1.2),.62),fov:40})],
-  [CUE(1,'scrambles back')-.2,.8,()=>({P:add3(E2,[3,-.2,-2.5]),T:mix3(follow(tau),at3(keeperAt(tau,0).place,1.2),.72),fov:36})],
-  [CUE(1,'touches it')-.45,.7,()=>({P:add3(E2,[3,-.2,-2.5]),T:[-1.1,1.5,-2.8],fov:20})],
-  [CUE(1,'goes in')-.1,.7,()=>({P:add3(E2,[3,-.2,-2.5]),T:[.2,.8,-3.1],fov:13})],
-  [CUE(1,'hat-trick')-.1,1.3,()=>({P:add3(E2,[1.5,.4,-1]),T:[-4,2,-2.2],fov:30})],
+  // the crane to the reverse angle: the keeper and the ball held in one frame
+  [T2_SAIL+.35,1.8,()=>holdAll(E2R,[at3(k,0),at3(k,1.8),ballAt(tau),ballAt(tau-.25)])],
  ]);
 }
+const cam2=(t:number):Cam=>planD(t,shot2,B2,subj2);
 const ch2:Scene={
  draw(s,t){
   const tau=tau2(t),tt=twos(t),tp=tau2(tt),tpp=tau2(tt-1/12);
@@ -472,9 +548,11 @@ function cam3v(t:number):Cam{
  const tau=tau3(t),Lp=lloydAt(Math.min(tau,-3)).place,L=at3(Lp,1.25),tF=CUE(2,'find the keeper');
  return plan(t,[
   [0,0,()=>({P:add3(L,[-1.6,.2,5.6]),T:add3(L,[1.6,-.1,-.6]),fov:36})],
-  [CUE(2,'Look up')-.1,1.1,()=>({P:add3(L,[-8.5,3.4,2.4]),T:[-40,0,.5],fov:38})],
-  [tF+.2,1.2,()=>({P:add3(L,[-8.5,9,2.4]),T:[K0[0]+4.5,.9,K0[1]-.3],fov:9.5})],
-  [CUE(2,'be brave')-.35,1.1,()=>({P:add3(B0,[-1.6,.95,6.4]),T:add3(B0,[-1.1,.72,0]),fov:40})],
+  // (closer framings, Oct 2026: the sight-line shot holds Lloyd WHOLE in the foreground with the keeper down the pitch; the tele finds
+  // the keeper bigger, then a quicker push in to the plant foot for "be brave")
+  [CUE(2,'Look up')-.1,1.1,()=>({P:add3(L,[-8.5,3.4,2.4]),T:add3(L,[12,-2.6,-.5]),fov:30})],
+  [tF+.2,1.2,()=>({P:add3(L,[-8.5,9,2.4]),T:[K0[0]+3.5,.9,K0[1]-.3],fov:7})],
+  [CUE(2,'be brave')-.35,.6,()=>({P:add3(B0,[-1.6,.95,6.4]),T:add3(B0,[-1.1,.72,0]),fov:35})],
   [CUE(2,'through the ball')+.25,1.9,()=>({P:[-27,19,64],T:[-26,6.5,-6],fov:40})],
  ]);
 }

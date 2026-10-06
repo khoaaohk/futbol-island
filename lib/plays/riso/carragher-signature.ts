@@ -55,6 +55,7 @@ import {type RisoStory,type Scene,type Chapter,playChapters} from '../../paths/r
 import {apertureDisc} from '../../paths/riso/passage';
 import {TAU,twos,sm,clamp,lerp,keyPath,hash,easeOut,easeOutBack,easeInOutSine,linear,blob,polyPath,ribbon,type Pt} from '../../paths/riso/motion';
 import {dust,sparkBurst,footballPanels} from '../../paths/riso/shapes';
+import {beats,shotAt,reframe,steady,near,type View as DView,type Keep,type Pin} from './director';
 import {drawAthlete,motionSmear,solve,blendPose,clampPose,runCycle,dribble,stand,strike,keeperSet,slideTackle,posed,keyPoses,STRIKE_CONTACT,
  type Pose,type Place,type AthleteStyle,type InkFill,type Projector} from './athlete';
 
@@ -101,7 +102,10 @@ const shape=(p:Pt[])=>polyPath(orient(p),true);
 
 // ---------------------------------------------------------------- camera: the whole frame
 /** Screen (x,y) → the centre of the canvas; ~1500 × 1030 units visible (the card window is 1.45:1 to square). Full sheet, never the safe box. */
-function frame(s:Sheet,x=0,y=0,z=1){const base=z*Math.min(s.W/1500,s.H/1030),a=Math.round(s.arrival*1e6)/1e6,k=base*a,q=(v:number)=>Math.round(v*1e4)/1e4;s.camera(q(x-(s.W/2-s.cx)/k),q(y-(s.H/2-s.cy)/k),base/s.fit,0);}
+function frame(s:Sheet,x=0,y=0,z=1){const base=z*Math.min(s.W/1500,s.H/1030),a=Math.round(s.arrival*1e6)/1e6,k=base*a,q=(v:number)=>Math.round(v*1e4)/1e4;DV={w:s.W/base,h:s.H/base};s.camera(q(x-(s.W/2-s.cx)/k),q(y-(s.H/2-s.cy)/k),base/s.fit,0);}
+
+/** the window in camera units (set by frame(); read by the director's reframing, aperture() included) */
+let DV:DView={w:1500,h:1030};
 
 // ---------------------------------------------------------------- 3D: pitch metres → screen through a TV camera
 type V3=[number,number,number];
@@ -358,7 +362,7 @@ function drawPlay(s:Sheet,T:number,c:Cam,o:{ballScale?:number;only?:string[];wid
  if(!o.noStadium){stadium(s,c);pitch(s,c);}
  const items:Item[]=[],ids=[...TRACKS.map(t=>t.id),'dudek'].filter(id=>!o.only||o.only.includes(id));
  for(const id of ids){const st=stateOf(id,T),g=P3([st.place.x!,0,-st.place.z!],c);if(!onScreen(g)||toCam([st.place.x!,1,-st.place.z!],c)[2]<2.5)continue;// nobody printed right against the lens
-  const style=id==='dudek'?DUDEK:TR(id).style,hero=(HEROES.includes(id)||id==='dudek')&&!o.wide,sty={...style,detail:hero||(!o.wide&&g[2]>190)?'auto' as const:'low' as const};
+  const style=id==='dudek'?DUDEK:TR(id).style,hero=(HEROES.includes(id)||id==='dudek')&&!o.wide,sty={...style,detail:hero||(id==='carragher'&&g[2]>130)||(!o.wide&&g[2]>190)?'auto' as const:'low' as const};
   const fast=(id==='carragher'&&T>LS+.05&&T<T_CLEAR+.25)||(id==='crosser'&&Math.abs(T-T_CROSS)<.22);
   items.push({depth:1/g[2],draw:()=>{const pr=stateOf(id,T-1/12);drawPlayer(s,st.pose,c,sty,st.place,{prev:pr.pose,prevPlace:pr.place,smear:fast&&hero});}});}
  if(!o.only||o.only.includes('ball')){const bp=ballAt(T),bq=P3(bp,c);if(onScreen(bq)){const r=Math.max(4,.11*(o.ballScale??2)*bq[2]),g=P3([bp[0],0,bp[2]],c);
@@ -371,8 +375,40 @@ function drawPlay(s:Sheet,T:number,c:Cam,o:{ballScale?:number;only?:string[];wid
 /** 1 · live: the high main camera on the near side, Liverpool's goal screen-left, panning with the attack; closing in as the ball comes across. */
 const MAIN_CAM:V3=[30,17,-44];
 const t1=(t:number)=>{const q=Q(0),S=SECS(0);return warp(t,[[0,-9.6],[q[2],-8],[q[3],T_PASS+.2],[q[4],-4.4],[q[5],T_CROSS-.25],[q[6]+.1,T_CLEAR+.15],[S,T_REST+1.4]]);};
-const cam1=(t:number)=>{const T=t1(t),b=ballAt(Math.min(T,T_OUT)),tx=clamp(lerp(b[0],7,.35),7,28),tz=lerp(40,30,sm(-6,T_CLEAR,T)),F=lerp(2900,5000,sm(-5,T_CLEAR,T,easeInOutSine));
- return camAt(MAIN_CAM,[tx,0,tz],F);};
+const cam1Authored=(t:number):Pin=>{const T=t1(t),b=ballAt(Math.min(T,T_OUT)),tx=clamp(lerp(b[0],7,.35),7,28),tz=lerp(40,30,sm(-6,T_CLEAR,T)),F=lerp(2900,5000,sm(-5,T_CLEAR,T,easeInOutSine));
+ return{eye:MAIN_CAM,target:[tx,0,tz],F};};
+// ---- director (lib/plays/riso/director.ts, Oct 4 2026): the camera follows Carragher (camera math only; the play is unchanged)
+/** Carragher's body on the grass (his track, then sliding through along H from the spot the slide starts) and his height on screen (down
+ * on the grass from the slide on, so the director frames the body as it is) */
+const carraXZ=(T:number):[number,number]=>T<LS?trackAt(C_KEYS,T):add2(C_AT,H,(DX_C+.7)*sm(LS,T_CLEAR+.5,T));
+const carraH=(T:number)=>1.9-.8*sm(LS,T_CLEAR,T)+.35*sm(T_CLEAR,T_CLEAR+.5,T)-.7*sm(T_CLEAR+1.2,T_CLEAR+2,T);// standing 1.9 m; the slide ~1.1; sitting up, arm raised ~1.45; bent over the stretch ~.75
+/** once he is down, his outstretched boots (toward the near side) and his head/shoulders behind the hips: hard points so the slide and the
+ * sitting stretch are never cut by the frame edge */
+const carraLimbs=(T:number):Keep[]=>{const w=sm(LS,LS+.5,T);if(w<=.01)return[];const f=add2(C_AT,H,DX_C+1.35),b=add2(C_AT,H,.3);
+ return[{P:[f[0],.1,f[1]],w},{P:[b[0],carraH(T),b[1]],w}];};
+const hero3=(T:number):V3=>{const p=carraXZ(T);return[p[0],0,p[1]];};
+const body=(p:[number,number],w:number,h=1.9):Keep[]=>w>.01?[{P:[p[0],0,p[1]],w},{P:[p[0],h,p[1]],w}]:[];
+const OTHERS=TRACKS.filter(k=>k.id!=='carragher');
+/** Ch 1 shot plan, in football terms: a short establishing wide of the bowl in Istanbul; then follow Carragher, goal-side in his own box;
+ * a little closer as the narration names him ("has cramp"); PULL OUT behind the attack ("Milan attack again") and follow the crosser with
+ * the ball down the near side, Carragher deeper in his box in the same frame (the space he has to defend); back on Carragher with the
+ * crosser and the ball held as the low ball comes across (the lane); PUSH IN low, swung round toward his goal, for the slide itself
+ * ("clears it"); then stay close on him on the grass. The ball is let go as it leaves his boot (the corner is chapter 3's shot). */
+const B1=(()=>{const q=Q(0);return beats([[0,'wide'],[1.3,'follow'],[q[3]-.3,{from:'follow',size:.38,low:.5}],[q[4]-1,{from:'space',size:.15}],[q[4]+.25,{from:'follow',size:.3}],
+ [q[5]-.3,{from:'space',size:.3,low:.5}],[q[6]-.45,{from:'tight',az:-35}],[q[6]+.95,{from:'reaction',az:-35}]]);})();
+function subj1(t:number){const T=t1(t),c=hero3(T),w=trackAt(W_KEYS,T),b=ballAt(Math.min(T,T_REST));
+ // the subject: Carragher; handed (blended over ~.5 s, once the camera has pulled out behind the attack) to the Milan crosser running down
+ // the line with the ball, Carragher held deeper in the same frame; then back to Carragher before the ball is played across
+ const hb=sm(-4.6,-3.6,T)*(1-sm(-2.2,-1.25,T)),hero:V3=[lerp(c[0],w[0],hb),0,lerp(c[2],w[1],hb)];
+ // hard points (each ramped in while it is already in frame, so the fit never has to jump): Carragher while the crosser is the subject;
+ // the ball from the run down the line until it is off Carragher's boot (then soft: the corner itself is chapter 3's shot); the crosser
+ // until the ball is played across
+ const wC=sm(-5.2,-4.6,T),wb=sm(-3.8,-3,T)*(1-sm(T_CLEAR-.45,T_CLEAR+.3,T)),wc=sm(-2.7,-1.7,T)*(1-sm(T_CROSS+.1,T_CROSS+.9,T));
+ const keep:Keep[]=[...(wb>.01?[{P:b,w:wb}]:[]),...carraLimbs(T),...body(w,wc),...body([c[0],c[2]],wC,carraH(T)),
+  ...near(hero,OTHERS.map(k=>{const p=trackAt(k.keys,T);return[p[0],0,p[1]] as V3;}),3,6)];
+ return{hero,keep,height:lerp(carraH(T),1.9,hb)};}
+const RC1=(t:number)=>{const q=Q(0);return .5*sm(q[4]-.5,q[4]+.3,t)*(1-sm(q[6]-.6,q[6],t));};
+const cam1=(t:number)=>{const p=steady(t,u=>reframe(cam1Authored(u),subj1(u),shotAt(u,B1),DV,{recenter:RC1(u)}));return camAt(p.eye,p.target,p.F);};
 const ch1:Scene={
  draw(s,t){frame(s);drawPlay(s,t1(twos(t)),cam1(t),{wide:true});frame(s);},
  aperture(t){const p=P3(ballAt(t1(twos(t))),cam1(t));return apertureDisc(p[0],p[1],Math.max(6,.3*p[2]),12);},
@@ -383,8 +419,16 @@ const ch1:Scene={
 const LOW_CAM:V3=[17.5,2.4,27];
 const REPLAY_CAST=['carragher','runner','dudek','ball','l-a'];
 const t2=(t:number)=>{const q=Q(1),S=SECS(1);return warp(t,[[0,-2.6],[q[1],-2.1],[q[2],LS+.05],[q[3]+.3,T_CLEAR],[S,T_CLEAR+.5]]);};
-const cam2=(t:number)=>{const T=t2(t),u=sm(-2.4,T_CLEAR,T,easeInOutSine),tx=lerp(7.6,5.8,u),tz=lerp(29,25.6,u),F=lerp(1500,1850,u);
- return camAt(LOW_CAM,[tx,.8,tz],F);};
+const cam2Authored=(t:number):Pin=>{const T=t2(t),u=sm(-2.4,T_CLEAR,T,easeInOutSine),tx=lerp(7.6,5.8,u),tz=lerp(29,25.6,u),F=lerp(1500,1850,u);
+ return{eye:LOW_CAM,target:[tx,.8,tz],F};};
+/** Ch 2 shot plan: the side-on replay a little closer than authored (he waits, goal-side, the runner coming), closer and lower as he goes
+ * down ("Then he stretches"), and
+ * one technique close-up on "his boot": the right toe reaching the ball, the Milan runner kept (soft) so "first" still reads. The ball is
+ * free while it is still with the crosser, then held (ramped in) as it comes across to him; the runner's pull widens as he arrives. */
+const B2=(()=>{const q=Q(1);return beats([[0,{from:'follow',size:.42,low:.4}],[q[2]-.4,{from:'tight',size:.5}],[q[3]-.4,'detail']]);})();
+function subj2(u:number){const T=t2(u),hero=hero3(T),r=trackAt(TR('runner').keys,T),wb=sm(-.55,-.12,T),rr=sm(-1.4,-.5,T);
+ return{hero,keep:[...(wb>.01?[{P:ballAt(T),w:wb}]:[]),...carraLimbs(T),...near(hero,[[r[0],0,r[1]]],lerp(3,4,rr),lerp(6,10,rr))],height:carraH(T)};}
+const cam2=(t:number)=>{const p=steady(t,u=>reframe(cam2Authored(u),subj2(u),shotAt(u,B2),DV));return camAt(p.eye,p.target,p.F);};
 const ch2:Scene={
  draw(s,t){frame(s);drawPlay(s,t2(twos(t)),cam2(t),{ballScale:1.6,only:REPLAY_CAST});frame(s);},
  aperture(t){const p=P3(ballAt(t2(twos(t))),cam2(t));return apertureDisc(p[0],p[1],Math.max(8,.25*p[2]),12);},
@@ -394,8 +438,20 @@ const ch2:Scene={
  * the line (a corner); no goal; Carragher down on the grass, stretching his leg. */
 const BEHIND:V3=[-15,5.2,21];
 const t3=(t:number)=>{const q=Q(2),S=SECS(2);return warp(t,[[0,T_CLEAR-.5],[q[1]+.2,T_CLEAR+.45],[q[2],T_REST],[q[3],T_REST+1.3],[S,T_REST+2.6]]);};
-const cam3=(t:number)=>{const T=t3(t),f=sm(T_CLEAR,T_REST+1,T,easeInOutSine),tx=lerp(4.4,.5,f),tz=lerp(27,24.5,f),F=lerp(1750,1550,f);
- return camAt(BEHIND,[tx,.7,tz],F);};
+const cam3Authored=(t:number):Pin=>{const T=t3(t),f=sm(T_CLEAR,T_REST+1,T,easeInOutSine),tx=lerp(4.4,.5,f),tz=lerp(27,24.5,f),F=lerp(1750,1550,f);
+ return{eye:BEHIND,target:[tx,.7,tz],F};};
+/** Ch 3 shot plan: from behind the goal, closer than authored but pulled out enough to hold the ball coming off his boot toward us and
+ * running over the goal line ("out for a corner"); then, once it is out, push in on Carragher on the grass stretching the cramp ("No goal!").
+ * Hard point: where the ball crosses the goal line (fixed, so the camera does not breathe with the ball), the ball itself soft until it is
+ * over; once it is out the line point slides in to his boots over ~1.3 s. */
+const B3=(()=>{const q=Q(2);return beats([[0,{from:'space',size:.26,az:25}],[q[1]+1,{from:'reaction',az:25}]]);})();
+function subj3(u:number){const q=Q(2),T=t3(u),f=sm(q[1]+.6,q[1]+1.9,u),b=ballAt(T),toe=add2(C_AT,H,DX_C+1.35),wb=lerp(.5,.95,sm(-.45,-.1,T))*(1-sm(T_OUT+.15,T_OUT+.6,T));
+ // the goal-line point slides in to his boots (a hard point that moves, rather than one that fades: a fading point behind the lens would snap)
+ const out:V3=[lerp(OUT_AT[0],toe[0],f),lerp(.3,.1,f),lerp(OUT_AT[1],toe[1],f)];
+ return{hero:hero3(T),keep:[out,...(wb>.01?[{P:b,w:wb}]:[]),...carraLimbs(T)],height:carraH(T)};}
+/** aim between him and the goal-line point while the ball goes out (it sits at the edge of the authored frame) */
+const RC3=(u:number)=>{const q=Q(2);return .6*(1-sm(q[1]+.6,q[1]+1.9,u));};
+const cam3=(t:number)=>{const p=steady(t,u=>reframe(cam3Authored(u),subj3(u),shotAt(u,B3),DV,{recenter:RC3(u)}));return camAt(p.eye,p.target,p.F);};
 const ch3:Scene={
  draw(s,t){frame(s);drawPlay(s,t3(twos(t)),cam3(t),{ballScale:1.6});frame(s);},
  aperture(t){const p=P3(ballAt(t3(twos(t))),cam3(t));return apertureDisc(p[0],p[1],Math.max(8,.25*p[2]),12);},
@@ -408,7 +464,22 @@ const ch3:Scene={
 const LESSON_CAM:V3=[16,6.2,14];
 const t4=(t:number)=>{const q=Q(3),S=SECS(3);return warp(t,[[0,LS-.5],[q[2],LS],[q[3]+.3,T_CLEAR],[S,T_CLEAR+.1]]);};
 const LESSON_MID:[number,number]=[(C_AT[0]+BALL0[0])/2,(C_AT[1]+BALL0[1])/2];
-const cam4=(t:number)=>camAt(LESSON_CAM,[LESSON_MID[0]-.4,.5,LESSON_MID[1]-.6],2150);
+const cam4Authored=():Pin=>({eye:LESSON_CAM,target:[LESSON_MID[0]-.4,.5,LESSON_MID[1]-.6],F:2150});
+/** Ch 4 shot plan: the lesson camera pushed in on Carragher (the ring, "Jamie Carragher"), and every teaching mark held in frame while it is
+ * up: the ball's lane arrow from "brave to the end" (its tail soft, the head at the touch point hard), the slide's path and the touch (near
+ * him), the tick beside the ball ("Timing matters"), and the crossed-out too-early ghost slide ("more than power"). Each mark's point is
+ * ramped in over ~.7 s before the mark appears, so the camera eases out to make room for it. */
+const B4=beats([[0,'lesson']]);
+function lessonKeep(t:number):Keep[]{const q=Q(3),a=add2(CROSS_BALL,CROSS_D,7),g:[number,number]=[GHOST_PLACE.x!,-GHOST_PLACE.z!],c=add2(g,H,1.3),e=add2(g,H,2.4);
+ const wl=sm(q[1]-.7,q[1],t)*(1-sm(q[4]+.3,q[4]+1,t)),wg=sm(q[4]-.8,q[4]-.1,t),ws=sm(q[3]-.4,q[3]+.3,t)*(1-sm(q[4]+.3,q[4]+1,t)),side:[number,number]=[.76,.65];
+ const k:Keep[]=[[BALL0[0],.13,BALL0[1]],[C_AT[0],0,C_AT[1]]];
+ if(wl>.01)k.push({P:[a[0],0,a[1]],w:.8*wl});
+ if(ws>.01)for(const sg of[1,-1]){const p=add2(BALL0,side,2*sg);k.push({P:[p[0],1.6,p[1]],w:.8*ws});}
+ if(wg>.01)k.push({P:[g[0],0,g[1]],w:wg},{P:[e[0],0,e[1]],w:wg},{P:[c[0],1.2,c[1]],w:wg});
+ return k;}
+function subj4(u:number){const T=t4(u),hero=hero3(T),r=trackAt(TR('runner').keys,T);
+ return{hero,keep:[...lessonKeep(u),...carraLimbs(T),...near(hero,[[r[0],0,r[1]]],5,10)],height:carraH(T)};}
+const cam4=(t:number)=>{const p=steady(t,u=>reframe(cam4Authored(),subj4(u),shotAt(u,B4),DV));return camAt(p.eye,p.target,p.F);};
 /** a bold yellow teaching stroke (navy edge, paper knockout, yellow) */
 function mark(s:Sheet,p:Path2D){s.stroke(K,p,5,.9);s.knockout(p);s.fill(Y,p,.95);}
 /** a bold teaching arrow a → b (drawn to `u`), one path: shaft + head */

@@ -62,7 +62,10 @@ function readGesture(points:StrokePoint[],world:PuzzleWorld):Kick{
   let rec:number|undefined,bt=3.5;
   for(let i=0;i<s.attackers.length;i++){
     if(i===s.carrier)continue;
-    const a=s.attackers[i].p,t=travel(Math.hypot(a.x-end.x,a.z-end.z),MEET_SPEED);
+    // A called run counts from where the runner is heading: pass to the space you sent them into.
+    // A runner counts from where they are heading too (a called run, or the next point of a scripted run).
+    const at=s.attackers[i],a=at.p,run=world.scenario.attackers[i]?.run,c=at.call?.to??(run&&at.runLeg<run.path.length&&at.mode!=='hold'?run.path[at.runLeg]:undefined);
+    const t=Math.min(travel(Math.hypot(a.x-end.x,a.z-end.z),MEET_SPEED),c?travel(Math.hypot(c.x-end.x,c.z-end.z),MEET_SPEED)+.4:9);
     if(t<bt){bt=t;rec=i;}
   }
   const k:Kick={kind:'pass-space',target:{x:end.x,z:end.z},curl,loft,power};
@@ -75,8 +78,10 @@ export type PassControlOptions={mode?:PassControlMode;power?:number;shotHeight?:
 /** Explicit controls share one interpretation for preview and actual release. */
 export function readStroke(points:StrokePoint[],world:PuzzleWorld,options:PassControlOptions={}):Kick{
  const kick=readGesture(points,world),mode=options.mode??'auto';
+ // No-heading youth rule: a lofted ball to a teammate is a chip to feet (chest/thigh control), never a header.
+ if(world.scenario.require.noHeading&&kick.kind==='header')kick.kind='pass-feet';
  if(mode==='ground'){kick.loft=0;if(kick.kind==='header')kick.kind='pass-feet';}
- if(mode==='lift'){kick.loft=.65;if(kick.kind==='pass-feet')kick.kind='header';}
+ if(mode==='lift'){kick.loft=.65;if(kick.kind==='pass-feet'&&!world.scenario.require.noHeading)kick.kind='header';}
  if(mode==='shoot'){
   const gestureLoft=kick.loft;
   const geo=geoOf(world.scenario),ball=world.state.ball.p,end=points.at(-1)??ball,forward=end.z-ball.z;

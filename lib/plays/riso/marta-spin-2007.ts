@@ -61,13 +61,16 @@ import {twos,sm,key,clamp,lerp,rng,hash,ribbon,polyPath,easeOut,easeOutBack,ease
 import {sparkBurst,speedLines,crescent} from '../../paths/riso/shapes';
 import {drawAthlete,motionSmear,makeCamera,solve,posed,keyPoses,blendPose,runCycle,dribble,stand,strike,backpedal,lunge,celebrate,keeperSet,keeperDive,STRIKE_CONTACT,
  type Pose,type AthleteStyle,type Camera,type Place,type Build,type V3,type Detail} from './athlete';
+import {beats,shotAt,reframe,steady,near,type Keep,type View as DView} from './director';
 
 const K='navy',R='red',Y='yellow',B='blue';
 const D2R=Math.PI/180;
 /** a narrower (square) window gets a slightly wider lens so the action still fits; set by frame() */
 let LENS=1;
 /** Frame the FULL sheet: world (0,0) on the canvas centre (card window 1.45:1 … square), ignoring safe. dx,dy = camera shake (units). */
-function frame(s:Sheet,dx=0,dy=0){const S=s.arrival;s.camera((s.cx-s.W/2)/S+dx,(s.cy-s.H/2)/S+dy,1/s.fit,0);LENS=Math.pow(Math.min(1,s.W/1620),.6);}
+function frame(s:Sheet,dx=0,dy=0){const S=s.arrival;s.camera((s.cx-s.W/2)/S+dx,(s.cy-s.H/2)/S+dy,1/s.fit,0);LENS=Math.pow(Math.min(1,s.W/1620),.6);DV={w:s.W,h:s.H};}
+/** the window in camera units (set by frame(); read by the director's reframing, aperture() included) */
+let DV:DView={w:1566,h:1080};
 const pxPer=(s:Sheet)=>{const m=s.getTransform();return Math.sqrt(Math.abs(m.a*m.d-m.b*m.c))/s.dpr;};
 
 // ================= narration (script.json mirrors it) =================
@@ -395,11 +398,11 @@ const ACTORS:Actor[]=[
 ];
 type Item={depth:number;draw:()=>void};
 /** everyone and the ball at τ, depth sorted. `hero` draws Marta with motion smear + secondary motion; `cap` limits figure detail
- * (passages), small figures in wide shots print at 'low'. */
+ * (passages), small figures in wide shots print at 'low' (extras below ~120 px stay 'low' now the director pushes in; only Marta gains detail). */
 function drawWorld(s:Sheet,c:Camera,tau:number,tp:number,o:{ballMin:number;hero?:boolean;glow?:number;cap?:boolean;skip?:number[]}){
  const ball=ballAt(tau),bp=ballAt(tp),items:Item[]=[],ppu=pxPer(s);
  const put=(style:Kit,st:{pose:Pose;place:Place},prev?:{pose:Pose;place:Place},smear=false)=>{const g:V3=[st.place.x??0,0,st.place.z??0],d=depthOf(c,g);if(d<(style===MARTA?1:2.6))return;const[x,y]=P(c,g),kk=kAt(c,g);if(Math.abs(x)>s.W*.62+kk*1.5||y<-s.H*.6||y>s.H*.6+2.2*kk)return;
-  const hPx=1.8*kk*ppu;if(o.cap&&style!==MARTA&&hPx<34)return;const detail:Detail|undefined=hPx<62||(o.cap&&style!==MARTA&&hPx<150)?'low':o.cap?'mid':undefined;
+  const hPx=1.8*kk*ppu;if(o.cap&&style!==MARTA&&hPx<34)return;const detail:Detail|undefined=hPx<(style===MARTA?62:120)||(o.cap&&style!==MARTA&&hPx<150)?'low':o.cap?'mid':undefined;
   items.push({depth:d,draw:()=>drawPlayer(s,st.pose,c,style,st.place,{prev,smear:smear&&!o.cap,detail})});};
  ACTORS.forEach((a,i)=>{if(!o.skip?.includes(i))put(a.style,a.at(tp,bp));});
  const ma=martaAt(tp);put(MARTA,ma,martaAt(tp-1/12),!!o.hero);
@@ -426,9 +429,38 @@ function ch1Play(tau:number):V3{const b=ballAt(tau);
  if(tau<0){const u=sm(T_PASS-.2,0,tau);return mix3([-26.5,1,-19.4],[lerp(b[0],MP[0],.6),1.1,lerp(b[2],MP[1],.6)],u);}
  if(tau<TS){const m=martaAt(tau).place;return[lerp(m.x??0,b[0],.4)+.8,1.2,lerp(m.z??0,b[2],.4)+.6];}
  return mix3([lerp(SB[0],b[0],.5),1.2,lerp(SB[2],b[2],.5)],[-4,1.2,-1.5],sm(TS+.3,T_GOAL,tau));}
-function ch1Cam(t:number){const q=ch1q(),{TL}=ch1T(),tau=t-TL,w=sm(TL+T_PASS-1.2,TL+T_PASS,t),av=(f:(x:number)=>V3)=>{const a=f(tau),b=f(tau-.2),c=f(tau-.4);return[(a[0]+b[0]+c[0])/3,(a[1]+b[1]+c[1])/3,(a[2]+b[2]+c[2])/3] as V3;};
+function ch1CamAuthored(t:number){const q=ch1q(),{TL}=ch1T(),tau=t-TL,w=sm(TL+T_PASS-1.2,TL+T_PASS,t),av=(f:(x:number)=>V3)=>{const a=f(tau),b=f(tau-.2),c=f(tau-.4);return[(a[0]+b[0]+c[0])/3,(a[1]+b[1]+c[1])/3,(a[2]+b[2]+c[2])/3] as V3;};
  const look=mix3(ch1Pre(t),av(ch1Play),w);
- const F=key(t,mono([[0,1650],[q.hz+.8,1900],[q.wc,2400],[q.br,3000],[q.ma,7000],[q.de+.3,8200],[TL+T_PASS-.6,4600],[TL+.1,7600],[TL+1.5,7000],[TL+TS-.1,5400],[TL+T_GOAL+.3,4300],[q.end,4700]]),easeInOutSine);return cam(BCAM,look,F);}
+ const F=key(t,mono([[0,1650],[q.hz+.8,1900],[q.wc,2400],[q.br,3000],[q.ma,7000],[q.de+.3,8200],[TL+T_PASS-.6,4600],[TL+.1,7600],[TL+1.5,7000],[TL+TS-.1,5400],[TL+T_GOAL+.3,4300],[q.end,4700]]),easeInOutSine);return{pos:BCAM,look,F};}
+// ---- director (lib/plays/riso/director.ts, Oct 4 2026): closer angles, camera math only ----
+/** keep weight: ramps 0 → 1 over .6 s from a, back to 0 over .6 s from b (so the camera never jumps out to catch a point) */
+const kw=(t:number,a:number,b=1e9)=>sm(a,a+.6,t,easeInOutSine)*(1-sm(b,b+.6,t,easeInOutSine));
+/** a player's feet and head as weighted keep points */
+const keepOf=(pl:Place,w:number,h=1.7):Keep[]=>w<=.01?[]:[{P:[pl.x??0,0,pl.z??0],w},{P:[pl.x??0,h,pl.z??0],w}];
+const pin=(c:{pos:V3;look:V3;F:number})=>({eye:c.pos,target:c.look,F:c.F*LENS});
+const unpin=(p:{eye:V3;target:V3;F:number})=>cam(p.eye,p.target,p.F/LENS);
+/** Chapter 1 shot plan, in football terms: a short establishing wide of the floodlit bowl, then ease in (in three steps, so the zoom
+ * stays gentle) on Marta with the players round her
+ * in frame while the teams are ringed; follow her as she sets up with her back to goal, push in tight on "A defender" with Ellertson held
+ * in frame (the pressure being taught); pull out for the bouncing pass so passer, ball and Marta are all seen; push in low on the touch —
+ * control, flick, spin — with Ellertson kept in shot so the viewer sees whom she beats; follow the dribble with the second defender (and, softly, Scurry) in
+ * frame into the seam. */
+const ch1Beats=()=>{const q=ch1q(),{TL}=ch1T();return beats([[0,'wide'],[.6,{from:'space',size:.2,k:.45}],[1.4,{from:'space',size:.2,k:.8}],[2.2,{from:'space',size:.2}],
+ [q.ma-.4,'follow'],[q.de-.4,{from:'tight',size:.48}],[q.here-.6,{from:'space',size:.24}],[q.wf-.45,'tight'],[TL+1.5,'follow']]);};
+let B1C:{key:string;B:ReturnType<typeof beats>}|null=null;
+const B1=()=>{const k=String(SEC(0));if(!B1C||B1C.key!==k)B1C={key:k,B:ch1Beats()};return B1C.B;};
+function ch1Dir(t:number){const q=ch1q(),{TL}=ch1T(),tau=t-TL,b=ballAt(tau),m=martaAt(tau).place,hero:V3=[m.x??0,0,m.z??0],keep:Keep[]=[];
+ const others:V3[]=ACTORS.map(a=>{const p=a.at(tau,b).place;return[p.x??0,0,p.z??0] as V3;});
+ // the teams (soft: everyone near her), Ellertson (hard from "A defender" until the collect), the passer and the ball for the pass,
+ // the second defender on the dribble, the goal and Scurry for the shot
+ keep.push(...near(hero,others,6,13,1.7).map(k=>({P:(k as {P:V3}).P,w:(k as {w:number}).w*.6*kw(t,1.2,q.ma)})));
+ const eW=Math.max(kw(t,q.de-.5,TL+1.45),kw(t,q.ma-.3)*.5*(1-sm(TL+1.45,TL+2.05,t)));keep.push(...keepOf(ACTORS[1].at(tau,b).place,eW));
+ keep.push(...keepOf(ACTORS[0].at(tau,b).place,kw(t,q.here-.75,q.here+.2)*.3));
+ const bw=kw(t,q.here);if(bw>.01)keep.push({P:b,w:bw});
+ keep.push(...keepOf(ACTORS[2].at(tau,b).place,kw(t,TL+1.6,TL+TS-.3)*.7));
+ keep.push(...keepOf(ACTORS[3].at(tau,b).place,kw(t,TL+TS-1.2)*.4));
+ return reframe(pin(ch1CamAuthored(t)),{hero,ball:null,keep,height:1.62},shotAt(t,B1()),DV,{recenter:.35});}
+function ch1Cam(t:number){return unpin(steady(t,ch1Dir,.3,5));}
 /** team rings: on "Brazil" yellow rings round the yellow shirts, on "United States" navy rings round the white ones; "A defender" rings Ellertson */
 function teamRings(s:Sheet,c:Camera,tp:number,t:number){
  const q=ch1q(),rb=sm(q.br,q.br+.3,t,easeOutBack)*(1-sm(q.us+.2,q.us+.8,t)),ru=sm(q.us,q.us+.3,t,easeOutBack)*(1-sm(q.ma,q.ma+.6,t)),rm=sm(q.ma,q.ma+.3,t,easeOutBack)*(1-sm(q.bk+.3,q.bk+.8,t)),rd=sm(q.de,q.de+.3,t,easeOutBack)*(1-sm(q.here,q.here+.5,t));
@@ -460,12 +492,26 @@ const ch1:Scene={
 const ch2q=()=>({w:T(1,'Watch again'),sl:T(1,'slowly'),mf:T(1,'Marta flicks'),os:T(1,'one side'),sr:T(1,'spins round'),ot:T(1,'the other'),bo:T(1,'beats one more'),si:T(1,'slots it'),pk:T(1,'past the keeper'),end:SEC(1)});
 const tau2=(t:number)=>{const q=ch2q();return key(t,mono([[0,-.95],[q.sl,-.3],[q.mf+.25,TF],[q.os+.35,.85],[q.sr+.35,1.1],[q.ot+.4,1.45],[q.bo+.4,2.55],[q.si+.25,TS],[q.pk+.5,T_GOAL],[q.end,T_GOAL+.6]]),x=>x);};
 /** the replay camera: low behind Marta and a little to the near side (the ball goes screen-right, she goes screen-left), tracking her in */
-function ch2Cam(t:number){const q=ch2q(),tau=tau2(t),av=(f:(x:number)=>number)=>(f(tau)+f(tau-.25)+f(tau-.5))/3;
+function ch2CamAuthored(t:number){const q=ch2q(),tau=tau2(t),av=(f:(x:number)=>number)=>(f(tau)+f(tau-.25)+f(tau-.5))/3;
  const mx=av(x=>martaAt(clamp(x,-1,TS)).place.x??0),mz=av(x=>martaAt(clamp(x,-1,TS)).place.z??0),late=sm(q.ot+.5,q.bo+.5,t,easeInOutSine),fin=sm(q.si,q.pk+.6,t,easeInOutSine);
  const pos:V3=[lerp(mx-7.4,-15,late),lerp(1.35,3,late),lerp(mz-2.6,-27,late)];
  const b=ballAt(tau),look0:V3=[lerp(mx,b[0],.4)+1.2,.85,lerp(mz,b[2],.4)+.3],look1:V3=[lerp(b[0],-4,.3),1,lerp(b[2],-2,.3)];
  const F=key(t,mono([[0,1500],[q.sl,1700],[q.mf,2000],[q.sr,1900],[q.ot+.3,1750],[q.bo,1900],[q.si,1750],[q.pk+.4,1800],[q.end,1850]]));
- return cam(pos,mix3(look0,look1,Math.max(late*.6,fin)),F);}
+ return{pos,look:mix3(look0,look1,Math.max(late*.6,fin)),F};}
+/** Chapter 2 shot plan (the slow-motion replay): open on the authored low camera behind her, then the one detail shot — down at her left
+ * boot for the flick with Ellertson kept in frame; ease out to tight so both lanes (the ball round one side, Marta round the other) and the
+ * defender read; follow her onto the second defender; push in on the finish with Scurry kept, and hold the reaction. */
+const ch2Beats=()=>{const q=ch2q();return beats([[0,'wide'],[q.mf-.45,{from:'detail',size:.7}],[q.os+.3,{from:'tight',size:.42}],
+ [q.bo-.45,{from:'follow',size:.3}],[q.si-.45,{from:'tight',size:.42}],[q.pk+.45,{from:'reaction',size:.4}]]);};
+let B2C:{key:string;B:ReturnType<typeof beats>}|null=null;
+const B2=()=>{const k=String(SEC(1));if(!B2C||B2C.key!==k)B2C={key:k,B:ch2Beats()};return B2C.B;};
+function ch2Dir(t:number){const q=ch2q(),tau=tau2(t),b=ballAt(tau),m=martaAt(tau).place,hero:V3=[m.x??0,0,m.z??0],keep:Keep[]=[];
+ keep.push(...keepOf(ACTORS[1].at(tau,b).place,Math.max(kw(t,q.mf-1.1,q.ot+.2),.8*kw(t,q.mf-1.1,q.bo-.6))));
+ const lw=kw(t,q.os-.4,q.bo-.6);if(lw>.01)keep.push({P:[FLICK_VIA[0],.1,FLICK_VIA[1]],w:lw},{P:COL,w:lw});
+ keep.push(...keepOf(ACTORS[2].at(tau,b).place,Math.max(kw(t,q.bo-1,q.si)*.7,kw(t,q.si-1,q.pk+.6))));// held in front of the lens at the shot (never brushes past it)
+ const gw=kw(t,q.si-.9);if(gw>.01){keep.push(...keepOf(ACTORS[3].at(tau,b).place,gw*.6));keep.push({P:TARGET,w:gw*.5});}
+ return reframe(pin(ch2CamAuthored(t)),{hero,ball:b,keep,height:1.62},shotAt(t,B2()),DV,{recenter:.25,near:3});}
+function ch2Cam(t:number){return unpin(steady(t,ch2Dir,.3,5));}
 const ch2:Scene={
  draw(s,t){const q=ch2q(),tt=twos(t),c=ch2Cam(t),tau=tau2(t),tp=tau2(tt),goalIn=tau-T_GOAL;frame(s);
   stadium(s,c,{t,cheer:.12+.8*sm(0,.4,goalIn),flash:.08+1.1*sm(0,.4,goalIn),net:goalIn>0?netRipple(goalIn,NET_HIT):undefined});

@@ -13,9 +13,10 @@ import type {FishingSessionApi} from './fishingSession';
 /**
  * Fishing props on the island + the "Fish" / "Sell" prompts (docs/fishing.md).
  *
- * Heat budget: all five fishing posts are ONE merged static mesh (one draw, one shadow draw), the floats are one
- * InstancedMesh (one draw), and the shared glow + ripple are hidden unless the player is at a spot. Per frame, when the
- * player is not near the water, update() is a distance check over five points and nothing else: no matrix writes, no
+ * Heat budget: every fishing post (12 since Oct 5 2026: 6 main island, 3 causeway, 3 Coral Cay) is in ONE merged static mesh
+ * (one draw, one shadow draw), the floats are one InstancedMesh (one draw), and the shared glow + ripple are hidden unless
+ * the player is at a spot. Per frame, when the player is not near the water, update() is a distance check over the spots
+ * (13 points) and nothing else: no matrix writes, no
  * material changes, no wake-ups of the sleeping island loop (it never requests frames itself). The Deep Sea Boat
  * (./deepSeaBoat.ts) adds one more distance check; its single merged mesh exists only within 260 m of the mooring.
  */
@@ -121,9 +122,9 @@ export function createFishingWorld(scene:T.Scene,player?:T.Object3D,session?:Fis
     visuals.setPose(ph==='caught'?'holdUp':ph==='casting'?(s.t<.25?'windup':'cast'):ph==='bite'||ph==='reeling'&&s.dip>.1?'strike':'hold');
     visuals.setBobber(ph==='ready'?{kind:'hanging'}:ph==='casting'?{kind:'flying',progress:s.t/CAST_TIME}:ph==='reeling'?{kind:'reeling',progress:s.reelTaps/Math.max(1,s.reelTarget)}:ph==='bite'?{kind:'under'}:ph==='caught'?{kind:'hidden'}:{kind:'floating'});
     const f=s.fish?fishById(s.fish.id):undefined;
-    visuals.showShadow(s.shadow&&f?{size:f.shadow,pos:{x:s.shadow.x,z:s.shadow.z},heading:s.shadow.heading+(ph==='scared'||ph==='escaped'?Math.PI:0),alpha:s.shadow.alpha}:null);
-    visuals.setReelingFish(ph==='reeling'&&f&&s.fish?{color:f.color,lengthCm:s.fish.size,shape:f.shape}:null);
-    visuals.holdUpFish(ph==='caught'&&f&&s.fish?{color:f.color,lengthCm:s.fish.size,shape:f.shape}:null);
+    visuals.showShadow(s.shadow&&f?{size:f.shadow,pos:{x:s.shadow.x,z:s.shadow.z},heading:s.shadow.heading+(ph==='scared'||ph==='escaped'?Math.PI:0),alpha:s.shadow.alpha,shape:f.shape}:null);
+    visuals.setReelingFish(ph==='reeling'&&f&&s.fish?{color:f.color,lengthCm:s.fish.size,shape:f.shape,id:f.id}:null);
+    visuals.holdUpFish(ph==='caught'&&f&&s.fish?{color:f.color,lengthCm:s.fish.size,shape:f.shape,id:f.id}:null);
     for(const e of events)beat(e);}
    if(visuals.busy)visuals.frame(c.dt,c.elapsed,c.reduced);
   }

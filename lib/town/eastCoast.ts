@@ -3,8 +3,9 @@ import {ISLAND_SHORE,onIsland} from './shoreline';
 import {CAUSEWAY} from './coralCay';
 import {EAST_PIER} from './eastPier';
 import type {Obstacle} from './simulation';
-type Tools={box:(w:number,h:number,d:number,c:string,x:number,y:number,z:number)=>T.Mesh;put:(g:T.BufferGeometry,c:string,x:number,y:number,z:number)=>T.Mesh;obstacles:Obstacle[]};
-export function buildEastCoast({box,put,obstacles}:Tools){
+import {untaggedProp,type PropTagger} from '../graphics/propReactions';
+type Tools={box:(w:number,h:number,d:number,c:string,x:number,y:number,z:number)=>T.Mesh;put:(g:T.BufferGeometry,c:string,x:number,y:number,z:number)=>T.Mesh;obstacles:Obstacle[];prop?:PropTagger};
+export function buildEastCoast({box,put,obstacles,prop=untaggedProp}:Tools){
  // Continue the south pier north beneath the existing market stalls.
  // Same wood, plank spacing and ground level as the ferry dock; no new collisions.
  box(28,.2,160,'#b98f62',224,-.1,110);
@@ -13,8 +14,8 @@ export function buildEastCoast({box,put,obstacles}:Tools){
 
  for(let z=19;z<190;z+=22){
   if(obstacles.some(o=>Math.abs(215-o.x)<o.w/2+1.7&&Math.abs(z-o.z)<o.d/2+2))continue;
-  box(2.3,.25,4,'#d2bc94',215,.125,z);
-  for(const dz of [-1.2,0,1.2])put(new T.IcosahedronGeometry(.6,0),'#739568',215,.65,z+dz);
+  prop('planter',()=>{box(2.3,.25,4,'#d2bc94',215,.125,z);
+  for(const dz of [-1.2,0,1.2])put(new T.IcosahedronGeometry(.6,0),'#739568',215,.65,z+dz);});
   obstacles.push({x:215,z,w:2.3,d:4});
  }
  // Short joined segments trace the rounded coast, rather than a straight barrier.

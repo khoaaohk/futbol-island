@@ -147,3 +147,7 @@
 
 /* Lane 2 (Sep 30 2026): the harbour card boards the Matchday Ferry once all four paths graduate. */
 .harbourBoard{position:relative;z-index:1;margin-top:14px;min-height:48px;padding:0 22px;border:0;border-radius:24px;background:#f8d651;color:#173f45;font:inherit;font-weight:800;cursor:pointer;box-shadow:0 4px 0 #b99a2a}.harbourBoard:active{transform:translateY(var(--btn-press));box-shadow:none}.harbourBoard:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
+
+/* Oct 4 2026 (clear path): Paths' top slot holds the landing card and the Warm-up row above the hero art. */
+.landingSlot{margin:6px 0 20px}.landingSlot:empty{display:none}
+.landingSlot .landing.landing{margin:0!important}

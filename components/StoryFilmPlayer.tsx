@@ -35,7 +35,7 @@ export default function StoryFilmPlayer({story,onClose,onComplete,origin}:{story
   const siblings=Array.from(node.parentElement?.children??[]).filter(child=>child!==node) as HTMLElement[],oldInert=siblings.map(child=>child.inert);siblings.forEach(child=>child.inert=true);
   node.querySelector<HTMLButtonElement>('button')?.focus({preventScroll:true});
   const media=new Audio(),releaseNarration=registerIslandNarration(media);audio.current=media;media.preload='auto';media.volume=getSoundVolume();media.muted=state.current.muted;
-  const narrationBuffer=createNarrationBuffer();let sourceKey='';
+  const narrationBuffer=createNarrationBuffer();let sourceKey='',loadedFor=-1;
   const prepareNext=()=>{if(!track&&!document.hidden)narrationBuffer.prepare(story.chapters[state.current.chapter+1]?.audio);};
   media.addEventListener('playing',prepareNext);
   const s=state.current;s.time=0;s.chapter=0;s.status='ready';reported.current=false;setStatus('ready');setChapter(0);setCaption(0);setClock(0);setCurrent({text:'',cut:true,n:0});let shownHeadline:string|null='',shownCaption=0,cutNext=false,headlineN=0;
@@ -45,7 +45,8 @@ export default function StoryFilmPlayer({story,onClose,onComplete,origin}:{story
   let frame=0,last=0,lastDraw=0,lastUI=0,disposed=false,width=1,height=1,dpr=1,drawnChapter=-1,lastPaintTime=-1,visible=true,scripted=false,introTimer:ReturnType<typeof setTimeout>|undefined,burstUntil=0,lastMove=0;
   const tray={bottom:0,right:0},touches:Touch[]=[];
   const seconds=(i:number)=>chapterSeconds(story,i);
-  const audioLive=()=>!s.audioFailed&&!scripted&&media.readyState>=2&&!media.ended&&(track||Boolean(story.chapters[s.chapter].audio));
+  // chapters mode: the element may already hold the NEXT chapter's clip during the passage tail (see tick), which is not this chapter's clock
+  const audioLive=()=>!s.audioFailed&&!scripted&&media.readyState>=2&&!media.ended&&(track||(Boolean(story.chapters[s.chapter].audio)&&loadedFor===s.chapter));
   const visualTime=()=>track?(audioLive()?media.currentTime:s.time):(audioLive()?starts[s.chapter]+Math.min(media.currentTime,seconds(s.chapter)):s.time);
   const paint=(now=performance.now())=>{
    if(disposed)return;const time=visualTime(),f=resolveFrame(story,time,track?undefined:s.chapter);
@@ -65,19 +66,24 @@ export default function StoryFilmPlayer({story,onClose,onComplete,origin}:{story
   };
   const stopFrame=()=>{if(frame)cancelAnimationFrame(frame);frame=0;last=0;};
   const failAudio=()=>{s.audioFailed=true;setAudioFailed(true);};media.addEventListener('error',failAudio);
-  const loadAudio=(index:number)=>{s.audioFailed=false;setAudioFailed(false);const source=track?(story.audio.mode==='track'?story.audio.src:undefined):story.chapters[index].audio;if(source){if(sourceKey!==source||media.error){sourceKey=source;media.src=track?source:narrationBuffer.take(source);media.load();}else{media.currentTime=0;}}else{sourceKey='';media.removeAttribute('src');media.load();failAudio();}};
-  const startAudio=()=>{if(disposed||!islandNarrationAllowed()||document.hidden||!visible||s.status!=='playing'||media.ended||scripted)return;if(!track&&!story.chapters[s.chapter].audio)return;void media.play().then(()=>{if(disposed||!islandNarrationAllowed())media.pause();}).catch(error=>{if(disposed||error?.name==='AbortError')return;if(error?.name==='NotAllowedError'){pause();}else failAudio();});};
+  const loadAudio=(index:number)=>{s.audioFailed=false;setAudioFailed(false);loadedFor=index;const source=track?(story.audio.mode==='track'?story.audio.src:undefined):story.chapters[index].audio;if(source){if(sourceKey!==source||media.error){sourceKey=source;media.src=track?source:narrationBuffer.take(source);media.load();}else{media.currentTime=0;}}else{sourceKey='';media.removeAttribute('src');media.load();failAudio();}};
+  const startAudio=()=>{if(disposed||!islandNarrationAllowed()||document.hidden||!visible||s.status!=='playing'||media.ended||scripted)return;if(!track&&(!story.chapters[s.chapter].audio||loadedFor!==s.chapter))return;void media.play().then(()=>{if(disposed||!islandNarrationAllowed())media.pause();}).catch(error=>{if(disposed||error?.name==='AbortError')return;if(error?.name==='NotAllowedError'){pause();}else failAudio();});};
   const setPhase=(next:Status)=>{s.status=next;setStatus(next);};
   const seam=(index:number)=>{setChapter(index);if(!reduced&&s.status==='playing'&&typeof navigator.vibrate==='function'){try{navigator.vibrate(8);}catch{}}};
   const finish=()=>{s.time=duration;media.pause();setPhase('finished');setClock(Math.round(duration));paint();if(!reported.current){reported.current=true;completion.current?.();}};
   const pause=(redraw=true)=>{clearTimeout(introTimer);introTimer=undefined;media.pause();stopFrame();if(s.status!=='playing')return;setPhase('paused');if(redraw)paint();};
   const tick=(now:number)=>{frame=0;if(disposed||!islandNarrationAllowed()||document.hidden||!visible||s.status!=='playing')return;const dt=last?Math.min(.15,(now-last)/1000):0;last=now;
    if(track){if(audioLive())s.time=media.currentTime;else if(media.ended)s.time=duration;else if(s.audioFailed||scripted||!media.getAttribute('src'))s.time+=dt;if(s.time>=duration&&(s.audioFailed||media.ended||!media.getAttribute('src'))){finish();return;}}
-   else{if(audioLive())s.time=starts[s.chapter]+Math.min(media.currentTime,seconds(s.chapter));else if(s.audioFailed||scripted||!media.getAttribute('src'))s.time+=dt;else if(media.ended)s.time=starts[s.chapter]+seconds(s.chapter);
-    const next=starts[s.chapter]+seconds(s.chapter);if(s.time>=next){
+   else{const next=starts[s.chapter]+seconds(s.chapter),tail=loadedFor!==s.chapter||media.ended;
+    // Passage tail (stutter audit, Oct 4 2026): each clip ends ~.65–.74 s before its chapter (the forward passage). Once it has ended the
+    // clock runs on frame time to the chapter end so the passage plays (it used to jump to `next`, cutting every seam), and the next
+    // chapter's clip (the prefetched blob) loads on the same Audio element meanwhile so it starts on the seam without a load wait.
+    if(audioLive())s.time=starts[s.chapter]+Math.min(media.currentTime,seconds(s.chapter));else if(s.audioFailed||scripted||!media.getAttribute('src'))s.time+=dt;else if(tail)s.time=Math.min(next,s.time+dt);
+    if(media.ended&&loadedFor===s.chapter&&s.chapter<story.chapters.length-1&&story.chapters[s.chapter+1].audio)loadAudio(s.chapter+1);
+    if(s.time>=next){
      // Do not cut an unfinished narration when playback buffering runs late. Hold at exactly `next`: the forced chapter index keeps the
      // chapter, frameFor clamps chapterTime to the chapter length, and the held frame equals the next chapter's frame 0 pixel for pixel.
-     if(!s.audioFailed&&story.chapters[s.chapter].audio&&!media.ended){s.time=next;}else if(s.chapter===story.chapters.length-1){finish();return;}else{s.chapter++;s.time=starts[s.chapter];seam(s.chapter);loadAudio(s.chapter);startAudio();}
+     if(!s.audioFailed&&story.chapters[s.chapter].audio&&!tail){s.time=next;}else if(s.chapter===story.chapters.length-1){finish();return;}else{s.chapter++;s.time=starts[s.chapter];seam(s.chapter);if(loadedFor!==s.chapter)loadAudio(s.chapter);startAudio();}
     }}
    if((!reduced&&now-lastDraw>=1000/24-1&&(s.time!==lastPaintTime||touches.some(t=>lastDraw<t.at+TOUCH_LIFE*1000)))||drawnChapter!==(track?resolveFrame(story,s.time).chapter:s.chapter)){paint(now);lastDraw=now;}
    if(now-lastUI>=250){setClock(s.time);lastUI=now;}

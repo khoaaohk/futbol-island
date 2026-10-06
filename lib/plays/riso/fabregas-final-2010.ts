@@ -35,6 +35,7 @@ import {apertureDisc} from '../../paths/riso/passage';
 import {twos,sm,key,settle,clamp,lerp,rng,hash,ribbon,polyPath,easeOut,easeIO,easeOutBack,easeInOutSine,TAU,type Pt,type Key} from '../../paths/riso/motion';
 import {footballPanels,sparkBurst,speedLines} from '../../paths/riso/shapes';
 import * as A from './athlete';
+import {beats,shotAt,reframe,type Keep,type View as DView} from './director';
 
 const VOICE:NarrationTiming|null=timingJson as NarrationTiming;
 const K='navy',R='orange',Y='yellow',B='blue';
@@ -58,7 +59,8 @@ function groundLine(path:Path2D,c:Cam,a:[number,number],b:[number,number],w=.13)
 /** keys forced to increase in time (a retime can never reorder a camera or a clock map) */
 function mono<T extends number[]>(K0:T[]):T[]{let prev=-1e9;return K0.map(k=>{const t=Math.max(k[0],prev+.05);prev=t;return[t,...k.slice(1)] as T;});}
 type CK=[number,number,number,number,number,number,number,number];// t, pos xyz, look xyz, focal
-const camOf=(t:number,K0:CK[])=>{const v=key(t,mono(K0) as unknown as Key[],easeIO,true);return makeCam([v[0],v[1],v[2]],[v[3],v[4],v[5]],v[6]);};
+/** the authored keyed camera as eye, aim point and focal (the director reframes it; makeCam builds it) */
+const camOf=(t:number,K0:CK[])=>{const v=key(t,mono(K0) as unknown as Key[],easeIO,true);return{eye:[v[0],v[1],v[2]] as V3,target:[v[3],v[4],v[5]] as V3,F:v[6]};};
 
 // ---------------- Soccer City at night: the bowl, the roof ring of floodlights, grass, lines, boards, the goal ----------------
 const IN=[[-111,39],[6,39],[6,-39],[-111,-39]] as const,OUT=[[-150,78],[45,78],[45,-78],[-150,-78]] as const;
@@ -126,10 +128,10 @@ const TORRES:A.AthleteStyle={...SPAIN,number:9,hairStyle:'long',build:{height:1.
 const HOLLAND:A.AthleteStyle={...LINE,shirt:R,shorts:R,socks:R,hairStyle:'short',build:{height:1.84},seed:11};
 const KEEPER:A.AthleteStyle={...LINE,shirt:[B,.55],shorts:[B,.55],socks:[B,.55],gloves:'paper',sleeves:'long',hairStyle:'short',number:1,numberInk:K,build:{height:1.97},seed:13};
 type Body={x:number;z:number;yaw:number;pose:A.Pose;prev:A.Pose;style:A.AthleteStyle;smear?:boolean};
-function drawWorld(s:Sheet,c:Cam,bodies:Body[],extra:{depth:number;draw:()=>void}[]=[],detail:'auto'|A.Detail='auto'){
+function drawWorld(s:Sheet,c:Cam,bodies:Body[],extra:{depth:number;draw:()=>void}[]=[],detail:'auto'|A.Detail='auto',hero?:A.AthleteStyle){
  const pj=projector(c),items:{depth:number;draw:()=>void}[]=[...extra];
  for(const bd of bodies){const g:V3=[bd.x,0,bd.z],d=depthOf(c,g);if(d<1)continue;const[x,y]=P(c,g),kk=kAt(c,g);if(Math.abs(x)>s.W*.62+kk*1.5||y<-s.H*.6||y>s.H*.6+2.4*kk)continue;
-  const place:A.Place={x:bd.x,z:-bd.z,yaw:bd.yaw},style={...bd.style,detail};
+  const place:A.Place={x:bd.x,z:-bd.z,yaw:bd.yaw},style={...bd.style,detail:hero&&bd.style===hero?'auto':detail};
   items.push({depth:d,draw:()=>{if(bd.smear)A.motionSmear(s,bd.prev,bd.pose,pj,style,place);A.drawAthlete(s,bd.pose,pj,style,place,{prev:bd.prev});}});}
  items.sort((a,b)=>b.depth-a.depth).forEach(i=>i.draw());
 }
@@ -235,13 +237,60 @@ const ch1T=()=>({sb:T(0,'Spain break forward'),bl:T(0,'the ball bounces loose'),
 const tau1=(t:number)=>{const q=ch1T();return t-Math.min(q.fi+.25,q.end-.75-T_IN-.25);};
 /** the camera's aim: the ball, smoothed over the last .3 s of play, a little above the grass */
 const aimAt=(tau:number):V3=>{const a=ballT(tau),b=ballT(tau-.15),c=ballT(tau-.3);return[(a[0]+b[0]+c[0])/3,1.2,(a[2]+b[2]+c[2])/3];};
-function ch1Cam(t:number){const tau=tau1(t),q=ch1T(),a=aimAt(tau),g=sm(T_SHOT-.2,T_IN+.3,tau,easeInOutSine),look=mix3(a,[-3,1.2,-1.5],g*.6);
- const F=key(tau,mono<number[]>([[-9,3300],[-3,3700],[0,4200],[T_SHOT,4600],[T_IN+.8,4900],[q.end,4500]]) as unknown as Key[],easeIO);
- return makeCam([look[0]-8,16,-50],look,F);}
+/** the window in camera units (set by each scene's draw; read by the director's reframing, aperture() included) */
+let DV:DView={w:1566,h:1080};
+/** who the ch1 shot is about at τ (every weight eases, nothing cuts): the key player (Torres → Fàbregas → Iniesta), the receiver to keep
+ * (Fàbregas while Torres plays it into the centre, then Iniesta while Fàbregas weighs the pass) and, for the finish, the goal mouth.
+ * X = the second subject the shot holds with the key player (the ball, swung to the receiver, then to the goal). */
+const GOAL_C:V3=[0,1.2,0];
+function ch1Subject(tau:number){const tor=moverPos(TOR,tau),fab=moverPos(FAB,tau),ini=moverPos(INI,tau),ball=ballT(tau);
+ const u1=sm(-1.9,-.9,tau,easeInOutSine),u2=sm(.3,.8,tau,easeInOutSine),hero:V3=[lerp(lerp(tor.x,fab.x,u1),ini.x,u2),0,lerp(lerp(tor.z,fab.z,u1),ini.z,u2)];
+ const wF=sm(-3,-1.85,tau,x=>x)*(1-u1),wI=sm(-1.9,-.8,tau)*(1-u2),wR=Math.max(wF,wI),wG=sm(T_ITOUCH,T_SHOT,tau),sw=wF+wI||1;
+ // for the finish X is the ball held within 2.5 m of Iniesta: the shot swings round behind him so the goal lines up beyond him instead
+ const rc:V3=[(fab.x*wF+ini.x*wI)/sw,1,(fab.z*wF+ini.z*wI)/sw],bd=Math.hypot(ball[0]-hero[0],ball[2]-hero[2]),bc=mix3(hero,ball,lerp(1,Math.min(1,2.5/(bd||1)),u2));
+ const X=mix3([bc[0],ball[1],bc[2]],rc,wR);
+ return{fab,ini,hero,ball,wF,wI,wG,X,u2,w:Math.max(wR,wG)};}
+function ch1CamAuthored(t:number){const tau=tau1(t),q=ch1T(),a=aimAt(tau),g=sm(T_SHOT-.2,T_IN+.3,tau,easeInOutSine),look0=mix3(a,[-3,1.2,-1.5],g*.6);
+ const F0=key(tau,mono<number[]>([[-9,3300],[-3,3700],[0,4200],[T_SHOT,4600],[T_IN+.8,4900],[q.end,4500]]) as unknown as Key[],easeIO);
+ // the broadcast operator holds the story: the key player, the ball and the second subject (the receiver for the pass, the goal mouth for
+ // the finish) — aimed at their middle, and widened just enough that all three sit inside the window
+ const S=ch1Subject(tau);if(S.w<=0)return{eye:[look0[0]-8,16,-50] as V3,target:look0,F:F0};
+ const pts:V3[]=[[S.hero[0],1,S.hero[2]],S.ball,S.X,mix3(S.ball,GOAL_C,S.wG)],x0=Math.min(...pts.map(p=>p[0])),x1=Math.max(...pts.map(p=>p[0])),z0=Math.min(...pts.map(p=>p[2])),z1=Math.max(...pts.map(p=>p[2]));
+ const look=mix3(look0,[(x0+x1)/2,1.2,(z0+z1)/2],S.w),eye:V3=[look[0]-8,16,-50],c0=makeCam(eye,look,F0),pp=pts.map(p=>P(c0,p));
+ const need=Math.max(1,...pp.map(q=>Math.max(Math.abs(q[0])/(.38*DV.w),Math.abs(q[1])/(.32*DV.h))));
+ return{eye,target:look,F:F0/lerp(1,need,S.w)};}
+const DUTCH=OTHERS.filter(o=>o.style.shirt===R);
+/** a soft keep only counts as far as the authored camera already shows it (so the authored frame always fits and the director never snaps) */
+const inView=(c0:Cam,p:V3)=>{if(depthOf(c0,p)<1)return 0;const q=P(c0,p);return 1-sm(.68,.84,Math.max(Math.abs(q[0])/(DV.w/2),Math.abs(q[1])/(DV.h/2)));};
+const softPt=(c0:Cam,p:V3,w0:number):Keep[]=>{const w=w0*inView(c0,p);return w>.01?[{P:p,w}]:[];};
+const softPlayer=(c0:Cam,x:number,z:number,w0:number):Keep[]=>{const f:V3=[x,0,z],h:V3=[x,1.8,z],w=w0*Math.min(inView(c0,f),inView(c0,h));return w>.01?[{P:f,w},{P:h,w}]:[];};
+/** the largest shot (hero height ÷ window height) that still holds every point beside the hero, judged sideways from where the director puts
+ * the eye (the authored bearing swung by az°); weights scale each point's pull so a keep easing in widens the shot smoothly */
+function gapFit(eye:V3,hero:V3,azDeg:number,pts:[V3,number][]){const v0=sub(eye,[hero[0],1,hero[2]]),az=Math.atan2(v0[2],v0[0])+azDeg*Math.PI/180,px=-Math.sin(az),pz=Math.cos(az);
+ const gap=Math.max(0,...pts.map(([p,w])=>w*Math.abs((p[0]-hero[0])*px+(p[2]-hero[2])*pz)));return Math.max(.14,1.8*.7*(DV.w/DV.h)/(gap+1.2));}
+/** Director beats (lib/plays/riso/director.ts, Oct 4 2026), chapter 1 in football terms: a short establishing wide of the bowl, then follow
+ * the ball carrier (Torres breaking). Pull out to a SPACE shot as Torres plays it into the centre and hold it through the bounce and
+ * Fàbregas's pass, aimed between the passer and the receiver (first Fàbregas, then Iniesta in space on the right) and only as wide as
+ * their gap needs, so the viewer sees the space and the decision. As the pass arrives, push in low and tight on Iniesta, swinging round
+ * behind him so the goal lines up beyond him (the touch, the half-volley and the far corner in one frame), then hold on him as the net
+ * ripples. The key player hands over Torres → Fàbregas → Iniesta, each over half a second to a second (never a cut). */
+const C1=ch1T(),T1=(tau:number)=>tau+(C1.fi-tau1(C1.fi));
+const B1=beats([[0,'wide'],[1.2,'follow'],[T1(-3),{from:'space',size:.24}],[T1(.2),{from:'tight',az:-30}],[T1(T_IN)+.3,{from:'reaction',az:-35}]]);
+function ch1Cam(t:number){const c=ch1CamAuthored(t),c0=makeCam(c.eye,c.target,c.F),tau=tau1(t),S=ch1Subject(tau),sh=shotAt(t,B1);
+ // the focus sits midway between the key player and X; the shot is never tighter than the sideways gap between them allows (as seen
+ // from where the director will put the eye), so the receiver / the goal stays in by framing rather than by backing the move off
+ // (judged a little ahead so the frame opens before it is needed, and released over the last second so a push-in after the pass eases in
+ // instead of jumping: pull-outs follow the play at once, push-ins at the director's own pace)
+ const fit=(d:number)=>{const Q=d?ch1Subject(tau+d):S;return gapFit(c.eye,Q.hero,sh.az,[[Q.X,1],[Q.ball,1]]);};
+ const sFit=Math.min(fit(0),fit(.35),Math.exp([-1,-.75,-.5,-.25,0].reduce((a,d)=>a+Math.log(fit(d)),0)/5));
+ const p={...sh,ball:lerp(sh.ball,.5,S.w),size:Math.min(sh.size,sFit)},wG=sm(T_SHOT,T_IN,tau);
+ const keep:Keep[]=[S.ball,...softPlayer(c0,S.fab.x,S.fab.z,S.wF),...softPlayer(c0,S.ini.x,S.ini.z,S.wI),...softPt(c0,GOAL_C,wG),...softPt(c0,[0,2.44,0],.9*wG),
+  ...DUTCH.flatMap(o=>{const m=moverPos(o.path,tau),d=Math.hypot(m.x-S.hero[0],m.z-S.hero[2]);return softPlayer(c0,m.x,m.z,(1-sm(2.5,5,d,x=>x))*(1-S.u2));})];
+ const r=reframe(c,{hero:S.hero,ball:S.X,keep},p,DV);return makeCam(r.eye,r.target,r.F);}
 const ch1:Scene={
- draw(s,t){const tt=twos(t),tau=tau1(t),c=ch1Cam(t),w=worldBodies(tau,tau1(tt),1/12),goalIn=tau-T_IN;
+ draw(s,t){DV={w:s.W,h:s.H};const tt=twos(t),tau=tau1(t),c=ch1Cam(t),w=worldBodies(tau,tau1(tt),1/12),goalIn=tau-T_IN,close=shotAt(t,B1).size>.4;
   frame(s);stadium(s,c,{t,cheer:.2+.9*sm(0,.5,goalIn),flash:.25+1.2*sm(0,.4,goalIn),net:netFor(tau)});
-  drawWorld(s,c,w.bodies,[ballItem(s,c,w.ball,tau,tt,16)],'low');},
+  drawWorld(s,c,w.bodies,[ballItem(s,c,w.ball,tau,tt,16)],'low',close?(tau<.55?FABREGAS:INIESTA):undefined);},
  aperture(t){const c=ch1Cam(t),q=[[0,0,-3.66],[0,2.44,-3.66],[0,2.44,3.66],[0,0,3.66]].map(p=>P(c,p as V3));const cx=q.reduce((a,p)=>a+p[0],0)/4,cy=q.reduce((a,p)=>a+p[1],0)/4,r=Math.max(20,Math.min(...q.map(p=>Math.hypot(p[0]-cx,p[1]-cy)))*.55);return apertureDisc(cx,cy,r,12);},
  still:9,
 };
@@ -271,9 +320,17 @@ const ch2:Scene={
 // ---------------- ch3: lesson replay from above and behind Fàbregas — calm, look up early, pass into the path ----------------
 const ch3T=()=>({sc:T(2,'Stay calm'),lu:T(2,'Look up'),ba:T(2,'before the ball arrives'),tp:T(2,'Then pass'),path:T(2,'into your teammate’s path'),feet:T(2,'not at his feet'),end:SEC(2)});
 const tau3=(t:number)=>{const q=ch3T();return clockMap(t,[[0,-1.6],[q.sc,-1.3],[q.lu,-.95],[q.tp+.2,-.02],[q.path+.1,0],[q.feet+.5,T_REC],[q.end,T_ITOUCH+.2]]);};
-function ch3Cam(t:number){const q=ch3T();return camOf(t,[[0,-34,11,4,-19,.5,-2.5,1350],[q.lu,-33.6,10.8,3.5,-17,.5,-4,1400],[q.tp,-33,10.6,3,-16,.5,-5,1480],[q.end,-32.4,10.4,2.5,-15,.5,-6,1560]]);}
+function ch3CamAuthored(t:number){const q=ch3T();return camOf(t,[[0,-34,11,4,-19,.5,-2.5,1350],[q.lu,-33.6,10.8,3.5,-17,.5,-4,1400],[q.tp,-33,10.6,3,-16,.5,-5,1480],[q.end,-32.4,10.4,2.5,-15,.5,-6,1560]]);}
+/** Director beats, chapter 3 (the lesson): a LESSON shot on Fàbregas from the first frame (the passage opens straight onto him), with
+ * everything the marks teach kept in frame the whole time (so nothing pops as a mark arrives): Iniesta (the sight line), the start of his
+ * run (the arrow), the target ring in his path, and the ball once it is on its way to Fàbregas. */
+const B3=beats([[0,{from:'lesson',ball:0}]]);
+const RUN0=(()=>{const m=moverPos(INI,-1.5);return[m.x,0,m.z] as V3;})();
+function ch3Cam(t:number){const q=ch3T(),c=ch3CamAuthored(t),tau=tau3(t),fab=moverPos(FAB,tau),ini=moverPos(INI,tau),wB=sm(q.lu,q.ba,t);
+ const keep:Keep[]=[[ini.x,0,ini.z],[ini.x,1.75,ini.z],RUN0,REC_PT,...(wB>.01?[{P:ballT(tau),w:wB}]:[])];
+ const r=reframe(c,{hero:[fab.x,0,fab.z],keep},shotAt(t,B3),DV);return makeCam(r.eye,r.target,r.F);}
 const ch3:Scene={
- draw(s,t){const q=ch3T(),tt=twos(t),c=ch3Cam(t),tau=tau3(t),w=worldBodies(tau,tau3(tt),Math.max(.01,tau3(tt)-tau3(tt-1/12)));
+ draw(s,t){DV={w:s.W,h:s.H};const q=ch3T(),tt=twos(t),c=ch3Cam(t),tau=tau3(t),w=worldBodies(tau,tau3(tt),Math.max(.01,tau3(tt)-tau3(tt-1/12)));
   frame(s);stadium(s,c,{t,lesson:true});
   const fb=moverPos(FAB,tau);
   // stay calm: a slow breathing ring around Fàbregas
@@ -283,7 +340,8 @@ const ch3:Scene={
   const ring=sm(q.path,q.path+.4,tt,easeOutBack)*(1-sm(q.end-.6,q.end,tt));if(ring>.02){for(let k=0;k<2;k++){const r=(.7+k*.5)*ring,pts:Pt[]=[];for(let i=0;i<24;i++){const a=i/24*TAU;pts.push(P(c,[REC_PT[0]+Math.cos(a)*r,.04,REC_PT[2]+Math.sin(a)*r]));}s.stroke(Y,polyPath(pts,true),12-k*3,.95);}}
   // not at his feet: Iniesta's run drawn as an arrow INTO the ring
   const run=sm(q.feet,q.feet+.5,tt,easeOut);if(run>0){const pts:Pt[]=[];for(let i=0;i<=14;i++){const m=moverPos(INI,lerp(-1.5,T_REC,i/14));pts.push(P(c,[m.x,.05,m.z]));}dashed(s,pts,14,run);}
-  drawWorld(s,c,w.bodies,[ballItem(s,c,w.ball,tau,tt,24)]);
+  // heat: the closer lesson framing would promote every figure to full detail; only Fàbregas (the passer the lesson is about) gets it
+  drawWorld(s,c,w.bodies,[ballItem(s,c,w.ball,tau,tt,24)],'low',FABREGAS);
   // look up: a dashed sight line from his eyes to Iniesta, drawn over the players
   const look=sm(q.lu,q.lu+.45,tt,easeOut)*(1-sm(q.tp+.3,q.tp+.7,tt));if(look>.02){const ini=moverPos(INI,tau),a=P(c,[fb.x,1.72,fb.z]),b=P(c,[ini.x,1.6,ini.z]);const pts:Pt[]=[];for(let i=0;i<=12;i++)pts.push([lerp(a[0],b[0],i/12),lerp(a[1],b[1],i/12)]);dashed(s,pts,10,look);}},
  still:7,

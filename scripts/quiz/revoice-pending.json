@@ -1,0 +1,5 @@
+{
+ "note": "Lesson/quiz lines whose text changed in the Oct 4 2026 learning pass and still need Kokoro voicing. Voice them with: <python with kokoro> scripts/plays/kokoro-lessons.py <hashes...> (fills public/voice/<coach>/<hash>.m4a and the durations), then delete them from this list. Until then the slots carry duration 0 and the lesson shows the text instead (lib/town/useLessonVoice.ts).",
+ "hashes": [],
+ "lines": []
+}

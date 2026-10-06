@@ -2,7 +2,7 @@ import * as T from 'three';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 /** Architectural edges and a soft upward wash, updated by the island's existing loop. */
-export function createBuildingGlow(root:T.Group,width:number,depth:number,height:number,kind:'store'|'arcade'|'coaches'|'museum'|'arena'|'ferry'|'cabinet'|'vending'|'konbini'){
+export function createBuildingGlow(root:T.Group,width:number,depth:number,height:number,kind:'store'|'arcade'|'coaches'|'museum'|'museum-wing'|'arena'|'ferry'|'cabinet'|'vending'|'konbini'){
  const arcade=kind==='arcade',coaches=kind==='coaches',vending=kind==='vending',cabinet=kind==='cabinet'||vending;
  const effect=new T.Group();effect.name='building-outline-glow';effect.visible=false;root.add(effect);
  const uniforms={strength:{value:0},rise:{value:-2},tint:{value:new T.Color('#35ed8b')},moving:{value:1}};
@@ -11,7 +11,13 @@ export function createBuildingGlow(root:T.Group,width:number,depth:number,height
  const materials=[material(false),material(true)];
  const shapes=vending?[
   {w:width+.1,d:depth+.1,h:height+.06,x:0,y:(height+.06)/2,z:0}
- ]:kind==='konbini'?[
+ ]:kind==='museum'?[
+  // History Museum (Oct 3 2026, user: hover "not correctly highlighting the building"): its own box and roof rim plus the
+  // wide HISTORY MUSEUM / THE STORY OF FOOTBALL sign board (25 m, y 5.5–8.65). No roof room: the museum has none.
+  {w:width+.22,d:depth+.24,h:height+.2,x:0,y:(height+.2)/2,z:0},
+  {w:width+.56,d:depth+.6,h:.23,x:0,y:height+.08,z:0},
+  {w:25.3,d:.42,h:3.25,x:0,y:7.07,z:depth/2+.2}
+ ]:kind==='konbini'||kind==='museum-wing'?[
   // Konbini (Sep 29 2026): exactly the store's own box (facade to back wall, ground to parapet) plus its flat roof rim.
   {w:width+.22,d:depth+.24,h:height+.2,x:0,y:(height+.2)/2,z:0},
   {w:width+.56,d:depth+.6,h:.23,x:0,y:height+.08,z:0}

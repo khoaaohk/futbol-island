@@ -55,9 +55,9 @@ export const EXHIBITS:Exhibit[]=[
   forYourGame:'Keepers are part of the passing team: give them an easy ball to their feet.',
   sources:[W('Back-pass_rule'),IFAB('Law 12 Fouls and Misconduct','fouls-and-misconduct')]},
  {id:'var-2018',gallery:'laws',year:'2018',title:'The video assistant referee',object:'screen',need:80,
-  facts:['The video assistant referee (VAR) was first used at a men’s World Cup in 2018, in Russia.','VAR can only help with clear mistakes about goals, penalties, straight red cards and mistaken identity.','The referee on the pitch still makes the final decision.'],
+  facts:['The video assistant referee (VAR) was first used at a men’s World Cup in 2018, in Russia.','VAR can only help with clear mistakes about goals, penalties, straight red cards and mistaken identity.','The referee on the pitch still makes the final decision.','A goal counts only when the whole ball has crossed the whole goal line, between the posts and under the crossbar.'],
   forYourGame:'Play to the whistle: keep going until the referee stops the game.',
-  sources:[W('Video_assistant_referee'),W('2018_FIFA_World_Cup')]},
+  sources:[W('Video_assistant_referee'),W('2018_FIFA_World_Cup'),IFAB('Law 10 Determining the Outcome of a Match','determining-the-outcome-of-a-match')]},
  // ---- World Cup history (cards) ----
  {id:'worldcup-1930',gallery:'worldcup',year:'1930',title:'The first World Cup',object:'trophy',need:10,
   facts:['The first FIFA World Cup was played in Uruguay in 1930.','Uruguay, the hosts, won it, beating Argentina 4–2 in the final in Montevideo.','Only 13 teams took part.'],
@@ -99,3 +99,39 @@ export function exhibitState(exhibit:Exhibit,counts:MuseumCounts):ExhibitState{
  return {open:left===0,have,need,left,lockText:left?`Collect ${left} more ${left===1?w.one:w.many} to open this case (${Math.min(have,need)}/${need}).`:'',how:w.how};
 }
 export const openExhibits=(counts:MuseumCounts)=>EXHIBITS.filter(e=>exhibitState(e,counts).open);
+
+// ---- Walk-in museum (Oct 3 2026): interactive-exhibit config ----------------------------------------------------------------
+/**
+ * The hands-on part of a case in the walk-in museum (components/MuseumRoom.tsx, lib/museum/*). No new facts: every `quote` is
+ * copied word for word from that case's own facts or "take it to your game" line above (tests/museum-room.cjs checks it), and
+ * the VAR replay is a made-up practice moment, labelled as practice. The timeline wall is built from the cases' own years.
+ */
+export type ExhibitInteractive=
+ |{kind:'whistle';label:string;quote:string}
+ |{kind:'cards';label:string;cards:{color:'yellow'|'red';word:string;quote:string}[]}
+ |{kind:'var';label:string;frames:string[];quote:string;
+   /** The goal-line rule (Law 10), quoted from the case: the practice replay shows a ball clearly over, or clearly still on, the line. */
+   rule:string;over:string;on:string}
+ |{kind:'compare';label:string;old:{title:string;quote:string};now:{title:string;quote:string};young:{quote:string}}
+ |{kind:'spin';label:string;quote:string}
+ |{kind:'kit';label:string;numbers:{n:number;quote:string}[]}
+ |{kind:'hall';label:string};
+export const EXHIBIT_INTERACTIVES:Readonly<Record<string,ExhibitInteractive>>={
+ 'penalty-1891':{kind:'whistle',label:'Blow the referee’s whistle',quote:'Today the ball goes on the penalty mark, 11 metres from the goal line.'},
+ 'cards-1970':{kind:'cards',label:'Hold up a card',cards:[{color:'yellow',word:'Careful',quote:'A yellow card is a warning.'},{color:'red',word:'Stop',quote:'yellow means careful, red means stop'}]},
+ 'var-2018':{kind:'var',label:'Practice replay',frames:['The ball flies at the goal…','Freeze! Where is the ball?','Look closer: is the WHOLE ball over the line?'],quote:'The referee on the pitch still makes the final decision.',
+  rule:'A goal counts only when the whole ball has crossed the whole goal line, between the posts and under the crossbar.',over:'The whole ball is past the line: goal!',on:'Part of the ball is still on the line: no goal yet.'},
+ 'laced-leather':{kind:'compare',label:'Compare the balls',old:{title:'Laced leather',quote:'They soaked up rain and got heavy.'},now:{title:'Size 5 match ball',quote:'68–70 cm around and 410–450 grams'},young:{quote:'Younger players use smaller size 3 or 4 balls, so the ball fits the player.'}},
+ 'telstar-1970':{kind:'spin',label:'Spin the Telstar',quote:'Its 32 panels were black and white, so it stood out on black-and-white television.'},
+ 'shirts':{kind:'kit',label:'The kit wall',numbers:[{n:1,quote:'1 the goalkeeper'},{n:9,quote:'9 the striker'},{n:10,quote:'10 the playmaker'}]},
+ 'hall-of-fame':{kind:'hall',label:'Your certificates'},
+};
+/** The years on the timeline wall, oldest first ("Before the 1960s" sits before 1960; "Today" last). */
+export function timelineOrder(list:readonly Exhibit[]=EXHIBITS):Exhibit[]{
+ const key=(y:string)=>/today/i.test(y)?Infinity:/before/i.test(y)?Number(y.match(/\d{4}/)?.[0]??0)-.5:Number(y.match(/\d{4}/)?.[0]??0);
+ return [...list].sort((a,b)=>key(a.year)-key(b.year)||list.indexOf(a)-list.indexOf(b));
+}
+/** The closed case nearest to opening (fewest left to collect; ties keep the hall order), for the museum guide's "Show me". */
+export function nextExhibitToOpen(counts:MuseumCounts):Exhibit|null{
+ let best:Exhibit|null=null,bestLeft=Infinity;for(const e of EXHIBITS){const s=exhibitState(e,counts);if(!s.open&&s.left<bestLeft){best=e;bestLeft=s.left;}}return best;
+}

@@ -44,6 +44,7 @@ import {type RisoStory,type Scene,type Chapter,playChapters} from '../../paths/r
 import {apertureDisc} from '../../paths/riso/passage';
 import {TAU,twos,sm,key,clamp,lerp,rng,hash,blob,polyPath,ribbon,rectPath,partial,easeOut,easeOutBack,easeInOutSine,linear,type Pt} from '../../paths/riso/motion';
 import {sparkBurst,laneArrow,footballPanels} from '../../paths/riso/shapes';
+import {beats,shotAt,reframe,near,steady,type Pin,type View as DView,type Keep,type Beats} from './director';
 import {drawAthlete,motionSmear,runCycle,dribble,backpedal,lunge,strike,keeperSet,keeperDive,celebrate,stand,posed,blendPose,touchPhase,
  type Pose,type AthleteStyle,type InkFill,type Place,type Projector,type V3,type DrawResult} from './athlete';
 
@@ -96,7 +97,9 @@ type View={hx:number;hy:number};
 const view=(s:Sheet,z:number):View=>({hx:s.W/(2*z*.68)+60,hy:s.H/(2*z*.68)+60});
 /** a narrower (square) window gets a slightly wider lens so the action still fits; set by frame(), read by every camera */
 let LENS=1;
-const frame=(s:Sheet)=>{LENS=Math.pow(Math.min(1,s.W/1620),.45);return view(s,cam(s,0,0,1));};
+const frame=(s:Sheet)=>{LENS=Math.pow(Math.min(1,s.W/1620),.45);const z=cam(s,0,0,1);DV={w:s.W/z,h:s.H/z};return view(s,z);};
+/** the window in camera units (set by frame(); read by the director's reframing, aperture() included) */
+let DV:DView={w:1566,h:1080};
 
 // ---------------------------------------------------------------- the TV camera: a right-handed 3D projection of the pitch
 /** Pitch metres (right-handed, like athlete.ts): X along the length (Liverpool attack +X; Palace's goal line at 105, the Kop end), Y up,
@@ -328,6 +331,31 @@ function ballAt(tau:number):V3{
 }
 const bulgeAt=(tau:number)=>tau<IN_NET?0:Math.exp(-(tau-IN_NET)*2.2)*(1+.3*Math.sin((tau-IN_NET)*14));
 
+// ---------------------------------------------------------------- the director (lib/plays/riso/director.ts): camera math only
+/** reframe an authored camera onto the hero at τ: the ball (its print stays near his boots through the shot, then hands focus to him; the
+ * real ball stays a keep point in flight, held a stride short of the line and let go once it is in the net), the nearby white shirts and
+ * the keeper still goal-side of him as soft keeps, plus any extra keeps */
+function directPin(c:Cam&{T:V3},tau:number,hero:V3,B:Beats,t:number,extra:Keep[],flight:boolean):Pin{
+ const sh=shotAt(t,B);if(sh.k<=1e-4)return{eye:c.C,target:c.T,F:c.F};
+ // the white shirts (and the keeper) between him and the goal are soft keeps; one he has already left behind fades out of the list, and
+ // from the shot only the keeper still matters; once the ball is in the net the celebration is about him alone
+ const gx=105-hero[0],gz=-hero[2],gl=Math.hypot(gx,gz)||1,keep:Keep[]=[...extra];
+ ACTORS.forEach((a,k)=>{if(a.role!=='cp'&&a.role!=='gk')return;const[fx,fz]=posOf(k,tau),ahead=sm(-4,1,((fx-hero[0])*gx+(fz-hero[2])*gz)/gl)*(1-sm(IN_NET+.3,IN_NET+1,tau))*(a.role==='gk'?1:1-sm(SHOT-.3,SHOT+.4,tau));
+  if(ahead>.01)for(const q of near(hero,[[fx,0,fz]],3.5,7))keep.push({P:(q as {P:V3}).P,w:(q as {w:number}).w*ahead});});
+ const real=ballAt(Math.min(tau,IN_NET-.2)),bw=1-sm(IN_NET-.2,IN_NET+.6,tau),bf=lerp3(ballAt(Math.min(tau,SHOT)),[hero[0],.11,hero[2]],sm(SHOT,SHOT+.5,tau));if(flight&&tau>SHOT&&bw>.01)keep.push({P:real,w:bw});
+ // the authored aim re-taken at the hero's depth (same view ray, so k = 0 is the authored frame exactly), then panned onto him during the
+ // first part of the move: the director's eye closes in on him while its aim would otherwise lag behind a far-off authored aim point
+ const ch:V3=[hero[0],1,hero[2]],dh=Math.max(4,dot3(sub3(ch,c.C),c.f)),T=lerp3(add3(c.C,[c.f[0]*dh,c.f[1]*dh,c.f[2]*dh]),ch,easeInOutSine(clamp(sh.k*2.5)));
+ return reframe({eye:c.C,target:T,F:c.F},{hero,ball:bf,keep},sh,DV);
+}
+/** the directed camera at t, steadied: averaged over ±.45 s (5 samples, camera math only) so a keep arriving or the fit clamp changing
+ * its answer becomes a smooth move, never a snap; the authored shot (no beat near t) passes straight through */
+type Setup={c:Cam&{T:V3};tau:number;hero:V3;extra:Keep[]};
+function direct(t:number,B:Beats,at:(u:number)=>Setup,flight=true):Cam{const H=.45;
+ if(shotAt(t-H,B).k<=1e-4&&shotAt(t,B).k<=1e-4&&shotAt(t+H,B).k<=1e-4)return at(t).c;
+ const r=steady(t,u=>{const q=at(u);return directPin(q.c,q.tau,q.hero,B,u,q.extra,flight);},H,5);return look(r.eye,r.target,r.F/LENS);
+}
+
 // ---------------------------------------------------------------- poses (angles in degrees via posed; the athlete clamps to real range of motion)
 const RAD=Math.PI/180;
 const LIN=new Set(['dx','dz','air','lHand','rHand','squash']);
@@ -439,14 +467,31 @@ function curlTrail(s:Sheet,c:Cam,tau:number,w:number,full=false){if(w<=0)return;
 // ---------------------------------------------------------------- 1 · live: the high Main Stand camera, near real time
 const tau1=(t:number)=>{const G=CUE(0,'goal');return key(t,mono([[0,-3.4],[CUE(0,'Luis'),-1.6],[CUE(0,'gets the ball'),-.1],[CUE(0,'runs straight'),.8],[CUE(0,'past one'),BEATS[0]+.05],[CUE(0,'past two'),BEATS[1]+.05],[CUE(0,'still going'),BEATS[2]+.3],[CUE(0,'right foot'),SHOT-.1],[G,IN_NET+.05],[SECS(0)+1,IN_NET+.05+(SECS(0)+1-G)*.9]]),linear);};
 const CAM1:V3=[70,24,60];
-function cam1(t:number):Cam{
+/** Director beats, chapter 1 (Oct 4 2026): a short establishing wide of Anfield under the lights, then follow Tsimikas on the left wing;
+ * pull out for his pass so the passer and Díaz (the target) are both in frame; follow Díaz as he receives and runs straight at the white
+ * shirts (the defender he is running at stays in frame); push in as he goes past one and two and stay close as he sets for the right-foot shot (the
+ * eye kept at the stand's height, so the players between the camera and him rarely fill the lens); as it flies, the camera hands over to the
+ * goal: the ball and Guaita in frame until it is in the net; then hold on Díaz for the roar. */
+const B1=beats([[0,'wide'],[1.0,{from:'follow',size:.3}],[CUE(0,'Luis')-.5,{from:'space',size:.26}],[CUE(0,'gets the ball')+.1,'follow'],
+ [CUE(0,'past one')-.4,{from:'tight',size:.48,low:0}],[CUE(0,'still going')-.2,{from:'tight',low:0}],[CUE(0,'right foot')+.25,{from:'space',size:.3}],[CUE(0,'goal')+.3,'reaction']]);
+/** who the camera is about at τ, always blended (never a hard switch): Tsimikas on the ball, the midpoint of passer and target while
+ * the pass is on, Díaz once it reaches him, Guaita while the shot flies at
+ * him, Díaz again for the celebration */
+function hero1(tau:number):V3{const a=posOf(TSI,tau),b=posOf(DIAZ,tau),g=posOf(GK,tau),u=.5*sm(-2.4,-1.7,tau,easeInOutSine)+.5*sm(-.8,-.1,tau,easeInOutSine),v=sm(SHOT,SHOT+.65,tau,easeInOutSine)*(1-sm(IN_NET+.05,IN_NET+.6,tau,easeInOutSine));
+ return[lerp(lerp(a[0],b[0],u),g[0],v),0,lerp(lerp(a[1],b[1],u),g[1],v)];}
+function cam1(t:number):Cam{return direct(t,B1,setup1);}
+function setup1(t:number):Setup{const tau=tau1(t),h=hero1(tau),[tx,tz]=posOf(TSI,tau),[dx,dz]=posOf(DIAZ,tau),w=sm(-2.4,-1.6,tau)*(1-sm(0,.9,tau,easeInOutSine));
+ // the pass: passer and target both kept (hard while the ball rolls between them)
+ const extra:Keep[]=w>.01?[{P:[tx,0,tz],w},{P:[tx,1.8,tz],w},{P:[dx,0,dz],w},{P:[dx,1.8,dz],w}]:[];
+ return{c:cam1Authored(t),tau,hero:h,extra};}
+function cam1Authored(t:number):Cam&{T:V3}{
  const G=CUE(0,'goal'),S=SECS(0),tau=tau1(t);
  const bs=(u:number):V3=>{const b=ballAt(Math.min(u,SHOT));return[b[0],0,b[2]];},b0=bs(tau),b1=bs(tau-.35),b2=bs(tau-.7),bt:V3=[(b0[0]+b1[0]+b2[0])/3,0,(b0[2]+b1[2]+b2[2])/3];
  const open:V3=[84,3,-12],m=posOf(DIAZ,tau),cel:V3=[m[0]-.5,1,m[1]];
  const toBall=sm(CUE(0,'Liverpool are'),CUE(0,'Luis')+.3,t,easeInOutSine),toS=sm(G+.5,G+1.6,t,easeInOutSine),toGoal=sm(CUE(0,'still going'),CUE(0,'right foot'),t,easeInOutSine)*(1-toS);
  const tb:V3=[lerp(open[0],bt[0]+2+4*toGoal,toBall),lerp(open[1],1.5,toBall),lerp(open[2],lerp(bt[2],0,.15+.2*toGoal),toBall)],T=lerp3(tb,cel,toS);
  const F=key(t,mono([[0,2400],[CUE(0,'Liverpool are'),2800],[CUE(0,'Luis'),4700],[CUE(0,'runs straight'),5200],[CUE(0,'still going'),5300],[G,5200],[G+1.6,6200],[S,6500]]),easeInOutSine);
- return look(CAM1,T,F);
+ return{...look(CAM1,T,F),T};
 }
 const ch1:Scene={
  draw(s,t){
@@ -488,10 +533,16 @@ const ch2:Scene={
 // ---------------------------------------------------------------- 3 · replay from behind Palace's goal: the weave past five, the shot, Guaita, the celebration
 const tau3=(t:number)=>{const kg=CUE(2,'keeper');return key(t,mono([[0,1.1],[CUE(2,'He weaves'),1.3],[CUE(2,'five'),2.2],[CUE(2,'edge of the box'),3.5],[CUE(2,'fires it'),SHOT-.1],[kg,SHOT+.45],[kg+1.2,IN_NET+.3],[SECS(2),IN_NET+.3+(SECS(2)-kg-1.2)*.9]]),linear);};
 const swing3=(t:number)=>sm(CUE(2,'keeper')+1.1,SECS(2)-.6,t,easeInOutSine);
-function cam3(t:number):Cam{
+/** Director beats, chapter 3 (the replay from behind the goal): open close on Díaz and follow him along the edge of the box (the white
+ * shirt he is beating and the next one stay in frame, and their rings with them); then ease back to the authored angle behind the net
+ * before the strike: from here the shot flies straight at this camera, so a close eye would sit in the ball's path; the wide shows it
+ * coming past Guaita's dive; then the swing in to him celebrating. */
+const B3=beats([[0,{from:'follow',size:.38}],[CUE(2,'edge of the box')+.3,'wide'],[CUE(2,'keeper')+1.1,'reaction']]);
+function cam3(t:number):Cam{return direct(t,B3,u=>{const tau=tau3(u),[x,z]=posOf(DIAZ,tau);return{c:cam3Authored(u),tau,hero:[x,0,z],extra:[]};},false);}
+function cam3Authored(t:number):Cam&{T:V3}{
  const tau=tau3(t),u=swing3(t),C:V3=[119,6.4+.2*u,-3-1*u],e=sm(SHOT-.4,IN_NET,tau,easeInOutSine);
  const m=smooth(DIAZ,Math.min(tau,9.5)),T0:V3=[lerp(m[0]+2,100,e),lerp(1,1.4,e),lerp(m[1]+1.5,0,e)],T1:V3=[m[0]-.3,1.1,m[1]];
- return look(C,lerp3(T0,T1,u),lerp(lerp(3300,3000,e),5600,u));
+ const T=lerp3(T0,T1,u);return{...look(C,T,lerp(lerp(3300,3000,e),5600,u)),T};
 }
 const ch3:Scene={
  draw(s,t){

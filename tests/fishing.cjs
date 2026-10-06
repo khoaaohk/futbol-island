@@ -44,7 +44,8 @@ for(const f of FISH){
 // Spot-exclusive specials: at most 10 per spot, each only at its own spot, and every spot has its own.
 const exclusives=FISH.filter(cat.isExclusive);
 // The East Pier (Sep 29 2026) has no specials by design: its table reuses shared species (shore commons + a few visitors).
-for(const s of FISH_SPOTS){const own=exclusives.filter(f=>f.spots[0]===s.id);if(s.id==='east-pier'){assert.equal(own.length,0,'east-pier: no specials of its own');continue;}assert(own.length>=1&&own.length<=10,`${s.id}: 1-10 specials (${own.length})`);}
+// The six causeway and Coral Cay spots (Oct 5 2026, `area` set) follow the East Pier's rule: shared species only.
+for(const s of FISH_SPOTS){const own=exclusives.filter(f=>f.spots[0]===s.id);if(s.id==='east-pier'||s.area){assert.equal(own.length,0,`${s.id}: no specials of its own`);continue;}assert(own.length>=1&&own.length<=10,`${s.id}: 1-10 specials (${own.length})`);}
 {const pier=cat.spotById('east-pier'),w=Object.entries(pier.weights),tot=w.reduce((n,[,x])=>n+x,0),ev=w.reduce((n,[id,x])=>n+x/tot*fishById(id).price,0);
  assert(['shrimp','sardine','mackerel','sea-bass','herring','cod','haddock','tuna','octopus'].every(id=>id in pier.weights)&&w.length===9,'east-pier: shore commons, three good catches, a rare tuna and a legendary octopus');
  assert(ev>3.8&&ev<4.3,`east-pier mean catch ${ev.toFixed(2)} ≈ the shore's 4.0 (economy unchanged)`);}
@@ -63,7 +64,44 @@ assert(FISH.every(f=>['fish','shark','ray','eel','seahorse','crab','lobster','sh
 // Big animals pay more, but the economy stays sane (docs/island-jobs.md: welcome 40, packs 40/60, books 100).
 assert(Math.max(...FISH.map(f=>f.price))<=20,'no catch pays more than 20 coins');
 for(const s of FISH_SPOTS){assert(Object.keys(s.weights).every(id=>fishById(id)),`${s.id}: valid species`);assert(s.story,'island story text');}
-assert(FISH_SPOTS.length>=4&&FISH_SPOTS.length<=7,'4-7 fishing spots (the East Pier is the 7th)');
+// 13 spots (Oct 5 2026): the 6 main-island shore posts (the East Pier is the 6th), the Deep Sea Boat, and 6 more on the Coral
+// Cay side (user: "add more fishing spots along the bridge road and coral cay island"): 3 on the causeway's sand banks and 3 on
+// the cay's beaches. Still ONE merged post mesh and ONE float InstancedMesh for all of them (asserted below).
+assert.equal(FISH_SPOTS.length,13,'13 fishing spots: 6 main-island posts, the Deep Sea Boat, 3 causeway posts and 3 Coral Cay posts');
+{const cayCat=e.load('lib/town/coralCay.ts'),{onLand}=e.load('lib/town/landmass.ts'),world=fs.readFileSync(path.join(ROOT,'lib/town/fishing/fishingWorld.ts'),'utf8');
+ const causeway=FISH_SPOTS.filter(s=>s.area==='causeway'),cay=FISH_SPOTS.filter(s=>s.area==='cay');
+ assert.equal(causeway.length,3,'three causeway spots');assert.equal(cay.length,3,'three Coral Cay spots');
+ const sharks=cayCat.SHARK_LOOPS.flatMap(l=>l.points),onIsland=e.load('lib/town/shoreline.ts').onIsland;
+ // The post (kiosk) footprint exactly as fishingWorld.ts kioskAt/fishingKioskObstacles place it (that module needs WebGL-side three imports).
+ assert(/KIOSK_OFFSET=2\.1/.test(world)&&/size=\(1\.2\+\.7\)\*c/.test(world),'kiosk rule unchanged');
+ const kioskOf=s=>{const dx=s.buoy.x-s.x,dz=s.buoy.z-s.z,l=Math.hypot(dx,dz),size=(1.2+.7)*Math.SQRT1_2;return {x:s.x-dz/l*2.1,z:s.z+dx/l*2.1,w:size,d:size};};
+ for(const s of [...causeway,...cay]){
+  const k=kioskOf(s);
+  assert(onLand(s.x,s.z)&&!onIsland(s.x,s.z),`${s.id}: stands on walkable Coral Cay ground`);
+  for(const [dx,dz] of [[-1,-1],[1,-1],[-1,1],[1,1]])assert(onLand(k.x+dx*k.w/2,k.z+dz*k.d/2),`${s.id}: the post stands on sand, not in the sea`);
+  assert(core.inOpenWater(s.buoy.x,s.buoy.z),`${s.id}: the idle float sits in open water`);
+  const c=core.castPoint(s,s);assert(core.inOpenWater(c.x,c.z)&&Math.hypot(c.x-s.buoy.x,c.z-s.buoy.z)<3,`${s.id}: the cast lands in open water by the float`);
+  // Spread out: at least 60 m from every other fishing spot.
+  for(const o of FISH_SPOTS)if(o!==s)assert(Math.hypot(o.x-s.x,o.z-s.z)>60,`${s.id}: 60+ m from ${o.id}`);
+ }
+ for(const s of causeway){const f=cayCat.causewayFrame(s.x,s.z,true),kf=cayCat.causewayFrame(kioskOf(s).x,kioskOf(s).z,true);
+  assert(f.s>cayCat.CAUSEWAY.sWater0&&f.s<cayCat.CAUSEWAY.sWater1,`${s.id}: over the water stretch of the causeway`);
+  // Lanes are ±2 m (cayTraffic.ts CAY_LANE_OFFSET), lamps 6.65 m, the deck edge 7 m: the angler and the post stand on the bank beyond.
+  assert(f.dist>cayCat.CAUSEWAY.deckHalf+1&&kf.dist-1>cayCat.CAUSEWAY.deckHalf,`${s.id}: angler and post stand on the sand bank, off the deck and clear of traffic`);
+  assert(Math.min(...sharks.map(p=>Math.hypot(p.x-s.buoy.x,p.z-s.buoy.z)))>=9,`${s.id}: the float is clear of the causeway sharks' patrols`);
+  assert(cayCat.SANDBARS.every(b=>Math.hypot(b.x-s.x,b.z-s.z)>b.radius+10),`${s.id}: not on a sandbar stop`);}
+ for(const s of cay){assert(cayCat.onCay(s.x,s.z)&&cayCat.distanceToCayShore(s.x,s.z)<6,`${s.id}: on the cay's beach, near the water`);
+  assert(!cayCat.onCourtBeach(s.x,s.z)&&!cayCat.inHostelArea(s.x,s.z),`${s.id}: away from the court and the hostel`);
+  const F=cayCat.FARM.fence;assert(!(s.x>F[0].x-6&&s.x<F[1].x+6&&s.z>F[0].z-6&&s.z<F[5].z+6),`${s.id}: outside the farm fence`);}
+ // Mean catch value stays near the shore's (≈ 4 coins), like the East Jetty: no new "best spot" to farm.
+ for(const s of [...causeway,...cay]){const w=Object.entries(s.weights),tot=w.reduce((n,[,x])=>n+x,0),ev=w.reduce((n,[id,x])=>n+x/tot*fishById(id).price,0);
+  assert(ev>3.7&&ev<4.3,`${s.id}: mean catch ${ev.toFixed(2)} ≈ the shore's 4.0`);assert(w.length>=6,`${s.id}: a varied table`);}
+ // Shallow sandbar water vs the open channel: shrimp in the shallows, tuna only where the water is deep and open.
+ assert(!('shrimp' in cat.spotById('causeway-channel').weights)&&'tuna' in cat.spotById('causeway-channel').weights,'the channel is deep water: tuna, no shrimp');
+ for(const id of ['causeway-gate','turtle-bank','farm-beach'])assert('shrimp' in cat.spotById(id).weights&&!('tuna' in cat.spotById(id).weights),`${id}: sandy shallows`);
+ // Heat: still one merged post mesh (built from FISH_SPOTS) and one float InstancedMesh sized to FISH_SPOTS.
+ assert(/for\(const s of FISH_SPOTS\)\{if\(s\.boat\)continue;/.test(world)&&/new T\.InstancedMesh\(floatGeo,floatMaterial,FISH_SPOTS\.length\)/.test(world)&&(world.match(/new T\.Mesh\(merged,/g)||[]).length===1,'posts merged into one mesh, floats instanced');}
+
 // Kid safety: no odds or percentages anywhere the player reads.
 const sessionMod=e.load('lib/town/fishing/fishingSession.ts');
 const shown=[...Object.values(RARITY_LABEL),...Object.values(cat.SHADOW_LABEL),...FISH.flatMap(f=>[f.name,f.plural,f.club.fact,f.club.name,f.club.nickname??'',f.club.credit??'']),...Object.values(KEEPER_LESSONS).flatMap(l=>[l.title,l.text]),...FISH_SPOTS.flatMap(s=>[s.story,s.name]),sessionMod.PULL_HINT];
@@ -310,6 +348,16 @@ assert(/visuals\.dispose\(\);visuals=null/.test(world)&&/nearAnySpot\(c\.x,c\.z,
 assert(!fs.existsSync(path.join(ROOT,'components/FishingPanel.tsx')),'no fishing modal: the flow is live in the island');
 const hostCss=fs.readFileSync(path.join(ROOT,'components/FishingHost.module.css'),'utf8');assert(!/backdrop-filter/.test(hostCss),'no blur over the island canvas');
 assert.equal(MARKET_STAND.z,35,'one stand: the CITRUS & FRUIT stall the jobs sale uses');
+
+// ---- Species models (Oct 5 2026, "this example is not a shrimp"): every species has its own cached, merged model ----
+{const models=e.load('lib/town/fishing/fishModels.ts'),tris=[];
+ for(const f of FISH){assert(models.MODELLED_SPECIES.includes(f.id),`${f.id} has its own 3D model`);
+  const m=models.speciesModel(f.id,f.shape,f.color);assert.equal(models.speciesModel(f.id,f.shape,f.color),m,`${f.id} model is cached`);
+  const g=m.geometry;['position','normal','color','glow'].forEach(a=>assert(g.getAttribute(a),`${f.id} has ${a}`));
+  g.computeBoundingBox();const bb=g.boundingBox;assert(bb.min.x>-.75&&bb.min.x<(f.group==="shellfish"?-.25:-.35)&&bb.max.x<.85,`${f.id} front near -0.5 (${bb.min.x.toFixed(2)}..${bb.max.x.toFixed(2)})`);
+  assert(m.triangles>80&&m.triangles<2600,`${f.id} low-poly (${m.triangles} triangles)`);tris.push([f.id,m.triangles]);}
+ assert(/name='fishing-held-fish'/.test(visualsSrc)&&!/fish-tail/.test(visualsSrc),'held and reeled catches are one mesh each (no per-part meshes)');
+ const sorted=tris.map(t=>t[1]).sort((a,b)=>a-b);console.log(`species models: ${tris.length}, triangles min ${sorted[0]} median ${sorted[sorted.length>>1]} max ${sorted[sorted.length-1]} (${tris.find(t=>t[1]===sorted[sorted.length-1])[0]})`);}
 
 for(const hz of [30,60,120]){const s=core.createSession();s.fish={id:'cod',size:40};s.phase='bite';core.tapSession(s);for(let i=0;i<hz*9;i++)core.stepSession(s,pier,1/hz,()=>.5,spawn);assert.notEqual(s.phase,'caught','idle reeling never awards a fish');assert(['escaped','floating'].includes(s.phase));}
 

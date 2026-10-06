@@ -9,7 +9,7 @@ for(const f of ['7v7','9v9','11v11','futsal'])for(const p of JSON.parse(fs.readF
  }
  for(const q of p.questions){if(q.visual)continue;// visual questions: tests/visual-quiz.cjs
   const candidates=q.interact?.candidates??q.interact?.cells??q.interact?.zones??q.interact?.spots??q.interact?.paths??[];assert.equal(candidates.length,q.options.length,`${p.id} quiz option mapping`);assert(candidates[q.correct].correct,`${p.id} correct spatial choice`);assert(q.step>=0&&q.step<p.steps.length);assert(q.options.length&&q.correct>=0&&q.correct<q.options.length);}
- for(const voice of [...p.steps.map(s=>s.voice),...p.questions.flatMap(q=>[q.voice,q.explainVoice,...q.choiceVoices??[]])])for(const tag of tags){if(!voice?.[tag]){missing.push(`${p.id}:${tag}`);continue;}assert(fs.statSync(`public${voice[tag].src}`).size>100);assert(voice[tag].duration>0);clips++;}
+ for(const voice of [...p.steps.map(s=>s.voice),...p.questions.flatMap(q=>[q.voice,q.explainVoice,...q.choiceVoices??[]])])for(const tag of tags){if(!voice?.[tag]||!(voice[tag].duration>0)){missing.push(`${p.id}:${tag}`);continue;}/* duration 0 = a changed line waiting for voicing (scripts/quiz/revoice-pending.json) */assert(fs.statSync(`public${voice[tag].src}`).size>100);assert(voice[tag].duration>0);clips++;}
  total++;steps+=p.steps.length;questions+=p.questions.length;rows.push({format:f,id:p.id,steps:p.steps.length,questions:p.questions.length,status:process.argv.includes('--structure-only')?'structure and finite playback samples passed; voice completion pending':'structure, finite playback samples and four-voice assets passed'});
 }
 if(!process.argv.includes('--structure-only'))assert.equal(missing.length,0,`${missing.length} missing voice references`);

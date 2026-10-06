@@ -32,19 +32,22 @@ import {apertureDisc} from '../../paths/riso/passage';
 import {twos,sm,key,settle,clamp,lerp,rng,hash,ribbon,polyPath,easeOut,easeIO,easeOutBack,easeInOutSine,TAU,type Pt,type Key} from '../../paths/riso/motion';
 import {footballPanels,sparkBurst,speedLines} from '../../paths/riso/shapes';
 import * as A from './athlete';
+import {beats,shotAt,type ShotParams,reframe,steady,type Pin,type Keep,type View as DView} from './director';
 
 const VOICE:NarrationTiming|null=timingJson as NarrationTiming;
 const K='navy',R='red',Y='yellow',B='blue';
-function frame(s:Sheet,zoom=1,rot=0,dx=0,dy=0){const S=zoom*s.arrival;s.camera((s.cx-s.W/2)/S+dx,(s.cy-s.H/2)/S+dy,zoom/s.fit,rot);}
+function frame(s:Sheet,zoom=1,rot=0,dx=0,dy=0){const S=zoom*s.arrival;DV={w:s.W,h:s.H};s.camera((s.cx-s.W/2)/S+dx,(s.cy-s.H/2)/S+dy,zoom/s.fit,rot);}
 
+/** the window in camera units (set by frame(); read by the director's reframing, aperture() included) */
+let DV:DView={w:1080,h:1080};
 // ---------------- 3D pinhole camera over a real pitch (metres; x → the goal line at 0, z → far touchline, y up) ----------------
 type V3=[number,number,number];
 const sub=(a:V3,b:V3):V3=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]];
 const dot=(a:V3,b:V3)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
 const nrm=(a:V3):V3=>{const l=Math.hypot(a[0],a[1],a[2])||1;return[a[0]/l,a[1]/l,a[2]/l];};
 const mix3=(a:V3,b:V3,u:number):V3=>[a[0]+(b[0]-a[0])*u,a[1]+(b[1]-a[1])*u,a[2]+(b[2]-a[2])*u];
-type Cam={p:V3;f:V3;r:V3;u:V3;F:number};
-function makeCam(p:V3,look:V3,F:number):Cam{const f=nrm(sub(look,p)),r=nrm([f[2],0,-f[0]]),u:V3=[f[1]*r[2]-f[2]*r[1],f[2]*r[0]-f[0]*r[2],f[0]*r[1]-f[1]*r[0]];return{p,f,r,u,F};}
+type Cam={p:V3;f:V3;r:V3;u:V3;F:number;t:V3};
+function makeCam(p:V3,look:V3,F:number):Cam{const f=nrm(sub(look,p)),r=nrm([f[2],0,-f[0]]),u:V3=[f[1]*r[2]-f[2]*r[1],f[2]*r[0]-f[0]*r[2],f[0]*r[1]-f[1]*r[0]];return{p,f,r,u,F,t:look};}
 const NEAR=.3;
 const depthOf=(c:Cam,p:V3)=>dot(sub(p,c.p),c.f);
 function P(c:Cam,p:V3):Pt{const d=sub(p,c.p),z=Math.max(NEAR,dot(d,c.f));return[c.F*dot(d,c.r)/z,-c.F*dot(d,c.u)/z];}
@@ -125,7 +128,8 @@ type Body={x:number;z:number;yaw:number;pose:A.Pose;prev:A.Pose;style:A.AthleteS
 function drawWorld(s:Sheet,c:Cam,bodies:Body[],extra:{depth:number;draw:()=>void}[]=[],detail:'auto'|A.Detail='auto'){
  const pj=projector(c),items:{depth:number;draw:()=>void}[]=[...extra];
  for(const bd of bodies){const g:V3=[bd.x,0,bd.z],d=depthOf(c,g);if(d<1)continue;const[x,y]=P(c,g),kk=kAt(c,g);if(Math.abs(x)>s.W*.62+kk*1.5||y<-s.H*.6||y>s.H*.6+2.4*kk)continue;
-  const place:A.Place={x:bd.x,z:-bd.z,yaw:bd.yaw},style={...bd.style,detail};
+  // the wide live shot draws everyone at low detail; only Cavani returns to full detail once the director has pushed in on him
+  const place:A.Place={x:bd.x,z:-bd.z,yaw:bd.yaw},style={...bd.style,detail:detail==='low'&&bd.style===CAVANI&&kk*1.84>=240?'auto':detail};
   items.push({depth:d,draw:()=>{if(bd.smear)A.motionSmear(s,bd.prev,bd.pose,pj,style,place);A.drawAthlete(s,bd.pose,pj,style,place,{prev:bd.prev});}});}
  items.sort((a,b)=>b.depth-a.depth).forEach(i=>i.draw());
 }
@@ -226,7 +230,43 @@ const aimAt=(tau:number):V3=>{const a=ballT(tau),b=ballT(tau-.15),c=ballT(tau-.3
 // ---------------- ch1: live, high main-stand camera, real time ----------------
 const ch1T=()=>({sp:T(0,'Edinson Cavani sprays'),end:SEC(0)});
 const tau1=(t:number)=>{const q=ch1T();return t-Math.min(q.sp+.6,q.end-.75-T_IN-.3);};
-function ch1Cam(t:number){const tau=tau1(t),q=ch1T(),a=aimAt(tau),cav=moverPos(CAV,tau),g=sm(T_CROSS-.3,T_HEAD,tau,easeInOutSine);
+/** the Portugal players and the keeper (feet), for the nearSlide() keeps */
+const foesAt=(tau:number):V3[]=>OTHERS.slice(0,5).map(m=>{const q=moverPos(m.path,tau);return[q.x,0,q.z] as V3;}).concat([[KEEP_G[0],0,lerp(KEEP_G[1],-.6,sm(T_CROSS,T_HEAD-.2,tau))] as V3]);
+const pinOf=(c:Cam):Pin=>({eye:c.p,target:c.t,F:c.F});
+const camOfPin=(p:Pin)=>makeCam(p.eye,p.target,p.F);
+const GOAL_KEEP:V3[]=[[0,2.44,-3.66],[0,0,-3.66],[0,0,1.5]];
+/** the ball as a keep that matters only while it is near the hero (a ball flying past the replay camera never vetoes the push-in) */
+const ballKeep=(b:V3,h:V3,r0=6,r1=14,g=1):Keep[]=>hard(b,(1-sm(r0,r1,Math.hypot(b[0]-h[0],b[2]-h[2])))*g,h);
+/** reframe about the hero with the teaching keeps; the aim leans toward their weighted centre (passed as the director's ball focus, so it
+ * slides smoothly as a keep fades in or out — no snap when a weight crosses "hard"); the nearby players are kept in frame but never steer the aim */
+function direct(c:Cam,hero:V3,teach:Keep[],soft:Keep[],shot:ShotParams):Pin{
+ let x=0,y=0,z=0,w=0;for(const k of teach){const P=Array.isArray(k)?k as V3:(k as {P:V3}).P,wk=Array.isArray(k)?1:(k as {w:number}).w;x+=P[0]*wk;y+=P[1]*wk;z+=P[2]*wk;w+=wk;}
+ const u=w/(w+1.5),poi:V3=w>0?[lerp(hero[0],x/w,u),lerp(1,y/w,u),lerp(hero[2],z/w,u)]:[hero[0],1,hero[2]];
+ return reframe(pinOf(c),{hero,ball:poi,keep:[...teach,...soft],height:1.84},shot,DV);}
+/** a teaching keep that never pops: instead of fading its weight (the fit would flip when a fading point slips behind the lens), the
+ * point itself slides in from the hero as w rises and back into him as w falls — a hard keep throughout, so the framing moves continuously */
+const hard=(P:V3,w:number,hero:V3):Keep[]=>{if(w<=.001)return[];const u=Math.min(1,w),y0=Math.min(P[1],1.84);return[{P:[lerp(hero[0],P[0],u),lerp(y0,P[1],u),lerp(hero[2],P[2],u)],w:1}];};
+const both=(g:[number,number]|{x:number;z:number},w:number,hero:V3,h=1.84):Keep[]=>{const x=Array.isArray(g)?g[0]:g.x,z=Array.isArray(g)?g[1]:g.z;return[...hard([x,0,z],w,hero),...hard([x,h,z],w,hero)];};
+/** the players near the hero (the defender he is beating, his marker, the keeper) as sliding keeps — like the director's near(), weighted
+ * 1 inside r0 m fading to 0 at r1, but each point slides out of the hero instead of softening, so the fit never flips frame to frame */
+const nearSlide=(hero:V3,others:V3[],r0:number,r1:number,about:V3=hero,g=1):Keep[]=>others.flatMap(o=>{const w=(1-sm(r0,r1,Math.hypot(o[0]-about[0],o[2]-about[2])))*g;return[...hard([o[0],0,o[2]],w,hero),...hard([o[0],1.84,o[2]],w,hero)];});
+/** Director beats, ch1 (lib/plays/riso/director.ts, Oct 4 2026): a short establishing wide of the bowl, follow Cavani as the ball is
+ * worked to him, push in low for the switch itself (the touch), then pull OUT for the 36 m long ball — Cavani and the ball first, then the
+ * ball and Suárez at the far side (the decision: the space on the left). Close on Suárez taking it down, pull out again for the cross with
+ * Cavani's run into the box, push in tight for the back-post header with the goal mouth and keeper kept, and hold on the celebration. */
+const ch1Off=()=>{const q=ch1T();return Math.min(q.sp+.6,q.end-.75-T_IN-.3);};
+const B1=beats([[0,'wide'],[1.2,'follow'],[T(0,'Edinson Cavani sprays')-.3,'tight'],[T(0,'Edinson Cavani sprays')+.5,{from:'space',size:.24}],
+ [T(0,'Luis Suárez')-.3,{from:'follow',size:.4}],[T(0,'then starts to run')-.7,{from:'space',size:.26}],[ch1Off()+T_HEAD-.3,'tight'],[ch1Off()+T_IN+.3,'reaction']]);
+/** the directed camera, steadied over ±.5 s (pure in t: seeking and the 15 fps player see the same move) */
+function ch1Cam(t:number){return camOfPin(steady(t,ch1Dir,.5,5));}
+function ch1Dir(t:number):Pin{const tau=tau1(t),c=ch1CamAuthored(t),cav=moverPos(CAV,tau),sua=moverPos(SUA,tau);
+ // the hero: Cavani, handed to Suárez while the switch flies to him, and back to Cavani as the cross flies (blended, never a hard switch)
+ const u=sm(.9,2.4,tau,easeInOutSine)*(1-sm(T_CROSS-.6,T_CROSS+.95,tau,easeInOutSine)),hero:V3=[lerp(cav.x,sua.x,u),0,lerp(cav.z,sua.z,u)];
+ const keep:Keep[]=[...both(cav,1-sm(1.4,2.2,tau,easeInOutSine),hero),...both(sua,sm(.1,.8,tau,easeInOutSine)*(1-sm(T_CROSS,T_CROSS+.8,tau,easeInOutSine)),hero,1.82),
+  ...GOAL_KEEP.flatMap(P=>hard(P,sm(T_CROSS+.2,T_HEAD-.2,tau,easeInOutSine),hero)),...ballKeep(ballT(tau),hero,4,10,1-sm(-1.2,-.3,tau)),...hard(ballT(tau),sm(-1.2,-.3,tau),hero)];
+ const fo=foesAt(tau),cp:V3=[cav.x,0,cav.z],sp:V3=[sua.x,0,sua.z];// near players measured from the real players (not the moving hand-over point)
+ return direct(c,hero,keep,[...nearSlide(hero,fo,5,9,cp,1-u),...nearSlide(hero,fo,5,9,sp,u)],shotAt(t,B1));}
+function ch1CamAuthored(t:number){const tau=tau1(t),q=ch1T(),a=aimAt(tau),cav=moverPos(CAV,tau),g=sm(T_CROSS-.3,T_HEAD,tau,easeInOutSine);
  // the director keeps Cavani's run in the picture while the ball is out on the left, then frames the box
  const run=sm(T_ARR-.4,T_ARR+.6,tau)*(1-g),look=mix3(mix3(a,[cav.x,1,cav.z],run*.45),[-4,1.2,-1],g*.5);
  const F=key(tau,mono<number[]>([[-6,3000],[0,3200],[T_ARR,2900],[T_CROSS,3500],[T_HEAD,4400],[q.end,4200]]) as unknown as Key[],easeIO);
@@ -242,7 +282,16 @@ const ch1:Scene={
 // ---------------- ch2: TV replay, low on the left of the box, looking across at Cavani's run and the back post ----------------
 const ch2T=()=>({hp:T(1,'He passes'),kr:T(1,'keeps running'),box:T(1,'into the box'),sw:T(1,'Suárez whips'),fp:T(1,'far post'),tc:T(1,'there is Cavani'),hh:T(1,'head it home'),on:T(1,'One nil'),end:SEC(1)});
 const tau2=(t:number)=>{const q=ch2T();return clockMap(t,[[0,-.7],[q.hp+.15,0],[q.sw+.2,T_CROSS],[q.fp+.2,T_CROSS+.75],[q.tc+.35,T_HEAD-.05],[q.hh+.1,T_HEAD+.1],[q.on+.1,T_IN+.5],[q.end,T_IN+2.4]]);};
-function ch2Cam(t:number){const q=ch2T(),tau=tau2(t),cav=moverPos(CAV,tau),a=aimAt(tau),w=sm(q.sw-.2,q.fp,t,easeInOutSine);
+/** Director beats, ch2: the replay starts on Cavani, pushes in low for his pass, follows him as he keeps running, pulls out as Suárez whips
+ * the cross in (the run and the ball both in the picture), then tight on the back-post header with the goal and the keeper kept in frame,
+ * and the reaction for one nil. Cavani's marker stays in shot (near) so the viewer sees him lose the man. */
+const B2=beats([[0,'follow'],[T(1,'He passes')-.35,'tight'],[T(1,'keeps running')+.1,'follow'],[T(1,'Suárez whips')-.3,{from:'space',size:.26}],
+ [T(1,'there is Cavani')-.1,'tight'],[T(1,'head it home')+.4,'reaction']]);
+function ch2Cam(t:number){return camOfPin(steady(t,ch2Dir,.5,5));}
+function ch2Dir(t:number):Pin{const q=ch2T(),tau=tau2(t),c=ch2CamAuthored(t),cav=moverPos(CAV,tau),hero:V3=[cav.x,0,cav.z];
+ const keep:Keep[]=[...GOAL_KEEP.flatMap(P=>hard(P,sm(q.sw,q.fp,t)*(1-sm(q.hh+.3,q.hh+1.4,t)),hero))],cross=sm(q.sw,q.fp,t),wb=1-sm(-.1,.5,tau)*(1-sm(T_ARR,T_CROSS-.3,tau));
+ return direct(c,hero,[...keep,...ballKeep(ballT(tau),hero,lerp(5,10,cross),lerp(20,30,cross),wb)],nearSlide(hero,foesAt(tau),3.5,7),shotAt(t,B2));}
+function ch2CamAuthored(t:number){const q=ch2T(),tau=tau2(t),cav=moverPos(CAV,tau),a=aimAt(tau),w=sm(q.sw-.2,q.fp,t,easeInOutSine);
  const look=mix3([cav.x+3,1.2,cav.z+1],mix3(a,[HEAD_PT[0],1.3,HEAD_PT[2]],.5),w);
  const v=key(t,mono<number[]>([[0,-14,1.8,27,1100],[q.box,-13,1.8,26,1200],[q.sw,-12,1.9,25,1300],[q.tc,-11.5,1.9,24.5,2000],[q.hh,-11.5,1.9,24.5,2300],[q.end,-12,2.4,24,1600]]) as unknown as Key[],easeIO,true);
  return makeCam([v[0],v[1],v[2]],look,v[3]);}
@@ -259,7 +308,18 @@ const ch2:Scene={
 // ---------------- ch3: lesson replay from high behind the run — pass, don't watch, sprint, far post ----------------
 const ch3T=()=>({ap:T(2,'After you pass'),dn:T(2,'do not stand and watch'),sb:T(2,'Sprint into the box'),fp:T(2,'aim for the far post'),cb:T(2,'come straight back'),end:SEC(2)});
 const tau3=(t:number)=>{const q=ch3T();return clockMap(t,[[0,-.5],[q.ap+.2,0],[q.dn,.5],[q.sb+.3,2.2],[q.fp+.3,T_CROSS],[q.cb+.4,T_HEAD],[q.end,T_IN+.9]]);};
-function ch3Cam(t:number){const q=ch3T();return camOf(t,[[0,-54,20,-18,-30,0,-2,1250],[q.dn,-52,19,-17,-26,0,0,1250],[q.sb,-44,17,-14,-18,0,1,1300],[q.fp,-34,15,-12,-9,0,0,1450],[q.end,-30,14,-11,-7,.5,-1,1550]]);}
+/** Director beats, ch3 (the lesson): closer than the authored high shot, but every mark stays readable — the dashed switch (pass point
+ * and Suárez) while it is drawn, the ring round Cavani for "do not stand and watch", the far post from the sprint on, and the cross's run-in —
+ * and a tight finish on the header that "comes straight back". */
+/** a point 80 % along Suárez's cross: the drawn arc's run-in to the far post stays readable */
+const CROSS_MID:V3=flight(CROSS_PT,HEAD_PT,T_HEAD-T_CROSS,.8);
+const B3=beats([[0,'lesson'],[T(2,'come straight back')+.1,{from:'tight',size:.45}]]);
+function ch3Cam(t:number){return camOfPin(steady(t,ch3Dir,.5,5));}
+function ch3Dir(t:number):Pin{const q=ch3T(),tau=tau3(t),c=ch3CamAuthored(t),cav=moverPos(CAV,tau),hero:V3=[cav.x,0,cav.z];
+ const E=easeInOutSine,wa=sm(q.ap-.6,q.ap,t,E)*(1-sm(q.dn-.2,q.dn+1.2,t,E)),wr=sm(q.dn-.6,q.dn,t,E)*(1-sm(q.sb-.6,q.sb+1.1,t,E)),wf=sm(q.sb-.6,q.sb+.6,t,E),wc=sm(q.cb-.7,q.cb,t,E)*(1-sm(q.cb+.6,q.cb+1.4,t,E));
+ const keep:Keep[]=[...hard(SWITCH_PT,wa,hero),...both(SUA_REC_G,wa,hero,1.82),...both(CAV_G,wr,hero),...hard([HEAD_G[0]-1.5,0,HEAD_G[1]],wf,hero),...hard([HEAD_G[0]+1.5,0,HEAD_G[1]],wf,hero),...hard(CROSS_MID,wc,hero)];
+ return direct(c,hero,[...keep,...ballKeep(ballT(tau),hero,5,20)],nearSlide(hero,foesAt(tau),3,6),shotAt(t,B3));}
+function ch3CamAuthored(t:number){const q=ch3T();return camOf(t,[[0,-54,20,-18,-30,0,-2,1250],[q.dn,-52,19,-17,-26,0,0,1250],[q.sb,-44,17,-14,-18,0,1,1300],[q.fp,-34,15,-12,-9,0,0,1450],[q.end,-30,14,-11,-7,.5,-1,1550]]);}
 const ring=(s:Sheet,c:Cam,p:V3,r:number,w:number)=>{const pts:Pt[]=[];for(let i=0;i<24;i++){const a=i/24*TAU;pts.push(P(c,[p[0]+Math.cos(a)*r,.04,p[2]+Math.sin(a)*r]));}s.stroke(Y,polyPath(pts,true),w,.95);};
 const ch3:Scene={
  draw(s,t){const q=ch3T(),tt=twos(t),c=ch3Cam(t),tau=tau3(t),w=worldBodies(tau,tau3(tt),Math.max(.01,tau3(tt)-tau3(tt-1/12)));

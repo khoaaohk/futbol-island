@@ -8,12 +8,13 @@
 import type {Sheet} from '../sheet';
 import {type RisoStory,type Scene,playChapters} from '../story';
 import {apertureDisc} from '../passage';
-import {twos,twosIndex,sm,easeOut,easeIO,easeIn,easeOutBack,linear,key,anticipate,settle,spring,squash,clamp,lerp,rng,noise1,blob,polyPath,circlePath,ribbon,partial,smoothPts,arc,TAU,type Pt,type Key} from '../motion';
+import {twos,twosIndex,sm,easeOut,easeIO,easeIn,easeOutBack,linear,key,anticipate,settle,spring,squash,clamp,lerp,rng,noise1,blob,polyPath,circlePath,ribbon,partial,smoothPts,arc,TAU,type Pt,type Key,creepHolds} from '../motion';
 import {contour,dust,laneArrow,sparkBurst,speedLines,ripple,confetti,handCut,crescent,tornRect} from '../shapes';
 
 const CH='/stories/narration/9v9/different-tides/';
 const T='teal',B='blue',R='red',K='navy';
-const cam=(s:Sheet,t:number,K_:Key[])=>{const v=key(t,K_,easeIO,true);s.camera(v[0],v[1],v[2],v[3]??0);return v;};
+// moving holds: a camera hold creeps toward the next key instead of parking (stutter audit, Oct 4 2026)
+const cam=(s:Sheet,t:number,K_:Key[])=>{const v=key(t,creepHolds(K_),easeIO,true);s.camera(v[0],v[1],v[2],v[3]??0);return v;};
 
 // ---------------- abstract riso figure (bible §1c.4) ----------------
 /** A person as a paper cut-out: one head disc, one torso block, two leg strokes, two arm strokes (3–6 shapes), big head, short legs,

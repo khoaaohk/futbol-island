@@ -45,11 +45,51 @@ export const SCENARIOS:Scenario[]=[
     },
     pitch:SMALL,carrier:0,
     attackers:[{x:0,z:6},{x:8.5,z:16}],
-    defenders:[{x:0,z:12}],
+    defenders:[{x:0,z:12},{x:-6,z:17.5}],   // the far-side cover defender keeps the friend onside
     keeper:{x:0,z:24},
     attempts:3,require:{minPasses:1,finish:'goal'},
     bonus:{kind:'first-time',label:'Shoot first time'},
     lesson:'When a defender blocks your shot, a pass to a free friend makes a better chance.',
+  },
+  {
+    id:'fp-far-corner',pack:'first-passes',title:'Far Corner',concept:'shot-placement',
+    brief:{
+      '7v7':'The keeper guards the near side. Shoot to the far side!',
+      '9v9':'The keeper is covering the near post. Place your shot across goal into the far corner.',
+      '11v11':'The keeper has set too close to the near post. Pass the ball across them into the far corner.',
+    },
+    hint:{
+      '7v7':'Aim away from the keeper. Low and hard.',
+      '9v9':'Shoot where the keeper is not: the far corner.',
+      '11v11':'Open your body and aim across the keeper; the far corner is the biggest gap.',
+    },
+    pitch:SMALL,carrier:0,
+    attackers:[{x:5,z:15}],
+    defenders:[],
+    keeper:{x:2,z:23.8},
+    attempts:3,require:{minPasses:0,finish:'goal'},
+    bonus:{kind:'placement',label:'Low into the far corner'},
+    lesson:'Aim away from the keeper. The far corner is often the biggest gap.',
+  },
+  {
+    id:'fp-up-and-over',pack:'first-passes',title:'Up and Over',concept:'chip',
+    brief:{
+      '7v7':'A defender blocks the ground pass. Lift the ball over them!',
+      '9v9':'A defender cuts off the ground pass. Chip the ball over their head to your teammate.',
+      '11v11':'The defender shuts the ground lane. Clip a lofted pass over them to find the teammate behind.',
+    },
+    hint:{
+      '7v7':'Hold your finger still at the end. The ball goes up.',
+      '9v9':'Hold still at the end of your stroke to lift the ball.',
+      '11v11':'Hold at the end of the stroke for loft; the ball clears the defender and drops to the receiver.',
+    },
+    pitch:SMALL,carrier:0,
+    attackers:[{x:0,z:4},{x:1,z:16}],
+    defenders:[{x:0.3,z:9.5},{x:-8,z:17}],
+    keeper:{x:0,z:24},
+    attempts:3,require:{minPasses:1,finish:'reach-zone',zone:{x:1,z:16,r:3}},
+    bonus:{kind:'chip',label:'Land it at their feet'},
+    lesson:'A chip lifts the ball over a defender when the ground pass is blocked.',
   },
   {
     id:'fp-run-onto-it',pack:'first-passes',title:'Run Onto It',concept:'pass-into-space',
@@ -64,8 +104,8 @@ export const SCENARIOS:Scenario[]=[
       '11v11':'Pass into the space away from the screening defender; the receiver attacks the ball.',
     },
     pitch:SMALL,carrier:0,
-    attackers:[{x:0,z:4},{x:4,z:12,run:{delay:0,path:[P(0,16)]}}],
-    defenders:[{x:3,z:9.5}],
+    attackers:[{x:0,z:4},{x:6,z:12,run:{delay:0,path:[P(1,16.5)]}}],
+    defenders:[{x:4.5,z:10},{x:-9,z:16}],   // the far cover defender holds the line: the runner starts onside
     keeper:{x:0,z:24},
     attempts:3,require:{minPasses:1,finish:'goal'},
     bonus:{kind:'first-time',label:'Shoot first time'},
@@ -85,49 +125,11 @@ export const SCENARIOS:Scenario[]=[
     },
     pitch:SMALL,carrier:0,
     attackers:[{x:-6,z:4},{x:5,z:16}],
-    defenders:[{x:0.6,z:11.3}],
+    defenders:[{x:0.6,z:11.3},{x:-7,z:17.5}],
     keeper:{x:0,z:24},
     attempts:3,require:{minPasses:1,finish:'goal'},
     bonus:{kind:'first-time',label:'Shoot first time'},
     lesson:'Curling the ball takes a pass around a defender who blocks the straight line.',
-  },
-  {
-    id:'fp-up-and-over',pack:'first-passes',title:'Up and Over',concept:'chip',
-    brief:{
-      '7v7':'A defender blocks the ground pass. Lift the ball over them!',
-      '9v9':'A defender cuts off the ground pass. Chip the ball over their head to your teammate.',
-      '11v11':'The defender shuts the ground lane. Clip a lofted pass over them to find the teammate behind.',
-    },
-    hint:{
-      '7v7':'Hold your finger still at the end. The ball goes up.',
-      '9v9':'Hold still at the end of your stroke to lift the ball.',
-      '11v11':'Hold at the end of the stroke for loft; the ball clears the defender and drops to the receiver.',
-    },
-    pitch:SMALL,carrier:0,
-    attackers:[{x:0,z:4},{x:1,z:16}],
-    defenders:[{x:0.3,z:9.5}],
-    keeper:{x:0,z:24},
-    attempts:3,require:{minPasses:1,finish:'reach-zone',zone:{x:1,z:16,r:3}},
-    lesson:'A chip lifts the ball over a defender when the ground pass is blocked.',
-  },
-  {
-    id:'fp-far-corner',pack:'first-passes',title:'Far Corner',concept:'shot-placement',
-    brief:{
-      '7v7':'The keeper guards the near side. Shoot to the far side!',
-      '9v9':'The keeper is covering the near post. Place your shot across goal into the far corner.',
-      '11v11':'The keeper has set too close to the near post. Pass the ball across them into the far corner.',
-    },
-    hint:{
-      '7v7':'Aim away from the keeper. Low and hard.',
-      '9v9':'Shoot where the keeper is not: the far corner.',
-      '11v11':'Open your body and aim across the keeper; the far corner is the biggest gap.',
-    },
-    pitch:SMALL,carrier:0,
-    attackers:[{x:5,z:15}],
-    defenders:[],
-    keeper:{x:2,z:23.8},
-    attempts:3,require:{minPasses:0,finish:'goal'},
-    lesson:'Aim away from the keeper. The far corner is often the biggest gap.',
   },
 
   /* ───────────── Pack 2: Team Moves ───────────── */
@@ -145,7 +147,7 @@ export const SCENARIOS:Scenario[]=[
     },
     pitch:SMALL,carrier:0,
     attackers:[{x:0,z:11,run:{delay:0.05,afterPass:true,path:[P(2,14),P(2,19)]}},{x:-6,z:14.5}],
-    defenders:[{x:0.5,z:14,press:true}],
+    defenders:[{x:0.5,z:14,press:true},{x:-5,z:19.5}],   // the covering centre-back keeps the wall player onside
     keeper:{x:0,z:24},
     attempts:3,require:{minPasses:2,finish:'goal'},
     bonus:{kind:'scorer',scorer:0,label:'The passer scores'},
@@ -164,7 +166,7 @@ export const SCENARIOS:Scenario[]=[
       '11v11':'The screening defender watches the first pass; the third man\'s run comes off their blind side.',
     },
     pitch:MID,carrier:0,
-    attackers:[{x:-4,z:4},{x:-3,z:12},{x:8.5,z:15.5,run:{delay:0,path:[P(6,20.5)]}}],
+    attackers:[{x:-4,z:4},{x:-3,z:12},{x:8.5,z:15.5,run:{delay:1.2,path:[P(6,20.5)]}}],   // the runner waits onside, then goes as the link pass is played
     defenders:[{x:-5,z:16},{x:3,z:10}],
     keeper:{x:0,z:29},
     attempts:3,require:{minPasses:2,finish:'goal'},
@@ -185,9 +187,10 @@ export const SCENARIOS:Scenario[]=[
     },
     pitch:MID,carrier:0,
     attackers:[{x:13,z:10},{x:18.5,z:17},{x:5,z:21.5}],
-    defenders:[{x:12,z:13.5},{x:8,z:16.5}],
+    defenders:[{x:12,z:13.5},{x:8,z:16.5},{x:-4,z:23}],   // the far centre-back holds the line
     keeper:{x:0,z:29},
     attempts:3,require:{minPasses:2,finish:'goal'},
+    bonus:{kind:'first-time',label:'Cross it first time'},
     lesson:'An overlap: a friend runs round the outside to make a 2 v 1 on the wing.',
   },
   {
@@ -206,6 +209,7 @@ export const SCENARIOS:Scenario[]=[
     attackers:[{x:-18,z:2},{x:-9,z:1},{x:20,z:6,run:{delay:0.4,path:[P(22,12)]}}],
     defenders:[{x:-17,z:3.4,press:true},{x:-13.5,z:2},{x:-9,z:2.5,mark:1},{x:-9,z:7}],
     attempts:3,require:{minPasses:1,finish:'reach-zone',zone:{x:21,z:10,r:5}},
+    bonus:{kind:'chip',label:'Lift it over the crowd'},
     lesson:'Switching play moves the ball from a crowded side to the free side.',
   },
   {
@@ -266,6 +270,7 @@ export const SCENARIOS:Scenario[]=[
     attackers:[{x:0,z:-23},{x:-3,z:-17},{x:-14,z:-17},{x:-15,z:-6,run:{delay:0.8,path:[P(-16,-2)]}}],
     defenders:[{x:-1.5,z:-18.5},{x:-7,z:-10},{x:4,z:-12}],
     attempts:3,require:{minPasses:2,finish:'reach-zone',zone:{x:-15,z:-3,r:5}},
+    bonus:{kind:'first-time',label:'Play forward first time'},
     lesson:'Playing out from the back: go wide, away from the press, then forward.',
   },
   {
@@ -281,7 +286,7 @@ export const SCENARIOS:Scenario[]=[
       '11v11':'The gap between the two midfielders is the lane; the receiver then finds the run past the centre-back.',
     },
     pitch:MID,carrier:0,
-    attackers:[{x:0,z:2},{x:0,z:15},{x:8.5,z:16,run:{delay:0,path:[P(7,20)]}}],
+    attackers:[{x:0,z:2},{x:0,z:15},{x:8.5,z:16,run:{delay:0.9,path:[P(7,20)]}}],   // the runner holds the line until the ball is between the lines
     defenders:[{x:-5,z:9},{x:5,z:9},{x:-1.5,z:20}],
     keeper:{x:0,z:29},
     attempts:3,require:{minPasses:2,finish:'goal'},
@@ -301,9 +306,10 @@ export const SCENARIOS:Scenario[]=[
       '11v11':'The press overloads the ball side; the back pass pulls it over, and the switch finds the far side.',
     },
     pitch:WIDE,carrier:0,
-    attackers:[{x:-26,z:4},{x:-25,z:14},{x:-10,z:-4},{x:22,z:8,run:{delay:0.6,path:[P(24,13)]}}],
+    attackers:[{x:-26,z:4},{x:-25,z:14},{x:-10,z:-4},{x:22,z:8,run:{delay:1.6,path:[P(24,13)]}}],   // the far full-back stays onside until the switch is coming
     defenders:[{x:-25,z:5.5,press:true},{x:-25.5,z:10},{x:-20,z:7},{x:-3,z:3}],
     attempts:3,require:{minPasses:2,finish:'reach-zone',zone:{x:23,z:12,r:6}},
+    bonus:{kind:'first-time',label:'Switch it first time'},
     lesson:'A pass backwards can escape a trap and open up the free side of the pitch.',
   },
   {
@@ -319,7 +325,7 @@ export const SCENARIOS:Scenario[]=[
       '11v11':'Weight it into the space behind the line; the screening midfielder cuts out the safe pass.',
     },
     pitch:MID,carrier:0,
-    attackers:[{x:0,z:6},{x:3,z:14,run:{delay:0,path:[P(3,21.5)]}},{x:-4,z:13}],
+    attackers:[{x:0,z:6},{x:3,z:13,run:{delay:0,path:[P(3,21.5)]}},{x:-4,z:13}],   // the striker starts a step onside and times the run with the pass
     defenders:[{x:-9,z:14},{x:-2,z:14},{x:8,z:14},{x:-3,z:10.8}],
     keeper:{x:0,z:29},
     attempts:3,require:{minPasses:1,finish:'goal'},
@@ -328,26 +334,6 @@ export const SCENARIOS:Scenario[]=[
   },
 
   /* ───────────── Pack 4: In the Air ───────────── */
-  {
-    id:'air-near-post',pack:'in-the-air',title:'Near-Post Header',concept:'near-post-header',
-    brief:{
-      '7v7':'Cross it high to your friend at the front post. Head it in!',
-      '9v9':'A defender blocks the low cross. Float it to the near post for your striker\'s header.',
-      '11v11':'The low cross gets cut out. Deliver it in the air to the near-post run, then glance the header across the keeper.',
-    },
-    hint:{
-      '7v7':'Hold at the end to lift the cross. Then head it at goal.',
-      '9v9':'A lofted cross clears the defender. Aim it at your striker\'s head.',
-      '11v11':'The near-post run gets in front of the defender; glance it into the far side of the goal.',
-    },
-    pitch:BIG,carrier:0,
-    attackers:[{x:20,z:25},{x:4,z:25.5}],
-    defenders:[{x:11,z:25.5},{x:-3,z:26}],
-    keeper:{x:0,z:31},
-    attempts:3,require:{minPasses:1,finish:'goal'},
-    bonus:{kind:'header',label:'Score with a header'},
-    lesson:'A near-post run gets you in front of the defender to head the cross first.',
-  },
   {
     id:'air-far-post',pack:'in-the-air',title:'Far-Post Header',concept:'far-post-header',
     brief:{
@@ -381,12 +367,52 @@ export const SCENARIOS:Scenario[]=[
       '11v11':'The flick-on changes the angle faster than the defenders can turn.',
     },
     pitch:BIG,carrier:0,
-    attackers:[{x:0,z:0},{x:-2,z:16},{x:7,z:12,run:{delay:0.3,path:[P(5,20)]}}],
+    attackers:[{x:0,z:0},{x:-2,z:16},{x:7,z:12,run:{delay:0.8,path:[P(5,20)]}}],   // the runner waits for the flick so they stay onside
     defenders:[{x:-2,z:17.5,mark:1},{x:3,z:10}],
     keeper:{x:0,z:31},
     attempts:3,require:{minPasses:2,finish:'goal'},
     bonus:{kind:'scorer',scorer:2,label:'The runner scores'},
     lesson:'A flick-on header can be a pass that sends a runner through.',
+  },
+  {
+    id:'air-near-post',pack:'in-the-air',title:'Near-Post Header',concept:'near-post-header',
+    brief:{
+      '7v7':'Cross it high to your friend at the front post. Head it in!',
+      '9v9':'A defender blocks the low cross. Float it to the near post for your striker\'s header.',
+      '11v11':'The low cross gets cut out. Deliver it in the air to the near-post run, then glance the header across the keeper.',
+    },
+    hint:{
+      '7v7':'Hold at the end to lift the cross. Then head it at goal.',
+      '9v9':'A lofted cross clears the defender. Aim it at your striker\'s head.',
+      '11v11':'The near-post run gets in front of the defender; glance it into the far side of the goal.',
+    },
+    pitch:BIG,carrier:0,
+    attackers:[{x:20,z:25},{x:4,z:25.5}],
+    defenders:[{x:11,z:25.5},{x:-3,z:26}],
+    keeper:{x:0,z:31},
+    attempts:3,require:{minPasses:1,finish:'goal'},
+    bonus:{kind:'header',label:'Score with a header'},
+    lesson:'A near-post run gets you in front of the defender to head the cross first.',
+  },
+  {
+    id:'air-corner-flick',pack:'in-the-air',title:'Corner Flick',concept:'corner-flick-on',
+    brief:{
+      '7v7':'Corner kick! Your front friend heads it on. Your back friend heads it in!',
+      '9v9':'From the corner, find the near-post runner, who glances it on to the far post for a header.',
+      '11v11':'Deliver the corner to the near-post runner; the flick-on takes the keeper out and finds the far-post attacker.',
+    },
+    hint:{
+      '7v7':'Cross to the near friend. Then head it across to the far friend.',
+      '9v9':'The near-post glance changes direction faster than the keeper can move.',
+      '11v11':'Aim at the near-post zone; a glancing flick across the six-yard box beats the keeper\'s starting position.',
+    },
+    pitch:BIG,carrier:0,
+    attackers:[{x:29.5,z:31.5},{x:6,z:25.5},{x:-3,z:25.3}],   // the far-post attacker stays level with the flick: onside
+    defenders:[{x:2,z:28.5},{x:-2,z:29}],
+    keeper:{x:0,z:31},
+    attempts:3,require:{minPasses:2,finish:'goal'},
+    bonus:{kind:'header',label:'Score with a header'},
+    lesson:'A near-post flick-on moves the ball across the goal faster than the keeper.',
   },
   {
     id:'air-knock-down',pack:'in-the-air',title:'Head It Down',concept:'knock-down',
@@ -408,27 +434,9 @@ export const SCENARIOS:Scenario[]=[
     bonus:{kind:'scorer',scorer:2,label:'The midfielder scores'},
     lesson:'A header does not have to be a shot: knock it down for a friend facing goal.',
   },
-  {
-    id:'air-corner-flick',pack:'in-the-air',title:'Corner Flick',concept:'corner-flick-on',
-    brief:{
-      '7v7':'Corner kick! Your front friend heads it on. Your back friend heads it in!',
-      '9v9':'From the corner, find the near-post runner, who glances it on to the far post for a header.',
-      '11v11':'Deliver the corner to the near-post runner; the flick-on takes the keeper out and finds the far-post attacker.',
-    },
-    hint:{
-      '7v7':'Cross to the near friend. Then head it across to the far friend.',
-      '9v9':'The near-post glance changes direction faster than the keeper can move.',
-      '11v11':'Aim at the near-post zone; a glancing flick across the six-yard box beats the keeper\'s starting position.',
-    },
-    pitch:BIG,carrier:0,
-    attackers:[{x:29.5,z:31.5},{x:6,z:25.5},{x:-3,z:27}],
-    defenders:[{x:2,z:28.5},{x:-2,z:29}],
-    keeper:{x:0,z:31},
-    attempts:3,require:{minPasses:2,finish:'goal'},
-    bonus:{kind:'header',label:'Score with a header'},
-    lesson:'A near-post flick-on moves the ball across the goal faster than the keeper.',
-  },
 ];
+/* Every arcade puzzle plays the offside law (Law 11, in all formats): the routes below are authored onside. */
+for(const s of SCENARIOS)s.require.offside??=true;
 
 /**
  * What the tests replay: the taught sequence, and the tempting direct option that fails.
@@ -441,12 +449,12 @@ export type ScenarioSolution={solution:Kick[];naive:Kick};
 
 export const SCENARIO_SOLUTIONS:Record<string,ScenarioSolution>={
   'fp-find-a-friend':{solution:[K('pass-feet',8.5,16,{receiver:1,power:0.43}),K('shot',-2.75,25,{power:0.54})],naive:K('shot',0.8,25,{power:0.69})},
-  'fp-run-onto-it':{solution:[K('pass-space',0,15,{receiver:1,power:0.36}),K('shot',-2.75,25,{power:0.41})],naive:K('pass-feet',4,12,{receiver:1,power:0.29})},
+  'fp-run-onto-it':{solution:[K('pass-space',0,15,{receiver:1,power:0.36}),K('shot',-2.75,25,{power:0.41})],naive:K('pass-feet',6,12,{receiver:1,power:0.32})},
   'fp-bend-it-round':{solution:[K('pass-feet',5,16,{receiver:1,power:0.61,curl:1}),K('shot',-2.7,25,{power:0.48})],naive:K('pass-feet',5,16,{receiver:1,power:0.53})},
   'fp-up-and-over':{solution:[K('header',1,16,{receiver:1,power:0.39,loft:1})],naive:K('pass-feet',1,16,{receiver:1,power:0.39})},
   'fp-far-corner':{solution:[K('shot',-2.75,25,{power:0.47})],naive:K('shot',2.7,25,{power:0.4})},
   'tm-give-and-go':{solution:[K('pass-feet',-6,14.5,{receiver:1,power:0.23}),K('pass-space',2,17.5,{receiver:0,power:0.26}),K('shot',2.7,25,{power:0.31})],naive:K('shot',0.5,25,{power:0.52})},
-  'tm-third-friend':{solution:[K('pass-feet',-3,12,{receiver:1,power:0.26}),K('pass-space',3.5,18.5,{receiver:2,power:0.35}),K('shot',-3.4,30,{power:0.51})],naive:K('pass-feet',8.5,15.5,{receiver:2,power:0.56})},
+  'tm-third-friend':{solution:[K('pass-feet',-3,12,{receiver:1,power:0.26}),K('pass-space',2,18.5,{receiver:2,power:0.32}),K('shot',-3.4,30,{power:0.49})],naive:K('pass-feet',8.5,15.5,{receiver:2,power:0.56})},
   'tm-round-the-outside':{solution:[K('pass-space',16.5,14,{receiver:1,power:0.17}),K('pass-feet',5,21.5,{receiver:2,power:0.46}),K('shot',-3.4,30,{power:0.52})],naive:K('pass-feet',5,21.5,{receiver:2,power:0.46})},
   'tm-switch-it':{solution:[K('pass-space',21,10,{receiver:2,power:1,loft:0.7})],naive:K('pass-feet',-9,1,{receiver:1,power:0.3})},
   'tm-pull-it-back':{solution:[K('pass-space',5,15.5,{receiver:2,power:0.38}),K('shot',-2.75,25,{power:0.46})],naive:K('pass-feet',2.5,21.5,{receiver:1,power:0.38})},
@@ -454,12 +462,12 @@ export const SCENARIO_SOLUTIONS:Record<string,ScenarioSolution>={
   'bp-keeper-starts-it':{solution:[K('pass-feet',-14,-17,{receiver:2,power:0.5}),K('pass-space',-15.5,-3,{receiver:3,power:0.51})],naive:K('pass-feet',-3,-17,{receiver:1,power:0.21})},
   'bp-through-the-gap':{solution:[K('pass-feet',0,15,{receiver:1,power:0.42}),K('pass-space',3.5,19.5,{receiver:2,power:0.26}),K('shot',-3.4,30,{power:0.48})],naive:K('pass-space',3.5,19.5,{receiver:2,power:0.58})},
   'bp-back-to-go-forward':{solution:[K('pass-feet',-10,-4,{receiver:2,power:0.6}),K('pass-space',22,10,{receiver:3,power:1,loft:0.6})],naive:K('pass-feet',-25,14,{receiver:1,power:0.32})},
-  'bp-in-behind':{solution:[K('pass-space',3,20.5,{receiver:1,power:0.48}),K('shot',-3.4,30,{power:0.44})],naive:K('pass-feet',-4,13,{receiver:2,power:0.26})},
+  'bp-in-behind':{solution:[K('pass-space',3,20.5,{receiver:1,power:0.48}),K('shot',-3.4,30,{power:0.43})],naive:K('pass-feet',-4,13,{receiver:2,power:0.26})},
   'air-near-post':{solution:[K('header',4,25.5,{receiver:1,power:0.53,loft:0.6}),K('shot',-3.4,32,{power:0.38})],naive:K('pass-feet',4,25.5,{receiver:1,power:0.53})},
   'air-far-post':{solution:[K('header',-5,26,{receiver:2,power:0.83,loft:0.8}),K('shot',3.4,32,{power:0.38})],naive:K('header',2.5,27.5,{receiver:1,power:0.59,loft:0.6})},
-  'air-flick-on':{solution:[K('header',-2,16,{receiver:1,power:0.53,loft:0.6}),K('pass-space',4,18,{receiver:2,power:0.21}),K('shot',-3.4,32,{power:0.58})],naive:K('pass-space',4,18,{receiver:2,power:0.6})},
+  'air-flick-on':{solution:[K('header',-2,16,{receiver:1,power:0.53,loft:0.6}),K('pass-space',4,18,{receiver:2,power:0.21}),K('shot',-3.4,32,{power:0.61})],naive:K('pass-space',4,18,{receiver:2,power:0.6})},
   'air-knock-down':{solution:[K('header',-6,26,{receiver:1,power:0.87,loft:0.8}),K('pass-feet',1,21,{receiver:2,power:0.27}),K('shot',-3.2,32,{power:0.41})],naive:K('pass-feet',-6,26,{receiver:1,power:0.87})},
-  'air-corner-flick':{solution:[K('header',6,25.5,{receiver:1,power:0.81,loft:0.6}),K('header',-3,27,{receiver:2,power:0.31,loft:0.55}),K('shot',3.4,32,{power:0.31})],naive:K('header',-3,27,{receiver:2,power:1,loft:0.72})},
+  'air-corner-flick':{solution:[K('header',6,25.5,{receiver:1,power:0.81,loft:0.6}),K('header',-3,25.3,{receiver:2,power:0.31,loft:0.55}),K('shot',-3.4,32,{power:0.29})],naive:K('shot',3.4,32,{power:0.87})},
 };
 
 export function scenarioById(id:string):Scenario|undefined{return SCENARIOS.find(s=>s.id===id);}

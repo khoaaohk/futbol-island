@@ -1,5 +1,106 @@
 # Performance reference for future Futbol Island updates
 
+## Species models for the caught animal — October 5, 2026 (local, not deployed)
+
+User: "fix all the fishing animals … this example is not a shrimp". Every one of the 64 species now has its own low-poly, flat-shaded, vertex-coloured model (`lib/town/fishing/fishModels.ts`): curled segmented shrimp with fan tail and antennae, 8-armed octopus, squid with fins and 2 tentacles, sharks with tall dorsal, heterocercal tail and gill slits (per-species snouts, tails, tips, spots, hammer, saw), billfish bills and sail, mola disc, anglerfish teeth and glowing lure, lanternfish photophores, mackerel bars, haddock thumbprint and black lateral line, rays, crabs, lobster, shells, eel, seahorses. `components/FishArt.tsx` (Fishbook/market 2D) was redrawn per species to match.
+- **Draws:** the held-up and reeled catch are now ONE mesh each (was a 6-mesh placeholder each: body, tail, fins, belly, dorsal, eyes), so 12 → 2 draw calls while a catch shows. One new shared material per role (same program, `customProgramCacheKey`).
+- **Triangles:** 150–1,412 per species (median ≈ 480; octopus the largest) vs ≈ 700 for the old placeholder. Only one species is drawn at a time.
+- **Build/caching:** each species' merged geometry is built on its first catch (a few ms on desktop, once) and cached for the page; `dispose()` frees the GPU buffers only (`releaseSpeciesModels`) so a later session re-uploads instead of rebuilding. No textures.
+- **Animation:** the tail wag / octopus arm sway is a vertex-shader term driven by the two uniforms the existing per-frame code now sets instead of the old tail/fin rotations. No new loop, timer or per-frame CPU vertex work; reduced motion sets the amplitude to 0.
+- **Shadows in the water:** the silhouette now matches the animal type (fish, shark, ray, octopus/squid, crab/shell); each silhouette geometry is built once on first use and reuses the existing per-frame bend.
+- Validation: `node tests/fishing.cjs` (new block: every species has a cached model with sane bounds and < 2,600 triangles, single held mesh), `npx tsc`, harness contact sheets, and desktop + 390×844 touch catches (shrimp at Lifebuoy Point) with no page errors. No phone-temperature claim.
+
+## Fishing spots on the Coral Cay causeway and cay — October 5, 2026 (local, not deployed)
+
+Six more fishing posts (3 on the causeway's sand banks, 3 on Coral Cay's beaches; details in `docs/fishing.md` "Causeway and Coral Cay spots"). No new draw calls: the posts join the existing single merged `fishing-posts` mesh (one draw + one shadow draw, ~4k more vertices), the floats stay one `InstancedMesh` (13 instances), the ripple ring and glows are shared. Idle per-frame cost: the spot loop is 13 distance checks instead of 7. Float/shadow water tests gained `clearOfCayShores` (`lib/town/coralCay.ts`), called only when a cast is planned or a shadow route is sampled (bounded, once per cast), with box rejects so main-island spots pay a few comparisons. No timers, loops, materials or textures added. Validation: `tests/fishing.cjs` (asserts the single merged mesh + instanced floats), and a desktop + 390×844 touch browser pass (walk, cast, catch) with no page errors. No phone-temperature claim.
+
+## Heat pass 6b: townsfolk shadows in a few instanced depth draws — October 3, 2026 (local, not deployed)
+
+The user approved this follow-up to heat pass 6. Before it, each townsperson cast one depth draw per body part (bean body, limbs and hat) and one per ride or prop piece (scooter boxes and cylinders, skateboard parts, freestyle balls): 80–86 shadow draws at the spawn and the square, against 38–63 colour draws.
+
+**Implementation (`lib/graphics/npcShadowBatch.ts`, three additive lines in `components/Town.tsx`).**
+- The module wraps `renderer.shadowMap.render`. Town creates it just before `shadowVisibility`, so it runs inside that module's culling and after the view gate: units hidden for this pass are never gathered.
+- For one shadow pass, each visible casting part of the townsfolk units (each child of `islandNpcs.root`: a rig or a ride) joins a shadow-only `InstancedMesh` for its shape:
+  - **Bean parts (body, limbs, hat style view).** The proxy uses the same `BeanDepthMaterial` vertex deformation, reading each rig's row from batch row textures (one row per instance, the `playerBatch` scheme: static and pose texels split, uploaded only when a row changed). Each rig's own `onBeforeShadow` sync runs first, so shape, pose and limbs are this frame's. The proxies share the never-disposed bean geometry and style views, so there is no geometry copy.
+  - **Plain rigid parts.** They are grouped by geometry type, parameters, side and shadow side, after a one-time vertex-data check: a geometry edited after construction is keyed by itself. They use the default depth material. Parts with custom depth, morphs, skinning, alpha test or maps, transparency or clipping, or a custom `onBeforeShadow`, keep their own draw.
+- A shape is batched only when it has 2 or more casters in the pass; a lone caster draws itself.
+- Source meshes get `castShadow=false` for the pass only, restored in `finally`, including after a throw. Proxies are visible only inside the pass, so the colour pass, picking, hover, labels and the simulation are untouched.
+- **Precision.** Each proxy sits at its first caster's origin and the instance matrices are relative to it. This keeps the GPU product close to the per-mesh path's CPU-combined model-view, which matters for contact shadows at the feet.
+- **No new always-on work.** When the shadow map isn't updating this frame, nothing runs. Hidden or culled units cost one visibility check. Part lists are built once per unit, and a part is regrouped only if its geometry or material object changes (hat or hair style).
+- **No per-frame allocations.** Lists, matrices and row textures are reused; row textures grow in powers of two. Proxies are built lazily, the first time a shape has 2 or more casters (14–20 built over the scene tour).
+- Off-screen 10 Hz routines, released hidden classic geometry, `shadowVisibility`, the view gate, the desktop static shadow cache (it still excludes all dynamic casters from its static build) and the heat tiers are unchanged.
+
+**Measured.** Headless Chromium with the Mac's GPU. Shadow draws come from hooking `renderBufferDirect` on the same frame, with the batch off and then on. Colour draws are unchanged in every scene.
+
+| scene | phone 390×844 DPR 3 | desktop 1280×800 DPR 2 |
+|---|---|---|
+| spawn | 138 → 78 | 154 → 83 |
+| square walk | 117 → 51 | 207 → 126 |
+| flying over town | 76 → 71 | 203 → 177 |
+| flying over sea | 30 → 30 | 107 → 101 |
+| beach match | 42 → 37 | 87 → 59 |
+| Coral Cay plaza | 34 → 27 | 64 → 50 |
+| east jetty, boat, pitch-side | unchanged (no townsfolk casting into view) | unchanged |
+
+- **CPU, phone at 4× throttle.** These are medians of 16 interleaved rounds of 10 renders each. Shadow pass: spawn 0.94 → 0.75 ms, square 0.73 → 0.62 ms. The whole `render()` call: 3.42 → 3.26 ms and 2.59 → 2.53 ms. Other scenes are within noise.
+- **GPU.** Not separable from noise on this shared machine.
+
+**Quality check.**
+- Same-frame parity, batch off as the reference:
+  - phone: 0 differing pixels in all 9 views;
+  - desktop: 0–1 pixels, at most 1/255.
+- 24 live frames per view, walking with the townsfolk animating:
+  - phone: at most 5 pixels a frame, at most 5/255;
+  - desktop: an occasional frame with 100–400 scattered pixels at most 7/255, mostly 0–20.
+  - In the worst frame captured, the difference was a single small patch at the edge of one off-screen townsperson's soft shadow. It is only visible at 40× amplification.
+- Same-frame before/after PNGs at 390×844 DPR 3 and 1280×800 DPR 2 (spawn, square, beach, Coral Cay) differ in 0–2 pixels.
+
+**Tests.** `tests/heat-pass6.cjs` §3 uses real bean townsfolk rigs (as `npc-style-batches.cjs` does). It checks:
+- One body and one limbs depth draw for 3 visible townsfolk.
+- Every instance's world matrix and bean row equal its source mesh's.
+- A hidden unit, hair (no shadow, as before), a lone shape and an edited geometry are left to draw themselves.
+- Identical separately built parts share a draw.
+- Casters are restored, including after a throw.
+- No work while the shadow map isn't updating, and the per-mesh path when disabled.
+- No new proxies in steady state.
+- Disposal, and the wiring order in `Town.tsx`.
+- `npc-style-batches`, `shadow-coverage`, `shadow-visibility`, `static-shadow-batches`, `heat-render`, `heat-pass5` and `bean-skin` pass, and `npm test` passes.
+
+**Caveat:** this is fewer draw calls in desktop emulation, not a measured iPhone temperature change.
+
+## Heat pass 6: shadow batches survive partial culling, no empty trail draws — October 3, 2026 (local, not deployed)
+
+The audit covered walking, flying, the beach match, Coral Cay, the jetty, the boat and pitch-side. It ran in Chromium with the Mac's GPU at 390×844 DPR 3 (tier 0: DPR 1.75, 1536² PCFSoft) and at 1280×800 DPR 2. It found very little left that is quality-neutral:
+- Transparent overdraw is at most 0.16 layers/pixel.
+- No DOM changes while playing, and no new timers.
+- No shader compiles in steady state.
+- Off-screen work is already gated.
+
+The GPU cost that remains is fragment shading (PCFSoft's 16 compare taps) and the per-part townsfolk depth draws. Changing either is a look trade-off or a project of its own (listed below). Two quality-neutral trims shipped:
+
+- **Static shadow batches survive partial shadow culling** (`lib/graphics/staticShadowBatches.ts`, `shadowVisibility.ts`). Previously, if `shadowVisibility` culled any member of a chunk's batch group, the whole group fell back to one depth draw per surviving member.
+  - Culled meshes are now flagged `userData.shadowCulled` for the pass. The group still draws its one proxy when 2 or more members survive; a single survivor draws itself.
+  - Restore order is unchanged: batches restore first, then visibility clears the flag and its cull.
+  - Phones only (desktop doesn't use the batches).
+  - Same-session A/B, shadow draws per frame: spawn 141→138, square 114→112, flying over town 78→76, flying over sea 31→30, pitch-side 30→26, jetty 9→9.
+  - Shadow triangles rise 0.2–1.0%, because the proxy also carries culled members.
+  - Same-frame parity against the unbatched reference: 0 of 1,007,314 pixels differ in all 9 phone views.
+  - Interaction with prop reactions: a reacting prop's shadow comes from the still batch more often, as `propReactions.ts` already states.
+- **Empty flight trails are not drawn** (`lib/graphics/flightTrail.ts`). `flying-car-trail` and `helicopter-wake` started visible with 0 instances, and `update()` returns early until the first flight. They were two empty instanced draws in every frame on every device. They now start hidden, and the existing per-update toggle shows them while they have instances. Saving: −2 colour draws and −2 transparent-list entries per frame.
+- **Not shipped:**
+  - Sweeping shadow and view-gate volumes to y = −2 instead of −8. The lowest static receiver is −1.5, but characters receive shadows and can go lower. The saving was a few draws.
+  - `checkShaderErrors=false` with a `compileAsync` pre-warm. First entry into an area links 5–9 programs, which is a hitch and not steady-state heat.
+- **Needs the user's decision (visible):**
+  - PCFSoft → PCF or Basic shadow filtering. The desktop timer A/B was too noisy to size it.
+  - `mediump` shader precision on phones.
+  - The pass-5 options that are still off.
+- **Townsfolk shadow batching:** done as heat pass 6b (user-approved), below.
+- **Tests:** `tests/heat-pass6.cjs`, added to `npm test`, covers:
+  - the batch-plus-visibility chain in Town's wrap order: a partly culled chunk keeps one proxy, a single survivor draws itself, a fully culled chunk draws nothing, and state is restored, including after a throw;
+  - empty trails hidden.
+- **Validation:** `npx tsc --noEmit` and `npm test` pass. Before and after screenshots at both sizes are identical apart from live NPC positions.
+- **Caveat:** this is fewer draw calls in desktop emulation, not a measured iPhone temperature change.
+
 ## Idle rides and flights at 20 fps — October 1, 2026 (deployed in Deploy 15)
 
 User: "when flying or riding idle should not waste energy." This supersedes the September "20 fps idle ambience: skipped" entry below. That pass rejected it because the hover bob, exhaust and townsfolk always move. The user has now chosen the energy saving over full smoothness while sitting still on a ride.
@@ -3727,3 +3828,323 @@ The graduation ceremony, the Matchday Ferry final, the History Museum and the Co
   fountain changes. The prompt sets one timeout, and only while a resting fountain's prompt is on screen. Storage is written only on a sip.
 - **Validation:** `tests/water-fountains.cjs` (one mesh, no update, no timers or rAF in the prop); browser check on phone 390×844 and
   desktop. No thermal claim: this adds work (one draw) rather than removing any.
+
+### Kick reactions for world props (3 Oct 2026, local, not deployed; `lib/graphics/propReactions.ts`)
+
+- **What:** a shot or wall-juggle bounce off a street lamp, signal, floodlight pole, bench, table, tree, palm, bush,
+  planter, sign, fence, net, goal, flag, lifeguard chair, bike, crate, pier bollard or lifebuoy stand gives a damped
+  0.4–0.95 s sway, rustle, jolt or ripple, plus an existing soft `fi2-job-cue` sound. At night a lamp's light pool also stutters dimmer. Everything comes
+  from one table (`PROP_REACTIONS`) and one updater. Builders tag props with `prop(kind, …)`, and the world.ts batching
+  pass records each prop's vertex run inside the merged island-chunk buffers (552 props). This is build-time only.
+- **No new loop:** `propReactions.update` runs in Town's existing frame callback. When idle it costs one counter check
+  and uploads nothing. There is no rAF, no timer, no shader change and no un-merging.
+- **Cost of a hit:**
+  - The hit prop's vertex run is rewritten in place on the CPU and uploaded via `addUpdateRange`. That is ≤ 3.8k
+    vertices (a palm, ≈ 45 KB/frame) and usually 100–500 vertices, for at most 0.9 s. Then the originals are copied
+    back bit for bit.
+  - At most 4 props animate at once; an extra hit plays sound only.
+  - Each prop has a cooldown (0.6–1.2 s) and a minimum ball speed.
+  - Normals and static shadow batches are untouched.
+  - No allocation per hit or per frame. The ≤ 4 slot copies (≤ 45 KB each) are allocated lazily on first use.
+- **Measured (desktop Chrome, after the stronger pass):** updater 0.02–0.08 ms mean while active (worst frame 0.3 ms,
+  and 1.6 ms on a palm's first hit including the slot allocation); 0 ms idle; no draw-call change. Amplitude doesn't
+  change the cost. No iPhone thermal claim.
+- **Reduced motion:** sound only (no vertex writes, no flicker).
+- **East Pier colliders (new):** 7 bollards, 4 lifebuoy stands, 16 pier lamps and the challenge board's 2 posts used
+  to let the ball through. They now have small `world.obstacles` footprints (0.2–0.5 m) on the kerb line, outside the
+  walkable width. That is +29 static entries in the obstacle grids, with no per-frame cost.
+- **Not covered:** buoys and boats, because the ball can't hit them.
+- **Validation:** `tests/prop-reactions.cjs` is part of `npm test`.
+
+## Walk-in History Museum — October 3, 2026 (local, not deployed)
+
+The History Museum became a walk-in building (`/museum`, `components/MuseumRoom.tsx`, `lib/museum/*`), replacing the Sep 30 DOM
+dialog. It uses the Konbini recipe:
+- **Document boundary.** Entering saves the departure at the museum door (`lib/museum/museumDoors.ts`, the Arcade's `islandReturnPosition` record), stops island music, narration and sound loops, and navigates, so the island is fully unloaded inside (`window.__fi2` is undefined there; checked by `tests/e2e/museum.spec.ts`). `/?from=museum` returns outside the door.
+- **Trade-off.** Returning re-parses the island and warms its shaders again, which takes about as long as leaving the Konbini (`IslandReturnLoading`). The in-document alternative was rejected: it would keep the island runtime resident and need invasive `Town.tsx` and frame-loop changes.
+- **Lazy loading.** The scene module is imported only when the page mounts, and only after the collections are read.
+- **Static geometry.** Every box (shell, rugs, partitions, plinths, cloth covers, low-poly exhibit objects) is ONE merged vertex-coloured Lambert mesh. Every printed thing (gallery signs, 12 placards, the timeline, the kit wall, the certificate frames, the VAR face, the court) is ONE merged unlit mesh on one 1024² canvas atlas, painted once per visit (`museumAtlas.ts`). The vitrine glass is one mesh and the doors are one 2-instance mesh.
+- **Moving objects.** Only the Telstar (spin) and the laced leather ball (rain tint) are their own meshes.
+- **Lighting.** Two lights, no shadow maps (contact discs).
+- **Sleeping.** The loop runs only while something moves: walking, zoom tween, doors, the guide's wave, Telstar inertia (it decays to zero) or the camera settling. Then it sleeps with no rAF. Phones are capped at 30 fps (`frameCap`) with the heat tier's pixel ratio (≤ 1.5) and frame caps. Dialogs (guide, certificate) and `document.hidden` stop it.
+- **Audio.** One-shot oscillators and noise (footstep per stride, bell, shh, whistle, card flick) on the walk-in rooms' one shared AudioContext. There is also one quiet ambience loop (user, Oct 3 2026): an original procedural pad plus room tone, rendered ONCE into a 16 s mono 22.05 kHz buffer (~1.4 MB) and played as one looping buffer source, with no live oscillators or sequencer.
+  - Its level is the music volume × 0.3, capped at half the footsteps' peak, and it is off when sound is muted or music is off.
+  - It fades in on entry and out on Done. It fades and suspends when the tab is hidden, fades out after 30 s idle, and is stopped on leave.
+- **DOM.** All exhibit text and the hands-on exhibits (cards, VAR practice replay, ball compare, kit numbers, certificates) are DOM. The only animations are one-shot CSS, and they are off with reduced motion.
+- **Dispose.** `dispose()` frees every geometry, material and the atlas, then calls `forceContextLoss()`.
+
+**Measured** (headless Chromium, desktop emulation, no CPU throttle; scratch script):
+
+| View | Draw calls | Triangles | Idle |
+|---|---|---|---|
+| Phone 390×844, at the door | 7 | 9.0k | asleep (0 rAF) ~2 s after the greeting |
+| Desktop 1280×800, at the door | 12 | 14.7k | asleep |
+| L-shaped hall + Your Collection wing (same day), phone, at the door | 7 | 12.0k | asleep |
+| L-shaped hall + Your Collection wing, desktop, at the door | 12 | 17.7k | asleep |
+
+The wing (ball pegboard: 100 pegs, card table, bookcase, certificate wall) joins the same merged static mesh and atlas, so it adds **no draw calls**, only about +3k triangles.
+
+These are reduced-work numbers only. They make no claim about measured iPhone cooling.
+
+## Futbol Tennis feel pass (A3), October 4 2026 (local, not deployed)
+
+**What was added.**
+- **`lib/arcade/tennisFeel.ts`.**
+  - 3 pooled billboard label meshes: touch grade, rival intent, point/rally banner. Each has its own small canvas texture, redrawn only when its text changes, which is once per event.
+  - 1 drop-line cylinder.
+  - Net and tape wobble is a position offset on the existing objects.
+  - Hit-stop is a dt gate.
+  - Split-step uses the rig's existing `jump` argument; the losing-point slump and the stumble use existing reactions.
+- **`lib/arcade/tennisAudio.ts`.** Synthesized one-shots on the game's existing AudioContext:
+  - 14-voice cap, one shared 1 s noise buffer per context;
+  - no timers, loops or assets;
+  - every node disconnects `onended`.
+- **No new always-on work.** `needsFrames` includes `tennisFeel.active()`, which is true only while a label, hop, wobble or hit-stop is live. The serve and pause sleep checks in `check-soccer-tennis-browser.cjs` (default and `--feel`) still pass. No per-frame allocations.
+- **Rally heat is free.** It reuses `glassFloor.update`'s existing `power` input (gold tint): no extra draws.
+
+**Measured.** Headless Chrome with the Mac GPU, bot rally, `renderer.info` sampled every 60 ms (median / max):
+
+| view | calls before | calls after | triangles before | triangles after |
+|---|---|---|---|---|
+| desktop 1280×800 | 93 / 97 | 95 / 100 | 27.9k / 28.4k | 27.9k / 28.4k |
+| phone 390×844 | 51 / 55 | 52 / 57 | 18 958 / 19 470 | 18 970 / 19 484 |
+| phone landscape 844×390 | 105 / 109 | 106 / 111 | 30 958 / 31 470 | 30 970 / 31 484 |
+
+At most +3 draws, and only while a call-out is on screen. No new lights or shadow casters: labels and the drop line don't cast.
+
+### Futbol Pinball game-feel pass (Oct 4 2026, A4)
+
+New per-game modules: `lib/games/soccerPinballFeel.ts` (pure event diffing, hit-stop, weighted shake, pop-up pool, end-of-ball summary), `soccerPinballAudio.ts` (synthesized one-shot voices) and `soccerPinballFx.ts` (pooled visuals). There are no new render loops, lights, shadows or post effects. The existing sleep rules still apply, plus a short tail while a pop-up, flash or hit-stop is active. Measured in emulated Chromium:
+- **Ready table:** desktop 124→125 draw calls (31.5k→31.5k tris); phone 74→75 (20.2k). The only steady addition is the BALL SAVE insert (1 call, 2 tris).
+- **Hit moments:** add up to 4 pop-up quads and 3 ring meshes, so at most +7 calls, all hidden when idle. Pop-up canvases (384×96, or 288×72 on phone) are redrawn only when a pop-up spawns, never per frame. Their textures are disposed by `stage.dispose()` through the arcadeSpill flag.
+- **Audio:** no assets or loops. Voices disconnect when they end. Polyphony is capped at 14 per context, and one 0.8 s noise buffer is cached per context.
+- **Reduced motion:** turns off shake, rings, pop-up drift and the insert blink.
+- **Not measured:** physical iPhone heat.
+
+## Rooftop Knockout controls and feel pass (Oct 4 2026, A6)
+- The new `lib/graphics/knockoutTelegraphs.ts` adds three pooled meshes: wind-up arrows (an InstancedMesh with 6 instances, about 5 triangles each), a danger ring and shock rings (an InstancedMesh with 8 instances of a 64-triangle ring). Each draws only while it is visible, so there are 0 extra draw calls when nothing is happening and at most 3 during a wind-up or impact. Measured in the arena at 1280×800: about 247 draw calls / 275k triangles while idle, and about 247 during a telegraph (within noise).
+- Impact bursts reuse the existing `knockout-hit-particles` InstancedMesh, whose capacity grew from 112 to 152 (+40 bounded sparks). There's no new draw call, light or shadow.
+- The sim uses fixed event counters and an 8-entry ring buffer of hits (`state.hitLog`), so it makes no per-frame allocations for effects. Hit-stop pauses the arena sim for 60 to 120 ms, and no new loop was added.
+- Sounds use the island's synthesized `ball`, `impact` and `boost` voices. Haptics are skipped when reduced motion is on.
+
+## Breakaway Run feel pass (Oct 4 2026, A2)
+
+`lib/arcade/runnerFx.ts` adds runner-only juice, with each effect pooled into one draw call:
+- side speed lines (one dynamic quad buffer);
+- plant dust (18 instances);
+- goal confetti (42 instances);
+- two recycled crowd-stand blocks (an instanced box crowd with a GPU vertex bob, so no per-frame matrix writes);
+- per-defender tackle-lane strip and read arc, prebuilt on the 6 pooled defenders.
+
+Each effect hides itself while idle, so it adds no draw call. Stands are refilled only when they wrap at the fog line. Nothing casts or receives shadows, and no lights were added.
+
+Measured with `renderer.info`, same route and seed:
+- **Phone portrait:** +0–4 calls, 47–121 calls total.
+- **Desktop:** +0–11 calls.
+- **Triangles:** stands add about 5k triangles per visible block.
+
+Reduced motion turns off speed lines, confetti, crowd bob, camera follow, shake and FOV.
+
+Audio (`createRunnerSoundtrack` in `components/games/runnerAudio.ts`) reuses the arcade's AudioContext:
+- Notes are scheduled 120 ms ahead from the existing frame update. There are no timers, loops or sustained nodes, so music stops with the render loop (pause, hidden, full time).
+- Voices are capped at 28.
+- Settings are re-read once per second.
+
+## Walking feel and slow gait (A7, Oct 4 2026)
+
+- **Rig (`lib/graphics/player.ts`).**
+  - Below 1.5 m/s, step length now matches the distance travelled (`stepAmount`). This removes stance-boot skating in slow walks; NPC strolls at 0.65–0.92 m/s went from 12–20 % of the distance travelled to 0.
+  - Foot steps last at least two rendered frames (`minStep`). At the 30 fps phone cap a 34 ms chop no longer teleports a planted boot 27 cm.
+  - Both changes are scalar arithmetic only, so 60 fps output is unchanged except for the slow-gait amplitude.
+  - New optional `windup` (0..1) reuses the existing strike backswing.
+  - 22-rig walking benchmark (desktop, noisy shared machine, interleaved A/B ×4): after median 1.29–1.55 ms, before 1.11–1.61 ms. No measurable difference.
+- **Controller (`lib/town/walkControl.ts`).**
+  - The stick has a 12 % radial dead zone and a 36 % walk floor (≈1.3 m/s).
+  - Portrait views centre the walker. Walking looks 0.3 s ahead (capped at 2.2 m; off in reduced motion).
+- **Hidden player.**
+  - The probe runs at about 6 Hz and reuses the walls grid.
+  - When a building hides the walker, the foot ring and one 8-triangle pin draw through the scenery: +1 draw call only while hidden, 0 otherwise.
+  - No new loops, lights or shadows, and no per-frame allocations (the grid query allocates at ~6 Hz).
+- **Tests.** `tests/walk-control.cjs`, `tests/player-slow-gait.cjs` and `scripts/check-walk-control-browser.cjs`.
+
+### Island Strikers game-feel pass (A1, 2026-10-04, local, not deployed)
+
+**Crowd.** The 120 crowd sphere meshes are now one `InstancedMesh`, with per-instance colours and the same neon palette.
+- Fans jump only while crowd energy is above about 0.35, which happens during gold attacks, blue threats and goals.
+- Matrices upload only during a swell, plus one final settle frame. At rest there are no uploads.
+
+**New meshes.** All of these are fixed. They update inside the existing game loop and add no new loops, lights or shadow casters.
+- Goal confetti: one pooled 48-instance `InstancedMesh`, hidden when no instance is alive.
+- A head marker for the selected player.
+- A goal-mouth target ring.
+- An interception ring.
+- A pressure/cover link.
+- Eight tackle wedges that share one geometry and one material.
+
+**Audio.** `lib/arcade/strikerAudio.ts` synthesizes everything on the game's existing `AudioContext` and adds no timers.
+- One 1.3 s noise buffer is shared by all noise voices.
+- The crowd bed is one looping source. It starts lazily while playing and stops on pause, blur, hidden or full time. A browser check confirmed no new nodes over 3.5 s of pause.
+- Drums use lookahead scheduling from the game loop, only above 0.55 crowd energy, and only when music is on.
+- At most 14 voices play at once.
+
+**Goal moment.**
+- The 0.11 s hit-stop and the camera punch/shake are skipped under reduced motion. Confetti, net ripple and fan jumps are skipped too.
+- The 1.85 s celebration moves players inside the existing step.
+
+**Draw calls, measured with `renderer.info` in headless Chrome during play.**
+
+| Viewport | Draw calls | Triangles |
+|---|---|---|
+| Desktop 1280×800 | 218 → 98 avg (max 104) | 75.4k → 65.8k avg |
+| Phone landscape 844×390, touch emulation | 177 → 99 avg | 68.5k → 66.5k avg |
+
+This is reduced work in emulation. It is not a measured iPhone cooling result.
+
+## Breakaway Run depth pass (G2, Oct 4 2026)
+
+- **New runner visuals are pooled and hidden when idle.**
+  - Shield ring: 1 draw.
+  - Puddles: 1 instanced draw.
+  - Fork arch: about 7 draws while visible.
+  - Pass ball, keeper rig and 2 teammate rigs: built once and posed only while visible. On keeper goals the 3 blocker rigs are hidden.
+- **Fork labels and ball skins.** Fork labels are 2 canvas textures and ball skins are 2 materials per skin. Both are built once.
+- **Missions** write localStorage only when a mission completes.
+- **Measured median draw calls** (headless Chrome, 24 s bot play):
+
+  | Viewport | Before | After |
+  |---|---|---|
+  | Desktop | 178 | 178 |
+  | Phone portrait | 92 | 93 |
+  | Phone landscape | 199 | 182 (the landscape camera now frames closer) |
+
+  Feature scenes peak at about 170 on desktop and about 87 on a portrait phone.
+- **No new loops, timers or lights.** The 30 fps cap and finished/paused sleep are unchanged.
+- **Not verified on device.** These are desktop-emulation numbers, not an iPhone thermal measurement.
+
+### Museum storytelling exhibits — October 4, 2026 (local, not deployed)
+
+Four cases became story exhibits (1863 meeting-table diorama, 1891 penalty "stand where they stood", 1992 hand-cranked zoetrope, 1930 split-flap board; `lib/museum/museumStories.ts`, `museumExhibits.ts`, `components/MuseumStory.tsx`).
+- **Static parts** (tables, mini pitch and goal, drum stand, board frame) join the room's ONE merged mesh.
+- **Moving parts:**
+  - a few small meshes, instanced where there are several (figures, heads, books, zoetrope slots);
+  - two small canvas textures: the zoetrope window at 256×128 and the flap display at 512×256. Each is redrawn only while its exhibit animates.
+- **Rendering:** `update()` reports busy only while a beat animates or the drum coasts, so the room sleeps after each beat. A scripted run checks that the loop is asleep (0 rAF) after every story.
+- **Narration:** 19 Kokoro clips in `public/voice/museum`, mono AAC at 32 kb/s (about 81 s, ≈ 330 KB). They play through one reused `<audio>`, loaded per beat with no preloading. The ambience ducks under each line.
+- **Measured** (headless Chromium, zoomed on each exhibit): 11–13 draw calls and ≈ 8.5k triangles.
+- **Reduced motion:** beats jump to their end state.
+
+## Freestyle tricks for the island freestylers — October 4, 2026 (local, not deployed)
+
+24 named tricks for the 7 freestylers (docs/player-moves/MOVES.md § G): sit-downs, uppers, lowers, ground ball mastery and court pair tricks.
+
+**Heat design:**
+- **No new loop.** `prepare()` and the optional `PlayerMotion.trick` pose run only on the existing townsfolk posing path:
+  - off-screen freestylers are skipped (`offscreenSkipped`) and keep their frozen pose;
+  - beyond 32 m they pose at 10 Hz;
+  - off-screen routines step at 10 Hz as before.
+- **The routine is a pure function of one shared clock** (`freestyleClock` in `islandNpcs`, paused with the island), so skipped frames cost nothing.
+- **No allocation per frame.** Each freestyler has one preallocated TrickPose and frame, the scratch vectors are module-level, and the tag strings are cached.
+- **No new meshes, materials or lights.** One ball per freestyler, as before. A pair trick passes the leader's ball; the partner's own ball rests beside it.
+- **The rig pose sets each joint once** (one `Euler.set`). The ground guard runs for sit, lie and bow poses only.
+- **The rig is marked busy with the ball** (`juggle`) while a trick plays, so the gait skips its foot-lock work underneath. This is ~25% cheaper than the unmarked pose.
+
+**Measured:**
+- **Node rig micro-bench**, 7 freestylers × 300 frames, interleaved A/B in one process. The machine was shared and loaded (load average 20–50), so this is µs per freestyler-frame for `prepare` + `rig.update`:
+  - old programs: min 63–91, median 77–175;
+  - new tricks: min 83–128, median 101–167.
+  - In a tight loop `prepare` alone costs 5.5 µs per freestyler.
+- **Browser**, headless Chromium at the court with the 4 court freestylers on screen. `islandNpcs.update` p50 / p95 per frame:
+
+  | Viewport | New tricks | Old-style juggle stand-in (same page) |
+  |---|---|---|
+  | 1280×800 | 0.9 / 1.5 ms | 0.9 / 1.4 ms |
+  | 390×844 | 0.9 / 1.6 ms | 1.0 / 1.7 ms |
+
+  - Draw calls overlap between the two: 231–260 vs 232–273.
+  - NPC shadow batching is unchanged: 15–16 instanced depth draws, about 93–99 casters batched.
+  - Looking away from the court, the freestylers are skipped off screen.
+- These are emulation numbers, not iPhone temperatures.
+
+**Reduced motion:** unchanged rule. No tricks; the ball rests at the feet.
+
+## Futbol Tennis depth pass (Oct 4 2026, G3)
+
+**What was added.** A six-stop court ladder, rival personalities, a target drill, a Golden Touch meter, and new moves (trap, shark attack, bicycle kick, slide, flick serve) with their call-outs and sounds.
+
+**How it stays cheap:**
+- **Event-driven.** Everything runs from events: no new loops, timers or real-time lights.
+- **Pooled and reused:**
+  - New poses reuse pooled `move`/`skill` objects (`tennisFeel.ts`).
+  - Labels reuse the three pooled meshes.
+  - Sand puffs use the stage's pooled `burst`.
+  - Sand swaps the court material (one shared material) and adds no draws.
+- **The drill court adds one ring mesh** (+1 draw), hidden on other courts.
+- **The intro call-out waits for the first touch.** It never shows during the idle serve, so the serve loop still sleeps (the browser check asserts this).
+
+**Measured:** median/max draw calls in a court-1 bot rally (`capture.cjs`). Triangles are unchanged.
+
+| Viewport | Before | After |
+|---|---|---|
+| Desktop | 81–94 / 98–100 | 96 / 98 |
+| Phone 390×844 | 53 / 58 | 52 / 56 |
+| Phone 844×390 | 107 / 112 | 107 / 110 |
+
+These are desktop-emulation numbers only; there is no claim about iPhone temperature.
+
+## Futbol Pinball playfield features (G4, Oct 4 2026)
+The new playfield pieces (kickboards, free-kick wall, G-O-A-L flags, crest lanes, training cones, dribble gate, dugout, lamp inserts and label decal) come from `lib/games/soccerPinballTableView.ts`.
+- They are built once and are instanced or merged, about 12 draw calls in total.
+- They have `castShadow=false`, and there are no new lights.
+- Matrices and colours are written only when a value changes. `active()` keeps the frame loop asleep in ready and over.
+- The counter-shot aim line adds 2 draw calls, and only while a defender winds up a shot.
+
+On phones, pinball hides the off-table room scenery, which is only visible in landscape.
+
+Draw calls and triangles, measured on the playing frame:
+
+| View | Before | After |
+|---|---|---|
+| Desktop 1280×800 | 123 / 30.0k | 135 / 31.7k |
+| Phone 390×844 | 75 / 19.1k | 87 / 20.8k |
+| Phone 844×390 | 175 / 40.5k | 87 / 20.8k |
+
+The physics adds about 20 capsule tests per 480 Hz substep, with a bounding-box early-out per feature group and zero allocations per frame. Measured in desktop emulation; no claim about iPhone temperature.
+
+## Pass Puzzles depth pass (G5, Oct 4 2026)
+
+**The loop is unchanged.** It is one rAF loop: 30 fps on phones, 60 on desktop. Idle aiming sleeps with zero frames. The result card is a hard stop after 1.7 s, and nothing runs while hidden. The browser check confirms the loop still sleeps.
+
+**New per-frame work is bounded and only happens while something visible moves:**
+
+| What | When / how long |
+|---|---|
+| First-time ring | ≤ 2.5 s after a receive, only on first-time-bonus puzzles |
+| Defender "!" reaction pop | ≤ 0.7 s per defender |
+| Run-drag arrow | only while a finger is down |
+| Player-view camera | only during a replay |
+| Offside line and intent sprites | re-placed inside the existing `update()` (a few scalar writes) |
+
+**Meshes, all built once per scene and pooled:**
+- 1 offside line;
+- 3 flag sprites;
+- 8 intent sprites;
+- 5 run arrows (shared geometry and material);
+- 1 sweeper zone;
+- 1 clock ring.
+
+Hidden ones are not drawn. Canvas textures (dash, flag, 4 intent glyphs) are made once and disposed in `dispose()`.
+
+**Draw calls**, measured on Find a Friend: desktop 65 → 70, phone 64 → 72.
+- The offside line adds 1 draw call.
+- The cover defender's rig accounts for the rest (+5.2k triangles). That rig is a teaching change: it makes offside correct.
+
+**Engine cost**
+- Offside adds an O(players) scan per kick.
+- A called run is one extra `moveTo` per tick for that runner.
+- Weather adds two scalar terms in `stepBall`.
+
+**Daily puzzle.** Built on tap only, once per session: 2–3 bounded sims, 18–77 ms on a loaded desktop. It is cached in memory and needs no network or storage beyond the stars entry.
+
+**Audio** (`lib/arcade/passPuzzleAudio.ts`): synthesized one-shots on the game's own context, capped at 8 voices. One 0.25 s noise buffer per context. Nodes disconnect on end.
+
+**Not measured:** no physical iPhone measurement was taken.

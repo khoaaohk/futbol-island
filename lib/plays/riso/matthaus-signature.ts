@@ -56,6 +56,7 @@ import {TAU,twos,sm,key,clamp,lerp,rng,hash,polyPath,ribbon,partial,easeOut,ease
 import {sparkBurst,footballPanels,speedLines} from '../../paths/riso/shapes';
 import {drawAthlete,motionSmear,makeCamera,solve,strike,runCycle,dribble,stand,keeperSet,keeperDive,celebrate,backpedal,posed,blendPose,touchPhase,STRIKE_CONTACT,
  type Pose,type Camera,type AthleteStyle,type Place,type InkFill,type V3} from './athlete';
+import {beats,shotAt,directShot,near,fovOf,focalOf,steady,type View as DView,type Keep} from './director';
 
 // ---------------------------------------------------------------- narration + timing
 /** The narration (script.json mirrors it). Cue `words` are the match keys for the voice's word onsets (withTiming matches each cue's FIRST
@@ -101,7 +102,9 @@ const lerpAng=(a:number,b:number,u:number)=>a+wrap(b-a)*u;
 const yawTo=(x:number,z:number,x2:number,z2:number)=>Math.atan2(-(z2-z),x2-x);
 let LENS=1;
 /** Frame the FULL sheet: world (0,0) on the canvas centre at 1 unit per sheet unit (the passage arrival scale still multiplies in). */
-function frame(s:Sheet){const S=s.arrival;s.camera((s.cx-s.W/2)/S,(s.cy-s.H/2)/S,1/s.fit,0);LENS=Math.pow(Math.min(1,s.W/1620),.6);}
+function frame(s:Sheet){const S=s.arrival;s.camera((s.cx-s.W/2)/S,(s.cy-s.H/2)/S,1/s.fit,0);LENS=Math.pow(Math.min(1,s.W/1620),.6);DV={w:s.W,h:s.H};}
+/** the window in camera units (set by frame(); read by the director's reframing, aperture() included) */
+let DV:DView={w:1566,h:1080};
 const view=(s:Sheet)=>({hx:s.W/(2*.68)+120,hy:s.H/(2*.68)+120});
 
 // ---------------------------------------------------------------- 3D: projection through an athlete.ts Camera (right-handed metres, y up)
@@ -475,8 +478,27 @@ function play(s:Sheet,c:Cam,tau:number,tp:number,tpp:number,e:Env){
 // ---------------------------------------------------------------- shot blending (camera plans keyed on cue times)
 type Shot={P:V3;T:V3;fov:number};
 const blendShot=(a:Shot,b:Shot,u:number):Shot=>u<=0?a:u>=1?b:{P:mix3(a.P,b.P,u),T:mix3(a.T,b.T,u),fov:Math.exp(lerp(Math.log(a.fov),Math.log(b.fov),u))};
-function plan(t:number,steps:[number,number,(t:number)=>Shot][]):Cam{let cur=steps[0][2](t);for(let i=1;i<steps.length;i++){const[a,d,f]=steps[i];const u=sm(a,a+Math.max(.01,d),t,easeInOutSine);if(u>0)cur=blendShot(cur,f(t),u);}return cam3(cur.P,cur.T,cur.fov);}
+function planShot(t:number,steps:[number,number,(t:number)=>Shot][]):Shot{let cur=steps[0][2](t);for(let i=1;i<steps.length;i++){const[a,d,f]=steps[i];const u=sm(a,a+Math.max(.01,d),t,easeInOutSine);if(u>0)cur=blendShot(cur,f(t),u);}return cur;}
+function plan(t:number,steps:[number,number,(t:number)=>Shot][]):Cam{const cur=planShot(t,steps);return cam3(cur.P,cur.T,cur.fov);}
+/** the directed camera averaged over ±.45 s (director steady()): the fit clamp's answers become smooth moves, never a snap */
+function steadyCam(t:number,f:(u:number)=>Shot):Cam{const size=1080*LENS;
+ const p=steady(t,u=>{const q=f(u);return{eye:q.P,target:q.T,F:focalOf(q.fov,size)};},.45,5);return cam3(p.eye,p.target,fovOf(p.F,size));}
 const lxz=(tau:number,y=0):V3=>{const p=lmXZ(tau);return[p[0],y,p[1]];};
+/** the director's move on a plan() Shot (lib/plays/riso/director.ts): size = the cam3 makeCamera size */
+function direct(sh:Shot,hero:V3,ball:V3,keep:Keep[],B:ReturnType<typeof beats>,t:number,height=1.74):Shot{
+ const p=shotAt(t,B),k=clamp(p.k),size=1080*LENS;if(k<=1e-4)return sh;
+ // the director only works from a base framing that already holds the subject. The authored aim sometimes leads the hero by metres
+ // (or sits on the stands): re-aim the base where the director aims (his chest toward the ball) as the shot comes in, and widen its lens
+ // just enough to hold the hero, the ball and the keep points (k = 0 → the authored shot exactly)
+ const T=mix3(sh.T,mix3([hero[0],height*.55,hero[2]],[ball[0],clamp(ball[1],0,height),ball[2]],p.ball),k),c=cam3(sh.P,T,sh.fov),Fa=c.F;let Fm=Fa;
+ const pts:{P:V3;w:number}[]=[{P:hero,w:1},{P:[hero[0],height*1.04,hero[2]],w:1},{P:ball,w:1},...keep.map(q=>Array.isArray(q)?{P:q as V3,w:1}:q)];
+ for(const{P,w} of pts){if(w<=.01)continue;const q=toCam(c,P);if(q[2]<1)continue;const L=.85/w;
+  if(Math.abs(q[0])>1e-6)Fm=Math.min(Fm,L*DV.w/2*q[2]/Math.abs(q[0]));if(Math.abs(q[1])>1e-6)Fm=Math.min(Fm,L*DV.h/2*q[2]/Math.abs(q[1]));}
+ const base:Shot={P:sh.P,T,fov:fovOf(Math.exp(lerp(Math.log(Fa),Math.log(Fm),k)),size)};
+ return directShot(base,{hero,ball,keep,height},p,DV,size);
+}
+const G_POSTS:V3[]=[[0,0,-3.66],[0,2.44,-3.66],[0,0,3.66],[0,2.44,3.66]];
+const wk=(P:V3,w:number):Keep=>({P,w});
 
 // ---------------------------------------------------------------- 1 · live: the high main-stand camera, real time
 /** the carry starts on "picks up"; the ball reaches the net just after "Goal"; real time throughout */
@@ -485,9 +507,22 @@ const T_WAIT=-10.4;
 const tau1=(t:number)=>Math.max(T_WAIT,t-tS1());
 /** the camera gantry, high on the near side, level with the halfway-to-box area */
 const P1:V3=[-40,21,-64];
-function cam1(t:number):Cam{
+/** Director beats (Oct 4 2026): a short establishing wide of the lit bowl, then follow the captain while he waits; push in on him as he is
+ * named; pull out for the lay-off (passer and Matthäus both in frame); push in low for the first touch deep in his own half; follow the
+ * carry with the chaser kept in frame behind him; pull out on "fifty metres" (the space he has run through); follow again; push in low
+ * for the drive with the goal mouth held in frame (the long-range shot is the lesson; it lands as the chapter hands over). */
+const DIR1=beats([[0,'wide'],[.5,{from:'follow',size:.12}],[1.1,'follow'],[CUE(0,'West')-.2,{from:'reaction',size:.45}],[CUE(0,'Lothar')-.4,{from:'space',size:.26}],[CUE(0,'picks up')-.3,'tight'],
+ [CUE(0,'picks up')+.9,{from:'follow',size:.4}],[CUE(0,'fifty')-.3,{from:'space',size:.3}],[CUE(0,'Then a hard')-.3,{from:'follow',size:.44}],[tS1()-.45,'tight']]);
+function dir1(t:number,sh:Shot):Shot{
+ const tau=tau1(t),h=lxz(tau),wb=sm(T_PASS-1.2,T_PASS-.5,tau),wp=wb*(1-sm(T_RCV+.3,T_RCV+.9,tau)),wg=sm(-1.6,-.3,tau)*(1-sm(IN_NET+.3,IN_NET+.9,tau)),ch=chaserAt(tau,0).place;
+ // before the lay-off the ball sits at the passer's feet: blend it in from Matthäus's feet so nothing pops
+ const keep:Keep[]=[wk([PASSER[0],0,PASSER[1]],wp),wk([PASSER[0],1.85,PASSER[1]],wp),...G_POSTS.map(P=>wk(P,wg)),...near(h,[[ch.x??0,0,ch.z??0]],4,9,1.84)];
+ return direct(sh,h,mix3([h[0],.11,h[2]],ballAt(tau),wb),keep,DIR1,t);
+}
+function cam1(t:number):Cam{return steadyCam(t,u=>dir1(u,shot1(u)));}
+function shot1(t:number):Shot{
  const tau=tau1(t),hero=():V3=>{const b=ballAt(Math.min(tau,0)),l=lxz(tau);return add3(mix3(l,[b[0],0,b[2]],.4),[4,.9,0]);};
- return plan(t,[
+ return planShot(t,[
   [0,0,()=>({P:P1,T:[-42,12,34],fov:50})],
   [CUE(0,'the World')-.2,1.6,()=>({P:P1,T:[-58,14,44],fov:40})],
   [CUE(0,"West")-.3,1.3,()=>({P:P1,T:hero(),fov:11})],
@@ -566,8 +601,17 @@ const ch3:Scene={
 const tau4=(t:number)=>key(t,mono([[0,T_WAIT],[CUE(3,'Start near')-.2,T_PASS+.2],[CUE(3,'Start near')+.6,T_RCV+.2],[CUE(3,'then shoot')-.25,-.35],[CUE(3,'then shoot')+.5,FLY],[SECS(3),IN_NET+.6]]),linear);
 /** the whole pitch from high in the main stand (never top-down), then a push toward the Yugoslav box for the shot */
 const E4:V3=[-52.5,46,-104];
-function cam4v(t:number):Cam{
- return plan(t,[
+/** Director beats (lesson): the whole pitch stays for "box-to-box … covering the whole pitch" (both boxes and the arrows are the lesson);
+ * on "Start near" move in on him with his start ring held in frame; on "carry it" follow him forward (the red run arrow trails behind
+ * him, its start ring released over half a second); push in for "then shoot" with the goal mouth and the target held in frame. */
+const DIR4=beats([[0,'wide'],[CUE(3,'Start near')-.4,'lesson'],[CUE(3,'carry it')-.3,{from:'follow',size:.4}],[CUE(3,'then shoot')-.45,'tight']]);
+function dir4(t:number,sh:Shot):Shot{
+ const tau=tau4(t),tS=CUE(3,'Start near'),tC=CUE(3,'carry it'),tF=CUE(3,'then shoot'),ws=sm(tS-.9,tS-.1,t)*(1-sm(tC-.6,tC+.4,t)),wg=sm(tF-.75,tF,t),p0=lxz(T_RCV);
+ return direct(sh,lxz(tau),ballAt(Math.min(tau,IN_NET)),[wk(p0,ws),wk([p0[0]+2.6,0,p0[2]],ws),wk([p0[0]-2.6,0,p0[2]],ws),...G_POSTS.map(P=>wk(P,wg)),wk(TGT,wg)],DIR4,t);
+}
+function cam4v(t:number):Cam{return steadyCam(t,u=>dir4(u,shot4(u)));}
+function shot4(t:number):Shot{
+ return planShot(t,[
   [0,0,()=>({P:E4,T:[-52.5,0,-2],fov:37})],
   [CUE(3,'then shoot')-.5,1.2,()=>({P:[-40,26,-62],T:[-14,0,0],fov:30})],
  ]);
@@ -607,7 +651,7 @@ const ch4:Scene={
    arrow3(s,c,pts,Math.max(8,kAt(c,lxz(tau))*.6),R,.95);}
   // 4 · "then shoot": the drive (yellow), a ring on the net
   if(tau>0){const pts=partial(pathPts(c,0,FLY,30),clamp(tau/FLY)),w=Math.max(8,kAt(c,flightU(.5))*.2);if(pts.length>2){s.knockout(ribbon(pts,w*1.6,{taper:.4,pressure:.2,wobble:0}),.5);s.fill(Y,ribbon(pts,w,{taper:.4,pressure:.2,wobble:0}),.95);}}
-  play(s,c,tau,tp,tpp,{it:tt,minBall:12,hero:t<tF-.4?'low':undefined});
+  play(s,c,tau,tp,tpp,{it:tt,minBall:12,hero:t<tS-.4?'low':undefined});
   const dn=sm(tF+.35,tF+.85,t,easeOutBack);
   if(dn>.02)ring3(s,c,TGT,.55,true,dn,Y,44);
  },

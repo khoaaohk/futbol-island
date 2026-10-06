@@ -41,11 +41,14 @@ import {twos,sm,key,clamp,lerp,rng,hash,ribbon,polyPath,easeOut,easeOutBack,ease
 import {sparkBurst,speedLines,laneArrow,crescent} from '../../paths/riso/shapes';
 import {drawAthlete,motionSmear,makeCamera,posed,blendPose,clampPose,runCycle,dribble,stand,strike,backpedal,celebrate,keeperSet,keeperDive,
  STRIKE_CONTACT,type Pose,type AthleteStyle,type Camera,type Place,type V3,type DrawResult} from './athlete';
+import {beats,shotAt as shotOf,reframe,near,type Beats,type Keep,type View as DView} from './director';
 
 const K='navy',R='red',Y='yellow',G='green';
 const D2R=Math.PI/180;
 /** Frame the FULL sheet: world (dx,dy) lands on the sheet centre at `zoom`, ignoring the safe box (the card window is small). */
-function frame(s:Sheet,zoom=1,dx=0,dy=0){const S=zoom*s.arrival;s.camera((s.cx-s.W/2)/S+dx,(s.cy-s.H/2)/S+dy,zoom/s.fit,0);}
+function frame(s:Sheet,zoom=1,dx=0,dy=0){const S=zoom*s.arrival;DV={w:s.W,h:s.H};s.camera((s.cx-s.W/2)/S+dx,(s.cy-s.H/2)/S+dy,zoom/s.fit,0);}
+/** the window in camera units (set by frame(); read by the director's reframing, aperture() included) */
+let DV:DView={w:1566,h:1080};
 
 // ================= narration (script.json mirrors it) =================
 /** Provisional cue onsets (≈2.6 words/s plus pauses) — replaced by the measured Kokoro onsets in timing.json. */
@@ -248,6 +251,14 @@ const samp=(arr:number[],tau:number)=>{const u=clamp((tau-TA)/DT,0,arr.length-1)
 const posOf=(k:number,tau:number):[number,number]=>[samp(TABLES[k].X,tau),samp(TABLES[k].Z,tau)];
 const distOf=(k:number,tau:number)=>samp(TABLES[k].D,tau);
 const velOf=(k:number,tau:number):[number,number]=>{const a=posOf(k,tau-.1),b=posOf(k,tau+.1);return[(b[0]-a[0])/.2,(b[1]-a[1])/.2];};
+// ---- the director (lib/plays/riso/director.ts): camera math only, the authored eye/aim/focal reframed about Quaresma ----
+const g3=(k:number,tau:number):V3=>{const[x,z]=posOf(k,tau);return[x,0,z];};
+/** a soft keep: the feet and head of a player at weight w (0 = free, 1 = hard) */
+const soft=(P:V3,w:number,h=1.9):Keep[]=>w>.01?[{P,w},{P:[P[0],h,P[2]],w}]:[];
+/** the Iran players and the keeper near Quaresma stay in frame (the men he beats) */
+const foes=(tau:number):V3[]=>ACTORS.flatMap((a,k)=>a.role==='irn'||a.role==='gk'?[g3(k,tau)]:[]);
+function directed(t:number,B:Beats,pos:V3,look:V3,F:number,hero:V3,ball:V3|null,keep:Keep[]):Camera{
+ const r=reframe({eye:pos,target:look,F},{hero,ball,keep,height:1.75},shotOf(t,B),DV);return cam(r.eye,r.target,r.F);}
 
 // ---- the ball ----
 function arc(a:V3,b:V3,D:number,s:number):V3{const u=s/D,vy=(b[1]-a[1]+.5*GRAV*D*D)/D;return[lerp(a[0],b[0],u),a[1]+vy*s-.5*GRAV*s*s,lerp(a[2],b[2],u)];}
@@ -305,12 +316,12 @@ function poseOf(k:number,tau:number):{p:Pose;yaw:number}{
 
 type Item={depth:number;draw:()=>void};
 type World={ball:V3;res:Map<number,DrawResult>};
-function drawWorld(s:Sheet,c:Camera,tau:number,tp:number,o:{ballMin:number;hero?:boolean;glow?:number}):World{
+function drawWorld(s:Sheet,c:Camera,tau:number,tp:number,o:{ballMin:number;hero?:boolean;glow?:number;lowKeys?:boolean}):World{
  const b=ballAt(tau),items:Item[]=[],res=new Map<number,DrawResult>();
  const m0=s.getTransform(),ppu=Math.sqrt(Math.abs(m0.a*m0.d-m0.b*m0.c))/s.dpr,passing=!!(s as unknown as {_passage?:{pending?:unknown}})._passage?.pending;
  ACTORS.forEach((a,k)=>{const[x,z]=posOf(k,tau),g:V3=[x,0,z],d=depthOf(c,g);if(d<1)return;const[gx,gy]=P(c,g),kk=kAt(c,g);if(Math.abs(gx)>s.W*.62+kk*2||gy<-s.H*.6||gy>s.H*.6+2.4*kk)return;
   items.push({depth:d,draw:()=>{const{p,yaw}=poseOf(k,tp),px=kk*1.8*ppu,place:Place={x,z,yaw};
-   const detail=passing?(k===HERO?'mid':'low'):px<50||(!a.key&&px<110)?'low':'auto';
+   const detail=passing?(k===HERO?'mid':'low'):px<50||((!a.key||(o.lowKeys&&k!==HERO))&&px<110)?'low':'auto';
    const big=px>=90&&!passing&&(k===HERO||a.key);
    const prev=big?{pose:poseOf(k,tp-1/12).p,place:{x:posOf(k,tau-1/12)[0],z:posOf(k,tau-1/12)[1],yaw:poseOf(k,tp-1/12).yaw}}:undefined;
    res.set(k,drawPlayer(s,p,c,{...a.style,detail},place,{prev,smear:!!o.hero&&k===HERO}));}});});
@@ -347,13 +358,28 @@ function look1(tau:number):V3{const b=ballAt(tau);
  if(tau<SHOT)return[b[0]+3,1,b[2]-3];
  if(tau<IN_NET)return mix3([b[0]+3,1,b[2]-3],[lerp(b[0],-3,.5),1.4,lerp(b[2],0,.5)],sm(SHOT,IN_NET,tau));
  const[x,z]=posOf(HERO,tau);return mix3([-3,1.4,0],[x,1,z],sm(IN_NET+.3,IN_NET+2,tau));}
+/** Director beats, chapter 1: a short establishing wide of the bowl, then follow Quaresma down the right with the defenders round him;
+ * pull out for the one-two so both he and Adrien (the wall pass) are in frame; push in low for the trivela itself (the touch being
+ * taught: the outside of the right boot across the ball); then ride with the ball as it curls in, widening so Beiranvand and the goal come
+ * into frame before it arrives; hold on the beaten keeper with the ball in the net at "Goal". */
+const B1=beats([[0,'wide'],[1.1,'follow'],[T(0,'plays a quick one-two')-.3,{from:'space',size:.24}],[T(0,'bends it')-.45,'tight'],
+ [T(0,'bends it')+.33,{from:'space',size:.3,ball:.9}],[T(0,'Goal')+.3,{from:'reaction',size:.32}]]);
 function cam1(t:number){const tau=tau1(t),a=look1(tau),b=look1(tau-.3),c=look1(tau-.6),look:V3=[(a[0]+b[0]+c[0])/3,(a[1]+b[1]+c[1])/3,(a[2]+b[2]+c[2])/3];
- const F=key(tau,[[-6,3000],[-3,3400],[PASS,3700],[RCV,4000],[SHOT,4000],[IN_NET,3300],[IN_NET+2.5,4400]]);return cam(CAM1,look,F);}
+ const F=key(tau,[[-6,3000],[-3,3400],[PASS,3700],[RCV,4000],[SHOT,4000],[IN_NET,3300],[IN_NET+2.5,4400]]);
+ const ot=T(0,'plays a quick one-two'),bi=T(0,'bends it'),g=T(0,'Goal'),q=g3(HERO,tau);
+ // from the strike (τ 0 at bends it + .3 s) the subject glides onto the ball and rides with it to the goal, then settles on Beiranvand,
+ // beaten, with the ball in the net beside him (chapter 3 picks Quaresma up as he races away)
+ const ct=bi+.3,ball=ballAt(tau),wK=sm(ct-.05,ct+.45,t),hero=mix3(mix3(q,[ball[0],0,ball[2]],wK),g3(GKI,tau),sm(g-.4,g+.4,t));
+ const wA=sm(ot-.7,ot-.2,t)*(1-sm(ot+1,ot+1.5,t)),wT=sm(bi-.6,bi-.2,t);
+ // the men he beats stay in frame; at the strike only the block-tackler right on him (the tight shot cannot hold the whole box)
+ const keep:Keep[]=[...near(q,foes(tau),lerp(3.5,1.6,wT),lerp(7,3.2,wT)).map(k=>Array.isArray(k)?k:{P:k.P,w:k.w*(1-wK)}),
+  ...soft(g3(ADI,tau),wA),...near(hero,[g3(GKI,tau)],4,9,2)];
+ return directed(t,B1,CAM1,look,F,hero,ball,keep);}
 const ch1:Scene={
- draw(s,t){const tt=twos(t),c=cam1(t),tau=tau1(t),tp=tau1(tt),goalIn=tau-IN_NET;frame(s);
+ draw(s,t){frame(s);const tt=twos(t),c=cam1(t),tau=tau1(t),tp=tau1(tt),goalIn=tau-IN_NET;
   stadium(s,c,{t,cheer:.12+.9*sm(0,.5,goalIn),flash:.15+1.2*sm(0,.4,goalIn)});
   ground(s,c,{net:goalIn>0?netRipple(goalIn,NET_HIT):undefined});
-  drawWorld(s,c,tau,tp,{ballMin:9});},
+  drawWorld(s,c,tau,tp,{ballMin:9,lowKeys:true});},
  aperture(t){const c=cam1(t),p=ballAt(tau1(t)),[x,y]=P(c,p);return apertureDisc(x,y,Math.max(9,BALL_R*kAt(c,p))*1.1,12);},
  still:12,
 };
@@ -361,13 +387,21 @@ const ch1:Scene={
 // ================= chapter 2 (TV replay, slow motion, low behind the shooter): it starts out wide, swerves back, over the keeper, far top corner =================
 const tau2=(t:number)=>{const E=SEC(1),tt=T(1,'This is the trivela'),sw=T(1,'The ball starts out wide'),sb=T(1,'then swerves back'),ok=T(1,'over keeper Beiranvand'),ft=T(1,'into the far top corner');
  return key(t,mono([[0,-1.4],[tt,-.55],[sw-.1,SHOT],[sb,.42],[ok,.72],[ft,.98],[ft+.8,IN_NET+.1],[E,IN_NET+.6]]),linear);};
-function cam2(t:number){const E=SEC(1),follow=sm(T(1,'The ball starts out wide')-.2,T(1,'into the far top corner')+.4,t,easeInOutSine),push=sm(0,E,t,easeInOutSine);
+/** Director beats, chapter 2 (the replay): the TV shot behind the shooter, then the technique close-up, low on his right boot, as he
+ * strikes across the ball ("This is the trivela"); as it leaves the boot the camera eases back out to the authored distance and aims along
+ * the flight (start line out wide, the swerve, the keeper), then settles on the authored replay framing for the far top corner. */
+const B2=beats([[0,'follow'],[T(1,'This is the trivela')-.4,'detail'],[T(1,'The ball starts out wide')-.25,{from:'space',size:.12,lens:0,low:0,ball:1}],[T(1,'over keeper Beiranvand')+.4,'wide']]);
+function cam2(t:number){const c=cam2Authored(t),tau=tau2(t),q=g3(HERO,tau),ball=ballAt(tau),sw=T(1,'The ball starts out wide'),
+ // once the ball is struck the subject rides with it (Quaresma is left behind, the keeper and the far corner ahead)
+ wB=sm(sw-.1,sw+.6,t),hero=mix3(q,[ball[0],0,ball[2]],wB),wD=sm(T(1,'This is the trivela')-.6,T(1,'This is the trivela'),t);
+ return directed(t,B2,c.pos,c.look,c.F,hero,ball,near(q,foes(tau),lerp(2.5,1.2,wD),lerp(5,2.4,wD)).map(k=>Array.isArray(k)?k:{P:k.P,w:k.w*(1-wB)}));}
+function cam2Authored(t:number){const E=SEC(1),follow=sm(T(1,'The ball starts out wide')-.2,T(1,'into the far top corner')+.4,t,easeInOutSine),push=sm(0,E,t,easeInOutSine);
  // high behind the shooter and a touch inside him, so the whole curl (boot → far top corner) and the keeper sit in one frame
  const dx=CHORD[0]/CL,dz=CHORD[1]/CL,back:V3=[SH[0]-dx*11-RIGHT[0]*2.2,4.6,SH[2]-dz*11-RIGHT[1]*2.2];
  const look=mix3([SH[0]+CHORD[0]*.3,1.1,SH[2]+CHORD[1]*.3],[SH[0]+CHORD[0]*.75,1.5,SH[2]+CHORD[1]*.75-.8],follow);
- return cam([back[0]+dx*2.5*push,back[1]-.6*push,back[2]+dz*2.5*push],look,lerp(1350,1750,follow));}
+ return{pos:[back[0]+dx*2.5*push,back[1]-.6*push,back[2]+dz*2.5*push] as V3,look,F:lerp(1350,1750,follow)};}
 const ch2:Scene={
- draw(s,t){const tt=twos(t),c=cam2(t),tau=tau2(t),tp=tau2(tt),E=SEC(1),tr=T(1,'This is the trivela'),sw=T(1,'The ball starts out wide'),sb=T(1,'then swerves back'),ok=T(1,'over keeper Beiranvand'),ft=T(1,'into the far top corner'),goalIn=tau-IN_NET;frame(s);
+ draw(s,t){frame(s);const tt=twos(t),c=cam2(t),tau=tau2(t),tp=tau2(tt),E=SEC(1),tr=T(1,'This is the trivela'),sw=T(1,'The ball starts out wide'),sb=T(1,'then swerves back'),ok=T(1,'over keeper Beiranvand'),ft=T(1,'into the far top corner'),goalIn=tau-IN_NET;
   stadium(s,c,{t,cheer:.1+.8*sm(0,.4,goalIn)});
   ground(s,c,{net:goalIn>0?netRipple(goalIn,NET_HIT):undefined});
   // "starts out wide": the straight start line, out past the far post (dashed, red)
@@ -390,16 +424,23 @@ const ch2:Scene={
 const tau3=(t:number)=>{const E=SEC(2),hf=T(2,'half-time'),ra=T(2,'Quaresma races away'),cr=T(2,'Cristiano Ronaldo'),jc=T(2,'joins the celebration');
  return key(t,mono([[0,IN_NET-.2],[hf+.2,IN_NET+.4],[ra,1.8],[cr,4.2],[jc+.2,5.9],[E,7.4]]),linear);};
 const CAM3:V3=[-3,1.6,36.5];
-function cam3(t:number){const tau=tau3(t),E=SEC(2),[x,z]=posOf(HERO,tau),b=ballAt(tau),fol=sm(T(2,'Just before'),T(2,'Quaresma races away')+.6,t,easeInOutSine);
+/** Director beats, chapter 3: it opens where chapter 1 left off, on the beaten keeper and the ball in the net ("Just before half-time"),
+ * widens as the camera swings across to Quaresma, follows him as he races away, and closes in on the celebration with Ronaldo held in
+ * frame as he joins him. */
+const B3=beats([[0,{from:'reaction',size:.3}],[T(2,'half-time')-.1,{from:'space',size:.2}],[T(2,'Quaresma races away')-.3,'follow'],[T(2,'joins the celebration')-.3,'reaction']]);
+function cam3(t:number){const c=cam3Authored(t),tau=tau3(t),q=g3(HERO,tau),cr=T(2,'Cristiano Ronaldo'),wQ=sm(T(2,'half-time')-.2,T(2,'Quaresma races away'),t);
+ const hero=mix3(g3(GKI,tau),q,wQ),b=ballAt(tau);
+ return directed(t,B3,c.pos,c.look,c.F,hero,null,[...soft(b,1-wQ,b[1]),...soft(g3(CRI,tau),sm(cr-.9,cr-.2,t)),...near(q,foes(tau),3,6).map(k=>Array.isArray(k)?k:{P:k.P,w:k.w*wQ})]);}
+function cam3Authored(t:number){const tau=tau3(t),E=SEC(2),[x,z]=posOf(HERO,tau),b=ballAt(tau),fol=sm(T(2,'Just before'),T(2,'Quaresma races away')+.6,t,easeInOutSine);
  const look=mix3([lerp(b[0],-3,.4),1.3,lerp(b[2],0,.4)],[x,1.2,z],fol);
- return cam([CAM3[0]-3*sm(0,E,t),CAM3[1],CAM3[2]],look,key(t,mono([[0,1500],[T(2,'Quaresma races away'),1550],[T(2,'Cristiano Ronaldo'),2000],[E,2400]])));}
+ return{pos:[CAM3[0]-3*sm(0,E,t),CAM3[1],CAM3[2]] as V3,look,F:key(t,mono([[0,1500],[T(2,'Quaresma races away'),1550],[T(2,'Cristiano Ronaldo'),2000],[E,2400]]))};}
 const ch3:Scene={
- draw(s,t){const tt=twos(t),c=cam3(t),tau=tau3(t),tp=tau3(tt),ra=T(2,'Quaresma races away'),cr=T(2,'Cristiano Ronaldo'),jc=T(2,'joins the celebration'),E=SEC(2),goalIn=tau-IN_NET;frame(s);
+ draw(s,t){frame(s);const tt=twos(t),c=cam3(t),tau=tau3(t),tp=tau3(tt),ra=T(2,'Quaresma races away'),cr=T(2,'Cristiano Ronaldo'),jc=T(2,'joins the celebration'),E=SEC(2),goalIn=tau-IN_NET;
   stadium(s,c,{t,cheer:.3+.8*sm(0,.5,goalIn),flash:.4+1.2*sm(0,.4,goalIn)});
   ground(s,c,{net:goalIn>0?netRipple(goalIn,NET_HIT):undefined});
   trail3(s,c,onGround(pathOf(HERO,1,5.8)),.16,R,{progress:sm(ra-.1,ra+1,t,easeOut),cov:.9*(1-sm(E-.9,E-.4,t)),seed:41});
   trail3(s,c,onGround(pathOf(CRI,1.5,6.3)),.14,Y,{progress:sm(cr-.1,cr+.9,t,easeOut),cov:.9*(1-sm(E-.9,E-.4,t)),dashed:true,seed:43});
-  const w=drawWorld(s,c,tau,tp,{ballMin:8,hero:true});
+  const w=drawWorld(s,c,tau,tp,{ballMin:8,hero:true,lowKeys:true});
   const q=w.res.get(HERO),age=t-jc;if(q&&age>-.1&&age<.9){const h=q.joints.head;sparkBurst(s,Y,h[0],h[1]-40,kAt(c,[-7,1,28])*.9,{n:10,seed:45,g:easeOutBack(clamp((age+.1)/.25))*(1-clamp((age-.6)/.3)),width:10});}
   if(t<.45)speedLines(s,K,0,0,Math.PI,{n:12,seed:47,len:900,spread:520,width:22,cov:.5*(1-t/.45)});
  },

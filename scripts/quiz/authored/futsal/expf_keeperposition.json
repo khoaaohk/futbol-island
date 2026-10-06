@@ -3,7 +3,11 @@
  "questions": [
   {
    "q": "The goalkeeper is hidden. Where should the keeper stand while the fixo pressures?",
-   "options": ["Near goal, behind the fixo", "Out toward the attacker", "Far side of the goal"],
+   "options": [
+    "Near goal, behind the fixo",
+    "Out toward the attacker",
+    "Far side of the goal"
+   ],
    "correct": 0,
    "explain": "Yes. The fixo pressures the ball, so the keeper sets near goal and keeps a view of the shot.",
    "choiceExplanations": [
@@ -13,13 +17,40 @@
    ],
    "visual": {
     "kind": "tapSpot",
-    "frame": {"step": 2, "hide": ["gk"], "ball": "dlm", "focus": ["cb", "dlm"]},
-    "spots": [{"x": 120, "y": 378}, {"x": 78, "y": 345}, {"x": 195, "y": 382}]
+    "frame": {
+     "step": 2,
+     "hide": [
+      "gk"
+     ],
+     "ball": "dlm",
+     "focus": [
+      "cb",
+      "dlm"
+     ]
+    },
+    "spots": [
+     {
+      "x": 120,
+      "y": 378
+     },
+     {
+      "x": 78,
+      "y": 345
+     },
+     {
+      "x": 195,
+      "y": 382
+     }
+    ]
    }
   },
   {
    "q": "The receiver is free on the right. Which picture shows the best keeper position?",
-   "options": ["Keeper in the middle of goal", "Keeper a few steps across", "Keeper right up at the attacker"],
+   "options": [
+    "Keeper in the middle of goal",
+    "Keeper a few steps across",
+    "Keeper right up at the attacker"
+   ],
    "correct": 1,
    "explain": "Right. A few controlled steps toward the ball close the angle, and you can still react.",
    "choiceExplanations": [
@@ -30,15 +61,58 @@
    "visual": {
     "kind": "pickPicture",
     "pictures": [
-     {"step": 5, "ball": "drm", "place": {"gk": {"x": 117, "y": 375}}, "focus": ["gk", "drm"]},
-     {"step": 5, "ball": "drm", "place": {"gk": {"x": 163, "y": 362}}, "focus": ["gk", "drm"]},
-     {"step": 5, "ball": "drm", "place": {"gk": {"x": 212, "y": 348}}, "focus": ["gk", "drm"]}
+     {
+      "step": 5,
+      "ball": "drm",
+      "place": {
+       "gk": {
+        "x": 135,
+        "y": 375
+       }
+      },
+      "focus": [
+       "gk",
+       "drm"
+      ]
+     },
+     {
+      "step": 5,
+      "ball": "drm",
+      "place": {
+       "gk": {
+        "x": 163,
+        "y": 362
+       }
+      },
+      "focus": [
+       "gk",
+       "drm"
+      ]
+     },
+     {
+      "step": 5,
+      "ball": "drm",
+      "place": {
+       "gk": {
+        "x": 212,
+        "y": 348
+       }
+      },
+      "focus": [
+       "gk",
+       "drm"
+      ]
+     }
     ]
    }
   },
   {
    "q": "Now the free runner is on the left. Drag the KEEPER to close the angle.",
-   "options": ["Rush out to the attacker", "Move toward the far post", "Take a few steps toward the ball"],
+   "options": [
+    "Rush out to the attacker",
+    "Move toward the far post",
+    "Take a few steps toward the ball"
+   ],
    "correct": 2,
    "explain": "Yes. A few steps toward the ball side close the near post, and you stay balanced.",
    "choiceExplanations": [
@@ -51,14 +125,74 @@
     "frame": {
      "step": 5,
      "place": {
-      "gk": {"x": 153, "y": 375}, "cb": {"x": 135, "y": 335}, "lm": {"x": 55, "y": 310}, "rm": {"x": 215, "y": 280}, "st": {"x": 140, "y": 255},
-      "dgk": {"x": 125, "y": 40}, "dcb": {"x": 125, "y": 210}, "dlm": {"x": 30, "y": 340}, "drm": {"x": 195, "y": 300}, "dst": {"x": 90, "y": 280}
+      "gk": {
+       "x": 153,
+       "y": 375
+      },
+      "cb": {
+       "x": 135,
+       "y": 335
+      },
+      "lm": {
+       "x": 55,
+       "y": 310
+      },
+      "rm": {
+       "x": 215,
+       "y": 280
+      },
+      "st": {
+       "x": 140,
+       "y": 255
+      },
+      "dgk": {
+       "x": 125,
+       "y": 40
+      },
+      "dcb": {
+       "x": 125,
+       "y": 210
+      },
+      "dlm": {
+       "x": 30,
+       "y": 340
+      },
+      "drm": {
+       "x": 195,
+       "y": 300
+      },
+      "dst": {
+       "x": 90,
+       "y": 280
+      }
      },
      "ball": "dlm",
-     "focus": ["gk", "dlm"]
+     "focus": [
+      "gk",
+      "dlm"
+     ]
     },
     "drag": "gk",
-    "zones": [{"x": 62, "y": 347, "w": 30, "h": 24}, {"x": 192, "y": 382, "w": 36, "h": 24}, {"x": 107, "y": 364, "w": 36, "h": 26}]
+    "zones": [
+     {
+      "x": 62,
+      "y": 347,
+      "w": 30,
+      "h": 24
+     },
+     {
+      "x": 192,
+      "y": 382,
+      "w": 36,
+      "h": 24
+     },
+     {
+      "x": 107,
+      "y": 364,
+      "w": 36,
+      "h": 26
+     }
+    ]
    }
   }
  ]

@@ -34,3 +34,11 @@ export function checkWelcomeBack(storage:Pick<Storage,'getItem'|'setItem'>|null,
 }
 /** Remember today as seen (call when the card shows). */
 export function markWelcomeBackSeen(storage:Pick<Storage,'setItem'>|null,now=Date.now()){if(!storage)return;try{storage.setItem(LAST_VISIT_KEY,localPlayDay(now));}catch{}}
+/** The card's one "next" line (Oct 3 2026 play-through): the next lesson when there is one; once every starter path is done
+ *  and the four graduations make the Ferry open, the Matchday final until it is finished (the card used to say only "Replay a
+ *  favourite", which hid the one endgame step left); after the final, replay and go deeper. Text only (the card has no buttons). */
+export function welcomeBackLine(nextLesson:string|null,ferryOpen:boolean,finaleDone:boolean):string{
+ if(nextLesson)return `Next up: ${nextLesson}`;
+ if(ferryOpen&&!finaleDone)return 'Every path graduated! The Matchday Ferry is waiting at the harbour.';
+ return 'Every starter path is done. Replay a favourite or go deeper!';
+}

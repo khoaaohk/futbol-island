@@ -235,7 +235,7 @@
           },
           {
             "id": "learn7_buildout",
-            "name": "Goal Kick & Build-Out Line · AYSO",
+            "name": "Goal Kick & Build-Out Line",
             "steps": 14,
             "questions": 5
           }
@@ -339,13 +339,13 @@
       },
       {
         "id": "next7_offsideboundary",
-        "name": "Which Line Matters? · AYSO",
+        "name": "Which Line Matters?",
         "steps": 9,
         "questions": 5
       },
       {
         "id": "next7_dribblein",
-        "name": "Start with Your Feet · FA",
+        "name": "Start with Your Feet",
         "steps": 8,
         "questions": 5
       }

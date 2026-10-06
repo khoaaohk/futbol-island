@@ -16,7 +16,7 @@ child presses Play. ~353 exist in `lib/plays/riso/<id>.ts`; study 3–4 recent o
    global replace in registry.ts (it once deleted the FILMS key).
 3. Narration script `public/plays/narration/<id>/script.json`, then voice it with Kokoro:
    `<venv>/bin/python scripts/plays/kokoro-narrate.py <id>` → `<n>.m4a` + `timing.json`.
-   Kokoro venv: `/private/tmp/claude-501/-Users-khoado-Desktop-Warp-Claude-Projects/bf21bd3b-8bef-46f7-a44a-b2461b53a632/scratchpad/kokoro-venv`
+   Kokoro venv: `~/.venvs/futbol-kokoro` (rebuild steps: `docs/voice/KOKORO_SETUP.md`)
    (espeak-ng is installed; the script patches its paths). Voice: the coach voice **af_bella, speed 1.0**. Never ElevenLabs
    (planned for later by the user, not now). Pronunciations: `scripts/plays/pronunciations.json`.
 4. Swap the film's `VOICE/TIMING` nulls for the `timing.json` import (via `withTiming` in `lib/plays/riso/timing.ts`),

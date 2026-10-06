@@ -10,7 +10,7 @@
 import type {Sheet} from '../sheet';
 import {type RisoStory,type Scene,type Chapter,playChapters,trackChapters} from '../story';
 import {aperture,apertureDisc} from '../passage';
-import {twos,sm,key,anticipate,settle,smearPose,pressPts,clamp,lerp,rng,hash,blob,polyPath,ribbon,smoothPts,partial,rotPts,circlePath,rectPath,arc,easeOut,easeIn,easeIO,easeOutBack,TAU,type Pt} from '../motion';
+import {twos,sm,key,anticipate,settle,smearPose,pressPts,clamp,lerp,rng,hash,blob,polyPath,ribbon,smoothPts,partial,rotPts,circlePath,rectPath,arc,easeOut,easeIn,easeIO,easeOutBack,TAU,type Pt,creepHolds} from '../motion';
 import {dust,speedLines,handCut,goalFrame,ripple,crescent,tornRect} from '../shapes';
 
 const K='navy',P='pink',B='blue',G='green';
@@ -191,7 +191,7 @@ const FIG11:Pt[]=[[-420,-820],[0,-820],[420,-820],[-520,-420],[-120,-420],[300,-
 const sc1:Scene={
  draw(s,t){
   const tt=twos(t),[cx,cy]=COURT1;
-  const v=key(t,[[0,0,0,.37],[.9,0,0,.39],[2.6,cx,cy,1.15],[3.85,cx,cy,1.15],[4.25,cx,cy+12,1.2],[5.5,cx,cy+12,1.2]],easeIO,true);
+  const v=key(t,creepHolds([[0,0,0,.37],[.9,0,0,.39],[2.6,cx,cy,1.15],[3.85,cx,cy,1.15],[4.25,cx,cy+12,1.2],[5.5,cx,cy+12,1.2]]),easeIO,true);
   s.camera(v[0],v[1],v[2],0);
   pitch(s,0,0,PITCH_W,PITCH_H,11,{boxes:false});
   tinyFigures(s,FIG11,170,12);
@@ -221,7 +221,7 @@ const YOU2:Pt=[-60,60],YOU2B:Pt=[40,-150];
 const sc2:Scene={
  draw(s,t){
   const tt=twos(t);
-  const v=key(t,[[0,0,0,1.55],[1.1,0,20,1.57],[5.2,0,20,1.57],[5.9,0,-10,1.75],[7.1,0,-10,1.75],[7.7,140,-80,1.75],[8.3,140,-80,1.75],[9.0,-60,-40,1.75],[11.3,-60,-40,1.75]],easeIO,true);
+  const v=key(t,creepHolds([[0,0,0,1.55],[1.1,0,20,1.57],[5.2,0,20,1.57],[5.9,0,-10,1.75],[7.1,0,-10,1.75],[7.7,140,-80,1.75],[8.3,140,-80,1.75],[9.0,-60,-40,1.75],[11.3,-60,-40,1.75]]),easeIO,true);
   s.camera(v[0]+10*pulse(t,1.1),v[1],v[2]*land(s),0);
   floorFill(s);
   // the walls: heavy push from off-frame to the court's touchlines; the touchlines buckle inward; dust at each wall's foot
@@ -264,7 +264,7 @@ const sc2:Scene={
 const sc3:Scene={
  draw(s,t){
   const tt=twos(t);
-  const v=key(t,[[0,-120,-40,1],[4.3,-160,-60,1],[4.54,-160,-60,1],[4.9,0,-60,1.02],[6.8,20,-60,1.02]],easeIO,true);
+  const v=key(t,creepHolds([[0,-120,-40,1],[4.3,-160,-60,1],[4.54,-160,-60,1],[4.9,0,-60,1.02],[6.8,20,-60,1.02]]),easeIO,true);
   s.camera(v[0],v[1]+8*pulse(t,4.89),v[2],0);
   pitch(s,-210,200,PITCH_W,PITCH_H,31);
   // left: you alone with the ball; a slow high pass arrives; the clock ticks three times while you look left and right
@@ -304,7 +304,7 @@ const BLOCKS:[Pt,Pt,number,number][]=[[[-160,-330],[-160,-330],2,51],[[140,-390]
 const sc4:Scene={
  draw(s,t){
   const tt=twos(t);
-  const v=key(t,[[0,0,40,1],[.5,0,40,1],[1.4,-40,20,1],[1.9,-40,20,1],[2.4,0,20,1.02],[3.54,0,20,1.03],[4.0,120,-40,1.04],[4.5,120,-40,1.04],[5.2,80,-120,1.04],[6.3,80,-120,1.05],[6.9,140,-210,1.06],[7.8,140,-210,1.07]],easeIO,true);
+  const v=key(t,creepHolds([[0,0,40,1],[.5,0,40,1],[1.4,-40,20,1],[1.9,-40,20,1],[2.4,0,20,1.02],[3.54,0,20,1.03],[4.0,120,-40,1.04],[4.5,120,-40,1.04],[5.2,80,-120,1.04],[6.3,80,-120,1.05],[6.9,140,-210,1.06],[7.8,140,-210,1.07]]),easeIO,true);
   s.camera(v[0]+12*sm(1.9,2.4,t)*(1-sm(2.6,3.0,t)),v[1],v[2]*land(s),0);
   floorFill(s);courtLines(s,0,60,COURT_W*2.2,COURT_H*2.2,50,{lw:30});
   const move=sm(3.6,4.0,tt,easeOut),you=L2(YOU4A,YOU4B,move),face:1|-1=tt<3.3?-1:1;
@@ -351,7 +351,7 @@ const FIVE:Pt[]=[[0,40],[-110,-230],[-120,240],[110,-230],[120,240]];
 const sc5:Scene={
  draw(s,t){
   const tt=twos(t);
-  const v=key(t,[[0,0,0,1.65],[1.5,0,0,1.72],[3.6,0,0,1.72],[4.1,60,-120,1.72],[4.46,60,-120,1.72],[4.9,-40,120,1.72],[5.38,-40,120,1.72],[5.9,-100,-40,1.72],[6.2,-100,-40,1.72],[7.2,0,-160,2.3]],easeIO,true);
+  const v=key(t,creepHolds([[0,0,0,1.65],[1.5,0,0,1.72],[3.6,0,0,1.72],[4.1,60,-120,1.72],[4.46,60,-120,1.72],[4.9,-40,120,1.72],[5.38,-40,120,1.72],[5.9,-100,-40,1.72],[6.2,-100,-40,1.72],[7.2,0,-160,2.3]]),easeIO,true);
   s.camera(v[0],v[1],v[2]*land(s),0);
   floorFill(s);courtLines(s,0,0,COURT_W,COURT_H,70);
   goalFrame(s,K,-70,-COURT_H/2-40,140,40,{depth:24,net:K,seed:71,bar:8});goalFrame(s,K,-70,COURT_H/2,140,40,{depth:24,net:K,seed:72,bar:8});
@@ -387,7 +387,7 @@ const YOU6:Pt=[-70,90],G6:Pt=[80,-110];
 const sc6:Scene={
  draw(s,t){
   const tt=twos(t);
-  const v=key(t,[[0,0,0,.6],[2.74,0,0,.63],[3.6,0,0,.85],[4.58,0,0,.85],[6.6,0,0,.95],[8.1,0,0,.95]],easeIO,true);
+  const v=key(t,creepHolds([[0,0,0,.6],[2.74,0,0,.63],[3.6,0,0,.85],[4.58,0,0,.85],[6.6,0,0,.95],[8.1,0,0,.95]]),easeIO,true);
   s.camera(v[0],v[1],v[2],0);
   pitch(s,0,0,PITCH_W,PITCH_H,90,{lines:lerp(.9,.6,sm(1.8,2.6,tt))});
   // the court: its outline grows a step with every touch (overshoot), and so does its cream floor
@@ -417,7 +417,7 @@ const sc6:Scene={
 const sc7:Scene={
  draw(s,t){
   const tt=twos(t);
-  const v=key(t,[[0,0,0,.6],[3.0,-24,14,.6],[3.5,-20,10,.6],[5.14,-20,10,.6],[6.6,0,0,.6],[8.5,24,-12,.6]],easeIO,true);
+  const v=key(t,creepHolds([[0,0,0,.6],[3.0,-24,14,.6],[3.5,-20,10,.6],[5.14,-20,10,.6],[6.6,0,0,.6],[8.5,24,-12,.6]]),easeIO,true);
   s.camera(v[0],v[1],v[2],0);
   const open=sm(5.14,6.4,tt,easeOut),ovs=open>=1?30*settle(tt,6.4,{amp:1,freq:3,decay:4}):0;
   const W=lerp(COURT_W,PITCH_W,open)+ovs,H=lerp(COURT_H,PITCH_H,open)+ovs*2;

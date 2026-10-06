@@ -45,6 +45,16 @@ export function blocked(x: number, z: number, obstacles: Obstacle[], radius = .3
   if(onCayLand(x,z)||onLandableDeck(x,z))return obstacles.some(o => insideObstacle(x,z,o,radius));
   return (!onIsland(x,z)&&!onFerryBoarding(x,z)) || x < ISLAND_BOUNDS.minX || x > ISLAND_BOUNDS.maxX || z < ISLAND_BOUNDS.minZ || z > ISLAND_BOUNDS.maxZ || obstacles.some(o => insideObstacle(x,z,o,radius));
 }
+/** A travel arrival that is itself free (Oct 3 2026 play-through: map travel to 7v7 put the player inside the Old Town Ground
+ *  vending machine, hidden and unable to move). Returns (x, z) when it is clear, else the nearest clear point on rings 0.75 m
+ *  apart up to `maxRadius`, trying the camera side (+z, so the player stands in front of what was in the way) first. Called
+ *  once per travel, never per frame. Falls back to (x, z) when nothing nearby is clear. */
+export function clearSpotNear(x:number,z:number,obstacles:Obstacle[],radius=.5,maxRadius=8):{x:number;z:number}{
+  if(!blocked(x,z,obstacles,radius))return {x,z};
+  for(let r=.75;r<=maxRadius;r+=.75){const n=Math.max(8,Math.ceil(r*2*Math.PI/.75));
+    for(let i=0;i<n;i++){const k=i&1?(i+1)/2:-i/2,a=Math.PI/2+k*2*Math.PI/n,nx=x+Math.cos(a)*r,nz=z+Math.sin(a)*r;if(!blocked(nx,nz,obstacles,radius))return {x:nx,z:nz};}}
+  return {x,z};
+}
 export function stepPlayer(position: {x: number; z: number}, velocity: {x: number; z: number}, input: {x: number; z: number; sprint: boolean}, dt: number, obstacles: Obstacle[], mode: TravelMode = 'walk', collisionRadius = mode==='walk'?.32:.8) {
   dt = Math.max(0, Math.min(dt, .25));
   const settings = TRAVEL_MODES[mode];

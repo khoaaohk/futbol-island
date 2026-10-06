@@ -60,6 +60,7 @@ import {type RisoStory,type Scene,type Chapter,playChapters} from '../../paths/r
 import {apertureDisc} from '../../paths/riso/passage';
 import {TAU,twos,sm,key,clamp,lerp,rng,hash,blob,polyPath,ribbon,rectPath,partial,easeOut,easeOutBack,easeInOutSine,linear,type Pt} from '../../paths/riso/motion';
 import {sparkBurst,laneArrow,footballPanels} from '../../paths/riso/shapes';
+import {beats,shotAt,reframe,steady,near,type View as DView,type Keep,type ReframeOpts,type Pin} from './director';
 import {drawAthlete,motionSmear,runCycle,backpedal,lunge,strike,keeperSet,keeperDive,slideTackle,stand,posed,blendPose,
  type Pose,type AthleteStyle,type InkFill,type Place,type Projector,type V3,type DrawResult} from './athlete';
 
@@ -112,7 +113,22 @@ type View={hx:number;hy:number};
 const view=(s:Sheet,z:number):View=>({hx:s.W/(2*z*.68)+60,hy:s.H/(2*z*.68)+60});
 /** a narrower (square) window gets a slightly wider lens so the action still fits; set by frame(), read by every camera */
 let LENS=1;
-const frame=(s:Sheet)=>{LENS=Math.pow(Math.min(1,s.W/1620),.45);return view(s,cam(s,0,0,1));};
+const frame=(s:Sheet)=>{LENS=Math.pow(Math.min(1,s.W/1620),.45);const z=cam(s,0,0,1);DV={w:s.W/z,h:s.H/z};return view(s,z);};
+/** the window in camera units (set by frame(); read by the director's reframing, aperture() included) */
+let DV:DView={w:1566,h:1080};
+/** steady() half-window (s); ch3: the eye stays behind the net (x ≥ PL3); ch1 recenter range */
+const STEADY=.45,PL3=107.5,RCMIN=.3,RCMAX=.7;
+/** ch1 aims between the framed points (director `recenter`) while two things must share the frame — the pass in behind (Swanson →
+ * Smith, ball) and the lift into the net — and at the hero otherwise; eased over ≥ .8 s */
+const RC1=(t:number)=>Math.max(sm(TP-1,TP-.2,t)*(1-sm(CUE(0,'bursts')-.8,CUE(0,'bursts'),t)),sm(CUE(0,'she lifts')-.4,CUE(0,'she lifts')+.4,t))*RCMAX+RCMIN;
+/** the director's move on a look() camera: reframe the eye/aim/focal (a Pin in look()'s scaled focal units) */
+const direct=(c:Cam,T:V3,hero:[number,number],ball:V3|null,keep:Keep[],t:number,B:ReturnType<typeof beats>,o?:ReframeOpts):Pin=>
+ reframe({eye:c.C,target:T,F:c.F},{hero:[hero[0],0,hero[1]],ball,keep,height:1.7},shotAt(t,B),DV,o);
+/** the directed camera averaged over ±STEADY s by the director's steady() (a keep point arriving or letting go becomes a smooth move,
+ * never a snap), rebuilt once with look() */
+const settle=(t:number,at:(t:number)=>Pin):Cam=>{const p=steady(t,at,STEADY,5);return look(p.eye,p.target,p.F/LENS);};
+/** feet and head of actor k at τ as hard keep points */
+const body=(k:number,tau:number):Keep[]=>{const[x,z]=posOf(k,tau);return[[x,0,z],[x,1.75,z]];};
 
 // ---------------------------------------------------------------- the TV camera: a right-handed 3D projection of the pitch
 /** Pitch metres (right-handed, like athlete.ts): X along the length (the USA attack +X; Germany's goal line at 105), Y up, Z across
@@ -443,14 +459,35 @@ function firstSpark(s:Sheet,c:Cam,w:number,seed=58){if(w<=0)return;const q=toCam
 // ---------------------------------------------------------------- 1 · live: the high main-stand camera, near real time
 const tau1=(t:number)=>{const G=CUE(0,'Goal');return key(t,mono([[0,-6.2],[CUE(0,'against'),-4.4],[CUE(0,'Mallory'),-1.5],[CUE(0,'Sophia'),.2],[CUE(0,'bursts'),.95],[CUE(0,'the keeper'),1.5],[CUE(0,'she lifts'),SHOT-.05],[G,IN_NET+.05],[SECS(0)+1,IN_NET+.05+(SECS(0)+1-G)*.9]]),linear);};
 const CAM1:V3=[62,24,68];
-function cam1(t:number):Cam{
+/** Director beats (lib/plays/riso/director.ts, Oct 4 2026): a short establishing wide of the stadium, then follow the ball up the pitch
+ * (Coffey to Swanson); pull out as Swanson plays it in behind so the passer AND Smith's run are both in frame (the run starts before the
+ * pass — the lesson); stay pulled out on Smith while the ball rolls into the space behind, with Rauch chasing; push in low as Berger comes
+ * out and Smith slides to lift it over her (Rauch and Berger kept in frame, the ball kept all the way into the net); then Smith. */
+const TP=lerp(CUE(0,'Mallory'),CUE(0,'Sophia'),1.5/1.7)-.6,TS=CUE(0,'Sophia')+.3;
+const B1=beats([[0,'wide'],[.7,{from:'follow',size:.4}],[TP,{from:'space',size:.24,low:.5}],[TS,{from:'space',size:.3,low:.5}],
+ [CUE(0,'bursts')-.35,'follow'],[CUE(0,'she lifts')-.45,'tight'],[CUE(0,'Goal')+.3,{from:'reaction',size:.62}]]);
+/** the ch1 subject: the ball carrier (Coffey, then Swanson) handing over smoothly to Smith around the pass in behind (τ −.5 … .4) */
+function hero1(tau:number):[number,number]{const c=posOf(COFK,tau),w=posOf(SWA,tau),m=posOf(SMI,tau),u=sm(COF,REC,tau,easeInOutSine),v=sm(-.5,.4,tau,easeInOutSine);
+ return[lerp(lerp(c[0],w[0],u),m[0],v),lerp(lerp(c[1],w[1],u),m[1],v)];}
+const cam1=(t:number)=>settle(t,cam1At);
+function cam1At(t:number):Pin{const tau=tau1(t),{c,T}=cam1Authored(t),h=hero1(tau),k=keep1(t,tau,h);return direct(c,T,h,null,k,t,B1,{recenter:RC1(t)});}
+/** what ch1 must keep in frame. Keep points slide in from the hero's own spot (a moving point, not a fading weight, so nothing pops):
+ * Smith's run while Swanson is the subject (passer and target both in frame at the pass); the ball until it is in the net; Rauch and
+ * Berger near Smith (soft); and any other player close enough to the hero to be cut by the frame edge */
+function keep1(t:number,tau:number,h:[number,number]):Keep[]{
+ const ws=sm(TP-.2,TP+.6,t)*(1-sm(-.5,.4,tau)),wb=sm(IN_NET+.4,IN_NET+1,tau),tw=sm(CUE(0,'she lifts')-.6,CUE(0,'she lifts'),t),H:V3=[h[0],.9,h[1]];
+ const out:Keep[]=[lerp3(ballAt(tau),H,wb)];
+ if(ws>0)for(const P of body(SMI,tau))out.push(lerp3(H,P as V3,ws));
+ const g=(k:number):V3=>{const[x,z]=posOf(k,tau);return[x,0,z];},rest=ACTORS.flatMap((_,k)=>k===RAU||k===BER?[]:[g(k)]).filter(P=>Math.hypot(P[0]-h[0],P[2]-h[1])>.3);
+ return[...out,...near([h[0],0,h[1]],[g(RAU),g(BER)],3,7,1.7),...near([h[0],0,h[1]],rest,lerp(4.5,2,tw),lerp(8,4,tw),1.7)];}
+function cam1Authored(t:number):{c:Cam;T:V3}{
  const G=CUE(0,'Goal'),S=SECS(0),tau=tau1(t);
  const bs=(u:number):V3=>{const b=ballAt(Math.min(u,SHOT));return[b[0],0,b[2]];},b0=bs(tau),b1=bs(tau-.35),b2=bs(tau-.7),bt:V3=[(b0[0]+b1[0]+b2[0])/3,0,(b0[2]+b1[2]+b2[2])/3];
  const open:V3=[66,4,2],m=posOf(SMI,tau),cel:V3=[m[0]+1,.8,m[1]-1];
  const toBall=sm(CUE(0,'the Olympic'),CUE(0,'against')+.4,t,easeInOutSine),toS=sm(G+.5,G+1.6,t,easeInOutSine),toGoal=sm(CUE(0,'Sophia'),CUE(0,'she lifts'),t,easeInOutSine)*(1-toS);
  const tb:V3=[lerp(open[0],bt[0]+4+2*toGoal,toBall),lerp(open[1],1.5,toBall),lerp(open[2],lerp(bt[2],7,.25+.2*toGoal),toBall)],T=lerp3(tb,cel,toS);
  const F=key(t,mono([[0,2100],[CUE(0,'against'),2600],[CUE(0,'Mallory'),3000],[CUE(0,'Sophia'),3500],[CUE(0,'bursts'),4200],[CUE(0,'the keeper'),4900],[G,5400],[G+1.6,7200],[S,7600]]),easeInOutSine);
- return look(CAM1,T,F);
+ return{c:look(CAM1,T,F),T};
 }
 const ch1:Scene={
  draw(s,t){
@@ -496,10 +533,19 @@ const ch2:Scene={
 // ---------------------------------------------------------------- 3 · replay from behind Germany's goal: the slide, the lift, the net, the embrace
 const tau3=(t:number)=>{const wg=CUE(2,'won gold');return key(t,mono([[0,SHOT-1],[CUE(2,'Berger'),SHOT-.4],[CUE(2,'Sophia'),SHOT-.02],[CUE(2,'over her'),SHOT+.4],[CUE(2,'into the net'),IN_NET-.05],[wg,5.9],[SECS(2),5.9+(SECS(2)-wg)*.7]]),linear);};
 const swing3=(t:number)=>sm(CUE(2,'into the net')+.5,CUE(2,'won gold')+.2,t,easeInOutSine);
-function cam3(t:number):Cam{
+/** Director beats: the replay from behind the goal starts as authored, pushes in on Smith as Berger slides out (Berger kept), goes low
+ * and tight for the scooped lift, and lets the flight of the ball pull the frame back to the goal mouth (kept until the camera swings);
+ * then holds Smith and Swanson for "won gold". */
+const B3=beats([[0,'wide'],[CUE(2,'Berger')-.4,{from:'follow',lens:0}],[CUE(2,'Sophia')-.4,{from:'tight',lens:0}],[CUE(2,'won gold')-.2,{from:'reaction',size:.45}]]);
+const cam3=(t:number)=>settle(t,cam3At);
+function cam3At(t:number):Pin{const tau=tau3(t),u=swing3(t),{c,T}=cam3Authored(t),m=posOf(SMI,tau);
+ const b=lerp3(ballAt(tau),[m[0],.9,m[1]],sm(IN_NET+.8,IN_NET+1.6,tau)),keep:Keep[]=[b,...near([m[0],0,m[1]],[BER,RAU,SWA].map(k=>{const[x,z]=posOf(k,tau);return[x,0,z] as V3;}),3,7,1.7)];
+ // the eye never comes in past the goal (it stays behind the net, x ≥ 107.5) until the camera swings round for "won gold"
+ return direct(c,T,m,null,keep,t,B3,{minDist:lerp(Math.max(2.5,(PL3-m[0])*1.03),2.5,sm(.2,.6,u))});}
+function cam3Authored(t:number):{c:Cam;T:V3}{
  const tau=tau3(t),u=swing3(t),C:V3=[117,4.4+.8*u,4.2-1*u],e=sm(SHOT-.3,IN_NET,tau,easeInOutSine);
- const T0:V3=[lerp(92,97,e),lerp(1,1.4,e),lerp(5,2.6,e)],T1:V3=[91,.8,4.8];
- return look(C,lerp3(T0,T1,u),lerp(lerp(3500,3000,e),6000,u));
+ const T0:V3=[lerp(92,97,e),lerp(1,1.4,e),lerp(5,2.6,e)],T1:V3=[91,.8,4.8],T=lerp3(T0,T1,u);
+ return{c:look(C,T,lerp(lerp(3500,3000,e),6000,u)),T};
 }
 const ch3:Scene={
  draw(s,t){
@@ -521,10 +567,17 @@ const ch3:Scene={
 
 // ---------------------------------------------------------------- 4 · the lesson: a raised coaching angle behind her, the whole move marked out
 const tau4=(t:number)=>key(t,mono([[0,-1.4],[CUE(3,'Your'),-1.2],[CUE(3,'run into'),-.6],[CUE(3,'space'),.4],[CUE(3,'then finish'),SHOT-.1],[CUE(3,'before'),SHOT+.35],[SECS(3),IN_NET+.1]]),linear);
-function cam4(t:number):Cam{
+/** Director beats: the coaching angle settles in closer behind Smith for "run into the space behind" while her start mark, the meeting
+ * point (the space) and Rauch stay in frame, then frames the finish — Smith, Berger and the goal-ring spot — for "then finish". */
+const B4=beats([[0,{from:'lesson',size:.42}],[CUE(3,'then finish')-.4,{from:'lesson',size:.4}]]);
+const cam4=(t:number)=>settle(t,cam4At);
+function cam4At(t:number):Pin{const tau=tau4(t),{c,T}=cam4Authored(t),m=smooth(SMI,Math.min(tau,SHOT)),wf=sm(CUE(3,'then finish')-1,CUE(3,'then finish')+.3,t);
+ const H:V3=[m[0],.9,m[1]],wl=sm(CUE(3,'run into')-.8,CUE(3,'run into')+.1,t),keep:Keep[]=[lerp3(H,[M[0],0,M[1]],wl),lerp3(H,[LINE_PTS[3][0],0,LINE_PTS[3][1]],wl),lerp3(H,[LINE_PTS[4][0],0,LINE_PTS[4][1]],wl),lerp3(H,ballAt(tau),sm(.6,1,tau)),lerp3([M[0],.5,M[1]],GOALPT,wf),...near([m[0],0,m[1]],[RAU,BER].map(k=>{const[x,z]=posOf(k,tau);return[x,0,z] as V3;}),4,9,1.7)];
+ return direct(c,T,m,null,keep,t,B4,{recenter:wf});}
+function cam4Authored(t:number):{c:Cam;T:V3}{
  const tau=tau4(t),orbit=sm(CUE(3,'space')-.3,CUE(3,'then finish')+.3,t,easeInOutSine),m=smooth(SMI,Math.min(tau,SHOT));
  const C:V3=[lerp(66,72,orbit),lerp(13,12,orbit),lerp(38,34,orbit)],T:V3=[lerp(m[0]+6,92,orbit*.8),.2,lerp(m[1]-4,5,orbit*.8)];
- return look(C,T,lerp(2400,2600,orbit));
+ return{c:look(C,T,lerp(2400,2600,orbit)),T};
 }
 const ch4:Scene={
  draw(s,t){

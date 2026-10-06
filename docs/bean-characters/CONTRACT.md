@@ -621,7 +621,7 @@ Research, the move table and where each move appears: `docs/player-moves/MOVES.m
   - 9v9: next9_shortcornerbudget;
   - futsal: bld_f_splitcb, f_pivot;
   - 11v11: trn_11_recover.
-  - `check-authored` passes. **Not merged:** they need `merge-visual-questions.py <format>` plus Kokoro voicing (`scripts/plays/kokoro-lessons.py <hashes>`). No Kokoro venv exists right now, and a merge without voices would fail `visual-quiz` / `lesson-catalog`.
+  - `check-authored` passes. **Not merged:** they need `merge-visual-questions.py <format>` plus Kokoro voicing (`scripts/plays/kokoro-lessons.py <hashes>`). No Kokoro venv exists right now, and a merge without voices would fail `visual-quiz` / `lesson-catalog`. *(Since done: all six are merged and voiced for the four coaches; checked Oct 6 2026.)*
 - **`SkillLab.tsx`:** aliases, context rigs for the new groups, and no ball for the celebrations.
 
 **Tests:**

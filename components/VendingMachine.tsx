@@ -73,7 +73,7 @@ export function faceDepthMatrix(machines:(()=>VendingMachines|null)|undefined,w:
  *  `widen` foreshortening correction, so every machine's products line up over their price rails. */
 export function facePlacement(quad:Point[]|null,machines:(()=>VendingMachines|null)|undefined,machineId:VendingMachineId){
  if(!quad)return null;const [a,b,c,d]=quad,h=Math.max(200,Math.round(Math.hypot(d.x-a.x,d.y-a.y))),w=Math.max(160,Math.round(h*FACE_SIZE.w/FACE_SIZE.h)),across=(Math.hypot(b.x-a.x,b.y-a.y)+Math.hypot(c.x-d.x,c.y-d.y))/2,down=(Math.hypot(d.x-a.x,d.y-a.y)+Math.hypot(c.x-b.x,c.y-b.y))/2;const depth=faceDepthMatrix(machines,w,h);
- return {w,h,transform:depth??quadMatrix(w,h,quad),depth:Boolean(depth),shifts:depth?machines?.()?.productShift?.(machineId)??[]:[],widen:Math.min(1.25,Math.max(1,down*FACE_SIZE.w/FACE_SIZE.h/Math.max(1,across)))};
+ return {w,h,transform:depth??quadMatrix(w,h,quad),depth:Boolean(depth),shifts:depth?machines?.()?.productShift?.(machineId)??[]:[],views:depth?machines?.()?.productView?.(machineId)??[]:[],widen:Math.min(1.25,Math.max(1,down*FACE_SIZE.w/FACE_SIZE.h/Math.max(1,across)))};
 }
 export default function VendingMachine({open,machineId,onOpenChange,value,onChange,onEquipRide,itemRequest,machines}:VendingMachineProps){
  const preview=isVendingPreview();
@@ -161,10 +161,11 @@ export default function VendingMachine({open,machineId,onOpenChange,value,onChan
   if(isRideCategory(s.category)&&!rides.isUnlocked(s.category,s.option.id)){const h=rideUnlockHint(s.category,s.option.id,rides.finished,rides.total);return {kind:'locked',note:h.text,short:h.short,need:h.need};}
   return buyable();
  }
- function picture(item:VendingItem,big=false){
-  if(item.kind==='display')return <VendingProductArt id={item.id} kind={item.kind}/>;
+ /** `slot`: the picture stands on a shelf slot of the in-use face (its base anchored on the slab top, VendingProductArt `stand`). */
+ function picture(item:VendingItem,big=false,slot=false){
+  if(item.kind==='display')return <VendingProductArt id={item.id} kind={item.kind} stand={slot&&Boolean(placement?.depth)}/>;
   // A real card pack (the foil pack art the machine front shows), standing on the shelf (Sep 30 2026: not a flat card back).
-  if(item.kind==='pack')return <VendingProductArt id={item.id} kind="pack"/>;
+  if(item.kind==='pack')return <VendingProductArt id={item.id} kind="pack" stand={slot&&Boolean(placement?.depth)}/>;
   if(item.kind==='costume'){const src=costumes[item.costume!];const island=getIslandCostume(item.costume!);return src?<img src={src} alt="" width={320} height={280} draggable={false}/>:<span className={styles.placeholder} style={{color:`#${island.kitColor.toString(16).padStart(6,'0')}`}}>{island.animalLabel}</span>;}
   if(item.storeItem?.category==='ball')return <BallPicture item={item.storeItem} src={gear[item.id]}/>;
   return <StorePreview item={item.storeItem!} src={gear[item.id]}/>;
@@ -258,12 +259,12 @@ export default function VendingMachine({open,machineId,onOpenChange,value,onChan
  const view:VendingFaceView|null=placement&&{trayNote,placement,fontSize,compact:placement.h<430,
   machine:{id:machine.id,name:machine.name,color:machine.color,light:machine.light,ink:machine.ink},
   header:{label:rowsOnPage.map(r=>ROW_SHORT[r]??r).join(' · '),page:Math.min(pageIndex,pages.length-1)+1,pages:pages.length,special:rowsOnPage.includes('special')},
-  slots:page.map((item,index)=>{const s=status(item);return {id:item.id,label:item.label,price:item.price,state:s.kind,special:rowOf.get(item.id)==='special',lit:item.id===armedId,vending:vendingSlot===item.id,kind:kindOf(item),picture:picture(item),
+  slots:page.map((item,index)=>{const s=status(item);return {id:item.id,label:item.label,price:item.price,state:s.kind,special:rowOf.get(item.id)==='special',lit:item.id===armedId,vending:vendingSlot===item.id,kind:kindOf(item),picture:picture(item,false,true),
    ariaLabel:`${index+1}. ${item.label}. ${s.kind==='buy'||s.kind==='short'?`${item.price} coins`:s.note}${item.machine?'. Only here':''}`};}),
   cursor,led:ledView,balance:vending.balance,found:{short:`${found}/${VENDING_MACHINES.length} found`,label:`${found}/${VENDING_MACHINES.length} machines found`},phase,coinDrop,
   tray:dispense?{key:dispense.key,id:dispense.item.id,label:dispense.item.label,kind:kindOf(dispense.item),picture:picture(dispense.item)}:null};
  const overlay=story?<section className={styles.story} aria-label="Club story">
-   <div className={styles.storyBar}><BackButton autoFocus immediate onBack={()=>setStory(null)}/><strong>Football history</strong></div>
+   <div className={styles.storyBar}><BackButton autoFocus onBack={()=>setStory(null)}/><strong>Football history</strong></div>
    <div className={styles.storyBody} data-modal-scroll><CostumeCollection active={story} onStoryChange={id=>setStory(id)} open={open} value={value} onChange={onChange} onNotice={msg=>setLed({msg,tone:'ok'})}
     isOwned={id=>isOwned(`costume:${id}`)} lockedText={id=>costumeEarned(coins,id)?'Buy it in the machine':`Unlocks at ${costumeUnlockBalls(id)} balls`}/></div>
   </section>

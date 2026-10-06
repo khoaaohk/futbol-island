@@ -1,0 +1,248 @@
+/* telstar-1970 · The broadcast: a 1970 TV on a teak stand in a 1970s living room, a paper TV guide beside it.
+   Type scale: 12 mono labels · 14 small · 16 body · 20–24 serif step. Radii: 12 cards, 999 buttons. Light from the upper left. */
+.root{position:fixed;inset:0;z-index:20;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;color:#f3eadb;background:#140e0b;
+ font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;box-sizing:border-box;-webkit-tap-highlight-color:transparent;
+ --ink:#2a1c12;--paper:#e7dcc3;--gold:#e0a33a;--stand-h:44px;--glow:rgba(150,190,235,0);--ease-spring:cubic-bezier(.3,1.5,.5,1)}
+.root *,.root *::before,.root *::after{box-sizing:border-box}
+.root[data-power=card],.root[data-power=live]{--glow:rgba(150,190,235,.2)}
+.root[data-power=live][data-colour=true]{--glow:rgba(130,200,150,.2)}
+
+/* ---- The room: wallpaper, lamp light, skirting and carpet ---- */
+.room{position:relative;min-height:100%;overflow-x:clip;display:flex;flex-direction:column;gap:12px;isolation:isolate;
+ padding:max(20px,env(safe-area-inset-top)) max(24px,env(safe-area-inset-right)) max(20px,env(safe-area-inset-bottom)) max(24px,env(safe-area-inset-left));
+ background:
+  radial-gradient(ellipse 55% 45% at 0% 0%,rgba(255,196,110,.16),transparent 70%),
+  radial-gradient(circle at 50% 50%,transparent 0 9px,rgba(232,150,70,.06) 9px 12px,transparent 12px 19px,rgba(232,150,70,.04) 19px 21px,transparent 21px) 0 0/48px 48px,
+  radial-gradient(circle at 0 0,rgba(232,150,70,.05) 0 4px,transparent 4px) 0 0/48px 48px,
+  linear-gradient(#2e2019,#21160f 60%,#170f0b)}
+.floor{position:absolute;left:0;right:0;bottom:0;top:var(--floor-y,82%);z-index:-1;pointer-events:none;
+ background:
+  linear-gradient(#3a2618,#22150c 9px,#120b07 11px,transparent 11px),
+  radial-gradient(ellipse 60% 70% at 40% 0%,rgba(255,190,120,.08),transparent 70%),
+  repeating-linear-gradient(90deg,rgba(0,0,0,.08) 0 2px,transparent 2px 5px),
+  linear-gradient(#5a3a22,#3c2615 45%,#24160c)}
+.lamp{display:none}
+
+.top{display:flex;align-items:center;justify-content:flex-end;min-height:48px;padding-left:96px}
+.title{margin:0;text-align:right;font-family:Georgia,'Times New Roman',serif;font-size:clamp(17px,2vw,22px);letter-spacing:.01em;line-height:1.15}
+.title span{display:block;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;letter-spacing:.32em;color:var(--gold);margin-bottom:4px}
+
+.stage{flex:1;display:grid;align-content:center;grid-template-columns:auto minmax(300px,380px);gap:32px;align-items:center;justify-content:center;max-width:1280px;width:100%;margin:0 auto}
+
+/* ---- The set ---- */
+.set{position:relative;z-index:1;display:grid;justify-items:center;min-width:0}
+/* The screen lights the wall and the carpet around it. */
+.set::before{content:'';position:absolute;inset:-35% -30% -10%;z-index:-1;pointer-events:none;background:radial-gradient(closest-side,var(--glow),transparent);transition:background .9s ease}
+/* Contact shadow on the carpet. */
+.set::after{content:'';position:absolute;left:6%;right:6%;bottom:-6px;height:18px;z-index:-1;border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,.6),transparent)}
+.stand{display:block;width:84%;height:var(--stand-h);margin-top:-2px}
+.tv{--screen-w:min(calc((100dvh - 210px)*4/3),calc(100vw - 600px),860px);display:grid;grid-template-columns:auto auto;gap:14px;padding:16px;border-radius:26px;width:max-content;max-width:100%;
+ background:
+  repeating-linear-gradient(97deg,rgba(0,0,0,.07) 0 3px,transparent 3px 9px,rgba(255,255,255,.04) 9px 11px,transparent 11px 19px),
+  linear-gradient(160deg,#8a5a34,#5c3820 55%,#432714);
+ box-shadow:0 24px 50px rgba(0,0,0,.5),inset 0 2px 0 rgba(255,255,255,.18),inset 0 -6px 12px rgba(0,0,0,.35)}
+.bezel{padding:12px;border-radius:22px;background:linear-gradient(#2c2724,#151210);box-shadow:inset 0 2px 6px rgba(0,0,0,.8),0 1px 0 rgba(255,255,255,.12)}
+.screen{position:relative;width:max(200px,var(--screen-w));aspect-ratio:4/3;border-radius:9% / 11%;overflow:hidden;background:#101410;isolation:isolate}
+.picture{position:absolute;inset:0;transform-origin:50% 50%}
+.canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;opacity:0;cursor:grab;transition:filter .7s ease,opacity .5s ease}
+.canvas[data-show=true]{opacity:1}
+.canvas:active{cursor:grabbing}
+.card{position:absolute;inset:0;transition:filter .7s ease}
+/* Black-and-white picture: the knob drains the colour (and softens it, like a 1970 set). */
+.screen[data-colour=false] .canvas,.screen[data-colour=false] .card{filter:grayscale(1) contrast(1.06) brightness(1.04) blur(.35px)}
+.bug,.bug2{position:absolute;top:7%;padding:.3em .55em;font:700 clamp(10px,1.4vw,13px)/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.14em;color:#fff;background:rgba(0,0,0,.55);pointer-events:none}
+.bug{left:8%}.bug b{color:#ff5a4a}.screen[data-colour=false] .bug b{color:#fff}
+.bug2{right:8%}
+/* On-screen display after a knob turn, and the lower-third for a right answer: both arrive with @starting-style and leave on a timer. */
+.osd{position:absolute;right:8%;bottom:10%;padding:.4em .7em;font:700 clamp(11px,1.6vw,15px)/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.16em;color:#b6ff8a;background:rgba(0,0,0,.6);pointer-events:none;
+ text-shadow:0 0 6px rgba(160,255,120,.6);transition:opacity .2s ease,transform .25s var(--ease-spring);animation:osdOut .3s ease 1.15s forwards}
+@starting-style{.osd{opacity:0;transform:translateY(6px)}}
+@keyframes osdOut{to{opacity:0}}
+.lower{position:absolute;left:6%;bottom:9%;display:flex;align-items:stretch;pointer-events:none;font-family:ui-monospace,Menlo,Consolas,monospace;
+ transition:clip-path .45s cubic-bezier(.2,.8,.2,1);clip-path:inset(0 0 0 0);animation:lowerOut .35s ease 1.5s forwards}
+@starting-style{.lower{clip-path:inset(0 100% 0 0)}}
+.lower b{padding:.45em .7em;font-size:clamp(13px,2vw,20px);letter-spacing:.12em;color:#1b1206;background:#ffd27a}
+.lower span{padding:.55em .7em;font-size:clamp(11px,1.5vw,15px);letter-spacing:.08em;color:#fff;background:rgba(0,0,0,.72);display:flex;align-items:center}
+@keyframes lowerOut{to{clip-path:inset(0 0 0 100%)}}
+.fail{position:absolute;inset:auto 8% 10%;margin:0;font-size:14px;text-align:center}
+.snow{position:absolute;inset:-20%;background-image:var(--snow);background-size:96px 96px;opacity:0;pointer-events:none;image-rendering:pixelated}
+.screen[data-tuning=true] .snow{opacity:.9;animation:snow .32s steps(6) infinite}
+@keyframes snow{to{transform:translate(37px,-53px)}}
+/* Between channels a bright band rolls down the picture (only while tuning). */
+.roll{position:absolute;left:0;right:0;top:0;height:28%;pointer-events:none;opacity:0;background:linear-gradient(transparent,rgba(255,255,255,.22) 45%,rgba(255,255,255,.3) 50%,transparent)}
+.screen[data-tuning=true] .roll{opacity:1;animation:roll .5s linear 1}
+@keyframes roll{from{transform:translateY(-100%)}to{transform:translateY(360%)}}
+/* A right answer: one soft white flash on the glass, like a camera flashbulb in the crowd. */
+.flash{position:absolute;inset:0;pointer-events:none;background:#fff;opacity:0;animation:flash .32s ease-out 1}
+@keyframes flash{from{opacity:.38}to{opacity:0}}
+.scan{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(to bottom,rgba(0,0,0,.22) 0 1px,transparent 1px 3px);mix-blend-mode:multiply}
+.glass{position:absolute;inset:0;pointer-events:none;border-radius:inherit;
+ background:radial-gradient(ellipse 60% 40% at 30% 18%,rgba(255,255,255,.13),transparent 60%),radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.55) 100%);
+ box-shadow:inset 0 0 30px rgba(0,0,0,.7)}
+.screen[data-power=off] .glass{background:radial-gradient(ellipse 60% 40% at 30% 18%,rgba(255,255,255,.1),transparent 60%),radial-gradient(ellipse 40% 30% at 70% 80%,rgba(255,190,120,.05),transparent),radial-gradient(ellipse at center,#20251f,#0b0d0b 90%)}
+/* Switching on: a bright line opens out into the picture. */
+.warm{position:absolute;inset:0;background:#e9f1ff;animation:warm .9s ease-out forwards}
+@keyframes warm{0%{transform:scale(.02,.004);opacity:1}35%{transform:scale(1,.012);opacity:1}100%{transform:scale(1,1);opacity:0}}
+
+.controls{display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:10px;padding:10px 6px;min-width:88px;
+ border-radius:14px;background:repeating-linear-gradient(0deg,#2a201a 0 3px,#3a2c22 3px 6px);box-shadow:inset 0 2px 5px rgba(0,0,0,.6)}
+.brand{font:700 12px/1 Georgia,serif;letter-spacing:.2em;color:#d9b77a}
+.knobWrap{display:grid;justify-items:center;gap:5px}
+.knobLabel{font:700 11px/1 ui-monospace,Menlo,monospace;letter-spacing:.18em;color:#e8dcc4}
+.knob{--r:-50deg;width:56px;height:56px;border-radius:50%;border:0;padding:0;cursor:pointer;position:relative;
+ background:radial-gradient(circle at 35% 30%,#efe6d4,#b9ab8f 45%,#6c5f4a 100%);box-shadow:0 4px 8px rgba(0,0,0,.55),inset 0 -3px 5px rgba(0,0,0,.3);
+ transition:transform .14s ease}
+.knob[data-value='1']{--r:50deg}
+.knob:active{transform:scale(.9)}
+.knob:focus-visible,.power:focus-visible{outline:3px solid #ffd27a;outline-offset:3px}
+.knobFace{position:absolute;inset:7px;border-radius:50%;background:repeating-conic-gradient(from 0deg,#cbbd9f 0 6deg,#a89a7d 6deg 12deg);transform:rotate(var(--r));transition:transform .45s var(--ease-spring);
+ transition:transform .6s linear(0,.009,.035 2.1%,.141,.281 6.7%,.723 12.9%,.938 16.7%,1.017,1.077,1.121,1.149 24.3%,1.159,1.163,1.161,1.154 29.9%,1.129 32.8%,1.051 39.6%,1.017 43.1%,.991,.977 51%,.974 53.8%,.975 57.1%,.997 69.8%,1.003 76.9%,1)}
+.knobFace::after{content:'';position:absolute;left:50%;top:3px;width:4px;height:16px;margin-left:-2px;border-radius:2px;background:#2b1d12}
+.knobValue{font:700 12px/1 ui-monospace,Menlo,monospace;letter-spacing:.06em;color:#ffd27a;transition:opacity .25s ease,transform .3s var(--ease-spring)}
+@starting-style{.knobValue{opacity:0;transform:translateY(-4px)}}
+.power{width:48px;height:48px;border-radius:50%;border:0;cursor:pointer;display:grid;place-items:center;background:radial-gradient(circle at 40% 35%,#4b4b4b,#151515);box-shadow:0 3px 6px rgba(0,0,0,.6);transition:transform .14s ease}
+.power:active{transform:scale(.88)}
+.power span{width:12px;height:12px;border-radius:50%;background:#5a1712;box-shadow:inset 0 1px 2px rgba(0,0,0,.6);transition:background .3s ease,box-shadow .3s ease}
+.power[data-on=true] span{background:#ff4a3a;box-shadow:0 0 10px 2px rgba(255,80,60,.8)}
+.power[data-on=false]{animation:beckon 1.8s ease-in-out 4}
+@keyframes beckon{50%{box-shadow:0 3px 6px rgba(0,0,0,.6),0 0 0 8px rgba(255,210,122,.3)}}
+
+/* ---- The guide: a paper TV guide pinned to the wall, as tall as the set ---- */
+.guide{position:relative;z-index:1;align-self:stretch;margin-bottom:var(--stand-h);min-width:0;contain:size;
+ color:var(--ink);border-radius:4px 4px 12px 12px;
+ background:
+  radial-gradient(ellipse 80% 50% at 15% 0%,rgba(255,255,255,.35),transparent 70%),
+  repeating-linear-gradient(0deg,rgba(80,50,20,.025) 0 1px,transparent 1px 3px),
+  linear-gradient(170deg,#ece2ca,#d9ccae);
+ box-shadow:0 18px 40px rgba(0,0,0,.45),0 2px 0 rgba(255,255,255,.4) inset}
+.sheet>*{flex-shrink:0}
+.sheet{height:100%;display:flex;flex-direction:column;gap:16px;padding:22px 22px 20px;-webkit-mask-image:linear-gradient(#000 calc(100% - 20px),transparent);mask-image:linear-gradient(#000 calc(100% - 20px),transparent);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:rgba(42,28,18,.3) transparent}
+/* A strip of tape holds it to the wall. */
+.guide::before{content:'';position:absolute;top:-10px;left:50%;width:84px;height:22px;margin-left:-42px;transform:rotate(-2deg);background:rgba(240,228,190,.6);box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.masthead{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding-bottom:10px;border-bottom:3px double rgba(42,28,18,.55)}
+.masthead b{font:italic 700 24px/1 Georgia,'Times New Roman',serif;letter-spacing:-.01em}
+.masthead span{font:700 11px/1 ui-monospace,Menlo,monospace;letter-spacing:.14em;text-transform:uppercase;color:#8a3d12;text-align:right}
+.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:6px;counter-reset:s}
+.steps li{display:grid;justify-items:center;gap:6px;text-align:center;font:600 12px/1.2 ui-sans-serif,system-ui,sans-serif;color:rgba(42,28,18,.5);transition:color .3s ease}
+.steps i{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;font:700 13px/1 ui-monospace,Menlo,monospace;font-style:normal;border:2px solid rgba(42,28,18,.3);transition:background .35s ease,border-color .35s ease,transform .45s var(--ease-spring)}
+.steps li[data-state=now]{color:var(--ink)}
+.steps li[data-state=now] i{border-color:#c0581a;color:#c0581a;transform:scale(1.12)}
+.steps li[data-state=done]{color:rgba(42,28,18,.75)}
+.steps li[data-state=done] i{background:#2f6b3a;border-color:#2f6b3a;color:#f3eadb}
+.hint{margin:0;text-wrap:balance;font-family:Georgia,'Times New Roman',serif;font-size:clamp(19px,1.9vw,23px);line-height:1.28;min-height:2.56em;transition:opacity .3s ease,transform .35s cubic-bezier(.2,.8,.2,1)}
+@starting-style{.hint{opacity:0;transform:translateY(6px)}}
+.actions{display:flex;gap:8px;flex-wrap:wrap;min-height:52px}
+.action,.answer{min-height:52px;padding:0 24px;border-radius:999px;border:0;cursor:pointer;font:800 17px/1 ui-sans-serif,system-ui,sans-serif;color:#1c120b;
+ background:linear-gradient(#ffd98a,#e0a33a);box-shadow:0 4px 0 #8f5e17,0 8px 16px rgba(60,30,0,.28);transition:transform .12s ease,box-shadow .12s ease}
+.action:active,.answer:active{transform:translateY(3px) scale(.94);box-shadow:0 1px 0 #8f5e17,0 4px 10px rgba(60,30,0,.28)}
+.action:focus-visible,.answer:focus-visible,.pager button:focus-visible{outline:3px solid #c0581a;outline-offset:3px}
+.action:disabled{opacity:.6;cursor:default}
+.answers{display:grid;grid-template-columns:1fr 1.35fr 1fr;gap:8px;width:100%}
+.answer{padding:0 8px;font-size:16px;line-height:1.1;color:#f3eadb;background:linear-gradient(#4a3424,#2a1c12);box-shadow:0 4px 0 #120b06,0 8px 16px rgba(60,30,0,.28)}
+.answer:active{box-shadow:0 1px 0 #120b06,0 4px 10px rgba(60,30,0,.28)}
+.fullTime{padding:12px 14px;border-radius:12px;border:2px solid #2f6b3a;background:rgba(47,107,58,.1);transition:opacity .4s ease,transform .5s var(--ease-spring)}
+@starting-style{.fullTime{opacity:0;transform:scale(.94)}}
+.fullTime b{display:block;font:700 12px/1 ui-monospace,Menlo,monospace;letter-spacing:.24em;text-transform:uppercase;color:#2f6b3a;margin-bottom:6px}
+.fullTime p{margin:0;font-size:16px;line-height:1.4}
+.caption{margin:0;padding:12px 0 0;border-top:1px solid rgba(42,28,18,.22)}
+.caption figcaption{font:700 12px/1 ui-monospace,Menlo,monospace;letter-spacing:.2em;text-transform:uppercase;color:#a2481a;margin-bottom:8px}
+.caption p{margin:0;text-wrap:pretty;font-size:16px;line-height:1.45;max-width:38ch;transition:opacity .3s ease}
+@starting-style{.caption p{opacity:0}}
+.pager{display:flex;align-items:center;gap:8px;margin-top:8px;font:600 12px ui-monospace,Menlo,monospace;color:rgba(42,28,18,.6)}
+.pager button{width:44px;height:44px;border-radius:50%;border:1.5px solid rgba(42,28,18,.3);background:transparent;color:var(--ink);font-size:22px;line-height:1;cursor:pointer;transition:transform .12s ease,opacity .2s ease}
+.pager button:active{transform:scale(.88)}
+.pager button:disabled{opacity:.3;cursor:default}
+.results{border-collapse:collapse;font-size:14px;width:100%;font-variant-numeric:tabular-nums}
+.results caption{text-align:left;font:700 12px/1 ui-monospace,Menlo,monospace;letter-spacing:.14em;text-transform:uppercase;color:rgba(42,28,18,.7);padding-bottom:8px}
+.results th,.results td{padding:7px 8px;border-bottom:1px solid rgba(42,28,18,.18);text-align:center}
+.results th[scope=row]{text-align:left;font-weight:700}
+.results thead th{font-weight:600;color:rgba(42,28,18,.7)}
+.results td[data-now=true]{background:rgba(224,163,58,.28);font-weight:800}
+.results [data-fresh=true]{display:inline-block;animation:pop .5s var(--ease-spring)}
+@keyframes pop{0%{transform:scale(1.5);color:#c0581a}100%{transform:scale(1)}}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.foot{margin-top:auto;display:grid;gap:2px}
+.note{margin:0;font-size:13px;line-height:1.4;color:rgba(42,28,18,.68)}
+.sources{font-size:13px;color:rgba(42,28,18,.8)}
+.sources summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-weight:700}
+.sources ul{margin:0 0 6px;padding-left:18px;display:grid;gap:6px}
+.sources a{color:#8a3d12;word-break:break-word}
+.sources p{margin:0}
+
+/* Wide screens: the lamp stands on the carpet beside the set. */
+@media (min-width:1500px) and (min-height:700px){
+ .lamp{display:block;position:absolute;z-index:0;width:120px;height:420px;left:max(24px,calc(50% - 760px));top:calc(var(--floor-y,80%) - 380px);pointer-events:none}
+}
+/* Narrower desktops and tablets in landscape. */
+@media (min-aspect-ratio:1/1) and (max-width:1100px){
+ .stage{gap:20px;grid-template-columns:auto minmax(280px,340px)}
+ .tv{--screen-w:min(calc((100dvh - 210px)*4/3),calc(100vw - 480px),860px)}
+}
+/* Portrait (phones and tall windows): the set on top, knobs in a strip under the screen, the guide on the carpet below. */
+@media (max-aspect-ratio:1/1){
+ .root{--stand-h:30px}
+ .room{gap:14px;padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(20px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+ .top{min-height:44px}
+ .stage{display:flex;flex-direction:column;align-items:stretch;gap:22px;flex:none}
+ .set{width:100%;max-width:640px;margin:0 auto}
+ .tv{grid-template-columns:1fr;width:100%;padding:12px;gap:10px;border-radius:20px}
+ .bezel{padding:8px}
+ .screen{width:100%}
+ .controls{flex-direction:row;justify-content:space-around;align-items:center;padding:10px 6px;min-width:0}
+ .brand{display:none}
+ .guide{align-self:stretch;margin:0 auto;width:100%;max-width:640px;contain:none}
+ .sheet{height:auto;overflow:visible;padding:20px 18px 10px;gap:14px;-webkit-mask-image:none;mask-image:none}
+ .foot{margin-top:4px}
+ /* The step and its button come first, so the screen and the button you press fit on one phone screen together. */
+ .masthead{order:0}.hint{order:1}.actions{order:2}.steps,.fullTime{order:3}.results{order:4}.caption{order:5}.foot{order:6}
+}
+@media (max-aspect-ratio:1/1) and (max-height:760px){
+ .root{--stand-h:22px}
+ .room{gap:10px}
+ .stage{gap:16px}
+ .sheet{padding-top:14px;gap:12px}
+ .masthead{padding-bottom:6px}
+ .masthead b{font-size:20px}
+ .hint{min-height:0}
+}
+@media (max-aspect-ratio:1/1) and (max-width:380px){
+ .masthead b{font-size:21px}
+ .knob{width:50px;height:50px}
+ .action{padding:0 20px}
+}
+/* Short landscape (phones on their side): no stand, tighter set and type, the guide scrolls beside the set. */
+@media (min-aspect-ratio:1/1) and (max-height:520px){
+ .root{--stand-h:0px}
+ .room{gap:6px;padding:max(12px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+ .top{min-height:44px}
+ .stage{gap:16px;align-items:start;grid-template-columns:auto minmax(260px,1fr)}
+ .stand{display:none}
+ .tv{--screen-w:min(calc((100dvh - 96px)*4/3),calc(100vw - 420px));padding:8px;gap:8px;border-radius:16px}
+ .bezel{padding:6px;border-radius:14px}
+ .controls{gap:4px;min-width:72px;padding:6px 4px}
+ .knob{width:44px;height:44px}
+ .knobFace{inset:6px}
+ .knobFace::after{height:12px}
+ .knobLabel{font-size:10px}
+ .power{width:44px;height:44px}
+ .brand{display:none}
+ .steps{display:none}
+ .guide{align-self:start;margin-bottom:0;contain:none}
+ .sheet{height:auto;overflow:visible;padding:14px 14px 4px;gap:10px;-webkit-mask-image:none;mask-image:none}
+ .masthead span{display:none}
+ .masthead b{white-space:nowrap}
+ .knobWrap{gap:3px}
+ .masthead{padding-bottom:6px}
+ .masthead b{font-size:19px}
+ .hint{font-size:17px;min-height:0}
+ .caption p{font-size:15px}
+}
+@media (prefers-reduced-motion:reduce){
+ .knobFace,.canvas,.card,.set::before,.hint,.knobValue,.fullTime,.caption p,.steps i,.osd,.lower{transition:none}
+ .power[data-on=false]{animation:none}
+ .screen[data-tuning=true] .snow{animation:none}
+ .warm{animation-duration:.01s}
+ .results [data-fresh=true],.flash,.roll{animation:none}
+ .screen[data-tuning=true] .roll{opacity:0}
+ .osd,.lower{animation-duration:.01s}
+}

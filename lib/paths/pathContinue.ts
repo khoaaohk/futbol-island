@@ -1,4 +1,4 @@
-import {FORMAT_PATHS,lessonEvidence,type FormatPath,type PathLesson} from './formatPaths';
+import {FORMAT_PATHS,lessonEvidence,type FormatPath,type FormatPathLaunch,type PathLesson} from './formatPaths';
 import type {Format} from '../town/venues';
 /**
  * ONE first path and ONE "Continue" rule (G-02, G-12; Sep 30 2026). Pure: no React, no browser globals (storage is passed in).
@@ -82,4 +82,55 @@ export function suggestedNextStep(storage:Pick<Storage,'getItem'>|null|undefined
  const target=pathContinue(path,steps,answers,savedLastOpened(storage)[format]);
  if(target.kind==='complete'&&target.next){const nextPath=FORMAT_PATHS.find(p=>p.format===target.next)!;return pathContinue(nextPath,steps,answers,savedLastOpened(storage)[target.next]);}
  return target;
+}
+
+/* ---- Clear path (Oct 4 2026, user-approved): ONE first step, "Next lesson" at the quiz end, the HUD pitch card. ----------
+ * Every "what next?" surface resolves through pathContinue: onboarding's last button, the HUD pitch card, Paths' landing card
+ * and the quiz-end button. A fresh save always lands on lesson 1 of its path (the opening story stays on the map as an
+ * optional extra; it is no longer "Start here"). Pure: storage and the graduation record are passed in. */
+
+/** The FORMAT_PATH_LAUNCH detail for a lesson, resuming where its evidence says (a replay starts from the top). Same rule as Paths. */
+export function pathLaunchDetail(format:Format,lesson:PathLesson,steps:ReadonlySet<string>,answers:ReadonlySet<string>,replay=false,nonce=Date.now()):FormatPathLaunch{
+ const s=lessonEvidence(format,lesson,steps,answers);
+ return {format,lessonId:lesson.id,step:replay?0:s.step,quiz:!replay&&s.quiz,question:replay?0:s.question,nonce};
+}
+/** What a pitch card / button says for a Continue target: "Start lesson 1", "Continue lesson 3", "Next: lesson 4". */
+export function continueAction(target:ContinueTarget):{action:string;name:string}|null{
+ if(target.kind!=='lesson')return null;
+ const n=target.index+1;
+ return {action:target.label==='Start here'?`Start lesson ${n}`:target.label==='Up next'?`Next: lesson ${n}`:`Continue lesson ${n}`,name:target.lesson.name};
+}
+/** The HUD pitch card (Town): this pitch's path Continue target; a finished path keeps the free Plays viewer (null). */
+export function pitchCardTarget(format:Format,steps:ReadonlySet<string>,answers:ReadonlySet<string>,lastOpened:Record<string,string>={}):Extract<ContinueTarget,{kind:'lesson'}>|null{
+ const path=FORMAT_PATHS.find(p=>p.format===format);if(!path)return null;
+ const t=pathContinue(path,steps,answers,lastOpened[format]);
+ return t.kind==='lesson'?t:null;
+}
+export type QuizEndNext=
+ |{kind:'lesson';format:Format;lesson:PathLesson;index:number;label:string}
+ |{kind:'graduate';format:Format;label:string}
+ |{kind:'ferry';label:string}
+ |{kind:'none'};
+/** The graduation facts the quiz end needs (lib/endgame/graduationModel GraduationRecord fits). */
+export type GraduationFacts={formats:Partial<Record<string,{seen:boolean}|undefined>>;finale:unknown};
+/**
+ * The quiz end's primary button after the LAST question of a Paths lesson (FieldLearning). The just-finished lesson counts as
+ * complete even if the stores have not caught up yet. Follows the existing endgame:
+ *  1. the next starter lesson of this path ("Next lesson");
+ *  2. the path is finished and its graduation not celebrated yet: "Graduate!" (the lesson closes; GraduationHost opens the
+ *     ceremony at the next calm moment, and the ceremony offers the next path or the Ferry);
+ *  3. already graduated: the next unfinished path's Continue ("Start 9v9");
+ *  4. every path finished: the Matchday Ferry until the final is done, then nothing (Back to Paths only).
+ */
+export function quizEndNext(format:Format,finishedId:string,steps:ReadonlySet<string>,answers:ReadonlySet<string>,lastOpened:Record<string,string>,record:GraduationFacts):QuizEndNext{
+ const path=FORMAT_PATHS.find(p=>p.format===format);if(!path)return {kind:'none'};
+ const s=new Set(steps),a=new Set(answers),done=[...coreOf(path),...path.depth].find(l=>l.id===finishedId);
+ if(done){for(let i=0;i<done.steps;i++)s.add(`${format}:${done.id}:${i}`);for(let i=0;i<done.questions;i++)a.add(`${format}:${done.id}:${i}`);}
+ const last=lastOpened[format]===finishedId?null:lastOpened[format];
+ const t=pathContinue(path,s,a,last);
+ if(t.kind==='lesson')return {kind:'lesson',format,lesson:t.lesson,index:t.index,label:'Next lesson'};
+ if(!record.formats[format]?.seen)return {kind:'graduate',format,label:'Graduate!'};
+ if(t.next){const np=FORMAT_PATHS.find(p=>p.format===t.next)!,nt=pathContinue(np,s,a,lastOpened[t.next]);
+  if(nt.kind==='lesson')return {kind:'lesson',format:t.next,lesson:nt.lesson,index:nt.index,label:`Start ${np.title}`};}
+ return record.finale?{kind:'none'}:{kind:'ferry',label:'Board the ferry'};
 }

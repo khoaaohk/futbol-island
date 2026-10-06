@@ -9,7 +9,7 @@
 import type {Sheet} from '../sheet';
 import {type RisoStory,type Scene,type Chapter,playChapters,trackChapters} from '../story';
 import {apertureDisc} from '../passage';
-import {twos,twosIndex,sm,easeOut,easeIO,easeIn,easeOutBack,linear,key,anticipate,settle,spring,squash,clamp,lerp,rng,noise1,blob,polyPath,circlePath,ribbon,partial,smoothPts,rotPts,arc,type Pt,type Key} from '../motion';
+import {twos,twosIndex,sm,easeOut,easeIO,easeIn,easeOutBack,linear,key,anticipate,settle,spring,squash,clamp,lerp,rng,noise1,blob,polyPath,circlePath,ribbon,partial,smoothPts,rotPts,arc,type Pt,type Key,creepHolds} from '../motion';
 import {contour,dust,laneArrow,sparkBurst,confetti,handCut,footballPanels,tornRect,ring} from '../shapes';
 
 
@@ -17,7 +17,8 @@ const Y='yellow',B='blue',R='red',K='navy';
 const DURATION=64.731375;
 /** Visual chapter starts (media seconds, each a sentence onset in recording-alignment.json). */
 const VS=[0,6.3,14.26,21.92,32.8,39.08,43.9,51.82,60.34];
-const cam=(s:Sheet,t:number,K_:Key[])=>{const v=key(t,K_,easeIO,true);s.camera(v[0],v[1],v[2],v[3]??0);return v;};
+// moving holds: a camera hold creeps toward the next key instead of parking (stutter audit, Oct 4 2026)
+const cam=(s:Sheet,t:number,K_:Key[])=>{const v=key(t,creepHolds(K_),easeIO,true);s.camera(v[0],v[1],v[2],v[3]??0);return v;};
 
 // ---------------- abstract riso figure (bible §1c.4) ----------------
 /** A person as a paper cut-out: one head disc, one torso block, two leg strokes, two arm strokes (3–6 shapes), big head, short legs,
@@ -191,7 +192,7 @@ const ch2:Scene={
  draw(s,t){
   const tt=twos(t);
   const rot=key(t,[[1.97,0],[2.1,-.09,easeIn],[2.9,Math.PI,easeIO],[5.16,Math.PI],[6.1,Math.PI*2,easeIO]])+(t>=2.9&&t<5.16?settle(t,2.9,{amp:.03,freq:2,decay:3}):0);
-  const v=key(t,[[0,0,0,1],[.9,0,0,1.08],[5.94,0,0,1.08],[6.8,0,20,1.3],[7.31,0,20,1.3,linear],[7.96,0,10,1.7]],easeIO,true);
+  const v=key(t,creepHolds([[0,0,0,1],[.9,0,0,1.08],[5.94,0,0,1.08],[6.8,0,20,1.3],[7.31,0,20,1.3,linear],[7.96,0,10,1.7]]),easeIO,true);
   s.camera(v[0],v[1],v[2],rot);
   skyRamp(s,0,500,-700,{levels:[.12,.22,.35],sun:120,glow:.8,seed:31});
   strata(s,32,0,{count:6,spacing:170,tilt:0});crust(s,0,33,{});
@@ -277,7 +278,7 @@ const ch5:Scene={
  draw(s,t){
   const tt=twos(t);
   const jolt=t>=1&&t<1.25?(twosIndex(t)%2?10:-10):0;
-  const v=key(t,[[0,0,180,1],[.6,0,180,1.2],[1.86,0,180,1.2],[2.9,0,-120,1.2],[4.5,0,-120,1.2],[5.2,0,-220,1.22],[5.63,0,-220,1.22,linear],[6.28,380,-360,1.7]],easeIO,true);
+  const v=key(t,creepHolds([[0,0,180,1],[.6,0,180,1.2],[1.86,0,180,1.2],[2.9,0,-120,1.2],[4.5,0,-120,1.2],[5.2,0,-220,1.22],[5.63,0,-220,1.22,linear],[6.28,380,-360,1.7]]),easeIO,true);
   const open=sm(4.5,5.2,tt,easeOut);
   s.camera(v[0],v[1]+jolt,v[2],-.09*open);
   skyRamp(s,200,380,-360,{levels:[.12,key(tt,[[1.86,.2],[2.6,.35]]),.35],sun:220,glow:1,seed:81});

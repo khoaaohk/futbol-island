@@ -17,7 +17,13 @@ const host=(url:string)=>{try{const h=new URL(url).hostname.replace(/^www\./,'')
 const credit=(f:FishSpecies)=>f.club.credit??host(f.club.source);
 /** Shared species first, then each spot's own specials (the Fishbook shows where every species lives, never how often it bites). */
 const SECTIONS=[{id:'shared',title:'Found at several spots',fish:FISH.filter(f=>!isExclusive(f))},...FISH_SPOTS.map(s=>({id:s.id,title:`${s.name} specials`,fish:FISH.filter(f=>isExclusive(f)&&f.spots[0]===s.id)}))].filter(s=>s.fish.length);
-const foundAt=(f:FishSpecies)=>SHORE_SPOTS.every(s=>f.spots.includes(s.id))?`every shore fishing spot${FISH_SPOTS.some(s=>s.boat&&f.spots.includes(s.id))?' and the Deep Sea Boat':''}`:FISH_SPOTS.filter(s=>f.spots.includes(s.id)).map(s=>s.name).join(', ');
+/** "Found at": main-island shore spots first (collapsed to "every main-island shore spot" when it lives at all of them), then
+ *  the causeway and Coral Cay spots (Oct 5 2026; collapsed the same way), then the Deep Sea Boat. */
+const MAIN_SHORE=SHORE_SPOTS.filter(s=>!s.area),CAY_SHORE=SHORE_SPOTS.filter(s=>s.area);
+const placesIn=(f:FishSpecies,spots:typeof SHORE_SPOTS)=>spots.filter(s=>f.spots.includes(s.id));
+const foundAt=(f:FishSpecies)=>{const main=placesIn(f,MAIN_SHORE),cay=placesIn(f,CAY_SHORE),both=main.length>0&&cay.length>0;
+ const part=(at:typeof SHORE_SPOTS,of:typeof SHORE_SPOTS,every:string,label:string)=>!at.length?'':at.length===of.length?every:`${both?label:''}${at.map(s=>s.name).join(', ')}`;
+ return [part(main,MAIN_SHORE,'every main-island shore spot','Main island: '),part(cay,CAY_SHORE,'every causeway and Coral Cay spot','Causeway and Coral Cay: '),FISH_SPOTS.some(s=>s.boat&&f.spots.includes(s.id))?'the Deep Sea Boat':''].filter(Boolean).join(' · ');};
 
 export default function Fishbook({open,onClose}:{open:boolean;onClose:()=>void}){
  const dialog=useRef<HTMLDialogElement>(null),close=useRef<HTMLButtonElement>(null),restore=useRef<HTMLElement|null>(null);

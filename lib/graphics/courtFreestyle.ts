@@ -1,28 +1,18 @@
 import * as T from 'three';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type {PlayerRig,PlayerMotion} from './player';
-import {juggleContact,type JuggleTouch} from '../town/walkBall';
+import {CLASSIC_GROUND,FREESTYLE_TRICKS,TRICK_R,TRICK_REST,createTrickCtx,createTrickFrame,sampleIdle,sampleTrick,trickById,type TrickDef} from './freestyleTricks';
+import {PAIR_FALLBACK,buildPairRoutines,buildSoloRoutine,type Routine,type RoutineSeg} from './freestyleRoutine';
 /**
- * One trick program per court freestyler (lib/town/courtFreestylers.ts `freestyle` index), so the four never do the
- * same thing at the same time: each has its own tricks, tempo, arc height, footedness, rests and program length.
- * `rest` = ball trapped on the ground (rig idles); `stall` = ball balanced on the head (rig idles, ball sways).
- * `h` = arc height above the straight line to the next contact; `s` = fixed side (-1 left, 1 right), else alternating.
+ * The island's freestylers (lib/town/courtFreestylers.ts, Coral Cay's Lua and Tavi, the East Pier's Ollie): a seeded routine of
+ * named tricks (freestyleTricks.ts) chained by idle beats (freestyleRoutine.ts). The court's two pairs (Teo–Kei, Zuri–Iza) also
+ * pass one ball between them; `linkFreestylePair` joins them.
+ * Heat: driven by the existing visible-NPC update only (no extra frame loop): islandNpcs calls `prepare` just before posing the rig,
+ * which it already skips off screen and slows to 10 Hz beyond 32 m. The routine is a pure function of the shared freestyle clock,
+ * so skipped frames cost nothing and partners stay in step. One ball mesh per freestyler, as before; no allocation per frame.
  */
-type Beat={t:JuggleTouch|'rest'|'stall';d:number;h?:number;s?:-1|1};
-const foot=(d:number,h:number,s?:-1|1):Beat=>({t:'foot',d,h,s});
-const PROGRAMS:readonly (readonly Beat[])[]=[
- // Nico: around the world, always the right foot, with a pause to reset between sets.
- [{t:'rest',d:1.1},foot(.6,.6,1),foot(.55,.55,1),{t:'around-world',d:.8,h:.85,s:1},foot(.55,.5,1),{t:'around-world',d:.8,h:.85,s:1},foot(.5,.5,1),foot(.5,.5,1),{t:'knee',d:.65,h:.55,s:1},foot(.55,.35,1)],
- // Zuri: quick, low alternating keep-ups, both feet, then a short rest.
- [{t:'rest',d:.7},foot(.5,.45),...Array.from({length:10},()=>foot(.4,.3)),{t:'knee',d:.5,h:.35},{t:'knee',d:.5,h:.35},foot(.4,.3),foot(.4,.3),foot(.4,.25)],
- // Kei: high, cushioned knee-to-foot combos.
- [foot(.65,.7,-1),{t:'knee',d:.8,h:.85,s:-1},{t:'knee',d:.8,h:.85,s:1},foot(.65,.6,1),{t:'knee',d:.8,h:.85,s:-1},{t:'knee',d:.8,h:.85,s:-1},foot(.65,.6,-1),foot(.65,.6,1),{t:'knee',d:.8,h:.85,s:1},foot(.6,.4,1),{t:'rest',d:1.3}],
- // Iza: climbs to the head, small head bounces, a head stall, then back down.
- [{t:'rest',d:.9},foot(.7,.9,1),{t:'knee',d:.65,h:.6,s:1},{t:'shoulder',d:.65,h:.45,s:1},{t:'head',d:.5,h:.35},{t:'head',d:.5,h:.35},{t:'head',d:.5,h:.35},{t:'stall',d:1.7},{t:'head',d:.55,h:.4},{t:'shoulder',d:.65,h:.4,s:-1},{t:'knee',d:.65,h:.5,s:-1},foot(.6,.35,-1)],
-];
-const GROUND={x:.2,y:.19,z:.5};
-/** Driven by the existing visible-NPC update only; no extra frame loop. */
-export function createCourtFreestyle(rig:PlayerRig,variant:number){
+const TAGS=new Map<TrickDef,string>(FREESTYLE_TRICKS.map(t=>[t,t.label.toUpperCase()]));
+export function createCourtFreestyle(rig:PlayerRig,variant:number,id=`freestyle-${variant}`){
  const paint=(g:T.BufferGeometry,color:string)=>{const c=new T.Color(color),n=g.getAttribute('position').count,colors=new Float32Array(n*3);for(let i=0;i<n;i++)colors.set([c.r,c.g,c.b],i*3);g.setAttribute('color',new T.BufferAttribute(colors,3));return g;};
  const parts=[paint(new T.SphereGeometry(.19,12,8),'#fff1d3')];
  for(const p of [[0,1,0],[0,-1,0],[1,0,0],[-1,0,0],[0,0,1],[0,0,-1]]){
@@ -32,23 +22,57 @@ export function createCourtFreestyle(rig:PlayerRig,variant:number){
  const geometry=mergeGeometries(parts)!;parts.forEach(g=>g.dispose());
  const material=new T.MeshStandardMaterial({vertexColors:true,roughness:.85});
  const ball=new T.Mesh(geometry,material);ball.name='freestyle-ball';ball.castShadow=true;rig.root.add(ball);
- const program=PROGRAMS[((variant%PROGRAMS.length)+PROGRAMS.length)%PROGRAMS.length],total=program.reduce((sum,b)=>sum+b.d,0);
- let age=(variant*2.3)%total;
- const motion:PlayerMotion={};
- const side=(i:number)=>program[i].s??(i%2?1:-1) as -1|1;
- const point=(i:number)=>{const b=program[i];return b.t==='rest'?GROUND:juggleContact(b.t==='stall'?'head':b.t,side(i),rig.juggleHead,rig.headTop);};
- return {ball,motion,prepare(dt:number,active:boolean,reduced:boolean){
-  if(active&&!reduced)age=(age+dt)%total;
-  if(!active||reduced){motion.juggle=undefined;ball.position.set(.28,.2,.36);return;}
-  let i=0,t=age;while(t>=program[i].d){t-=program[i].d;i=(i+1)%program.length;}
-  const beat=program[i],phase=t/beat.d,next=(i+1)%program.length;
-  if(beat.t==='rest'||beat.t==='stall'){
-   motion.juggle=undefined;const at=point(i),sway=beat.t==='stall'?Math.sin(age*3.1)*.03:0;
-   ball.position.set(at.x+sway,at.y,at.z);ball.rotation.y=beat.t==='stall'?age*.6:ball.rotation.y;return;
-  }
-  motion.juggle=phase;motion.juggleTouch=beat.t;motion.kickSide=side(i);
-  const from=point(i),to=point(next),blend=phase*phase*(3-2*phase),h=beat.h??.5;
-  ball.position.set(from.x+(to.x-from.x)*blend,from.y+(to.y-from.y)*phase+4*phase*(1-phase)*h,from.z+(to.z-from.z)*blend);
-  ball.rotation.x=age*(1.8+variant*.5);ball.rotation.z=age*(variant%2?1:-1)*.8;
- },dispose(){ball.removeFromParent();geometry.dispose();material.dispose();}};
+ // Rig measurements for the trick maths (root frame, before the root's scale).
+ const legs=rig.profile?.legs??1,scale=Math.abs(rig.root.scale.y)||1,pelvisRest=.88+(legs-1)*.83;
+ const ctx=createTrickCtx({legs,pelvisRest,headTop:rig.headTop!==undefined?rig.headTop/scale:pelvisRest+1.01,ground:(rig.root.userData.beanBody as {ground?:number[]}|undefined)?.ground??CLASSIC_GROUND});
+ let routine:Routine=buildSoloRoutine(id,variant);
+ const frame=createTrickFrame(),motion:PlayerMotion={},fallback=trickById(PAIR_FALLBACK)!;
+ let cursor=0,latched:RoutineSeg|null=null,pairOn=false,tag:string|null=null,current:TrickDef|null=null,facing:number|undefined,active=false,ownClock=(variant*2.3)%10;
+ let partner:{readonly active:boolean}|null=null,partnerYaw=0,lx:number=TRICK_REST.x,ly:number=TRICK_REST.y,lz:number=TRICK_REST.z;
+ const find=(t:number)=>{const s=routine.segs;if(t<s[cursor].start)cursor=0;while(cursor<s.length-1&&t>=s[cursor].start+s[cursor].dur)cursor++;return s[cursor];};
+ const rest=()=>{motion.trick=undefined;motion.juggle=undefined;tag=null;current=null;facing=undefined;ball.position.set(TRICK_REST.x,TRICK_REST.y,TRICK_REST.z);lx=TRICK_REST.x;ly=TRICK_REST.y;lz=TRICK_REST.z;};
+ rest();
+ return {ball,motion,ctx,id,variant,
+  /** Name tag text for the trick being played (upper case, cached), or null between tricks. */
+  get tag(){return tag;},
+  /** The trick being played (its label and football purpose), or null. */
+  get trick(){return current;},
+  /** Heading toward the partner during a pair trick, else undefined (the NPC keeps its own facing). */
+  get facing(){return facing;},
+  get active(){return active;},
+  get routine(){return routine;},
+  setRoutine(r:Routine){routine=r;cursor=0;latched=null;},
+  setPartner(p:{readonly active:boolean}|null,yaw:number){partner=p;partnerYaw=yaw;},
+  /** `clock`: the shared freestyle clock (seconds, paused with the island); without it the freestyler keeps its own. */
+  prepare(dt:number,on:boolean,reduced:boolean,clock?:number){
+   if(clock===undefined){if(on&&!reduced)ownClock+=dt;clock=ownClock;}
+   active=on&&!reduced;
+   if(!active){rest();return;}
+   const t=((clock+routine.offset)%routine.cycle+routine.cycle)%routine.cycle,seg=find(t),τ=t-seg.start;
+   facing=undefined;
+   if(seg.kind==='idle'){sampleIdle(τ,seg.dur,seg.side,seg.to,ctx,frame,seg.seed);current=null;}
+   else if(seg.kind==='trick'){sampleTrick(seg.trick!,τ,seg.side,ctx,frame);current=seg.trick;}
+   else{
+    // A pair window: decided once when it starts, so a partner walking off mid-rally does not make the ball jump.
+    if(latched!==seg){latched=seg;pairOn=!!partner?.active;}
+    if(pairOn){sampleTrick(seg.trick!,τ,seg.side,ctx,frame,seg.role);facing=partnerYaw;current=seg.trick;}
+    else{sampleTrick(fallback,τ*fallback.seconds/seg.dur,seg.side,ctx,frame);current=fallback;}
+   }
+   tag=current?TAGS.get(current)??null:null;
+   // `juggle` marks the rig busy with the ball (feet free, no step locks or reactions): the trick pose then sets every joint, and the
+   // gait skips its stance work (measured ~25 % cheaper per freestyler than leaving the gait's foot locks running underneath).
+   motion.trick=frame.pose;motion.juggle=0;motion.juggleTouch='foot';motion.kickSide=seg.side;
+   const b=frame.ball;ball.position.set(b.x,b.y,b.z);
+   // Roll with the ground (or spin in the air); a stalled ball stays still.
+   const dx=b.x-lx,dz=b.z-lz;ball.rotation.x+=dz/TRICK_R;ball.rotation.z-=dx/TRICK_R;if(frame.air)ball.rotation.x+=dt*(4+variant%3);
+   lx=b.x;ly=b.y;lz=b.z;void ly;
+  },dispose(){ball.removeFromParent();geometry.dispose();material.dispose();}};
+}
+export type CourtFreestyle=ReturnType<typeof createCourtFreestyle>;
+/** Joins two freestylers standing at `pa` and `pb` (world x/z) into a pair: shared timeline, facing each other for pair tricks. */
+export function linkFreestylePair(a:CourtFreestyle,b:CourtFreestyle,pa:{x:number;z:number},pb:{x:number;z:number}){
+ const [ra,rb]=buildPairRoutines(a.id,b.id,a.variant,b.variant),d=Math.hypot(pb.x-pa.x,pb.z-pa.z);
+ a.setRoutine(ra);b.setRoutine(rb);
+ a.ctx.partnerD=b.ctx.partnerD=d;a.ctx.partner=b.ctx;b.ctx.partner=a.ctx;
+ a.setPartner(b,Math.atan2(pb.x-pa.x,pb.z-pa.z));b.setPartner(a,Math.atan2(pa.x-pb.x,pa.z-pb.z));
 }

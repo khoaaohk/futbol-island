@@ -69,7 +69,7 @@ export default function MarketStand({open,onOpenChange,initialTab,place='rosa'}:
 }
 
 function Goods({kind,lines,busy,onOne,onAll}:{kind:'fish'|'produce';lines:ReturnType<typeof basketLines>;busy:boolean;onOne:(id:string)=>void;onAll:()=>void}){
- if(!lines.length)return <div className={styles.empty}>{kind==='fish'?<><b>No fish in your basket yet.</b><p>Look for the little fishing posts with a red float: {FISH_SPOTS.map(s=>s.name).join(', ')}.</p></>:<><b>No produce in your basket yet.</b><p>Pick ripe fruit and vegetables at the Community Garden, just north of the market, or work a Harvest day on Coral Cay Farm.</p></>}</div>;
+ if(!lines.length)return <div className={styles.empty}>{kind==='fish'?<><b>No fish in your basket yet.</b><p>Look for the little fishing posts with a red float (F on the map): {FISH_SPOTS.filter(s=>!s.area).map(s=>s.name).join(', ')}, plus {FISH_SPOTS.filter(s=>s.area).length} more along the Coral Cay causeway and round Coral Cay.</p></>:<><b>No produce in your basket yet.</b><p>Pick ripe fruit and vegetables at the Community Garden, just north of the market, or work a Harvest day on Coral Cay Farm.</p></>}</div>;
  const total=islandMarket.quote(kind).coins;
  return <section className={styles.goods} aria-label={kind==='fish'?'Sell fish':'Sell produce'}>
   <ul>{lines.map(({good,count,each})=>{const fish=kind==='fish'?fishById(good.id):undefined;return <li key={good.id} data-good={good.id}>

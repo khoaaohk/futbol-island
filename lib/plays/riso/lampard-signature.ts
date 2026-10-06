@@ -57,6 +57,7 @@ import {TAU,twos,sm,key,clamp,lerp,rng,hash,polyPath,ribbon,partial,easeOut,ease
 import {sparkBurst,footballPanels,speedLines} from '../../paths/riso/shapes';
 import {drawAthlete,motionSmear,makeCamera,solve,strike,runCycle,dribble,stand,keeperSet,keeperDive,header,celebrate,posed,blendPose,STRIKE_CONTACT,
  type Pose,type Camera,type AthleteStyle,type Place,type InkFill,type V3,type DrawResult} from './athlete';
+import {beats,shotAt,reframe,steady,focalOf,fovOf,near,type Beats,type Subject,type ReframeOpts,type View as DView} from './director';
 
 // ---------------------------------------------------------------- narration + timing
 /** The narration (script.json mirrors it). Cue `words` are the match keys for the voice's word onsets; their `at` and each chapter's
@@ -109,7 +110,9 @@ const bump=(a:number,b:number,t:number)=>Math.sin(Math.PI*clamp((t-a)/(b-a)));
 /** a narrower (square) window gets a slightly wider lens so the action still fits; set by frame(), read by every camera */
 let LENS=1;
 /** Frame the FULL sheet: world (0,0) on the canvas centre at 1 unit per sheet unit (the passage arrival scale still multiplies in). */
-function frame(s:Sheet){const S=s.arrival;s.camera((s.cx-s.W/2)/S,(s.cy-s.H/2)/S,1/s.fit,0);LENS=Math.pow(Math.min(1,s.W/1620),.6);}
+function frame(s:Sheet){const S=s.arrival;s.camera((s.cx-s.W/2)/S,(s.cy-s.H/2)/S,1/s.fit,0);LENS=Math.pow(Math.min(1,s.W/1620),.6);DV={w:s.W,h:s.H};}
+/** the window in camera units, for the director (set by frame(); read by every camera, aperture() included) */
+let DV:DView={w:1566,h:1080};
 /** half the visible extents with margin for the .68 passage preview */
 const view=(s:Sheet)=>({hx:s.W/(2*.68)+120,hy:s.H/(2*.68)+120});
 
@@ -410,6 +413,15 @@ type Shot={P:V3;T:V3;fov:number};
 const blendShot=(a:Shot,b:Shot,u:number):Shot=>u<=0?a:u>=1?b:{P:mix3(a.P,b.P,u),T:mix3(a.T,b.T,u),fov:Math.exp(lerp(Math.log(a.fov),Math.log(b.fov),u))};
 function plan(t:number,steps:[number,number,(t:number)=>Shot][]):Cam{let cur=steps[0][2](t);for(let i=1;i<steps.length;i++){const[a,d,f]=steps[i];const u=sm(a,a+Math.max(.01,d),t,easeInOutSine);if(u>0)cur=blendShot(cur,f(t),u);}return cam3(cur.P,cur.T,cur.fov);}
 const at3=(k:number,tau:number,y=0):V3=>{const[x,z]=posOf(k,tau);return[x,y,z];};
+/** plan() through the shared director (lib/plays/riso/director.ts): the authored Shot, then moved toward the beat's framing; steady()
+ * averages the directed camera over ±.35 s so a keep point arriving or the subject handing over never pops the framing */
+function planD(t:number,steps:[number,number,(t:number)=>Shot][],B:Beats,subj:(t:number)=>Subject,opts:(t:number,sh:Shot)=>ReframeOpts=()=>({})):Cam{
+ const at=(u:number)=>{let cur=steps[0][2](u);for(let i=1;i<steps.length;i++){const[a,d,f]=steps[i];const w=sm(a,a+Math.max(.01,d),u,easeInOutSine);if(w>0)cur=blendShot(cur,f(u),w);}
+  return reframe({eye:cur.P,target:cur.T,F:focalOf(cur.fov,1080*LENS)},subj(u),shotAt(u,B),DV,opts(u,cur));};
+ const r=steady(t,at);return cam3(r.eye,r.target,fovOf(r.F,1080*LENS));}
+/** soft keep (feet and head) for actor k at weight w */
+const keepK=(k:number,tau:number,w:number):{P:V3;w:number}[]=>w<=.01?[]:[{P:at3(k,tau),w},{P:at3(k,tau,1.8),w}];
+const others=(tau:number,ks:number[]):V3[]=>ks.map(k=>at3(k,tau));
 
 // ---------------------------------------------------------------- teaching marks
 /** the shot's path so far: a ribbon along the real flight from contact to τ */
@@ -441,9 +453,24 @@ function edgeMark(s:Sheet,c:Cam,w:number){if(w<=.02)return;const ln=new Path2D()
 const tau1=(t:number)=>{const dr=CUE(0,'Drogba'),fl=CUE(0,'Frank Lampard'),ar=CUE(0,'arriving late'),g=CUE(0,'Goal');const s0=Math.max(-9.8,T_HD-(dr+.1));
  return key(t,mono([[0,s0],[dr+.1,T_HD],[fl,-3.1],[ar+.15,T_TH],[g+.05,IN_NET],[SECS(0)+1,IN_NET+SECS(0)+1-g]]),linear);};
 const P1:V3=[-26,20,60];
+/** Director beats (Oct 4 2026): a short establishing wide of the Reebok; pull in to the long ball dropping onto Drogba (Terry's ball and
+ * Drogba both in frame); push in on the header; pull back out for Gudjohnsen's lofted pass so Lampard — the man arriving — is in the
+ * picture with the ball; follow Lampard's late run; push in low as he wins the bouncing ball, cuts inside Candela and drills it (the
+ * ball and Jääskeläinen held in frame, so the shot and the keeper are seen); hold on Lampard after the goal. The followed player hands
+ * over smoothly Terry → Drogba → Gudjohnsen → Lampard. */
+const BT1=beats([[0,'wide'],[1,{from:'space',size:.26}],[CUE(0,'Drogba')-.45,{from:'tight',size:.45}],[CUE(0,'Drogba')+.65,{from:'space',size:.24}],
+ [CUE(0,'Frank Lampard')-.3,{from:'follow',low:0}],[CUE(0,'arriving late')-.38,{from:'tight',low:.4}],[CUE(0,'Goal')+.3,'reaction']]);
+function hero1(tau:number):V3{const u0=sm(T_LB,T_HD-.4,tau,easeInOutSine),u1=sm(T_HD+.1,T_HD+.7,tau,easeInOutSine),u2=sm(T_PASS,T_PASS+.7,tau,easeInOutSine),
+  u3=sm(-.3,IN_NET+.4,tau,easeInOutSine)*(1-sm(IN_NET+.7,IN_NET+1.9,tau,easeInOutSine));
+ return mix3(mix3(mix3(mix3(at3(TERRY,tau),at3(DROGBA,tau),u0),at3(GUD,tau),u1),at3(HERO,tau),u2),at3(GK,tau),u3);}
+/** the ball is held in frame except high in the long ball's flight (it drops in onto Drogba) and once it has settled in the net; the
+ * receiver (Lampard) is held in frame while Gudjohnsen lofts the pass */
+function subj1(tau:number):Subject{const h=hero1(tau),pass=sm(T_RCV-.8,T_RCV,tau)*(1-sm(T_PASS+.4,T_PASS+1.2,tau)),
+  bw=(1-.7*bump(T_LB+.2,T_HD-.3,tau))*(1-sm(IN_NET+.3,IN_NET+1.1,tau));
+ return{hero:h,keep:[...(bw>.01?[{P:ballAt(tau),w:bw}]:[]),...keepK(HERO,tau,pass),...near(h,others(tau,[CANDELA,DROGBA,GUD,NGOTTY,BENHAIM,HIERRO,JAROSIK]),4.5,9)]};}
 function cam1(t:number):Cam{
  const tau=tau1(t),hp=at3(HERO,tau,1),g=CUE(0,'Goal');
- return plan(t,[
+ return planD(t,[
   [0,0,()=>({P:P1,T:mix3([-46,1,0],ballAt(tau),.45),fov:21})],
   [CUE(0,'Drogba')-.9,1,()=>({P:P1,T:mix3(ballAt(Math.max(tau,T_LB)),at3(DROGBA,tau,1.2),.45),fov:11.5})],
   [CUE(0,'Frank Lampard')-.5,1,()=>({P:P1,T:mix3(hp,ballAt(Math.min(tau,0)),.45),fov:8.5})],
@@ -451,7 +478,7 @@ function cam1(t:number):Cam{
   [g-.35,.7,()=>({P:P1,T:[-5,1,-1],fov:13})],
   [g+.3,1.6,()=>({P:P1,T:[-1,1,1.2],fov:8})],
   [g+2.1,1.2,()=>({P:P1,T:add3(hp,[1,0,0]),fov:11})],
- ]);
+ ],BT1,u=>subj1(tau1(u)));
 }
 const ch1:Scene={
  draw(s,t){
@@ -467,16 +494,24 @@ ch1.still=CUE(0,'Goal')+.3;
 
 // ---------------------------------------------------------------- 2 · slow-motion replay, low reverse angle behind the run
 const tau2=(t:number)=>key(t,mono([[0,-5.5],[CUE(1,'Watch again'),-5.3],[CUE(1,'watching the strikers'),-4.8],[CUE(1,'nobody'),-3.8],[CUE(1,'wins the bouncing'),-2.2],[CUE(1,'edge of the box'),-1.7],[CUE(1,'cuts inside'),-1.2],[CUE(1,'drills'),-.05],[SECS(1),.8]]),linear);
+/** Director beats: open on the two centre-backs and the two strikers they are watching (all four held in frame, the eye-lines are the
+ * lesson) with Lampard coming from behind; follow him into the free space ("nobody"); push in low as he wins the bouncing ball at the
+ * edge of the box; ease out a little for the cut inside (the red arrow and Candela in frame); push in again on the drive, the ball held
+ * in frame all the way to the net. */
+const BT2=beats([[0,{from:'space',size:.26}],[CUE(1,'nobody')-.35,'follow'],[CUE(1,'wins the bouncing')-.4,'tight'],
+ [CUE(1,'cuts inside')-.45,{from:'follow',size:.4,low:.5}],[CUE(1,'drills')-.4,'tight']]);
+function subj2(tau:number):Subject{const h=at3(HERO,Math.min(tau,.2)),w=1-sm(-4.4,-3.6,tau);
+ return{hero:h,ball:ballAt(Math.min(tau,FLY)),keep:[...[NGOTTY,BENHAIM,DROGBA,GUD].flatMap(k=>keepK(k,tau,w)),...near(h,others(tau,[CANDELA]),3.5,7)]};}
 function cam2(t:number):Cam{
  const tau=tau2(t),hp=at3(HERO,Math.min(tau,.2),1),b=ballAt(Math.min(tau,FLY));
  const track=(back:number,side:number,up:number):V3=>{const[x,z]=posOf(HERO,Math.min(tau,.1)-.6);return[x-back,up,z-side];};
- return plan(t,[
+ return planD(t,[
   [0,0,()=>({P:[-57,3,-15],T:mix3(hp,[-29,1.2,-2],.55),fov:30})],
   [CUE(1,'nobody')-.3,1,()=>({P:track(8,6.5,2),T:mix3(hp,[-22,1,-4],.3),fov:28})],
   [CUE(1,'wins the bouncing')-.4,.9,()=>({P:track(5,4.6,1.6),T:add3(hp,[1.6,-.15,.6]),fov:28})],
   [CUE(1,'cuts inside')-.2,.9,()=>({P:track(6.5,5.5,1.7),T:mix3(add3(hp,[2,-.1,1]),[-4,1,0],.25),fov:32})],
   [CUE(1,'drills')+.1,1.4,()=>({P:[-24,1.8,-14],T:mix3([-8,.9,-1],b,.4),fov:34})],
- ]);
+ ],BT2,u=>subj2(tau2(u)));
 }
 const ch2:Scene={
  draw(s,t){
@@ -504,15 +539,24 @@ ch2.still=CUE(1,'nobody')+.4;
 // ---------------------------------------------------------------- 3 · the second replay angle, behind the goal, running on live into the celebration
 const tau3=(t:number)=>{const ch=CUE(2,'Chelsea');return key(t,mono([[0,-3.4],[CUE(2,'behind the goal'),-3.1],[CUE(2,'late run'),-2.2],[CUE(2,'strike'),0],[ch,IN_NET+.9],[SECS(2)+1,IN_NET+.9+SECS(2)+1-ch]]),linear);};
 const E3:V3=[12,5.2,-6];
+/** Director beats: from behind the net, follow Lampard's late run (long lens kept, so it still reads as the camera behind the goal); push
+ * in on the strike (Candela at his shoulder, the keeper between us and him), the drive held in frame until it is almost on us; hold on him as he
+ * wheels away. The eye never comes past the back of the net. */
+const BT3=beats([[0,{from:'follow',size:.3,lens:0}],[CUE(2,'strike')-.45,{from:'tight',lens:0,low:.4}],[CUE(2,'strike')+.9,{from:'reaction',lens:0}]]);
+function subj3(tau:number):Subject{const h=at3(HERO,tau),bw=1-sm(FLY*.6,FLY+.05,tau);
+ return{hero:h,keep:[...(bw>.01?[{P:ballAt(Math.min(tau,IN_NET)),w:bw}]:[]),...near(h,others(tau,[CANDELA,DROGBA,GUD]),3,7)]};}
+/** the eye stays behind the back of the net (x ≥ 3.2) along the authored line of sight */
+function opts3(tau:number,sh:Shot):ReframeOpts{const h=at3(HERO,tau),dx=sh.P[0]-h[0],dz=sh.P[2]-h[2],l=Math.hypot(dx,dz)||1;
+ return dx/l>.2?{minDist:Math.min(Math.hypot(dx,sh.P[1]-1,dz),(3.2-h[0])/(dx/l))}:{};}
 function cam3v(t:number):Cam{
  const tau=tau3(t),b=ballAt(Math.min(tau,IN_NET)),hp=at3(HERO,tau,1.1);
- return plan(t,[
+ return planD(t,[
   [0,0,()=>({P:E3,T:mix3(hp,[-18,1,-7],.3),fov:24})],
   [CUE(2,'late run')-.2,1,()=>({P:E3,T:mix3(hp,b,.3),fov:20})],
   [CUE(2,'strike')-.2,.7,()=>({P:add3(E3,[-.6,-.2,.4]),T:mix3([-8,1,-2],b,.45),fov:26})],
   [CUE(2,'strike')+.9,1.4,()=>({P:add3(E3,[-.8,.5,1]),T:add3(hp,[1,0,-1]),fov:26})],
   [CUE(2,'title')-.5,1.4,()=>({P:add3(E3,[-.8,.8,1.2]),T:add3(hp,[0,.2,0]),fov:18})],
- ]);
+ ],BT3,u=>subj3(tau3(u)),(u,sh)=>opts3(tau3(u),sh));
 }
 const ch3:Scene={
  draw(s,t){
@@ -532,12 +576,18 @@ ch3.still=CUE(2,'strike')+.4;
 
 // ---------------------------------------------------------------- 4 · the lesson: defenders watch the strikers → wait → arrive late → the edge of the box
 const tau4=(t:number)=>key(t,mono([[0,-5.4],[CUE(3,'defenders watch'),-5.1],[CUE(3,'wait'),-4.7],[CUE(3,'arrive late')-.1,-4.4],[CUE(3,'edge of the box'),-2.1],[SECS(3),-.9]]),linear);
+/** Director beats (the lesson): the two centre-backs and the strikers they watch held in frame with Lampard behind them; push in on him
+ * as he waits; ease back out as he arrives late, with the edge of the box (the yellow ring) held in frame ahead of him. */
+const BT4=beats([[0,'lesson'],[CUE(3,'wait')-.35,{from:'tight',size:.45,low:.4}],[CUE(3,'arrive late')-.15,'lesson']]);
+const EDGE:V3=[-19.5,0,-10.3];
+function subj4(tau:number,t:number):Subject{const h=at3(HERO,tau),w=1-sm(CUE(3,'wait')-.4,CUE(3,'wait')+.3,t),e=sm(CUE(3,'arrive late')-.4,CUE(3,'arrive late')+.3,t);
+ return{hero:h,keep:[...[NGOTTY,BENHAIM,DROGBA,GUD].flatMap(k=>keepK(k,tau,w)),...(e>.01?[{P:add3(EDGE,[1.6,0,0]),w:e},{P:add3(EDGE,[-1.6,0,0]),w:e}]:[])]};}
 function cam4v(t:number):Cam{
- return plan(t,[
+ return planD(t,[
   [0,0,()=>({P:[-47,8,-21],T:[-33,.8,-3.5],fov:30})],
   [CUE(3,'arrive late')-.2,1.4,()=>({P:[-38,7,-23],T:[-24,.6,-6],fov:32})],
   [CUE(3,'edge of the box')-.2,1.2,()=>({P:[-31,6,-21],T:[-19,.5,-7.5],fov:30})],
- ]);
+ ],BT4,u=>subj4(tau4(u),u),()=>({recenter:.4}));
 }
 const ch4:Scene={
  draw(s,t){

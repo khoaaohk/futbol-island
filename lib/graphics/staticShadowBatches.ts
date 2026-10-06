@@ -27,8 +27,11 @@ export function createStaticShadowBatches(renderer:T.WebGLRenderer,scene:T.Scene
  const original=renderer.shadowMap.render;
  renderer.shadowMap.render=function(...args){
   stats.savedCalls=0;if(!enabled)return original.apply(this,args);
-  for(const group of groups){if(!group.members.every(m=>m.visible&&m.castShadow&&m.material.visible))continue;group.proxy.visible=true;for(const m of group.members)m.castShadow=false;stats.savedCalls+=group.members.length-1;}
-  try{return original.apply(this,args);}finally{for(const group of groups)if(group.proxy.visible){group.proxy.visible=false;for(const m of group.members)m.castShadow=true;}}
+  // Heat pass 6: a member culled by shadowVisibility (`userData.shadowCulled`, its shadow cannot reach the view) no longer breaks the
+  // group into one depth draw per remaining member; the proxy draws it too, which adds only shadow texels nothing on screen samples.
+  for(const group of groups){let live=0;for(const m of group.members){if(!m.visible||!m.material.visible||!(m.castShadow||m.userData.shadowCulled===true)){live=-1;break;}if(m.castShadow)live++;}
+   if(live<2)continue;/* one surviving member: its own draw is the same single call with fewer triangles */group.proxy.visible=true;for(const m of group.members)m.castShadow=false;stats.savedCalls+=live-1;}
+  try{return original.apply(this,args);}finally{for(const group of groups)if(group.proxy.visible){group.proxy.visible=false;for(const m of group.members)m.castShadow=m.userData.shadowCulled!==true;}}
  };
  return {stats,setEnabled(value:boolean){enabled=value;},dispose(){renderer.shadowMap.render=original;for(const {proxy,geometry,material} of groups){proxy.removeFromParent();geometry.dispose();material.dispose();}}};
 }

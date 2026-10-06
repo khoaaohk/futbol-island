@@ -1,13 +1,13 @@
 import './register-local-ts.mjs';
 import assert from 'node:assert/strict';
-const {createRunnerGame,tickRunner,runnerJump,runnerSlide,runnerShoot,runnerCharge,runnerRelease,RUNNER_STRIKE_X}=await import('../lib/arcade/runnerGame.ts');
+const {createRunnerGame,tickRunner,runnerJump,runnerSlide,runnerShoot,runnerCharge,runnerRelease,RUNNER_STRIKE_X,RUNNER_TUNING}=await import('../lib/arcade/runnerGame.ts');
 const setup=(kind,lane=0,z=-.2)=>{const s=createRunnerGame();s.spawn=99;s.objects=[{kind,lane,z,passed:false,openLane:0}];return s;};
 const advance=(s,n=50)=>{for(let i=0;i<n;i++)tickRunner(s,1/60);};
 const hit=setup('defender');tickRunner(hit,.05);assert.equal(hit.lives,2);tickRunner(hit,.05);assert.equal(hit.lives,2,'one challenge cannot damage twice');
 const slide=setup('defender');runnerSlide(slide);tickRunner(slide,.05);assert.equal(slide.lives,3,'skill slide evades a defender');
 const cone=setup('cone');runnerSlide(cone);tickRunner(cone,.05);assert.equal(cone.lives,2,'sliding does not pass through a cone');
 const jump=setup('cone',0,-4);runnerJump(jump);advance(jump,30);assert.equal(jump.lives,3,'well-timed jump clears a cone');
-const boost=setup('coin');boost.energy=4;tickRunner(boost,.05);assert(boost.boost>0);assert.equal(boost.energy,0);assert.equal(boost.score,25);assert.equal(boost.balls,2);
+const boost=setup('coin');boost.energy=RUNNER_TUNING.powerTouches-1;tickRunner(boost,.05);assert(boost.boost>0);assert(boost.shield,'a power run is a one-tackle shield');assert.equal(boost.energy,0);assert.equal(boost.score,25);assert.equal(boost.balls,2);
 const walk=setup('goal');tickRunner(walk,.05);assert.equal(walk.goals,0,'crossing the net without shooting never scores');
 const goal=setup('goal',0,-15);assert(runnerShoot(goal));assert.equal(goal.balls,0);assert.equal(goal.shots[0].x,goal.x+RUNNER_STRIKE_X,'shot leaves the visible striking boot side');advance(goal);assert.equal(goal.goals,1);assert.equal(goal.score,450);assert.equal(goal.lives,3);assert(!runnerShoot(goal),'empty inventory cannot shoot');
 for(const lane of[-1,0,1]){const g=setup('goal',0,-15);g.lane=lane;g.x=lane*2.4;g.objects[0].openLane=lane;runnerShoot(g);advance(g);assert.equal(g.goals,1,'boot-side contact still finishes each lane');assert.equal(g.score,450);}

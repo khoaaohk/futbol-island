@@ -78,7 +78,7 @@ def _load(fn, name):
 B = _load('fetch-player-photos-backup.py', 'pp_backup')
 S, LEG, FUT, WOM = B.S, B.LEG, B.FUT, B.WOM
 
-UA = 'FutbolIslandPhotoBot/1.0 (educational kids app)'
+UA = 'FutbolIsland/1.0'
 GAP = 8.0          # anonymous: one runner, 1 request / 8 s on every Wikimedia host (1.5 s / 4 s drew 429s)
 GAP_AUTH = 1.0     # with WIKIMEDIA_TOKEN (OAuth 2.0, 5000 req/h): ~1 req/s on the API hosts
 GAP_UPLOAD = 8.0   # upload.wikimedia.org (never sent the token): own throttle, 1 download / 8 s

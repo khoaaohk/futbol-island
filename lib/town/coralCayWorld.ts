@@ -8,6 +8,7 @@ import {CAUSEWAY,CAUSEWAY_PATH,SANDBARS,CAY_SHORE,CAY_SAND,CAY_LAWN,CAY_CENTER,C
 import {INTERIOR_GRASS_COLOR} from './shoreline';
 import {fadeBand} from './shallows';
 import type {DecorPart,DecorPlant} from '../graphics/farmDecor';
+import {untaggedProp,type PropTagger} from '../graphics/propReactions';
 type Mesh=T.Mesh;
 export type CayTools={
  box:(w:number,h:number,d:number,c:string,x:number,y:number,z:number)=>Mesh;
@@ -27,6 +28,8 @@ export type CayTools={
  buildings:{x:number;z:number;w:number;d:number;height:number;name:string;cornerRadius?:number}[];
  assets:{kind:string;x:number;z:number;w:number;d:number;visualW?:number;visualD?:number;canopyHeight?:number;baseY?:number}[];
  surfaceAreas:{kind:string;x:number;z:number;w:number;d:number}[];
+ /** Kick-reaction tagging (lib/graphics/propReactions.ts); identity when absent. */
+ prop?:PropTagger;
 };
 export type CayLampSite={x:number;z:number;ground:number;region:'coral-cay';poolWidth?:number;poolDepth?:number};
 const V=(x:number,y:number,z:number)=>new T.Vector3(x,y,z);
@@ -35,7 +38,7 @@ function mergeRows(parts:T.BufferGeometry[]){const pos:number[]=[],nor:number[]=
  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('normal',new T.Float32BufferAttribute(nor,3));g.setIndex(idx);return g;}
 
 export function buildCoralCay(t:CayTools){
- const {box,cylinder,put,line,sign,palm,house,table,planter,path,districtSign,shallows,obstacles,buildings,assets,surfaceAreas}=t;
+ const {box,cylinder,put,line,sign,palm,house,table,planter,path,districtSign,shallows,obstacles,buildings,assets,surfaceAreas}=t,prop=t.prop??untaggedProp;
  const lampSites:CayLampSite[]=[];
  const farmDecor:DecorPlant[]=[];
  const z0=CAUSEWAY.z,P=CAUSEWAY_PATH,deck=CAUSEWAY.deckHalf;
@@ -118,8 +121,8 @@ export function buildCoralCay(t:CayTools){
  // Warm lamps every 24 m, alternating sides on the sidewalk edge. Same pieces as the street lamps, so the shared lamp
  // lens material and the night pool batches light them.
  const lamp=(x:number,z:number,ground:number)=>{
-  cylinder(.19,.22,'#384443',x,ground+.11,z).castShadow=false;cylinder(.065,4.2,'#384443',x,ground+2.1,z).castShadow=false;
-  box(.62,.12,.62,'#384443',x,ground+4.22,z).castShadow=false;box(.43,.32,.43,'#ffe8ae',x,ground+3.99,z).castShadow=false;
+  prop('lamp',()=>{cylinder(.19,.22,'#384443',x,ground+.11,z).castShadow=false;cylinder(.065,4.2,'#384443',x,ground+2.1,z).castShadow=false;
+  box(.62,.12,.62,'#384443',x,ground+4.22,z).castShadow=false;box(.43,.32,.43,'#ffe8ae',x,ground+3.99,z).castShadow=false;});
   obstacles.push({x,z,w:.38,d:.38});assets.push({kind:'cay-lamp',x,z,w:.38,d:.38,visualW:.65,visualD:.65});
   lampSites.push({x,z,ground:ground+.005,region:'coral-cay',poolWidth:9,poolDepth:9});
  };
@@ -207,12 +210,12 @@ export function buildCoralCay(t:CayTools){
   palm(x-K.w/2-2,front-1.5,6);planter(x+K.w/2+2.8,front+1.4);// 1 m further east: clear of the drinks machine (Sep 29 2026)
   // A potted tropical plant west of the doors (outside the door's 2.2 m clearance). The east one was dropped when the
   // snack + drinks machines moved in flush beside the doors (Sep 29 2026).
-  for(const px of [door-2.25]){cylinder(.34,.55,'#bd7657',px,.27,front+.6);for(let k=0;k<4;k++){const leaf=put(new T.IcosahedronGeometry(.34,0),k%2?'#3f7a4f':'#5b895e',px+Math.cos(k*1.6)*.22,.85+(k%2)*.22,front+.6+Math.sin(k*1.6)*.22);leaf.scale.set(1,.55,1.5);leaf.rotation.y=k*1.6;}obstacles.push({x:px,z:front+.6,w:.7,d:.7});}
+  for(const px of [door-2.25]){prop('planter',()=>{cylinder(.34,.55,'#bd7657',px,.27,front+.6);for(let k=0;k<4;k++){const leaf=put(new T.IcosahedronGeometry(.34,0),k%2?'#3f7a4f':'#5b895e',px+Math.cos(k*1.6)*.22,.85+(k%2)*.22,front+.6+Math.sin(k*1.6)*.22);leaf.scale.set(1,.55,1.5);leaf.rotation.y=k*1.6;}});obstacles.push({x:px,z:front+.6,w:.7,d:.7});}
   // Bench in front of the west window, facing the roundabout.
-  {const bx=x-3.4,bz=front+2.2;box(2.2,.1,.55,'#a67d55',bx,.48,bz);box(2.2,.45,.08,'#a67d55',bx,.78,bz-.25);for(const ex of [-.9,.9])box(.1,.45,.5,'#385a4e',bx+ex,.23,bz);obstacles.push({x:bx,z:bz,w:2.2,d:.7});}
+  {const bx=x-3.4,bz=front+2.2;prop('bench',()=>{box(2.2,.1,.55,'#a67d55',bx,.48,bz);box(2.2,.45,.08,'#a67d55',bx,.78,bz-.25);for(const ex of [-.9,.9])box(.1,.45,.5,'#385a4e',bx+ex,.23,bz);});obstacles.push({x:bx,z:bz,w:2.2,d:.7});}
   // Chalkboard A-frame at the east corner, past the drinks machine (clear of the machines' buying spots): the day's refuel pick.
-  {const cx=x+K.w/2+.7,cz=front+1.6;for(const dz of [-.16,.16]){const leg=box(.72,1.05,.05,'#384443',cx,.5,cz+dz);leg.rotation.x=dz>0?-.28:.28;}
-   sign('WATER + FRUIT',.6,.34,cx,.62,cz+.33,'#384443','#fff4dc');obstacles.push({x:cx,z:cz,w:.8,d:.6});}
+  {const cx=x+K.w/2+.7,cz=front+1.6;prop('sign',()=>{for(const dz of [-.16,.16]){const leg=box(.72,1.05,.05,'#384443',cx,.5,cz+dz);leg.rotation.x=dz>0?-.28:.28;}
+   sign('WATER + FRUIT',.6,.34,cx,.62,cz+.33,'#384443','#fff4dc');});obstacles.push({x:cx,z:cz,w:.8,d:.6});}
   // Surfboard rack against the west wall.
   {const rx=x-K.w/2-.55,rz=front-2.6;box(.14,1.1,3.2,'#9d805b',rx-.3,.55,rz);for(let i=0;i<3;i++){const b=box(.08,2.2,.58,['#8fcfc0','#f0b49a','#f4d98f'][i],rx,1.1,rz-1+i*1);b.rotation.z=-.16;}obstacles.push({x:rx-.1,z:rz,w:.9,d:3.2});}
   buildings.push({x,z,w:K.w,d:K.d,height:4.52,name:'CORAL CAY KONBINI'});obstacles.push({x,z,w:K.w,d:K.d});}
@@ -224,7 +227,8 @@ export function buildCoralCay(t:CayTools){
   for(const dx of [-1.1,1.1]){targets.push(box(.8,.18,2.2,'#eddfbb',x+dx,.12,z+1.2));const back=box(.8,.1,.75,i%2?'#589aa0':'#c8734f',x+dx,.38,z+.4);back.rotation.x=-.55;targets.push(back);obstacles.push({x:x+dx,z:z+1,w:.8,d:2.5});}
   const towel=box(1.1,.015,1.7,i%2?'#d69b61':'#8b9e6b',x+3,.008,z+1);towel.rotation.y=.15*i;targets.push(towel);
  }
- function lifeguardChair(x:number,z:number){
+ function lifeguardChair(x:number,z:number){prop('post',()=>lifeguardChairParts(x,z));}
+ function lifeguardChairParts(x:number,z:number){
   for(const dx of [-1,1])for(const dz of [-1,1])line(V(x+dx*1.05,0,z+dz*1.05),V(x+dx*.7,2.2,z+dz*.7),.07,'#9d805b');
   box(1.7,.14,1.7,'#eddfbb',x,2.27,z);box(1.7,.9,.12,'#bd7657',x,2.8,z-.8);
   for(const y of [.55,1.1,1.65])box(1.35,.07,.07,'#9d805b',x,y,z+.95+(2.2-y)*.16);
@@ -237,11 +241,11 @@ export function buildCoralCay(t:CayTools){
   const g=new T.ShapeGeometry(s);g.rotateX(-Math.PI/2);const m=flat(put(g,'#d69b61',x,-.035,z));m.rotation.y=yaw;
  }
  function teachingBoard(text:string,x:number,z:number,w=7.4){
-  box(w+.2,.8,.14,'#9d805b',x,1.8,z);for(const dx of [-w/2+.3,w/2-.3])cylinder(.075,2.15,'#9d805b',x+dx,1.075,z);
-  sign(text,w,.65,x,1.8,z+.08,'#477c6a');obstacles.push({x,z,w:w+.2,d:.3});
+  prop('sign',()=>{box(w+.2,.8,.14,'#9d805b',x,1.8,z);for(const dx of [-w/2+.3,w/2-.3])cylinder(.075,2.15,'#9d805b',x+dx,1.075,z);
+  sign(text,w,.65,x,1.8,z+.08,'#477c6a');});obstacles.push({x,z,w:w+.2,d:.3});
  }
  /** Name board on two posts over a spur entrance, clear of the spur rails. */
- function postSign(text:string,x:number,z:number){box(6.3,.7,.12,'#294f43',x,2.2,z);for(const dx of [-3.1,3.1]){cylinder(.07,2.5,'#9d805b',x+dx,1.25,z);obstacles.push({x:x+dx,z,w:.2,d:.2});}sign(text,6,.55,x,2.2,z+.07,'#294f43','#f4cc7c');}
+ function postSign(text:string,x:number,z:number){prop('sign',()=>{box(6.3,.7,.12,'#294f43',x,2.2,z);for(const dx of [-3.1,3.1])cylinder(.07,2.5,'#9d805b',x+dx,1.25,z);sign(text,6,.55,x,2.2,z+.07,'#294f43','#f4cc7c');});for(const dx of [-3.1,3.1])obstacles.push({x:x+dx,z,w:.2,d:.2});}
  /** Flat outline slab (built relative to its centre) — the sandbars' irregular sand and wet rim. */
  function outlineSlab(points:{x:number;z:number}[],cx:number,cz:number,scale:number,top:number,depth:number,color:string){
   const shape=new T.Shape();points.forEach((p,i)=>{const x=(p.x-cx)*scale,z=-(p.z-cz)*scale;i?shape.lineTo(x,z):shape.moveTo(x,z);});shape.closePath();
@@ -340,20 +344,20 @@ export function buildCoralCay(t:CayTools){
  for(const end of [-1,1])for(const side of [-1,1]){const inner=K.goalWidth/2,len=halfW-inner;box(.1,.014,len,blue,K.x+end*halfL,-.095,K.z+side*(inner+len/2));}
  // Five-metre substitution zone in front of the team benches (Law 3: rolling substitutions through this zone).
  for(const dx of [-2.5,2.5])box(.1,.014,1.2,blue,K.x+dx,-.095,K.z+halfW+.6);
- const flag=(x:number,z:number,color:string)=>{cylinder(.03,1.5,'#eddfbb',x,.75,z);box(.02,.34,.5,color,x,1.33,z+.26);obstacles.push({x,z,w:.12,d:.12});};
+ const flag=(x:number,z:number,color:string)=>{prop('flag',()=>{cylinder(.03,1.5,'#eddfbb',x,.75,z);box(.02,.34,.5,color,x,1.33,z+.26);});obstacles.push({x,z,w:.12,d:.12});};
  for(const sx of [-1,1])for(const sz of [-1,1])flag(K.x+sx*(halfL+.8),K.z+sz*(halfW+.8),'#d9534a');
  for(const sz of [-1,1]){flag(K.x,K.z+sz*(halfW+1),'#d9534a');for(const sx of [-1,1])flag(K.x+sx*(halfL-K.penalty),K.z+sz*(halfW+1),'#f4cc7c');}
  // Goals: posts and bar on the goal line, shallow nets behind (same build as the pocket futsal court's goals).
  for(const end of [-1,1]){
   const gx=K.x+end*halfL,back=gx+end*1.5,gw=K.goalWidth/2,h=K.goalHeight;
-  for(const side of [-1,1]){box(.12,h,.12,'#fff1d3',gx,h/2,K.z+side*gw);box(1.5,.07,.07,'#fff1d3',(gx+back)/2,h,K.z+side*gw);box(1.5,.07,.07,'#fff1d3',(gx+back)/2,.06,K.z+side*gw);}
+  prop('net',()=>{for(const side of [-1,1]){box(.12,h,.12,'#fff1d3',gx,h/2,K.z+side*gw);box(1.5,.07,.07,'#fff1d3',(gx+back)/2,h,K.z+side*gw);box(1.5,.07,.07,'#fff1d3',(gx+back)/2,.06,K.z+side*gw);}
   box(.12,.12,K.goalWidth+.12,'#fff1d3',gx,h,K.z);box(.07,.07,K.goalWidth,'#fff1d3',back,h*.55,K.z);
   for(let y=.2;y<=h;y+=.3)box(.022,.022,K.goalWidth,'#c3d1b9',back,y,K.z).castShadow=false;
-  for(let z=-gw;z<=gw+.01;z+=.3){box(.022,h,.022,'#c3d1b9',back,h/2,K.z+z).castShadow=false;box(1.5,.022,.022,'#c3d1b9',(gx+back)/2,h,K.z+z).castShadow=false;}
+  for(let z=-gw;z<=gw+.01;z+=.3){box(.022,h,.022,'#c3d1b9',back,h/2,K.z+z).castShadow=false;box(1.5,.022,.022,'#c3d1b9',(gx+back)/2,h,K.z+z).castShadow=false;}});
   for(const o of [{x:(gx+back)/2,z:K.z-gw,w:1.5,d:.14},{x:(gx+back)/2,z:K.z+gw,w:1.5,d:.14},{x:back,z:K.z,w:.14,d:K.goalWidth}])obstacles.push(o);
  }
  // Team benches face the pitch behind the substitution zone; low bleachers beyond them.
- for(const dx of [-6,6]){const x=K.x+dx,z=K.z+halfW+3.4;box(4,.12,.65,'#a67d55',x,.55,z);box(4,.5,.09,'#a67d55',x,.9,z+.28);for(const ex of [-1.5,1.5])box(.13,.5,.5,'#385a4e',x+ex,.26,z);obstacles.push({x,z,w:4,d:.8});}
+ for(const dx of [-6,6]){const x=K.x+dx,z=K.z+halfW+3.4;prop('bench',()=>{box(4,.12,.65,'#a67d55',x,.55,z);box(4,.5,.09,'#a67d55',x,.9,z+.28);for(const ex of [-1.5,1.5])box(.13,.5,.5,'#385a4e',x+ex,.26,z);});obstacles.push({x,z,w:4,d:.8});}
  for(let row=0;row<3;row++){const h=.4+row*.4,z=K.z+halfW+7.2+row;box(24,h,.95,'#d2bc94',K.x,h/2,z);for(let x=K.x-11.5;x<=K.x+11.5;x+=1)box(.7,.1,.7,'#477c6a',x,h+.05,z);}
  obstacles.push({x:K.x,z:K.z+halfW+8.2,w:24,d:3});
  // Court scoreboard (it replaced the Beach Soccer Club building, removed at the user's request): a sturdy stucco wall
@@ -395,13 +399,13 @@ export function buildCoralCay(t:CayTools){
   for(const z of rowsIn(-104,-91))for(const x of along(4)){put(new T.IcosahedronGeometry(.26,0),'#5b895e',x,.3,z);box(.08,.14,.08,n%3?'#e8a33d':'#d9534a',x+.12,.34,z+.1);n++;} // Peppers
   // Orchard: mango and citrus trees in rows, papayas at the ends, bananas along the east fence.
   const trees:[number,number,'mango'|'citrus'|'papaya'][]=[[655,-124,'mango'],[664,-124,'citrus'],[673,-124,'mango'],[682,-124,'citrus'],[655,-117.5,'citrus'],[664,-117.5,'mango'],[673,-117.5,'citrus'],[682,-117.5,'papaya'],[651.5,-120.5,'papaya']];
-  trees.forEach(([x,z,kind],i)=>{
+  trees.forEach(([x,z,kind],i)=>{prop('tree',()=>{
    if(kind==='papaya'){cylinder(.12,3.2,'#9d805b',x,1.6,z);for(let k=0;k<6;k++){const leaf=box(1.3,.04,.3,'#739568',x+Math.cos(k)*.55,3.25,z+Math.sin(k)*.55);leaf.rotation.y=-k;leaf.rotation.z=.25;}for(let k=0;k<4;k++)put(new T.IcosahedronGeometry(.16,0),'#e8be71',x+Math.cos(k*1.6)*.18,2.8,z+Math.sin(k*1.6)*.18);}
    else{cylinder(.16,1.6,'#9d805b',x,.8,z);const c=put(new T.IcosahedronGeometry(kind==='mango'?1.55:1.3,0),kind==='mango'?'#5b895e':'#739568',x,2.4,z);c.scale.y=.85;
-    for(let k=0;k<5;k++)put(new T.IcosahedronGeometry(.13,0),kind==='mango'?'#e6a341':'#f4a53d',x+Math.cos(k*1.3+i)*1.05,1.9+rnd(i,k)*.7,z+Math.sin(k*1.3+i)*1.05);}
+    for(let k=0;k<5;k++)put(new T.IcosahedronGeometry(.13,0),kind==='mango'?'#e6a341':'#f4a53d',x+Math.cos(k*1.3+i)*1.05,1.9+rnd(i,k)*.7,z+Math.sin(k*1.3+i)*1.05);}});
    obstacles.push({x,z,w:.5,d:.5});assets.push({kind:'fruit-tree',x,z,w:.5,d:.5,visualW:3.2,visualD:3.2,canopyHeight:3.4});
   });
-  for(let z=-127;z<=-116;z+=2.8){const x=687;cylinder(.16,1.8,'#8baa69',x,.9,z);for(let k=0;k<5;k++){const leaf=box(1.5,.03,.38,'#7a9e67',x+Math.cos(k*1.25)*.55,1.95,z+Math.sin(k*1.25)*.55);leaf.rotation.y=-k*1.25;leaf.rotation.z=-.35;}put(new T.IcosahedronGeometry(.2,0),'#e8d25a',x+.2,1.4,z);obstacles.push({x,z,w:.4,d:.4});}
+  for(let z=-127;z<=-116;z+=2.8){const x=687;prop('bush',()=>{cylinder(.16,1.8,'#8baa69',x,.9,z);for(let k=0;k<5;k++){const leaf=box(1.5,.03,.38,'#7a9e67',x+Math.cos(k*1.25)*.55,1.95,z+Math.sin(k*1.25)*.55);leaf.rotation.y=-k*1.25;leaf.rotation.z=-.35;}put(new T.IcosahedronGeometry(.2,0),'#e8d25a',x+.2,1.4,z);});obstacles.push({x,z,w:.4,d:.4});}
   // Pineapple patch and a melon/pumpkin patch on the ground.
   for(let x=F.pineapples.x0+.8;x<=F.pineapples.x1-.6;x+=1.2)for(let z=F.pineapples.z0+.6;z<=F.pineapples.z1-.5;z+=1.3){const b=put(new T.IcosahedronGeometry(.2,0),'#d7ad62',x,.28,z);b.scale.y=1.35;put(new T.ConeGeometry(.2,.36,5),'#5b895e',x,.66,z);}
   {let k=0;for(let x=F.melons.x0+.9;x<=F.melons.x1-.6;x+=1.8)for(let z=F.melons.z0+.8;z<=F.melons.z1-.6;z+=1.7){const melon=k++%2===0,m=put(new T.IcosahedronGeometry(melon?.42:.36,0),melon?'#4f8a4f':'#e0873a',x+rnd(k,4)*.3,melon?.25:.22,z);m.scale.set(melon?1.3:1,.75,1);put(new T.IcosahedronGeometry(.12,0),'#739568',x+.35,.12,z+.3);}}
@@ -428,7 +432,7 @@ export function buildCoralCay(t:CayTools){
    const thatch=new T.ConeGeometry(Math.SQRT1_2,1,4);thatch.rotateY(Math.PI/4);put(thatch,'#d7ad62',S.x,2.75,S.z).scale.set(S.w+1.4,1,S.d+1.8);
    sign('FRESH FROM THE FARM',S.w-.2,.42,S.x,1.62,S.z+S.d/2+.06,'#e8a33d','#294f43');box(S.w-.1,.5,.06,'#294f43',S.x,1.62,S.z+S.d/2+.02);
    obstacles.push({x:S.x,z:S.z,w:S.w,d:S.d});}
-  const crate=(x:number,z:number,fruit:string,i:number)=>{box(.8,.42,.55,'#a67d55',x,.21,z);for(let k=0;k<4;k++)put(new T.IcosahedronGeometry(.11,0),fruit,x-.24+k*.16,.46,z+(k%2?.1:-.1));assets.push({kind:'crate',x,z,w:.8,d:.55});obstacles.push({x,z,w:.8,d:.55});void i;};
+  const crate=(x:number,z:number,fruit:string,i:number)=>{prop('crate',()=>{box(.8,.42,.55,'#a67d55',x,.21,z);for(let k=0;k<4;k++)put(new T.IcosahedronGeometry(.11,0),fruit,x-.24+k*.16,.46,z+(k%2?.1:-.1));});assets.push({kind:'crate',x,z,w:.8,d:.55});obstacles.push({x,z,w:.8,d:.55});void i;};
   ['#e8d25a','#d9534a','#e6a341','#4f8a4f'].forEach((c,i)=>crate(F.stand.x-1.5+i*1,F.stand.z+1.6,c,i));
   crate(F.barn.x+7.2,F.barn.z+3,'#e8be71',9);crate(F.barn.x+7.2,F.barn.z+1.9,'#e0873a',10);
   // Scarecrow in a football shirt keeps watch over the sweet potatoes.
@@ -460,7 +464,7 @@ export function buildCoralCay(t:CayTools){
   for(const o of FARM_FENCE_OBSTACLES){if(o.w<3&&o.d<3)continue;const horizontal=o.w>=o.d,len=Math.max(o.w,o.d);for(let t=-len/2+1.4;t<len/2-1;t+=3.3){const x=o.x+(horizontal?t:0),z=o.z+(horizontal?0:t);plant(...[0,1,2].map(k=>{const r=.2+rnd(t,k)*.08;return blob(x+(horizontal?(k-1)*.3:0),.75+(k%2)*.25,z+(horizontal?0:(k-1)*.3),r,r,r,k===1?'#739568':'#c2458f');}));}}
   // Monstera and ferns under the orchard trees.
   for(const [x,z] of trees.map(([x,z])=>[x,z]) as [number,number][])plant(...[0,1].map(k=>broadLeaf(x+Math.cos(k*3+x)*1.1,z+Math.sin(k*3+x)*1.1,.55,k*3+x,k?'#3f7a4f':'#5b895e')));
-  for(const [x,z] of [[647.8,-126.2],[647.8,-115.5]] as [number,number][]){cylinder(.2,2.2,'#8a6a4a',x,1.1,z);const c=put(new T.IcosahedronGeometry(1.75,0),'#3f7a4f',x,3.1,z);c.scale.y=.9;for(let k=0;k<4;k++)put(new T.IcosahedronGeometry(.2,0),'#9cc05a',x+Math.cos(k*1.6)*1.3,2.5,z+Math.sin(k*1.6)*1.3);obstacles.push({x,z,w:.6,d:.6});assets.push({kind:'fruit-tree',x,z,w:.6,d:.6,visualW:3.5,visualD:3.5,canopyHeight:4.6});}
+  for(const [x,z] of [[647.8,-126.2],[647.8,-115.5]] as [number,number][]){prop('tree',()=>{cylinder(.2,2.2,'#8a6a4a',x,1.1,z);const c=put(new T.IcosahedronGeometry(1.75,0),'#3f7a4f',x,3.1,z);c.scale.y=.9;for(let k=0;k<4;k++)put(new T.IcosahedronGeometry(.2,0),'#9cc05a',x+Math.cos(k*1.6)*1.3,2.5,z+Math.sin(k*1.6)*1.3);});obstacles.push({x,z,w:.6,d:.6});assets.push({kind:'fruit-tree',x,z,w:.6,d:.6,visualW:3.5,visualD:3.5,canopyHeight:4.6});}
   for(const [x,z,h] of [[594,-127,6.8],[594.5,-94,5.2],[660,-96,6.2],[681,-97,4.8],[692.5,-120,5.6],[640,-86,5.4]] as [number,number,number][])palm(x,z,h);
   // Signs: the farm's name at the path gate and two short fuelling lessons (the farmers explain more).
   // Farm gateway over the track at the west fence gate (off the tan path): timber posts on the gate edges, a crossbeam
@@ -488,7 +492,7 @@ export function buildCoralCay(t:CayTools){
   for(const dx of [-4.6,4.6])box(.16,1.4,.16,'#294f43',H.x+dx,H.h+.45,H.z+H.d/2-.4);
   // Surfboards and bikes by the steps.
   ['#589aa0','#f4cc7c','#d9534a'].forEach((c,i)=>{const b=box(.6,2.2,.08,c,H.x+H.w/2-1.2-i*.8,1.1,vz+H.verandah.d/2+.5);b.rotation.x=-.2;});
-  for(let i=0;i<2;i++){const bx=H.x-H.w/2+2+i*1.4,bz=vz+H.verandah.d/2+.8;for(const dx of [-.45,.45]){const w=put(new T.TorusGeometry(.32,.04,5,12),'#294f43',bx+dx,.36,bz);w.castShadow=false;}line(V(bx-.45,.36,bz),V(bx,.8,bz),.03,i?'#d9534a':'#4a8bb0');line(V(bx,.8,bz),V(bx+.45,.36,bz),.03,i?'#d9534a':'#4a8bb0');line(V(bx-.1,.95,bz),V(bx+.25,.95,bz),.03,'#294f43');}
+  for(let i=0;i<2;i++)prop('bike',()=>{const bx=H.x-H.w/2+2+i*1.4,bz=vz+H.verandah.d/2+.8;for(const dx of [-.45,.45]){const w=put(new T.TorusGeometry(.32,.04,5,12),'#294f43',bx+dx,.36,bz);w.castShadow=false;}line(V(bx-.45,.36,bz),V(bx,.8,bz),.03,i?'#d9534a':'#4a8bb0');line(V(bx,.8,bz),V(bx+.45,.36,bz),.03,i?'#d9534a':'#4a8bb0');line(V(bx-.1,.95,bz),V(bx+.25,.95,bz),.03,'#294f43');});
   // QA11 D-1: collide only where the boards and bikes stand (the deck front has only posts). One 17 m rail across the whole front
   // walled off the verandah and left the hostel ball's pickup (behind its training bag) reachable only by sliding in sideways.
   obstacles.push({x:H.x+H.w/2-2,z:vz+H.verandah.d/2+.5,w:2.8,d:.8},{x:H.x-H.w/2+2.7,z:vz+H.verandah.d/2+.8,w:2.8,d:.9});
@@ -520,7 +524,7 @@ export function buildCoralCay(t:CayTools){
   box(.06,.6,3.2,'#eddfbb',gx+(i%2?-.8:.8),.3,h.z+1.6);obstacles.push({x:gx+(i%2?-.8:.8),z:h.z+1.6,w:.12,d:3.2});
  });
  // Kids' mini goal in the south-east yard, a ball in front of it.
- {const G=MINI_GOAL;for(const dx of [-1.1,1.1])box(.08,1,.08,'#fff1d3',G.x+dx,.5,G.z);box(2.3,.08,.08,'#fff1d3',G.x,1,G.z);for(let dx=-1;dx<=1.01;dx+=.25)box(.02,.95,.02,'#c3d1b9',G.x+dx,.5,G.z-.5).castShadow=false;
+ {const G=MINI_GOAL;prop('net',()=>{for(const dx of [-1.1,1.1])box(.08,1,.08,'#fff1d3',G.x+dx,.5,G.z);box(2.3,.08,.08,'#fff1d3',G.x,1,G.z);for(let dx=-1;dx<=1.01;dx+=.25)box(.02,.95,.02,'#c3d1b9',G.x+dx,.5,G.z-.5).castShadow=false;});
   put(new T.IcosahedronGeometry(.19,1),'#f4edd3',G.x+.3,.19,G.z+1.8);obstacles.push({x:G.x,z:G.z-.25,w:2.4,d:.7});}
  // Palms and a second washing line among the homes.
  for(const [x,z,hgt] of [[542.5,-109.5,6],[586,-117.5,5.2],[589,-107.5,6.4],[569.5,-97,4.8],[552.8,-96,5.5]] as [number,number,number][])palm(x,z,hgt);
@@ -542,8 +546,8 @@ export function buildCoralCay(t:CayTools){
  // The farm (FARM fence, plus a metre) keeps its own planting: no lawn palms or shrub clumps inside it.
  const inFarm=(x:number,z:number)=>x>FARM.fence[0].x-1.5&&x<FARM.fence[1].x+1.5&&z>FARM.fence[0].z-1.5&&z<FARM.fence[5].z+1.5;
  const inland=(x:number,z:number,margin:number)=>onCay(x,z)&&distanceToCayShore(x,z)>margin&&!inFarm(x,z)&&!inHostelArea(x,z)&&!onCourtBeach(x,z);
- for(const [x,z] of [[523,-170],[541,-168.6],[560,-168.6],[578,-172.5],[617,-186],[659,-186],[604,-140]])if(inland(x,z,14)){for(const [dx,r,c] of [[-.6,.7,'#5b895e'],[.5,.6,'#7a9e67']] as [number,number,string][]){const shrub=put(new T.IcosahedronGeometry(r,1),c,x+dx,.45,z);shrub.scale.y=.75;}obstacles.push({x,z,w:1.8,d:1.2});}
+ for(const [x,z] of [[523,-170],[541,-168.6],[560,-168.6],[578,-172.5],[617,-186],[659,-186],[604,-140]])if(inland(x,z,14)){prop('bush',()=>{for(const [dx,r,c] of [[-.6,.7,'#5b895e'],[.5,.6,'#7a9e67']] as [number,number,string][]){const shrub=put(new T.IcosahedronGeometry(r,1),c,x+dx,.45,z);shrub.scale.y=.75;}});obstacles.push({x,z,w:1.8,d:1.2});}
  [[525,-205],[543,-216],[559,-199],[585,-222],[604,-209],[619,-233],[667,-222],[686,-181],[696,-150],[673,-101],[648,-112],[620,-101],[568,-110],[548,-112],[610,-127],[531,-118],[640,-240],[700,-130],[626,-173],[646,-146],[621,-146],[636,-193],[560,-80],[620,-78]].forEach(([x,z],i)=>{if(inland(x,z,12))palm(x,z,5.4+jitter(i,9)*1.4);});
- for(const [x,z] of [[537,-200],[577,-205],[612,-218],[681,-160],[660,-104],[577,-120],[540,-124]])if(inland(x,z,12)){for(let k=0;k<3;k++){const shrub=put(new T.IcosahedronGeometry(.55+k*.12,1),k%2?'#7a9e67':'#5b895e',x+(k-1)*.9,.4,z+(k%2)*.5);shrub.scale.y=.75;}obstacles.push({x,z:z+.25,w:3,d:1.4});}
+ for(const [x,z] of [[537,-200],[577,-205],[612,-218],[681,-160],[660,-104],[577,-120],[540,-124]])if(inland(x,z,12)){prop('bush',()=>{for(let k=0;k<3;k++){const shrub=put(new T.IcosahedronGeometry(.55+k*.12,1),k%2?'#7a9e67':'#5b895e',x+(k-1)*.9,.4,z+(k%2)*.5);shrub.scale.y=.75;}});obstacles.push({x,z:z+.25,w:3,d:1.4});}
  return {lampSites,farmDecor,destinations:[{name:'Coral Cay Plaza',x:CAY_PLAZA.x,z:CAY_PLAZA.z+8},{name:'Beach Soccer Court',x:BEACH_COURT.x,z:BEACH_COURT.z+BEACH_COURT.width/2+2},{name:'Sharks Beach',x:SHARKS_BEACH.x,z:SHARKS_BEACH.z+8},{name:'Coral Cay Farm',x:FARM.crops.x0-1.5,z:FARM.track.z},{name:'Coral Cay Hostel',x:HOSTEL.x,z:HOSTEL_PATHS[0][1]},{name:'Hostel homes',x:HOSTEL_PATHS[2][0],z:-104},{name:'Farm beach gate',x:FARM.beachTrack.x,z:FARM.beachTrack.z1+1},...SANDBARS.map(s=>({name:s.name,x:s.x,z:s.z}))]};
 }

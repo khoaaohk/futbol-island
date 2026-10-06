@@ -25,8 +25,12 @@ export default function IslandQuests({onDiscover,onExplore,onCards,exploration=f
  useEffect(()=>{if(howOpen)return;const t=setTimeout(unlockGuide,matchMedia('(prefers-reduced-motion: reduce)').matches?0:320);return ()=>clearTimeout(t);},[howOpen]);
  useEffect(()=>{addEventListener('resize',unlockGuide);return ()=>removeEventListener('resize',unlockGuide);},[]);
  const items=useExploreChecklist(),doneCount=items.filter(item=>item.complete).length;
+ // Oct 4 2026 (user, clear path): Paths' landing card ("Start here" / "Up next") and the Warm-up row render in this slot ABOVE the
+ // hero art (QuestLearningPath portals them here), so the next lesson is above the fold on a phone and after "Back to Paths".
+ const [landingSlot,setLandingSlot]=useState<HTMLDivElement|null>(null);
  return <div className={styles.content}>
  {!exploration?<>
+ <div ref={setLandingSlot} className={journey.landingSlot}/>
  <section ref={arrivalRef} className={journey.arrival} aria-label="Your island journey">
  <div className={journey.arrivalCopy}><h3>Have fun.<br/>Explore your island.</h3></div>
  <JourneyArrivalArt className={journey.arrivalArt}/>
@@ -34,7 +38,7 @@ export default function IslandQuests({onDiscover,onExplore,onCards,exploration=f
  </section>
  <section className={journey.basecamp} aria-label="Island side quests"><div className={`${styles.pathSummaries} ${journey.sideQuests}`}>{onCards&&<CardsSummary onCards={onCards}/>}<BallHuntSummary onDiscover={onDiscover}/>
  <button type="button" className={styles.explorationSummary} onClick={onExplore} aria-haspopup="dialog"><span><strong>Explore</strong></span><span className={styles.explorationArrow}><Icon name="arrow" size={24}/></span><small>{doneCount} / {EXPLORE_ITEMS.length} <span data-count-word="">completed</span></small></button></div></section>
- <QuestLearningPath/>
+ <QuestLearningPath landingSlot={landingSlot}/>
  </>:<section className={styles.exploreChecklist} aria-label="Explore checklist">
   <h3 className={styles.exploreTitle}>Your island checklist</h3>
   <div className={styles.exploreIntro}><p>Activities check off automatically as you complete them.</p><strong>{doneCount} / {EXPLORE_ITEMS.length} completed</strong></div>

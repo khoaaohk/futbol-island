@@ -27,9 +27,10 @@ const views=[['phone-portrait',{width:390,height:844},true],['phone-landscape',{
    slots:[...document.querySelectorAll('[data-vending-item]')].map(b=>{const r=b.getBoundingClientRect();return b.dataset.vendingItem+' '+Math.round(r.width)+'x'+Math.round(r.height);}),
    small:[...document.querySelectorAll('[data-vending-machine] *')].filter(el=>[...el.childNodes].some(n=>n.nodeType===3&&n.textContent.trim())&&el.getClientRects().length&&getComputedStyle(el).visibility!=='hidden'&&parseFloat(getComputedStyle(el).fontSize)<12).map(el=>el.className+':'+el.textContent.slice(0,20)+':'+getComputedStyle(el).fontSize),
    smallButtons:[...document.querySelectorAll('[data-vending-machine] button')].filter(b=>b.getClientRects().length).map(b=>{const r=b.getBoundingClientRect();return [b.getAttribute('aria-label')||b.textContent.trim().slice(0,20),Math.round(r.width),Math.round(r.height)];}).filter(([,w,h])=>w<44||h<44)}));
-  // Sep 30 2026: coins pill top-left, Done top-right (same 18/16 phone, 24/20 desktop anchors, mirrored).
-  const done=await page.getByRole('button',{name:'Done',exact:true}).boundingBox(),inset=viewport.width<=600?18:24;
-  if(!done||Math.abs(viewport.width-(done.x+done.width)-inset)>1||Math.abs(done.y-(viewport.width<=600?16:20))>1)throw Error('Done button does not match the shared screen anchor: '+JSON.stringify(done));
+  // Sep 30 2026: coins pill top-left, Done top-right (same 18/16 phone, 24/20 desktop anchors, mirrored). Phone anchors apply to touch
+  // screens of any width too (VendingMachine.module.css: @media (max-width:600px),(pointer:coarse)), e.g. a landscape phone.
+  const phone=viewport.width<=600||mobile,done=await page.getByRole('button',{name:'Done',exact:true}).boundingBox(),inset=phone?18:24;
+  if(!done||Math.abs(viewport.width-(done.x+done.width)-inset)>1||Math.abs(done.y-(phone?16:20))>1)throw Error('Done button does not match the shared screen anchor: '+JSON.stringify(done));
   const pill=await page.locator('[data-vending-coins]').boundingBox();if(!pill||pill.x>inset+8||pill.x+pill.width>viewport.width/2)throw Error('coins pill is not top-left: '+JSON.stringify(pill));
   console.log(JSON.stringify(info));
   if(info.small.length||info.smallButtons.length)throw Error('Vending readability bounds failed');

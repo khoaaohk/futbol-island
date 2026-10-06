@@ -10,7 +10,7 @@ export function createFlightTrail(){
  const ringMaterial=new T.MeshBasicMaterial({color:'#c69bff',transparent:true,opacity:.4,depthWrite:false});
  const streaks=new T.InstancedMesh(streakGeometry,streakMaterial,64),rings=new T.InstancedMesh(ringGeometry,ringMaterial,64);
  streaks.name='flying-car-trail';rings.name='helicopter-wake';root.add(streaks,rings);
- for(const mesh of [streaks,rings]){mesh.count=0;mesh.frustumCulled=false;mesh.instanceMatrix.setUsage(T.DynamicDrawUsage);}
+ for(const mesh of [streaks,rings]){mesh.count=0;mesh.visible=false;/* heat pass 6: no empty instanced draw before the first flight */mesh.frustumCulled=false;mesh.instanceMatrix.setUsage(T.DynamicDrawUsage);}
  const pool=Array.from({length:64},()=>({x:0,y:0,z:0,yaw:0,age:2,life:0,boost:false})),dummy=new T.Object3D();
  let cursor=0,credit=0,lastX=NaN,lastY=0,lastZ=NaN,lastKind='';
  return {root,update(x:number,y:number,z:number,yaw:number,speed:number,dt:number,kind:string,enabled:boolean,boost:boolean,reduced:boolean,up=false){

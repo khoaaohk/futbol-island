@@ -18,3 +18,7 @@ __pycache__/
 /test-results/
 /playwright-report/
 /shots/
+
+# scratch output (audit maps, screenshots)
+/audit/
+/var-shots/

@@ -72,3 +72,5 @@
 .art.ballArt{overflow:hidden;padding:0}
 .art.ballArt img{width:100%;height:100%;object-fit:cover;scale:1.9;object-position:center 48%}
 @media(max-width:380px){.pathLink{width:16px}.stop{width:46px;height:46px}}
+/* Oct 4 2026 (clear path): the last step's button names the first lesson ("Start lesson 1"), so its column grows to fit. */
+.dialog .card>.footer[data-first-step]{grid-template-columns:76px minmax(0,1fr) auto}

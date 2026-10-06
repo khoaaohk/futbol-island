@@ -20,11 +20,14 @@ import ui from './FormatPaths.module.css';
 import journey from './IslandJourney.module.css';
 const StoryModal=dynamic(()=>import('./PathStoryModal'),{ssr:false});
 import pathArt from '@/lib/paths/pathArt.json';
+import PathWarmUpRow from './PathWarmUpRow';
 const LAST_OPENED_KEY=PATH_LAST_OPENED_KEY;
 // Chapter island inks: paper fill, a darker same-hue halftone, and a second ink printed slightly out of register.
 const ISLAND_INKS=[{fill:'#f4d57a',dots:'#c9a032',echo:'#ff48b0'},{fill:'#8ec6a1',dots:'#3f8f66',echo:'#0078bf'},{fill:'#f0b1cc',dots:'#d56d9c',echo:'#0078bf'},{fill:'#edb676',dots:'#c8813a',echo:'#22366b'}];
 function StopIcon({kind}:{kind:string}){return <svg viewBox="0 0 24 24" width="29" height="29" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{kind==='lock'?<><rect x="5" y="10" width="14" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 15v2"/></>:kind==='story'?<><path d="M3 4h7l2 2 2-2h7v15h-7l-2 2-2-2H3zM12 6v15"/><path d="M6 9h3m6 0h3M6 13h3m6 0h3"/></>:kind==='check'?<path d="m5 12 4 4L19 6"/>:kind==='play'?<path d="m9 5 10 7-10 7z" fill="currentColor"/>:kind==='support'?<><circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="m8 8 8 8m-5 0h5v-5"/></>:kind==='arrows'?<><path d="M4 18V6h6m-4-3 4 3-4 3M20 6v12h-6m4-3-4 3 4 3"/></>:kind==='ball'?<><circle cx="12" cy="12" r="9"/><path d="m12 7 5 4-2 6H9l-2-6zM12 3v4m9 5-4-1M7 11l-4 1m3 7 3-2m6 0 3 2"/></>:<path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.9z"/>}</svg>;}
-export default function QuestLearningPath(){
+/** `landingSlot` (Oct 4 2026, clear path): Paths' top slot above the hero art; the landing card and the Warm-up row render there so
+ * "Up next" is the first thing on a phone (390×844) and "Back to Paths" after a quiz lands on the next lesson. */
+export default function QuestLearningPath({landingSlot}:{landingSlot?:HTMLElement|null}={}){
  const [upcoming,setUpcoming]=useState<UpcomingStoryData|null>(null);
  const [optionalDone,setOptionalDone]=useState<string[]>([]);
  const root=useRef<HTMLElement>(null),[host,setHost]=useState<HTMLElement|null>(null);
@@ -103,13 +106,10 @@ export default function QuestLearningPath(){
  const finishedPaths=FORMAT_PATHS.filter(p=>p.chapters.flatMap(c=>c.lessons).every(l=>lessonEvidence(p.format,l,steps,answers).complete)).length;
  const launch=(lesson:PathLesson,replay=false)=>{endLearningPreview();const s=status(lesson);const remembered={...lastOpened,[path.format]:lesson.id};setLastOpened(remembered);try{localStorage.setItem(LAST_OPENED_KEY,JSON.stringify(remembered));}catch{}window.dispatchEvent(new CustomEvent(FORMAT_PATH_LAUNCH,{detail:{format:path.format,lessonId:lesson.id,step:replay?0:s.step,quiz:!replay&&s.quiz,question:replay?0:s.question,nonce:Date.now()}}));};
  const openStory=(id:StoryId,node:HTMLButtonElement)=>{const rect=node.getBoundingClientRect();storyOrigin.current={x:rect.x+rect.width/2,y:rect.y+rect.height/2,size:rect.width,height:rect.height,radius:getComputedStyle(node).borderRadius,color:getComputedStyle(node).backgroundColor};setStory(id);};
- const opening=path.openingStory&&!storyDone.includes(path.openingStory)?path.openingStory:null;
  // Landing card (G-12, Sep 30 2026): Continue always targets a REQUIRED starter lesson (lib/paths/pathContinue.ts); an unwatched
- // opening story is offered beside it as an optional chip, and a finished path points at the next path.
+ // opening story is an optional stop on the map (Oct 4 2026), and a finished path points at the next path.
  const target=pathContinue(path,steps,answers,lastOpened[path.format]),resumeLesson=target.kind==='lesson'?target.lesson:undefined;
  const untouched=target.kind==='lesson'&&target.label==='Start here';
- const openingTitle=opening?(opening==='grit'?'Grit':STORY_CARDS.find(card=>card.id===opening)?.skill??'Story'):null;
- const openingStoryTitle=opening?STORY_CARDS.find(card=>card.id===opening)?.title.replace(/\.$/,'')??openingTitle:null;
  const nextTitle=target.kind==='complete'&&target.next?FORMAT_PATHS.find(p=>p.format===target.next)?.title??target.next:null;
  // Optional stories sit after these lesson indexes: three stories at 3/7/11, four spread evenly across the twelve stops.
  const slots=(UPCOMING_STORIES[format]?.length??0)>=4?[2,5,8,11]:[3,7,11];
@@ -120,16 +120,17 @@ export default function QuestLearningPath(){
  placeBetweenStops(stops,path.chapters.map(c=>c.lessons[c.lessons.length-1].id));
  const height=stops[stops.length-1].y+210;
  return <section ref={root} className={`${styles.learningPath} ${journey.journey}`} aria-label="Format learning paths" onTouchStart={swipeStart} onTouchEnd={swipeEnd} onTouchCancel={()=>{swipe.current=null;}} onClickCapture={e=>{if(performance.now()<suppressClickUntil.current){e.preventDefault();e.stopPropagation();}}}>
- <div className={`${ui.overview} ${journey.bearing} ${journey.landing}`}>
+ {(()=>{const landing=<><div className={`${ui.overview} ${journey.bearing} ${journey.landing}`} data-path-landing>
  <div className={journey.landingHead}><span className={journey.eyebrow}>{untouched?'YOUR FIRST LANDING':'WHERE YOU LEFT OFF'}</span><h3>{path.title} Pitch</h3></div>
  <div className={journey.landingNext}>
   <div className={journey.landingProgress}><strong>{completed} / {core.length} starter lessons complete</strong><progress value={completed} max={core.length} aria-label={`${path.title} starter progress`}/></div>
-  {/* Oct 1 2026 (user): the card shows ONE step. A brand-new player starts with the path's opening story (7v7: "When the game
-      feels unfair"), then lesson 1; everyone else sees only where they left off (no optional story beside it). */}
-  {untouched&&opening&&openingStoryTitle?<button type="button" data-path-continue data-path-opening-story onClick={event=>openStory(opening,event.currentTarget)}><span className={journey.continueLabel}>Start here</span><span className={journey.continueTitle}>{openingStoryTitle}</span></button>
-  :resumeLesson&&target.kind==='lesson'?<button type="button" data-path-continue onClick={()=>launch(resumeLesson)}><span className={journey.continueLabel}>{target.label}</span><span className={journey.continueTitle}>{target.index+1}. {resumeLesson.name}</span></button>:nextTitle?<button type="button" data-path-continue onClick={()=>{const n=target.kind==='complete'?target.next:null;if(n)chooseFormat(n);}}><span className={journey.continueLabel}>Path complete! Next path</span><span className={journey.continueTitle}>Try {nextTitle}</span></button>:<p role="status">Every starter path is complete! Go deeper below or replay any stop.</p>}
+  {/* Oct 4 2026 (user, clear path; reverses the Oct 1 story-first card): the card shows ONE step, and a brand-new player's
+      "Start here" is lesson 1, the same step onboarding and the HUD pitch card point at. The opening story (7v7: "When the game
+      feels unfair", written for about 12 and up) stays on the map as an optional stop. */}
+  {resumeLesson&&target.kind==='lesson'?<button type="button" data-path-continue onClick={()=>launch(resumeLesson)}><span className={journey.continueLabel}>{target.label}</span><span className={journey.continueTitle}>{target.index+1}. {resumeLesson.name}</span></button>:nextTitle?<button type="button" data-path-continue onClick={()=>{const n=target.kind==='complete'?target.next:null;if(n)chooseFormat(n);}}><span className={journey.continueLabel}>Path complete! Next path</span><span className={journey.continueTitle}>Try {nextTitle}</span></button>:<p role="status">Every starter path is complete! Go deeper below or replay any stop.</p>}
  </div></div>
- {/* Oct 1 2026 (user): the Review / Warm up card is removed from Paths. */}
+ {/* Oct 4 2026 (user, clear path): a small, calm Warm-up row is back near the top (the Oct 1 removal left the warm-up unreachable). */}
+ <PathWarmUpRow/></>;return landingSlot?createPortal(landing,landingSlot):landing;})()}
  <div className={journey.sectionLabel}><span>02 / CHOOSE YOUR PATH</span><p>Four paths. One island.</p></div>
  <div ref={sentinel} className={journey.dockSentinel} aria-hidden="true"/>
  <div ref={dock} className={journey.pathDock}><div className={`${ui.tabs} ${journey.coasts}`} style={{'--format-index':PATHS_IN_ORDER.findIndex(p=>p.format===format)} as CSSProperties} role="group" aria-label="Choose a format"><span className={ui.tabHighlight} aria-hidden="true"/>{PATHS_IN_ORDER.map((p,i)=><button key={p.format} type="button" aria-pressed={format===p.format} onClick={()=>chooseFormat(p.format)}><span className={journey.coastArt} aria-hidden="true"><i/><b>{String(i+1).padStart(2,'0')}</b></span><strong>{p.title}</strong></button>)}</div></div>

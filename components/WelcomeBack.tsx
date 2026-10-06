@@ -1,6 +1,8 @@
 'use client';
 import {useEffect,useState} from 'react';
-import {checkWelcomeBack,markWelcomeBackSeen,WELCOME_BACK_SHOW_MS} from '@/lib/town/welcomeBack';
+import {checkWelcomeBack,markWelcomeBackSeen,welcomeBackLine,WELCOME_BACK_SHOW_MS} from '@/lib/town/welcomeBack';
+import {useGraduations} from '@/lib/endgame/graduationStore';
+import {ferryUnlocked,finaleComplete} from '@/lib/endgame/graduationModel';
 import {suggestedNextStep} from '@/lib/paths/pathContinue';
 import {FORMAT_PATHS} from '@/lib/paths/formatPaths';
 import {useQuestEvidence} from '@/lib/town/questProgress';
@@ -21,7 +23,7 @@ let decided:boolean|null=null,shown=false;
 const welcomeDwellMs=()=>{if(process.env.NODE_ENV!=='production'&&typeof window!=='undefined'){const v=(window as unknown as {__fi2WelcomeMs?:number}).__fi2WelcomeMs;if(typeof v==='number'&&v>0)return v;}return WELCOME_BACK_SHOW_MS;};
 export default function WelcomeBack({blocked,held=false}:{blocked:boolean;held?:boolean}){
  const [due,setDue]=useState(false),[open,setOpen]=useState(false);
- const evidence=useQuestEvidence(),answers=useQuizCompletions();
+ const evidence=useQuestEvidence(),answers=useQuizCompletions(),graduations=useGraduations();
  // Decided once per page load (the module-level `decided` makes React's dev double effect a no-op). Today is recorded only when
  // the card actually shows, so a day it stayed blocked is offered again on the next load (bug audit B14).
  useEffect(()=>{if(decided===null){let storage:Storage|null=null;try{storage=localStorage;}catch{}decided=checkWelcomeBack(storage);}if(decided&&!shown)setDue(true);},[]);
@@ -34,7 +36,7 @@ export default function WelcomeBack({blocked,held=false}:{blocked:boolean;held?:
  const title=target.kind==='lesson'?`${FORMAT_PATHS.find(p=>p.format===target.format)?.title??target.format} · ${target.index+1}. ${target.lesson.name}`:null;
  return <HudSlot><button type="button" className={`${toast.toast} ${styles.card}`} role="status" data-hud-slot="guide" data-welcome-back onClick={()=>setOpen(false)}>
   <b>Welcome back!</b>
-  {title?<span>Next up: {title}</span>:<span>Every starter path is done. Replay a favourite or go deeper!</span>}
+  <span>{welcomeBackLine(title,ferryUnlocked(graduations),finaleComplete(graduations))}</span>
   <span className={styles.note}>Walk, ride or fly for {DAILY_PLAY_SECONDS} seconds today for a {DAILY_PLAY_COINS}-coin bonus.</span>
  </button></HudSlot>;
 }

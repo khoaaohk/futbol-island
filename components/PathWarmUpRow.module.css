@@ -1,0 +1,14 @@
+/* Paths → Warm-up row (Oct 4 2026): a slim cream riso row under the landing card. Calm colours only (gold count, green tick). */
+.row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;width:100%;box-sizing:border-box;margin:12px 0 0;padding:10px 14px;border:2px solid #fff2cd;border-radius:18px 26px 18px 18px;background:#fff0cc var(--btn-grain) center/160px;background-blend-mode:soft-light;color:#244d40;font:inherit;text-align:left;cursor:pointer;box-shadow:0 4px 0 #173e3726;transition:translate 160ms ease,box-shadow 160ms ease}
+.row:active{translate:0 3px;box-shadow:0 1px 0 #173e3733}
+.row:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:var(--btn-focus-offset,3px)}
+@media(hover:hover) and (pointer:fine){.row:hover{translate:0 -2px;box-shadow:0 6px 0 #173e3733}}
+.badge{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;font-weight:800;font-size:16px;background:#e6e5d0;color:#3f6a5a}
+.badge[data-kind='due']{background:var(--btn-gold,#e9c16b);color:#244d40;box-shadow:inset 0 0 0 2px #fff2cd}
+.badge[data-kind='caught-up']{background:#cfe3d3;color:#2f6b52}
+.copy{display:grid;gap:1px;min-width:0}
+.eyebrow{font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#61705b}
+.copy strong{font-size:15px;line-height:1.25}
+.copy small{font-size:12px;line-height:1.35;color:#4d5d49}
+.arrow{display:grid;place-items:center;color:#244d40;opacity:.8}
+@media(prefers-reduced-motion:reduce){.row{transition:none}.row:hover,.row:active{translate:none}}

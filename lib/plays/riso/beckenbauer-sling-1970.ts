@@ -47,6 +47,7 @@
  * sheet (never sheet.safe) for card windows from 1.45:1 to square. Actions are timed from the chapter cues, so the recorded voice (withTiming)
  * re-times the drawing. Scenes read only their local time t. Every random value is seeded. */
 import {withTiming,type NarrationTiming} from './timing';
+import {beats,shotAt,reframe,steady,near,type Subject,type Pin} from './director';
 import type {Sheet} from '../../paths/riso/sheet';
 import {type RisoStory,type Scene,type Chapter,playChapters} from '../../paths/riso/story';
 import {apertureDisc} from '../../paths/riso/passage';
@@ -347,8 +348,20 @@ function drawPlay(s:Sheet,T:number,c:Cam,o:{ballScale?:number;only?:string[];ski
  * and runs, head up, past Mullery, the shot, goal, the arms go up. */
 const MAIN_CAM:V3=[66,24,-42];
 const t1=(t:number)=>{const q=Q(0),S=SECS(0);return warp(t,[[0,-3.6],[q[2],T_REB-.1],[q[3],T_GET+.35],[q[4],2.2],[q[6],T_KNOCK],[q[7]+.1,T_SHOT],[S,T_SHOT+2.5]]);};
-const cam1=(t:number)=>{const T=t1(t),b=ballAt(Math.max(-3.6,T-.35)),tx=clamp(b[0]+2,52,96),tz=lerp(24,29,sm(3,6,T)),F=lerp(6400,8000,sm(1,5.4,T,easeInOutSine));
- return camAt(MAIN_CAM,[tx,0,tz],F);};
+const cam1Authored=(t:number):Pin=>{const T=t1(t),b=ballAt(Math.max(-3.6,T-.35)),tx=clamp(b[0]+2,52,96),tz=lerp(24,29,sm(3,6,T)),F=lerp(6400,8000,sm(1,5.4,T,easeInOutSine));
+ return{eye:MAIN_CAM,target:[tx,0,tz],F};};
+/** the window in this film's camera units (frame(): ~1500 × 1030 at z = 1) */
+const DV={w:1500,h:1030};
+const g3=(p:number[]):[number,number,number]=>[p[0],0,p[1]];
+/** Director (lib/plays/riso/director.ts): the ball and whoever is on it, blending onto Beckenbauer as he wins it; Mullery (the man he
+ * runs past) and Bonetti (the keeper he beats) stay in frame as they come near */
+function subjAt(T:number):Subject{const f=g3(trackAt(FRANZ_KEYS,T)),b=ballAt(T),u=sm(T_REB-.5,T_GET+.3,T,easeInOutSine),
+  h:[number,number,number]=[lerp(b[0],f[0],u),0,lerp(b[2],f[2],u)];
+ return{hero:h,ball:b,height:1.8*FIG,keep:near(h,[g3(trackAt(MULLERY_KEYS,T)),g3(trackAt(BONETTI_KEYS,T))],3.5,7,1.8*FIG)};}
+/** Live: a short establishing wide of the Azteca, then follow the loose ball and Beckenbauer as he takes it; pull out for the run into
+ * the open grass (the space he sees with his head up is the lesson); tight as he goes past Mullery and shoots; the reaction. */
+const B1=beats([[0,'wide'],[1,'follow'],[Q(0)[4]-.2,{from:'space',size:.28}],[Q(0)[6]-.4,'tight'],[Q(0)[7]+.4,'reaction']]);
+const cam1=(t:number)=>{const r=steady(t,u=>reframe(cam1Authored(u),subjAt(t1(u)),shotAt(u,B1),DV));return camAt(r.eye,r.target,r.F);};
 const ch1:Scene={
  draw(s,t){frame(s);drawPlay(s,t1(twos(t)),cam1(t),{wide:true});frame(s);},
  aperture(t){const p=P3(ballAt(t1(twos(t))),cam1(t));return apertureDisc(p[0],p[1],Math.max(6,.25*p[2]),12);},
@@ -367,8 +380,12 @@ const ch2:Scene={
 /** 3 · the second replay, from high behind England's goal: round Mullery, the low right-foot cross-shot, under Bonetti, the far corner. */
 const BEHIND:V3=[119,9,37];
 const t3=(t:number)=>{const q=Q(2),S=SECS(2);return warp(t,[[0,T_KNOCK+.3],[q[1],T_SHOT],[q[2]+.35,T_UNDER],[q[3],T_LINE+.2],[S,T_LINE+1.1]]);};
-const cam3=(t:number)=>{const T=t3(t),b=ballAt(T),u=sm(T_SHOT,T_LINE,T,easeInOutSine),tx=lerp(90,101.5,u),tz=lerp(24,33.5,u),F=lerp(3600,3000,u);
- return camAt(BEHIND,[lerp(tx,b[0],.25),.7,lerp(tz,b[2],.25)],F);};
+const cam3Authored=(t:number):Pin=>{const T=t3(t),b=ballAt(T),u=sm(T_SHOT,T_LINE,T,easeInOutSine),tx=lerp(90,101.5,u),tz=lerp(24,33.5,u),F=lerp(3600,3000,u);
+ return{eye:BEHIND,target:[lerp(tx,b[0],.25),.7,lerp(tz,b[2],.25)],F};};
+/** Behind the goal: tight on the low right-foot shot with Bonetti in frame (under the diving keeper is the lesson), then the authored
+ * wide as the ball rolls into the far corner. */
+const B3=beats([[0,'follow'],[Q(2)[1]-.45,'tight'],[Q(2)[2]-.55,'wide']]);
+const cam3=(t:number)=>{const r=steady(t,u=>reframe(cam3Authored(u),subjAt(t3(u)),shotAt(u,B3),DV));return camAt(r.eye,r.target,r.F);};
 const ch3:Scene={
  draw(s,t){frame(s);drawPlay(s,t3(twos(t)),cam3(t),{ballScale:1.6});frame(s);},
  aperture(t){const p=P3(ballAt(t3(twos(t))),cam3(t));return apertureDisc(p[0],p[1],Math.max(8,.2*p[2]),12);},

@@ -60,6 +60,7 @@
  .game[data-arcade-kind=tennis] .tennisActions [data-tennis-action=scissor]{grid-column:2;grid-row:2}
  .game[data-arcade-kind=tennis] .tennisActions [data-tennis-action=lob]{grid-column:1;grid-row:3}
  .game[data-arcade-kind=tennis] .tennisActions [data-tennis-action=drop]{grid-column:2;grid-row:3}
+ .game[data-arcade-kind=tennis] .tennisActions [data-tennis-action=trap]{grid-column:1;grid-row:1}
  .game[data-arcade-kind=tennis] .message{bottom:calc(174px + env(safe-area-inset-bottom,0px));left:18px;transform:none;max-width:calc(100% - 182px);font-size:10px;padding:7px 9px}
 }
 @media(max-width:350px){
@@ -78,13 +79,14 @@
 /* Desktop mirrors the island's 72px action strip, 12px spacing and corner anchor.
    Explicit tracks prevent the former 44px rows overlapping round 58px faces. */
 @media(min-width:601px) and (pointer:fine){
- .game[data-arcade-kind=tennis] .tennisActions{position:fixed;right:calc(24px + env(safe-area-inset-right,0px));bottom:24px;width:auto;grid-template-columns:repeat(5,72px);grid-template-rows:72px;gap:12px;pointer-events:auto}
+ .game[data-arcade-kind=tennis] .tennisActions{position:fixed;right:calc(24px + env(safe-area-inset-right,0px));bottom:24px;width:auto;grid-template-columns:repeat(5,72px);grid-auto-columns:72px;grid-template-rows:72px;gap:12px;pointer-events:auto}
  .game[data-arcade-kind=tennis] .tennisActions button{width:72px;height:72px;min-width:72px;min-height:72px;padding:4px;font-size:12px;border-radius:50%;grid-row:1}
  .game[data-arcade-kind=tennis] .tennisActions [data-tennis-action=header]{grid-column:1}
  .game[data-arcade-kind=tennis] .tennisActions [data-tennis-action=scissor]{grid-column:2}
  .game[data-arcade-kind=tennis] .tennisActions [data-tennis-action=lob]{grid-column:3}
  .game[data-arcade-kind=tennis] .tennisActions [data-tennis-action=drop]{grid-column:4}
  .game[data-arcade-kind=tennis] .tennisActions [data-tennis-action=kick]{grid-column:5;grid-row:1;font-size:14px}
+ .game[data-arcade-kind=tennis] .tennisActions [data-tennis-action=trap]{grid-column:6}
 }
 
 
@@ -102,7 +104,7 @@
 .game[data-arcade-kind=tennis] .tennisActions [data-tennis-action=header]{background:#21334b;color:#ddf6ff;border-color:#8bcbff;box-shadow:0 4px 0 #121a2c}
 
 @media(max-height:520px){.game .header>.headerScore{display:flex}}
-.game[data-arcade-kind=tennis] .tennisActions [data-tennis-action=lob],.game[data-arcade-kind=tennis] .tennisActions [data-tennis-action=drop]{background:#18333f;color:#e9fbff;border-color:#88ffef;box-shadow:0 4px 0 #101729,0 0 12px #64ffee22}
+.game[data-arcade-kind=tennis] .tennisActions [data-tennis-action=lob],.game[data-arcade-kind=tennis] .tennisActions [data-tennis-action=drop],.game[data-arcade-kind=tennis] .tennisActions [data-tennis-action=trap]{background:#18333f;color:#e9fbff;border-color:#88ffef;box-shadow:0 4px 0 #101729,0 0 12px #64ffee22}
 .game[data-arcade-kind=runner] .actions button:last-child{background:#402340;color:#ffe5f6;border-color:#ff83d3;box-shadow:0 4px 0 #1c142b,0 0 12px #ff62c22b}
 
 /* Desktop scoreboards hug their contents instead of stretching across the header grid. */
@@ -127,3 +129,8 @@
 
 /* A steady timing rim uses the existing control; no pulsing animation loop. */
 .game[data-arcade-kind=pinball] .controls>button[data-ready=true]{outline:3px solid #effff8;outline-offset:4px}
+/* Breakaway Run: Skill button (named live by the HUD) and the mission card. */
+.game[data-arcade-kind=runner] .actions button[data-runner-skill]{--control-paper:#bfe7a6;--control-base:#78a55f;font-size:12px;line-height:1.1;white-space:normal;word-break:break-word}
+.game[data-arcade-kind=runner] .actions button[data-runner-skill][data-ready]{--control-paper:#fff1a8;--control-base:#b99b2f;box-shadow:0 5px 0 var(--control-base),0 0 0 4px #fff2cd80,0 0 14px #ffe36b}
+@media(max-width:600px){.game[data-arcade-kind=runner] .actions button:not(:last-child){width:52px;min-width:52px;height:52px;min-height:52px;padding:4px;font-size:11px}.game[data-arcade-kind=runner] .actions{gap:7px}}
+@media(prefers-reduced-motion:reduce){.game[data-arcade-kind=runner] .actions button[data-runner-skill][data-ready]{box-shadow:0 5px 0 var(--control-base),0 0 0 4px #fff2cd80}}

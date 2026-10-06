@@ -85,7 +85,137 @@ function drawDrinkFront(c:C,a:DrinkArt,x:number,y:number,h:number,only?:DrinkLay
   const g=(gx:number,gy:number,gr:number)=>{c.fillStyle='#ffffff';c.fillRect(gx-gr,gy-.5,gr*2,1);c.fillRect(gx-.5,gy-gr,1,gr*2);};g(x+w*.6,top+H*.14,h*.06);g(L-w*.08,y-H*.5,h*.04);}
  c.restore();
 }
-export function drawDrink(c:C,a:DrinkArt,x:number,y:number,h:number,only?:DrinkLayer,view:DrinkView='iso'){
+/**
+ * The CAMERA mode (user, Oct 5 2026: "fix the perspective of the bottles. doesn't match with the machine perspective"). In the
+ * vending close-up each drink is a picture plane standing on its shelf slab, turned (yaw only, like a billboard) to face the zoom
+ * camera, so the picture must show the package as seen from that camera: `yaw` (degrees, camera to the right of the product > 0)
+ * and `pitch` (degrees, camera above > 0), from VendingMachines.productView. Every point of the 3D package (X right, Y up, Z toward
+ * the glass, base centre at the origin) is projected along the view direction onto the upright picture plane:
+ *   u = X·cos(yaw) − Z·sin(yaw),  v = Y − tan(pitch)·(X·sin(yaw) + Z·cos(yaw))
+ * so caps, shoulders and bases are ellipses of the camera's openness, the label band and its word wrap around the cylinder and turn
+ * away with the yaw (the front of the label slides toward the side away from the camera, letters narrowing as they go), and the
+ * carton shows the side face that faces the camera. Base centre (0,0,0) lands at (x, y). Painted once; deterministic.
+ */
+export type DrinkCamera={yaw:number;pitch:number};
+const isCamera=(v:DrinkView|DrinkCamera):v is DrinkCamera=>typeof v==='object'&&v!==null;
+/** Lathe profiles (Y as a fraction of H, radius as a fraction of R) shared by the silhouette and the rings. */
+const PROFILE={
+ bottle:[[0,.92],[.03,1],[.62,1],[.67,.95],[.72,.82],[.77,.62],[.81,.44],[.88,.42]],
+ can:[[0,.86],[.04,1],[.94,1],[1,.88]],
+} as const;
+function drawDrinkCamera(c:C,a:DrinkArt,x:number,y:number,h:number,only:DrinkLayer|undefined,view:DrinkCamera){
+ const show=(l:DrinkLayer)=>!only||only===l,lim=(v:number,m:number)=>Math.max(-m,Math.min(m,v));
+ const yaw=lim(view.yaw,70)*Math.PI/180,pitch=lim(view.pitch,60)*Math.PI/180,cy=Math.cos(yaw),sy=Math.sin(yaw),tp=Math.tan(pitch),lw=Math.max(.8,h*.012);
+ const P=(X:number,Y:number,Z:number):[number,number]=>[x+X*cy-Z*sy,y-(Y-tp*(X*sy+Z*cy))];
+ // A horizontal ring (radius r at height Y): its image is an ellipse (rx r, ry r·tan pitch) centred at the projected axis point.
+ // Its half facing the camera is the lower half seen from above (pitch > 0) and the upper half seen from below.
+ const ry=(r:number)=>Math.max(.35,r*Math.abs(tp)),down=tp>=0,
+  half=(ex:number,ey:number,r:number,ltr:boolean)=>{const q=ry(r);if(down){if(ltr)c.ellipse(ex,ey,r,q,0,Math.PI,0,true);else c.ellipse(ex,ey,r,q,0,0,Math.PI);}else if(ltr)c.ellipse(ex,ey,r,q,0,Math.PI,Math.PI*2);else c.ellipse(ex,ey,r,q,0,Math.PI*2,Math.PI,true);},
+  near=(Y:number,r:number)=>{const [ex,ey]=P(0,Y,0);half(ex,ey,r,true);};
+ // Contact shadow on the slab: a soft wide pool (light from the upper left, so a little behind and right) and a tight dark
+ // occlusion ellipse right under the base, both lying on the shelf with the camera's openness (a thin line when the camera is level
+ // with the slab top; none when it is below it, since the slab's front edge then hides the base).
+ const contact=(rx:number,rz:number)=>{if(tp<-.005)return;const flat=(X:number,Z:number,rr:number,a2:number)=>{const [ex,ey]=P(X,0,Z);c.fillStyle=`rgba(18,34,48,${a2})`;c.beginPath();c.ellipse(ex,ey,rr*rx,Math.max(.9,rr*rz*Math.abs(tp),rr*rz*.07),0,0,Math.PI*2);c.fill();};
+  flat(rx*.16,-rz*.2,1.5,.14);flat(rx*.06,-rz*.06,1.12,.22);flat(0,0,.98,.2);};
+ const r=rng(`cam:${a.shape}:${a.word}:${a.body}`);c.save();c.lineJoin='round';
+ if(a.shape==='carton'){drawCartonCamera(c,a,h,show,P,{cy,sy,tp,lw},r,contact);c.restore();return;}
+ const {w,h:H}=frontSize(a,h),R=w/2,prof=a.shape==='bottle'?PROFILE.bottle:PROFILE.can,top=a.shape==='bottle'?H*.88:H;
+ // Radius along the profile, sampled densely; the silhouette is the exact envelope of the ring ellipses (top and bottom per column).
+ const radiusAt=(t:number)=>{for(let i=1;i<prof.length;i++){const [t0,r0]=prof[i-1],[t1,r1]=prof[i];if(t<=t1)return R*(r0+(r1-r0)*(t-t0)/Math.max(1e-6,t1-t0));}return R*prof[prof.length-1][1];};
+ const solid=(y0:number,y1:number,rad:(Y:number)=>number)=>{const rings:[number,number][]=[];for(let i=0;i<=36;i++){const Y=y0+(y1-y0)*i/36;rings.push([Y,rad(Y)]);}
+  const rmax=Math.max(...rings.map(q=>q[1])),N=28,up:[number,number][]=[],dn:[number,number][]=[];
+  for(let k=0;k<=N;k++){const u=-rmax+2*rmax*k/N;let hi=Infinity,lo=-Infinity;for(const [Y,rr] of rings){if(rr<Math.abs(u)-1e-6)continue;const s=Math.sqrt(Math.max(0,rr*rr-u*u))*Math.abs(tp),ey=y-Y;hi=Math.min(hi,ey-s);lo=Math.max(lo,ey+s);}
+   if(hi<Infinity){up.push([x+u,hi]);dn.push([x+u,lo]);}}
+  return ()=>{c.beginPath();up.forEach(([px,py],i)=>i?c.lineTo(px,py):c.moveTo(px,py));for(let i=dn.length-1;i>=0;i--)c.lineTo(dn[i][0],dn[i][1]);c.closePath();};};
+ const body=solid(0,top,Y=>radiusAt(Y/H)),inBody=(fn:()=>void)=>{c.save();body();c.clip();fn();c.restore();};
+ const L=P(0,0,0)[0]-R,can=a.shape!=='bottle',M='#c9ced4';
+ // The region between two rings' near halves (a band wrapping the cylinder), or everything above / below one ring.
+ const band=(Ylo:number|null,Yhi:number|null,rr:number)=>{const xl=x-rr-4,xr=x+rr+4,far=h*2;c.beginPath();
+  if(Yhi===null){c.moveTo(xl,y-far);c.lineTo(xr,y-far);}else{const ey=y-Yhi;c.moveTo(xl,ey);half(x,ey,rr,true);c.lineTo(xr,ey);}
+  if(Ylo===null){c.lineTo(xr,y+far);c.lineTo(xl,y+far);}else{const ey=y-Ylo;c.lineTo(xr,ey);half(x,ey,rr,false);c.lineTo(xl,ey);}
+  c.closePath();};
+ if(show('bottle')){
+  // Soft floor shadow: a ground ellipse with the camera's openness, a little behind and to the right (light from the upper left).
+  contact(R,R);
+  inBody(()=>{banded(c,a.body,L,2*R,y-H-4,y+R+4);
+   if(can){c.save();band(H*.93,null,R);c.clip();banded(c,M,L,2*R,y-H-R-4,y+R);c.restore();c.save();band(null,H*.06,R);c.clip();banded(c,M,L,2*R,y-H,y+R+4);c.restore();}
+   c.fillStyle='rgba(255,255,255,.7)';c.fillRect(L+2*R*.22,P(0,H*.7,0)[1],Math.max(1,R*.14),H*.58);});
+  if(!can)for(const k of [.08,.14]){c.strokeStyle=tone(a.body,-.22);c.lineWidth=lw*.8;c.beginPath();near(H*k,R);c.stroke();}
+  if(can){c.strokeStyle=tone(M,-.25);c.lineWidth=lw*.7;c.beginPath();near(H*.93,R);c.stroke();}
+  c.strokeStyle=tone(a.body,-.42);c.lineWidth=lw;body();c.stroke();
+  // Seen from above: the lid (cans) or the neck ring (bottles); from below: the base, in shade.
+  if(!down){const [ex,ey]=P(0,0,0),rb=R*(can?.86:.92);c.fillStyle=can?'#aab1b8':tone(a.body,-.16);c.beginPath();c.ellipse(ex,ey,rb,ry(rb),0,0,Math.PI*2);c.fill();c.strokeStyle=tone(a.body,-.42);c.lineWidth=lw*.6;c.stroke();}
+  else if(can){const [ex,ey]=P(0,H,0),rl=R*.88;c.fillStyle='#dfe3e7';c.beginPath();c.ellipse(ex,ey,rl,ry(rl),0,0,Math.PI*2);c.fill();c.strokeStyle='#8f979f';c.lineWidth=lw*.8;c.stroke();
+   c.fillStyle='#eef1f3';c.beginPath();c.ellipse(ex-rl*.18,ey-ry(rl)*.2,rl*.62,ry(rl*.62),0,0,Math.PI*2);c.fill();}
+  else{const [ex,ey]=P(0,top,0),rn=R*.42;c.fillStyle=tone(a.body,.2);c.beginPath();c.ellipse(ex,ey,rn,ry(rn),0,0,Math.PI*2);c.fill();}
+ }
+ if(show('label')){
+  const y0=a.shape==='bottle'?H*.28:H*(a.shape==='can'?.24:.26),y1=a.shape==='bottle'?H*.56:H*.74,rl=R+Math.max(.3,R*.03);
+  c.save();body();c.clip();band(y0,y1,rl);c.clip();banded(c,a.label,L,2*R,y-H,y+R);
+  // Lit top edge of the wrap (a thin band just under its upper ring).
+  c.save();band(y1-(y1-y0)*.1,y1,rl);c.clip();banded(c,tone(a.label,.35),L,2*R,y-H,y+R);c.restore();c.restore();
+  c.strokeStyle=tone(a.label,-.25);c.lineWidth=lw*.6;c.beginPath();near(y0,rl);c.stroke();
+  // The word, letter by letter around the cylinder: each letter sits at its angle φ on the wrap, at u = r·sin(φ − yaw) and narrowed by cos(φ − yaw); letters turned too far from the camera are skipped.
+  const Ym=(y0+y1)/2;let fs=Math.max(5,Math.min((y1-y0)*.62,R*2.6/Math.max(2.5,a.word.length*.62)));c.font=`900 ${fs}px system-ui,sans-serif`;
+  const widths=()=>[...a.word].map(ch=>c.measureText?.(ch)?.width||fs*.62);let ws=widths(),span=ws.reduce((s,v)=>s+v,0)/rl;
+  if(span>1.6){fs*=1.6/span;c.font=`900 ${fs}px system-ui,sans-serif`;ws=widths();span=ws.reduce((s,v)=>s+v,0)/rl;}
+  // Printed twice round the wrap (as real labels are), the copy we see sits 40% of the way from the label's front toward the camera:
+  // it still turns away with the yaw, but stays readable on the small phone face.
+  c.fillStyle=a.ink;c.textAlign='center';c.textBaseline='middle';let phi=yaw*.4-span/2;
+  [...a.word].forEach((ch,i)=>{const mid=phi+ws[i]/rl/2;phi+=ws[i]/rl;const psi=mid-yaw,k=Math.cos(psi);if(k<.12)return;
+   const [px,py]=P(rl*Math.sin(mid),Ym,rl*Math.cos(mid));c.save();c.translate(px,py);c.transform(k,-Math.sin(psi)*tp,0,1,0,0);c.fillText(ch,0,0);c.restore();});
+ }
+ if(show('cap')){
+  if(a.shape==='bottle'){const rc=R*.47,c0=H*.87,cap=solid(c0,H,()=>rc);c.save();cap();c.clip();banded(c,a.cap,L+R-rc,2*rc,y-H-rc-2,P(0,c0,0)[1]+rc+2);c.restore();
+   c.strokeStyle=tone(a.cap,-.3);c.lineWidth=lw*.7;cap();c.stroke();
+   // Ribs: short vertical lines at fixed angles round the cap, only on the half facing the camera.
+   for(let d=0;d<360;d+=36){const ph=d*Math.PI/180;if(Math.cos(ph-yaw)<.25)continue;const [ax,ay]=P(rc*Math.sin(ph),c0+(H-c0)*.25,rc*Math.cos(ph)),[,by]=P(rc*Math.sin(ph),H*.985,rc*Math.cos(ph));c.beginPath();c.moveTo(ax,ay);c.lineTo(ax,by);c.stroke();}
+   if(down){const [ex,ey]=P(0,H,0);c.fillStyle=tone(a.cap,.22);c.beginPath();c.ellipse(ex,ey,rc,ry(rc),0,0,Math.PI*2);c.fill();}}
+  else if(down){// Ring pull on the lid, toward the front: the rivet, the tab and the drinking hole, all lying flat on the lid.
+   const rl=R*.88,flat=(X:number,Z:number,rx:number,rz:number,fill:string)=>{const [ex,ey]=P(X,H,Z);c.fillStyle=fill;c.beginPath();c.ellipse(ex,ey,Math.max(.6,rx*cy+rz*Math.abs(sy)*.2),Math.max(.4,(rz*cy+rx*Math.abs(sy))*Math.abs(tp)),0,0,Math.PI*2);c.fill();};
+   c.strokeStyle='#8f979f';c.lineWidth=lw*.6;{const [ex,ey]=P(0,H,0);c.beginPath();c.ellipse(ex,ey,rl*.8,ry(rl*.8),0,0,Math.PI*2);c.stroke();}
+   flat(0,R*.42,R*.3,R*.2,'#5f666e');flat(0,-R*.08,R*.24,R*.34,'#aab1b8');flat(0,-R*.04,R*.06,R*.06,'#8a929a');}
+ }
+ if(show('sparkle')){const zones=a.shape==='bottle'?[[.06,.26],[.6,.78]]:[[.08,.22],[.8,.92]];
+  for(let i=0;i<9;i++){const [z0,z1]=zones[i%2],t=z0+r()*(z1-z0),ph=yaw+(r()-.5)*2.2,Y=H*t,rr=radiusAt(t)+.3,[px,py]=P(rr*Math.sin(ph),Y,rr*Math.cos(ph)),d=Math.max(1,h*.02);
+   c.fillStyle='rgba(30,70,100,.28)';c.fillRect(px,py+d*.5,d,d);c.fillStyle='#ffffffe8';c.fillRect(px-d*.4,py-d*.5,d,d*1.3);}
+  const g=(gx:number,gy:number,gr:number)=>{c.fillStyle='#ffffff';c.fillRect(gx-gr,gy-.5,gr*2,1);c.fillRect(gx-.5,gy-gr,1,gr*2);};g(L+2*R*1.1,y-H*.86,h*.06);g(L-R*.16,y-H*.5,h*.04);}
+ c.restore();
+}
+/** The carton in the camera mode: a box with a gable top (ridge across, sealed fin), faces culled against the view direction. */
+function drawCartonCamera(c:C,a:DrinkArt,h:number,show:(l:DrinkLayer)=>boolean,P:(X:number,Y:number,Z:number)=>[number,number],k:{cy:number;sy:number;tp:number;lw:number},r:()=>number,contact:(rx:number,rz:number)=>void){
+ const {w}=frontSize(a,h),b=w/2,hb=h*.69,hr=h*.83,fin=h*.035,t=b*.1,{cy,sy,tp,lw}=k,d=[sy,tp,cy] as const;
+ const faces=(n:readonly number[])=>n[0]*d[0]+n[1]*d[1]+n[2]*d[2]>1e-4;
+ const poly=(pts:[number,number,number][],fill:string,stroke?:string)=>{c.beginPath();pts.forEach((q,i)=>{const [px,py]=P(...q);if(i)c.lineTo(px,py);else c.moveTo(px,py);});c.closePath();c.fillStyle=fill;c.fill();if(stroke){c.strokeStyle=stroke;c.lineWidth=lw;c.stroke();}};
+ const edge=tone(a.body,-.4),side=sy<0?-1:1,sideTone=side<0?-.08:-.22;
+ if(show('bottle')){
+  contact(b*1.15,b*1.15);
+  if(faces([0,-1,0]))poly([[-b,0,b],[b,0,b],[b,0,-b],[-b,0,-b]],tone(a.body,-.3),edge);
+  poly([[-b,0,b],[b,0,b],[b,hb,b],[-b,hb,b]],a.body,edge);
+  if(faces([side,0,0]))poly([[side*b,0,b],[side*b,0,-b],[side*b,hb,-b],[side*b,hb,b]],tone(a.body,sideTone),edge);
+  if(faces([0,b,-(hr-hb)]))poly([[-b,hb,-b],[b,hb,-b],[b,hr,0],[-b,hr,0]],tone(a.body,-.1),edge);
+  if(faces([0,b,hr-hb]))poly([[-b,hb,b],[b,hb,b],[b,hr,0],[-b,hr,0]],tone(a.body,.14),edge);
+  if(faces([side,0,0]))poly([[side*b,hb,-b],[side*b,hb,b],[side*b,hr,0]],tone(a.body,sideTone+.04),edge);
+  // The sealed fin along the ridge.
+  const fb=b*.94;poly([[-fb,hr,t],[fb,hr,t],[fb,hr+fin,t],[-fb,hr+fin,t]],tone(a.body,.02),edge);
+  if(faces([side,0,0]))poly([[side*fb,hr,t],[side*fb,hr,-t],[side*fb,hr+fin,-t],[side*fb,hr+fin,t]],tone(a.body,sideTone),edge);
+  if(faces([0,1,0]))poly([[-fb,hr+fin,t],[fb,hr+fin,t],[fb,hr+fin,-t],[-fb,hr+fin,-t]],tone(a.body,.18));
+ }
+ if(show('label')){const z0=hb*.3,z1=hb*.76,o=b+Math.max(.25,b*.02);
+  poly([[-b,z0,o],[b,z0,o],[b,z1,o],[-b,z1,o]],a.label);poly([[-b,z1-(z1-z0)*.1,o],[b,z1-(z1-z0)*.1,o],[b,z1,o],[-b,z1,o]],tone(a.label,.35));
+  if(faces([side,0,0])){poly([[side*o,z0,b],[side*o,z0,-b],[side*o,z1,-b],[side*o,z1,b]],tone(a.label,sideTone));poly([[side*o,z1-(z1-z0)*.1,b],[side*o,z1-(z1-z0)*.1,-b],[side*o,z1,-b],[side*o,z1,b]],tone(a.label,sideTone+.3));}
+  // The word printed on the front face: drawn in the face's own plane (an affine map: narrowed by cos yaw, sheared by the pitch).
+  const fs=Math.max(5,Math.min((z1-z0)*.5,w*1.5/Math.max(3,a.word.length))),[ox,oy]=P(0,(z0+z1)/2,o);
+  c.save();c.translate(ox,oy);c.transform(cy,tp*sy,0,1,0,0);c.fillStyle=a.ink;c.textAlign='center';c.textBaseline='middle';c.font=`900 ${fs}px system-ui,sans-serif`;c.fillText(a.word,0,0,w*.88);c.restore();}
+ if(show('cap')){// The straw, standing on the front roof slope.
+  const sx=b*.36,zs=b*.45,ys=hb+(hr-hb)*(1-zs/b),[ax,ay]=P(sx,ys,zs),[bx,by]=P(sx,hr+h*.13,zs*.6),[tx,ty]=P(sx+b*.42,hr+h*.13,zs*.6);
+  c.strokeStyle=a.cap;c.lineCap='round';c.lineWidth=Math.max(1.2,w*.08);c.beginPath();c.moveTo(ax,ay);c.lineTo(bx,by);c.lineTo(tx,ty);c.stroke();c.lineCap='butt';}
+ if(show('sparkle')){for(let i=0;i<9;i++){const tt=i%2?.8+r()*.15:.25+r()*.15,onSide=i%3===2&&faces([side,0,0]),u=(r()-.5)*1.7*b,[px,py]=onSide?P(side*(b+.3),hb*tt,u):P(u,hb*tt,b+.3),dd=Math.max(1,h*.02);
+   c.fillStyle='rgba(30,70,100,.28)';c.fillRect(px,py+dd*.5,dd,dd);c.fillStyle='#ffffffe8';c.fillRect(px-dd*.4,py-dd*.5,dd,dd*1.3);}
+  const [gx,gy]=P(b,hb,b);c.fillStyle='#ffffff';const gr=h*.05;c.fillRect(gx+2-gr,gy-.5,gr*2,1);c.fillRect(gx+2-.5,gy-gr,1,gr*2);}
+}
+export function drawDrink(c:C,a:DrinkArt,x:number,y:number,h:number,only?:DrinkLayer,view:DrinkView|DrinkCamera='iso'){
+ if(isCamera(view)){drawDrinkCamera(c,a,x,y,h,only,view);return;}
  if(view==='front'){drawDrinkFront(c,a,x,y,h,only);return;}
  const g=NAT[a.shape],real=a.shape==='can'?h*.66:a.shape==='tallcan'?h*.95:h,k=real/g.H,show=(l:DrinkLayer)=>!only||only===l,R=g.R,H=g.H;
  c.save();c.translate(x,y-(a.shape==='carton'?R:R*.707)*k);c.scale(k,k);c.lineJoin='round';const I=new Iso(c,0,0),r=rng(`drink:${a.shape}:${a.word}:${a.body}`);

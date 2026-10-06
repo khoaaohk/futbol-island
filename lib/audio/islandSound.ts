@@ -135,8 +135,16 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
     tone(750,920,.055,.045,'sine');
   }
   // Story cues reuse the island context and persisted effects mix; no extra audio loop.
+  /** A cue fired by the same tap that wakes the context (the 2 s idle suspend, or a first gesture) used to be dropped: resume()
+   *  is async, so ready() still saw 'suspended' (Oct 3 2026 play-through: quiz and job cues went missing after a pause). Same rule
+   *  as ui() above: resume, then replay the cue once if it lands within 300 ms. One promise per dropped cue; no loop. */
+  function deferUntilAwake(replay:()=>void){
+    const c=context;if(!c||c.state==='running'||c.state==='closed'||muted||hidden||disposed||idleFaded)return false;
+    idleSuspended=false;const requested=performance.now();
+    void c.resume().then(()=>{if(c.state==='running'&&performance.now()-requested<300)replay();}).catch(()=>{});return true;
+  }
   function storyCue(event:Event){
-    unlock();if(!ready('story',.09))return;
+    unlock();if(deferUntilAwake(()=>storyCue(event)))return;if(!ready('story',.09))return;
     const done=(event as CustomEvent).detail==='finish';
     tone(523,523,.075,.055,'square');tone(done?784:659,done?784:659,.09,.04,'square',.085);
     if(done)tone(1047,1047,.13,.035,'square',.18);
@@ -145,7 +153,7 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
   const pathCue=(event:Event)=>{const kind=(event as CustomEvent).detail;if(kind==='dock'||kind==='undock'||kind==='swipe-right'||kind==='swipe-left'||kind==='path-pop')ui(kind);};
   document.addEventListener('fi2-path-cue',pathCue);
   // Island job actions (Sep 30 2026, lib/town/jobs/jobScene.ts 'fi2-job-cue'): one short voice per action, from the same tone/noise kit.
-  const jobCue=(event:Event)=>{const kind=String((event as CustomEvent).detail);if(!ready('job:'+kind,kind==='rustle'||kind==='tap'?.07:.1))return;
+  const jobCue=(event:Event):void=>{if(deferUntilAwake(()=>jobCue(event)))return;const kind=String((event as CustomEvent).detail);if(!ready('job:'+kind,kind==='rustle'||kind==='tap'?.07:.1))return;
     switch(kind){
       case 'rustle':hiss(2600,.18,.1);hiss(1400,.12,.05,.04);return;          // leaves shaking
       case 'swish':hiss(1800,.22,.09);return;                                   // rake / broom sweep

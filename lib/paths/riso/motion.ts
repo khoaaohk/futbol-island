@@ -98,6 +98,35 @@ function keyPathPadded(t:number,K0:Key[],e:Ease):number[]{
 const CAM_DEFAULTS=[0,0,1,0];
 /** camKeys(sheet, t, [[t, x, y, zoom, rot?], ...]): the camera on a smooth curve; call with continuous t. Returns [x,y,zoom,rot]. */
 export function camKeys(sheet:Sheet,t:number,K:Key[],e:Ease=easeInOutSine){const v=keyPathOf(t,K,e,CAM_DEFAULTS);const x=v[0]||0,y=v[1]||0,z=Number.isFinite(v[2])?v[2]:1,r=Number.isFinite(v[3])?v[3]:0;sheet.camera(x,y,z,r);return[x,y,z,r];}
+// Moving holds (story stutter audit, Oct 4 2026): additive; key()/keyPath()/camKeys() are unchanged.
+/** creep ease: half linear, half sine — the camera keeps a little speed at both ends of a creep instead of parking */
+export const creepEase:Ease=t=>.5*t+.5*easeInOutSine(t);
+/** creepHolds(keys): moving holds for camera keys [t, x, y, zoom?, rot?, ease?] used with key(t, keys, ease, true).
+ * Bible §motion "the camera still creeps so the hold has weight" / "no flat holds": a segment of ≥ minHold s whose keys (nearly) match
+ * becomes a slow creep toward the next key that differs, at ≥ `speed` sheet units per second on screen and at most `share` of that next
+ * move (all of it when the next move is only a small drift — under 40 units and under what the creep needs — so a run of drifts becomes one slow
+ * drift; a real reframe keeps its cue timing); a hold with no later move pushes in instead. Keys that END a move keep their authored pose (only the end of a hold moves), the
+ * first key never changes (seam frames are untouched), and the creep always heads where the camera goes next (no reverse). Pure. */
+export function creepHolds(K:Key[],o:{speed?:number;share?:number;minHold?:number}={}):Key[]{
+ const{speed=24,share=.4,minHold=.3}=o,n=K.length;if(n<2)return K;
+ // values padded the way key() pads them: a missing component holds the previous key's value (zoom 1, rot 0 when no key has one)
+ let prev:number[]=[0,0,1,0];const V=(k:Key)=>{const v:number[]=[];for(let i=1;i<k.length;i++){const x=k[i];if(typeof x==='number')v.push(x);}while(v.length<4)v.push(prev[v.length]);prev=v;return v;};
+ const ease=(k:Key)=>typeof k[k.length-1]==='function'?k[k.length-1] as Ease:undefined;
+ const dist=(a:number[],b:number[])=>{const z=Math.max(.05,(a[2]+b[2])/2);return Math.hypot(b[0]-a[0],b[1]-a[1])*z+Math.abs(b[2]-a[2])/z*540+Math.abs(b[3]-a[3])*540;};
+ const vals=K.map(V),out=vals.map(v=>v.slice());let changed=false;const eases:(Ease|undefined)[]=K.map(ease);
+ for(let k=0;k+1<n;k++){
+  const dur=(K[k+1][0] as number)-(K[k][0] as number);if(dur<minHold)continue;
+  const need=speed*dur,have=dist(out[k],vals[k+1]);if(have>=need)continue;
+  let j=k+2;while(j<n&&dist(vals[k+1],vals[j])<1)j++;
+  const base=vals[k+1];let next:number[];
+  if(j<n){const dir=vals[j].map((x,i)=>x-base[i]),m=dist(base,vals[j]),b=Math.min(m<=Math.min(need,40)?1:share,(need-have)/m);next=base.map((x,i)=>x+dir[i]*b);}
+  else{next=base.slice();next[2]=base[2]*(1+(need-have)/540);}
+  out[k+1]=next;if(!eases[k])eases[k]=creepEase;changed=true;
+ }
+ if(!changed)return K;
+ // every key comes back as [t, x, y, zoom, rot, ease?] (missing zoom = 1, rot = 0, the camera defaults)
+ return K.map((k,i)=>{const r:Key=[k[0] as number,...out[i]];const e=eases[i];if(e)r.push(e);return r;});
+}
 
 // ---------------- principles as pure functions of time ----------------
 /** anticipate(a,b,t): 0..1 between a and b with a small move the other way first (back = fraction, hold = share of time winding up). */

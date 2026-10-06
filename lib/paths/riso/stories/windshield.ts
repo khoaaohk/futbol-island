@@ -7,7 +7,7 @@
 import type {Sheet} from '../sheet';
 import {type RisoStory,type Scene,playChapters} from '../story';
 import {apertureDisc} from '../passage';
-import {twos,twosIndex,sm,easeOut,easeIO,easeIn,easeOutBack,key,anticipate,settle,clamp,lerp,rng,noise1,blob,polyPath,ribbon,wob,rectPath,TAU,type Pt,type Key,linear} from '../motion';
+import {twos,twosIndex,sm,easeOut,easeIO,easeIn,easeOutBack,key,anticipate,settle,clamp,lerp,rng,noise1,blob,polyPath,ribbon,wob,rectPath,TAU,type Pt,type Key,linear,creepHolds} from '../motion';
 import {contour,dust,handCut,tornRect,confetti,speedLines,crescent,ring} from '../shapes';
 
 const CH='/stories/narration/11v11/windshield/';
@@ -223,7 +223,8 @@ function glass(s:Sheet,open:Path2D,p:Pane,st:{u:number;reach:number;clean:number
 /** A paper road post with an orange face, at pitch coords. */
 function post(s:Sheet,px:number,d:number,vp:Pt,seed:number){const g=G(px,d,vp),h=90*g.sz,w=16*g.sz;if(h<6)return;const p=polyPath(wob([[g.x-w/2,g.y],[g.x+w/2,g.y],[g.x+w/2,g.y-h],[g.x-w/2,g.y-h]],1.5,seed,true,{step:12,corner:.3}),true);s.knockout(p,.95);s.fill(O,polyPath([[g.x-w/2,g.y-h*.55],[g.x+w/2,g.y-h*.55],[g.x+w/2,g.y-h],[g.x-w/2,g.y-h]],true),.95);}
 /** Camera through segment-eased keys [t,x,y,zoom,rot?] (exact at cue times). */
-function cam(s:Sheet,t:number,keys:Key[],dx=0,dy=0,rot=0){const v=key(t,keys,easeIO,true);s.camera(v[0]+dx,v[1]+dy,v[2],(v[3]??0)+rot);return v;}
+// moving holds: a camera hold creeps toward the next key instead of parking (stutter audit, Oct 4 2026)
+function cam(s:Sheet,t:number,keys:Key[],dx=0,dy=0,rot=0){const v=key(t,creepHolds(keys),easeIO,true);s.camera(v[0]+dx,v[1]+dy,v[2],(v[3]??0)+rot);return v;}
 
 // ---------------- chapters ----------------
 // ch1 — a night stadium from behind a player: two players, a riser lifts one; technique and speed do not move it, the decision does

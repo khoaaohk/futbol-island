@@ -43,6 +43,7 @@ import {type RisoStory,type Scene,type Chapter,playChapters} from '../../paths/r
 import {apertureDisc} from '../../paths/riso/passage';
 import {TAU,twos,sm,key,clamp,lerp,rng,hash,blob,polyPath,ribbon,rectPath,easeOut,easeOutBack,easeInOutSine,linear,type Pt} from '../../paths/riso/motion';
 import {sparkBurst,laneArrow,footballPanels} from '../../paths/riso/shapes';
+import {beats,shotAt,reframe,near,steady,type Pin,type Keep,type View as DView} from './director';
 import {drawAthlete,motionSmear,runCycle,dribble,backpedal,lunge,strike,keeperSet,celebrate,stand,posed,blendPose,
  STRIKE_CONTACT,type Pose,type AthleteStyle,type InkFill,type Place,type Projector,type V3,type DrawResult} from './athlete';
 
@@ -84,7 +85,9 @@ const bump=(a:number,b:number,t:number)=>t<=a||t>=b?0:Math.sin(Math.PI*(t-a)/(b-
 function cam(s:Sheet,x:number,y:number,z0:number,r=0){const z=z0*Math.min(1,Math.pow(s.W/1566,.75)),k=z*s.arrival;s.camera(x-(s.W/2-s.cx)/k,y-(s.H/2-s.cy)/k,z/s.fit,r);return z;}
 type View={hx:number;hy:number};
 const view=(s:Sheet,z:number):View=>({hx:s.W/(2*z*.68)+60,hy:s.H/(2*z*.68)+60});
-const frame=(s:Sheet)=>view(s,cam(s,0,0,1));
+const frame=(s:Sheet)=>{const z=cam(s,0,0,1);DV={w:s.W/z,h:s.H/z};return view(s,z);};
+/** the window in camera units (set by frame(); read by the director's reframing, aperture() included) */
+let DV:DView={w:1566,h:1080};
 /** the visible sheet rectangle in world units (through whatever transform is active) and world units per css px */
 function screenBox(s:Sheet){const pw=s.width*s.dpr,ph=s.height*s.dpr,a=s.toWorld(0,0),b=s.toWorld(pw,ph);return{x0:Math.min(a[0],b[0]),y0:Math.min(a[1],b[1]),x1:Math.max(a[0],b[0]),y1:Math.max(a[1],b[1]),k:Math.abs(b[0]-a[0])/Math.max(1,s.width)};}
 
@@ -412,7 +415,31 @@ function clockRing(s:Sheet,c:Cam,x:number,z:number,u:number,w:number,t:number){i
 /** τ from chapter-1 time, keyed to the cue words (≈ real time; slight catch-up between "past his man" and the cross) */
 const tau1=(t:number)=>{const SC=CUEW(0,'So close');return key(t,[[0,-4.3],[CUEW(0,'Brazil lead'),-1.5],[CUEW(0,'seventy'),0],[CUEW(0,'races'),4],[CUEW(0,'past his man'),6],[CUEW(0,'crosses'),CROSS],[CUEW(0,'Rivaldo'),MISS_T],[SC,9.3],[SECS(0)+1,9.3+(SECS(0)+1-SC)*.85]],linear);};
 const CAM1:V3=[60,30,86];
-function cam1(t:number):Cam{
+/** Director beats (lib/plays/riso/director.ts, Oct 4 2026): a short establishing wide of the bowl, follow Kléberson on the ball, pull out just enough to hold
+ * his pass and Cafu running onto it, follow the captain down the wing with the space ahead of him, push in low as he knocks it past
+ * Bode (the man being beaten stays in frame), pull back out for the cross so Rivaldo and the goal are in shot, push in on Rivaldo's stretch
+ * as the ball rolls past, and hold on the "so close" reaction. */
+const B1=beats([[0,'wide'],[.9,'follow'],[CUEW(0,'Brazil lead')-.2,{from:'space',size:.28}],[CUEW(0,'seventy')-.1,{from:'follow',size:.38}],
+ [CUEW(0,'past his man')-.7,'tight'],[CUEW(0,'crosses')-.75,{from:'space',size:.24}],[CUEW(0,'Rivaldo')+.1,'tight'],[CUEW(0,'So close')+.3,'reaction']]);
+/** the German players (soft keeps: the man Cafu beats, the markers round Rivaldo) */
+const FOES=ACTORS.map((a,k)=>a.role==='ger'||a.role==='gk'?k:-1).filter(k=>k>=0);
+const foesAt=(tau:number):V3[]=>FOES.map(k=>{const[x,z]=posOf(k,tau);return[x,0,z] as V3;});
+const at3=(k:number,tau:number,y=0):V3=>{const[x,z]=posOf(k,tau);return[x,y,z];};
+/** the directed camera, averaged over ±.45 s by steady() so no frame-to-frame snap survives (keeps and hand-overs also ramp ≥ .6 s) */
+function cam1(t:number):Cam{const p=steady(t,dir1,.5,5);return look(p.eye,p.target,p.F);}
+function dir1(t:number):Pin{const c=cam1Authored(t),tau=tau1(t),sh=shotAt(t,B1);if(sh.k<=1e-4)return{eye:c.C,target:c.T,F:c.F};
+ // the subject follows the ball: Kléberson on it, handing over to Cafu while his pass travels, then to Rivaldo while the cross is in the
+ // air (blended, never a hard switch)
+ const take=sm(CUEW(0,'Brazil lead')+.1,CUEW(0,'seventy')-.2,t,easeInOutSine),hand=sm(CUEW(0,'crosses')-.4,CUEW(0,'Rivaldo')+.9,t,easeInOutSine);
+ const k0=posOf(KLEB,tau),a=posOf(CAFU,tau),b=posOf(RIVALDO,tau),ax=lerp(k0[0],a[0],take),az=lerp(k0[1],a[1],take),hero:V3=[lerp(ax,b[0],hand),0,lerp(az,b[1],hand)];
+ const keep:Keep[]=near(hero,foesAt(tau),3.5,7);
+ // Kléberson's pass (it leaves his foot ≈ .3–.7 s after "Brazil lead"): the passer until the ball has gone, the receiver from just before it is struck
+ const BL=CUEW(0,'Brazil lead'),kw=sm(BL-.9,BL-.2,t,easeInOutSine)*(1-sm(BL+.5,BL+1.2,t,easeInOutSine)),cw=sm(BL-.4,BL+.3,t,easeInOutSine)*(1-sm(CUEW(0,'seventy')-.4,CUEW(0,'seventy')+.3,t,easeInOutSine));
+ if(kw>.01)keep.push({P:at3(KLEB,tau),w:kw},{P:at3(KLEB,tau,1.8),w:kw});if(cw>.01)keep.push({P:at3(CAFU,tau),w:cw},{P:at3(CAFU,tau,1.8),w:cw});
+ // the cross: Rivaldo arriving and the near post stay in frame
+ const box=sm(CUEW(0,'crosses')-1.3,CUEW(0,'crosses')-.6,t,easeInOutSine)*(1-hand);if(box>.01)keep.push({P:at3(RIVALDO,tau),w:box},{P:at3(RIVALDO,tau,1.86),w:box},{P:[105,0,3.66],w:box});
+ return reframe({eye:c.C,target:c.T,F:c.F},{hero,ball:ballAt(tau),keep},sh,DV);}
+function cam1Authored(t:number):Cam&{T:V3}{
  const tau=tau1(t),S=SECS(0);
  const bs=(u:number):V3=>{const b=ballAt(u);return[b[0],0,b[2]];},b0=bs(tau),b1=bs(tau-.25),b2=bs(tau-.5),bt:V3=[(b0[0]+b1[0]+b2[0])/3,0,(b0[2]+b1[2]+b2[2])/3];
  // as he nears the box the director widens to hold the box and Rivaldo arriving
@@ -420,7 +447,7 @@ function cam1(t:number):Cam{
  const open:V3=[48,4,4],toBall=sm(.2,CUEW(0,'the World')+1,t,easeInOutSine);
  const T=lerp3(open,tb,toBall);
  const F=key(t,[[0,1700],[CUEW(0,'Brazil lead'),3900],[CUEW(0,'Cafu is'),4500],[CUEW(0,'races'),4300],[CUEW(0,'crosses'),3700],[CUEW(0,'So close'),4200],[S,4600]],easeInOutSine);
- return look(CAM1,T,F);
+ return{...look(CAM1,T,F),T};
 }
 const ch1:Scene={
  draw(s,t){
@@ -436,11 +463,22 @@ const ch1:Scene={
 
 // ---------------------------------------------------------------- 2 · slow replay, a low rail camera on the track beside him: past Bode, down the wing, the cross
 const tau2=(t:number)=>key(t,[[0,3.3],[CUEW(1,'A defender'),4.1],[CUEW(1,'flying'),4.8],[CUEW(1,'like an'),KNOCK+.05],[CUEW(1,'still'),7],[CUEW(1,'late'),CROSS],[SECS(1),9.1]],linear);
-function cam2(t:number):Cam{
+/** Director beats for the replay: the wipe opens on the authored rail shot, then follow him "flying up the wing" with the dashed run ahead
+ * in frame, push in low as he knocks it past Bode (Bode stays in shot), follow the sprint, and pull out for the cross so Rivaldo and the
+ * box are in frame. */
+const B2=beats([[0,'wide'],[CUEW(1,'A defender')-.4,'follow'],[CUEW(1,'like an')-.45,'tight'],[CUEW(1,'still')-.4,'follow'],[CUEW(1,'late')-.4,{from:'space',size:.24}]]);
+function cam2(t:number):Cam{const p=steady(t,dir2,.45,5);return look(p.eye,p.target,p.F);}
+function dir2(t:number):Pin{const c=cam2Authored(t),sh=shotAt(t,B2);if(sh.k<=1e-4)return{eye:c.C,target:c.T,F:c.F};
+ const tau=tau2(t),hero=at3(CAFU,tau),keep=near(hero,foesAt(tau),3.5,7),fl=CUEW(1,'flying'),lt=CUEW(1,'late');
+ // "flying up the wing": the run ahead of him; "late in the final": Rivaldo and the near post for the cross
+ const run=bump(fl-.3,CUEW(1,'like an')-.2,t);if(run>.01)keep.push({P:at3(CAFU,Math.min(CROSS,tau+1)),w:Math.min(1,run*1.5)});
+ const box=sm(lt-.8,lt,t,easeInOutSine);if(box>.01)keep.push({P:at3(RIVALDO,tau),w:box},{P:at3(RIVALDO,tau,1.86),w:box},{P:[105,0,3.66],w:box});
+ return reframe({eye:c.C,target:c.T,F:c.F},{hero,ball:ballAt(tau),keep},sh,DV);}
+function cam2Authored(t:number):Cam&{T:V3}{
  const tau=tau2(t),m=smooth(CAFU,Math.min(tau,CROSS+.3)),g=sm(CROSS-.9,CROSS+.6,tau,easeInOutSine),open=1-sm(0,1.2,t,easeInOutSine);
  const C:V3=[m[0]-6.5-2*g-3*open,2.3+1.2*g,39.5+1.5*g];
  const T:V3=[lerp(m[0]+4.5,93.5,g),lerp(1,1.1,g),lerp(m[1]-2.5,9,g)];
- return look(C,T,lerp(1900,1500,g)-250*open);
+ return{...look(C,T,lerp(1900,1500,g)-250*open),T};
 }
 const ch2:Scene={
  draw(s,t){
@@ -555,14 +593,24 @@ const ch3:Scene={
 
 // ---------------------------------------------------------------- 4 · the lesson: the whole right flank, a low camera on the track that pans with the words
 const tau4=(t:number)=>key(t,[[0,-1],[CUEW(3,'Get back'),.8],[CUEW(3,'then run'),2.2],[CUEW(3,'Keep running'),5.4],[SECS(3),CROSS-.1]],linear);
-function cam4(t:number):Cam{
+/** Director beats for the lesson: start close on the full-back (his ring), go back to the authored pans for "defend" / "and attack" / "Get
+ * back" (both boxes must be seen), a medium shot for "then run forward" that keeps the run ahead of him in frame, close again for the
+ * clock filling round his feet on "Keep running", and the authored wide for "the whole game". */
+const B4=beats([[0,{from:'lesson',size:.3}],[CUEW(3,'Your turn')+.3,'wide'],[CUEW(3,'Get back')+.5,{from:'lesson',size:.24}],[CUEW(3,'Keep running')-.8,'lesson'],[CUEW(3,'the whole game')-.5,'wide']]);
+function cam4(t:number):Cam{const p=steady(t,dir4,.6,5);return look(p.eye,p.target,p.F);}
+function dir4(t:number):Pin{const c=cam4Authored(t),sh=shotAt(t,B4);if(sh.k<=1e-4)return{eye:c.C,target:c.T,F:c.F};
+ const tau=tau4(t),hero=at3(CAFU,tau),run=bump(CUEW(3,'Get back')+.4,CUEW(3,'Keep running')-.2,t),keep=near(hero,foesAt(tau),3,6);
+ // "then run forward": the yellow run ahead of him stays in frame
+ if(run>.01)keep.push({P:at3(CAFU,Math.min(CROSS,tau+.7)),w:Math.min(1,run*1.5)});
+ return reframe({eye:c.C,target:c.T,F:c.F},{hero,ball:ballAt(tau),keep},sh,DV);}
+function cam4Authored(t:number):Cam&{T:V3}{
  const tau=tau4(t),m=smooth(CAFU,tau),df=CUEW(3,'defend'),at=CUEW(3,'and attack'),gb=CUEW(3,'Get back'),rf=CUEW(3,'then run'),wg=CUEW(3,'the whole game');
  // the target pans: Cafu → his own box ("defend") → their box ("attack") → back to him → with him up the wing → wide on "the whole game"
  const x=key(t,[[0,m[0]],[df-.2,m[0]],[df+.5,16],[at-.1,16],[at+.7,92],[gb-.2,92],[gb+.6,m[0]-4],[rf,m[0]],[SECS(3),m[0]]],easeInOutSine);
  const follow=sm(gb+.4,gb+.8,t);const X=lerp(x,m[0]+2,follow*sm(rf-.3,rf,t));
  const wide=sm(wg-.3,wg+.8,t,easeInOutSine);
  const C:V3=[lerp(X-5,52.5,wide),lerp(6.5,34,wide),lerp(46,88,wide)],T:V3=[lerp(X,54,wide),.4,lerp(24,20,wide)];
- return look(C,T,lerp(1700,2400,wide));
+ return{...look(C,T,lerp(1700,2400,wide)),T};
 }
 const ch4:Scene={
  draw(s,t){

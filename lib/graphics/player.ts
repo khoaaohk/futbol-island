@@ -19,6 +19,7 @@ import type {BeanLook,Outfit,BeanExpression} from './beanLook';
 import {createSkillDriver,type SkillMotion} from './skillMoves';
 import {jobPoseTarget,type PoseTarget} from './jobPoses';
 import type {JobPose} from '../town/jobs/jobMoves';
+import {copyTrickPose,createTrickPose,solveTrickLeg,type TrickPose,type TrickLegAngles} from './trickPose';
 
 export const PLAYER_KICK_CONTACT = STRIKE_CONTACT;
 export type PlayerMotion = {
@@ -52,6 +53,10 @@ export type PlayerMotion = {
   juggleTouch?: JuggleTouch;
   stunAge?: number;
   shotCharge?: number;
+  /** 0..1 wind-up before a kick (A7, Oct 2026): the support boot plants beside the ball and the kicking leg draws back
+   *  to the shot's backswing (kick phase 0 → .15). Ignored while `kick` or `shotCharge` is set; follow it with `kick`
+   *  starting at .15 so the strike continues from the drawn-back leg. Uses `kickSide` and `shotPower`. */
+  windup?: number;
   powerKick?: boolean;
   shotPower?: number;
   shotStep?: number;
@@ -109,6 +114,9 @@ export type PlayerMotion = {
   jump?: {progress:number;height:number};
   /** Island job action (lib/graphics/jobPoses.ts): pull, twist, rake, throw-in, mallet… bounded, host-driven, fades in and out. */
   job?: JobPose;
+  /** Freestyle trick pose (lib/graphics/trickPose.ts, freestyleTricks.ts): optional full-body pose over the finished solve
+   *  (sit, lie, bow, a free leg aimed anywhere), blended by `trick.w`; fades out over ~.2 s when removed. Absent = no change. */
+  trick?: TrickPose;
 };
 /** Dive milestones on `dive.progress`: push-off, feet leave, hands meet the ball, land, start and end of the get-up. */
 export const DIVE_PHASE = {push:.1,lift:.18,contact:.3,land:.42,rise:.6,up:.92} as const;
@@ -154,6 +162,9 @@ const SK={roll:[.1,0,.33,1.05,.56,1.3,.68,1.3,.93,0],lie:[.15,0,.56,1,.68,1,.93,
 const DK={pitch:[0,0,.08,.25,.18,1.2,.3,1.45,.46,1.5,.64,1.5,.94,0],lie:[.14,0,.46,1,.64,1,.94,0],body:[0,0,.06,0,.14,1,.64,1,.94,0],fwd:[.1,0,.46,.3,.64,.3,.94,0],
   arms:[.14,0,.24,1,.94,1],brace:[.22,0,.36,1,.64,1,.9,0]};
 const smooth = (value: number) => { const t = T.MathUtils.clamp(value, 0, 1); return t * t * (3 - 2 * t); };
+/** Freestyle trick pose blending (poseTrick): one set() per joint. */
+const trickMix=(v:T.Vector3,x:number,y:number,z:number,k:number)=>{v.set(v.x+(x-v.x)*k,v.y+(y-v.y)*k,v.z+(z-v.z)*k);};
+const trickMixE=(e:T.Euler,x:number,y:number,z:number,k:number)=>{e.set(e.x+(x-e.x)*k,e.y+(y-e.y)*k,e.z+(z-e.z)*k,e.order);};
 
 export type PlayerReaction = NonNullable<PlayerMotion['reaction']>;
 /**
@@ -465,12 +476,19 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
   let ws=1,pelvisY=.88,kickSupport=-1,sitBackBlend=0,gaitFwd=1,gaitSide=0,dutyState=.6;
   // Island job pose (docs/island-jobs.md §10): blend weight and the last target (kept for the fade-out).
   let jobW=0,jobHeld:PoseTarget|null=null;
+  // Freestyle trick pose (optional; motion.trick): the last pose held for the fade-out, and scratch for the leg solve.
+  const trickHeld=createTrickPose(),trickLeg:TrickLegAngles={hipZ:0,hipX:0,knee:0,ankle:0,reach:0};let trickFade=0,trickBase=0;
   const anchorFoot=(index:number,px:number,pz:number,heading:number,lx:number,lz:number)=>{
     footLocked[index]=true;lockBlend[index]=0;lx*=ws;lz*=ws;
     supportFeet[index].set(px+lx*Math.cos(heading)+lz*Math.sin(heading),.075,pz-lx*Math.sin(heading)+lz*Math.cos(heading));
   };
   // A quick chop step: the boot arcs from where it stands to a new world anchor, then holds there.
+  // A step always spans at least two rendered frames: at the 30 fps phone cap a 34 ms chop would otherwise land in a
+  // single frame, a planted boot jumping ~27 cm along the ground with no lift (A7, Oct 2026). 60 fps and up are unchanged.
+  let stepFrame=1/60;
+  const minStep=(duration:number)=>Math.max(duration,2*stepFrame);
   const stepFoot=(index:number,px:number,pz:number,heading:number,lx:number,lz:number,duration:number)=>{
+    duration=minStep(duration);
     // Starts from where the boot really is (airborne height, reach-clamped position), never from a stale anchor.
     replantVelocity[index].copy(footVelocity[index]);
     replantAnchors[index].copy(shownFeet[index]);replant[index]=replantTotal[index]=duration;liftOff[index]=false;
@@ -731,9 +749,27 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
     for(let i=0;i<2;i++){const a=i===0?t.al:t.ar,arm=arms[i],side=i===0?-1:1;
       mix(arm.shoulder.rotation,'x',a[0]);mix(arm.shoulder.rotation,'y',0);mix(arm.shoulder.rotation,'z',side*a[1]);mix(arm.elbow.rotation,'x',a[2]);mix(arm.elbow.rotation,'y',0);mix(arm.hand.rotation,'y',side*(a[3]??0));}
   };
+  /** Freestyle trick pose over the finished pose (motion.trick, lib/graphics/trickPose.ts): pelvis, torso, head, both legs by the
+   *  shared analytic solve (so the host knows exactly where each boot is) and both arms, blended by `w`. No allocation. */
+  const poseTrick=(input:TrickPose|undefined,dt:number,snap:boolean)=>{
+    if(input){copyTrickPose(trickHeld,input);trickBase=input.w;trickFade=1;}
+    else trickFade=snap?0:Math.max(0,trickFade-dt/.2);
+    const t=trickHeld,w=Math.min(1,Math.max(0,trickBase*(input?1:smooth(trickFade))));if(w<=0)return false;
+    // One .set per joint (one quaternion refresh each); the spine (lumbar/chest) keeps the gait's small breathing values.
+    trickMix(pelvis.position,0,t.pelvisY,t.pelvisZ,w);trickMixE(pelvis.rotation,t.pelvisPitch,t.pelvisYaw,t.pelvisRoll,w);
+    trickMixE(torso.rotation,t.torsoPitch,t.torsoYaw,t.torsoRoll,w);trickMixE(head.rotation,t.headPitch,t.headYaw,0,w);
+    for(let i=0;i<2;i++){const side=i===0?-1:1,L=t.legs[i],leg=legs[i],k=w*L.w;
+      if(k>0){solveTrickLeg(t,side,L,P.legs,trickLeg);if(leg.hip.rotation.order!=='XYZ')leg.hip.rotation.reorder('XYZ');
+        trickMixE(leg.hip.rotation,trickLeg.hipX,0,trickLeg.hipZ,k);trickMixE(leg.knee.rotation,trickLeg.knee,0,0,k);trickMixE(leg.ankle.rotation,trickLeg.ankle,0,0,k);}
+      const A=t.arms[i],arm=arms[i],a=w*A.w;
+      if(a>0){trickMixE(arm.shoulder.rotation,A.sx,0,side*A.sz,a);trickMixE(arm.elbow.rotation,A.el,0,arm.elbow.rotation.z,a);}}
+    // Only a seated, lying or bowing pose can reach the grass: the ground guard runs for those alone.
+    return t.pelvisY<.88+(P.legs-1)*.83-.25||Math.abs(t.pelvisPitch)>.3;
+  };
   const update = (x: number, z: number, dt: number, time: number, reduced: boolean, motion?: PlayerMotion) => {
     // A seek/teleport must not look like a sprint. Cap integration after a suspended tab.
     dt = Math.max(0, Math.min(dt, .1));
+    if(dt>0)stepFrame=dt;
     ws = Math.max(.05, Math.abs(root.scale.x));
     // Dive / jump state first: a diving keeper's yaw must not chase his own sideways travel.
     const airAllowed=!motion?.truckRiding&&!(motion?.travelMode&&motion.travelMode!=='walk')&&!motion?.parachute&&!motion?.rooftopPose&&motion?.stunAge===undefined&&!motion?.wallSplat&&motion?.shotStep===undefined&&motion?.juggle===undefined;
@@ -785,7 +821,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
     const anticipates = !rideBase && !reduced && !discontinuity && dt > 0;
     const yawRate = anticipates ? Math.atan2(Math.sin(yaw-previousYaw),Math.cos(yaw-previousYaw))/dt : 0;
     turnLead = discontinuity || reduced ? 0 : T.MathUtils.damp(turnLead,T.MathUtils.clamp(yawRate*.025,-.1,.1),10,dt);
-    const amount = smooth(speed / 1.5), run = motion?.runIntensity===undefined?smooth((speed-1.5)/4):smooth(T.MathUtils.clamp(motion.runIntensity,0,1))*amount;
+    const amount = smooth(speed / 1.5), stepAmount = Math.max(amount, smooth(speed / .4)), run = motion?.runIntensity===undefined?smooth((speed-1.5)/4):smooth(T.MathUtils.clamp(motion.runIntensity,0,1))*amount;
     // Blend directional footwork continuously rather than switching animation clips.
     const backward=smooth((-forward-.15)/.65)*amount;
     const lateral=smooth((Math.abs(sideways)-.35)/.55)*amount;
@@ -814,8 +850,9 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
     const compact=Math.max(backpedal*.7,shuffle,defensive*.6);
 
     const heldStrike=motion?.shotCharge!==undefined&&motion?.shotStep===undefined;
-    const kick = heldStrike?.15:T.MathUtils.clamp(motion?.kick ?? 0, 0, 1);
-    const strikeKind=motion?.powerKick||heldStrike?'shot':motion?.actionKind??'pass';
+    const windingUp=!heldStrike&&motion?.kick===undefined&&motion?.windup!==undefined;
+    const kick = heldStrike?.15:windingUp?.15*T.MathUtils.clamp(motion!.windup!,0,1):T.MathUtils.clamp(motion?.kick ?? 0, 0, 1);
+    const strikeKind=motion?.powerKick||heldStrike||windingUp?'shot':motion?.actionKind??'pass';
     strikePose(kick,strikeKind,motion?.shotPower??.5,strike);
     // Lesson dribbles also use ballContact: keep the ball clear of the stride, while
     // preserving the exact boot contact during an authored kick or first-touch cushion.
@@ -966,7 +1003,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
         stepFoot(i,previousX,previousZ,previousYaw,plantSide*(.108+.1),.14,.05);
         // Include airborne height: a high swing must have time to descend into a cut.
         // Horizontal distance alone could drive a 28cm drop in roughly 34ms.
-        const reachTime=T.MathUtils.clamp(Math.hypot(supportFeet[i].x-replantAnchors[i].x,supportFeet[i].z-replantAnchors[i].z)/ws*.12+Math.max(0,replantAnchors[i].y-.18)*.2,.034,.14);
+        const reachTime=minStep(T.MathUtils.clamp(Math.hypot(supportFeet[i].x-replantAnchors[i].x,supportFeet[i].z-replantAnchors[i].z)/ws*.12+Math.max(0,replantAnchors[i].y-.18)*.2,.034,.14));
         replantTotal[i]=reachTime;replant[i]=reachTime;plantTotal=plantTimer+=reachTime;
       }
       else{footLocked[i]=true;lockBlend[i]=1;}
@@ -1139,7 +1176,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
       const swing = Math.sin(recoveryT*Math.PI);
       // Stance speed matches travel (stride * duty), with swing clearance and flat support feet.
       const reachZ = stride*duty*.5;
-      let footZ = (stance ? reachZ-2*reachZ*t : -reachZ+2*reachZ*smooth(recoveryT))*amount;
+      let footZ = (stance ? reachZ-2*reachZ*t : -reachZ+2*reachZ*smooth(recoveryT))*stepAmount;
       let footX=footZ*gaitSide;
       // A defensive shuffle opens the leading foot and gathers the trailing foot;
       // it never crosses one boot through the other on a lateral step.
@@ -1148,7 +1185,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
       // Knee lift grows with sprint (~.42 m); backpedal and shuffles keep steps low.
       // Zero vertical velocity at lift-off and landing, with the same mid-step clearance.
       // A plain sine hits the ground at full downward speed and stops in one frame.
-      let lift = stance ? 0 : swing*swing*(.15+.27*sprint)*(1-.65*compact)*amount;
+      let lift = stance ? 0 : swing*swing*(.15+.27*sprint)*(1-.65*compact)*Math.max(amount,.5*stepAmount);
       // Sideways walk/shuffle only (duty keeps a support boot; a lateral run's flight phase is untouched): the
       // trailing boot leaves at leg reach, so a lead boot in its last 3 cm sets down as soon as the trailing one
       // lifts off, never leaving both boots in the air. The touch-down lock then holds it where it landed.
@@ -1240,7 +1277,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
       // curve (the lock and the curve part ways under lateral travel, duty changes and reach limits).
       if(planted[index]&&lockWeight===0&&replant[index]===0&&moving&&!hardReset&&!contactStrike){
         const swingTime=(1-duty)*stride*ws/Math.max(speed,velocity,.5);
-        replant[index]=replantTotal[index]=T.MathUtils.clamp(.55*swingTime,.05,.12);replantAnchors[index].copy(shownFeet[index]);liftOff[index]=true;
+        replant[index]=replantTotal[index]=minStep(T.MathUtils.clamp(.55*swingTime,.05,.12));replantAnchors[index].copy(shownFeet[index]);liftOff[index]=true;
       }
       // (Skill moves lane) Coming to rest from a slow walk: a boot that loses its gait lock steps to its rest spot
       // (it used to snap there in one frame, up to ~20 cm). Boots already at their spot stay put (no idle bumps).
@@ -1648,6 +1685,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
     if(diving)poseDive(dt,reduced,discontinuity);
     if(jumping)poseJump(dt,reduced,discontinuity,!reacting);
     if(airMove)poseAirMove(dt,reduced,discontinuity);
+    const tricking=(!!motion?.trick||trickFade>0)&&poseTrick(motion?.trick,dt,reduced||discontinuity);
     if(signing){
       const M=MOVE_PHASE[moveKind];
       if(!discontinuity&&dt>0&&moveLast>=0){
@@ -1657,7 +1695,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
       moveLast=moveP;
     }
     if(skilling){const q=skill.squash(discontinuity,dt);if(q){squashV+=q*(reduced?.4:1);squashActive=true;}} // skill moves lane
-    if(diving||jumping||signing||skilling||reacting&&(reactKind==='slide'||reactKind==='stumble'||prevKind==='slide'||prevKind==='stumble'))groundGuard();
+    if(diving||jumping||signing||skilling||tricking||reacting&&(reactKind==='slide'||reactKind==='stumble'||prevKind==='slide'||prevKind==='stumble'))groundGuard();
     // Squash spring on the torso group: volume-preserving (1/√s, s, 1/√s) over the shape scale.
     // One impulse per squashSerial change, damping ratio .6, ≤60 Hz substeps, asleep once settled.
     if(squashActive&&discontinuity&&initialized){squashX=squashV=0;squashActive=false;torso.scale.copy(torsoBase);}

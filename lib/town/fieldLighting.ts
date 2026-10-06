@@ -1,5 +1,6 @@
 import {fieldLightLayout} from './fieldLightLayout';
 import * as T from 'three';
+import type {PropSpec} from '../graphics/propReactions';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {VENUES,FIELD_SURFACE_Y,type Format,type Venue} from './venues';
 import {KNOCKOUT_ROOF} from '../games/rooftopKnockout';
@@ -16,13 +17,16 @@ export function createFieldLighting(scene:T.Scene,roots:Map<string,T.Group>,surf
  const steel=new T.MeshStandardMaterial({color:'#596269',roughness:.72});
  const lenses=new T.MeshStandardMaterial({color:'#f5eed5',emissive:'#fff0cf',emissiveIntensity:0,roughness:.45});
  const owned:T.BufferGeometry[]=[],entries:FieldEntry[]=[],fixtures:T.Mesh[]=[];
+ /** Kick reactions (lib/graphics/propReactions.ts): each post's vertex runs in the two merged fixture meshes. */
+ const propSpecs:PropSpec[]=[];
  const roofRoot=new T.Group();roofRoot.name='rooftop-floodlights';roofRoot.position.set(KNOCKOUT_ROOF.x,KNOCKOUT_ROOF.height,KNOCKOUT_ROOF.z);scene.add(roofRoot);
  const roofVenue:LightingVenue={id:'knockout',name:'Rooftop Knockout',x:KNOCKOUT_ROOF.x,z:KNOCKOUT_ROOF.z,elevation:KNOCKOUT_ROOF.height,width:24,length:44,players:7,goalWidth:0,goalHeight:0,surface:'#648c72',shape:''};
  for(const v of [...VENUES,roofVenue]){
   const root=v.id==='knockout'?roofRoot:roots.get(v.id)!,body:T.BufferGeometry[]=[],glass:T.BufferGeometry[]=[];
   const {height,side,posts}=fieldLightLayout(v);
   const box=(list:T.BufferGeometry[],w:number,h:number,d:number,x:number,y:number,z:number,tilt=0)=>{const g=new T.BoxGeometry(w,h,d);g.rotateZ(tilt);g.translate(x,y,z);list.push(g);};
-  for(const {x,z,hand} of posts){
+  const postPieces:{body:[number,number];glass:[number,number]}[]=[];
+  for(const {x,z,hand} of posts){const body0=body.length,glass0=glass.length;
    const pole=new T.CylinderGeometry(.13,.22,height,8);pole.translate(x,FIELD_SURFACE_Y+height/2,z);body.push(pole);
    box(body,.75,.28,.75,x,FIELD_SURFACE_Y+.14,z);
    box(body,1.6,.14,.22,x-hand*.5,height+.08,z);
@@ -30,11 +34,20 @@ export function createFieldLighting(scene:T.Scene,roots:Map<string,T.Group>,surf
    const tilt=hand*.22,bankX=x-hand*.7;
    box(body,2.05,.55,.52,bankX,height,z,tilt);
    for(let panel=0;panel<3;panel++){box(glass,.52,.12,.44,bankX+(panel-1)*.61,height-.3,z,tilt);box(glass,.52,.045,.44,bankX+(panel-1)*.61,height+.3,z,tilt);}
+   postPieces.push({body:[body0,body.length],glass:[glass0,glass.length]});
   }
+  // Vertex start of every piece once merged (mergeGeometries concatenates in order), and each post's bounds.
+  const starts=(list:T.BufferGeometry[])=>{let n=0;return list.map(g=>{const s=n;n+=g.getAttribute('position').count;return s;}).concat(n);};
+  const bodyStarts=starts(body),glassStarts=starts(glass),postBounds=postPieces.map(({body:[b0,b1],glass:[g0,g1]})=>{const box=new T.Box3();for(const g of [...body.slice(b0,b1),...glass.slice(g0,g1)]){g.computeBoundingBox();box.union(g.boundingBox!);}return box;});
+  const fixtureMeshes:T.Mesh[]=[];
   for(const [list,material,name]of [[body,steel,'floodlight-structure'],[glass,lenses,'floodlight-panels']] as const){
    const geometry=mergeGeometries(list)!;list.forEach(g=>g.dispose());geometry.computeBoundingSphere();owned.push(geometry);
-   const mesh=new T.Mesh(geometry,material);mesh.name=name;mesh.castShadow=false;mesh.receiveShadow=false;mesh.matrixAutoUpdate=false;root.add(mesh);fixtures.push(mesh);
+   const mesh=new T.Mesh(geometry,material);mesh.name=name;mesh.castShadow=false;mesh.receiveShadow=false;mesh.matrixAutoUpdate=false;root.add(mesh);fixtures.push(mesh);fixtureMeshes.push(mesh);
   }
+  const [bodyMesh,glassMesh]=fixtureMeshes,o=root.position;
+  postPieces.forEach(({body:[b0,b1],glass:[g0,g1]},i)=>{const b=postBounds[i];propSpecs.push({kind:'pole',offset:{x:o.x,y:o.y,z:o.z},
+   min:{x:b.min.x+o.x,y:b.min.y+o.y,z:b.min.z+o.z},max:{x:b.max.x+o.x,y:b.max.y+o.y,z:b.max.z+o.z},
+   parts:[{attribute:bodyMesh.geometry.getAttribute('position') as T.BufferAttribute,start:bodyStarts[b0],count:bodyStarts[b1]-bodyStarts[b0]},{attribute:glassMesh.geometry.getAttribute('position') as T.BufferAttribute,start:glassStarts[g0],count:glassStarts[g1]-glassStarts[g0]}]});});
   const surface=surfaces.get(v.id);if(surface){surface.emissive.copy(surface.color);surface.emissiveIntensity=0;}
   const dayColor=surface?.color.clone()??new T.Color(v.surface),nightColor=dayColor.clone(),nightEmission=v.id==='futsal'?dayColor.clone():new T.Color('#d0ccb7');
   entries.push({venue:v,root,surface,height,side,dayColor,nightColor,nightEmission});
@@ -58,7 +71,7 @@ export function createFieldLighting(scene:T.Scene,roots:Map<string,T.Group>,surf
   for(let i=0;i<4;i++){const hand=i%2?1:-1,end=i<2?-1:1;spots[i].position.set(v.x+hand*(entry.side-.7),y,v.z+end*(v.length/2+(v.id==='knockout'?1.5:2.3)));spots[i].target.position.set(v.x-hand*v.width*.12,(v.elevation??0)+FIELD_SURFACE_Y,v.z-end*v.length*.12);spots[i].distance=Math.hypot(v.width,v.length)+entry.height+15;}
   strength=Math.pow(Math.hypot(entry.side-.7,v.length/2+(v.id==='knockout'?1.5:2.3),entry.height),2)*.85*(v.id==='futsal'?.82:.5);lightRoot.userData.format=v.id;
  }
- return {update(mode:string,camera:T.Camera,isolated:Format|null,dt:number,reduced=false,roofActive=false,player?:{x:number;y:number;z:number}){
+ return {propSpecs,update(mode:string,camera:T.Camera,isolated:Format|null,dt:number,reduced=false,roofActive=false,player?:{x:number;y:number;z:number}){
   const nextTeaching=isolated!==null;
   if(teaching!==nextTeaching){
    teaching=nextTeaching;for(const fixture of fixtures)fixture.visible=!teaching;

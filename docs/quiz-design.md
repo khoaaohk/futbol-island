@@ -207,3 +207,11 @@ The test also caps any line at 34 words.
 - **Tests:**
   - `tests/visual-quiz.cjs` covers the schema, voice, card length, 2+ types per quiz and the card rule;
   - the existing lesson tests skip `interact`-only checks for visual questions.
+
+## Oct 4 2026 learning pass (A5): content audit, "Watch that part", pending voice
+
+- **Content audit** of all 96 lessons / 918 steps / 486 questions against US Youth Soccer, FA and IFAB (Laws 11, 12, 13, 15, 16; Futsal Laws 12, 15, 16). Fixes: off-concept questions (skill-name trivia such as "Cruyff turn" replaced by the lesson's own idea), rule wording (offside is a pass to an offside position, not standing there; futsal goalkeeper back-pass; 10-yard free-kick distance; goal kick from the goal area), choreography that contradicted its line (9v9 runner "behind our midfield", 11v11 cut-back moved into the box), plain-language lesson goals instead of internal notes ("AYSO rule example, checked…").
+- **Wrong answer → lesson moment.** A wrong answer shows **Watch that part** next to Try again: it replays the step the question's picture comes from (and the one before; pitch-tap questions stop before their outcome, which stays on "Show me"), then returns to the same question. The warm-up's wrong answers open the lesson at that step (`openPathLesson(key, q.step)`).
+- **Lofted balls.** A step's `ballPathType` of `air`, `lofted`, `cross`, `chip` or `clearance` now arcs in lesson playback (`LOFTED_PATHS` / `loftPeak` in `lib/town/formatLessons.ts`); `ground` / `through` stay on the grass.
+- **Pending voice.** A changed narrated line points at its new hash with `duration: 0` and is listed in `scripts/quiz/revoice-pending.json`; the lesson shows the text instead of playing it. Voice them with `<python with kokoro> scripts/plays/kokoro-lessons.py <hashes>` and remove them from the list. Until then `tests/lesson-catalog.cjs` and `tests/visual-quiz.cjs` pass only with `--structure-only`.
+- **Test:** `tests/learning-content.cjs` (in `npm test`) checks every question against its lesson, answer indices, a why per option, pitch options, authored-file sync, Paths/manifest counts, voice-to-text hashes, format rules and kid copy.

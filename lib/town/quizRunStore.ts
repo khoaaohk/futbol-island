@@ -42,6 +42,13 @@ export function saveQuizRun(format:string,run:QuizRun,storage:Store|null=browser
 export function clearQuizRun(format:string,lessonId:string,storage:Store|null=browser()){
  const all=readAll(storage),key=keyOf(format,lessonId);if(!(key in all))return;delete all[key];writeAll(storage,all);
 }
+/** Answer feedback sound (Oct 3 2026 play-through: quizzes were silent). Reuses the island kit's one-shot cues in
+ *  lib/audio/islandSound.ts: a right answer `ding`, a wrong one a soft `nope`, and the last question right (the quiz is done)
+ *  the three-note `finish` fanfare that jobs and fishing already use. One event per answer; no loop. */
+export function quizAnswerCue(right:boolean,lastQuestion:boolean):{event:'fi2-job-cue'|'fi2-story-cue';detail:string}{
+ if(right&&lastQuestion)return {event:'fi2-story-cue',detail:'finish'};
+ return {event:'fi2-job-cue',detail:right?'ding':'nope'};
+}
 /** "Quiz done" line under the last answer: positive, and says what earns the card without guilt. */
 export function quizDoneLine(questions:number,firstTry:number,cardsOn:boolean):string{
  const base=`Quiz done: all ${questions} answered! ${firstTry} of ${questions} right first time.`;

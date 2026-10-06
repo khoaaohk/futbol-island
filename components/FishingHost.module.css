@@ -36,6 +36,10 @@
 /* In-world catch label (placed above the held-up fish by fishingWorld.ts). */
 .catch{position:absolute;z-index:29;left:0;top:0;transform:translate(-50%,-100%);width:min(300px,calc(100vw - 40px));box-sizing:border-box;padding:10px 14px 12px;border:3px solid #fff2cd;border-radius:18px 26px 18px 18px;background:#fff1d3f2;color:#244d40;box-shadow:0 5px 0 #183b3440;pointer-events:none;animation:pop .35s cubic-bezier(.2,1.4,.4,1) both}
 .catch[hidden],.catch[data-dismissed]{display:none!important}
+/* Oct 5 2026 fix: Town's place() (placeEntryPrompt) now positions through --entry-x/--entry-y (the shared `translate` rule in
+   globals.css only covers .store-enter-prompt), so the catch card applies them itself; without this it sat at 0,0 in the top-left
+   corner. `translate` composes with the side offsets in `transform` below. */
+.catch[data-entry-prompt]{translate:var(--entry-x,0px) var(--entry-y,0px)}
 /* Phones: docked just above the Fishbook / Cast actions (the angler stays visible), no pointer arrow. */
 .catch[data-side=dock]{transform:translate(-50%,calc(-100% - env(safe-area-inset-bottom,0px)))}
 .catch[data-side=dock]::after{display:none}

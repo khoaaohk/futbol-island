@@ -11,9 +11,9 @@
    "correct": 1,
    "explain": "Right. Between halfway and the far line, offside cannot apply.",
    "choiceExplanations": [
-    "Past the far line and ahead of the defenders, this spot is offside.",
+    "Past the far line and ahead of the defenders, a pass here is offside.",
     "Right. Between halfway and the far line, offside cannot apply.",
-    "This spot is past the far line and ahead of the defenders, so offside."
+    "Past the far line and ahead of the defenders, a pass here is offside too."
    ],
    "visual": {
     "kind": "tapSpot",

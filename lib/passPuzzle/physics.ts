@@ -21,10 +21,15 @@ const SPIN_KEEP=Math.exp(-STEP/2.5);
 const SOLVE_DT=1/60, SOLVE_MAX=300; // aim solver runs at half rate (≤5 s); both predict and the world use it, so aims match
 const GROUND_MAGNUS=0.4;
 
-export type Geo={hw:number;len:number;goalZ:number;backZ:number;halfGoal:number;barH:number};
+export type Geo={hw:number;len:number;goalZ:number;backZ:number;halfGoal:number;barH:number;
+  /** Weather (optional): wind pushes a ball in the air (m/s²); a wet pitch lets a rolling ball skid on. */
+  wind?:{x:number;z:number};roll?:number;bounce?:number};
+/** Wet-pitch friction and bounce multipliers: the ball skids further and sits lower. */
+export const WET_ROLL=0.55,WET_BOUNCE=0.8;
 export function geoOf(sc:Scenario):Geo{
-  const gw=sc.pitch.goalWidth;
-  return {hw:sc.pitch.halfWidth,len:sc.pitch.length,goalZ:sc.pitch.length/2,backZ:-sc.pitch.length/2,halfGoal:gw/2,barH:gw>=7?2.44:gw>=6?2.13:1.98};
+  const gw=sc.pitch.goalWidth,g:Geo={hw:sc.pitch.halfWidth,len:sc.pitch.length,goalZ:sc.pitch.length/2,backZ:-sc.pitch.length/2,halfGoal:gw/2,barH:gw>=7?2.44:gw>=6?2.13:1.98};
+  const w=sc.weather;if(w?.wind&&(w.wind.x||w.wind.z))g.wind={x:w.wind.x,z:w.wind.z};if(w?.wet){g.roll=WET_ROLL;g.bounce=WET_BOUNCE;}
+  return g;
 }
 
 export const F_BOUNCE=1,F_POST=2,F_GOAL=4,F_OUT=8,F_BAR=16;
@@ -52,17 +57,18 @@ export function stepBall(b:BallLike,geo:Geo|null,inNet=false,dt=STEP):number{
   let ax=-DRAG*sp*v.x,ay=-DRAG*sp*v.y,az=-DRAG*sp*v.z;
   const m=MAGNUS*b.spin*(grounded?GROUND_MAGNUS:1);
   ax+=m*-v.z;az+=m*v.x;               // spin>0 accelerates toward (−v.z, v.x)
-  if(!grounded)ay-=G;
+  if(!grounded){ay-=G;const w=geo?.wind;if(w&&p.y>R+0.05){ax+=w.x;az+=w.z;}}
   v.x+=ax*dt;v.y+=ay*dt;v.z+=az*dt;
   if(grounded){
     v.y=0;const h=Math.sqrt(v.x*v.x+v.z*v.z);
-    if(h>0){const nh=h>ROLL*dt?h-ROLL*dt:0;v.x*=nh/h;v.z*=nh/h;}
+    const roll=ROLL*(geo?.roll??1);
+    if(h>0){const nh=h>roll*dt?h-roll*dt:0;v.x*=nh/h;v.z*=nh/h;}
   }
   const pz=p.z,px=p.x;
   p.x+=v.x*dt;p.y+=v.y*dt;p.z+=v.z*dt;
   if(p.y<R){
     p.y=R;
-    if(v.y<-0.8){v.y=-v.y*REST;v.x*=0.92;v.z*=0.92;b.spin*=0.6;f|=F_BOUNCE;}
+    if(v.y<-0.8){v.y=-v.y*REST*(geo?.bounce??1);v.x*=0.92;v.z*=0.92;b.spin*=0.6;f|=F_BOUNCE;}
     else v.y=0;
   }
   b.spin*=dt===STEP?SPIN_KEEP:Math.exp(-dt/2.5);

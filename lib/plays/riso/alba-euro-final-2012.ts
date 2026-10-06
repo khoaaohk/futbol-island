@@ -40,6 +40,7 @@ import {drawAthlete,motionSmear,runCycle,dribble,backpedal,strike,keeperSet,keep
  touchPhase,STRIKE_CONTACT,type Pose,type AthleteStyle,type InkFill,type Place,type V3,type DrawResult} from './athlete';
 import {Y,K,estimate,cueFn,mono,lerp3,lerpA,yawOf,bump,over,frame,look,toCam,scr,polyP,stadium,ground,goal3,bulgeAt,tracks,footOn,play,
  streaks,groundArrow,groundRing,bootRing,spark,touchTurf,type Cam,type View,type Venue,type Pitch,type CastE} from './tv-kit-six';
+import {beats,shotAt,reframe,steady,near,type Keep,type Pin,type View as DView} from './director';
 
 const ID='alba-euro-final-2012',R='red',B='blue';
 // ---------------------------------------------------------------- narration + timing
@@ -151,26 +152,57 @@ function poseOf(k:number,tau:number):{p:Pose;yaw:number}{
 // ---------------------------------------------------------------- drawing the match through a camera
 function draw(s:Sheet,c:Cam,v:View,tau:number,tauP:number,tauPrev:number,o:{minBall?:number;hero?:boolean;trail?:number;before?:()=>void}={}){
  return play(s,c,v,tau,{n:ACTORS.length,pos:TR.pos,ball:ballAt,draw:(k:number,e:CastE,q:{passing:boolean;px:number})=>{
-  const a=ACTORS[k],{p,yaw}=poseOf(k,tauP),big=e.h>=300,detail=q.passing?(k===AL?'mid':'low'):q.px<50||(!a.key&&q.px<110)?'low':'auto';
+  const a=ACTORS[k],{p,yaw}=poseOf(k,tauP),big=e.h>=300,detail=q.passing?(k===AL?'mid':'low'):q.px<50||!a.key||(k!==AL&&q.px<KL)?'low':'auto';
   return drawPlayer(s,p,c,{...a.style,shadow:e.h<420?false:undefined,detail},{x:e.x,z:e.z,yaw},big&&a.key&&!q.passing?{prev:poseOf(k,tauPrev).p,smear:!!o.hero&&k===AL}:{});}},
   {minBall:o.minBall,trail:o.trail,trailFrom:SHOT,before:o.before});
 }
 const replay=(s:Sheet,c:Cam,v:View,tau:number,t:number,map:(t:number)=>number,before?:()=>void,trail=0)=>draw(s,c,v,tau,map(twos(t)),map(twos(t)-1/12),{minBall:5,hero:true,trail,before});
 
+// ---------------------------------------------------------------- the director (lib/plays/riso/director.ts, Oct 4 2026): camera math only
+/** the window in camera units for the kit's frame() (cam(s,0,0,1): z = min(1,(W/1566)^.75)); set by fr(), read by every camera call */
+let DV:DView={w:1566,h:1080};
+/** heat: in the directed (closer) chapters 1–2 the other key players stay at 'low' detail below KL (160) css px — only Alba goes to full detail
+ * when close; chapters 3–4 (not directed) keep the authored 50 px rule */
+let KL=50;
+const fr=(s:Sheet,kl=160)=>{const z=Math.min(1,Math.pow(s.W/1566,.75));DV={w:s.W/z,h:s.H/z};KL=kl;return frame(s);};
+const P3=(k:number,tau:number,y=0):V3=>{const p=TR.pos(k,tau);return[p[0],y,p[1]];};
+/** a hard-ish keep point fading in/out (weight w; ≥ .99 = hard) */
+const kp=(P:V3,w:number):Keep[]=>w>.01?[{P,w:Math.min(1,w)},{P:[P[0],1.7,P[2]],w:Math.min(1,w)}]:[];
+const pin=(c:Cam,T:V3):Pin=>({eye:c.C,target:T,F:c.F});
+
 // ---------------------------------------------------------------- 1 · live: the high main-stand camera, near real time
 const tau1=(t:number)=>{const tn=CUEW(0,'Two'),S=SECS(0);return key(t,mono([[0,-2.6],[CUEW(0,'Jordi'),-.8],[CUEW(0,'passes'),0],[CUEW(0,'and keeps'),1.2],[CUEW(0,'Xavi slides'),XP-.3],[CUEW(0,'Alba finishes'),T1-.1],[CUEW(0,'left'),SHOT],[tn,IN+.4],[S+1,IN+.4+(S+1-tn)*.95]]),linear);};
 const CAM1:V3=[66,22,94];
+/** Director beats, chapter 1: a short establishing wide of the Kyiv bowl, then follow Alba carrying it out of his own half; on "passes to
+ * Xavi" pull out to the SPACE shot and hold it through "and keeps running" and "Xavi slides the ball through" — Alba's run in behind and
+ * Xavi's through-ball with BOTH in frame (Xavi a hard keep from the pull-out until the ball is through the gap; the two centre-backs he
+ * runs between as soft keeps); on "and keeps running" the camera swings ~25° round behind the play so the run and the pass line open up in
+ * depth; push in low and tight for the control and the left-foot strike (the ball kept to the contact); then the reaction on Alba for "two nil". */
+const B1=beats([[0,'wide'],[1.3,'follow'],[CUEW(0,'passes')-.45,{from:'space',size:.25}],
+ [CUEW(0,'and keeps')-.3,{from:'space',size:.25,az:25}],[CUEW(0,'Alba finishes')-.4,{from:'tight',az:25}],[CUEW(0,'Two')+.3,{from:'reaction',az:25}]]);
+function subj1(t:number){const tau=tau1(t),al=P3(AL,tau),b=ballAt(tau),ps=CUEW(0,'passes'),af=CUEW(0,'Alba finishes');
+ // Xavi: ramped in with the pull-out (≥ .6 s), out once the through-ball has reached Alba
+ const wX=sm(ps-.7,ps+.1,t,easeInOutSine)*(1-sm(XP+.2,XP+.75,tau));
+ // the ball: hard through the control and the strike, then let go as it leaves the tight shot for the far corner (the goal going in is
+ // the behind-the-goal replay's job, chapter 3); letting a keep go never moves the camera
+ const wB=1-sm(SHOT+.05,SHOT+.3,tau);
+ const cbs=near(al,[P3(CB1,tau),P3(CB2,tau)],4,9,1.85).map(k=>({P:(k as {P:V3}).P,w:(k as {w:number}).w*(1-sm(af-.6,af,t))}));
+ return{hero:al,ball:null,height:1.7,keep:[...kp(P3(XA,tau),wX),...(wB>.01?[{P:b,w:wB}]:[]),...cbs] as Keep[],rc:.55*wX};}
 function cam1(t:number):Cam{
+ const sh=(u:number)=>{const a=cam1Authored(u),sj=subj1(u);return reframe(pin(a,a.T),sj,shotAt(u,B1),DV,{recenter:sj.rc});};
+ const r=steady(t,sh);return look(r.eye,r.target,r.F);
+}
+function cam1Authored(t:number):Cam&{T:V3}{
  const tau=tau1(t),S=SECS(0),tn=CUEW(0,'Two');
  const bs=(u:number):V3=>{const b=ballAt(Math.min(u,IN));return[b[0],0,b[2]];},b0=bs(tau),b1=bs(tau-.35),b2=bs(tau-.7),bt:V3=[(b0[0]+b1[0]+b2[0])/3,0,(b0[2]+b1[2]+b2[2])/3];
  const al=TR.pos(AL,tau),mid:V3=[lerp(bt[0],al[0],.35*sm(CUEW(0,'and keeps')-.3,CUEW(0,'and keeps')+.5,t)*(1-sm(CUEW(0,'Xavi slides'),CUEW(0,'Alba finishes'),t))),1.4,lerp(bt[2],al[1],.35)];
  const goalward=.35*sm(CUEW(0,'Alba finishes')-.3,tn,t,easeInOutSine),T=lerp3(mid,[99,1,0],goalward);
  const F=key(t,mono([[0,5600],[CUEW(0,'passes'),6400],[CUEW(0,'and keeps'),5200],[CUEW(0,'Xavi slides'),5600],[CUEW(0,'Alba finishes'),8000],[tn,7600],[S,8200]]),easeInOutSine);
- return look(CAM1,T,F);
+ return{...look(CAM1,T,F),T};
 }
 const ch1:Scene={
  draw(s,t){
-  const v=frame(s),c=cam1(t),tau=tau1(t),tn=CUEW(0,'Two');
+  const v=fr(s),c=cam1(t),tau=tau1(t),tn=CUEW(0,'Two');
   stadium(s,c,v,t,VENUE,[0,2,3],{roar:sm(tn-.3,tn+.3,t),flash:sm(tn-.2,tn+.2,t)*(1-sm(SECS(0)-.9,SECS(0)-.4,t))});
   ground(s,c,PITCH,{bulge:bulge(tau),ballZ:NETP[2],ballY:.3});
   draw(s,c,v,tau,tau1(twos(t)),tau1(twos(t)-1/12),{minBall:8,trail:tau>SHOT&&tau<NETHIT+.3?1:0});
@@ -181,17 +213,29 @@ const ch1:Scene={
 
 // ---------------------------------------------------------------- 2 · slow replay, high behind Alba: the 50 m sprint, the space, the pass between the two centre-backs
 const tau2=(t:number)=>key(t,mono([[0,.6],[CUEW(1,'Alba sprints'),1.3],[CUEW(1,'into the space'),3.2],[CUEW(1,'The pass'),XP-.05],[CUEW(1,'between'),XP+.35],[CUEW(1,'right into'),T1-.1],[SECS(1),T1+.25]]),linear);
+/** Director beats, chapter 2 (the replay was far too): stay wide through the replay wipe, follow Alba's 50 m sprint, then pull out to the
+ * SPACE shot for "into the space behind the defence" and "the pass goes between two defenders" — the two centre-backs (the gap) are hard
+ * keeps (eased to soft as it arrives), so the space and the pass line through it stay readable; the ball is a near-hard keep, so the pass
+ * is seen from Xavi's foot — and push in as it arrives "right into his path". */
+const B2=beats([[0,'wide'],[CUEW(1,'Watch again')+.9,'follow'],[CUEW(1,'into the space')-.4,{from:'space',size:.24,az:-20}],[CUEW(1,'The pass')-.6,{from:'space',size:.24}],[CUEW(1,'right into')-.35,{from:'follow',size:.4}]]);
 function cam2(t:number):Cam{
+ const sh=(u:number)=>{const a=cam2Authored(u),tau=tau2(u),is=CUEW(1,'into the space'),ri=CUEW(1,'right into');
+  const wC=sm(is-.9,is+.1,u,easeInOutSine)*(1-.6*sm(ri-.4,ri+.4,u,easeInOutSine));
+  const keep:Keep[]=[...kp(P3(CB1,tau),wC),...kp(P3(CB2,tau),wC),{P:ballAt(tau),w:.98}];
+  return reframe(pin(a,a.T),{hero:P3(AL,tau),ball:null,height:1.7,keep},shotAt(u,B2),DV,{recenter:.4*wC});};
+ const r=steady(t,sh);return look(r.eye,r.target,r.F);
+}
+function cam2Authored(t:number):Cam&{T:V3}{
  const tau=tau2(t),m=TR.smooth(AL,tau),back=sm(CUEW(1,'The pass')-.3,SECS(1),t,easeInOutSine);
  const T:V3=[m[0]+12+2*back,.5,m[1]+4.5],C:V3=[m[0]-9+2*back,7.5-1.5*back,m[1]-6.5];
- return look(C,T,1500+300*back);
+ return{...look(C,T,1500+300*back),T};
 }
 /** the space behind the defence: a yellow screen between the two centre-backs and the keeper, toward Alba's side */
 function space(s:Sheet,c:Cam,tau:number,w:number){if(w<=0)return;const a=TR.pos(CB1,tau),b=TR.pos(CB2,tau),g=polyP(c,[[a[0]+1.5,.02,a[1]-1],[b[0]+1.5,.02,b[1]+.5],[97,.02,b[1]+1.5],[97,.02,a[1]-2]]);
  if(g.length<3)return;const p=polyPath(g,true);s.knockout(p,.45*w);s.tone(Y,p,.6*w);}
 const ch2:Scene={
  draw(s,t){
-  const v=frame(s),c=cam2(t),tau=tau2(t),as=CUEW(1,'Alba sprints'),is=CUEW(1,'into the space'),tp=CUEW(1,'The pass'),bt=CUEW(1,'between'),ri=CUEW(1,'right into'),E=SECS(1);
+  const v=fr(s),c=cam2(t),tau=tau2(t),as=CUEW(1,'Alba sprints'),is=CUEW(1,'into the space'),tp=CUEW(1,'The pass'),bt=CUEW(1,'between'),ri=CUEW(1,'right into'),E=SECS(1);
   stadium(s,c,v,t,VENUE,[0,2]);
   ground(s,c,PITCH);
   // "sprints fifty metres": his yellow run line from where he gave it to Xavi; "the space behind the defence": the yellow screen;
@@ -218,7 +262,7 @@ function cam3(t:number):Cam{
 }
 const ch3:Scene={
  draw(s,t){
-  const v=frame(s),c=cam3(t),tau=tau3(t),ot=CUEW(2,'One touch'),co=CUEW(2,'control'),sl=CUEW(2,'slots'),gb=CUEW(2,'Gianluigi'),hf=CUEW(2,'His first');
+  const v=fr(s,50),c=cam3(t),tau=tau3(t),ot=CUEW(2,'One touch'),co=CUEW(2,'control'),sl=CUEW(2,'slots'),gb=CUEW(2,'Gianluigi'),hf=CUEW(2,'His first');
   stadium(s,c,v,t,VENUE,[0,1,3],{roar:sm(IN,IN+.3,tau),flash:sm(hf-.3,hf+.2,t)*(1-sm(SECS(2)-.9,SECS(2)-.5,t)),lamps:sm(hf-.2,hf+.3,t)});
   ground(s,c,PITCH,{goalLater:true});
   // "one touch to control it": a yellow ring settles round the ball at his feet; "slots it": the shot's yellow line into the corner;
@@ -243,7 +287,7 @@ function cam4(t:number):Cam{
 }
 const ch4:Scene={
  draw(s,t){
-  const v=frame(s),c=cam4(t),tau=tau4(t),wt=CUEW(3,'when'),lu=CUEW(3,'looks'),sp=CUEW(3,'sprint'),bd=CUEW(3,'behind'),E=SECS(3);
+  const v=fr(s,50),c=cam4(t),tau=tau4(t),wt=CUEW(3,'when'),lu=CUEW(3,'looks'),sp=CUEW(3,'sprint'),bd=CUEW(3,'behind'),E=SECS(3);
   stadium(s,c,v,t,VENUE,[0,2]);
   ground(s,c,PITCH);
   // "when a teammate looks up": a yellow ring round Xavi, his head lifting; "sprint": Alba's yellow run; "into the space behind the

@@ -4,9 +4,9 @@ const [,,mode='desktop',spot='west-cove']=process.argv;
 // FISHING_RARE=1 biases Math.random for the second fish only, so the rarer end of the spot's catch list bites (for a rare-catch screenshot).
 const RARE=process.env.FISHING_RARE==='1';
 const VP={desktop:{width:1280,height:800},mobile:{width:390,height:844},landscape:{width:844,height:390}}[mode];const touch=mode!=='desktop';
-const spots={'south-pier':[217,211.4],'harbour-wall':[236,66],'north-rocks':[60,-237],'west-pier':[63,211.4],'west-cove':[-94.5,24],'east-pier':[371.2,68.4]};
+const spots={'south-pier':[217,211.4],'harbour-wall':[236,66],'north-rocks':[60,-237],'west-pier':[63,211.4],'west-cove':[-94.5,24],'east-pier':[371.2,68.4],'causeway-gate':[254.8,-169.2],'causeway-channel':[359.2,-176.1],'turtle-bank':[486.2,-124.8],'coral-garden':[514.8,-226.5],'sharks-beach':[697.3,-200.2],'farm-beach':[651,-68.1]};
 (async()=>{
- const browser=await chromium.launch({headless:true,executablePath:'/Users/khoado/Library/Caches/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-mac-arm64/chrome-headless-shell',args:['--use-angle=metal','--enable-gpu','--ignore-gpu-blocklist']});
+ const browser=await chromium.launch({headless:true,executablePath:'/Users/khoado/Library/Caches/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-mac-arm64/chrome-headless-shell',args:['--mute-audio','--use-angle=metal','--enable-gpu','--ignore-gpu-blocklist']});
  const ctx=await browser.newContext({viewport:VP,isMobile:touch,hasTouch:touch,deviceScaleFactor:touch?2:1});
  const page=await ctx.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push('console: '+m.text().slice(0,160));});
  const [x,z]=spots[spot];
@@ -67,6 +67,10 @@ const spots={'south-pier':[217,211.4],'harbour-wall':[236,66],'north-rocks':[60,
  console.log('fishbook sections',JSON.stringify(await page.evaluate(()=>[...document.querySelectorAll('[data-fishbook-spot]')].map(e=>e.querySelector('h3')?.textContent))));
  await page.keyboard.press('Escape');await page.waitForTimeout(500);
  await press('[data-fish-stop]');await page.waitForTimeout(350);await shot('7-returning');await page.waitForTimeout(1200);await shot('8-returned');
+ // A first catch completes the "Catch a fish" task, and its card offer pauses the island loop (by design, for heat), which can
+ // freeze the last splash ring mid-fade. Answer the offer like a player, then the loop resumes and the visuals must sleep.
+ for(let i=0;i<8&&await page.locator('dialog[open][class*=CardOffer]').count();i++){const b=page.locator('dialog[open][class*=CardOffer] button',{hasText:/Open this card|Done/}).first();if(await b.count())await b.click({timeout:3000}).catch(()=>{});else await page.keyboard.press('Escape');await page.waitForTimeout(1500);}
+ await page.waitForTimeout(1600);
  const st=await page.evaluate(()=>({hud:!!document.querySelector('[data-fishing-hud]'),live:window.__fi2.scene.getObjectByName('fishing-live')?.visible}));
  console.log(tag,'book',caught,'after',JSON.stringify(st),'errors',errors.slice(0,4));
  if(st.hud||st.live)throw Error('Fishing did not sleep after Stop');

@@ -1,7 +1,8 @@
 'use client';
 // Skill moves lab (dev review page, not linked from the island): plays one skill move on the real rig (bean style),
 // with a ball and a defender for context. Query: ?skill=<type>&side=1|-1&view=side|q|front|top&t=<0..1 paused>.
-// ?base=run|turn|stop|pass|shot|idle shows the base motions used for the fine-tunes. Heat: renders only while
+// ?base=run|turn|stop|pass|shot|idle shows the base motions used for the fine-tunes. ?skill=<freestyle trick id> (sitJuggle, neckStall,
+// pairVolley … lib/graphics/freestyleTricks.ts) plays an island freestyler's trick on a townsperson-style rig; pair tricks add the partner. Heat: renders only while
 // playing (stops after three loops), pauses when hidden; `window.__fiSkill` seeks and renders single frames for strips.
 import {useEffect,useRef,useState} from 'react';
 import * as T from 'three';
@@ -12,6 +13,7 @@ import {matchPlayerDress} from '@/lib/town/beanLooks';
 import {SKILL_MOVES,SKILL_TYPES,applySkill,skillFrame,type SkillMove} from '@/lib/graphics/skillMoves';
 import {createPreviewDriver,moveBounds,moveSeconds,type PreviewProbe} from '@/lib/graphics/previewMoves';
 import {applyCelebrationArms} from '@/lib/graphics/celebrations';
+import {CLASSIC_GROUND,FREESTYLE_TRICKS,createTrickCtx,createTrickFrame,sampleTrick,trickById,type TrickCtx} from '@/lib/graphics/freestyleTricks';
 
 type Base='run'|'turn'|'stop'|'pass'|'shot'|'idle'|'showcase';
 const BASES:Base[]=['run','turn','stop','pass','shot','idle','showcase'];
@@ -27,7 +29,9 @@ export default function SkillLab(){
  const config=useRef({skill,side,view});config.current={skill,side,view};
  useEffect(()=>{
   const q=new URLSearchParams(location.search),raw=q.get('skill')??q.get('base'),s=raw&&ALIASES[raw.toLowerCase()]||raw;
-  if(s&&((SKILL_TYPES as string[]).includes(s)||(BASES as string[]).includes(s)))setSkill(s as SkillMove);
+  const trick=raw?FREESTYLE_TRICKS.find(t=>t.id.toLowerCase()===raw.toLowerCase()):undefined;
+  if(trick)setSkill(trick.id as SkillMove);
+  else if(s&&((SKILL_TYPES as string[]).includes(s)||(BASES as string[]).includes(s)))setSkill(s as SkillMove);
   if(q.get('side')==='-1')setSide(-1);if(q.get('view'))setView(q.get('view')!);
  },[]);
  useEffect(()=>{
@@ -49,8 +53,13 @@ export default function SkillLab(){
   const probe:PreviewProbe={ankle:(sd,o)=>{rig.root.getObjectByName(sd<0?'left-ankle':'right-ankle')!.getWorldPosition(tA);o.x=tA.x;o.y=tA.y;o.z=tA.z;return o;},hands:o=>{rig.handPositions(tA,tB);o.x=(tA.x+tB.x)/2;o.y=(tA.y+tB.y)/2;o.z=(tA.z+tB.z)/2;return o;}};
   let t=0,dur=1,ballShown=true;const showSeconds=moveSeconds('showcase')+.6;
   const isBase=(k:string):k is Base=>(BASES as string[]).includes(k);
+  // Freestyle tricks: the trick pose and ball from freestyleTricks.ts; the defender rig plays the partner in pair tricks.
+  const isTrick=(k:string)=>!!trickById(k),trickFrame=createTrickFrame(),partnerFrame=createTrickFrame(),PAIR_D=4.5;
+  // Trick maths is in the rig's root frame before its profile scale (as on the island): convert heights in, the ball out.
+  const ctxOf=(r:typeof rig):TrickCtx=>{const s=Math.abs(r.root.scale.y)||1,legs=r.profile.legs;return createTrickCtx({legs,pelvisRest:.88+(legs-1)*.83,headTop:r.headTop!==undefined?r.headTop/s:.88+(legs-1)*.83+1.01,ground:(r.root.userData.beanBody as {ground?:number[]}|undefined)?.ground??CLASSIC_GROUND,partnerD:PAIR_D/s});};
   // Defender placement for context: in front for feints/turns, beside for the charge, behind for the shield.
   const placeDefender=(k:string)=>{
+   if(isTrick(k)){defender.root.visible=!!trickById(k)!.pair;return {x:0,z:PAIR_D,f:Math.PI,ready:0};}
    const sd=config.current.side,g=isBase(k)?'':SKILL_MOVES[k as SkillMove].group;defender.root.visible=!isBase(k)&&k!=='scan'&&g!=='celebrate'&&g!=='keeper';
    if(k==='shoulderCharge')return {x:sd*.84+root.x,z:root.z+.08,f:0,ready:0};
    // Batch 2: the chip goes over a keeper off his line; a curler/trivela/toe poke past a blocking defender; the
@@ -77,6 +86,12 @@ export default function SkillLab(){
   const step=(i:number)=>{
    const k=config.current.skill,sd=config.current.side;
    if(isBase(k)){baseStep(k,i,motion);}
+   else if(isTrick(k)){
+    const t=trickById(k)!,c=ctxOf(rig),p=ctxOf(defender);c.partner=p;p.partner=c;
+    sampleTrick(t,Math.min(t.seconds,i*DT),sd,c,trickFrame,t.pair?'lead':'solo');for(const key of Object.keys(motion))delete (motion as Record<string,unknown>)[key];
+    Object.assign(motion,{facing:0,trick:trickFrame.pose,juggle:0,juggleTouch:'foot',kickSide:sd});root.x=root.z=0;const sc=Math.abs(rig.root.scale.y)||1;bp.x=trickFrame.ball.x*sc;bp.y=trickFrame.ball.y*sc;bp.z=trickFrame.ball.z*sc;
+    if(t.pair)sampleTrick(t,Math.min(t.seconds,i*DT),sd,p,partnerFrame,'follow');
+   }
    else{
     const pre=20;
     if(i<pre){motion.facing=0;motion.skill=undefined;root.x=0;root.z=0;const b={x:0,y:0,z:0};applySkill({},k,0,sd,start,{x:0,z:0},b);bp.x=b.x;bp.y=b.y;bp.z=b.z;}
@@ -84,20 +99,21 @@ export default function SkillLab(){
    }
    rig.update(root.x,root.z,DT,i*DT,false,motion);if(k==='showcase'&&showCelebrate>=0)applyCelebrationArms(rig.root,showCelebrate);
    const d=placeDefender(k);for(const key of Object.keys(dm))delete (dm as Record<string,unknown>)[key];dm.facing=d.f;dm.ready=d.ready;dm.lookX=bp.x;dm.lookZ=bp.z;
+   if(isTrick(k)&&trickById(k)!.pair){dm.trick=partnerFrame.pose;dm.juggle=0;dm.juggleTouch='foot';}
    // The fair charge knocks the opponent off balance (a stumble that recovers, no fall).
    if(k==='shoulderCharge'&&motion.skill){const pr=(motion.skill.progress-.36)/.5;if(pr>0&&pr<1){dm.reaction='stumble';dm.reactionProgress=pr;dm.kickSide=config.current.side;}}
    defender.update(d.x,d.z,DT,i*DT,false,dm);
-   ball.position.set(bp.x,bp.y,bp.z);ball.visible=k==='showcase'?ballShown:isBase(k)?k!=='idle':SKILL_MOVES[k as SkillMove].ball;
+   ball.position.set(bp.x,bp.y,bp.z);ball.visible=k==='showcase'?ballShown:isBase(k)?k!=='idle':isTrick(k)?true:SKILL_MOVES[k as SkillMove].ball;
   };
-  const framesFor=()=>{const k=config.current.skill;dur=k==='showcase'?showSeconds:isBase(k)?BASE_SECONDS[k]:SKILL_MOVES[k].seconds;return (isBase(k)?0:20)+Math.round(dur/DT)+(isBase(k)?0:36);};
+  const framesFor=()=>{const k=config.current.skill;if(isTrick(k)){dur=trickById(k)!.seconds;return Math.round(dur/DT)+20;}dur=k==='showcase'?showSeconds:isBase(k)?BASE_SECONDS[k]:SKILL_MOVES[k].seconds;return (isBase(k)?0:20)+Math.round(dur/DT)+(isBase(k)?0:36);};
   const reset=()=>{show=createPreviewDriver();scene.remove(rig.root);rig.dispose();rig=makeRig('skill-lab-10','home',10);root.x=root.z=0;t=0;for(const key of Object.keys(motion))delete (motion as Record<string,unknown>)[key];};
   const seek=(i:number)=>{reset();for(let f=0;f<=i;f++)step(f);t=i;};
   const place=(v:string)=>{
    const P=rig.root.position,sd=config.current.side;const cx=P.x,cz=P.z;
    // Skill moves: a fixed camera on the middle of the move (travel reads); base motions follow the player.
-   const k=config.current.skill,mid=isBase(k)?undefined:skillFrame(k,.5,sd),box=k==='showcase'?moveBounds('showcase'):undefined;
+   const k=config.current.skill,trick=trickById(k),mid=isBase(k)||trick?undefined:skillFrame(k,.5,sd),box=k==='showcase'?moveBounds('showcase'):trick?{minX:-.6,maxX:.6,minZ:-.2,maxZ:trick.pair?PAIR_D:.9}:undefined;
    const lx=box?(box.minX+box.maxX)/2:mid?mid.x*.6:(cx+ball.position.x)/2,lz=box?(box.minZ+box.maxZ)/2:mid?mid.z*.6+.35:(cz+ball.position.z)/2;
-   if(v==='side')camera.position.set(lx-sd*4.5,1.05,lz+.1);else if(v==='front')camera.position.set(lx+.2,1.25,lz+4);else if(v==='top')camera.position.set(lx+.01,5.5,lz+.5);else if(v==='back')camera.position.set(lx+.3,1.4,lz-4);
+   if(trick?.pair)camera.position.set(lx-sd*7.5,2.4,lz+1.2);else if(v==='side')camera.position.set(lx-sd*4.5,1.05,lz+.1);else if(v==='front')camera.position.set(lx+.2,1.25,lz+4);else if(v==='top')camera.position.set(lx+.01,5.5,lz+.5);else if(v==='back')camera.position.set(lx+.3,1.4,lz-4);
    else camera.position.set(lx-sd*3.5,2.05,lz+3.6);
    camera.lookAt(lx,.9,lz);sun.position.set(cx-3,7,cz+4);sun.target.position.set(cx,0,cz);
   };
@@ -111,7 +127,7 @@ export default function SkillLab(){
   const vis=()=>{if(document.hidden){cancelAnimationFrame(frame);frame=0;}};document.addEventListener('visibilitychange',vis);
   (window as unknown as {__fiSkill?:unknown}).__fiSkill={types:SKILL_TYPES,bases:BASES,specs:SKILL_MOVES,
    /** Poses the move at progress p (0..1; >1 = after the end) with a fresh rig and renders one frame; returns a JPEG data URL. */
-   shot:(k:SkillMove|Base,p:number,sd:1|-1,v:string)=>{cancelAnimationFrame(frame);frame=0;config.current={skill:k,side:sd,view:v};framesFor();const pre=isBase(k)?0:20;seek(pre+Math.round(p*dur/DT));render(v);return renderer.domElement.toDataURL('image/jpeg',.86);},
+   shot:(k:SkillMove|Base,p:number,sd:1|-1,v:string)=>{cancelAnimationFrame(frame);frame=0;config.current={skill:k,side:sd,view:v};framesFor();const pre=isBase(k)||isTrick(k)?0:20;seek(pre+Math.round(p*dur/DT));render(v);return renderer.domElement.toDataURL('image/jpeg',.86);},
    get clock(){return clock;},rig:()=>rig,ball};
   const q=new URLSearchParams(location.search);resize();const ro=new ResizeObserver(resize);ro.observe(node);
   if(q.get('t'))((window as unknown as {__fiSkill:{shot:(k:string,p:number,s:number,v:string)=>void}}).__fiSkill).shot(config.current.skill,Number(q.get('t')),config.current.side,config.current.view);else play();
@@ -124,6 +140,7 @@ export default function SkillLab(){
   <div style={{display:'flex',flexWrap:'wrap',gap:8,margin:'8px 0'}}>
    <select aria-label="Move" value={skill} onChange={e=>setSkill(e.target.value as SkillMove)} style={{fontSize:16}}>
     <optgroup label="Skill moves">{SKILL_TYPES.map(k=><option key={k} value={k}>{SKILL_MOVES[k].label}</option>)}</optgroup>
+    <optgroup label="Freestyle tricks">{FREESTYLE_TRICKS.map(t=><option key={t.id} value={t.id}>{t.label}</option>)}</optgroup>
     <optgroup label="Base motions">{BASES.map(k=><option key={k} value={k}>{k}</option>)}</optgroup>
    </select>
    <select aria-label="Foot" value={side} onChange={e=>setSide(Number(e.target.value) as 1|-1)} style={{fontSize:16}}><option value={1}>Right foot</option><option value={-1}>Left foot</option></select>
@@ -132,5 +149,6 @@ export default function SkillLab(){
   </div>
   <div ref={host} data-skill-lab style={{width:'100%',aspectRatio:'16 / 10',maxHeight:'70vh',background:'#9fc7d8',borderRadius:8,overflow:'hidden'}}/>
   {spec&&<p style={{lineHeight:1.45}}><b>{spec.label}.</b> {spec.teach} {spec.history&&<i>{spec.history}</i>}</p>}
+  {trickById(skill)&&<p style={{lineHeight:1.45}}><b>{trickById(skill)!.label}.</b> {trickById(skill)!.purpose}</p>}
  </main>;
 }

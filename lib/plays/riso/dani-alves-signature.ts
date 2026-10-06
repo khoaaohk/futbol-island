@@ -47,6 +47,7 @@ import {TAU,twos,sm,key,clamp,lerp,rng,hash,blob,polyPath,ribbon,rectPath,easeOu
 import {sparkBurst,laneArrow,footballPanels} from '../../paths/riso/shapes';
 import {drawAthlete,motionSmear,runCycle,dribble,backpedal,lunge,strike,keeperSet,keeperDive,celebrate,stand,posed,blendPose,
  STRIKE_CONTACT,type Pose,type AthleteStyle,type InkFill,type Place,type Projector,type V3,type DrawResult} from './athlete';
+import {beats,shotAt,reframe,steady,near,type Subject,type Keep,type View as DView} from './director';
 
 // ---------------------------------------------------------------- narration + timing
 /** Narration, cue words and provisional (≈2.5 words/s) timings. `at` = word onset in the chapter's audio (s); `seconds` = clip length incl.
@@ -84,7 +85,9 @@ const bump=(a:number,b:number,t:number)=>t<=a||t>=b?0:Math.sin(Math.PI*(t-a)/(b-
 function cam(s:Sheet,x:number,y:number,z0:number,r=0){const z=z0*Math.min(1,Math.pow(s.W/1566,.75)),k=z*s.arrival;s.camera(x-(s.W/2-s.cx)/k,y-(s.H/2-s.cy)/k,z/s.fit,r);return z;}
 type View={hx:number;hy:number};
 const view=(s:Sheet,z:number):View=>({hx:s.W/(2*z*.68)+60,hy:s.H/(2*z*.68)+60});
-const frame=(s:Sheet)=>view(s,cam(s,0,0,1));
+const frame=(s:Sheet)=>{const z=cam(s,0,0,1);DV={w:s.W/z,h:s.H/z};return view(s,z);};
+/** the window in camera units (set by frame(); read by the director's reframing, aperture() included) */
+let DV:DView={w:1566,h:1080};
 
 // ---------------------------------------------------------------- the TV camera: a right-handed 3D projection of the pitch
 /** Pitch metres (right-handed, like athlete.ts): X along the length (Barça attack +X, the goal line they attack at 105), Y up, Z across
@@ -337,8 +340,9 @@ function play(s:Sheet,c:Cam,v:View,tau:number,tauP:number,tauPrev:number,o:{minB
  let ballDone=!list.length||bq[2]>=list[0].d;if(ballDone)drawBall();
  for(const e of list){if(!ballDone&&bq[2]>=e.d){drawBall();ballDone=true;}
   const a=ACTORS[e.k],{p,yaw}=poseOf(e.k,tauP),px=e.h*ppu,big=e.h>=300;
-  // phone heat: low detail for small figures and extras; during a passage only Alves keeps 'mid'
-  const detail=passing?(e.k===ALVES?'mid':'low'):px<50||(!a.key&&px<110)?'low':'auto';
+  // phone heat: low detail for small figures and extras; during a passage only Alves keeps 'mid'. The director's closer shots enlarge
+  // everyone, so only Alves and Messi go up to full detail at the old size; the rest of the cast needs to be twice as big first
+  const duo=e.k===ALVES||e.k===MESSI,detail=passing?(e.k===ALVES?'mid':'low'):px<50||(!duo&&px<(a.key?110:220))?'low':'auto';
   drawPlayer(s,p,c,{...a.style,shadow:e.h<420?false:undefined,detail},{x:e.x,z:e.z,yaw},big&&(a.key||e.h>520)&&!passing?{prev:poseOf(e.k,tauPrev).p,smear:hero&&(e.k===ALVES||e.k===MESSI)}:{});}
  if(!ballDone)drawBall();
  const out={list,bg,br};
@@ -375,11 +379,59 @@ function zone(s:Sheet,c:Cam,P:[number,number][],w:number,t:number,ink:string,see
 /** the space in behind the left-back that the return pass is played into */
 const SPACE:[number,number][]=[[69,26],[79,25.5],[81,30],[79,33.4],[69,33.4],[67,30]];
 
+// ---------------------------------------------------------------- the director (lib/plays/riso/director.ts, Oct 4 2026): closer angles
+/** soft keep points (feet and head) for actor k at τ with weight w (0 = free, 1 = must stay inside the window margin) */
+const keepK=(k:number,tau:number,w:number,h=1.8):Keep[]=>{if(w<=.01)return[];const[x,z]=posOf(k,tau);return[{P:[x,0,z],w},{P:[x,h,z],w}];};
+/** the opponents near the hero (the defender being beaten, the keeper) as soft keeps */
+const foesNear=(hero:V3,tau:number,r0=3.5,r1=7):Keep[]=>near(hero,[LB,CB1,GK].map(k=>{const[x,z]=posOf(k,tau);return[x,0,z] as V3;}),r0,r1)
+ // capped below 1: a soft keep never counts as a hard point for the director's recenter, so walking in and out of range never shifts the aim
+ .map(k=>({...(k as {P:V3;w:number}),w:(k as {w:number}).w*.95}));
+/** reframe an authored {C,T,F} through the director and rebuild it with this film's own look() */
+/** the ball for the director: when it is far from the hero (with another player, or in flight) it is only a soft keep and the focus eases
+ * back to the hero's feet — continuous in τ, so nothing jumps as the ball comes and goes */
+function ballSubj(hero:V3,b:V3):{ball:V3;keep:Keep[]}{const u=sm(3,14,Math.hypot(b[0]-hero[0],b[2]-hero[2]),easeInOutSine);
+ // the ball in flight is not a keep of its own (it crosses 10 m in half a second: a keep that fast would snap the camera) — the passer
+ // and the receiver are kept instead, so the ball travels between two players who are both in shot
+ return{ball:[lerp(b[0],hero[0],u),lerp(b[1],.11,u),lerp(b[2],hero[2],u)],keep:[]};}
+/** the empty space on the wing as keep points: its centre firmly, its corners softly (the zone may run off the edge, never vanish) */
+const spaceKeep=(w:number):Keep[]=>w<=.01?[]:[{P:[75,0,29.5],w},...SPACE.map(([x,z])=>({P:[x,0,z] as V3,w:w*.55}))];
+/** reframe an authored {C,T,F} through the director, averaged over ±HALF s by steady() (the fit clamp's answer changes smoothly, never
+ * a snap), and rebuild it once with this film's own look(). rc = the director's recenter (aim between the hero and the hard keeps). */
+// low:0 on the three push-ins that hold a far keep (Messi behind Alves): the director's eye-lowering depends on the dolly-back distance,
+// so with `low` the fit is not monotonic in that distance and the answer can snap; a constant elevation keeps the back-off smooth.
+const HALF=.45;
+const directed=(auth:(t:number)=>{C:V3;T:V3;F:number},subj:(t:number)=>Subject,t:number,B:ReturnType<typeof beats>,rc:(t:number)=>number=()=>0)=>{
+ const r=steady(t,u=>{const c=auth(u);return reframe({eye:c.C,target:c.T,F:c.F},subj(u),shotAt(u,B),DV,{recenter:rc(u)});},HALF,5);return look(r.eye,r.target,r.F);};
+
 // ---------------------------------------------------------------- 1 · live: the high main-stand camera at halfway, near real time
 /** τ from chapter-1 time, keyed to the cue words (≈ real time from the pass to the goal) */
 const tau1=(t:number)=>{const MS=CUEW(0,'Messi scores');return key(t,[[0,-4.4],[CUEW(0,'passes'),-.3],[CUEW(0,'keeps'),1.1],[CUEW(0,'Round'),2.2],[CUEW(0,'Messi slides'),RET-.05],[CUEW(0,'into his'),RET_IN],[CUEW(0,'Alves crosses'),CROSS-.05],[MS,SHOT+.05],[SECS(0)+1,SHOT+.05+(SECS(0)+1-MS)*.9]],linear);};
 const CAM1:V3=[52.5,30,90];
-function cam1(t:number):Cam{
+/** Director beats, chapter 1: a short establishing wide of Camp Nou, then follow Alves on the ball; pull out for his pass inside so Messi
+ * (the target) is in the shot, stay with Alves as he keeps running round the outside (Messi and the left-back he drags inside stay in
+ * frame), pull out again for Messi's return pass (passer and Alves both in shot), push in low as the ball arrives in his path, pull out
+ * for the cross so Messi is in frame, push in on Messi's first-time finish with the goal mouth kept, and hold on the scorer. */
+const B1=beats([[0,'wide'],[.9,'follow'],[CUEW(0,'passes to Messi')-.45,{from:'space',size:.32}],[CUEW(0,'keeps running')-.2,'follow'],
+ [CUEW(0,'Messi slides')-.4,{from:'space',size:.3}],[CUEW(0,'into his path')-.35,{from:'tight',size:.48,low:0}],[CUEW(0,'Alves crosses')-.3,{from:'space',size:.26}],
+ [CUEW(0,'Messi scores')-.45,'tight'],[CUEW(0,'Messi scores')+.5,'reaction']]);
+/** the subject in chapter 1: Alves (the card's player) until his cross, then the hero blends to Messi for the finish (never a hard switch) */
+function subj1(t:number):Subject{
+ // every weight and the hand-over ramp on the chapter clock (≥ .7 s, eased): τ runs fast around the passes, so τ ramps would snap
+ const tau=tau1(t),ps=CUEW(0,'passes to'),ih=CUEW(0,'into his'),ac=CUEW(0,'Alves crosses'),ms=CUEW(0,'Messi scores');
+ const toM=sm(ac+.1,ac+.9,t,easeInOutSine),a=posOf(ALVES,tau),m=posOf(MESSI,tau),hero:V3=[lerp(a[0],m[0],toM),0,lerp(a[1],m[1],toM)];
+ // Messi: the target of the pass, the player Alves runs round, the passer of the return, the target of the cross (held throughout)
+ const wM=sm(ps-1.1,ps-.2,t,easeInOutSine);
+ // Alves: the crosser stays in shot while the ball is in the air to Messi
+ const wA=1-sm(ac+.3,ac+1.1,t,easeInOutSine),goal=sm(ms-.8,ms,t,easeInOutSine);
+ const bs=ballSubj(hero,ballAt(tau)),keep:Keep[]=[...keepK(MESSI,tau,wM),...keepK(ALVES,tau,wA),...foesNear(hero,tau),...bs.keep];
+ if(goal>.01)keep.push({P:[105,0,3.66],w:goal*.8},{P:[105,2.44,-3.66],w:goal*.75});
+ return{hero,ball:bs.ball,keep};
+}
+/** recenter in chapter 1: on the passes (the pass inside, the return, the cross) the shot aims at the group — passer, receiver, ball —
+ * so it can push in on all of them; eased in and out over ≥ .6 s */
+const RC1=(t:number)=>.6*Math.max(bump(CUEW(0,'passes to')-1.4,CUEW(0,'keeps')+.4,t),bump(CUEW(0,'Messi slides')-1.2,CUEW(0,'into his')+.9,t),bump(CUEW(0,'Alves crosses')-1.2,CUEW(0,'Messi scores')+.6,t));
+function cam1(t:number):Cam{return directed(cam1Authored,subj1,t,B1,RC1);}
+function cam1Authored(t:number):{C:V3;T:V3;F:number}{
  const tau=tau1(t),S=SECS(0);
  const bs=(u:number):V3=>{const b=ballAt(u);return[b[0],0,b[2]];},b0=bs(tau),b1=bs(tau-.3),b2=bs(tau-.6),bt:V3=[(b0[0]+b1[0]+b2[0])/3,0,(b0[2]+b1[2]+b2[2])/3];
  // the director frames the ball but leans toward the box as the move reaches it
@@ -387,7 +439,7 @@ function cam1(t:number):Cam{
  const open:V3=[52.5,4,2],toBall=sm(.2,CUEW(0,'at Barcelona')+.6,t,easeInOutSine);
  const T=lerp3(open,tb,toBall);
  const F=key(t,[[0,1700],[CUEW(0,'again and'),3900],[CUEW(0,'The right'),4700],[CUEW(0,'Round'),4400],[CUEW(0,'Alves crosses'),3900],[CUEW(0,'Messi scores'),4300],[S,4700]],easeInOutSine);
- return look(CAM1,T,F);
+ return{C:CAM1,T,F};
 }
 const ch1:Scene={
  draw(s,t){
@@ -402,13 +454,28 @@ const ch1:Scene={
 
 // ---------------------------------------------------------------- 2 · slow replay, a low rail camera on the touchline beside Alves
 const tau2=(t:number)=>key(t,[[0,-.6],[CUEW(1,'The defender'),.5],[CUEW(1,'follows'),1.2],[CUEW(1,'Nobody'),2],[CUEW(1,'He sprints'),2.5],[CUEW(1,'the empty'),2.75],[CUEW(1,'the ball is'),RET_IN-.05],[SECS(1),4.5]],linear);
-function cam2(t:number):Cam{
+/** Director beats, chapter 2 (the slow replay): the replay wipe on a pulled-back rail shot, then hold so the defender following Messi
+ * inside and Messi are both in frame (the shot centred on Messi, easing over to Alves), push in on Alves as "nobody follows" him, ride with his sprint with the empty space ahead kept in
+ * shot, and push in low as the ball waits for him (the passer stays in shot while it travels). */
+const B2=beats([[0,{from:'space',size:.24}],[CUEW(1,'The defender')-.4,{from:'space',size:.3}],[CUEW(1,'Nobody')-.2,{from:'tight',size:.48,low:0}],
+ [CUEW(1,'He sprints')-.1,'follow'],[CUEW(1,'the empty')-.3,{from:'space',size:.26}],[CUEW(1,'the ball is')-.4,{from:'tight',size:.5}]]);
+function subj2(t:number,tau:number):Subject{
+ const es=CUEW(1,'the empty'),nb=CUEW(1,'Nobody'),toA=sm(nb-1.5,nb-.5,t,easeInOutSine),a=posOf(ALVES,tau),m=posOf(MESSI,tau);
+ // the subject: Messi (followed inside by the defender) until "Nobody follows", then Alves — blended, never a hard switch
+ const hero:V3=[lerp(m[0],a[0],toA),0,lerp(m[1],a[1],toA)];
+ // the defender and Messi (ringed in red) while they are named; Messi again as the return pass is played; the empty space when named
+ const wIn=1-sm(nb-.3,nb+.6,t,easeInOutSine),wM=Math.max(wIn,.5*sm(RET-.9,RET-.1,tau,easeInOutSine)*(1-sm(RET_IN-.4,RET_IN+.4,tau,easeInOutSine))),wS=sm(es-.8,es,t,easeInOutSine)*(1-sm(CUEW(1,'the ball is')-.8,CUEW(1,'the ball is'),t,easeInOutSine));
+ const bs=ballSubj(hero,ballAt(tau)),keep:Keep[]=[...keepK(MESSI,tau,wM),...keepK(LB,tau,wIn),...keepK(ALVES,tau,1),...spaceKeep(wS),...bs.keep];
+ return{hero,ball:bs.ball,keep};
+}
+function cam2(t:number):Cam{return directed(cam2Authored,u=>subj2(u,tau2(u)),t,B2);}
+function cam2Authored(t:number):{C:V3;T:V3;F:number}{
  const tau=tau2(t),m=smooth(ALVES,tau),open=1-sm(0,1.2,t,easeInOutSine);
  // early the lens leans inside to hold Messi and the left-back; then it rides with Alves
  const inside=1-sm(CUEW(1,'Nobody')-.3,CUEW(1,'He sprints')+.3,t,easeInOutSine);
  const C:V3=[m[0]-7-3*open,2.4+.8*inside,40.5];
  const T:V3=[m[0]+5+2*inside,1,lerp(m[1]-2,m[1]-8,inside)];
- return look(C,T,1750-250*open-200*inside);
+ return{C,T,F:1750-250*open-200*inside};
 }
 const ch2:Scene={
  draw(s,t){
@@ -431,11 +498,25 @@ const ch2:Scene={
 
 // ---------------------------------------------------------------- 3 · the lesson: a raised three-quarter camera behind the right flank
 const tau3=(t:number)=>key(t,[[0,-1.5],[CUEW(2,'pass to'),0],[CUEW(2,'keep running'),1.2],[CUEW(2,'round the'),2.2],[CUEW(2,'into space'),2.6],[CUEW(2,'The return'),RET],[CUEW(2,'find you'),RET_IN],[SECS(2),4.6]],linear);
-function cam3(t:number):Cam{
+/** Director beats, chapter 3 (the lesson): the raised three-quarter camera brought in to lesson size on Alves with Messi kept for "pass
+ * to a teammate", the run round the outside with the left-back and the space kept, pulled out for "The return pass" so passer, receiver
+ * and the space are all in shot, and a closer hold on Alves as the return pass finds him. */
+const B3=beats([[0,{from:'lesson',size:.3}],[CUEW(2,'pass to')-.4,'lesson'],[CUEW(2,'into space')-.3,{from:'lesson',size:.3}],[CUEW(2,'The return')-.35,{from:'space',size:.26}],
+ [CUEW(2,'find you')-.35,{from:'lesson',size:.44,low:0}]]);
+function subj3(t:number,tau:number):Subject{
+ const a=posOf(ALVES,tau),hero:V3=[a[0],0,a[1]],is=CUEW(2,'into space'),fy=CUEW(2,'find you');
+ const wM=1-sm(fy-.2,fy+.6,t,easeInOutSine),wS=sm(is-.8,is,t,easeInOutSine)*.9;
+ const bs=ballSubj(hero,ballAt(tau)),keep:Keep[]=[...keepK(MESSI,tau,wM),...foesNear(hero,tau,4,9),...spaceKeep(wS),...bs.keep];
+ return{hero,ball:bs.ball,keep};
+}
+/** recenter in the lesson (aim between Alves and Messi), eased out before Messi's keep is released at "find you there" */
+const RC3=(t:number)=>.5*(1-sm(CUEW(2,'find you')-1,CUEW(2,'find you')-.3,t,easeInOutSine));
+function cam3(t:number):Cam{return directed(cam3Authored,u=>subj3(u,tau3(u)),t,B3,RC3);}
+function cam3Authored(t:number):{C:V3;T:V3;F:number}{
  const tau=tau3(t),a=smooth(ALVES,clamp(tau,-1.5,4.2)),m=smooth(MESSI,clamp(tau,-1.5,3.2)),open=1-sm(0,1.2,t,easeInOutSine);
  const late=sm(RET-.2,RET_IN+.6,tau,easeInOutSine)*.65,T:V3=[lerp((a[0]+m[0])/2+2,a[0],late),.4,lerp((a[1]+m[1])/2-1,a[1]-3,late)];
  const C:V3=[T[0]-12-4*open,7.5+2*open,T[2]+19+3*open];
- return look(C,T,1700-200*open);
+ return{C,T,F:1700-200*open};
 }
 const ch3:Scene={
  draw(s,t){

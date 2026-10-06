@@ -48,7 +48,7 @@ for(const sc of SCENARIOS){
   if(sc.keeper)assert(inside(sc.keeper)&&sc.keeper.z>L/2-3,at(sc,'keeper on the goal line'));
   if(sc.require.finish==='goal')assert(sc.keeper,at(sc,'a goal puzzle has a keeper'));
   if(sc.bonus){
-    assert(['curl','chip','header','first-time','scorer'].includes(sc.bonus.kind),at(sc,'bonus kind'));
+    assert(['curl','chip','header','first-time','scorer','placement'].includes(sc.bonus.kind),at(sc,'bonus kind'));
     assert(sc.bonus.label.length>0&&sc.bonus.label.length<=28,at(sc,'bonus label'));
     if(sc.bonus.kind==='scorer')assert(sc.attackers[sc.bonus.scorer],at(sc,'bonus scorer'));
   }

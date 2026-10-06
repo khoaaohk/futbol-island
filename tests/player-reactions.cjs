@@ -64,7 +64,9 @@ function react(kind,{duration=.8,travel=kind,speed=speedFor(travel),side=1,until
   let z=r.root.position.z;const v=kind==='slide'?speedFor(kind)*.15:speedFor(kind);
   for(let i=0;i<30;i++){z+=v*DT;for(const q of[r,twin])q.update(0,z,DT,2+i*DT,false,{facing:0,kickSide:1,lookX:0,lookZ:z+3,runIntensity:v>0?Math.min(1,v/6):undefined});}
   const d=dist(poseVector(r),poseVector(twin));settle[kind]=+d.toFixed(3);
-  assert(d<.35,kind+' settles back into the gait after the action: '+d.toFixed(3));
+  // .4 (A7, Oct 2026, was .35): at the slide's .75 m/s exit the gait now takes full-length, distance-matched steps, so
+  // the same small phase offset from the twin reads as a larger joint distance (.27 -> .38); it still oscillates, never grows.
+  assert(d<(kind==='slide'?.4:.35),kind+' settles back into the gait after the action: '+d.toFixed(3));
   r.dispose();twin.dispose();
  }
  console.log('REACTION_SETTLE',JSON.stringify(settle));

@@ -52,7 +52,8 @@ export function creditConceptTick(concept:ConceptId|null,source:string,format?:s
 export function useDueReviewCount(){useReviewState();const now=Date.now();return Object.values(readSnapshot().lessons).filter(r=>r.enrolled>0&&r.due<=now).length;}
 export function openLearningReview(){window.dispatchEvent(new CustomEvent(LEARNING_REVIEW_OPEN));}
 /** Open a Paths lesson from anywhere (replay from the start); Town travels to the pitch and opens it. */
-export function openPathLesson(key:string){const {format,lessonId}=splitLessonKey(key);window.dispatchEvent(new CustomEvent(FORMAT_PATH_LAUNCH,{detail:{format,lessonId,step:0,quiz:false,question:0,nonce:Date.now()}}));}
+/** Opens a Paths lesson; `step` starts the play at that moment (a missed warm-up question opens the step its picture comes from). */
+export function openPathLesson(key:string,step=0){const {format,lessonId}=splitLessonKey(key);window.dispatchEvent(new CustomEvent(FORMAT_PATH_LAUNCH,{detail:{format,lessonId,step:Math.max(0,Math.floor(step)||0),quiz:false,question:0,nonce:Date.now()}}));}
 /** The lesson the player has passed for this concept (same format first), or null: the live-match "spot it" gate. */
 export function learnedLessonFor(concept:ConceptId,format?:string):string|null{
  const passed=new Set(passedQuizLessons().map(l=>l.id));return conceptLessons(concept,format,true).find(k=>passed.has(k))??null;

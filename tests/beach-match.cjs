@@ -119,7 +119,9 @@ const seen=new Set();
 // ---- 8. No Learn card at the court (user request, Sep 29): the four island pitches keep theirs; nothing is registered for the beach ----
 {const town=fs.readFileSync('components/Town.tsx','utf8');
  assert(!/data-field="beach"|BeachMatchGuide|LIVE_VENUES/.test(town),'no beach learn card, guide or prompt in Town');
- assert.match(town,/\{VENUES\.map\(v=><button key=\{v\.id\} data-tour="plays" data-field=\{v\.id\} className="meet-coach field-learn-card"/,'island pitch learn cards unchanged');
+ // Oct 4 2026 (clear path): the island pitch cards moved into components/FieldPathCard.tsx (one per VENUES pitch, beach excluded).
+ assert.match(town,/\{VENUES\.map\(v=><FieldPathCard key=\{v\.id\} venue=\{v\}/,'island pitch learn cards: one per island pitch');
+ assert.match(fs.readFileSync('components/FieldPathCard.tsx','utf8'),/data-tour="plays" data-field=\{venue\.id\}[^>]*className="meet-coach field-learn-card"/,'the card keeps its HUD hooks');
  assert.match(town,/for\(const v of VENUES\)\{\n\s*\/\/ Clip the actual pitch polygon/,'visible-pitch scan covers the island pitches only');}
 // ---- 9. Teaching moments reach the live feed ----
 {const src=fs.readFileSync('lib/town/matchEffects.ts','utf8');assert.match(src,/const note=sim\.note;if\(note\.serial!==lastNote\)/);

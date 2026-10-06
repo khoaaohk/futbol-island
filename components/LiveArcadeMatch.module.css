@@ -60,3 +60,45 @@
 @media(max-width:700px),(pointer:coarse){.root>.header.header{padding:calc(16px + env(safe-area-inset-top,0px)) calc(18px + env(safe-area-inset-right,0px)) 10px calc(18px + env(safe-area-inset-left,0px))}}
 /* The "turn sideways" screen owns the view: hide the joystick, action buttons and footer under it. */
 .root[data-rotate] .touchControls,.root[data-rotate] .footer{visibility:hidden;pointer-events:none}
+
+/* Oct 4 polish: round focus chip, goal/kickoff banner, full-time recap. */
+.root .direction .focus{display:inline-block;margin-top:6px;padding:3px 10px;border:1px solid #81fbed66;border-radius:999px;background:#151b32d9;color:#cef7ff;font-size:10px;font-weight:700;letter-spacing:.04em;animation:focusPop .45s ease-out 1}
+.root .direction .focus[data-done]{border-color:#fff08a;color:#fff08a}
+@keyframes focusPop{0%{transform:scale(1.25);background:#81fbed55}100%{transform:scale(1)}}
+.banner{position:absolute;z-index:2;left:50%;top:30%;display:grid;justify-items:center;gap:4px;pointer-events:none;text-align:center;transform:translate(-50%,-50%);animation:bannerIn 1.6s cubic-bezier(.2,1.4,.4,1) both}
+.banner strong{font:64px/1 IslandBrush,Arial,sans-serif;color:#81fbed;text-shadow:0 4px 0 #121329,0 0 24px #4debd588;white-space:nowrap}
+.banner span{font-size:13px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#eff8ff;text-shadow:0 2px 0 #121329}
+.banner[data-tone=goal] strong{font-size:96px;color:#fff08a;text-shadow:0 5px 0 #6b3a1f,0 0 30px #ffd25e99}
+.banner[data-tone=concede] strong{font-size:56px;color:#83dfff}
+@keyframes bannerIn{0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}14%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}24%{transform:translate(-50%,-50%) scale(1)}82%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-60%) scale(.96)}}
+@media(prefers-reduced-motion:reduce){.banner{animation:bannerFade 1.6s linear both}.root .direction .focus{animation:none}}
+@keyframes bannerFade{0%,85%{opacity:1}100%{opacity:0}}
+.card .result{margin:2px 0 6px;font:30px/1.1 IslandBrush,Arial,sans-serif;color:#81fbed}
+.card .result[data-result=win]{color:#fff08a}.card .result[data-result=loss]{color:#83dfff}
+.stats{display:flex;gap:8px;margin:8px 0;padding:0;list-style:none}
+.stats li{flex:1;display:grid;gap:2px;padding:8px 6px;border:1px solid #446776;border-radius:12px;background:#151c35;font-size:11px;text-align:center;color:#bdeaf2}
+.stats li b{font-size:20px;color:#eff8ff}.stats li[data-done]{border-color:#fff08a}.stats li[data-done] b{color:#fff08a}
+.card .lesson{font-size:12px;color:#cef7ff;border-left:3px solid #81fbed;padding-left:10px}
+@media(max-width:700px),(pointer:coarse){.banner strong{font-size:44px}.banner[data-tone=goal] strong{font-size:64px}.banner[data-tone=concede] strong{font-size:40px}}
+/* Phone landscape: keep the whole card on screen and the meters clear of the direction line. */
+@media(max-height:500px){.card{padding:12px 18px}.card h2{font-size:22px;margin:2px 0}.card p{margin:5px 0;font-size:12px}.card select{margin:4px 0 6px;padding:7px 10px}.card .result{font-size:22px;margin:0}.stats{margin:5px 0}.stats li{padding:4px}.stats li b{font-size:16px}.card .lesson{display:none}}
+@media(pointer:coarse) and (orientation:landscape){.root .meters{top:auto;bottom:calc(30px + env(safe-area-inset-bottom,0px))}.root .direction .focus{margin-top:3px}}
+
+/* Mastery stars (G1, Oct 4): best stars on the ready card, earned stars at full time, coach-eased retry note. */
+.starsLine{font-size:12px!important;line-height:1.4!important;margin:6px 0!important}.starsLine b{color:#fff08a;letter-spacing:.12em;margin-right:6px;font-size:15px}
+.starList{list-style:none;padding:0;margin:8px 0;display:grid;gap:4px;font-size:13px}.starList li{opacity:.6}.starList li[data-done]{opacity:1;font-weight:700;color:#fff08a}
+.assist{font-size:12px!important;background:#73fff11f;border:1px solid #73fff155;border-radius:10px;padding:6px 10px;margin:6px 0!important}
+@media(max-height:500px){.starList{font-size:11px;gap:2px;margin:4px 0}.starsLine{font-size:10px!important}}
+.root[data-phase=ready] .meters,.root[data-phase=finished] .meters,.root[data-phase=paused] .meters{visibility:hidden}
+/* Island Cup, team shape and team spirit (G1, Oct 4). Reuses the card's pill buttons and meter styles. */
+.modes{display:flex;gap:8px;margin:6px 0}.modes button{flex:1;min-height:44px!important;padding:6px 10px!important;opacity:.72}.modes button[aria-pressed=true]{opacity:1;outline:2px solid #fff08a;outline-offset:1px}
+.bracket{display:flex;gap:6px;list-style:none;padding:0;margin:6px 0;font-size:11px;font-weight:700;letter-spacing:.04em}.bracket li{flex:1;text-align:center;padding:5px 4px;border-radius:9px;border:1px solid #ffffff33;opacity:.6}.bracket li[data-done]{opacity:.9;color:#9ff3c4}.bracket li[data-now]{opacity:1;border-color:#fff08a;color:#fff08a}
+.shape{display:grid;gap:4px;margin:6px 0;font-size:13px}.shape small{font-size:11px;font-weight:400;letter-spacing:0;opacity:.85}
+.meters label[data-full]{color:#ff8fc8;font-weight:800}.meters label[data-full] meter{accent-color:#ff8fc8}
+@media(max-height:500px){.modes button{min-height:44px!important;font-size:11px!important}.bracket{font-size:9px;margin:3px 0}.shape{font-size:11px;margin:3px 0}.shape small{display:none}}
+.hold{display:block;font-size:8px;font-weight:600;opacity:.8;line-height:1}
+@media(max-height:500px){.card h2{font-size:18px!important;margin:2px 0!important}.card>p:first-of-type{font-size:11px!important;margin:4px 0!important;line-height:1.35}.meters{gap:8px!important;font-size:8px!important}.meters meter{width:38px!important}}
+.shape select{font-size:max(16px,1em)}
+@media(max-height:500px){.blurb{display:none}.shape{grid-template-columns:auto 1fr;align-items:center;gap:8px}.card h2{font-size:16px!important}}
+@media(max-height:500px){.inline{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:8px;font-size:13px}}
+.inline select{font-size:max(16px,1em)}

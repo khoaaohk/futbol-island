@@ -96,19 +96,29 @@ export function produceFuel(id:string,kind:'produce'|'fish',category?:'fruit'|'v
 // ---- Travel sampling (pure; Town calls it from its existing 150 ms HUD tick) ---------------------------------------------------
 export type TravelSample={now:number;mode:FuelMode;x:number;z:number;
  /** a lesson, field menu, truck bed or anything not under the player's own steam: fuel does not change */paused:boolean;
- /** jetpack in the air: hovering and climbing burn fuel too, not only flying across (user, Sep 30 2026: "flying should also drain it") */airborne?:boolean;
+ /** jetpack in the air: climbing or pushing with input burns fuel even at low ground speed (user, Sep 30 2026: "flying should also
+  *  drain it"); a hands-off hover does not (user, Oct 3 2026: "standing idle… still drains the energy bar") */airborne?:boolean;
+ /** the player is driving the travel right now: the joystick or a move key is held, or (jetpack) a take-off or a boost/dash they
+  *  started. Movement without it (platforms, idle animations, knock-backs, ramp launches, a hands-off hover) is never charged.
+  *  Omitted = treated as driving (pure callers and older tests). Short gaps (DRIVE_GRACE_MS) still count, so tapping keys or a
+  *  release between two ticks is charged for the momentum it made. */driving?:boolean;
  /** the scripted arrival (the burst and the opening jetpack hover until the player first moves): never charged (bug A6) */arrival?:boolean};
 /** Below this speed the player is standing (or nudging) and nothing drains. */
 export const MOVING_SPEED=.5;
-/** Returns the seconds of movement in `mode` since the previous sample (0 when paused, standing, or after a teleport). */
+/** After the player lets go of the controls, the travel still counts this long (one HUD tick plus slack), then stops. */
+export const DRIVE_GRACE_MS=400;
+/** Returns the seconds of movement in `mode` since the previous sample (0 when paused, standing, idle with no input, or after a teleport). */
 export function createTravelSampler(){
- let last:{now:number;x:number;z:number}|null=null;
+ let last:{now:number;x:number;z:number}|null=null,droveAt=-Infinity;
  return function sample(s:TravelSample):number{
   const prev=last;last={now:s.now,x:s.x,z:s.z};
+  if(s.driving!==false)droveAt=s.now;
   if(!prev||s.paused||s.arrival)return 0;
   const dt=(s.now-prev.now)/1000;if(!(dt>0))return 0;
+  // Idle never drains (Oct 3 2026): no player input, no fuel, whatever the platform, bob or idle animation does to `location`.
+  if(s.now-droveAt>DRIVE_GRACE_MS)return 0;
   const d=Math.hypot(s.x-prev.x,s.z-prev.z),speed=d/dt;
-  if(speed<MOVING_SPEED&&!(s.airborne&&s.mode==='jetpack'))return 0;
+  if(speed<MOVING_SPEED&&!(s.airborne&&s.mode==='jetpack'&&s.driving!==false))return 0;
   // Map travel, ferries, field trips and respawns move the player far in one tick: never charged.
   if(d>FUEL_SPEED[s.mode]*1.8*Math.min(dt,MAX_SAMPLE_SECONDS)+4)return 0;
   return Math.min(dt,MAX_SAMPLE_SECONDS);
@@ -118,7 +128,7 @@ export function createTravelSampler(){
 // ---- Teaching copy (gentle; never alarming; always names a free way back) ---------------------------------------------------
 export const FUEL_COPY={
  what:'Fuel is your energy for zooming around. Footballers fuel up with carbs (rice, bread, fruit), drink water, and refuel at half time.',
- cost:'Flying burns the most, then the moped, bike and scooter. Walking uses almost none and always works. Lessons, plays and quizzes never use fuel.',
+ cost:'Flying burns the most, then the moped, bike and scooter. Walking uses almost none and always works. Standing still or hovering uses none. Lessons, plays and quizzes never use fuel.',
  where:'Refuel with a snack at a Konbini, a drink from a drink machine, or fruit from your pocket. Garden fruit is free to pick!',
  low:{title:'Fuel running low',detail:'Players refuel at half time: grab a snack at the Konbini, or eat a banana from your pocket.'},
  empty:{title:'Out of fuel: time to walk',detail:'Walking always works. Eat fruit from your pocket or visit a Konbini to ride and fly again.'},

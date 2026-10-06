@@ -6,6 +6,7 @@
 // pieces: the '#ffe8ae' lens is the shared emissive lamp lens and each lamp adds a site to the night light-pool batch.
 import * as T from 'three';
 import type {Obstacle} from './simulation';
+import {untaggedProp,type PropTagger} from '../graphics/propReactions';
 import {onIsland} from './shoreline';
 import {fadeBand} from './shallows';
 import {EAST_PIER,JETTY_PATH,JETTY_BEACON,KEEPER_HUT,PIER_KICK_SPOT,coilAt,jettyOffset,walkwayOffset,jettySide,type JettySample} from './eastPier';
@@ -18,12 +19,13 @@ export type PierTools={
  shallows:(g:T.BufferGeometry,x:number,z:number)=>void;
  obstacles:Obstacle[];
  assets:{kind:string;x:number;z:number;w:number;d:number;visualW?:number;visualD?:number;baseY?:number}[];
+ prop?:PropTagger;
 };
 export type PierLampSite={x:number;z:number;ground:number;region:'east-pier';poolWidth?:number;poolDepth?:number};
 const WALK='#e2d5b5',KERB='#bca987',ROCK='#bca987',ROCK2='#d2bc94',FOAM='#f5e9cb',IRON='#384443',POST='#9d805b';
 const jitter=(i:number,k=1)=>{const s=Math.sin(i*12.9898+k*78.233)*43758.5453;return s-Math.floor(s);};
 
-export function buildEastPier({box,cylinder,put,sign,shallows,obstacles,assets}:PierTools){
+export function buildEastPier({box,cylinder,put,sign,shallows,obstacles,assets,prop=untaggedProp}:PierTools){
  const P=EAST_PIER,S=JETTY_PATH,last=S.length-1,lampSites:PierLampSite[]=[];
  const overWater=(p:{x:number;z:number})=>!onIsland(p.x,p.z);
  /** Index runs where keep(i) holds. */
@@ -111,22 +113,26 @@ export function buildEastPier({box,cylinder,put,sign,shallows,obstacles,assets}:
   sign('FARMERS MARKET',5.6,.62,x+.26,4.1,P.z,'#294f43','#f4cc7c',Math.PI/2);}
  // ---- Lamps every 20 m of walkway, alternating sides, standing on the kerb (outside the walkable width).
  const lamp=(x:number,z:number,ground:number)=>{
-  cylinder(.19,.22,IRON,x,ground+.11,z);cylinder(.065,4.2,IRON,x,ground+2.1,z);box(.62,.12,.62,IRON,x,ground+4.22,z);box(.43,.32,.43,'#ffe8ae',x,ground+3.99,z);
+  prop('lamp',()=>{cylinder(.19,.22,IRON,x,ground+.11,z);cylinder(.065,4.2,IRON,x,ground+2.1,z);box(.62,.12,.62,IRON,x,ground+4.22,z);box(.43,.32,.43,'#ffe8ae',x,ground+3.99,z);});
+  // Kerb props stand outside the walkable width (walkHalf 2.4; the kerb line is 2.75 off the centre line), so a footprint
+  // stops the ball (it used to pass through) without narrowing the walkway (Oct 3 2026, kick reactions).
+  obstacles.push({x,z,w:.38,d:.38});
   assets.push({kind:'pier-lamp',x,z,w:.38,d:.38,visualW:.65,visualD:.65});lampSites.push({x,z,ground:.005,region:'east-pier',poolWidth:8,poolDepth:8});
  };
  {let k=0;for(let s=10;s<S[last].s-8;s+=20,k++){const p=S.find(q=>q.s>=s)!,side=k%2?1:-1,q=jettySide(p,side*(P.kerbHalf+P.railHalf)/2);
   if(Math.hypot(q.x-P.cx,q.z-P.cz)<P.plazaEdge+.5||walkwayOffset(q.x,q.z)<P.kerbHalf-.05)continue;lamp(q.x,q.z,.22);}}
  // ---- Benches on the plaza (backs to the beacon), bollards and lifebuoys on the kerbs.
  const bench=(x:number,z:number,facing:1|-1)=>{
-  box(2,.12,.65,'#a67d55',x,.58,z);box(2,.45,.09,'#a67d55',x,.91,z-facing*.25);
-  for(const dx of [-.75,.75])box(.13,.5,.5,'#385a4e',x+dx,.27,z);
+  prop('bench',()=>{box(2,.12,.65,'#a67d55',x,.58,z);box(2,.45,.09,'#a67d55',x,.91,z-facing*.25);
+  for(const dx of [-.75,.75])box(.13,.5,.5,'#385a4e',x+dx,.27,z);});
   obstacles.push({x,z,w:2,d:.7});assets.push({kind:'bench',x,z,w:2,d:.7});
  };
  bench(P.cx-.8,P.cz-5,-1);bench(P.cx-.8,P.cz+5,1);
- const bollard=(x:number,z:number)=>{cylinder(.17,.5,IRON,x,.47,z);put(new T.SphereGeometry(.19,8,5,0,Math.PI*2,0,Math.PI/2),IRON,x,.72,z);};
+ const bollard=(x:number,z:number)=>{prop('bollard',()=>{cylinder(.17,.5,IRON,x,.47,z);put(new T.SphereGeometry(.19,8,5,0,Math.PI*2,0,Math.PI/2),IRON,x,.72,z);});obstacles.push({x,z,w:.4,d:.4});};
  const lifebuoy=(x:number,z:number,yaw:number)=>{
-  cylinder(.06,1.5,POST,x,.97,z);const ring=put(new T.TorusGeometry(.34,.085,6,14),'#e0513f',x,1.27,z);ring.rotation.y=yaw;
-  for(let i=0;i<4;i++){const a=i*Math.PI/2+Math.PI/4,band2=box(.1,.2,.2,'#fff3df',x+Math.cos(yaw)*Math.cos(a)*.34,1.27+Math.sin(a)*.34,z-Math.sin(yaw)*Math.cos(a)*.34);band2.rotation.set(0,yaw,a);}
+  prop('lifebuoy',()=>{cylinder(.06,1.5,POST,x,.97,z);const ring=put(new T.TorusGeometry(.34,.085,6,14),'#e0513f',x,1.27,z);ring.rotation.y=yaw;
+  for(let i=0;i<4;i++){const a=i*Math.PI/2+Math.PI/4,band2=box(.1,.2,.2,'#fff3df',x+Math.cos(yaw)*Math.cos(a)*.34,1.27+Math.sin(a)*.34,z-Math.sin(yaw)*Math.cos(a)*.34);band2.rotation.set(0,yaw,a);}});
+  obstacles.push({x,z,w:.5,d:.5});// the post plus most of the ring's swing
  };
  const kerbLine=(P.kerbHalf+P.railHalf)/2;
  for(const x of [252,276])for(const s of [-1,1])bollard(x,P.z+s*kerbLine);
@@ -136,9 +142,10 @@ export function buildEastPier({box,cylinder,put,sign,shallows,obstacles,assets}:
  // ---- Shooting challenge: a painted kick spot on the outer north stretch and a board on the outer kerb beside it.
  box(1.3,.3,1.3,'#f3ecdc',PIER_KICK_SPOT.x,-.147,PIER_KICK_SPOT.z);
  {const c=coilAt(-Math.PI/2+.32,kerbLine+.05),yaw=Math.atan2(c.tz,-c.tx),ix=c.tz*.07,iz=-c.tx*.07;// faces inward, across the walkway
-  for(const d of [-1.3,1.3])cylinder(.07,2.2,POST,c.x+c.tx*d,1.32,c.z+c.tz*d);
+  prop('sign',()=>{for(const d of [-1.3,1.3])cylinder(.07,2.2,POST,c.x+c.tx*d,1.32,c.z+c.tz*d);
   box(3.1,1.05,.12,'#294f43',c.x,1.97,c.z).rotation.y=yaw;
   sign('JETTY SHOOTING CHALLENGE',2.9,.42,c.x+ix,2.27,c.z+iz,'#294f43','#f4cc7c',yaw);
-  sign('PICK YOUR SPOT · LAND IT IN THE RING',2.9,.34,c.x+ix,1.77,c.z+iz,'#294f43','#fff0cf',yaw);}
+  sign('PICK YOUR SPOT · LAND IT IN THE RING',2.9,.34,c.x+ix,1.77,c.z+iz,'#294f43','#fff0cf',yaw);});
+  for(const d of [-1.3,1.3])obstacles.push({x:c.x+c.tx*d,z:c.z+c.tz*d,w:.2,d:.2});}
  return {lampSites,destination:{name:'East Jetty',x:P.cx,z:P.cz}};
 }

@@ -266,7 +266,7 @@ function KonbiniInterior({door}:{door:KonbiniDoor}){
  const haptic=()=>{try{navigator.vibrate?.(8);}catch{/* no haptics */}};
  const until=(b:HTMLElement,ms=700)=>{b.dataset.actionUntil=String(performance.now()+ms);},suppressed=(b:HTMLElement)=>performance.now()<Number(b.dataset.actionUntil??0);
  return <main onClickCapture={e=>{if(konbiniClickTarget(e.target))konbiniSfx.click();}} aria-label={SHOP_NAMES[shop]} className={styles.root} data-konbini-room={shop} data-ready={ready} data-shop={shop} data-zoomed={!!zoom}>
-  <header className={styles.header}>{zoom?<NavigationButton back label="Back" data-konbini-back onNavigate={()=>{setSelected(null);room.current?.zoomOut();}} immediate/>:<NavigationButton label="Done" data-konbini-done key={exitTry} onNavigate={()=>{if(room.current){setWalkingOut(true);room.current.leave();const n=exitTry;setTimeout(()=>{if(!leavingRef.current){setExitTry(n+1);setWalkingOut(false);}},5000);}else leave();}}/>}
+  <header className={styles.header}>{zoom?<NavigationButton back label="Back" data-konbini-back onNavigate={()=>{setSelected(null);room.current?.zoomOut();}}/>:<NavigationButton label="Done" data-konbini-done key={exitTry} onNavigate={()=>{if(room.current){setWalkingOut(true);room.current.leave();const n=exitTry;setTimeout(()=>{if(!leavingRef.current){setExitTry(n+1);setWalkingOut(false);}},5000);}else leave();}}/>}
    {zoom&&<span className={styles.section} data-konbini-section={zoom.poi} aria-live="polite">{zoom.label}</span>}
    <div className={styles.headerActions}><span ref={walletRef} className={`${jobStyles.wallet} ${styles.hudWallet}`} data-konbini-wallet data-paying={shownBalance!==null||undefined} aria-label={`${shownBalance??wallet.balance} coins`}><span className={jobStyles.coin} aria-hidden="true"/><b>{compactCoins(shownBalance??wallet.balance)}</b><small>coins</small></span></div></header>
   <canvas ref={canvas} tabIndex={0} className={styles.canvas} aria-label={`Walkable ${SHOP_NAMES[shop]}. Use WASD or arrow keys to walk, then Enter to look at a shelf. Tap a shelf to walk there.`}
@@ -287,7 +287,7 @@ function KonbiniInterior({door}:{door:KonbiniDoor}){
   {receipt&&!reveal&&<div key={'receipt-'+receipt.key} className={styles.receipt} data-konbini-receipt aria-live="polite"><b>しま KONBINI</b><span>{receipt.label}</span><span>{receipt.price} coins</span><i>ありがとうございました · Thank you!</i></div>}
   {overlay&&!reveal&&<div className={styles.panelWrap} onPointerDown={e=>{if(e.target===e.currentTarget)setOverlay(null);}}>
    <OverlayPanel kind={overlay.kind} onClose={()=>setOverlay(null)}>
-    <NavigationButton className={styles.close} label="Done" onNavigate={()=>setOverlay(null)} immediate/>{overlayBody(overlay)}</OverlayPanel></div>}
+    <NavigationButton className={styles.close} label="Done" onNavigate={()=>setOverlay(null)}/>{overlayBody(overlay)}</OverlayPanel></div>}
   {preview&&!reveal&&<KonbiniReveal key={`preview:${preview.item.id}`} item={preview.item} onDone={()=>setPreview(null)} preview={{price:preview.price,onBack:()=>setPreview(null),
    onBuy:()=>{const p=preview;setPreview(null);if(p.gear)void buyGear(p.gear);else void buy(p.item.id);},
    buyDisabled:preview.gear?ownedGear(preview.gear)||!!busy:fuelled||!!busy,buyLabel:preview.gear?(ownedGear(preview.gear)?'Owned':undefined):fuelled?'Fuelled up today':undefined}}/>}

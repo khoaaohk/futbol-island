@@ -9,6 +9,16 @@
     "date": "2012-02-19",
     "source": "wikimedia/infobox"
   },
+  "Alf Ramsey": {
+    "slug": "alf-ramsey",
+    "article": "Alf Ramsey",
+    "file": "https://commons.wikimedia.org/wiki/File:Alf_Ramsey_(1969).jpg",
+    "artist": "Bert Verhoeff for Anefo",
+    "license": "CC BY-SA 3.0 nl",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/nl/deed.en",
+    "date": "1969-11-03",
+    "source": "wikimedia/deep"
+  },
   "Andoni Iraola": {
     "slug": "andoni-iraola",
     "article": "Andoni Iraola",
@@ -118,6 +128,16 @@
     "licenseUrl": "",
     "date": "Taken on 1",
     "source": "wikimedia/infobox"
+  },
+  "Giovanni Trapattoni": {
+    "slug": "giovanni-trapattoni",
+    "article": "Giovanni Trapattoni",
+    "file": "https://commons.wikimedia.org/wiki/File:FIFA_WC-qualification_2014_-_Austria_vs_Ireland_2013-09-10_-_Giovanni_Trapattoni_03_(cropped).JPG",
+    "artist": "Michael Kranewitter",
+    "license": "CC BY-SA 3.0 at",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/at/deed.en",
+    "date": "2013-09-10",
+    "source": "wikimedia/deep"
   },
   "Hansi Flick": {
     "slug": "hansi-flick",
@@ -239,6 +259,16 @@
     "date": "2019-01-23",
     "source": "wikimedia/infobox"
   },
+  "Massimiliano Allegri": {
+    "slug": "massimiliano-allegri",
+    "article": "Massimiliano Allegri",
+    "file": "https://commons.wikimedia.org/wiki/File:Icc-4_43826041582_o_(50121485051)_(cropped).jpg",
+    "artist": "All-Pro Reels from District of Columbia, USA (crop: Lorenzo De Leonardis2)",
+    "license": "CC BY-SA 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+    "date": "2018-08-04",
+    "source": "wikimedia/deep"
+  },
   "Matt Busby": {
     "slug": "matt-busby",
     "article": "Matt Busby",
@@ -268,6 +298,16 @@
     "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
     "date": "2022-07-16",
     "source": "wikimedia/infobox"
+  },
+  "Mário Zagallo": {
+    "slug": "mario-zagallo",
+    "article": "Mário Zagallo",
+    "file": "https://commons.wikimedia.org/wiki/File:M%C3%A1rio_Zagallo_1974.jpg",
+    "artist": "Mieremet, Rob / Anefo",
+    "license": "CC BY-SA 3.0 nl",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/nl/deed.en",
+    "date": "1974-07-01",
+    "source": "wikimedia/deep"
   },
   "Pep Guardiola": {
     "slug": "pep-guardiola",
@@ -338,6 +378,16 @@
     "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
     "date": "2015-03-03",
     "source": "wikimedia/infobox"
+  },
+  "Thomas Tuchel": {
+    "slug": "thomas-tuchel",
+    "article": "Thomas Tuchel",
+    "file": "https://commons.wikimedia.org/wiki/File:Thomas_Tuchel_England_v_Ghana_23_June_2026-081.jpg",
+    "artist": "Bryan Berlin",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "date": "2026-06-23",
+    "source": "wikimedia/deep"
   },
   "Unai Emery": {
     "slug": "unai-emery",

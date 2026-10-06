@@ -1,22 +1,137 @@
-{"lesson":"expf_delay2v1","questions":[
-{"q":"The FIXO is alone against two. Tap where the RIGHT ALA sprints to help.",
- "options":["Stay up the pitch","Goal-side of the far attacker","Next to the FIXO at the ball"],
- "correct":1,
- "explain":"Yes. The RIGHT ALA recovers goal-side of the far attacker, so the FIXO is not alone.",
- "choiceExplanations":["Staying up leaves the far attacker free, so the FIXO is still outnumbered.","Yes. The RIGHT ALA recovers goal-side of the far attacker, so the FIXO is not alone.","Two on the ball leaves the far attacker free for an easy pass."],
- "visual":{"kind":"tapSpot","frame":{"step":3,"hide":["rm"],"focus":["cb","drm"]},
-  "spots":[{"x":220,"y":245},{"x":222,"y":342},{"x":110,"y":308}]}},
-{"q":"Put the two versus one defence in order, from first to last.",
- "options":["FIXO drops between both attackers","RIGHT ALA sprints back goal-side","The far attacker is covered","FIXO steps up to the ball"],
- "correct":0,
- "explain":"Right. Delay first, wait for help, then press once the far attacker is covered.",
- "choiceExplanations":["Right. Delay first, wait for help, then press once the far attacker is covered.","The FIXO must delay first, or Blue passes before help arrives.","The far attacker is covered only after the RIGHT ALA sprints back.","Pressing comes last. Going early leaves the far attacker free."],
- "visual":{"kind":"order"}},
-{"q":"Now Blue attacks two versus one on the other side. Drag the FIXO to delay them.",
- "options":["Between both attackers, backing off","Right at the ball carrier","Out on the far attacker"],
- "correct":0,
- "explain":"Yes. Between both attackers the FIXO guards the middle and buys time for help.",
- "choiceExplanations":["Yes. Between both attackers the FIXO guards the middle and buys time for help.","Diving in lets the ball carrier pass to the free attacker.","That leaves the ball carrier a clear run at our goal."],
- "visual":{"kind":"dragToZone","frame":{"step":1,"place":{"drm":{"x":180,"y":280},"dlm":{"x":45,"y":300},"rm":{"x":215,"y":215},"lm":{"x":55,"y":225},"cb":{"x":135,"y":300}},"ball":"drm","focus":["cb","drm","dlm"]},
-  "drag":"cb","zones":[{"x":120,"y":335,"w":44,"h":32},{"x":175,"y":315,"w":44,"h":32},{"x":60,"y":335,"w":44,"h":32}]}}
-]}
+{
+ "lesson": "expf_delay2v1",
+ "questions": [
+  {
+   "q": "The FIXO is alone against two. Tap where the RIGHT ALA sprints to help.",
+   "options": [
+    "Stay up the court",
+    "Goal-side of the far attacker",
+    "Next to the FIXO at the ball"
+   ],
+   "correct": 1,
+   "explain": "Yes. The RIGHT ALA recovers goal-side of the far attacker, so the FIXO is not alone.",
+   "choiceExplanations": [
+    "Staying up leaves the far attacker free, so the FIXO is still outnumbered.",
+    "Yes. The RIGHT ALA recovers goal-side of the far attacker, so the FIXO is not alone.",
+    "Two on the ball leaves the far attacker free for an easy pass."
+   ],
+   "visual": {
+    "kind": "tapSpot",
+    "frame": {
+     "step": 3,
+     "hide": [
+      "rm"
+     ],
+     "focus": [
+      "cb",
+      "drm"
+     ]
+    },
+    "spots": [
+     {
+      "x": 220,
+      "y": 245
+     },
+     {
+      "x": 222,
+      "y": 342
+     },
+     {
+      "x": 110,
+      "y": 308
+     }
+    ]
+   }
+  },
+  {
+   "q": "Put the two versus one defence in order, from first to last.",
+   "options": [
+    "FIXO drops between both attackers",
+    "RIGHT ALA sprints back goal-side",
+    "The far attacker is covered",
+    "FIXO steps up to the ball"
+   ],
+   "correct": 0,
+   "explain": "Right. Delay first, wait for help, then press once the far attacker is covered.",
+   "choiceExplanations": [
+    "Right. Delay first, wait for help, then press once the far attacker is covered.",
+    "The FIXO must delay first, or Blue passes before help arrives.",
+    "The far attacker is covered only after the RIGHT ALA sprints back.",
+    "Pressing comes last. Going early leaves the far attacker free."
+   ],
+   "visual": {
+    "kind": "order"
+   }
+  },
+  {
+   "q": "Now Blue attacks two versus one on the other side. Drag the FIXO to delay them.",
+   "options": [
+    "Between both attackers, backing off",
+    "Right at the ball carrier",
+    "Out on the far attacker"
+   ],
+   "correct": 0,
+   "explain": "Yes. Between both attackers the FIXO guards the middle and buys time for help.",
+   "choiceExplanations": [
+    "Yes. Between both attackers the FIXO guards the middle and buys time for help.",
+    "Diving in lets the ball carrier pass to the free attacker.",
+    "That leaves the ball carrier a clear run at our goal."
+   ],
+   "visual": {
+    "kind": "dragToZone",
+    "frame": {
+     "step": 1,
+     "place": {
+      "drm": {
+       "x": 180,
+       "y": 280
+      },
+      "dlm": {
+       "x": 45,
+       "y": 300
+      },
+      "rm": {
+       "x": 215,
+       "y": 215
+      },
+      "lm": {
+       "x": 55,
+       "y": 225
+      },
+      "cb": {
+       "x": 135,
+       "y": 300
+      }
+     },
+     "ball": "drm",
+     "focus": [
+      "cb",
+      "drm",
+      "dlm"
+     ]
+    },
+    "drag": "cb",
+    "zones": [
+     {
+      "x": 120,
+      "y": 335,
+      "w": 44,
+      "h": 32
+     },
+     {
+      "x": 175,
+      "y": 315,
+      "w": 44,
+      "h": 32
+     },
+     {
+      "x": 60,
+      "y": 335,
+      "w": 44,
+      "h": 32
+     }
+    ]
+   }
+  }
+ ]
+}

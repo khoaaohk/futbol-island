@@ -1,5 +1,8 @@
 import {useEffect,useRef,useMemo,memo,useState} from 'react';
 import {ARCADE_DOOR,COACHES_DOOR,VENUES,type Format} from '@/lib/town/venues';
+import {MUSEUM_DOOR} from '@/lib/museum/museumDoors';
+/** The History Museum's door on the map (Oct 5 2026, user: "add museum to the map"); the label hangs just below it. */
+const MUSEUM_MAP_POINT={x:MUSEUM_DOOR.x,z:MUSEUM_DOOR.front} as const;
 import {ISLAND_SHORE,SHORE_SAND,INTERIOR_GRASS,INTERIOR_GRASS_COLOR,NORTH_BEACH_UMBRELLAS,NORTH_BEACH_PATHS,onIsland} from '@/lib/town/shoreline';
 import {FLIGHT_BOUNDS,FLIGHT_WATER_MARGIN} from '@/lib/town/simulation';
 import {onLand} from '@/lib/town/landmass';
@@ -26,9 +29,9 @@ const VENDING_MARKERS=VENDING_MACHINES.reduce<{id:string;x:number;z:number;names
  const near=list.find(o=>Math.hypot(o.x-m.x,o.z-m.z)<6);if(near){near.names.push(m.name);near.ids.push(m.id);}else list.push({id:m.id,x:m.x,z:m.z,names:[m.name],ids:[m.id]});return list;},[]);
 /** Job board markers ("J", full map only): one per board in JOBS (new jobs appear by themselves), nudged clear of the V/F
  *  markers, field names and Rosa's label (lib/town/mapMarkers.ts). Static, computed once. */
-const JOB_MARKERS=placeJobMarkers(JOBS,[...VENDING_MARKERS,...FISH_SPOTS],VENUES,MARKET_STAND,[{x:ARCADE_DOOR.x,z:ARCADE_DOOR.z+30,w:64,h:20}]);// the full map's ARCADE label
+const JOB_MARKERS=placeJobMarkers(JOBS,[...VENDING_MARKERS,...FISH_SPOTS],VENUES,MARKET_STAND,[{x:ARCADE_DOOR.x,z:ARCADE_DOOR.z+30,w:64,h:20},{x:MUSEUM_MAP_POINT.x,z:MUSEUM_MAP_POINT.z+28,w:74,h:20}]);// the full map's ARCADE and MUSEUM labels
 export type MapFootprint={x:number;z:number;w:number;d:number;cornerRadius?:number};
-export type MapDestination=Format|'square'|'store'|'coaches'|'cay';
+export type MapDestination=Format|'square'|'store'|'coaches'|'cay'|'museum';
 function IslandOverview({roads,buildings,position,markerPosition,onSelect,active=true,frames}:{roads:MapFootprint[];buildings:MapFootprint[];position?:{x:number;z:number};markerPosition?:{x:number;z:number};onSelect?:(destination:MapDestination)=>void;active?:boolean;frames?:(listener:(x:number,z:number)=>void)=>()=>void}){
  // The map is drawn in the browser only (after hydration): its world-space coordinates come from trig, and WebKit and the
  // server's V8 disagree in the last digit, which made React report a hydration mismatch on every Safari load (Sep 30 2026).
@@ -87,7 +90,7 @@ function IslandOverview({roads,buildings,position,markerPosition,onSelect,active
   {roads.map((r,i)=><rect key={'road'+i} x={r.x-r.w/2} y={r.z-r.d/2} width={r.w} height={r.d} fill="#8c927a"/>)}
   {buildings.map((r,i)=><rect key={'building'+i} x={r.x-r.w/2} y={r.z-r.d/2} width={r.w} height={r.d} rx={r.cornerRadius??1} fill="#be8d65"/>)}
   {VENUES.map(v=><g key={v.id} {...destination(v.id,v.id+' field')}><rect x={v.x-v.width/2} y={v.z-v.length/2} width={v.width} height={v.length} fill={v.surface} stroke="#fff0cc" strokeWidth="1.5"/><text x={v.x} y={v.z+4} textAnchor="middle" fill="#fff5d5" stroke="#294f43" strokeWidth="3" paintOrder="stroke" fontSize={localMap?10:22} fontWeight="700">{v.id}</text></g>)}
-  {([{id:'square',label:'ARCADE',point:ARCADE_DOOR,dx:0,dy:localMap?19:30,width:localMap?42:64},{id:'coaches',label:'COACHES',point:COACHES_DOOR,dx:localMap?27:29,dy:localMap?1:3,width:localMap?46:74},{id:'cay',label:'CORAL CAY',point:CORAL_CAY_ARRIVAL,dx:0,dy:localMap?-19:-32,width:localMap?56:88}] as const).map(({id,label,point,dx,dy,width})=><g key={id} {...destination(id,id==='coaches'?'Coaches Centre':id==='cay'?'Coral Cay':'Arcade')}>
+  {([{id:'square',label:'ARCADE',point:ARCADE_DOOR,dx:0,dy:localMap?19:30,width:localMap?42:64},{id:'coaches',label:'COACHES',point:COACHES_DOOR,dx:localMap?27:29,dy:localMap?1:3,width:localMap?46:74},{id:'cay',label:'CORAL CAY',point:CORAL_CAY_ARRIVAL,dx:0,dy:localMap?-19:-32,width:localMap?56:88},{id:'museum',label:'MUSEUM',point:MUSEUM_MAP_POINT,dx:0,dy:localMap?18:28,width:localMap?48:74}] as const).map(({id,label,point,dx,dy,width})=><g key={id} {...destination(id,id==='coaches'?'Coaches Centre':id==='cay'?'Coral Cay':id==='museum'?'History Museum':'Arcade')}>
    <path d={`M${point.x} ${point.z} L${point.x+dx} ${point.z+dy}`} fill="none" stroke="#294f43" strokeWidth="1.2"/>
    <circle cx={point.x} cy={point.z} r={localMap?4.5:6} fill="#f9ca70" stroke="#294f43" strokeWidth="1.5"/>
    {!localMap&&<circle cx={point.x} cy={point.z} r="11" fill="transparent"/>}

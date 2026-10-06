@@ -19,7 +19,7 @@ import {createMatchBallTexture} from '../graphics/matchBallTexture';
 import {MatchSim,ROLE_MOVEMENT} from './match/matchSim';
 import {VENUES,LIVE_VENUES,liveWorldX,liveWorldZ,liveWorldYaw,type Venue,type LiveVenue,type LiveFormat} from './venues';
 import {BEACH_MATCH_KITS} from './beanLooks';
-import {quizOutcomeStep,lessonPositions,lessonVisualFrame,lessonStepSeconds,type FieldSession} from './formatLessons';
+import {quizOutcomeStep,lessonPositions,lessonVisualFrame,lessonStepSeconds,loftPeak,type FieldSession} from './formatLessons';
 // Movement and ball share a per-format clock; the compact futsal court needs a brisker pace.
 export const LIVE_GAME_SPEED=.32;
 export const liveGameSpeed=(format:LiveFormat)=>format==='futsal'||format==='beach'?.48:LIVE_GAME_SPEED;
@@ -270,6 +270,8 @@ export function createFieldRuntime(scene:T.Scene,reactions?:BallReactions){
    const sk=teachingPose.skill;
    if(sk?.ball&&sk.weight>0&&teachingPose.travel===0)e.ball.position.lerp(skillBallPoint.set(sk.ball.x,sk.ball.y,sk.ball.z),sk.weight);
    if(sk?.type==='keeperThrow'&&teachingPose.travel>0&&teachingPose.travel<1)e.ball.position.y+=1.1*4*teachingPose.travel*(1-teachingPose.travel);
+   // A lofted pass, cross, chip or clearance (the step's ballPathType) flies over the defenders the line says it beats, not along the grass.
+   else if(teachingPose.travel>0&&teachingPose.travel<1){const peak=loftPeak(teaching.lesson.steps[visualStep]?.ballPathType,anchors.release.distanceTo(anchors.arrival));if(peak)e.ball.position.y+=peak*4*teachingPose.travel*(1-teachingPose.travel);}
  }else {const a=contact(teachingPose.source);if(a)e.ball.position.copy(a).setY(.295);
    // A turn or a shield in this step: the ball follows the move's authored path at the boot, then hands back.
    const sk=teachingPose.skill;if(sk?.ball&&sk.weight>0)e.ball.position.lerp(skillBallPoint.set(sk.ball.x,sk.ball.y,sk.ball.z),sk.weight);}

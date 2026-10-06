@@ -9,7 +9,7 @@
 import type {Sheet} from '../sheet';
 import {type RisoStory,type Scene,playChapters} from '../story';
 import {apertureDisc} from '../passage';
-import {TAU,twos,twosIndex,sm,easeOut,easeIO,easeIn,easeOutBack,key,anticipate,settle,smearPose,clamp,lerp,rng,hash,blob,polyPath,ribbon,smoothPts,rectPath,arc,type Pt,type Key} from '../motion';
+import {TAU,twos,twosIndex,sm,easeOut,easeIO,easeIn,easeOutBack,key,anticipate,settle,smearPose,clamp,lerp,rng,hash,blob,polyPath,ribbon,smoothPts,rectPath,arc,type Pt,type Key,creepHolds,creepEase} from '../motion';
 import {dust,speedLines,handCut,crescent,goalFrame,ring,confetti,tornRect} from '../shapes';
 
 const CH='/stories/narration/9v9/pick-a-purpose/';
@@ -18,7 +18,8 @@ const L2=(a:Pt,b:Pt,u:number):Pt=>[lerp(a[0],b[0],u),lerp(a[1],b[1],u)];
 /** View factor: landscape safe regions (desktop 793 × 625 u) pull back (.74) so the tall figures clear the band; phones (portrait) come closer (1.2). */
 const land=(s:Sheet,landZ=.74)=>s.safe.w/s.safe.h>1.2?landZ:1.2;
 /** Camera through [t,x,y,zoom] keys (each segment eased) with the view factor; dx = shake; landDy shifts the world on landscape. */
-function cam(s:Sheet,t:number,keys:Key[],dx=0,landDy=-30,landZ=.74){const v=key(t,keys,easeIO,true),L=land(s,landZ),short=s.W>s.H&&L>=1;s.camera(v[0]+dx,v[1]+(L<1?landDy:0)+(short?70:0),(v[2]??1)*L,0);return v;}
+// drift camera (stutter audit, Oct 4 2026): creepEase keeps a little speed through each key instead of parking on it (easeIO stops dead)
+function cam(s:Sheet,t:number,keys:Key[],dx=0,landDy=-30,landZ=.74){const v=key(t,creepHolds(keys),creepEase,true),L=land(s,landZ),short=s.W>s.H&&L>=1;s.camera(v[0]+dx,v[1]+(L<1?landDy:0)+(short?70:0),(v[2]??1)*L,0);return v;}
 
 // ---------------- abstract riso figure (bible §1c.4) — room-to-invent's pictogram ----------------
 type Pose='stand'|'scan'|'run'|'arms'|'up'|'slump'|'step'|'listen'|'crouch'|'kick'|'point'|'aim';
@@ -284,7 +285,7 @@ const ch2:Scene={
  draw(s,t){
   const tt=twos(t);
   const shake=settle(t,6.2,{amp:10,freq:7,decay:5});
-  cam(s,t,[[0,-100,-120,.95],[1.47,-60,-160,.97],[3.75,60,-120,1.0],[5.05,80,-110,1.02],[5.87,140,-110,1.05],[8.5,200,-110,1.1]],shake);
+  cam(s,t,[[0,-100,-120,.95],[1.47,-60,-160,.97],[3.75,60,-120,1.0],[5.05,80,-110,1.02],[5.87,140,-110,1.05],[8.5,200,-110,1.1],[9.7,224,-110,1.12]],shake);
   world(s,{seed:12,goalX:-110,goalW:160});
   // the target rises at 3.8
   const rise=easeOutBack(sm(3.8,4.35,tt)),sq=tt>=6.2?.05*settle(tt,6.2,{amp:1,freq:5,decay:5,phase:Math.PI/2}):0;

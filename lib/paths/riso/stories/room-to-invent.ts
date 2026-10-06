@@ -8,7 +8,7 @@
 import type {Sheet} from '../sheet';
 import {type RisoStory,type Scene,playChapters} from '../story';
 import {apertureDisc} from '../passage';
-import {TAU,twos,twosIndex,sm,easeOut,easeIO,easeIn,easeOutBack,key,anticipate,settle,smearPose,clamp,lerp,rng,hash,blob,polyPath,ribbon,smoothPts,rotPts,rectPath,circlePath,arc,type Pt,type Key} from '../motion';
+import {TAU,twos,twosIndex,sm,easeOut,easeIO,easeIn,easeOutBack,key,anticipate,settle,smearPose,clamp,lerp,rng,hash,blob,polyPath,ribbon,smoothPts,rotPts,rectPath,circlePath,arc,type Pt,type Key,creepHolds} from '../motion';
 import {dust,sparkBurst,speedLines,handCut,crescent,goalFrame} from '../shapes';
 
 const CH='/stories/narration/futsal/room-to-invent/';
@@ -17,7 +17,8 @@ const L2=(a:Pt,b:Pt,u:number):Pt=>[lerp(a[0],b[0],u),lerp(a[1],b[1],u)];
 /** View factor: landscape safe regions (desktop 793 × 625 u) pull back (.74) so the tall kid clears the band; phones (portrait, 1080 × ~1230 u) come closer (1.2). */
 const land=(s:Sheet,landZ=.74)=>s.safe.w/s.safe.h>1.2?landZ:1.2;
 /** Camera through [t,x,y,zoom] keys (each segment eased) with the view factor; dx = shake; landDy shifts the world down on landscape (clear of the headline). */
-function cam(s:Sheet,t:number,keys:Key[],dx=0,landDy=-80,landZ=.74){const v=key(t,keys,easeIO,true),L=land(s,landZ);s.camera(v[0]+dx,v[1]+(L<1?landDy:0),(v[2]??1)*L,0);return v;}
+// moving holds: a camera hold creeps toward the next key instead of parking (stutter audit, Oct 4 2026)
+function cam(s:Sheet,t:number,keys:Key[],dx=0,landDy=-80,landZ=.74){const v=key(t,creepHolds(keys),easeIO,true),L=land(s,landZ);s.camera(v[0]+dx,v[1]+(L<1?landDy:0),(v[2]??1)*L,0);return v;}
 
 // ---------------- abstract riso figure (bible §1c.4) — chalk-line's pictogram with a yellow shirt ----------------
 type Pose='stand'|'scan'|'run'|'arms'|'up'|'slump'|'step'|'listen'|'crouch'|'kick'|'kneel';

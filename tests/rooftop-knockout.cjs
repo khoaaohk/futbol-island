@@ -7,7 +7,7 @@ const live=createKnockout();live.state.players[0].alive=false;live.state.remaini
 
 // Aim at the stationary main character to verify protection and the third-hit rule.
 const protectedGame=createKnockout();protectedGame.start();const me=protectedGame.state.players[0];Object.assign(me,{x:-9,z:0});protectedGame.state.players.slice(1).forEach(p=>{p.x=10;p.z=-19;p.cooldown=999;});
-function incoming(){Object.assign(protectedGame.state.balls[0],{x:-9,z:.5,vx:0,vz:-10,owner:1,life:1,heldBy:-1});protectedGame.update(.01,{x:0,z:0});}
+function incoming(){Object.assign(me,{x:-9,z:0,kx:0,kz:0});Object.assign(protectedGame.state.balls[0],{x:-9,z:.5,vx:0,vz:-10,owner:1,life:1,heldBy:-1});protectedGame.update(.01,{x:0,z:0});}
 incoming();assert.equal(me.hits,1);assert.equal(me.shield,5);assert(me.alive);incoming();assert.equal(me.hits,1,'shield blocks consecutive hits');
 for(let i=0;i<498;i++)protectedGame.update(.01,{x:0,z:0});assert(me.shield>0,'protected until five seconds elapse');incoming();assert.equal(me.hits,1);
 protectedGame.update(.02,{x:0,z:0});incoming();assert.equal(me.hits,2);assert(me.alive,'second hit does not queue player');

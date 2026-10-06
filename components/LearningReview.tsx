@@ -13,7 +13,7 @@ import shell from './ModalShell.module.css';
 import styles from './LearningReview.module.css';
 import {loadCatalog,type FieldLesson} from '@/lib/town/formatLessons';
 import {isVisual,visualHint,type VisualFieldQuestion} from '@/lib/town/visualQuiz';
-import {getDueReviews,answerReviewQuestion,useReviewState,syncReviews} from '@/lib/learning/reviewStore';
+import {getDueReviews,answerReviewQuestion,useReviewState,syncReviews,openPathLesson} from '@/lib/learning/reviewStore';
 import type {DueReview} from '@/lib/learning/reviewStoreCore';
 import {nextDue,localDaysBetween,REVIEW_PAID_PER_DAY} from '@/lib/learning/review';
 import {conceptsForLesson,conceptWords} from '@/lib/learning/conceptMap';
@@ -79,7 +79,7 @@ function WarmUp({onDone}:{onDone:()=>void}){
    {answer!==null&&<div className={styles.feedback} data-right={right} role="status">
     <b>{right?(tries>1?'Got it!':'Yes, you remembered!'):'Not this time.'}</b>
     <p>{right?q.explain:q.choiceExplanations?.[answer]??'Look at the picture again: where is the space?'}</p>
-    {right?<button type="button" className={styles.primary} onClick={next}>{at+1<items.length?'Next question':'Finish'}</button>:<button type="button" className={styles.secondary} onClick={()=>setAnswer(null)}>Try again</button>}
+    {right?<button type="button" className={styles.primary} onClick={next}>{at+1<items.length?'Next question':'Finish'}</button>:<div className={styles.actions}><button type="button" className={styles.secondary} onClick={()=>setAnswer(null)}>Try again</button><button type="button" className={styles.secondary} onClick={()=>{onDone();openPathLesson(item.key,q.step);}}>Watch that part</button></div>}
    </div>}
   </section>
   <p className={styles.note}>Right first time moves the lesson along. Up to {REVIEW_PAID_PER_DAY} right answers a day pay {LEARN_COINS.review} coins each.</p>

@@ -9,12 +9,13 @@
 import type {Sheet} from '../sheet';
 import {type RisoStory,type Scene,playChapters} from '../story';
 import {apertureDisc} from '../passage';
-import {twos,twosIndex,sm,easeOut,easeIO,easeIn,easeOutBack,linear,key,camKeys,anticipate,settle,spring,clamp,lerp,rng,hash,noise1,blob,polyPath,ribbon,smoothPts,partial,rotPts,scalePts,circlePath,rectPath,torn,TAU,type Pt} from '../motion';
+import {twos,twosIndex,sm,easeOut,easeIO,easeIn,easeOutBack,linear,key,camKeys,anticipate,settle,spring,clamp,lerp,rng,hash,noise1,blob,polyPath,ribbon,smoothPts,partial,rotPts,scalePts,circlePath,rectPath,torn,TAU,type Pt,creepHolds} from '../motion';
 import {contour,dust,handCut,confetti,sparkBurst,speedLines,crescent} from '../shapes';
 
 const CH='/stories/narration/7v7/signal-water/';
 const K='navy',Y='yellow',O='orange',G='green';
-const cam=(s:Sheet,t:number,K:number[][])=>camKeys(s,t,K);
+// moving holds: a camera hold creeps toward the next key instead of parking (stutter audit, Oct 4 2026)
+const cam=(s:Sheet,t:number,K:number[][])=>camKeys(s,t,creepHolds(K));
 const shake=(t:number,seed:number,amp:number)=>(hash(twosIndex(t),seed)-.5)*2*amp;
 
 // ---------------- abstract riso figure (bible §1c.4) ----------------

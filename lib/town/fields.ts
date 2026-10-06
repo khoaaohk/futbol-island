@@ -5,8 +5,9 @@ import {ISLAND_SHORE,shoreSandWidth,INTERIOR_GRASS,INTERIOR_GRASS_COLOR} from '.
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {VENUES,FIELD_SURFACE_Y} from './venues';
 import {GOAL_DEPTH,goalPostRadius} from './goalCollisions';
+import type {PropSpec} from '../graphics/propReactions';
 export function buildFormatFields(scene:T.Scene){
- const roots=new Map<string,T.Group>();const surfaces=new Map<string,T.MeshStandardMaterial>();const owned:(T.Material|T.BufferGeometry)[]=[];
+ const roots=new Map<string,T.Group>(),goalSpecs:PropSpec[]=[];const surfaces=new Map<string,T.MeshStandardMaterial>();const owned:(T.Material|T.BufferGeometry)[]=[];
  const cream=new T.LineBasicMaterial({color:'#f5eed5'});owned.push(cream);
  const frameMaterial=new T.MeshStandardMaterial({color:'#fff6df',roughness:.48});
  const netMaterial=new T.LineBasicMaterial({color:'#c6d4cc',transparent:true,opacity:.68});owned.push(frameMaterial,netMaterial);
@@ -43,7 +44,10 @@ export function buildFormatFields(scene:T.Scene){
  for(let i=0;i<=cols;i++){const x=-gw+i*v.goalWidth/cols;line([x,base,back],[x,h-.12,back]);line([x,h,z],[x,h-.12,back]);}
  for(let i=0;i<=rows;i++){const y=base+i*v.goalHeight/rows;line([-gw,Math.min(y,h-.12),back],[gw,Math.min(y,h-.12),back]);for(const x of [-gw,gw])line([x,y,z],[x,Math.min(y,h-.12),back]);}
  for(const x of [-gw,gw])for(let i=1;i<6;i++){const t=i/6,zz=z+(back-z)*t;line([x,base,zz],[x,h-.12*t,zz]);}
- const netGeo=new T.BufferGeometry();netGeo.setAttribute('position',new T.Float32BufferAttribute(goalPts,3));owned.push(netGeo);const net=new T.LineSegments(netGeo,netMaterial);net.name='goal-net';goal.add(net);}
+ const netGeo=new T.BufferGeometry();netGeo.setAttribute('position',new T.Float32BufferAttribute(goalPts,3));owned.push(netGeo);const net=new T.LineSegments(netGeo,netMaterial);net.name='goal-net';goal.add(net);
+ // Kick reaction (lib/graphics/propReactions.ts): a shot off the frame billows the nearby net; the frame only shivers.
+ {frameGeo.computeBoundingBox();netGeo.computeBoundingBox();const b=frameGeo.boundingBox!.clone().union(netGeo.boundingBox!),o=root.position,frameAttr=frameGeo.getAttribute('position') as T.BufferAttribute,netAttr=netGeo.getAttribute('position') as T.BufferAttribute;
+  goalSpecs.push({kind:'goal',offset:{x:o.x,y:o.y,z:o.z},min:{x:b.min.x+o.x,y:b.min.y+o.y,z:b.min.z+o.z},max:{x:b.max.x+o.x,y:b.max.y+o.y,z:b.max.z+o.z},parts:[{attribute:frameAttr,start:0,count:frameAttr.count,gain:.12},{attribute:netAttr,start:0,count:netAttr.count}]});}}
 
  const lineGeo=new T.BufferGeometry();lineGeo.setAttribute('position',new T.Float32BufferAttribute(pts,3));owned.push(lineGeo);root.add(new T.LineSegments(lineGeo,cream));
  }
@@ -65,5 +69,5 @@ export function buildFormatFields(scene:T.Scene){
  });
  const sandGeo=new T.BufferGeometry();sandGeo.setAttribute('position',new T.Float32BufferAttribute(sandPositions,3));sandGeo.setIndex(sandIndices);sandGeo.computeVertexNormals();const sandMat=new T.MeshStandardMaterial({color:'#f1d6a1',roughness:1,side:T.DoubleSide});owned.push(sandGeo,sandMat);const sand=new T.Mesh(sandGeo,sandMat);sand.name='continuous-sandy-shore';sand.receiveShadow=true;scene.add(sand);
  const floodlights=createFieldLighting(scene,roots,surfaces,frameMaterial,cream);
- return {roots,updateLighting:floodlights.update,setIsolated(isolated:boolean){land.receiveShadow=!isolated;sand.receiveShadow=!isolated;lawn.receiveShadow=!isolated;},dispose(){floodlights.dispose();for(const root of roots.values())root.removeFromParent();land.removeFromParent();sand.removeFromParent();lawn.removeFromParent();for(const item of owned)item.dispose();}};
+ return {roots,propSpecs:[...goalSpecs,...floodlights.propSpecs],updateLighting:floodlights.update,setIsolated(isolated:boolean){land.receiveShadow=!isolated;sand.receiveShadow=!isolated;lawn.receiveShadow=!isolated;},dispose(){floodlights.dispose();for(const root of roots.values())root.removeFromParent();land.removeFromParent();sand.removeFromParent();lawn.removeFromParent();for(const item of owned)item.dispose();}};
 }

@@ -36,11 +36,12 @@ import {withTiming,type NarrationTiming} from './timing';
 import type {Sheet} from '../../paths/riso/sheet';
 import {type RisoStory,type Scene,type Chapter,playChapters} from '../../paths/riso/story';
 import {apertureDisc} from '../../paths/riso/passage';
-import {TAU,twos,sm,key,clamp,lerp,rng,polyPath,ribbon,easeOut,easeOutBack,linear,type Pt} from '../../paths/riso/motion';
+import {TAU,twos,sm,key,clamp,lerp,rng,polyPath,ribbon,easeOut,easeOutBack,easeInOutSine,linear,type Pt} from '../../paths/riso/motion';
 import {sparkBurst,footballPanels} from '../../paths/riso/shapes';
 import {solve,strike,keeperSet,keeperDive,slideTackle,celebrate,blendPose,lunge,STRIKE_CONTACT,type Pose,type AthleteStyle,type InkFill,type V3,type Build} from './athlete';
-import {frame,toCam,scr,pr,kAt,stadium,ground,drawScene,tracks,plan,gnd,arrow3,groundRing,pathRibbon,estimate,mono,add3,mix3,yawTo,lerpAng,nrm2,win,
- DEJECT,BALL_R,kickerAt,type Pal,type StadiumSpec,type Cam,type State,type Fig} from './broadcast-pitch';
+import {frame as framePitch,toCam,scr,pr,kAt,stadium,ground,drawScene,tracks,gnd,arrow3,groundRing,pathRibbon,estimate,mono,add3,mix3,yawTo,lerpAng,nrm2,win,
+ DEJECT,BALL_R,kickerAt,blendShot,cam3,type Shot,type Pal,type StadiumSpec,type Cam,type State,type Fig} from './broadcast-pitch';
+import {beats,shotAt,reframe,steady,focalOf,fovOf,near,type Beats,type Keep,type Subject,type ReframeOpts,type View as DView} from './director';
 
 // ---------------------------------------------------------------- narration + timing
 const SCRIPT:{label:string;text:string;tail:number;cues:string[]}[]=[
@@ -176,10 +177,39 @@ function play(s:Sheet,c:Cam,tau:number,tauPrev:number,o:{smear?:boolean;min?:num
 }
 const atA=(k:number,tau:number,y=1):V3=>{const[x,z]=posOf(k,tau);return[x,y,z];};
 
+// ---------------------------------------------------------------- the director (lib/plays/riso/director.ts): closer, eased camera moves
+/** the kit's frame(), plus the two numbers the director needs (the kit keeps them private): its lens factor (the same formula as
+ * broadcast-pitch.ts frame(), so cam3's makeCamera size is 1080·LENS) and the window in camera units (frame() calls s.camera(…,1/s.fit)) */
+let LENS=1,DV:DView={w:1566,h:1080};
+function frame(s:Sheet){framePitch(s);LENS=Math.pow(Math.min(1,s.W/1620),.6);DV={w:s.W,h:s.H};}
+/** the kit's plan(), but each authored Shot is moved toward the beat's framing (reframe), averaged over ±.5 s (steady) so a keep point
+ * ramping in never pops the framing; rebuilt with the kit's own cam3 */
+function plan(t:number,steps:[number,number,(t:number)=>Shot][],B?:Beats,subj?:(t:number)=>Subject,o:ReframeOpts={}):Cam{
+ const authored=(u:number):Shot=>{let cur=steps[0][2](u);for(let i=1;i<steps.length;i++){const[a,d,f]=steps[i];const w=sm(a,a+Math.max(.01,d),u,easeInOutSine);if(w>0)cur=blendShot(cur,f(u),w);}return cur;};
+ if(!B||!subj){const c=authored(t);return cam3(c.P,c.T,c.fov);}
+ const size=1080*LENS,at=(u:number)=>{const c=authored(u);return reframe({eye:c.P,target:c.T,F:focalOf(c.fov,size)},subj(u),shotAt(u,B),DV,o);};
+ const r=steady(t,at,.5);return cam3(r.eye,r.target,fovOf(r.F,size));}
+const pos3=(k:number,tau:number,y=0):V3=>{const[x,z]=posOf(k,tau);return[x,y,z];};
+/** a player's feet and head as keep points, weight w (0 = not kept). Weights stay below .99 (soft) so a ramping keep never flips into the
+ * director's hard set (recenter's aim) within a frame */
+const body=(k:number,tau:number,w:number):Keep[]=>w<=.01?[]:[{P:pos3(k,tau),w},{P:pos3(k,tau,1.85),w}];
+const VILLA=[4,5,6,7,8,9];
+
 // ---------------------------------------------------------------- 1 · live: the high main-stand camera, near real time
 function tau1(t:number){const tW=CUE(0,'wins the ball')+.2,tG=CUE(0,'Anthony Gordon')+.1,tC=CUE(0,'crosses')+.2,tS=CUE(0,'slides in')+.3,S=SECS(0);
  return key(t,mono([[0,Math.max(T0+.2,TI-tW*.8)],[tW,TI],[tG,TGT-.4],[tC,0],[tS,TC],[S+1,TC+S+1-tS]]),linear);}
 const P1:V3=[-26,27,76];
+/** Director beats: a short establishing wide of St James' Park; follow Tonali to the ball; push in low as he wins it (the interception that
+ * starts the move); back to following his run; pull out for the one-two and Gordon's cross (Gordon, the ball and Tonali's run all in
+ * frame — the space he runs into is the lesson); push in low for the sliding volley; hold on him for the goal. Tonali is the hero throughout. */
+const B1=beats([[0,'wide'],[1.2,'follow'],[CUE(0,'wins the ball')-.4,'tight'],[CUE(0,'keeps running')-.3,'follow'],
+ [CUE(0,'Anthony Gordon')-.4,{from:'space',size:.24,low:.5}],[CUE(0,'slides in')-.45,'tight'],[CUE(0,'Goal')+.3,'reaction']]);
+function subj1(tau:number):Subject{const h=pos3(TON,tau),g=sm(TGT-1.4,TGT-.8,tau,easeInOutSine)*(1-sm(.3,.9,tau,easeInOutSine)),
+  wb=sm(TI-.85,TI-.3,tau,easeInOutSine)*(1-sm(TG+1.6,TG+2.2,tau,easeInOutSine)),b=ballAt(tau);
+ // the ball eases in as the kept point as the Villa pass he intercepts nears him (before that it is 10–16 m off with the Villa midfielder),
+ // and eases out once it has been in the net for a beat (the camera then holds on the scorer): the director's `ball` slides continuously
+ // from his chest to the real ball, so the aim and the fit never switch within a frame
+ return{hero:h,height:1.81,ball:mix3([h[0],1,h[2]],b,wb),keep:[...body(GOR,tau,.98*g),...near(h,[...VILLA,EMI,10,11].map(k=>pos3(k,tau)),5,9)]};}
 function cam1(t:number):Cam{
  const tau=tau1(t),b=ballAt(tau);
  return plan(t,[
@@ -189,7 +219,7 @@ function cam1(t:number):Cam{
   [CUE(0,'crosses')-.2,.8,()=>({P:P1,T:mix3(add3(gnd(b),[0,.8,0]),[SP[0],1,SP[1]],.4+.5*sm(0,TC,tau)),fov:11})],
   [CUE(0,'slides in')-.2,.6,()=>({P:P1,T:[lerp(SP[0],-2,sm(TC,TG,tau)),.9,lerp(SP[1],1,sm(TC,TG,tau))],fov:9})],
   [CUE(0,'Goal')+.3,1.5,()=>{const w=atA(TON,tau,1.2);return{P:P1,T:mix3(w,[-6,1.2,3],.3),fov:11};}],
- ]);
+ ],B1,u=>subj1(tau1(u)),{recenter:.5});
 }
 const ch1:Scene={
  draw(s,t){
@@ -204,12 +234,20 @@ const ch1:Scene={
 
 // ---------------------------------------------------------------- 2 · the replay from high behind the move: Tonali's run from midfield
 const tau2=(t:number)=>key(t,mono([[0,TT],[CUE(1,'comes from deep'),-6.2],[CUE(1,'midfield'),-5],[CUE(1,'nobody follows'),-2.2],[SECS(1),TC-.1]]),linear);
+/** Director beats: the replay follows Tonali's run from midfield at once (closer than the live shot, the yellow ribbon of his run behind
+ * him); on "nobody follows" it eases out so the two Villa centre-backs he runs past (ringed in purple, watching the ball) are in frame with
+ * him (the midfielder and left-back beside him were outside the authored frame too, so they are not forced in). */
+const B2=beats([[0,{from:'follow',ball:.2}],[CUE(1,'nobody follows')-.5,{from:'space',size:.26,ball:.5}]]);
+/** subject: Tonali; `ball` is the replay's lead point (the authored aim, 10 m ahead of him toward the box: there is no ball near him in
+ * this replay), so the follow keeps the space he runs into ahead of him and the pull-out aims between him and the defenders */
+function subj2(t:number):Subject{const tau=tau2(t),h=pos3(TON,tau),tN=CUE(1,'nobody follows'),w=sm(tN-.6,tN,t,easeInOutSine);
+ return{hero:h,height:1.81,ball:add3(h,[10,1,-3]),keep:[6,7].flatMap(k=>body(k,tau,w*.8))};}
 function cam2(t:number):Cam{
  const tau=tau2(t),tn=atA(TON,tau,1);
  return plan(t,[
   [0,0,()=>({P:add3(tn,[-11,7,-4]),T:add3(tn,[9,0,-2]),fov:38})],
   [CUE(1,'nobody follows')-.3,1.2,()=>({P:add3(tn,[-10,7.5,-3]),T:add3(tn,[10,0,-3]),fov:44})],
- ]);
+ ],B2,subj2);
 }
 const ch2:Scene={
  draw(s,t){
@@ -254,13 +292,19 @@ const ch3:Scene={
 // ---------------------------------------------------------------- 4 · the lesson: frozen as Gordon crosses — defenders watch the ball and the forwards, the late runner is free
 const tau4=(t:number)=>key(t,mono([[0,-2.2],[CUE(3,'arrive late'),-1.4],[CUE(3,'in the box'),-.5],[CUE(3,'hardest'),-.15],[CUE(3,'defenders to follow'),0],[SECS(3),.12]]),linear);
 const E4:V3=[-28,9,-15];
+/** Director beats (the lesson): closer on Tonali, frozen as Gordon crosses; as the yellow lane grows to the slide spot ("arrive late")
+ * the spot is kept in frame, and on "hardest" it eases out so the ringed Villa back three in the box (both centre-backs, the left-back), all watching the
+ * ball, are in frame with him. */
+const B4=beats([[0,'lesson'],[CUE(3,'hardest')-.5,{from:'lesson',size:.26}]]);
+function subj4(t:number):Subject{const tau=tau4(t),h=pos3(TON,tau),tA=CUE(3,'arrive late'),tH=CUE(3,'hardest'),wa=sm(tA-.4,tA+.3,t,easeInOutSine),wd=sm(tH-.6,tH,t,easeInOutSine);
+ return{hero:h,height:1.81,keep:[...(wa>.01?[{P:[SP[0],0,SP[1]] as V3,w:.98*wa}]:[]),...[6,7,8].flatMap(k=>body(k,tau,wd*.8))]};}
 function cam4v(t:number):Cam{
  const tau=tau4(t),tn=atA(TON,tau,1);
  return plan(t,[
   [0,0,()=>({P:E4,T:mix3(tn,[-10,.5,-4],.5),fov:28})],
   [CUE(3,'in the box')-.3,1,()=>({P:add3(E4,[3,-1,0]),T:mix3(tn,[-9,.5,-2],.45),fov:27})],
   [CUE(3,'defenders to follow')-.3,1,()=>({P:add3(E4,[4,-1,2]),T:[-10,.5,-2],fov:30})],
- ]);
+ ],B4,subj4,{recenter:.5});
 }
 const ch4:Scene={
  draw(s,t){

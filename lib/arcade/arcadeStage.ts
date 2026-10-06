@@ -43,15 +43,16 @@ export function createArcadeStage(canvas:HTMLCanvasElement){
  // Constant cabinet lighting: no day/night washout or extra light/shadow passes.
  function lighting(_seconds:number){}
  function effects(dt:number){if(!alive)return;alive=false;for(let i=0;i<count;i++){if(life[i]<=0)continue;life[i]-=dt;const j=i*3;vel[j+1]-=dt*5;for(let k=0;k<3;k++)positions[j+k]+=vel[j+k]*dt;dummy.position.fromArray(positions,j);dummy.scale.setScalar(Math.max(0,life[i]*1.8));dummy.updateMatrix();particles.setMatrixAt(i,dummy.matrix);if(life[i]>0)alive=true;}particles.instanceMatrix.needsUpdate=true;}
- function fit(width:number,length:number,runner=false,tennis=false){const w=canvas.clientWidth,h=canvas.clientHeight;renderer.setSize(w,h,false);camera.clearViewOffset();camera.aspect=w/Math.max(1,h);camera.updateProjectionMatrix();target.set(0,0,runner?-11:0);
+ function fit(width:number,length:number,runner=false,tennis=false,pinball=false){const w=canvas.clientWidth,h=canvas.clientHeight;renderer.setSize(w,h,false);camera.clearViewOffset();camera.aspect=w/Math.max(1,h);camera.updateProjectionMatrix();target.set(0,0,runner?-11:0);
   if(runner){camera.position.set(0,mobile?14:11,mobile?21:15);target.set(0,0,mobile?-10:-14);camera.lookAt(target);camera.updateMatrixWorld();return;}
   // Compose the court into the space between HUD and controls, not into a tiny
   // island in the centre. Binary search only on resize; no per-frame fitting.
-  const top=tennis?(mobile?64:80):(mobile?64:80),bottom=tennis?(h<520?100:mobile?174:146):(mobile?144:112);
+  // Short (landscape) pinball: its message sits ~74px up, so reclaim the rest.
+   const short=pinball&&h<520,top=tennis?(mobile?64:80):short?92:(mobile?64:80),bottom=tennis?(h<520?100:mobile?174:146):short?122:(mobile?144:112);
   // Portrait phones get a more overhead court; short viewports tilt it enough
   // to fill the available width without sacrificing either baseline.
   const usableHeight=Math.max(1,h-top-bottom),courtRatio=length/width,viewRatio=usableHeight/Math.max(1,w);
-  const tilt=tennis?(mobile?T.MathUtils.clamp(Math.sqrt(Math.max(.015,(courtRatio/viewRatio)**2-1)),.12,1.35):.58):(mobile?T.MathUtils.clamp(Math.sqrt(Math.max(.2,(courtRatio/viewRatio)**2-1)),.45,1.15):.82);
+  const tilt=tennis?(mobile?T.MathUtils.clamp(Math.sqrt(Math.max(.015,(courtRatio/viewRatio)**2-1)),.12,1.35):.58):short?T.MathUtils.clamp(Math.sqrt(Math.max(.2,(courtRatio/viewRatio)**2-1)),.82,1.8):(mobile?T.MathUtils.clamp(Math.sqrt(Math.max(.2,(courtRatio/viewRatio)**2-1)),.45,1.15):.82);
   const room=Math.max(.3,usableHeight/h),limitX=tennis?(mobile?.985:.88):.98,corner=new T.Vector3();let low=5,high=250;
   for(let i=0;i<22;i++){const distance=(low+high)/2;camera.position.set(0,distance,distance*tilt);camera.lookAt(target);camera.updateMatrixWorld();let fits=true,minY=Infinity,maxY=-Infinity;for(const x of [-width/2,width/2])for(const z of [-length/2,length/2]){corner.set(x,0,z).project(camera);minY=Math.min(minY,corner.y);maxY=Math.max(maxY,corner.y);if(Math.abs(corner.x)>limitX)fits=false;}if(maxY-minY>room*2)fits=false;if(fits)high=distance;else low=distance;}
   camera.position.set(0,high,high*tilt);camera.lookAt(target);camera.updateMatrixWorld();

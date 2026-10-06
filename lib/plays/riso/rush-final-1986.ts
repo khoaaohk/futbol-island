@@ -36,6 +36,7 @@ import {twos,sm,key,clamp,lerp,rng,hash,ribbon,polyPath,easeOut,easeOutBack,ease
 import {sparkBurst,speedLines,laneArrow,crescent} from '../../paths/riso/shapes';
 import {drawAthlete,motionSmear,makeCamera,posed,blendPose,clampPose,runCycle,dribble,stand,strike,backpedal,celebrate,keeperSet,keeperDive,
  STRIKE_CONTACT,type Pose,type AthleteStyle,type Camera,type Place,type V3,type DrawResult} from './athlete';
+import {beats,shotAt,reframe,near,steady,type Beats,type Keep,type Subject,type Pin,type View as DView} from './director';
 
 const K='navy',R='red',Y='yellow',G='blue',B='blue';
 const D2R=Math.PI/180;
@@ -254,6 +255,26 @@ const posOf=(k:number,tau:number):[number,number]=>[samp(TABLES[k].X,tau),samp(T
 const distOf=(k:number,tau:number)=>samp(TABLES[k].D,tau);
 const velOf=(k:number,tau:number):[number,number]=>{const a=posOf(k,tau-.1),b=posOf(k,tau+.1);return[(b[0]-a[0])/.2,(b[1]-a[1])/.2];};
 
+// ---- the director (lib/plays/riso/director.ts, Oct 4 2026): closer camera angles; camera math only ----
+/** the window in camera units (set at the top of every chapter draw; read by the reframing, aperture() included) */
+let DV:DView={w:1566,h:1080};
+const HR=1.83;
+/** a player's feet and head as keep points, eased in and out by w 0..1: the points slide from Rush to the player (rather than soft
+ * weights, which still fail when a point is behind the lens), so the framing changes continuously and nothing pops */
+const slide=(tau:number,P:V3,w:number):V3=>{const[x,z]=posOf(HERO,tau);return mix3([x,P[1],z],P,clamp(w));};
+const keepOf=(k:number,tau:number,w:number):Keep[]=>{if(w<=.01)return[];const[x,z]=posOf(k,tau);return[slide(tau,[x,0,z],w),slide(tau,[x,HR,z],w)];};
+/** Rush is the hero; the Everton players right by him are soft keeps (the keeper he rounds, a defender on his shoulder). wB: how much
+ * the real ball is framed (0 = the framing point sits at Rush's feet, 1 = the ball itself), so the ball can be let in and out of the
+ * shot continuously (it is with Stevens 10 m away during the intros, in the net after the goal). */
+function rushSubj(tau:number,extra:Keep[],wB=1,r0=2,r1=4.5):Subject{const[x,z]=posOf(HERO,tau),h:V3=[x,0,z],foes:V3[]=[];
+ ACTORS.forEach((a,k)=>{if(a.role==='eve'||a.role==='gk'){const[fx,fz]=posOf(k,tau);foes.push([fx,0,fz]);}});
+ return{hero:h,ball:mix3([x,BALL_R,z],ballAt(tau),clamp(wB)),keep:[...near(h,foes,r0,r1,HR),...extra],height:HR};}
+const direct=(eye:V3,target:V3,F:number,subj:Subject,B:Beats,t:number):Pin=>reframe({eye,target,F},subj,shotAt(t,B),DV);
+/** the reframed camera, steadied with the director's steady() (±.4 s, triangle weights), so a framing limit that changes quickly (the
+ * ball arriving, a keep point easing in) becomes a smooth push instead of a jump; still a pure function of t */
+const STEADY_HALF=.4,STEADY_N=5;
+const steadyCam=(f:(t:number)=>Pin,t:number):Camera=>{const p=steady(t,f,STEADY_HALF,STEADY_N);return cam(p.eye,p.target,p.F);};
+
 // ---- the ball: the sloppy pass, the interception, Mølby's pass, Rush's run, the side-step, the slot ----
 const roll=(a:V3,b:V3,u:number)=>mix3(a,b,u*(1.25-.25*u));
 const REST:V3=[1.5,.11,1.1],NET_HIT:V3=[2,.3,1];
@@ -342,10 +363,21 @@ const CAM1:V3=[-34,21,-60];
 function look1(tau:number):V3{const b=ballAt(tau);
  if(tau<IN_NET+.2)return[b[0]+4,1,b[2]-2];
  const[x,z]=posOf(HERO,tau);return mix3([b[0]+4,1,b[2]-2],[x,1,z],sm(IN_NET+.2,IN_NET+1.8,tau));}
-function cam1(t:number){const tau=tau1(t),a=look1(tau),b=look1(tau-.3),c=look1(tau-.6),look:V3=[(a[0]+b[0]+c[0])/3,(a[1]+b[1]+c[1])/3,(a[2]+b[2]+c[2])/3];
- const F=key(tau,[[-6,2600],[MP,2800],[RCV,3200],[SS,3900],[IN_NET,3900],[IN_NET+2,3500]]);return cam(CAM1,look,F);}
+/** Director beats, chapter 1: a short establishing wide of Wembley from the main stand, then follow Rush, the card's player, through the
+ * team intros (the ball, with Stevens 10 m away, is not yet framed); pull out as Everton lose it and Mølby slides the pass through (the
+ * ball, so Mølby's feet, and Rush both kept in frame: the pass and the space behind the line); follow Rush as he races clear; push in low as he steps round Mimms (the keeper kept in frame),
+ * and hold on Rush after the goal. */
+const B1=beats([[0,'wide'],[.9,'follow'],[T(0,'Everton lead')-.3,{from:'space',size:.24}],[T(0,'Ian Rush races clear')-.3,'follow'],
+ [T(0,'steps round the keeper')-.45,'tight'],[T(0,'and scores')+.3,'reaction']]);
+const cam1=(t:number)=>steadyCam(cam1Pin,t);
+function cam1Pin(t:number):Pin{const tau=tau1(t),el=T(0,'Everton lead'),ir=T(0,'Ian Rush races clear'),sr=T(0,'steps round the keeper'),as=T(0,'and scores');
+ const wB=sm(el-.5,el+.3,t)*(1-sm(as+.4,as+1,t)),wK=sm(sr-.9,sr-.4,t)*(1-sm(as,as+.6,t)),wP=sm(el-.5,el+.3,t)*(1-sm(ir,ir+.8,t)),c=cam1Authored(t);
+ // during the pass the Everton players round Rush are held in frame from further out (the line he runs behind)
+ return direct(c.eye,c.target,c.F,rushSubj(tau,keepOf(GKI,tau,wK),wB,lerp(2,3.5,wP),lerp(4.5,6.5,wP)),B1,t);}
+function cam1Authored(t:number){const tau=tau1(t),a=look1(tau),b=look1(tau-.3),c=look1(tau-.6),look:V3=[(a[0]+b[0]+c[0])/3,(a[1]+b[1]+c[1])/3,(a[2]+b[2]+c[2])/3];
+ const F=key(tau,[[-6,2600],[MP,2800],[RCV,3200],[SS,3900],[IN_NET,3900],[IN_NET+2,3500]]);return{eye:CAM1,target:look,F};}
 const ch1:Scene={
- draw(s,t){const tt=twos(t),c=cam1(t),tau=tau1(t),tp=tau1(tt),goalIn=tau-IN_NET;frame(s);
+ draw(s,t){DV={w:s.W,h:s.H};const tt=twos(t),c=cam1(t),tau=tau1(t),tp=tau1(tt),goalIn=tau-IN_NET;frame(s);
   stadium(s,c,{t,cheer:.12+.9*sm(0,.5,goalIn),flash:.1+1*sm(0,.4,goalIn)});
   ground(s,c,{net:goalIn>0?netRipple(goalIn,NET_HIT):undefined});
   drawWorld(s,c,tau,tp,{ballMin:9});},
@@ -356,11 +388,19 @@ const ch1:Scene={
 // ================= chapter 2 (TV replay, slow motion, a high side camera level with the play): onside, the keeper out, the side-step, the slot =================
 const tau2=(t:number)=>{const E=SEC(1),rt=T(1,'Rush times his run'),so=T(1,'stays onside'),kc=T(1,'The keeper, Mimms, comes out'),ot=T(1,'One touch to the side'),si=T(1,'slots it in');
  return key(t,mono([[0,MP-.9],[rt,MP-.3],[so+.6,MP+.05],[kc,RCV-.1],[kc+1.2,-1],[ot,SS-.1],[ot+.8,-.15],[si+.1,FIN+.02],[E,IN_NET+.3]]),linear);};
-function cam2(t:number){const tau=tau2(t),E=SEC(1),[rx]=posOf(HERO,tau),push=sm(T(1,'The keeper, Mimms, comes out')-.3,T(1,'One touch to the side'),t,easeInOutSine);
+/** Director beats, chapter 2 (the replay): open pulled out on Rush timing his run against Ratcliffe, the last defender (Ratcliffe and the
+ * offside line kept in frame; the ball joins the shot as Mølby's pass arrives); follow Rush as Mimms comes out (the keeper kept); push in
+ * low for the one touch to the side and the slot (keeper and ball kept in frame). */
+const B2=beats([[0,{from:'space',size:.26}],[T(1,'The keeper, Mimms, comes out')-.3,'follow'],[T(1,'One touch to the side')-.4,'tight']]);
+const cam2=(t:number)=>steadyCam(cam2Pin,t);
+function cam2Pin(t:number):Pin{const tau=tau2(t),so=T(1,'stays onside'),kc=T(1,'The keeper, Mimms, comes out');
+ const wB=sm(so+.2,so+1.2,t),wL=1-sm(kc-.2,kc+.6,t),wK=sm(kc-1.6,kc-.2,t),c=cam2Authored(t);
+ return direct(c.eye,c.target,c.F,rushSubj(tau,[...keepOf(5,tau,wL),...keepOf(GKI,tau,wK)],wB),B2,t);}
+function cam2Authored(t:number){const tau=tau2(t),[rx]=posOf(HERO,tau),push=sm(T(1,'The keeper, Mimms, comes out')-.3,T(1,'One touch to the side'),t,easeInOutSine);
  const lx=lerp(rx+3,-8,push),look:V3=[lx,.8,-.5];
- return cam([lx-2,lerp(15,9,push),-44+14*push],look,lerp(2300,2200,push));void E;}
+ return{eye:[lx-2,lerp(15,9,push),-44+14*push] as V3,target:look,F:lerp(2300,2200,push)};}
 const ch2:Scene={
- draw(s,t){const tt=twos(t),c=cam2(t),tau=tau2(t),tp=tau2(tt),E=SEC(1),rt=T(1,'Rush times his run'),so=T(1,'stays onside'),kc=T(1,'The keeper, Mimms, comes out'),ot=T(1,'One touch to the side'),si=T(1,'slots it in'),goalIn=tau-IN_NET;frame(s);
+ draw(s,t){DV={w:s.W,h:s.H};const tt=twos(t),c=cam2(t),tau=tau2(t),tp=tau2(tt),E=SEC(1),rt=T(1,'Rush times his run'),so=T(1,'stays onside'),kc=T(1,'The keeper, Mimms, comes out'),ot=T(1,'One touch to the side'),si=T(1,'slots it in'),goalIn=tau-IN_NET;frame(s);
   stadium(s,c,{t,cheer:.1+.8*sm(0,.4,goalIn)});
   ground(s,c,{net:goalIn>0?netRipple(goalIn,NET_HIT):undefined});
   // "stays onside": the last defender's line across the grass, Rush behind it as the pass goes
@@ -381,11 +421,17 @@ const ch2:Scene={
 // ================= chapter 3 (low behind the goal): the net, Rush away; two goals and a 3–1 win =================
 const tau3=(t:number)=>{const E=SEC(2),oa=T(2,'One-all'),rs=T(2,'Rush scored again');
  return key(t,mono([[0,FIN-.1],[oa+.3,IN_NET+.3],[rs,2.2],[E,5.6]]),linear);};
-function cam3(t:number){const tau=tau3(t),E=SEC(2),[x,z]=posOf(HERO,tau),fol=sm(T(2,'One-all'),T(2,'Rush scored again')+.5,t,easeInOutSine);
+/** Director beats, chapter 3 (behind the goal): hold the net as the ball goes in (the net kept in frame), then a reaction shot on Rush
+ * as he wheels away, held through "three-one". */
+const B3=beats([[0,'wide'],[T(2,'One-all')+.35,'reaction']]);
+const cam3=(t:number)=>steadyCam(cam3Pin,t);
+function cam3Pin(t:number):Pin{const tau=tau3(t),oa=T(2,'One-all'),wN=1-sm(oa+.35,oa+1.6,t),c=cam3Authored(t);
+ return direct(c.eye,c.target,c.F,rushSubj(tau,wN>.01?[slide(tau,NET_HIT,wN)]:[],0),B3,t);}
+function cam3Authored(t:number){const tau=tau3(t),[x,z]=posOf(HERO,tau),fol=sm(T(2,'One-all'),T(2,'Rush scored again')+.5,t,easeInOutSine);
  const look=mix3([-5,.8,1.2],[x,1.2,z],fol);
- return cam([5.5,1.4+.6*fol,-4.5],look,lerp(1150,1700,fol));void E;}
+ return{eye:[5.5,1.4+.6*fol,-4.5] as V3,target:look,F:lerp(1150,1700,fol)};}
 const ch3:Scene={
- draw(s,t){const tt=twos(t),c=cam3(t),tau=tau3(t),tp=tau3(tt),oa=T(2,'One-all'),rs=T(2,'Rush scored again'),lw=T(2,'Liverpool won'),to=T(2,'three-one'),E=SEC(2),goalIn=tau-IN_NET;frame(s);
+ draw(s,t){DV={w:s.W,h:s.H};const tt=twos(t),c=cam3(t),tau=tau3(t),tp=tau3(tt),oa=T(2,'One-all'),rs=T(2,'Rush scored again'),lw=T(2,'Liverpool won'),to=T(2,'three-one'),E=SEC(2),goalIn=tau-IN_NET;frame(s);
   stadium(s,c,{t,cheer:.3+.8*sm(0,.4,goalIn),flash:.2+1.2*sm(lw-.2,lw+.3,t)});
   ground(s,c,{net:goalIn>0?netRipple(goalIn,NET_HIT):undefined});
   trail3(s,c,onGround(pathOf(HERO,.8,5)),.16,R,{progress:sm(oa,rs+.6,t,easeOut),cov:.9*(1-sm(E-.8,E-.4,t)),seed:41});
@@ -402,11 +448,18 @@ const ch3:Scene={
 // ================= chapter 4 (the lesson, a low side camera): time your run, stay onside, take it round the keeper =================
 const tau4=(t:number)=>{const E=SEC(3),tr=T(3,'time your run'),yo=T(3,'you are onside'),tb=T(3,'take the ball round'),tk=T(3,'the keeper');
  return key(t,mono([[0,MP-.5],[tr,MP-.2],[yo+.5,MP+.2],[tb-.2,-1.1],[tk+.2,SS+.05],[tk+1,FIN+.05],[E,IN_NET+.4]]),linear);};
-function cam4(t:number){const tau=tau4(t),E=SEC(3),[rx]=posOf(HERO,tau),push=sm(T(3,'take the ball round')-.4,T(3,'the keeper')+.3,t,easeInOutSine);
+/** Director beats, chapter 4 (the lesson): Rush at lesson size with Ratcliffe, the last defender (the offside line), kept in frame while
+ * "time your run … onside" is said; the ball joins as it reaches him; push in low for "take the ball round the keeper" (Mimms kept). */
+const B4=beats([[0,'lesson'],[T(3,'take the ball round')-.4,'tight']]);
+const cam4=(t:number)=>steadyCam(cam4Pin,t);
+function cam4Pin(t:number):Pin{const tau=tau4(t),yo=T(3,'you are onside'),tb=T(3,'take the ball round');
+ const tk=T(3,'the keeper'),wB=sm(tb-.7,tb,t)*(1-sm(tk+.5,tk+1.4,t)),wL=1-sm(yo+.4,tb-.2,t),wK=sm(tb-.5,tb+.5,t),c=cam4Authored(t);
+ return direct(c.eye,c.target,c.F,rushSubj(tau,[...keepOf(5,tau,wL),...keepOf(GKI,tau,wK)],wB,lerp(2,3.5,wL),lerp(4.5,7,wL)),B4,t);}
+function cam4Authored(t:number){const tau=tau4(t),[rx]=posOf(HERO,tau),push=sm(T(3,'take the ball round')-.4,T(3,'the keeper')+.3,t,easeInOutSine);
  const lx=lerp(rx+2,-8.4,push),look:V3=[lx,.8,-.5];
- return cam([lx-1.5,lerp(11,6,push),lerp(-34,-16,push)],look,lerp(2200,1900,push));void E;}
+ return{eye:[lx-1.5,lerp(11,6,push),lerp(-34,-16,push)] as V3,target:look,F:lerp(2200,1900,push)};}
 const ch4:Scene={
- draw(s,t){const tt=twos(t),c=cam4(t),tau=tau4(t),tp=tau4(tt),E=SEC(3),tr=T(3,'time your run'),yo=T(3,'you are onside'),tb=T(3,'take the ball round'),tk=T(3,'the keeper');frame(s);
+ draw(s,t){DV={w:s.W,h:s.H};const tt=twos(t),c=cam4(t),tau=tau4(t),tp=tau4(tt),E=SEC(3),tr=T(3,'time your run'),yo=T(3,'you are onside'),tb=T(3,'take the ball round'),tk=T(3,'the keeper');frame(s);
   stadium(s,c,{t,cheer:.08});
   ground(s,c);
   offsideLine(s,c,sm(tr-.1,tr+.4,t)*(1-sm(tb,tb+.5,t)),51);

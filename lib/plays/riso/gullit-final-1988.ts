@@ -36,11 +36,14 @@ import {twos,sm,key,clamp,lerp,rng,hash,ribbon,polyPath,easeOut,easeOutBack,ease
 import {sparkBurst,speedLines,laneArrow,crescent} from '../../paths/riso/shapes';
 import {drawAthlete,motionSmear,makeCamera,posed,blendPose,clampPose,runCycle,dribble,stand,strike,header,backpedal,celebrate,keeperSet,keeperDive,
  STRIKE_CONTACT,type Pose,type AthleteStyle,type Camera,type Place,type V3,type DrawResult} from './athlete';
+import {beats,shotAt,reframe,steady,near,type Beats,type Keep,type Pin,type Subject,type View as DView} from './director';
 
 const K='navy',R='orange',Y='yellow',G='blue',B='blue';
 const D2R=Math.PI/180;
 /** Frame the FULL sheet: world (dx,dy) lands on the sheet centre at `zoom`, ignoring the safe box (the card window is small). */
 function frame(s:Sheet,zoom=1,dx=0,dy=0){const S=zoom*s.arrival;s.camera((s.cx-s.W/2)/S+dx,(s.cy-s.H/2)/S+dy,zoom/s.fit,0);}
+/** the window in camera units (set at the top of every draw; read by the director's reframing, aperture() included) */
+let DV:DView={w:1566,h:1080};
 
 // ================= narration (script.json mirrors it) =================
 /** Provisional cue onsets (≈2.6 words/s plus pauses) — replaced by the measured Kokoro onsets in timing.json. */
@@ -87,6 +90,12 @@ const wrapA=(a:number)=>{a=(a+Math.PI)%TAU;if(a<0)a+=TAU;return a-Math.PI;};
 const lerpAng=(a:number,b:number,u:number)=>a+wrapA(b-a)*clamp(u);
 const bump=(a:number,b:number,t:number)=>t<=a||t>=b?0:Math.sin(Math.PI*(t-a)/(b-a));
 function quadP(c:Camera,q:V3[],minD=16):Pt[]|null{for(const p of q)if(depthOf(c,p)<minD)return null;return q.map(p=>P(c,p));}
+/** the shared director (lib/plays/riso/director.ts): the authored pin moved toward the beat's shot, averaged over ±.35 s (steady) so a keep
+ * point fading in or out never pops the framing; rebuilt with the film's own cam() */
+function directed(t:number,pin:(t:number)=>Pin,B:Beats,subj:(t:number)=>Subject,rc:(t:number)=>number=()=>0):Camera{
+ const r=steady(t,u=>reframe(pin(u),subj(u),shotAt(u,B),DV,{recenter:rc(u)}));return cam(r.eye,r.target,r.F);}
+/** a player's feet and head as keep points of weight w (w ≥ .99 = hard) */
+const keepOf=(x:number,z:number,w:number,h=1.85):Keep[]=>w<=.01?[]:[{P:[x,0,z],w},{P:[x,h,z],w}];
 
 // ================= Munich Olympiastadion, a June afternoon: an open bowl with the translucent tent canopy over the main stand, boards =================
 const CX=-52.5,NS=56;
@@ -299,7 +308,8 @@ function drawWorld(s:Sheet,c:Camera,tau:number,tp:number,o:{ballMin:number;hero?
  const m0=s.getTransform(),ppu=Math.sqrt(Math.abs(m0.a*m0.d-m0.b*m0.c))/s.dpr,passing=!!(s as unknown as {_passage?:{pending?:unknown}})._passage?.pending;
  ACTORS.forEach((a,k)=>{if(o.only&&!o.only.includes(k))return;const[x,z]=posOf(k,tau),g:V3=[x,0,z],d=depthOf(c,g);if(d<1)return;const[gx,gy]=P(c,g),kk=kAt(c,g);if(Math.abs(gx)>s.W*.62+kk*2||gy<-s.H*.6||gy>s.H*.6+2.4*kk)return;
   items.push({depth:d,draw:()=>{const{p,yaw}=poseOf(k,tp),px=kk*1.8*ppu,place:Place={x,z,yaw};
-   const detail=passing?(k===HERO?'mid':'low'):px<50||(!a.key&&px<110)?'low':'auto';
+   // heat: the director's closer shots enlarge everyone; only Gullit (and a key player who fills the frame) goes up to full detail
+   const detail=passing?(k===HERO?'mid':'low'):px<50||(k!==HERO&&(!a.key||px<170))?'low':'auto';
    const big=px>=90&&!passing&&(k===HERO||a.key);
    const prev=big?{pose:poseOf(k,tp-1/12).p,place:{x:posOf(k,tau-1/12)[0],z:posOf(k,tau-1/12)[1],yaw:poseOf(k,tp-1/12).yaw}}:undefined;
    res.set(k,drawPlayer(s,p,c,{...a.style,detail},place,{prev,smear:!!o.hero&&k===HERO}));}});});
@@ -341,10 +351,26 @@ function look1(tau:number):V3{
  if(tau<VBH)return mix3([-12,1,-12],[-5,1.5,2.5],sm(CR,VBH,tau,easeInOutSine));
  if(tau<IN_NET+.3)return mix3([-5,1.5,2.5],[-3.6,1.4,-.4],sm(VBH,HDR,tau));
  const[x,z]=posOf(HERO,tau);return mix3([-3.6,1.4,-.4],[x,1,z],sm(IN_NET+.3,IN_NET+2,tau));}
-function cam1(t:number){const tau=tau1(t),a=look1(tau),b=look1(tau-.3),c=look1(tau-.6),look:V3=[(a[0]+b[0]+c[0])/3,(a[1]+b[1]+c[1])/3,(a[2]+b[2]+c[2])/3];
- const F=key(tau,[[-5,2900],[CR,3200],[VBH,3600],[HDR,3900],[IN_NET+.5,3700],[IN_NET+2.5,3500]]);return cam(CAM1,look,F);}
+function cam1Authored(t:number):Pin{const tau=tau1(t),a=look1(tau),b=look1(tau-.3),c=look1(tau-.6),look:V3=[(a[0]+b[0]+c[0])/3,(a[1]+b[1]+c[1])/3,(a[2]+b[2]+c[2])/3];
+ const F=key(tau,[[-5,2900],[CR,3200],[VBH,3600],[HDR,3900],[IN_NET+.5,3700],[IN_NET+2.5,3500]]);return{eye:CAM1,target:look,F};}
+/** players other than k at τ, as ground points (for near()) */
+const othersAt=(tau:number,k:number,only?:number[]):V3[]=>{const o:V3[]=[];ACTORS.forEach((_,j)=>{if(j===k||(only&&!only.includes(j)))return;const[x,z]=posOf(j,tau);o.push([x,0,z]);});return o;};
+/** Director beats, chapter 1: a short establishing wide of the bowl, then follow Gullit in the box (the orange and white shirts round him
+ * come with him as soft keeps); pull out wide for Erwin Koeman's ball in — the crosser, Van Basten at the far post and the ball's flight all
+ * in frame; back to Gullit as Van Basten heads it back across (Van Basten kept in frame); a step closer on "captain Ruud Gullit", push in low
+ * for the header itself with the goal mouth and Dasayev kept in shot; then hold on Gullit as the net bulges. */
+const B1:Beats=beats([[0,'wide'],[1,'follow'],[T(0,'The ball is crossed in')-.45,{from:'space',size:.24,low:.8}],[T(0,'Marco van Basten')-.2,'follow'],
+ [T(0,'captain Ruud Gullit')-.4,{from:'follow',size:.42,az:-35,low:.9}],[T(0,'heads it in')-.4,{from:'tight',az:-35,lens:1}],[T(0,'heads it in')+.75,{from:'reaction',az:-35}]]);
+function subj1(t:number):Subject{const tau=tau1(t),[x,z]=posOf(HERO,tau),bc=T(0,'The ball is crossed in'),vb=T(0,'Marco van Basten'),hb=T(0,'heads it back across'),rg=T(0,'captain Ruud Gullit');
+ // the ball waits at the corner during the introduction: it joins the frame (ramped) as Koeman shapes to cross
+ const hi=T(0,'heads it in'),wIn=sm(bc-.9,bc-.25,t),wK=wIn*(1-sm(vb-.6,vb+.2,t)),wV=wIn*(1-sm(hb+.2,rg-.2,t)),wG=sm(hi-1,hi-.35,t),b=ballAt(tau);
+ const[kx,kz]=posOf(EKI,tau),[vx,vz]=posOf(VBI,tau),[gx,gz]=posOf(GKI,tau);
+ return{hero:[x,0,z],ball:null,height:1.91,keep:[...near([x,0,z],othersAt(tau,HERO),lerp(5.5,2,wG),lerp(8,4.5,wG)),...(wIn>.01?[{P:b,w:wIn}]:[]),
+  ...keepOf(kx,kz,wK),...keepOf(vx,vz,wV),...(wG>.01?[{P:GL,w:wG}]:[]),...keepOf(gx,gz,.6*wG)]};}
+function cam1(t:number){const bc=T(0,'The ball is crossed in'),vb=T(0,'Marco van Basten'),hi=T(0,'heads it in');
+ return directed(t,cam1Authored,B1,subj1,u=>.6*sm(bc-.9,bc-.25,u)*(1-sm(vb-.6,vb+.4,u))+.5*sm(hi-1,hi-.35,u));}
 const ch1:Scene={
- draw(s,t){const tt=twos(t),c=cam1(t),tau=tau1(t),tp=tau1(tt),goalIn=tau-IN_NET;frame(s);
+ draw(s,t){DV={w:s.W,h:s.H};const tt=twos(t),c=cam1(t),tau=tau1(t),tp=tau1(tt),goalIn=tau-IN_NET;frame(s);
   stadium(s,c,{t,cheer:.12+.9*sm(0,.5,goalIn),flash:.1+1*sm(0,.4,goalIn)});
   ground(s,c,{net:goalIn>0?netRipple(goalIn,NET_HIT):undefined});
   drawWorld(s,c,tau,tp,{ballMin:9});},
@@ -355,11 +381,21 @@ const ch1:Scene={
 // ================= chapter 2 (TV replay, slow motion, high behind the goal): nobody marking him, an early jump, eyes open, past Dasayev =================
 const tau2=(t:number)=>{const E=SEC(1),nm=T(1,'Nobody is marking Gullit'),je=T(1,'He jumps early'),eo=T(1,'keeps his eyes open'),ah=T(1,'and heads it'),pd=T(1,'past Dasayev');
  return key(t,mono([[0,VBH-.5],[nm,VBH+.05],[je,-.42],[eo,-.2],[ah+.2,HDR+.01],[pd+.3,IN_NET],[E,IN_NET+.5]]),linear);};
-function cam2(t:number){const E=SEC(1),push=sm(0,E,t,easeInOutSine),f2=sm(T(1,'and heads it')-.3,T(1,'past Dasayev')+.4,t,easeInOutSine);
+function cam2Authored(t:number):Pin{const E=SEC(1),push=sm(0,E,t,easeInOutSine),f2=sm(T(1,'and heads it')-.3,T(1,'past Dasayev')+.4,t,easeInOutSine);
  const look=mix3([-6.2,1.4,1.6],[-3.6,1.5,-.8],f2);
- return cam([15-2.5*push,9.5-2*push,.5],look,lerp(1900,2300,push));}
+ return{eye:[15-2.5*push,9.5-2*push,.5],target:look,F:lerp(1900,2300,push)};}
+/** Director beats, chapter 2 (the replay from behind the goal): open on Gullit with the free grass round him (the yellow ring and the nearest
+ * Soviet shirts kept in frame — nobody is marking him); push in low as he jumps early and keeps his eyes on the ball; ease back for the
+ * header so the ball's path past Dasayev into the corner is in shot; hold on him after it goes in. Swung 20° throughout so Dasayev, near this camera, is not cut by the bottom of the frame. */
+const B2:Beats=beats([[0,{from:'follow',size:.3,az:-20}],[T(1,'He jumps early')-.4,{from:'tight',az:-20}],[T(1,'and heads it')-.4,{from:'follow',size:.4,ball:.5,az:-20}],[T(1,'past Dasayev')+.4,{from:'reaction',size:.42,az:-20}]]);
+function subj2(t:number):Subject{const tau=tau2(t),[x,z]=posOf(HERO,tau),[hx,hz]=posOf(HERO,Math.min(tau,HDR)),nm=T(1,'Nobody is marking Gullit'),je=T(1,'He jumps early'),ah=T(1,'and heads it');
+ const wR=sm(nm-.8,nm-.1,t)*(1-sm(je+.4,je+1.1,t)),wG=sm(ah-1,ah-.3,t),[gx,gz]=posOf(GKI,tau),r=2.4;
+ return{hero:[x,0,z],ball:ballAt(tau),height:1.91,keep:[...near([x,0,z],othersAt(tau,HERO),3,6),
+  ...(wR>.01?[{P:[hx+r,0,hz] as V3,w:wR},{P:[hx-r,0,hz] as V3,w:wR},{P:[hx,0,hz+r] as V3,w:wR},{P:[hx,0,hz-r] as V3,w:wR}]:[]),
+  ...(wG>.01?[{P:GL,w:wG}]:[]),...keepOf(gx,gz,wG)]};}
+function cam2(t:number){return directed(t,cam2Authored,B2,subj2);}
 const ch2:Scene={
- draw(s,t){const tt=twos(t),c=cam2(t),tau=tau2(t),tp=tau2(tt),E=SEC(1),nm=T(1,'Nobody is marking Gullit'),je=T(1,'He jumps early'),eo=T(1,'keeps his eyes open'),ah=T(1,'and heads it'),pd=T(1,'past Dasayev'),goalIn=tau-IN_NET;frame(s);
+ draw(s,t){DV={w:s.W,h:s.H};const tt=twos(t),c=cam2(t),tau=tau2(t),tp=tau2(tt),E=SEC(1),nm=T(1,'Nobody is marking Gullit'),je=T(1,'He jumps early'),eo=T(1,'keeps his eyes open'),ah=T(1,'and heads it'),pd=T(1,'past Dasayev'),goalIn=tau-IN_NET;frame(s);
   stadium(s,c,{t,cheer:.1+.8*sm(0,.4,goalIn)});
   ground(s,c,{net:goalIn>0?netRipple(goalIn,NET_HIT):undefined});
   trail3(s,c,backArc(),.07,K,{progress:clamp((tau-VBH)/FFL),cov:.75*(1-sm(E-.8,E-.3,t)),dashed:true,head:false,seed:21});
@@ -380,11 +416,17 @@ const ch2:Scene={
 // ================= chapter 3 (low camera by the right corner flag): he runs to celebrate; two–nil; champions of Europe =================
 const tau3=(t:number)=>{const E=SEC(2),on=T(2,'One-nil'),gr=T(2,'Gullit runs to celebrate'),tw=T(2,'win two-nil');
  return key(t,mono([[0,IN_NET-.1],[on+.3,IN_NET+.5],[gr,1.3],[tw,4.8],[E,7.4]]),linear);};
-function cam3(t:number){const tau=tau3(t),E=SEC(2),[x,z]=posOf(HERO,tau),b=ballAt(tau),fol=sm(T(2,'One-nil'),T(2,'Gullit runs to celebrate')+.6,t,easeInOutSine);
+function cam3Authored(t:number):Pin{const tau=tau3(t),E=SEC(2),[x,z]=posOf(HERO,tau),b=ballAt(tau),fol=sm(T(2,'One-nil'),T(2,'Gullit runs to celebrate')+.6,t,easeInOutSine);
  const look=mix3([lerp(b[0],-3,.3),1.3,lerp(b[2],0,.3)],[x,1.2,z],fol);
- return cam([-1.5-3*sm(0,E,t),1.5,36.5],look,key(t,mono([[0,1300],[T(2,'Gullit runs to celebrate'),1500],[T(2,'win two-nil'),2100],[E,2400]])));}
+ return{eye:[-1.5-3*sm(0,E,t),1.5,36.5],target:look,F:key(t,mono([[0,1300],[T(2,'Gullit runs to celebrate'),1500],[T(2,'win two-nil'),2100],[E,2400]]))};}
+/** Director beats, chapter 3 (the low camera by the corner flag): on Gullit from the seam with the net softly kept for "one-nil", follow his run
+ * toward us (Van Basten soft-kept as he chases him; swung 20° so the Soviet defender on the edge of the six-yard box is not between us and him), and push in on his face for "two-nil … champions of Europe". */
+const B3:Beats=beats([[0,{from:'follow',size:.26,az:20}],[T(2,'Gullit runs to celebrate')-.3,{from:'follow',az:20}],[T(2,'win two-nil')-.4,{from:'reaction',az:20}]]);
+function subj3(t:number):Subject{const tau=tau3(t),[x,z]=posOf(HERO,tau),wN=.7*(1-sm(.6,T(2,'Gullit runs to celebrate'),t));
+ return{hero:[x,0,z],height:1.91,keep:[...near([x,0,z],othersAt(tau,HERO,[VBI]),3,7),...(wN>.01?[{P:GL,w:wN}]:[])]};}
+function cam3(t:number){return directed(t,cam3Authored,B3,subj3);}
 const ch3:Scene={
- draw(s,t){const tt=twos(t),c=cam3(t),tau=tau3(t),tp=tau3(tt),on=T(2,'One-nil'),gr=T(2,'Gullit runs to celebrate'),tw=T(2,'win two-nil'),ce=T(2,'champions of Europe'),E=SEC(2),goalIn=tau-IN_NET;frame(s);
+ draw(s,t){DV={w:s.W,h:s.H};const tt=twos(t),c=cam3(t),tau=tau3(t),tp=tau3(tt),on=T(2,'One-nil'),gr=T(2,'Gullit runs to celebrate'),tw=T(2,'win two-nil'),ce=T(2,'champions of Europe'),E=SEC(2),goalIn=tau-IN_NET;frame(s);
   stadium(s,c,{t,cheer:.3+.8*sm(0,.5,goalIn),flash:.3+1.2*sm(tw-.2,tw+.3,t)});
   ground(s,c,{net:goalIn>0?netRipple(goalIn,NET_HIT):undefined});
   trail3(s,c,onGround(pathOf(HERO,1,6.4)),.16,R,{progress:sm(gr-.1,gr+1,t,easeOut),cov:.9*(1-sm(E-.9,E-.4,t)),seed:41});
@@ -400,10 +442,16 @@ const ch3:Scene={
 // ================= chapter 4 (the lesson, a side camera): jump early, eyes open, head it down towards the goal =================
 const tau4=(t:number)=>{const E=SEC(3),je=T(3,'jump early'),ey=T(3,'keep your eyes open'),hd=T(3,'head the ball down'),tg=T(3,'towards the goal');
  return key(t,mono([[0,VBH-.3],[je,-.45],[ey,-.2],[hd+.2,HDR+.02],[tg,.2],[E,IN_NET+.4]]),linear);};
-function cam4(t:number){const E=SEC(3),push=sm(0,E,t,easeInOutSine),look:V3=[-5.6,1.6,-.4];
- return cam([-9.5+1.5*push,2.1,-12+1.5*push],look,lerp(1350,1600,push));}
+function cam4Authored(t:number):Pin{const E=SEC(3),push=sm(0,E,t,easeInOutSine),look:V3=[-5.6,1.6,-.4];
+ return{eye:[-9.5+1.5*push,2.1,-12+1.5*push],target:look,F:lerp(1350,1600,push)};}
+/** Director beats, chapter 4 (the lesson): the lesson framing on Gullit, push in for "jump early" and "keep your eyes open" (his face and
+ * the ball), then ease back so the yellow arrow — the header angled down at the goal mouth — and the goal are in frame. */
+const B4:Beats=beats([[0,'lesson'],[T(3,'jump early')-.35,'tight'],[T(3,'head the ball down')-.45,{from:'lesson',ball:.5}]]);
+function subj4(t:number):Subject{const tau=tau4(t),[x,z]=posOf(HERO,tau),hd=T(3,'head the ball down'),wG=sm(hd-1.1,hd-.4,t);
+ return{hero:[x,0,z],ball:ballAt(tau),height:1.91,keep:[...near([x,0,z],othersAt(tau,HERO,[VBI,GKI]),3,6),...(wG>.01?[{P:mix3([x,1.8,z],[0,.6,-1.2],.75),w:wG}]:[])]};}
+function cam4(t:number){return directed(t,cam4Authored,B4,subj4);}
 const ch4:Scene={
- draw(s,t){const tt=twos(t),c=cam4(t),tau=tau4(t),tp=tau4(tt),E=SEC(3),je=T(3,'jump early'),ey=T(3,'keep your eyes open'),hd=T(3,'head the ball down'),tg=T(3,'towards the goal');frame(s);
+ draw(s,t){DV={w:s.W,h:s.H};const tt=twos(t),c=cam4(t),tau=tau4(t),tp=tau4(tt),E=SEC(3),je=T(3,'jump early'),ey=T(3,'keep your eyes open'),hd=T(3,'head the ball down'),tg=T(3,'towards the goal');frame(s);
   stadium(s,c,{t,cheer:.08});
   ground(s,c);
   const[hx,hz]=posOf(HERO,Math.min(tau,HDR));groundRing(s,c,hx,hz,.55,.06,R,bump(je-.1,je+1,t),51);

@@ -24,6 +24,14 @@ export const LESSON_GOALS:Record<string,LessonGoal>={
  '7v7:def_7_goalside':{goal:'Defend by staying between the attacker and your goal.'},
  '7v7:dbz_7_dontballwatch':{goal:'Don’t just watch the ball: keep an eye on the runner too.'},
  '7v7:gap7_lostball':{goal:'Lost the ball? First protect the way to your goal.'},
+ // 7v7 depth stops (Oct 4 2026): their catalog lines read like rule notes ("AYSO 9U/10U example…"), so they get kid goals too.
+ '7v7:next7_reachableforward':{goal:'Our one forward stays close enough for a short pass from midfield.'},
+ '7v7:next7_outsideback':{goal:'With three at the back, an outside defender can run wide to make a new route.'},
+ '7v7:next7_dribbleroom':{goal:'Give a teammate room to dribble, then move close again to help.'},
+ '7v7:next7_shotreaction':{goal:'After a shot, watch the keeper: run in for a loose ball, or get back if they catch it.'},
+ '7v7:next7_offsideboundary':{goal:'Some 7v7 leagues only call offside past the build-out line. Learn where it counts.',words:[
+  {term:'Offside',meaning:'being nearer their goal than the ball and the second-last defender when a teammate passes to you.'}]},
+ '7v7:next7_dribblein':{goal:'In some leagues you can dribble or pass the ball in from the sideline. Pick the open way.'},
 };
 /** The opener's goal line for a lesson, or null when there is nothing to say. */
 export function lessonGoal(format:string,lesson:{id:string;concept?:string;desc?:string}):LessonGoal|null{

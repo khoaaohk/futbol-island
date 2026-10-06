@@ -1,0 +1,111 @@
+/* Walk-in History Museum UI (Oct 3 2026). The Konbini room's layout and the island design system (gold / mint pill buttons from
+ * the --btn-* tokens, the store-enter-prompt pill, IslandBrush headings), in museum colours: cream gallery paper, the
+ * museum's dark green, and each gallery's own colour (--g) as the card's band. Pure CSS, no blur, no animation loops; every
+ * one-shot animation is off with reduced motion. Buttons are ≥ 44 px. */
+.root{--m-paper:#fff6e3;--m-ink:#22366b;--m-green:#294f43;--m-soft:#4d5b74;--control-bottom:calc(28px + env(safe-area-inset-bottom,0px));position:fixed;inset:0;background:#f6ecd6;color:var(--m-ink);font-family:var(--font-body,Arial,sans-serif);overflow:hidden}
+.canvas{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-user-drag:none;width:100%;height:100%;display:block;touch-action:none;outline:none}
+.header{position:absolute;z-index:3;left:0;right:0;top:0;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:calc(20px + env(safe-area-inset-top,0px)) calc(24px + env(safe-area-inset-right,0px)) 12px calc(24px + env(safe-area-inset-left,0px));pointer-events:none}
+.header>*{pointer-events:auto}
+@media(max-width:600px),(pointer:coarse){.header{padding:calc(16px + env(safe-area-inset-top,0px)) calc(16px + env(safe-area-inset-right,0px)) 10px calc(16px + env(safe-area-inset-left,0px))}}
+.section{position:absolute;left:50%;transform:translateX(-50%);max-width:min(52vw,360px);padding:8px 14px;border-radius:999px;background:#294f43e6;color:#fff1d3;font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+.counts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;pointer-events:none}
+.counts span{display:inline-flex;align-items:baseline;gap:4px;padding:6px 10px;border-radius:999px;background:var(--m-paper);border:2px solid var(--g);color:var(--m-ink);font-size:12px;font-weight:700;box-shadow:0 2px 0 #3a2b1826}
+.counts b{font-size:15px;font-weight:900;color:var(--g)}
+@media(max-width:420px){.counts{gap:4px;max-width:62vw}.counts span{padding:4px 8px;font-size:11px}}
+.prompt{z-index:4;visibility:hidden}
+.error{position:absolute;inset:32% 12%;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;border-radius:20px;background:#2a2016e6;color:#fff1d3;text-align:center;padding:16px}
+.error button,.gold,.mint{min-height:44px;min-width:44px;padding:8px 16px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:var(--btn-radius,999px);background:var(--btn-gold-bright,#f9d665) var(--btn-grain) center/128px 128px;color:var(--btn-ink,#244d40);box-shadow:0 4px 0 var(--btn-gold-bright-edge,#aa8b3e);font:inherit;font-weight:800;font-size:14px;cursor:pointer}
+.mint{background:var(--btn-mint,#beded1) var(--btn-grain) center/128px 128px;box-shadow:0 4px 0 var(--btn-mint-edge,#8bac9d)}
+.error button:active,.gold:active,.mint:active{translate:0 var(--btn-press,2px);box-shadow:0 1px 0 var(--btn-gold-bright-edge,#aa8b3e)}
+/* Zoomed: section arrows either side of the case, the exhibit card under it (portrait) or beside it (landscape). */
+.arrow{position:absolute;z-index:3;top:34%;width:48px;height:48px;display:grid;place-items:center;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:999px;background:var(--btn-gold-bright,#f5c45e);color:var(--btn-ink,#244d40);box-shadow:0 4px 0 var(--btn-gold-bright-edge,#bf954a);cursor:pointer}
+.arrow:disabled{opacity:.35;cursor:default}.prev{left:calc(18px + env(safe-area-inset-left,0px))}.next{right:calc(18px + env(safe-area-inset-right,0px))}
+.card{position:absolute;z-index:4;left:50%;translate:-50% 0;bottom:calc(14px + env(safe-area-inset-bottom,0px));width:min(560px,calc(100% - 28px));max-height:46%;overflow:auto;overscroll-behavior:contain;border-radius:26px}
+@media(min-aspect-ratio:6/5){.card{left:auto;translate:none;right:calc(84px + env(safe-area-inset-right,0px));top:calc(84px + env(safe-area-inset-top,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));width:min(440px,40%);max-height:none}}
+@media(min-aspect-ratio:6/5) and (max-height:520px){.card{top:calc(70px + env(safe-area-inset-top,0px));right:calc(70px + env(safe-area-inset-right,0px));width:min(380px,46%)}}
+.tag{--g:#294f43;box-sizing:border-box;border:3px solid var(--btn-rim,#fff2cd);border-top:10px solid var(--g);border-radius:26px;background:var(--btn-grain) center/160px,var(--m-paper);background-blend-mode:soft-light,normal;color:var(--m-ink);padding:12px 16px 14px;box-shadow:0 7px 0 #3a2b1833,0 12px 30px #2a20162e;animation:tagIn .28s ease-out both}
+@keyframes tagIn{from{transform:translateY(14px);opacity:0}to{transform:none;opacity:1}}
+.tagHead h2{margin:2px 0 4px;font:normal 26px/1.08 IslandBrush,Georgia,serif;color:var(--m-ink)}
+.eyebrow{display:block;font-size:12px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:var(--g)}
+.tag p{margin:6px 0 0;font-size:14px;line-height:1.42}
+.facts{margin:6px 0 0;padding-left:18px;font-size:14px;line-height:1.42}.facts li{margin:3px 0}
+.forGame{padding:8px 10px;border-radius:14px;background:#294f4314}.forGame b{color:var(--m-green)}
+.sources{margin-top:8px;font-size:13px}.sources summary{min-height:44px;display:flex;align-items:center;cursor:pointer;font-weight:800;color:var(--m-soft)}.sources ul{margin:0;padding-left:18px}.sources a{color:#2f6fb0;overflow-wrap:anywhere}
+.small{font-size:13px;color:var(--m-soft)}
+.locked{margin-top:6px}.lockText{font-weight:800;font-size:15px!important}
+.progress{height:14px;margin:10px 0 2px;border-radius:999px;background:#3a2b1820;overflow:hidden}.progress i{display:block;height:100%;border-radius:999px;background:var(--g)}
+.lockIcon{display:inline-block;width:10px;height:9px;margin-right:5px;border-radius:2px;background:currentColor;position:relative;top:-1px}
+.lockIcon::before{content:'';position:absolute;left:1.5px;top:-6px;width:7px;height:7px;box-sizing:border-box;border:2px solid currentColor;border-bottom:0;border-radius:5px 5px 0 0}
+/* Timeline wall: one button per case, in date order. */
+.years{list-style:none;margin:10px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.years button{width:100%;min-height:52px;display:flex;flex-direction:column;align-items:flex-start;gap:7px;padding:6px 10px;border:2px solid var(--g);border-left-width:8px;border-radius:14px;background:#fffdf6;color:var(--m-ink);font:inherit;text-align:left;cursor:pointer}
+.years button[data-open=false]{opacity:.62;border-style:dashed}
+.years b{font-size:15px;color:var(--g)}.years span{font-size:12px;font-weight:700;line-height:1.25}
+/* The hands-on exhibit. */
+.hands{margin:10px 0 2px;padding:10px 12px 12px;border:2px dashed var(--g);border-radius:18px;background:#fffdf6}
+.hands h4{margin:0 0 8px;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--g)}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.quote{font-weight:700;color:var(--m-green)}
+.cardButton{min-height:48px;display:inline-flex;align-items:center;gap:8px;padding:6px 14px 6px 8px;border:3px solid #fff2cd;border-radius:14px;background:#fff;color:var(--m-ink);font:inherit;font-weight:800;box-shadow:0 3px 0 #3a2b1833;cursor:pointer}
+.cardButton i{width:24px;height:32px;border-radius:4px;border:2px solid var(--m-ink);background:#f8d651}.cardButton[data-color=red] i{background:#e0453d}
+.bigCard{position:fixed;z-index:20;left:50%;top:34%;translate:-50% -50%;width:min(260px,70%);display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;cursor:pointer;animation:raise .38s cubic-bezier(.2,.9,.3,1.3) both}
+.bigCardFace{width:120px;height:168px;border-radius:14px;border:5px solid #fff;background:#f8d651;box-shadow:0 18px 40px #2a201655;transform:rotate(-6deg)}
+.bigCard[data-color=red] .bigCardFace{background:#e0453d;transform:rotate(5deg)}
+.bigCard b{padding:6px 16px;border-radius:999px;background:var(--m-ink);color:#fff1d3;font:normal 30px/1.1 IslandBrush,Georgia,serif}
+.bigCard p{margin:0;padding:8px 12px;border-radius:14px;background:var(--m-paper);color:var(--m-ink);font-weight:700;font-size:15px;box-shadow:0 6px 18px #2a201633}
+@keyframes raise{from{transform:translateY(120px) rotate(-12deg);opacity:0}to{transform:none;opacity:1}}
+.var{display:flex;flex-direction:column;align-items:flex-start;gap:8px}.varScreen{width:min(260px,100%);height:auto;border-radius:10px;box-shadow:0 4px 0 #3a2b1833}
+.var p{margin:0}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.compare>div{padding:8px 10px;border-radius:14px;background:#f6ecd6;display:flex;flex-direction:column;gap:2px}.compare>div[data-wet]{background:#d9dfe8}
+.compare b{font-size:14px}.compare small{font-size:13px;line-height:1.3}
+.round{width:48px;height:48px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:999px;background:var(--btn-gold-bright,#f9d665);color:var(--btn-ink,#244d40);box-shadow:0 4px 0 var(--btn-gold-bright-edge,#aa8b3e);font-size:22px;font-weight:900;cursor:pointer}
+.shirt{width:56px;height:56px;display:grid;place-items:center;border:3px solid #fff2cd;border-radius:14px 14px 18px 18px;background:#d8466f;color:#fff1d3;font-size:22px;font-weight:900;box-shadow:0 3px 0 #3a2b1833;cursor:pointer}
+.shirt:nth-child(1){background:#3a9e5c}.shirt:nth-child(3){background:#2f6fb0}.shirt[aria-pressed=true]{outline:4px solid var(--m-ink);outline-offset:2px}
+.certs{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:8px}
+.certs .gold{width:100%}
+.certEmpty{display:flex;flex-direction:column;gap:2px;min-height:44px;justify-content:center;padding:6px 12px;border:2px dashed #8c8068;border-radius:14px;font-size:13px;color:var(--m-soft)}.certEmpty b{color:var(--m-ink);font-size:14px}
+.hint{position:absolute;z-index:3;left:50%;top:calc(76px + env(safe-area-inset-top,0px));translate:-50% 0;margin:0;padding:6px 12px;border-radius:999px;background:#294f43d9;color:#fff1d3;font-weight:800;font-size:13px;pointer-events:none}
+@media(min-aspect-ratio:6/5){.hint{left:30%}.bigCard{left:32%;top:46%}}
+.greeting{position:fixed;z-index:6;top:calc(84px + env(safe-area-inset-top,0px));left:50%;translate:-50% 0;width:max-content;max-width:calc(100% - 32px);margin:0;padding:10px 16px;border-radius:18px;background:var(--m-paper);color:var(--m-ink);font-weight:700;font-size:15px;box-shadow:0 6px 18px #2a201633;animation:bubble 3.6s ease both;pointer-events:none;text-align:center}
+.greeting b{color:var(--m-green)}
+@keyframes bubble{0%{opacity:0;transform:translateY(-8px)}10%,85%{opacity:1;transform:none}100%{opacity:0}}
+/* The guide's panel. */
+.panelWrap{position:fixed;inset:0;z-index:10;display:grid;place-items:center;background:#2a201666;padding:calc(76px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px))}
+.panel{position:relative;width:min(480px,100%);max-height:100%;overflow:auto;overscroll-behavior:contain;box-sizing:border-box;border:3px solid var(--btn-rim,#fff2cd);border-top:10px solid #477c6a;border-radius:26px;padding:16px 18px 18px;background:var(--btn-grain) center/160px,var(--m-paper);background-blend-mode:soft-light,normal;color:var(--m-ink);box-shadow:0 12px 40px #2a201655;display:flex;flex-direction:column;align-items:flex-start;gap:8px}
+.panel h2{margin:0 96px 0 0;font:normal 28px/1.05 IslandBrush,Georgia,serif}
+.panel h3{margin:8px 0 0;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:#477c6a}
+.panel p{margin:0;font-size:14px;line-height:1.4}
+.close{position:absolute;top:12px;right:12px}
+.guideCounts{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:6px;width:100%}
+.guideCounts li{padding:8px 10px;border-radius:12px;background:#f6ecd6;font-size:14px}.guideCounts b{font-size:18px;color:var(--m-green)}
+.srOnly{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media(orientation:landscape){.root{--control-bottom:calc(16px + env(safe-area-inset-bottom,0px))}}
+@media(prefers-reduced-motion:reduce){.tag,.greeting,.bigCard{animation:none}}
+.collectionList{margin:6px 0 0;padding-left:18px;font-size:13px;line-height:1.4}.collectionList li{margin:4px 0}.collectionList b{color:var(--m-green)}
+/* Storytelling strip (Oct 4 2026): a slim caption bar under the working exhibit, not a card. One action, beat dots, the told
+ * line, an ⓘ plaque. No backdrop, no focus trap; the exhibit stays the star. */
+.strip{--g:#294f43;position:absolute;z-index:4;left:50%;translate:-50% 0;bottom:calc(14px + env(safe-area-inset-bottom,0px));width:min(560px,calc(100% - 28px));box-sizing:border-box;display:flex;flex-direction:column;gap:6px;padding:10px 14px 12px;border:3px solid var(--btn-rim,#fff2cd);border-left:8px solid var(--g);border-radius:22px;background:var(--btn-grain) center/160px,var(--m-paper);background-blend-mode:soft-light,normal;color:var(--m-ink);box-shadow:0 6px 0 #3a2b1833,0 10px 26px #2a20162e}
+.stripHead{display:flex;align-items:center;gap:4px 10px;flex-wrap:wrap}.stripHead b{font:normal 19px/1.1 IslandBrush,Georgia,serif}.stripHead .eyebrow{flex-basis:100%}
+.dots{display:inline-flex;gap:5px;margin-left:auto}.dots i{width:9px;height:9px;border-radius:50%;background:#3a2b1826}.dots i[data-on]{background:var(--g)}
+.plaqueButton{width:44px;height:44px;flex:none;border:3px solid var(--btn-rim,#fff2cd);border-radius:50%;background:var(--m-paper);color:var(--g);font:italic 900 20px/1 Georgia,serif;box-shadow:0 3px 0 #3a2b1833;cursor:pointer}.plaqueButton[aria-expanded=true]{background:var(--g);color:#fff1d3}
+.caption{margin:0;min-height:2.6em;font-size:15px;line-height:1.35;font-weight:700}
+.strip .gold,.strip .mint{align-self:flex-start}
+.takeaway{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 6px 6px 12px;border-radius:14px;background:#f2bb4540}.takeaway b{color:var(--m-green)}
+.plaque{position:absolute;left:0;right:0;bottom:calc(100% + 8px);max-height:min(40vh,320px);overflow:auto;overscroll-behavior:contain;box-sizing:border-box;padding:10px 14px;border:3px solid var(--btn-rim,#fff2cd);border-radius:18px;background:#fffdf6;color:var(--m-ink);box-shadow:0 8px 22px #2a201633;animation:tagIn .22s ease-out both}
+.plaque .facts{margin-top:0}
+@media(max-height:520px) and (orientation:landscape){.strip{left:auto;right:calc(16px + env(safe-area-inset-right,0px));translate:none;width:min(380px,46%)}.caption{min-height:0}}
+@media(prefers-reduced-motion:reduce){.plaque{animation:none}}
+/* Story stages fill the top of a phone: the case arrows sit below the stage, above the caption strip (never over the set). */
+@media(max-width:600px){.root[data-story] .arrow{top:auto;bottom:calc(214px + env(safe-area-inset-bottom,0px));width:44px;height:44px}}
+/* One header row whatever the title's length: the title shrinks with an ellipsis, the dots and the ⓘ stay put. */
+.stripHead b{flex:1 1 0;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* The walk-through timeline's pop-up: the year you're standing on, in its gallery's colour. */
+.yearPop{position:fixed;z-index:6;top:calc(84px + env(safe-area-inset-top,0px));left:50%;translate:-50% 0;display:flex;align-items:baseline;gap:10px;max-width:calc(100% - 32px);margin:0;padding:8px 16px;border-radius:16px;border-left:8px solid var(--g);background:var(--m-paper);color:var(--m-ink);font-weight:800;font-size:15px;box-shadow:0 6px 18px #2a201633;animation:tagIn .2s ease-out both;pointer-events:none}
+.yearPop b{font:normal 24px/1 IslandBrush,Georgia,serif;color:var(--g)}
+@media(prefers-reduced-motion:reduce){.yearPop{animation:none}}
+
+/* "Step inside": opens the case's full-screen experience (components/museum/experiences). */
+.stepInside{min-height:44px;padding:8px 18px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:999px;background:var(--btn-gold-bright,#f9d665) var(--btn-grain) center/128px 128px;color:var(--btn-ink,#244d40);box-shadow:0 4px 0 var(--btn-gold-bright-edge,#aa8b3e);font:inherit;font-weight:800;font-size:14px;cursor:pointer;transition:transform .16s,translate .16s,box-shadow .16s}
+.stepInside:active{translate:0 var(--btn-press,2px);transform:scale(.94);box-shadow:0 1px 0 var(--btn-gold-bright-edge,#aa8b3e)}
+@media(prefers-reduced-motion:reduce){.stepInside{transition:none}}

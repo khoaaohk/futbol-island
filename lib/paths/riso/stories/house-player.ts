@@ -11,7 +11,7 @@
 import type {Sheet} from '../sheet';
 import {type RisoStory,type Scene,playChapters} from '../story';
 import {apertureDisc} from '../passage';
-import {twos,twosIndex,sm,easeOut,easeIO,easeIn,easeOutBack,linear,key,camKeys,anticipate,settle,clamp,lerp,rng,hash,noise1,blob,polyPath,ribbon,smoothPts,partial,circlePath,rectPath,torn,arc,scalePts,TAU,type Pt} from '../motion';
+import {twos,twosIndex,sm,easeOut,easeIO,easeIn,easeOutBack,linear,key,camKeys,anticipate,settle,clamp,lerp,rng,hash,noise1,blob,polyPath,ribbon,smoothPts,partial,circlePath,rectPath,torn,arc,scalePts,TAU,type Pt,creepHolds} from '../motion';
 import {contour,handCut,confetti,sparkBurst,speedLines,crescent,glowDisc,ring} from '../shapes';
 
 const CH='/stories/narration/7v7/house-player/';
@@ -22,7 +22,8 @@ const WX=-220,WY=-440,WW=440,WH=250; // the big second-floor window (back wall)
 const W1X=300,W1Y=5,DOORX=-250; // the first-floor window and door (back wall)
 const doorPath=(x:number,y:number,w:number,h:number)=>{const p=new Path2D();p.moveTo(x-w/2,y);p.lineTo(x-w/2,y-h+w/2);p.arc(x,y-h+w/2,w/2,Math.PI,0);p.lineTo(x+w/2,y);p.closePath();return p;};
 /** Camera keys on real chapter time (a Catmull-Rom path through the keys, no whole-chapter time warp) so every move lands on its cue. */
-const cam=(s:Sheet,t:number,K:number[][])=>camKeys(s,t,K,linear);
+// moving holds: a camera hold creeps toward the next key instead of parking (stutter audit, Oct 4 2026)
+const cam=(s:Sheet,t:number,K:number[][])=>camKeys(s,t,creepHolds(K),linear);
 const shake=(t:number,seed:number,amp:number)=>(hash(twosIndex(t),seed)-.5)*2*amp;
 
 // ---------------- abstract riso figure (bible §1c.4) ----------------

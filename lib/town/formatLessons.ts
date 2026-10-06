@@ -113,4 +113,8 @@ export function quizOutcomeStep(session:FieldSession|null):number|undefined{
  if(!q||(session.answer!==q.correct&&!session.outcomePreview))return;
  return q.outcomeStep??undefined;
 }
+/** Lofted ball flight for lesson passes (Oct 4 2026): a step whose `ballPathType` is one of these flies in an arc instead of rolling.
+ * Value = peak height per metre of pass; `ground`/`through` (and no type) stay on the grass. Pure, no allocation (fieldRuntime calls it per frame). */
+export const LOFTED_PATHS:Readonly<Record<string,number>>={air:.16,lofted:.16,cross:.13,clearance:.2,chip:.25};
+export function loftPeak(type:string|undefined,meters:number):number{const k=type?LOFTED_PATHS[type]:0;return k&&meters>4?Math.min(7,Math.max(1.2,k*meters)):0;}
 export function resetQuizOutcome(session:FieldSession){session.outcomeProgress=0;session.outcomePreview=false;session.outcomePaused=false;}

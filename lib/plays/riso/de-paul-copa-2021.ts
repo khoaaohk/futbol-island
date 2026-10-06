@@ -44,6 +44,7 @@ import {TAU,twos,sm,key,clamp,lerp,rng,hash,polyPath,ribbon,easeOut,easeOutBack,
 import {sparkBurst,footballPanels,speedLines} from '../../paths/riso/shapes';
 import {drawAthlete,motionSmear,makeCamera,solve,strike,runCycle,stand,keeperSet,posed,blendPose,celebrate,STRIKE_CONTACT,
  type Pose,type Camera,type AthleteStyle,type Place,type InkFill,type V3,type DrawResult} from './athlete';
+import {beats,shotAt,reframe,steady,focalOf,fovOf,near,type Beats,type Subject,type Keep,type ReframeOpts,type View as DView} from './director';
 
 // ---------------------------------------------------------------- narration + timing
 /** The narration (script.json mirrors it). Cue `words` are the match keys for the voice's word onsets. */
@@ -90,7 +91,9 @@ function over(p:Pose,d:Partial<Pose>,w:number):Pose{if(w<=0)return p;const o={..
 const bump=(a:number,b:number,t:number)=>Math.sin(Math.PI*clamp((t-a)/(b-a)));
 let LENS=1;
 /** Frame the FULL sheet: world (0,0) on the canvas centre at 1 unit per sheet unit (the passage arrival scale still multiplies in). */
-function frame(s:Sheet){const S=s.arrival;s.camera((s.cx-s.W/2)/S,(s.cy-s.H/2)/S,1/s.fit,0);LENS=Math.pow(Math.min(1,s.W/1620),.6);}
+function frame(s:Sheet){const S=s.arrival;s.camera((s.cx-s.W/2)/S,(s.cy-s.H/2)/S,1/s.fit,0);LENS=Math.pow(Math.min(1,s.W/1620),.6);DV={w:s.W,h:s.H};}
+/** the window in camera units (set by frame(); read by the director's reframing, aperture() included) */
+let DV:DView={w:1566,h:1080};
 const view=(s:Sheet)=>({hx:s.W/(2*.68)+120,hy:s.H/(2*.68)+120});
 
 // ---------------------------------------------------------------- 3D projection through an athlete.ts Camera (right-handed metres, y up)
@@ -355,6 +358,15 @@ function play(s:Sheet,c:Cam,tau:number,tp:number,tpp:number,e:Env={}):DrawResult
 type Shot={P:V3;T:V3;fov:number};
 const blendShot=(a:Shot,b:Shot,u:number):Shot=>u<=0?a:u>=1?b:{P:mix3(a.P,b.P,u),T:mix3(a.T,b.T,u),fov:Math.exp(lerp(Math.log(a.fov),Math.log(b.fov),u))};
 function plan(t:number,steps:[number,number,(t:number)=>Shot][]):Cam{let cur=steps[0][2](t);for(let i=1;i<steps.length;i++){const[a,d,f]=steps[i];const u=sm(a,a+Math.max(.01,d),t,easeInOutSine);if(u>0)cur=blendShot(cur,f(t),u);}return cam3(cur.P,cur.T,cur.fov);}
+/** plan() through the shared director (lib/plays/riso/director.ts): the authored Shot, then moved toward the beat's framing; steady()
+ * averages the directed camera over ±.35 s so a keep point arriving or the followed player handing over never pops the framing */
+function planD(t:number,steps:[number,number,(t:number)=>Shot][],B:Beats,subj:(t:number)=>Subject,half=.35,o:ReframeOpts={}):Cam{
+ const at=(u:number)=>{let cur=steps[0][2](u);for(let i=1;i<steps.length;i++){const[a,d,f]=steps[i];const w=sm(a,a+Math.max(.01,d),u,easeInOutSine);if(w>0)cur=blendShot(cur,f(u),w);}
+  return reframe({eye:cur.P,target:cur.T,F:focalOf(cur.fov,1080*LENS)},subj(u),shotAt(u,B),DV,o);};
+ const r=steady(t,at,half,half>.4?7:5);return cam3(r.eye,r.target,fovOf(r.F,1080*LENS));}
+const pos3=(k:number,tau:number):V3=>{const[x,z]=posOf(k,tau);return[x,0,z];};
+/** a player's feet and head as keep points at weight w (hard when w = 1) */
+const body=(k:number,tau:number,w:number):Keep[]=>{if(w<=.01)return[];const P=pos3(k,tau);return[{P,w},{P:add3(P,[0,1.8,0]),w}];};
 
 // ---------------------------------------------------------------- teaching marks
 /** the ball's real path between τa and τb (dashed yellow ribbon, drawn on up to τ) */
@@ -376,16 +388,33 @@ function spark(s:Sheet,c:Cam,P:V3,t:number,t0:number,ink=Y,seed=61){const a=t-t0
 // ---------------------------------------------------------------- 1 · live: the high main-stand camera, real time anchored on the chip ("lifts it")
 const tau1=(t:number)=>t-CUE(0,'lifts it');
 const P1:V3=[-38,25,74];
+/** Director beats: a short establishing wide of the Maracanã; follow De Paul as the ball comes to him; push in on him as he LOOKS UP
+ * and strikes (his touch — the card's skill); then pull out with the ball to a space shot that holds the passer AND the runner (with
+ * Lodi beside him): the gap behind the defence is the lesson. Both players ~37 m apart from the main stand print small, so the space
+ * shot is honest-wide while the ball is in the air; as it drops, the followed player hands over De Paul → Di María (eased over ~2 s of the flight)
+ * and the camera comes in on Di María; push in low for the chip with the advancing Ederson kept in frame; hold on Di María for the goal. */
+const B1=beats([[0,'wide'],[.9,'follow'],[CUE(0,'looks up')-.35,{from:'tight',size:.38,low:.5}],[T_PASS-tau1(0)+.1,{from:'space',size:.24}],
+ [CUE(0,'Di María')-.2,'follow'],[CUE(0,'lifts it')-.45,'tight'],[CUE(0,'Goal')+.3,'reaction']]);
+function subj1(tau:number):Subject{
+ const hand=sm(T_PASS+.3,T_L1-.5,tau,easeInOutSine),h=mix3(pos3(HERO,tau),pos3(DIM,tau),hand);
+ // after the strike the runner (and the defender he gets behind) ramp in while the camera pulls out with the ball; De Paul stays in
+ // frame until the followed player is Di María
+ const pass=sm(T_PASS+.15,T_PASS+1.35,tau,easeInOutSine)*(1-sm(T_L1-.5,T_L1+.3,tau,easeInOutSine)),dp=sm(T_PASS+.15,T_PASS+.95,tau)*(1-sm(T_L1-1.2,T_L1-.4,tau,easeInOutSine));
+ // the chip: the advancing keeper, out after the ball is in
+ const chip=sm(T_TCH-.4,T_TCH+.4,tau,easeInOutSine)*(1-sm(IN_NET+.6,IN_NET+1.4,tau,easeInOutSine));
+ return{hero:h,ball:ballAt(Math.min(tau,IN_NET)),keep:[...body(DIM,tau,pass),...body(HERO,tau,dp),...body(LODI,tau,pass*.8),...body(EDER,tau,chip),
+  ...near(h,[pos3(LODI,tau)],4,8)]};
+}
 function cam1(t:number):Cam{
  const tau=tau1(t),dp=at3(HERO,tau,1),dm=at3(DIM,tau,1),b=ballAt(Math.min(tau,IN_NET)),g=CUE(0,'Goal');
- return plan(t,[
+ return planD(t,[
   [0,0,()=>({P:P1,T:[-56,2,-6],fov:24})],
   [CUE(0,'Rodrigo')-.3,.9,()=>({P:P1,T:add3(dp,[4,0,2]),fov:11})],
   [CUE(0,'long pass')+.1,1.1,()=>({P:P1,T:mix3(b,[-26,1,12],.45),fov:19})],
   [CUE(0,'Di María')-.2,1,()=>({P:P1,T:mix3(dm,b,.4),fov:11})],
   [CUE(0,'lifts it')-.2,.8,()=>({P:P1,T:mix3(dm,[-4,1.5,1],.5),fov:12})],
   [g-.3,1,()=>({P:P1,T:[-2,1.4,0],fov:9})],
- ]);
+ ],B1,u=>subj1(tau1(u)),.8);
 }
 const ch1:Scene={
  draw(s,t){
@@ -440,14 +469,23 @@ ch2.still=CUE(1,'opens')+.2;
 // ---------------------------------------------------------------- 3 · over the top: behind the Brazil line, the drop past Lodi, the touch, the chip
 const tau3=(t:number)=>{const ta=CUE(2,'Argentina win');return key(t,mono([[0,-2.5],[CUE(2,'The pass'),-2.25],[CUE(2,'Renan Lodi'),T_L1-.1],[CUE(2,'right into'),T_TCH-.15],[CUE(2,'One touch'),T_TCH+.05],[CUE(2,'one chip'),0],[ta,IN_NET+.6],[SECS(2)+1,IN_NET+.6+(SECS(2)+1-ta)*.9]]),linear);};
 const E3:V3=[-5,2.6,21];
+/** Director beats (replay from behind the line): follow Di María as the pass drops over Lodi (Lodi kept in frame — the defender beaten),
+ * push in low for the touch and the chip with Ederson kept in frame, then hold on Di María for the celebration. */
+const B3=beats([[0,'follow'],[CUE(2,'One touch')-.45,'tight'],[CUE(2,'Argentina win')+.2,'reaction']]);
+function subj3(t:number):Subject{
+ const tau=tau3(t),tT=CUE(2,'One touch'),tC=CUE(2,'one chip'),tA=CUE(2,'Argentina win'),lodi=1-sm(tT-.5,tT+.3,t,easeInOutSine),
+  eder=sm(tC-.6,tC+.2,t,easeInOutSine)*(1-sm(tA-.4,tA+.8,t,easeInOutSine)),bw=1-sm(IN_NET+.2,IN_NET+1.6,tau,easeInOutSine);
+ // the ball is a keep (not the focus) so it can fade out of the shot once it is in the net and the camera holds on Di María
+ return{hero:pos3(DIM,tau),keep:[...body(LODI,tau,lodi),...body(EDER,tau,eder),{P:ballAt(Math.min(tau,IN_NET+1)),w:bw}]};
+}
 function cam3v(t:number):Cam{
  const tau=tau3(t),b=ballAt(Math.min(tau,IN_NET)),dm=at3(DIM,tau,1);
- return plan(t,[
+ return planD(t,[
   [0,0,()=>({P:E3,T:mix3([-21,1,12.5],b,.35),fov:30})],
   [CUE(2,'right into')-.2,.8,()=>({P:add3(E3,[-2,-.6,-2]),T:mix3(dm,b,.5),fov:30})],
   [CUE(2,'one chip')-.1,.9,()=>({P:[5,2.2,12],T:mix3(b,[-4,2,1],.5),fov:34})],
   [CUE(2,'Argentina win')-.2,1.3,()=>({P:[4,2.6,26],T:add3(dm,[.5,.3,0]),fov:30})],
- ]);
+ ],B3,subj3,.6,{recenter:.4});
 }
 const ch3:Scene={
  draw(s,t){
@@ -471,13 +509,23 @@ ch3.still=CUE(2,'One touch')+.3;
 
 // ---------------------------------------------------------------- 4 · the lesson: look up early → the runner → the space behind → one long pass
 const tau4=(t:number)=>key(t,mono([[0,-6.6],[CUE(3,'look up'),-6],[CUE(3,'runner'),-5.1],[CUE(3,'behind'),-4.6],[CUE(3,'one long'),T_PASS],[SECS(3),-1.4]]),easeInOutSine);
+/** Director beats (lesson): closer on De Paul, over his shoulder, as he looks up; then pull out to a space shot from the SAME side —
+ * behind De Paul, looking where he looks — that keeps him, the runner (Di María) and the landing spot behind the back line (the ring) in
+ * frame for "runner … behind the defence … one long pass": the picture of the lesson. (The authored lesson camera swung to a view past
+ * De Paul for "runner" and a high wide for the pass; both now stay behind the passer so the decision reads as his.) */
+const B4=beats([[0,'lesson'],[CUE(3,'runner')-.4,{from:'space',size:.26}]]);
+function subj4(t:number):Subject{
+ const tau=tau4(t),tN=CUE(3,'runner'),tB=CUE(3,'behind'),tL=CUE(3,'one long'),run=sm(tN-.7,tN+.1,t,easeInOutSine),
+  gap=sm(tB-.5,tB+.3,t,easeInOutSine),ball=sm(tL-.4,tL+.4,t,easeInOutSine);
+ return{hero:pos3(HERO,tau),keep:[...body(DIM,tau,run),...(gap>.01?[{P:L1,w:gap}]:[]),{P:ballAt(tau),w:Math.max(.3,ball)}]};
+}
 function cam4v(t:number):Cam{
  const tau=tau4(t),dp=at3(HERO,Math.min(tau,T_PASS),1);
- return plan(t,[
+ return planD(t,[
   [0,0,()=>({P:add3(dp,[-8,5,-6]),T:add3(dp,[10,0,7]),fov:34})],
-  [CUE(3,'runner')-.2,1,()=>({P:[-44,8,-6],T:[-30,0,14],fov:42})],
-  [CUE(3,'one long')+.1,1.4,()=>({P:[-42,24,-24],T:[-40,0,7],fov:56})],
- ]);
+  [CUE(3,'runner')-.2,1,()=>({P:add3(dp,[-9,6,-6]),T:[-30,0,14],fov:40})],
+  [CUE(3,'one long')+.1,1.4,()=>({P:add3(dp,[-10,8,-7]),T:[-32,1,12],fov:46})],
+ ],B4,subj4,.6,{recenter:.4});
 }
 const ch4:Scene={
  draw(s,t){

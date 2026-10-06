@@ -43,6 +43,7 @@ import {type RisoStory,type Scene,type Chapter,playChapters} from '../../paths/r
 import {apertureDisc} from '../../paths/riso/passage';
 import {TAU,twos,sm,key,clamp,lerp,rng,hash,blob,polyPath,ribbon,rectPath,easeOut,easeOutBack,easeInOutSine,linear,type Pt} from '../../paths/riso/motion';
 import {sparkBurst,laneArrow} from '../../paths/riso/shapes';
+import {beats,shotAt,reframe,near,steady,type View as DView,type Keep,type Pin} from './director';
 import {drawAthlete,motionSmear,runCycle,lunge,strike,keeperSet,keeperDive,celebrate,stand,posed,blendPose,
  STRIKE_CONTACT,type Pose,type AthleteStyle,type InkFill,type Place,type Projector,type V3,type DrawResult} from './athlete';
 
@@ -83,7 +84,9 @@ const bump=(a:number,b:number,t:number)=>t<=a||t>=b?0:Math.sin(Math.PI*(t-a)/(b-
 function cam(s:Sheet,x:number,y:number,z0:number,r=0){const z=z0*Math.min(1,Math.pow(s.W/1566,.75)),k=z*s.arrival;s.camera(x-(s.W/2-s.cx)/k,y-(s.H/2-s.cy)/k,z/s.fit,r);return z;}
 type View={hx:number;hy:number};
 const view=(s:Sheet,z:number):View=>({hx:s.W/(2*z*.68)+60,hy:s.H/(2*z*.68)+60});
-const frame=(s:Sheet)=>view(s,cam(s,0,0,1));
+const frame=(s:Sheet)=>{const z=cam(s,0,0,1);DV={w:s.W/z,h:s.H/z};return view(s,z);};
+/** the window in camera units (set by frame(); read by the director's reframing, aperture() included) */
+let DV:DView={w:1566,h:1080};
 
 // ---------------------------------------------------------------- the TV camera: a right-handed 3D projection of the pitch
 /** Pitch metres (right-handed, like athlete.ts): X along the length (Milan defend X = 0 and attack +X, Verona's goal line at 105), Y up,
@@ -417,7 +420,21 @@ function speedLines(s:Sheet,c:Cam,tau:number,w:number){if(w<=0)return;const[x,z]
 // ---------------------------------------------------------------- 1 · live: the high main-stand camera, near real time
 const tau1=(t:number)=>key(t,[[0,T0+.1],[CUEW(0,"Verona's"),KICK],[CUEW(0,'too long'),-1.7],[CUEW(0,'controls'),0],[CUEW(0,'his own box'),.7],[CUEW(0,'and off'),2],[CUEW(0,'Past one'),5.1],[CUEW(0,'past another'),9.8],[CUEW(0,'and another'),13.3],[CUEW(0,'goal'),IN_NET-.05],[SECS(0)+1,IN_NET-.05+SECS(0)+1-CUEW(0,'goal')]],linear);
 const CAM1:V3=[52.5,27,78];
-function cam1(t:number):Cam{
+/** Director beats (lib/plays/riso/director.ts, Oct 4 2026): a short establishing wide of San Siro, then pulled out on the corner (the taker,
+ * the ball's long flight and the box), push in low as Weah controls it, pull back to follow him with the open grass ahead of him, a little
+ * closer through the three dribbles (each Verona man stays in frame as he is beaten), push in low for the finish (Gregori and the goal kept
+ * in frame), and hold on the celebration. The subject glides from the taker to Weah along the ball's flight (no hard switch). */
+const B1=beats([[0,'wide'],[1.1,{from:'space',size:.24}],[CUEW(0,'controls')-.5,'tight'],[CUEW(0,'and off')-.15,'follow'],
+ [CUEW(0,'Past one')-.4,{from:'follow',size:.46,low:.5}],[CUEW(0,'and another')+.2,{from:'tight',az:35}],[CUEW(0,'goal')+.3,{from:'reaction',az:30}]]);
+const TAKER=ACTORS.findIndex(a=>a.name==='taker'),FOES=ACTORS.map((a,k)=>a.role==='hv'||a.role==='gk'?k:-1).filter(k=>k>=0&&k!==TAKER);
+/** the directed camera, averaged over ±.45 s (director steady(): the fit clamp's answer changes as players move; averaging makes every
+ * change a smooth move, never a snap), then rebuilt once */
+function cam1(t:number):Cam{const r=steady(t,cam1Pin,.45,5);return look(r.eye,r.target,r.F);}
+function cam1Pin(t:number):Pin{const c=cam1Authored(t),tau=tau1(t),sh=shotAt(t,B1);
+ const w=easeInOutSine(clamp((tau-KICK)/1.8)),tk=posOf(TAKER,tau),m=posOf(W9,tau),hero:V3=[lerp(tk[0],m[0],w),0,lerp(tk[1],m[1],w)];
+ const fin=sm(13.6,15.2,tau)*(1-sm(IN_NET+.6,IN_NET+1.4,tau)),keep:Keep[]=[...near(hero,FOES.map(k=>{const p=posOf(k,tau);return[p[0],0,p[1]] as V3;}),3,6),...(fin>.01?[{P:NET,w:fin}]:[])];
+ return reframe({eye:c.C,target:c.T,F:c.F},{hero,ball:ballAt(tau),keep},sh,DV);}
+function cam1Authored(t:number):Cam&{T:V3}{
  const G=CUEW(0,'goal'),S=SECS(0),tau=tau1(t);
  const bs=(u:number):V3=>{const b=ballAt(u);return[b[0],0,b[2]*.75];},b0=bs(tau),b1=bs(tau-.35),b2=bs(tau-.7),bt:V3=[(b0[0]+b1[0]+b2[0])/3,0,(b0[2]+b1[2]+b2[2])/3];
  // the corner: framed on the box (the ball is high above it); then the camera follows the ball
@@ -425,7 +442,7 @@ function cam1(t:number):Cam{
  const toBall=sm(CUEW(0,'too long')-.2,CUEW(0,'controls')+.3,t,easeInOutSine),toD=sm(G+.4,G+1.4,t,easeInOutSine);
  const tb:V3=lerp3(box,[bt[0],1.5,bt[2]],toBall),T=lerp3(tb,cel,toD);
  const F=key(t,[[0,2500],[CUEW(0,'controls'),3300],[CUEW(0,'and off'),3600],[CUEW(0,'Past one'),4000],[CUEW(0,'and another'),4600],[G,5000],[G+1.4,6200],[S,6500]],easeInOutSine);
- return look(CAM1,T,F);
+ return{...look(CAM1,T,F),T};
 }
 const ch1:Scene={
  draw(s,t){
@@ -448,7 +465,8 @@ function cam2(t:number):Cam{
  // side-on to the control (he faces the corner flag), so the ball dropping onto the outside of his right boot is in profile
  let C:V3=[m[0]+7.4,1.5,m[1]-1.2],T:V3=[m[0]-.2,.85,m[1]+.2];let F=2700;
  C=lerp3(C,[31,9,27],pull);T=lerp3(T,[8,.5,-1.5],pull);F=lerp(F,2250,pull);
- C=lerp3(C,[m[0]-7.5,2.6,m[1]+3.5],behind);T=lerp3(T,[m[0]+14,.6,m[1]-1.5],behind);F=lerp(F,2150,behind);
+ // (Oct 4 2026: aim a little lower so his boots stay inside the window — they were cut off at the bottom edge)
+ C=lerp3(C,[m[0]-7.5,2.6,m[1]+3.5],behind);T=lerp3(T,[m[0]+14,-1.6,m[1]-1.5],behind);F=lerp(F,2150,behind);
  C=lerp3(C,[m[0]-3,1.9,m[1]+12.5],w);T=lerp3(T,[m[0]+2.5,.9,m[1]],w);F=lerp(F,2450,w);
  return look(C,T,F);
 }
@@ -505,11 +523,27 @@ const ch3:Scene={
 
 // ---------------------------------------------------------------- 4 · the lesson: a raised three-quarter camera behind the counter-attack
 const tau4=(t:number)=>key(t,[[0,-3.3],[CUEW(3,'defend'),-2.5],[CUEW(3,'look up'),.2],[CUEW(3,'Space'),.9],[CUEW(3,'Break'),1.8],[CUEW(3,'A quick'),5.2],[CUEW(3,'all the way'),12.2],[SECS(3),IN_NET+.3]],linear);
-function cam4(t:number):Cam{
+/** Director beats (lesson): a lesson framing on Weah for "Your turn", eased out over Milan's crowded box (every ringed Milan player kept), closer on
+ * Weah as he looks up (the sight line's end kept), pulled out over the open grass ("Space ahead?"), following his break with the lane
+ * ahead of him, and pulled out again so the run reaches the goal ("all the way"). */
+const B4=beats([[0,'lesson'],[CUEW(3,'defend')-.3,{from:'lesson',size:.3}],[CUEW(3,'look up')-.3,{from:'lesson',size:.42}],[CUEW(3,'Space')-.3,'space'],
+ [CUEW(3,'Break')-.3,'follow'],[CUEW(3,'all the way')-.4,{from:'space',size:.26}]]);
+const RINGED=ACTORS.map((a,k)=>a.role==='acm'||a.role==='weah'||(a.role==='gk'&&k!==GREG)?k:-1).filter(k=>k>=0);
+function cam4(t:number):Cam{const r=steady(t,cam4Pin,.45,5);return look(r.eye,r.target,r.F);}
+function cam4Pin(t:number):Pin{const c=cam4Authored(t),tau=tau4(t),[x,z]=posOf(W9,tau),sh=shotAt(t,B4),dc=CUEW(3,'defend'),lu=CUEW(3,'look up'),sa=CUEW(3,'Space'),bf=CUEW(3,'Break'),aw=CUEW(3,'all the way');
+ // every keep fades in and out over .6 s (eased) round its cue: nothing appears or vanishes within a frame
+ const R=(a:number,b:number)=>sm(a-.6,a,t,easeInOutSine)*(1-sm(b-.5,b+.1,t,easeInOutSine));
+ const wBox=R(dc,lu),wSee=R(lu+.3,sa),wSpace=R(sa+.2,bf),wGoal=sm(aw-.8,aw,t,easeInOutSine);
+ const keep:Keep[]=[...(wBox>.01?RINGED.flatMap(k=>{const p=posOf(k,Math.min(tau,0));const w=.9*wBox*(1-sm(16,20,p[0]));return w>.01?[{P:[p[0],0,p[1]] as V3,w}]:[];}):[]),...(wSee>.01?[{P:[x+24,1.7,z-2] as V3,w:.7*wSee}]:[]),
+  ...(wSpace>.01?[{P:[46,0,-8] as V3,w:.6*wSpace},{P:[46,0,8] as V3,w:.6*wSpace}]:[]),{P:[x+12,0,z] as V3,w:.8*sm(bf-.8,bf,t,easeInOutSine)*(1-wGoal)},...(wGoal>.01?[{P:[105,1.2,-1] as V3,w:wGoal}]:[]),
+  // the ball joins the frame as it drops to him (before that it is out at the corner flag, not the lesson's subject)
+  {P:ballAt(tau),w:sm(-1.4,-.3,tau)}];
+ return reframe({eye:c.C,target:c.T,F:c.F},{hero:[x,0,z],ball:null,keep},sh,DV);}
+function cam4Authored(t:number):Cam&{T:V3}{
  const tau=tau4(t),m=smooth(W9,Math.max(0,tau)),push=sm(CUEW(3,'look up')-.4,CUEW(3,'look up')+.4,t,easeInOutSine)*(1-sm(CUEW(3,'Space')-.2,CUEW(3,'Space')+.5,t,easeInOutSine));
  const pre=1-sm(CUEW(3,'defend')+.6,CUEW(3,'look up'),t,easeInOutSine);
  const C:V3=[m[0]-19+6*push-4*pre,13-5*push+3*pre,m[1]+21-7*push],T:V3=[m[0]+13-7*push-11*pre,.2,m[1]-3-3*pre];
- return look(C,T,1900+500*push);
+ return{...look(C,T,1900+500*push),T};
 }
 const ch4:Scene={
  draw(s,t){

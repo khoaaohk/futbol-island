@@ -34,7 +34,9 @@ export function useLessonVoice(session:MutableRefObject<FieldSession|null>,clips
  const [primed,setPrimed]=useState(0);
  const enabledRef=useRef(enabled);enabledRef.current=enabled;
  const prime=useCallback(()=>{if(!audio.current){audio.current=primeLessonVoice();setPrimed(n=>n+1);}},[]);
- const clip=clips?.[coach];
+ // A slot with no duration is a changed line still waiting to be voiced (scripts/plays/kokoro-lessons.py fills it): show the text, don't
+ // try to play a file that isn't there.
+ const slot=clips?.[coach],clip=slot&&slot.duration>0?slot:undefined;
  useEffect(()=>{const token=++generation.current;const a=audio.current??=shared,s=session.current;setError('');if(!a)return;a.pause();if(s)s.voicePending=!!clip&&enabled&&!quiz;if(!clip){a.removeAttribute('src');return;}a.src=clip.src;a.currentTime=0;
  const finish=()=>{if(session.current===s&&s)s.voicePending=false;};
  const fail=()=>{finish();setError('Recording could not play. Tap Play or turn voice on to retry.');};
@@ -49,5 +51,5 @@ export function useLessonVoice(session:MutableRefObject<FieldSession|null>,clips
  },[identity,clip?.src,playing,enabled,quiz,paused,session,primed]);
  // Closing the lesson unloads the line (removing src alone keeps the resource, which iOS can resume later).
  useEffect(()=>()=>{if(speaker===self.current)speaker=null;const a=audio.current;if(a){a.pause();a.removeAttribute('src');a.load();}audio.current=null;},[]);
- return {prime,coach,enabled,message:identity&&enabled?(!clip?'Original recording unavailable for this line. Read the instruction below.':error):''};
+ return {prime,coach,enabled,message:identity&&enabled?(!clip?'No voice for this line yet. Read it below.':error):''};
 }

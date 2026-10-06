@@ -7,7 +7,7 @@ const assert=require('node:assert/strict');
   const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.addInitScript(()=>localStorage.setItem('fi2-welcome-v1','completed'));
   await page.goto('http://localhost:8092/',{waitUntil:'domcontentloaded'});
-  await page.waitForFunction(()=>window.__fi2?.islandNpcs,{timeout:180000});await page.waitForTimeout(3500);
+  await page.waitForFunction(()=>window.__fi2?.islandNpcs,null,{timeout:180000});await page.waitForTimeout(3500);
   await page.evaluate(()=>{const f=window.__fi2;f.rideRef.current='walk';f.flight.height=0;f.location.x=86;f.location.z=-54.5;});
   await page.waitForTimeout(1800);
   const snapshot=()=>page.evaluate(()=>window.__fi2.islandNpcs.entries.filter(e=>e.freestyle).map(e=>({id:e.id,x:e.position.x,z:e.position.z,ball:e.freestyle.ball.position.toArray(),phase:e.freestyle.motion.juggle})));

@@ -49,7 +49,7 @@ export default function BookGameCheck({bookId,onOpenLesson}:{bookId:string;onOpe
       <button type="button" className={styles.secondary} onClick={()=>{setOpen(false);onOpenLesson?.();openPathLesson(key);}}>Watch the lesson</button>
      </>:<button type="button" className={styles.secondary} onClick={()=>setAnswer(null)}>Try again</button>}</div>
     </div>}
-    <DoneButton className={styles.close} data-book-check-close immediate onDone={()=>setOpen(false)}/>
+    <DoneButton className={styles.close} data-book-check-close onDone={()=>setOpen(false)}/>
    </section>
   </div>}
  </>;

@@ -6,7 +6,8 @@ const s=createTennis(47);assert.equal(s.phase,'ready');assert.equal(tennisNeedsF
 requestTennisKick(s);tickTennis(s,1/120);assert.equal(s.phase,'rally');assert.equal(s.ball.last,'you');assert.equal(s.rally,1);let maxHeight=0;
 for(let i=0;i<360&&s.rally===1;i++){tickTennis(s,1/120);maxHeight=Math.max(maxHeight,s.ball.z);}assert(maxHeight>2);assert(s.rally>=2,'AI returns a reachable serve');assert.equal(s.ball.last,'rival');
 advance(s,7);assert(s.score.you+s.score.rival>0,'an unanswered rally awards a point');
-const receive=createTennis();beginTennis(receive);receive.phase='rally';Object.assign(receive.ball,{x:.4,y:5.2,z:.6,vx:0,vy:3,vz:-1,last:'rival',crossed:true});assert(canTennisKick(receive,'you'));requestTennisKick(receive);tickTennis(receive,1/120);assert.equal(receive.ball.last,'you');assert(receive.ball.vy<0);const landing=tennisLanding(receive);assert(landing.y<0&&landing.y>-8&&Math.abs(landing.x)<5,'return targets legal opposite court');
+const receive=createTennis(47,6);beginTennis(receive); // court 6: raw timing, no bounce-wait assist
+receive.phase='rally';Object.assign(receive.ball,{x:.4,y:5.2,z:.6,vx:0,vy:3,vz:-1,last:'rival',crossed:true});assert(canTennisKick(receive,'you'));requestTennisKick(receive);tickTennis(receive,1/120);assert.equal(receive.ball.last,'you');assert(receive.ball.vy<0);const landing=tennisLanding(receive);assert(landing.y<0&&landing.y>-8&&Math.abs(landing.x)<5,'return targets legal opposite court');
 requestTennisKick(receive);tickTennis(receive,1/120);assert.equal(receive.rally,1,'one player cannot return their own shot');
 const net=createTennis();beginTennis(net);net.phase='rally';Object.assign(net.ball,{x:0,y:.01,z:.6,vx:0,vy:-5,vz:0,last:'you',crossed:false});advance(net,.6);assert.equal(net.score.rival,1,'net fault awards opponent');
 const bounce=createTennis();beginTennis(bounce);bounce.phase='rally';bounce.aiReaction=99;Object.assign(bounce.ball,{x:3,y:-4,z:.18,vx:0,vy:0,vz:-1,last:'you',crossed:true,bounces:0});tickTennis(bounce,.02);assert.equal(bounce.ball.bounces,1);assert.equal(bounce.score.you,0);advance(bounce,1);assert.equal(bounce.score.you,1,'second bounce awards last hitter');
@@ -14,7 +15,7 @@ const out=createTennis();beginTennis(out);out.phase='rally';Object.assign(out.ba
 const match=createTennis();beginTennis(match);for(let i=0;i<7;i++){match.phase='rally';Object.assign(match.ball,{x:0,y:-.01,z:.6,vx:0,vy:5,vz:0,last:'rival',crossed:false});advance(match,.6);}assert.equal(match.phase,'over');assert.equal(match.score.you,7);assert.equal(match.winner,'you');assert.equal(tennisNeedsFrames(match),false);advance(match,3);assert.equal(match.score.you,7,'finished match cannot score again');resetTennis(match);assert.equal(match.score.you,0);assert.equal(match.score.rival,0);assert.equal(match.phase,'ready');assert.equal(match.winner,null);
 setTennisTarget(match,999,-999);assert.equal(match.you.targetX,4.55);assert.equal(match.you.targetY,.95);beginTennis(match);advance(match,10);assert(match.you.x<=4.6&&match.you.y>=.9,'movement stays on own court');
 const a=createTennis(8),b=createTennis(8);for(const game of[a,b]){beginTennis(game);requestTennisKick(game);advance(game,8);}assert.deepEqual(a,b,'seeded simulation is repeatable');
-const skilled=createTennis(47);beginTennis(skilled);for(let i=0;i<120*240&&skilled.phase!=='over';i++){if(skilled.phase==='serve')requestTennisKick(skilled);if(skilled.phase==='rally'&&skilled.ball.last==='rival'){const land=tennisLanding(skilled);setTennisTarget(skilled,land.x,land.y);requestTennisKick(skilled);}tickTennis(skilled,1/120);}assert.equal(skilled.phase,'over','A complete match reaches a winner');assert.ok(['you','rival'].includes(skilled.winner));assert.ok(Number.isFinite(skilled.ball.x+skilled.ball.y+skilled.ball.z),'Long rallies remain finite');
+const skilled=createTennis(47);beginTennis(skilled);for(let i=0;i<120*480&&skilled.phase!=='over';i++){if(skilled.phase==='serve')requestTennisKick(skilled);if(skilled.phase==='rally'&&skilled.ball.last==='rival'){const land=tennisLanding(skilled);setTennisTarget(skilled,land.x,land.y);requestTennisKick(skilled);}tickTennis(skilled,1/120);}assert.equal(skilled.phase,'over','A complete match reaches a winner');assert.ok(['you','rival'].includes(skilled.winner));assert.ok(Number.isFinite(skilled.ball.x+skilled.ball.y+skilled.ball.z),'Long rallies remain finite');
 console.log('SOCCER_TENNIS_SIM_PASS serve, rally, return, net, bounces, out, score7, reset, movement bounds, deterministic AI');
 
 const {setTennisMovement,canTennisSlam}=await import('../lib/games/soccerTennis.ts');
@@ -56,7 +57,8 @@ for(const hz of [24,30,60,90,120]){
 }
 console.log('SOCCER_TENNIS_SLEEP_PASS 24/30/60/90/120 Hz release reaches exact rest');
 
-const contact=(seed=47)=>{const game=createTennis(seed);beginTennis(game);game.phase='rally';game.aiReaction=99;Object.assign(game.ball,{x:0,y:5.3,z:.55,vx:0,vy:0,vz:-1,last:'rival',crossed:true});return game;};
+const contact=(seed=47)=>{const game=createTennis(seed,6);beginTennis(game); // court 6: raw half-volley contact, no bounce-wait assist
+game.phase='rally';game.aiReaction=99;Object.assign(game.ball,{x:0,y:5.3,z:.55,vx:0,vy:0,vz:-1,last:'rival',crossed:true});return game;};
 const left=contact(),right=contact();
 for(const [game,aim] of [[left,-1],[right,1]]){setTennisMovement(game,aim,0);setTennisMovement(game,0,0);requestTennisKick(game);tickTennis(game,1/120);}
 assert(tennisLanding(left).x<-2&&tennisLanding(right).x>2,'last horizontal intent deliberately controls placement after releasing movement');

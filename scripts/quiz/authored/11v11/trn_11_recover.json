@@ -102,23 +102,27 @@
       }
     },
     {
-      "q": "Their carrier fakes a kick, drags the ball behind his standing leg and turns past you. Which move is that?",
+      "q": "Their carrier takes a heavy touch, and the ball rolls toward you. What do you do?",
       "options": [
-        "A stepover",
-        "A Cruyff turn",
-        "A nutmeg"
+        "Turn and run back toward goal",
+        "Step in and win the ball",
+        "Wait and watch the carrier"
       ],
       "correct": 1,
-      "explain": "Right. The Cruyff turn sells a kick, then hides the ball behind the standing leg to turn away.",
+      "explain": "Yes. The ball is loose and close to you, so this is the moment to win it back.",
       "choiceExplanations": [
-        "A stepover circles over the ball; it does not drag it behind the leg.",
-        "Right. The Cruyff turn sells a kick, then hides the ball behind the standing leg to turn away.",
-        "A nutmeg goes through your legs; here he turned away from you."
+        "Running back gives away a ball you can win. Recover only when the chance has gone.",
+        "Yes. The ball is loose and close to you, so this is the moment to win it back.",
+        "Waiting lets the carrier reach the ball again. A loose ball close to you is there to win."
       ],
       "visual": {
         "kind": "whatNext",
         "frame": {
           "step": 5,
+          "ball": {
+            "x": 135,
+            "y": 242
+          },
           "focus": [
             "dst",
             "cm"

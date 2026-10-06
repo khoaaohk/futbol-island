@@ -8,10 +8,10 @@
     "False"
    ],
    "correct": 1,
-   "explain": "Right, it's false. The wall stays the required distance until the ball is kicked and clearly moves.",
+   "explain": "Right, it's false. The wall stays ten yards (about nine metres) away until the ball is kicked and clearly moves.",
    "choiceExplanations": [
     "Rushing in early breaks the distance rule, so Blue takes the kick again and you can be booked.",
-    "Right, it's false. The wall stays the required distance until the ball is kicked and clearly moves."
+    "Right, it's false. The wall stays ten yards (about nine metres) away until the ball is kicked and clearly moves."
    ],
    "visual": {
     "kind": "trueFalse",

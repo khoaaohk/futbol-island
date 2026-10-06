@@ -48,6 +48,7 @@ import {type RisoStory,type Scene,type Chapter,playChapters} from '../../paths/r
 import {apertureDisc} from '../../paths/riso/passage';
 import {TAU,twos,sm,key,clamp,lerp,rng,hash,blob,polyPath,ribbon,rectPath,easeOut,easeOutBack,easeInOutSine,linear,type Pt} from '../../paths/riso/motion';
 import {sparkBurst,laneArrow,crescent} from '../../paths/riso/shapes';
+import {beats,shotAt,reframe,near,steady,type View as DView,type Keep,type Pin} from './director';
 import {drawAthlete,motionSmear,runCycle,dribble,backpedal,lunge,strike,keeperSet,keeperDive,stand,posed,blendPose,
  STRIKE_CONTACT,type Pose,type AthleteStyle,type InkFill,type Place,type Projector,type V3,type DrawResult} from './athlete';
 
@@ -93,7 +94,11 @@ const bump=(a:number,b:number,t:number)=>t<=a||t>=b?0:Math.sin(Math.PI*(t-a)/(b-
 function cam(s:Sheet,x:number,y:number,z0:number,r=0){const z=z0*Math.min(1,Math.pow(s.W/1566,.75)),k=z*s.arrival;s.camera(x-(s.W/2-s.cx)/k,y-(s.H/2-s.cy)/k,z/s.fit,r);return z;}
 type View={hx:number;hy:number};
 const view=(s:Sheet,z:number):View=>({hx:s.W/(2*z*.68)+60,hy:s.H/(2*z*.68)+60});
-const frame=(s:Sheet)=>view(s,cam(s,0,0,1));
+const frame=(s:Sheet)=>{const z=cam(s,0,0,1);DV={w:s.W/z,h:s.H/z};return view(s,z);};
+/** the window in camera units (set by frame(); read by the director's reframing, aperture() included) */
+let DV:DView={w:1566,h:1080};
+/** samples per steady() window (heat: each is one reframe, no drawing) */
+const STEADY_N=3;
 /** the visible sheet rectangle in world units and world units per css px */
 function screenBox(s:Sheet){const pw=s.width*s.dpr,ph=s.height*s.dpr,a=s.toWorld(0,0),b=s.toWorld(pw,ph);return{x0:Math.min(a[0],b[0]),y0:Math.min(a[1],b[1]),x1:Math.max(a[0],b[0]),y1:Math.max(a[1],b[1]),k:Math.abs(b[0]-a[0])/Math.max(1,s.width)};}
 
@@ -425,7 +430,42 @@ function plusOne(s:Sheet,c:Cam,x:number,z:number,w:number,t:number){if(w<=.01)re
 // ---------------------------------------------------------------- 1 · live: the high main-stand camera, near real time
 const tau1=(t:number)=>{const G=CUEW(0,'Goal'),E=SECS(0);return key(t,[[0,-7.6],[CUEW(0,'Look who'),-1.7],[CUEW(0,'charging'),-.3],[CUEW(0,'the left-back'),1.3],[CUEW(0,'Giacinto'),2.6],[CUEW(0,'He shoots'),SHOT-.25],[G,LINE_T+.1],[E+1,LINE_T+.1+(E+1-G)*.9]],linear);};
 const CAM1:V3=[50,31,-92];
-function cam1(t:number):Cam{
+/** Director beats (lib/plays/riso/director.ts, Oct 4 2026): a short establishing wide of the floodlit bowl, then follow Suárez on the ball;
+ * pull out for his pass to Corso so Facchetti's run from left-back is in the same frame ("Look who is charging forward"), follow Facchetti
+ * up the wing, pull out again for Corso's pass into his path (passer and runner both in shot), push in low for the shot, swung round
+ * behind his shoulder so the keeper and the goal mouth stay in frame, and close on Facchetti's celebration after "Goal". The first pass
+ * (a 20 m ball, Suárez to Corso) stays near the authored width: from this side camera nothing closer holds passer and receiver. */
+const B1=beats([[0,'wide'],[1,{from:'follow',size:.4}],[CUEW(0,'the final')-1,{from:'space',size:.12,az:-35,ball:.1}],[CUEW(0,'Look who')-.1,{from:'follow',size:.4}],
+ [CUEW(0,'the left-back')-.1,{from:'space',size:.3,ball:.15}],[CUEW(0,'He shoots')-.4,{from:'tight',az:-30,low:.5}],[CUEW(0,'Goal')+.3,'reaction']]);
+const FOES=ACTORS.map((a,k)=>a.role==='lfc'||a.role==='gk'?k:-1).filter(k=>k>=0);
+const at3=(k:number,tau:number,y=0):V3=>{const p=posOf(k,tau);return[p[0],y,p[1]];};
+/** both feet-and-head points of a player as soft keeps of weight w */
+const keepP=(k:number,tau:number,w:number):Keep[]=>w<=.01?[]:[{P:at3(k,tau),w},{P:at3(k,tau,1.85),w}];
+/** the directed camera, averaged over ±.35 s (director steady(): the fit clamp and keep hand-overs become smooth moves) */
+function cam1(t:number):Cam{const p=steady(t,dir1,.35,STEADY_N);return look(p.eye,p.target,p.F);}
+function dir1(t:number):Pin{
+ const a=cam1Authored(t),tau=tau1(t),sh=shotAt(t,B1),G=CUEW(0,'Goal'),lp=CUEW(0,'the final')-1,ch=CUEW(0,'charging'),lb=CUEW(0,'the left-back')-.1,hs=CUEW(0,'He shoots')-.4;
+ // the centre of the shot, blended (never cut): Suárez on the ball; the middle of Suárez and Corso as he plays the first pass; the middle
+ // of Corso and the charging Facchetti while it travels ("Look who"); Facchetti up the wing; the middle of Corso and Facchetti while Corso's
+ // pass travels into his run; Facchetti again for the shot and after
+ const f=CUEW(0,'the final'),su=posOf(SUAREZ,tau),co=posOf(CORSO,tau),fa=posOf(FAC,tau),cf:[number,number]=[(co[0]+fa[0])/2,(co[1]+fa[1])/2];
+ const chain:[number,[number,number]][]=[[sm(lp+.2,lp+.9,t,easeInOutSine),[(su[0]+co[0])/2,(su[1]+co[1])/2]],[sm(f+.1,f+.7,t,easeInOutSine),cf],
+  [sm(ch-.2,ch+.4,t,easeInOutSine),fa],[sm(lb-.3,lb+.3,t,easeInOutSine),cf],[sm(hs-.7,hs,t,easeInOutSine),fa]];
+ let h=su;for(const[u,q] of chain)h=[lerp(h[0],q[0],u),lerp(h[1],q[1],u)];
+ const hero:V3=[h[0],0,h[1]];
+ const keep:Keep[]=near(hero,FOES.map(k=>at3(k,tau)),3.5,7);
+ // the first pass: Suárez to Corso, then Corso and the charging Facchetti; the second: Corso (the passer) and his runner; the shot: the
+ // keeper and the goal mouth
+ const E=easeInOutSine,wS=Math.min(sm(lp+.4,lp+1.1,t,E),1-sm(f+.1,f+.8,t,E)),wC=Math.max(Math.min(sm(lp+.4,lp+1.1,t,E),1-sm(ch,ch+.7,t,E)),Math.min(sm(lb-.4,lb+.3,t,E),1-sm(hs-.8,hs-.1,t,E))),
+  wF=Math.min(sm(f+.1,f+.8,t,E),1-sm(ch,ch+.7,t,E)),wG=Math.min(sm(hs-.1,hs+.6,t,E),1-sm(G+.2,G+.9,t,E));
+ keep.push(...keepP(SUAREZ,tau,wS),...keepP(CORSO,tau,wC),...keepP(FAC,tau,wF),...keepP(LAW,tau,wG));
+ if(wG>.01)for(const z of [-3.66,3.66])keep.push({P:[105,0,z],w:wG},{P:[105,2.44,z],w:wG});
+ // after the goal the ball rests in the net: the focus hands over to Facchetti so the camera can close on the celebration
+ const b=ballAt(tau),cu=sm(G+.1,G+.9,t,easeInOutSine),ball=lerp3(b,[fa[0],1,fa[1]],cu);
+ const r=reframe({eye:a.C,target:a.T,F:a.F},{hero,ball,keep,height:1.9},sh,DV,{margin:.82});
+ return r;
+}
+function cam1Authored(t:number):{C:V3;T:V3;F:number}{
  const tau=tau1(t),S=SECS(0);
  const bs=(u:number):V3=>{const b=ballAt(u);return[b[0],0,b[2]];},b0=bs(tau),b1=bs(tau-.3),b2=bs(tau-.6),bt:V3=[(b0[0]+b1[0]+b2[0])/3,0,(b0[2]+b1[2]+b2[2])/3];
  // as he nears the box the director widens to hold the goal; after the goal he follows Facchetti's celebration
@@ -434,7 +474,7 @@ function cam1(t:number):Cam{
  const open:V3=[52,4,4],toBall=sm(.2,CUEW(0,'Inter lead')+.8,t,easeInOutSine);
  const T=lerp3(open,tb,toBall),j=weave(t);
  const F=key(t,[[0,1600],[CUEW(0,'Inter lead'),3600],[CUEW(0,'Look who'),5200],[CUEW(0,'the left-back'),5000],[CUEW(0,'He shoots'),4300],[CUEW(0,'Goal'),5000],[S,6000]],easeInOutSine);
- return look(CAM1,[T[0]+j[0]*8,T[1]+j[1]*8,T[2]+j[2]*8],F);
+ return{C:CAM1,T:[T[0]+j[0]*8,T[1]+j[1]*8,T[2]+j[2]*8],F};
 }
 const ch1:Scene={
  draw(s,t){
@@ -455,11 +495,22 @@ const ch1:Scene={
 
 // ---------------------------------------------------------------- 2 · slow replay, a low touchline camera running beside him
 const tau2=(t:number)=>key(t,[[0,-1.9],[CUEW(1,'A defender'),-.8],[CUEW(1,'sprinting'),.4],[CUEW(1,'like an'),1.9],[CUEW(1,'Back then'),RECV2],[CUEW(1,'hardly'),3.7],[SECS(1),SHOT+.1]],linear);
-function cam2(t:number):Cam{
+/** Director beats for the slow replay: the low running camera is already close, so it stays as authored for the overlap and the sprint;
+ * on "Back then" it pushes in low on the touch — Corso's pass arriving in Facchetti's stride and his touch inside — with the chasing
+ * defenders soft-kept in frame. */
+const B2=beats([[0,'wide'],[CUEW(1,'Back then')-.4,'tight']]);
+/** the directed camera, averaged over ±.35 s (director steady(): the fit clamp and keep hand-overs become smooth moves) */
+function cam2(t:number):Cam{const p=steady(t,dir2,.35,STEADY_N);return look(p.eye,p.target,p.F);}
+function dir2(t:number):Pin{
+ const a=cam2Authored(t),tau=tau2(t),fa=posOf(FAC,tau),hero:V3=[fa[0],0,fa[1]];
+ const r=reframe({eye:a.C,target:a.T,F:a.F},{hero,ball:ballAt(tau),keep:near(hero,FOES.map(k=>at3(k,tau)),3,6),height:1.9},shotAt(t,B2),DV);
+ return r;
+}
+function cam2Authored(t:number):{C:V3;T:V3;F:number}{
  const tau=tau2(t),m=smooth(FAC,Math.min(tau,SHOT)),g=sm(2.6,SHOT,tau,easeInOutSine),open=1-sm(0,1.2,t,easeInOutSine),j=weave(t,.06);
  const C:V3=[m[0]-4.5-3*open+2*g,1.9+.8*g,-39+2.5*g];
  const T:V3=[lerp(m[0]+5,98,g*.7)+j[0],1+j[1],lerp(m[1]+1,-8,g*.6)+j[2]];
- return look(C,T,lerp(2600,2100,g)-400*open);
+ return{C,T,F:lerp(2600,2100,g)-400*open};
 }
 const ch2:Scene={
  draw(s,t){
@@ -482,12 +533,31 @@ const ch2:Scene={
 
 // ---------------------------------------------------------------- 3 · reverse angle from behind the goal: the shot, the dive, the net, the celebration
 const tau3=(t:number)=>{const E=SECS(2);return key(t,[[0,3.3],[CUEW(2,'shot flies'),SHOT-.02],[CUEW(2,'past the'),LINE_T-.02],[CUEW(2,'Tommy'),NET_T+.4],[CUEW(2,'Inter were'),6.2],[E,6.2+(E-CUEW(2,'Inter were'))*.75]],linear);};
-function cam3(t:number):Cam{
+/** Director beats for the reverse angle: hold the authored wide behind the goal through the replay wipe, pull in to frame the shooter and
+ * the keeper together as "the shot flies", push in tight on Tommy Lawrence's dive as it goes "past the keeper" (the ball held in frame),
+ * ease back to the authored camera while it pans from the keeper to the scorer (no close-up whip across 15 m), then close on Facchetti's
+ * celebration for "Inter were off to the final". */
+const B3=beats([[0,'wide'],[CUEW(2,'shot flies')-.8,{from:'space',size:.3}],[CUEW(2,'past the')-.35,'tight'],[CUEW(2,'Tommy')+.15,'wide'],[CUEW(2,'Inter were')-.3,'reaction']]);
+/** the directed camera, averaged over ±.35 s (director steady(): the fit clamp and keep hand-overs become smooth moves) */
+function cam3(t:number):Cam{const p=steady(t,dir3,.35,STEADY_N);return look(p.eye,p.target,p.F);}
+function dir3(t:number):Pin{
+ const a=cam3Authored(t),tau=tau3(t),fa=posOf(FAC,tau),lw0=posOf(LAW,tau),lw:[number,number]=[lw0[0],lw0[1]+2.2*sm(LINE_T-.5,LINE_T+.3,tau)],pk=CUEW(2,'past the'),iw=CUEW(2,'Inter were');
+ // the centre of the shot, blended: Facchetti (the shooter) → Lawrence for the dive (where his dive lands, as his ring) → Facchetti for the
+ // celebration, handed back on the authored camera's own pan to him (cel) so the hero never leaves the authored frame
+ const cel=sm(LINE_T+.4,6.4,tau,easeInOutSine),u=Math.min(sm(pk-.6,pk,t,easeInOutSine),1-cel),hero:V3=[lerp(fa[0],lw[0],u),0,lerp(fa[1],lw[1],u)];
+ // the shooter and the keeper both held as the shot is struck, then the keeper (now the hero) and the ball
+ const E=easeInOutSine,wK=Math.min(sm(CUEW(2,'shot flies')-1.1,CUEW(2,'shot flies')-.4,t,E),1-sm(pk-.3,pk+.4,t,E)),wF=Math.min(wK,1-sm(pk-.4,pk+.3,t,E)),cu=sm(pk-.2,pk+.5,t,E);
+ const keep:Keep[]=[...keepP(FAC,tau,wF),...(wK>.01?[{P:[lw[0],0,lw[1]] as V3,w:wK},{P:[lw[0],1.85,lw[1]] as V3,w:wK}]:[])];
+ // once the ball is over the line (it ends in the net under the camera) the focus hands from the ball to the man in the shot
+ const r=reframe({eye:a.C,target:a.T,F:a.F},{hero,ball:lerp3(ballAt(tau),[hero[0],1,hero[2]],cu),keep,height:1.9},shotAt(t,B3),DV);
+ return r;
+}
+function cam3Authored(t:number):{C:V3;T:V3;F:number}{
  const tau=tau3(t),m=smooth(FAC,tau),cel=sm(LINE_T+.4,6.4,tau,easeInOutSine),open=1-sm(0,1.2,t,easeInOutSine),j=weave(t,.05);
  const C:V3=lerp3([113+2*open,6+.6*open,6],[104.5,2.8,-8],cel);
  const shotT:V3=[lerp(m[0],103,.42),.5,lerp(m[1],0,.42)];
  const T=lerp3(shotT,[m[0],1.3,m[1]],cel);
- return look(C,[T[0]+j[0],T[1]+j[1],T[2]+j[2]],lerp(2700,2500,cel)-400*open);
+ return{C,T:[T[0]+j[0],T[1]+j[1],T[2]+j[2]],F:lerp(2700,2500,cel)-400*open};
 }
 /** the European Cup (the big-eared trophy), a newsreel stamp top right; w = 0..1 */
 function cupStamp(s:Sheet,w:number,t:number){if(w<=.01)return;const bx=screenBox(s),k=bx.k,H=Math.min(bx.x1-bx.x0,bx.y1-bx.y0)*.3*easeOutBack(clamp(w)),cx=bx.x1-H*.75-16*k,by=bx.y0+H*1.1+14*k;
@@ -517,14 +587,31 @@ const ch3:Scene={
 
 // ---------------------------------------------------------------- 4 · the lesson: the left flank from a low touchline camera
 const tau4=(t:number)=>{const E=SECS(3),om=CUEW(3,'one more');return key(t,[[0,-1.2],[CUEW(3,'when your'),-.6],[CUEW(3,'runs forward'),.2],[CUEW(3,'That gives'),1.5],[om,1.75],[om+1.3,RECV2],[E+1,RECV2+.4]],linear);};
-function cam4(t:number):Cam{
+/** Director beats for the lesson: start on Facchetti and Corso at lesson size; pull back to the authored wide on "when your team attacks" so
+ * the lit-up box and the whole left flank are in shot; push in again on "the full-back" for his run forward (the next metres of his run
+ * held in frame); pull out on "That gives" so Corso, his first option (Mazzola) and the extra one (Facchetti's run) all fit with both
+ * pass lines. */
+const B4=beats([[0,'lesson'],[CUEW(3,'when your')-.2,'wide'],[CUEW(3,'the full-back')-.6,{from:'lesson',size:.46}],[CUEW(3,'That gives')-.35,{from:'space',size:.24,ball:.1}]]);
+/** the directed camera, averaged over ±.35 s (director steady(): the fit clamp and keep hand-overs become smooth moves) */
+function cam4(t:number):Cam{const p=steady(t,dir4,.35,STEADY_N);return look(p.eye,p.target,p.F);}
+function dir4(t:number):Pin{
+ const a=cam4Authored(t),tau=tau4(t),fa=posOf(FAC,tau),hero:V3=[fa[0],0,fa[1]],yg=CUEW(3,'That gives'),rf=CUEW(3,'the full-back');
+ const co=posOf(CORSO,Math.min(tau,PASS2)),mz=posOf(MAZZOLA,Math.min(tau,PASS2)+.5),fr=posOf(FAC,RECV2);
+ // Corso soft-kept throughout; the next metres of Facchetti's run while it is drawn; the pass-line ends (Mazzola, the run's end) from "That gives"
+ const wR=Math.min(sm(rf-.7,rf,t,easeInOutSine),1-sm(yg-1,yg-.2,t,easeInOutSine)),wP=sm(yg-1,yg-.1,t,easeInOutSine),nx=posOf(FAC,Math.min(tau+.5,RECV2));
+ const keep:Keep[]=[...near(hero,[[co[0],0,co[1]]],4,9),...(wR>.01?[{P:[nx[0],0,nx[1]] as V3,w:wR}]:[]),
+  ...(wP>.01?[{P:[mz[0],0,mz[1]] as V3,w:wP},{P:[mz[0],1.85,mz[1]] as V3,w:wP},{P:[fr[0],0,fr[1]] as V3,w:wP},{P:[co[0],0,co[1]] as V3,w:wP},{P:[co[0],1.85,co[1]] as V3,w:wP}]:[])];
+ const r=reframe({eye:a.C,target:a.T,F:a.F},{hero,ball:ballAt(tau),keep,height:1.9},shotAt(t,B4),DV);
+ return r;
+}
+function cam4Authored(t:number):{C:V3;T:V3;F:number}{
  const tau=tau4(t),m=smooth(FAC,tau),co=posOf(CORSO,tau),at=CUEW(3,'when your'),yg=CUEW(3,'That gives'),j=weave(t,.04);
  const mid:[number,number]=[(m[0]+co[0])/2,(m[1]+co[1])/2];
  // "when your team attacks": the camera looks up the pitch at their box, then settles on Corso + Facchetti + the box
  const up=bump(at-.1,at+1.6,t),wide=sm(yg-.3,yg+.8,t,easeInOutSine);
  const T:V3=[lerp(lerp(mid[0]+4,94,up*.8),88,wide*.4)+j[0],.6+j[1],lerp(lerp(mid[1]+3,-6,up*.6),-12,wide*.5)+j[2]];
  const C:V3=[lerp(mid[0]-14,mid[0]-6,wide),lerp(6,10,wide),lerp(-50,-54,wide)];
- return look(C,T,lerp(2000,1650,wide));
+ return{C,T,F:lerp(2000,1650,wide)};
 }
 const ch4:Scene={
  draw(s,t){

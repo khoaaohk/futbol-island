@@ -60,6 +60,7 @@ import {TAU,twos,sm,clamp,lerp,keyPath,easeOut,easeOutBack,easeInOutSine,linear,
 import {dust,sparkBurst,footballPanels} from '../../paths/riso/shapes';
 import {drawAthlete,motionSmear,solve,blendPose,clampPose,runCycle,stand,strike,header,keeperSet,keeperDive,celebrate,keyPoses,STRIKE_CONTACT,
  type Pose,type Place,type AthleteStyle,type InkFill,type Projector} from './athlete';
+import {beats,shotAt,reframe,steady,near,type View as DView,type Keep} from './director';
 
 // ---------------------------------------------------------------- narration + timing
 /** Narration, cue words and provisional (≈2.6 words/s plus pauses) timings: `at` = the onset of those exact words; `seconds` = the clip
@@ -95,7 +96,9 @@ const shape=(p:Pt[])=>polyPath(orient(p),true);
 
 // ---------------------------------------------------------------- camera: the whole frame
 /** Screen (x,y) → the centre of the canvas; ~1500 × 1030 units visible (the card window is 1.45:1 to square). Full sheet, never the safe box. */
-function frame(s:Sheet,x=0,y=0,z=1){const base=z*Math.min(s.W/1500,s.H/1030),a=Math.round(s.arrival*1e6)/1e6,k=base*a,q=(v:number)=>Math.round(v*1e4)/1e4;s.camera(q(x-(s.W/2-s.cx)/k),q(y-(s.H/2-s.cy)/k),base/s.fit,0);}
+function frame(s:Sheet,x=0,y=0,z=1){const base=z*Math.min(s.W/1500,s.H/1030);DV={w:s.W/base,h:s.H/base};const a=Math.round(s.arrival*1e6)/1e6,k=base*a,q=(v:number)=>Math.round(v*1e4)/1e4;s.camera(q(x-(s.W/2-s.cx)/k),q(y-(s.H/2-s.cy)/k),base/s.fit,0);}
+/** the window in camera units (set by frame(); read by the director's reframing, aperture() included) */
+let DV:DView={w:1500,h:1030};
 
 // ---------------------------------------------------------------- 3D: pitch metres → screen through a TV camera
 type V3=[number,number,number];
@@ -343,10 +346,41 @@ function drawPlay(s:Sheet,T:number,c:Cam,o:{ballScale?:number;only?:string[];wid
 /** 1 · live, real time: the high main camera in the Main Stand, panning with the long ball across, the sprint, the cross and the header. */
 const MAIN_CAM:V3=[36,19,-40];
 const t1=(t:number)=>{const q=Q(0),S=SECS(0);return warp(t,[[0,-3.1],[q[1]+.1,T_PASS],[q[2]+.2,T_TOUCH],[q[4]+.3,T_HEAD],[S,T_HEAD+2.9]]);};
-const cam1=(t:number)=>{const T=t1(t),b=ballAt(Math.max(-3,T-.25)),tx=clamp(lerp(b[0],(b[0]+ballAt(clamp(T+.8,-3,T_HEAD))[0])/2,.5),10,52),tz=lerp(30,22,sm(T_TOUCH,T_CROSS,T));
- const F=lerp(3300,4300,sm(T_TOUCH-.4,T_CROSS+.6,T,easeInOutSine));return camAt(MAIN_CAM,[tx,0,tz],F);};
+const cam1Authored=(t:number):{pos:V3;target:V3;F:number}=>{const T=t1(t),b=ballAt(Math.max(-3,T-.25)),tx=clamp(lerp(b[0],(b[0]+ballAt(clamp(T+.8,-3,T_HEAD))[0])/2,.5),10,52),tz=lerp(30,22,sm(T_TOUCH,T_CROSS,T));
+ const F=lerp(3300,4300,sm(T_TOUCH-.4,T_CROSS+.6,T,easeInOutSine));return{pos:MAIN_CAM,target:[tx,0,tz],F};};
+/** figures print 10 % over life size (FIG): the director's hero height in metres */
+const HERO_H=1.8*FIG;
+/** the chapter-1 time of play time T (inverse of t1's warp, for the beats) */
+const tOf1=(T:number)=>{let lo=0,hi=SECS(0);for(let i=0;i<30;i++){const m=(lo+hi)/2;if(t1(m)<T)lo=m;else hi=m;}return(lo+hi)/2;};
+/** Director beats (lib/plays/riso/director.ts, Oct 4 2026): a short establishing wide of Anfield, then follow Trent on the ball and push in on his strike; as he hits
+ * the long switch the camera rides the ball across to Robertson (the receiver and the space he runs into); push in low for his one touch,
+ * ease back to follow the sprint, pull out for the early cross so Salah's run into the box is in frame, push in on Salah's header with the
+ * keeper and the goal kept in, and hold on Salah's reaction. */
+const B1=beats([[0,'wide'],[1,'follow'],[Q(0)[1]-.35,{from:'tight',size:.45}],[Q(0)[1]+.4,{from:'space',size:.26}],[tOf1(T_TOUCH)-.4,'tight'],[Q(0)[3]-.1,'follow'],
+ [tOf1(T_CROSS)-.35,{from:'space',size:.24}],[tOf1(T_HEAD)-.6,'tight'],[tOf1(T_HEAD)+.35,'reaction']]);
+const P2=(xz:[number,number]):V3=>[xz[0],0,xz[1]];
+const mix3=(a:V3,b:V3,u:number):V3=>[lerp(a[0],b[0],u),lerp(a[1],b[1],u),lerp(a[2],b[2],u)];
+/** the key player at play time T, blended (never a hard switch): Trent on the ball, Robertson from the long ball on, Salah from the cross on */
+function subj1(T:number){
+ const tr=P2(trackAt(TRENT_KEYS,T)),rb=robState(T).place,ro:V3=[rb.x!,0,-rb.z!],sa=salahState(T).place,so:V3=[sa.x!,0,-sa.z!],bv=bravoState(T).place,bo:V3=[bv.x!,0,-bv.z!];
+ const uR=sm(T_PASS+.1,T_TOUCH-.3,T,easeInOutSine),uS=sm(T_CROSS+.05,T_HEAD-.3,T,easeInOutSine),hero=mix3(mix3(tr,ro,uR),so,uS);
+ const foes=['fern','angel','walker','stones'].map(id=>P2(trackAt(TR(id).keys,T)));
+ const keep:Keep[]=[...near(hero,foes,3.5,7,HERO_H)];
+ // the passer fades out as the ball leaves him; the cross's target (Salah) comes in before the cross; the keeper and the goal at the header
+ const wT=1-uR,wS=sm(T_CROSS-1.7,T_CROSS-.2,T,easeInOutSine)*(1-uS),wG=sm(T_HEAD-1.3,T_HEAD-.5,T,easeInOutSine);
+ if(wT>.01&&uR>.01)keep.push({P:tr,w:wT},{P:[tr[0],HERO_H,tr[2]],w:wT});
+ if(wS>.01)keep.push({P:so,w:wS},{P:[so[0],HERO_H,so[2]],w:wS});
+ if(wG>.01)keep.push({P:bo,w:wG},{P:[bo[0],HERO_H,bo[2]],w:wG},{P:[0,2.44,30.34],w:wG*.35},{P:[0,0,37.66],w:wG*.35});
+ return{hero,ball:ballAt(T),keep,height:HERO_H};
+}
+/** the directed chapter-1 camera at time t (before smoothing) */
+const dir1=(t:number)=>{const c=cam1Authored(t),T=t1(t),
+ // the long switch: the ball high in the air and Robertson far below it — a slightly slimmer safe margin keeps both and him readable
+ margin=lerp(.88,.95,sm(T_PASS+.2,T_PASS+.7,T)*(1-sm(T_TOUCH-.5,T_TOUCH-.1,T)));return reframe({eye:c.pos,target:c.target,F:c.F},subj1(T),shotAt(t,B1),DV,{margin});};
+/** steadied over ±0.45 s (3 samples) so no hand-over or fit clamp can snap the zoom */
+const cam1=(t:number)=>{const r=steady(t,dir1,.45,3);return camAt(r.eye,r.target,r.F);};
 const ch1:Scene={
- draw(s,t){frame(s);drawPlay(s,t1(twos(t)),cam1(t),{wide:true});frame(s);},
+ draw(s,t){frame(s);const sh=shotAt(t,B1);drawPlay(s,t1(twos(t)),cam1(t),{wide:sh.k*sh.size<.3});frame(s);},
  aperture(t){const p=P3(ballAt(t1(twos(t))),cam1(t));return apertureDisc(p[0],p[1],Math.max(6,.25*p[2]),12);},
  get still(){return Q(0)[4]+.5;},
 };
@@ -362,8 +396,28 @@ const ch2:Scene={
 /** 3 · the second replay, from high behind the goal: the cross past Fernandinho, Salah on Angeliño's blind side, the header back across. */
 const BEHIND_CAM:V3=[-8.5,4.6,32];
 const t3=(t:number)=>{const q=Q(2),S=SECS(2);return warp(t,[[0,T_CROSS-.35],[q[1],T_FERN+.1],[q[2]+.2,T_HEAD],[q[3],T_NET+.15],[S,T_NET+1.5]]);};
-const cam3=(t:number)=>{const T=t3(t),b=ballAt(Math.min(T,T_HEAD)),u=sm(T_FERN-.2,T_HEAD,T,easeInOutSine);
- return camAt(BEHIND_CAM,[lerp(b[0]*.6+6,HEAD_AT[0]+1,u),1.2,lerp(b[2]*.6+14,HEAD_AT[1]-3,u)],lerp(2000,2500,u));};
+const cam3Authored=(t:number):{pos:V3;target:V3;F:number}=>{const T=t3(t),b=ballAt(Math.min(T,T_HEAD)),u=sm(T_FERN-.2,T_HEAD,T,easeInOutSine);
+ return{pos:BEHIND_CAM,target:[lerp(b[0]*.6+6,HEAD_AT[0]+1,u),1.2,lerp(b[2]*.6+14,HEAD_AT[1]-3,u)],F:lerp(2000,2500,u)};};
+/** Director beats for the second replay: in from the start on the cross's flight with Fernandinho (the defender it beats) as the key player and
+ * Salah's run kept in, follow Salah as he rushes in, push in for the header with Bravo kept in, and hold on Salah after the goal. The header
+ * and reaction stay at ~35 %: any closer and this behind-the-goal camera would have to pass the goal frame and Bravo. */
+const B3=beats([[0,{from:'space',size:.34}],[Q(2)[1]-.3,'follow'],[Q(2)[2]-.4,{from:'tight',size:.36,low:.2}],[Q(2)[3]+.3,{from:'reaction',size:.4,low:0}]]);
+function subj3(T:number){const sa=salahState(T).place,so:V3=[sa.x!,0,-sa.z!],fe=fernState(T).place,fo:V3=[fe.x!,0,-fe.z!],bv=bravoState(T).place,bo:V3=[bv.x!,0,-bv.z!];
+ // the key player: Fernandinho (the defender the cross beats) while the ball flies at him, then Salah — blended, never a hard switch
+ const uS=sm(T_FERN-.15,T_FERN+.45,T,easeInOutSine),hero=mix3(fo,so,uS),wB=sm(T_HEAD-.7,T_HEAD-.3,T)*(1-.7*sm(T_NET+.3,T_NET+.9,T)),keep:Keep[]=[];
+ // Salah's run (wide of the authored view as the replay opens) joins the framing as the ball flies toward him; Fernandinho fades out once
+ // the ball is past him
+ const wS=Math.max(uS,.9*sm(T_CROSS,T_FERN-.2,T));if(wS>.01&&uS<.99)keep.push({P:so,w:wS},{P:[so[0],HERO_H,so[2]],w:wS});
+ if(uS>.01&&uS<.99)keep.push({P:fo,w:1-uS},{P:[fo[0],HERO_H,fo[2]],w:1-uS});
+ // Bravo in full while he dives (he lies across the frame, so his dive extent is held too, not just his standing height)
+ if(wB>.01){const wk=wB*(.8+.18*(1-sm(T_NET+.3,T_NET+.9,T)));keep.push({P:bo,w:wk},{P:[bo[0],HERO_H,bo[2]],w:wk},{P:[bo[0],.4,bo[2]-1.3],w:wk},{P:[bo[0],.4,bo[2]+1.3],w:wk},{P:[bo[0]-1.3,.4,bo[2]],w:wk},{P:[bo[0]+1.3,.4,bo[2]],w:wk});}
+ // the replay opens with the ball still at Robertson's boot, wide of this camera's view: it joins the framing as it flies in
+ // (from the header on, the ball flies at this camera into the net: it eases to a soft point so the camera never snaps back after it;
+ // after the goal Bravo eases to a soft point too — the shot is Salah's reaction)
+ const wX=sm(T_CROSS+.1,T_CROSS+.5,T)*(1-.65*sm(T_HEAD-.2,T_HEAD+.3,T,easeInOutSine));if(wX>.01)keep.push({P:ballAt(T),w:wX});
+ return{hero,ball:null,keep,height:HERO_H};}
+const dir3=(t:number)=>{const c=cam3Authored(t);return reframe({eye:c.pos,target:c.target,F:c.F},subj3(t3(t)),shotAt(t,B3),DV);};
+const cam3=(t:number)=>{const r=steady(t,dir3,.45,3);return camAt(r.eye,r.target,r.F);};
 const ch3:Scene={
  draw(s,t){frame(s);drawPlay(s,t3(twos(t)),cam3(t),{ballScale:1.6,heroes:['fern','angel','bravo','stones']});frame(s);},
  aperture(t){const p=P3(ballAt(t3(twos(t))),cam3(t));return apertureDisc(p[0],p[1],Math.max(8,.2*p[2]),12);},
@@ -373,8 +427,20 @@ const ch3:Scene={
  * round Robertson (the overlap), a ring round his winger Mané inside him, a big arrow down the outside, then the early cross drawn as a
  * curving arrow into the box, a burst at his boot and a ghost of the whip. */
 const t4=(t:number)=>{const q=Q(3),S=SECS(3);return warp(t,[[0,1.2],[q[1],1.6],[q[2],2.3],[q[3],T_CROSS-.35],[q[3]+1.4,T_CROSS+.05],[S,T_CROSS+.6]]);};
-const cam4=(t:number)=>{const T=t4(t),r=trackAt(ROB_KEYS,Math.min(T,T_CROSS)),u=sm(Q(3)[3],SECS(3)-1,t,easeInOutSine);
- return camAt([r[0]+10,8.5+1.5*u,-8.5],[r[0]-8-3*u,0,lerp(12,16,u)],lerp(1700,1450,u));};
+const cam4Authored=(t:number):{pos:V3;target:V3;F:number}=>{const T=t4(t),r=trackAt(ROB_KEYS,Math.min(T,T_CROSS)),u=sm(Q(3)[3],SECS(3)-1,t,easeInOutSine);
+ return{pos:[r[0]+10,8.5+1.5*u,-8.5],target:[r[0]-8-3*u,0,lerp(12,16,u)],F:lerp(1700,1450,u)};};
+/** Director beats for the lesson: closer on Robertson with his winger Mané (and Walker) kept in for the overlap and the run on the outside,
+ * then eased back out for the early cross so the arrow into Salah's path stays readable. */
+const B4=beats([[0,'lesson'],[Q(3)[3]+.6,{from:'lesson',size:.31}]]);
+function subj4(t:number,T:number){const rb=robState(T).place,hero:V3=[rb.x!,0,-rb.z!],mn=P2(trackAt(MANE_KEYS,T)),wk=P2(trackAt(TR('walker').keys,T));
+ const wW=1-sm(Q(3)[3]-.6,Q(3)[3]+.4,t,easeInOutSine),wC=sm(Q(3)[3]-.2,Q(3)[3]+.8,t,easeInOutSine),keep:Keep[]=[];
+ if(wW>.01)keep.push({P:mn,w:wW},{P:[mn[0],HERO_H,mn[2]],w:wW},{P:wk,w:wW*.7});
+ if(wC>.01)keep.push({P:[BALL_H[0],0,BALL_H[2]],w:wC*.75},{P:BALL_X,w:wC});
+ // the lesson opens with Trent's long ball still high overhead (out of this camera's frame): the ball joins the framing only as it drops to him
+ const wB=sm(T_TOUCH-.7,T_TOUCH-.15,T);if(wB>.01)keep.push({P:ballAt(T),w:wB});
+ return{hero,ball:null,keep,height:HERO_H};}
+const dir4=(t:number)=>{const c=cam4Authored(t);return reframe({eye:c.pos,target:c.target,F:c.F},subj4(t,t4(t)),shotAt(t,B4),DV);};
+const cam4=(t:number)=>{const r=steady(t,dir4,.45,3);return camAt(r.eye,r.target,r.F);};
 /** a bold yellow teaching stroke (navy edge, paper knockout, yellow) */
 function mark(s:Sheet,p:Path2D,a=1){s.stroke(K,p,5,.9*a);s.knockout(p,a);s.fill(Y,p,.95*a);}
 /** a bold teaching arrow along points (drawn to `u`), one path: shaft + head */

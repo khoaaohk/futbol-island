@@ -6,6 +6,10 @@
 // steps sideways, and the sideways-gait fix in lib/graphics/player.ts ("a lead boot in its last 3 cm sets down as
 // soon as the trailing one lifts off") lands the lead boot one frame earlier, so both boots are never airborne.
 // No dive or jump code changed: every dive/jump/slide assertion below passes before and after.
+// 2026-10-04 (A7): six hashes re-recorded (sprintBrake, backpedalJockey, shot, calledSquash, keeper, walkIdle; cutPlant,
+// pass, receive and reactions unchanged). Below 1.5 m/s the gait's step length now matches the distance travelled
+// (lib/graphics/player.ts `stepAmount`), so slow walks and the slow ends of brakes stop sliding planted boots.
+// Every scenario with a slow phase changes; no dive, jump or skill code changed.
 const assert=require('node:assert/strict'),fs=require('node:fs'),ts=require('typescript'),vm=require('node:vm'),path=require('node:path'),crypto=require('node:crypto'),T=require('three');
 const ROOT=path.resolve(__dirname,'..'),GRAPHICS=path.join(ROOT,'lib/graphics');
 const loaded=new Map();

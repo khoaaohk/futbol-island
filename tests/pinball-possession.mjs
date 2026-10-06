@@ -1,5 +1,6 @@
+import '../scripts/register-local-ts.mjs';
 import assert from 'node:assert/strict';
-import {createPinballState,stepPinball,pinballDefenders,nudgePinball,launchPinball,tapPinballFlipper} from '../lib/games/soccerPinball.ts';
+const {createPinballState,stepPinball,pinballDefenders,nudgePinball,launchPinball,tapPinballFlipper}=await import('../lib/games/soccerPinball.ts');
 function incoming(owner=0,defs=3,time=0,speed=-100){const s=createPinballState();s.phase='playing';s.defs=defs;s.time=time;s.openingRescue=false;s.launchGrace=0;const d=pinballDefenders(time,defs)[owner];Object.assign(s.ball,{x:d.x,y:d.y+24,vx:0,vy:speed});return s;}
 const input={left:false,right:false};
 for(const hz of [30,60,120])for(const owner of [0,1,2]){

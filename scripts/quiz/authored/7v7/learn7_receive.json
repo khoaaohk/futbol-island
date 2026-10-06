@@ -84,18 +84,18 @@
    }
   },
   {
-   "q": "You want to turn with the ball close. Which move does that?",
+   "q": "There is room ahead. What should your first touch do?",
    "options": [
-    "Cruyff turn: pretend to kick, then turn",
-    "Kick it far and chase it",
-    "Stand still with the ball"
+    "Small touch into the room ahead",
+    "Big kick far ahead, then chase",
+    "Stop it dead and look down"
    ],
    "correct": 0,
-   "explain": "Yes. Pretend to kick, pull the ball behind your leg, and turn.",
+   "explain": "Yes. A small touch keeps the ball close, so you can turn into the room.",
    "choiceExplanations": [
-    "Yes. Pretend to kick, pull the ball behind your leg, and turn.",
-    "A far kick is easy for the defender to win.",
-    "Standing still lets the defender come and take it."
+    "Yes. A small touch keeps the ball close, so you can turn into the room.",
+    "A big touch runs away from you, so the defender can win it.",
+    "Looking down at a stopped ball wastes the room, so the defender closes in."
    ],
    "visual": {
     "kind": "whatNext",

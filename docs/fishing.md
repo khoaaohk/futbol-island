@@ -111,7 +111,7 @@ The arowana and piranha are river fish. The island story says a stream meets the
 
 ## Spots
 
-All spots are in `lib/town/fishing/fishCatalog.ts` (`FISH_SPOTS`). Brown Shrimp, Sardine, Mackerel and Sea Bass are shared commons at every spot. Each spot has its own 10 specials, and each special lives only there.
+All spots are in `lib/town/fishing/fishCatalog.ts` (`FISH_SPOTS`). Brown Shrimp, Sardine, Mackerel and Sea Bass are shared commons at every main-island shore spot (on the Coral Cay side, Channel Bend has no shrimp). Each of the five original shore spots and the boat has its own specials, and each special lives only there; the East Jetty and the six causeway and Coral Cay spots (5 Oct 2026) have none.
 
 | Spot (id) | Where | Theme (island fiction) | Specials |
 | --- | --- | --- | --- |
@@ -122,6 +122,12 @@ All spots are in `lib/town/fishing/fishCatalog.ts` (`FISH_SPOTS`). Brown Shrimp,
 | West Cove (`west-cove`) | (−95.5, 24) | Beach cove where a stream meets the sea | cownose ray, tope shark, wobbegong, arowana, piranha, sandbar, lemon, reef and dusky sharks, coelacanth (10) |
 | Deep Sea Boat (`deep-sea-boat`) | aft deck of the boat moored at (282.5, −93.5) | Open deep water off the east coast, south of the Coral Cay causeway | squid, lanternfish, grouper, sailfish, anglerfish, swordfish, blue marlin, ocean sunfish (8) |
 | East Jetty Spiral (`east-pier`, 29 Sep 2026; moved 30 Sep) | (371.6, 68), the outermost east curve of the East Jetty's spiral; casts east | Deeper water at the end of a long pier | none: a table between shore and deep sea built from existing species (4 shared commons, herring, cod, haddock, bluefin tuna, octopus); mean catch ≈ 4.05 coins |
+| Seawall Gate Sands (`causeway-gate`, 5 Oct 2026) | (254.8, −169.2), north sand bank just past the seawall gate; casts north | Warm sandy shallows by the seawall stones | none: shrimp, sardine, mackerel, sea bass, herring, haddock, octopus; mean ≈ 3.81 coins |
+| Channel Bend (`causeway-channel`, 5 Oct 2026) | (359.2, −176.1), south sand bank at the causeway's big bend; casts south-west | The open channel under the causeway, the deepest water between the islands | none: sardine, mackerel, sea bass, herring, cod, bluefin tuna, Little Shark (no shrimp); mean ≈ 4.26 |
+| Turtle Bank (`turtle-bank`, 5 Oct 2026) | (486.2, −124.8), south sand bank on the last stretch to the cay; casts south toward Turtle Sandbar | Clear sandy shallows | none: shrimp, sardine, mackerel, sea bass, herring, Little Shark; mean ≈ 3.75 |
+| Coral Garden Beach (`coral-garden`, 5 Oct 2026) | (514.8, −226.5), Coral Cay's north-west beach; casts north | Coral just offshore | none: shrimp, sardine, mackerel, sea bass, haddock, Little Shark, octopus; mean ≈ 3.87 |
+| Sharks Beach Point (`sharks-beach`, 5 Oct 2026) | (697.3, −200.2), east end of Sharks Beach (past the court, away from its sign, vending machine and ball); casts north | Where the open sea starts | none: shrimp, sardine, mackerel, sea bass, herring, bluefin tuna, Little Shark; mean ≈ 3.87 |
+| Farm Beach (`farm-beach`, 5 Oct 2026) | (651, −68.1), south beach below Coral Cay Farm, 22 m east of the farm's beach track; casts south-east | Sandy bottom | none: shrimp, sardine, mackerel, sea bass, cod, haddock; mean ≈ 3.83 |
 
 The original fish keep their earlier spots: herring, cod, haddock, tuna, Little Shark and Octopus.
 
@@ -303,3 +309,18 @@ See `docs/performance-guide.md` ("Fishing spots and market stand").
 ## East Jetty Spiral (29 Sep 2026; jetty rework 30 Sep)
 
 The seventh spot stands on the outer east curve of the East Jetty's spiral (it was on the head of the timber East Pier until the 30 Sep rework) (`lib/town/eastPier.ts`, docs/performance-guide.md "East Pier"). It adds no new species and no specials: the four shared commons, herring, cod and haddock (Good), bluefin tuna (Rare) and the octopus (Legendary) were given `'east-pier'` in their `spots`, so the table sits between the shore and the deep sea. Internal weights come from `RARITY_WEIGHT` as everywhere else; the mean catch is about 4.05 coins (shore 4.0, boat 3.9), so the economy is unchanged and every fish still sells through Rosa's capped market. The five older shore tables are byte-identical (the `tests/fishing.cjs` snapshot). `fishingCore.ts` now also treats the pier's planks as "not open water": the float is cast past the rock armour and shadows never swim over the stone. `tests/fishing.cjs` allows 4–7 spots and a spot with no specials only for `east-pier`, and checks its table and mean. Browser: `node scripts/check-fishing-browser.cjs mobile east-pier` (a Haddock, 6 coins, no errors).
+
+## Causeway and Coral Cay spots (5 Oct 2026)
+
+User request: "add more fishing spots along the bridge road and coral cay island". Six more posts (13 spots in all): three on the Coral Cay causeway's sand banks and three on the cay's beaches (table above; `area: 'causeway' | 'cay'` in `FISH_SPOTS`). Like the East Jetty they add no species and no specials: each table is built from the ten shared species to fit the water (shrimp in the sandy shallows, tuna only where the water is open and deep, no shrimp in the channel), every mean catch is 3.75–4.26 coins (shore ≈ 4.0; the shore EV in `scripts/economy-sim.cjs` is 3.96 after the change), and the older spots' tables are unchanged (snapshot test). Names and stories are island stories (game fiction).
+
+**Placement.** Causeway posts stand on the widest sand banks, 1.6 m inside the walkable sand (9+ m off the centre line: lanes ±2 m, lamps 6.65 m, deck edge 7 m), between the friendly sharks' patrol stretches (every float ≥ 9 m from a shark loop), and clear of the bank palms and umbrellas, the Starfish/Turtle sandbar stops and the causeway ball-hunt balls. Cay posts stand a fifth of the way up the beach from the waterline and cast square to the coast, away from the court and its beach, the farm fence and track, the hostel, the huts and the Sharks Beach sign, vending machine and ball. The kiosk footprints join `world.obstacles` like the others (`fishingKioskObstacles`).
+
+**Water.** `shoreline.ts` is main-island only, so `coralCay.ts` gained `clearOfCayShores(x, z, margin)`: sea at least `margin` past the causeway's waterline (stone skirt or bank slope), the sandbars and spurs, and the cay's beach. `fishingCore.ts` uses it in `castPoint` (floats land past the bank or beach) and `inOpenWater` (shadow routes). Box rejects keep the main-island spots' cost to a few comparisons. `fishingVisuals.ts` draws no main-island foam ribbon for these spots (Seawall Gate Sands is 17 m off the main coast), only the ripple arcs.
+
+**Lists.** Map F markers, job-marker spacing, prompts, hover, glow, camera, kiosk merge, floats and ripple all read `FISH_SPOTS`. The Fishbook's "Found at" now reads, for example, "every main-island shore spot · every causeway and Coral Cay spot · the Deep Sea Boat" or "Main island: … · Causeway and Coral Cay: …". The empty-basket hint at Rosa's lists the main-island posts plus "6 more along the Coral Cay causeway and round Coral Cay".
+
+**Heat.** Still one merged post mesh (one draw, one shadow draw; 6 more posts' vertices in it), one float `InstancedMesh` (13 instances), one ripple ring; per frame the idle check is 13 distance tests instead of 7. No new materials, textures, timers or loops.
+
+**Checks.** `tests/fishing.cjs` asserts exactly 13 spots and, for the six new ones: walkable stand off the main island, post footprint on sand, float and cast in open water, 60+ m from every other spot, causeway posts on the bank and clear of traffic and shark loops and the sandbars, cay posts on the beach and away from the court, hostel and farm, mean 3.7–4.3, the shallow-vs-channel species split, and the single merged mesh + instanced floats. Browser (1280×800 desktop and 390×844 touch): walked to each new post, cast and landed a fish at all six on desktop and at Turtle Bank and Farm Beach on the phone, no page errors.
+

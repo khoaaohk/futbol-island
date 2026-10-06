@@ -4,7 +4,7 @@ import {BackButton} from './BackButton';
 import {NavigationButton} from './DoneButton';
 import shell from './ModalShell.module.css';
 import {selectCharacter} from '@/lib/town/customization';
-import {useEffect,useLayoutEffect,useRef,useState,type MutableRefObject} from 'react';
+import {useEffect,useLayoutEffect,useRef,useState,type CSSProperties,type MutableRefObject} from 'react';
 import type {OnboardingNpcTarget} from '@/lib/graphics/onboardingNpc';
 import type {CharacterCustomization} from '@/lib/town/customization';
 import {finishIslandOnboarding} from '@/lib/town/onboarding';
@@ -17,6 +17,10 @@ import {CostumeHoodArt,FruitArt,HuntBallArt,JobsArt,TipBookArt} from './PocketAr
 import {StorePreview,useStorePreviews} from './StorePreviews';
 import {STORE_ITEMS} from '@/lib/town/store';
 import {Icon} from './Icon';
+import {useQuestEvidence} from '@/lib/town/questProgress';
+import {useQuizCompletions} from '@/lib/town/quizProgress';
+import {continueAction,suggestedNextStep} from '@/lib/paths/pathContinue';
+import {launchPathLesson} from '@/lib/paths/pathLaunch';
 import MiniCard from './MiniCard';
 import {cardNumber} from '@/lib/town/cardCollection';
 import jobs from './IslandJobs.module.css';
@@ -33,7 +37,7 @@ type Step={id:'welcome'|'paths'|'balls'|'earn'|'learn';eyebrow:string;title:stri
  /** HUD controls to ring while this step is shown (the card moves into the largest clear gap). */tour?:string};
 const steps:Step[]=[
  {id:'welcome',eyebrow:'PICK YOUR PLAYER',title:'Welcome to Futbol Island',copy:'Learn real football plays, one path at a time. Choose your character to begin.'},
- {id:'paths',eyebrow:'START HERE',title:'Follow your Path',copy:'Tap Paths to start learning. Watch each play through a player\'s eyes, then test yourself with a quick quiz.',note:'Paths start with 7v7 and grow into 9v9 and 11v11 as you learn.',tour:'[data-tour="quests"]'},
+ {id:'paths',eyebrow:'START HERE',title:'Follow your Path',copy:'Your first lesson is waiting in Paths. Watch a play through a player\'s eyes, then try a quick quiz.',note:'Paths start with 7v7 and grow into 9v9 and 11v11 as you learn.',tour:'[data-tour="quests"]'},
  {id:'balls',eyebrow:'THE BALL HUNT',title:'Find hidden balls',copy:'100 balls are hidden around the island. Each one you find teaches you a football tip.',note:'Every 10 balls unlock new costumes, each with its club’s story. See your count in Paths → Ball hunt.'},
  {id:'earn',eyebrow:'YOUR ISLAND POCKET',title:'Earn coins',copy:'Walk or ride around the island to catch fish, pick fruit and help with island jobs.',note:'Sell your catch to Rosa at the market stand. Your coins show at the top of the screen.',tour:'[data-job-wallet]'},
  {id:'learn',eyebrow:'VENDING MACHINES',title:'Spend and learn',copy:'Spend coins on cards, pop-up books and gear. Everything goes in your Backpack: tap your character to open it.',note:'Cards teach positions and books tell true stories of great players. Start with the Futbol Island book in your Backpack!'},
@@ -50,7 +54,11 @@ export default function IslandOnboarding({open,onClose,value,onChange}:Props){
  // Same shelf snapshot the vending machine and Backpack show, rendered once when the Spend step opens (one short-lived renderer).
  const gear=useStorePreviews(open&&step===LEARN_STEP,GEAR_BALL);
  const dismiss=()=>{finishIslandOnboarding('dismissed');onClose();};
- const next=()=>{if(last){finishIslandOnboarding('completed');onClose();}else setStep(n=>n+1);};
+ // Clear path (Oct 4 2026, user): the last button starts the ONE first step (the saved path's Continue: lesson 1 on a fresh save),
+ // the same lesson Paths' "Start here" and the HUD pitch card point at. Skip still just closes.
+ const evidence=useQuestEvidence(),answers=useQuizCompletions();
+ const first=open&&last?(()=>{try{return suggestedNextStep(localStorage,new Set(evidence.steps),answers);}catch{return null;}})():null,firstSay=first?continueAction(first):null;
+ const next=()=>{if(last){finishIslandOnboarding('completed');onClose();if(first?.kind==='lesson')launchPathLesson(first.format,first.lesson,new Set(evidence.steps),answers);}else setStep(n=>n+1);};
  useEffect(()=>{const el=dialog.current;if(!el)return;if(open){setStep(0);restore.current=document.activeElement instanceof HTMLElement?document.activeElement:null;if(!el.open)el.showModal();heading.current?.focus({preventScroll:true});}else if(el.open){el.close();if(restore.current?.isConnected)restore.current.focus({preventScroll:true});}},[open]);
  useEffect(()=>{if(open)heading.current?.focus({preventScroll:true});},[open,step]);
  // Heat pass 4 (audit F10): measured on the step, after it settles and on resize — no layout poll (the island is paused behind the tour).
@@ -103,7 +111,7 @@ export default function IslandOnboarding({open,onClose,value,onChange}:Props){
  </div>}
  {current.note&&<div className={styles.note}><Icon name={current.id==='learn'?'book':current.id==='paths'?'flag':current.id==='balls'?'star':'target'} size={28}/><span>{current.note}</span></div>}
  </div></div>
- <footer className={styles.footer}><NavigationButton label="Skip" onNavigate={dismiss}/><div className={styles.progress} role="status" aria-label={`Welcome step ${step+1} of ${steps.length}`}>{steps.map((s,i)=><span key={s.id} className={i===step?styles.current:undefined} aria-hidden="true"/>)}</div><NavigationButton key={step} label={last?'Done':'Next'} onNavigate={next}/></footer>
+ <footer className={styles.footer} data-first-step={last&&firstSay?'':undefined}><NavigationButton label="Skip" onNavigate={dismiss}/><div className={styles.progress} role="status" aria-label={`Welcome step ${step+1} of ${steps.length}`}>{steps.map((s,i)=><span key={s.id} className={i===step?styles.current:undefined} aria-hidden="true"/>)}</div><NavigationButton key={step} label={last?firstSay?.action??'Done':'Next'} style={last&&firstSay?{'--navigation-width':`${Math.max(76,firstSay.action.length*8+36)}px`} as CSSProperties:undefined} data-onboarding-first-step={last&&first?.kind==='lesson'?first.lesson.id:undefined} onNavigate={next}/></footer>
  </section>
  </dialog>;
 }

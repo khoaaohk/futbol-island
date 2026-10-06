@@ -47,8 +47,8 @@ function Boarding({onStart}:{onStart:()=>void}){
   <div className={styles.card}>
    <span className={styles.badge}>Matchday</span>
    <h3>All aboard for your Matchday final</h3>
-   <p>You graduated on all four pitches. Today your coach has one last test before the big match: two questions from every path you learned, then two passes to draw.</p>
-   <p>Got one wrong? Your coach explains why, and you try again. Every answer counts toward your trophy.</p>
+   <p>You graduated on all four pitches. Your coach has one last test: two questions from every path you learned, then two passes to draw.</p>
+   <p>Got one wrong? Your coach explains why, and you try again. Keep going and you lift the trophy!</p>
    <div className={styles.actions}><button type="button" className={styles.primary} onClick={onStart}>Start the coach’s exam</button></div>
    <p style={{fontSize:13}}>The Academy island is still being built. This trip is your Matchday, and you can ride again any time to practise.</p>
   </div>

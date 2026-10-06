@@ -30,6 +30,7 @@ export const EXPLORE_ITEMS=[
  {id:'visit-cay',title:'Visit Coral Cay',detail:'Cross the causeway and find the beach soccer court. Twenty hidden balls wait there too.'},
  {id:'walk-jetty',title:'Walk the East Jetty',detail:'Walk out to the end and try the target: pick your spot first, then strike.'},
  {id:'enter-konbini',title:'Step into a Konbini',detail:'Look around the shelves and learn which snacks and drinks help before and after a match.'},
+ {id:'visit-museum',title:'Visit the museum',detail:'Walk into the History Museum and find out how football got its Laws, World Cups and kits.'},
 ] as const;
 export type ExploreId=typeof EXPLORE_ITEMS[number]['id'];
 const quizzes=Object.entries(quizManifest).flatMap(([format,lessons])=>Object.entries(lessons).map(([id,count])=>({key:`${format}:${id}`,count})));
@@ -49,7 +50,7 @@ export function exploreProgress(evidence:QuestEvidence,quizKeys:ReadonlySet<stri
  'knock-characters':[activity.knockovers??0,20,'knockovers'], 'win-knockout':[activity.knockoutWins??0,5,'wins'],
  'play-arcade':[Number(activity.arcade),1,''], 'ramp-trick':[Number(activity.ramp),1,''],
  'catch-fish':[Number(activity.fish),1,''], 'island-job':[Number(activity.job),1,''], 'sell-rosa':[Number(activity.sold),1,''],
- 'visit-cay':[Number(activity.cay),1,''], 'walk-jetty':[Number(activity.jetty),1,''], 'enter-konbini':[Number(activity.konbini),1,''],
+ 'visit-cay':[Number(activity.cay),1,''], 'walk-jetty':[Number(activity.jetty),1,''], 'enter-konbini':[Number(activity.konbini),1,''], 'visit-museum':[Number(activity.museum),1,''],
  };
  return EXPLORE_ITEMS.map(item=>{const [value,target,unit]=values[item.id];return{...item,value:Math.min(value,target),target,unit,complete:value>=target};});
 }

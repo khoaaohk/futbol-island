@@ -34,7 +34,7 @@ const M=require('../lib/town/market/market.ts'),goods=require('../lib/town/marke
  assert.equal(sample({now:600+3600e3+150,mode:'walk',x:401.5,z:0,paused:false}),.15,'normal walking counts its 150 ms');
  const town=read('components/Town.tsx');
  assert(town.includes("!active||!!learning||!!lessonRef.current||fieldMenu.current||streetTraffic.rider.index>=0,"),'Town pauses fuel in lessons, field menus and truck beds');
- assert(town.includes("rideRef.current==='jetpack'&&flight.height>.5,!fuelArmed)"),'hovering on the jetpack is charged as flying (after the opening hover)');}
+ assert(/rideRef\.current==='jetpack'&&flight\.height>\.5,!fuelArmed,/.test(town),'climbing on the jetpack with input is charged as flying (after the opening hover)');}
 
 // 4. Refills: every Konbini item and every machine drink refuels; carbs and meals most, treats least; sports drink > water.
 {for(const f of food.FOOD_MENU)assert(F.foodFuel(f)>0,f.id);for(const d of drinks.DRINKS)assert(F.foodFuel(d)>0,d.id);
@@ -116,7 +116,8 @@ function memStore(start){const data=new Map(),clock={t:start??Date.UTC(2026,8,30
  // A6: the scripted arrival and opening hover are never charged and never force a landing.
  {const smp=F.createTravelSampler();smp({now:0,mode:'jetpack',x:0,z:0,paused:false,airborne:true,arrival:true});
   assert.equal(smp({now:300,mode:'jetpack',x:0,z:0,paused:false,airborne:true,arrival:true}),0,'the opening hover drains 0');
-  assert(smp({now:450,mode:'jetpack',x:0,z:0,paused:false,airborne:true})>0,'once the player has moved, hovering drains as before');
+  assert(smp({now:450,mode:'jetpack',x:0,z:0,paused:false,airborne:true,driving:true})>0,'once the player has moved, climbing in place with input drains as before');
+  assert.equal(smp({now:1200,mode:'jetpack',x:0,z:0,paused:false,airborne:true,driving:false}),0,'a hands-off hover after the arrival drains 0');
   const town=read('components/Town.tsx'),fs_=read('lib/town/fuelStore.ts');
   assert(/let fuelArmed=false;/.test(town)&&/if\(!fuelArmed&&\([^\n]*characterArrival\.getState\(\)\.done\)fuelArmed=true;/.test(town),'armed only by a first move after the arrival');
   assert(/return !paused&&!arrival&&mode!=='walk'/.test(fs_),'the arrival can never trigger "Out of fuel" / a forced landing');}
@@ -130,6 +131,44 @@ console.log('PASS fuel: fly > rides > walk, walking always works at 0, learning 
 // Sep 30 2026 (user): rates halved; hovering/climbing on the jetpack burns fuel, standing on foot still does not.
 {const ts=require('typescript'),fs=require('node:fs'),vm=require('node:vm');const m={exports:{}};vm.runInNewContext(ts.transpileModule(fs.readFileSync('lib/town/fuel.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{exports:m.exports,module:m,require,Math,Number,Object,JSON});
  const F=m.exports,assert=require('node:assert/strict');assert.equal(F.FUEL_RATE.jetpack,.06);assert.equal(F.FUEL_RATE.walk,.003);assert(F.FUEL_MAX/F.FUEL_RATE.jetpack/60>=25,'25+ min of flying per tank');
- const hover=F.createTravelSampler();hover({now:0,mode:'jetpack',x:0,z:0,paused:false,airborne:true});assert(hover({now:300,mode:'jetpack',x:0,z:0,paused:false,airborne:true})>0,'hovering drains');
+ const hover=F.createTravelSampler();hover({now:0,mode:'jetpack',x:0,z:0,paused:false,airborne:true});assert(hover({now:300,mode:'jetpack',x:0,z:0,paused:false,airborne:true})>0,'climbing on the spot (input) drains');
  const stand=F.createTravelSampler();stand({now:0,mode:'walk',x:0,z:0,paused:false});assert.equal(stand({now:300,mode:'walk',x:0,z:0,paused:false}),0,'standing still is free');
- console.log('fuel: halved rates, hover drains, standing free');}
+ console.log('fuel: halved rates, climbing drains, standing free');}
+
+// Oct 3 2026 (user: "fix the matter of standing idle. it still drains the energy bar"): idle never drains. Fuel is charged only
+// for travel the player drives (joystick / move keys; on the jetpack also a take-off or a boost they started). A hands-off
+// jetpack hover, a parked ride, standing with the ball, a bobbing deck or boat, an idle animation's drift, a knock-back or a
+// ramp launch cost nothing; climbing / steering on the jetpack and real travel still drain.
+{const run=(mode,steps,{airborne=false,driving=false,dx=0,tick=150}={})=>{const smp=F.createTravelSampler();let x=0,z=0,t=0,sum=0;
+  smp({now:t,mode,x,z,paused:false,airborne,driving});
+  for(let i=0;i<steps;i++){t+=tick;x+=typeof dx==='function'?dx(i):dx;z+=typeof dx==='function'?dx(i+7)*.5:0;
+   sum+=smp({now:t,mode,x,z,paused:false,airborne,driving:typeof driving==='function'?driving(i):driving});}return sum;};
+ const MIN=400;// 60 s of 150 ms HUD ticks
+ const wobble=i=>Math.sin(i*1.3)*.12;// an idle animation / bobbing platform nudge (up to 0.8 m/s between two ticks)
+ // Idle: every state, with and without a drifting `location`, drains nothing.
+ for(const mode of ['walk','sprint','scooter','bike','moped','jetpack']){
+  assert.equal(run(mode,MIN),0,`${mode}: standing idle drains 0`);
+  assert.equal(run(mode,MIN,{dx:wobble}),0,`${mode}: idle drift (ball nudges, bob, idle animation) drains 0`);
+  assert.equal(run(mode,MIN,{dx:.6}),0,`${mode}: carried at 4 m/s with no input (a platform, a knock-back, a ramp launch) drains 0`);}
+ assert.equal(run('jetpack',MIN,{airborne:true}),0,'jetpack: a hands-off hover drains 0');
+ assert.equal(run('jetpack',MIN,{airborne:true,dx:wobble}),0,'jetpack: hover bob drains 0');
+ assert.equal(run('walk',MIN,{dx:wobble}),0,'on the jetty / a rooftop / the deep-sea boat: the deck bob drains 0');
+ // Driving still drains, on every mode; the jetpack also when climbing in place with input.
+ for(const mode of ['walk','sprint','scooter','bike','moped','jetpack'])assert(run(mode,40,{driving:true,dx:1})>5.9,`${mode}: moving with input drains`);
+ assert(Math.abs(run('jetpack',40,{airborne:true,driving:true})-6)<1e-9,'jetpack: climbing / pushing with input drains even at no ground speed');
+ assert.equal(run('walk',40,{driving:true,dx:.02}),0,'pressing into a wall on foot (no travel) drains 0');
+ // Letting go: the momentum of the next tick still counts (DRIVE_GRACE_MS), then nothing, even while coasting.
+ const coast=run('bike',40,{driving:i=>i<10,dx:1});assert(coast>=1.5&&coast<=1.5+.45,`bike: let go after 1.5 s, charged ${coast}s (grace ${F.DRIVE_GRACE_MS} ms only)`);
+ assert(F.DRIVE_GRACE_MS>=150&&F.DRIVE_GRACE_MS<=600,'the grace covers one HUD tick, not a long coast');
+ // Old guards still hold with input: paused, arrival, teleport, sample cap.
+ {const smp=F.createTravelSampler();smp({now:0,mode:'bike',x:0,z:0,paused:false,driving:true});
+  assert.equal(smp({now:150,mode:'bike',x:3,z:0,paused:true,driving:true}),0,'paused');
+  assert.equal(smp({now:300,mode:'bike',x:6,z:0,paused:false,arrival:true,driving:true}),0,'arrival');
+  assert.equal(smp({now:450,mode:'bike',x:600,z:0,paused:false,driving:true}),0,'teleport');
+  assert.equal(smp({now:5450,mode:'bike',x:610,z:0,paused:false,driving:true}),F.MAX_SAMPLE_SECONDS,'max sample seconds');}
+ // Wiring: Town passes the player's own input (joystick / move keys, take-off, a boost) as `driving`.
+ const town=read('components/Town.tsx'),store=read('lib/town/fuelStore.ts');
+ assert(/flight\.height>\.5,!fuelArmed,Math\.hypot\(driveX,driveZ\)>\.1\|\|rideRef\.current==='jetpack'&&\(flight\.takeoffTime<1\.05\|\|jetActions\.state\.phase==='dash'\|\|jetActions\.state\.phase==='charge'\|\|jetActions\.state\.phase==='blast'\)\)/.test(town),'Town passes driving = steering, or a jetpack take-off / boost');
+ assert(/arrival=false,driving=true\):boolean/.test(store)&&/sampler\(\{now,mode,x,z,paused,airborne,arrival,driving\}\)/.test(store),'fuelTravel forwards driving');
+ assert(/Standing still or hovering uses none/.test(F.FUEL_COPY.cost)&&!/hover[^.]*burn/i.test(JSON.stringify(F.FUEL_COPY)),'the copy says idling and hovering are free');
+ console.log('fuel: idle never drains (foot, ball, rides, jetpack hover, decks), driving still does');}

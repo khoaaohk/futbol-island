@@ -40,7 +40,7 @@ ROOT = os.path.dirname(HERE)
 PLAYERS = os.path.join(ROOT, 'lib/town/positionPlayers.json')
 MANIFEST = os.path.join(ROOT, 'lib/town/playerPhotos.coaches.json')
 THROTTLE_FILE = os.path.join(tempfile.gettempdir(), 'futbol-wikimedia-throttle.lock')
-UA = 'FutbolIslandPhotoBot/1.0 (educational kids app)'
+UA = 'FutbolIsland/1.0'
 GAP = 8.0
 # Card name -> Wikipedia title (the card name is used when it is not listed).
 TITLES = {

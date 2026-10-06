@@ -483,3 +483,74 @@ In the script these sit in `PICKS` plus `APPROVED_CREDIT` (scripts/fetch-player-
 licence filter.
 
 Photo-less cards now: **71 of 400.**
+
+## Oct 6 2026 (one runner; roster 450)
+
+Photo-less cards before: **77 of 450** (10 coaches, 67 players). None of the 67 players is new since Sep 27; they are all
+covered by the sections above, so only the open leads were tried for them. **After: 72 of 450.**
+
+### Coaches: deep search (`scripts/fetch-coach-photos-deep.py`)
+
+New script. It reads the Wikidata item (P18, P373), the Commons category tree (one level, statues, graves, murals and stamps
+skipped by name), depicts (P180) and a full-text name search, then imageinfo for every candidate. `gather` writes a numbered
+contact sheet for review; `apply --pick "Name=File:...#face"` crops with the project's `portrait_crop` + `riso` + `save_mask`.
+`--offline` uses only cached responses. User-Agent `FutbolIsland/1.0`, shared lock file, 1.5 s gap (3 s after a 429), 429 log
+persisted in the cache so the three-per-hour rule holds across runs.
+
+Why `fetch-coach-photos.py` had missed these: Trapattoni, Zagallo and Ramsey have free en lead images, but their licence tags
+carry a country port (`CC BY-SA 3.0 at` / `nl`), which that script's licence regex refused. Tuchel's lead image is free (a
+Bryan Berlin 2026 photo, probably added after Sep 28).
+
+**Applied (5), each crop and riso cell checked by eye:**
+
+| Coach | File | Licence, author |
+| --- | --- | --- |
+| Thomas Tuchel | Thomas Tuchel England v Ghana 23 June 2026-081.jpg (P18 / en lead) | CC BY-SA 4.0, Bryan Berlin |
+| Massimiliano Allegri | Icc-4 43826041582 o (50121485051) (cropped).jpg (Juventus, ICC 2018; depicts + category) | CC BY-SA 2.0, All-Pro Reels (crop Lorenzo De Leonardis2) |
+| Giovanni Trapattoni | FIFA WC-qualification 2014 - Austria vs Ireland 2013-09-10 - Giovanni Trapattoni 03 (cropped).JPG (en lead; SFace 0.63 vs P18) | CC BY-SA 3.0 AT, Michael Kranewitter |
+| Mário Zagallo | Mário Zagallo 1974.jpg (Brazil, 1974 World Cup; P18) | CC BY-SA 3.0 NL, Rob Mieremet / Anefo |
+| Alf Ramsey | Alf Ramsey (1969).jpg (England at Schiphol, Nov 1969; P18) | CC BY-SA 3.0 NL, Bert Verhoeff / Anefo |
+
+These five were cut from the cached 330 px Commons thumbnails, because the run had to stop before the 960 px downloads (see
+rate limits). Faces are 88 to 173 px in the source, so the upscale is at most 1.5x (the pipeline allows 2x). The riso cells
+read cleanly. They can be re-cut from 960 px on a later run with the same `--pick`.
+
+**Not applied:**
+- Lionel Scaloni: the free 2026 lead photo (Bryan Berlin) also holds Pablo Aimar's face beside his, and the riso showed two
+  faces. Held. Best next pick, once 960 px downloads are possible: `Lionel Scaloni 2022 vs Colombia.jpg` or
+  `Scaloni DT 2 (cropped).jpg` (jmmuguerza, CC BY-SA 3.0, touchline, alone). Also seen: a 2016 Deportivo-shirt portrait
+  (Romean2, CC BY-SA 4.0), not used for a coach card.
+- Valeriy Lobanovskyi: P18 `Valeri Lobanovsky.jpg` is **CC0** (Rob Croes / Anefo, 16 Sep 1985). It was found but not downloaded
+  before the stop. **Apply it next run.** (The batched imageinfo call for his 97 candidates failed on URL length with
+  Cyrillic titles, so it was missed in the first pass. Use smaller batches.)
+- Bill Shankly: Commons has only statues, plinths and graffiti, plus one Anefo CC0 photo (Ajax v Liverpool, 7 Dec 1966, fog) where
+  the faces are too small. Openverse: statues and museum items only.
+- Bob Paisley: Commons has only a banner (P18), statues, the Paisley Gateway and plaques. Openverse: the "Men Who Built Anfield"
+  banner. No free photo of him found.
+- Telê Santana: P18 `Telê Santana da Silva 01.jpg` is tagged public domain by an uploader for a 1993 photo, so its provenance is unverified
+  (held, like Okocha). `Telé, Técnico de Futebol.tif` (1971, Correio da Manhã collection, public domain) found no face at 330 px.
+  Check it at full size next run.
+
+### Players: open leads
+
+- **Governo do Paraná / AEN (CC0):** still offline. `aen.pr.gov.br` now redirects to `parana.pr.gov.br/aen/`, and the 2025 Brazil
+  futsal stories (`/Audio/Selecao-Brasileira-de-futsal-conquista-titulo-...`) return 404 with the "período eleitoral" banner.
+  The runoff is Oct 25. **Retry after Oct 26.** robots.txt allows `/aen/` and `/Audio/` but disallows `/search/` and `/noticias/aen/`.
+- **Dynamomania.com:** I crawled the whole album index (`/photos?page=N`, 1,178 albums, 6 s apart). It holds no futsal albums at all. It covers
+  Dynamo Kyiv and Ukraine senior and U-21 football from 2008 on. The site search for "футзал" and "Фаренюк" returns only news items,
+  no albums. Opponents in the index that touch the missing list: none (Chelsea 2015/2019, AEK 2018 and Olympiacos 2019 are all
+  after the relevant players' time there). **Dead end for Fareniuk, Abakshyn and Mykytiuk.**
+- **Openverse:** all 67 players were queried on Sep 27. I queried the 10 coaches (new): Allegri, Paisley, Shankly, Lobanovskyi,
+  Zagallo, Telê Santana, Ramsey, Trapattoni and Scaloni returned mostly statues, plaques, the Senado Federal and namesakes. Trapattoni has
+  CC BY 2.0 Ireland v Serbia 2008 photos (gordonflood.com, Flickr). Commons already served him.
+  Note: anonymous Openverse requests now cap `page_size` at 20.
+
+### Rate limits
+
+At about 1 request per 1.5 s, then 3 s: 429s at 08:36 (et.wikipedia), 08:43 (uk.wikipedia) and 09:06 (commons). That is three inside an
+hour, so Wikimedia traffic stopped as the rule says, after about 175 requests. Small-language Wikipedias tripped first, so the
+other-language lead lookup is now off by default for later runs (`COACH_LANGS=`). Everything after the stop came from the cache.
+
+Photo-less cards now: **72 of 450.**
+- Coaches 5: Scaloni and Lobanovskyi are ready to apply next run; Telê Santana needs a full-size check; Shankly and Paisley have nothing.
+- Players 67: unchanged.

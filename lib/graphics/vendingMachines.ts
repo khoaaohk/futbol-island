@@ -202,15 +202,29 @@ function paintRail(c:Ctx,at:(r:Rect)=>number[],row:number,items:ShelfItem[]){
 }
 /** Product art cell: the slot above its shelf line (transparent background; the product stands on the cell's bottom edge). */
 const productCell=(i:number):Rect=>{const r=L.slots[i],top=i<L.cols?L.label.y+L.label.h+.006:r.y;return {x:r.x,y:top,w:r.w,h:shelfLine(r)-top};};
+/** Where the camera is, seen from a product on the shelf: `yaw` (degrees; camera to the product's right > 0) and `pitch` (degrees;
+ *  camera above > 0). Drinks are painted from this viewpoint (lib/graphics/drinkArt.ts camera mode, user Oct 5 2026: "fix the
+ *  perspective of the bottles. doesn't match with the machine perspective"). */
+export type ProductView={yaw:number;pitch:number};
+/** Per slot (reading order), the camera direction from the product standing there: VENDING_BAY.product behind the glass, slid along
+ *  the camera's ray through its slot centre (as productShift and the close-up sprites place it), aimed at about a third of its
+ *  height. `cam` is the camera in machine-local metres. Rounded to 0.1° (the callers repaint only on a meaningful change). */
+function slotViews(cam:T.Vector3):ProductView[]{const F=VENDING_FACE,zP=VENDING_SIZE.d/2-VENDING_BAY.product,deg=(a:number)=>Math.round(a*1800/Math.PI)/10;
+ return L.slots.map((r,i)=>{const sx=F.x0+(r.x+r.w/2)*FACE_SIZE.w,px=Math.abs(cam.z-F.z)>.01?cam.x+(sx-cam.x)*(cam.z-zP)/(cam.z-F.z):sx,py=F.y1-(shelfLine(r)-productCell(i).h*.35)*FACE_SIZE.h,dx=cam.x-px,dz=cam.z-zP;
+  return {yaw:deg(Math.atan2(dx,dz)),pitch:deg(Math.atan2(cam.y-py,Math.hypot(dx,dz)))};});}
 /** How big each kind stands in its cell (fractions of the cell height), and its thin real box behind the art, if any. */
 const PRODUCT_FIT:Record<string,{h:number;w:number;box?:{depth:number;color:string}}>={
  ball:{h:.62,w:.62},drink:{h:.86,w:.5},display:{h:.8,w:.56,box:{depth:.04,color:'#efe3c6'}},pack:{h:.8,w:.5,box:{depth:.012,color:'#2b4f60'}},
 };
 const fitOf=(kind:string)=>PRODUCT_FIT[kind]??{h:.72,w:.8};
-function paintProduct(c:Ctx,cell:number[],item:ShelfItem,pics:Pictures,changed:()=>void){
+/** The baked ball pictures (public/vending/products) have 14/103 transparent / soft-shadow rows under the ball: the ball's lowest
+ *  point stands on the shelf line, its baked shadow spilling onto the slab (Oct 5 2026, "these items are floating still"). */
+const BALL_PAD=14/103;
+function paintProduct(c:Ctx,cell:number[],item:ShelfItem,pics:Pictures,changed:()=>void,view?:ProductView){
  const [x,y,w,h]=cell,f=fitOf(item.kind),ph=h*f.h,pw=Math.min(w*.9,ph*f.w/f.h*(item.kind==='ball'?1:1)),cx=x+w/2,base=y+h;
- if(item.kind==='ball'){const src=vendingBallPicture(item.id);if(src){pics.draw(c,src,img=>{const k=Math.min(pw,ph)/(img.width-4),dw=img.width*k,dh=img.height*k;c.drawImage(img,cx-dw/2,base-dh+dh*.06,dw,dh);},changed);return;}}
- if(item.drink){drawDrink(c,item.drink.art,cx,base-h*.02,ph,undefined,'front');return;}
+ if(item.kind==='ball'){const src=vendingBallPicture(item.id);if(src){pics.draw(c,src,img=>{const k=Math.min(pw,ph)/(img.width-4),dw=img.width*k,dh=img.height*k;c.drawImage(img,cx-dw/2,base-dh+dh*BALL_PAD,dw,dh);},changed);return;}}
+ // Drinks: seen from the close-up camera (their sprite turns to face it), so caps, shoulders and labels match the bay's perspective.
+ if(item.drink){drawDrink(c,item.drink.art,cx,base-h*.02,ph,undefined,view??'front');return;}
  // Books and packs: the flat front art (drawVendingProduct centres them on s; a book is 1.7 s tall, a pack 2 s).
  const s=item.kind==='display'?ph/1.7:ph/2,cy=item.kind==='display'?base-s*.72:base-s;drawVendingProduct(c,item.id,item.kind,cx,cy,s,false);
 }
@@ -350,8 +364,8 @@ export function createVendingMachines(scene:T.Scene,opts:{coins?:()=>number|null
  const dropFace=(f:Face)=>{f.alive=false;f.listeners.clear();f.canvas.width=f.canvas.height=1;};
  const cachedMachines=()=>faces.reduce((n,f)=>n+f.machines,0);
  const pageKey=(m:VendingMachine)=>{const {items,header}=pageOne(m);return JSON.stringify([header,items.map(i=>[i.id,i.label,i.price,i.kind,i.drink?.temp])]);};
- function faceFor(group:Entry[],fw:number,fh:number):{face:Face;reused:boolean}|null{
-  const W=group.length*fw,H=fh,key=`${group.map(g=>g.machine.id).join('+')}|${fw}x${fh}|${atlas.coins}|${group.map(g=>pageKey(g.machine)).join('|')}`,at0=faces.findIndex(f=>f.key===key);
+ function faceFor(group:Entry[],fw:number,fh:number,views:ProductView[][]):{face:Face;reused:boolean}|null{
+  const W=group.length*fw,H=fh,key=`${group.map(g=>g.machine.id).join('+')}|${fw}x${fh}|${atlas.coins}|${group.map(g=>pageKey(g.machine)).join('|')}|${JSON.stringify(views)}`,at0=faces.findIndex(f=>f.key===key);
   if(at0>=0){const f=faces[at0];faces.splice(at0,1);faces.push(f);return {face:f,reused:true};}
   const canvas=document.createElement('canvas');canvas.width=W;canvas.height=H;const c=canvas.getContext('2d');if(!c)return null;
   const face:Face={key,canvas,machines:group.length,alive:true,listeners:new Set()},changed=()=>{if(face.alive)face.listeners.forEach(fn=>fn());};
@@ -360,7 +374,7 @@ export function createVendingMachines(scene:T.Scene,opts:{coins?:()=>number|null
    paintHeader(c,at,g.machine,header);paintRail(c,at,0,items);paintRail(c,at,1,items);
    const panel=(r:Rect,fn:(w:number,h:number)=>void)=>{const [x,y,w,h]=at(r);c.save();c.translate(x,y);fn(w,h);c.restore();};
    const [msg,sub]=g.machine.drinks?GREETING.drinks:GREETING.shop;panel(L.led,(w,h)=>paintLed(c,w,h,msg,sub));panel(L.coin,(w,h)=>paintCoin(c,w,h,atlas.coins));panel(L.tray,(w,h)=>paintTray(c,w,h));
-   items.forEach((item,i)=>paintProduct(c,at(productCell(i)),item,atlas.pics,changed));});
+   items.forEach((item,i)=>paintProduct(c,at(productCell(i)),item,atlas.pics,changed,views[gi]?.[i]));});
   let n=cachedMachines()+group.length;while(faces.length&&n>FACES_MAX_MACHINES){const f=faces.shift()!;n-=f.machines;dropFace(f);}
   faces.push(face);return {face,reused:false};}
  /** Cut the flat front (cabinet front face + printed glass) of one machine away, or put it back. */
@@ -379,14 +393,14 @@ export function createVendingMachines(scene:T.Scene,opts:{coins?:()=>number|null
   const dpr=Math.min(2,view.dpr||1);let fh=Math.min(view.height*.92,view.width*.94*FACE_SIZE.h/FACE_SIZE.w)*dpr,fw=fh*FACE_SIZE.w/FACE_SIZE.h;
   const k=Math.min(1,HIRES_MAX/Math.max(group.length*fw,fh));fw=Math.floor(fw*k);fh=Math.floor(fh*k);const W=group.length*fw,H=fh;if(W<16||H<16)return;
   const t0=typeof performance!=='undefined'?performance.now():0;
-  const got=faceFor(group,fw,fh);if(!got)return;const canvas=got.face.canvas;
+  // The close-up camera first: round products (balls, bottles) turn to face it, and drinks are painted from its viewpoint.
+  const cam=new T.PerspectiveCamera(40,view.width/view.height,1,500),camPos=new T.Vector3(),camLook=new T.Vector3();faceView(e,cam,camPos,camLook,view.height);
+  const got=faceFor(group,fw,fh,group.map(g=>slotViews(g.mesh.worldToLocal(camPos.clone()))));if(!got)return;const canvas=got.face.canvas;
   const texture=new T.CanvasTexture(canvas);texture.colorSpace=T.SRGBColorSpace;texture.generateMipmaps=false;texture.minFilter=T.LinearFilter;texture.name='vending-closeup';
   const state={alive:true},refresh=()=>{if(state.alive)texture.needsUpdate=true;};got.face.listeners.add(refresh);
   const printed=new T.MeshBasicMaterial({map:texture,toneMapped:false,alphaTest:.5});printed.name='vending-closeup';
   const glassCanvas=document.createElement('canvas');glassCanvas.width=glassCanvas.height=64;{const g=glassCanvas.getContext('2d');if(g){g.fillStyle='rgba(225,250,255,.05)';g.fillRect(0,0,64,64);g.fillStyle='rgba(255,255,255,.14)';g.beginPath();g.moveTo(18,0);g.lineTo(26,0);g.lineTo(12,64);g.lineTo(4,64);g.fill();g.fillStyle='rgba(255,255,255,.08)';g.beginPath();g.moveTo(29,0);g.lineTo(31,0);g.lineTo(17,64);g.lineTo(15,64);g.fill();}}
   const glassMap=new T.CanvasTexture(glassCanvas);glassMap.colorSpace=T.SRGBColorSpace;const glass=new T.MeshBasicMaterial({map:glassMap,transparent:true,depthWrite:false,toneMapped:false});glass.name='vending-closeup-glass';
-  // The close-up camera, so round products (balls, bottles) can turn to face it.
-  const cam=new T.PerspectiveCamera(40,view.width/view.height,1,500),camPos=new T.Vector3(),camLook=new T.Vector3();faceView(e,cam,camPos,camLook,view.height);
   const front=VENDING_SIZE.d/2,P=VENDING_BAY.product;
   const parts:CloseUpPart[]=group.map((g,gi)=>{
    const ox=gi*fw,at=(r:Rect)=>[ox+r.x*fw,r.y*fh,r.w*fw,r.h*fh],{items}=pageOne(g.machine);
@@ -580,6 +594,9 @@ export function createVendingMachines(scene:T.Scene,opts:{coins?:()=>number|null
    *  VENDING_BAY.product behind the glass, it reads centred over its price in the angled close-up; [] when not zoomed. */
   productShift(id:VendingMachineId):number[]{const e=entries.find(x=>x.machine.id===id);if(!e||!lastCamera)return [];const F=VENDING_FACE,cam=e.mesh.worldToLocal(lastCamera.getWorldPosition(new T.Vector3())),zP=VENDING_SIZE.d/2-VENDING_BAY.product;
    if(Math.abs(cam.z-F.z)<.01)return [];return L.slots.map(r=>{const sx=F.x0+(r.x+r.w/2)*FACE_SIZE.w;return (cam.x+(sx-cam.x)*(cam.z-zP)/(cam.z-F.z)-sx)/FACE_SIZE.w;});},
+  /** Per slot (reading order), the zoom camera's direction seen from each product on the shelf (yaw/pitch, degrees; ProductView):
+   *  the in-use face paints its drinks from this viewpoint and turns them to face the camera; [] when not zoomed. */
+  productView(id:VendingMachineId):ProductView[]{const e=entries.find(x=>x.machine.id===id);if(!e||!lastCamera)return [];return slotViews(e.mesh.worldToLocal(lastCamera.getWorldPosition(new T.Vector3())));},
   /** Whether a machine shows the real-depth close-up right now (else its flat printed front). */
   hasCloseUp(id:VendingMachineId){return Boolean(closeUp?.parts.some(p=>p.entry.machine.id===id));},
   /** Checks and screenshots: show (or hide) the close-up products again after the camera arrived. */

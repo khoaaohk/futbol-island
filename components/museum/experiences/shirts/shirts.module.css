@@ -1,0 +1,391 @@
+/* shirts · The Kit Room. An editorial poster: warm paper, black ink, one deep-green pitch, red wool.
+   Grid: 8 px. Radii: 999px pills (buttons), 10px cards, 2px ink frames (pitches). Back is the shared fixed ExperienceBack
+   (24/20 desktop, 16/16 phones): the header keeps its 100 × 64 corner clear. */
+.root{
+ --paper:#efe7d6;--paper2:#e4dac4;--card:#f8f2e4;--ink:#16181d;--muted:#5b5547;--wool:#b8283a;--gold:#f2c94c;--pitch:#2a7a51;--ok:#14532d;--bad:#a1182a;
+ --r:10px;--gap:16px;
+ --display:Impact,Haettenschweiler,'Arial Narrow Bold','Arial Narrow',sans-serif;
+ /* a soft spring (overshoot then settle), with a plain ease for browsers without linear() */
+ --spring:cubic-bezier(.3,1.5,.55,1);
+ --pad-t:max(20px,env(safe-area-inset-top));--pad-x:max(24px,env(safe-area-inset-left));
+ position:fixed;inset:0;z-index:20;display:grid;grid-template-rows:auto minmax(0,1fr);overflow:hidden;
+ background:
+  radial-gradient(120% 90% at 85% 10%,#f6f0e2 0%,transparent 60%),
+  repeating-linear-gradient(0deg,rgba(22,24,29,.018) 0 1px,transparent 1px 3px),
+  linear-gradient(180deg,var(--paper) 0%,var(--paper2) 100%);
+ color:var(--ink);
+ font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;
+ padding:var(--pad-t) max(24px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) var(--pad-x);
+ outline:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;
+}
+@supports (transition-timing-function:linear(0,1)){
+ .root{--spring:linear(0,.006,.025 2.8%,.101 6.1%,.539 18.9%,.721 25.3%,.849 31.5%,.937 38.1%,.968 41.8%,.991 45.7%,1.006 50.1%,1.015 55%,1.017 63.9%,1.001 85.9%,1)}
+}
+.root[data-dragging]{cursor:grabbing}
+
+/* ---- header: clear of the fixed Back (desktop 24+76 = 100 px wide, 20+44 = 64 px tall) ---- */
+.top{display:flex;align-items:center;gap:16px;min-height:44px;padding:0 0 12px 88px;border-bottom:2px solid var(--ink)}
+.eyebrow{margin:0;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.eyebrow b{color:var(--wool)}
+.tabs{margin-left:auto;display:flex;gap:8px}
+.tab{min-height:44px;padding:0 16px;border:2px solid var(--ink);border-radius:999px;background:transparent;color:var(--ink);font-weight:800;font-size:14px;display:flex;align-items:center;gap:8px;cursor:pointer;transition:transform .15s var(--spring),background .2s,color .2s}
+.tab span{font-family:var(--display);font-size:18px;line-height:1}
+.tab[aria-selected=true]{background:var(--ink);color:var(--paper)}
+.tab:active,.primary:active,.ghostBtn:active,.smallBtn:active,.roleBtn:active,.swatch:active,.peg:active{transform:scale(.93)}
+.spot:active{transform:translate(-50%,-50%) scale(.93)}
+
+/* ---- the stage ---- */
+.stage{min-height:0;display:grid;gap:16px 32px;padding-top:16px;animation:stageIn .35s ease-out backwards}
+@keyframes stageIn{from{opacity:0;transform:translateY(8px)}}
+.stage[data-stage=numbers]{grid-template-columns:minmax(300px,380px) minmax(0,1fr) minmax(240px,320px);grid-template-areas:"story pitch rail"}
+.stage[data-stage=colours]{grid-template-columns:minmax(320px,420px) minmax(0,1fr);grid-template-areas:"story scan"}
+.story{grid-area:story;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:16px;padding-right:4px;scrollbar-width:thin}
+.title{margin:0;font-family:var(--display);font-weight:400;text-transform:uppercase;font-size:clamp(44px,5vw,76px);line-height:.88;letter-spacing:.005em;text-wrap:balance}
+.lede{margin:0;font-size:16px;line-height:1.45;max-width:36ch;text-wrap:pretty}
+.readout{display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px;align-items:center;padding:12px 0;border-top:1px solid #16181d33;border-bottom:1px solid #16181d33}
+.bigShirt{width:96px;height:96px;animation:swap .35s var(--spring) both}
+.bigShirt svg{display:block;width:100%;height:100%;filter:drop-shadow(3px 4px 0 rgba(22,24,29,.18))}
+.bigShirt:not([data-has]) svg{filter:none}
+@keyframes swap{from{transform:scale(.7) rotate(-8deg);opacity:0}}
+.readText{min-width:0}
+.role{margin:0 0 4px;font-weight:900;font-size:18px;line-height:1.2}
+.note{margin:0;font-size:15px;line-height:1.4;min-height:4.2em;text-wrap:pretty}
+.note[data-tone=hint]{color:#8a2a17}
+.note[data-tone=ok]{color:var(--ok)}
+.clue{margin:0;font-size:15px;line-height:1.45;max-width:36ch}
+.woven{display:flex;flex-direction:column;gap:16px;background:var(--ink);color:var(--paper);padding:16px;border-radius:var(--r);animation:rise .45s var(--spring) both}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}}
+.factCard{min-height:7.5em;animation:fadeSlide .3s ease-out both}
+@keyframes fadeSlide{from{opacity:0;transform:translateX(12px)}}
+.factCard p{margin:0;font-size:15px;line-height:1.45}
+.factTitle{display:flex;justify-content:space-between;gap:8px;margin-bottom:4px!important;font-weight:900;color:var(--gold)}
+.factTitle span{font-weight:700;color:#efe7d699;font-size:13px}
+.woven .ghostBtn{color:var(--paper);border-color:var(--paper)}
+.woven .primary{border-color:var(--paper);box-shadow:3px 3px 0 #000}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.primary,.ghostBtn,.smallBtn{min-height:44px;padding:0 16px;border-radius:999px;font-weight:800;font-size:14px;cursor:pointer;transition:transform .15s var(--spring),background .2s,box-shadow .2s}
+.primary{border:2px solid var(--ink);background:var(--wool);color:#fff;box-shadow:3px 3px 0 var(--ink)}
+.ghostBtn,.smallBtn{border:2px solid var(--ink);background:transparent;color:var(--ink)}
+.smallBtn{padding:0 14px;font-size:13px}
+@media (hover:hover){.ghostBtn:hover,.smallBtn:hover{background:#16181d10}.primary:hover{box-shadow:4px 4px 0 var(--ink)}}
+
+/* ---- the pitch (the loom) ---- */
+.pitchWrap{grid-area:pitch;position:relative;z-index:2;min-height:0;min-width:0;container-type:size;display:grid;place-items:center}
+.pitch{position:relative;width:min(100cqw - 10px,(100cqh - 10px)*68/105);aspect-ratio:68/105;box-shadow:8px 8px 0 var(--ink);border:2px solid var(--ink);touch-action:none;transition:box-shadow .6s ease}
+.pitchSvg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.thread{stroke:var(--gold);stroke-width:.7;stroke-linecap:round;stroke-dasharray:1.4 .9;animation:fadeIn .4s ease both}
+.weave{fill:none;stroke:#fff3c4;stroke-width:.45;stroke-linejoin:round;stroke-dasharray:200;stroke-dashoffset:200;animation:draw 2.6s ease-in-out forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes fadeIn{from{opacity:0}}
+.spot{position:absolute;transform:translate(-50%,-50%);width:max(44px,12%);aspect-ratio:1;padding:0;border:0;background:none;display:grid;place-items:center;color:#fff;cursor:pointer;transition:transform .15s var(--spring)}
+.ring{width:72%;aspect-ratio:1;border-radius:50%;border:2px dashed rgba(255,255,255,.55);background:rgba(0,0,0,.14);transition:border-color .2s,background .2s,transform .3s var(--spring)}
+.pitch[data-holding] .spot[data-ready] .ring{border-color:#fff;background:rgba(255,255,255,.16);transform:scale(1.08)}
+@media (hover:hover){.spot:hover .ring{border-style:solid;border-color:#fff}}
+.spot[data-hint] .ring{border:2px solid var(--gold);background:rgba(242,201,76,.35);animation:pulse .9s ease-in-out 4}
+.spot[data-wrong]{animation:shake .45s ease}
+.spotShirt{width:92%;height:auto;filter:drop-shadow(1px 2px 0 rgba(0,0,0,.35));animation:pop .45s var(--spring) both}
+.burst{position:absolute;inset:6%;border-radius:50%;border:2px solid var(--gold);pointer-events:none;animation:burst .6s ease-out both}
+@keyframes burst{from{transform:scale(.6);opacity:1}to{transform:scale(1.7);opacity:0}}
+.spotLabel{position:absolute;top:88%;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#fff;background:rgba(10,30,20,.55);padding:1px 5px;border-radius:4px;pointer-events:none}
+.spot[data-on] .spotLabel{color:#fff3c4}
+/* when the woven thread reaches each shirt, it hops (staggered along the 1 → 11 order) */
+.pitch[data-done] .spot[data-on] .spotShirt{animation:pop .45s var(--spring) both,cheer .5s ease-out calc(var(--i)*.24s + .1s) both}
+@keyframes cheer{40%{transform:translateY(-14%) scale(1.08)}}
+@keyframes shake{0%,100%{transform:translate(-50%,-50%)}25%{transform:translate(-62%,-50%)}50%{transform:translate(-40%,-50%)}75%{transform:translate(-56%,-50%)}}
+@keyframes pulse{50%{transform:scale(1.18)}}
+@keyframes pop{from{transform:scale(.4) rotate(-10deg);opacity:0}}
+.pitch[data-done]{box-shadow:8px 8px 0 var(--wool)}
+.stamp{position:absolute;left:50%;top:9%;transform:translate(-50%,-50%) rotate(-7deg);display:flex;flex-direction:column;align-items:center;padding:6px 14px 4px;border:3px solid #fff3c4;border-radius:6px;color:#fff3c4;background:rgba(22,24,29,.35);pointer-events:none;animation:stamp .5s var(--spring) 2.6s both}
+.stamp b{font-family:var(--display);font-weight:400;font-size:clamp(20px,6cqh,40px);line-height:1;letter-spacing:.04em}
+.stamp span{font-size:11px;font-weight:800;letter-spacing:.3em}
+@keyframes stamp{from{transform:translate(-50%,-50%) rotate(-7deg) scale(1.8);opacity:0}}
+/* small pitches: the readout names each spot, so the pitch drops its labels */
+@container (max-height:430px){.spotLabel{display:none}}
+
+/* ---- the shirt line ---- */
+.rail{grid-area:rail;min-height:0;display:flex;flex-direction:column;gap:8px;padding:16px;background:var(--card);border:2px solid var(--ink);border-radius:var(--r);box-shadow:5px 5px 0 #16181d22;align-self:center;max-height:100%}
+.railHead{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.railLabel{margin:0;font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:flex;gap:8px;align-items:baseline}
+.railLabel span{font-family:var(--display);font-weight:400;font-size:20px;letter-spacing:0;color:var(--ink)}
+.pips{display:grid;grid-template-columns:repeat(11,1fr);gap:3px}
+.pips i{height:4px;border-radius:2px;background:#16181d1f;transition:background .3s}
+.pips i[data-on]{background:var(--wool)}
+.pips i:first-child[data-on]{background:#1e8c4e}
+.line{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));column-gap:0;row-gap:4px;padding-top:4px}
+.peg{position:relative;height:104px;padding:14px 8px 0;border:0;background:none;touch-action:none;cursor:grab;transition:transform .15s var(--spring),opacity .25s}
+/* the rope: twisted cord, continuous across a row */
+.peg::before{content:'';position:absolute;left:0;right:0;top:7px;height:3px;background:repeating-linear-gradient(90deg,#8a7350 0 3px,#5e4c33 3px 6px);border-radius:2px}
+.clip{position:absolute;top:1px;left:50%;width:8px;height:16px;margin-left:-4px;background:linear-gradient(90deg,#d8b47a,#b48c52);border:1px solid var(--ink);border-radius:2px;z-index:1}
+.pegShirt{display:block;width:100%;max-width:80px;height:auto;margin:0 auto;transform-origin:50% 0;transform:rotate(var(--tilt,0deg));transition:transform .5s var(--spring),opacity .3s,filter .3s;filter:drop-shadow(2px 3px 0 rgba(22,24,29,.15))}
+@media (hover:hover){.peg:not(:disabled):hover .pegShirt{transform:rotate(0deg) translateY(3px)}}
+.peg[aria-pressed=true] .pegShirt{transform:rotate(0deg) translateY(4px) scale(1.06);filter:drop-shadow(0 0 0 var(--gold)) drop-shadow(0 0 5px var(--gold))}
+.peg[data-held] .pegShirt{opacity:.3}
+.peg[data-gone] .pegShirt{opacity:.14;filter:grayscale(1);transform:rotate(0deg) translateY(-6px) scale(.85)}
+.peg:disabled{cursor:default}
+.peg:focus-visible{outline:3px solid var(--gold);outline-offset:-2px;border-radius:6px}
+.ghost{position:fixed;left:0;top:0;width:84px;pointer-events:none;z-index:45;filter:drop-shadow(5px 8px 0 rgba(0,0,0,.28));will-change:transform}
+.ghost svg{display:block;width:100%;height:auto}
+
+/* ---- colours ---- */
+.kitCard{display:flex;flex-direction:column;gap:12px;padding:16px;background:var(--card);border:2px solid var(--ink);border-radius:var(--r);box-shadow:5px 5px 0 #16181d22}
+.cardLabel{margin:0;font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.roles{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.roleBtn{min-height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:6px 2px;border:2px solid transparent;border-radius:var(--r);background:#16181d0c;color:var(--ink);font-size:12px;line-height:1.15;font-weight:800;cursor:pointer;transition:transform .15s var(--spring),border-color .2s,background .2s}
+.roleBtn[aria-checked=true]{border-color:var(--ink);background:#fff}
+.roleShirt{width:34px;height:34px;transition:transform .3s var(--spring)}
+.roleBtn[aria-checked=true] .roleShirt{transform:scale(1.12) translateY(-1px)}
+.palette{display:grid;grid-template-columns:repeat(5,minmax(44px,1fr));gap:8px}
+.swatch{min-height:44px;border:2px solid #16181d55;border-radius:var(--r);cursor:pointer;transition:transform .15s var(--spring),box-shadow .2s}
+.swatch[aria-checked=true]{border-color:var(--ink);box-shadow:inset 0 0 0 3px var(--card),0 0 0 2px var(--ink)}
+.checks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.checks li{display:flex;gap:12px;align-items:flex-start;padding:8px 12px;border-radius:var(--r);background:#1e8c4e1a;border:1px solid #1e8c4e33;transition:background .3s,border-color .3s}
+.checks li[data-ok=false]{background:#d628391f;border-color:#d6283944}
+.tick{display:grid;place-items:center;flex:none;width:24px;height:24px;border-radius:50%;background:var(--ok);color:#fff;font-weight:900;font-size:14px;line-height:1;animation:tickIn .4s var(--spring) both}
+.checks li[data-ok=false] .tick{background:var(--bad)}
+@keyframes tickIn{from{transform:scale(.3) rotate(-30deg);opacity:0}}
+.checks b{display:block;font-size:14px;line-height:1.3}
+.checks b i{display:none;font-style:normal}
+.checks b em{font-style:normal}
+.checks small{display:block;font-size:13px;line-height:1.35;color:var(--muted)}
+.presets{display:grid;grid-template-columns:repeat(3,auto);justify-content:start;gap:8px}
+.scanWrap{grid-area:scan;min-height:0;min-width:0;display:flex;flex-direction:column;gap:12px}
+.scanHead{display:flex;align-items:center;gap:16px}
+.scanHead p{margin:0;font-size:16px;line-height:1.4;flex:1}
+.lawBadge{flex:none;padding:6px 12px;border-radius:999px;font-size:13px;font-weight:900;letter-spacing:.04em;background:var(--ok);color:#fff;animation:badge .4s var(--spring) both}
+.lawBadge[data-ok=false]{background:var(--bad)}
+@keyframes badge{from{transform:scale(.7)}}
+.scanBox{flex:1;min-height:0;container-type:size;display:grid;place-items:start center}
+.scan{position:relative;width:min(100cqw - 10px,(100cqh - 10px)*100/70);aspect-ratio:100/70;border:2px solid var(--ink);box-shadow:8px 8px 0 var(--ink);transition:box-shadow .4s}
+.scan[data-live]{box-shadow:8px 8px 0 var(--wool)}
+.scanSvg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.token{cursor:pointer;outline:none}
+.token:focus-visible circle:first-child{stroke:#fff;stroke-width:.6}
+.flash{animation:fadeIn .15s ease both}
+.flashOk{animation:okRing .6s ease-out both;transform-box:fill-box;transform-origin:center}
+@keyframes okRing{from{transform:scale(.5);opacity:0}40%{opacity:1}to{transform:scale(1.25)}}
+.round{position:absolute;left:8px;right:8px;top:8px;margin:0;display:flex;gap:8px;align-items:center;flex-wrap:wrap;pointer-events:none}
+.round b{flex:none;padding:4px 10px;border-radius:999px;background:var(--wool);color:#fff;font-size:13px;letter-spacing:.04em}
+.round span{padding:4px 10px;border-radius:999px;background:rgba(248,242,228,.94);color:var(--ink);font-size:14px;font-weight:700;line-height:1.3;animation:fadeIn .2s ease both}
+.scanCard{position:absolute;left:50%;top:50%;translate:-50% -50%;width:min(90%,440px);max-height:94%;overflow:auto;background:var(--card);border:2px solid var(--ink);border-radius:var(--r);box-shadow:5px 5px 0 var(--ink);padding:16px;display:flex;flex-direction:column;gap:12px;align-items:flex-start;animation:cardIn .4s var(--spring) both}
+@keyframes cardIn{from{opacity:0;scale:.9}}
+.scanCard p{margin:0;font-size:15px;line-height:1.45}
+.result b{font-family:var(--display);font-weight:400;font-size:44px;line-height:1;color:var(--wool)}
+.compare{padding:8px 12px;border-radius:var(--r);background:#1e8c4e1a;font-weight:700}
+.compare[data-slower]{background:#d628391a}
+.chip{padding:0 6px;border-radius:4px;background:var(--ink)}
+.runs{margin:0;padding:0 0 0 18px;font-size:14px;line-height:1.5}
+.runs li[data-clash=true]{color:var(--bad)}
+
+/* ---- sources ---- */
+.sources{margin-top:auto;font-size:14px;color:var(--muted)}
+.sources summary{min-height:44px;display:flex;align-items:center;cursor:pointer;font-weight:800;letter-spacing:.08em;text-transform:uppercase;font-size:12px}
+.sources ul{margin:0;padding-left:18px;line-height:1.6}
+.sources a{color:var(--ink);-webkit-user-select:text;user-select:text}
+.sources p{margin:8px 0 0}
+
+/* ---- tablets and narrow laptops ---- */
+@media (max-width:1100px) and (min-aspect-ratio:4/5){
+ .stage[data-stage=numbers]{grid-template-columns:minmax(260px,320px) minmax(0,1fr) minmax(200px,250px);gap:16px 24px}
+ .peg{height:88px}
+}
+
+/* ---- phones and touch tablets: Back moves to 16/16 (92 × 60) ---- */
+@media (max-width:600px),(pointer:coarse){
+ .root{--pad-t:max(16px,env(safe-area-inset-top));--pad-x:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
+ .top{padding-left:88px}
+}
+
+/* ---- portrait (phones, iPad portrait) ---- */
+@media (max-aspect-ratio:4/5){
+ .eyebrow{display:none}
+ .top{padding-bottom:12px}
+ .stage{gap:12px;padding-top:12px}
+ .title{font-size:clamp(30px,8.6vw,56px);line-height:.9}
+ .lede{font-size:15px}
+ /* numbers: title + readout, the pitch, the shirt line */
+ .stage[data-stage=numbers]{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"story" "pitch" "rail"}
+ .stage[data-stage=numbers] .story{overflow:visible;gap:8px}
+ .stage[data-stage=numbers] .title br{display:none}
+ .stage[data-stage=numbers] .lede,.stage[data-stage=numbers] .clue,.stage[data-stage=numbers] .sources{display:none}
+ .stage[data-stage=numbers][data-done] .sources{display:block;margin-top:0}
+ .stage[data-done] .rail{display:none}
+ .readout{padding:8px 0;gap:12px}
+ .bigShirt{width:56px;height:56px}
+ .role{font-size:16px;margin-bottom:2px}
+ .note{font-size:14px;min-height:2.8em}
+ .woven{padding:12px 16px;gap:12px}
+ .factCard{min-height:0}
+ .factCard p{font-size:14px}
+ .pitch{box-shadow:5px 5px 0 var(--ink)}
+ .pitch[data-done]{box-shadow:5px 5px 0 var(--wool)}
+ .rail{padding:8px 12px 4px;gap:4px;align-self:stretch;box-shadow:none}
+ .pips{display:none}
+ .line{grid-template-columns:repeat(6,minmax(0,1fr));row-gap:0;padding-top:0}
+ .peg{height:62px;padding:12px 2px 0}
+ .pegShirt{max-width:46px}
+ /* colours: title, the scan pitch, then the kit designer, compact checks and presets; the stage scrolls only if it must */
+ .stage[data-stage=colours]{display:flex;flex-direction:column;overflow:auto;gap:12px;margin:0 -4px;padding:12px 4px 8px}
+ .stage[data-stage=colours] .story{display:contents}
+ .stage[data-stage=colours] .title{order:1}
+ .stage[data-stage=colours] .lede{order:2}
+ .stage[data-stage=colours] .scanWrap{order:3;flex:none}
+ .stage[data-stage=colours] .kitCard,.stage[data-stage=colours] .checks,.stage[data-stage=colours] .presets,.stage[data-stage=colours] .sources{order:4}
+ .scanHead p{font-size:14px}
+ .scanBox{flex:none;height:auto}
+ .scanBox{container-type:inline-size}
+ .scan{width:calc(100% - 6px);box-shadow:5px 5px 0 var(--ink)}
+ .scan[data-live]{box-shadow:5px 5px 0 var(--wool)}
+ .scanCard{padding:12px;gap:8px;width:min(92%,440px)}
+ .scanCard p{font-size:14px}
+ .result b{font-size:34px}
+ .kitCard{padding:12px;gap:8px;box-shadow:none}
+ .cardLabel{display:none}
+ .roleBtn{min-height:56px;font-size:11px}
+ .roleShirt{width:28px;height:28px}
+ /* checks collapse to three chips; a failing check opens to say why */
+ .checks{flex-direction:row;flex-wrap:wrap;gap:8px}
+ .checks li{flex:1 1 0;min-width:0;padding:8px;align-items:center;gap:8px}
+ .checks li[data-ok=false]{flex-basis:100%;align-items:flex-start}
+ .checks b i{display:inline}
+ .checks b em{display:none}
+ .checks li[data-ok=false] b em{display:inline}
+ .checks li[data-ok=false] b i{display:none}
+ .checks small{display:none}
+ .checks li[data-ok=false] small{display:block}
+ .tick{width:22px;height:22px;font-size:13px}
+ .presets{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .presets .ghostBtn{padding:0 8px;font-size:13px}
+ .sources{margin-top:0}
+}
+
+/* ---- phone landscape ---- */
+@media (max-height:520px) and (min-aspect-ratio:4/5){
+ .top{padding-bottom:8px}
+ .stage{gap:8px 16px;padding-top:8px}
+ .stage[data-stage=numbers]{grid-template-columns:minmax(0,1fr) auto minmax(176px,220px)}
+ .stage[data-stage=numbers] .pitchWrap{width:calc((100svh - 92px)*68/105 + 10px)}
+ .stage[data-stage=numbers] .lede{display:none}
+ .stage[data-stage=colours]{grid-template-columns:minmax(0,1fr) minmax(0,1.2fr)}
+ .story{gap:8px}
+ .title{font-size:32px}
+ .lede{font-size:14px}
+ .readout{padding:4px 0;gap:12px}
+ .bigShirt{width:56px;height:56px}
+ .role{font-size:15px}
+ .note{font-size:14px;min-height:0}
+ .clue{font-size:14px}
+ .factCard{min-height:0}
+ .rail{padding:8px;gap:4px;box-shadow:none;align-self:stretch;overflow:hidden}
+ .pips{display:none}
+ .line{row-gap:0;padding-top:0}
+ .peg{height:62px;padding:12px 2px 0}
+ .pegShirt{max-width:44px}
+ .pitch{box-shadow:5px 5px 0 var(--ink)}
+ .pitch[data-done]{box-shadow:5px 5px 0 var(--wool)}
+ .scan{box-shadow:5px 5px 0 var(--ink)}
+ .scanHead p{font-size:14px}
+ .lawBadge{font-size:12px;padding:4px 10px}
+ .kitCard{padding:8px;gap:8px;box-shadow:none}
+ .cardLabel{display:none}
+ .roleBtn{min-height:52px;font-size:11px}
+ .roleShirt{width:26px;height:26px}
+ .checks li{padding:6px 10px}
+ .scanCard{padding:10px 12px;gap:8px}
+ .scanCard p{font-size:14px}
+ .result b{font-size:28px}
+}
+
+@media (prefers-reduced-motion:reduce){
+ .root *,.root *::before,.root *::after{animation:none!important;transition:none!important}
+ .weave{stroke-dashoffset:0}
+}
+
+/* ---- added: colour-gap meter, grey view ---- */
+.meter{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:8px 12px;font-size:13px;font-weight:800}
+.meterLabel{color:var(--muted);letter-spacing:.04em}
+.meterBar{position:relative;height:10px;border-radius:5px;background:#16181d14;overflow:hidden}
+.meterBar i{position:absolute;inset:0;transform-origin:0 50%;background:linear-gradient(90deg,#d62839,#e9a21b 40%,#1e8c4e 70%);transition:transform .5s var(--spring)}
+.meterBar b{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:var(--ink)}
+.meterValue{min-width:4.6em;text-align:right;color:var(--ok)}
+.meter[data-clash] .meterValue{color:var(--bad)}
+.greyBtn{flex:none;min-height:44px;padding:0 14px;display:flex;align-items:center;gap:8px;border:2px solid var(--ink);border-radius:999px;background:transparent;color:var(--ink);font-weight:800;font-size:13px;cursor:pointer;transition:transform .15s var(--spring),background .2s,color .2s}
+.greyBtn span{width:14px;height:14px;border-radius:50%;background:conic-gradient(#d62839 0 25%,#f5cf2a 0 50%,#1e8c4e 0 75%,#2f56c4 0);border:1px solid var(--ink);transition:filter .3s}
+.greyBtn[aria-pressed=true]{background:var(--ink);color:var(--paper)}
+.greyBtn[aria-pressed=true] span{filter:grayscale(1)}
+.greyBtn:active{transform:scale(.93)}
+.scanSvg{transition:filter .5s ease}
+.scan[data-grey] .scanSvg{filter:grayscale(1) contrast(1.05)}
+.greyNote{position:absolute;left:8px;bottom:8px;margin:0;padding:4px 10px;border-radius:999px;background:rgba(22,24,29,.85);color:#fff;font-size:13px;font-weight:700;pointer-events:none;animation:fadeIn .25s ease both}
+@media (max-aspect-ratio:4/5),(max-height:520px){.meter{font-size:12px}.greyBtn{padding:0 12px}}
+.railHead .smallBtn{white-space:nowrap}
+.railLabel{white-space:nowrap}
+.spot[data-on] .spotLabel{top:96%}
+.cardTip{display:none}
+@media (max-aspect-ratio:4/5){
+ .stage[data-stage=numbers][data-done] .sources{display:none}
+ .stage[data-stage=colours] .title{font-size:clamp(26px,7.4vw,48px)}
+ .headTip{display:none}
+ .cardTip{display:inline}
+ .scanHead{gap:8px}
+}
+.pitch[data-done] .thread{animation-delay:.7s}
+@media (max-aspect-ratio:4/5){.cardLong{display:none}}
+/* phone landscape: a 4-wide shirt line, the button under its label; the scan tip moves into the card */
+@media (max-height:520px) and (min-aspect-ratio:4/5){
+ .railHead{flex-wrap:wrap}
+ .railHead .smallBtn{flex:1 1 100%}
+ .line{grid-template-columns:repeat(4,minmax(0,1fr))}
+ .peg{height:56px;padding:12px 1px 0}
+ .pegShirt{max-width:40px}
+ .headTip{display:none}
+ .cardTip{display:inline}
+ .cardLong{display:none}
+}
+/* iPad portrait: room for bigger shirts and the lede */
+@media (max-aspect-ratio:4/5) and (min-width:700px){
+ .stage[data-stage=numbers] .lede{display:block;max-width:60ch}
+ .bigShirt{width:80px;height:80px}
+ .role{font-size:18px}
+ .note{font-size:16px}
+ .rail{padding:12px 16px 8px}
+ .peg{height:92px;padding:14px 4px 0}
+ .pegShirt{max-width:72px}
+}
+/* colours: passing checks say it in one line; only a failing check explains itself */
+.checks li[data-ok=true] small{display:none}
+.checks li[data-ok=true]{align-items:center}
+.stage[data-stage=colours] .title{font-size:clamp(40px,4.4vw,64px)}
+.stage[data-stage=colours] .story{gap:12px}
+.stamp b{white-space:nowrap}
+@media (max-aspect-ratio:4/5){
+ .stage[data-stage=numbers][data-done] .readout{display:none}
+ .stage[data-stage=colours] .title{font-size:clamp(26px,7.4vw,48px)}
+}
+@media (max-aspect-ratio:4/5) and (min-width:700px){
+ .scan{width:min(calc(100% - 6px),40svh*100/70)}
+ .scanBox{justify-items:center}
+}
+@media (max-height:520px) and (min-aspect-ratio:4/5){.stage[data-stage=colours] .title{font-size:32px}}
+.presets{grid-template-columns:auto repeat(3,auto);align-items:center;justify-content:center}
+.tryLabel{font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-right:4px}
+@media (max-aspect-ratio:4/5){
+ .presets{grid-template-columns:repeat(3,minmax(0,1fr));justify-content:stretch;margin-top:4px}
+ .tryLabel{display:none}
+}
+@media (max-height:520px) and (min-aspect-ratio:4/5){.tryLabel{display:none}.presets .ghostBtn{padding:0 12px;font-size:13px}}
+/* phone landscape: the scan pitch gets the height; Grey and the Law 4 badge sit on its top-right corner */
+@media (max-height:520px) and (min-aspect-ratio:4/5){
+ .scanWrap{position:relative;gap:8px}
+ .scanHead{position:absolute;top:8px;right:18px;z-index:3;gap:8px}
+ .scanHead p{display:none}
+ .scanBox{place-items:start end}
+ .greyBtn{background:var(--card)}
+ .round{right:180px}
+ .scanCard{width:min(94%,440px)}
+}
+.allHung{min-height:44px;display:flex;align-items:center;font-size:13px;font-weight:800;color:var(--ok);white-space:nowrap;animation:fadeIn .4s ease both}
+@media (max-height:520px) and (min-aspect-ratio:4/5){
+ .stage[data-stage=numbers][data-done] .readout{display:none}
+ .scanCard{translate:-50% -44%}
+ .round span{font-size:14px}
+}

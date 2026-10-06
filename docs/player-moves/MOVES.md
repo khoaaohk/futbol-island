@@ -231,3 +231,72 @@ Futsal matches use the whole library, behind `comboSettings.futsalCreative` (on 
 - **Keepers (view).** Futsal keepers roll it out or throw it overarm (futsal Law 16: goal clearances are thrown), never punt.
 - **Celebrations** as for every format.
 - **Teaching feed.** Every take-on and shot style has a line (why a toe poke, why the sole under pressure, why the curl). Lines are spaced: take-on lines at most one per team every 7 s, shot lines at most one every 6 s.
+
+## G. Freestyle tricks for the island's freestylers (Oct 4 2026)
+
+User brief: "Add more moves for the characters … in the main square area next to the Konbini they do tricks. Have them do more types of tricks, like sitting on the ground juggling, and more different types of tricks."
+
+**Where:**
+- The four freestylers on the pocket futsal court beside the Konbini: Teo, Zuri, Kei and Iza.
+- Lua and Tavi on Coral Cay.
+- Ollie on the East Pier.
+
+Each freestyler plays a seeded routine of about 2.5–3 minutes made of named tricks, idle "scanning" beats (shoulder checks) and, on the court, **pair tricks**. The pairs are Teo with Kei and Zuri with Iza, who stand about 5 m apart. Every trick ends where the next one starts, so the routine loops with no visible repeat.
+
+**Sources:**
+- WFFA (World Freestyle Football Association) judging criteria: "All-Round" covers Uppers, Lowers, Sitdowns, Transitions, Acrobatics and Ground Moves.
+- Wikipedia, "Freestyle football": the five styles, plus around the world, crossover, hop the world and neck stall.
+- Red Bull, "Freestyle football tricks for beginners": the neck stall, and "sit downs" as tricks done sitting or lying down.
+- The FA, England DNA Foundation Phase ("love the ball"): ball mastery means toe taps, sole rolls, inside–outside touches and juggling.
+
+| Trick (id) | Group | Football purpose (shown in the lab and in the "What tricks are you practising?" topic) |
+|---|---|---|
+| Keep-ups (`keepUps`) | lower | Soft touches with a firm ankle: the base of every good first touch. |
+| Toe stall (`toeStall`) | lower | Stop the ball dead on your foot: the perfect first touch. |
+| Instep catch (`instepCatch`) | lower | Give with the foot to cushion a dropping ball. |
+| Around the world (`aroundWorld`) | lower | Fast feet that circle the ball and come back underneath: footwork for close control. |
+| Inside around the world (`aroundWorldIn`) | lower | Circling the other way trains balance and footwork on both sides of the ball. |
+| Crossover (`crossover`) | lower | The other leg goes around the ball: balance and coordination on one foot. |
+| Heel flick-up (`heelFlick`) | lower | Lift a ball off the ground without your hands, even from behind you. |
+| Thigh juggles (`kneeJuggles`) | lower | Cushion a bouncing pass with the flat top of the thigh. |
+| Thigh–foot combo (`thighFoot`) | lower | Choose the surface that fits the ball's height. |
+| Head juggles (`headJuggles`) | upper | Meet the ball with your forehead, eyes open and knees soft. |
+| Head stall (`headStall`) | upper | Find the middle of the ball: the same skill that makes headers accurate. |
+| Chest juggles (`chestJuggles`) | upper | Lean back and cushion a high ball on your chest. |
+| Neck stall (`neckStall`) | upper | Keep your eyes on the ball and stay soft as it lands on you. |
+| Shoulder roll (`shoulderRoll`) | upper | Move your body under the ball to keep it balanced. |
+| Sitting juggles (`sitJuggle`) | sit-down | Tiny touches with a soft ankle: the same cushion that settles a pass. |
+| Sit-down instep catch (`sitCatch`) | sit-down | Cushion a dropping ball so it stops dead on your foot. |
+| Lying-down juggles (`lieJuggle`) | sit-down | Both feet can control the ball, even from the ground. |
+| Sit-up transition (`sitToStand`) | sit-down | Keep control while you get back up, like recovering after a fall. |
+| Sole rolls (`soleRolls`) | ground | Roll the ball with your sole to keep it close and shielded. |
+| Toe taps (`toeTaps`) | ground | Quick, light feet: stay on your toes, ready to move. |
+| Inside–outside touches (`insideOutside`) | ground | Change direction with the ball glued to your foot. |
+| Keep-up passes (`pairVolley`) | pair | Control a lofted pass, then pass it back in two touches. |
+| Header rally (`pairHeader`) | pair | Head with your forehead, eyes open, aiming at your partner. |
+| Pass and flick-up (`pairGround`) | pair | Pass along the ground with the inside of the foot; your partner receives it softly. |
+
+**How it works:**
+- `lib/graphics/freestyleTricks.ts` holds the data and the maths. Each trick is a list of beats; a beat is a contact plus an optional hold.
+  - **Posture contacts** (laces, thigh, chest, neck, head) put the body part in a fixed posture; the ball sits on it.
+  - **Ball contacts** (sole, inside, outside, heel, flick) put the ball at an authored spot; the boot is placed on it.
+  - Stances: stand, low, head, lean, bow, sit and lie.
+- `lib/graphics/freestyleRoutine.ts` builds the seeded routines and the shared pair timelines.
+- `lib/graphics/courtFreestyle.ts` is the runtime per NPC: the same single ball mesh as before.
+- `lib/graphics/trickPose.ts` and `PlayerMotion.trick` are an **optional** rig pose. The rig applies pelvis, torso, head, both legs and both arms over its finished solve.
+  - Both legs use the same analytic two-bone solve the trick maths uses, so boot and ball meet by construction.
+  - The ground guard runs only for sit, lie and bow poses.
+  - With `trick` absent the rig is unchanged.
+
+**Where it shows:**
+- The NPC name tag shows the live trick name. Each court freestyler has a "What tricks are you practising?" topic listing its tricks and their purposes.
+- `/skill-lab?skill=<id>` (for example `sitJuggle`, `neckStall`, `pairVolley`) previews every trick. Pair tricks show the partner.
+
+**Tests:** `tests/freestyle-tricks.cjs` (in `npm test`) checks every trick on both feet:
+- the ball path is continuous and above the floor, and starts and ends on the sole;
+- every contact meets the ball on the solved bean townsperson rig (gap within ±5 cm);
+- the ball never sinks into the body capsules by more than 7 cm;
+- the ground guard lifts the pose by less than 2 cm;
+- the routines tile with no gaps and loop;
+- the pair windows align on both partners;
+- the partner fallback, reduced motion and determinism on the shared clock all hold.

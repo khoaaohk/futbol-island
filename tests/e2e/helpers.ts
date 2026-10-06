@@ -1,4 +1,20 @@
 import { expect, type Locator, type Page, type TestInfo } from '@playwright/test';
+import formatPathsData from '../../lib/paths/formatPaths.json';
+
+/**
+ * Storage for a save whose starter paths in `formats` are finished and graduated (ceremony already seen). Since Oct 4 2026 (clear
+ * path) a pitch card starts or continues that pitch's Paths lesson; on a finished path it opens the free live Plays viewer, which
+ * the live-match tests watch.
+ */
+export function finishedPathsStorage(formats: string[]): Record<string, string> {
+  const answers = (formatPathsData as { format: string; chapters: { lessons: { id: string; questions: number }[] }[] }[])
+    .filter(p => formats.includes(p.format))
+    .flatMap(p => p.chapters.flatMap(c => c.lessons).flatMap(l => Array.from({ length: l.questions }, (_, i) => `${p.format}:${l.id}:${i}`)));
+  return {
+    'futbol-island-quiz-progress-v1': JSON.stringify(answers), 'futbol-island-quiz-growth-v1': '1',
+    'fi2-graduations-v1': JSON.stringify({ version: 1, formats: Object.fromEntries(formats.map(f => [f, { at: 1, seen: true }])), finale: null }),
+  };
+}
 
 /* Shared helpers for the device suite (docs/testing-devices.md). */
 

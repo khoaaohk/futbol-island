@@ -115,3 +115,98 @@ The actual island-rig integration passes desktop and mobile `check-breakaway-bro
 Review also caught shot power being lost when input charge reset on release; the root adapter now retains release power during follow-through and resets virtual/action state on retry. The root adapter disposes the island rigs before generic scene resources. Ordinary-play navigation initially timed out before entering gameplay during concurrent recompilation; the run was retried after compilation.
 
 The retried ordinary touch run passes with the actual island characters: **647.70 metres, twelve lane changes, three precision goals, 13,175 points and all three chances**; 115 committed-defender samples and .8 metres maximum lateral travel. Reviewed `/tmp/breakaway-play-mobile-20.png` for running/dribbling and the approaching island-rig defender. All Runner browser processes exited successfully before the root continued the remaining games' serial verification.
+
+## Feel pass, October 4 2026 (A2)
+
+What the player feels:
+- **Music and crowd.** There's now a synthesized soundtrack. Tempo follows running pace (about 100 to 128 BPM), and layers grow by stage: pluck from stage 2, clap from stage 3.
+  - A crowd murmur builds through goal approaches and roars on a goal. It gives an "ooh" on a save, plus a whistle and an "aww" at full time.
+  - Cuts get a swish, jumps and slides have their own cues, and collecting plays a rising note while touches stay clean.
+- **Beat the tackle.** If you stand in a committed tackle's path late and then cut away clean, you get "Beat the tackle! +25". Chained escapes earn kind streak copy, a whoosh, a speed-line flash and 0.1 s of slow-mo.
+- **Telegraphs.** Every reading defender gets a role-coloured read arc that fills during its read. A ground strip shows exactly where and how far the committed tackle reaches.
+- **Green presser (stage 3+).** It reads you, then sprints out of its line to close you down before a poke. It stays inside its lane band, and its warning still runs ≥1 s at maximum boosted speed.
+- **Fairness.** A link ball now sits just past every gap, so a greedy ball-follower is never lured into an early cut. The simulation verifies zero hits at stages 1–6. Link balls reload but don't build the power-run meter.
+- **Timing.**
+  - Slide in the air fast-falls into the buffered slide.
+  - Pace now ramps smoothly with distance instead of stepping at each stage.
+  - Losing a chance eases the pace for about 1.6 s.
+- **Fail moment.** The last chance triggers a 1.35 s full-time beat: hit-stop, shake, a stumble into a dejected stop, the world coasting to a halt and a whistle. Only then does the result card appear.
+- **Juice.**
+  - Plant dust on cuts, landings, slides and hits.
+  - Goal confetti.
+  - A camera that gently follows your lane, with FOV that widens with speed and boost.
+  - Sparing shake on hits and blasts.
+  - Hit-stop on tackles and goals.
+- **Scenery.** Recycled crowd stands change density and colours by district: empty on the Boardwalk, terraces in Old Town, full stands at Club Grounds. They always fill for a goal approach, and the crowd bobs harder as a goal nears.
+
+Files:
+- `lib/arcade/runnerGame.ts` (engine)
+- `lib/arcade/runnerFx.ts` (new)
+- `components/games/runnerAudio.ts` (`createRunnerSoundtrack`)
+- small runner-only hooks in `lib/arcade/arcadeGames.ts`
+- one audio-context argument in `ArcadeGame3D.tsx`
+
+Tests:
+- `tests/runner-feel.mjs` (wrapped by `tests/runner-feel.cjs`, which is in `npm test`)
+- the existing runner suites
+- `scripts/check-breakaway-browser.cjs` in desktop, mobile, mobile reduced-motion and returns modes
+
+Note: `components/games/BreakawayRun.tsx`, `runnerRig.ts` and `runnerScenery.ts` are the older Babylon build. Nothing mounts them.
+
+## Round 2 depth pass, October 4 2026 (G2)
+
+**Decision:** the user chose power-run option (b). It takes 8 clean touches and gives a 3 s burst plus the power shot. It rides exactly one tackle; it is no longer full invincibility.
+
+**New this round** (each one is a real football decision):
+- **Skill moves.** The Skill button (E) names the counter for the defender ahead:
+
+  | Defender | Skill move |
+  |---|---|
+  | jockey | step-over |
+  | presser | roulette |
+  | low tackler | drag-back |
+  | sweeper | rainbow flick |
+  | gold wall | nutmeg |
+  | pink pair | croqueta |
+  | back line | body feint |
+
+  - A move counts inside a timed window (perfect band +40). Pressing too early fails visibly.
+  - The rig plays the real move from `skillMoves.ts`.
+- **Closer (stage 3+).** A defender steps into the trail lane after a read. Its strip previews where it will step, and there is no link ball, so you have to read it.
+- **The trail fades** from stage 4.
+- **Pink pair (stage 5+).** Two defenders squeeze the gap between them.
+- **Puddles.** Jump to lift the ball over.
+- **Teammate one-two.** It takes the next defender out and gives a burst of pace.
+- **Keeper goals (stage 2+).**
+  - A set keeper sways; shoot the other side. Placed and power shots need different gaps.
+  - A rushing keeper must be chipped or rounded.
+  - The wing route ends in a cross, which you volley in.
+- **Route fork.** Wing (safer, cross) or middle (busy, goals ×2).
+- **Back-line boss.** From stage 2, before every second goal. The first one in a run is a single line. It shifts as a unit and holds its shape inside 18 m, and it costs at most one chance.
+- **Missions.** There are 18 missions in 6 sets of 3 (`lib/arcade/runnerMissions.ts`).
+  - Completing a set unlocks a ball with a true story.
+  - The cards show the missions and a 6-stamp mission path.
+  - Storage is written only on completion.
+- **Pacing.**
+  - The pace climbs gently to 20 m/s after 18 m/s.
+  - Spacing between lines tightens with the stage.
+  - Two-line patterns are spread out between single lines.
+  - After a lost chance, the next encounter is simple.
+  - Landscape phones get a closer camera.
+
+**Simulation** (`scratchpad/arcade-loop/breakaway/sim2.mjs`, 60 runs):
+
+| | Before | After |
+|---|---|---|
+| A bot that only follows the balls | Never lost (4 min+) | Median 106 s |
+| Kid-like bot | Median past 4 min | Median 151 s; hits/min by stage 0.19, 0.43, 1.47, 1.07, 1.86, 1.39 |
+
+**Files:**
+- `lib/arcade/runnerGame.ts`, `runnerFx.ts`, `runnerHud.ts` (new), `runnerMissions.ts` (new)
+- `components/games/RunnerMissionCard.tsx` (+ css, new), `runnerAudio.ts`
+- Runner-only hooks in `arcadeGames.ts`
+- The Skill button and the mission card in `ArcadeGame3D.tsx` (+ css)
+
+**Tests:**
+- `tests/runner-moves.mjs` (new; runs inside `tests/runner-feel.cjs`)
+- `tests/runner-depth.mjs`, `tests/runner-feel.mjs` and `scripts/check-arcade-runner.mjs`, updated for the fading trail, the 8-touch shield and the reading requirement from stage 2

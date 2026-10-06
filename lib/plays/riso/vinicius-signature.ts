@@ -64,6 +64,7 @@
  * the recorded word onsets), poses on twos, cameras on ones; all randomness seeded. Heat: small figures print at 'low', at most 4 non-hero
  * figures at full detail, every figure inside a passage is capped; ≈ 150–330 plate ops a frame. */
 import {withTiming,type NarrationTiming} from './timing';
+import {beats,shotAt as dShotAt,reframe,steady,focalOf,fovOf,near,type Beats,type Subject,type View as DView} from './director';
 import type {Sheet} from '../../paths/riso/sheet';
 import {type RisoStory,type Scene,type Chapter,playChapters} from '../../paths/riso/story';
 import {apertureDisc} from '../../paths/riso/passage';
@@ -120,7 +121,9 @@ const nrm2=(x:number,z:number):[number,number]=>{const l=Math.hypot(x,z)||1;retu
 /** a narrower (square) window gets a slightly wider lens so the action still fits; set by frame(), read by every camera (also aperture()) */
 let LENS=1;
 /** Frame the FULL sheet: world (0,0) on the canvas centre at 1 unit per sheet unit (the passage arrival scale still multiplies in). */
-function frame(s:Sheet){const S=s.arrival;s.camera((s.cx-s.W/2)/S,(s.cy-s.H/2)/S,1/s.fit,0);LENS=Math.pow(Math.min(1,s.W/1620),.6);}
+function frame(s:Sheet){const S=s.arrival;s.camera((s.cx-s.W/2)/S,(s.cy-s.H/2)/S,1/s.fit,0);LENS=Math.pow(Math.min(1,s.W/1620),.6);DV={w:s.W,h:s.H};}
+/** the window in camera units, for the director (set by frame()) */
+let DV:DView={w:1566,h:1080};
 /** half the visible extents with margin for the .68 passage preview */
 const view=(s:Sheet)=>({hx:s.W/(2*.68)+120,hy:s.H/(2*.68)+120});
 
@@ -415,6 +418,12 @@ const blendShot=(a:Shot,b:Shot,u:number):Shot=>u<=0?a:u>=1?b:{P:mix3(a.P,b.P,u),
 /** steps: [start, duration, shot]; each step eases in over the previous result */
 function plan(t:number,steps:[number,number,(t:number)=>Shot][]):Cam{let cur=steps[0][2](t);for(let i=1;i<steps.length;i++){const[a,d,f]=steps[i];const u=sm(a,a+Math.max(.01,d),t,easeInOutSine);if(u>0)cur=blendShot(cur,f(t),u);}return cam3(cur.P,cur.T,cur.fov);}
 const gnd=(P:V3,y=0):V3=>[P[0],y,P[2]];
+/** plan() through the shared director (lib/plays/riso/director.ts): the authored Shot moved toward the beat's framing, averaged over
+ * ±.6 s (steady, 7 samples) so a keep point arriving never pops the frame */
+function planD(t:number,steps:[number,number,(t:number)=>Shot][],B:Beats,subj:(t:number)=>Subject):Cam{
+ const one=(u:number)=>{let cur=steps[0][2](u);for(let i=1;i<steps.length;i++){const[a,d,f]=steps[i];const w=sm(a,a+Math.max(.01,d),u,easeInOutSine);if(w>0)cur=blendShot(cur,f(u),w);}
+  return reframe({eye:cur.P,target:cur.T,F:focalOf(cur.fov,1080*LENS)},subj(u),dShotAt(u,B),DV,{recenter:.5});};
+ const r=steady(t,one,.6,7);return cam3(r.eye,r.target,fovOf(r.F,1080*LENS));}
 const at=(k:number,tau:number,y=1):V3=>{const[x,z]=posOf(k,tau);return[x,y,z];};
 /** a projected arrow (shaft + head) along 3D points, in one ink */
 function arrow3(s:Sheet,c:Cam,pts:V3[],w:number,ink:string,cov=1){
@@ -446,16 +455,28 @@ function burstLines(s:Sheet,c:Cam,tau:number,a:number,seed=3){
 /** τ from chapter time: real time, anchored so the finish lands on "away" (the steal then falls inside "Bellingham steals it, Vinícius") */
 function tau1(t:number){const tF=CUE(0,'away')+.1;return Math.max(T_EARLY+.2,t-(tF-TS));}
 const P1:V3=[-26,23,-70];
+/** Director beats: a short establishing wide of Wembley, then follow the play; pull out as the Dortmund pass goes astray (the passer,
+ * the ball and Bellingham reading it in one frame), push in on Bellingham's steal, pull out for his roll into Vinícius's path (the
+ * space he runs into), follow the change of gear, low and tight on the finish across the keeper, then the celebration. The followed
+ * player blends ball → Bellingham → Vinícius (no jumps). */
+const B1=beats([[0,'wide'],[1,'follow'],[CUE(0,'Dortmund pass')-.5,{from:'space',size:.26}],[CUE(0,'Bellingham steals')-.4,{from:'tight',size:.45,low:.3}],
+ [CUE(0,'Vinícius Júnior')-.3,{from:'space',size:.28}],[CUE(0,'away')-.6,'follow'],[CUE(0,'away')-.2,'tight'],[CUE(0,'two')+.3,'reaction']]);
+function subj1(tau:number):Subject{const b=ballAt(tau),u1=sm(TI-.6,TI,tau,easeInOutSine),u2=sm(TB,TT,tau,easeInOutSine),
+  h=mix3(mix3(gnd(b),gnd(at(BEL,tau)),u1),gnd(at(VIN,tau)),u2),roll=sm(TB-1.2,TB,tau,easeInOutSine)*(1-sm(TT,TT+.9,tau,easeInOutSine)),
+  shot=sm(TT-.4,TS,tau,easeInOutSine)*(1-sm(TG+.4,TG+1.2,tau,easeInOutSine)),
+  read=sm(TM-1,TM,tau,easeInOutSine)*(1-sm(TI,TI+.8,tau,easeInOutSine));// Bellingham reading the stray pass: in frame before he steals it
+ return{hero:h,ball:b,keep:[{P:gnd(at(BEL,tau)),w:read*.98},{P:at(BEL,tau,1.8),w:read*.98},{P:gnd(at(VIN,tau)),w:roll},{P:at(VIN,tau,1.8),w:roll},{P:gnd(at(BEL,tau)),w:roll},{P:at(GK,tau,1.8),w:shot},{P:gnd(at(GK,tau)),w:shot},
+  ...near(h,[gnd(at(MAA,tau)),gnd(at(RYE,tau)),gnd(at(HUM,tau))],3.5,7)]};}
 function cam1(t:number):Cam{
  const tau=tau1(t),b=ballAt(tau),v=at(VIN,tau,1);
- return plan(t,[
+ return planD(t,[
   [0,0,()=>({P:P1,T:[-22,9,18],fov:36})],
   [CUE(0,'Real Madrid lead')-.3,1.4,()=>({P:P1,T:[-17,1,1],fov:17})],
   [CUE(0,'Dortmund pass')-.9,1.2,()=>({P:P1,T:mix3(add3(gnd(b),[0,1,0]),[-17,1,-3],.35),fov:8.5})],
   [CUE(0,'Bellingham')-.3,.9,()=>({P:P1,T:mix3(add3(gnd(b),[0,1,0]),v,.45),fov:7.2})],
   [CUE(0,'Vinícius')-.4,1,()=>({P:P1,T:mix3(mix3(add3(gnd(b),[0,1,0]),v,.5),[-3,1,-1],.4*sm(TT,TS+.2,tau)),fov:lerp(6.9,8.6,sm(TT,TS+.2,tau))})],
   [CUE(0,'two')+.1,1.4,()=>({P:P1,T:mix3(at(VIN,tau,1.1),[-6,1,-6],.2),fov:6.6})],
- ]);
+ ],B1,u=>subj1(tau1(u)));
 }
 const ch1:Scene={
  draw(s,t){
@@ -470,16 +491,19 @@ const ch1:Scene={
 
 // ---------------------------------------------------------------- 2 · the slow-motion replay: low behind Vinícius on the left, tracking
 const tau2=(t:number)=>key(t,mono([[0,-2.4],[CUE(1,'rolls it'),TB-.05],[CUE(1,"Vinícius's path"),-.8],[CUE(1,'change gear'),-.62],[CUE(1,'one quick touch'),TT-.03],[CUE(1,"he's clear"),TS-.08],[SECS(1)-.2,TS+.18]]),linear);
+/** Replay: open close on Bellingham's steal (instead of the far wide), then the authored shots: the roll into Vinícius's path with both
+ * in frame, and the low tracking shot (already close) for the change of gear. */
+const B2=beats([[0,'follow'],[CUE(1,'rolls it')-1.2,{from:'wide',dur:2}]]);
 function cam2(t:number):Cam{
  const tau=tau2(t),v=at(VIN,tau,1.1),b=ballAt(tau),follow=(off:V3):V3=>add3([v[0],0,v[2]],off);
- return plan(t,[
+ return planD(t,[
   [0,0,()=>({P:[-40,4.6,-5],T:[-20,.6,-3.5],fov:34})],
   [CUE(1,'rolls it')-.3,.9,()=>({P:[-37,4,-5],T:mix3(add3(gnd(b),[0,.6,0]),v,.45),fov:26})],
   [CUE(1,"Vinícius's path")-.2,1,()=>({P:follow([-9,2.8,1.4]),T:mix3(v,add3(gnd(b),[0,.5,0]),.4),fov:23})],
   [CUE(1,'change gear')-.2,.8,()=>({P:follow([-8,2.5,1.6]),T:add3(v,[1.4,-.2,0]),fov:19})],
   [CUE(1,'one quick touch')-.2,.7,()=>({P:follow([-6.8,2.2,1.6]),T:mix3(add3(gnd(b),[0,.5,0]),v,.4),fov:18})],
   [CUE(1,"he's clear")-.3,.9,()=>({P:follow([-8,3,1.2]),T:mix3(v,[-2,.8,0],.45),fov:30})],
- ]);
+ ],B2,u=>subj1(tau2(u)));
 }
 const ch2:Scene={
  draw(s,t){
@@ -501,15 +525,18 @@ const ch2:Scene={
 // ---------------------------------------------------------------- 3 · a second replay: high behind the goal, the sweep comes across at us
 const tau3=(t:number)=>key(t,mono([[0,TT-.35],[CUE(2,'sweeps it'),TS-.03],[CUE(2,'across the keeper'),TS+.34],[CUE(2,'far corner'),TG+.1],[CUE(2,'fifteenth')-.4,TG+2.2],[SECS(2),TG+5]]),linear);
 const E3:V3=[5.5,6.5,11.5];
+/** Behind the goal: tight on the strike with the keeper in frame (the finish ACROSS him is the lesson), the authored wide as the ball
+ * flies to the far corner and the authored swing round onto Vinícius. */
+const B3=beats([[0,'follow'],[CUE(2,'sweeps it')-.4,'tight'],[CUE(2,'across')-.3,'wide']]);
 function cam3v(t:number):Cam{
  const tau=tau3(t),v=at(VIN,tau,1.2);
- return plan(t,[
+ return planD(t,[
   [0,0,()=>({P:E3,T:[-13,.8,-7.2],fov:24})],
   [CUE(2,'sweeps it')-.3,.8,()=>({P:E3,T:add3(SP,[.8,.6,.4]),fov:17})],
   [CUE(2,'across')-.2,.9,()=>({P:E3,T:[-5,.6,-2.2],fov:30})],
   [CUE(2,'far corner')+.1,1.1,()=>({P:E3,T:[-1.8,.7,.8],fov:30})],
   [CUE(2,'fifteenth')-.9,1.8,()=>({P:[4.5,6.5,9],T:v,fov:19})],
- ]);
+ ],B3,u=>subj1(tau3(u)));
 }
 const ch3:Scene={
  draw(s,t){

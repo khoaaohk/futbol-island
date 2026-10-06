@@ -1,0 +1,25 @@
+/* History Museum door transition (Oct 3 2026): two tall wooden doors with brass handles swing open on warm gallery light.
+ * CSS only, one-shot (no loop); reduced motion turns every animation off. */
+.slide{position:fixed;inset:0;z-index:100000;pointer-events:auto;overflow:hidden;perspective:1400px}
+.slide[data-mode=arrive]{pointer-events:none}
+.light{position:absolute;inset:0;background:radial-gradient(circle at 50% 42%,#fffaf0 0,#f6ecd6 48%,#e3cfa6 100%)}
+.door{position:absolute;top:0;bottom:0;width:50.5%;box-sizing:border-box;border:8px solid #6f5236;background:repeating-linear-gradient(90deg,#9d805b 0 46px,#93754f 46px 50px),#9d805b;box-shadow:inset 0 0 0 14px #8a6c47,inset 0 0 0 18px #c9a46a}
+.door b{position:absolute;top:46%;width:12px;height:12%;border-radius:6px;background:#d6b46a;box-shadow:0 0 0 3px #8a6c47}
+.left{left:0;transform-origin:left center}.left b{right:22px}.right{right:0;transform-origin:right center}.right b{left:22px}
+/* enter: the doors swing in, light floods out */
+.slide[data-mode=enter] .light{animation:lightIn .38s ease-out both}
+.slide[data-mode=enter] .left{animation:swingLeft .38s cubic-bezier(.5,0,.3,1) both}
+.slide[data-mode=enter] .right{animation:swingRight .38s cubic-bezier(.5,0,.3,1) both}
+/* arrive: doors already open, the light fades away */
+.slide[data-mode=arrive] .door{display:none}
+.slide[data-mode=arrive] .light{animation:lightOut .55s ease-out .05s both}
+.slide[data-mode=arrive][data-ready=false] .light{animation:none;opacity:1}
+/* leave: the doors swing shut */
+.slide[data-mode=leave] .light{background:#2a2016;animation:lightIn .35s ease-in .15s both}
+.slide[data-mode=leave] .left{animation:swingLeft .36s cubic-bezier(.5,0,.3,1) reverse both}
+.slide[data-mode=leave] .right{animation:swingRight .36s cubic-bezier(.5,0,.3,1) reverse both}
+@keyframes swingLeft{from{transform:rotateY(0)}to{transform:rotateY(88deg);opacity:.2}}
+@keyframes swingRight{from{transform:rotateY(0)}to{transform:rotateY(-88deg);opacity:.2}}
+@keyframes lightIn{from{opacity:0}to{opacity:1}}
+@keyframes lightOut{from{opacity:1}to{opacity:0;visibility:hidden}}
+@media(prefers-reduced-motion:reduce){.slide *{animation:none!important}.slide[data-mode=arrive]{display:none}.slide[data-mode=enter] .door,.slide[data-mode=leave] .door{display:none}}

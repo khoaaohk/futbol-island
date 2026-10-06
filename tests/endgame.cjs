@@ -157,4 +157,10 @@ const finishPath=(format,skipLast=false)=>{const quiz=at('lib/town/quizProgress.
  assert(!/total:TOTAL/.test(f)&&!/of \{TOTAL\}/.test(f),'no fixed total in the score');
  console.log('PASS finale score counts the questions actually asked');
 }
+// Oct 3 2026 play-through: the intro promised "one last test before the big match" (there is no match: a live-match finale was
+// rejected for heat) and "every answer counts", while the trophy counts first tries and is always reached.
+{const f=fs.readFileSync(path.join(root,'components/MatchdayFinale.tsx'),'utf8');
+ assert(!/big match/.test(f),'the intro does not promise a match');assert(!/Every answer counts/.test(f),'the intro does not misstate the scoring');
+ assert(/you try again\. Keep going and you lift the trophy!/.test(f),'retry until right, then the trophy');
+ console.log('PASS finale intro copy matches what happens');}
 console.log('Endgame: all checks passed.');

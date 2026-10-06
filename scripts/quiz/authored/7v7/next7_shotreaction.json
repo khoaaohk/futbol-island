@@ -64,10 +64,10 @@
     "Wait near their goal"
    ],
    "correct": 1,
-   "explain": "Yes. The keeper has control, so you go back to help defend.",
+   "explain": "Yes. The keeper holds it, so drop back behind the build-out line.",
    "choiceExplanations": [
     "The keeper already holds it, so chasing leaves a gap behind you.",
-    "Yes. The keeper has control, so you go back to help defend.",
+    "Yes. The keeper holds it, so drop back behind the build-out line.",
     "Waiting near their goal leaves your team short when Blue passes."
    ],
    "visual": {

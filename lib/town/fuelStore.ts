@@ -34,12 +34,13 @@ const sampler=createTravelSampler();
 const RIDES:ReadonlySet<string>=new Set(['scooter','bike','moped','jetpack']);
 /**
  * Town's HUD tick (every ~150 ms, already running): charge the movement since the last tick. `paused` = a lesson, a field menu,
- * a truck bed, anything not under the player's own steam. Returns true when the easy modes are out of fuel (Town then lands /
+ * a truck bed, anything not under the player's own steam. `driving` = the player is steering (joystick / move keys) or, on the
+ * jetpack, taking off or boosting: without it nothing drains, so idling never costs fuel (Oct 3 2026). Returns true when the easy modes are out of fuel (Town then lands /
  * steps off to walk). Cheap: a hypot and a compare; storage is written only when the shown number changes.
  */
-export function fuelTravel(now:number,ride:string,x:number,z:number,sprint:boolean,paused:boolean,airborne=false,arrival=false):boolean{
+export function fuelTravel(now:number,ride:string,x:number,z:number,sprint:boolean,paused:boolean,airborne=false,arrival=false,driving=true):boolean{
  const mode:FuelMode=RIDES.has(ride)?ride as FuelMode:sprint?'sprint':'walk';
- const seconds=sampler({now,mode,x,z,paused,airborne,arrival});
+ const seconds=sampler({now,mode,x,z,paused,airborne,arrival,driving});
  const s=seconds>0?fuelStore.travel(mode,seconds):fuelStore.read();sprintOk=s.fuel>=1;
  // `arrival`: the scripted arrival and opening hover never cost fuel and never force a landing (bug A6).
  return !paused&&!arrival&&mode!=='walk'&&mode!=='sprint'&&s.fuel<1;

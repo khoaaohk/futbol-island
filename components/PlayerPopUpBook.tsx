@@ -36,7 +36,16 @@ export default function PlayerPopUpBook({bookId,onClose}:{bookId:PlayerBookId;on
  const story=BOOKS[bookId],current=story.pages[page],amount=steps[page]??0,target=current.steps??1;
  const narration=useBookNarration(current.id,bookId);
  useEffect(()=>{let live=true;void loadSpreads(bookId).then(s=>{if(live)setSpreads(s);}).catch(()=>{if(live)setSpreads({});});return()=>{live=false;};},[bookId]);
- const turn=(next:number)=>{if(turning||next<0||next>=story.pages.length)return;narration.onPause();audio.current?.setMuted(musicMuted);void audio.current?.play(next,'turn');setPage(next);stage.current?.scrollTo({top:0});try{localStorage.setItem(BOOK_PROGRESS_KEY,JSON.stringify({...readProgress(),version:1,[bookId]:next}));}catch{/* Reading remains available without storage. */}};
+ // Oct 5 2026 (user: "when clicking next … flip the pages and auto play so the user doesn't have to click play"): a page turn
+ // asks Coach Bella to start the new page once the flip has landed. `seen` notes that the flip began, so narration never
+ // starts mid-fold; a one-shot fallback covers turns that don't animate (reduced motion, spreads still loading).
+ const autoPlay=useRef<{page:number;seen:boolean;at:number}|null>(null);
+ const turn=(next:number)=>{if(turning||next<0||next>=story.pages.length)return;narration.onPause();autoPlay.current={page:next,seen:false,at:performance.now()};audio.current?.setMuted(musicMuted);void audio.current?.play(next,'turn');setPage(next);stage.current?.scrollTo({top:0});try{localStorage.setItem(BOOK_PROGRESS_KEY,JSON.stringify({...readProgress(),version:1,[bookId]:next}));}catch{/* Reading remains available without storage. */}};
+ useEffect(()=>{const a=autoPlay.current;if(!a||a.page!==page||closing)return;if(turning){a.seen=true;return;}
+  const start=()=>{if(autoPlay.current!==a)return;autoPlay.current=null;narration.onReplay();};
+  if(a.seen||matchMedia('(prefers-reduced-motion: reduce)').matches){start();return;}
+  const fallback=setTimeout(()=>{if(autoPlay.current===a&&!a.seen)start();},900);return()=>clearTimeout(fallback);
+ },[page,turning,closing,narration.onReplay]);
  const interact=()=>{if(turning||closing)return;void audio.current?.play(page,'action');setSteps(s=>({...s,[page]:(s[page]??0)>=target?0:(s[page]??0)+1}));};
  useEffect(()=>{const sound=createBookAudio(musicMuted,getSoundVolume());audio.current=sound;void sound.play(page,'open');return()=>{sound.dispose();audio.current=null;};},[]);// eslint-disable-line react-hooks/exhaustive-deps
  useEffect(()=>{audio.current?.setMuted(musicMuted||narration.playing);},[musicMuted,narration.playing]);

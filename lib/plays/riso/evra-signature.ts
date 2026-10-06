@@ -52,6 +52,7 @@ import {type RisoStory,type Scene,type Chapter,playChapters} from '../../paths/r
 import {apertureDisc} from '../../paths/riso/passage';
 import {TAU,twos,sm,key,clamp,lerp,rng,hash,blob,polyPath,ribbon,partial,smoothPts,easeOut,easeOutBack,easeInOutSine,linear,type Pt} from '../../paths/riso/motion';
 import {sparkBurst,laneArrow,footballPanels,speedLines} from '../../paths/riso/shapes';
+import {beats,shotAt,directShot,near,type Beats,type Subject,type View as DView} from './director';
 import {drawAthlete,motionSmear,makeCamera,solve,runCycle,backpedal,dribble,strike,keeperSet,keeperDive,posed,blendPose,keyPoses,celebrate,
  STRIKE_CONTACT,type Pose,type Camera,type AthleteStyle,type InkFill,type Place,type V3,type DrawResult} from './athlete';
 
@@ -97,7 +98,9 @@ const yawOf=(dx:number,dz:number)=>Math.atan2(-dz,dx);
 /** a narrower (square) window gets a slightly wider lens so the action still fits; set by frame(), read by every camera */
 let LENS=1;
 /** Frame the FULL sheet: world (0,0) on the canvas centre at 1 unit per sheet unit (the passage arrival scale still multiplies in). */
-function frame(s:Sheet){const S=s.arrival;s.camera((s.cx-s.W/2)/S,(s.cy-s.H/2)/S,1/s.fit,0);LENS=Math.pow(Math.min(1,s.W/1620),.6);}
+function frame(s:Sheet){const S=s.arrival;s.camera((s.cx-s.W/2)/S,(s.cy-s.H/2)/S,1/s.fit,0);LENS=Math.pow(Math.min(1,s.W/1620),.6);DV={w:s.W,h:s.H};}
+/** the window in camera units (set by frame(); read by the director's reframing, aperture() included) */
+let DV:DView={w:1566,h:1080};
 /** half the visible extents with margin for the .68 passage preview */
 const view=(s:Sheet)=>({hx:s.W/(2*.68)+120,hy:s.H/(2*.68)+120});
 
@@ -423,6 +426,9 @@ function play(s:Sheet,c:Cam,T:number,Tp:number,Tprev:number,e:Env={}):PlayOut{
 type Shot={P:V3;T:V3;fov:number};
 const blendShot=(a:Shot,b:Shot,u:number):Shot=>u<=0?a:u>=1?b:{P:mix3(a.P,b.P,u),T:mix3(a.T,b.T,u),fov:Math.exp(lerp(Math.log(a.fov),Math.log(b.fov),u))};
 function plan(t:number,steps:[number,number,(t:number)=>Shot][]):Cam{let cur=steps[0][2](t);for(let i=1;i<steps.length;i++){const[a,d,f]=steps[i];const u=sm(a,a+Math.max(.01,d),t,easeInOutSine);if(u>0)cur=blendShot(cur,f(t),u);}return cam3(cur.P,cur.T,cur.fov);}
+/** the same plan, then the shared director's reframing (lib/plays/riso/director.ts) toward the beat's shot about the subject */
+function planD(t:number,steps:[number,number,(t:number)=>Shot][],B:Beats,subj:Subject,minDist=2.5):Cam{let cur=steps[0][2](t);for(let i=1;i<steps.length;i++){const[a,d,f]=steps[i];const u=sm(a,a+Math.max(.01,d),t,easeInOutSine);if(u>0)cur=blendShot(cur,f(t),u);}
+ const r=directShot(cur,subj,shotAt(t,B),DV,1080*LENS,{minDist});return cam3(r.P,r.T,r.fov);}
 
 // ---------------------------------------------------------------- teaching marks
 /** a ring on the grass round a point (a stamped spot), knocked out under */
@@ -475,9 +481,23 @@ const evraAt=(T:number):V3=>{const[x,z]=posOf(EVRA_I,T);return[x,0,z];};
  * "pulls it back", the stab on "shoots", the header just after "John Terry" — close to real time (≈ 1.25×) */
 const tau1=(t:number)=>key(t,mono([[0,-12.2],[CUE(0,'Patrice Evra'),-7.4],[CUE(0,'weaves into')+.1,-3],[CUE(0,'pulls it back')+.25,T_PASS],[CUE(0,'shoots')+.1,0],[CUE(0,'John Terry')-.05,T_SAVE],[SECS(0),T_SAVE+(SECS(0)-CUE(0,'John Terry'))*.95]]),linear);
 const P1:V3=[-30,24,64];
+/** Director beats: a short establishing wide of the wet bowl; follow Evra down the left, closer as he is named and races on; push in low
+ * as he weaves into the box (the man he goes past kept in frame); pull out for the pull-back so Giggs arriving is in the same picture;
+ * stay out a little for the shot (Giggs, the ball, Terry and the goal line together); push in on Terry's header off the line; hold on him. */
+const B1=beats([[0,'wide'],[1.2,'follow'],[CUE(0,'Patrice Evra')-.3,{from:'follow',size:.4}],[CUE(0,'weaves into')-.4,'tight'],
+ [CUE(0,'pulls it back')-.3,{from:'space',size:.26}],[CUE(0,'shoots')-.4,{from:'space',size:.3,low:.4}],[CUE(0,'John Terry')-.35,'tight'],[CUE(0,'off the line')+.3,'reaction']]);
+const pos3=(k:number,T:number):V3=>{const[x,z]=posOf(k,T);return[x,0,z];};
+const FOES=ACTORS.map((a,k)=>a.role==='che'||a.role==='terry'||a.role==='cech'?k:-1).filter(k=>k>=0);
+/** the followed player hands over smoothly: Evra → Giggs as the pull-back runs to him → Terry as the stab flies to the line */
+function hero1(T:number):V3{const u1=sm(T_PASS+.1,-.25,T,easeInOutSine),u2=sm(.05,.7,T,easeInOutSine);return mix3(mix3(evraAt(T),pos3(GIGGS_I,T),u1),pos3(TERRY_I,T),u2);}
+function subj1(T:number):Subject{const h=hero1(T),pass=sm(T_PASS-.6,T_PASS-.2,T)*(1-sm(.1,.5,T)),shot=sm(-.5,-.1,T)*(1-sm(T_SAVE+.3,T_SAVE+.8,T));
+ const G=pos3(GIGGS_I,T),Te=pos3(TERRY_I,T),bw=1-sm(T_SAVE+.2,T_SAVE+.6,T),bl=ballAt(T);
+ // the ball is held in frame until it is headed away; after that it is a fading soft point (the reaction is on Terry)
+ return{hero:h,ball:bw>=1?bl:null,keep:[...(bw<1&&bw>0?[{P:bl,w:bw}]:[]),...(pass>0?[{P:G,w:pass},{P:add3(G,[0,1.8,0]),w:pass}]:[]),...(shot>0?[{P:Te,w:shot},{P:add3(Te,[0,1.9,0]),w:shot},{P:[GOAL.x,0,GOAL.z0] as V3,w:shot*.6},{P:[GOAL.x,GOAL.h,GOAL.z1] as V3,w:shot*.6}]:[]),
+  ...near(h,FOES.map(k=>pos3(k,T)),3.5,7)]};}
 function cam1(t:number):Cam{
  const e=()=>{const T=tau1(t),E=evraAt(T),b=ballAt(T);return mix3(E,b,.3);};
- return plan(t,[
+ return planD(t,[
   [0,0,()=>({P:P1,T:add3(e(),[7,1,7]),fov:13.5})],
   [CUE(0,'legs are tired')-.2,1.2,()=>({P:P1,T:add3(e(),[5,1,5]),fov:12})],
   [CUE(0,'Patrice Evra')-.4,1,()=>({P:P1,T:add3(e(),[3.5,1,3]),fov:11})],
@@ -485,7 +505,7 @@ function cam1(t:number):Cam{
   [CUE(0,'pulls it back')-.3,.9,()=>({P:P1,T:[-5.4,1.1,-5.6],fov:11})],
   [CUE(0,'shoots')-.3,.8,()=>({P:P1,T:[-4.4,1.3,-2.4],fov:10})],
   [CUE(0,'off the line')+.5,1.4,()=>({P:P1,T:[-3.6,1.2,-5],fov:12.5})],
- ]);
+ ],B1,subj1(tau1(t)),7);
 }
 const ch1:Scene={
  draw(s,t){
@@ -538,13 +558,17 @@ const ch2:Scene={
 // ---------------------------------------------------------------- 3 · the lesson: high behind United's left wing, looking down the whole touchline
 const tau3=(t:number)=>key(t,mono([[0,-12.2],[CUE(2,'stamina'),-3],[CUE(2,'last minutes')+.3,T_PASS+.2],[SECS(2),T_PASS+.9]]),linear);
 const E3:V3=[-60,9.5,-39];
+/** Director beats (the lesson): the authored wide while the arrows run DOWN and back UP the whole touchline (the wing is the lesson);
+ * then push in on Evra, still sprinting, for "when others get tired" and "stamina" (his ring and speed lines); hold close as the
+ * match clock flashes on "the last minutes" (the clock rides with the lens, so it stays in the corner). */
+const B3=beats([[0,'wide'],[CUE(2,'all game')-.2,{from:'lesson',size:.3}],[CUE(2,'When others')-.3,'lesson']]);
 function cam3v(t:number):Cam{
  const E=()=>evraAt(tau3(t));
- return plan(t,[
+ return planD(t,[
   [0,0,()=>({P:E3,T:[-34,0,-22],fov:36})],
   [CUE(2,'Keep running')-.3,1.6,()=>({P:add3(E(),[-17,7,-3.5]),T:add3(E(),[8,.2,.5]),fov:40})],
   [CUE(2,'last minutes')-.5,1.2,()=>({P:[-26,8,-31],T:[-8,.5,-10],fov:36})],
- ]);
+ ],B3,{hero:E(),ball:ballAt(tau3(t))},4.5);
 }
 /** the clock hangs in the air, upper left of the lens (anchored to the camera, drawn in perspective) */
 const clockAt=(c:Cam):V3=>add3(c.eye,[c.f[0]*40-c.r[0]*9+c.u[0]*7,c.f[1]*40-c.r[1]*9+c.u[1]*7,c.f[2]*40-c.r[2]*9+c.u[2]*7]);

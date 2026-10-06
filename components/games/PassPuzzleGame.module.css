@@ -93,3 +93,53 @@
 .game .directHint{font-size:12px;color:#92e9df}.passControls:focus-within{border-color:#b6fff4}
 
 .shotHeight button{min-width:66px}.game[data-view=play][data-shot-height=true] .tip{bottom:calc(184px + env(safe-area-inset-bottom))}
+
+/* Offside warning while drawing: the same tip, in the offside-line amber. */
+.game .tip[data-warn=offside]{border-color:#ffb347;color:#fff3d9;background:#4a2f12ee}
+
+/* Star goals on the brief card: the three skill goals, gold when already earned. */
+.goals{list-style:none;padding:0;margin:6px 0 10px;display:grid;gap:3px;font-size:13px}
+.goals li::before{content:'★ ';color:#ffffff40}.goals li[data-on=true]::before{color:#e3a93a}
+.goals li[data-on=false]{opacity:.85}
+.earned li[data-new=true]{font-weight:800}
+.newStar{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#ffe36e;margin-left:4px}
+@media(prefers-reduced-motion:no-preference){.earned li[data-new=true]{animation:puzzleStarPop .4s 1s both}}
+@keyframes puzzleStarPop{from{transform:scale(.85);opacity:.3}to{transform:scale(1);opacity:1}}
+
+/* Daily puzzle: one wide card above the pack map. */
+.game .daily{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;width:100%;min-height:56px;margin:0 0 14px;padding:10px 14px;border:2px solid #76e4df;border-radius:16px;background:#183c44;color:#efffff;text-align:left;font:inherit;cursor:pointer}
+.game .daily span{display:grid;gap:2px}.game .daily b{font-size:15px}.game .daily small{font-size:11px;color:#b5c7dc}.game .daily em{font-style:normal}
+
+/* Pack map: a numbered path of packs; each opens with stars earned anywhere (skill, never coins). */
+.packMap{list-style:none;margin:0 0 18px;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;counter-reset:pack}
+.packMap li{position:relative}
+.packMap button{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:8px;align-items:center;width:100%;min-height:52px;padding:7px 10px;border:2px solid #466478;border-radius:14px;background:#202b40;color:#edf8ff;text-align:left;font:inherit;cursor:pointer}
+.packMap button b{grid-row:span 2;display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:#efc776;color:#244b43;font-size:13px}
+.packMap button span{font-size:13px;font-weight:700;line-height:1.2}.packMap button small{font-size:11px;color:#b5c7dc}
+.packMap button[aria-pressed=true]{border-color:#76e4df;background:#193c46;box-shadow:0 3px 0 #10212d}
+.packMap li[data-open=false] button{opacity:.72}.packMap li[data-open=false] b{background:#3a4a5e;color:#b5c7dc}
+.packMap li[data-done=true] b{background:#ffe36e}
+.game .gate{font-size:12px!important;color:#ffcf8a;margin:0 0 8px!important}
+.pips{display:block;font-style:normal;font-size:9px;letter-spacing:2px;color:#9fd8ff;margin-top:2px}
+@media(max-width:380px){.packMap{grid-template-columns:1fr}}
+
+/* Level modifiers (wind, wet pitch, counter clock, trap, hunter, sweeper keeper). */
+.modifiers{position:absolute;top:84px;left:50%;transform:translateX(-50%);display:flex;flex-wrap:wrap;justify-content:center;gap:6px;width:min(520px,calc(100% - 32px));margin:0;padding:0;list-style:none;z-index:3;pointer-events:none}
+.modifiers li{padding:5px 10px;border-radius:999px;background:#10192cdd;border:1px solid #ffb347;color:#fff3d9;font-size:11px;font-weight:700}
+.modifiers[data-inline]{position:static;transform:none;width:auto;justify-content:flex-start;margin:4px 0 8px}
+.game[data-view=play] .replayChip+.skip{z-index:4}
+.camToggle{margin-left:8px;min-height:44px;padding:4px 10px;border:1px solid #76e4df;border-radius:10px;background:#183c44;color:#efffff;font:inherit;font-size:11px;cursor:pointer;pointer-events:auto}
+@media(max-width:600px){.modifiers{top:77px}}
+/* The lesson takeaway reads on the dark result card (it was cream text-on-cream). */
+.game .lesson{background:#10192c;color:#eef8ff;border-left-color:#e8bc58}
+.game .packMap small,.game .daily small{border:0;padding:0;margin:0;display:block;line-height:1.3}
+.game .daily em{display:flex;gap:2px;font-size:15px}
+
+/* Short landscape phones: one compact control strip at the bottom edge, no tip, so the pitch stays visible. */
+@media(max-height:520px) and (orientation:landscape){
+ .passControls{display:flex;align-items:center;gap:10px;width:min(640px,calc(100% - 24px));bottom:calc(6px + env(safe-area-inset-bottom));padding:5px 10px}
+ .passModes{flex:1.3}.passModes button{min-height:44px;font-size:11px}
+ .powerControl{flex:1;margin-top:0;gap:6px}.powerControl>span{min-width:0;font-size:10px}
+ .game[data-view=play] .tip:not([data-warn]){display:none}.game[data-view=play] .tip[data-warn]{bottom:62px}
+ .modifiers{top:8px}.replayChip{top:8px}
+}

@@ -40,13 +40,16 @@ import {type RisoStory,type Scene,type Chapter,playChapters} from '../../paths/r
 import {apertureDisc} from '../../paths/riso/passage';
 import {twos,sm,key,clamp,lerp,rng,hash,ribbon,polyPath,easeOut,easeOutBack,easeInOutSine,linear,TAU,type Pt,type Key} from '../../paths/riso/motion';
 import {sparkBurst,speedLines,laneArrow,crescent} from '../../paths/riso/shapes';
+import {beats,shotAt,reframe,near,steady,type Keep,type Pin,type View as DView} from './director';
 import {drawAthlete,motionSmear,makeCamera,posed,blendPose,clampPose,runCycle,dribble,stand,strike,backpedal,celebrate,keeperSet,keeperDive,
  STRIKE_CONTACT,type Pose,type AthleteStyle,type Camera,type Place,type V3,type DrawResult} from './athlete';
 
 const K='navy',R='red',Y='yellow',G='blue',B='blue';
 const D2R=Math.PI/180;
+/** the window in camera units (set by frame(); read by the director's reframing, aperture() included) */
+let DV:DView={w:1566,h:1080};
 /** Frame the FULL sheet: world (dx,dy) lands on the sheet centre at `zoom`, ignoring the safe box (the card window is small). */
-function frame(s:Sheet,zoom=1,dx=0,dy=0){const S=zoom*s.arrival;s.camera((s.cx-s.W/2)/S+dx,(s.cy-s.H/2)/S+dy,zoom/s.fit,0);}
+function frame(s:Sheet,zoom=1,dx=0,dy=0){const S=zoom*s.arrival;DV={w:s.W,h:s.H};s.camera((s.cx-s.W/2)/S+dx,(s.cy-s.H/2)/S+dy,zoom/s.fit,0);}
 
 // ================= narration (script.json mirrors it) =================
 /** Provisional cue onsets (≈2.6 words/s plus pauses) — replaced by the measured Kokoro onsets in timing.json. */
@@ -233,7 +236,7 @@ const ACTORS:Actor[]=[
  {name:'Zabaleta',role:'arg',style:ARG({number:4,seed:44}),keys:[[-6,-41,30],[0,-31,26],[10,-26,24]]},
  {name:'Referee',role:'ref',style:REF,keys:[[-6,-40,-2],[0,-28,1],[10,-22,4]]},
 ];
-const HERO=0,MSI=1,HUM=2,LVI=3,GKI=4;
+const HERO=0,MSI=1,HUM=2,LVI=3,GKI=4,BOA=7;
 function herm(keys:TK[],t:number):[number,number]{const n=keys.length;if(t<=keys[0][0])return[keys[0][1],keys[0][2]];if(t>=keys[n-1][0])return[keys[n-1][1],keys[n-1][2]];
  let i=0;while(t>keys[i+1][0])i++;const k0=keys[Math.max(0,i-1)],k1=keys[i],k2=keys[i+1],k3=keys[Math.min(n-1,i+2)],h=k2[0]-k1[0],u=(t-k1[0])/h,u2=u*u,u3=u2*u;
  const f=(j:1|2)=>{const m1=(k2[j]-k0[j])/Math.max(1e-6,k2[0]-k0[0])*h,m2=(k3[j]-k1[j])/Math.max(1e-6,k3[0]-k1[0])*h;return(2*u3-3*u2+1)*k1[j]+(u3-2*u2+u)*m1+(-2*u3+3*u2)*k2[j]+(u3-u2)*m2;};return[f(1),f(2)];}
@@ -330,8 +333,27 @@ const CAM1:V3=[-24,21,-58];
 function look1(tau:number):V3{const b=ballAt(tau);
  if(tau<CLR)return[b[0]-2,1,b[2]-3];
  return mix3([b[0]-2,1,b[2]-3],[lerp(b[0],-7,.5),1.5,lerp(b[2],8,.5)],sm(CLR,CLR+1,tau));}
-function cam1(t:number){const tau=tau1(t),a=look1(tau),b=look1(tau-.3),c=look1(tau-.6),look:V3=[(a[0]+b[0]+c[0])/3,(a[1]+b[1]+c[1])/3,(a[2]+b[2]+c[2])/3];
- const F=key(tau,[[-6.4,3400],[-4,3500],[-1.6,3700],[PB,4000],[CLR,4000],[1.5,3300],[3,3100]]);return cam(CAM1,look,F);}
+function cam1Authored(t:number):Pin{const tau=tau1(t),a=look1(tau),b=look1(tau-.3),c=look1(tau-.6),look:V3=[(a[0]+b[0]+c[0])/3,(a[1]+b[1]+c[1])/3,(a[2]+b[2]+c[2])/3];
+ const F=key(tau,[[-6.4,3400],[-4,3500],[-1.6,3700],[PB,4000],[CLR,4000],[1.5,3300],[3,3100]]);return{eye:CAM1,target:look,F};}
+/** Director beats (lib/plays/riso/director.ts, Oct 4 2026): a short establishing wide of the Maracanã, then follow Messi on the ball (no swing
+ * across the pitch to Schweinsteiger for "Germany": that 17 m truck read as a snap); push in low as Messi sells Hummels the dummy (the
+ * defender being beaten stays in frame), ease back as he carries into the box, pull right out for the pullback (Messi, the lane, Lavezzi and
+ * Schweinsteiger racing in all in shot: the decision), slide onto Schweinsteiger, push in tight as he gets there first, then hold on him
+ * from just after the clearance (τ 0 lands ≈ .3 s after "gets there first"; "clears it" is spoken a beat later). */
+const B1=beats([[0,'wide'],[1.2,{from:'follow',size:.38}],[T(0,'Messi races past Hummels')-.35,'tight'],[T(0,'into the box')-.3,{from:'follow',size:.38}],
+ [T(0,'pulls it back')-.45,{from:'space',size:.24}],[T(0,'Bastian Schweinsteiger')-.4,'follow'],[T(0,'gets there first')-.4,{from:'tight',low:.35}],[T(0,'gets there first')+.65,'reaction']]);
+/** Schweinsteiger's share of the hero (0 = Messi, the ball carrier): handed over to him after the pullback, over 1 s */
+const w1=(t:number)=>sm(T(0,'for Lavezzi')+.1,T(0,'for Lavezzi')+1.1,t,easeInOutSine);
+/** the pullback's teaching window: Lavezzi (the target he beats to it), Schweinsteiger (racing in) held in frame
+ * until it is cleared; Boateng (covering, nearest the camera, else cropped in the low shots) held a little longer */
+const pass1=(t:number)=>sm(T(0,'pulls it back')-.8,T(0,'pulls it back')-.1,t,easeInOutSine)*(1-sm(T(0,'gets there first')+.5,T(0,'clears it')-.1,t,easeInOutSine));
+/** the directed cameras are averaged over ±.45 s by steady() (3 samples; 5 in ch3, where the cleared ball flies at the lens) so no keep or hand-over can snap them */
+function cam1(t:number):Camera{const r=steady(t,cam1Directed,.45,3);return cam(r.eye,r.target,r.F);}
+function cam1Directed(t:number):Pin{const a=cam1Authored(t),tau=tau1(t),w=w1(t),[sx,sz]=posOf(HERO,tau),[mx,mz]=posOf(MSI,tau),b=ballAt(tau);
+ const hero:V3=[lerp(mx,sx,w),0,lerp(mz,sz,w)],bl:V3=mix3(b,[sx,.11,sz],w*(1-sm(T(0,'Bastian Schweinsteiger'),T(0,'gets there first')-.4,t)));
+ const keys=[HERO,MSI,HUM,LVI].map(k=>{const[x,z]=posOf(k,tau);return[x,0,z] as V3;}),pw=pass1(t),[lx,lz]=posOf(LVI,tau),[bx,bz]=posOf(BOA,tau),bw=sm(T(0,'pulls it back')-.8,T(0,'pulls it back')-.1,t,easeInOutSine)*(1-sm(T(0,'clears it')+.3,T(0,'clears it')+1.1,t,easeInOutSine));
+ const keep:Keep[]=[...near(hero,keys,3.5,7),...(pw>.01?[{P:[lx,0,lz] as V3,w:pw},{P:[lx,1.8,lz] as V3,w:pw},{P:[sx,0,sz] as V3,w:pw},{P:[sx,1.9,sz] as V3,w:pw},{P:[mx,0,mz] as V3,w:pw}]:[]),...(bw>.01?[{P:[bx,0,bz] as V3,w:bw}]:[])];
+ return reframe(a,{hero,ball:bl,keep},shotAt(t,B1),DV);}
 const ch1:Scene={
  draw(s,t){const tt=twos(t),c=cam1(t),tau=tau1(t),tp=tau1(tt),gf=T(0,'gets there first');frame(s);
   stadium(s,c,{t,cheer:.1+.5*sm(gf,gf+.6,t)});
@@ -345,9 +367,18 @@ const ch1:Scene={
 // ================= chapter 2 (TV replay, slow motion, high behind the goal): back between the ball and his goal, reads the pass, first to it =================
 const tau2=(t:number)=>{const E=SEC(1),sb=T(1,'Schweinsteiger sprints back'),bb=T(1,'between the ball'),hg=T(1,'and his goal'),rp=T(1,'He reads the pass'),sf=T(1,'steps in first');
  return key(t,mono([[0,-3.6],[sb,-3.2],[bb,-1.9],[hg,-1.4],[rp,PB-.12],[rp+.8,PB+.2],[sf+.1,-.06],[sf+.9,.3],[E,1.1]]),linear);};
-function cam2(t:number){const tau=tau2(t),E=SEC(1),[sx,sz]=posOf(HERO,tau),b=ballAt(Math.min(tau,.2)),push=sm(0,E,t,easeInOutSine);
+function cam2Authored(t:number):Pin{const tau=tau2(t),E=SEC(1),[sx,sz]=posOf(HERO,tau),b=ballAt(Math.min(tau,.2)),push=sm(0,E,t,easeInOutSine);
  const look:V3=[lerp(sx,b[0],.45),1,lerp(sz,b[2],.45)];
- return cam([17-3*push,10.5-1.5*push,-3+1*push],look,lerp(1800,2300,push));}
+ return{eye:[17-3*push,10.5-1.5*push,-3+1*push],target:look,F:lerp(1800,2300,push)};}
+/** Director beats: the replay opens following Schweinsteiger's sprint back (the ball a soft keep, hard from "between the ball"), pulls out for "between the ball and
+ * his goal" and "reads the pass" (the ball, the goal and Lavezzi held in frame: the space he is protecting), and pushes in tight as he
+ * steps in first. */
+const B2=beats([[0,'follow'],[T(1,'between the ball')-.4,{from:'space',size:.26}],[T(1,'steps in first')-.4,'tight']]);
+function cam2(t:number):Camera{const r=steady(t,cam2Directed,.45,3);return cam(r.eye,r.target,r.F);}
+function cam2Directed(t:number):Pin{const a=cam2Authored(t),tau=tau2(t),[sx,sz]=posOf(HERO,tau),[lx,lz]=posOf(LVI,tau),hero:V3=[sx,0,sz];
+ const gw=sm(T(1,'between the ball')-.7,T(1,'between the ball'),t,easeInOutSine)*(1-sm(T(1,'steps in first')-.6,T(1,'steps in first')+.2,t,easeInOutSine)),lw=sm(T(1,'He reads the pass')-.7,T(1,'He reads the pass'),t,easeInOutSine)*(1-sm(T(1,'steps in first')-.4,T(1,'steps in first')+.3,t,easeInOutSine));
+ const keep:Keep[]=[...near(hero,[MSI,LVI].map(k=>{const[x,z]=posOf(k,tau);return[x,0,z] as V3;}),3.5,7),...(gw>.01?[{P:[0,1.2,0] as V3,w:gw}]:[]),...(lw>.01?[{P:[lx,0,lz] as V3,w:lw},{P:[lx,1.8,lz] as V3,w:lw}]:[])];
+ const r=reframe(a,{hero,keep:[...keep,{P:ballAt(Math.min(tau,.2)),w:lerp(.3,1,sm(T(1,'between the ball')-1.2,T(1,'between the ball')-.4,t,easeInOutSine))}]},shotAt(t,B2),DV);return r;}
 const ch2:Scene={
  draw(s,t){const tt=twos(t),c=cam2(t),tau=tau2(t),tp=tau2(tt),E=SEC(1),sb=T(1,'Schweinsteiger sprints back'),bb=T(1,'between the ball'),hg=T(1,'and his goal'),rp=T(1,'He reads the pass'),sf=T(1,'steps in first');frame(s);
   stadium(s,c,{t,cheer:.1});
@@ -373,9 +404,15 @@ const ch2:Scene={
 const tau3=(t:number)=>{const E=SEC(2),kg=T(2,'Then he keeps going'),hr=T(2,'He ran'),gw=T(2,'Germany won');
  return key(t,mono([[0,.15],[kg+.2,1.2],[hr,2.4],[gw,4.6],[E,6.4]]),linear);};
 const CAM3:V3=[-3,1.6,37.5];
-function cam3(t:number){const tau=tau3(t),E=SEC(2),[x,z]=posOf(HERO,tau),b=ballAt(tau),fol=sm(T(2,'Then he keeps going')-.3,T(2,'He ran')+.5,t,easeInOutSine);
+function cam3Authored(t:number):Pin{const tau=tau3(t),E=SEC(2),[x,z]=posOf(HERO,tau),b=ballAt(tau),fol=sm(T(2,'Then he keeps going')-.3,T(2,'He ran')+.5,t,easeInOutSine);
  const look=mix3([b[0],Math.max(1,b[1]*.6),b[2]],[x,1.2,z],fol);
- return cam([CAM3[0]-6*sm(0,E,t,easeInOutSine),CAM3[1],CAM3[2]],look,key(t,mono([[0,2400],[T(2,'Then he keeps going'),2800],[T(2,'He ran'),3300],[E,3700]])));}
+ return{eye:[CAM3[0]-6*sm(0,E,t,easeInOutSine),CAM3[1],CAM3[2]],target:look,F:key(t,mono([[0,2400],[T(2,'Then he keeps going'),2800],[T(2,'He ran'),3300],[E,3700]]))};}
+/** Director beats: follow Schweinsteiger as he turns and keeps going (the cleared ball a soft keep until it lands), then close on him for
+ * "Germany won the World Cup". */
+const B3=beats([[0,'follow'],[T(2,'Germany won')-.2,'reaction']]);
+function cam3(t:number):Camera{const r=steady(t,cam3Directed,.45,5);return cam(r.eye,r.target,r.F);}
+function cam3Directed(t:number):Pin{const a=cam3Authored(t),tau=tau3(t),[x,z]=posOf(HERO,tau),bw=.6*(1-sm(LANDT-.3,LANDT+.5,tau,easeInOutSine));
+ const r=reframe(a,{hero:[x,0,z],keep:bw>.01?[{P:ballAt(tau),w:bw}]:[]},shotAt(t,B3),DV);return r;}
 const ch3:Scene={
  draw(s,t){const tt=twos(t),c=cam3(t),tau=tau3(t),tp=tau3(tt),kg=T(2,'Then he keeps going'),hr=T(2,'He ran'),mn=T(2,'one hundred and twenty minutes'),gw=T(2,'Germany won'),wc=T(2,'the World Cup'),E=SEC(2);frame(s);
   stadium(s,c,{t,cheer:.15+.9*sm(gw,gw+.4,t),flash:1.3*sm(wc-.2,wc+.3,t)});

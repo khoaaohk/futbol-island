@@ -268,3 +268,21 @@
 @keyframes trayNote{0%{opacity:0}8%{opacity:1}82%{opacity:1}100%{opacity:0}}
 @media(prefers-reduced-motion:reduce){.trayNote{animation:none}}
 .tray{position:relative}
+/* Drinks seen from the camera (user, Oct 5 2026: "fix the perspective of the bottles. doesn't match with the machine perspective").
+   Each drink picture turns about its base (the shelf line, VENDING_BAY.shelf) to face the zoom camera, like the 3D close-up's sprites,
+   and DrinkArt paints the package from that viewpoint (--yaw from VendingMachines.productView). The art draws its own floor shadow
+   with the camera's openness, so the flat contact-shadow ellipse is dropped. Static: set once per placement, no animation. */
+.face[data-depth] .slot .window[data-kind=drink]{transform:translateZ(calc(var(--bay-product) * -1)) translateX(var(--shift-x,0px)) rotateY(var(--yaw,0deg));transform-origin:50% 100%}
+.face[data-depth] .window[data-kind=drink]::before{display:none}
+/* Oct 5 2026 ("these items are floating still"): the product window's bottom edge IS the shelf slab's top surface at the product's
+   depth (VENDING_BAY.shelf of the slot, VENDING_BAY.product behind the glass, as the 3D bay builds it). The top-row slots are pushed
+   down by --header-clearance, so their window is shortened by the clearance it would otherwise add below the shelf line. */
+.face[data-depth] .slot .window{height:calc(100% * .53 - var(--win-fix,0px))}
+/* Balls, books and packs stand on the slab too (Oct 5 2026, same measurement as the drinks): a ball's baked picture has 14/103 rows of
+   soft shadow under the ball, so the picture is anchored at the window bottom and moved down by them (its own shadow then lies on the
+   slab); books and packs anchor themselves (VendingProductArt `stand`). The flat contact shadow is centred on the shelf line, and
+   hidden where the camera is below the slab top (data-below: the slab's front edge hides the base there) and for balls (baked). */
+.face[data-depth] .window[data-kind=ball] img[data-ball-picture]{position:absolute;left:50%;bottom:0;top:auto;height:78%;width:auto;max-width:none;max-height:none;object-fit:fill;
+ transform:translateX(-50%) scaleX(var(--ball-widen,1)) translateY(13.592%);transform-origin:50% 100%}
+.face[data-depth] .window::before{bottom:-5%;height:10%}
+.face[data-depth] .window[data-below]::before,.face[data-depth] .window[data-kind=ball]::before{display:none}

@@ -58,4 +58,15 @@ const shared=voice.primeLessonVoice();assert.ok(shared,'primed in the gesture');
 shared.pause();shared.src=shared.currentSrc='/voice/kokoro_af_bella/line.m4a';
 shared.play();assert.equal(shared.paused,true,'a play nobody asked for (iOS resume, lock screen, stray call) is stopped at once');
 assert.equal(voice.lessonVoiceSpeaking(),false);
+// --- Oct 3 2026 play-through: a job/quiz cue fired by the tap that wakes a suspended context was dropped (resume() is async) ---
+(async()=>{
+ const s2=createIslandSound(false,.5);s2.unlock();const c2=ctx;advance(2100);assert.equal(c2.state,'suspended','idle-suspended after 2 s of silence');
+ let finish;c2.resume=function(){this.resumes++;return new Promise(r=>{finish=()=>{this.state='running';r();};});};// a real resume lands later
+ s2.unlock();// Town's pointerdown unlock: resume requested, state still 'suspended'
+ const n0=started.length;docListeners.get('fi2-job-cue')({detail:'ding'});assert.equal(started.length,n0,'nothing plays before the resume lands');
+ finish();await Promise.resolve();await Promise.resolve();assert.ok(started.length>n0,'the cue plays once the context is running');
+ assert.equal(s2.debug.counts['job:ding'],1,'played exactly once');
+ const n1=started.length;docListeners.get('fi2-story-cue')({detail:'finish'});assert.ok(started.length>n1,'a running context plays at once');
+ s2.dispose();console.log('ISLAND_CUE_WAKE_PASS a cue on the waking tap is replayed once, not dropped');
+})().catch(e=>{console.error(e);process.exit(1);});
 console.log('ISLAND_IDLE_AUDIO_PASS 30 s idle fades + suspends, no queue, real input wakes without replays, active playback holds, stray lesson voice blocked');

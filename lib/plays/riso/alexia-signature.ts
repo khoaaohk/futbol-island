@@ -62,6 +62,7 @@ import {TAU,twos,sm,key,clamp,lerp,rng,hash,polyPath,ribbon,easeOut,easeOutBack,
 import {sparkBurst,footballPanels,speedLines} from '../../paths/riso/shapes';
 import {drawAthlete,motionSmear,makeCamera,solve,strike,runCycle,stand,dribble,keeperSet,keeperDive,backpedal,celebrate,posed,blendPose,STRIKE_CONTACT,
  type Pose,type Camera,type AthleteStyle,type Place,type InkFill,type V3} from './athlete';
+import {beats,shotAt as shotParams,reframe,steady,focalOf,fovOf,near,type Beats,type Keep,type ReframeOpts,type Subject,type View as DView} from './director';
 
 // ---------------------------------------------------------------- narration + timing
 /** The narration (script.json mirrors it). Cue `words` are the match keys for the voice's word onsets; their `at` and each chapter's
@@ -108,7 +109,9 @@ const lerpAng=(a:number,b:number,u:number)=>a+wrap(b-a)*u;
 const yawTo=(x:number,z:number,x2:number,z2:number)=>Math.atan2(-(z2-z),x2-x);
 let LENS=1;
 /** Frame the FULL sheet: world (0,0) on the canvas centre at 1 unit per sheet unit (the passage arrival scale still multiplies in). */
-function frame(s:Sheet){const S=s.arrival;s.camera((s.cx-s.W/2)/S,(s.cy-s.H/2)/S,1/s.fit,0);LENS=Math.pow(Math.min(1,s.W/1620),.6);}
+function frame(s:Sheet){const S=s.arrival;s.camera((s.cx-s.W/2)/S,(s.cy-s.H/2)/S,1/s.fit,0);LENS=Math.pow(Math.min(1,s.W/1620),.6);DV={w:s.W,h:s.H};}
+/** the window in camera units, for the director (set by frame(); aperture() reads the same directed cameras) */
+let DV:DView={w:1566,h:1080};
 const view=(s:Sheet)=>({hx:s.W/(2*.68)+120,hy:s.H/(2*.68)+120});
 
 // ---------------------------------------------------------------- 3D: projection through an athlete.ts Camera (right-handed metres, y up)
@@ -404,7 +407,21 @@ function play(s:Sheet,c:Cam,tau:number,tp:number,tpPrev:number,e:Env){
 // ---------------------------------------------------------------- shot blending (camera plans keyed on cue times)
 type Shot={P:V3;T:V3;fov:number};
 const blendShot=(a:Shot,b:Shot,u:number):Shot=>u<=0?a:u>=1?b:{P:mix3(a.P,b.P,u),T:mix3(a.T,b.T,u),fov:Math.exp(lerp(Math.log(a.fov),Math.log(b.fov),u))};
-function plan(t:number,steps:[number,number,(t:number)=>Shot][]):Cam{let cur=steps[0][2](t);for(let i=1;i<steps.length;i++){const[a,d,f]=steps[i];const u=sm(a,a+Math.max(.01,d),t,easeInOutSine);if(u>0)cur=blendShot(cur,f(t),u);}return cam3(cur.P,cur.T,cur.fov);}
+/** the camera plan through the shared director (lib/plays/riso/director.ts): the authored Shots (eased steps keyed on cues), then moved toward the beat's framing; steady()
+ * averages the directed camera over ±.35 s so a keep point fading in or the followed player handing over never pops the framing */
+function planD(t:number,steps:[number,number,(t:number)=>Shot][],B:Beats,subj:(t:number)=>Subject,o:ReframeOpts|((t:number)=>ReframeOpts)={}):Cam{
+ const at=(u:number)=>{let cur=steps[0][2](u);for(let i=1;i<steps.length;i++){const[a,d,f]=steps[i];const w=sm(a,a+Math.max(.01,d),u,easeInOutSine);if(w>0)cur=blendShot(cur,f(u),w);}
+  return reframe({eye:cur.P,target:cur.T,F:focalOf(cur.fov,1080*LENS)},subj(u),shotParams(u,B),DV,typeof o==='function'?o(u):o);};
+ const r=steady(t,at);return cam3(r.eye,r.target,fovOf(r.F,1080*LENS));}
+/** director subject helpers: a player's ground point; a keep (feet + head) that is always a hard point but slides out from the hero to P as w ramps 0..1 (so the director's
+ * recenter sees it the whole time and the framing widens continuously); the ball point faded onto
+ * the hero (w = 0) so the ball can stop being a hard frame point without a snap; the other players for near() */
+const posA=(a:Actor,tau:number):V3=>{const[x,z]=pathAt(a.path,tau);return[x,0,z];};
+const keepW=(P:V3,w:number,hero:V3):Keep[]=>{if(w<=.01)return[];const Q=mix3(hero,P,clamp(w));return[[Q[0],0,Q[2]],[Q[0],1.75,Q[2]]];};
+const ballW=(tau:number,hero:V3,w:number):V3=>mix3([hero[0],1,hero[2]],ballAt(tau),clamp(w));
+const others=(tau:number,skip:string[]=[]):V3[]=>ACTORS.filter(a=>!skip.includes(a.name)).map(a=>posA(a,tau));
+/** a weight that ramps up over [a0,a1] and down over [b0,b1] (eased) */
+const ramp=(x:number,a0:number,a1:number,b0=1e9,b1=1e9+1)=>sm(a0,a1,x,easeInOutSine)*(1-sm(b0,b1,x,easeInOutSine));
 /** a broadcast pan: the ball's recent path averaged (the operator lags a touch), nudged toward the goal */
 function panTarget(tau:number):V3{let x=0,y=0,z=0;for(let i=0;i<5;i++){const p=ballAt(tau-i*.1);x+=p[0];y+=Math.min(1.4,p[1]);z+=p[2];}return[x/5+3,(y/5)*.6+.6,z/5];}
 /** smoothed ground point under Putellas (cameras ride this) */
@@ -443,16 +460,35 @@ function strikeSpark(s:Sheet,c:Cam,tau:number){const hit=sm(-.02,.04,tau)*(1-sm(
 const tS1=()=>CUE(0,'Goal')-.5;
 const tau1=(t:number)=>t-tS1();
 const P1:V3=[-34,19,-57];
+/** Director beats (lib/plays/riso/director.ts, Oct 4 2026), in football terms: a short establishing wide of San Mamés; follow Batlle as
+ * she breaks forward with it; pull out as she sets it to Pina on the left (passer, ball and receiver in frame); stay pulled out on the broadcast lens while the
+ * camera hands over to Putellas (so the hand-over is a pan from the stand, not a dolly across the pitch), then follow her run from midfield into the box; pull out again for Pina's pass (Pina, the ball and Putellas's arrival all in frame — the
+ * timing is the lesson); push in low on the first-time left-footed strike; hold on her as she wheels away. (τ = t − tS1(); the beats sit on
+ * the play's own τ events, which the cues pin: Batlle's pass τ −5.3, Pina's pass τ −1.05 = "Pina passes", the strike τ 0 = "Goal" −.5.) */
+const F1={from:'follow' as const,size:.4};
+const B1=beats([[0,'wide'],[.75,F1],[tS1()-5.8,{from:'space',size:.19,az:35,lens:1,low:.4}],[tS1()-4.6,{from:'space',size:.2,lens:0}],[tS1()-3.4,F1],
+ [tS1()-1.9,{from:'space',size:.24}],[tS1()-.42,'tight'],[CUE(0,'Goal')+.3,'reaction']]);
+/** the opening wide's aim on the grass, and τ of the first push-in (the followed point glides from one to Batlle, so she is never
+ * outside the frame the director is moving from) */
+const OPEN1:V3=[-52,0,6],T1F=.75-(CUE(0,'Goal')-.5);
+/** the followed point: Batlle with the ball → the middle of the pass (Batlle and Pina both in shot) → Pina as it arrives → Putellas as
+ * she bursts (eased glides, never a cut) */
+const hero1=(tau:number):V3=>{const p=posA(PINA,tau),b=mix3(OPEN1,posA(BATLLE,tau),sm(T1F,T1F+1.2,tau,easeInOutSine));
+ return mix3(mix3(mix3(b,mix3(b,p,.5),sm(-5.8,-5.2,tau,easeInOutSine)),p,sm(-5.3,-4.55,tau,easeInOutSine)),alexiaXZ(tau),sm(-4.45,-3.5,tau,easeInOutSine));};
+function subj1(tau:number):Subject{const h=hero1(tau);
+ // Pina (the receiver, then the passer) kept for both passes; the ball held in frame except while Putellas runs off it, and released after the net
+ const wP=Math.max(ramp(tau,-5.8,-5.2,-4.45,-3.85),ramp(tau,-1.95,-1.3,-.95,-.4)),wB=Math.max(ramp(tau,T1F+.2,T1F+.9,-4.45,-3.85),ramp(tau,-2,-1.4,.8,1.5));
+ return{hero:h,height:1.7,ball:ballW(tau,h,wB),keep:[...keepW(posA(PINA,tau),wP,h),...keepW(posA(BATLLE,tau),ramp(tau,-5.8,-5.2,-5.15,-4.6),h),...near(h,others(tau,['Batlle','Pina']),3,6)]};}
+/** the authored broadcast plan (each step evaluated at the sample time u, so steady() sees the pan as it was at u) */
 function cam1(t:number):Cam{
- const tau=tau1(t);
- return plan(t,[
+ return planD(t,[
   [0,0,()=>({P:P1,T:[-52,5,6],fov:30})],
-  [CUE(0,'Barcelona lead')-.3,1.8,()=>({P:P1,T:panTarget(tau),fov:12.5})],
-  [CUE(0,'Alexia')-.4,1.1,()=>({P:P1,T:mix3(panTarget(tau),add3(kxz(tau),[0,.6,0]),.8),fov:14})],
-  [CUE(0,'runs into')-.3,1,()=>({P:P1,T:mix3(panTarget(tau),[-14,1,-8],.3),fov:10.5})],
-  [tS1()-.5,.7,()=>({P:P1,T:mix3(panTarget(tau),[-5,1.2,-2],.55),fov:9.5})],
-  [tS1()+T_NET+.5,1.6,()=>({P:P1,T:add3(kxz(tau),[0,1,0]),fov:7.5})],
- ]);
+  [CUE(0,'Barcelona lead')-.3,1.8,u=>({P:P1,T:panTarget(tau1(u)),fov:12.5})],
+  [CUE(0,'Alexia')-.4,1.1,u=>({P:P1,T:mix3(panTarget(tau1(u)),add3(kxz(tau1(u)),[0,.6,0]),.8),fov:14})],
+  [CUE(0,'runs into')-.3,1,u=>({P:P1,T:mix3(panTarget(tau1(u)),[-14,1,-8],.3),fov:10.5})],
+  [tS1()-.5,.7,u=>({P:P1,T:mix3(panTarget(tau1(u)),[-5,1.2,-2],.55),fov:9.5})],
+  [tS1()+T_NET+.5,1.6,u=>({P:P1,T:add3(kxz(tau1(u)),[0,1,0]),fov:7.5})],
+ ],B1,u=>subj1(tau1(u)),{recenter:.5,margin:.93});
 }
 const ch1:Scene={
  draw(s,t){
@@ -468,14 +504,19 @@ const ch1:Scene={
 
 // ---------------------------------------------------------------- 2 · slow-motion replay, low, from behind her and then beside her: midfield, the wait, the burst
 const tau2=(t:number)=>key(t,mono([[0,-8.2],[CUE(1,'starts in'),-7.4],[CUE(1,'bursts'),-4.9],[CUE(1,'Pina gets'),-4.3],[SECS(1),-2.6]]),linear);
+/** Director beats, ch2 (the slow replay): follow her low through midfield while she holds her run (the defenders near her in shot);
+ * push in at the burst — the moment being taught; pull out as Pina gets the ball so the pass she is timing her run on is in frame. */
+const B2=beats([[0,{from:'follow',size:.42}],[CUE(1,'bursts')-.4,{from:'tight',size:.5}],[CUE(1,'Pina gets')-.1,{from:'space',size:.3}]]);
+function subj2(t:number):Subject{const tau=tau2(t),h=alexiaXZ(tau),tP=CUE(1,'Pina gets');
+ return{hero:h,height:1.7,keep:[...keepW(posA(PINA,tau),ramp(t,tP-.1,tP+.5),h),...near(h,others(tau,['Pina']),3,6)]};}
 function cam2(t:number):Cam{
- const tau=tau2(t),k=kxz(tau);
- return plan(t,[
-  [0,0,()=>({P:add3(k,[-11,3.6,5.5]),T:add3(k,[9,.5,-9]),fov:38})],
-  [CUE(1,'starts in')+.2,1.4,()=>({P:add3(k,[-9,3.2,5]),T:add3(k,[12,.6,-11]),fov:40})],
-  [CUE(1,'bursts')-.2,1.2,()=>({P:add3(k,[3.5,1.8,10.5]),T:add3(k,[.5,.9,-1]),fov:38})],
-  [CUE(1,'Pina gets')+.2,1.4,()=>({P:add3(k,[-2,2.2,11]),T:add3(k,[5.5,.8,-10]),fov:42})],
- ]);
+ const k=(u:number)=>kxz(tau2(u));
+ return planD(t,[
+  [0,0,u=>({P:add3(k(u),[-11,3.6,5.5]),T:add3(k(u),[9,.5,-9]),fov:38})],
+  [CUE(1,'starts in')+.2,1.4,u=>({P:add3(k(u),[-9,3.2,5]),T:add3(k(u),[12,.6,-11]),fov:40})],
+  [CUE(1,'bursts')-.2,1.2,u=>({P:add3(k(u),[3.5,1.8,10.5]),T:add3(k(u),[.5,.9,-1]),fov:38})],
+  [CUE(1,'Pina gets')+.2,1.4,u=>({P:add3(k(u),[-2,2.2,11]),T:add3(k(u),[5.5,.8,-10]),fov:42})],
+ ],B2,subj2,{recenter:.4});
 }
 const ch2:Scene={
  draw(s,t){
@@ -496,14 +537,20 @@ const ch2:Scene={
 const tau3=(t:number)=>{const a=CUE(2,'She arrives'),j=CUE(2,'just as'),c=CUE(2,'crashes'),f=CUE(2,'left foot');
  return key(t,mono([[0,-2.4],[a+.3,-1.6],[j+.3,-.5],[c,-.02],[c+.5,.18],[f,T_NET+.05],[SECS(2),T_NET+.05+(SECS(2)-f)]]),linear);};
 const E3:V3=[6.5,3.4,-9.5];
+/** Director beats, ch3 (behind the goal): open pulled out on the run and the pass converging on the ringed spot (Pina's pass, the spot
+ * and Putellas all in frame — the timing); push in low on the first-time left-footed strike; hold on her as she wheels away. */
+const B3=beats([[0,{from:'space',size:.3}],[CUE(2,'crashes')-.4,'tight'],[CUE(2,'left foot')+.3,'reaction']]);
+function subj3(t:number):Subject{const tau=tau3(t),h=alexiaXZ(tau),tC=CUE(2,'crashes'),w=1-sm(tC-.6,tC,t,easeInOutSine);
+ // the ball is held in frame from Pina's pass until it leaves her boot (it then flies at this camera), then fades back onto her
+ return{hero:h,height:1.7,ball:ballW(tau,h,ramp(tau,-1.5,-.9,.02,.3)),keep:[...keepW(S_BALL,w,h),...near(h,others(tau),2.5,5)]};}
 function cam3v(t:number):Cam{
- const tau=tau3(t),k=add3(kxz(tau),[0,1.1,0]);
- return plan(t,[
-  [0,0,()=>({P:E3,T:mix3(k,[-14,1,-10],.35),fov:26})],
-  [CUE(2,'just as')-.3,.9,()=>({P:E3,T:mix3(k,S_BALL,.5),fov:24})],
+ const k=(u:number)=>add3(kxz(tau3(u)),[0,1.1,0]);
+ return planD(t,[
+  [0,0,u=>({P:E3,T:mix3(k(u),[-14,1,-10],.35),fov:26})],
+  [CUE(2,'just as')-.3,.9,u=>({P:E3,T:mix3(k(u),S_BALL,.5),fov:24})],
   [CUE(2,'crashes')-.1,.5,()=>({P:E3,T:mix3([-8,1.2,-3.4],GOAL_PT,.35),fov:30})],
-  [CUE(2,'left foot')+.3,1.4,()=>({P:add3(E3,[.3,.3,-1]),T:k,fov:18})],
- ]);
+  [CUE(2,'left foot')+.3,1.4,u=>({P:add3(E3,[.3,.3,-1]),T:k(u),fov:18})],
+ ],B3,subj3,{recenter:.4});
 }
 const ch3:Scene={
  draw(s,t){
@@ -526,13 +573,19 @@ const ch3:Scene={
 // ---------------------------------------------------------------- 4 · the lesson: time your run from midfield → arrive just as the ball does
 const tau4=(t:number)=>{const r=CUE(3,'Time your'),m=CUE(3,'from mid'),a=CUE(3,'arrive'),b=CUE(3,'the ball does');
  return key(t,mono([[0,-8],[r,-7.4],[m+.3,-4.6],[a,-1.4],[b,-.2],[b+.6,.1],[SECS(3),T_NET+.1]]),linear);};
+/** Director beats, ch4 (the lesson): closer on her at midfield with the yellow start ring in frame; pull out as she arrives so the meeting
+ * ring and then Pina's pass arriving into it are both in frame — the run and the pass meeting is the lesson. As she sprints
+ * past the authored eye the camera keeps ≥ 13.5 m back (minDist, eased in) so it never chases at her heels. */
+const B4=beats([[0,'lesson'],[CUE(3,'arrive')-.1,{from:'space',size:.26}]]);
+function subj4(t:number):Subject{const tau=tau4(t),h=alexiaXZ(tau),tA=CUE(3,'arrive'),tB=CUE(3,'the ball does');
+ return{hero:h,height:1.7,ball:ballW(tau,h,ramp(t,tB-.6,tB)),keep:[...keepW(alexiaXZ(-7.4),1-sm(tA-1.3,tA-.6,t,easeInOutSine),h),...keepW(S_BALL,ramp(t,tA-.1,tA+.5),h)]};}
 function cam4v(t:number):Cam{
- const tau=tau4(t),k=kxz(tau);
- return plan(t,[
+ const k=(u:number)=>kxz(tau4(u));
+ return planD(t,[
   [0,0,()=>({P:[-30,14,-37],T:[-30,0,-4],fov:50})],
-  [CUE(3,'from mid')-.2,1.4,()=>({P:[-29,13,-36],T:mix3([-30,0,-5],k,.25),fov:48})],
+  [CUE(3,'from mid')-.2,1.4,u=>({P:[-29,13,-36],T:mix3([-30,0,-5],k(u),.25),fov:48})],
   [CUE(3,'arrive')-.3,1.2,()=>({P:add3(S_BALL,[-17,10,-1]),T:add3(S_BALL,[3,.3,-4]),fov:40})],
- ]);
+ ],B4,subj4,u=>({recenter:.4,minDist:lerp(2.5,13.5,sm(CUE(3,'arrive')-.8,CUE(3,'arrive')-.1,u,easeInOutSine))}));
 }
 const ch4:Scene={
  draw(s,t){

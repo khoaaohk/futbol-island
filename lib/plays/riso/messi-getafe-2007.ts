@@ -32,6 +32,7 @@ import {type RisoStory,type Scene,type Chapter,playChapters} from '../../paths/r
 import {apertureDisc} from '../../paths/riso/passage';
 import {TAU,twos,sm,key,clamp,lerp,rng,hash,blob,polyPath,curvePath,ribbon,rectPath,easeOut,easeOutBack,easeInOutSine,linear,type Pt} from '../../paths/riso/motion';
 import {sparkBurst,glowDisc} from '../../paths/riso/shapes';
+import {beats,shotAt,reframe,steady,near,type View as DView} from './director';
 import {drawAthlete,motionSmear,runCycle,dribble,strike,lunge,backpedal,keeperSet,keeperDive,celebrate,stand,blendPose,touchPhase,STRIKE_CONTACT,type Pose as APose,type AthleteStyle,type InkFill,type Projector} from './athlete';
 
 // ---------------------------------------------------------------- narration + timing
@@ -294,14 +295,16 @@ function play(s:Sheet,c:Cam3,v:View,tau:number,tauPose:number,o:{low?:boolean;mi
  for(const e of list){
   if(!ballDone&&bq[2]>=e.d){drawBall();ballDone=true;}
   const cur=poseOf(e.k,tauPose),prev=poseOf(e.k,tauPose-dtau),[px,pz]=posOf(e.k,tauPose-dtau);
-  const st:AthleteStyle=low||e.h<240?{...e.a.st,detail:'low'}:e.a.st,place={x:e.x,z:-e.z,yaw:cur.yaw},prevPlace={x:px,z:-pz,yaw:prev.yaw};
+  const st:AthleteStyle=(low&&e.a.role!=='messi')||e.h<240?{...e.a.st,detail:'low'}:e.a.st,place={x:e.x,z:-e.z,yaw:cur.yaw},prevPlace={x:px,z:-pz,yaw:prev.yaw};
   if(smear&&e.a.role==='messi')motionSmear(s,prev.p,cur.p,P,st,place,{prevPlace});
   drawAthlete(s,cur.p,P,st,place,{prev:prev.p,prevPlace});
  }
  if(!ballDone)drawBall();
 }
 /** the camera with the card-window framing (world = screen units, centred on the canvas) */
-const frame=(s:Sheet)=>{const z=cam(s,0,0,1);return view(s,z);};
+const frame=(s:Sheet)=>{const z=cam(s,0,0,1);DV={w:s.W/z,h:s.H/z};return view(s,z);};
+/** the window in camera units (set by frame(); read by the director's reframing, aperture() included) */
+let DV:DView={w:1566,h:1080};
 /** smoothed track point (a replay camera eases after Messi) */
 const smooth=(k:number,tau:number):[number,number]=>{const a=posOf(k,tau),b=posOf(k,tau-.3),d=posOf(k,tau-.6);return[(a[0]+b[0]+d[0])/3,(a[1]+b[1]+d[1])/3];};
 
@@ -309,14 +312,24 @@ const smooth=(k:number,tau:number):[number,number]=>{const a=posOf(k,tau),b=posO
 /** τ from chapter-1 time: real time between "gets the ball" (the control, τ 0) and "goal" (the ball in, τ 12) */
 const tau1=(t:number)=>{const tR=CUEW(0,'gets the ball'),tG=CUEW(0,'goal');return(t-tR)*(IN_NET/(tG-tR));};
 const CAM1:V3=[52.5,22,-38];
-function cam1(t:number):Cam3{
+/** Director beats (lib/plays/riso/director.ts, Oct 4 2026): a short establishing wide of the bowl, then follow Messi at the control, push
+ * in low for the turn and the nutmeg (the touches being taught), pull back out for the run down the right (the space he runs into), push in
+ * again round the keeper, and hold on the celebration. */
+const B1=beats([[0,'wide'],[.8,{from:'follow',dur:2}],[CUEW(0,'turns past one')-.35,'tight'],[CUEW(0,'past him again')+.4,'follow'],
+ [CUEW(0,'away down the right')-.2,{from:'space',size:.26}],[CUEW(0,'into the box')-.2,'follow'],[CUEW(0,'round the keeper')-.45,'tight'],[CUEW(0,'goal')+.35,'reaction']]);
+function cam1Pin(t:number){const c=cam1Authored(t),tau=tau1(t),[x,z]=posOf(0,tau),sh=shotAt(t,B1);
+ const foes:V3[]=[];ACTORS.forEach((a,k)=>{if(a.role==='def'||a.role==='gk'){const[fx,fz]=posOf(k,tau);foes.push([fx,0,fz]);}});
+ return reframe({eye:c.C,target:c.T,F:c.F},{hero:[x,0,z],ball:ballAt(tau),keep:near([x,0,z],foes,3.5,7)},sh,DV);}
+/** steady(): averaged over ±.35 s (3 samples), so a defender coming into range never snaps the frame */
+function cam1(t:number):Cam3{const r=steady(t,cam1Pin,.35,3);return look(r.eye,r.target,r.F);}
+function cam1Authored(t:number):Cam3&{T:V3}{
  const tR=CUEW(0,'gets the ball'),tG=CUEW(0,'goal'),S=SECS(0),tau=tau1(t);
  const bs=(u:number):V3=>{const b=ballAt(u);return[b[0],0,b[2]];},b0=bs(tau),b1=bs(tau-.35),b2=bs(tau-.7),bt:V3=[(b0[0]+b1[0]+b2[0])/3,0,(b0[2]+b1[2]+b2[2])/3];
  const open:V3=[58,0,34],m=posOf(0,tau),cel:V3=[m[0]-2,0,m[1]];
  const toBall=sm(0,tR-.3,t,easeInOutSine),toMessi=sm(tG+.4,tG+1.4,t,easeInOutSine);
  const tb:V3=[lerp(open[0],bt[0],toBall),0,lerp(open[2],lerp(bt[2],25,.2),toBall)],T:V3=[lerp(tb[0],cel[0],toMessi),lerp(9,4.4,toBall)*(1-toMessi)+1.2*toMessi,lerp(tb[2],cel[2],toMessi)];
  const F=key(t,[[0,1700],[tR-.4,4300],[tR+4,4500],[tG-2.6,5300],[tG,5500],[tG+1.4,7200],[S,7600]],easeInOutSine);
- return look(CAM1,T,F);
+ return{...look(CAM1,T,F),T};
 }
 const ch1:Scene={
  draw(s,t){

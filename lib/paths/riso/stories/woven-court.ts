@@ -8,7 +8,7 @@
 import type {Sheet} from '../sheet';
 import {type RisoStory,type Scene,playChapters} from '../story';
 import {aperture,apertureDisc} from '../passage';
-import {twos,sm,key,anticipate,settle,spring,clamp,lerp,rng,hash,noise1,blob,polyPath,ribbon,wob,smoothPts,partial,along,rotPts,circlePath,rectPath,arc,easeOut,easeIn,easeIO,easeOutBack,TAU,type Pt,type Key} from '../motion';
+import {twos,sm,key,anticipate,settle,spring,clamp,lerp,rng,hash,noise1,blob,polyPath,ribbon,wob,smoothPts,partial,along,rotPts,circlePath,rectPath,arc,easeOut,easeIn,easeIO,easeOutBack,TAU,type Pt,type Key,creepHolds} from '../motion';
 import {dust,laneArrow,speedLines,handCut,ring,crescent} from '../shapes';
 
 const CH='/stories/narration/futsal/woven-court/';
@@ -170,7 +170,7 @@ function strandPts(sag:number):Pt[]{const out:Pt[]=[];for(let i=0;i<=14;i++)out.
 const ch1:Scene={
  draw(s,t){
   const tt=twos(t);
-  const v=key(t,[[0,0,-40,.85],[1.2,0,-40,1],[3.98,0,-40,1.01],[4.9,-60,20,1.03],[5.8,40,-40,1.03],[7.22,40,-40,1.03],[8.6,140,-140,1.25],[9.4,140,-140,1.25]],easeIO,true);
+  const v=key(t,creepHolds([[0,0,-40,.85],[1.2,0,-40,1],[3.98,0,-40,1.01],[4.9,-60,20,1.03],[5.8,40,-40,1.03],[7.22,40,-40,1.03],[8.6,140,-140,1.25],[9.4,140,-140,1.25]]),easeIO,true);
   s.camera(v[0],v[1]+settle(t,1.3,{amp:22,freq:3,decay:4})+settle(t,2.55,{amp:8,freq:5,decay:5}),v[2],0);
   const sag=key(tt,SAG),sagPrev=key(twos(t-1/12),SAG),squeeze=key(tt,[[2.2,0],[2.55,1],[4.0,1],[4.6,0]]);
   const peak=key(tt,[[1.9,0],[2.1,-24,easeIn],[2.55,280,easeOut],[3.98,280],[4.7,0]])+(tt>2.55&&tt<3.98?8*Math.sin(tt*9):0);
@@ -211,7 +211,7 @@ const STRETCH:Key[]=[[7.2,0],[7.75,160,easeIn],[8.3,160],[8.75,-25,easeOut],[9.1
 const ch2:Scene={
  draw(s,t){
   const tt=twos(t);
-  const v=key(t,[[0,-200,-300,1,0],[1.6,0,-60,.95,0],[3.02,0,-60,.95,0],[4.2,0,-120,1.15,0],[5,0,-120,1.15,0],[6.4,0,0,1.15,-.07],[7.08,0,0,1.15,-.07],[8,0,80,1.15,-.07],[8.3,0,80,1.15,-.07],[8.8,0,40,1.15,-.07],[10.2,0,40,1.15,-.07]],easeIO,true);
+  const v=key(t,creepHolds([[0,-200,-300,1,0],[1.6,0,-60,.95,0],[3.02,0,-60,.95,0],[4.2,0,-120,1.15,0],[5,0,-120,1.15,0],[6.4,0,0,1.15,-.07],[7.08,0,0,1.15,-.07],[8,0,80,1.15,-.07],[8.3,0,80,1.15,-.07],[8.8,0,40,1.15,-.07],[10.2,0,40,1.15,-.07]]),easeIO,true);
   s.camera(v[0],v[1]+settle(t,5.4,{amp:14,freq:4,decay:4}),v[2],v[3]);
   const S=key(tt,STRETCH),stretch=clamp(S/160),spread=sm(8.3,8.7,tt,easeOut);
   // the ball flies in on "connect" and lands in the net at 5.4: the net gives (a dip that springs) and holds
@@ -251,7 +251,7 @@ const ch3:Scene={
  draw(s,t){
   const tt=twos(t);
   const snag1Push=sm(1.6,2.2,tt,easeIn),lunge=sm(7.3,7.8,tt,easeIn);
-  const v=key(t,[[0,0,40,1],[1.2,-100,-150,1.05],[3.46,-100,-150,1.05],[3.7,-100,-150,1.05],[4.5,80,-220,1.05],[6.24,80,-220,1.05],[7.24,-20,-300,1.25],[9,-20,-300,1.25]],easeIO,true);
+  const v=key(t,creepHolds([[0,0,40,1],[1.2,-100,-150,1.05],[3.46,-100,-150,1.05],[3.7,-100,-150,1.05],[4.5,80,-220,1.05],[6.24,80,-220,1.05],[7.24,-20,-300,1.25],[9,-20,-300,1.25]]),easeIO,true);
   s.camera(v[0]+30*snag1Push*(1-sm(3.46,4,t))+settle(t,6.39,{amp:10,freq:8,decay:6}),v[1]+settle(t,.5,{amp:10,freq:4,decay:5}),v[2],0);
   loom(s,{pitch:340,cov:[.2,.32],seed:13,sagY:(x,y)=>-10*pulse(tt,.5)*gauss((x+180)*(x+180)+(y-160)*(y-160),260)});
   s.knockout(polyPath(handCut([[-540,-900],[540,-900],[540,520],[-540,520]],103,10,300),true),.45);
@@ -298,7 +298,7 @@ const ch4:Scene={
   const tt=twos(t);
   const pushIn=key(tt,[[0,-600],[.2,-630,easeIn],[.8,0]]),shove=settle(tt,.8,{amp:14,freq:6,decay:6});
   const collapse=sm(6.1,6.6,tt,easeIn)*(1-sm(10.2,10.8,tt,easeOut)),widen=20*sm(2.5,2.8,tt);
-  const v=key(t,[[0,0,-150,1,0],[1,0,-230,1.1,0],[4.24,0,-230,1.1,0],[4.5,0,-230,1.1,0],[5.5,40,-410,1.1,0],[8.64,40,-410,1.1,0],[10.04,-60,-210,1.15,.14],[11.9,-60,-210,1.15,.14]],easeIO,true);
+  const v=key(t,creepHolds([[0,0,-150,1,0],[1,0,-230,1.1,0],[4.24,0,-230,1.1,0],[4.5,0,-230,1.1,0],[5.5,40,-410,1.1,0],[8.64,40,-410,1.1,0],[10.04,-60,-210,1.15,.14],[11.9,-60,-210,1.15,.14]]),easeIO,true);
   s.camera(v[0]+shove*.6,v[1]+15*(pulse(t,.2)-pulse(t,6.1)),v[2]*(1+.01*sm(2,4.2,t)),v[3]);
   const crumple=1+1.2*sm(.6,.75,tt)*(1-sm(.95,1.3,tt));
   loom(s,{pitch:340,cov:[.2,.32],seed:14,wobble:16*crumple,sagX:(x,y)=>y>-400&&y<-120?-40*(1-clamp(Math.abs(x)/250))*Math.sign(x||1)*sm(.5,.8,tt)*(1-sm(1,1.5,tt)):0});
@@ -351,7 +351,7 @@ const ch4:Scene={
 const ch5:Scene={
  draw(s,t){
   const tt=twos(t);
-  const v=key(t,[[0,0,0,1,0],[.6,120,-40,1,0],[1.7,120,-40,1,0],[2.7,0,0,1,.122],[5.98,0,0,1,.122],[7.18,0,240,1.2,0],[8.8,0,240,1.2,0],[9.3,20,220,1.2,0],[11.3,20,220,1.2,0]],easeIO,true);
+  const v=key(t,creepHolds([[0,0,0,1,0],[.6,120,-40,1,0],[1.7,120,-40,1,0],[2.7,0,0,1,.122],[5.98,0,0,1,.122],[7.18,0,240,1.2,0],[8.8,0,240,1.2,0],[9.3,20,220,1.2,0],[11.3,20,220,1.2,0]]),easeIO,true);
   s.camera(v[0],v[1]+15*pulse(t,.7)+20*pulse(t,2.55)+10*pulse(t,7.2),v[2],v[3]);
   const colour=sm(5.98,6.12,tt);
   // night: a heavy navy halftone field; the lattice shows as a lighter plaid knocked out of it
@@ -411,7 +411,7 @@ const ch6:Scene={
  draw(s,t){
   const tt=twos(t);
   const dropL=sm(7.1,7.5,tt,easeIn),bowl=(x:number,y:number)=>tt<7.5?0:80*gauss(x*x+y*y,300)*(spring(tt-7.5,2.2,.5)*(1-.62*sm(7.5,8.6,tt)));
-  const v=key(t,[[0,0,0,.9,-.21],[1.2,0,0,1,-.07],[3.76,0,0,1,-.07],[4.16,-120,-60,1.05,-.07],[4.61,120,-40,1.05,-.07],[5.16,0,0,1.05,-.035],[6.94,0,0,1.05,-.035],[8.04,0,0,1.15,0],[9.4,0,0,1.15,0]],easeIO,true);
+  const v=key(t,creepHolds([[0,0,0,.9,-.21],[1.2,0,0,1,-.07],[3.76,0,0,1,-.07],[4.16,-120,-60,1.05,-.07],[4.61,120,-40,1.05,-.07],[5.16,0,0,1.05,-.035],[6.94,0,0,1.05,-.035],[8.04,0,0,1.15,0],[9.4,0,0,1.15,0]]),easeIO,true);
   s.camera(v[0],v[1]+20*pulse(t,7.5),v[2],v[3]);
   const bowlPrev=(x:number,y:number)=>{const tp=twos(t-1/12);return tp<7.5?0:80*gauss(x*x+y*y,300)*(spring(tp-7.5,2.2,.5)*(1-.62*sm(7.5,8.6,tp)));};
   loom(s,{pitch:96,cov:[.2,.32],seed:16,ext:1500,wobble:8,sagY:(x,y)=>.5*bowlPrev(x,y)});

@@ -1,6 +1,6 @@
 """Offline, replaceable Kokoro narration. Model/runtime stay outside the app.
 
-Usage: python scripts/build-path-narration.py MODEL_DIR JOBS_JSON [--sample]
+Usage: ~/.venvs/futbol-kokoro/bin/python scripts/build-path-narration.py ~/.venvs/futbol-kokoro/onnx-models JOBS_JSON [--sample]
 Export jobs first with scripts/export-path-narration.cjs.
 """
 import hashlib

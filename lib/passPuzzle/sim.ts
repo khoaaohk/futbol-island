@@ -13,7 +13,7 @@ export const DEF_REACH=0.75, DEF_HEIGHT=2.05, SLIDE_REACH=1.35, SLIDE_HEIGHT=0.3
 export const ATT_REACH=0.85, ATT_HEIGHT=2.25, CHEST_Y=1.35, HEAD_LO=1.3;
 export const GK_SPEED=6.2, GK_SET=3.0, GK_REACH=0.9, GK_DIVE=0.9, GK_HEIGHT=2.5, GK_AREA_DEPTH=5.5, GK_AREA_WIDE=6;
 export const PARRY_SPEED=22, PARRY_DIVING=16, HEAVY_FEET=18, HEAVY_BODY=13, HEAVY_HEAD=24;
-export const FIRST_TIME=1.5, SAMPLE=4, SPIN_MAX=10, HEAD_Y=1.85, MARK_GAP=1.3, PLAN_EVERY=12;
+export const FIRST_TIME=2.5, SAMPLE=4, SPIN_MAX=10, HEAD_Y=1.85, MARK_GAP=1.3, PLAN_EVERY=12;
 export const ADT=2*STEP; // players step at 60 Hz (every other tick)
 export const MEET_MAX=2.5, REST_FAIL=2.5, FLIGHT_MAX=8, KICKER_IGNORE=0.3, HEADER_WINDUP=0.4;
 
@@ -117,13 +117,15 @@ export function turnFor(s:PuzzleState,k:Kick):{turn:number;windup:number}{
 }
 
 /** Start a kick from the aiming phase. */
-export function beginKick(s:PuzzleState,k:Kick):boolean{
+export function beginKick(s:PuzzleState,k:Kick,noHeading=false):boolean{
   if(s.phase!=='aiming'||s.ball.owner==null)return false;
   const {turn,windup}=turnFor(s,k);
-  const kick:Kick={kind:k.kind,target:{x:k.target.x,z:k.target.z},curl:clamp(k.curl||0,-1,1),loft:clamp(k.loft||0,0,1),power:clamp(k.power||0,0,1)};
+  const kind=k.kind==='header'&&noHeading?'pass-feet':k.kind;
+  const kick:Kick={kind,target:{x:k.target.x,z:k.target.z},curl:clamp(k.curl||0,-1,1),loft:clamp(k.loft||0,0,1),power:clamp(k.power||0,0,1)};
   if(k.receiver!=null)kick.receiver=k.receiver;
   if(Number.isFinite(k.shotHeight))kick.shotHeight=clamp(k.shotHeight!,0,1);
   s.pending={kick,kicker:s.carrier,left:windup,total:windup,turn,fromHead:s.ball.atHead};
+  for(const a of s.attackers)if(a.call&&a.call.startAt==null)a.call.startAt=s.t; // called runs go with the wind-up
   s.phase='windup';
   return true;
 }
@@ -204,8 +206,25 @@ function faceToward(a:{facing:number},x:number,z:number,px:number,pz:number,rate
   a.facing=wrapAngle(a.facing+clamp(d,-m,m));
 }
 
+export const CALL_MAX=18; // m: the longest run a child can call
+/** Validate and store a called run (aiming only). */
+export function setCall(ctx:Ctx,s:PuzzleState,i:number,to:Vec2|null):boolean{
+  const a=s.attackers[i];if(s.phase!=='aiming'||!a||i===s.carrier)return false;
+  if(!to){a.call=undefined;return true;}
+  let x=clamp(to.x,-ctx.geo.hw+0.5,ctx.geo.hw-0.5),z=clamp(to.z,-ctx.geo.len/2+0.5,ctx.geo.goalZ-0.5);
+  const dx=x-a.p.x,dz=z-a.p.z,d=hyp(dx,dz);if(d<1)return false;
+  if(d>CALL_MAX){x=a.p.x+dx/d*CALL_MAX;z=a.p.z+dz/d*CALL_MAX;}
+  a.call={to:{x,z},startAt:null};return true;
+}
+
 function runStep(ctx:Ctx,s:PuzzleState,i:number){
   const a=s.attackers[i],run=ctx.sc.attackers[i].run;
+  if(a.call){
+    if(a.call.startAt==null||s.t<a.call.startAt){brakeStop(a);return;}
+    a.mode='run';const t=a.call.to;moveTo(a,t.x,t.z,ATT_SPEED,true);
+    if(hyp(t.x-a.p.x,t.z-a.p.z)<0.15){a.call=undefined;a.mode='idle';a.runLeg=run?.path.length??0;}
+    return;
+  }
   if(!run||a.runLeg>=run.path.length){if(a.mode==='run')a.mode='idle';brakeStop(a);return;}
   // afterPass runs start `delay` s after this player's own pass (pass-and-move); others count from kick-off
   const startAt=run.afterPass?(a.passedAt==null?Infinity:a.passedAt+run.delay):run.delay;
@@ -225,6 +244,13 @@ function goalSide(ctx:Ctx,px:number,pz:number,gap:number):Vec2{
 function defenderShape(ctx:Ctx,s:PuzzleState,j:number){
   const d=s.defenders[j],def=ctx.sc.defenders[j],b=s.ball.p;
   let t:Vec2;
+  if(def.hunt){ // presses whoever the ball is going to, then whoever has it
+    const r=s.flight?.receiver,to=r!=null&&s.attackers[r]?(s.attackers[r].target??s.attackers[r].p):b;
+    t=goalSide(ctx,to.x,to.z,1.1);d.mode='press';moveTo(d,t.x,t.z,DEF_SPEED);faceToward(d,b.x,b.z,d.p.x,d.p.z,8);return;}
+  if(def.recover&&s.phase!=='aiming'){ // counter-attack: sprint back goal-side once the move starts
+    t={x:b.x*0.35+def.x*0.2,z:Math.max(def.z,ctx.geo.goalZ-9)};d.mode='hold';moveTo(d,t.x,t.z,DEF_SPEED,false);faceToward(d,b.x,b.z,d.p.x,d.p.z,8);return;}
+  if(def.trap&&s.phase!=='aiming'&&(s.pending||s.flight)){ // offside trap: the line steps up together as the pass is struck
+    t={x:def.x+(b.x-def.x)*0.25,z:Math.max(b.z+1,def.z-def.trap)};d.mode='hold';moveTo(d,t.x,t.z,DEF_SPEED);faceToward(d,b.x,b.z,d.p.x,d.p.z,8);return;}
   if(def.press){t=goalSide(ctx,b.x,b.z,s.ball.owner!=null?1.2:0.6);d.mode='press';}
   else if(def.mark!=null&&s.attackers[def.mark]){const m=s.attackers[def.mark];t=goalSide(ctx,m.p.x,m.p.z,MARK_GAP);d.mode='mark';}
   else{t={x:def.x+(b.x-def.x)*0.25,z:def.z};d.mode='hold';}
@@ -245,7 +271,24 @@ function keeperSet(ctx:Ctx,s:PuzzleState){
   faceToward(k,b.x,b.z,k.p.x,k.p.z,10);
 }
 
-function inKeeperArea(g:Geo,x:number,z:number){return z>=g.goalZ-GK_AREA_DEPTH&&Math.abs(x)<=g.halfGoal+GK_AREA_WIDE;}
+/** Offside line (Law 11): z of the second-last opponent. The keeper counts; a puzzle without one
+ *  has an implied keeper on the goal line, so the deepest outfield defender sets the line. */
+export const OFFSIDE_EPS=0.1; // level (within 10 cm) is onside: kids get the benefit, like a body part
+export function offsideLine(ctx:Ctx,s:PuzzleState):number{
+  let a=s.keeper?s.keeper.p.z:ctx.geo.goalZ,b=-1e9;
+  for(const d of s.defenders){const z=d.p.z;if(z>a){b=a;a=z;}else if(z>b)b=z;}
+  return b;
+}
+/** Attackers (other than the kicker) in an offside position right now, judged against the ball. */
+export function offsideAttackers(ctx:Ctx,s:PuzzleState,kicker:number):number[]{
+  if(!ctx.sc.require.offside)return [];
+  const line=offsideLine(ctx,s),bz=s.ball.p.z,out:number[]=[];
+  for(let i=0;i<s.attackers.length;i++){if(i===kicker)continue;const z=s.attackers[i].p.z;if(z>0&&z>bz+OFFSIDE_EPS&&z>line+OFFSIDE_EPS)out.push(i);}
+  return out;
+}
+
+export const SWEEPER_DEPTH=16;
+function inKeeperArea(g:Geo,x:number,z:number,sweeper=false){return z>=g.goalZ-(sweeper?SWEEPER_DEPTH:GK_AREA_DEPTH)&&Math.abs(x)<=g.halfGoal+(sweeper?GK_AREA_WIDE+6:GK_AREA_WIDE);}
 
 /* ── the tick ── */
 export function tick(ctx:Ctx,s:PuzzleState,emit:Emit){
@@ -288,21 +331,21 @@ function windupTick(ctx:Ctx,s:PuzzleState,emit:Emit){
   const firstTime=pd.fromHead||(s.chain.length>0&&s.aimTime<=FIRST_TIME);
   s.chain.push({kind:pd.kick.kind,curl:pd.kick.curl,loft:pd.kick.loft,kicker:pd.kicker,header:pd.fromHead,firstTime});
   let receiver:number|null=pd.kick.receiver??null;
-  s.flight={kick:pd.kick,kicker:pd.kicker,elapsed:0,receiver,header:pd.fromHead,firstTime,dirty:false};
+  s.flight={kick:pd.kick,kicker:pd.kicker,elapsed:0,receiver,header:pd.fromHead,firstTime,dirty:false,offside:offsideAttackers(ctx,s,pd.kicker)};
   s.pending=null;s.phase='flight';
   for(const d of s.defenders){d.react=0;d.target=undefined;}
   if(s.keeper){s.keeper.react=0;s.keeper.target=undefined;}
   computePath(ctx,s);
-  if(receiver==null&&pd.kick.kind!=='shot')s.flight.receiver=bestChaser(s,pd.kicker);
+  if(receiver==null&&pd.kick.kind!=='shot')s.flight.receiver=bestChaser(s,pd.kicker,ctx.sc.require.noHeading);
   emit(ev(s,'kick',{attacker:pd.kicker,kind:pd.kick.kind,turn:pd.turn,windup:pd.total}));
 }
 
-function bestChaser(s:PuzzleState,exclude:number):number|null{
+function bestChaser(s:PuzzleState,exclude:number,noHeading=false):number|null{
   if(!s.path)return null;
   let best:number|null=null,bt=1e9;
   for(let i=0;i<s.attackers.length;i++){
     if(i===exclude)continue;
-    const pl=planOnPath(s.path,s.tick,s.attackers[i].p,MEET_SPEED,ATT_REACT,ATT_REACH,ATT_HEIGHT);
+    const pl=planOnPath(s.path,s.tick,s.attackers[i].p,MEET_SPEED,ATT_REACT,ATT_REACH,noHeading?CHEST_Y:ATT_HEIGHT);
     if(pl&&pl.dt<bt){bt=pl.dt;best=i;}
   }
   return best;
@@ -333,6 +376,7 @@ function flightTick(ctx:Ctx,s:PuzzleState,emit:Emit){
   if(b.p.y<=R+1e-6&&sp2<0.09)b.still+=STEP;else b.still=0;
   if(b.still>REST_FAIL){finish(ctx,s,'fail','rest');return;}
   if(f.elapsed>FLIGHT_MAX){finish(ctx,s,'fail','timeout');return;}
+  const clock=ctx.sc.require.clock;if(clock&&s.t>clock){finish(ctx,s,'fail','timeout');return;}
 }
 
 /** Player AI + movement for one 60 Hz actor step during a flight. */
@@ -349,7 +393,7 @@ function movePlayers(ctx:Ctx,s:PuzzleState,f:NonNullable<PuzzleState['flight']>,
         // to chest height; ground pass: come to meet it (earliest point you can get to first).
         const fresh=!f.dirty&&b.lastTouch?.side==='att'&&b.lastTouch.i===f.kicker,kind=f.kick.kind;
         const prefer=fresh&&(kind==='pass-space'||kind==='header')?f.kick.target:undefined;
-        const hi=fresh&&kind==='pass-feet'&&f.kick.loft>0?CHEST_Y:ATT_HEIGHT,lo=fresh&&kind==='header'?HEAD_LO:-1;
+        const hi=(fresh&&kind==='pass-feet'&&f.kick.loft>0)||ctx.sc.require.noHeading?CHEST_Y:ATT_HEIGHT,lo=fresh&&kind==='header'?HEAD_LO:-1;
         const near=fresh&&kind==='pass-feet'?{x:f.kick.target.x,z:f.kick.target.z,r:MEET_MAX}:undefined;
         const pl=(near&&planOnPath(path,s.tick,a.p,MEET_SPEED,0,ATT_REACH*0.5,hi,lo,0,undefined,near,a.v))||planOnPath(path,s.tick,a.p,MEET_SPEED,0,ATT_REACH*0.5,hi,lo,0,prefer,undefined,a.v);
         const n=path.pts.length/3-1;
@@ -376,7 +420,7 @@ function movePlayers(ctx:Ctx,s:PuzzleState,f:NonNullable<PuzzleState['flight']>,
   if(k){
     if(k.react>=GK_REACT&&(replan||k.react-ADT<GK_REACT)){
       const pl=planOnPath(path,s.tick,k.p,GK_SPEED,0,GK_REACH+GK_DIVE,GK_HEIGHT);
-      k.target=pl&&inKeeperArea(g,pl.x,pl.z)?{x:pl.x,z:pl.z}:undefined;
+      k.target=pl&&inKeeperArea(g,pl.x,pl.z,!!ctx.sc.keeper?.sweeper)?{x:pl.x,z:pl.z}:undefined;
       if(k.target&&Math.abs(k.target.x-k.p.x)>1.0){k.mode='dive';k.diveDir=Math.sign(k.target.x-k.p.x);}
       else if(k.target)k.mode='claim';
     }
@@ -395,7 +439,7 @@ function contacts(ctx:Ctx,s:PuzzleState,emit:Emit):boolean{
   let bestD=1e9,who:'att'|'def'|'gk'|null=null,wi=-1,slide=false;
   for(let i=0;i<s.attackers.length;i++){
     if(i===f.kicker&&f.elapsed<KICKER_IGNORE&&b.lastTouch?.side==='att'&&b.lastTouch.i===i)continue;
-    if(y>ATT_HEIGHT)continue;
+    if(y>ATT_HEIGHT||(ctx.sc.require.noHeading&&y>CHEST_Y))continue; // no-heading: let it drop to the chest
     // a chip to feet: the intended receiver lets it drop and takes it on the chest, thigh or foot
     if(i===f.receiver&&y>CHEST_Y&&f.kick.kind==='pass-feet'&&f.kick.loft>0&&!f.dirty)continue;
     const a=s.attackers[i],d=hyp(b.p.x-a.p.x,b.p.z-a.p.z);
@@ -410,12 +454,19 @@ function contacts(ctx:Ctx,s:PuzzleState,emit:Emit):boolean{
   const k=s.keeper;
   if(k&&k.react>=0){
     const d=hyp(b.p.x-k.p.x,b.p.z-k.p.z),reach=GK_REACH+GK_DIVE*k.dive;
-    if(y<=GK_HEIGHT&&d<=reach&&d<bestD&&inKeeperArea(ctx.geo,b.p.x,b.p.z)){bestD=d;who='gk';wi=0;}
+    if(y<=GK_HEIGHT&&d<=reach&&d<bestD&&inKeeperArea(ctx.geo,b.p.x,b.p.z,!!ctx.sc.keeper?.sweeper)){bestD=d;who='gk';wi=0;}
   }
   if(!who)return false;
   const sp=hyp(b.v.x,b.v.y,b.v.z);
   if(who==='att'){
     const a=s.attackers[wi],touch=touchOf(y);
+    // Law 11: an attacker who was offside when the ball was played is penalised on his first touch
+    // (a deflection or a save does not reset it). The ball stops where he touched it.
+    if(f.offside?.includes(wi)){
+      emit(ev(s,'offside',{attacker:wi,touch}));
+      b.v.x=b.v.y=b.v.z=0;b.p.y=R;b.lastTouch={side:'att',i:wi};
+      finish(ctx,s,'fail','offside');return true;
+    }
     const limit=touch==='feet'?HEAVY_FEET:touch==='header'?HEAVY_HEAD:HEAVY_BODY;
     if(sp>limit){
       emit(ev(s,'heavy_touch',{attacker:wi,touch}));
@@ -432,7 +483,7 @@ function contacts(ctx:Ctx,s:PuzzleState,emit:Emit):boolean{
     // take possession, frozen for the next aim
     a.facing=Math.atan2(-b.v.x,-b.v.z)||a.facing;
     if(hyp(b.v.x,b.v.z)<0.5)a.facing=Math.atan2(-a.p.x,ctx.geo.goalZ-a.p.z);
-    a.mode='hold';if(!ctx.sc.attackers[wi].run?.afterPass)a.runLeg=ctx.sc.attackers[wi].run?.path.length??0;
+    a.mode='hold';a.call=undefined;if(!ctx.sc.attackers[wi].run?.afterPass)a.runLeg=ctx.sc.attackers[wi].run?.path.length??0;
     b.owner=wi;b.atHead=touch==='header';b.lastTouch={side:'att',i:wi};b.still=0;
     placeBallAtFeet(s,wi);
     s.carrier=wi;s.aimTime=0;
@@ -463,7 +514,7 @@ function contacts(ctx:Ctx,s:PuzzleState,emit:Emit):boolean{
     b.v.y=Math.abs(b.v.y)*0.4+(slide?0.5:1.5);b.spin=0;
     b.lastTouch={side:'def',i:wi};f.dirty=true;
     d.react=-0.4;d.target=undefined; // the deflector is off balance
-    computePath(ctx,s);f.receiver=bestChaser(s,-1);
+    computePath(ctx,s);f.receiver=bestChaser(s,-1,ctx.sc.require.noHeading);
     for(const x of s.attackers)x.target=undefined;
     return true;
   }
@@ -479,7 +530,7 @@ function contacts(ctx:Ctx,s:PuzzleState,emit:Emit):boolean{
   b.v.z=-Math.abs(b.v.z)*0.3;b.v.x=b.v.x*0.3+side*4;b.v.y=2;b.spin=0;
   b.p.z=Math.min(b.p.z,ctx.geo.goalZ-0.05);
   b.lastTouch={side:'gk',i:0};f.dirty=true;k!.react=-0.6;k!.target=undefined;
-  computePath(ctx,s);f.receiver=bestChaser(s,-1);
+  computePath(ctx,s);f.receiver=bestChaser(s,-1,ctx.sc.require.noHeading);
   for(const x of s.attackers)x.target=undefined;
   return true;
 }
@@ -492,9 +543,12 @@ function finish(ctx:Ctx,s:PuzzleState,outcome:'success'|'fail',reason?:FailReaso
     const ch=s.chain,last=ch[ch.length-1];
     if(bz.kind==='curl')bonus=ch.some(c=>Math.abs(c.curl)>=0.35);
     else if(bz.kind==='chip')bonus=ch.some(c=>c.loft>0&&c.kind!=='header'&&!c.header);
+    else if(bz.kind==='header'&&ctx.sc.require.noHeading)bonus=!!last?.firstTime; // "volley it first time"
     else if(bz.kind==='header')bonus=ctx.sc.require.finish==='goal'?!!last?.header:ch.some(c=>c.header||c.kind==='header');
     else if(bz.kind==='first-time')bonus=!!last?.firstTime;
     else if(bz.kind==='scorer')bonus=scorer!=null&&scorer===bz.scorer;
+    else if(bz.kind==='placement'){ // low into the corner away from where the keeper started
+      const kx=ctx.sc.keeper?.x??0,b=s.ball.p;bonus=last?.kind==='shot'&&b.y<1.0&&Math.abs(b.x)>ctx.geo.halfGoal*.45&&(Math.abs(kx)<.3||Math.sign(b.x)!==Math.sign(kx));}
   }
   s.result={outcome,reason,passes:s.passes,bonus};
 }

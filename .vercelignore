@@ -16,3 +16,5 @@ docs/story-production
 test-results
 playwright-report
 shots
+audit
+var-shots

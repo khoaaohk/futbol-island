@@ -5,7 +5,9 @@ type Unit={object:T.Object3D;radius:number};
  * is a unit. A unit's bounding sphere is measured once around its own origin, padded for poses, then swept along the
  * sunlight to below the lowest island surface each shadow frame; a unit whose volume misses the view is hidden for the
  * shadow pass only (its whole subtree is skipped) and restored in `finally`. Its shadow could not reach a visible pixel,
- * so the image is unchanged; the colour pass and the simulation are untouched. */
+ * so the image is unchanged; the colour pass and the simulation are untouched.
+ * Heat pass 6: a culled chunk mesh is flagged `userData.shadowCulled` for the pass, so `staticShadowBatches` (wrapped inside this
+ * one) can still draw its chunk's one batched proxy instead of falling back to one depth draw per surviving member. */
 export function createShadowVisibility(renderer:T.WebGLRenderer,scene:T.Scene,sun:T.DirectionalLight){
  const casters=scene.children.filter((o):o is T.Mesh=>o instanceof T.Mesh&&o.name.startsWith('island-chunk-')&&o.castShadow).map(mesh=>({mesh,box:new T.Box3().setFromObject(mesh)}));
  const frustum=new T.Frustum(),matrix=new T.Matrix4(),volume=new T.Box3(),shifted=new T.Box3(),direction=new T.Vector3(),offset=new T.Vector3(),removed:T.Mesh[]=[];
@@ -28,7 +30,7 @@ export function createShadowVisibility(renderer:T.WebGLRenderer,scene:T.Scene,su
    // Extrude to below the lowest island surface; include tall off-screen casters.
    offset.copy(direction).multiplyScalar(Math.max(0,(box.max.y+8)/-direction.y));
    volume.copy(box).union(shifted.copy(box).translate(offset)).expandByScalar(1);
-   if(!frustum.intersectsBox(volume)){mesh.castShadow=false;removed.push(mesh);}
+   if(!frustum.intersectsBox(volume)){mesh.castShadow=false;mesh.userData.shadowCulled=true;removed.push(mesh);}
   }
   stats.culled=removed.length;
   if(dynamic)for(const root of dynamicRoots){if(!root.visible)continue;
@@ -41,7 +43,7 @@ export function createShadowVisibility(renderer:T.WebGLRenderer,scene:T.Scene,su
    }
   }
   stats.dynamicCulled=hidden.length;
-  try{return original.call(this,lights,world,camera);}finally{for(const mesh of removed)mesh.castShadow=true;removed.length=0;for(const object of hidden)object.visible=true;hidden.length=0;}
+  try{return original.call(this,lights,world,camera);}finally{for(const mesh of removed){mesh.castShadow=true;mesh.userData.shadowCulled=false;}removed.length=0;for(const object of hidden)object.visible=true;hidden.length=0;}
  };
  return {stats,setEnabled(value:boolean){enabled=value;},setDynamic(value:boolean){dynamic=value;},addDynamicRoots(roots:T.Object3D[]){for(const root of roots)if(!dynamicRoots.includes(root))dynamicRoots.push(root);},dispose(){renderer.shadowMap.render=original;}};
 }

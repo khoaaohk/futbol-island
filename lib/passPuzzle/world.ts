@@ -1,8 +1,8 @@
 /** PuzzleWorld wrapper, predict() and replay() over the pure sim core. */
 import type {Scenario,PuzzleWorld,PuzzleState,PuzzleEvent,PuzzleInput,PuzzleSnapshot,Kick,Prediction,Replay,Vec3} from './types';
 import {STEP} from './physics';
-import {makeCtx,initialState,tick,beginKick,turnFor,planOnPath,planDefender,clamp,type Ctx,
-  REACT,GK_AREA_DEPTH,GK_AREA_WIDE,GK_SPEED,GK_REACT,GK_REACH,GK_DIVE,GK_HEIGHT,SAMPLE} from './sim';
+import {makeCtx,initialState,tick,beginKick,turnFor,setCall,planOnPath,planDefender,clamp,offsideLine,type Ctx,
+  REACT,GK_AREA_DEPTH,GK_AREA_WIDE,SWEEPER_DEPTH,GK_SPEED,GK_REACT,GK_REACH,GK_DIVE,GK_HEIGHT,SAMPLE} from './sim';
 
 const clone:<T>(v:T)=>T=typeof structuredClone==='function'?v=>structuredClone(v):v=>JSON.parse(JSON.stringify(v));
 const ctxs=new WeakMap<PuzzleWorld,Ctx>();
@@ -20,8 +20,9 @@ export function createPuzzle(sc:Scenario):PuzzleWorld{
       while(acc>=STEP-1e-9){acc-=STEP;tick(ctx,s,emit);}
     },
     kick(k:Kick){
-      if(!beginKick(s,k))return false;
-      recorded.push({tick:s.tick,kick:clone(s.pending!.kick)});
+      const calls=s.attackers.flatMap((a,i)=>a.call&&a.call.startAt==null?[{attacker:i,to:{x:a.call.to.x,z:a.call.to.z}}]:[]);
+      if(!beginKick(s,k,sc.require.noHeading))return false;
+      recorded.push(calls.length?{tick:s.tick,kick:clone(s.pending!.kick),calls}:{tick:s.tick,kick:clone(s.pending!.kick)});
       return true;
     },
     snapshot(){return {scenario:sc,state:clone(s)};},
@@ -37,13 +38,14 @@ export function createPuzzle(sc:Scenario):PuzzleWorld{
     attemptStart(){return {scenario:sc,state:clone(start)};},
     inputs(){return recorded.map(i=>clone(i));},
     turnFor(k:Kick){return turnFor(s,k);},
+    callRun(i,to){return setCall(ctx,s,i,to);},
   };
   ctxs.set(w,ctx);
   return w;
 }
 
 const PREDICT_FLIGHT_TICKS=4*120;
-const END_OF:Record<string,Prediction['end']|undefined>={goal:'goal',out:'out',intercept:'intercept',save:'intercept',parry:'intercept',deflect:'intercept',receive:'rest',heavy_touch:'rest'};
+const END_OF:Record<string,Prediction['end']|undefined>={goal:'goal',out:'out',offside:'offside',intercept:'intercept',save:'intercept',parry:'intercept',deflect:'intercept',receive:'rest',heavy_touch:'rest'};
 
 /**
  * Bounded look-ahead: clones the frozen aiming state, runs the windup and at most
@@ -67,13 +69,13 @@ function predictUncached(world:PuzzleWorld,kick:Kick):Prediction{
   const empty:Prediction={path:[],end:'rest',threats:[],keeperThreat:false};
   if(world.state.phase!=='aiming')return empty;
   const s=clone(world.state);
-  if(!beginKick(s,kick))return empty;
+  if(!beginKick(s,kick,ctx.sc.require.noHeading))return empty;
   const got:{e:PuzzleEvent|null;launched:boolean}={e:null,launched:false};
   const emit=(e:PuzzleEvent)=>{if(e.type==='kick'){got.launched=true;return;}if(!got.e&&END_OF[e.type])got.e=e;};
   let guard=200;
   while(!got.launched&&guard-->0)tick(ctx,s,emit);
   if(!got.launched||!s.path)return empty;
-  const launchTick=s.tick,launchPath=s.path;
+  const launchTick=s.tick,launchPath=s.path,launchOffside=s.flight?.offside.slice()??[],launchLine=ctx.sc.require.offside?offsideLine(ctx,s):undefined;
   // who threatens, from the positions at launch
   const defenders=s.defenders.map(d=>({x:d.p.x,z:d.p.z}));
   const kp=s.keeper?{x:s.keeper.p.x,z:s.keeper.p.z}:null;
@@ -98,7 +100,7 @@ function predictUncached(world:PuzzleWorld,kick:Kick):Prediction{
   let keeperThreat=false;
   if(kp){
     const pl=planOnPath(cut,launchTick,kp,GK_SPEED,GK_REACT,GK_REACH+GK_DIVE,GK_HEIGHT);
-    keeperThreat=!!pl&&pl.z>=ctx.geo.goalZ-GK_AREA_DEPTH&&Math.abs(pl.x)<=ctx.geo.halfGoal+GK_AREA_WIDE;
+    const sw=!!ctx.sc.keeper?.sweeper;keeperThreat=!!pl&&pl.z>=ctx.geo.goalZ-(sw?SWEEPER_DEPTH:GK_AREA_DEPTH)&&Math.abs(pl.x)<=ctx.geo.halfGoal+GK_AREA_WIDE+(sw?6:0);
   }
   const out:Prediction={path,end:first?END_OF[first.type]!:s.result?.reason==='out'?'out':'rest',threats,keeperThreat};
   if(first&&(first.type==='receive'||first.type==='heavy_touch')){out.receiver=first.attacker;out.receiveAt=first.at;}
@@ -106,6 +108,8 @@ function predictUncached(world:PuzzleWorld,kick:Kick):Prediction{
   if(first&&(first.type==='save'||first.type==='parry'))keeperThreat=out.keeperThreat=true;
   if(out.end==='goal')out.keeperThreat=false;
   if(hitsPost)out.hitsPost=true;
+  if(launchLine!==undefined){out.offside=launchOffside;out.offsideLine=launchLine;}
+  if(first?.type==='offside'){out.receiver=first.attacker;out.receiveAt=first.at;}
   return out;
 }
 
@@ -123,6 +127,7 @@ export function replay(snapshot:PuzzleSnapshot,inputs:PuzzleInput[],speed=0.38):
       const inp=queue[qi];
       if(!inp){done=true;return;}
       while(s().tick<inp.tick)w.step(STEP);
+      for(const c of inp.calls??[])w.callRun(c.attacker,c.to);
       w.kick(inp.kick);qi++;
     }
     if(s().phase==='success'||s().phase==='fail')done=true;

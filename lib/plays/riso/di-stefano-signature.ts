@@ -65,11 +65,14 @@ import {twos,sm,key,clamp,lerp,rng,hash,ribbon,polyPath,easeOut,easeOutBack,ease
 import {sparkBurst,speedLines,laneArrow,crescent} from '../../paths/riso/shapes';
 import {drawAthlete,motionSmear,makeCamera,posed,blendPose,runCycle,dribble,stand,strike,lunge,backpedal,celebrate,keeperSet,keeperDive,solve,
  touchPhase,STRIKE_CONTACT,type Pose,type AthleteStyle,type Camera,type Place,type V3,type DrawResult} from './athlete';
+import {beats,shotAt,reframe,near,steady,type Keep,type Pin,type View as DView} from './director';
 
 const K='navy',R='red',Y='yellow',B='blue';
 const D2R=Math.PI/180;
 /** Frame the FULL sheet: world (dx,dy) lands on the sheet centre at `zoom`, ignoring safe/fit (the card window is small). */
-function frame(s:Sheet,zoom=1,dx=0,dy=0){const S=zoom*s.arrival;s.camera((s.cx-s.W/2)/S+dx,(s.cy-s.H/2)/S+dy,zoom/s.fit,0);}
+function frame(s:Sheet,zoom=1,dx=0,dy=0){const S=zoom*s.arrival;DV={w:s.W,h:s.H};s.camera((s.cx-s.W/2)/S+dx,(s.cy-s.H/2)/S+dy,zoom/s.fit,0);}
+/** the window in camera units (world = sheet units under frame()); read by the director's reframing, aperture() included */
+let DV:DView={w:1566,h:1080};
 
 // ================= narration (script.json mirrors it) =================
 /** Provisional cue onsets: ≈2.6 words/s plus sentence pauses; replaced by measured Kokoro onsets once timing.json exists. */
@@ -441,14 +444,50 @@ function look1(tau:number):V3{const b=ballAt(tau),[cx,cz]=posOf(DS,tau);
  if(tau<0)return[lerp(b[0],-53,.4),1,lerp(b[2],0,.4)*.7];
  if(tau<IN_NET){const u=sm(SHOT-1,SHOT+.3,tau);return[lerp(lerp(b[0],cx,.3)+1.5,lerp(b[0],-8,.3),u),1,lerp(b[2],0,.3)*.7];}
  return mix3([-6,1.2,-1],[cx+1,1.4,cz*.8],sm(IN_NET+.1,IN_NET+1,tau));}
-function cam1(t:number){const tau=tau1(t),a=look1(tau),b=look1(tau-.3),c=look1(tau-.6),look:V3=[(a[0]+b[0]+c[0])/3,(a[1]+b[1]+c[1])/3,(a[2]+b[2]+c[2])/3];
+function cam1Authored(t:number):Pin{const tau=tau1(t),a=look1(tau),b=look1(tau-.3),c=look1(tau-.6),look:V3=[(a[0]+b[0]+c[0])/3,(a[1]+b[1]+c[1])/3,(a[2]+b[2]+c[2])/3];
  const gl=T(0,'Glasgow'),rm=T(0,'Real Madrid');
  // wide on the great bowl first ("that great Glasgow canyon"), then down onto the centre circle and the play
  const up=1-sm(rm-1.4,rm+.3,t,easeInOutSine);
  const F=key(t,mono([[0,1250],[gl+1.2,1350],[rm+.3,3900],[T(0,'have just scored'),4300],[T(0,'Alfredo Di Stéfano'),5000],[T(0,'off he goes')+.4,5400],[T(0,'scores'),5800],[T(0,'His third goal')+.4,6600],[SEC(0),6300]]),easeInOutSine);
- return cam(CAM1,mix3(look,[-52,11,-74],up),F);}
+ return{eye:CAM1,target:mix3(look,[-52,11,-74],up),F};}
+/** Director beats (lib/plays/riso/director.ts, Oct 4 2026): a short establishing wide of the Hampden bowl ("that great Glasgow
+ * canyon"), then down onto Di Stéfano on the centre spot (the lit centre circle softly kept), in on him for "in white", out again for
+ * Frankfurt (Stein, who has just scored, kept in frame), in for the kick-off tap to Puskás, out for Puskás' pass back (passer and
+ * receiver both in frame), follow him as he goes, push in low as he swerves past Weilbächer (the defender he beats kept in frame),
+ * then pull out for the shot so the shooter, the goal and the keeper are all in the picture when he strikes (the ball is always kept,
+ * so its flight into the net stays in), and push in on him for the hat-trick; the ball in the net eases back in for the closing frame. */
+const B1=(()=>{const ec=T(0,'European Cup final'),rm=T(0,'Real Madrid'),ef=T(0,'Eintracht Frankfurt'),am=T(0,'A minute later'),ad=T(0,'Alfredo Di Stéfano'),og=T(0,'off he goes'),rr=T(0,'runs and runs'),sc=T(0,'scores');
+ return beats([[0,'wide'],[Math.min(1,ec-.5),{from:'space',size:.2}],[rm+.45,'follow'],[ef-.25,{from:'space',size:.24}],[am-.45,'follow'],[ad+.25,{from:'space',size:.26}],
+  [og-.45,'follow'],[rr-.5,{from:'tight',size:.5,az:20}],[sc-.95,{from:'space',size:.22,az:35}],[sc+.75,{from:'reaction',az:25}]]);})();
+const CIRC:V3[]=Array.from({length:8},(_,i)=>[-52.5+Math.cos(i/8*TAU)*9.15,0,Math.sin(i/8*TAU)*9.15]);
+const OTHERS=ACTORS.map((_,k)=>k).filter(k=>k!==DS);
+/** what chapter 1 must keep in frame at t: Di Stéfano, the ball (handed back to his feet after it rests in the net, then the real ball
+ * eased back in for the closing frame), and the soft keeps the narration is about — all weights ramped over ≥ .6 s */
+function subj1(t:number,tau:number){
+ const ec=T(0,'European Cup final'),rm=T(0,'Real Madrid'),ef=T(0,'Eintracht Frankfurt'),hj=T(0,'have just scored'),am=T(0,'A minute later'),gb=T(0,'gets the ball'),tg=T(0,'His third goal'),E=SEC(0);
+ const sc=T(0,'scores'),[x,z]=posOf(DS,tau),hero:V3=[x,0,z],ballR=ballAt(tau),endw=sm(E-1.3,E-.7,t),ball=mix3(ballR,[x,.11,z],sm(IN_NET,IN_NET+.6,tau)*(1-endw)),keep:Keep[]=[];
+ const add=(P:V3,w:number)=>{if(w>.01)keep.push({P,w:w>.99?1:w});};
+ const actor=(k:number,w:number)=>{const[px,pz]=posOf(k,tau);add([px,0,pz],w);add([px,1.8,pz],w);};
+ const cw=.5*sm(ec-.1,ec+.5,t)*(1-sm(rm+.2,rm+.8,t));for(const p of CIRC)add(p,cw);
+ const tw=(k:Keep[],w:number)=>{if(w>.01)for(const q of k)if(!Array.isArray(q))add(q.P,q.w*w);};
+ tw(near(hero,OTHERS.map(k=>{const[px,pz]=posOf(k,tau);return[px,0,pz] as V3;}),8,13),sm(rm-.6,rm,t)*(1-sm(rm+.5,rm+1.1,t)));
+ tw(near(hero,FRANK.map(k=>{const[px,pz]=posOf(k,tau);return[px,0,pz] as V3;}),8,14),sm(ef-.4,ef+.2,t)*(1-sm(hj+.9,hj+1.5,t)));
+ actor(STEIN,sm(hj-1,hj-.3,t)*(1-sm(hj+.9,hj+1.5,t)));
+ actor(PUS,sm(am-.7,am-.1,t)*(1-sm(gb+.25,gb+.85,t)));
+ // the defenders he goes past
+ tw(near(hero,[WEIL,EIG].map(k=>{const[px,pz]=posOf(k,tau);return[px,0,pz] as V3;}),3.5,7.5),1-sm(SHOT+.5,SHOT+1.2,tau));
+ // anyone between the camera and him (nearer the main stand) and close by: kept softly, so no foreground player is cut off by the push-in
+ const dh=Math.hypot(x-CAM1[0],z-CAM1[2]);ACTORS.forEach((_,k)=>{if(k===DS)return;const[px,pz]=posOf(k,tau),fg=sm(1,4,dh-Math.hypot(px-CAM1[0],pz-CAM1[2]));if(fg>.01)tw(near(hero,[[px,0,pz]],4.5,10),fg);});
+ // the shot: the posts and the keeper as hard points that slide out from him as it nears (so the aim can centre on the whole
+ // picture; their spread grows exponentially, so the pull-out runs at a steady zoom rate), back in after the net; then headroom for
+ // the three hat-trick balls
+ const gu=clamp((t-(sc-1.4))/1.5),gw=gu<=0?0:Math.exp(Math.log(.1)*(1-easeInOutSine(gu)))*sm(0,.15,gu)*Math.exp(Math.log(.1)*sm(IN_NET-.1,IN_NET+.7,tau))*(1-sm(IN_NET+.5,IN_NET+.8,tau)),[lx,lz]=posOf(GKI,tau);
+ if(gw>.01)for(const P of[[0,0,-3.66],[0,2.44,3.66],[lx,0,lz],[lx,1.8,lz]] as V3[])keep.push(mix3([x,P[1],z],P,gw));
+ add([x,3.4,z],sm(tg,tg+.6,t));
+ return{subj:{hero,ball,keep,height:1.78},recenter:Math.max(gw,endw)};}
+function cam1(t:number){const r=steady(t,u=>{const q=subj1(u,tau1(u));return reframe(cam1Authored(u),q.subj,shotAt(u,B1),DV,{recenter:q.recenter,margin:.88+.06*q.recenter});},.3,3);return cam(r.eye,r.target,r.F);}
 const ch1:Scene={
- draw(s,t){const tt=twos(t),c=cam1(t),tau=tau1(t),tp=tau1(tt),goalIn=tau-IN_NET,gl=T(0,'Glasgow'),ec=T(0,'European Cup final'),rm=T(0,'Real Madrid'),iw=T(0,'in white'),ef=T(0,'Eintracht Frankfurt'),hj=T(0,'have just scored'),am=T(0,'A minute later'),ad=T(0,'Alfredo Di Stéfano'),og=T(0,'off he goes'),rr=T(0,'runs and runs'),tg=T(0,'His third goal');frame(s);
+ draw(s,t){DV={w:s.W,h:s.H};const tt=twos(t),c=cam1(t),tau=tau1(t),tp=tau1(tt),goalIn=tau-IN_NET,gl=T(0,'Glasgow'),ec=T(0,'European Cup final'),rm=T(0,'Real Madrid'),iw=T(0,'in white'),ef=T(0,'Eintracht Frankfurt'),hj=T(0,'have just scored'),am=T(0,'A minute later'),ad=T(0,'Alfredo Di Stéfano'),og=T(0,'off he goes'),rr=T(0,'runs and runs'),tg=T(0,'His third goal');frame(s);
   stadium(s,c,{t,cheer:.1+.9*sm(0,.5,goalIn)+.35*bump(hj-.2,am,t),flash:.12+1.2*sm(0,.4,goalIn),canyon:sm(gl-.1,gl+.4,t)*(1-sm(ec+.4,rm-.4,t))});
   ground(s,c,{net:goalIn>0?netRipple(goalIn,NET_HIT):undefined,circle:sm(ec-.1,ec+.5,t)*(1-sm(rm+.2,rm+.8,t))+sm(am-.2,am+.2,t)*(1-sm(am+1,am+1.5,t)),half:sm(ad-.1,ad+.3,t)*(1-sm(og+.2,og+.8,t))});
   // "Real Madrid, in white" / "Eintracht Frankfurt": rings under each team

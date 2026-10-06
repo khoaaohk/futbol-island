@@ -2,8 +2,10 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'/Users/khoado/.npm/_npx
 const assert=require('node:assert/strict');
 (async()=>{const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'});try{
  const mobile=process.argv.includes('--mobile'),page=await browser.newPage({viewport:mobile?{width:390,height:844}:{width:1280,height:800},isMobile:mobile,hasTouch:mobile}),errors=[];
- page.on('pageerror',e=>errors.push(e.message));await page.addInitScript(()=>localStorage.setItem('fi2-welcome-v1','completed'));
- await page.goto(new URL('/arcade?game=live',process.env.FUTBOL_BASE_URL||'http://localhost:8092').href);
+ page.on('pageerror',e=>errors.push(e.message));await page.addInitScript(()=>{localStorage.setItem('fi2-welcome-v1','completed');localStorage.setItem('fi2-audio-mix','4-50-v1');localStorage.setItem('fi2-sound-muted','false');localStorage.setItem('fi2-music-enabled','false');localStorage.setItem('fi2-voice-enabled','false');});
+ // Arcade plays cost coins (economy pass): take the developer test grant first.
+ await page.goto(new URL('/?preview=all&testCoins=50000',process.env.FUTBOL_BASE_URL||'http://localhost:8092').href,{waitUntil:'domcontentloaded',timeout:90000});await page.waitForTimeout(15000);
+ await page.goto(new URL('/arcade?game=live',process.env.FUTBOL_BASE_URL||'http://localhost:8092').href,{waitUntil:'domcontentloaded',timeout:90000});
  const root=page.getByRole('region',{name:'Island Strikers arcade match'}),canvas=root.locator('canvas');
  await page.waitForFunction(()=>window.__fi2Live);
  const framing=await page.evaluate(()=>{const {camera,scene}=window.__fi2Live,d=camera.position.length(),p=camera.position.clone();let extent=0;for(const x of [-26,26])for(const z of [-14,14]){p.set(x,2,z).project(camera);extent=Math.max(extent,Math.abs(p.x),Math.abs(p.y));}return{extent,d,far:camera.far,fogNear:scene.fog.near};});

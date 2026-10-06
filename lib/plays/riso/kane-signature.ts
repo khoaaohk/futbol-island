@@ -62,6 +62,7 @@
  * Inks: yellow, red, blue, navy (grass = yellow under blue). Scenes read only their local t; poses on twos, cameras on ones; all randomness
  * seeded. Budget ≈ 150–320 plate ops per frame. */
 import {withTiming,type NarrationTiming} from './timing';
+import {beats,shotAt,directShot,reframe,steady,focalOf,fovOf,near,type Beats,type Subject,type View as DView} from './director';
 import type {Sheet} from '../../paths/riso/sheet';
 import {type RisoStory,type Scene,type Chapter,playChapters} from '../../paths/riso/story';
 import {apertureDisc} from '../../paths/riso/passage';
@@ -118,7 +119,9 @@ const lerpAng=(a:number,b:number,u:number)=>a+wrap(b-a)*u;
 const yawTo=(dx:number,dz:number)=>Math.atan2(-dz,dx);
 let LENS=1;
 /** Frame the FULL sheet: world (0,0) on the canvas centre at 1 unit per sheet unit (the passage arrival scale still multiplies in). */
-function frame(s:Sheet){const S=s.arrival;s.camera((s.cx-s.W/2)/S,(s.cy-s.H/2)/S,1/s.fit,0);LENS=Math.pow(Math.min(1,s.W/1620),.6);}
+function frame(s:Sheet){const S=s.arrival;s.camera((s.cx-s.W/2)/S,(s.cy-s.H/2)/S,1/s.fit,0);LENS=Math.pow(Math.min(1,s.W/1620),.6);DV={w:s.W,h:s.H};}
+/** the window in camera units, for the director (set by frame()) */
+let DV:DView={w:1566,h:1080};
 /** half the visible extents with margin for the .68 passage preview */
 const view=(s:Sheet)=>({hx:s.W/(2*.68)+120,hy:s.H/(2*.68)+120});
 
@@ -455,6 +458,12 @@ type Shot={P:V3;T:V3;fov:number};
 const blendShot=(a:Shot,b:Shot,u:number):Shot=>u<=0?a:u>=1?b:{P:mix3(a.P,b.P,u),T:mix3(a.T,b.T,u),fov:Math.exp(lerp(Math.log(a.fov),Math.log(b.fov),u))};
 /** steps: [start, duration, shot]; each step eases in over the previous result */
 function plan(t:number,steps:[number,number,(t:number)=>Shot][]):Cam{let cur=steps[0][2](t);for(let i=1;i<steps.length;i++){const[a,d,f]=steps[i];const u=sm(a,a+Math.max(.01,d),t,easeInOutSine);if(u>0)cur=blendShot(cur,f(t),u);}return cam3(cur.P,cur.T,cur.fov);}
+/** plan() through the shared director (lib/plays/riso/director.ts): the authored Shot, then moved toward the beat's framing */
+function planD(t:number,steps:[number,number,(t:number)=>Shot][],B:Beats,subj:(t:number)=>Subject):Cam{
+ const at=(u:number)=>{let cur=steps[0][2](u);for(let i=1;i<steps.length;i++){const[a,d,f]=steps[i];const w=sm(a,a+Math.max(.01,d),u,easeInOutSine);if(w>0)cur=blendShot(cur,f(u),w);}
+  const size=1080*LENS;return reframe({eye:cur.P,target:cur.T,F:focalOf(cur.fov,size)},subj(u),shotAt(u,B),DV);};
+ // steady(): the directed camera averaged over ±.35 s, so a keep point arriving never pops the framing
+ const r=steady(t,at,.5);return cam3(r.eye,r.target,fovOf(r.F,1080*LENS));}
 /** the ball's ground point, lagged (a broadcast camera operator follows a beat behind) */
 const lagBall=(tau:number):V3=>{const g=(u:number):V3=>{const q=ballAt(u);return[q[0],.5,q[2]];};return mul3(add3(add3(g(tau),g(tau-.35)),g(tau-.7)),1/3);};
 
@@ -469,9 +478,19 @@ function tau1(t:number){
  return T_SH+(t-A[A.length-1][0]);
 }
 const P1:V3=[-46,27,-76];
+/** Director beats: a short establishing wide of Wembley; follow Kane as he drops back and receives from Shaw; pull out as he sweeps it
+ * wide (Trippier's run and the space down the right in frame — the pass is the lesson); follow the cross; push in low on Shaw's
+ * half-volley; hold on him for one-nil. The followed player hands over smoothly Shaw → Kane → Trippier → Shaw (no jump). */
+const B1=beats([[0,'wide'],[.5,{from:'follow',size:.4,dur:1.8}],[CUE(0,'Kane sweeps')-.9,{from:'space',size:.24,dur:1.6}],[CUE(0,'Cross')-.4,'follow'],
+ [CUE(0,'Shaw volleys')-.45,'tight'],[CUE(0,'One-nil')+.3,'reaction']]);
+const pos3=(k:number,tau:number):V3=>{const[x,z]=posOf(k,tau);return[x,0,z];};
+function hero1(tau:number):V3{const u0=sm(-.3,T_KR,tau,easeInOutSine),u1=sm(T_KP-.2,T_TR-.2,tau,easeInOutSine),u2=sm(T_CR,T_CR+.6,tau,easeInOutSine);
+ return mix3(mix3(mix3(pos3(SHAW,tau),pos3(KANE,tau),u0),pos3(TRIP,tau),u1),pos3(SHAW,tau),u2);}
+function subj1(tau:number):Subject{const h=hero1(tau),pass=sm(T_KP-1.1,T_KP+.3,tau,easeInOutSine)*(1-sm(T_TR,T_TR+1,tau,easeInOutSine));
+ return{hero:h,ball:ballAt(tau),keep:[...(pass>0?[{P:pos3(TRIP,tau),w:pass},{P:add3(pos3(TRIP,tau),[0,1.8,0]),w:pass}]:[]),...near(h,[pos3(GIGI,tau)],5,10)]};}
 function cam1(t:number):Cam{
  const tau=tau1(t),sh=():V3=>{const[x,z]=posOf(SHAW,tau);return[x,.8,z];};
- return plan(t,[
+ return planD(t,[
   [0,0,()=>({P:P1,T:[-44,30,40],fov:60})],
   [CUE(0,'England against')-.2,1.3,()=>({P:P1,T:[-64,0,-10],fov:19})],
   [CUE(0,'Luke Shaw')-.8,1,()=>({P:P1,T:lagBall(tau),fov:12})],
@@ -479,7 +498,7 @@ function cam1(t:number):Cam{
   [CUE(0,'Cross')-.5,1,()=>({P:P1,T:mix3(lagBall(tau),[-10,.5,-2],.45),fov:13})],
   [CUE(0,'Shaw volleys')-.1,.7,()=>({P:P1,T:[-5.5,.6,-3.5],fov:8.5})],
   [CUE(0,'One-nil')+.4,1.4,()=>({P:P1,T:sh(),fov:9})],
- ]);
+ ],B1,u=>subj1(tau1(u)));
 }
 const ch1:Scene={
  draw(s,t){

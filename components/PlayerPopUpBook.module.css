@@ -71,3 +71,10 @@
  .activity button{padding:6px 16px;line-height:1.15;white-space:normal;text-wrap:balance;text-align:center}
  .playback.playback{width:min(760px,calc(100% - 2 * (var(--phone-gutter) + var(--btn-icon) + 12px)))}
 }
+
+/* Oct 5 2026 (user: "make them larger to match the other btns"): Previous/Next are the island's round action size (72 px, 58 px on
+   phones and touch), like Cast/Fishbook and the travel buttons, with a larger arrow. */
+.navigation{--book-nav:72px;grid-template-columns:var(--book-nav) minmax(0,1fr) var(--book-nav)}
+.navigation>button{width:var(--book-nav);height:var(--book-nav);min-width:var(--book-nav);min-height:var(--book-nav);box-shadow:0 5px 0 var(--btn-gold-bright-edge)}
+.navigation>button svg{width:30px;height:30px}
+@media(max-width:600px),(pointer:coarse){.navigation{--book-nav:58px}.navigation>button svg{width:26px;height:26px}}

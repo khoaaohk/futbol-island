@@ -142,18 +142,18 @@
    }
   },
   {
-   "q": "Your teammate wants to go inside. Which move changes direction fast?",
+   "q": "Your teammate cuts inside past the defender. Where do you go now?",
    "options": [
-    "Toe poke",
-    "Stop and wait",
-    "Inside cut: hook it across your body"
+    "Stay right behind them",
+    "Run across in front of them",
+    "Out to the side they left"
    ],
    "correct": 2,
-   "explain": "Right. Hook the ball across with the inside of your foot and go.",
+   "explain": "Yes. The side they left is empty, so you give them a new pass there.",
    "choiceExplanations": [
-    "A toe poke is a quick shot, not a turn.",
-    "Waiting gives the defender time to close you down.",
-    "Right. Hook the ball across with the inside of your foot and go."
+    "Right behind them, you share their lane, so they get no new pass.",
+    "Running in front blocks their dribble, so they lose their room.",
+    "Yes. The side they left is empty, so you give them a new pass there."
    ],
    "visual": {
     "kind": "whatNext",
@@ -161,7 +161,7 @@
      "step": 3,
      "focus": [
       "lm",
-      "drm"
+      "cm"
      ]
     }
    }

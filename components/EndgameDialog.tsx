@@ -19,7 +19,7 @@ export default function EndgameDialog({open,onClose,onBack,title,label,children}
  useEffect(()=>{body.current?.scrollTo?.({top:0});},[title,onBack]);
  return <dialog ref={dialog} className={styles.dialog} aria-labelledby={`${label}-title`} onCancel={e=>{e.preventDefault();if(onBack)onBack();else onClose();}} onKeyDown={e=>e.stopPropagation()} onKeyUp={e=>e.stopPropagation()}>
   <section className={`${styles.panel} ${shell.shell}`}>
-   <header className={shell.header}>{onBack&&<BackButton ref={close} onBack={onBack} immediate/>}<div><h2 id={`${label}-title`}>{title}</h2></div>{!onBack&&<DoneButton ref={close} onDone={onClose}/>}</header>
+   <header className={shell.header}>{onBack&&<BackButton ref={close} onBack={onBack}/>}<div><h2 id={`${label}-title`}>{title}</h2></div>{!onBack&&<DoneButton ref={close} onDone={onClose}/>}</header>
    <div ref={body} className={shell.body}>{open&&children}</div>
   </section>
  </dialog>;

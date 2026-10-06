@@ -1,21 +1,134 @@
-{"lesson":"def_7_goalside","questions":[
-{"q":"Which picture shows you between the ball and your goal?",
- "options":["Out on the right side","In line with the ball","Up level with the ball"],"correct":1,
- "explain":"Yes. You stand between the ball and goal, so the straight route is blocked.",
- "choiceExplanations":["You are off to the side, so the attacker runs straight at goal.","Yes. You stand between the ball and goal, so the straight route is blocked.","You rushed past the ball, so the attacker can go around you."],
- "visual":{"kind":"pickPicture","pictures":[
-  {"step":2,"place":{"lb":{"x":185,"y":315}},"focus":["lb","dcm"]},
-  {"step":2,"focus":["lb","dcm"]},
-  {"step":2,"place":{"lb":{"x":140,"y":268}},"focus":["lb","dcm"]}]}},
-{"q":"True or false? You should dive in to win the ball.",
- "options":["True","False"],"correct":1,
- "explain":"Right, it's false. Stay on your feet and slow the attacker down.",
- "choiceExplanations":["If you dive in and miss, the attacker runs past you to goal.","Right, it's false. Stay on your feet and slow the attacker down."],
- "visual":{"kind":"trueFalse","frame":{"step":5,"focus":["lb","dcm"]}}},
-{"q":"Now the attacker carries left. Drag the defender to protect the goal.",
- "options":["Across to the left","Stay on the right","Up near the ball"],"correct":0,
- "explain":"Yes. Moving left keeps you between the ball and your goal.",
- "choiceExplanations":["Yes. Moving left keeps you between the ball and your goal.","The danger moved left, so guarding the old space leaves goal open.","Going up past the ball lets the attacker slip behind you to goal."],
- "visual":{"kind":"dragToZone","frame":{"step":3,"place":{"dcm":{"x":45,"y":265}},"ball":"dcm","focus":["lb","dcm"]},
-  "drag":"lb","zones":[{"x":82,"y":318,"w":40,"h":36},{"x":170,"y":318,"w":40,"h":36},{"x":78,"y":232,"w":40,"h":36}]}}
-]}
+{
+ "lesson": "def_7_goalside",
+ "questions": [
+  {
+   "q": "Which picture shows you between the ball and your goal?",
+   "options": [
+    "Out on the right side",
+    "In line with the ball",
+    "Up level with the ball"
+   ],
+   "correct": 1,
+   "explain": "Yes. You stand between the ball and goal, so the straight route is blocked.",
+   "choiceExplanations": [
+    "You are off to the side, so the attacker runs straight at goal.",
+    "Yes. You stand between the ball and goal, so the straight route is blocked.",
+    "Level with the ball, you leave the way to goal open behind you."
+   ],
+   "visual": {
+    "kind": "pickPicture",
+    "pictures": [
+     {
+      "step": 2,
+      "place": {
+       "lb": {
+        "x": 185,
+        "y": 315
+       }
+      },
+      "focus": [
+       "lb",
+       "dcm"
+      ]
+     },
+     {
+      "step": 2,
+      "focus": [
+       "lb",
+       "dcm"
+      ]
+     },
+     {
+      "step": 2,
+      "place": {
+       "lb": {
+        "x": 140,
+        "y": 268
+       }
+      },
+      "focus": [
+       "lb",
+       "dcm"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "q": "True or false? You should dive in to win the ball.",
+   "options": [
+    "True",
+    "False"
+   ],
+   "correct": 1,
+   "explain": "Right, it's false. Stay on your feet and slow the attacker down.",
+   "choiceExplanations": [
+    "If you dive in and miss, the attacker runs past you to goal.",
+    "Right, it's false. Stay on your feet and slow the attacker down."
+   ],
+   "visual": {
+    "kind": "trueFalse",
+    "frame": {
+     "step": 5,
+     "focus": [
+      "lb",
+      "dcm"
+     ]
+    }
+   }
+  },
+  {
+   "q": "Now the attacker carries left. Drag the defender to protect the goal.",
+   "options": [
+    "Across to the left",
+    "Over to the right",
+    "Up near the ball"
+   ],
+   "correct": 0,
+   "explain": "Yes. Moving left keeps you between the ball and your goal.",
+   "choiceExplanations": [
+    "Yes. Moving left keeps you between the ball and your goal.",
+    "The ball is on the left, so moving right opens the way to goal.",
+    "Going up past the ball lets the attacker slip behind you to goal."
+   ],
+   "visual": {
+    "kind": "dragToZone",
+    "frame": {
+     "step": 3,
+     "place": {
+      "dcm": {
+       "x": 45,
+       "y": 265
+      }
+     },
+     "ball": "dcm",
+     "focus": [
+      "lb",
+      "dcm"
+     ]
+    },
+    "drag": "lb",
+    "zones": [
+     {
+      "x": 82,
+      "y": 318,
+      "w": 40,
+      "h": 36
+     },
+     {
+      "x": 170,
+      "y": 318,
+      "w": 40,
+      "h": 36
+     },
+     {
+      "x": 78,
+      "y": 232,
+      "w": 40,
+      "h": 36
+     }
+    ]
+   }
+  }
+ ]
+}

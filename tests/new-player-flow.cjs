@@ -225,6 +225,20 @@ const read=rel=>fs.readFileSync(path.join(root,rel),'utf8');
  const card=read('components/WelcomeBack.tsx');
  assert(!/\bstreak|\bmissed\b|\blose\b|don.t break/i.test(card),'no streak pressure or guilt copy');
  assert(/suggestedNextStep\(/.test(card),'one suggested step from the Continue rule');
+ // Oct 3 2026 play-through: with every path graduated the card pointed nowhere; it now names the Ferry until the final is done.
+ assert.equal(B.welcomeBackLine('7v7 · 2. A Formation',false,false),'Next up: 7v7 · 2. A Formation','a next lesson wins');
+ assert.match(B.welcomeBackLine(null,true,false),/Matchday Ferry/,'all graduated, final not done: the Ferry');
+ assert.match(B.welcomeBackLine(null,true,true),/Replay a favourite/,'after the final: replay and go deeper');
+ assert.doesNotMatch(B.welcomeBackLine(null,false,false),/Ferry/,'no Ferry before it opens');
+ assert(/welcomeBackLine\(title,ferryUnlocked\(graduations\),finaleComplete\(graduations\)\)/.test(card),'the card uses the graduation record');
+ // Quiz answer sounds (Oct 3 2026 play-through: quizzes were silent): the island kit's existing one-shot cues, one per answer.
+ const Q=world().load('lib/town/quizRunStore.ts');
+ same(Q.quizAnswerCue(true,false),{event:'fi2-job-cue',detail:'ding'},'right answer: ding');
+ same(Q.quizAnswerCue(false,false),{event:'fi2-job-cue',detail:'nope'},'wrong answer: soft nope');
+ same(Q.quizAnswerCue(false,true),{event:'fi2-job-cue',detail:'nope'},'wrong on the last question: still nope (retry)');
+ same(Q.quizAnswerCue(true,true),{event:'fi2-story-cue',detail:'finish'},'quiz done: the finish fanfare');
+ const sound=read('lib/audio/islandSound.ts');assert(/case 'ding':/.test(sound)&&/case 'nope':/.test(sound)&&/addEventListener\('fi2-story-cue'/.test(sound),'the cues exist in the island sound kit');
+ assert(/recordRunAnswer\(correctRun\.current,question,right\);\{const cue=quizAnswerCue\(right,question\+1===chosen\.questions\.length\)/.test(read('components/FieldLearning.tsx')),'one cue per real (non-preview) answer');
 }
 
 // ---- 6. Explore checklist: six new items (G-13) -----------------------------------------------------------------------------
@@ -232,11 +246,11 @@ const read=rel=>fs.readFileSync(path.join(root,rel),'utf8');
  const W=world(),E=W.load('lib/town/exploreChecklist.ts'),A=W.load('lib/town/exploreActivity.ts'),T=W.load('lib/town/cardRewardTriggers.ts');
  const ids=E.EXPLORE_ITEMS.map(i=>i.id);
  for(const id of ['catch-fish','island-job','sell-rosa','visit-cay','walk-jetty','enter-konbini'])assert(ids.includes(id),id+' is on the checklist');
- assert.equal(ids.length,22);
+ assert.equal(ids.length,23);assert(ids.includes('visit-museum'),'visit-museum is on the checklist (Oct 3 2026)');
  for(const item of E.EXPLORE_ITEMS.slice(-6))assert(item.detail.length<=110&&/[.!]$/.test(item.detail),item.id+' copy is short and complete');
  const paid=new Set(T.CARD_EXPLORE_ITEMS.map(i=>i.id));
  for(const id of ['catch-fish','island-job','sell-rosa'])assert(paid.has(id),id+' pays like the other effort items (5 coins + a pick)');
- for(const id of ['visit-cay','walk-jetty','enter-konbini'])assert(!paid.has(id),id+' is a visit: ticks off, pays nothing (same rule as visiting a field)');
+ for(const id of ['visit-cay','walk-jetty','enter-konbini','visit-museum'])assert(!paid.has(id),id+' is a visit: ticks off, pays nothing (same rule as visiting a field)');
  // Existing saves count, from the stores' own keys.
  const keys={fish:'lib/town/fishing/fishingCore.ts:FISHBOOK_STORAGE_KEY',job:'lib/town/jobs/jobEconomy.ts:JOBS_STORAGE_KEY',sold:'lib/town/market/market.ts:MARKET_STORAGE_KEY',jetty:'lib/town/eastPierChallenge.ts:PIER_CHALLENGE_KEY',konbini:'lib/konbini/foodStore.ts:KONBINI_COLLECTION_KEY'};
  for(const [k,ref] of Object.entries(keys)){const [file,name]=ref.split(':');const m=read(file).match(new RegExp(`export const ${name}='([^']+)'`));assert(m,ref);assert.equal(A.SAVE_EVIDENCE_KEYS[k],m[1],k+' evidence key matches '+ref);}

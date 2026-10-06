@@ -21,13 +21,33 @@ export type Scenario={
     /** (engine addition) Start the run `delay` s after this player's own pass (pass-and-move / one-two).
      *  The run then survives this player receiving and passing. */
     afterPass?:boolean}}[];
-  defenders:{x:number;z:number;mark?:number;press?:boolean}[]; // mark = attacker index
-  keeper?:{x:number;z:number};
+  defenders:{x:number;z:number;mark?:number;press?:boolean;
+    /** (engine addition) Offside trap: as a pass is struck, step up this many metres toward the ball. */
+    trap?:number;
+    /** (engine addition) Hunter: closes down whoever the ball is played to (presses after every pass). */
+    hunt?:boolean;
+    /** (engine addition) Recovering defender on a counter: sprints back toward goal once play starts. */
+    recover?:boolean}[]; // mark = attacker index
+  keeper?:{x:number;z:number;
+    /** (engine addition) Sweeper keeper: rushes off the line to claim balls played in behind (16 m deep). */
+    sweeper?:boolean};
+  /** (engine addition) Weather: wind (m/s² on a ball in the air) and/or a wet, skiddy pitch. */
+  weather?:{wind?:Vec2;wet?:boolean};
   attempts:number;                     // usually 3
   require:{minPasses:number;finish:'goal'|'reach-zone';zone?:{x:number;z:number;r:number};
     /** Arcade free-choice mode: a clean opening shot can solve a goal puzzle without the pass route. */
-    allowDirectShot?:boolean};
-  bonus?:{kind:'curl'|'chip'|'header'|'first-time'|'scorer';scorer?:number;label:string};
+    allowDirectShot?:boolean;
+    /** (engine addition) Law 11: a teammate who is past the ball and the second-last opponent in the
+     *  attacking half when the ball is played is offside if they then touch it. Puzzles turn it on. */
+    offside?:boolean;
+    /** (engine addition) Youth rule (US Soccer: no heading at 10 and under): attackers never play the
+     *  ball above chest height. Header kicks become lofted passes to feet; a high ball is let drop and
+     *  controlled on the chest or thigh, then volleyed or passed. A 'header' bonus becomes "first time". */
+    noHeading?:boolean;
+    /** (engine addition) Counter-attack clock: the move must finish within this many seconds of play
+     *  (the action clock, which is frozen while aiming), or the defence has recovered ('timeout'). */
+    clock?:number};
+  bonus?:{kind:'curl'|'chip'|'header'|'first-time'|'scorer'|'placement';scorer?:number;label:string};
   lesson:string;                       // what the child learned, shown after success
 };
 
@@ -55,7 +75,7 @@ export type Kick={
   shotHeight?:number;
 };
 
-export type PuzzleEventType='kick'|'receive'|'intercept'|'save'|'heavy_touch'|'deflect'|'parry'|'goal'|'out';
+export type PuzzleEventType='kick'|'receive'|'intercept'|'save'|'heavy_touch'|'deflect'|'parry'|'goal'|'out'|'offside';
 export type Touch='feet'|'thigh'|'chest'|'header';
 
 export type PuzzleEvent={
@@ -79,7 +99,7 @@ export type PuzzleEvent={
 
 export type Phase='aiming'|'windup'|'flight'|'success'|'fail';
 
-export type FailReason='intercept'|'save'|'out'|'rest'|'too-few-passes'|'timeout';
+export type FailReason='intercept'|'save'|'out'|'rest'|'too-few-passes'|'timeout'|'offside';
 
 export type AttackerState={
   p:Vec2; v:Vec2;
@@ -90,6 +110,9 @@ export type AttackerState={
   runLeg:number;          // index of the next run waypoint
   target?:Vec2;           // where a 'meet' run is heading
   passedAt?:number;       // action-clock time of this player's last kick (afterPass runs)
+  /** A run the child called (dragged from this teammate) while aiming. It starts with the next kick's
+   *  wind-up (startAt = action clock then) and overrides any scripted run until it arrives. */
+  call?:{to:Vec2;startAt:number|null};
 };
 
 export type DefenderState={
@@ -143,7 +166,9 @@ export type PuzzleState={
   pending:{kick:Kick;kicker:number;left:number;total:number;turn:number;fromHead:boolean}|null;
   flight:{kick:Kick;kicker:number;elapsed:number;receiver:number|null;header:boolean;firstTime:boolean;
     /** A defender or the keeper touched it: a later receive is not a completed pass. */
-    dirty:boolean}|null;
+    dirty:boolean;
+    /** Attackers caught in an offside position when this ball was played (empty when offside is off). */
+    offside:number[]}|null;
   /** Kicks this attempt, used for bonus evaluation. */
   chain:{kind:KickKind;curl:number;loft:number;kicker:number;header:boolean;firstTime:boolean}[];
   result:PuzzleResult|null;
@@ -154,7 +179,9 @@ export type PuzzleState={
 export type PuzzleSnapshot={scenario:Scenario;state:PuzzleState};
 
 /** A recorded kick: applied when the world reaches `tick` (it is in the aiming phase then). */
-export type PuzzleInput={tick:number;kick:Kick};
+export type PuzzleInput={tick:number;kick:Kick;
+  /** Runs the child called during this aim; replay applies them just before the kick. */
+  calls?:{attacker:number;to:Vec2}[]};
 
 export type PuzzleWorld={
   readonly scenario:Scenario;
@@ -164,6 +191,8 @@ export type PuzzleWorld={
   step(dt:number):void;
   /** Start a kick from the aiming phase. Returns false if not aiming. */
   kick(k:Kick):boolean;
+  /** While aiming: call a run for teammate i toward `to` (null cancels). It starts with the next kick. */
+  callRun(i:number,to:Vec2|null):boolean;
   snapshot():PuzzleSnapshot;
   restore(s:PuzzleSnapshot):void;
   /** Events since the last drain (also delivered to listeners as they happen). */
@@ -180,12 +209,15 @@ export type PuzzleWorld={
 
 export type Prediction={
   path:Vec3[];            // sampled every 1/30 s from the launch point
-  end:'goal'|'out'|'rest'|'intercept';
+  end:'goal'|'out'|'rest'|'intercept'|'offside';
   threats:number[];       // defender indices who can reach a path point before the ball
   keeperThreat:boolean;   // the keeper can reach the path first (save / claim)
   receiver?:number;       // attacker predicted to receive it
   receiveAt?:Vec3;        // where (path is truncated there)
   hitsPost?:boolean;
+  /** Offside puzzles: attackers in an offside position at the release, and the line (z) they were judged against. */
+  offside?:number[];
+  offsideLine?:number;
 };
 
 export type Replay={

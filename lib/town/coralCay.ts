@@ -248,6 +248,20 @@ export const CAUSEWAY_BEACHES:CayPoint[][]=([-1,1] as RoadSide[]).flatMap(side=>
 /** Where each side of the causeway meets the sea: the stone skirt's waterline, or the foot of the sand bank's slope. */
 export const causewayWaterline=(s:number,side:RoadSide)=>{const w=shoulderWidth(s,side);return Math.max(CAUSEWAY.deckHalf+2.05,CAUSEWAY.deckHalf+w+2.4*Math.min(1,w/1.5)*.9);};
 
+/** Sea round the cay's shapes, at least `margin` metres past the waterline: the causeway (deck, stone skirt or sand bank
+ *  and its slope), both sandbars and their spurs, and the cay's beach. Main-island water is shoreline.ts's job. For the
+ *  causeway and Coral Cay fishing spots (Oct 5 2026, lib/town/fishing/fishingCore.ts: where floats land and fish shadows
+ *  swim). Cheap box rejects first, so a point far from every shape costs a few comparisons. */
+const causewayWaterBox=box(CAUSEWAY_PATH,CAUSEWAY.deckHalf+16);
+const sandbarWaterBoxes=SANDBARS.map(s=>box(s.outline,4));
+export function clearOfCayShores(x:number,z:number,margin=0){
+ if(x>=CAUSEWAY.x0-margin-2&&inBox(causewayWaterBox,x,z)){const f=causewayFrame(x,z);if(f.s>0&&f.dist<=causewayWaterline(f.s,f.d>=0?1:-1)+margin)return false;}
+ for(let i=0;i<SANDBARS.length;i++){const s=SANDBARS[i];if(!inBox(sandbarWaterBoxes[i],x,z))continue;
+  if(insidePolygon(s.outline,x,z)||ringDistance(s.outline,x,z)<margin||rectDistance(x,z,s.spur.x-s.spur.half,s.spur.x+s.spur.half,s.spur.z0,s.spur.z1)<margin+.2)return false;}
+ if(x>=shoreBox.minX-margin&&x<=shoreBox.maxX+margin&&z>=shoreBox.minZ-margin&&z<=shoreBox.maxZ+margin&&(onCay(x,z)||distanceToCayShore(x,z)<margin))return false;
+ return true;
+}
+
 // ---------------------------------------------------------------------------------------------------------------
 // Sharks Beach: the cay's north-east bay, the nearest shore to the beach-soccer court. The friendly sharks themselves
 // patrol only along the causeway, on both sides (user request): caySharks.ts animates them only when near and on screen.

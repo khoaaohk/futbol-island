@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { openIsland } from './helpers';
+import { finishedPathsStorage, openIsland } from './helpers';
 
 /* Heat pass 5, view-based work on phones: off-screen far fields do no work, and nothing on screen is ever culled. */
 type Fi2 = Record<string, any>;
@@ -42,7 +42,8 @@ async function onScreenNeverCulled(page: Page, N: number) {
 
 test('far off-screen live fields are dormant and resume where they paused', async ({ page }) => {
   test.setTimeout(180_000);
-  await openIsland(page); await clearOffers(page);
+  // Every pitch card opens the free live viewer once its path is finished (clear path, Oct 4 2026), so "watch" = the live match.
+  await openIsland(page, { storage: finishedPathsStorage(['futsal', '7v7', '9v9', '11v11']) }); await clearOffers(page);
   type Snap = { id: string; dormant: boolean; time: number };
   const snap = (): Promise<Snap[]> => page.evaluate(() => (window as unknown as { __fi2: Fi2 }).__fi2.games.entries.map((e: any) => ({ id: e.venue.id as string, dormant: !!e.dormant, time: e.sim.stats.time as number })));
   await page.waitForTimeout(1500);

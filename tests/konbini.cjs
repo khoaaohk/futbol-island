@@ -82,6 +82,12 @@ const {BOOK_PRICE}=require('../lib/books/catalog.ts');
   assert(y1<=206&&y1>=198,d.id+' front: stands on its base line');assert(y0>=200-80*1.08,d.id+' front: fits its height');assert(x0>=100-80*.5&&x1<=100+80*.5,d.id+' front: fits its width');
   const g=mockCtx();DA.drawDrink(g.ctx,d.art,100,200,80,undefined,'front');assert.deepEqual(g.ops,f.ops,d.id+' front: deterministic');
   const s=DA.frontSize(d.art,80);assert(d.art.shape==='can'?s.h<80*.7:true,'cans are shorter than bottles');}}
+ // Camera mode (Oct 5 2026, vending close-up: drinks seen from the zoom camera): paints, deterministically, and DrinkArt uses it only when
+ // given angles ('front' stays the default elsewhere). The base-on-the-shelf contact is measured in the browser (clip paths make mock bounds meaningless).
+ {const DA=require('../lib/graphics/drinkArt.ts');for(const d of D.DRINKS)for(const v of [{yaw:-25,pitch:-9},{yaw:-20,pitch:0},{yaw:20,pitch:12}]){const f=mockCtx();DA.drawDrink(f.ctx,d.art,100,200,80,undefined,v);
+   assert(f.ops.length>40,d.id+' camera: paints the package');
+   const g=mockCtx();DA.drawDrink(g.ctx,d.art,100,200,80,undefined,v);assert.deepEqual(g.ops,f.ops,d.id+' camera: deterministic');}
+  assert(/drawDrink\(c,art,size\/2,size\*base,size\*height,layer,yaw!==undefined&&pitch!==undefined\?\{yaw,pitch\}:view\)/.test(fs.readFileSync(require.resolve('../components/DrinkArt.tsx'),'utf8')),'DrinkArt: camera angles only when given, else the front/iso view');}
  assert(/view='front'/.test(fs.readFileSync(require.resolve('../components/DrinkArt.tsx'),'utf8'))&&(fs.readFileSync(require.resolve('../lib/graphics/drinkArt.ts'),'utf8').match(/undefined,'front'\)/g)||[]).length>=2,'machine glass + slot pictures use the front mode');
  // Every shelf-stock item that isn't for sale opens a look-only card (Sep 30 2026: "not all the items are selectable").
  {const src=fs.readFileSync(require.resolve('../lib/konbini/konbiniScene.ts'),'utf8'),T2=require('../lib/konbini/konbiniAtlas.ts');

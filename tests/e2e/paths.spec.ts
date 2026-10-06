@@ -286,15 +286,17 @@ test('a play from Paths starts on the first Play press', async ({ page }, info) 
   const issues = await openIsland(page);
   await openPaths(page, info);
   await press(page.getByRole('button', { name: /^1\. / }).first(), info);
+  // Deploy 14: lessons opened from Paths autoplay, so the play may already be running (Pause showing) with no Play press.
   const play = page.getByRole('button', { name: 'Play', exact: true });
-  await expect(play).toBeVisible({ timeout: 60_000 });
+  const pause = page.getByRole('button', { name: 'Pause', exact: true });
+  await expect(play.or(pause)).toBeVisible({ timeout: 60_000 });
   const state = () => page.evaluate(() => {
     const s = (window as unknown as { __fi2: { fieldSession: { current: { step: number; playing: boolean; voicePending: boolean } | null } } }).__fi2.fieldSession.current;
     return s ? { step: s.step, playing: s.playing, voicePending: s.voicePending } : null;
   });
   const before = await state();
-  await press(play, info);
-  await expect(page.getByRole('button', { name: 'Pause', exact: true }), 'one Play press starts the play').toBeVisible({ timeout: 1_500 });
+  if (await play.isVisible()) await press(play, info);
+  await expect(pause, 'the play is running after at most one Play press').toBeVisible({ timeout: 1_500 });
   // ...and keeps playing into the next step (narration on, the default): no forward-arrow press needed first. The root
   // cause was a narration wait that never cleared, so check that directly, then the step change (slow when the pitch's
   // frame loop is starved by parallel browsers, hence the long timeout).
@@ -319,5 +321,34 @@ test('a quiz resumed from Paths narrates its question without another tap', asyn
   await press(page.getByRole('button', { name: /^1\. / }).first(), info);
   await expect(page.getByText(/Question 2 \/ \d/i), 'the lesson resumes in its quiz').toBeVisible({ timeout: 60_000 });
   await expect.poll(() => page.evaluate(() => (window as unknown as { __voicePlays: string[] }).__voicePlays.length), { timeout: 15_000, message: 'the question narration plays with no extra tap' }).toBeGreaterThan(0);
+  expectNoErrors(issues, info);
+});
+
+// Clear path (Oct 4 2026, user): Paths' first card is lesson 1 above the hero art, and the last right answer offers "Next lesson"
+// (with "Back to Paths" kept), which starts lesson 2 through the usual Paths launch; Back to Paths then shows lesson 2 up next.
+test('quiz end: Next lesson starts the next lesson, and Paths shows it up next', async ({ page }, info) => {
+  test.setTimeout(360_000);
+  const seven = (formatPaths as { format: string; chapters: { lessons: { id: string; name: string }[] }[] }[]).find(p => p.format === '7v7')!.chapters.flatMap(c => c.lessons);
+  const four = [0, 1, 2, 3].map(i => `7v7:${seven[0].id}:${i}`);
+  const issues = await openIsland(page, { storage: { 'futbol-island-quiz-progress-v1': JSON.stringify(four), 'futbol-island-quiz-growth-v1': '1' } });
+  await openPaths(page, info);
+  const landing = page.locator('dialog[open] [data-path-landing]');
+  const box = (await landing.boundingBox())!, hero = (await page.locator('dialog[open] section[aria-label="Your island journey"]').boundingBox())!;
+  expect(box.y, 'the landing card sits above the hero art').toBeLessThan(hero.y);
+  expect(box.y + box.height, 'the landing card is above the fold').toBeLessThanOrEqual(page.viewportSize()!.height);
+  await expect(page.locator('dialog[open] [data-path-warmup]'), 'the Warm-up row is in Paths').toBeVisible();
+  await press(page.locator('dialog[open] [data-path-continue]'), info);
+  await expect(page.getByText(/Question 5 \/ \d/i), 'lesson 1 resumes on its last question').toBeVisible({ timeout: 60_000 });
+  await page.evaluate(() => { type S = { question: number; lesson: { questions: { correct: number }[] }; onAnswer?: (a: number) => void }; const s = (window as unknown as { __fi2: { fieldSession: { current: S | null } } }).__fi2.fieldSession.current; s?.onAnswer?.(s.lesson.questions[s.question].correct); });
+  const next = page.getByRole('button', { name: 'Next lesson' }), back = page.getByRole('button', { name: 'Back to Paths' });
+  await expect(next).toBeVisible({ timeout: 10_000 });
+  await expect(back, '"Back to Paths" stays as the second button').toBeVisible();
+  await capture(page, info, 'quiz-end-next-lesson');
+  await next.dispatchEvent('click');
+  await expect.poll(() => page.evaluate(() => (window as unknown as { __fi2: { fieldSession: { current: { lesson: { id: string } } | null } } }).__fi2.fieldSession.current?.lesson.id ?? null), { timeout: 60_000, message: 'lesson 2 opens' }).toBe(seven[1].id);
+  await closeDialogs(page);
+  const done = page.getByRole('button', { name: 'Done', exact: true }).first();
+  if (await done.isVisible().catch(() => false)) await done.dispatchEvent('click');
+  await expect(page.locator('dialog[open] [data-path-continue]'), 'Paths shows lesson 2 next').toContainText(`2. ${seven[1].name}`, { timeout: 30_000 });
   expectNoErrors(issues, info);
 });
