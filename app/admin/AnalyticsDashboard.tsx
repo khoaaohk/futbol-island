@@ -4,6 +4,8 @@ import {useRouter} from 'next/navigation';
 import {BackButton} from '@/components/BackButton';
 import type {Report,Row} from '@/lib/analytics/core';
 import {BarList,ChartCard,Columns,LineChart,fmtDuration,fmtInt,fmtPct,type BarRow} from './charts';
+import IslandSection from './IslandSection';
+import RegionCard from './RegionCard';
 import styles from './admin.module.css';
 
 type Preset='today'|'7d'|'30d'|'custom';
@@ -63,9 +65,12 @@ export default function AnalyticsDashboard({initial,initialRange}:{initial:Repor
  const areaTotal=report.areas.reduce((a,r)=>a+r.ms,0);
 
  return <main className={styles.page}>
+  {/* Corners as in the main app and the museum exhibits: Back top left, Log out top right (24/20 px, 16/16 on phones). */}
+  <div className={styles.cornerLeft}><BackButton onBack={()=>router.push('/')}/></div>
+  <div className={styles.cornerRight}><button type="button" className={styles.secondary} onClick={logout}>Log out</button></div>
   <div className={styles.wrap}>
    <header className={styles.header}>
-    <BackButton onBack={()=>router.push('/')}/>
+    <span aria-hidden="true"/>
     <h1><small>Admin</small>Island visitors</h1>
    </header>
 
@@ -78,17 +83,15 @@ export default function AnalyticsDashboard({initial,initialRange}:{initial:Repor
     </form>}
     <span className={styles.spacer}/>
     <span className={styles.live} data-tip="Tabs that sent anything in the last 5 minutes" title="Tabs that sent anything in the last 5 minutes"><i aria-hidden="true"/>{fmtInt(report.live)} on now</span>
-    <button type="button" className={styles.secondary} onClick={logout}>Log out</button>
    </div>
-   <p className={styles.utc}>{rangeText} · days and hours in UTC{loading?' · loading…':''}</p>
+   <div className={styles.utcRow}><p className={styles.utc}>{rangeText} · days and hours in UTC{loading?' · loading…':''}</p>{report.notes.map(n=><p key={n} className={styles.utc}>{n}</p>)}</div>
 
    {!report.configured&&<section className={styles.banner}>
     <h2>Analytics storage is not configured</h2>
-    Add <code>SUPABASE_SERVICE_ROLE_KEY</code> to the server environment and run <code>supabase/migrations/20261007_analytics.sql</code> in Supabase.
+    Add <code>SUPABASE_SERVICE_ROLE_KEY</code> to the server environment and run <code>supabase/migrations/20261007_analytics.sql</code> and <code>20261008_analytics_places.sql</code> in Supabase.
     Until then the game sends visits to a route that quietly does nothing.
    </section>}
    {error&&<section className={styles.banner} role="alert">{error}</section>}
-   {report.notes.map(n=><p key={n} className={styles.note}>{n}</p>)}
 
    <div className={`${styles.stack} ${loading?styles.loading:''}`} aria-busy={loading}>
     <section className={styles.kpis} aria-label="Totals">
@@ -147,11 +150,10 @@ export default function AnalyticsDashboard({initial,initialRange}:{initial:Repor
       <BarList rows={report.areas.map(a=>({key:a.area,label:AREA_LABEL[a.area]||a.area,value:Math.round(a.ms/60000)}))} unit="minutes"/>
      </ChartCard>
 
-     <ChartCard title="Regions" subtitle="Visitors by country region" empty={empty||!d.region.length}
-      table={tableOf(d.region,k=>`${countryName(k.slice(0,2))} · ${k.slice(3)}`)}>
-      <BarList rows={barsOf(d.region,k=>`${countryName(k.slice(0,2))} · ${k.slice(3)}`)} unit="visitors"/>
-     </ChartCard>
+     <RegionCard report={report} empty={empty} countryName={countryName}/>
     </div>
+
+    <IslandSection report={report}/>
    </div>
   </div>
  </main>;

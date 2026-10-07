@@ -3,6 +3,7 @@
  * yet frozen, rollups the store computes on the fly (SQL in production). Raw rows never reach the function.
  */
 import type {AnalyticsStore} from './store';
+import {regionNamesFor} from './regions';
 import {LIVE_WINDOW_MS,RETENTION_DAYS,addDays,dailySeries,dayList,displayDistribution,emptyReport,mergeRollups,rollupDay,utcDay,type DailyRollup,type Report} from './core';
 
 export async function buildReport(store:AnalyticsStore|null,range:{from:string;to:string},now=new Date()):Promise<Report>{
@@ -13,7 +14,8 @@ export async function buildReport(store:AnalyticsStore|null,range:{from:string;t
  if(missing.length)for(const r of await store.computeDays(missing[0],missing[missing.length-1],now))if(!byDay.has(r.day))byDay.set(r.day,r);
  const rollups=days.map(d=>byDay.get(d)??rollupDay(d,[]));
  const merged=mergeRollups(rollups);
- const report:Report={...emptyReport(range.from,range.to,now,true),totals:merged.totals,distribution:displayDistribution(merged.hist),dims:merged.dims,areas:merged.areas};
+ const report:Report={...emptyReport(range.from,range.to,now,true),totals:merged.totals,distribution:displayDistribution(merged.hist),dims:merged.dims,areas:merged.areas,
+  places:merged.places,activities:merged.activities,cells:merged.cells,regionNames:regionNamesFor(merged.dims.region.map(r=>r.key))};
  if(days.length===1&&days[0]>=oldestRaw){report.series=await store.hourly(days[0]);report.granularity='hour';
   /* no future hours drawn as zeros */if(days[0]===today)report.series=report.series.slice(0,now.getUTCHours()+1);}
  else{report.series=dailySeries(rollups);report.granularity='day';}

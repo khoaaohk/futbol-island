@@ -16,6 +16,12 @@
 .wrap{max-width:1180px;margin:0 auto;display:grid;gap:18px}
 .stack{display:grid;gap:18px;min-width:0}
 
+/* Corner controls pinned to the page, at the main app's corner insets (ExperienceBack: 24/20 px; 16/16 on phones and touch). */
+.page{position:relative}
+.cornerLeft,.cornerRight{position:absolute;z-index:5;top:calc(20px + env(safe-area-inset-top,0px))}
+.cornerLeft{left:calc(24px + env(safe-area-inset-left,0px))}
+.cornerRight{right:calc(24px + env(safe-area-inset-right,0px))}
+@media(max-width:600px),(pointer:coarse){.cornerLeft,.cornerRight{top:calc(16px + env(safe-area-inset-top,0px))}.cornerLeft{left:calc(16px + env(safe-area-inset-left,0px))}.cornerRight{right:calc(16px + env(safe-area-inset-right,0px))}}
 /* Header: the ModalShell grid (76px | title | 76px) and anchors. */
 .header{display:grid;grid-template-columns:var(--btn-nav-width) minmax(0,1fr) var(--btn-nav-width);align-items:start;gap:16px;min-height:64px}
 .header>:first-child{grid-column:1;justify-self:start}
@@ -40,6 +46,8 @@
 .primary:disabled,.secondary:disabled,.chip:disabled{opacity:.5;box-shadow:none;cursor:default}
 .spacer{flex:1}
 .utc{font-size:12px;color:var(--a-muted)}
+/* Date range on the left, data notes on the right, one line (wraps only when there's no room). */
+.utcRow{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:4px 16px}.utcRow>.utc{margin:0}.utcRow>.utc+.utc{text-align:right}
 .live{display:inline-flex;align-items:center;gap:8px;min-height:var(--btn-height);padding:0 14px;border-radius:var(--btn-radius);background:var(--a-surface);box-shadow:0 0 0 1px var(--a-ring);font-size:14px;font-weight:700}
 .live i{width:10px;height:10px;border-radius:50%;background:var(--a-live);box-shadow:0 0 0 3px #0ca30c33}
 
@@ -114,7 +122,7 @@
 @media (max-width:900px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.grid{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:600px),(pointer:coarse){
  .page{padding:calc(16px + env(safe-area-inset-top,0px)) calc(var(--phone-gutter) + env(safe-area-inset-right,0px)) calc(32px + env(safe-area-inset-bottom,0px)) calc(var(--phone-gutter) + env(safe-area-inset-left,0px))}
- .header{gap:8px}
+ .header{gap:8px;grid-template-columns:104px minmax(0,1fr) 104px} /* room for the wider Log out corner button */
 }
 @media (max-width:600px){
  .card{padding:16px;border-radius:22px 30px 20px 22px}
@@ -124,3 +132,30 @@
  .spacer{display:none}
 }
 @media (prefers-reduced-motion:reduce){.chip,.primary,.secondary,.tableToggle,.loading{transition:none}}
+
+/* Where on the island (Oct 8 2026). Heat ramp: one hue (the brand orange), five stepped bins, validated with the dataviz
+   validator (--ordinal) against each card surface: light #e1984a→#633003 on #fff9e9, dark #a5621b→#ffd59a on #183a30 (the
+   dark ramp runs dark→light so "more" still reads as "stronger"). Silhouette tones stay recessive under the cells. */
+.page{--h0:#e1984a;--h1:#c97a2c;--h2:#ac5e18;--h3:#88450b;--h4:#633003;--a-sea:#dbe7e1;--a-land:#f4ecd6;--a-pitch:#e6dcbd}
+@media (prefers-color-scheme:dark){:root:where(:not([data-theme=light])) .page{--h0:#a5621b;--h1:#c97a26;--h2:#e5963d;--h3:#f7b462;--h4:#ffd59a;--a-sea:#12302a;--a-land:#24493d;--a-pitch:#2d5548}}
+:root[data-theme=dark] .page{--h0:#a5621b;--h1:#c97a26;--h2:#e5963d;--h3:#f7b462;--h4:#ffd59a;--a-sea:#12302a;--a-land:#24493d;--a-pitch:#2d5548}
+.island{display:grid;gap:18px;min-width:0}
+.sectionHead h2{margin:8px 0 2px;font-size:24px;line-height:1.2}
+.sectionHead p{margin:0;font-size:13px;line-height:1.4;color:var(--a-muted);max-width:70ch}
+.heat{display:grid;gap:10px;min-width:0}
+.viewRow{display:flex;flex-wrap:wrap;gap:8px}
+.heatSvg{display:block;width:100%;height:auto;border-radius:14px;touch-action:pan-y;cursor:crosshair}
+.heatSvg:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
+.heatSea{fill:var(--a-sea)}
+.heatLand{fill:var(--a-land);stroke:var(--a-land)}
+.heatPitch{fill:var(--a-pitch)}
+.heatCoast{stroke:var(--a-axis);stroke-width:1.2px;vector-effect:non-scaling-stroke}
+.heatCoast *{vector-effect:non-scaling-stroke}
+.heatFocus{fill:none;stroke:var(--a-ink);stroke-width:2px;vector-effect:non-scaling-stroke}
+.heatLabels{fill:var(--a-ink-2);font-family:var(--btn-font);font-weight:700;stroke:var(--a-surface);paint-order:stroke;pointer-events:none}
+.heatLegend{display:flex;flex-wrap:wrap;gap:6px 16px;margin:0;padding:0;list-style:none;font-size:13px;color:var(--a-ink-2);font-variant-numeric:tabular-nums}
+.heatLegend li{display:inline-flex;align-items:center;gap:6px}
+.heatLegend i{display:inline-block;width:14px;height:14px;border-radius:3px;background:var(--key)}
+.picker{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--a-ink-2)}
+.picker select{min-height:var(--btn-height);max-width:100%;min-width:0;padding:0 12px;border:2px solid #a8b78d;border-radius:14px;background:#fffaf0;color:#244d40;font:700 16px var(--btn-font)}
+.picker select:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}

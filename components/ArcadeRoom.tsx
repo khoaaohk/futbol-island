@@ -7,6 +7,8 @@ import ArcadeCoinsPanel from './ArcadeCoinsPanel';
 import TravelIcon from './TravelIcon';
 import {Icon} from './Icon';
 import {useEffect,useRef,useState,type PointerEvent} from 'react';
+import {enterActivity} from '@/lib/analytics/tracker';
+import type {ActivityId} from '@/lib/analytics/islandIds';
 import {arcadeCabinets,type ArcadeCabinetId} from '@/lib/arcade/arcadeCatalog';
 import type {createArcadeRoomScene,ArcadeRoomAction} from '@/lib/arcade/arcadeRoomScene';
 import styles from './ArcadeRoom.module.css';
@@ -27,6 +29,7 @@ export default function ArcadeRoom(){
  const [queryReady,setQueryReady]=useState(false);
  const [game,setGame]=useState<ArcadeCabinetId|null>(null),[near,setNear]=useState<ArcadeCabinetId|null>(null),[list,setList]=useState(false),[ready,setReady]=useState(false),[failed,setFailed]=useState(false);
  const machinePrompt=useRef<HTMLButtonElement>(null);
+ useEffect(()=>game?enterActivity(`arcade_${game}` as ActivityId):undefined,[game]);// admin analytics: time per arcade game (module variable, no render)
  const canvas=useRef<HTMLCanvasElement>(null),room=useRef<ReturnType<typeof createArcadeRoomScene>|null>(null),position=useRef<{x:number;z:number}>(),joy=useRef<HTMLDivElement>(null),pointer=useRef<number|null>(null),tap=useRef<{x:number;y:number}|null>(null);
  const joyRect=useJoystickBounds(joy,ready&&!game);
  const leave=(destination='/?from=arcade')=>{if(exitingRef.current)return;exitingRef.current=true;room.current?.clearInput();setExiting(true);exitTimer.current=setTimeout(()=>window.location.assign(destination),matchMedia('(prefers-reduced-motion:reduce)').matches?60:360);};

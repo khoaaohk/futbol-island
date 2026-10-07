@@ -16,15 +16,15 @@ export function fmtDuration(ms:number):string{
 }
 export const fmtPct=(x:number)=>`${Math.round(x*100)}%`;
 
-type TipState={x:number;y:number;below?:boolean;content:ReactNode}|null;
+export type TipState={x:number;y:number;below?:boolean;content:ReactNode}|null;
 /** The island map's tooltip (IslandTravelMap.module.css .tip), positioned inside a relative container and kept on-screen. */
-function Tip({tip,width}:{tip:TipState;width:number}){
+export function Tip({tip,width}:{tip:TipState;width:number}){
  if(!tip)return null;
  const half=Math.min(130,width/2),clamped=Math.max(half,Math.min(width-half,tip.x));
  return <div role="tooltip" className={tipStyles.tip} data-below={tip.below||undefined} style={{left:tip.x,'--tip-top':`${tip.y}px`,'--tip-bottom':`${tip.y}px`,'--tip-shift':`${clamped-tip.x}px`} as CSSProperties}>{tip.content}</div>;
 }
 
-function useWidth<T extends HTMLElement>(){
+export function useWidth<T extends HTMLElement>(){
  const ref=useRef<T>(null);const [w,setW]=useState(0);
  useEffect(()=>{const el=ref.current;if(!el)return;setW(el.clientWidth);const ro=new ResizeObserver(([e])=>setW(Math.round(e.contentRect.width)));ro.observe(el);return()=>ro.disconnect();},[]);
  return [ref,w] as const;
@@ -73,11 +73,12 @@ export function LineChart({labels,series,values,ariaLabel}:{labels:string[];seri
 
 export type BarRow={key:string;label:string;value:number;detail?:string};
 /** Horizontal bars, one series in slot 1. Value at the bar tip; the row is the hover/focus target. */
-export function BarList({rows,format=fmtInt,unit,limit=10}:{rows:BarRow[];format?:(n:number)=>string;unit:string;limit?:number}){
+/** `share` adds "· 12%" of the column total to the tooltip (off for averages, where a share means nothing). */
+export function BarList({rows,format=fmtInt,unit,limit=10,share=true}:{rows:BarRow[];format?:(n:number)=>string;unit:string;limit?:number;share?:boolean}){
  const [wrap,width]=useWidth<HTMLDivElement>();const [tip,setTip]=useState<TipState>(null);
  const shown=rows.slice(0,limit),max=Math.max(1,...shown.map(r=>r.value)),total=rows.reduce((a,r)=>a+r.value,0);
  const show=(el:HTMLElement,r:BarRow)=>{const box=wrap.current!.getBoundingClientRect(),b=el.getBoundingClientRect();
-  setTip({x:b.left-box.left+b.width/2,y:b.top-box.top,content:<><strong>{format(r.value)}</strong> {unit} · {total?fmtPct(r.value/total):'0%'}<br/><span>{r.label}{r.detail?` · ${r.detail}`:''}</span></>});};
+  setTip({x:b.left-box.left+b.width/2,y:b.top-box.top,content:<><strong>{format(r.value)}</strong> {unit}{share?` · ${total?fmtPct(r.value/total):'0%'}`:''}<br/><span>{r.label}{r.detail?` · ${r.detail}`:''}</span></>});};
  return <div className={styles.plot} ref={wrap}>
   <ul className={styles.bars}>
    {shown.map(r=><li key={r.key} className={styles.bar} tabIndex={0} aria-label={`${r.label}: ${format(r.value)} ${unit}`}
@@ -113,12 +114,12 @@ export function Columns({rows,unit}:{rows:{label:string;value:number}[];unit:str
 
 export type TableSpec={columns:string[];rows:(string|number)[][]};
 /** A chart card: title, subtitle, Table toggle (chip family, pink when on) and the chart or its table twin. */
-export function ChartCard({title,subtitle,table,children,wide=false,empty=false}:{title:string;subtitle?:string;table:TableSpec;children:ReactNode;wide?:boolean;empty?:boolean}){
+export function ChartCard({title,subtitle,table,children,wide=false,empty=false,emptyText='No visits in this range yet.'}:{title:string;subtitle?:string;table:TableSpec;children:ReactNode;wide?:boolean;empty?:boolean;emptyText?:string}){
  const [asTable,setAsTable]=useState(false);
- const body=useMemo(()=>empty?<p className={styles.empty}>No visits in this range yet.</p>:asTable?<div className={styles.tableScroll}><table className={styles.table}>
+ const body=useMemo(()=>empty?<p className={styles.empty}>{emptyText}</p>:asTable?<div className={styles.tableScroll}><table className={styles.table}>
   <thead><tr>{table.columns.map(c=><th key={c} scope="col">{c}</th>)}</tr></thead>
   <tbody>{table.rows.map((r,i)=><tr key={i}>{r.map((c,j)=>j===0?<th key={j} scope="row" style={{fontWeight:400,fontSize:14,color:'inherit'}}>{c}</th>:<td key={j}>{typeof c==='number'?fmtInt(c):c}</td>)}</tr>)}</tbody>
- </table></div>:children,[asTable,children,empty,table]);
+ </table></div>:children,[asTable,children,empty,table,emptyText]);
  return <section className={`${styles.card} ${wide?styles.wide:''}`} aria-label={title}>
   <div className={styles.cardHead}>
    <div><h2>{title}</h2>{subtitle&&<p>{subtitle}</p>}</div>

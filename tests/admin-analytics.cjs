@@ -9,7 +9,7 @@ const loaded=new Map();
 function load(file){file=path.resolve(file);if(loaded.has(file))return loaded.get(file);const m={exports:{}};loaded.set(file,m.exports);
  vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{fileName:file,compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,
   {module:m,exports:m.exports,Buffer,URL,URLSearchParams,TextDecoder,Date,Math,JSON,process:{env:{}},console,
-   require:id=>id.startsWith('.')?load(path.resolve(path.dirname(file),id+'.ts')):require(id)});
+   require:id=>id.endsWith('.json')?{default:JSON.parse(fs.readFileSync(path.resolve(path.dirname(file),id),'utf8'))}:id.startsWith('.')?load(path.resolve(path.dirname(file),id+'.ts')):require(id)});
  loaded.set(file,m.exports);return m.exports;}
 const C=load('lib/analytics/core.ts'),S=load('lib/analytics/store.ts'),I=load('lib/analytics/ingest.ts'),R=load('lib/analytics/report.ts'),A=load('lib/analytics/adminAuth.ts'),T=load('lib/analytics/tracker.ts');
 const read=f=>fs.readFileSync(f,'utf8');
@@ -34,7 +34,7 @@ await ok('validation',async()=>{
   JSON.stringify({t:'start',s:SID,p:'/',u:{source:'x',name:'Sam'}}),JSON.stringify({t:'start',s:SID,p:'/',tp:7}),JSON.stringify({t:'start',s:SID,p:'/',r:'x'.repeat(300)}),
   JSON.stringify({t:'start',s:SID,p:'/'+'a'.repeat(250)})];
  for(const b of bad)assert.equal(C.validateEvent(b).ok,false,'rejects '+b.slice(0,60));
- assert.equal(C.validateEvent(JSON.stringify({t:'start',s:SID,p:'/',pad:'x'.repeat(3000)})).reason,'too-large');
+ assert.equal(C.validateEvent(JSON.stringify({t:'start',s:SID,p:'/',pad:'x'.repeat(5000)})).reason,'too-large');
  assert.equal(C.validateEvent(JSON.stringify({v:1,t:'start',s:SID,p:'/arcade',r:'google.com',u:{source:'newsletter'},tp:1})).ok,true);
  assert.equal(C.validateEvent(JSON.stringify({v:1,t:'beat',s:SID,p:'/',e:30000,a:{island:20000,paths:10000},n:3})).ok,true);
  const store=S.createMemoryStore();
@@ -55,7 +55,7 @@ await ok('no PII',async()=>{
  assert.equal(s.utmSource,'news-letter');assert.equal(s.utmCampaign,null,'an unsafe utm value is dropped, not stored');
  assert.equal(s.country,'GB');assert.equal(s.region,'ENG');assert.equal(s.device,'phone');assert.match(s.visitorHash,/^[0-9a-f]{32}$/);
  await ingest(store,{v:1,t:'beat',s:SID,p:'/museum?who=sam',e:20000,a:{museum:20000},n:2},{now:at(25000)});
- assert.deepEqual(Object.keys(store.data.beats[0]).sort(),['areaMs','engagedMs','pageviews','sessionId','ts']);
+ assert.deepEqual(Object.keys(store.data.beats[0]).sort(),['activityMs','areaMs','cells','engagedMs','pageviews','placeMs','sessionId','ts']);
  const dump=JSON.stringify(store.data);
  for(const pii of [IP,'203.0.113','iPhone','Mozilla','London','51.5','-0.12','sam','Sam','q=','search?','name=','who=','#x','<script>'])assert(!dump.includes(pii),'stored data must not contain '+pii);
  assert.equal(C.sanitizePath('/coffee/checkout?amount=5'),'/coffee');assert.equal(C.sanitizePath('/users/sam'),'/other');assert.equal(C.sanitizePath('/admin'),'/other');
@@ -341,7 +341,8 @@ await ok('sql',async()=>{
   const psql=(sql,{role}={})=>cp.execFileSync(psqlBin,[...args,'-c',(role?`set role ${role}; `:'')+sql],{encoding:'utf8',stdio:['ignore','pipe','pipe']}).trim();
   const fails=(sql,role)=>{const r=cp.spawnSync(psqlBin,[...args,'-c',`set role ${role}; ${sql}`],{encoding:'utf8'});return r.status!==0?r.stderr:'';};
   psql('create role anon; create role authenticated; create role service_role bypassrls;');// as in Supabase: only service_role bypasses RLS
-  cp.execFileSync(psqlBin,[...args,'-f','supabase/migrations/20261007_analytics.sql'],{stdio:['ignore','ignore','pipe']});
+  // The live migration, then the additive one on top (as in production).
+  for(const f of ['supabase/migrations/20261007_analytics.sql','supabase/migrations/20261008_analytics_places.sql'])cp.execFileSync(psqlBin,[...args,'-f',f],{stdio:['ignore','ignore','pipe']});
   // RLS and grants: the public roles get nothing; the service role gets the functions.
   for(const role of ['anon','authenticated']){
    assert.match(fails('select count(*) from analytics_sessions',role),/permission denied/);

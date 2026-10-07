@@ -7,6 +7,7 @@ import type {PlayerBookId} from '@/lib/books/catalog';
 import {holdVideoPlayback} from '@/lib/videoPlayback';
 import StoryPlaybackBar from './StoryPlaybackBar';
 import {BackButton} from './BackButton';
+import {enterActivity} from '@/lib/analytics/tracker';
 import {Icon} from './Icon';
 import {getSoundVolume,isSoundEnabled} from '@/lib/games/sound';
 import {createBookAudio} from '@/lib/books/bookAudio';
@@ -20,6 +21,7 @@ function savedPage(bookId:PlayerBookId){return boundedBookPage(readProgress()[bo
 
 /** Purchased paper story. Only finite scene interactions render; narration uses native media events. */
 export default function PlayerPopUpBook({bookId,onClose}:{bookId:PlayerBookId;onClose:()=>void}){
+ useEffect(()=>enterActivity('book'),[]);// admin analytics: time in the pop-up book (module variable, no render)
  const audio=useRef<ReturnType<typeof createBookAudio>|null>(null);
  const [musicMuted,setMusicMuted]=useState(()=>!isSoundEnabled()||getSoundVolume()===0);
  const [turning,setTurning]=useState(false);

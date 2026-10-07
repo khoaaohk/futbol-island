@@ -6,6 +6,7 @@ import MiniCard from './MiniCard';
 import {preloadPlayerPhotos} from './PlayerArt';
 import {hasPlayFilm} from '@/lib/plays/riso/registry';
 import {NavigationButton} from './DoneButton';
+import {enterActivity} from '@/lib/analytics/tracker';
 import navStyles from './DoneButton.module.css';
 import BinderLeaf,{type LeafHandle} from './BinderLeaf';
 import {matchesCard} from './cardSearch';
@@ -118,6 +119,7 @@ type Turn={id:number;from:number;to:number;dir:1|-1;under:{side:'left'|'right'|'
  * (transform and opacity only). No loop runs at rest.
  */
 export default function CardCollection(){
+ useEffect(()=>enterActivity('cards'),[]);// admin analytics: time in the cards binder (module variable, no render)
  const [owned,setOwned]=useState<string[]>([]),[field,setField]=useState<Field>('football'),[page,setPage]=useState(0),[turn,setTurn]=useState<Turn|null>(null);
  const [query,setQuery]=useState(''),[searchOpen,setSearchOpen]=useState(false),[active,setActive]=useState(0),[spot,setSpot]=useState<string|null>(null),[size,setSize]=useState({width:0,height:0});
  const [flipped,setFlipped]=useState(false),[lift,setLift]=useState<Lift|null>(null),[host,setHost]=useState<HTMLElement|null>(null),[leaving,setLeaving]=useState(false);

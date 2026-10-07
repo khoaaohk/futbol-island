@@ -4160,3 +4160,10 @@ Hidden ones are not drawn. Canvas textures (dash, flag, 4 intent glyphs) are mad
 **Asset headers** (`next.config.mjs`): asset folders get 1 day + SWR 7 days, JSON in them gets 5 min + SWR 1 day, and only verified content-addressed files (`stories/eleven/*-<hash>.m4a`, `stories/paths/chapters/ink-<hash>.webp`) are immutable. Lesson voices (`voice/kokoro_*/<hash>.m4a`) are NOT immutable: the hash comes from the line text, and they get re-voiced in place.
 
 **Not measured:** no physical iPhone measurement was taken.
+
+## Oct 7 2026: island analytics sampling (places, activities, heat map)
+- **Added runtime cost:** one `islandFrame()` call inside Town's existing `animate()`: a timestamp comparison per frame and one position sample every 5 s (point-in-zone lookup plus 20 m grid binning into a small Map). No new timers, rAF loops or React re-renders (`enterActivity()` is a module variable like `enterArea`).
+- **Network:** the totals ride in the existing tracker beats (flush on hide plus a safety beat every 3 min ±20%), so there are no extra requests. A typical beat is ~470 B (worst case ~2.4 KB, at most 64 cells).
+- **Gating:** it does nothing when the tracker is off (DNT/GPC, bots, preview, labs, admin, localhost), when the tab is hidden, or after 60 s with no input or movement.
+- **Validation:** tests/admin-analytics-places.cjs (wiring and heat-budget group), tests/heat-*.cjs and device-guards pass. Desktop/headless only; no iPhone thermal claim.
+- **Deployment status:** not yet deployed.

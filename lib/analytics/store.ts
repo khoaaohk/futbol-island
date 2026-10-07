@@ -3,7 +3,7 @@
  * memory store backs the tests and, with ANALYTICS_LOCAL_FILE outside Vercel, local previews of the dashboard.
  *
  * Both are append-only on the write path (one insert per event, no row locks, no read-modify-write) and aggregate on the
- * read path: Supabase in SQL (supabase/migrations/20261007_analytics.sql), the memory store with the TypeScript reference
+ * read path: Supabase in SQL (supabase/migrations/20261007_analytics.sql + 20261008_analytics_places.sql), the memory store with the TypeScript reference
  * in core.ts. tests/admin-analytics.cjs runs the SQL on a throwaway Postgres and checks it matches the reference.
  */
 import {randomBytes} from 'crypto';
@@ -64,7 +64,7 @@ export function createMemoryStore(file?:string):AnalyticsStore&{data:MemoryData}
     const s=data.starts[ev.session];
     if(!s||now.getTime()-Date.parse(s.startedAt)>BEAT_WINDOW_MS)return;
     if(data.beats.filter(b=>b.sessionId===ev.session).length>=BEAT_CAP_PER_SESSION)return;
-    data.beats.push({sessionId:ev.session,ts:t,engagedMs:ev.engagedMs,pageviews:ev.pageviews,areaMs:ev.areaMs});
+    data.beats.push({sessionId:ev.session,ts:t,engagedMs:ev.engagedMs,pageviews:ev.pageviews,areaMs:ev.areaMs,placeMs:ev.placeMs,activityMs:ev.activityMs,cells:ev.cells});
    }
    save();
   },
@@ -111,7 +111,8 @@ export function createSupabaseStore(url:string,serviceKey:string,fetchImpl:typeo
   },
   async track(ev){
    await rpc('analytics_ingest',{p:{type:ev.type,session:ev.session,path:ev.path,day:ev.day,visitor_hash:ev.visitorHash,country:ev.country,region:ev.region,device:ev.device,source:ev.source,
-    referrer_host:ev.referrerHost,utm_source:ev.utmSource,utm_medium:ev.utmMedium,utm_campaign:ev.utmCampaign,engaged_ms:ev.engagedMs,pageviews:ev.pageviews,area_ms:ev.areaMs}});
+    referrer_host:ev.referrerHost,utm_source:ev.utmSource,utm_medium:ev.utmMedium,utm_campaign:ev.utmCampaign,engaged_ms:ev.engagedMs,pageviews:ev.pageviews,area_ms:ev.areaMs,
+    place_ms:ev.placeMs,activity_ms:ev.activityMs,cells:ev.cells}});
   },
   async rollups(fromDay,toDay){
    const rows=await call(`/analytics_daily?select=day,data&day=gte.${fromDay}&day=lte.${toDay}&order=day.asc`) as {day:string;data:DailyRollup}[];

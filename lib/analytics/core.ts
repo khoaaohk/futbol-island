@@ -12,11 +12,17 @@
  * Write path (scaling review, Oct 7 2026): append-only. A tab sends one `start` when its session begins and a few `beat`s
  * (foreground time, area split and page-view count since the last beat) on hide/pagehide plus a jittered ~3 min safety
  * ping, so ~3–6 writes per session. Nothing is read-modify-written; sessions are assembled when aggregating.
+ *
+ * Where on the island (Oct 8 2026, supabase/migrations/20261008_analytics_places.sql): a beat may also carry ms per named place
+ * (`pl`), ms per activity (`ac`) and seconds per 20 m heat-map cell (`c`), all fixed ids from islandIds.ts. Totals only.
  */
+import {ACTIVITY_IDS,CELL_COUNT,MAX_BEAT_CELLS,PLACE_IDS,type ActivityId,type PlaceId} from './islandIds';
 
 export const EVENT_TYPES=['start','beat'] as const;
 export type EventType=typeof EVENT_TYPES[number];
-export const MAX_BODY_BYTES=2048;
+/** Raised from 2048 (Oct 8 2026) for the place/activity/cell split: a worst-case beat (every place, every activity and 64
+ *  cells) is ~3 KB; a typical one is 300–700 bytes. */
+export const MAX_BODY_BYTES=4096;
 /** Most foreground time one beat can carry (the client's safety ping is ≤3.6 min apart while visible). */
 export const MAX_EVENT_ENGAGED_MS=300_000;
 export const MAX_BEAT_PAGEVIEWS=100;
@@ -44,7 +50,10 @@ export type SourceClass='direct'|'search'|'social'|'referral'|'campaign';
 export type Device='phone'|'tablet'|'desktop';
 
 /** What the browser sends. Everything is optional except t/s/p; the server derives the rest. */
-export type RawEvent={v?:number;t:EventType;s:string;p:string;r?:string;u?:Utm;e?:number;a?:Record<string,number>;n?:number;tp?:number};
+export type RawEvent={v?:number;t:EventType;s:string;p:string;r?:string;u?:Utm;e?:number;a?:Record<string,number>;n?:number;tp?:number;
+ pl?:Record<string,number>;ac?:Record<string,number>;c?:Record<string,number>};
+/** Seconds per heat-map cell (key = cell index as a string). */
+export type CellMap=Record<string,number>;
 
 /** What reaches the store: no IP, no user agent, no full URL. */
 export type CleanEvent={
@@ -52,6 +61,7 @@ export type CleanEvent={
  country:string|null;region:string|null;device:Device;source:SourceClass;referrerHost:string|null;
  utmSource:string|null;utmMedium:string|null;utmCampaign:string|null;
  engagedMs:number;areaMs:Partial<Record<Area,number>>;pageviews:number;
+ placeMs:Partial<Record<PlaceId,number>>;activityMs:Partial<Record<ActivityId,number>>;cells:CellMap;
 };
 
 const SESSION_RE=/^[A-Za-z0-9_-]{16,32}$/;
@@ -123,7 +133,7 @@ export function validateEvent(body:string):Validated{
  let o:unknown;try{o=JSON.parse(body);}catch{return {ok:false,reason:'json'};}
  if(!o||typeof o!=='object'||Array.isArray(o))return {ok:false,reason:'shape'};
  const r=o as Record<string,unknown>;
- const allowed=new Set(['v','t','s','p','r','u','e','a','n','tp']);
+ const allowed=new Set(['v','t','s','p','r','u','e','a','n','tp','pl','ac','c']);
  for(const k of Object.keys(r))if(!allowed.has(k))return {ok:false,reason:'unknown-key'};
  if(!(EVENT_TYPES as readonly unknown[]).includes(r.t))return {ok:false,reason:'type'};
  if(typeof r.s!=='string'||!SESSION_RE.test(r.s))return {ok:false,reason:'session'};
@@ -142,12 +152,44 @@ export function validateEvent(body:string):Validated{
   for(const [k,v] of entries)if(!(AREAS as readonly string[]).includes(k)||typeof v!=='number'||!Number.isFinite(v)||v<0||v>3_600_000)return {ok:false,reason:'areas'};
  }
  if(r.n!==undefined&&(typeof r.n!=='number'||!Number.isInteger(r.n)||r.n<0||r.n>MAX_BEAT_PAGEVIEWS))return {ok:false,reason:'pageviews'};
- if(r.t==='start'&&(r.e!==undefined||r.a!==undefined||r.n!==undefined))return {ok:false,reason:'start-engaged'};
+ // Place / activity / cell split: fixed ids only, and no bucket can hold more than the beat's own foreground time.
+ const limit=bucketLimitMs(typeof r.e==='number'?r.e:0);
+ for(const [key,ids,reason] of [['pl',PLACE_IDS,'places'],['ac',ACTIVITY_IDS,'activities']] as const){
+  const o=r[key];if(o===undefined)continue;
+  if(!o||typeof o!=='object'||Array.isArray(o))return {ok:false,reason};
+  const entries=Object.entries(o as Record<string,unknown>);if(entries.length>ids.length)return {ok:false,reason};
+  for(const [k,v] of entries)if(!(ids as readonly string[]).includes(k)||typeof v!=='number'||!Number.isFinite(v)||v<0||v>limit)return {ok:false,reason};
+ }
+ if(r.c!==undefined){
+  if(!r.c||typeof r.c!=='object'||Array.isArray(r.c))return {ok:false,reason:'cells'};
+  const entries=Object.entries(r.c as Record<string,unknown>);if(entries.length>MAX_BEAT_CELLS)return {ok:false,reason:'cells'};
+  for(const [k,v] of entries)if(!/^(0|[1-9][0-9]{0,3})$/.test(k)||Number(k)>=CELL_COUNT||typeof v!=='number'||!Number.isInteger(v)||v<1||v*1000>limit)return {ok:false,reason:'cells'};
+ }
+ if(r.t==='start'&&(r.e!==undefined||r.a!==undefined||r.n!==undefined||r.pl!==undefined||r.ac!==undefined||r.c!==undefined))return {ok:false,reason:'start-engaged'};
  if(r.t==='beat'&&(r.r!==undefined||r.u!==undefined))return {ok:false,reason:'beat-source'};
  return {ok:true,event:r as unknown as RawEvent};
 }
 
 function byteLength(s:string){let n=0;for(let i=0;i<s.length;i++){const c=s.charCodeAt(i);n+=c<0x80?1:c<0x800?2:c>=0xd800&&c<0xdc00?(i++,4):3;}return n;}
+
+/** Most any one place/activity/cell bucket may claim in a beat: its foreground time + 10% + 5 s (rounding and sample slack). */
+export const bucketLimitMs=(e:number)=>Math.max(0,e)*1.1+5000;
+
+/** Scale a split down so it never adds up to more than `total` (ms); unknown ids and non-positive values are dropped. */
+export function clampSplit<K extends string>(split:Record<string,number>|undefined,ids:readonly K[],total:number):Partial<Record<K,number>>{
+ const entries=Object.entries(split||{}).filter(([k,v])=>(ids as readonly string[]).includes(k)&&typeof v==='number'&&v>0);
+ const sum=entries.reduce((n,[,v])=>n+v,0),scale=sum>total&&sum>0?total/sum:1,out:Partial<Record<K,number>>={};
+ for(const [k,v] of entries){const n=Math.floor(v*scale);if(n>0)out[k as K]=n;}
+ return out;
+}
+/** Heat-map cells: valid indices only, the busiest MAX_BEAT_CELLS, whole seconds, adding up to at most the beat's time. */
+export function clampCells(c:Record<string,number>|undefined,engagedMs:number):CellMap{
+ const entries=Object.entries(c||{}).filter(([k,v])=>/^(0|[1-9][0-9]{0,3})$/.test(k)&&Number(k)<CELL_COUNT&&Number.isInteger(v)&&v>0)
+  .sort((a,b)=>b[1]-a[1]||Number(a[0])-Number(b[0])).slice(0,MAX_BEAT_CELLS);
+ const sum=entries.reduce((n,[,v])=>n+v,0),cap=Math.floor(engagedMs/1000),scale=sum>cap&&sum>0?cap/sum:1,out:CellMap={};
+ for(const [k,v] of entries){const n=Math.floor(v*scale);if(n>0)out[k]=n;}
+ return out;
+}
 
 /** Clamp the engaged time and per-area split of one heartbeat. The area total never exceeds the event total. */
 export function clampEngaged(e:number|undefined,a:Record<string,number>|undefined):{engagedMs:number;areaMs:Partial<Record<Area,number>>}{
@@ -172,21 +214,27 @@ export type SessionRow={
  id:string;day:string;visitorHash:string;startedAt:string;lastSeenAt:string;engagedMs:number;pageviews:number;entryPath:string;
  country:string|null;region:string|null;device:Device;source:SourceClass;referrerHost:string|null;
  utmSource:string|null;utmMedium:string|null;utmCampaign:string|null;areaMs:Partial<Record<Area,number>>;
+ placeMs:Partial<Record<PlaceId,number>>;activityMs:Partial<Record<ActivityId,number>>;cells:CellMap;
 };
 /** Append-only rows: one per session start, one per beat. */
 export type StartRow={id:string;day:string;visitorHash:string;startedAt:string;entryPath:string;country:string|null;region:string|null;device:Device;source:SourceClass;referrerHost:string|null;utmSource:string|null;utmMedium:string|null;utmCampaign:string|null};
-export type BeatRow={sessionId:string;ts:string;engagedMs:number;pageviews:number;areaMs:Partial<Record<Area,number>>};
+export type BeatRow={sessionId:string;ts:string;engagedMs:number;pageviews:number;areaMs:Partial<Record<Area,number>>;
+ /** Oct 8 2026; absent on beats stored before the place split. */
+ placeMs?:Partial<Record<PlaceId,number>>;activityMs?:Partial<Record<ActivityId,number>>;cells?:CellMap};
 
 /** Assemble sessions from append-only rows, with the same rules as the SQL (public.analytics_day). */
 export function deriveSessions(starts:StartRow[],beats:BeatRow[]):SessionRow[]{
  const by=new Map<string,BeatRow[]>();for(const b of beats)(by.get(b.sessionId)??by.set(b.sessionId,[]).get(b.sessionId)!).push(b);
  return starts.map(st=>{
-  const bs=by.get(st.id)||[];let e=0,pv=1,last=Date.parse(st.startedAt);const areaMs:Partial<Record<Area,number>>={};
-  for(const b of bs){e+=b.engagedMs;pv+=b.pageviews;last=Math.max(last,Date.parse(b.ts));for(const [k,v] of Object.entries(b.areaMs||{}))areaMs[k as Area]=(areaMs[k as Area]||0)+(v||0);}
+  const bs=by.get(st.id)||[];let e=0,pv=1,last=Date.parse(st.startedAt);const areaMs:Partial<Record<Area,number>>={},placeMs:Record<string,number>={},activityMs:Record<string,number>={},cells:CellMap={};
+  for(const b of bs){e+=b.engagedMs;pv+=b.pageviews;last=Math.max(last,Date.parse(b.ts));for(const [k,v] of Object.entries(b.areaMs||{}))areaMs[k as Area]=(areaMs[k as Area]||0)+(v||0);
+   addInto(placeMs,b.placeMs);addInto(activityMs,b.activityMs);addInto(cells,b.cells);}
   const cap=Math.max(0,last-Date.parse(st.startedAt))+ENGAGED_SLACK_MS;
-  return {...st,engagedMs:bs.length?Math.min(e,cap):0,pageviews:pv,lastSeenAt:new Date(last).toISOString(),areaMs};
+  return {...st,engagedMs:bs.length?Math.min(e,cap):0,pageviews:pv,lastSeenAt:new Date(last).toISOString(),areaMs,placeMs,activityMs,cells};
  });
 }
+
+function addInto(to:Record<string,number>,from:Record<string,number|undefined>|undefined){for(const [k,v] of Object.entries(from||{}))if(v)to[k]=(to[k]||0)+v;}
 
 export const DIMS=['country','region','source','referrer','campaign','device','entry'] as const;
 export type Dim=typeof DIMS[number];
@@ -195,6 +243,9 @@ export type Counts={s:number;v:number;pv:number};
 export type DailyRollup={
  day:string;visitors:number;sessions:number;pageviews:number;bounces:number;engagedMs:number;
  hist:number[];dims:Record<Dim,Record<string,Counts>>;areaMs:Partial<Record<Area,number>>;
+ /** Oct 8 2026 (absent in rollups frozen before): ms per place and the sessions that spent any time there, ms per
+  *  activity, and seconds per heat-map cell, all summed over the day. */
+ placeMs?:Partial<Record<PlaceId,number>>;placeSessions?:Partial<Record<PlaceId,number>>;activityMs?:Partial<Record<ActivityId,number>>;cells?:CellMap;
 };
 
 /** Fine session-length buckets in seconds (bucket i is [EDGES[i], EDGES[i+1]); the last is open). Used for the median. */
@@ -208,6 +259,8 @@ export function lengthBucket(ms:number):number{const s=Math.max(0,ms)/1000;let i
 
 export const isBounce=(s:Pick<SessionRow,'pageviews'|'engagedMs'>)=>s.pageviews<=1&&s.engagedMs<BOUNCE_MS;
 const TOP_N=100;
+/** Regions keep many more keys per day so the per-country breakdown can list every state/province seen (Oct 8 2026). */
+export const REGION_TOP_N=1000;
 const emptyDims=()=>Object.fromEntries(DIMS.map(d=>[d,{}])) as Record<Dim,Record<string,Counts>>;
 
 export function dimKeys(s:SessionRow):Record<Dim,string|null>{
@@ -225,7 +278,8 @@ export function dimKeys(s:SessionRow):Record<Dim,string|null>{
 
 /** One UTC day of raw sessions → its rollup. Visitors are distinct hashes (the hash only lives for that day anyway). */
 export function rollupDay(day:string,sessions:SessionRow[]):DailyRollup{
- const r:DailyRollup={day,visitors:0,sessions:0,pageviews:0,bounces:0,engagedMs:0,hist:LENGTH_EDGES.map(()=>0),dims:emptyDims(),areaMs:{}};
+ const r:DailyRollup={day,visitors:0,sessions:0,pageviews:0,bounces:0,engagedMs:0,hist:LENGTH_EDGES.map(()=>0),dims:emptyDims(),areaMs:{},placeMs:{},placeSessions:{},activityMs:{},cells:{}};
+ const placeMs=r.placeMs as Record<string,number>,placeSessions=r.placeSessions as Record<string,number>;
  const visitors=new Set<string>(),dimVisitors=new Map<string,Set<string>>();
  for(const s of sessions){
   if(s.day!==day)continue;
@@ -237,9 +291,11 @@ export function rollupDay(day:string,sessions:SessionRow[]):DailyRollup{
    const id=dim+'\u0000'+key;let set=dimVisitors.get(id);if(!set)dimVisitors.set(id,set=new Set());
    if(!set.has(s.visitorHash)){set.add(s.visitorHash);c.v++;}}
   for(const [a,ms] of Object.entries(s.areaMs||{}))if(ms)r.areaMs[a as Area]=(r.areaMs[a as Area]||0)+ms;
+  for(const [p,ms] of Object.entries(s.placeMs||{}))if(ms){placeMs[p]=(placeMs[p]||0)+ms;placeSessions[p]=(placeSessions[p]||0)+1;}
+  addInto(r.activityMs as Record<string,number>,s.activityMs);addInto(r.cells!,s.cells);
  }
  r.visitors=visitors.size;
- for(const dim of DIMS)r.dims[dim]=trimTop(r.dims[dim],TOP_N);
+ for(const dim of DIMS)r.dims[dim]=trimTop(r.dims[dim],dim==='region'?REGION_TOP_N:TOP_N);
  return r;
 }
 
@@ -264,22 +320,29 @@ export function displayDistribution(hist:number[]):{label:string;sessions:number
 
 export type Row={key:string;sessions:number;visitors:number;pageviews:number};
 export type Totals={visitors:number;sessions:number;pageviews:number;bounceRate:number;avgMs:number;medianMs:number;engagedMs:number};
-export type Merged={totals:Totals;hist:number[];dims:Record<Dim,Row[]>;areas:{area:Area;ms:number}[]};
+export type PlaceRow={place:PlaceId;ms:number;sessions:number};
+export type ActivityRow={activity:ActivityId;ms:number};
+export type Merged={totals:Totals;hist:number[];dims:Record<Dim,Row[]>;areas:{area:Area;ms:number}[];
+ places:PlaceRow[];activities:ActivityRow[];cells:[number,number][]};
 
 export function mergeRollups(rollups:DailyRollup[]):Merged{
- const hist=LENGTH_EDGES.map(()=>0),dims=emptyDims(),areaMs:Partial<Record<Area,number>>={};
+ const hist=LENGTH_EDGES.map(()=>0),dims=emptyDims(),areaMs:Partial<Record<Area,number>>={},placeMs:Record<string,number>={},placeSessions:Record<string,number>={},activityMs:Record<string,number>={},cells:CellMap={};
  let visitors=0,sessions=0,pageviews=0,bounces=0,engagedMs=0;
  for(const r of rollups){
   visitors+=r.visitors;sessions+=r.sessions;pageviews+=r.pageviews;bounces+=r.bounces;engagedMs+=r.engagedMs;
   r.hist.forEach((c,i)=>{if(i<hist.length)hist[i]+=c;});
   for(const dim of DIMS)for(const [k,c] of Object.entries(r.dims?.[dim]||{})){const t=(dims[dim][k]??={s:0,v:0,pv:0});t.s+=c.s;t.v+=c.v;t.pv+=c.pv;}
   for(const [a,ms] of Object.entries(r.areaMs||{}))areaMs[a as Area]=(areaMs[a as Area]||0)+(ms||0);
+  addInto(placeMs,r.placeMs);addInto(placeSessions,r.placeSessions);addInto(activityMs,r.activityMs);addInto(cells,r.cells);
  }
  const rows=(rec:Record<string,Counts>)=>Object.entries(rec).map(([key,c])=>({key,sessions:c.s,visitors:c.v,pageviews:c.pv})).sort((a,b)=>b.visitors-a.visitors||b.sessions-a.sessions||a.key.localeCompare(b.key));
  return {
   totals:{visitors,sessions,pageviews,engagedMs,bounceRate:sessions?bounces/sessions:0,avgMs:sessions?Math.round(engagedMs/sessions):0,medianMs:histMedianMs(hist)},
   hist,dims:Object.fromEntries(DIMS.map(d=>[d,rows(dims[d])])) as Record<Dim,Row[]>,
   areas:(Object.entries(areaMs) as [Area,number][]).filter(([,ms])=>ms>0).map(([area,ms])=>({area,ms})).sort((a,b)=>b.ms-a.ms),
+  places:Object.entries(placeMs).filter(([p,ms])=>ms>0&&(PLACE_IDS as readonly string[]).includes(p)).map(([p,ms])=>({place:p as PlaceId,ms,sessions:placeSessions[p]||0})).sort((a,b)=>b.ms-a.ms||a.place.localeCompare(b.place)),
+  activities:Object.entries(activityMs).filter(([a,ms])=>ms>0&&(ACTIVITY_IDS as readonly string[]).includes(a)).map(([a,ms])=>({activity:a as ActivityId,ms})).sort((a,b)=>b.ms-a.ms||a.activity.localeCompare(b.activity)),
+  cells:Object.entries(cells).map(([k,s])=>[Number(k),s] as [number,number]).filter(([k,s])=>s>0&&k>=0&&k<CELL_COUNT).sort((a,b)=>a[0]-b[0]),
  };
 }
 
@@ -299,12 +362,16 @@ export const dailySeries=(rollups:DailyRollup[]):Point[]=>rollups.map(r=>({key:r
 export type Report={
  configured:boolean;from:string;to:string;granularity:'hour'|'day';generatedAt:string;live:number;
  series:Point[];totals:Totals;distribution:{label:string;sessions:number}[];dims:Record<Dim,Row[]>;areas:{area:Area;ms:number}[];
+ places:PlaceRow[];activities:ActivityRow[];cells:[number,number][];
+ /** Full names for the region keys in dims.region ("US-CA" → "California"), filled on the server (regions.ts). */
+ regionNames:Record<string,string>;
  notes:string[];
 };
 
 export function emptyReport(from:string,to:string,now:Date,configured:boolean):Report{
  const m=mergeRollups([]);
- return {configured,from,to,granularity:from===to?'hour':'day',generatedAt:now.toISOString(),live:0,series:[],totals:m.totals,distribution:displayDistribution(m.hist),dims:m.dims,areas:m.areas,notes:[]};
+ return {configured,from,to,granularity:from===to?'hour':'day',generatedAt:now.toISOString(),live:0,series:[],totals:m.totals,distribution:displayDistribution(m.hist),dims:m.dims,areas:m.areas,
+  places:m.places,activities:m.activities,cells:m.cells,regionNames:{},notes:[]};
 }
 
 /** Resolve a preset or custom range to inclusive UTC days. Custom ranges are capped at 366 days and never end after today. */
@@ -323,4 +390,18 @@ export function resolveRange(q:{range?:string|null;from?:string|null;to?:string|
   }
   default:return {from:addDays(today,-6),to:today};
  }
+}
+
+/**
+ * Per-country state/province breakdown (Oct 8 2026) from the region rows ("US-CA"): the countries that have any region,
+ * by visitors, and for one country ALL its regions with full names (`names` from the report; the code when missing).
+ */
+export function regionCountries(rows:Row[]):{country:string;visitors:number;sessions:number}[]{
+ const by=new Map<string,{country:string;visitors:number;sessions:number}>();
+ for(const r of rows){const c=r.key.slice(0,2);if(!/^[A-Z]{2}-/.test(r.key))continue;const t=by.get(c)??{country:c,visitors:0,sessions:0};t.visitors+=r.visitors;t.sessions+=r.sessions;by.set(c,t);}
+ return [...by.values()].sort((a,b)=>b.visitors-a.visitors||b.sessions-a.sessions||a.country.localeCompare(b.country));
+}
+export function regionsOf(rows:Row[],country:string,names:Record<string,string>):(Row&{code:string;name:string})[]{
+ return rows.filter(r=>r.key.startsWith(country+'-')).map(r=>({...r,code:r.key.slice(3),name:names[r.key]||r.key.slice(3)}))
+  .sort((a,b)=>b.visitors-a.visitors||b.sessions-a.sessions||a.name.localeCompare(b.name));
 }

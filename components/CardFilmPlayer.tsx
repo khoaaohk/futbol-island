@@ -1,6 +1,7 @@
 'use client';
 import {registerIslandNarration,islandNarrationAllowed} from '@/lib/audio/islandNarration';
 import {useEffect,useRef} from 'react';
+import {enterActivity} from '@/lib/analytics/tracker';
 import {acquireSheet,releaseSheet,setSheetDots,type DotMode} from '@/lib/paths/riso/sheet';
 import {chapterSeconds,chapterStarts,cueAt,resolveFrame,storyDuration,type RisoStory} from '@/lib/paths/riso/story';
 import {holdVideoPlayback} from '@/lib/videoPlayback';
@@ -53,6 +54,7 @@ function sentenceFor(narration:string,words:string,progress:number){
  * stays on the canvas so the host can fade it out. At the natural end it draws the final frame and calls onEnd.
  */
 export default function CardFilmPlayer({story,audio,running,className,onEnd,onCaption}:{story:RisoStory;audio:HTMLAudioElement;running:boolean;className?:string;onEnd:()=>void;onCaption:(caption:CardCaption)=>void}){
+ useEffect(()=>enterActivity('films'),[]);// admin analytics: time watching a card film (module variable, no render)
  const ref=useRef<HTMLCanvasElement>(null);
  const endRef=useRef(onEnd),captionRef=useRef(onCaption);endRef.current=onEnd;captionRef.current=onCaption;
  // Unmount (after the fade): free the visible canvas's backing store at once (iOS counts it against the canvas memory budget until GC).

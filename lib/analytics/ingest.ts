@@ -5,7 +5,8 @@
  */
 import {createHash} from 'crypto';
 import type {AnalyticsStore} from './store';
-import {MAX_BEAT_PAGEVIEWS,MAX_BODY_BYTES,clampEngaged,classifySource,deviceClass,isBot,sanitizeCountry,sanitizeHost,sanitizePath,sanitizeRegion,sanitizeUtm,utcDay,validateEvent,type CleanEvent} from './core';
+import {ACTIVITY_IDS,PLACE_IDS} from './islandIds';
+import {MAX_BEAT_PAGEVIEWS,MAX_BODY_BYTES,clampCells,clampEngaged,clampSplit,classifySource,deviceClass,isBot,sanitizeCountry,sanitizeHost,sanitizePath,sanitizeRegion,sanitizeUtm,utcDay,validateEvent,type CleanEvent} from './core';
 
 export type HeaderBag={get(name:string):string|null};
 export type IngestResult={status:204|400|403|413|429;reason:string};
@@ -61,6 +62,8 @@ export async function handleIngest({body,headers,store,limiter,now=new Date(),ve
   device:deviceClass(ua,ev.tp===1),
   source:classifySource(referrerHost,{source:utm.source||undefined,medium:utm.medium||undefined,campaign:utm.campaign||undefined}),
   referrerHost,utmSource:utm.source,utmMedium:utm.medium,utmCampaign:utm.campaign,engagedMs,areaMs,pageviews:start?0:Math.min(ev.n||0,MAX_BEAT_PAGEVIEWS),
+  // Where on the island: fixed ids only, each split scaled to at most the beat's (clamped) foreground time.
+  placeMs:start?{}:clampSplit(ev.pl,PLACE_IDS,engagedMs),activityMs:start?{}:clampSplit(ev.ac,ACTIVITY_IDS,engagedMs),cells:start?{}:clampCells(ev.c,engagedMs),
  };
  if(!start&&!engagedMs&&!clean.pageviews)return {status:204,reason:'empty-beat'};
  await store.track(clean,now);

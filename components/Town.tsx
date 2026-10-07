@@ -170,6 +170,8 @@ import FuelToast from './FuelToast';
 import {fuelTravel,fuelAllowsRide,fuelCanSprint} from '@/lib/town/fuelStore';
 import JobActionButton from './JobActionButton';
 import {earnForBall} from '@/lib/town/cardRewardTriggers';
+import {enterActivity,islandFrame} from '@/lib/analytics/tracker';
+import {placeAt} from '@/lib/analytics/islandPlaces';
 /** The position guide (PlayerCard, PlayerArt, photo manifests, film registry and player) loads on the first live-player tap, not with the island. */
 const PositionGuide=stableMemo(dynamic(()=>import('./PositionGuide'),{ssr:false}));
 // Heat (overnight audit F4): Town re-renders on its HUD tick; these dialog hosts (closed almost all the time) re-render only when a
@@ -336,6 +338,9 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
   useEffect(()=>{if(testCoinsRequested())void grantTestingCoins();},[]);// dev builds on localhost only (lib/town/vendingPreview.ts, G-16)
   const [minimapCollapsed,setMinimapCollapsed]=useState(false);
   const [map,setMap]=useState(false),[goals,setGoals]=useState(0),[scored,setScored]=useState(false);
+  // Admin analytics (lib/analytics/tracker.ts): which open panel the island's time goes to. A module variable, no render.
+  const panelActivity=settingsOpen||map||customizerOpen||balancesOpen||onboardingOpen||ferryOpen||playsPickerOpen?'menu':storeOpen?'vending':coachesOpen?'coaches':conversationOpen?'talk':videoPlaying?'films':ballLessons.length>0?'lesson':fishingOpen?'fishing':jobRunning?'job':null;
+  useEffect(()=>panelActivity?enterActivity(panelActivity):undefined,[panelActivity]);
   // Lane 2 endgame: certificates, the Coaches Board and the Ferry open other places (Paths on a format, the Ferry, the Museum).
   useEffect(()=>{const open=(event:Event)=>{const d=(event as CustomEvent<EndgameOpen>).detail;if(!d||d.target==='certificate')return;
    setFerryOpen(false);setMuseumOpen(false);setCoachesOpen(false);
@@ -879,6 +884,8 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       const dailyMoved=Math.hypot(location.x-dailyX,location.z-dailyZ)>.001;dailyX=location.x;dailyZ=location.z;
       dailyPlay.step(dt,dailyPlayCounts({active,menuOpen:!!fieldMenu.current,inLesson:!!lessonRef.current,onTruck:streetTraffic.rider.index>=0,steering:Math.hypot(driveX,driveZ)>.1,moved:dailyMoved}),!document.hidden);// any steered ride counts (G-11)
       if(active&&!exploreZones.finished)exploreZones.step(dt,location.x,location.z,rideRef.current==='jetpack');
+      // Admin analytics: base activity + a place/heat-map sample every ~5 s (lib/analytics/tracker.ts; a no-op when not counting).
+      islandFrame(location.x,location.z,fieldSession.current?(fieldSession.current.quiz?'quiz':'lesson'):lessonRef.current?'lesson':fieldMenu.current?'watch':rideRef.current==='jetpack'||jetActions.state.phase==='parachute'?'fly':rideRef.current!=='walk'||streetTraffic.rider.index>=0?'ride':'walk',placeAt);
       if(streetTraffic.root.visible)streetTraffic.update(active?dt:0,{x:location.x,y:rideRef.current==='jetpack'?flight.height:rooftop.state.height+rampMotion.state.lift,z:location.z},{drive:{x:driveX*.857+driveZ*.515,z:-driveX*.515+driveZ*.857},vx:rooftop.state.recovery>0?0:velocity.x,vz:rooftop.state.recovery>0?0:velocity.z,reduced,onCrash:()=>{resetInputs();velocity.x=velocity.z=0;rideTricks.reset();rampMotion.reset();spinCrashAge=0;rooftop.state.recovery=ROOF_RECOVERY_TIME;sound.impact();tapHaptic();}});
       const hitTruck=streetTraffic.rider.index>=0?streetTraffic.cars[streetTraffic.rider.index]:null;
       const ride=rideRef.current,lightRide=ride==='scooter'||ride==='bike'||ride==='moped'?ride:null;

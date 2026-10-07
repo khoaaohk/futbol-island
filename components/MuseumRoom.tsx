@@ -25,6 +25,8 @@ import type {MuseumScene,MuseumZoomView} from '@/lib/museum/museumScene';
 import type {MuseumPoi} from '@/lib/museum/museumLayout';
 const WorldCupBalls=dynamic(()=>import('./WorldCupBalls'),{ssr:false});
 import {EXPERIENCES} from './museum/experiences';
+import {enterActivity} from '@/lib/analytics/tracker';
+import type {ActivityId} from '@/lib/analytics/islandIds';
 const GraduationCeremony=dynamic(()=>import('./GraduationCeremony'),{ssr:false,loading:()=><p role="status">Getting your certificate ready…</p>});
 
 /**
@@ -68,6 +70,7 @@ function MuseumHall({counts,open,earned,scene:sceneInput}:{counts:Counts;open:Re
  const [balls,setBalls]=useState<string|false>(false);
  // Full-screen exhibit experiences (components/museum/experiences/<id>): "Step inside" on an open case; ?exp=<id> in development.
  const [experience,setExperience]=useState<string|null>(null);
+ useEffect(()=>experience?enterActivity(`exhibit_${experience}` as ActivityId):undefined,[experience]);// admin analytics: time per exhibit (module variable, no render)
  useEffect(()=>{const q=new URLSearchParams(window.location.search);if(q.has('balls'))setBalls(q.get('balls')||'');
   const x=q.get('exp');if(x&&EXPERIENCES[x]&&process.env.NODE_ENV!=='production')setExperience(x);},[]);
  const leavingRef=useRef(false),record=useGraduations();

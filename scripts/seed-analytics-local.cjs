@@ -12,7 +12,7 @@ const DAYS=Number(process.argv[3]||35);
 let seed=7;const rnd=()=>((seed=(seed*1103515245+12345)%2147483648)/2147483648);
 const pick=list=>{const total=list.reduce((a,[,w])=>a+w,0);let r=rnd()*total;for(const [v,w] of list){if((r-=w)<0)return v;}return list[0][0];};
 const id=()=>crypto.randomBytes(16).toString('base64url').slice(0,22);
-const countries=[[['US','CA'],22],[['US','TX'],12],[['US','NY'],9],[['GB','ENG'],16],[['GB','SCT'],3],[['CA','ON'],6],[['AU','NSW'],5],[['IE','D'],3],[['MX','CMX'],4],[['ES','MD'],3],[['DE','BE'],2],[['BR','SP'],3],[['JP','13'],2],[['NG','LA'],2],[[null,null],1]];
+const countries=[[['US','CA'],22],[['US','TX'],12],[['US','NY'],9],[['US','FL'],6],[['US','WA'],4],[['US','IL'],3],[['US','MA'],2],[['US','CO'],2],[['CA','BC'],3],[['CA','QC'],2],[['GB','WLS'],2],[['AU','VIC'],3],[['GB','ENG'],16],[['GB','SCT'],3],[['CA','ON'],6],[['AU','NSW'],5],[['IE','D'],3],[['MX','CMX'],4],[['ES','MD'],3],[['DE','BE'],2],[['BR','SP'],3],[['JP','13'],2],[['NG','LA'],2],[[null,null],1]];
 const sources=[[['direct',null,null],46],[['search','google.com',null],22],[['search','duckduckgo.com',null],3],[['search','bing.com',null],2],[['social','youtube.com',null],7],[['social','instagram.com',null],4],[['social','facebook.com',null],3],[['referral','myclubschool.org',null],4],[['referral','coachesforum.net',null],2],[['campaign',null,['newsletter','email','autumn-term']],5],[['campaign',null,['club-flyer','qr','u10-league']],3]];
 const devices=[['phone',48],['tablet',30],['desktop',22]];
 const entries=[['/',82],['/arcade',8],['/museum',5],['/konbini',2],['/controller',3]];
@@ -35,10 +35,32 @@ for(let d=DAYS-1;d>=0;d--){
   if(left>0)areaMs.island=(areaMs.island||0)+left;
   data.starts[sid]={id:sid,day,visitorHash:hash,startedAt:new Date(start).toISOString(),entryPath:entry,
    country,region:country?region:null,device:pick(devices),source,referrerHost:ref,utmSource:utm?utm[0]:null,utmMedium:utm?utm[1]:null,utmCampaign:utm?utm[2]:null};
-  // Beats as the tracker sends them: a safety beat every ~3 min, then the hide beat; page views ride along.
+  // Where on the island (Oct 8 2026): FAKE place / activity / heat-map splits for the island share of each beat.
+const GRID={x0:-160,z0:-320,size:20,cols:52,rows:31};
+const SPOTS=[['island_square',85,-35,18,14],['arcade',103,-48,6,6],['konbini',71,-55,6,5],['field_11v11',135,100,28,13],['field_7v7',11,-80,16,8],['field_9v9',160,-110,20,7],
+ ['field_futsal',11,18,9,5],['east_jetty',330,75,22,7],['farmers_market',228,60,10,6],['north_beach',60,-215,60,6],['coaches',160,-30,12,4],['school',120,160,30,4],
+ ['palm_coast',20,70,25,4],['old_town',-20,-110,20,4],['causeway',380,-160,80,6],['sandbars',342,-222,10,2],['cay_town',560,-160,25,6],['beach_court',680,-161,15,7],
+ ['farm',640,-110,25,4],['sharks_beach',660,-210,15,3],['hostel',560,-108,12,2],['deep_sea_boat',283,-92,6,3],['south_pier',110,200,40,4],['ferry_dock',225,200,10,2],
+ ['community_hall',181,-177,8,2],['library_square',80,-110,12,2],['town',150,-60,60,5],['sea',300,0,60,2],['coral_cay',650,-150,40,2],['west_side',-60,70,20,2],
+ ['club_grounds',150,-150,30,2],['community_garden',205,0,15,2],['museum',160,186,6,3],['cay_konbini',524,-176,5,1],['community_park',10,-45,15,1]];
+const ACTS=[['walk',30],['ride',14],['fly',10],['fishing',7],['job',5],['lesson',5],['watch',4],['quiz',3],['vending',3],['book',2],['cards',2],['films',2],['talk',2],['menu',6],['paths',3],['boat',1],['coaches',1],['idle',8]];
+const gauss=()=>(rnd()+rnd()+rnd()-1.5)/1.5;
+function islandSplit(ms){
+ const pl={},ac={},c={};if(ms<1000)return {pl,ac,c};
+ const n=1+Math.floor(rnd()*3),picks=[];for(let i=0;i<n;i++)picks.push(pick(SPOTS.map(s=>[s,s[4]])));
+ let idle=0;for(const [a] of [[pick(ACTS)],[pick(ACTS)]]){const v=Math.round(ms*(.3+rnd()*.3));if(a==='idle')idle+=v;ac[a]=(ac[a]||0)+v;}
+ const actSum=Object.values(ac).reduce((x,y)=>x+y,0);if(actSum<ms)ac.walk=(ac.walk||0)+ms-actSum;else{const k=ms/actSum;for(const a in ac)ac[a]=Math.floor(ac[a]*k);idle=Math.floor(idle*k);}
+ const play=ms-idle;let left=play;
+ picks.forEach((s,i)=>{const v=i===picks.length-1?left:Math.round(play/picks.length);left-=v;if(v<=0)return;pl[s[0]]=(pl[s[0]]||0)+v;
+  let secs=Math.floor(v/1000);const k=1+Math.floor(rnd()*3);for(let j=0;j<k&&secs>0;j++){const x=s[1]+gauss()*s[3],z=s[2]+gauss()*s[3]*.7;
+   const col=Math.floor((x-GRID.x0)/GRID.size),row=Math.floor((z-GRID.z0)/GRID.size);if(col<0||row<0||col>=GRID.cols||row>=GRID.rows)continue;const cell=row*GRID.cols+col,t=j===k-1?secs:Math.floor(secs/k);secs-=t;if(t>0)c[cell]=(c[cell]||0)+t;}});
+ return {pl,ac,c};
+}
+// Beats as the tracker sends them: a safety beat every ~3 min, then the hide beat; page views ride along.
   let t=start,e=engaged,pv=pages-1;const share=Object.entries(areaMs);
   while(e>0){const step=Math.min(e,180_000);t+=step;if(t>now)break;const a={};for(const [k,v] of share)a[k]=Math.round(v*step/engaged);
-   data.beats.push({sessionId:sid,ts:new Date(t).toISOString(),engagedMs:step,pageviews:pv,areaMs:a});pv=0;e-=step;}
+   const sp=islandSplit(a.island||0);
+   data.beats.push({sessionId:sid,ts:new Date(t).toISOString(),engagedMs:step,pageviews:pv,areaMs:a,placeMs:sp.pl,activityMs:sp.ac,cells:sp.c});pv=0;e-=step;}
  }
 }
 // A few tabs "on now".

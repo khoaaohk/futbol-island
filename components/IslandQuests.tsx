@@ -8,10 +8,11 @@ import {EXPLORE_ITEMS,useExploreChecklist} from '@/lib/town/exploreChecklist';
 import styles from './IslandSettings.module.css';
 import journey from './IslandJourney.module.css';
 import JourneyArrivalArt from './JourneyArrivalArt';
-import {enterArea} from '@/lib/analytics/tracker';
+import {enterActivity,enterArea} from '@/lib/analytics/tracker';
 export default function IslandQuests({onDiscover,onExplore,onCards,exploration=false}:{onLearn:()=>void;onMap:()=>void;onStore?:()=>void;onDiscover:()=>void;onExplore?:()=>void;onCards?:()=>void;exploration?:boolean}){
  const [howOpen,setHowOpen]=useState(false);
- useEffect(()=>enterArea('paths'),[]);// admin analytics: foreground time while Paths is open (a module variable, no render)
+ useEffect(()=>enterArea('paths'),[]);
+ useEffect(()=>enterActivity('paths'),[]);// …and as an activity (it opens over the Settings menu)// admin analytics: foreground time while Paths is open (a module variable, no render)
  // "How your journey works" opens downward only (user, Sep 25 2026): the card's min-height left spare space around the guide, so the
  // growing guide ate that space and its divider and title slid up. Opening locks the resting layout (the rows above the guide keep
  // their px heights, the guide keeps its top via a margin, min-height off), so only the text below the title grows the card. The lock
