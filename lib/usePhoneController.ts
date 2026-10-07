@@ -23,7 +23,10 @@ export function usePhoneController(enabled: boolean) {
   const send = useRef((obj: Record<string, unknown>) => { chRef.current?.send({ type: "broadcast", event: "state", payload: obj }); }).current;
 
   useEffect(() => {
-    fetch("/api/lan").then((r) => r.json()).then((d) => setLanIp(d.ip)).catch(() => {});
+    // /api/lan exists only under `next dev` (it would reveal the server's network address in production); elsewhere the
+    // QR uses the page's own host.
+    if (process.env.NODE_ENV !== "development") return;
+    fetch("/api/lan").then((r) => (r.ok ? r.json() : null)).then((d) => { if (typeof d?.ip === "string") setLanIp(d.ip); }).catch(() => {});
   }, []);
 
   useEffect(() => {

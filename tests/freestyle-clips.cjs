@@ -1,7 +1,7 @@
 // Freestyle clips (Sep 30 2026): every freestyle NPC opens on its OWN clip (Henderson used to repeat on four of them),
 // every clip id is in the pool, and the pool entries are well-formed. The rig trick index `freestyle` stays separate.
 const fs=require('fs'),path=require('path'),ts=require('typescript'),assert=require('node:assert/strict');
-const cache=new Map();function load(file){file=path.resolve(file);if(cache.has(file))return cache.get(file);const m={exports:{}};cache.set(file,m.exports);new Function('exports','module','require',ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText)(m.exports,m,id=>load(path.resolve(path.dirname(file),id+'.ts')));return m.exports;}
+const cache=new Map();function load(file){file=path.resolve(file);if(cache.has(file))return cache.get(file);const m={exports:{}};cache.set(file,m.exports);new Function('exports','module','require',ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText)(m.exports,m,id=>id.startsWith('.')?load(path.resolve(path.dirname(file),id+'.ts')):require(id));return m.exports;}
 const {COURT_FREESTYLERS,FREESTYLE_CLIPS,freestyleClipStart}=load('lib/town/courtFreestylers.ts');
 const {CORAL_CAY_NPCS}=load('lib/town/coralCayNpcs.ts'),{EAST_PIER_NPCS}=load('lib/town/eastPierNpcs.ts');
 const freestylers=[...COURT_FREESTYLERS,...CORAL_CAY_NPCS,...EAST_PIER_NPCS].filter(n=>n.freestyle!==undefined);

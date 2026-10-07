@@ -4148,3 +4148,15 @@ Hidden ones are not drawn. Canvas textures (dash, flag, 4 intent glyphs) are mad
 **Audio** (`lib/arcade/passPuzzleAudio.ts`): synthesized one-shots on the game's own context, capped at 8 voices. One 0.25 s noise buffer per context. Nodes disconnect on end.
 
 **Not measured:** no physical iPhone measurement was taken.
+
+## Scaling pass: shared score store, CDN caching, lighter welcome music (Oct 7 2026, local, not deployed)
+
+**Scores and news.** `/api/cron/scores` (Vercel Cron every 5 min, `Authorization: Bearer $CRON_SECRET`) makes ONE multi-competition football-data.org `/matches?competitions=…` request for the seven free-tier leagues, refreshes the ESPN-only leagues (J1, MLS, WSL; at most three requests in flight), the all-leagues feed and transfers, and writes each feed to a shared store (`lib/town/sharedCache.ts`: the Vercel Runtime Cache from the request context on Vercel, a per-process Map locally). `/api/island-news` and `/api/island-clips` read the store and fetch live (still quota-guarded and coalesced) only when an entry is missing or older than 15 min; when that live fetch fails, a stored feed up to 2 h old is served instead of "unavailable". The "latest result" lookups are shared for 30 min too. A failed cron run never overwrites stored feeds. Responses send `public, s-maxage=300, stale-while-revalidate=600` (unavailable feeds and 400s: `s-maxage=30`). Test: `tests/scaling-cache.cjs`.
+
+**Welcome music.** `public/music/01-welcome.mp3` (2.55 MB, 160 kbps + cover art) is now `01-welcome.m4a` (80 kbps AAC-LC, 1.05 MB). It is still fetched only after the first gesture (preload none; src set in unlock). Cold visit of `/` on iPhone 13 emulation, `next start`: 1.55 MB before and after with no tap. With the first tap it drops from 4.04 MB to 2.61 MB.
+
+**Static `/`.** `/` no longer reads `searchParams`. `/?from=arcade|konbini|museum` is a `beforeFiles` rewrite to the static `app/island-return` page, so both pages prerender (○) and can be served from the CDN. Town still reads `?store=` on the client.
+
+**Asset headers** (`next.config.mjs`): asset folders get 1 day + SWR 7 days, JSON in them gets 5 min + SWR 1 day, and only verified content-addressed files (`stories/eleven/*-<hash>.m4a`, `stories/paths/chapters/ink-<hash>.webp`) are immutable. Lesson voices (`voice/kokoro_*/<hash>.m4a`) are NOT immutable: the hash comes from the line text, and they get re-voiced in place.
+
+**Not measured:** no physical iPhone measurement was taken.

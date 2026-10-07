@@ -10,7 +10,7 @@ function fixture(shared=false){
 }
 (async()=>{
  const f=fixture();for(let i=0;i<40;i++)f.music.unlock();assert.equal(f.counts().resumes,1,'One resume while unlock is pending');assert.equal(f.counts().plays,1,'Media play starts inside the user gesture before context resume resolves');f.context.finish();await flush();assert.equal(f.counts().plays,1);for(let i=0;i<40;i++)f.music.unlock();assert.equal(f.counts().plays,1,'One play request while media loads');f.audio.finish();await flush();
- for(let i=0;i<100;i++)f.music.unlock();assert.deepEqual(f.counts(),{resumes:1,plays:1,sourceAssignments:1,ramps:[.25]},'Steering never restarts the track, context or gain fade');assert.equal(f.audio.loop,true);assert.equal(f.audio.url,'/music/01-welcome.mp3');
+ for(let i=0;i<100;i++)f.music.unlock();assert.deepEqual(f.counts(),{resumes:1,plays:1,sourceAssignments:1,ramps:[.25]},'Steering never restarts the track, context or gain fade');assert.equal(f.audio.loop,true);assert.equal(f.audio.url,'/music/01-welcome.m4a');
  f.music.setVolume(.7);f.music.setVolume(.7);assert.deepEqual(f.counts().ramps,[.25,.7],'Only changed volume schedules a new ramp');
  f.doc.hidden=true;f.music.visibility();assert.equal(f.audio.paused,true);assert.equal(f.context.state,'suspended');f.doc.hidden=false;f.music.visibility();for(let i=0;i<20;i++)f.music.unlock();await flush();assert.equal(f.counts().resumes,2);f.context.finish();await flush();f.audio.finish();await flush();assert.equal(f.counts().plays,2);assert.equal(f.counts().sourceAssignments,1,'Visibility resumes the existing track');
  f.music.setDucked(true);f.music.setDucked(false);assert.equal(f.counts().plays,2,'Quick narration duck reversal preserves playback');assert.equal(f.context.state,'running');

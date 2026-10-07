@@ -1,5 +1,5 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),ts=require('typescript');
-function load(file){const m={exports:{}};vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{module:m,exports:m.exports,require:id=>load(path.resolve(path.dirname(file),id+'.ts'))});return m.exports;}
+function load(file){const m={exports:{}};vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{module:m,exports:m.exports,require:id=>id.startsWith('.')?load(path.resolve(path.dirname(file),id+'.ts')):require(id)});return m.exports;}
 const {OPTIONAL_STORY_KEY,readOptionalStoryProgress,loadOptionalStoryProgress,completeOptionalStory}=load('lib/paths/optionalStoryProgress.ts');
 const all=Object.values(load('lib/paths/upcomingStories.ts').UPCOMING_STORIES).flat().map(story=>story.id);
 assert(all.length>=12,'upcoming catalog');assert.equal(new Set(all).size,all.length,'unique upcoming story ids');assert.deepEqual(Array.from(readOptionalStoryProgress([...all,...all,'grit','unknown',null])),all);

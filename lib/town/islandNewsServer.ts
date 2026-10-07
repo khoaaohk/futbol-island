@@ -1,6 +1,7 @@
 import {NEWS_LEAGUES,type NewsLeague} from './newsLeagues';
 import type {IslandNewsFeed,IslandNewsItem,IslandNewsKind} from './islandNews';
 import {isVerifiedResult,latestMatchStories} from './matchStory';
+import {sharedStore} from './sharedCache';
 import {FOOTBALL_DATA_ATTRIBUTION,FOOTBALL_DATA_CODES,FOOTBALL_DATA_SOURCE,footballDataCode,footballDataFinishedPath,footballDataGet,footballDataScheduledPath,footballDataToken,footballDataWeekPath,parseFootballDataMatches} from './footballDataServer';
 const TTL=5*60*1000;
 const cache=new Map<string,{expires:number;feed:IslandNewsFeed}>();
@@ -47,20 +48,22 @@ async function espnWeek(selected:NewsLeague[]|NewsLeague,now:number){
 }
 /** Scores: football-data.org first for the free-tier competitions (needs FOOTBALL_DATA_TOKEN), ESPN for the rest and as the
  * secondary source when football-data.org fails. Each league counts as one source for `unavailable` / `partial`. */
-async function scoreResults(selectedLeague:NewsLeague|undefined,now:number):Promise<PromiseSettledResult<IslandNewsItem[]>[]>{
+/** `fdWeek`: the cron's one multi-competition football-data.org week, already parsed; reused instead of a new request. */
+async function scoreResults(selectedLeague:NewsLeague|undefined,now:number,fdWeek?:IslandNewsItem[]):Promise<PromiseSettledResult<IslandNewsItem[]>[]>{
  const token=footballDataToken(),wanted=selectedLeague?[selectedLeague]:leagues as NewsLeague[];
  const viaFd=token?wanted.filter(league=>footballDataCode(league)):[],rest=wanted.filter(league=>!viaFd.includes(league));
  let fd:PromiseSettledResult<IslandNewsItem[]>[]=[];
- if(viaFd.length){try{const items=parseFootballDataMatches(await footballDataGet(footballDataWeekPath(viaFd.map(league=>footballDataCode(league)!),now),token!),leagueForCode,now);fd=[{status:'fulfilled',value:items}];}
+ if(viaFd.length&&fdWeek)fd=[{status:'fulfilled',value:fdWeek.filter(item=>viaFd.includes(item.league as NewsLeague))}];
+ else if(viaFd.length){try{const items=parseFootballDataMatches(await footballDataGet(footballDataWeekPath(viaFd.map(league=>footballDataCode(league)!),now),token!),leagueForCode,now);fd=[{status:'fulfilled',value:items}];}
   catch{rest.unshift(...viaFd);}}
  const espn=rest.length?selectedLeague?await espnWeek(selectedLeague,now):await espnWeek(rest,now):[];
  // A single-league ESPN week is nine day requests but one source: it is available when any day answered.
  if(selectedLeague&&espn.length){const ok=espn.filter((r):r is PromiseFulfilledResult<IslandNewsItem[]>=>r.status==='fulfilled');return ok.length?[{status:'fulfilled',value:ok.flatMap(r=>r.value)},...(ok.length<espn.length?[{status:'rejected',reason:'partial'} as PromiseRejectedResult]:[])]:espn;}
  return [...fd,...espn];
 }
-async function load(kind:IslandNewsKind,selectedLeague?:NewsLeague):Promise<IslandNewsFeed>{
+async function load(kind:IslandNewsKind,selectedLeague?:NewsLeague,fdWeek?:IslandNewsItem[]):Promise<IslandNewsFeed>{
  const now=Date.now();let results:PromiseSettledResult<IslandNewsItem[]>[];
- if(kind==='scores')results=await scoreResults(selectedLeague,now);
+ if(kind==='scores')results=await scoreResults(selectedLeague,now,fdWeek);
  else results=await Promise.allSettled([['https://feeds.bbci.co.uk/sport/football/rss.xml','BBC Sport'],['https://www.theguardian.com/football/transfer-window/rss','The Guardian']].map(async([url,source])=>parseTransferRss(await(await fetchSource(url)).text(),source as 'BBC Sport'|'The Guardian',now)));
  const successes=results.filter((result):result is PromiseFulfilledResult<IslandNewsItem[]>=>result.status==='fulfilled');
  const items=successes.flatMap(result=>result.value);const unique=Array.from(new Map(items.map(item=>[item.id,item])).values());
@@ -79,16 +82,20 @@ async function load(kind:IslandNewsKind,selectedLeague?:NewsLeague):Promise<Isla
 /** Months searched backwards (this month + 3 earlier) for the last verified result; longer gaps count as between seasons. */
 export const LOOKBACK_MONTHS=4;
 type LatestResults={items:IslandNewsItem[];complete:boolean;nextMatchAt?:string};
+const LATEST_STORE='latest:v1:',LATEST_FRESH_MS=30*60000;
 const latestCache=new Map<string,{expires:number;value:LatestResults}>(),latestPending=new Map<string,Promise<LatestResults>>();
 /** The league's most recent verified round when its past week has none: football-data.org first (free-tier leagues with a
  * token), then ESPN. Cached 30 minutes (one minute after a source failure) so the extra lookup never runs per visitor. */
 export async function getLatestResults(league:NewsLeague,now=Date.now()):Promise<LatestResults>{
  const saved=latestCache.get(league);if(saved&&saved.expires>Date.now())return saved.value;const active=latestPending.get(league);if(active)return active;
  const task=(async():Promise<LatestResults>=>{
+  // Shared across instances (and the cron): a complete answer is reused for 30 minutes everywhere.
+  const stored=await sharedStore().get<{savedAt:number;value:LatestResults}>(LATEST_STORE+league);
+  if(stored&&Date.now()-stored.savedAt<LATEST_FRESH_MS)return stored.value;
   const token=footballDataToken(),code=footballDataCode(league);
   if(token&&code){const fd=await footballDataLatest(league,code,token,now);if(fd.complete)return fd;}
   return espnLatest(league,now);
- })().then(value=>{latestCache.set(league,{value,expires:Date.now()+(value.complete?30*60000:60000)});return value;}).finally(()=>latestPending.delete(league));
+ })().then(async value=>{latestCache.set(league,{value,expires:Date.now()+(value.complete?30*60000:60000)});if(value.complete)await sharedStore().set(LATEST_STORE+league,{savedAt:Date.now(),value},STORE_TTL_S);return value;}).finally(()=>latestPending.delete(league));
  latestPending.set(league,task);return task;
 }
 /** Newest verified round: games within three days of the latest, at most ten. */
@@ -127,4 +134,48 @@ async function espnLatest(league:NewsLeague,now:number):Promise<LatestResults>{
   }catch{return {items:[],complete:true};}
  }
 }
-export async function getIslandNews(kind:IslandNewsKind,league?:NewsLeague){const key=kind+':'+(kind==='scores'?league??'all':'all'),saved=cache.get(key);if(saved&&saved.expires>Date.now())return saved.feed;const active=pending.get(key);if(active)return active;const task=load(kind,league).then(feed=>{cache.set(key,{feed,expires:Date.now()+(feed.unavailable?30000:TTL)});return feed;}).finally(()=>pending.delete(key));pending.set(key,task);return task;}
+/** Shared-store freshness. The cron (app/api/cron/scores) rewrites every feed about every 5 minutes; user requests read the
+ * store and only fetch live (still quota-guarded and coalesced) when the entry is missing or older than this bound. */
+export const STORE_FRESH_MS=15*60*1000;
+/** When that live fetch fails, a stored feed up to this old is served instead of "unavailable". */
+export const STORE_LAST_RESORT_MS=2*3600*1000;
+const STORE_TTL_S=6*3600,NEWS_STORE='news:v1:';
+/** How long an instance reuses a feed it read from the store before reading the store again (picks up cron refreshes). */
+const STORE_MEMORY_MS=60*1000;
+type StoredFeed={savedAt:number;feed:IslandNewsFeed};
+const feedKey=(kind:IslandNewsKind,league?:NewsLeague)=>kind+':'+(kind==='scores'?league??'all':'all');
+const saveFeed=(key:string,feed:IslandNewsFeed,savedAt=Date.now())=>sharedStore().set(NEWS_STORE+key,{savedAt,feed} satisfies StoredFeed,STORE_TTL_S);
+export async function getIslandNews(kind:IslandNewsKind,league?:NewsLeague){
+ const key=feedKey(kind,league),saved=cache.get(key);if(saved&&saved.expires>Date.now())return saved.feed;const active=pending.get(key);if(active)return active;
+ const task=(async()=>{
+  const stored=await sharedStore().get<StoredFeed>(NEWS_STORE+key),age=stored?Date.now()-stored.savedAt:Infinity;
+  if(stored&&age<STORE_FRESH_MS){cache.set(key,{feed:stored.feed,expires:Date.now()+Math.min(STORE_MEMORY_MS,STORE_FRESH_MS-age)});return stored.feed;}
+  const feed=await load(kind,league);
+  if(!feed.unavailable){cache.set(key,{feed,expires:Date.now()+TTL});await saveFeed(key,feed);return feed;}
+  if(stored&&age<STORE_LAST_RESORT_MS){cache.set(key,{feed:stored.feed,expires:Date.now()+30000});return stored.feed;}
+  cache.set(key,{feed,expires:Date.now()+30000});return feed;
+ })().finally(()=>pending.delete(key));
+ pending.set(key,task);return task;
+}
+/** Cron job: refresh every stored feed. football-data.org gets ONE multi-competition week request for all its leagues (plus the
+ * shared, 30-minute "latest result" lookups only for leagues with no result this week). ESPN-only leagues (J1, MLS, WSL) are
+ * refreshed one league at a time, at most three requests in flight, like a single visitor today. A source failure keeps the
+ * previous stored feed (it is not overwritten with "unavailable"). */
+export async function refreshIslandNewsStore(now=Date.now()){
+ const status:Record<string,string>={},token=footballDataToken();
+ const fdLeagues=leagues.filter(league=>footballDataCode(league as NewsLeague)) as NewsLeague[],espnLeagues=leagues.filter(league=>!footballDataCode(league as NewsLeague)) as NewsLeague[];
+ let week:IslandNewsItem[]|undefined;
+ if(token){try{week=parseFootballDataMatches(await footballDataGet(footballDataWeekPath(fdLeagues.map(league=>footballDataCode(league)!),now),token),leagueForCode,now);}catch{}}
+ const refresh=async(kind:IslandNewsKind,league:NewsLeague|undefined,fdWeek?:IslandNewsItem[])=>{
+  const key=feedKey(kind,league);
+  try{const feed=await load(kind,league,fdWeek);if(feed.unavailable){status[key]='unavailable (kept previous)';return;}cache.set(key,{feed,expires:Date.now()+TTL});await saveFeed(key,feed);status[key]=feed.partial?'partial':'ok';}
+  catch{status[key]='failed (kept previous)';}
+ };
+ // Without the week (no token, or football-data.org failing) those leagues are left alone: user requests fall back to a live
+ // fetch only once their stored feed is older than STORE_FRESH_MS.
+ for(const league of fdLeagues){if(week)await refresh('scores',league,week);else status['scores:'+league]=token?'skipped (football-data.org unavailable)':'skipped (no FOOTBALL_DATA_TOKEN)';}
+ for(const league of espnLeagues)await refresh('scores',league);
+ if(week)await refresh('scores',undefined,week);
+ await refresh('transfers',undefined);
+ return {store:sharedStore().kind,footballData:token?week?'ok':'unavailable':'no-token',feeds:status};
+}

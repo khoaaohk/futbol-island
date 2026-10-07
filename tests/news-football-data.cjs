@@ -5,7 +5,7 @@ const fs=require('fs'),path=require('path'),ts=require('typescript'),assert=requ
 const NOW=Date.parse('2026-10-01T12:00:00Z'),TOKEN='test-token-abc123';
 class FakeDate extends Date{constructor(...a){super(...(a.length?a:[NOW]));}static now(){return NOW;}}
 function loader(fakeFetch){const cache=new Map();return function load(file){file=path.resolve(file);if(cache.has(file))return cache.get(file);const m={exports:{}};cache.set(file,m.exports);
- new Function('exports','module','require','fetch','Date',ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText)(m.exports,m,id=>load(path.resolve(path.dirname(file),id+'.ts')),fakeFetch,FakeDate);return m.exports;};}
+ new Function('exports','module','require','fetch','Date',ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText)(m.exports,m,id=>id.startsWith('.')?load(path.resolve(path.dirname(file),id+'.ts')):require(id),fakeFetch,FakeDate);return m.exports;};}
 const headers=(h={})=>({get:k=>h[k.toLowerCase()]??null});
 const json=(body,status=200,h)=>({ok:status>=200&&status<300,status,headers:headers(h),json:async()=>body,text:async()=>JSON.stringify(body)});
 const fdMatch=(id,utcDate,home,away,hs,as,{status='FINISHED',code='PL',duration='REGULAR',extra}={})=>({id,utcDate,status,competition:{code,name:'Premier League'},season:{startDate:'2026-08-15'},homeTeam:{id:10+id,name:home+' FC',shortName:home},awayTeam:{id:500+id,name:away+' FC',shortName:away},score:{duration,fullTime:{home:hs,away:as},...extra}});

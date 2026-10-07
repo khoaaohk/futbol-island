@@ -7,7 +7,7 @@ const fs=require('fs'),path=require('path'),ts=require('typescript'),assert=requ
 const NOW=Date.parse('2026-10-01T12:00:00Z');
 class FakeDate extends Date{constructor(...a){super(...(a.length?a:[NOW]));}static now(){return NOW;}}
 function loader(fakeFetch){const cache=new Map();return function load(file){file=path.resolve(file);if(cache.has(file))return cache.get(file);const m={exports:{}};cache.set(file,m.exports);
- new Function('exports','module','require','fetch','Date',ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText)(m.exports,m,id=>load(path.resolve(path.dirname(file),id+'.ts')),fakeFetch,FakeDate);return m.exports;};}
+ new Function('exports','module','require','fetch','Date',ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText)(m.exports,m,id=>id.startsWith('.')?load(path.resolve(path.dirname(file),id+'.ts')):require(id),fakeFetch,FakeDate);return m.exports;};}
 const event=(id,date,home,away,hs,as,{state='post',completed=true}={})=>({id,date,links:[{href:'https://www.espn.com/soccer/match/_/gameId/'+id}],competitions:[{status:{type:{state,completed,shortDetail:completed?'FT':'Postponed'}},competitors:[{homeAway:'home',id:'h'+id,team:{displayName:home},score:hs},{homeAway:'away',id:'a'+id,team:{displayName:away},score:as}],details:[]}]});
 const respond=body=>({ok:true,status:200,json:async()=>body,text:async()=>JSON.stringify(body)});
 function source(months,{calendar=[],events=[],failMonth}={}){const calls=[];return {calls,fetch:async url=>{calls.push(url);const dates=new URL(url).searchParams.get('dates');

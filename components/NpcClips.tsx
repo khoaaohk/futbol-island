@@ -6,7 +6,7 @@ import type {NewsLeague} from '@/lib/town/newsLeagues';
 import styles from './NpcConversation.module.css';
 // Cache discovery on the server. Recheck feed membership whenever a card opens.
 const pending=new Map<string,Promise<IslandClipFeed>>();
-function load(key:string){const existing=pending.get(key);if(existing)return existing;const task=fetch('/api/island-clips?'+key,{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('Unavailable');return r.json() as Promise<IslandClipFeed>;}).finally(()=>pending.delete(key));pending.set(key,task);return task;}
+function load(key:string){const existing=pending.get(key);if(existing)return existing;const task=fetch('/api/island-clips?'+key).then(r=>{if(!r.ok)throw Error('Unavailable');return r.json() as Promise<IslandClipFeed>;}).finally(()=>pending.delete(key));pending.set(key,task);return task;}
 export default function NpcClips({league,topic,prompt,matchId,player,eager=false}:{player?:string;league?:NewsLeague;topic?:string;prompt?:string;matchId?:string;eager?:boolean}){
  const query=player?`player=${encodeURIComponent(player)}`:topic?`topic=${encodeURIComponent(topic)}`:`league=${encodeURIComponent(league??'uefa.champions')}${matchId?`&match=${encodeURIComponent(matchId)}`:''}`;
  const attempted=useRef(new Set<string>()),backupMode=useRef(false),switching=useRef(false);

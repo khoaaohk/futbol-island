@@ -6,6 +6,8 @@ import os from "os";
 export const dynamic = "force-dynamic";
 
 export function GET() {
+  // Development only: never expose the server's network address from a deployment or `next start`.
+  if (process.env.NODE_ENV !== "development") return NextResponse.json({ error: "Not found" }, { status: 404 });
   let ip = "localhost";
   const ifaces = os.networkInterfaces();
   const prefer = (name: string) => /en0|eth0|wlan0|Wi-Fi/i.test(name); // typical Wi-Fi/ethernet first

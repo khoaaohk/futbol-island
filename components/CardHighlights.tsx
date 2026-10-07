@@ -7,7 +7,7 @@ import styles from './PlayerCard.module.css';
 /** One shared request per player while it is in flight (the server caches the feeds). */
 const pending=new Map<string,Promise<IslandClipFeed>>();
 function load(player:string){const key=`player=${encodeURIComponent(player)}`,existing=pending.get(key);if(existing)return existing;
- const task=fetch(`/api/island-clips?${key}`,{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('Unavailable');return r.json() as Promise<IslandClipFeed>;}).finally(()=>pending.delete(key));
+ const task=fetch(`/api/island-clips?${key}`).then(r=>{if(!r.ok)throw Error('Unavailable');return r.json() as Promise<IslandClipFeed>;}).finally(()=>pending.delete(key));
  pending.set(key,task);return task;}
 const time=(s?:number)=>s?`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`:'';
 

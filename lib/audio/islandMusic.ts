@@ -1,5 +1,7 @@
 // Local copies of the original island's Towball's Crossing Deluxe soundtrack.
-const TRACK='01-welcome';
+// Oct 7 2026: re-encoded from the 2.55 MB 160 kbps mp3 (with cover art) to 80 kbps AAC-LC, 1.05 MB. It is fetched only once
+// the first user gesture unlocks audio (preload none; the src is set inside unlock/play), never on the cold page load.
+const TRACK_URL='/music/01-welcome.m4a';
 /** Heat pass 4 (user decision Sep 26 2026): the music fades out (~1 s) after 30 s with no player input and fades back in on the next
  * input; `onAudible` tells the shared sound context when music stops, so it can suspend while nothing is audible. */
 export const MUSIC_IDLE_MS=30000;
@@ -50,7 +52,7 @@ export function createIslandMusic(initialEnabled=true,initialVolume=.04,sharedCo
     const start=(allowSuspended=false)=>{
       if(!allowed()){if(!disposed)pause(true);return;}
       if(current.state!=='running'&&!allowSuspended)return;
-      if(!audio.getAttribute('src'))audio.src=`/music/${TRACK}.mp3`;
+      if(!audio.getAttribute('src'))audio.src=TRACK_URL;
       // Pointer events may unlock repeatedly while steering. Only real state
       // changes fade the music, and a loading play request is never duplicated.
       fade(volume,.3);audible(true);
@@ -86,7 +88,7 @@ export function createIslandMusic(initialEnabled=true,initialVolume=.04,sharedCo
       if(allowed()){play(true);return;}
       // Not allowed right now: prime the element inside this gesture (iOS only lets media start from a tap) at zero gain; the
       // 'play' listener pauses it again at once, and a later play() without a gesture is then permitted.
-      if(first&&audio.paused){if(!audio.getAttribute('src'))audio.src=`/music/${TRACK}.mp3`;try{void audio.play().then(()=>{if(!allowed())audio.pause();}).catch(()=>{});}catch{}}
+      if(first&&audio.paused){if(!audio.getAttribute('src'))audio.src=TRACK_URL;try{void audio.play().then(()=>{if(!allowed())audio.pause();}).catch(()=>{});}catch{}}
     }catch{/* Keep exploration working when audio is unavailable. */}
   }
   // Idle pause: one timer, re-armed only when it fires (inputs just stamp the time). Any pointer/key/wheel input resumes in the gesture.
@@ -110,7 +112,7 @@ export function createIslandMusic(initialEnabled=true,initialVolume=.04,sharedCo
     setEnabled(value:boolean){enabled=value;if(value)unlock();else pause();},
     setDucked(value:boolean){if(ducked===value)return;ducked=value;if(value)pause();else play();},
     visibility(){if(document.hidden)pause(true);else play();},
-    getState(){return {sceneActive,pageActive,idle,enabled,ducked,unlocked,paused:audio.paused,time:audio.currentTime,track:TRACK,level:volume,volume:gain?.gain.value??0,contextState:context?.state??'locked',disposed,sharedContext:!!sharedContext,error:audio.error?.code??null};},
+    getState(){return {sceneActive,pageActive,idle,enabled,ducked,unlocked,paused:audio.paused,time:audio.currentTime,track:'01-welcome',level:volume,volume:gain?.gain.value??0,contextState:context?.state??'locked',disposed,sharedContext:!!sharedContext,error:audio.error?.code??null};},
     dispose(){if(disposed)return;if(timers){window.removeEventListener('pagehide',pageHide);window.removeEventListener('pageshow',pageShow);}document.removeEventListener('fi2-bottle-ocean',bottle);if(timers){for(const type of INPUTS)window.removeEventListener(type,input,{capture:true});if(idleTimer!==undefined)clearTimeout(idleTimer);}disposed=true;clear();audible(false);audio.pause();audio.removeAttribute('src');audio.load();source?.disconnect();gain?.disconnect();if(context&&!sharedContext)void context.close().catch(()=>{});},
   };
 }
