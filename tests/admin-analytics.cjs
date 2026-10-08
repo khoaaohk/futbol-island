@@ -387,7 +387,7 @@ await ok('sql',async()=>{
   psql(`update analytics_sessions set day='${fin}', started_at=started_at + ('${fin}'::date - '${DAY}'::date) * interval '1 day' where day='${DAY}'`);
   psql(`insert into analytics_sessions (id,day,visitor_hash,started_at,entry_path,device,source) values ('young_session_000001','${young}','${hx('1')}','${young}T10:00:00Z','/','phone','direct'),('old_session_00000001','${old}','${hx('2')}','${old}T10:00:00Z','/','phone','direct')`);
   psql(`insert into analytics_beats (session_id,ts,engaged_ms) values ('old_session_00000001','${old}T10:01:00Z',5000)`);
-  psql(`insert into analytics_salts values ('${add(today,-1)}','old'),('${add(today,-3)}','older')`);
+  psql(`insert into analytics_salts values ('${add(today,-1)}','old'),('${add(today,-3)}','older') on conflict (day) do nothing`); // the fixed test DAY can be today-1 on a later date
   const before=JSON.parse(psql(`select analytics_day_rollup('${fin}')`,{role:'service_role'}));
   const frozen=JSON.parse(psql(`select analytics_finalize('${today}')`,{role:'service_role'}));
   assert(frozen.includes(fin)&&!frozen.includes(young)&&!frozen.includes(today),'freezes final days only: '+frozen.join(','));
@@ -407,7 +407,7 @@ await ok('sql',async()=>{
 // 11. Wiring: production-only mount, Vercel Analytics kept, migration locks the tables down.
 await ok('wiring',async()=>{
  const layout=read('app/layout.tsx');
- assert(/\{ANALYTICS && <Analytics\/>\}/.test(layout),'Vercel Web Analytics stays');
+ assert(!/@vercel\/analytics|<Analytics\/>/.test(layout),'Vercel Web Analytics removed Oct 7 2026; the first-party counter replaces it');
  assert(/const VISITS = process\.env\.VERCEL_ENV === 'production'/.test(layout)&&/\{VISITS && <VisitTracker/.test(layout),'the tracker mounts on production deployments only');
  const sql=read('supabase/migrations/20261007_analytics.sql');
  for(const t of ['analytics_sessions','analytics_beats','analytics_daily','analytics_salts'])assert(new RegExp(`alter table public\\.${t}\\s+enable row level security`).test(sql),t+' has RLS');

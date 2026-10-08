@@ -44,7 +44,7 @@ for n, chapter in enumerate(script['chapters'], 1):
         sf.write(tmp.name, wave, RATE)
         dest = root / f'{n}.m4a'
         subprocess.run(['ffmpeg', '-hide_banner', '-loglevel', 'error', '-y', '-i', tmp.name, '-af', 'loudnorm=I=-18:TP=-2:LRA=11',
-                        '-ac', '1', '-ar', '24000', '-c:a', 'aac', '-b:a', '64k', str(dest)], check=True)
+                        '-ac', '1', '-ar', '24000', '-c:a', 'aac', '-aac_coder', 'fast', '-b:a', '40k', str(dest)], check=True)  # Oct 7 2026: 40 kbps (docs/performance-guide.md)
     seconds = float(subprocess.run(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'default=noprint_wrappers=1:nokey=1', str(dest)],
                                    capture_output=True, text=True, check=True).stdout)
     out.append({'label': chapter['label'], 'text': chapter['text'], 'src': f'/plays/narration/{film}/{n}.m4a', 'seconds': round(seconds, 3), 'words': words})

@@ -42,7 +42,7 @@ for page in json.loads(Path(sys.argv[1]).read_text()):
     with tempfile.TemporaryDirectory(prefix='bella-book-') as temp:
         wav = Path(temp)/'page.wav'
         sf.write(wav,np.concatenate(clips),24000)
-        subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y','-i',str(wav),'-af','loudnorm=I=-18:TP=-2:LRA=11','-ac','1','-ar','24000','-c:a','aac','-b:a','64k',str(target)],check=True)
+        subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y','-i',str(wav),'-af','loudnorm=I=-18:TP=-2:LRA=11','-ac','1','-ar','24000','-c:a','aac','-aac_coder','fast','-b:a','40k',str(target)],check=True)  # Oct 7 2026: 40 kbps
     duration=float(subprocess.check_output(['ffprobe','-v','error','-show_entries','format=duration','-of','default=nw=1:nk=1',str(target)],text=True))
     manifest['pages'][page['id']]={'src':f"/voice/books/{book}/{page['id']}.m4a?v=coach-bella-1",'duration':round(duration,3),'scriptSha256':page['scriptSha256'],'cues':cues}
     print(f"{page['id']}: Coach Bella {duration:.2f}s",flush=True)

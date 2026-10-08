@@ -1,5 +1,73 @@
 # Performance reference for future Futbol Island updates
 
+## Narration at 40 kbps, one audio file per lesson — October 7, 2026 (local, not deployed)
+
+Goal: smaller narration downloads and fewer audio requests. Football content, scripts, voices, durations and cue timing are unchanged.
+
+**1. Narration re-encoded to AAC-LC mono 24 kHz, 40 kbps.** Encoded with ffmpeg's native `aac` encoder using `-aac_coder fast`. The default `twoloop` coder overshot peaks up to 1.67× on Kokoro speech and measured 6 dB lower waveform SNR at the same bitrate. AudioToolbox `aac_at` shifted container durations by 12–40 ms, so it was rejected. HE-AAC was not used: SBR at 24 kHz leaves a 12 kHz core, and it couldn't be checked on iOS.
+
+| Folder | Files | Before | After |
+|---|---|---|---|
+| `public/plays/narration/**` (card films, ~66 kbps, in place) | 1,544 | 124,893,141 B | 74,789,512 B (−40%) |
+| `public/voice/books/**` (pop-up books, ~71 kbps, in place) | 222 | 81,556,785 B | 48,510,095 B (−41%) |
+| `public/stories/eleven/**` (path stories, ~97 kbps at 96 kHz) | 117 live | 17,425,653 B | 7,221,943 B (−59%) |
+| **Total** | 1,883 | **223,875,579 B** | **130,521,550 B (−93.4 MB, −42%)** |
+
+- **Story file names.** Story files are content-hashed and cached `immutable` for a year, so each re-encode got a new name, `<part>-<sha256(new bytes)[:12]>.m4a`. The new paths are in `lib/paths/riso/data/narrationOverrides.json` and `docs/story-production/elevenlabs-narration-2026-09-22.json`. The previous files stay in place, so pages still holding the old manifest can finish, and they remain the rollback.
+- **In-place files.** Card-film and book files keep their names; they are on the 1-day cache.
+- **Generators.** `scripts/plays/kokoro-narrate.py`, `scripts/build-book-narration.py` and `scripts/build-eleven-narration.py` now encode the same way, so a re-voice doesn't bring back the old bitrate. The story script now names files by the encoded bytes.
+- **Left as they were:**
+  - Lesson and quiz voices (`voice/kokoro_*`) and museum voices: already 32 kbps.
+  - `stories/narration/**` (114 files, 13 MB) and `stories/films/*/narration.mp3` (4 files): fallbacks the overrides replace for all 22 stories, so never fetched.
+  - Music: not speech.
+- **Timing and quality checks:**
+  - ffprobe duration within 1.96 ms of each original, and within 1.96 ms of `timing.json`, `narration.json` and the overrides. ffmpeg decodes to exactly the original sample count, at cross-correlation lag 0.
+  - EBU R128 integrated loudness −0.5…+0.2 LU. Band energies (0–10 kHz) within 1.4 dB; the 10–12 kHz band within ±1.7 dB.
+  - Peaks unclipped. Decoded sample peak ≤ 0.95 and true peak ≤ −0.3 dBTP. 13 files needed a latency-compensated limiter (limit 0.70–0.85, loudness within 0.5 LU). 18 originals had clipped (peaks up to 1.28); none of their re-encodes do.
+  - In the browser, Chromium's `<audio>.duration` matches the timing data within 1.96 ms on all 1,883 files.
+  - In WebKit, cards and books report the same duration as their originals. Story files report 34 ms less than their 96 kHz originals: WebKit takes 1088 samples off the end of every 24 kHz AAC file. Captured element output starts at the same point as ffmpeg's decode of the original (0 ms) for both old and new, so cues are unchanged. The only effect is that a track story's final jump to its stated end is 45 ms instead of 11 ms.
+  - Gates and tests passed:
+    - `scripts/review-riso-story.mjs`: 22 stories, 0 seam diffs.
+    - `scripts/check-path-films-browser.mjs`: 44 views, run with `--mute-audio`.
+    - `tests/story-narration.cjs`, `tests/book-narration.cjs`, `scripts/check-path-narration.cjs`.
+    - All 400 `tests/play-film-*.cjs`.
+
+**2. Lesson voice packs.** Before, a lesson fetched each spoken line as its own file, about 22 requests per lesson.
+- **What a pack is.** `scripts/build-lesson-packs.cjs` joins one lesson's core lines for one coach into `public/voice/packs/<coach>/<lessonId>-<sha256[:12]>.m4a`: the steps, then each question's prompt and explanation. That makes 384 packs (96 lessons × 4 coaches) from 6,920 lines.
+  - **No re-encode.** Each line's AAC packets are copied byte for byte with its own priming frame. Between lines go 24 constant silent frames (1.024 s, 8 bytes each).
+  - **Deterministic writer.** A small MP4 writer is used: moov first, fixed times, and the AAC `roll` sample group that ffmpeg also writes. Without the roll group, WebKit played every pack line 87.9 ms early.
+  - **Offset maps.** Kept beside the packs, one per coach and format: `public/voice/packs/<coach>/<format>.json` = `{lessonId: {src, lines: {hash[:8]: [start, end]}}}`, 5–8 KB gzipped each. They are not in the lesson catalogs, so voice-off players fetch nothing.
+  - **Wrong-answer explanations** stay single files. Most runs never play them, and packing them would add about 45% to every pack.
+- **Playback** (`lib/town/useLessonVoice.ts`): the same one gesture-primed `<audio>` element.
+  - It loads the pack once (`preload=auto`, only for the open lesson and the chosen coach) and seeks to `start − 0.05 s`.
+  - A stop timer is armed on `playing`/`seeked`, cleared on `pause`, and re-armed if the media clock lags. `timeupdate` and `ended` are backstops. There is no rAF, no polling and no Web Audio decode, and the pack is released on close.
+  - The map is requested when the lesson screen renders with voice on. A line arriving before it waits at most 2 s, then that lesson uses line files.
+  - **Fallback to line files:** a line not in the pack, a duration mismatch over 10 ms (a re-voiced line), a pack that errors, or a missing map.
+- **Measured.** Lesson `learn7_roles`, Coach Bella, all 9 steps narrated plus 5 questions answered correctly. Production build, headless, `--mute-audio` (WebKit with every media element muted). All `/voice/` requests counted:
+
+| Engine | Before | After |
+|---|---|---|
+| Chromium | 22 requests, 505,723 B | **2 requests, 490,767 B** (map 5,573 B, once per format, + pack 485,194 B) |
+| WebKit | 44 requests (a range probe + the file, per line), 513,620 B | **3 requests, 491,128 B** (map + range probe + pack) |
+
+  Fallback runs (Chromium), all 22 lines played: with the pack returning 404, 24 requests and 511,341 B (map + failed pack + 22 line files); with the map returning 404, 23 requests and 505,768 B. A second lesson in the same format reuses the cached map, so it costs 1 request (2 in WebKit).
+- **Checks:**
+  - `tests/lesson-audio-packs.cjs` (in `npm test`) checks:
+    - Every voiced line maps into its pack or, for wrong answers, to an existing file.
+    - Map offsets equal the frame positions, and the packets are byte-identical.
+    - Gaps are at least 0.5 s, and the roll group is present.
+    - Packs are deterministic, a changed line renames its pack, and the build is up to date.
+    - The player's seek, stop and pause behaviour and every fallback.
+  - `node scripts/build-lesson-packs.cjs --verify` decodes all 384 packs: the first line of each is bit-exact. Later lines are SNR ≥ 10 dB, frame energy ±2.9 dB, gaps silent. They differ only in noise-substituted (PNS) bands, because the decoder's noise generator runs on through the stream. The same packets led only by silent frames decode bit-exact.
+  - Captured `<audio>` output puts each pack line at the same sample as its own file, in both Chromium and WebKit.
+  - Stops land −1…+5 ms from the line end in WebKit. In Chromium they land up to +128 ms late, because headless rendering kept its main thread busy; that is well inside the 1.024 s gap.
+- **Tradeoffs:**
+  - Headless WebKit resumes a paused element after a seek about 0.15–0.25 s later than it starts a freshly loaded file, so each pack line begins that much later there. The whole WebKit lesson took 83.2 s against 81.3 s before.
+  - `public/` grows by 144.5 MB of packs, because the line files stay for fallback and wrong answers. With the 93.4 MB saved in part 1 and 7.2 MB of new story names, that is about +58 MB net.
+  - Re-run `node scripts/build-lesson-packs.cjs` after any lesson-voice change (`kokoro-lessons.py`, `import-lessons.mjs`, `link-generated-voices.mjs`); the test fails until it is re-run.
+  - Not done: an `immutable` cache rule for `/voice/packs/**-<12hex>.m4a`. It is still on the 1-day `voice/` rule.
+- Emulation only; nothing was measured on an iPhone and no thermal claim is made. Fewer requests means fewer radio wake-ups per lesson, but that is not measured.
+
 ## Species models for the caught animal — October 5, 2026 (local, not deployed)
 
 User: "fix all the fishing animals … this example is not a shrimp". Every one of the 64 species now has its own low-poly, flat-shaded, vertex-coloured model (`lib/town/fishing/fishModels.ts`): curled segmented shrimp with fan tail and antennae, 8-armed octopus, squid with fins and 2 tentacles, sharks with tall dorsal, heterocercal tail and gill slits (per-species snouts, tails, tips, spots, hammer, saw), billfish bills and sail, mola disc, anglerfish teeth and glowing lure, lanternfish photophores, mackerel bars, haddock thumbprint and black lateral line, rays, crabs, lobster, shells, eel, seahorses. `components/FishArt.tsx` (Fishbook/market 2D) was redrawn per species to match.

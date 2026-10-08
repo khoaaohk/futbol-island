@@ -58,7 +58,7 @@ export default function FieldLearning({pathRequest,learningId,onResetQuizView,on
  // into the question's step replay, then the same question returns. Holds the question index while that replay runs.
  const [rewatch,setRewatch]=useState<number|null>(null);
  const voiceQuestion=chosen?.questions[question];
- const voice=useLessonVoice(session,quiz?(answer===null?voiceQuestion?.voice:(answer!==voiceQuestion?.correct?voiceQuestion?.choiceVoices?.[answer]??voiceQuestion?.explainVoice:voiceQuestion?.explainVoice)):chosen?.steps[step]?.voice,chosen?`${chosen.id}:${quiz?'q'+question+':'+(answer===null?'prompt':'feedback'):'s'+step}`:'',playing,quiz,voiceEnabled,coachVoice,narrationPaused||pickerOpen);
+ const voice=useLessonVoice(session,quiz?(answer===null?voiceQuestion?.voice:(answer!==voiceQuestion?.correct?voiceQuestion?.choiceVoices?.[answer]??voiceQuestion?.explainVoice:voiceQuestion?.explainVoice)):chosen?.steps[step]?.voice,chosen?`${chosen.id}:${quiz?'q'+question+':'+(answer===null?'prompt':'feedback'):'s'+step}`:'',playing,quiz,voiceEnabled,coachVoice,narrationPaused||pickerOpen,format,chosen?.id);
  useEffect(()=>{let current=true;loadCatalog(format).then(list=>{if(current)setLessons(list);}).catch(e=>{if(current)setError(e.message);});return()=>{current=false;session.current=null;};},[format,session]);
  useEffect(()=>{if(!pickerOpen||!session.current)return;const current=session.current,wasPlaying=current.playing;current.playing=false;setPlaying(false);return()=>{if(session.current===current){current.playing=wasPlaying;setPlaying(wasPlaying);}};},[pickerOpen,session]);
  // Oct 1 2026 (user): no "You'll learn" opener card; a lesson picked from the list goes straight into the play and plays.

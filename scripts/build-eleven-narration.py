@@ -114,10 +114,14 @@ def install(films):
             folder,fingerprint=cache_paths(film,part,text); result=json.loads((folder/'result.json').read_text())
             if result['fingerprint']!=fingerprint: raise RuntimeError('Stale cache')
             asset_fingerprint=digest(fingerprint+f'|pace-v2|{tempo}|loudnorm=-18,-2,9')
-            relative=f'/stories/eleven/{film["id"]}/{part}-{asset_fingerprint[:12]}.m4a'
+            # Oct 7 2026: 40 kbps AAC-LC mono 24 kHz, named by the sha256 of the encoded bytes (the URL is cached immutable,
+            # so new bytes always get a new name). Encoded to a staging file first, then moved to its content-addressed name.
+            staging=folder/f'{part}-{asset_fingerprint[:12]}-40k.m4a'
+            if not staging.exists():
+                subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y','-i',str(folder/'audio.mp3'),'-af',f'atempo={tempo},loudnorm=I=-18:TP=-2:LRA=9','-ac','1','-ar','24000','-c:a','aac','-aac_coder','fast','-b:a','40k','-f','mp4',str(staging)],check=True)
+            relative=f'/stories/eleven/{film["id"]}/{part}-{hashlib.sha256(staging.read_bytes()).hexdigest()[:12]}.m4a'
             target=ROOT/'public'/relative.lstrip('/');target.parent.mkdir(parents=True,exist_ok=True)
-            if not target.exists():
-                subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y','-i',str(folder/'audio.mp3'),'-af',f'atempo={tempo},loudnorm=I=-18:TP=-2:LRA=9','-c:a','aac','-b:a','96k',str(target)],check=True)
+            if not target.exists():target.write_bytes(staging.read_bytes())
             duration=float(subprocess.check_output(['ffprobe','-v','error','-show_entries','format=duration','-of','default=nw=1:nk=1',str(target)]))
             alignment={**result['alignment'],**{key:[t/tempo for t in result['alignment'][key]] for key in ['character_start_times_seconds','character_end_times_seconds']}};knots=[]
             if part=='track':
