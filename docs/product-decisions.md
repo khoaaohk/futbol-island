@@ -37,6 +37,8 @@ These are implementation choices from the audit's "do all". The user can reverse
 
 ## Analytics: Vercel Web Analytics instead of Google Analytics (Sep 30 2026)
 
+**Superseded Oct 7 2026:** Vercel Web Analytics was removed (a paid duplicate at $3 per 100k events). Visit counting is now only the first-party, cookie-free counter behind `/admin` (`lib/analytics/*`, `components/VisitTracker.tsx`).
+
 Futbol Island is played by children, so visit counting uses Vercel Web Analytics (`<Analytics/>` from `@vercel/analytics/next` in `app/layout.tsx`): no cookies, no personal identifiers, aggregate page views only. The Google tag (G-9NS6SZ3FEN, added Sep 29) was removed: GA sets cookies and identifiers, which for under-13 players raises COPPA and kids'-category store concerns. The parents' "About this game" copy says the same. Web Analytics must be enabled in the Vercel project (Analytics tab) for the counts to appear.
 
 ## Oct 1 2026 UI requests (user decisions; local, not committed or deployed)

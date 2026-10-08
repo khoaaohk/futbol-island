@@ -69,8 +69,8 @@ const read=rel=>fs.readFileSync(path.join(root,rel),'utf8');
  for(const href of ['https://www.scottbuckley.com.au/library/wildflowers/','https://creativecommons.org/licenses/by/4.0/','https://www.instagram.com/fc_yap/','/coffee/checkout?amount=500&return=about','mailto:hi@example.com','http://futbolisland.app.evil.com/'])assert.equal(X.leavesSite(href,o),true,href+' leaves the site');
  for(const href of ['/','/?panel=about','/konbini?door=cay','/coffee','#top','javascript:void(0)','https://futbolisland.app/arcade'])assert.equal(X.leavesSite(href,o),false,href+' stays in the game');
  assert(/<ExternalLinkGate\/>/.test(read('app/layout.tsx')),'the gate is mounted once for every page');
- // Analytics is production-only: in dev its third-party debug script sends nothing and 403'd in a WebKit e2e run (Sep 30 2026).
- assert(/const ANALYTICS = process\.env\.NODE_ENV === 'production';/.test(read('app/layout.tsx'))&&/\{ANALYTICS && <Analytics\/>\}/.test(read('app/layout.tsx')),'Vercel Analytics renders in production only');
+ // Vercel Web Analytics was removed Oct 7 2026 (paid duplicate of the first-party /admin counter).
+ assert(!/@vercel\/analytics|<Analytics\/>/.test(read('app/layout.tsx')),'no Vercel Web Analytics script');
  const gate=read('components/ExternalLinkGate.tsx');assert(/addEventListener\('click',click,true\)/.test(gate)&&/parentGatePassed\(\)/.test(gate)&&/<ParentGate /.test(gate),'capture-phase check, shared ParentGate, remembered pass');
  assert(!/setInterval|requestAnimationFrame/.test(gate),'event-driven, no loop');
 }
