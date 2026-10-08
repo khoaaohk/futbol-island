@@ -16,9 +16,9 @@ Surf design(vec3 p){
 `;
 
 export const decals:Decal[]=[
- {src:'/museum/wcballs/decals/1970-telstar-1.png',dir:[-0.0476,0.9447,0.3244],up:[0.0260,0.3258,-0.9451],w:0.376,h:0.132,gloss:0.62,credit:"Adidas Telstar Mexico 1970 Official ball (Wikimedia Commons, Zac allan, public domain)"},
- {src:'/museum/wcballs/decals/1970-telstar-2.png',dir:[0.0071,0.4876,0.8730],up:[0.0003,0.8731,-0.4876],w:0.306,h:0.087,gloss:0.62,credit:"Adidas Telstar Mexico 1970 Official ball (Wikimedia Commons, Zac allan, public domain)"},
- {src:'/museum/wcballs/decals/1970-telstar-3.png',dir:[0.0217,0.0163,0.9996],up:[0.0067,0.9998,-0.0164],w:0.515,h:0.136,gloss:0.62,credit:"Adidas Telstar Mexico 1970 Official ball (Wikimedia Commons, Zac allan, public domain)"},
- {src:'/museum/wcballs/decals/1970-telstar-4.png',dir:[0.6266,0.5270,0.5742],up:[0.1838,0.6160,-0.7660],w:0.219,h:0.264,gloss:0.62,credit:"1970 TelstarDurlast (Wikimedia Commons, public domain)"},
- {src:'/museum/wcballs/decals/1970-telstar-4.png',dir:[-0.6266,0.5270,0.5742],up:[-0.1838,0.6160,-0.7660],w:0.219,h:0.264,gloss:0.62,credit:"1970 TelstarDurlast (Wikimedia Commons, public domain)"}
+ {src:'/museum/wcballs/decals/1970-telstar-1.webp',dir:[-0.0476,0.9447,0.3244],up:[0.0260,0.3258,-0.9451],w:0.376,h:0.132,gloss:0.62,credit:"Adidas Telstar Mexico 1970 Official ball (Wikimedia Commons, Zac allan, public domain)"},
+ {src:'/museum/wcballs/decals/1970-telstar-2.webp',dir:[0.0071,0.4876,0.8730],up:[0.0003,0.8731,-0.4876],w:0.306,h:0.087,gloss:0.62,credit:"Adidas Telstar Mexico 1970 Official ball (Wikimedia Commons, Zac allan, public domain)"},
+ {src:'/museum/wcballs/decals/1970-telstar-3.webp',dir:[0.0217,0.0163,0.9996],up:[0.0067,0.9998,-0.0164],w:0.515,h:0.136,gloss:0.62,credit:"Adidas Telstar Mexico 1970 Official ball (Wikimedia Commons, Zac allan, public domain)"},
+ {src:'/museum/wcballs/decals/1970-telstar-4.webp',dir:[0.6266,0.5270,0.5742],up:[0.1838,0.6160,-0.7660],w:0.219,h:0.264,gloss:0.62,credit:"1970 TelstarDurlast (Wikimedia Commons, public domain)"},
+ {src:'/museum/wcballs/decals/1970-telstar-4.webp',dir:[-0.6266,0.5270,0.5742],up:[-0.1838,0.6160,-0.7660],w:0.219,h:0.264,gloss:0.62,credit:"1970 TelstarDurlast (Wikimedia Commons, public domain)"}
 ];

@@ -1,6 +1,6 @@
 'use client';
 import type React from 'react';
-import PlayerArt,{PlayerBackdrop,lookFor,photoFor} from './PlayerArt';
+import PlayerArt,{PlayerBackdrop,lookFor,photoFor,playerMaskStyle} from './PlayerArt';
 import {countryArt} from '@/lib/town/countryArt';
 import {hasPlayFilm} from '@/lib/plays/riso/registry';
 import {cardDisplayName,isCoachCard} from '@/lib/town/cardCollection';
@@ -22,7 +22,8 @@ export type MiniCardProps={name:string;number:number;era:'current'|'allTime';
 /**
  * A lightweight mini version of PlayerCard for the collection: tan grain stock, Star (gold) or Legend (purple)
  * rarity, No., the picture window, the name plate, and the player's flag trim and stripe. Static by design (phone
- * heat): the window is the flat country backdrop (four SVG paths, no filters) plus the riso photo's two mask layers,
+ * heat): the window is the flat country backdrop (four SVG paths, no filters) plus the riso photo's two mask layers (both halves
+ * of one packed file, PlayerArt's playerMaskStyle),
  * or the flat PlayerArt when there is no photo. No parallax, glare or animation.
  */
 export default function MiniCard({name,number,era,got,revealName=false,compact=false,numbered=false,thumb=false,className='',style}:MiniCardProps){
@@ -37,13 +38,13 @@ export default function MiniCard({name,number,era,got,revealName=false,compact=f
  return <span className={`${styles.card} ${legend?styles.legend:styles.star} ${compact?styles.compact:''} ${thumb&&photo?styles.thumb:''} ${className}`} style={flag} aria-hidden="true">
   <span className={styles.top}><span className={styles.rarity}>{legend?'Legend':isCoachCard(name)?'Coach':'Star'}</span><span className={styles.no}>No. {pad(number)}</span></span>
   <span className={styles.window}>
-   {photo&&thumb?<span className={styles.photo}><span className={styles.paper}/><span className={styles.ink} style={{WebkitMaskImage:`url(/players/${photo.slug}-ink.webp)`,maskImage:`url(/players/${photo.slug}-ink.webp)`}}/></span>
+   {photo&&thumb?<span className={styles.photo}><span className={styles.paper}/><span className={styles.ink} style={playerMaskStyle(photo.slug)}/></span>
    :photo?<>
     <PlayerBackdrop name={name} className={styles.backdrop}/>
     <span className={styles.photo}>
      <span className={styles.paper}/>
-     <span className={styles.tone} style={{background:toneInk(country),WebkitMaskImage:`url(/players/${photo.slug}-tone.webp)`,maskImage:`url(/players/${photo.slug}-tone.webp)`}}/>
-     <span className={styles.ink} style={{WebkitMaskImage:`url(/players/${photo.slug}-ink.webp)`,maskImage:`url(/players/${photo.slug}-ink.webp)`}}/>
+     <span className={styles.tone} style={{background:toneInk(country),...playerMaskStyle(photo.slug)}}/>
+     <span className={styles.ink} style={playerMaskStyle(photo.slug)}/>
     </span>
    </>:<PlayerArt name={name}/>}
   </span>

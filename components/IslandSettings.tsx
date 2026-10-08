@@ -1,6 +1,5 @@
 'use client';
 import {HOME_DECOR_ENABLED} from '@/lib/town/homeFeature';
-import {IslandBottleLogo} from './IslandBottle';
 import {BackButton} from './BackButton';
 import {DoneButton} from './DoneButton';
 import shell from './ModalShell.module.css';
@@ -13,12 +12,19 @@ import {useSceneryRest} from '@/lib/sceneryRest';
 import {batterySaverOn,setBatterySaver,subscribeHeatTier} from '@/lib/graphics/heatTier';
 import {COACH_VOICES} from '@/lib/town/useLessonVoice';
 import styles from './IslandSettings.module.css';
-import IslandQuests from './IslandQuests';
-import CoinQuest from './CoinQuest';
 import dynamicImport from 'next/dynamic';
 import {CardOfferDot,pendingPicksLabel,usePendingPicks} from './CardOfferBadges';
 import {OPEN_CARDS_EVENT} from '@/lib/town/cardRewardStore';
+import {prefetchPart} from '@/lib/ui/idlePrefetch';
+import {loadBottleLogo,loadCoinQuest,loadPathsPanel} from './islandParts';
 const IslandHome=dynamicImport(()=>import('./IslandHome'),{ssr:false});
+// Lazy-load pass (Oct 7 2026, docs/performance-guide.md): the Paths panel (IslandQuests: the learning path, stories, warm-ups),
+// the daily bottle and the ball hunt are not in the boot bundle. The HUD buttons below stay; touching or hovering them (and the
+// island's idle warm-up) fetches the panels before the dialog opens (components/islandParts.ts).
+const IslandQuests=dynamicImport(()=>import('./IslandQuests'),{ssr:false});
+const CoinQuest=dynamicImport(()=>import('./CoinQuest'),{ssr:false});
+const IslandBottleLogo=dynamicImport(()=>import('./IslandBottle').then(m=>m.IslandBottleLogo),{ssr:false});
+const warmPanels=()=>{prefetchPart(loadPathsPanel);prefetchPart(loadBottleLogo);prefetchPart(loadCoinQuest);};
 const CardCollection=dynamicImport(()=>import('./CardCollection'),{ssr:false});
 /** Ms until the Paths button's 3 s cycle is between swaps and shakes (250–2350 ms: one icon fully shown, button still), so a rest never
  * freezes a half-blurred icon or a tilted button. The icons' 3 s / 6 s delays keep them on the button's cycle.
@@ -82,6 +88,7 @@ export default function IslandSettings({voiceEnabled,onVoiceChange,coachVoice,on
     const element=dialog.current;if(!element)return;
     let timer:ReturnType<typeof setTimeout>|undefined;
     if(open){
+      warmPanels();
       if(body.current)body.current.scrollTop=0;
       if(!element.open){restoreFocus.current=document.activeElement instanceof HTMLElement?document.activeElement:null;element.showModal();element.scrollLeft=0;if(body.current)body.current.scrollTop=0;close.current?.focus({preventScroll:true});}
     }else if(element.open){
@@ -104,7 +111,7 @@ export default function IslandSettings({voiceEnabled,onVoiceChange,coachVoice,on
     else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
   };
   return <>
-    <nav ref={triggers} className={styles.triggers} data-hud-triggers aria-label="Island information">
+    <nav ref={triggers} className={styles.triggers} data-hud-triggers aria-label="Island information" onPointerEnter={warmPanels} onPointerDown={warmPanels} onFocus={warmPanels}>
       <button type="button" className={styles.circle} aria-label="Settings" aria-haspopup="dialog" aria-expanded={open&&tab==='settings'} onClick={()=>show('settings')}><Symbol kind="settings"/></button>
       <button type="button" className={`${styles.circle} ${styles.questsTrigger}`} data-tour="quests" aria-label={`Paths${pendingPicksLabel(picks)}`} aria-haspopup="dialog" aria-expanded={open&&(tab==='quests'||tab==='balls'||tab==='exploration'||tab==='cards')} onClick={()=>show('quests')}><CardOfferDot/><span className={styles.pathIconCycle} aria-hidden="true">{['bolt','book','play'].map(name=><span key={name} data-path-icon={name}><Icon name={name} size={24}/></span>)}</span></button>
     </nav>

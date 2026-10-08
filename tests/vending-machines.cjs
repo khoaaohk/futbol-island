@@ -244,22 +244,26 @@ const {CUSTOMIZATION_OPTIONS,BALL_COLORS}=load(path.join(root,'lib/town/customiz
   w.dispose();assert.equal(w.lastHiRes.cachedMachines,0,'dispose frees the cached faces');}
 }
 // 3b. Ball pictures (Sep 29 2026): every ball item, regular and special, shows a baked picture of the real in-game ball
-// (public/vending/products/ball-<style>.png, scripts/capture-vending-products.cjs), keyed by ball, not machine, so a ball looks
+// (public/vending/products/ball-<style>.png, scripts/capture-vending-products.cjs; packed into one atlas since Oct 7), keyed by ball, not machine, so a ball looks
 // the same on every machine and matches the walking ball; the shop snapshots add the walking ball's patches too.
 {
  const T=require('three');
  const {BAKED_BALL_PICTURES,vendingBallPicture}=load(path.join(root,'lib/graphics/vendingProductArt.ts'));
  const balls=[...C.VENDING_ITEMS,...C.VENDING_SPECIALS].filter(i=>i.storeItem?.category==='ball');
  same(balls.map(i=>i.id).sort(),CUSTOMIZATION_OPTIONS.ball.map(o=>'ball:'+o.id).sort(),'every ball style is sold');
- for(const item of balls){const src=vendingBallPicture(item.id);assert.equal(src,`/vending/products/ball-${item.id.slice(5)}.png`,item.id+' has a baked picture');
-  const file=path.join(root,'public',src),png=fs.readFileSync(file);assert.equal(png.toString('latin1',1,4),'PNG',src+' is a PNG');
-  const w=png.readUInt32BE(16),h=png.readUInt32BE(20);const D=w-4;assert(w>=64&&w<=128&&h===w+Math.round(D*.14),src+' is a small ball picture framed as diameter+4 wide with a contact-shadow strip below ('+w+'×'+h+')');assert(png.length<20000,src+' stays small');}
+ // Oct 7 2026: the pictures ship as one lossless WebP atlas (scripts/pack-vending-atlas.py, lib/graphics/vendingBallAtlas.json);
+ // the ball-<style>.png files stay as its sources. Each ball is an atlas cell with the PNG's exact size.
+ const atlas=JSON.parse(read('lib/graphics/vendingBallAtlas.json'));assert.match(atlas.src,/^\/vending\/products\/balls-[0-9a-f]{12}\.webp$/,'one content-named atlas');
+ for(const item of balls){const sp=vendingBallPicture(item.id),style=item.id.slice(5);assert.ok(sp,item.id+' has a baked picture');assert.equal(sp.src,atlas.src,item.id+' is drawn from the atlas');
+  const file=path.join(root,'public/vending/products',`ball-${style}.png`),png=fs.readFileSync(file);assert.equal(png.toString('latin1',1,4),'PNG',file+' (source) is a PNG');
+  const w=png.readUInt32BE(16),h=png.readUInt32BE(20);const D=w-4;assert(w>=64&&w<=128&&h===w+Math.round(D*.14),style+' is a small ball picture framed as diameter+4 wide with a contact-shadow strip below ('+w+'×'+h+')');assert(png.length<20000,style+' stays small');
+  assert.deepEqual([sp.w,sp.h],[w,h],style+': the atlas cell is the picture\'s exact size');assert(sp.x>=2&&sp.y>=2&&sp.x+sp.w<=atlas.w-2&&sp.y+sp.h<=atlas.h-2,style+': cell inside the atlas with its gutter');}
  assert.equal(BAKED_BALL_PICTURES.length,balls.length,'no stale pictures listed');assert.equal(vendingBallPicture('ball:nope'),null,'unknown balls draw instead of 404ing');
- for(const f of fs.readdirSync(path.join(root,'public/vending/products')))assert(/^(pack|ball-[a-z]+)\.png$/.test(f)&&(f==='pack.png'||BAKED_BALL_PICTURES.includes(f.slice(5,-4))),'no per-machine or stale product photos: '+f);
- // The atlas asks, for every machine, for exactly the pictures of the balls on its first page, and nothing that 404s.
+ for(const f of fs.readdirSync(path.join(root,'public/vending/products')))assert(/^(pack|ball-[a-z]+)\.png$/.test(f)&&(f==='pack.png'||BAKED_BALL_PICTURES.includes(f.slice(5,-4)))||'/vending/products/'+f===atlas.src,'no per-machine or stale product photos: '+f);
+ // The world atlas asks for the ball atlas once (every ball on the machines' first pages is a cell of it), and nothing that 404s.
  imageLog.length=0;const v=load(path.join(root,'lib/graphics/vendingMachines.ts')).createVendingMachines(new T.Scene());
- const expected=C.VENDING_MACHINES.filter(m=>!m.drinks).flatMap(m=>C.machineStock(m.id).flatMap(r=>r.items).slice(0,6).filter(i=>i.storeItem?.category==='ball').map(i=>vendingBallPicture(i.id)));
- same(imageLog.filter(s=>s.includes('/ball-')).sort(),[...new Set(expected)].sort(),'each machine shows its balls by ball id, one shared request per picture');assert.equal(new Set(imageLog).size,imageLog.length,'every picture is requested once');
+ const expected=C.VENDING_MACHINES.filter(m=>!m.drinks).flatMap(m=>C.machineStock(m.id).flatMap(r=>r.items).slice(0,6).filter(i=>i.storeItem?.category==='ball').map(i=>vendingBallPicture(i.id).src));
+ same(imageLog.filter(s=>s.includes('/vending/products/')),[atlas.src],'one request for every ball picture on every machine');assert.equal(new Set(imageLog).size,imageLog.length,'every picture is requested once');
  assert(expected.length>=8,'every special ball is on its machine\'s first page');
  for(const src of imageLog)assert(fs.existsSync(path.join(root,'public',src)),src+' exists (no 404)');
  // Sep 30 2026: one atlas texture (no emissive copy); the high-res close-up face only exists while zoomed in a browser.

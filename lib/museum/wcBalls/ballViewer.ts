@@ -2,6 +2,7 @@ import * as T from 'three';
 import {BALL_GLSL_PRELUDE,BALL_GLSL_POLY} from './glsl';
 import {MAX_DECALS,type Decal} from './decals';
 import type {BallModel} from './models';
+import {mediaUrl} from '../../media/mediaUrl';
 
 /**
  * World Cup ball gallery viewer (Oct 5 2026): one procedurally shaded ball on a studio sweep, turned by dragging (trackball,
@@ -10,7 +11,7 @@ import type {BallModel} from './models';
  * precompiled while idle so scrubbing never hitches). The loop runs only while something moves: the idle turn winds down ~10 s
  * after the last input and the loop sleeps; it also sleeps while the tab is hidden. Phones render at ≤1.5× pixel ratio.
  *
- * Exact balls (Oct 5 2026): a ball can carry printed decals (decals.ts: PNGs packed into one small atlas per ball, loaded on
+ * Exact balls (Oct 5 2026): a ball can carry printed decals (decals.ts: lossless WebPs packed into one small atlas per ball, loaded on
  * first show) or come from a licensed 3D model (models.ts: a GLB loaded on demand; the procedural design shows until it lands
  * and stays the fallback). Models get a lazily built studio environment for their PBR materials.
  */
@@ -77,7 +78,7 @@ type DecalUniforms=ReturnType<typeof decalUniforms>;
 const loadImage=(src:string)=>new Promise<HTMLImageElement>((ok,fail)=>{const i=new Image();i.decoding='async';i.onload=()=>ok(i);i.onerror=fail;i.src=src;});
 /** Pack a ball's decal images into one atlas row (each scaled to 512 px tall, max 4096 wide) and fill the uniforms. */
 async function applyDecals(u:DecalUniforms,decals:readonly Decal[]){
- const list=decals.slice(0,MAX_DECALS),imgs=await Promise.all(list.map(d=>loadImage(d.src)));const H=512,ws=imgs.map(i=>Math.round(i.naturalWidth/i.naturalHeight*H));
+ const list=decals.slice(0,MAX_DECALS),imgs=await Promise.all(list.map(d=>loadImage(mediaUrl(d.src))));const H=512,ws=imgs.map(i=>Math.round(i.naturalWidth/i.naturalHeight*H));
  let total=ws.reduce((a,b)=>a+b+4,0);const k=total>4096?4096/total:1;total=Math.ceil(total*k);
  const c=document.createElement('canvas');c.width=total;c.height=Math.round(H*k);const g=c.getContext('2d')!;let x=2;
  list.forEach((d,i)=>{const w=Math.round(ws[i]*k);g.drawImage(imgs[i],x,0,w,c.height);

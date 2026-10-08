@@ -2,7 +2,13 @@ import * as T from 'three';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {createBuildingGlow} from '../../graphics/buildingGlow';
 import {FISH_SPOTS,MARKET_STAND,type FishSpot} from './fishCatalog';
-import {createFishingVisuals,type FishingVisuals} from './fishingVisuals';
+import type {FishingVisuals} from './fishingVisuals';
+// Lazy-load pass (Oct 7 2026, docs/performance-guide.md): the angler/shoreline art (fishingVisuals.ts) and the caught-animal models
+// (fishModels.ts) are not in the boot bundle. Their chunk is fetched once the player is within VISUALS_PREFETCH m of a spot, well
+// before the 45 m at which the visuals are built; if a session starts first, the visuals join it as soon as the chunk lands.
+const VISUALS_PREFETCH=100;
+let visualsModule:typeof import('./fishingVisuals')|null=null,visualsLoading:Promise<void>|null=null;
+const loadFishingVisuals=()=>{visualsLoading??=import('./fishingVisuals').then(m=>{visualsModule=m;},()=>{visualsLoading=null;});return visualsLoading;};
 import {createFishingCamera} from './fishingCamera';
 import {CAST_TIME,castPoint,planApproach,stepSession,type SessionEvent} from './fishingCore';
 import {fishById} from './fishCatalog';
@@ -95,6 +101,7 @@ export function createFishingWorld(scene:T.Scene,player?:T.Object3D,session?:Fis
  /** Near a spot (45 m) or fishing: the visuals exist; 80 m away and idle: they are disposed (docs/fishing-visuals-HANDOFF.md). */
  let catchLabelHeight=0;
  const nearAnySpot=(x:number,z:number,r:number)=>FISH_SPOTS.some(s=>Math.abs(x-s.x)<r&&Math.abs(z-s.z)<r);
+ const makeVisuals=()=>{if(visualsModule&&player)return visualsModule.createFishingVisuals(scene,player);void loadFishingVisuals();return null;};
  const beat=(e:SessionEvent)=>{if(!visuals)return;if(e==='splash')visuals.splash('land');else if(e==='reel'||e==='pull')visuals.nibble();else if(e==='nibble')visuals.nibble();else if(e==='bite')visuals.splash('bite');else if(e==='hooked')visuals.splash('hook');else if(e==='scared'||e==='escaped')visuals.splash('small');};
  const stopFishing=(api:FishingSessionApi)=>{fishing=false;cam.end();visuals?.end();api.end();hideFloat(liveSpot,false);liveSpot=-1;};
  const driver=player&&session?(c:FishingUpdate,near:number):number=>{
@@ -104,7 +111,7 @@ export function createFishingWorld(scene:T.Scene,player?:T.Object3D,session?:Fis
   const pending=session.takePending();
   if(pending&&!fishing){const i=FISH_SPOTS.findIndex(s=>s.id===pending),s=FISH_SPOTS[i];
    if(s&&near===i){liveSpot=i;fishing=true;stand={x:c.x,z:c.z};cast=castPoint(s,stand);session.begin(s.id);hideFloat(i,true);
-    visuals??=createFishingVisuals(scene,player);visuals.begin(stand,cast,cast.dir);
+    visuals??=makeVisuals();visuals?.begin(stand,cast,cast.dir);
     cam.begin(stand,cast.dir,cast.distance,()=>{if(fishing&&session.session.phase==='ready')session.tap();},s.camera);}}
   const events:SessionEvent[]=[];
   if(fishing){
@@ -114,7 +121,8 @@ export function createFishingWorld(scene:T.Scene,player?:T.Object3D,session?:Fis
   events.push(...session.drainTapEvents());
   // Visuals lifecycle + drive (no logic in the visuals; they only show the current state).
   const around=fishing||nearAnySpot(c.x,c.z,45);
-  if(!visuals&&around)visuals=createFishingVisuals(scene,player);
+  if(!visualsModule&&nearAnySpot(c.x,c.z,VISUALS_PREFETCH))void loadFishingVisuals();
+  if(!visuals&&around){visuals=makeVisuals();if(visuals&&fishing)visuals.begin(stand,cast,cast.dir);}
   if(visuals&&!fishing&&!visuals.busy&&!nearAnySpot(c.x,c.z,80)){visuals.dispose();visuals=null;}
   if(visuals){
    visuals.setCoastVisible(around);

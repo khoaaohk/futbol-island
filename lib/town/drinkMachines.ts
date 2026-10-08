@@ -17,10 +17,9 @@
  * names only (no real brands).
  */
 import {registerConsumables,registerCollectionGroup,type Consumable,type Source} from '../konbini/food';
-// Reveal/tile art for the Backpack pouch and the Konbini Collection (code review finding 6). Both are plain canvas painters
-// (no three.js, no DOM at import); drinkArt only imports types from here and foodArt, so there is no runtime cycle.
-import {registerFoodLayers,drinkCellShadow} from '../konbini/foodArt';
-import {drinkRevealLayers} from '../graphics/drinkArt';
+// Reveal/tile art for the Backpack pouch and the Konbini Collection (code review finding 6) is registered by lib/konbini/foodArt.ts
+// itself when it loads (lazy-load pass, Oct 7 2026): this data module stays free of the canvas painters, so the island's boot bundle
+// (which needs isDrinkMachine and the machine info) does not carry the Konbini food art.
 
 export type DrinkMachineId='drinksplaza'|'drinkscay';
 export const DRINK_MACHINE_IDS:readonly DrinkMachineId[]=['drinksplaza','drinkscay'];
@@ -134,6 +133,5 @@ export function registerDrinks(){
  if(registered)return;registered=true;
  registerConsumables(DRINKS.map(({id,label,jp,price,group,blurb,note,limit})=>({id,label,jp,price,group,blurb,note,limit})));
  registerCollectionGroup(DRINK_COLLECTION_GROUP);
- for(const d of DRINKS)registerFoodLayers(d.id,drinkRevealLayers(d.art),drinkCellShadow(d.art));
 }
 registerDrinks();

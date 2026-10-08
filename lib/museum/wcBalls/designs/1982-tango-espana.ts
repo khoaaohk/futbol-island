@@ -52,7 +52,7 @@ Surf design(vec3 p){
 `;
 
 export const decals:Decal[]=[
- {src:'/museum/wcballs/decals/1982-tango-espana-1.png',dir:[-0.0300,0.5686,0.8221],up:[-0.9696,-0.2165,0.1143],w:0.299,h:0.151,credit:"Adidas Tango Espa\u00f1a (Wikimedia Commons, Warren Rohner, CC BY-SA 2.0); this crop CC BY-SA 2.0"},
- {src:'/museum/wcballs/decals/1982-tango-espana-2.png',dir:[0.8773,0.0009,0.4799],up:[-0.4798,-0.0218,0.8771],w:0.288,h:0.264,credit:"Adidas Tango Espa\u00f1a (Wikimedia Commons, Warren Rohner, CC BY-SA 2.0); this crop CC BY-SA 2.0"},
- {src:'/museum/wcballs/decals/1982-tango-espana-3.png',dir:[0.5423,0.8395,-0.0331],up:[-0.6380,0.4371,0.6340],w:0.273,h:0.235,credit:"1982 TangoEspana (Wikimedia Commons, Chong Fat, public domain)"}
+ {src:'/museum/wcballs/decals/1982-tango-espana-1.webp',dir:[-0.0300,0.5686,0.8221],up:[-0.9696,-0.2165,0.1143],w:0.299,h:0.151,credit:"Adidas Tango Espa\u00f1a (Wikimedia Commons, Warren Rohner, CC BY-SA 2.0); this crop CC BY-SA 2.0"},
+ {src:'/museum/wcballs/decals/1982-tango-espana-2.webp',dir:[0.8773,0.0009,0.4799],up:[-0.4798,-0.0218,0.8771],w:0.288,h:0.264,credit:"Adidas Tango Espa\u00f1a (Wikimedia Commons, Warren Rohner, CC BY-SA 2.0); this crop CC BY-SA 2.0"},
+ {src:'/museum/wcballs/decals/1982-tango-espana-3.webp',dir:[0.5423,0.8395,-0.0331],up:[-0.6380,0.4371,0.6340],w:0.273,h:0.235,credit:"1982 TangoEspana (Wikimedia Commons, Chong Fat, public domain)"}
 ];

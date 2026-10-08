@@ -20,15 +20,13 @@ import {DAILY_PLAY_COINS} from '@/lib/town/dailyPlay';
 import {LEARN_COINS_EARNED,learnToastTitle,type LearnCoinsEarned} from '@/lib/town/learnCoins';
 import {creditConceptTick} from '@/lib/learning/reviewStore';
 import {conceptForJob} from '@/lib/learning/conceptMap';
-import FishArt from './FishArt';
+import PocketFishIcon from './PocketFishIcon';
 import FuelCount from './FuelCount';
 import {useFuel} from '@/lib/town/fuelStore';
 import {FruitArt} from './PocketArt';
-import {FISH} from '@/lib/town/fishing/fishCatalog';
 import {OPEN_MARKET_STAND} from './FishingHost';
 import styles from './IslandJobs.module.css';
-/** Same fish + fruit art as the onboarding "Earn coins" step. */
-const POCKET_FISH=FISH.find(f=>f.id==='sardine')??FISH[0];
+/** Same fish + fruit art as the onboarding "Earn coins" step (the sardine is FishArt's drawing, inlined in PocketFishIcon). */
 
 const subscribeView=(fn:()=>void)=>{let off=getJobRuntime()?.subscribe(fn);const unreg=subscribeJobRuntime(()=>{off?.();off=getJobRuntime()?.subscribe(fn);fn();});return()=>{off?.();unreg();};};
 const readView=()=>getJobRuntime()?.getView()??emptyJobView();
@@ -124,7 +122,7 @@ export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,o
   if(active.kind==='carry')return a.carrying?`Carry the ball to the ${active.deliver?.label} (follow the arrow).`:'Run to the loose ball (follow the arrow).';
   return active.howTo;};
  return <>
-  <button type="button" className={styles.wallet} onClick={onOpenBalances} aria-label={`Your island pocket: ${wallet.balance} coins, ${fish} fish, ${fruit} fruit and vegetables, fuel ${fuel.fuel} of 100${fuel.level==='low'||fuel.level==='empty'?` (${fuel.level})`:''}`} aria-haspopup="dialog" data-job-wallet><span className={styles.coin} aria-hidden="true"/><b>{wallet.balance}</b><small>coins</small><em className={styles.basketCount} aria-label={`${fish} fish in basket`} title="Fish in basket"><FishArt fish={POCKET_FISH} size={24}/><span>{fish}</span></em><em className={styles.basketCount} aria-label={`${fruit} fruit and vegetables in basket`} title="Fruit and vegetables in basket"><FruitArt size={19}/><span>{fruit}</span></em><FuelCount className={styles.basketCount}/></button>
+  <button type="button" className={styles.wallet} onClick={onOpenBalances} aria-label={`Your island pocket: ${wallet.balance} coins, ${fish} fish, ${fruit} fruit and vegetables, fuel ${fuel.fuel} of 100${fuel.level==='low'||fuel.level==='empty'?` (${fuel.level})`:''}`} aria-haspopup="dialog" data-job-wallet><span className={styles.coin} aria-hidden="true"/><b>{wallet.balance}</b><small>coins</small><em className={styles.basketCount} aria-label={`${fish} fish in basket`} title="Fish in basket"><PocketFishIcon/><span>{fish}</span></em><em className={styles.basketCount} aria-label={`${fruit} fruit and vegetables in basket`} title="Fruit and vegetables in basket"><FruitArt size={19}/><span>{fruit}</span></em><FuelCount className={styles.basketCount}/></button>
   {view.stand&&offerAllowed&&!offer&&!active&&!introJob&&!payday&&<HudSlot><button type="button" className={styles.offer} data-hud-slot="focus" data-farm-stand-sell onClick={()=>window.dispatchEvent(new CustomEvent(OPEN_MARKET_STAND,{detail:{tab:'produce',place:'farm'}}))}><small>Coral Cay Farm Stand</small>Sell fruit &amp; veg<span aria-hidden="true">Sell</span></button></HudSlot>}
   {offer&&offerAllowed&&!active&&!introJob&&!payday&&<HudSlot><button type="button" className={styles.offer} data-hud-slot="focus" data-job-offer={offer.id} aria-keyshortcuts="G" title="Open job (G)" onClick={()=>setIntro(offer.id)}><small>Island job · {offer.role}</small>{offer.title}<span aria-hidden="true">Go</span></button></HudSlot>}
   {/* Job cards (the offer's Start job / Not now, and the payday card) hang in the stack's task slot, right under the coins bar:

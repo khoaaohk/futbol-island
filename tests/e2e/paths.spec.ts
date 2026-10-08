@@ -314,7 +314,9 @@ test('a quiz resumed from Paths narrates its question without another tap', asyn
   await page.addInitScript(() => {
     const w = window as unknown as { __voicePlays: string[] }, play = HTMLMediaElement.prototype.play;
     w.__voicePlays = [];
-    HTMLMediaElement.prototype.play = function (this: HTMLMediaElement) { const src = this.currentSrc || this.src, p = play.call(this); p.then(() => { if (src.includes('/voice/')) w.__voicePlays.push(src); }, () => {}); return p; };
+    // `src` first: play() called in the same task as `a.src = pack` still reports the silent primer as currentSrc (resource
+    // selection runs later), which is what happens when the lesson screen mounts after the primer finished (lazy lessons, Oct 7 2026).
+    HTMLMediaElement.prototype.play = function (this: HTMLMediaElement) { const src = this.src || this.currentSrc, p = play.call(this); p.then(() => { if (src.includes('/voice/')) w.__voicePlays.push(src); }, () => {}); return p; };
   });
   const issues = await openIsland(page, { storage: { 'futbol-island-quiz-progress-v1': JSON.stringify(started), 'futbol-island-quiz-growth-v1': '1' } });
   await openPaths(page, info);

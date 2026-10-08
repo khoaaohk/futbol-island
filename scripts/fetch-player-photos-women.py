@@ -58,6 +58,9 @@ import cv2
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter, ImageFont, ImageOps
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import player_masks  # noqa: E402  packed ink+tone masks, one file per player (Oct 7 2026)
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MANIFEST = os.path.join(ROOT, 'lib/town/playerPhotos.women.json')
 OUT_DIR = os.path.join(ROOT, 'public/players')
@@ -780,17 +783,14 @@ def riso(img):
 def save_mask(alpha, path):
     a = (np.clip(alpha, 0, 1) * 255).astype(np.int32)
     a = ((a + 8) // 17 * 17).clip(0, 255).astype(np.uint8)
-    rgba = np.zeros((H, W, 4), np.uint8)
-    rgba[..., 3] = a
-    Image.fromarray(rgba, 'RGBA').save(path + '.tmp', 'WEBP', lossless=True, quality=100, method=6, exact=False)
-    os.replace(path + '.tmp', path)     # atomic: the dev server never sees a half-written mask
+    # <slug>-ink|tone.webp -> that half of the packed public/players/<slug>.webp (atomic; scripts/player_masks.py)
+    player_masks.save_mask_alpha(a, path)
 
 
 def riso_cell(slug):
     cell = np.full((H, W, 3), (0xff, 0xf1, 0xd3), np.float32)
     for layer, col in (('tone', (0xe9, 0x79, 0x8b)), ('ink', (0x1f, 0x3d, 0x36))):
-        m = np.asarray(Image.open(os.path.join(OUT_DIR, f'{slug}-{layer}.webp')).getchannel('A'),
-                       dtype=np.float32)[..., None] / 255.0
+        m = player_masks.read_layer(OUT_DIR, slug, layer).astype(np.float32)[..., None] / 255.0
         cell = cell * (1 - m) + cell * (np.array(col, np.float32) / 255.0) * m
     return Image.fromarray(cell.astype(np.uint8))
 
@@ -956,10 +956,7 @@ def main():
             dropped[name] = reason
             if manifest.pop(name, None) is not None:
                 write_manifest(manifest)
-                for layer in ('ink', 'tone'):
-                    f = os.path.join(OUT_DIR, f'{slug}-{layer}.webp')
-                    if os.path.exists(f):
-                        os.remove(f)
+                player_masks.remove(OUT_DIR, slug)
             print(f'{tag}: DROP {reason}', flush=True)
 
         if (manifest.get(name) or {}).get('source', '').startswith('wikimedia/deep-audit'):

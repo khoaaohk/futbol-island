@@ -10,8 +10,10 @@ export default function IslandLoading({exiting=false}:{exiting?:boolean}){
   const screen=useRef<HTMLDivElement>(null),[land,setLand]=useState<{viewBox:string;style:CSSProperties}|null>(null);
   useLayoutEffect(()=>{if(!exiting||!screen.current)return;const root=screen.current,shape=Array.from(root.querySelectorAll<SVGPathElement>('[data-loading-tan-land]')).find(p=>p.getBoundingClientRect().width>0);if(!shape)return;const r=shape.getBoundingClientRect(),container=root.getBoundingClientRect(),b=shape.getBBox();setLand({viewBox:`${b.x} ${b.y} ${b.width} ${b.height}`,style:{'--land-x':`${r.left-container.left+r.width/2}px`,'--land-y':`${r.top-container.top+r.height/2}px`,'--land-w':`${r.width}px`,'--land-h':`${r.height}px`,'--land-dx':`${container.width/2-(r.left-container.left+r.width/2)}px`,'--land-dy':`${container.height/2-(r.top-container.top+r.height/2)}px`,'--land-sx':container.width*2/r.width,'--land-sy':container.height*2/r.height} as CSSProperties});},[exiting]);
   useEffect(()=>{
-    // Small shared UI assets only; leave films, audio and lesson catalogs on demand.
-    const images=['/stories/films/assets/entry-grain.png','/stories/paths/abstract-island.svg?v=diagonal-2','/stories/paths/island-mark.svg','/stories/paths/settings-coast.svg','/stories/paths/coaches-coast.svg'].map(src=>{
+    // Small shared UI assets only; leave films, audio and lesson catalogs on demand. The Settings and Coaches dialog backdrops
+    // (settings-coast.svg, coaches-coast.svg, ~28 KB each) are no longer warmed here (Oct 7 2026): their CSS loads them when the
+    // dialog opens, so a visit that never opens them doesn't fetch them.
+    const images=['/stories/films/assets/entry-grain.png','/stories/paths/abstract-island.svg?v=diagonal-2','/stories/paths/island-mark.svg'].map(src=>{
       const image=new Image();image.decoding='async';image.src=src;void image.decode().catch(()=>{});return image;
     });
     void document.fonts?.load('24px IslandBrush').catch(()=>{});

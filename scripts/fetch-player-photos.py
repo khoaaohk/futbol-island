@@ -58,6 +58,9 @@ from io import BytesIO
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter, ImageOps
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import player_masks  # noqa: E402  packed ink+tone masks, one file per player (Oct 7 2026)
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PLAYERS_JSON = os.path.join(ROOT, 'lib/town/positionPlayers.json')
 MANIFEST = os.path.join(ROOT, 'lib/town/playerPhotos.json')
@@ -888,16 +891,14 @@ def riso(img):
 def save_mask(alpha, path):
     a = (np.clip(alpha, 0, 1) * 255).astype(np.int32)
     a = ((a + 8) // 17 * 17).clip(0, 255).astype(np.uint8)   # 16 levels: AA edges, small files
-    rgba = np.zeros((H, W, 4), np.uint8)
-    rgba[..., 3] = a
-    Image.fromarray(rgba, 'RGBA').save(path, 'WEBP', lossless=True, quality=100, method=6, exact=False)
+    # <slug>-ink|tone.webp -> that half of the packed public/players/<slug>.webp (atomic; scripts/player_masks.py)
+    player_masks.save_mask_alpha(a, path)
 
 
 def riso_cell(slug):
     cell = np.full((H, W, 3), (0xff, 0xf1, 0xd3), np.float32)
     for layer, col in (('tone', (0xe9, 0x79, 0x8b)), ('ink', (0x1f, 0x3d, 0x36))):
-        m = np.asarray(Image.open(os.path.join(OUT_DIR, f'{slug}-{layer}.webp')).getchannel('A'),
-                       dtype=np.float32)[..., None] / 255.0
+        m = player_masks.read_layer(OUT_DIR, slug, layer).astype(np.float32)[..., None] / 255.0
         cell = cell * (1 - m) + cell * (np.array(col, np.float32) / 255.0) * m   # overprint
     return Image.fromarray(cell.astype(np.uint8))
 
@@ -1068,10 +1069,7 @@ def main():
             report['rejected'].setdefault(reason, []).append(name)
             manifest.pop(name, None)
             write_manifest(name, None)
-            for layer in ('ink', 'tone'):
-                f = os.path.join(OUT_DIR, f'{slugify(name)}-{layer}.webp')
-                if os.path.exists(f):
-                    os.remove(f)
+            player_masks.remove(OUT_DIR, slugify(name))
             print(f'{tag}: REJECT {reason}', flush=True)
 
         s, how = resolve(net, name, futsal[name])
@@ -1174,10 +1172,7 @@ def main():
     # remove stale masks of players in this run that were rejected
     for n in names:
         if n not in manifest:
-            for layer in ('ink', 'tone'):
-                f = os.path.join(OUT_DIR, f'{slugify(n)}-{layer}.webp')
-                if os.path.exists(f):
-                    os.remove(f)
+            player_masks.remove(OUT_DIR, slugify(n))
 
     acc = [n for n in order if n in manifest and n in names]
     if acc:

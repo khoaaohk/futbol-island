@@ -245,7 +245,7 @@ Surf design(vec3 p){
 `;
 
 export const decals:Decal[]=[
- {src:'/museum/wcballs/decals/1994-questra-1.png',dir:[-0.0229,0.5441,0.8387],up:[-0.0115,-0.8390,0.5440],w:0.285,h:0.217,credit:"1994 - Questra (USA) (Wikimedia Commons, Shine 2010, CC BY 2.0)"},
- {src:'/museum/wcballs/decals/1994-questra-2.png',dir:[0.5373,0.8422,0.0437],up:[0.2531,-0.2105,0.9443],w:0.277,h:0.253,credit:"1994 - Questra (USA) (Wikimedia Commons, Shine 2010, CC BY 2.0)"},
- {src:'/museum/wcballs/decals/1994-questra-3.png',dir:[-0.5247,0.8499,0.0497],up:[-0.1996,-0.1795,0.9633],w:0.284,h:0.165,credit:"1994 - Questra (USA) (Wikimedia Commons, Shine 2010, CC BY 2.0)"}
+ {src:'/museum/wcballs/decals/1994-questra-1.webp',dir:[-0.0229,0.5441,0.8387],up:[-0.0115,-0.8390,0.5440],w:0.285,h:0.217,credit:"1994 - Questra (USA) (Wikimedia Commons, Shine 2010, CC BY 2.0)"},
+ {src:'/museum/wcballs/decals/1994-questra-2.webp',dir:[0.5373,0.8422,0.0437],up:[0.2531,-0.2105,0.9443],w:0.277,h:0.253,credit:"1994 - Questra (USA) (Wikimedia Commons, Shine 2010, CC BY 2.0)"},
+ {src:'/museum/wcballs/decals/1994-questra-3.webp',dir:[-0.5247,0.8499,0.0497],up:[-0.1996,-0.1795,0.9633],w:0.284,h:0.165,credit:"1994 - Questra (USA) (Wikimedia Commons, Shine 2010, CC BY 2.0)"}
 ];

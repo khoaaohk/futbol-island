@@ -59,5 +59,5 @@ Surf design(vec3 p){
  return Surf(col,g,0.2200+.06*gr);}
 `;
 
-export const decals:Decal[]=[{"src":"/museum/wcballs/decals/1954-swiss-world-champion-1.png","dir":[0.2986,0.8601,0.4135],"up":[-0.3851,0.505,-0.7724],"w":0.19,"h":0.18,"gloss":0.1,"credit":"Wikimedia Commons, File:Swiss World Champion-1954.jpg (MDBR), CC BY-SA 3.0"},
- {"src":"/museum/wcballs/decals/1954-swiss-world-champion-2.png","dir":[0.4709,0.2206,0.8542],"up":[-0.048,0.9732,-0.2249],"w":0.93,"h":0.62,"gloss":0.1,"credit":"Wikimedia Commons, File:Swiss World Champion-1954.jpg (MDBR), CC BY-SA 3.0"}];
+export const decals:Decal[]=[{"src":"/museum/wcballs/decals/1954-swiss-world-champion-1.webp","dir":[0.2986,0.8601,0.4135],"up":[-0.3851,0.505,-0.7724],"w":0.19,"h":0.18,"gloss":0.1,"credit":"Wikimedia Commons, File:Swiss World Champion-1954.jpg (MDBR), CC BY-SA 3.0"},
+ {"src":"/museum/wcballs/decals/1954-swiss-world-champion-2.webp","dir":[0.4709,0.2206,0.8542],"up":[-0.048,0.9732,-0.2249],"w":0.93,"h":0.62,"gloss":0.1,"credit":"Wikimedia Commons, File:Swiss World Champion-1954.jpg (MDBR), CC BY-SA 3.0"}];

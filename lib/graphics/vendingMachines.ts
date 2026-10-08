@@ -46,7 +46,7 @@ const R={
 type Ctx=CanvasRenderingContext2D;
 function roundRect(c:Ctx,x:number,y:number,w:number,h:number,r:number){c.beginPath();if(c.roundRect)c.roundRect(x,y,w,h,r);else c.rect(x,y,w,h);}
 /**
- * Product pictures (ball-<style>.png, pack.png), one Image per URL for this set of machines, shared by the atlas and the
+ * Product pictures (the ball atlas, vendingBallAtlas.json: each ball is a cell of one WebP), one Image per URL for this set of machines, shared by the atlas and the
  * high-res close-up face. `draw` paints with the canvas transform in force at the call, now if the picture has loaded or once it
  * does (then `changed` runs so the texture re-uploads). Nothing runs per frame.
  */
@@ -87,7 +87,7 @@ function paintShopGlass(c:Ctx,machine:VendingMachine,pics:Pictures,changed:()=>v
   // Balls: the baked picture of that ball (ball-<style>.png: the real in-game ball, the same on every machine), resting ON the
   // shelf line (just above it: the shelf's metal lip stands proud of the glass and would hide the bottom). Its framing (scripts/capture-vending-products.cjs): width = diameter + 4, the contact shadow below.
   // A ball without one (none today) draws its miniature instead, so there is never a 404.
-  if(ballSrc){const d=size*1.56,base=shelfY-h*.025;pics.draw(c,ballSrc,img=>{const k=d/(img.width-4),dw=img.width*k*GLASS_ROUND*ballWiden,dh=img.height*k;c.drawImage(img,cx-dw/2,base-d-2*k,dw,dh);},changed);}
+  if(ballSrc){const d=size*1.56,base=shelfY-h*.025,b=ballSrc;pics.draw(c,b.src,img=>{const k=d/(b.w-4),dw=b.w*k*GLASS_ROUND*ballWiden,dh=b.h*k;c.drawImage(img,b.x,b.y,b.w,b.h,cx-dw/2,base-d-2*k,dw,dh);},changed);}
   else if(item.kind==='pack'){const ps=winH*.4;c.save();c.translate(cx,0);c.scale(GLASS_ROUND,1);drawVendingProduct(c,item.id,item.kind,0,shelfY-ps-2,ps,false);c.restore();}
   else drawVendingProduct(c,item.id,item.kind,cx,y+4+winH-size*.86,size,false);
   c.fillStyle='#fff1d3';c.font='800 19px system-ui,sans-serif';const words=item.label.split(' '),lines:string[]=[''];for(const word of words){const i=lines.length-1,trial=lines[i]?lines[i]+' '+word:word;if((c.measureText(trial)?.width??trial.length*10)>w-8&&lines[i])lines.push(word);else lines[i]=trial;}lines.slice(0,2).forEach((label,j)=>c.fillText(label,cx,nameY+12+j*21,w-8));
@@ -222,7 +222,7 @@ const fitOf=(kind:string)=>PRODUCT_FIT[kind]??{h:.72,w:.8};
 const BALL_PAD=14/103;
 function paintProduct(c:Ctx,cell:number[],item:ShelfItem,pics:Pictures,changed:()=>void,view?:ProductView){
  const [x,y,w,h]=cell,f=fitOf(item.kind),ph=h*f.h,pw=Math.min(w*.9,ph*f.w/f.h*(item.kind==='ball'?1:1)),cx=x+w/2,base=y+h;
- if(item.kind==='ball'){const src=vendingBallPicture(item.id);if(src){pics.draw(c,src,img=>{const k=Math.min(pw,ph)/(img.width-4),dw=img.width*k,dh=img.height*k;c.drawImage(img,cx-dw/2,base-dh+dh*BALL_PAD,dw,dh);},changed);return;}}
+ if(item.kind==='ball'){const b=vendingBallPicture(item.id);if(b){pics.draw(c,b.src,img=>{const k=Math.min(pw,ph)/(b.w-4),dw=b.w*k,dh=b.h*k;c.drawImage(img,b.x,b.y,b.w,b.h,cx-dw/2,base-dh+dh*BALL_PAD,dw,dh);},changed);return;}}
  // Drinks: seen from the close-up camera (their sprite turns to face it), so caps, shoulders and labels match the bay's perspective.
  if(item.drink){drawDrink(c,item.drink.art,cx,base-h*.02,ph,undefined,view??'front');return;}
  // Books and packs: the flat front art (drawVendingProduct centres them on s; a book is 1.7 s tall, a pack 2 s).

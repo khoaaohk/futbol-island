@@ -99,7 +99,9 @@ const load=(path,extra={})=>{const m={exports:{}};vm.runInNewContext(ts.transpil
   assert.match(moving,/<TravelMap \{\.\.\.props\} onSelect=\{select\} position=\{shown\.current\}\/>/);
   assert.match(read('components/IslandOverview.tsx'),/if\(!mounted\)return null;/,'IslandOverview keeps its client-only mounted gate');
   // F4: closed dialog hosts are memoized with stable callbacks.
-  for(const host of ['IslandSettings','CharacterCustomizer','CoachesCentre','IslandOnboarding','NpcConversation','Museum','FerryPreview'])assert.match(town,new RegExp(`\\b${host}=stableMemo\\(${host}Host\\)`),`${host} is memoized`);
+  for(const host of ['IslandSettings','Museum','FerryPreview'])assert.match(town,new RegExp(`\\b${host}=stableMemo\\(${host}Host\\)`),`${host} is memoized`);
+  // Lazy-load pass (Oct 7 2026): these hosts load on first use and are memoized around their next/dynamic wrapper.
+  for(const host of ['CharacterCustomizer','CoachesCentre','IslandOnboarding','NpcConversation'])assert.match(town,new RegExp(`\\b${host}=stableMemo\\(dynamic\\(\\(\\)=>import\\('\\./${host}'\\),\\{ssr:false\\}\\)\\)`),`${host} is memoized (lazy)`);
   assert.match(town,/const PositionGuide=stableMemo\(dynamic\(/);
   // stableMemo itself: data props pass through, callbacks become one stable wrapper per prop that calls the latest function.
   {const refs=[];let i=0,memoArg=null;const fakeReact={memo:c=>{memoArg=c;return {memoOf:c};},useRef:v=>{const k=i++;return refs[k]??(refs[k]={current:v});},createElement:(type,props)=>({type,props})};

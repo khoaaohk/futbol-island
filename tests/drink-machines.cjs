@@ -89,7 +89,7 @@ const D=load(path.join(root,'lib/town/drinkMachines.ts')),F=load(path.join(root,
  const ctlSrc=read('components/DrinkMachine.tsx');
  assert.match(ctlSrc,/function dismissReveal\(\)\{const kept=keepInHand\(\)/,'the reveal dismiss keeps the drink');assert.match(ctlSrc,/keepDrink\(h\.purchaseId\)/);
  assert.match(ctlSrc,/return\(\)=>\{[^}]*keepInHand\(\);\};/,'closing the machine mid-purchase keeps it too');
- // The drinks have art in the Backpack pouch and the Konbini Collection (code review finding 6): registerDrinks registers layers.
+ // The drinks have art in the Backpack pouch and the Konbini Collection (code review finding 6): foodArt.ts registers the drink layers when it loads.
  {const A=load(path.join(root,'lib/konbini/foodArt.ts'));for(const d of D.DRINKS){assert(A.FOOD_LAYERS[d.id]&&A.FOOD_LAYERS[d.id].length===4,d.id+' reveal layers registered');assert(A.finishedLayers(d.id,false).length>=3,d.id+' has a drawable tile');}}
  const poor=F.createKonbiniLedger({read:()=>null,write:()=>{},now:()=>now,day:t=>String(Math.floor(t/DAY)),readCollection:()=>null,writeCollection:()=>{},reward:async()=>0,lock:fn=>Promise.resolve().then(fn),spend:async()=>({ok:false,reason:'Not enough coins yet.'})});
  r=await poor.buy(water.id,'x');assert.equal(r.ok,false);assert.match(r.reason,/coins/);

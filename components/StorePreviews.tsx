@@ -6,7 +6,7 @@ import {createVehicle} from '@/lib/graphics/vehicle';
 import {ISLAND_LIGHT_PRESETS,ISLAND_SUN_POSITION} from '@/lib/graphics/islandLighting';
 import {DEFAULT_CUSTOMIZATION} from '@/lib/town/customization';
 import {STORE_ITEMS,type StoreItem} from '@/lib/town/store';
-import {vendingBallPicture} from '@/lib/graphics/vendingProductArt';
+import {ballPictureUrl,ballPictureUrlNow,vendingBallPicture} from '@/lib/graphics/vendingProductArt';
 /**
  * Ball framing (user, Sep 30 2026: "fix the perspective of the balls" / "the balls need to be the same as the real balls"):
  * a near-front camera 12° above the ball, looking from the island camera's side, the ball turned so one of the walking ball's six
@@ -101,7 +101,12 @@ export function useStorePreviews(open:boolean,onlyItem?:string,shelfFraming=fals
  return previews;
 }
 export function StorePreview({item,src}:{item:StoreItem;src?:string}){return src?<img src={src} width={340} height={220} alt={`${item.option.label} ${item.category==='jetpack'?'flight equipment':item.category}`} draggable={false}/>:<span role="img" aria-label={`${item.option.label} ${item.category}`} style={{color:item.option.color,fontSize:64}}>{item.category==='ball'?'⚽':item.category==='bike'?'🚲':item.category==='scooter'?'🛴':item.category==='moped'?'🛵':'✦'}</span>;}
-/** A ball's baked shelf picture (public/vending/products/ball-<style>.png, baked from the snapshot above): the vending face, its tray
- * and the backpack show exactly what the machine's glass shows. Its bottom edge is the ball's contact shadow, so CSS can stand it on
- * the shelf line. Falls back to the live snapshot for a ball without one. */
-export function BallPicture({item,src}:{item:StoreItem;src?:string}){const pic=vendingBallPicture(item.id);return pic?<img src={pic} alt={`${item.option.label} ball`} data-ball-picture="" draggable={false}/>:<StorePreview item={item} src={src}/>;}
+/** A ball's baked shelf picture (baked from the snapshot above; a cell of the vending ball atlas since Oct 7 2026, copied 1:1 into a
+ * blob URL so this <img> has the old ball-<style>.png's size and pixels with no extra request): the vending face, its tray and the
+ * backpack show exactly what the machine's glass shows. Its bottom edge is the ball's contact shadow, so CSS can stand it on the
+ * shelf line. Falls back to the live snapshot for a ball without one. */
+export function BallPicture({item,src}:{item:StoreItem;src?:string}){
+ const baked=!!vendingBallPicture(item.id),[pic,setPic]=useState<string|null>(()=>ballPictureUrlNow(item.id));
+ useEffect(()=>{if(!baked)return;let live=true;void ballPictureUrl(item.id).then(url=>{if(live&&url)setPic(url);});return()=>{live=false;};},[baked,item.id]);
+ return baked?(pic?<img src={pic} alt={`${item.option.label} ball`} data-ball-picture="" draggable={false}/>:null):<StorePreview item={item} src={src}/>;
+}

@@ -18,11 +18,13 @@ import {StorePreview,useStorePreviews} from './StorePreviews';
 import {STORE_ITEMS,type StoreCategory} from '@/lib/town/store';
 import {isVendingOwned} from '@/lib/town/vendingWallet';
 import dynamic from 'next/dynamic';
-import Backpack from './Backpack';
 import {ensureStarterKit} from '@/lib/town/backpackStore';
 import {showCardInBinder} from '@/lib/town/cardRewardStore';
 import type {PlayerBookId} from '@/lib/books/catalog';
 const PlayerPopUpBook=dynamic(()=>import('./PlayerPopUpBook'),{ssr:false});
+// Lazy-load pass (Oct 7 2026, docs/performance-guide.md): the Backpack tab (cards, Konbini collection, food art) loads when the
+// customizer opens, while the child is still on the Look tab, so this dialog's own chunk stays small enough to warm on idle.
+const Backpack=dynamic(()=>import('./Backpack'),{ssr:false});
 type Props={open:boolean;onOpenChange:(open:boolean)=>void;value:CharacterCustomization;onChange:(value:CharacterCustomization)=>void;completedQuizCount:number;totalQuizCount:number;onEquipRide?:(mode:TravelMode)=>void};
 const labels:Record<CustomizationKey,string>={costume:'Island costume',character:'Your character',face:'Face',body:'Body',clothing:'Kit',ball:'Dribbling ball',scooter:'Scooters',bike:'Bikes',moped:'Mopeds',jetpack:'Flight',bodyColor:'Body colour',skinTone:'Skin',eyes:'Eyes',mouth:'Mouth',hair:'Hair',hairColor:'Hair colour',build:'Build',headwear:'Headwear',headwearColor:'Headwear colour'};
 /** Rarely used fine-tuning, tucked behind More, in two-column order (Build | Headwear, Headwear colour | Body colour, Eyes | Mouth). */
@@ -59,7 +61,7 @@ export default function CharacterCustomizer({open,onOpenChange,value,onChange,co
  const [previewCategory,setPreviewCategory]=useState<StoreCategory>('ball');
  // The preview's move; the Skills showcase (0) plays each time Make it yours opens.
  const [moveIndex,setMoveIndex]=useState(0);
- useEffect(()=>{if(open){setMoveIndex(0);setView('look');}},[open]);
+ useEffect(()=>{if(open){setMoveIndex(0);setView('look');void import('./Backpack');}},[open]);
  // Look | Backpack (user, Sep 28 2026). The backpack is a view of what the player owns (lib/town/backpack.ts); the starter kit is
  // granted once per save when the island first loads (this component mounts with the island).
  const [view,setView]=useState<'look'|'backpack'>('look');

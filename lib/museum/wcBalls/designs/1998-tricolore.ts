@@ -255,7 +255,7 @@ Surf design(vec3 p){
 `;
 
 export const decals:Decal[]=[
- {src:'/museum/wcballs/decals/1998-tricolore-1.png',dir:[-0.0268,0.5236,0.8515],up:[0.0190,-0.8514,0.5241],w:0.258,h:0.105,credit:"1998 - Tricolore (France) (Wikimedia Commons, Shine 2010, CC BY 2.0)"},
- {src:'/museum/wcballs/decals/1998-tricolore-2.png',dir:[0.5071,0.8617,0.0195],up:[0.3590,-0.2317,0.9041],w:0.225,h:0.198,credit:"1998 - Tricolore (France) (Wikimedia Commons, Shine 2010, CC BY 2.0)"},
- {src:'/museum/wcballs/decals/1998-tricolore-3.png',dir:[-0.5116,0.8591,-0.0136],up:[-0.1719,-0.0868,0.9813],w:0.246,h:0.176,credit:"1998 - Tricolore (France) (Wikimedia Commons, Shine 2010, CC BY 2.0)"}
+ {src:'/museum/wcballs/decals/1998-tricolore-1.webp',dir:[-0.0268,0.5236,0.8515],up:[0.0190,-0.8514,0.5241],w:0.258,h:0.105,credit:"1998 - Tricolore (France) (Wikimedia Commons, Shine 2010, CC BY 2.0)"},
+ {src:'/museum/wcballs/decals/1998-tricolore-2.webp',dir:[0.5071,0.8617,0.0195],up:[0.3590,-0.2317,0.9041],w:0.225,h:0.198,credit:"1998 - Tricolore (France) (Wikimedia Commons, Shine 2010, CC BY 2.0)"},
+ {src:'/museum/wcballs/decals/1998-tricolore-3.webp',dir:[-0.5116,0.8591,-0.0136],up:[-0.1719,-0.0868,0.9813],w:0.246,h:0.176,credit:"1998 - Tricolore (France) (Wikimedia Commons, Shine 2010, CC BY 2.0)"}
 ];

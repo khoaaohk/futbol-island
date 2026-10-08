@@ -140,7 +140,7 @@ const PHOTO="Trionda.jpg (Wikimedia Commons, User34790, CC BY-SA 4.0)";
  *  blue one, TRIONDA on the green one). The adidas Badge of Sport and the TRIONDA wordmark are redrawn as clean vectors
  *  (bar and letter proportions matched to the photo); the 26 emblem is cut from the photo. */
 export const decals:Decal[]=[
- {src:'/museum/wcballs/decals/2026-trionda-1.png',dir:[-0.3827,-0.9098,-0.1608],up:[0.8764,-0.4126,0.2482],w:.34,h:.182,gloss:.6,credit:'adidas Badge of Sport, redrawn after '+PHOTO},
- {src:'/museum/wcballs/decals/2026-trionda-2.png',dir:[0.0557,-0.3597,-0.9314],up:[0.6182,-0.7201,0.3151],w:.25,h:.35,gloss:.6,credit:'FIFA World Cup 26 emblem, cut from '+PHOTO},
- {src:'/museum/wcballs/decals/2026-trionda-3.png',dir:[-0.8109,-0.1526,-0.565],up:[0.5846,-0.1669,-0.794],w:.25,h:.042,gloss:.6,credit:'TRIONDA wordmark, set after '+PHOTO},
+ {src:'/museum/wcballs/decals/2026-trionda-1.webp',dir:[-0.3827,-0.9098,-0.1608],up:[0.8764,-0.4126,0.2482],w:.34,h:.182,gloss:.6,credit:'adidas Badge of Sport, redrawn after '+PHOTO},
+ {src:'/museum/wcballs/decals/2026-trionda-2.webp',dir:[0.0557,-0.3597,-0.9314],up:[0.6182,-0.7201,0.3151],w:.25,h:.35,gloss:.6,credit:'FIFA World Cup 26 emblem, cut from '+PHOTO},
+ {src:'/museum/wcballs/decals/2026-trionda-3.webp',dir:[-0.8109,-0.1526,-0.565],up:[0.5846,-0.1669,-0.794],w:.25,h:.042,gloss:.6,credit:'TRIONDA wordmark, set after '+PHOTO},
 ];

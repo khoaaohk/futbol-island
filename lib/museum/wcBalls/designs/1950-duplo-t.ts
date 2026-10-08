@@ -59,4 +59,4 @@ Surf design(vec3 p){
  return Surf(col,g,0.2200+.06*gr);}
 `;
 
-export const decals:Decal[]=[{"src":"/museum/wcballs/decals/1950-duplo-t-1.png","dir":[0.4663,0.346,0.8141],"up":[-0.1091,0.9358,-0.3352],"w":0.66,"h":0.6,"gloss":0.1,"credit":"Wikimedia Commons, File:Duplo T-1950.jpg (MDBR), CC BY-SA 3.0"}];
+export const decals:Decal[]=[{"src":"/museum/wcballs/decals/1950-duplo-t-1.webp","dir":[0.4663,0.346,0.8141],"up":[-0.1091,0.9358,-0.3352],"w":0.66,"h":0.6,"gloss":0.1,"credit":"Wikimedia Commons, File:Duplo T-1950.jpg (MDBR), CC BY-SA 3.0"}];

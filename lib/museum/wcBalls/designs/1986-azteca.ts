@@ -164,7 +164,7 @@ Surf design(vec3 p){
 `;
 
 export const decals:Decal[]=[
- {src:'/museum/wcballs/decals/1986-azteca-1.png',dir:[-0.0029,0.5486,0.8361],up:[-0.0516,-0.8351,0.5477],w:0.260,h:0.165,credit:"Exposici\u00f3n \u201c\u00bfDe qu\u00e9 color pinta el verde?\u201d - El Colegio Nacional - 09 (Wikimedia Commons, ProtoplasmaKid, CC BY 4.0)"},
- {src:'/museum/wcballs/decals/1986-azteca-2.png',dir:[0.5010,0.8635,0.0582],up:[0.3471,-0.2621,0.9004],w:0.295,h:0.220,credit:"Exposici\u00f3n \u201c\u00bfDe qu\u00e9 color pinta el verde?\u201d - El Colegio Nacional - 10 (Wikimedia Commons, ProtoplasmaKid, CC BY 4.0)"},
- {src:'/museum/wcballs/decals/1986-azteca-3.png',dir:[-0.4817,0.8762,0.0148],up:[-0.4438,-0.2585,0.8580],w:0.257,h:0.223,credit:"1986 - Azteca (Mexico) (Wikimedia Commons, Shine 2010, CC BY 2.0); trefoil shape, printed black as on the match ball"}
+ {src:'/museum/wcballs/decals/1986-azteca-1.webp',dir:[-0.0029,0.5486,0.8361],up:[-0.0516,-0.8351,0.5477],w:0.260,h:0.165,credit:"Exposici\u00f3n \u201c\u00bfDe qu\u00e9 color pinta el verde?\u201d - El Colegio Nacional - 09 (Wikimedia Commons, ProtoplasmaKid, CC BY 4.0)"},
+ {src:'/museum/wcballs/decals/1986-azteca-2.webp',dir:[0.5010,0.8635,0.0582],up:[0.3471,-0.2621,0.9004],w:0.295,h:0.220,credit:"Exposici\u00f3n \u201c\u00bfDe qu\u00e9 color pinta el verde?\u201d - El Colegio Nacional - 10 (Wikimedia Commons, ProtoplasmaKid, CC BY 4.0)"},
+ {src:'/museum/wcballs/decals/1986-azteca-3.webp',dir:[-0.4817,0.8762,0.0148],up:[-0.4438,-0.2585,0.8580],w:0.257,h:0.223,credit:"1986 - Azteca (Mexico) (Wikimedia Commons, Shine 2010, CC BY 2.0); trefoil shape, printed black as on the match ball"}
 ];

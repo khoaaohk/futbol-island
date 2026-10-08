@@ -59,6 +59,6 @@ Surf design(vec3 p){
  return Surf(col,g,0.2400+.06*gr);}
 `;
 
-export const decals:Decal[]=[{"src":"/museum/wcballs/decals/1958-top-star-1.png","dir":[0.5038,0.3352,0.7961],"up":[-0.1032,0.9384,-0.3299],"w":0.93,"h":0.66,"gloss":0.1,"credit":"Wikimedia Commons, File:Top Star-1958.jpg (MDBR), CC BY-SA 3.0"},
- {"src":"/museum/wcballs/decals/1958-top-star-2.png","dir":[-0.2334,0.9315,0.2789],"up":[0.0799,0.3042,-0.9492],"w":0.22,"h":0.18,"gloss":0.1,"credit":"Wikimedia Commons, File:Top Star-1958.jpg (MDBR), CC BY-SA 3.0"},
- {"src":"/museum/wcballs/decals/1958-top-star-3.png","dir":[0.5497,0.8173,-0.1729],"up":[-0.8056,0.4638,-0.3687],"w":0.22,"h":0.2,"gloss":0.1,"credit":"Wikimedia Commons, File:Top Star-1958.jpg (MDBR), CC BY-SA 3.0"}];
+export const decals:Decal[]=[{"src":"/museum/wcballs/decals/1958-top-star-1.webp","dir":[0.5038,0.3352,0.7961],"up":[-0.1032,0.9384,-0.3299],"w":0.93,"h":0.66,"gloss":0.1,"credit":"Wikimedia Commons, File:Top Star-1958.jpg (MDBR), CC BY-SA 3.0"},
+ {"src":"/museum/wcballs/decals/1958-top-star-2.webp","dir":[-0.2334,0.9315,0.2789],"up":[0.0799,0.3042,-0.9492],"w":0.22,"h":0.18,"gloss":0.1,"credit":"Wikimedia Commons, File:Top Star-1958.jpg (MDBR), CC BY-SA 3.0"},
+ {"src":"/museum/wcballs/decals/1958-top-star-3.webp","dir":[0.5497,0.8173,-0.1729],"up":[-0.8056,0.4638,-0.3687],"w":0.22,"h":0.2,"gloss":0.1,"credit":"Wikimedia Commons, File:Top Star-1958.jpg (MDBR), CC BY-SA 3.0"}];

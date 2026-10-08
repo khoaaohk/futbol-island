@@ -246,7 +246,7 @@ Surf design(vec3 p){
 `;
 
 export const decals:Decal[]=[
- {src:'/museum/wcballs/decals/1990-etrusco-unico-1.png',dir:[-0.0184,0.5049,0.8630],up:[-0.0295,-0.8630,0.5043],w:0.311,h:0.216,credit:"World Cup 1990 & Euro 1992 ball (Wikimedia Commons, CC BY-SA 4.0); this crop CC BY-SA 4.0"},
- {src:'/museum/wcballs/decals/1990-etrusco-unico-2.png',dir:[0.5474,0.8362,-0.0335],up:[0.1294,-0.0450,0.9906],w:0.261,h:0.233,credit:"Exposici\u00f3n \u201c\u00bfDe qu\u00e9 color pinta el verde?\u201d - El Colegio Nacional - 12 (Wikimedia Commons, ProtoplasmaKid, CC BY 4.0)"},
- {src:'/museum/wcballs/decals/1990-etrusco-unico-3.png',dir:[-0.5413,0.8408,0.0051],up:[-0.0831,-0.0595,0.9948],w:0.248,h:0.287,credit:"Exposici\u00f3n \u201c\u00bfDe qu\u00e9 color pinta el verde?\u201d - El Colegio Nacional - 12 (Wikimedia Commons, ProtoplasmaKid, CC BY 4.0)"}
+ {src:'/museum/wcballs/decals/1990-etrusco-unico-1.webp',dir:[-0.0184,0.5049,0.8630],up:[-0.0295,-0.8630,0.5043],w:0.311,h:0.216,credit:"World Cup 1990 & Euro 1992 ball (Wikimedia Commons, CC BY-SA 4.0); this crop CC BY-SA 4.0"},
+ {src:'/museum/wcballs/decals/1990-etrusco-unico-2.webp',dir:[0.5474,0.8362,-0.0335],up:[0.1294,-0.0450,0.9906],w:0.261,h:0.233,credit:"Exposici\u00f3n \u201c\u00bfDe qu\u00e9 color pinta el verde?\u201d - El Colegio Nacional - 12 (Wikimedia Commons, ProtoplasmaKid, CC BY 4.0)"},
+ {src:'/museum/wcballs/decals/1990-etrusco-unico-3.webp',dir:[-0.5413,0.8408,0.0051],up:[-0.0831,-0.0595,0.9948],w:0.248,h:0.287,credit:"Exposici\u00f3n \u201c\u00bfDe qu\u00e9 color pinta el verde?\u201d - El Colegio Nacional - 12 (Wikimedia Commons, ProtoplasmaKid, CC BY 4.0)"}
 ];

@@ -13,8 +13,13 @@
 @media(prefers-reduced-motion:reduce){.layer,:global([data-active]) .layer{transition:none;transform:none}}
 /* Riso-printed photo portrait: cream paper oval, a flag-colour halftone and a deep-green ink pass,
    slightly misregistered like a real two-drum riso print. Masks come from scripts/fetch-player-photos.py. */
-.riso{left:6%;right:6%;top:4%;bottom:0;width:auto;height:auto}
-.riso>span{position:absolute;inset:0;-webkit-mask-size:contain;mask-size:contain;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:center bottom;mask-position:center bottom}
+.riso{left:6%;right:6%;top:4%;bottom:0;width:auto;height:auto;container-type:size}
+.riso>span{position:absolute;inset:0}
+/* Packed masks (Oct 7 2026, scripts/player_masks.py): <slug>.webp holds ink (left half) and tone (right half). Each layer's box
+   is the rectangle the old single 4:5 mask filled (contained, centre bottom; cq units of this box), and the mask spans twice
+   its width, so the half shown lands where the old file did (pixel compare: docs/performance-guide.md, Oct 7 2026). */
+.riso>.tone,.riso>.ink{inset:auto auto 0 calc(50cqw - min(40cqh,50cqw));width:min(80cqh,100cqw);height:min(100cqh,125cqw);-webkit-mask-size:200% 100%;mask-size:200% 100%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:0 0;mask-position:0 0}
+.riso>.tone{-webkit-mask-position:100% 0;mask-position:100% 0}
 .paper{inset:6% 8% 0!important;border-radius:50% 50% 18% 18%/42% 42% 12% 12%;background:#fff1d3 url('/stories/films/assets/entry-grain.png') repeat;background-size:128px 128px;box-shadow:0 6px 0 #183b3430}
 .tone{mix-blend-mode:multiply;transform:translate(2px,1px)}
 .ink{background:#1f3d36;mix-blend-mode:multiply}
@@ -73,12 +78,16 @@
 /* Fill mode (MiniCard's picture window, no photo): the same coast backdrop + paper arch + portrait box as the photo cards. */
 .fill{position:absolute;inset:0;display:block;overflow:hidden;isolation:isolate}
 .fillBackdrop{position:absolute;inset:0;display:block;width:100%;height:100%}
-.fillPortrait{position:absolute;left:4%;right:4%;top:6%;bottom:0;z-index:1}
+.fillPortrait{position:absolute;left:4%;right:4%;top:6%;bottom:0;z-index:1;container-type:size}
 .fillPaper{position:absolute;inset:10% 14% 0;border-radius:50% 50% 18% 18%/42% 42% 12% 12%;background:#fff1d3 url('/stories/films/assets/entry-grain.png') 0 0/128px 128px;box-shadow:0 .4em 0 #183b3430}
-.maskPart{position:absolute;inset:0;-webkit-mask-size:contain;mask-size:contain;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:center bottom;mask-position:center bottom}
+/* The packed mask's half on the old contain rectangle (as .riso above). */
+.maskPart{position:absolute;inset:auto auto 0 calc(50cqw - min(40cqh,50cqw));width:min(80cqh,100cqw);height:min(100cqh,125cqw);-webkit-mask-size:200% 100%;mask-size:200% 100%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:0 0;mask-position:0 0}
+.maskPart.tone{-webkit-mask-position:100% 0;mask-position:100% 0}
 /* Thumbnail mode (PlayerThumb's size): flag bands, paper arch, head and shoulders zoomed like the photo thumbs (128%, top). */
 .thumb{position:relative;display:block;flex:none;overflow:hidden;border-radius:26%;isolation:isolate;box-shadow:inset 0 0 0 2px #183b3424}
 .thumbPaper{position:absolute;left:9%;right:9%;top:7%;bottom:-6%;border-radius:50% 50% 16% 16%/44% 44% 10% 10%;background:#fff1d3}
-.thumbMask{position:absolute;inset:0;-webkit-mask-size:128% auto;mask-size:128% auto;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:50% 0;mask-position:50% 0}
+/* The packed mask's half on the old `128% auto, 50% 0` rectangle: 128% wide, centred, from the top, 4:5. */
+.thumbMask{position:absolute;inset:0 auto auto -14%;width:128%;height:auto;aspect-ratio:4/5;-webkit-mask-size:200% 100%;mask-size:200% 100%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:0 0;mask-position:0 0}
+.thumbMask.thumbTone{-webkit-mask-position:100% 0;mask-position:100% 0}
 .print.thumbPrint{inset:0 auto auto -14%;width:128%;height:auto;aspect-ratio:4/5}
 .thumbTone{mix-blend-mode:multiply;opacity:.72}

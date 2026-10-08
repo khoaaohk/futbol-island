@@ -15,8 +15,8 @@ Surf design(vec3 p){
 `;
 
 export const decals:Decal[]=[
- {src:'/museum/wcballs/decals/1974-telstar-durlast-1.png',dir:[-0.0860,0.9329,0.3498],up:[0.0636,0.3555,-0.9325],w:0.298,h:0.169,credit:"Fifaworldcup1974.JPG (Wikimedia Commons, Florian K, CC BY-SA 2.5); this crop CC BY-SA 2.5"},
- {src:'/museum/wcballs/decals/1974-telstar-durlast-2.png',dir:[0.5379,0.6306,0.5595],up:[-0.0126,0.6696,-0.7426],w:0.282,h:0.274,credit:"Fifaworldcup1974.JPG (Wikimedia Commons, Florian K, CC BY-SA 2.5); this crop CC BY-SA 2.5"},
- {src:'/museum/wcballs/decals/1974-telstar-durlast-2.png',dir:[-0.5379,0.6306,0.5595],up:[0.0126,0.6696,-0.7426],w:0.282,h:0.274,credit:"Fifaworldcup1974.JPG (Wikimedia Commons, Florian K, CC BY-SA 2.5); this crop CC BY-SA 2.5"},
- {src:'/museum/wcballs/decals/1974-telstar-durlast-3.png',dir:[0.1058,-0.0447,0.9934],up:[-0.1450,0.9876,0.0599],w:0.593,h:0.219,credit:"Fifaworldcup1974.JPG (Wikimedia Commons, Florian K, CC BY-SA 2.5); this crop CC BY-SA 2.5"}
+ {src:'/museum/wcballs/decals/1974-telstar-durlast-1.webp',dir:[-0.0860,0.9329,0.3498],up:[0.0636,0.3555,-0.9325],w:0.298,h:0.169,credit:"Fifaworldcup1974.JPG (Wikimedia Commons, Florian K, CC BY-SA 2.5); this crop CC BY-SA 2.5"},
+ {src:'/museum/wcballs/decals/1974-telstar-durlast-2.webp',dir:[0.5379,0.6306,0.5595],up:[-0.0126,0.6696,-0.7426],w:0.282,h:0.274,credit:"Fifaworldcup1974.JPG (Wikimedia Commons, Florian K, CC BY-SA 2.5); this crop CC BY-SA 2.5"},
+ {src:'/museum/wcballs/decals/1974-telstar-durlast-2.webp',dir:[-0.5379,0.6306,0.5595],up:[0.0126,0.6696,-0.7426],w:0.282,h:0.274,credit:"Fifaworldcup1974.JPG (Wikimedia Commons, Florian K, CC BY-SA 2.5); this crop CC BY-SA 2.5"},
+ {src:'/museum/wcballs/decals/1974-telstar-durlast-3.webp',dir:[0.1058,-0.0447,0.9934],up:[-0.1450,0.9876,0.0599],w:0.593,h:0.219,credit:"Fifaworldcup1974.JPG (Wikimedia Commons, Florian K, CC BY-SA 2.5); this crop CC BY-SA 2.5"}
 ];

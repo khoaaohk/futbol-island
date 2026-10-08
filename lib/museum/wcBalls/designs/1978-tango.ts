@@ -56,7 +56,7 @@ Surf design(vec3 p){
 `;
 
 export const decals:Decal[]=[
- {src:'/museum/wcballs/decals/1978-tango-1.png',dir:[0.0252,0.5299,0.8477],up:[-0.0160,-0.8476,0.5303],w:0.261,h:0.147,credit:"Adidas Tango Argentina (River Plate) 1978 cup Official ball (Wikimedia Commons, Zac allan, public domain)"},
- {src:'/museum/wcballs/decals/1978-tango-2.png',dir:[0.5233,0.8515,0.0329],up:[0.1402,-0.1241,0.9823],w:0.233,h:0.216,credit:"1978 - Tango (Argentina) (4171468378).jpg (Wikimedia Commons, Shine 2010, CC BY 2.0)"},
- {src:'/museum/wcballs/decals/1978-tango-3.png',dir:[-0.4311,0.8989,0.0782],up:[-0.1148,-0.1406,0.9833],w:0.298,h:0.144,credit:"1978 TangoDurlast.jpg (Wikimedia Commons, Chong Fat, public domain)"}
+ {src:'/museum/wcballs/decals/1978-tango-1.webp',dir:[0.0252,0.5299,0.8477],up:[-0.0160,-0.8476,0.5303],w:0.261,h:0.147,credit:"Adidas Tango Argentina (River Plate) 1978 cup Official ball (Wikimedia Commons, Zac allan, public domain)"},
+ {src:'/museum/wcballs/decals/1978-tango-2.webp',dir:[0.5233,0.8515,0.0329],up:[0.1402,-0.1241,0.9823],w:0.233,h:0.216,credit:"1978 - Tango (Argentina) (4171468378).jpg (Wikimedia Commons, Shine 2010, CC BY 2.0)"},
+ {src:'/museum/wcballs/decals/1978-tango-3.webp',dir:[-0.4311,0.8989,0.0782],up:[-0.1148,-0.1406,0.9833],w:0.298,h:0.144,credit:"1978 TangoDurlast.jpg (Wikimedia Commons, Chong Fat, public domain)"}
 ];

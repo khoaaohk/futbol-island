@@ -339,5 +339,5 @@ Surf design(vec3 p){
 `;
 
 export const decals:Decal[]=[
- {src:'/museum/wcballs/decals/2002-fevernova-1.png',dir:[0.5733,0.5779,0.5808],up:[-0.7589,0.1072,0.6424],w:0.218,h:0.162,credit:"Deutsches Fu\u00dfballmuseum 2015 2-Fevernova (Wikimedia Commons, Nicola, CC BY-SA 4.0); this crop CC BY-SA 4.0"}
+ {src:'/museum/wcballs/decals/2002-fevernova-1.webp',dir:[0.5733,0.5779,0.5808],up:[-0.7589,0.1072,0.6424],w:0.218,h:0.162,credit:"Deutsches Fu\u00dfballmuseum 2015 2-Fevernova (Wikimedia Commons, Nicola, CC BY-SA 4.0); this crop CC BY-SA 4.0"}
 ];

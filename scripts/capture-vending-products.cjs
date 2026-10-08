@@ -3,6 +3,7 @@
 //   StorePreview snapshots (components/StorePreviews.tsx), i.e. the real in-game ball: same sphere, skin
 //   (lib/graphics/ballAppearance.ts + specialBallSkins.ts), material and lights. Cropped to the ball and its contact shadow so the atlas slot stays tiny.
 //   Keyed by ball, not by machine, so every machine selling a ball shows the same picture. Re-run after changing a ball skin.
+//   Then scripts/pack-vending-atlas.py packs them into the one WebP atlas the game loads (lib/graphics/vendingBallAtlas.json).
 // - public/vending/products/pack.png: the mystery-pack card back.
 // usage (dev server on :8092): node scripts/capture-vending-products.cjs [--pack | --pack-only]
 //   The pack picture is taken at 2× once the card back has painted (Sep 29 2026: the old 41×57 capture was a blurry green tile
@@ -29,5 +30,7 @@ const out=path.join(__dirname,'..','public/vending/products');
    result[id]=dst.toDataURL('image/png');}
   return result;});
  for(const [id,url] of Object.entries(balls)){fs.writeFileSync(path.join(out,`ball-${id.slice(5)}.png`),Buffer.from(url.split(',')[1],'base64'));console.log(id);}
+ // Oct 7 2026: the game draws the balls from one lossless atlas (lib/graphics/vendingBallAtlas.json); rebuild it from these PNGs.
+ if(Object.keys(balls).length)require('child_process').execFileSync('python3',[path.join(__dirname,'pack-vending-atlas.py')],{stdio:'inherit'});
  if(process.argv.includes('--pack')||packOnly){const card=p.locator('[data-vending-item^="pack:"]').first().locator('[class*=packCard]');await card.waitFor();await p.evaluate(()=>document.fonts.ready);await p.waitForTimeout(600);await card.screenshot({path:path.join(out,'pack.png'),omitBackground:true});console.log('pack');}
  await b.close();})().catch(e=>{console.error(e);process.exit(1)});

@@ -1,10 +1,39 @@
 import {vendingItem} from '../town/vendingCatalog';
 import {BALL_COLORS} from '../town/customization';
-/** Balls with a baked picture at public/vending/products/ball-<style>.png: the real in-game ball (skin + patches) rendered by
- * the shop snapshot renderer and trimmed (scripts/capture-vending-products.cjs; re-run it after changing a ball skin). Keyed by
- * ball, so every machine selling a ball shows the same picture. A ball missing here falls back to drawVendingProduct (no 404). */
-export const BAKED_BALL_PICTURES:readonly string[]=['classic','sunset','neon','frost','solar','cosmic','telstar','futsal','grassroots','hivis','eleven','beach','retro','panna'];
-export function vendingBallPicture(id:string):string|null{const style=id.startsWith('ball:')?id.slice(5):'';return BAKED_BALL_PICTURES.includes(style)?`/vending/products/ball-${style}.png`:null;}
+import {mediaUrl} from '../media/mediaUrl';
+import ballAtlas from './vendingBallAtlas.json';
+/** Balls with a baked picture: the real in-game ball (skin + patches) rendered by the shop snapshot renderer and trimmed
+ * (scripts/capture-vending-products.cjs writes public/vending/products/ball-<style>.png; re-run it after changing a ball skin, then
+ * scripts/pack-vending-atlas.py). Since Oct 7 2026 the pictures ship as ONE lossless WebP atlas (lib/graphics/vendingBallAtlas.json:
+ * the file and each ball's [x, y, w, h]), so island boot makes one request instead of one per ball. Keyed by ball, so every
+ * machine selling a ball shows the same picture. A ball missing here falls back to drawVendingProduct (no 404). */
+type BallAtlas={src:string;w:number;h:number;rects:Record<string,[number,number,number,number]>};
+const ATLAS=ballAtlas as unknown as BallAtlas;
+export const BAKED_BALL_PICTURES:readonly string[]=Object.keys(ATLAS.rects);
+/** One ball's picture: the atlas URL and its cell. Draw it with drawImage(img, x, y, w, h, dx, dy, dw, dh); the cell has a 2 px
+ *  edge-repeating gutter, so filtering at its edges matches drawing the old single PNG. */
+export type BallSprite={src:string;x:number;y:number;w:number;h:number};
+export function vendingBallPicture(id:string):BallSprite|null{
+ const style=id.startsWith('ball:')?id.slice(5):'',r=Object.prototype.hasOwnProperty.call(ATLAS.rects,style)?ATLAS.rects[style]:null;
+ return r?{src:mediaUrl(ATLAS.src),x:r[0],y:r[1],w:r[2],h:r[3]}:null;
+}
+/** The atlas image, loaded once per page (shared with lib/graphics/vendingMachines.ts' picture cache by URL through the HTTP cache). */
+let atlasImage:Promise<HTMLImageElement>|null=null;
+const loadAtlas=()=>atlasImage??=new Promise<HTMLImageElement>((ok,fail)=>{const img=new Image();img.decoding='async';img.onload=()=>ok(img);img.onerror=()=>{atlasImage=null;fail(new Error('vending ball atlas failed'));};img.src=mediaUrl(ATLAS.src);});
+const cropped=new Map<string,string>(),cropping=new Map<string,Promise<string|null>>();
+/** An <img>-ready URL for a ball's picture (BallPicture: the vending face, its tray, the backpack): the atlas cell copied 1:1 into
+ *  a PNG blob, so the element has the same natural size and pixels as the old ball-<style>.png. Sync when already made. */
+export function ballPictureUrlNow(id:string):string|null{return cropped.get(id)??null;}
+export function ballPictureUrl(id:string):Promise<string|null>{
+ const hit=cropped.get(id);if(hit)return Promise.resolve(hit);
+ const sprite=vendingBallPicture(id);if(!sprite||typeof document==='undefined')return Promise.resolve(null);
+ let job=cropping.get(id);
+ if(!job){job=loadAtlas().then(img=>new Promise<string|null>(done=>{const c=document.createElement('canvas');c.width=sprite.w;c.height=sprite.h;
+   c.getContext('2d')!.drawImage(img,sprite.x,sprite.y,sprite.w,sprite.h,0,0,sprite.w,sprite.h);
+   c.toBlob(blob=>{if(!blob){done(null);return;}const url=URL.createObjectURL(blob);cropped.set(id,url);done(url);},'image/png');}),()=>null);
+  cropping.set(id,job);void job.then(url=>{if(!url)cropping.delete(id);});}
+ return job;
+}
 /** Original product miniatures, shared by the world atlas and the interactive face. */
 export function drawVendingProduct(c:CanvasRenderingContext2D,id:string,kind:string,x:number,y:number,s:number,shadow=true){
  c.save();c.translate(x,y);

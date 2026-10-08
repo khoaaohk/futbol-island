@@ -1,7 +1,7 @@
 import {FOOD_MENU} from './food';
 import {Iso,rng,tone,softShadow,steam,sheen,ngon,lerp3,TAU,type C,type V3,type P2,type Rng} from './isoArt';
 import {drinkRevealLayers,drinkShadow} from '../graphics/drinkArt';
-import type {DrinkArt} from '../town/drinkMachines';
+import {DRINKS,type DrinkArt} from '../town/drinkMachines';
 /**
  * Layered isometric art for every Konbini food and drink (user, Sep 29 2026: "The Konbini items need better graphics, at an
  * angle to see more depth. Also add more details."). Chunky voxel / low-poly food in a true 30° iso view with 3-tone face
@@ -357,3 +357,8 @@ export function foodBitmap(id:string,px:number):HTMLCanvasElement|null{
  const cv=document.createElement('canvas');cv.width=cv.height=px;const c=cv.getContext('2d');if(!c)return null;c.scale(px/64,px/64);drawFood(c,id,32,34);
  bitmaps.set(key,cv);while(bitmaps.size>FOOD_BITMAP_CACHE){const first=bitmaps.keys().next().value as string;bitmaps.delete(first);}return cv;
 }
+
+// The drink machines' drinks (lib/town/drinkMachines.ts) get their reveal layers here, wherever this module loads (the Backpack pouch,
+// the Konbini Collection). Lazy-load pass, Oct 7 2026: drinkMachines.ts used to import this module to register them, which put all
+// of the Konbini food art in the island's boot bundle.
+for(const d of DRINKS)registerFoodLayers(d.id,drinkRevealLayers(d.art),drinkCellShadow(d.art));

@@ -56,7 +56,7 @@ for(const n of coaches){
  assert.ok(LOOKS[n]&&LOOKS[n].country,`${n} appearance + country`);
  const t=TIERS.cards[n];assert.ok(t&&Number.isInteger(t.demand)&&t.why.length>10,`${n} tier entry`);
  if(PHOTOS[n]){const ph=PHOTOS[n];assert.ok(/^CC0|^CC BY|^Public domain|^Attribution/i.test(ph.license),`${n} photo licence ${ph.license}`);assert.ok(ph.file.startsWith('https://commons.wikimedia.org/'),`${n} photo is on Commons`);
-  for(const layer of ['ink','tone'])assert.ok(fs.existsSync(path.join(root,'public/players',`${ph.slug}-${layer}.webp`)),`${n} ${layer} mask`);}
+  assert.ok(fs.existsSync(path.join(root,'public/players',`${ph.slug}.webp`)),`${n} packed ink+tone mask`);}
 }
 assert.ok(allTime.filter(n=>CAREERS[n].clubs.every(s=>s.to!==null)).length>=20,'most all-time greats have finished coaching');
 for(const n of ['Sarina Wiegman','Emma Hayes'])assert.ok(current.includes(n),`${n} is a current coach`);

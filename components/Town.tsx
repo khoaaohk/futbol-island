@@ -28,7 +28,6 @@ import {createIslandSound} from '@/lib/audio/islandSound';
 import {stopIslandNarration} from '@/lib/audio/islandNarration';
 import {createIslandMusic} from '@/lib/audio/islandMusic';
 import * as T from 'three';
-import CoachLesson from './CoachLesson';
 import TravelIcon from './TravelIcon';
 import {createSpinGesture} from '@/lib/town/spinGesture';
 import {tapHaptic} from '@/lib/town/haptics';
@@ -45,8 +44,6 @@ import {sweepGoalFrame,type FrameHit} from '@/lib/town/goalCollisions';
 import IslandSettingsHost from './IslandSettings';
 import IslandLoading from './IslandLoading';
 import IslandReturnLoading from './IslandReturnLoading';
-import CharacterCustomizerHost from './CharacterCustomizer';
-import VendingMachine from './VendingMachine';
 import {isDrinkMachine} from '@/lib/town/drinkMachines';
 import {createVendingMachines,type VendingMachines} from '@/lib/graphics/vendingMachines';
 import {readArcadeWallet} from '@/lib/arcade/arcadeWallet';
@@ -58,11 +55,12 @@ const SQUARE_VENDING_ARRIVAL=(m=>m?{x:m.x+Math.sin(m.yaw)*2,z:m.z+Math.cos(m.yaw
 import {isVendingPreview,testCoinsRequested} from '@/lib/town/vendingPreview';
 import {grantTestingCoins} from '@/lib/arcade/arcadeWallet';
 import {enforceVendingOwnership} from '@/lib/town/vendingWallet';
-import CoachesCentreHost from './CoachesCentre';
 import {positionInfo,type PositionSelection} from '@/lib/town/playerPositions';
 import dynamic from 'next/dynamic';
 import {stableMemo} from '@/lib/ui/stableMemo';
-import IslandOnboardingHost from './IslandOnboarding';
+import {prefetchOnIdle,prefetchPart,prefetchWhenIdle} from '@/lib/ui/idlePrefetch';
+import {loadBottleLogo,loadCoaches,loadCoachLesson,loadConversation,loadCustomizer,loadFieldLearning,loadOnboarding,loadPathsPanel,loadVending} from './islandParts';
+import {ensureStarterKit} from '@/lib/town/backpackStore';
 import WelcomeBack from './WelcomeBack';
 import {shouldShowIslandOnboarding} from '@/lib/town/onboarding';
 import {LEARNING_LAUNCH} from '@/lib/town/learningProgress';
@@ -70,7 +68,6 @@ import {journeyById,type LearningId} from '@/lib/town/learningJourneys';
 import {recordExploreActivity,recordExploreKnockover,exploreActivityNow} from '@/lib/town/exploreActivity';
 import {createExploreZones} from '@/lib/town/exploreZones';
 import {recordQuestVisit} from '@/lib/town/questProgress';
-import NpcConversationHost from './NpcConversation';
 import {createIslandNpcs} from '@/lib/graphics/islandNpcs';
 import type {NpcDefinition} from '@/lib/town/npcDialogues';
 import {useQuizProgress,getQuizProgress} from '@/lib/town/quizProgress';
@@ -102,7 +99,6 @@ import FerryPreviewHost from './FerryPreview';
 import {createLiveKnockout} from '@/lib/graphics/liveKnockout';
 import {createRooftopTravel,ROOF_RECOVERY_TIME} from '@/lib/town/rooftopTravel';
 import {roofJumpMotion,applyRoofJumpPose} from '@/lib/town/rooftopJump';
-import FieldLearning from './FieldLearning';
 import {type MapFootprint} from './IslandOverview';
 import {VENUES,ISLAND_SQUARE,ARCADE_DOOR,COACHES_DOOR,venueById,venueEntrance,nearestVenue,fieldSurfaceHeight,liveHalfX,liveHalfZ,liveWorldX,liveWorldZ,liveFieldPoint,type Format} from '@/lib/town/venues';
 import {buildFormatFields} from '@/lib/town/fields';
@@ -176,7 +172,12 @@ import {placeAt} from '@/lib/analytics/islandPlaces';
 const PositionGuide=stableMemo(dynamic(()=>import('./PositionGuide'),{ssr:false}));
 // Heat (overnight audit F4): Town re-renders on its HUD tick; these dialog hosts (closed almost all the time) re-render only when a
 // data prop changes. Their inline callbacks reach them through stable wrappers (lib/ui/stableMemo.ts).
-const IslandSettings=stableMemo(IslandSettingsHost),CharacterCustomizer=stableMemo(CharacterCustomizerHost),CoachesCentre=stableMemo(CoachesCentreHost),IslandOnboarding=stableMemo(IslandOnboardingHost),NpcConversation=stableMemo(NpcConversationHost),Museum=stableMemo(MuseumHost),FerryPreview=stableMemo(FerryPreviewHost);
+const IslandSettings=stableMemo(IslandSettingsHost),Museum=stableMemo(MuseumHost),FerryPreview=stableMemo(FerryPreviewHost);
+// Lazy-load pass (Oct 7 2026, docs/performance-guide.md): these dialogs are not in the boot bundle. Each mounts the first time it
+// is wanted and then stays mounted (its own close animation and focus restore still run); its chunk is warmed beforehand by the
+// idle warm-up or by the HUD focus that offers it (components/islandParts.ts), so a first open does not wait on the network.
+const CharacterCustomizer=stableMemo(dynamic(()=>import('./CharacterCustomizer'),{ssr:false})),CoachesCentre=stableMemo(dynamic(()=>import('./CoachesCentre'),{ssr:false})),IslandOnboarding=stableMemo(dynamic(()=>import('./IslandOnboarding'),{ssr:false})),NpcConversation=stableMemo(dynamic(()=>import('./NpcConversation'),{ssr:false}));
+const VendingMachine=dynamic(()=>import('./VendingMachine'),{ssr:false}),FieldLearning=dynamic(()=>import('./FieldLearning'),{ssr:false}),CoachLesson=dynamic(()=>import('./CoachLesson'),{ssr:false});
 // The two outdoor drink machines (lib/town/drinkMachines.ts): same in-world machine, drink stock and the Konbini consumable flow.
 const DrinkMachine=dynamic(()=>import('./DrinkMachine'),{ssr:false});
 const INITIAL_SPAWN={x:103,z:-8};
@@ -228,6 +229,8 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
   // Mounted from the first selection on and kept mounted, so the guide's own close/focus-restore effect still runs.
   // It also mounts (closed) once its idle prefetch lands, so the first tap only fills an already-mounted dialog.
   const [guideWarm,setGuideWarm]=useState(false),guideMounted=useRef(false);if(positionSelection||guideWarm)guideMounted.current=true;
+  // Lazy dialogs (components/islandParts.ts) mount the first time they are wanted and then stay mounted, like the guide.
+  const lazyMounted=useRef<Record<string,true>>({});const mountWhen=(part:string,wanted:boolean)=>wanted?(lazyMounted.current[part]=true):lazyMounted.current[part]===true;
   /** Opens a vending machine: the given one, or the nearest. The camera zooms straight onto its face (vendingMachines.ts), then the machine face itself is the UI (VendingMachine.tsx). */
   const openVending=(id?:VendingMachineId,itemId?:string)=>{const p=positionStore.getSnapshot(),m=(id&&vendingMachine(id))||nearestVendingMachine(p.x,p.z),request=vendingItemFor(itemId);
     setStoreItemRequest(request?{id:request,nonce:Date.now()}:null);setSettingsOpen(false);setCustomizerOpen(false);setConversationOpen(false);setMap(false);setHint(false);setVendingId(m.id);
@@ -1272,7 +1275,13 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
   // the island is idle, and the binder's own chunk when the Paths menu opens, so a first card or binder opens without a parse stall.
   useEffect(()=>{if(!ready)return;const w=window as Window&{requestIdleCallback?:(cb:()=>void,o?:{timeout:number})=>number;cancelIdleCallback?:(id:number)=>void};
    const timer=setTimeout(()=>{const load=()=>{void import('./PositionGuide').then(()=>setGuideWarm(true),()=>{});};if(w.requestIdleCallback)w.requestIdleCallback(load,{timeout:4000});else load();},6000);return ()=>clearTimeout(timer);},[ready]);
-  useEffect(()=>{if(settingsOpen)void import('./CardCollection');},[settingsOpen]);
+  useEffect(()=>{if(settingsOpen){void import('./CardCollection');prefetchPart(loadFieldLearning);}},[settingsOpen]);
+  // Lazy-load pass (Oct 7 2026): the island's dialogs load on first use. One idle warm-up, 8 s after the island is interactive and
+  // only while the tab is visible, fetches the parts one tap away from anywhere (Paths, your character, a lesson, a chat); the HUD
+  // focus warms what the player is standing next to; a new player's welcome starts loading with the island.
+  useEffect(()=>{if(!ready||failed)return;ensureStarterKit();return prefetchOnIdle([loadPathsPanel,loadBottleLogo,loadCustomizer,loadFieldLearning,loadConversation,loadCoachLesson],8000);},[ready,failed]);
+  useEffect(()=>{if(!ready)return;if(hudFocus==='talk')prefetchWhenIdle(loadCoachLesson);const part=hudFocus==='talk'?loadConversation:hudFocus==='vending'?loadVending:hudFocus==='learn'?loadFieldLearning:hudFocus==='enter'?loadCoaches:null;if(part)prefetchWhenIdle(part);},[hudFocus,ready]);
+  useEffect(()=>{if(!returningFromArcade&&shouldShowIslandOnboarding())prefetchPart(loadOnboarding);},[]);
   const updateStick=(e:React.PointerEvent)=>{const rect=joystickBounds.current??(joystickBounds.current=joystick.current!.getBoundingClientRect()),dx=e.clientX-rect.left-rect.width/2,dy=e.clientY-rect.top-rect.height/2,len=Math.hypot(dx,dy),scale=Math.min(1,36/Math.max(1,len));setStick({x:dx*scale,y:dy*scale});shapeStick(dx*scale/36,dy*scale/36,input.current);/* A7: dead zone + walk floor (lib/town/walkControl.ts) */if(spinGesture.current.update(dx*scale/36,dy*scale/36,performance.now(),e.pointerType==='touch'&&window.matchMedia('(pointer:coarse)').matches))spinRequested.current=true;if(hint)setHint(false);};
   // Secondary touches do not reliably synthesize click while the joystick is captured.
   const travelControlDown=(e:React.PointerEvent<HTMLButtonElement>,activate:()=>void)=>{if(e.pointerType==='mouse')return;e.preventDefault();e.currentTarget.dataset.touchActionUntil=String(performance.now()+700);activate();tapHaptic();soundRef.current?.ui('click');};
@@ -1291,8 +1300,8 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
   const stackCovered=calmBlocked||graduationOpen||settingsOpen||balancesOpen;
   return <main onPointerDownCapture={unlockAudio} onPointerUpCapture={unlockAudio} onKeyDownCapture={unlockAudio} onPointerOverCapture={e=>{const button=soundButton(e.target);/* relatedTarget null = the browser re-hit-testing after the DOM changed under a resting pointer (an animating preview re-rendering a button), not the pointer arriving: no hover tick, or it repeats while you hover Done. */if(e.pointerType!=='touch'&&button&&e.relatedTarget instanceof Node&&!button.contains(e.relatedTarget))soundRef.current?.ui(button.getAttribute('data-sound')==='slide'?'slide':'hover');}} onFocusCapture={e=>{if(soundButton(e.target))soundRef.current?.ui('hover');}} onClickCapture={e=>{const button=soundButton(e.target);if(button&&!(e.detail!==0&&performance.now()<Number((button as HTMLElement).dataset.touchActionUntil??0))){tapHaptic();const cue=(button as HTMLElement).dataset.uiSound;soundRef.current?.ui(cue==='expand'||cue==='collapse'?cue:'click');}}} className={'town-app'+(loadingComplete?' island-revealing':'')+' district-'+district+(controlsFlipped?' controls-flipped':'')+(lesson||fieldCatalog?' in-lesson':'')+(locationZone&1?' at-field':'')+(locationZone&2?' at-square':'')}>
     <HudStackContext.Provider value={hudStackEl}>
-    {ready&&!failed&&<NpcConversation npc={talkingNpc} open={conversationOpen} onOpenChange={setConversationOpen}/>}
-    {ready&&!failed&&<IslandOnboarding npcTarget={onboardingNpcTarget} onNpcStepChange={active=>{onboardingNpcStep.current=active;if(active)wakeLoopRef.current();}} open={onboardingOpen} onClose={()=>setOnboardingOpen(false)} value={customization} onChange={changeCustomization}/>}
+    {ready&&!failed&&mountWhen('conversation',conversationOpen)&&<NpcConversation npc={talkingNpc} open={conversationOpen} onOpenChange={setConversationOpen}/>}
+    {ready&&!failed&&mountWhen('onboarding',onboardingOpen)&&<IslandOnboarding npcTarget={onboardingNpcTarget} onNpcStepChange={active=>{onboardingNpcStep.current=active;if(active)wakeLoopRef.current();}} open={onboardingOpen} onClose={()=>setOnboardingOpen(false)} value={customization} onChange={changeCustomization}/>}
     {ready&&!failed&&!settingsRef.current&&!map&&!fieldCatalog&&!lesson&&<CoinHuntHud near={hudFocus==='hint'?coinNear||seaNote:''}/>}
     {balancesOpen&&<IslandBalanceDrawer onClose={()=>setBalancesOpen(false)}/>}
     {ready&&!failed&&<FishingHost paused={balancesOpen} onOpenChange={setFishingOpen} onDialogChange={setFishingDialog}/>}
@@ -1300,10 +1309,10 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     {ready&&!failed&&<IslandJobs onOpenBalances={()=>setBalancesOpen(true)} blocked={settingsRef.current||map||!!fieldCatalog||!!lesson} holdToasts={stackCovered} offerAllowed={hudFocus==='job-offer'} onCardChange={onJobCardChange} onRequestWalk={()=>{if(rideRef.current!=='walk')selectRide('walk');}}/>}
     {ready&&!failed&&<FerryPreview open={ferryOpen} onOpenChange={setFerryOpen}/>}
     {ready&&!failed&&<Museum open={museumOpen} onOpenChange={setMuseumOpen}/>}
-    {ready&&!failed&&<CoachesCentre open={coachesOpen} onOpenChange={setCoachesOpen}/>}
+    {ready&&!failed&&mountWhen('coaches',coachesOpen)&&<CoachesCentre open={coachesOpen} onOpenChange={setCoachesOpen}/>}
     {ready&&!failed&&isDrinkMachine(vendingId)&&<DrinkMachine machineId={vendingId} open={storeOpen} onOpenChange={open=>{setStoreOpen(open);if(!open){setVendingLeaving(true);vendingRef.current?.release(()=>setVendingLeaving(false));}}} machines={getVendingMachines}/>}
-    {ready&&!failed&&<VendingMachine machineId={vendingId} itemRequest={storeItemRequest} open={storeOpen&&!isDrinkMachine(vendingId)} onOpenChange={open=>{setStoreOpen(open);if(!open){setVendingLeaving(true);vendingRef.current?.release(()=>setVendingLeaving(false));}}} value={customization} onChange={changeCustomization} onEquipRide={selectRide} machines={getVendingMachines}/>}
-    {ready&&!failed&&<CharacterCustomizer open={customizerOpen} onOpenChange={setCustomizerOpen} value={customization} onChange={changeCustomization} completedQuizCount={quizProgress.completed} totalQuizCount={quizProgress.total} onEquipRide={selectRide}/>}
+    {ready&&!failed&&mountWhen('vending',storeOpen&&!isDrinkMachine(vendingId))&&<VendingMachine machineId={vendingId} itemRequest={storeItemRequest} open={storeOpen&&!isDrinkMachine(vendingId)} onOpenChange={open=>{setStoreOpen(open);if(!open){setVendingLeaving(true);vendingRef.current?.release(()=>setVendingLeaving(false));}}} value={customization} onChange={changeCustomization} onEquipRide={selectRide} machines={getVendingMachines}/>}
+    {ready&&!failed&&mountWhen('customizer',customizerOpen)&&<CharacterCustomizer open={customizerOpen} onOpenChange={setCustomizerOpen} value={customization} onChange={changeCustomization} completedQuizCount={quizProgress.completed} totalQuizCount={quizProgress.total} onEquipRide={selectRide}/>}
     {ready&&!failed&&!fieldCatalog&&!lesson&&<IslandSettings onGrownUpsOpenChange={setGrownUpsOpen} pathsRequest={pathsRequest} onRestartOnboarding={()=>setOnboardingOpen(true)} onOpenStore={openStore} onStartLearning={()=>{setFieldCatalog(nearestVenue(positionStore.getSnapshot().x,positionStore.getSnapshot().z)?.id??'futsal');setHint(false);}} voiceEnabled={voiceEnabled} onVoiceChange={value=>{setVoiceEnabled(value);savePreference('fi2-voice-enabled',String(value));}} coachVoice={coachVoice} onCoachVoiceChange={value=>{setCoachVoice(value);savePreference('fi2-coach-voice',value);}} controlsFlipped={controlsFlipped} onControlsFlippedChange={value=>{releaseStick();setControlsFlipped(value);savePreference('fi2-controls-flipped',String(value));}} onOpenMap={()=>setMap(true)} open={settingsOpen} onOpenChange={value=>{setSettingsOpen(value);if(value)setMap(false);}} musicEnabled={musicEnabled} musicVolume={musicVolume} soundVolume={soundVolume} onMusicVolumeChange={value=>{setMusicVolume(value);musicRef.current?.setVolume(value);savePreference('fi2-music-volume',String(value));}} onSoundVolumeChange={value=>{setSoundVolume(value);soundRef.current?.setVolume(value);savePreference('fi2-sound-volume',String(value));}} onMusicChange={value=>{setMusicEnabled(value);musicRef.current?.setEnabled(value);try{localStorage.setItem('fi2-music-enabled',String(value));}catch{}}} soundMuted={soundMuted} onSoundMutedChange={value=>{setSoundMuted(value);soundRef.current?.setMuted(value);try{localStorage.setItem('fi2-sound-muted',String(value));}catch{}}} timeOfDay={timeOfDay} onTimeOfDayChange={changeTime}/>}
     <div className="job-spot-arrow" data-job-spot-arrow hidden aria-hidden="true"><svg viewBox="0 0 24 24" width="30" height="30"><path d="M4 12h13 M12 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
     <button type="button" className="store-enter-prompt" data-vending-go aria-label="Go to the vending machine" hidden onClick={e=>{const id=e.currentTarget.dataset.vending as VendingMachineId|undefined;if(id)openVending(id);}}>Go</button>

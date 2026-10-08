@@ -15,8 +15,12 @@
 .window>svg{position:absolute;left:0;top:50%;width:100%;height:auto;aspect-ratio:1;transform:translateY(-50%);border-radius:0}
 .window>svg.backdrop{top:0;height:100%;aspect-ratio:auto;transform:none}
 /* Riso-printed photo portrait: cream paper, a flag-colour halftone and a deep-green ink pass (as in PlayerArt's layered mode). */
-.photo{position:absolute;left:4%;right:4%;top:6%;bottom:0;z-index:1}
-.photo>span{position:absolute;inset:0;-webkit-mask-size:contain;mask-size:contain;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:center bottom;mask-position:center bottom}
+.photo{position:absolute;left:4%;right:4%;top:6%;bottom:0;z-index:1;container-type:size}
+.photo>span{position:absolute;inset:0}
+/* Packed masks (Oct 7 2026, scripts/player_masks.py): one <slug>.webp, ink in the left half and tone in the right. Each layer's box
+   is the old `contain`, `center bottom` rectangle of the 4:5 mask (cq units of .photo) and the mask spans twice its width. */
+.photo>.tone,.photo>.ink{inset:auto auto 0 calc(50cqw - min(40cqh,50cqw));width:min(80cqh,100cqw);height:min(100cqh,125cqw);-webkit-mask-size:200% 100%;mask-size:200% 100%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:0 0;mask-position:0 0}
+.photo>.tone{-webkit-mask-position:100% 0;mask-position:100% 0}
 .photo>.paper{inset:10% 14% 0;border-radius:50% 50% 18% 18%/42% 42% 12% 12%;background:#fff1d3 url('/stories/films/assets/entry-grain.png') 0 0/128px 128px;box-shadow:0 .4em 0 #183b3430}
 .tone{mix-blend-mode:multiply;transform:translate(1px,.5px)}
 .ink{background:#1f3d36;mix-blend-mode:multiply}

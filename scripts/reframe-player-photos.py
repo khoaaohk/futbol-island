@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Re-frame card portraits offline: rebuild a player's riso masks
-(public/players/<slug>-ink.webp / -tone.webp) from the photo the manifests
+(both halves of the packed public/players/<slug>.webp) from the photo the manifests
 already name, with a per-player framing override. No network: the source
 image and its Commons imageinfo must already be in the shared response cache
 the fetch scripts write (--cache, keyed by sha1(url)).
@@ -185,9 +185,8 @@ def main():
             img = img.resize((round(img.size[0] * s), round(img.size[1] * s)), Image.LANCZOS)
         ink, tone = L.riso(crop(img, face, fx.get('frac', L.FACE_FRAC), fx.get('cy', 0.40)))
         for layer, a in (('ink', ink), ('tone', tone)):
-            dst = os.path.join(args.out, f"{e['slug']}-{layer}.webp")
-            L.save_mask(a, dst + '.tmp.webp')
-            os.replace(dst + '.tmp.webp', dst)   # atomic: the dev server never sees half a mask
+            # writes that half of the packed <out>/<slug>.webp, atomically (scripts/player_masks.py)
+            L.save_mask(a, os.path.join(args.out, f"{e['slug']}-{layer}.webp"))
         print(f"{name}: reframed ({img.size[0]}x{img.size[1]}, face {face['w'] * img.size[0]:.0f}px)")
 
 

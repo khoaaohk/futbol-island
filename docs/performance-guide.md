@@ -1,5 +1,122 @@
 # Performance reference for future Futbol Island updates
 
+## Fewer, smaller image files — October 7, 2026 (local, not deployed)
+
+Goal: fewer image requests and fewer bytes, with no visible change. Measured on local production builds of the same tree with and without this pass (`next start`, headless Chromium, `--mute-audio`, cold cache, 1440×900 unless noted). Bytes are response bodies; local responses carry ~317 B of headers each.
+
+| Visit | Before | After |
+|---|---|---|
+| Island boot: vending ball pictures | 8 requests, 129,490 B | **1 request, 99,558 B** |
+| Island boot: closed dialogs' backdrops (`settings-coast.svg`, `coaches-coast.svg`) | 2 requests, 42,228 B | **0** (loaded when the dialog opens) |
+| Binder spread (Paths → Collect cards; 134 masked layers incl. the prebuilt next turn) | 140 requests, 1,699,052 B | **70 requests**, 1,733,368 B |
+| Paths, chapter art, desktop / 390 px | 4 requests, 1,377,182 B / 865,972 B | 4 requests, **619,096 B / 396,218 B** |
+| Museum ball gallery, all 40 balls warmed | 98 decal requests, 5,694,240 B | 98 requests, **3,731,042 B** |
+
+**1. Player card masks: one file per player.** `public/players/<slug>.webp` is 640×400 lossless, alpha only: the ink mask in the left half, the tone mask in the right. The halves are exactly the old 320×400 files; `python3 scripts/pack-player-masks.py --check` verifies all 379.
+- Two colour channels were not possible: CSS `mask-mode:luminance` mixes R, G and B, so it can't isolate one channel.
+- **CSS.** Each masked layer's box is the rectangle the old single mask filled, and `mask-size:200% 100%` shows a half: `mask-position:0 0` for ink, `100% 0` for tone. The cards use `.photo`, `.riso` and `.fillPortrait` (now `container-type:size`; the rectangle is computed in cq units). The thumbnails (`.thumbMask`, PlayerThumb `.mask`) use a 128%-wide 4:5 box. Every mask has ≥18 empty columns at each side, so filtering at the seam never mixes the halves.
+- **Code.** `playerMaskUrl()` / `playerMaskStyle()` live in `components/PlayerArt.tsx` and go through `mediaUrl()`. They are used by MiniCard, PlayerArt, PlayerThumb, CardOffer's warm-up and `preloadPlayerPhotos`.
+- **Pipelines.** The fetch scripts' `save_mask()` (and reframe) write their half of the packed file atomically through `scripts/player_masks.py`; the readers and rejects use it too.
+- **Bytes.** The packed file is 1.4% larger than the pair (18,782,964 vs 18,524,448 B for 379 players; stacking vertically saved only 0.6% and would bleed at the bottom row). The win is half the requests: −70 per spread. Counting local headers it is about even (1.755 vs 1.743 MB).
+- **Pixels.** Not bit-identical. Chromium snaps a `contain` mask to its own pixel grid and a sized box doesn't reproduce that snap exactly, so the halftone is resampled at a sub-pixel offset. 20 players × 11 card/thumb variants were compared:
+  - Chromium, DPR 1/2/3: 6.6–7.1% of pixels differ, mean |Δ| 0.6–1.0 levels. After a 1 CSS px blur, the max Δ is 75–82 and the mean 0.21–0.23.
+  - WebKit, DPR 2/3: 5.2–5.4% differ, mean |Δ| 0.4–0.5, blurred max 33–45.
+  - Control: the old cards moved by 0.3 px of layout differ more in every measure (Chromium 10.4–10.8% of pixels, blurred mean 0.76; WebKit 22.9%).
+  - The real binder (prod, 1440 and 390@3x): 10.6–12.4% of pixels differ, ≤3% by more than 8 levels, all on halftone dot edges. The contact sheets show no visible change.
+- **Old files.** The separate `-ink`/`-tone` files stay for one release, because a tab opened before the deploy still asks for them. No code references them (tests/image-packing.cjs). Delete them with `python3 scripts/pack-player-masks.py --remove-singles` after the next deploy.
+
+**2. Paths chapter art at WebP quality 0.85** (`scripts/bake-path-art.mjs`, was 0.96). The set of 16 files goes from 4,660,712 to 2,129,486 B (−54%).
+- **0.80 rejected.** A sweep of 0.80/0.85/0.88/0.90 against the 0.96 originals (composited on the Paths blue) gave PSNR ≥39.6 / 41.5 / 42.3 / 43.1 dB. The worst 64 px block: 36.0 / 38.3 / 39.2 / 40.2 dB. At 0.80 the orange plates' square dot grid went visibly blotchy at 1:1 (dots fading in 4×4 patches). At 0.85 the dots hold. Override per file with `PATH_ART_QUALITY_<format>_<variant>_<i>`.
+- **Bake race fixed.** The bake took a fixed 250 ms after each format click, which sometimes captured the previous format's layout: two runs gave different manifests. It now waits for `aria-pressed` and five identical layout polls, and throws if mobile and desktop disagree. With that, a 0.96 re-bake reproduces every committed file byte for byte, so the 0.85 files are the same art.
+- **Names.** New bytes, new names (`ink-<sha256[:12]>.webp`, cached immutable). `lib/paths/pathArt.json` points at them. The 16 old files stay for open tabs.
+- `QuestLearningPath` now wraps the art URLs in `mediaUrl()`.
+
+**3. Museum ball decals: 37 PNGs → lossless WebP** (3,273,492 → 1,310,294 B, −60%).
+- **Pixels.** `cwebp -lossless -z 9`: alpha is identical everywhere and RGB is identical wherever alpha > 0. Only RGB under fully transparent pixels was dropped, and the decal atlas is drawn premultiplied, so those values never show.
+- **References.** `lib/museum/wcBalls/designs/*.ts` now point at `.webp`; every `credit` field is kept. `ballViewer.ts` loads through `mediaUrl()`.
+- **Gallery renders.** The 15 men's balls with decals, PNG vs WebP, Chromium, reduced motion: 13 differ by ≤2 levels; 1954 Swiss by ≤7; 2002 Fevernova by ≤10. 1970 Telstar has 7 pixels over 8 levels (max 55) on lettering edges: Chromium decodes WebP premultiplied, so semi-transparent edges round differently. Repeat runs of the old build are bit-identical.
+- `tests/wc-balls.cjs` and the browser shader check pass; `audit-wc-balls` gives 40/40 panel counts.
+- The PNGs stay for one release (open tabs).
+
+**4. Vending ball pictures: one lossless atlas.**
+- **The atlas.** `scripts/pack-vending-atlas.py` packs the 14 `ball-<style>.png` into `public/vending/products/balls-<sha256[:12]>.webp` (475×325, 99,558 B, against 214,306 B of PNGs). Each picture keeps its exact size in its own cell with a 2 px edge-repeat gutter. `lib/graphics/vendingBallAtlas.json` holds the cells. `capture-vending-products.cjs` re-packs after a capture; `--check` verifies the cells are pixel-exact.
+- **Drawing.** `vendingBallPicture()` returns `{src, x, y, w, h}` (the URL through `mediaUrl()`). `vendingMachines.ts` draws the source rectangle.
+- **`<img>` uses.** BallPicture (vending face, tray, backpack) copies the cell 1:1 into a PNG blob URL. Same natural size, so the CSS is unchanged, and no extra request.
+- **Canvas compare.** 672 draws (14 balls × 8 scales × widen × sub-pixel offsets):
+  - WebKit: identical except a 1 px edge band at exactly 1:1 and 0.5× scale with half-pixel offsets (0.03% of pixels).
+  - Chromium: premultiplied values within 9.2/255. The blob crops are within 2/255 in Chromium and identical in WebKit.
+- **Closed dialogs' backdrops.** `IslandLoading` no longer pre-warms `settings-coast.svg` / `coaches-coast.svg`. Their CSS backgrounds load when the dialog renders. Tradeoff: the first open shows the dialog's flat colour for the moment the ~21 KB (gzip) SVG takes to arrive. No change was needed in Town.tsx.
+
+**Checks**
+- `tests/image-packing.cjs` (in `npm test`) checks:
+  - Every roster player with a photo has a lossless 640×400 packed mask, and nothing asks for the pair.
+  - Chapter-art names equal their content hashes, and every reference exists.
+  - There are no PNG decal references, and every decal exists with its credit.
+  - The atlas covers every ball with non-overlapping gutters.
+  - The boot preload list is clean.
+- `tests/vending-machines.cjs` and `tests/coach-cards.cjs` were updated.
+- Also passed:
+  - `npx tsc --noEmit`, the full `npm test` and `next build`.
+  - `review-riso-story.mjs`: 22 stories, 0 seam failures.
+  - `check-path-films-browser.mjs --mute-audio`: 44 views.
+  - `tests/card-collection.cjs` on the production build.
+  - The wc-balls browser check and audit.
+- Desktop headless only. Fewer requests means fewer radio wake-ups, but no iPhone measurement was taken and no thermal claim is made.
+
+## Load parts of the island when they are opened — October 7, 2026 (local, not deployed)
+
+Goal: a smaller boot bundle for `/` (and `/island-return`), so a deploy re-downloads less and a phone parses and compiles less before the island is playable. Gameplay, visuals and saved data are unchanged.
+
+**What is no longer in the boot bundle, and what loads it.**
+
+| Part | Loaded by | Chunk (gzip) |
+|---|---|---|
+| Paths panel (`IslandQuests`: learning path, upcoming story film, warm-ups), daily bottle, ball hunt | `next/dynamic` inside `IslandSettings`. The Settings/Paths HUD buttons stay in the boot bundle with their animations; hovering, focusing or pressing them, or the dialog opening by any route, warms the panels. | 28.3 + 6.4 + 1.5 KB, plus the riso engine pieces it shares |
+| Character customizer | Mounts on the first character tap, then stays mounted. Its **Backpack** tab (cards, Konbini collection, food art) is a further `next/dynamic` that starts loading when the customizer opens. | 8.2 KB + Backpack 6.0 KB (+ shared card/food chunks) |
+| Vending machine face | Mounts the first time a machine opens. Warmed when the HUD focus is `vending`. | 19.7 KB |
+| Coaches Centre | Mounts on first open. Warmed when the HUD focus is `enter`. | 2.0 KB |
+| NPC conversation | Mounts on first open. Warmed when the HUD focus is `talk`. | 7.7 KB |
+| Welcome walkthrough (`IslandOnboarding`) | Mounts when it opens. A new player's boot (`shouldShowIslandOnboarding()`) starts the import with the island, so it is ready when the loading screen leaves; returning players fetch it only from "See walkthrough". | 7.9 KB |
+| Lessons and quizzes (`FieldLearning`, `VisualQuestion`, Plays picker) | Already mounted only while a pitch menu is open; now `next/dynamic`. Warmed when the HUD focus is `learn` (a pitch card is showing) and when Paths opens. | 15.7 + 8.9 KB |
+| Coach passing lesson panel (`CoachLesson`) | `next/dynamic`, warmed with conversations. | 2.4 KB |
+| Fishing angler art and the 3D caught-animal models (`fishingVisuals.ts`, `fishModels.ts`) | `import()` in `fishingWorld.ts` once the player is within 100 m of a spot (box test, the same `nearAnySpot`), well before the 45 m at which the visuals are built. A session that somehow starts first gets its visuals when the chunk lands. | 21.0 KB |
+| `FishArt` (all species drawings) | The island pocket on the coins bar only needed the sardine: `components/PocketFishIcon.tsx` is that drawing inlined (FishArt's own markup at 24 px). `tests/lazy-parts.cjs` renders both and fails if they ever differ. | 16.5 KB, now only with the Fishbook/market/pocket drawer/onboarding |
+| Konbini food art (`foodArt.ts`) | `drinkMachines.ts` imported it only to register the drinks' reveal layers. `foodArt.ts` now registers them itself when it loads, so the drink data module the island needs carries no canvas painters. | 20.6 KB |
+
+**Prefetch (no new loops).** `lib/ui/idlePrefetch.ts` + `components/islandParts.ts` (one loader per part, the same `import()` the `next/dynamic` wrapper uses):
+- One idle warm-up, one-shot: 8 s after the island is interactive, only while the tab is visible (a hidden tab waits on one `visibilitychange` listener), each part in its own `requestIdleCallback`, in order: Paths panel, bottle, customizer, lessons, conversation, coach lesson. Then it stops. It imports the code only; nothing mounts until it is wanted.
+- HUD focus (talk / vending / learn / enter), after `ready`, in the next idle moment (≤ 1 s): what the player is standing next to.
+- Each import runs once whatever triggers it (`prefetchPart`); a failed load is forgotten so a later trigger retries.
+- Mount rule: a lazy dialog mounts the first time it is wanted and stays mounted (its close animation and focus restore still run), like the position guide. Opening mounts it with `open` already true; each dialog's own open effect (`showModal` + its entering class) runs on mount, so the existing animation plays. The starter kit that the customizer used to grant when it mounted at boot is granted by Town at the same moment (`ensureStarterKit()` when the island is ready).
+
+**Kept on the boot path on purpose.**
+- **The match sim (`matchSim`, `combos`, `choreo`, ~340 KB of source).** At the default spawn the Old Town 7v7 is on screen with players running (desktop: 2 of 5 venues awake, 14 visible players at `ready`; phone: 1 venue awake). Every point on the main island is within the wake/visibility range of some pitch, so an async match sim would load during every boot anyway; and building the matches after the init pass would miss the init-time scene passes (static shadow batches, texture sharpening). No real deferral, so not split.
+- Island jobs (`jobScene`, `jobRules`, `jobMoves`, `jobPoses`): the job boards, badges and garden props are built with the island and `jobPoses` lives in the player rig. Splitting the run logic from the board scene is a refactor of that module, not a loader change. Left for later.
+- NPC dialogues (the definitions that place the townsfolk carry their topics inline), the loading screen art, the minimap, `coinQuest`, the vending machines' 3D drink art.
+
+**Measured** (production builds in a scratch copy, `next start`, headless Chromium with SwiftShader, `--mute-audio`, cache disabled, welcome already seen, default spawn).
+
+| | Before | After |
+|---|---|---|
+| `next build` First Load JS for `/` | 1.19 MB | 962 kB |
+| Boot chunks, gzip −9 (`app-build-manifest` `/layout` + `/page`) | 1,172 KB (3,605 KB minified) | 943 KB (2,828 KB minified), **−229 KB** |
+| JS transferred until the HUD is up (server gzip) | 1,186 KB, 28 files | 956 KB, 27 files (**−230 KB**) |
+| JS loaded / unused at HUD + 5 s (before the warm-up), desktop | 3,603 KB / 46.8% unused | 2,899 KB / 42.9% unused |
+| same, Pixel 7 emulation | 3,603 KB / 46.9% | 2,899 KB / 43.0% |
+| JS loaded / unused at HUD + 15 s (after the warm-up), desktop | 3,753 KB / 44.6% | 3,486 KB / 42.5% |
+| JS heap after GC at HUD + 5 s, desktop / Pixel 7 | 158.0 / 152.4 MB | 152.4 / 149.5 MB |
+| JS heap after GC at HUD + 15 s, desktop / Pixel 7 | 158.2 / 154.1 MB | 154.2 / 151.6 MB |
+
+- 704 KB less minified JS is parsed before the island is playable. The used bytes at boot also fell (1,917 → 1,655 KB): the closed dialogs no longer render at boot.
+- The idle warm-up then fetches about 180–195 KB (server gzip) 8 s later, including the position guide's existing warm-up; the code is evaluated but not mounted, so heap stays below the old boot.
+- The heap is mostly the three.js scene; the JS change moves it only 3–6 MB. Times to `ready` in headless SwiftShader varied 15–29 s run to run and are not a comparison.
+- The island mega-chunk (`Town.tsx` and the world, match, jobs) is still ~413 KB gzip.
+
+**Validation.** `npx tsc --noEmit`; full `npm test` (adds `tests/lazy-parts.cjs`: no static imports of the lazy parts, the mount and prefetch wiring, pocket fish = FishArt's sardine, fishing by distance, food art out of the drink data, and the warm-up's one-shot / visible-only / cancellable behaviour in a fake window; `tests/heat-pass3.cjs` now expects `stableMemo(dynamic(...))` for the four lazy hosts); `next build`; a headless play-through of the production build (desktop Chromium; first opens cold, before the idle warm-up): a lesson from the pitch card (Done reopens Paths with its bottle and content), Settings, Paths, the walkthrough, the customizer and its Backpack tab (starter kit present), a conversation (tapping Mr. Okafor), the Coaches Centre door, the 9v9 touchline (18 live players), a walk from 126 m toward the Harbour Wall (the fishing chunk landed before the rod was built at ~36 m), the Arcade door (to `/arcade`); no console errors, no missing UI; the device suite against the production build (desktop Chromium, 43 tests, `--mute-audio`): 40 pass after two spec fixes (`gap-map-settings` "first run" follows the Oct 6 welcome: Next to the last step, Explore closes into the island with no lesson, Skip in the header top right, Back bottom left; `paths` "quiz resumed" probes `src` before `currentSrc`, because a lesson screen that mounts after the voice primer finished calls `play()` in the same task as `a.src = pack`, while `currentSrc` still names the silent primer; the narration itself plays, checked on the element). The 3 that still fail fail the same way on the baseline build because they need dev-only hooks: `__fi2WelcomeMs` (2 welcome-back specs) and `__passPuzzle` (Pass Puzzles). The `gap-fuel` and `offscreen-work` failures of the first run were load timing and pass on a re-run. The `/music` and voice-pack 404s seen once were a stale `public/` in the scratch baseline copy, not the app; and on WebKit iPhone 15 the boot, HUD layout, Settings/About, bottle, play-and-quiz and vending specs pass (6/6). `scripts/check-fishing-browser.cjs` (spawned on the Harbour Wall, visuals loaded during the return loading screen) passes: cast, approach, scare, bite, reel, catch, Fishbook, stop, no errors.
+
+Emulation only. Nothing was measured on an iPhone and no thermal claim is made.
+
+
 ## Narration at 40 kbps, one audio file per lesson — October 7, 2026 (local, not deployed)
 
 Goal: smaller narration downloads and fewer audio requests. Football content, scripts, voices, durations and cue timing are unchanged.

@@ -360,8 +360,9 @@ None of these shows him or her in playing kit, so relaxing the date window would
 This was a separate pass to find photos outside Wikipedia and Commons for the cards that still had none. Entries go in
 `lib/town/playerPhotos.external.json`, which has the same shape as the other shards plus `source: external/<key>` and a
 `sourceName` for the card credit. `components/PlayerArt.tsx` spreads it **first**, so every Commons shard overrides it. External
-masks are saved as `public/players/<slug>-x-ink.webp` / `-tone.webp` (manifest `slug: "<slug>-x"`), so neither agent can
-overwrite the other's mask files. Before each write the tool checks the other shards again. Each crop went through the
+masks were saved as `public/players/<slug>-x-ink.webp` / `-tone.webp` (manifest `slug: "<slug>-x"`), so neither agent can
+overwrite the other's mask files. (Since Oct 7 2026 every player's two masks are one packed file, `public/players/<slug>.webp`:
+`save_mask` writes its half through `scripts/player_masks.py`; `scripts/pack-player-masks.py` packs any pair written another way.) Before each write the tool checks the other shards again. Each crop went through the
 project's own `portrait_crop` + `riso` + `save_mask` (imported from `scripts/fetch-player-photos-stars.py`), and each crop
 was checked by eye. Network use: a generic User-Agent (`FutbolIslandPhotoResearch/1.0`), one request at a time per host,
 at least 5 s between requests (11 s on hosts that ask for `Crawl-delay: 10`), and robots.txt respected. Wikimedia was used

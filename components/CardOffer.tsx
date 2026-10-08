@@ -2,7 +2,7 @@
 import {useEffect,useId,useLayoutEffect,useRef,useState} from 'react';
 import type React from 'react';
 import {CardBack} from './MiniCard';
-import {photoFor} from './PlayerArt';
+import {photoFor,playerMaskUrl} from './PlayerArt';
 import {DoneButton} from './DoneButton';
 import navStyles from './DoneButton.module.css';
 import viewerStyles from './CardCollection.module.css';
@@ -45,7 +45,7 @@ const glintLead=()=>window.matchMedia('(hover: none), (pointer: coarse)').matche
  *  and the flight's paused two-frame lead-in covers the first raster. */
 const decode=(src:string)=>{const img=new Image();img.src=src;return img.decode().catch(()=>{});};
 const warm=(name:string)=>{const photo=photoFor(name);
- const assets=Promise.all([decode('/stories/films/assets/entry-grain.png'),...(photo?[decode(`/players/${photo.slug}-ink.webp`),decode(`/players/${photo.slug}-tone.webp`)]:[]),document.fonts?.ready]);
+ const assets=Promise.all([decode('/stories/films/assets/entry-grain.png'),...(photo?[decode(playerMaskUrl(photo.slug))]:[]),document.fonts?.ready]);
  return Promise.all([playerCardView??loadPlayerCard(),Promise.race([assets,new Promise(done=>setTimeout(done,LIFT_MS+60))])]).then(([view])=>view);};
 /** Where a card sits in the deck: in front, or behind to the right / left. */
 const place=(i:number,active:number,n:number)=>{const d=((i-active)%n+n)%n;return d===0?'front':d===1?'right':'left';};

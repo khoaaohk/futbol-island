@@ -63,14 +63,29 @@ test('first run: the welcome steps through to the island and pays the 40 welcome
   const welcome = page.locator('dialog[data-onboarding-step][open]');
   await expect(welcome).toBeVisible({ timeout: 150_000 });
   await expect(welcome).toHaveAttribute('data-onboarding-step', 'welcome');
+  // Oct 6 2026 flow: Skip sits in the header (top right), Back bottom left from step 2, Next on every step but the last, whose button
+  // is Explore: it just closes into the island (no lesson launch).
+  const skip = welcome.locator('header').getByRole('button', { name: 'Skip' });
+  await expect(skip, 'Skip in the header').toBeVisible();
+  const vw = page.viewportSize()!.width;
+  expect((await skip.boundingBox())!.x, 'Skip on the right').toBeGreaterThan(vw / 2);
   const seen: string[] = [];
+  let explored = false;
   for (let i = 0; i < 8 && await welcome.isVisible(); i++) {
     seen.push((await welcome.getAttribute('data-onboarding-step'))!);
-    const next = welcome.getByRole('button', { name: /^(Next|Done)$/ }).last();
-    await next.click();
+    const explore = welcome.getByRole('button', { name: 'Explore', exact: true });
+    if (await explore.count()) {
+      const back = welcome.getByRole('button', { name: 'Back', exact: true });
+      await expect(back, 'Back on the last step').toBeVisible();
+      expect((await back.boundingBox())!.x, 'Back bottom left').toBeLessThan((await explore.boundingBox())!.x);
+      await explore.click(); explored = true;
+    } else await welcome.getByRole('button', { name: 'Next', exact: true }).click();
     await page.waitForTimeout(500);
   }
+  expect(explored, 'the last step ends with Explore').toBe(true);
   await expect(welcome).toBeHidden();
+  await page.waitForTimeout(1500);
+  await expect(page.locator('footer[aria-label="Playback controls"]'), 'Explore launches no lesson').toHaveCount(0);
   expect(seen[0]).toBe('welcome');
   expect(seen).toContain('paths');
   expect(await page.evaluate(() => localStorage.getItem('fi2-welcome-v1'))).toBeTruthy();

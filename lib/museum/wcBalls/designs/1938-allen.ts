@@ -79,4 +79,4 @@ Surf design(vec3 p){
  return Surf(col,g,0.2000+.06*gr);}
 `;
 
-export const decals:Decal[]=[{"src":"/museum/wcballs/decals/1938-allen-1.png","dir":[0.4534,0.2648,0.8511],"up":[-0.071,0.9625,-0.2617],"w":0.9,"h":0.62,"gloss":0.1,"credit":"Wikimedia Commons, File:Allen-1938.jpg (MDBR), CC BY-SA 3.0"}];
+export const decals:Decal[]=[{"src":"/museum/wcballs/decals/1938-allen-1.webp","dir":[0.4534,0.2648,0.8511],"up":[-0.071,0.9625,-0.2617],"w":0.9,"h":0.62,"gloss":0.1,"credit":"Wikimedia Commons, File:Allen-1938.jpg (MDBR), CC BY-SA 3.0"}];

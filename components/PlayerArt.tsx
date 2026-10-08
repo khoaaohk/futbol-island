@@ -11,6 +11,7 @@ import womenPhotos from '@/lib/town/playerPhotos.women.json';
 import externalPhotos from '@/lib/town/playerPhotos.external.json';
 import coachPhotos from '@/lib/town/playerPhotos.coaches.json';
 import {useSceneryRest} from '@/lib/sceneryRest';
+import {mediaUrl} from '@/lib/media/mediaUrl';
 import styles from './PlayerArt.module.css';
 
 /**
@@ -465,14 +466,20 @@ export type PlayerPhoto={slug:string;article:string;file:string;artist:string;li
 /** External (non-Wikimedia) finds go first so every Commons shard overrides them: they only fill cards nothing else covers. */
 const PHOTOS:Record<string,PlayerPhoto>={...(externalPhotos as Record<string,PlayerPhoto>),...(photos as Record<string,PlayerPhoto>),...(starPhotos as Record<string,PlayerPhoto>),...(futsalPhotos as Record<string,PlayerPhoto>),...(womenPhotos as Record<string,PlayerPhoto>),...(coachPhotos as Record<string,PlayerPhoto>)};
 export const photoFor=(name:string):PlayerPhoto|undefined=>PHOTOS[name];
-/** Warm the browser cache with players' riso photo masks (ink + tone, ~25 KB each) before their cards appear, so a card
- *  never sits with its backdrop and silhouette while the photo trickles in. Each file is requested once per session. */
+/** A player's riso masks, packed in ONE file (Oct 7 2026, scripts/player_masks.py): public/players/<slug>.webp is 640×400, the ink
+ *  mask in the left half and the tone mask in the right. Each masked layer is a box the size of the old `contain` rectangle with
+ *  `mask-size:200% 100%`, and its CSS class picks the half (ink `mask-position:0 0`, tone `100% 0`), so a card makes one request
+ *  instead of two and paints the same pixels. */
+export const playerMaskUrl=(slug:string)=>mediaUrl(`/players/${slug}.webp`);
+export const playerMaskStyle=(slug:string):React.CSSProperties=>{const url=`url("${playerMaskUrl(slug)}")`;return {WebkitMaskImage:url,maskImage:url};};
+/** Warm the browser cache with players' packed riso photo masks (~50 KB each) before their cards appear, so a card never sits
+ *  with its backdrop and silhouette while the photo trickles in. Each file is requested once per session. */
 const warmed=new Set<string>();
 export function preloadPlayerPhotos(names:Iterable<string|null|undefined>){
  if(typeof window==='undefined')return;
  for(const name of names){const photo=name?PHOTOS[name]:undefined;if(!photo)continue;
-  for(const layer of ['ink','tone']){const src=`/players/${photo.slug}-${layer}.webp`;if(warmed.has(src))continue;warmed.add(src);
-   const image=new Image();image.decoding='async';image.src=src;void image.decode?.().catch(()=>{});}}
+  const src=playerMaskUrl(photo.slug);if(warmed.has(src))continue;warmed.add(src);
+  const image=new Image();image.decoding='async';image.src=src;void image.decode?.().catch(()=>{});}
 }
 /** The riso halftone ink: the flag's strongest colour, never its white or black. */
 const toneInk=(country?:string)=>countryArt(country).flag.find(c=>c!=='#ffffff'&&c!=='#000000')??'#e9798b';
@@ -492,18 +499,17 @@ export default function PlayerArt({name,team='gold',layered=false,size,look,coun
  const id=useId().replace(/:/g,''),authored=lookFor(name),f=look??authored.look;country=country??authored.country;
  void team;
  const view='0 0 240 240',known=photoFor(name);
- // The two riso masks: the player's pre-printed photo.
- const photo=known?{ink:`/players/${known.slug}-ink.webp`,tone:`/players/${known.slug}-tone.webp`}:undefined;
- const maskOf=(part:'ink'|'tone')=>photo?{WebkitMaskImage:`url("${photo[part]}")`,maskImage:`url("${photo[part]}")`}:{};
+ // The two riso masks: the player's pre-printed photo, both halves of one packed file (the layer's class picks the half).
+ const photo=known?playerMaskStyle(known.slug):undefined;
+ const mask=photo??{};
  if(silhouette)return <svg className={styles.flat} viewBox="0 0 240 240" width={size} height={size} aria-hidden="true">
   <defs><pattern id={`${id}sh`} patternUnits="userSpaceOnUse" width={PITCH} height={PITCH} patternTransform="rotate(45)"><circle cx={PITCH/2} cy={PITCH/2} r={PITCH*.46} fill="#33403a"/></pattern></defs>
   <rect width="240" height="240" rx="40" fill="#c9bc9d"/><path d="M40 240 V112 A80 80 0 0 1 200 112 V240Z" fill="#d8ccb0"/>
   <svg x="12" y="0" width="216" height="240" viewBox={PRINT_VIEW} preserveAspectRatio="xMidYMax meet"><g opacity=".8"><FigureShape f={f} fill={`url(#${id}sh)`}/></g></svg>
  </svg>;
  if(!layered&&size!=null){
-  const mask=maskOf;
   return <span className={styles.thumb} style={{width:size,height:size,background:bandsFor(country)}} aria-hidden="true">
-   {photo?<><span className={styles.thumbPaper}/><span className={`${styles.thumbMask} ${styles.thumbTone}`} style={{...mask('tone'),background:toneInk(country)}}/><span className={`${styles.thumbMask} ${styles.ink}`} style={mask('ink')}/></>
+   {photo?<><span className={styles.thumbPaper}/><span className={`${styles.thumbMask} ${styles.thumbTone}`} style={{...mask,background:toneInk(country)}}/><span className={`${styles.thumbMask} ${styles.ink}`} style={mask}/></>
    :<RisoPrint id={id} f={f} country={country} cls={{paper:styles.thumbPaper,tone:`${styles.print} ${styles.thumbPrint} ${styles.thumbTone}`,ink:`${styles.print} ${styles.thumbPrint} ${styles.printInk}`}}/>}
   </span>;
  }
@@ -511,8 +517,8 @@ export default function PlayerArt({name,team='gold',layered=false,size,look,coun
   <CoastBackdrop seed={f.seed} country={country} className={styles.fillBackdrop}/>
   <span className={styles.fillPortrait}>
    {photo?<><span className={styles.fillPaper}/>
-    <span className={`${styles.maskPart} ${styles.tone}`} style={{background:toneInk(country),...maskOf('tone')}}/>
-    <span className={`${styles.maskPart} ${styles.ink}`} style={maskOf('ink')}/></>
+    <span className={`${styles.maskPart} ${styles.tone}`} style={{background:toneInk(country),...mask}}/>
+    <span className={`${styles.maskPart} ${styles.ink}`} style={mask}/></>
    :<RisoPrint id={id} f={f} country={country} cls={{paper:styles.fillPaper,tone:`${styles.print} ${styles.printTone} ${styles.small}`,ink:`${styles.print} ${styles.printInk}`}}/>}
   </span>
  </span>;
@@ -524,8 +530,8 @@ export default function PlayerArt({name,team='gold',layered=false,size,look,coun
   <div className={`${styles.layer} ${styles.mid} ${styles.riso}`}>
    {photo?<>
     <span className={styles.paper}/>
-    <span className={styles.tone} style={{background:toneInk(country),...maskOf('tone')}}/>
-    <span className={styles.ink} style={maskOf('ink')}/>
+    <span className={styles.tone} style={{background:toneInk(country),...mask}}/>
+    <span className={styles.ink} style={mask}/>
    </>:<RisoPrint id={id} f={f} country={country} cls={{paper:styles.paper,tone:`${styles.print} ${styles.printTone}`,ink:`${styles.print} ${styles.printInk}`}} pitch={BIG_PITCH}/>}
   </div>
   <div className={`${styles.layer} ${styles.front}`}><svg className={styles.plane} viewBox={view} preserveAspectRatio="xMidYMax slice"><Foreground f={f}/></svg></div>

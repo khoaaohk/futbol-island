@@ -38,4 +38,4 @@ Surf design(vec3 p){
  return Surf(col,g,0.2400+.06*gr);}
 `;
 
-export const decals:Decal[]=[{"src":"/museum/wcballs/decals/1962-crack-1.png","dir":[0.4659,0.3937,0.7924],"up":[-0.1332,0.9165,-0.3771],"w":0.95,"h":0.95,"gloss":0.1,"credit":"Wikimedia Commons, File:Crack-1962.jpg (MDBR), CC BY-SA 3.0"}];
+export const decals:Decal[]=[{"src":"/museum/wcballs/decals/1962-crack-1.webp","dir":[0.4659,0.3937,0.7924],"up":[-0.1332,0.9165,-0.3771],"w":0.95,"h":0.95,"gloss":0.1,"credit":"Wikimedia Commons, File:Crack-1962.jpg (MDBR), CC BY-SA 3.0"}];

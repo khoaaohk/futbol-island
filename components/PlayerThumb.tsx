@@ -1,5 +1,5 @@
 'use client';
-import PlayerArt,{lookFor,photoFor} from './PlayerArt';
+import PlayerArt,{lookFor,photoFor,playerMaskStyle} from './PlayerArt';
 import {countryArt} from '@/lib/town/countryArt';
 import styles from './PlayerThumb.module.css';
 
@@ -20,10 +20,11 @@ export default function PlayerThumb({name,size=56,team='gold',className}:{name:s
  const flag=countryArt(lookFor(name).country).flag,[a,b,c]=flag.map(paint);
  // Two equal colours either side (e.g. Spain, Denmark) read as two bands; otherwise three.
  const bands=a===c?`linear-gradient(160deg,${a} 0 38%,${b} 38% 62%,${a} 62%)`:`linear-gradient(160deg,${a} 0 34%,${b} 34% 67%,${c} 67%)`;
- const mask=(part:'ink'|'tone')=>{const url=`url(/players/${photo.slug}-${part}.webp)`;return {WebkitMaskImage:url,maskImage:url};};
+ // Both layers use the one packed mask file; the .tone / .ink class picks its half.
+ const mask=playerMaskStyle(photo.slug);
  return <span className={`${styles.thumb} ${className??''}`} style={{width:size,height:size,background:bands}} aria-hidden="true">
   <span className={styles.paper}/>
-  <span className={`${styles.mask} ${styles.tone}`} style={{...mask('tone'),background:toneInk(flag)}}/>
-  <span className={`${styles.mask} ${styles.ink}`} style={mask('ink')}/>
+  <span className={`${styles.mask} ${styles.tone}`} style={{...mask,background:toneInk(flag)}}/>
+  <span className={`${styles.mask} ${styles.ink}`} style={mask}/>
  </span>;
 }
