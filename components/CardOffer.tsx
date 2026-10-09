@@ -12,6 +12,7 @@ import {OPEN_CARDS_EVENT,chooseOfferCard,liveOffer} from '@/lib/town/cardRewardS
 import {offerReason,type CardOffer as Offer} from '@/lib/town/cardRewards';
 import styles from './CardOffer.module.css';
 import {SCENERY_AWAKE_MS} from '@/lib/sceneryRest';
+import {cardFoil} from '@/lib/town/cardFoil';
 
 const ENTRY=new Map(CARD_ENTRIES.map(entry=>[entry.name,entry]));
 const PROFILES=profiles as Record<string,{blurb:string;strengths:string[]}>;
@@ -190,7 +191,7 @@ export default function CardOffer({offerId,complete=false,onClose}:{offerId:stri
      {/* Above the card, large, in the island's brush font (user, Sep 25 2026). */}
      <h2 id={`${uid}-title`} className={styles.added}>Added to your binder!</h2>
      {PlayerCard&&<PlayerCard name={chosen} role={chosenEntry.roleLabel.replace('Futsal ','')} era={chosenEntry.era} team="gold" format={chosenEntry.futsal?'futsal':'11v11'} firstName={first(chosen)} compact glint={glint}
-      blurb={PROFILES[chosen]?.blurb??`${chosen} is one of the players to learn from as a ${chosenEntry.roleLabel.toLowerCase()}.`} strengths={PROFILES[chosen]?.strengths??[]} onFlipChange={setFlipped}/>}
+      blurb={PROFILES[chosen]?.blurb??`${chosen} is one of the players to learn from as a ${chosenEntry.roleLabel.toLowerCase()}.`} strengths={PROFILES[chosen]?.strengths??[]} onFlipChange={setFlipped} holo={cardFoil(chosen)}/>}
      {/* The same twinkling stars as the deck, around the revealed card while it is on screen (user, Sep 25 2026). */}
      {PlayerCard&&landed&&<Sparkles className={`${styles.sparkles} ${styles.revealSparkles}`}/>}
     </div>

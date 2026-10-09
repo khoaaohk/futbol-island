@@ -22,3 +22,7 @@ __pycache__/
 # scratch output (audit maps, screenshots)
 /audit/
 /var-shots/
+
+# editor swap files
+*.swp
+*.swo

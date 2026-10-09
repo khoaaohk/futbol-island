@@ -5,6 +5,7 @@ import {QUEST_STORAGE_KEY} from '../town/questProgress';
 import {QUIZ_STORAGE_KEY} from '../town/quizProgress';
 import {mergeFinished,type GradFormat} from './graduationModel';
 import {updateGraduations} from './graduationStore';
+import {countGraduation} from '../analytics/learnEvents';
 
 /**
  * Derives graduations from the saved path progress (the same stores and "complete" rule the Paths screen reads) and saves any
@@ -21,6 +22,7 @@ export function finishedFormatsFromStorage():string[]{
 export function syncGraduations(finished:readonly string[]=finishedFormatsFromStorage(),now=Date.now()):GradFormat[]{
  let added:GradFormat[]=[];
  updateGraduations(record=>{const merged=mergeFinished(record,finished,now);added=merged.added;return merged.record;});
+ for(const f of added)countGraduation(f);// learning analytics (Oct 9 2026): a map increment per new graduation
  return added;
 }
 /** The 12 starter lessons of a format: the "what you learned" list on certificates and in the credits. */

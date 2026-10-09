@@ -249,8 +249,9 @@ await ok('sql',async()=>{
   assert.equal(psql(`select place_ms::text||activity_ms::text||cells::text from analytics_beats where session_id='legacy_session_00001'`),'{}{}{}','existing rows read as empty');
   // Additive only: running it again is harmless too (idempotent), and the grants still hold.
   runFile('supabase/migrations/20261008_analytics_places.sql');
+  runFile('supabase/migrations/20261009_analytics_counts.sql');// and the learning one after it, as in production
   for(const role of ['anon','authenticated'])assert.match(fails(`select analytics_ingest('{}'::jsonb)`,role),/permission denied/);
-  assert.deepEqual(psql(`select column_name from information_schema.columns where table_name='analytics_beats' order by ordinal_position`).split('\n'),['id','session_id','ts','engaged_ms','pageviews','area_ms','place_ms','activity_ms','cells'],'three new columns, nothing else');
+  assert.deepEqual(psql(`select column_name from information_schema.columns where table_name='analytics_beats' order by ordinal_position`).split('\n'),['id','session_id','ts','engaged_ms','pageviews','area_ms','place_ms','activity_ms','cells','counts'],'three new columns (+ counts, Oct 9), nothing else');
   // The SQL's enums and limits are the TypeScript ones.
   const sql=read('supabase/migrations/20261008_analytics_places.sql');
   const lists=[...sql.matchAll(/where key in \(([^)]*)\)/g)].map(m=>m[1].split(',').map(s=>s.trim().replace(/'/g,'')));

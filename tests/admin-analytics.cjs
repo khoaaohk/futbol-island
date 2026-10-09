@@ -50,12 +50,12 @@ await ok('no PII',async()=>{
  const r=await ingest(store,{v:1,t:'start',s:SID,p:'/arcade?name=Sam#x',r:'https://www.google.com/search?q=sam+smith+age+9',u:{source:'News Letter',medium:'email',campaign:'Spring<script>'},tp:0});
  assert.equal(r.status,204);assert.equal(r.reason,'ok');
  const s=store.data.starts[SID];
- assert.deepEqual(Object.keys(s).sort(),['country','day','device','entryPath','id','referrerHost','region','source','startedAt','utmCampaign','utmMedium','utmSource','visitorHash'].sort());
+ assert.deepEqual(Object.keys(s).sort(),['country','day','device','entryPath','flags','id','referrerHost','region','source','startedAt','utmCampaign','utmMedium','utmSource','visitorHash'].sort());
  assert.equal(s.entryPath,'/arcade');assert.equal(s.referrerHost,'google.com');assert.equal(s.source,'campaign');
  assert.equal(s.utmSource,'news-letter');assert.equal(s.utmCampaign,null,'an unsafe utm value is dropped, not stored');
  assert.equal(s.country,'GB');assert.equal(s.region,'ENG');assert.equal(s.device,'phone');assert.match(s.visitorHash,/^[0-9a-f]{32}$/);
  await ingest(store,{v:1,t:'beat',s:SID,p:'/museum?who=sam',e:20000,a:{museum:20000},n:2},{now:at(25000)});
- assert.deepEqual(Object.keys(store.data.beats[0]).sort(),['activityMs','areaMs','cells','engagedMs','pageviews','placeMs','sessionId','ts']);
+ assert.deepEqual(Object.keys(store.data.beats[0]).sort(),['activityMs','areaMs','cells','counts','engagedMs','pageviews','placeMs','sessionId','ts']);
  const dump=JSON.stringify(store.data);
  for(const pii of [IP,'203.0.113','iPhone','Mozilla','London','51.5','-0.12','sam','Sam','q=','search?','name=','who=','#x','<script>'])assert(!dump.includes(pii),'stored data must not contain '+pii);
  assert.equal(C.sanitizePath('/coffee/checkout?amount=5'),'/coffee');assert.equal(C.sanitizePath('/users/sam'),'/other');assert.equal(C.sanitizePath('/admin'),'/other');
@@ -341,8 +341,8 @@ await ok('sql',async()=>{
   const psql=(sql,{role}={})=>cp.execFileSync(psqlBin,[...args,'-c',(role?`set role ${role}; `:'')+sql],{encoding:'utf8',stdio:['ignore','pipe','pipe']}).trim();
   const fails=(sql,role)=>{const r=cp.spawnSync(psqlBin,[...args,'-c',`set role ${role}; ${sql}`],{encoding:'utf8'});return r.status!==0?r.stderr:'';};
   psql('create role anon; create role authenticated; create role service_role bypassrls;');// as in Supabase: only service_role bypasses RLS
-  // The live migration, then the additive one on top (as in production).
-  for(const f of ['supabase/migrations/20261007_analytics.sql','supabase/migrations/20261008_analytics_places.sql'])cp.execFileSync(psqlBin,[...args,'-f',f],{stdio:['ignore','ignore','pipe']});
+  // The live migration, then the additive ones on top, in order (as in production).
+  for(const f of ['supabase/migrations/20261007_analytics.sql','supabase/migrations/20261008_analytics_places.sql','supabase/migrations/20261009_analytics_counts.sql'])cp.execFileSync(psqlBin,[...args,'-f',f],{stdio:['ignore','ignore','pipe']});
   // RLS and grants: the public roles get nothing; the service role gets the functions.
   for(const role of ['anon','authenticated']){
    assert.match(fails('select count(*) from analytics_sessions',role),/permission denied/);
@@ -382,7 +382,9 @@ await ok('sql',async()=>{
   const fnSrc=read('supabase/migrations/20261007_analytics.sql');assert(!/for update|\bupdate (public\.)?analytics_/i.test(fnSrc),'no row locks or updates on the write path');
   // Nightly finalize: freezes final days (rollup = reference), skips not-final ones, purges raw > 14 days and old salts.
   const add=(d,n)=>new Date(Date.parse(d+'T00:00:00Z')+n*86400000).toISOString().slice(0,10);
-  const fin=add(today,-5),young=add(today,-1),old=add(today,-20);
+  // fin: a final day (>= 2 days old, inside the 14-day raw window) that no fixture session already uses, so the test holds on any date.
+  const used=new Set(psql(`select coalesce(string_agg(distinct day::text,','),'') from analytics_sessions`).split(',').filter(Boolean));
+  const fin=[-5,-6,-7,-8,-9].map(n=>add(today,n)).find(d=>!used.has(d)&&d!==DAY)||add(today,-5),young=add(today,-1),old=add(today,-20);
   psql(`update analytics_beats set ts=ts + ('${fin}'::date - '${DAY}'::date) * interval '1 day' where session_id in (select id from analytics_sessions where day='${DAY}')`);
   psql(`update analytics_sessions set day='${fin}', started_at=started_at + ('${fin}'::date - '${DAY}'::date) * interval '1 day' where day='${DAY}'`);
   psql(`insert into analytics_sessions (id,day,visitor_hash,started_at,entry_path,device,source) values ('young_session_000001','${young}','${hx('1')}','${young}T10:00:00Z','/','phone','direct'),('old_session_00000001','${old}','${hx('2')}','${old}T10:00:00Z','/','phone','direct')`);

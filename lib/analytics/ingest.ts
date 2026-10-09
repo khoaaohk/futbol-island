@@ -6,7 +6,8 @@
 import {createHash} from 'crypto';
 import type {AnalyticsStore} from './store';
 import {ACTIVITY_IDS,PLACE_IDS} from './islandIds';
-import {MAX_BEAT_PAGEVIEWS,MAX_BODY_BYTES,clampCells,clampEngaged,clampSplit,classifySource,deviceClass,isBot,sanitizeCountry,sanitizeHost,sanitizePath,sanitizeRegion,sanitizeUtm,utcDay,validateEvent,type CleanEvent} from './core';
+import {checkFlags} from './countIds';
+import {MAX_BEAT_PAGEVIEWS,MAX_BODY_BYTES,clampCells,clampCounts,clampEngaged,clampSplit,classifySource,deviceClass,isBot,sanitizeCountry,sanitizeHost,sanitizePath,sanitizeRegion,sanitizeUtm,utcDay,validateEvent,type CleanEvent} from './core';
 
 export type HeaderBag={get(name:string):string|null};
 export type IngestResult={status:204|400|403|413|429;reason:string};
@@ -64,8 +65,11 @@ export async function handleIngest({body,headers,store,limiter,now=new Date(),ve
   referrerHost,utmSource:utm.source,utmMedium:utm.medium,utmCampaign:utm.campaign,engagedMs,areaMs,pageviews:start?0:Math.min(ev.n||0,MAX_BEAT_PAGEVIEWS),
   // Where on the island: fixed ids only, each split scaled to at most the beat's (clamped) foreground time.
   placeMs:start?{}:clampSplit(ev.pl,PLACE_IDS,engagedMs),activityMs:start?{}:clampSplit(ev.ac,ACTIVITY_IDS,engagedMs),cells:start?{}:clampCells(ev.c,engagedMs),
+  // Learning (Oct 9 2026): allowlisted counter ids on beats, coarse buckets on starts. Totals per fixed id only.
+  counts:start?{}:clampCounts(ev.k),flags:start?(checkFlags(ev.f)||{}):{},
  };
- if(!start&&!engagedMs&&!clean.pageviews)return {status:204,reason:'empty-beat'};
+ // A beat with no time, no page views and no counters is not written. (A count-only beat is a hide that drained leftovers.)
+ if(!start&&!engagedMs&&!clean.pageviews&&!Object.keys(clean.counts).length)return {status:204,reason:'empty-beat'};
  await store.track(clean,now);
  return {status:204,reason:'ok'};
 }

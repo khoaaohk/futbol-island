@@ -19,6 +19,7 @@ import {nextDue,localDaysBetween,REVIEW_PAID_PER_DAY} from '@/lib/learning/revie
 import {conceptsForLesson,conceptWords} from '@/lib/learning/conceptMap';
 import {LEARN_COINS} from '@/lib/town/learnCoins';
 import type {Format} from '@/lib/town/venues';
+import {countReview,countReviewDone} from '@/lib/analytics/learnEvents';// learning analytics (Oct 9 2026): map increments only
 
 const FORMAT_LABEL:Record<string,string>={futsal:'Futsal','7v7':'7v7','9v9':'9v9','11v11':'11v11'};
 /** Rotate through the lesson's visual questions, so each review is a different picture. */
@@ -66,9 +67,9 @@ function WarmUp({onDone}:{onDone:()=>void}){
  const item=items[at],lesson=item.lesson!,q=lesson.questions[item.index] as VisualFieldQuestion,right=answer!==null&&answer===q.correct;
  const words=conceptsForLesson(item.key)[0];const concept=words?conceptWords(words,item.format):null;
  const choose=(i:number)=>{if(answer!==null)return;setAnswer(i);const correct=i===q.correct;
-  if(tries===0){void answerReviewQuestion(item.key,correct).then(coins=>setResults(r=>[...r,{key:item.key,first:correct,coins}]));}
+  if(tries===0){countReview(correct);void answerReviewQuestion(item.key,correct).then(coins=>setResults(r=>[...r,{key:item.key,first:correct,coins}]));}
   setTries(t=>t+1);};
- const next=()=>{setAt(a=>a+1);setAnswer(null);setTries(0);};
+ const next=()=>{if(at+1===items.length)countReviewDone();setAt(a=>a+1);setAnswer(null);setTries(0);};
  return <div className={styles.stack} data-warmup-state="question" data-warmup-lesson={item.key}>
   <div className={styles.meter} aria-label={`Question ${at+1} of ${items.length}`}>{items.map((_,i)=><span key={i} data-on={i<=at}/>)}</div>
   <section className={styles.quiz} aria-label="Warm-up question">

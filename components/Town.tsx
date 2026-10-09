@@ -63,6 +63,7 @@ import {loadBottleLogo,loadCoaches,loadCoachLesson,loadConversation,loadCustomiz
 import {ensureStarterKit} from '@/lib/town/backpackStore';
 import WelcomeBack from './WelcomeBack';
 import {shouldShowIslandOnboarding} from '@/lib/town/onboarding';
+import {countPathLaunch} from '@/lib/analytics/learnEvents';// Paths format share (Oct 9 2026): a map increment per launch
 import {LEARNING_LAUNCH} from '@/lib/town/learningProgress';
 import {journeyById,type LearningId} from '@/lib/town/learningJourneys';
 import {recordExploreActivity,recordExploreKnockover,exploreActivityNow} from '@/lib/town/exploreActivity';
@@ -208,7 +209,7 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
   // Shared lesson-launch path (QA11): a lesson can start from inside Make it yours (book check, Spot it) or the
   // coin drawer, so close every overlay that would sit over the pitch or keep the island loop asleep (settingsRef).
   const closeForLesson=()=>{setSettingsOpen(false);setStoreOpen(false);setConversationOpen(false);setCustomizerOpen(false);setBalancesOpen(false);setMap(false);setHint(false);};
-  useEffect(()=>{const launch=(event:Event)=>{const detail=(event as CustomEvent).detail;if(!validPathLaunch(detail))return;primeLessonVoice();setFormatPathRequest(detail);setLearningRequest(null);closeForLesson();setFieldCatalog(detail.format);};window.addEventListener(FORMAT_PATH_LAUNCH,launch);return()=>window.removeEventListener(FORMAT_PATH_LAUNCH,launch);},[]);
+  useEffect(()=>{const launch=(event:Event)=>{const detail=(event as CustomEvent).detail;if(!validPathLaunch(detail))return;countPathLaunch(detail.format);primeLessonVoice();setFormatPathRequest(detail);setLearningRequest(null);closeForLesson();setFieldCatalog(detail.format);};window.addEventListener(FORMAT_PATH_LAUNCH,launch);return()=>window.removeEventListener(FORMAT_PATH_LAUNCH,launch);},[]);
   const [learningRequest,setLearningRequest]=useState<{id:LearningId;nonce:number}|null>(null);
   useEffect(()=>{const launch=(event:Event)=>{const detail=(event as CustomEvent<{id:LearningId;nonce:number}>).detail,j=journeyById(detail?.id);if(!j)return;primeLessonVoice();setFormatPathRequest(null);setLearningRequest(detail);closeForLesson();setFieldCatalog(j.format);};window.addEventListener(LEARNING_LAUNCH,launch);return()=>window.removeEventListener(LEARNING_LAUNCH,launch);},[]);
   const [storeItemRequest,setStoreItemRequest]=useState<{id:string;nonce:number}|null>(null),[pathsRequest,setPathsRequest]=useState<{nonce:number}|null>(null);

@@ -1,0 +1,22 @@
+/* Holo foil, small-card version (MiniCard `foil`; live on the binder pockets and the vending/market reveals since Oct 8 2026).
+   The position pattern is a static SVG mask (lib/graphics/holoFoil/patterns.ts miniPatternUrl) over one rainbow layer; hover or
+   press slides the rainbow once (a transform transition, compositor only), so the hues shift and then everything rests. No WebGL,
+   no loop, no repaint at rest. hard-light: mid-tone colours tint both the pale stock and the dark window.
+   One mask image per pattern and region, with a soft hole over the portrait's head and shoulders (faces stay clean, as on the large
+   card) and a cut at the bottom of the picture window (the name plate stays plain; readability, user Oct 8 2026) baked into the SVG,
+   so nothing is composited between mask layers at paint time (binder paint A/B, Oct 8 2026). Regular cards use the edge-band image.
+   --holo-k is the user's per-pattern intensity (PATTERN_INTENSITY: the shield wall at 0.70). */
+.foil{position:absolute;inset:0;z-index:4;pointer-events:none;border-radius:inherit;overflow:hidden;mix-blend-mode:hard-light;opacity:calc(.85 * var(--holo-k,1));
+ -webkit-mask:var(--holo-mask) 0 0/100% 100% no-repeat;mask:var(--holo-mask) 0 0/100% 100% no-repeat}
+.foil::before{content:'';position:absolute;left:-100%;top:-15%;width:300%;height:130%;
+ background:linear-gradient(112deg,#dc6f9c,#e8b45a,#d4dd66,#62d3a6,#64ade6,#9d78dc,#dc6f9c,#e8b45a,#d4dd66,#62d3a6,#64ade6,#9d78dc,#dc6f9c);
+ transform:translateX(0);transition:transform .8s cubic-bezier(.2,.8,.2,1)}
+/* A 2D transform at rest (no layer of its own; promoted only while the slide runs), and the hover/press rule scoped to the foiled
+   card ([data-holo]), so hovering anything else invalidates nothing here (binder paint A/B, Oct 8 2026). */
+:global([data-holo]):hover>.foil::before,:global([data-holo]):active>.foil::before{transform:translateX(30%)}
+/* Regular: subtle, only round the edges (the pattern fades out toward the middle). */
+.foil[data-tier=regular]{opacity:calc(.6 * var(--holo-k,1))}
+.foil[data-tier=icon]{opacity:calc(.95 * var(--holo-k,1))}
+/* Icon: a gold etched double rule inside the frame. */
+.etch{position:absolute;inset:.22em;z-index:4;pointer-events:none;border:.07em solid #c4952f;border-radius:.8em 1.3em .8em .8em;box-shadow:inset 0 0 0 .14em #0000,inset 0 0 0 .2em #d9b04f99}
+@media(prefers-reduced-motion:reduce){.foil::before{transition:none}}

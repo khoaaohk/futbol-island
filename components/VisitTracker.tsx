@@ -2,6 +2,7 @@
 import {useEffect,useRef} from 'react';
 import {usePathname} from 'next/navigation';
 import {startTracker} from '@/lib/analytics/tracker';
+import {readStartFlags} from '@/lib/analytics/startFlags';
 
 /**
  * Cookie-free first-party visit counter for the admin dashboard (lib/analytics/tracker.ts has the privacy and heat notes).
@@ -12,7 +13,9 @@ export default function VisitTracker({allowLocalhost=false}:{allowLocalhost?:boo
  const tracker=useRef<ReturnType<typeof startTracker>>(null);
  useEffect(()=>{
   tracker.current=startTracker({window,document,navigator:navigator as Navigator&{globalPrivacyControl?:boolean},storage:(()=>{try{return window.sessionStorage;}catch{return null;}})(),
-   now:()=>performance.now(),random:n=>crypto.getRandomValues(new Uint8Array(n)),fetch:window.fetch.bind(window),allowLocalhost});
+   now:()=>performance.now(),random:n=>crypto.getRandomValues(new Uint8Array(n)),fetch:window.fetch.bind(window),allowLocalhost,
+   // Coarse progress/settings buckets for a new session's start (read once; lib/analytics/startFlags.ts).
+   flags:()=>{try{return readStartFlags(window.localStorage);}catch{return null;}}});
   return()=>{tracker.current?.stop();tracker.current=null;};
  },[allowLocalhost]);
  useEffect(()=>{if(pathname)tracker.current?.pageview(pathname);},[pathname]);

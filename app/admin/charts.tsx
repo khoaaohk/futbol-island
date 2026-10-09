@@ -71,20 +71,21 @@ export function LineChart({labels,series,values,ariaLabel}:{labels:string[];seri
  </div>;
 }
 
-export type BarRow={key:string;label:string;value:number;detail?:string};
+/** `text` replaces the printed value (e.g. "<5" for a cell withheld by small-number suppression, drawn as an empty track). */
+export type BarRow={key:string;label:string;value:number;detail?:string;text?:string};
 /** Horizontal bars, one series in slot 1. Value at the bar tip; the row is the hover/focus target. */
 /** `share` adds "· 12%" of the column total to the tooltip (off for averages, where a share means nothing). */
 export function BarList({rows,format=fmtInt,unit,limit=10,share=true}:{rows:BarRow[];format?:(n:number)=>string;unit:string;limit?:number;share?:boolean}){
  const [wrap,width]=useWidth<HTMLDivElement>();const [tip,setTip]=useState<TipState>(null);
  const shown=rows.slice(0,limit),max=Math.max(1,...shown.map(r=>r.value)),total=rows.reduce((a,r)=>a+r.value,0);
  const show=(el:HTMLElement,r:BarRow)=>{const box=wrap.current!.getBoundingClientRect(),b=el.getBoundingClientRect();
-  setTip({x:b.left-box.left+b.width/2,y:b.top-box.top,content:<><strong>{format(r.value)}</strong> {unit}{share?` · ${total?fmtPct(r.value/total):'0%'}`:''}<br/><span>{r.label}{r.detail?` · ${r.detail}`:''}</span></>});};
+  setTip({x:b.left-box.left+b.width/2,y:b.top-box.top,content:<><strong>{r.text??format(r.value)}</strong> {unit}{share&&r.text===undefined?` · ${total?fmtPct(r.value/total):'0%'}`:''}<br/><span>{r.label}{r.detail?` · ${r.detail}`:''}</span></>});};
  return <div className={styles.plot} ref={wrap}>
   <ul className={styles.bars}>
-   {shown.map(r=><li key={r.key} className={styles.bar} tabIndex={0} aria-label={`${r.label}: ${format(r.value)} ${unit}`}
+   {shown.map(r=><li key={r.key} className={styles.bar} tabIndex={0} aria-label={`${r.label}: ${r.text??format(r.value)} ${unit}`}
     onPointerEnter={e=>show(e.currentTarget,r)} onPointerLeave={()=>setTip(null)} onFocus={e=>show(e.currentTarget,r)} onBlur={()=>setTip(null)}>
     <span className={styles.barLabel}>{r.label}</span>
-    <span className={styles.barTrack}><span className={styles.barFill} style={{width:`calc((100% - 64px) * ${r.value/max})`}}/><span className={styles.barValue}>{format(r.value)}</span></span>
+    <span className={styles.barTrack}><span className={styles.barFill} style={{width:`calc((100% - 64px) * ${r.value/max})`}}/><span className={styles.barValue}>{r.text??format(r.value)}</span></span>
    </li>)}
   </ul>
   {rows.length>limit&&<p className={styles.note}>Top {limit} of {rows.length}. The table shows all.</p>}

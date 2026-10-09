@@ -7,6 +7,7 @@ import {CARD_ADDED} from '@/lib/town/cardRewardStore';
 import {CARD_TRADE_COINS,CARD_TRADES_PER_DAY,tradesLeft} from '@/lib/town/market/cardSelling';
 import {CARD_REMOVED,cardTrade} from '@/lib/town/market/cardSellingStore';
 import styles from './MarketCardsSection.module.css';
+import {miniFoil} from '@/lib/town/cardFoil';
 
 /**
  * The Cards section of the farmers-market sell stand (docs/sell-shop.md). The stand (components/FishMarket.tsx, fishing
@@ -78,7 +79,7 @@ export default function MarketCardsSection({active,onSold}:Props){
    </ul>:<p className={styles.empty}>No cards to trade here yet. Keep learning to fill your binder!</p>}
   </>}
   {pending&&<div className={styles.confirm} role="alertdialog" aria-modal="false" aria-labelledby="market-card-confirm" data-card-confirm>
-   <MiniCard name={pending.name} number={pending.number} era={pending.era} got className={styles.big}/>
+   <MiniCard name={pending.name} number={pending.number} era={pending.era} got className={styles.big} foil={miniFoil(pending.name)}/>
    <div>
     <h3 id="market-card-confirm">Trade in {pending.name} for {CARD_TRADE_COINS} coins?</h3>
     <p>This card will leave your binder. You might find it again in a future card pick, but it is not guaranteed.</p>

@@ -4,6 +4,7 @@ import MiniCard from './MiniCard';
 import {CARD_ENTRIES,cardNumber} from '@/lib/town/cardCollection';
 import {legendFor} from '@/lib/arcade/legendPacks';
 import {DoneButton} from './DoneButton';
+import {miniFoil} from '@/lib/town/cardFoil';
 import styles from './VendingCardReveal.module.css';
 
 /** Static collection artwork; only entry and deliberate card changes animate.
@@ -23,7 +24,7 @@ export default function VendingCardReveal({cards,preview,origin,onClose}:{cards:
     onPointerDown={e=>{e.currentTarget.setPointerCapture(e.pointerId);swiped.current=false;touch.current={x:e.clientX,y:e.clientY};}}
     onPointerUp={e=>{const start=touch.current;touch.current=null;if(start&&Math.abs(e.clientX-start.x)>45&&Math.abs(e.clientX-start.x)>Math.abs(e.clientY-start.y)){e.preventDefault();swiped.current=true;step(e.clientX<start.x?1:-1);}}}
     onPointerCancel={()=>{touch.current=null;}}>
-    <span key={index} className={first.current?styles.firstCard:styles.nextCard}><MiniCard name={current} number={cardNumber(current)} era={legend?'allTime':entry?.era??'current'} got className={styles.card}/></span>
+    <span key={index} className={first.current?styles.firstCard:styles.nextCard}><MiniCard name={current} number={cardNumber(current)} era={legend?'allTime':entry?.era??'current'} got className={styles.card} foil={miniFoil(current)}/></span>
    </button>
    <div className={styles.caption} aria-live="polite"><strong>{current}</strong><span>{legend?`Legend · ${legend.theme}`:entry?.roleLabel??'Player card'}</span><p>{legend?.note??'Every player brings a different strength to the team.'}</p></div>
    <nav aria-label="Cards in this pack"><button type="button" disabled={index===0} onClick={()=>step(-1)}>Previous</button><span aria-hidden="true">{cards.map((_,i)=><i key={i} data-active={i===index||undefined}/>)}</span><button type="button" onClick={()=>index<cards.length-1?step(1):onClose()}>{index<cards.length-1?'Next card':'Keep shopping'}</button></nav>

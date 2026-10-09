@@ -11,6 +11,7 @@ import VisualQuestion from './VisualQuestion';
 import {CertificateActions,CertificateCard} from './Certificate';
 import {Confetti} from './GraduationCeremony';
 import styles from './Endgame.module.css';
+import {countGraduation} from '@/lib/analytics/learnEvents';// learning analytics (Oct 9 2026)
 
 type Step='board'|'exam'|'draw'|'trophy'|'credits';
 /** The PLANNED questions (progress dots). The score uses the questions actually asked (QA11): a format with fewer eligible
@@ -33,7 +34,7 @@ export default function MatchdayFinale({onDone,onStepChange}:{onDone:()=>void;on
  const [score,setScore]=useState(0),[asked,setAsked]=useState(0);
  const mark=(key:string,ok:boolean)=>{if(!tried.current.has(key)){tried.current.add(key);if(ok){firstTry.current.add(key);setScore(firstTry.current.size);}}};
  // Every question asked gets a first answer before the child can move on, so `tried` is exactly the questions asked.
- const finish=()=>{const total=tried.current.size;setAsked(total);updateGraduations(r=>recordFinale(r,{firstTry:firstTry.current.size,total},Date.now()));setStep('trophy');};
+ const finish=()=>{const total=tried.current.size;setAsked(total);updateGraduations(r=>recordFinale(r,{firstTry:firstTry.current.size,total},Date.now()));countGraduation('finale');setStep('trophy');};
  if(step==='board')return <Boarding onStart={()=>setStep('exam')}/>;
  if(step==='exam')return <Exam seed={seed} mark={mark} onDone={()=>setStep('draw')}/>;
  if(step==='draw')return <DrawRounds mark={mark} onDone={finish}/>;

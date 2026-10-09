@@ -5,6 +5,7 @@ import {BackButton} from '@/components/BackButton';
 import type {Report,Row} from '@/lib/analytics/core';
 import {BarList,ChartCard,Columns,LineChart,fmtDuration,fmtInt,fmtPct,type BarRow} from './charts';
 import IslandSection from './IslandSection';
+import LearningSection from './LearningSection';
 import RegionCard from './RegionCard';
 import styles from './admin.module.css';
 
@@ -88,8 +89,15 @@ export default function AnalyticsDashboard({initial,initialRange}:{initial:Repor
 
    {!report.configured&&<section className={styles.banner}>
     <h2>Analytics storage is not configured</h2>
-    Add <code>SUPABASE_SERVICE_ROLE_KEY</code> to the server environment and run <code>supabase/migrations/20261007_analytics.sql</code> and <code>20261008_analytics_places.sql</code> in Supabase.
+    Add <code>SUPABASE_SERVICE_ROLE_KEY</code> to the server environment and run <code>supabase/migrations/20261007_analytics.sql</code>, <code>20261008_analytics_places.sql</code> and <code>20261009_analytics_counts.sql</code> in Supabase, in that order.
     Until then the game sends visits to a route that quietly does nothing.
+   </section>}
+   {report.configured&&report.storage?.needsUpdate&&<section className={`${styles.banner} ${styles.bannerWarn}`} role="status" aria-labelledby="storage-update">
+    <h2 id="storage-update">Storage needs an update for Learning</h2>
+    The database is missing the learning counters (analytics schema {report.storage.schema}, this app needs 3). In the Supabase SQL editor, paste the
+    <b> whole</b> of <code>supabase/migrations/20261009_analytics_counts.sql</code> and run it. Its last result must be one row reading
+    <code>OK, counts installed (analytics schema 3)</code>; anything else means it did not finish, and running the whole file again is safe.
+    Until then visits, places and everything above keep counting; only the Learning section stays empty.
    </section>}
    {error&&<section className={styles.banner} role="alert">{error}</section>}
 
@@ -154,6 +162,8 @@ export default function AnalyticsDashboard({initial,initialRange}:{initial:Repor
     </div>
 
     <IslandSection report={report}/>
+
+    <LearningSection report={report}/>
    </div>
   </div>
  </main>;

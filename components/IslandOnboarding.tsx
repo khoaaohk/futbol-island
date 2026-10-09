@@ -8,6 +8,7 @@ import {useEffect,useLayoutEffect,useRef,useState,type MutableRefObject} from 'r
 import type {OnboardingNpcTarget} from '@/lib/graphics/onboardingNpc';
 import type {CharacterCustomization} from '@/lib/town/customization';
 import {finishIslandOnboarding} from '@/lib/town/onboarding';
+import {countWalkthroughExplore,countWalkthroughSkip,countWalkthroughStep} from '@/lib/analytics/learnEvents';
 import {FISH} from '@/lib/town/fishing/fishCatalog';
 import {goodById} from '@/lib/town/market/goods';
 import CharacterPreview from './CharacterPreview';
@@ -49,9 +50,11 @@ export default function IslandOnboarding({open,onClose,value,onChange}:Props){
  const current=steps[step],last=step===steps.length-1;
  // Same shelf snapshot the vending machine and Backpack show, rendered once when the Spend step opens (one short-lived renderer).
  const gear=useStorePreviews(open&&step===LEARN_STEP,GEAR_BALL);
- const dismiss=()=>{finishIslandOnboarding('dismissed');onClose();};
+ // Learning analytics (Oct 9 2026): the step a Skip happens on, Explore at the end, and each step shown (map increments only).
+ const dismiss=()=>{countWalkthroughSkip(steps[step].id);finishIslandOnboarding('dismissed');onClose();};
  // Oct 6 2026 (user): the last button is Explore and just drops the player into the island (no lesson launch).
- const next=()=>{if(last){finishIslandOnboarding('completed');onClose();}else setStep(n=>n+1);};
+ const next=()=>{if(last){countWalkthroughExplore();finishIslandOnboarding('completed');onClose();}else setStep(n=>n+1);};
+ useEffect(()=>{if(open)countWalkthroughStep(steps[step].id);},[open,step]);
  useEffect(()=>{const el=dialog.current;if(!el)return;if(open){setStep(0);restore.current=document.activeElement instanceof HTMLElement?document.activeElement:null;if(!el.open)el.showModal();heading.current?.focus({preventScroll:true});}else if(el.open){el.close();if(restore.current?.isConnected)restore.current.focus({preventScroll:true});}},[open]);
  useEffect(()=>{if(open)heading.current?.focus({preventScroll:true});},[open,step]);
  // Heat pass 4 (audit F10): measured on the step, after it settles and on resize — no layout poll (the island is paused behind the tour).

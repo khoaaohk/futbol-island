@@ -1,5 +1,65 @@
 # Performance reference for future Futbol Island updates
 
+## Holo foil on the live cards — October 8, 2026 (local, not deployed)
+
+The user approved the card-lab holo foil (section below) for the game.
+
+**Where it is on.** `lib/town/cardFoil.ts` gives each card one frozen `{pattern, tier, intensity}`: pattern from the card's role (coaches: passing lanes), tier from `cardTiers.json`, and intensity from `PATTERN_INTENSITY` in `lib/graphics/holoFoil/patterns.ts` (the user's settings: shield 0.70, the rest 1.00; the lab slider starts there).
+- **Large card, WebGL** (`holo={cardFoil(name)}`): the binder viewer (collected cards; the greyed uncollected card stays plain), the card-offer reveal, and the position guide.
+- **Mini cards, CSS** (`foil={miniFoil(name)}`): collected binder pockets, the vending card reveal, and the market's big card. Tiny thumbnails stay plain: search results, backpack, onboarding and the market list.
+- **Card back:** a one-line note per role, e.g. "Goal-net foil: goalkeeper. The net is what a goalkeeper guards." Coaches read "Passing-lane foil: coach. Coaches plan the passes that link the team."
+
+**Readability.** Nothing is drawn over the text panel: the name plate, role · nation, tag chip and bio.
+- In the shader, a single box from the plate through the bio zeroes every foil term (pattern, sheen, glint, etching, glitter).
+- On mini cards, everything below the picture window is cut out of the baked mask.
+
+**Binder paint A/B.** Production build, phone profile 390×844 at DPR 3 with touch and a 4× CPU throttle, full spread (every card owned). Foil on against the foil hidden, on the same page, interleaved, median of 3 windows. One window = 4 dock page turns, or 4 pocket presses held 0.9 s. The script is `scratchpad/binderpaint.cjs`; the JSON is in `scratchpad/holo-lab/`.
+
+| Variant | Paint (turns) | Style | Layerize | Commit | Raster tasks | Press paint | Idle 2 s |
+|---|---|---|---|---|---|---|---|
+| Off | 110–132 ms | 95–113 ms | 36–43 ms | 16–20 ms | 158 | 23 ms | 0 |
+| All tiers, 3 mask layers, `translate3d` (36 foils) | 141 ms (+28 %) | 104 ms | 53 ms (+48 %) | 32 ms (+94 %) | 1302 | 26 ms | 0 |
+| Elite + Icon only (22 foils) | 144 ms (+20 %) | 116 ms | 55 ms | 30 ms | 823 | 26 ms | 0 |
+| **Kept:** Elite + Icon, one baked mask, 2D transform at rest, hover scoped to `[data-holo]` | 150 ms (+29 %) | 115 ms (+8 %) | 46 ms (+12 %) | 22 ms (+8 %) | 248 | 30 ms | 0 |
+
+- **Decision.** A full spread with every tier cost noticeably more, so the mini foil is limited to Elite and Icon (`MINI_FOIL_TIERS`). Regular cards keep their foil on the big card.
+- **What the kept build changes.** Each foil uses one baked SVG mask (portrait hole and plate cut inside it), so there are no mask layers to composite. The rainbow layer has a 2D transform at rest, so it gets no compositor layer of its own. The hover/press rule is scoped to foiled cards.
+- **Result.** Raster tasks drop to near the foil-off level, and Layerize and Commit are almost unchanged. Main-thread Paint recording on turns is still about +30 %; all main-thread work together is about +15 %, roughly 2–3 ms per turn at full CPU speed.
+- **Desktop hover sweep over 9 pockets (kept build):** style 20 → 32 ms, Layerize 145 → 182 ms, Paint 33 → 42 ms.
+- **At rest:** nothing, with or without the foil.
+
+**Live checks.**
+- The binder viewer on the phone profile has 1 holo canvas, with 0 rAF requests in the 2 s after the arrival glint and 0 again 1.5 s after a touch tilt (35 during it).
+- `tests/holo-foil.cjs` pins the live hosts, the intensity map, the text-panel exclusion and the idle loop.
+- `tests/card-collection.cjs` passes on the production build at 1440 and 390. Its 390 end-of-turn snap diff is 0.93 % (was 0.125 %): the foil is drawn in the frames it compares.
+- The `tests/e2e/cards.spec.ts` binder and card-offer tests pass on iphone-15 (WebKit) and pixel-7.
+- Desktop emulation only: this is not iPhone temperature evidence.
+
+## Holo foil card lab — October 8, 2026 (local, not deployed; the live cards are unchanged)
+
+A dev-only comparison page, `/card-lab` (`lib/dev/labRoutes.ts`; production answers 404), for a WebGL2 holo foil on the large PlayerCard. Each position has its own foil so the shine teaches the job: goal net (goalkeeper), shield wall (defender), passing lanes from the centre circle (midfielder), starbursts (forward). Our own implementation, written from scratch (`lib/graphics/holoFoil/`, `components/HoloFoil.tsx`). Off in the game: PlayerCard `holo` and MiniCard `foil` default to null and only `components/CardLab.tsx` sets them (`tests/holo-foil.cjs`).
+
+**Heat design.**
+- One WebGL2 context on the page (`claimHoloContext`: a second holo card takes it and the first falls back to the CSS foil and loses its context).
+- No loop of its own while tilting: PlayerCard's one spring rAF calls `draw()` inside its frame, `settle()` when the spring sleeps and `rest()` when it goes flat (`lib/graphics/holoFoil/loop.ts`). The only self-scheduled frames are one 1.2 s arrival glint per player, deferred until the card is first in view. Hidden tab or off-screen (visibilitychange, IntersectionObserver): nothing draws; coming back draws one still frame.
+- Canvas DPR capped at 1.5 on touch devices and 2 on desktop. The player's packed riso mask is uploaded once per player (it keeps the foil off the portrait); layout uniforms change only on resize.
+- Falls back to the existing CSS `.foil` for no WebGL2, a lost or taken context, and reduced motion.
+- One canvas with `mix-blend-mode: hard-light` in the front face, in place of the CSS foil's `color-dodge`/`overlay` layer, so compositing cost is in the same class as today. At rest the canvas holds its last frame.
+- Binder MiniCards use a CSS-only version: a static SVG pattern mask per position over one rainbow layer that slides on hover/press (one transform transition). No WebGL, no loop.
+
+**Measured** (headless Chrome 1440×900 at DPR 2 and 390×844 at DPR 3 with touch, ANGLE/Metal on an Apple M4, dev server; GPU time from `EXT_disjoint_timer_query_webgl2`):
+
+| | Desktop (canvas 740×1136) | Phone profile (canvas 474×729, DPR 1.5) |
+|---|---|---|
+| Arrival glint | 74 frames, then stops | 73 frames, then stops |
+| Mouse sweep across the card (~1.3 s incl. settle) / touch drag | 108 frames | 92 frames |
+| Spring back after leaving | 39 frames | (in the 92) |
+| GPU per frame | 2.4 ms (1.0 ms at DPR 1) | 1.2 ms |
+| CPU submit per frame | 0.03–0.07 ms | 0.03–0.1 ms |
+| At rest, 2 s (pointer still on the card, and after leaving) | 0 rAF requests, 0 frames | 0 rAF requests, 0 frames |
+
+This is reduced and bounded work measured in desktop emulation, not evidence of iPhone temperature. Before wiring it into the live viewer, profile it on a real iPhone (Safari Web Inspector timeline during a tilt and at rest).
+
 ## Fewer, smaller image files — October 7, 2026 (local, not deployed)
 
 Goal: fewer image requests and fewer bytes, with no visible change. Measured on local production builds of the same tree with and without this pass (`next start`, headless Chromium, `--mute-audio`, cold cache, 1440×900 unless noted). Bytes are response bodies; local responses carry ~317 B of headers each.
@@ -4352,3 +4412,15 @@ Hidden ones are not drawn. Canvas textures (dash, flag, 4 intent glyphs) are mad
 - **Gating:** it does nothing when the tracker is off (DNT/GPC, bots, preview, labs, admin, localhost), when the tab is hidden, or after 60 s with no input or movement.
 - **Validation:** tests/admin-analytics-places.cjs (wiring and heat-budget group), tests/heat-*.cjs and device-guards pass. Desktop/headless only; no iPhone thermal claim.
 - **Deployment status:** not yet deployed.
+
+## Learning analytics counters (Oct 9 2026)
+
+`lib/analytics/learnEvents.ts` adds one map increment (`tracker.count`) at moments that already happen: a lesson opens, the play
+comes to rest on its last step (an effect on FieldLearning's existing derived `finished` flag), a quiz starts, an answer is
+picked, a walkthrough step shows, a Paths launch, a graduation, a warm-up answer. No new timer, loop, listener, state or request:
+the counts ride in the existing beat (`k`), and a hide may send up to two extra small count-only beacons when more than 64 ids
+are waiting. The start flags (`lib/analytics/startFlags.ts`) are read once per session from existing saves. When the tracker is
+off (dev, DNT/GPC, preview, labs, admin, localhost) every call returns at its first check. Bundle cost on every page: the
+allowlist (`lib/analytics/learningIds.generated.ts`, ~3.7 KB raw); the question text (`learningText.generated.ts`, ~79 KB) is
+server-only. Verified by tests/admin-analytics-learning.cjs (no timers added by counting; tracker has no intervals or frame loops).
+No device heat measurement was needed or claimed for this change.

@@ -15,13 +15,23 @@
  *
  * Where on the island (Oct 8 2026, supabase/migrations/20261008_analytics_places.sql): a beat may also carry ms per named place
  * (`pl`), ms per activity (`ac`) and seconds per 20 m heat-map cell (`c`), all fixed ids from islandIds.ts. Totals only.
+ *
+ * Learning (Oct 9 2026, supabase/migrations/20261009_analytics_counts.sql): a beat may carry learning counters (`k`, fixed ids
+ * from countIds.ts: lesson funnel stages, first-try answer indices, walkthrough steps…) and a start may carry coarse flags
+ * (`f`: progress band, graduations band, settings bits, coach voice). The day's rollup adds `counts` (sums), `countSessions`
+ * (sessions with each id ≥ 1, which makes funnels work without any per-session id) and `flags` (sessions per flag value).
  */
 import {ACTIVITY_IDS,CELL_COUNT,MAX_BEAT_CELLS,PLACE_IDS,type ActivityId,type PlaceId} from './islandIds';
+import type {LearningReport} from './learning';
+import {COUNT_KEY_RE,MAX_BEAT_COUNTS,MAX_COUNT_VALUE,checkFlags,flagTallyKeys,isCountId,type StartFlags} from './countIds';
 
+/** The analytics SQL this code expects: 3 = 20261009_analytics_counts.sql (public.analytics_schema_version()). */
+export const SCHEMA_VERSION=3;
 export const EVENT_TYPES=['start','beat'] as const;
 export type EventType=typeof EVENT_TYPES[number];
 /** Raised from 2048 (Oct 8 2026) for the place/activity/cell split: a worst-case beat (every place, every activity and 64
- *  cells) is ~3 KB; a typical one is 300–700 bytes. */
+ *  cells) is ~3 KB; a typical one is 300–700 bytes. Unchanged for the learning counters (Oct 9 2026): the tracker fits `k`
+ *  under its BEACON_BUDGET (4000 B) and carries the rest to the next beat, so no beat it sends is ever over this. */
 export const MAX_BODY_BYTES=4096;
 /** Most foreground time one beat can carry (the client's safety ping is ≤3.6 min apart while visible). */
 export const MAX_EVENT_ENGAGED_MS=300_000;
@@ -51,7 +61,9 @@ export type Device='phone'|'tablet'|'desktop';
 
 /** What the browser sends. Everything is optional except t/s/p; the server derives the rest. */
 export type RawEvent={v?:number;t:EventType;s:string;p:string;r?:string;u?:Utm;e?:number;a?:Record<string,number>;n?:number;tp?:number;
- pl?:Record<string,number>;ac?:Record<string,number>;c?:Record<string,number>};
+ pl?:Record<string,number>;ac?:Record<string,number>;c?:Record<string,number>;
+ /** Oct 9 2026: learning counters (beats) and start flags (starts). */
+ k?:Record<string,number>;f?:StartFlags};
 /** Seconds per heat-map cell (key = cell index as a string). */
 export type CellMap=Record<string,number>;
 
@@ -62,6 +74,8 @@ export type CleanEvent={
  utmSource:string|null;utmMedium:string|null;utmCampaign:string|null;
  engagedMs:number;areaMs:Partial<Record<Area,number>>;pageviews:number;
  placeMs:Partial<Record<PlaceId,number>>;activityMs:Partial<Record<ActivityId,number>>;cells:CellMap;
+ /** Oct 9 2026: allowlisted learning counters (beats) and start flags (starts); empty objects otherwise. */
+ counts:Record<string,number>;flags:StartFlags;
 };
 
 const SESSION_RE=/^[A-Za-z0-9_-]{16,32}$/;
@@ -133,7 +147,7 @@ export function validateEvent(body:string):Validated{
  let o:unknown;try{o=JSON.parse(body);}catch{return {ok:false,reason:'json'};}
  if(!o||typeof o!=='object'||Array.isArray(o))return {ok:false,reason:'shape'};
  const r=o as Record<string,unknown>;
- const allowed=new Set(['v','t','s','p','r','u','e','a','n','tp','pl','ac','c']);
+ const allowed=new Set(['v','t','s','p','r','u','e','a','n','tp','pl','ac','c','k','f']);
  for(const k of Object.keys(r))if(!allowed.has(k))return {ok:false,reason:'unknown-key'};
  if(!(EVENT_TYPES as readonly unknown[]).includes(r.t))return {ok:false,reason:'type'};
  if(typeof r.s!=='string'||!SESSION_RE.test(r.s))return {ok:false,reason:'session'};
@@ -165,8 +179,17 @@ export function validateEvent(body:string):Validated{
   const entries=Object.entries(r.c as Record<string,unknown>);if(entries.length>MAX_BEAT_CELLS)return {ok:false,reason:'cells'};
   for(const [k,v] of entries)if(!/^(0|[1-9][0-9]{0,3})$/.test(k)||Number(k)>=CELL_COUNT||typeof v!=='number'||!Number.isInteger(v)||v<1||v*1000>limit)return {ok:false,reason:'cells'};
  }
- if(r.t==='start'&&(r.e!==undefined||r.a!==undefined||r.n!==undefined||r.pl!==undefined||r.ac!==undefined||r.c!==undefined))return {ok:false,reason:'start-engaged'};
- if(r.t==='beat'&&(r.r!==undefined||r.u!==undefined))return {ok:false,reason:'beat-source'};
+ // Learning counters: an object of ≤ MAX_BEAT_COUNTS well-formed ids, whole numbers 1..MAX_COUNT_VALUE. An id with the right
+ // shape that is not (or no longer) on the allowlist is dropped later by clampCounts, never a reason to lose the beat: a tab
+ // left open across a content deploy may still name a lesson that was removed.
+ if(r.k!==undefined){
+  if(!r.k||typeof r.k!=='object'||Array.isArray(r.k))return {ok:false,reason:'counts'};
+  const entries=Object.entries(r.k as Record<string,unknown>);if(entries.length>MAX_BEAT_COUNTS)return {ok:false,reason:'counts'};
+  for(const [k,v] of entries)if(!COUNT_KEY_RE.test(k)||typeof v!=='number'||!Number.isInteger(v)||v<1||v>MAX_COUNT_VALUE)return {ok:false,reason:'counts'};
+ }
+ if(r.f!==undefined&&!checkFlags(r.f))return {ok:false,reason:'flags'};
+ if(r.t==='start'&&(r.e!==undefined||r.a!==undefined||r.n!==undefined||r.pl!==undefined||r.ac!==undefined||r.c!==undefined||r.k!==undefined))return {ok:false,reason:'start-engaged'};
+ if(r.t==='beat'&&(r.r!==undefined||r.u!==undefined||r.f!==undefined))return {ok:false,reason:'beat-source'};
  return {ok:true,event:r as unknown as RawEvent};
 }
 
@@ -188,6 +211,13 @@ export function clampCells(c:Record<string,number>|undefined,engagedMs:number):C
   .sort((a,b)=>b[1]-a[1]||Number(a[0])-Number(b[0])).slice(0,MAX_BEAT_CELLS);
  const sum=entries.reduce((n,[,v])=>n+v,0),cap=Math.floor(engagedMs/1000),scale=sum>cap&&sum>0?cap/sum:1,out:CellMap={};
  for(const [k,v] of entries){const n=Math.floor(v*scale);if(n>0)out[k]=n;}
+ return out;
+}
+
+/** Learning counters: allowlisted ids only (see countIds.ts), whole numbers capped at MAX_COUNT_VALUE, at most MAX_BEAT_COUNTS. */
+export function clampCounts(k:Record<string,number>|undefined):Record<string,number>{
+ const out:Record<string,number>={};let n=0;
+ for(const [id,v] of Object.entries(k||{})){if(n>=MAX_BEAT_COUNTS)break;if(!isCountId(id)||!Number.isInteger(v)||v<1)continue;out[id]=Math.min(v,MAX_COUNT_VALUE);n++;}
  return out;
 }
 
@@ -215,22 +245,27 @@ export type SessionRow={
  country:string|null;region:string|null;device:Device;source:SourceClass;referrerHost:string|null;
  utmSource:string|null;utmMedium:string|null;utmCampaign:string|null;areaMs:Partial<Record<Area,number>>;
  placeMs:Partial<Record<PlaceId,number>>;activityMs:Partial<Record<ActivityId,number>>;cells:CellMap;
+ counts:Record<string,number>;flags:StartFlags;
 };
 /** Append-only rows: one per session start, one per beat. */
-export type StartRow={id:string;day:string;visitorHash:string;startedAt:string;entryPath:string;country:string|null;region:string|null;device:Device;source:SourceClass;referrerHost:string|null;utmSource:string|null;utmMedium:string|null;utmCampaign:string|null};
+export type StartRow={id:string;day:string;visitorHash:string;startedAt:string;entryPath:string;country:string|null;region:string|null;device:Device;source:SourceClass;referrerHost:string|null;utmSource:string|null;utmMedium:string|null;utmCampaign:string|null;
+ /** Oct 9 2026; absent on starts stored before the learning counters. */
+ flags?:StartFlags};
 export type BeatRow={sessionId:string;ts:string;engagedMs:number;pageviews:number;areaMs:Partial<Record<Area,number>>;
  /** Oct 8 2026; absent on beats stored before the place split. */
- placeMs?:Partial<Record<PlaceId,number>>;activityMs?:Partial<Record<ActivityId,number>>;cells?:CellMap};
+ placeMs?:Partial<Record<PlaceId,number>>;activityMs?:Partial<Record<ActivityId,number>>;cells?:CellMap;
+ /** Oct 9 2026; absent on beats stored before the learning counters. */
+ counts?:Record<string,number>};
 
 /** Assemble sessions from append-only rows, with the same rules as the SQL (public.analytics_day). */
 export function deriveSessions(starts:StartRow[],beats:BeatRow[]):SessionRow[]{
  const by=new Map<string,BeatRow[]>();for(const b of beats)(by.get(b.sessionId)??by.set(b.sessionId,[]).get(b.sessionId)!).push(b);
  return starts.map(st=>{
-  const bs=by.get(st.id)||[];let e=0,pv=1,last=Date.parse(st.startedAt);const areaMs:Partial<Record<Area,number>>={},placeMs:Record<string,number>={},activityMs:Record<string,number>={},cells:CellMap={};
-  for(const b of bs){e+=b.engagedMs;pv+=b.pageviews;last=Math.max(last,Date.parse(b.ts));for(const [k,v] of Object.entries(b.areaMs||{}))areaMs[k as Area]=(areaMs[k as Area]||0)+(v||0);
+  const bs=by.get(st.id)||[];let e=0,pv=1,last=Date.parse(st.startedAt);const areaMs:Partial<Record<Area,number>>={},placeMs:Record<string,number>={},activityMs:Record<string,number>={},cells:CellMap={},counts:Record<string,number>={};
+  for(const b of bs){addInto(counts,b.counts);e+=b.engagedMs;pv+=b.pageviews;last=Math.max(last,Date.parse(b.ts));for(const [k,v] of Object.entries(b.areaMs||{}))areaMs[k as Area]=(areaMs[k as Area]||0)+(v||0);
    addInto(placeMs,b.placeMs);addInto(activityMs,b.activityMs);addInto(cells,b.cells);}
   const cap=Math.max(0,last-Date.parse(st.startedAt))+ENGAGED_SLACK_MS;
-  return {...st,engagedMs:bs.length?Math.min(e,cap):0,pageviews:pv,lastSeenAt:new Date(last).toISOString(),areaMs,placeMs,activityMs,cells};
+  return {...st,flags:st.flags||{},engagedMs:bs.length?Math.min(e,cap):0,pageviews:pv,lastSeenAt:new Date(last).toISOString(),areaMs,placeMs,activityMs,cells,counts};
  });
 }
 
@@ -246,6 +281,9 @@ export type DailyRollup={
  /** Oct 8 2026 (absent in rollups frozen before): ms per place and the sessions that spent any time there, ms per
   *  activity, and seconds per heat-map cell, all summed over the day. */
  placeMs?:Partial<Record<PlaceId,number>>;placeSessions?:Partial<Record<PlaceId,number>>;activityMs?:Partial<Record<ActivityId,number>>;cells?:CellMap;
+ /** Oct 9 2026 (absent in rollups frozen before, or computed by SQL functions from before 20261009_analytics_counts.sql):
+  *  learning counter sums, sessions with each counter ≥ 1, and sessions per start-flag value (flagTallyKeys). */
+ counts?:Record<string,number>;countSessions?:Record<string,number>;flags?:Record<string,number>;
 };
 
 /** Fine session-length buckets in seconds (bucket i is [EDGES[i], EDGES[i+1]); the last is open). Used for the median. */
@@ -278,7 +316,7 @@ export function dimKeys(s:SessionRow):Record<Dim,string|null>{
 
 /** One UTC day of raw sessions → its rollup. Visitors are distinct hashes (the hash only lives for that day anyway). */
 export function rollupDay(day:string,sessions:SessionRow[]):DailyRollup{
- const r:DailyRollup={day,visitors:0,sessions:0,pageviews:0,bounces:0,engagedMs:0,hist:LENGTH_EDGES.map(()=>0),dims:emptyDims(),areaMs:{},placeMs:{},placeSessions:{},activityMs:{},cells:{}};
+ const r:DailyRollup={day,visitors:0,sessions:0,pageviews:0,bounces:0,engagedMs:0,hist:LENGTH_EDGES.map(()=>0),dims:emptyDims(),areaMs:{},placeMs:{},placeSessions:{},activityMs:{},cells:{},counts:{},countSessions:{},flags:{}};
  const placeMs=r.placeMs as Record<string,number>,placeSessions=r.placeSessions as Record<string,number>;
  const visitors=new Set<string>(),dimVisitors=new Map<string,Set<string>>();
  for(const s of sessions){
@@ -293,6 +331,8 @@ export function rollupDay(day:string,sessions:SessionRow[]):DailyRollup{
   for(const [a,ms] of Object.entries(s.areaMs||{}))if(ms)r.areaMs[a as Area]=(r.areaMs[a as Area]||0)+ms;
   for(const [p,ms] of Object.entries(s.placeMs||{}))if(ms){placeMs[p]=(placeMs[p]||0)+ms;placeSessions[p]=(placeSessions[p]||0)+1;}
   addInto(r.activityMs as Record<string,number>,s.activityMs);addInto(r.cells!,s.cells);
+  for(const [id,n] of Object.entries(s.counts||{}))if(n>0){r.counts![id]=(r.counts![id]||0)+n;r.countSessions![id]=(r.countSessions![id]||0)+1;}
+  if(s.flags&&Object.keys(s.flags).length)for(const k of flagTallyKeys(s.flags))r.flags![k]=(r.flags![k]||0)+1;
  }
  r.visitors=visitors.size;
  for(const dim of DIMS)r.dims[dim]=trimTop(r.dims[dim],dim==='region'?REGION_TOP_N:TOP_N);
@@ -323,10 +363,13 @@ export type Totals={visitors:number;sessions:number;pageviews:number;bounceRate:
 export type PlaceRow={place:PlaceId;ms:number;sessions:number};
 export type ActivityRow={activity:ActivityId;ms:number};
 export type Merged={totals:Totals;hist:number[];dims:Record<Dim,Row[]>;areas:{area:Area;ms:number}[];
- places:PlaceRow[];activities:ActivityRow[];cells:[number,number][]};
+ places:PlaceRow[];activities:ActivityRow[];cells:[number,number][];
+ /** Learning totals over the range (raw; lib/analytics/learning.ts suppresses small cells before anything leaves the server). */
+ counts:Record<string,number>;countSessions:Record<string,number>;flags:Record<string,number>};
 
 export function mergeRollups(rollups:DailyRollup[]):Merged{
  const hist=LENGTH_EDGES.map(()=>0),dims=emptyDims(),areaMs:Partial<Record<Area,number>>={},placeMs:Record<string,number>={},placeSessions:Record<string,number>={},activityMs:Record<string,number>={},cells:CellMap={};
+ const counts:Record<string,number>={},countSessions:Record<string,number>={},flags:Record<string,number>={};
  let visitors=0,sessions=0,pageviews=0,bounces=0,engagedMs=0;
  for(const r of rollups){
   visitors+=r.visitors;sessions+=r.sessions;pageviews+=r.pageviews;bounces+=r.bounces;engagedMs+=r.engagedMs;
@@ -334,6 +377,7 @@ export function mergeRollups(rollups:DailyRollup[]):Merged{
   for(const dim of DIMS)for(const [k,c] of Object.entries(r.dims?.[dim]||{})){const t=(dims[dim][k]??={s:0,v:0,pv:0});t.s+=c.s;t.v+=c.v;t.pv+=c.pv;}
   for(const [a,ms] of Object.entries(r.areaMs||{}))areaMs[a as Area]=(areaMs[a as Area]||0)+(ms||0);
   addInto(placeMs,r.placeMs);addInto(placeSessions,r.placeSessions);addInto(activityMs,r.activityMs);addInto(cells,r.cells);
+  addInto(counts,r.counts);addInto(countSessions,r.countSessions);addInto(flags,r.flags);
  }
  const rows=(rec:Record<string,Counts>)=>Object.entries(rec).map(([key,c])=>({key,sessions:c.s,visitors:c.v,pageviews:c.pv})).sort((a,b)=>b.visitors-a.visitors||b.sessions-a.sessions||a.key.localeCompare(b.key));
  return {
@@ -343,6 +387,7 @@ export function mergeRollups(rollups:DailyRollup[]):Merged{
   places:Object.entries(placeMs).filter(([p,ms])=>ms>0&&(PLACE_IDS as readonly string[]).includes(p)).map(([p,ms])=>({place:p as PlaceId,ms,sessions:placeSessions[p]||0})).sort((a,b)=>b.ms-a.ms||a.place.localeCompare(b.place)),
   activities:Object.entries(activityMs).filter(([a,ms])=>ms>0&&(ACTIVITY_IDS as readonly string[]).includes(a)).map(([a,ms])=>({activity:a as ActivityId,ms})).sort((a,b)=>b.ms-a.ms||a.activity.localeCompare(b.activity)),
   cells:Object.entries(cells).map(([k,s])=>[Number(k),s] as [number,number]).filter(([k,s])=>s>0&&k>=0&&k<CELL_COUNT).sort((a,b)=>a[0]-b[0]),
+  counts,countSessions,flags,
  };
 }
 
@@ -366,12 +411,16 @@ export type Report={
  /** Full names for the region keys in dims.region ("US-CA" → "California"), filled on the server (regions.ts). */
  regionNames:Record<string,string>;
  notes:string[];
+ /** Oct 9 2026: the Learning section (built and small-number-suppressed on the server, lib/analytics/learning.ts). */
+ learning:LearningReport|null;
+ /** Database functions version (3 = 20261009_analytics_counts.sql installed); `needsUpdate` drives the /admin banner. */
+ storage:{schema:number;needsUpdate:boolean};
 };
 
 export function emptyReport(from:string,to:string,now:Date,configured:boolean):Report{
  const m=mergeRollups([]);
  return {configured,from,to,granularity:from===to?'hour':'day',generatedAt:now.toISOString(),live:0,series:[],totals:m.totals,distribution:displayDistribution(m.hist),dims:m.dims,areas:m.areas,
-  places:m.places,activities:m.activities,cells:m.cells,regionNames:{},notes:[]};
+  places:m.places,activities:m.activities,cells:m.cells,regionNames:{},notes:[],learning:null,storage:{schema:SCHEMA_VERSION,needsUpdate:false}};
 }
 
 /** Resolve a preset or custom range to inclusive UTC days. Custom ranges are capped at 366 days and never end after today. */

@@ -16,6 +16,7 @@ import navStyles from './DoneButton.module.css';
 import viewerStyles from './CardCollection.module.css';
 import revealStyles from './CardOffer.module.css';
 import {showCardInBinder} from '@/lib/town/cardRewardStore';
+import {cardFoil} from '@/lib/town/cardFoil';
 export default function PositionGuide({selection,onClose}:{selection:PositionSelection|null;onClose:()=>void}){
  const dialog=useRef<HTMLDialogElement>(null),close=useRef<HTMLButtonElement>(null),restore=useRef<HTMLElement|null>(null);
  const [detail,setDetail]=useState<string|null>(null);const scroll=useRef<HTMLDivElement>(null),profileTrigger=useRef<HTMLButtonElement|null>(null),listScroll=useRef(0),back=useRef<HTMLButtonElement>(null);
@@ -51,7 +52,7 @@ export default function PositionGuide({selection,onClose}:{selection:PositionSel
   </div>
   <div ref={cardHost} className={`${viewerStyles.cardHost} ${revealStyles.host}`} onClickCapture={syncFlip}>
    <h2 id="position-guide-title" className={revealStyles.added}>{detail}</h2>
-   <PlayerCard compact onFlipChange={setFlipped} name={detail} role={info.name} era={tab} team={selection.team} format={selection.format} firstName={detail.split(' ')[0]} strengths={profile?.strengths??info.keySkills} sources={POSITION_SOURCES.filter((_,i)=>selection.format==='futsal'?i>0:i===0)} blurb={profile?.blurb??`Explore ${detail} through the ${info.name.toLowerCase()} role. Use the checklist below while watching their movement and decisions.`}/>
+   <PlayerCard compact onFlipChange={setFlipped} holo={cardFoil(detail)} name={detail} role={info.name} era={tab} team={selection.team} format={selection.format} firstName={detail.split(' ')[0]} strengths={profile?.strengths??info.keySkills} sources={POSITION_SOURCES.filter((_,i)=>selection.format==='futsal'?i>0:i===0)} blurb={profile?.blurb??`Explore ${detail} through the ${info.name.toLowerCase()} role. Use the checklist below while watching their movement and decisions.`}/>
   </div>
   <section ref={sheet} className={revealStyles.below}><button type="button" className={revealStyles.primary} onClick={()=>openBinder(detail)}>See it in my binder</button></section>
  </div>:<>

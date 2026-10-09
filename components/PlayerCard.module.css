@@ -353,3 +353,8 @@
    blended again under every film frame. Both return at once when the film fades out (filmFading) or ends. */
 .window:has(>canvas.filmCanvas:not(.filmFading))>:not(canvas){visibility:hidden;transition:visibility 0s linear .35s}
 .card[data-playing]:has(canvas.filmCanvas:not(.filmFading)) .foil{visibility:hidden;transition:visibility 0s linear .35s}
+/* Holo foil (dev flag `holo`, card lab Oct 8 2026; unused in the live game): the WebGL canvas takes the CSS .foil's place
+   (HoloFoil.module.css) and, like it, leaves compositing while a film covers the window. The back names the foil's meaning. */
+.card[data-playing]:has(canvas.filmCanvas:not(.filmFading)) .holo{visibility:hidden;transition:visibility 0s linear .35s}
+.stage .card .back p.foilNote{flex:none;margin:0;font-size:clamp(10px,calc(var(--u) * 3),12.5px);line-height:1.35;color:var(--meta)}
+.stage .card .back p.foilNote b{color:var(--label);font-weight:800}

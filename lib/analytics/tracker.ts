@@ -18,8 +18,16 @@
  * enterActivity() when they open (a module variable, like enterArea), and the split happens in flush(). Only totals per
  * fixed id leave the tab: never a position list, an order of places or a time per position. Time with no input or movement
  * for ACTIVITY_IDLE_MS is booked as `idle` and never counted toward a place or a cell.
+ *
+ * Learning counters (Oct 9 2026): count(id,n) adds n to a module map (no re-render, no timer, no request) at the moment a
+ * learning event already happens (a lesson opens, a quiz answer is picked, a walkthrough step shows…). The map rides along in
+ * the next beat as `k:{id:n}`: fixed ids from countIds.ts only, the busiest MAX_BEAT_COUNTS, and only as many as keep the
+ * beacon under BEACON_BUDGET bytes; the rest carry to the next beat (a hide also drains up to MAX_DRAIN_BEATS extra small
+ * beats, so a tab that closes keeps its counts). A session's start may carry `f`, coarse progress/settings buckets read once
+ * by startFlags.ts (VisitTracker passes it in; this file reads no storage of the game's).
  */
 import type {Area} from './core';
+import {MAX_BEAT_COUNTS,MAX_COUNT_VALUE,isCountId,type StartFlags} from './countIds';
 import {ACTIVITY_IDS,ACTIVITY_IDLE_MS,MAX_BEAT_CELLS,PASSIVE_ACTIVITIES,SAMPLE_MAX_MS,SAMPLE_MS,cellOf,type ActivityId,type PlaceId} from './islandIds';
 
 export const ENDPOINT='/api/visit';
@@ -29,6 +37,10 @@ export const IDLE_MS=10*60_000;
 export const SESSION_IDLE_MS=30*60_000;
 export const MAX_PINGS=80;// 4 h of safety beats per session; the hide/pagehide beat still counts the rest
 const SESSION_KEY='fi-visit',SKIP_KEY='fi-visit-off';
+/** A beacon never grows past this (the server's MAX_BODY_BYTES is 4096; the rest is slack). Counts are fitted under it. */
+export const BEACON_BUDGET=4000;
+/** Extra count-only beats a hide may send when the counts did not all fit (each still one small sendBeacon). */
+export const MAX_DRAIN_BEATS=2;
 
 export type TrackerEnv={
  window:Pick<Window,'addEventListener'|'removeEventListener'|'setTimeout'|'clearTimeout'|'location'>&{doNotTrack?:string|null};
@@ -38,6 +50,8 @@ export type TrackerEnv={
  now:()=>number;
  random:(n:number)=>Uint8Array;
  fetch?:typeof fetch;
+ /** Coarse progress/settings buckets for the session's start (lib/analytics/startFlags.ts). Called once per new session. */
+ flags?:()=>StartFlags|null;
  allowLocalhost?:boolean;
 };
 
@@ -71,6 +85,29 @@ export function islandFrame(x:number,z:number,mode:ActivityId,lookup:(x:number,z
  if(mode!==frameMode){live.flush();frameMode=mode;}
  const t=live.now();if(t<nextSample)return;nextSample=t+SAMPLE_MS;
  live.sample(x,z,lookup);
+}
+
+/** Learning counters waiting for the next beat (id → n). Only filled while a tracker runs. */
+const countAcc=new Map<string,number>();
+/**
+ * Count a learning event: a map increment and nothing else (no state, no timer, no request). Unknown ids are ignored, so a
+ * lesson that is not in the generated allowlist (a Learning Journey's practice scene) is simply not counted.
+ */
+export function count(id:string,n=1){
+ if(!live||!Number.isInteger(n)||n<1||!isCountId(id))return;
+ countAcc.set(id,Math.min(10_000,(countAcc.get(id)||0)+n));
+}
+/** Take the busiest counts that fit in `room` bytes (≤ MAX_BEAT_COUNTS ids, ≤ MAX_COUNT_VALUE each); the rest stay for later.
+ *  (Exported for tests: the heaviest real beat, every place + every activity + 64 cells + 64 count ids, is ~3.9 KB, so this
+ *  byte guard only binds on beats heavier than the game produces today.) */
+export function takeCounts(room:number):Record<string,number>|null{
+ if(!countAcc.size)return null;
+ const sorted=[...countAcc].sort((a,b)=>b[1]-a[1]||(a[0]<b[0]?-1:a[0]>b[0]?1:0)).slice(0,MAX_BEAT_COUNTS);
+ const out:Record<string,number>={};let bytes=6;// ,"k":{}
+ for(const [id,n] of sorted){const v=Math.min(n,MAX_COUNT_VALUE),add=id.length+String(v).length+4;if(bytes+add>room)break;bytes+=add;out[id]=v;}
+ if(!Object.keys(out).length)return null;
+ for(const [id,v] of Object.entries(out)){const left=(countAcc.get(id)||0)-v;if(left>0)countAcc.set(id,left);else countAcc.delete(id);}
+ return out;
 }
 
 const areaOf=(path:string):Area=>{const top='/'+(path.split('/')[1]||'');return top==='/'?'island':top==='/arcade'?'arcade':top==='/museum'?'museum':top==='/konbini'?'konbini':top==='/controller'?'controller':'other';};
@@ -155,13 +192,14 @@ export function startTracker(env:TrackerEnv){
  /** Send what accumulated since the last beat; nothing at all when there is under a second and no page view. */
  function beat(){
   flush();
-  if(acc<1000&&!pend)return;
+  if(acc<1000&&!pend&&!countAcc.size)return;
   const round=(o:Record<string,number|undefined>)=>{const r:Record<string,number>={};for(const [k,v] of Object.entries(o)){const n=Math.round(v||0);if(n>0)r[k]=n;}return r;};
   const a=round(areaAcc),body:Record<string,unknown>={v:1,t:'beat',s:session,p:path,e:Math.round(acc),a,n:Math.min(pend,100)};
   const pl=round(placeAcc),ac=round(activityAcc);if(Object.keys(pl).length)body.pl=pl;if(Object.keys(ac).length)body.ac=ac;
   // Heat-map cells: whole seconds, the busiest MAX_BEAT_CELLS only (keeps the beacon small).
   const cells=[...cellAcc].map(([k,ms])=>[k,Math.round(ms/1000)] as const).filter(([,s])=>s>0).sort((x,y)=>y[1]-x[1]||x[0]-y[0]).slice(0,MAX_BEAT_CELLS);
   if(cells.length)body.c=Object.fromEntries(cells);
+  const k=takeCounts(BEACON_BUDGET-JSON.stringify(body).length);if(k)body.k=k;
   send(body);
   acc=0;pend=0;for(const o of [areaAcc,placeAcc,activityAcc] as Record<string,number>[])for(const k of Object.keys(o))delete o[k];cellAcc.clear();
  }
@@ -185,11 +223,14 @@ export function startTracker(env:TrackerEnv){
    for(const k of ['source','medium','campaign']){const v=q.get('utm_'+k);if(v)u[k]=v.slice(0,100);}
    if(Object.keys(u).length)body.u=u;
    if((n.maxTouchPoints||0)>1)body.tp=1;
+   try{const f=env.flags?.();if(f&&Object.keys(f).length)body.f=f;}catch{}
   }
   send(body);schedule();
  }
  const onInput=()=>{const t=env.now();if(visibleSince!==null&&t-lastInput>IDLE_MS){flush();visibleSince=t;}lastInput=t;markActive(t);schedule();};
- const onHide=()=>{beat();visibleSince=null;stopTimer();};
+ /** Counts that did not fit the hide beat go out in up to MAX_DRAIN_BEATS small count-only beats (no time, no page views). */
+ const drain=()=>{for(let i=0;i<MAX_DRAIN_BEATS&&countAcc.size;i++){const body:Record<string,unknown>={v:1,t:'beat',s:session,p:path};const k=takeCounts(BEACON_BUDGET-JSON.stringify(body).length);if(!k)break;body.k=k;send(body);}};
+ const onHide=()=>{beat();drain();visibleSince=null;stopTimer();};
  function onVisibility(){
   if(d.visibilityState==='visible'){
    if(visibleSince!==null)return;
@@ -207,8 +248,8 @@ export function startTracker(env:TrackerEnv){
  w.addEventListener('keydown',onInput,{capture:true,passive:true});
  return {
   pageview,
-  stop(){overrideListeners.delete(flush);live=null;stopTimer();d.removeEventListener('visibilitychange',onVisibility);w.removeEventListener('pagehide',onHide);w.removeEventListener('pointerdown',onInput,{capture:true});w.removeEventListener('keydown',onInput,{capture:true});},
+  stop(){overrideListeners.delete(flush);live=null;countAcc.clear();stopTimer();d.removeEventListener('visibilitychange',onVisibility);w.removeEventListener('pagehide',onHide);w.removeEventListener('pointerdown',onInput,{capture:true});w.removeEventListener('keydown',onInput,{capture:true});},
   /** Test hooks. */
-  state:()=>({session,timer:timer!==null,acc,pend,pings,path,place,activity:activityNow(currentOverride??areaOf(path)),cells:cellAcc.size}),
+  state:()=>({session,timer:timer!==null,acc,pend,pings,path,place,activity:activityNow(currentOverride??areaOf(path)),cells:cellAcc.size,counts:Object.fromEntries(countAcc)}),
  };
 }

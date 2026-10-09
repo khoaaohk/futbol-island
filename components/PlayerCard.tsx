@@ -11,7 +11,11 @@ import {ALL_PLAYERS,CARD_STORAGE_KEY,cardDisplayName,isCoachCard} from '@/lib/to
 import dynamic from 'next/dynamic';
 import styles from './PlayerCard.module.css';
 import artStyles from './PlayerArt.module.css';
+import type {HoloFoilConfig,HoloFoilHandle,HoloStats} from './HoloFoil';
+import {foilNote} from '@/lib/graphics/holoFoil/patterns';
 const CardHighlights=dynamic(()=>import('./CardHighlights'),{ssr:false});
+/** WebGL holo foil (card lab, Oct 8 2026): loaded only when a host sets `holo` (none in the live game). */
+const HoloFoil=dynamic(()=>import('./HoloFoil'),{ssr:false});
 
 const STORAGE_KEY=CARD_STORAGE_KEY;
 /** The narration sentence with the current cue words marked. */
@@ -115,7 +119,14 @@ export type PlayerCardProps={name:string;role:string;era:'current'|'allTime';blu
  /** Host-driven turn light, for a host that turns the card itself (the Pick a card unpack): each new non-zero value plays the
   *  to-front turn light once (the glare sweep on the arriving front, the edge catch light and the sparks), without flipping and
   *  without the lift (the host moves the card). Never with reduced motion. */
- glint?:number};
+ glint?:number;
+ /** Dev flag, OFF by default (card lab, Oct 8 2026): draw the WebGL holo foil (components/HoloFoil.tsx) instead of the CSS `.foil`,
+  *  driven by this card's own tilt spring. The live hosts pass cardFoil(name) (lib/town/cardFoil.ts) since Oct 8 2026. */
+ holo?:HoloFoilConfig|null;onHoloStats?:(stats:HoloStats)=>void;
+ /** Dev: lets a host pose the tilt (the card lab's auto-wobble and screenshots). Unset, nothing changes. */
+ tiltRef?:React.MutableRefObject<CardTiltHandle|null>};
+/** Pose the card's tilt from outside (degrees, within the hover range): the same spring and sleep as a pointer. */
+export type CardTiltHandle={pose:(rx:number,ry:number)=>void;release:()=>void};
 
 /**
  * A collectable player card. The tilt and foil glare follow the pointer through CSS variables set on
@@ -132,7 +143,7 @@ function TurnLight({toBack,leaving,onDone}:{toBack:boolean;leaving:boolean;onDon
 }
 type Phase='idle'|'loading'|'playing'|'holding'|'fading';
 const HOLD_MS=600,FADE_MS=400;
-export default function PlayerCard({name,role,era,blurb,team,strengths,sources=[],compact=false,onFlipChange,glint=0}:PlayerCardProps){
+export default function PlayerCard({name,role,era,blurb,team,strengths,sources=[],compact=false,onFlipChange,glint=0,holo=null,onHoloStats,tiltRef}:PlayerCardProps){
  const card=useRef<HTMLDivElement>(null),stage=useRef<HTMLDivElement>(null),controls=useRef<HTMLDivElement>(null);
  const [flipped,setFlipped]=useState(false);
  // Iconic-play film: nothing is imported until Play is pressed. idle → loading → playing → holding (last frame) → fading → idle.
@@ -242,6 +253,7 @@ export default function PlayerCard({name,role,era,blurb,team,strengths,sources=[
  type Motion={rx:number;ry:number;vx:number;vy:number;tx:number;ty:number;mode:'rest'|'hover'|'leave';raf:number;last:number;box:DOMRect|null;glare:string};
  const motion=useRef<Motion>({rx:0,ry:0,vx:0,vy:0,tx:0,ty:0,mode:'rest',raf:0,last:0,box:null,glare:''});
  const shadow=useRef<HTMLSpanElement>(null),flipAt=useRef(0),turnMs=useRef(700);// no tilt until the turn has settled
+ const holoFoil=useRef<HoloFoilHandle|null>(null);// set only while a holo foil is mounted (dev flag)
  const flipEl=()=>card.current?.firstElementChild as HTMLElement|null;
  // The parallax planes (PlayerArt: back −16/−12 px, mid −6/−4 px, front 12/8 px at full tilt, as in its CSS) get their transform
  // written directly, and only the foils get --px/--py (for their glare layers): nothing else on the card restyles or repaints.
@@ -258,18 +270,19 @@ export default function PlayerCard({name,role,era,blurb,team,strengths,sources=[
   if(glare!==m.glare){m.glare=glare;const {planes,foils}=tiltTargets();
    for(const [p,kx,ky] of planes)p.style.transform=`translate3d(${(px*kx).toFixed(2)}px,${(py*ky).toFixed(2)}px,0)`;
    for(const t of foils){t.style.setProperty('--px',px.toFixed(3));t.style.setProperty('--py',py.toFixed(3));}}
+  if(holoFoil.current&&!flippedNow.current)holoFoil.current.draw({rx:m.rx,ry:local,px,py});// drawn inside this frame: no second loop
   const sh=shadow.current,rad=local*Math.PI/180;if(sh){const c=Math.cos(rad);sh.style.transform=`translate(${(Math.sin(rad)*10).toFixed(1)}%,${(m.rx*.6).toFixed(1)}%) scaleX(${(.55+.45*c).toFixed(3)})`;sh.style.opacity=(.35+.3*c).toFixed(2);}};
  /** Drops every inline write: the class transform (data-flipped) takes over exactly where the spring came to rest. */
  const halt=useCallback(()=>{unwatch.current?.();unwatch.current=null;untouch.current?.();untouch.current=null;const m=motion.current;cancelAnimationFrame(m.raf);m.raf=0;m.mode='rest';m.box=null;m.vx=m.vy=m.rx=0;m.ry=0;m.glare='';
   const el=card.current,f=flipEl();if(f)f.style.transform='';
   if(el){delete el.dataset.motion;delete el.dataset.active;const {planes,foils}=tiltTargets();for(const [p] of planes)p.style.transform='';for(const t of foils){t.style.removeProperty('--px');t.style.removeProperty('--py');}}
-  if(shadow.current){shadow.current.style.transform='';shadow.current.style.opacity='';}},[]);
+  if(shadow.current){shadow.current.style.transform='';shadow.current.style.opacity='';}holoFoil.current?.rest();},[]);
  const rest=halt;
  const step=(now:number)=>{const m=motion.current;m.raf=0;const dt=Math.min(1/30,Math.max(0,(now-m.last)/1000));m.last=now;
   const spring=(pos:number,vel:number,target:number):[number,number]=>{const v=vel+(260*(target-pos)-2*Math.sqrt(260)*vel)*dt;return [pos+v*dt,v];};// critically damped, ~0.15 s
   [m.rx,m.vx]=spring(m.rx,m.vx,m.tx);[m.ry,m.vy]=spring(m.ry,m.vy,m.ty);
   const still=Math.abs(m.vx)<.3&&Math.abs(m.vy)<.3&&Math.abs(m.rx-m.tx)<.05&&Math.abs(m.ry-m.ty)<.05;
-  if(still){m.rx=m.tx;m.ry=m.ty;if(m.mode==='leave'){halt();return;}paint(m);return;}// caught up: sleep
+  if(still){m.rx=m.tx;m.ry=m.ty;if(m.mode==='leave'){halt();return;}paint(m);holoFoil.current?.settle();return;}// caught up: sleep
   paint(m);m.raf=requestAnimationFrame(step);};
  const kick=()=>{const m=motion.current;if(m.raf)return;m.last=performance.now();m.raf=requestAnimationFrame(step);};
  useEffect(()=>{halt();return halt;},[name,halt]);
@@ -292,6 +305,14 @@ export default function PlayerCard({name,role,era,blurb,team,strengths,sources=[
   document.addEventListener('pointermove',away,{passive:true});document.documentElement.addEventListener('pointerleave',leave);
   unwatch.current=()=>{document.removeEventListener('pointermove',away);document.documentElement.removeEventListener('pointerleave',leave);};};
  useEffect(()=>()=>{unwatch.current?.();unwatch.current=null;untouch.current?.();untouch.current=null;},[]);
+ // Host-posed tilt (dev: the card lab). Same targets, spring and sleep as the hover tilt; never with reduced motion or a film on.
+ useEffect(()=>{if(!tiltRef)return;
+  tiltRef.current={pose:(rx,ry)=>{const m=motion.current,el=card.current;
+    if(!el||phaseNow.current!=='idle'||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+    if(m.mode==='rest'){m.rx=0;m.ry=face();m.vx=m.vy=0;el.dataset.motion='';}
+    m.mode='hover';m.tx=Math.max(-14,Math.min(14,rx));m.ty=face()+Math.max(-18,Math.min(18,ry));el.dataset.active='true';kick();},
+   release:()=>{const m=motion.current;if(m.mode!=='hover')return;m.mode='leave';m.tx=0;m.ty=face();if(card.current)delete card.current.dataset.active;kick();}};
+  return ()=>{tiltRef.current=null;};},[tiltRef]);// eslint-disable-line react-hooks/exhaustive-deps (refs only)
  // ── Touch tilt (user, Sep 24 2026: "add that gesture back"; tilt and parallax only, no spin, flip or momentum). A finger pressed on
  // the card that moves past TOUCH_SLOP tilts the card toward it with the hover mapping (±14° X, ±18° Y), the same spring, planes and
  // glare; pointermove only sets the target, so the one sleeping rAF spring batches the writes. The card box is cached at pointerdown.
@@ -351,7 +372,8 @@ export default function PlayerCard({name,role,era,blurb,team,strengths,sources=[
      {film&&caption&&phase!=='idle'?<div className={`${styles.bio} ${styles.filmBio}`} aria-live="polite"><span className={styles.eraLine}>{film.story.title}</span><p>{highlight(caption)}</p></div>
      :<div className={styles.bio}><span className={styles.eraLine}>{coach?(legend?'All-time great coach':'Coaching now'):legend?'All-time great':'Current star'} · {role}</span><p>{blurb}</p></div>}
      <span className={styles.flagStripe} aria-hidden="true"/>
-     <span className={styles.foil} aria-hidden="true"/>
+     {holo?<HoloFoil {...holo} name={name} handleRef={holoFoil} className={styles.holo} onStats={onHoloStats} fallback={<span className={styles.foil} aria-hidden="true"/>}/>
+      :<span className={styles.foil} aria-hidden="true"/>}
      {burst&&<TurnLight key={burst.id} toBack={burst.sweep} leaving={burst.toBack} onDone={()=>setBurst(null)}/>}
     </section>
     <section className={`${styles.face} ${styles.back}`} aria-hidden={!flipped}>
@@ -390,6 +412,7 @@ export default function PlayerCard({name,role,era,blurb,team,strengths,sources=[
       :coach?<p className={styles.backEmpty}>{first}’s coaching career isn’t on the card yet.</p>
       :<p className={styles.backEmpty}>{first}’s club history isn’t on the card yet. Look for the club badge in their highlights, and check back soon.</p>}
      </div>
+     {holo&&<p className={styles.foilNote}><b>{foilNote(holo.pattern,coach?'coach':undefined).chip}.</b> {foilNote(holo.pattern,coach?'coach':undefined).line}</p>}
      {(refs.length>0||!!photo)&&<div className={styles.refs}><span className={styles.refsTitle}>{coach?'Coach':'Player'} references &amp; sources</span>{refs.map(source=><a key={source.url} href={source.url} target="_blank" rel="noopener noreferrer" tabIndex={flipped?0:-1} onClick={event=>event.stopPropagation()}>{source.title} ↗</a>)}{photo&&<a className={styles.credit} href={photo.file} target="_blank" rel="noopener noreferrer" tabIndex={flipped?0:-1} onClick={event=>event.stopPropagation()}>Portrait from a photo by {photo.artist} · {photo.license} · {(photo as {sourceName?:string}).sourceName??'Wikimedia Commons'} ↗</a>}</div>}
      <span className={styles.flagStripe} aria-hidden="true"/>
      {burst&&<TurnLight key={burst.id} toBack={burst.sweep} leaving={!burst.toBack} onDone={()=>setBurst(null)}/>}

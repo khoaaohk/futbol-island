@@ -15,6 +15,7 @@ import profiles from '@/lib/town/playerProfiles.json';
 import {CARD_ENTRIES,ROLE_ORDER,readCollection} from '@/lib/town/cardCollection';
 import {CARD_ADDED,CARD_SPOT,cardRewardsActive,takeCardSpot} from '@/lib/town/cardRewardStore';
 import {cardTier} from '@/lib/town/cardTiers';
+import {cardFoil,miniFoil} from '@/lib/town/cardFoil';
 import {TIER_TEACHING_LINE} from '@/lib/town/cardRewards';
 import {CardOfferPill} from './CardOfferBadges';
 import styles from './CardCollection.module.css';
@@ -435,7 +436,7 @@ export default function CardCollection(){
      if(!shows(i))return <li key={i} className={styles.pocket}/>;
      return <li key={i} data-slot={i} data-name={name??undefined} className={styles.pocket} data-match={matches&&name?(matches.has(name)?'yes':'no'):undefined} data-spot={spot&&spot===name?'':undefined} data-lifted={lift&&lift.name===name&&lift.got&&lift.phase!=='in'?'':undefined}>
       {entry&&name?(got?<button type="button" className={styles.inPocket} data-sound="slide" aria-label={`${name}, card ${entry.number}, ${entry.era==='allTime'?'legend':'star'}, ${entry.roleLabel}${hasPlayFilm(name)?', has a Play Moment':''}. Take out card`} onClick={event=>liftCard(name,event.currentTarget)}>
-        <PocketCard name={name} number={entry.number} era={entry.era} got/>
+        <PocketCard name={name} number={entry.number} era={entry.era} got foil={miniFoil(name)}/>
        </button>
        :<button type="button" className={`${styles.inPocket} ${styles.ghost}`} aria-label={`${name}, card ${entry.number}, ${entry.roleLabel}. Not collected yet. Show details`} onClick={event=>liftCard(name,event.currentTarget)}>
         <PocketCard name={name} number={entry.number} era={entry.era} got/>
@@ -546,7 +547,7 @@ export default function CardCollection(){
    </div>
    {lift.got?<>
     <div ref={cardHost} className={styles.cardHost} onClickCapture={syncFlip}>
-     {PlayerCard&&<PlayerCard name={lift.name} role={liftEntry.roleLabel.replace('Futsal ','')} era={lift.era} team="gold" format={liftEntry.futsal?'futsal':'11v11'} firstName={lift.name.split(' ')[0]} compact
+     {PlayerCard&&<PlayerCard name={lift.name} role={liftEntry.roleLabel.replace('Futsal ','')} era={lift.era} team="gold" format={liftEntry.futsal?'futsal':'11v11'} firstName={lift.name.split(' ')[0]} compact holo={cardFoil(lift.name)}
       blurb={PROFILES[lift.name]?.blurb??`${lift.name} is one of the players to learn from as a ${liftEntry.roleLabel.toLowerCase()}.`} strengths={PROFILES[lift.name]?.strengths??[]} onFlipChange={setFlipped}/>}
     </div>
    </>:<>

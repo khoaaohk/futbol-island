@@ -5,11 +5,13 @@
  * Both are append-only on the write path (one insert per event, no row locks, no read-modify-write) and aggregate on the
  * read path: Supabase in SQL (supabase/migrations/20261007_analytics.sql + 20261008_analytics_places.sql), the memory store with the TypeScript reference
  * in core.ts. tests/admin-analytics.cjs runs the SQL on a throwaway Postgres and checks it matches the reference.
+ * Oct 9 2026 (20261009_analytics_counts.sql): starts may carry `flags`, beats `counts`; tests/admin-analytics-learning.cjs runs
+ * all three migrations in order and checks the SQL rollup against the TypeScript one again.
  */
 import {randomBytes} from 'crypto';
 import * as fs from 'fs';
 import type {BeatRow,CleanEvent,DailyRollup,Point,StartRow} from './core';
-import {BEAT_CAP_PER_SESSION,BEAT_WINDOW_MS,RETENTION_DAYS,SESSION_CAP_PER_VISITOR_DAY,addDays,dayList,deriveSessions,hourlySeries,rollupDay,utcDay} from './core';
+import {BEAT_CAP_PER_SESSION,BEAT_WINDOW_MS,RETENTION_DAYS,SCHEMA_VERSION,SESSION_CAP_PER_VISITOR_DAY,addDays,dayList,deriveSessions,hourlySeries,rollupDay,utcDay} from './core';
 
 export interface AnalyticsStore{
  kind:'supabase'|'memory';
@@ -25,6 +27,8 @@ export interface AnalyticsStore{
  live(sinceIso:string):Promise<number>;
  /** Cron: freeze every final, unfrozen raw-retained day into a rollup, then purge raw rows and old salts. */
  finalize(now:Date):Promise<{frozen:string[]}>;
+ /** The installed analytics SQL version (public.analytics_schema_version(); < 3 when 20261009_analytics_counts.sql is missing). */
+ schemaVersion():Promise<number>;
 }
 
 /**
@@ -59,12 +63,12 @@ export function createMemoryStore(file?:string):AnalyticsStore&{data:MemoryData}
     if(data.starts[ev.session])return;
     if(Object.values(data.starts).filter(s=>s.day===ev.day&&s.visitorHash===ev.visitorHash).length>=SESSION_CAP_PER_VISITOR_DAY)return;
     data.starts[ev.session]={id:ev.session,day:ev.day,visitorHash:ev.visitorHash,startedAt:t,entryPath:ev.path,country:ev.country,region:ev.region,device:ev.device,
-     source:ev.source,referrerHost:ev.referrerHost,utmSource:ev.utmSource,utmMedium:ev.utmMedium,utmCampaign:ev.utmCampaign};
+     source:ev.source,referrerHost:ev.referrerHost,utmSource:ev.utmSource,utmMedium:ev.utmMedium,utmCampaign:ev.utmCampaign,flags:ev.flags||{}};
    }else{
     const s=data.starts[ev.session];
     if(!s||now.getTime()-Date.parse(s.startedAt)>BEAT_WINDOW_MS)return;
     if(data.beats.filter(b=>b.sessionId===ev.session).length>=BEAT_CAP_PER_SESSION)return;
-    data.beats.push({sessionId:ev.session,ts:t,engagedMs:ev.engagedMs,pageviews:ev.pageviews,areaMs:ev.areaMs,placeMs:ev.placeMs,activityMs:ev.activityMs,cells:ev.cells});
+    data.beats.push({sessionId:ev.session,ts:t,engagedMs:ev.engagedMs,pageviews:ev.pageviews,areaMs:ev.areaMs,placeMs:ev.placeMs,activityMs:ev.activityMs,cells:ev.cells,counts:ev.counts||{}});
    }
    save();
   },
@@ -84,6 +88,7 @@ export function createMemoryStore(file?:string):AnalyticsStore&{data:MemoryData}
    for(const d of Object.keys(data.salts))if(d<today)delete data.salts[d];
    save();return {frozen};
   },
+  async schemaVersion(){return SCHEMA_VERSION;},
  };
 }
 
@@ -112,7 +117,9 @@ export function createSupabaseStore(url:string,serviceKey:string,fetchImpl:typeo
   async track(ev){
    await rpc('analytics_ingest',{p:{type:ev.type,session:ev.session,path:ev.path,day:ev.day,visitor_hash:ev.visitorHash,country:ev.country,region:ev.region,device:ev.device,source:ev.source,
     referrer_host:ev.referrerHost,utm_source:ev.utmSource,utm_medium:ev.utmMedium,utm_campaign:ev.utmCampaign,engaged_ms:ev.engagedMs,pageviews:ev.pageviews,area_ms:ev.areaMs,
-    place_ms:ev.placeMs,activity_ms:ev.activityMs,cells:ev.cells}});
+    place_ms:ev.placeMs,activity_ms:ev.activityMs,cells:ev.cells,
+    // Oct 9 2026: ignored by the ingest of older migrations (so this ships safely before 20261009_analytics_counts.sql runs).
+    counts:ev.counts,flags:ev.flags}});
   },
   async rollups(fromDay,toDay){
    const rows=await call(`/analytics_daily?select=day,data&day=gte.${fromDay}&day=lte.${toDay}&order=day.asc`) as {day:string;data:DailyRollup}[];
@@ -122,6 +129,8 @@ export function createSupabaseStore(url:string,serviceKey:string,fetchImpl:typeo
   async hourly(day){return (await rpc('analytics_hourly',{p_day:day}) as Point[]|null)||[];},
   async live(sinceIso){return Number(await rpc('analytics_live',{p_since:sinceIso}))||0;},
   async finalize(now){const frozen=await rpc('analytics_finalize',{p_today:utcDay(now)}) as string[]|null;return {frozen:frozen||[]};},
+  // A missing function (migration not run) answers 404, which reads as version 2 (the places migration).
+  async schemaVersion(){try{return Number(await rpc('analytics_schema_version',{}))||2;}catch{return 2;}},
  };
 }
 

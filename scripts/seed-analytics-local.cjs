@@ -18,6 +18,28 @@ const devices=[['phone',48],['tablet',30],['desktop',22]];
 const entries=[['/',82],['/arcade',8],['/museum',5],['/konbini',2],['/controller',3]];
 const lengths=[[[2,9],18],[[10,30],10],[[30,60],9],[[60,180],15],[[180,600],22],[[600,1800],19],[[1800,3600],5],[[3600,5400],2]];
 const now=Date.now(),data={salts:{},starts:{},beats:[],rollups:{}};
+// Learning (Oct 9 2026): FAKE lesson funnels, first-try answers, walkthrough steps, Paths, warm-ups and start flags, using the
+// real lesson ids and question/option counts (so the dashboard can show real question text). Nothing here is real player data.
+const LESSONS=[];for(const f of ['7v7','9v9','11v11','futsal'])JSON.parse(fs.readFileSync(require('path').join(__dirname,'..','public/lessons',f+'.json'),'utf8')).forEach((l,i)=>LESSONS.push({f,id:l.id,i,qs:l.questions.map(q=>({n:q.options.length,c:q.correct}))}));
+const hash=s=>{let h=7;for(const c of s)h=(h*31+c.charCodeAt(0))>>>0;return h;};
+const STEPS=['welcome','paths','balls','earn','learn'];
+function learningCounts(){
+ const k={},add=(id,n=1)=>{k[id]=(k[id]||0)+n;};
+ if(rnd()<0.22){let at=0;for(;at<STEPS.length;at++){add('ob:seen:'+STEPS[at]);if(rnd()<[0.18,0.12,0.1,0.08,0.05][at]){add('ob:skip:'+STEPS[at]);break;}}if(at===STEPS.length){add('ob:explore');if(rnd()<0.55)add('ob:lesson');}}
+ const nLessons=rnd()<0.45?0:1+Math.floor(rnd()*3);
+ for(let j=0;j<nLessons;j++){
+  const f=pick([['7v7',40],['9v9',22],['11v11',18],['futsal',20]]),pool=LESSONS.filter(l=>l.f===f),l=pool[Math.min(pool.length-1,Math.floor(Math.pow(rnd(),1.8)*pool.length))];
+  if(rnd()<0.5)add('pf:'+f);add('lo:'+l.id);const ease=0.45+(hash(l.id)%40)/100;
+  if(rnd()>0.35+(hash(l.id)%25)/100)continue;add('le:'+l.id);if(rnd()<0.25)continue;add('ls:'+l.id);
+  let clean=true,quit=false;l.qs.forEach((q,qi)=>{if(quit)return;const p=Math.min(0.97,Math.max(0.12,ease+((hash(l.id+qi)%60)-30)/100));add(`q:${l.id}:${qi}`);
+   let o=q.c;if(rnd()>p){clean=false;const w=Array.from({length:q.n},(_,i)=>[i,i===q.c?0:1+(hash(l.id+qi+i)%5)*(hash(l.id+qi+i)%3)]).filter(([,x])=>x>0);o=w.length?pick(w):q.c;}add(`o:${l.id}:${qi}:${o}`);if(rnd()<0.04)quit=true;});
+  if(!quit){add('lf:'+l.id);if(clean)add('la:'+l.id);}
+ }
+ if(rnd()<0.12){const n=1+Math.floor(rnd()*3);add('rv:q',n);const ok=Math.floor(n*(0.5+rnd()*0.5));if(ok)add('rv:ok',ok);if(rnd()<0.8)add('rv:done');}
+ if(rnd()<0.02)add('gr:'+pick([['7v7',5],['9v9',2],['11v11',1],['futsal',2]]));if(rnd()<0.003)add('gr:finale');
+ return k;
+}
+const startFlags=()=>({p:pick([[0,45],[1,28],[2,18],[3,9]]),g:pick([[0,80],[1,12],[2,5],[3,2],[4,1]]),s:(rnd()<0.18?1:0)|(rnd()<0.35?2:0)|(rnd()<0.14?4:0)|(rnd()<0.06?8:0),v:pick([[0,62],[1,16],[2,14],[3,8]])});
 for(let d=DAYS-1;d>=0;d--){
  const dayStart=Date.UTC(new Date(now).getUTCFullYear(),new Date(now).getUTCMonth(),new Date(now).getUTCDate())-d*86_400_000;
  const day=new Date(dayStart).toISOString().slice(0,10),dow=new Date(dayStart).getUTCDay();
@@ -34,7 +56,8 @@ for(let d=DAYS-1;d>=0;d--){
   for(const [area,share] of [[entry==='/'?'island':entry.slice(1),0.55],['paths',0.15],['arcade',0.15],['museum',0.1],['konbini',0.05]]){const ms=Math.round(engaged*share*(0.6+rnd()*0.8));const v=Math.min(left,ms);if(v>0){areaMs[area==='controller'?'controller':area]=(areaMs[area]||0)+v;left-=v;}}
   if(left>0)areaMs.island=(areaMs.island||0)+left;
   data.starts[sid]={id:sid,day,visitorHash:hash,startedAt:new Date(start).toISOString(),entryPath:entry,
-   country,region:country?region:null,device:pick(devices),source,referrerHost:ref,utmSource:utm?utm[0]:null,utmMedium:utm?utm[1]:null,utmCampaign:utm?utm[2]:null};
+   country,region:country?region:null,device:pick(devices),source,referrerHost:ref,utmSource:utm?utm[0]:null,utmMedium:utm?utm[1]:null,utmCampaign:utm?utm[2]:null,flags:startFlags()};
+  const lc=learningCounts();
   // Where on the island (Oct 8 2026): FAKE place / activity / heat-map splits for the island share of each beat.
 const GRID={x0:-160,z0:-320,size:20,cols:52,rows:31};
 const SPOTS=[['island_square',85,-35,18,14],['arcade',103,-48,6,6],['konbini',71,-55,6,5],['field_11v11',135,100,28,13],['field_7v7',11,-80,16,8],['field_9v9',160,-110,20,7],
@@ -60,7 +83,7 @@ function islandSplit(ms){
   let t=start,e=engaged,pv=pages-1;const share=Object.entries(areaMs);
   while(e>0){const step=Math.min(e,180_000);t+=step;if(t>now)break;const a={};for(const [k,v] of share)a[k]=Math.round(v*step/engaged);
    const sp=islandSplit(a.island||0);
-   data.beats.push({sessionId:sid,ts:new Date(t).toISOString(),engagedMs:step,pageviews:pv,areaMs:a,placeMs:sp.pl,activityMs:sp.ac,cells:sp.c});pv=0;e-=step;}
+   data.beats.push({sessionId:sid,ts:new Date(t).toISOString(),engagedMs:step,pageviews:pv,areaMs:a,placeMs:sp.pl,activityMs:sp.ac,cells:sp.c,counts:e<=180_000?lc:{}});pv=0;e-=step;}
  }
 }
 // A few tabs "on now".
