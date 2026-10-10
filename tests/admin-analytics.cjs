@@ -75,36 +75,47 @@ await ok('dnt',async()=>{
  assert.equal(Object.keys(store.data.starts).length,0);assert.equal(Object.keys(store.data.salts).length,0,'DNT requests do not even create a salt');
 });
 
-// 4. The visitor hash rotates daily; old salts and raw rows are purged by the nightly finalize.
+// 4. The visitor hash rotates daily, at PACIFIC midnight since Oct 12 2026 (not at UTC midnight, which is 5 pm Pacific); old
+// salts and raw rows are purged by the nightly finalize.
 await ok('hash rotation',async()=>{
  const store=S.createMemoryStore();
- const d1=new Date('2026-10-07T23:59:00Z'),d2=new Date('2026-10-08T00:01:00Z');
+ const utcBefore=new Date('2026-10-07T23:59:00Z'),utcAfter=new Date('2026-10-08T00:01:00Z');// 4:59 pm / 5:01 pm PDT, Oct 7
+ const d1=new Date('2026-10-08T06:59:00Z'),d2=new Date('2026-10-08T07:01:00Z');// 11:59 pm Oct 7 / 12:01 am Oct 8 PDT
+ await ingest(store,{t:'start',s:'Session0Session0Sess',p:'/'},{now:utcBefore});
+ await ingest(store,{t:'start',s:'SessionUSessionUSess',p:'/'},{now:utcAfter});
  await ingest(store,{t:'start',s:'Session1Session1Sess',p:'/'},{now:d1});
  await ingest(store,{t:'start',s:'Session2Session2Sess',p:'/'},{now:d1});
  await ingest(store,{t:'start',s:'Session3Session3Sess',p:'/'},{now:d2});
  const ss=store.data.starts;
+ assert.equal(ss.Session0Session0Sess.visitorHash,ss.SessionUSessionUSess.visitorHash,'UTC midnight (5 pm Pacific) no longer splits a visitor');
+ assert.equal(ss.Session0Session0Sess.day,'2026-10-07');assert.equal(ss.SessionUSessionUSess.day,'2026-10-07','the session day is the Pacific day');
  assert.equal(ss.Session1Session1Sess.visitorHash,ss.Session2Session2Sess.visitorHash,'same visitor, same day: one hash');
- assert.notEqual(ss.Session1Session1Sess.visitorHash,ss.Session3Session3Sess.visitorHash,'same visitor, next day: a new hash');
+ assert.equal(ss.Session0Session0Sess.visitorHash,ss.Session1Session1Sess.visitorHash,'same Pacific day: one hash');
+ assert.notEqual(ss.Session1Session1Sess.visitorHash,ss.Session3Session3Sess.visitorHash,'same visitor, next Pacific day: a new hash');
  assert.notEqual(await store.salt('2026-10-07'),await store.salt('2026-10-08'));
  assert.notEqual(I.visitorHash('a',IP,UA,'h'),I.visitorHash('b',IP,UA,'h'));
  assert.notEqual(I.visitorHash('a',IP,UA,'h'),I.visitorHash('a',IP,UA,'other-host'));
- await store.finalize(new Date('2026-10-08T02:30:00Z'));
+ await store.finalize(new Date('2026-10-08T10:30:00Z'));
  assert.deepEqual(Object.keys(store.data.salts),['2026-10-08'],'only today\'s salt survives the nightly purge');
  // Retention: raw rows older than 14 days go; the frozen rollup of that day stays.
  const old=S.createMemoryStore();await ingest(old,{t:'start',s:SID,p:'/'},{now:new Date('2026-09-20T10:00:00Z')});
  await ingest(old,{t:'beat',s:SID,p:'/',e:40000},{now:new Date('2026-09-20T10:01:00Z')});
- assert.equal(J((await old.finalize(new Date('2026-09-22T02:30:00Z'))).frozen).includes('2026-09-20'),true);
- await old.finalize(new Date('2026-10-07T02:30:00Z'));
+ assert.equal(J((await old.finalize(new Date('2026-09-22T10:30:00Z'))).frozen).includes('2026-09-20'),true);
+ await old.finalize(new Date('2026-10-07T10:30:00Z'));
  assert.equal(Object.keys(old.data.starts).length,0);assert.equal(old.data.beats.length,0);
- assert.equal(old.data.rollups['2026-09-20'].sessions,1);assert.equal(old.data.rollups['2026-09-20'].engagedMs,40000);
+ assert.equal(old.data.ptRollups['2026-09-20'].sessions,1);assert.equal(old.data.ptRollups['2026-09-20'].engagedMs,40000);
  assert.equal(C.RETENTION_DAYS,14);
+ // The pre-migration (UTC) path still rotates at UTC midnight.
+ const u=S.createMemoryStore(undefined,{tz:'utc'});
+ await ingest(u,{t:'start',s:'Session0Session0Sess',p:'/'},{now:utcBefore});await ingest(u,{t:'start',s:'SessionUSessionUSess',p:'/'},{now:utcAfter});
+ assert.notEqual(u.data.starts.Session0Session0Sess.visitorHash,u.data.starts.SessionUSessionUSess.visitorHash,'UTC mode: a new hash at UTC midnight');
 });
 
 // 5. Append-only writes and abuse caps.
 await ok('caps',async()=>{
  const store=S.createMemoryStore(),limiter=I.createLimiter();
- const codes=[];for(let i=0;i<30;i++)codes.push((await ingest(store,{t:'start',s:SID,p:'/'},{limiter})).status);
- assert.equal(codes.filter(c=>c===204).length,20);assert.equal(codes.filter(c=>c===429).length,10);
+ const codes=[];for(let i=0;i<70;i++)codes.push((await ingest(store,{t:'start',s:SID,p:'/'},{limiter})).status);
+ assert.equal(codes.filter(c=>c===204).length,60,'a burst of 60 (two classes behind one school NAT) is accepted');assert.equal(codes.filter(c=>c===429).length,10);
  assert.equal((await ingest(store,{t:'start',s:SID,p:'/'},{limiter,now:at(4000)})).status,204,'the bucket refills');
  assert.equal(Object.keys(store.data.starts).length,1,'a repeated start is ignored, not double counted');
  const lim=I.createLimiter({maxKeys:3});for(const k of ['a','b','c','d','e'])lim.allow(k,0);assert(lim.size()<=3,'limiter memory is bounded');
@@ -158,8 +169,8 @@ await ok('auth',async()=>{
  assert.equal(A.cronAuthorized('Bearer undefined',undefined),false);
  // Server-side enforcement in the page and every admin/cron route.
  const page=read('app/admin/page.tsx'),api=read('app/api/admin/analytics/route.ts'),login=read('app/api/admin/login/route.ts'),cron=read('app/api/cron/analytics/route.ts');
- assert(page.indexOf('verifySession(')>0&&page.indexOf('verifySession(')<page.indexOf('buildReport('),'the page checks the session before building a report');
- assert(/if\(!verifySession\(cookies\(\)\.get\(ADMIN_COOKIE\)\?\.value,Date\.now\(\)\)\)return Response\.json\(\{error:'unauthorized'\},\{status:401/.test(api)&&api.indexOf('status:401')<api.indexOf('buildReport('),'the data route answers 401 without a session');
+ assert(page.indexOf('verifySession(')>0&&page.indexOf('verifySession(')<page.indexOf('buildReportFor('),'the page checks the session before building a report');
+ assert(/if\(!verifySession\(cookies\(\)\.get\(ADMIN_COOKIE\)\?\.value,Date\.now\(\)\)\)return Response\.json\(\{error:'unauthorized'\},\{status:401/.test(api)&&api.indexOf('status:401')<api.indexOf('buildReportFor('),'the data route answers 401 without a session');
  assert(/sameOrigin\(/.test(login)&&/lockout\.locked\(/.test(login)&&/passwordMatches\(/.test(login),'login: origin check, lockout, constant-time compare');
  assert(cron.indexOf('cronAuthorized(')>0&&cron.indexOf('cronAuthorized(')<cron.indexOf('finalize('),'cron: secret checked before any work');
  assert(/robots:\{index:false,follow:false/.test(read('app/admin/layout.tsx')),'noindex metadata');
@@ -222,6 +233,7 @@ await ok('aggregation',async()=>{
  assert.deepEqual(J(hours[23]),{key:DAY+'T23',visitors:1,sessions:1,pageviews:1},'the next day\'s beat is not counted on this day');
  const now=new Date('2026-10-07T12:00:00Z');
  assert.deepEqual(J(C.resolveRange({range:'today'},now)),{from:'2026-10-07',to:'2026-10-07'});
+ assert.deepEqual(J(C.resolveRange({range:'yesterday'},now)),{from:'2026-10-06',to:'2026-10-06'},'Yesterday is one full Pacific day (DST cases: tests/admin-analytics-pacific.cjs)');
  assert.deepEqual(J(C.resolveRange({range:'7d'},now)),{from:'2026-10-01',to:'2026-10-07'});
  assert.deepEqual(J(C.resolveRange({range:'30d'},now)),{from:'2026-09-08',to:'2026-10-07'});
  assert.deepEqual(J(C.resolveRange({range:'custom',from:'2026-10-09',to:'2026-10-02'},now)),{from:'2026-10-02',to:'2026-10-07'},'future end clamps to today, reversed ranges swap');
@@ -237,11 +249,13 @@ await ok('aggregation',async()=>{
  const rep=await R.buildReport(store,{from:'2026-10-04',to:'2026-10-07'},now);
  assert.equal(rep.configured,true);assert.equal(rep.granularity,'day');assert.equal(rep.series.length,4);assert.equal(rep.totals.sessions,7);
  assert.deepEqual(J(rep.series.map(p=>p.sessions)),[1,6,0,0]);
- const one=await R.buildReport(store,{from:DAY,to:DAY},now);assert.equal(one.granularity,'hour');assert.equal(one.series.length,24);assert.deepEqual(J(one.series),J(hours));
+ const one=await R.buildReport(store,{from:DAY,to:DAY},now);assert.equal(one.granularity,'hour');assert.equal(one.series.length,24);
+ assert.deepEqual(J(one.series),J(C.hourlySeries(DAY,FIX_STARTS,FIX_BEATS,'pacific')),'Pacific hours of the Pacific day');
+ assert.equal(one.series[0].key,'2026-10-05T07:00:00.000Z','hour 0 = midnight PDT');
  store.data.starts.live_session_000001={...st('live_session_000001',hx('9'),'2026-10-07T11:00:00.000Z'),day:'2026-10-07'};
  store.data.beats.push(bt('live_session_000001','2026-10-07T11:56:00.000Z',1000));
  assert.equal((await R.buildReport(store,{from:'2026-10-07',to:'2026-10-07'},now)).live,1,'on now = an event in the last 5 minutes');
- assert.equal((await R.buildReport(store,{from:'2026-10-07',to:'2026-10-07'},now)).series.length,13,'today stops at the current hour');
+ assert.equal((await R.buildReport(store,{from:'2026-10-07',to:'2026-10-07'},now)).series.length,6,'today stops at the current hour (12:00 UTC = 5 am PDT: hours 0–5)');
  assert.equal((await R.buildReport(store,{from:'2026-10-07',to:'2026-10-07'},new Date('2026-10-07T12:02:00Z'))).live,0);
  assert.equal((await R.buildReport(null,{from:'2026-10-07',to:'2026-10-07'},now)).configured,false,'no store: not configured');
  const file=path.join(os.tmpdir(),`fi-analytics-${process.pid}.json`);const fstore=S.createMemoryStore(file);await fstore.salt('2026-10-07');
@@ -255,17 +269,18 @@ await ok('aggregation',async()=>{
 await ok('cron rollup',async()=>{
  const store=S.createMemoryStore();
  for(const s of FIX_STARTS)store.data.starts[s.id]=s;store.data.beats.push(...FIX_BEATS);
- assert.equal(S.isFinal(DAY,new Date('2026-10-07T01:59:00Z')),false);assert.equal(S.isFinal(DAY,new Date('2026-10-07T02:00:00Z')),true,'final at D+2 02:00 UTC');
- const r1=await store.finalize(new Date('2026-10-06T02:30:00Z'));
+ assert.equal(S.isFinal(DAY,new Date('2026-10-07T08:59:00Z')),false);assert.equal(S.isFinal(DAY,new Date('2026-10-07T09:00:00Z')),true,'final at D+2 02:00 Pacific (09:00 UTC in PDT)');
+ assert.equal(S.isFinal(DAY,new Date('2026-10-07T02:00:00Z'),'utc'),true,'UTC mode: D+2 02:00 UTC');
+ const r1=await store.finalize(new Date('2026-10-06T10:30:00Z'));
  assert.deepEqual(J(r1.frozen).filter(d=>d>='2026-10-04'),['2026-10-04'],'D-2 freezes; D-1 waits for late beats');
- const r2=await store.finalize(new Date('2026-10-07T02:30:00Z'));assert.deepEqual(J(r2.frozen),[DAY]);
- assert.deepEqual(J(store.data.rollups[DAY]),J(C.rollupDay(DAY,C.deriveSessions(FIX_STARTS,FIX_BEATS))));
- assert.deepEqual(J((await store.finalize(new Date('2026-10-07T03:00:00Z'))).frozen),[],'idempotent');
+ const r2=await store.finalize(new Date('2026-10-07T10:30:00Z'));assert.deepEqual(J(r2.frozen),[DAY]);
+ assert.deepEqual(J(store.data.ptRollups[DAY]),J(C.rollupPacificDay(DAY,C.deriveSessions(FIX_STARTS,FIX_BEATS))));
+ assert.deepEqual(J((await store.finalize(new Date('2026-10-07T11:00:00Z'))).frozen),[],'idempotent');
  // Frozen days are read from the rollup, not recomputed.
  store.data.beats.push(bt('sessA_aaaaaaaaaaaaaa',iso(9,16),100000));
- assert.equal((await R.buildReport(store,{from:DAY,to:DAY},new Date('2026-10-07T12:00:00Z'))).totals.engagedMs,store.data.rollups[DAY].engagedMs);
+ assert.equal((await R.buildReport(store,{from:DAY,to:DAY},new Date('2026-10-07T12:00:00Z'))).totals.engagedMs,store.data.ptRollups[DAY].engagedMs);
  const vercel=JSON.parse(read('vercel.json'));
- assert((vercel.crons||[]).some(c=>c.path==='/api/cron/analytics'&&c.schedule==='30 2 * * *'),'the nightly analytics cron is scheduled (other crons may sit beside it)');
+ assert((vercel.crons||[]).some(c=>c.path==='/api/cron/analytics'&&c.schedule==='30 10 * * *'),'the nightly analytics cron runs just after Pacific midnight: 10:30 UTC = 3:30 am PDT / 2:30 am PST (other crons may sit beside it)');
  const visit=read('app/api/visit/route.ts');
  assert(!/maintain|finalize|rollup/i.test(visit.replace(/\/\*[\s\S]*?\*\//g,'')),'/api/visit does one insert and nothing else');
 });
@@ -287,7 +302,8 @@ await ok('tracker',async()=>{
  for(const [nav,label] of [[{doNotTrack:'1'},'DNT'],[{globalPrivacyControl:true},'GPC'],[{webdriver:true},'Playwright']]){const x=env({nav});assert.equal(T.startTracker(x.e),null,label+' sends nothing');}
  const pre=env({search:'?preview=all'});assert.equal(T.startTracker(pre.e),null);assert.equal(T.skipReason({...pre.e,window:{...pre.e.window,location:{hostname:'futbolisland.app',pathname:'/arcade',search:''}}}),'preview','preview mode sticks for the tab');
  assert.equal(T.startTracker(env({host:'localhost'}).e),null,'local dev sends nothing');assert.equal(T.startTracker(env({pathname:'/motion-lab'}).e),null,'labs send nothing');
- assert.equal(T.startTracker(env({pathname:'/admin'}).e),null,'admin visits are not counted');
+ const adminTab={};assert.equal(T.startTracker(env({pathname:'/admin',store:adminTab}).e),null,'admin visits are not counted');
+ assert.equal(T.startTracker(env({pathname:'/',store:adminTab}).e),null,'and the admin tab stays off when it reloads the game');
  const x=env({search:'?utm_source=club&utm_campaign=autumn',referrer:'https://www.google.com/search?q=futbol'});
  const tr=T.startTracker(x.e);tr.pageview('/');
  assert.equal(x.sent.length,1);const start=x.sent[0];

@@ -18,7 +18,13 @@ const devices=[['phone',48],['tablet',30],['desktop',22]];
 // The title screen is at `/` since Oct 9 2026 (/start was removed): about a third of `/` entries are title-screen sessions.
 const entries=[['/',122],['/arcade',8],['/museum',5],['/konbini',2],['/controller',3]];
 const lengths=[[[2,9],18],[[10,30],10],[[30,60],9],[[60,180],15],[[180,600],22],[[600,1800],19],[[1800,3600],5],[[3600,5400],2]];
-const now=Date.now(),data={salts:{},starts:{},beats:[],rollups:{}};
+const now=Date.now(),data={salts:{},starts:{},beats:[],rollups:{},ptRollups:{}};
+// Oct 12 2026: days are Pacific days (America/Los_Angeles, DST included), like the dashboard and the ingest's salt day.
+const PT=new Intl.DateTimeFormat('en-US',{timeZone:'America/Los_Angeles',hourCycle:'h23',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+const ptParts=ms=>Object.fromEntries(PT.formatToParts(new Date(ms)).filter(p=>p.type!=='literal').map(p=>[p.type,Number(p.value)]));
+const ptOffset=ms=>{const p=ptParts(ms);return Date.UTC(p.year,p.month-1,p.day,p.hour,p.minute,p.second)-Math.floor(ms/1000)*1000;};
+const ptDay=ms=>{const p=ptParts(ms);return `${p.year}-${String(p.month).padStart(2,'0')}-${String(p.day).padStart(2,'0')}`;};
+const ptMidnight=day=>{const g=Date.parse(day+'T00:00:00Z');let t=g-ptOffset(g);return g-ptOffset(t);};
 // Learning (Oct 9 2026): FAKE lesson funnels, first-try answers, walkthrough steps, Paths, warm-ups and start flags, using the
 // real lesson ids and question/option counts (so the dashboard can show real question text). Nothing here is real player data.
 const LESSONS=[];for(const f of ['7v7','9v9','11v11','futsal'])JSON.parse(fs.readFileSync(require('path').join(__dirname,'..','public/lessons',f+'.json'),'utf8')).forEach((l,i)=>LESSONS.push({f,id:l.id,i,qs:l.questions.map(q=>({n:q.options.length,c:q.correct}))}));
@@ -55,8 +61,7 @@ function startCounts(k){
 }
 const startFlags=()=>({p:pick([[0,45],[1,28],[2,18],[3,9]]),g:pick([[0,80],[1,12],[2,5],[3,2],[4,1]]),s:(rnd()<0.18?1:0)|(rnd()<0.35?2:0)|(rnd()<0.14?4:0)|(rnd()<0.06?8:0),v:pick([[0,62],[1,16],[2,14],[3,8]])});
 for(let d=DAYS-1;d>=0;d--){
- const dayStart=Date.UTC(new Date(now).getUTCFullYear(),new Date(now).getUTCMonth(),new Date(now).getUTCDate())-d*86_400_000;
- const day=new Date(dayStart).toISOString().slice(0,10),dow=new Date(dayStart).getUTCDay();
+ const day=new Date(Date.parse(ptDay(now)+'T00:00:00Z')-d*86_400_000).toISOString().slice(0,10),dayStart=ptMidnight(day),dow=new Date(day+'T00:00:00Z').getUTCDay();
  const base=(dow===0||dow===6?95:60)+Math.round((DAYS-d)*1.4);
  const n=Math.round(base*(0.8+rnd()*0.4)),visitors=[];
  for(let i=0;i<n;i++){

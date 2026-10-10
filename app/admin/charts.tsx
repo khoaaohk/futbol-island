@@ -35,7 +35,8 @@ export function niceTicks(max:number,count=4):number[]{const step=Math.max(1,nic
 
 export type Series={key:string;label:string;color:string};
 /** Multi-series line chart, one y-axis (all three measures are counts). Crosshair snaps to the nearest x. */
-export function LineChart({labels,series,values,ariaLabel}:{labels:string[];series:Series[];values:Record<string,number[]>;ariaLabel:string}){
+/** `tipLabels`: a fuller label per x for the tooltip (e.g. "Sep 20 (UTC day)"); the axis keeps the short `labels`. */
+export function LineChart({labels,tipLabels,series,values,ariaLabel}:{labels:string[];tipLabels?:string[];series:Series[];values:Record<string,number[]>;ariaLabel:string}){
  const [wrap,width]=useWidth<HTMLDivElement>();
  const [idx,setIdx]=useState<number|null>(null);
  const n=labels.length,H=240,top=14,bottom=28,left=44,right=width>=520?92:14;
@@ -49,7 +50,7 @@ export function LineChart({labels,series,values,ariaLabel}:{labels:string[];seri
  // End labels only where they don't collide (≥14px apart); otherwise the legend and tooltip carry them.
  const placed:number[]=[];const endLabels=right>14?ends.filter(e=>{const yy=y(e.v);if(placed.some(p=>Math.abs(p-yy)<14))return false;placed.push(yy);return true;}):[];
  const tip:TipState=idx===null||!n?null:{x:x(idx),y:Math.max(top+8,y(Math.max(...series.map(s=>(values[s.key]||[])[idx]??0)))),content:<>
-  <strong style={{display:'block',marginBottom:4}}>{labels[idx]}</strong>
+  <strong style={{display:'block',marginBottom:4}}>{tipLabels?.[idx]??labels[idx]}</strong>
   {series.map(s=><span key={s.key} style={{display:'flex',alignItems:'center',gap:6,justifyContent:'flex-start',fontWeight:400}}><i style={{width:12,height:2,background:s.color,display:'inline-block',borderRadius:1}}/><b style={{fontWeight:700}}>{fmtInt((values[s.key]||[])[idx]??0)}</b> {s.label.toLowerCase()}</span>)}
  </>};
  return <div className={styles.plot} ref={wrap}>

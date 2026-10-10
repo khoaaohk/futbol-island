@@ -16,32 +16,47 @@ import styles from './admin.module.css';
 const show=(c:Cell|undefined)=>c===null||c===undefined?'<5':fmtInt(c);
 const num=(c:Cell|undefined)=>c===undefined?null:c;
 export const prevLabel=(days:number)=>days===1?'the day before':`the ${days} days before`;
-const perDay=(p:PeriodTotals)=>p.days?p.visitors/p.days:0;
+/** Oct 12 2026: what the period before was cut to. When the range ends today, the period before stops at the same time of day
+ *  (report.time.compare: 'exact' from raw rows, 'estimated' when its last day is older than the raw window). */
+export function compareLabel(report:Report,days:number){
+ const base=prevLabel(days),c=report.time?.compare;
+ return c==='exact'?`${base}, same time of day`:c==='estimated'?`${base}, same time of day (est.)`:base;
+}
+const perDay=(p:PeriodTotals)=>p.perDay?.value??(p.days?p.visitors/p.days:0);
+const plural=(n:number,w:string)=>`${n} ${w}${n===1?'':'s'}`;
 const hours=(ms:number)=>ms>=3_600_000?`${(ms/3_600_000).toFixed(ms>=36_000_000?0:1)} h`:fmtDuration(ms);
 
 /** Row 1: the numbers an investor reads first. One hero (players per day); everything else a stat tile. */
 export function HeadlineTiles({report}:{report:Report}){
  const o=report.overview,c=o?.current,p=o?.previous??null,d=saveData(report),gap=saveGap(report.saves);
- const label=prevLabel(c?.days||1);
+ const len=c?.days||1,label=compareLabel(report,len),partial=!!report.time?.partialToday;
  const r=d?.retention,ret=(k:'d1'|'d7'|'d30')=>r&&r[k].eligible?fmtPct(r[k].kept/r[k].eligible):'—';
  const restored=num(c?.steps['st:restored']),restoredPrev=num(p?.steps['st:restored']);
+ // Players per day (Oct 12 2026): complete days only. A 7-day range that ends today averages its 6 finished days (today so far
+ // is shown beside it), and the period before averages the same 6 positions a week earlier.
+ const per=c?.perDay,single=len===1,full=len-(partial?1:0);
+ const perLabel=single?label:`the same ${per?.days??full} days ${len===7?'a week':plural(len,'day')} earlier`;
+ const todaySoFar=partial&&!single?report.series[report.series.length-1]?.visitors:undefined;
+ // New save codes: like for like when the range ends today (its complete days vs as many days before; lib/saves/metrics.ts).
+ const sc=report.saves?.compare;
  return <section className={styles.kpis8} aria-label="Headline numbers">
   <div className={`${styles.tile} ${styles.hero}`}>
-   <span>Players per day</span>
+   <span>{single?(partial?'Players today so far':'Players that day'):'Players per day'}</span>
    <b>{c?fmtInt(Math.round(perDay(c))):'0'}</b>
-   <small>average unique visitors a day · {fmtInt(report.totals.visitors)} visitor-days in the range</small>
-   {c&&<Delta cur={perDay(c)} prev={p?perDay(p):null} label={label}/>}
+   <small>{single?'unique visitors':`average unique visitors a day over ${per&&per.days<full?`the ${plural(per.days,'day')} since tracking began`:plural(per?.days??full,'complete day')}`}{todaySoFar!==undefined?` · today so far ${fmtInt(todaySoFar)}`:''} · a visitor is one device and network on one day</small>
+   {c&&<Delta cur={perDay(c)} prev={p?perDay(p):null} label={perLabel}/>}
    <Sparkline values={report.series.map(s=>s.visitors)} label="Visitors over the range"/>
   </div>
   <div className={styles.tile}><span>Active save codes, 7 days</span><b>{d?fmtInt(d.active_7):'—'}</b>
-   <small>{d?`weekly active · today ${fmtInt(d.active_1)} · 30 days ${fmtInt(d.active_30)}`:gap}</small></div>
+   <small>{d?`weekly active · today ${fmtInt(d.active_1)} · 30 days ${fmtInt(d.active_30)} (UTC dates)`:gap}</small></div>
   <div className={styles.tile}><span>New save codes</span><b>{d?fmtInt(d.range.created):'—'}</b>
-   {d?<Delta cur={d.range.created} prev={d.range.prev_created} label={label}/>:<small>{gap}</small>}
+   {!d?<small>{gap}</small>:sc?<Delta cur={sc.created} prev={sc.prevCreated} label={`${plural(sc.days,'complete day')} vs the ${sc.days} before`}/>
+    :d.to===d.today&&d.from===d.to?<small>today so far (UTC date)</small>:<Delta cur={d.range.created} prev={d.range.prev_created} label={prevLabel(len)}/>}
    {d&&<Sparkline values={d.by_day.map(x=>x.created)} label="New save codes per day"/>}</div>
   <div className={styles.tile}><span>Returning save codes</span><b>{d?fmtInt(d.returning):'—'}</b>
-   <small>{d?`${d.eligible?fmtPct(d.returning/d.eligible):'—'} of codes made before today came back on a later day`:gap}</small></div>
-  <div className={styles.tile}><span>Day-7 retention</span><b>{d?ret('d7'):'—'}</b>
-   <small>{d?`day 1 ${ret('d1')} · day 30 ${ret('d30')} (save codes)`:gap}</small></div>
+   <small>{d?`all time · ${d.eligible?fmtPct(d.returning/d.eligible):'—'} of codes made before today came back on a later day`:gap}</small></div>
+  <div className={styles.tile}><span>Day-7 retention (rolling)</span><b>{d?ret('d7'):'—'}</b>
+   <small>{d?`codes used again 7+ days after they were made · day 1 ${ret('d1')} · day 30 ${ret('d30')}`:gap}</small></div>
   <div className={styles.tile}><span>Save codes stored</span><b>{d?fmtInt(d.total):'—'}</b>
    <small>{d?'all codes still kept (unused ones go after 12 months)':gap}</small></div>
   <div className={styles.tile}><span>Sessions</span><b>{fmtInt(report.totals.sessions)}</b>
@@ -55,11 +70,11 @@ export function HeadlineTiles({report}:{report:Report}){
 
 /** Row 2: how much they play and learn. */
 export function EngagementTiles({report}:{report:Report}){
- const t=report.totals,o=report.overview,c=o?.current,p=o?.previous??null,label=prevLabel(c?.days||1);
+ const t=report.totals,o=report.overview,c=o?.current,p=o?.previous??null,label=compareLabel(report,c?.days||1);
  const spp=(x:{sessions:number;visitors:number})=>x.visitors?x.sessions/x.visitors:0;
  const ft=c?.firstTry,ftPrev=p?.firstTry;
  return <div className={styles.startTiles} aria-label="Engagement">
-  <div><span>Sessions per player a day</span><b>{spp(t).toFixed(2)}</b>{c?<Delta cur={spp(c)} prev={p?spp(p):null} label={label}/>:<small>sessions ÷ daily visitors</small>}</div>
+  <div><span>Sessions per visitor a day</span><b>{spp(t).toFixed(2)}</b>{c?<Delta cur={spp(c)} prev={p?spp(p):null} label={label}/>:<small>sessions ÷ daily unique visitors</small>}</div>
   <div><span>Median visit</span><b>{fmtDuration(t.medianMs)}</b><small>average {fmtDuration(t.avgMs)}</small>{c&&<Delta cur={c.medianMs} prev={p?.medianMs??null} label={label}/>}</div>
   <div><span>Page views</span><b>{fmtInt(t.pageviews)}</b><small>{t.sessions?(t.pageviews/t.sessions).toFixed(1):'0'} per session</small></div>
   <div><span>Bounce rate</span><b>{fmtPct(t.bounceRate)}</b><small>one page and under 10 s</small></div>
@@ -77,10 +92,10 @@ export function InvestorFunnel({report}:{report:Report}){
  const empty=!s||!steps.some(x=>x.sessions!==0);
  return <ChartCard wide title="New-player funnel" subtitle="Sessions at each step in this range, then save codes made in the range that came back on a later day. Bars are scaled to the first step; the drop from the step before is on the right."
   empty={empty&&!d} emptyText="No title-screen visits in this range yet."
-  table={{columns:['Step','Count','Unit'],rows:[...steps.map(x=>[x.label,show(x.sessions),'sessions']),['Came back on a later day',d?`${fmtInt(d.range.returned)} of ${fmtInt(d.range.created)}`:'—','save codes made in the range']]}}>
+  table={{columns:['Step','Count','Unit'],rows:[...steps.map(x=>[x.label,show(x.sessions),'sessions']),['Came back on a later day (so far)',d?`${fmtInt(d.range.returned)} of ${fmtInt(d.range.created)}`:'—','save codes made in the range']]}}>
   {!empty&&<Steps steps={steps}/>}
-  <p className={styles.note}>Day-2 return: <b>{d?fmtInt(d.range.returned):'—'}</b> of <b>{d?fmtInt(d.range.created):'—'}</b> save codes made in this range were used again on a later day{d&&d.range.created?<> (<b>{fmtPct(d.range.returned/d.range.created)}</b>; the range before: {d.range.prev_created?fmtPct(d.range.prev_returned/d.range.prev_created):'—'})</>:null}.
-   {!d&&<> Save codes: {saveGap(report.saves)}.</>} Codes made in the last day of the range have not had a later day yet.</p>
+  <p className={styles.note}>Came back on a later day (any later day so far, not only day 2): <b>{d?fmtInt(d.range.returned):'—'}</b> of <b>{d?fmtInt(d.range.created):'—'}</b> save codes made in this range were used again on a later day{d&&d.range.created?<> (<b>{fmtPct(d.range.returned/d.range.created)}</b>; the range before: {d.range.prev_created?fmtPct(d.range.prev_returned/d.range.prev_created):'—'}, whose codes have had longer to come back)</>:null}.
+   {!d&&<> Save codes: {saveGap(report.saves)}.</>} Codes made on the last day of the range have not had a later day yet. Save-code days are UTC dates.</p>
  </ChartCard>;
 }
 

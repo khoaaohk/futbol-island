@@ -260,3 +260,8 @@
 .statusIcon[data-s=critical]{background:#d03b3b;color:#fff}
 @media (max-width:900px){.kpis8{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:600px){.statList{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.statList dd{font-size:19px}}
+/* Oct 12 2026: "How to read these numbers" (known limitations an investor could misread). */
+.readNotes{background:var(--a-surface);border-radius:18px;padding:12px 18px;font-size:13px;line-height:1.5;color:var(--a-muted)}
+.readNotes summary{cursor:pointer;font-weight:700;color:inherit}
+.readNotes ul{margin:8px 0 0;padding-left:18px;display:grid;gap:4px}
+.readNotes li[data-flag]{color:var(--a-ink)}

@@ -7,12 +7,12 @@ import {createHash} from 'crypto';
 import type {AnalyticsStore} from './store';
 import {ACTIVITY_IDS,PLACE_IDS} from './islandIds';
 import {checkFlags} from './countIds';
-import {MAX_BEAT_PAGEVIEWS,MAX_BODY_BYTES,clampCells,clampCounts,clampEngaged,clampSplit,classifySource,deviceClass,isBot,sanitizeCountry,sanitizeHost,sanitizePath,sanitizeRegion,sanitizeUtm,utcDay,validateEvent,type CleanEvent} from './core';
+import {MAX_BEAT_PAGEVIEWS,MAX_BODY_BYTES,clampCells,clampCounts,clampEngaged,clampSplit,classifySource,deviceClass,isBot,sanitizeCountry,sanitizeHost,sanitizePath,sanitizeRegion,sanitizeUtm,dayIn,validateEvent,type CleanEvent} from './core';
 
 export type HeaderBag={get(name:string):string|null};
 export type IngestResult={status:204|400|403|413|429;reason:string};
 
-/** sha256(daily salt + IP + UA + host), truncated. The inputs are discarded right after. */
+/** sha256(daily salt + IP + UA + host), truncated. The inputs are discarded right after. The salt is per Pacific day (Oct 12 2026). */
 export function visitorHash(salt:string,ip:string,ua:string,host:string):string{
  return createHash('sha256').update(salt).update('\u0000').update(ip).update('\u0000').update(ua).update('\u0000').update(host).digest('hex').slice(0,32);
 }
@@ -21,8 +21,14 @@ export function clientIp(h:HeaderBag):string{
  return (h.get('x-vercel-forwarded-for')||h.get('x-forwarded-for')||h.get('x-real-ip')||'').split(',')[0].trim();
 }
 
-/** A per-instance token bucket keyed by visitor hash: bursts of 20, then one event every 2 s. Bounded memory. */
-export function createLimiter({capacity=20,refillPerSec=0.5,maxKeys=20_000}={}){
+/**
+ * A per-instance token bucket keyed by visitor hash: bursts of 60, then one event every 2 s. Bounded memory.
+ * Oct 12 2026 (accuracy pass): the burst was 20. A classroom behind one school NAT shares one hash (same IP, same UA), and a
+ * class of 25–30 iPads opening the game together sent 25–30 starts within seconds: everything past the 20th was refused, and
+ * a refused start is never resent, so those sessions (and every beat after them) were lost. 60 covers two classes at once;
+ * the day cap (SESSION_CAP_PER_VISITOR_DAY, also in SQL) still bounds what one hash can write.
+ */
+export function createLimiter({capacity=60,refillPerSec=0.5,maxKeys=20_000}={}){
  const buckets=new Map<string,{tokens:number;at:number}>();
  return {
   allow(key:string,nowMs:number):boolean{
@@ -50,7 +56,10 @@ export async function handleIngest({body,headers,store,limiter,now=new Date(),ve
  const host=(headers.get('host')||'').toLowerCase();
  const origin=headers.get('origin');
  if(origin&&origin!=='null'){let oh='';try{oh=new URL(origin).host.toLowerCase();}catch{}if(!host||oh!==host)return {status:403,reason:'origin'};}
- const ev=v.event,day=utcDay(now);
+ // Oct 12 2026: the salt day (and the session's `day`) is the PACIFIC day once 20261012_admin_pacific_time.sql is installed,
+ // so a visitor's hash is stable from Los Angeles midnight to midnight and the dashboard's Pacific days count unique visitors
+ // exactly. Before that, the UTC day as always (timeMode() is cached; one RPC per instance every 10 minutes at most).
+ const ev=v.event,day=dayIn(await store.timeMode(),now);
  const hash=visitorHash(await store.salt(day),clientIp(headers),ua,host);
  if(!limiter.allow(hash,now.getTime()))return {status:429,reason:'throttled'};
  const path=sanitizePath(ev.p),start=ev.t==='start';

@@ -120,7 +120,9 @@ export function skipReason(env:TrackerEnv):string|null{
  const {hostname,pathname,search}=env.window.location;
  if(!env.allowLocalhost&&/^(localhost|127\.|0\.0\.0\.0|\[::1\]|192\.168\.|10\.)/.test(hostname))return 'local';
  if(/-lab(\/|$)/.test(pathname))return 'lab';
- if(/^\/admin(\/|$)/.test(pathname))return 'admin';
+ // Oct 12 2026: an admin tab stays off for good (like ?preview=all), so reloading the game from the dashboard's tab (Back,
+ // then a refresh) does not count the admin as a player. sessionStorage only: it ends with the tab.
+ if(/^\/admin(\/|$)/.test(pathname)){try{env.storage?.setItem(SKIP_KEY,'1');}catch{}return 'admin';}
  const q=new URLSearchParams(search);
  if(q.get('preview')==='all'||q.has('unlock')||q.has('testCoins')){try{env.storage?.setItem(SKIP_KEY,'1');}catch{}return 'preview';}
  try{if(env.storage?.getItem(SKIP_KEY)==='1')return 'preview';}catch{}

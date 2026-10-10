@@ -243,6 +243,39 @@ export const addDays=(day:string,n:number)=>utcDay(Date.parse(day+'T00:00:00Z')+
 export function dayList(from:string,to:string):string[]{const out:string[]=[];for(let d=from;d<=to&&out.length<400;d=addDays(d,1))out.push(d);return out;}
 
 // ---------------------------------------------------------------------------------------------------------------------
+// Pacific time (Oct 12 2026, supabase/migrations/20261012_admin_pacific_time.sql). The dashboard's days run midnight to
+// midnight in America/Los_Angeles, PST or PDT as the date has it: a spring-forward day (2nd Sunday of March) has 23 hours,
+// a fall-back day (1st Sunday of November) 25. Day keys stay plain 'YYYY-MM-DD' strings (addDays/dayList are calendar
+// arithmetic and need no zone); only "which day is it now", "when does a day start" and "which hour is this" need the zone.
+// `TimeZoneMode` 'utc' is the old behaviour, kept for a database where the Pacific migration has not run yet.
+// ---------------------------------------------------------------------------------------------------------------------
+export const PACIFIC_TZ='America/Los_Angeles';
+export type TimeZoneMode='pacific'|'utc';
+const HOUR_MS=3_600_000;
+let ptFormat:Intl.DateTimeFormat|null=null;
+/** Wall-clock parts of an instant in Los Angeles. */
+function ptParts(ms:number){
+ ptFormat??=new Intl.DateTimeFormat('en-US',{timeZone:PACIFIC_TZ,hourCycle:'h23',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+ const o:Record<string,number>={};for(const p of ptFormat.formatToParts(new Date(ms)))if(p.type!=='literal')o[p.type]=Number(p.value);
+ return o as {year:number;month:number;day:number;hour:number;minute:number;second:number};
+}
+/** Los Angeles offset from UTC at an instant, in ms (-7 h in PDT, -8 h in PST). */
+export function pacificOffsetMs(ms:number):number{const p=ptParts(ms);return Date.UTC(p.year,p.month-1,p.day,p.hour,p.minute,p.second)-Math.floor(ms/1000)*1000;}
+/** The Pacific calendar day of an instant. */
+export function pacificDay(d:Date|number|string):string{const p=ptParts(new Date(d).getTime());return `${p.year}-${String(p.month).padStart(2,'0')}-${String(p.day).padStart(2,'0')}`;}
+/** The day an instant falls on in a mode. */
+export const dayIn=(mode:TimeZoneMode,d:Date|number|string)=>mode==='utc'?utcDay(d):pacificDay(d);
+/** The instant (UTC ms) a day starts: local midnight in Los Angeles (never inside a DST gap, which is at 2 am), or UTC midnight. */
+export function dayStartMs(day:string,mode:TimeZoneMode='pacific'):number{
+ const guess=Date.parse(day+'T00:00:00Z');if(mode==='utc')return guess;
+ let t=guess-pacificOffsetMs(guess);t=guess-pacificOffsetMs(t);return t;
+}
+/** [start, end) of a day in UTC ms; end - start is 23, 24 or 25 hours in Pacific mode. */
+export const dayBounds=(day:string,mode:TimeZoneMode='pacific'):[number,number]=>[dayStartMs(day,mode),dayStartMs(addDays(day,1),mode)];
+/** How many hours a day has (23 on the spring-forward day, 25 on the fall-back day, else 24). */
+export const hoursInDay=(day:string,mode:TimeZoneMode='pacific')=>{const [a,b]=dayBounds(day,mode);return Math.round((b-a)/HOUR_MS);};
+
+// ---------------------------------------------------------------------------------------------------------------------
 // Aggregation
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -293,6 +326,14 @@ export type DailyRollup={
  /** Oct 9 2026 (20261009_analytics_start.sql; absent before): the same visitor totals and dims, for sessions that saw the title
   *  screen or entered on the old /start (isStartSession). */
  start?:StartRollup;
+ /** Oct 12 2026 (20261012_admin_pacific_time.sql): which clock the day runs on. 'America/Los_Angeles' for a Pacific day
+  *  (rebuilt from raw rows by start time); 'UTC' for a day frozen before the Pacific migration (a UTC day used in its place:
+  *  it covers 4 or 5 pm Pacific the evening before to 4 or 5 pm that day); absent on the old UTC-mode path. */
+ tz?:'America/Los_Angeles'|'UTC';
+ /** Pacific days only: every session of the day was hashed with that same day's salt, so unique visitors are exact. False for
+  *  days before the migration, when the salt still rotated at UTC midnight (5 or 4 pm Pacific): someone who played before and
+  *  after that hour counts as two visitors that day. */
+ exactVisitors?:boolean;
 };
 /** The dims the start-page subset keeps (no region or entry: the start page is the entry). */
 export const START_DIMS=['country','source','referrer','campaign','device'] as const;
@@ -329,7 +370,7 @@ export function dimKeys(s:SessionRow):Record<Dim,string|null>{
  };
 }
 
-/** One UTC day of raw sessions → its rollup. Visitors are distinct hashes (the hash only lives for that day anyway). */
+/** One day of raw sessions (by their `day` label: the UTC day in UTC mode; rollupPacificDay relabels by start time) → its rollup. Visitors are distinct hashes (a hash only lives for its salt day anyway). */
 export function rollupDay(day:string,sessions:SessionRow[]):DailyRollup{
  const r:DailyRollup={day,visitors:0,sessions:0,pageviews:0,bounces:0,engagedMs:0,hist:LENGTH_EDGES.map(()=>0),dims:emptyDims(),areaMs:{},placeMs:{},placeSessions:{},activityMs:{},cells:{},counts:{},countSessions:{},flags:{}};
  const placeMs=r.placeMs as Record<string,number>,placeSessions=r.placeSessions as Record<string,number>;
@@ -364,6 +405,17 @@ function startRollup(sessions:SessionRow[]):StartRollup{
    const id=dim+'\u0000'+key;let set=seen.get(id);if(!set)seen.set(id,set=new Set());if(!set.has(s.visitorHash)){set.add(s.visitorHash);c.v++;}}}
  for(const dim of START_DIMS)out.dims[dim]=trimTop(out.dims[dim],TOP_N);
  return out;
+}
+
+/**
+ * One Pacific day (Oct 12 2026): the sessions that STARTED between that day's Los Angeles midnights (dayBounds), whatever day
+ * their visitor hash was salted for, rolled up exactly like rollupDay. The SQL twin is public.analytics_pt_day_rollup.
+ * `lo`/`hi` (UTC ms) narrow it to part of the day (the same-time-yesterday comparison; SQL: analytics_window_rollup).
+ */
+export function rollupPacificDay(day:string,sessions:SessionRow[],lo?:number,hi?:number):DailyRollup{
+ const [a,b]=dayBounds(day,'pacific'),from=lo??a,to=hi??b;
+ const mine=sessions.filter(s=>{const t=Date.parse(s.startedAt);return t>=from&&t<to;});
+ return {...rollupDay(day,mine.map(s=>({...s,day}))),tz:PACIFIC_TZ,exactVisitors:mine.every(s=>s.day===day)};
 }
 
 /** Keep the top n keys by sessions (ties by key), like the SQL's `order by s desc, k limit 100`. */
@@ -424,10 +476,24 @@ export function mergeRollups(rollups:DailyRollup[]):Merged{
  };
 }
 
-export type Point={key:string;visitors:number;sessions:number;pageviews:number};
+/** `utcDay`: a daily point that is a UTC day standing in for a Pacific one (frozen before the Pacific migration). */
+export type Point={key:string;visitors:number;sessions:number;pageviews:number;utcDay?:boolean};
 
-/** Hourly series for one UTC day: sessions and visitors by start hour; page views = each start plus beats' counts by hour. */
-export function hourlySeries(day:string,starts:StartRow[],beats:BeatRow[]):Point[]{
+/**
+ * Hourly series for one day: sessions and visitors by start hour; page views = each start plus beats' counts by hour (a beat
+ * after the day ends is left out here, though the day's totals keep it: totals follow the session, hours follow the clock).
+ * Pacific mode (Oct 12 2026): the hours of that Los Angeles day, 23, 24 or 25 of them, each keyed by the ISO instant it starts
+ * (unique even when 1 am happens twice); the UI formats them in Pacific time. UTC mode: the old 24 'YYYY-MM-DDTHH' UTC hours.
+ */
+export function hourlySeries(day:string,starts:StartRow[],beats:BeatRow[],mode:TimeZoneMode='utc'):Point[]{
+ if(mode==='pacific'){
+  const [lo,hi]=dayBounds(day,'pacific'),n=Math.round((hi-lo)/HOUR_MS);
+  const pts:Point[]=Array.from({length:n},(_,h)=>({key:new Date(lo+h*HOUR_MS).toISOString(),visitors:0,sessions:0,pageviews:0}));
+  const seen=pts.map(()=>new Set<string>()),ids=new Set<string>();
+  for(const s of starts){const t=Date.parse(s.startedAt);if(t<lo||t>=hi)continue;ids.add(s.id);const h=Math.floor((t-lo)/HOUR_MS);pts[h].sessions++;pts[h].pageviews++;if(!seen[h].has(s.visitorHash)){seen[h].add(s.visitorHash);pts[h].visitors++;}}
+  for(const b of beats){const t=Date.parse(b.ts);if(!ids.has(b.sessionId)||t<lo||t>=hi)continue;pts[Math.floor((t-lo)/HOUR_MS)].pageviews+=b.pageviews;}
+  return pts;
+ }
  const pts:Point[]=Array.from({length:24},(_,h)=>({key:`${day}T${String(h).padStart(2,'0')}`,visitors:0,sessions:0,pageviews:0}));
  const seen=pts.map(()=>new Set<string>()),ids=new Set<string>();
  for(const s of starts){if(s.day!==day)continue;ids.add(s.id);const h=new Date(s.startedAt).getUTCHours();pts[h].sessions++;pts[h].pageviews++;if(!seen[h].has(s.visitorHash)){seen[h].add(s.visitorHash);pts[h].visitors++;}}
@@ -435,7 +501,7 @@ export function hourlySeries(day:string,starts:StartRow[],beats:BeatRow[]):Point
  return pts;
 }
 
-export const dailySeries=(rollups:DailyRollup[]):Point[]=>rollups.map(r=>({key:r.day,visitors:r.visitors,sessions:r.sessions,pageviews:r.pageviews}));
+export const dailySeries=(rollups:DailyRollup[]):Point[]=>rollups.map(r=>({key:r.day,visitors:r.visitors,sessions:r.sessions,pageviews:r.pageviews,...(r.tz==='UTC'?{utcDay:true}:{})}));
 
 export type Report={
  configured:boolean;from:string;to:string;granularity:'hour'|'day';generatedAt:string;live:number;
@@ -448,25 +514,52 @@ export type Report={
  learning:LearningReport|null;
  /** Oct 9 2026: the "Start page" section (built and small-number-suppressed on the server, lib/analytics/startReport.ts). */
  start:StartReport|null;
- /** Database functions version (3 = 20261009_analytics_counts.sql installed); `needsUpdate` drives the /admin banner. */
- storage:{schema:number;needsUpdate:boolean};
+ /** Database functions version (3 = 20261009_analytics_counts.sql installed); `needsUpdate` drives the /admin banner.
+  *  `pacific` (Oct 12 2026): 20261012_admin_pacific_time.sql is installed (days are Pacific days); false shows its banner. */
+ storage:{schema:number;needsUpdate:boolean;pacific?:boolean};
+ /** Oct 12 2026: the clock the days run on, and everything about the range a reader could misread (see ReportTime). */
+ time?:ReportTime;
  /** Oct 11 2026: the investor overview (this range vs the one before it; lib/analytics/overview.ts). */
  overview?:Overview|null;
  /** Oct 11 2026: save-code metrics (lib/saves/metrics.ts), added by the admin page and route; aggregates only. */
  saves?:SaveMetricsReport|null;
 };
 
+/** How the report's days and comparisons were cut (Oct 12 2026). Shown on /admin wherever it changes how a number reads. */
+export type ReportTime={
+ /** 'pacific': America/Los_Angeles days; 'utc': the Pacific migration has not run, days are still UTC days. */
+ mode:TimeZoneMode;
+ /** Today on that clock, and whether the range ends today (so its last day is only partly over). */
+ today:string;partialToday:boolean;
+ /** Days in the range shown as UTC-day totals: frozen before Pacific time, older than the raw window, so they cannot be
+  *  re-cut (each covers 5 pm–5 pm Pacific in summer, 4 pm–4 pm in winter). */
+ utcDays:string[];
+ /** Pacific days whose unique visitors may be a little high: the visitor salt still rotated at UTC midnight then. */
+ inexactVisitorDays:string[];
+ /** Days in the range that are not 24 hours long (DST: 23 in March, 25 in November). */
+ dstDays:{day:string;hours:number}[];
+ /** How the period before was matched to this one when this one ends today: 'exact' (cut at the same time of day from raw
+  *  rows), 'estimated' (its last day scaled to the share of a day that has passed), or 'none' (the range does not end today). */
+ compare:'exact'|'estimated'|'none';
+};
+
 export function emptyReport(from:string,to:string,now:Date,configured:boolean):Report{
  const m=mergeRollups([]);
  return {configured,from,to,granularity:from===to?'hour':'day',generatedAt:now.toISOString(),live:0,series:[],totals:m.totals,distribution:displayDistribution(m.hist),dims:m.dims,areas:m.areas,
-  places:m.places,activities:m.activities,cells:m.cells,regionNames:{},notes:[],learning:null,start:null,storage:{schema:SCHEMA_VERSION,needsUpdate:false}};
+  places:m.places,activities:m.activities,cells:m.cells,regionNames:{},notes:[],learning:null,start:null,storage:{schema:SCHEMA_VERSION,needsUpdate:false},
+  time:{mode:'pacific',today:pacificDay(now),partialToday:to===pacificDay(now),utcDays:[],inexactVisitorDays:[],dstDays:[],compare:'none'}};
 }
 
-/** Resolve a preset or custom range to inclusive UTC days. Custom ranges are capped at 366 days and never end after today. */
-export function resolveRange(q:{range?:string|null;from?:string|null;to?:string|null},now:Date):{from:string;to:string}{
- const today=utcDay(now),day=/^\d{4}-\d{2}-\d{2}$/;
+/**
+ * Resolve a preset or custom range to inclusive days. Oct 12 2026: Pacific days by default ("today" is today in Los Angeles,
+ * "yesterday" the whole Pacific day before, 23 or 25 hours on a DST change); `mode` 'utc' is the pre-migration fallback.
+ * Custom ranges are capped at 366 days and never end after today.
+ */
+export function resolveRange(q:{range?:string|null;from?:string|null;to?:string|null},now:Date,mode:TimeZoneMode='pacific'):{from:string;to:string}{
+ const today=dayIn(mode,now),day=/^\d{4}-\d{2}-\d{2}$/;
  switch(q.range){
   case 'today':return {from:today,to:today};
+  case 'yesterday':{const y=addDays(today,-1);return {from:y,to:y};}
   case '30d':return {from:addDays(today,-29),to:today};
   case '90d':return {from:addDays(today,-89),to:today};
   case 'custom':{

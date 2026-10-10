@@ -12,8 +12,8 @@ import {ComingBackCard,NewCodesCard,RestoresCard,RetentionCard,SaveHealthCard,Sa
 import RegionCard from './RegionCard';
 import styles from './admin.module.css';
 
-type Preset='today'|'7d'|'30d'|'90d'|'custom';
-const PRESETS:{id:Preset;label:string}[]=[{id:'today',label:'Today'},{id:'7d',label:'7 days'},{id:'30d',label:'30 days'},{id:'90d',label:'90 days'},{id:'custom',label:'Custom'}];
+type Preset='today'|'yesterday'|'7d'|'30d'|'90d'|'custom';
+const PRESETS:{id:Preset;label:string}[]=[{id:'today',label:'Today'},{id:'yesterday',label:'Yesterday'},{id:'7d',label:'7 days'},{id:'30d',label:'30 days'},{id:'90d',label:'90 days'},{id:'custom',label:'Custom'}];
 /** Oct 11 2026: the dashboard order, most important for investors first. */
 const SECTIONS:[string,string][]=[['sec-headline','Headline'],['sec-engagement','Engagement'],['sec-acquisition','Acquisition'],['sec-product','Product usage'],['sec-health','Save health'],['sec-detail','Detail']];
 const SOURCE_LABEL:Record<string,string>={direct:'Direct',search:'Search',social:'Social',referral:'Referral',campaign:'Campaign'};
@@ -26,10 +26,46 @@ function countryName(code:string){
  if(!/^[A-Z]{2}$/.test(code))return code==='(unknown)'?'Unknown':code;
  try{regionNames??=new Intl.DisplayNames(['en'],{type:'region'});return regionNames.of(code)||code;}catch{return code;}
 }
-const dayLabel=(key:string,hourly:boolean)=>hourly?`${key.slice(11,13)}:00`:new Date(key+'T00:00:00Z').toLocaleDateString('en',{month:'short',day:'numeric',timeZone:'UTC'});
+/** Day keys are calendar dates ('YYYY-MM-DD', formatted as such). Hour keys: Pacific mode sends the ISO instant each hour
+ *  starts (Oct 12 2026), shown as the Los Angeles wall-clock hour, with PDT/PST on a DST day where 1 am happens twice or
+ *  2 am never does; the pre-migration UTC mode sends 'YYYY-MM-DDTHH' UTC hours. */
+const PT='America/Los_Angeles';
+const dayLabel=(key:string,hourly:boolean,zone=false)=>!hourly?new Date(key.slice(0,10)+'T00:00:00Z').toLocaleDateString('en',{month:'short',day:'numeric',timeZone:'UTC'})
+ :key.length<=13?`${key.slice(11,13)}:00`
+ :new Date(key).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hourCycle:'h23',timeZone:PT,...(zone?{timeZoneName:'short'}:{})});
+/** Today's date in Los Angeles (the browser may be anywhere). */
+const pacificToday=()=>{try{return new Intl.DateTimeFormat('en-CA',{timeZone:PT,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());}catch{return new Date().toISOString().slice(0,10);}};
 
-const tableOf=(rows:Row[],label:(k:string)=>string)=>({columns:['Name','Visitors','Sessions','Page views'],rows:rows.map(r=>[label(r.key),r.visitors,r.sessions,r.pageviews])});
+const tableOf=(rows:Row[],label:(k:string)=>string,visitors='Visitors')=>({columns:['Name',visitors,'Sessions','Page views'],rows:rows.map(r=>[label(r.key),r.visitors,r.sessions,r.pageviews])});
 const barsOf=(rows:Row[],label:(k:string)=>string,metric:'visitors'|'sessions'='visitors'):BarRow[]=>rows.map(r=>({key:r.key,label:label(r.key),value:r[metric]}));
+
+const shortDay=(day:string)=>new Date(day+'T00:00:00Z').toLocaleDateString('en',{month:'short',day:'numeric',timeZone:'UTC'});
+const dayRun=(days:string[])=>days.length===1?shortDay(days[0]):`${days.length} days (${shortDay(days[0])} – ${shortDay(days[days.length-1])})`;
+
+/**
+ * Oct 12 2026 (accuracy pass): the known limits of these numbers, next to them. Range-specific ones (UTC stand-in days,
+ * visitor counts from before the salt rotated at Pacific midnight, DST days, an estimated comparison) are flagged and open the
+ * box; the standing ones (what a visitor is, save-code dates, "on now") are always listed.
+ */
+function ReadingNotes({report}:{report:Report}){
+ const tm=report.time;if(!tm)return null;
+ const flagged:string[]=[];
+ if(tm.mode==='utc')flagged.push('Days are UTC days until the Pacific-time migration runs (see the banner).');
+ if(tm.utcDays.length)flagged.push(`${dayRun(tm.utcDays)} in this range are UTC-day totals (marked *): they were frozen before Pacific time and their raw rows are gone, so each covers 5 pm Pacific the day before to 5 pm (4 pm in winter). Where they meet the first Pacific day, that evening (about 7 hours) is not counted on either side.`);
+ if(tm.inexactVisitorDays.length)flagged.push(`Unique visitors on ${dayRun(tm.inexactVisitorDays)} may be slightly high: the visitor count still reset at UTC midnight (5 pm Pacific, 4 pm in winter) then, so someone who played before and after that hour counts twice. Sessions, time and page views are exact.`);
+ for(const d of tm.dstDays)flagged.push(`${shortDay(d.day)} had ${d.hours} hours (clocks went ${d.hours<24?'forward':'back'}); day-by-day comparisons are by calendar day.`);
+ if(tm.compare==='estimated')flagged.push('The change vs the period before compares like with like up to this time of day; that period’s last day is older than the raw 14 days, so its part-day is estimated from yesterday’s shape.');
+ const standing=[
+  'A visitor is one device and network on one day (no cookies, no ids): a shared tablet counts once, one child on a phone and a laptop counts twice, and a returning player counts again each day. Over several days, visitors add up as visitor-days. Save codes are the only measure that follows a player across days.',
+  'Bots, automated browsers, Do-Not-Track/GPC browsers, preview builds, local and admin pages, and ?preview=all test sessions are never counted.',
+  'Save codes keep only the UTC date they were made and last used, so save-code days run 5 pm to 5 pm Pacific (4 pm in winter). Retention is rolling: "day 7" means used again 7 or more days after the code was made.',
+  '"On now" is browser tabs that sent anything in the last 5 minutes, not people; an idle tab stops counting after 10 minutes.',
+ ];
+ return <details className={styles.readNotes} open={flagged.length>0}>
+  <summary>How to read these numbers{flagged.length?` · ${flagged.length} note${flagged.length>1?'s':''} for this range`:''}</summary>
+  <ul>{flagged.map(n=><li key={n} data-flag="">{n}</li>)}{standing.map(n=><li key={n}>{n}</li>)}</ul>
+ </details>;
+}
 
 /** `saves`: the save-code status line from the server (app/admin/page.tsx; counts only, never a code or a save's contents). */
 export default function AnalyticsDashboard({initial,initialRange,saves}:{initial:Report;initialRange:Preset;saves?:string}){
@@ -52,7 +88,7 @@ export default function AnalyticsDashboard({initial,initialRange,saves}:{initial
  // Refresh once a minute while this tab is visible and the range includes today ("on now" stays current).
  useEffect(()=>{
   let timer:ReturnType<typeof setTimeout>|null=null;
-  const today=new Date().toISOString().slice(0,10);
+  const today=report.time?.mode==='utc'?new Date().toISOString().slice(0,10):pacificToday();
   const arm=()=>{if(timer||document.visibilityState!=='visible'||report.to<today)return;timer=setTimeout(()=>{timer=null;void load(query.current);},60_000);};
   const vis=()=>{if(document.visibilityState==='visible')arm();else if(timer){clearTimeout(timer);timer=null;}};
   arm();document.addEventListener('visibilitychange',vis);
@@ -63,9 +99,13 @@ export default function AnalyticsDashboard({initial,initialRange,saves}:{initial
  const applyCustom=()=>void load(`range=custom&from=${from}&to=${to}`);
  const logout=async()=>{await fetch('/api/admin/logout',{method:'POST'}).catch(()=>{});router.refresh();};
 
- const hourly=report.granularity==='hour';
+ const hourly=report.granularity==='hour',tm=report.time,pacific=tm?.mode!=='utc',clock=pacific?'Pacific time':'UTC';
  const t=report.totals,d=report.dims,empty=t.sessions===0;
- const labels=useMemo(()=>report.series.map(p=>dayLabel(p.key,hourly)),[report.series,hourly]);
+ const dst=!!tm?.dstDays.length;
+ const labels=useMemo(()=>report.series.map(p=>dayLabel(p.key,hourly,dst)+(p.utcDay?'*':'')),[report.series,hourly,dst]);
+ const tipLabels=useMemo(()=>report.series.map((p,i)=>p.utcDay?`${labels[i].slice(0,-1)} (UTC day)`:labels[i]),[report.series,labels]);
+ // Visitors are unique per day: over a longer range the dimension tables add days up, so they are visitor-days.
+ const vUnit=report.from===report.to?'visitors':'visitor-days',vCol=report.from===report.to?'Visitors':'Visitor-days';
  const values=useMemo(()=>({visitors:report.series.map(p=>p.visitors),sessions:report.series.map(p=>p.sessions),pageviews:report.series.map(p=>p.pageviews)}),[report.series]);
  const rangeText=report.from===report.to?dayLabel(report.from,false):`${dayLabel(report.from,false)} – ${dayLabel(report.to,false)}`;
  const sources=Object.keys(SOURCE_LABEL).map(k=>d.source.find(r=>r.key===k)??{key:k,visitors:0,sessions:0,pageviews:0});
@@ -92,7 +132,8 @@ export default function AnalyticsDashboard({initial,initialRange,saves}:{initial
     <span className={styles.spacer}/>
     <span className={styles.live} data-tip="Tabs that sent anything in the last 5 minutes" title="Tabs that sent anything in the last 5 minutes"><i aria-hidden="true"/>{fmtInt(report.live)} on now</span>
    </div>
-   <div className={styles.utcRow}><p className={styles.utc}>{rangeText} · days and hours in UTC{loading?' · loading…':''}</p>{report.notes.map(n=><p key={n} className={styles.utc}>{n}</p>)}</div>
+   <div className={styles.utcRow}><p className={styles.utc}>{rangeText}{tm?.partialToday?' (today so far)':''} · days and hours in {pacific?'Pacific time (midnight to midnight, Los Angeles; PDT or PST)':'UTC'}{loading?' · loading…':''}</p>{report.notes.map(n=><p key={n} className={styles.utc}>{n}</p>)}</div>
+   <ReadingNotes report={report}/>
 
    {!report.configured&&<section className={styles.banner}>
     <h2>Analytics storage is not configured</h2>
@@ -114,6 +155,13 @@ export default function AnalyticsDashboard({initial,initialRange,saves}:{initial
     Until then visits, places and everything above keep counting; only the Learning section stays empty. Then run
     <code>20261009_analytics_start.sql</code> the same way (its last row: <code>OK, start page installed (analytics schema 4)</code>).
    </section>}
+   {report.configured&&report.storage?.pacific===false&&<section className={`${styles.banner} ${styles.bannerWarn}`} role="status" aria-labelledby="pacific-update">
+    <h2 id="pacific-update">Days are still UTC days</h2>
+    The database does not have Pacific-time days yet, so every day below runs midnight to midnight UTC (5 pm to 5 pm Pacific in summer, 4 pm to 4 pm in winter).
+    In the Supabase SQL editor, paste the <b>whole</b> of <code>supabase/migrations/20261012_admin_pacific_time.sql</code> and run it. Its last result must be one row reading
+    <code>OK, admin pacific time installed</code>; anything else means it did not finish, and running the whole file again is safe.
+    Within ten minutes the dashboard switches to Pacific days (the last 14 days are rebuilt exactly from raw rows) and the visitor count starts rotating at Pacific midnight.
+   </section>}
    {error&&<section className={styles.banner} role="alert">{error}</section>}
 
    <nav aria-label="Sections"><ol className={styles.toc}>{SECTIONS.map(([id,label],i)=><li key={id}><a href={'#'+id}>{i+1}. {label}</a></li>)}</ol></nav>
@@ -124,14 +172,14 @@ export default function AnalyticsDashboard({initial,initialRange,saves}:{initial
      <div className={styles.sectionHead}><h2 id="sec-headline"><span className={styles.sectionNum}>1</span>Headline</h2>
       <p>Players, save codes and growth for {rangeText}, each compared with the same number of days just before. Save-code counts (active, returning, retention, stored) are as of today.</p></div>
      <HeadlineTiles report={report}/>
-     <ChartCard wide title="Visitors, sessions and page views" subtitle={hourly?'By hour (UTC)':'By day (UTC)'} empty={empty}
-      table={{columns:[hourly?'Hour':'Day','Visitors','Sessions','Page views'],rows:report.series.map((p,i)=>[labels[i],p.visitors,p.sessions,p.pageviews])}}>
+     <ChartCard wide title="Visitors, sessions and page views" subtitle={`${hourly?'By hour':'By day'} (${clock}${tm?.utcDays.length?'; * = a UTC day, frozen before Pacific time':''}). Visitors are unique per ${hourly?'hour':'day'}.`} empty={empty}
+      table={{columns:[hourly?`Hour (${clock})`:'Day','Visitors','Sessions','Page views'],rows:report.series.map((p,i)=>[tipLabels[i],p.visitors,p.sessions,p.pageviews])}}>
       <ul className={styles.legend}>
        <li><i style={{'--key':'var(--s1)'} as CSSProperties}/>Visitors</li>
        <li><i style={{'--key':'var(--s2)'} as CSSProperties}/>Sessions</li>
        <li><i style={{'--key':'var(--s3)'} as CSSProperties}/>Page views</li>
       </ul>
-      <LineChart labels={labels} values={values} ariaLabel={`Visitors, sessions and page views, ${rangeText}`}
+      <LineChart labels={labels} tipLabels={tipLabels} values={values} ariaLabel={`Visitors, sessions and page views, ${rangeText}, ${clock}`}
        series={[{key:'visitors',label:'Visitors',color:'var(--s1)'},{key:'sessions',label:'Sessions',color:'var(--s2)'},{key:'pageviews',label:'Page views',color:'var(--s3)'}]}/>
      </ChartCard>
      <div className={styles.grid}>
@@ -161,22 +209,22 @@ export default function AnalyticsDashboard({initial,initialRange,saves}:{initial
      <InvestorFunnel report={report}/>
      <div className={styles.grid}>
       <NewCodesCard d={sd} saves={report.saves}/>
-      <ChartCard title="Where they come from" subtitle="Visitors by source" empty={empty}
-       table={{columns:['Source','Visitors','Sessions','Page views'],rows:sources.map(r=>[SOURCE_LABEL[r.key],r.visitors,r.sessions,r.pageviews])}}>
-       <BarList rows={barsOf(sources,k=>SOURCE_LABEL[k]||k)} unit="visitors"/>
+      <ChartCard title="Where they come from" subtitle={`${vCol} by source`} empty={empty}
+       table={{columns:['Source',vCol,'Sessions','Page views'],rows:sources.map(r=>[SOURCE_LABEL[r.key],r.visitors,r.sessions,r.pageviews])}}>
+       <BarList rows={barsOf(sources,k=>SOURCE_LABEL[k]||k)} unit={vUnit}/>
       </ChartCard>
-      <ChartCard title="Countries" subtitle="Visitors by country" empty={empty} table={tableOf(d.country,countryName)}>
-       <BarList rows={barsOf(d.country,countryName)} unit="visitors"/>
+      <ChartCard title="Countries" subtitle={`${vCol} by country`} empty={empty} table={tableOf(d.country,countryName,vCol)}>
+       <BarList rows={barsOf(d.country,countryName)} unit={vUnit}/>
       </ChartCard>
       <RegionCard report={report} empty={empty} countryName={countryName}/>
-      <ChartCard title="Referring sites" subtitle="Visitors by referrer (host only)" empty={empty||!d.referrer.length} table={tableOf(d.referrer,k=>k)}>
-       <BarList rows={barsOf(d.referrer,k=>k)} unit="visitors"/>
+      <ChartCard title="Referring sites" subtitle={`${vCol} by referrer (host only)`} empty={empty||!d.referrer.length} table={tableOf(d.referrer,k=>k,vCol)}>
+       <BarList rows={barsOf(d.referrer,k=>k)} unit={vUnit}/>
       </ChartCard>
-      <ChartCard title="Campaigns" subtitle="utm_campaign · source / medium" empty={empty||!d.campaign.length} table={tableOf(d.campaign,k=>k)}>
-       <BarList rows={barsOf(d.campaign,k=>k)} unit="visitors"/>
+      <ChartCard title="Campaigns" subtitle={`${vCol} by utm_campaign · source / medium`} empty={empty||!d.campaign.length} table={tableOf(d.campaign,k=>k,vCol)}>
+       <BarList rows={barsOf(d.campaign,k=>k)} unit={vUnit}/>
       </ChartCard>
-      <ChartCard title="Devices" subtitle="Visitors by device class" empty={empty} table={tableOf(d.device,k=>DEVICE_LABEL[k]||k)}>
-       <BarList rows={barsOf(d.device,k=>DEVICE_LABEL[k]||k)} unit="visitors"/>
+      <ChartCard title="Devices" subtitle={`${vCol} by device class`} empty={empty} table={tableOf(d.device,k=>DEVICE_LABEL[k]||k,vCol)}>
+       <BarList rows={barsOf(d.device,k=>DEVICE_LABEL[k]||k)} unit={vUnit}/>
       </ChartCard>
       <ChartCard title="Entry pages" subtitle="Sessions by the page they started on" empty={empty} table={tableOf(d.entry,k=>PAGE_LABEL[k]||k)}>
        <BarList rows={barsOf(d.entry,k=>PAGE_LABEL[k]||k,'sessions')} unit="sessions"/>

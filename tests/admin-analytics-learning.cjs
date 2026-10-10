@@ -230,7 +230,7 @@ await ok('schema-version banner',async()=>{
  const mem=S.createMemoryStore();for(const s of FIX_STARTS)mem.data.starts[s.id]=s;mem.data.beats.push(...FIX_BEATS);
  const now=new Date('2026-10-07T12:00:00Z');
  const fine=await R.buildReport(mem,{from:DAY,to:DAY},now);
- assert.deepEqual(J(fine.storage),{schema:C.SCHEMA_VERSION,needsUpdate:false});assert.equal(fine.learning.hasData,true);
+ assert.deepEqual(J(fine.storage),{schema:C.SCHEMA_VERSION,needsUpdate:false,pacific:true});assert.equal(fine.learning.hasData,true);
  const old={...mem,schemaVersion:async()=>2};assert.equal((await R.buildReport(old,{from:DAY,to:DAY},now)).storage.needsUpdate,true,'schema 2 → banner');
  const stale={...mem,schemaVersion:async()=>3,computeDays:async(f,t,n)=>(await mem.computeDays(f,t,n)).map(r=>{const o={...r};delete o.counts;delete o.countSessions;delete o.flags;return o;})};
  assert.equal((await R.buildReport(stale,{from:DAY,to:DAY},now)).storage.needsUpdate,true,'a day with visits but no counts key → banner');
@@ -317,7 +317,7 @@ await ok('sql',async()=>{
   assert.equal(sqlRoll.countSessions[lo],2);assert.deepEqual(sqlRoll.flags,ref.flags);
   assert.deepEqual(JSON.parse(psql(`select analytics_day_rollup('2026-09-01')`,{role:'service_role'})),J(C.rollupDay('2026-09-01',[])),'an empty day has the same shape');
   // Through the real ingest path too: TS ingest → memory store vs the same events → SQL ingest, same rollup.
-  const mem=S.createMemoryStore(),D2=today,sid='e2eLearnSession00001',now=new Date();
+  const mem=S.createMemoryStore(undefined,{tz:'utc'}),D2=today,sid='e2eLearnSession00001',now=new Date();// compared with the UTC-day SQL rollup
   const evs=[{v:1,t:'start',s:sid,p:'/',f:{p:2,g:0,s:4,v:1}},{v:1,t:'beat',s:sid,p:'/',e:60000,a:{island:60000},k:{[lo]:1,[q0]:1,[o0]:1,'ob:seen:welcome':1}},{v:1,t:'beat',s:sid,p:'/',e:30000,a:{island:30000},k:{[lo]:1,'pf:7v7':1}}];
   for(const ev of evs){await ingest(mem,ev,{now});const st0=mem.data.starts[sid],last=ev.t==='start'?null:mem.data.beats[mem.data.beats.length-1];
    psql(`select analytics_ingest('${JSON.stringify(ev.t==='start'?{type:'start',session:sid,path:'/',day:D2,visitor_hash:st0.visitorHash,device:st0.device,source:st0.source,country:st0.country,region:st0.region,flags:st0.flags}

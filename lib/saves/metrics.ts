@@ -26,7 +26,14 @@ export type RawSaveMetrics={
  throttle:{failed_tries:number;ip_locks:number;breaker_hours:number;hard_stop_hours:number;create_cap_ip:number;create_cap_day:number;mail_cap_ip:number;mail_cap_day:number;creates:number};
 };
 export type SaveMetricsStatus='ok'|'not-configured'|'table-missing'|'needs-migration'|'error';
-export type SaveMetricsReport={status:SaveMetricsStatus;data:RawSaveMetrics|null};
+/**
+ * Oct 12 2026 (accuracy pass): "New save codes" compared like for like. When the range ends today (a day that is not over),
+ * comparing it with the same number of whole days before always reads low; `compare` is the range's COMPLETE days
+ * [from, today - 1] against the same number of days just before (one more call of the same function with p_to = today - 1).
+ * Null when the range does not end today (then data.range is already like for like) or is only today.
+ */
+export type SaveCompare={from:string;to:string;days:number;created:number;prevCreated:number};
+export type SaveMetricsReport={status:SaveMetricsStatus;data:RawSaveMetrics|null;compare?:SaveCompare|null};
 
 const DAY=86_400_000;
 const addDays=(day:string,n:number)=>new Date(Date.parse(day+'T00:00:00Z')+n*DAY).toISOString().slice(0,10);
@@ -97,14 +104,27 @@ export async function supabaseSaveMetrics(url:string,serviceKey:string,from:stri
  return normaliseMetrics(JSON.parse(await res.text()));
 }
 
-/** The save-code block of the admin report for [from, to]. Never throws: the status says what is missing. */
+/**
+ * The save-code block of the admin report for [from, to]. Never throws: the status says what is missing.
+ * Dates (Oct 12 2026): game_saves keeps only a DATE per code (created_on, last_used_on), stamped with the database's
+ * current_date, which is the UTC date on Supabase. Those cannot be moved to Pacific days after the fact, so the save numbers
+ * stay on UTC dates and /admin says so; [from, to] (Pacific dates) is applied to them as dates.
+ */
 export async function loadSaveMetrics(from:string,to:string,now=new Date()):Promise<SaveMetricsReport>{
  const store=getSaveStore();
  if(!store)return {status:'not-configured',data:null};
  let version=0;try{version=await store.schemaVersion();}catch{}
  if(version<1)return {status:'table-missing',data:null};
  try{
-  if(store.kind==='memory')return {status:'ok',data:memorySaveMetrics((store as unknown as {data:MemorySaveData}).data,from,to,now)};
-  return {status:'ok',data:await supabaseSaveMetrics(process.env.NEXT_PUBLIC_SUPABASE_URL||'',process.env.SUPABASE_SERVICE_ROLE_KEY||'',from,to)};
+  const get=store.kind==='memory'?async(f:string,t:string)=>memorySaveMetrics((store as unknown as {data:MemorySaveData}).data,f,t,now)
+   :(f:string,t:string)=>supabaseSaveMetrics(process.env.NEXT_PUBLIC_SUPABASE_URL||'',process.env.SUPABASE_SERVICE_ROLE_KEY||'',f,t);
+  const data=await get(from,to);
+  return {status:'ok',data,compare:await completeDays(data,get)};
  }catch(e){return {status:(e as Error)?.message==='needs-migration'?'needs-migration':'error',data:null};}
+}
+
+/** The like-for-like "new codes" comparison when the range ends today (see SaveCompare). Best effort: null on any failure. */
+export async function completeDays(data:RawSaveMetrics,get:(from:string,to:string)=>Promise<RawSaveMetrics>):Promise<SaveCompare|null>{
+ if(data.to!==data.today||data.from>=data.to)return null;
+ try{const c=await get(data.from,addDays(data.today,-1));return {from:c.from,to:c.to,days:diffDays(c.to,c.from)+1,created:c.range.created,prevCreated:c.range.prev_created};}catch{return null;}
 }
