@@ -20,7 +20,17 @@ import {fieldLightLayout} from './fieldLightLayout';
 import {ISLAND_SHORE,NORTH_BEACH_UMBRELLAS,NORTH_BEACH_PATHS,onIsland} from './shoreline';
 import { Obstacle } from './simulation';
 
-export function buildTown(scene: T.Scene) {
+/** The island's static world (Town's scene). Synchronous: runs every slice of buildTownSteps at once. */
+export function buildTown(scene: T.Scene) {return runSteps(buildTownSteps(scene));}
+export type TownWorld=ReturnType<typeof buildTown>;
+/** Runs a sliced build to the end in one go. */
+export function runSteps<R>(steps:Generator<unknown,R,unknown>):R{for(;;){const r=steps.next();if(r.done)return r.value;}}
+/**
+ * buildTown in slices (preload pass, Oct 9 2026): the same build, paused at about a dozen points (each slice ≲ 130 ms on a 4×-throttled
+ * phone, ~30 ms on a laptop) so the title screen can build the island in idle time while a new player reads their save code
+ * (lib/town/islandWarm.ts). Nothing between slices touches the scene, so the result is the one buildTown makes.
+ */
+export function* buildTownSteps(scene: T.Scene) {
   const existingRoots=new Set(scene.children);
   const umbrellaReaction=createUmbrellaReaction();
   const town = new T.Group(); scene.add(town);
@@ -338,6 +348,7 @@ export function buildTown(scene: T.Scene) {
   ];club.forEach(([x,z,w,d,h,label],i)=>house(x+cx,z+cz,w,d,h,label,i+22));
   street(264,-235,98);street(336,-235,98);street(300,-284,72,false);street(300,-186,72,false);
   path(300,-193.5,3,13);
+  yield;
   for(const x of [272,328])for(const z of [-270,-250,-229,-207])tree(x,z);
   for(const [x,z] of [[249,-254],[351,-254],[248,-213.5],[350,-211],[327,-176]]){planter(x,z);bench(x+3,z);}
   districtSign('CLUB GROUNDS',316,-192);
@@ -862,6 +873,7 @@ export function buildTown(scene: T.Scene) {
   surfaceAreas.push({kind:'path',x:88,z:-49,w:48,d:6});
   box(48,.12,6,'#eddfbb',88,0,-49);
   box(48,.15,.22,'#d2bc94',88,.025,-46);
+  yield;
   for(let x=64;x<=112;x+=2)box(.025,.008,5.7,'#d2bc94',x,.065,-49);
   for(const z of [-50,-48])box(48,.008,.025,'#d2bc94',88,.065,z);
   for(const x of [67,75,94,111]){
@@ -1184,6 +1196,7 @@ export function buildTown(scene: T.Scene) {
   box(28.4,.18,18.4,'#d2bc94',gh.x,-.06,gh.z);
   box(27.5,.08,17.5,'#bfae87',gh.x,.04,gh.z);
   box(3.8,.012,18,'#eddfbb',gh.x,.086,gh.z);
+  yield;
   const greenhouseGlass=new T.MeshStandardMaterial({color:'#a6d0bd',roughness:.28,metalness:.04,transparent:true,opacity:.32,depthWrite:false,side:T.DoubleSide});
   greenhouseGlass.forceSinglePass=true;materials.push(greenhouseGlass);
   function greenhousePane(points:[number,number,number][]){
@@ -1263,6 +1276,7 @@ export function buildTown(scene: T.Scene) {
   sign('GROW & SHARE · MATCH-DAY TABLE',9,.48,gh.x,3.05,28.28,'#eddfbb','#365b56');
   path(202,19,3.8,24);destinations.push({name:'Community Greenhouse',x:202,z:29.3});
 
+  yield;
   destinations.push(buildFarmersMarket({box,cylinder,put,sign,path,obstacles,buildings,roads,prop}));
 
   buildEastCoast({box,put,obstacles,prop});
@@ -1270,11 +1284,13 @@ export function buildTown(scene: T.Scene) {
   const eastPier=buildEastPier({box,cylinder,put,sign,shallows,obstacles,assets,prop});destinations.push(eastPier.destination);
   // Coral Cay, its causeway and the two sandbar stops (lib/town/coralCayWorld.ts). Built before the batching pass below,
   // so it shares the same 50 m spatial paint batches; its lamps join the night pools after the lamp placement pass.
+  yield;
   const coralCay=buildCoralCay({box,cylinder,put,line,sign,palm,house,table,planter,path,districtSign,shallows,obstacles,buildings,assets,surfaceAreas,prop});
   destinations.push(...coralCay.destinations);
 
   // Canonical centre lines remove offsets and duplicated dash phases. Touching
   // collinear sections become one street before any road surface is generated.
+  yield;
   const aligned=new Map<string,typeof roads>();
   for(const r of roads){const key=(r.vertical?'x:':'z:')+(r.vertical?r.x:r.z);const group=aligned.get(key)||[];group.push(r);aligned.set(key,group);}
   const canonical:typeof roads=[];
@@ -1490,6 +1506,7 @@ export function buildTown(scene: T.Scene) {
     }
   }
   const roofBounds=new T.Box3();
+  yield;
   town.traverse(object=>{
     if(!(object instanceof T.Mesh)||object.userData.skipRoofObstacle)return;
     roofBounds.setFromObject(object);
@@ -1523,7 +1540,8 @@ export function buildTown(scene: T.Scene) {
   // at night they share one warm emissive uniform and one batch per city chunk.
   for(const source of windowSources)paintMaterials.set(source,windowPaint);
   const position=new T.Vector3();
-  town.traverse(object=>{
+  // Visited in traverse order, in slices (buildTownSteps): the callback only collects, it never changes the tree.
+  const batchObject=(object:T.Object3D)=>{
     if(!(object instanceof T.Mesh)||object.userData.umbrellaAnimated||object.parent===ferry||waves.includes(object)||Array.isArray(object.material))return;
     object.getWorldPosition(position);
     const paint=object.castShadow?paintMaterials.get(object.material):undefined;
@@ -1541,14 +1559,24 @@ export function buildTown(scene: T.Scene) {
     let batch=batches.get(key);if(!batch){batch={material,castShadow:object.castShadow,geometries:[]};batches.set(key,batch);}batch.geometries.push(geom);original.push(object);
     const tag=object.userData.propTag as PropTag|undefined;
     if(tag){let record=propRecords.get(tag);if(!record){record={pieces:[],bounds:new T.Box3()};propRecords.set(tag,record);}geom.computeBoundingBox();record.bounds.union(geom.boundingBox!);record.pieces.push({batch,index:batch.geometries.length-1});}
-  });
+  };
+  {const all:T.Object3D[]=[];town.traverse(o=>{all.push(o);});for(let i=0;i<all.length;i++){batchObject(all[i]);if(i%500===499)yield;}}
+  yield;
+  let merges=0;
   for(const [key,batch] of batches){const {material,castShadow,geometries}=batch;
     let vertex=0;batch.starts=geometries.map(g=>{const start=vertex;vertex+=g.getAttribute('position').count;return start;});
     const merged=mergeGeometries(geometries);
     if(merged){merged.computeBoundingSphere();const mesh=new T.Mesh(merged,material);batch.mesh=mesh;mesh.name='island-chunk-'+key;mesh.castShadow=castShadow;mesh.receiveShadow=true;mesh.matrixAutoUpdate=false;mesh.matrixWorldAutoUpdate=false;scene.add(mesh);mergedMeshes.push(mesh);}
     geometries.forEach(g=>g.dispose());
+    if(++merges%12===0)yield;
   }
-  original.forEach(m=>{m.removeFromParent();m.geometry.dispose();});
+  // Preload pass (Oct 9 2026): one pass per parent instead of a children.indexOf + splice per mesh (thousands of them: quadratic).
+  // Same result and the same removed / childremoved events as removeFromParent.
+  {const byParent=new Map<T.Object3D,Set<T.Object3D>>();for(const m of original){const p=m.parent;if(!p)continue;let s=byParent.get(p);if(!s)byParent.set(p,s=new Set());s.add(m);}
+   for(const [p,gone] of byParent){const kids=p.children;let w=0;for(let r=0;r<kids.length;r++){const c=kids[r];if(!gone.has(c))kids[w++]=c;}kids.length=w;
+    for(const c of gone){c.parent=null;c.dispatchEvent({type:'removed'});p.dispatchEvent({type:'childremoved',child:c});}}
+   for(const m of original)m.geometry.dispose();}
+  yield;
   // Heat audit Sep 30 2026: the batching pass leaves ~170 unnamed Groups with nothing left inside. They drew nothing, but the renderer
   // still refreshed their matrices and walked them in both passes every frame. Only groups whose whole subtree is empty groups go.
   {const empty=(o:T.Object3D):boolean=>o.children.every(c=>c.type==='Group'&&empty(c));let pruned=0;

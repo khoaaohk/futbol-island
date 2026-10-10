@@ -45,6 +45,9 @@ import IslandSettingsHost from './IslandSettings';
 import IslandLoading from './IslandLoading';
 import {rememberInGame} from '@/lib/rootView';
 import {bootMark} from '@/lib/boot/perfMarks';
+import {takeWarmIsland} from '@/lib/town/islandWarm';
+/** <html data-island-handoff="tan">: Town's loader is the title screen's plain tan sheet (components/landing/waterLaunch.ts). */
+const tanHandoff=()=>document.documentElement.dataset.islandHandoff==='tan';
 import IslandReturnLoading from './IslandReturnLoading';
 import {isDrinkMachine} from '@/lib/town/drinkMachines';
 import {createVendingMachines,type VendingMachines} from '@/lib/graphics/vendingMachines';
@@ -335,14 +338,16 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
   const [minimumLoadElapsed,setMinimumLoadElapsed]=useState(returningFromArcade);
   const loadingComplete=sceneReady&&minimumLoadElapsed;
   const [ready,setReady]=useState(false);
-  useEffect(()=>{if(!loadingComplete)return;const timer=window.setTimeout(()=>setReady(true),window.matchMedia('(prefers-reduced-motion: reduce)').matches?60:returningFromArcade?1050:2050);return()=>window.clearTimeout(timer);},[loadingComplete,returningFromArcade]);
+  // Tan hand-off from the title screen (preload pass, Oct 9 2026): the plain tan sheet starts its 0.5 s cross-fade at once (IslandLoading
+  // CSS), so the arrival starts with it and the HUD arrives as it ends, instead of the art loader's 1.5 s / 2.05 s choreography.
+  useEffect(()=>{if(!loadingComplete)return;const timer=window.setTimeout(()=>setReady(true),window.matchMedia('(prefers-reduced-motion: reduce)').matches?60:returningFromArcade?1050:tanHandoff()?600:2050);return()=>window.clearTimeout(timer);},[loadingComplete,returningFromArcade]);
   // The loading screen starts sliding away 1.55 s after loadingComplete (IslandLoading .exiting delay): start the arrival as it departs.
-  useEffect(()=>{if(!loadingComplete||returningFromArcade)return;const timer=window.setTimeout(()=>arrivalRestartRef.current(),window.matchMedia('(prefers-reduced-motion: reduce)').matches?80:1500);return()=>window.clearTimeout(timer);},[loadingComplete,returningFromArcade]);
+  useEffect(()=>{if(!loadingComplete||returningFromArcade)return;const timer=window.setTimeout(()=>arrivalRestartRef.current(),window.matchMedia('(prefers-reduced-motion: reduce)').matches?80:tanHandoff()?0:1500);return()=>window.clearTimeout(timer);},[loadingComplete,returningFromArcade]);
   // This tab is in the game now: a reload or a later visit to `/` in this tab skips the title screen (lib/rootView.ts).
   useEffect(()=>{rememberInGame();},[]);
   // The title screen's water-loader hand-off (<html data-island-handoff="tan">, components/landing/waterLaunch.ts): the loader is a plain tan
   // sheet with no artwork to show, so the 3 s minimum (there for the loader art) is skipped; the island appears once it is ready.
-  useEffect(()=>{if(returningFromArcade)return;const timer=window.setTimeout(()=>setMinimumLoadElapsed(true),document.documentElement.dataset.islandHandoff==='tan'?0:3000);return()=>window.clearTimeout(timer);},[returningFromArcade]);
+  useEffect(()=>{if(returningFromArcade)return;const timer=window.setTimeout(()=>setMinimumLoadElapsed(true),tanHandoff()?0:3000);return()=>window.clearTimeout(timer);},[returningFromArcade]);
   useEffect(()=>{if(ready&&!failed&&!returningFromArcade&&shouldShowIslandOnboarding())setOnboardingOpen(true);},[ready,failed]);
   // Coaches Board share links (#play=…, Oct 9 2026): open the Coaches Centre on the board once the island is ready.
   useEffect(()=>{if(ready&&!failed&&/^#play=/.test(window.location.hash))setCoachesOpen(true);},[ready,failed]);
@@ -389,7 +394,10 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
     if(departure){rideRef.current=departure.ride;setRideMode(departure.ride);positionStore.publish(sceneSpawn);const zone=zoneAt(sceneSpawn.x,sceneSpawn.z);zoneRef.current=zone;setLocationZone(zone);}
     let renderer:T.WebGLRenderer;
     // MSAA per lib/graphics/quality phoneGraphicsFor (kept on for phones after the Sep 26 2026 visual check; the lever is PHONE_ANTIALIAS_OFF_AT_DPR2).
-    try{renderer=new T.WebGLRenderer({antialias:graphicsQuality().antialias,powerPreference:'default'});}catch{setFailed(true);return;}
+    // Preload pass (Oct 9 2026): the title screen may have built the static island already (lib/town/islandWarm.ts: renderer with
+    // its shaders compiled, scene, world, vending machines). Take it; without one (a reload, /island-return) build as before.
+    const warm=takeWarmIsland();
+    try{renderer=warm?.renderer??new T.WebGLRenderer({antialias:graphicsQuality().antialias,powerPreference:'default'});}catch{setFailed(true);return;}
     let savedMuted=false;try{savedMuted=localStorage.getItem('fi2-sound-muted')==='true';}catch{}
     const savedVolume=(key:string,fallback:number)=>{try{const raw=localStorage.getItem(key),n=raw===null?fallback:Number(raw);return Number.isFinite(n)?Math.max(0,Math.min(1,n)):fallback;}catch{return fallback;}};
     // Apply the requested mix once to existing saves, then retain slider edits.
@@ -403,7 +411,7 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
     // Phones hold one resolution (the governor's tier sets it); the moving/still switch stays a desktop-free no-op on them.
     const motionResolution=new MotionResolution(quality.pixelRatio,dynamicResolutionEnabled(window.devicePixelRatio||1,window.matchMedia('(pointer: coarse)').matches),quality.phone?quality.pixelRatio:undefined);
     renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.0;parent.appendChild(renderer.domElement);
-    const scene=new T.Scene();scene.background=new T.Color('#e8b98b');scene.fog=null;
+    const scene=warm?.scene??new T.Scene();scene.background=new T.Color('#e8b98b');scene.fog=null;
     // A ball-hunt hint (e.g. "Land inside the ring…") owns the top prompt slot: the Learn-plays card steps aside while it shows.
     const focusArbiter=createFocusArbiter();let hudFocusNow:HudFocus|null=null;// HUD stack arbiter (lib/ui/hudStack.ts), decided on the HUD tick
     let coinHintShown=false,seaNoteShown=false,pierNoteTimer:ReturnType<typeof setTimeout>|undefined;const pierTarget=createPierTarget(scene);// East Pier shooting ring (eastPierChallenge.ts): static, moved only on a hit.
@@ -420,7 +428,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     const quizView=createQuizViewControls(renderer.domElement,camera,()=>Boolean(learningFormat.current));resetQuizView.current=quizView.reset;
     const LEARNING_HIDE=['vending-machines','fishing-spots','fishing-spot-selection','market-stand-selection','fishing-live','fishing-shore-foam'];let learningHidden:[T.Object3D,boolean][]|null=null;
     bootMark('town:scene-start');
-    const world=buildTown(scene),vending=createVendingMachines(scene,{coins:()=>readArcadeWallet().balance});world.obstacles.push(...vending.obstacles,...fishingKioskObstacles());vendingRef.current=vending;
+    const world=warm?.world??buildTown(scene),vending=warm?.vending??createVendingMachines(scene,{coins:()=>readArcadeWallet().balance});world.obstacles.push(...vending.obstacles,...fishingKioskObstacles());vendingRef.current=vending;
     const fields=buildFormatFields(scene),ballReactions=createBallReactions(scene),games=createFieldRuntime(scene,ballReactions);gamesRef.current=games;const fieldBump=createFieldCollision();
     const shadowBatches=createStaticShadowBatches(renderer,scene,window.matchMedia("(pointer: coarse)").matches);
     const npcShadows=createNpcShadowBatch(renderer,scene);/* heat pass 6b: wrapped inside shadowVisibility, so it batches only casters that survive its culling */

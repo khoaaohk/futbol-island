@@ -5,7 +5,8 @@
  *
  *  1. TitleActions fades the links and other buttons (CSS, [data-launch] on the screen) and the gold pill fills with water.
  *  2. waitForGame(): real loading. The game's code (components/root/gameLoader.ts: Town and its whole module graph) is
- *     imported now, so the water rises while it downloads and evaluates, and is full when it is done. Until then the level follows
+ *     imported now (usually already prefetched on idle), and the island is built off screen (islandPreload.ts warmIsland: started at
+ *     Start for a new player, at Play otherwise), so the water rises while that happens, and is full when it is done. Until then the level follows
  *     a believable eased curve that never reaches the top; a slow network keeps it rising slowly, never stalling at a fake 100 %.
  *  3. runTanExit(): pill out, pink slides down, island items / characters / props hop away (the loader's own exit motions), then the
  *     island's sand expands to cover the screen (the loader's tan-wipe maths).
@@ -16,6 +17,7 @@
  * (removed with the button); the exit is one-shot WAAPI (transform/opacity); nothing is left running after the hand-off.
  */
 import {loadGame} from '../root/gameLoader';
+import {islandWarmSettled} from '../root/islandPreload';
 export const TAN='#dfc587';
 export const HANDOFF_KEY='fi2-island-handoff';
 export const markTanHandoff=()=>{document.documentElement.dataset.islandHandoff='tan';};
@@ -29,10 +31,11 @@ export function nextLevel(level:number,ms:number,dt:number,ready:boolean,minMs=1
  return Math.min(1,level+(target-level)*Math.min(1,dt*5));
 }
 
-/** Load the game's code (shared with RootSwitch, which renders it). Resolves when it is downloaded and evaluated, or after
- *  `timeoutMs` (RootSwitch then shows the island loader until it arrives). */
+/** Load the game's code (shared with RootSwitch, which renders it) and let the island warm-up finish (components/root/
+ *  islandPreload.ts: Play starts it if Start had not already). Resolves when both are done, or after `timeoutMs` (RootSwitch then
+ *  shows the island loader until the code arrives, and Town finishes any unbuilt slices itself). */
 export function waitForGame(timeoutMs=20000):Promise<void>{
- return Promise.race([loadGame().then(()=>undefined),new Promise<void>(r=>setTimeout(r,timeoutMs))]);
+ return Promise.race([loadGame().then(()=>islandWarmSettled()),new Promise<void>(r=>setTimeout(r,timeoutMs))]);
 }
 
 /** Rise the water in `fill` (translateY from 100 % to 0) until the game is ready. Resolves when full. */
@@ -52,7 +55,7 @@ export function runWaterFill(fill:HTMLElement,{reduced=false,onLevel}:{reduced?:
 /** The loader's castAway: a hop, then a quick shrink; fully opaque until the last moment, so nothing ghosts over the background. */
 const hopAway=(el:Element,delay:number)=>(el as HTMLElement).animate([
  {transform:'none',opacity:1},{transform:'translateY(-6%) scale(1.06)',opacity:1,offset:.35},{transform:'translateY(2%) scale(.45)',opacity:1,offset:.8},{transform:'translateY(4%) scale(.2)',opacity:0}],{
- delay,duration:360,easing:'ease-in',fill:'forwards'});
+ delay,duration:280,easing:'ease-in',fill:'forwards'});
 /** The loader's itemBounceAway: a little lift and squash, then gone. SVG items scale about their own box. */
 const bounceAway=(el:SVGElement|HTMLElement,delay:number)=>{el.style.transformBox='fill-box';el.style.transformOrigin='center';
  return el.animate([{transform:'scale(1)',opacity:1},{transform:'translateY(-5px) scale(1.13)',opacity:1,offset:.28},{transform:'translateY(2px) scale(.94)',opacity:1,offset:.48},{transform:'translateY(5px) scale(0)',opacity:0}],{
@@ -73,12 +76,14 @@ export async function runTanExit(screen:HTMLElement,pill:HTMLElement|null,{reduc
  // Pink slides down and away; the far hills and the sky's sun / star / sea glints leave.
  // The dark hills ride down WITH the pink (same move): the hill band has a flat bottom that only the pink covers, so it must never
  // be left behind uncovered (Oct 9 2026 fix: a dark rectangle showed when the hills only faded).
- const slide=[{transform:'none'},{transform:`translateY(${Math.round(vh*.85)}px)`}],slideTiming:KeyframeAnimationOptions={delay:440,duration:620,easing:'cubic-bezier(.5,0,.3,1)',fill:'forwards'};
+ // Quicker (user, Oct 9 2026: "the grass and white thing is still showing, fade that out quicker"): the ground starts as the cast
+ // lands its hop, slides faster and fades as it goes, so it's gone well before the sand expands.
+ const slide=[{transform:'none',opacity:1},{transform:`translateY(${Math.round(vh*.35)}px)`,opacity:.6,offset:.5},{transform:`translateY(${Math.round(vh*.85)}px)`,opacity:0}],slideTiming:KeyframeAnimationOptions={delay:300,duration:420,easing:'cubic-bezier(.5,0,.3,1)',fill:'forwards'};
  q('[data-x="near"]')?.animate(slide,slideTiming);q('[data-x="far"]')?.animate(slide,slideTiming);
  for(const el of qa('[data-x="glints"],[data-x="sun"],[data-x="star"]'))bounceAway(el,240);
  // Characters and props hop away first (the loader's castAway), before the ground moves, so they leave from where they stand.
- qa('[data-x="cast"]').forEach((el,i)=>hopAway(el,40+i*70));
- const props=q('[data-x="props"]');if(props)hopAway(props,80);
+ qa('[data-x="cast"]').forEach((el,i)=>hopAway(el,i*50));
+ const props=q('[data-x="props"]');if(props)hopAway(props,40);
  const svg=land.ownerSVGElement;
  const items=[...(svg?[...svg.children].filter(c=>c!==land&&c.getAttribute('fill')!=='#78d7df'):[]),...qa('[data-x="island"] svg[data-item]')];
  const DELAYS=[280,420,70,210,0,140];
@@ -90,7 +95,9 @@ export async function runTanExit(screen:HTMLElement,pill:HTMLElement|null,{reduc
  Object.assign(sheet.style,{left:`${r.left}px`,top:`${r.top}px`,width:`${r.width}px`,height:`${r.height}px`,transformOrigin:'50% 50%'});
  const path=document.createElementNS('http://www.w3.org/2000/svg','path');path.setAttribute('d',land.getAttribute('d')??'');path.setAttribute('fill',TAN);sheet.appendChild(path);
  screen.appendChild(sheet);
- const dx=vw/2-(r.left+r.width/2),dy=vh/2-(r.top+r.height/2);
- await sheet.animate([{transform:'none'},{transform:`translate(${dx}px,${dy}px) scale(${vw*2/r.width},${vh*2/r.height})`}],
+ // Grow in place, outward in every direction (user, Oct 9 2026: "the tan needs to stretch out and fill in all directions"): scale about
+ // the sand's own centre, enough that its inner blob (≈70% of the box) passes the farthest screen edge on each axis.
+ const cx=r.left+r.width/2,cy=r.top+r.height/2,sx=2*Math.max(cx,vw-cx)/(r.width*.7),sy=2*Math.max(cy,vh-cy)/(r.height*.7),k=Math.max(sx,sy);
+ await sheet.animate([{transform:'none'},{transform:`scale(${k})`}],
   {delay:820,duration:700,easing:'cubic-bezier(.45,0,.55,1)',fill:'forwards'}).finished.catch(()=>{});
 }

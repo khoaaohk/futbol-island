@@ -4,6 +4,7 @@ import {useEffect,useLayoutEffect,useRef,useState,type CSSProperties} from 'reac
 import styles from './IslandLoading.module.css';
 import LoadingIslandArt,{LOADING_LAND_PATH} from './LoadingIslandArt';
 import LoadingBeanCast from './LoadingBeanCast';
+import LoadingTanCue from './LoadingTanCue';
 import {HANDOFF_BOOT,takeLoaderContinuation} from './islandLoadingBoot';
 
 /** Static artwork: the island can finish loading without another rendering loop. */
@@ -42,6 +43,7 @@ export default function IslandLoading({exiting=false}:{exiting?:boolean}){
     <div className={styles.art} aria-hidden="true"><LoadingIslandArt/></div>
     {land&&<svg data-island-tan-wipe className={styles.tanWipe} viewBox={land.viewBox} style={land.style} preserveAspectRatio="none" aria-hidden="true"><path d={LOADING_LAND_PATH} fill="#dfc587"/></svg>}
     <LoadingBeanCast/>
+    <LoadingTanCue/>
     <div className={styles.copy}>
       <span className={styles.eyebrow}>PLAY · LEARN · GROW</span>
       <h2>Futbol Island</h2>

@@ -5,6 +5,7 @@ import WaterPill from './WaterPill';
 import {SPRING_EASE,flipTransform,invert} from './motion';
 import styles from './Title.module.css';
 import {startTitleState} from '@/lib/analytics/startEvents';
+import {prefetchIslandWhenSettled,warmIsland} from '../root/islandPreload';
 
 type Saves=typeof import('./saveCodeAdapter');
 /** What the title screen offers. A save code is REQUIRED to play (user decision, Oct 9 2026):
@@ -45,6 +46,9 @@ export default function TitleActions(){
  useEffect(()=>{let live=true;import('./saveCodeAdapter').then(m=>{if(!live)return;setSaves(m);const have=m.getLocalCode();setCode(have);setState(have?'returning':'new');
   // Warm the one status check so Start answers at once (cached by lib/saves/client).
   void m.isSavingAvailable().catch(()=>false);},()=>{if(live)setState('break');});return()=>{live=false;};},[]);
+ // Preload pass (Oct 9 2026, components/root/islandPreload.ts): once the title has settled, the game's code and the island's first
+ // picture go into the HTTP cache on idle; Start / Play then build the island off screen (warmIsland).
+ useEffect(()=>prefetchIslandWhenSettled(),[]);
  // Open: the sheet's surface grows out of the button that opened it.
  useLayoutEffect(()=>{if(!sheet||!surface.current)return;
   const from=sheet.from?.getBoundingClientRect();if(from)void morph(surface.current,from);
@@ -83,20 +87,24 @@ export default function TitleActions(){
   setTimeout(()=>{setCelebrate(false);void leave('ready');},reduced()?400:1150);
  };
  const onCreatePhase=(p:string)=>{setCreatePhase(p);if(p==='unavailable'||p==='error')void leave('break');};
- const onRestorePhase=(p:string)=>{if(p==='unavailable')void leave('break');};
+ const [restorePhase,setRestorePhase]=useState('');
+ const onRestorePhase=(p:string)=>{setRestorePhase(p);if(p==='unavailable')void leave('break');};
  useEffect(()=>{if(!sheet)return;const key=(e:KeyboardEvent)=>{if(e.key==='Escape'){e.preventDefault();void leave(null);}};window.addEventListener('keydown',key);return()=>window.removeEventListener('keydown',key);},[sheet,leave]);
 
  const codeFooter=sheet?.mode==='create'&&createPhase==='code';
+ // "I have a save code": the form's own footer carries Back (bottom left) and Load my island (bottom right).
+ const restoreFooter=sheet?.mode==='restore'&&(restorePhase==='enter'||restorePhase==='loading');
+ const footerBack=codeFooter||restoreFooter;
  return <div className={styles.actions} data-title-state={state} aria-live="polite">
   {state==='new'&&<div className={styles.choices} data-enter="actions">
-   <button type="button" className={styles.start} data-title-start data-track="st:start" disabled={!saves||busy} onClick={e=>void open('create',e.currentTarget)}>
+   <button type="button" className={styles.start} data-title-start data-track="st:start" disabled={!saves||busy} onClick={e=>{warmIsland('create');void open('create',e.currentTarget);}}>
     <span>Start</span><small>Get my save code</small>
    </button>
-   <button type="button" className={styles.haveCode} data-title-restore data-track="st:have" disabled={!saves||busy} onClick={e=>void open('restore',e.currentTarget)}>I have a save code</button>
+   <button type="button" className={styles.haveCode} data-title-restore data-track="st:have" disabled={!saves||busy} onClick={e=>{warmIsland('restore');void open('restore',e.currentTarget);}}>I have a save code</button>
   </div>}
   {state==='returning'&&<div ref={landing} className={styles.choices} data-title-card="returning" data-enter="actions">
    <WaterPill card="returning" label="Play" sub={code?`Welcome back, ${code.split('-')[0]}!`:'Welcome back!'}/>
-   <button type="button" className={styles.haveCode} data-track="st:other_code" onClick={e=>void open('restore',e.currentTarget)}>Use a different code</button>
+   <button type="button" className={styles.haveCode} data-track="st:other_code" onClick={e=>{warmIsland('restore');void open('restore',e.currentTarget);}}>Use a different code</button>
   </div>}
   {state==='ready'&&<div ref={landing} className={styles.choices} data-title-card="ready">
    <WaterPill card="ready" label="Play" sub="You’re all set!" autoStart/>
@@ -111,20 +119,20 @@ export default function TitleActions(){
    <WaterPill card="break" label="Play"/>
   </div>}
 
-  {sheet&&saves&&<div className={styles.sheetWrap} data-save-sheet={sheet.mode} data-code-footer={codeFooter||undefined}>
+  {sheet&&saves&&<div className={styles.sheetWrap} data-save-sheet={sheet.mode} data-code-footer={footerBack||undefined}>
    <div ref={backdrop} className={styles.backdrop} onClick={()=>void leave(null)} aria-hidden="true"/>
    <div className={styles.sheet} role="dialog" aria-modal="true" aria-labelledby="save-sheet-title">
     <div ref={surface} className={styles.surface}/>
     <div ref={content} className={styles.sheetContent}>
      <header className={styles.sheetHeader}>
-      {!codeFooter&&<BackButton onBack={()=>void leave(null)}/>}
-      <h2 id="save-sheet-title" tabIndex={-1}>{sheet.mode==='create'?'New island':'My save code'}</h2>
-      {!codeFooter&&<span aria-hidden="true"/>}
+      {!footerBack&&<BackButton onBack={()=>void leave(null)}/>}
+      <h2 id="save-sheet-title" tabIndex={-1}>{codeFooter?'Your secret code':sheet.mode==='create'?'New island':'My save code'}</h2>
+      {!footerBack&&<span aria-hidden="true"/>}
      </header>
      <div className={styles.sheetBody} data-save-flow={sheet.mode}>
       {sheet.mode==='create'
-       ?<saves.SaveCodeCreate onDone={created} onPhase={onCreatePhase} onBack={()=>void leave(null)} onHaveCode={()=>setSheet(s=>s&&{...s,mode:'restore'})}/>
-       :<saves.SaveCodeRestore onDone={restored=>{if(!restored)void leave('break');}} onPhase={onRestorePhase} onCancel={()=>setSheet(s=>s&&{...s,mode:'create'})}
+       ?<saves.SaveCodeCreate headless={codeFooter} onDone={created} onPhase={onCreatePhase} onBack={()=>void leave(null)} onHaveCode={()=>setSheet(s=>s&&{...s,mode:'restore'})}/>
+       :<saves.SaveCodeRestore onDone={restored=>{if(!restored)void leave('break');}} onPhase={onRestorePhase} onBack={()=>void leave(null)} onCancel={()=>setSheet(s=>s&&{...s,mode:'create'})}
          onPlay={apply=>{applyRestore.current=apply;void leave('restored');}}/>}
      </div>
      {celebrate&&<div className={styles.saved} aria-live="assertive">

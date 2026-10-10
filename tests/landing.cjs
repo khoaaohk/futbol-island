@@ -185,23 +185,26 @@ const actions=read(`${DIR}/TitleActions.tsx`),scene=read(`${DIR}/TitleScene.tsx`
 {const water=read(`${DIR}/waterLaunch.ts`),pill=read(`${DIR}/WaterPill.tsx`),restore=read('components/saves/SaveCodeRestore.tsx');
  // The level: rises, never fakes full before the game is ready, fills once ready (not before the minimum time).
  const src=ts.transpileModule(water.replace(/^'use client';/,'').replace(/export function waitForGame[\s\S]*?\n\}\n/,'').replace(/export function runWaterFill[\s\S]*$/,''),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText;
- const m={exports:{}};vm.runInNewContext(src,{module:m,exports:m.exports,Math,document:{},sessionStorage:{},require:id=>{assert.equal(id,'../root/gameLoader');return {loadGame:()=>Promise.resolve(null)};}});const L=m.exports;
+ const m={exports:{}};vm.runInNewContext(src,{module:m,exports:m.exports,Math,document:{},sessionStorage:{},require:id=>{if(id==='../root/islandPreload')return {islandWarmSettled:()=>Promise.resolve()};assert.equal(id,'../root/gameLoader');return {loadGame:()=>Promise.resolve(null)};}});const L=m.exports;
  assert(L.waitingLevel(200)<L.waitingLevel(1500)&&L.waitingLevel(60000)<=.9,'waiting: rises and stays below 90 %');
  let lv=0;for(let t=0;t<30000;t+=16)lv=L.nextLevel(lv,t,.016,false);assert(lv<.91,'not ready: never full');
  lv=0;for(let t=0;t<600;t+=16)lv=L.nextLevel(lv,t,.016,true);assert(lv<.9,'ready early: still eases, no jump');
  for(let t=600;t<3000;t+=16)lv=L.nextLevel(lv,t,.016,true);assert(lv>.995,'ready: fills to the top');
  // Real progress: the game's own code (Town and its module graph) is what the water waits for.
- assert.match(water,/return Promise\.race\(\[loadGame\(\)\.then/);assert.match(read('components/root/gameLoader.ts'),/promise\?\?=import\('\.\/Game'\)/);
+ assert.match(water,/return Promise\.race\(\[loadGame\(\)\.then\(\(\)=>islandWarmSettled\(\)\)/,'… and the island warm-up (components/root/islandPreload.ts)');assert.match(read('components/root/gameLoader.ts'),/promise\?\?=import\('\.\/Game'\)/);
  assert.match(read('components/root/Game.tsx'),/import Town from '@\/components\/Town';/,'the game chunk is Town and its module graph');
  assert.match(water,/requestAnimationFrame\(frame\);\s*\}\);\s*\}/,'the fill loop ends when full');assert(!/setInterval/.test(water+pill),'no polling');
  // Order: fade links/buttons ([data-launch]) → fill → pill out, pink down, items away → sand covers the screen → tan flag → route.
  assert.match(pill,/screen\?\.setAttribute\('data-launch',''\);/);assert(!/useRouter|router\./.test(strip(pill)),'no navigation: `/` switches in place');
  assert.match(pill,/runWaterFill\(fill\.current,\{reduced,onLevel:setLevel\}\)\s*\.then\(\(\)=>screen\?runTanExit\(screen,wrap\.current,\{reduced\}\):undefined\)\s*\.then\(\(\)=>\{(?:bootMark\('[a-z-]+'\);)?if\(apply\)\{rememberInGame\(\);markTanReload\(\);apply\(\);\}else\{markTanHandoff\(\);enterGame\(\);\}\}\);/);
  assert.match(pill,/data-landing-play="hero"/,'analytics: Play inside its data-title-card');
- assert.match(water,/const slide=\[\{transform:'none'\},\{transform:`translateY\(/,'pink slides down');
- assert.match(water,/qa\('\[data-x="cast"\]'\)\.forEach\(\(el,i\)=>hopAway\(el,40\+i\*70\)\)/,'any number of characters hop away, before the ground moves');
+ assert.match(water,/const slide=\[\{transform:'none',opacity:1\},.*translateY\(.*opacity:0\}\]/,'pink slides down and fades');
+ {const d=+water.match(/slideTiming:KeyframeAnimationOptions=\{delay:(\d+),duration:(\d+)/)[1],u=+water.match(/slideTiming:KeyframeAnimationOptions=\{delay:\d+,duration:(\d+)/)[1];
+  assert.ok(d+u<=820,'the ground is gone before the sand expands');}
+ assert.match(water,/qa\('\[data-x="cast"\]'\)\.forEach\(\(el,i\)=>hopAway\(el,i\*50\)\)/,'any number of characters hop away, before the ground moves');
  assert.match(water,/q\('\[data-x="near"\]'\)\?\.animate\(slide,slideTiming\);q\('\[data-x="far"\]'\)\?\.animate\(slide,slideTiming\);/,'the dark hills ride down with the pink (their flat bottom is never exposed)');
- assert.match(water,/translate\(\$\{dx\}px,\$\{dy\}px\) scale\(\$\{vw\*2\/r\.width\},\$\{vh\*2\/r\.height\}\)/,'the sand expands like the loader tan wipe');
+ assert.match(water,/\{transform:`scale\(\$\{k\}\)`\}/,'the sand grows in place, outward in every direction (user)');
+ assert.doesNotMatch(water,/translate\(\$\{dx\}px/,'…without drifting to the screen centre');
  for(const k of strip(water).matchAll(/\.animate\(\[([\s\S]*?)\],\{/g))assert(!/(width|height|top|left|background|filter)\s*:/.test(k[1]),`exit keyframes: transform/opacity only: ${k[1].slice(0,50)}`);
  assert.match(css,/@media\(prefers-reduced-motion:no-preference\)\{\.waterPill\[data-loading\] \.waterCrest\{animation:crestRoll/,'the crest rolls only while loading');
  assert.match(css,/\.screen\[data-launch\] :is\(\.grownRow,\.tilt,\.haveCode,\.quiet,\.breakChip,\.cardTitle,\.cardBody\)\{opacity:0;pointer-events:none\}/,'links and other buttons go first');
@@ -217,8 +220,12 @@ const actions=read(`${DIR}/TitleActions.tsx`),scene=read(`${DIR}/TitleScene.tsx`
  assert.match(lcss,/\.art\{transform-origin:50% 100%;animation:coastArrive 3s/,'cold start unchanged');
  // The tan hold is as short as the island allows: no 3 s art minimum and an earlier fade, only in tan mode.
  const town=read('components/Town.tsx');
- assert.match(town,/setMinimumLoadElapsed\(true\),document\.documentElement\.dataset\.islandHandoff==='tan'\?0:3000\)/,'tan: no 3 s minimum; cold start keeps it');
- assert.match(lcss,/:global\(html\[data-island-handoff=tan\]\) \.exiting\{animation:loadingDepart \.45s \.95s ease-in-out both\}/);
+ assert.match(town,/const tanHandoff=\(\)=>document\.documentElement\.dataset\.islandHandoff==='tan';/);
+ assert.match(town,/setMinimumLoadElapsed\(true\),tanHandoff\(\)\?0:3000\)/,'tan: no 3 s minimum; cold start keeps it');
+ // Preload pass (Oct 9 2026): the tan sheet cross-fades as soon as the first frame is drawn; arrival with it, HUD as it ends.
+ assert.match(lcss,/:global\(html\[data-island-handoff=tan\]\) \.exiting\{animation:loadingDepart \.5s \.05s ease-in-out both\}/);
+ assert.match(town,/returningFromArcade\?1050:tanHandoff\(\)\?600:2050\)/,'tan: ready (HUD) when the 0.5 s fade ends');
+ assert.match(town,/\?80:tanHandoff\(\)\?0:1500\)/,'tan: the arrival starts with the fade');
  assert.match(lcss,/\.exiting\{animation:loadingDepart \.5s 1\.55s ease-in-out both\}/,'cold-start exit timing unchanged');
  assert.equal(water.match(/HANDOFF_KEY='([^']+)'/)[1],'fi2-island-handoff','the same key IslandLoading reads');
  // Restore: the smallest backward-compatible prop on the real component.
@@ -234,11 +241,13 @@ assert.match(read('components/VisitTracker.tsx'),/if\(pathname!=='\/'\|\|view!==
 {const rv=read('lib/rootView.ts'),page=read('app/page.tsx'),sw=read('components/root/RootSwitch.tsx'),css=read('app/globals.css');
  // The pre-paint rule, run as the browser runs it: fresh → title screen; a tab in the game, ?from=, ?panel= → the game.
  const BOOT=JSON.parse('"'+(rv.match(/ROOT_VIEW_BOOT=`([^`]*)`/)[1]).replace(/\$\{IN_GAME_KEY\}/g,'fi2-in-game').replace(/\$\{JSON\.stringify\(GAME_QUERY_KEYS\)\}/g,"['from','panel']").replace(/"/g,'\\"')+'"');
- const boot=(search,stored={})=>{const html={dataset:{}};vm.runInNewContext(BOOT,{document:{documentElement:html},location:{search},URLSearchParams,
-  sessionStorage:{getItem:k=>stored[k]??null}});return html.dataset.rootView;};
+ const boot=(search,stored={},nav='navigate')=>{const html={dataset:{}};vm.runInNewContext(BOOT,{document:{documentElement:html},location:{search},URLSearchParams,
+  performance:{getEntriesByType:()=>[{type:nav}]},sessionStorage:{getItem:k=>stored[k]??null}});return html.dataset.rootView;};
  assert.equal(boot(''),'landing','a fresh session sees the title screen');
  assert.equal(boot('?coffee=thanks'),'landing','the title screen\'s own donation return stays on it');
- assert.equal(boot('',{'fi2-in-game':'1'}),'game','a tab that entered the game goes straight to Town (reloads, restores, back to /)');
+ assert.equal(boot('',{'fi2-in-game':'1'},'reload'),'game','a tab that entered the game reloads straight into Town (restores, Settings)');
+ assert.equal(boot('',{'fi2-in-game':'1'},'back_forward'),'game','…and back/forward to / returns to Town');
+ assert.equal(boot('',{'fi2-in-game':'1'},'navigate'),'landing','visiting the address again shows the title screen and its water-fill Play (user)');
  assert.equal(boot('?from=arcade'),'game','/?from=arcade goes straight to the game');
  assert.equal(boot('?panel=about&coffee=thanks'),'game','the game\'s About return opens the game');
  assert.equal(boot('',null),'landing');

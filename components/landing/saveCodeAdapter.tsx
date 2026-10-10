@@ -19,14 +19,14 @@ export {isSavingAvailable,getLocalCode} from '@/lib/saves/client';
 import {startCreatePhase,startRestorePhase,trackStart} from '@/lib/analytics/startEvents';
 type CreateProps=ComponentProps<typeof RealCreate>;type RestoreProps=ComponentProps<typeof RealRestore>;
 /** onBack (Oct 9 2026): the code's footer row carries Back (bottom left), "Print code" and "I saved it". */
-export function SaveCodeCreate({onDone,onPhase,onHaveCode,onBack}:Pick<CreateProps,'onDone'|'onPhase'|'onHaveCode'|'onBack'>){
- return <RealCreate required autoStart onBack={onBack} onDone={c=>{if(c)trackStart('st:saved');onDone(c);}} onPhase={p=>{startCreatePhase(p);onPhase?.(p);}} onHaveCode={onHaveCode}/>;
+export function SaveCodeCreate({onDone,onPhase,onHaveCode,onBack,headless}:Pick<CreateProps,'onDone'|'onPhase'|'onHaveCode'|'onBack'|'headless'>){
+ return <RealCreate required autoStart headless={headless} onBack={onBack} onDone={c=>{if(c)trackStart('st:saved');onDone(c);}} onPhase={p=>{startCreatePhase(p);onPhase?.(p);}} onHaveCode={onHaveCode}/>;
 }
 /** onPlay (Oct 9 2026): the restore's Play hands `apply` to the title screen, which runs the water loader first; apply() then
  *  applies the save, whose reload lands in the game. Counted first, then the address is reset to `/`. Without onPlay: the old
  *  immediate reload. */
-export function SaveCodeRestore({onDone,onPhase,onCancel,onPlay}:Pick<RestoreProps,'onDone'|'onPhase'|'onCancel'|'onPlay'>){
- return <RealRestore required onPhase={p=>{startRestorePhase(p);onPhase?.(p);}} onCancel={onCancel}
+export function SaveCodeRestore({onDone,onPhase,onCancel,onPlay,onBack}:Pick<RestoreProps,'onDone'|'onPhase'|'onCancel'|'onPlay'|'onBack'>){
+ return <RealRestore required onBack={onBack} onPhase={p=>{startRestorePhase(p);onPhase?.(p);}} onCancel={onCancel}
   onPlay={onPlay}
   onDone={restored=>{if(restored)trackStart('st:play_restored');if(restored){window.history.replaceState(window.history.state,'','/');if(HANDOFF_ENABLED)markReloadHandoff();}onDone(restored);}}/>;
 }

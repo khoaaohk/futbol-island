@@ -152,12 +152,11 @@ button.playHero.playHero.playHero.playHero[data-closing=true]{width:56px!importa
 .sheetContent{position:relative;min-height:0;max-height:calc(100svh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 20px);overflow:auto;overscroll-behavior:contain;padding:14px 18px 20px}
 .sheetHeader{display:grid;grid-template-columns:76px minmax(0,1fr) 76px;align-items:center;gap:8px;margin-bottom:4px}
 .sheetHeader h2{margin:0;text-align:center;font-family:IslandBrush,var(--btn-font);font-weight:400;font-size:24px;line-height:1.1;outline:none}
-/* The new code ("New island" → "Your secret code", Oct 9 2026): a taller sheet that keeps the Futbol Island title in view, its parts
-   spaced out (SaveCode.module.css .shown) and Back moved into the code's footer row. */
-.sheetWrap[data-save-sheet=create] .sheetContent{display:flex;flex-direction:column;min-height:min(700px,calc(100svh - 190px));padding-bottom:22px}
+/* The new code (Oct 9 2026): the header reads "Your secret code" (no "New island" above it), the sheet is as tall as its content with
+   one even gap between parts (SaveCode.module.css .shown), and Back sits in the code's footer row. */
+.sheetWrap[data-save-sheet=create] .sheetContent{display:flex;flex-direction:column;padding-bottom:22px}
 .sheetWrap[data-save-sheet=create] .sheetHeader{margin-bottom:clamp(6px,1.6svh,16px)}
 .sheetWrap[data-save-sheet=create] .sheetBody{flex:1;display:flex;flex-direction:column}
-@media(min-width:900px){.sheetWrap[data-save-sheet=create] .sheetContent{min-height:min(560px,calc(100svh - 190px))}}
 .sheetWrap[data-code-footer] .sheetHeader{grid-template-columns:minmax(0,1fr)}
 @media(min-width:900px){.sheetWrap{align-items:center}}
 /* The code words flip in like cards (the real CodeTiles, [data-save-code]). */

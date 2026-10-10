@@ -4,6 +4,7 @@ import {markTanHandoff,markTanReload,runTanExit,runWaterFill} from './waterLaunc
 import {trackStart} from '@/lib/analytics/startEvents';
 import {enterGame,rememberInGame} from '@/lib/rootView';
 import {bootMark} from '@/lib/boot/perfMarks';
+import {warmIsland} from '../root/islandPreload';
 import styles from './Title.module.css';
 
 /**
@@ -20,6 +21,8 @@ export default function WaterPill({label='Play',sub,card,autoStart=false,apply}:
  const started=useRef(false);
  const go=()=>{
   if(started.current||!fill.current)return;started.current=true;setLoading(true);bootMark('play');
+  // Build the island while the water rises (a restore's Play reloads the page, so it only needs the code in the HTTP cache).
+  warmIsland(apply?'restore':'play');
   const screen=document.querySelector<HTMLElement>('[data-title-scene]');
   const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
   screen?.setAttribute('data-launch','');

@@ -125,6 +125,17 @@
 :global(html[data-island-handoff=tan]) .screen{background:#dfc587}
 :global(html[data-island-handoff=tan]) .screen::before{display:none}
 :global(html[data-island-handoff=tan]) .screen>*{visibility:hidden}
-/* Tan mode has no art to clear first: the sheet fades as the island's arrival starts (Town restarts the arrival at 1.5 s). */
-:global(html[data-island-handoff=tan]) .exiting{animation:loadingDepart .45s .95s ease-in-out both}
+/* Tan mode has no art to clear first: the sheet cross-fades into the island as soon as its first frame is drawn (preload pass, Oct 9
+   2026: the old .95 s delay only held a finished island behind tan). Town restarts the arrival as the fade starts. */
+:global(html[data-island-handoff=tan]) .exiting{animation:loadingDepart .5s .05s ease-in-out both}
 @media(prefers-reduced-motion:reduce){:global(html[data-island-handoff=tan]) .exiting{animation:loadingDepart .08s linear both}}
+
+/* The tan sheet's wait cue (LoadingTanCue.tsx): only in tan mode, only after 0.9 s, transform/opacity only. */
+.tanCue{display:none}
+:global(html[data-island-handoff=tan]) .screen>.tanCue{display:block;visibility:visible;position:absolute;left:50%;top:56%;width:48px;height:76px;margin:-38px 0 0 -24px;z-index:4;pointer-events:none;opacity:0;animation:tanCueIn .45s .9s ease-out forwards}
+.tanCueBall{position:absolute;left:4px;bottom:10px;width:40px;height:40px;transform-origin:50% 100%;animation:tanCueBounce .8s .9s infinite both}
+.tanCueShadow{position:absolute;left:8px;bottom:2px;width:32px;height:8px;border-radius:50%;background:#a88a4c;opacity:.45;animation:tanCueShadow .8s .9s infinite both}
+@keyframes tanCueIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes tanCueBounce{0%{transform:translateY(0) scale(1.1,.88);animation-timing-function:cubic-bezier(.2,.7,.4,1)}12%{transform:translateY(-3px) scale(.95,1.06);animation-timing-function:cubic-bezier(.2,.7,.4,1)}50%{transform:translateY(-26px) rotate(160deg);animation-timing-function:cubic-bezier(.6,0,.8,.3)}100%{transform:translateY(0) rotate(320deg) scale(1.1,.88)}}
+@keyframes tanCueShadow{0%,100%{transform:scaleX(1.05);opacity:.45}50%{transform:scaleX(.55);opacity:.18}}
+@media(prefers-reduced-motion:reduce){:global(html[data-island-handoff=tan]) .screen>.tanCue{animation:tanCueIn .2s .9s linear forwards}.tanCueBall,.tanCueShadow{animation:none}}

@@ -9,16 +9,21 @@
 .note svg{flex:none;color:var(--btn-ink)}
 .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .stack{display:grid;gap:10px}
-/* The title screen's "Your secret code" (CodeShown with onBack): fills the sheet's height and spaces its parts out, footer last. */
-.shown{flex:1;display:flex;flex-direction:column;justify-content:space-between;gap:clamp(10px,2.2svh,24px)}
+/* The title screen's "Your secret code" (CodeShown with onBack): one even gap between its parts, footer last. */
+.shown{display:flex;flex-direction:column;gap:clamp(14px,2.4svh,22px)}
+.shown>:last-child{margin-top:clamp(4px,1svh,10px)}
 /* Short phones (a small iPhone is 667 px tall): tighter so the sheet fits under the Futbol Island title without scrolling. */
 @media(max-height:720px){.shown{gap:10px}.shown .tile{min-height:64px;padding-block:6px}.shown .tile i{font-size:22px;min-height:25px}
  .shown .copy{font-size:14px;line-height:1.42}.shown .chip{min-height:42px}}
 /* One footer row: Back left, "Print code" centred, "I saved it" right; fits a 320 px phone without wrapping. */
-.footer{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px}
-.footer>.secondary{justify-self:center}
-.footer>.secondary,.footer>.primary{white-space:nowrap}
-@media(max-width:360px){.footer{gap:6px}.footer>.secondary,.footer>.primary{padding-inline:12px;font-size:14px}}
+/* "Print code" is centred on the sheet itself, not on the space left over, so Back shrinking to its arrow never moves it (user). */
+.footer{position:relative;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.footerCenter{position:absolute;inset:0;display:flex;justify-content:center;align-items:center;pointer-events:none}
+.footerCenter>.secondary{pointer-events:auto}
+.footer .secondary,.footer>.primary{white-space:nowrap}
+.footer .secondary,.footer>.primary{padding-inline:14px}
+@media(max-width:400px){.footer .secondary,.footer>.primary{padding-inline:12px;font-size:15px}}
+@media(max-width:360px){.footer{gap:6px}.footer .secondary,.footer>.primary{padding-inline:9px;font-size:13px}}
 
 .primary,.secondary,.quiet{min-height:var(--btn-height);padding:10px 20px;border-radius:var(--btn-radius);font-family:var(--btn-font);font-size:15px;font-weight:700;cursor:pointer;transition:translate .16s,box-shadow .16s;box-sizing:border-box}
 .primary{background:var(--btn-green);color:var(--btn-ink-on-dark);border:var(--btn-rim-width) solid var(--btn-rim);box-shadow:0 4px 0 var(--btn-green-edge)}

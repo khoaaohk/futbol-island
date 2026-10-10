@@ -21,7 +21,7 @@ export default function RootSwitch({landing,loader}:{landing:ReactNode;loader:Re
  const [failed,setFailed]=useState(false);
  const Loaded=Game??(view==='game'?loadedGame():null);
  useLayoutEffect(()=>{if(!view)return;const html=document.documentElement;const was=html.dataset.rootView;html.dataset.rootView=view;
-  if(view==='game'&&was==='landing')window.scrollTo(0,0);},[view]);
+  if(view==='game'&&was==='landing')window.scrollTo(0,0);setThemeColor(view==='game'?GAME_TINT:TITLE_TINT);},[view]);
  useEffect(()=>{
   if(view!=='game'||Loaded)return;let live=true;
   void loadGame().then(G=>{if(!live)return;if(!G){setFailed(true);return;}
@@ -32,6 +32,16 @@ export default function RootSwitch({landing,loader}:{landing:ReactNode;loader:Re
   {view!=='game'&&<div data-root-landing="">{landing}</div>}
   {view!=='landing'&&<div data-root-game="">{Loaded?<Loaded/>:failed?<LoadFailed/>:loader}</div>}
  </>;
+}
+
+/** The browser's tint around its own UI (iPhone Safari also tints the strip behind the on-screen keyboard from the page): the title
+ *  screen's sea blue there, the game's dark green (the page background, globals.css) in the game, so typing a save code in the
+ *  game no longer shows a blue band behind the keyboard (user, Oct 9 2026). */
+const TITLE_TINT='#2b53e5',GAME_TINT='#244d40';
+function setThemeColor(c:string){
+ let m=document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+ if(!m){m=document.createElement('meta');m.name='theme-color';document.head.appendChild(m);}
+ m.content=c;document.documentElement.style.backgroundColor=c===GAME_TINT?'':c;
 }
 
 /** When the static placeholder's animations started (document timeline), so Town's loader picks up from there. */

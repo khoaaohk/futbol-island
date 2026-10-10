@@ -8,7 +8,8 @@
  *     onDone(false)  "Keep this one" (this device's island stays)
  *     onPlay(apply)  optional (Oct 9 2026, the title screen): Play hands `apply` to the host instead of applying + reloading at once; the host
  *                    runs its own transition and then calls apply() (which applies the save and reloads). Without it: unchanged.
- *     onCancel       shows a "Go back" link on the first screen (in required mode the host takes it back to "Get my code")
+ *     onBack         (the title screen's sheet) Back bottom left and "Load my island" bottom right on the first screen, no title
+ *     onCancel       shows a "Go back" link on the first screen (not with onBack) (in required mode the host takes it back to "Get my code")
  *     required       a code is needed before playing (Oct 9 2026): "Keep this one" becomes "Keep this one, get a new code" (onCancel);
  *                    if saving is down: "Saving is taking a break — you can still play today" with Play (onDone(false))
  * Wrong, unknown and throttled codes all read "That code didn't work" (the server can't tell them apart either); after 3
@@ -19,13 +20,14 @@ import {applyRestoredSave,deviceHasProgress,restoreGate,restoreSave,savingStatus
 import {NUMBER_PICTURE,matchWord,parseCode,parseNumber,pictureFor,suggestWords} from '@/lib/saves/code';
 import {summaryLine} from '@/lib/saves/summary';
 import ParentGate from '../ParentGate';
+import {BackButton} from '../BackButton';
 import styles from './SaveCode.module.css';
 
 export type RestorePhase='checking'|'unavailable'|'enter'|'loading'|'grownup'|'break'|'swap'|'welcome'|'newer'|'offline';
 export const RESTORE_TITLES:Record<RestorePhase,string>={checking:'Type your save code',unavailable:'Type your save code',enter:'Type your save code',loading:'Type your save code',grownup:'Ask a grown-up',break:'Let’s take a break',swap:'Swap islands?',welcome:'Welcome back!',newer:'A newer island',offline:'Type your save code'};
 type Ok=Extract<RestoreResult,{ok:true}>;
 
-export default function SaveCodeRestore({onDone,initialCode,onCancel,required=false,headless=false,onPhase,onPlay}:{onDone:(restored:boolean)=>void;initialCode?:string;onCancel?:()=>void;required?:boolean;headless?:boolean;onPhase?:(p:RestorePhase)=>void;onPlay?:(apply:()=>void)=>void}){
+export default function SaveCodeRestore({onDone,initialCode,onCancel,required=false,headless=false,onPhase,onPlay,onBack,submitOutside}:{onDone:(restored:boolean)=>void;initialCode?:string;onCancel?:()=>void;required?:boolean;headless?:boolean;onPhase?:(p:RestorePhase)=>void;onBack?:()=>void;submitOutside?:(s:{ready:boolean;busy:boolean})=>void;onPlay?:(apply:()=>void)=>void}){
  const init=useMemo(()=>initialCode?parseCode(initialCode):null,[initialCode]);
  const [phase,setPhase]=useState<RestorePhase>('checking');
  const [words,setWords]=useState<string[]>(init?[...init.words]:['','','']),[num,setNum]=useState(init?String(init.number):'');
@@ -37,6 +39,7 @@ export default function SaveCodeRestore({onDone,initialCode,onCancel,required=fa
  const matched=words.map(w=>matchWord(w));
  const number=parseNumber(num);
  const ready=matched.every(Boolean)&&number!==null;
+ useEffect(()=>{submitOutside?.({ready,busy:phase==='loading'});},[ready,phase]);// eslint-disable-line react-hooks/exhaustive-deps
  const setWord=(i:number,v:string)=>{
   // A whole code pasted or typed into one box fills every box.
   const whole=parseCode(v);if(whole){setWords([...whole.words]);setNum(String(whole.number));setMsg('');return;}
@@ -83,9 +86,9 @@ export default function SaveCodeRestore({onDone,initialCode,onCancel,required=fa
   <div className={styles.row}><button type="button" className={styles.primary} data-restore-play onClick={play}>Play</button></div></div>;
 
  const busy=phase==='loading';
- return <form className={styles.box} data-save-restore="enter" onSubmit={e=>{e.preventDefault();void submit();}}>
-  {title('Type your save code')}
-  <p className={styles.small} data-save-explainer>Your save code brings your island to this device. Three words and a number. Tap a word when it pops up.</p>
+ return <form id="save-restore-form" className={styles.box} data-save-restore="enter" onSubmit={e=>{e.preventDefault();void submit();}}>
+  {!onBack&&!submitOutside&&title('Type your save code')}
+  <p className={styles.small} data-save-explainer>{onBack||submitOutside?'Type your save code to bring your island to this device. It’s three words and a number.':'Your save code brings your island to this device. Three words and a number.'}</p>
   <div className={styles.boxes}>
    {[0,1,2].map(i=><div key={i} className={styles.field}>
     <label htmlFor={`save-word-${i}`}>Word {i+1}{matched[i]&&<i aria-hidden="true" data-word-picture> {pictureFor(matched[i]!)}</i>}</label>
@@ -98,9 +101,18 @@ export default function SaveCodeRestore({onDone,initialCode,onCancel,required=fa
   </div>
   {focus>=0&&focus<3&&<Suggestions typed={words[focus]} chosen={matched[focus]} onPick={w=>pick(focus,w)}/>}
   <p className={`${styles.status} ${msg?styles.warn:''}`} role="status" data-restore-status>{busy?'Looking for your island…':msg}</p>
-  <div className={styles.row}><button type="submit" className={styles.primary} data-load-island disabled={!ready||busy}>Load my island</button>
+  {submitOutside
+   // The welcome walkthrough (Oct 9 2026): its own footer carries Back and "Load my island" (form="save-restore-form").
+   ?(required&&offline?<div className={styles.row}><button type="button" className={styles.quiet} data-saving-break onClick={()=>onDone(false)}>Play today</button></div>:null)
+   :onBack
+   // The title screen's sheet (user, Oct 9 2026): one footer row, Back bottom left and "Load my island" bottom right; no "Go back" link.
+   ?<div className={styles.footer} data-save-footer>
+     <BackButton onBack={onBack}/>
+     {required&&offline&&<span className={styles.footerCenter}><button type="button" className={styles.quiet} data-saving-break onClick={()=>onDone(false)}>Play today</button></span>}
+     <button type="submit" className={styles.primary} data-load-island disabled={!ready||busy}>Load my island</button></div>
+   :<div className={styles.row}><button type="submit" className={styles.primary} data-load-island disabled={!ready||busy}>Load my island</button>
    {onCancel&&<button type="button" className={styles.quiet} onClick={onCancel}>Go back</button>}
-   {required&&offline&&<button type="button" className={styles.quiet} data-saving-break onClick={()=>onDone(false)}>Play today</button>}</div>
+   {required&&offline&&<button type="button" className={styles.quiet} data-saving-break onClick={()=>onDone(false)}>Play today</button>}</div>}
  </form>;
 }
 

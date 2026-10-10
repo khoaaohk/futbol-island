@@ -83,7 +83,7 @@ export function CodeShown({code,onDone,headless=false,doneLabel='I saved it',onB
   {onBack
    ?<div className={styles.footer} data-save-footer>
      <BackButton onBack={onBack}/>
-     <button type="button" className={styles.secondary} data-print-code onClick={print}>Print code</button>
+     <span className={styles.footerCenter}><button type="button" className={styles.secondary} data-print-code onClick={print}>Print code</button></span>
      <button type="button" className={styles.primary} data-saved-it onClick={onDone}>{doneLabel}</button></div>
    :<div className={styles.row}><button type="button" className={styles.secondary} data-print-code onClick={print}>Print a code card</button>
      <button type="button" className={styles.primary} data-saved-it onClick={onDone}>{doneLabel}</button></div>}
