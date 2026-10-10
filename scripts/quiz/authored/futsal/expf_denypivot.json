@@ -11,7 +11,7 @@
    "correct": 1,
    "explain": "Right. The RIGHT ALA stays with their own player, so nobody is left free.",
    "choiceExplanations": [
-    "The FIXO already screens the PIVOT. Two on him leaves Blue's RIGHT ALA free.",
+    "The FIXO already screens the PIVOT. Two on them leaves Blue's RIGHT ALA free.",
     "Right. The RIGHT ALA stays with their own player, so nobody is left free.",
     "The LEFT ALA already presses the ball. Blue's RIGHT ALA would be free for a switch."
    ],
@@ -64,7 +64,7 @@
    }
   },
   {
-   "q": "The ball switches and Blue's PIVOT moves closer to our goal. Drag the FIXO to guard him.",
+   "q": "The ball switches and Blue's PIVOT moves closer to our goal. Drag the FIXO to guard them.",
    "options": [
     "Out to the new passer",
     "The middle, away from the PIVOT",
@@ -74,7 +74,7 @@
    "explain": "Yes. The old screen no longer works, so the FIXO recovers goal-side of the PIVOT.",
    "choiceExplanations": [
     "Our RIGHT ALA already presses the passer. The PIVOT would be free behind you.",
-    "The PIVOT is free there, and one pass puts him through on goal.",
+    "The PIVOT is free there, and one pass puts them through on goal.",
     "Yes. The old screen no longer works, so the FIXO recovers goal-side of the PIVOT."
    ],
    "visual": {

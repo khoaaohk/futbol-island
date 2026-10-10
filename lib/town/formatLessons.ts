@@ -13,7 +13,7 @@ export type LessonSkill={id:string;type:string;side?:-1|1;start?:number;at?:numb
 export type FieldStep={skill?:LessonSkill;arrows?:[string,string][];fieldZones?:{x:number;y:number;w:number;h:number;label?:string;color?:number[]}[];defensiveCues?:{id:string;markId?:string;attention?:string}[];beats?:FieldBeat[];voice?:VoiceClips;cameraFocusIds?:string[];camView?:string;desc:string;say?:string;ball:Point;moves:{id:string;to:Point;via?:Point}[];dur?:number;ballPathType?:string;highlight?:{ids:string[];color:number[]}[];links?:[string,string][];focusIds?:string[];overlays?:LessonCue[]};
 export type FieldQuestion={choiceExplanations?:string[];choiceVoices?:VoiceClips[];interact?:QuizInteraction;feedback?:{highlight?:{ids:string[];color:number[]}[];overlays?:LessonCue[]};voice?:VoiceClips;explainVoice?:VoiceClips;step:number;q:string;options:string[];correct:number;explain:string;outcomeStep?:number|null};
 export type FieldLesson={id:string;name:string;fmt:Format;ball:Point;offense:FieldActor[];defense:FieldActor[];steps:FieldStep[];questions:FieldQuestion[];catalog:{category:string;what:string}};
-export type FieldSession={renderedBall?:{x:number;z:number;landed:boolean};format:Format;lesson:FieldLesson;step:number;progress:number;playing:boolean;quiz:boolean;question:number;answer:number|null;voicePending?:boolean;outcomeProgress?:number;outcomePreview?:boolean;outcomePaused?:boolean;cameraMode?:'guided'|'broadcast';onAnswer?:(index:number)=>void;onPlaying?:(playing:boolean)=>void;onStep:(step:number)=>void};
+export type FieldSession={renderedBall?:{x:number;z:number;landed:boolean};format:Format;lesson:FieldLesson;step:number;progress:number;playing:boolean;quiz:boolean;question:number;answer:number|null;voicePending?:boolean;outcomeProgress?:number;outcomePaused?:boolean;cameraMode?:'guided'|'broadcast';onAnswer?:(index:number)=>void;onPlaying?:(playing:boolean)=>void;onStep:(step:number)=>void};
 export const catalogs=new Map<Format,Promise<FieldLesson[]>>();
 export function loadCatalog(format:Format){let promise=catalogs.get(format);if(!promise){promise=fetch('/lessons/'+format+'.json').then(r=>{if(!r.ok)throw Error('Lessons could not load. Please try again.');return r.json() as Promise<FieldLesson[]>;}).catch(e=>{catalogs.delete(format);throw e;});catalogs.set(format,promise);}return promise;}
 const smooth=(t:number)=>t*t*(3-2*t);
@@ -106,15 +106,23 @@ export function lessonStepSeconds(step:FieldStep){
  return Math.max(3,(step.dur??1)*5,narration||reading,(step.beats?.length??1)*2);
 }
 
-/** A demonstration after a wrong answer never changes the recorded answer or awards credit. */
-export function quizOutcomeStep(session:FieldSession|null):number|undefined{
- if(!session?.quiz||session.answer===null)return;
+/**
+ * No reveal on a wrong answer (Oct 10 2026, user; three testers): a wrong pick only marks that pick wrong and shows its hint, so
+ * "Try again" stays a real retrieval, as picture questions already do. The correct route, its feedback cues and highlights and
+ * the outcome demonstration show only once the question is answered right (the quiz cannot move on before that).
+ */
+export function quizAnswerRevealed(session:FieldSession|null):boolean{
+ if(!session?.quiz||session.answer===null)return false;
  const q=session.lesson.questions[session.question];
- if(!q||(session.answer!==q.correct&&!session.outcomePreview))return;
- return q.outcomeStep??undefined;
+ return !!q&&session.answer===q.correct;
+}
+/** The outcome demonstration plays only after a right answer (quizAnswerRevealed); it never changes the recorded answer. */
+export function quizOutcomeStep(session:FieldSession|null):number|undefined{
+ if(!quizAnswerRevealed(session))return;
+ return session!.lesson.questions[session!.question].outcomeStep??undefined;
 }
 /** Lofted ball flight for lesson passes (Oct 4 2026): a step whose `ballPathType` is one of these flies in an arc instead of rolling.
  * Value = peak height per metre of pass; `ground`/`through` (and no type) stay on the grass. Pure, no allocation (fieldRuntime calls it per frame). */
 export const LOFTED_PATHS:Readonly<Record<string,number>>={air:.16,lofted:.16,cross:.13,clearance:.2,chip:.25};
 export function loftPeak(type:string|undefined,meters:number):number{const k=type?LOFTED_PATHS[type]:0;return k&&meters>4?Math.min(7,Math.max(1.2,k*meters)):0;}
-export function resetQuizOutcome(session:FieldSession){session.outcomeProgress=0;session.outcomePreview=false;session.outcomePaused=false;}
+export function resetQuizOutcome(session:FieldSession){session.outcomeProgress=0;session.outcomePaused=false;}

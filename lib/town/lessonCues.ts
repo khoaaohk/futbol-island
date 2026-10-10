@@ -3,7 +3,7 @@ import * as T from 'three';
 import {trimTeachingRoute,remainingPassRoute} from './teachingRoutes';
 import {fieldPoint,type Venue} from './venues';
 import {createTeachingGround,teachingAreaContains,uploadPrefix,type TeachingHitArea} from './teachingGround';
-import {quizOutcomeStep,lessonVisualFrame,lessonPositions,type FieldSession,type Point,type CuePoint} from './formatLessons';
+import {quizOutcomeStep,quizAnswerRevealed,lessonVisualFrame,lessonPositions,type FieldSession,type Point,type CuePoint} from './formatLessons';
 
 /** Reusable teaching geometry; no per-frame textures or extra render loop. */
 export function createLessonCues(scene:T.Scene){
@@ -44,7 +44,7 @@ export function createLessonCues(scene:T.Scene){
   hitAreas.length=0;hitHeight=viewportHeight;teachingLabelTexts.clear();teachingLabelBudget=0;
   root.visible=!!session;count=labelCount=fillCount=0;targets.length=0;labels.forEach(s=>s.visible=false);fills.forEach(s=>s.visible=false);
   if(!session||!v){geometry.setDrawRange(0,0);ground.finish();return;}
-  const frame=lessonVisualFrame(session.lesson,session.step,session.progress),visualStep=frame.step,outcome=quizOutcomeStep(session)!==undefined;
+  const frame=lessonVisualFrame(session.lesson,session.step,session.progress),visualStep=frame.step,outcome=quizOutcomeStep(session)!==undefined,revealed=quizAnswerRevealed(session);
   const presentation=teachingPresentation(visualStep,frame.progress,frame.label),focus=presentation.ids;
   const clearEnd=!session.quiz&&session.progress>=1;
   let routeBudget=2;
@@ -71,7 +71,8 @@ export function createLessonCues(scene:T.Scene){
   const drawnRoutes=new Set<string>();
   const movement=(id:string,color:number[])=>{if(clearEnd||drawnRoutes.has(id)||drawnRoutes.size>=1||routeBudget<=0)return;const samples=routeSamples.map(sample=>point(sample.positions.get(id))).filter((p):p is T.Vector3=>!!p);if(samples.length<2||samples[0].distanceTo(samples[samples.length-1])<.7)return;drawnRoutes.add(id);for(let i=1;i<samples.length;i++){const elapsed=i/16<frame.progress,tint=elapsed?color.map(c=>c*.7):color;if(i===samples.length-1)route(samples[i-1],samples[i],color,true);else ground.line(samples[i-1],samples[i],tint,elapsed?.13:.22);}};
   const question=session.lesson.questions[session.question];
-  const cues=session.quiz?(session.answer===null?[]:outcome?[...(visualStep.overlays??[]),...(question?.feedback?.overlays??[])]:question?.feedback?.overlays??[]):visualStep.overlays??[];
+  // A wrong answer draws no feedback cues: they explain (and so reveal) the correct answer.
+  const cues=session.quiz?(!revealed?[]:outcome?[...(visualStep.overlays??[]),...(question?.feedback?.overlays??[])]:question?.feedback?.overlays??[]):visualStep.overlays??[];
   for(const cue of cues){const color=cue.color??gold;
    if(clearEnd)continue;
    const ids=cue.ids??(cue.anchor?[cue.anchor]:[]);
@@ -102,14 +103,15 @@ export function createLessonCues(scene:T.Scene){
    routeBudget=Infinity;
    const interaction=question.interact;
    const choices:{at:Point|undefined;from?:Point;correct:boolean;rx?:number;rz?:number;rect?:boolean}[]=interaction.paths?.map(p=>({at:p.to,from:p.from,correct:p.correct}))??interaction.candidates?.map(p=>({at:poses.get(p.id),correct:p.correct}))??interaction.spots?.map(p=>({at:p as Point,correct:p.correct,rx:p.r/250*v.width,rz:p.r/380*v.length}))??interaction.zones?.map(p=>({at:{x:p.x,y:p.y},correct:p.correct,rx:p.w/2/250*v.width,rz:p.h/2/380*v.length,rect:true}))??[];
-   choices.forEach((choice,i)=>{const p=point(choice.at);if(!p)return;const color=session.answer===null?neutral:choice.correct?[.4,.9,.62]:session.answer===i?[1,.55,.4]:neutral;
+   // Only the child's own pick is coloured: green when right, coral when wrong. A wrong pick never turns the right route green.
+   choices.forEach((choice,i)=>{const p=point(choice.at);if(!p)return;const color=session.answer===i?(choice.correct?[.4,.9,.62]:[1,.55,.4]):revealed&&choice.correct?[.4,.9,.62]:neutral;
     const from=choice.from?point(choice.from):null;const rx=choice.rx??1,rz=choice.rz??1;hitAreas.push({answer:i,at:p.clone(),from:from??undefined,rx,rz,rect:choice.rect});
     if(from&&!(choice.correct&&matchesPass(from,p)))route(from,p,color,true);
     area(p,rx,rz,color,choice.rect,3);label(String(i+1),p.clone().add(new T.Vector3(0,1.25,0)),color,i);
    });
   }
   const highlighted=session.quiz?question?.feedback?.highlight:visualStep.highlight;
-  if(!session.quiz||session.answer!==null)for(const id of highlighted?.flatMap(h=>h.ids)??[]){const p=point({id});if(p&&!areas.some(a=>a.at.distanceTo(p)<.8))area(p,1.1,1.1,session.lesson.offense.some(a=>a.id===id)?gold:blue,false,0,false);}
+  if(!session.quiz||revealed)for(const id of highlighted?.flatMap(h=>h.ids)??[]){const p=point({id});if(p&&!areas.some(a=>a.at.distanceTo(p)<.8))area(p,1.1,1.1,session.lesson.offense.some(a=>a.id===id)?gold:blue,false,0,false);}
   const visibleAreas=clearEnd?[]:session.quiz&&!outcome?areas:[...areas].sort((a,b)=>b.priority-a.priority).slice(0,2);
   for(const a of visibleAreas){if(a.filled)fill(a.at,a.rx,a.rz,a.color,a.rect);ground.outline(a.at,a.rx,a.rz,a.color,a.rect);}
   if(camera instanceof T.PerspectiveCamera){

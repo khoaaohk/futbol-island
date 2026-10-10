@@ -8,6 +8,7 @@ import {FORMAT_PATHS,FORMAT_PATH_LAUNCH,lessonEvidence,pathLessonLocked,type Pat
 import {DEFAULT_PATH_FORMAT,PATHS_IN_ORDER,PATH_FORMAT_KEY,PATH_LAST_OPENED_KEY,pathContinue,inferredPathFormat} from '@/lib/paths/pathContinue';
 import {STORY_CARDS,STORY_KEY,readStoryProgress,type StoryId} from '@/lib/paths/stories';
 import {earnForStory} from '@/lib/town/cardRewardTriggers';
+import {cardHoldId,holdCardOffers} from '@/lib/town/cardOfferHold';
 import {loadOptionalStoryProgress,completeOptionalStory} from '@/lib/paths/optionalStoryProgress';
 import {placeBetweenStops} from '@/lib/paths/betweenStops';
 import {useQuestEvidence} from '@/lib/town/questProgress';
@@ -53,6 +54,10 @@ export default function QuestLearningPath({landingSlot}:{landingSlot?:HTMLElemen
   return()=>{cancel();dialog?.removeEventListener('close',cancel);document.removeEventListener('visibilitychange',hide);window.removeEventListener('resize',cancel);motion.removeEventListener('change',reduce);};
  },[]);
  useEffect(()=>{if(story||upcoming){changeId.current++;cancelWarm();stopPathMotion();}},[story,upcoming]);
+ // A card offer (even one this story just earned) waits until the story closes (lib/town/cardOfferHold.ts).
+ const storyHold=useRef('');if(!storyHold.current)storyHold.current=cardHoldId('story');
+ useEffect(()=>{holdCardOffers(storyHold.current,!!(story||upcoming));},[story,upcoming]);
+ useEffect(()=>{const id=storyHold.current;return()=>holdCardOffers(id,false);},[]);
  useEffect(()=>{mapRef.current?.querySelectorAll<HTMLImageElement>('picture img').forEach(img=>{void img.decode().catch(()=>{});});},[format]);
  useLayoutEffect(()=>{const map=mapRef.current;if(!revealNext.current||!map)return;revealNext.current=false;fade.current?.cancel();fade.current=null;stopRevealsNow();
   // Read visibility once; offscreen stops stay settled and never consume entrance animations.

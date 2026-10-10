@@ -60,11 +60,11 @@
     "Goal-side of the far-post runner"
    ],
    "correct": 2,
-   "explain": "Yes. Between the runner and our goal, the left ala can reach any pass across the box.",
+   "explain": "Yes. Between the runner and our goal, the left ala can reach any pass across goal.",
    "choiceExplanations": [
     "The fixo already guards the middle. Joining the ball leaves the far runner alone.",
     "That space is behind the runner. They can get to our goal first.",
-    "Yes. Between the runner and our goal, the left ala can reach any pass across the box."
+    "Yes. Between the runner and our goal, the left ala can reach any pass across goal."
    ],
    "visual": {
     "kind": "dragToZone",

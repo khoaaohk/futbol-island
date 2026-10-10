@@ -11,11 +11,11 @@
  "explain":"Yes. The whole diamond slides across with the pass, so pressure, cover and the middle stay connected.",
  "choiceExplanations":["Chasing in a line leaves holes behind, and one pass beats everyone.","Yes. The whole diamond slides across with the pass, so pressure, cover and the middle stay connected.","If nobody moves, the ball reaches the free side with no one to press it."],
  "visual":{"kind":"whatNext","frame":{"step":5,"trails":true,"focus":["st","rm"]}}},
-{"q":"Blue's PIVOT drifts to the far side. Drag the FIXO to keep covering him.",
+{"q":"Blue's PIVOT drifts to the far side. Drag the FIXO to keep covering them.",
  "options":["Behind Blue's PIVOT, near our goal","Stay in the middle","Up near the ball"],
  "correct":0,
  "explain":"Yes. The FIXO stays goal-side of Blue's PIVOT, so the pass through the diamond is still covered.",
- "choiceExplanations":["Yes. The FIXO stays goal-side of Blue's PIVOT, so the pass through the diamond is still covered.","Blue's PIVOT is free now, so a pass through the diamond finds him alone.","The RIGHT ALA already presses the ball. Blue's PIVOT would be free behind you."],
+ "choiceExplanations":["Yes. The FIXO stays goal-side of Blue's PIVOT, so the pass through the diamond is still covered.","Blue's PIVOT is free now, so a pass through the diamond finds them alone.","The RIGHT ALA already presses the ball. Blue's PIVOT would be free behind you."],
  "visual":{"kind":"dragToZone","frame":{"step":6,"place":{"dst":{"x":95,"y":320}},"focus":["cb","dst"]},
   "drag":"cb","zones":[{"x":100,"y":350,"w":50,"h":36},{"x":170,"y":325,"w":44,"h":36},{"x":215,"y":320,"w":36,"h":30}]}}
 ]}

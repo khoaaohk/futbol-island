@@ -7,6 +7,7 @@ import {pathProgressFrom} from '@/lib/town/cardTiers';
 import {useQuestEvidence} from '@/lib/town/questProgress';
 import {useQuizCompletions} from '@/lib/town/quizProgress';
 import {LEARNING_STAGE_COMPLETE} from '@/lib/town/learningProgress';
+import {useCardOffersHeld} from '@/lib/town/cardOfferHold';
 import {useExploreChecklist} from '@/lib/town/exploreChecklist';
 const CardOffer=dynamic(()=>import('./CardOffer'),{ssr:false});
 
@@ -48,13 +49,15 @@ function PathCardWatcher(){
 }
 /**
  * Mounted once in Town. Nothing renders (and the offer code is not loaded) until there is an offer to show. A new offer opens
- * at the next calm moment (`blocked` is false: no ball lesson, chat or other card dialog in the way); an offer set aside opens
+ * at the next calm moment (`blocked` is false: no ball lesson, chat or other card dialog in the way) and never during a lesson,
+ * quiz or story (Oct 10 2026, user): those hold it (lib/town/cardOfferHold.ts) until the quiz has ended or the child is back on
+ * Paths or the island. The offer itself is saved when earned, so a reload in between loses nothing. An offer set aside opens
  * again from the Paths badge or the binder pill (CARD_OFFER_OPEN). `onOpenChange` lets Town sleep the 3D island behind it.
  */
 export default function CardOfferHost({blocked,onOpenChange}:{blocked:boolean;onOpenChange:(open:boolean)=>void}){
- const offers=useCardOffers(),fresh=offers.find(offer=>!offer.seen);
+ const offers=useCardOffers(),fresh=offers.find(offer=>!offer.seen),held=useCardOffersHeld();
  const [openId,setOpenId]=useState<string|null>(null),[complete,setComplete]=useState(false);
- useEffect(()=>{if(!openId&&!complete&&!blocked&&fresh)setOpenId(fresh.id);},[openId,complete,blocked,fresh]);
+ useEffect(()=>{if(!openId&&!complete&&!blocked&&!held&&fresh)setOpenId(fresh.id);},[openId,complete,blocked,held,fresh]);
  useEffect(()=>{if(!cardRewardsActive())return;
   const open=()=>{const first=readCardOffers()[0];if(first)setOpenId(first.id);};
   const done=()=>{if(completeShown)return;completeShown=true;setComplete(true);};
@@ -62,7 +65,7 @@ export default function CardOfferHost({blocked,onOpenChange}:{blocked:boolean;on
   const stage=(event:Event)=>{const detail=(event as CustomEvent<{id:string;stage:number}>).detail;if(detail)earnForJourney(detail.id,detail.stage);};
   window.addEventListener(CARD_OFFER_OPEN,open);window.addEventListener(CARD_COMPLETE,done);window.addEventListener(LEARNING_STAGE_COMPLETE,stage);
   return()=>{window.removeEventListener(CARD_OFFER_OPEN,open);window.removeEventListener(CARD_COMPLETE,done);window.removeEventListener(LEARNING_STAGE_COMPLETE,stage);};},[]);
- const showing=!!openId||(complete&&!blocked);
+ const showing=!!openId||(complete&&!blocked&&!held);
  useEffect(()=>{onOpenChange(showing);},[showing,onOpenChange]);
  const watcher=cardRewardsActive()&&<><ExploreCardWatcher/><PathCardWatcher/></>;
  if(!showing)return watcher||null;

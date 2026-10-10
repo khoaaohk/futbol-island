@@ -10,7 +10,7 @@
  "options":["Steps out to press the FIXO","Stays glued to the near post","Runs to mark the far ALA"],
  "correct":0,
  "explain":"Yes. The defender steps out to the FIXO, and that leaves the far side open.",
- "choiceExplanations":["Yes. The defender steps out to the FIXO, and that leaves the far side open.","The FIXO is free with the ball, so a defender has to close him down.","Another defender already watches the far ALA. The nearest threat is the FIXO."],
+ "choiceExplanations":["Yes. The defender steps out to the FIXO, and that leaves the far side open.","The FIXO is free with the ball, so a defender has to close them down.","Another defender already watches the far ALA. The nearest threat is the FIXO."],
  "visual":{"kind":"whatNext","frame":{"step":3,"trails":true,"focus":["cb","dlm"]}}},
 {"q":"Now a defender blocks the far side. Which pass is open?",
  "options":["Pass to the taker by the line","Pass to the far ALA","Pass to the near-post PIVOT"],

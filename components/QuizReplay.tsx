@@ -2,7 +2,7 @@
 import {useEffect,useState,type MutableRefObject} from 'react';
 import {quizOutcomeStep,type FieldSession} from '@/lib/town/formatLessons';
 import styles from './FieldLearning.module.css';
-/** `onWake` restarts Town's 3D loop, which sleeps once a replay has ended or paused (Show me, Replay and Continue replay need it). */
+/** `onWake` restarts Town's 3D loop, which sleeps once a replay has ended or paused (Replay and Continue replay need it). */
 /** `onRewatch` (wrong answers only) replays the lesson moment the question comes from, then returns to the question. */
 /** `secondaryLabel`/`onSecondary` (right answers only): a quieter second exit beside `nextLabel`, e.g. "Back to Paths" next to "Next lesson". */
 export default function QuizReplay({session,onRetry,onNext,nextLabel,onWake,onRewatch,secondaryLabel,onSecondary}:{session:MutableRefObject<FieldSession|null>;onRetry:()=>void;onNext:()=>void;nextLabel:string;onWake?:()=>void;onRewatch?:()=>void;secondaryLabel?:string;onSecondary?:()=>void}){
@@ -11,9 +11,10 @@ export default function QuizReplay({session,onRetry,onNext,nextLabel,onWake,onRe
  useEffect(()=>{if(!playing)return;const timer=setInterval(()=>refresh(n=>n+1),150);return()=>clearInterval(timer);},[playing]);
  if(!s||!s.quiz||s.answer===null)return null;
  const q=s.lesson.questions[s.question];
- const toggle=()=>{if(playing)s.outcomePaused=true;else{if(outcome===undefined||progress>=1)s.outcomeProgress=0;s.outcomePreview=true;s.outcomePaused=false;}refresh(n=>n+1);onWake?.();};
+ const toggle=()=>{if(playing)s.outcomePaused=true;else{if(progress>=1)s.outcomeProgress=0;s.outcomePaused=false;}refresh(n=>n+1);onWake?.();};
  return <div className={styles.quizActions}>
- {q.outcomeStep!=null&&<button type="button" className={styles.quizSecondary} onClick={toggle}>{playing?'Pause':outcome===undefined?'Show me':progress>=1?'Replay':'Continue replay'}</button>}
+ {/* The outcome demonstration is the answer, so it only follows a right answer (no "Show me" after a wrong one). */}
+ {q.outcomeStep!=null&&s.answer===q.correct&&<button type="button" className={styles.quizSecondary} onClick={toggle}>{playing?'Pause':progress>=1?'Replay':'Continue replay'}</button>}
  {s.answer!==q.correct&&onRewatch&&<button type="button" className={styles.quizSecondary} onClick={onRewatch}>Watch that part</button>}
  {s.answer===q.correct&&secondaryLabel&&onSecondary&&<button type="button" className={styles.quizSecondary} data-quiz-secondary onClick={onSecondary}>{secondaryLabel}</button>}
  {s.answer===q.correct?<button type="button" className={styles.quizPrimary} data-quiz-next onClick={()=>onNext()}>{nextLabel}</button>:<button type="button" className={styles.quizPrimary} onClick={onRetry}>Try again</button>}

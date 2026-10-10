@@ -8,7 +8,7 @@
    "explain": "Right, it's true. A short slide keeps the group connected, so a pass inside still meets a midfielder.",
    "choiceExplanations": [
     "Right, it's true. A short slide keeps the group connected, so a pass inside still meets a midfielder.",
-    "Look at the central midfielder: the group slid left together, but he still guards the middle."
+    "Look at the central midfielder: the group slid left together, but they still guard the middle."
    ],
    "visual": {
     "kind": "trueFalse",
@@ -39,7 +39,7 @@
    }
   },
   {
-   "q": "The ball is on the right, but your left midfielder stayed out wide. Drag him where he helps.",
+   "q": "The ball is on the right, but your left midfielder stayed out wide. Drag them where they help.",
    "options": [
     "Tuck in toward the middle",
     "Stay wide on the left touchline",
@@ -49,7 +49,7 @@
    "explain": "Yes. Tucking in closes the gap beside the central midfielder, so a pass inside is covered.",
    "choiceExplanations": [
     "Yes. Tucking in closes the gap beside the central midfielder, so a pass inside is covered.",
-    "Alone out wide, he leaves a big gap in midfield for the next pass through the middle.",
+    "Alone out wide, they leave a big gap in midfield for the next pass through the middle.",
     "Chasing across leaves the whole left side and middle empty if the ball is switched back."
    ],
    "visual": {

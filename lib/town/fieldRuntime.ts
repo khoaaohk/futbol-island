@@ -19,7 +19,7 @@ import {createMatchBallTexture} from '../graphics/matchBallTexture';
 import {MatchSim,ROLE_MOVEMENT} from './match/matchSim';
 import {VENUES,LIVE_VENUES,liveWorldX,liveWorldZ,liveWorldYaw,type Venue,type LiveVenue,type LiveFormat} from './venues';
 import {BEACH_MATCH_KITS} from './beanLooks';
-import {quizOutcomeStep,lessonPositions,lessonVisualFrame,lessonStepSeconds,loftPeak,type FieldSession} from './formatLessons';
+import {quizOutcomeStep,quizAnswerRevealed,lessonPositions,lessonVisualFrame,lessonStepSeconds,loftPeak,type FieldSession} from './formatLessons';
 // Movement and ball share a per-format clock; the compact futsal court needs a brisker pace.
 export const LIVE_GAME_SPEED=.32;
 export const liveGameSpeed=(format:LiveFormat)=>format==='futsal'||format==='beach'?.48:LIVE_GAME_SPEED;
@@ -114,8 +114,8 @@ export function createFieldRuntime(scene:T.Scene,reactions?:BallReactions){
  if(visualSession){visualSession.step=visualStep;visualSession.progress=visualProgress;}
  teachingPose=teachingMotion(teaching.lesson,v as Venue,visualStep,visualProgress);
  const sampled=lessonPositions(teaching.lesson,visualStep,visualProgress);poses=sampled.positions;ball=sampled.ball;tokens=[...teaching.lesson.offense.map(p=>({...p,home:true})),...teaching.lesson.defense.map(p=>({...p,home:false}))];
- const step=lessonVisualFrame(teaching.lesson,visualStep,visualProgress).step,ids=teaching.quiz&&teaching.answer===null?[]:[...new Set([...(teaching.quiz?teaching.lesson.questions[teaching.question]?.feedback?.highlight?.flatMap(h=>h.ids)??[]:step.highlight?.flatMap(h=>h.ids)??step.focusIds??[]),...(!teaching.quiz?step.overlays?.filter(o=>o.kind==='spotlight').flatMap(o=>o.ids??[])??[]:[])])];
- emphasized=new Set(ids);callouts=new Set((teaching.quiz?teaching.lesson.questions[teaching.question]?.feedback?.overlays:step.overlays)?.filter(o=>o.kind==='callout').map(o=>o.anchor??'')??[]);
+ const step=lessonVisualFrame(teaching.lesson,visualStep,visualProgress).step,ids=teaching.quiz&&!quizAnswerRevealed(teaching)?[]:[...new Set([...(teaching.quiz?teaching.lesson.questions[teaching.question]?.feedback?.highlight?.flatMap(h=>h.ids)??[]:step.highlight?.flatMap(h=>h.ids)??step.focusIds??[]),...(!teaching.quiz?step.overlays?.filter(o=>o.kind==='spotlight').flatMap(o=>o.ids??[])??[]:[])])];
+ emphasized=new Set(ids);callouts=new Set((teaching.quiz?(quizAnswerRevealed(teaching)?teaching.lesson.questions[teaching.question]?.feedback?.overlays:undefined):step.overlays)?.filter(o=>o.kind==='callout').map(o=>o.anchor??'')??[]);
  // Teaching highlights are drawn once by lessonCues, including quiz feedback.
 
 

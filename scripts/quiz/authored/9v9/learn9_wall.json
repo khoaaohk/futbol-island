@@ -10,7 +10,7 @@
  "explain":"Right. The lane to the forward is clear now, so the return goes before the defender moves.",
  "choiceExplanations":["Going backward throws away the space the wall pass just made.","Right. The lane to the forward is clear now, so the return goes before the defender moves.","Waiting lets the defender track across and close the lane."],
  "visual":{"kind":"whatNext","frame":{"step":4,"focus":["lcm","st"],"trails":true}}},
-{"q":"True or false? The defender moved away, so the pass to the runner is open.",
+{"q":"True or false? The defender is back on the right, so the runner is open.",
  "options":["True","False"],"correct":0,
  "explain":"Right, it's true. With the defender back on the right, the return lane to the runner is clear again.",
  "choiceExplanations":["Right, it's true. With the defender back on the right, the return lane to the runner is clear again.","Look at the lane: the defender has left it, so nothing blocks the pass now."],

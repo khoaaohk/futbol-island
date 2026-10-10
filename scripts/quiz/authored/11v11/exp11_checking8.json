@@ -26,7 +26,7 @@
    }
   },
   {
-   "q": "True or false? Here the six should move into the same lane as the eight to help him.",
+   "q": "True or false? Here the six should move into the same lane as the eight to help them.",
    "options": ["True", "False"],
    "correct": 1,
    "explain": "Right, it's false. The six keeps a different lane, giving the eight another inside connection.",
@@ -47,11 +47,11 @@
     "Wing-back dropped, eight followed"
    ],
    "correct": 2,
-   "explain": "Yes. The wing-back has dropped and the eight drags his marker inside, so the fullback is free.",
+   "explain": "Yes. The wing-back has dropped and the eight drags their marker inside, so the fullback is free.",
    "choiceExplanations": [
     "The wing-back still blocks the wide pass, and the eight is free, so play into the checking eight.",
     "The wing-back still sits in the wide lane, so a pass to the fullback would be cut out.",
-    "Yes. The wing-back has dropped and the eight drags his marker inside, so the fullback is free."
+    "Yes. The wing-back has dropped and the eight drags their marker inside, so the fullback is free."
    ],
    "visual": {
     "kind": "pickPicture",

@@ -57,17 +57,17 @@
    }
   },
   {
-   "q": "Now the keeper grabs the loose ball first. Where do you go?",
+   "q": "Now the keeper reaches the loose ball first. Where do you go?",
    "options": [
     "Run at the keeper",
     "Back toward midfield",
     "Wait near their goal"
    ],
    "correct": 1,
-   "explain": "Yes. The keeper holds it, so drop back behind the build-out line.",
+   "explain": "Yes. The keeper has it, so get back toward midfield and help your team defend.",
    "choiceExplanations": [
-    "The keeper already holds it, so chasing leaves a gap behind you.",
-    "Yes. The keeper holds it, so drop back behind the build-out line.",
+    "The keeper already has it, so chasing leaves a gap behind you.",
+    "Yes. The keeper has it, so get back toward midfield and help your team defend.",
     "Waiting near their goal leaves your team short when Blue passes."
    ],
    "visual": {

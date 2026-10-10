@@ -15,8 +15,17 @@ session.quiz=true;cues.update(session,venue);const targets=fills();assert.equal(
 const camera=new T.PerspectiveCamera(45,1,.1,1000);camera.position.set(0,120,120);camera.lookAt(0,0,40);camera.updateMatrixWorld();cues.root.updateMatrixWorld(true);
 const project=(x,z)=>{const p=new T.Vector3(x,.23,z).project(camera);return new T.Vector2(p.x,p.y)};
 assert.equal(cues.pick(project(19,49),camera),0,'click near actual rectangle corner accepted');assert.equal(cues.pick(project(23,49),camera),undefined,'outside rectangle is not invisible hit padding');
-session.answer=1;cues.update(session,venue);assert(fills().some(m=>m.scale.x===1.15),'feedback spotlight appears after answer');assert.notEqual(fills()[1].material.color.getHex(),fills()[2].material.color.getHex(),'answer feedback colors differ');
+// No reveal on a wrong answer (Oct 10 2026, user): only the child's pick turns coral; the right zone stays neutral and no
+// feedback cue (which explains the right answer) is drawn until the answer is right.
+const hex=c=>new T.Color().setRGB(...c).getHex(),NEUTRAL=hex([.98,.92,.72]),GREEN=hex([.4,.9,.62]),CORAL=hex([1,.55,.4]);
+lesson.questions[0].feedback.highlight=[{ids:['b'],color:[1,1,1]}];
+session.answer=1;cues.update(session,venue);assert.equal(fills().length,2,'wrong answer: only the two choices, no feedback spotlight');assert(!fills().some(m=>m.scale.x===1.15),'wrong answer: no feedback spotlight');
+assert.equal(fills()[0].material.color.getHex(),NEUTRAL,'wrong answer never turns the correct choice green');assert.equal(fills()[1].material.color.getHex(),CORAL,'wrong pick is coral');
+const outlines=()=>cues.root.getObjectByName('teaching-ground-markings').geometry.drawRange.count;const wrongMarks=outlines();
+session.answer=0;cues.update(session,venue);assert(fills().some(m=>m.scale.x===1.15),'feedback spotlight appears after the right answer');assert(fills().some(m=>m.material.color.getHex()===GREEN),'right pick is green');assert(!fills().some(m=>m.material.color.getHex()===CORAL),'no coral after a right answer');assert(outlines()>wrongMarks,'right answer adds the feedback highlight and cue markings');
+session.answer=null;cues.update(session,venue);assert(fills().every(m=>m.material.color.getHex()===NEUTRAL),'Try again: every choice neutral again');
+lesson.questions[0].feedback.highlight=undefined;
 lesson.questions[0].interact={kind:'spot',spots:[{x:135,y:240,r:12,correct:true}]};session.answer=null;cues.update(session,venue);assert.equal(fills()[0].geometry.type,'CircleGeometry');assert.equal(fills()[0].scale.x,12);assert.equal(fills()[0].scale.y,12);
 const area={answer:0,at:new T.Vector3(),rx:5,rz:2};assert(teachingAreaContains(area,new T.Vector3(4,0,0)));assert(!teachingAreaContains(area,new T.Vector3(4,0,1.8)));assert(teachingAreaContains({...area,rect:true},new T.Vector3(4,0,1.8)));
 lesson.questions[0].interact={kind:'candidate',candidates:[{id:'a',correct:true}]};lesson.questions[0].feedback.overlays=[{kind:'spotlight',ids:['a']},{kind:'spotlight',ids:['a']}];session.answer=0;cues.update(session,venue);assert.equal(fills().length,1,'quiz target replaces duplicate feedback spotlights');assert.equal(fills()[0].scale.x,1,'quiz target dimensions win');
-cues.update(null);assert.equal(ground.geometry.drawRange.count,0);cues.dispose();assert.equal(scene.children.length,0);console.log('LESSON_CUES_PASS: spotlight, actual curved routes, thick connections/angles, pause/seek, exact zone/spot dimensions+hitting, neutral quiz choices and feedback, disposal');
+cues.update(null);assert.equal(ground.geometry.drawRange.count,0);cues.dispose();assert.equal(scene.children.length,0);console.log('LESSON_CUES_PASS: spotlight, actual curved routes, thick connections/angles, pause/seek, exact zone/spot dimensions+hitting, neutral quiz choices, no reveal on a wrong answer, feedback after a right answer, disposal');

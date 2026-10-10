@@ -11,6 +11,7 @@ import {loadQuizRun,saveQuizRun,clearQuizRun,quizDoneLine,quizAnswerCue} from '@
 import {quizFeedbackText} from '@/lib/town/quizFeedback';
 import VisualQuestion from './VisualQuestion';
 import {earnForQuiz} from '@/lib/town/cardRewardTriggers';
+import {cardHoldId,holdCardOffers,lessonHoldsCards} from '@/lib/town/cardOfferHold';
 import {cardRewardsActive} from '@/lib/town/cardRewardStore';
 import type {LearningAngle} from '@/lib/town/learningView';
 import type {LiveMatchView} from '@/lib/town/fieldRuntime';
@@ -59,24 +60,27 @@ export default function FieldLearning({pathRequest,learningId,onResetQuizView,on
  // A wrong answer can send the child back to the lesson moment the question comes from ("Watch that part"): the steps leading
  // into the question's step replay, then the same question returns. Holds the question index while that replay runs.
  const [rewatch,setRewatch]=useState<number|null>(null);
+ // Card offers wait until this lesson's quiz has ended (Oct 10 2026, user; lib/town/cardOfferHold.ts): true on the lesson's end
+ // screen after the last right answer, false again as soon as the child picks, replays or re-quizzes a lesson.
+ const [quizEnded,setQuizEnded]=useState(false);
  const voiceQuestion=chosen?.questions[question];
  const voice=useLessonVoice(session,quiz?(answer===null?voiceQuestion?.voice:(answer!==voiceQuestion?.correct?voiceQuestion?.choiceVoices?.[answer]??voiceQuestion?.explainVoice:voiceQuestion?.explainVoice)):chosen?.steps[step]?.voice,chosen?`${chosen.id}:${quiz?'q'+question+':'+(answer===null?'prompt':'feedback'):'s'+step}`:'',playing,quiz,voiceEnabled,coachVoice,narrationPaused||pickerOpen,format,chosen?.id);
  useEffect(()=>{let current=true;loadCatalog(format).then(list=>{if(current)setLessons(list);}).catch(e=>{if(current)setError(e.message);});return()=>{current=false;session.current=null;};},[format,session]);
  useEffect(()=>{if(!pickerOpen||!session.current)return;const current=session.current,wasPlaying=current.playing;current.playing=false;setPlaying(false);return()=>{if(session.current===current){current.playing=wasPlaying;setPlaying(wasPlaying);}};},[pickerOpen,session]);
  // Oct 1 2026 (user): no "You'll learn" opener card; a lesson picked from the list goes straight into the play and plays.
- const select=(lesson:FieldLesson)=>{countLessonOpened(lesson.id);setRewatch(null);setLivePaused(false);onLivePause?.(false);voice.prime();setChosen(lesson);setStep(0);setPlaying(true);setQuiz(false);setQuestion(0);setAnswer(null);session.current={format,lesson,step:0,progress:0,playing:true,quiz:false,question:0,answer:null,voicePending:voice.enabled,cameraMode:'guided',onPlaying:setPlaying,onStep:setStep};setPickerOpen(false);};
- const seek=(n:number)=>{if(learningId&&!preview.current&&n>0)exposeLearning(learningId,stageVariant(learningId,stage),'solution');const s=session.current;if(!s)return;s.quiz=false;setQuiz(false);s.answer=null;setAnswer(null);s.step=Math.max(0,Math.min(s.lesson.steps.length-1,n));s.progress=0;s.voicePending=voice.enabled;s.playing=false;setPlaying(false);setStep(s.step);};
+ const select=(lesson:FieldLesson)=>{countLessonOpened(lesson.id);setQuizEnded(false);setRewatch(null);setLivePaused(false);onLivePause?.(false);voice.prime();setChosen(lesson);setStep(0);setPlaying(true);setQuiz(false);setQuestion(0);setAnswer(null);session.current={format,lesson,step:0,progress:0,playing:true,quiz:false,question:0,answer:null,voicePending:voice.enabled,cameraMode:'guided',onPlaying:setPlaying,onStep:setStep};setPickerOpen(false);};
+ const seek=(n:number)=>{setQuizEnded(false);if(learningId&&!preview.current&&n>0)exposeLearning(learningId,stageVariant(learningId,stage),'solution');const s=session.current;if(!s)return;s.quiz=false;setQuiz(false);s.answer=null;setAnswer(null);s.step=Math.max(0,Math.min(s.lesson.steps.length-1,n));s.progress=0;s.voicePending=voice.enabled;s.playing=false;setPlaying(false);setStep(s.step);};
  // Card rewards (docs/quiz-design.md): this quiz run's answers. A quiz of MIN_CARD_QUIZ_QUESTIONS+ questions, all correct under
  // quizRunAllCorrect (retries count unless CARD_QUIZ_FIRST_TRY), offers one card pick; quizCardEligible is the single rule.
  const correctRun=useRef<QuizRun>(newQuizRun(''));
- const startQuiz=()=>{correctRun.current=newQuizRun(chosen?.id??'');if(chosen)clearQuizRun(chosen.fmt,chosen.id);if(!chosen?.questions.length)return;countLessonStage('ls',chosen.id);const q=chosen.questions[0],s=session.current!;resetQuizOutcome(s);s.quiz=true;s.playing=false;s.step=q.step;s.progress=1;s.question=0;s.answer=null;setQuiz(true);setQuestion(0);setAnswer(null);setPlaying(false);setStep(q.step);setPickerOpen(false);};
+ const startQuiz=()=>{setQuizEnded(false);correctRun.current=newQuizRun(chosen?.id??'');if(chosen)clearQuizRun(chosen.fmt,chosen.id);if(!chosen?.questions.length)return;countLessonStage('ls',chosen.id);const q=chosen.questions[0],s=session.current!;resetQuizOutcome(s);s.quiz=true;s.playing=false;s.step=q.step;s.progress=1;s.question=0;s.answer=null;setQuiz(true);setQuestion(0);setAnswer(null);setPlaying(false);setStep(q.step);setPickerOpen(false);};
  const choose=(index:number)=>{if(!chosen||!session.current||session.current.answer!==null)return;resetQuizOutcome(session.current);setAnswer(index);session.current.answer=index;if(learningId&&!preview.current)answerLearning(learningId,stage,chosen.id,question,index,index===chosen.questions[question]?.correct);if(!preview.current){if(correctRun.current.lessonId!==chosen.id)correctRun.current=learningId?newQuizRun(chosen.id):loadQuizRun(chosen.fmt,chosen.id);const right=index===chosen.questions[question]?.correct;if(!correctRun.current.tried.has(question))countFirstTry(chosen.id,question,index);recordRunAnswer(correctRun.current,question,right);{const cue=quizAnswerCue(right,question+1===chosen.questions.length);try{document.dispatchEvent(new CustomEvent(cue.event,{detail:cue.detail}));}catch{}}if(right&&question+1===chosen.questions.length){countLessonStage('lf',chosen.id);if(correctRun.current.firstTry.size>=chosen.questions.length)countLessonStage('la',chosen.id);}if(!learningId)saveQuizRun(chosen.fmt,correctRun.current);if(right)recordCorrectQuizAnswer(chosen.fmt,chosen.id,question);}};
  useEffect(()=>{if(session.current)session.current.onAnswer=choose;});
  useEffect(()=>{if(!quiz||answer!==null||pickerOpen||chatOpen||!chosen||isVisual(chosen.questions[question]))return;const key=(event:KeyboardEvent)=>{if(event.ctrlKey||event.metaKey||event.altKey||event.target instanceof HTMLElement&&event.target.closest('input,textarea,select,[contenteditable=true]'))return;const index=/^[1-9]$/.test(event.key)?Number(event.key)-1:event.key.toUpperCase().charCodeAt(0)-65;if(event.key.length===1&&index>=0&&index<chosen.questions[question].options.length){event.preventDefault();choose(index);}};window.addEventListener('keydown',key);return()=>window.removeEventListener('keydown',key);},[quiz,answer,pickerOpen,chatOpen,chosen,question]);
  const retryQuestion=()=>{const s=session.current;if(!s)return;const q=s.lesson.questions[s.question];resetQuizOutcome(s);s.answer=null;s.step=q.step;s.progress=1;s.playing=false;setAnswer(null);setStep(q.step);};
  const backToQuestion=(n:number)=>{const s=session.current;if(!s)return;const q=s.lesson.questions[n];if(!q)return;s.onStep=setStep;resetQuizOutcome(s);s.quiz=true;s.playing=false;s.step=q.step;s.progress=1;s.question=n;s.answer=null;s.onPlaying?.(false);setRewatch(null);setQuiz(true);setQuestion(n);setAnswer(null);setPlaying(false);setStep(q.step);};
- // Pitch-tap questions pose the choice at q.step and reveal it at outcomeStep, so the replay ends at q.step (the outcome stays
- // for "Show me"); a picture question's frame is q.step itself, so its own line and the one before replay.
+ // Pitch-tap questions pose the choice at q.step and reveal it at outcomeStep, so the replay ends at q.step (the outcome plays
+ // only after a right answer); a picture question's frame is q.step itself, so its own line and the one before replay.
  const watchThatPart=()=>{const s=session.current;if(!s)return;const n=s.question,q=s.lesson.questions[n];if(!q)return;const end=q.step,start=Math.max(0,end-(isVisual(q)?1:2));voice.prime();resetQuizOutcome(s);s.quiz=false;s.answer=null;s.step=start;s.progress=0;s.voicePending=voice.enabled;s.playing=true;s.onStep=(i:number)=>{if(i>end)backToQuestion(n);else setStep(i);};setRewatch(n);setQuiz(false);setAnswer(null);setStep(start);setPlaying(true);};
  // Clear path (Oct 4 2026, user): the LAST right answer of a Paths lesson offers the next step (lib/paths/pathContinue.ts quizEndNext):
  // the next lesson, the graduation, the next path or the Ferry, with "Back to Paths" kept as the quieter second button.
@@ -84,20 +88,25 @@ export default function FieldLearning({pathRequest,learningId,onResetQuizView,on
  const lastRight=!!(chosen&&quiz&&answer!==null&&question+1===chosen.questions.length&&answer===chosen.questions[question]?.correct);
  const pathNext=pathRequest&&!learningId&&!preview.current&&chosen&&lastRight?quizEndNext(format,chosen.id,new Set(questEvidence.steps),quizAnswers,readLastOpened(),graduations):null;
  const nextQuestion=(exit?:'paths')=>{if(!chosen)return;const n=question+1;if(n>=chosen.questions.length){if(!preview.current&&!learningId){earnForQuiz(chosen,quizRunCardAnswers(chosen.id,chosen.questions.length,correctRun.current));clearQuizRun(chosen.fmt,chosen.id);}if(learningId){if(!preview.current)completeLearningStage(learningId,stage);onClose();return;}if(pathRequest){
-  // The usual Paths launch event: Town swaps in the next lesson (it autoplays); a card earned above opens over it first.
+  // The usual Paths launch event: Town swaps in the next lesson (it autoplays). A card earned above is saved now but waits
+  // (cardOfferHold) until the child is back on Paths or the island, or ends a quiz on a lesson's end screen.
   if(exit!=='paths'&&pathNext?.kind==='lesson'){launchPathLesson(pathNext.format,pathNext.lesson,new Set(questEvidence.steps),quizAnswers);return;}
-  onClose();if(exit!=='paths'&&pathNext?.kind==='ferry')openEndgame({target:'ferry'});return;}setQuiz(false);session.current!.quiz=false;return;}const q=chosen.questions[n],s=session.current!;resetQuizOutcome(s);s.question=n;s.answer=null;s.step=q.step;s.progress=1;s.playing=false;setQuestion(n);setAnswer(null);setStep(q.step);};
+  onClose();if(exit!=='paths'&&pathNext?.kind==='ferry')openEndgame({target:'ferry'});return;}setQuiz(false);session.current!.quiz=false;setQuizEnded(true);return;}const q=chosen.questions[n],s=session.current!;resetQuizOutcome(s);s.question=n;s.answer=null;s.step=q.step;s.progress=1;s.playing=false;setQuestion(n);setAnswer(null);setStep(q.step);};
  // A tall visual question on a phone can push the result and its Try again / Next button below the panel's fold: bring them into view once.
  useEffect(()=>{if(!quiz||answer===null)return;const id=requestAnimationFrame(()=>{const s=document.querySelector<HTMLElement>('section[aria-label="Pitch quiz"]');if(s&&s.scrollHeight>s.clientHeight+2)s.scrollTo({top:s.scrollHeight,behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});});return()=>cancelAnimationFrame(id);},[quiz,answer,question]);
  const returnToLive=()=>{session.current=null;setChosen(null);setQuiz(false);setAnswer(null);setPlaying(true);setChatOpen(false);setRadarOpen(false);setLivePaused(false);onLivePause?.(false);cameraAngle.current='default';setAngle('default');};
- const togglePlayback=()=>{if(!chosen){const paused=!livePaused;setLivePaused(paused);onLivePause?.(paused);return;}voice.prime();const s=session.current!;if(!s.playing&&s.step===s.lesson.steps.length-1&&s.progress>=1){s.step=0;s.progress=0;s.voicePending=voice.enabled;setStep(0);}s.playing=!s.playing;setPlaying(s.playing);};
+ const togglePlayback=()=>{if(!chosen){const paused=!livePaused;setLivePaused(paused);onLivePause?.(paused);return;}voice.prime();const s=session.current!;if(!s.playing&&s.step===s.lesson.steps.length-1&&s.progress>=1){setQuizEnded(false);s.step=0;s.progress=0;s.voicePending=voice.enabled;setStep(0);}s.playing=!s.playing;setPlaying(s.playing);};
  const finished=Boolean(chosen&&!quiz&&!playing&&step===chosen.steps.length-1&&session.current&&session.current.progress>=1);
  // Watched to the end: counted when the play comes to rest on its last step (no extra render; the flag is already derived).
  useEffect(()=>{if(finished&&chosen)countLessonStage('le',chosen.id);},[finished,chosen]);
  // Manual Next navigation pauses at the start of the final step. Offer the
  // same exit choices without requiring playback or awarding lesson progress.
  const endActionsAvailable=Boolean(chosen&&!quiz&&!playing&&step===chosen.steps.length-1);
- const watchAgain=()=>{const s=session.current;if(!s)return;voice.prime();s.quiz=false;s.answer=null;s.step=0;s.progress=0;s.voicePending=voice.enabled;s.playing=true;setQuiz(false);setAnswer(null);setStep(0);setPlaying(true);};
+ const holdId=useRef('');if(!holdId.current)holdId.current=cardHoldId('lesson');
+ const holdsCards=lessonHoldsCards({launching:!!(pathRequest||learningId),chosen:!!chosen,quiz,quizEnded,playing,rewatch:rewatch!==null});
+ useEffect(()=>{holdCardOffers(holdId.current,holdsCards);},[holdsCards]);
+ useEffect(()=>{const id=holdId.current;return()=>holdCardOffers(id,false);},[]);
+ const watchAgain=()=>{const s=session.current;if(!s)return;setQuizEnded(false);voice.prime();s.quiz=false;s.answer=null;s.step=0;s.progress=0;s.voicePending=voice.enabled;s.playing=true;setQuiz(false);setAnswer(null);setStep(0);setPlaying(true);};
  useEffect(()=>{
   if(!pathRequest||restored.current||!lessons.length)return;
   const lesson=lessons.find(l=>l.id===pathRequest.lessonId);if(!lesson){setError('This lesson could not load. Please return to Paths and try again.');return;}
