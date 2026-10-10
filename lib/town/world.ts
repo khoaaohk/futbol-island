@@ -1,6 +1,7 @@
 import {createUmbrellaReaction} from '../graphics/umbrellaReaction';
 import type {PropReactionKind,PropSpec} from '../graphics/propReactions';
 import {ARENA_BLOCKS,ARENA_QUEUES,KNOCKOUT_ROOF} from '../games/rooftopKnockout';
+import {shadeHex,STRIPE_LIGHT,STRIPE_DARK} from '../graphics/pitchStripes';
 import {FERRY_RAMP,FERRY_DECK} from './ferryBoarding';
 import {buildEastCoast} from './eastCoast';
 import {buildEastPier} from './eastPierWorld';
@@ -697,7 +698,9 @@ export function buildTown(scene: T.Scene) {
   }
   sign('SORT & RECYCLE',2.15,.35,141.52,schoolRoofY+.65,8.36,'#477c6a');
   const arenaRails:(Obstacle&{floor:number;top:number})[]=[],ar=KNOCKOUT_ROOF;
-  box(24,.035,44,'#648c72',ar.x,ar.height+.02,ar.z);
+  // Rooftop turf in eight 5.5 m mown bands (pitchStripes.ts). Two palette shades of the old turf colour: both batch into the
+  // same vertex-colour chunk draw as before, so the stripes add no draw call, material or shader.
+  {const light=shadeHex('#648c72',STRIPE_LIGHT),dark=shadeHex('#648c72',STRIPE_DARK);for(let i=0;i<8;i++)box(24,.035,5.5,i%2?light:dark,ar.x,ar.height+.02,ar.z-22+(i+.5)*5.5);}
   for(const side of [-1,1]){box(.09,.04,44,'#f8edc9',ar.x+side*12,ar.height+.05,ar.z);box(24,.04,.09,'#f8edc9',ar.x,ar.height+.05,ar.z+side*22);}
   box(24,.04,.09,'#f8edc9',ar.x,ar.height+.05,ar.z);
   for(const side of [-1,1]){

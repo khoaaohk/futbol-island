@@ -1,33 +1,47 @@
 'use client';
-import {Fragment,useCallback,useEffect,useRef,useState,type CSSProperties,type PointerEvent as ReactPointerEvent} from 'react';
-import {flushSync} from 'react-dom';
+import {Fragment,useCallback,useEffect,useLayoutEffect,useRef,useState,type CSSProperties,type HTMLAttributes,type KeyboardEvent as ReactKeyboardEvent,type PointerEvent as ReactPointerEvent} from 'react';
 import {museumSfx} from '@/lib/museum/museumSound';
 import type {ExperienceProps} from '../types';
 import ExperienceBack from '../ExperienceBack';
 import type {Chart} from './voyage';
-import {CASE_FACTS,DATES,FINAL,GOALS,GROUPS,PORTS,SEA_NOTES,SEMIS,SOURCES,TEAMS,score,type Group,type Tie} from './data';
+import {CASE_FACTS,DATES,FINAL,GOALS,GROUPS,PORTS,QUIZ,SEA_NOTES,SEMIS,SOURCES,TEAMS,score,type Group,type Tie} from './data';
+import {flip,rubber,stepSpring} from './spring';
+import Poster from './Poster';
 import s from './Experience.module.css';
 
 /**
- * worldcup-1930 · "Two weeks at sea" (Oct 5 2026). One long scroll in four acts:
- *  1. The voyage: scrolling sails the Conte Verde from Genoa to Montevideo across a hand-drawn sea chart (Canvas 2D, lazily
- *     loaded), picking up Romania, France, Belgium and Brazil; a keepy-up on the rolling deck in mid-ocean.
- *  2. Arrival: the Estadio Centenario and the first kick-off.
- *  3. The bracket you build: pick each group winner, then the semi-finals and the final; the real results flip over.
- *  4. The final with two balls: drag the match clock; at half-time you swap Argentina's ball for Uruguay's.
- * Heat: no loop runs unless something moves. The chart draws on scroll and eases for a moment, then sleeps; the keepy-up and
- * the match clock run only while the ball is in the air / the clock is playing; everything stops when the tab is hidden and
- * is torn down on unmount. Sound: the museum's shared one-shots (they respect the island's mute), only after a tap.
+ * worldcup-1930 · "Two weeks at sea" (Oct 5 2026; Oct 9 2026 restyled as an Art Deco travel poster, user: "the museum is a
+ * playground for different styles"). One long scroll in beats the visitor drives:
+ *  1. The poster: an original deco liner poster (Poster.tsx) with one orchestrated spring entrance.
+ *  2. The voyage: scrolling sails the liner from Genoa to Montevideo across a deco route map (Canvas 2D, lazily loaded),
+ *     picking up Romania, France, Belgium and Brazil; a keepy-up on the rolling deck in mid-ocean.
+ *  3. Arrival: the Estadio Centenario and the first kick-off.
+ *  4. The bracket you build: pick each group winner; your team flies (spring FLIP) to where it really finished.
+ *  5. The final with two balls: drag the ball along the match clock (spring follow, flick momentum, rubber-band at the
+ *     half-time wall), then drag Uruguay's ball onto the pitch at half-time; the balls trade places with a spring FLIP.
+ *  6. Ticket check: four quick questions on the story; every right answer punches a hole in your deco ticket home.
+ * Fonts: Limelight and Josefin Sans (SIL OFL 1.1, self-hosted in public/museum/experiences/worldcup-1930/ with their licences),
+ * loaded with the FontFace API on open (no global CSS), with fallback stacks.
+ * Heat: no loop runs unless something moves. The chart draws on scroll and eases for a moment, then sleeps; the keepy-up, the
+ * clock and the ball spring run only while the ball is in the air / you drag / it settles / Play runs; everything stops when
+ * the tab is hidden and is torn down on unmount. Sound: the museum's shared one-shots (they respect the island's mute).
  */
-const CHAPTERS=[{id:'voyage',label:'Sail'},{id:'arrive',label:'Arrive'},{id:'bracket',label:'Bracket'},{id:'final',label:'Final'},{id:'end',label:'Sources'}] as const;
+const CHAPTERS=[{id:'voyage',label:'Sail'},{id:'arrive',label:'Arrive'},{id:'bracket',label:'Bracket'},{id:'final',label:'Final'},{id:'quiz',label:'Ticket'},{id:'end',label:'Sources'}] as const;
 type ChapterId=typeof CHAPTERS[number]['id'];
 const DRILL_P=.505;// between "Training at sea" (.44) and "Crossing the Equator" (.58)
 const reduced=()=>typeof matchMedia!=='undefined'&&matchMedia('(prefers-reduced-motion: reduce)').matches;
 const play=(f:()=>void)=>{try{f();}catch{}};
+const FONT_DIR='/museum/experiences/worldcup-1930/';
+/** Load the two deco faces once per page (FontFace API; nothing global in CSS). Resolves when they're ready, or on failure. */
+let fontsReady:Promise<void>|null=null;
+function loadFonts(){if(fontsReady)return fontsReady;if(typeof FontFace==='undefined'||!document.fonts)return fontsReady=Promise.resolve();
+ const faces=[new FontFace('WC30 Deco',`url(${FONT_DIR}limelight-latin.woff2) format("woff2")`,{display:'swap'}),
+  new FontFace('WC30 Sans',`url(${FONT_DIR}josefin-sans-latin.woff2) format("woff2")`,{weight:'100 700',display:'swap'})];
+ return fontsReady=Promise.all(faces.map(f=>f.load().then(x=>{document.fonts.add(x);}).catch(()=>{}))).then(()=>{});}
 
 export default function Experience({exhibit,onClose}:ExperienceProps){
  const scroller=useRef<HTMLDivElement>(null),canvas=useRef<HTMLCanvasElement>(null),track=useRef<HTMLDivElement>(null);
- const dayRef=useRef<HTMLSpanElement>(null),dateRef=useRef<HTMLSpanElement>(null),barRef=useRef<HTMLSpanElement>(null);
+ const hudRef=useRef<HTMLDivElement>(null),dayRef=useRef<HTMLSpanElement>(null),dateRef=useRef<HTMLSpanElement>(null),barRef=useRef<HTMLSpanElement>(null);
  const [chapter,setChapter]=useState<ChapterId>('voyage'),[sailing,setSailing]=useState(true),[chartFailed,setChartFailed]=useState(false);
  const chapterRef=useRef<ChapterId>('voyage'),sailingRef=useRef(true);
 
@@ -50,6 +64,8 @@ export default function Experience({exhibit,onClose}:ExperienceProps){
   const onScroll=()=>{
    const t=track.current;if(!t)return;const vh=el.clientHeight,inChart=el.scrollTop<t.offsetTop+t.offsetHeight;
    if(inChart!==sailingRef.current){sailingRef.current=inChart;setSailing(inChart);}
+   // The day/date band only shows once the poster has scrolled away (it would sit on the poster otherwise).
+   const hudOn=inChart&&el.scrollTop>t.offsetTop-vh*.55;if(hudRef.current&&hudRef.current.dataset.on!==String(hudOn))hudRef.current.dataset.on=String(hudOn);
    // Which chapter is in the middle of the screen (state only changes when the chapter does).
    let ch:ChapterId='voyage';for(const c of CHAPTERS){const n=el.querySelector<HTMLElement>(`[data-chapter="${c.id}"]`);if(n&&n.offsetTop<=el.scrollTop+vh*.5)ch=c.id;}
    if(ch!==chapterRef.current){chapterRef.current=ch;setChapter(ch);}
@@ -57,7 +73,8 @@ export default function Experience({exhibit,onClose}:ExperienceProps){
   };
   const onResize=()=>{chart?.resize();target=progress();if(still)cur=target;kick();};
   const onVis=()=>{if(document.hidden){cancelAnimationFrame(raf);raf=0;last=0;}else kick();};
-  import('./voyage').then(({createChart})=>{if(disposed)return;try{chart=createChart(cv,{coarse:matchMedia('(pointer:coarse)').matches});target=cur=progress();chart.draw(cur,0);hud(cur);}catch(err){console.error('worldcup-1930 chart failed',err);setChartFailed(true);}})
+  import('./voyage').then(({createChart})=>{if(disposed)return;try{chart=createChart(cv,{coarse:matchMedia('(pointer:coarse)').matches});target=cur=progress();chart.draw(cur,0);hud(cur);
+   loadFonts().then(()=>{if(!disposed&&chart)chart.draw(cur,phase);});}catch(err){console.error('worldcup-1930 chart failed',err);setChartFailed(true);}})
    .catch(()=>{if(!disposed)setChartFailed(true);});
   el.addEventListener('scroll',onScroll,{passive:true});window.addEventListener('resize',onResize);document.addEventListener('visibilitychange',onVis);
   (window as unknown as {__wc1930?:unknown}).__wc1930={progress:()=>cur,looping:()=>raf!==0};
@@ -66,7 +83,7 @@ export default function Experience({exhibit,onClose}:ExperienceProps){
  },[]);
 
  // Escape leaves; focus the scroller so the arrow keys / space scroll the voyage straight away.
- useEffect(()=>{const key=(e:KeyboardEvent)=>{if(e.key==='Escape'){e.preventDefault();onClose();}};window.addEventListener('keydown',key);scroller.current?.focus({preventScroll:true});
+ useEffect(()=>{void loadFonts();const key=(e:KeyboardEvent)=>{if(e.key==='Escape'){e.preventDefault();onClose();}};window.addEventListener('keydown',key);scroller.current?.focus({preventScroll:true});
   return()=>window.removeEventListener('keydown',key);},[onClose]);
  const jump=(id:ChapterId)=>{const el=scroller.current,n=el?.querySelector<HTMLElement>(`[data-chapter="${id}"]`);if(!el||!n)return;
   el.scrollTo({top:id==='voyage'?0:n.offsetTop,behavior:reduced()?'auto':'smooth'});};
@@ -79,7 +96,7 @@ export default function Experience({exhibit,onClose}:ExperienceProps){
     {CHAPTERS.map((c,i)=><button key={c.id} type="button" className={s.chapterBtn} aria-current={chapter===c.id?'step':undefined} onClick={()=>jump(c.id)}><i aria-hidden="true">{i+1}</i><span>{c.label}</span></button>)}
    </nav>
   </header>
-  <div className={s.hud} data-on={sailing} aria-hidden={!sailing}>
+  <div ref={hudRef} className={s.hud} data-on="false" aria-hidden={!sailing}>
    <span className={s.hudDay} ref={dayRef}>Day 1</span><span className={s.hudDate} ref={dateRef}>21 June 1930</span>
    <span className={s.hudBar}><span ref={barRef}/></span>
    <span className={s.hudEnds}><span>Genoa</span><span>Montevideo</span></span>
@@ -88,11 +105,15 @@ export default function Experience({exhibit,onClose}:ExperienceProps){
   <div ref={scroller} className={s.scroller} tabIndex={0} aria-label="The 1930 World Cup story. Scroll to sail.">
    {/* ---- Act 1: the voyage ---- */}
    <div className={s.hero} data-chapter="voyage">
-    <p className={s.kicker}>{exhibit.year} · {exhibit.title}</p>
-    <h1 className={s.title}>Two weeks<br/>at sea.</h1>
-    <p className={s.lede}>{CASE_FACTS.host} Uruguay is far from Europe, so the European teams had to sail there. Four of them shared one ship.</p>
-    <p className={s.scrollHint} aria-hidden="true"><span>Scroll to set sail</span><b>↓</b></p>
-    {chartFailed&&<p className={s.note}>The sea chart couldn’t load on this device, but the story still scrolls.</p>}
+    <div className={s.posterWrap}><Poster/></div>
+    <div className={s.heroText}>
+     <p className={s.kicker}>{exhibit.year} · {exhibit.title}</p>
+     <h1 className={s.title}><span>Two weeks</span> <span>at sea.</span></h1>
+     <p className={s.route}><span>Genoa</span><i aria-hidden="true"/><span>Montevideo</span></p>
+     <p className={s.lede}>{CASE_FACTS.host} Uruguay is far from Europe, so the European teams had to sail there. Four of them shared one ship.</p>
+     <p className={s.scrollHint} aria-hidden="true"><span>Scroll to set sail</span><b>↓</b></p>
+     {chartFailed&&<p className={s.note}>The route map couldn’t load on this device, but the story still scrolls.</p>}
+    </div>
    </div>
    <div ref={track} className={s.track} aria-label="The voyage">
     {PORTS.map(p=><article key={p.id} className={s.card} data-port={p.id} style={{'--p':p.p} as CSSProperties}>
@@ -127,6 +148,9 @@ export default function Experience({exhibit,onClose}:ExperienceProps){
    {/* ---- Act 4: the final ---- */}
    <FinalMatch/>
 
+   {/* ---- Quick check: punch your ticket home ---- */}
+   <TicketCheck/>
+
    {/* ---- Outro ---- */}
    <section className={s.end} data-chapter="end" aria-labelledby="wc30-end">
     <p className={s.kicker}>Take it to your game</p>
@@ -134,7 +158,7 @@ export default function Experience({exhibit,onClose}:ExperienceProps){
     <p className={s.endLine}>And if you’re losing at half-time, keep going. Uruguay were 2–1 down and won 4–2.</p>
     <ul className={s.recap}>{[CASE_FACTS.host,CASE_FACTS.final,CASE_FACTS.teams].map(f=><li key={f}>{f}</li>)}</ul>
     <details className={s.sources}><summary>Sources</summary><ul>{[...exhibit.sources,...SOURCES.filter(x=>!exhibit.sources.some(e=>e.url===x.url))].map(x=><li key={x.url}><a href={x.url} target="_blank" rel="noopener noreferrer">{x.title}</a></li>)}</ul>
-     <p className={s.small}>Everything here is real history. The sea chart is drawn by hand and simplified; the ship’s line joins the real ports but is not its logged course. Team colours are just colours, not 1930 flags.</p></details>
+     <p className={s.small}>Everything here is real history. The pictures are new drawings in the style of 1930s Art Deco travel posters, not real posters or photos, and the liner is not drawn in the real Conte Verde’s colours. The route map is simplified; the ship’s line joins the real ports but is not its logged course. Team colours are just colours, not 1930 flags.</p></details>
     <div className={s.endRow}>
      <button type="button" className={s.againBtn} data-museum-own-cue onClick={()=>jump('voyage')}><span aria-hidden="true">↑</span> Sail it again</button>
      <p className={s.fin} aria-hidden="true">Fin · 1930</p>
@@ -196,14 +220,17 @@ const CROWD=(()=>{const out:{x:number;y:number;c:string}[]=[];const pal=['#1f2a4
 function Stadium(){
  return <svg className={s.stadium} viewBox="0 0 640 260" role="img" aria-label="A drawing of the Estadio Centenario: a full oval bowl around the pitch, with a tall tower on the far side.">
   <defs>
-   <linearGradient id="wc30sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#f3cf96"/><stop offset=".55" stopColor="#f2dfb8"/><stop offset="1" stopColor="#efe5cc"/></linearGradient>
+   <linearGradient id="wc30sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#1f5566"/><stop offset=".45" stopColor="#e9a35b"/><stop offset=".75" stopColor="#f6d58a"/><stop offset="1" stopColor="#f8efd9"/></linearGradient>
    <radialGradient id="wc30sun" cx="12%" cy="22%" r="40%"><stop offset="0" stopColor="#fff6dc" stopOpacity=".95"/><stop offset="1" stopColor="#fff6dc" stopOpacity="0"/></radialGradient>
    <linearGradient id="wc30stand" x1="0" x2="1"><stop offset="0" stopColor="#efe2bf"/><stop offset=".55" stopColor="#ddcb9f"/><stop offset="1" stopColor="#c4af80"/></linearGradient>
    <linearGradient id="wc30wall" x1="0" x2="1"><stop offset="0" stopColor="#e3d3ad"/><stop offset="1" stopColor="#b59f72"/></linearGradient>
    <linearGradient id="wc30shade" x1="0" x2="1"><stop offset=".45" stopColor="#1f2a44" stopOpacity="0"/><stop offset="1" stopColor="#1f2a44" stopOpacity=".22"/></linearGradient>
    <clipPath id="wc30pitch"><ellipse cx="320" cy="194" rx="206" ry="35"/></clipPath>
   </defs>
-  <rect width="640" height="260" fill="url(#wc30sky)"/><rect width="640" height="260" fill="url(#wc30sun)"/>
+  <rect width="640" height="260" fill="url(#wc30sky)"/>
+  {/* Deco sunburst rising behind the Torre de los Homenajes. */}
+  <g opacity=".22">{Array.from({length:16},(_,i)=>{const a0=Math.PI+i/16*Math.PI,a1=a0+Math.PI/32;return <path key={i} d={`M402 150 L${(402+Math.cos(a0)*700).toFixed(1)} ${(150+Math.sin(a0)*700).toFixed(1)} L${(402+Math.cos(a1)*700).toFixed(1)} ${(150+Math.sin(a1)*700).toFixed(1)}Z`} fill="#fff2c4"/>;})}</g>
+  <circle cx="402" cy="150" r="58" fill="#f3b443" opacity=".55"/><rect width="640" height="260" fill="url(#wc30sun)"/>
   {/* Montevideo on the horizon. */}
   <path d="M0 150 L0 132 L26 132 L26 120 L40 120 L40 128 L70 128 L74 112 L80 112 L84 126 L120 126 L120 116 L150 116 L150 130 L200 130 L210 124 L240 128 L640 132 L640 150Z" fill="#a9b6bf" opacity=".45"/>
   <ellipse cx="320" cy="214" rx="318" ry="42" fill="#1f2a44" opacity=".12"/>
@@ -235,25 +262,27 @@ function Stadium(){
    <g transform="translate(1 -2)"><rect width="24" height="15" fill="#f4efe3" stroke="#1f2a44" strokeWidth=".8"/>
     {[3.3,6.7,10,13.3].map(y=><rect key={y} x={y<7?8:0} y={y-.8} width={y<7?16:24} height="1.7" fill="#2f6fb5"/>)}<rect width="8" height="7" fill="#f4efe3"/><circle cx="4" cy="3.6" r="2.3" fill="#e2b53b"/></g>
   </g>
-  <text x="24" y="34" fontFamily="Georgia, serif" fontSize="15" fontStyle="italic" fill="#1f2a44">Estadio Centenario, Montevideo</text>
-  <text x="24" y="52" fontFamily="Georgia, serif" fontSize="11" fill="#1f2a44" opacity=".7">Opened 18 July 1930</text>
+  <text x="24" y="36" fontFamily={'"WC30 Deco","Limelight",Georgia,serif'} fontSize="19" fill="#f8efd9">Estadio Centenario</text>
+  <text x="24" y="54" fontFamily={'"WC30 Sans","Josefin Sans",Futura,Arial,sans-serif'} fontWeight="700" fontSize="10" letterSpacing="2.5" fill="#f8efd9" opacity=".85">MONTEVIDEO · OPENED 18 JULY 1930</text>
  </svg>;
 }
 
 // ---- The bracket you build -----------------------------------------------------------------------------------------------
-function Chip({id,on,dim}:{id:string;on?:boolean;dim?:boolean}){const t=TEAMS[id];return <span className={s.chip} data-on={on||undefined} data-dim={dim||undefined}>
+function Chip({id,on,dim}:{id:string;on?:boolean;dim?:boolean}){const t=TEAMS[id];return <span className={s.chip} data-chip data-on={on||undefined} data-dim={dim||undefined}>
  <i style={{background:t.color}} aria-hidden="true"/>{t.name}{t.ship&&<ShipIcon/>}</span>;}
 function ShipIcon(){return <svg className={s.shipIcon} viewBox="0 0 24 14" aria-label="came on the ship" role="img"><path d="M1 8h22l-3 5H4z" fill="currentColor"/><rect x="7" y="4" width="10" height="4" fill="currentColor" opacity=".7"/><rect x="9" y="0" width="2.4" height="4" fill="#d9a441"/><rect x="13" y="0" width="2.4" height="4" fill="#d9a441"/></svg>;}
 
 function Bracket(){
  const [pick,setPick]=useState<Record<string,string>>({});
- // A group pick morphs: the team you tapped flies to its place in the real table (a same-document View Transition, where the
- // browser has one and motion is allowed; otherwise the result simply flips in).
+ // A group pick morphs: the team you tapped flies (FLIP, spring-sampled) from its button to its real place in the table, so
+ // you SEE whether your team finished top or further down. Reduced motion: the table simply appears.
+ const from=useRef<{id:string;team:string;rect:DOMRect}|null>(null);
  const choose=(id:string,team:string)=>{if(pick[id])return;play(museumSfx.stamp);
-  const doc=document as Document&{startViewTransition?:(cb:()=>void)=>unknown},btn=document.querySelector<HTMLElement>(`[data-group="${id}"] [data-team="${team}"]`);
-  if(doc.startViewTransition&&btn&&!reduced()){btn.style.setProperty('view-transition-name',`wc30-${id}`);
-   try{doc.startViewTransition(()=>{flushSync(()=>setPick(p=>({...p,[id]:team})));});return;}catch{btn.style.removeProperty('view-transition-name');}}
+  const btn=document.querySelector<HTMLElement>(`[data-group="${id}"] [data-team="${team}"] [data-chip]`);
+  from.current=btn&&!reduced()?{id,team,rect:btn.getBoundingClientRect()}:null;
   setPick(p=>({...p,[id]:team}));};
+ useLayoutEffect(()=>{const f=from.current;if(!f)return;from.current=null;
+  const el=document.querySelector<HTMLElement>(`[data-group="${f.id}"] [data-row="${f.team}"] [data-chip]`);if(el)flip(el,f.rect,{k:210,c:20});},[pick]);
  const groupsDone=GROUPS.every(g=>pick[g.id]),semisDone=groupsDone&&SEMIS.every(t=>pick[t.id]),finalDone=semisDone&&!!pick.f;
  const right=[...GROUPS.map(g=>pick[g.id]===g.winner),...SEMIS.map(t=>pick[t.id]===t.winner)].filter(Boolean).length;
  return <section className={s.bracket} data-chapter="bracket" aria-labelledby="wc30-bracket">
@@ -264,7 +293,7 @@ function Bracket(){
    <p><b>Groups.</b> Every team plays every other team in its group once. Only the top team goes through.</p>
    <p><b>Knockouts.</b> Win and you go on. Lose once and you are out.</p>
   </div>
-  <p className={s.instr}>Tap the team you think won each group. Then the real result flips over.</p>
+  <p className={s.instr}>Tap the team you think won each group. Watch where your team really finished.</p>
   <div className={s.groups}>{GROUPS.map(g=><GroupCard key={g.id} g={g} pick={pick[g.id]} onPick={t=>choose(g.id,t)}/>)}</div>
   {groupsDone&&<p className={s.callout} data-reveal><ShipIcon/> All four teams from the ship went home after the groups: France, Brazil, Romania and Belgium.</p>}
   <h3 className={s.stageHead}>Semi-finals</h3>
@@ -282,7 +311,7 @@ function GroupCard({g,pick,onPick}:{g:Group;pick?:string;onPick:(t:string)=>void
   {!pick?<div className={s.pickList} role="group" aria-label={`${g.label}: who won it?`}>{g.teams.map(t=><button key={t} type="button" className={s.pickBtn} data-museum-own-cue data-team={t} onClick={()=>onPick(t)}><Chip id={t}/></button>)}</div>
   :<div className={s.result} aria-live="polite">
    <p className={s.verdict} data-right={pick===g.winner}>{pick===g.winner?'You got it!':`You picked ${TEAMS[pick].name}.`}</p>
-   <ol className={s.table}>{[g.winner,...g.teams.filter(t=>t!==g.winner)].map((t,i)=><li key={t} style={t===pick?{viewTransitionName:`wc30-${g.id}`} as CSSProperties:undefined}><Chip id={t} on={i===0} dim={i>0}/>{i===0&&<em>through</em>}</li>)}</ol>
+   <ol className={s.table}>{[g.winner,...g.teams.filter(t=>t!==g.winner)].map((t,i)=><li key={t} data-row={t} data-mine={t===pick||undefined} style={{'--i':i} as CSSProperties}><Chip id={t} on={i===0} dim={i>0}/>{i===0&&<em>through</em>}</li>)}</ol>
    <p className={s.line}>{g.line}</p>
    <details className={s.games}><summary>All the scores</summary><ul>{g.games.map(x=><li key={x}>{x}</li>)}</ul></details>
   </div>}
@@ -300,47 +329,163 @@ function TieCard({t,pick,locked,onPick,final}:{t:Tie;pick?:string;locked:boolean
  </div>;
 }
 
-// ---- The final: two balls, one clock ---------------------------------------------------------------------------------------
+// ---- Ticket check: the quick learning check --------------------------------------------------------------------------------
+/** Four questions on what the story taught. A right answer punches the next hole in your ticket (a CSS spring pop, no loop); a
+ *  wrong one explains nothing yet and lets you try again. All four punched: the ticket is stamped "Montevideo 1930". */
+function TicketCheck(){
+ const [i,setI]=useState(0),[picked,setPicked]=useState<number|null>(null),[wrong,setWrong]=useState<number[]>([]),[first,setFirst]=useState(0);
+ const done=i>=QUIZ.length,q=QUIZ[Math.min(i,QUIZ.length-1)],ok=picked!==null,punched=i+(ok?1:0);
+ const answer=(k:number)=>{if(ok||done)return;if(k===q.right){setPicked(k);if(!wrong.length)setFirst(n=>n+1);play(museumSfx.stamp);}else{setWrong(w=>[...w,k]);play(museumSfx.look);}};
+ const next=()=>{setPicked(null);setWrong([]);setI(n=>n+1);if(i+1>=QUIZ.length)play(museumSfx.crowd);else play(museumSfx.click);};
+ const again=()=>{setI(0);setPicked(null);setWrong([]);setFirst(0);};
+ return <section className={s.quiz} data-chapter="quiz" aria-labelledby="wc30-quiz">
+  <p className={s.kicker}>Before you sail home</p>
+  <h2 id="wc30-quiz" className={s.bigHead}>Ticket check</h2>
+  <div className={s.ticket} data-done={done||undefined}>
+   <div className={s.ticketStub} aria-hidden="true"><b>1930</b><span>Montevideo</span><span>→ Home</span>
+    <ol className={s.holes}>{QUIZ.map((_,k)=><li key={k} data-on={k<punched||undefined}/>)}</ol></div>
+   {!done?<div key={i} className={s.ticketBody}>
+    <p className={s.ticketNo}>Question {i+1} of {QUIZ.length}</p>
+    <p className={s.ticketQ}>{q.q}</p>
+    <div className={s.answers} role="group" aria-label="Answers">{q.choices.map((c,k)=><button key={c} type="button" className={s.answerBtn} data-museum-own-cue
+     data-a={ok&&k===q.right?'right':wrong.includes(k)?'wrong':undefined} disabled={ok||wrong.includes(k)} onClick={()=>answer(k)}>{c}</button>)}</div>
+    <p className={s.ticketWhy} aria-live="polite">{ok?<><b>Punched!</b> {q.why}</>:wrong.length?<><b>Not that one.</b> Try another.</>:'Every right answer punches a hole in your ticket.'}</p>
+    {ok&&<button type="button" className={s.againBtn} data-museum-own-cue onClick={next}>{i+1<QUIZ.length?'Next question':'Stamp my ticket'} <span aria-hidden="true">→</span></button>}
+   </div>
+   :<div className={s.ticketBody} role="status">
+    <span className={s.stamp} aria-hidden="true"><i>Montevideo</i><b>1930</b><i>Approved</i></span>
+    <p className={s.ticketQ}>{first===QUIZ.length?'All four, first time. Bon voyage!':`${first} of ${QUIZ.length} first time. Bon voyage!`}</p>
+    <p className={s.ticketWhy}>You sailed with the teams, built the bracket and played the final with two balls.</p>
+    <button type="button" className={s.againBtn} data-museum-own-cue onClick={again}><span aria-hidden="true">↺</span> Check again</button>
+   </div>}
+  </div>
+ </section>;
+}
+
+// ---- The final: two balls, one clock -------------------------------------------------------------------------------------
+/** The match clock is a drag-scrubbed track: the ball-thumb follows your finger on a stiff spring, a flick keeps the clock
+ *  rolling (momentum with friction), and it rubber-bands at 0′, at 90′, and at the half-time wall until you swap the ball.
+ *  At half-time you DRAG Uruguay's ball onto the centre spot (or press Swap): the two balls trade places with a spring FLIP.
+ *  One rAF loop, only while you drag, while it coasts or settles, or while Play runs; it stops when hidden or unmounted. */
+type Eng={x:number;v:number;drag:boolean;to:number|null;target:number;play:boolean;raf:number;last:number;shown:number;samples:{t:number;m:number}[]};
 function FinalMatch(){
- const [min,setMin]=useState(0),[swapped,setSwapped]=useState(false),[playing,setPlaying]=useState(false);
- const minRef=useRef(0),swapRef=useRef(false),raf=useRef(0),last=useRef(0);
- const sc=score(min),half=min>=45&&!swapped,ballArg=!swapped,ft=min>=90;
- const setMinute=useCallback((v:number,sound=true)=>{const cap=swapRef.current?90:45,next=Math.max(0,Math.min(cap,v)),prev=minRef.current;
-  if(sound&&next>prev){if(GOALS.some(g=>g.min>prev&&g.min<=next))play(museumSfx.crowd);if((prev<45&&next>=45)||(prev<90&&next>=90))play(museumSfx.whistle);}
-  minRef.current=next;setMin(next);return next;},[]);
- const stop=useCallback(()=>{cancelAnimationFrame(raf.current);raf.current=0;last.current=0;setPlaying(false);},[]);
- const tick=useCallback((now:number)=>{raf.current=0;if(document.hidden){last.current=0;setPlaying(false);return;}const dt=Math.min(.05,last.current?(now-last.current)/1000:.016);last.current=now;
-  const before=minRef.current,next=setMinute(before+dt*(reduced()?12:6));
-  if(next>=(swapRef.current?90:45)){stop();return;}raf.current=requestAnimationFrame(tick);},[setMinute,stop]);
- const start=()=>{if(raf.current)return stop();if(minRef.current>=90){minRef.current=0;setMin(0);setSwapped(false);swapRef.current=false;}
-  if(minRef.current===0)play(museumSfx.whistle);if(!swapRef.current&&minRef.current>=45)return;setPlaying(true);last.current=0;raf.current=requestAnimationFrame(tick);};
- const swap=()=>{swapRef.current=true;setSwapped(true);play(museumSfx.spin);};
- useEffect(()=>()=>{cancelAnimationFrame(raf.current);raf.current=0;},[]);
- useEffect(()=>{const v=()=>{if(document.hidden&&raf.current)stop();};document.addEventListener('visibilitychange',v);return()=>document.removeEventListener('visibilitychange',v);},[stop]);
+ const [min,setMin]=useState(0),[swapped,setSwapped]=useState(false),[playing,setPlaying]=useState(false),[bump,setBump]=useState(0),[touched,setTouched]=useState(false);
+ const [nudge,setNudge]=useState(''),[hot,setHot]=useState(false);
+ const swapRef=useRef(false),trackRef=useRef<HTMLDivElement>(null),thumbRef=useRef<HTMLSpanElement>(null),fillRef=useRef<HTMLSpanElement>(null);
+ const eng=useRef<Eng>({x:0,v:0,drag:false,to:null,target:0,play:false,raf:0,last:0,shown:0,samples:[]});
+ const sc=score(min),half=min>=45&&!swapped,ft=min>=90;
+ const cap=()=>swapRef.current?90:45;
+ const paint=useCallback(()=>{const e=eng.current,w=trackRef.current?.clientWidth??0;
+  if(thumbRef.current)thumbRef.current.style.transform=`translateX(${(e.x/90*w).toFixed(1)}px) rotate(${(e.x*14).toFixed(0)}deg)`;
+  if(fillRef.current)fillRef.current.style.transform=`scaleX(${Math.max(0,Math.min(1,e.x/90)).toFixed(4)})`;},[]);
+ const hitWall=useCallback(()=>{setBump(b=>b+1);setNudge('Half-time! Swap the ball to play the second half.');},[]);
+ /** The clock's minute (clamped to what's allowed) drives the score; sounds play as you pass a goal or a whistle, going forward. */
+ const commit=useCallback((x:number)=>{const e=eng.current,m=Math.max(0,Math.min(cap(),x)),prev=e.shown;if(Math.floor(m)===Math.floor(prev)&&!(m>=90&&prev<90))return;
+  if(m>prev){if(GOALS.some(g=>g.min>prev&&g.min<=m))play(museumSfx.crowd);if((prev<45&&m>=45)||(prev<90&&m>=90))play(museumSfx.whistle);}
+  e.shown=m;setMin(m);},[]);
+ const frame=useCallback((now:number)=>{const e=eng.current;e.raf=0;
+  if(document.hidden){e.last=0;if(e.play){e.play=false;setPlaying(false);}return;}
+  const dt=Math.min(.05,e.last?(now-e.last)/1000:1/60);e.last=now;const c=cap(),still=reduced();let settled=false;
+  if(e.drag){if(still){e.x=e.target;e.v=0;}else stepSpring(e,e.target,dt,900,55,.001);}
+  else if(e.play){e.x+=dt*(still?12:6);e.v=0;if(e.x>=c){e.x=c;e.play=false;setPlaying(false);if(c===45)hitWall();}}
+  else{
+   // Past a limit (a flick into the half-time wall, or a rubber-banded drag): spring back to it, carrying the velocity.
+   if(e.to===null&&(e.x>c||e.x<0)){if(e.x>c&&c===45&&e.v>3)hitWall();e.to=Math.max(0,Math.min(c,e.x));}
+   if(e.to!==null){settled=still?(e.x=e.to,true):stepSpring(e,e.to,dt,e.v?260:300,e.v?24:30,.01);if(settled)e.to=null;}
+   else{e.v*=Math.exp(-3*dt);e.x+=e.v*dt;if(Math.abs(e.v)<.5&&e.x>=0&&e.x<=c){e.v=0;settled=true;}}}
+  paint();commit(e.x);
+  if(e.drag||e.play||!settled)e.raf=requestAnimationFrame(frame);else e.last=0;
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ },[]);
+ const kick=useCallback(()=>{const e=eng.current;if(!e.raf&&!document.hidden)e.raf=requestAnimationFrame(frame);},[frame]);
+ const stop=useCallback(()=>{const e=eng.current;e.play=false;setPlaying(false);},[]);
+ const toMin=(clientX:number)=>{const r=trackRef.current?.getBoundingClientRect();return r&&r.width?(clientX-r.left)/r.width*90:0;};
+ const down=(ev:ReactPointerEvent<HTMLDivElement>)=>{if(!ev.isPrimary||ev.button>0)return;const e=eng.current;ev.currentTarget.setPointerCapture?.(ev.pointerId);
+  setTouched(true);setNudge('');stop();e.drag=true;e.to=null;e.target=rubber(toMin(ev.clientX),0,cap(),5);e.samples=[{t:ev.timeStamp,m:e.target}];thumbRef.current?.focus({preventScroll:true});kick();};
+ const move=(ev:ReactPointerEvent<HTMLDivElement>)=>{const e=eng.current;if(!e.drag)return;const raw=toMin(ev.clientX);e.target=rubber(raw,0,cap(),5);
+  if(raw>cap()&&cap()===45&&e.shown>=44.5&&!nudge)hitWall();
+  e.samples.push({t:ev.timeStamp,m:raw});while(e.samples.length>2&&ev.timeStamp-e.samples[0].t>90)e.samples.shift();};
+ const up=(ev:ReactPointerEvent<HTMLDivElement>)=>{const e=eng.current;if(!e.drag)return;e.drag=false;const a=e.samples[0],b=e.samples[e.samples.length-1],dt=(ev.timeStamp-a.t)/1000;
+  // Release velocity (minutes per second) from the last ~90 ms of the drag: a flick keeps the clock rolling.
+  e.v=!reduced()&&b&&dt>.008?Math.max(-90,Math.min(90,(b.m-a.m)/dt)):0;if(Math.abs(e.v)<4)e.v=0;kick();};
+ const key=(ev:ReactKeyboardEvent<HTMLSpanElement>)=>{const e=eng.current,c=cap();const base=e.to??e.x;
+  const step:Record<string,number>={ArrowRight:1,ArrowUp:1,ArrowLeft:-1,ArrowDown:-1,PageUp:10,PageDown:-10};
+  let next:number|null=null;if(ev.key in step)next=base+step[ev.key];else if(ev.key==='Home')next=0;else if(ev.key==='End')next=c;if(next===null)return;
+  ev.preventDefault();setTouched(true);stop();if(next>c&&c===45)hitWall();e.to=Math.max(0,Math.min(c,Math.round(next)));e.v=0;kick();};
+ const start=()=>{const e=eng.current;setTouched(true);if(e.play)return stop();
+  if(e.shown>=90){resetBalls();e.x=0;e.to=null;e.shown=0;setMin(0);paint();}
+  if(e.shown<=0)play(museumSfx.whistle);if(!swapRef.current&&e.shown>=45){hitWall();return;}
+  e.to=null;e.v=0;e.play=true;setPlaying(true);kick();};
+ useEffect(()=>{const e=eng.current;const v=()=>{if(document.hidden&&e.raf){cancelAnimationFrame(e.raf);e.raf=0;e.last=0;if(e.play){e.play=false;setPlaying(false);}if(e.drag)e.drag=false;}};
+  const rs=()=>paint();document.addEventListener('visibilitychange',v);window.addEventListener('resize',rs);
+  return()=>{cancelAnimationFrame(e.raf);e.raf=0;document.removeEventListener('visibilitychange',v);window.removeEventListener('resize',rs);};},[paint]);
+
+ // ---- The ball swap: drag Uruguay's ball onto the centre spot (a FLIP trades the two balls' places). ----
+ const ballsRef=useRef<HTMLDivElement>(null),spotRef=useRef<HTMLSpanElement>(null),flipFrom=useRef<Record<string,DOMRect>|null>(null);
+ const measure=()=>{const out:Record<string,DOMRect>={};ballsRef.current?.querySelectorAll<HTMLElement>('[data-ball]').forEach(el=>{out[el.dataset.ball!]=el.getBoundingClientRect();});return out;};
+ const setSwap=(v:boolean)=>{if(swapRef.current===v)return;flipFrom.current=reduced()?null:measure();swapRef.current=v;setSwapped(v);};
+ const resetBalls=()=>setSwap(false);
+ const swap=()=>{if(swapRef.current)return;setSwap(true);setNudge('');setHot(false);play(museumSfx.spin);
+  // The clock can run again: give it a little push off the wall so you see the second half begin.
+  const e=eng.current;if(!e.drag&&!e.play&&e.shown>=45){e.to=Math.min(90,Math.max(e.x,45)+1);kick();}};
+ useLayoutEffect(()=>{const f=flipFrom.current;if(!f)return;flipFrom.current=null;
+  ballsRef.current?.querySelectorAll<HTMLElement>('[data-ball]').forEach(el=>{el.style.transform='';const r=f[el.dataset.ball!];if(r)flip(el,r,{k:230,c:21,scale:true});});},[swapped]);
+ const bd=useRef({on:false,x0:0,y0:0,dx:0,dy:0,vx:0,vy:0,t:0,raf:0,last:0});
+ const ballDown=(ev:ReactPointerEvent<HTMLElement>)=>{if(swapRef.current||!ev.isPrimary)return;const b=bd.current;ev.currentTarget.setPointerCapture?.(ev.pointerId);cancelAnimationFrame(b.raf);b.raf=0;
+  Object.assign(b,{on:true,x0:ev.clientX-b.dx,y0:ev.clientY-b.dy,vx:0,vy:0,t:ev.timeStamp});setTouched(true);};
+ const ballMove=(ev:ReactPointerEvent<HTMLElement>)=>{const b=bd.current;if(!b.on)return;const allowed=eng.current.shown>=45;
+  // Before half-time the ball is heavy (rubber-banded to a few px): it's Argentina's half.
+  let dx=ev.clientX-b.x0,dy=ev.clientY-b.y0;if(!allowed){dx=rubber(dx,0,0,14);dy=rubber(dy,0,0,14);}
+  const dt=Math.max(.001,(ev.timeStamp-b.t)/1000);b.vx=(dx-b.dx)/dt;b.vy=(dy-b.dy)/dt;b.t=ev.timeStamp;b.dx=dx;b.dy=dy;
+  ev.currentTarget.style.transform=`translate(${dx}px,${dy}px) rotate(${dx*.6}deg)`;
+  const sp=spotRef.current?.getBoundingClientRect();if(sp&&allowed){const h=Math.hypot(ev.clientX-(sp.left+sp.width/2),ev.clientY-(sp.top+sp.height/2))<sp.width*.75;if(h!==hot)setHot(h);}};
+ const ballUp=(ev:ReactPointerEvent<HTMLElement>)=>{const b=bd.current;if(!b.on)return;b.on=false;const el=ev.currentTarget;const allowed=eng.current.shown>=45;
+  const sp=spotRef.current?.getBoundingClientRect();const over=!!sp&&Math.hypot(ev.clientX-(sp.left+sp.width/2),ev.clientY-(sp.top+sp.height/2))<sp.width*.75;
+  if(!allowed&&Math.hypot(b.dx,b.dy)>4)setNudge('Not yet! Argentina’s ball is used in the first half.');
+  if(allowed&&over){b.dx=b.dy=0;swap();return;}
+  setHot(false);
+  // Miss: spring home from where you let go, carrying the throw's velocity.
+  if(reduced()){b.dx=b.dy=0;el.style.transform='';return;}
+  const sx={x:b.dx,v:Math.max(-3000,Math.min(3000,b.vx))},sy={x:b.dy,v:Math.max(-3000,Math.min(3000,b.vy))};b.last=0;
+  const tick=(now:number)=>{b.raf=0;if(document.hidden){sx.x=sy.x=0;}const dt=Math.min(.05,b.last?(now-b.last)/1000:1/60);b.last=now;
+   const a=stepSpring(sx,0,dt,260,20,.3),c=stepSpring(sy,0,dt,260,20,.3);b.dx=sx.x;b.dy=sy.x;el.style.transform=a&&c?'':`translate(${sx.x}px,${sy.x}px) rotate(${sx.x*.6}deg)`;
+   if(!(a&&c)&&!document.hidden)b.raf=requestAnimationFrame(tick);else{b.dx=b.dy=0;el.style.transform='';}};
+  b.raf=requestAnimationFrame(tick);};
+ useEffect(()=>{const b=bd.current;return()=>{cancelAnimationFrame(b.raf);b.raf=0;};},[]);
+
  const shown=GOALS.filter(g=>g.min<=min);
+ const status=ft?'Full time':half?'Half-time':`${Math.floor(min)}′`;
+ const ballProps=(kind:'arg'|'uru')=>{const drag=kind==='uru'&&!swapped;return drag?{onPointerDown:ballDown,onPointerMove:ballMove,onPointerUp:ballUp,onPointerCancel:ballUp,'data-drag':half?'ready':'wait'}:{};};
  return <section className={s.final} data-chapter="final" aria-labelledby="wc30-final" data-half={min<45?1:2} data-swapped={swapped}>
+  <span className={s.finalRays} aria-hidden="true"/>
   <p className={s.kickerLight}>30 July 1930 · Estadio Centenario · 68,346 fans</p>
   <h2 id="wc30-final" className={s.bigHeadLight}>The final with two balls</h2>
-  <p className={s.ledeLight}>Uruguay and Argentina could not agree whose ball to use. So they used one each: Argentina’s ball in the first half, Uruguay’s in the second. Drag the clock, or press Play.</p>
-  <div className={s.board} role="status" aria-live="polite" aria-label={`${Math.floor(min)} minutes. Uruguay ${sc.uru}, Argentina ${sc.arg}.`}>
+  <p className={s.ledeLight}>Uruguay and Argentina could not agree whose ball to use. So they used one each: Argentina’s ball in the first half, Uruguay’s in the second. Drag the ball along the clock to play the match.</p>
+  <div className={s.board} role="status" aria-live="polite" aria-label={`${status}. Uruguay ${sc.uru}, Argentina ${sc.arg}.`}>
    <span className={`${s.team} ${s.teamA}`}><i aria-hidden="true" style={{background:TEAMS.uru.color}}/>Uruguay</span>
    <span key={`u${sc.uru}`} className={`${s.num} ${s.numA}`} data-pop={sc.uru>0||undefined}>{sc.uru}</span><span className={s.dash}>–</span>
    <span key={`a${sc.arg}`} className={`${s.num} ${s.numB}`} data-pop={sc.arg>0||undefined}>{sc.arg}</span>
    <span className={`${s.team} ${s.teamB}`}>Argentina<i aria-hidden="true" style={{background:TEAMS.arg.color}}/></span>
-   <span className={s.minute}>{ft?'Full time':half?'Half-time':`${Math.floor(min)}′`}</span>
+   <span className={s.minute}>{status}</span>
   </div>
-  <div className={s.balls}>
-   <Ball kind="arg" active={ballArg}/><Ball kind="uru" active={!ballArg}/>
+  <div ref={ballsRef} className={s.balls} data-hot={hot||undefined}>
+   <span ref={spotRef} className={s.spot} aria-hidden="true"><i>Match ball</i></span>
+   <Ball kind="arg" slot={swapped?'benchL':'spot'}/>
+   <Ball kind="uru" slot={swapped?'spot':'benchR'} {...ballProps('uru')}/>
   </div>
-  {half&&<div className={s.swapBox}><p>Half-time. Argentina lead 2–1 with their ball. Now it’s Uruguay’s turn.</p>
+  <p className={s.ballMsg} aria-live="polite">{nudge||(half?'Half-time. Argentina lead 2–1. Drag Uruguay’s ball onto the pitch.':swapped?(ft?'Uruguay won with their own ball in the second half.':'Second half: Uruguay’s ball is in play.'):'First half: Argentina’s ball is in play.')}</p>
+  {half&&<div className={s.swapBox}><p>Can’t drag? Use the button.</p>
    <button type="button" className={s.swapBtn} data-museum-own-cue data-swap onClick={swap}>Swap the ball</button></div>}
   <div className={s.clock}>
    <button type="button" className={s.playBtn} data-museum-own-cue onClick={start} aria-label={playing?'Pause the clock':'Play the match clock'} disabled={half}>{playing?'Pause':ft?'Replay':min>0?'Play on':'Kick off'}</button>
    <div className={s.rangeWrap}>
-    <input type="range" min={0} max={90} step={1} value={Math.floor(min)} aria-label="Match clock, minutes" aria-valuetext={`${Math.floor(min)} minutes`}
-     onChange={e=>{if(raf.current)stop();setMinute(+e.target.value);}} className={s.range}/>
-    <span className={s.halfMark} aria-hidden="true"/>
-    {GOALS.map(g=><span key={g.min} className={s.goalMark} data-team={g.team} data-on={g.min<=min||undefined} style={{left:`${g.min/90*100}%`}} aria-hidden="true"/>)}
+    <div ref={trackRef} className={s.scrub} data-wall={!swapped||undefined} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}>
+     <span className={s.scrubRail} aria-hidden="true"><span ref={fillRef}/></span>
+     <span key={bump} className={s.halfMark} data-bump={bump>0||undefined} aria-hidden="true"/>
+     {GOALS.map(g=><span key={g.min} className={s.goalMark} data-team={g.team} data-on={g.min<=min||undefined} style={{left:`${g.min/90*100}%`}} aria-hidden="true"/>)}
+     <span ref={thumbRef} className={s.thumb} role="slider" tabIndex={0} aria-label="Match clock" aria-valuemin={0} aria-valuemax={90} aria-valuenow={Math.floor(min)} aria-valuetext={`${status}, Uruguay ${sc.uru}, Argentina ${sc.arg}`} onKeyDown={key}/>
+     {!touched&&<span className={s.tryIt} aria-hidden="true">Drag me →</span>}
+    </div>
     <span className={s.rangeEnds} aria-hidden="true"><span>0′</span><span>45′</span><span>90′</span></span>
    </div>
   </div>
@@ -357,15 +502,15 @@ function FinalMatch(){
      <li>Uruguay scored three goals with their own ball in the second half.</li>
      <li>Argentina’s Guillermo Stábile was the top scorer of the World Cup, with 8 goals.</li>
      <li>The referee, John Langenus of Belgium, had sailed over on the Conte Verde.</li>
-     <li>Today, Law 2 of the Laws of the Game sets one size and weight for every match ball: 68–70 cm around and 410–450 g.</li>
+     <li>Today, Law 2 of the Laws of the Game sets one size and weight for every match ball: 68–70 cm around and 410–450 g. No more arguing!</li>
     </ul></div>
   </div>}
  </section>;
 }
 /** The two 1930 balls, drawn: Argentina's (about 12 panels) and Uruguay's T-Model (11 T-shaped panels), both laced leather. */
-function Ball({kind,active}:{kind:'arg'|'uru';active:boolean}){
+function Ball({kind,slot,...rest}:{kind:'arg'|'uru';slot:'spot'|'benchL'|'benchR'}&HTMLAttributes<HTMLElement>&{'data-drag'?:string}){
  const arg=kind==='arg';
- return <figure className={s.ball} data-ball={kind} data-active={active||undefined}>
+ return <figure className={s.ball} data-ball={kind} data-slot={slot} data-active={slot==='spot'||undefined} {...rest}>
   <svg viewBox="-60 -60 120 120" role="img" aria-label={arg?'Argentina’s ball, used in the first half':'Uruguay’s T-Model ball, used in the second half'}>
    <defs><radialGradient id={`wc30b-${kind}`} cx="35%" cy="30%" r="80%"><stop offset="0" stopColor={arg?'#c98a52':'#f0cf96'}/><stop offset=".7" stopColor={arg?'#8e5528':'#c08a4c'}/><stop offset="1" stopColor="#4d2c12"/></radialGradient>
     <clipPath id={`wc30c-${kind}`}><circle r="52"/></clipPath></defs>

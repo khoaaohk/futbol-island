@@ -49,3 +49,20 @@ Research only; nothing below is built yet. Privacy rules: fixed ids, totals only
 - Item statistics: https://assess.com/item-statistics-classical-test-theory/
 
 This is not legal advice. The 2025 COPPA text and the UK commencement date were checked from secondary sources only.
+
+## Start page tracking (Oct 9 2026)
+- **What:** /admin → "Start page" (after the headline numbers): visitors and sessions to /start, its countries / sources /
+  referrers / campaigns / devices, the title-screen funnels (Start → code made → code check → Play; I have a save code →
+  restored / failed → Play; returning → Play; saving break → Play), For grown-ups (each link, Donate → grown-up check → $5/$10/$15/$25,
+  donations completed on the Stripe return `/start?coffee=thanks`) and Privacy (opened from the link vs from For grown-ups, contents taps).
+- **How:** fixed counter ids on the existing beat channel (`lib/analytics/startIds.ts`: `st:*`, `sg:*`, `sp:*`, all on the
+  allowlist in countIds.ts; the COUNT_KEY_RE grammar was enough). ONE passive capture click listener on window
+  (`lib/analytics/startEvents.ts`, mounted by VisitTracker on /start only) counts the `data-track` id of the tapped element;
+  Play buttons count by their card. Outcomes (code made, restore ok/failed, which-word first pick, card shown, gate pass/cancel)
+  are one call where they happen. No new requests, no timers, nothing read from the page but those attributes.
+- **Storage:** taps need no migration (the SQL ingest checks only an id's shape). The /start-only visitor split does:
+  `supabase/migrations/20261009_analytics_start.sql` (additive: replaces analytics_day_rollup, adds a `start` object, schema 4;
+  last row `OK, start page installed (analytics schema 4)`). Until it runs, /admin shows the banner and the taps.
+- **Privacy:** totals per fixed id, cells under 5 sessions shown as "<5"; privacy policy §7 gained one bullet.
+- **Tests:** tests/admin-analytics-start.cjs (ids, listener, hooks, funnel maths, /start subset incl. SQL = TypeScript, suppression,
+  no free text).

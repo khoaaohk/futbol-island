@@ -169,6 +169,22 @@ export function planOnPath(path:{tick0:number;pts:number[]},nowTick:number,p:Vec
   return best;
 }
 
+/**
+ * How close a defender comes to cutting a pass out: the smallest spare time (seconds the ball arrives
+ * BEFORE they could) over every reachable path point, and where. Negative = they get there first.
+ * Same reach rules as planDefender; one O(path) scan, used only for the aim preview and the takeaway.
+ */
+export function defenderSlack(path:{tick0:number;pts:number[]},nowTick:number,p:Vec2,reactLeft:number):{slack:number;x:number;z:number}|null{
+  const pts=path.pts,n=pts.length/3;let best:{slack:number;x:number;z:number}|null=null;
+  for(let k=Math.max(0,Math.ceil((nowTick-path.tick0)/SAMPLE));k<n;k++){
+    const y=pts[3*k+1];if(y>DEF_HEIGHT)continue;
+    const x=pts[3*k],z=pts[3*k+2],tk=(path.tick0+k*SAMPLE-nowTick)*STEP,reach=y<=SLIDE_HEIGHT?SLIDE_REACH:DEF_REACH;
+    const d=Math.hypot(x-p.x,z-p.z),need=d<=reach?0:reactLeft+travel(d-reach,DEF_SPEED),slack=need-tk;
+    if(!best||slack<best.slack)best={slack,x,z};
+  }
+  return best;
+}
+
 /** One scan for a defender: the earliest standing interception, else the earliest slide. */
 export function planDefender(path:{tick0:number;pts:number[]},nowTick:number,p:Vec2,reactLeft:number):{x:number;z:number;dt:number;slide:boolean}|null{
   const pts=path.pts,n=pts.length/3,px=p.x,pz=p.z;

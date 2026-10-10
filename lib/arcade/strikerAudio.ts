@@ -9,7 +9,7 @@ import {isSoundEnabled,getSoundVolume} from '../games/sound';
  *   with music on.
  * - Voices are capped; every node disconnects when it ends.
  */
-export type StrikerCue='pass'|'shot'|'touch'|'tackle'|'hit'|'save'|'post'|'miss'|'board'|'goal'|'concede'|'intercept'|'focus'|'switch'|'kickoff'|'fulltime'|'charge'|'perfect'|'skill'|'beat'|'foul'|'spirit'|'special'|'star'|'call';
+export type StrikerCue='pass'|'shot'|'touch'|'tackle'|'hit'|'save'|'post'|'miss'|'board'|'goal'|'concede'|'intercept'|'focus'|'switch'|'kickoff'|'fulltime'|'charge'|'perfect'|'skill'|'beat'|'foul'|'spirit'|'special'|'star'|'call'|'chain';
 const MAX_VOICES=14;
 export function createStrikerAudio(){
  let ctx:AudioContext|null=null,out:GainNode|null=null,noise:AudioBuffer|null=null,voices=0;
@@ -71,6 +71,9 @@ export function createStrikerAudio(){
    case 'special':hiss(at,.7,v*.2,'bandpass',300,3200,1.4,.05);tone(at,90,40,.4,v*.4);break;
    case 'star':tone(at,1175,1180,.25,v*.07,'sine');tone(at+.12,1568,1575,.35,v*.07,'sine');break;
    case 'call':tone(at,700*j,940,.08,v*.07,'square',2000);break;
+   // Pass chain (Oct 9 2026): each completed Gold pass in a move rings one step higher on a major pentatonic, so a
+   // passing move is heard building. power = passes in the chain (2..); the scale tops out after six.
+   case 'chain':{const step=Math.max(0,Math.min(5,Math.round(power)-2)),hz=[523,587,659,784,880,1047][step];tone(at,hz,hz*1.005,.16,v*.06,'triangle');if(step>=2)tone(at+.05,hz*1.5,hz*1.505,.2,v*.035,'sine');break;}
   }}
  /** Start the crowd bed when play starts; stop it on pause, hide or full time. */
  function startCrowd(){const c=live();if(!c||crowd||!noise)return;const src=c.createBufferSource(),filter=c.createBiquadFilter(),gain=c.createGain();src.buffer=noise;src.loop=true;filter.type='bandpass';filter.Q.value=.55;filter.frequency.value=520;gain.gain.value=.0001;src.connect(filter);filter.connect(gain);gain.connect(out!);src.start();crowd={src,filter,gain};crowdTarget=-1;music=musicOn();}

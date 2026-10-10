@@ -19,5 +19,7 @@ export const metadata: Metadata = {
   openGraph: { title: 'Futbol Island', description, url: '/', siteName: 'Futbol Island', type: 'website' },
   twitter: { card: 'summary_large_image', title: 'Futbol Island', description },
 };
-export default function Layout({ children }: { children: React.ReactNode }) { return <html lang="en"><head><link rel="preload" href="/stories/films/assets/IslandBrush-Regular.ttf" as="font" type="font/ttf" crossOrigin="anonymous"/></head><body>{children}<ExternalLinkGate/>{VISITS && <VisitTracker allowLocalhost={process.env.FI_VISITS_LOCAL === '1'}/>}
+// suppressHydrationWarning on <html> only: IslandLoading's pre-paint boot script sets <html data-island-handoff> (the /start
+// hand-off) before React hydrates, which is intended and would otherwise log "Extra attributes from the server".
+export default function Layout({ children }: { children: React.ReactNode }) { return <html lang="en" suppressHydrationWarning><head><link rel="preload" href="/stories/films/assets/IslandBrush-Regular.ttf" as="font" type="font/ttf" crossOrigin="anonymous"/></head><body>{children}<ExternalLinkGate/>{VISITS && <VisitTracker allowLocalhost={process.env.FI_VISITS_LOCAL === '1'}/>}
   </body></html>; }

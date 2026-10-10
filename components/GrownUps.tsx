@@ -13,7 +13,10 @@ import {COIN_QUEST} from '@/lib/town/coinQuest';
 import {useLearning} from '@/lib/town/learningProgress';
 import {LEARNING_JOURNEYS,learningStatus} from '@/lib/town/learningJourneys';
 import {batterySaverOn,setBatterySaver,subscribeHeatTier} from '@/lib/graphics/heatTier';
-import {IDP_KEY,goalById,homeworkStatus,loadIdp,type IdpState} from '@/lib/coaches/idp';
+import {goalById,homeworkStatus} from '@/lib/coaches/idp';
+// IDP v2 (Oct 9 2026, docs/idp/DESIGN.md §3): the plan's first goal feeds the report and "Try it at home"; the full grown-up view is IdpPlan's Grown-ups tab.
+import {IDP2_KEY,loadIdp2,type IdpState2} from '@/lib/coaches/idp/store';
+import {weekSummary} from '@/lib/coaches/idp/journey';
 import {STAGE_LABELS,STAGE_ORDER,graduateBadge,summarizeProgress} from '@/lib/grownups/progress';
 import {PRACTICE_SAFETY,practiceFor} from '@/lib/grownups/practice';
 import {progressReportHtml} from '@/lib/grownups/report';
@@ -23,6 +26,10 @@ import type {Format} from '@/lib/town/venues';
 import {useGraduations} from '@/lib/endgame/graduationStore';
 import {useReviewState} from '@/lib/learning/reviewStore';
 import {GRADUATION_FORMATS,GRAD_TITLES} from '@/lib/endgame/graduationModel';
+import dynamicImport from 'next/dynamic';
+// Save codes (Oct 10 2026, docs/accounts-design.md §3.4): this sheet is already behind the ParentGate, so the card's grown-up
+// actions (print, email, delete) open without a second gate.
+const SaveCodeCard=dynamicImport(()=>import('./saves/SaveCodeCard'),{ssr:false});
 
 export type GrownUpSettings={musicEnabled:boolean;onMusicChange:(v:boolean)=>void;soundMuted:boolean;onSoundMutedChange:(v:boolean)=>void;voiceEnabled:boolean;onVoiceChange:(v:boolean)=>void};
 const FORMAT_NAMES:Record<Format,string>={'7v7':'7v7','9v9':'9v9','11v11':'11v11',futsal:'Futsal'};
@@ -44,10 +51,10 @@ export default function GrownUps({open,view:initialView,fromSettings=false,onClo
  return <dialog ref={dialog} className={styles.dialog} data-grownups aria-labelledby="grownups-title" onCancel={e=>{e.preventDefault();back();}} onKeyDown={e=>e.stopPropagation()} onKeyUp={e=>e.stopPropagation()}>
   <section className={`${shell.shell} ${shell.drawer} ${styles.panel}`}>
    {/* Opened from Settings it is a Settings sub-page (like About): Back on the left returns there. Elsewhere Done closes it. */}
-   <header className={shell.header}>{view==='plan'&&unlocked?<BackButton ref={nav} onBack={()=>setView('home')}/>:fromSettings?<BackButton ref={nav} onBack={onClose}/>:null}<div><h2 id="grownups-title">{view==='plan'&&unlocked?'Coach plan':'For grown-ups'}</h2></div>{view==='plan'&&unlocked||fromSettings?<span aria-hidden="true" style={{visibility:'hidden',width:44}}/>:<DoneButton ref={nav} onDone={onClose}/>}</header>
+   <header className={shell.header}>{view==='plan'&&unlocked?<BackButton ref={nav} onBack={()=>setView('home')}/>:fromSettings?<BackButton ref={nav} onBack={onClose}/>:null}<div><h2 id="grownups-title">{view==='plan'&&unlocked?'Development plan':'For grown-ups'}</h2></div>{view==='plan'&&unlocked||fromSettings?<span aria-hidden="true" style={{visibility:'hidden',width:44}}/>:<DoneButton ref={nav} onDone={onClose}/>}</header>
    <div ref={body} className={shell.body}>
     {!unlocked?<ParentGate.Guard reason="Progress, the coach plan and settings for parents, carers and coaches." onCancel={onClose}><Unlock onUnlock={()=>setUnlocked(true)}/></ParentGate.Guard>
-    :view==='plan'?<IdpPlan onLaunch={()=>{onClose();onLaunch();}}/>
+    :view==='plan'?<IdpPlan audience="grownup" onLaunch={()=>{onClose();onLaunch();}}/>
     :<Home settings={settings} onPlan={()=>setView('plan')}/>}
    </div>
   </section>
@@ -55,7 +62,7 @@ export default function GrownUps({open,view:initialView,fromSettings=false,onClo
 }
 function Unlock({onUnlock}:{onUnlock:()=>void}){useEffect(()=>{onUnlock();},[onUnlock]);return null;}
 
-function useIdp(){const [s,setS]=useState<IdpState|null>(null);useEffect(()=>{setS(loadIdp());const f=(e:StorageEvent)=>{if(e.key===IDP_KEY||e.key===null)setS(loadIdp());};window.addEventListener('storage',f);return()=>window.removeEventListener('storage',f);},[]);return s;}
+function useIdp(){const [s,setS]=useState<IdpState2|null>(null);useEffect(()=>{setS(loadIdp2());const f=(e:StorageEvent)=>{if(e.key===IDP2_KEY||e.key===null)setS(loadIdp2());};window.addEventListener('storage',f);return()=>window.removeEventListener('storage',f);},[]);return s;}
 
 function Home({settings,onPlan}:{settings?:GrownUpSettings;onPlan:()=>void}){
  const evidence=useQuestEvidence(),answers=useQuizCompletions(),coins=useCoinProgress(),learning=useLearning(),idp=useIdp(),grads=useGraduations(),review=useReviewState();
@@ -64,13 +71,14 @@ function Home({settings,onPlan}:{settings?:GrownUpSettings;onPlan:()=>void}){
  const steps=useMemo(()=>new Set(evidence.steps),[evidence]);
  const summary=useMemo(()=>summarizeProgress({steps,answers,badges,reviews:review.lessons,balls:{found:coins.collected.length,total:COIN_QUEST.length},preferred,
   journeys:LEARNING_JOURNEYS.flatMap(j=>{const r=learning.journeys[j.id];return r?[{title:j.title,status:learningStatus(r).label}]:[];})}),[steps,answers,badges,review,coins.collected.length,preferred,learning]);
- const goal=idp?.plan?goalById(idp.plan.goalId):undefined,hw=goal?homeworkStatus(goal,steps,answers):null;
+ const goal=idp?.plan?.goals[0]?goalById(idp.plan.goals[0].goalId):undefined,hw=goal?homeworkStatus(goal,steps,answers):null;
+ const week=idp?.plan?weekSummary(idp,Date.now()):null;
  const practice=useMemo(()=>practiceFor([...summary.recent,...(goal?goal.lessons.map(id=>({id})):[]),...summary.nextUp]),[summary,goal]);
  const [name,setName]=useState('');
  const report=useMemo(()=>progressReportHtml(summary,{firstName:name,printedAt:Date.now(),practice,focus:goal&&hw?{title:goal.title,tryIt:goal.tryIt,parentCue:goal.parentCue,homework:`${hw.done} of ${hw.total} linked lessons done`}:null}),[summary,name,practice,goal,hw]);
  const understood=summary.totals.understood;
  return <div className={styles.home}>
-  <nav className={styles.jump} aria-label="Sections">{[['gu-progress','Progress'],['gu-next','Next'],['gu-practice','At home'],['gu-plan','Coach plan'],['gu-report','Report'],['gu-settings','Settings'],['gu-about','About']].map(([id,label])=><a key={id} href={`#${id}`} onClick={e=>{e.preventDefault();document.getElementById(id)?.scrollIntoView({block:'start'});}}>{label}</a>)}</nav>
+  <nav className={styles.jump} aria-label="Sections">{[['gu-progress','Progress'],['gu-next','Next'],['gu-practice','At home'],['gu-plan','Plan'],['gu-report','Report'],['gu-saves','Saving'],['gu-settings','Settings'],['gu-about','About']].map(([id,label])=><a key={id} href={`#${id}`} onClick={e=>{e.preventDefault();document.getElementById(id)?.scrollIntoView({block:'start'});}}>{label}</a>)}</nav>
   <section id="gu-progress" className={styles.card} aria-labelledby="gu-progress-t" data-progress-summary>
    <h3 id="gu-progress-t">What they’ve learned</h3>
    <div className={styles.stats}>
@@ -99,16 +107,22 @@ function Home({settings,onPlan}:{settings?:GrownUpSettings;onPlan:()=>void}){
    <p className={styles.muted}>{PRACTICE_SAFETY}</p>
   </section>
   <section id="gu-plan" className={styles.card} aria-labelledby="gu-plan-t">
-   <h3 id="gu-plan-t">Coach plan (IDP)</h3>
-   {goal&&hw?<><p><b>Current focus:</b> {goal.title}</p><p className={styles.muted}>Island homework: {hw.done} of {hw.total} linked lessons done · review by {new Date(idp!.plan!.reviewAt).toLocaleDateString(undefined,{month:'short',day:'numeric'})}</p></>
-   :<p className={styles.muted}>One focus to work on with a coach, linked island lessons that tick themselves off, the player’s own reflection and a coach note. Saved on this device only.</p>}
-   <button type="button" className={styles.primary} data-open-plan onClick={onPlan}>{goal?'Open the plan':'Start a plan'}</button>
+   <h3 id="gu-plan-t">Development plan (IDP)</h3>
+   {goal&&hw&&week?<><p><b>Working on:</b> “{goal.ican}”{idp!.plan!.goals.length>1?` and one more goal`:''}</p><p className={styles.muted}>This week: {week.missions} mission{week.missions===1?'':'s'} and {week.checkins} check-in{week.checkins===1?'':'s'} · {hw.done} of {hw.total} linked island lessons · review by {new Date(idp!.plan!.reviewAt).toLocaleDateString(undefined,{month:'short',day:'numeric'})}</p>{week.help&&<p><b>They asked for some help with this.</b> Open the plan to see what to ask.</p>}</>
+   :<p className={styles.muted}>One or two “I can…” goals your player chooses with you or their coach, weekly missions linked to island lessons, picture check-ins, and a calm weekly summary for you with what to ask and what to avoid. Saved on this device; nothing typed is ever uploaded.</p>}
+   <button type="button" className={styles.primary} data-open-plan onClick={onPlan}>{goal?'Open this week’s plan':'Make a plan together'}</button>
   </section>
   <section id="gu-report" className={styles.card} aria-labelledby="gu-report-t">
    <h3 id="gu-report-t">Progress report</h3>
    <p className={styles.muted}>A one-page summary to print, or save as a PDF from the print window. It has no name unless you type one here, and the name isn’t saved.</p>
    <div className={styles.inline}><label htmlFor="gu-name" className={styles.srOnly}>First name for the report (optional)</label><input id="gu-name" value={name} maxLength={24} autoComplete="off" placeholder="First name on the report (optional)" onChange={e=>setName(e.target.value)}/><button type="button" className={styles.primary} data-print-report onClick={()=>printHtml(report)}>Print or save PDF</button></div>
    <iframe className={styles.preview} title="Progress report preview" srcDoc={report} loading="lazy" data-report-preview/>
+  </section>
+  <section id="gu-saves" className={styles.card} aria-labelledby="gu-saves-t" data-saving-progress>
+   <h3 id="gu-saves-t">Saving progress</h3>
+   <p>A save code is three words and a number, made by the game, that opens this island on another phone, tablet or computer. We hold no name or email: only a locked fingerprint of the code and the game progress (coins, cards, lessons and settings inside the game). Notes typed into the coach plan stay on this device.</p>
+   <p className={styles.muted}>Volume, controls and battery saver stay on each device. A save not used for 12 months is deleted automatically. We can’t recover a lost code, so print the card or take a photo. <a href="/privacy" target="_blank" rel="noopener">How we look after saves</a>.</p>
+   <SaveCodeCard grownups/>
   </section>
   <section id="gu-settings" className={styles.card} aria-labelledby="gu-settings-t">
    <h3 id="gu-settings-t">Settings</h3>
@@ -127,11 +141,14 @@ function Home({settings,onPlan}:{settings?:GrownUpSettings;onPlan:()=>void}){
    <p>Lessons unlock in order along each path. Coins and cards are earned in the game; nothing in the game is bought with real money. There are no leaderboards and no streaks to keep.</p>
    <h4>Privacy</h4>
    <ul>
-    <li>No accounts and no sign-up. We never ask a child for a name, age, email or photo.</li>
-    <li>Progress, plans and notes are saved only in this browser on this device. Clearing this site’s data in the browser deletes them.</li>
-    <li>No ads and no chat with other players.</li>
-    <li>The website counts visits with a privacy-friendly counter (Vercel Web Analytics): no cookies and no personal identifiers, just page views. It never receives progress, plans, notes or names.</li>
-    <li>Printing a report or plan happens on this device. Nothing is uploaded.</li>
+    <li><b>No sign-up.</b> We never ask a child for a name, age, email or photo.</li>
+    <li><b>Save code (optional).</b> If your child taps “Get my code”, the game makes a random code (three words and a number) and keeps a copy of their game progress on our server: coins, cards, lessons and settings inside the game. The code is the only way to open it; we can’t see who it belongs to. Notes typed into the coach plan stay on this device.</li>
+    <li><b>Keep the code safe.</b> Print the code card or take a photo. We can’t recover a lost code.</li>
+    <li><b>Delete any time.</b> “Delete this save” removes it from our server straight away (backups clear within 7 days). Saves not used for 12 months are deleted automatically.</li>
+    <li>Without a save code, progress stays only in this browser; clearing this site’s data deletes it.</li>
+    <li>The website counts visits with its own counter: no cookies and no personal identifiers. It never receives progress, plans, notes, names or save codes.</li>
+    <li>No ads and no chat with other players. Printing a report or plan happens on this device.</li>
+    <li>The full notice, with what each part is used for and how long it is kept: <a href="/privacy" target="_blank" rel="noopener">futbolisland.app/privacy</a>.</li>
    </ul>
   </section>
  </div>;

@@ -45,7 +45,8 @@ export const EDITIONS:readonly Edition[]=[
   starWhy:'This star hasn’t lit up yet. Maybe someone you watch now.',
   note:'The first Women’s World Cup in South America. Brazil once banned women’s football (1941 to 1979). Now it hosts the world.',upcoming:true},
 ];
-export const WINNER_COLOR:Record<Exclude<Winner,null>,string>={USA:'#ffd56b',Norway:'#ff9d8a',Germany:'#9fd2ff',Japan:'#f3a9ff',Spain:'#8ff0c4'};
+/** Paper colours (the Oct 9 2026 paper-cut restyle): each winner is a sheet of coloured paper that reads on the cream ground. */
+export const WINNER_COLOR:Record<Exclude<Winner,null>,string>={USA:'#23408e',Norway:'#c8102e',Germany:'#2a2522',Japan:'#c2457a',Spain:'#d98200'};
 /** How many titles each winner has (computed, so it can never disagree with EDITIONS). */
 export function titles(){const m=new Map<string,number>();for(const e of EDITIONS)if(e.winner)m.set(e.winner,(m.get(e.winner)??0)+1);return [...m].sort((a,b)=>b[1]-a[1]);}
 
@@ -58,6 +59,24 @@ export const FINAL_1991={date:'30 November 1991',place:'Tianhe Stadium, Guangzho
   {min:29,team:'Norway',who:'Linda Medalen',how:'Norway equalised: 1–1.',path:[[30,44],[12,36],[0,35]]},
   {min:78,team:'USA',who:'Michelle Akers',how:'She chased a Norway back pass, won it, went round the goalkeeper and scored.',path:[[84,42],[93,38],[100,27],[105,32]]},
  ] as Goal[]};
+
+/** China 1991: the tournament itself (beat 2). Checked against Wikipedia's 1991 FIFA Women's World Cup article and the 1988
+ *  Invitation Tournament article (SOURCES). */
+export const CHINA_1991={dates:'16 to 30 November 1991',region:'Guangdong',cities:['Guangzhou','Foshan','Jiangmen','Zhongshan'],
+ officialName:'1st FIFA World Championship for Women’s Football for the M&M’s Cup',
+ trial:'In 1988, FIFA tried out a women’s tournament in Guangdong, China. Because of that trial, FIFA picked China to host the first real one.',
+ opener:'In the very first match, China beat Norway 4–0. China’s Ma Li scored the first goal in Women’s World Cup history.',
+ minutes:'Every match lasted 80 minutes: two halves of 40. From 1995 it was 90, like the men’s game.'} as const;
+/** The 12 teams of 1991, by continent (every one of FIFA's six confederations sent at least one). */
+export const TEAMS_1991:readonly {name:string;from:string;host?:boolean}[]=[
+ {name:'China',from:'Asia',host:true},{name:'Japan',from:'Asia'},{name:'Chinese Taipei',from:'Asia'},{name:'Nigeria',from:'Africa'},
+ {name:'Brazil',from:'South America'},{name:'New Zealand',from:'Oceania'},{name:'USA',from:'North America'},{name:'Denmark',from:'Europe'},
+ {name:'Germany',from:'Europe'},{name:'Italy',from:'Europe'},{name:'Norway',from:'Europe'},{name:'Sweden',from:'Europe'}];
+
+/** "Your turn": Akers's 78th-minute winner as a game, pitch metres (USA attack right, goal x = 105, posts y 30.34–37.66).
+ *  The real goal: she chased a Norway back pass, won it, went round the goalkeeper and scored. Spots are drawn for teaching. */
+export const AKERS_PLAY={defender:[88,46] as [number,number],keeper:[103.5,34] as [number,number],akers:[76,50] as [number,number],passTo:[101.5,35] as [number,number],
+ passSpeed:3.6,posts:[30.34,37.66] as [number,number]};
 
 /** Before the stars: women's football was banned or blocked in some countries for decades. */
 export type Ban={country:string;from:number;to:number;who:string;banned:string;after:string;before?:string};
@@ -96,8 +115,25 @@ export const SOURCES:readonly Source[]=[
  {title:'Olympics.com · Spain claim their first Women’s World Cup with 1–0 win over England (2023)',url:'https://www.olympics.com/en/news/fifa-womens-world-cup-2023-spain-victory-england-final'},
  {title:'FOX Sports · 2027 Women’s World Cup in Brazil will run from June 24 to July 25',url:'https://www.foxsports.com/stories/soccer/2027-womens-world-cup-in-brazil-will-run-from-june-24-to-july-25'},
  {title:'Wikipedia · FIFA Women’s World Cup (12, 16, 24, then 32 teams)',url:'https://en.wikipedia.org/wiki/FIFA_Women%27s_World_Cup'},
+ {title:'Wikipedia · 1988 FIFA Women’s Invitation Tournament (the trial in Guangdong)',url:'https://en.wikipedia.org/wiki/1988_FIFA_Women%27s_Invitation_Tournament'},
  {title:'Wikipedia · Bans of women’s association football',url:'https://en.wikipedia.org/wiki/Bans_of_women%27s_association_football'},
  {title:'Women in Football · Dick, Kerr Ladies’ Boxing Day crowd, 100 years on',url:'https://www.womeninfootball.co.uk/news/2020/12/26/remembering-dick,-kerr-ladies-100-years-on/'},
  {title:'Wikipedia · Decree-law 3,199 (Brazil, 1941)',url:'https://en.wikipedia.org/wiki/Decree-law_3,199'},
  {title:'FIFA · Celebrating 50 years of women’s football in Germany',url:'https://inside.fifa.com/womens-football/news/celebrating-50-years-of-women-s-football-in-germany'},
+];
+
+/** Beat 5, "Cut your star": a quick check. Every answer is a fact taught in beats 1–3 (sources above). Each right answer cuts one
+ *  point of a paper star; five points and the star is yours. The right answer sits in a different place each time. */
+export type Q={q:string;choices:readonly string[];right:number;why:string};
+export const QUIZ:readonly Q[]=[
+ {q:'In 1991, how long did each match last?',choices:['90 minutes','80 minutes','60 minutes'],right:1,
+  why:'Two halves of 40 minutes. From 1995 it was 90, like the men’s game.'},
+ {q:'Who scored both US goals in the 1991 final?',choices:['Michelle Akers','Linda Medalen','Hege Riise'],right:0,
+  why:'Michelle Akers scored both. Linda Medalen scored Norway’s goal.'},
+ {q:'How did Akers score the winner, two minutes from the end?',choices:['A penalty','A long free kick','She chased a back pass and won it'],right:2,
+  why:'She kept pressing, won Norway’s back pass, went round the goalkeeper and scored.'},
+ {q:'How many teams came to China in 1991?',choices:['32','16','12'],right:2,
+  why:'12 teams, from all six continents. In 2023 there were 32.'},
+ {q:'For how long did England’s FA ban women’s teams from its grounds?',choices:['50 years','5 years','100 years'],right:0,
+  why:'From 1921 to 1971. Twenty years later came the first Women’s World Cup.'},
 ];

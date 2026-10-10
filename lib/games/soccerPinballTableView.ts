@@ -1,5 +1,5 @@
 import * as T from 'three';
-import {pinballCounterLane,pinballWillPass,type PinballState} from './soccerPinball';
+import {GOAL_LEFT,GOAL_RIGHT,pinballCounterLane,pinballMinute,pinballWillPass,type PinballState} from './soccerPinball';
 import {CREST_POSTS,CREST_TOP,CREST_BOT,CREST_LANES,WALL_Y,WALL_X,WALL_HALF,FLAGS,FLAG_LETTERS,SLINGS,CONES,CONE_R,SPINNER,DUGOUT,SAVER,PINBALL_MODES,TRAINING_GOAL} from './soccerPinballTable';
 
 /* Futbol Pinball playfield pieces, built once:
@@ -125,6 +125,24 @@ export function createPinballTableView(scene:T.Scene,px:(x:number)=>number,pz:(y
  const headShape=new T.Shape();headShape.moveTo(0,.32);headShape.lineTo(.26,-.1);headShape.lineTo(-.26,-.1);headShape.closePath();const headGeo=new T.ShapeGeometry(headShape);headGeo.rotateX(-Math.PI/2);
  const headMaterial=new T.MeshBasicMaterial({color:'#ff7a8a',transparent:true,depthWrite:false,toneMapped:false,side:T.DoubleSide});
  const head=own(new T.Mesh(headGeo,headMaterial),'pinball-counter-aim-head') as T.Mesh;head.visible=false;head.renderOrder=4;
+ // Goal-lit countdown: a gold bar across the goal mouth that shrinks as the
+ // chance runs out ("finish before it closes"). One draw, hidden when unlit.
+ const litMaterial=new T.MeshBasicMaterial({color:'#ffe86d',transparent:true,depthWrite:false,toneMapped:false});
+ const litGeo=new T.PlaneGeometry(1,1);litGeo.rotateX(-Math.PI/2);
+ const litBar=own(new T.Mesh(litGeo,litMaterial),'pinball-goal-lit-bar') as T.Mesh;litBar.visible=false;litBar.renderOrder=4;
+ // Match clock, painted on the floor in the dead corner below the left
+ // flipper (visible on every layout, never under the HUD). Repainted only
+ // when the minute changes (about 90 times a match).
+ const boardCanvas=document.createElement('canvas');boardCanvas.width=256;boardCanvas.height=112;
+ const boardTexture=new T.CanvasTexture(boardCanvas);boardTexture.colorSpace=T.SRGBColorSpace;
+ const boardMaterial=new T.MeshBasicMaterial({map:boardTexture,transparent:true,depthWrite:false,toneMapped:false});boardMaterial.userData.arcadeSpill=true;litMaterial.userData.arcadeSpill=true;
+ const board=own(new T.Mesh(new T.PlaneGeometry(68*W,30*W),boardMaterial),'pinball-match-clock') as T.Mesh;board.position.set(px(56),.03,pz(588));board.rotation.x=-Math.PI/2;board.renderOrder=4;
+ let boardDrawn='';
+ function paintBoard(minute:string,late:boolean){
+  const b=boardCanvas.getContext('2d');if(!b)return;b.clearRect(0,0,256,112);
+  b.fillStyle='rgba(8,12,30,.9)';b.beginPath();b.roundRect?.(4,4,248,104,22);b.fill();b.lineWidth=6;b.strokeStyle=late?'#ff7a8a':'#73fff1';b.stroke();
+  b.textAlign='center';b.textBaseline='middle';b.font=`900 ${minute.length>4?52:66}px ${font}`;b.fillStyle=late?'#ff7a8a':'#fff6dc';b.fillText(minute,128,60);boardTexture.needsUpdate=true;
+ }
  let flagCache=-1,rubberCache=[-1,-1],live=false,skillDrawn=-1;
  function lamp(i:number,c:T.Color){const j=i*3;if(lampCache[j]===c.r&&lampCache[j+1]===c.g&&lampCache[j+2]===c.b)return;lampCache[j]=c.r;lampCache[j+1]=c.g;lampCache[j+2]=c.b;lamps.setColorAt(i,c);lamps.instanceColor!.needsUpdate=true;}
  const lerp=(a:T.Color,b:T.Color,k:number)=>tmp.copy(a).lerp(b,Math.max(0,Math.min(1,k)));
@@ -137,6 +155,10 @@ export function createPinballTableView(scene:T.Scene,px:(x:number)=>number,pz:(y
   for(let i=0;i<2;i++){const f=Math.round(t.slingFlash[i]*20)/20;if(f!==rubberCache[i]){rubberCache[i]=f;rubbers.setColorAt(i,lerp(LIT.pink,LIT.white,f));rubbers.instanceColor!.needsUpdate=true;}if(f>0)live=true;}
   if(spinner.rotation.x!==t.spinAngle){spinner.rotation.x=t.spinAngle;live=live||t.spinOmega!==0;}
   setSaver(t.saver);
+  // Scoreboard and the shrinking goal-lit bar.
+  const minute=pinballMinute(s),late=s.stoppage>=0||s.clock>=270,key=`${minute}|${late}`;if(key!==boardDrawn){boardDrawn=key;paintBoard(minute,late);}
+  const lit=s.phase==='playing'&&s.moveTime>0;litBar.visible=lit;
+  if(lit){const k=Math.min(1,s.moveTime/14),w=(GOAL_RIGHT-GOAL_LEFT-10)*k;litBar.position.set(px(180),.05,pz(58));litBar.scale.set(Math.max(.01,w*W),1,11*W);litMaterial.opacity=reduced?.85:.6+.35*Math.abs(Math.sin(time*(k<.3?9:4)));live=true;}
   const shooter=s.phase==='playing'&&s.possession>=0&&pinballWillPass(s)<0?s.defenders[s.possession]:null;
   aim.visible=head.visible=!!shooter;
   if(shooter){

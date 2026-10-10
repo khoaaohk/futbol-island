@@ -74,6 +74,15 @@ test('first run: the welcome steps through to the island and pays the 40 welcome
   for (let i = 0; i < 8 && await welcome.isVisible(); i++) {
     seen.push((await welcome.getAttribute('data-onboarding-step'))!);
     const explore = welcome.getByRole('button', { name: 'Explore', exact: true });
+    // Save codes (Oct 9 2026): with saving switched on, a new player must make a code before the island (no Next, no Skip).
+    if (await welcome.locator('[data-get-code]').isVisible().catch(() => false)) {
+      await expect(welcome.getByRole('button', { name: 'Next', exact: true }), 'no way past the save step without a code').toHaveCount(0);
+      await expect(welcome.locator('header').getByRole('button', { name: 'Skip' })).toHaveCount(0);
+      await welcome.locator('[data-get-code]').click();
+      await welcome.locator('[data-saved-it]').click();
+      await page.waitForTimeout(500);
+      continue;
+    }
     if (await explore.count()) {
       const back = welcome.getByRole('button', { name: 'Back', exact: true });
       await expect(back, 'Back on the last step').toBeVisible();

@@ -3,10 +3,12 @@ import React,{useCallback,useEffect,useRef,useState,type MutableRefObject} from 
 import {museumSfx} from '@/lib/museum/museumSound';
 import {FINAL_1991,TAKE_IT,WINNER_COLOR} from './data';
 import {Again,FirstStar,Pause,Play} from './icons';
+import {crescent} from './papercut';
 import styles from './wwc.module.css';
 
-/** The 1991 final as a goal map: the 80-minute clock runs at 6 match-minutes a second and pauses for each goal while the ball
- *  draws its path. One rAF loop, only while playing; it stops at full time, on pause, when the tab hides and on unmount. */
+/** The 1991 final as a goal map, cut from paper: the 80-minute clock runs at 6 match-minutes a second and pauses for each goal
+ *  while the ball draws its path. One rAF loop, only while playing; it stops at full time, on pause, when the tab hides and on
+ *  unmount. */
 const RATE=6,GOAL=1.8,G=FINAL_1991.goals,LEN=FINAL_1991.length;
 const starts=(()=>{let acc=0,prev=0;return G.map(g=>{const s=acc+(g.min-prev)/RATE;acc=s+GOAL;prev=g.min;return s;});})();
 const TOTAL=starts[starts.length-1]+GOAL+(LEN-G[G.length-1].min)/RATE;
@@ -42,43 +44,62 @@ function along(path:[number,number][],f:number):[number,number]{
  for(let i=0;i<segs.length;i++){if(d<=segs[i]){const t=segs[i]?d/segs[i]:0;return [path[i][0]+(path[i+1][0]-path[i][0])*t,path[i][1]+(path[i+1][1]-path[i][1])*t];}d-=segs[i];}
  return path[path.length-1];
 }
+/** A rectangle of paper with a toothed (锯齿) edge all round. */
+function toothRect(x:number,y:number,w:number,h:number,step=2.2,d=.9){
+ const nx=Math.max(2,Math.round(w/step)),ny=Math.max(2,Math.round(h/step)),sx=w/nx,sy=h/ny;let p=`M${x} ${y}`;
+ for(let i=0;i<nx;i++)p+=`L${x+i*sx+sx/2} ${y-d}L${x+(i+1)*sx} ${y}`;
+ for(let i=0;i<ny;i++)p+=`L${x+w+d} ${y+i*sy+sy/2}L${x+w} ${y+(i+1)*sy}`;
+ for(let i=nx;i>0;i--)p+=`L${x+i*sx-sx/2} ${y+h+d}L${x+(i-1)*sx} ${y+h}`;
+ for(let i=ny;i>0;i--)p+=`L${x-d} ${y+i*sy-sy/2}L${x} ${y+(i-1)*sy}`;
+ return p+'Z';
+}
+/** The pitch as stacked paper: a red toothed mat, a green sheet with mown strips, the lines cut through to the cream below. */
+export function PitchSheet({x0=0}:{x0?:number}){
+ const w=105-x0,cut='#fff4dc';
+ const corners=[[x0-1.6,-1.6,Math.PI*1.25],[106.6+1,-1.6,-Math.PI*.25],[x0-1.6,69.6,Math.PI*.75],[106.6+1,69.6,Math.PI*.25]] as const;
+ const mat=toothRect(x0-3.2,-3.2,w+3.2+6,74.4);
+ return <g>
+  <path d={mat} transform="translate(.7 1.1)" fill="#3a1d0e" opacity=".22"/>
+  <path d={toothRect(x0-3.2,-3.2,w+3.2+6,74.4)+corners.map(([x,y,a])=>crescent(x,y,.9,a,.5)).join('')} fill="#b5121b" fillRule="evenodd"/>
+  <rect x={x0+.5} y={.7} width={w} height={68} fill="#1d3d27" opacity=".35"/>
+  <rect x={x0} y={0} width={w} height={68} fill="#2f7a4f"/>
+  {Array.from({length:8},(_,k)=>{const x=x0+k*w/8;return k%2?<rect key={k} x={x} y={0} width={w/8} height={68} fill="#2a6f47"/>:null;})}
+  <g fill="none" stroke={cut} strokeWidth={.5} strokeLinejoin="round" strokeLinecap="round">
+   <rect x={x0<0?0:x0} y={0} width={x0<0?105:w} height={68} stroke={cut} strokeDasharray={x0>0?`${w*2+68} 68`:undefined}/>
+   {x0<52.5&&<><line x1={52.5} y1={0} x2={52.5} y2={68}/><circle cx={52.5} cy={34} r={9.15}/></>}
+   {x0<16.5&&<><rect x={0} y={13.84} width={16.5} height={40.32}/><rect x={0} y={24.84} width={5.5} height={18.32}/><path d="M16.5 26.69A9.15 9.15 0 0 1 16.5 41.31"/></>}
+   <rect x={88.5} y={13.84} width={16.5} height={40.32}/><rect x={99.5} y={24.84} width={5.5} height={18.32}/><path d="M88.5 26.69A9.15 9.15 0 0 0 88.5 41.31"/>
+  </g>
+  <g fill={cut}>{x0<11&&<circle cx={11} cy={34} r={.5}/>}<circle cx={94} cy={34} r={.5}/>{x0<52.5&&<circle cx={52.5} cy={34} r={.5}/>}</g>
+  {[...(x0<0?[-2.4]:[]),105].map(gx=><g key={gx}><rect x={gx} y={30.34} width={2.4} height={7.32} fill="#fff4dc"/>
+   {[0,1,2,3,4,5].map(i=><path key={i} d={`M${gx+.4} ${31+i*1.08}L${gx+1.2} ${31.5+i*1.08}L${gx+2} ${31+i*1.08}`} fill="none" stroke="#b5121b" strokeWidth={.22}/>)}</g>)}
+ </g>;
+}
 
-/** The ball runs along its path in the first part of each goal's pause, then the net bursts and "GOAL" shows. */
+/** The ball runs along its path in the first part of each goal's pause, then the paper "GOAL" banner pops. */
 const TRAVEL=.55;
 export function FinalPitch({r}:{r:Replay}){
  const {state}=r,act=state.active,travel=act?Math.min(1,act.f/TRAVEL):0,ball=act&&travel<1?along(G[act.i].path,travel):null,over=r.sec>=r.total;
  const pts=(p:[number,number][])=>p.map(q=>q.join(',')).join(' ');
  const usa=G.filter((g,i)=>g.team==='USA'&&i<state.done).length,nor=G.filter((g,i)=>g.team==='Norway'&&i<state.done).length;
  return <div className={styles.pitchWrap} data-over={over||undefined}>
-  <svg className={styles.pitch} viewBox="-8 -9 121 92" role="img" aria-label={`Goal map of the 1991 final, USA against Norway. Minute ${Math.floor(state.minute)}.`}>
-   <defs>
-    <radialGradient id="wwcFlood" cx=".5" cy=".5" r=".65"><stop offset="0" stopColor="#7f93ff" stopOpacity=".16"/><stop offset="1" stopColor="#7f93ff" stopOpacity=".03"/></radialGradient>
-    <pattern id="wwcNet" width="1" height="1" patternUnits="userSpaceOnUse"><path d="M0 0H1M0 0V1" stroke="#dfe5ff" strokeOpacity=".35" strokeWidth=".12"/></pattern>
-   </defs>
-   {/* The pitch, drawn as a floodlit constellation: soft mown stripes, faint lines, a star at every corner and spot. */}
-   <rect x={0} y={0} width={105} height={68} fill="url(#wwcFlood)"/>
-   {Array.from({length:7},(_,k)=><rect key={k} x={k*15} y={0} width={7.5} height={68} fill="#ffffff" opacity={.018}/>)}
-   <rect className={styles.pl} x={0} y={0} width={105} height={68}/>
-   <line className={styles.pl} x1={52.5} y1={0} x2={52.5} y2={68}/><circle className={styles.pl} cx={52.5} cy={34} r={9.15}/>
-   <rect className={styles.pl} x={0} y={13.84} width={16.5} height={40.32}/><rect className={styles.pl} x={88.5} y={13.84} width={16.5} height={40.32}/>
-   <rect className={styles.pl} x={0} y={24.84} width={5.5} height={18.32}/><rect className={styles.pl} x={99.5} y={24.84} width={5.5} height={18.32}/>
-   <rect className={styles.goalMouth} x={-2.4} y={30.34} width={2.4} height={7.32} fill="url(#wwcNet)"/><rect className={styles.goalMouth} x={105} y={30.34} width={2.4} height={7.32} fill="url(#wwcNet)"/>
-   {[[0,0],[105,0],[0,68],[105,68],[52.5,34],[11,34],[94,34],[52.5,0],[52.5,68]].map(([x,y])=><circle key={x+'-'+y} className={styles.pdot} cx={x} cy={y} r={.7}/>)}
-   <text className={styles.side} x={0} y={-3.5} fill={colorOf('Norway')}>← NORWAY ATTACK</text>
-   <text className={styles.side} x={105} y={-3.5} textAnchor="end" fill={colorOf('USA')}>USA ATTACK →</text>
+  <svg className={styles.pitch} viewBox="-8 -10 121 94" role="img" aria-label={`Goal map of the 1991 final, USA against Norway. Minute ${Math.floor(state.minute)}.`}>
+   <PitchSheet x0={-2.4}/>
+   <text className={styles.side} x={0} y={-5} fill={colorOf('Norway')}>← NORWAY ATTACK</text>
+   <text className={styles.side} x={105} y={-5} textAnchor="end" fill={colorOf('USA')}>USA ATTACK →</text>
    {G.map((g,i)=>{const shown=i<state.done||act?.i===i;if(!shown)return null;const f=act?.i===i?travel:1,end=g.path[g.path.length-1],c=colorOf(g.team),landed=f>=1,live=act?.i===i&&landed;
     const lx=Math.min(96,Math.max(9,g.path[0][0])),ly=g.path[0][1]+(g.path[0][1]<34?-3.2:5.6);
     return <g key={i}>
-     <polyline className={styles.trailGlow} points={pts(g.path)} pathLength={1} stroke={c} strokeDasharray="1 1" strokeDashoffset={1-f}/>
+     <polyline className={styles.trailUnder} points={pts(g.path)} pathLength={1} strokeDasharray="1 1" strokeDashoffset={1-f}/>
      <polyline className={styles.trail} points={pts(g.path)} pathLength={1} stroke={c} strokeDasharray="1 1" strokeDashoffset={1-f}/>
-     {g.path.slice(0,-1).map(([x,y],k)=><circle key={k} cx={x} cy={y} r={.95} fill={c} opacity={f>k/(g.path.length-1)?1:.15}/>)}
-     {landed&&<><circle className={styles.burst} cx={end[0]} cy={end[1]} r={3} stroke={c}/>
-      <circle cx={end[0]} cy={end[1]} r={1.4} fill={c}/>
-      <text className={styles.gl} x={lx} y={ly} textAnchor="middle">{g.min}′ {g.who.split(' ').pop()}</text></>}
-     {live&&<text className={styles.goalWord} x={g.team==='USA'?90:15} y={g.team==='USA'?60:60} textAnchor="middle" fill={c}>GOAL!</text>}
+     {g.path.slice(0,-1).map(([x,y],k)=><circle key={k} cx={x} cy={y} r={1} fill={c} stroke="#fff4dc" strokeWidth={.3} opacity={f>k/(g.path.length-1)?1:.2}/>)}
+     {landed&&<><circle className={styles.burst} cx={end[0]} cy={end[1]} r={3} stroke="#f2b705"/>
+      <circle cx={end[0]} cy={end[1]} r={1.4} fill={c} stroke="#fff4dc" strokeWidth={.3}/>
+      <g transform={`translate(${lx} ${ly})`}><rect className={styles.glTag} x={-8.5} y={-2.6} width={17} height={3.8} rx={.4}/><text className={styles.gl} y={.3} textAnchor="middle">{g.min}′ {g.who.split(' ').pop()}</text></g></>}
+     {live&&<text className={styles.goalWord} x={g.team==='USA'?88:17} y={62} textAnchor="middle">GOAL!</text>}
     </g>;})}
-   {ball&&<><circle cx={ball[0]} cy={ball[1]} r={2.6} fill="#fff" opacity={.18}/><circle className={styles.ball} cx={ball[0]} cy={ball[1]} r={1.25}/></>}
-   {!over&&<text className={styles.side} x={52.5} y={77.5} textAnchor="middle">{FINAL_1991.place.toUpperCase()} · {FINAL_1991.date.toUpperCase()}</text>}
+   {ball&&<><circle cx={ball[0]} cy={ball[1]} r={1.35} fill="#fff4dc" stroke="#3a1d0e" strokeWidth={.25}/></>}
+   {!over&&<text className={styles.side} x={52.5} y={79} textAnchor="middle" fill="#7a2a14">{FINAL_1991.place.toUpperCase()} · {FINAL_1991.date.toUpperCase()}</text>}
   </svg>
   {over&&<div className={styles.ft} role="status">
    <FirstStar className={`${styles.ftStar} ${styles.ignite}`}/>
@@ -89,7 +110,7 @@ export function FinalPitch({r}:{r:Replay}){
  </div>;
 }
 
-export function FinalPanel({r,onSky}:{r:Replay;onSky:()=>void}){
+export function FinalPanel({r,onPlay}:{r:Replay;onPlay:()=>void}){
  const {state}=r,scored=(t:'USA'|'Norway')=>G.filter((g,i)=>g.team===t&&(i<state.done||(state.active?.i===i&&state.active.f>=TRAVEL))).length;
  const m=Math.floor(state.minute),over=r.sec>=r.total,u=scored('USA'),n=scored('Norway');
  return <div>
@@ -101,9 +122,9 @@ export function FinalPanel({r,onSky}:{r:Replay;onSky:()=>void}){
    {G.map((g,i)=><b key={i} data-done={i<state.done||undefined} style={{left:`${g.min/LEN*100}%`,'--c':colorOf(g.team)} as React.CSSProperties}/>)}
    <em style={{left:'50%'}}>HT</em></div>
   <div className={styles.row}>
-   <button type="button" className={`${styles.btn} ${over?'':styles.gold}`} data-museum-own-cue onClick={()=>r.playing?r.pause():r.start()}>{r.playing?<><Pause/>Pause</>:over?<><Again/>Replay</>:r.sec>0?<><Play/>Play</>:<><Play/>Kick off</>}</button>
+   <button type="button" className={styles.btn} data-museum-own-cue onClick={()=>r.playing?r.pause():r.start()}>{r.playing?<><Pause/>Pause</>:over?<><Again/>Replay</>:r.sec>0?<><Play/>Play</>:<><Play/>Kick off</>}</button>
    <span className={styles.grow}/>
-   {over&&<button type="button" className={`${styles.btn} ${styles.gold} ${styles.pop}`} onClick={onSky}>Back to the stars</button>}
+   <button type="button" className={`${styles.btn} ${styles.gold}`} data-museum-own-cue data-try-akers onClick={onPlay}>Your turn: score Akers’s winner</button>
   </div>
   <ol className={styles.goals} aria-label="Goals">
    {G.map((g,i)=><li key={i}><button type="button" data-done={i<state.done||undefined} data-live={state.active?.i===i||undefined} data-museum-own-cue onClick={()=>r.goTo(i)} style={{'--c':colorOf(g.team)} as React.CSSProperties}>

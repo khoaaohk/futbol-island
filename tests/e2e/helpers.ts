@@ -54,6 +54,9 @@ export async function openIsland(page: Page, { query = '', storage = {} as Recor
   await freezeHmr(page);
   await page.addInitScript(seed => {
     localStorage.setItem('fi2-welcome-v1', 'completed');
+    // Save codes are required before play (Oct 9 2026). A device whose save a grown-up deleted is not asked again, which keeps
+    // the "Save your island" prompt out of specs about other things when they run against a server with saving switched on.
+    if (!('fi2-save-code-v1' in seed)) localStorage.setItem('fi2-save-deleted-v1', 'device-specs');
     for (const [k, v] of Object.entries(seed)) localStorage.setItem(k, v);
     // Record long-press side effects for the hold tests.
     const w = window as unknown as { __deviceProbe: { contextmenu: number; contextmenuAllowed: number; selections: string[] } };

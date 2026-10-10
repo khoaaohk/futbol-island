@@ -15,8 +15,12 @@
  *   pf:<format>                    a Paths lesson launched, by format
  *   gr:<format> gr:finale          a graduation earned (or the Matchday Ferry final finished) in this session
  *   rv:q rv:ok rv:done             warm-up review questions answered (first try), right first time, warm-ups finished
+ *   st: sg: sp:                    the /start title screen, its For grown-ups and Privacy sheets (startIds.ts, Oct 9 2026)
+ *   ip:<event>                     the development plan (IDP_COUNT_EVENTS; lib/coaches/idp/analytics.ts): totals only, never
+ *                                  which goal, mission, sticker or feeling (docs/idp/DESIGN.md §7)
  */
 import {LESSON_TABLE} from './learningIds.generated';
+import {START_COUNT_IDS} from './startIds';
 
 export const LEARN_FORMATS=['7v7','9v9','11v11','futsal'] as const;
 export type LearnFormat=typeof LEARN_FORMATS[number];
@@ -27,9 +31,15 @@ export const ONBOARDING_STEPS=[['welcome','Welcome & pick a player'],['paths','F
 /** lib/town/useLessonVoice.ts COACH_VOICES, in order (tests check they match); the index is what a start's `f.v` carries. */
 export const COACH_VOICE_IDS=[['kokoro_af_bella','Coach Bella'],['kokoro_af_heart','Coach Heart'],['kokoro_am_michael','Coach Michael'],['kokoro_af_sarah','Coach Sarah']] as const;
 
+/** Development-plan events (Oct 9 2026, docs/idp/DESIGN.md §7). Fixed names; a total per day, nothing per child. */
+export const IDP_COUNT_EVENTS=[['open','Plan story opened'],['set','Plan made'],['goal','Next goal chosen'],['mission','Mission done'],
+ ['checkin','Check-in'],['proud','Proud moment added'],['met','Goal celebrated'],['review','6-week review done'],['link','Island link opened from the plan'],
+ ['grown','Grown-up view opened'],['fridge','Fridge card printed'],['coachqr','Coach goal QR made'],['coachadd','Coach goal added by a player'],
+ ['week','Shared week plan opened'],['cheer','Cheer left for the player'],['helped','“This helped” tapped']] as const;
 export const FIXED_COUNT_IDS:readonly string[]=[
  ...ONBOARDING_STEPS.map(([s])=>'ob:seen:'+s),...ONBOARDING_STEPS.map(([s])=>'ob:skip:'+s),'ob:explore','ob:lesson',
  ...LEARN_FORMATS.map(f=>'pf:'+f),...LEARN_FORMATS.map(f=>'gr:'+f),'gr:finale','rv:q','rv:ok','rv:done',
+ ...IDP_COUNT_EVENTS.map(([e])=>'ip:'+e),...START_COUNT_IDS,
 ];
 const FIXED=new Set(FIXED_COUNT_IDS);
 

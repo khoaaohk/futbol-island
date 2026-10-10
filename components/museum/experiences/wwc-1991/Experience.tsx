@@ -1,96 +1,73 @@
 'use client';
-import {flushSync} from 'react-dom';
-import {useCallback,useEffect,useRef,useState,type CSSProperties,type PointerEvent as RPointerEvent} from 'react';
+import {useCallback,useEffect,useLayoutEffect,useRef,useState,type CSSProperties} from 'react';
 import {museumSfx} from '@/lib/museum/museumSound';
 import ExperienceBack from '../ExperienceBack';
 import type {ExperienceProps} from '../types';
 import {EDITIONS,WINNER_COLOR,titles,SOURCES,type Edition} from './data';
 import {FinalPitch,FinalPanel,useReplay} from './FinalReplay';
 import {DarkStage,DarkPanel,useDarkYears} from './DarkYears';
+import {ChinaStage,ChinaPanel,useFold} from './China91';
+import {AkersPitch,AkersPanel,useAkers} from './AkersGame';
+import {QuizStage,QuizPanel,useQuiz} from './Quiz';
+import {Medallion,starPath} from './papercut';
+import {flip,pop} from './spring';
 import {Chevron,Play} from './icons';
 import styles from './wwc.module.css';
 
 /**
- * wwc-1991 · "A Sky of Firsts" (Oct 5 2026, polished the same day). Every FIFA Women's World Cup is a star in one constellation;
- * the first one, China 1991, ignites first and brightest, then the line draws star to star to 2023 and a dashed promise to 2027.
- * Tap a star for its host, final and star player. "1991 final" replays USA 2–1 Norway as an animated goal map (Michelle Akers
- * scored both US goals). "Banned years" scrubs 1920 → 1991 through the decades when women's football was banned in England,
- * Brazil and West Germany, until the first star ignites. Real history, sourced in data.ts.
- * Heat: the night sky (far dust + nebulae, near stars) is drawn ONCE to two canvases (redrawn only on resize); mouse parallax is
- * event-driven CSS transforms (no loop); the only animation loops are the replay and the time-travel play button, both rAF that
- * stop when finished, paused, hidden or unmounted. Everything else is finite CSS (ignition, line draw, a few twinkles).
+ * wwc-1991 · "Cut from paper" (Oct 9 2026 restyle of "A Sky of Firsts", Oct 5). The first FIFA Women's World Cup (China 1991)
+ * told as Chinese paper-cut (剪纸 jianzhi): red sheets with sawtooth and crescent cuts layered on cream paper, 1991 poster type.
+ * Five beats the visitor drives:
+ *  1. Shut out: scrub 1920 → 1991; each ban on women's football is a red shutter across a country's lane that lifts when it ends.
+ *  2. China 1991: drag a folded paper open into a 12-petal window flower, one petal per team (12 teams, 80-minute matches).
+ *  3. The final: replay USA 2–1 Norway as a paper goal map, then YOUR TURN: drag Michelle Akers to win Norway's back pass and
+ *     flick in the winner (Akers scored both US goals).
+ *  4. Every star since: each Women's World Cup as a paper star; tap one for its host, final and star player.
+ *  5. Cut your star (quick check): five questions on beats 1–3; each right answer cuts one point of a paper star, then it ignites.
+ * Real history, sourced in data.ts. Heat: no canvas and no loop at rest; the only rAF loops are the replay, the time-travel
+ * play button, the paper unfold spring and the Akers game, each running only while it moves and stopping when finished,
+ * hidden or unmounted. Paper texture is CSS (an SVG noise tile the browser rasterises once). Transitions between beats are
+ * FLIP / WAAPI on spring-sampled keyframes (no View Transitions).
  */
-type Mode='stars'|'final'|'dark';
+type Mode='dark'|'china'|'final'|'stars'|'quiz';
+const BEATS:[Mode,string,string][]=[['dark','1','Shut out'],['china','2','China'],['final','3','Final'],['stars','4','Stars'],['quiz','5','Quiz']];
 const WIDE:[number,number][]=[[8,74],[18,52],[28,66],[37,40],[47,58],[56,32],[66,50],[75,24],[85,38],[93,70]];
 const TALL:[number,number][]=[[22,90],[70,80],[26,69],[74,59],[28,48],[72,38],[26,28],[68,18],[30,8],[82,6]];
-const color=(e:Edition)=>e.winner?WINNER_COLOR[e.winner]:'#c8d2ff';
-const size=(e:Edition)=>e.year===1991?22:6+e.teams/3;
-/** Ignition timeline (seconds): 1991 first, then the line reaches each star in turn. */
-const T0=.35,T1=1.25,STEP=.26;
-const lightAt=(i:number)=>i===0?T0:T1+(i-1)*STEP;
+const color=(e:Edition)=>e.winner?WINNER_COLOR[e.winner]:'#b9a989';
+const size=(e:Edition)=>e.year===1991?32:15+e.teams/4;
 
 export default function Experience({exhibit,onClose}:ExperienceProps){
- const [mode,setMode]=useState<Mode>('stars');
+ const [mode,setMode]=useState<Mode>('dark');
+ const [sub,setSub]=useState<'watch'|'play'>('watch');
  const [sel,setSel]=useState(0);
  const [touched,setTouched]=useState(false);
  const [tall,setTall]=useState(false);
- const [skyKey,setSkyKey]=useState(0);
  const [seen,setSeen]=useState<ReadonlySet<number>>(()=>new Set([0]));
- /** True from the moment the last star is visited until the sky is re-lit (so a re-ignition draws its lines afresh). */
  const [complete,setComplete]=useState(false);
- const root=useRef<HTMLElement>(null),stage=useRef<HTMLDivElement>(null),bg=useRef<HTMLCanvasElement>(null),near=useRef<HTMLCanvasElement>(null);
+ const stage=useRef<HTMLDivElement>(null),tabs=useRef<HTMLDivElement>(null),pill=useRef<HTMLSpanElement>(null),pillFrom=useRef<DOMRect|null>(null);
  const reduced=useRef(false);
  useEffect(()=>{reduced.current=matchMedia('(prefers-reduced-motion: reduce)').matches;},[]);
  const replay=useReplay(reduced);
  const dark=useDarkYears(reduced);
+ const fold=useFold(reduced);
+ const akers=useAkers(reduced);
+ const quiz=useQuiz(reduced);
 
- // The night sky: two layers drawn once, redrawn only when the screen size changes (no loop at all).
- useEffect(()=>{const c=bg.current,n=near.current,st=stage.current;if(!c||!n||!st)return;
-  const draw=()=>{const w=c.clientWidth,h=c.clientHeight;if(!w||!h)return;const coarse=matchMedia('(pointer:coarse)').matches;
-   const dpr=Math.min(window.devicePixelRatio||1,coarse?1.5:2);let seed=1991;const rnd=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
-   const gauss=()=>(rnd()+rnd()+rnd()-1.5)/1.5;
-   const prep=(cv:HTMLCanvasElement)=>{cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);const g=cv.getContext('2d');if(!g)return null;g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,w,h);return g;};
-   const g=prep(c);if(!g)return;const portrait=w/h<1.05;
-   // Nebulae: soft coloured clouds, low alpha, light from the lower left (where the first star sits).
-   const cloud=(x:number,y:number,r:number,col:string,a:number)=>{const gr=g.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,col+a.toString(16).padStart(2,'0'));gr.addColorStop(1,col+'00');g.fillStyle=gr;g.fillRect(x-r,y-r,r*2,r*2);};
-   const D=Math.hypot(w,h);
-   cloud(w*.12,h*.82,D*.42,'#6a4bff',0x22);cloud(w*.55,h*.35,D*.35,'#b04bd0',0x10);cloud(w*.85,h*.15,D*.3,'#2bb3c0',0x0e);cloud(w*.3,h*.25,D*.25,'#3a5bff',0x0c);
-   // The milky band, rising like the constellation (bottom-left to top-right; bottom to top on tall screens).
-   const ang=portrait?-Math.PI/2.4:-Math.atan2(h*.75,w),cx=w*.5,cy=h*.55;
-   g.save();g.translate(cx,cy);g.rotate(ang);g.scale(1,.16);const band=g.createRadialGradient(0,0,0,0,0,D*.6);band.addColorStop(0,'#b9c4ff1c');band.addColorStop(.5,'#9fb0ff0c');band.addColorStop(1,'#9fb0ff00');
-   g.fillStyle=band;g.beginPath();g.arc(0,0,D*.6,0,Math.PI*2);g.fill();g.restore();
-   const dot=(x:number,y:number,r:number,a:number)=>{g.beginPath();g.arc(x,y,r,0,Math.PI*2);g.fillStyle=`rgba(${215+rnd()*40|0},${222+rnd()*33|0},255,${a})`;g.fill();};
-   const nField=Math.round(Math.min(380,w*h/2800));
-   for(let i=0;i<nField;i++)dot(rnd()*w,rnd()*h,rnd()<.94?rnd()*.7+.2:rnd()*1.1+.7,.18+rnd()*.5);
-   const nBand=Math.round(Math.min(520,w*h/2000)),ca=Math.cos(ang),sa=Math.sin(ang);
-   for(let i=0;i<nBand;i++){const along=(rnd()-.5)*D,across=gauss()*D*.07;dot(cx+along*ca-across*sa,cy+along*sa+across*ca,rnd()*.55+.15,.12+rnd()*.38);}
-   // Near layer: fewer, brighter stars with glow; a handful with soft cross spikes. It moves more with the mouse (depth).
-   const k=prep(n);if(!k)return;
-   const nNear=Math.round(Math.min(46,w*h/22000));
-   for(let i=0;i<nNear;i++){const x=rnd()*w,y=rnd()*h,r=rnd()*1+.6,a=.45+rnd()*.45,hue=rnd();
-    const col=hue<.2?'255,226,190':hue<.4?'190,210,255':'235,240,255';
-    const gl=k.createRadialGradient(x,y,0,x,y,r*6);gl.addColorStop(0,`rgba(${col},${a*.5})`);gl.addColorStop(1,`rgba(${col},0)`);k.fillStyle=gl;k.fillRect(x-r*6,y-r*6,r*12,r*12);
-    k.beginPath();k.arc(x,y,r,0,Math.PI*2);k.fillStyle=`rgba(${col},${a})`;k.fill();
-    if(r>1.35){k.strokeStyle=`rgba(${col},${a*.35})`;k.lineWidth=.6;k.beginPath();k.moveTo(x-r*7,y);k.lineTo(x+r*7,y);k.moveTo(x,y-r*7);k.lineTo(x,y+r*7);k.stroke();}}
-   // A vignette to give the sky a frame.
-   const v=k.createRadialGradient(w/2,h/2,Math.min(w,h)*.35,w/2,h/2,D*.62);v.addColorStop(0,'#03051600');v.addColorStop(1,'#030516b0');k.fillStyle=v;k.fillRect(0,0,w,h);
-  };
-  const measure=()=>{const r=st.getBoundingClientRect();setTall(r.width<600||r.width/Math.max(1,r.height)<1.05);draw();};
-  measure();const ro=new ResizeObserver(measure);ro.observe(st);ro.observe(c);return()=>ro.disconnect();},[]);
+ // Portrait vs landscape constellation (measured, not polled).
+ useEffect(()=>{const st=stage.current;if(!st)return;const measure=()=>{const r=st.getBoundingClientRect();setTall(r.width<600||r.width/Math.max(1,r.height)<1.05);};
+  measure();const ro=new ResizeObserver(measure);ro.observe(st);return()=>ro.disconnect();},[]);
 
- // Depth: with a mouse, the two sky layers drift a few pixels against each other. Event-driven, eased by a CSS transition.
- const parallax=useCallback((ev:RPointerEvent<HTMLElement>)=>{if(ev.pointerType!=='mouse'||reduced.current)return;const r=root.current;if(!r)return;
-  r.style.setProperty('--px',(ev.clientX/innerWidth*2-1).toFixed(3));r.style.setProperty('--py',(ev.clientY/innerHeight*2-1).toFixed(3));},[]);
+ // The beat rail's paper tab slides to the chosen beat (FLIP on a spring), instead of jumping.
+ useLayoutEffect(()=>{const t=tabs.current,p=pill.current;if(!t||!p)return;const b=t.querySelector<HTMLElement>('[aria-selected="true"]');if(!b)return;
+  p.style.left=b.offsetLeft+'px';p.style.width=b.offsetWidth+'px';const from=pillFrom.current;pillFrom.current=null;if(from&&!reduced.current)flip(p,from,{scale:true,k:300,c:24});},[mode]);
 
+ const go=useCallback((m:Mode)=>{if(m===mode)return;pillFrom.current=pill.current?.getBoundingClientRect()??null;try{museumSfx.flap();}catch{}
+  setMode(m);if(m==='final'){setSub('watch');replay.start();}else replay.pause();if(m!=='dark')dark.pause();},[mode,replay,dark]);
  const visit=useCallback((i:number)=>{setSel(i);setTouched(true);if(seen.has(i))return;const n=new Set(seen);n.add(i);setSeen(n);if(n.size===EDITIONS.length){museumSfx.reveal();setComplete(true);}},[seen]);
- const pick=useCallback((i:number)=>{visit(Math.max(0,Math.min(EDITIONS.length-1,i)));museumSfx.flap();},[visit]);
- // Views swap through a same-document View Transition where supported (Safari 18+, Chrome, Firefox 144+); otherwise the
- // .scene/.pane rise keyframes still ease the change in. Reduced motion: an instant swap.
- const go=useCallback((m:Mode)=>{const d=document as Document&{startViewTransition?:(cb:()=>void)=>unknown};
-  if(d.startViewTransition&&!reduced.current)d.startViewTransition(()=>flushSync(()=>setMode(m)));else setMode(m);if(m==='final')replay.start();if(m!=='final')replay.pause();if(m!=='dark')dark.pause();},[replay,dark]);
- const backToSky=useCallback(()=>{setSel(0);setComplete(false);setSkyKey(k=>k+1);go('stars');},[go]);
+ const pick=useCallback((i:number)=>{const j=Math.max(0,Math.min(EDITIONS.length-1,i));visit(j);museumSfx.flap();
+  if(!reduced.current)pop(document.querySelector(`[data-wwc-star="${j}"] svg`),.7);},[visit]);
+ const play=useCallback(()=>{replay.pause();setSub('play');},[replay]);
 
- // Keyboard: Escape leaves, arrows walk the constellation.
  useEffect(()=>{const key=(e:KeyboardEvent)=>{if(e.key==='Escape'){e.preventDefault();onClose();return;}
   if(mode!=='stars'||(e.target instanceof HTMLElement&&e.target.matches('input,summary,a')))return;
   if(e.key==='ArrowRight'||e.key==='ArrowUp'){e.preventDefault();pick(sel+1);}
@@ -98,53 +75,54 @@ export default function Experience({exhibit,onClose}:ExperienceProps){
   window.addEventListener('keydown',key);return()=>window.removeEventListener('keydown',key);},[mode,onClose,pick,sel]);
 
  const pos=tall?TALL:WIDE,ar=tall?.75:5/3,e=EDITIONS[sel];
- return <section ref={root} className={styles.root} role="dialog" aria-modal="true" aria-label={`${exhibit.year} · ${exhibit.title}`} data-museum-experience="wwc-1991" data-mode={mode} onPointerMove={parallax}>
-  <canvas ref={bg} className={`${styles.bg} ${styles.far}`} aria-hidden="true"/>
-  <canvas ref={near} className={`${styles.bg} ${styles.near}`} aria-hidden="true"/>
+ return <section className={styles.root} role="dialog" aria-modal="true" aria-label={`${exhibit.year} · ${exhibit.title}`} data-museum-experience="wwc-1991" data-mode={mode}>
+  <Medallion className={`${styles.deco} ${styles.decoA}`} r={50} n={12}/>
+  <Medallion className={`${styles.deco} ${styles.decoB}`} r={50} n={8}/>
   <ExperienceBack onClose={onClose}/>
   <header className={styles.header}>
-   <h1 className={styles.title}>A sky of <b>firsts</b></h1>
+   <h1 className={styles.title}><span className={styles.hanziSm} lang="zh">中国 1991</span> The first Women’s World Cup</h1>
    <span className={styles.real}>Real history</span>
   </header>
 
   <div ref={stage} className={styles.stage}>
-   <div key={mode} className={styles.scene}>
-   {mode==='stars'&&<div key={skyKey+(tall?'t':'w')} className={styles.sky} data-complete={complete||undefined} style={{'--ar':ar} as CSSProperties} role="group" aria-label="Every FIFA Women’s World Cup as a star. Bigger stars had more teams.">
+   <div key={mode+(mode==='final'?sub:'')} className={styles.scene}>
+   {mode==='dark'&&<DarkStage d={dark} onLit={()=>go('china')}/>}
+   {mode==='china'&&<ChinaStage f={fold}/>}
+   {mode==='final'&&(sub==='watch'?<FinalPitch r={replay}/>:<AkersPitch g={akers}/>)}
+   {mode==='quiz'&&<QuizStage q={quiz}/>}
+   {mode==='stars'&&<div className={styles.sky} data-complete={complete||undefined} style={{'--ar':ar} as CSSProperties} role="group" aria-label="Every FIFA Women’s World Cup as a paper star. Bigger stars had more teams.">
     <svg className={styles.lines} viewBox={`0 0 ${100*ar} 100`} aria-hidden="true">
-     <defs><filter id="wwcGlow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation=".6"/></filter></defs>
      {pos.slice(1).map((p,i)=>{const a=pos[i],fut=EDITIONS[i+1].upcoming,on=sel===i||sel===i+1;
-      const st={'--d':`${i===0?T0+.45:lightAt(i)}s`,'--t':`${i===0?T1-T0-.45:STEP}s`} as CSSProperties;
-      return <g key={i} data-future={fut||undefined} data-on={on||undefined} className={styles.seg} style={{'--i':i} as CSSProperties}>
-       <line className={styles.segGlow} pathLength={1} x1={a[0]*ar} y1={a[1]} x2={p[0]*ar} y2={p[1]} style={st} filter="url(#wwcGlow)"/>
-       <line className={styles.segLine} pathLength={1} x1={a[0]*ar} y1={a[1]} x2={p[0]*ar} y2={p[1]} style={st}/>
-      </g>;})}
+      return <line key={i} className={styles.thread} data-future={fut||undefined} data-on={on||undefined} x1={a[0]*ar} y1={a[1]} x2={p[0]*ar} y2={p[1]} style={{'--i':i} as CSSProperties}/>;})}
     </svg>
-    {EDITIONS.map((ed,i)=><button key={ed.year} type="button" className={styles.star} data-first={ed.year===1991||undefined} data-future={ed.upcoming||undefined} aria-pressed={i===sel} data-seen={seen.has(i)||undefined} data-museum-own-cue
+    {EDITIONS.map((ed,i)=><button key={ed.year} type="button" className={styles.star} data-wwc-star={i} data-first={ed.year===1991||undefined} data-future={ed.upcoming||undefined} aria-pressed={i===sel} data-seen={seen.has(i)||undefined} data-museum-own-cue
       data-side={tall?(pos[i][0]<50?'l':'r'):'b'}
       aria-label={`${ed.year}, ${ed.host}. ${ed.upcoming?'Not played yet':`Won by ${ed.winner}`}. ${ed.teams} teams.`} onClick={()=>pick(i)}
-      style={{left:`${pos[i][0]}%`,top:`${pos[i][1]}%`,'--r':`${size(ed)}px`,'--c':color(ed),'--d':`${lightAt(i)}s`,'--tw':`${2.6+(i%4)*.7}s`} as CSSProperties}>
-     <span className={styles.glow}/><span className={styles.spikes}/><span className={styles.core}/>
-     {ed.year===1991&&<span className={styles.wave}/>}
+      style={{left:`${pos[i][0]}%`,top:`${pos[i][1]}%`,'--r':`${size(ed)}px`,'--c':color(ed),'--i':i} as CSSProperties}>
+     <svg viewBox="-12 -12 24 24" aria-hidden="true"><path d={starPath(10.5)} transform="translate(.5 .8)" className={styles.starShadow}/><path d={starPath(10.5)} fillRule="evenodd" className={styles.starPaper}/></svg>
      <span className={styles.yr}>{ed.year}<small>{ed.upcoming?'next':ed.winner}</small></span></button>)}
-    {complete&&<p className={styles.done} role="status"><b>Every star visited</b><span>9 World Cups played. One star still to light.</span></p>}
+    {complete&&<p className={styles.done} role="status"><b>Every star visited</b><span>9 World Cups played. One star still to cut.</span></p>}
     {!touched&&<span className={styles.hint}><i aria-hidden="true"/>Tap any star to visit that World Cup</span>}
    </div>}
-   {mode==='final'&&<FinalPitch r={replay}/>}
-   {mode==='dark'&&<DarkStage d={dark} onLit={backToSky}/>}
    </div>
   </div>
 
-  <aside className={styles.panel} aria-label="About this star">
-   <div className={styles.tabs} role="tablist" aria-label="Views">
-    {([['stars','Stars'],['final','1991 final'],['dark','Banned years']] as [Mode,string][]).map(([m,l])=><button key={m} type="button" role="tab" aria-selected={mode===m} onClick={()=>go(m)}>{l}</button>)}
+  <aside className={styles.panel} aria-label="The story">
+   <div ref={tabs} className={styles.tabs} role="tablist" aria-label="Story beats">
+    <span ref={pill} className={styles.pill} aria-hidden="true"/>
+    {BEATS.map(([m,n,l])=><button key={m} type="button" role="tab" aria-selected={mode===m} data-museum-own-cue onClick={()=>go(m)}><i>{n}</i><span>{l}</span></button>)}
    </div>
    <div key={mode} className={styles.pane}>
-    {mode==='stars'&&<StarCard e={e} sel={sel} seen={seen.size} pick={pick} onReplay={()=>go('final')} onDark={()=>go('dark')}/>}
-    {mode==='final'&&<FinalPanel r={replay} onSky={backToSky}/>}
-    {mode==='dark'&&<DarkPanel d={dark} onLit={backToSky}/>}
+    {mode==='dark'&&<DarkPanel d={dark} onLit={()=>go('china')}/>}
+    {mode==='china'&&<ChinaPanel f={fold} onNext={()=>go('final')}/>}
+    {mode==='final'&&<>{sub==='watch'?<FinalPanel r={replay} onPlay={play}/>:<AkersPanel g={akers} onWatch={()=>{setSub('watch');}}/>}
+     <div className={styles.row}><span className={styles.grow}/><button type="button" className={styles.btn} data-museum-own-cue onClick={()=>go('stars')}>Next: every World Cup since →</button></div></>}
+    {mode==='stars'&&<><StarCard e={e} sel={sel} seen={seen.size} pick={pick} onReplay={()=>go('final')} onDark={()=>go('dark')}/>
+     <div className={styles.row}><span className={styles.grow}/><button type="button" className={`${styles.btn} ${styles.gold}${complete?' '+styles.pop:''}`} data-museum-own-cue data-wwc-to-quiz onClick={()=>go('quiz')}>Next: cut your star →</button></div></>}
+    {mode==='quiz'&&<QuizPanel q={quiz} onAgain={()=>{quiz.reset();go('dark');}}/>}
    </div>
    <details className={styles.sources}><summary>Sources</summary>
-    <p>Everything here is real football history, not part of the island’s story. The 1991 goal spots on the map are drawn to show how each goal happened.</p>
+    <p>Everything here is real football history, not part of the island’s story. The 1991 goal spots and the “Your turn” game are drawn to show how each goal happened.</p>
     <ul>{SOURCES.map(s=><li key={s.url}><a href={s.url} target="_blank" rel="noopener noreferrer">{s.title}</a></li>)}</ul>
    </details>
   </aside>

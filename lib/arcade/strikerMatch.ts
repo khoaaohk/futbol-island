@@ -35,9 +35,27 @@ export const STRIKER_SHAPES:Record<StrikerShape,{label:string;lesson:string}>={
  wide:{label:'Wide 1-2',lesson:'Width stretches the defence and opens the middle.'},
  solid:{label:'Solid 2-1',lesson:'Two at the back stops counter-attacks.'}};
 export type StrikerRun='behind'|'overlap'|'check';
+/** Why Blue scored, in one coaching line a 7-12 year old can act on next time (shown on the concede banner). */
+export type StrikerConcede='intercept'|'tackle'|'teamStrike'|'setPiece'|'shot';
+export const STRIKER_CONCEDE_LINES:Record<StrikerConcede,string>={
+ intercept:'Your pass was cut out. Pick a cyan ring with a clear lane.',
+ tackle:'You were tackled. Pass before the defender arrives.',
+ teamStrike:'Blue Team Strike. Close the shooter down sooner.',
+ setPiece:'From a set piece. Mark your player and stay goal-side.',
+ shot:'Blue got a shot away. Stay goal-side and close them down.'};
+/** Seconds a lost ball still "explains" a Blue goal (turnover, then a quick attack). */
+export const STRIKER_CONCEDE_WINDOW=8;
 export const STRIKER_RUNS:Record<StrikerRun,string>={behind:'Run in behind! Play it into space ahead of them.',overlap:'Overlap! Your teammate runs round the outside.',check:'Check to the ball! They come short to get free.'};
 /** Team spirit: earned by good football (passes, habits, perfect touches, beaten tackles). Full = one Team Strike. */
-export const STRIKER_SPIRIT={pass:.035,habit:.12,perfect:.08,beat:.08,steal:.1,intercept:.05,run:.08,bluePass:.06,blueIntercept:.12,blueTackle:.08,blueScale:[.4,.7,1,1.2]};
+export const STRIKER_SPIRIT={pass:.035,habit:.12,perfect:.08,beat:.08,steal:.1,intercept:.05,run:.08,bluePass:.06,blueIntercept:.12,blueTackle:.08,blueScale:[.3,.5,.7,.85]};
+/** Blue Team Strike charge-ups allowed per match, by round (Oct 9 2026). Bot sims showed 4.6-5.4 per match in rounds 3-4,
+ * which turned the special into background noise; one (R1-2) or two (R3-4) keeps it a big moment the player must answer. */
+export const STRIKER_BLUE_STRIKES=[1,1,2,2];
+/** Clean strike: releasing Shoot inside this band of the charge is a controlled, low, accurate finish (keeper reads it
+ * a beat later). Teaches placement over power: the meter's sweet spot sits below the overhit zone. */
+export const STRIKER_CLEAN:[number,number]=[.6,.86];
+/** A Gold teammate is "open" for the scan markers when its lane is clear and no defender is within this distance. */
+export const STRIKER_MARKED=2.6;
 /** Set pieces. Penalty box: |x| > 17 and |z| < 5 (the drawn lines). Wall stands 4.6 m from the ball (scaled 9.15 m). */
 export type StrikerSetPieceKind=''|'free'|'penalty'|'corner';
 export const STRIKER_BOX_X=17,STRIKER_BOX_Z=5,STRIKER_WALL_GAP=4.6,STRIKER_PENALTY_X=20.2;
@@ -85,6 +103,9 @@ export function createStrikerMatch(){
   setPiece:{kind:'' as StrikerSetPieceKind,team:0 as 0|1,x:0,z:0,wait:0,taker:-1,aimSide:0,guess:0},fouls:[0,0],setPieceGoals:0,setPieceShot:false,
   /** Gold's shape, team spirit per side (0..1), Team Strike events, called-run counters. */
   shape:'balanced' as StrikerShape,
+  /** Oct 9 2026 playtest pass: the player's own passes (played / reached a teammate) for an honest full-time stat, the
+   * ball currently travelling from one of them, and why Blue's last goal happened (for the "why" banner). */
+  userPasses:0,userPassesDone:0,userPassLive:false,lostKind:'' as ''|'intercept'|'tackle',lostAt:-99,bluePieceAt:-99,concedeCause:'shot' as StrikerConcede,
   /** Match length, goal half-width, modifiers, golden-goal extra time and the penalty shootout. */
   baseDuration:STRIKER_SECONDS,duration:STRIKER_SECONDS,goalHalf:STRIKER_GOAL_HALF,mods:{rain:false,small:false,golden:false,spirit:false} as StrikerMods,extra:false,goldenWin:false,
   shootout:{active:false,turn:0 as 0|1,kicks:[0,0],goals:[0,0],wait:-1,winner:-1},spirit:[0,0],spiritEvent:0,spiritTeam:0,special:0,specialTeam:0,teamStrike:false,calls:0,runPasses:0,lastSkill:'' as string,curlTime:0,curled:false,chip:false,
@@ -93,7 +114,11 @@ export function createStrikerMatch(){
   /** Pass preview risk 0..1 (a defender sits in the lane) and the defender reading a travelling pass. */
   passRisk:0,passAge:0,nearMiss:0,interceptor:-1,interceptX:0,interceptZ:0,overhit:false,
   /** Defending roles, for telegraphs: presser and cover of the blue team. */
-  presser:-1,cover:-1};
+  presser:-1,cover:-1,
+  /** Scanning (Oct 9 2026): how open each Gold teammate is right now (0 blocked .. 1 open), passes played into open vs
+   * blocked lanes, Blue Team Strikes used, clean strikes, and what built the last Gold goal (for the replay caption). */
+  laneOpen:[0,0,0,0,0,0,0,0],safePasses:0,riskyPasses:0,blueStrikes:0,cleanStrike:false,cleanStrikes:0,
+  goalStory:{chain:0,habit:false,firstTime:false,teamStrike:false,chip:false,curled:false,setPiece:false,clean:false,at:-1}};
  const clamp=(v:number,a:number,b:number)=>Math.max(a,Math.min(b,v));
  const b0=()=>state.ball;
  const T=STRIKER_TUNING,A=STRIKER_ASSIST,lv=()=>clamp(state.level,1,4)-1,eased=()=>state.assist&&state.assistLevel===state.level;
@@ -110,8 +135,8 @@ export function createStrikerMatch(){
    const k:StrikerRun=behind?'overlap':marked?'check':'behind',value=(k==='behind'?3:k==='overlap'?2:1)+(q.x-p.x)*forward*.05;if(value>score){score=value;pick=q;kind=k;}}
   if(!pick)return;pick.callRun=2.4;pick.callKind=kind;pick.run=0;state.calls++;emit('call',pick.x,pick.z,STRIKER_RUNS[kind]);}
  function kickoff(team=0){for(const p of players){const side=p.team===0?-1:1,i=p.id%4;p.x=side*(p.keeper?22:i===0?7:12);p.z=i===1?-8:i===2?8:0;if(p.team===0&&!p.keeper){if(state.shape==='wide'&&i>0)p.z*=1.35;if(state.shape==='solid'&&i===2){p.x=-15;p.z=3;}}p.receive=p.receiveX=p.receiveZ=0;p.vx=p.vz=p.stun=p.tackle=p.kick=p.cooldown=p.run=p.windup=p.keeperAim=p.tackleX=p.tackleZ=p.jockey=p.dive=p.react=0;p.caught=false;p.skill=p.heavy=p.header=p.receiveHeight=p.wall=p.callRun=p.strikeCharge=0;p.skillCount=0;p.touchCycle=.9+p.id%3*.17;p.yaw=-side*Math.PI/2;p.strikeYaw=p.yaw;p.strikeKind='pass';p.strikePower=.35;p.saveSide=1;p.saveHeight=0;p.saveWide=false;p.stamina=1;p.think=.8+p.id*.1;}const owner=team===0?0:4;Object.assign(state.ball,{owner,x:players[owner].x,z:0,y:.25,vx:0,vz:0,vy:0,lock:.2,lastTeam:team});state.selected=0;state.charge=0;state.queuedPass=0;state.timeScale=1;state.shotMoment=0;state.passTarget=-1;state.lastPasser=-1;state.passChain=0;state.hitStop=0;state.scorer=-1;state.lastKicker=-1;state.firstTime=state.quickPass=state.overhit=false;state.holdTime=0;state.interceptor=-1;state.passRisk=0;state.presser=state.cover=-1;state.queuedShot=0;state.queuedPerfect=false;state.touchWindow=0;state.touchEta=-1;state.curlTime=0;state.chip=false;state.firstTimeShot=false;state.setPiece.kind='';state.setPieceShot=false;}
- function reset(advance=false){if(advance&&state.finished){const won=state.score[0]>state.score[1];if(won){state.level=Math.min(4,state.level+1);state.assist=false;}else{state.assist=true;state.assistLevel=state.level;}}if(state.assistLevel!==state.level)state.assist=false;state.score[0]=state.score[1]=0;state.time=0;state.finished=false;state.goalPause=0;state.message='Pass, move, receive. Pull the defence apart.';state.passes[0]=state.passes[1]=state.shots[0]=state.shots[1]=0;state.aim=0;state.focus=0;state.crowd=0;state.habitAt=-99;state.habitGoals=state.firstTimeGoals=state.perfect=state.setPieceGoals=0;state.fouls[0]=state.fouls[1]=0;state.spirit[0]=state.spirit[1]=0;state.calls=state.runPasses=0;state.extra=state.goldenWin=false;state.duration=state.baseDuration;const so=state.shootout;so.active=false;so.turn=0;so.kicks[0]=so.kicks[1]=so.goals[0]=so.goals[1]=0;so.wait=-1;so.winner=-1;kickoff();}
- function release(p:StrikerPlayer,dx:number,dz:number,speed:number,lift:number,kind:string){const b=state.ball,n=Math.hypot(dx,dz)||1;if(kind==='save')state.lastPasser=-1;if(kind==='pass')state.passAge=0;state.interceptor=-1;state.lastKicker=p.id;p.yaw=Math.atan2(dx,dz);p.strikeYaw=p.yaw;p.strikeKind=kind==='save'?'save':kind==='shot'?'shot':'pass';p.strikePower=clamp((speed-19)/23,.15,1);p.kick=1;p.receive=0;b.owner=-1;b.x=p.x+dx/n*.9;b.z=p.z+dz/n*.9;b.y=.3;b.vx=dx/n*speed;b.vz=dz/n*speed;b.vy=lift;b.lock=.18;b.lastTeam=p.team;emit(kind,b.x,b.z,kind==='shot'?'Follow your shot for the rebound!':'Move after the pass. Make another angle.');}
+ function reset(advance=false){if(advance&&state.finished){const won=state.score[0]>state.score[1];if(won){state.level=Math.min(4,state.level+1);state.assist=false;}else{state.assist=true;state.assistLevel=state.level;}}if(state.assistLevel!==state.level)state.assist=false;state.score[0]=state.score[1]=0;state.time=0;state.finished=false;state.goalPause=0;state.message='Pass, move, receive. Pull the defence apart.';state.passes[0]=state.passes[1]=state.shots[0]=state.shots[1]=0;state.aim=0;state.focus=0;state.crowd=0;state.habitAt=-99;state.habitGoals=state.firstTimeGoals=state.perfect=state.setPieceGoals=0;state.fouls[0]=state.fouls[1]=0;state.spirit[0]=state.spirit[1]=0;state.calls=state.runPasses=0;state.safePasses=state.riskyPasses=state.blueStrikes=state.cleanStrikes=0;state.userPasses=state.userPassesDone=0;state.userPassLive=false;state.lostKind='';state.lostAt=state.bluePieceAt=-99;state.concedeCause='shot';state.cleanStrike=false;state.goalStory.at=-1;state.extra=state.goldenWin=false;state.duration=state.baseDuration;const so=state.shootout;so.active=false;so.turn=0;so.kicks[0]=so.kicks[1]=so.goals[0]=so.goals[1]=0;so.wait=-1;so.winner=-1;kickoff();}
+ function release(p:StrikerPlayer,dx:number,dz:number,speed:number,lift:number,kind:string){const b=state.ball,n=Math.hypot(dx,dz)||1;state.userPassLive=false;if(kind==='save')state.lastPasser=-1;if(kind==='pass')state.passAge=0;state.interceptor=-1;state.lastKicker=p.id;p.yaw=Math.atan2(dx,dz);p.strikeYaw=p.yaw;p.strikeKind=kind==='save'?'save':kind==='shot'?'shot':'pass';p.strikePower=clamp((speed-19)/23,.15,1);p.kick=1;p.receive=0;b.owner=-1;b.x=p.x+dx/n*.9;b.z=p.z+dz/n*.9;b.y=.3;b.vx=dx/n*speed;b.vz=dz/n*speed;b.vy=lift;b.lock=.18;b.lastTeam=p.team;emit(kind,b.x,b.z,kind==='shot'?'Follow your shot for the rebound!':'Move after the pass. Make another angle.');}
  // Over-hitting (the last few % of the charge) adds lift: from range it can sail over.
  // Teaches placement over power without making a full charge useless up close.
  // Chip: aimed over the keeper. The apex sits above the keeper when they have rushed out; from the line it must
@@ -125,14 +150,16 @@ export function createStrikerMatch(){
  function teamStrike(p:StrikerPlayer,aim:number){shoot(p,1,aim);const b=state.ball,n=Math.hypot(b.vx,b.vz)||1;b.vx=b.vx/n*44;b.vz=b.vz/n*44;b.vy=2.2;state.overhit=false;
   const k=players[p.team===0?7:3];k.react+=.18;state.spirit[p.team]=0;state.special++;state.specialTeam=p.team;state.teamStrike=true;
   state.message=p.team===0?'TEAM STRIKE! Built from your passes and habits.':'Blue Team Strike! Pressure the shooter sooner next time.';}
- function shoot(p:StrikerPlayer,power:number,aim:number,firstTime=false){state.teamStrike=false;const penalty=state.setPiece.kind==='penalty';if(p.team===0){if(!state.setPiece.kind)state.setPieceShot=false;state.firstTimeShot=firstTime;state.chip=false;state.curled=false;state.curlTime=p.id===state.selected?.32:0;}if(p.team===0&&power>=.75)state.shotMoment=.18;state.shots[p.team]++;state.lastPasser=-1;const side=p.team===0?1:-1,G=state.goalHalf-.1,targetZ=clamp(aim*G,-G,G),overhit=power>.93;state.overhit=overhit&&p.team===0;
+ function shoot(p:StrikerPlayer,power:number,aim:number,firstTime=false,manual=false){state.teamStrike=false;state.cleanStrike=false;const penalty=state.setPiece.kind==='penalty';if(p.team===0){if(!state.setPiece.kind)state.setPieceShot=false;state.firstTimeShot=firstTime;state.chip=false;state.curled=false;state.curlTime=p.id===state.selected?.32:0;}if(p.team===0&&power>=.75)state.shotMoment=.18;state.shots[p.team]++;state.lastPasser=-1;const side=p.team===0?1:-1,G=state.goalHalf-.1,targetZ=clamp(aim*G,-G,G),overhit=power>.93;state.overhit=overhit&&p.team===0;
   release(p,side*27-p.x,targetZ-p.z,(24+power*18)*(penalty?.68:1),2+power*3.2+(overhit?(power-.93)/.07*3.4:0),'shot');
   // The opposing keeper reads the strike after a short, round-scaled reaction.
   const keeper=players[p.team===0?7:3];keeper.react=p.team===0?tune.react()+(firstTime?.06:0):.11;
   // Penalty: Blue's keeper must guess as the ball is struck (left, middle or right on a fixed, fair rotation).
   // Spot kicks travel at a kid's pace: a right guess reaches a placed shot, only a hard one in the corner beats it.
   if(penalty&&p.team===0){const guess=[-1,0,1,1,-1,0][(state.fouls[1]+state.shots[0])%6];keeper.react=0;if(guess){keeper.dive=STRIKER_DIVE;keeper.vz=guess*12;keeper.vx=-.6;keeper.saveSide=guess*-1>0?1:-1;keeper.saveWide=true;keeper.saveHeight=.6;}}
-  if(overhit)state.message='Huge power! Too much can fly over the bar.';}
+  if(overhit)state.message='Huge power! Too much can fly over the bar.';
+  // Clean strike: a controlled release in the sweet spot stays low and the keeper reads it a beat later.
+  else if(manual&&p.team===0&&!penalty&&power>=STRIKER_CLEAN[0]&&power<=STRIKER_CLEAN[1]){const b=state.ball;b.vy*=.8;keeper.react+=.05;state.cleanStrike=true;state.cleanStrikes++;state.message='Clean strike! Controlled power keeps it low and on target.';}}
  // Score passing lanes, not just the nearest teammate. The same choice drives
  // the receiver marker and actual pass, so the preview tells the truth.
  let laneCover=0;
@@ -142,6 +169,21 @@ export function createStrikerMatch(){
    const rank=alignment*(n>.1?10:3)-d*.08-cover*1.8+(q.callRun>0?6:0);if(rank>best){best=rank;target=q;laneCover=cover;}}
   return target;
  }
+ /** Defenders standing in the lane from (ax,az) to (bx,bz): same measure as the pass preview (0 = clear). */
+ function laneBlock(team:0|1,ax:number,az:number,bx:number,bz:number){const dx=bx-ax,dz=bz-az,d2=dx*dx+dz*dz||1;let cover=0;
+  for(const e of players){if(e.team===team||e.keeper)continue;const t=clamp(((e.x-ax)*dx+(e.z-az)*dz)/d2,0,1);if(t>.08&&t<.94){const gap=Math.hypot(e.x-ax-dx*t,e.z-az-dz*t);cover+=Math.max(0,2.1-gap)*3;}}return cover;}
+ /** Support angles (Oct 9 2026): an off-ball Gold teammate looks at a few spots around its shape position and takes the one
+  * with a clear lane from the ball, away from defenders and not on top of a teammate. Re-read every 0.35 s, not per tick. */
+ const support=new Float32Array(16),supportT=new Float32Array(8);
+ const SUPPORT_OFFSETS=[[0,0],[0,3],[0,-3],[3,0],[-3,0],[2.5,2.5],[2.5,-2.5],[-2.5,2.5],[-2.5,-2.5]];
+ function supportSpot(p:StrikerPlayer,bx:number,bz:number,baseX:number,baseZ:number,forward:number){
+  if(supportT[p.id]>0)return;supportT[p.id]=.35;let best=-Infinity,sx=baseX,sz=baseZ;
+  for(const [ox,oz] of SUPPORT_OFFSETS){const cx=clamp(baseX+ox*forward,-21,21),cz=clamp(baseZ+oz,-11.5,11.5),d=Math.hypot(cx-bx,cz-bz);
+   let score=-laneBlock(0,bx,bz,cx,cz)*1.4-Math.hypot(ox,oz)*.22-Math.max(0,4.5-d)*1.2-Math.max(0,d-16)*.5;
+   for(const e of players)if(e.team===1&&!e.keeper)score-=Math.max(0,STRIKER_MARKED+1.2-Math.hypot(e.x-cx,e.z-cz))*1.1;
+   for(const q of players)if(q.team===0&&!q.keeper&&q!==p&&q.id!==state.selected){const qx=support[q.id*2],qz=support[q.id*2+1];if(supportT[q.id]>0)score-=Math.max(0,4-Math.hypot(qx-cx,qz-cz))*.8;}
+   if(score>best){best=score;sx=cx;sz=cz;}}
+  support[p.id*2]=sx;support[p.id*2+1]=sz;}
  function pass(p:StrikerPlayer,ix:number,iz:number,through=false,returnTo=-1,sprint=false){
   const target=returnTo>=0?players[returnTo]:receiver(p,ix,iz);if(!target)return;
   state.lastPasser=p.id;p.run=1.5;if(p.team===0){state.passFromZ=p.z;state.quickPass=state.holdTime<1.2&&state.passChain>0;}
@@ -149,6 +191,8 @@ export function createStrikerMatch(){
   // Control transfers to the receiver. Lead the movement the player is already
   // holding, including acceleration, rather than their previous AI velocity.
   // Solve a short intercept against friction; the released ball never homes.
+  // Scanning stat: a pass the player chose into an open lane, or into a blocked one (the preview was warm).
+  if(manual&&returnTo<0&&!state.setPiece.kind){if(laneCover/2.4>.5)state.riskyPasses++;else state.safePasses++;}
   const vx=manual?ix/n*runSpeed:target.vx,vz=manual?iz/n*runSpeed:target.vz;
   const departing=Math.max(0,(vx*(target.x-p.x)+vz*(target.z-p.z))/Math.max(1,distance));
   const speed=clamp((through?25:clamp(12+distance*.9,16,36))+departing,16,42);
@@ -160,7 +204,8 @@ export function createStrikerMatch(){
    const travel=Math.max(0,Math.hypot(tx-p.x,tz-p.z)-.9),drag=through?.3:.7;
    arrival=clamp(-Math.log(Math.max(.15,1-travel*drag/speed))/drag,0,1.8);
   }
-  const lofted=through&&sprint&&(p.team===0||state.setPiece.kind==='corner');release(p,tx-p.x,tz-p.z,lofted?speed*.8:speed,lofted?7.4:through?1.5:.5,'pass');if(lofted)state.message='Lofted through ball! Over the press, into the run.';if(p.team===0)state.selected=target.id;
+  const userPass=manual&&!state.setPiece.kind;if(userPass)state.userPasses++;
+  const lofted=through&&sprint&&(p.team===0||state.setPiece.kind==='corner');release(p,tx-p.x,tz-p.z,lofted?speed*.8:speed,lofted?7.4:through?1.5:.5,'pass');state.userPassLive=userPass;if(lofted)state.message='Lofted through ball! Over the press, into the run.';else if(manual&&returnTo<0&&state.safePasses+state.riskyPasses<=3&&!state.setPiece.kind)state.message='Scan as it travels: cyan rings are free teammates for your next pass.';if(p.team===0)state.selected=target.id;
  }
  function tackle(p:StrikerPlayer){if(p.cooldown>0||p.stun>0)return;
   // Timed tackle: the carrier's heavy touch leaves the ball off their foot. Step in now for a clean steal.
@@ -171,7 +216,7 @@ export function createStrikerMatch(){
  // A foul (a tackle from behind) or a parry around the post stops play. Everyone is placed and
  // the kick is taken with the normal controls. Blue's set pieces are taken by the AI after a short look.
  function awardSetPiece(kind:Exclude<StrikerSetPieceKind,''>,team:0|1,x:number,z:number){const b=state.ball,forward=team===0?1:-1,goalX=forward*25,sp=state.setPiece;
-  sp.kind=kind;sp.team=team;sp.wait=team===0?6:kind==='penalty'?1.6:1.1;sp.guess=0;state.queuedPass=state.queuedShot=0;state.curlTime=0;state.interceptor=-1;state.charge=0;state.lastPasser=-1;state.setPieceShot=false;
+  sp.kind=kind;sp.team=team;if(team===1)state.bluePieceAt=state.time;sp.wait=team===0?6:kind==='penalty'?1.6:1.1;sp.guess=0;state.queuedPass=state.queuedShot=0;state.curlTime=0;state.interceptor=-1;state.charge=0;state.lastPasser=-1;state.setPieceShot=false;
   if(kind==='penalty'){x=forward*STRIKER_PENALTY_X;z=0;}if(kind==='corner'){x=forward*24.3;z=(Math.sign(z)||1)*13.2;}
   x=clamp(x,-24.3,24.3);z=clamp(z,-13.2,13.2);sp.x=x;sp.z=z;
   // Taker: the nearest outfield player of the awarded team.
@@ -235,7 +280,7 @@ export function createStrikerMatch(){
   if(Math.abs(gap)<.85||Math.abs(zc)>state.goalHalf+1.4||yc>3.1){k.jockey=1;return;}
   const reach=(k.team===1?tune.dive():10.5)*(state.teamStrike?.6:1);k.dive=STRIKER_DIVE;k.vz=clamp(gap/Math.max(t,.14),-reach,reach);k.vx=forward*.8;}
  function score(team:number){if(state.shootout.active){state.shootout.goals[team]++;state.shootout.wait=-1;state.goalPause=1.1;state.hitStop=STRIKER_HIT_STOP;state.crowd=1.4;state.scorer=-1;state.ball.lastTeam=team;emit('goal',state.ball.x,state.ball.z,team===0?'Penalty scored!':'Blue scores the penalty.');return;}
-  if(state.extra)state.goldenWin=true;state.score[team]++;if(team===0){if(state.time-state.habitAt<STRIKER_HABIT_GOAL_WINDOW)state.habitGoals++;if(state.firstTimeShot)state.firstTimeGoals++;if(state.setPieceShot)state.setPieceGoals++;}const b=state.ball;b.lastTeam=team;state.goalPause=STRIKER_GOAL_PAUSE;state.hitStop=STRIKER_HIT_STOP;state.crowd=1.6;const kicker=state.lastKicker>=0?players[state.lastKicker]:null;state.scorer=kicker&&kicker.team===team&&!kicker.keeper?kicker.id:-1;state.charge=0;state.interceptor=-1;
+  if(state.extra)state.goldenWin=true;state.score[team]++;if(team===1)state.concedeCause=state.teamStrike?'teamStrike':state.time-state.bluePieceAt<5?'setPiece':state.lostKind&&state.time-state.lostAt<STRIKER_CONCEDE_WINDOW?state.lostKind:'shot';if(team===0){const g=state.goalStory;g.chain=state.passChain;g.habit=state.time-state.habitAt<STRIKER_HABIT_GOAL_WINDOW;g.firstTime=state.firstTimeShot;g.teamStrike=state.teamStrike;g.chip=state.chip;g.curled=state.curled;g.setPiece=state.setPieceShot;g.clean=state.cleanStrike;g.at=state.time;if(state.time-state.habitAt<STRIKER_HABIT_GOAL_WINDOW)state.habitGoals++;if(state.firstTimeShot)state.firstTimeGoals++;if(state.setPieceShot)state.setPieceGoals++;}const b=state.ball;b.lastTeam=team;state.goalPause=STRIKER_GOAL_PAUSE;state.hitStop=STRIKER_HIT_STOP;state.crowd=1.6;const kicker=state.lastKicker>=0?players[state.lastKicker]:null;state.scorer=kicker&&kicker.team===team&&!kicker.keeper?kicker.id:-1;state.charge=0;state.interceptor=-1;
   // The ball keeps travelling into the net (slowed in celebrate), not frozen on the line.
   b.vx=clamp(b.vx,-14,14);b.vz*=.4;b.vy=Math.min(b.vy,1);emit('goal',b.x,b.z,team===0?'GOAL! Great finish.':'Blue scores. Win it back!');}
  // Goal celebration: scorer runs to the corner, teammates join, the other side trudges back.
@@ -278,6 +323,9 @@ export function createStrikerMatch(){
   const b=state.ball;if(input.switchPlayer){state.queuedPass=0;let best=Infinity,next=state.selected;const previous=state.selected;for(const p of players)if(p.team===0&&!p.keeper&&p.id!==previous){const d=Math.hypot(p.x-b.x,p.z-b.z);if(d<best){best=d;next=p.id;}}state.selected=next;}
   const user=players[state.selected];state.aim=input.z;state.passTarget=b.owner===user.id?(receiver(user,input.x,input.z)?.id??-1):-1;state.passRisk=state.passTarget>=0?clamp(laneCover/2.4,0,1):0;state.charge=input.charge&&b.owner===user.id?Math.min(1,state.charge+dt*.95):0;
   if(b.owner===user.id)state.holdTime+=dt;
+  // Scan markers: how open each Gold teammate is from the ball (lane clear and unmarked). Once per frame, 3 x 4 checks.
+  for(const q of players){if(q.team!==0||q.keeper||q.id===b.owner){state.laneOpen[q.id]=0;continue;}let near=Infinity;for(const e of players)if(e.team===1&&!e.keeper)near=Math.min(near,Math.hypot(e.x-q.x,e.z-q.z));
+   state.laneOpen[q.id]=clamp(1-laneBlock(0,b.x,b.z,q.x,q.z)/2.4,0,1)*clamp((near-STRIKER_MARKED*.6)/(STRIKER_MARKED*.6),0,1);}
   // Crowd energy follows the attack: gold near the blue goal, or blue threatening ours.
   {const owner=b.owner>=0?players[b.owner]:null,gold=clamp((b.x-6)/14,0,1),blue=clamp((-b.x-6)/14,0,1)*.75,target=owner?(owner.team===0?gold:blue):Math.max(gold,blue)*.8;state.crowd+=(target-state.crowd)*(1-Math.exp(-dt*(target>state.crowd?1.6:.7)));}
   // Touch window: how close a Gold pass is to reaching the selected player (0 = none, 1 = at feet).
@@ -286,7 +334,7 @@ export function createStrikerMatch(){
   if(input.call&&b.owner===user.id&&!state.setPiece.kind)callRun(user);
   // Aftertouch curl: for a moment after striking, holding up or down bends the ball (Sensible-style, gently capped).
   if(state.curlTime>0){state.curlTime-=dt;if(b.owner<0&&state.lastKicker===state.selected&&Math.abs(input.z)>.3){const bend=input.z*24*dt;b.vz=clamp(b.vz+bend,-16,16);if(!state.curled){state.curled=true;state.message='Curled it! Bend the ball away from the keeper.';}}}
-  if(input.shoot&&b.owner===user.id){if(input.sprint)chip(user,clamp(input.power,0,1),input.z);else if(state.spirit[0]>=1&&input.power>=.88&&!state.setPiece.kind)teamStrike(user,input.z);else shoot(user,clamp(input.power,0,1),input.z);}
+  if(input.shoot&&b.owner===user.id){if(input.sprint)chip(user,clamp(input.power,0,1),input.z);else if(state.spirit[0]>=1&&input.power>=.88&&!state.setPiece.kind)teamStrike(user,input.z);else shoot(user,clamp(input.power,0,1),input.z,false,true);}
   // Shoot while a pass is on its way: a buffered first-time shot. Inside the window it is "perfect".
   else if(input.shoot&&b.owner<0&&state.lastPasser>=0&&players[state.lastPasser].team===0&&state.lastPasser!==user.id){state.queuedShot=.65;state.queuedPass=0;state.queuedShotPower=clamp(input.power>.3?input.power:.72,.45,.9);state.queuedPerfect=state.touchWindow>0;state.message='FIRST-TIME SHOT READY · meet it and strike!';}
   if(input.pass||input.through){if(b.owner===user.id)pass(user,input.x,input.z,input.through,-1,input.sprint);else if(b.owner<0&&state.lastPasser>=0&&players[state.lastPasser].team===0){state.queuedPass=.65;state.queuedShot=0;state.queuedThrough=input.through;state.queuedX=input.x;state.queuedZ=input.z;state.queuedPerfect=state.touchWindow>0;state.message='ONE-TOUCH READY · meet it and move it.';}else tackle(user);}
@@ -320,7 +368,7 @@ export function createStrikerMatch(){
      state.interceptor=id;state.interceptX=ix;state.interceptZ=iz;}else if(skill<=0)state.interceptor=-1;}
    else if(owner)state.interceptor=-1;
    for(const p of players){if(state.setPiece.kind){p.vx=p.vz=0;if(p.id===state.setPiece.taker&&state.setPiece.team===0&&state.setPiece.kind!=='corner')p.yaw=Math.atan2(25-p.x,clamp(input.z*4.5,-4.5,4.5)-p.z);continue;}
-    p.receive=Math.max(0,p.receive-h);p.wall=Math.max(0,p.wall-h);p.kick=Math.max(0,p.kick-h*2.6);p.cooldown=Math.max(0,p.cooldown-h);p.stun=Math.max(0,p.stun-h);p.tackle=Math.max(0,p.tackle-h);p.think-=h;if(p.windup>0){if(b.owner<0||players[b.owner].team===p.team)p.windup=0;else{p.windup-=h;if(p.windup<=0)tackle(p);}}p.run=Math.max(0,p.run-h);p.jockey=0;p.header=Math.max(0,p.header-h);if(p.strikeCharge>0&&b.owner!==p.id){p.strikeCharge=0;state.spirit[p.team]*=.5;}let dx=0,dz=0,speed=8;
+    p.receive=Math.max(0,p.receive-h);supportT[p.id]=Math.max(0,supportT[p.id]-h);p.wall=Math.max(0,p.wall-h);p.kick=Math.max(0,p.kick-h*2.6);p.cooldown=Math.max(0,p.cooldown-h);p.stun=Math.max(0,p.stun-h);p.tackle=Math.max(0,p.tackle-h);p.think-=h;if(p.windup>0){if(b.owner<0||players[b.owner].team===p.team)p.windup=0;else{p.windup-=h;if(p.windup<=0)tackle(p);}}p.run=Math.max(0,p.run-h);p.jockey=0;p.header=Math.max(0,p.header-h);if(p.strikeCharge>0&&b.owner!==p.id){p.strikeCharge=0;state.spirit[p.team]*=.5;}let dx=0,dz=0,speed=8;
     if(b.owner===p.id&&p.team===1&&!p.keeper){p.heavy=Math.max(0,p.heavy-h);p.touchCycle-=h;if(p.touchCycle<=0){p.heavy=STRIKER_HEAVY_TOUCH;p.touchCycle=1.05+(p.id%3)*.12;}}else{p.heavy=0;if(b.owner!==p.id)p.touchCycle=Math.min(p.touchCycle,.9);}
     if(p.react>0){p.react-=h;if(p.react<=0){p.react=0;readShot(p);}}
     if(p.dive>0){p.dive=Math.max(0,p.dive-h);if(p.dive<=0)p.cooldown=Math.max(p.cooldown,.25);}
@@ -340,7 +388,7 @@ export function createStrikerMatch(){
       if(owner&&owner.team!==p.team&&(owner.id===state.selected?state.charge>.2:Math.abs(forward*-25-owner.x)<21))p.jockey=1;
      }
      else if(owner===p&&p.strikeCharge>0){p.strikeCharge=Math.max(0,p.strikeCharge-h);tx=p.x+forward*.3;tz=p.z;speed=1.2;p.jockey=0;if(p.strikeCharge<=0){const k=players[p.team===0?7:3];teamStrike(p,k.z>0?-.85:.85);}}
-     else if(owner===p&&p.team===1&&state.spirit[1]>=1&&Math.abs(forward*25-p.x)<21&&!state.setPiece.kind){p.strikeCharge=1.05;emit('bluecharge',p.x,p.z,'Blue is charging a Team Strike! Close the shooter down!');tx=p.x;tz=p.z;}
+     else if(owner===p&&p.team===1&&state.spirit[1]>=1&&state.blueStrikes<STRIKER_BLUE_STRIKES[lv()]&&Math.abs(forward*25-p.x)<21&&!state.setPiece.kind){p.strikeCharge=1.05;state.blueStrikes++;emit('bluecharge',p.x,p.z,'Blue is charging a Team Strike! Close the shooter down!');tx=p.x;tz=p.z;}
      else if(owner===p){tx=forward*22;tz=p.z*.65;for(const q of players){if(q.team===p.team||q.keeper)continue;const ahead=(q.x-p.x)*forward,gap=q.z-p.z;if(ahead>0&&ahead<5&&Math.abs(gap)<2.5)tz=clamp(p.z+(gap>=0?-3:3),-10,10);}if(p.think<=0){p.think=p.team===1?T.carrierThink[lv()]:.8;if(Math.abs(forward*25-p.x)<19)shoot(p,.45+Math.abs(Math.sin(state.time))*.4,Math.sin(state.time*1.7)*.85);else if(players.some(q=>q.team!==p.team&&Math.hypot(q.x-p.x,q.z-p.z)<3))pass(p,forward,0);}}
      else if(p.id===state.interceptor){tx=clamp(state.interceptX,-23,23);tz=clamp(state.interceptZ,-12,12);speed=7.6*(p.team===1?tune.skill():.85)+.6;p.jockey=.6;}
      else if((!owner||owner.team!==p.team)&&p.id===closest[p.team]&&!owner?.keeper){const lead=owner?0:Math.min(.4,Math.hypot(p.x-b.x,p.z-b.z)/24);tx=clamp(b.x+b.vx*lead,-23,23);tz=clamp(b.z+b.vz*lead,-12,12);if(owner&&owner.team!==p.team){const gap=Math.hypot(p.x-b.x,p.z-b.z);if(gap<5){p.jockey=1;tx=b.x-forward*1.9;tz=b.z;speed*=.8;}// Good defenders get goal-side first: no wind-up while the carrier runs away from them (that would be a foul from behind).
@@ -352,6 +400,8 @@ export function createStrikerMatch(){
       tx=clamp(b.x+forward*(p.run>0?9:p.id%4===0?-5:5),-20,20);tz=p.id%4===1?-8:p.id%4===2?8:(b.z>0?-3:3);
       // Team shape (Gold): wide players hug the touchlines; solid keeps one teammate back as rest defence.
       if(p.team===0&&p.run<=0){if(state.shape==='wide'&&p.id%4!==0){tz=p.id%4===1?-11.5:11.5;tx=clamp(b.x+forward*6,-20,20);}if(state.shape==='solid'&&p.id%4===2){tx=clamp(Math.min(b.x-8,-6),-20,20);tz=b.z*.3;}}
+      // Gold's support angle: pick the open spot near the shape position (forward runs and called runs keep their line).
+      if(p.team===0&&p.run<=0&&p.callRun<=0){supportSpot(p,b.x,b.z,tx,tz,forward);tx=support[p.id*2];tz=support[p.id*2+1];}
       // A called run overrides the shape until the pass arrives or the run fades.
       if(p.team===0&&p.callRun>0){const carrier=owner!;p.callRun=Math.max(0,p.callRun-h);speed=10.5;
        if(p.callKind==='behind'){let last=-25;for(const q of players)if(q.team!==p.team&&!q.keeper)last=Math.max(last,q.x*forward);tx=clamp(forward*(last+3.5),-22.5,22.5);tz=clamp(p.z*.7,-10,10);}
@@ -382,7 +432,7 @@ export function createStrikerMatch(){
      // A skill move inside its evade window beats the committed challenge: the tackler goes past and stumbles.
      if(victim.team!==p.team&&victim.skill>0&&1-victim.skill/STRIKER_SKILLS[victim.skillKind].seconds<STRIKER_SKILLS[victim.skillKind].evade&&Math.hypot(victim.x-p.x,victim.z-p.z)<1.9){p.tackle=0;p.stun=.5;p.vx*=.4;p.vz*=.4;state.beatEvent++;addSpirit(victim.team,T2.beat);emit('beat',p.x,p.z,STRIKER_SKILLS[victim.skillKind].label+' beat the tackle! Now pass or shoot.');}
      else if(victim.team!==p.team&&Math.hypot(victim.x-p.x,victim.z-p.z)<1.65&&!victim.keeper&&(p.team===1||p.id===state.selected)&&Math.hypot(victim.vx,victim.vz)>3.5&&(p.vx*Math.sin(victim.yaw)+p.vz*Math.cos(victim.yaw))/(Math.hypot(p.vx,p.vz)||1)>.8){p.tackle=0;foul(p,victim);break;}
-     else if(victim.team!==p.team&&Math.hypot(victim.x-p.x,victim.z-p.z)<1.65){victim.stun=.6;if(p.team===1)addSpirit(1,T2.blueTackle);if(victim.strikeCharge>0){victim.strikeCharge=0;state.spirit[victim.team]*=.5;}victim.vx=p.vx*.7;victim.vz=p.vz*.7;b.owner=-1;b.vx=p.vx*.6;b.vz=p.vz*.6;b.vy=2;b.lock=.2;p.tackle=0;emit('hit',victim.x,victim.z,victim.team===0?'Tackled! Release the ball before the defender arrives.':'Clean challenge! Chase the loose ball.');}}
+     else if(victim.team!==p.team&&Math.hypot(victim.x-p.x,victim.z-p.z)<1.65){victim.stun=.6;if(p.team===1)addSpirit(1,T2.blueTackle);if(victim.strikeCharge>0){victim.strikeCharge=0;state.spirit[victim.team]*=.5;}if(victim.team===0){state.lostKind='tackle';state.lostAt=state.time;}victim.vx=p.vx*.7;victim.vz=p.vz*.7;b.owner=-1;b.vx=p.vx*.6;b.vz=p.vz*.6;b.vy=2;b.lock=.2;p.tackle=0;emit('hit',victim.x,victim.z,victim.team===0?'Tackled! Release the ball before the defender arrives.':'Clean challenge! Chase the loose ball.');}}
    }
    // Separate bodies gently; tackles supply their own impulse.
    for(let i=0;i<players.length;i++)for(let j=i+1;j<players.length;j++){const a=players[i],c=players[j],dx=c.x-a.x,dz=c.z-a.z,n=Math.hypot(dx,dz);if(n>.001&&n<1.05){const push=(1.05-n)*.2;a.x-=dx/n*push;a.z-=dz/n*push;c.x+=dx/n*push;c.z+=dz/n*push;}}
@@ -406,11 +456,11 @@ export function createStrikerMatch(){
        const side=p.team===0?1:-1,speed=Math.hypot(b.vx,b.vz);if(!diving){p.saveSide=(b.z-p.z)*side<0?-1:1;p.saveHeight=b.y;p.saveWide=Math.abs(b.z-p.z)>.48;}
        const shotAt=b.lastTeam!==p.team&&speed>14;p.react=0;state.interceptor=-1;
        // Soft balls are held (Gold's keeper is kinder); hard wide stops are parried toward the corner, away from the goal mouth.
-       if(speed<(p.team===0?19:15)&&!p.saveWide&&b.y<1.8){state.lastPasser=-1;state.lastKicker=-1;p.kick=1;p.strikeKind='save';p.caught=true;b.owner=p.id;b.lastTeam=p.team;b.lock=.3;b.vx=b.vz=b.vy=0;p.think=.75;emit('save',p.x,p.z,p.team===1?'Keeper holds it. Shoot lower and wider.':'Safe hands! Now build again.');}
+       if(speed<(p.team===0?19:15)&&!p.saveWide&&b.y<1.8){state.lastPasser=-1;state.lastKicker=-1;p.kick=1;p.strikeKind='save';p.caught=true;state.userPassLive=false;b.owner=p.id;b.lastTeam=p.team;b.lock=.3;b.vx=b.vz=b.vy=0;p.think=.75;emit('save',p.x,p.z,p.team===1?'Keeper holds it. Shoot lower and wider.':'Safe hands! Now build again.');}
        else if(p.saveWide&&speed>25&&Math.abs(b.z)>1.8){release(p,-side*.3,Math.sign(b.z)||1,13,2.6,'save');state.message=p.team===1?'Tipped round the post! Corner to Gold.':'Our keeper tips it wide! Defend the corner.';}
        else{release(p,side,p.saveWide?(Math.sign(b.z-p.z)||1)*.95:-p.z*.12,p.saveWide?24:21,4,'save');if(shotAt)state.message=p.team===1?'Great save! Aim for the corners.':'Our keeper saves! Recover your shape.';}
        break;}
-      const passer=state.lastPasser,completed=passer>=0&&passer!==p.id&&players[passer].team===p.team,stolen=passer>=0&&players[passer].team!==p.team;const ranIn=completed&&p.team===0&&p.callRun>0;if(completed){state.passes[p.team]++;state.passChain++;addSpirit(p.team,p.team===0?T2.pass:T2.bluePass);if(ranIn){state.runPasses++;addSpirit(0,T2.run);}}else state.passChain=0;if(stolen)addSpirit(p.team,p.team===0?T2.intercept:T2.blueIntercept);p.callRun=0;state.lastPasser=-1;state.interceptor=-1;p.receive=.22;p.receiveHeight=b.y;p.receiveX=b.x-p.x;p.receiveZ=b.z-p.z;b.owner=p.id;b.lastTeam=p.team;b.lock=.32;if(p.team===0){state.selected=p.id;state.holdTime=0;}
+      const passer=state.lastPasser,completed=passer>=0&&passer!==p.id&&players[passer].team===p.team,stolen=passer>=0&&players[passer].team!==p.team;const ranIn=completed&&p.team===0&&p.callRun>0;if(completed){state.passes[p.team]++;state.passChain++;addSpirit(p.team,p.team===0?T2.pass:T2.bluePass);if(ranIn){state.runPasses++;addSpirit(0,T2.run);}}else state.passChain=0;if(stolen)addSpirit(p.team,p.team===0?T2.intercept:T2.blueIntercept);if(completed&&p.team===0&&state.userPassLive)state.userPassesDone++;if(stolen&&p.team===1){state.lostKind='intercept';state.lostAt=state.time;}state.userPassLive=false;p.callRun=0;state.lastPasser=-1;state.interceptor=-1;p.receive=.22;p.receiveHeight=b.y;p.receiveX=b.x-p.x;p.receiveZ=b.z-p.z;b.owner=p.id;b.lastTeam=p.team;b.lock=.32;if(p.team===0){state.selected=p.id;state.holdTime=0;}
       emit(stolen?'intercept':'touch',p.x,p.z,stolen?(p.team===1?'Intercepted! Pass away from the defender\'s lane.':'Interception! Now go forward.'):completed?'Pass received! Look for the next open angle.':'Find space. Keep your next pass moving.');
       if(ranIn)state.message='Great run! You played it into the run you called.';
       if(completed&&p.team===0){
@@ -441,3 +491,25 @@ export function strikerStars(s:{level:number;score:number[];focus:number;habitGo
  const win=s.score[0]>s.score[1],habit=s.focus>=STRIKER_FOCUS_GOAL,challenge=[win&&s.score[1]===0,s.firstTimeGoals>0,s.habitGoals>0,s.score[0]-s.score[1]>=2][Math.max(1,Math.min(4,s.level))-1];
  return{win,habit,challenge,count:Number(win)+Number(habit)+Number(challenge)};
 }
+/** Replay caption: how the goal was built, in a 7v7 kid's words (passes first, then the finish). */
+export function strikerGoalStory(g:{chain:number;habit:boolean;firstTime:boolean;teamStrike:boolean;chip:boolean;curled:boolean;setPiece:boolean;clean:boolean},level:number){
+ const parts:string[]=[];
+ if(g.setPiece)parts.push('Set piece');else if(g.chain>=2)parts.push(`${g.chain} passes`);else if(g.chain===1)parts.push('One pass');else parts.push('Solo run');
+ if(g.habit)parts.push(STRIKER_FOCUS[Math.max(1,Math.min(4,level))-1].toLowerCase());
+ parts.push(g.teamStrike?'Team Strike':g.chip?'chip over the keeper':g.firstTime?'first-time finish':g.curled?'curled finish':g.clean?'clean strike':'finish');
+ return parts.join(' · ');}
+/** Context prompt for the action buttons (Oct 9 2026 playtest): what a young player should press right now. "shoot" in
+ * the shooting zone, "pass" when a teammate is open and the carrier is pressed or has held the ball a while, "tackle"
+ * at the exact moment a Blue carrier's heavy touch leaves the ball off their foot. Pure and allocation-free. */
+export type StrikerHint=''|'pass'|'shoot'|'tackle';
+export const STRIKER_SHOOT_ZONE=12;
+export function strikerHint(s:{finished:boolean;goalPause:number;selected:number;holdTime:number;laneOpen:number[];setPiece:{kind:string};ball:{owner:number;x:number;z:number};players:{id:number;team:0|1;keeper:boolean;x:number;z:number;heavy:number}[]}):StrikerHint{
+ if(s.finished||s.goalPause>0||s.setPiece.kind)return '';
+ const user=s.players[s.selected],owner=s.ball.owner;
+ if(owner===user.id){
+  if(user.x>=STRIKER_SHOOT_ZONE&&Math.abs(user.z)<9)return 'shoot';
+  let pressed=false,open=false;
+  for(const q of s.players){if(q.keeper)continue;if(q.team===1&&Math.hypot(q.x-user.x,q.z-user.z)<3.5)pressed=true;if(q.team===0&&q.id!==user.id&&s.laneOpen[q.id]>.7)open=true;}
+  return open&&(pressed||s.holdTime>1.8)?'pass':'';}
+ if(owner>=0){const carrier=s.players[owner];if(carrier.team===1&&!carrier.keeper&&carrier.heavy>0&&Math.hypot(s.ball.x-user.x,s.ball.z-user.z)<2.6)return 'tackle';}
+ return '';}

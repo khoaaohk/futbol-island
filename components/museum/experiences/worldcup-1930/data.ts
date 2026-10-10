@@ -33,7 +33,7 @@ export const PORTS:Port[]=[
 /** Open-sea cards between the ports. */
 export const SEA_NOTES=[
  {id:'why',p:.3,title:'Why a ship?',text:'In 1930 there were no passenger planes across the ocean. Most European teams said no to the trip, so only four came from Europe.'},
- {id:'deck',p:.44,title:'Training at sea',text:'Teams kept fit on the ship’s decks every day, with running and fitness drills. Romania’s coach drilled his 19 players on deck.'},
+ {id:'deck',p:.44,title:'Training at sea',text:'Teams kept fit on the ship’s decks every day, with running and fitness drills. Romania’s coach, Costel Rădulescu, drilled his players on deck.'},
  {id:'equator',p:.58,title:'Crossing the Equator',text:'Into the southern half of the world. In Uruguay it is winter in July.'},
 ] as const;
 
@@ -86,7 +86,7 @@ export const LAND_LABELS:{t:string;at:LonLat;size:number}[]=[
 // ---- The tournament -------------------------------------------------------------------------------------------------------
 export type Team={id:string;name:string;from:'sa'|'eu'|'na';ship?:boolean;color:string};
 export const TEAMS:Record<string,Team>={
- arg:{id:'arg',name:'Argentina',from:'sa',color:'#7fb4e0'},chi:{id:'chi',name:'Chile',from:'sa',color:'#c8443b'},
+ arg:{id:'arg',name:'Argentina',from:'sa',color:'repeating-linear-gradient(90deg,#7fb4e0 0 3px,#f4efe3 3px 6px)'},chi:{id:'chi',name:'Chile',from:'sa',color:'#c8443b'},
  fra:{id:'fra',name:'France',from:'eu',ship:true,color:'#2f4fa2'},mex:{id:'mex',name:'Mexico',from:'na',color:'#2f7d4f'},
  yug:{id:'yug',name:'Yugoslavia',from:'eu',color:'#3a5ea8'},bra:{id:'bra',name:'Brazil',from:'sa',ship:true,color:'#e4c33b'},
  bol:{id:'bol',name:'Bolivia',from:'sa',color:'#3f8a4c'},uru:{id:'uru',name:'Uruguay',from:'sa',color:'#5fa8dc'},
@@ -97,7 +97,7 @@ export const TEAMS:Record<string,Team>={
 export type Group={id:string;label:string;teams:string[];winner:string;line:string;games:string[]};
 export const GROUPS:Group[]=[
  {id:'g1',label:'Group 1',teams:['arg','chi','fra','mex'],winner:'arg',line:'Argentina won all three games.',
-  games:['France 4–1 Mexico','Argentina 1–0 France','Chile 3–0 Mexico','Argentina 6–3 Mexico','Argentina 3–1 Chile']},
+  games:['France 4–1 Mexico','Argentina 1–0 France','Chile 3–0 Mexico','Chile 1–0 France','Argentina 6–3 Mexico','Argentina 3–1 Chile']},
  {id:'g2',label:'Group 2',teams:['yug','bra','bol'],winner:'yug',line:'Yugoslavia beat Brazil and Bolivia.',
   games:['Yugoslavia 2–1 Brazil','Yugoslavia 4–0 Bolivia','Brazil 4–0 Bolivia']},
  {id:'g3',label:'Group 3',teams:['uru','rou','per'],winner:'uru',line:'Uruguay, the hosts, won both games.',
@@ -119,6 +119,19 @@ export const GOALS:Goal[]=[
  {min:57,team:'uru',who:'Pedro Cea'},{min:68,team:'uru',who:'Santos Iriarte'},{min:89,team:'uru',who:'Héctor Castro'},
 ];
 export const score=(min:number)=>GOALS.reduce((s,g)=>g.min<=min?{...s,[g.team]:s[g.team]+1}:s,{uru:0,arg:0});
+
+/** Ticket check (the quick learning check before the outro): each answer was taught on the way. Right answers punch the ticket. */
+export type Q={q:string;choices:readonly string[];right:number;why:string};
+export const QUIZ:readonly Q[]=[
+ {q:'How did the European teams get to Uruguay?',choices:['By plane','By ship','By train'],right:1,
+  why:'On the Conte Verde: about two weeks at sea. There were no passenger planes across the ocean.'},
+ {q:'How many teams played at the first World Cup?',choices:['13','16','32'],right:0,
+  why:'Only 13, and they were invited. Seven came from South America.'},
+ {q:'Why were there two balls in the final?',choices:['One ball burst','The rules said so','The teams could not agree whose ball to use'],right:2,
+  why:'So Argentina’s ball was used in the first half and Uruguay’s in the second.'},
+ {q:'Who won the first World Cup?',choices:['Argentina','Uruguay','Yugoslavia'],right:1,
+  why:'Uruguay, the hosts, came back from 2–1 down at half-time to win 4–2.'},
+];
 
 export const SOURCES:Src[]=[
  {title:'FIFA · King Carol II takes Romania to the 1930 FIFA World Cup (Genoa, 21 June; Rimet and the trophy; training on deck)',url:'https://www.fifa.com/en/tournaments/mens/worldcup/articles/romania-king-carol-second-1930-uruguay'},

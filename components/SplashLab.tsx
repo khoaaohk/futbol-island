@@ -11,6 +11,7 @@ import {createPreviewDriver,type PreviewMoveId,type PreviewProbe} from '@/lib/gr
 import {DEFAULT_CUSTOMIZATION,BEAN_PRESETS,beanLookFor,playerOutfit,type CharacterCustomization} from '@/lib/town/customization';
 import {matchPlayerDress} from '@/lib/town/beanLooks';
 import type {BeanExpression,BeanLook,Outfit} from '@/lib/graphics/beanLook';
+import {CLASSIC_GROUND,createTrickCtx,createTrickFrame,sampleTrick,trickById} from '@/lib/graphics/freestyleTricks';
 
 export type SplashSpec={
  /** Main-character builder look (plus an optional club costume), or a match player (team side + keeper). */
@@ -19,6 +20,11 @@ export type SplashSpec={
  outfit?:Partial<Outfit>;look?:Partial<BeanLook>;number?:number;move:PreviewMoveId;at:number;yaw:number;expression?:BeanExpression;
  /** Camera: azimuth around the rig (radians) and height; `px` = output pixels per metre. */
  azimuth?:number;height?:number;px?:number;ball?:boolean;
+ /** Optional island freestyle trick (lib/graphics/freestyleTricks.ts id) posed instead of the preview `move`; `at` = seconds into the trick. */
+ trick?:{id:string;side?:-1|1;
+  /** Loop sampling: [t0, period] = one cycle of the trick. The rig plays to t0, then repeats that cycle `warm` times (default 6) so
+   *  its smoothing settles, then plays `at` seconds further (0 ≤ at < period): frames sampled this way tile seamlessly. */
+  cycle?:readonly [number,number];warm?:number};
 };
 
 export default function SplashLab(){
@@ -55,7 +61,18 @@ export default function SplashLab(){
    const dt=1/60;let f=driver.step(0,probe),el=0;
    const apply=()=>{r.update(f.x,f.z,dt,el,false,f.motion);if(f.celebrate>=0)applyCelebrationArms(r.root,f.celebrate);};
    apply();
-   for(let s=0;s<spec.at;s+=dt){el+=dt;probe.headTop=r.headTop;probe.juggleHead=r.juggleHead;f=driver.step(dt,probe);apply();}
+   const trick=spec.trick?trickById(spec.trick.id):undefined;
+   if(trick){
+    // Same drive as /skill-lab?skill=<trick>: the trick pose rides PlayerMotion.trick, the ball follows the trick's frame.
+    const sd=spec.trick!.side??1,tf=createTrickFrame(),sc=()=>Math.abs(r.root.scale.y)||1;
+    const ctx=()=>{const s=sc(),legs=r.profile.legs;return createTrickCtx({legs,pelvisRest:.88+(legs-1)*.83,headTop:r.headTop!==undefined?r.headTop/s:.88+(legs-1)*.83+1.01,ground:(r.root.userData.beanBody as {ground?:number[]}|undefined)?.ground??CLASSIC_GROUND});};
+    const tstep=(t:number)=>{sampleTrick(trick,Math.min(trick.seconds,t),sd,ctx(),tf,'solo');r.update(0,0,dt,el,false,{facing:0,trick:tf.pose,juggle:0,juggleTouch:'foot',kickSide:sd} as unknown as typeof f.motion);};
+    const cyc=spec.trick!.cycle,end=cyc?cyc[0]+(spec.trick!.warm??6)*cyc[1]+spec.at:spec.at;
+    const tt=(s:number)=>!cyc||s<=cyc[0]?s:cyc[0]+((s-cyc[0])%cyc[1]);
+    const n=Math.round(end/dt);tstep(0);for(let i=1;i<=n;i++){el+=dt;tstep(tt(i===n?end:i*dt));}
+    f={...f,x:0,z:0,ball:{x:tf.ball.x*sc(),y:tf.ball.y*sc(),z:tf.ball.z*sc()},ballVisible:true};
+   }
+   else for(let s=0;s<spec.at;s+=dt){el+=dt;probe.headTop=r.headTop;probe.juggleHead=r.juggleHead;f=driver.step(dt,probe);apply();}
    r.setExpression(spec.expression??'happy');
    // Turn the whole stage (rig + ball) so the pose faces the camera nicely.
    const yaw=spec.yaw;const rot=(x:number,z:number)=>({x:x*Math.cos(yaw)+z*Math.sin(yaw),z:-x*Math.sin(yaw)+z*Math.cos(yaw)});

@@ -336,8 +336,12 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
   useEffect(()=>{if(!loadingComplete)return;const timer=window.setTimeout(()=>setReady(true),window.matchMedia('(prefers-reduced-motion: reduce)').matches?60:returningFromArcade?1050:2050);return()=>window.clearTimeout(timer);},[loadingComplete,returningFromArcade]);
   // The loading screen starts sliding away 1.55 s after loadingComplete (IslandLoading .exiting delay): start the arrival as it departs.
   useEffect(()=>{if(!loadingComplete||returningFromArcade)return;const timer=window.setTimeout(()=>arrivalRestartRef.current(),window.matchMedia('(prefers-reduced-motion: reduce)').matches?80:1500);return()=>window.clearTimeout(timer);},[loadingComplete,returningFromArcade]);
-  useEffect(()=>{if(returningFromArcade)return;const timer=window.setTimeout(()=>setMinimumLoadElapsed(true),3000);return()=>window.clearTimeout(timer);},[returningFromArcade]);
+  // /start's water-loader hand-off (<html data-island-handoff="tan">, components/landing/waterLaunch.ts): the loader is a plain tan
+  // sheet with no artwork to show, so the 3 s minimum (there for the loader art) is skipped; the island appears once it is ready.
+  useEffect(()=>{if(returningFromArcade)return;const timer=window.setTimeout(()=>setMinimumLoadElapsed(true),document.documentElement.dataset.islandHandoff==='tan'?0:3000);return()=>window.clearTimeout(timer);},[returningFromArcade]);
   useEffect(()=>{if(ready&&!failed&&!returningFromArcade&&shouldShowIslandOnboarding())setOnboardingOpen(true);},[ready,failed]);
+  // Coaches Board share links (#play=…, Oct 9 2026): open the Coaches Centre on the board once the island is ready.
+  useEffect(()=>{if(ready&&!failed&&/^#play=/.test(window.location.hash))setCoachesOpen(true);},[ready,failed]);
   useEffect(()=>{if(!ready||failed)return;const url=new URL(window.location.href);const store=url.searchParams.get('store');if(store===null)return;if(store==='books'&&isVendingPreview())openVending('plaza','display:plaza:book');else openStore(store==='packs'||openArcadePacks?'packs:legend':undefined);url.searchParams.delete('store');window.history.replaceState(null,'',url.pathname+url.search);},[ready,failed]);
   useEffect(()=>{if(testCoinsRequested())void grantTestingCoins();},[]);// dev builds on localhost only (lib/town/vendingPreview.ts, G-16)
   const [minimapCollapsed,setMinimapCollapsed]=useState(false);

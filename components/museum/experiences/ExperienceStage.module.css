@@ -1,0 +1,17 @@
+/* The museum's doorway curtain (ExperienceStage.tsx): warm lacquer with the gallery's colour as a band, above every experience
+   (z 60 > the shared Back's 40) while it is down. Moved by one-shot Web Animations on transform/opacity only. */
+.host{display:contents}
+.veil{--g:#c9a24a;position:fixed;inset:0;z-index:60;display:grid;place-items:center;padding:24px;color:#f6ead0;pointer-events:none;will-change:transform;
+ background:linear-gradient(180deg,var(--g) 0 10px,transparent 10px),radial-gradient(120% 80% at 50% 45%,#2b1d14 0,#1d1410 60%,#140d0a 100%);
+ box-shadow:0 -18px 40px -10px rgba(0,0,0,.45)}
+.veil[data-stage-leave]{background:linear-gradient(0deg,var(--g) 0 10px,transparent 10px),radial-gradient(120% 80% at 50% 45%,#2b1d14 0,#1d1410 60%,#140d0a 100%)}
+.card{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;max-width:min(560px,100%)}
+.gallery{display:inline-flex;align-items:center;gap:8px;font:700 13px/1 system-ui,-apple-system,"Segoe UI",sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#e8d6ac}
+.gallery > i{width:10px;height:10px;border-radius:2px;background:var(--g);transform:rotate(45deg)}
+.year{font:700 clamp(46px,9vw,84px)/1 "Hiragino Mincho ProN","Yu Mincho","Noto Serif",Georgia,serif;letter-spacing:.02em;font-variant-numeric:tabular-nums;text-wrap:balance}
+.title{font:600 clamp(20px,3.4vw,30px)/1.2 "Hiragino Mincho ProN","Yu Mincho","Noto Serif",Georgia,serif;text-wrap:balance}
+.note{margin-top:6px;padding:6px 14px;border-radius:999px;border:1.5px solid var(--g);font:600 14px/1.2 system-ui,-apple-system,sans-serif;color:#f6ead0}
+.afterglow{--g:#c9a24a;position:fixed;inset:0;z-index:30;pointer-events:none;background:radial-gradient(120% 80% at 50% 45%,#2b1d14 0,#1d1410 60%,#140d0a 100%)}
+@media (prefers-reduced-motion:reduce){.veil,.afterglow{display:none}}
+/* Focus guards (ExperienceStage.tsx): tabbable, invisible, never in the way. */
+.guard{position:fixed;top:0;left:0;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;pointer-events:none}

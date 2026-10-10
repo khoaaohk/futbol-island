@@ -19,6 +19,19 @@ export const FACT_LINE:Readonly<Record<string,number>>={
  'var-2018':1,       // what VAR may help with
  'hall-of-fame':0,   // your certificates hang here
 };
+/**
+ * The story's chapters (Oct 9 2026): a 7–12-year-old reads the scroll as five chapters and an ending, not twelve loose dates.
+ * Framing words only (no new facts): each title sums up the cases under it.
+ */
+export const CHAPTERS:readonly {n:number;title:string;ids:readonly string[]}[]=[
+ {n:1,title:'Writing the rules',ids:['laws-1863','penalty-1891']},
+ {n:2,title:'The game grows up',ids:['shirts','worldcup-1930','laced-leather']},
+ {n:3,title:'The whole world is watching',ids:['cards-1970','telstar-1970']},
+ {n:4,title:'Everyone joins in',ids:['futsal-1989','wwc-1991']},
+ {n:5,title:'A faster, fairer game',ids:['backpass-1992','var-2018']},
+ {n:6,title:'Your turn',ids:['hall-of-fame']},
+];
+export const chapterOf=(id:string)=>CHAPTERS.find(c=>c.ids.includes(id))??null;
 export type Era={exhibit:Exhibit;fact:string;figure:FigureDef;tick:string};
 /** The tick label under the scrubber: the year, or a short form of "Before the 1960s". */
 export const tickLabel=(year:string)=>/before/i.test(year)?`<${year.match(/\d{4}s?/)?.[0]??year}`:year;

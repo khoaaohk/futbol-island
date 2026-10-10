@@ -1,0 +1,24 @@
+/* Privacy policy body, shared by /privacy and the /start Privacy sheet. Plain, readable, game palette. */
+.policy{display:grid;gap:22px;color:#36504a;font-size:16px;line-height:1.6}
+.policy h2{margin:0 0 8px;font-size:19px;line-height:1.3;color:#244d40}
+.policy p,.policy li{margin:0}
+.policy p+p{margin-top:10px}
+.policy ul,.policy ol{margin:8px 0 0;padding-left:22px;display:grid;gap:6px}
+.policy a{color:#244d40;font-weight:700}
+.policy section{scroll-margin-top:16px}
+.lede{font-size:17px;color:#244d40}
+.updated{font-size:14px;color:#5c6b58}
+.toc{background:#fff1d3;border-radius:18px;padding:14px 18px}
+.toc ol{columns:2 220px;column-gap:24px;display:block}
+.toc li{break-inside:avoid;margin:3px 0}
+.toc a{font-weight:600;text-decoration:none}
+.toc a:hover,.toc a:focus-visible{text-decoration:underline}
+.tableWrap{overflow-x:auto;margin-top:8px;border-radius:14px;background:#fff1d3}
+.tableWrap table{width:100%;min-width:520px;border-collapse:collapse;font-size:15px}
+.tableWrap th,.tableWrap td{padding:9px 12px;text-align:left;vertical-align:top;border-bottom:1px solid #244d401f}
+.tableWrap th{font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:#5c6b58}
+.tableWrap tr:last-child td{border-bottom:0}
+/* Grid children default to min-width:auto, so the wide retention table would widen the whole column; keep it inside its scroller. */
+.policy{grid-template-columns:minmax(0,1fr);min-width:0}
+.policy>*{min-width:0}
+.policy h2:focus{outline:none}

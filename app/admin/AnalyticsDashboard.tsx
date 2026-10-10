@@ -6,6 +6,7 @@ import type {Report,Row} from '@/lib/analytics/core';
 import {BarList,ChartCard,Columns,LineChart,fmtDuration,fmtInt,fmtPct,type BarRow} from './charts';
 import IslandSection from './IslandSection';
 import LearningSection from './LearningSection';
+import StartSection from './StartSection';
 import RegionCard from './RegionCard';
 import styles from './admin.module.css';
 
@@ -14,7 +15,7 @@ const PRESETS:{id:Preset;label:string}[]=[{id:'today',label:'Today'},{id:'7d',la
 const SOURCE_LABEL:Record<string,string>={direct:'Direct',search:'Search',social:'Social',referral:'Referral',campaign:'Campaign'};
 const DEVICE_LABEL:Record<string,string>={phone:'Phone',tablet:'Tablet',desktop:'Desktop'};
 const AREA_LABEL:Record<string,string>={island:'Island',paths:'Paths',arcade:'Arcade',museum:'Museum',konbini:'Konbini',controller:'Phone controller',other:'Other pages'};
-const PAGE_LABEL:Record<string,string>={'/':'Island (/)','/arcade':'Arcade','/museum':'Museum','/konbini':'Konbini','/controller':'Phone controller','/coffee':'Support page','/other':'Other'};
+const PAGE_LABEL:Record<string,string>={'/':'Island (/)','/arcade':'Arcade','/museum':'Museum','/konbini':'Konbini','/controller':'Phone controller','/coffee':'Support page','/start':'Landing page (/start)','/other':'Other'};
 
 let regionNames:Intl.DisplayNames|null=null;
 function countryName(code:string){
@@ -26,7 +27,8 @@ const dayLabel=(key:string,hourly:boolean)=>hourly?`${key.slice(11,13)}:00`:new 
 const tableOf=(rows:Row[],label:(k:string)=>string)=>({columns:['Name','Visitors','Sessions','Page views'],rows:rows.map(r=>[label(r.key),r.visitors,r.sessions,r.pageviews])});
 const barsOf=(rows:Row[],label:(k:string)=>string,metric:'visitors'|'sessions'='visitors'):BarRow[]=>rows.map(r=>({key:r.key,label:label(r.key),value:r[metric]}));
 
-export default function AnalyticsDashboard({initial,initialRange}:{initial:Report;initialRange:Preset}){
+/** `saves`: the save-code status line from the server (app/admin/page.tsx; counts only, never a code or a save's contents). */
+export default function AnalyticsDashboard({initial,initialRange,saves}:{initial:Report;initialRange:Preset;saves?:string}){
  const router=useRouter();
  const [report,setReport]=useState(initial),[preset,setPreset]=useState<Preset>(initialRange),[loading,setLoading]=useState(false),[error,setError]=useState('');
  const [from,setFrom]=useState(initial.from),[to,setTo]=useState(initial.to);
@@ -85,19 +87,27 @@ export default function AnalyticsDashboard({initial,initialRange}:{initial:Repor
     <span className={styles.spacer}/>
     <span className={styles.live} data-tip="Tabs that sent anything in the last 5 minutes" title="Tabs that sent anything in the last 5 minutes"><i aria-hidden="true"/>{fmtInt(report.live)} on now</span>
    </div>
-   <div className={styles.utcRow}><p className={styles.utc}>{rangeText} · days and hours in UTC{loading?' · loading…':''}</p>{report.notes.map(n=><p key={n} className={styles.utc}>{n}</p>)}</div>
+   <div className={styles.utcRow}><p className={styles.utc}>{rangeText} · days and hours in UTC{loading?' · loading…':''}</p>{report.notes.map(n=><p key={n} className={styles.utc}>{n}</p>)}{saves&&<p className={styles.utc} data-save-status>{saves}</p>}</div>
 
    {!report.configured&&<section className={styles.banner}>
     <h2>Analytics storage is not configured</h2>
-    Add <code>SUPABASE_SERVICE_ROLE_KEY</code> to the server environment and run <code>supabase/migrations/20261007_analytics.sql</code>, <code>20261008_analytics_places.sql</code> and <code>20261009_analytics_counts.sql</code> in Supabase, in that order.
+    Add <code>SUPABASE_SERVICE_ROLE_KEY</code> to the server environment and run <code>supabase/migrations/20261007_analytics.sql</code>, <code>20261008_analytics_places.sql</code>, <code>20261009_analytics_counts.sql</code> and <code>20261009_analytics_start.sql</code> in Supabase, in that order.
     Until then the game sends visits to a route that quietly does nothing.
    </section>}
-   {report.configured&&report.storage?.needsUpdate&&<section className={`${styles.banner} ${styles.bannerWarn}`} role="status" aria-labelledby="storage-update">
+   {report.configured&&report.storage?.needsUpdate&&report.storage.schema>=3&&<section className={`${styles.banner} ${styles.bannerWarn}`} role="status" aria-labelledby="storage-update">
+    <h2 id="storage-update">Storage needs an update for the Start page</h2>
+    The database is missing the start-page split (analytics schema {report.storage.schema}, this app needs 4). In the Supabase SQL editor, paste the
+    <b> whole</b> of <code>supabase/migrations/20261009_analytics_start.sql</code> and run it. Its last result must be one row reading
+    <code>OK, start page installed (analytics schema 4)</code>; anything else means it did not finish, and running the whole file again is safe.
+    Until then everything keeps counting, including the start-page taps; only the start-page countries, sources and devices stay empty.
+   </section>}
+   {report.configured&&report.storage?.needsUpdate&&report.storage.schema<3&&<section className={`${styles.banner} ${styles.bannerWarn}`} role="status" aria-labelledby="storage-update">
     <h2 id="storage-update">Storage needs an update for Learning</h2>
     The database is missing the learning counters (analytics schema {report.storage.schema}, this app needs 3). In the Supabase SQL editor, paste the
     <b> whole</b> of <code>supabase/migrations/20261009_analytics_counts.sql</code> and run it. Its last result must be one row reading
     <code>OK, counts installed (analytics schema 3)</code>; anything else means it did not finish, and running the whole file again is safe.
-    Until then visits, places and everything above keep counting; only the Learning section stays empty.
+    Until then visits, places and everything above keep counting; only the Learning section stays empty. Then run
+    <code>20261009_analytics_start.sql</code> the same way (its last row: <code>OK, start page installed (analytics schema 4)</code>).
    </section>}
    {error&&<section className={styles.banner} role="alert">{error}</section>}
 
@@ -109,6 +119,8 @@ export default function AnalyticsDashboard({initial,initialRange}:{initial:Repor
      <div className={styles.tile}><span>Median visit</span><b>{fmtDuration(t.medianMs)}</b><small>average {fmtDuration(t.avgMs)}</small></div>
      <div className={styles.tile}><span>Bounce rate</span><b>{fmtPct(t.bounceRate)}</b><small>one page and under 10 s</small></div>
     </section>
+
+    <StartSection report={report} countryName={countryName}/>
 
     <ChartCard wide title="Visitors, sessions and page views" subtitle={hourly?'By hour (UTC)':'By day (UTC)'} empty={empty}
      table={{columns:[hourly?'Hour':'Day','Visitors','Sessions','Page views'],rows:report.series.map((p,i)=>[labels[i],p.visitors,p.sessions,p.pageviews])}}>

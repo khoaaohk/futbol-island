@@ -73,7 +73,7 @@ export const EXHIBITS:Exhibit[]=[
   sources:[W('Futsal'),W('1989_FIFA_Futsal_World_Championship'),{title:'FIFA Futsal Laws of the Game 2024-25 · Law 2 The Ball',url:'https://digitalhub.fifa.com/m/7b1da24ec7a25f67/original/Futsal-Laws-of-the-Game-2024-2025.pdf'}]},
  // ---- Balls and kits (books) ----
  {id:'laced-leather',gallery:'kit',year:'Before the 1960s',title:'Laced leather balls',object:'leather',need:2,
-  facts:['Before the 1960s most footballs were brown leather with laces. They soaked up rain and got heavy.','Today an adult match ball is size 5: 68–70 cm around and 410–450 grams.','Younger players use smaller size 3 or 4 balls, so the ball fits the player.'],
+  facts:['Long ago, footballs were brown leather, and the old ones were laced up. They soaked up rain and got heavy.','Today an adult match ball is size 5: 68–70 cm around and 410–450 grams.','Younger players use smaller size 3 or 4 balls, so the ball fits the player.'],
   forYourGame:'Use the right size ball for your age: it makes good technique easier.',
   sources:[IFAB('Law 2 The Ball','the-ball'),W('Ball_(association_football)')]},
  {id:'telstar-1970',gallery:'kit',year:'1970',title:'The Telstar TV ball',object:'telstar',need:3,

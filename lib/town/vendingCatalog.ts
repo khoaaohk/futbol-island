@@ -38,7 +38,7 @@ export const VENDING_MACHINES:VendingMachine[]=[
  {id:'clubgrounds',name:'Club Grounds',place:'on the street corner by the 9v9 pitch',x:132.8,z:-69.8,y:0,yaw:-Math.PI/4,color:'#ee7d22',light:'#ffe4c2',ink:'#5a2a04',specials:['ball:hivis','pack:defenders'],lesson:'9v9 often plays a 3–2–3 with a back three that defends together.'},
  {id:'eleven',name:'Eleven Park',place:'on the 11v11 touchline',x:96,z:115,y:0,yaw:VENDING_YAW,color:'#23407e',light:'#d5e0ff',ink:'#0b1a3d',specials:['ball:eleven','pack:midfield'],lesson:'11v11 uses the full-size ball and a 4–3–3 with a midfield three.'},
  {id:'beach',name:'Beach Kitchen',place:'by the surf shop on the west beach',x:-60,z:92,y:0,yaw:VENDING_YAW,color:'#f06a9a',light:'#ffe0ec',ink:'#5a0f2c',specials:['ball:beach','pack:strikers'],lesson:'Beach soccer is 5-a-side, barefoot, on soft sand.'},
- {id:'pier',name:'Pier Cafés',place:'between the pier bakery and the coast café',x:108.5,z:183.6,y:0,yaw:0,color:'#f2f0ea',light:'#d9f3ff',ink:'#153a52',specials:['ball:retro','pack:keepers'],lesson:'Before the 1960s, footballs were laced leather that got heavy in the rain.'},
+ {id:'pier',name:'Pier Cafés',place:'between the pier bakery and the coast café',x:108.5,z:183.6,y:0,yaw:0,color:'#f2f0ea',light:'#d9f3ff',ink:'#153a52',specials:['ball:retro','pack:keepers'],lesson:'Long ago, footballs were brown leather that got heavy in the rain.'},
  {id:'market',name:'High School Rooftop',place:'on the highest school roof, reached by the east-side stairs',x:135,z:8,y:17.23,yaw:0,color:'#7a4cc2',light:'#eadcff',ink:'#2a1350',specials:['ball:panna','pack:eras'],lesson:'Street football like panna teaches close control in tight spaces.'},
  // Sep 29 2026: four book machines. Each sells the regular rows plus its one pop-up book (no exclusive ball or pack: all eight
  // special balls already have a home). North Beach is on the main island; the other three follow Coral Cay's anchors.
@@ -123,7 +123,7 @@ const ballLessons:Record<VendingSpecialBall,string>={
  hivis:'In snow, fog and low winter light, leagues switch to a bright yellow ball so players and fans can follow it.',
  eleven:'Adult 11v11 matches use a size 5 ball, 68–70 cm around, the size set in the Laws of the Game.',
  beach:'Beach soccer is 5-a-side and played barefoot on sand, so the ball is soft and a little lighter.',
- retro:'Before the 1960s most footballs were brown leather with laces. They soaked up rain and got heavy.',
+ retro:'Long ago, footballs were brown leather, and the old ones were laced up. They soaked up rain and got heavy.',
  panna:'Panna is street football for a nutmeg: playing the ball through an opponent’s legs. Cage games reward close control.',
 };
 const packLessons:Record<string,{label:string;blurb:string;spec:PackSpec}>={

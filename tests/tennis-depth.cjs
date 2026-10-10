@@ -84,6 +84,39 @@ assert(t.tennisTempo({rally:50,level:6})>t.tennisTempo({rally:50,level:1}));asse
 // 10. Hidden adaptive help stays bounded.
 const help=t.createTennis(4,4);help.phase='rally';for(let i=0;i<12;i++){help.phase='rally';help.aiReaction=99;Object.assign(help.ball,{x:0,y:3,z:.18,vx:0,vy:0,vz:-1,last:'rival',crossed:true,bounces:1});advance(help,1.4);}
 assert(help.assist>0&&help.assist<=1,'a losing run eases the rival a little');
+// 12. Rival variety: each personality's everyday mix (you recovered to the middle) differs by court.
+function mix(level){const n={};for(let seed=1;seed<=160;seed++){const s=t.createTennis(seed*7919,level);s.phase='rally';s.rally=3;Object.assign(s.you,{x:0,y:4.6,targetX:0,targetY:4.6});Object.assign(s.rival,{x:0,y:-5.3,targetX:0,targetY:-5.3});
+ Object.assign(s.ball,{x:.1,y:-.5,z:1.5,vx:0,vy:-4.6,vz:.4,last:'you',crossed:true,bounces:0});for(let i=0;i<240&&!s.rivalPlan;i++)t.tickTennis(s,1/120);if(s.rivalPlan)n[s.rivalPlan]=(n[s.rivalPlan]||0)+1;}return n;}
+const steady=mix(1),rusher=mix(4),trick=mix(5),champ=mix(6);
+assert(steady.auto>=130,'the steady rival keeps it simple: '+JSON.stringify(steady));
+assert((rusher.drive||0)>=50&&!(rusher.lob),'the net rusher drives low to come in: '+JSON.stringify(rusher));
+assert((trick.drop||0)>(steady.drop||0)+30,'the trickster loves the short ball: '+JSON.stringify(trick));
+assert(Object.keys(champ).length>=4,'the champion mixes every shot: '+JSON.stringify(champ));
+// The steady rival's mid-court balls stay away from the lines (court 1 is a gentle start).
+assert(t.TENNIS_COURTS[0].aim<t.TENNIS_COURTS[1].aim);
+// 13. Rival headers on aerial courts; never on court 1.
+function head(level,seed){const s=t.createTennis(seed,level);s.phase='rally';s.rally=3;s.aiHeader=true;Object.assign(s.rival,{x:0,y:-5,targetX:0,targetY:-5});Object.assign(s.ball,{x:.1,y:-5,z:1.8,vx:0,vy:0,vz:-.2,last:'you',crossed:true,bounces:0});t.tickTennis(s,1/120);return s;}
+const rh=head(4,3);assert.equal(rh.lastShot,'header','an aerial-court rival heads a high ball');assert.equal(rh.rival.kickStyle,3);assert(t.tennisLanding(rh).y>0,'over to your side');assert.match(rh.message,/HEADS/);
+let headers=0;for(let seed=1;seed<=200;seed++){const s=t.createTennis(seed*7919,1);t.beginTennis(s);t.requestTennisKick(s);t.tickTennis(s,1/120);headers+=s.aiHeader?1:0;}assert.equal(headers,0,'court 1 rival never plans a header');
+// 14. Long rallies end: from court 4 the rival sometimes goes for the line, at some risk.
+let finishes=0;for(let seed=1;seed<=200;seed++){const s=t.createTennis(seed*7919,6);s.phase='rally';s.rally=12;Object.assign(s.you,{x:0,y:4.6,targetX:0,targetY:4.6});Object.assign(s.ball,{x:.1,y:-.5,z:1.5,vx:0,vy:-4.6,vz:.4,last:'you',crossed:true,bounces:0});for(let i=0;i<240&&!s.rivalPlan;i++)t.tickTennis(s,1/120);if(s.rivalFinish){finishes++;assert.equal(s.rivalPlan,'drive');assert(Math.abs(s.rivalPlanX)>3.7);}}
+assert(finishes>20&&finishes<150,'the finisher is a habit, not every ball: '+finishes);
+// 15. Flight read: a ball flying long warns you to let it go; leaving it wins the point.
+let found=null;for(let seed=1;seed<600&&!found;seed++){const s=t.createTennis(seed*7919,4);s.phase='rally';s.rally=4;s.aiSlam=false;s.aiHeader=false;s.aiReaction=0;Object.assign(s.you,{x:0,y:4.6,targetX:0,targetY:4.6});Object.assign(s.rival,{x:1.28,y:-5.3,targetX:1.28,targetY:-5.3});Object.assign(s.ball,{x:0,y:-5.3,z:.4,vx:0,vy:0,vz:0,last:'you',crossed:true,bounces:1});t.tickTennis(s,1/120);if(s.ball.last==='rival'&&s.incomingOut)found=s;}
+assert(found,'some rival returns fly out');assert(found.outEvents>0);assert.match(found.message,/LONG/);
+const land=t.tennisLanding(found);assert(Math.abs(land.x)>5||land.y>8,'the warning is honest: it lands out');
+for(let i=0;i<600&&found.phase==='rally';i++)t.tickTennis(found,1/120);
+assert.equal(found.pointKind,'out','left alone, it lands out');{assert.equal(found.pointWinner,'you');assert.match(found.message,/good leave/);}
+// Head spot: a high incoming lob on an aerial court marks where it drops through head height.
+let spot=null;for(let seed=1;seed<400&&!spot;seed++){const s=t.createTennis(seed*7919,6);s.phase='rally';s.rally=4;s.aiSlam=false;s.aiHeader=false;Object.assign(s.you,{x:0,y:2.9,targetX:0,targetY:2.9});Object.assign(s.rival,{x:0,y:-5.3,targetX:0,targetY:-5.3});Object.assign(s.ball,{x:.1,y:-.5,z:1.5,vx:0,vy:-4.6,vz:.4,last:'you',crossed:true,bounces:0});const k=s.kickCount;for(let i=0;i<360&&s.kickCount===k;i++)t.tickTennis(s,1/120);if(s.headSpot)spot=s;}
+assert(spot,'a high lob gets a head spot');assert(spot.headY>0&&spot.headY<8&&Math.abs(spot.headX)<5);
+let passZ=null;for(let i=0;i<400&&spot.ball.last==='rival';i++){const z0=spot.ball.z;t.tickTennis(spot,1/120);if(passZ===null&&z0>t.TENNIS_HEAD_HEIGHT&&spot.ball.z<=t.TENNIS_HEAD_HEIGHT&&spot.ball.vz<0){passZ=Math.hypot(spot.ball.x-spot.headX,spot.ball.y-spot.headY);}}
+assert(passZ!==null&&passZ<.25,'the ball really drops through head height on the blue spot ('+passZ+')');
+const flat=t.createTennis(5,1);assert.equal(flat.headSpot,false);
+// 16. Court progression: the end card names the coach's takeaway and, after a win, the next rival.
+const end=t.createTennis(1,2);end.winner='you';end.phase='over';end.stars=2;end.gradeCounts.heavy=4;
+const detail=t.tennisOverDetail(end);assert.match(detail,/Coach: Heavy/);assert.match(detail,new RegExp('Next: '+t.TENNIS_COURTS[2].name));
+end.winner='rival';assert.doesNotMatch(t.tennisOverDetail(end),/Next:/);end.stars=3;end.winner='you';assert.doesNotMatch(t.tennisOverDetail(end),/3rd star/,'no 3rd-star hint once it is earned');
 // 11. Deterministic.
 const a=t.createTennis(8,4),b=t.createTennis(8,4);for(const g of[a,b]){t.beginTennis(g);t.requestTennisKick(g);advance(g,10);}assert.equal(JSON.stringify(a),JSON.stringify(b));
-console.log('PASS tennis depth: ladder, patient touch, trap & set, golden/bicycle, shark/slide/flick, personalities + fake, drill, stars, tempo, adaptive help');
+console.log('PASS tennis depth: rival mixes/headers/finisher, flight read (out + head spot), coach card, ladder, patient touch, trap & set, golden/bicycle, shark/slide/flick, personalities + fake, drill, stars, tempo, adaptive help');

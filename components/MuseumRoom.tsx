@@ -1,5 +1,5 @@
 'use client';
-import {useCallback,useEffect,useMemo,useRef,useState,type PointerEvent as ReactPointerEvent} from 'react';
+import {useCallback,useEffect,useLayoutEffect,useMemo,useRef,useState,type PointerEvent as ReactPointerEvent} from 'react';
 import dynamic from 'next/dynamic';
 import {NavigationButton} from './DoneButton';
 import MuseumDoorSlide from './MuseumDoorSlide';
@@ -25,6 +25,8 @@ import type {MuseumScene,MuseumZoomView} from '@/lib/museum/museumScene';
 import type {MuseumPoi} from '@/lib/museum/museumLayout';
 const WorldCupBalls=dynamic(()=>import('./WorldCupBalls'),{ssr:false});
 import {EXPERIENCES} from './museum/experiences';
+import ExperienceStage,{ExperienceAfterglow,type StageInfo} from './museum/experiences/ExperienceStage';
+import {nextToVisit,passport,recordMuseumVisit,useMuseumVisits,museumVisitsNow} from '@/lib/museum/museumVisits';
 import {enterActivity} from '@/lib/analytics/tracker';
 import type {ActivityId} from '@/lib/analytics/islandIds';
 const GraduationCeremony=dynamic(()=>import('./GraduationCeremony'),{ssr:false,loading:()=><p role="status">Getting your certificate ready…</p>});
@@ -70,11 +72,39 @@ function MuseumHall({counts,open,earned,scene:sceneInput}:{counts:Counts;open:Re
  const [balls,setBalls]=useState<string|false>(false);
  // Full-screen exhibit experiences (components/museum/experiences/<id>): "Step inside" on an open case; ?exp=<id> in development.
  const [experience,setExperience]=useState<string|null>(null);
+ // The visit's connective tissue (Oct 9 2026): one doorway curtain for every experience (ExperienceStage), Back from an exhibit
+ // you entered from the timeline returns to the timeline at that era, and the museum passport (lib/museum/museumVisits.ts)
+ // stamps every exhibit you step inside, with a stamp card in the hall when you come out.
+ const visits=useMuseumVisits(),pass=passport(visits);
+ const [stage,setStage]=useState<{covered:boolean;from:string|null;tlAt:string|null;note:string}>({covered:false,from:null,tlAt:null,note:''});
+ const [afterglow,setAfterglow]=useState<string|null>(null);
+ const rootRef=useRef<HTMLElement>(null),trigger=useRef<{el:HTMLElement|null;id:string}|null>(null),refocus=useRef<'trigger'|'canvas'|null>(null);
+ const [stamp,setStamp]=useState<{id:string;fresh:boolean;k:number}|null>(null);
+ /** Step inside an experience (from a case, the timeline, the stamp card or ?exp=). Stamps the passport. */
+ const openExperience=useCallback((id:string,o:{covered?:boolean;from?:string|null;tlAt?:string|null;note?:string}={})=>{
+  // Remember the control that opened it from the hall (Step inside, the stamp card's Next), to hand focus back on the way out.
+  if(!o.covered){const a=document.activeElement;trigger.current={el:a instanceof HTMLElement&&a!==document.body?a:null,id};}
+  const fresh=recordMuseumVisit(id),p=passport(museumVisitsNow());
+  const note=o.note!==undefined?o.note:id==='timeline'?`${p.seen} of ${p.total} exhibits visited`:fresh?`New stamp! ${p.seen} of ${p.total} visited`:`Visited before · ${p.seen} of ${p.total}`;
+  setStamp(null);setStage({covered:!!o.covered,from:o.from??null,tlAt:o.tlAt??null,note});setExperience(id);},[]);
  useEffect(()=>experience?enterActivity(`exhibit_${experience}` as ActivityId):undefined,[experience]);// admin analytics: time per exhibit (module variable, no render)
  useEffect(()=>{const q=new URLSearchParams(window.location.search);if(q.has('balls'))setBalls(q.get('balls')||'');
-  const x=q.get('exp');if(x&&EXPERIENCES[x]&&process.env.NODE_ENV!=='production')setExperience(x);},[]);
+  const x=q.get('exp');if(x&&EXPERIENCES[x]&&process.env.NODE_ENV!=='production')openExperience(x);},[openExperience]);
  const leavingRef=useRef(false),record=useGraduations();
  const covered=guideOpen||!!cert||balls!==false||!!experience;
+ // Modal exhibits (Oct 9 2026 QA: Tab escaped from an open exhibit into the hall 7 to 17 times in 25). While an experience is up,
+ // everything else in the hall is inert (the stage itself and native <dialog>s, e.g. a certificate opened from an exhibit, stay
+ // live); re-applied if the hall's children change underneath. On the way out, focus goes back to the control that opened it.
+ useLayoutEffect(()=>{const root=rootRef.current;if(!root)return;
+  const apply=()=>{for(const el of Array.from(root.children)){if(!(el instanceof HTMLElement))continue;
+   const want=!!experience&&!el.hasAttribute('data-museum-stage')&&el.tagName!=='DIALOG';if(el.inert!==want)el.inert=want;}};
+  apply();
+  if(!experience){const how=refocus.current;refocus.current=null;
+   if(how==='trigger'){const t=trigger.current,fall=t&&root.querySelector<HTMLElement>(`[data-museum-step-inside="${t.id}"]`);
+    const el=t?.el?.isConnected&&!t.el.closest('[inert]')?t.el:fall??canvas.current;el?.focus({preventScroll:true});}
+   else if(how==='canvas')canvas.current?.focus({preventScroll:true});
+   if(how)trigger.current=null;return;}
+  const obs=new MutationObserver(apply);obs.observe(root,{childList:true});return()=>obs.disconnect();},[experience]);
  const joyRect=useJoystickBounds(joy,ready&&!zoom&&!covered);
 
  const leave=()=>{if(leavingRef.current)return;leavingRef.current=true;ambience.current?.fadeOut(.4);setTimeout(()=>ambience.current?.dispose(),420);setWalkingOut(true);setGuideOpen(false);setCert(null);room.current?.clearInput();refreshMuseumDeparture();setLeaving(true);
@@ -122,7 +152,8 @@ function MuseumHall({counts,open,earned,scene:sceneInput}:{counts:Counts;open:Re
   if(zoom.id==='timeline')return <div className={styles.tag} data-museum-card="timeline"><div className={styles.tagHead}><span className={styles.eyebrow}>Timeline wall</span><h2>The story of football</h2></div>
    <p>Every case in date order. Tap a year to go to its case.</p>
    <ol className={styles.years}>{timelineOrder().map(e=>{const s=exhibitState(e,counts);return <li key={e.id}><button type="button" data-museum-year={e.id} data-open={s.open} style={{'--g':galleryOf(e.gallery).art} as React.CSSProperties} aria-label={`${e.year}: ${e.title}${s.open?'':'. Locked'}`} onClick={()=>room.current?.zoomTo(e.id)}>
-    <b>{e.year}</b><span>{s.open?e.title:<><i className={styles.lockIcon} aria-hidden="true"/>{e.title}</>}</span></button></li>;})}</ol></div>;
+    <b>{e.year}{visits.seen.includes(e.id)&&<i className={styles.yearSeen} data-museum-year-seen aria-label=" (visited)"/>}</b><span>{s.open?e.title:<><i className={styles.lockIcon} aria-hidden="true"/>{e.title}</>}</span></button></li>;})}</ol>
+   <p className={styles.small} data-museum-passport={pass.seen}>{pass.seen} of {pass.total} exhibits visited. Step inside to collect a stamp for each one.</p></div>;
   if(zoom.id==='my-balls'){const found=COIN_QUEST.filter(spot=>counts.collection.balls.includes(spot.id));return <div className={styles.tag} data-museum-card="my-balls" style={{'--g':'#477c6a'} as React.CSSProperties}><div className={styles.tagHead}><span className={styles.eyebrow}>Your Collection</span><h2>Your hidden balls</h2></div>
    <p data-museum-found={found.length}><b>{found.length} of {COIN_QUEST.length}</b> found. Each one sits on its own peg.</p>
    <div className={styles.progress} role="progressbar" aria-label="Hidden balls found" aria-valuemin={0} aria-valuemax={COIN_QUEST.length} aria-valuenow={found.length}><i style={{width:`${found.length/COIN_QUEST.length*100}%`}}/></div>
@@ -152,11 +183,12 @@ function MuseumHall({counts,open,earned,scene:sceneInput}:{counts:Counts;open:Re
  }
 
  const label=zoom?`${zoom.label} · ${zoom.index+1}/${zoom.count}`:'';
- return <main onClickCapture={e=>{if(museumClickTarget(e.target))museumSfx.click();}} aria-label="History Museum" className={styles.root} data-museum-room data-ready={ready} data-zoomed={!!zoom} data-story={storyCase&&!!zoom?.arrived||undefined}>
+ return <main ref={rootRef} onClickCapture={e=>{if(museumClickTarget(e.target))museumSfx.click();}} aria-label="History Museum" className={styles.root} data-museum-room data-ready={ready} data-zoomed={!!zoom} data-story={storyCase&&!!zoom?.arrived||undefined}>
   <header className={styles.header}>{zoom?<NavigationButton back label="Back" data-museum-back onNavigate={()=>room.current?.zoomOut()}/>:<NavigationButton label="Done" data-museum-done key={exitTry} onNavigate={()=>{if(room.current){setWalkingOut(true);room.current.leave();const n=exitTry;setTimeout(()=>{if(!leavingRef.current){setExitTry(n+1);setWalkingOut(false);}},5000);}else leave();}}/>}
    {zoom&&<span className={styles.section} data-museum-section={zoom.id} aria-live="polite">{label}</span>}
-   {zoom?.arrived&&zoom.id==='timeline'&&<button type="button" className={styles.stepInside} data-museum-step-inside="timeline" onClick={()=>setExperience('timeline')}>Step inside</button>}
-   {zoom?.arrived&&zoom.id!=='timeline'&&EXPERIENCES[zoom.id]&&open[zoom.id]&&<button type="button" className={styles.stepInside} data-museum-step-inside={zoom.id} onClick={()=>setExperience(zoom.id)}>Step inside</button>}
+   {zoom?.arrived&&zoom.id==='timeline'&&<button type="button" className={styles.stepInside} data-museum-step-inside="timeline" onClick={()=>openExperience('timeline')}>Step inside</button>}
+   {zoom?.arrived&&zoom.id!=='timeline'&&EXPERIENCES[zoom.id]&&open[zoom.id]&&<button type="button" className={styles.stepInside} data-museum-step-inside={zoom.id} data-visited={visits.seen.includes(zoom.id)||undefined} onClick={()=>openExperience(zoom.id)}>
+    {visits.seen.includes(zoom.id)&&<i className={styles.stepSeen} aria-hidden="true"/>}{visits.seen.includes(zoom.id)?'Step inside again':'Step inside'}</button>}
    {!zoom&&<span className={styles.counts} aria-label={`${counts.balls} hidden balls, ${counts.cards} player cards, ${counts.books} pop-up books, ${counts.graduations} graduations`}>
     {(['balls','cards','books','graduations'] as const).map(k=><span key={k} data-museum-hud={k} style={{'--g':COUNT_ART[k]} as React.CSSProperties}><b>{counts[k]}</b>{counts[k]===1?COUNT_WORD[k].slice(0,-1):COUNT_WORD[k]}</span>)}</span>}
   </header>
@@ -184,7 +216,7 @@ function MuseumHall({counts,open,earned,scene:sceneInput}:{counts:Counts;open:Re
     <h2>Ada, museum guide</h2>
     <p>Every case opens with something you collect on the island, and the west wing shows your own collection. Here’s what you have:</p>
     <ul className={styles.guideCounts}>{(['balls','cards','books','graduations'] as const).map(k=><li key={k} data-museum-count={k}><b>{counts[k]}</b> {counts[k]===1?UNLOCK_WORDS[k].one:UNLOCK_WORDS[k].many}</li>)}</ul>
-    <p className={styles.small}>{EXHIBITS.filter(e=>exhibitState(e,counts).open).length} of {EXHIBITS.length} cases open.</p>
+    <p className={styles.small}>{EXHIBITS.filter(e=>exhibitState(e,counts).open).length} of {EXHIBITS.length} cases open · {pass.seen} of {pass.total} exhibits visited{pass.all?'. You’re a Museum Explorer!':''}</p>
     {nextCase?<><h3>Next to open</h3><p data-museum-next-case={nextCase.id}><b>{nextCase.title}</b> ({nextCase.year}). {exhibitState(nextCase,counts).lockText}</p>
      <button type="button" className={styles.gold} data-museum-show-me onClick={()=>{setGuideOpen(false);room.current?.walkTo(nextCase.id);}}>Show me</button></>
      :<p>Every case is open. You’ve seen the whole story of football!</p>}
@@ -192,9 +224,22 @@ function MuseumHall({counts,open,earned,scene:sceneInput}:{counts:Counts;open:Re
      <button type="button" className={styles.mint} data-museum-guide-collection onClick={()=>{setGuideOpen(false);room.current?.walkTo('my-balls');}}>Your Collection wing</button></div>
    </GuidePanel></div>}
   {/* The timeline wall (Hairline line figures, components/museum/experiences/timeline): "Visit this case" closes it and walks the hall's camera to that case. */}
-  {experience==='timeline'&&(()=>{const X=EXPERIENCES.timeline;return <X exhibit={timelineOrder()[0]} earned={earned} openCertificate={id=>setCert(id)} onClose={()=>{setExperience(null);canvas.current?.focus();}}
-   onVisit={id=>{setExperience(null);canvas.current?.focus();requestAnimationFrame(()=>room.current?.zoomTo(id));}}/>;})()}
-  {experience&&experience!=='timeline'&&(()=>{const X=EXPERIENCES[experience],e=EXHIBITS.find(x=>x.id===experience);return X&&e?<X exhibit={e} earned={earned} openCertificate={id=>setCert(id)} onClose={()=>{setExperience(null);canvas.current?.focus();}}/>:null;})()}
+  {experience&&(()=>{const X=EXPERIENCES[experience],tl=experience==='timeline',e=tl?(EXHIBITS.find(x=>x.id===stage.tlAt)??timelineOrder()[0]):EXHIBITS.find(x=>x.id===experience);if(!X||!e)return null;
+   const info:StageInfo=tl?{id:'timeline',year:'1863 → Today',title:'The story of football',gallery:'The timeline',color:'#c9a24a',note:stage.note}
+    :{id:e.id,year:e.year,title:e.title,gallery:galleryOf(e.gallery).title,color:galleryOf(e.gallery).art,note:stage.note};
+   /** Out of an experience: back to the timeline when it was entered from there, otherwise the hall fades in with the stamp card. */
+   const closed=()=>{if(!tl&&stage.from==='timeline'){openExperience('timeline',{covered:true,from:experience,tlAt:experience,note:stage.note.startsWith('New')?stage.note:''});return;}
+    const id=experience;refocus.current='trigger';setExperience(null);setAfterglow(info.color);if(!tl)setStamp(s=>({id,fresh:stage.note.startsWith('New'),k:(s?.k??0)+1}));};
+   // The timeline wall (components/museum/experiences/timeline): "Find it in the hall" closes it and walks the hall's camera to
+   // that case; "Step inside" opens that exhibit straight away, and its Back comes back to the timeline at that era.
+   return <ExperienceStage key={experience+(stage.covered?'+c':'')} info={info} covered={stage.covered} onClose={closed}>{close=><X exhibit={e} earned={earned} openCertificate={id=>setCert(id)} onClose={close}
+    onComplete={()=>{recordMuseumVisit(experience,'done');}}
+    {...(tl?{onVisit:(id:string)=>{refocus.current='canvas';setExperience(null);setAfterglow(info.color);requestAnimationFrame(()=>room.current?.zoomTo(id));},
+     onEnter:(id:string)=>{if(EXPERIENCES[id]&&open[id])openExperience(id,{covered:true,from:'timeline',tlAt:id});else{refocus.current='canvas';setExperience(null);requestAnimationFrame(()=>room.current?.zoomTo(id));}}}:{})}/>}</ExperienceStage>;})()}
+  {afterglow&&<ExperienceAfterglow key={afterglow+(stamp?.k??0)} color={afterglow} onDone={()=>setAfterglow(null)}/>}
+  {stamp&&!experience&&(()=>{const e=EXHIBITS.find(x=>x.id===stamp.id);if(!e)return null;const next=nextToVisit(visits,id=>!!open[id],id=>!!EXPERIENCES[id],e.id);
+   return <StampCard key={stamp.k} exhibit={e} fresh={stamp.fresh} seen={visits.seen} total={pass.total} all={pass.all} next={next}
+    onNext={next?()=>{setStamp(null);room.current?.zoomTo(next.id);openExperience(next.id);}:undefined} onDone={()=>setStamp(null)}/>;})()}
   {balls!==false&&<WorldCupBalls initialId={balls||undefined} onClose={()=>{setBalls(false);canvas.current?.focus();}}/>}
   <EndgameDialog open={!!cert} label="certificate" title="Certificate" onClose={()=>setCert(null)}>{cert&&<GraduationCeremony record={record} formats={[]} view={cert}/>}</EndgameDialog>
   {!zoom&&!covered&&<div className="touch-controls"><div className="joystick" data-edge="false" ref={joy} draggable={false} onDragStart={e=>e.preventDefault()} onContextMenu={e=>e.preventDefault()} role="group" aria-label="Move around the museum"
@@ -202,4 +247,28 @@ function MuseumHall({counts,open,earned,scene:sceneInput}:{counts:Counts;open:Re
   {walkingOut&&!leaving&&<span className={styles.srOnly} role="status">Walking out to the island…</span>}
   <MuseumDoorSlide mode={leaving?'leave':'arrive'} key={leaving?'leave':'arrive'} ready={firstFrame||failed}/>
  </main>;
+}
+
+/**
+ * The passport stamp card (Oct 9 2026): when you come out of an exhibit, its stamp presses into your museum passport (one dot
+ * per case, in timeline order) and the card offers the next open exhibit you haven't visited. Not modal (role="status"); it goes
+ * by itself after 9 s. One-shot CSS spring on transform/opacity; reduced motion shows it still.
+ */
+function StampCard({exhibit,fresh,seen,total,all,next,onNext,onDone}:{exhibit:{id:string;year:string;title:string;gallery:string};fresh:boolean;seen:readonly string[];total:number;all:boolean;
+ next:{id:string;year:string;title:string}|null;onNext?:()=>void;onDone:()=>void}){
+ const doneRef=useRef(onDone);doneRef.current=onDone;
+ useEffect(()=>{const t=setTimeout(()=>doneRef.current(),9000);return()=>clearTimeout(t);},[]);
+ const g=galleryOf(exhibit.gallery),n=timelineOrder().filter(e=>seen.includes(e.id)).length;
+ return <aside className={styles.stampCard} role="status" data-museum-stamp={exhibit.id} data-fresh={fresh||undefined} data-all={all||undefined} style={{'--g':g.art} as React.CSSProperties}>
+  <span className={styles.stampSeal} aria-hidden="true"><b>{exhibit.year.match(/\d{4}/)?.[0]??exhibit.year}</b></span>
+  <div className={styles.stampBody}>
+   <p className={styles.stampHead}>{all&&fresh?'Every exhibit visited!':fresh?'New stamp!':'Exhibit visited'}<span>{n} of {total}</span></p>
+   <p className={styles.stampTitle}>{exhibit.title}</p>
+   <span className={styles.stampDots} aria-hidden="true">{timelineOrder().map(e=><i key={e.id} data-seen={seen.includes(e.id)||undefined} data-now={e.id===exhibit.id||undefined}/>)}</span>
+   {all?<p className={styles.small}>You’re a Museum Explorer: you’ve stepped inside the whole story of football.</p>
+    :next&&onNext?<button type="button" className={styles.stampNext} data-museum-stamp-next={next.id} onClick={onNext}>Next: {next.year} · {next.title}<span aria-hidden="true">→</span></button>
+    :<p className={styles.small}>Collect more on the island to open the next case.</p>}
+  </div>
+  <button type="button" className={styles.stampClose} aria-label="Close" data-museum-stamp-close onClick={onDone}><span aria-hidden="true">×</span></button>
+ </aside>;
 }

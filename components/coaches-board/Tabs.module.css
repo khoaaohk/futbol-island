@@ -1,0 +1,6 @@
+/* Coaches Board tabs: chip/tab family (cream on the patterned ground, pink when selected; docs/ui/BUTTONS.md). */
+.tabs{display:flex;gap:6px;flex:none}
+.tab{padding:0 14px}
+.tab[aria-selected=true]{background:var(--btn-pink);box-shadow:0 4px 0 var(--btn-pink-edge)}
+.progressTop{margin-bottom:16px}
+@media (max-width:420px){.tabs{gap:4px}.tab{padding:0 10px;font-size:13px}}

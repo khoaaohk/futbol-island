@@ -260,17 +260,51 @@ function goalFrame(g:CanvasRenderingContext2D,v:View,items:Item[]){
  for(const sx of [-3.66,3.66])for(let j=0;j<=6;j++){const t=j/6;rod(g,v,items,p3(sx,lerp(2.44,0,t),zl),p3(sx,lerp(2.1,0,t),lerp(-1.8,-2,t)),.012,net);}
  const post='#f7f7f2';limb(g,v,items,p3(-3.66,0,zl),p3(-3.66,2.44,zl),LINE_W,post);limb(g,v,items,p3(3.66,0,zl),p3(3.66,2.44,zl),LINE_W,post);limb(g,v,items,p3(-3.66,2.44,zl),p3(3.66,2.44,zl),LINE_W,post);
 }
-export type DrawOpts={zoom?:number;lines?:{def:number|null;att:number|null};lineTags?:{def?:string;att?:string;attBad?:boolean};measure?:boolean;dim?:number};
+/** Where to put a line's drag handle: the point of the line nearest the lower third of the screen (inside it), plus the screen
+ *  direction in which the line moves when z grows (so the chevrons point the way it slides). */
+export function handleAt(v:View,z:number,w:number,h:number,who:'def'|'att',at?:number){
+ let best:{x:number;y:number;px:number}|null=null,bd=Infinity;const want=h*(at??(who==='def'?.8:.66));
+ for(let x=-34;x<=34;x+=1){const c=v.toCam(p3(x,0,z));if(c.z<=NEAR)continue;const s=v.proj(c);if(s.x<24||s.x>w-24||s.y<24||s.y>h-24)continue;const d=Math.abs(s.y-want);if(d<bd){bd=d;best={x:s.x,y:s.y,px:x};}}
+ if(!best)return null;const c2=v.toCam(p3(best.px,0,z+.5));if(c2.z<=NEAR)return {x:best.x,y:best.y,dx:1,dy:0};
+ const s2=v.proj(c2),L=Math.hypot(s2.x-best.x,s2.y-best.y)||1;return {x:best.x,y:best.y,dx:(s2.x-best.x)/L,dy:(s2.y-best.y)/L};
+}
+export type DrawOpts={zoom?:number;lines?:{def:number|null;att:number|null};lineTags?:{def?:string;att?:string;attBad?:boolean};measure?:boolean;dim?:number;
+ /** The line being dragged (drawn thicker) and whether to draw the round drag handles. */active?:'def'|'att'|null;handles?:boolean;
+ /** Blueprint overlay: a metre grid on the grass (labelled every 2 m) and a dimension callout between the two lines. */grid?:boolean;/** Fraction of the width at the bottom-left kept clear of grid labels (the timecode sits there). */gridSkip?:number};
 /** Draw one frame from one camera. w/h are canvas pixels. */
 export function drawFrame(g:CanvasRenderingContext2D,w:number,h:number,camId:CamId,frame:number,o:DrawOpts={}){
  const f=clamp(Math.round(frame),0,LAST),v=view(camOf(camId),w,h,o.zoom??1);
  const sky=g.createLinearGradient(0,0,0,h);sky.addColorStop(0,'#0a0e14');sky.addColorStop(1,'#141b22');g.fillStyle=sky;g.fillRect(0,0,w,h);
  const glow=g.createRadialGradient(w*.5,-h*.2,0,w*.5,-h*.2,h*1.1);glow.addColorStop(0,'rgba(170,200,230,.16)');glow.addColorStop(1,'rgba(170,200,230,0)');g.fillStyle=glow;g.fillRect(0,0,w,h);
  pitch(g,v);stands(g,v);
+ // Blueprint grid: one faint line every metre across the pitch, labelled every 2 m at the bottom of the picture (static, drawn with
+ // the frame, so it costs nothing at rest).
+ if(o.grid){g.save();const fs=Math.max(10,Math.round(h/42));g.font=`600 ${fs}px ui-monospace,SFMono-Regular,Menlo,monospace`;g.textAlign='center';g.textBaseline='bottom';
+  for(let z=8;z<=26;z++){const s=seg(g,v,p3(-34,0,z),p3(34,0,z));if(!s)continue;g.strokeStyle=z%2?'rgba(150,210,255,.13)':'rgba(150,210,255,.26)';g.lineWidth=Math.max(1,w/1400);g.setLineDash(z%2?[3,5]:[]);
+   g.beginPath();g.moveTo(s.sa.x,s.sa.y);g.lineTo(s.sb.x,s.sb.y);g.stroke();
+   if(z%2===0){const lp=handleAt(v,z,w,h,'def',.96);if(lp&&lp.x>w*(o.gridSkip??0)){g.fillStyle='rgba(190,230,255,.75)';g.fillText(`${z} m`,lp.x,h-4);}}}
+  g.setLineDash([]);g.restore();}
  // Offside lines lie on the grass, so they go under the players (as on TV).
  if(o.lines){const tags=o.lineTags??{};for(const who of ['def','att'] as const){const z=o.lines[who];if(z==null)continue;
   const s=seg(g,v,p3(-34,0,z),p3(34,0,z));if(!s)continue;const col=who==='def'?'#38a8ff':(tags.attBad?'#ffb020':'#ff3b4e');
-  g.save();g.strokeStyle=col;g.shadowColor=col;g.shadowBlur=Math.max(2,w/220);g.lineWidth=Math.max(2,w/420);g.beginPath();g.moveTo(s.sa.x,s.sa.y);g.lineTo(s.sb.x,s.sb.y);g.stroke();g.restore();}}
+  const on=o.active===who;
+  g.save();g.strokeStyle=col;g.shadowColor=col;g.shadowBlur=Math.max(2,w/220)*(on?2.2:1);g.lineWidth=Math.max(2,w/420)*(on?1.8:1);g.beginPath();g.moveTo(s.sa.x,s.sa.y);g.lineTo(s.sb.x,s.sb.y);g.stroke();g.restore();
+  if(o.handles){const hp=handleAt(v,z,w,h,who);if(hp){const r=Math.max(12,Math.min(w,h)/(on?17:21));
+   g.save();g.fillStyle='rgba(5,8,12,.78)';g.strokeStyle=col;g.lineWidth=Math.max(2,r*.16);g.beginPath();g.arc(hp.x,hp.y,r,0,Math.PI*2);g.fill();g.stroke();
+   // ‹ › chevrons along the line's screen direction: "slide me this way"
+   const d=hp.dx,e=hp.dy,a=r*.5,b=r*.28;g.fillStyle='#fff';
+   for(const sg of [-1,1]){const cx=hp.x+sg*d*a,cy=hp.y+sg*e*a;g.beginPath();g.moveTo(cx+sg*d*b,cy+sg*e*b);g.lineTo(cx-e*b-sg*d*b*.2,cy+d*b-sg*e*b*.2);g.lineTo(cx+e*b-sg*d*b*.2,cy-d*b-sg*e*b*.2);g.closePath();g.fill();}
+   g.restore();}}}}
+ // Dimension callout between the two lines (blueprint style: extension ticks, arrowheads, the gap in cm).
+ if(o.grid&&o.lines&&o.lines.def!=null&&o.lines.att!=null){const zd=o.lines.def,za=o.lines.att,a=handleAt(v,zd,w,h,'def',.27),b=handleAt(v,za,w,h,'att',.27);
+  if(a&&b&&Math.hypot(b.x-a.x,b.y-a.y)>4){const cm=Math.round((za-zd)*100),col='#e9f4ff',ux=(b.x-a.x),uy=(b.y-a.y),L=Math.hypot(ux,uy),nx=-uy/L,ny=ux/L,ah=Math.min(9,L/3);
+   g.save();g.strokeStyle=col;g.fillStyle=col;g.lineWidth=Math.max(1.2,w/900);
+   for(const p of [a,b]){g.beginPath();g.moveTo(p.x-nx*9,p.y-ny*9);g.lineTo(p.x+nx*9,p.y+ny*9);g.stroke();}
+   g.beginPath();g.moveTo(a.x,a.y);g.lineTo(b.x,b.y);g.stroke();
+   for(const [p,sg] of [[a,1],[b,-1]] as const){const dx=ux/L*sg,dy=uy/L*sg;g.beginPath();g.moveTo(p.x,p.y);g.lineTo(p.x+dx*ah+nx*ah*.45,p.y+dy*ah+ny*ah*.45);g.lineTo(p.x+dx*ah-nx*ah*.45,p.y+dy*ah-ny*ah*.45);g.closePath();g.fill();}
+   const fs=Math.max(11,Math.round(h/30)),txt=`${Math.abs(cm)>=100?(Math.abs(cm)/100).toFixed(2)+' m':Math.abs(cm)+' cm'}`;g.font=`700 ${fs}px ui-monospace,SFMono-Regular,Menlo,monospace`;
+   const tw=g.measureText(txt).width+12,mx=(a.x+b.x)/2,my=(a.y+b.y)/2-fs*1.3;g.fillStyle='rgba(8,32,58,.9)';g.fillRect(mx-tw/2,my-fs*.75,tw,fs*1.5);g.strokeRect(mx-tw/2,my-fs*.75,tw,fs*1.5);
+   g.fillStyle=col;g.textAlign='center';g.textBaseline='middle';g.fillText(txt,mx,my);g.restore();}}
  const items:Item[]=[],ball=ballAt(f);
  for(const p of PEOPLE){const pose=personPose(p,f);shadow(g,v,pose.pelvis.x,pose.pelvis.z,.42,.3);figure(g,v,items,pose,p.role,p.num);}
  const kp=keeperPose(f);shadow(g,v,kp.pelvis.x,kp.pelvis.z,.55,.35);figure(g,v,items,kp,'gk','1');
@@ -283,7 +317,12 @@ export function drawFrame(g:CanvasRenderingContext2D,w:number,h:number,camId:Cam
  items.sort((a,b)=>b.depth-a.depth);for(const it of items)it.draw();
  // The goal-line check, once answered: the slice of ball still over the line, in yellow.
  if(o.measure&&f===DEEP){const a=v.toCam(p3(ball.x,ball.y,-LINE_W)),b=v.toCam(p3(ball.x,ball.y,ball.z+BALL_R));if(a.z>NEAR&&b.z>NEAR){const sa=v.proj(a),sb=v.proj(b),r=BALL_R*v.focal/a.z;
-  g.save();g.fillStyle='rgba(255,214,0,.55)';g.fillRect(Math.min(sa.x,sb.x),sa.y-r,Math.abs(sb.x-sa.x),r*2);g.strokeStyle='#ffd600';g.lineWidth=Math.max(1.5,w/500);g.strokeRect(Math.min(sa.x,sb.x),sa.y-r,Math.abs(sb.x-sa.x),r*2);g.restore();}}
+  g.save();g.fillStyle='rgba(255,214,0,.55)';g.fillRect(Math.min(sa.x,sb.x),sa.y-r,Math.abs(sb.x-sa.x),r*2);g.strokeStyle='#ffd600';g.lineWidth=Math.max(1.5,w/500);g.strokeRect(Math.min(sa.x,sb.x),sa.y-r,Math.abs(sb.x-sa.x),r*2);
+  // callout: a leader line up to a label, like a note on a technical drawing
+  if(camId==='goal'){const fs=Math.max(11,Math.round(h/28)),lx=Math.min(sa.x,sb.x)+Math.abs(sb.x-sa.x)/2,ly=sa.y+r,ty=Math.min(h-fs*2.6,ly+h*.16),txt=`${TRUTH.ballOnLineCm} cm ON THE LINE`;
+  g.strokeStyle='#ffd600';g.lineWidth=Math.max(1.2,w/900);g.beginPath();g.moveTo(lx,ly);g.lineTo(lx,ty);g.lineTo(lx+18,ty);g.stroke();
+  g.font=`800 ${fs}px ui-monospace,SFMono-Regular,Menlo,monospace`;const tw=g.measureText(txt).width+12,bx=Math.min(w-tw-4,lx+18);g.fillStyle='rgba(20,16,0,.88)';g.fillRect(bx,ty-fs*.75,tw,fs*1.5);g.strokeRect(bx,ty-fs*.75,tw,fs*1.5);
+  g.fillStyle='#ffd600';g.textBaseline='middle';g.fillText(txt,bx+6,ty);}g.restore();}}
  // Tags on snapped lines: a label at the near end of each line.
  if(o.lines&&o.lineTags){g.save();g.font=`600 ${Math.max(11,Math.round(h/34))}px ui-monospace,SFMono-Regular,Menlo,monospace`;g.textBaseline='middle';
   for(const who of ['def','att'] as const){const z=o.lines[who],t=o.lineTags[who];if(z==null||!t)continue;const anchor=v.toCam(p3(-1.2+(who==='att'?1.8:0),who==='att'?2.25:.1,z));if(anchor.z<=NEAR)continue;const s=v.proj(anchor);

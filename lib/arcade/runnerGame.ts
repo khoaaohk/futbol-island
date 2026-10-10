@@ -1,4 +1,5 @@
 import {JUMP_V,crossesPickup,goalPoints} from '../../components/games/runnerPhysics';
+import {routeCurve,routeGrade,ROUTE_BEND_MIN,ROUTE_STEEP} from '../../components/games/runnerRoute';
 export const RUNNER_STRIKE_X=-.3;
 /** Each stage introduces a football decision before adding another defensive line. */
 export const RUNNER_STAGES=[
@@ -57,9 +58,28 @@ export function createRunnerGame(){return{time:0,distance:0,x:0,vx:0,lean:0,slid
  skill:'' as RunnerSkill|'',skillT:0,skillSide:1 as -1|1,skillCooldown:0,skillPerfect:false,
  pass:{phase:'' as ''|'out'|'back',t:0,mateX:0,mateZ:0},
  route:'main' as RunnerRoute,goalCount:0,bossPending:false,boss:0,bossSeen:0,
+ /* Winding route (Oct 9 2026): grade (+ uphill) and curvature (+ bends right) under the runner; the
+  * current bend (direction, metres run, metres on the inside lane) and how many bends were cut inside. */
+ grade:0,curve:0,bendDir:0,bendLen:0,bendIn:0,bends:0,insideCuts:0,downhillBeats:0,
  /* Mission counters. */
- skills:0,skillKinds:[] as string[],oneTwos:0,chips:0,headers:0,bosses:0,hurdles:0,puddleJumps:0,cornerGoals:0,rounded:0,shieldSaves:0,wingRuns:0,middleRuns:0,closersBeaten:0};}
+ skills:0,perfectSkills:0,beatScores:0,lastBeatAt:-99,cleanStage:1,skillKinds:[] as string[],oneTwos:0,chips:0,headers:0,bosses:0,hurdles:0,puddleJumps:0,cornerGoals:0,rounded:0,shieldSaves:0,wingRuns:0,middleRuns:0,closersBeaten:0};}
 export type RunnerGame=ReturnType<typeof createRunnerGame>;
+/** Slope pace: slower up a climb, faster down a descent, within ±10 %. */
+export const RUNNER_SLOPE={gain:1.1,min:.9,max:1.1,laneGain:1.5,insideShare:.6,minBend:12};
+export const runnerSlopeFactor=(grade:number)=>Math.max(RUNNER_SLOPE.min,Math.min(RUNNER_SLOPE.max,1-RUNNER_SLOPE.gain*grade));
+/** Fairness ceiling: slopes never take the runner past the old top speed (boost + one-two burst), so every
+ * read-to-contact window measured at maximum speed still holds. */
+export const runnerTopSpeed=(distance:number)=>runnerPace(distance)*1.3*1.15;
+/** The lane on the inside of a bend (-1 left, 1 right), or 0 on a straight. */
+export const runnerInsideLane=(curve:number)=>Math.abs(curve)>ROUTE_BEND_MIN?Math.sign(curve):0;
+/** Metres of run-up before a goal in which a single defensive line may still spawn. A line placed at -57 m then
+ * stands ~17 m ahead of the goal's golden trail when the goal appears: beat the defender, then find the goal. */
+export const RUNNER_GOAL_RUNUP=40;
+/** Seconds after beating a defender in which a goal counts as "beat the tackle, find the goal". */
+export const RUNNER_BEAT_SCORE_WINDOW=4;
+/** Open lane of each new wave. Wave 0 opens on the right, so the very first defender stands in the
+ * kick-off (centre) lane: the first thing every run teaches is to move into space. */
+export const RUNNER_WAVE_LANES=[1,-1,0,-1,1,0] as const;
 export function runnerMultiplier(s:RunnerGame){return Math.min(3,1+Math.floor(s.combo/6));}
 function cleanPlay(s:RunnerGame){s.combo++;s.bestCombo=Math.max(s.bestCombo,s.combo);}
 /** Pace: smooth ramp to 18 m/s by stage 5, then a gentle climb to 20 m/s. */
@@ -70,9 +90,9 @@ export function spawnRunnerPattern(s:RunnerGame){
  const goal=s.objects.find(o=>o.kind==='goal'&&!o.passed&&o.z<0);
  if(goal){s.readLane=goal.openLane;s.pattern=goal.keeper?'Watch the keeper':'Find the golden opening';return 24;}
  // Reserve a distinct finishing beat: no fresh obstacle line is placed across a goal or a back line.
- const room=s.nextGoal-s.distance;if(room<(runnerBossDue(s)||s.bossPending?175:62))return 18;
+ const room=s.nextGoal-s.distance;if(room<(runnerBossDue(s)||s.bossPending?175:RUNNER_GOAL_RUNUP))return 18;
  const index=s.wave++,stage=RUNNER_STAGES[Math.min(5,s.level-1)];
- const lane=[0,-1,1,0,1,-1][index%6];s.readLane=lane;
+ const lane:number=RUNNER_WAVE_LANES[index%6];s.readLane=lane;
  // Kind reset: right after a lost chance the next encounter is a single, simple line.
  // Wing route: single lines and more footballs; middle route: the busy patterns.
  let pattern=runnerPatternFor(index,stage.patterns);
@@ -81,6 +101,7 @@ export function spawnRunnerPattern(s:RunnerGame){
  else if(s.route==='middle'&&pattern<2&&s.level>=3)pattern=index%2?5:2;
  // Lines must be behind the runner before the goal's golden trail appears.
  if(room<95&&pattern>=3&&pattern!==6)pattern=index%2?1:0;
+ const runup=room<62;if(runup&&pattern===6)pattern=1;
  let defenderIndex=0;const roles:RunnerDefender[]=s.level>=3?['jockey','presser','tackler','wall','sweeper']:s.level>=2?['jockey','tackler','wall','sweeper']:['jockey','tackler','sweeper'];
  const add=(kind:RunnerObject['kind'],lane:number,z:number,extra?:Partial<RunnerObject>)=>{const o:RunnerObject={kind,lane,z,passed:false,openLane:0,...(kind==='defender'?{role:roles[(index+defenderIndex++)%roles.length]}:{}),...extra};s.objects.push(o);return o;};
  // The trail fades as the player learns to read defenders: 3 balls, then 2 from stage 4.
@@ -127,6 +148,7 @@ export function spawnRunnerPattern(s:RunnerGame){
  }
  if(!Number.isNaN(linkLane))link(linkLane,-57);
  if(s.wave===1)s.message='Follow the footballs. A clear lane is always available.';
+ else if(runup)s.message='Beat the defender, then find the goal!';
  return 42*Math.max(.82,1-(s.level-1)*.04);
 }
 /** The back-line boss: two lines of two defenders that shift across together. */
@@ -143,8 +165,10 @@ export function spawnRunnerBoss(s:RunnerGame){
 export const RUNNER_DEFENDER_REACH={rest:{x:.85,z:.9},jockey:{x:.92,z:1.2},tackler:{x:.94,z:2.1},sweeper:{x:1.15,z:1.55},presser:{x:.95,z:1.35},wall:{x:.95,z:1.1},pair:{x:.92,z:1.2},line:{x:.95,z:1.1}} as const;
 export function runnerDefenderReach(o:RunnerObject){return (o.tackle??0)>.08&&(o.tackle??0)<.7?RUNNER_DEFENDER_REACH[o.role??'jockey']:RUNNER_DEFENDER_REACH.rest;}
 function feedback(s:RunnerGame,kind:string,x:number,z:number,message:string){s.event++;s.eventAt=s.time;s.eventKind=kind;s.eventX=x;s.eventZ=z;s.message=message;}
+/** A defender was beaten (skill, dodge, hurdle, one-two, back line): opens the beat-then-score window. */
+function beat(s:RunnerGame){s.lastBeatAt=s.time;}
 /** One place for losing a chance: a short kind slow-down, then the full-time beat. */
-function loseChance(s:RunnerGame,message:string){s.lives--;s.hurt=1.2;s.combo=s.streak=s.energy=0;s.nearStreak=0;s.hits++;s.recover=1.6;s.easeNext=true;s.skill='';if(s.boss)s.boss=-1;if(s.lives<=0){s.outro=RUNNER_OUTRO;s.charging=false;s.charge=0;}feedback(s,'hit',s.x,0,s.lives?message:'Full time! Great effort. One more run?');}
+function loseChance(s:RunnerGame,message:string){s.lives--;s.lastBeatAt=-99;s.hurt=1.2;s.combo=s.streak=s.energy=0;s.nearStreak=0;s.hits++;s.recover=1.6;s.easeNext=true;s.skill='';if(s.boss)s.boss=-1;if(s.lives<=0){s.outro=RUNNER_OUTRO;s.charging=false;s.charge=0;}feedback(s,'hit',s.x,0,s.lives?message:'Full time! Great effort. One more run?');}
 /** A power-run shield takes one tackle instead of a chance. */
 function absorb(s:RunnerGame,o:RunnerObject|undefined,x:number,z:number){s.shield=false;s.shieldSaves++;s.hurt=.35;if(o){o.passed=true;o.knock=.65;}s.score+=50;feedback(s,'shield',x,z,'Strong on the ball! Your power run rode that tackle. +50');}
 /** Advances only the full-time beat after the last chance. The match clock
@@ -196,7 +220,7 @@ export function runnerSkill(s:RunnerGame){
  if(time>RUNNER_SKILL_WINDOW.early){s.skillPerfect=false;feedback(s,'early',s.x,target.z,`Too early! Wait until they are close, then ${spec.label.toLowerCase()}.`);return true;}
  const perfect=time<=RUNNER_SKILL_WINDOW.perfectEarly&&time>=RUNNER_SKILL_WINDOW.perfectLate;s.skillPerfect=perfect;
  target.beaten=1;if(target.role==='pair')for(const o of s.objects)if(o.role==='pair'&&!o.passed&&Math.abs(o.z-target.z)<.5)o.beaten=1;s.skills++;if(!s.skillKinds.includes(move))s.skillKinds.push(move);if(target.closing!==undefined)s.closersBeaten++;
- const reward=(60+(perfect?40:0))*runnerMultiplier(s);s.score+=reward;cleanPlay(s);
+ if(perfect)s.perfectSkills++;beat(s);const reward=(60+(perfect?40:0))*runnerMultiplier(s);s.score+=reward;cleanPlay(s);
  feedback(s,'skillmove',s.x,target.z,`${perfect?'PERFECT ':''}${spec.label.toUpperCase()}! ${spec.teach} +${reward}`);return true;
 }
 export function runnerShoot(s:RunnerGame){
@@ -224,8 +248,10 @@ function keeperStep(s:RunnerGame,o:RunnerObject,dt:number){
 }
 function scoreGoal(s:RunnerGame,target:RunnerObject,x:number,power:boolean,precision:boolean,label:string){
  target.passed=true;target.scored=true;target.netHit=.65;target.goalBurst=0;target.hitX=x;s.goals++;s.streak++;s.celebrate=1;
+ // The game's lesson in one move: beat the tackle, then find the goal.
+ const beatFirst=s.time-s.lastBeatAt<=RUNNER_BEAT_SCORE_WINDOW;if(beatFirst){s.beatScores++;s.lastBeatAt=-99;}
  const reward=(goalPoints(power,s.streak)+150+(precision?150:0))*runnerMultiplier(s)*(target.danger?2:1);cleanPlay(s);s.score+=reward;
- feedback(s,'goal',x,target.z,`${label}! +${reward} · ${target.danger?'Danger zone ×2':s.streak>1?`×${Math.min(3,s.streak)} streak`:'Great finish!'}`);
+ feedback(s,'goal',x,target.z,`${label}! +${reward} · ${beatFirst?'Beat the tackle, found the goal!':target.danger?'Danger zone ×2':s.streak>1?`×${Math.min(3,s.streak)} streak`:'Great finish!'}`);
 }
 /** Resolve a shot arriving at a goal. Keeper goals check the gap to the keeper and the shot type. */
 function shotAtGoal(s:RunnerGame,shot:RunnerShot,target:RunnerObject){
@@ -250,7 +276,9 @@ export function tickRunner(s:RunnerGame,dt:number){
  // Exact critically damped spring: a lane cut accelerates and plants without
  // snapping velocity or overshooting, including when the player reverses it.
  const previousX=s.x,previousY=s.y,previousVy=s.vy;
- const offset=s.x-s.lane*2.4,omega=22,impulse=s.vx+omega*offset,decay=Math.exp(-omega*dt);
+ // Downhill the ball runs away from you: a cut takes a touch longer. Uphill touches are tighter.
+ s.grade=routeGrade(s.distance);s.curve=routeCurve(s.distance);
+ const offset=s.x-s.lane*2.4,omega=22*(1+Math.max(-.1,Math.min(.1,s.grade*RUNNER_SLOPE.laneGain))),impulse=s.vx+omega*offset,decay=Math.exp(-omega*dt);
  s.x=s.lane*2.4+(offset+impulse*dt)*decay;s.vx=(s.vx-omega*impulse*dt)*decay;
  const blend=1-Math.exp(-dt*18);s.lean+=(Math.max(-1,Math.min(1,s.vx/10))-s.lean)*blend;
  s.slidePose+=(Math.min(1,s.slide/.16)-s.slidePose)*(1-Math.exp(-dt*24));
@@ -264,13 +292,20 @@ export function tickRunner(s:RunnerGame,dt:number){
  if(s.pass.phase){s.pass.t+=dt;if(s.pass.phase==='out'&&s.pass.t>=.32){s.pass.phase='back';s.pass.t=0;}
   else if(s.pass.phase==='back'&&s.pass.t>=.32){s.pass.phase='';s.pass.t=0;s.balls=Math.min(5,s.balls+1);s.burst=1.4;s.oneTwos++;
    const beat=s.objects.filter(o=>o.kind==='defender'&&!o.passed&&!o.beaten&&o.z>-36&&o.z<0&&Math.abs((o.x??o.lane*2.4)-s.x)<1.6).sort((a,b)=>b.z-a.z)[0];if(beat)beat.beaten=1;
-   const reward=80*runnerMultiplier(s);s.score+=reward;cleanPlay(s);feedback(s,'onetwo',s.x,-6,`ONE-TWO! Pass and move${beat?': the return takes the defender out':''}. +${reward}`);}}
+   if(beat)s.lastBeatAt=s.time;const reward=80*runnerMultiplier(s);s.score+=reward;cleanPlay(s);feedback(s,'onetwo',s.x,-6,`ONE-TWO! Pass and move${beat?': the return takes the defender out':''}. +${reward}`);}}
  const nextLevel=1+Math.floor(s.distance/360);
- if(nextLevel!==s.level){s.level=nextLevel;const stage=RUNNER_STAGES[Math.min(5,s.level-1)];s.stageName=stage.name;s.message=`STAGE ${s.level} · ${stage.name}. ${stage.lesson}`;}
+ if(nextLevel!==s.level){s.level=nextLevel;if(s.hits===0)s.cleanStage=s.level;const stage=RUNNER_STAGES[Math.min(5,s.level-1)];s.stageName=stage.name;s.message=s.level===10?'STAGE 10 · LEGEND RUN! 3 km of hills and bends. Keep going!':`STAGE ${s.level} · ${stage.name}. ${s.level<=6?stage.lesson:'Steeper hills, sharper bends: look up early.'}`;}
  s.stageProgress=(s.distance%360)/360;
  // Pace ramps smoothly with distance (no stage-boundary jolt) and eases off for
  // a moment after a lost chance so the player can reset. Puddles drag; a one-two lifts it.
- const pace=runnerPace(s.distance),speed=pace*(s.boost>0?1.3:1)*(1-.16*Math.min(1,s.recover/1.2))*(1-.28*Math.min(1,s.mud/.4))*(1+.15*Math.min(1,s.burst/.4)),travel=speed*dt;s.speed=speed;s.distance+=travel;s.spawn-=dt;
+ const pace=runnerPace(s.distance),speed=Math.min(runnerTopSpeed(s.distance),pace*runnerSlopeFactor(s.grade)*(s.boost>0?1.3:1)*(1-.16*Math.min(1,s.recover/1.2))*(1-.28*Math.min(1,s.mud/.4))*(1+.15*Math.min(1,s.burst/.4))),travel=speed*dt;s.speed=speed;s.distance+=travel;s.spawn-=dt;
+ // Bends: the inside lane is the short way round. Hold it through most of a bend for a clean-play bonus.
+ const inside=runnerInsideLane(s.curve);
+ if(inside&&!s.bendDir){s.bendDir=inside;s.bendLen=0;s.bendIn=0;}
+ if(s.bendDir){if(inside===s.bendDir){s.bendLen+=travel;if(s.lane===s.bendDir)s.bendIn+=travel;}
+  else{if(s.bendLen>=RUNNER_SLOPE.minBend){s.bends++;if(s.bendIn>=s.bendLen*RUNNER_SLOPE.insideShare&&s.hurt===0){s.insideCuts++;const reward=30*runnerMultiplier(s);s.score+=reward;s.energy++;cleanPlay(s);
+    feedback(s,'inside',s.x,0,`CUT INSIDE! The short way round the bend. +${reward}`);}}
+   s.bendDir=0;s.bendLen=s.bendIn=0;}}
  s.stride+=dt*speed*.7*(1-s.slidePose*.85)*(1-(s.kick>0?Math.sin(s.kick/.3*Math.PI/2):0)*.5);
  // From stage 2 the second goal of each stage is guarded by a back line first.
  if(runnerBossDue(s)&&s.nextGoal-s.distance<=100&&s.nextGoal-s.distance>60)spawnRunnerBoss(s);
@@ -363,22 +398,22 @@ export function tickRunner(s:RunnerGame,dt:number){
   const same=Math.abs(contactX-defenderX)<(reach?.x??.85),slip=defender&&s.slide>0&&(o.role??'jockey')!=='tackler',evaded=contactY>=.9||slip,invincible=!RUNNER_TUNING.powerShield&&s.boost>0;
   if(!defender)o.passed=true;
   if(o.kind==='goal'){s.streak=0;s.combo=0;s.message=o.keeper?'Shoot before reaching the keeper. Look up early!':'Shoot before reaching the goal. Look up early!';}
-  else if(same&&o.kind==='coin'){s.score+=25*runnerMultiplier(s);cleanPlay(s);if(!o.link)s.energy++;s.balls=Math.min(5,s.balls+1);s.collected++;feedback(s,'collect',s.x,o.z,o.bonus?'Brave! Bonus ball through the middle.':s.balls===5?'Five balls ready. Shoot to create space!':`Ball collected · ${s.balls}/5 ready to shoot`);
+  else if(same&&o.kind==='coin'){const full=s.balls===5;s.score+=25*runnerMultiplier(s);cleanPlay(s);if(!o.link)s.energy++;s.balls=Math.min(5,s.balls+1);s.collected++;feedback(s,'collect',s.x,o.z,o.bonus?'Brave! Bonus ball through the middle.':s.balls===5?(full?`+${25*runnerMultiplier(s)} · bag full: shoot to use them`:'Five balls ready. Shoot to create space!'):`Ball collected · ${s.balls}/5 ready to shoot`);
    if(s.energy>=RUNNER_TUNING.powerTouches){s.energy=0;s.boost=RUNNER_TUNING.powerSeconds;s.shield=RUNNER_TUNING.powerShield;s.message=RUNNER_TUNING.powerShield?'Clean touches! Burst of pace: you can ride one tackle.':'Five clean touches. Break away! Shoot for a power goal.';}}
   else if(defender&&o.beaten){/* Wrong-footed by a skill move or one-two: no tackle. */}
   else if(same&&o.kind!=='coin'&&s.hurt===0&&!invincible&&!evaded){if(s.shield)absorb(s,o,s.x,o.z);else{o.passed=true;
    // One back-line catch is enough: the rest of the line drops off so a boss never costs two chances.
    if(o.boss)for(const b of s.objects)if(b.boss&&!b.passed)b.beaten=1;
    loseChance(s,o.role==='tackler'?'Low tackle! Jump, drag it back, or change lanes.':o.role==='presser'?'Pressed! Cut away early when they sprint out.':o.role==='line'?'Caught by the back line! Go to the side they leave open.':o.role==='pair'?'Squeezed! Go round the pair, or split them early.':o.closing!==undefined?'The gap closed! Watch for a defender stepping across.':'Tackled! Shoot, skill or cut into the open lane.');}}
-  else if(same&&o.kind!=='coin'&&evaded&&!invincible){o.passed=true;const reward=40*runnerMultiplier(s);s.score+=reward;cleanPlay(s);if(contactY>=.9&&o.role==='tackler')s.hurdles++;feedback(s,'skill',s.x,0,`${slip?'Slipped the defender':'Clean hurdle'}! +${reward}`);}
+  else if(same&&o.kind!=='coin'&&evaded&&!invincible){o.passed=true;if(defender)beat(s);const reward=40*runnerMultiplier(s);s.score+=reward;cleanPlay(s);if(contactY>=.9&&o.role==='tackler')s.hurdles++;feedback(s,'skill',s.x,0,`${slip?'Slipped the defender':'Clean hurdle'}! +${reward}`);}
   else if(same&&o.kind!=='coin'&&invincible){o.passed=true;o.knock=.65;s.score+=50;feedback(s,'clear',s.x,o.z,'Power run! +50');}
   if(defender&&!o.passed&&o.z>(reach?.z??.9)){o.passed=true;
    if(o.closeThreat&&!o.beaten&&s.hurt===0&&s.lives>0)s.closersBeaten++;
-   if(o.threat&&!o.beaten&&s.hurt===0&&!invincible&&s.lives>0){s.nearMisses++;s.nearStreak++;const reward=25*runnerMultiplier(s);s.score+=reward;cleanPlay(s);
+   if(o.threat&&!o.beaten&&s.hurt===0&&!invincible&&s.lives>0){s.nearMisses++;beat(s);s.nearStreak++;if(s.grade<-ROUTE_STEEP)s.downhillBeats++;const reward=25*runnerMultiplier(s);s.score+=reward;cleanPlay(s);
     feedback(s,'skill',s.x,0,s.nearStreak>1?`${s.nearStreak} tackles beaten! +${reward} · great scanning`:`Beat the tackle! +${reward}`);}}
  }
  // Boss resolution: both back lines passed without losing a chance.
- if(s.boss&&!s.objects.some(o=>o.boss&&!o.passed)){if(s.boss>0){s.bosses++;const reward=300*runnerMultiplier(s);s.score+=reward;cleanPlay(s);feedback(s,'boss',s.x,0,`BACK LINE BEATEN! +${reward} · now pick your finish.`);}s.boss=0;}
+ if(s.boss&&!s.objects.some(o=>o.boss&&!o.passed)){if(s.boss>0){s.bosses++;beat(s);const reward=300*runnerMultiplier(s);s.score+=reward;cleanPlay(s);feedback(s,'boss',s.x,0,`BACK LINE BEATEN! +${reward} · now pick your finish.`);}s.boss=0;}
  // A route lasts until the goal it leads to has been played.
  for(let i=s.objects.length-1;i>=0;i--){const o=s.objects[i];
   if(o.kind==='goal'&&o.passed&&o.z>9&&s.route!=='main')s.route='main';

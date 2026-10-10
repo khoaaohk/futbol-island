@@ -1,13 +1,19 @@
 import * as T from 'three';
 import {PINBALL_POPUP_LIFE,type PinballFeel,type PinballPopupKind} from './soccerPinballFeel';
-import type {PinballState} from './soccerPinball';
+import {pinballReadShow,PINBALL_READ_DOTS,type PinballState} from './soccerPinball';
 
 /* Futbol Pinball visual juice, built once and pooled:
  *  - 4 billboarded score pop-ups (one small canvas texture each, redrawn only
  *    when a pop-up spawns, never per frame);
  *  - 3 neon hit rings sharing one geometry;
  *  - one "BALL SAVE" insert between the flippers that lights while the ball
- *    save is armed, flashes green on a rescue and coral on a drain.
+ *    save is armed, flashes green on a rescue and coral on a drain;
+ *  - the rebound READ marker: a landing ring on the flipper line in the
+ *    receiving bat's colour (yellow left, pink right, coral = the centre
+ *    gap) that closes in as the ball arrives — fully closed = strike now —
+ *    plus up to 8 path dots in one instanced draw (early divisions only);
+ *  - the 2v1 multiball's second football: a clone of the game ball (shared
+ *    geometry and materials), drawn only while that ball is live.
  * Idle pieces are hidden, so the steady-state cost is the insert's single
  * draw call. Every material is a Mesh material flagged arcadeSpill, so the
  * stage's dispose() frees textures with it — no separate teardown. */
@@ -38,7 +44,18 @@ export function createPinballFx(scene:T.Scene,camera:T.Camera,px:(x:number)=>num
  const insertTexture=new T.CanvasTexture(insertCanvas);insertTexture.colorSpace=T.SRGBColorSpace;
  const insertMaterial=new T.MeshBasicMaterial({map:insertTexture,color:'#8dff9e',transparent:true,opacity:.16,depthWrite:false,toneMapped:false});insertMaterial.userData.arcadeSpill=true;
  const insert=new T.Mesh(plane,insertMaterial);insert.name='pinball-ball-save';insert.rotation.x=-Math.PI/2;insert.position.set(px(180),.03,pz(586));insert.scale.set(2.5,.62,1);scene.add(insert);
+ // Second ball for the 2v1 multiball: shares the real ball's meshes/materials.
+ const source=scene.getObjectByName('pinball-ball');
+ const extra=source?source.clone(true):null,extraRoll=extra?.getObjectByName('pinball-rolling')??null;let extraSpin=0;
+ if(extra){extra.name='pinball-ball-2';extra.visible=false;extra.scale.setScalar(1);scene.add(extra);}
  const green=new T.Color('#8dff9e'),coral=new T.Color('#ff7a6b'),gold=new T.Color('#ffe86d');
+ // Rebound read: 2 draw calls while visible, none otherwise.
+ const READ_COLORS=[new T.Color('#ffe86d'),new T.Color('#ff62c2'),new T.Color('#ff7a6b')];
+ const readMaterial=new T.MeshBasicMaterial({color:READ_COLORS[0],transparent:true,opacity:0,depthWrite:false,toneMapped:false,side:T.DoubleSide});
+ const readRing=new T.Mesh(new T.RingGeometry(.7,.9,36),readMaterial);readRing.name='pinball-read-ring';readRing.rotation.x=-Math.PI/2;readRing.visible=false;readRing.renderOrder=6;scene.add(readRing);
+ const dotMaterial=new T.MeshBasicMaterial({color:READ_COLORS[0],transparent:true,opacity:0,depthWrite:false,toneMapped:false});
+ const readDots=new T.InstancedMesh(new T.CircleGeometry(.075,10),dotMaterial,PINBALL_READ_DOTS);readDots.name='pinball-read-dots';readDots.count=0;readDots.visible=false;readDots.frustumCulled=false;readDots.renderOrder=6;scene.add(readDots);
+ const dot=new T.Object3D();dot.rotation.x=-Math.PI/2;let readDrawn=-1;
 
  function paint(p:typeof popups[number],text:string,kind:PinballPopupKind){
   const g=p.canvas.getContext('2d');if(!g)return;const w=p.canvas.width,h=p.canvas.height;g.clearRect(0,0,w,h);
@@ -69,10 +86,23 @@ export function createPinballFx(scene:T.Scene,camera:T.Camera,px:(x:number)=>num
    r.age=Math.min(RING_LIFE,r.age+dt);const t=r.age/RING_LIFE,ease=1-(1-t)*(1-t)*(1-t);
    r.mesh.visible=true;r.mesh.scale.setScalar(.25+ease*1.25*r.power);r.material.opacity=(1-t)*.85;
   }
+  // Rebound read marker.
+  {const show=pinballReadShow(s),r=s.read;
+   if(show.ring>0){
+    const colour=READ_COLORS[r.side<0?2:r.side],left=Math.max(0,r.eta-(s.time-r.at)),close=Math.min(1,left/.6);
+    readMaterial.color.copy(colour);readMaterial.opacity=show.ring*(.55+.4*(1-close));
+    readRing.position.set(px(r.x),.07,pz(505));readRing.scale.setScalar(.38+close*.9);readRing.visible=true;
+   }else readRing.visible=false;
+   if(show.path>0&&r.n>0){
+    if(readDrawn!==r.at){readDrawn=r.at;for(let i=0;i<r.n;i++){dot.position.set(px(r.dots[i*2]),.065,pz(r.dots[i*2+1]));dot.updateMatrix();readDots.setMatrixAt(i,dot.matrix);}readDots.count=r.n;readDots.instanceMatrix.needsUpdate=true;}
+    dotMaterial.color.copy(READ_COLORS[r.side<0?2:r.side]);dotMaterial.opacity=show.path*.7;readDots.visible=true;
+   }else readDots.visible=false;}
   // Ball-save insert: lit while armed (blinks in its final second), green
   // flash on a rescue, coral flash on a real drain, dim otherwise.
-  const armed=s.openingRescue&&(s.phase==='ready'||s.phase==='playing'&&s.launchGrace>0);
-  const blink=s.phase==='playing'&&s.launchGrace<1&&!reduced?(Math.sin(s.time*Math.PI*8)>0?1:.35):1;
+  if(extra){const on=s.extraLive&&s.phase==='playing';extra.visible=on;if(on){const b=s.extra,speed=Math.hypot(b.vx,b.vy);extra.position.set(px(b.x),7/30,pz(b.y));if(speed>1)extra.rotation.set(0,-Math.atan2(b.vy,b.vx),0);extraSpin+=speed*dt/7;if(extraRoll)extraRoll.rotation.set(0,0,extraSpin);}}
+  const multiSave=s.extraLive&&s.mbSave>0&&s.phase==='playing';
+  const armed=multiSave||s.openingRescue&&(s.phase==='ready'||s.phase==='playing'&&s.launchGrace>0);
+  const blink=s.phase==='playing'&&(multiSave?s.mbSave:s.launchGrace)<1&&!reduced?(Math.sin(s.time*Math.PI*8)>0?1:.35):1;
   let opacity=armed?(s.phase==='ready'?.62:.92*blink):.14;
   insertMaterial.color.copy(green);
   if(f.rescueFlash>0){opacity=Math.max(opacity,reduced?.9:.55+.45*f.rescueFlash);}

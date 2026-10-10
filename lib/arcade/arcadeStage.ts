@@ -66,7 +66,15 @@ export function createArcadeStage(canvas:HTMLCanvasElement){
  const ray=new T.Raycaster(),pointer=new T.Vector2(),plane=new T.Plane(new T.Vector3(0,1,0),0),point=new T.Vector3();
  function pick(clientX:number,clientY:number){const r=canvas.getBoundingClientRect();pointer.set((clientX-r.left)/r.width*2-1,1-(clientY-r.top)/r.height*2);ray.setFromCamera(pointer,camera);return ray.ray.intersectPlane(plane,point);}
  function render(){renderer.render(scene,camera);}
- function dispose(){for(const rig of islandPlayers)rig.dispose();const geometries=new Set<T.BufferGeometry>(),mats=new Set<T.Material>();scene.traverse(o=>{if(o instanceof T.Mesh||o instanceof T.LineSegments){geometries.add(o.geometry);const list=Array.isArray(o.material)?o.material:[o.material];list.forEach(m=>mats.add(m));}});geometries.forEach(g=>g.dispose());mats.forEach(m=>{if(m.userData.arcadeSpill)(m as T.MeshBasicMaterial).map?.dispose();m.dispose();});grain.dispose();sun.shadow.map?.dispose();renderer.dispose();}
+ function dispose(){const geometries=new Set<T.BufferGeometry>(),mats=new Set<T.Material>();scene.traverse(o=>{if(o instanceof T.Mesh||o instanceof T.Line||o instanceof T.Points||o instanceof T.Sprite){geometries.add(o.geometry);const list=Array.isArray(o.material)?o.material:[o.material];list.forEach(m=>mats.add(m));
+  // Shadow-pass materials too (e.g. runnerTrack's shared bend depth material): their dispose listeners hold this renderer.
+  for(const m of [o.customDepthMaterial,o.customDistanceMaterial])if(m)mats.add(m);}});
+ // Rigs after the walk, so their shared bean geometries are collected too (a rig's dispose detaches its meshes). Sprites count:
+ // three's Sprite geometry is one module-level BufferGeometry, which otherwise keeps every renderer that drew a sprite.
+ for(const rig of islandPlayers)rig.dispose();geometries.forEach(g=>g.dispose());// Textures too, shared ones included (e.g. beanSkin's module-level face atlas): each renderer that uploaded a texture adds a 'dispose' listener holding its WebGL context, so a shared texture that is never disposed pins every past arcade renderer and its GPU memory (one live context per game visit; Chrome starts dropping contexts after ~16). Disposing only frees GPU copies: a renderer that still uses the texture re-uploads it on its next frame.
+ const textures=new Set<T.Texture>();const addTexture=(v:unknown)=>{if((v as T.Texture|null)?.isTexture)textures.add(v as T.Texture);};
+ // Maps on the material, and uniform holders such as BeanMaterial.beanUniforms ({beanFace:{value:atlas},…}).
+ mats.forEach(m=>{for(const v of Object.values(m)){addTexture(v);if(v&&typeof v==='object'&&!(v as T.Texture).isTexture&&!Array.isArray(v))for(const u of Object.values(v as Record<string,unknown>))addTexture((u as {value?:unknown}|null)?.value);}m.dispose();});textures.forEach(t=>t.dispose());grain.dispose();sun.shadow.map?.dispose();renderer.dispose();}
  return{resetPlayers:()=>islandPlayers.forEach(p=>p.resetPose()),scenery,effectsActive:()=>alive,scene,camera,renderer,mobile,reduced,box,sphere,cylinder,bar,ring,goal,football,player,burst,effects,lighting,scrollScenery,fit,pick,render,dispose};
 }
 export type ArcadeStage=ReturnType<typeof createArcadeStage>;

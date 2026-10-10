@@ -15,4 +15,12 @@ export type ExperienceProps={
  openCertificate:(id:CertificateId)=>void;
  /** Optional (timeline wall): close the experience and take the hall to this case. Experiences that don't jump ignore it. */
  onVisit?:(exhibitId:string)=>void;
+ /** Optional (timeline wall): step straight inside another exhibit's experience. Back from there returns to the timeline. */
+ onEnter?:(exhibitId:string)=>void;
+ /**
+  * Optional: call once when the visitor has finished this exhibit (its takeaway is showing, the challenge is done…). It turns
+  * the exhibit's passport stamp gold (lib/museum/museumVisits.ts). Calling it again is harmless. Stepping inside already earns
+  * the ordinary stamp, so exhibits that never call it still count as visited.
+  */
+ onComplete?:()=>void;
 };

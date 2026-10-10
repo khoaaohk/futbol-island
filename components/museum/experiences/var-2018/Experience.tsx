@@ -1,20 +1,32 @@
 'use client';
 import {useCallback,useEffect,useRef,useState,type PointerEvent as ReactPointerEvent} from 'react';
 import {flushSync} from 'react-dom';
+import {EDGE_SPRING,FLIP_SPRING,SNAP_SPRING,atRest,coast,project,rubber,rubberClamp,springEasing,stepSpring,velocity,type SpringState} from './motion';
 import ExperienceBack from '../ExperienceBack';
 import {museumSfx,unlockMuseumAudio} from '@/lib/museum/museumSound';
 import type {ExperienceProps} from '../types';
 import styles from './var.module.css';
 import {CAMS,DEEP,FPS,KICK,LAST,TRUTH,camOf,drawFrame,groundZAt,snapLine,timecode,type CamId,type LineTarget} from './scene';
+const Z_MIN=8,Z_MAX=26;
+import Quiz from './Quiz';
 import {CASE_FACTS,CHECKS,FOR_YOUR_GAME,IFAB_MOTTO,IFAB_QUOTE,OFFSIDE_LAW,PRACTICE_NOTE,REAL_CASE,SOURCES,TOURNAMENT_NUMBERS} from './content';
 
 /**
  * var-2018 · "You are the VAR" (Oct 5 2026). A dark broadcast control room: one PRACTICE moment (made up, drawn live from four
  * camera angles by scene.ts). The visitor scrubs to the kick frame, drags the offside lines onto the right body parts (arms don't
  * count), judges whether the WHOLE ball crossed the WHOLE line, then swaps chairs: as the referee at the pitchside screen they
- * make the decision, because VAR only advises. Ends on the real 2018 case (France v Australia, the first VAR penalty).
+ * make the decision, because VAR only advises. Ends on the real 2018 case (France v Australia, the first VAR penalty), told one
+ * beat at a time ("What happened next?", the monitor's slate follows: play on, look again, penalty), then a four-question quick
+ * check (Quiz.tsx) whose payoff stamps the monitor "VAR CERTIFIED" (Oct 9 2026).
  *
- * Heat: nothing animates unless the visitor plays the clip. Drawing happens on demand (one requestAnimationFrame per change, never
+ * Motion pass (Oct 9 2026, motion.ts): the offside lines are physical. A drag follows the finger, clicks onto a body part with a
+ * magnet, rubber-bands past the 8–26 m ends, and on release keeps the finger's velocity: a flick glides, then a spring settles it
+ * (onto the body part when it lands near one). Scrubbing the monitor works the same way: flick to coast through the frames, the
+ * clip decelerates, and pulling past the first or last frame stretches the picture and springs it back. A camera switch is a FLIP:
+ * the new feed grows out of the thumbnail you tapped into the monitor, on a spring-sampled linear() easing (no View Transitions).
+ * One rAF loop drives all of it and stops the moment everything is at rest.
+ *
+ * Heat: nothing animates unless the visitor plays the clip or a line/scrub is still settling. Drawing happens on demand (one requestAnimationFrame per change, never
  * a loop); playback is a rAF loop that stops at the last frame, on pause, when the tab hides and on unmount. Canvas pixel ratio
  * is capped (1.5 on coarse pointers, 2 otherwise; thumbnails at 1). No WebGL, no audio nodes of our own (museumSfx one-shots).
  */
@@ -37,6 +49,8 @@ export default function Experience({exhibit,onClose}:ExperienceProps){
  const [goalCall,setGoalCall]=useState<'goal'|'nogoal'|null>(null);
  const [refCall,setRefCall]=useState<'goal'|'nogoal'|null>(null);
  const [checked,setChecked]=useState<readonly number[]>([]);
+ // The real 2018 case unfolds one line at a time (0..2), then the quick check.
+ const [caseBeat,setCaseBeat]=useState(0),[certified,setCertified]=useState<string|null>(null);
  const rangeEl=useRef<HTMLInputElement>(null);
  // The timeline's filled part (a CSS variable set after mount, so server and client markup match).
  useEffect(()=>{rangeEl.current?.style.setProperty('--p',`${frame/LAST*100}%`);},[frame]);
@@ -59,23 +73,32 @@ export default function Experience({exhibit,onClose}:ExperienceProps){
  state.current={frame,cam,zoom,lines,snap,step,linesShown,goalCall,refCall};
  const drawAll=useCallback(()=>{
   const s=state.current,tags={def:s.snap.def?.label,att:s.snap.att?(s.snap.att.id==='arm'?'Arm: doesn’t count':s.snap.att.label):undefined,attBad:s.snap.att?.id==='arm'};
-  const opts={lines:s.linesShown?s.lines:undefined,lineTags:s.linesShown?tags:undefined,measure:(s.goalCall==='nogoal'||s.step==='ref'||s.step==='case')&&s.frame===DEEP};
+  const L=live.current&&s.linesShown?{...s.lines,[live.current.who]:live.current.z}:s.lines;
+  const opts={lines:s.linesShown?L:undefined,active:live.current?.who??null,handles:s.step==='lines',grid:s.step==='lines',gridSkip:main.current?Math.min(.5,190/Math.max(1,main.current.clientWidth)):0,lineTags:s.linesShown?tags:undefined,measure:(s.goalCall==='nogoal'||s.step==='ref'||s.step==='case')&&s.frame===DEEP};
   const m=main.current,g=m?.getContext('2d');if(m&&g&&m.width>0)drawFrame(g,m.width,m.height,s.cam,s.frame,{...opts,zoom:s.zoom?ZOOM:1,dim:s.step==='booth'?.55:s.step==='case'?.8:0});
   CAMS.forEach((c,i)=>{const t=thumbs.current[i],tg=t?.getContext('2d');if(t&&tg&&t.width>0)drawFrame(tg,t.width,t.height,c.id,s.frame,{lines:opts.lines});});
+  // Over-scrub: the picture stretches past the first/last frame (compositor transform, no repaint).
+  if(m)m.style.transform=Math.abs(edge.current.x)>.3?`translateX(${edge.current.x.toFixed(1)}px)`:'';
  },[]);
  const requestDraw=useCallback(()=>{if(raf.current)return;raf.current=requestAnimationFrame(()=>{raf.current=0;drawAll();});},[drawAll]);
  const reduced=()=>matchMedia('(prefers-reduced-motion:reduce)').matches;
- // Camera switch: the tapped feed grows into the big monitor (same-document View Transition: the thumbnail's snapshot morphs into
- // the monitor's). The canvas is redrawn inside the update so the new snapshot already shows the new angle. Without View
- // Transitions (or with reduced motion) it is a quick broadcast cut instead.
+ // Camera switch, FLIP: First = the thumbnail's box, Last = the monitor's box once the new angle is drawn, Invert = a transform that
+ // puts the monitor back over the thumbnail, Play = a spring (sampled into a CSS linear() easing) back to identity. Compositor-
+ // only (transform), finite, interruptible by the next tap. Reduced motion: a quick broadcast cut instead.
  const [cuts,setCuts]=useState(0);
+ const flip=useRef<Animation|null>(null);
  const switchCam=(id:CamId,thumb:HTMLElement)=>{
   if(id===state.current.cam)return;
-  const d=document as Document&{startViewTransition?:(cb:()=>void)=>{finished:Promise<void>}},mon=monitorEl.current;
-  if(!d.startViewTransition||!mon||reduced()){setCam(id);if(!reduced())setCuts(n=>n+1);return;}
-  thumb.style.viewTransitionName='var2018-feed';
-  const vt=d.startViewTransition(()=>{thumb.style.viewTransitionName='';mon.style.viewTransitionName='var2018-feed';flushSync(()=>setCam(id));drawAll();});
-  vt.finished.finally(()=>{mon.style.viewTransitionName='';thumb.style.viewTransitionName='';});
+  const mon=monitorEl.current,first=thumb.getBoundingClientRect();
+  flushSync(()=>setCam(id));drawAll();
+  if(!mon||reduced()||typeof mon.animate!=='function'){if(!reduced())setCuts(n=>n+1);return;}
+  flip.current?.cancel();
+  const last=mon.getBoundingClientRect();if(!last.width||!last.height)return;
+  const sx=first.width/last.width,sy=first.height/last.height,dx=first.left-last.left,dy=first.top-last.top;
+  const e=springEasing(FLIP_SPRING),linearOk=typeof CSS!=='undefined'&&CSS.supports?.('animation-timing-function','linear(0, 1)');
+  flip.current=mon.animate([{transformOrigin:'0 0',transform:`translate(${dx.toFixed(1)}px,${dy.toFixed(1)}px) scale(${sx.toFixed(4)},${sy.toFixed(4)})`},{transformOrigin:'0 0',transform:'none'}],
+   {duration:linearOk?e.duration:420,easing:linearOk?e.easing:'cubic-bezier(.2,.9,.25,1.15)'});
+  museumSfx.tick();
  };
  // The "got it" beat: a one-frame white flash and a tiny punch of the monitor (WAAPI, finite). Reduced motion: none; the stamp,
  // colour and sound still say it.
@@ -108,7 +131,7 @@ export default function Experience({exhibit,onClose}:ExperienceProps){
 
  // Keep the newest feedback in view in the (scrolling) task panel; a new step starts at the top.
  useEffect(()=>{panel.current?.scrollTo({top:0});},[step]);
- useEffect(()=>{const all=panel.current?.querySelectorAll('[data-feedback]'),el=all?.[all.length-1];if(el)el.scrollIntoView({block:'nearest',behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth'});},[kickMsg,goalCall,refCall,onside,armTagged]);
+ useEffect(()=>{const all=panel.current?.querySelectorAll('[data-feedback]'),el=all?.[all.length-1];if(el)el.scrollIntoView({block:'nearest',behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth'});},[kickMsg,goalCall,refCall,onside,armTagged,caseBeat]);
  // ---- Keyboard: Escape leaves, arrows step frames, space plays ---------------------------------------------------------------
  useEffect(()=>{const key=(e:KeyboardEvent)=>{
   if(e.key==='Escape'){e.preventDefault();onClose();return;}
@@ -121,21 +144,81 @@ export default function Experience({exhibit,onClose}:ExperienceProps){
  useEffect(()=>{root.current?.focus();},[]);
 
  // ---- Direct manipulation on the monitor: drag to scrub, or drag the offside lines -----------------------------------------
- const drag=useRef<{kind:'scrub'|'line';who?:'def'|'att';x0:number;f0:number;dz?:number}|null>(null);
+ type Sample={t:number;x:number};
+ const drag=useRef<{kind:'scrub'|'line';who?:'def'|'att';x0:number;f0:number;dz?:number;per?:number;raw?:number;samples:Sample[]}|null>(null);
  const local=(e:ReactPointerEvent)=>{const c=main.current!,r=c.getBoundingClientRect();return {x:(e.clientX-r.left)*c.width/r.width,y:(e.clientY-r.top)*c.height/r.height,w:c.width,h:c.height,cssW:r.width};};
- const moveLine=useCallback((who:'def'|'att',z:number)=>{const s=snapLine(who,Math.max(8,Math.min(26,z)));
+ const moveLine=useCallback((who:'def'|'att',z:number)=>{const s=snapLine(who,Math.max(Z_MIN,Math.min(Z_MAX,z)));
   if(s.target&&state.current.snap[who]?.id!==s.target.id)museumSfx.tick();
   setLines(l=>({...l,[who]:s.z}));setSnap(prev=>({...prev,[who]:s.target}));},[]);
+ /** Mark which body part (if any) a line sits on: a tick when it clicks onto a new one. */
+ const markSnap=useCallback((who:'def'|'att',t:LineTarget|null)=>{if(state.current.snap[who]?.id===(t?.id))return;if(t)museumSfx.tick();setSnap(prev=>({...prev,[who]:t}));},[]);
+
+ // ---- The motion loop: one rAF while a line spring, a scrub coast or the over-scrub spring is still moving ------------------
+ const live=useRef<{who:'def'|'att';z:number}|null>(null);
+ const lineAnim=useRef<{who:'def'|'att';s:SpringState;to:number}|null>(null);
+ const coastAnim=useRef<SpringState|null>(null);
+ const edge=useRef<SpringState>({x:0,v:0});
+ const loop=useRef(0),loopT=useRef(0),perPx=useRef(8);
+ const [tried,setTried]=useState<{scrub?:boolean;lines?:boolean}>({});
+ const settleAll=useCallback(()=>{// jump everything to where it was heading (tab hidden, unmount, reduced motion)
+  const l=lineAnim.current;if(l){lineAnim.current=null;live.current=null;setLines(x=>({...x,[l.who]:l.to}));}
+  const c=coastAnim.current;if(c){coastAnim.current=null;setFrameState(Math.max(0,Math.min(LAST,Math.round(c.x))));}
+  edge.current={x:0,v:0};if(main.current)main.current.style.transform='';
+ },[]);
+ const tick=useCallback((now:number)=>{
+  loop.current=0;const dt=Math.min(.05,(now-loopT.current)/1000||1/60);loopT.current=now;let moving=false;
+  const l=lineAnim.current;
+  if(l){stepSpring(l.s,l.to,dt,SNAP_SPRING);if(atRest(l.s,l.to)){lineAnim.current=null;live.current=null;const to=l.to;setLines(x=>({...x,[l.who]:to}));}else{live.current={who:l.who,z:l.s.x};moving=true;}}
+  const c=coastAnim.current;
+  if(c){coast(c,dt);
+   if(c.x<0||c.x>LAST){// hit the first/last frame: the leftover speed becomes a bounce of the picture
+    const per=perPx.current;edge.current.v+=Math.sign(c.v)*Math.min(1600,Math.abs(c.v)*per*.6);c.x=Math.max(0,Math.min(LAST,c.x));coastAnim.current=null;}
+   else if(Math.abs(c.v)<3){coastAnim.current=null;c.x=Math.round(c.x);}else moving=true;
+   setFrame(c.x,true);}
+  const e=edge.current;
+  if(Math.abs(e.x)>.3||Math.abs(e.v)>1){stepSpring(e,0,dt,EDGE_SPRING);if(atRest(e,0,.3,2)){e.x=0;e.v=0;}else moving=true;}
+  drawAll();
+  if(moving&&!document.hidden){loop.current=requestAnimationFrame(tick);}else if(moving)settleAll();
+ },[drawAll,setFrame,settleAll]);
+ const kick=useCallback(()=>{if(loop.current||document.hidden)return;loopT.current=performance.now();loop.current=requestAnimationFrame(tick);},[tick]);
+ useEffect(()=>{const vis=()=>{if(document.hidden&&loop.current){cancelAnimationFrame(loop.current);loop.current=0;settleAll();}};
+  document.addEventListener('visibilitychange',vis);
+  return()=>{document.removeEventListener('visibilitychange',vis);cancelAnimationFrame(loop.current);loop.current=0;flip.current?.cancel();};},[settleAll]);
+
  const down=(e:ReactPointerEvent<HTMLDivElement>)=>{unlockMuseumAudio();const p=local(e);
-  if(step==='lines'){const z=groundZAt(cam,p.w,p.h,p.x,p.y,zoom?ZOOM:1);if(z==null)return;const who=Math.abs(z-lines.def)<=Math.abs(z-lines.att)?'def':'att';
-   drag.current={kind:'line',who,x0:p.x,f0:0,dz:lines[who]-z};}
-  else if(scrubbable){setPlaying(false);drag.current={kind:'scrub',x0:e.clientX,f0:frame};}
+  if(step==='lines'){const z=groundZAt(cam,p.w,p.h,p.x,p.y,zoom?ZOOM:1);if(z==null)return;
+   // Grab whichever line is nearer (the one still moving counts where it is now): catching a gliding line stops it in your hand.
+   const at=(w:'def'|'att')=>live.current?.who===w?live.current.z:lines[w];
+   const who=Math.abs(z-at('def'))<=Math.abs(z-at('att'))?'def':'att';
+   if(lineAnim.current){const l=lineAnim.current;lineAnim.current=null;if(l.who!==who){live.current=null;setLines(x=>({...x,[l.who]:l.to}));}}
+   const z0=at(who);live.current={who,z:z0};
+   drag.current={kind:'line',who,x0:p.x,f0:0,dz:z0-z,samples:[{t:e.timeStamp,x:z0}]};setTried(t=>t.lines?t:{...t,lines:true});requestDraw();}
+  else if(scrubbable){setPlaying(false);coastAnim.current=null;
+   drag.current={kind:'scrub',x0:e.clientX,f0:frame,per:Math.max(4,p.cssW/(LAST*1.2)),samples:[{t:e.timeStamp,x:frame}]};setTried(t=>t.scrub?t:{...t,scrub:true});}
   else return;
   e.currentTarget.setPointerCapture(e.pointerId);};
  const move=(e:ReactPointerEvent<HTMLDivElement>)=>{const d=drag.current;if(!d)return;const p=local(e);
-  if(d.kind==='line'&&d.who){const z=groundZAt(cam,p.w,p.h,p.x,p.y,zoom?ZOOM:1);if(z!=null)moveLine(d.who,z+(d.dz??0));}
-  else{const per=Math.max(4,p.cssW/(LAST*1.2));setFrame(d.f0+(e.clientX-d.x0)/per,true);}};
- const up=()=>{drag.current=null;};
+  if(d.kind==='line'&&d.who){const g=groundZAt(cam,p.w,p.h,p.x,p.y,zoom?ZOOM:1);if(g==null)return;
+   const raw=g+(d.dz??0);let z=rubberClamp(raw,Z_MIN,Z_MAX,1.2);
+   const s=snapLine(d.who,z);if(s.target&&raw>=Z_MIN&&raw<=Z_MAX)z=s.target.z;// magnet: the line clicks onto a body part
+   markSnap(d.who,raw>=Z_MIN&&raw<=Z_MAX?s.target:null);
+   d.samples.push({t:e.timeStamp,x:z});if(d.samples.length>12)d.samples.shift();live.current={who:d.who,z};requestDraw();}
+  else{const per=d.per??8,raw=d.f0+(e.clientX-d.x0)/per;d.raw=raw;d.samples.push({t:e.timeStamp,x:raw});if(d.samples.length>12)d.samples.shift();
+   const over=raw<0?raw*per:raw>LAST?(raw-LAST)*per:0;edge.current={x:over?rubber(over,70):0,v:0};
+   setFrame(raw,true);requestDraw();}};
+ const up=(e:ReactPointerEvent<HTMLDivElement>)=>{const d=drag.current;drag.current=null;if(!d)return;
+  const v=velocity(d.samples),calm=reduced();
+  if(d.kind==='line'&&d.who&&live.current){const z=live.current.z;
+   // Release: keep the finger's speed. Project where the fling would stop, keep it on the pitch, and let it click onto a body part
+   // if it lands near one. Then a spring carries it there, starting with the finger's velocity.
+   const end=Math.max(Z_MIN,Math.min(Z_MAX,calm?z:project(z,v,.994))),s=snapLine(d.who,end);markSnap(d.who,s.target);
+   if(calm){live.current=null;setLines(x=>({...x,[d.who!]:s.z}));requestDraw();return;}
+   lineAnim.current={who:d.who,s:{x:z,v:Math.max(-40,Math.min(40,v))},to:s.z};kick();}
+  else if(d.kind==='scrub'){
+   if(calm){edge.current={x:0,v:0};requestDraw();return;}
+   if(Math.abs(edge.current.x)>.3){kick();return;}// spring back from the over-scrub
+   if(Math.abs(v)>6&&d.raw!=null){perPx.current=d.per??8;coastAnim.current={x:Math.max(0,Math.min(LAST,d.raw)),v:Math.max(-90,Math.min(90,v))};kick();}}
+ };
 
  // ---- Step actions -------------------------------------------------------------------------------------------------------------
  const goStep=(s:Step)=>{setPlaying(false);setStep(s);
@@ -143,7 +226,9 @@ export default function Experience({exhibit,onClose}:ExperienceProps){
   if(s==='lines'){setCam('offside');setFrame(KICK);setZoom((main.current?.getBoundingClientRect().width??999)<560);}
   if(s==='goal'){setCam('goal');setFrame(38);setGoalCall(null);setZoom(false);}
   if(s==='ref'){setCam('goal');setFrame(DEEP);setRefCall(null);setZoom(false);}
-  if(s==='case'){setCam('wide');setFrame(DEEP);}};
+  if(s==='case'){setCam('wide');setFrame(DEEP);setCaseBeat(0);}};
+ const nextCase=()=>{unlockMuseumAudio();setCaseBeat(b=>Math.min(REAL_CASE.story.length-1,b+1));museumSfx.flap();if(caseBeat===REAL_CASE.story.length-2){museumSfx.whistle();showStamp('PENALTY · after review','go');}};
+ const onQuizDone=useCallback((score:number,of:number)=>{const t=`VAR CERTIFIED · ${score}/${of}`;setCertified(t);showStamp(t,'go');},[showStamp]);
  const markKick=()=>{
   if(frame===KICK){museumSfx.reveal();setKickMsg(null);goStep('lines');showStamp('KICK FRAME · F20','info');return;}
   museumSfx.card();
@@ -151,7 +236,7 @@ export default function Experience({exhibit,onClose}:ExperienceProps){
    :(frame-KICK<=3?'Too late: the ball has already left the foot. Step back.':'Too late: the pass has gone. Scrub back to the kick.'));};
  const callGoal=(c:'goal'|'nogoal')=>{setGoalCall(c);setPlaying(false);if(c==='nogoal'){museumSfx.reveal();setFrame(DEEP);setCam('goal');showStamp(`NO GOAL · ${TRUTH.ballOnLineCm} cm on the line`,'stop');}else museumSfx.card();};
  const decide=(c:'goal'|'nogoal')=>{setRefCall(c);museumSfx.whistle();};
- const restart=()=>{setLines(START_LINES);setSnap({def:null,att:null});setGoalCall(null);setRefCall(null);setKickMsg(null);goStep('kick');};
+ const restart=()=>{setCertified(null);setLines(START_LINES);setSnap({def:null,att:null});setGoalCall(null);setRefCall(null);setKickMsg(null);goStep('kick');};
  const stepIndex=STEPS.findIndex(s=>s.id===step);
  const camInfo=camOf(cam);
 
@@ -181,12 +266,12 @@ export default function Experience({exhibit,onClose}:ExperienceProps){
      {step!=='case'&&<span className={styles.practice}>PRACTICE REPLAY</span>}
      {step!=='case'&&<span className={styles.tc}>{timecode(frame)} <b>F{String(frame).padStart(2,'0')}</b></span>}
      {frame===KICK&&step!=='booth'&&step!=='kick'&&step!=='lines'&&<span className={styles.badge}>KICK FRAME</span>}
-     {step==='lines'&&!onside&&<span className={styles.hint}>Drag the lines</span>}
-     {step==='kick'&&frame===0&&<span className={styles.hint}>Drag to scrub ⟷</span>}
+     {step==='lines'&&!onside&&<span className={styles.hint} data-tried={tried.lines||undefined}><Hand/>Drag a line onto a foot</span>}
+     {(step==='kick'||step==='goal')&&!tried.scrub&&<span className={styles.hint}><Hand/>Drag the picture to move time ⟷</span>}
      {step==='booth'&&<div className={styles.slate}><p className={styles.slateKicker}>Video operation room</p><p className={styles.slateBig}>Watch.<br/>Check.<br/>Advise.</p><p className={styles.slateSmall}>The referee decides.</p></div>}
      {step==='ref'&&refCall&&<div className={styles.decision} data-call={refCall}><p>Referee’s decision</p><strong>{refCall==='goal'?'GOAL':'NO GOAL'}</strong></div>}
      {step==='ref'&&!refCall&&<div className={styles.ofr}>ON-FIELD REVIEW</div>}
-     {step==='case'&&<div className={styles.slate}><p className={styles.slateKicker}>Real history</p><p className={styles.slateBig}>{REAL_CASE.match}</p><p className={styles.slateSmall}>{REAL_CASE.when}</p></div>}
+     {step==='case'&&<div className={styles.slate}><p className={styles.slateKicker}>Real history · {REAL_CASE.match}</p><p key={caseBeat} className={`${styles.slateBig} ${styles.slateBeat}`} data-beat={caseBeat}>{REAL_CASE.slates[caseBeat]}</p><p className={styles.slateSmall}>{certified??REAL_CASE.when}</p></div>}
     </div>
 
    <div className={styles.transport} data-off={!scrubbable||undefined}>
@@ -292,10 +377,15 @@ export default function Experience({exhibit,onClose}:ExperienceProps){
       </ol>
       <p className={styles.eyebrow}>Real history · {REAL_CASE.when}</p>
       <p className={styles.lead}>{REAL_CASE.match}: the first VAR penalty</p>
-      {REAL_CASE.story.map(s=><p key={s}>{s}</p>)}
-      <p className={styles.bigLine}>{REAL_CASE.lesson}</p>
-      <p>{TOURNAMENT_NUMBERS} VAR’s motto: “{IFAB_MOTTO}”</p>
-      <div data-feedback className={styles.verdict} data-tone="go"><strong>Take it to your game</strong><p>{FOR_YOUR_GAME}</p></div>
+      <ol className={styles.unfold} aria-label="What happened">
+       {REAL_CASE.story.slice(0,caseBeat+1).map((s,i)=><li key={s} data-feedback={i===caseBeat||undefined} className={styles.unfoldLine}><span aria-hidden="true">{String(i+1).padStart(2,'0')}</span><p>{s}</p></li>)}
+      </ol>
+      {caseBeat<REAL_CASE.story.length-1?<button type="button" className={styles.primary} onClick={nextCase} data-museum-own-cue>What happened next?</button>:<>
+       <p className={`${styles.bigLine} ${styles.unfoldLine}`}>{REAL_CASE.lesson}</p>
+       <p>{TOURNAMENT_NUMBERS} VAR’s motto: “{IFAB_MOTTO}”</p>
+       <Quiz onDone={onQuizDone}/>
+       <div className={styles.verdict} data-tone="go"><strong>Take it to your game</strong><p>{FOR_YOUR_GAME}</p></div>
+      </>}
       <details className={styles.sources}><summary>Sources</summary><ul>{SOURCES.map(s=><li key={s.url}><a href={s.url} target="_blank" rel="noreferrer">{s.title}</a></li>)}</ul>
        <p className={styles.small}>The replay in this room is a made-up practice moment drawn for the museum. The 2018 story is real.</p></details>
       <button type="button" className={styles.secondary} onClick={restart}>Run the check again</button>
@@ -305,5 +395,7 @@ export default function Experience({exhibit,onClose}:ExperienceProps){
   </div>
  </section>;
 }
+/** The "try it" hand: a pointing finger that slides left and right a few times (finite CSS), then rests. */
+const Hand=()=><svg className={styles.hand} viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M9 11V5.5a1.5 1.5 0 0 1 3 0V10m0-.5a1.5 1.5 0 0 1 3 0V11m0-.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-.6a5 5 0 0 1-3.9-1.9L4.2 15.6a1.5 1.5 0 0 1 2.3-1.9L9 16" fill="#fff" stroke="#0b1d33" strokeWidth="1.4" strokeLinejoin="round"/></svg>;
 const PlayIcon=()=><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M7 5l12 7-12 7z" fill="currentColor"/></svg>;
 const PauseIcon=()=><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 5h4v14H6zM14 5h4v14h-4z" fill="currentColor"/></svg>;

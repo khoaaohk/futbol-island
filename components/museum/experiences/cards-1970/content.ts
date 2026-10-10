@@ -22,6 +22,19 @@ export const STORY_1966=[
  'After the game, England’s Jack Charlton found out from a newspaper that he had been warned.',
  'Ken Aston was in charge of the World Cup referees. Driving home, he stopped at the traffic lights on Kensington High Street…',
 ];
+/** The manga narration box over the street panel, one per story beat (same sources). */
+export const STORY_TAGS=['1966 · the World Cup in England','Wembley · England v Argentina','After the game','Kensington, London · the drive home'];
+/** Full time quick check: the history, in three questions (answers from CASE_FACTS and TWO_YELLOWS). Right answers move about. */
+export const CHECK:{q:string;options:string[];right:number;why:string}[]=[
+ {q:'Where did Ken Aston get the idea for the cards?',options:['From a card game','At a set of traffic lights','From a dream'],right:1,
+  why:'He was waiting at traffic lights on Kensington High Street: yellow means careful, red means stop.'},
+ {q:'Why were colours a good idea at a World Cup?',options:['Every player and fan understands a colour, whatever language they speak','Cards are cheaper than whistles','Fans like bright colours'],right:0,
+  why:'In 1966 a player and the referee did not speak the same language. A card says it without words.'},
+ {q:'What do two yellow cards in one game make?',options:['Nothing, you start again','A green card','A red card'],right:2,
+  why:'Two yellow cards in one game make a red card: the player must leave the pitch.'},
+];
+/** Quiz-show sound effects in katakana (as a Japanese quiz manga prints them), with an English gloss. */
+export const CHECK_SFX={right:{ja:'ピンポン',en:'DING'},wrong:{ja:'ブブー',en:'BZZT'}};
 /** After 1970 (sources: Topend Sports World Cup firsts, Guinness World Records). */
 export const FIRSTS=[
  'The first yellow card at a World Cup went to Evgeny Lovchev of the Soviet Union, in the opening game of 1970.',
@@ -93,9 +106,17 @@ export type Scene={
  whistle?:number;impact?:{t:number;x:number;y:number};grab?:{from:string;to:string;t0:number;t1:number};goal?:boolean;
  figs:Fig[];ball:{t:number;x:number;y:number}[];
  verdict:string;law:string;why:string;note:{x:number;y:number;text:string;x2?:number;ly?:number};
+ /** "Spot it": what the visitor freezes the film on (finish the sentence "Freeze the film on…"). */
+ spot:string;
+ /** Manga sound effects (katakana as in Japanese manga, with an English gloss as translated manga print it). */
+ sfx:Sfx[];
 };
+/** A sound-effect lettering at time t (scene seconds), at x/y in scene units. */
+export type Sfx={t:number;x:number;y:number;ja:string;en:string;rot:number;size?:number};
+/** The referee's whistle in manga lettering: ピーッ (pii!). */
+export const WHISTLE_SFX={ja:'ピーッ',en:'FWEEET'};
 export const SCENES:Scene[]=[
- {id:'tackle',focus:470,watch:4,answer:'none',duration:2.8,moment:1.45,
+ {id:'tackle',spot:'the moment number 4 reaches the ball',sfx:[{t:1.12,x:610,y:228,ja:'ズザザッ',en:'SKRRT',rot:-9}],focus:470,watch:4,answer:'none',duration:2.8,moment:1.45,
   figs:[
    {id:'a',num:9,dir:1,keys:[...run(150,400,0,1.2,5),K(1.35,450,POSES.jump,34),K(1.6,510,POSES.jump2,20),K(1.8,550,POSES.run1),...run(550,700,1.8,2.7,3).slice(1)]},
    {id:'d',num:4,dir:-1,keys:[K(0,640,POSES.stand),K(.3,630,POSES.ready),...run(620,590,.5,.95,2),K(1.15,580,POSES.slide),K(1.45,540,POSES.slide),K(1.8,520,POSES.slide),K(2.2,515,POSES.sit),K(2.75,512,POSES.stand)]},
@@ -104,7 +125,7 @@ export const SCENES:Scene[]=[
   verdict:'Play on. No foul!',law:'Law 12 · a fair tackle',
   why:'Number 4 slid in and played the ball, not the player, and nobody was put in danger. So there is no foul and no card. Good tackling is part of the game.',
   note:{x:452,y:318,text:'Ball first'}},
- {id:'dive',focus:470,watch:9,answer:'yellow',duration:2.8,moment:1.55,whistle:2.0,
+ {id:'dive',spot:'the moment number 9 goes down',sfx:[{t:1.45,x:400,y:214,ja:'ドサッ',en:'FLOP',rot:7}],focus:470,watch:9,answer:'yellow',duration:2.8,moment:1.55,whistle:2.0,
   figs:[
    {id:'a',num:9,dir:1,keys:[...run(150,400,0,1.15,5),K(1.3,425,POSES.dive1,18),K(1.5,450,POSES.dive2,22),K(1.75,470,POSES.lie),K(2.8,470,POSES.lie)]},
    {id:'d',num:4,dir:-1,keys:[K(0,650,POSES.stand),K(.5,640,POSES.run1),K(.8,630,POSES.run2),K(1.05,625,POSES.pullout),K(1.7,628,POSES.pullout),K(2.1,628,POSES.shrug),K(2.8,628,POSES.shrug)]},
@@ -113,7 +134,7 @@ export const SCENES:Scene[]=[
   verdict:'Yellow card for diving.',law:'Law 12 · unsporting behaviour',
   why:'Look at the gap: nobody touched number 9. Pretending to be fouled is trying to trick the referee, so it is a yellow card. The game restarts with a free kick to the other team.',
   note:{x:552,y:300,x2:612,text:'No touch!'}},
- {id:'studs',focus:450,watch:4,answer:'red',duration:3,moment:1.5,whistle:1.75,impact:{t:1.48,x:500,y:310},
+ {id:'studs',spot:'the moment number 4 jumps in',sfx:[{t:1.46,x:560,y:206,ja:'ガッ',en:'CRACK',rot:-10,size:62}],focus:450,watch:4,answer:'red',duration:3,moment:1.5,whistle:1.75,impact:{t:1.48,x:500,y:310},
   figs:[
    {id:'a',num:9,dir:1,keys:[...run(280,480,0,1.4,5),K(1.55,495,POSES.hit,30),K(1.8,520,POSES.stumble,10),K(2.1,545,POSES.lie),K(3,545,POSES.lie)]},
    {id:'d',num:4,dir:1,keys:[...run(80,350,0,1.1,4),K(1.25,390,POSES.launch,22),K(1.5,425,POSES.studs,26),K(1.8,450,POSES.slide),K(2.3,455,POSES.sit),K(3,455,POSES.sit)]},
@@ -122,7 +143,7 @@ export const SCENES:Scene[]=[
   verdict:'Red card: serious foul play.',law:'Law 12 · excessive force',
   why:'Number 4 jumped in from behind with both feet and the studs showing. That puts the other player in danger of a bad injury. A tackle that endangers a player’s safety is a red card: off.',
   note:{x:505,y:298,text:'Both feet, studs up'}},
- {id:'trip',focus:470,watch:4,answer:'none',duration:2.8,moment:1.4,whistle:1.45,impact:{t:1.38,x:462,y:318},
+ {id:'trip',spot:'the moment the two players meet',sfx:[{t:1.4,x:410,y:222,ja:'ドテッ',en:'THUD',rot:8}],focus:470,watch:4,answer:'none',duration:2.8,moment:1.4,whistle:1.45,impact:{t:1.38,x:462,y:318},
   figs:[
    {id:'a',num:9,dir:1,keys:[...run(150,430,0,1.2,5),K(1.3,455,POSES.run2),K(1.45,480,POSES.stumble,6),K(1.75,520,POSES.fall),K(2.1,545,POSES.lie),K(2.8,545,POSES.lie)]},
    {id:'d',num:4,dir:-1,keys:[K(0,575,POSES.stand),K(.6,560,POSES.run1),K(.9,545,POSES.run2),K(1.15,535,POSES.lunge),K(1.45,530,POSES.lunge),K(1.85,530,POSES.stand),K(2.2,530,POSES.sorry),K(2.8,530,POSES.sorry)]},
@@ -131,7 +152,7 @@ export const SCENES:Scene[]=[
   verdict:'Foul! Free kick, but no card.',law:'Law 12 · careless',
   why:'Number 4 was late and clumsy and tripped number 9, so it is a foul and a free kick. Careless means not taking enough care. The Law says a careless foul needs no card, and saying sorry helps too.',
   note:{x:462,y:316,text:'Late and clumsy'}},
- {id:'shirt',focus:480,watch:4,answer:'yellow',duration:2.8,moment:1.4,whistle:1.7,grab:{from:'d',to:'a',t0:1.1,t1:1.95},
+ {id:'shirt',spot:'the moment number 4 reaches number 9',sfx:[{t:1.12,x:430,y:196,ja:'グイッ',en:'YANK',rot:-7}],focus:480,watch:4,answer:'yellow',duration:2.8,moment:1.4,whistle:1.7,grab:{from:'d',to:'a',t0:1.1,t1:1.95},
   figs:[
    {id:'a',num:9,dir:1,keys:[...run(260,520,0,1,4),K(1.15,545,POSES.pulled),K(1.5,560,POSES.pulled),K(1.9,565,POSES.stand),K(2.3,565,POSES.shrug),K(2.8,565,POSES.shrug)]},
    {id:'d',num:4,dir:1,keys:[...run(140,440,0,1,4),K(1.15,475,POSES.grab),K(1.5,492,POSES.grab2),K(1.95,495,POSES.stand),K(2.8,495,POSES.headdown)]},
@@ -140,7 +161,7 @@ export const SCENES:Scene[]=[
   verdict:'Yellow card.',law:'Law 12 · stopping a promising attack',
   why:'Number 9 was running clear with the ball. Number 4 held the shirt to stop them. Holding is a foul, and unfairly stopping a promising attack is a yellow card.',
   note:{x:530,y:250,ly:150,text:'Holding the shirt'}},
- {id:'handball',focus:540,watch:5,answer:'red',duration:2.8,moment:1.2,whistle:1.6,impact:{t:1.2,x:657,y:144},goal:true,
+ {id:'handball',spot:'the moment the shot reaches number 5',sfx:[{t:1.18,x:600,y:90,ja:'バシッ',en:'SLAP',rot:-8}],focus:540,watch:5,answer:'red',duration:2.8,moment:1.2,whistle:1.6,impact:{t:1.2,x:657,y:144},goal:true,
   figs:[
    {id:'k',num:1,dir:-1,keeper:true,keys:[K(0,590,POSES.lie)]},
    {id:'a',num:9,dir:1,keys:[K(0,330,POSES.run1),K(.3,350,POSES.run2),K(.5,365,POSES.kickback),K(.65,375,POSES.kick),K(.9,385,POSES.stand),K(1.5,390,POSES.stand),K(1.9,390,POSES.appeal),K(2.8,390,POSES.appeal)]},

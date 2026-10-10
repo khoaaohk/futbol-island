@@ -23,10 +23,12 @@
  */
 import {ACTIVITY_IDS,CELL_COUNT,MAX_BEAT_CELLS,PLACE_IDS,type ActivityId,type PlaceId} from './islandIds';
 import type {LearningReport} from './learning';
+import type {StartReport} from './startReport';
 import {COUNT_KEY_RE,MAX_BEAT_COUNTS,MAX_COUNT_VALUE,checkFlags,flagTallyKeys,isCountId,type StartFlags} from './countIds';
 
-/** The analytics SQL this code expects: 3 = 20261009_analytics_counts.sql (public.analytics_schema_version()). */
-export const SCHEMA_VERSION=3;
+/** The analytics SQL this code expects: 3 = 20261009_analytics_counts.sql, 4 = 20261009_analytics_start.sql (the /start
+ *  traffic subset in the day's rollup) (public.analytics_schema_version()). */
+export const SCHEMA_VERSION=4;
 export const EVENT_TYPES=['start','beat'] as const;
 export type EventType=typeof EVENT_TYPES[number];
 /** Raised from 2048 (Oct 8 2026) for the place/activity/cell split: a worst-case beat (every place, every activity and 64
@@ -53,7 +55,8 @@ export const BOUNCE_MS=10_000;
 export const AREAS=['island','paths','arcade','museum','konbini','controller','other'] as const;
 export type Area=typeof AREAS[number];
 /** The only paths that are stored. Anything else becomes "/other". */
-export const KNOWN_PATHS=['/','/arcade','/museum','/konbini','/controller','/coffee'] as const;
+/** '/start' (Oct 9 2026): the landing page (app/start), counted as its own entry page. */
+export const KNOWN_PATHS=['/','/arcade','/museum','/konbini','/controller','/coffee','/start'] as const;
 
 export type Utm={source?:string;medium?:string;campaign?:string};
 export type SourceClass='direct'|'search'|'social'|'referral'|'campaign';
@@ -284,7 +287,16 @@ export type DailyRollup={
  /** Oct 9 2026 (absent in rollups frozen before, or computed by SQL functions from before 20261009_analytics_counts.sql):
   *  learning counter sums, sessions with each counter ≥ 1, and sessions per start-flag value (flagTallyKeys). */
  counts?:Record<string,number>;countSessions?:Record<string,number>;flags?:Record<string,number>;
+ /** Oct 9 2026 (20261009_analytics_start.sql; absent before): the same visitor totals and dims, for sessions that entered on
+  *  /start or viewed it (isStartSession). */
+ start?:StartRollup;
 };
+/** The dims the /start subset keeps (no region or entry: the start page is the entry). */
+export const START_DIMS=['country','source','referrer','campaign','device'] as const;
+export type StartDim=typeof START_DIMS[number];
+export type StartRollup={visitors:number;sessions:number;pageviews:number;dims:Record<StartDim,Record<string,Counts>>};
+/** A session counts as start-page traffic when it entered on /start or viewed it later (the st:view counter). */
+export const isStartSession=(s:Pick<SessionRow,'entryPath'|'counts'>)=>s.entryPath==='/start'||(s.counts?.['st:view']||0)>0;
 
 /** Fine session-length buckets in seconds (bucket i is [EDGES[i], EDGES[i+1]); the last is open). Used for the median. */
 export const LENGTH_EDGES=[0,5,10,15,20,30,45,60,90,120,180,240,300,420,600,900,1200,1800,2700,3600,5400,7200,10800];
@@ -336,7 +348,19 @@ export function rollupDay(day:string,sessions:SessionRow[]):DailyRollup{
  }
  r.visitors=visitors.size;
  for(const dim of DIMS)r.dims[dim]=trimTop(r.dims[dim],dim==='region'?REGION_TOP_N:TOP_N);
+ r.start=startRollup(sessions.filter(s=>s.day===day&&isStartSession(s)));
  return r;
+}
+
+/** The /start subset of one day's sessions: visitors (distinct hashes), sessions, page views and the START_DIMS. */
+function startRollup(sessions:SessionRow[]):StartRollup{
+ const out:StartRollup={visitors:new Set(sessions.map(s=>s.visitorHash)).size,sessions:sessions.length,pageviews:0,dims:Object.fromEntries(START_DIMS.map(d=>[d,{}])) as StartRollup['dims']};
+ const seen=new Map<string,Set<string>>();
+ for(const s of sessions){out.pageviews+=s.pageviews;const keys=dimKeys(s);
+  for(const dim of START_DIMS){const key=keys[dim];if(key==null)continue;const c=(out.dims[dim][key]??={s:0,v:0,pv:0});c.s++;c.pv+=s.pageviews;
+   const id=dim+'\u0000'+key;let set=seen.get(id);if(!set)seen.set(id,set=new Set());if(!set.has(s.visitorHash)){set.add(s.visitorHash);c.v++;}}}
+ for(const dim of START_DIMS)out.dims[dim]=trimTop(out.dims[dim],TOP_N);
+ return out;
 }
 
 /** Keep the top n keys by sessions (ties by key), like the SQL's `order by s desc, k limit 100`. */
@@ -365,13 +389,18 @@ export type ActivityRow={activity:ActivityId;ms:number};
 export type Merged={totals:Totals;hist:number[];dims:Record<Dim,Row[]>;areas:{area:Area;ms:number}[];
  places:PlaceRow[];activities:ActivityRow[];cells:[number,number][];
  /** Learning totals over the range (raw; lib/analytics/learning.ts suppresses small cells before anything leaves the server). */
- counts:Record<string,number>;countSessions:Record<string,number>;flags:Record<string,number>};
+ counts:Record<string,number>;countSessions:Record<string,number>;flags:Record<string,number>;
+ /** Oct 9 2026: the /start subset summed over the days that carry it (`days`: how many of the range's rollups had it). */
+ start:{visitors:number;sessions:number;pageviews:number;dims:Record<StartDim,Row[]>;days:number}};
 
 export function mergeRollups(rollups:DailyRollup[]):Merged{
  const hist=LENGTH_EDGES.map(()=>0),dims=emptyDims(),areaMs:Partial<Record<Area,number>>={},placeMs:Record<string,number>={},placeSessions:Record<string,number>={},activityMs:Record<string,number>={},cells:CellMap={};
  const counts:Record<string,number>={},countSessions:Record<string,number>={},flags:Record<string,number>={};
  let visitors=0,sessions=0,pageviews=0,bounces=0,engagedMs=0;
+ const sd=Object.fromEntries(START_DIMS.map(d=>[d,{}])) as Record<StartDim,Record<string,Counts>>,st={visitors:0,sessions:0,pageviews:0,days:0};
  for(const r of rollups){
+  if(r.start){st.days++;st.visitors+=r.start.visitors;st.sessions+=r.start.sessions;st.pageviews+=r.start.pageviews;
+   for(const dim of START_DIMS)for(const [k,c] of Object.entries(r.start.dims?.[dim]||{})){const t=(sd[dim][k]??={s:0,v:0,pv:0});t.s+=c.s;t.v+=c.v;t.pv+=c.pv;}}
   visitors+=r.visitors;sessions+=r.sessions;pageviews+=r.pageviews;bounces+=r.bounces;engagedMs+=r.engagedMs;
   r.hist.forEach((c,i)=>{if(i<hist.length)hist[i]+=c;});
   for(const dim of DIMS)for(const [k,c] of Object.entries(r.dims?.[dim]||{})){const t=(dims[dim][k]??={s:0,v:0,pv:0});t.s+=c.s;t.v+=c.v;t.pv+=c.pv;}
@@ -388,6 +417,7 @@ export function mergeRollups(rollups:DailyRollup[]):Merged{
   activities:Object.entries(activityMs).filter(([a,ms])=>ms>0&&(ACTIVITY_IDS as readonly string[]).includes(a)).map(([a,ms])=>({activity:a as ActivityId,ms})).sort((a,b)=>b.ms-a.ms||a.activity.localeCompare(b.activity)),
   cells:Object.entries(cells).map(([k,s])=>[Number(k),s] as [number,number]).filter(([k,s])=>s>0&&k>=0&&k<CELL_COUNT).sort((a,b)=>a[0]-b[0]),
   counts,countSessions,flags,
+  start:{...st,dims:Object.fromEntries(START_DIMS.map(d=>[d,rows(sd[d])])) as Record<StartDim,Row[]>},
  };
 }
 
@@ -413,6 +443,8 @@ export type Report={
  notes:string[];
  /** Oct 9 2026: the Learning section (built and small-number-suppressed on the server, lib/analytics/learning.ts). */
  learning:LearningReport|null;
+ /** Oct 9 2026: the "Start page" section (built and small-number-suppressed on the server, lib/analytics/startReport.ts). */
+ start:StartReport|null;
  /** Database functions version (3 = 20261009_analytics_counts.sql installed); `needsUpdate` drives the /admin banner. */
  storage:{schema:number;needsUpdate:boolean};
 };
@@ -420,7 +452,7 @@ export type Report={
 export function emptyReport(from:string,to:string,now:Date,configured:boolean):Report{
  const m=mergeRollups([]);
  return {configured,from,to,granularity:from===to?'hour':'day',generatedAt:now.toISOString(),live:0,series:[],totals:m.totals,distribution:displayDistribution(m.hist),dims:m.dims,areas:m.areas,
-  places:m.places,activities:m.activities,cells:m.cells,regionNames:{},notes:[],learning:null,storage:{schema:SCHEMA_VERSION,needsUpdate:false}};
+  places:m.places,activities:m.activities,cells:m.cells,regionNames:{},notes:[],learning:null,start:null,storage:{schema:SCHEMA_VERSION,needsUpdate:false}};
 }
 
 /** Resolve a preset or custom range to inclusive UTC days. Custom ranges are capped at 366 days and never end after today. */

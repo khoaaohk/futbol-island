@@ -61,17 +61,50 @@ const src=read(`${dir}/Experience.tsx`),css=read(`${dir}/var.module.css`);
   {const s=sel.replace(/^\}?\s*/,'').replace(/\{$/,'').trim();if(!s||/^(from|to|\d+%)$/.test(s))continue;for(const part of s.split(','))assert.ok(/\.[a-zA-Z]/.test(part),'local class in selector: '+part);}
  console.log('PASS contract: fixed root, shared ExperienceBack (no local NavigationButton), header clear of the Back corner, Escape, 44 px controls that shrink, safe areas');}
 
-// 4b. Polish: camera switch morphs via a View Transition with a reduced-motion cut fallback; reward stamps are finite CSS/WAAPI.
-{assert.match(src,/startViewTransition/);assert.match(src,/reduced\(\)/);assert.match(css,/@keyframes stamp\{/);assert.match(css,/\.stamp\{[^}]*forwards/,'stamp animation is finite');
- assert.ok(!/::view-transition/.test(css),'no global view-transition selectors in the CSS module');
+// 4b. Motion (Oct 9 2026): the camera switch is a FLIP (no View Transitions anywhere), the lines and the scrub use the spring kit,
+// and the spring kit itself behaves (settles, rubber-bands, projects flicks, produces a linear() easing ending at 1).
+{const M=require(`../${dir}/motion.ts`);
+ assert.ok(!/startViewTransition|viewTransitionName|::view-transition/.test(src+css),'no View Transitions: the camera switch is a FLIP');
+ assert.match(src,/getBoundingClientRect\(\)[^]*flushSync\(\(\)=>setCam\(id\)\)[^]*mon\.animate\(\[\{transformOrigin:'0 0',transform:`translate/,'FLIP: first rect, update, invert, play');
+ assert.match(src,/springEasing\(FLIP_SPRING\)/);assert.match(src,/if\(!mon\|\|reduced\(\)\|\|typeof mon\.animate!=='function'\)/,'reduced motion: a cut, no FLIP');
+ assert.match(src,/stepSpring\(l\.s,l\.to,dt,SNAP_SPRING\)/,'lines settle on a spring');assert.match(src,/project\(z,v,/,'a flicked line keeps its momentum');
+ assert.match(src,/rubberClamp\(raw,Z_MIN,Z_MAX/,'lines rubber-band at the ends');assert.match(src,/coast\(c,dt\)/,'a flicked scrub coasts');
+ assert.match(src,/rubber\(over,70\)/,'over-scrub stretches the picture');assert.match(src,/stepSpring\(e,0,dt,EDGE_SPRING\)/,'and springs back');
+ assert.match(src,/data-tried/,'the try-it hint goes once tried');assert.match(css,/\.hand\{[^}]*animation:handSlide[^}]* 3 both/,'the hand hint is finite');
+ // the spring kit
+ const s={x:0,v:0};let t=0;while(!M.atRest(s,1)&&t<3){M.stepSpring(s,1,1/60,M.SNAP_SPRING);t+=1/60;}assert.ok(t<1,'snap spring settles under a second ('+t.toFixed(2)+' s)');
+ const o={x:0,v:0};let peak=0;for(let i=0;i<60;i++){M.stepSpring(o,1,1/60,M.SNAP_SPRING);peak=Math.max(peak,o.x);}assert.ok(peak>1&&peak<1.1,'one small overshoot');
+ const fast={x:0,v:30};M.stepSpring(fast,0,1/60,M.SNAP_SPRING);assert.ok(fast.x>0,'velocity-aware: a moving start keeps going first');
+ assert.equal(M.rubberClamp(10,8,26,1.2),10);assert.ok(M.rubberClamp(40,8,26,1.2)<26+1.2&&M.rubberClamp(40,8,26,1.2)>26,'rubber band: past the end, never more than dim');
+ assert.ok(M.rubber(1,1)<M.rubber(2,1)&&M.rubber(2,1)<1,'resistance grows');
+ assert.ok(M.project(0,10)>M.project(0,5)&&M.project(0,0)===0,'flick projection');
+ const c={x:0,v:50};for(let i=0;i<120;i++)M.coast(c,1/60);assert.ok(Math.abs(c.v)<1&&c.x>10&&c.x<20,'coast decelerates and stops');
+ assert.equal(M.velocity([{t:0,x:0},{t:50,x:1},{t:100,x:2}]),20);
+ const e=M.springEasing(M.FLIP_SPRING);assert.match(e.easing,/^linear\(0,.*,1\)$/);assert.ok(e.duration>200&&e.duration<=900);
+ // the blueprint overlay: grid + dimension callout + handles exist in the renderer and only on the offside beat
+ const sc=read(`${dir}/scene.ts`);assert.match(sc,/if\(o\.grid\)/);assert.match(sc,/Dimension callout between the two lines/);assert.match(sc,/if\(o\.handles\)/);
+ assert.match(src,/handles:s\.step==='lines',grid:s\.step==='lines'/);
+ assert.match(css,/@keyframes stamp\{/);assert.match(css,/\.stamp\{[^}]*forwards/,'stamp animation is finite');
  assert.match(css,/prefers-reduced-motion:reduce\)\{[^]*\.stamp,\.done li/);
- console.log('PASS polish: view-transition camera morph (cut fallback), finite stamps and reveals, reduced-motion branch');}
+ console.log('PASS motion: FLIP camera grow, spring-settled flickable lines with rubber bands, coasting scrub with an edge bounce, finite hints');}
 
 // 5. Heat: no loop unless playing; playback stops at the end, on pause, on hide, on unmount; resize by observer; capped DPR.
 {assert.match(src,/requestDraw=useCallback\(\(\)=>\{if\(raf\.current\)return;raf\.current=requestAnimationFrame/,'draws once per change');
- assert.match(src,/if\(!playing\)return;/,'no loop unless playing');assert.match(src,/if\(n>=LAST\)done=true/,'stops at the last frame');
+ assert.match(src,/if\(!playing\)return;/,'no loop unless playing');
+ assert.match(src,/if\(moving&&!document\.hidden\)\{loop\.current=requestAnimationFrame\(tick\);\}/,'the motion loop runs only while something moves');
+ assert.match(src,/if\(document\.hidden&&loop\.current\)\{cancelAnimationFrame\(loop\.current\);loop\.current=0;settleAll\(\);\}/,'hidden tab: settle, stop');
+ assert.match(src,/cancelAnimationFrame\(loop\.current\);loop\.current=0;flip\.current\?\.cancel\(\);/,'unmount: loop and FLIP cancelled');assert.match(src,/if\(n>=LAST\)done=true/,'stops at the last frame');
  assert.match(src,/visibilitychange/);assert.match(src,/return\(\)=>\{cancelAnimationFrame\(id\);document\.removeEventListener\('visibilitychange'/,'loop cancelled on unmount');
  assert.match(src,/new ResizeObserver/);assert.match(src,/ro\.disconnect\(\);cancelAnimationFrame\(raf\.current\)/,'observer and pending draw disposed');
  assert.match(src,/coarse\?1\.5:2/,'pixel ratio capped');assert.ok(!/setInterval|three|WebGLRenderer|new AudioContext/.test(src),'no polling, WebGL or own audio context');
  assert.ok(!/requestAnimationFrame/.test(read(`${dir}/scene.ts`)),'the renderer is pure');
  console.log('PASS heat: on-demand drawing, playback loop sleeps and is disposed, ResizeObserver, DPR cap');}
+
+// 6. The ending (Oct 9 2026): the real case unfolds a line at a time, then a four-question quick check stamps "VAR CERTIFIED".
+{const quiz=read(`${dir}/Quiz.tsx`);
+ assert.equal(C.REAL_CASE.slates.length,C.REAL_CASE.story.length,'one slate word per story line');
+ assert.match(src,/REAL_CASE\.story\.slice\(0,caseBeat\+1\)/);assert.match(src,/What happened next\?/);assert.match(src,/<Quiz onDone=\{onQuizDone\}\/>/);
+ assert.equal(C.QUIZ.length,4);for(const q of C.QUIZ)assert.ok(q.answer<q.options.length&&q.hint&&q.why,q.q);
+ assert.match(C.QUIZ[0].options[C.QUIZ[0].answer],/referee/);assert.equal(C.QUIZ[2].options[C.QUIZ[2].answer],'No goal');assert.equal(C.QUIZ[3].options[C.QUIZ[3].answer],'The arm');
+ assert.ok(!/requestAnimationFrame|setInterval|setTimeout/.test(quiz),'no loop in the quiz');assert.match(css,/prefers-reduced-motion:reduce\)\{\.unfoldLine,\.slateBeat,\.quizOpt\{animation:none/);
+ console.log('PASS ending: the 2018 case unfolds beat by beat, four-question quick check, VAR CERTIFIED stamp, no loop');}

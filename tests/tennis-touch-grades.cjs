@@ -19,6 +19,26 @@ assert(chest.ball.vy<0&&t.tennisLanding(chest).y<-1,'the cushioned ball floats b
 assert(Math.hypot(chest.ball.vx,chest.ball.vy)<Math.hypot(receive({x:.2,y:5.1,z:.45,bounces:1},{},{bounceAge:.4}).ball.vy,1)*1.05,'chest return is softer than a normal drive');
 const late=receive({x:.62,y:5.3,z:.2,vz:-1},{},{bounceAge:1.05});assert.equal(late.touchGrade,'late','a ball left to die after the bounce is late');
 assert.match(late.message,/LATE/);
+// 1b. Heavy touch: sprinting through the ball (close enough, but at full pace) is heavy, not stretched.
+const heavy=receive({x:.3,y:5.1,z:.3},{vx:6.5,vy:0},{bounceAge:.4,level:6});
+assert.equal(heavy.touchGrade,'heavy','running through the ball grades heavy');assert.match(heavy.message,/HEAVY/);
+const heavyLand=t.tennisLanding(heavy).y,calm=receive({x:.3,y:5.1,z:.3},{},{bounceAge:.4,level:6});
+assert.equal(calm.touchGrade,'good','the same ball, planted, is a good touch');
+assert(heavyLand<t.tennisLanding(calm).y-.5,'a heavy touch runs long');
+assert(t.TENNIS_GRADE_TIPS.heavy.length>0);
+// Grade counts feed the coach's takeaway; the perfect streak counts consecutive perfect touches.
+assert.equal(heavy.gradeCounts.heavy,1);assert.equal(calm.gradeCounts.good,1);
+const streak=t.createTennis();streak.phase='rally';
+for(let i=0;i<3;i++){streak.bounceAge=.12;streak.rally=3;Object.assign(streak.you,{x:0,y:5.3,vx:0,vy:0,kick:0});Object.assign(streak.ball,{x:.1,y:5.2,z:.3,vx:0,vy:0,vz:2,wx:0,wy:0,wz:0,last:'rival',crossed:true,bounces:1});t.requestTennisKick(streak);t.tickTennis(streak,1/120);}
+assert.equal(streak.perfectStreak,3,'three perfect touches in a row');assert.match(streak.message,/PERFECT ×3/);
+const broken=receive({x:1.15,y:5.3,z:.3},{},{bounceAge:.4,perfectStreak:4});assert.equal(broken.perfectStreak,0,'a scrappy touch ends the streak');
+assert.equal(t.tennisTakeaway({gradeCounts:{perfect:1,good:2,heavy:5,early:0,late:1,stretched:2},perfectTouches:1,caught:0}),t.TENNIS_COACH.heavy);
+assert.equal(t.tennisTakeaway({gradeCounts:{perfect:8,good:2,heavy:1,early:0,late:0,stretched:1},perfectTouches:8,caught:0}),t.TENNIS_COACH.rhythm);
+assert.equal(t.tennisTakeaway({gradeCounts:{perfect:1,good:2,heavy:1,early:0,late:0,stretched:2},perfectTouches:1,caught:6}),t.TENNIS_COACH.recover,'positioning comes first');
+// Volley: a clean, planted touch before the bounce is named (court 6: no bounce-wait).
+const volley=receive({x:.2,y:5.1,z:.6,vz:-.5,bounces:0},{},{bounceAge:9,level:6});
+assert.equal(volley.touchVolley,true,'clean pre-bounce touch is a volley');assert.match(volley.message,/VOLLEY/);
+assert.equal(receive({x:.25,y:5.2,z:.35},{},{bounceAge:.4}).touchVolley,false,'after the bounce it is not a volley');
 // 2. The rival commits before contact; earlier courts commit sooner (a longer, fairer read).
 assert(t.tennisCommitRange(1)>t.tennisCommitRange(5)+1,'harder courts disguise the shot longer');
 for(const level of [1,5]){
@@ -53,4 +73,4 @@ assert.equal(letgo.pointKind,'letgo');assert.match(letgo.message,/let it go/);as
 const a=t.createTennis(8),b=t.createTennis(8);for(const g of [a,b]){t.beginTennis(g);t.requestTennisKick(g);advance(g,8);}assert.deepEqual(a,b,'seeded simulation stays repeatable');
 for(const level of [1,3,5]){const s=t.createTennis(21,level);t.beginTennis(s);for(let i=0;i<120*480&&s.phase!=='over';i++){if(s.phase==='serve')t.requestTennisKick(s);if(s.phase==='rally'&&s.ball.last==='rival'){const l=t.tennisReceivingPoint(s);t.setTennisTarget(s,l.x,l.y);t.requestTennisKick(s);}t.tickTennis(s,1/120);}
  assert.equal(s.phase,'over',`court ${level} completes`);assert(Number.isFinite(s.ball.x+s.ball.y+s.ball.z));}
-console.log('PASS tennis touch grades, rival telegraph + commit ramp, wrong-footing, rally tempo, point reasons, event counters');
+console.log('PASS tennis touch grades (heavy, volley, streak, coach takeaway), rival telegraph + commit ramp, wrong-footing, rally tempo, point reasons, event counters');

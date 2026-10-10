@@ -1,0 +1,11 @@
+/* /plan landing: the island paper card on the island green, phone first (16px gutters, no horizontal scroll). */
+@font-face{font-family:IslandBrush;src:url('/stories/films/assets/IslandBrush-Regular.ttf') format('truetype');font-display:swap}
+.page{min-height:100dvh;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(24px + env(safe-area-inset-bottom,0px));background:#4f8a62 url('/stories/films/assets/entry-grain.png') center/128px 128px;background-blend-mode:soft-light;box-sizing:border-box;color:#244d40;font-family:Arial,Helvetica,sans-serif}
+.card{display:grid;gap:16px;max-width:640px;margin:0 auto;padding:20px 16px 24px;border-radius:28px;background:#f7f0db;box-shadow:0 8px 0 #183b3460}
+.head{display:flex;gap:12px;align-items:center}
+.head h1{margin:0;font-family:IslandBrush,sans-serif;font-weight:400;font-size:clamp(26px,7vw,36px);line-height:1.1}
+.brand{margin:0;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#5f6b58}
+.mark{width:44px;height:44px;flex:0 0 44px;border-radius:14px;border:3px solid #fff2cd;background:#e9c16b url('/stories/paths/island-mark.svg') center/34px 34px no-repeat;box-shadow:0 5px 0 #a8863d}
+.link{display:inline-grid;place-items:center;min-height:44px;padding:8px 16px;border-radius:999px;background:#beded1;box-shadow:0 4px 0 #8bac9d;color:#244d40;font-weight:800;text-decoration:none}
+.link:focus-visible{outline:3px solid #ffd451;outline-offset:3px}
+.note{margin:0;font-size:12px;line-height:1.5;color:#5f6b58}

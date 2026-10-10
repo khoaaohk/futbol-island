@@ -230,7 +230,7 @@ await ok('schema-version banner',async()=>{
  const mem=S.createMemoryStore();for(const s of FIX_STARTS)mem.data.starts[s.id]=s;mem.data.beats.push(...FIX_BEATS);
  const now=new Date('2026-10-07T12:00:00Z');
  const fine=await R.buildReport(mem,{from:DAY,to:DAY},now);
- assert.deepEqual(J(fine.storage),{schema:3,needsUpdate:false});assert.equal(fine.learning.hasData,true);
+ assert.deepEqual(J(fine.storage),{schema:C.SCHEMA_VERSION,needsUpdate:false});assert.equal(fine.learning.hasData,true);
  const old={...mem,schemaVersion:async()=>2};assert.equal((await R.buildReport(old,{from:DAY,to:DAY},now)).storage.needsUpdate,true,'schema 2 → banner');
  const stale={...mem,schemaVersion:async()=>3,computeDays:async(f,t,n)=>(await mem.computeDays(f,t,n)).map(r=>{const o={...r};delete o.counts;delete o.countSessions;delete o.flags;return o;})};
  assert.equal((await R.buildReport(stale,{from:DAY,to:DAY},now)).storage.needsUpdate,true,'a day with visits but no counts key → banner');
@@ -285,7 +285,7 @@ await ok('sql',async()=>{
   assert.equal(psql(`select counts::text||(select flags::text from analytics_sessions where id='oldsession0000000001') from analytics_beats where session_id='oldsession0000000001'`),'{}{}','existing rows read as empty');
   assert.deepEqual(psql(`select column_name from information_schema.columns where table_name='analytics_beats' order by ordinal_position`).split('\n'),['id','session_id','ts','engaged_ms','pageviews','area_ms','place_ms','activity_ms','cells','counts']);
   assert.equal(psql(`select column_name from information_schema.columns where table_name='analytics_sessions' order by ordinal_position desc limit 1`),'flags');
-  assert.equal(psql('select analytics_schema_version()',{role:'service_role'}),String(C.SCHEMA_VERSION));
+  assert.equal(psql('select analytics_schema_version()',{role:'service_role'}),'3','this file installs 3 (20261009_analytics_start.sql then 4)');
   for(const role of ['anon','authenticated'])for(const fn of [`analytics_ingest('{}'::jsonb)`,'analytics_schema_version()',`analytics_day_rollup(current_date)`])assert.match(fails(`select ${fn}`,role),/permission denied/,role+' '+fn);
   const sql=read('supabase/migrations/20261009_analytics_counts.sql');
   assert(!/\bdrop\b|\btruncate\b|\bdelete from\b|rename/i.test(sql.replace(/--.*$/gm,'')),'no destructive statements');
@@ -294,6 +294,8 @@ await ok('sql',async()=>{
   psql(`create or replace function analytics_schema_version() returns integer language sql immutable as $$ select 2 $$`);
   assert.match(psql(sql.slice(sql.lastIndexOf('select case when missing'))),/^NOT INSTALLED: analytics_schema_version\(\) = 3$/);
   runFile('supabase/migrations/20261009_analytics_counts.sql');
+  // The start-page migration on top (as in production), so the rollup has every key the TypeScript reference has.
+  assert.equal(runFile('supabase/migrations/20261009_analytics_start.sql'),'OK, start page installed (analytics schema 4)');
   // Caps in SQL: flags sanitised, counts shape-checked, ≤ 64 (busiest), each ≤ 50.
   psql(`select analytics_ingest('{"type":"start","session":"sqllearnsession00001","path":"/","day":"${today}","visitor_hash":"${'9'.repeat(32)}","device":"phone","source":"direct","flags":{"p":3,"g":9,"s":15,"v":"2","name":"sam"}}')`,{role:'service_role'});
   assert.deepEqual(JSON.parse(psql(`select flags from analytics_sessions where id='sqllearnsession00001'`)),{p:3,s:15,v:2},'known keys and ranges only');

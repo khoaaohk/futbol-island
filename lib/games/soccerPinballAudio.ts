@@ -45,6 +45,10 @@ function haptic(pattern:number|number[]){
  lastHaptic=now;navigator.vibrate(pattern);
 }
 
+/** A pea whistle: two slightly detuned sines per blast. */
+function whistle(ctx:AudioContext,v:Voices,now:number,blasts:readonly (readonly [number,number])[],vol:number){
+ for(const [at,len] of blasts){tone(ctx,v,'sine',2350,2310,now+at,len,.025*vol);tone(ctx,v,'sine',2440,2400,now+at,len,.018*vol);}
+}
 /** Throttle per cue so the same event arriving from two paths (or a rattle of
  * wall contacts) plays once. */
 function throttled(v:Voices,cue:string,now:number,gap:number){const last=v.last.get(cue)??-9;if(now-last<gap)return true;v.last.set(cue,now);return false;}
@@ -55,6 +59,7 @@ export function playPinballCue(ctx:AudioContext|null,cue:string,s?:PinballState|
  const volume=getSoundVolume();if(volume<=0)return;
  if(cue==='goal'||cue==='level')haptic(cue==='goal'?[18,35,28]:[10,30,10]);
  else if(cue==='dazed'||cue==='save'||cue==='nudge'||cue==='attack'||cue==='pb-wallDown'||cue==='pb-block'||cue==='pb-saver'||cue==='pb-modeDone')haptic(12);
+ else if(cue==='pb-perfect'||cue==='pb-read')haptic(8);
  if(!ctx||ctx.state!=='running')return;
  const v=state(ctx),now=ctx.currentTime,vol=volume;
  switch(cue){
@@ -88,6 +93,16 @@ export function playPinballCue(ctx:AudioContext|null,cue:string,s?:PinballState|
    if(hit>.5)noise(ctx,v,now,.03,.025*hit*vol,'bandpass',2200,1600,2);
    break;
   }
+  // Timing coach. PERFECT: a bright "sweet spot" ping that climbs with the
+  // streak; READ adds a sparkle on top. EARLY/LATE: soft, low and short, an
+  // honest nudge rather than a fail buzzer.
+  case 'pb-perfect':case 'pb-read':{
+   const step=Math.max(0,Math.min(4,(s?.timing.streak??1)-1)),hz=PENTA[step+2];
+   tone(ctx,v,'sine',hz,hz*1.01,now+.01,.12,.06*vol);tone(ctx,v,'triangle',hz*1.5,hz*1.5,now+.05,.1,.035*vol);
+   if(cue==='pb-read')arpeggio(ctx,v,[hz*2,hz*2.5],now+.1,.05,.03*vol,'sine',.08);
+   break;
+  }
+  case 'pb-early':case 'pb-late':if(!throttled(v,'pb-timing',now,.4))tone(ctx,v,'triangle',cue==='pb-early'?260:220,cue==='pb-early'?200:150,now,.14,.04*vol);break;
   case 'pb-gate':if(!throttled(v,cue,now,.08))tone(ctx,v,'square',1250*jitter(.05),900,now,.025,.018*vol);break;
   case 'dazed':{
    // Bumper knock-down: pop + ringing note, climbing the scale on a chain.
@@ -179,6 +194,23 @@ export function playPinballCue(ctx:AudioContext|null,cue:string,s?:PinballState|
   case 'pb-final':
    for(const [at,len] of [[0,.4]] as const){tone(ctx,v,'sine',2350,2310,now+at,len,.025*vol);tone(ctx,v,'sine',2440,2400,now+at,len,.018*vol);}
    arpeggio(ctx,v,[392,523.25,659.25,783.99,1046.5,1318.51],now+.45,.07,.07*vol,'triangle',.2);noise(ctx,v,now+.4,.9,.05*vol,'bandpass',500,1400,.5);break;
+  // ---- match flow, keeper parry, wall pass and the 2v1 multiball -----------
+  case 'pb-parry':
+   // Gloves punch it clear: a hard padded slap that flicks upward.
+   noise(ctx,v,now,.06,.09*vol,'bandpass',1500*jitter(.05),2400,1.2);tone(ctx,v,'triangle',260,520,now,.09,.06*vol);break;
+  case 'wallPass':arpeggio(ctx,v,[659.25,987.77],now,.07,.065*vol,'triangle',.12);break;
+  case 'multiball':
+   whistle(ctx,v,now,[[0,.12],[.16,.12]],vol);
+   arpeggio(ctx,v,[523.25,659.25,783.99,1046.5,1318.51],now+.32,.055,.07*vol);noise(ctx,v,now+.3,.7,.045*vol,'bandpass',500,1400,.5);break;
+  case 'mbGoal':
+   arpeggio(ctx,v,[587.33,739.99,880,1174.66,1479.98],now,.07,.08*vol,'triangle',.18);
+   noise(ctx,v,now+.05,.7,.045*vol,'bandpass',500,1400,.5);tone(ctx,v,'sine',130,48,now,.24,.12*vol);break;
+  case 'mbSave':tone(ctx,v,'sine',330,660,now,.2,.06*vol);break;
+  case 'mbEnd':tone(ctx,v,'sine',659.25,523.25,now,.25,.04*vol);break;
+  case 'halfTime':whistle(ctx,v,now,[[0,.18],[.26,.3]],vol);break;
+  case 'stoppage':whistle(ctx,v,now,[[0,.12]],vol);break;
+  // The referee's full-time whistle: short, short, long.
+  case 'fullTime':whistle(ctx,v,now,[[0,.16],[.24,.16],[.48,.6]],vol);break;
   case 'pb-over':arpeggio(ctx,v,[783.99,659.25,523.25,392],now+.15,.12,.05*vol,'sine',.22);break;
   default:tone(ctx,v,'sine',240*jitter(.05),180,now,.06,.04*vol);
  }

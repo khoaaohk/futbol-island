@@ -5,8 +5,8 @@ import {BANS,DARK_FROM,DARK_TO,type Ban} from './data';
 import {Again,FirstStar,Pause,Play} from './icons';
 import styles from './wwc.module.css';
 
-/** "Banned years": scrub (or play) 1920 → 1991 and watch three countries' bans on women's football start and end, until the
- *  first Women's World Cup star lights up. The play button is the only loop: rAF at 10 years a second, stopping at 1991, on
+/** Beat 1, "Shut out": scrub (or play) 1920 → 1991. Each country's ban is a red paper shutter pulled across its lane; when the
+ *  ban ends, the shutter is cut free and lifts away, until the first Women's World Cup star is cut and lights up. The play button is the only loop: rAF at 10 years a second, stopping at 1991, on
  *  pause, when the tab hides and on unmount. */
 const status=(b:Ban,y:number)=>y<b.from?'none':y<b.to?'banned':'lifted';
 const LABEL={none:'No ban yet',banned:'Banned',lifted:'Ban lifted'} as const;
@@ -33,19 +33,23 @@ export const eventAt=(y:number)=>EVENTS.filter(e=>e.y<=y).at(-1)??EVENTS[0];
 const DECADES=[1930,1940,1950,1960,1970,1980];
 
 export function DarkStage({d,onLit}:{d:Dark;onLit:()=>void}){
+ const banned=BANS.filter(b=>status(b,d.year)==='banned').length;
  const lit=d.year>=DARK_TO,ev=eventAt(d.year);
  return <div className={styles.dark} data-lit={lit||undefined}>
+  <p className={styles.beatKick}>Beat 1 · Shut out</p>
   <div className={styles.dhead}>
    <div className={styles.yearRow}>{lit&&<FirstStar className={`${styles.dStar} ${styles.ignite}`}/>}<p className={styles.dyear} data-lit={lit||undefined} aria-hidden="true">{d.year}</p></div>
    {lit?<p className={styles.event} aria-live="polite"><span>1991</span>The first FIFA Women’s World Cup, in China.</p>
     :<p key={ev.y+ev.t} className={styles.event} aria-live="polite"><span>{ev.y}</span>{ev.t}</p>}
   </div>
   <div className={styles.tracks}>
+   <p className={styles.srOnly} aria-live="polite">{banned?`${d.year}: banned in ${banned} of these countries.`:`${d.year}: no ban in these countries.`}</p>
    {BANS.map(b=>{const s=status(b,d.year),fill=Math.max(0,Math.min(1,(d.year-b.from)/(b.to-b.from)));return <div key={b.country} className={styles.track} data-s={s}>
     <b>{b.country}</b>
     <div className={styles.lane} aria-hidden="true">
      {DECADES.map(y=><i key={y} className={styles.grid} style={{left:`${pct(y)}%`}}/>)}
-     <span className={styles.ban} style={{left:`${pct(b.from)}%`,width:`${pct(b.to)-pct(b.from)}%`}}><span className={styles.banFill} style={{transform:`scaleX(${fill})`}}/><em>{b.from}–{String(b.to).slice(2)}</em></span>
+     <span className={styles.banGhost} style={{left:`${pct(b.from)}%`,width:`${pct(b.to)-pct(b.from)}%`}}/>
+     <span className={styles.ban} data-s={s} style={{left:`${pct(b.from)}%`,width:`${pct(b.to)-pct(b.from)}%`}}><span className={styles.banFill} style={{clipPath:`inset(-6px ${((1-(s==='none'?0:fill))*100).toFixed(1)}% -6px 0)`}}/><em>{b.from}–{String(b.to).slice(2)}</em></span>
      <span className={styles.cursor} style={{left:`${pct(d.year)}%`}}/>
     </div>
     <span className={styles.chip} data-s={s}>{LABEL[s]}</span>
@@ -56,17 +60,17 @@ export function DarkStage({d,onLit}:{d:Dark;onLit:()=>void}){
     <div className={styles.ticks} aria-hidden="true">{[DARK_FROM,1940,1960].map(y=><span key={y} style={{left:`${pct(y)}%`}}>{y}</span>)}<span style={{left:'100%'}} data-gold>1991</span></div>
    </div><span/></div>
   </div>
-  {lit&&<div className={styles.lit}><p>The first star lights up.</p>
-   <button type="button" className={`${styles.btn} ${styles.gold}`} onClick={onLit}>See the stars</button></div>}
+  {lit&&<div className={styles.lit}><p>The bans are lifted. The first Women’s World Cup is cut.</p>
+   <button type="button" className={`${styles.btn} ${styles.gold}`} data-museum-own-cue onClick={onLit}>Next: China 1991 →</button></div>}
  </div>;
 }
 
 export function DarkPanel({d,onLit}:{d:Dark;onLit:()=>void}){
  const focus=eventAt(d.year).c;
  return <div>
-  <p className={styles.lead}>For years, some countries <b>banned</b> women’s football. Slide through time, or press play, and watch what changed before the first Women’s World Cup.</p>
+  <p className={styles.lead}>For years, some countries <b>shut women out</b> of football. Drag the year slider, or press play, and watch the bans start and end before the first Women’s World Cup.</p>
   <div className={styles.row}><button type="button" className={`${styles.btn} ${d.year>=DARK_TO?'':styles.gold}`} onClick={()=>d.playing?d.pause():d.play()}>{d.playing?<><Pause/>Pause</>:d.year>=DARK_TO?<><Again/>Play again</>:<><Play/>Play through time</>}</button>
-   <span className={styles.grow}/>{d.year>=DARK_TO&&<button type="button" className={`${styles.btn} ${styles.gold} ${styles.pop}`} onClick={onLit}>See the stars</button>}</div>
+   <span className={styles.grow}/>{d.year>=DARK_TO&&<button type="button" className={`${styles.btn} ${styles.gold} ${styles.pop}`} data-museum-own-cue onClick={onLit}>Next: China 1991 →</button>}</div>
   <ul className={styles.dtext}>
    {BANS.map(b=>{const s=status(b,d.year);return <li key={b.country} data-s={s} data-focus={(focus===b.country||(!focus&&b===BANS[0]))||undefined}><b>{b.country}, {b.from}–{b.to}.</b> {b.banned} {s==='lifted'?b.after:s==='banned'?b.who:b.before??''}</li>;})}
   </ul>

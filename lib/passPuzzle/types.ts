@@ -211,6 +211,13 @@ export type Prediction={
   path:Vec3[];            // sampled every 1/30 s from the launch point
   end:'goal'|'out'|'rest'|'intercept'|'offside';
   threats:number[];       // defender indices who can reach a path point before the ball
+  /** Parallel to threats: where each threat can get to the ball (for the aim preview's cut marker). */
+  threatAt?:Vec2[];
+  /** Where the ball is first stopped (intercept, deflection, save or parry), when it is. */
+  cut?:Vec3;
+  /** The defender who comes closest to cutting the pass out, with the spare time in seconds
+   *  (ball arrives this much earlier; negative = they get there first) and where. */
+  closest?:{defender:number;slack:number;at:Vec2};
   keeperThreat:boolean;   // the keeper can reach the path first (save / claim)
   receiver?:number;       // attacker predicted to receive it
   receiveAt?:Vec3;        // where (path is truncated there)

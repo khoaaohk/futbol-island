@@ -38,5 +38,47 @@
    215,
    331
   ]
+ },
+ "trick-boy": {
+  "width": 517,
+  "height": 681,
+  "sm": [
+   259,
+   341
+  ],
+  "frames": 4,
+  "frameMs": 300,
+  "strip": {
+   "frames": 16,
+   "fps": 13.33,
+   "cell": [
+    517,
+    681
+   ],
+   "smCell": [
+    259,
+    341
+   ]
+  }
+ },
+ "trick-girl": {
+  "width": 558,
+  "height": 656,
+  "sm": [
+   279,
+   328
+  ],
+  "strip": {
+   "frames": 16,
+   "fps": 16.67,
+   "cell": [
+    558,
+    656
+   ],
+   "smCell": [
+    279,
+    328
+   ]
+  }
  }
 }

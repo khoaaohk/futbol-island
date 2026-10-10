@@ -35,14 +35,15 @@ function haptic(pattern:number|number[]){
 }
 
 /** cue grammar (from tennisFeel):
- *  tennis:kick:<side>:<grade|serve>:<shot>:<rally>:<power>
+ *  tennis:kick:<side>:<grade|serve>:<shot>:<rally>:<power>:<perfect streak>:<volley 0|1>
+ *  tennis:out (the incoming ball is flying out: let it go)
  *  tennis:bounce:<intensity>:<half> · tennis:net:<net|over|back>
  *  tennis:point:<winner>:<rally>:<kind> · tennis:match:<winner>:<rally>:<kind>
- *  tennis:trap:<side>:<chest|thigh> · tennis:golden:<shot> · tennis:goldready · tennis:fake · tennis:target · tennis:tempo:<step> */
+ *  tennis:trap:<side>:<chest|thigh> · tennis:golden:<shot> · tennis:goldready · tennis:fake · tennis:target · tennis:tempo:<step> · tennis:tire */
 export function tennisSound(ctx:AudioContext|null,cue:string){
  if(typeof document==='undefined'||document.hidden||!isSoundEnabled())return;
  const volume=getSoundVolume();if(volume<=0)return;
- const [,kind,a='',b='',c='',d='0',e='0']=cue.split(':');
+ const [,kind,a='',b='',c='',d='0',e='0',f='0',g='0']=cue.split(':');
  if(kind==='kick'&&a==='you'&&(b==='perfect'||c==='slam'||c==='scissor'||c==='shark'||c==='bicycle'))haptic(b==='perfect'?[9,24,12]:14);
  if(kind==='golden'||kind==='target')haptic(kind==='golden'?[12,30,20]:10);
  if((kind==='point'||kind==='match')&&a==='you')haptic(kind==='match'?[18,35,28,35,40]:[18,35,28]);
@@ -50,7 +51,7 @@ export function tennisSound(ctx:AudioContext|null,cue:string){
  const t=ctx.currentTime+.005,v=volume;
  if(kind==='kick'){
   const side=a,grade=b,shot=c,rally=Number(d)||0,power=Number(e)||.4,far=side==='rival'?.72:1,p=jitter(.06)*(side==='rival'?.92:1);
-  const dull=grade==='early'||grade==='late'||grade==='stretched'||shot==='dive';
+  const dull=grade==='early'||grade==='late'||grade==='stretched'||grade==='heavy'||shot==='dive',streak=Number(f)||0,volley=g==='1';
   if(shot==='chest'){tone(ctx,t,'sine',118*p,68*p,.14,(dull?.1:.14)*v*far,.012);noise(ctx,t,.09,.05*v*far,'lowpass',420,260,.6,.01);} // soft cushioned chest thud
   else if(shot==='header'){tone(ctx,t,'sine',260*p,140*p,.11,.16*v*far);noise(ctx,t,.04,.05*v*far,'bandpass',1800,1200,1.2);}
   else{
@@ -59,7 +60,11 @@ export function tennisSound(ctx:AudioContext|null,cue:string){
    noise(ctx,t,dull?.07:.03,(dull?.07:.06)*v*far,dull?'lowpass':'bandpass',dull?700:2600*p,dull?400:1800,dull?.7:1.4);
    if(heavy)noise(ctx,t+.01,.28,.07*v*far,'bandpass',900,2600,.9,.03); // whoosh
   }
-  if(side==='you'&&grade==='perfect'){tone(ctx,t+.03,'triangle',1046.5,1046.5,.16,.055*v);tone(ctx,t+.085,'triangle',1568,1568,.2,.05*v);}
+  // Perfect chime climbs a whole step per touch of a perfect streak (capped), so rhythm is audible.
+  if(side==='you'&&grade==='perfect'){const up=Math.pow(2,Math.min(4,Math.max(0,streak-1))*2/12);tone(ctx,t+.03,'triangle',1046.5*up,1046.5*up,.16,.055*v);tone(ctx,t+.085,'triangle',1568*up,1568*up,.2,.05*v);}
+  // Heavy touch: the ball skids off the boot (a longer scuff). Clean volley: a crisp, high snap.
+  if(side==='you'&&grade==='heavy')noise(ctx,t+.02,.16,.05*v,'bandpass',900,500,1,.01);
+  if(side==='you'&&volley)noise(ctx,t,.035,.05*v,'highpass',3200,3200,.9);
   // Adaptive rally bassline: the exchange itself plays the music, and it climbs as the rally grows.
   if(rally>=3&&musicOn()){const step=(rally-3)%BASS.length,octave=rally>=11?2:1;tone(ctx,t,'triangle',BASS[step]*octave,BASS[step]*octave,.26,.05*v,.02);if(rally>=8)tone(ctx,t+.01,'sine',BASS[step]*octave*1.5,BASS[step]*octave*1.5,.22,.022*v,.02);}
   // Crowd leans in as the rally gets long.
@@ -71,6 +76,8 @@ export function tennisSound(ctx:AudioContext|null,cue:string){
  if(kind==='trap'){const far=a==='rival'?.7:1;tone(ctx,t,'sine',(b==='chest'?110:150)*jitter(.05),70,.12,.12*v*far,.015);noise(ctx,t,.08,.04*v*far,'lowpass',500,250,.6,.01);return;} // soft cushion
  if(kind==='goldready'){if(musicOn())[523.25,659.25,783.99,1046.5].forEach((hz,i)=>tone(ctx,t+i*.07,'triangle',hz,hz,.22,.045*v));return;}
  if(kind==='golden'){tone(ctx,t,'triangle',1318.5,1318.5,.35,.05*v,.01);tone(ctx,t+.04,'sine',1975.5,1975.5,.4,.035*v,.01);noise(ctx,t,.4,.05*v,'highpass',3000,5000,.7,.02);return;}
+ if(kind==='out'){tone(ctx,t,'sine',660,520,.14,.04*v,.01);tone(ctx,t+.15,'sine',520,392,.18,.035*v,.01);return;} // a gentle 'uh-oh': it is going long
+ if(kind==='tire'){noise(ctx,t,.7,.05*v,'bandpass',480,760,1,.2);tone(ctx,t+.05,'sine',392,262,.38,.03*v,.04);return;} // the crowd 'ooh' as the rival tires
  if(kind==='fake'){noise(ctx,t,.18,.05*v,'bandpass',600,1400,1.2,.02);return;} // a scuff of the sole on the ball
  if(kind==='target'){tone(ctx,t,'triangle',880,880,.16,.06*v);tone(ctx,t+.08,'triangle',1318.5,1318.5,.22,.05*v);return;}
  if(kind==='tempo'){const step=Number(a)||1;if(musicOn())tone(ctx,t,'triangle',BASS[0]*(1+step*.25),BASS[0]*(1+step*.25),.3,.05*v,.02);noise(ctx,t+.05,.6,.04*v,'bandpass',500,800,.9,.2);return;}

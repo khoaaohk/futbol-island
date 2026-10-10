@@ -109,3 +109,39 @@
 .stepInside{min-height:44px;padding:8px 18px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:999px;background:var(--btn-gold-bright,#f9d665) var(--btn-grain) center/128px 128px;color:var(--btn-ink,#244d40);box-shadow:0 4px 0 var(--btn-gold-bright-edge,#aa8b3e);font:inherit;font-weight:800;font-size:14px;cursor:pointer;transition:transform .16s,translate .16s,box-shadow .16s}
 .stepInside:active{translate:0 var(--btn-press,2px);transform:scale(.94);box-shadow:0 1px 0 var(--btn-gold-bright-edge,#aa8b3e)}
 @media(prefers-reduced-motion:reduce){.stepInside{transition:none}}
+
+/* The museum passport (Oct 9 2026; lib/museum/museumVisits.ts). "Step inside again" wears a small stamp; the timeline wall's
+ * year buttons show which cases you have visited; the stamp card springs in when you come out of an exhibit. */
+.stepInside{display:inline-flex;align-items:center;gap:8px}
+.stepSeen{width:16px;height:16px;border-radius:50%;background:var(--m-green);position:relative;flex:none}
+.stepSeen::after,.yearSeen::after{content:'';position:absolute;left:5px;top:3px;width:4px;height:7px;border:solid #fff6e3;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.yearSeen{display:inline-block;vertical-align:-2px;margin-left:6px;width:16px;height:16px;border-radius:50%;background:var(--g);position:relative}
+.stampCard{--g:#294f43;position:fixed;z-index:8;top:calc(84px + env(safe-area-inset-top,0px));left:50%;translate:-50% 0;width:min(440px,calc(100% - 24px));box-sizing:border-box;
+ display:flex;align-items:flex-start;gap:12px;padding:12px 10px 12px 12px;border:3px solid var(--btn-rim,#fff2cd);border-left:10px solid var(--g);border-radius:22px;
+ background:var(--m-paper);color:var(--m-ink);box-shadow:0 14px 34px -12px #2a201680;animation:stampCardIn .5s cubic-bezier(.3,1.4,.5,1) both;animation:stampCardIn .62s linear(0,.2 6%,.62 16%,.94 27%,1.06 36%,1.07 44%,1.02 58%,.99 72%,1) both}
+.stampSeal{flex:none;width:58px;height:58px;display:grid;place-items:center;border-radius:12px;background:var(--g);color:#fff6e3;box-shadow:inset 0 0 0 3px #fff6e399,inset 0 0 0 5px var(--g);
+ transform:rotate(-6deg);animation:stampPress .5s cubic-bezier(.3,1.6,.5,1) .18s both}
+.stampSeal b{font:normal 19px/1 IslandBrush,Georgia,serif;letter-spacing:.02em}
+.stampBody{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.stampHead{margin:0;display:flex;align-items:baseline;justify-content:space-between;gap:8px;font-size:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--g)}
+.stampHead span{color:var(--m-soft);letter-spacing:.02em;font-variant-numeric:tabular-nums}
+.stampTitle{margin:0;font:normal 22px/1.1 IslandBrush,Georgia,serif}
+.stampDots{display:flex;flex-wrap:wrap;gap:5px}
+.stampDots i{width:12px;height:12px;border-radius:50%;border:2px solid #3a2b1840;box-sizing:border-box}
+.stampDots i[data-seen]{background:var(--m-green);border-color:var(--m-green)}
+.stampDots i[data-now]{background:var(--g);border-color:var(--g);animation:stampDot .5s cubic-bezier(.3,1.8,.5,1) .4s both}
+.stampNext{align-self:flex-start;display:inline-flex;align-items:center;gap:8px;min-height:44px;max-width:100%;padding:6px 14px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:999px;
+ background:var(--btn-gold-bright,#f9d665);color:var(--btn-ink,#244d40);box-shadow:0 4px 0 var(--btn-gold-bright-edge,#aa8b3e);font:inherit;font-size:14px;font-weight:800;text-align:left;cursor:pointer;
+ transition:transform 140ms cubic-bezier(.3,1.5,.5,1)}
+.stampNext:active{transform:scale(.95)}
+.stampClose{flex:none;width:44px;height:44px;margin:-6px -4px 0 0;border:0;border-radius:50%;background:transparent;color:var(--m-soft);font-size:26px;line-height:1;cursor:pointer}
+.stampCard[data-all] .stampSeal{background:linear-gradient(135deg,#f9d665,#d7a43c);color:#3a2b18}
+@keyframes stampCardIn{from{transform:translate3d(0,-18px,0) scale(.94);opacity:0}to{transform:none;opacity:1}}
+@keyframes stampPress{from{transform:scale(1.7) rotate(-14deg);opacity:0}to{transform:rotate(-6deg);opacity:1}}
+@keyframes stampDot{from{transform:scale(0)}to{transform:none}}
+@media(prefers-reduced-motion:reduce){.stampCard,.stampSeal,.stampDots i[data-now]{animation:none}.stampNext{transition:none}}
+.stampBody p{margin:0}
+/* Phones: "Step inside" and the zoomed case's label can't share one row with Back, so the label drops just under the row (and
+ * the stamp card sits under the label). */
+@media(max-width:600px){.header:has(.stepInside) .section{top:calc(100% - 4px);max-width:calc(100% - 32px)}
+ .stampCard{top:calc(124px + env(safe-area-inset-top,0px))}}

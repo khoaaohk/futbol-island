@@ -57,6 +57,8 @@ export type PinballTable={
  spinAngle:number;spinOmega:number;spinTouches:number;spinCount:number;
  training:number;dugoutLit:boolean;hold:number;holdTip:number;ejectCool:number;
  mode:PinballMode;modeTime:number;modeProgress:number;modesDone:number;nextMode:number;oneTwo:number;finalPlayed:boolean;
+ /** A completed mode asks the simulation to start the 2v1 multiball. */
+ mbPending:boolean;
  ballBonus:number;lastBonus:number;lastBonusX:number;
  ballClock:number;quickDrains:number;assist:boolean;
  blocks:number;stars:[number,number,number,number];
@@ -69,7 +71,7 @@ export function createPinballTable():PinballTable{return{
  slingCool:[0,0],slingFlash:[0,0],coneCool:[0,0,0],coneFlash:[0,0,0],
  spinAngle:0,spinOmega:0,spinTouches:0,spinCount:0,
  training:0,dugoutLit:false,hold:0,holdTip:0,ejectCool:0,
- mode:'none',modeTime:0,modeProgress:0,modesDone:0,nextMode:0,oneTwo:0,finalPlayed:false,
+ mode:'none',modeTime:0,modeProgress:0,modesDone:0,nextMode:0,oneTwo:0,finalPlayed:false,mbPending:false,
  ballBonus:0,lastBonus:0,lastBonusX:1,ballClock:0,quickDrains:0,assist:false,
  blocks:0,stars:[0,0,0,0],prevLeft:false,prevRight:false,
  sfx:{sling:0,drop:0,wallDown:0,wallUp:0,flag:0,word:0,lane:0,crest:0,skill:0,cone:0,spin:0,dugout:0,mode:0,modeDone:0,modeEnd:0,block:0,saver:0,final:0}};}
@@ -93,6 +95,8 @@ function completeMode(s:PinballState){
  const t=s.table,i=PINBALL_MODES.findIndex(m=>m.id===t.mode);if(i<0)return;
  t.modesDone|=1<<i;t.mode='none';t.modeTime=0;t.modeProgress=0;t.oneTwo=0;t.nextMode=(i+1)%3;t.training=0;
  t.stars[s.level-1]|=4;s.score+=1500;t.ballBonus+=500;s.hitId++;s.hitX=180;s.hitY=300;s.cue='modeDone';s.cueTime=2.2;t.sfx.modeDone++;
+ // The reward for finishing a mode: a 2v1 breakaway (two balls).
+ t.mbPending=true;
  if(t.modesDone===7&&!t.finalPlayed)startFinal(s);
 }
 function startMode(s:PinballState){
@@ -173,7 +177,8 @@ export function tableTimers(s:PinballState,dt:number,left:boolean,right:boolean)
  if(t.wallReset>0)t.wallReset=Math.max(0,t.wallReset-dt);
  if(t.wallReset===0&&(t.wall[0]+t.wall[1]+t.wall[2])<3){
   // Re-form only when the ball is clear of the line, so it can never trap it.
-  const b=s.ball;if(Math.abs(b.y-WALL_Y)>WALL_RAD+b.r+3||b.x<WALL_X[0]-WALL_HALF-WALL_RAD-b.r-3||b.x>WALL_X[2]+WALL_HALF+WALL_RAD+b.r+3){t.wall[0]=t.wall[1]=t.wall[2]=1;t.wallReset=-1;t.sfx.wallUp++;}
+  const clear=(b:PinballBall)=>Math.abs(b.y-WALL_Y)>WALL_RAD+b.r+3||b.x<WALL_X[0]-WALL_HALF-WALL_RAD-b.r-3||b.x>WALL_X[2]+WALL_HALF+WALL_RAD+b.r+3;
+  if(clear(s.ball)&&(!s.extraLive||clear(s.extra))){t.wall[0]=t.wall[1]=t.wall[2]=1;t.wallReset=-1;t.sfx.wallUp++;}
  }else if(t.wallReset===0)t.wallReset=-1;
  if(t.mode!=='none'){
   t.modeTime=Math.max(0,t.modeTime-dt);
@@ -199,7 +204,8 @@ export function tableHold(s:PinballState,dt:number){
 
 /** All static and active feature contacts for one substep. prevY is the ball's
  * y before this substep's move (for the rollover and spinner triggers). */
-export function tableContacts(s:PinballState,H:TableHelpers,prevY:number){
+/** `extra`: the multiball's second ball, which never drops into the dugout. */
+export function tableContacts(s:PinballState,H:TableHelpers,prevY:number,extra=false){
  const t=s.table,b=s.ball;let touched=false;
  // Crest lanes: two guide posts plus rollover switches across CREST_LINE.
  if(b.y<CREST_BOT+b.r+4&&b.x<CREST_RIGHT+b.r){
@@ -229,7 +235,7 @@ export function tableContacts(s:PinballState,H:TableHelpers,prevY:number){
   for(let i=0;i<4;i++){const f=FLAGS[i];if(Math.abs(b.y-f.y)>FLAG_HALF+FLAG_RAD+b.r)continue;const c=H.contact(b,f.x,f.y-FLAG_HALF,f.x,f.y+FLAG_HALF,FLAG_RAD);if(!c)continue;touched=true;
    const a=H.resolve(b,c.nx,c.ny,0,0,.75,.12);
    if(a>40){
-    if(a>180)s.banked=true;
+    if(a>180)s.banked=true;s.reboundAt=s.time;
     t.sfx.flag++;addTraining(s,2);oneTwoTarget(s,f.x,f.y);
     if(!(t.flags&1<<i)){t.flags|=1<<i;
      if(t.flags===15){t.flags=0;t.sfx.word++;if(!t.saverUsed&&!t.saver){t.saver=true;award(s,180,f.y,400,'goalWord',2.4);}else award(s,180,f.y,400,'goalWordPts',2);}
@@ -243,7 +249,7 @@ export function tableContacts(s:PinballState,H:TableHelpers,prevY:number){
   for(let i=0;i<2;i++){const k=SLINGS[i];
    let c=H.contact(b,k.ax,k.ay,k.cx,k.cy,SLING_RAD);
    if(c){touched=true;const a=H.resolve(b,c.nx,c.ny,0,0,.55,.15);
-    if(a>60&&t.slingCool[i]===0){t.slingCool[i]=.14;t.slingFlash[i]=1;b.vx+=c.nx*300;b.vy+=c.ny*300-120;/* a little lift: the kick goes across AND up, never flat into the centre gap */t.sfx.sling++;s.score+=10;t.ballBonus+=5;
+    if(a>60&&t.slingCool[i]===0){t.slingCool[i]=.14;s.reboundAt=s.time;t.slingFlash[i]=1;b.vx+=c.nx*300;b.vy+=c.ny*300-120;/* a little lift: the kick goes across AND up, never flat into the centre gap */t.sfx.sling++;s.score+=10;t.ballBonus+=5;
      if(t.mode==='onetwo')t.oneTwo=4;if(s.cueTime<.6||s.cue==='sling'){s.cue='sling';s.cueTime=1.2;}}
     continue;}
    c=H.contact(b,k.ax,k.ay,k.bx,k.by,SLING_RAD)??H.contact(b,k.bx,k.by,k.cx,k.cy,SLING_RAD);
@@ -263,7 +269,7 @@ export function tableContacts(s:PinballState,H:TableHelpers,prevY:number){
   if(Math.abs(w)>6&&(s.cueTime<.6||s.cue==='spin')){s.cue='spin';s.cueTime=1.2;}
  }
  // Dugout scoop: a soft ball drops in; a fast one rattles over the lip.
- if(t.hold===0&&t.ejectCool===0){const dx=b.x-DUGOUT.x,dy=b.y-DUGOUT.y;
+ if(!extra&&t.hold===0&&t.ejectCool===0){const dx=b.x-DUGOUT.x,dy=b.y-DUGOUT.y;
   if(dx*dx+dy*dy<DUGOUT.r*DUGOUT.r&&b.vx*b.vx+b.vy*b.vy<650*650&&s.possession<0){
    t.hold=1.1;t.sfx.dugout++;b.vx=b.vy=b.omega=0;t.holdTip=(t.holdTip+1)%COACH_TIPS.length;
    oneTwoTarget(s,DUGOUT.x,DUGOUT.y);

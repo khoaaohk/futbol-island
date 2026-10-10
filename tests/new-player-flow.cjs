@@ -59,7 +59,9 @@ const read=rel=>fs.readFileSync(path.join(root,rel),'utf8');
  // Donations sit behind the shared grown-up check.
  const settings=read('components/IslandSettings.tsx'),donations=read('components/DonationLinks.tsx'),coffee=read('app/coffee/page.tsx');
  assert(!/coffee\/checkout/.test(settings),'About has no direct checkout links');
- assert(/<DonationLinks\/>/.test(settings)&&/<ParentGate /.test(donations),'About shows donations only after the ParentGate');
+ // About now shows the shared For grown-ups content (Oct 9 2026): its Donate step is still behind the ParentGate.
+ {const about=read('components/about/AboutGrownUps.tsx'),donate=read('components/landing/Donate.tsx');
+  assert(/<AboutGrownUps donateReturn="about"/.test(settings)&&/<Donate returnTo=\{donateReturn\}\/>/.test(about)&&/<ParentGate /.test(donate)&&/step==='open'&&/.test(donate)&&/return=\$\{returnTo\}/.test(donate),'About shows donations only after the ParentGate');}
  assert(/<CoffeeGate>[\s\S]*TIERS\.map[\s\S]*<\/CoffeeGate>/.test(coffee),'/coffee tiers are inside the gate');
 }
 

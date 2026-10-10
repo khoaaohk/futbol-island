@@ -3,16 +3,28 @@ import {SEVEN_PENALTY_DEPTH,sevenBuildOutLocalZ} from './buildOut';
 import {createFieldLighting} from './fieldLighting';
 import {ISLAND_SHORE,shoreSandWidth,INTERIOR_GRASS,INTERIOR_GRASS_COLOR} from './shoreline';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import {VENUES,FIELD_SURFACE_Y} from './venues';
+import {VENUES,FIELD_SURFACE_Y,type Venue} from './venues';
 import {GOAL_DEPTH,goalPostRadius} from './goalCollisions';
 import type {PropSpec} from '../graphics/propReactions';
+import {stripePlan,stripedSlabGeometry,type StripePlan} from '../graphics/pitchStripes';
+/** Mowing pattern per ground: about 5 m bands goal to goal, sized so the penalty-area edge sits as close to a band edge as it can
+ * (exactly on Eleven Park, whose 5.5 m and 16.5 m box edges both land on band edges). Eleven Park also gets a fainter cross-mown pass (the stadium chequerboard). Futsal (hard court) has none. */
+export function pitchStripePlan(v:Pick<Venue,'id'|'length'|'width'>):StripePlan|null{
+ if(v.id==='futsal')return null;
+ // Penalty-area depths as drawn below (fields.ts markings).
+ const boxDepth=v.id==='11v11'?16.5:v.id==='9v9'?13:SEVEN_PENALTY_DEPTH;
+ return stripePlan(v.length,{boxDepth,lanesWidth:v.id==='11v11'?v.width:undefined});
+}
 export function buildFormatFields(scene:T.Scene){
  const roots=new Map<string,T.Group>(),goalSpecs:PropSpec[]=[];const surfaces=new Map<string,T.MeshStandardMaterial>();const owned:(T.Material|T.BufferGeometry)[]=[];
  const cream=new T.LineBasicMaterial({color:'#f5eed5'});owned.push(cream);
  const frameMaterial=new T.MeshStandardMaterial({color:'#fff6df',roughness:.48});
  const netMaterial=new T.LineBasicMaterial({color:'#c6d4cc',transparent:true,opacity:.68});owned.push(frameMaterial,netMaterial);
  for(const v of VENUES){const root=new T.Group();root.name='venue-'+v.id;root.position.set(v.x,v.elevation??0,v.z);scene.add(root);roots.set(v.id,root);
- const material=new T.MeshStandardMaterial({color:v.surface,roughness:.94});const geom=new T.BoxGeometry(v.width+6,.14,v.length+6);owned.push(material,geom);surfaces.set(v.id,material);const surface=new T.Mesh(geom,material);surface.position.y=FIELD_SURFACE_Y-.07;surface.receiveShadow=true;root.add(surface);
+ // Grass grounds carry mowing stripes in vertex colours (pitchStripes.ts): same one draw, and the vertex-colour program the
+ // batched island paint already compiled. The rooftop futsal court is hard court: no stripes, unchanged material.
+ const plan=pitchStripePlan(v);
+ const material=new T.MeshStandardMaterial({color:v.surface,roughness:.94,vertexColors:Boolean(plan)});const geom=plan?stripedSlabGeometry(v.width+6,.14,v.length+6,plan,v.width):new T.BoxGeometry(v.width+6,.14,v.length+6);owned.push(material,geom);surfaces.set(v.id,material);const surface=new T.Mesh(geom,material);surface.name='pitch-surface';surface.position.y=FIELD_SURFACE_Y-.07;surface.receiveShadow=true;root.add(surface);
  const pts:number[]=[];const seg=(a:number,b:number,c:number,d:number)=>pts.push(a,.115,b,c,.115,d);const w=v.width/2,l=v.length/2;
  const rect=(x:number,z:number,width:number,length:number)=>{seg(x-width/2,z-length/2,x+width/2,z-length/2);seg(x+width/2,z-length/2,x+width/2,z+length/2);seg(x+width/2,z+length/2,x-width/2,z+length/2);seg(x-width/2,z+length/2,x-width/2,z-length/2);};
  const arc=(x:number,z:number,r:number,start=0,end=Math.PI*2)=>{for(let i=0;i<48;i++){const a=start+(end-start)*i/48,b=start+(end-start)*(i+1)/48;seg(x+Math.cos(a)*r,z+Math.sin(a)*r,x+Math.cos(b)*r,z+Math.sin(b)*r);}};

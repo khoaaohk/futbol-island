@@ -1,0 +1,73 @@
+/* Save codes (Oct 10 2026). Cream panel content with the shared button families (docs/ui/BUTTONS.md): green primary, mint
+   secondary with the 3px rim, tiles on --btn-cream. No raw focus colours, the shared press depth. */
+.box{display:grid;gap:12px;color:var(--btn-ink)}
+.eyebrow{margin:0;font:800 10px/1.2 system-ui;letter-spacing:1.4px;color:#32775c}
+.title{margin:0;font-family:IslandBrush,sans-serif;font-weight:400;font-size:clamp(24px,4vw,30px);line-height:1.1;color:var(--btn-ink)}
+.copy{margin:0;font:15px/1.5 system-ui;color:#4c6157}
+.small{margin:0;font:13px/1.45 system-ui;color:#5c6b58}
+.note{display:flex;gap:12px;align-items:center;background:#beded1;color:#315745;border-radius:22px 28px 20px 18px;padding:12px 14px;font:14px/1.4 system-ui}
+.note svg{flex:none;color:var(--btn-ink)}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.stack{display:grid;gap:10px}
+
+.primary,.secondary,.quiet{min-height:var(--btn-height);padding:10px 20px;border-radius:var(--btn-radius);font-family:var(--btn-font);font-size:15px;font-weight:700;cursor:pointer;transition:translate .16s,box-shadow .16s;box-sizing:border-box}
+.primary{background:var(--btn-green);color:var(--btn-ink-on-dark);border:var(--btn-rim-width) solid var(--btn-rim);box-shadow:0 4px 0 var(--btn-green-edge)}
+.primary:disabled{opacity:.5;cursor:default;box-shadow:none}
+.primary:not(:disabled):active{translate:0 var(--btn-press);box-shadow:0 1px 0 var(--btn-green-edge)}
+.secondary{background:var(--btn-mint);color:var(--btn-ink);border:var(--btn-rim-width) solid var(--btn-rim);box-shadow:0 4px 0 var(--btn-mint-edge)}
+.secondary:disabled{opacity:.5;cursor:default}
+.secondary:not(:disabled):active{translate:0 var(--btn-press);box-shadow:0 1px 0 var(--btn-mint-edge)}
+.quiet{background:transparent;border:0;color:var(--btn-ink);text-decoration:underline;text-underline-offset:3px;padding-inline:8px}
+.primary:focus-visible,.secondary:focus-visible,.quiet:focus-visible,.input:focus-visible,.tile:focus-visible,.chip:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
+@media(prefers-reduced-motion:reduce){.primary,.secondary{transition:none}}
+
+/* The code: four tiles (three words with their picture, then the number). */
+/* Four in a row when there is room; two by two in narrow spaces (phones), so a 9-letter word never has to shrink or break. */
+.tilesWrap{container-type:inline-size;width:100%}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+@container (max-width:380px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.tile{display:grid;justify-items:center;align-content:center;gap:2px;min-height:76px;padding:8px 2px;overflow:hidden;border-radius:var(--btn-radius-tile);background:var(--btn-cream);border:var(--btn-rim-width) solid var(--btn-rim);box-shadow:0 4px 0 var(--btn-gold-bright-edge);text-align:center;min-width:0}
+.tile b{font:800 18px/1.15 var(--btn-font);color:var(--btn-ink);white-space:nowrap;max-width:100%}
+.tile i{font-style:normal;font-size:26px;line-height:1.1;min-height:29px}
+.tile.number{background:var(--btn-gold-bright)}
+.tile.number b{font-size:clamp(20px,5vw,26px);letter-spacing:1px}
+.tile.hidden b{letter-spacing:2px;color:#7b8a76}
+.tile.hint{box-shadow:0 0 0 4px var(--btn-pink),0 4px 0 var(--btn-pink-edge)}
+.small .tiles{gap:6px}
+
+/* Restore: three word boxes and the number box. */
+.boxes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) minmax(0,.8fr);gap:8px}
+@media(max-width:480px){.boxes{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.field{display:grid;gap:4px;min-width:0}
+.field label{font:700 11px/1.2 system-ui;color:#5c6b58}
+.input{width:100%;min-height:48px;box-sizing:border-box;border:2px solid #a8b78d;border-radius:14px;background:#fffaf0;color:var(--btn-ink);font:700 17px/1.2 var(--btn-font);padding:8px 10px;text-transform:lowercase}
+.input[aria-invalid=true]{border-color:#c9806c}
+.input.good{border-color:#3f8f66;background:#f2fbf4}
+.chips{display:flex;flex-wrap:wrap;gap:8px;min-height:0}
+.chip{display:inline-flex;align-items:center;gap:6px;min-height:var(--btn-height);padding:6px 14px;border-radius:var(--btn-radius);background:var(--btn-gold-bright);color:var(--btn-ink);border:0;box-shadow:0 4px 0 var(--btn-gold-bright-edge);font:700 15px/1 var(--btn-font);cursor:pointer}
+.chip:active{translate:0 var(--btn-press);box-shadow:0 1px 0 var(--btn-gold-bright-edge)}
+.chip[aria-pressed=true]{background:var(--btn-pink);box-shadow:0 4px 0 var(--btn-pink-edge)}
+.chip i{font-style:normal;font-size:20px}
+.status{margin:0;min-height:1.4em;font:600 14px/1.4 system-ui;color:#48604c}
+.warn{color:#8a4b2f}
+
+/* Summaries ("1,240 coins · 36 cards · 12 lessons") and the two-island chooser. */
+.summary{margin:0;padding:12px 14px;border-radius:18px;background:var(--btn-cream);font:700 16px/1.4 var(--btn-font);color:var(--btn-ink);box-shadow:0 4px 0 var(--btn-cream-edge)}
+.islands{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:480px){.islands{grid-template-columns:1fr}}
+.island{display:grid;gap:8px;align-content:start;padding:14px;border-radius:22px 28px 20px 18px;background:var(--btn-cream);box-shadow:0 5px 0 var(--btn-cream-edge)}
+.island h4{margin:0;font:800 15px/1.2 var(--btn-font)}
+.island p{margin:0;font:14px/1.4 system-ui;color:#4c6157}
+
+/* Settings card status dot. */
+.saved{display:inline-flex;align-items:center;gap:6px;font:700 13px/1.3 system-ui;color:#3f8f66}
+.saved.off{color:#8a4b2f}
+.email{display:grid;gap:8px}
+.legal{margin:0;font:12px/1.5 system-ui;color:#5c6b58}
+
+/* Stand-alone dialog (QR link restore, the two-island chooser): the onboarding card on a dark see-through backdrop. */
+.dialog{position:fixed;inset:0;width:100%;max-width:none;height:100%;max-height:none;margin:0;padding:12px var(--phone-gutter);border:0;background:transparent;box-sizing:border-box;overflow:auto}
+.dialog::backdrop{background:#0c1c1a88}
+.dialog[open]{display:grid!important;place-items:center;padding:12px var(--phone-gutter)!important;background:transparent!important}
+.dialog:focus,.dialog:focus-visible{outline:none}
+.card{width:min(460px,100%);max-height:calc(100dvh - 24px);overflow:auto;box-sizing:border-box;padding:22px 20px 24px;background:#fff2d3 var(--btn-grain);background-blend-mode:soft-light;border-radius:30px 42px 26px 26px;box-shadow:0 8px 0 #173e3750,0 20px 60px #102d3540}

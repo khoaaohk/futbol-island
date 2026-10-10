@@ -56,10 +56,12 @@ export const THREADS:LawThread[]=[
  {id:'throw',title:'Of the Throw-in',lawThen:'Law V',lawNow:'Law 15',versions:[
   {year:1863,old:true,text:'When the ball is in touch, the first player who touches it shall throw it from the point where it left the ground, at right angles with the boundary line.',
    why:'It was a race! Whoever reached the ball first won the throw, and one hand was fine.'},
-  {year:1882,text:'When the ball is in touch, it shall be thrown in with both hands, from the point where it left the ground.',
-   why:'In 1882 the two-handed throw-in arrived, the throw every player still uses.'},
+  {year:1873,text:'When the ball is in touch, a player of the side opposite to the one that kicked it out shall throw it from the point where it left the ground.',
+   why:'No more racing for the ball. From 1873 the throw went to the team that did NOT kick it out, the way it still does.'},
+  {year:1883,text:'When the ball is in touch, a player of the side opposite to the one that kicked it out shall throw it in with both hands, from the point where it left the ground.',
+   why:'In 1883 the English and Scottish rules were joined up, and Scotland’s two-handed throw-in won. Every player still throws with both hands.'},
   {year:TODAY,text:'When the whole ball crosses the touch line, the team that did not touch it last throws it in, with both hands, from behind and over the head.',
-   why:'No more racing for the ball: the referee gives the throw to the team that did not touch it last.'},
+   why:'Today the ball must come from behind and over your head, with your feet on or behind the touch line.'},
  ]},
  {id:'fair',title:'Of Fair Play',lawThen:'Law X',lawNow:'Laws 5 & 12',versions:[
   {year:1863,old:true,text:'Neither tripping nor hacking shall be allowed, and no player shall use his hands to hold or push his adversary.',
@@ -80,7 +82,9 @@ export const MILESTONES:{year:number;headline:string}[]=[
  {year:1863,headline:'The FA writes down one set of rules'},
  {year:1866,headline:'A tape on the goal, no more catching, a new offside'},
  {year:1871,headline:'The goalkeeper arrives'},
- {year:1882,headline:'Crossbars and two-handed throw-ins'},
+ {year:1873,headline:'The throw-in goes to the other team'},
+ {year:1882,headline:'The crossbar becomes a must'},
+ {year:1883,headline:'Two hands for the throw-in'},
  {year:1886,headline:'The IFAB starts looking after the Laws'},
  {year:1891,headline:'A referee takes charge, and the penalty kick arrives'},
  {year:1897,headline:'Eleven players a side'},
@@ -112,7 +116,7 @@ export function diffWords(a:string,b:string):Token[]{
 }
 
 export const LAW_SOURCES:{title:string;url:string}[]=[
- {title:'Wikisource · Laws of the Game (1863)',url:'https://en.wikisource.org/wiki/Laws_of_the_Game_(1863)'},
+ {title:'Wikisource · Laws of the Game (1863), as settled on 1 December 1863',url:'https://en.wikisource.org/wiki/Laws_of_the_Game_(1863)_(as_submitted_for_adoption)'},
  {title:'Wikisource · Laws of the Game (1897)',url:'https://en.wikisource.org/wiki/Laws_of_the_Game_(1897)'},
  {title:'Wikisource · The Sporting Life (1863), Football Association meeting (Blackheath leaves)',url:'https://en.wikisource.org/wiki/The_Sporting_Life/1863/Football_Association_Meeting'},
  {title:'National Football Museum · The Laws of the Game, 1863',url:'https://nationalfootballmuseum.com/items/the-laws-of-the-game-1863/'},
@@ -121,7 +125,8 @@ export const LAW_SOURCES:{title:string;url:string}[]=[
  {title:'Wikipedia · Offside (association football)',url:'https://en.wikipedia.org/wiki/Offside_(association_football)'},
  {title:'Wikipedia · Goalkeeper (association football) (1871, 1912)',url:'https://en.wikipedia.org/wiki/Goalkeeper_(association_football)'},
  {title:'Wikipedia · Fair catch',url:'https://en.wikipedia.org/wiki/Fair_catch'},
- {title:'Wikipedia · Throw-in',url:'https://en.wikipedia.org/wiki/Throw-in'},
+ {title:'Wikipedia · Throw-in (1873: to the other team; 1883: both hands)',url:'https://en.wikipedia.org/wiki/Throw-in'},
+ {title:'Wikipedia · The Football Association (formed 26 October 1863, Freemasons’ Tavern)',url:'https://en.wikipedia.org/wiki/The_Football_Association'},
  {title:'Wikipedia · Referee (1891: referee in charge, two linesmen)',url:'https://en.wikipedia.org/wiki/Referee'},
  {title:'17 Laws Guy · The Day the Goal Broke (tape 1866, crossbar 1882)',url:'https://17lawsguy.substack.com/p/the-day-the-goal-broke'},
  {title:'IFAB Laws of the Game · Law 1 The Field of Play',url:'https://www.theifab.com/laws/latest/the-field-of-play/'},

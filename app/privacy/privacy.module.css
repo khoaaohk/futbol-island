@@ -1,0 +1,13 @@
+/* The heading's brush face (same file the root layout preloads; without this the h1 fell back to Arial). */
+@font-face{font-family:IslandBrush;src:url('/stories/films/assets/IslandBrush-Regular.ttf') format('truetype');font-display:swap}
+.page{min-height:100dvh;margin:0;padding:32px 24px 48px;box-sizing:border-box;background:#f2e7c5 url('/stories/films/assets/entry-grain.png');background-blend-mode:soft-light;color:#244d40;font:16px/1.6 Arial,Helvetica,sans-serif}
+.wrap{max-width:760px;margin:0 auto;display:grid;gap:18px}
+.wrap h1{margin:0;font-family:IslandBrush,Arial,sans-serif;font-weight:400;font-size:clamp(30px,6vw,44px);line-height:1.1}
+.wrap h2{margin:8px 0 0;font-size:20px}
+.wrap p,.wrap li{margin:0}
+.wrap ul{margin:0;padding-left:20px;display:grid;gap:6px}
+.card{background:#fff1d3;border-radius:22px 28px 20px 18px;padding:18px 20px;box-shadow:0 5px 0 #193f3733;display:grid;gap:10px}
+.muted{color:#5c6b58;font-size:14px}
+.back{justify-self:start;display:inline-flex;align-items:center;min-height:44px;padding:8px 18px;border-radius:999px;background:#beded1;color:#244d40;border:3px solid #fff2cd;box-shadow:0 4px 0 #8bac9d;font-weight:700;text-decoration:none}
+.back:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
+@media(max-width:600px){.page{padding:20px var(--phone-gutter,18px) 36px}}

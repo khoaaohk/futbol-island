@@ -10,8 +10,8 @@ async function run(browser,mobile){
  await page.addInitScript(()=>{localStorage.setItem('fi2-welcome-v1','completed');localStorage.removeItem('fi2-pass-puzzles-v1');
   // Puzzles cost 3 coins from the shared wallet: seed earned coins the same way the book/vending checks do.
   if(!localStorage.getItem('ppa-coins-seeded')){localStorage.setItem('ppa-coins-seeded','1');localStorage.setItem('fi2-island-jobs-v1',JSON.stringify({version:1,day:'',today:{},lifetime:{},earned:0,best:{},starter:true}));localStorage.setItem('fi2-arcade-wallet-v1',JSON.stringify({version:1,runs:Object.fromEntries(Array.from({length:10},(_,i)=>['ppa-fixture-'+i,{game:'island',paid:20,reason:'fixture',at:i}])),packs:[]}));}});
- await page.goto((process.env.FUTBOL_BASE_URL||'http://localhost:8092')+'/arcade?game=puzzle');
- await page.waitForFunction(()=>window.__passPuzzle?.world);
+ await page.goto((process.env.FUTBOL_BASE_URL||'http://localhost:8092')+'/arcade?game=puzzle',{waitUntil:'domcontentloaded',timeout:120000});
+ await page.waitForFunction(()=>window.__passPuzzle?.world,null,{timeout:120000});
  const canvas=page.locator('[data-arcade-kind="pass-puzzle"] canvas');
  await page.waitForTimeout(400);await page.screenshot({path:`${shots}/pass-puzzle-levels-${tag}.png`});
  // Level select → brief → freeze.
@@ -46,6 +46,10 @@ async function run(browser,mobile){
  const dpt=at(threatProbe.d);for(let i=1;i<=10;i++){await page.mouse.move(a.x+(dpt.x-a.x)*i/10,a.y+(dpt.y-a.y)*i/10);await page.waitForTimeout(16);}
  await page.waitForTimeout(100);const threat=await page.evaluate(()=>window.__passPuzzle.scene.debug());
  assert(threat.threatRings>0,'a defender on the line gets a red threat ring');
+ // Threat preview: an arrow from the defender to where they reach the ball, a cross where it is stopped,
+ // a red path, and the coach's live read naming the defender by shirt number.
+ assert(threat.dangerArrows>0,'the threat defender gets a red arrow to the ball');assert.equal(threat.pathColor,'#ff6a4d','a blocked lane draws a red path');
+ const laneTip=await page.locator('[data-lane]').first();assert.equal(await laneTip.getAttribute('data-lane'),'blocked','the lane read says blocked');assert.match(await laneTip.textContent(),/#\d+ can/,'the lane read names the defender');
  await page.screenshot({path:`${shots}/pass-puzzle-threat-${tag}.png`});
  await page.mouse.move(a.x,a.y);await page.mouse.up();
  await page.waitForTimeout(200);assert.equal(await page.evaluate(()=>window.__passPuzzle.world.state.phase),'aiming','a stroke back to the ball does not kick');
@@ -54,9 +58,13 @@ async function run(browser,mobile){
  assert.equal(naive.outcome,'fail','the naive option fails: '+JSON.stringify(naive));
  await page.getByText('Not this time.').waitFor();await page.getByText(/2 TRIES LEFT/).waitFor();
  assert(await page.locator('[class*="hint"]').count()>0,'fail card shows the hint');
+ assert.match(await page.locator('[data-why]').first().textContent(),/#\d+|defender|keeper/i,'the fail card says who stopped it');
+ // Tier-2 hint: "Show me where" marks the next pass of the coach's route on the pitch for the next try.
+ await page.getByRole('button',{name:/Show me where/}).click();
  await page.screenshot({path:`${shots}/pass-puzzle-fail-${tag}.png`});
  await page.waitForTimeout(1500);const failRest=Number(await canvas.getAttribute('data-frames'));await page.waitForTimeout(500);assert.equal(Number(await canvas.getAttribute('data-frames')),failRest,'fail card sleeps');
  await page.getByRole('button',{name:'Try again'}).click();await page.waitForFunction(()=>{const s=window.__passPuzzle.world.state;return s.phase==='aiming'&&s.attempt===2;});
+ await page.waitForFunction(()=>window.__passPuzzle.scene.debug().hint);
  // Solve the level with its solution kicks, fed through the real kick path.
  const solved=await page.evaluate(async()=>{const g=window.__passPuzzle,w=g.world,sol=g.solution?.(w.scenario.id);if(!sol)return{skipped:true};
   const wait=async(ok,ms=15000)=>{const start=performance.now();while(!ok()&&performance.now()-start<ms)await new Promise(r=>setTimeout(r,40));};
@@ -64,6 +72,7 @@ async function run(browser,mobile){
   const start=performance.now();while(w.state.phase!=='success'&&w.state.phase!=='fail'&&performance.now()-start<20000)await new Promise(r=>setTimeout(r,50));return{phase:w.state.phase,result:w.state.result};});
  assert.equal(solved.phase,'success','the solution completes the level');
  await page.getByText('That’s the move!').waitFor();await page.waitForTimeout(300);
+ assert(await page.locator('[data-why] li').count()>0,'the success card explains why the pass worked');
  await page.screenshot({path:`${shots}/pass-puzzle-success-${tag}.png`});
  const stars=await page.evaluate(()=>JSON.parse(localStorage.getItem('fi2-pass-puzzles-v1')).stars);assert(Object.values(stars)[0]>=1,'stars saved');
  // The result screen stops rendering fully.
@@ -73,6 +82,7 @@ async function run(browser,mobile){
  await page.waitForFunction(()=>window.__passPuzzle.scene.debug().zoom>1.02,null,{timeout:30000});
  await page.screenshot({path:`${shots}/pass-puzzle-replay-${tag}.png`});
  const speed=await page.evaluate(()=>window.__passPuzzle.replay?.speed);assert.equal(speed,.38);
+ assert.match(await page.locator('[data-replay-call]').textContent({timeout:20000}),/#\d+/,'the replay calls the play by shirt number');
  await page.getByText('That’s the move!').waitFor({timeout:40000});
  await page.waitForTimeout(1500);const after=Number(await canvas.getAttribute('data-frames'));await page.waitForTimeout(500);assert.equal(Number(await canvas.getAttribute('data-frames')),after,'sleeps after replay');
  // Back to the list shows the stars.
@@ -82,6 +92,6 @@ async function run(browser,mobile){
  console.log('PASS_PUZZLE_ARCADE_PASS',JSON.stringify({mobile,aim,loft,threat:threat.threatRings,result:solved.result,stars}));
  await page.close();
 }
-(async()=>{const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'});
+(async()=>{const browser=await chromium.launch({headless:true,args:['--mute-audio','--use-gl=angle'],executablePath:process.env.CHROMIUM_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'});
  try{const only=process.argv.includes('--mobile')?[true]:process.argv.includes('--desktop')?[false]:[true,false];for(const m of only)await run(browser,m);}finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exit(1);});

@@ -1,7 +1,7 @@
 /** PuzzleWorld wrapper, predict() and replay() over the pure sim core. */
 import type {Scenario,PuzzleWorld,PuzzleState,PuzzleEvent,PuzzleInput,PuzzleSnapshot,Kick,Prediction,Replay,Vec3} from './types';
 import {STEP} from './physics';
-import {makeCtx,initialState,tick,beginKick,turnFor,setCall,planOnPath,planDefender,clamp,offsideLine,type Ctx,
+import {makeCtx,initialState,tick,beginKick,turnFor,setCall,planOnPath,planDefender,defenderSlack,clamp,offsideLine,type Ctx,
   REACT,GK_AREA_DEPTH,GK_AREA_WIDE,SWEEPER_DEPTH,GK_SPEED,GK_REACT,GK_REACH,GK_DIVE,GK_HEIGHT,SAMPLE} from './sim';
 
 const clone:<T>(v:T)=>T=typeof structuredClone==='function'?v=>structuredClone(v):v=>JSON.parse(JSON.stringify(v));
@@ -93,18 +93,25 @@ function predictUncached(world:PuzzleWorld,kick:Kick):Prediction{
   const limit=Math.min(launchPath.pts.length/3,Math.floor((endTick-launchTick)/SAMPLE)+1);
   const cut={tick0:launchPath.tick0,pts:launchPath.pts.slice(0,limit*3)};
   const threats:number[]=[];
+  const threatAt:{x:number;z:number}[]=[];let closest:Prediction['closest'];
   for(let j=0;j<defenders.length;j++){
-    const p=defenders[j];
-    if(planDefender(cut,launchTick,p,REACT))threats.push(j);
+    const p=defenders[j],plan=planDefender(cut,launchTick,p,REACT);
+    if(plan){threats.push(j);threatAt.push({x:plan.x,z:plan.z});}
+    // the nearest miss: how much spare time the pass had over this defender
+    const sl=defenderSlack(cut,launchTick,p,REACT);
+    if(sl&&(!closest||sl.slack<closest.slack))closest={defender:j,slack:sl.slack,at:{x:sl.x,z:sl.z}};
   }
   let keeperThreat=false;
   if(kp){
     const pl=planOnPath(cut,launchTick,kp,GK_SPEED,GK_REACT,GK_REACH+GK_DIVE,GK_HEIGHT);
     const sw=!!ctx.sc.keeper?.sweeper;keeperThreat=!!pl&&pl.z>=ctx.geo.goalZ-(sw?SWEEPER_DEPTH:GK_AREA_DEPTH)&&Math.abs(pl.x)<=ctx.geo.halfGoal+GK_AREA_WIDE+(sw?6:0);
   }
-  const out:Prediction={path,end:first?END_OF[first.type]!:s.result?.reason==='out'?'out':'rest',threats,keeperThreat};
+  const out:Prediction={path,end:first?END_OF[first.type]!:s.result?.reason==='out'?'out':'rest',threats,keeperThreat,threatAt};
+  if(closest)out.closest=closest;
+  if(first&&(first.type==='intercept'||first.type==='deflect'||first.type==='save'||first.type==='parry'))out.cut={x:first.at.x,y:first.at.y,z:first.at.z};
   if(first&&(first.type==='receive'||first.type==='heavy_touch')){out.receiver=first.attacker;out.receiveAt=first.at;}
-  if(first?.type==='intercept'||first?.type==='deflect'){if(first.defender!=null&&!threats.includes(first.defender))threats.push(first.defender);}
+  if(first?.type==='intercept'||first?.type==='deflect'){if(first.defender!=null&&!threats.includes(first.defender)){threats.push(first.defender);threatAt.push({x:first.at.x,z:first.at.z});}
+    if(first.defender!=null&&(!out.closest||out.closest.defender!==first.defender||out.closest.slack>=0))out.closest={defender:first.defender,slack:Math.min(-0.01,out.closest?.defender===first.defender?out.closest.slack:-0.01),at:{x:first.at.x,z:first.at.z}};}
   if(first&&(first.type==='save'||first.type==='parry'))keeperThreat=out.keeperThreat=true;
   if(out.end==='goal')out.keeperThreat=false;
   if(hitsPost)out.hitsPost=true;

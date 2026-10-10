@@ -166,7 +166,8 @@ function lane(ctx:CanvasRenderingContext2D,c:Cam,from:Pt,to:Pt,col:string,dash:n
  ctx.fillStyle=col;ctx.beginPath();ctx.moveTo(ex+Math.cos(ang)*6,ey+Math.sin(ang)*6);ctx.lineTo(ex+Math.cos(ang+2.5)*7,ey+Math.sin(ang+2.5)*7);ctx.lineTo(ex+Math.cos(ang-2.5)*7,ey+Math.sin(ang-2.5)*7);ctx.fill();ctx.restore();
 }
 
-export function drawWorld(ctx:CanvasRenderingContext2D,w:World,cw:number,ch:number,dpr:number,now:number,reduced:boolean){
+/** `withOsd:false` leaves out the painted on-screen text (the film's VCR draws its own OSD in HTML over the tape). */
+export function drawWorld(ctx:CanvasRenderingContext2D,w:World,cw:number,ch:number,dpr:number,now:number,reduced:boolean,withOsd=true){
  const P=PAL[w.era],c=camera(cw,ch),M=mem(w),old=w.era==="old",busy=w.phase!=="idle";
  ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,cw,ch);
  pitch(ctx,c,P,w.era,cw,ch);
@@ -233,6 +234,7 @@ export function drawWorld(ctx:CanvasRenderingContext2D,w:World,cw:number,ch:numb
  const vg=ctx.createRadialGradient(cw/2,ch*.55,Math.min(cw,ch)*.35,cw/2,ch*.55,Math.max(cw,ch)*.78);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,old?'rgba(30,16,2,.5)':'rgba(0,10,4,.42)');
  ctx.fillStyle=vg;ctx.fillRect(0,0,cw,ch);
  const osd=Math.max(11,Math.min(14,Math.round(cw/48)));
+ if(!withOsd)return;
  if(old){
   ctx.save();ctx.fillStyle='rgba(255,236,200,.06)';ctx.fillRect(0,0,cw,ch);
   if(busy&&!reduced){const by=((now/9)%(ch+60))-30;ctx.fillStyle='rgba(255,250,235,.12)';ctx.fillRect(0,by,cw,3);ctx.fillStyle='rgba(255,250,235,.06)';ctx.fillRect(0,by+5,cw,9);}

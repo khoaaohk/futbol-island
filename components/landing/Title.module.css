@@ -1,0 +1,314 @@
+/* Futbol Island title screen (/start, Oct 9 2026). The game's identity only: the loading screen's sea blue and riso grain, the
+   IslandBrush face, the loading-island vectors split into depth layers, the splash cast, the shared --btn-* tokens
+   (docs/ui/BUTTONS.md) and the cream modal surface. Motion is transform/opacity only:
+   - one choreographed entrance (~1.5 s: letters drop, island rises, cast pops, buttons settle last), CSS one-shots;
+   - ambient life (palms, flag, glints, cast, balls) as CSS loops that PAUSE when TitleScene sets data-calm (8 s idle) or
+     data-hidden (tab hidden);
+   - parallax transforms written by TitleScene only while its spring moves (will-change only then, via data-moving).
+   prefers-reduced-motion: no animation at all; the end state is the resting layout. */
+@font-face{font-family:IslandBrush;src:url('/stories/films/assets/IslandBrush-Regular.ttf') format('truetype');font-display:swap}
+
+/* Colour tokens. Text pairs are checked for WCAG AA contrast by tests/landing.cjs. */
+.page{
+ --sea:#2b53e5;--on-sea:#fff2d3;--sea-shadow:#1d3cb4;--pink:#ef8fd0;--on-pink:#153f43;--deep:#153f43;--on-deep:#fff2d3;--deep-soft:#d9e4d6;
+ --paper:#f7f0db;--ink:#244d40;--ink-soft:#3d5446;--gold:#f9d55d;
+ position:relative;min-height:100%;background:var(--sea);color:var(--on-sea);font-family:var(--btn-font);overflow-x:clip;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+/* One sea in both colour schemes: the game's loading screen is always #2b53e5, and /start hands off into it (handoffMotion.ts). */
+.page *{box-sizing:border-box}
+
+/* ---- The one screen ---- */
+.screen{
+ --isle-top:max(25svh,calc(env(safe-area-inset-top,0px) + 172px));
+ --isle-h:min(37svh,calc(106vw / 1.415));--isle-w:calc(var(--isle-h) * 1.415);
+ --cast-w:min(100vw,calc(var(--isle-h) * 1.4));--cast-top:calc(var(--isle-top) + var(--isle-h) * .7);
+ position:relative;isolation:isolate;overflow:hidden;min-height:100vh;min-height:100svh;display:grid;grid-template-rows:auto 1fr auto auto;
+ padding:0 calc(var(--phone-gutter) + env(safe-area-inset-right,0px)) 0 calc(var(--phone-gutter) + env(safe-area-inset-left,0px));background:var(--sea)}
+/* The riso grain over the whole print, under the type and buttons (as on the loading screen). */
+.screen::after{content:'';position:absolute;inset:0;z-index:1;background:url('/stories/films/assets/entry-grain.png');opacity:.38;pointer-events:none}
+@media(min-width:900px){.screen{--isle-h:min(40svh,calc(60vw / 1.415));--isle-top:max(19svh,160px);--cast-w:calc(var(--isle-w) * 1.05);--cast-top:calc(var(--isle-top) + var(--isle-h) * .72)}}
+
+.scene{position:absolute;inset:0;z-index:0;pointer-events:none}
+.layer{position:absolute}
+.screen[data-moving] .layer{will-change:transform}
+.layer svg{display:block}
+.bandIn>svg,.isleBox svg{width:100%;height:100%}
+/* Palms and flag: their own small SVG boxes over the island (compositor-friendly ambient transforms; TitleArt). */
+.isleBox svg.isleItem{position:absolute;display:block;overflow:visible}
+.sky{inset:-16px}
+.skyIn{position:absolute;inset:0}
+.sun{position:absolute;width:calc(var(--isle-h) * .343);height:auto;left:calc(50% + var(--isle-w) * .34 - var(--isle-h) * .172 + 16px);top:calc(var(--isle-top) + var(--isle-h) * .02 + 16px)}
+.star{position:absolute;width:calc(var(--isle-h) * .245);height:auto;left:calc(50% - var(--isle-w) * .5 - var(--isle-h) * .02 + 16px);top:calc(var(--isle-top) + var(--isle-h) * .1 + 16px)}
+.farHills{left:-90px;right:-90px;top:calc(var(--isle-top) + var(--isle-h) * .226);height:calc(var(--isle-h) * .987)}
+.bandIn{position:absolute;inset:0;display:flex;flex-direction:column}
+.farHills .bandIn svg{height:100%}
+/* The pink hill: its SVG spans 2100 units with headroom above the crest (see TitleArt), so no flat clip at the sides or top;
+   -90px overscan covers the largest parallax shift (34px). */
+.nearHills{left:-90px;right:-90px;top:calc(var(--isle-top) + var(--isle-h) * .68);bottom:-80px}
+.nearHills svg{flex:none;height:calc(var(--isle-h) * .64)}
+.pinkFloor{flex:1;margin-top:-1px;background:var(--pink)}
+.isleBox{left:50%;top:var(--isle-top);width:var(--isle-w);height:var(--isle-h);margin-left:calc(var(--isle-w) / -2)}
+.isleIn{position:absolute;inset:0;transform-origin:50% 80%}
+.glints svg{overflow:visible}
+.castBox{left:50%;top:var(--cast-top);width:var(--cast-w);aspect-ratio:1200/640;margin-left:calc(var(--cast-w) / -2)}
+.castMember{position:absolute;bottom:0;transform-origin:50% 100%}
+.castMember img{display:block;width:100%;height:auto;user-select:none;-webkit-user-drag:none}
+.castLife{display:block;transform-origin:50% 100%}
+/* The trick cast on the shared px-per-metre scale (trick-boy ≈24 %, trick-girl ≈25.5 % of the box), feet on one ground line. */
+.boy{left:14%;bottom:4%}
+.girl{right:13%;bottom:3.3%}
+/* Trick loops as CSS sprites (when cast.json has a strip): one strip image slides in steps() across an overflow-hidden box the size
+   of one cell; the still sits under it and stays for reduced motion. Compositor-only; paused when calm / hidden. */
+.castStill{visibility:visible}
+.spriteBox{position:absolute;left:0;right:0;bottom:0;overflow:hidden;display:block}
+.sprite{position:absolute;left:0;top:0;bottom:0;display:block}
+.sprite img{display:block;width:100%;height:100%}
+@media(prefers-reduced-motion:no-preference){
+ .castMember:has(.spriteBox[data-ready]) .castStill{visibility:hidden}
+ .spriteBox:not([data-ready]){visibility:hidden}
+ .spriteBox[data-ready] .sprite{animation:spriteRun var(--dur) steps(var(--frames)) infinite}
+}
+@media(prefers-reduced-motion:reduce){.spriteBox{display:none}}
+.spriteBox{flex:none}
+@keyframes spriteRun{from{transform:translateX(0)}to{transform:translateX(-100%)}}
+.props{left:50%;top:var(--cast-top);width:var(--cast-w);aspect-ratio:1200/640;margin-left:calc(var(--cast-w) / -2)}
+.propsIn{position:absolute;inset:0}
+.ballA{position:absolute;left:31%;bottom:4%;width:8%;height:auto}
+.ballB{position:absolute;right:-1%;top:-6%;width:6.5%;height:auto}
+.waves{position:absolute;right:-3%;bottom:38%;width:12%;height:auto}
+
+/* ---- Type ---- */
+.copy{position:relative;z-index:2;display:grid;justify-items:center;text-align:center;padding-top:calc(env(safe-area-inset-top,0px) + 4.5svh)}
+.eyebrow{margin:0;font-size:clamp(10px,1.1vw,14px);font-weight:800;letter-spacing:.17em}
+.title{margin:16px 0 10px;font-family:IslandBrush,var(--btn-font);font-weight:400;font-size:clamp(32px,4.3vw,62px);line-height:1.18;letter-spacing:-.025em;text-shadow:0 3px 0 var(--sea-shadow),0 10px 26px #0b1f7a55;white-space:nowrap}
+.word{display:inline-block;white-space:nowrap}
+.word+.word{margin-left:.24em}
+.letter{display:inline-block}
+@media(min-width:900px){.copy{padding-top:calc(env(safe-area-inset-top,0px) + 6svh)}}
+
+/* ---- Actions (bottom, over the pink coast) ---- */
+.actions{position:relative;z-index:5;grid-row:3;display:grid;justify-items:center;padding-bottom:6px}
+.choices{display:grid;justify-items:center;gap:12px;width:min(340px,100%)}
+.start{position:relative;overflow:hidden;display:grid;justify-items:center;gap:2px;width:100%;min-height:68px;padding:8px 24px 10px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius);
+ background:var(--btn-gold) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;color:var(--btn-ink);box-shadow:var(--btn-shadow-gold);cursor:pointer;
+ transition:translate .16s,box-shadow .16s,scale .2s cubic-bezier(.2,1.28,.32,1)}
+.start span{font-family:IslandBrush,var(--btn-font);font-size:32px;line-height:1}
+.start small{font-size:13px;font-weight:800;letter-spacing:.03em}
+/* Hover: a lift and one riso shine across the face (transform only). */
+.start::after{content:'';position:absolute;inset:-20% auto -20% -40%;width:30%;background:linear-gradient(100deg,transparent,#fff7dc99,transparent);transform:translateX(-120%) skewX(-18deg);pointer-events:none}
+@media(hover:hover){.start:hover{scale:1.03}.start:hover::after{transform:translateX(560%) skewX(-18deg);transition:transform .7s ease}}
+.start:active{translate:0 var(--btn-press);scale:.98;box-shadow:var(--btn-shadow-gold-pressed)}
+.start:focus-visible,.haveCode:focus-visible,.quiet:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
+.start:disabled,.haveCode:disabled{cursor:progress}
+.haveCode{min-height:48px;width:100%;padding:10px 20px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius);background:var(--btn-mint);color:var(--btn-ink);
+ box-shadow:0 4px 0 var(--btn-mint-edge);font-size:16px;font-weight:800;cursor:pointer;transition:translate .16s,box-shadow .16s,scale .2s cubic-bezier(.2,1.28,.32,1)}
+@media(hover:hover){.haveCode:hover{scale:1.03}}
+.haveCode:active{translate:0 var(--btn-press);scale:.98;box-shadow:0 1px 0 var(--btn-mint-edge)}
+.quiet{min-height:44px;padding:8px 14px;border:0;background:none;color:inherit;font-size:15px;font-weight:700;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px;cursor:pointer}
+@media(hover:hover){.quiet:hover{text-decoration-thickness:3px}}
+
+/* Landing cards after a code (or during a saving break). */
+.card{display:grid;justify-items:center;gap:10px;width:min(380px,100%);padding:16px 18px 14px;border-radius:26px 40px 22px 24px;background:var(--paper);color:var(--ink);box-shadow:0 6px 0 #183b3438;text-align:center}
+.cardTitle{margin:0;font-family:IslandBrush,var(--btn-font);font-weight:400;font-size:30px;line-height:1.05}
+.cardBody{margin:0;font-size:15px;line-height:1.45;color:var(--ink-soft)}
+.maskedCode{margin:0;padding:6px 14px;border-radius:999px;background:#e6e5d0;font-size:15px;font-weight:700;letter-spacing:.04em}
+.maskedCode b{font-weight:800}
+/* The outage card is deliberately not the normal flow: deep coast colour, a dashed rim and a "Saving break" chip. */
+/* Its surface is a ::before layer so it can fade (opacity) while the pill inside it loads. */
+.breakCard{position:relative;isolation:isolate;background:none;box-shadow:none;color:var(--on-deep)}
+.breakCard::before{content:'';position:absolute;inset:0;z-index:-1;border-radius:inherit;background:var(--deep);border:3px dashed var(--gold);box-shadow:0 6px 0 #0b2427}
+.breakCard .cardBody{color:var(--deep-soft)}
+.breakChip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:var(--gold);color:var(--deep);font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+
+/* Play: the shared NavigationButton (DoneButton.module.css), the hero size only scales the same tokens. */
+button.playHero.playHero.playHero.playHero{font-size:20px;font-weight:800;letter-spacing:.01em;align-self:center}
+button.playHero.playHero.playHero.playHero[data-closing=true]{width:56px!important}
+@media(hover:hover){button.playHero.playHero.playHero.playHero:not([data-closing=true]):hover{scale:1.04;transition:scale .2s cubic-bezier(.2,1.28,.32,1),width 220ms cubic-bezier(.22,.7,.3,1),opacity 140ms ease,translate .16s,box-shadow .16s}}
+/* The game's loading screen, shown the moment Play is pressed (PlayButton). */
+.launch{position:fixed;inset:0;z-index:3000}
+
+/* Grown-ups row: always on the title screen, quiet. */
+.grownRow{position:relative;z-index:3;grid-row:4;display:flex;justify-content:center;gap:2px 6px;flex-wrap:wrap;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 4px)}
+.grownRow a{display:inline-flex;align-items:center;min-height:44px;padding:0 10px;color:var(--on-pink);font-size:13px;font-weight:800;text-decoration:none}
+.grownRow a:hover,.grownRow a:focus-visible{text-decoration:underline}
+
+/* Tilt (iPhone/iPad: motion permission needs a tap). */
+.tilt{position:absolute;z-index:4;top:calc(env(safe-area-inset-top,0px) + 12px);right:calc(var(--phone-gutter) + env(safe-area-inset-right,0px));display:grid;place-items:center;width:44px;height:44px;padding:0;
+ border:var(--btn-rim-width) solid var(--btn-rim);border-radius:50%;background:var(--btn-gold) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;color:var(--btn-ink);box-shadow:var(--btn-shadow-gold);transition:translate .16s,box-shadow .16s}
+.tilt:active{translate:0 var(--btn-press);box-shadow:var(--btn-shadow-gold-pressed)}
+.tilt[aria-pressed=true]{background-color:var(--btn-pink)}
+
+/* ---- Save sheet: grows out of the button that opened it (FLIP in TitleActions), on a see-through dark backdrop ---- */
+.sheetWrap{position:fixed;inset:0;z-index:50;display:grid;align-items:end;justify-items:center;
+ padding:calc(env(safe-area-inset-top,0px) + 10px) calc(10px + env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) calc(10px + env(safe-area-inset-left,0px))}
+.backdrop{position:absolute;inset:0;background:#0f2a2fb3}
+.sheet{position:relative;width:min(520px,100%);max-height:100%;display:grid;border-radius:28px 40px 26px 28px;color:var(--ink)}
+.surface{position:absolute;inset:0;border-radius:inherit;background:var(--paper);box-shadow:0 8px 0 #183b3440;transform-origin:0 0}
+.sheetContent{position:relative;min-height:0;max-height:calc(100svh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 20px);overflow:auto;overscroll-behavior:contain;padding:14px 18px 20px}
+.sheetHeader{display:grid;grid-template-columns:76px minmax(0,1fr) 76px;align-items:center;gap:8px;margin-bottom:4px}
+.sheetHeader h2{margin:0;text-align:center;font-family:IslandBrush,var(--btn-font);font-weight:400;font-size:24px;line-height:1.1;outline:none}
+.mark{justify-self:end;width:44px;height:44px;border:3px solid var(--btn-rim);border-radius:14px;background:var(--btn-gold) url('/stories/paths/island-mark.svg') center/34px 34px no-repeat;box-shadow:0 4px 0 var(--btn-gold-edge)}
+@media(min-width:900px){.sheetWrap{align-items:center}}
+/* The code words flip in like cards (the real CodeTiles, [data-save-code]). */
+.sheetBody [data-save-code]{perspective:700px}
+@media(prefers-reduced-motion:no-preference){
+ .sheetBody [data-save-code]>span{animation:tileFlip .6s cubic-bezier(.2,1.28,.32,1) both;backface-visibility:hidden}
+ .sheetBody [data-save-code]>span:nth-child(1){animation-delay:.15s}.sheetBody [data-save-code]>span:nth-child(2){animation-delay:.27s}
+ .sheetBody [data-save-code]>span:nth-child(3){animation-delay:.39s}.sheetBody [data-save-code]>span:nth-child(4){animation-delay:.51s}
+}
+@keyframes tileFlip{from{transform:rotateY(-110deg) translateY(6px);opacity:0}45%{opacity:1}to{transform:none;opacity:1}}
+/* The "saved" moment: a riso stamp and a short confetti burst in the island's inks. */
+.saved{position:absolute;inset:0;z-index:5;display:grid;place-items:center;pointer-events:none}
+.stamp{padding:6px 22px 10px;border:5px solid #e0569c;border-radius:16px;color:#e0569c;background:#fff2d3e6;font-family:IslandBrush,var(--btn-font);font-size:52px;line-height:1;rotate:-9deg;mix-blend-mode:multiply;
+ animation:stampIn .5s cubic-bezier(.2,1.5,.35,1) both}
+@keyframes stampIn{from{transform:scale(2.4);opacity:0}55%{opacity:1}to{transform:none;opacity:1}}
+.confetti{position:absolute;left:50%;top:50%;width:10px;height:14px;margin:-7px 0 0 -5px;border-radius:2px;background:var(--c);opacity:0;animation:burst .95s var(--d) cubic-bezier(.15,.75,.3,1) both}
+@keyframes burst{0%{transform:translate(0,0) rotate(0);opacity:1}45%{transform:translate(var(--x),var(--y)) rotate(calc(var(--r) * .5));opacity:1}100%{transform:translate(calc(var(--x) * 1.25),calc(var(--y) + 200px)) rotate(var(--r));opacity:0}}
+
+/* ---- Entrance: one orchestrated ~1.5 s moment ---- */
+@media(prefers-reduced-motion:no-preference){
+ .screen [data-enter=sky]{animation:fadeUp .9s ease-out both}
+ .screen [data-enter=hills]{animation:rise .8s .12s cubic-bezier(.2,.9,.3,1) both}
+ .screen [data-enter=near]{animation:rise .8s .28s cubic-bezier(.2,.9,.3,1) both}
+ .screen [data-enter=island]{animation:islandRise 1s .22s cubic-bezier(.2,1.28,.32,1) both}
+ .screen [data-enter=cast]{animation:pop .6s calc(.68s + var(--i) * .12s) cubic-bezier(.2,1.5,.35,1) both}
+ .screen [data-enter=props]{animation:pop .55s 1s cubic-bezier(.2,1.5,.35,1) both}
+ .screen [data-enter=eyebrow]{animation:fadeUp .5s .05s ease-out both}
+ .letter{animation:drop .62s calc(.12s + var(--i) * .045s) cubic-bezier(.2,1.45,.35,1) both}
+ .screen [data-enter=actions]{animation:settle .6s 1.02s cubic-bezier(.2,1.28,.32,1) both}
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes rise{from{transform:translateY(60px)}to{transform:none}}
+@keyframes islandRise{from{opacity:0;transform:translateY(22%) scale(.86)}35%{opacity:1}to{opacity:1;transform:none}}
+@keyframes pop{from{opacity:0;transform:translateY(18%) scale(.7)}40%{opacity:1}to{opacity:1;transform:none}}
+@keyframes drop{from{opacity:0;transform:translateY(-70%) rotate(-8deg)}35%{opacity:1}to{opacity:1;transform:none}}
+@keyframes settle{from{opacity:0;transform:translateY(26px) scale(.96)}to{opacity:1;transform:none}}
+
+/* ---- Ambient life: CSS loops that pause when calm (8 s idle) or hidden ---- */
+@media(prefers-reduced-motion:no-preference){
+ .palm,.palmB{transform-origin:50% 96%;animation:sway 3.2s 1.6s ease-in-out infinite alternate}
+ .palmB{animation-duration:3.8s;animation-delay:2s}
+ .flag{transform-origin:5% 50%;animation:flap 1.1s 1.6s ease-in-out infinite alternate}
+ .glint{animation:glint 2.6s 1.4s ease-in-out infinite alternate}
+ .ballB{animation:float 2s 2s ease-in-out infinite alternate}
+ .sun{animation:breathe 4s 1.6s ease-in-out infinite alternate}
+ .screen:is([data-calm],[data-hidden]) :is(.palm,.palmB,.flag,.glint,.castLife,.ballA,.ballB,.sun,.sprite){animation-play-state:paused}
+}
+@keyframes sway{from{transform:rotate(-3deg)}to{transform:rotate(3deg)}}
+@keyframes flap{from{transform:skewY(-6deg) scaleX(.94)}to{transform:skewY(5deg) scaleX(1.04)}}
+@keyframes glint{from{opacity:.25}to{opacity:1}}
+@keyframes kickSway{from{transform:rotate(-2.5deg)}to{transform:rotate(3deg) translateY(-2%)}}
+@keyframes float{from{transform:translateY(0)}to{transform:translateY(-7%)}}
+@keyframes hop{from{transform:translateY(0) scaleY(1)}to{transform:translateY(-9%) scaleY(1.02)}}
+@keyframes bounce{from{transform:translateY(0)}to{transform:translateY(-55%) rotate(40deg)}}
+@keyframes breathe{from{transform:scale(1)}to{transform:scale(1.05)}}
+@media(prefers-reduced-motion:reduce){.page *,.page *::before,.page *::after{animation:none!important;transition:none!important}}
+
+/* Short screens (landscape phones): smaller title and island, no cast. */
+@media(max-height:560px){.screen{--isle-h:min(34svh,calc(60vw / 1.415));--isle-top:max(30svh,120px)}.title{font-size:28px;margin:8px 0 10px}.eyebrow{font-size:9px}.castBox,.props{display:none}}
+
+/* ---- Footer (below the screen): the grown-ups line ---- */
+.footer{padding:26px calc(var(--phone-gutter) + env(safe-area-inset-right,0px)) calc(26px + env(safe-area-inset-bottom,0px)) calc(var(--phone-gutter) + env(safe-area-inset-left,0px));background:var(--btn-green);color:var(--btn-ink-on-dark);text-align:center;font-size:14px;line-height:1.6}
+.footer p{max-width:60ch;margin:0 auto}
+.footer p+p{margin-top:6px}
+.footer a{display:inline-block;padding:12px 6px;color:inherit;font-weight:800}
+
+/* Title size and placement match the island loading screen (IslandLoading.module.css), user Oct 9 2026. */
+@media(max-width:700px){.title{font-size:clamp(30px,8vw,48px)}.eyebrow{font-size:10px}}
+@media(max-width:700px) and (max-aspect-ratio:5/6){.copy{padding-top:max(calc(8svh + 4px),calc(env(safe-area-inset-top,0px) + 16px))}}
+@media(max-width:700px) and (max-aspect-ratio:5/6) and (max-height:700px){.copy{padding-top:max(5svh,calc(env(safe-area-inset-top,0px) + 12px))}}
+@media(min-width:701px) and (max-aspect-ratio:5/6){.title{font-size:clamp(44px,6.5vw,72px)}.eyebrow{font-size:13px}}
+
+/* For grown-ups sheet (user, Oct 9 2026): full screen, the game's modal shell, Back top left. */
+.grownRow .grownLink,.grownRow a.grownLink{display:inline-flex;align-items:center;min-height:44px;padding:0 10px;border:0;background:none;color:var(--on-pink);font:800 13px var(--btn-font);cursor:pointer}
+.grownRow .grownLink:hover,.grownRow .grownLink:focus-visible{text-decoration:underline}
+.grownDialog{position:fixed;inset:0;width:100%;max-width:none;height:100%;max-height:none;margin:0;padding:0;border:0;background:transparent}
+.grownDialog::backdrop{background:#0c1c1a88}
+.grownDialog[open]{display:block}
+.grownSheet{width:100%;height:100%;max-height:100dvh!important}
+.grownHeader{display:grid!important;grid-template-columns:var(--btn-nav-width,76px) minmax(0,1fr) var(--btn-nav-width,76px)}
+.grownHeader h2{text-align:center;font:400 clamp(26px,3.4vw,40px)/1.15 IslandBrush,var(--btn-font)}
+.grownBody{width:100%;font-size:16px;line-height:1.55;color:#36504a}
+.grownInner h3{margin:22px 0 6px;font-size:18px;color:#244d40}
+.grownInner h3:first-child{margin-top:4px}
+.grownInner p{margin:0}
+.grownInner a{color:#244d40;font-weight:800}
+.grownFree{margin-top:22px!important;font-weight:800;color:#244d40}
+@media(prefers-reduced-motion:reduce){.grownDialog{animation:none}}
+.inlineLink{display:inline;padding:0;border:0;background:none;color:#244d40;font:inherit;font-weight:800;text-decoration:underline;cursor:pointer}
+.grownHeader>h2{flex:1 1 auto;text-align:center}
+.grownHeader>span{flex:0 0 var(--btn-nav-width,76px)}
+.grownBody>*{min-width:0}
+
+/* Sheets fade in and out (user, Oct 9 2026). The dialog fades as a whole, backdrop included. */
+.grownDialog[open]{animation:sheetIn .24s ease-out both}
+.grownDialog[open]::backdrop{animation:sheetIn .24s ease-out both}
+.grownDialog[data-closing]{animation:sheetOut .22s ease-in both}
+.grownDialog[data-closing]::backdrop{animation:sheetOut .22s ease-in both}
+@keyframes sheetIn{from{opacity:0}to{opacity:1}}
+@keyframes sheetOut{from{opacity:1}to{opacity:0}}
+@media(prefers-reduced-motion:reduce){.grownDialog[open],.grownDialog[open]::backdrop,.grownDialog[data-closing],.grownDialog[data-closing]::backdrop{animation:none}}
+/* The scroller spans the full sheet (scrollbar at the far right); only the text column is narrowed (user, Oct 9 2026). */
+.grownInner{max-width:72ch;margin:0 auto;min-width:0}
+.grownBody>*{min-width:0}
+/* Header title: centred on the Back button. The brush face draws its letters high in the line box, so nudge them down. */
+.grownHeader{align-items:center!important}
+.grownHeader>h2{align-self:center;margin:0!important;line-height:1!important;padding-top:.02em}
+.partnerLinks{display:flex;flex-wrap:wrap;gap:4px 18px;margin-top:8px!important}
+.partnerLinks a{display:inline-flex;align-items:center;min-height:44px}
+.partnerLinks a{padding:0;font-size:inherit;font-weight:800;color:#244d40;text-decoration:underline;text-underline-offset:3px}
+/* For grown-ups → Local non-profits: one Donate button (grown-up check), then the Stripe tiers. */
+.donateButton{margin-top:12px;min-height:48px;padding:0 28px;border:3px solid #fff2cd;border-radius:999px;background:var(--btn-gold,#e9c16b);color:#244d40;font:800 17px var(--btn-font);box-shadow:0 5px 0 var(--btn-gold-edge,#a8863d);cursor:pointer}
+.donateButton:active{transform:translateY(3px);box-shadow:0 2px 0 var(--btn-gold-edge,#a8863d)}
+.donateBox{margin-top:12px;display:grid;gap:8px}
+.donateAmounts{display:flex;flex-wrap:wrap;gap:10px}
+.donateAmounts a{display:inline-grid;place-items:center;min-width:72px;min-height:48px;border-radius:999px;background:#beded1;border:3px solid #fff2cd;box-shadow:0 4px 0 #8bac9d;color:#244d40;font-weight:800;font-size:17px;text-decoration:none}
+.donateNote{font-size:14px;color:#5c6b58}
+/* Bottom-row links: larger (user, Oct 9 2026). */
+.grownRow .grownLink,.grownRow a.grownLink{font-size:17px;min-height:48px;padding:0 14px}
+@media(max-height:560px){.grownRow .grownLink,.grownRow a.grownLink{font-size:15px;min-height:44px}}
+/* Links inside sheet text read as plain underlined links (a global link style was padding them like chips). */
+.grownInner p a{display:inline;min-height:0;padding:0;font-size:inherit;font-weight:800;color:#244d40;text-decoration:underline;text-underline-offset:3px;background:none;border:0;box-shadow:none}
+.grownInner .partnerLinks a{display:inline-flex;align-items:center;min-height:44px}
+
+/* ---- Hand-off into the game's loading screen (Play; handoffMotion.ts, Oct 9 2026) ----
+   [data-exit] on the screen: the bottom row drops out first, then the save actions; the loader's track appears under the title
+   (same size and place as IslandLoading's); the ambient loops hold still while the art morphs onto the loader (WAAPI). */
+.track{display:none}
+.copy .track{margin:18px auto 0;width:180px;height:6px;background:#fff2d338}
+.copy .track>span{background:#f9d55d}
+@media(max-height:560px){.copy .track{margin-top:12px}}
+.screen[data-exit] .track{display:block;animation:trackIn .24s .2s ease-out both}
+.screen[data-exit] :is(.grownRow,.actions,.tilt){opacity:0;pointer-events:none}
+.screen[data-exit] .grownRow{animation:exitDown .22s cubic-bezier(.5,0,.75,0) both}
+.screen[data-exit] .actions{animation:exitDown .3s .07s cubic-bezier(.5,0,.75,0) both}
+.screen[data-exit] .tilt{animation:exitFade .2s both}
+.screen[data-exit] :is(.palm,.flag,.glint,.castLife,.ballA,.ballB,.sun){animation-play-state:paused}
+@keyframes exitDown{from{opacity:1;transform:none}to{opacity:0;transform:translateY(32px)}}
+@keyframes exitFade{from{opacity:1}to{opacity:0}}
+@keyframes trackIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+
+/* ---- Play = the water loader (WaterPill + waterLaunch.ts, Oct 9 2026) ----
+   The gold pill fills with sea water from the bottom while the game loads (the level is a transform set by the loader); its crest
+   rolls (one CSS loop, only while [data-loading], gone with the button). [data-launch] on the screen: the links and the other
+   buttons fade and drop away first. */
+.pillWrap{display:grid;width:100%}
+.waterPill{isolation:isolate}
+.waterPill>span,.waterPill>small{position:relative;z-index:1}
+.water{position:absolute;inset:0;z-index:0;display:block;overflow:hidden;border-radius:inherit;pointer-events:none}
+.waterFill{position:absolute;left:0;right:0;top:0;bottom:0;display:block;transform:translateY(100%);background:#78d7df var(--btn-grain) center/128px 128px;background-blend-mode:soft-light}
+.waterCrest{position:absolute;left:0;bottom:calc(100% - 1px);width:200%;height:12px;fill:#78d7df}
+.waterPill[data-loading]{cursor:progress}
+.waterPill[data-loading]:disabled{opacity:1}
+.waterCrestBack{height:15px;fill:#b4ecee;opacity:.85}
+@media(prefers-reduced-motion:no-preference){.waterPill[data-loading] .waterCrest{animation:crestRoll 1.3s linear infinite}.waterPill[data-loading] .waterCrestBack{animation:crestRoll 2.1s linear infinite reverse}}
+@keyframes crestRoll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.screen[data-launch] :is(.grownRow,.tilt,.haveCode,.quiet,.breakChip,.cardTitle,.cardBody){opacity:0;pointer-events:none}
+@media(prefers-reduced-motion:no-preference){
+ .screen[data-launch] .grownRow{animation:launchOut .26s cubic-bezier(.5,0,.75,0) both}
+ .screen[data-launch] .tilt{animation:launchOut .22s both}
+ .screen[data-launch] :is(.haveCode,.quiet,.breakChip,.cardTitle,.cardBody){animation:launchOut .3s .08s cubic-bezier(.5,0,.75,0) both}
+ .screen[data-launch] .breakCard::before{animation:launchFade .4s .12s both}
+}
+@media(prefers-reduced-motion:reduce){.screen[data-launch] .breakCard::before{opacity:0}}
+@keyframes launchOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(24px)}}
+@keyframes launchFade{from{opacity:1}to{opacity:0}}

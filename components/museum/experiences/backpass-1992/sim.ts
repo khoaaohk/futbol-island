@@ -114,3 +114,44 @@ export function step(w:World,dt:number):SimEvent|null{
 /** How much of the striker's run is left (1 = just started, 0 = arrived), for the pressure ring. */
 export const pressure=(w:World)=>w.phase==='feet'?Math.max(0,1-w.t/DUR.feet):0;
 export const clockText=(s:number)=>{const m=Math.floor(s/60),r=Math.floor(s%60);return `${m}:${String(r).padStart(2,'0')}`;};
+
+// ---- The film (Oct 9 2026): one scripted back-pass clip per law, sampled by time --------------------------------------------
+/**
+ * The crank-and-lever film at the start of the room (the hall's zoetrope, made hands-on): the same 6.2 seconds of play under each
+ * law. Old law: 4 kicks it back, the keeper picks it up, holds it while nobody may challenge, then rolls it out. New law: the same
+ * back-pass, but the keeper must play it with the feet, so the ball keeps moving (two quick passes in the same time).
+ * Deterministic and pure: the clip is stepped once at CLIP_FPS and cached, so scrubbing backwards and forwards (and the Node test)
+ * always see the same frame for the same time.
+ */
+export const CLIP_LEN=DUR.back+DUR.hold+DUR.roll+.2;
+export const CLIP_FPS=60;
+/** When the new-law keeper plays the ball with the feet (seconds after it reaches the feet). */
+export const CLIP_TOUCH=.45;
+const cloneWorld=(w:World):World=>{const cp=(r:Record<Actor,Pt>)=>Object.fromEntries(Object.entries(r).map(([k,v])=>[k,copy(v)])) as Record<Actor,Pt>;
+ return {...w,pos:cp(w.pos),from:cp(w.from),ball:copy(w.ball),ballFrom:copy(w.ballFrom)};};
+const CLIPS=new Map<Era,World[]>();
+function buildClip(era:Era):World[]{
+ const w=createWorld(era),out:World[]=[];passBack(w);out.push(cloneWorld(w));
+ const n=Math.round(CLIP_LEN*CLIP_FPS);
+ for(let i=1;i<=n;i++){
+  step(w,1/CLIP_FPS);
+  if(era==='new'&&w.phase==='feet'&&w.t>=CLIP_TOUCH)footPass(w,freeTarget(w));
+  if(w.phase==='idle'&&i<n-DUR.back*CLIP_FPS)passBack(w);
+  out.push(cloneWorld(w));
+ }
+ return out;
+}
+/** The clip's world at time t (seconds, clamped to 0…CLIP_LEN). Treat the result as read-only. */
+export function clipAt(era:Era,t:number):World{
+ let c=CLIPS.get(era);if(!c){c=buildClip(era);CLIPS.set(era,c);}
+ return c[Math.max(0,Math.min(c.length-1,Math.round(t*CLIP_FPS)))];
+}
+/** Copy a clip frame into a persistent world (so the painter's stride/trail memory carries across scrubbed frames). */
+export function loadInto(dst:World,src:World){Object.assign(dst,cloneWorld(src));return dst;}
+/** The times (seconds) where the clip's phase changes, plus the end: the key frames a reduced-motion PLAY steps between. */
+export function clipKeys(era:Era):number[]{
+ const out:number[]=[];let prev=clipAt(era,0).phase;const n=Math.round(CLIP_LEN*CLIP_FPS);
+ for(let i=1;i<=n;i++){const p=clipAt(era,i/CLIP_FPS).phase;if(p!==prev){out.push(i/CLIP_FPS);prev=p;}}
+ if(out[out.length-1]!==n/CLIP_FPS)out.push(n/CLIP_FPS);
+ return out;
+}

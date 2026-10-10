@@ -118,4 +118,42 @@ for(const hz of [30,60,120]){const s=active(WALL_X[0],WALL_Y+60,0,-700);advance(
 {let centre=0,n=80;for(let k=0;k<n;k++){const s=createPinballState();s.time=k*.53+(k%2)*.3;s.keeper=150+((k*37)%70);launchPinball(s);
   for(let i=0;i<480*10&&s.phase==='playing';i++){const y=s.ball.y;sub(s);if(y<525&&s.ball.y>=525&&s.ball.x<341){if(s.ball.x>162&&s.ball.x<198)centre++;break;}}}
  assert.ok(centre/n<=.15,`untouched launches into the centre gap: ${centre}/${n}`);}
+// 15. Keeper parry ("keeper bumper"): a firm shot is punched out WIDE and opens a
+// rebound window; a soft one is just held. A follow-up goal is a REBOUND goal.
+{const s=active(180,108,0,-560);s.keeper=180;s.keeperTarget=180;sub(s,40);
+ assert.equal(s.sfx.parry,1,'firm shot is parried');assert.equal(s.cue,'save','a parry is still a save');assert.ok(s.rebound>2,'rebound window open');
+ assert.ok(Math.abs(s.ball.vx)>140&&s.ball.vy>0,`parry goes wide and down-table (${s.ball.vx.toFixed(0)},${s.ball.vy.toFixed(0)})`);
+ Object.assign(s.ball,{x:130,y:49,vx:0,vy:-400});advance(s,.03);assert.equal(s.phase,'goal');assert.equal(s.lastRebound,true);assert.equal(s.stats.rebounds,1);assert.ok(s.lastGoalPoints>=500+P.REBOUND_BONUS,'rebound goal pays the bonus');}
+{const s=active(180,100,0,-150);s.keeper=180;s.keeperTarget=180;sub(s,60);assert.equal(s.sfx.parry,0,'a soft shot is not parried');assert.equal(s.rebound,0);}
+// 16. Wall pass: strike, rebound off a board/flag/rail, meet it first time with the other foot.
+{const s=active(140,528,0,250);advance(s,.12,{left:true,right:false});assert.equal(s.sfx.flipper,1);advance(s,.15);
+ s.reboundAt=s.time;s.flipperCooldown=[0,0];Object.assign(s.ball,{x:220,y:528,vx:0,vy:250});const score=s.score;advance(s,.12,{left:false,right:true});
+ assert.equal(s.cue,'wallPass');assert.equal(s.stats.wallPasses,1);assert.ok(s.score-score>=P.WALL_PASS_POINTS);assert.ok(s.moveTime>13,'a wall pass lights the goal');}
+{const s=active(140,528,0,250);advance(s,.12,{left:true,right:false});advance(s,.15);s.flipperCooldown=[0,0];Object.assign(s.ball,{x:220,y:528,vx:0,vy:250});advance(s,.12,{left:false,right:true});
+ assert.equal(s.stats.wallPasses,0,'switching feet without a rebound is a combination, not a wall pass');}
+// 17. 2v1 multiball: finishing a mode serves a second ball; save, end, promotion, double goals, ball-ball contact.
+{const s=active(180,300,0,0);s.table.mode='freekick';s.table.modeTime=30;s.table.wall=[0,1,0];Object.assign(s.ball,{x:WALL_X[1],y:WALL_Y+20,vx:0,vy:-500});sub(s,30);
+ assert.equal(s.table.modesDone&1,1);assert.equal(s.extraLive,true,'mode completion starts the 2v1');assert.ok(s.mbSave>9);assert.ok(s.extra.x>341&&s.extra.vy<0,'second ball comes up the launch lane');
+ Object.assign(s.extra,{x:180,y:630,vx:0,vy:400});sub(s,2);assert.equal(s.extraLive,true,'drain during the multiball save is played back in');assert.ok(s.extra.x>341);assert.equal(s.balls,3);
+ s.mbSave=0;Object.assign(s.extra,{x:180,y:630,vx:0,vy:400});sub(s,2);assert.equal(s.extraLive,false,'a later drain ends the 2v1');assert.equal(s.balls,3,'the 2v1 never costs a ball');assert.equal(s.cue,'mbEnd');assert.equal(s.phase,'playing');
+ assert.ok(P.startMultiball(s));s.mbSave=0;Object.assign(s.extra,{x:200,y:300,vx:0,vy:0});Object.assign(s.ball,{x:180,y:630,vx:0,vy:400});sub(s,2);
+ assert.equal(s.extraLive,false);assert.ok(Math.abs(s.ball.x-200)<3,'main ball drained: the other ball carries on');assert.equal(s.phase,'playing');
+ assert.ok(P.startMultiball(s));const goals=s.goals;Object.assign(s.ball,{x:180,y:49,vx:0,vy:-400});sub(s,10);
+ assert.equal(s.phase,'playing','a 2v1 goal does not stop play');assert.equal(s.goals,goals+1);assert.equal(s.cue,'mbGoal');assert.ok(s.lastGoalPoints>=1000,'2v1 goals count double');assert.ok(s.ball.x>341,'the scorer is served again');}
+{const s=active(150,420,300,0);assert.ok(P.startMultiball(s));s.ball.vy=0;Object.assign(s.extra,{x:166,y:420,vx:-300,vy:0});sub(s,8);assert.ok(s.ball.vx<0&&s.extra.vx>0,'two balls knock into each other');}
+{const s=active(180,200,0,-300);P.startMultiball(s);Object.assign(s.extra,{x:130,y:480,vx:0,vy:350});assert.equal(P.pinballReadyFoot(s),0,'the timing light also reads the second ball');}
+// 18. Match clock: half time, stoppage time, full time with a kept-ball bonus; the Cup Final always finishes.
+{const s=active(60,300,0,0);s.clock=P.PINBALL_MATCH_TIME/2-1e-4;sub(s);assert.equal(s.halfTime,true);assert.equal(s.cue,'halfTime');assert.equal(P.pinballMinute(s),"45'");
+ s.clock=P.PINBALL_MATCH_TIME-1e-4;sub(s);assert.ok(s.stoppage>=0);assert.equal(s.cue,'stoppage');assert.equal(P.pinballMinute(s),"90+1'");
+ const score=s.score;s.stoppage=P.PINBALL_STOPPAGE-1e-4;sub(s,2);assert.equal(s.phase,'over','stoppage time runs out: full time');assert.equal(s.fullTimeBonus,3*P.PINBALL_FULLTIME_BALL);assert.ok(s.score-score>=1500);
+ assert.match(F.pinballTableMessage(s),/^Full time · \+1,500 for balls kept · /);}
+{const s=active(60,300,0,0);s.clock=P.PINBALL_MATCH_TIME;s.stoppage=P.PINBALL_STOPPAGE+1;s.table.mode='final';s.table.modeTime=30;sub(s,4);assert.equal(s.phase,'playing','the Cup Final plays on past full time');
+ s.table.modeTime=1e-4;sub(s,4);assert.equal(s.phase,'over');}
+{const s=active(180,49,0,-400);s.clock=P.PINBALL_MATCH_TIME;s.stoppage=3;advance(s,.03);assert.equal(s.phase,'goal','a stoppage-time winner still counts');advance(s,1.6);assert.equal(s.phase,'over');assert.equal(s.cue,'fullTime');}
+{const s=createPinballState();launchPinball(s);const t=s.clock;s.phase='ready';advance(s,2);assert.equal(s.clock,t,'the clock stops while the ball waits on the plunger');}
+// 19. Full-time takeaway is one kid-sized next step.
+{const s=createPinballState();assert.match(F.pinballTakeaway(s),/reach your flipper/);s.goals=2;assert.match(F.pinballTakeaway(s),/kickboard/);s.stats.wallPasses=1;s.stats.parries=2;assert.match(F.pinballTakeaway(s),/rebound/);s.stats.rebounds=1;assert.match(F.pinballTakeaway(s),/posts/);s.stats.corners=1;assert.match(F.pinballTakeaway(s),/ring/,'a run that never read a rebound points at the landing ring');s.stats.reads=2;s.stats.perfect=3;assert.match(F.pinballTakeaway(s),/strikers/);assert.match(F.pinballTakeaway(s),/2 rebounds read, 3 perfect/);
+ {const e=createPinballState();e.goals=1;e.stats.early=3;e.stats.perfect=1;assert.match(F.pinballTakeaway(e),/longer/,'early pressers are told to wait');}
+ for(const t of [F.pinballTakeaway(createPinballState()),F.pinballTakeaway(s)])assert.ok(t.length<80,t);}
+console.log('PASS pinball match: keeper parry + rebound goals, wall pass, 2v1 multiball (save, end, promotion, double goals, ball contact), match clock (half time, stoppage, full time, final), takeaway');
 console.log('PASS pinball table: no tunnelling (wall/flags/kickboards/cones), kickboard kick, soft-entry path, wall reset safety, lanes + lane change + skill shot, G-O-A-L saver, cones + dugout, three modes, bonus x multiplier, assist, stars, Cup Final, 30/60/120Hz, launch-drain rate');

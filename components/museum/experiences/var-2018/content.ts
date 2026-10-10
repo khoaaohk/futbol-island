@@ -1,6 +1,7 @@
 /**
  * var-2018 copy. The four CASE_FACTS are the case's own facts in lib/endgame/museum.ts, word for word (the test checks). The
- * rest is new, true and cited in SOURCES below. The replay is a made-up PRACTICE moment, never a real match.
+ * rest is new, true and cited in SOURCES below (the 440 checks / 19 reviews in 62 matches re-checked Oct 9 2026 against FIFA's
+ * figures as reported by Gulf News and The Quint). The replay is a made-up PRACTICE moment, never a real match.
  */
 export const CASE_FACTS={
  first:'The video assistant referee (VAR) was first used at a men’s World Cup in 2018, in Russia.',
@@ -35,7 +36,21 @@ export const REAL_CASE={
   'Then he decided: penalty. It was the first penalty ever given with VAR at a World Cup. Griezmann scored it.',
  ],
  lesson:'VAR spotted it. The referee decided it.',
+ /** What the monitor's slate says as each line of the story unfolds. */
+ slates:['Play on','Look again','Penalty!'],
 };
+
+/** The quick check at the end (Oct 9 2026): one question per idea the room taught. Every answer is in the IFAB Laws above. */
+export const QUIZ:readonly {q:string;options:readonly string[];answer:number;why:string;hint:string}[]=[
+ {q:'Who makes the final decision: the VAR or the referee?',options:['The VAR','The referee on the pitch'],answer:1,
+  why:'The referee. VAR only advises: “The final decision is always taken by the referee.”',hint:'Think back to when you swapped chairs.'},
+ {q:'Can VAR check whether it should have been a corner kick?',options:['Yes','No'],answer:1,
+  why:'No. VAR only helps with goals, penalties, straight red cards and mistaken identity.',hint:'Remember the booth: which things could VAR check?'},
+ {q:'At its deepest, a slice of the ball is still on the line. Goal?',options:['Goal','No goal'],answer:1,
+  why:'No goal. The WHOLE ball must cross the WHOLE line.',hint:'Look at the goal-line camera again in your head: was ALL of the ball over?'},
+ {q:'For offside, which part of a player does NOT count?',options:['The foot','The head','The arm'],answer:2,
+  why:'The arm. You can’t score with your hands or arms, so they don’t count for offside.',hint:'Which line did the room tell you was the wrong one?'},
+];
 export const TOURNAMENT_NUMBERS='In the first 62 matches of Russia 2018, VAR quietly made more than 440 checks, but asked for a second look only 19 times.';
 
 export const SOURCES:readonly {title:string;url:string}[]=[

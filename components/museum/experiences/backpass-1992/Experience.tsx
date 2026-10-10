@@ -1,6 +1,5 @@
 'use client';
-import {useCallback,useEffect,useRef,useState,type CSSProperties,type PointerEvent as ReactPointerEvent} from 'react';
-import {flushSync} from 'react-dom';
+import {useCallback,useEffect,useLayoutEffect,useRef,useState,type CSSProperties,type PointerEvent as ReactPointerEvent} from 'react';
 import ExperienceBack from '../ExperienceBack';
 import {museumSfx,unlockMuseumAudio} from '@/lib/museum/museumSound';
 import type {ExperienceProps} from '../types';
@@ -8,6 +7,8 @@ import styles from './Experience.module.css';
 import {createWorld,step,passBack,footPass,pickUp,isBusy,freeTarget,clockText,type Era,type World,type SimEvent,type Target} from './sim';
 import {drawWorld,hitActor} from './draw';
 import {HISTORY,EXTRA_SOURCES,FICTION_NOTE} from './content';
+import Film from './Film';
+import {springSamples} from './spring';
 
 /**
  * backpass-1992 · The Time-Wasting Machine (Oct 5 2026). Two mini-matches side by side: the same team, the same 1–0 lead, the
@@ -34,12 +35,14 @@ const snap=(w:World):Hud=>({phase:w.phase,clock:Math.floor(w.clock),wasted:Math.
 const same=(a:Hud,b:Hud)=>a.phase===b.phase&&a.clock===b.clock&&a.wasted===b.wasted&&a.chances===b.chances&&a.good===b.good&&a.hands===b.hands&&a.rounds===b.rounds&&a.marked===b.marked;
 const IDLE_NOTE:Record<Era,Note>={old:{text:'Old law: the keeper may pick up a back-pass.',tone:'calm'},new:{text:'New law: no hands from a kicked back-pass.',tone:'calm'}};
 const WASTE_MAX=150,ROUNDS=3;
-/** Run a DOM change inside a View Transition when the browser has one and motion is welcome. */
-const transition=(reduced:boolean,fn:()=>void)=>{
- const d=document as Document&{startViewTransition?:(cb:()=>void)=>unknown};
- if(reduced||typeof d.startViewTransition!=='function'){fn();return;}
- d.startViewTransition(()=>flushSync(fn));
-};
+/** FLIP with a real spring: play an element from a measured box (`from`) into where it now sits, keyframes sampled from a
+ *  damped spring (Web Animations, finite). Skipped under reduced motion. */
+function flipFrom(el:HTMLElement,from:DOMRect,delay:number,reduced:boolean){
+ if(reduced||typeof el.animate!=='function')return;const to=el.getBoundingClientRect();if(!to.width||!to.height)return;
+ const dx=from.left-to.left,dy=from.top-to.top,sx=from.width/to.width,sy=from.height/to.height,{frames,ms}=springSamples(190,21);
+ el.style.transformOrigin='0 0';
+ el.animate(frames.map(f=>{const q=1-f.p;return {transform:`translate(${(dx*q).toFixed(2)}px,${(dy*q).toFixed(2)}px) scale(${(1+(sx-1)*q).toFixed(4)},${(1+(sy-1)*q).toFixed(4)})`,opacity:delay?Math.min(1,f.p*1.6):1,offset:f.offset};}),{duration:ms,delay,fill:'backwards'});
+}
 
 export default function Experience({exhibit,onClose}:ExperienceProps){
  const worlds=useRef<Record<Era,World>>({old:createWorld('old'),new:createWorld('new')});
@@ -52,6 +55,9 @@ export default function Experience({exhibit,onClose}:ExperienceProps){
  const [unlocked,setUnlocked]=useState<Unlock[]>(['intro']);
  const [story,setStory]=useState(false);
  const [fullTime,setFullTime]=useState(false);
+ // The room opens on the tape (the story beats); the two-pitch match follows it.
+ const [mode,setMode]=useState<'film'|'match'>('film');
+ const flipRect=useRef<DOMRect|null>(null),stageRef=useRef<HTMLDivElement>(null);
  const unlock=useCallback((u:Unlock)=>setUnlocked(l=>l.includes(u)?l:[...l,u]),[]);
  const sting=useCallback((era:Era,text:string,tone:Tone)=>setStings(s=>({...s,[era]:{text,tone,id:++stingId.current}})),[]);
 
@@ -108,10 +114,9 @@ export default function Experience({exhibit,onClose}:ExperienceProps){
   for(const era of ['old','new'] as Era[]){const c=canvases.current[era];if(c)ro.observe(c);}
   const vis=()=>{if(document.visibilityState!=='visible'){cancelAnimationFrame(raf.current);raf.current=0;}else if(isBusy(worlds.current.old)||isBusy(worlds.current.new))wake();};
   document.addEventListener('visibilitychange',vis);
-  passRef.current?.focus({preventScroll:true});
   return()=>{ro.disconnect();document.removeEventListener('visibilitychange',vis);cancelAnimationFrame(raf.current);raf.current=0;
    for(const era of ['old','new'] as Era[]){const c=canvases.current[era];if(c){c.width=1;c.height=1;}}};// release the bitmaps
- },[draw,wake]);
+ },[draw,wake,mode]);
 
  // Escape closes the story panel first, then the full-time card, then the room.
  useEffect(()=>{const key=(e:KeyboardEvent)=>{if(e.key!=='Escape')return;e.preventDefault();if(story)setStory(false);else if(fullTime)setFullTime(false);else onClose();};
@@ -133,11 +138,19 @@ export default function Experience({exhibit,onClose}:ExperienceProps){
  };
  const doFoot=(t:Target)=>{if(footPass(worlds.current.new,t)){museumSfx.kick();setNotes(n=>({...n,new:{text:`Passed with the feet to number ${t==='W'?7:8}…`,tone:'calm'}}));wake();}};
  const doHands=()=>{if(pickUp(worlds.current.new)){museumSfx.whistle();setNotes(n=>({...n,new:{text:'Whistle! Indirect free kick to the other team.',tone:'bad'}}));sting('new','Free kick to them','bad');impact('new',false);unlock('handball');wake();}};
- const replay=()=>transition(reduced.current,()=>{
+ const replay=()=>{
   worlds.current={old:createWorld('old'),new:createWorld('new')};
   setHud({old:snap(worlds.current.old),new:snap(worlds.current.new)});setNotes(IDLE_NOTE);setStings({old:null,new:null});setFullTime(false);
-  draw('old');draw('new');requestAnimationFrame(()=>passRef.current?.focus({preventScroll:true}));
- });
+  draw('old');draw('new');passRef.current?.focus({preventScroll:true});
+  // a quick "new tape" blink on both feeds (WAAPI, finite) instead of a View Transition
+  if(!reduced.current)stageRef.current?.querySelectorAll<HTMLElement>('[data-era]').forEach((el,i)=>el.animate?.([{opacity:.25,transform:'scale(.985)'},{opacity:1,transform:'none'}],{duration:320,delay:i*60,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'}));
+ };
+ const toMatch=(from:DOMRect|null)=>{flipRect.current=from;setStory(false);setMode('match');};
+ // FLIP: the tape's TV grows into the "before" feed, the "after" feed follows (staggered).
+ useLayoutEffect(()=>{if(mode!=='match')return;const from=flipRect.current;flipRect.current=null;
+  const ws=stageRef.current?.querySelectorAll<HTMLElement>(':scope>section[data-era]');
+  if(from&&ws)ws.forEach((el,i)=>flipFrom(el,from,i*90,reduced.current));
+  passRef.current?.focus({preventScroll:true});},[mode]);
 
  // Direct manipulation: tap your number 4 to pass back; on the new-law pitch tap 7 or 8 to pass, or the keeper to grab it.
  const tap=(era:Era)=>(e:ReactPointerEvent<HTMLCanvasElement>)=>{
@@ -190,13 +203,17 @@ export default function Experience({exhibit,onClose}:ExperienceProps){
   </section>;};
 
  const ftMax=Math.max(1,hud.old.wasted,hud.new.wasted);
- return <section role="dialog" aria-modal="true" aria-label={`${exhibit.year} · ${exhibit.title}: the time-wasting machine`} data-museum-experience="backpass-1992" className={styles.root}>
+ return <section role="dialog" aria-modal="true" aria-label={`${exhibit.year} · ${exhibit.title}: the time-wasting machine`} data-museum-experience="backpass-1992" data-mode={mode} className={styles.root}>
   <ExperienceBack onClose={onClose}/>
   <div className={styles.top}>
-   <h1 className={styles.title}><span className={styles.kicker}>{exhibit.year} · {exhibit.title}</span>The Time-Wasting Machine</h1>
-   <button type="button" className={styles.storyBtn} onClick={()=>setStory(true)} aria-haspopup="dialog">The real story</button>
+   <h1 className={styles.title}><span className={styles.kicker}>{exhibit.year} · {exhibit.title}</span>{mode==='film'?'The Time-Wasting Tape':'The Time-Wasting Machine'}</h1>
+   <div className={styles.topBtns}>
+    {mode==='match'&&<button type="button" className={styles.storyBtn} onClick={()=>setMode('film')}>The tape</button>}
+    <button type="button" className={styles.storyBtn} onClick={()=>setStory(true)} aria-haspopup="dialog">The real story</button>
+   </div>
   </div>
-  <div className={styles.stage}>
+  {mode==='film'?<Film facts={exhibit.facts} forYourGame={exhibit.forYourGame} onPlayMatch={toMatch} onStory={()=>setStory(true)}/>:<>
+  <div className={styles.stage} ref={stageRef}>
    {panel('old')}{panel('new')}
    {fullTime&&<div className={styles.ft} role="dialog" aria-modal="false" aria-labelledby="bp-ft-title" onClick={e=>{if(e.target===e.currentTarget)setFullTime(false);}}>
     <div className={styles.ftCard}>
@@ -227,6 +244,7 @@ export default function Experience({exhibit,onClose}:ExperienceProps){
     <span className={styles.passText}>{done?'Full time':'Pass it back'}{!done&&hud.old.rounds>0&&<small>{roundsLeft} left</small>}</span>
    </button>
   </div>
+  </>}
   {story&&<div className={styles.sheetWrap} onClick={e=>{if(e.target===e.currentTarget)setStory(false);}}>
    <div className={styles.sheet} role="dialog" aria-modal="true" aria-labelledby="bp-story-title">
     <div className={styles.sheetHead}><h2 id="bp-story-title">The real story of 1992</h2>

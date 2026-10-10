@@ -199,6 +199,8 @@ export function createRunnerSoundtrack(getContext: () => AudioContext | null) {
       else if (kind === "shield") { tone(sfx, now, 880 * jitter(0.02), 0.08, 0.3, "triangle", 660); hiss(sfx, now, 0.15, 0.06, "highpass", 4000); }
       else if (kind === "boss") { roar(now, 0.08, 1.2); tone(sfx, now, 110, 0.12, 0.35, "triangle", 165); }
       else if (kind === "route") whoosh(now, 0.07, 0.5, s.lane < 0 ? -0.5 : 0.5, 1800);
+      // Cut inside a bend: a short whoosh panned to the inside plus a bright two-note lift.
+      else if (kind === "inside") { whoosh(now, 0.06, 0.35, s.lane < 0 ? -0.6 : 0.6, 2200); tone(sfx, now + 0.04, 587, 0.05, 0.1, "triangle", 880); }
       else if (kind === "mission") { tone(sfx, now, 784, 0.06, 0.12, "sine", 784); tone(sfx, now + 0.1, 988, 0.06, 0.12, "sine", 988); tone(sfx, now + 0.2, 1319, 0.07, 0.3, "sine", 1319); }
     }
     last.multiplier = multiplier; last.level = s.level; last.cuts = s.cuts; last.jumps = s.jumps; last.landings = s.landings; last.slides = s.slides; last.nearMisses = s.nearMisses; last.collected = s.collected; last.event = s.event;

@@ -28,7 +28,17 @@ export function routeFor(id:string,heading:boolean):Step[]{
 }
 export const packGateOpen=(p:CatalogPack,totalStars:number)=>totalStars>=p.gate;
 /** Ground-ball ideas that remix well (no headers, so they work in every mode). */
-const DAILY_POOL=['fp-find-a-friend','fp-run-onto-it','fp-bend-it-round','tm-give-and-go','tm-third-friend','tm-pull-it-back','bp-through-the-gap','bp-in-behind','tr-make-the-run','tr-beat-the-trap','ca-break-fast','sp-lay-it-off'];
+const DAILY_POOL=['fp-find-a-friend','fp-run-onto-it','fp-bend-it-round','tm-give-and-go','tm-third-friend','tm-pull-it-back','bp-through-the-gap','bp-in-behind','tr-make-the-run','tr-beat-the-trap','ca-break-fast','sp-lay-it-off','ss-look-up','ss-set-and-go','ss-third-runner'];
 export const DAILY_TEMPLATES:Record<string,DailyTemplate>=Object.fromEntries(DAILY_POOL.map(id=>{const sc=ALL_SCENARIOS.find(s=>s.id===id)!,r=ALL_SOLUTIONS[id];return [id,{scenario:sc,solution:r.solution,naive:r.naive}];}));
 /** 1–3 difficulty pips from the measured bot ratings (scripts/pass-puzzle-curve.cjs). */
 export function pips(id:string):1|2|3{const r=DIFFICULTY[id]??50;return r<34?1:r<58?2:3;}
+/** Every puzzle in pack-map order (pack by pack, each pack in its teaching order). */
+export const MAP_ORDER:Scenario[]=ALL_PACKS.flatMap(p=>ALL_SCENARIOS.filter(s=>s.pack===p.id));
+/** What "Next puzzle" leads to after `id`: the next puzzle along the pack map, or the next pack that
+ *  is still closed (with the stars it needs), or nothing at the end of the map. */
+export function nextOnMap(id:string,totalStars:number):{scenario:Scenario;newPack:boolean}|{locked:CatalogPack;need:number}|null{
+  const i=MAP_ORDER.findIndex(s=>s.id===id),next=i>=0?MAP_ORDER[i+1]:undefined;if(!next)return null;
+  const pack=ALL_PACKS.find(p=>p.id===next.pack);
+  if(pack&&!packGateOpen(pack,totalStars))return {locked:pack,need:pack.gate-totalStars};
+  return {scenario:next,newPack:next.pack!==MAP_ORDER[i].pack};
+}

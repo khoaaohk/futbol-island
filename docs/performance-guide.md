@@ -1,5 +1,229 @@
 # Performance reference for future Futbol Island updates
 
+## Coaches Board tactics board — October 9, 2026 (local, not deployed)
+
+The Coaches Board (`components/CoachesBoard.tsx`) now opens on a magnetic **Tactics board** (`components/coaches-board/`,
+`lib/coaches/board/`), with the old badges/goals/shapes board kept as its **Progress** tab.
+
+**Rendering choice: DOM counters over static SVG, not one canvas.**
+- The pitch is one SVG string, injected once per format, zoom and size. It never repaints while counters move.
+- Counters are `<button>`s moved only by `translate3d`. They get `will-change` only while moving (`data-moving`), so a drag is compositor work with no pitch repaint.
+- The buttons double as the keyboard and screen-reader targets: Tab, arrow keys, Delete, and a label naming each counter's zone.
+- Arrows are SVG paths. Only arrows attached to a moving counter get a new `d` each frame.
+- A single canvas would have redrawn the whole board every frame, and would have needed a parallel DOM for accessibility.
+- The PNG export reuses the same SVG builders (`lib/coaches/board/art.ts`, `render.ts`) and rasterises once, only when asked.
+
+**One loop, only while something moves.** `components/coaches-board/stage.ts` owns the only `requestAnimationFrame`. It runs only while:
+- a finger drags;
+- a counter glides or settles (one closed-form damped spring per counter, so it is frame-rate independent and settles exactly on its resting point);
+- a play runs or is scrubbed.
+
+It then stops.
+- A React commit inside a frame (the step label changing) cannot start a second loop (guarded; unit-tested).
+- No timers poll; the only timeouts are the debounced save, the toast and the drop animation.
+- The playhead knob moves by `transform`.
+
+**Measured** (headless Chromium, iPhone 15 profile at 390×844 with CDP touch; WebKit iPhone profile with mouse-driven pointers):
+
+| Moment | Result |
+|---|---|
+| Page-wide rAF at rest | **0 in 3 s** after every interaction (phone, WebKit, 1440 desktop). Landscape 844×390 once saw 2 page rAF and 0 board frames. |
+| Drag and glide | 60 frames per second while dragging. A 1 s drag plus its glide: 176 frames; the glide is ~1 s with one overshoot (a soft magnet settle); then the loop stops. |
+| Production build, 4× CPU throttle: 1 s drag + glide | 244 ms main-thread task, 2 layouts. |
+| Production build, 4× CPU throttle: 5-step example played through | 6.9 s; 409 board frames (one per frame); 12 ms layout. |
+
+**Bundle.**
+- Island first load: 969 kB, the same as the rest of the tree. The only island-boot addition is the `fi2-coach-plays-v1` string on the saves allowlist.
+- Loaded with the Coaches Centre: a 31 KB / 10.7 KB gz chunk (the IDP link, examples, storage and the play schema).
+- Loaded when the Coaches Board opens: a 77.5 KB / 26.7 KB gz chunk (the board UI). No new dependencies; share links use the browser's CompressionStream.
+
+**Validation.**
+- `tests/coaches-board.cjs` (in `npm test`, 12 groups), including a fake-rAF stage test: 0 frames at rest, the glide stops, playback stops, and one frame request per frame.
+- Headless play-throughs at 390 portrait (touch), 844×390 landscape (touch), 1440 desktop (mouse) and WebKit (iPhone 15 profile).
+- `npm test` passes, and so does `device-guards` (inputs ≥ 16 px).
+
+This is reduced, bounded work measured in desktop emulation, not iPhone temperature evidence.
+
+## Mowing stripes on the grass pitches — October 9, 2026 (local, not deployed)
+
+Light/dark mown bands ("grass lines") on Old Town Ground (7v7), Club Grounds (9v9), Eleven Park (11v11) and the rooftop
+knockout turf; the arcade's Island Strikers and pass-puzzle pitches (already striped) now draw their bands as one mesh.
+No stripes on the Palm Coast rooftop futsal court (hard court), the pocket futsal cage (16 × 9 m turf, futsal-sized) or the
+Sharks Beach sand court. Code: `lib/graphics/pitchStripes.ts`, `lib/town/fields.ts` (`pitchStripePlan`), `lib/town/world.ts`
+(rooftop turf), `lib/arcade/strikerScene.ts`, `lib/arcade/passPuzzleScene.ts`. Test: `tests/pitch-stripes.cjs` (in `npm test`).
+
+- **Technique: vertex colours on the slab each pitch already draws.** The venue's `BoxGeometry` slab is replaced by the same
+  footprint with its top face cut into bands; a light/dark factor (×1.06 / ×0.94 linear, about ±3% displayed) sits in a `color`
+  attribute and the venue material turns on `vertexColors`. That is the exact shader program the batched island palette paint
+  already compiles, so no new program; the material is still the one per venue that fieldLighting.ts blends at night, so the
+  floodlight and time-of-day grade drive the stripes for free. No texture, overlay plane, `onBeforeCompile` or extra mesh.
+- **Layout.** Bands run touchline to touchline, an even number between the goal lines so halfway is a band edge, ~5 m each
+  (7v7: 10 × 5.22 m, 9v9: 12 × 5.8 m, 11v11: 18 × 5.54 m, so its 5.5 m and 16.5 m box edges land on band edges), continuing into
+  the run-off. Eleven Park adds a fainter (×1.02 / ×0.98) cross-mown pass in 12 lanes. Teaching option, not added as copy:
+  "each stripe is about 5 m" for judging distance in lessons.
+- **Rooftop knockout turf**: eight 5.5 m palette boxes in two shades replace the one turf box; both shades batch into the same
+  vertex-colour chunk draw as before (+84 triangles, castShadow unchanged).
+- **Arcade**: Strikers' ten band meshes and the pass puzzle's one-mesh-per-band become one two-group mesh with the same two
+  plain materials (2 draws, no vertex-colour variant). The pass puzzle now also releases its stripe materials on rebuild.
+
+Measured (production builds of the same tree with and without the change, scratch copies, headless Chromium `--use-gl=angle`
+on ANGLE Metal / Apple M4, interleaved A/B, 3 runs each, 8 s samples; phone = 390×844 DPR 3 emulation with the game's own cap
+giving DPR 1.75 and a 30 fps cap, 4× CPU throttle; desktop = 1280×800 DPR 2, uncapped; GPU time from
+`EXT_disjoint_timer_query_webgl2` around `renderer.render`):
+
+| Scene | Draw calls | Triangles | Programs | Textures | Frame ms med (before → after) | GPU ms med, 3 runs (before → after) |
+| --- | --- | --- | --- | --- | --- | --- |
+| Phone, 7v7 | 104 → 104 | +20 | 46 → 46 | 46 → 46 | 33.3 → 33.3 | 2.85/2.66/1.72 → 2.73/1.83/2.70 |
+| Phone, 11v11 | 102 → 102 | +556 | 46 → 46 | 54 → 54 | 33.3 → 33.3 | 2.69/2.54/2.52 → 2.60/2.57/2.58 |
+| Phone, 7v7 lesson | 26 → 26 | +20 | 49–50 → 49–50 | 54–56 | 33.3 → 33.3 | 1.22/0.87/1.38 → 1.41/1.41/1.42 |
+| Desktop, 7v7 | 179 → 179 | +20 | 46 → 46 | 58 → 58 | 16.7 → 16.7 | 6.79/7.09/7.22 → 7.33/7.37/7.23 |
+| Desktop, 11v11 | 178 → 178 | +624 | 58 → 58 | 81 → 81 | 16.7 → 16.7 | 4.96/7.35/7.36 → 7.57/7.58/7.42 |
+| Desktop, 7v7 lesson | 26 → 26 | +20 | 61 → 61 | 81 → 81 | 16.7 → 16.7 | 4.83/4.84/4.86 → 4.94/4.97/4.84 |
+| Strikers, phone and desktop | 161 → 153 | unchanged (10 band meshes → 1) | 25 → 25 linked | — | — | — |
+
+The A/B runs used factors ×1.045/×0.955; the final ×1.06/×0.94 only changes the colour values (re-run: same draws, programs and
+triangles). Texture memory unchanged (87,182 KB island / 87,592 KB lesson, same texture count). Night (9v9, knockout too) and the rooftop
+knockout: same draw calls and programs before/after. Because the cross-build GPU medians swing more between runs (up to 2 ms)
+than between builds, the shader cost was isolated in one page: in the 7v7 lesson the pitch material was toggled stripes on/off
+every 3 s for 8 cycles (~400 GPU samples each): phone 1.192 vs 1.138, 0.850 vs 0.850, 0.826 vs 0.802 ms; desktop 4.007 vs
+4.264 ms. **No measurable added work**: identical draws, programs, textures and frame pacing, a few hundred extra triangles on
+Eleven Park (0.4% of the scene), GPU differences within run-to-run noise. This is emulation evidence, not an iPhone thermal
+measurement.
+
+Validation: `tests/pitch-stripes.cjs`, field-lighting, heat-render, seven-build-out-fields, prop-reactions, heat-pass3/4/5/6,
+heat-tiers, heat-idle, frame-cap, town, static-shadow-batches, npc-style-batches, striker and pass-puzzle tests, `tsc`. At the
+time of this note `device-guards` (TacticsBoard select font size) and `oct1-ui` (plan page) failed on other agents' in-progress
+files, unrelated to this change.
+
+## Save codes: what they cost at run time — October 9, 2026 (local, not deployed)
+
+Save codes (docs/save-codes.md, built from docs/accounts-design.md) add no timers, polling, loops or animation. Everything runs on
+events that already happen.
+
+- **Network.** A device without a code makes no save requests beyond one status GET (cached at the edge for a minute): on the
+  island's start (a code is required before playing, so a player without one is asked), when a save screen is about to show,
+  or the first time a real card or graduation is earned. A device with
+  a code makes one `check` on start, one save when the tab hides (keepalive), and at most one save per 2 minutes after a
+  milestone the stores already dispatch (lesson coins, graduations, stage complete, cards, purchases, daily coins). Each trigger
+  first compares an FNV-1a hash of the allowlisted keys with the last saved one and sends nothing when they match.
+  Measured on the production build (390×844, headless Chromium): boot `POST /api/save/check` (plus one download when the last
+  page-hide save's answer never arrived, to confirm the saved island is this one), then **0 requests in an idle minute**.
+- **CPU.** Building a snapshot reads ~60 localStorage strings and stringifies them (a few ms for a ~50 KB save), only at those
+  moments. Gzip uses the browser's CompressionStream; a page-hide save that already fits a 64 KB keepalive request is sent
+  uncompressed and synchronously, because a closing page may never get back from the async gzip.
+- **Bundle.** Island first-load JS 965 → 967 kB (+2 kB: the save-key constants the welcome-back card and Settings read);
+  arcade, Konbini and museum unchanged (131 / 344 / 270 kB). Measured against a build of the last commit. The sync client
+  (SaveSync) loads after hydration as its own chunk (components/saves/LazySaveSync.tsx); the word list, the restore boxes, the
+  chooser, the Settings card and the print card (with the `qrcode` package) are lazy chunks loaded only when opened.
+- **Wallet compaction** runs only on the uploaded copy, never on the device's own ledger (two tabs merging receipt sets by id
+  would otherwise double-count coins).
+
+Validation: `tests/game-saves.cjs` (12 groups, including a two-device client flow and the SQL on a throwaway Postgres);
+`npm test`; device specs gap-map-settings, island and the Paths "complete a quiz" on desktop-chromium, iphone-15 (WebKit) and
+pixel-7 against the production build with saving switched on. This is reduced, bounded work measured in desktop emulation, not
+iPhone temperature evidence.
+
+## Landing page /start — October 9, 2026 (local, not deployed)
+
+`/start` is a one-screen title page: the title, one line, a layered parallax island, and the save-code actions (`app/start/page.tsx`, `components/landing/*`). The game stays at `/`, and the `/?from=` rewrite is unchanged.
+
+**A save code is required to play** (user decision, Oct 9 2026).
+- **New player:** Start makes the code, shows it with the photo/print prompts and the "Which word comes first?" check, and only then shows Play.
+- **Returning player:** "I have a save code" opens the word boxes, then "Welcome back!" with Play.
+- **This browser already has a code** (`getLocalCode()`): "Welcome back" and Play straight away.
+- **Saving unavailable** (`isSavingAvailable()` false, the server down, create/restore failing, or the save module not loading): a deliberately different card, "Saving is taking a break — you can still play today", with Play. An outage never locks a kid out.
+- The landing uses the save-code agent's real components in their `required` mode, through `components/landing/saveCodeAdapter.tsx`. It holds no save logic.
+- Restore's own Play reloads the page, so the adapter first moves the address to `/` (`history.replaceState`) and the reload lands in the game.
+
+**How it is built.**
+- Static: `force-static`, so `next build` shows `○ /start` (8.81 kB route JS, 107 kB first-load JS with the 97.7 kB shared framework).
+- The art is server-rendered SVG in seven depth layers (`TitleArt.tsx`): sky/sun, far hills, sea glints, island, near pink hill, cast, foreground props.
+  - The vectors and colours are the loading-island art's, and the characters are the splash cast stills.
+  - The pink hill is drawn wider than the screen (x −600…1500), with headroom above its crest, so it curves off both sides.
+  - Its −90 px overscan exceeds the largest parallax shift (34 px).
+  - Checked at 390, 768, 1280, 1440, 1630, 1920 and 2560 px, at rest and at the four parallax extremes: no straight clip.
+- Client code:
+  - `TitleScene`: the parallax spring and the calm logic.
+  - `TitleActions`: the save flow and its FLIP morphs. The save module is loaded on demand right after mount, since save actions are the only thing on this screen.
+  - `PlayButton`: the shared NavigationButton with its shrink-to-icon press; it prefetches `/` once on idle after it appears.
+- No WebGL, canvas, video or audio.
+
+**Motion and heat.**
+- **Entrance:** one ~1.5 s CSS choreography. The letters drop with a springy stagger, the island rises, the cast pops in, and the buttons settle last.
+- **Parallax:**
+  - a spring (k 90, c 13.5) driven by the pointer on desktop, by device tilt on phones (only after a gesture: Android on the first touch, iOS through a Tilt button for the permission), by a horizontal touch drag, or by scroll;
+  - the rAF loop runs only while the spring moves and stops when it settles;
+  - `will-change` is set only while it moves (`data-moving`).
+- **Ambient loops** (palms, flag, sea glints, cast, balls, sun) are transform/opacity CSS:
+  - they pause after 8 s without input (`data-calm`, which also drops the tilt listener) and while the tab is hidden;
+  - input wakes them.
+- **Save flow:**
+  - the sheet grows out of the button that opened it, and folds into the Play or break card (WAAPI FLIP, transform only);
+  - the code tiles flip in;
+  - a riso "Saved!" stamp with an 18-piece confetti burst lasts about 1.1 s.
+- `prefers-reduced-motion`: nothing is attached, and every animation and transition is off (a static, complete scene).
+- **Measured** (production build, phone profile 390×844 DPR 3, headless Chromium):
+
+| Moment | Running CSS animations | rAF | Canvases |
+|---|---|---|---|
+| t = 3 s (ambient running) | 13 | 0 | 0 |
+| After the 8 s calm (t = 11–13 s) | 0 | 0 in 2 s | 0 |
+| After a tap | Wakes, then calms again 9 s later | 0 once the spring settles | 0 |
+| Hidden tab | 0 | 0 | 0 |
+
+- Desktop emulation only: this is not iPhone temperature evidence.
+
+**Page weight** (same profile):
+
+| Stage | Transferred |
+|---|---|
+| First load | **247 KB** in 19 requests (was 299 KB with the long showcase) |
+| After idle | +30 KB: the save module and its one status GET |
+
+- First load breaks down as: HTML 7 KB (gzip); CSS 44 KB; JS 118 KB; IslandBrush font 24 KB; images 54 KB (3 cast AVIFs ~33 KB, the entry grain 20 KB).
+- The game's JS (~860 KB) is prefetched only once Play is on screen.
+
+**Validation.**
+- `tests/landing.cjs` (in `npm test`) checks:
+  - the route is static, with no Play in the static HTML;
+  - Play appears only after a code, a returning code or a saving break;
+  - the adapter's required mode and the restore-into-the-game step;
+  - the spring settles, a slow frame is clamped, the tilt deadband holds, and the FLIP maths is right;
+  - rAF runs only while moving, the ambient loops pause when calm or hidden, and reduced motion is static;
+  - keyframes animate transform/opacity only, and there are no global view-transition rules;
+  - no WebGL; one h1, labelled buttons, AA contrast tokens, ≥16 px inputs.
+- `tests/device-guards.cjs`: 0 errors.
+
+**Play = the water loader (Oct 9 2026, replaces the morph hand-off).** Files: `components/landing/WaterPill.tsx`, `components/landing/waterLaunch.ts`, IslandLoading's tan mode. The earlier morph-into-IslandLoading hand-off is kept for reuse (`Handoff.tsx`, `handoffMotion.ts`), switched off by `HANDOFF_ENABLED=false` in `PlayButton.tsx`.
+
+Every Play is the big gold pill: the returning fast path, the end of a new code (the sheet folds into the pill), a restore (the sheet folds into the pill), and the saving break.
+
+1. The links and the other buttons fade and drop away (`[data-launch]`).
+2. Water rises in the pill while the game's code (`components/Town` and its module graph, the same chunks `/` needs) downloads and evaluates. The level follows an eased curve that stays below 90 % until the import resolves, then fills; minimum ~1.1 s. One rAF loop runs only while filling. The crest is a CSS loop, only while loading.
+3. The pill fades. The pink slides down, the characters and props hop away, and the island items bounce away (the loader's own motions).
+4. The island's sand expands over the whole screen (the loader's tan-wipe maths).
+5. The route switches. With `<html data-island-handoff="tan">` (or sessionStorage plus the inline script for a restore's reload), the game's `IslandLoading` starts as the same plain tan sheet: no art, characters or title. It keeps its normal exit timing and fades into the island. Without the flag (every cold start) nothing changes.
+
+Measured on a production build:
+- **Hand-off frame:** the last /start frame equals the first game frame (0.00 % of pixels differ) at 390×844 and 1440×900.
+- **Commit time:** the game route commits ~3.8 s after Play, because its code is already loaded.
+- **Restore:** the real `SaveCodeRestore` gained a backward-compatible `onPlay(apply)`, so the restore runs the water loader before applying and reloading.
+
+**Smoothness pass (Oct 9 2026; production, 390×844 DPR 3, touch, 4× CPU throttle).** Layouts dropped sharply in every phase. Dropped frames were already low and stayed low.
+
+| Phase | Dropped frames (before → after) | Layouts (before → after) |
+|---|---|---|
+| Entrance | 3 → 2 | 58 → 6 |
+| Ambient idle (3 s) | 0 → 0 | 180 → 0 |
+| Parallax drag | 0 → 0 | 109 → 1 |
+| Sheet + code | 1 → 2 (React mount) | 136 → 8 |
+| Water + exit | 0 → 0 | 203 → 50 |
+
+Fixes:
+- **Ambient loops:** the palms, flag and glint now animate as their own `<svg>` boxes, not as elements inside the island SVG. Those were repainted on the main thread every frame.
+- **Trick cast:** the timed 4-frame src swaps were removed. The trick loops play as CSS `steps()` sprite strips once `public/splash/cast.json` lists a `strip`; until then the stills show.
+- **Restore fold:** the sheet folds into the pill itself, with its label fading in, so no text is stretched.
+
 ## Holo foil on the live cards — October 8, 2026 (local, not deployed)
 
 The user approved the card-lab holo foil (section below) for the game.
@@ -4424,3 +4648,107 @@ off (dev, DNT/GPC, preview, labs, admin, localhost) every call returns at its fi
 allowlist (`lib/analytics/learningIds.generated.ts`, ~3.7 KB raw); the question text (`learningText.generated.ts`, ~79 KB) is
 server-only. Verified by tests/admin-analytics-learning.cjs (no timers added by counting; tracker has no intervals or frame loops).
 No device heat measurement was needed or claimed for this change.
+
+## var-2018 motion and blueprint pass (Oct 9 2026)
+
+The VAR room is restyled as a technical blueprint (static CSS grid paper, hairline rules, a title-block step strip, viewfinder brackets, a ruler scrubber) and the offside beat draws a metre grid and a live dimension callout between the two lines on the canvas, all inside the existing on-demand draw (no new loop at rest). New motion lives in `components/museum/experiences/var-2018/motion.ts` (pure springs, rubber band, flick projection, coasting, a spring-sampled `linear()` easing): offside lines follow the finger, magnet onto body parts, rubber-band past 8–26 m and settle on a velocity-aware spring after a flick; a monitor flick coasts through frames and over-scrubbing stretches the picture and springs back; a camera switch is a WAAPI FLIP from the thumbnail (View Transitions removed). One rAF loop drives it and stops when everything is at rest; a hidden tab settles it instantly and stops; unmount cancels the loop and the FLIP. Reduced motion: no coasting, springs, FLIP or hand hint animation; lines land where released. Measured with headless Chromium (desktop 1440×900, phone 390×844 touch, reduced motion): 0 rAF callbacks over 1 s at rest after every beat (booth, flick, over-scrub, line fling, onside, end), no console errors, no horizontal overflow; tests/museum-exp-var-2018.cjs passes. Desktop emulation only, no iPhone thermal claim. Not yet deployed.
+
+## backpass-1992 tape and motion pass (Oct 9 2026)
+
+The back-pass room now opens on "The Time-Wasting Tape": an early-90s VHS story in five beats the visitor drives (PLAY the 1990 tape, PAUSE when the keeper picks it up, turn the JOG dial to rewind and roll on, put in the 1992 tape, PLAY the same moment under the new law), then a takeaway and the existing two-pitch match. The clip is pure and deterministic (`clipAt`/`clipKeys` in `sim.ts`, stepped once at 60 fps and cached), drawn by the existing `drawWorld` with its painted text off; the VHS look is CSS (CRT bezel, scanlines, head-switching strip, an HTML OSD) plus one 96 px noise tile rendered once per visit; the tracking band only moves when the tape is painted. Motion (`spring.ts`, no library): the jog dial follows the finger's angle, keeps momentum (exponential friction), rubber-bands past both ends and springs back; the cassette drops in on a spring sampled into WAAPI keyframes; the hand-off to the match is a spring FLIP; the replay crossfade's View Transition was removed. One rAF loop runs only while the tape plays/winds, a hand is on the dial or a spring settles; a hidden tab lands everything at rest and stops; unmount cancels it and releases the canvas (DPR ≤ 1.5 on touch). Reduced motion: PLAY and the winds step between key frames (no playback loop), no momentum, springs, tracking or slide. Measured in headless Chromium (desktop 1440×900, phone 390×844 touch, both with reduced motion): 0 rAF callbacks over 1.5 s at rest at the start, after a jog, at the takeaway and in the match; no console errors or horizontal overflow; Back closes. tests/museum-exp-backpass-1992.cjs passes. Desktop emulation only, no iPhone thermal claim. Not yet deployed.
+
+**futsal-1989 cordel folheto (Oct 9 2026).** The exhibit is now five woodcut pamphlet beats (1930 cover, drop test, touches match, spin the diamond, 1989). Only the beat on screen is mounted. The drop test (BounceLab) and the spin (Rotation) share one `sleepyLoop` (futsal-1989/spring.ts): rAF runs only while a ball is held, flying or squashing, or while the ring is held or settling, and stops on the first still frame, on a hidden tab and on unmount. The match keeps its round-only loop (DPR ≤ 1.5 on touch); its paper grain is painted once into cached canvases. The woodcut ink roughness is an SVG displacement filter on still layers only (moving balls and beans sit outside it). There are no View Transitions: the print press-in is a single WAAPI animation. The self-hosted slab font is 11.6 KB (woff2, OFL). Measured with a rAF counter in headless Chromium at 1440×900: 0 frames in 2 s at rest on every beat, including after a drop and after a spin settles. Reduced motion prints the drop result and the spin landing at once, with no flight.
+
+**telstar-1970 and laced-leather motion and style pass (Oct 9 2026).** telstar-1970 (1970 TV broadcast style) gains a "How it's made" programme on the TV screen: the visitor stitches the Telstar together, 12 black pentagons and 20 white hexagons, by dragging, tapping or using the keyboard. The bench (`telstar-1970/stitch.ts`) is Canvas 2D. Its one rAF loop runs only while a flick slows down, a piece flies on its spring, a panel pops in, the ball turns to a gap or "Stitch the rest" plays its stagger. It stops on the first still frame and on a hidden tab, and it is disposed when the programme ends. DPR is capped at 1.5 on touch. The 3D match is unchanged and still lazy-loaded. This pass also fixes the desktop layout, where the knobs and power button had been hidden under the guide at 1440 px. laced-leather is now a sepia photo album with hand-tinted plates. Its painted backdrop, grain and vignette are drawn once per size into a cached canvas, plus a static CSS grain layer. The lightbox shadow is now a plain offset fill instead of a per-frame shadowBlur. It also gains plate IV, "Head it", a pendulum header rig that adds no new loop, because it uses the machine's existing sleeping loop. The bounded lace-print fade keeps that loop running only while it fades. Measured in headless Chromium at 1440×900 and 390×844 touch, both with and without reduced motion: 0 rAF callbacks in 2 s at rest on the finished bench, in the live match and after a header settles, with no console errors and no horizontal overflow. Back closes both exhibits. Reduced motion skips the swing, flights, pops and stagger and shows each result at once. tests/museum-exp-telstar-1970.cjs and tests/museum-exp-laced-leather.cjs pass. These are desktop emulation results only; no iPhone thermal claim is made. Not yet deployed.
+
+**Oct 9 2026: worldcup-1930 museum exhibit (Art Deco poster + motion pass).** The full view is now an Art Deco travel poster. The hero is an SVG poster (`Poster.tsx`) whose entrance is one set of spring-sampled Web Animations that plays once; the liner's sail-off on scroll is a CSS scroll-driven animation. The route map (`voyage.ts`) is restyled but still uses the same sleeping Canvas 2D loop, with DPR capped at 1.5 on touch. Its per-pixel grain tile was removed: the speckle is now one static SVG-noise overlay rasterised once. The fonts are Limelight and Josefin Sans (OFL, 42 KB of woff2 in `public/museum/experiences/worldcup-1930/`), loaded on open with the FontFace API. New interactions: the match clock is a drag-scrubbed slider (the thumb follows on a stiff spring, a flick keeps it rolling, and it rubber-bands at 0′, 90′ and the half-time wall), Uruguay's ball is dragged onto the pitch at half-time, and the balls and bracket picks move by spring FLIP instead of View Transitions. All of it runs in one rAF loop per control, and only while you drag, it coasts or settles, or Play runs. Each loop stops when the tab is hidden and is cancelled on unmount; `spring.ts` never loops on its own. Headless Chromium at 1440×900 and 390×844 (touch), with and without reduced motion: 0 rAF callbacks in 2 s at rest after full time, and no console errors. Reduced motion gives instant moves with no momentum, and the poster is shown complete. tests/museum-exp-worldcup-1930.cjs passes. These are desktop emulation results only; no iPhone thermal claim is made. Not yet deployed.
+
+**Pass Puzzles coaching pass (Oct 9 2026).** The live lane read (clear / tight / blocked), threat arrows, cut cross, hint spot, replay calls and the "why it worked" takeaway add no loop, timer or per-frame work. `predict()` gains one O(defenders × path samples) slack scan, still inside the existing ≤12.5 Hz, dirty-only prediction (engine test: 0.31–0.39 ms wall per predict on a loaded desktop). The takeaway note is one memoised `predict` per release. Commentary and lane text re-render React only when the line changes. New meshes are built once per scene and hidden when unused: 3 threat arrows (they share the run-arrow geometry), 1 cut cross, a hint ring and dot, and a sixth run arrow. Draw calls on the phone profile (390×844, DPR 3, 4× CPU throttle) on Find a Friend: ball in flight 73 → 73, 69–70 renders per solve, as before. Aiming at a blocked lane: 74 → 78 (arrow and cross, only while a stroke is held). The replay freeze-frame (0.7 s, 0.35 s with reduced motion) keeps the existing replay loop running for that time, then it sleeps as before. Idle aiming, the result card and the end of a replay still sleep (`tests/pass-puzzle-arcade.cjs`). Render ms/frame on the throttled profile was 1.9 ms before and 3.4–7.0 ms after, but the machine load average was 17–48, so these numbers are not comparable. The flight render path is unchanged. No physical iPhone measurement was taken.
+
+**cards-1970 manga + motion pass (Oct 9 2026).** The exhibit is now a sports-manga page: ink on paper with screentone SVG patterns, focus and speed lines, and katakana sound effects. Bangers and a Dela Gothic One katakana subset are self-hosted (OFL): 35 KB of woff2 in `public/museum/experiences/cards-1970/`, downloaded only when their glyphs render. New hands-on beat: after one replay the visitor finds the moment on a film strip and blows the whistle (within 0.3 s; after three misses the film shows the moment), then makes the call on the traffic light. The film strip scrubs by drag or flick (momentum, rubber band at both ends), by tap (spring) and by arrow keys (role="slider"); a horizontal drag on the panel scrubs too, with touch-action:pan-y. The pressed lamp FLIPs into the referee's hand and the card turns over with a spring, using spring-sampled WAAPI keyframes on the compositor, so no loop runs for it. View Transitions were removed. One rAF loop (`Clip.tsx`) runs only while the replay plays, coasts or springs; while a finger drags, pointer events drive it with no loop. It pauses while the tab is hidden and is cancelled on unmount. The panel is a pure function of t, so the sound effects and focus lines scrub both ways. Headless Chromium at 1440×900 and 390×844 (touch), with and without reduced motion, all six calls played: 0 rAF callbacks in 2 s at rest, 0 running animations, no console errors and no horizontal overflow (`tests/museum-exp-cards-1970.cjs` passes). Headless note: phone-emulation screenshots of /museum come out blank without `--use-gl=angle`, and desktop ones can come out blank with it; this is a capture quirk from the hall's WebGL canvas, not a page fault. These are desktop emulation results only; no iPhone thermal claim is made. Not deployed.
+
+## Futbol Pinball: match clock, keeper parry, wall pass and 2v1 multiball (Oct 9 2026, local, not deployed)
+
+**Teaching.** The keeper is now a "keeper bumper": a firm shot (approach over 330 px/s) is parried out wide, and for 3 s a follow-up is a REBOUND goal (+300). A wall pass (strike, rebound off a kickboard, corner flag or side rail, then meet it first time with the other foot within 2.5 s) pays +200 and lights the goal. A gold bar across the goal mouth shrinks while the goal is lit. Full time shows one next step for the player (for example "bounce it off a kickboard and finish with your other foot").
+**Defaults picked.** *Session length:* 3 balls plus a match clock: 90' is 5 minutes of live play (the clock stops on the plunger and during celebrations). Half time is only a whistle. At 90' the ball in play gets up to 20 s of stoppage time, the Cup Final always finishes, and balls still in hand pay +500 each. In bot runs, long sessions used to reach 7 to 25 minutes. They now end around 5 to 6 minutes. Weak-player runs got a little longer (about 80 → 100 s), because parries now feed the wings instead of dropping the ball down the middle. *Multiball:* finishing any mode starts a "2v1 BREAKAWAY". A second ball is served from the lane with a 10 s multiball save. Goals count double, and the scorer is served straight back in. A drain never costs a ball; it ends the 2v1. Flipper rise/fall speed (22/s up, 10/s down) is unchanged.
+**Cost.** The second ball is one cloned ball group (shared geometry and materials), drawn only while live. The new pieces are a floor match-clock decal (a 256×112 canvas, repainted only when the minute changes, about 90 times a match) and one goal-lit bar, hidden when unlit. Per-substep work adds a second ball's contacts only during multiball. Defender AI still runs once per substep. Sim cost per 30 fps frame (node): 0.024 → 0.026 ms, and 0.035 ms with two balls. Phone 390×844 emulation, back-to-back A/B: 84.2 → 85.3 draw calls average (max 93 → 93), update 0.88 → 0.74 ms and render 1.67 → 1.42 ms per frame (within noise on a loaded machine). No new loops, lights, shadows or timers. Ready, paused and hidden still sleep, and reduced motion keeps the bar steady. No physical-phone heat claim.
+
+**Museum timeline (emaki) and Hall of Fame (ukiyo-e prints), Oct 9 2026.** The timeline wall is now a Japanese hand-scroll: the hairline figures are drawn as ink line paintings on paper, with gold kasumi cloud bands between the scenes and vermilion year seals. The scroll's spring (drag 1:1, rubber-banding at both ends, flick momentum that snaps to a scene) is one more board on the hairline engine's single shared rAF loop. That loop runs only while a spring moves; a drag paints straight from pointer events. Only the active scene and its two neighbours have figures. The paper grain is one static SVG-noise image, and the unroll, roll-up and seal stamp are one-shot Web Animations on spring-sampled `linear()` easings. The "Real years" rule and the "Find it" challenge add no loops. The Hall of Fame is now a gallery of six original woodblock-style SVG prints of legends from the game's cards, plus the player's four-panel print. A drag along a print's brush line writes SVG attributes directly, with no React render per frame. `motion.ts` runs rAF only while a spring or glide settles, and cancels it on unmount; the room's entrance is finite CSS, and the wood grain is one static noise image. Headless Chromium at 1440×900 and 390×844 (touch), with and without reduced motion: 0 rAF callbacks at rest after a fling or a finished move and at the end, and 0 on open (one run of the Hall with reduced motion counted a single stray frame on open); no console errors. Reduced motion gives no unroll, no FLIP and instant settles. tests/museum-exp-timeline.cjs and tests/museum-exp-hall-of-fame.cjs pass. These are desktop emulation results only; no iPhone thermal claim is made. Not yet deployed.
+
+**Futbol Tennis improvement pass, Oct 9 2026 (local, not deployed).** Teaching point: a first touch is a habit you can name and fix. Touch grades gain **HEAVY** (sprinting through the ball; the ball also runs long). Every call-out now carries a 3–5 word fix ("Slow your feet first", "Meet it as it rises"). Clean volleys, headers and chest traps are named, and a perfect-touch streak shows as PERFECT ×N with gold progress. The perfect chime climbs a step per streak touch so the rhythm is audible. The end card adds a one-line coach takeaway from this court's grade counts (or "get back to the middle" when the rival kept catching you out of position), and after a win it names the next court and rival. Rivals now play a per-personality shot mix. Steady (court 1) plays mid-court balls and only punishes a real camp. Aerial courts head some high balls back. From court 4, long rallies end with a riskier "go for the line" drive. Flight read: at each rival contact the sim flies the ball once (or twice). A **red ring** on the line plus "GOING OUT · LET IT GO" warns that it's going long, and leaving it scores a "good leave". On aerial courts, a **blue ring** marks where a high ball drops through head height. Fixed: the 5-touch rally banner was overwritten by TEMPO UP, and milestone banners never re-fired on later points. **Cost:** one pooled ring mesh (+1 draw, only while an incoming ball is airborne and flagged). No new loops or per-frame allocations, and it is hidden outside rallies, so serve and pause sleep checks still pass (`check-soccer-tennis-browser --feel`, desktop and 390×844 touch). Bot rally, median/p95 ms per frame (update + render) and draw calls, before → after: desktop 0.5/1.1 + 1.4/2.3 ms, 95 calls → 0.5/1.1 + 1.4/2.3 ms, 95 calls; phone 390×844 0.5/1.3 + 1.3/2.4 ms, 53 calls → 0.5/1.7 + 1.5/2.8 ms, 54 calls (max 57 → 57; 59 in an injected court-4 flight-spot run). Triangles are unchanged. These are headless desktop-GPU emulation numbers, not physical-phone heat. Defaults: no doubles (it would double the rig and AI cost on phones); courts 1–2 stay easy; the court-5/6 step is driven by recovery, so it is taught with the coach line rather than flattened.
+
+**Museum: laws-1863 and penalty-1891 styles + motion pass (Oct 9 2026).** *penalty-1891* is now 16-bit pixel art: the existing three.js stage renders into a low-res drawing buffer (`pixelScale`: one buffer pixel per 2–4 CSS px, about 440 px on the long side, so 480×300 at 1440×900 and 195×422 on a 390×844 phone, against 1440×900 and 585×1266 at DPR 1.5 before; that is about 9× fewer shaded pixels). The browser upscales it with `image-rendering: pixelated`. One full-screen pass per drawn frame (`copyFramebufferToTexture` into a buffer-sized `FramebufferTexture`, then 9-bit colour, a 4×4 Bayer dither and a 1 px outline) gives the console look. Antialiasing is off, and a shot is drawn at 30 fps instead of 60. The HUD's new motion is a hold-to-power spring and an aim that glides and rubber-bands. It runs on one rAF chain (`motion.ts`) only while a finger is down or a spring settles; it stops itself and is stopped on unmount. The "Same kick in 1891" replay reuses the existing on-demand shot loop. *laws-1863* adds the "Still a rule?" sorter: one rAF chain (`spring.ts`) runs only while a slip is thrown or springs home, a drag writes one transform per pointer move, and the chips use one-shot WAAPI FLIP. Its print styling is static: self-hosted OFL fonts (Old Standard TT and Abril Fatface for laws, Press Start 2P and Pixelify Sans for penalty, 4–15 KB each), an SVG ink filter on the static headlines only, and pattern hatching in the figures. **Validation:** headless Chromium (`--mute-audio`, `--use-gl=angle`) at 1440×900 and 390×844 touch, with and without reduced motion. We counted rAF callbacks: 0 in 1.5–2 s at rest after load, after a drag or throw, after a shot or replay, and on the result and round cards, in both exhibits. Both stopped at rest before as well. No console errors. Tests: `tests/museum-exp-penalty-1891.cjs` and `tests/museum-exp-laws-1863.cjs` both pass. Desktop emulation only; no iPhone thermal claim. Not deployed.
+
+**Oct 9 2026 · shirts (the Kit Room) as a fashion-editorial collage.** A new first beat, "Decades", is a paper-doll kit builder (`KitThroughTime.tsx`, data in `eras.ts`). You drag a year tag along a timeline (momentum, rubber-banding at the ends, a spring snap to sourced milestones) and drag paper parts onto a bean doll. A part from the future flutters off with a "Too early!" stamp, and scrubbing back in time knocks parts off. A hold-to-rain test tips a scale with the cited figures only: cotton 7 g and polyester 0.4 g of water per 100 g (Compound Interest). All motion runs on one sleepy rAF loop (`shirts/spring.ts`). It drives the scrubber spring, a damped-pendulum sway with a lagging hem, the rotateY flip, falling paper, the ghost's spring home and the raindrops. It runs only while something moves, returns false and stops once everything settles, sleeps in a hidden tab, and is stopped on unmount. Per-frame values are written straight to the DOM; React re-renders only when the whole year or a part changes. Falling paper and stamps live in a fixed `overflow:hidden` layer, so they never widen the fixed root (that had scrolled the whole room sideways in an early build). The collage itself is static: torn-paper `clip-path` polygons, CSS halftone gradients, masking-tape strips, and a self-hosted OFL Abril Fatface (13 KB woff2). Beats switch with a FLIP tab ink and a one-shot paste-in WAAPI animation, which replaced `startViewTransition`. Reduced motion jumps every spring to its end, with no loop and no CSS animation. **Validation:** headless Chromium (`--mute-audio`) at 1440×900 and 390×844 touch, with and without reduced motion. We counted rAF callbacks for 2 s: 0 at rest after load, and 0 after a drag, a flick, the rain test and the fall-off, once settled. No console errors, and no horizontal scroll of the root. `tests/museum-exp-shirts.cjs` passes. Desktop emulation only. Not deployed.
+
+**Breakaway Run winding route, Oct 9 2026 (local, not deployed).** The path now bends left and right and climbs and falls over hills. The simulation is still the straight three-lane treadmill, so every lane, collision and read window is unchanged; one vertex-shader bend (`lib/arcade/runnerTrack.ts`) moves each runner vertex onto the curved, banked, sloped centreline from `components/games/runnerRoute.ts` (60 m smoothstep segments, deterministic, sharper and steeper each stage up to stage 8). The bend is a 40×vec4 uniform table refilled per frame into a preallocated array (~15 µs desktop); it is chained into every runner material's projection, shadow-receive world position and normal, and casters get a bent depth material, so shadows read the terrain. Materials shared with other scenes only bend on the runner's renderer. Fixed, reused geometry replaces the stage's straight ground/grid/strip/rails and the ~150-mesh palm/house scenery: one tessellated terrain (scrolling mowing stripes), one rail mesh, one far-dash line set, one sky dome (horizon glow + two procedural skyline layers that turn with the route; fog colour matches the horizon) and four instanced prop meshes (houses, trees, lamps, flags on the outside of bends) recycled in 30 m chunks, rewritten only when a chunk wraps. The view yaws to keep the road 40 m ahead centred (reduced motion: slower turn, flatter horizon, no lean). Slopes change pace ±10 % but never beyond the old top speed (boost + burst), so ≥1 s read windows hold on the steepest descent; descents add speed lines and a little FOV. Measured with `renderer.info` in headless Chromium (same bot, same seeds; CPU ms are wall-clock JS for `update`/`render` on a busy shared machine):
+
+| Profile | Draw calls (median) before → after | update + render ms before → after |
+|---|---|---|
+| Phone 390×844, stage 1 | 91–94 → 70 | 2.6–3.4 → 2.2 |
+| Phone 390×844, stage 5–6 | 95–96 → 63 | 2.6–4.4 → 2.4–2.9 |
+| Desktop 1280×800, stage 5–6 | 178 → 66–68 | 2.9 → 2.1–2.3 |
+| Phone landscape 844×390 | — → 58 | — → 2.0 |
+
+Triangles rise slightly (≈30k → 33k, the terrain and dome). No new loops, timers or lights; paused/hidden/finished sleep, DPR caps and the 30 fps phone cap are unchanged. No physical-phone thermal measurement. Tests: `tests/runner-route.mjs` (in `tests/runner-feel.cjs`).
+
+## Island Strikers scanning, support and replay pass (Oct 9 2026, local, not deployed)
+
+Teaching focus: **scan before you receive, then pass into an open lane**, and finish with control rather than power.
+- **Scan rings.** While you carry the ball, or a Gold pass is travelling to you, each other Gold teammate stands on a ring: cyan means open (no defender in the lane and no defender within 2.6 m), orange means covered. The rings pulse once when a scan starts. The sim computes `state.laneOpen` once per frame (3 teammates × 4 defenders), not per substep. The scene uses three fixed meshes that share one geometry; they're hidden otherwise.
+- **Support angles.** Off-ball Gold teammates now compare 9 spots around their shape position. Each spot is scored by the lane from the ball, distance from defenders and spacing from teammates. The choice is re-read every 0.35 s (about 290 evaluations per 3-minute match); forward runs and called runs keep their own line. The wide and solid shapes still hold (`tests/striker-team.cjs`).
+- **Clean strike.** Releasing Shoot in the 0.60–0.86 band (the power ring and aim line turn cyan) gives a lower shot that the keeper reads 0.05 s later. Above 0.93 is still the red overhit zone.
+- **Instant replay.** After a Gold goal (not shootouts, not under reduced motion), the last 2.2 s play back at 0.7× with a closer camera. The caption says how the goal was built, for example "3 passes · switch play across the pitch · first-time finish". Any action key or button skips it. The tape is one preallocated `Float32Array` of 60 frames at 20 Hz. The replay renders through the normal loop, and the sim and clock wait while it plays.
+- **Full time.** A new stat shows passes into open lanes out of all passes. A one-line coach takeaway is built from it (blocked-lane passes, clean strikes).
+- **Defaults chosen for the open questions.**
+  - Blue Team Strikes are capped at 1 per match in rounds 1–2 and 2 in rounds 3–4. Blue spirit gain is also lowered to `[.3,.5,.7,.85]`. Bot sims had shown 4.6–5.4 charge-ups per match in rounds 3–4.
+  - The Island Cup unlocks after winning Round 2, which is its quarter-final level. A player who already has a trophy keeps access.
+  - Round-4 "pass early" still needs an existing pass chain.
+- **Curve (bot sims, 48 matches per round).** Win rates are 0.90 / 0.94 / 0.79 / 0.52. Better support also halves Blue's goals, because teammates now give rest defence behind the ball. Keeper and press probes are unchanged apart from the clean-strike band: final keeper save rate 0.58 → 0.50, still capped in `tests/striker-curve.cjs`.
+- **Cost, phone landscape 844×390, touch emulation, 4× CPU throttle, machine load 35–40, A/B swapped against HEAD in the same session.**
+  - JS + render per frame: 11.8 ms before, 9.4 ms after. The difference is within noise at this load.
+  - Draw calls: 99.5 (max 104) → 100.3 (max 109); the extra calls are the scan rings when they're visible.
+  - Triangles: ~66k, unchanged.
+  - Sim microbenchmark: about 280–290 µs per 30 fps step in both versions.
+  - No new loops, timers, lights or shadow casters. Pause, hidden and finished states still sleep, and DPR caps and heat tiers are unchanged.
+  - This is emulation only; no claim about physical-phone heat.
+- **Tests.** Added `tests/striker-scan.cjs`: lane openness and marking, safe/risky pass counts, support angles (this assertion fails with support disabled), the clean-strike band at 30/60/120 Hz, the Blue Team Strike cap and the replay caption.
+
+**Oct 9 2026: museum exhibit wwc-1991 ("Cut from paper").** The full-screen view was restyled as Chinese paper-cut in four beats (Shut out, China 1991, The final + "Your turn: score Akers's winner", Every star). The two night-sky canvases are gone: there is no canvas at all now. The paper is static SVG paths plus a CSS grain tile (an SVG noise data URI the browser rasterises once), and layer shadows are offset copies, not CSS filters, so nothing is re-filtered per frame. The three new loops (the paper unfold spring, the Akers game and the beat-rail FLIP via WAAPI) run only while dragging, settling or the move is live. They stop at every result, on `visibilitychange` and on unmount, and the game writes SVG transforms through refs (no React render per frame). The existing replay and year-scrub loops are unchanged. The fonts are self-hosted woff2 files (Anton Latin 12 KB; a ZCOOL QingKe HuangYou subset of 2.6 KB, OFL), loaded only with the exhibit. The View Transition was removed. Measured with a rAF-counting probe in headless Chromium at 1440×900, 390×844 touch and 390×844 with reduced motion: 0 rAF calls in 2 s at rest in each beat (after the replay ends, the fold settles and the game result lands); one run showed a single stray call in beat 1. Desktop/headless only; no iPhone thermal claim. Not deployed.
+
+**laced-leather picture-book variation (Oct 9 2026, replaces the sepia album above).** At the user's request, The Weather Machine is now drawn as a 1950s–60s science picture-book. The palette is five inks on warm paper. Shapes are flat with two-tone shading, outlines are printed a little off-register, and the type is a rounded system font, so there are no font files. A water tank drains through a pipe and valve wheel into a rain cloud. The heat profile is unchanged. The page's flat shapes and screen-print speckle are drawn once per size into the cached canvas, and the shadows are now flat ellipses with no gradients or blur. The posterised ball sprites remain cached and are never drawn per frame. The only added CSS texture is one static SVG noise tile. Measured in headless Chromium at 1440×900 and 390×844 touch, with and without reduced motion: 0 rAF callbacks in 2 s at rest, no console errors and no horizontal overflow. tests/museum-exp-laced-leather.cjs passes. These are desktop emulation results only; no iPhone thermal claim is made. Not yet deployed.
+
+**Museum laws-1863 restyle: thin line art in motion (Oct 9 2026, later the same day).** The engraving/letterpress look and its four self-hosted fonts are gone; type is the system sans (no web fonts). Pictures are monoline SVG strokes (`lines.ts`, `drawings.ts`), each a short path. `LineMorph` draws new strokes on and old strokes off with one-shot CSS `stroke-dashoffset` animations. Rule figures draw only once they scroll into view, using a single IntersectionObserver per figure that disconnects after the first sighting. Strokes that persist between versions morph on one `spring.ts` rAF chain, only while points actually move; an identical redraw (including React's development double-run) starts no frames. The masthead mounts the timeline's Hairline rulebook figure read-only; its shared loop sleeps at rest. Validation is headless Chromium at 1440×900 and 390×844 touch, with and without reduced motion. rAF callbacks were 0 in 1.5 s at rest after load, after a sort, after all cards were sorted, and after scrubbing to 1863 and to Today. A card's one-line story runs about 45 frames once when the card appears. No console errors, and `tests/museum-exp-laws-1863.cjs` passes. Desktop emulation only; no iPhone thermal claim. Not deployed.
+
+**IDP v2: the plan as a story (Oct 9 2026, local, not deployed; docs/idp/DESIGN.md §6).** The development plan (Coaches
+Centre → IDP, For grown-ups → Development plan, and the static `/plan` QR landing) is static DOM plus one-shot motion:
+finite CSS keyframes with `backwards` fill (nothing stays in effect), CSS `linear()` spring easings, SVG `pathLength=1`
+draw-ons, and one Web Animations spring FLIP for the goal badge between beats. No requestAnimationFrame, timers, polling or
+`infinite` animations in `components/idp/*` (asserted by `tests/coaches-idp-v2.cjs`). It still loads only with the Coaches
+Centre / grown-ups sheet; the Grown-ups and Coach tabs are further lazy chunks and `qrcode` loads only when a QR is made.
+Measured headless (Chrome, 390×844 touch and 1280×800, `tests/coaches-idp-browser.cjs` against a scratch dev server):
+**0 rAF callbacks and 0 running animations over 2 s at rest** with the plan open (the island's loop sleeps behind the
+grown-ups sheet), and the celebration's ~2 s sequence ends with 0 running animations. Reduced motion: no animation, complete
+frames. Desktop/headless evidence only; no physical-phone thermal claim.
+
+### Futbol Tennis touch calls and open space (2026-10-09)
+
+Futbol Tennis now lights the one action button that fits the ball (`tennisTouchCall`, `data-best`; the Kick button turns
+mint in the perfect window) and shows one pink open-space ring on the rival's court while you receive. Runtime cost: one
+pooled ring mesh (+1 draw only while an incoming ball is live, disposed with the feel layer), a CSS `transform`/`opacity`
+pulse on one button only while a call is live (static ring under reduced motion), and a few cheap predicate checks inside
+the existing per-frame HUD read. No new rAF loop, timers or allocations per frame; the serve/pause sleep checks in
+`scripts/check-soccer-tennis-browser.cjs --feel` pass on desktop and 390×844 touch. Early-court rivals tire after 10
+touches, so court-1 matches end in roughly 2–5 minutes instead of running to 10 (bot sims). Desktop/headless evidence only.
+
+### Island Strikers playtest pass (2026-10-09)
+
+Follow camera (`lib/arcade/strikerScene.ts`): during live play the existing camera block eases to zoom 1.28 (phone) / 1.14
+(desktop) and pans with the ball inside pitch-clamped limits, reusing one `Vector3`; it snaps back to the full pitch when the
+loop renders with dt 0 (ready, paused, full time) and is off under reduced motion and in the rotated portrait view. No extra
+render passes; draw calls stay 89–91 at 60 fps in headless Chrome (desktop and 844×390 touch). UI additions in
+`components/LiveArcadeMatch.tsx` ride the existing 10 Hz HUD update: a pass-chain pill and score bump (one-shot
+transform/opacity keyframes), a desktop key prompt, and a pulsing ring on the touch button the play calls for (the only
+looping animation, present only while a hint shows during play; static under reduced motion). The pass-chain cue is one or two
+oscillators per completed pass. Paused/finished canvases still stop drawing (frames stable in the browser checks). Headless
+emulation only; no physical-phone thermal claim.

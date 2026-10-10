@@ -1,42 +1,107 @@
-/* Timeline wall: a museum at night. Hairline's palette is set through its own --hairline-* custom properties; the active era's
-   lit strokes turn gold. Every selector carries a local class; SVG internals are reached with :global() under one. */
+/* The timeline as an emaki (Oct 9 2026): a long paper hand-scroll laid on a lacquer table. Scenes are ink line drawings
+   (hakubyō) beside their words (kotobagaki); gold suyari-gasumi mist bands drift between scenes; years are vermilion seals.
+   Pigments: sumi ink, gofun-white paper, gold leaf, shu vermilion, gunjō azurite. Every selector carries a local class;
+   SVG internals are reached with :global() under one. Paper fibre is a static SVG noise image (drawn once, never per frame). */
 .root{
- --gold:#f1c56b;--ink:#eceef3;--dim:#a9afbd;--night:#07080b;--pool:#10131a;
- --hairline-plate:var(--pool);--hairline-hi:#e6e9f0;--hairline-edge:#6f7686;--hairline-mid:#3d4250;--hairline-lo:#272b35;--hairline-stroke:1;
- --ease:cubic-bezier(.16,1,.3,1);
- position:fixed;inset:0;z-index:20;overflow:hidden;color:var(--ink);color-scheme:dark;
- background:radial-gradient(120% 70% at 50% 40%,var(--pool) 0 34%,#0b0d12 58%,var(--night) 86%);
+ --paper:#efe5cf;--paper2:#e4d4b3;--sumi:#1f1a17;--sumi2:#4f443b;--shu:#c23a26;--gold:#c9a24a;--gold2:#e8cc84;--gunjo:#2f4c7e;
+ --lacquer:#140d0a;--ink-on-dark:#efe2c4;
+ --mincho:"Hiragino Mincho ProN","Yu Mincho",YuMincho,"Noto Serif JP","Noto Serif",ui-serif,Georgia,"Times New Roman",serif;
+ position:fixed;inset:0;z-index:20;overflow:hidden;color:var(--ink-on-dark);color-scheme:dark;
+ background:radial-gradient(130% 80% at 50% 45%,#2a1a12 0,#1a100b 55%,var(--lacquer) 100%);
  font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
- display:grid;grid-template-rows:auto minmax(0,1fr) auto auto;grid-template-areas:"head" "stage" "cap" "scrub";
+ display:grid;grid-template-rows:auto auto minmax(0,1fr) auto;grid-template-columns:minmax(0,1fr);
  padding:0 env(safe-area-inset-right,0px) 0 env(safe-area-inset-left,0px);-webkit-tap-highlight-color:transparent;
 }
 .srOnly{position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 
 /* ---- header (clear of the shared Back, top-left 100×64) ---- */
-.head{grid-area:head;padding:calc(22px + env(safe-area-inset-top,0px)) 124px 0;text-align:center;pointer-events:none}
-.eyebrow{display:block;font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);opacity:.9}
-.title{margin:6px 0 0;font:600 clamp(20px,2.4vw,28px)/1.15 ui-serif,Georgia,"Times New Roman",serif;letter-spacing:.01em;text-wrap:balance}
+.head{padding:calc(20px + env(safe-area-inset-top,0px)) 124px 0;text-align:center;pointer-events:none}
+.eyebrow{display:block;font-size:12px;letter-spacing:.24em;text-transform:uppercase;color:var(--gold2)}
+.title{margin:4px 0 0;font:600 clamp(21px,2.4vw,29px)/1.15 var(--mincho);letter-spacing:.02em;text-wrap:balance}
+/* The museum passport: one dot per case, filled once you have stepped inside it (lib/museum/museumVisits.ts). */
+.passport{margin:6px 0 0;display:inline-flex;align-items:center;gap:8px;font:600 13px/1 system-ui,-apple-system,sans-serif;color:#d9c79f;font-variant-numeric:tabular-nums}
+.passDots{display:inline-flex;gap:4px}
+.passDots > i{width:7px;height:7px;border-radius:50%;border:1.25px solid rgba(232,204,132,.55);box-sizing:border-box}
+.passDots > i[data-seen]{background:var(--shu);border-color:var(--shu)}
 
-/* ---- the wall: three figures at most, sliding on a shared rail ---- */
-.stage{grid-area:stage;position:relative;container-type:size;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;min-height:0}
-.slot{
- --fw:min(118cqw,124cqh,600px);--gap:min(46cqw,calc(var(--fw)*.8));
- position:absolute;left:50%;top:50%;width:var(--fw);aspect-ratio:5/4;margin:calc(var(--fw)*-.4) 0 0 calc(var(--fw)*-.5);
- transition:transform 680ms var(--ease),opacity 520ms var(--ease),filter 520ms var(--ease);will-change:transform;
-}
-.slot[data-off="0"]{transform:none;opacity:1;z-index:2;--hairline-hi:var(--gold);--hairline-edge:#a3aaba;--hairline-mid:#4a5060}
-.slot[data-off="-1"],.slot[data-off="1"]{opacity:.42;z-index:1;--hairline-plate:#0d1016;pointer-events:none}
-.slot[data-off="-1"]{transform:translateX(calc(var(--gap)*-1)) scale(.46)}
-.slot[data-off="1"]{transform:translateX(var(--gap)) scale(.46)}
-.slot[data-off="-2"]{transform:translateX(calc(var(--gap)*-1.7)) scale(.3);opacity:0;pointer-events:none}
-.slot[data-off="2"]{transform:translateX(calc(var(--gap)*1.7)) scale(.3);opacity:0;pointer-events:none}
-@media (min-width:900px){.slot{--fw:min(60cqw,128cqh,680px);--gap:min(35cqw,calc(var(--fw)*.92))}}
+/* ---- the "Find it" slip (a tanzaku on the table) ---- */
+.quest{display:flex;align-items:center;gap:12px;width:min(680px,calc(100% - 32px));margin:12px auto 10px;padding:8px 10px 8px 12px;min-height:52px;
+ background:linear-gradient(180deg,#f3ead6,#e7d9bb);color:var(--sumi);border-radius:4px;box-shadow:0 2px 0 rgba(0,0,0,.35),0 10px 24px -14px #000;
+ transition:background-color 300ms ease}
+.quest[data-tl-quest="found"],.quest[data-tl-quest="done"]{background:linear-gradient(180deg,#f6e3a8,#e9c96f);animation:slipPop 520ms cubic-bezier(.3,1.6,.5,1) both}
+.questSeal{flex:none;width:26px;height:26px;border-radius:3px;background:var(--shu);box-shadow:inset 0 0 0 2px #e9b3a6,inset 0 0 0 4px var(--shu);transform:rotate(-4deg);position:relative}
+.questSeal::after{content:"";position:absolute;inset:7px;border:2px solid #f6dcd3;border-radius:50%}
+.quest[data-tl-quest="found"] .questSeal::after,.quest[data-tl-quest="done"] .questSeal::after{border-radius:0;border-width:0 0 2.5px 2.5px;inset:6px 6px 9px 7px;transform:rotate(-45deg)}
+.questText{margin:0;flex:1;font:500 15px/1.35 var(--mincho);text-wrap:pretty;animation:inkIn 380ms ease both}
+.questBtn{flex:none;min-height:44px;padding:0 16px;border-radius:999px;border:1.5px solid var(--sumi);background:var(--sumi);color:var(--paper);font:600 15px/1 system-ui,-apple-system,sans-serif;cursor:pointer;
+ transition:transform 140ms cubic-bezier(.3,1.5,.5,1),background-color 160ms ease}
+.questBtn:active{transform:scale(.93)}
 
-/* Hairline's drawing rules (the package's stylesheet, scoped): filled plates, one non-scaling stroke, bright outside, dim inside. */
+/* ---- the scroll: two rollers and the paper between them ---- */
+.scroll{position:relative;min-height:0;margin:6px 10px 0;--roll:0px}
+.roller{position:absolute;top:-12px;bottom:-12px;width:20px;z-index:4;border-radius:10px;pointer-events:none;
+ background:repeating-linear-gradient(180deg,transparent 0 17px,rgba(0,0,0,.22) 17px 19px,transparent 19px 26px) 0 var(--roll)/100% 26px,
+  linear-gradient(90deg,#2c1a10,#9a6a3e 38%,#c18a52 50%,#6e4527 72%,#2a170d);box-shadow:0 6px 14px -6px #000}
+.roller::before,.roller::after{content:"";position:absolute;left:-3px;right:-3px;height:14px;border-radius:7px;background:linear-gradient(90deg,#3b2a12,var(--gold2) 45%,#8a6a26)}
+.roller::before{top:-8px}
+.roller::after{bottom:-8px}
+.rollerL{left:0}
+.rollerR{right:0}
+.paper{position:absolute;inset:0 16px;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab;--w:600px;
+ background:
+  linear-gradient(180deg,rgba(201,162,74,.55) 0 2px,transparent 2px calc(100% - 2px),rgba(201,162,74,.55) calc(100% - 2px)) ,
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.02 .5' numOctaves='2' seed='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .36 0 0 0 0 .22 0 0 0 .4 -.14'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23f)'/%3E%3C/svg%3E"),
+  radial-gradient(120% 90% at 50% 50%,var(--paper) 55%,var(--paper2) 100%);
+ box-shadow:inset 0 0 40px rgba(110,80,40,.28)}
+.paper[data-grab="1"]{cursor:grabbing}
+.strip{position:absolute;inset:0}
+
+/* One scene: words (kotobagaki) then picture, read left to right. Placed by JS (translate3d) on the scroll's spring. */
+.panel{position:absolute;top:0;bottom:0;left:50%;width:var(--w);margin-left:calc(var(--w) / -2);display:grid;grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr);
+ align-items:center;gap:2%;padding:4% 4.5%;color:var(--sumi);will-change:transform;z-index:2}
+.panel:not([data-on]){cursor:pointer}
+.words{min-width:0;position:relative;z-index:2}
+.panel > .slot{z-index:0}
+.meta{margin:0;display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;font-size:12.5px;color:var(--sumi2);letter-spacing:.05em}
+.gallery{display:inline-flex;align-items:center;gap:7px}
+.gallery > i{width:9px;height:9px;border-radius:2px;background:var(--g,#888);transform:rotate(45deg)}
+.count{font-variant-numeric:tabular-nums}
+.year{margin:10px 0 0;line-height:1;display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}
+/* The story's chapter (eras.ts CHAPTERS) and the time since the scene before: the arc a child can follow. */
+.chapter{margin:0 0 8px;font:700 12px/1.3 system-ui,-apple-system,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--gunjo)}
+.later{font:500 14px/1.2 var(--mincho);color:var(--sumi2);font-style:italic}
+/* "Visited": a small vermilion hanko pressed beside the year seal. */
+.seen{display:inline-block;padding:3px 7px;border:1.5px solid var(--shu);border-radius:3px;color:var(--shu);font:700 12px/1 system-ui,-apple-system,sans-serif;letter-spacing:.08em;
+ text-transform:uppercase;font-style:normal;transform:rotate(-4deg)}
+.year > span{display:inline-block;padding:6px 10px 5px;border-radius:4px;background:var(--shu);color:#fbefe6;font:700 clamp(26px,3vw,36px)/1 var(--mincho);letter-spacing:.03em;
+ font-variant-numeric:tabular-nums;transform:rotate(-3deg);box-shadow:inset 0 0 0 2px rgba(251,239,230,.55),inset 0 0 0 4px var(--shu),inset 0 0 14px rgba(80,10,0,.35)}
+.panel[data-on] .year{transform-origin:20% 60%}
+.caseTitle{margin:12px 0 0;font:700 clamp(19px,2vw,24px)/1.22 var(--mincho);text-wrap:balance}
+.fact{margin:8px 0 0;font:400 16.5px/1.5 var(--mincho);color:#2b241f;text-wrap:pretty;max-width:36ch}
+.actions{margin:12px 0 0;display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px}
+.visit{display:inline-flex;align-items:center;gap:10px;min-height:46px;padding:0 18px 0 20px;border-radius:999px;border:1.5px solid var(--sumi);background:rgba(31,26,23,.06);color:var(--sumi);
+ font:600 16px/1 system-ui,-apple-system,"Segoe UI",sans-serif;cursor:pointer;transition:transform 140ms cubic-bezier(.3,1.5,.5,1),background-color 180ms ease,color 180ms ease}
+.visit:active{transform:scale(.94)}
+.enter{background:var(--sumi);color:var(--paper)}
+.quiet{border-color:rgba(31,26,23,.4);background:transparent;padding:0 16px}
+.panel:not([data-on]) .visit{visibility:hidden}
+.arrow{width:16px;height:1.5px;background:currentColor;position:relative;transition:transform 200ms cubic-bezier(.3,1.5,.5,1)}
+.arrow::after{content:"";position:absolute;right:0;top:-3.5px;width:7px;height:7px;border:solid currentColor;border-width:1.5px 1.5px 0 0;transform:rotate(45deg)}
+.lock{margin:0;display:inline-flex;align-items:center;gap:8px;max-width:340px;font-size:14px;line-height:1.35;color:var(--sumi2)}
+.padlock{flex:none;width:48px;--hairline-plate:var(--paper);--hairline-hi:var(--shu);--hairline-edge:#3a312a;--hairline-mid:#6d6157;--hairline-lo:#a3978a;--hairline-stroke:1}
+.visit:focus-visible,.stepBtn:focus-visible,.track:focus-visible,.zoom:focus-visible,.questBtn:focus-visible{outline:2.5px solid var(--shu);outline-offset:3px}
+.zoom:focus-visible,.stepBtn:focus-visible,.track:focus-visible{outline-color:var(--gold2)}
+@media (hover:hover){.visit:hover{background:var(--sumi);color:var(--paper)}.visit:hover .arrow{transform:translateX(3px)}
+ .stepBtn:not(:disabled):hover{border-color:var(--gold2)}.zoom:hover{border-color:var(--gold2)}.questBtn:hover{background:#3a312b}}
+
+/* The picture: a hairline figure drawn as an ink line painting (hakubyō) on the paper. */
+.slot{position:relative;width:100%;max-height:100%;aspect-ratio:5/4;min-width:0}
 .fig{position:absolute;inset:0;touch-action:none;
+ --hairline-plate:#ece1c7;--hairline-hi:#2a221d;--hairline-edge:#2a231e;--hairline-mid:rgba(42,35,30,.6);--hairline-lo:rgba(42,35,30,.32);--hairline-stroke:1.2;
  --hl-plate:var(--hairline-plate);--hl-hi:var(--hairline-hi);--hl-edge:var(--hairline-edge);--hl-mid:var(--hairline-mid);--hl-lo:var(--hairline-lo);--hl-sw:var(--hairline-stroke)}
+.slot[data-active] .fig{--hairline-hi:var(--shu)}
 .fig > :global(svg){position:absolute;inset:0;width:100%;height:100%;display:block;overflow:visible}
-.fig :global(path),.fig :global(ellipse){fill:var(--hl-plate);stroke:var(--hl-mid);stroke-width:var(--hl-sw);vector-effect:non-scaling-stroke;stroke-linejoin:round;stroke-linecap:round;transition:stroke 260ms cubic-bezier(.5,0,.1,1),fill 260ms cubic-bezier(.5,0,.1,1)}
+.fig :global(path),.fig :global(ellipse){fill:var(--hl-plate);stroke:var(--hl-mid);stroke-width:var(--hl-sw);vector-effect:non-scaling-stroke;stroke-linejoin:round;stroke-linecap:round;transition:stroke 260ms ease,fill 260ms ease}
 .fig :global(.nf){fill:none}
 .fig :global(.sil){stroke:var(--hl-edge)}
 .fig :global(.hi){stroke:var(--hl-hi)}
@@ -44,109 +109,125 @@
 .fig :global(.dash){stroke-dasharray:1 3}
 .fig :global(.dot){stroke:none;fill:var(--hl-edge)}
 .fig :global(.dot.off){fill:var(--hl-lo)}
-.fig :global(.ghost path){fill:none;stroke:var(--hl-mid)}
+.fig :global(.ghost path){fill:none;stroke:rgba(42,35,30,.22)}
 .fig :global(.pent){stroke:none;fill:var(--hl-edge)}
-.fig :global(.cardY) :global(.sil){stroke:#bfa33c}
-.fig :global(.cardY) :global(path){fill:#1c1a10}
-.fig :global(.cardR) :global(.sil){stroke:#b4473e}
-.fig :global(.cardR) :global(path){fill:#1d1012}
-/* The active figure: its key parts light up in gold. */
+.fig :global(.cardY) :global(.sil){stroke:#7d5d12}
+.fig :global(.cardY) :global(path){fill:#e5bd4a}
+.fig :global(.cardR) :global(.sil){stroke:#6b170c}
+.fig :global(.cardR) :global(path){fill:#c84a33}
 .fig :global(svg.on .key),.fig :global(svg.on .key .sil){stroke:var(--hl-hi)}
 .fig :global(svg.on .dot.key),.fig :global(svg.on .pent){fill:var(--hl-hi)}
-.fig :global(svg.on .cardY .sil){stroke:#f1cf4a}
-.fig :global(svg.on .cardR .sil){stroke:#ef5b4d}
 
-/* Neighbours are buttons too (a tap on either side steps the wall). */
-.peek{position:absolute;top:18%;bottom:18%;width:min(22%,180px);min-width:44px;border:0;background:none;padding:0;margin:0;cursor:pointer;z-index:3;border-radius:16px}
-.peekPrev{left:0}
-.peekNext{right:0}
-.peek:focus-visible{outline:2px solid var(--gold);outline-offset:-4px}
+/* Kasumi: gold mist bands between scenes (placed by JS, a little faster than the paper for depth). */
+.kasumi{position:absolute;top:0;left:50%;height:100%;width:calc(var(--w) * .42);margin-left:calc(var(--w) * -.21);z-index:1;pointer-events:none;will-change:transform}
+.kasumiT,.kasumiB{position:absolute;left:0;width:100%;height:auto;overflow:visible;display:block}
+.kasumiT{top:0}
+.kasumiB{bottom:0}
+.band{fill:#d9b866;stroke:#9c7a32;stroke-width:1;vector-effect:non-scaling-stroke}
+.bandLine{fill:none;stroke:#f4e0a6;stroke-width:1.4;vector-effect:non-scaling-stroke;stroke-linecap:round;opacity:.85}
+.leaf{fill:#f6e2a4;opacity:.9}
 
-/* ---- the caption: year, title, one quoted fact, and the way to the case ---- */
-.cap{grid-area:cap;position:relative;width:100%;max-width:720px;margin:0 auto;padding:0 20px;text-align:center}
-.meta{margin:0;display:flex;justify-content:center;gap:14px;align-items:center;font-size:13px;color:var(--dim);letter-spacing:.04em}
-.gallery{display:inline-flex;align-items:center;gap:8px}
-.gallery > i{width:8px;height:8px;border-radius:50%;background:var(--g,#888);box-shadow:0 0 0 3px color-mix(in srgb,var(--g,#888) 25%,transparent)}
-.count{font-variant-numeric:tabular-nums;opacity:.8}
-.year{margin:6px 0 0;font:600 clamp(36px,5.4vw,56px)/1 ui-serif,Georgia,"Times New Roman",serif;color:var(--gold);font-variant-numeric:tabular-nums;letter-spacing:.01em;
- animation:yearIn 620ms var(--ease) both}
-.cap[data-dir="prev"] .year{animation-name:yearInPrev}
-.caseTitle{margin:6px 0 0;font:600 clamp(19px,2vw,23px)/1.25 system-ui,-apple-system,"Segoe UI",sans-serif;animation:rise 520ms var(--ease) 80ms both}
-.fact{margin:10px auto 0;max-width:54ch;font-size:17px;line-height:1.45;color:#cdd1db;min-height:4.35em;text-wrap:pretty}
-.word{display:inline-block;white-space:pre;animation:word 560ms var(--ease) both;animation-delay:calc(140ms + var(--i) * 26ms)}
-.actions{margin:12px 0 0;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:10px 16px;animation:rise 520ms var(--ease) 260ms both}
-.visit{display:inline-flex;align-items:center;gap:10px;min-height:46px;padding:0 20px 0 22px;border-radius:999px;border:1.5px solid var(--gold);background:rgba(241,197,107,.08);color:var(--gold);
- font:600 16px/1 system-ui,-apple-system,"Segoe UI",sans-serif;cursor:pointer;transition:transform 120ms ease,background-color 200ms ease}
-.visit:active{transform:scale(.95)}
-.visit:focus-visible,.stepBtn:focus-visible,.track:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
-.arrow{width:16px;height:1.5px;background:currentColor;position:relative}
-.arrow::after{content:"";position:absolute;right:0;top:-3.5px;width:7px;height:7px;border:solid currentColor;border-width:1.5px 1.5px 0 0;transform:rotate(45deg)}
-.lock{margin:0;display:inline-flex;align-items:center;gap:8px;max-width:400px;text-align:left;font-size:14px;line-height:1.35;color:var(--dim)}
-.padlock{flex:none;width:56px;--hairline-plate:var(--pool);--hairline-hi:var(--gold);--hairline-edge:#8d94a4;--hairline-mid:#454b59;--hairline-lo:#2a2e38;--hairline-stroke:1}
-@media (hover:hover){.visit:hover{background:rgba(241,197,107,.16)}.stepBtn:not(:disabled):hover{border-color:rgba(241,197,107,.6)}}
+/* The "try it" affordance: a hand that drags the paper twice, then goes. */
+.hint{position:absolute;left:50%;top:7%;z-index:3;display:flex;flex-direction:column;align-items:center;gap:6px;transform:translateX(-50%);pointer-events:none;color:var(--sumi)}
+.hand{width:34px;height:34px;border-radius:50%;background:rgba(31,26,23,.14);border:2px solid var(--sumi);animation:hand 1.3s cubic-bezier(.45,0,.35,1) 900ms 2 alternate both}
+.hintText{font:600 14px/1 var(--mincho);letter-spacing:.06em;background:rgba(239,229,207,.85);padding:4px 8px;border-radius:3px}
 
-/* ---- the year rule ---- */
-.scrub{grid-area:scrub;display:grid;grid-template-columns:48px minmax(0,1fr) 48px;align-items:center;gap:10px;width:100%;max-width:1040px;margin:0 auto;
- padding:10px 18px calc(16px + env(safe-area-inset-bottom,0px))}
-.stepBtn{width:48px;height:48px;border-radius:50%;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.03);color:var(--ink);cursor:pointer;display:grid;place-items:center;
- transition:transform 120ms ease,opacity 200ms ease,border-color 200ms ease;padding:0}
-.stepBtn:active:not(:disabled){transform:scale(.92)}
+/* ---- the year rule: gold lacquer (maki-e) lines under the scroll ---- */
+.scrub{width:100%;max-width:1040px;margin:0 auto;padding:12px 18px calc(14px + env(safe-area-inset-bottom,0px))}
+.scrubTop{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 58px;min-height:44px}
+.zoom{display:inline-flex;align-items:center;gap:9px;min-height:44px;padding:0 14px 0 10px;border-radius:999px;border:1px solid rgba(232,204,132,.35);background:rgba(232,204,132,.06);color:var(--ink-on-dark);
+ font:600 14px/1 system-ui,-apple-system,sans-serif;white-space:nowrap;cursor:pointer;transition:transform 140ms cubic-bezier(.3,1.5,.5,1),border-color 160ms ease}
+.zoom:active{transform:scale(.94)}
+.zoomBox{width:30px;height:18px;border-radius:9px;background:rgba(255,255,255,.12);position:relative;transition:background-color 200ms ease}
+.zoomBox::after{content:"";position:absolute;top:3px;left:3px;width:12px;height:12px;border-radius:50%;background:var(--ink-on-dark);transition:transform 320ms cubic-bezier(.3,1.6,.5,1)}
+.zoom[aria-pressed="true"] .zoomBox{background:var(--shu)}
+.zoom[aria-pressed="true"] .zoomBox::after{transform:translateX(12px)}
+.ruleNote{font:500 14px/1.3 var(--mincho);color:#cdbd9c;text-align:right}
+.scrubRow{display:grid;grid-template-columns:48px minmax(0,1fr) 48px;align-items:center;gap:10px}
+.stepBtn{width:48px;height:48px;border-radius:50%;border:1px solid rgba(232,204,132,.3);background:rgba(232,204,132,.05);color:var(--ink-on-dark);cursor:pointer;display:grid;place-items:center;
+ transition:transform 140ms cubic-bezier(.3,1.5,.5,1),opacity 200ms ease,border-color 200ms ease;padding:0}
+.stepBtn:active:not(:disabled){transform:scale(.9)}
 .stepBtn:disabled{opacity:.3;cursor:default}
 .chev{width:10px;height:10px;border:solid currentColor;border-width:0 0 1.75px 1.75px;transform:translateX(2px) rotate(45deg)}
 .chevNext{transform:translateX(-2px) rotate(-135deg)}
-.track{position:relative;height:60px;touch-action:none;cursor:pointer;margin:0 10px;outline:none}
-.rail{position:absolute;left:0;right:0;top:22px;height:1px;background:rgba(255,255,255,.16)}
-.fill{position:absolute;left:0;top:0;height:1px;width:100%;background:var(--gold);transform-origin:left;transform:scaleX(var(--x));transition:transform 520ms var(--ease)}
-.tick{position:absolute;top:0;left:calc(var(--x) * 100%);width:0;height:100%;pointer-events:none}
-.tick > i{position:absolute;top:16px;left:-.5px;width:1px;height:13px;background:rgba(255,255,255,.3);transition:background-color 200ms ease,transform 300ms var(--ease)}
-.tick > b{position:absolute;top:34px;left:0;transform:translateX(-50%);font:500 12px/1 system-ui,-apple-system,sans-serif;color:var(--dim);white-space:nowrap;font-variant-numeric:tabular-nums;transition:color 200ms ease,opacity 200ms ease}
-.tick[data-on] > i{background:var(--gold);transform:scaleY(1.4)}
-.tick[data-on] > b{color:var(--gold);font-weight:700;font-size:13px}
-.thumb{position:absolute;top:22px;left:calc(var(--x) * 100%);width:20px;height:20px;margin:-10px 0 0 -10px;border-radius:50%;background:var(--night);border:2px solid var(--gold);
- box-shadow:0 0 0 5px rgba(241,197,107,.13);transition:left 520ms var(--ease);pointer-events:none}
-.thumb[data-drag="1"]{transition:none}
+.track{position:relative;height:62px;touch-action:none;cursor:pointer;margin:0 12px;outline:none;--m:0;--p:0}
+.rail{position:absolute;left:0;right:0;top:22px;height:1px;background:rgba(232,204,132,.25)}
+.fill{position:absolute;left:0;top:0;height:2px;margin-top:-.5px;width:100%;background:var(--gold2);transform-origin:left;transform:scaleX(var(--p))}
+.tick{position:absolute;top:0;left:calc(var(--x,0) * 100%);width:0;height:100%;pointer-events:none}
+.tick > i{position:absolute;top:15px;left:-.5px;width:1px;height:14px;background:rgba(232,204,132,.5);transition:background-color 200ms ease,transform 300ms cubic-bezier(.3,1.5,.5,1)}
+.tick > b{position:absolute;top:36px;left:0;transform:translateX(-50%);font:500 12px/1 system-ui,-apple-system,sans-serif;color:#bfae8c;white-space:nowrap;font-variant-numeric:tabular-nums;
+ opacity:calc(1 - var(--m));transition:color 200ms ease}
+.tick[data-on] > i{background:var(--gold2);transform:scaleY(1.4)}
+.tick[data-on] > b{opacity:0}
+.tick[data-target] > i{background:var(--shu);width:3px;left:-1.5px}
+.tick[data-seen]::after{content:"";position:absolute;top:8px;left:-2.5px;width:5px;height:5px;border-radius:50%;background:var(--shu)}
+.decade{position:absolute;top:30px;left:calc(var(--x) * 100%);width:0;height:10px;opacity:var(--m);pointer-events:none}
+.decade::before{content:"";position:absolute;left:-.5px;top:0;width:1px;height:5px;background:rgba(232,204,132,.35)}
+.decade > b{position:absolute;top:10px;left:0;transform:translateX(-50%);font:500 11px/1 system-ui,sans-serif;color:#a8977a;white-space:nowrap}
+.decade:not([data-major]) > b{display:none}
+.thumb{position:absolute;top:22px;left:calc(var(--p) * 100%);width:0;height:0;pointer-events:none}
+.thumb > span{position:absolute;left:0;top:0;transform:translate(-50%,-50%) rotate(-4deg);min-width:26px;height:24px;padding:0 5px;border-radius:3px;background:var(--shu);color:#fbefe6;
+ display:grid;place-items:center;font:700 11px/1 var(--mincho);font-variant-numeric:tabular-nums;box-shadow:inset 0 0 0 1.5px rgba(251,239,230,.55),0 3px 8px -2px #000}
 
-/* ---- motion: finite, eased; reduced motion lands at once ---- */
-@keyframes yearIn{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}
-@keyframes yearInPrev{from{opacity:0;transform:translateX(-28px)}to{opacity:1;transform:none}}
-@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-@keyframes word{from{opacity:0;transform:translateY(.5em);filter:blur(3px)}to{opacity:1;transform:none;filter:none}}
+/* ---- motion: finite one-shots; the scroll itself is spring-driven from JS ---- */
+@keyframes hand{0%{transform:translateX(46px);opacity:0}15%{opacity:1}100%{transform:translateX(-46px);opacity:1}}
+@keyframes inkIn{from{opacity:0;filter:blur(2px)}to{opacity:1;filter:none}}
+@keyframes slipPop{0%{transform:scale(.96)}55%{transform:scale(1.025)}100%{transform:none}}
 
-/* ---- phones: tighter type, only the active and end years on the rule ---- */
-@media (max-width:700px){
- .head{padding:calc(20px + env(safe-area-inset-top,0px)) 16px 0 112px;text-align:left}
+/* ---- phones: picture above words; only the active and end years on the rule ---- */
+@media (max-width:759px){
+ .head{padding:calc(18px + env(safe-area-inset-top,0px)) 16px 0 112px;text-align:left;min-height:64px}
  .eyebrow{font-size:11px}
  .title{font-size:20px}
- .fact{font-size:15px;min-height:4.35em;margin-top:8px}
- .year{font-size:38px}
- .caseTitle{font-size:18px}
- .scrub{padding:6px 10px calc(12px + env(safe-area-inset-bottom,0px));gap:4px;grid-template-columns:44px minmax(0,1fr) 44px}
+ .passport{margin-top:4px;font-size:12px}
+ .passDots{gap:3px}
+ .passDots > i{width:6px;height:6px}
+ .chapter{font-size:11px;margin-bottom:4px}
+ .later{font-size:13px}
+ .quest{margin:8px 12px 8px;width:auto;min-height:48px}
+ .questText{font-size:14px}
+ .scroll{margin:4px 4px 0}
+ .roller{width:14px;border-radius:7px}
+ .paper{inset:0 10px}
+ .panel{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;align-items:end;padding:22px 18px 18px;gap:4px}
+ .slot{order:-1;justify-self:center;width:auto;height:100%;max-width:100%;max-height:none}
+ .year{margin-top:6px}
+ .year > span{font-size:24px}
+ .caseTitle{font-size:18px;margin-top:8px}
+ .fact{font-size:15px;margin-top:6px}
+ .actions{margin-top:10px}
+ .meta{font-size:12px}
+ .scrub{padding:8px 8px calc(10px + env(safe-area-inset-bottom,0px))}
+ .scrubTop{padding:0 4px}
+ .ruleNote{font-size:12.5px}
+ .kasumi{width:calc(var(--w) * .34);margin-left:calc(var(--w) * -.17)}
+ .scrubRow{gap:4px;grid-template-columns:44px minmax(0,1fr) 44px}
  .stepBtn{width:44px;height:44px}
- .track{margin:0 12px}
+ .track{margin:0 14px}
  .tick > b{opacity:0}
- .tick[data-on] > b,.tick[data-end] > b{opacity:1}
- .tick[data-end]:not([data-on]) > b{font-size:11px}
+ .tick[data-on] > b{opacity:0}
+ .tick[data-end]:not([data-on]) > b{opacity:calc(1 - var(--m));font-size:11px}
  .tick[data-end="first"] > b{transform:none}
  .tick[data-end="last"] > b{transform:translateX(-100%)}
 }
-/* Phone landscape: the wall on the left, the caption on the right. */
+/* Phone landscape: words beside the picture, a slimmer header. */
 @media (max-height:520px) and (orientation:landscape){
- .root{grid-template-rows:auto minmax(0,1fr) auto;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);grid-template-areas:"head head" "stage cap" "scrub scrub"}
- .head{padding:calc(14px + env(safe-area-inset-top,0px)) 16px 0 112px;text-align:left}
+ .root{grid-template-rows:auto minmax(0,1fr) auto}
+ .quest{display:none}
+ .head{padding:calc(12px + env(safe-area-inset-top,0px)) 16px 0 112px;text-align:left}
  .eyebrow{display:inline;margin-right:10px}
+ .passport{display:none}
+ .chapter{display:none}
  .title{display:inline;font-size:18px}
- .cap{align-self:center;text-align:left;padding:0 20px 0 4px}
- .meta{justify-content:flex-start}
- .year{font-size:32px;margin-top:4px}
- .caseTitle{font-size:17px;margin-top:4px}
- .fact{font-size:14px;margin:6px 0 0;min-height:0}
- .actions{justify-content:flex-start;margin-top:8px}
- .scrub{padding:0 12px calc(8px + env(safe-area-inset-bottom,0px))}
- .track{height:50px}
- .slot{--fw:min(92cqw,118cqh);--gap:min(46cqw,calc(var(--fw)*.9))}
+ .panel{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:none;align-items:center;padding:12px 18px}
+ .slot{order:0;height:auto;width:100%;max-height:100%}
+ .fact{font-size:14px}
+ .scrub{padding:0 12px calc(6px + env(safe-area-inset-bottom,0px))}
+ .scrubTop{min-height:36px}
+ .track{height:52px}
 }
 @media (prefers-reduced-motion:reduce){
- .slot,.thumb,.fill,.tick > i{transition-duration:.01ms}
- .year,.caseTitle,.word,.actions{animation:fadeOnly 150ms linear both;animation-delay:0ms}
+ .hand{animation:none;opacity:1}
+ .quest,.questText{animation:none}
+ .zoomBox::after,.arrow,.tick > i{transition-duration:.01ms}
 }
-@keyframes fadeOnly{from{opacity:0}to{opacity:1}}

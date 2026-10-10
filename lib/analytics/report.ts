@@ -5,6 +5,7 @@
 import type {AnalyticsStore} from './store';
 import {regionNamesFor} from './regions';
 import {buildLearning} from './learning';
+import {buildStart} from './startReport';
 import {LIVE_WINDOW_MS,SCHEMA_VERSION,RETENTION_DAYS,addDays,dailySeries,dayList,displayDistribution,emptyReport,mergeRollups,rollupDay,utcDay,type DailyRollup,type Report} from './core';
 
 export async function buildReport(store:AnalyticsStore|null,range:{from:string;to:string},now=new Date()):Promise<Report>{
@@ -13,15 +14,15 @@ export async function buildReport(store:AnalyticsStore|null,range:{from:string;t
  const byDay=new Map<string,DailyRollup>((await store.rollups(days[0],days[days.length-1])).map(r=>[r.day,r]));
  const missing=days.filter(d=>!byDay.has(d)&&d>=oldestRaw&&d<=today);
  // Storage check (Oct 9 2026): the installed SQL version, and whether a live-computed day with visits came back without the
- // learning keys (the SQL functions predate 20261009_analytics_counts.sql). Either one shows the "storage needs update" banner.
+ // learning keys (the SQL functions predate 20261009_analytics_counts.sql) or the /start subset (20261009_analytics_start.sql). Either one shows the "storage needs update" banner.
  let stale=false;
- if(missing.length)for(const r of await store.computeDays(missing[0],missing[missing.length-1],now)){if(r.sessions>0&&!('counts' in r))stale=true;if(!byDay.has(r.day))byDay.set(r.day,r);}
+ if(missing.length)for(const r of await store.computeDays(missing[0],missing[missing.length-1],now)){if(r.sessions>0&&(!('counts' in r)||!('start' in r)))stale=true;if(!byDay.has(r.day))byDay.set(r.day,r);}
  const schema=await store.schemaVersion();
  const rollups=days.map(d=>byDay.get(d)??rollupDay(d,[]));
  const merged=mergeRollups(rollups);
  const report:Report={...emptyReport(range.from,range.to,now,true),totals:merged.totals,distribution:displayDistribution(merged.hist),dims:merged.dims,areas:merged.areas,
   places:merged.places,activities:merged.activities,cells:merged.cells,regionNames:regionNamesFor(merged.dims.region.map(r=>r.key)),
-  learning:buildLearning(merged.counts,merged.countSessions,merged.flags),storage:{schema,needsUpdate:schema<SCHEMA_VERSION||stale}};
+  learning:buildLearning(merged.counts,merged.countSessions,merged.flags),start:buildStart(merged,schema,days.length),storage:{schema,needsUpdate:schema<SCHEMA_VERSION||stale}};
  if(days.length===1&&days[0]>=oldestRaw){report.series=await store.hourly(days[0]);report.granularity='hour';
   /* no future hours drawn as zeros */if(days[0]===today)report.series=report.series.slice(0,now.getUTCHours()+1);}
  else{report.series=dailySeries(rollups);report.granularity='day';}

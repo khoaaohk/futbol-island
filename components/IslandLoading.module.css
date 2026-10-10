@@ -116,3 +116,15 @@
 /* Tagline removed (user, Sep 27 2026): keep breathing room between the title and the loading track. */
 .copy :global(.island-loading-track){margin-top:18px}
 @media(max-height:560px){.copy :global(.island-loading-track){margin-top:12px}}
+
+/* Hand-off from /start (Oct 9 2026, IslandLoading.tsx): with <html data-island-handoff> the screen is already shown, so the
+   one-shot entrance (coast arrive, cast pop) does not replay; the exit (.exiting) is untouched. No flag: unchanged. */
+:global(html[data-island-handoff]) .screen:not(.exiting) .art,:global(html[data-island-handoff]) .screen:not(.exiting) .castMember{animation:none}
+/* /start water-loader hand-off (data-island-handoff="tan"): the screen starts as the full tan sheet /start ended on (no grain, art,
+   characters or title) and keeps the normal exit timing, so it fades into the island when it is ready. No flag: unchanged. */
+:global(html[data-island-handoff=tan]) .screen{background:#dfc587}
+:global(html[data-island-handoff=tan]) .screen::before{display:none}
+:global(html[data-island-handoff=tan]) .screen>*{visibility:hidden}
+/* Tan mode has no art to clear first: the sheet fades as the island's arrival starts (Town restarts the arrival at 1.5 s). */
+:global(html[data-island-handoff=tan]) .exiting{animation:loadingDepart .45s .95s ease-in-out both}
+@media(prefers-reduced-motion:reduce){:global(html[data-island-handoff=tan]) .exiting{animation:loadingDepart .08s linear both}}

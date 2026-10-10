@@ -143,3 +143,30 @@
  .game[data-view=play] .tip:not([data-warn]){display:none}.game[data-view=play] .tip[data-warn]{bottom:62px}
  .modifiers{top:8px}.replayChip{top:8px}
 }
+
+/* Oct 9: the coach's live lane read while drawing (clear / tight / blocked), the replay call and the takeaway. */
+.game .tip[data-lane=clear]{border:1px solid #8cff9e;background:#173d2eee;color:#eaffef}
+.game .tip[data-lane=tight]{border:1px solid #ffc457;background:#4a3812ee;color:#fff3d9}
+.game .tip[data-lane=blocked],.game .tip[data-lane=save]{border:1px solid #ff6a4d;background:#4a1d17ee;color:#fff0ea}
+.replayCall{display:block;flex-basis:100%;order:3;font-size:14px;letter-spacing:0;text-transform:none;color:#fff3d9;max-width:240px}
+.replayChip:has(.replayCall){flex-wrap:wrap;width:min(340px,calc(100% - 32px));box-sizing:border-box;justify-content:center;white-space:nowrap}
+.replayChip:has(.replayCall) .replayCall{white-space:normal;text-align:center}
+.why{margin:0 0 12px;padding:10px 12px;border-radius:10px;background:#173d2e;color:#eaffef;font-size:14px}
+.why b{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#8cff9e;margin-bottom:4px}
+.why ul{margin:0;padding-left:18px;display:grid;gap:4px;line-height:1.45}
+.game .fix{font-size:14px!important;margin:0 0 10px}.game .fix b{color:#ffc457}
+.game .spotHint{width:100%;margin-top:10px}
+.game .spotHint.secondary{display:flex;min-height:var(--btn-height);padding:8px 18px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius);background:var(--btn-mint);color:var(--btn-ink);font:700 14px/1.2 var(--btn-font);box-shadow:0 4px 0 var(--btn-mint-edge)}
+
+/* Oct 9 (b): "Look up" Scan toggle beside the power slider, and the next-pack note on the result card. */
+.aidRow{display:flex;align-items:center;gap:8px;margin-top:8px}
+.aidRow>.powerControl{flex:1;min-width:0;margin-top:0}
+.game .scanToggle.scanToggle{font-size:12px;line-height:1.1}
+.scanToggle{display:inline-flex;align-items:center;gap:5px;flex:none;min-height:44px;padding:0 12px;border:1px solid #54758a;border-radius:13px;background:#23334b;color:#effbff;font:inherit;font-weight:700;font-size:12px;cursor:pointer}
+.scanToggle[aria-pressed=true]{background:#173d2e;border-color:#8cff9e;color:#eaffef;box-shadow:0 0 10px #8cff9e30}
+.game .nextNote{font-size:13px!important;margin:0 0 10px;padding:8px 12px;border-radius:10px;background:#183c44;color:#efffff}
+.game .nextNote b{color:#ffe36e}
+@media(max-height:520px) and (orientation:landscape){.aidRow{flex:1;margin-top:0;gap:6px}.scanToggle{padding:0 8px;font-size:11px}}
+/* Short landscape: ArcadeGame3D.module.css hides every `.header>div` at max-height:520px (the title block); keep the Puzzles + hint
+   strip, which is a div in that header (tests/pass-puzzle-arcade-header.cjs). */
+@media(max-height:520px){.header>.navigation{display:flex}}

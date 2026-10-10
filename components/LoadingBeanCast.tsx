@@ -5,7 +5,8 @@ import CAST_SIZES from '@/public/splash/cast.json';
 import INLINE from './splashInline.json';
 import ARCADE_SIZES from '@/public/arcade-loading/cast.json';
 import ARCADE_INLINE from './arcadeLoadingInline.json';
-type CastId=keyof typeof CAST_SIZES;
+/** The ids both casts have (Oct 9 2026: public/splash/cast.json also lists the /start trick cast, which this loader doesn't use). */
+type CastId=keyof typeof CAST_SIZES&keyof typeof ARCADE_SIZES;
 type Group={w:number;h:number;items:{id:CastId;x:number;b:number;s:number}[]};
 /**
  * The splash cast: stills of the real bean rig baked by scripts/render-splash-characters.cjs, all at one scale, so

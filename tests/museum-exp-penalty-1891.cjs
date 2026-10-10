@@ -52,7 +52,7 @@ const exp=read('Experience.tsx'),scene=read('scene.ts'),css=read('Experience.mod
  assert.ok(!/\.header[^{]*\{[^}]*grid-template-columns:auto/.test(css),'the header keeps its first column free for the fixed Back');
  assert.match(exp,/e\.key==='Escape'/);assert.match(exp,/ArrowLeft/);assert.match(exp,/if\(story\)return;/,'Escape closes the story drawer first (the dialog handles it), then the exhibit');
  for(const m of css.matchAll(/min-height:(\d+)px/g))assert.ok(+m[1]>=44,'controls ≥ 44 px');
- assert.match(css,/button:active:not\(:disabled\)\{transform:scale\(\.94\)\}/,'press-shrink');assert.match(css,/prefers-reduced-motion/);assert.match(css,/safe-area-inset-bottom/);
+ assert.match(css,/button:active:not\(:disabled\)\{transform:translateY\(3px\)\}/,'arcade press: every button drops onto its shadow');assert.match(css,/prefers-reduced-motion/);assert.match(css,/safe-area-inset-bottom/);
  for(const sel of (css+drawerCss).replace(/@keyframes[^{]*\{([^{}]*\{[^}]*\})*\s*\}/g,'').replace(/\{[^{}]*\}/g,'\n').split(/\n/).map(s=>s.trim()).filter(s=>s&&!s.startsWith('@')&&!s.startsWith('/*')&&!s.startsWith('*')&&s!=='}'))
   for(const part of sel.split(','))assert.ok(/\./.test(part),'CSS module selector has a local class: '+part);
  console.log('PASS contract: fixed dialog, shared ExperienceBack (animated), 44 px controls, keyboard, reduced motion, safe areas');}
@@ -73,7 +73,7 @@ const exp=read('Experience.tsx'),scene=read('scene.ts'),css=read('Experience.mod
  assert.match(scene,/function fitFor\(/);assert.match(scene,/makePerspective\(/,'an off-centre frustum puts the goal in the middle of the free stage');assert.match(exp,/s\.setInsets\(\{/);
  assert.match(scene,/createBallMaterial\(TRIONDA_GLSL\)/);assert.match(scene,/leatherStrips\(p,hex\(0x8a5a2f\),3\.,true\)/,'1891 laced leather');
  assert.match(scene,/ln\(p\.y-10\.97,W\)/,'1891: the 12-yard line across the pitch');assert.match(scene,/length\(vec2\(ax,p\.y\)\)-5\.49/,'1891: 6-yard arcs from each post');
- assert.match(scene,/KEEPER REACH/);assert.match(scene,/for\(const w of WOBBLE\)/,'the spray is the model\'s own wobble samples');assert.match(scene,/uAmp\.value=\.42\*Math\.exp/,'the net bulges');
+ assert.match(exp,/className=\{styles\.reachTag\}[^>]*>Keeper reach</,'the keeper-reach oval is labelled (a DOM tag that rides on the oval)');assert.match(scene,/for\(const w of WOBBLE\)/,'the spray is the model\'s own wobble samples');assert.match(scene,/uAmp\.value=\.42\*Math\.exp/,'the net bulges');
  assert.match(exp,/ROUND=5/);assert.match(exp,/Take five more/);assert.match(exp,/Step up to the spot/);assert.match(scene,/HOLD_MS=80/,'hit-stop');
  assert.match(css,/--spring:linear\(/);assert.match(css,/@supports not \(transition-timing-function:linear\(0,1\)\)/,'linear() fallback');
  const rm=css.slice(css.indexOf('@media (prefers-reduced-motion:reduce)'));for(const c of ['.result','.summary','.scrim','.hint','.dock','.thumb'])assert.ok(rm.includes(c),'reduced motion covers '+c);
@@ -89,8 +89,42 @@ const exp=read('Experience.tsx'),scene=read('scene.ts'),css=read('Experience.mod
  assert.match(scene,/const busy=\(\)=>!!run&&!run\.done\|\|camT<1\|\|settle>0/,'busy only while a shot, camera move or settle runs');
  assert.match(scene,/visibilitychange/);assert.match(scene,/if\(document\.hidden\)\{cancelAnimationFrame\(raf\);raf=0;/,'hidden tab stops the loop');
  assert.match(scene,/dispose\(\)\{disposed=true;cancelAnimationFrame\(raf\);raf=0;ro\.disconnect\(\);document\.removeEventListener/);
- assert.match(scene,/kicker\.dispose\(\);keeper\.dispose\(\);disposables\.forEach\(d=>d\.dispose\(\)\);sun\.shadow\.map\?\.dispose\(\);renderer\.dispose\(\);renderer\.forceContextLoss\(\);/);
+ assert.match(scene,/kicker\.dispose\(\);keeper\.dispose\(\);disposables\.forEach\(d=>d\.dispose\(\)\);fb\.dispose\(\);sun\.shadow\.map\?\.dispose\(\);renderer\.dispose\(\);renderer\.forceContextLoss\(\);/);
  assert.match(scene,/opts\.coarse\?1\.5:2/,'pixel ratio ≤ 1.5 on touch');assert.match(scene,/mapSize\.set\(1024,1024\)/,'one small shadow map');
  assert.match(scene,/process\.env\.NODE_ENV!=='production'/,'the dev hook is stripped from production');
  assert.ok(!/AudioContext\(/.test(exp+scene),'sound only through the museum one-shots (mute respected)');assert.match(exp,/museumSfx\./);
  console.log('PASS heat: lazy three.js stage, on-demand frames, stops when idle/hidden/unmounted, DPR ≤1.5 on touch, muted-aware one-shots');}
+
+// 6. Oct 9 2026 styles + motion pass: 16-bit pixel art, hold-to-power spring, rubber-band/flick aim, 1891-vs-today replay.
+{const MO=require('../'+dir+'motion.ts');
+ // Pixel art: low-res buffer upscaled nearest-neighbour, 9-bit colour through an ordered dither, square-texel goal graphics.
+ assert.match(scene,/export const pixelScale=\(w:number,h:number\)=>Math\.max\(2,Math\.min\(4,/,'2–4 CSS px per buffer pixel');
+ assert.match(scene,/renderer\.setPixelRatio\(Math\.min\(1\/px,opts\.coarse\?1\.5:2\)\)/,'buffer pixels, never above 1.5 on touch');
+ assert.match(scene,/antialias:false/);assert.match(scene,/new T\.FramebufferTexture\(/);assert.match(scene,/copyFramebufferToTexture\(fb\)/);
+ assert.match(scene,/float bayer\(vec2 a\)/,'ordered (Bayer) dither');assert.match(scene,/floor\(clamp\(c,0\.,1\.\)\*7\.\+t\)\/7\./,'8 levels a channel (Mega Drive 9-bit colour)');
+ assert.match(scene,/ovTex\.magFilter=T\.NearestFilter/);assert.match(css,/image-rendering:pixelated/);assert.match(scene,/fb\.dispose\(\)/,'the frame copy is disposed');
+ assert.match(scene,/now-last<31/,'shots draw at 30 fps');
+ // Self-hosted pixel faces with their OFL licences.
+ for(const f of ['press-start-2p-latin.woff2','pixelify-sans-latin.woff2','OFL-pressstart2p.txt','OFL-pixelifysans.txt'])assert.ok(fs.existsSync(path.join(root,'public/museum/experiences/penalty-1891/fonts',f)),'font file '+f);
+ assert.match(css,/@font-face\{font-family:'PK Press Start';src:url\('\/museum\/experiences\/penalty-1891\/fonts\/press-start-2p-latin\.woff2'\)/);assert.match(css,/--pixel:'PK Pixelify',system-ui/,'fallback stack');
+ // Hold to power: a spring follows the charge; the band (soft/firm/blast) follows it live; a tap still kicks; keyboard clicks kick.
+ assert.match(exp,/onPointerDown=\{shootDown\} onPointerUp=\{shootUp\} onPointerCancel=\{shootUp\} onClick=\{shootClick\}/);assert.match(exp,/if\(e\.detail===0\)shoot\(\)/,'keyboard Enter/Space on Shoot');
+ assert.match(exp,/const bandOf=\(c:number\):Power=>c<1\/3\?'soft':c<2\/3\?'firm':'blast'/);assert.match(exp,/Harder kicks wobble more/,'the cause and effect is said in words while charging');
+ // Aim: rubber band past the posts, a flick glides, springs settle inside the goal area.
+ assert.match(exp,/rubber\(x,AIM_X\[0\],AIM_X\[1\],\.55\)/);assert.match(exp,/X\.target=clamp\(X\.x\+X\.v\*\.14,AIM_X\)/,'flick projection, clamped');
+ // The springs: converge, rest exactly, interruptible; rubber band never passes its limit; the loop stops itself.
+ {const sp=MO.spring(0);sp.target=1;sp.v=8;let t=0,rest=false;while(!rest&&t<5){rest=MO.stepSpring(sp,1/60);t+=1/60;}assert.ok(rest&&sp.x===1&&sp.v===0&&t<2,'spring settles and stops (velocity carried in)');
+  assert.ok(MO.rubber(10,0,5,.5)<5.5&&MO.rubber(10,0,5,.5)>5,'rubber band resists past the bound');assert.equal(MO.rubber(3,0,5,.5),3);}
+ assert.match(read('motion.ts'),/if\(tick\(dt\)\)raf=requestAnimationFrame\(f\);else stopped=true;/,'the HUD loop stops when the springs rest');
+ assert.match(exp,/return !!h\|\|!rest;/,'power loop runs only while held or settling');assert.match(exp,/aimLoop\.current\?\.stop\(\)/);
+ assert.match(exp,/useEffect\(\(\)=>\(\)=>powerLoop\.current\?\.stop\(\),\[\]\)/,'stopped on unmount');assert.match(exp,/timers\.current\.forEach\(clearTimeout\)/);
+ // The keeper: a split-step hop timed to land as he pushes off, leaning to his guess.
+ assert.match(scene,/split-step hop/);assert.match(scene,/lift=u>0&&u<1\?Math\.sin\(Math\.PI\*u\)\*\.075:0/);
+ // 1891 vs today: the same kick (same spot, same dive) replays under the other rule, and the round card counts the other rules.
+ assert.match(exp,/const replayOther=/);assert.match(exp,/fire\(\{x:k\.x,y:k\.y,dive:k\.dive\},\{era:other,power:k\.power,replay:k\}\)/);
+ assert.match(exp,/Same five kicks under \{ERA_NAME\[otherEra\]\}/);
+ assert.match(C.compareText('1891','goal','saved'),/6 yards/);assert.match(C.compareText('today','saved','goal'),/1905/);assert.match(C.compareText('1891','wide','wide'),/wobble/);
+ // the 1891 keeper really does reach shots today's can't (the replay can teach it)
+ let flips=0;for(const w of M.WOBBLE.slice(0,120)){const l=M.landing(1.6,1,'firm',w);for(const d of ['left','right'])if(M.shotResult('today','firm',d,l.x,l.y)==='goal'&&M.shotResult('1891','firm',d,l.x,l.y)==='saved')flips++;}
+ assert.ok(flips>0,'some goals today are saves in 1891');
+ console.log('PASS styles+motion: 16-bit pixel stage (low-res, 9-bit colour, Bayer dither), pixel fonts (OFL), hold-to-power spring, rubber-band aim, keeper split-step, 1891 replay');}

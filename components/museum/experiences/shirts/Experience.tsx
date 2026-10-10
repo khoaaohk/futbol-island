@@ -1,24 +1,29 @@
 'use client';
 import {useCallback,useEffect,useId,useLayoutEffect,useMemo,useRef,useState,type KeyboardEvent as ReactKeyboardEvent,type PointerEvent as ReactPointerEvent} from 'react';
-import {flushSync} from 'react-dom';
 import {museumSfx} from '@/lib/museum/museumSound';
 import ExperienceBack from '../ExperienceBack';
 import type {ExperienceProps} from '../types';
 import styles from './shirts.module.css';
+import Decades from './KitThroughTime';
+import FullTime from './FullTime';
 import {SPOTS,spotOf,nearestSpot,hintFor,EXTRA_FACTS,SOURCES,SWATCHES,swatch,lawChecks,DEFAULT_KITS,KIT_ROLES,scanScene,colourGap,CLASH_DE,type Kits,type Spot,type ScanScene} from './data';
 
 /**
- * shirts · "Numbers and colours" (1928): the Kit Room, a full-screen installation in two halves.
+ * shirts · "Numbers and colours" (1928): the Kit Room, a full-screen installation told as a fashion-editorial collage in
+ * three beats (Oct 9 2026). Beat 1 "Decades" (KitThroughTime.tsx) is a paper-doll kit builder through sourced milestones; the
+ * two original halves follow:
  *  1. The formation loom: eleven shirts hang on a washing line; drag (or tap, then tap a spot) each one onto the 1928 2-3-5
  *     line-up. Right spots light up and a wool thread weaves 1 → 2 → … → 11 across the pitch, so you see the numbers count
  *     from the goalkeeper forwards, right to left along each line.
  *  2. The colour-clash tester: pick the kits for both teams, both keepers and the referee; the three Law 4 checks light up, and
  *     a scan test times how fast you find your free team-mate. Clashing kits make it slower: that's why the Law exists.
- * No animation loop at all: dragging moves one element straight from pointer events, everything else is CSS transitions that
- * stop by themselves (and switch off under prefers-reduced-motion). Sound is the museum's shared one-shots (mute respected).
+ * Beats 2 and 3 have no animation loop: dragging moves one element straight from pointer events, everything else is CSS transitions that
+ * stop by themselves (and switch off under prefers-reduced-motion). Beat 1 has one sleepy rAF loop (spring.ts) that runs only
+ * while something moves. Beats switch with FLIP (the tab ink) and a one-shot paste-in animation, never View Transitions. Sound is the museum's shared one-shots (mute respected).
  * Back is the shared ExperienceBack (fixed top-left); the header keeps that corner clear.
  */
-type Mode='numbers'|'colours';
+type Mode='decades'|'numbers'|'colours'|'fulltime';
+const MODES:readonly {id:Mode;label:string}[]=[{id:'decades',label:'Decades'},{id:'numbers',label:'Numbers'},{id:'colours',label:'Colours'},{id:'fulltime',label:'Full time'}];
 type Note={text:string;tone:'info'|'ok'|'hint'};
 type Run={avg:number;misses:number;clash:boolean;kits:string};
 type Scan={phase:'idle'|'live'|'done';round:number;scene:ScanScene;times:number[];misses:number;flash:{id:string;kind:'ok'|'bad'}|null;say:string};
@@ -67,7 +72,7 @@ export default function Experience({exhibit,onClose}:ExperienceProps){
  const root=useRef<HTMLElement>(null),pitch=useRef<HTMLDivElement>(null),ghost=useRef<HTMLDivElement>(null),timers=useRef<ReturnType<typeof setTimeout>[]>([]);
  const drag=useRef<{n:number;id:number;x0:number;y0:number;x:number;y:number;moved:boolean}|null>(null);
  const gid=useId().replace(/:/g,'');
- const [mode,setMode]=useState<Mode>('numbers');
+ const [mode,setMode]=useState<Mode>('decades');
  const [placed,setPlaced]=useState<ReadonlySet<number>>(()=>new Set());
  const [selected,setSelected]=useState<number|null>(null),[dragging,setDragging]=useState<number|null>(null);
  const [focusN,setFocusN]=useState<number|null>(null),[justN,setJustN]=useState<number|null>(null);
@@ -149,12 +154,21 @@ export default function Experience({exhibit,onClose}:ExperienceProps){
  };
  const hangAll=()=>{let k=0;SPOTS.forEach(s=>{if(!placed.has(s.n))recordFlight(s.n,(k++)*70);});setPlaced(new Set(SPOTS.map(s=>s.n)));setSelected(null);setFocusN(10);setJustN(null);setFactI(0);setNote({tone:'ok',text:DONE_NOTE});museumSfx.reveal();};
  const restart=()=>{setPlaced(new Set());setTries({});setSelected(null);setFocusN(null);setJustN(null);setNote({tone:'info',text:START_NOTE});};
- /** Switch halves with a View Transition (a soft cross-fade of the whole room) where the browser has one. */
+ /** Switch beats with FLIP (no View Transitions): the ink pill behind the tabs slides from the old tab to the new one with a
+  *  spring, and the new page is pasted in (a one-shot Web Animation). Reduced motion: an instant swap. */
+ const inkFrom=useRef<DOMRect|null>(null);
  const switchMode=(m:Mode)=>{
   if(m===mode)return;museumSfx.card();
-  const doc=document as Document&{startViewTransition?:(cb:()=>void)=>unknown};
-  if(doc.startViewTransition&&!reduced())doc.startViewTransition(()=>{flushSync(()=>setMode(m));});else setMode(m);
+  inkFrom.current=reduced()?null:root.current?.querySelector('[data-tab-ink]')?.getBoundingClientRect()??null;
+  setMode(m);
  };
+ useLayoutEffect(()=>{
+  const from=inkFrom.current;inkFrom.current=null;if(!from)return;const ease=springEase();
+  const ink=root.current?.querySelector<HTMLElement>('[data-tab-ink]'),to=ink?.getBoundingClientRect();
+  if(ink?.animate&&to?.width)ink.animate([{transform:`translate(${from.left-to.left}px,0) scaleX(${from.width/to.width})`},{transform:'none'}],{duration:520,easing:ease});
+  const page=root.current?.querySelector<HTMLElement>('[data-stage]');
+  page?.animate?.([{opacity:0,transform:'translateY(14px) rotate(-.6deg)',clipPath:'inset(0 0 100% 0)'},{opacity:1,transform:'none',clipPath:'inset(0 0 0% 0)'}],{duration:480,easing:'cubic-bezier(.2,.8,.2,1)'});
+ },[mode]);
  const hold=dragging??selected;
  const big=hold??focusN;
 
@@ -199,13 +213,15 @@ export default function Experience({exhibit,onClose}:ExperienceProps){
   <ExperienceBack onClose={onClose}/>
   <header className={styles.top}>
    <p className={styles.eyebrow}><b>{exhibit.year}</b> · The Kit Room</p>
-   <div className={styles.tabs} role="tablist" aria-label="Kit Room halves">
-    <button type="button" role="tab" aria-selected={mode==='numbers'} className={styles.tab} onClick={()=>switchMode('numbers')}><span>1</span> Numbers</button>
-    <button type="button" role="tab" aria-selected={mode==='colours'} className={styles.tab} onClick={()=>switchMode('colours')}><span>2</span> Colours</button>
+   <div className={styles.tabs} role="tablist" aria-label="Kit Room beats">
+    {MODES.map((t,i)=><button key={t.id} type="button" role="tab" aria-selected={mode===t.id} className={styles.tab} onClick={()=>switchMode(t.id)}>
+     {mode===t.id&&<i className={styles.tabInk} data-tab-ink aria-hidden="true"/>}<span>{i+1}</span> <em>{t.label}</em></button>)}
    </div>
   </header>
 
-  {mode==='numbers'?<div key="numbers" className={styles.stage} data-stage="numbers" data-done={done||undefined}>
+  {mode==='decades'?<Decades key="decades" onNext={()=>switchMode('numbers')}/>
+  :mode==='fulltime'?<FullTime key="fulltime" forYourGame={exhibit.forYourGame} onRestart={()=>switchMode('decades')}/>
+  :mode==='numbers'?<div key="numbers" className={styles.stage} data-stage="numbers" data-done={done||undefined}>
    <div className={styles.story}>
     <h1 className={styles.title}>Numbers on&nbsp;the&nbsp;back</h1>
     <p className={styles.lede}>{facts[0]}</p>
@@ -343,7 +359,8 @@ export default function Experience({exhibit,onClose}:ExperienceProps){
       {runs.length>1&&<ol className={styles.runs} aria-label="Your scan times">
        {runs.map((r,i)=><li key={runs.length-i} data-clash={r.clash}><b>{r.avg.toFixed(1)} s</b> {r.kits}{r.clash?' · clash':''}</li>)}
       </ol>}
-      <button type="button" data-museum-own-cue className={styles.primary} onClick={startScan}>{scan.phase==='done'?'Scan again':'Start the scan test'} · {ROUNDS} balls</button>
+      <div className={styles.row}><button type="button" data-museum-own-cue className={scan.phase==='done'?styles.ghostBtn:styles.primary} onClick={startScan}>{scan.phase==='done'?'Scan again':'Start the scan test'} · {ROUNDS} balls</button>
+       {scan.phase==='done'&&<button type="button" className={styles.primary} onClick={()=>switchMode('fulltime')}>Full time: kit quiz →</button>}</div>
      </div>}
     </div></div>
     <div className={styles.presets} role="group" aria-label="Try these kits"><span className={styles.tryLabel}>Try</span>

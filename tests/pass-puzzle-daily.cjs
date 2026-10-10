@@ -18,7 +18,7 @@ assert.equal(C.ALL_PACKS[0].id,'first-passes');assert.equal(C.ALL_PACKS[0].gate,
 for(let i=1;i<C.ALL_PACKS.length;i++)assert(C.ALL_PACKS[i].order>C.ALL_PACKS[i-1].order&&C.ALL_PACKS[i].gate>=C.ALL_PACKS[i-1].gate,'gates rise along the map: '+C.ALL_PACKS[i].id);
 const total=C.ALL_SCENARIOS.length*3;assert(C.ALL_PACKS.every(p=>p.gate<=total*.6),'every pack can be opened without perfect stars');
 // 3. difficulty curve: inside each pack the measured rating climbs (one small dip allowed per pack)
-for(const p of C.ALL_PACKS){const r=C.ALL_SCENARIOS.filter(s=>s.pack===p.id).map(s=>DIFFICULTY[s.id]);let dips=0;for(let i=1;i<r.length;i++)if(r[i]<r[i-1]-12)dips++;assert(dips<=1,`${p.id} ramps: ${r.join(' → ')}`);}
+for(const p of C.ALL_PACKS){const r=C.ALL_SCENARIOS.filter(s=>s.pack===p.id).map(s=>DIFFICULTY[s.id]);let dips=0;for(let i=1;i<r.length;i++)if(r[i]<r[i-1]-12)dips++;assert(dips<=1,`${p.id} ramps: ${r.join(' → ')}`);assert(r[0]<=65,`${p.id} opens with an approachable puzzle: ${r.join(' → ')}`);}
 assert(DIFFICULTY['fp-find-a-friend']<=45&&DIFFICULTY['fp-far-corner']<=45,'the first two puzzles are gentle');
 // 4. youth routes come from the catalog in no-heading mode
 for(const s of C.ALL_SCENARIOS){const r=C.routeFor(s.id,false);assert(!r.some(k=>k.kind==='header'),s.id+' youth route has no headers');}

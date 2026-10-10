@@ -26,7 +26,14 @@ import {BALL_R,GOAL_H,GOAL_W,MARK,POST_X,POWERS,WOBBLE,atKeeper,flightTime,keepe
  *
  * Heat: render on demand. Nothing runs while you aim (a drag draws one frame per move); the loop runs only while something moves
  * (a shot ≈3 s, the keeper stepping out, the intro camera move) and sleeps after; it stops when the tab is hidden and everything
- * is disposed on unmount. Pixel ratio ≤1.5 on touch screens, one small shadow map, no post-processing.
+ * is disposed on unmount. One small shadow map.
+ *
+ * 16-bit pixel art (Oct 9 2026, museum styles pass): the stage renders into a LOW-RES drawing buffer (one buffer pixel = 2–4 CSS
+ * pixels, ≈440 px on the long side, so far fewer pixels than the old DPR ≤1.5 render) that the browser upscales nearest-neighbour
+ * (CSS image-rendering: pixelated). One cheap full-screen pass then gives it the console look: the frame is reduced to the Sega
+ * Mega Drive's 9-bit colour (8 levels per channel) through a 4×4 Bayer ordered dither, with a one-pixel dark outline where a
+ * figure meets a brighter background. The goal-plane graphics are drawn on a small canvas sampled nearest-neighbour (square
+ * pixels, no smoothing). While a shot plays the stage is drawn at 30 frames a second (sprite-like cadence, half the GPU work).
  */
 export type Insets={top:number;right:number;bottom:number;left:number};
 export type Shot={x:number;y:number;result:Result};
@@ -139,10 +146,28 @@ void main(){vec2 q=vec2(vM.x+vM.y,vM.x-vM.y)*(.7071/.12);vec2 f=abs(fract(q)-.5)
  float veil=smoothstep(.25,.6,w);float a=mix(line*.7,.16,veil);if(a<.02)discard;
  vec3 c=mix(uCol,uFog,smoothstep(uFogNear,uFogFar,vF));gl_FragColor=vec4(c,a);}`;
 
+/** Buffer pixels: one per 2–4 CSS pixels, ≈440 on the long side (a 16-bit console's resolution, scaled to the screen). */
+export const pixelScale=(w:number,h:number)=>Math.max(2,Math.min(4,Math.round(Math.max(w,h)/440)));
+const POST_VERT=/* glsl */`varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}`;
+/** 9-bit colour (8 levels a channel, the Mega Drive's palette space) through a 4×4 Bayer ordered dither, and a 1 px dark outline
+ *  on the darker side of a strong edge (sprites in 16-bit games are outlined). A little extra saturation for the console punch. */
+const POST_FRAG=/* glsl */`uniform sampler2D uTex;uniform vec2 uRes;varying vec2 vUv;
+float bayer2(vec2 a){a=floor(a);return fract(a.x/2.+a.y*a.y*.75);}
+float bayer(vec2 a){return bayer2(.5*a)*.25+bayer2(a);}// 4×4 ordered-dither threshold, 0..1
+float lum(vec3 c){return dot(c,vec3(.299,.587,.114));}
+void main(){vec2 d=1./uRes;vec3 c=texture2D(uTex,vUv).rgb;float l=lum(c);
+ float n=max(max(lum(texture2D(uTex,vUv+vec2(d.x,0.)).rgb),lum(texture2D(uTex,vUv-vec2(d.x,0.)).rgb)),max(lum(texture2D(uTex,vUv+vec2(0.,d.y)).rgb),lum(texture2D(uTex,vUv-vec2(0.,d.y)).rgb)));
+ c=mix(vec3(l),c,1.18);
+ if(n-l>.30)c*=.38;
+ float t=bayer(gl_FragCoord.xy);
+ c=floor(clamp(c,0.,1.)*7.+t)/7.;
+ gl_FragColor=vec4(c,1.);}`;
+
 // ── the stage ───────────────────────────────────────────────────────────────────────────────────────────────────────────────
 export function createPenaltyScene(canvas:HTMLCanvasElement,opts:Opts):PenaltyScene{
- const renderer=new T.WebGLRenderer({canvas,antialias:true,alpha:false,powerPreference:'high-performance'});
- const dpr=Math.min(window.devicePixelRatio||1,opts.coarse?1.5:2);renderer.setPixelRatio(dpr);
+ const renderer=new T.WebGLRenderer({canvas,antialias:false,alpha:false,powerPreference:'high-performance'});
+ // Pixel art: the drawing buffer is low-res (DPR well under 1); the browser upscales it nearest-neighbour. Never above 1.5 on touch.
+ let px=pixelScale(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(1/px,opts.coarse?1.5:2));
  renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;
  renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;
  const scene=new T.Scene();scene.background=new T.Color('#16244a');
@@ -178,9 +203,17 @@ export function createPenaltyScene(canvas:HTMLCanvasElement,opts:Opts):PenaltySc
  const net=new T.Mesh(keep(netGeometry()),keep(new T.ShaderMaterial({vertexShader:NET_VERT,fragmentShader:NET_FRAG,uniforms:netU,transparent:true,depthWrite:false,side:T.DoubleSide,extensions:{derivatives:true} as never})));net.renderOrder=2;goal.add(net);
 
  // Teaching graphics on the goal plane (a canvas texture, redrawn only when the aim, power, era or shots change).
- const OV_W=11.2,OV_H=3.9,ovCanvas=document.createElement('canvas');ovCanvas.width=opts.coarse?1280:1600;ovCanvas.height=Math.round(ovCanvas.width*OV_H/OV_W);
- const ovTex=keep(new T.CanvasTexture(ovCanvas));ovTex.colorSpace=T.SRGBColorSpace;ovTex.anisotropy=4;
+ const OV_W=11.2,OV_H=3.9,ovCanvas=document.createElement('canvas');ovCanvas.width=448;ovCanvas.height=Math.round(ovCanvas.width*OV_H/OV_W);// 40 texels a metre: chunky
+ const ovTex=keep(new T.CanvasTexture(ovCanvas));ovTex.colorSpace=T.SRGBColorSpace;ovTex.magFilter=T.NearestFilter;ovTex.minFilter=T.NearestFilter;ovTex.generateMipmaps=false;
  const overlay=new T.Mesh(keep(new T.PlaneGeometry(OV_W,OV_H)),keep(new T.MeshBasicMaterial({map:ovTex,transparent:true,depthWrite:false,toneMapped:false,fog:false})));overlay.position.set(0,OV_H/2,.05);overlay.renderOrder=3;scene.add(overlay);
+
+ // The 16-bit pass: copy the low-res frame, quantise it to 9-bit colour with an ordered dither, outline the figures.
+ let fb=new T.FramebufferTexture(1,1);const postU={uTex:{value:fb as T.Texture},uRes:{value:new T.Vector2(1,1)}};
+ const postMat=keep(new T.ShaderMaterial({vertexShader:POST_VERT,fragmentShader:POST_FRAG,uniforms:postU,depthTest:false,depthWrite:false,toneMapped:false}));
+ const postScene=new T.Scene(),postCam=new T.OrthographicCamera(-1,1,1,-1,0,1),postQuad=new T.Mesh(keep(new T.PlaneGeometry(2,2)),postMat);postQuad.frustumCulled=false;postScene.add(postQuad);
+ const bufSize=new T.Vector2();
+ function sizePost(){renderer.getDrawingBufferSize(bufSize);const w=Math.max(1,bufSize.x|0),h=Math.max(1,bufSize.y|0);if(fb.image.width===w&&fb.image.height===h)return;
+  fb.dispose();fb=new T.FramebufferTexture(w,h);postU.uTex.value=fb;postU.uRes.value.set(w,h);}
 
  // Environments: a modern stadium (today) and an 1891 ground.
  const glow=keep(glowTexture());
@@ -276,28 +309,25 @@ export function createPenaltyScene(canvas:HTMLCanvasElement,opts:Opts):PenaltySc
   const zone=zoneOf(s.aimX,s.aimY);
   const zones:[string,number,number,number,number][]=[['top-corner',-POST_X,-2.3,1.55,GOAL_H],['top-corner',2.3,POST_X,1.55,GOAL_H],['low-corner',-POST_X,-2.3,0,.95],['low-corner',2.3,POST_X,0,.95],['middle',-1.1,1.1,0,GOAL_H]];
   if(!quiet)for(const [z,x0,x1,y0,y1] of zones){const on=z===zone;g.fillStyle=on?'rgba(255,255,255,.13)':'rgba(255,255,255,.035)';g.fillRect(X(x0),Y(y1),(x1-x0)*k,(y1-y0)*k);
-   g.setLineDash([.06*k,.07*k]);g.strokeStyle=on?'rgba(255,255,255,.6)':'rgba(255,255,255,.2)';g.lineWidth=.022*k;g.strokeRect(X(x0),Y(y1),(x1-x0)*k,(y1-y0)*k);g.setLineDash([]);}
+   g.setLineDash([2,3]);g.strokeStyle=on?'rgba(248,248,248,.7)':'rgba(248,248,248,.25)';g.lineWidth=1;g.strokeRect(X(x0),Y(y1),(x1-x0)*k,(y1-y0)*k);g.setLineDash([]);}
   // The keeper's reach (the model's oval; in 1891 its "shadow" from 6 yards out, as you see it from the ball).
   if(!quiet){const t=keeperTime(s.era,s.power),{a,b}=reach(t),c=toGoal(s.era,0,1),sc=s.era==='1891'?MARK/(MARK-keeperDepth('1891')):1;
    const rx=a*sc*k,ry=b*sc*k,cx=X(0),cy=Y(c.y);
    g.save();g.beginPath();g.rect(X(-POST_X-.4),Y(OV_H),(2*POST_X+.8)*k,(OV_H)*k);g.clip();
-   const grad=g.createRadialGradient(cx,cy,0,cx,cy,Math.max(rx,ry));grad.addColorStop(0,'rgba(95,212,232,.30)');grad.addColorStop(1,'rgba(95,212,232,.10)');
-   g.fillStyle=grad;g.beginPath();g.ellipse(cx,cy,rx,ry,0,0,Math.PI*2);g.fill();g.strokeStyle='rgba(140,232,248,.9)';g.lineWidth=.03*k;g.stroke();g.restore();
-   // Never higher than just over the bar: the 1891 oval runs off the top, and its label would slide under the rules banner.
-   const ly=Math.max(Y(GOAL_H+.35),cy-ry-.02*k);pill(g,'KEEPER REACH',cx,Math.max(.16*k,ly),'#5fd4e8','#062028',k);}
+   // A flat fill and a 2-texel rim (pixel art has no soft gradients; the dither pass does the shading).
+   g.fillStyle='rgba(88,216,248,.2)';g.beginPath();g.ellipse(cx,cy,rx,ry,0,0,Math.PI*2);g.fill();g.strokeStyle='#58d8f8';g.lineWidth=2;g.stroke();g.restore();
+   }
   // Your shot's spray: the model's own wobble samples for this aim and power (yellow lands on target, coral misses).
   if(!quiet){const wob=POWERS[s.power].wobble;
-   for(const w of WOBBLE){const x=s.aimX+w[0]*wob,y=Math.max(BALL_R,s.aimY+w[1]*wob*.8),out=Math.abs(x)>POST_X||y>GOAL_H;g.fillStyle=out?'rgba(255,138,107,.55)':'rgba(255,216,74,.5)';g.beginPath();g.arc(X(x),Y(y),.026*k,0,Math.PI*2);g.fill();}}
+   for(const w of WOBBLE){const x=s.aimX+w[0]*wob,y=Math.max(BALL_R,s.aimY+w[1]*wob*.8),out=Math.abs(x)>POST_X||y>GOAL_H;g.fillStyle=out?'#f87858':'#f8d838';g.fillRect(Math.round(X(x)),Math.round(Y(y)),1,1);}}
   // Your earlier shots this round.
-  for(const sh of s.shots.slice(-5)){const c=sh.result==='goal'?'#7ee081':sh.result==='saved'?'#5fd4e8':'#ff8a6b';g.fillStyle=c;g.strokeStyle='rgba(6,14,24,.85)';g.lineWidth=.02*k;g.beginPath();g.arc(X(sh.x),Y(sh.y),.075*k,0,Math.PI*2);g.fill();g.stroke();}
+  for(const sh of s.shots.slice(-5)){const c=sh.result==='goal'?'#7ee081':sh.result==='saved'?'#5fd4e8':'#ff8a6b';const x=Math.round(X(sh.x)),y=Math.round(Y(sh.y));g.fillStyle='#000';g.fillRect(x-3,y-3,7,7);g.fillStyle=c;g.fillRect(x-2,y-2,5,5);}
   // The reticle.
-  if(s.mode!=='result'){const x=X(s.aimX),y=Y(s.aimY),r=.2*k;g.strokeStyle=quiet?'rgba(255,216,74,.45)':'#ffd84a';g.lineWidth=.035*k;g.beginPath();g.arc(x,y,r,0,Math.PI*2);g.stroke();
-   g.lineWidth=.03*k;for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){g.beginPath();g.moveTo(x+dx*r*.55,y+dy*r*.55);g.lineTo(x+dx*r*1.35,y+dy*r*1.35);g.stroke();}
-   g.fillStyle='#ffd84a';g.beginPath();g.arc(x,y,.035*k,0,Math.PI*2);g.fill();}
+  // The reticle: a pixel crosshair (four 2×4 ticks round a hollow square, outlined in black so it reads on the net).
+  if(s.mode!=='result'){const x=Math.round(X(s.aimX)),y=Math.round(Y(s.aimY)),c=quiet?'#b89828':'#f8d838';
+   const box=(bx:number,by:number,w:number,h:number)=>{g.fillStyle='#000';g.fillRect(bx-1,by-1,w+2,h+2);g.fillStyle=c;g.fillRect(bx,by,w,h);};
+   box(x-6,y-1,4,2);box(x+3,y-1,4,2);box(x-1,y-6,2,4);box(x-1,y+3,2,4);box(x-1,y-1,2,2);}
   g.restore();ovTex.needsUpdate=true;return true;}
- function pill(g:CanvasRenderingContext2D,text:string,cx:number,cy:number,bg:string,fg:string,k:number){
-  g.font=`800 ${Math.round(.17*k)}px system-ui,-apple-system,"Segoe UI",Arial,sans-serif`;const w=g.measureText(text).width+.26*k,h=.28*k;
-  g.fillStyle=bg;g.beginPath();g.roundRect(cx-w/2,cy-h/2,w,h,h/2);g.fill();g.fillStyle=fg;g.textAlign='center';g.textBaseline='middle';g.fillText(text,cx,cy+.01*k);}
 
  // ── poses ──
  const ballPos=new T.Vector3(0,VR,MARK);
@@ -386,7 +416,11 @@ export function createPenaltyScene(canvas:HTMLCanvasElement,opts:Opts):PenaltySc
   // A beaten keeper stays down a beat before he gets up.
   if(r.hold>0&&p>D.land+.06){const held=(t-r.diveStart-(D.land+.06)*DIVE_S);p=held<r.hold?D.land+.06:(t-r.hold-r.diveStart)/DIVE_S;}
   let x=r.kx,z=r.kz,lift=0;
-  if(p<0){keeperM.stance='ready';keeperM.ready=1;const set=smooth((t-(r.diveStart-.32))/.22);x=r.kx+Math.sin(t*7.5)*.07*(1-set);}
+  if(p<0){keeperM.stance='ready';keeperM.ready=1;const set=smooth((t-(r.diveStart-.32))/.22);
+   // Weight shifts on the line while the kicker runs up, then the keeper's real-life timing: a small split-step hop that lands
+   // just as he pushes off, loading his legs, with his weight already leaning a touch toward the side he has guessed.
+   x=r.kx+Math.sin(t*7.5)*.07*(1-set)+r.dir*.09*set*(r.kind==='stand'?0:1);
+   if(!opts.reducedMotion){const u=clamp01((t-(r.diveStart-.24))/.2);lift=u>0&&u<1?Math.sin(Math.PI*u)*.075:0;}}
   else if(p<1){keeperM.dive={progress:p,dir:r.dir,height:r.height,kind:r.kind,outcome:r.outcome};
    const m=1-Math.pow(1-clamp01((p-D.push)/(D.contact+.05-D.push)),2.2);x=r.kx+r.dir*r.travel*m;z=r.kz+.25*m;
    // High balls: the push-off carries the whole body up (the rig arcs the hips; the host owns the root's height).
@@ -417,6 +451,8 @@ export function createPenaltyScene(canvas:HTMLCanvasElement,opts:Opts):PenaltySc
  const busy=()=>!!run&&!run.done||camT<1||settle>0||Math.abs(keeperPos.z-keeperPos.tz)>.005||shake>0;
  function frame(now:number){
   raf=0;if(disposed||document.hidden)return;
+  // 30 frames a second while something moves: the sprite cadence of a console game, and half the GPU work of 60.
+  if(last&&now-last<31){raf=requestAnimationFrame(frame);return;}
   const dt=last?Math.min(.05,(now-last)/1000):1/60;last=now;elapsed+=dt;
   advance(dt);draw();
   if(busy())raf=requestAnimationFrame(frame);else last=0;}
@@ -426,7 +462,7 @@ export function createPenaltyScene(canvas:HTMLCanvasElement,opts:Opts):PenaltySc
   else if(run)settle=0;
   else if(!run){const walking=stepKeeperWalk(dt);if(walking||settle>0){idleKicker(dt);idleKeeper(dt);settle=Math.max(0,settle-dt);}if(!walking&&settle<=0)settle=0;placeBall();}
  }
- function draw(){applyCamera();drawOverlay();renderer.render(scene,camera);}
+ function draw(){applyCamera();drawOverlay();renderer.render(scene,camera);sizePost();renderer.copyFramebufferToTexture(fb);renderer.render(postScene,postCam);}
  const wake=()=>{if(!raf&&!disposed&&!document.hidden){raf=requestAnimationFrame(frame);}};
  /** One frame now-ish (aiming, layout): a single rAF, then sleep. */
  const request=wake;
@@ -435,13 +471,14 @@ export function createPenaltyScene(canvas:HTMLCanvasElement,opts:Opts):PenaltySc
  const onVis=()=>{if(document.hidden){cancelAnimationFrame(raf);raf=0;last=0;}else{wake();}};
  document.addEventListener('visibilitychange',onVis);
 
- function resize(){const w=canvas.clientWidth||1,h=canvas.clientHeight||1;if(w===cw&&h===ch)return;cw=w;ch=h;renderer.setSize(w,h,false);camera.aspect=w/h;request();opts.onLayout?.();}
+ function resize(){const w=canvas.clientWidth||1,h=canvas.clientHeight||1;if(w===cw&&h===ch)return;cw=w;ch=h;px=pixelScale(w,h);renderer.setPixelRatio(Math.min(1/px,opts.coarse?1.5:2));renderer.setSize(w,h,false);sizePost();camera.aspect=w/h;request();opts.onLayout?.();}
  const ro=new ResizeObserver(resize);ro.observe(canvas);
  resize();applyEra('today');placeBall();settleNow();keeperPos.z=keeperPos.tz;
 
  // Dev hook for the browser checks (frame strips, framing, sleep): not in production builds.
  if(process.env.NODE_ENV!=='production')(window as unknown as {__pk?:unknown}).__pk={
   get sleeping(){return raf===0;},
+  get pixel(){renderer.getDrawingBufferSize(bufSize);return {px,buffer:[bufSize.x,bufSize.y]};},
   get debug(){return {run:run?{t:+run.t.toFixed(2),end:+run.end.toFixed(2),done:run.done}:null,camT,settle,kz:keeperPos.z,ktz:keeperPos.tz,shake};},
   goalCentre(){applyCamera();return api.project(0,GOAL_H/2,0);},
   stage(){return {left:insets.left,top:insets.top,width:cw-insets.left-insets.right,height:ch-insets.top-insets.bottom,cw,ch};},
@@ -474,7 +511,7 @@ export function createPenaltyScene(canvas:HTMLCanvasElement,opts:Opts):PenaltySc
   project(x,y,z){inv.copy(aimCam.matrixWorld).invert();tmp.set(x,y,z).applyMatrix4(inv);const f=aimF,tx=tmp.x/-tmp.z,ty=tmp.y/-tmp.z;return {x:(tx-f.l)/(f.r-f.l)*cw,y:(f.t-ty)/(f.t-f.b)*ch};},
   dispose(){disposed=true;cancelAnimationFrame(raf);raf=0;ro.disconnect();document.removeEventListener('visibilitychange',onVis);
    if(process.env.NODE_ENV!=='production')delete (window as unknown as {__pk?:unknown}).__pk;
-   kicker.dispose();keeper.dispose();disposables.forEach(d=>d.dispose());sun.shadow.map?.dispose();renderer.dispose();renderer.forceContextLoss();},
+   kicker.dispose();keeper.dispose();disposables.forEach(d=>d.dispose());fb.dispose();sun.shadow.map?.dispose();renderer.dispose();renderer.forceContextLoss();},
  };
  return api;
 }

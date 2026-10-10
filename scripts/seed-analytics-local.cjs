@@ -15,7 +15,7 @@ const id=()=>crypto.randomBytes(16).toString('base64url').slice(0,22);
 const countries=[[['US','CA'],22],[['US','TX'],12],[['US','NY'],9],[['US','FL'],6],[['US','WA'],4],[['US','IL'],3],[['US','MA'],2],[['US','CO'],2],[['CA','BC'],3],[['CA','QC'],2],[['GB','WLS'],2],[['AU','VIC'],3],[['GB','ENG'],16],[['GB','SCT'],3],[['CA','ON'],6],[['AU','NSW'],5],[['IE','D'],3],[['MX','CMX'],4],[['ES','MD'],3],[['DE','BE'],2],[['BR','SP'],3],[['JP','13'],2],[['NG','LA'],2],[[null,null],1]];
 const sources=[[['direct',null,null],46],[['search','google.com',null],22],[['search','duckduckgo.com',null],3],[['search','bing.com',null],2],[['social','youtube.com',null],7],[['social','instagram.com',null],4],[['social','facebook.com',null],3],[['referral','myclubschool.org',null],4],[['referral','coachesforum.net',null],2],[['campaign',null,['newsletter','email','autumn-term']],5],[['campaign',null,['club-flyer','qr','u10-league']],3]];
 const devices=[['phone',48],['tablet',30],['desktop',22]];
-const entries=[['/',82],['/arcade',8],['/museum',5],['/konbini',2],['/controller',3]];
+const entries=[['/start',40],['/',82],['/arcade',8],['/museum',5],['/konbini',2],['/controller',3]];
 const lengths=[[[2,9],18],[[10,30],10],[[30,60],9],[[60,180],15],[[180,600],22],[[600,1800],19],[[1800,3600],5],[[3600,5400],2]];
 const now=Date.now(),data={salts:{},starts:{},beats:[],rollups:{}};
 // Learning (Oct 9 2026): FAKE lesson funnels, first-try answers, walkthrough steps, Paths, warm-ups and start flags, using the
@@ -39,6 +39,19 @@ function learningCounts(){
  if(rnd()<0.02)add('gr:'+pick([['7v7',5],['9v9',2],['11v11',1],['futsal',2]]));if(rnd()<0.003)add('gr:finale');
  return k;
 }
+// Start page (Oct 9 2026): FAKE title-screen taps (lib/analytics/startIds.ts) for sessions that saw /start.
+function startCounts(k){
+ const add=id=>{k[id]=(k[id]||0)+1;},p=x=>rnd()<x;add('st:view');
+ if(p(0.6)){add('st:start');if(p(0.9)){add('st:created');if(p(0.85)){add('st:word');if(p(0.78))add('st:word_ok');}if(p(0.8)){add('st:saved');if(p(0.93))add('st:play_ready');}}}
+ else if(p(0.4)){add('st:have');if(p(0.3))add('st:restore_fail');if(p(0.7)){add('st:restored');if(p(0.95))add('st:play_restored');}}
+ else if(p(0.6)){add('st:returning');if(p(0.9))add('st:play_returning');else if(p(0.5))add('st:other_code');}
+ else{add('st:break');if(p(0.85))add('st:play_break');}
+ if(p(0.05))add('st:tilt');
+ if(p(0.16)){add('sg:open');for(const [id,x] of [['wsv',0.18],['instagram',0.12],['fc_yap',0.08],['street_soccer_san_diego',0.07],['ronin_futsal',0.06],['privacy',0.1]])if(p(x))add('sg:'+id);
+  if(p(0.3)){add('sg:donate');if(p(0.7)){add('sg:gate_ok');if(p(0.5)){add('sg:amt_'+pick([[5,4],[10,5],[15,2],[25,2]]));if(p(0.45))add('sg:paid');}}else add('sg:gate_no');}}
+ if(p(0.07)||k['sg:privacy']){if(!k['sg:privacy'])add('sp:open');for(const [id,x] of [['short',0.4],['codes',0.25],['visits',0.3],['retention',0.15],['rights',0.12],['contact',0.08],['never',0.1]])if(p(x))add('sp:'+id);}
+ return k;
+}
 const startFlags=()=>({p:pick([[0,45],[1,28],[2,18],[3,9]]),g:pick([[0,80],[1,12],[2,5],[3,2],[4,1]]),s:(rnd()<0.18?1:0)|(rnd()<0.35?2:0)|(rnd()<0.14?4:0)|(rnd()<0.06?8:0),v:pick([[0,62],[1,16],[2,14],[3,8]])});
 for(let d=DAYS-1;d>=0;d--){
  const dayStart=Date.UTC(new Date(now).getUTCFullYear(),new Date(now).getUTCMonth(),new Date(now).getUTCDate())-d*86_400_000;
@@ -57,7 +70,7 @@ for(let d=DAYS-1;d>=0;d--){
   if(left>0)areaMs.island=(areaMs.island||0)+left;
   data.starts[sid]={id:sid,day,visitorHash:hash,startedAt:new Date(start).toISOString(),entryPath:entry,
    country,region:country?region:null,device:pick(devices),source,referrerHost:ref,utmSource:utm?utm[0]:null,utmMedium:utm?utm[1]:null,utmCampaign:utm?utm[2]:null,flags:startFlags()};
-  const lc=learningCounts();
+  const lc=learningCounts();if(entry==='/start'||rnd()<0.05)startCounts(lc);
   // Where on the island (Oct 8 2026): FAKE place / activity / heat-map splits for the island share of each beat.
 const GRID={x0:-160,z0:-320,size:20,cols:52,rows:31};
 const SPOTS=[['island_square',85,-35,18,14],['arcade',103,-48,6,6],['konbini',71,-55,6,5],['field_11v11',135,100,28,13],['field_7v7',11,-80,16,8],['field_9v9',160,-110,20,7],

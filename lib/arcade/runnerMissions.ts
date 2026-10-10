@@ -7,7 +7,7 @@ import type {RunnerGame} from './runnerGame';
  * Earned only by playing: no purchases, no randomness, no streak pressure.
  * Storage is written only when a mission completes (never per frame).
  */
-export type RunnerMissionId='goals2'|'skill1'|'stage2'|'hurdle'|'onetwo'|'near3'|'puddle'|'corner'|'boss'|'skillKinds'|'closer'|'chip'|'cross'|'round'|'shield'|'goals5'|'middle'|'stage5';
+export type RunnerMissionId='goals2'|'skill1'|'stage2'|'hurdle'|'onetwo'|'near3'|'puddle'|'corner'|'boss'|'skillKinds'|'closer'|'chip'|'cross'|'round'|'shield'|'goals5'|'middle'|'stage5'|'inside3'|'downhill'|'stage6'|'beatScore'|'perfect3'|'clean3';
 type Mission={label:string;target:number;value:(s:RunnerGame)=>number};
 export const RUNNER_MISSIONS:Record<RunnerMissionId,Mission>={
  goals2:{label:'Score 2 goals',target:2,value:s=>s.goals},
@@ -28,10 +28,19 @@ export const RUNNER_MISSIONS:Record<RunnerMissionId,Mission>={
  goals5:{label:'Score 5 goals in one run',target:5,value:s=>s.goals},
  middle:{label:'Take the route through the middle',target:1,value:s=>s.middleRuns},
  stage5:{label:'Reach stage 5',target:5,value:s=>s.level},
+ // Hills and bends (Oct 9 2026): the short way round, and calm feet when the slope speeds you up.
+ inside3:{label:'Cut inside on 3 bends',target:3,value:s=>s.insideCuts},
+ downhill:{label:'Beat a tackle running downhill',target:1,value:s=>s.downhillBeats},
+ stage6:{label:'Reach stage 6',target:6,value:s=>s.level},
+ // The lesson in one move (Oct 9 2026): beat a defender, then finish within a few seconds.
+ beatScore:{label:'Beat a defender, then score straight away',target:1,value:s=>s.beatScores},
+ perfect3:{label:'Time 3 PERFECT skill moves',target:3,value:s=>s.perfectSkills},
+ clean3:{label:'Reach stage 3 without losing a chance',target:3,value:s=>s.cleanStage},
 };
 export const RUNNER_MISSION_SETS:readonly (readonly RunnerMissionId[])[]=[
  ['goals2','skill1','stage2'],['hurdle','onetwo','near3'],['puddle','corner','boss'],
  ['skillKinds','closer','chip'],['cross','round','shield'],['goals5','middle','stage5'],
+ ['inside3','downhill','stage6'],['beatScore','perfect3','clean3'],
 ];
 /** Cosmetic balls, each with a true piece of football history or kit knowledge. */
 export const RUNNER_BALLS=[

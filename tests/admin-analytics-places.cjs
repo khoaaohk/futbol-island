@@ -15,9 +15,10 @@ function resolve(from,id){
 function load(file){file=path.resolve(file);if(loaded.has(file))return loaded.get(file);
  if(file.endsWith('.json')){const v={default:JSON.parse(fs.readFileSync(file,'utf8'))};loaded.set(file,v);return v;}
  const m={exports:{}};loaded.set(file,m.exports);
- vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{fileName:file,compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,
-  {module:m,exports:m.exports,Buffer,URL,URLSearchParams,TextDecoder,Date,Math,JSON,process:{env:{}},console,
-   require:id=>id.startsWith('.')||id.startsWith('@/')?load(resolve(file,id)):require(id)});
+ // Wrapped in a function so module/exports/require are locals, as in a real bundle. Left as sandbox globals, every
+ // `exports.X` read in a hot loop (e.g. onIsland's polygon walk) goes through the vm context's interceptor: ~30x slower.
+ vm.runInNewContext('(function(module,exports,require){'+ts.transpileModule(fs.readFileSync(file,'utf8'),{fileName:file,compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText+'\n})',
+  {Buffer,URL,URLSearchParams,TextDecoder,Date,Math,JSON,process:{env:{}},console})(m,m.exports,id=>id.startsWith('.')||id.startsWith('@/')?load(resolve(file,id)):require(id));
  loaded.set(file,m.exports);return m.exports;}
 const IDS=load('lib/analytics/islandIds.ts'),P=load('lib/analytics/islandPlaces.ts'),C=load('lib/analytics/core.ts'),S=load('lib/analytics/store.ts'),
  I=load('lib/analytics/ingest.ts'),R=load('lib/analytics/report.ts'),T=load('lib/analytics/tracker.ts'),G=load('lib/analytics/regions.ts');
@@ -69,8 +70,12 @@ await ok('zones',()=>{
  assert.deepEqual([...IDS.PLACE_IDS].filter(p=>!seen.has(p)),[],'every place is reachable');
  assert.equal(new Set(IDS.PLACE_IDS).size,IDS.PLACE_IDS.length);assert.equal(new Set(IDS.ACTIVITY_IDS).size,IDS.ACTIVITY_IDS.length);
  assert(IDS.PLACE_IDS.every(p=>/^[a-z0-9_]+$/.test(p)&&IDS.PLACE_LABEL[p]),'ids are plain and labelled');
- const t0=process.hrtime.bigint();for(let i=0;i<20000;i++)pa(-100+(i*37)%900,-300+(i*53)%590);const ms=Number(process.hrtime.bigint()-t0)/1e6;
- assert(ms/20000<.1,'a lookup costs well under 0.1 ms (one runs every 5 s): '+ms.toFixed(1)+' ms');
+ // Cost per lookup: warmed up, then the median of 9 batches of 2,000 (robust to a busy machine; a per-call rebuild of a
+ // table or an O(map) scan still lands far above the budget).
+ const batch=()=>{const t0=process.hrtime.bigint();for(let i=0;i<2000;i++)pa(-100+(i*37)%900,-300+(i*53)%590);return Number(process.hrtime.bigint()-t0)/1e6/2000;};
+ for(let i=0;i<3;i++)batch();
+ const per=Array.from({length:9},batch).sort((a,b)=>a-b)[4];
+ assert(per<.1,'a lookup costs well under 0.1 ms (one runs every 5 s): median '+(per*1000).toFixed(1)+' µs');
 });
 
 // 2. The grid covers the whole flyable world (Coral Cay included) in 20 m cells.
@@ -249,7 +254,7 @@ await ok('sql',async()=>{
   assert.equal(psql(`select place_ms::text||activity_ms::text||cells::text from analytics_beats where session_id='legacy_session_00001'`),'{}{}{}','existing rows read as empty');
   // Additive only: running it again is harmless too (idempotent), and the grants still hold.
   runFile('supabase/migrations/20261008_analytics_places.sql');
-  runFile('supabase/migrations/20261009_analytics_counts.sql');// and the learning one after it, as in production
+  runFile('supabase/migrations/20261009_analytics_counts.sql');runFile('supabase/migrations/20261009_analytics_start.sql');// and the learning + start-page ones after it, as in production
   for(const role of ['anon','authenticated'])assert.match(fails(`select analytics_ingest('{}'::jsonb)`,role),/permission denied/);
   assert.deepEqual(psql(`select column_name from information_schema.columns where table_name='analytics_beats' order by ordinal_position`).split('\n'),['id','session_id','ts','engaged_ms','pageviews','area_ms','place_ms','activity_ms','cells','counts'],'three new columns (+ counts, Oct 9), nothing else');
   // The SQL's enums and limits are the TypeScript ones.

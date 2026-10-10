@@ -3,6 +3,7 @@ import {useEffect,useRef} from 'react';
 import {usePathname} from 'next/navigation';
 import {startTracker} from '@/lib/analytics/tracker';
 import {readStartFlags} from '@/lib/analytics/startFlags';
+import {watchStart} from '@/lib/analytics/startEvents';
 
 /**
  * Cookie-free first-party visit counter for the admin dashboard (lib/analytics/tracker.ts has the privacy and heat notes).
@@ -19,5 +20,7 @@ export default function VisitTracker({allowLocalhost=false}:{allowLocalhost?:boo
   return()=>{tracker.current?.stop();tracker.current=null;};
  },[allowLocalhost]);
  useEffect(()=>{if(pathname)tracker.current?.pageview(pathname);},[pathname]);
+ // The /start title screen: its view and one passive click listener for its buttons and links (lib/analytics/startEvents.ts).
+ useEffect(()=>{if(pathname!=='/start'||!tracker.current)return;return watchStart(window);},[pathname]);
  return null;
 }

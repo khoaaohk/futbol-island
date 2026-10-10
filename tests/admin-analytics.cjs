@@ -342,7 +342,7 @@ await ok('sql',async()=>{
   const fails=(sql,role)=>{const r=cp.spawnSync(psqlBin,[...args,'-c',`set role ${role}; ${sql}`],{encoding:'utf8'});return r.status!==0?r.stderr:'';};
   psql('create role anon; create role authenticated; create role service_role bypassrls;');// as in Supabase: only service_role bypasses RLS
   // The live migration, then the additive ones on top, in order (as in production).
-  for(const f of ['supabase/migrations/20261007_analytics.sql','supabase/migrations/20261008_analytics_places.sql','supabase/migrations/20261009_analytics_counts.sql'])cp.execFileSync(psqlBin,[...args,'-f',f],{stdio:['ignore','ignore','pipe']});
+  for(const f of ['supabase/migrations/20261007_analytics.sql','supabase/migrations/20261008_analytics_places.sql','supabase/migrations/20261009_analytics_counts.sql','supabase/migrations/20261009_analytics_start.sql'])cp.execFileSync(psqlBin,[...args,'-f',f],{stdio:['ignore','ignore','pipe']});
   // RLS and grants: the public roles get nothing; the service role gets the functions.
   for(const role of ['anon','authenticated']){
    assert.match(fails('select count(*) from analytics_sessions',role),/permission denied/);

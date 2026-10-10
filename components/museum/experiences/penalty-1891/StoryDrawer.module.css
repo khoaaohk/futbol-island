@@ -1,24 +1,27 @@
-/* penalty-1891 · the story slide-out: the shared drawer slide (DrawerSlide.module.css) in the exhibit's broadcast-editorial look. */
-.dialog{position:fixed;inset:0;margin:0;padding:0;border:0;width:100%;height:100dvh;max-width:none;max-height:none;background:transparent;color:#18202e;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+/* penalty-1891 · the story slide-out: the shared drawer slide (DrawerSlide.module.css) dressed as a 16-bit console text window
+ * (Oct 9 2026 styles pass): navy window, hard black edge, two-tone bevel, Press Start 2P for labels, Pixelify Sans for reading.
+ * The faces are declared in Experience.module.css (the drawer only ever opens inside the exhibit). */
+.dialog{position:fixed;inset:0;margin:0;padding:0;border:0;width:100%;height:100dvh;max-width:none;max-height:none;background:transparent;color:#fcfcfc;
+ font-family:'PK Pixelify',system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:none}
 .dialog[open]{display:flex;justify-content:flex-end}
-.dialog::backdrop{background:#050b1666}
-.dialog .panel{box-sizing:border-box;width:min(460px,100%);height:100%;overflow:auto;overscroll-behavior:contain;background:#f7f5ef;box-shadow:-18px 0 50px #050b1659;
- padding:calc(22px + env(safe-area-inset-top,0px)) calc(24px + env(safe-area-inset-right,0px)) calc(28px + env(safe-area-inset-bottom,0px)) 26px;display:flex;flex-direction:column;gap:16px;-webkit-user-select:text;user-select:text}
-.head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding-bottom:16px;border-bottom:3px solid #18202e}
-.eyebrow{display:block;font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#b08a1e}
-.head h2{margin:6px 0 0;font-family:Georgia,"Times New Roman",serif;font-size:32px;line-height:1.05;font-weight:700;letter-spacing:-.01em}
+.dialog::backdrop{background:#00002a99}
+.dialog .panel{box-sizing:border-box;width:min(480px,100%);height:100%;overflow:auto;overscroll-behavior:contain;background:#000090!important;/* beats the island's global light-dialog rule */box-shadow:-3px 0 0 #000,inset 3px 0 0 #fcfcfc,inset 6px 0 0 #2448d8;
+ padding:calc(22px + env(safe-area-inset-top,0px)) calc(24px + env(safe-area-inset-right,0px)) calc(28px + env(safe-area-inset-bottom,0px)) 30px;display:flex;flex-direction:column;gap:16px;-webkit-user-select:text;user-select:text}
+.head{background:transparent!important;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding-bottom:16px;border-bottom:4px solid #fcd824}
+.eyebrow{display:block;font-family:'PK Press Start','Courier New',monospace;font-size:9px;line-height:1.6;color:#fcd824}
+.head h2{margin:10px 0 0;font-family:'PK Press Start','Courier New',monospace;font-weight:400;font-size:20px;line-height:1.35;text-shadow:3px 3px 0 #000}
 .facts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px}
 .facts li{display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:start}
-.facts li span{font-size:13px;font-weight:800;color:#b08a1e;font-variant-numeric:tabular-nums;padding-top:3px}
-.facts li p{margin:0;font-size:16px;line-height:1.5}
-.h3{margin:8px 0 0;font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#4d5566}
-.list{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px;font-size:16px;line-height:1.5}
-.note{margin:0;font-size:15px;line-height:1.5;color:#3b4352}
-.take{margin:0;padding:12px 14px;border-radius:12px;background:#18202e;color:#f7f5ef;font-size:15px;line-height:1.45}
-.take b{color:#ffd84a}
-.more{font-size:14px;color:#4d5566;border-top:1px solid #18202e1f;padding-top:4px}
-.more summary{min-height:44px;display:flex;align-items:center;cursor:pointer;font-weight:800;color:#18202e}
-.more ul{margin:0 0 6px;padding-left:18px;display:flex;flex-direction:column;gap:8px;line-height:1.45}
-.more a{color:#2f5aa8;overflow-wrap:anywhere}
-.more a:focus-visible,.more summary:focus-visible{outline:3px solid #b08a1e;outline-offset:2px}
-@media(max-width:600px){.dialog .panel{width:100%;padding-left:calc(18px + env(safe-area-inset-left,0px));padding-right:calc(18px + env(safe-area-inset-right,0px))}.head h2{font-size:28px}}
+.facts li span{font-family:'PK Press Start','Courier New',monospace;font-size:10px;color:#fcd824;padding-top:5px}
+.facts li p{margin:0;font-size:18px;line-height:1.45}
+.h3{margin:8px 0 0;font-family:'PK Press Start','Courier New',monospace;font-weight:400;font-size:10px;line-height:1.6;color:#48d8fc}
+.list{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px;font-size:18px;line-height:1.45}
+.note{margin:0;font-size:17px;line-height:1.45;color:#d8fcfc}
+.take{margin:0;padding:12px 14px;background:#000048;box-shadow:inset 0 0 0 3px #fcd824;font-size:17px;line-height:1.45}
+.take b{color:#fcd824}
+.more{font-size:16px;color:#d8fcfc;border-top:3px solid #2448d8;padding-top:4px}
+.more summary{min-height:44px;display:flex;align-items:center;cursor:pointer;font-family:'PK Press Start','Courier New',monospace;font-size:11px;color:#fcfcfc}
+.more ul{margin:0 0 6px;padding-left:18px;display:flex;flex-direction:column;gap:8px;line-height:1.4}
+.more a{color:#6cd8fc;overflow-wrap:anywhere}
+.more a:focus-visible,.more summary:focus-visible{outline:3px solid #fcd824;outline-offset:2px}
+@media(max-width:600px){.dialog .panel{width:100%;padding-left:calc(18px + env(safe-area-inset-left,0px));padding-right:calc(18px + env(safe-area-inset-right,0px))}.head h2{font-size:17px}}

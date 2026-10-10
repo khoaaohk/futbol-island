@@ -5,13 +5,16 @@ import {createPlayer,type PlayerMotion,type PlayerRig} from '../graphics/player'
 import {DEFAULT_CUSTOMIZATION} from '../town/customization';
 import {matchPlayerDress} from '../town/beanLooks';
 import type {Scenario,PuzzleState,Prediction,Vec2,PuzzleEvent} from '../passPuzzle/types';
+import type {LaneStatus} from '../passPuzzle/explain';
+import {stripedPlaneGeometry} from '../graphics/pitchStripes';
 
 /**
  * Pass Puzzles scene: a broadcast view from behind the attack on a sand-framed island pitch.
  * All meshes are built once per level (rigs are pooled across levels). Nothing here owns a
  * render loop: the game component calls update()/render() only while something moves.
  */
-export type AimView={prediction:Prediction|null;receiver?:number;loft:number;stroke:Vec2[]};
+export type AimView={prediction:Prediction|null;receiver?:number;loft:number;stroke:Vec2[];status?:LaneStatus};
+const LANE_COLOR:Record<LaneStatus,string>={clear:'#8cff9e',tight:'#ffc457',blocked:'#ff6a4d',offside:'#ffb347',save:'#ff6a4d'};
 type Actor={tag:T.Sprite|null;rig:PlayerRig;motion:PlayerMotion;reactionLeft:number;reactionTotal:number;receiveLeft:number;kickLeft:number;called:number;callWave:number;dejected:boolean};
 const REACTION_SECONDS={chest:.62,thigh:.55,header:.5,stumble:.8,deflect:.55,slide:.75,dejected:1.3} as const;
 const PATH_DOTS=72,THREAT_RINGS=8,RIG_SCALE=1.3,BALL_R=.21,Y_SCALE=RIG_SCALE*.9;/* heights read against the scaled rigs */
@@ -103,7 +106,29 @@ export function createPassPuzzleScene(canvas:HTMLCanvasElement){
  const reactAge=new Float32Array(16).fill(-1),prevMode:string[]=[];
  // Called runs: a mint arrow from the runner to where they will go (pool of 4, plus one live preview).
  const arrowMat=new T.MeshBasicMaterial({color:'#70fff0',transparent:true,opacity:.85,depthWrite:false}),arrowHeadGeo=new T.ConeGeometry(.42,.9,3);arrowHeadGeo.rotateX(Math.PI/2);
- const arrows=Array.from({length:5},()=>{const g=new T.Group(),shaft=new T.Mesh(new T.PlaneGeometry(.22,1),arrowMat),head=new T.Mesh(arrowHeadGeo,arrowMat);shaft.rotation.x=-Math.PI/2;g.add(shaft,head);g.visible=false;g.name='puzzle-run-arrow';g.renderOrder=3;scene.add(g);return{g,shaft,head};});
+ const arrowShaftGeo=new T.PlaneGeometry(.22,1);
+ const arrows=Array.from({length:6},()=>{const g=new T.Group(),shaft=new T.Mesh(arrowShaftGeo,arrowMat),head=new T.Mesh(arrowHeadGeo,arrowMat);shaft.rotation.x=-Math.PI/2;g.add(shaft,head);g.visible=false;g.name='puzzle-run-arrow';g.renderOrder=3;scene.add(g);return{g,shaft,head};});
+ // Threat preview: a thin arrow from each defender who can reach the pass to the spot they would reach
+ // ("#4 gets here"), a cross where the ball would be stopped, and a tight-lane amber arrow for a near miss.
+ const dangerMat=new T.MeshBasicMaterial({color:'#ff6a4d',transparent:true,opacity:.9,depthWrite:false}),nearMat=new T.MeshBasicMaterial({color:'#ffc457',transparent:true,opacity:.75,depthWrite:false});
+ const dangerArrows=Array.from({length:3},()=>{const g=new T.Group(),shaft=new T.Mesh(arrowShaftGeo,dangerMat),head=new T.Mesh(arrowHeadGeo,dangerMat);shaft.rotation.x=-Math.PI/2;head.scale.setScalar(.7);g.add(shaft,head);g.visible=false;g.name='puzzle-danger-arrow';g.renderOrder=3;scene.add(g);return{g,shaft,head};});
+ const placeDanger=(i:number,from:Vec2|null,to:Vec2|null,near=false)=>{const a=dangerArrows[i];if(!a)return;if(!from||!to){a.g.visible=false;return;}const dx=to.x-from.x,dz=to.z-from.z,len=Math.hypot(dx,dz);if(len<.5){a.g.visible=false;return;}
+  const m=near?nearMat:dangerMat;a.shaft.material=m;a.head.material=m;a.g.visible=true;a.g.position.set(from.x,.06,from.z);a.g.rotation.set(0,Math.atan2(dx,dz),0);a.shaft.scale.set(.6,Math.max(.1,len-.6),1);a.shaft.position.set(0,0,(len-.6)/2);a.head.position.set(0,.02,len-.32);};
+ const cutMark=new T.Group();{const m=new T.MeshBasicMaterial({color:'#ff6a4d',depthWrite:false,transparent:true});for(const a of [1,-1]){const bar=new T.Mesh(new T.BoxGeometry(1.25,.05,.26),m);bar.rotation.y=a*Math.PI/4;cutMark.add(bar);}}cutMark.visible=false;cutMark.name='puzzle-cut-mark';cutMark.renderOrder=5;scene.add(cutMark);
+ // Hint spot: where the next pass of the coach's route goes (tier-2 hint), with its run arrow when one is needed.
+ const hintRing=flatRing(.78,1,'#70fff0',.95);hintRing.name='puzzle-hint-spot';const hintDot=flatRing(0,.32,'#70fff0',.7);hintDot.name='puzzle-hint-dot';let hint:{spot:Vec2;run?:{from:Vec2;to:Vec2}}|null=null;
+ function setHint(h:{spot:Vec2;run?:{from:Vec2;to:Vec2}}|null){hint=h;hintRing.visible=hintDot.visible=!!h;if(h){hintRing.position.set(h.spot.x,.05,h.spot.z);hintRing.scale.setScalar(1.3);hintDot.position.set(h.spot.x,.05,h.spot.z);}placeArrow(5,h?.run?.from??null,h?.run?.to??null);}
+ // "Look up" scan: a translucent lane from the ball to each teammate, green (open), amber (tight) or red
+ // (shut), with a ring at their feet. Pooled (5), placed once per aim on request; static, so no frames.
+ const scanMats:Record<string,T.MeshBasicMaterial>={clear:new T.MeshBasicMaterial({color:'#8cff9e',transparent:true,opacity:.66,depthWrite:false,toneMapped:false}),tight:new T.MeshBasicMaterial({color:'#ffc457',transparent:true,opacity:.62,depthWrite:false,toneMapped:false}),blocked:new T.MeshBasicMaterial({color:'#ff6a4d',transparent:true,opacity:.58,depthWrite:false,toneMapped:false})};
+ scanMats.offside=scanMats.save=scanMats.blocked;
+ const scanRingGeo=new T.RingGeometry(.95,1.18,32);
+ const scanLanes=Array.from({length:5},()=>{const g=new T.Group(),shaft=new T.Mesh(arrowShaftGeo,scanMats.clear),ring=new T.Mesh(scanRingGeo,scanMats.clear);shaft.rotation.x=ring.rotation.x=-Math.PI/2;g.add(shaft);g.visible=ring.visible=false;g.name='puzzle-scan-lane';g.renderOrder=ring.renderOrder=2;scene.add(g,ring);return{g,shaft,ring};});
+ function setScan(lanes:{from:Vec2;to:Vec2;status:string}[]|null){scanLanes.forEach((l,i)=>{const lane=lanes?.[i],dx=lane?lane.to.x-lane.from.x:0,dz=lane?lane.to.z-lane.from.z:0,len=Math.hypot(dx,dz);
+  if(!lane||len<2){l.g.visible=l.ring.visible=false;return;}const m=scanMats[lane.status]??scanMats.clear,start=.7,span=Math.max(.2,len-start-1.2);
+  l.shaft.material=l.ring.material=m;l.g.visible=l.ring.visible=true;l.g.position.set(lane.from.x,.035,lane.from.z);l.g.rotation.set(0,Math.atan2(dx,dz),0);l.shaft.scale.set(1.6,span,1);l.shaft.position.set(0,0,start+span/2);l.ring.position.set(lane.to.x,.04,lane.to.z);});}
+ // Replays show every run as it happens, so the movement that made the pass is visible.
+ let replayRuns=false;const setReplayRuns=(on:boolean)=>{replayRuns=on;};
  function placeArrow(i:number,from:Vec2|null,to:Vec2|null){const a=arrows[i];if(!a)return;if(!from||!to){a.g.visible=false;return;}const dx=to.x-from.x,dz=to.z-from.z,len=Math.hypot(dx,dz);if(len<.6){a.g.visible=false;return;}
   a.g.visible=true;a.g.position.set(from.x,.05,from.z);a.g.rotation.set(0,Math.atan2(dx,dz),0);a.shaft.scale.set(1,Math.max(.1,len-.8),1);a.shaft.position.set(0,0,(len-.8)/2);a.head.position.set(0,.02,len-.45);}
  /** Show the runs the child has called (and the one being dragged right now). */
@@ -125,6 +150,7 @@ export function createPassPuzzleScene(canvas:HTMLCanvasElement){
  const celebrations=Array.from({length:8},(_,i)=>({type:i%2?'thankPasser':'airplane',progress:0,side:1 as const})) as Array<NonNullable<PlayerMotion['skill']>>;
  const ball=stage.football(BALL_R),ballShadow=new T.Mesh(new T.CircleGeometry(.24,16),new T.MeshBasicMaterial({color:'#193e37',transparent:true,opacity:.35,depthWrite:false}));ballShadow.rotation.x=-Math.PI/2;scene.add(ballShadow);
  let net:{attribute:T.BufferAttribute;rest:Float32Array;hit:number;x:number}|null=null;
+ let stripeMaterials:T.MeshStandardMaterial[]=[];
 
  function buildPitch(s:Scenario){
   glassFloor?.dispose();glassFloor=null;
@@ -132,8 +158,9 @@ export function createPassPuzzleScene(canvas:HTMLCanvasElement){
   const {halfWidth:hw,length:L,goalWidth:gw}=s.pitch,line='#73fff1',half=L/2;
   const base=new T.Mesh(new T.PlaneGeometry(hw*2+6,L+10),new T.MeshStandardMaterial({color:'#202039',roughness:1}));base.rotation.x=-Math.PI/2;base.position.set(0,.004,1);base.receiveShadow=true;pitch.add(base);
   glassFloor=createGlassFloor(pitch,hw*2,L,8,14,.01);
-  const stripes=Math.max(4,Math.round(L/5)),stripeMats=(s.weather?.wet?['#12303f','#1a3d50']:['#193440','#203f4c']).map(color=>new T.MeshStandardMaterial({color,roughness:s.weather?.wet?.38:1,metalness:s.weather?.wet?.15:0}));
-  for(let i=0;i<stripes;i++){const m=new T.Mesh(new T.PlaneGeometry(hw*2,L/stripes),stripeMats[i%2]);m.rotation.x=-Math.PI/2;m.position.set(0,.008,-half+(i+.5)*L/stripes);m.receiveShadow=true;pitch.add(m);}
+  // Mown bands about 5 m long in one mesh, two draws (pitchStripes.ts; was one mesh per band).
+  {const stripes=Math.max(4,Math.round(L/5)),wet=s.weather?.wet;stripeMaterials.forEach(m=>m.dispose());stripeMaterials=(wet?['#12303f','#1a3d50']:['#193440','#203f4c']).map(color=>new T.MeshStandardMaterial({color,roughness:wet?.38:1,metalness:wet?.15:0}));
+   const m=new T.Mesh(stripedPlaneGeometry(hw*2,L,stripes),stripeMaterials);m.name='pass-puzzle-grass';m.position.y=.008;m.receiveShadow=true;pitch.add(m);}
   const paint=(x1:number,z1:number,x2:number,z2:number)=>{const m=new T.Mesh(new T.PlaneGeometry(Math.max(.1,Math.abs(x2-x1)),Math.max(.1,Math.abs(z2-z1))),new T.MeshBasicMaterial({color:line}));m.rotation.x=-Math.PI/2;m.position.set((x1+x2)/2,.014,(z1+z2)/2);pitch.add(m);};
   paint(-hw,half,hw,half);paint(-hw,-half,-hw,half);paint(hw,-half,hw,half);
   const boxDepth=Math.min(16.5,L*.36),boxHalf=Math.min(hw-.5,gw/2+11),six=Math.min(5.5,boxDepth*.35),sixHalf=gw/2+Math.min(5.5,boxHalf-gw/2-1);
@@ -153,7 +180,7 @@ export function createPassPuzzleScene(canvas:HTMLCanvasElement){
  }
 
  function load(s:Scenario){
-  scenario=s;elapsed=0;flagged=[];calledOffside=-1;reactAge.fill(-1);prevMode.length=0;for(let i=0;i<5;i++)arrows[i].g.visible=false;goalAge=keeperDiveAge=-1;keeperWasDiving=false;trailHead=trailCount=trailClock=trailLife=0;liveTrail.count=0;buildPitch(s);
+  scenario=s;elapsed=0;flagged=[];calledOffside=-1;reactAge.fill(-1);prevMode.length=0;for(let i=0;i<arrows.length;i++)arrows[i].g.visible=false;hint=null;hintRing.visible=hintDot.visible=false;setScan(null);goalAge=keeperDiveAge=-1;keeperWasDiving=false;trailHead=trailCount=trailClock=trailLife=0;liveTrail.count=0;buildPitch(s);
   for(const rig of [...pool.attack,...pool.defend,...(pool.keeper?[pool.keeper]:[])])rig.root.removeFromParent();
   attackers=s.attackers.map((_,i)=>newActor(rigFor('attack',i)));defenders=s.defenders.map((_,i)=>newActor(rigFor('defend',i)));keeper=s.keeper?newActor(rigFor('keeper',0)):null;
   for(const t of scene.children.filter(o=>o instanceof T.Sprite&&o.name==='puzzle-tag'))scene.remove(t);
@@ -215,9 +242,15 @@ export function createPassPuzzleScene(canvas:HTMLCanvasElement){
   if(view?.prediction?.path.length){const path=view.prediction.path,q=path[Math.floor(path.length/2)];glassFloor?.update(.1,q.x,q.z,view.loft*.4,.2);}
   const p=view?.prediction;hideDots();for(const r of threats)r.visible=false;keeperThreat.visible=receiverRing.visible=endGoal.visible=endRest.visible=endOut.visible=false;
   const carrier=state.attackers[state.carrier];carrierRing.visible=state.phase==='aiming';if(carrier)carrierRing.position.set(carrier.p.x,.035,carrier.p.z);
-  for(const a of attackers)a.called=0;
+  for(const a of attackers)a.called=0;dotMat.color.set('#ffe36e');
   flagged=p?.offside?.slice(0,3)??[];placeFlags(state);(receiverRing.material as T.MeshBasicMaterial).color.set(p?.end==='offside'?'#ffb347':'#fff3d2');
+  for(let i=0;i<dangerArrows.length;i++)placeDanger(i,null,null);cutMark.visible=false;
   if(!view||!p){return;}
+  const status=view.status??'clear';dotMat.color.set(LANE_COLOR[status]);
+  // Who can reach it, and where: arrows from the threat defenders, plus a cross where the ball is stopped.
+  let shown=0;p.threats.forEach((d,i)=>{const s=state.defenders[d],at=p.threatAt?.[i];if(s&&at&&shown<dangerArrows.length)placeDanger(shown++,s.p,at);});
+  if(status==='tight'&&p.closest&&shown<dangerArrows.length){const s=state.defenders[p.closest.defender];if(s)placeDanger(shown++,s.p,p.closest.at,true);}
+  const cutAt=p.cut??(p.threats.length&&p.threatAt?.[0]?p.threatAt[0]:null);if(cutAt&&(status==='blocked'||status==='save')){cutMark.visible=true;cutMark.position.set(cutAt.x,.07,cutAt.z);}
   // Dotted, fading path: every other sample, shrinking and thinning toward the end.
   const step=Math.max(1,Math.ceil(p.path.length/PATH_DOTS)),count=Math.min(PATH_DOTS,Math.ceil(p.path.length/step));
   for(let i=0;i<count;i++){const q=p.path[i*step],fade=1-i/Math.max(1,count)*.72,r=.085*fade+.025;dummy.position.set(q.x,Math.max(.1,q.y*Y_SCALE),q.z);dummy.scale.setScalar(i%2?0:r*1.45);dummy.updateMatrix();dots.setMatrixAt(i,dummy.matrix);
@@ -299,7 +332,10 @@ export function createPassPuzzleScene(canvas:HTMLCanvasElement){
   offsideLine.visible=line>0&&line<(scenario?.pitch.length??0)/2-.2;if(offsideLine.visible)offsideLine.position.set(0,.026,line);
   if(state.phase==='flight')flagged=[];placeFlags(state);
   if(placeIntents(state,dt))busy=true;
-  if(state.phase!=='aiming')for(let i=0;i<5;i++)arrows[i].g.visible=false;
+  if(state.phase!=='aiming'){for(let i=0;i<arrows.length;i++)arrows[i].g.visible=false;hintRing.visible=hintDot.visible=false;
+   // Replay: an arrow on each called or scripted run while the runner is still going.
+   if(replayRuns){let n=0;state.attackers.forEach((a,i)=>{if(n>=4)return;const to=a.call&&a.call.startAt!=null?a.call.to:a.mode==='run'?(scenario?.attackers[i]?.run?.path.at(-1)??null):null;if(to&&Math.hypot(to.x-a.p.x,to.z-a.p.z)>1.2)placeArrow(n++,a.p,to);});}
+  }else if(hint){hintRing.visible=hintDot.visible=true;}
   return busy;
  }
  const ray=new T.Raycaster(),ndc=new T.Vector2(),ground=new T.Plane(new T.Vector3(0,1,0),0),hit=new T.Vector3();
@@ -307,8 +343,11 @@ export function createPassPuzzleScene(canvas:HTMLCanvasElement){
  const projected=new T.Vector3();
  function toScreen(x:number,y:number,z:number){const r=canvas.getBoundingClientRect();projected.set(x,y,z).project(camera);return{x:(projected.x+1)/2*r.width,y:(1-projected.y)/2*r.height};}
  /** Test/inspection hook: what the aim overlay is showing right now. */
- function debug(){const m=new T.Matrix4(),v=new T.Vector3();let pathDots=0;for(let i=0;i<PATH_DOTS;i++){dots.getMatrixAt(i,m);v.setFromMatrixScale(m);if(v.x>0)pathDots++;}return{keeperDiveAge,goalAge,trailCount:liveTrail.count,keeperRootRoll:keeper?.rig.root.rotation.z??0,strokePoints:0,strokeEnd:null,pathDots,threatRings:threats.filter(r=>r.visible).length+(keeperThreat.visible?1:0),receiverRing:receiverRing.visible,called:attackers.map(a=>a.called),clock:clockRing.visible,arrows:arrows.filter(a=>a.g.visible).length,intents:intents.filter(i=>i.visible).length,sweeperZone:sweeperZone.visible,offsideLine:offsideLine.visible?+offsideLine.position.z.toFixed(2):null,flags:flags.filter(f=>f.visible).length,end:endGoal.visible?'goal':endOut.visible?'out':endRest.visible?'rest':null,zoom:camera.zoom};}
- function dispose(){Object.values(intentTextures).forEach(t=>t.dispose());Object.values(intentMaterials).forEach(m=>m.dispose());arrowMat.dispose();arrowHeadGeo.dispose();dashTexture.dispose();flagTexture.dispose();flagMaterial.dispose();tagTextures.forEach(t=>t.dispose());tagMaterials.forEach(m=>m.dispose());for(const rig of [...pool.attack,...pool.defend,...(pool.keeper?[pool.keeper]:[])])rig.dispose();pitch.traverse(o=>{if(o instanceof T.Mesh)o.geometry.dispose();});stage.dispose();}
- return{stage,debug,load,fit,update,setAim,setClock,setCalls,followPlayer,onEvent,resetActors,setReplayFocus,pick,toScreen,render:stage.render,dispose,get replayAmount(){return replayAmount;}};
+ function debug(){const m=new T.Matrix4(),v=new T.Vector3();let pathDots=0;for(let i=0;i<PATH_DOTS;i++){dots.getMatrixAt(i,m);v.setFromMatrixScale(m);if(v.x>0)pathDots++;}return{keeperDiveAge,goalAge,trailCount:liveTrail.count,keeperRootRoll:keeper?.rig.root.rotation.z??0,strokePoints:0,strokeEnd:null,pathDots,threatRings:threats.filter(r=>r.visible).length+(keeperThreat.visible?1:0),receiverRing:receiverRing.visible,called:attackers.map(a=>a.called),clock:clockRing.visible,arrows:arrows.filter(a=>a.g.visible).length,intents:intents.filter(i=>i.visible).length,sweeperZone:sweeperZone.visible,offsideLine:offsideLine.visible?+offsideLine.position.z.toFixed(2):null,flags:flags.filter(f=>f.visible).length,end:endGoal.visible?'goal':endOut.visible?'out':endRest.visible?'rest':null,zoom:camera.zoom,dangerArrows:dangerArrows.filter(a=>a.g.visible).length,cut:cutMark.visible,hint:hintRing.visible,scan:scanLanes.filter(l=>l.g.visible).length,pathColor:'#'+dotMat.color.getHexString()};}
+ function dispose(){stripeMaterials.forEach(m=>m.dispose());new Set(Object.values(scanMats)).forEach(m=>m.dispose());scanRingGeo.dispose();Object.values(intentTextures).forEach(t=>t.dispose());Object.values(intentMaterials).forEach(m=>m.dispose());arrowMat.dispose();arrowHeadGeo.dispose();arrowShaftGeo.dispose();dangerMat.dispose();nearMat.dispose();dashTexture.dispose();flagTexture.dispose();flagMaterial.dispose();tagTextures.forEach(t=>t.dispose());tagMaterials.forEach(m=>m.dispose());pitch.traverse(o=>{if(o instanceof T.Mesh)o.geometry.dispose();});
+ // The stage first, while the pooled rigs are still in the scene: its walk then releases their shared bean geometries from this
+ // renderer (a rig's dispose detaches its meshes; disposed after, they kept this game's WebGL context alive, one per visit).
+ stage.dispose();for(const rig of [...pool.attack,...pool.defend,...(pool.keeper?[pool.keeper]:[])])rig.dispose();}
+ return{stage,debug,load,fit,update,setAim,setClock,setCalls,setHint,setScan,setReplayRuns,followPlayer,onEvent,resetActors,setReplayFocus,pick,toScreen,render:stage.render,dispose,get replayAmount(){return replayAmount;}};
 }
 export type PassPuzzleScene=ReturnType<typeof createPassPuzzleScene>;

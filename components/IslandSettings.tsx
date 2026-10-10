@@ -4,7 +4,8 @@ import {BackButton} from './BackButton';
 import {DoneButton} from './DoneButton';
 import shell from './ModalShell.module.css';
 import {Icon} from './Icon';
-import DonationLinks from './DonationLinks';
+import AboutGrownUps from './about/AboutGrownUps';
+import PrivacyPolicy from './privacy/PrivacyPolicy';
 import GrownUpsHost from './GrownUpsHost';
 
 import {useEffect,useRef,useState,type KeyboardEvent} from 'react';
@@ -26,6 +27,8 @@ const CoinQuest=dynamicImport(()=>import('./CoinQuest'),{ssr:false});
 const IslandBottleLogo=dynamicImport(()=>import('./IslandBottle').then(m=>m.IslandBottleLogo),{ssr:false});
 const warmPanels=()=>{prefetchPart(loadPathsPanel);prefetchPart(loadBottleLogo);prefetchPart(loadCoinQuest);};
 const CardCollection=dynamicImport(()=>import('./CardCollection'),{ssr:false});
+// Save codes (Oct 10 2026, docs/accounts-design.md §3.2): the "My save code" card loads when Settings opens, never at boot.
+const SaveCodeCard=dynamicImport(()=>import('./saves/SaveCodeCard'),{ssr:false});
 /** Ms until the Paths button's 3 s cycle is between swaps and shakes (250–2350 ms: one icon fully shown, button still), so a rest never
  * freezes a half-blurred icon or a tilted button. The icons' 3 s / 6 s delays keep them on the button's cycle.
  * A cycle that is not running (paused under a card film or a dialog) never reaches a clean frame: rest now. Waiting on it
@@ -74,7 +77,7 @@ export default function IslandSettings({voiceEnabled,onVoiceChange,coachVoice,on
   const mapAfterClose=useRef(false),learnAfterClose=useRef(false),storeAfterClose=useRef(false),welcomeAfterClose=useRef(false);
   const [backward,setBackward]=useState(false);
   const [musicOpen,setMusicOpen]=useState(false);
-  const [tab,setTab]=useState<'settings'|'about'|'quests'|'balls'|'exploration'|'shortcuts'|'cards'|'home'>('settings');
+  const [tab,setTab]=useState<'settings'|'about'|'quests'|'balls'|'exploration'|'shortcuts'|'cards'|'home'|'privacy'>('settings');
   useEffect(()=>{const show=()=>{setTab('balls');setBackward(false);};window.addEventListener('fi2-open-coin-panel',show);return()=>window.removeEventListener('fi2-open-coin-panel',show);},[]);
   useEffect(()=>{if(pathsRequest){setTab('quests');setBackward(false);}},[pathsRequest]);
   // "See it in my binder" after choosing a card: open Paths → Collect cards (the binder turns to the new card itself).
@@ -98,8 +101,8 @@ export default function IslandSettings({voiceEnabled,onVoiceChange,coachVoice,on
     return ()=>{if(timer)clearTimeout(timer);};
   },[open]);
   useEffect(()=>()=>{if(restoreFocus.current?.isConnected)restoreFocus.current.focus();},[]);
-  const show=(next:'settings'|'about'|'quests'|'balls'|'exploration'|'shortcuts'|'cards'|'home')=>{setBackward(false);setTab(next);onOpenChange(true);};
-  const backPage=()=>{if(tab==='settings'||tab==='quests'){onOpenChange(false);return;}setBackward(true);setTab(tab==='home'||tab==='about'||tab==='shortcuts'?'settings':'quests');};
+  const show=(next:'settings'|'about'|'quests'|'balls'|'exploration'|'shortcuts'|'cards'|'home'|'privacy')=>{setBackward(false);setTab(next);onOpenChange(true);};
+  const backPage=()=>{if(tab==='settings'||tab==='quests'){onOpenChange(false);return;}if(tab==='privacy'){setBackward(true);setTab('about');return;}setBackward(true);setTab(tab==='home'||tab==='about'||tab==='shortcuts'?'settings':'quests');};
   const keyboard=(event:KeyboardEvent<HTMLDialogElement>)=>{
     event.stopPropagation();
     if(event.key==='Escape'){event.preventDefault();backPage();return;}
@@ -117,7 +120,7 @@ export default function IslandSettings({voiceEnabled,onVoiceChange,coachVoice,on
     </nav>
     <dialog ref={dialog} className={`${styles.dialog} ${styles.fullModal} ${tab==='balls'?styles.ballsModal:tab==='exploration'?styles.exploreModal:''} ${tab==='quests'||tab==='balls'||tab==='exploration'||tab==='cards'?styles.pathsModal:''} ${open?styles.entering:styles.leaving}`} aria-labelledby="island-settings-title" aria-modal="true" onKeyDown={keyboard} onKeyUp={e=>e.stopPropagation()} onCancel={e=>{e.preventDefault();backPage();}} onClick={e=>{if(e.target===e.currentTarget)onOpenChange(false);}}>
       <section data-paths-host={tab==='quests'||tab==='balls'||tab==='exploration'||tab==='cards'?'true':undefined} className={`${styles.panel} ${shell.shell} ${tab==='quests'||tab==='balls'||tab==='exploration'||tab==='cards'?shell.white:shell.drawer}`}>
-        <header className={`${styles.header} ${shell.header}`}>{tab==='quests'&&<IslandBottleLogo/>}{(tab==='balls'||tab==='exploration'||tab==='cards'||tab==='home'||tab==='about'||tab==='shortcuts')&&<BackButton ref={close} className={styles.headerBack} onBack={backPage}/>}<div><h2 id="island-settings-title" className={tab==='settings'?styles.settingsTitle:undefined}>{tab==='settings'?'Make it your island':tab==='quests'?'Island paths':tab==='balls'?'Ball hunt':tab==='cards'?'Collect cards':tab==='exploration'?'Explore':tab==='home'?'My home':tab==='shortcuts'?'Keyboard shortcuts':'About us'}</h2></div>{/* Sub-pages use Back only; an invisible spacer keeps the title centred. */}{tab==='home'||tab==='about'||tab==='shortcuts'||tab==='cards'||tab==='balls'||tab==='exploration'?<span className={`${styles.circle} ${styles.close}`} aria-hidden="true" style={{visibility:'hidden'}}/>:<DoneButton ref={close} className={`${styles.circle} ${styles.close}`} onDone={()=>onOpenChange(false)}/>}</header><div ref={body} className={shell.body}>
+        <header className={`${styles.header} ${shell.header}`}>{tab==='quests'&&<IslandBottleLogo/>}{(tab==='balls'||tab==='exploration'||tab==='cards'||tab==='home'||tab==='about'||tab==='shortcuts'||tab==='privacy')&&<BackButton key={tab} ref={close} className={styles.headerBack} onBack={backPage}/>}<div><h2 id="island-settings-title" className={tab==='settings'?styles.settingsTitle:undefined}>{tab==='settings'?'Make it your island':tab==='quests'?'Island paths':tab==='balls'?'Ball hunt':tab==='cards'?'Collect cards':tab==='exploration'?'Explore':tab==='home'?'My home':tab==='shortcuts'?'Keyboard shortcuts':tab==='privacy'?'Privacy policy':'About us'}</h2></div>{/* Sub-pages use Back only; an invisible spacer keeps the title centred. */}{tab==='home'||tab==='about'||tab==='shortcuts'||tab==='privacy'||tab==='cards'||tab==='balls'||tab==='exploration'?<span className={`${styles.circle} ${styles.close}`} aria-hidden="true" style={{visibility:'hidden'}}/>:<DoneButton ref={close} className={`${styles.circle} ${styles.close}`} onDone={()=>onOpenChange(false)}/>}</header><div ref={body} className={shell.body}>
         <div key={tab} className={backward?styles.subpageBack:styles.subpage}>
         {tab==='home'&&HOME_DECOR_ENABLED?<IslandHome onShop={()=>{storeAfterClose.current=true;onOpenChange(false);}}/>:(tab==='quests'||tab==='exploration')?<IslandQuests exploration={tab==='exploration'} onExplore={()=>{setBackward(false);setTab('exploration');}} onDiscover={()=>{setBackward(false);setTab('balls');}} onCards={()=>{setBackward(false);setTab('cards');}} onMap={()=>{mapAfterClose.current=true;onOpenChange(false);}} onStore={onOpenStore?()=>{storeAfterClose.current=true;onOpenChange(false);}:undefined} onLearn={()=>{learnAfterClose.current=true;onOpenChange(false);}}/>:tab==='cards'?<div className={styles.content}><CardCollection/></div>:tab==='balls'?<div className={styles.content}><CoinQuest onStore={()=>{storeItem.current='costume:matchday-fox';storeAfterClose.current=true;onOpenChange(false);}}/></div>:tab==='shortcuts'?<div className={styles.content}><dl id="desktop-keyboard-shortcuts" className={styles.shortcutList}>{[['WASD / ↑ ↓ ← →','Move'],['Space','Kick · hold for a stronger, higher shot'],['J','Juggle / stop juggling'],['R','Change ride'],['E','Talk to a nearby island character'],['M','Open / close map'],['Space / J','Use your ride’s two actions'],['Space / J in a truck','Speed up / honk'],['Esc','Close the map or current panel']].map(([key,action])=><div key={key}><dt><kbd>{key}</kbd></dt><dd>{action}</dd></div>)}</dl></div>:tab==='settings'?<div className={`${styles.content} ${styles.settingsJourney}`}>
           <p className={styles.settingsEyebrow}>YOUR ISLAND, YOUR WAY</p>
@@ -127,7 +130,7 @@ export default function IslandSettings({voiceEnabled,onVoiceChange,coachVoice,on
           <button type="button" className={`${styles.mapButton} ${styles.secondaryButton}`} onClick={()=>{mapAfterClose.current=true;onOpenChange(false);}}>Open full map <span aria-hidden="true"><Icon name="external"/></span></button>
           {onRestartOnboarding&&<div className={styles.walkthrough}><button type="button" className={`${styles.mapButton} ${styles.secondaryButton}`} onClick={()=>{welcomeAfterClose.current=true;onOpenChange(false);}}>See walkthrough <span aria-hidden="true"><Icon name="arrow"/></span></button></div>}
           <div className={styles.desktopShortcuts}><button type="button" className={`${styles.mapButton} ${styles.secondaryButton}`} onClick={()=>{setBackward(false);setTab('shortcuts');}}>Keyboard shortcuts <Icon name="arrow"/></button></div>
-          </div><section className={styles.preferenceCard}><h3>Time of day</h3><p className={styles.copy}>Choose the light for your next lap.</p>
+          </div><section className={styles.preferenceCard} aria-labelledby="save-code-title" data-save-section><h3 id="save-code-title">My save code</h3>{open&&<SaveCodeCard/>}</section><section className={styles.preferenceCard}><h3>Time of day</h3><p className={styles.copy}>Choose the light for your next lap.</p>
           <div className={styles.times} role="group" aria-label="Time of day">{(['day','sunset','night'] as const).map(time=><button type="button" key={time} aria-pressed={timeOfDay===time} onClick={()=>onTimeOfDayChange(time)}><span aria-hidden="true"><Icon name={time==='day'?'sun':time==='sunset'?'sunset':'moon'} size={24}/></span>{time[0].toUpperCase()+time.slice(1)}</button>)}</div>
           </section><section className={styles.preferenceCard}><h3>Island sounds</h3>
           <button type="button" className={styles.toggle} aria-label="Background music" aria-pressed={musicEnabled} onClick={()=>onMusicChange(!musicEnabled)}><span><strong>Background music</strong><small>A soundtrack for your travels.</small></span><span className={styles.switch} aria-hidden="true">{musicEnabled?'On':'Off'}</span></button>
@@ -140,11 +143,9 @@ export default function IslandSettings({voiceEnabled,onVoiceChange,coachVoice,on
           </section><section className={`${styles.mobileControls} ${styles.preferenceCard}`} aria-label="Mobile controls"><h3>Mobile controls</h3><button type="button" className={styles.toggle} aria-label="Flip controls" aria-pressed={controlsFlipped} onClick={()=>onControlsFlippedChange(!controlsFlipped)}><span><strong>Flip controls</strong><small>{controlsFlipped?'Move on the right. Map and actions on the left.':'Move on the left. Map and actions on the right.'}</small></span><span className={styles.switch} aria-hidden="true">{controlsFlipped?'On':'Off'}</span></button></section><section className={styles.preferenceCard} aria-label="Battery"><h3>Battery</h3><button type="button" className={styles.toggle} aria-label="Battery saver" aria-pressed={saver} data-battery-saver onClick={()=>setBatterySaver(!saver)}><span><strong>Battery saver</strong><small>Keeps your device cooler with slightly softer graphics, a gentler frame rate and calm water.</small></span><span className={styles.switch} aria-hidden="true">{saver?'On':'Off'}</span></button></section>
 
           
-        </div>:<div className={`${styles.content} ${styles.about}`}>
-          <p>Walk, ride or fly between futsal, 7v7, 9v9 and 11v11 pitches. Watch plays in 3D, learn the tactics, and test what you know.</p>
-          <p><strong>Why it’s free.</strong> Learning the concepts of the game shouldn’t cost money. Club soccer already prices too many kids out, so Futbol Island is free, always.</p>
-          <section className={styles.support} aria-labelledby="support-island-title"><h3 id="support-island-title">Support Futbol Island</h3><p className={styles.intro}>The app is free. Tips grow the game.</p>
-          <DonationLinks/></section>
+        </div>:tab==='privacy'?<div className={styles.content}><PrivacyPolicy/></div>:<div className={`${styles.content} ${styles.about}`}>
+          {/* Same content as /start → For grown-ups (components/about/AboutGrownUps.tsx), user Oct 9 2026. */}
+          <AboutGrownUps donateReturn="about" onOpenPrivacy={()=>{setBackward(false);setTab('privacy');}}/>
           {/* Bug audit B16: the WAI-ARIA accordion pattern (a button inside the h3) keeps "Story music" a level-3 heading for screen readers; an h3 inside <summary> was flattened into the toggle. */}
           <section className={styles.musicCredits} data-open={musicOpen||undefined} aria-labelledby="story-music-credit"><h3 id="story-music-credit"><button type="button" aria-expanded={musicOpen} aria-controls="story-music-credit-body" onClick={()=>setMusicOpen(o=>!o)}>Story music</button></h3><div id="story-music-credit-body" hidden={!musicOpen}><p>“Wildflowers” by <a href="https://www.scottbuckley.com.au/library/wildflowers/" target="_blank" rel="noopener noreferrer">Scott Buckley</a>, released under <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a>. Excerpted, faded and mixed beneath Grit’s narration.</p><p>“Ascension” by <a href="https://www.scottbuckley.com.au/library/ascension/" target="_blank" rel="noopener noreferrer">Scott Buckley</a>, released under <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a>. Excerpted, faded and mixed beneath Regulating Emotions’ narration.</p></div></section>
         </div>}

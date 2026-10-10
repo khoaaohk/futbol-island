@@ -61,6 +61,9 @@
  .game[data-arcade-kind=tennis] .tennisActions [data-tennis-action=lob]{grid-column:1;grid-row:3}
  .game[data-arcade-kind=tennis] .tennisActions [data-tennis-action=drop]{grid-column:2;grid-row:3}
  .game[data-arcade-kind=tennis] .tennisActions [data-tennis-action=trap]{grid-column:1;grid-row:1}
+ /* Courts without aerial play (no Header/Scissor): Serve/Kick (and Trap) drop into the empty middle row so the actions stay one group. */
+ .game[data-arcade-kind=tennis] .tennisActions:not(:has([data-tennis-action=header])) [data-tennis-action=kick],
+ .game[data-arcade-kind=tennis] .tennisActions:not(:has([data-tennis-action=header])) [data-tennis-action=trap]{grid-row:2}
  .game[data-arcade-kind=tennis] .message{bottom:calc(174px + env(safe-area-inset-bottom,0px));left:18px;transform:none;max-width:calc(100% - 182px);font-size:10px;padding:7px 9px}
 }
 @media(max-width:350px){
@@ -134,3 +137,18 @@
 .game[data-arcade-kind=runner] .actions button[data-runner-skill][data-ready]{--control-paper:#fff1a8;--control-base:#b99b2f;box-shadow:0 5px 0 var(--control-base),0 0 0 4px #fff2cd80,0 0 14px #ffe36b}
 @media(max-width:600px){.game[data-arcade-kind=runner] .actions button:not(:last-child){width:52px;min-width:52px;height:52px;min-height:52px;padding:4px;font-size:11px}.game[data-arcade-kind=runner] .actions{gap:7px}}
 @media(prefers-reduced-motion:reduce){.game[data-arcade-kind=runner] .actions button[data-runner-skill][data-ready]{box-shadow:0 5px 0 var(--control-base),0 0 0 4px #fff2cd80}}
+/* Futbol Tennis: the glowing button is the touch that fits the ball now (data-best); the Kick button turns mint
+   in the perfect window. Compositor-only pulse (transform/opacity) that only runs while a call is live. */
+.game[data-arcade-kind=tennis] .tennisActions button{position:relative}
+.game[data-arcade-kind=tennis] .tennisActions button[data-best]::after{content:'';position:absolute;inset:-7px;border:3px solid #ffe36b;border-radius:inherit;pointer-events:none;opacity:0;animation:tennisCall .8s ease-out infinite}
+.game[data-arcade-kind=tennis] .tennisActions button[data-best]{border-color:#ffe36b;color:#fffbe8;outline:none;box-shadow:0 4px 0 #171827,0 0 0 3px #ffe36b55,0 0 18px #ffe36b88}
+.game[data-arcade-kind=tennis] .tennisActions [data-tennis-action=kick][data-call=wait]::after{animation:none;opacity:.45}
+.game[data-arcade-kind=tennis] .tennisActions [data-tennis-action=kick][data-call=perfect]{background:#1d4a49;border-color:#73fff1;color:#e6fffb;box-shadow:0 4px 0 #171827,0 0 0 3px #73fff155,0 0 20px #73fff1aa}
+.game[data-arcade-kind=tennis] .tennisActions [data-tennis-action=kick][data-call=perfect]::after{border-color:#73fff1;animation-duration:.45s}
+@keyframes tennisCall{0%{opacity:.95;transform:scale(.92)}100%{opacity:0;transform:scale(1.28)}}
+@media(prefers-reduced-motion:reduce){.game[data-arcade-kind=tennis] .tennisActions button[data-best]::after{animation:none;opacity:.8;transform:none}}
+/* Start / full-time card (Oct 9 2026 QA): the overlay (z 4) covered the header (z 3), so the Arcade button showed dimmed but could
+   not be tapped. While the card is up the header stops being its own stacking context and only the Arcade button rises above the
+   overlay (the score and pause stay under the tint). The NavigationButton keeps its own look. */
+.game[data-card]>.header{z-index:auto}
+.game[data-card]>.header>button:first-child{position:relative;z-index:5}

@@ -26,7 +26,7 @@ const exp=read(dir+'Experience.tsx'),css=read(dir+'Experience.module.css');
  assert.match(at('hands',1863).text,/fair catch/);assert.match(at('hands',1871).text,/goalkeeper/);assert.match(at('hands',1912).text,/penalty area/);
  assert.match(at('hands',1992).why,/Since 1992, a goalkeeper may not pick up the ball when a team-mate deliberately kicks it back to them/,'quotes the back-pass case');
  assert.match(at('players',1863).text,/say nothing of how many players/);assert.match(at('players',1897).text,/eleven/);assert.match(at('players',TODAY).text,/fewer than seven/);
- assert.match(at('throw',1863).text,/first player who touches it/);assert.match(at('throw',1882).text,/both hands/);
+ assert.match(at('throw',1863).text,/first player who touches it/);assert.match(at('throw',1873).text,/side opposite to the one that kicked it out/,'1873: the throw goes to the other team (no more race)');assert.ok(!/both hands/.test(at('throw',1882).text),'two hands only from 1883');assert.match(at('throw',1883).text,/both hands/);
  assert.match(at('fair',1863).text,/Neither tripping nor hacking/);assert.match(at('fair',1891).why,/William McCrum/);assert.match(at('fair',1970).why,/1970 World Cup in Mexico/);assert.match(at('fair',2018).why,/2018, in Russia/);
  assert.equal(L.milestoneAt(1924).year,1912);assert.equal(L.yearLabel(TODAY),'Today');assert.equal(L.eraOf(1863),'letterpress');assert.equal(L.eraOf(1925),'book');assert.equal(L.eraOf(1990),'modern');
  console.log('PASS six rules, 1863 to today, dated and true');}
@@ -60,3 +60,62 @@ const exp=read(dir+'Experience.tsx'),css=read(dir+'Experience.module.css');
  for(const u of ['wikisource.org/wiki/Laws_of_the_Game_(1863)','theifab.com/laws/latest/offside/','theifab.com/laws/latest/the-players/'])assert.ok(L.LAW_SOURCES.some(s=>s.url.includes(u)),u+' cited');
  assert.match(exp,/<summary>Sources<\/summary>/);
  console.log('PASS heat: no loop, no polling, timers and listeners cleaned up; sources cited');}
+
+// 6. Oct 9 2026 styles + motion pass: "Still a rule?" sorter, Victorian print styling, spring physics that sleep.
+{const S=require('../'+dir+'sort.ts'),SP=require('../'+dir+'spring.ts'),sorter=read(dir+'Sorter.tsx'),spring=read(dir+'spring.ts');
+ // The cards: eight 1863 Laws, true to the 1863 text, sorted against today's IFAB Laws; half kept, half changed.
+ assert.equal(S.SORT_CARDS.length,8);assert.equal(S.SORT_CARDS.filter(c=>c.kept).length,4,'four survived, four changed');
+ const by=id=>S.SORT_CARDS.find(c=>c.id===id);
+ assert.ok(by('kickoff').kept&&/Law 8/.test(by('kickoff').now),'1863 Law III: the side that lost the goal kicks off — still Law 8');
+ assert.ok(!by('ends').kept&&/half-time/.test(by('ends').now),'1863 Law III: change ends after each goal — now only at half-time');
+ assert.ok(by('ten').kept&&/9\.15/.test(by('ten').now),'1863 Law II: 10 yards at kick-off — 9.15 m today');
+ assert.ok(!by('height').kept&&/1866/.test(by('height').now)&&/1882/.test(by('height').now));
+ assert.ok(by('trip').kept&&/Law 12/.test(by('trip').now));assert.ok(by('nails').kept&&/Law 4/.test(by('nails').now));
+ assert.ok(!by('offside').kept&&!by('throw').kept&&/Law 15/.test(by('throw').now));
+ for(const c of S.SORT_CARDS){assert.ok(c.then.length>20&&c.now.length>20&&c.short.length<34);if(c.thread)assert.ok(L.THREADS.some(t=>t.id===c.thread),c.id+' opens a real rule');if(c.year)assert.ok(L.MILESTONES.some(m=>m.year===c.year),c.id+' opens a year on the rule');}
+ for(const u of ['Laws_of_the_Game_(1863)_(as_submitted_for_adoption)','the-players-equipment','the-start-and-restart-of-play'])assert.ok(S.SORT_SOURCES.some(s=>s.url.includes(u)),u+' cited');
+ assert.ok(!L.LAW_SOURCES.some(s=>/Laws_of_the_Game_\(1863\)'?$/.test(s.url)),'the deleted Wikisource page is no longer cited');
+ assert.match(exp,/\.\.\.SORT_SOURCES/,'sorter sources are listed');
+ assert.match(S.sortVerdict(8,8),/Every one/);assert.match(S.sortVerdict(3,8),/surprised/);
+ // The mechanic: drag/flick, keyboard and buttons; a live verdict; the wrong guess hops to the right tray (FLIP); see it in the rulebook.
+ assert.match(sorter,/onPointerDown=\{down\} onPointerMove=\{move\} onPointerUp=\{up\} onPointerCancel=\{up\} onKeyDown=\{key\}/);assert.match(sorter,/setPointerCapture/);
+ assert.match(sorter,/e\.key==='ArrowLeft'/);assert.match(sorter,/onClick=\{\(\)=>throwTo\('changed'\)\}/);assert.match(sorter,/onClick=\{\(\)=>throwTo\('kept'\)\}/);
+ assert.match(sorter,/aria-live="polite"/);assert.match(sorter,/x<-w\*\.3\|\|vx<-650/,'past 30% or a flick');assert.match(sorter,/P\.x\.v=vx;P\.y\.v=vy/,'release velocity carried into the spring');
+ assert.match(sorter,/rubber\(e\.clientY-d\.y0/,'vertical rubber band');assert.match(sorter,/el\.animate\(\[\{transform:`translate\(\$\{dx\}px,\$\{dy\}px\)`\}/,'FLIP');
+ assert.match(sorter,/setPlaced\(list=>list\.map\(x=>x\.id===c\.id\?\{\.\.\.x,side:truth\(c\)\}:x\)\)/,'a wrong guess moves to the right tray');
+ assert.match(exp,/<Sorter reduced=\{reduced\} onSee=\{see\}\/>/);assert.match(exp,/const see=useCallback/);
+ assert.match(css,/\.slip\[data-top\]\{[^}]*touch-action:pan-y/,'the slip drag never fights page scroll');
+ // Heat: the springs sleep. The only loop lives in spring.ts and stops itself when every spring rests; unmount stops it.
+ assert.match(spring,/if\(tick\(dt\)\)raf=requestAnimationFrame\(f\);else stopped=true;/);assert.match(sorter,/useEffect\(\(\)=>\(\)=>\{anim\.current\?\.stop\(\);timers\.current\.forEach\(clearTimeout\);\},\[\]\)/);
+ assert.ok(!/requestAnimationFrame|setInterval/.test(sorter),'no loop in the component itself');assert.match(sorter,/if\(reduced\|\|!el\|\|!bin\)\{commit\(c,guess\);return;\}/,'reduced motion: no throw');
+ {const s=SP.spring(0);s.target=200;s.v=-900;let t=0,rest=false;while(!rest&&t<4){rest=SP.stepSpring(s,1/60,190,22,.5);t+=1/60;}assert.ok(rest&&s.x===200&&t<2,'the throw spring settles exactly and stops');}
+ // Thin line art in motion (Oct 9 2026 restyle): one hairline, one accent, drawings that draw on, morph and draw off.
+ {const LN=require('../'+dir+'lines.ts'),D=require('../'+dir+'drawings.ts'),lm=read(dir+'LineMorph.tsx');
+  assert.ok(!fs.existsSync(path.join(root,'public/museum/experiences/laws-1863/fonts')),'the old print fonts are gone');
+  assert.ok(!/font-face|LW Wood|LW Old|laws1863-ink|laws1863-hatch|feTurbulence/.test(css+exp),'no wood type, ink filter or hatching left');
+  assert.match(css,/\.ln\{fill:none;stroke:var\(--ink\);stroke-width:var\(--sw\);vector-effect:non-scaling-stroke/,'one non-scaling hairline');
+  assert.match(css,/--sw:1\.25px/);assert.match(css,/@media \(min-resolution:2dppx\)\{\.root\{--sw:1\.1px\}\}/,'weight tuned for DPR');
+  assert.equal((css.match(/--accent:#/g)||[]).length,1,'exactly one accent colour');
+  assert.match(css,/@keyframes draw\{from\{stroke-dashoffset:1\}to\{stroke-dashoffset:0\}\}/,'lines draw themselves on');assert.match(css,/@keyframes undraw/,'and off');
+  assert.match(lm,/pathLength=\{st\.dash\?undefined:1\}/,'normalised path length for the draw-on');
+  // Morph maths: resample keeps the ends and the count; mix interpolates; every rule has a drawing for every version.
+  const r=LN.resample([[0,0],[10,0],[10,10]],5);assert.equal(r.length,5);assert.deepEqual(r[0],[0,0]);assert.deepEqual(r[4],[10,10]);
+  assert.deepEqual(LN.mix([[0,0]],[[10,20]],.5),[[5,10]]);assert.match(LN.toPath([[0,0],[1,1],[2,0]],true),/^M0 0C/);
+  for(const t of L.THREADS)for(let i=0;i<t.versions.length;i++){const d=D.ruleDrawing(t.id,i);assert.ok(Object.keys(d).length>=4,`${t.id} ${i} has a drawing`);
+   assert.ok(Object.values(d).every(st=>st.pts.length>=2&&st.pts.every(p=>p.every(Number.isFinite))),`${t.id} ${i} strokes are finite`);}
+  // The goal's top morphs: no bar in 1863, a sagging tape in 1866, a straight crossbar in 1882 (same stroke, so it morphs).
+  assert.ok(!D.ruleDrawing('goal',0).bar&&D.ruleDrawing('goal',1).bar.smooth&&D.ruleDrawing('goal',2).bar.pts.length===2);
+  assert.ok(D.ruleDrawing('players',1).a10&&!D.ruleDrawing('players',0).a10,'the eleventh player draws on in 1897');
+  assert.ok(D.ruleDrawing('fair',2).card&&!D.ruleDrawing('fair',1).card,'the card appears in 1970');
+  for(const c of S.SORT_CARDS){const st=D.CARD_STORY[c.id];assert.ok(st&&st.length===2,c.id+' has a two-state line story');}
+  // The museum's own Hairline engine, read-only, for the masthead figure.
+  assert.match(exp,/import\('\.\.\/timeline\/hairline\/figures'\)/);assert.match(exp,/mountFigure\(h,FIGURES\['laws-1863'\],true\)/);assert.match(exp,/f\?\.destroy\(\)/);
+  // Heat: the morph loop only runs when points really move, and stops at rest; reduced motion shows finished drawings.
+  assert.match(lm,/if\(reduced\|\|!moves\)\{write\(1\);return;\}/);assert.match(lm,/return !rest;/);assert.match(lm,/anim\.current\?\.stop\(\);timers\.current\.forEach\(clearTimeout\)/);
+  assert.match(lm,/io\.disconnect\(\)/,'draw-on when seen, observer released');
+  assert.ok(!/requestAnimationFrame|setInterval/.test(lm),'the only loop is spring.ts');
+  const rm=css.slice(css.lastIndexOf('@media (prefers-reduced-motion:reduce){\n .ln'));assert.match(rm,/stroke-dasharray:none!important;stroke-dashoffset:0!important/,'reduced motion: finished drawings');
+  // The verdict marks are lines that draw with the lean.
+  assert.match(sorter,/className=\{s\.mark\} data-side="kept"/);assert.match(css,/\.sorter\[data-lean=kept\] \.mark\[data-side=kept\] svg\{stroke-dashoffset:0\}|\.sorter\[data-lean=changed\] \.mark\[data-side=changed\] svg,\.sorter\[data-lean=kept\] \.mark\[data-side=kept\] svg\{stroke-dashoffset:0\}/);
+ }
+ console.log('PASS styles+motion: "Still a rule?" sorter (8 checked Laws, drag/flick/keys, FLIP, springs that sleep), thin line art: draw-on, morph, Hairline masthead');}

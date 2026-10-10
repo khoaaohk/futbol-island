@@ -363,3 +363,21 @@ Additive engine changes. Every field is optional, and the coach lesson (`lib/tow
 - `pass-puzzle-engine`, `-scenarios`, `-challenges`, `-direct-shots`, `-gesture` (existing);
 - `-offside`, `-youth`, `-packs`, `-daily` (new).
 - Browser checks: `tests/pass-puzzle-arcade.cjs`, `scripts/check-pass-puzzle-controls.cjs` and `tests/pass-puzzle-challenges-browser.cjs`. The last now seeds 36 stars, because the pack map opens Match Problems at 34.
+
+## Oct 9 2026 — coaching pass (aim read, replay calls, hints, takeaway; nothing committed or deployed)
+
+**Engine (additive, optional fields).** `Prediction.threatAt[]` (parallel to `threats`: where each threat defender reaches the ball), `Prediction.cut` (where the ball is first stopped: intercept, deflection, save, parry) and `Prediction.closest` (`{defender, slack, at}`: the defender who comes nearest, with the spare time in seconds; negative = they get there first). `sim.ts` `defenderSlack()` is one O(path) scan per defender with the same reach rules as `planDefender`. Nothing else in the rules changed.
+
+**`lib/passPuzzle/explain.ts` (new, pure).** `laneStatus()` reads a prediction as clear / tight (slack < 0.35 s) / blocked / save / offside; `laneWords()` says it in 7v7 or 9v9+ words and names the defender by shirt number; `noteFor()` records each release (receiver, loft, curl, defenders beaten, the defender in the straight lane, called runs, first time, onside margin); `explainSuccess()` turns the notes into up to two "why it worked" lines; `explainFail()` gives "why it didn't" plus "Try this"; `replayCall()` is the replay commentary ("#9 runs… #10 passes to #9", "#4 cuts it out!", "GOAL! #9 scores").
+
+**Arcade.**
+- Aim: the dotted path is green (clear), amber (tight) or red (blocked); a red arrow runs from each threat defender to the spot they would reach, a red cross marks where the ball is stopped, and a tight lane shows the near-miss defender in amber. The tip becomes the coach's live read.
+- Hints in tiers: the book button gives the words, then "Show me where" (a glowing spot for the next pass of the coach's route and, when the route needs it, a mint arrow for the run to drag first), then hides. The fail card offers "Show me where next try". If the child's move has left the route, the words say to start again. No star penalty.
+- Replay: a commentary line per event, a short freeze-frame on the deciding moment (0.7 s, 0.35 s with reduced motion), and arrows on called and scripted runs while they happen.
+- Result: "Why it worked" (two lines) above the lesson; a miss names who stopped it and what to try.
+
+**Content.** `wr-aim-off` (Wind & Rain, "Aim Off": lift a switch upwind of the winger in a crosswind) is new and original; route proven through `readStroke`, sloppy 4/4, youth mode, naive option fails. Timing & Runs is reordered by the measured curve (Beat the Trap → Decoy Run → Make the Run → Get Back Onside); Wind & Rain ends with Aim Off. `curve.ts` regenerated; `tests/pass-puzzle-daily.cjs` now also requires every pack to open with a puzzle rated ≤ 65. Offside stays on in every puzzle; no heading stays the 7v7 default.
+
+**Defaults picked for the open questions.** Star gates unchanged (3/6/10/14/18/22/28/34). Daily puzzle: stars only, no coins (unchanged; avoids a daily coin farm). Up and Over: the route stays a held stroke on the teammate. With heading off (the 7v7 default) it is the youth chip to feet; a chip-to-feet route below loft 0.5 is cut out by the halfway defender and making the puzzle `noHeading` breaks the heading-on route, so neither was shipped.
+
+**Tests.** New `tests/pass-puzzle-explain.cjs` (all 36 routes explained in three formats, every naive pass flagged before release with the defender named, fails explained, replay calls, Prediction field invariants). `tests/pass-puzzle-arcade.cjs` adds the red arrow, red path, the lane read, the fail "why", the tier-2 hint spot, the success "why" and the replay call; the browser checks launch with `--mute-audio` and wait for `domcontentloaded` (the shared dev server was too loaded for `load`).

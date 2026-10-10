@@ -57,4 +57,13 @@ const run=(s,feel,seconds,input=idle,hz=60,cues=[])=>{for(let i=0;i<Math.round(s
  a.playPinballCue(ctx,'pb-wall',s);const before=started.length;a.playPinballCue(ctx,'pb-wall',s);assert.equal(started.length,before,'wall rattle is throttled');
  ctx.currentTime+=1;a.playPinballCue(ctx,'goal',s);assert.ok(started.length>before,'voices are released after ending');}
 
+// 7. New moments read clearly: parry shows where the ball went, the 2v1 and a wall pass pop up, full time whistles.
+{const s=p.createPinballState(),feel=f.createPinballFeel();p.launchPinball(s);s.openingRescue=false;s.launchGrace=0;s.defs=1;s.keeper=s.keeperTarget=180;Object.assign(s.ball,{x:180,y:108,vx:0,vy:-560});
+ const cues=run(s,feel,.05);assert.equal(s.sfx.parry,1);assert.ok(cues.includes('pb-parry'),'parry has its own glove punch');assert.ok(feel.popups.some(q=>q.text==='PARRIED!'));assert.ok(!feel.popups.some(q=>q.text==='SAVED'),'a parry is not also labelled SAVED');
+ assert.match(f.pinballTableMessage(s),/rebound/i,'parry message teaches the rebound');
+ p.startMultiball(s);run(s,feel,1/60);assert.ok(feel.popups.some(q=>q.text==='2v1 BREAKAWAY!'));assert.match(f.pinballTableMessage(s),/2v1 BREAKAWAY/);
+ s.clock=p.PINBALL_MATCH_TIME;s.stoppage=p.PINBALL_STOPPAGE;s.extraLive=false;run(s,feel,.2);assert.equal(s.phase,'over');assert.ok(feel.popups.some(q=>/^FULL TIME/.test(q.text)));
+ const ctx={state:'running',currentTime:1,sampleRate:8000,destination:{},createOscillator:()=>({connect(){},disconnect(){},frequency:{setValueAtTime(){},exponentialRampToValueAtTime(){}},start(){},stop(){}}),createGain:()=>({connect(){},disconnect(){},gain:{setValueAtTime(){},linearRampToValueAtTime(){},exponentialRampToValueAtTime(){}}}),createBiquadFilter:()=>({connect(){},disconnect(){},Q:{},frequency:{setValueAtTime(){},exponentialRampToValueAtTime(){}}}),createBufferSource:()=>({connect(){},disconnect(){},playbackRate:{},start(){}}),createBuffer:(c,len)=>({getChannelData:()=>new Float32Array(len)})};
+ for(const cue of ['pb-parry','wallPass','multiball','mbGoal','mbSave','mbEnd','halfTime','stoppage','fullTime'])a.playPinballCue(ctx,cue,s);}
+
 console.log('PASS pinball feel: per-ball save, hit-stop buffer, weighted shake, pop-ups, lit sting, summary and capped layered audio');

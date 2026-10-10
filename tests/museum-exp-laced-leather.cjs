@@ -59,7 +59,29 @@ const e=X.EXHIBITS.find(x=>x.id==='laced-leather');
  assert.match(exp,/return\(\)=>\{m\.dispose\(\)/,'disposed on unmount');assert.match(exp,/prefers-reduced-motion: reduce/);
  assert.doesNotMatch(exp+machine+balls,/setInterval|<audio|<video|autoplay/i,'no polling, no media');
  assert.doesNotMatch(balls,/requestAnimationFrame|setInterval/,'ball sprites are rendered on demand, never in a loop of their own');
- assert.match(balls,/while\(cache\.size>10\)/,'bounded sprite cache');assert.match(machine,/clearBallCache\(\);canvas\.width=canvas\.height=0/,'sprite cache freed on dispose');
+ assert.match(balls,/while\(cache\.size>10\)/,'bounded sprite cache');assert.match(machine,/clearBallCache\(\);plate=null;canvas\.width=canvas\.height=0/,'sprite cache and the cached sepia plate freed on dispose');
  assert.match(machine,/if\(opts\.reduced\)\{if\(!near/,'reduced motion: a still rain curtain, no particles');
  assert.match(css,/animation:cue[^;]*\b3\}/,'idle cue pulses 3 times and stops');
  console.log('PASS heat: sleeping rAF loop, stops when hidden, disposed on unmount, DPR ≤ 1.5 on touch, bounded particles');}
+
+// 6. Plate IV "Head it" (Oct 9 2026 motion pass): a pendulum header rig the visitor drives, with the sourced numbers and quotes.
+{assert.deepEqual(Object.keys(F.HEAD_BALLS),['wet','dry','modern']);
+ assert.equal(F.HEAD_BALLS.wet.g,F.LEATHER.wet,'soaked = the lab weight');assert.equal(F.HEAD_BALLS.dry.g,F.LEATHER.dry);
+ assert.ok(F.HEAD_BALLS.modern.g>=F.SIZES['5'].minG&&F.HEAD_BALLS.modern.g<=F.SIZES['5'].maxG,'the modern ball is inside Law 2');
+ assert.equal(F.HEAD_MORE_PCT,40,'595 / 430 → about 40 % more push at the same speed');
+ assert.equal(F.YEATS.quote,'The ball had a lace in it and if you headed the lace, you had prints all over your head.','Ron Yeats, word for word');
+ assert.match(F.HEAD_STUDY,/slow headers/);assert.match(F.HEAD_STUDY,/fast headers/,'the 2023 result is told both ways, not overstated');
+ const urls=F.EXTRA_SOURCES.map(s=>s.url);for(const u of ['https://lfchistory.net/articles/4667','https://www.readingrefs.org.uk/ftm/ftmpages/FTM124.html'])assert.ok(urls.includes(u),'cites '+u);
+ assert.equal(new Set([...e.sources,...F.EXTRA_SOURCES].map(s=>s.url)).size,e.sources.length+F.EXTRA_SOURCES.length,'no duplicate source URLs (React keys)');
+ assert.match(exp,/replica/i,'the lab ball is labelled a replica');assert.doesNotMatch(exp,/real leather World Cup ball/,'not called the real ball');
+ // the mechanic: grab → pull → let go on the canvas, and a keyboard/button path that runs the same swing
+ assert.match(exp,/m\.grab\(x,y\)/);assert.match(exp,/machine\.current\?\.pull\(/);assert.match(exp,/machine\.current\?\.letGo\(\)/);
+ assert.match(exp,/autoSwing\(\)\}>Pull back and let go/,'a button for keyboards and anyone who cannot drag');
+ assert.match(exp,/aria-live="polite"/,'results announced');assert.match(exp,/compared&&/,'a takeaway once two balls are compared');
+ // motion: velocity-aware springs, a real pendulum, a hit-stop, rubber-banding, and the loop still sleeps
+ assert.match(machine,/hd\.om\+=-\(G\/H\.L\)\*Math\.sin\(hd\.th\)\*h/,'pendulum physics');
+ assert.match(machine,/hitStop/);assert.match(machine,/raw\*=\.18/,'rubber-band when pushed into the head');
+ assert.match(machine,/\(hd\.print>0&&!opts\.reduced\)/,'the lace print fade keeps the loop awake only while it fades');
+ assert.match(machine,/if\(opts\.reduced\)\{\/\/ reduced motion: no swing/,'reduced motion: the result without the swing');
+ assert.match(css,/\.paper\{[^}]*pointer-events:none/,'the print-speckle overlay never blocks input');
+ console.log('PASS head it: pendulum rig, sourced quotes, fair-test framing, button + drag, sleeping loop, reduced-motion result');}

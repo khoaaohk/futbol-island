@@ -5,7 +5,8 @@ import {skillBall,skillFrame,type SkillMove} from '../graphics/skillMoves';
 import {sideGameDress} from '../town/beanLooks';
 import type {ArcadePoseOptions} from './arcadePlayerMotion';
 import {readRunnerProgress,runnerBallFor} from './runnerMissions';
-import {districtAt,DISTRICTS} from '../../components/games/runnerRoute';
+import {districtAt,DISTRICTS,routeGrade} from '../../components/games/runnerRoute';
+import {createRunnerTrack} from './runnerTrack';
 
 /**
  * Breakaway Run presentation layer: speed lines, plant dust, goal confetti,
@@ -23,8 +24,8 @@ const clamp01=(v:number)=>Math.max(0,Math.min(1,v));
 export function createRunnerFx(stage:ArcadeStage){
  const {scene,reduced}=stage;
  const dummy=new T.Object3D(),colour=new T.Color();
- let elapsed=0,trauma=0,hitstop=0,hitstopScale=1,follow=0,fov=0,lineFlash=0,hype=0,slideDust=0;
- const seen={event:0,cuts:0,landings:0,nearMisses:0,state:null as RunnerGame|null};
+ let descent=0,elapsed=0,trauma=0,hitstop=0,hitstopScale=1,follow=0,fov=0,lineFlash=0,hype=0,slideDust=0,punch=0;
+ const seen={event:0,cuts:0,landings:0,nearMisses:0,hurdles:0,beatScores:0,state:null as RunnerGame|null};
 
  /* ---------- speed lines: one quad buffer, side streaks only ---------- */
  const linePos=new Float32Array(LINES*12),lineSeed=new Float32Array(LINES*4);
@@ -54,14 +55,10 @@ export function createRunnerFx(stage:ArcadeStage){
  const structurePerSide=ROWS+1,fansPerSide=ROWS*FANS_PER_ROW,perSide=structurePerSide+fansPerSide*2,perBlock=perSide*2;
  const crowdUniforms={uTime:{value:0},uAmp:{value:0},uRate:{value:7}};
  const crowdMaterial=new T.MeshLambertMaterial({color:'#ffffff'});
+ // The bob is applied in world space through the route bend's hook (runnerTrack), so stands follow the curve.
  crowdMaterial.onBeforeCompile=shader=>{Object.assign(shader.uniforms,crowdUniforms);
-  shader.vertexShader='attribute float aBob;\nuniform float uTime;uniform float uAmp;uniform float uRate;\n'+shader.vertexShader.replace('#include <project_vertex>',`vec4 mvPosition=vec4(transformed,1.0);
-#ifdef USE_INSTANCING
- mvPosition=instanceMatrix*mvPosition;
-#endif
- mvPosition.y+=step(.5,aBob)*abs(sin(uTime*uRate+aBob*6.2831))*uAmp;
- mvPosition=modelViewMatrix*mvPosition;gl_Position=projectionMatrix*mvPosition;`);};
- crowdMaterial.customProgramCacheKey=()=>'runner-crowd-bob';
+  shader.vertexShader='attribute float aBob;\nuniform float uTime;uniform float uAmp;uniform float uRate;\n#define RUNNER_WORLD_HOOK rbW.y+=step(.5,aBob)*abs(sin(uTime*uRate+aBob*6.2831))*uAmp;\n'+shader.vertexShader;};
+ crowdMaterial.customProgramCacheKey=()=>'runner-crowd-bob-2';
  const crowdGeometry=new T.BoxGeometry(1,1,1);const bob=new Float32Array(perBlock);
  for(let side=0;side<2;side++){const base=side*perSide;for(let f=0;f<fansPerSide;f++){const phase=1+((f*0.618)%1);bob[base+structurePerSide+f*2]=phase;bob[base+structurePerSide+f*2+1]=phase;}}
  crowdGeometry.setAttribute('aBob',new T.InstancedBufferAttribute(bob,1));
@@ -89,8 +86,9 @@ export function createRunnerFx(stage:ArcadeStage){
  /* ---------- tackle telegraphs (attached once to each pooled defender) ---------- */
  const stripGeometry=new T.PlaneGeometry(1,1);stripGeometry.rotateX(-Math.PI/2);stripGeometry.translate(0,0,.5);
  type Tele={strip:T.Mesh<T.PlaneGeometry,T.MeshBasicMaterial>;arc:T.Mesh<T.RingGeometry,T.MeshBasicMaterial>;role:string};
+ const defenders:T.Group[]=[];
  function prepareDefender(g:T.Group){
-  if(g.userData.tele)return;
+  if(g.userData.tele)return;defenders.push(g);
   const strip=new T.Mesh(stripGeometry,new T.MeshBasicMaterial({color:'#ff7d5e',transparent:true,opacity:0,depthWrite:false,toneMapped:false}));strip.name='runner-tackle-lane';strip.position.y=.03;strip.renderOrder=1;
   const arc=new T.Mesh(new T.RingGeometry(.7,.84,ARC_SEGMENTS,1,Math.PI/2,Math.PI*2),new T.MeshBasicMaterial({color:'#ff7d5e',transparent:true,opacity:.9,depthWrite:false,side:T.DoubleSide,toneMapped:false}));arc.name='runner-read-arc';arc.rotation.x=-Math.PI/2;arc.position.y=.045;arc.renderOrder=2;
   strip.visible=arc.visible=false;g.add(strip,arc);g.userData.tele={strip,arc,role:''} as Tele;
@@ -98,6 +96,7 @@ export function createRunnerFx(stage:ArcadeStage){
  /** Read arc fills while the defender reads you; the lane strip shows where the
   * committed tackle will land and how far it reaches. Colour = role. */
  function defender(g:T.Group,o:RunnerObject,s:RunnerGame){
+  if(g.userData.role!==(o.role??'jockey'))g.userData.bendDirty=true;
   const tele=g.userData.tele as Tele|undefined;if(!tele)return;
   const role=o.role??'jockey',t=o.tackle??0,active=o.read!==undefined&&!o.knock&&!o.beaten&&s.lives>0&&(!o.passed||t>0&&t<.7);
   // Wrong-footed by a skill move or one-two: stumble the wrong way, no telegraph.
@@ -186,30 +185,69 @@ export function createRunnerFx(stage:ArcadeStage){
   // Fork
   const f=s.objects.find(o=>o.kind==='fork'&&o.z<4);fork.visible=!!f;if(f)fork.position.z=f.z;
  }
+ /* ---------- pop words: one pooled billboard for the big moments (GOAL!, DODGED!, STEP-OVER!) ---------- */
+ // Kids read one big word faster than a sentence. One plane + one canvas texture, redrawn only on an event
+ // (never per frame); hidden when idle so it costs no draw call. Reduced motion: a plain fade, no pop or rise.
+ const WORD_W=512,WORD_H=176;let wordCanvas:HTMLCanvasElement|undefined,wordCtx:CanvasRenderingContext2D|null=null,wordTexture:T.CanvasTexture|undefined;
+ const wordMaterial=new T.MeshBasicMaterial({transparent:true,opacity:0,depthTest:false,depthWrite:false,toneMapped:false,side:T.DoubleSide});
+ const word=new T.Mesh(new T.PlaneGeometry(1,WORD_H/WORD_W),wordMaterial);word.name='runner-pop-word';word.visible=false;word.renderOrder=20;word.frustumCulled=false;word.rotation.x=-.32;scene.add(word);
+ if(typeof document!=='undefined'){wordCanvas=document.createElement('canvas');wordCanvas.width=WORD_W;wordCanvas.height=WORD_H;wordCtx=wordCanvas.getContext('2d');wordTexture=new T.CanvasTexture(wordCanvas);wordTexture.colorSpace=T.SRGBColorSpace;wordMaterial.map=wordTexture;}
+ let wordAge=0,wordLife=0,wordSize=1,wordX=0,wordText='';
+ /** Show a word (and an optional short line under it). `size` is the world width at full scale. */
+ function pop(text:string,fill:string,size:number,life:number,sub=''){
+  if(!wordCtx||!wordTexture)return;
+  const g=wordCtx;g.clearRect(0,0,WORD_W,WORD_H);g.textAlign='center';g.textBaseline='middle';g.lineJoin='round';
+  let px=118;g.font=`${px}px Impact, "Arial Black", Arial, sans-serif`;const fit=WORD_W-40;const w=g.measureText(text).width;if(w>fit){px=Math.floor(px*fit/w);g.font=`${px}px Impact, "Arial Black", Arial, sans-serif`;}
+  const y=sub?72:WORD_H/2;g.lineWidth=Math.max(8,px*.16);g.strokeStyle='#1a1036';g.strokeText(text,WORD_W/2,y);g.fillStyle=fill;g.fillText(text,WORD_W/2,y);
+  if(sub){g.font='bold 30px Arial, sans-serif';g.lineWidth=8;g.strokeText(sub,WORD_W/2,148,WORD_W-24);g.fillStyle='#ffffff';g.fillText(sub,WORD_W/2,148,WORD_W-24);}
+  wordTexture.needsUpdate=true;wordText=text;wordAge=0;wordLife=life;wordSize=size*(stage.mobile?1:1.3);word.visible=true;
+ }
+ function stepWord(dt:number,s:RunnerGame){
+  if(!word.visible)return;wordAge+=dt;if(wordAge>=wordLife){word.visible=false;wordMaterial.opacity=0;return;}
+  const t=wordAge/wordLife,inT=clamp01(wordAge/.2),fade=clamp01((wordLife-wordAge)/.3);
+  // Ease-out-back pop, then a slow drift up; the word follows the runner a little so it stays readable.
+  const back=1+2.2*Math.pow(inT-1,3)+1.2*Math.pow(inT-1,2),k=reduced?1:.35+.65*back;
+  wordX+=(s.x*.45-wordX)*(1-Math.exp(-dt*6));
+  word.scale.set(wordSize*k,wordSize*k,1);word.position.set(wordX,(stage.mobile?3.1:2.7)+(reduced?0:t*.5),-7);
+  wordMaterial.opacity=Math.min(reduced?clamp01(wordAge/.12):1,fade);
+ }
  /* ---------- per-frame ---------- */
  function update(dt:number,s:RunnerGame){
   elapsed+=dt;
-  if(seen.state!==s){seen.state=s;seen.event=s.event;seen.cuts=s.cuts;seen.landings=s.landings;seen.nearMisses=s.nearMisses;}
+  if(seen.state!==s){seen.state=s;seen.event=s.event;seen.cuts=s.cuts;seen.landings=s.landings;seen.nearMisses=s.nearMisses;seen.hurdles=s.hurdles;seen.beatScores=s.beatScores;}
   // Counters → one-shot juice. Nothing here allocates.
   if(s.cuts!==seen.cuts){seen.cuts=s.cuts;puff(s.x-s.cutDir*.25,.1,3,.9,.45);}
   if(s.landings!==seen.landings){seen.landings=s.landings;puff(s.x,0,4,1.1,.5);}
-  if(s.nearMisses!==seen.nearMisses){seen.nearMisses=s.nearMisses;lineFlash=1;hitstop=.11;hitstopScale=.45;}
+  if(s.nearMisses!==seen.nearMisses){seen.nearMisses=s.nearMisses;lineFlash=1;hitstop=.11;hitstopScale=.45;pop(s.nearStreak>2?`${s.nearStreak} IN A ROW!`:'DODGED!','#7ff0e2',3.4,.8);}
+  if(s.hurdles!==seen.hurdles){seen.hurdles=s.hurdles;pop('HURDLED!','#7ff0e2',3.4,.8);}
   depth(dt,s);
   if(s.event!==seen.event){seen.event=s.event;const kind=s.eventKind;
-   if(kind==='skillmove'){lineFlash=Math.max(lineFlash,.7);hitstop=.08;hitstopScale=.4;puff(s.x,-.4,4,1.2,.5);}
+   if(kind==='skillmove'){lineFlash=Math.max(lineFlash,.7);hitstop=.08;hitstopScale=.4;puff(s.x,-.4,4,1.2,.5);if(s.skill&&s.skill!=='chipShot')pop(`${RUNNER_SKILLS[s.skill].label.toUpperCase()}!`,s.skillPerfect?'#ffe07a':'#ffffff',3.8,1,s.skillPerfect?'PERFECT TIMING':'');}
+   else if(kind==='early')pop('TOO EARLY!','#ffb27a',3,.8,'Wait until they are close');
    else if(kind==='shield'){trauma=Math.min(1,trauma+.3);hitstop=.06;hitstopScale=.2;puff(s.x,-.3,6,1.8,.8);}
    else if(kind==='mud')puff(s.x,-.2,6,1.4,.3);
    else if(kind==='onetwo'||kind==='boss'&&s.boss===0){lineFlash=1;hype=Math.max(hype,.7);}
-   if(kind==='hit'){trauma=Math.min(1,trauma+(s.lives>0?.55:.8));hitstop=s.lives>0?.09:.14;hitstopScale=.06;puff(s.x,-.1,6,1.6,.9);}
-   else if(kind==='goal'){trauma=Math.min(1,trauma+.32);hitstop=.06;hitstopScale=.3;celebrate(s.eventX,s.eventZ);hype=1;}
+   if(kind==='hit'){trauma=Math.min(1,trauma+(s.lives>0?.55:.8));hitstop=s.lives>0?.09:.14;hitstopScale=.06;puff(s.x,-.1,6,1.6,.9);pop(s.lives>0?'TACKLED!':'FULL TIME','#ff7d5e',3.4,1,s.lives>0?`${s.lives} chance${s.lives===1?'':'s'} left`:'');}
+   else if(kind==='goal'){
+    // The goal moment: a breath of slow motion as the net bursts, a camera punch-in and the word itself.
+    trauma=Math.min(1,trauma+.32);hitstop=reduced?.06:.3;hitstopScale=reduced?.3:.35;celebrate(s.eventX,s.eventZ);hype=1;punch=1;
+    const beatFirst=s.beatScores!==seen.beatScores;seen.beatScores=s.beatScores;
+    pop('GOAL!','#ffe07a',5.2,1.5,beatFirst?'Beat the tackle, found the goal!':s.streak>1?`${Math.min(3,s.streak)} in a row!`:'');}
+   else if(kind==='save')pop('SAVED!','#ff9bd2',3.2,.9,'Shoot where the keeper is not');
+   else if(kind==='onetwo')pop('ONE-TWO!','#ffe07a',3.8,1);
+   else if(kind==='boss'&&s.boss===0&&s.lives>0&&/BEATEN/.test(s.message))pop('BACK LINE BEATEN!','#ffe07a',4.6,1.2);
+   else if(kind==='shield')pop('RODE IT!','#9ff6ff',3.4,.9);
+   else if(kind==='mission')pop('★ MISSION!','#ffe07a',4,1.3);
    else if(kind==='shot'&&s.lastBlast>=.8)trauma=Math.min(1,trauma+.28);
   }
   if(s.slide>.15&&s.lives>0){slideDust-=dt;if(slideDust<=0){slideDust=.07;puff(s.x+.2,.25,1,.5,.35);}}
-  hitstop=Math.max(0,hitstop-dt);trauma=Math.max(0,trauma-dt*2.4);lineFlash=Math.max(0,lineFlash-dt*2.5);
+  hitstop=Math.max(0,hitstop-dt);trauma=Math.max(0,trauma-dt*2.4);lineFlash=Math.max(0,lineFlash-dt*2.5);punch=Math.max(0,punch-dt*1.6);stepWord(dt,s);
   const travel=s.speed*dt*(s.lives>0||s.outro>0?1:0);
 
   // Speed lines: invisible at kick-off pace, building with speed, boost and near misses.
-  const strength=reduced?0:Math.min(.75,clamp01((s.speed-13.4)/4.6)*.32+(s.boost>0?.32:0)+lineFlash*.4);
+  // Descents add streaks: the slope is doing the work, so speed reads as the ground falls away.
+  descent+=(clamp01((-routeGrade(s.distance)-.025)/.07)*(s.lives>0?1:0)-descent)*(1-Math.exp(-dt*4));
+  const strength=reduced?0:Math.min(.75,clamp01((s.speed-13.4)/4.6)*.32+(s.boost>0?.32:0)+lineFlash*.4+descent*.36);
   lineMaterial.opacity=strength;lines.visible=strength>.015;
   if(lines.visible){const stretch=.6+s.speed/9;for(let i=0;i<LINES;i++){const k=i*4;lineSeed[k+2]+=travel*1.7;if(lineSeed[k+2]>8)lineSeed[k+2]-=70;const x=lineSeed[k],y=lineSeed[k+1],z=lineSeed[k+2],len=lineSeed[k+3]*stretch,w=.022+(i%3)*.008,j=i*12;
    linePos[j]=x-w;linePos[j+1]=y;linePos[j+2]=z;linePos[j+3]=x+w;linePos[j+4]=y;linePos[j+5]=z;linePos[j+6]=x+w;linePos[j+7]=y;linePos[j+8]=z+len;linePos[j+9]=x-w;linePos[j+10]=y;linePos[j+11]=z+len;}
@@ -229,9 +267,10 @@ export function createRunnerFx(stage:ArcadeStage){
   hype+=((goalNear?.6:s.boost>0?.35:.1)-hype)*(1-Math.exp(-dt*(hype>.6?.8:2)));
   for(const stand of stands){const z=((stand.base+s.distance+62)%STAND_PERIOD+STAND_PERIOD)%STAND_PERIOD-62;if(z<stand.z-20)fillStand(stand,s.distance,goalNear);stand.z=z;stand.mesh.position.z=z;}
   crowdUniforms.uTime.value=elapsed;crowdUniforms.uAmp.value=reduced?0:.04+hype*.2;crowdUniforms.uRate.value=6+hype*6;
+  track.update(dt,s,hype);
  }
  function reset(s:RunnerGame){
-  trauma=hitstop=lineFlash=follow=0;hitstopScale=1;hype=0;dustLife.fill(0);confLife.fill(0);dust.visible=confetti.visible=false;seen.state=null;
+  trauma=hitstop=lineFlash=follow=descent=punch=0;hitstopScale=1;word.visible=false;wordMaterial.opacity=0;wordAge=wordLife=0;hype=0;track.reset();dustLife.fill(0);confLife.fill(0);dust.visible=confetti.visible=false;seen.state=null;
   shield.visible=keeper.root.visible=passBall.visible=callout.visible=mud.visible=fork.visible=false;for(const m of mates)m.rig.root.visible=false;
   for(const stand of stands){stand.z=((stand.base+s.distance+62)%STAND_PERIOD+STAND_PERIOD)%STAND_PERIOD-62;stand.mesh.position.z=stand.z;fillStand(stand,s.distance,false);}
  }
@@ -241,19 +280,30 @@ export function createRunnerFx(stage:ArcadeStage){
   // Landscape phones: the shared runner framing leaves the runner ~20 px tall. Frame
   // closer and lower so the runner, lanes and next defender line read at a glance.
   if(stage.mobile&&cam.aspect>1.45){cam.position.set(cam.position.x,8.6,12.6);lookTarget.set(cam.position.x*.5,0,-12);cam.lookAt(lookTarget);}
-  if(reduced){if(stage.mobile&&cam.aspect>1.45)cam.updateMatrixWorld();if(cam.fov!==baseFov){cam.fov=baseFov;cam.updateProjectionMatrix();}return;}
+  // Desktop / tablet landscape: pitch the view down a touch so the runner sits above the coaching line
+  // instead of behind it (the line lives at the bottom of the screen, just above the controls).
+  else if(!stage.mobile&&cam.aspect>1.2)cam.rotateX(-.055);
+  // Heat: three updates every world matrix each frame, hidden or not. The runner keeps ~1,500 objects in pools
+  // (six defender rigs, two exploding goal frames, spare rigs), most of them hidden. Skip hidden top-level
+  // subtrees; a pool item that turns visible recomputes its whole subtree on that same frame.
+  for(const child of scene.children)child.matrixWorldAutoUpdate=child.visible;
+  // A role change re-dresses the pooled rig (new costume materials): bend them before their first draw.
+  for(const g of defenders)if(g.userData.bendDirty){g.userData.bendDirty=false;track.patch(g);}
+  if(reduced){if(stage.mobile&&cam.aspect>1.45)cam.updateMatrixWorld();if(cam.fov!==baseFov){cam.fov=baseFov;cam.updateProjectionMatrix();}track.pose(cam);return;}
   follow+=(s.x*.2-follow)*(1-Math.exp(-dt*5));cam.position.x+=follow;
   if(trauma>0){const shake=trauma*trauma*.2;cam.position.x+=Math.sin(elapsed*71.3)*shake;cam.position.y+=Math.sin(elapsed*53.1+1.7)*shake*.7;}
-  const target=baseFov+clamp01((s.speed-13)/5)*2.6+(s.boost>0?2.2:0)+lineFlash*1.2;
+  const target=baseFov+clamp01((s.speed-13)/5)*2.6+(s.boost>0?2.2:0)+lineFlash*1.2+descent*1.6-Math.sin(Math.min(1,punch)*Math.PI)*5;
   if(!fov)fov=baseFov;fov+=(target-fov)*(1-Math.exp(-dt*4));if(Math.abs(cam.fov-fov)>.01){cam.fov=fov;cam.updateProjectionMatrix();}
-  cam.updateMatrixWorld();
+  cam.updateMatrixWorld();track.pose(cam);
  }
- return{update,reset,camera,defender,prepareDefender,player,
+ // The winding route: built last so every runner mesh above is bent too.
+ const track=createRunnerTrack(stage);
+ return{update,reset,camera,defender,prepareDefender,player,track,dispose:track.dispose,
   /** Simulation time scale for hit-stop: brief freezes on impact, a breath of slow-mo on near misses. */
   timeScale:()=>hitstop>0?hitstopScale:1,
   /** Any effect still animating keeps frames coming briefly after play stops. */
-  active:()=>dust.visible||confetti.visible||trauma>0||hitstop>0,
-  debug:()=>({lines:lines.visible,lineOpacity:lineMaterial.opacity,dust:dust.visible,confetti:confetti.visible,stands:stands.map(s=>s.mesh.visible),hype,trauma}),
+  active:()=>dust.visible||confetti.visible||trauma>0||hitstop>0||word.visible,
+  debug:()=>({word:word.visible?wordText:'',wordOpacity:wordMaterial.opacity,punch,route:track.debug(),descent,lines:lines.visible,lineOpacity:lineMaterial.opacity,dust:dust.visible,confetti:confetti.visible,stands:stands.map(s=>s.mesh.visible),hype,trauma}),
  };
 }
 export type RunnerFx=ReturnType<typeof createRunnerFx>;

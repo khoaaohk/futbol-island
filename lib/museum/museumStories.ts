@@ -86,7 +86,7 @@ export const STORIES:Readonly<Record<string,Story>>={
  ]},
  // The ball cabinet: a weighing scale, a rain cloud, three ball sizes.
  'laced-leather':{id:'laced-leather',beats:[
-  fact('tap','Weigh the leather ball','weigh','Before the 1960s most footballs were brown leather with laces.'),
+  fact('tap','Weigh the leather ball','weigh','Long ago, footballs were brown leather, and the old ones were laced up.'),
   fact('tap','Make it rain','rain','They soaked up rain and got heavy.'),
   fact('tap','Weigh a size 5','size5','Today an adult match ball is size 5: 68–70 cm around and 410–450 grams.'),
   fact('tap','A ball for every age','sizes','Younger players use smaller size 3 or 4 balls, so the ball fits the player.'),
