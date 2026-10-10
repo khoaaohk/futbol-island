@@ -324,12 +324,12 @@ await ok('ui hidden without setup',async()=>{
  assert.equal(EM.emailProvider({}),null);assert.equal(EM.emailProvider({RESEND_API_KEY:'k'}),null);assert.equal(EM.emailProvider({SAVE_EMAIL_LOG:'1',VERCEL:'1'}),null,'no log mode on Vercel');
  assert.equal(EM.emailProvider({RESEND_API_KEY:'k',SAVE_EMAIL_FROM:'f'}).kind,'resend');assert.equal(EM.emailProvider({SAVE_EMAIL_LOG:'1'}).kind,'log');
  const onb=read('components/IslandOnboarding.tsx'),card=read('components/saves/SaveCodeCard.tsx'),create=read('components/saves/SaveCodeCreate.tsx'),restore=read('components/saves/SaveCodeRestore.tsx');
- assert(/\{saving&&<button[^>]*data-have-save-code/.test(onb),'"I have a save code" only when saving is set up');
+ assert(!/data-have-save-code onClick=\{\(\)=>\{setRestoreCode/.test(onb),'the welcome step has no "I have a save code" link (user, Oct 10 2026: the title screen has it)');
  assert(/const mustSave=\(\)=>saving&&!fallback&&codeRequired\(\)/.test(onb)&&/if\(step===0&&mustSave\(\)\)/.test(onb),'the save step only when saving is set up');
  for(const f of [card,create,restore])assert(/Saving isn’t ready yet — you can still play\./.test(f),'friendly unavailable state');
  assert(/avail\.email&&<button[^>]*data-email-code/.test(card),'the email option is hidden without a provider');
  // The title screen's sheet (Oct 9 2026): one footer row, Back · Print code · I saved it.
- assert(/onBack=\{onBack\}/.test(read('components/landing/saveCodeAdapter.tsx'))&&/<BackButton onBack=\{onBack\}\/>/.test(create)&&/>Print code<\/button>/.test(create)&&/data-saved-it onClick=\{onDone\}/.test(create),'create sheet footer');
+ assert(/onBack=\{onBack\}/.test(read('components/landing/saveCodeAdapter.tsx'))&&/<BackButton onBack=\{onBack\}\/>/.test(create)&&/>Print code<\/button>/.test(create)&&/data-saved-it onNavigate=\{onDone\}/.test(create),'create sheet footer');
  // What a save code is, said where codes are shown, made and typed.
  assert(/data-save-explainer>\{SAVE_CODE_WHAT\}/.test(card)&&/data-save-explainer>\{SAVE_CODE_NEW\}/.test(create)&&/data-save-explainer/.test(restore),'the save-code explainer');
  // Masked tiles hide the picture as well as the word (a picture would give the word away); the number tile shows 🔢.

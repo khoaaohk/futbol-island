@@ -94,10 +94,13 @@ export async function runTanExit(screen:HTMLElement,pill:HTMLElement|null,{reduc
  sheet.setAttribute('viewBox',`${b.x} ${b.y} ${b.width} ${b.height}`);
  Object.assign(sheet.style,{left:`${r.left}px`,top:`${r.top}px`,width:`${r.width}px`,height:`${r.height}px`,transformOrigin:'50% 50%'});
  const path=document.createElementNS('http://www.w3.org/2000/svg','path');path.setAttribute('d',land.getAttribute('d')??'');path.setAttribute('fill',TAN);sheet.appendChild(path);
+ // Added only when the sand starts to grow (the pink is gone by then): appended at once, its copy of the sand sat ON TOP of the
+ // pink for the first 820 ms (user, Oct 9 2026: "the tan portion should be below the pink").
+ await new Promise(res=>setTimeout(res,820));
  screen.appendChild(sheet);
  // Grow in place, outward in every direction (user, Oct 9 2026: "the tan needs to stretch out and fill in all directions"): scale about
  // the sand's own centre, enough that its inner blob (≈70% of the box) passes the farthest screen edge on each axis.
  const cx=r.left+r.width/2,cy=r.top+r.height/2,sx=2*Math.max(cx,vw-cx)/(r.width*.7),sy=2*Math.max(cy,vh-cy)/(r.height*.7),k=Math.max(sx,sy);
  await sheet.animate([{transform:'none'},{transform:`scale(${k})`}],
-  {delay:820,duration:700,easing:'cubic-bezier(.45,0,.55,1)',fill:'forwards'}).finished.catch(()=>{});
+  {duration:700,easing:'cubic-bezier(.45,0,.55,1)',fill:'forwards'}).finished.catch(()=>{});
 }

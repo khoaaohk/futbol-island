@@ -46,22 +46,26 @@ export const bandAt=(along:number,bandLength:number)=>((Math.floor(along/bandLen
 
 /**
  * A pitch slab (same footprint as `BoxGeometry(width,height,length)`, centred on the origin) whose top face is cut into mown
- * bands carried in a `color` attribute. `pitchWidth` is the marked pitch inside the run-off (lanes start at its touchline); the bands keep
- * alternating into the run-off as on a real ground. The underside is left out (it rests on the island and is never seen).
+ * bands carried in a `color` attribute. `pitchWidth` × `pitchLength` is the marked pitch inside the run-off (lanes start at its
+ * touchline). The bands stop at the white lines: the run-off outside them is one plain light shade (user, Oct 9 2026). The
+ * underside is left out (it rests on the island and is never seen).
  */
-export function stripedSlabGeometry(width:number,height:number,length:number,plan:StripePlan,pitchWidth=width){
+export function stripedSlabGeometry(width:number,height:number,length:number,plan:StripePlan,pitchWidth=width,pitchLength=length){
  const pos:number[]=[],nor:number[]=[],col:number[]=[],idx:number[]=[];
  const quad=(a:number[],b:number[],c:number[],d:number[],n:number[],k:number)=>{const i=pos.length/3;pos.push(...a,...b,...c,...d);for(let j=0;j<4;j++){nor.push(...n);col.push(k,k,k);}idx.push(i,i+1,i+2,i,i+2,i+3);};
  const hx=width/2,hy=height/2,hz=length/2,b=plan.bandLength;
  // Band edges along z: every multiple of the band length from halfway, clipped to the slab.
- const zs=[-hz];for(let k=Math.ceil(-hz/b+1e-6);k*b<hz-1e-6;k++)zs.push(k*b);zs.push(hz);
- const lane=plan.lanes?pitchWidth/plan.lanes:0,xs=[-hx];
- if(lane){for(let k=Math.ceil((-hx+pitchWidth/2)/lane+1e-6);-pitchWidth/2+k*lane<hx-1e-6;k++)xs.push(-pitchWidth/2+k*lane);}
- xs.push(hx);
- for(let i=0;i<zs.length-1;i++){const z0=zs[i],z1=zs[i+1],main=bandAt((z0+z1)/2,b)?STRIPE_LIGHT:STRIPE_DARK;
-  for(let j=0;j<xs.length-1;j++){const x0=xs[j],x1=xs[j+1];
-   const cross=lane?(bandAt((x0+x1)/2+pitchWidth/2,lane)?CROSS_LIGHT:CROSS_DARK):1;
-   quad([x0,hy,z1],[x1,hy,z1],[x1,hy,z0],[x0,hy,z0],[0,1,0],main*cross);}}
+ const px=pitchWidth/2,pz=pitchLength/2,uniq=(a:number[])=>[...new Set(a.map(v=>+v.toFixed(5)))].sort((m,n)=>m-n);
+ const zs:number[]=[-hz,-pz,pz,hz];for(let k=Math.ceil(-pz/b+1e-6);k*b<pz-1e-6;k++)zs.push(k*b);
+ const lane=plan.lanes?pitchWidth/plan.lanes:0,xs:number[]=[-hx,-px,px,hx];
+ if(lane){for(let k=1;k<plan.lanes;k++)xs.push(-px+k*lane);}
+ const Z=uniq(zs.filter(z=>z>=-hz-1e-6&&z<=hz+1e-6)),X=uniq(xs.filter(x=>x>=-hx-1e-6&&x<=hx+1e-6));
+ for(let i=0;i<Z.length-1;i++){const z0=Z[i],z1=Z[i+1],zm=(z0+z1)/2;if(z1-z0<1e-6)continue;
+  for(let j=0;j<X.length-1;j++){const x0=X[j],x1=X[j+1],xm=(x0+x1)/2;if(x1-x0<1e-6)continue;
+   // Outside the white lines: the plain light shade. Inside: bands across, plus the fainter lengthwise pass where planned.
+   const inside=Math.abs(zm)<pz&&Math.abs(xm)<px;
+   const k=inside?(bandAt(zm,b)?STRIPE_LIGHT:STRIPE_DARK)*(lane?(bandAt(xm+px,lane)?CROSS_LIGHT:CROSS_DARK):1):STRIPE_LIGHT;
+   quad([x0,hy,z1],[x1,hy,z1],[x1,hy,z0],[x0,hy,z0],[0,1,0],k);}}
  // Four plain sides (factor 1: the slab edge keeps the pitch's own colour).
  quad([-hx,-hy,hz],[hx,-hy,hz],[hx,hy,hz],[-hx,hy,hz],[0,0,1],1);
  quad([hx,-hy,-hz],[-hx,-hy,-hz],[-hx,hy,-hz],[hx,hy,-hz],[0,0,-1],1);

@@ -2,9 +2,10 @@
 import {forwardRef,useEffect,useRef,useState,type ButtonHTMLAttributes} from 'react';
 import {Icon} from './Icon';
 import styles from './DoneButton.module.css';
-type NavigationProps=Omit<ButtonHTMLAttributes<HTMLButtonElement>,'onClick'> & {onNavigate:()=>void;back?:boolean;label?:string;immediate?:boolean};
+/** `icon` overrides the collapsed glyph: 'forward' is a right arrow (e.g. "Get my code", the mirror of Back). */
+type NavigationProps=Omit<ButtonHTMLAttributes<HTMLButtonElement>,'onClick'> & {onNavigate:()=>void;back?:boolean;label?:string;immediate?:boolean;icon?:'forward'};
 /** Collapse the label before changing views; keep focus refs and native keyboard activation. */
-export const NavigationButton=forwardRef<HTMLButtonElement,NavigationProps>(function NavigationButton({onNavigate,back=false,label,className='',disabled,immediate=false,...props},ref){
+export const NavigationButton=forwardRef<HTMLButtonElement,NavigationProps>(function NavigationButton({onNavigate,back=false,label,className='',disabled,immediate=false,icon,...props},ref){
  const [closing,setClosing]=useState(false),[departing,setDeparting]=useState(false);
  const button=useRef<HTMLButtonElement|null>(null);
  const timer=useRef<ReturnType<typeof setTimeout>>();
@@ -26,7 +27,7 @@ export const NavigationButton=forwardRef<HTMLButtonElement,NavigationProps>(func
  };
  return <button {...props} ref={node=>{button.current=node;if(typeof ref==='function')ref(node);else if(ref)ref.current=node;}} type="button" className={`${className} ${styles.button}`} data-navigation={back?'back':'done'} data-closing={closing} data-departing={departing} disabled={disabled} aria-label={label??(back?'Back':'Done')} aria-disabled={closing||disabled} onClick={navigate}>
   <span className={styles.label} aria-hidden="true">{label??(back?'Back':'Done')}</span>
-  <span className={styles.icon} aria-hidden="true"><Icon name={back?'back':'check'} size={22}/></span>
+  <span className={styles.icon} aria-hidden="true"><Icon name={icon==='forward'?'arrow':back?'back':'check'} size={22}/></span>
  </button>;
 });
 export const DoneButton=forwardRef<HTMLButtonElement,Omit<NavigationProps,'onNavigate'|'back'> & {onDone:()=>void}>(function DoneButton({onDone,...props},ref){return <NavigationButton {...props} ref={ref} onNavigate={onDone}/>;});

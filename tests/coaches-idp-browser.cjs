@@ -100,7 +100,7 @@ async function run(browser,vp){
  await page.locator('[data-grown-view]').evaluate(el=>el.closest('[class*="body"]')?.scrollBy(0,900));await page.waitForTimeout(300);await shot(page,`${tag}-18-grown-cheer`);
  await page.locator('#idp-fridge-name').fill('Sam');
  await page.locator('[data-fridge-print]').click();
- const printed=await page.waitForFunction(()=>{const f=document.querySelector('iframe[data-grownups-print]');return f&&f.srcdoc?f.srcdoc:null;},null,{timeout:10000}).then(h=>h.jsonValue());
+ const printed=await page.waitForFunction(()=>{const f=document.querySelector('div[data-grownups-print]');return f&&f.shadowRoot?f.shadowRoot.innerHTML:null;},null,{timeout:10000}).then(h=>h.jsonValue());
  fs.writeFileSync(path.join(OUT,`${tag}-19-fridge.html`),printed);
  assert.match(printed,/Sam’s football plan/);assert.match(printed,/data:image\/png;base64/,'the QR is an inline image');assert.ok(!/<script/i.test(printed));
  const fridge=await ctx.newPage();await fridge.setViewportSize({width:820,height:1160});await fridge.setContent(printed);await fridge.waitForTimeout(300);

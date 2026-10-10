@@ -4768,3 +4768,26 @@ transform/opacity keyframes), a desktop key prompt, and a pulsing ring on the to
 looping animation, present only while a hint shows during play; static under reduced motion). The pass-chain cue is one or two
 oscillators per completed pass. Paused/finished canvases still stop drawing (frames stable in the browser checks). Headless
 emulation only; no physical-phone thermal claim.
+
+## Title-screen preload (Oct 9 2026)
+
+User: "the tan screen takes a while, can that be more seamless. can we load while they are on the main page?" Measured on a production build (`next start`), Chrome with Metal GPU, 390×844 phone emulation at 4× CPU throttle and 1440×900 desktop; median of 3 runs (before: 1 run).
+
+| Tan hold (tan fully covering → island visible) | before | after |
+|---|---|---|
+| phone, new player (code flow) | 8.5 s | 2.7 s |
+| phone, returning player Play | 9.2 s | 2.3 s |
+| phone, Play within 1 s of load | 8.5 s | 2.6 s |
+| desktop (all three) | 3.0 s | 0.77–0.87 s |
+
+Play → island visible: phone 12.3–13.0 s → 6.5–8.7 s; desktop 6.8 s → 4.7–4.9 s. A returning Play now spends ~1.9 s more in the water fill (the island builds there) and much less on the plain tan.
+
+Where the old hold went (phone, 4×): buildTown + vending 2.6 s, ride-ramp planning 2.6 s (linear obstacle scans), NPCs 1.0 s, rest of Town ~0.6 s, first frame incl. shader compile 0.3 s, then a fixed 0.95 s CSS delay before the fade.
+
+Implemented:
+- `planRideRamps` queries an obstacle grid (2.6 s → 55 ms; identical plan, tested against the full scan).
+- `buildTownSteps` (world.ts): buildTown as ~140 slices; the batching pass removes its originals in one pass per parent instead of a splice per mesh.
+- `lib/town/islandWarm.ts` + `components/root/islandPreload.ts`: after load + 1.5 s, on idle, webpack prefetch links (low-priority fetch on Safari) put the game chunks and the vending ball atlas in the HTTP cache (skipped on Save-Data / 2G). Start builds renderer + scene + world + vending in idle slices and runs one `compileAsync` (stand-in lights matching Town's); Play does the same eagerly while the water rises; Town takes it (`takeWarmIsland`). No rAF, no render; disposed (forceContextLoss) after 3 min unused or on pagehide. Restore intents only prefetch (their Play reloads). In-game tabs never warm.
+- Tan mode: the fade starts as soon as the first frame is drawn (0.05 s, 0.5 s long); arrival at once, HUD at 0.6 s; a CSS-only bouncing ball cue appears on the tan after 0.9 s.
+
+Costs: warm island on the title ≈ JS heap of the built scene (~15–25 MB) and one WebGL context with ~23 programs (no geometry/textures uploaded); idle prefetch ≈ 1 MB of game JS + 97 kB atlas per title visit that reaches idle (not on Save-Data / 2G). Title first-load JS 130 → 132 kB (preload controller ≈ 1.4 kB gz). Remaining: NPC creation (~1 s at 4×) still runs after the tan; idle warm slices reach ~0.2–0.3 s long tasks at 4× while the code sheet is open. Not validated on a real iPhone (no thermal claim).

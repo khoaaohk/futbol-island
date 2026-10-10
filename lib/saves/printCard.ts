@@ -33,8 +33,15 @@ h1{margin:0 0 14px;font-size:22px}.tiles{display:grid;grid-template-columns:repe
  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex"><title>Futbol Island save code</title><style>${css}</style></head><body>${card}</body></html>`;
 }
 
-export async function printCodeCard(code:string){
- let qr:string|null=null;
- try{const {default:QR}=await import('qrcode');qr=await QR.toDataURL(qrLink(code),{width:240,margin:1,errorCorrectionLevel:'M'});}catch{}
- return printHtml(codeCardHtml(code,qr));
+const qrCache=new Map<string,string|null>();
+/** Make the card's QR ahead of time (called when the code is shown), so Print can open the print sheet straight from the tap:
+ *  browsers (Safari especially) refuse print() once the tap is too far back, and loading the QR library on a slow connection or
+ *  the dev server took longer than that (Oct 10 2026: "print doesn't seem to be working on desktop"). */
+export async function prepareCodeCard(code:string){
+ if(qrCache.has(code))return;
+ try{const {default:QR}=await import('qrcode');qrCache.set(code,await QR.toDataURL(qrLink(code),{width:240,margin:1,errorCorrectionLevel:'M'}));}catch{qrCache.set(code,null);}
+}
+export function printCodeCard(code:string){
+ if(qrCache.has(code))return printHtml(codeCardHtml(code,qrCache.get(code)??null),{now:true});
+ return prepareCodeCard(code).then(()=>printHtml(codeCardHtml(code,qrCache.get(code)??null)));
 }

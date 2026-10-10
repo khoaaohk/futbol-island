@@ -16,8 +16,7 @@ type OrientationCtor={requestPermission?:()=>Promise<'granted'|'denied'>};
  */
 export default function TitleScene({children,className}:{children:ReactNode;className?:string}){
  const root=useRef<HTMLElement>(null);
- const [tiltAsk,setTiltAsk]=useState(false),[tiltOn,setTiltOn]=useState(false);
- const enableTilt=useRef<(()=>void)|null>(null);
+ const [,setTiltOn]=useState(false);
  useEffect(()=>{
   const el=root.current;if(!el)return;
   if(matchMedia('(prefers-reduced-motion: reduce)').matches){el.dataset.calm='';return;}
@@ -62,8 +61,6 @@ export default function TitleScene({children,className}:{children:ReactNode;clas
   const Orientation=(window as unknown as {DeviceOrientationEvent?:OrientationCtor}).DeviceOrientationEvent;
   const needsPermission=!!Orientation&&typeof Orientation.requestPermission==='function';
   function armTilt(){if(armed||fine||!Orientation)return;armed=true;if(!needsPermission)startTilt();}
-  if(needsPermission&&!fine)setTiltAsk(true);
-  enableTilt.current=()=>{Orientation?.requestPermission?.().then(r=>{if(r==='granted'){armed=true;startTilt();}}).catch(()=>{});};
   const onVisibility=()=>{if(document.hidden){el.dataset.hidden='';cancelAnimationFrame(raf);raf=0;last=0;}else{delete el.dataset.hidden;kick();}};
   if(fine){window.addEventListener('pointermove',onMove,{passive:true});document.documentElement.addEventListener('pointerleave',onLeave);}
   el.addEventListener('pointerdown',onDown,{passive:true});window.addEventListener('pointermove',onDrag,{passive:true});
@@ -78,8 +75,6 @@ export default function TitleScene({children,className}:{children:ReactNode;clas
  },[]);
  return <section ref={root} className={className} data-title-scene>
   {children}
-  {tiltAsk&&<button type="button" className={styles.tilt} aria-pressed={tiltOn} aria-label={tiltOn?'Tilt is on: move your phone to look around':'Tilt your phone to look around'} data-tip="Tilt to look around" data-track="st:tilt" onClick={()=>enableTilt.current?.()}>
-   <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="7" y="3" width="10" height="18" rx="2.5" transform="rotate(-14 12 12)"/><path d="M3 9a9 9 0 0 0 0 6M21 9a9 9 0 0 1 0 6"/></svg>
-  </button>}
+  {/* The Tilt button (iOS motion permission) was removed (user, Oct 9 2026); tilt still starts on a touch where no permission is needed. */}
  </section>;
 }

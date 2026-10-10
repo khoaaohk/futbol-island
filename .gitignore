@@ -26,3 +26,4 @@ __pycache__/
 # editor swap files
 *.swp
 *.swo
+.local-saves.json

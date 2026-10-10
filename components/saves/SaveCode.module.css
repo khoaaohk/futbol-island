@@ -18,6 +18,9 @@
 /* One footer row: Back left, "Print code" centred, "I saved it" right; fits a 320 px phone without wrapping. */
 /* "Print code" is centred on the sheet itself, not on the space left over, so Back shrinking to its arrow never moves it (user). */
 .footer{position:relative;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.shown [data-save-explainer]{text-align:center;white-space:pre-line;text-wrap:balance}
+.introTop{display:grid}.introTop>*{grid-area:1/1;min-width:0}
+.introOver{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(8px,1.6svh,14px);text-align:center}
 .footerCenter{position:absolute;inset:0;display:flex;justify-content:center;align-items:center;pointer-events:none}
 .footerCenter>.secondary{pointer-events:auto}
 .footer .secondary,.footer>.primary{white-space:nowrap}
@@ -45,6 +48,8 @@
 .tile b{font:800 18px/1.15 var(--btn-font);color:var(--btn-ink);white-space:nowrap;max-width:100%}
 .tile i{font-style:normal;font-size:26px;line-height:1.1;min-height:29px}
 .tile.number{background:var(--btn-gold-bright)}
+.tileCell{display:grid;gap:4px;min-width:0}
+.tileLabel{font:700 12px/1.2 var(--btn-font);color:var(--btn-ink);opacity:.72;text-align:center;letter-spacing:.02em}
 .tile.number b{font-size:clamp(20px,5vw,26px);letter-spacing:1px}
 .tile.hidden b{letter-spacing:2px;color:#7b8a76}
 .tile.hint{box-shadow:0 0 0 4px var(--btn-pink),0 4px 0 var(--btn-pink-edge)}
@@ -87,3 +92,6 @@
 .dialog[open]{display:grid!important;place-items:center;padding:12px var(--phone-gutter)!important;background:transparent!important}
 .dialog:focus,.dialog:focus-visible{outline:none}
 .card{width:min(460px,100%);max-height:calc(100dvh - 24px);overflow:auto;box-sizing:border-box;padding:22px 20px 24px;background:#fff2d3 var(--btn-grain);background-blend-mode:soft-light;border-radius:30px 42px 26px 26px;box-shadow:0 8px 0 #173e3750,0 20px 60px #102d3540}
+/* "I saved it" as a navigation button (shrinks to a check) in the dark green primary colours. */
+button.savedIt.savedIt.savedIt.savedIt{background:var(--btn-green)!important;color:var(--btn-ink-on-dark)!important;box-shadow:0 4px 0 var(--btn-green-edge)!important}
+button.savedIt.savedIt.savedIt.savedIt:not(:disabled):active{box-shadow:0 1px 0 var(--btn-green-edge)!important}

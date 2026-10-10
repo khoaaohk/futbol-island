@@ -91,7 +91,7 @@ const actions=read(`${DIR}/TitleActions.tsx`),scene=read(`${DIR}/TitleScene.tsx`
  assert.equal((scene.match(/addEventListener\('deviceorientation'/g)||[]).length,1);
  assert.match(scene,/const startTilt=\(\)=>\{if\(tilting\)return;tilting=true;g0=b0=NaN;window\.addEventListener\('deviceorientation'/);
  assert.match(scene,/const onDown=\(e:PointerEvent\)=>\{[^\n]*armTilt\(\);\};/,'Android: after the first touch');
- assert.match(scene,/requestPermission\?\.\(\)\.then\(r=>\{if\(r==='granted'\)/,'iOS: through the Tilt button');
+ assert.doesNotMatch(scene,/className=\{styles\.tilt\}/,'no Tilt button on the title screen (user)');
  assert.match(scene,/const calm=\(\)=>\{el\.dataset\.calm='';stopTilt\(\);\};/,'calm drops the tilt listener');
  // Trick cast: stills until the sprite strips land; no timed src swapping (it was not smooth).
  const art=read(`${DIR}/TitleArt.tsx`);assert.match(art,/import CAST_SIZES from '@\/public\/splash\/cast\.json';/,'sizes from cast.json, not hardcoded');
@@ -245,9 +245,9 @@ assert.match(read('components/VisitTracker.tsx'),/if\(pathname!=='\/'\|\|view!==
   performance:{getEntriesByType:()=>[{type:nav}]},sessionStorage:{getItem:k=>stored[k]??null}});return html.dataset.rootView;};
  assert.equal(boot(''),'landing','a fresh session sees the title screen');
  assert.equal(boot('?coffee=thanks'),'landing','the title screen\'s own donation return stays on it');
- assert.equal(boot('',{'fi2-in-game':'1'},'reload'),'game','a tab that entered the game reloads straight into Town (restores, Settings)');
- assert.equal(boot('',{'fi2-in-game':'1'},'back_forward'),'game','…and back/forward to / returns to Town');
- assert.equal(boot('',{'fi2-in-game':'1'},'navigate'),'landing','visiting the address again shows the title screen and its water-fill Play (user)');
+ assert.equal(boot('',{'fi2-in-game':'1'},'reload'),'landing','a reload shows the title screen and its water-fill Play, never the old loader (user)');
+ assert.equal(boot('',{'fi2-in-game':'1'},'navigate'),'landing','…and so does visiting the address again');
+ assert.equal(boot('',{'fi2-island-handoff':'tan'},'reload'),'game','the game\'s own hand-off reload (a restored save) lands in the game');
  assert.equal(boot('?from=arcade'),'game','/?from=arcade goes straight to the game');
  assert.equal(boot('?panel=about&coffee=thanks'),'game','the game\'s About return opens the game');
  assert.equal(boot('',null),'landing');

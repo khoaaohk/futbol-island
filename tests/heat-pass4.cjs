@@ -15,7 +15,9 @@ function load(file,globals={}){const m={exports:{}};vm.runInNewContext(ts.transp
  const pr=Q.phoneGraphicsFor(3,true).pixelRatio,r=new Q.MotionResolution(pr,true,pr);// as Town builds it for phones (quality pass: 1.75 while cool)
  assert.equal(r.enabled,false,'the sharp-when-still switch is a no-op on phones');assert.equal(r.update(0,true),0);assert.equal(r.update(900,false),0);
  const town=read('components/Town.tsx');assert.match(town,/new MotionResolution\(quality\.pixelRatio,[^\n]*quality\.phone\?quality\.pixelRatio:undefined\)/,'phones never switch resolution by motion');
- assert.match(town,/renderer=new T\.WebGLRenderer\(\{antialias:graphicsQuality\(\)\.antialias,/,'MSAA decided at renderer creation');
+ assert.match(town,/renderer=(?:warm\?\.renderer\?\?)?new T\.WebGLRenderer\(\{antialias:graphicsQuality\(\)\.antialias,/,'MSAA decided at renderer creation');
+// Preload pass: the title screen's warm renderer makes the same MSAA decision (lib/town/islandWarm.ts), else Town makes its own.
+assert.match(fs.readFileSync('lib/town/islandWarm.ts','utf8'),/const quality=graphicsQuality\(\);antialias=quality\.antialias;\s*try\{renderer=new T\.WebGLRenderer\(\{antialias,powerPreference:'default'\}\)/);
  assert.match(town,/sun\.shadow\.mapSize\.set\(quality\.shadowSize,quality\.sha/,'sun shadow size from quality');
  assert.match(town,/sun\.shadow\.normalBias=\.12\*2048\/quality\.shadowSize;/,'normal bias scales with the texel (no acne on 1024² roofs)');
  assert.match(town,/governed:quality\.phone\}\)/,'the governor keys on phone detection, not MotionResolution.enabled (off on phones now)');}

@@ -26,6 +26,9 @@
 /* The riso grain over the whole print, under the type and buttons (as on the loading screen). */
 .screen::after{content:'';position:absolute;inset:0;z-index:1;background:url('/stories/films/assets/entry-grain.png');opacity:.38;pointer-events:none}
 @media(min-width:900px){.screen{--isle-h:min(40svh,calc(60vw / 1.415));--isle-top:max(19svh,160px);--cast-w:calc(var(--isle-w) * 1.05);--cast-top:calc(var(--isle-top) + var(--isle-h) * .72)}}
+/* Shorter phones (≤ 760px tall, e.g. an iPhone with the browser bars showing): a slightly smaller island and the cast lifted, so
+   the characters' feet and shadows sit clear above Start (user, Oct 9 2026). */
+@media(max-width:899px) and (max-height:760px){.screen{--isle-top:max(22svh,calc(env(safe-area-inset-top,0px) + 150px));--isle-h:min(33svh,calc(106vw / 1.415));--cast-top:calc(var(--isle-top) + var(--isle-h) * .62)}}
 /* Shorter laptop screens (≤ 860px tall): lift the cast so the feet clear the Start button (Oct 9 2026). */
 @media(min-width:900px) and (max-height:860px){.screen{--cast-top:calc(var(--isle-top) + var(--isle-h) * .6)}}
 
@@ -154,9 +157,9 @@ button.playHero.playHero.playHero.playHero[data-closing=true]{width:56px!importa
 .sheetHeader h2{margin:0;text-align:center;font-family:IslandBrush,var(--btn-font);font-weight:400;font-size:24px;line-height:1.1;outline:none}
 /* The new code (Oct 9 2026): the header reads "Your secret code" (no "New island" above it), the sheet is as tall as its content with
    one even gap between parts (SaveCode.module.css .shown), and Back sits in the code's footer row. */
-.sheetWrap[data-save-sheet=create] .sheetContent{display:flex;flex-direction:column;padding-bottom:22px}
-.sheetWrap[data-save-sheet=create] .sheetHeader{margin-bottom:clamp(6px,1.6svh,16px)}
-.sheetWrap[data-save-sheet=create] .sheetBody{flex:1;display:flex;flex-direction:column}
+.sheetWrap:is([data-save-sheet=create],[data-save-sheet=restore]) .sheetContent{display:flex;flex-direction:column;padding-bottom:22px}
+.sheetWrap:is([data-save-sheet=create],[data-save-sheet=restore]) .sheetHeader{margin-bottom:clamp(6px,1.6svh,16px)}
+.sheetWrap:is([data-save-sheet=create],[data-save-sheet=restore]) .sheetBody{flex:1;display:flex;flex-direction:column}
 .sheetWrap[data-code-footer] .sheetHeader{grid-template-columns:minmax(0,1fr)}
 @media(min-width:900px){.sheetWrap{align-items:center}}
 /* The code words flip in like cards (the real CodeTiles, [data-save-code]). */
@@ -323,3 +326,19 @@ button.playHero.playHero.playHero.playHero[data-closing=true]{width:56px!importa
 @media(prefers-reduced-motion:reduce){.screen[data-launch] .breakCard::before{opacity:0}}
 @keyframes launchOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(24px)}}
 @keyframes launchFade{from{opacity:1}to{opacity:0}}
+
+/* "Start" step 1 (Oct 9 2026): a kids' app, no personal information collected; Back bottom left, "Get my code" bottom right. */
+.introStack{display:grid;flex:1}.introStack>*{grid-area:1/1;min-width:0}
+.intro{display:flex;flex-direction:column;justify-content:center;gap:clamp(12px,2.2svh,20px);text-align:center;padding-top:4px}
+.introBadge{display:flex;justify-content:center;line-height:0}
+.introLead{margin:0;font:800 20px/1.25 var(--btn-font);color:var(--ink)}
+.introCopy{margin:0;font-size:16px;line-height:1.5;color:var(--ink);opacity:.86}
+.introFooter{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:auto}
+/* Same size as the Back button beside it (NavigationButton: 44 px tall, 14 px semibold). */
+.introGo{height:44px;padding:0 18px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius);white-space:nowrap;
+ background:var(--btn-gold) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;color:var(--btn-ink);box-shadow:var(--btn-shadow-gold);
+ font:600 14px/1 var(--btn-font);cursor:pointer;transition:translate .16s,box-shadow .16s}
+.introGo:active{translate:0 var(--btn-press);box-shadow:var(--btn-shadow-gold-pressed)}
+.introGo:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
+/* "My save code" fills the stacked height: its form's footer sits at the bottom, like the Start steps. */
+.restoreFill{display:flex;flex-direction:column}.restoreFill>form{flex:1;display:flex;flex-direction:column}.restoreFill [data-save-footer]{margin-top:auto}

@@ -54,7 +54,7 @@ await ok('ids allowlisted',()=>{
  // Every data-track in the start page's files is an allowlisted id (the literal ones; the computed ones are checked below).
  const files=['components/landing/TitleActions.tsx','components/landing/GrownUps.tsx','components/about/AboutGrownUps.tsx','components/landing/Donate.tsx','components/landing/TitleScene.tsx'];
  const literal=files.flatMap(f=>[...read(f).matchAll(/data-track="([^"]+)"/g)].map(m=>m[1]));
- assert.deepEqual(literal.sort(),['sg:donate','sg:instagram','sg:open','sg:privacy','sg:wsv','sp:open','st:have','st:other_code','st:start','st:tilt'].sort());
+ assert.deepEqual(literal.sort(),['sg:donate','sg:instagram','sg:open','sg:privacy','sg:wsv','sp:open','st:have','st:other_code','st:start'].sort());
  for(const id of literal)assert(SI.isStartId(id),id);
  // Computed ids: the non-profits, the amounts and the privacy contents match their sources.
  const np=[...read('components/DonationLinks.tsx').match(/NONPROFITS=\[(.*?)\] as const/)[1].matchAll(/name:'([^']+)'/g)].map(m=>SI.nonprofitSlug(m[1]));

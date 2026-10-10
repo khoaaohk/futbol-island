@@ -15,11 +15,13 @@
  *                    middle, "I saved it" right. The host hides its own Back while the code shows (onPhase 'code').
  * When saving is not set up yet it says "Saving isn't ready yet — you can still play."
  */
-import {useEffect,useMemo,useState} from 'react';
+import {useEffect,useMemo,useRef,useState,type CSSProperties,type ReactNode} from 'react';
 import {createSave,getLocalCode,savingStatus} from '@/lib/saves/client';
 import {codeFromNormal,pictureFor} from '@/lib/saves/code';
 import {BackButton} from '../BackButton';
+import {NavigationButton} from '../DoneButton';
 import CodeTiles from './CodeTiles';
+import {WORDS} from '@/lib/saves/words';
 import styles from './SaveCode.module.css';
 import {startWordPick} from '@/lib/analytics/startEvents';
 
@@ -30,7 +32,8 @@ export function LockGlyph({size=26}:{size?:number}){return <svg viewBox="0 0 24 
 /** What a save code is, in plain words (Oct 9 2026). Settings' "My save code" card shows it under its title. */
 export const SAVE_CODE_WHAT='Your save code is the key to your island. Type it on any phone, tablet or computer to keep playing where you left off. Keep it secret, like a password.';
 /** The shorter line shown with a brand-new code (the photo / write-it-down prompt follows it). */
-export const SAVE_CODE_NEW='Your save code is the key to your island. Type it on any phone, tablet or computer to keep playing. Take a photo or write it down, and keep it secret, like a password.';
+// The \n is a line break on the title screen's sheet (white-space:pre-line there): "or write it down" starts line two (user).
+export const SAVE_CODE_NEW='This is your island’s only key. Take a photo\nor write it down, and keep it a secret!';
 
 /** Required mode's outage message: never lock a kid out (user decision, Oct 9 2026). */
 export const SAVING_BREAK='Saving is taking a break — you can still play today.';
@@ -73,19 +76,44 @@ export function CodeShown({code,onDone,headless=false,doneLabel='I saved it',onB
  const options=useMemo(()=>{if(!c)return [];const o=[...c.words];for(let i=o.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[o[i],o[j]]=[o[j],o[i]];}return o;},[code]);// eslint-disable-line react-hooks/exhaustive-deps
  if(!c)return null;
  const right=picked===c.words[0];
- const print=()=>{void import('@/lib/saves/printCard').then(m=>m.printCodeCard(code));};
+ // The print module and this code's QR are readied when the code shows, so Print opens the print sheet straight from the tap.
+ const printMod=useRef<typeof import('@/lib/saves/printCard')|null>(null);
+ useEffect(()=>{let live=true;void import('@/lib/saves/printCard').then(m=>{if(!live)return;printMod.current=m;void m.prepareCodeCard(code);});return()=>{live=false;};},[code]);
+ const print=()=>{const m=printMod.current;if(m)void m.printCodeCard(code);else void import('@/lib/saves/printCard').then(x=>x.printCodeCard(code));};
  return <div className={`${styles.box} ${onBack?styles.shown:''}`} data-save-create="code">
   {!headless&&<h3 className={styles.title}>Your secret code</h3>}
-  <CodeTiles code={code} hint={picked&&!right?0:-1}/>
+  <CodeTiles code={code} hint={picked&&!right?0:-1} labelled={!!onBack}/>
   <p className={styles.copy} data-save-explainer>{SAVE_CODE_NEW}</p>
-  <div className={styles.stack}><p className={styles.small}>{picked===null?'Which word comes first?':right?'Yes! Great memory.':`It’s “${c.words[0]}”. Now you know!`}</p>
-   <div className={styles.chips}>{options.map(w=><button key={w} type="button" className={styles.chip} aria-pressed={picked===w} onClick={()=>{if(picked===null)startWordPick(w===c.words[0]);setPicked(w);}}><i aria-hidden="true">{pictureFor(w)??''}</i>{w}</button>)}</div></div>
+  {/* The title screen's sheet drops the "which word comes first?" check (user, Oct 9 2026); the walkthrough keeps it. */}
+  {!onBack&&<div className={styles.stack}><p className={styles.small}>{picked===null?'Which word comes first?':right?'Yes! Great memory.':`It’s “${c.words[0]}”. Now you know!`}</p>
+   <div className={styles.chips}>{options.map(w=><button key={w} type="button" className={styles.chip} aria-pressed={picked===w} onClick={()=>{if(picked===null)startWordPick(w===c.words[0]);setPicked(w);}}><i aria-hidden="true">{pictureFor(w)??''}</i>{w}</button>)}</div></div>}
   {onBack
    ?<div className={styles.footer} data-save-footer>
      <BackButton onBack={onBack}/>
      <span className={styles.footerCenter}><button type="button" className={styles.secondary} data-print-code onClick={print}>Print code</button></span>
-     <button type="button" className={styles.primary} data-saved-it onClick={onDone}>{doneLabel}</button></div>
+     {/* Shrinks to a check like Back shrinks to its arrow (user, Oct 10 2026); keeps the dark green. */}
+     <NavigationButton label={doneLabel} className={styles.savedIt} data-saved-it onNavigate={onDone} style={{'--navigation-width':'104px'} as CSSProperties}/></div>
    :<div className={styles.row}><button type="button" className={styles.secondary} data-print-code onClick={print}>Print a code card</button>
-     <button type="button" className={styles.primary} data-saved-it onClick={onDone}>{doneLabel}</button></div>}
+     {/* Shrinks to a check like Back shrinks to its arrow (user, Oct 10 2026); keeps the dark green. */}
+     <NavigationButton label={doneLabel} className={styles.savedIt} data-saved-it onNavigate={onDone} style={{'--navigation-width':'104px'} as CSSProperties}/></div>}
+ </div>;
+}
+
+/** An invisible, inert copy of the title screen's "Your secret code" layout (sample words), stacked under "Before you start" so
+ *  both steps are exactly the same height and the sheet doesn't jump between them (user, Oct 10 2026). */
+export function CodeGhost(){
+ return <div aria-hidden="true" inert style={{visibility:'hidden',pointerEvents:'none'}} data-code-ghost>
+  <CodeShown code={`${WORDS[0]}-${WORDS[1]}-${WORDS[2]}-888`} onDone={()=>{}} headless onBack={()=>{}}/></div>;
+}
+
+/** "Before you start" in the very same frame as "Your secret code" (user, Oct 10 2026): `top` sits over an invisible copy of the
+ *  labelled tiles (same height), `copy` in the explainer's place and style, and the footer row in the same spot, so nothing moves
+ *  between the two steps. */
+export function IntroShown({top,copy,onBack,go}:{top:ReactNode;copy:string;onBack:()=>void;go:ReactNode}){
+ return <div className={`${styles.box} ${styles.shown}`} data-save-intro>
+  <div className={styles.introTop}><div aria-hidden="true" inert style={{visibility:'hidden'}}><CodeTiles code={`${WORDS[0]}-${WORDS[1]}-${WORDS[2]}-888`} labelled/></div>
+   <div className={styles.introOver}>{top}</div></div>
+  <p className={styles.copy} data-save-explainer>{copy}</p>
+  <div className={styles.footer} data-save-footer><BackButton onBack={onBack}/>{go}</div>
  </div>;
 }

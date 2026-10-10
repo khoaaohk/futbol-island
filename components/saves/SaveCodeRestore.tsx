@@ -88,7 +88,7 @@ export default function SaveCodeRestore({onDone,initialCode,onCancel,required=fa
  const busy=phase==='loading';
  return <form id="save-restore-form" className={styles.box} data-save-restore="enter" onSubmit={e=>{e.preventDefault();void submit();}}>
   {!onBack&&!submitOutside&&title('Type your save code')}
-  <p className={styles.small} data-save-explainer>{onBack||submitOutside?'Type your save code to bring your island to this device. It’s three words and a number.':'Your save code brings your island to this device. Three words and a number.'}</p>
+  <p className={onBack?styles.copy:styles.small} data-save-explainer>{onBack||submitOutside?'Type your save code to bring your island to this device. It’s three words and a number.':'Your save code brings your island to this device. Three words and a number.'}</p>
   <div className={styles.boxes}>
    {[0,1,2].map(i=><div key={i} className={styles.field}>
     <label htmlFor={`save-word-${i}`}>Word {i+1}{matched[i]&&<i aria-hidden="true" data-word-picture> {pictureFor(matched[i]!)}</i>}</label>

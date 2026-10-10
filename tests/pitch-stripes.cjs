@@ -33,7 +33,12 @@ for(const v of VENUES){
  for(let i=0;i<pos.count;i++)if(nor.getY(i)>.5)top.push({z:pos.getZ(i),x:pos.getX(i),k:col.getX(i)});else assert.equal(col.getX(i),1,'slab sides keep the pitch colour');
  const ks=new Set(top.map(t=>+t.k.toFixed(4)));assert(ks.size>=2,`${v.id}: light and dark bands`);
  assert(top.some(t=>Math.abs(t.z)<1e-6),`${v.id}: halfway line is a band edge`);
- const near=d=>{const q=top.filter(t=>t.z>d-1e-3&&t.z<d+plan.bandLength-1e-3);return q.length?q[0].k:null;};
+ // Top-face quad centres (each quad has its own 4 vertices and one shade).
+ const cells=[];for(let i=0;i<pos.count;i+=4)if(nor.getY(i)>.5){let x=0,z=0;for(let j=0;j<4;j++){x+=pos.getX(i+j);z+=pos.getZ(i+j);}cells.push({x:x/4,z:z/4,k:col.getX(i)});}
+ const near=d=>{const q=cells.filter(t=>t.z>d&&t.z<d+plan.bandLength&&Math.abs(t.x)<v.width/2);return q.length?q[0].k:null;};
+ // The bands stop at the white lines (user, Oct 9 2026): every top vertex outside the marked pitch is the plain light shade.
+ const out=cells.filter(t=>Math.abs(t.x)>v.width/2||Math.abs(t.z)>v.length/2);
+ assert(out.length>0&&out.every(t=>Math.abs(t.k-S.STRIPE_LIGHT)<1e-6),`${v.id}: plain light run-off outside the lines`);
  assert.notEqual(+near(0).toFixed(4),+near(-plan.bandLength).toFixed(4),`${v.id}: bands alternate across halfway`);
  assert.equal(g.getIndex().count/3<1200,true,`${v.id}: a few hundred triangles at most (${g.getIndex().count/3})`);
 }

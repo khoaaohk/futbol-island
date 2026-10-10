@@ -76,3 +76,17 @@ export function CostumeHoodArt({size=40}:{size?:number}){
   <path d="m36 35.4.8 1.7 1.9.3-1.4 1.3.3 1.9-1.6-.9-1.6.9.3-1.9-1.4-1.3 1.9-.3z" fill="#fff4dc"/>
  </svg>;
 }
+
+/** A friendly padlock with a football keyhole and a gold star: the title screen's "made for kids, nothing collected" step (Oct 9 2026). */
+export function SafeLockArt({size=40}:{size?:number}){
+ return <svg viewBox="0 0 48 48" width={size} height={size} role="img" aria-label="Safe and private">
+  <path d="M14 22v-6c0-6 4.5-10 10-10s10 4 10 10v6" stroke="#d9a93c" strokeWidth="5" fill="none" strokeLinecap="round"/>
+  <path d="M17.5 13c1-3 3.4-4.6 6.5-4.6" stroke="#f4d98a" strokeWidth="2" fill="none" strokeLinecap="round"/>
+  <rect x="7" y="20" width="34" height="24" rx="7" fill="#2e7867"/>
+  <path d="M11 26c1-2.4 3-3.6 6-3.8" stroke="#6fb59c" strokeWidth="2.6" fill="none" strokeLinecap="round"/>
+  <circle cx="24" cy="32" r="7.4" fill="#fff9ec"/>
+  <path d="M24 28.2l3.3 2.4-1.3 3.9h-4l-1.3-3.9z" fill={INK}/>
+  <path d="M24 28.2v-3M27.3 30.6l3-1M26 34.5l1.8 2.4M22 34.5l-1.8 2.4M20.7 30.6l-3-1" stroke={INK} strokeWidth="1.5" strokeLinecap="round"/>
+  <path d="m38 4 1.7 3.4 3.8.6-2.8 2.7.7 3.8-3.4-1.8-3.4 1.8.7-3.8-2.8-2.7 3.8-.6z" fill="#f4c64a" stroke="#c9a032" strokeWidth="1" strokeLinejoin="round"/>
+ </svg>;
+}

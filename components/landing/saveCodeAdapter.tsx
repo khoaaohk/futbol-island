@@ -16,6 +16,7 @@ import {HANDOFF_ENABLED} from './PlayButton';
  *    (history.replaceState), so a ?coffee=thanks is not counted again.
  */
 export {isSavingAvailable,getLocalCode} from '@/lib/saves/client';
+export {CodeGhost,IntroShown} from '@/components/saves/SaveCodeCreate';
 import {startCreatePhase,startRestorePhase,trackStart} from '@/lib/analytics/startEvents';
 type CreateProps=ComponentProps<typeof RealCreate>;type RestoreProps=ComponentProps<typeof RealRestore>;
 /** onBack (Oct 9 2026): the code's footer row carries Back (bottom left), "Print code" and "I saved it". */
